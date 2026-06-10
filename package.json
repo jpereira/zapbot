@@ -1,0 +1,24 @@
+{
+  "name": "csfbot",
+  "version": "1.0.0",
+  "main": "app.js",
+  "license": "MIT",
+  "scripts": {
+    "init": "ts-node-dev -r tsconfig-paths/register --transpile-only scripts/init.ts",
+    "start:dev:docker": "DOCKER_BUILDKIT=1 docker-compose --file docker/docker-compose.yml up --build --force-recreate --remove-orphans --detach",
+    "start:dev": "node app.js",
+    "start:prod": "node dist/index.js",
+    "start": "[ \"$NODE_ENV\" = \"production\" ] && npm run start:prod || npm run start:dev"
+  },
+  "dependencies": {
+    "colors": "^1.4.0",
+    "dotenv": "^16.4.1",
+    "elevenlabs-node": "^2.0.3",
+    "mathjs": "^12.3.0",
+    "openai": "^4.25.0",
+    "qrcode-terminal": "^0.12.0",
+    "replicate": "^0.25.2",
+    "sharp": "^0.33.2",
+    "whatsapp-web.js": "^1.23.0"
+  }
+}

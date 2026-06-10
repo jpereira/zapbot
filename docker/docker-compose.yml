@@ -1,0 +1,10 @@
+services:
+  csfbot:
+    container_name: csfbot
+    build:
+      context: ..
+      dockerfile: docker/app/Dockerfile.dev
+    # volumes:
+    #  - ..:/app
+    env_file: ../config/.env
+    ports: []
