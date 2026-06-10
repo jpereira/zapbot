@@ -1,0 +1,18 @@
+FROM node:20-alpine
+
+RUN apk add --no-cache tzdata chromium \
+  && apk cache clean
+RUN yarn add sharp --ignore-engines
+
+ENV TZ=Brazil/East
+ENV NODE_ENV=development
+
+USER node
+
+WORKDIR /app
+
+COPY --chown=node:node . /app
+COPY --chown=node:node --chmod=755 docker/app/entrypoint.dev.sh /app/entrypoint.dev.sh
+
+ENTRYPOINT ["/bin/sh", "-x", "./entrypoint.dev.sh"]
+#ENTRYPOINT ["/bin/sh", "-x", "/usr/local/bin/entrypoint.dev.sh"]
