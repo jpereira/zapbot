@@ -1,0 +1,11 @@
+*
+
+!src/
+!config/
+!dist/
+!docker/
+!babel.config.js
+!tsconfig.json
+!package.json
+!app.js
+!bot-config.json
