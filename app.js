@@ -334,7 +334,11 @@ client.on('qr', async (qr) => {
 });
 
 client.on('authenticated', (session) => printSuccess(`Whatsapp authentication success!`));
-client.on('ready', () => printSuccess('Ready to go, bot is running!'));
+
+client.on('ready', () => {
+    printSuccess('Ready to go');
+    client.sendMessage(process.env.PHONE_NUMBER, `🤖 ZapBot inicializado`);
+});
 
 client.on('message_revoke_everyone', async (after, before) => {
     const sender_a = await before.getContact();
