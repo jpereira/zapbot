@@ -1,27 +1,104 @@
 {
-  "ping": "ping",
-  "gpt4": "/gpt",
-  "dalle2": "/dalle2",
-  "dalle3":"/dalle3",
-  "gptquestion": "/gpt3",
-  "muie": "/muie",
-  "cries": "/cries",
-  "badgpt": "/bgpt",
-  "sticker": "/sticker",
-  "show": "/show",
-  "transcribe": "/transcribe",
-  "everyone": "@everyone@",
-  "variation": "/change",
-  "tweet": "/tweet",
-  "cmd": "/cmd",
-  "stablediffusion": "/sd",
-  "stablediffusionxl": "/sdxl",
-  "stablediffusion_openjourney": "/openjourney",
-  "kandinsky": "/kandinsky",
-  "epicrealism": "/epicreal",
-  "elevenlabs_voice1":"/vinicius-speak-this",
-  "paywall":"/bypasspw",
-  "emoji":"/emoji",
-  "gif": "/gif",
-  "disney":"/disney"
+    "commands": [
+        {
+            "cmd":  "/help",
+            "help": "Exibe este menu de ajuda."
+        },        
+        {
+            "cmd":  "/ping",
+            "help": "Verificar status do bot."
+        },
+        {
+            "cmd": "/gpt",
+            "help": "Executa consulta GPT."
+        },
+        {
+            "cmd": "/dalle2",
+            "help": "Gera imagem usando DALL-E 2."
+        },
+        {
+            "cmd": "/dalle3",
+            "help": "Gera imagem usando DALL-E 3."
+        },
+        {
+            "cmd": "/gpt3",
+            "help": "Executa consulta GPT alternativa."
+        },
+        {
+            "cmd": "/muie",
+            "help": "Executa comando Muie."
+        },
+        {
+            "cmd": "/cries",
+            "help": "Executa comando Cries."
+        },
+        {
+            "cmd": "/bgpt",
+            "help": "Executa comando BadGPT."
+        },
+        {
+            "cmd": "/sticker",
+            "help": "Converte conteúdo em sticker."
+        },
+        {
+            "cmd": "/show",
+            "help": "Exibe informações."
+        },
+        {
+            "cmd": "/transcribe",
+            "help": "Transcreve áudio para texto."
+        },
+        {
+            "cmd": "/change",
+            "help": "Gera variação de imagem."
+        },
+        {
+            "cmd": "/tweet",
+            "help": "Gera texto estilo tweet."
+        },
+        {
+            "cmd": "/cmd",
+            "help": "Executa comando administrativo."
+        },
+        {
+            "cmd": "/sd",
+            "help": "Gera imagem usando Stable Diffusion."
+        },
+        {
+            "cmd": "/sdxl",
+            "help": "Gera imagem usando Stable Diffusion XL."
+        },
+        {
+            "cmd": "/openjourney",
+            "help": "Gera imagem usando OpenJourney."
+        },
+        {
+            "cmd": "/kandinsky",
+            "help": "Gera imagem usando Kandinsky."
+        },
+        {
+            "cmd": "/epicreal",
+            "help": "Gera imagem usando EpicRealism."
+        },
+        {
+            "cmd": "/vinicius-speak-this",
+            "help": "Converte texto em voz."
+        },
+        {
+            "cmd": "/bypasspw",
+            "help": "Executa bypass de paywall."
+        },
+        {
+            "cmd": "/emoji",
+            "help": "Converte conteúdo para emoji."
+        },
+        {
+            "cmd": "/gif",
+            "help": "Gera ou processa GIF."
+        },
+        {
+            "cmd": "/disney",
+            "help": "Aplica efeito estilo Disney."
+        }
+    ]
 }
