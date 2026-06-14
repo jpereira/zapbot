@@ -9,7 +9,6 @@ const sharp = require('sharp');
 //const png = require('pngjs').PNG;
 const voice = require('elevenlabs-node');
 const dotenv = require('dotenv');
-const Buffer = require('buffer').Buffer;
 
 dotenv.config();
 
@@ -421,7 +420,7 @@ const commands_handler = async (message) => {
             printCall(sender_contact, command.cmd);
             if (quotedMsg && quotedMsg.hasMedia) {
                 const media = await quotedMsg.downloadMedia();
-                if (formatResponse(quotedMsg.body).length > 0) {
+                if (quotedMsg.body != '' && formatResponse(quotedMsg.body).length > 0) {
                     caption = formatResponse(quotedMsg.body);
                 } else {
                     caption = '';
