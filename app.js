@@ -1182,6 +1182,23 @@ client.on('message_create', async (msg) => {
             }
             break;
 
+        case "/sticker":
+            printCall(sender_contact, argv);
+
+            if (quotedMsg && quotedMsg.hasMedia) {
+                const media = await quotedMsg.downloadMedia();
+                const options = {
+                    media: media,
+                    sendMediaAsSticker: true,
+                }
+
+                await msg.reply(media, null, options);
+            } else {
+                await msg.reply("Syntax: Faça um 'reply' utilizando /sticker");
+            }
+
+            break;
+
         case "/gpt3":
             const gptquestion = content_after_caller;
             printCall(sender_contact, command.cmd);
