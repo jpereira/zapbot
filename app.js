@@ -1,24 +1,63 @@
-const { Client, MessageMedia, LocalAuth } = require('whatsapp-web.js');
+const { Client, MessageMedia, LocalAuth, Location } = require('whatsapp-web.js');
 const axios = require('axios');
 const qrcode = require('qrcode');
 const qrcodeTerminal = require('qrcode-terminal');
 const colors = require('colors');
 const fs = require('fs-extra');
-// const { send } = require('process');
 const { OpenAI } = require('openai');
 const Math = require('mathjs');
 const sharp = require('sharp');
-//const png = require('pngjs').PNG;
 const voice = require('elevenlabs-node');
 const dotenv = require('dotenv');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
+// Tempo máximo que o WhatsApp permite apagar para todos: 68 horas em milissegundos
+const MAX_DELETE_WINDOW = 68 * 60 * 60 * 1000; 
+
+const CACHE_DIR = path.join(__dirname, 'cache');
+
+// Pasta onde as mídias (fotos/áudios) serão temporariamente salvas
+const MEDIA_DIR = path.join(CACHE_DIR, 'media');
+
+// basic debug functions
+function printDebug(message) {
+    const stack = new Error().stack.split('\n');
+
+    const caller = stack[2]
+        ?.trim()
+        ?.replace('at ', '');
+
+    console.log(colors.white(`[DEBUG] [${caller}] ${message}`));
+}
+
+function printError(message) {
+    const stack = new Error().stack.split('\n');
+
+    const caller = stack[2]
+        ?.trim()
+        ?.replace('at ', '');
+
+    console.log(colors.red(`[*] [${caller}] ${message}`));
+}
+
+function printInfo(message) {
+    console.log(colors.yellow('[!] ' + message));
+}
+
+function printSuccess(message) {
+    console.log(colors.green('[+] ' + message));
+}
+
+function printCall(sender_contact, call) {
+    console.log(colors.blue(`[+] ${sender_contact.pushname} used ${call}`));
+}
+
 // INICIALIZAÇÃO DO BANCO DE DADOS SQLITE
-const dbPath = path.resolve(__dirname, './config/bot_database.db');
+const dbPath = path.resolve(__dirname, './cache/bot_database.db');
 const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) return console.error('Erro ao conectar ao SQLite:', err.message);
-    console.log('Conectado com sucesso ao banco de dados SQLite.');
+    if (err) return printError('Erro ao conectar ao SQLite:', err.message);
+    printInfo('Conectado com sucesso ao banco de dados SQLite: ' + dbPath);
 });
 
 // bootstrap
@@ -44,31 +83,53 @@ try {
                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
             )
         `);
+        // Criar a tabela para armazenar as mensagens se ela não existir
+        db.run(`
+            CREATE TABLE IF NOT EXISTS messages (
+                id TEXT PRIMARY KEY,
+                sender TEXT,
+                body TEXT,
+                type TEXT,
+                timestamp INTEGER,
+                has_media INTEGER,
+                media_path TEXT,
+                location_lat REAL,
+                location_lng REAL
+            )
+        `);
     });
 
-    // loading ./config/bot-config.json
-    global.botConfig = require('./config/bot-config.json');
-    const commands = botConfig.commands.map(c => c.cmd);
-    printSuccess(`Loaded ${commands.length} callers (${commands.join(',')})`);
-
-    // Send the QR over e-mail
-    const nodemailer = require('nodemailer');
-    const transporter = nodemailer.createTransport({
-        host: process.env.QRCODE_EMAIL_SMTP_HOST,
-        port: process.env.QRCODE_EMAIL_SMTP_PORT,
-        secure: true, // true = SSL (465)
-        auth: {
-            user: process.env.QRCODE_EMAIL_SMTP_USER,
-            pass: process.env.QRCODE_EMAIL_SMTP_PASS
-        },
-        tls: {
-            rejectUnauthorized: false
-        }
-    });
+    if (!fs.existsSync(MEDIA_DIR)) {
+        fs.mkdirSync(MEDIA_DIR);
+    }
 } catch (e) {
     console.error('Bootstrap Erro:', e);
     process.exit(1);
 }
+
+// loading ./config/bot-config.json
+botConfig = require('./config/bot-config.json');
+const commands = botConfig.commands.map(c => c.cmd);
+printSuccess(`Loaded ${commands.length} callers (${commands.join(',')})`);
+
+// Send the QR over e-mail
+const nodemailer = require('nodemailer');
+const transporter = nodemailer.createTransport({
+    host: process.env.QRCODE_EMAIL_SMTP_HOST,
+    port: process.env.QRCODE_EMAIL_SMTP_PORT,
+    secure: true, // true = SSL (465)
+    auth: {
+        user: process.env.QRCODE_EMAIL_SMTP_USER,
+        pass: process.env.QRCODE_EMAIL_SMTP_PASS
+    },
+    tls: {
+        rejectUnauthorized: false
+    }
+});
+
+/*
+ * bot functions
+ */
 
 let openai;
 console.log(process.env.OPENAI_API_KEY);
@@ -78,7 +139,6 @@ if (process.env.OPENAI_API_KEY != null) {
         organization: process.env.OPENAI_ORGANIZATION_ID,
     });
 }
-// bot functions
 
 // OpenAI
 const GPT3_5 = async (clientText) => {
@@ -89,7 +149,7 @@ const GPT3_5 = async (clientText) => {
             messages: [{ role: 'user', content: clientText }],
         });
 
-        return (res = completion.choices[0].message.content);
+        return (res = completion.choices[0].msg.content);
     } catch (e) {
         return 'error';
     }
@@ -102,7 +162,7 @@ const GPT4 = async (clientText) => {
             temperature: 0.7,
             messages: [{ role: 'user', content: clientText }],
         });
-        return (res = completion.choices[0].message.content);
+        return (res = completion.choices[0].msg.content);
     } catch (e) {
         return 'error';
     }
@@ -201,40 +261,62 @@ function getElevenLabsAudio(textInput, fileName, voiceID, stability, similarityB
     });
 }
 
+// Função auxiliar para gerar e criar a estrutura de pastas cache/media/ano/mes/dia
+function obterPastaMidia() {
+    const agora = new Date();
+    const ano = agora.getFullYear().toString();
+    const mes = String(agora.getMonth() + 1).padStart(2, '0');
+    const dia = String(agora.getDate()).padStart(2, '0');
+
+    // Caminho final: cache/media/ano/mes/dia
+    const pastaDestino = path.join(MEDIA_DIR, ano, mes, dia);
+
+    // Cria as pastas recursivamente caso não existam
+    if (!fs.existsSync(pastaDestino)) {
+        fs.mkdirSync(pastaDestino, { recursive: true });
+    }
+
+    return pastaDestino;
+}
+
+// Limpa mensagens e mídias físicas com mais de 68 horas
+function limparCacheAntigo() {
+    const limiteTempo = Date.now() - MAX_DELETE_WINDOW;
+
+    // 1. Busca quais mídias físicas serão apagadas antes de deletar as linhas do banco
+    db.all(`SELECT media_path FROM messages WHERE timestamp < ? AND media_path IS NOT NULL`, [limiteTempo], (err, rows) => {
+        if (!err && rows) {
+            rows.forEach(row => {
+                if (fs.existsSync(row.media_path)) {
+                    printInfo(`Removendo ${row.media_path}`);
+                    fs.unlinkSync(row.media_path); // Apaga o arquivo físico da pasta
+                }
+            });
+        }
+    });
+
+    // 2. Remove os registros textuais do SQLite
+    db.run(`DELETE FROM messages WHERE timestamp < ?`, [limiteTempo], function(err) {
+        if (!err && this.changes > 0) {
+            printInfo(`Limpeza: ${this.changes} registros antigos limpos.`);
+        }
+    });
+}
+
+// envia mensagem para si próprio.
+function messageToSelf(message) {
+    client.sendMessage(process.env.PHONE_NUMBER, message);
+}
+
 // node and help functions
 function normalizerPhoneNumber(phoneNumber) {
     return phoneNumber.replace(/\D/g, '');
 }
 
+// valida se o valor é um telefone valido.
 function isPhoneNumber(value) {
     const digits = normalizerPhoneNumber(value);
     return digits.length >= 10 && digits.length <= 13;
-}
-
-function printDebug(message) {
-    const stack = new Error().stack.split('\n');
-
-    const caller = stack[2]
-        ?.trim()
-        ?.replace('at ', '');
-
-    console.log(colors.white(`[DEBUG] [${caller}] ${message}`));
-}
-
-function printError(message) {
-    console.log(colors.red('[*] ' + message));
-}
-
-function printInfo(message) {
-    console.log(colors.yellow('[!] ' + message));
-}
-
-function printSuccess(message) {
-    console.log(colors.green('[+] ' + message));
-}
-
-function printCall(sender_contact, call) {
-    console.log(colors.blue(`[+] ${sender_contact.pushname} used ${call}`));
 }
 
 async function resizeAndSquareImage(inputPath) {
@@ -270,6 +352,10 @@ function formatResponse(response) {
     );
 }
 
+/*
+ * main()
+ */
+
 const banner = `
 *          ____ ____ _____
 |_        /_  // __ \`/ __ \\
@@ -278,7 +364,7 @@ const banner = `
 '-' d  b          /_/
 `;
 console.log(colors.rainbow(banner));
-printInfo('Starting bot...');
+printInfo('🤖 Starting ZapBot...');
 
 // WA start-up
 const client = new Client({
@@ -313,9 +399,7 @@ client.on('qr', async (qr) => {
     if (process.env.QRCODE_EMAIL_ENABLE == "true") {
         const myantiphishing = process.env.QRCODE_EMAIL_SMTP_ANTIPHISHING;
 
-        if (qrEmailSent) {
-            return;
-        }
+        if (qrEmailSent) return;
 
         qrEmailSent = true;
 
@@ -360,11 +444,11 @@ client.on('qr', async (qr) => {
                     }
                 ]
             });
-            console.log('Email enviado:', info.messageId);
+            printInfo('Email enviado:', info.messageId);
 
         } catch (err) {
             qrEmailSent = false;
-            console.error('Erro ao enviar QR por email:', err);
+            printError('Erro ao enviar QR por email:', err);
         }
     } else {
         printInfo(`QR Code received at (${currentdatetimeday}), scan it please`)
@@ -372,23 +456,25 @@ client.on('qr', async (qr) => {
     }
 });
 
-client.on('authenticated', (session) => printSuccess(`Whatsapp authentication success!`));
+client.on('authenticated', (session) => {
+    printSuccess(`Whatsapp authentication success!`)
+});
 
 client.on('ready', () => {
-    printSuccess('Ready to go');
-    client.sendMessage(process.env.PHONE_NUMBER, `🤖 ZapBot inicializado`);
+    let myid = process.env.PHONE_NUMBER;
 
-    const query = `SELECT phone_number, timestamp FROM monitored_numbers LIMIT 20`;
+    printSuccess(`🤖 ZapBot inicializado! Informando ${myid}`);
+    messageToSelf(`🤖 ZapBot inicializado`);
 
-    db.all(query, [], async (err, rows) => {
+    db.all('SELECT phone_number, timestamp FROM monitored_numbers LIMIT 20', [], async (err, rows) => {
         if (err) {
-            printError('Erro ao listar logs:', err.message);
-            await message.reply('Erro ao buscar o histórico de logs.');
+            printError('Erro ao listar os números monitorados:', err.message);
+            await msg.reply('Erro ao buscar lista de números monitorados.');
             return;
         }
 
         if (rows.length === 0) {
-            client.sendMessage(process.env.PHONE_NUMBER, '📲🔔 *Números Monitorados:*\n<VAZIO>\n;');
+            messageToSelf('📲🔔 *Números Monitorados:*\n<VAZIO>\n;');
             return;
         }
 
@@ -398,7 +484,7 @@ client.on('ready', () => {
             responseText += `* ${row.phone_number} adicionado em: _${row.timestamp}_\n`;
         });
 
-        client.sendMessage(process.env.PHONE_NUMBER, responseText);
+        messageToSelf(responseText);
     });
 
     // Força o seu próprio bot a aparecer ativo se necessário
@@ -413,12 +499,8 @@ client.on('ready', () => {
                 return;
             }
 
-            // console.log(`[Presença] Iniciando ciclo de inscrição para ${
-
             rows.forEach(async (row) => {
                 const jid = `${row.phone_number}@c.us`;
-
-                // printDebug("setInterval() for " + jid);
 
                 try {
                     // Abre o canal de escuta de status para este contato específico no ecossistema do WA
@@ -431,18 +513,58 @@ client.on('ready', () => {
     }, 60000); // Executa a cada 1 minuto para garantir que a conexão de presença não caia
 });
 
-client.on('message_revoke_everyone', async (after, before) => {
-    const sender_a = await before.getContact();
-    const chat_a = await before.getChat();
-    const t = `📩 Mensagem apagada\nEnviada por: ${sender_a.pushname}\nEm: ${chat_a.name}\nConteudo:\n${before.body} `;
-    printInfo(`Mensagem apagada por ${sender_a.pushname}, enviando para o pv...`);
-    client.sendMessage(process.env.PHONE_NUMBER, t);
+client.on('presence_update', async (presence) => {
+    const myid = process.env.PHONE_NUMBER;
+
+    printDebug("presence_update: ");
+    console.log(presence);
+
+    if (!presence || !presence.id) return;
+
+    try {
+        const rawId = presence.id._serialized || presence.id;
+        const number = rawId.split('@')[0].split(':')[0];
+        const currentStatus = presence.status || (presence.type === 'available' ? 'available' : 'unavailable');
+
+        printDebug(`[Presence Event Disparado] Identificado: ${number} -> Estado: ${currentStatus}`);
+        await client.sendMessage(myid, `[Presence Event Disparado] Identificado: ${number} -> Estado: ${currentStatus}`);
+
+        // Só executa a lógica pesada se o contato estiver de fato "available" (online)
+        if (currentStatus === 'available') {
+            
+            // CONSULTA NO SQLITE: Verifica se este número está na lista de monitorados ativos
+            db.get('SELECT phone_number FROM monitored_numbers WHERE phone_number = ?', [number], async (err, row) => {
+                if (err || !row) return; // Se der erro ou o número NÃO estiver cadastrado, ignora em silêncio
+
+                // Daqui para baixo só roda se o número existir no seu banco!
+                const contact = await client.getContactById(rawId).catch(() => null);
+                const displayName = contact?.pushname || contact?.name || number;
+
+                // SALVAR NO SQLITE: Registra o log histórico
+                const stmt = db.prepare(`INSERT INTO presence_logs (phone_number, display_name, status) VALUES (?, ?, ?)`);
+                stmt.run(number, displayName, currentStatus, (insertErr) => {
+                    if (insertErr) console.error('Erro ao salvar log de presença:', insertErr.message);
+                });
+                stmt.finalize();
+
+                // Envia a notificação no WhatsApp
+                if (myid) {
+                    await client.sendMessage(myid, `🔔 *${displayName}* (${number}) acabou de ficar online.`);
+                    printSuccess(`Notificação enviada e salva no banco para: ${number}`);
+                }
+            });
+        }
+
+    } catch (error) {
+        printError('Erro controlado no evento de presença:', error.message);
+        await client.sendMessage(myid, 'Erro controlado no evento de presença: ' + error.message);
+    }
 });
 
 client.on('presence_update', async (presence) => {
     const targetChat = process.env.PHONE_NUMBER;
 
-    printInfo("presence_update: ");
+    printDebug("presence_update: ");
     console.log(presence);
 
     if (!presence || !presence.id) return;
@@ -487,33 +609,183 @@ client.on('presence_update', async (presence) => {
     }
 });
 
+client.on('message_revoke_everyone', async (after, before) => {
+    const protocolKey = after._data?.protocolMessageKey;
+    const targetId = protocolKey?.id || before?.id?.id || after?.id?.id;
+
+    if (!targetId) return;
+
+    db.get(`SELECT * FROM messages WHERE id = ?`, [targetId], async (err, row) => {
+        if (err || !row) return;
+
+        const dataEnvio = new Date(row.timestamp).toLocaleString('pt-BR');
+        const meuChatId = client.info.wid._serialized;
+        
+        // Cabeçalho básico padrão de informações
+        let alertaTexto = `❌ *MENSAGEM APAGADA DETECTADA*\n\n` +
+                            `👤 *Remetente:* ${row.sender}\n` +
+                            `📅 *Enviada em:* ${dataEnvio}\n`;
+
+        printDebug("Printing 'row'")
+        console.log(row);
+
+        try {
+            // 📍 1. TRATAMENTO DA LOCALIZAÇÃO (Igual ao áudio: Informação primeiro, mapa depois)
+            if (row.type === 'location' && row.location_lat && row.location_lng) {
+                // Link do Google Maps corrigido de forma 100% segura
+                const linkMaps = `https://www.google.com/maps?q=${row.location_lat},${row.location_lng}`;
+                alertaTexto += `🗺️ *Tipo:* LOCALIZAÇÃO\n🔗 *Link do Mapa:* ${linkMaps}`;
+                
+                // Etapa 1: Envia o texto informativo com o link direto clicável
+                await client.sendMessage(meuChatId, alertaTexto);
+                
+                // Etapa 2: Dispara o mapa interativo nativo logo abaixo
+                const latitude = Number(row.location_lat);
+                const longitude = Number(row.location_lng);
+                const descricaoLocal = row.body || 'Localização Fixada';
+                
+                const localizacaoNativa = new Location(latitude, longitude, descricaoLocal);
+                await client.sendMessage(meuChatId, localizacaoNativa);
+                printInfo(`[Bot] Localização apagada enviada de forma isolada.`);
+            } 
+            
+            // 📇 2. TRATAMENTO DO VCARD (Igual ao áudio: Informação primeiro, cartão depois)
+            else if (['vcard', 'contact', 'multi_vcard'].includes(row.type)) {
+                alertaTexto += `📇 *Tipo:* CARTÃO DE CONTATO\n💡 *Nota:* O contato oficial está anexado abaixo.`;
+                
+                // Etapa 1: Envia o texto informativo do alerta
+                await client.sendMessage(meuChatId, alertaTexto);
+                
+                // Etapa 2: Dispara a string bruta do vCard com a flag nativa ativada de forma limpa
+                await client.sendMessage(meuChatId, row.body, { parseVCards: true });
+                printInfo(`[Bot] Cartão vCard enviado de forma isolada.`);
+            }
+            
+            // 📁 3. TRATAMENTO DE MÍDIAS FÍSICAS (Áudio, Vídeo, Imagem, Documento)
+            else if (row.has_media && row.media_path && fs.existsSync(row.media_path)) {
+                const mediaAnexo = MessageMedia.fromFilePath(row.media_path);
+                const nomeDoArquivo = row.body || 'Sem texto';
+
+                // Áudios / Notas de voz (Duas etapas)
+                if (row.type === 'audio' || row.type === 'ptt' || mediaAnexo.mimetype.includes('audio')) {
+                    alertaTexto += `🎵 *Tipo:* ÁUDIO / NOTA DE VOZ`;
+                    await client.sendMessage(meuChatId, alertaTexto);
+                    await client.sendMessage(meuChatId, mediaAnexo, { sendAudioAsVoice: true });
+                } 
+                // Vídeos ou Imagens (Com legenda unificada)
+                else if (row.type === 'video' || row.type === 'image' || mediaAnexo.mimetype.includes('image') || mediaAnexo.mimetype.includes('video')) {
+                    alertaTexto += `🎬 *Tipo:* ${row.type.toUpperCase()}\n💬 *Legenda:* "${row.body || 'Sem texto'}"`;
+                    await client.sendMessage(meuChatId, mediaAnexo, { caption: alertaTexto });
+                } 
+                // Documentos
+                else {
+                    alertaTexto += `📄 *Tipo:* DOCUMENTO\n`;
+                    alertaTexto += `💬 *Legenda:* "${nomeDoArquivo}"`;
+
+                    mediaAnexo.filename = nomeDoArquivo;
+                    await client.sendMessage(meuChatId, mediaAnexo, {
+                        caption: alertaTexto,
+                        sendMediaAsDocument: true
+                    });
+                }
+            } 
+            
+            // 💬 4. TEXTO CONVENCIONAL
+            else {
+                alertaTexto += `💬 *Texto:* "${row.body}"`;
+                await client.sendMessage(meuChatId, alertaTexto);
+            }
+        } catch (sendError) {
+            printError('Erro ao reenviar o item deletado:', sendError.message);
+        }
+    });
+});
+
 client.initialize();
 
 printInfo('Starting WhatsApp authentication...');
 
 let _called_help = false;
 
-client.on('message_create', async (message) => {
+client.on('message_create', async (msg) => {
+    const msgIdPure = msg.id.id; 
+    const timestamp = Date.now();
+    const msgType = msg.type;
+    
+    const rawSenderId = msg.author || msg.from;
+    const cleanSenderId = rawSenderId.includes(':') ? `${rawSenderId.split(':')}@c.us` : rawSenderId;
+    
+    let senderName = cleanSenderId.split('@').shift();
+
     try {
-        if (!message.body.includes(' ')) {
-            message.body += ' ';
+        if (cleanSenderId) {
+            const contact = await client.getContactById(cleanSenderId);
+            senderName = contact.name || contact.pushname || senderName;
+        }
+    } catch (contactError) {
+        printInfo(`Não foi possível obter o nome do contato.`);
+    }
+
+    let hasMedia = msg.hasMedia ? 1 : 0;
+    let localMediaPath = null;
+    let lat = null;
+    let lng = null;
+
+    // console.log(msg);
+
+    if (msgType === 'location' && msg.location) {
+        lat = msg.location.latitude;
+        lng = msg.location.longitude;
+    }
+
+    if (msg.hasMedia) {
+        try {
+            const media = await msg.downloadMedia();
+            if (media && media.data) {
+                const extension = (media.mimetype && media.mimetype.includes('/')) 
+                    ? media.mimetype.split('/').pop().split(';').shift() 
+                    : 'bin';
+                    
+                const filename = `${msgIdPure}.${extension}`;
+                
+                // 💡 SOLUÇÃO: Obtém a pasta correta (cache/media/ano/mes/dia)
+                const pastaData = obterPastaMidia();
+                localMediaPath = path.join(pastaData, filename);
+                
+                fs.writeFileSync(localMediaPath, Buffer.from(media.data, 'base64'));
+            }
+        } catch (error) {
+            console.error(`Falha ao baixar mídia:`, error.message);
+            hasMedia = 0;
+        }
+    }
+
+    const stmt = db.prepare(`
+        INSERT OR REPLACE INTO messages 
+        (id, sender, body, type, timestamp, has_media, media_path, location_lat, location_lng) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    stmt.run(msgIdPure, senderName, msg.body || '', msgType, timestamp, hasMedia, localMediaPath, lat, lng);
+    stmt.finalize();
+
+    limparCacheAntigo();
+
+    try {
+        if (!msg.body.includes(' ')) {
+            msg.body += ' ';
         }
     } catch (e) {
         printError('faiou');
         return;
     }
 
-    let caller = message.body.substring(0, message.body.indexOf(' '));
-    let content_after_caller = message.body.substring(message.body.indexOf(' ') + 1);
+    let caller = msg.body.substring(0, msg.body.indexOf(' '));
+    let content_after_caller = msg.body.substring(msg.body.indexOf(' ') + 1);
     const argv = content_after_caller.split(' ');
-
-    // Descobrir quem é o remetente REAL da mensagem antes de chamar a API
-    // Em grupos usa 'author', em chats privados usa 'from'
-    const rawSenderId = message.author || message.from || '';
 
     // Ignora mensagens do seu próprio dispositivo, de sistemas e LIDs inválidos
     if (
-        message.fromMe ||
+        msg.fromMe ||
         rawSenderId.includes(':') ||        // Ignora IDs de múltiplos dispositivos emparelhados (ex: 1234:2@c.us)
         rawSenderId.includes('lid') ||      // Ignora novos identificadores baseados em LID
         !rawSenderId.includes('@')          // Ignora se não for um JID válido do WhatsApp
@@ -526,7 +798,7 @@ client.on('message_create', async (message) => {
             pushname: 'Self/System'
         };
 
-        printDebug(`[Ignorado API] Mensagem de controle do próprio dispositivo ou LID.`);
+        // printDebug(`[Ignorado API] Mensagem de controle do próprio dispositivo ou LID.`);
     } else {
         var sender_contact = null;
     }
@@ -540,12 +812,12 @@ client.on('message_create', async (message) => {
             sender_contact = await client.getContactById(rawSenderId);
         }
 
-        message_mentions = await message.getMentions().catch(() => []);
-        quotedMsg = await message.getQuotedMessage().catch(() => null);
-        groupChat = await message.getChat().catch(() => null);
+        message_mentions = await msg.getMentions().catch(() => []);
+        quotedMsg = await msg.getQuotedMessage().catch(() => null);
+        groupChat = await msg.getChat().catch(() => null);
 
     } catch (error) {
-        console.error('Erro controlado ao ler propriedades do chat:', error.message);
+        printError('Erro controlado ao ler propriedades do chat:', error.message);
 
         sender_contact = sender_contact || {
             id: { _serialized: rawSenderId },
@@ -555,19 +827,19 @@ client.on('message_create', async (message) => {
         };
     }
 
-    printDebug(`sender_contact='${JSON.stringify(sender_contact)}', message_mentions='${message_mentions}', quotedMsg='${quotedMsg}', groupChat='${groupChat}'`);
-
     // Handle the commands /foo
     const command = botConfig.commands.find(
         c => c.cmd === caller
     );
 
     if (!command) {
-        printDebug(`Comando '${command}' não encontrado`);
+        // printDebug(`Comando '${command}' não encontrado`);
         return;
     }
 
     if (!_called_help) printDebug(`Recebido comando '${command.cmd}'`);
+
+    printDebug(`sender_contact='${JSON.stringify(sender_contact)}', message_mentions='${message_mentions}', quotedMsg='${quotedMsg}', groupChat='${groupChat}'`);
 
     switch (command.cmd) {
         case "/help":
@@ -584,7 +856,7 @@ client.on('message_create', async (message) => {
                         .join('\n') +
                     "```\n";
 
-                message.reply(helpText);
+                msg.reply(helpText);
 
                 _called_help = true;
             } else {
@@ -595,7 +867,7 @@ client.on('message_create', async (message) => {
 
         case "/ping":
             printCall(sender_contact, command.cmd);
-            message.reply('pong');
+            msg.reply('pong');
             break;
 
         case "/color":
@@ -613,7 +885,7 @@ client.on('message_create', async (message) => {
                 return heart;
             });
 
-            await message.reply(rainbowText);
+            await msg.reply(rainbowText);
             break;
 
         case "/crypto":
@@ -622,7 +894,7 @@ client.on('message_create', async (message) => {
                         'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,dogecoin&vs_currencies=usd'
                     );
 
-                    await message.reply('📉 / 📈 Crypto Price 🚀\n\n'            +
+                    await msg.reply('📉 / 📈 Crypto Price 🚀\n\n'            +
                                         `* BTC/USDT:    $${data.bitcoin.usd}\n`  +
                                         `* ETH/USDT:    $${data.ethereum.usd}\n` +
                                         `* SOLANA/USDT: $${data.solana.usd}\n`   +
@@ -630,7 +902,7 @@ client.on('message_create', async (message) => {
                     );
                 } catch (error) {
                     console.error('Error fetching crypto prices:', error);
-                    await message.reply('Error fetching crypto prices');
+                    await msg.reply('Error fetching crypto prices');
                 }
             break;
 
@@ -656,7 +928,7 @@ client.on('message_create', async (message) => {
                     try {
                         await client.sendMessage(groupChat.id._serialized, text, {
                             mentions: mentions,
-                            quotedMessageId: message.id._serialized
+                            quotedMessageId: msg.id._serialized
                         });
 
                         printSuccess('/everyone responded OK');
@@ -667,7 +939,7 @@ client.on('message_create', async (message) => {
                     printDebug('Nenhum outro participante encontrado para marcar.');
                 }
             } else {
-                await message.reply('Apenas utilizado dentro de grupos.');
+                await msg.reply('Apenas utilizado dentro de grupos.');
             }
             break
 
@@ -687,13 +959,13 @@ client.on('message_create', async (message) => {
                         db.all(query, [], async (err, rows) => {
                             if (err) {
                                 printError('Erro ao listar logs:', err.message);
-                                await message.reply('Erro ao buscar o histórico de logs.');
+                                await msg.reply('Erro ao buscar o histórico de logs.');
                                 return;
                             }
 
                             if (rows.length === 0) {
                                 printInfo('Nenhum log encontrado para os números monitorados atuais. Use /monitor list');
-                                await message.reply('Nenhum histórico encontrado para os números ativos. Use /monitor list');
+                                await msg.reply('Nenhum histórico encontrado para os números ativos. Use /monitor list');
                                 return;
                             }
 
@@ -706,7 +978,7 @@ client.on('message_create', async (message) => {
                                 responseText += `⏱️ *${row.display_name}* ficou online em: _${row.timestamp}_\n`;
                             });
 
-                            await message.reply(responseText);
+                            await msg.reply(responseText);
                         });
                     }
                     break;
@@ -719,13 +991,13 @@ client.on('message_create', async (message) => {
                         db.all(query, [], async (err, rows) => {
                             if (err) {
                                 printError('Erro ao listar logs:', err.message);
-                                await message.reply('Erro ao buscar o histórico de logs.');
+                                await msg.reply('Erro ao buscar o histórico de logs.');
                                 return;
                             }
 
                             if (rows.length === 0) {
                                 printInfo('Nenhum numero encontrado para os números monitorados atuais.');
-                                await message.reply('Nenhum histórico encontrado para os números ativos.');
+                                await msg.reply('Nenhum histórico encontrado para os números ativos.');
                                 return;
                             }
 
@@ -735,7 +1007,7 @@ client.on('message_create', async (message) => {
                                 responseText += `* ${row.phone_number} adicionado em: _${row.timestamp}_\n`;
                             });
 
-                            await message.reply(responseText);
+                            await msg.reply(responseText);
                             printInfo(responseText);
                         });
                     }
@@ -748,7 +1020,7 @@ client.on('message_create', async (message) => {
                         db.run('DELETE FROM monitored_numbers', [], async function(err) {
                             if (err) {
                                 console.error('Erro ao limpar o banco:', err.message);
-                                await message.reply(`Erro ao tentar limpar o monitoramento: ${err.message}`);
+                                await msg.reply(`Erro ao tentar limpar o monitoramento: ${err.message}`);
                                 return;
                             }
 
@@ -756,9 +1028,9 @@ client.on('message_create', async (message) => {
                             const totalDeletados = this.changes;
 
                             if (totalDeletados === 0) {
-                                await message.reply('A lista de monitoramento já estava vazia. Nenhum número foi removido.');
+                                await msg.reply('A lista de monitoramento já estava vazia. Nenhum número foi removido.');
                             } else {
-                                await message.reply(`🧼 Faxina concluída! Todos os números foram removidos.\nTotal de números limpos: *${totalDeletados}*`);
+                                await msg.reply(`🧼 Faxina concluída! Todos os números foram removidos.\nTotal de números limpos: *${totalDeletados}*`);
                             }
                         });
                     }
@@ -771,18 +1043,18 @@ client.on('message_create', async (message) => {
 
                         if (!isPhoneNumber(phoneNumber)) {
                             printError('Número inválido informado.');
-                            await message.reply('Número inválido informado.');
+                            await msg.reply('Número inválido informado.');
                             break;
                         }
 
                         db.get('SELECT phone_number FROM monitored_numbers WHERE phone_number = ?', [phoneNumber], async (err, row) => {
                             if (err) {
-                                await message.reply(`Erro ao verificar número '${phoneNumber}':`, err.message);
+                                await msg.reply(`Erro ao verificar número '${phoneNumber}':`, err.message);
                                 return;
                             }
 
                             if (row) {
-                                await message.reply(`🔔 O número ${phoneNumber} já está sendo monitorado.`);
+                                await msg.reply(`🔔 O número ${phoneNumber} já está sendo monitorado.`);
                                 printInfo(`O número ${phoneNumber} já está sendo monitorado.`);
                                 return;
                             }
@@ -790,11 +1062,11 @@ client.on('message_create', async (message) => {
                             // Insere se não existir
                             db.run('INSERT INTO monitored_numbers (phone_number) VALUES (?)', [phoneNumber], async function(insertErr) {
                                 if (insertErr) {
-                                    await message.reply(`Erro ao adicionar número '${phoneNumber}':`, insertErr.message);
+                                    await msg.reply(`Erro ao adicionar número '${phoneNumber}':`, insertErr.message);
                                     printError(`Erro ao adicionar número '${phoneNumber}':`, insertErr.message);
                                     return;
                                 }
-                                await message.reply(`🔔 O número ${phoneNumber} agora está sendo monitorado.`);
+                                await msg.reply(`🔔 O número ${phoneNumber} agora está sendo monitorado.`);
                                 printInfo(`O número ${phoneNumber} agora está sendo monitorado.`);
                             });
                         });
@@ -802,25 +1074,25 @@ client.on('message_create', async (message) => {
                         break;
                     }
 
-                    case "rem": {
+                    case "del": {
                         const phoneNumber = normalizerPhoneNumber(content_after_caller);
 
-                        printInfo(`/monitor rem ${phoneNumber}`);
+                        printInfo(`/monitor del ${phoneNumber}`);
 
                         if (!isPhoneNumber(phoneNumber)) {
                             printError('Número inválido informado.');
-                            await message.reply('Número inválido informado.');
+                            await msg.reply('Número inválido informado.');
                             break;
                         }
 
                         db.get('SELECT phone_number FROM monitored_numbers WHERE phone_number = ?', [phoneNumber], async (err, row) => {
                             if (err) {
-                                await message.reply('Erro ao buscar número para remoção:', err.message);
+                                await msg.reply('Erro ao buscar número para remoção:', err.message);
                                 return;
                             }
 
                             if (!row) {
-                                await message.reply(`O numero ${phoneNumber} não está sendo monitorado.`);
+                                await msg.reply(`O numero ${phoneNumber} não está sendo monitorado.`);
                                 printInfo(`O numero ${phoneNumber} não está sendo monitorado.`);
                                 return;
                             }
@@ -830,7 +1102,7 @@ client.on('message_create', async (message) => {
                                     printError('Erro ao deletar número:', deleteErr.message);
                                     return;
                                 }
-                                await message.reply(`Número ${phoneNumber} removido com sucesso.`);
+                                await msg.reply(`Número ${phoneNumber} removido com sucesso.`);
                                 printInfo(`Número ${phoneNumber} removido com sucesso.`);
                             });
                         });
@@ -839,7 +1111,6 @@ client.on('message_create', async (message) => {
                     }
                 break;
             }
-
             break;
 
         case "/gpt3":
@@ -848,10 +1119,10 @@ client.on('message_create', async (message) => {
             GPT4(gptquestion).then(async (response) => {
                 if (response.includes('Erro ao processar a solicitação.')) {
                     printError('GPT resonded with error');
-                    message.reply(formatResponse(response));
+                    msg.reply(formatResponse(response));
                 } else {
                     printSuccess('GPT resonded OK');
-                    message.reply(formatResponse(response));
+                    msg.reply(formatResponse(response));
                 }
             });
             break;
@@ -865,15 +1136,15 @@ client.on('message_create', async (message) => {
                 .then(async (response) => {
                     if (response.includes('Erro ao processar a solicitação.')) {
                         printError('BADGPT responded with error');
-                        message.reply(formatResponse(response));
+                        msg.reply(formatResponse(response));
                     } else {
                         printSuccess('BADGPT reponded OK');
-                        message.reply(formatResponse(response));
+                        msg.reply(formatResponse(response));
                     }
                 })
                 .catch((error) => {
                     printError('BADGPT responded with error');
-                    message.reply(`${error}`);
+                    msg.reply(`${error}`);
                 });
             break;
 
@@ -887,12 +1158,12 @@ client.on('message_create', async (message) => {
                         media: media,
                         sendMediaAsSticker: false,
                     };
-                    await message.reply(media, null, options);
+                    await msg.reply(media, null, options);
                     printSuccess('DALLE2 responded OK');
                 })
                 .catch((error) => {
                     printError('DALLE2 responded with error');
-                    message.reply(`${error}`);
+                    msg.reply(`${error}`);
                 });
             break;
 
@@ -905,13 +1176,14 @@ client.on('message_create', async (message) => {
                         media: media,
                         sendMediaAsSticker: false,
                     };
-                    await message.reply(media, null, options);
+                    await msg.reply(media, null, options);
                     printSuccess('DALLE3 responded OK');
                 })
                 .catch((error) => {
                     printError('DALLE3 responded with error');
-                    message.reply(`${error}`);
+                    msg.reply(`${error}`);
                 });
+            break;
 
         case "/sticker":
             printCall(sender_contact, command.cmd);
@@ -921,7 +1193,7 @@ client.on('message_create', async (message) => {
                     media: media,
                     sendMediaAsSticker: true,
                 };
-                await message.reply(media, null, options);
+                await msg.reply(media, null, options);
                 printSuccess("/sticker responded OK");
             }
             break;
@@ -940,10 +1212,10 @@ client.on('message_create', async (message) => {
                     caption: caption,
                     sendMediaAsSticker: false,
                 };
-                await message.reply(media, null, options);
+                await msg.reply(media, null, options);
                 printSuccess('/show responded OK');
             } else {
-                await message.reply("Syntax: Responda uma media usando /show");
+                await msg.reply("Syntax: Responda uma media usando /show");
             }
             break;
 
@@ -958,7 +1230,7 @@ client.on('message_create', async (message) => {
                     mentions.push(contact);
                     text += `@${participant.id.user} `;
                 }
-                await message.reply(text, null, { mentions });
+                await msg.reply(text, null, { mentions });
                 printSuccess('everyone responded OK');
             }
             break;
@@ -972,15 +1244,15 @@ client.on('message_create', async (message) => {
                 .then(async (response) => {
                     if (response.includes('Erro ao processar a solicitação.')) {
                         printError('MUIE responded with error');
-                        message.reply(formatResponse(response));
+                        msg.reply(formatResponse(response));
                     } else {
                         printSuccess('MUIE reponded OK');
-                        message.reply(formatResponse(response));
+                        msg.reply(formatResponse(response));
                     }
                 })
                 .catch((error) => {
                     printError('MUIE responded with error');
-                    message.reply(`${error}`);
+                    msg.reply(`${error}`);
                 });
             break;
 
@@ -995,24 +1267,24 @@ client.on('message_create', async (message) => {
                     chat1.sendMessage(formatResponse(response));
                 } else {
                     printSuccess('[+] cries reponded OK');
-                    message.reply(formatResponse(response));
+                    msg.reply(formatResponse(response));
                 }
             });
             break;
 
         case "/gpt4":
             printCall(sender_contact, command.cmd);
-            if (message.hasQuotedMsg) {
+            if (msg.hasQuotedMsg) {
                 content_after_caller += quotedMsg.body;
             }
             const gpt4question = content_after_caller;
             GPT4(gpt4question).then(async (response) => {
                 if (response.includes('Erro ao processar a solicitação.')) {
                     printError('GPT4 resonded with error');
-                    message.reply(formatResponse(response));
+                    msg.reply(formatResponse(response));
                 } else {
                     printSuccess('GPT4 resonded OK');
-                    message.reply(formatResponse(response));
+                    msg.reply(formatResponse(response));
                 }
             });
             break;
@@ -1036,10 +1308,10 @@ client.on('message_create', async (message) => {
                     fs.writeFileSync(fileName, media.data, { encoding: 'base64' });
                     printSuccess('file saved');
                     let texta = await speech_to_text_whisper(fileName);
-                    message.reply(formatResponse(texta));
+                    msg.reply(formatResponse(texta));
                 }
             } else {
-                message.reply(
+                msg.reply(
                     formatResponse(
                         'Você precisa responder a uma mensagem de audio ou video para que eu possa transcrever',
                     ),
@@ -1067,7 +1339,7 @@ client.on('message_create', async (message) => {
                         media: media_to_send,
                         sendMediaAsSticker: false,
                     };
-                    await message.reply(media_to_send, null, options);
+                    await msg.reply(media_to_send, null, options);
                     printSuccess('Variation responded OK');
                     fs.unlinkSync(fileName);
                     fs.unlinkSync(fileName.replace(/\.jpg$/, '.png'));
@@ -1086,7 +1358,7 @@ client.on('message_create', async (message) => {
                     chat1.sendMessage(formatResponse(response));
                 } else {
                     printSuccess('[+] cmd reponded OK');
-                    message.reply(formatResponse(response));
+                    msg.reply(formatResponse(response));
                 }
             });
             break;
@@ -1094,7 +1366,7 @@ client.on('message_create', async (message) => {
         case "/tweet":
             printCall(sender_contact, command.cmd);
             let username;
-            if (message.hasQuotedMsg) {
+            if (msg.hasQuotedMsg) {
                 content_after_caller += quotedMsg.body;
                 username = await quotedMsg.getContact();
                 username = username.pushname;
@@ -1112,7 +1384,7 @@ client.on('message_create', async (message) => {
                     chat1.sendMessage(formatResponse(response));
                 } else {
                     printSuccess('[+] tweet reponded OK');
-                    await message.reply(formatResponse(response));
+                    await msg.reply(formatResponse(response));
                 }
             });
             break;
@@ -1129,12 +1401,12 @@ client.on('message_create', async (message) => {
                         media: media,
                         sendMediaAsSticker: false,
                     };
-                    await message.reply(media, null, options);
+                    await msg.reply(media, null, options);
                     printSuccess('stabledif responded OK');
                 })
                 .catch((error) => {
                     printError('stabledif responded with error');
-                    message.reply(`${error}`);
+                    msg.reply(`${error}`);
                 });
             break;
 
@@ -1150,12 +1422,12 @@ client.on('message_create', async (message) => {
                         media: media,
                         sendMediaAsSticker: false,
                     };
-                    await message.reply(media, null, options);
+                    await msg.reply(media, null, options);
                     printSuccess('stabledifXL responded OK');
                 })
                 .catch((error) => {
                     printError('stabledifXL responded with error');
-                    message.reply(`${error}`);
+                    msg.reply(`${error}`);
                 });
             break;
 
@@ -1171,12 +1443,12 @@ client.on('message_create', async (message) => {
                         media: media,
                         sendMediaAsSticker: false,
                     };
-                    await message.reply(media, null, options);
+                    await msg.reply(media, null, options);
                     printSuccess('openjourney responded OK');
                 })
                 .catch((error) => {
                     printError('openjourney responded with error');
-                    message.reply(`${error}`);
+                    msg.reply(`${error}`);
                 });
             break;
 
@@ -1192,12 +1464,12 @@ client.on('message_create', async (message) => {
                         media: media,
                         sendMediaAsSticker: false,
                     };
-                    await message.reply(media, null, options);
+                    await msg.reply(media, null, options);
                     printSuccess('kandinsky responded OK');
                 })
                 .catch((error) => {
                     printError('kandinsky responded with error');
-                    message.reply(`${error}`);
+                    msg.reply(`${error}`);
                 });
             break;
 
@@ -1213,14 +1485,15 @@ client.on('message_create', async (message) => {
                         media: media,
                         sendMediaAsSticker: false,
                     };
-                    await message.reply(media, null, options);
+                    await msg.reply(media, null, options);
                     printSuccess('epicrealism responded OK');
                 })
                 .catch((error) => {
                     printError('epicrealism responded with error');
-                    message.reply(`${error}`);
+                    msg.reply(`${error}`);
                 });
             break;
+        
         case "/emoji":
             printCall(sender_contact, command.cmd);
             stable_prompt = 'A TOK emoji of a ' + content_after_caller;
@@ -1233,17 +1506,18 @@ client.on('message_create', async (message) => {
                         media: media,
                         sendMediaAsSticker: true,
                     };
-                    await message.reply(media, null, options);
+                    await msg.reply(media, null, options);
                     printSuccess('epicrealism responded OK');
                 })
                 .catch((error) => {
                     printError('epicrealism responded with error');
-                    message.reply(`${error}`);
+                    msg.reply(`${error}`);
                 });
             break;
+        
         case "/vinicius-speak-this":
             printCall(sender_contact, command.cmd);
-            if (message.hasQuotedMsg) {
+            if (msg.hasQuotedMsg) {
                 content_after_caller += quotedMsg.body;
             }
             if (!fs.existsSync('./tmp')) {
@@ -1261,7 +1535,7 @@ client.on('message_create', async (message) => {
 
             // Verifique o comprimento da mensagem em 'fale'
             if (voice1_text.length > 300 && !sender_contact.isMe) {
-                await message.reply('A mensagem precisa ter menos de 300 caracteres');
+                await msg.reply('A mensagem precisa ter menos de 300 caracteres');
             } else {
                 await getElevenLabsAudio(voice1_text, fileName, voice_id, stability, similarityBoost);
                 const media = await MessageMedia.fromFilePath(fileName);
@@ -1270,14 +1544,15 @@ client.on('message_create', async (message) => {
                     sendMediaAsSticker: false,
                     sendAudioAsVoice: true,
                 };
-                await message.reply(media, null, options);
+                await msg.reply(media, null, options);
                 fs.unlinkSync(fileName);
                 printSuccess('elevenlabs responded OK');
             }
             break;
+        
         case "/bypasspw":
             printCall(sender_contact, command.cmd);
-            if (message.hasQuotedMsg) {
+            if (msg.hasQuotedMsg) {
                 content_after_caller += quotedMsg.body;
             }
             let paywall_url = content_after_caller;
@@ -1286,8 +1561,9 @@ client.on('message_create', async (message) => {
             paywall_url = encodeURIComponent(paywall_url);
             let umdoisft = 'https://12ft.io/proxy?q=';
             let final_url = umdoisft + paywall_url;
-            message.reply(final_url);
+            msg.reply(final_url);
             break;
+
         case "/gif":
             printCall(sender_contact, command.cmd);
             stable_prompt = content_after_caller;
@@ -1300,14 +1576,15 @@ client.on('message_create', async (message) => {
                         media: media,
                         sendMediaAsSticker: false,
                     };
-                    await message.reply(media, null, options);
+                    await msg.reply(media, null, options);
                     printSuccess('epicrealism responded OK');
                 })
                 .catch((error) => {
                     printError('epicrealism responded with error');
-                    message.reply(`${error}`);
+                    msg.reply(`${error}`);
                 });
             break;
+
         case "/disney":
             printCall(sender_contact, command.cmd);
             stable_prompt = 'breathtaking 3D animated movie poster in style of Pixar with ' + content_after_caller;
@@ -1320,12 +1597,12 @@ client.on('message_create', async (message) => {
                         media: media,
                         sendMediaAsSticker: false,
                     };
-                    await message.reply(media, null, options);
+                    await msg.reply(media, null, options);
                     printSuccess('epicrealism responded OK');
                 })
                 .catch((error) => {
                     printError('epicrealism responded with error');
-                    message.reply(`${error}`);
+                    msg.reply(`${error}`);
                 });
             break;
     }
