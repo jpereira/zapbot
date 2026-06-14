@@ -87,14 +87,34 @@ try {
         db.run(`
             CREATE TABLE IF NOT EXISTS messages (
                 id TEXT PRIMARY KEY,
-                sender TEXT,
+
+                -- Informações do remetente
+                sender_name TEXT,
+                sender_jid TEXT,
+                sender_number TEXT,
+
+                -- Informações do chat/grupo
+                chat_id TEXT,
+                chat_name TEXT,
+                is_group INTEGER DEFAULT 0,
+
+                -- Conteúdo
                 body TEXT,
                 type TEXT,
+
+                -- Data
                 timestamp INTEGER,
-                has_media INTEGER,
+
+                -- Mídia
+                has_media INTEGER DEFAULT 0,
                 media_path TEXT,
+
+                -- Localização
                 location_lat REAL,
-                location_lng REAL
+                location_lng REAL,
+
+                -- Payload bruto do WhatsApp
+                raw_json TEXT
             )
         `);
     });
@@ -570,18 +590,24 @@ client.on('message_revoke_everyone', async (after, before) => {
     db.get(`SELECT * FROM messages WHERE id = ?`, [targetId], async (err, row) => {
         if (err || !row) return;
 
+        printDebug("Dumping 'row'");
+        console.log(row);
+
         const dataEnvio = new Date(row.timestamp).toLocaleString('pt-BR');
         const meuChatId = client.info.wid._serialized;
         
         // Cabeçalho básico padrão de informações
-        let alertaTexto = `❌ *MENSAGEM APAGADA DETECTADA*\n\n` +
-                            `👤 *Remetente:* ${row.sender}\n` +
-                            `📅 *Enviada em:* ${dataEnvio}\n`;
+        let alertaTexto = `❌ *MENSAGEM APAGADA DETECTADA*\n\n`;
 
-        printDebug("Printing 'row'")
-        console.log(row);
-        printDebug("Printing 'after'")
-        console.log(after);
+        if (row.is_group) {
+            alertaTexto += `👥 *Grupo:* ${row.chat_name}\n`;
+        }
+        alertaTexto += `👤 *Nome:* ${row.sender_name}\n` +
+                       `📱 *Número:* ${row.sender_number}\n` +
+                       `📅 *Enviada em:* ${dataEnvio}\n`;
+
+        // printDebug("Printing 'row'")
+        // console.log(row);
 
         try {
             // 📍 1. TRATAMENTO DA LOCALIZAÇÃO (Igual ao áudio: Informação primeiro, mapa depois)
@@ -662,30 +688,51 @@ printInfo('Starting WhatsApp authentication...');
 let _called_help = false;
 
 client.on('message_create', async (msg) => {
-    const msgIdPure = msg.id.id; 
+    const msgIdPure = msg.id.id;
     const timestamp = Date.now();
     const msgType = msg.type;
-    
     const rawSenderId = msg.author || msg.from;
-    const cleanSenderId = rawSenderId.includes(':') ? `${rawSenderId.split(':')}@c.us` : rawSenderId;
-    
-    let senderName = cleanSenderId.split('@').shift();
 
-    try {
-        if (cleanSenderId) {
-            const contact = await client.getContactById(cleanSenderId);
-            senderName = contact.name || contact.pushname || senderName;
-        }
-    } catch (contactError) {
-        printInfo(`Não foi possível obter o nome do contato.`);
-    }
+    const chat = await msg.getChat();
+    const contact = await msg.getContact();
+
+    const senderJid = contact.id._serialized;
+
+    // Número real
+    const senderNumber = contact?.id?.user || contact?.number || 'UNKNOWN';
+
+    // Nome final
+    const senderName =
+        contact?.name ||       // Nome salvo na agenda
+        contact?.pushname ||   // Nome do WhatsApp
+        senderNumber;
+
+    // Nome do contato salvo na agenda
+    const contactName = contact.name;
+
+    // Nome definido na conta WhatsApp
+    const profileName = contact.pushname;
+
+    const chatId = msg.from;
+    const chatName = chat?.name || '';
+    const isGroup = chat?.isGroup ? 1 : 0;
 
     let hasMedia = msg.hasMedia ? 1 : 0;
     let localMediaPath = null;
     let lat = null;
     let lng = null;
 
-    // console.log(msg);
+    // printDebug("======================================================");
+    // console.log({
+    //     author: msg.author,
+    //     from: msg.from,
+    //     contact_id: contact.id._serialized,
+    //     number: contact.number,
+    //     lid: contact.lid,
+    //     pushname: contact.pushname,
+    //     name: contact.name
+    // });
+    // console.log(contact);
 
     if (msgType === 'location' && msg.location) {
         lat = msg.location.latitude;
@@ -716,10 +763,53 @@ client.on('message_create', async (msg) => {
 
     const stmt = db.prepare(`
         INSERT OR REPLACE INTO messages 
-        (id, sender, body, type, timestamp, has_media, media_path, location_lat, location_lng) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (id,
+
+        sender_name,
+        sender_jid,
+        sender_number,
+
+        chat_id,
+        chat_name,
+        is_group,
+
+        body,
+        type,
+        timestamp,
+
+        has_media,
+        media_path,
+
+        location_lat,
+        location_lng,
+
+        raw_json
+        )
+        VALUES
+        (
+            ?, ?, ?, ?,
+            ?, ?, ?,
+            ?, ?, ?,
+            ?, ?,
+            ?, ?,
+            ?
+        )
     `);
-    stmt.run(msgIdPure, senderName, msg.body || '', msgType, timestamp, hasMedia, localMediaPath, lat, lng);
+    stmt.run(msgIdPure,senderName,senderJid,senderNumber,chatId,chatName,
+        isGroup,
+
+        msg.body || '',
+        msgType,
+        timestamp,
+
+        hasMedia,
+        localMediaPath,
+
+        lat,
+        lng,
+
+        JSON.stringify(msg._data || {})
+    );
     stmt.finalize();
 
     limparCacheAntigo();
