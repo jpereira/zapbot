@@ -1,5 +1,6 @@
 const { Client, MessageMedia, LocalAuth } = require('whatsapp-web.js');
-const qrcode = require('qrcode-terminal');
+const qrcode = require('qrcode');
+const qrcodeTerminal = require('qrcode-terminal');
 const colors = require('colors');
 const fs = require('fs-extra');
 // const { send } = require('process');
@@ -10,7 +11,26 @@ const sharp = require('sharp');
 const voice = require('elevenlabs-node');
 const dotenv = require('dotenv');
 
-dotenv.config();
+try {
+    dotenv.config();
+} catch (e) {
+    console.error('Erro:', e);
+}
+
+// Send the QR over e-mail
+const nodemailer = require('nodemailer');
+const transporter = nodemailer.createTransport({
+    host: process.env.QRCODE_EMAIL_SMTP_HOST,
+    port: process.env.QRCODE_EMAIL_SMTP_PORT,
+    secure: true, // true = SSL (465)
+    auth: {
+        user: process.env.QRCODE_EMAIL_SMTP_USER,
+        pass: process.env.QRCODE_EMAIL_SMTP_PASS
+    },
+    tls: {
+        rejectUnauthorized: false
+    }
+});
 
 try {
     global.botConfig = require('./config/bot-config.json');
@@ -239,10 +259,77 @@ const client = new Client({
         ],
     },
 });
+
 printSuccess('Client created');
-client.on('qr', (qr) => {
-    printInfo('QR Code received, scan it using your phone please');
-    qrcode.generate(qr, { small: true });
+
+let qrEmailSent = false;
+
+client.on('qr', async (qr) => {
+    const currentdatetimeday = new Date()
+        .toISOString()
+        .replace('T', ' ')
+        .replace(/\.\d{3}Z$/, ' UTC');
+
+    if (process.env.QRCODE_EMAIL_ENABLE == "true") {
+        const myantiphishing = process.env.QRCODE_EMAIL_SMTP_ANTIPHISHING;
+
+        if (qrEmailSent) {
+            return;
+        }
+
+        qrEmailSent = true;
+
+        printInfo(`QR Code received at (${currentdatetimeday}) and sent to '${process.env.QRCODE_EMAIL_SMTP_TO}'`);
+        try {
+            // qr = string recebida do WhatsApp
+            const pngBuffer = await qrcode.toBuffer(qr, {
+                type: 'png',
+                width: 300
+            });
+
+            const info = await transporter.sendMail({
+                from: process.env.QRCODE_EMAIL_SMTP_FROM,
+                to: process.env.QRCODE_EMAIL_SMTP_TO,
+                subject: `[ZapBot] WhatsApp QR Code Authentication ${currentdatetimeday}`,
+                html: `
+                    <table width="50%" style="background:#f8f8f8;border:1px solid #dddddd;border-radius:5px;">
+                    <tr>
+                        <td style="padding:12px;">
+                            <strong>🛡️ Anti-Phishing Code:</strong>
+                            <span style="color:#d9534f;font-weight:bold;">${myantiphishing}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:12px;">
+                            <strong>📅 Generated At:</strong>
+                            <span style="color:#000000;font-weight:bold;">${currentdatetimeday}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:12px;">
+                            <strong>📱 Escaneie o QR:</strong>
+                            <img src="cid:qrcode">
+                        </td>
+                    </tr>
+                    </table>`,
+                attachments: [
+                    {
+                        filename: 'qrcode.png',
+                        content: pngBuffer,
+                        cid: 'qrcode'
+                    }
+                ]
+            });
+            console.log('Email enviado:', info.messageId);
+
+        } catch (err) {
+            qrEmailSent = false;
+            console.error('Erro ao enviar QR por email:', err);
+        }
+    } else {
+        printInfo(`QR Code received at (${currentdatetimeday}), scan it please`)
+        qrcodeTerminal.generate(qr, { small: true })
+    }
 });
 
 client.on('authenticated', (session) => printSuccess(`Whatsapp authentication success!`));
