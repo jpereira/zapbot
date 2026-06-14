@@ -197,7 +197,7 @@ function printSuccess(message) {
 }
 
 function printCall(sender_contact, call) {
-    console.log(colors.blue(`[+] ${sender_contact} used ${call}`));
+    console.log(colors.blue(`[+] ${sender_contact.pushname} used ${call}`));
 }
 
 async function resizeAndSquareImage(inputPath) {
@@ -335,7 +335,6 @@ client.on('qr', async (qr) => {
 
 client.on('authenticated', (session) => printSuccess(`Whatsapp authentication success!`));
 client.on('ready', () => printSuccess('Ready to go, bot is running!'));
-client.on('message_create', (message) => commands_handler(message));
 
 client.on('message_revoke_everyone', async (after, before) => {
     const sender_a = await before.getContact();
@@ -351,7 +350,7 @@ printInfo('Starting WhatsApp authentication...');
 
 let _called_help = false;
 
-const commands_handler = async (message) => {
+client.on('message_create', async (message) => {
     try {
         if (!message.body.includes(' ')) {
             message.body += ' ';
@@ -361,25 +360,60 @@ const commands_handler = async (message) => {
         return;
     }
 
-    let caller = await message.body.substring(0, message.body.indexOf(' '));
-    let content_after_caller = await message.body.substring(message.body.indexOf(' ') + 1);
-    const chat = await message.getChat();
-    const message_mentions = await message.getMentions();
-    // var sender_contact = await message.getContact();
-    var sender_contact = message.notifyName || message._data?.notifyName || 'Sem nome';
-    const quotedMsg = await message.getQuotedMessage();
-    const groupChat = await message.getChat();
+    let caller = message.body.substring(0, message.body.indexOf(' '));
+    let content_after_caller = message.body.substring(message.body.indexOf(' ') + 1);
 
-    let question;
-    let stable_prompt;
-    let model_string;
-    let stability;
-    let similarityBoost;
-    let text_elevenlabs;
-    let voice_id;
+    // Descobrir quem é o remetente REAL da mensagem antes de chamar a API
+    // Em grupos usa 'author', em chats privados usa 'from'
+    const rawSenderId = message.author || message.from || '';
 
-    printDebug(`sender_contact='${sender_contact}', chat='${chat}', message_mentions='${message_mentions}', quotedMsg='${quotedMsg}', groupChat='${groupChat}'`);
+    // Ignora mensagens do seu próprio dispositivo, de sistemas e LIDs inválidos
+    if (
+        message.fromMe ||
+        rawSenderId.includes(':') ||        // Ignora IDs de múltiplos dispositivos emparelhados (ex: 1234:2@c.us)
+        rawSenderId.includes('lid') ||      // Ignora novos identificadores baseados em LID
+        !rawSenderId.includes('@')          // Ignora se não for um JID válido do WhatsApp
+    ) {
+        // Se cair aqui, um mock seguro para não quebrar seus logs lá embaixo
+        var sender_contact = {
+            id: { _serialized: rawSenderId },
+            number: rawSenderId.split('@')[0],
+            name: 'Dispositivo Vinculado / Sistema',
+            pushname: 'Self/System'
+        };
 
+        printDebug(`[Ignorado API] Mensagem de controle do próprio dispositivo ou LID.`);
+    } else {
+        var sender_contact = null;
+    }
+
+    let message_mentions = [];
+    let quotedMsg = null;
+    let groupChat = null;
+
+    try {
+        if (!sender_contact) {
+            sender_contact = await client.getContactById(rawSenderId);
+        }
+
+        message_mentions = await message.getMentions().catch(() => []);
+        quotedMsg = await message.getQuotedMessage().catch(() => null);
+        groupChat = await message.getChat().catch(() => null);
+
+    } catch (error) {
+        console.error('Erro controlado ao ler propriedades do chat:', error.message);
+
+        sender_contact = sender_contact || {
+            id: { _serialized: rawSenderId },
+            number: rawSenderId.split('@')[0],
+            name: 'Desconhecido',
+            pushname: 'Desconhecido'
+        };
+    }
+
+    printDebug(`sender_contact='${JSON.stringify(sender_contact)}', message_mentions='${message_mentions}', quotedMsg='${quotedMsg}', groupChat='${groupChat}'`);
+
+    // Handle the commands /foo
     const command = botConfig.commands.find(
         c => c.cmd === caller
     );
@@ -437,6 +471,23 @@ const commands_handler = async (message) => {
                     await message.reply('Error fetching crypto prices');
                 }
             break;
+
+        case "@everyone@":
+            printCall(sender_contact, command.cmd);
+            if (groupChat.isGroup) {
+                const mentions = groupChat.participants
+                    .map(p => p.id)
+                    .filter(id => id.user !== message.author?.split('@')[0]);
+
+                const text = mentions
+                    .map(id => `@${id.user}`)
+                    .join(' ');
+
+                await message.reply(text, undefined, { mentions });
+
+                printSuccess('everyone responded OK');
+            }
+            break
 
         case "/gpt3":
             const gptquestion = content_after_caller;
@@ -518,7 +569,7 @@ const commands_handler = async (message) => {
                     sendMediaAsSticker: true,
                 };
                 await message.reply(media, null, options);
-                printSuccess('FIGURINHA responded OK');
+                printSuccess("/sticker responded OK");
             }
             break;
 
@@ -537,7 +588,7 @@ const commands_handler = async (message) => {
                     sendMediaAsSticker: false,
                 };
                 await message.reply(media, null, options);
-                printSuccess('show responded OK');
+                printSuccess('/show responded OK');
             }
             break;
 
@@ -923,4 +974,4 @@ const commands_handler = async (message) => {
                 });
             break;
     }
-};
+});
