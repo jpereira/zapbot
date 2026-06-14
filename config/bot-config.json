@@ -17,6 +17,10 @@
             "help": "Faz o reply marcando todos do grupo."
         },
         {
+            "cmd":  "/monitor",
+            "help": "<list> lista numeros\n<logs> lista logs\n<add> <numero> Adiciona número para ser monitorado.\n<rem> <numero>numero remove\nObs: Max 20 numeros"
+        },
+        {
             "cmd": "/crypto",
             "help": "Exibe o preço atual das cryptos: BTC, ETH, GALA, MATIC."
         },
