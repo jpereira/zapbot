@@ -561,54 +561,6 @@ client.on('presence_update', async (presence) => {
     }
 });
 
-client.on('presence_update', async (presence) => {
-    const targetChat = process.env.PHONE_NUMBER;
-
-    printDebug("presence_update: ");
-    console.log(presence);
-
-    if (!presence || !presence.id) return;
-
-    try {
-        const rawId = presence.id._serialized || presence.id;
-        const number = rawId.split('@')[0].split(':')[0];
-        const currentStatus = presence.status || (presence.type === 'available' ? 'available' : 'unavailable');
-
-        console.log(`[Presence Event Disparado] Identificado: ${number} -> Estado: ${currentStatus}`);
-        await client.sendMessage(targetChat, `[Presence Event Disparado] Identificado: ${number} -> Estado: ${currentStatus}`);
-
-        // Só executa a lógica pesada se o contato estiver de fato "available" (online)
-        if (currentStatus === 'available') {
-            
-            // CONSULTA NO SQLITE: Verifica se este número está na lista de monitorados ativos
-            db.get('SELECT phone_number FROM monitored_numbers WHERE phone_number = ?', [number], async (err, row) => {
-                if (err || !row) return; // Se der erro ou o número NÃO estiver cadastrado, ignora em silêncio
-
-                // Daqui para baixo só roda se o número existir no seu banco!
-                const contact = await client.getContactById(rawId).catch(() => null);
-                const displayName = contact?.pushname || contact?.name || number;
-
-                // SALVAR NO SQLITE: Registra o log histórico
-                const stmt = db.prepare(`INSERT INTO presence_logs (phone_number, display_name, status) VALUES (?, ?, ?)`);
-                stmt.run(number, displayName, currentStatus, (insertErr) => {
-                    if (insertErr) console.error('Erro ao salvar log de presença:', insertErr.message);
-                });
-                stmt.finalize();
-
-                // Envia a notificação no WhatsApp
-                if (targetChat) {
-                    await client.sendMessage(targetChat, `🔔 *${displayName}* (${number}) acabou de ficar online.`);
-                    printSuccess(`Notificação enviada e salva no banco para: ${number}`);
-                }
-            });
-        }
-
-    } catch (error) {
-        printError('Erro controlado no evento de presença:', error.message);
-        await client.sendMessage(targetChat, 'Erro controlado no evento de presença: ' +error.message);
-    }
-});
-
 client.on('message_revoke_everyone', async (after, before) => {
     const protocolKey = after._data?.protocolMessageKey;
     const targetId = protocolKey?.id || before?.id?.id || after?.id?.id;
