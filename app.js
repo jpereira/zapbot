@@ -808,7 +808,8 @@ client.on('message_create', async (msg) => {
         lat,
         lng,
 
-        JSON.stringify(msg._data || {})
+        "desativado"
+        // JSON.stringify(msg._data || {})
     );
     stmt.finalize();
 
