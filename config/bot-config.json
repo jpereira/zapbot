@@ -2,15 +2,21 @@
     "commands": [
         {
             "cmd":  "/help",
+            "aliases": [ "/h" ],
             "help": "Exibe este menu de ajuda."
         },        
         {
             "cmd":  "/ping",
+            "aliases": [ "/p" ],
             "help": "Verificar status do bot."
         },
         {
             "cmd":  "/color",
-            "help": "Converta o texto para arcoires 🌈🏳️‍🌈"
+            "aliases": [ "/🌈", "/🏳️‍🌈", "/c", "/noffa" ],
+            "help": "Da uma colorida no texto.",
+            "syntax": [
+                "<texto com espaços> ou dê um 'reply' com ele."
+            ]
         },
         {
             "cmd":  "/everyone",
@@ -18,10 +24,18 @@
         },
         {
             "cmd":  "/monitor",
-            "help": "<list> lista numeros\n<logs> lista logs\n<add> <numero> Adiciona número para ser monitorado.\n<del> <numero>deleta numero.\nObs: Max 20 numeros"
+            "aliases": [ "/m" ],
+            "help": "Números a serem monitorados. Obs: Max 20 numeros",
+            "syntax": [
+                "<list> lista numeros",
+                "<logs> lista logs",
+                "<add> <numero> Adiciona número para ser monitorado.",
+                "<del> <numero> deleta numero."
+            ]
         },
         {
             "cmd": "/crypto",
+            "aliases": [ "/bitcoio", "/btc", "/moedinha" ],
             "help": "Exibe o preço atual das cryptos: BTC, ETH, GALA, MATIC."
         },
         {

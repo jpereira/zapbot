@@ -881,9 +881,9 @@ client.on('message_create', async (msg) => {
         };
     }
 
-    // Handle the commands /foo
+    // Handle the commands /foo and the "aliases": [ ... ]
     const command = botConfig.commands.find(
-        c => c.cmd === caller
+        c => c.cmd === caller || c.aliases?.includes(caller)
     );
 
     if (!command) {
@@ -901,14 +901,29 @@ client.on('message_create', async (msg) => {
                 const maxCmdLength = Math.max(
                     ...botConfig.commands.map(c => c.cmd.length)
                 );
+
                 const helpText =
                     "🤖 *MENU DE AJUDA*\n\n```" +
                     botConfig.commands
-                        .map(c =>
-                            `${c.cmd.padEnd(maxCmdLength)} | ${c.help}`
-                        )
-                        .join('\n') +
-                    "```\n";
+                        .map(c => {
+                            let text =
+                                `${c.cmd.padEnd(maxCmdLength)} | ${c.help}`;
+
+                            if (c.syntax?.length) {
+                                text += "\n" +
+                                    c.syntax
+                                        .map(s => `  └ ${c.cmd} ${s}`)
+                                        .join("\n");
+                            }
+
+                            if (c.aliases?.length) {
+                                text += `\n  └ aliases: [${c.aliases.join(", ")}]`;
+                            }
+
+                            return text;
+                        })
+                        .join("\n")
+                    + "```";
 
                 msg.reply(helpText);
 
@@ -925,7 +940,7 @@ client.on('message_create', async (msg) => {
             break;
 
         case "/color":
-            const rainbowHearts = ['❤️', '🌈', '🏳️‍🌈', '👨‍❤️‍👨', '🧡', '💛', '💚', '💙', '💜'];
+            const rainbowHearts = ['🌈', '🏳️‍🌈', '🏳️‍⚧️', '🧡', '💛', '💚', '💙', '💜'];
             let text = content_after_caller;
             let index = 0;
 
@@ -934,7 +949,7 @@ client.on('message_create', async (msg) => {
             }
 
             const rainbowText = text.replace(/ /g, () => {
-                const heart = rainbowHearts[index % rainbowHearts.length];
+                const heart = ' ' + rainbowHearts[index % rainbowHearts.length] + ' ';
                 index++;
                 return heart;
             });
