@@ -429,7 +429,7 @@ client.on('message_create', async (message) => {
         return;
     }
 
-    if (!_called_help) printDebug(`Recebido comando '${command.cmd}', executando '${command.func}'`);
+    if (!_called_help) printDebug(`Recebido comando '${command.cmd}'`);
 
     switch (command.cmd) {
         case "/help":
@@ -496,20 +496,40 @@ client.on('message_create', async (message) => {
                 }
             break;
 
-        case "@everyone@":
+        case "/everyone":
             printCall(sender_contact, command.cmd);
             if (groupChat.isGroup) {
-                const mentions = groupChat.participants
-                    .map(p => p.id)
-                    .filter(id => id.user !== message.author?.split('@')[0]);
+                let text = '';
+                let mentions = [];
 
-                const text = mentions
-                    .map(id => `@${id.user}`)
-                    .join(' ');
+                for (let participant of groupChat.participants) {
+                    const rawId = participant.id._serialized;
+                    const cleanId = rawId.split(':')[0];
 
-                await message.reply(text, undefined, { mentions });
+                    if (participant.id.user === sender_contact?.id?.user) continue;
 
-                printSuccess('everyone responded OK');
+                    if (cleanId && !mentions.includes(cleanId)) {
+                        mentions.push(cleanId);
+                        text += `@${participant.id.user} `;
+                    }
+                }
+
+                if (mentions.length > 0) {
+                    try {
+                        await client.sendMessage(groupChat.id._serialized, text, {
+                            mentions: mentions,
+                            quotedMessageId: message.id._serialized
+                        });
+
+                        printSuccess('/everyone responded OK');
+                    } catch (replyError) {
+                        console.error('Erro interno do WhatsApp Web ao processar menções:', replyError.message);
+                    }
+                } else {
+                    printDebug('Nenhum outro participante encontrado para marcar.');
+                }
+            } else {
+                await message.reply('Apenas utilizado dentro de grupos.');
             }
             break
 

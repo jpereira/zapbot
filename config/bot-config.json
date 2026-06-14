@@ -13,8 +13,8 @@
             "help": "Converta o texto para arcoires 🌈🏳️‍🌈"
         },
         {
-            "cmd":  "@everyone@",
-            "help": "Ainda sem entender esse conceito de @everyone@"
+            "cmd":  "/everyone",
+            "help": "Faz o reply marcando todos do grupo."
         },
         {
             "cmd": "/crypto",
