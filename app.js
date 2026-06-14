@@ -613,6 +613,8 @@ client.on('message_create', async (message) => {
                 };
                 await message.reply(media, null, options);
                 printSuccess('/show responded OK');
+            } else {
+                await message.reply("Syntax: Responda uma media usando /show");
             }
             break;
 
