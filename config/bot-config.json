@@ -9,6 +9,14 @@
             "help": "Verificar status do bot."
         },
         {
+            "cmd":  "/color",
+            "help": "Converta o texto para arcoires 🌈🏳️‍🌈"
+        },
+        {
+            "cmd":  "@everyone@",
+            "help": "Ainda sem entender esse conceito de @everyone@"
+        },
+        {
             "cmd": "/crypto",
             "help": "Exibe o preço atual das cryptos: BTC, ETH, GALA, MATIC."
         },
