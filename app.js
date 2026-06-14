@@ -458,6 +458,24 @@ client.on('message_create', async (message) => {
             message.reply('pong');
             break;
 
+        case "/color":
+            const rainbowHearts = ['❤️', '🌈', '🏳️‍🌈', '👨‍❤️‍👨', '🧡', '💛', '💚', '💙', '💜'];
+            let text = content_after_caller;
+            let index = 0;
+
+            if (quotedMsg) {
+                text += quotedMsg.body;
+            }
+
+            const rainbowText = text.replace(/ /g, () => {
+                const heart = rainbowHearts[index % rainbowHearts.length];
+                index++;
+                return heart;
+            });
+
+            await message.reply(rainbowText);
+            break;
+
         case "/crypto":
                 try {
                     const { data } = await axios.get(
