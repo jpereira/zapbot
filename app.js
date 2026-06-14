@@ -145,6 +145,16 @@ function getElevenLabsAudio(textInput, fileName, voiceID, stability, similarityB
 }
 
 // node and help functions
+function printDebug(message) {
+    const stack = new Error().stack.split('\n');
+
+    const caller = stack[2]
+        ?.trim()
+        ?.replace('at ', '');
+
+    console.log(colors.white(`[DEBUG] [${caller}] ${message}`));
+}
+
 function printError(message) {
     console.log(colors.red('[*] ' + message));
 }
