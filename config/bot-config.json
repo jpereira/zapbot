@@ -40,6 +40,11 @@
             "help": "Exibe o preço atual das cryptos: BTC, ETH, GALA, MATIC."
         },
         {
+            "cmd": "/sticker",
+            "aliases": [ "/st" ],
+            "help": "Cria um 'sticker' a partir de uma imagem."
+        },
+        {
             "cmd": "/gpt",
             "help": "Executa consulta GPT."
         },
@@ -66,10 +71,6 @@
         {
             "cmd": "/bgpt",
             "help": "Executa comando BadGPT."
-        },
-        {
-            "cmd": "/sticker",
-            "help": "Converte conteúdo em sticker."
         },
         {
             "cmd": "/show",
