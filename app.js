@@ -11,34 +11,62 @@ const sharp = require('sharp');
 //const png = require('pngjs').PNG;
 const voice = require('elevenlabs-node');
 const dotenv = require('dotenv');
+const sqlite3 = require('sqlite3').verbose();
+const path = require('path');
 
-try {
-    dotenv.config();
-} catch (e) {
-    console.error('Erro:', e);
-}
-
-// Send the QR over e-mail
-const nodemailer = require('nodemailer');
-const transporter = nodemailer.createTransport({
-    host: process.env.QRCODE_EMAIL_SMTP_HOST,
-    port: process.env.QRCODE_EMAIL_SMTP_PORT,
-    secure: true, // true = SSL (465)
-    auth: {
-        user: process.env.QRCODE_EMAIL_SMTP_USER,
-        pass: process.env.QRCODE_EMAIL_SMTP_PASS
-    },
-    tls: {
-        rejectUnauthorized: false
-    }
+// INICIALIZAÇÃO DO BANCO DE DADOS SQLITE
+const dbPath = path.resolve(__dirname, './config/bot_database.db');
+const db = new sqlite3.Database(dbPath, (err) => {
+    if (err) return console.error('Erro ao conectar ao SQLite:', err.message);
+    console.log('Conectado com sucesso ao banco de dados SQLite.');
 });
 
+// bootstrap
 try {
+    dotenv.config();
+
+    // Criação das tabelas necessárias caso não existam
+    db.serialize(() => {
+        // Tabela para guardar o histórico de quando os usuários ficam online
+        db.run(`
+            CREATE TABLE IF NOT EXISTS presence_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                phone_number TEXT,
+                display_name TEXT,
+                status TEXT,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+        // Tabela para guardar os numeros monitorados manipulados por /monitor.{add,list,rem}
+        db.run(`
+            CREATE TABLE IF NOT EXISTS monitored_numbers (
+                phone_number TEXT PRIMARY KEY,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+    });
+
+    // loading ./config/bot-config.json
     global.botConfig = require('./config/bot-config.json');
     const commands = botConfig.commands.map(c => c.cmd);
     printSuccess(`Loaded ${commands.length} callers (${commands.join(',')})`);
-} catch (error) {
-    printError('Error parsing JSON of config file ', error);
+
+    // Send the QR over e-mail
+    const nodemailer = require('nodemailer');
+    const transporter = nodemailer.createTransport({
+        host: process.env.QRCODE_EMAIL_SMTP_HOST,
+        port: process.env.QRCODE_EMAIL_SMTP_PORT,
+        secure: true, // true = SSL (465)
+        auth: {
+            user: process.env.QRCODE_EMAIL_SMTP_USER,
+            pass: process.env.QRCODE_EMAIL_SMTP_PASS
+        },
+        tls: {
+            rejectUnauthorized: false
+        }
+    });
+} catch (e) {
+    console.error('Bootstrap Erro:', e);
     process.exit(1);
 }
 
@@ -174,6 +202,15 @@ function getElevenLabsAudio(textInput, fileName, voiceID, stability, similarityB
 }
 
 // node and help functions
+function normalizerPhoneNumber(phoneNumber) {
+    return phoneNumber.replace(/\D/g, '');
+}
+
+function isPhoneNumber(value) {
+    const digits = normalizerPhoneNumber(value);
+    return digits.length >= 10 && digits.length <= 13;
+}
+
 function printDebug(message) {
     const stack = new Error().stack.split('\n');
 
@@ -340,14 +377,114 @@ client.on('authenticated', (session) => printSuccess(`Whatsapp authentication su
 client.on('ready', () => {
     printSuccess('Ready to go');
     client.sendMessage(process.env.PHONE_NUMBER, `🤖 ZapBot inicializado`);
+
+    const query = `SELECT phone_number, timestamp FROM monitored_numbers LIMIT 20`;
+
+    db.all(query, [], async (err, rows) => {
+        if (err) {
+            printError('Erro ao listar logs:', err.message);
+            await message.reply('Erro ao buscar o histórico de logs.');
+            return;
+        }
+
+        if (rows.length === 0) {
+            client.sendMessage(process.env.PHONE_NUMBER, '📲🔔 *Números Monitorados:*\n<VAZIO>\n;');
+            return;
+        }
+
+        let responseText = '📲🔔 *Números Monitorados:*\n\n';
+
+        rows.forEach((row) => {
+            responseText += `* ${row.phone_number} adicionado em: _${row.timestamp}_\n`;
+        });
+
+        client.sendMessage(process.env.PHONE_NUMBER, responseText);
+    });
+
+    // Força o seu próprio bot a aparecer ativo se necessário
+    client.sendPresenceAvailable().catch(() => null);
+
+    // Busca os números do SQLite para assinar a presença deles de tempos em tempos
+    setInterval(() => {
+        db.all('SELECT phone_number FROM monitored_numbers', [], (err, rows) => {
+
+            if (err || !rows || rows.length === 0) {
+                printInfo('[Presença] Nenhum número cadastrado no SQLite para monitorar.');
+                return;
+            }
+
+            // console.log(`[Presença] Iniciando ciclo de inscrição para ${
+
+            rows.forEach(async (row) => {
+                const jid = `${row.phone_number}@c.us`;
+
+                // printDebug("setInterval() for " + jid);
+
+                try {
+                    // Abre o canal de escuta de status para este contato específico no ecossistema do WA
+                    await client.sendPresenceAvailableForChat(jid);
+                } catch (e) {
+                    // Silencia erros caso o chat não esteja carregado ainda
+                }
+            });
+        });
+    }, 60000); // Executa a cada 1 minuto para garantir que a conexão de presença não caia
 });
 
 client.on('message_revoke_everyone', async (after, before) => {
     const sender_a = await before.getContact();
     const chat_a = await before.getChat();
-    const t = `Mensagem apagada\nEnviada por: ${sender_a.pushname}\nEm: ${chat_a.name}\nConteudo:\n${before.body} `;
+    const t = `📩 Mensagem apagada\nEnviada por: ${sender_a.pushname}\nEm: ${chat_a.name}\nConteudo:\n${before.body} `;
     printInfo(`Mensagem apagada por ${sender_a.pushname}, enviando para o pv...`);
     client.sendMessage(process.env.PHONE_NUMBER, t);
+});
+
+client.on('presence_update', async (presence) => {
+    const targetChat = process.env.PHONE_NUMBER;
+
+    printInfo("presence_update: ");
+    console.log(presence);
+
+    if (!presence || !presence.id) return;
+
+    try {
+        const rawId = presence.id._serialized || presence.id;
+        const number = rawId.split('@')[0].split(':')[0];
+        const currentStatus = presence.status || (presence.type === 'available' ? 'available' : 'unavailable');
+
+        console.log(`[Presence Event Disparado] Identificado: ${number} -> Estado: ${currentStatus}`);
+        await client.sendMessage(targetChat, `[Presence Event Disparado] Identificado: ${number} -> Estado: ${currentStatus}`);
+
+        // Só executa a lógica pesada se o contato estiver de fato "available" (online)
+        if (currentStatus === 'available') {
+            
+            // CONSULTA NO SQLITE: Verifica se este número está na lista de monitorados ativos
+            db.get('SELECT phone_number FROM monitored_numbers WHERE phone_number = ?', [number], async (err, row) => {
+                if (err || !row) return; // Se der erro ou o número NÃO estiver cadastrado, ignora em silêncio
+
+                // Daqui para baixo só roda se o número existir no seu banco!
+                const contact = await client.getContactById(rawId).catch(() => null);
+                const displayName = contact?.pushname || contact?.name || number;
+
+                // SALVAR NO SQLITE: Registra o log histórico
+                const stmt = db.prepare(`INSERT INTO presence_logs (phone_number, display_name, status) VALUES (?, ?, ?)`);
+                stmt.run(number, displayName, currentStatus, (insertErr) => {
+                    if (insertErr) console.error('Erro ao salvar log de presença:', insertErr.message);
+                });
+                stmt.finalize();
+
+                // Envia a notificação no WhatsApp
+                if (targetChat) {
+                    await client.sendMessage(targetChat, `🔔 *${displayName}* (${number}) acabou de ficar online.`);
+                    printSuccess(`Notificação enviada e salva no banco para: ${number}`);
+                }
+            });
+        }
+
+    } catch (error) {
+        printError('Erro controlado no evento de presença:', error.message);
+        await client.sendMessage(targetChat, 'Erro controlado no evento de presença: ' +error.message);
+    }
 });
 
 client.initialize();
@@ -368,6 +505,7 @@ client.on('message_create', async (message) => {
 
     let caller = message.body.substring(0, message.body.indexOf(' '));
     let content_after_caller = message.body.substring(message.body.indexOf(' ') + 1);
+    const argv = content_after_caller.split(' ');
 
     // Descobrir quem é o remetente REAL da mensagem antes de chamar a API
     // Em grupos usa 'author', em chats privados usa 'from'
@@ -532,6 +670,177 @@ client.on('message_create', async (message) => {
                 await message.reply('Apenas utilizado dentro de grupos.');
             }
             break
+
+        case "/monitor":
+            printCall(sender_contact, argv);
+
+            switch (argv[0]) {
+                case "logs": {
+                        const query = `
+                            SELECT pl.phone_number, pl.display_name, pl.status, pl.timestamp
+                            FROM presence_logs pl
+                            INNER JOIN monitored_numbers mn ON pl.phone_number = mn.phone_number
+                            ORDER BY pl.timestamp DESC
+                            LIMIT 50
+                        `;
+
+                        db.all(query, [], async (err, rows) => {
+                            if (err) {
+                                printError('Erro ao listar logs:', err.message);
+                                await message.reply('Erro ao buscar o histórico de logs.');
+                                return;
+                            }
+
+                            if (rows.length === 0) {
+                                printInfo('Nenhum log encontrado para os números monitorados atuais. Use /monitor list');
+                                await message.reply('Nenhum histórico encontrado para os números ativos. Use /monitor list');
+                                return;
+                            }
+
+                            let responseText = '📊 *Histórico de Presença (Números Ativos):*\n';
+                            printInfo('--- Histórico de Presença ---');
+
+                            rows.forEach((row) => {
+                                const logLine = `[${row.timestamp}] ${row.display_name} (${row.phone_number}) -> ${row.status}`;
+                                printInfo(logLine); // Print linha por linha no console
+                                responseText += `⏱️ *${row.display_name}* ficou online em: _${row.timestamp}_\n`;
+                            });
+
+                            await message.reply(responseText);
+                        });
+                    }
+                    break;
+
+                    case "list": {
+                        printInfo('/monitor list');
+
+                        const query = `SELECT phone_number, timestamp FROM monitored_numbers LIMIT 20`;
+
+                        db.all(query, [], async (err, rows) => {
+                            if (err) {
+                                printError('Erro ao listar logs:', err.message);
+                                await message.reply('Erro ao buscar o histórico de logs.');
+                                return;
+                            }
+
+                            if (rows.length === 0) {
+                                printInfo('Nenhum numero encontrado para os números monitorados atuais.');
+                                await message.reply('Nenhum histórico encontrado para os números ativos.');
+                                return;
+                            }
+
+                            let responseText = '📲🔔 *Números Monitorados:*\n\n';
+
+                            rows.forEach((row) => {
+                                responseText += `* ${row.phone_number} adicionado em: _${row.timestamp}_\n`;
+                            });
+
+                            await message.reply(responseText);
+                            printInfo(responseText);
+                        });
+                    }
+                    break;
+
+                    case "clean": {
+                        printCall(sender_contact, command.cmd);
+                        printInfo('/monitor clean');
+
+                        db.run('DELETE FROM monitored_numbers', [], async function(err) {
+                            if (err) {
+                                console.error('Erro ao limpar o banco:', err.message);
+                                await message.reply(`Erro ao tentar limpar o monitoramento: ${err.message}`);
+                                return;
+                            }
+
+                            // 'this.changes' armazena quantos registros foram apagados
+                            const totalDeletados = this.changes;
+
+                            if (totalDeletados === 0) {
+                                await message.reply('A lista de monitoramento já estava vazia. Nenhum número foi removido.');
+                            } else {
+                                await message.reply(`🧼 Faxina concluída! Todos os números foram removidos.\nTotal de números limpos: *${totalDeletados}*`);
+                            }
+                        });
+                    }
+                    break;
+
+                    case "add": {
+                        const phoneNumber = normalizerPhoneNumber(content_after_caller);
+
+                        printInfo(`/monitor add '${phoneNumber}'`);
+
+                        if (!isPhoneNumber(phoneNumber)) {
+                            printError('Número inválido informado.');
+                            await message.reply('Número inválido informado.');
+                            break;
+                        }
+
+                        db.get('SELECT phone_number FROM monitored_numbers WHERE phone_number = ?', [phoneNumber], async (err, row) => {
+                            if (err) {
+                                await message.reply(`Erro ao verificar número '${phoneNumber}':`, err.message);
+                                return;
+                            }
+
+                            if (row) {
+                                await message.reply(`🔔 O número ${phoneNumber} já está sendo monitorado.`);
+                                printInfo(`O número ${phoneNumber} já está sendo monitorado.`);
+                                return;
+                            }
+
+                            // Insere se não existir
+                            db.run('INSERT INTO monitored_numbers (phone_number) VALUES (?)', [phoneNumber], async function(insertErr) {
+                                if (insertErr) {
+                                    await message.reply(`Erro ao adicionar número '${phoneNumber}':`, insertErr.message);
+                                    printError(`Erro ao adicionar número '${phoneNumber}':`, insertErr.message);
+                                    return;
+                                }
+                                await message.reply(`🔔 O número ${phoneNumber} agora está sendo monitorado.`);
+                                printInfo(`O número ${phoneNumber} agora está sendo monitorado.`);
+                            });
+                        });
+
+                        break;
+                    }
+
+                    case "rem": {
+                        const phoneNumber = normalizerPhoneNumber(content_after_caller);
+
+                        printInfo(`/monitor rem ${phoneNumber}`);
+
+                        if (!isPhoneNumber(phoneNumber)) {
+                            printError('Número inválido informado.');
+                            await message.reply('Número inválido informado.');
+                            break;
+                        }
+
+                        db.get('SELECT phone_number FROM monitored_numbers WHERE phone_number = ?', [phoneNumber], async (err, row) => {
+                            if (err) {
+                                await message.reply('Erro ao buscar número para remoção:', err.message);
+                                return;
+                            }
+
+                            if (!row) {
+                                await message.reply(`O numero ${phoneNumber} não está sendo monitorado.`);
+                                printInfo(`O numero ${phoneNumber} não está sendo monitorado.`);
+                                return;
+                            }
+
+                            db.run('DELETE FROM monitored_numbers WHERE phone_number = ?', [phoneNumber], async function(deleteErr) {
+                                if (deleteErr) {
+                                    printError('Erro ao deletar número:', deleteErr.message);
+                                    return;
+                                }
+                                await message.reply(`Número ${phoneNumber} removido com sucesso.`);
+                                printInfo(`Número ${phoneNumber} removido com sucesso.`);
+                            });
+                        });
+
+                        break;
+                    }
+                break;
+            }
+
+            break;
 
         case "/gpt3":
             const gptquestion = content_after_caller;
