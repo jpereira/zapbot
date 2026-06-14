@@ -1,4 +1,5 @@
 const { Client, MessageMedia, LocalAuth } = require('whatsapp-web.js');
+const axios = require('axios');
 const qrcode = require('qrcode');
 const qrcodeTerminal = require('qrcode-terminal');
 const colors = require('colors');
@@ -417,6 +418,24 @@ const commands_handler = async (message) => {
         case "/ping":
             printCall(sender_contact, command.cmd);
             message.reply('pong');
+            break;
+
+        case "/crypto":
+                try {
+                    const { data } = await axios.get(
+                        'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,dogecoin&vs_currencies=usd'
+                    );
+
+                    await message.reply('📉 / 📈 Crypto Price 🚀\n\n'            +
+                                        `* BTC/USDT:    $${data.bitcoin.usd}\n`  +
+                                        `* ETH/USDT:    $${data.ethereum.usd}\n` +
+                                        `* SOLANA/USDT: $${data.solana.usd}\n`   +
+                                        `* DOGE/USDT:   $${data.dogecoin.usd}`
+                    );
+                } catch (error) {
+                    console.error('Error fetching crypto prices:', error);
+                    await message.reply('Error fetching crypto prices');
+                }
             break;
 
         case "/gpt3":
