@@ -628,6 +628,8 @@ client.on('message_revoke_everyone', async (after, before) => {
 
         printDebug("Printing 'row'")
         console.log(row);
+        printDebug("Printing 'after'")
+        console.log(after);
 
         try {
             // 📍 1. LOCATION HANDLING (Like audio: Information first, map afterward)
@@ -693,7 +695,7 @@ client.on('message_revoke_everyone', async (after, before) => {
             // 💬 4. TEXTO CONVENCIONAL
             else {
                 alertText += `💬 *Texto:* "${row.body}"`;
-                await client.sendMessage(myChatId, alertText);
+                await client.sendMessage(myChatId, alertText, { linkPreview: true });
             }
         } catch (sendError) {
             printError('Erro ao reenviar o item deletado:', sendError.message);
