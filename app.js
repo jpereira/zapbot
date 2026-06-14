@@ -247,16 +247,18 @@ printInfo('Starting bot...');
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
+        headless: true, // ou "new" dependendo da versão
         // if you use windows, remove this puppeteer json
         executablePath: '/usr/bin/chromium-browser',
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
             '--disable-dev-shm-usage',
+            '--disable-extensions',
             '--disable-gpu',
             '--no-first-run',
             '--no-zygote',
-            '--single-process',
+            '--single-process'
         ],
     },
 });
