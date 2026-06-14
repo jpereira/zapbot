@@ -9,6 +9,10 @@
             "help": "Verificar status do bot."
         },
         {
+            "cmd": "/crypto",
+            "help": "Exibe o preço atual das cryptos: BTC, ETH, GALA, MATIC."
+        },
+        {
             "cmd": "/gpt",
             "help": "Executa consulta GPT."
         },
