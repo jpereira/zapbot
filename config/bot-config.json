@@ -30,7 +30,8 @@
                 "<list> lista numeros",
                 "<logs> lista logs",
                 "<add> <numero> Adiciona número para ser monitorado.",
-                "<del> <numero> deleta numero."
+                "<del> <numero> deleta numero.",
+                "<clean> Limpa todos os números."
             ]
         },
         {
