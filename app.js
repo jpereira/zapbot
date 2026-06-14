@@ -281,6 +281,14 @@ function getElevenLabsAudio(textInput, fileName, voiceID, stability, similarityB
     });
 }
 
+function normalizeWid(wid) {
+    if (!wid) return null;
+
+    const number = wid.split('@')[0].split(':')[0];
+
+    return `${number}@c.us`;
+}
+
 // Função auxiliar para gerar e criar a estrutura de pastas cache/media/ano/mes/dia
 function obterPastaMidia() {
     const agora = new Date();
@@ -543,6 +551,7 @@ client.on('presence_update', async (presence) => {
 
     try {
         const rawId = presence.id._serialized || presence.id;
+        const safeWid = normalizeWid(rawId);
         const number = rawId.split('@')[0].split(':')[0];
         const currentStatus = presence.status || (presence.type === 'available' ? 'available' : 'unavailable');
 
@@ -557,7 +566,7 @@ client.on('presence_update', async (presence) => {
                 if (err || !row) return; // Se der erro ou o número NÃO estiver cadastrado, ignora em silêncio
 
                 // Daqui para baixo só roda se o número existir no seu banco!
-                const contact = await client.getContactById(rawId).catch(() => null);
+                const contact = await client.getContactById(safeWid).catch(() => null);
                 const displayName = contact?.pushname || contact?.name || number;
 
                 // SALVAR NO SQLITE: Registra o log histórico
@@ -590,8 +599,8 @@ client.on('message_revoke_everyone', async (after, before) => {
     db.get(`SELECT * FROM messages WHERE id = ?`, [targetId], async (err, row) => {
         if (err || !row) return;
 
-        printDebug("Dumping 'row'");
-        console.log(row);
+        // printDebug("Dumping 'row'");
+        // console.log(row);
 
         const dataEnvio = new Date(row.timestamp).toLocaleString('pt-BR');
         const meuChatId = client.info.wid._serialized;
@@ -688,13 +697,13 @@ printInfo('Starting WhatsApp authentication...');
 let _called_help = false;
 
 client.on('message_create', async (msg) => {
-    const msgIdPure = msg.id.id;
     const timestamp = Date.now();
+    const msgIdPure = msg.id.id;
     const msgType = msg.type;
     const rawSenderId = msg.author || msg.from;
-
     const chat = await msg.getChat();
-    const contact = await msg.getContact();
+    const safeWid = normalizeWid(rawSenderId);
+    let contact = await client.getContactById(safeWid);
 
     const senderJid = contact.id._serialized;
 
@@ -854,7 +863,7 @@ client.on('message_create', async (msg) => {
 
     try {
         if (!sender_contact) {
-            sender_contact = await client.getContactById(rawSenderId);
+            sender_contact = await client.getContactById(safeWid);
         }
 
         message_mentions = await msg.getMentions().catch(() => []);
