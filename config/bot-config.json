@@ -18,7 +18,7 @@
         },
         {
             "cmd":  "/monitor",
-            "help": "<list> lista numeros\n<logs> lista logs\n<add> <numero> Adiciona número para ser monitorado.\n<rem> <numero>numero remove\nObs: Max 20 numeros"
+            "help": "<list> lista numeros\n<logs> lista logs\n<add> <numero> Adiciona número para ser monitorado.\n<del> <numero>deleta numero.\nObs: Max 20 numeros"
         },
         {
             "cmd": "/crypto",
