@@ -410,12 +410,12 @@ const client = new Client({
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
-            '--disable-dev-shm-usage',
-            '--disable-extensions',
-            '--disable-gpu',
+            '--disable-dev-shm-usage', // Evita crash por falta de memória compartilhada
+            '--disable-accelerated-2d-canvas',
             '--no-first-run',
             '--no-zygote',
-            '--single-process'
+            '--single-process', // Ajuda a manter o contexto unificado
+            '--disable-gpu'
         ],
     },
 });
@@ -597,86 +597,75 @@ client.on('presence_update', async (presence) => {
 });
 
 client.on('message_revoke_everyone', async (after, before) => {
+    // 💡 CORREÇÃO 1: Forma robusta de extrair o ID exato da mensagem deletada
     const protocolKey = after._data?.protocolMessageKey;
     const targetId = protocolKey?.id || before?.id?.id || after?.id?.id;
 
     if (!targetId) return;
 
+    // Busca o registro histórico salvo anteriormente pelo seu 'message_create'
     db.get(`SELECT * FROM messages WHERE id = ?`, [targetId], async (err, row) => {
-        if (err || !row) return;
-
-        // printDebug("Dumping 'row'");
-        // console.log(row);
+        if (err || !row) {
+            printError(`[Revoke] Mensagem apagada ID ${targetId} não foi encontrada no banco.`);
+            return;
+        }
 
         const dataEnvio = new Date(row.timestamp).toLocaleString('pt-BR');
         const meuChatId = client.info.wid._serialized;
         
-        // Cabeçalho básico padrão de informações
+        // 💡 CORREÇÃO 2: Garante o uso estrito das colunas já tratadas e limpas do SQLite
         let alertaTexto = `❌ *MENSAGEM APAGADA DETECTADA*\n\n`;
 
-        if (row.is_group) {
-            alertaTexto += `👥 *Grupo:* ${row.chat_name}\n`;
+        if (row.is_group === 1) {
+            alertaTexto += `👥 *Grupo:* ${row.chat_name || 'Grupo Desconhecido'}\n`;
         }
-        alertaTexto += `👤 *Nome:* ${row.sender_name}\n` +
-                       `📱 *Número:* ${row.sender_number}\n` +
+        
+        // Exibe os dados do remetente exatamente como foram catalogados no envio
+        alertaTexto += `👤 *Nome:* ${row.sender_name || 'Desconhecido'}\n` +
+                       `📱 *Número:* ${row.sender_number || 'Sem Número'}\n` +
                        `📅 *Enviada em:* ${dataEnvio}\n`;
 
-        // printDebug("Printing 'row'")
-        // console.log(row);
-
         try {
-            // 📍 1. TRATAMENTO DA LOCALIZAÇÃO (Igual ao áudio: Informação primeiro, mapa depois)
+            // 📍 TRATAMENTO DA LOCALIZAÇÃO
             if (row.type === 'location' && row.location_lat && row.location_lng) {
-                // Link do Google Maps corrigido de forma 100% segura
-                const linkMaps = `https://www.google.com/maps?q=${row.location_lat},${row.location_lng}`;
+                const linkMaps = `https://google.com{row.location_lat},${row.location_lng}`;
                 alertaTexto += `🗺️ *Tipo:* LOCALIZAÇÃO\n🔗 *Link do Mapa:* ${linkMaps}`;
                 
-                // Etapa 1: Envia o texto informativo com o link direto clicável
                 await client.sendMessage(meuChatId, alertaTexto);
                 
-                // Etapa 2: Dispara o mapa interativo nativo logo abaixo
                 const latitude = Number(row.location_lat);
                 const longitude = Number(row.location_lng);
                 const descricaoLocal = row.body || 'Localização Fixada';
                 
                 const localizacaoNativa = new Location(latitude, longitude, descricaoLocal);
                 await client.sendMessage(meuChatId, localizacaoNativa);
-                printInfo(`[Bot] Localização apagada enviada de forma isolada.`);
+                printInfo(`[Bot] Localização apagada enviada.`);
             } 
             
-            // 📇 2. TRATAMENTO DO VCARD (Igual ao áudio: Informação primeiro, cartão depois)
+            // 📇 TRATAMENTO DO VCARD
             else if (['vcard', 'contact', 'multi_vcard'].includes(row.type)) {
                 alertaTexto += `📇 *Tipo:* CARTÃO DE CONTATO\n💡 *Nota:* O contato oficial está anexado abaixo.`;
-                
-                // Etapa 1: Envia o texto informativo do alerta
                 await client.sendMessage(meuChatId, alertaTexto);
-                
-                // Etapa 2: Dispara a string bruta do vCard com a flag nativa ativada de forma limpa
                 await client.sendMessage(meuChatId, row.body, { parseVCards: true });
-                printInfo(`[Bot] Cartão vCard enviado de forma isolada.`);
+                printInfo(`[Bot] Cartão vCard enviado.`);
             }
             
-            // 📁 3. TRATAMENTO DE MÍDIAS FÍSICAS (Áudio, Vídeo, Imagem, Documento)
+            // 📁 TRATAMENTO DE MÍDIAS FÍSICAS
             else if (row.has_media && row.media_path && fs.existsSync(row.media_path)) {
                 const mediaAnexo = MessageMedia.fromFilePath(row.media_path);
                 const nomeDoArquivo = row.body || 'Sem texto';
 
-                // Áudios / Notas de voz (Duas etapas)
                 if (row.type === 'audio' || row.type === 'ptt' || mediaAnexo.mimetype.includes('audio')) {
                     alertaTexto += `🎵 *Tipo:* ÁUDIO / NOTA DE VOZ`;
                     await client.sendMessage(meuChatId, alertaTexto);
                     await client.sendMessage(meuChatId, mediaAnexo, { sendAudioAsVoice: true });
                 } 
-                // Vídeos ou Imagens (Com legenda unificada)
                 else if (row.type === 'video' || row.type === 'image' || mediaAnexo.mimetype.includes('image') || mediaAnexo.mimetype.includes('video')) {
                     alertaTexto += `🎬 *Tipo:* ${row.type.toUpperCase()}\n💬 *Legenda:* "${row.body || 'Sem texto'}"`;
                     await client.sendMessage(meuChatId, mediaAnexo, { caption: alertaTexto });
                 } 
-                // Documentos
                 else {
-                    alertaTexto += `📄 *Tipo:* DOCUMENTO\n`;
-                    alertaTexto += `💬 *Legenda:* "${nomeDoArquivo}"`;
-
+                    alertaTexto += `📄 *Tipo:* DOCUMENTO\n💬 *Legenda:* "${nomeDoArquivo}"`;
                     mediaAnexo.filename = nomeDoArquivo;
                     await client.sendMessage(meuChatId, mediaAnexo, {
                         caption: alertaTexto,
@@ -685,7 +674,7 @@ client.on('message_revoke_everyone', async (after, before) => {
                 }
             } 
             
-            // 💬 4. TEXTO CONVENCIONAL
+            // 💬 TEXTO CONVENCIONAL
             else {
                 alertaTexto += `💬 *Texto:* "${row.body}"`;
                 await client.sendMessage(meuChatId, alertaTexto, { linkPreview: true });
@@ -696,9 +685,29 @@ client.on('message_revoke_everyone', async (after, before) => {
     });
 });
 
-client.initialize();
+async function iniciarBot() {
+    try {
+        printInfo('Starting WhatsApp authentication...');
+        await client.initialize();
+    } catch (error) {
+        console.error("Erro capturado na inicialização:", error.message);
+        
+        // 💡 SOLUÇÃO: Fecha o navegador antigo com segurança se ele tiver sido aberto parcialmente
+        try {
+            console.log("Fechando instâncias pendentes do navegador...");
+            await client.destroy(); 
+        } catch (destroyError) {
+            console.log("Nenhum navegador ativo para destruir.");
+        }
 
-printInfo('Starting WhatsApp authentication...');
+        if (error.message.includes('Execution context was destroyed') || error.message.includes('browser is already running')) {
+            console.log("Reiniciando o processo de inicialização em 5 segundos...");
+            setTimeout(iniciarBot, 5000);
+        }
+    }
+}
+
+iniciarBot();
 
 let _called_help = false;
 
@@ -706,31 +715,51 @@ client.on('message_create', async (msg) => {
     const timestamp = Date.now();
     const msgIdPure = msg.id.id;
     const msgType = msg.type;
-    const rawSenderId = msg.author || msg.from;
+
     const chat = await msg.getChat();
-    const safeWid = normalizeWid(rawSenderId);
-    let contact = await client.getContactById(safeWid);
-
-    const senderJid = contact.id._serialized;
-
-    // Número real
-    const senderNumber = contact?.id?.user || contact?.number || 'UNKNOWN';
-
-    // Nome final
-    const senderName =
-        contact?.name ||       // Nome salvo na agenda
-        contact?.pushname ||   // Nome do WhatsApp
-        senderNumber;
-
-    // Nome do contato salvo na agenda
-    const contactName = contact.name;
-
-    // Nome definido na conta WhatsApp
-    const profileName = contact.pushname;
-
     const chatId = msg.from;
     const chatName = chat?.name || '';
     const isGroup = chat?.isGroup ? 1 : 0;
+
+    // 💡 CORREÇÃO 1: Identifica o remetente real e ignora o ID do grupo
+    let rawSenderId;
+    if (isGroup === 1) {
+        rawSenderId = msg.author || msg._data?.participant?._serialized || msg.from;
+    } else {
+        rawSenderId = msg.fromMe ? (msg.to || msg.from) : msg.from;
+    }
+
+    // 💡 CORREÇÃO 2: Remove o sufixo de múltiplos dispositivos (:1, :2) antes de processar
+    if (rawSenderId && rawSenderId.includes(':')) {
+        rawSenderId = rawSenderId.split(':')[0] + '@c.us';
+    }
+
+    // const safeWid = normalizeWid(rawSenderId);
+    const safeWid = rawSenderId;
+    
+    // Busca o contato de forma segura contra falhas da API
+    let contact = null;
+    if (safeWid) {
+        contact = await client.getContactById(safeWid); // .catch(() => null);
+    }
+
+    // 💡 CORREÇÃO 3: Garante o JID limpo padrão do usuário
+    const senderJid = contact?.id?._serialized || safeWid || rawSenderId;
+
+    // 💡 CORREÇÃO 4: Extrai estritamente a string do número (sem gerar Array/Objeto)
+    const senderNumber = senderJid ? senderJid.split('@')[0] : 'UNKNOWN';
+
+    // Nome final tratado para exibição
+    const senderName =
+        contact?.name ||       // Nome salvo na agenda
+        contact?.pushname ||   // Nome público do WhatsApp
+        senderNumber;          // Caso não tenha nome, usa o número limpo
+
+    // Nome isolado da agenda
+    const contactName = contact?.name || '';
+
+    // Nome isolado do perfil público
+    const profileName = contact?.pushname || '';
 
     let hasMedia = msg.hasMedia ? 1 : 0;
     let localMediaPath = null;
@@ -738,6 +767,7 @@ client.on('message_create', async (msg) => {
     let lng = null;
 
     // printDebug("======================================================");
+    // printDebug(`DEBUG: msgIdPure=${msgIdPure},senderName=${senderName},senderJid=${senderJid},senderNumber=${senderNumber},chatId=${chatId},chatName=${chatName}`);
     // console.log({
     //     author: msg.author,
     //     from: msg.from,
