@@ -4,7 +4,7 @@
             "cmd":  "/help",
             "aliases": [ "/h" ],
             "help": "Exibe este menu de ajuda.",
-            "onlyAdmin": true
+            "onlyAdmin": false
         },        
         {
             "cmd":  "/ping",
@@ -55,6 +55,15 @@
             "cmd": "/show",
             "help": "Exibe informações sobre medias deletada. (view once).",
             "onlyAdmin": true
+        },
+        {
+            "cmd": "/download",
+            "aliases": [ "/d", "/wget", "/getright", "/get" ],
+            "help": "Caso seja válido, faz o download da midia. (ex: Instagram)",
+            "syntax": [
+                "[-startSec sec|-endSec sec] http://www.{instagram,youtube,tiktok}.com/"
+            ],
+            "onlyAdmin": false
         }
     ]
 }
