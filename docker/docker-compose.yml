@@ -1,9 +1,9 @@
 services:
-  csfbot:
-    container_name: csfbot
+  zapbot:
+    container_name: zapbot
     build:
       context: ..
-      dockerfile: docker/app/Dockerfile.dev
+      dockerfile: docker/app/Dockerfile
     # volumes:
     #  - ..:/app
     env_file: ../config/.env
