@@ -410,12 +410,12 @@ const client = new Client({
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
-            '--disable-dev-shm-usage',
-            '--disable-extensions',
-            '--disable-gpu',
+            '--disable-dev-shm-usage', // Avoids a crash from lack of shared memory
+            '--disable-accelerated-2d-canvas',
             '--no-first-run',
             '--no-zygote',
-            '--single-process'
+            '--single-process', // Ajuda a manter o contexto unificado
+            '--disable-gpu'
         ],
     },
 });
@@ -597,86 +597,75 @@ client.on('presence_update', async (presence) => {
 });
 
 client.on('message_revoke_everyone', async (after, before) => {
+    // 💡 FIX 1: Robust way to extract the exact ID of the deleted message
     const protocolKey = after._data?.protocolMessageKey;
     const targetId = protocolKey?.id || before?.id?.id || after?.id?.id;
 
     if (!targetId) return;
 
+    // Fetches the historical record previously saved by its 'message_create'
     db.get(`SELECT * FROM messages WHERE id = ?`, [targetId], async (err, row) => {
-        if (err || !row) return;
-
-        // printDebug("Dumping 'row'");
-        // console.log(row);
+        if (err || !row) {
+            printError(`[Revoke] Mensagem apagada ID ${targetId} não foi encontrada no banco.`);
+            return;
+        }
 
         const dateSending = new Date(row.timestamp).toLocaleString('pt-BR');
         const myChatId = client.info.wid._serialized;
         
-        // Default basic information header
+        // 💡 FIX 2: Guarantees strict use of the already processed and cleaned SQLite columns
         let alertText = `❌ *MENSAGEM APAGADA DETECTADA*\n\n`;
 
-        if (row.is_group) {
-            alertText += `👥 *Grupo:* ${row.chat_name}\n`;
+        if (row.is_group === 1) {
+            alertText += `👥 *Grupo:* ${row.chat_name || 'Grupo Desconhecido'}\n`;
         }
-        alertText += `👤 *Nome:* ${row.sender_name}\n` +
-                       `📱 *Número:* ${row.sender_number}\n` +
+        
+        // Shows the sender data exactly as catalogued at send time
+        alertText += `👤 *Nome:* ${row.sender_name || 'Desconhecido'}\n` +
+                       `📱 *Número:* ${row.sender_number || 'Sem Número'}\n` +
                        `📅 *Enviada em:* ${dateSending}\n`;
 
-        // printDebug("Printing 'row'")
-        // console.log(row);
-
         try {
-            // 📍 1. LOCATION HANDLING (Like audio: Information first, map afterward)
+            // 📍 LOCATION HANDLING
             if (row.type === 'location' && row.location_lat && row.location_lng) {
-                // Google Maps link fixed in a 100% safe way
-                const linkMaps = `https://www.google.com/maps?q=${row.location_lat},${row.location_lng}`;
+                const linkMaps = `https://google.com{row.location_lat},${row.location_lng}`;
                 alertText += `🗺️ *Tipo:* LOCALIZAÇÃO\n🔗 *Link do Mapa:* ${linkMaps}`;
                 
-                // Step 1: Sends the informational text with the clickable direct link
                 await client.sendMessage(myChatId, alertText);
                 
-                // Etapa 2: Dispara o mapa interativo nativo logo abaixo
                 const latitude = Number(row.location_lat);
                 const longitude = Number(row.location_lng);
                 const descriptionLocal = row.body || 'Localização Fixada';
                 
                 const locationNativa = new Location(latitude, longitude, descriptionLocal);
                 await client.sendMessage(myChatId, locationNativa);
-                printInfo(`[Bot] Localização apagada enviada de forma isolada.`);
+                printInfo(`[Bot] Localização apagada enviada.`);
             } 
             
-            // 📇 2. VCARD HANDLING (Like audio: Information first, card afterward)
+            // 📇 VCARD HANDLING
             else if (['vcard', 'contact', 'multi_vcard'].includes(row.type)) {
                 alertText += `📇 *Tipo:* CARTÃO DE CONTATO\n💡 *Nota:* O contato oficial está anexado abaixo.`;
-                
-                // Step 1: Sends the alert's informational text
                 await client.sendMessage(myChatId, alertText);
-                
-                // Step 2: Fires the raw vCard string with the native flag cleanly on
                 await client.sendMessage(myChatId, row.body, { parseVCards: true });
-                printInfo(`[Bot] Cartão vCard enviado de forma isolada.`);
+                printInfo(`[Bot] Cartão vCard enviado.`);
             }
             
-            // 📁 3. HANDLING OF PHYSICAL MEDIA (Audio, Video, Image, Document)
+            // 📁 HANDLING OF PHYSICAL MEDIA
             else if (row.has_media && row.media_path && fs.existsSync(row.media_path)) {
                 const mediaAttachment = MessageMedia.fromFilePath(row.media_path);
                 const fileNameAlt = row.body || 'Sem texto';
 
-                // Audios / Voice notes (Two steps)
                 if (row.type === 'audio' || row.type === 'ptt' || mediaAttachment.mimetype.includes('audio')) {
                     alertText += `🎵 *Tipo:* ÁUDIO / NOTA DE VOZ`;
                     await client.sendMessage(myChatId, alertText);
                     await client.sendMessage(myChatId, mediaAttachment, { sendAudioAsVoice: true });
                 } 
-                // Videos or Images (With a unified caption)
                 else if (row.type === 'video' || row.type === 'image' || mediaAttachment.mimetype.includes('image') || mediaAttachment.mimetype.includes('video')) {
                     alertText += `🎬 *Tipo:* ${row.type.toUpperCase()}\n💬 *Legenda:* "${row.body || 'Sem texto'}"`;
                     await client.sendMessage(myChatId, mediaAttachment, { caption: alertText });
                 } 
-                // Documentos
                 else {
-                    alertText += `📄 *Tipo:* DOCUMENTO\n`;
-                    alertText += `💬 *Legenda:* "${fileNameAlt}"`;
-
+                    alertText += `📄 *Tipo:* DOCUMENTO\n💬 *Legenda:* "${fileNameAlt}"`;
                     mediaAttachment.filename = fileNameAlt;
                     await client.sendMessage(myChatId, mediaAttachment, {
                         caption: alertText,
@@ -685,7 +674,7 @@ client.on('message_revoke_everyone', async (after, before) => {
                 }
             } 
             
-            // 💬 4. TEXTO CONVENCIONAL
+            // 💬 TEXTO CONVENCIONAL
             else {
                 alertText += `💬 *Texto:* "${row.body}"`;
                 await client.sendMessage(myChatId, alertText, { linkPreview: true });
@@ -696,9 +685,29 @@ client.on('message_revoke_everyone', async (after, before) => {
     });
 });
 
-client.initialize();
+async function startBot() {
+    try {
+        printInfo('Starting WhatsApp authentication...');
+        await client.initialize();
+    } catch (error) {
+        console.error("Erro capturado na inicialização:", error.message);
+        
+        // 💡 SOLUTION: Safely closes the old browser if it was partially opened
+        try {
+            console.log("Fechando instâncias pendentes do navegador...");
+            await client.destroy(); 
+        } catch (destroyError) {
+            console.log("Nenhum navegador ativo para destruir.");
+        }
 
-printInfo('Starting WhatsApp authentication...');
+        if (error.message.includes('Execution context was destroyed') || error.message.includes('browser is already running')) {
+            console.log("Reiniciando o processo de inicialização em 5 segundos...");
+            setTimeout(startBot, 5000);
+        }
+    }
+}
+
+startBot();
 
 let _called_help = false;
 
@@ -706,31 +715,51 @@ client.on('message_create', async (msg) => {
     const timestamp = Date.now();
     const msgIdPure = msg.id.id;
     const msgType = msg.type;
-    const rawSenderId = msg.author || msg.from;
+
     const chat = await msg.getChat();
-    const safeWid = normalizeWid(rawSenderId);
-    let contact = await client.getContactById(safeWid);
-
-    const senderJid = contact.id._serialized;
-
-    // Real number
-    const senderNumber = contact?.id?.user || contact?.number || 'UNKNOWN';
-
-    // Nome final
-    const senderName =
-        contact?.name ||       // Name saved in the address book
-        contact?.pushname ||   // WhatsApp name
-        senderNumber;
-
-    // Name of the contact saved in the address book
-    const contactName = contact.name;
-
-    // Name set on the WhatsApp account
-    const profileName = contact.pushname;
-
     const chatId = msg.from;
     const chatName = chat?.name || '';
     const isGroup = chat?.isGroup ? 1 : 0;
+
+    // 💡 FIX 1: Identifies the real sender and ignores the group ID
+    let rawSenderId;
+    if (isGroup === 1) {
+        rawSenderId = msg.author || msg._data?.participant?._serialized || msg.from;
+    } else {
+        rawSenderId = msg.fromMe ? (msg.to || msg.from) : msg.from;
+    }
+
+    // 💡 FIX 2: Removes the multi-device suffix (:1, :2) before processing
+    if (rawSenderId && rawSenderId.includes(':')) {
+        rawSenderId = rawSenderId.split(':')[0] + '@c.us';
+    }
+
+    // const safeWid = normalizeWid(rawSenderId);
+    const safeWid = rawSenderId;
+    
+    // Looks up the contact safely against API failures
+    let contact = null;
+    if (safeWid) {
+        contact = await client.getContactById(safeWid); // .catch(() => null);
+    }
+
+    // 💡 FIX 3: Guarantees the user's standard clean JID
+    const senderJid = contact?.id?._serialized || safeWid || rawSenderId;
+
+    // 💡 FIX 4: Strictly extracts the number string (without generating an Array/Object)
+    const senderNumber = senderJid ? senderJid.split('@')[0] : 'UNKNOWN';
+
+    // Final name processed for display
+    const senderName =
+        contact?.name ||       // Name saved in the address book
+        contact?.pushname ||   // WhatsApp public name
+        senderNumber;          // If there is no name, uses the clean number
+
+    // Isolated address book name
+    const contactName = contact?.name || '';
+
+    // Isolated public profile name
+    const profileName = contact?.pushname || '';
 
     let hasMedia = msg.hasMedia ? 1 : 0;
     let localMediaPath = null;
@@ -738,6 +767,7 @@ client.on('message_create', async (msg) => {
     let lng = null;
 
     // printDebug("======================================================");
+    // printDebug(`DEBUG: msgIdPure=${msgIdPure},senderName=${senderName},senderJid=${senderJid},senderNumber=${senderNumber},chatId=${chatId},chatName=${chatName}`);
     // console.log({
     //     author: msg.author,
     //     from: msg.from,
