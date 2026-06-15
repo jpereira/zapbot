@@ -281,6 +281,12 @@ function getElevenLabsAudio(textInput, fileName, voiceID, stability, similarityB
     });
 }
 
+function isFromAdmin(senderId) {
+    printDebug("isFromAdmin(): senderId="+senderId+" PHONE_NUMBER="+process.env.PHONE_NUMBER)
+
+    return (senderId === process.env.PHONE_NUMBER);
+}
+
 function normalizeWid(wid) {
     if (!wid) return null;
 
@@ -742,6 +748,7 @@ client.on('message_create', async (msg) => {
     //     name: contact.name
     // });
     // console.log(contact);
+    // console.log(msg);
 
     if (msgType === 'location' && msg.location) {
         lat = msg.location.latitude;
@@ -891,6 +898,14 @@ client.on('message_create', async (msg) => {
         return;
     }
 
+    // Its allowed?
+    if (!msg.fromMe && command.onlyAdmin) {
+        let warnMsg = (`⚠️ Usuario '${chatName}' não pode executar: ${command.cmd}`);
+
+        messageToSelf(warnMsg);
+        return;
+    }
+
     if (!_called_help) printDebug(`Recebido comando '${command.cmd}'`);
 
     printDebug(`sender_contact='${JSON.stringify(sender_contact)}', message_mentions='${message_mentions}', quotedMsg='${quotedMsg}', groupChat='${groupChat}'`);
@@ -939,7 +954,7 @@ client.on('message_create', async (msg) => {
             msg.reply('pong');
             break;
 
-        case "/color":
+        case "/gay":
             const rainbowHearts = ['🌈', '🏳️‍🌈', '🏳️‍⚧️', '🧡', '💛', '💚', '💙', '💜'];
             let text = content_after_caller;
             let index = 0;
@@ -1179,6 +1194,11 @@ client.on('message_create', async (msg) => {
                         break;
                     }
                 break;
+
+                default: {
+                    await msg.reply('Syntax: /monitor <cmd> [args]');
+                    break;
+                }
             }
             break;
 
