@@ -444,6 +444,8 @@ client.on('qr', async (qr) => {
                 type: 'png',
                 width: 300
             });
+            let phoneNumber = process.env.PHONE_NUMBER.split("@")[0]; // remove @u.cs
+            let maskPhone   = phoneNumber.replace(/(\d{4})\d+(\d{4})$/, "$1XXXX$2");
 
             const info = await transporter.sendMail({
                 from: process.env.QRCODE_EMAIL_SMTP_FROM,
@@ -451,6 +453,12 @@ client.on('qr', async (qr) => {
                 subject: `[ZapBot] WhatsApp QR Code Authentication ${currentdatetimeday}`,
                 html: `
                     <table width="50%" style="background:#f8f8f8;border:1px solid #dddddd;border-radius:5px;">
+                    <tr>
+                        <td style="padding:12px;">
+                            <strong>📱 Phone Number:</strong>
+                            <span style="color:#d9534f;font-weight:bold;">${maskPhone}</span>
+                        </td>
+                    </tr>
                     <tr>
                         <td style="padding:12px;">
                             <strong>🛡️ Anti-Phishing Code:</strong>
@@ -478,7 +486,7 @@ client.on('qr', async (qr) => {
                     }
                 ]
             });
-            printInfo('Email enviado:', info.messageId);
+            printInfo(`Email enviado, phoneNumber=${phoneNumber} info.messageId=${info.messageId}`);
 
         } catch (err) {
             qrEmailSent = false;
