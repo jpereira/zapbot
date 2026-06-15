@@ -522,29 +522,29 @@ client.on('ready', () => {
     });
 
     // Força o seu próprio bot a aparecer ativo se necessário
-    client.sendPresenceAvailable().catch(() => null);
+    // client.sendPresenceAvailable().catch(() => null);
 
-    // Busca os números do SQLite para assinar a presença deles de tempos em tempos
-    setInterval(() => {
-        db.all('SELECT phone_number FROM monitored_numbers', [], (err, rows) => {
+    // // Busca os números do SQLite para assinar a presença deles de tempos em tempos
+    // setInterval(() => {
+    //     db.all('SELECT phone_number FROM monitored_numbers', [], (err, rows) => {
 
-            if (err || !rows || rows.length === 0) {
-                printInfo('[Presença] Nenhum número cadastrado no SQLite para monitorar.');
-                return;
-            }
+    //         if (err || !rows || rows.length === 0) {
+    //             printInfo('[Presença] Nenhum número cadastrado no SQLite para monitorar.');
+    //             return;
+    //         }
 
-            rows.forEach(async (row) => {
-                const jid = `${row.phone_number}@c.us`;
+    //         rows.forEach(async (row) => {
+    //             const jid = `${row.phone_number}@c.us`;
 
-                try {
-                    // Abre o canal de escuta de status para este contato específico no ecossistema do WA
-                    await client.sendPresenceAvailableForChat(jid);
-                } catch (e) {
-                    // Silencia erros caso o chat não esteja carregado ainda
-                }
-            });
-        });
-    }, 60000); // Executa a cada 1 minuto para garantir que a conexão de presença não caia
+    //             try {
+    //                 // Abre o canal de escuta de status para este contato específico no ecossistema do WA
+    //                 await client.sendPresenceAvailableForChat(jid);
+    //             } catch (e) {
+    //                 // Silencia erros caso o chat não esteja carregado ainda
+    //             }
+    //         });
+    //     });
+    // }, 60000); // Executa a cada 1 minuto para garantir que a conexão de presença não caia
 });
 
 client.on('presence_update', async (presence) => {
