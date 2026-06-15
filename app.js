@@ -1199,6 +1199,32 @@ client.on('message_create', async (msg) => {
 
             break;
 
+        case "/show":
+            printCall(sender_contact, argv);
+
+            if (quotedMsg && quotedMsg.hasMedia && quotedMsg.isViewOnce) {
+                printInfo("/show: AVISO: É view once 👀");
+            }
+
+            if (quotedMsg && quotedMsg.hasMedia) {
+                const media = await quotedMsg.downloadMedia();
+                const options = {
+                    media: media,
+                    sendMediaAsSticker: false,
+                }
+
+                if (!media) {
+                    printDebug("/show: Media bloqueada (provável view once)");
+                    return;
+                }
+
+                printDebug("/show: Baixou mídia:", media.mimetype);
+
+                await msg.reply(media, null, options);
+                printSuccess('show responded OK');
+            }
+            break;
+
         case "/gpt3":
             const gptquestion = content_after_caller;
             printCall(sender_contact, command.cmd);
