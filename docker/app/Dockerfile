@@ -20,21 +20,30 @@ RUN apk add --no-cache \
     ca-certificates \
     ttf-freefont \
     html2text \
-    sqlite
+    sqlite \
+    python3 \
+    py3-pip \
+    ffmpeg \
+    curl
 
+# cria venv
+RUN python3 -m venv /venv
+
+# yt-dlp via pip, needed by "/download"
+RUN /venv/bin/pip install --no-cache-dir yt-dlp
+
+# User instance
 USER node
 
-#ENV TZ=Brazil/East
+# timezone
 ENV TZ=America/Sao_Paulo
 
+# main
 COPY --chown=node:node . /app/
 WORKDIR /app
 
 # Expose the port if needed
 EXPOSE 3000
-
-# Tenta iniciar o projeto
-#CMD ["/bin/bash"]
 
 # Runs the boot script
 ENTRYPOINT ["/bin/sh", "-x", "/app/docker/app/entrypoint.dev.sh"]
