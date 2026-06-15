@@ -942,9 +942,17 @@ client.on('message_create', async (msg) => {
         return;
     }
 
-    if (!_called_help) printDebug(`Recebido comando '${command.cmd}'`);
+    if (!_called_help) {
+        let printMsg = null;
 
-    printDebug(`sender_contact='${JSON.stringify(sender_contact)}', message_mentions='${message_mentions}', quotedMsg='${quotedMsg}', groupChat='${groupChat}'`);
+        if (isGroup) {
+            printMsg = (`Executando comando '${command.cmd}' de '${senderName}' no grupo '${chatName}'`);
+        } else {
+            printMsg = (`Executando comando '${command.cmd}' em '${chatName}'`);
+        }
+
+        printDebug(printMsg);
+    }
 
     switch (command.cmd) {
         case "/help":
