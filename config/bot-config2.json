@@ -1,0 +1,136 @@
+{
+    "commands": [
+        {
+            "cmd":  "/help",
+            "aliases": [ "/h" ],
+            "help": "Exibe este menu de ajuda."
+        },        
+        {
+            "cmd":  "/ping",
+            "aliases": [ "/p" ],
+            "help": "Verificar status do bot."
+        },
+        {
+            "cmd":  "/color",
+            "aliases": [ "/🌈", "/🏳️‍🌈", "/c", "/noffa" ],
+            "help": "Da uma colorida no texto.",
+            "syntax": [
+                "<texto com espaços> ou dê um 'reply' com ele."
+            ]
+        },
+        {
+            "cmd":  "/everyone",
+            "help": "Faz o reply marcando todos do grupo."
+        },
+        {
+            "cmd":  "/monitor",
+            "aliases": [ "/m" ],
+            "help": "Números a serem monitorados. Obs: Max 20 numeros",
+            "syntax": [
+                "<list> lista numeros",
+                "<logs> lista logs",
+                "<add> <numero> Adiciona número para ser monitorado.",
+                "<del> <numero> deleta numero.",
+                "<clean> Limpa todos os números."
+            ]
+        },
+        {
+            "cmd": "/crypto",
+            "aliases": [ "/bitcoio", "/btc", "/moedinha" ],
+            "help": "Exibe o preço atual das cryptos: BTC, ETH, GALA, MATIC."
+        },
+        {
+            "cmd": "/sticker",
+            "aliases": [ "/st" ],
+            "help": "Cria um 'sticker' a partir de uma imagem."
+        },
+        {
+            "cmd": "/show",
+            "help": "Exibe informações sobre medias deletada. (view once)."
+        },
+        {
+            "cmd": "/gpt",
+            "help": "Executa consulta GPT."
+        },
+        {
+            "cmd": "/dalle2",
+            "help": "Gera imagem usando DALL-E 2."
+        },
+        {
+            "cmd": "/dalle3",
+            "help": "Gera imagem usando DALL-E 3."
+        },
+        {
+            "cmd": "/gpt3",
+            "help": "Executa consulta GPT alternativa."
+        },
+        {
+            "cmd": "/muie",
+            "help": "Executa comando Muie."
+        },
+        {
+            "cmd": "/cries",
+            "help": "Executa comando Cries."
+        },
+        {
+            "cmd": "/bgpt",
+            "help": "Executa comando BadGPT."
+        },
+        {
+            "cmd": "/transcribe",
+            "help": "Transcreve áudio para texto."
+        },
+        {
+            "cmd": "/change",
+            "help": "Gera variação de imagem."
+        },
+        {
+            "cmd": "/tweet",
+            "help": "Gera texto estilo tweet."
+        },
+        {
+            "cmd": "/cmd",
+            "help": "Executa comando administrativo."
+        },
+        {
+            "cmd": "/sd",
+            "help": "Gera imagem usando Stable Diffusion."
+        },
+        {
+            "cmd": "/sdxl",
+            "help": "Gera imagem usando Stable Diffusion XL."
+        },
+        {
+            "cmd": "/openjourney",
+            "help": "Gera imagem usando OpenJourney."
+        },
+        {
+            "cmd": "/kandinsky",
+            "help": "Gera imagem usando Kandinsky."
+        },
+        {
+            "cmd": "/epicreal",
+            "help": "Gera imagem usando EpicRealism."
+        },
+        {
+            "cmd": "/vinicius-speak-this",
+            "help": "Converte texto em voz."
+        },
+        {
+            "cmd": "/bypasspw",
+            "help": "Executa bypass de paywall."
+        },
+        {
+            "cmd": "/emoji",
+            "help": "Converte conteúdo para emoji."
+        },
+        {
+            "cmd": "/gif",
+            "help": "Gera ou processa GIF."
+        },
+        {
+            "cmd": "/disney",
+            "help": "Aplica efeito estilo Disney."
+        }
+    ]
+}
