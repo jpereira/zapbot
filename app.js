@@ -522,29 +522,29 @@ client.on('ready', () => {
     });
 
     // Forces your own bot to appear active if needed
-    client.sendPresenceAvailable().catch(() => null);
+    // client.sendPresenceAvailable().catch(() => null);
 
-    // Fetches the numbers from SQLite to subscribe to their presence from time to time
-    setInterval(() => {
-        db.all('SELECT phone_number FROM monitored_numbers', [], (err, rows) => {
+    // // Fetches the numbers from SQLite to subscribe to their presence from time to time
+    // setInterval(() => {
+    //     db.all('SELECT phone_number FROM monitored_numbers', [], (err, rows) => {
 
-            if (err || !rows || rows.length === 0) {
-                printInfo('[Presença] Nenhum número cadastrado no SQLite para monitorar.');
-                return;
-            }
+    //         if (err || !rows || rows.length === 0) {
+    // printInfo('[Presença] No number registered in SQLite to monitor.');
+    //             return;
+    //         }
 
-            rows.forEach(async (row) => {
-                const jid = `${row.phone_number}@c.us`;
+    //         rows.forEach(async (row) => {
+    //             const jid = `${row.phone_number}@c.us`;
 
-                try {
-                    // Opens the status listening channel for this specific contact in the WA ecosystem
-                    await client.sendPresenceAvailableForChat(jid);
-                } catch (e) {
-                    // Silences errors in case the chat is not loaded yet
-                }
-            });
-        });
-    }, 60000); // Runs every 1 minute to make sure the presence connection does not drop
+    //             try {
+    // // Opens the status listening channel for this specific contact in the WA ecosystem
+    //                 await client.sendPresenceAvailableForChat(jid);
+    //             } catch (e) {
+    // // Silences errors in case the chat is not loaded yet
+    //             }
+    //         });
+    //     });
+    // }, 60000); // Runs every 1 minute to make sure the presence connection does not drop
 });
 
 client.on('presence_update', async (presence) => {
