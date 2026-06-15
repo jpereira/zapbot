@@ -3,24 +3,28 @@
         {
             "cmd":  "/help",
             "aliases": [ "/h" ],
-            "help": "Exibe este menu de ajuda."
+            "help": "Exibe este menu de ajuda.",
+            "onlyAdmin": true
         },        
         {
             "cmd":  "/ping",
             "aliases": [ "/p" ],
-            "help": "Verificar status do bot."
+            "help": "Verificar status do bot.",
+            "onlyAdmin": true
         },
         {
-            "cmd":  "/color",
-            "aliases": [ "/🌈", "/🏳️‍🌈", "/c", "/noffa" ],
-            "help": "Da uma colorida no texto.",
+            "cmd":  "/gay",
+            "aliases": [ "/🌈", "/🏳️‍🌈", "/noffa" ],
+            "help": "Da uma gayzada no texto.",
             "syntax": [
                 "<texto com espaços> ou dê um 'reply' com ele."
-            ]
+            ],
+            "onlyAdmin": false
         },
         {
             "cmd":  "/everyone",
-            "help": "Faz o reply marcando todos do grupo."
+            "help": "Faz o reply marcando todos do grupo.",
+            "onlyAdmin": true
         },
         {
             "cmd":  "/monitor",
@@ -32,21 +36,25 @@
                 "<add> <numero> Adiciona número para ser monitorado.",
                 "<del> <numero> deleta numero.",
                 "<clean> Limpa todos os números."
-            ]
+            ],
+            "onlyAdmin": true
         },
         {
             "cmd": "/crypto",
             "aliases": [ "/bitcoio", "/btc", "/moedinha" ],
-            "help": "Exibe o preço atual das cryptos: BTC, ETH, GALA, MATIC."
+            "help": "Exibe o preço atual das cryptos: BTC, ETH, GALA, MATIC.",
+            "onlyAdmin": false
         },
         {
             "cmd": "/sticker",
             "aliases": [ "/st" ],
-            "help": "Cria um 'sticker' a partir de uma imagem."
+            "help": "Cria um 'sticker' a partir de uma imagem.",
+            "onlyAdmin": false
         },
         {
             "cmd": "/show",
-            "help": "Exibe informações sobre medias deletada. (view once)."
+            "help": "Exibe informações sobre medias deletada. (view once).",
+            "onlyAdmin": true
         }
     ]
 }
