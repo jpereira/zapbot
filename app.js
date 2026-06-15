@@ -1,10 +1,12 @@
 const { Client, MessageMedia, LocalAuth, Location } = require('whatsapp-web.js');
+const { execSync } = require('child_process');
+const { OpenAI } = require('openai');
+
 const axios = require('axios');
 const qrcode = require('qrcode');
 const qrcodeTerminal = require('qrcode-terminal');
 const colors = require('colors');
 const fs = require('fs-extra');
-const { OpenAI } = require('openai');
 const Math = require('mathjs');
 const sharp = require('sharp');
 const voice = require('elevenlabs-node');
@@ -19,6 +21,13 @@ const CACHE_DIR = path.join(__dirname, 'cache');
 
 // Pasta onde as mídias (fotos/áudios) serão temporariamente salvas
 const MEDIA_DIR = path.join(CACHE_DIR, 'media');
+
+// Paste onde fica as coisas temporárias.
+const TMP_DIR = path.join(CACHE_DIR, 'tmp');
+
+// extras
+const BIN_FFMPEG = "/usr/bin/ffmpeg";
+const BIN_YT = "/venv/bin/yt-dlp";
 
 // basic debug functions
 function printDebug(message) {
@@ -120,7 +129,12 @@ try {
     });
 
     if (!fs.existsSync(MEDIA_DIR)) {
-        fs.mkdirSync(MEDIA_DIR);
+        fs.mkdirSync(MEDIA_DIR, { recursive: true });
+        printInfo("Creating `${MEDIA_DIR}`");
+    }
+    if (!fs.existsSync(TMP_DIR)) {
+        fs.mkdirSync(TMP_DIR, { recursive: true });
+        printInfo("Creating `${TMP_DIR}`");
     }
 } catch (e) {
     console.error('Bootstrap Erro:', e);
@@ -150,6 +164,92 @@ const transporter = nodemailer.createTransport({
 /*
  * bot functions
  */
+function extractFirstUrl(text) {
+    const m = text.match(/https?:\/\/[^\s"'<>]+/);
+    return m ? m[0] : null;
+}
+
+function isValidHttpUrl(str) {
+    try {
+        const url = new URL(str);
+
+        return url.protocol === 'http:' ||
+               url.protocol === 'https:';
+    } catch {
+        return false;
+    }
+}
+
+function parseCommandForFfmpeg(opts, originalFile, outputFile) {
+    const args = [ BIN_FFMPEG ];
+
+    args.push("-y");
+
+    // printDebug("INPUT OPTS");
+    // console.log(JSON.stringify(opts, null, 4));
+
+    if (opts.opt?.startSec != null) {
+        args.push("-ss", String(opts.opt.startSec));
+    }
+
+    if (
+        opts.opt?.startSec != null &&
+        opts.opt?.endSec != null &&
+        opts.opt.endSec > opts.opt.startSec
+    ) {
+        args.push(
+            "-t",
+            String(opts.opt.endSec - opts.opt.startSec)
+        );
+    }
+
+    args.push("-i", originalFile);
+
+    args.push(
+        "-c:v", "libx264",
+        "-b:v", "800k",
+        "-maxrate", "800k",
+        "-bufsize", "1600k",
+        "-pix_fmt", "yuv420p",
+        "-profile:v", "baseline",
+        "-movflags", "+faststart",
+        "-c:a", "aac",
+        outputFile
+    );
+
+    // printDebug("OUTPUT ARGS");
+    // console.log(JSON.stringify(args, null, 4));
+
+    return args;
+}
+
+function parseCommand(input) {
+    const tokens = [...input.matchAll(/"([^"]*)"|(\S+)/g)]
+        .map(m => m[1] ?? m[2]);
+
+    const result = {
+        opt: {},
+        argv: []
+    };
+
+    for (let i = 0; i < tokens.length; i++) {
+        const token = tokens[i];
+
+        if (token.startsWith('-') && token.length > 1) {
+            const key = token.slice(1);
+
+            if (i + 1 < tokens.length && !tokens[i + 1].startsWith('-')) {
+                result.opt[key] = tokens[++i];
+            } else {
+                result.opt[key] = true;
+            }
+        } else {
+            result.argv.push(token);
+        }
+    }
+
+    return result;
+}
 
 let openai;
 console.log(process.env.OPENAI_API_KEY);
@@ -500,6 +600,11 @@ client.on('qr', async (qr) => {
 
 client.on('authenticated', (session) => {
     printSuccess(`Whatsapp authentication success!`)
+});
+
+client.on('disconnected', (reason) => {
+    printInfo('💥 WhatsApp desconectou:', reason);
+    client.initialize();
 });
 
 client.on('ready', () => {
@@ -1295,6 +1400,165 @@ client.on('message_create', async (msg) => {
                 await msg.reply(media, null, options);
                 printSuccess('show responded OK');
             }
+            break;
+
+        case "/download":
+            // TODO: limpar cache a cada X tempo, boot.
+            const id         = Date.now();
+            const workDir    = TMP_DIR;
+            let originalFile = null;
+            let outputFile   = null;
+            let logCmdFile   = null;
+            let logCmd       = null;
+
+            try {
+                let urlInput = null;
+                let optArgs  = null;
+
+                // TODO: Adicionar ARGV
+                printCall(sender_contact, argv);
+
+                if (quotedMsg) { // It was a reply...
+                    urlInput = extractFirstUrl(quotedMsg.body);
+                } else {
+                    optArgs  = parseCommand(content_after_caller);
+                    urlInput = optArgs.argv[0];
+                }
+
+                printInfo(`DEBUG: urlInput=${urlInput} optArgs >\n`);
+                console.log(JSON.stringify(optArgs, null, 4));
+
+                if (!isValidHttpUrl(urlInput)) {
+                    throw new Error(`A URL '${urlInput}' é inválida. ignorando.'`, {
+                        cause: {
+                            inner: null,
+                            cmd: null
+                        }
+                    });
+                }
+
+                printInfo(`Recebido '/download' ${urlInput}`);
+                await msg.reply("💡 Processando seu video, aguarde.", null, { linkPreview: false });
+
+                if (!fs.existsSync(workDir)) {
+                    fs.mkdirSync(workDir, { recursive: true });
+                }
+
+                originalFile = path.join(workDir, `${id}_original.mp4`);
+                outputFile   = path.join(workDir, `${id}_output.mp4`);
+                logCmdFile   = path.join(workDir, `${id}_cmd.log`);
+                logCmd       = fs.openSync(logCmdFile, "a");
+
+                printInfo(`> Todos o output dos comandos salvos em ${logCmdFile}`);
+
+                // Baixar vídeo
+                const cmdYt = [ BIN_YT,
+                                "-f mp4",
+                                "--merge-output-format mp4",
+                                `-o "${originalFile}"`,
+                                `"${urlInput}"`
+                ].join(" ");
+
+                try {
+                    printInfo(`> Executando: ${cmdYt}`);
+                    fs.writeSync(logCmd, `# Executando: ${cmdYt}\n`);
+                    execSync(cmdYt, { stdio: ["ignore", logCmd, logCmd] });
+                } catch (inner) {
+                    throw new Error(`Problemas para baixar com '${BIN_YT}'`, {
+                        cause: {
+                            inner: inner,
+                            cmd: cmdYt
+                        }
+                    });
+                }
+
+                if (fs.statSync(originalFile).size > 20 * 1024 * 1024) {
+                    throw new Error("Arquivo muito grande para WhatsApp Web", {
+                        cause: {
+                            inner: null,
+                            cmd: null
+                        }
+                    });
+                }
+
+                const cmdFfmpeg = parseCommandForFfmpeg(optArgs, originalFile, outputFile).join(" ");
+
+                try {
+                    printInfo(`> Executando: ${cmdFfmpeg}`);
+                    fs.writeSync(logCmd, `\n\n# Executando: ${cmdFfmpeg}\n`);
+                    execSync(cmdFfmpeg, { stdio: ["ignore", logCmd, logCmd] });
+                } catch (inner) {
+                    throw new Error(`Problemas para decodificar com '${BIN_FFMPEG}'`, {
+                        cause: {
+                            inner: inner,
+                            cmd: cmdFfmpeg
+                        }
+                    });
+                }
+
+                try {
+                    printInfo(`> Enviando a midia ${outputFile} para '${senderName}'`);
+                    const media = MessageMedia.fromFilePath(outputFile);
+                    let textMsg = "💾 Aqui está o vídeo para download.";
+
+                    if (optArgs.opt?.v || optArgs.opt?.verbose) {
+                        textMsg += "\n\n";
+                        textMsg += "🛠️ *Verbose Mode*\n";
+                        textMsg += "\n";
+                        textMsg += `💾 *yt-dlp*: _${cmdYt}_\n`;
+                        textMsg += "\n";
+                        textMsg += `🔗 *ffmpeg*: _${cmdFfmpeg}_\n`;
+                        textMsg += "\n";
+                    }
+
+                    await msg.reply(media, null, {
+                        caption: textMsg,
+                        sendMediaAsDocument: true
+                    });
+                } catch (inner) {
+                    throw new Error(`Problemas para enviar com 'MessageMedia.fromFilePath(${outputFile})`, {
+                        cause: {
+                            inner: inner,
+                            cmd: null
+                        }
+                    });
+                }
+            } catch (e) {
+                    // Processe todos os replies de erros.
+                    printError(e.message);
+                    let textError = `⚠️💥 ${e.message}.`;
+
+                    if (e?.cause?.cmd) {
+                        textError += '\n';
+                        textError += `🛠️ *Cmd*:    ${e.cause.cmd}`;
+                    }
+
+                    if (e?.cause?.crash) {
+                        textError += '\n';
+                        textError += `⛓️‍💥 *Crash*:  ${e.cause.crash}`;
+                    }
+
+                    textError += '\n';
+
+                    await msg.reply(textError, null, { linkPreview: false });
+            } finally {
+                const tmpFiles = [ originalFile, outputFile, logCmdFile ];
+
+                if (tmpFiles.every(v => v == null)) {
+                    printInfo(`> Nada para limpar em ${workDir}`);
+                    return;
+                }
+
+                printInfo(`> Limpando arquivos em ${tmpFiles}`);
+                for (const _tmp of tmpFiles) {
+                    try {
+                        // fs.unlinkSync(_tmp);
+                    } catch {
+                        // Ignora qualquer erro e não exibe nenhum warning/log
+                    }
+                }
+            }
+
             break;
 
         case "/gpt3":
