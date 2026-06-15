@@ -639,7 +639,7 @@ client.on('message_revoke_everyone', async (after, before) => {
                 
                 const localizacaoNativa = new Location(latitude, longitude, descricaoLocal);
                 await client.sendMessage(meuChatId, localizacaoNativa);
-                printInfo(`[Bot] Localização apagada enviada.`);
+                // printInfo(`[Bot] Localização apagada enviada.`);
             } 
             
             // 📇 TRATAMENTO DO VCARD
@@ -647,7 +647,7 @@ client.on('message_revoke_everyone', async (after, before) => {
                 alertaTexto += `📇 *Tipo:* CARTÃO DE CONTATO\n💡 *Nota:* O contato oficial está anexado abaixo.`;
                 await client.sendMessage(meuChatId, alertaTexto);
                 await client.sendMessage(meuChatId, row.body, { parseVCards: true });
-                printInfo(`[Bot] Cartão vCard enviado.`);
+                // printInfo(`[Bot] Cartão vCard enviado.`);
             }
             
             // 📁 TRATAMENTO DE MÍDIAS FÍSICAS
@@ -930,7 +930,13 @@ client.on('message_create', async (msg) => {
 
     // Its allowed?
     if (!msg.fromMe && command.onlyAdmin) {
-        let warnMsg = (`⚠️ Usuario '${chatName}' não pode executar: ${command.cmd}`);
+        let warnMsg;
+
+        if (isGroup) {
+            warnMsg = (`⚠️ Usuario '${senderName}' não pode executar '${command.cmd}' no grupo '${chatName}'`);
+        } else {
+            warnMsg = (`⚠️ Usuario '${chatName}' não pode executar: ${command.cmd}`);
+        }
 
         messageToSelf(warnMsg);
         return;
@@ -968,7 +974,7 @@ client.on('message_create', async (msg) => {
                             return text;
                         })
                         .join("\n")
-                    + "```";
+                    + "\n```";
 
                 msg.reply(helpText);
 
