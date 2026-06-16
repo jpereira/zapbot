@@ -30,6 +30,20 @@ const BIN_FFMPEG = "/usr/bin/ffmpeg";
 const BIN_YT = "/venv/bin/yt-dlp";
 
 // basic debug functions
+function getTimestamp() {
+    const now = new Date();
+
+    const yyyy = now.getFullYear();
+    const MM   = String(now.getMonth() + 1).padStart(2, '0');
+    const dd   = String(now.getDate()).padStart(2, '0');
+
+    const hh   = String(now.getHours()).padStart(2, '0');
+    const mm   = String(now.getMinutes()).padStart(2, '0');
+    const ss   = String(now.getSeconds()).padStart(2, '0');
+
+    return `${yyyy}-${MM}-${dd} ${hh}:${mm}:${ss}`;
+}
+
 function printDebug(message) {
     const stack = new Error().stack.split('\n');
 
@@ -37,7 +51,27 @@ function printDebug(message) {
         ?.trim()
         ?.replace('at ', '');
 
-    console.log(colors.white(`[DEBUG] [${caller}] ${message}`));
+    console.log(
+        colors.white(
+            `[${getTimestamp()}] [DEBUG] [${caller}] ${message}`
+        )
+    );
+}
+
+function printInfo(message) {
+    console.log(
+        colors.yellow(
+            `[${getTimestamp()}] [!] ${message}`
+        )
+    );
+}
+
+function printSuccess(message) {
+    console.log(
+        colors.green(
+            `[${getTimestamp()}] [+] ${message}`
+        )
+    );
 }
 
 function printError(message) {
@@ -47,19 +81,19 @@ function printError(message) {
         ?.trim()
         ?.replace('at ', '');
 
-    console.log(colors.red(`[*] [${caller}] ${message}`));
-}
-
-function printInfo(message) {
-    console.log(colors.yellow('[!] ' + message));
-}
-
-function printSuccess(message) {
-    console.log(colors.green('[+] ' + message));
+    console.log(
+        colors.red(
+            `[${getTimestamp()}] [*] [${caller}] ${message}`
+        )
+    );
 }
 
 function printCall(sender_contact, call) {
-    console.log(colors.blue(`[+] ${sender_contact.pushname} used ${call}`));
+    console.log(
+        colors.blue(
+            `[${getTimestamp()}] [+] ${sender_contact.pushname} used ${call}`
+        )
+    );
 }
 
 // INICIALIZAÇÃO DO BANCO DE DADOS SQLITE
@@ -251,6 +285,56 @@ function parseCommand(input) {
     return result;
 }
 
+// realiza check e restart do cliente
+async function restartClient() {
+    try {
+        await client.destroy();
+    } catch (e) {}
+
+    await new Promise(r => setTimeout(r, 5000));
+
+    try {
+        await client.initialize();
+    } catch (e) {
+        printError(e);
+    }
+}
+
+/*
+ * Health check
+ */
+let lastOk = Date.now();
+
+setInterval(async () => {
+    try {
+        await client.getState();
+
+        lastOk = Date.now();
+    } catch (e) {
+        printInfo('Healthcheck falhou');
+    }
+}, 30000);
+
+/*
+ * Watchdog
+ */
+setInterval(async () => {
+    try {
+        if (
+            !client.pupBrowser ||
+            !client.pupBrowser.isConnected()
+        ) {
+            printInfo('Browser morto');
+
+            await restartClient();
+        }
+    } catch (e) {
+        await restartClient();
+    }
+}, 30000);
+
+// OpenAI
+
 let openai;
 console.log(process.env.OPENAI_API_KEY);
 if (process.env.OPENAI_API_KEY != null) {
@@ -259,8 +343,6 @@ if (process.env.OPENAI_API_KEY != null) {
         organization: process.env.OPENAI_ORGANIZATION_ID,
     });
 }
-
-// OpenAI
 const GPT3_5 = async (clientText) => {
     try {
         const completion = await openai.chat.completions.create({
@@ -510,11 +592,7 @@ const client = new Client({
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
-            '--disable-dev-shm-usage', // Evita crash por falta de memória compartilhada
-            '--disable-accelerated-2d-canvas',
-            '--no-first-run',
-            '--no-zygote',
-            '--single-process', // Ajuda a manter o contexto unificado
+            '--disable-dev-shm-usage',
             '--disable-gpu'
         ],
     },
@@ -602,13 +680,20 @@ client.on('authenticated', (session) => {
     printSuccess(`Whatsapp authentication success!`)
 });
 
-client.on('disconnected', (reason) => {
+client.on('disconnected', async (reason) => {
     printInfo('💥 WhatsApp desconectou:', reason);
-    client.initialize();
+    await restartClient();
+});
+
+client.on('change_state', state => {
+    printInfo('WA STATE]=', state);
+
+    lastOk = Date.now();
 });
 
 client.on('ready', () => {
     let myid = process.env.PHONE_NUMBER;
+    lastOk = Date.now();
 
     printSuccess(`🤖 ZapBot inicializado! Informando ${myid}`);
     messageToSelf(`🤖 ZapBot inicializado`);
@@ -710,6 +795,8 @@ client.on('presence_update', async (presence) => {
 });
 
 client.on('message_revoke_everyone', async (after, before) => {
+    lastOk = Date.now(); // healCheck
+
     // 💡 CORREÇÃO 1: Forma robusta de extrair o ID exato da mensagem deletada
     const protocolKey = after._data?.protocolMessageKey;
     const targetId = protocolKey?.id || before?.id?.id || after?.id?.id;
