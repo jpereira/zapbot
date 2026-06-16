@@ -10,10 +10,12 @@ clean:
 
 shell:
 	docker context use default
+	docker volume create wwebjs_auth || true
 	docker run --rm -it \
 		--env-file config/.env \
 		--hostname DOCKER:zapbot \
-		--volume   "$(PWD):/workspace" \
+		--volume "$(PWD):/workspace" \
+		--volume wwebjs_auth:/workspace/.wwebjs_auth \
 		-w /workspace \
 		--entrypoint /bin/bash \
 		zapbot
@@ -59,4 +61,10 @@ deploy.shell:
 	docker context create qnap --docker "host=$(DOCKER_REMOTE_SERVER)" || true
 	docker context use qnap
 	docker exec -it zapbot /bin/bash
+	docker context use default
+
+deploy.volume:
+	docker context create qnap --docker "host=$(DOCKER_REMOTE_SERVER)" || true
+	docker context use qnap
+	docker volume inspect wwebjs_auth
 	docker context use default
