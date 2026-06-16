@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# cleanup
+rm -vf \
+  .wwebjs_auth/**/SingletonLock \
+  .wwebjs_auth/**/SingletonSocket \
+  .wwebjs_auth/**/SingletonCookie
+
 mkdir -p $PWD/cache
 
 if [ ! -f "/tmp/npm.install.ok" ]; then
