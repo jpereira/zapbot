@@ -1,10 +1,13 @@
 services:
   zapbot:
+    user: "1000:1000"
     container_name: zapbot
     build:
       context: ..
       dockerfile: docker/app/Dockerfile
-    # volumes:
-    #  - ..:/app
+    volumes:
+      - wwebjs_auth:/app/.wwebjs_auth
     env_file: ../config/.env
     ports: []
+volumes:
+  wwebjs_auth:
