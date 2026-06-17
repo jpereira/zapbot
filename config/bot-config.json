@@ -59,9 +59,13 @@
         {
             "cmd": "/download",
             "aliases": [ "/d", "/wget", "/getright", "/get" ],
-            "help": "Caso seja válido, faz o download da midia. (ex: Instagram)",
+            "help": "Caso seja válido, faz o download do video. (ex: Instagram,YouTube,X,...)",
             "syntax": [
-                "[-startSec sec|-endSec sec] http://www.{instagram,youtube,tiktok}.com/"
+                "[-st|-sticker]   - Enviar como sticker.",
+                "[-v|-verbose]    - Exibe os parametros usados no yt-dlp/ffmpeg",
+                "[-startSec sec]  - Iniciar a partir do segundo determinado.",
+                "[-endSec sec]    - Cortar o video no segundo terminado.",
+                "<url>            - ex: http://www.{instagram,youtube,tiktok}.com/?path"
             ],
             "onlyAdmin": false
         }

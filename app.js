@@ -1,5 +1,5 @@
 const { Client, MessageMedia, LocalAuth, Location } = require('whatsapp-web.js');
-const { execSync } = require('child_process');
+const { spawn } = require('child_process');
 const { OpenAI } = require('openai');
 
 const axios = require('axios');
@@ -205,6 +205,22 @@ const transporter = nodemailer.createTransport({
 /*
  * bot functions
  */
+function runCommand(bin, args, logFd) {
+    return new Promise((resolve, reject) => {
+        const child = spawn(bin, args, {
+            stdio: ["ignore", logFd, logFd]
+        });
+
+        child.on("error", reject);
+
+        child.on("close", code => {
+            if (code === 0) return resolve();
+
+            reject(new Error(`${bin} exited with code ${code}`));
+        });
+    });
+}
+
 function extractFirstUrl(text) {
     const m = text.match(/https?:\/\/[^\s"'<>]+/);
     return m ? m[0] : null;
@@ -222,44 +238,58 @@ function isValidHttpUrl(str) {
 }
 
 function parseCommandForFfmpeg(opts, originalFile, outputFile) {
-    const args = [ BIN_FFMPEG ];
+    const args = [];
+
+    const isSticker = opts.opt?.st || opts.opt?.sticker;
 
     args.push("-y");
-
-    // printDebug("INPUT OPTS");
-    // console.log(JSON.stringify(opts, null, 4));
 
     if (opts.opt?.startSec != null) {
         args.push("-ss", String(opts.opt.startSec));
     }
 
-    if (
+    if (isSticker) {
+        args.push("-t", "6");
+    } else if (
         opts.opt?.startSec != null &&
         opts.opt?.endSec != null &&
-        opts.opt.endSec > opts.opt.startSec
+        Number(opts.opt.endSec) > Number(opts.opt.startSec)
     ) {
         args.push(
             "-t",
-            String(opts.opt.endSec - opts.opt.startSec)
+            String(Number(opts.opt.endSec) - Number(opts.opt.startSec))
         );
     }
 
     args.push("-i", originalFile);
 
-    args.push(
-        "-c:v", "libx264",
-        "-b:v", "800k",
-        "-maxrate", "800k",
-        "-bufsize", "1600k",
-        "-pix_fmt", "yuv420p",
-        "-profile:v", "baseline",
-        "-movflags", "+faststart",
-        "-c:a", "aac",
-        outputFile
-    );
-
-    // printDebug("OUTPUT ARGS");
-    // console.log(JSON.stringify(args, null, 4));
+    if (isSticker) {
+        args.push(
+            "-vf",
+            "fps=15,scale=512:512:force_original_aspect_ratio=decrease,pad=512:512:(ow-iw)/2:(oh-ih)/2:color=black",
+            "-an",
+            "-c:v", "libx264",
+            "-b:v", "500k",
+            "-maxrate", "500k",
+            "-bufsize", "1000k",
+            "-pix_fmt", "yuv420p",
+            "-profile:v", "baseline",
+            "-movflags", "+faststart",
+            outputFile
+        );
+    } else {
+        args.push(
+            "-c:v", "libx264",
+            "-b:v", "800k",
+            "-maxrate", "800k",
+            "-bufsize", "1600k",
+            "-pix_fmt", "yuv420p",
+            "-profile:v", "baseline",
+            "-movflags", "+faststart",
+            "-c:a", "aac",
+            outputFile
+        );
+    }
 
     return args;
 }
@@ -1448,6 +1478,8 @@ client.on('message_create', async (msg) => {
                 const options = {
                     media: media,
                     sendMediaAsSticker: true,
+                    stickerName: "ZapBot",
+                    stickerAuthor: "https://github.com/jpereira/zapbot/"
                 }
 
                 await msg.reply(media, null, options);
@@ -1495,6 +1527,7 @@ client.on('message_create', async (msg) => {
             try {
                 let urlInput = null;
                 let optArgs  = null;
+                let mediaType = "video";
 
                 // TODO: Adicionar ARGV
                 printCall(sender_contact, argv);
@@ -1505,6 +1538,9 @@ client.on('message_create', async (msg) => {
                     optArgs  = parseCommand(content_after_caller);
                     urlInput = optArgs.argv[0];
                 }
+
+                let isSticker = (optArgs.opt?.sticker || optArgs.opt?.st);
+                let isVerbose = (optArgs.opt?.v || optArgs.opt?.verbose);
 
                 printInfo(`DEBUG: urlInput=${urlInput} optArgs >\n`);
                 console.log(JSON.stringify(optArgs, null, 4));
@@ -1519,7 +1555,7 @@ client.on('message_create', async (msg) => {
                 }
 
                 printInfo(`Recebido '/download' ${urlInput}`);
-                await msg.reply("💡 Processando seu video, aguarde.", null, { linkPreview: false });
+                await msg.reply(`💡 Processando seu ${isSticker ? "sticker" : "video"}, aguarde.`, null, { linkPreview: false });
 
                 if (!fs.existsSync(workDir)) {
                     fs.mkdirSync(workDir, { recursive: true });
@@ -1533,17 +1569,17 @@ client.on('message_create', async (msg) => {
                 printInfo(`> Todos o output dos comandos salvos em ${logCmdFile}`);
 
                 // Baixar vídeo
-                const cmdYt = [ BIN_YT,
-                                "-f mp4",
-                                "--merge-output-format mp4",
-                                `-o "${originalFile}"`,
-                                `"${urlInput}"`
-                ].join(" ");
+                const cmdYTargs = [ "-f", "mp4",
+                                    "--merge-output-format", "mp4",
+                                    "-o", originalFile,
+                                    urlInput
+                ];
+                const cmdYt = [BIN_YT, ...cmdYTargs].join(" ");
 
                 try {
                     printInfo(`> Executando: ${cmdYt}`);
                     fs.writeSync(logCmd, `# Executando: ${cmdYt}\n`);
-                    execSync(cmdYt, { stdio: ["ignore", logCmd, logCmd] });
+                    await runCommand(BIN_YT, cmdYTargs, logCmd);
                 } catch (inner) {
                     throw new Error(`Problemas para baixar com '${BIN_YT}'`, {
                         cause: {
@@ -1562,12 +1598,13 @@ client.on('message_create', async (msg) => {
                     });
                 }
 
-                const cmdFfmpeg = parseCommandForFfmpeg(optArgs, originalFile, outputFile).join(" ");
+                const ffmpegArgs = parseCommandForFfmpeg(optArgs, originalFile, outputFile);
+                const cmdFfmpeg = [BIN_FFMPEG, ...ffmpegArgs].join(" ");
 
                 try {
                     printInfo(`> Executando: ${cmdFfmpeg}`);
                     fs.writeSync(logCmd, `\n\n# Executando: ${cmdFfmpeg}\n`);
-                    execSync(cmdFfmpeg, { stdio: ["ignore", logCmd, logCmd] });
+                    await runCommand(BIN_FFMPEG, ffmpegArgs, logCmd);
                 } catch (inner) {
                     throw new Error(`Problemas para decodificar com '${BIN_FFMPEG}'`, {
                         cause: {
@@ -1578,24 +1615,41 @@ client.on('message_create', async (msg) => {
                 }
 
                 try {
-                    printInfo(`> Enviando a midia ${outputFile} para '${senderName}'`);
                     const media = MessageMedia.fromFilePath(outputFile);
-                    let textMsg = "💾 Aqui está o vídeo para download.";
 
-                    if (optArgs.opt?.v || optArgs.opt?.verbose) {
-                        textMsg += "\n\n";
-                        textMsg += "🛠️ *Verbose Mode*\n";
-                        textMsg += "\n";
-                        textMsg += `💾 *yt-dlp*: _${cmdYt}_\n`;
-                        textMsg += "\n";
-                        textMsg += `🔗 *ffmpeg*: _${cmdFfmpeg}_\n`;
-                        textMsg += "\n";
+                    if (isVerbose) {
+                        let textMsg = "🛠️ *Verbose Mode*\n";
+                            textMsg += "\n";
+                            textMsg += `💾 *yt-dlp*: _${cmdYt}_\n`;
+                            textMsg += "\n";
+                            textMsg += `🔗 *ffmpeg*: _${cmdFfmpeg}_\n`;
+                            textMsg += "\n";
+
+                        // verbose? mande uma mensagem antes.
+                        await msg.reply(textMsg, null, { linkPreview: false });
                     }
 
-                    await msg.reply(media, null, {
-                        caption: textMsg,
-                        sendMediaAsDocument: true
-                    });
+                    let msgOpts = {
+                        caption: null,
+                        sendMediaAsDocument: false,
+                        sendMediaAsSticker: false,
+                        linkPreview: false,
+                        stickerName: "ZapBot",
+                        stickerAuthor: "https://github.com/jpereira/zapbot/"
+                    };
+
+                    if (isSticker) {
+                        // então prepare e envie o sticker.
+                        msgOpts.caption = undefined;
+                        msgOpts.sendMediaAsSticker = true;
+                        printInfo(`> Enviando a midia como sticker para '${senderName}'`);
+                    } else {
+                        msgOpts.caption = "💾 Aqui está o vídeo para download.";
+                        msgOpts.sendMediaAsDocument = true;
+                        printInfo(`> Enviando a midia ${outputFile} para '${senderName}'`);
+                    }
+
+                    await msg.reply(media, null, msgOpts);
                 } catch (inner) {
                     throw new Error(`Problemas para enviar com 'MessageMedia.fromFilePath(${outputFile})`, {
                         cause: {
@@ -1614,9 +1668,9 @@ client.on('message_create', async (msg) => {
                         textError += `🛠️ *Cmd*:    ${e.cause.cmd}`;
                     }
 
-                    if (e?.cause?.crash) {
+                    if (e?.cause?.inner) {
                         textError += '\n';
-                        textError += `⛓️‍💥 *Crash*:  ${e.cause.crash}`;
+                        textError += `⛓️‍💥 *Inner*:  ${e.cause.inner.message || e.cause.inner}`;
                     }
 
                     textError += '\n';
