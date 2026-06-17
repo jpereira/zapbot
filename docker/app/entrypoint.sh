@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Dev
+# Prod
 #
 export UID=$(id -u)
 export GID=$(id -g)
@@ -13,7 +13,13 @@ rm -vf \
   .wwebjs_auth/**/SingletonSocket \
   .wwebjs_auth/**/SingletonCookie
 
-mkdir -p $PWD/cache
+mkdir -vp $PWD/.wwebjs_auth
+mkdir -vp $PWD/cache
+
+chown -R node:node $PWD/.wwebjs_auth || true
+chown -R node:node $PWD/cache || true
 
 # busyloop
-npm start
+echo "Starting as node:"
+echo "CMD: $@"
+exec su-exec node $@
