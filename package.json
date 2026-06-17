@@ -7,7 +7,7 @@
     "init": "ts-node-dev -r tsconfig-paths/register --transpile-only scripts/init.ts",
     "start:dev:docker": "DOCKER_BUILDKIT=1 docker-compose --file docker/docker-compose.yml up --build --force-recreate --remove-orphans --detach",
     "start:dev": "node app.js",
-    "start:prod": "node dist/index.js",
+    "start:prod": "node app.js",
     "start": "[ \"$NODE_ENV\" = \"production\" ] && npm run start:prod || npm run start:dev"
   },
   "dependencies": {
