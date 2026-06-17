@@ -29,6 +29,9 @@ const TMP_DIR = path.join(CACHE_DIR, 'tmp');
 const BIN_FFMPEG = "/usr/bin/ffmpeg";
 const BIN_YT = "/venv/bin/yt-dlp";
 
+// Load the config/.env.{APP_ENV} file
+dotenv.config();
+
 // basic debug functions
 function getTimestamp() {
     const now = new Date();
@@ -96,6 +99,12 @@ function printCall(sender_contact, call) {
     );
 }
 
+
+// environment
+const APP_ENV = process.env.APP_ENV || 'dev';
+printInfo(`Running in APP_ENV=${process.env.APP_ENV}`);
+
+
 // INICIALIZAÇÃO DO BANCO DE DADOS SQLITE
 const dbPath = path.resolve(__dirname, './cache/bot_database.db');
 const db = new sqlite3.Database(dbPath, (err) => {
@@ -105,8 +114,6 @@ const db = new sqlite3.Database(dbPath, (err) => {
 
 // bootstrap
 try {
-    dotenv.config();
-
     // Criação das tabelas necessárias caso não existam
     db.serialize(() => {
         // Tabela para guardar o histórico de quando os usuários ficam online
@@ -164,11 +171,11 @@ try {
 
     if (!fs.existsSync(MEDIA_DIR)) {
         fs.mkdirSync(MEDIA_DIR, { recursive: true });
-        printInfo("Creating `${MEDIA_DIR}`");
+        printInfo(`Creating ${MEDIA_DIR}`);
     }
     if (!fs.existsSync(TMP_DIR)) {
         fs.mkdirSync(TMP_DIR, { recursive: true });
-        printInfo("Creating `${TMP_DIR}`");
+        printInfo(`Creating ${TMP_DIR}`);
     }
 } catch (e) {
     console.error('Bootstrap Erro:', e);
