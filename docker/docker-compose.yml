@@ -1,13 +1,65 @@
 services:
-  zapbot:
-    user: "1000:1000"
-    container_name: zapbot
+  #
+  # Development
+  #
+  zapbot-dev:
+    image: zapbot-dev
+    container_name: zapbot-dev
+    build:
+      context: ..
+      dockerfile: docker/app/Dockerfile.dev
+
+    hostname: DOCKER:zapbot-dev
+
+    env_file:
+      - ../config/.env.dev
+
+    environment:
+      - APP_ENV=dev
+      - NODE_ENV=development
+
+    volumes:
+      - ..:/workspace
+      - wwebjs_auth_dev:/workspace/.wwebjs_auth
+      - app_cache_dev:/app/cache
+
+    working_dir: /workspace
+
+    stdin_open: true
+    tty: true
+    entrypoint: /bin/bash
+
+  #
+  # Production
+  #
+  zapbot-prod:
+    user: "root:root"
+    image: zapbot-prod
+    container_name: zapbot-prod
     build:
       context: ..
       dockerfile: docker/app/Dockerfile
+
+    hostname: DOCKER:zapbot-prod
+    env_file:
+      - ../config/.env
+
+    environment:
+      - APP_ENV=prod
+      - NODE_ENV=production
+
     volumes:
+      - app_cache:/app/cache
       - wwebjs_auth:/app/.wwebjs_auth
-    env_file: ../config/.env
-    ports: []
+#      - wwebjs_cache_dev:/app/.wwebjs_cache
+
+    working_dir: /app
+    restart: unless-stopped
+
 volumes:
+  app_cache_dev:
+  wwebjs_auth_dev:
+
+  app_cache:
   wwebjs_auth:
+#  wwebjs_cache_dev:
