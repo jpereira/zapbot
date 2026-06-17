@@ -675,7 +675,8 @@ client.on('qr', async (qr) => {
 
         } catch (err) {
             qrEmailSent = false;
-            printError('Erro ao enviar QR por email:', err);
+            printError('Erro ao enviar QR por email:', );
+            console.log(err);
         }
     } else {
         printInfo(`QR Code received at (${currentdatetimeday}), scan it please`)
