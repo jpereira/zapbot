@@ -1241,21 +1241,90 @@ client.on('message_create', async (msg) => {
             break;
 
         case "/crypto":
-                try {
-                    const { data } = await axios.get(
-                        'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,dogecoin&vs_currencies=usd'
-                    );
+            try {
+                const symbols = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "DOGEUSDT"];
 
-                    await msg.reply('📉 / 📈 Crypto Price 🚀\n\n'            +
-                                        `* BTC/USDT:    $${data.bitcoin.usd}\n`  +
-                                        `* ETH/USDT:    $${data.ethereum.usd}\n` +
-                                        `* SOLANA/USDT: $${data.solana.usd}\n`   +
-                                        `* DOGE/USDT:   $${data.dogecoin.usd}`
-                    );
-                } catch (error) {
-                    console.error('Error fetching crypto prices:', error);
-                    await msg.reply('Error fetching crypto prices');
-                }
+                const { data } = await axios.get(
+                    "https://api.binance.com/api/v3/ticker/24hr",
+                    {
+                        params: {
+                            symbols: JSON.stringify(symbols)
+                        }
+                    }
+                );
+
+                const icon = {
+                    BTCUSDT: "₿",
+                    ETHUSDT: "Ξ",
+                    SOLUSDT: "◎",
+                    DOGEUSDT: "Ð"
+                };
+
+                const fmtPrice = (value) =>
+                    Number(value).toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 6
+                    });
+
+                const fmtVolume = (value) => {
+                    const n = Number(value);
+
+                    if (n >= 1_000_000_000) return `$${(n / 1_000_000_000).toFixed(2)}B`;
+                    if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
+                    if (n >= 1_000) return `$${(n / 1_000).toFixed(2)}K`;
+
+                    return `$${n.toFixed(2)}`;
+                };
+
+                const pct = (value) => {
+                    const n = Number(value);
+                    const signal = n >= 0 ? "+" : "";
+                    const emoji = n >= 0 ? "🟢" : "🔴";
+                    return `${emoji} ${signal}${n.toFixed(2)}%`;
+                };
+
+                const coins = data.map(item => ({
+                    symbol: item.symbol.replace("USDT", ""),
+                    icon: icon[item.symbol] || "",
+                    price: Number(item.lastPrice),
+                    change: Number(item.priceChangePercent),
+                    high: Number(item.highPrice),
+                    low: Number(item.lowPrice),
+                    volume: Number(item.quoteVolume)
+                }));
+
+                const topGainer = [...coins].sort((a, b) => b.change - a.change)[0];
+
+                let text = '';
+
+                text += '🚀 *CRYPTO MARKET*\n';
+                text += '\n';
+                text += '```\n';
+
+                coins.forEach(c => {
+
+                    const priceLine = `💰 $${fmtPrice(c.price)}`.padEnd(14);
+                    const change = pct(c.change).padStart(10);
+
+                    text += `${c.icon} ${c.symbol}\n`;
+                    text += `    ${priceLine}${change}\n`;
+                    text += `    📈 $${fmtPrice(c.high)}\n`;
+                    text += `    📉 $${fmtPrice(c.low)}\n`;
+                    text += `    📊 ${fmtVolume(c.volume)}\n`;
+                    text += '\n';
+
+                });
+                text += '```';
+                text += `🔥 *Top:* ${topGainer.icon} ${topGainer.symbol}\n`;
+                text += '🟡 Binance\n';
+                text += '⚡ Live Market Data';
+
+                await msg.reply(text);
+
+            } catch (error) {
+                console.error(error);
+                await msg.reply("❌ Error fetching crypto prices.");
+            }
             break;
 
         case "/everyone":
