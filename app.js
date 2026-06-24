@@ -347,6 +347,76 @@ function parseValueOption(tokens, index) {
     };
 }
 
+function getDirSize(dir) {
+    let total = 0;
+
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+
+    for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+
+        if (entry.isDirectory()) {
+            total += getDirSize(fullPath);
+        } else {
+            total += fs.statSync(fullPath).size;
+        }
+    }
+
+    return total;
+}
+
+function humanSize(bytes) {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 ** 2) return `${(bytes / 1024).toFixed(2)} KB`;
+    if (bytes < 1024 ** 3) return `${(bytes / 1024 ** 2).toFixed(2)} MB`;
+    return `${(bytes / 1024 ** 3).toFixed(2)} GB`;
+}
+
+function listCacheLevelOnly(dir = 'cache') {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+
+    if (!entries.length) {
+        return 'Diretório vazio.\n';
+    }
+
+    let totalBytes = 0;
+
+    const rows = entries.map((entry, index) => {
+        const fullPath = path.join(dir, entry.name);
+        const isLast = index === entries.length - 1;
+        const branch = isLast ? '└── ' : '├── ';
+
+        let sizeBytes;
+
+        if (entry.isDirectory()) {
+            sizeBytes = getDirSize(fullPath);
+        } else {
+            sizeBytes = fs.statSync(fullPath).size;
+        }
+
+        totalBytes += sizeBytes;
+
+        return {
+            name: entry.isDirectory()
+                ? `${branch}📁 ${entry.name}/`
+                : `${branch}${entry.name}`,
+            size: humanSize(sizeBytes)
+        };
+    });
+
+    const maxName = Math.max(...rows.map(r => r.name.length));
+
+    let output = rows
+        .map(r => `${r.name.padEnd(maxName)}  ${r.size.padStart(10)}`)
+        .join('\n');
+
+    output += '\n';
+    output += `${''.padEnd(maxName, '─')} ${'─'.repeat(12)}\n`;
+    output += `${'Total:'.padEnd(maxName)}  ${humanSize(totalBytes).padStart(10)}`;
+
+    return output;
+}
+
 /*
 Exemplo de 'config: {}'
 
@@ -621,6 +691,19 @@ function normalizeWid(wid) {
     return `${number}@c.us`;
 }
 
+function countMessages() {
+    return new Promise((resolve, reject) => {
+        db.get(`SELECT COUNT(*) AS total FROM messages`, (err, row) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+
+            resolve(row.total);
+        });
+    });
+}
+
 // Função auxiliar para gerar e criar a estrutura de pastas cache/media/ano/mes/dia
 function obterPastaMidia() {
     const agora = new Date();
@@ -640,8 +723,8 @@ function obterPastaMidia() {
 }
 
 // Limpa mensagens e mídias físicas com mais de 68 horas
-function limparCacheAntigo() {
-    const limiteTempo = Date.now() - MAX_DELETE_WINDOW;
+function limparCacheAntigo(maxDeletewin = MAX_DELETE_WINDOW) {
+    const limiteTempo = Date.now() - maxDeletewin;
 
     // 1. Busca quais mídias físicas serão apagadas antes de deletar as linhas do banco
     db.all(`SELECT media_path FROM messages WHERE timestamp < ? AND media_path IS NOT NULL`, [limiteTempo], (err, rows) => {
@@ -1742,22 +1825,22 @@ client.on('message_create', async (msg) => {
             let outputFile   = null;
             let logCmdFile   = null;
             let logCmd       = null;
-            const configCmd  = {
-                booleanOptions: [
-                    'audio',   'a',
-                    'verbose', 'v',
-                    'sticker', 'st'
-                ],
-                valueOptions: [
-                    'startSec', 'ss',
-                    'endSec',   'es'
-                ]
-            };
 
             try {
                 let urlInput = null;
-                let optArgs  = null;
+                let opts  = null;
                 let mediaType = "video";
+                const configCmd  = {
+                    booleanOptions: [
+                        'audio',   'a',
+                        'verbose', 'v',
+                        'sticker', 'st'
+                    ],
+                    valueOptions: [
+                        'startSec', 'ss',
+                        'endSec',   'es'
+                    ]
+                };
 
                 // TODO: Adicionar ARGV
                 printCall(sender_contact, argv);
@@ -1765,8 +1848,8 @@ client.on('message_create', async (msg) => {
                 if (quotedMsg) { // It was a reply...
                     urlInput = extractFirstUrl(quotedMsg.body);
                 } else {
-                    optArgs  = parseCommand(content_after_caller, configCmd);
-                    urlInput = optArgs.argv[0];
+                    opts  = parseCommand(content_after_caller, configCmd);
+                    urlInput = opts.argv[0];
                 }
 
                 if (urlInput == undefined) {
@@ -1779,12 +1862,12 @@ client.on('message_create', async (msg) => {
                     });
                 }
 
-                let isAudio   = (optArgs.opt?.audio   || optArgs.opt?.a);
-                let isSticker = (optArgs.opt?.sticker || optArgs.opt?.st);
-                let isVerbose = (optArgs.opt?.verbose || optArgs.opt?.v);
+                let isAudio   = (opts.opt?.audio   || opts.opt?.a);
+                let isSticker = (opts.opt?.sticker || opts.opt?.st);
+                let isVerbose = (opts.opt?.verbose || opts.opt?.v);
 
-                printInfo(`DEBUG: urlInput=${urlInput} optArgs >\n`);
-                console.log(JSON.stringify(optArgs, null, 4));
+                printInfo(`DEBUG: urlInput=${urlInput} opts >\n`);
+                console.log(JSON.stringify(opts, null, 4));
 
                 if (!isValidHttpUrl(urlInput)) {
                     throw new Error(`A URL '${urlInput}' é inválida. ignorando.'`, {
@@ -1843,7 +1926,7 @@ client.on('message_create', async (msg) => {
                     });
                 }
 
-                const ffmpegArgs = parseCommandForFfmpeg(optArgs, originalFile, outputFile);
+                const ffmpegArgs = parseCommandForFfmpeg(opts, originalFile, outputFile);
                 const cmdFfmpeg = [BIN_FFMPEG, ...ffmpegArgs].join(" ");
 
                 try {
@@ -1870,10 +1953,10 @@ client.on('message_create', async (msg) => {
                             textMsg += `🔗 *ffmpeg*: _${cmdFfmpeg}_\n`;
                             textMsg += "\n";
 
-                        if (optArgs) {
+                        if (opts) {
                             textMsg += `🧩 *cmdArgs*:`;
                             textMsg += '```\n';
-                            textMsg += JSON.stringify(optArgs, null, 4);
+                            textMsg += JSON.stringify(opts, null, 4);
                             textMsg += '\n```';
                         }
 
@@ -1951,6 +2034,60 @@ client.on('message_create', async (msg) => {
                         // Ignora qualquer erro e não exibe nenhum warning/log
                     }
                 }
+            }
+
+            break;
+
+       case "/cache":
+            try {
+                const configCmd = {
+                    booleanOptions: [
+                        'clean', 'c',
+                        'force', 'f'
+
+                    ],
+                    valueOptions: [
+                    ]
+                };
+
+                let textMsg = "";
+                const opts = parseCommand(content_after_caller, configCmd);
+
+                if (opts?.opt?.clean || opts?.opt?.c) {
+                    const isForce = (opts?.opt?.force || opts?.opt?.f);
+                    const maxAgeHours = isForce ? 0 : 2;
+                    const maxDeletewin = isForce ? 0 : MAX_DELETE_WINDOW;
+
+                    textMsg += `🧹 Limpando o cache. ${isForce ? "(force)" : ""}`;
+
+                    limparCacheAntigo(maxDeletewin);
+                    limparArquivosAntigos(TMP_DIR, maxAgeHours);
+
+                    textMsg += "\n";
+                } else {
+                    const totalMessages = await countMessages();
+
+                    textMsg += `🗂️ Exibindo conteúdo de ${CACHE_DIR}/*`;
+                    textMsg += '\n\n```' + listCacheLevelOnly(CACHE_DIR) + '```\n\n';
+                    textMsg += `🗄️ Existem ${totalMessages} mensagens no cache.`;
+                }
+
+                await msg.reply(textMsg, null, { linkPreview: false });
+            } catch (e) {
+                let textError = "";
+
+                // Processe todos os replies de erros.
+                printError(e.message);
+                textError += `⚠️💥 ${e.message}.`;
+
+                if (e?.cause?.inner) {
+                    textError += '\n';
+                    textError += `⛓️‍💥 *Inner*:  ${e.cause.inner.message || e.cause.inner}`;
+                }
+
+                textError += '\n';
+
+                await msg.reply(textError, null, { linkPreview: false });
             }
 
             break;
