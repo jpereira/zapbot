@@ -650,6 +650,48 @@ function limparCacheAntigo() {
     });
 }
 
+async function limparArquivosAntigos(dir = TMP_DIR, maxAgeHours = 2) {
+    const now = Date.now();
+    const maxAgeMs = maxAgeHours * 60 * 60 * 1000;
+
+    try {
+        const files = await fs.readdir(dir);
+
+        for (const file of files) {
+            const fullPath = path.join(dir, file);
+
+            try {
+                const stat = await fs.stat(fullPath);
+
+                // Ignora diretórios
+                if (!stat.isFile()) {
+                    continue;
+                }
+
+                const ageMs = now - stat.mtimeMs;
+
+                if (ageMs > maxAgeMs) {
+                    await fs.unlink(fullPath);
+
+                    printInfo(`[cleanup] Deleted: ${fullPath}`);
+                }
+
+            } catch (err) {
+                console.error(
+                    `[cleanup] Error processing ${fullPath}:`,
+                    err.message
+                );
+            }
+        }
+
+    } catch (err) {
+        console.error(
+            `[cleanup] Error reading directory ${dir}:`,
+            err.message
+        );
+    }
+}
+
 // envia mensagem para si próprio.
 function messageToSelf(message) {
     client.sendMessage(process.env.PHONE_NUMBER, message);
@@ -1190,6 +1232,7 @@ client.on('message_create', async (msg) => {
     stmt.finalize();
 
     limparCacheAntigo();
+    limparArquivosAntigos();
 
     try {
         if (!msg.body.includes(' ')) {
