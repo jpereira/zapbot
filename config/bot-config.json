@@ -69,6 +69,16 @@
                 "<url>               - ex: http://www.{instagram,youtube,tiktok}.com/?path"
             ],
             "onlyAdmin": false
+        },
+        {
+            "cmd": "/cache",
+            "aliases": [ "/c" ],
+            "help": "Exibe espaço ocupado em ${CACHE_DIR}",
+            "syntax": [
+                "[-clean|-c]  - Limpa o cache.",
+                "[-force|-f]  - Apaga tudo."
+            ],
+            "onlyAdmin": false
         }
     ]
 }
