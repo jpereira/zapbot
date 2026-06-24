@@ -238,32 +238,49 @@ function isValidHttpUrl(str) {
 }
 
 function parseCommandForFfmpeg(opts, originalFile, outputFile) {
-    const args = [];
-
-    const isSticker = opts.opt?.st || opts.opt?.sticker;
+    const isSticker = opts?.opt?.sticker  || opts?.opt?.st;
+    const isAudio   = opts?.opt?.audio    || opts?.opt?.a;
+    const startSec  = opts?.opt?.startSec || opts?.opt?.ss;
+    const endSec    = opts?.opt?.endSec   || opts?.opt?.es;
+    const args      = [];
 
     args.push("-y");
 
-    if (opts.opt?.startSec != null) {
-        args.push("-ss", String(opts.opt.startSec));
+    if (startSec != null) {
+        args.push("-ss", String(startSec));
     }
 
     if (isSticker) {
         args.push("-t", "6");
     } else if (
-        opts.opt?.startSec != null &&
-        opts.opt?.endSec != null &&
-        Number(opts.opt.endSec) > Number(opts.opt.startSec)
+        startSec != null &&
+        endSec != null &&
+        Number(endSec) > Number(startSec)
     ) {
         args.push(
             "-t",
-            String(Number(opts.opt.endSec) - Number(opts.opt.startSec))
+            String(Number(endSec) - Number(startSec))
         );
     }
 
     args.push("-i", originalFile);
 
-    if (isSticker) {
+    //
+    // AUDIO ONLY
+    //
+    if (isAudio) {
+        args.push(
+            "-vn",                // remove vídeo
+            "-c:a", "libmp3lame", // codec mp3
+            "-b:a", "192k",       // bitrate
+            outputFile            // deve terminar em .mp3
+        );
+    }
+
+    //
+    // STICKER
+    //
+    else if (isSticker) {
         args.push(
             "-vf",
             "fps=15,scale=512:512:force_original_aspect_ratio=decrease,pad=512:512:(ow-iw)/2:(oh-ih)/2:color=black",
@@ -277,7 +294,12 @@ function parseCommandForFfmpeg(opts, originalFile, outputFile) {
             "-movflags", "+faststart",
             outputFile
         );
-    } else {
+    }
+
+    //
+    // NORMAL VIDEO
+    //
+    else {
         args.push(
             "-c:v", "libx264",
             "-b:v", "800k",
@@ -294,10 +316,56 @@ function parseCommandForFfmpeg(opts, originalFile, outputFile) {
     return args;
 }
 
-function parseCommand(input) {
-    const tokens = [...input.matchAll(/"([^"]*)"|(\S+)/g)]
-        .map(m => m[1] ?? m[2]);
+// Parseando os parametros
+function tokenizeCommand(input) {
+    return [...input.matchAll(/"([^"]*)"|'([^']*)'|(\S+)/g)]
+        .map(m => m[1] ?? m[2] ?? m[3]);
+}
 
+function normalizeArg(arg) {
+    // Corrige esse typo dos seus exemplos: uol..com.br
+    return arg.replace('..com.br', '.com.br');
+}
+
+function isOption(token) {
+    return token.startsWith('-') && token.length > 1;
+}
+
+function parseValueOption(tokens, index) {
+    const next = tokens[index + 1];
+
+    if (next != null && !isOption(next)) {
+        return {
+            value: next,
+            nextIndex: index + 1
+        };
+    }
+
+    return {
+        value: true,
+        nextIndex: index
+    };
+}
+
+/*
+Exemplo de 'config: {}'
+
+    const configCmd = {
+        booleanOptions: [
+            'audio', 'a',
+            'verbose', 'v',
+            'sticker', 'st'
+        ],
+        valueOptions: [
+            'startSec',
+            'endSec'
+        ]
+    };
+*/
+function parseCommand(input, config = {}) {
+    const tokens = tokenizeCommand(input);
+    const booleanOptions = new Set(config.booleanOptions);
+    const valueOptions = new Set(config.valueOptions);
     const result = {
         opt: {},
         argv: []
@@ -306,17 +374,43 @@ function parseCommand(input) {
     for (let i = 0; i < tokens.length; i++) {
         const token = tokens[i];
 
-        if (token.startsWith('-') && token.length > 1) {
+        // ignora /cmd
+        if (i === 0 && token.startsWith('/')) {
+            continue;
+        }
+
+        if (isOption(token)) {
             const key = token.slice(1);
 
-            if (i + 1 < tokens.length && !tokens[i + 1].startsWith('-')) {
-                result.opt[key] = tokens[++i];
-            } else {
+            if (booleanOptions.has(key)) {
                 result.opt[key] = true;
+                continue;
             }
-        } else {
-            result.argv.push(token);
+
+            if (valueOptions.has(key)) {
+                const parsed = parseValueOption(tokens, i);
+                result.opt[key] = parsed.value;
+                i = parsed.nextIndex;
+                continue;
+            }
+
+            // fallback:
+            // opção desconhecida vira boolean se próxima coisa parece URL/argumento solto
+            // ou consome valor se você quiser manter compatibilidade antiga
+            const parsed = parseValueOption(tokens, i);
+            result.opt[key] = parsed.value;
+            i = parsed.nextIndex;
+            continue;
         }
+
+        result.argv.push(normalizeArg(token));
+    }
+
+    // regra específica do seu caso:
+    // se tem mais de um argumento, não tratar como audio
+    if (result.argv.length > 1) {
+        delete result.opt.audio;
+        delete result.opt.a;
     }
 
     return result;
@@ -1592,6 +1686,17 @@ client.on('message_create', async (msg) => {
             let outputFile   = null;
             let logCmdFile   = null;
             let logCmd       = null;
+            const configCmd  = {
+                booleanOptions: [
+                    'audio',   'a',
+                    'verbose', 'v',
+                    'sticker', 'st'
+                ],
+                valueOptions: [
+                    'startSec', 'ss',
+                    'endSec',   'es'
+                ]
+            };
 
             try {
                 let urlInput = null;
@@ -1604,12 +1709,22 @@ client.on('message_create', async (msg) => {
                 if (quotedMsg) { // It was a reply...
                     urlInput = extractFirstUrl(quotedMsg.body);
                 } else {
-                    optArgs  = parseCommand(content_after_caller);
+                    optArgs  = parseCommand(content_after_caller, configCmd);
                     urlInput = optArgs.argv[0];
                 }
 
+                if (urlInput == undefined) {
+                    throw new Error(`Falta parametro. /help para mais ajuda.`, {
+                        cause: {
+                            inner: null,
+                            cmd: null
+                        }
+                    });
+                }
+
+                let isAudio   = (optArgs.opt?.audio   || optArgs.opt?.a);
                 let isSticker = (optArgs.opt?.sticker || optArgs.opt?.st);
-                let isVerbose = (optArgs.opt?.v || optArgs.opt?.verbose);
+                let isVerbose = (optArgs.opt?.verbose || optArgs.opt?.v);
 
                 printInfo(`DEBUG: urlInput=${urlInput} optArgs >\n`);
                 console.log(JSON.stringify(optArgs, null, 4));
@@ -1624,14 +1739,18 @@ client.on('message_create', async (msg) => {
                 }
 
                 printInfo(`Recebido '/download' ${urlInput}`);
-                await msg.reply(`💡 Processando seu ${isSticker ? "sticker" : "video"}, aguarde.`, null, { linkPreview: false });
+                await msg.reply(`💡 Processando ${isSticker ? "seu sticker" : "sua midia"}, aguarde.`, null, { linkPreview: false });
 
                 if (!fs.existsSync(workDir)) {
                     fs.mkdirSync(workDir, { recursive: true });
                 }
 
                 originalFile = path.join(workDir, `${id}_original.mp4`);
-                outputFile   = path.join(workDir, `${id}_output.mp4`);
+                if (isAudio) {
+                    outputFile   = path.join(workDir, `${id}_output.mp3`);
+                } else {
+                    outputFile   = path.join(workDir, `${id}_output.mp4`);
+                }
                 logCmdFile   = path.join(workDir, `${id}_cmd.log`);
                 logCmd       = fs.openSync(logCmdFile, "a");
 
@@ -1658,7 +1777,7 @@ client.on('message_create', async (msg) => {
                     });
                 }
 
-                if (fs.statSync(originalFile).size > 20 * 1024 * 1024) {
+                if (fs.statSync(originalFile).size > (20 * 1024 * 1024)) { // Max 20mb
                     throw new Error("Arquivo muito grande para WhatsApp Web", {
                         cause: {
                             inner: null,
@@ -1694,6 +1813,13 @@ client.on('message_create', async (msg) => {
                             textMsg += `🔗 *ffmpeg*: _${cmdFfmpeg}_\n`;
                             textMsg += "\n";
 
+                        if (optArgs) {
+                            textMsg += `🧩 *cmdArgs*:`;
+                            textMsg += '```\n';
+                            textMsg += JSON.stringify(optArgs, null, 4);
+                            textMsg += '\n```';
+                        }
+
                         // verbose? mande uma mensagem antes.
                         await msg.reply(textMsg, null, { linkPreview: false });
                     }
@@ -1713,7 +1839,7 @@ client.on('message_create', async (msg) => {
                         msgOpts.sendMediaAsSticker = true;
                         printInfo(`> Enviando a midia como sticker para '${senderName}'`);
                     } else {
-                        msgOpts.caption = "💾 Aqui está o vídeo para download.";
+                        msgOpts.caption = "📥 Aqui está a mídia para download.";
                         msgOpts.sendMediaAsDocument = true;
                         printInfo(`> Enviando a midia ${outputFile} para '${senderName}'`);
                     }
