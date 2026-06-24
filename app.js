@@ -705,26 +705,26 @@ client.on('ready', () => {
     printSuccess(`🤖 ZapBot inicializado! Informando ${myid}`);
     messageToSelf(`🤖 ZapBot inicializado`);
 
-    db.all('SELECT phone_number, timestamp FROM monitored_numbers LIMIT 20', [], async (err, rows) => {
-        if (err) {
-            printError('Erro ao listar os números monitorados:', err.message);
-            await msg.reply('Erro ao buscar lista de números monitorados.');
-            return;
-        }
+    // db.all('SELECT phone_number, timestamp FROM monitored_numbers LIMIT 20', [], async (err, rows) => {
+    //     if (err) {
+    //         printError('Erro ao listar os números monitorados:', err.message);
+    //         await msg.reply('Erro ao buscar lista de números monitorados.');
+    //         return;
+    //     }
 
-        if (rows.length === 0) {
-            messageToSelf('📲🔔 *Números Monitorados:*\n<VAZIO>\n;');
-            return;
-        }
+    //     if (rows.length === 0) {
+    //         messageToSelf('📲🔔 *Números Monitorados:*\n<VAZIO>\n;');
+    //         return;
+    //     }
 
-        let responseText = '📲🔔 *Números Monitorados:*\n\n';
+    //     let responseText = '📲🔔 *Números Monitorados:*\n\n';
 
-        rows.forEach((row) => {
-            responseText += `* ${row.phone_number} adicionado em: _${row.timestamp}_\n`;
-        });
+    //     rows.forEach((row) => {
+    //         responseText += `* ${row.phone_number} adicionado em: _${row.timestamp}_\n`;
+    //     });
 
-        messageToSelf(responseText);
-    });
+    //     messageToSelf(responseText);
+    // });
 
     // Força o seu próprio bot a aparecer ativo se necessário
     // client.sendPresenceAvailable().catch(() => null);
@@ -915,8 +915,6 @@ async function iniciarBot() {
 }
 
 iniciarBot();
-
-let _called_help = false;
 
 client.on('message_create', async (msg) => {
     const timestamp = Date.now();
@@ -1149,54 +1147,42 @@ client.on('message_create', async (msg) => {
         return;
     }
 
-    if (!_called_help) {
-        let printMsg = null;
-
-        if (isGroup) {
-            printMsg = (`Executando comando '${command.cmd}' de '${senderName}' no grupo '${chatName}'`);
-        } else {
-            printMsg = (`Executando comando '${command.cmd}' em '${chatName}'`);
-        }
-
-        printDebug(printMsg);
+    if (isGroup) {
+        printDebug(`Executando comando '${command.cmd}' de '${senderName}' no grupo '${chatName}'`);
+    } else {
+        printDebug(`Executando comando '${command.cmd}' em '${chatName}'`);
     }
 
     switch (command.cmd) {
         case "/help":
-            if (!_called_help) {
-                const maxCmdLength = Math.max(
-                    ...botConfig.commands.map(c => c.cmd.length)
-                );
+            const maxCmdLength = Math.max(
+                ...botConfig.commands.map(c => c.cmd.length)
+            );
 
-                const helpText =
-                    "🤖 *MENU DE AJUDA*\n\n```" +
-                    botConfig.commands
-                        .map(c => {
-                            let text =
-                                `${c.cmd.padEnd(maxCmdLength)} | ${c.help}`;
+            const helpText =
+                "🤖 *MENU DE AJUDA*\n\n```" +
+                botConfig.commands
+                    .map(c => {
+                        let text =
+                            `${c.cmd.padEnd(maxCmdLength)} | ${c.help}`;
 
-                            if (c.syntax?.length) {
-                                text += "\n" +
-                                    c.syntax
-                                        .map(s => `  └ ${c.cmd} ${s}`)
-                                        .join("\n");
-                            }
+                        if (c.syntax?.length) {
+                            text += "\n" +
+                                c.syntax
+                                    .map(s => `  └ ${c.cmd} ${s}`)
+                                    .join("\n");
+                        }
 
-                            if (c.aliases?.length) {
-                                text += `\n  └ aliases: [${c.aliases.join(", ")}]`;
-                            }
+                        if (c.aliases?.length) {
+                            text += `\n  └ aliases: [${c.aliases.join(", ")}]`;
+                        }
 
-                            return text;
-                        })
-                        .join("\n")
-                    + "\n```";
+                        return text;
+                    })
+                    .join("\n")
+                + "\n```";
 
-                msg.reply(helpText);
-
-                _called_help = true;
-            } else {
-                _called_help = false;
-            }
+            msg.reply(helpText);
 
             break;
 
