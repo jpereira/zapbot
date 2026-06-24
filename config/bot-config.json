@@ -57,8 +57,8 @@
             "onlyAdmin": true
         },
         {
-            "cmd": "/download",
-            "aliases": [ "/d", "/wget", "/getright", "/get" ],
+            "cmd": "/get",
+            "aliases": [ "/d", "/download", "/wget", "/getright" ],
             "help": "Caso seja válido, faz o download do video. (ex: Instagram,YouTube,X,...)",
             "syntax": [
                 "[-st|-sticker]      - Enviar como sticker.",

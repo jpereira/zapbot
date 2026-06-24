@@ -416,6 +416,19 @@ function parseCommand(input, config = {}) {
     return result;
 }
 
+function getCommandSyntax(cmd) {
+    const command = botConfig.commands.find(c =>
+        c.cmd === cmd ||
+        c.aliases?.includes(cmd)
+    );
+
+    if (!command?.syntax) {
+        return null;
+    }
+
+    return command.syntax.join('\n');
+}
+
 // realiza check e restart do cliente
 async function restartClient() {
     try {
@@ -1721,7 +1734,7 @@ client.on('message_create', async (msg) => {
             }
             break;
 
-        case "/download":
+        case "/get":
             // TODO: limpar cache a cada X tempo, boot.
             const id         = Date.now();
             const workDir    = TMP_DIR;
@@ -1757,8 +1770,9 @@ client.on('message_create', async (msg) => {
                 }
 
                 if (urlInput == undefined) {
-                    throw new Error(`Falta parametro. /help para mais ajuda.`, {
+                    throw new Error('Syntax: /get <opções> http://www.instagram.com/ajsh12j', {
                         cause: {
+                            syntax: '```' + getCommandSyntax("/get") + '```',
                             inner: null,
                             cmd: null
                         }
@@ -1781,7 +1795,7 @@ client.on('message_create', async (msg) => {
                     });
                 }
 
-                printInfo(`Recebido '/download' ${urlInput}`);
+                printInfo(`Recebido '/get' ${urlInput}`);
                 await msg.reply(`💡 Processando ${isSticker ? "seu sticker" : "sua midia"}, aguarde.`, null, { linkPreview: false });
 
                 if (!fs.existsSync(workDir)) {
@@ -1897,21 +1911,28 @@ client.on('message_create', async (msg) => {
                     });
                 }
             } catch (e) {
-                    // Processe todos os replies de erros.
-                    printError(e.message);
-                    let textError = `⚠️💥 ${e.message}.`;
+                    let textError = "";
 
-                    if (e?.cause?.cmd) {
+                    if (e?.cause?.syntax) {
+                        textError += `${e.message}\n`;
+                        textError += `${e.cause.syntax}`;
+                    } else {
+                        // Processe todos os replies de erros.
+                        printError(e.message);
+                        textError += `⚠️💥 ${e.message}.`;
+
+                        if (e?.cause?.cmd) {
+                            textError += '\n';
+                            textError += `🛠️ *Cmd*:    ${e.cause.cmd}`;
+                        }
+
+                        if (e?.cause?.inner) {
+                            textError += '\n';
+                            textError += `⛓️‍💥 *Inner*:  ${e.cause.inner.message || e.cause.inner}`;
+                        }
+
                         textError += '\n';
-                        textError += `🛠️ *Cmd*:    ${e.cause.cmd}`;
                     }
-
-                    if (e?.cause?.inner) {
-                        textError += '\n';
-                        textError += `⛓️‍💥 *Inner*:  ${e.cause.inner.message || e.cause.inner}`;
-                    }
-
-                    textError += '\n';
 
                     await msg.reply(textError, null, { linkPreview: false });
             } finally {
