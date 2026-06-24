@@ -61,11 +61,12 @@
             "aliases": [ "/d", "/wget", "/getright", "/get" ],
             "help": "Caso seja válido, faz o download do video. (ex: Instagram,YouTube,X,...)",
             "syntax": [
-                "[-st|-sticker]   - Enviar como sticker.",
-                "[-v|-verbose]    - Exibe os parametros usados no yt-dlp/ffmpeg",
-                "[-startSec sec]  - Iniciar a partir do segundo determinado.",
-                "[-endSec sec]    - Cortar o video no segundo terminado.",
-                "<url>            - ex: http://www.{instagram,youtube,tiktok}.com/?path"
+                "[-st|-sticker]      - Enviar como sticker.",
+                "[-a|-audio]         - Extrai o audio e envia no formato .mp3",
+                "[-v|-verbose]       - Exibe os parametros usados no yt-dlp/ffmpeg",
+                "[-ss|-startSec sec] - Iniciar a partir do segundo determinado.",
+                "[-es|-endSec sec]   - Cortar o video no segundo terminado.",
+                "<url>               - ex: http://www.{instagram,youtube,tiktok}.com/?path"
             ],
             "onlyAdmin": false
         }
