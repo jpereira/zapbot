@@ -42,7 +42,7 @@
         {
             "cmd": "/crypto",
             "aliases": [ "/bitcoio", "/btc", "/moedinha" ],
-            "help": "Exibe o preço atual das cryptos: BTC, ETH, GALA, MATIC.",
+            "help": "Exibe o preço atual das cryptos: BTC, ETH, DOGE e SOLANA.",
             "onlyAdmin": false
         },
         {
