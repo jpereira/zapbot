@@ -5,7 +5,17 @@
             "aliases": [ "/h" ],
             "help": "Exibe este menu de ajuda.",
             "onlyAdmin": false
-        },        
+        },
+        {
+            "cmd":  "/debug",
+            "aliases": [ "/h" ],
+            "help": "Ajuda na depuração de problemas.",
+            "syntax": [
+                "on  - Ativa o debug mode.",
+                "off - Desativa o debug mode."
+            ],
+            "onlyAdmin": true
+        },
         {
             "cmd":  "/ping",
             "aliases": [ "/p" ],
