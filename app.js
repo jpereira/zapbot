@@ -99,11 +99,14 @@ function printCall(sender_contact, call) {
     );
 }
 
-
 // environment
 const APP_ENV = process.env.APP_ENV || 'dev';
-printInfo(`Running in APP_ENV=${process.env.APP_ENV}`);
 
+// Debug mode variavel.
+//let isDebugMode = (APP_ENV == "Dev");
+let isDebugMode = true;
+
+printInfo(`Running in APP_ENV=${process.env.APP_ENV} isDebugMode=${isDebugMode}`);
 
 // INICIALIZAÇÃO DO BANCO DE DADOS SQLITE
 const dbPath = path.resolve(__dirname, './cache/bot_database.db');
@@ -1234,19 +1237,23 @@ client.on('message_create', async (msg) => {
     let lat = null;
     let lng = null;
 
-    // printDebug("======================================================");
-    // printDebug(`DEBUG: msgIdPure=${msgIdPure},senderName=${senderName},senderJid=${senderJid},senderNumber=${senderNumber},chatId=${chatId},chatName=${chatName}`);
-    // console.log({
-    //     author: msg.author,
-    //     from: msg.from,
-    //     contact_id: contact.id._serialized,
-    //     number: contact.number,
-    //     lid: contact.lid,
-    //     pushname: contact.pushname,
-    //     name: contact.name
-    // });
-    // console.log(contact);
-    // console.log(msg);
+    if (isDebugMode) {
+        printDebug("<event: 'message_create'>");
+        printDebug(`DEBUG: msgIdPure=${msgIdPure},senderName=${senderName},senderJid=${senderJid},senderNumber=${senderNumber},chatId=${chatId},chatName=${chatName}`);
+
+        console.log({
+            author: msg.author,
+            from: msg.from,
+            contact_id: contact.id._serialized,
+            number: contact.number,
+            lid: contact.lid,
+            pushname: contact.pushname,
+            name: contact.name
+        });
+        console.log(contact);
+        console.log(msg);
+        printDebug("</event: 'message_create'>");
+    }
 
     if (msgType === 'location' && msg.location) {
         lat = msg.location.latitude;
