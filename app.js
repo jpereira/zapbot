@@ -14,6 +14,9 @@ const dotenv = require('dotenv');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
+const BOT_START_TIME = Date.now();
+let BOT_AUTHENTICATED_TIME = 0;
+
 // Tempo máximo que o WhatsApp permite apagar para todos: 68 horas em milissegundos
 const MAX_DELETE_WINDOW = 68 * 60 * 60 * 1000; 
 
@@ -31,6 +34,31 @@ const BIN_YT = "/venv/bin/yt-dlp";
 
 // Load the config/.env.{APP_ENV} file
 dotenv.config();
+
+function getBotUptime(started_time) {
+    const totalSeconds = Math.floor((Date.now() - started_time) / 1000);
+
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    const parts = [];
+
+    if (days)
+        parts.push(`${days} ${days === 1 ? 'dia' : 'dias'}`);
+
+    if (hours)
+        parts.push(`${hours} ${hours === 1 ? 'hora' : 'horas'}`);
+
+    if (minutes)
+        parts.push(`${minutes} ${minutes === 1 ? 'minuto' : 'minutos'}`);
+
+    if (!days && !hours)
+        parts.push(`${seconds} ${seconds === 1 ? 'segundo' : 'segundos'}`);
+
+    return parts.join(', ');
+}
 
 // basic debug functions
 function getTimestamp() {
@@ -966,11 +994,13 @@ client.on('qr', async (qr) => {
 });
 
 client.on('authenticated', (session) => {
-    printSuccess(`Whatsapp authentication success!`)
+    printSuccess(`🔐 Whatsapp authentication success!`);
+    BOT_AUTHENTICATED_TIME = Date.now();
 });
 
 client.on('disconnected', async (reason) => {
     printInfo('💥 WhatsApp desconectou:', reason);
+    BOT_AUTHENTICATED_TIME = 0;
     await restartClient();
 });
 
@@ -984,7 +1014,7 @@ client.on('ready', () => {
     let myid = process.env.PHONE_NUMBER;
     lastOk = Date.now();
 
-    printSuccess(`🤖 ZapBot inicializado! Informando ${myid}`);
+    printSuccess(`🤖 ZapBot ${version} inicializado! Informando ${myid}`);
     messageToSelf(`🤖 ZapBot inicializado`);
 
     // db.all('SELECT phone_number, timestamp FROM monitored_numbers LIMIT 20', [], async (err, rows) => {
@@ -1524,6 +1554,18 @@ client.on('message_create', async (msg) => {
                     msg.reply('🪲 Debug Desativado.');
                 }
 
+                break;
+
+            case "/uptime":
+                printCall(sender_contact, command.cmd);
+
+                const msgReply =
+                    `🤖 *ZapBot ${version}*\n` +
+                    `━━━━━━━━━━━━━━━━━━\n` +
+                    `⚡ Online: *${getBotUptime(BOT_START_TIME)}*\n` +
+                    `🔐 Conectado: *${getBotUptime(BOT_AUTHENTICATED_TIME)}*`;
+
+                await msg.reply(msgReply);
                 break;
 
             case "/ping":
