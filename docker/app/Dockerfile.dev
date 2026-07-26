@@ -48,6 +48,7 @@ RUN npm install puppeteer-core --save
 
 # BugFix
 RUN npm install github:lindionez/whatsapp-web.js#feat/fix-_serialized-id-fallback
+RUN /venv/bin/python -m pip install -U yt-dlp
 
 COPY . .
 COPY --chown=node:node . /app/
