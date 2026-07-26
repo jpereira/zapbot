@@ -45,6 +45,9 @@ COPY package*.json ./
 RUN npm install
 RUN npm install puppeteer-core --save
 
+# BugFix
+RUN npm install github:lindionez/whatsapp-web.js#feat/fix-_serialized-id-fallback
+
 COPY . .
 COPY --chown=node:node . /app/
 #COPY --chown=node:node --chmod=755 docker/app/entrypoint.sh
