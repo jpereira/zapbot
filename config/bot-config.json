@@ -17,6 +17,12 @@
             "onlyAdmin": true
         },
         {
+            "cmd":  "/uptime",
+            "aliases": [ "/u" ],
+            "help": "Exibe o tempo que o bot está rodando.",
+            "onlyAdmin": true
+        },
+        {
             "cmd":  "/ping",
             "aliases": [ "/p" ],
             "help": "Verificar status do bot.",
