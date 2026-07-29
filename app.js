@@ -1,6 +1,7 @@
 const { Client, MessageMedia, LocalAuth, Location } = require('whatsapp-web.js');
 const { spawn } = require('child_process');
 const { OpenAI } = require('openai');
+const packageJson = require('./package.json');
 
 const axios = require('axios');
 const qrcode = require('qrcode');
@@ -1014,8 +1015,8 @@ client.on('ready', () => {
     let myid = process.env.PHONE_NUMBER;
     lastOk = Date.now();
 
-    printSuccess(`🤖 ZapBot ${version} inicializado! Informando ${myid}`);
-    messageToSelf(`🤖 ZapBot inicializado`);
+    printSuccess(`🤖 ZapBot ${packageJson.version} inicializado! Informando ${myid}`);
+    messageToSelf(`🤖 ZapBot ${packageJson.version} inicializado.`);
 
     // db.all('SELECT phone_number, timestamp FROM monitored_numbers LIMIT 20', [], async (err, rows) => {
     //     if (err) {
@@ -1560,7 +1561,7 @@ client.on('message_create', async (msg) => {
                 printCall(sender_contact, command.cmd);
 
                 const msgReply =
-                    `🤖 *ZapBot ${version}*\n` +
+                    `🤖 *ZapBot ${packageJson.version}*\n` +
                     `━━━━━━━━━━━━━━━━━━\n` +
                     `⚡ Online: *${getBotUptime(BOT_START_TIME)}*\n` +
                     `🔐 Conectado: *${getBotUptime(BOT_AUTHENTICATED_TIME)}*`;
