@@ -2339,7 +2339,9 @@ client.on('message_create', async (msg) => {
                     let isSticker = (opts.opt?.sticker || opts.opt?.st);
                     let isVerbose = (opts.opt?.verbose || opts.opt?.v);
 
-                    printInfo(`DEBUG: urlInput=${urlInput} opts >\n`);
+                    if (isDebugMode) {
+                        printInfo(`DEBUG: urlInput=${urlInput} opts >\n`);
+                    }
                     console.log(JSON.stringify(opts, null, 4));
 
                     if (!isValidHttpUrl(urlInput)) {
