@@ -269,10 +269,10 @@ function isValidHttpUrl(str) {
 }
 
 function parseCommandForFfmpeg(opts, originalFile, outputFile) {
-    const isSticker = opts?.opt?.sticker  || opts?.opt?.st;
-    const isAudio   = opts?.opt?.audio    || opts?.opt?.a;
-    const startSec  = opts?.opt?.startSec || opts?.opt?.ss;
-    const endSec    = opts?.opt?.endSec   || opts?.opt?.es;
+    const isSticker = opts?.opt?.sticker  || opts?.opt?.st; // -sticker  | -st
+    const isAudio   = opts?.opt?.audio    || opts?.opt?.a;  // -audio    | -a
+    const startSec  = opts?.opt?.startSec || opts?.opt?.ss; // -startSec | -ss
+    const endSec    = opts?.opt?.endSec   || opts?.opt?.es; // -endSec   | -es
     const args      = [];
 
     args.push("-y");
@@ -1115,94 +1115,283 @@ client.on('presence_update', async (presence) => {
 });
 
 client.on('message_revoke_everyone', async (after, before) => {
-    lastOk = Date.now(); // healCheck
+    lastOk = Date.now();
 
-    // 💡 FIX 1: Robust way to extract the exact ID of the deleted message
     const protocolKey = after._data?.protocolMessageKey;
-    const targetId = protocolKey?.id || before?.id?.id || after?.id?.id;
 
-    if (!targetId) return;
+    const targetId =
+        protocolKey?.id ||
+        before?.id?.id ||
+        after?.id?.id;
 
-    // Fetches the historical record previously saved by its 'message_create'
-    db.get(`SELECT * FROM messages WHERE id = ?`, [targetId], async (err, row) => {
-        if (err || !row) {
-            printError(`[Revoke] Mensagem apagada ID ${targetId} não foi encontrada no banco.`);
-            return;
-        }
+    if (!targetId) {
+        printError('[Revoke] Não foi possível identificar a mensagem apagada.');
+        return;
+    }
 
-        const dateSending = new Date(row.timestamp).toLocaleString('pt-BR');
-        const myChatId = client.info.wid._serialized;
-        
-        // 💡 FIX 2: Guarantees strict use of the already processed and cleaned SQLite columns
-        let alertText = `❌ *MENSAGEM APAGADA DETECTADA*\n\n`;
-
-        if (row.is_group === 1) {
-            alertText += `👥 *Grupo:* ${row.chat_name || 'Grupo Desconhecido'}\n`;
-        }
-        
-        // Shows the sender data exactly as catalogued at send time
-        alertText += `👤 *Nome:* ${row.sender_name || 'Desconhecido'}\n` +
-                       `📱 *Número:* ${row.sender_number || 'Sem Número'}\n` +
-                       `📅 *Enviada em:* ${dateSending}\n`;
-
-        try {
-            // 📍 LOCATION HANDLING
-            if (row.type === 'location' && row.location_lat && row.location_lng) {
-                const linkMaps = `https://google.com{row.location_lat},${row.location_lng}`;
-                alertText += `🗺️ *Tipo:* LOCALIZAÇÃO\n🔗 *Link do Mapa:* ${linkMaps}`;
-                
-                await client.sendMessage(myChatId, alertText);
-                
-                const latitude = Number(row.location_lat);
-                const longitude = Number(row.location_lng);
-                const descriptionLocal = row.body || 'Localização Fixada';
-                
-                const locationNativa = new Location(latitude, longitude, descriptionLocal);
-                await client.sendMessage(myChatId, locationNativa);
-                // printInfo(`[Bot] Deleted location sent.`);
-            } 
-            
-            // 📇 VCARD HANDLING
-            else if (['vcard', 'contact', 'multi_vcard'].includes(row.type)) {
-                alertText += `📇 *Tipo:* CARTÃO DE CONTATO\n💡 *Nota:* O contato oficial está anexado abaixo.`;
-                await client.sendMessage(myChatId, alertText);
-                await client.sendMessage(myChatId, row.body, { parseVCards: true });
-                // printInfo(`[Bot] vCard card sent.`);
+    db.get(
+        `SELECT * FROM messages WHERE id = ?`,
+        [targetId],
+        async (err, row) => {
+            if (err) {
+                printError('[Revoke] Erro ao consultar banco:', err.message);
+                return;
             }
-            
-            // 📁 HANDLING OF PHYSICAL MEDIA
-            else if (row.has_media && row.media_path && fs.existsSync(row.media_path)) {
-                const mediaAttachment = MessageMedia.fromFilePath(row.media_path);
-                const fileNameAlt = row.body || 'Sem texto';
 
-                if (row.type === 'audio' || row.type === 'ptt' || mediaAttachment.mimetype.includes('audio')) {
-                    alertText += `🎵 *Tipo:* ÁUDIO / NOTA DE VOZ`;
+            if (!row) {
+                printError(
+                    `[Revoke] Mensagem apagada ID ${targetId} não encontrada no banco.`
+                );
+                return;
+            }
+
+            try {
+                const myChatId = client.info.wid._serialized;
+
+                /*
+                 * The WhatsApp timestamp is normally in seconds.
+                 * If you saved Date.now(), it will be in milliseconds.
+                 */
+                const timestampMs =
+                    Number(row.timestamp) < 10_000_000_000
+                        ? Number(row.timestamp) * 1000
+                        : Number(row.timestamp);
+
+                const dateSending = new Date(timestampMs).toLocaleString('pt-BR');
+
+                let nameChat = row.chat_name || 'Conversa desconhecida';
+                let nameSender = row.sender_name || 'Desconhecido';
+                let numberSender = row.sender_number || 'Número indisponível';
+
+                /*
+                 * Recovers the real chat where the deletion happened.
+                 * This fixes the group name even when chat_name was saved wrong.
+                 */
+                try {
+                    const chat = await after.getChat();
+
+                    if (chat?.name) {
+                        nameChat = chat.name;
+                    }
+                } catch (chatError) {
+                    printError(
+                        '[Revoke] Não foi possível recuperar o chat:',
+                        chatError.message
+                    );
+                }
+
+                /*
+                 * Tries to recover the sender from the original message,
+                 * when the "before" parameter is available.
+                 */
+                if (before) {
+                    try {
+                        const contactAlt = await before.getContact();
+
+                        nameSender =
+                            contactAlt.pushname ||
+                            contactAlt.name ||
+                            contactAlt.shortName ||
+                            row.sender_name ||
+                            'Desconhecido';
+
+                        const contactId = contactAlt.id?._serialized || '';
+
+                        if (contactId.endsWith('@c.us')) {
+                            numberSender = contactId.split('@')[0];
+                        } else if (contactAlt.number) {
+                            numberSender = contactAlt.number;
+                        }
+                    } catch (contactError) {
+                        printError(
+                            '[Revoke] Não foi possível recuperar o contato original:',
+                            contactError.message
+                        );
+                    }
+                }
+
+                /*
+                 * If the database stored a @lid, tries to convert it
+                 * to the @c.us phone identifier.
+                 */
+                const senderId =
+                    row.sender_id ||
+                    row.author ||
+                    before?.author ||
+                    protocolKey?.participant;
+
+                if (
+                    senderId &&
+                    senderId.endsWith('@lid') &&
+                    typeof client.getContactLidAndPhone === 'function'
+                ) {
+                    try {
+                        const resultAlt = await client.getContactLidAndPhone([
+                            senderId
+                        ]);
+
+                        const phoneId = resultAlt?.[0]?.pn;
+
+                        if (phoneId) {
+                            numberSender = phoneId
+                                .replace('@c.us', '')
+                                .replace(/\D/g, '');
+
+                            const contactAlt = await client.getContactById(phoneId);
+
+                            nameSender =
+                                contactAlt.pushname ||
+                                contactAlt.name ||
+                                contactAlt.shortName ||
+                                nameSender;
+                        }
+                    } catch (lidError) {
+                        printError(
+                            `[Revoke] Não foi possível converter o LID ${senderId}:`,
+                            lidError.message
+                        );
+                    }
+                }
+
+                let alertText =
+                    `❌ *MENSAGEM APAGADA DETECTADA*\n\n`;
+
+                if (row.is_group === 1) {
+                    alertText += `👥 *Grupo:* ${nameChat}\n`;
+                }
+
+                alertText +=
+                    `👤 *Nome:* ${nameSender}\n` +
+                    `📱 *Número:* ${numberSender}\n` +
+                    `📅 *Enviada em:* ${dateSending}\n`;
+
+                // Location
+                if (
+                    row.type === 'location' &&
+                    row.location_lat !== null &&
+                    row.location_lng !== null
+                ) {
+                    const latitude = Number(row.location_lat);
+                    const longitude = Number(row.location_lng);
+
+                    const linkMaps =
+                        `https://www.google.com/maps?q=` +
+                        `${latitude},${longitude}`;
+
+                    alertText +=
+                        `🗺️ *Tipo:* LOCALIZAÇÃO\n` +
+                        `🔗 *Link do mapa:* ${linkMaps}`;
+
                     await client.sendMessage(myChatId, alertText);
-                    await client.sendMessage(myChatId, mediaAttachment, { sendAudioAsVoice: true });
-                } 
-                else if (row.type === 'video' || row.type === 'image' || mediaAttachment.mimetype.includes('image') || mediaAttachment.mimetype.includes('video')) {
-                    alertText += `🎬 *Tipo:* ${row.type.toUpperCase()}\n💬 *Legenda:* "${row.body || 'Sem texto'}"`;
-                    await client.sendMessage(myChatId, mediaAttachment, { caption: alertText });
-                } 
-                else {
-                    alertText += `📄 *Tipo:* DOCUMENTO\n💬 *Legenda:* "${fileNameAlt}"`;
-                    mediaAttachment.filename = fileNameAlt;
+
+                    const descriptionLocal =
+                        row.body || 'Localização compartilhada';
+
+                    const locationNativa = new Location(
+                        latitude,
+                        longitude,
+                        descriptionLocal
+                    );
+
+                    await client.sendMessage(
+                        myChatId,
+                        locationNativa
+                    );
+
+                    return;
+                }
+
+                // Contato / vCard
+                if (
+                    ['vcard', 'contact', 'multi_vcard'].includes(row.type)
+                ) {
+                    alertText +=
+                        `📇 *Tipo:* CARTÃO DE CONTATO\n` +
+                        `💡 *Nota:* O contato está anexado abaixo.`;
+
+                    await client.sendMessage(myChatId, alertText);
+
+                    if (row.body) {
+                        await client.sendMessage(myChatId, row.body, {
+                            parseVCards: true
+                        });
+                    }
+
+                    return;
+                }
+
+                // Physical file
+                if (
+                    row.has_media &&
+                    row.media_path &&
+                    fs.existsSync(row.media_path)
+                ) {
+                    const mediaAttachment =
+                        MessageMedia.fromFilePath(row.media_path);
+
+                    const mimetype = mediaAttachment.mimetype || '';
+                    const captionAlt = row.body || 'Sem texto';
+
+                    if (
+                        row.type === 'audio' ||
+                        row.type === 'ptt' ||
+                        mimetype.startsWith('audio/')
+                    ) {
+                        alertText += `🎵 *Tipo:* ÁUDIO / NOTA DE VOZ`;
+
+                        await client.sendMessage(myChatId, alertText);
+
+                        await client.sendMessage(myChatId, mediaAttachment, {
+                            sendAudioAsVoice: true
+                        });
+
+                        return;
+                    }
+
+                    if (
+                        row.type === 'video' ||
+                        row.type === 'image' ||
+                        mimetype.startsWith('image/') ||
+                        mimetype.startsWith('video/')
+                    ) {
+                        alertText +=
+                            `🎬 *Tipo:* ${String(row.type).toUpperCase()}\n` +
+                            `💬 *Legenda:* "${captionAlt}"`;
+
+                        await client.sendMessage(myChatId, mediaAttachment, {
+                            caption: alertText
+                        });
+
+                        return;
+                    }
+
+                    alertText +=
+                        `📄 *Tipo:* DOCUMENTO\n` +
+                        `💬 *Legenda:* "${captionAlt}"`;
+
                     await client.sendMessage(myChatId, mediaAttachment, {
                         caption: alertText,
                         sendMediaAsDocument: true
                     });
+
+                    return;
                 }
-            } 
-            
-            // 💬 TEXTO CONVENCIONAL
-            else {
-                alertText += `💬 *Texto:* "${row.body}"`;
-                await client.sendMessage(myChatId, alertText, { linkPreview: true });
+
+                // Texto
+                alertText +=
+                    `💬 *Texto:* "${row.body || 'Mensagem sem conteúdo'}"`;
+
+                await client.sendMessage(myChatId, alertText, {
+                    linkPreview: true
+                });
+            } catch (sendError) {
+                printError(
+                    '[Revoke] Erro ao reenviar item apagado:',
+                    sendError.message
+                );
             }
-        } catch (sendError) {
-            printError('Erro ao reenviar o item deletado:', sendError.message);
         }
-    });
+    );
 });
 
 async function startBot() {
@@ -1228,6 +1417,79 @@ async function startBot() {
 }
 
 startBot();
+
+const lidPhoneCache = new Map();
+
+/**
+ * Removes the device identifier (:1, :93 etc.)
+ * without changing the original server: @lid stays @lid.
+ */
+function removeDeviceSuffix(jid) {
+    if (!jid || typeof jid !== 'string') {
+        return null;
+    }
+
+    const atIndex = jid.indexOf('@');
+
+    if (atIndex === -1) {
+        return jid;
+    }
+
+    const userPart = jid.substring(0, atIndex).split(':')[0];
+    const serverPart = jid.substring(atIndex + 1);
+
+    return `${userPart}@${serverPart}`;
+}
+
+/**
+ * Converts a @lid identifier to the real @c.us phone.
+ */
+async function resolveLidToPhone(lidJid) {
+    const normalizedLid = removeDeviceSuffix(lidJid);
+
+    if (!normalizedLid?.endsWith('@lid')) {
+        return normalizedLid;
+    }
+
+    if (lidPhoneCache.has(normalizedLid)) {
+        return lidPhoneCache.get(normalizedLid);
+    }
+
+    try {
+        const result = await client.getContactLidAndPhone([
+            normalizedLid
+        ]);
+
+        const mapping = Array.isArray(result)
+            ? result.find(item =>
+                removeDeviceSuffix(item?.lid) === normalizedLid
+            )
+            : null;
+
+        let phoneJid = mapping?.pn || null;
+
+        if (phoneJid && !phoneJid.includes('@')) {
+            phoneJid = `${phoneJid}@c.us`;
+        }
+
+        phoneJid = removeDeviceSuffix(phoneJid);
+
+        if (phoneJid?.endsWith('@c.us')) {
+            lidPhoneCache.set(normalizedLid, phoneJid);
+            return phoneJid;
+        }
+
+        return null;
+
+    } catch (error) {
+        console.error('[LID] Falha ao converter LID para telefone:', {
+            lid: normalizedLid,
+            error: error?.message || String(error)
+        });
+
+        return null;
+    }
+}
 
 client.on('message_create', async (msg) => {
     try {
@@ -1259,57 +1521,140 @@ client.on('message_create', async (msg) => {
                 ? `Grupo ${chatId.split('@')[0]}`
                 : chatId.split('@')[0]);
 
-        // 💡 FIX 1: Identifies the real sender and ignores the group ID
+        /*
+         * Identifica o remetente real.
+         *
+         * In a group:
+         * msg.from   = group ID
+         * msg.author = participant who sent it
+         *
+         * In a private conversation:
+         *   msg.from = remetente
+         */
         let rawSenderId;
+
         if (isGroup === 1) {
-            rawSenderId = msg.author || msg._data?.participant?._serialized || msg.from;
+            rawSenderId =
+                msg?.author ||
+                msg?._data?.participant?._serialized ||
+                msg?._data?.participant ||
+                null;
         } else {
-            rawSenderId = msg.fromMe ? (msg.to || msg.from) : msg.from;
+            rawSenderId = msg?.fromMe
+                ? (msg?.to || msg?.from)
+                : msg?.from;
         }
 
-        // 💡 FIX 2: Removes the multi-device suffix (:1, :2) before processing
-        if (rawSenderId && rawSenderId.includes(':')) {
-            rawSenderId = rawSenderId.split(':')[0] + '@c.us';
+        /*
+         * Removes only the device suffix.
+         *
+         * Exemplo:
+         * 100000000000001:93@lid
+         * vira:
+         * 100000000000001@lid
+         *
+         * Do not convert @lid directly to @c.us.
+         */
+        rawSenderId = removeDeviceSuffix(rawSenderId);
+
+        const originalSenderJid = rawSenderId;
+
+        /*
+         * If it is a LID, tries to get the real phone.
+         */
+        let resolvedSenderJid = rawSenderId;
+
+        if (rawSenderId?.endsWith('@lid')) {
+            const phoneJid = await resolveLidToPhone(rawSenderId);
+
+            if (phoneJid) {
+                resolvedSenderJid = phoneJid;
+            }
         }
 
-        // const safeWid = normalizeWid(rawSenderId);
-        const safeWid = rawSenderId;
-        
-        // Looks up the contact only when the identifier is compatible
+        /*
+         * Busca o contato usando preferencialmente o telefone real.
+         */
         let contact = null;
 
         if (
-            safeWid &&
-            !safeWid.endsWith('@lid') &&
-            !safeWid.endsWith('@g.us')
+            resolvedSenderJid &&
+            !resolvedSenderJid.endsWith('@g.us')
         ) {
             try {
-                contact = await client.getContactById(safeWid);
+                contact = await client.getContactById(resolvedSenderJid);
             } catch (error) {
-                console.error('[message_create] Falha ao obter contato:', {
-                    error: error?.message || String(error),
-                    safeWid
+                console.warn('[message_create] Falha ao obter contato:', {
+                    originalSenderJid,
+                    resolvedSenderJid,
+                    error: error?.message || String(error)
                 });
             }
         }
 
-        // 💡 FIX 3: Guarantees the user's standard clean JID
-        const senderJid = contact?.id?._serialized || safeWid || rawSenderId;
+        /*
+         * If the phone lookup brought no contact,
+         * tries to query by the original LID.
+         */
+        if (
+            !contact &&
+            originalSenderJid?.endsWith('@lid')
+        ) {
+            try {
+                contact = await client.getContactById(originalSenderJid);
+            } catch {
+                // Keeps contact as null.
+            }
+        }
 
-        // 💡 FIX 4: Strictly extracts the number string (without generating an Array/Object)
-        const senderNumber = senderJid ? senderJid.split('@')[0] : 'UNKNOWN';
+        /*
+         * O sender_jid deve priorizar o telefone real.
+         * If it cannot be resolved, keeps the LID so as not to invent a number.
+         */
+        const senderJid =
+            resolvedSenderJid ||
+            originalSenderJid ||
+            'UNKNOWN';
 
-        // Final name processed for display
+        /*
+         * Only considers sender_number when we really have a @c.us.
+         * A @lid is not a phone number.
+         */
+        const senderNumber = senderJid.endsWith('@c.us')
+            ? senderJid.split('@')[0]
+            : null;
+
+        /*
+         * Order of the names:
+         * 1. Name saved in the address book;
+         * 2. Public name;
+         * 3. the message's own notifyName;
+         * 4. telefone real;
+         * 5. identificador LID.
+         */
         const senderName =
-            contact?.name ||       // Name saved in the address book
-            contact?.pushname ||   // WhatsApp public name
-            senderNumber;          // If there is no name, uses the clean number
+            contact?.name ||
+            contact?.pushname ||
+            msg?._data?.notifyName ||
+            senderNumber ||
+            originalSenderJid ||
+            'Desconhecido';
 
-        // Isolated address book name
-        const contactName = contact?.name || '';
+        const contactName =
+            contact?.name ||
+            '';
 
-        // Isolated public profile name
-        const profileName = contact?.pushname || '';
+        const profileName =
+            contact?.pushname ||
+            msg?._data?.notifyName ||
+            '';
+
+        /*
+         * Keeps safeWid for the rest of your code.
+         */
+        const safeWid =
+            resolvedSenderJid ||
+            originalSenderJid;
 
         let hasMedia = msg.hasMedia ? 1 : 0;
         let localMediaPath = null;
@@ -1433,24 +1778,31 @@ client.on('message_create', async (msg) => {
         let content_after_caller = msg.body.substring(msg.body.indexOf(' ') + 1);
         const argv = content_after_caller.split(' ');
 
-        // Ignores messages from your own device, from systems and invalid LIDs
-        if (
-            msg.fromMe ||
-            rawSenderId.includes(':') ||        // Ignores IDs of multiple paired devices (e.g.: 1234:2@c.us)
-            rawSenderId.includes('lid') ||      // Ignores new LID-based identifiers
-            !rawSenderId.includes('@')          // Ignores it if it is not a valid WhatsApp JID
-        ) {
-            // If it falls here, a safe mock so as not to break your logs down below
-            var sender_contact = {
-                id: { _serialized: rawSenderId },
-                number: rawSenderId.split('@')[0],
-                name: 'Dispositivo Vinculado / Sistema',
-                pushname: 'Self/System'
-            };
+        let sender_contact = contact;
 
-            // printDebug(`[Ignorado API] Control message from the device itself or LID.`);
-        } else {
-            var sender_contact = null;
+        if (!sender_contact) {
+            sender_contact = {
+                id: {
+                    _serialized:
+                        senderJid !== 'UNKNOWN'
+                            ? senderJid
+                            : originalSenderJid
+                },
+
+                number:
+                    senderNumber ||
+                    originalSenderJid?.split('@')[0] ||
+                    'UNKNOWN',
+
+                name:
+                    senderName ||
+                    'Desconhecido',
+
+                pushname:
+                    profileName ||
+                    senderName ||
+                    'Desconhecido'
+            };
         }
 
         let message_mentions = [];
@@ -1458,8 +1810,10 @@ client.on('message_create', async (msg) => {
         let groupChat = null;
 
         try {
-            if (!sender_contact) {
-                sender_contact = await client.getContactById(safeWid);
+            if (!sender_contact && safeWid) {
+                sender_contact = await client
+                    .getContactById(safeWid)
+                    .catch(() => null);
             }
 
             message_mentions = await msg.getMentions().catch(() => []);
