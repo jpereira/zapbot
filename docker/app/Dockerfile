@@ -1,4 +1,5 @@
-FROM node:22-alpine
+# Node.js 24 LTS
+FROM node:24-alpine
 
 # fuso horário
 ENV TZ=America/Sao_Paulo
@@ -52,6 +53,8 @@ RUN /venv/bin/python -m pip install -U yt-dlp
 COPY . .
 COPY --chown=node:node . /app/
 #COPY --chown=node:node --chmod=755 docker/app/entrypoint.sh
+
+RUN chown -R node:node /app
 
 WORKDIR /app
 
