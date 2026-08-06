@@ -1000,13 +1000,13 @@ client.on('authenticated', (session) => {
 });
 
 client.on('disconnected', async (reason) => {
-    printInfo('💥 WhatsApp desconectou:', reason);
+    printInfo(`💥 WhatsApp desconectou: ${reason}`);
     BOT_AUTHENTICATED_TIME = 0;
     await restartClient();
 });
 
 client.on('change_state', state => {
-    printInfo('WA STATE]=', state);
+    printInfo(`WA STATE]=${state}`);
 
     lastOk = Date.now();
 });
