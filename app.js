@@ -775,6 +775,15 @@ function limparCacheAntigo(maxDeletewin = MAX_DELETE_WINDOW) {
             printInfo(`Limpeza: ${this.changes} registros antigos limpos.`);
         }
     });
+
+    // 2. Remove os registros textuais do SQLite
+    // db.run("VACUUM", function(err) {
+    //     if (err) {
+    //         printError(`Erro executando VACUUM: ${err.message}`);
+    //         return;
+    //     }
+    //     printInfo("VACUUM concluído com sucesso.");
+    // });
 }
 
 function limparConteudoDiretorio(dirPath) {
@@ -917,80 +926,170 @@ const client = new Client({
 
 printSuccess('Client created');
 
-let qrEmailSent = false;
+let lastQrSent = null;
+let qrEmailSending = false;
+let qrEmailCounter = 0;
 
 client.on('qr', async (qr) => {
+
     const currentdatetimeday = new Date()
         .toISOString()
         .replace('T', ' ')
         .replace(/\.\d{3}Z$/, ' UTC');
 
-    if (process.env.QRCODE_EMAIL_ENABLE == "true") {
+    if (process.env.QRCODE_EMAIL_ENABLE !== "true") {
+        printInfo(`QR Code received at (${currentdatetimeday}), scan it please`);
+        qrcodeTerminal.generate(qr, { small: true });
+        return;
+    }
+
+    // Ignora exatamente o mesmo QR já enviado.
+    if (qr === lastQrSent) {
+        return;
+    }
+
+    // Evita dois envios simultâneos.
+    if (qrEmailSending) {
+        return;
+    }
+
+    qrEmailSending = true;
+
+    try {
         const myantiphishing = process.env.QRCODE_EMAIL_SMTP_ANTIPHISHING;
+        const pngBuffer = await qrcode.toBuffer(qr, {
+            type: 'png',
+            width: 300
+        });
+        const phoneNumber = process.env.PHONE_NUMBER.split("@")[0];
+        const maskPhone = phoneNumber.replace(
+                /(\d{4})\d+(\d{4})$/,
+                "$1XXXX$2"
+            );
 
-        if (qrEmailSent) return;
+        // Só calculamos o próximo número.
+        // O contador real só será atualizado após sucesso no SMTP.
+        const nextQrEmailCounter = qrEmailCounter + 1;
 
-        qrEmailSent = true;
+        const info = await transporter.sendMail({
+            from: process.env.QRCODE_EMAIL_SMTP_FROM,
+            to: process.env.QRCODE_EMAIL_SMTP_TO,
 
-        printInfo(`QR Code received at (${currentdatetimeday}) and sent to '${process.env.QRCODE_EMAIL_SMTP_TO}'`);
-        try {
-            // qr = string recebida do WhatsApp
-            const pngBuffer = await qrcode.toBuffer(qr, {
-                type: 'png',
-                width: 300
-            });
-            let phoneNumber = process.env.PHONE_NUMBER.split("@")[0]; // remove @u.cs
-            let maskPhone   = phoneNumber.replace(/(\d{4})\d+(\d{4})$/, "$1XXXX$2");
+            subject:
+                `[ZapBot] WhatsApp QR Code Authentication #${nextQrEmailCounter} - ${currentdatetimeday}`,
 
-            const info = await transporter.sendMail({
-                from: process.env.QRCODE_EMAIL_SMTP_FROM,
-                to: process.env.QRCODE_EMAIL_SMTP_TO,
-                subject: `[ZapBot] WhatsApp QR Code Authentication ${currentdatetimeday}`,
-                html: `
-                    <table width="50%" style="background:#f8f8f8;border:1px solid #dddddd;border-radius:5px;">
+            html: `
+                <table width="50%"
+                    style="
+                        background:#f8f8f8;
+                        border:1px solid #dddddd;
+                        border-radius:5px;
+                    ">
+
+                    <tr>
+                        <td style="padding:12px;">
+                            <strong>🔢 QR Code:</strong>
+                            <span style="
+                                color:#d9534f;
+                                font-weight:bold;
+                            ">
+                                #${nextQrEmailCounter}
+                            </span>
+                        </td>
+                    </tr>
+
                     <tr>
                         <td style="padding:12px;">
                             <strong>📱 Phone Number:</strong>
-                            <span style="color:#d9534f;font-weight:bold;">${maskPhone}</span>
+                            <span style="
+                                color:#d9534f;
+                                font-weight:bold;
+                            ">
+                                ${maskPhone}
+                            </span>
                         </td>
                     </tr>
+
                     <tr>
                         <td style="padding:12px;">
                             <strong>🛡️ Anti-Phishing Code:</strong>
-                            <span style="color:#d9534f;font-weight:bold;">${myantiphishing}</span>
+                            <span style="
+                                color:#d9534f;
+                                font-weight:bold;
+                            ">
+                                ${myantiphishing}
+                            </span>
                         </td>
                     </tr>
+
                     <tr>
                         <td style="padding:12px;">
                             <strong>📅 Generated At:</strong>
-                            <span style="color:#000000;font-weight:bold;">${currentdatetimeday}</span>
+                            <span style="
+                                color:#000000;
+                                font-weight:bold;
+                            ">
+                                ${currentdatetimeday}
+                            </span>
                         </td>
                     </tr>
+
+                    <tr>
+                        <td style="
+                            padding:12px;
+                            background:#fff3cd;
+                            border:1px solid #ffeeba;
+                        ">
+                            <strong>⚠️ Atenção:</strong>
+                            Este QR Code substitui qualquer QR Code
+                            enviado anteriormente.
+                        </td>
+                    </tr>
+
                     <tr>
                         <td style="padding:12px;">
                             <strong>📱 Escaneie o QR:</strong>
+                            <br><br>
                             <img src="cid:qrcode">
                         </td>
                     </tr>
-                    </table>`,
-                attachments: [
-                    {
-                        filename: 'qrcode.png',
-                        content: pngBuffer,
-                        cid: 'qrcode'
-                    }
-                ]
-            });
-            printInfo(`Email enviado, phoneNumber=${phoneNumber} info.messageId=${info.messageId}`);
 
-        } catch (err) {
-            qrEmailSent = false;
-            printError('Erro ao enviar QR por email:', );
-            console.log(err);
-        }
-    } else {
-        printInfo(`QR Code received at (${currentdatetimeday}), scan it please`)
-        qrcodeTerminal.generate(qr, { small: true })
+                </table>
+            `,
+
+            attachments: [
+                {
+                    filename: `qrcode-${nextQrEmailCounter}.png`,
+                    content: pngBuffer,
+                    cid: 'qrcode'
+                }
+            ]
+        });
+
+        // Atualiza somente após envio bem-sucedido.
+        lastQrSent = qr;
+        qrEmailCounter = nextQrEmailCounter;
+
+        printInfo(
+            `QR Code #${qrEmailCounter} received at (${currentdatetimeday}) ` +
+            `and sent to '${process.env.QRCODE_EMAIL_SMTP_TO}'`
+        );
+
+        printInfo(
+            `Email enviado, ` +
+            `phoneNumber=${phoneNumber} ` +
+            `qrCounter=${qrEmailCounter} ` +
+            `info.messageId=${info.messageId}`
+        );
+
+    } catch (err) {
+
+        printError('Erro ao enviar QR por email:');
+        console.log(err);
+
+    } finally {
+
+        qrEmailSending = false;
     }
 });
 
