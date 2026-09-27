@@ -23,6 +23,6 @@
     "replicate": "^0.25.2",
     "sharp": "^0.33.2",
     "sqlite3": "^6.0.1",
-    "whatsapp-web.js": "^1.34.7"
+    "whatsapp-web.js": "github:wwebjs/whatsapp-web.js#58ddf1561cd783d6a548fa812eb70a05944604b4"
   }
 }
