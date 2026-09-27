@@ -976,7 +976,8 @@ client.on('qr', async (qr) => {
             to: process.env.QRCODE_EMAIL_SMTP_TO,
 
             subject:
-                `[ZapBot] WhatsApp QR Code Authentication #${nextQrEmailCounter} - ${currentdatetimeday}`,
+                //`[ZapBot] WhatsApp QR Code Authentication #${nextQrEmailCounter} - ${currentdatetimeday}`,
+                `[ZapBot] WhatsApp QR Code Authentication`,
 
             html: `
                 <table width="50%"
@@ -1105,7 +1106,7 @@ client.on('disconnected', async (reason) => {
 });
 
 client.on('change_state', state => {
-    printInfo(`WA STATE]=${state}`);
+    printInfo(`[WA STATE]=${state}`);
 
     lastOk = Date.now();
 });
@@ -1960,12 +1961,16 @@ client.on('message_create', async (msg) => {
             printDebug(`Executando comando '${command.cmd}' em '${chatName}'`);
         }
 
+        //
+        // TODO: caso tenha (/h|/help) /cmd, ou -h ou --help responder pegando o help com getCommandSyntax()
+        //
         switch (command.cmd) {
             case "/help":
                 const maxCmdLength = Math.max(
                     ...botConfig.commands.map(c => c.cmd.length)
                 );
 
+                // TODO: aceitar /help /get
                 const helpText =
                     "🤖 *MENU DE AJUDA*\n\n```" +
                     botConfig.commands
@@ -2046,6 +2051,7 @@ client.on('message_create', async (msg) => {
                 break;
 
             case "/crypto":
+                // TODO: Colocar tudo no banco
                 try {
                     const symbols = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "DOGEUSDT"];
 
@@ -2364,6 +2370,9 @@ client.on('message_create', async (msg) => {
                 break;
 
             case "/show":
+                // TODO: adicionar capacidade para quando for executado dentro de grupo ou conversa,
+                // procure as ultimas mensagens deletadas e exiba. aceitando parametro tipo -2 indo
+                // buscar e exibir as ultimas -2 que tiver no historico.
                 printCall(sender_contact, argv);
 
                 if (quotedMsg && quotedMsg.hasMedia && quotedMsg.isViewOnce) {
@@ -2390,6 +2399,11 @@ client.on('message_create', async (msg) => {
                 break;
 
             case "/get":
+                // TODO: por padrao quado receber -sticker, deve baixar os 6s
+                // e dai criar o sticker removendo logica que verifica o tamanho.
+                // tbm suportar reply de msg com link
+
+
                 // TODO: limpar cache a cada X tempo, boot.
                 const id         = Date.now();
                 const workDir    = TMP_DIR;
