@@ -6,6 +6,8 @@
 !docker/
 !babel.config.js
 !tsconfig.json
+!patches/
+!patches/**
 !package.json
 !app.js
 !bot-config.json
