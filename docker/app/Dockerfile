@@ -41,33 +41,25 @@ RUN python3 -m venv /venv
 # yt-dlp via pip, needed by "/download"
 RUN /venv/bin/pip install --no-cache-dir yt-dlp
 
-# main
-COPY package*.json ./
-RUN npm install
-RUN npm install puppeteer-core --save
-
-# BugFix: Movido para o package.json
-#RUN npm install --save-exact \
-#    github:wwebjs/whatsapp-web.js#58ddf1561cd783d6a548fa812eb70a05944604b4
-
 # dependencies
 RUN /venv/bin/python -m pip install -U yt-dlp
-
-COPY . .
-COPY --chown=node:node . /app/
-#COPY --chown=node:node --chmod=755 docker/app/entrypoint.sh
-
-RUN chown -R node:node /app
-
-WORKDIR /app
 
 # Misc
 RUN echo "alias ls='ls --color=auto'" >> /etc/profile.d/aliases.sh && \
     echo "alias ll='ls -lah --color=auto'" >> /etc/profile.d/aliases.sh && \
     echo "alias la='ls -A --color=auto'" >> /etc/profile.d/aliases.sh
 
-# Exponha a porta se necessário
-#EXPOSE 3000
+# main
+WORKDIR /app
+
+COPY package*.json ./
+COPY patches ./patches
+
+RUN npm install
+
+COPY --chown=node:node . .
+
+RUN chown -R node:node /app
 
 # Executa script de boot
 ENTRYPOINT ["/bin/sh", "-x", "/app/docker/app/entrypoint.sh"]
