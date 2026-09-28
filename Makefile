@@ -37,7 +37,8 @@ deploy.up:
 	docker context create qnap --docker "host=$(DOCKER_REMOTE_SERVER)" || true
 	docker context use qnap
 	docker image prune -f
-	docker compose -f docker/docker-compose.yml up -d --build zapbot-prod
+	docker compose -f docker/docker-compose.yml build $(OPTS) zapbot-prod
+	docker compose -f docker/docker-compose.yml up -d --force-recreate zapbot-prod
 	docker context use default
 
 deploy.logs:

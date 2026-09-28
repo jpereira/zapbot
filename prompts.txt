@@ -1,0 +1,18 @@
+1. Crie um projeto do zero em nodeJS
+2. Ele deve receber o endereço de uma pool da Orca, parametros:
+
+ex: 
+ * whirlpools=CeaZcxBNLpJWtxzt58qQmfMBtJY8pQLvursXTJYGQpbN
+ * mywallet=7qozKc6SFNDKb6Z43X1a96zZNteVZQFquytU56G2NwPB
+
+3. Deve exibir os dados da seguinte forma:
+
+* Positions (aqui listamos todas as ordens abertas)
+ - tipo da Pool (ex: cbBTC / SQL x.xx%)
+ - Balance:       $xx,xxx.xx
+ - Total PnL:     $xx,xxx.xx
+ - Pending Yield: $xx,xxx.xx
+ - Est/ Yield:    $xx,xxx.xx (XX dias)
+ - Position Range: 
+    - $xx,xxx.xx
+    - $xx,xxx.xx
