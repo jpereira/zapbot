@@ -33,7 +33,11 @@ RUN apk add --no-cache \
     py3-pip \
     ffmpeg \
     curl \
-    htop
+    htop \
+    strace \
+    lsof \
+    tcpdump \
+    net-tools
 
 # cria venv
 RUN python3 -m venv /venv
@@ -59,7 +63,7 @@ RUN npm install
 
 COPY --chown=node:node . .
 
-RUN chown -R node:node /app
+#RUN chown -R node:node /app
 
 # Executa script de boot
 ENTRYPOINT ["/bin/sh", "-x", "/app/docker/app/entrypoint.sh"]
