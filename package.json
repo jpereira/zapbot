@@ -8,7 +8,8 @@
     "start:dev:docker": "DOCKER_BUILDKIT=1 docker-compose --file docker/docker-compose.yml up --build --force-recreate --remove-orphans --detach",
     "start:dev": "node app.js",
     "start:prod": "node app.js",
-    "start": "[ \"$NODE_ENV\" = \"production\" ] && npm run start:prod || npm run start:dev"
+    "start": "[ \"$NODE_ENV\" = \"production\" ] && npm run start:prod || npm run start:dev",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "colors": "^1.4.0",
@@ -17,7 +18,9 @@
     "mathjs": "^12.3.0",
     "nodemailer": "^8.0.11",
     "openai": "^4.25.0",
+    "patch-package": "^8.0.0",
     "puppeteer": "^25.1.0",
+    "puppeteer-core": "^25.1.0",
     "qrcode": "^1.5.4",
     "qrcode-terminal": "^0.12.0",
     "replicate": "^0.25.2",
