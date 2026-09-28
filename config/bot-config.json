@@ -8,93 +8,160 @@
         },
         {
             "cmd":  "/debug",
-            "aliases": [ "/h" ],
+            "usage": "/debug [OPTION]",
+            "aliases": [ "/d", "/dbg" ],
             "help": "Ajuda na depuração de problemas.",
-            "syntax": [
-                "on  - Ativa o debug mode.",
-                "off - Desativa o debug mode."
+            "cmd_opts": [
+                {
+                    "opts": [ "on" ],
+                    "values": [],
+                    "desc": "Ativa o debug mode."
+                },
+                {
+                    "opts": [ "off" ],
+                    "values": [],
+                    "desc": "Desativa o debug mode."
+                }
             ],
             "onlyAdmin": true
         },
         {
             "cmd":  "/uptime",
+            "usage": "/uptime",
             "aliases": [ "/u" ],
             "help": "Exibe o tempo que o bot está rodando.",
             "onlyAdmin": true
         },
         {
             "cmd":  "/ping",
+            "usage": "/ping",
             "aliases": [ "/p" ],
             "help": "Verificar status do bot.",
             "onlyAdmin": true
         },
         {
             "cmd":  "/gay",
+            "usage": "/gay",
             "aliases": [ "/🌈", "/🏳️‍🌈", "/noffa" ],
             "help": "Da uma gayzada no texto.",
-            "syntax": [
-                "<texto com espaços> ou dê um 'reply' com ele."
-            ],
             "onlyAdmin": false
         },
         {
             "cmd":  "/everyone",
+            "usage": "/everyone",
             "help": "Faz o reply marcando todos do grupo.",
             "onlyAdmin": true
         },
         {
             "cmd":  "/monitor",
+            "usage": "/monitor [OPTION]",
             "aliases": [ "/m" ],
             "help": "Números a serem monitorados. Obs: Max 20 numeros",
-            "syntax": [
-                "<list> lista numeros",
-                "<logs> lista logs",
-                "<add> <numero> Adiciona número para ser monitorado.",
-                "<del> <numero> deleta numero.",
-                "<clean> Limpa todos os números."
+            "cmd_opts": [
+                {
+                    "opts": [ "list"],
+                    "values": [],
+                    "desc": "Lista numeros."
+                },
+                {
+                    "opts": [ "logs" ],
+                    "values": [],
+                    "desc": "Lista logs."
+                },
+                {
+                    "opts": [ "add" ],
+                    "values": [ "numero" ],
+                    "desc": "Adiciona número para ser monitorado."
+                },
+                {
+                    "opts": [ "del" ],
+                    "values": [ "numero" ],
+                    "desc": "Deleta numero."
+                },
+                {
+                    "opts": [ "clean" ],
+                    "values": [],
+                    "desc": "Limpa todos os números."
+                }
             ],
             "onlyAdmin": true
         },
         {
             "cmd": "/crypto",
+            "usage": "/crypto",
             "aliases": [ "/bitcoio", "/btc", "/moedinha" ],
             "help": "Exibe o preço atual das cryptos: BTC, ETH, DOGE e SOLANA.",
             "onlyAdmin": false
         },
         {
             "cmd": "/sticker",
+            "usage": "/sticker",
             "aliases": [ "/st" ],
             "help": "Cria um 'sticker' a partir de uma imagem.",
             "onlyAdmin": false
         },
         {
             "cmd": "/show",
+            "usage": "/show",
             "help": "Exibe informações sobre medias deletada. (view once).",
             "onlyAdmin": true
         },
         {
             "cmd": "/get",
-            "aliases": [ "/d", "/download", "/wget", "/getright" ],
-            "help": "Caso seja válido, faz o download do video. (ex: Instagram,YouTube,X,...)",
-            "syntax": [
-                "[-st|-sticker]      - Enviar como sticker.",
-                "[-a|-audio]         - Extrai o audio e envia no formato .mp3",
-                "[-v|-verbose]       - Exibe os parametros usados no yt-dlp/ffmpeg",
-                "[-ss|-startSec sec] - Iniciar a partir do segundo determinado.",
-                "[-es|-endSec sec]   - Cortar o video no segundo terminado.",
-                "<url>               - ex: http://www.{instagram,youtube,tiktok}.com/?path"
+            "usage": "/get [OPTION]... URL",
+            "aliases": [ "/download", "/wget", "/getright" ],
+            "help": "Caso seja válido, faz o download do video.",
+            "cmd_opts": [
+                {
+                    "opts": [ "sticker", "st" ],
+                    "values": [],
+                    "desc": "Enviar como sticker."
+                },
+                {
+                    "opts": [ "audio", "a" ],
+                    "values": [],
+                    "desc": "Extrai o audio e envia no formato .mp3."
+                },
+                {
+                    "opts": [ "startSec", "ss" ],
+                    "values": [ "<second>" ],
+                    "desc": "Iniciar a partir do segundo determinado."
+                },
+                {
+                    "opts": [ "endSec", "es" ],
+                    "values": [ "<second>" ],
+                    "desc": "Cortar o video no segundo terminado."
+                },
+                {
+                    "opts": [ "verbose", "v" ],
+                    "values": [ "" ],
+                    "desc": "Exibe os parametros usados no yt-dlp/ffmpeg."
+                },
+                {
+                    "argv": [ "<url>" ],
+                    "desc": "ex: Instagram,YouTube,X,..."
+                }
             ],
             "onlyAdmin": false
         },
         {
             "cmd": "/cache",
+            "usage": "/cache [OPTION]",
+            "cmd_opts": [
+                {
+                    "opts": [ "clean", "c" ],
+                    "values": [],
+                    "desc": "Limpa o cache."
+                },
+                {
+                    "opts": [ "force", "f" ],
+                    "values": [],
+                    "desc": "Apaga tudo."
+                }
+            ],
             "aliases": [ "/c" ],
             "help": "Exibe espaço ocupado em ${CACHE_DIR}",
-            "syntax": [
-                "[-clean|-c]  - Limpa o cache.",
-                "[-force|-f]  - Apaga tudo."
-            ],
-            "onlyAdmin": false
+            "onlyAdmin": true
         }
     ]
 }
