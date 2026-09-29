@@ -61,7 +61,8 @@ brincadeiras, tudo por comandos digitados no próprio chat (`/help`, `/get`,
   a cópia no banco e a reenvia **no seu privado** (chat consigo mesmo). Mensagens
   apagadas ficam guardadas por 30 dias (setting `cache.revokedRetentionDays`)
   e podem ser reexibidas com `/show`. Status (textos/fotos/vídeos) apagados
-  também são recuperados, com o título `📸 STATUS APAGADO DETECTADO`.
+  também são recuperados, com o título `📸 STATUS APAGADO DETECTADO`
+  (desative com `/set revoke.status off`).
 - **Limpeza automática**: a cada 10 minutos o bot remove do banco/disco as
   mensagens comuns com mais de 68 h (janela máxima que o WhatsApp permite
   apagar), as apagadas com mais de 30 dias e as ocorrências do `/watch` com
@@ -576,6 +577,7 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 | `sticker.name` | texto | `ZapBot` | Nome do pacote das figurinhas |
 | `sticker.author` | texto | `https://github.com/jpereira/zapbot/` | Autor das figurinhas |
 | `cache.revokedRetentionDays` | 1–365 | `30` | Dias que as mensagens apagadas ficam guardadas |
+| `revoke.status` | on/off | `on` | Recupera status apagados; `off` ignora (nem alerta, nem `/show`) |
 | `get.maxSizeMB` | 1–100 | `20` | Tamanho máximo do arquivo do `/get` |
 | `get.maxDownloadMB` | 10–2000 | `200` | Tamanho máximo baixado pelo yt-dlp no `/get`, antes da conversão |
 | `show.max` | 1–100 | `20` | Máximo de mensagens por `/show -N` |
