@@ -457,7 +457,8 @@ settings `sticker.name` e `sticker.author`.
 Imagens (inclusive a miniatura do link) viram um quadrado 512x512 **enquadrado
 no meio da imagem**: numa foto deitada as laterais são cortadas, numa em pé o
 topo e a base. GIFs mantêm a animação. Figurinhas (WebP) vão como estão, e
-vídeos seguem a conversão padrão (redimensionados sem corte).
+vídeos respondidos com `/sticker` seguem a conversão padrão (redimensionados
+sem corte). Já o `/get -sticker` enquadra o vídeo no meio, do mesmo jeito.
 
 ```
 (reply numa foto)  /sticker
@@ -472,7 +473,7 @@ argumento ou você pode dar reply numa mensagem que contenha o link.
 
 | Opção | Valor | Descrição |
 |---|---|---|
-| `-sticker`, `-st` | | Envia como figurinha |
+| `-sticker`, `-st` | | Envia como figurinha animada (até 6 s), enquadrada no meio do vídeo como no `/sticker` |
 | `-audio`, `-a` | | Extrai só o áudio (`.mp3`) |
 | `-startSec`, `-ss` | `<segundo>` | Começa a partir deste segundo |
 | `-endSec`, `-es` | `<segundo>` | Corta neste segundo |
