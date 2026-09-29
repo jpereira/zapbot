@@ -3478,13 +3478,13 @@ client.on('message_create', async (msg) => {
             return;
         }
 
-        // Command restricted to the bot owner
+        /*
+         * Command restricted to the bot owner: silently ignored in the chat and only warns
+         * in your private chat. Avoids that, with several zapbots in the same group, the command
+         * of one person be executed by everyone.
+         */
         if (!msg.fromMe && command.onlyAdmin) {
-            const warnMsg = isGroup
-                ? `⚠️ Usuário '${senderName}' não pode executar '${command.cmd}' no grupo '${chatName}'`
-                : `⚠️ Usuário '${chatName}' não pode executar: ${command.cmd}`;
-
-            messageToSelf(warnMsg);
+            messageToSelf(`⚠️ ${senderName} tentou executar ${command.cmd} dentro de ${chatName}, mas sem permissão`);
             return;
         }
 
