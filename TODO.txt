@@ -1,13 +1,7 @@
-* Adicionar /set <allow|deny> para funcoes usuarios/grupos tudo no sqlite (usar uma classe/crud? talvez)
-
-* Adicionar esquema para DeFi, tipo monitorar pools da Orca/Liquidswap/Morpho exibindo relatorios de fees/pnl/status. talvez um watch para report diario?
-
 * Adicionar capacidade de enviar email quando tiver crash, bom para saber status.
-
+* Adicionar esquema para DeFi, tipo monitorar pools da Orca/Liquidswap/Morpho exibindo
+  relatorios de fees/pnl/status. talvez um watch para report diario?
+* Adicionar comando /defi para pegar status das carteiras. salvando enderecos no banco.
+  suportar Orca, Prjx
+* Adicionar suporte para /gif
 * Adicionar suporte para /gpt
-
-* Fazer merge das outras funções feitas por rfds.
-
-* Mega refactory para por cada comando separado por callback por arquivos tipo "cmd_XXX.js" e dai poder habilitar/desabilitar durante include.
-
-* Adicionar comando /defi para pegar status das carteiras. salvando enderecos no banco. suportar Orca, Prjx
