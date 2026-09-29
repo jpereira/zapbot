@@ -24,7 +24,7 @@
                 "/d",
                 "/dbg"
             ],
-            "help": "Ajuda na depuração de problemas.",
+            "help": "Ajuda na depuração de problemas. O estado fica salvo (setting debug.enabled).",
             "cmd_opts": [
                 {
                     "opts": [
@@ -83,7 +83,7 @@
             "aliases": [
                 "/m"
             ],
-            "help": "🚧 [EM DESENVOLVIMENTO] Números a serem monitorados. Obs: Max 20 numeros",
+            "help": "🚧 [EM DESENVOLVIMENTO] Números a serem monitorados. Máx. definido em monitor.max (/set).",
             "disabled": true,
             "cmd_opts": [
                 {
@@ -130,13 +130,43 @@
         },
         {
             "cmd": "/crypto",
-            "usage": "/crypto",
+            "usage": "/crypto [OPTION]",
             "aliases": [
                 "/bitcoio",
-                "/btc",
+                "/creptomoeda",
                 "/moedinha"
             ],
-            "help": "Exibe o preço atual das cryptos: BTC, ETH, SOL e HYPE.",
+            "help": "Exibe o preço atual das cryptos ativadas.",
+            "cmd_opts": [
+                {
+                    "opts": [
+                        "list",
+                        "l"
+                    ],
+                    "values": [],
+                    "desc": "Lista as moedas suportadas (* = ativada)."
+                },
+                {
+                    "opts": [
+                        "add",
+                        "a"
+                    ],
+                    "values": [
+                        "<TOKEN>"
+                    ],
+                    "desc": "Ativa uma moeda suportada. Só o dono."
+                },
+                {
+                    "opts": [
+                        "del",
+                        "d"
+                    ],
+                    "values": [
+                        "<TOKEN>"
+                    ],
+                    "desc": "Desativa uma moeda. Só o dono."
+                }
+            ],
             "onlyAdmin": false
         },
         {
@@ -283,10 +313,40 @@
                     "argv": [
                         "-N"
                     ],
-                    "desc": "Quantidade de mensagens (padrão 1, máx 20). Ex: /show -3"
+                    "desc": "Quantidade de mensagens (padrão 1, máx. show.max). Ex: /show -3"
                 }
             ],
             "onlyAdmin": false
+        },
+        {
+            "cmd": "/set",
+            "usage": "/set [OPTION] [<chave> [<valor>]]",
+            "help": "Lista, exibe e altera as configurações do bot (settings).",
+            "cmd_opts": [
+                {
+                    "opts": [
+                        "reset",
+                        "r"
+                    ],
+                    "values": [
+                        "<chave>"
+                    ],
+                    "desc": "Volta a chave ao valor padrão."
+                },
+                {
+                    "argv": [
+                        "<chave>"
+                    ],
+                    "desc": "Exibe valor, padrão e descrição da chave."
+                },
+                {
+                    "argv": [
+                        "<chave> <valor>"
+                    ],
+                    "desc": "Altera. Listas: itens separados por vírgula ou espaço."
+                }
+            ],
+            "onlyAdmin": true
         }
     ]
 }
