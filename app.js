@@ -307,6 +307,11 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 1, max: 365,
         desc: 'Dias que as mensagens apagadas ficam guardadas para o /show.'
     },
+    'revoke.status': {
+        default: true,
+        type: 'boolean',
+        desc: 'Recupera status (stories) apagados; off ignora.'
+    },
     'get.maxSizeMB': {
         default: 20,
         type: 'number', min: 1, max: 100,
@@ -1761,6 +1766,11 @@ client.on('message_revoke_everyone', async (after, before) => {
 
     if (!row) {
         printError(`[Revoke] Mensagem apagada ID ${targetId} não encontrada no banco.`);
+        return;
+    }
+
+    if (isStatus(row) && !getSetting('revoke.status')) {
+        printDebug(`[Revoke] Status apagado ID ${targetId} ignorado (revoke.status off).`);
         return;
     }
 
