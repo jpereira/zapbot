@@ -2761,7 +2761,7 @@ async function listarApagadas({ msg, opts, chatId }) {
  * Remove do cache as mensagens apagadas (linhas + arquivos de mídia):
  *   - num chat qualquer      → só as apagadas DESTE chat;
  *   - no seu próprio privado → as apagadas de TODOS os chats.
- * Destrutivo: só o dono do bot executa, mesmo que o /show esteja liberado no config.
+ * Destrutivo: só o dono do bot executa, mesmo que o /show seja liberado no config.
  */
 async function limparApagadasDoChat({ msg, chatId, alvo = null }) {
     if (!msg.fromMe) {
@@ -3478,13 +3478,13 @@ client.on('message_create', async (msg) => {
             return;
         }
 
-        // Comando restrito ao dono do bot
+        /*
+         * Comando restrito ao dono do bot: ignora em silêncio no chat e só avisa
+         * no seu privado. Evita que, com vários zapbots no mesmo grupo, o comando
+         * de uma pessoa seja executado por todos.
+         */
         if (!msg.fromMe && command.onlyAdmin) {
-            const warnMsg = isGroup
-                ? `⚠️ Usuário '${senderName}' não pode executar '${command.cmd}' no grupo '${chatName}'`
-                : `⚠️ Usuário '${chatName}' não pode executar: ${command.cmd}`;
-
-            messageToSelf(warnMsg);
+            messageToSelf(`⚠️ ${senderName} tentou executar ${command.cmd} dentro de ${chatName}, mas sem permissão`);
             return;
         }
 

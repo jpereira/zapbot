@@ -297,7 +297,7 @@ conta do bot** (você, de qualquer aparelho). Se outra pessoa tentar, nada
 acontece no chat e você recebe um aviso no `PHONE_NUMBER`:
 
 ```
-⚠️ Usuário 'Fulano' não pode executar '/monitor' no grupo 'Família'
+⚠️ Fulano tentou executar /show dentro de Família, mas sem permissão
 ```
 
 As **respostas do próprio bot** também saem pela sua conta, mas nunca são
@@ -320,7 +320,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -c -f`) para fazer o bot
 | `/sticker` | `/st` | | Transforma imagem/vídeo em figurinha |
 | `/get` | `/download` | | Baixa vídeo/áudio de redes sociais |
 | `/cache` | `/c` | ✅ | Uso e limpeza do cache |
-| `/show` | `/undo`, `/s` | | Reexibe mensagens apagadas |
+| `/show` | `/undo`, `/s` | ✅ | Reexibe mensagens apagadas |
 | `/set` | | ✅ | Lista e altera as configurações (settings) |
 | `/watch` | `/w` | ✅ | Avisa no seu privado quando uma mensagem casa com um texto/regex |
 
@@ -529,7 +529,7 @@ setting `cache.revokedRetentionDays`). Os envios são espaçados por
 | `-list`, `-l` | | Mostra quantas apagadas existem no cache |
 | `-pv` | | Envia no seu privado em vez de expor no chat atual |
 | `-chat`, `-c` | `<nº\|nome>` | *(Só no seu privado)* Escolhe outro chat: nº do `/show -l` ou parte do nome |
-| `-flush`, `-f` | | Remove as apagadas deste chat (no seu privado: de todos). Só o dono |
+| `-flush`, `-f` | | Remove as apagadas deste chat (no seu privado: de todos) |
 
 ```
 /show                → última mensagem apagada deste chat
