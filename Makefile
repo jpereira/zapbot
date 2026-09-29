@@ -22,10 +22,11 @@ RCOMPOSE             := $(RDOCKER) compose -f $(COMPOSE_FILE)
 DEV_SERVICE  := zapbot-dev
 PROD_SERVICE := zapbot-prod
 VOLUMES      := zapbot_app_cache zapbot_wwebjs_auth
+DEV_VOLUMES  := zapbot_app_cache_dev zapbot_wwebjs_auth_dev
 
 .DEFAULT_GOAL := build
 
-.PHONY: help all build shell clean prune \
+.PHONY: help all build shell clean destroy prune \
 	deploy.context deploy.up deploy.logs deploy.ps deploy.shell deploy.images \
 	deploy.volume deploy.prune deploy.clean deploy.destroy
 
@@ -46,6 +47,11 @@ shell: ## Shell inside the dev container
 
 clean: ## Removes the zapbot-dev image
 	$(DOCKER) rmi -f $(DEV_SERVICE)
+
+destroy: ## clean + deletes the dev volumes (session and cache!)
+	-$(DOCKER) rm -f $(DEV_SERVICE)
+	-$(MAKE) clean
+	-$(DOCKER) volume rm -f $(DEV_VOLUMES)
 
 prune: ## Deletes media and messages from the local cache
 	rm -rf cache/media/
