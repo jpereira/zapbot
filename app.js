@@ -577,7 +577,9 @@ function GetOptFromCommandForFfmpeg(opts, originalFile, outputFile) {
     const isAudio   = opts.opt.audio;    // -audio    | -a
     const startSec  = opts.opt.startSec; // -startSec | -ss
     const endSec    = opts.opt.endSec;   // -endSec   | -es
-    const args      = ['-y'];
+    // The input is a local file downloaded from the internet: ffmpeg must not open
+    // rede nem outros protocolos a partir dele (playlists/concat maliciosos)
+    const args      = ['-y', '-protocol_whitelist', 'file'];
 
     if (startSec != null) {
         args.push('-ss', String(startSec));
