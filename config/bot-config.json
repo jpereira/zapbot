@@ -272,7 +272,8 @@
             "cmd": "/show",
             "usage": "/show [-N] [OPTION]",
             "aliases": [
-                "/undo"
+                "/undo",
+                "/s"
             ],
             "help": "Reexibe as últimas mensagens apagadas deste chat.",
             "cmd_opts": [
