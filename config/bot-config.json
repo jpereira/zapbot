@@ -175,7 +175,7 @@
             "aliases": [
                 "/st"
             ],
-            "help": "Cria um 'sticker' a partir de uma imagem.",
+            "help": "Cria um 'sticker' a partir de uma imagem (recorte quadrado no meio da imagem).",
             "onlyAdmin": false
         },
         {
