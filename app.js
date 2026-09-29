@@ -1427,14 +1427,14 @@ async function cmdNoffa({ msg, args, quotedMsg }) {
 
 async function cmdCrypto({ msg }) {
     try {
-        const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'DOGEUSDT'];
+        const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'HYPEUSDT'];
 
         const { data } = await axios.get('https://api.binance.com/api/v3/ticker/24hr', {
             params: { symbols: JSON.stringify(symbols) },
             timeout: 10000
         });
 
-        const icon = { BTCUSDT: '₿', ETHUSDT: 'Ξ', SOLUSDT: '◎', DOGEUSDT: 'Ð' };
+        const icon = { BTCUSDT: '₿', ETHUSDT: 'Ξ', SOLUSDT: '◎', HYPEUSDT: 'Ⓗ' };
 
         const fmtPrice = (value) =>
             Number(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 6 });
