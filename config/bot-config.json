@@ -343,7 +343,66 @@
                     "argv": [
                         "<chave> <valor>"
                     ],
-                    "desc": "Altera. Listas: itens separados por vírgula ou espaço."
+                    "desc": "Altera. Listas: itens separados por vírgula ou espaço (watch.rules: um por linha)."
+                }
+            ],
+            "onlyAdmin": true
+        },
+        {
+            "cmd": "/watch",
+            "usage": "/watch [OPTION] [-N | <PATTERN|/REGEX/>]",
+            "aliases": [
+                "/w"
+            ],
+            "help": "Vigia as mensagens recebidas e avisa no seu privado quando alguma casar com uma regra (setting watch.rules).",
+            "cmd_opts": [
+                {
+                    "opts": [
+                        "list",
+                        "l"
+                    ],
+                    "values": [],
+                    "desc": "Lista as regras (nº, regra e ocorrências)."
+                },
+                {
+                    "opts": [
+                        "show",
+                        "s"
+                    ],
+                    "values": [],
+                    "desc": "Resumo das mensagens que casaram com a regra -N (sem -N: todas). Padrão sem opções."
+                },
+                {
+                    "opts": [
+                        "add",
+                        "a"
+                    ],
+                    "values": [
+                        "<PATTERN|/REGEX/>"
+                    ],
+                    "desc": "Adiciona regra: texto (sem diferenciar maiúsculas/acentos) ou /regex/flags."
+                },
+                {
+                    "opts": [
+                        "del",
+                        "d"
+                    ],
+                    "values": [],
+                    "desc": "Remove a regra -N e as ocorrências dela."
+                },
+                {
+                    "opts": [
+                        "flush",
+                        "f"
+                    ],
+                    "values": [],
+                    "desc": "Apaga as ocorrências da regra -N (sem -N: de todas). As regras são mantidas."
+                },
+                {
+                    "argv": [
+                        "-N"
+                    ],
+                    "desc": "Nº da regra no /watch -l. Ex: /watch -d -2, /watch -f -2"
                 }
             ],
             "onlyAdmin": true
