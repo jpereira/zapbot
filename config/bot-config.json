@@ -136,7 +136,7 @@
                 "/btc",
                 "/moedinha"
             ],
-            "help": "Exibe o preço atual das cryptos: BTC, ETH, DOGE e SOLANA.",
+            "help": "Exibe o preço atual das cryptos: BTC, ETH, SOL e HYPE.",
             "onlyAdmin": false
         },
         {
