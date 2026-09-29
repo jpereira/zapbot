@@ -1,11 +1,11 @@
-# 🤖 ZapBot
+# 🤖 ZapBot v1.0
 
 > 🇧🇷 **Projeto em português (pt_BR).** Documentação, comandos e mensagens do bot
 > estão em português do Brasil.
 
 Bot para WhatsApp escrito em Node.js que roda em cima de uma sessão real do
 WhatsApp Web. Ele recupera mensagens apagadas, baixa vídeos de redes sociais,
-cria figurinhas, monitora quando contatos ficam online (em desenvolvimento) e mais algumas
+cria figurinhas, vigia mensagens por texto/regex e te avisa no privado, monitora quando contatos ficam online (em desenvolvimento) e mais algumas
 brincadeiras, tudo por comandos digitados no próprio chat (`/help`, `/get`,
 `/show`...).
 
@@ -58,7 +58,12 @@ brincadeiras, tudo por comandos digitados no próprio chat (`/help`, `/get`,
   e podem ser reexibidas com `/show`.
 - **Limpeza automática**: a cada 10 minutos o bot remove do banco/disco as
   mensagens comuns com mais de 68 h (janela máxima que o WhatsApp permite
-  apagar) e as apagadas com mais de 30 dias.
+  apagar), as apagadas com mais de 30 dias e as ocorrências do `/watch` com
+  mais de 30 dias (setting `watch.hitsRetentionDays`).
+- **Watch**: toda mensagem recebida que não é comando é testada contra as
+  regras do [`/watch`](#watch-w--admin) (setting `watch.rules`); quando casa, a
+  ocorrência é gravada na tabela `watch_hits` e você é avisado **no seu
+  privado**.
 - **Configurações (`settings`)**: configurações gerais que podem mudar em
   tempo de execução (debug, moedas do `/crypto`, limites...) ficam na tabela
   genérica `settings` do SQLite (`key` → `value` em JSON) e são alteradas pelo
@@ -307,6 +312,7 @@ acontece no chat e você recebe um aviso no `PHONE_NUMBER`:
 | `/cache` | `/c` | ✅ | Uso e limpeza do cache |
 | `/show` | `/undo` | | Reexibe mensagens apagadas |
 | `/set` | | ✅ | Lista e altera as configurações (settings) |
+| `/watch` | `/w` | ✅ | Avisa no seu privado quando uma mensagem casa com um texto/regex |
 
 ### `/help`
 
@@ -471,8 +477,8 @@ Mostra o espaço ocupado em `cache/` (banco, mídias, temporários).
 
 | Opção | Descrição |
 |---|---|
-| `-clean`, `-c` | Remove só o que passou da janela de retenção (68 h / `cache.revokedRetentionDays` para apagadas) |
-| `-force`, `-f` | Junto com `-clean`: apaga **todas** as mensagens (inclusive as guardadas para o `/show`), mídias e temporários, e compacta o banco. Números e logs do `/monitor` são mantidos |
+| `-clean`, `-c` | Remove só o que passou da janela de retenção (68 h / `cache.revokedRetentionDays` para apagadas / `watch.hitsRetentionDays` para ocorrências do `/watch`) |
+| `-force`, `-f` | Junto com `-clean`: apaga **todas** as mensagens (inclusive as guardadas para o `/show`), mídias e temporários, e compacta o banco. Números e logs do `/monitor` e ocorrências do `/watch` são mantidos |
 
 ```
 /cache           → lista o conteúdo de cache/ e total de mensagens
@@ -513,7 +519,7 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 |---|---|---|
 | *(nenhuma)* | | Lista todas as chaves e valores |
 | `<chave>` | | Mostra valor, padrão, tipo e descrição |
-| `<chave> <valor>` | | Altera. Listas: itens separados por vírgula ou espaço; `""` esvazia |
+| `<chave> <valor>` | | Altera. Listas: itens separados por vírgula ou espaço (`watch.rules`: uma regra por linha); `""` esvazia |
 | `-reset`, `-r` | `<chave>` | Volta ao valor padrão |
 
 ```
@@ -525,6 +531,7 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 /set commands.disabled noffa everyone
 /set commands.disabled ""
 /set -r crypto.coins
+/set watch.rules ""
 ```
 
 #### Settings
@@ -541,10 +548,75 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 | `show.max` | 1–100 | `20` | Máximo de mensagens por `/show -N` |
 | `show.delayMs` | 0–10000 | `700` | Intervalo entre os envios do `/show` |
 | `monitor.max` | 1–1000 | `20` | Máximo de números monitorados |
+| `watch.rules` | lista (uma por linha) | *(vazia)* | Regras do `/watch`: texto ou `/regex/flags`. Normalmente alterada pelo `/watch -a`/`-d` |
+| `watch.max` | 1–100 | `20` | Máximo de regras do `/watch` |
+| `watch.showMax` | 1–100 | `20` | Máximo de ocorrências listadas por `/watch -show` |
+| `watch.hitsRetentionDays` | 1–365 | `30` | Dias que as ocorrências do `/watch` ficam guardadas |
 
 Uma chave nova é declarada em `SETTINGS_SCHEMA` (`app.js`) com padrão, tipo,
 descrição e limites, e lida com `getSetting('<chave>')`. Valores inválidos no
 banco são ignorados no boot (vale o padrão, com aviso nos logs).
+
+### `/watch` (`/w`) · admin
+
+Vigia as mensagens que chegam em **qualquer chat** (privados e grupos) e, quando
+alguma casa com uma regra, manda o alerta **no seu privado**:
+
+```
+👀 WATCH: MENSAGEM DETECTADA
+
+🔎 Regra #2: /pix\s*\d+/i
+👥 Grupo: Família
+👤 Nome: Fulano
+📱 Número: +5521999999999
+📅 Enviada em: 29/09/2026, 14:32:07
+💬 Texto: "me manda um pix 50 aí"
+```
+
+Tipos de regra:
+
+- **Texto**: casa se a mensagem *contém* o texto, sem diferenciar maiúsculas
+  nem acentos (`promoção` casa com `PROMOCAO`).
+- **`/regex/flags`**: expressão regular do JavaScript (ex.: `/^bom dia$/i`). As
+  flags `g` e `y` são ignoradas.
+
+As regras são testadas contra o texto original da mensagem (menções como
+`@111780869222483`), mas no alerta e no `-show` as menções aparecem com o nome
+do contato (`@Fulano`) e o grupo com o nome atual.
+
+| Opção | Valor | Descrição |
+|---|---|---|
+| *(nenhuma)* | | O mesmo que `-show`: ocorrências de todas as regras |
+| `-list`, `-l` | | Lista as regras, com o nº e a quantidade de ocorrências |
+| `-show`, `-s` | `[-N]` | Resumo das mensagens que casaram com a regra nº N (sem `-N`: de todas). Máx. 20 (setting `watch.showMax`) |
+| `-add`, `-a` | `<PATTERN\|/REGEX/>` | Adiciona uma regra (máx. 20, setting `watch.max`). Pode ter espaços |
+| `-del`, `-d` | `-N` | Remove a regra nº N e as ocorrências dela. As seguintes são renumeradas |
+| `-flush`, `-f` | `[-N]` | Apaga as ocorrências da regra nº N (sem `-N`: de todas, inclusive de regras já removidas). As regras são mantidas |
+
+```
+/watch -a promoção
+/watch -a "bom dia grupo"
+/watch -a /pix\s*\d+/i
+/watch -l
+/watch -s -2       → mensagens que casaram com a regra 2
+/w -s              → de todas as regras (o mesmo que /watch)
+/watch -f -2       → apaga as ocorrências da regra 2
+/w -f              → apaga as ocorrências de todas as regras
+/watch -d -1
+```
+
+Detalhes:
+
+- As regras ficam no setting `watch.rules` (sobrevivem a reinícios); dá para
+  vê-las também com `/set watch.rules`.
+- **Suas próprias mensagens e comandos são ignorados** (senão os próprios
+  alertas no seu privado casariam de novo).
+- A mesma mensagem não gera dois alertas para a mesma regra; se casar com várias
+  regras, vem um alerta só listando todas.
+- `-list` e `-show` mostram conversas de terceiros: usados fora do seu privado,
+  a resposta vai para o seu privado.
+- As ocorrências ficam na tabela `watch_hits` por 30 dias (setting
+  `watch.hitsRetentionDays`), ou até um `/watch -f`.
 
 ### Adicionando ou alterando comandos
 
