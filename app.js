@@ -604,10 +604,11 @@ function GetOptFromCommandForFfmpeg(opts, originalFile, outputFile) {
             outputFile
         );
     } else if (isSticker) {
-        // Sticker animado 512x512
+        // 512x512 animated sticker framed in the middle of the video (like /sticker):
+        // scales until it covers the square and the crop (centered by default) cuts off the excess
         args.push(
             '-vf',
-            'fps=15,scale=512:512:force_original_aspect_ratio=decrease,pad=512:512:(ow-iw)/2:(oh-ih)/2:color=black',
+            'fps=15,scale=512:512:force_original_aspect_ratio=increase,crop=512:512,setsar=1',
             '-an',
             '-c:v', 'libx264',
             '-b:v', '500k',
