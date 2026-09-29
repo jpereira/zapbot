@@ -1,4 +1,13 @@
 {
+    "_about": {
+        "project": "ZapBot - Bot para WhatsApp baseado no whatsapp-web.js",
+        "file": "Definição dos comandos do bot. Cada 'cmd' precisa de um handler em app.js (HANDLERS).",
+        "author": "Jorge Pereira <jpereiran@gmail.com>",
+        "url": "https://github.com/jpereira/zapbot",
+        "copyright": "Copyright (c) 2026 Jorge Pereira",
+        "license": "MIT",
+        "docs": "Veja a seção 'Comandos' do README.md para o formato de cada campo."
+    },
     "commands": [
         {
             "cmd": "/help",
@@ -53,14 +62,13 @@
             "onlyAdmin": true
         },
         {
-            "cmd": "/gay",
-            "usage": "/gay",
+            "cmd": "/noffa",
+            "usage": "/noffa",
             "aliases": [
                 "/🌈",
-                "/🏳️‍🌈",
-                "/noffa"
+                "/🏳️‍🌈"
             ],
-            "help": "Da uma gayzada no texto.",
+            "help": "Da uma floreada no texto.",
             "onlyAdmin": false
         },
         {
@@ -75,7 +83,8 @@
             "aliases": [
                 "/m"
             ],
-            "help": "Números a serem monitorados. Obs: Max 20 numeros",
+            "help": "🚧 [EM DESENVOLVIMENTO] Números a serem monitorados. Obs: Max 20 numeros",
+            "disabled": true,
             "cmd_opts": [
                 {
                     "opts": [

@@ -1,3 +1,27 @@
+/*
+ * ZapBot - WhatsApp bot based on whatsapp-web.js
+ *
+ * Recovers deleted messages, downloads videos (/get), creates stickers,
+ * monitors contacts and more. The commands are defined in
+ * config/bot-config.json e implementados neste arquivo (ver HANDLERS).
+ *
+ * Version:  see package.json
+ * Author:   Jorge Pereira <jpereiran@gmail.com>
+ * Site:    https://github.com/jpereira/zapbot
+ *
+ * Copyright (c) 2026 Jorge Pereira
+ *
+ * Licensed under the MIT license. It is permitted to use, copy, modify,
+ * merge, publish, distribute, sublicense and/or sell copies of this
+ * software, provided that this copyright notice is kept.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+ *
+ * Unofficial project, with no link to WhatsApp or Meta. Using bots on
+ * personal accounts violates WhatsApp's Terms of Service and may lead to
+ * number ban. Use at your own risk.
+ */
+
 const { Client, MessageMedia, LocalAuth, Location } = require('whatsapp-web.js');
 const { spawn } = require('child_process');
 const util = require('util');
@@ -212,8 +236,17 @@ const dbReady = initializeDb().catch((e) => {
  * Command configuration
  */
 const botConfig = require('./config/bot-config.json');
+
+// "disabled": true takes the command out of the bot: it does not answer, it does not show in /help
+const disabledCommands = botConfig.commands.filter(c => c.disabled).map(c => c.cmd);
+botConfig.commands = botConfig.commands.filter(c => !c.disabled);
+
 const commands = botConfig.commands.map(c => c.cmd);
 printSuccess(`Loaded ${commands.length} callers (${commands.join(',')})`);
+
+if (disabledCommands.length) {
+    printInfo(`Disabled ${disabledCommands.length} callers (${disabledCommands.join(',')})`);
+}
 
 function findCommand(name) {
     return botConfig.commands.find(c => c.cmd === name || c.aliases?.includes(name));
@@ -1027,6 +1060,8 @@ client.on('ready', () => {
  * Presence of the monitored numbers
  */
 client.on('presence_update', async (presence) => {
+    // Without /monitor loaded, already registered numbers generate no notices
+    if (!findCommand('/monitor')) return;
     if (!presence?.id) return;
 
     const myid = process.env.PHONE_NUMBER;
@@ -1373,14 +1408,14 @@ async function cmdPing({ msg }) {
     await msg.reply('pong');
 }
 
-async function cmdGay({ msg, args, quotedMsg }) {
+async function cmdNoffa({ msg, args, quotedMsg }) {
     const rainbowHearts = ['🌈', '🏳️‍🌈', '🏳️‍⚧️', '🧡', '💛', '💚', '💙', '💜'];
 
     // It used to use only the first word (argv[1]) and produced "undefined" with no argument.
     const text = [args, quotedMsg?.body].filter(Boolean).join(' ').trim();
 
     if (!text) {
-        await msg.reply('Syntax: /gay <texto> (ou responda uma mensagem)');
+        await msg.reply('Syntax: /noffa <texto> (ou responda uma mensagem)');
         return;
     }
 
@@ -2234,7 +2269,7 @@ const HANDLERS = {
     '/debug': cmdDebug,
     '/uptime': cmdUptime,
     '/ping': cmdPing,
-    '/gay': cmdGay,
+    '/noffa': cmdNoffa,
     '/everyone': cmdEveryone,
     '/monitor': cmdMonitor,
     '/crypto': cmdCrypto,
