@@ -480,10 +480,9 @@ const transporter = nodemailer.createTransport({
     auth: {
         user: process.env.QRCODE_EMAIL_SMTP_USER,
         pass: process.env.QRCODE_EMAIL_SMTP_PASS
-    },
-    tls: {
-        rejectUnauthorized: false
     }
+    // No "tls.rejectUnauthorized: false": the SMTP certificate must be valid,
+    // otherwise a MITM captures the password and the QR Code (= the WhatsApp session).
 });
 
 /*
