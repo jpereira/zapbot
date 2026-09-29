@@ -799,6 +799,19 @@ function getFolderMedia() {
 }
 
 /*
+ * The message id and mimetype come from the sender's client: a client
+ * modified could send "../../app/app" as the id. Only letters, numbers, _ and -.
+ */
+const nameSafe = (valueAlt, defaults) => String(valueAlt ?? '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 64) || defaults;
+
+// true if `arquivo` is inside MEDIA_DIR (also applies to paths already stored in the database)
+function mediaIsPath(fileAlt) {
+    if (!fileAlt) return false;
+    const relative = path.relative(MEDIA_DIR, path.resolve(fileAlt));
+    return relative !== '' && !relative.startsWith('..') && !path.isAbsolute(relative);
+}
+
+/*
  * Database + media cleanup:
  * - normal messages: removed after the "delete for everyone" window (68h),
  * because after that they can no longer be deleted;
@@ -820,7 +833,7 @@ async function cleanCacheOld(maxDeleteWin = MAX_DELETE_WINDOW, retentionDeleted 
         const rows = await dbAll(`SELECT media_path FROM messages WHERE media_path IS NOT NULL AND (${filter})`, params);
 
         for (const row of rows) {
-            if (fs.existsSync(row.media_path)) {
+            if (mediaIsPath(row.media_path) && fs.existsSync(row.media_path)) {
                 printInfo(`Removendo ${row.media_path}`);
                 fs.unlinkSync(row.media_path);
             }
@@ -1621,7 +1634,7 @@ async function sendMessageDeleted(destination, row, info, { titulo: title = '❌
     }
 
     // Physical file
-    if (row.has_media && row.media_path && fs.existsSync(row.media_path)) {
+    if (row.has_media && mediaIsPath(row.media_path) && fs.existsSync(row.media_path)) {
         const mediaAttachment = MessageMedia.fromFilePath(row.media_path);
         const mimetype = mediaAttachment.mimetype || '';
         const captionAlt = row.body || 'Sem texto';
@@ -2661,6 +2674,8 @@ async function chatCleanDeleted({ msg, chatId, alvo: target = null }) {
     let bytes = 0;
 
     for (const { media_path } of mediaAltAlt) {
+        if (!mediaIsPath(media_path)) continue;
+
         try {
             bytes += fs.statSync(media_path).size;
             fs.unlinkSync(media_path);
@@ -3243,12 +3258,13 @@ client.on('message_create', async (msg) => {
                 const media = await msg.downloadMedia();
 
                 if (media?.data) {
-                    const extension = media.mimetype?.includes('/')
-                        ? media.mimetype.split('/').pop().split(';').shift()
-                        : 'bin';
+                    const extension = nameSafe(media.mimetype?.split('/')[1]?.split(';')[0], 'bin');
+                    const fileAlt = path.join(getFolderMedia(), `${nameSafe(msgIdPure, `fallback_${timestamp}`)}.${extension}`);
 
-                    localMediaPath = path.join(getFolderMedia(), `${msgIdPure}.${extension}`);
-                    fs.writeFileSync(localMediaPath, Buffer.from(media.data, 'base64'));
+                    if (!mediaIsPath(fileAlt)) throw new Error(`caminho de mídia inválido: ${fileAlt}`);
+
+                    fs.writeFileSync(fileAlt, Buffer.from(media.data, 'base64'));
+                    localMediaPath = fileAlt;
                 }
             } catch (error) {
                 printError('Falha ao baixar mídia:', error.message);
