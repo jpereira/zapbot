@@ -26,6 +26,13 @@ let BOT_AUTHENTICATED_TIME = 0;
 // Maximum time WhatsApp allows deleting for everyone: 68 hours in milliseconds
 const MAX_DELETE_WINDOW = 68 * 60 * 60 * 1000;
 
+// DELETED messages are kept longer (for /show): 30 days
+const REVOKED_RETENTION = 30 * 24 * 60 * 60 * 1000;
+
+// /show: maximum messages per call and interval between sends (avoids flood/ban)
+const UNDO_MAX = 20;
+const UNDO_DELAY_MS = 700;
+
 const CACHE_DIR = path.join(__dirname, 'cache');
 const MEDIA_DIR = path.join(CACHE_DIR, 'media'); // media saved to recover deleted messages
 const TMP_DIR = path.join(CACHE_DIR, 'tmp');     // /get temporary files
@@ -127,55 +134,66 @@ const dbAll = (sql, params = []) => new Promise((resolve, reject) =>
 const dbRun = (sql, params = []) => new Promise((resolve, reject) =>
     db.run(sql, params, function (err) { return err ? reject(err) : resolve(this); }));
 
-try {
-    db.serialize(() => {
-        // History of when the monitored contacts come online
-        db.run(`
-            CREATE TABLE IF NOT EXISTS presence_logs (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                phone_number TEXT,
-                display_name TEXT,
-                status TEXT,
-                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-        `);
+/*
+ * Creation of the tables.
+ * All in sequence (await): before, CREATE TABLE might not yet have
+ * finished when the first query arrived.
+ *
+ * Handlers that use the database do `await dbReady` before querying.
+ */
+async function initializeDb() {
+    // History of when the monitored contacts come online
+    await dbRun(`
+        CREATE TABLE IF NOT EXISTS presence_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            phone_number TEXT,
+            display_name TEXT,
+            status TEXT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
 
-        // Numbers monitored via /monitor
-        db.run(`
-            CREATE TABLE IF NOT EXISTS monitored_numbers (
-                phone_number TEXT PRIMARY KEY,
-                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-        `);
+    // Numbers monitored via /monitor
+    await dbRun(`
+        CREATE TABLE IF NOT EXISTS monitored_numbers (
+            phone_number TEXT PRIMARY KEY,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
 
-        // Received messages (to recover the deleted ones)
-        db.run(`
-            CREATE TABLE IF NOT EXISTS messages (
-                id TEXT PRIMARY KEY,
+    // Received messages (to recover the deleted ones)
+    await dbRun(`
+        CREATE TABLE IF NOT EXISTS messages (
+            id TEXT PRIMARY KEY,
 
-                sender_name TEXT,
-                sender_jid TEXT,
-                sender_number TEXT,
+            sender_name TEXT,
+            sender_jid TEXT,
+            sender_number TEXT,
 
-                chat_id TEXT,
-                chat_name TEXT,
-                is_group INTEGER DEFAULT 0,
+            chat_id TEXT,
+            chat_name TEXT,
+            is_group INTEGER DEFAULT 0,
 
-                body TEXT,
-                type TEXT,
+            body TEXT,
+            type TEXT,
 
-                timestamp INTEGER,
+            timestamp INTEGER,
 
-                has_media INTEGER DEFAULT 0,
-                media_path TEXT,
+            has_media INTEGER DEFAULT 0,
+            media_path TEXT,
 
-                location_lat REAL,
-                location_lng REAL,
+            location_lat REAL,
+            location_lng REAL,
 
-                raw_json TEXT
-            )
-        `);
-    });
+            raw_json TEXT,
+
+            revoked INTEGER DEFAULT 0,
+            revoked_at INTEGER
+        )
+    `);
+
+    // /show query: a chat's deleted messages, from most recent to oldest
+    await dbRun('CREATE INDEX IF NOT EXISTS idx_messages_chat_revoked ON messages (chat_id, revoked, revoked_at)');
 
     for (const dir of [MEDIA_DIR, TMP_DIR]) {
         if (!fs.existsSync(dir)) {
@@ -183,10 +201,12 @@ try {
             printInfo(`Creating ${dir}`);
         }
     }
-} catch (e) {
+}
+
+const dbReady = initializeDb().catch((e) => {
     console.error('Bootstrap Erro:', e);
     process.exit(1);
-}
+});
 
 /*
  * Command configuration
@@ -528,15 +548,26 @@ function getFolderMedia() {
     return folderDestination;
 }
 
-// Removes messages and media older than the "delete for everyone" window
-async function cleanCacheOld(maxDeleteWin = MAX_DELETE_WINDOW) {
-    const limitTime = Date.now() - maxDeleteWin;
+/*
+ * Database + media cleanup:
+ * - normal messages: removed after the "delete for everyone" window (68h),
+ * because after that they can no longer be deleted;
+ * - DELETED messages (revoked=1): kept for REVOKED_RETENTION (30 days),
+ * so /show keeps working.
+ * With /cache -clean -force, both windows are 0 and everything is removed.
+ */
+async function cleanCacheOld(maxDeleteWin = MAX_DELETE_WINDOW, retentionDeleted = REVOKED_RETENTION) {
+    await dbReady;
+
+    const nowAlt = Date.now();
+    const filter = `
+        (revoked = 0 AND timestamp < ?)
+        OR (revoked = 1 AND COALESCE(revoked_at, timestamp) < ?)
+    `;
+    const params = [nowAlt - maxDeleteWin, nowAlt - retentionDeleted];
 
     try {
-        const rows = await dbAll(
-            'SELECT media_path FROM messages WHERE timestamp < ? AND media_path IS NOT NULL',
-            [limitTime]
-        );
+        const rows = await dbAll(`SELECT media_path FROM messages WHERE media_path IS NOT NULL AND (${filter})`, params);
 
         for (const row of rows) {
             if (fs.existsSync(row.media_path)) {
@@ -545,13 +576,35 @@ async function cleanCacheOld(maxDeleteWin = MAX_DELETE_WINDOW) {
             }
         }
 
-        const res = await dbRun('DELETE FROM messages WHERE timestamp < ?', [limitTime]);
+        const res = await dbRun(`DELETE FROM messages WHERE ${filter}`, params);
         if (res.changes > 0) {
             printInfo(`Limpeza: ${res.changes} registros antigos limpos.`);
         }
     } catch (err) {
         printError('Erro na limpeza do cache:', err.message);
     }
+}
+
+/*
+ * General cleanup (/cache -c -f): ALL messages (including the deleted ones
+ * stored for /show), all the media and all the temporaries.
+ * At the end, VACUUM gives the space back to the disk: DELETE alone does not shrink the .db.
+ * Does not touch monitored_numbers or presence_logs (configuration and history).
+ */
+async function cleanAll() {
+    await dbReady;
+
+    const bytesBefore = getDirSize(CACHE_DIR);
+    const { total, apagadas: deletedAlt } = await dbGet(
+        'SELECT COUNT(*) AS total, COALESCE(SUM(revoked), 0) AS apagadas FROM messages'
+    );
+
+    await dbRun('DELETE FROM messages');
+    cleanContentDirectory(MEDIA_DIR);
+    cleanContentDirectory(TMP_DIR);
+    await dbRun('VACUUM');
+
+    return { total, apagadas: deletedAlt, liberado: Math.max(0, bytesBefore - getDirSize(CACHE_DIR)) };
 }
 
 function cleanContentDirectory(dirPath) {
@@ -1012,7 +1065,176 @@ client.on('presence_update', async (presence) => {
 
 /*
  * Deleted message recovery
+ *
+ * The same renderer is used in two places:
+ * - event 'message_revoke_everyone' → sends to yourself, right away;
+ * - command /show                    → resends in the current chat, on demand.
  */
+
+// Timestamp stored in seconds (WhatsApp) or milliseconds (Date.now())
+function paraMs(valueAlt) {
+    const n = Number(valueAlt);
+    return n < 10_000_000_000 ? n * 1000 : n;
+}
+
+function formatData(valueAlt) {
+    return new Date(paraMs(valueAlt)).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+}
+
+const wait = (ms) => new Promise(r => setTimeout(r, ms));
+
+/**
+ * Finds the chat and sender names of a deleted message.
+ * With the event objects (after/before) it gets more precise names;
+ * without them (/show) uses what was stored in the database.
+ */
+async function resolverAuthorDeleted(row, { after, before, protocolKey } = {}) {
+    let nameChat = row.chat_name || 'Conversa desconhecida';
+    let nameSender = row.sender_name || 'Desconhecido';
+    let numberSender = row.sender_number || null;
+
+    // Real name of the chat where the deletion happened
+    if (after) {
+        try {
+            const chat = await after.getChat();
+            if (chat?.name) nameChat = chat.name;
+        } catch (chatError) {
+            printError('[Revoke] Não foi possível recuperar o chat:', chatError.message);
+        }
+    }
+
+    // Sender from the original message, when available
+    if (before) {
+        try {
+            const contactAlt = await before.getContact();
+
+            nameSender = contactAlt.pushname || contactAlt.name || contactAlt.shortName || nameSender;
+
+            const contactId = contactAlt.id?._serialized || '';
+
+            if (contactId.endsWith('@c.us')) {
+                numberSender = contactId.split('@')[0];
+            } else if (contactAlt.number) {
+                numberSender = contactAlt.number;
+            }
+        } catch (contactError) {
+            printError('[Revoke] Não foi possível recuperar o contato original:', contactError.message);
+        }
+    }
+
+    // Converts @lid to a real phone, if possible
+    const senderId = before?.author || protocolKey?.participant;
+
+    if (senderId?.endsWith('@lid')) {
+        const phoneId = await resolveLidToPhone(senderId);
+
+        if (phoneId) {
+            numberSender = phoneId.replace('@c.us', '').replace(/\D/g, '');
+
+            const contactAlt = await client.getContactById(phoneId).catch(() => null);
+            nameSender = contactAlt?.pushname || contactAlt?.name || contactAlt?.shortName || nameSender;
+        }
+    }
+
+    return { nomeChat: nameChat, nomeRemetente: nameSender, numeroRemetente: numberSender };
+}
+
+/**
+ * Sends a deleted message (text, media, location or contact) to `destino`.
+ *
+ * @param {string} destino              chat that will receive
+ * @param {object} row                  row of the messages table
+ * @param {object} info                 { nomeChat, nomeRemetente, numeroRemetente }
+ * @param {object} [opcoes]
+ * @param {string} [opcoes.titulo]      first line of the alert
+ * @param {string[]} [opcoes.extras]    extra lines after "Enviada em"
+ */
+async function sendMessageDeleted(destination, row, info, { titulo: title = '❌ *MENSAGEM APAGADA DETECTADA*', extras = [] } = {}) {
+    let alertText = `${title}\n\n`;
+
+    if (row.is_group === 1) {
+        alertText += `👥 *Grupo:* ${info.nomeChat}\n`;
+    }
+
+    alertText +=
+        `👤 *Nome:* ${info.nomeRemetente}\n` +
+        `📱 *Número:* ${info.numeroRemetente ? `+${info.numeroRemetente}` : 'Número indisponível'}\n` +
+        `📅 *Enviada em:* ${formatData(row.timestamp)}\n`;
+
+    for (const line of extras) {
+        alertText += `${line}\n`;
+    }
+
+    // Location
+    if (row.type === 'location' && row.location_lat !== null && row.location_lng !== null) {
+        const latitude = Number(row.location_lat);
+        const longitude = Number(row.location_lng);
+
+        alertText +=
+            '🗺️ *Tipo:* LOCALIZAÇÃO\n' +
+            `🔗 *Link do mapa:* https://www.google.com/maps?q=${latitude},${longitude}`;
+
+        await client.sendMessage(destination, alertText);
+        await client.sendMessage(destination, new Location(latitude, longitude, row.body || 'Localização compartilhada'));
+        return;
+    }
+
+    // Contato / vCard
+    if (['vcard', 'contact', 'multi_vcard'].includes(row.type)) {
+        alertText +=
+            '📇 *Tipo:* CARTÃO DE CONTATO\n' +
+            '💡 *Nota:* O contato está anexado abaixo.';
+
+        await client.sendMessage(destination, alertText);
+
+        if (row.body) {
+            await client.sendMessage(destination, row.body, { parseVCards: true });
+        }
+        return;
+    }
+
+    // Physical file
+    if (row.has_media && row.media_path && fs.existsSync(row.media_path)) {
+        const mediaAttachment = MessageMedia.fromFilePath(row.media_path);
+        const mimetype = mediaAttachment.mimetype || '';
+        const captionAlt = row.body || 'Sem texto';
+
+        if (row.type === 'audio' || row.type === 'ptt' || mimetype.startsWith('audio/')) {
+            alertText += '🎵 *Tipo:* ÁUDIO / NOTA DE VOZ';
+
+            await client.sendMessage(destination, alertText);
+            await client.sendMessage(destination, mediaAttachment, { sendAudioAsVoice: true });
+            return;
+        }
+
+        if (row.type === 'video' || row.type === 'image' || mimetype.startsWith('image/') || mimetype.startsWith('video/')) {
+            alertText +=
+                `🎬 *Tipo:* ${String(row.type).toUpperCase()}\n` +
+                `💬 *Legenda:* "${captionAlt}"`;
+
+            await client.sendMessage(destination, mediaAttachment, { caption: alertText });
+            return;
+        }
+
+        alertText +=
+            '📄 *Tipo:* DOCUMENTO\n' +
+            `💬 *Legenda:* "${captionAlt}"`;
+
+        await client.sendMessage(destination, mediaAttachment, { caption: alertText, sendMediaAsDocument: true });
+        return;
+    }
+
+    // Media that existed but the file is no longer on disk
+    if (row.has_media) {
+        alertText += `📎 *Tipo:* ${String(row.type).toUpperCase()} _(arquivo não disponível no cache)_\n`;
+    }
+
+    // Texto
+    alertText += `💬 *Texto:* "${row.body || 'Mensagem sem conteúdo'}"`;
+
+    await client.sendMessage(destination, alertText, { linkPreview: true });
+}
+
 client.on('message_revoke_everyone', async (after, before) => {
     const protocolKey = after._data?.protocolMessageKey;
     const targetId = protocolKey?.id || before?.id?.id || after?.id?.id;
@@ -1024,6 +1246,7 @@ client.on('message_revoke_everyone', async (after, before) => {
 
     let row;
     try {
+        await dbReady;
         row = await dbGet('SELECT * FROM messages WHERE id = ?', [targetId]);
     } catch (err) {
         printError('[Revoke] Erro ao consultar banco:', err.message);
@@ -1036,136 +1259,24 @@ client.on('message_revoke_everyone', async (after, before) => {
     }
 
     try {
-        const myChatId = client.info.wid._serialized;
+        const info = await resolverAuthorDeleted(row, { after, before, protocolKey });
 
-        // Timestamp in seconds (WhatsApp) or milliseconds (Date.now())
-        const timestampMs = Number(row.timestamp) < 10_000_000_000
-            ? Number(row.timestamp) * 1000
-            : Number(row.timestamp);
+        // Marks as deleted BEFORE sending: even if the send fails, /show finds it.
+        // Also stores the names resolved now, which are more precise than those from receiving.
+        await dbRun(
+            `UPDATE messages
+                SET revoked = 1,
+                    revoked_at = ?,
+                    chat_name = ?,
+                    sender_name = ?,
+                    sender_number = COALESCE(?, sender_number)
+              WHERE id = ?`,
+            [Date.now(), info.nomeChat, info.nomeRemetente, info.numeroRemetente, row.id]
+        );
 
-        const dateSending = new Date(timestampMs).toLocaleString('pt-BR');
-
-        let nameChat = row.chat_name || 'Conversa desconhecida';
-        let nameSender = row.sender_name || 'Desconhecido';
-        let numberSender = row.sender_number || 'Número indisponível';
-
-        // Real name of the chat where the deletion happened
-        try {
-            const chat = await after.getChat();
-            if (chat?.name) nameChat = chat.name;
-        } catch (chatError) {
-            printError('[Revoke] Não foi possível recuperar o chat:', chatError.message);
-        }
-
-        // Sender from the original message, when available
-        if (before) {
-            try {
-                const contactAlt = await before.getContact();
-
-                nameSender = contactAlt.pushname || contactAlt.name || contactAlt.shortName || row.sender_name || 'Desconhecido';
-
-                const contactId = contactAlt.id?._serialized || '';
-
-                if (contactId.endsWith('@c.us')) {
-                    numberSender = contactId.split('@')[0];
-                } else if (contactAlt.number) {
-                    numberSender = contactAlt.number;
-                }
-            } catch (contactError) {
-                printError('[Revoke] Não foi possível recuperar o contato original:', contactError.message);
-            }
-        }
-
-        // Converts @lid to a real phone, if possible
-        const senderId = before?.author || protocolKey?.participant;
-
-        if (senderId?.endsWith('@lid')) {
-            const phoneId = await resolveLidToPhone(senderId);
-
-            if (phoneId) {
-                numberSender = phoneId.replace('@c.us', '').replace(/\D/g, '');
-
-                const contactAlt = await client.getContactById(phoneId).catch(() => null);
-                nameSender = contactAlt?.pushname || contactAlt?.name || contactAlt?.shortName || nameSender;
-            }
-        }
-
-        let alertText = '❌ *MENSAGEM APAGADA DETECTADA*\n\n';
-
-        if (row.is_group === 1) {
-            alertText += `👥 *Grupo:* ${nameChat}\n`;
-        }
-
-        alertText +=
-            `👤 *Nome:* ${nameSender}\n` +
-            `📱 *Número:* +${numberSender}\n` +
-            `📅 *Enviada em:* ${dateSending}\n`;
-
-        // Location
-        if (row.type === 'location' && row.location_lat !== null && row.location_lng !== null) {
-            const latitude = Number(row.location_lat);
-            const longitude = Number(row.location_lng);
-
-            alertText +=
-                '🗺️ *Tipo:* LOCALIZAÇÃO\n' +
-                `🔗 *Link do mapa:* https://www.google.com/maps?q=${latitude},${longitude}`;
-
-            await client.sendMessage(myChatId, alertText);
-            await client.sendMessage(myChatId, new Location(latitude, longitude, row.body || 'Localização compartilhada'));
-            return;
-        }
-
-        // Contato / vCard
-        if (['vcard', 'contact', 'multi_vcard'].includes(row.type)) {
-            alertText +=
-                '📇 *Tipo:* CARTÃO DE CONTATO\n' +
-                '💡 *Nota:* O contato está anexado abaixo.';
-
-            await client.sendMessage(myChatId, alertText);
-
-            if (row.body) {
-                await client.sendMessage(myChatId, row.body, { parseVCards: true });
-            }
-            return;
-        }
-
-        // Physical file
-        if (row.has_media && row.media_path && fs.existsSync(row.media_path)) {
-            const mediaAttachment = MessageMedia.fromFilePath(row.media_path);
-            const mimetype = mediaAttachment.mimetype || '';
-            const captionAlt = row.body || 'Sem texto';
-
-            if (row.type === 'audio' || row.type === 'ptt' || mimetype.startsWith('audio/')) {
-                alertText += '🎵 *Tipo:* ÁUDIO / NOTA DE VOZ';
-
-                await client.sendMessage(myChatId, alertText);
-                await client.sendMessage(myChatId, mediaAttachment, { sendAudioAsVoice: true });
-                return;
-            }
-
-            if (row.type === 'video' || row.type === 'image' || mimetype.startsWith('image/') || mimetype.startsWith('video/')) {
-                alertText +=
-                    `🎬 *Tipo:* ${String(row.type).toUpperCase()}\n` +
-                    `💬 *Legenda:* "${captionAlt}"`;
-
-                await client.sendMessage(myChatId, mediaAttachment, { caption: alertText });
-                return;
-            }
-
-            alertText +=
-                '📄 *Tipo:* DOCUMENTO\n' +
-                `💬 *Legenda:* "${captionAlt}"`;
-
-            await client.sendMessage(myChatId, mediaAttachment, { caption: alertText, sendMediaAsDocument: true });
-            return;
-        }
-
-        // Texto
-        alertText += `💬 *Texto:* "${row.body || 'Mensagem sem conteúdo'}"`;
-
-        await client.sendMessage(myChatId, alertText, { linkPreview: true });
+        await sendMessageDeleted(client.info.wid._serialized, row, info);
     } catch (sendError) {
-        printError('[Revoke] Erro ao reenviar item apagado:', sendError.message);
+        printError('[Revoke] Erro ao processar item apagado:', sendError.message);
     }
 });
 
@@ -1573,30 +1684,6 @@ async function cmdSticker({ msg, quotedMsg }) {
     await msg.reply(media, null, { sendMediaAsSticker: true, ...STICKER_META });
 }
 
-async function cmdShow({ msg, quotedMsg }) {
-    if (!quotedMsg?.hasMedia) {
-        await msg.reply('Syntax: Responda uma mídia usando /show');
-        return;
-    }
-
-    if (quotedMsg.isViewOnce) {
-        printInfo('/show: AVISO: É view once 👀');
-    }
-
-    const media = await quotedMsg.downloadMedia();
-
-    if (!media) {
-        printDebug('/show: Mídia bloqueada (provável view once)');
-        await msg.reply('Não consegui baixar a mídia (provável view once já aberta).');
-        return;
-    }
-
-    printDebug('/show: Baixou mídia:', media.mimetype);
-
-    await msg.reply(media, null, { sendMediaAsSticker: false });
-    printSuccess('/show responded OK');
-}
-
 async function cmdGet({ msg, opts, quotedMsg, senderName }) {
     const id = Date.now();
     let originalFile = null;
@@ -1713,29 +1800,431 @@ async function cmdCache({ msg, opts }) {
     try {
         let textMsg;
 
-        if (opts.opt.clean) {
-            const isForce = opts.opt.force;
+        if (opts.opt.clean && opts.opt.force) {
+            // General cleanup: messages, deleted ones, media, temporaries
+            const r = await cleanAll();
 
-            await cleanCacheOld(isForce ? 0 : MAX_DELETE_WINDOW);
-            await cleanFilesOld(TMP_DIR, isForce ? 0 : 2);
+            textMsg =
+                '🧹 *Limpeza geral concluída* (force)\n\n' +
+                `🗄️ Mensagens removidas: *${r.total}* _(${r.apagadas} apagada${r.apagadas === 1 ? '' : 's'})_\n` +
+                `💾 Espaço liberado: *${humanSize(r.liberado)}*`;
+        } else if (opts.opt.clean) {
+            // Normal cleanup: only what is past the retention windows
+            await cleanCacheOld();
+            await cleanFilesOld();
 
-            if (isForce) {
-                cleanContentDirectory(MEDIA_DIR);
-            }
-
-            textMsg = `🧹 Cache limpo. ${isForce ? '(force)' : ''}\n`;
+            textMsg = '🧹 Cache limpo (itens fora da janela de retenção).\n';
         } else {
-            const { total } = await dbGet('SELECT COUNT(*) AS total FROM messages');
+            const { total, apagadas: deletedAlt } = await dbGet(
+                'SELECT COUNT(*) AS total, COALESCE(SUM(revoked), 0) AS apagadas FROM messages'
+            );
 
             textMsg = `🗂️ Exibindo conteúdo de ${CACHE_DIR}/*`;
             textMsg += '\n\n```' + listCacheLevelOnly(CACHE_DIR) + '```\n\n';
-            textMsg += `🗄️ Existem ${total} mensagens no cache.`;
+            textMsg += `🗄️ Existem ${total} mensagens no cache (${deletedAlt} apagadas).`;
         }
 
         await msg.reply(textMsg, null, { linkPreview: false });
     } catch (e) {
         printError(e.message);
         await msg.reply(formatErrorCommand(e), null, { linkPreview: false });
+    }
+}
+
+/*
+ * /show [-N] [-pv]
+ * Re-shows the last N deleted messages of THIS chat (default: 1), in the same
+ * format of the 'message_revoke_everyone' alert.
+ * /show        → the last deleted one
+ * /show -3     → the last 3 (max. UNDO_MAX)
+ * /show -3 -pv → sends to YOUR private chat instead of exposing it in the current chat
+ * /show -list  → how many deleted messages exist in the cache
+ * /show -flush → removes the deleted ones of this chat (in your private chat: of all chats)
+ * /show -2 -c 1       → (in your private chat) the last 2 of chat no. 1 of /show -l
+ * /show -2 -c zapbot  → (in your private chat) same, looking up the chat by name
+ * /show -f -c 1       → (in your private chat) flush only chat no. 1
+ * Sends in chronological order: the last one sent is the most recently deleted.
+ */
+// In private conversations the same chat may appear as @lid or @c.us
+async function chatCurrentIds(chatId) {
+    const ids = [chatId];
+
+    if (chatId.endsWith('@lid')) {
+        const phoneAlt = await resolveLidToPhone(chatId);
+        if (phoneAlt) ids.push(phoneAlt);
+    }
+
+    return ids;
+}
+
+/*
+ * Numbering of the last /show -l (index → chat_id).
+ * We keep the snapshot because the list order changes with every new message
+ * deleted: without it, "chat 2" could point to another chat between -l and -c.
+ */
+let chatsLastList = [];
+
+// Chats with deleted messages, in the same order as /show -l
+function queryChatsWithDeleted() {
+    return dbAll(
+        `SELECT chat_id,
+                MAX(chat_name) AS chat_name,
+                MAX(is_group) AS is_group,
+                COUNT(*) AS total,
+                MAX(revoked_at) AS ultima
+           FROM messages
+          WHERE revoked = 1
+          GROUP BY chat_id
+          ORDER BY total DESC, ultima DESC`
+    );
+}
+
+const chatNameAlt = (c) => c.chat_name || c.chat_id.split('@')[0];
+
+/**
+ * Resolves the -c value to a chat:
+ * number → position in the last /show -l
+ * text  → search by name (case insensitive)
+ * @returns {Promise<{ids: string[], nome: string} | {erro: string}>}
+ */
+async function resolverChatTarget(valueAlt) {
+    const chats = await queryChatsWithDeleted();
+
+    if (!chats.length) {
+        return { erro: '♻️ Nenhuma mensagem apagada no cache.' };
+    }
+
+    // By number
+    if (/^\d+$/.test(valueAlt)) {
+        const indexAlt = Number(valueAlt);
+        const list = chatsLastList.length ? chatsLastList : chats.map(c => c.chat_id);
+        const chatId = list[indexAlt - 1];
+        const chat = chats.find(c => c.chat_id === chatId);
+
+        if (!chat) {
+            return { erro: `❌ Chat nº ${indexAlt} não existe (ou não tem mais apagadas). Rode /show -l para ver a lista atual.` };
+        }
+
+        return { ids: [chat.chat_id], nome: chatNameAlt(chat) };
+    }
+
+    // By name
+    const search = valueAlt.toLowerCase();
+    const foundAlt6 = chats.filter(c => chatNameAlt(c).toLowerCase().includes(search));
+    const exact = foundAlt6.find(c => chatNameAlt(c).toLowerCase() === search);
+
+    if (exact || foundAlt6.length === 1) {
+        const chat = exact || foundAlt6[0];
+        return { ids: [chat.chat_id], nome: chatNameAlt(chat) };
+    }
+
+    if (!foundAlt6.length) {
+        return { erro: `❌ Nenhum chat com apagadas contém "${valueAlt}". Rode /show -l para ver a lista.` };
+    }
+
+    return {
+        erro: `🔎 "${valueAlt}" corresponde a ${foundAlt6.length} chats. Seja mais específico ou use o número:\n` +
+              foundAlt6.map(c => `• ${chatNameAlt(c)}`).join('\n')
+    };
+}
+
+/*
+ * /show -list
+ * Summary of the deleted messages stored in the cache.
+ *
+ * The "per chat" breakdown shows NAMES of other conversations. So it only appears
+ * in your own private chat or with -pv; in any other chat (e.g.: a group)
+ * only the totals come out, so as not to expose who you talk to.
+ */
+async function listDeleted({ msg, opts, chatId }) {
+    await dbReady;
+
+    const myId = client.info.wid._serialized;
+    const idsDoChat = await chatCurrentIds(chatId);
+    const ownerInPrivate = idsDoChat.includes(myId);
+    const showPerChat = ownerInPrivate || opts.opt.pv;
+
+    const general = await dbGet(
+        `SELECT COUNT(*) AS total,
+                COALESCE(SUM(has_media), 0) AS com_midia,
+                MIN(revoked_at) AS mais_antiga
+           FROM messages
+          WHERE revoked = 1`
+    );
+
+    const inChat = await dbGet(
+        `SELECT COUNT(*) AS total
+           FROM messages
+          WHERE revoked = 1
+            AND chat_id IN (${idsDoChat.map(() => '?').join(', ')})`,
+        idsDoChat
+    );
+
+    let textAlt = '🗑️ *Mensagens apagadas no cache*\n\n';
+    textAlt += `📦 *Total:* ${general.total}`;
+    if (general.com_midia > 0) textAlt += ` _(${general.com_midia} com mídia)_`;
+    textAlt += '\n';
+
+    if (!ownerInPrivate) {
+        textAlt += `💬 *Neste chat:* ${inChat.total}\n`;
+    }
+
+    if (general.total > 0 && general.mais_antiga) {
+        const expiresIn = paraMs(general.mais_antiga) + REVOKED_RETENTION;
+        const daysAlt = Math.max(0, Math.ceil((expiresIn - Date.now()) / (24 * 60 * 60 * 1000)));
+        textAlt += `⏳ *Mais antiga:* ${formatData(general.mais_antiga)} _(expira em ${daysAlt} dia${daysAlt === 1 ? '' : 's'})_\n`;
+    }
+
+    if (showPerChat && general.total > 0) {
+        const LIMIT = 10;
+
+        const byChat = await queryChatsWithDeleted();
+        chatsLastList = byChat.map(c => c.chat_id);
+
+        textAlt += '\n*Por chat:*\n';
+
+        byChat.slice(0, LIMIT).forEach((c, i) => {
+            const iconAlt = c.is_group ? '👥' : '👤';
+            const nameAlt = chatNameAlt(c);
+            const current = idsDoChat.includes(c.chat_id) ? ' ← _este chat_' : '';
+            textAlt += `${i + 1}. ${iconAlt} ${nameAlt} — *${c.total}* _(última ${formatData(c.ultima)})_${current}\n`;
+        });
+
+        if (byChat.length > LIMIT) {
+            textAlt += `_+${byChat.length - LIMIT} chat(s)_\n`;
+        }
+    }
+
+    textAlt += `\n💡 _Use /show -N para reexibir (máx. ${UNDO_MAX})._`;
+
+    if (showPerChat && general.total > 0) {
+        textAlt += '\n💡 _No seu privado: /show -N -c <nº ou nome> para ver as de um chat._';
+    }
+
+    if (opts.opt.pv && !ownerInPrivate) {
+        await msg.reply('🗑️ Resumo enviado no seu privado.');
+        await client.sendMessage(myId, textAlt);
+    } else {
+        await msg.reply(textAlt);
+    }
+}
+
+/*
+ * /show -flush
+ * Removes the deleted messages from the cache (rows + media files):
+ * - in any chat      → only the deleted ones of THIS chat;
+ * - in your own private chat → the deleted ones of ALL chats.
+ * Destructive: only the bot owner runs it, even if /show is opened up in the config.
+ */
+async function chatCleanDeleted({ msg, chatId, alvo: target = null }) {
+    if (!msg.fromMe) {
+        await msg.reply('⛔ Só o dono do bot pode usar /show -flush.');
+        return;
+    }
+
+    await dbReady;
+
+    const myId = client.info.wid._serialized;
+    // With -c, the target is the chosen chat; without it, the current chat
+    const idsDoChat = target ? target.ids : await chatCurrentIds(chatId);
+    const general = !target && idsDoChat.includes(myId);
+
+    // Filter: all deleted ones (owner's private chat) or only those of the target chat
+    const filter = general
+        ? 'revoked = 1'
+        : `revoked = 1 AND chat_id IN (${idsDoChat.map(() => '?').join(', ')})`;
+    const params = general ? [] : idsDoChat;
+
+    // Collects what will go out BEFORE deleting, for the summary message
+    const byChat = await dbAll(
+        `SELECT chat_id,
+                MAX(chat_name) AS chat_name,
+                MAX(is_group) AS is_group,
+                COUNT(*) AS total
+           FROM messages
+          WHERE ${filter}
+          GROUP BY chat_id
+          ORDER BY total DESC`,
+        params
+    );
+
+    const total = byChat.reduce((sum, c) => sum + c.total, 0);
+
+    if (!total) {
+        await msg.reply(general
+            ? '♻️ Nenhuma mensagem apagada no cache.'
+            : '♻️ Nenhuma mensagem apagada registrada neste chat.');
+        return;
+    }
+
+    // Deletes the media from disk
+    const mediaAltAlt = await dbAll(`SELECT media_path FROM messages WHERE ${filter} AND media_path IS NOT NULL`, params);
+    let files = 0;
+    let bytes = 0;
+
+    for (const { media_path } of mediaAltAlt) {
+        try {
+            bytes += fs.statSync(media_path).size;
+            fs.unlinkSync(media_path);
+            files++;
+        } catch {
+            // file no longer exists
+        }
+    }
+
+    // Deletes the database rows
+    const res = await dbRun(`DELETE FROM messages WHERE ${filter}`, params);
+
+    printInfo(`/show -flush (${general ? 'geral' : chatId}): ${res.changes} mensagens e ${files} arquivos removidos`);
+
+    const plural = (n, um, several) => `${n} ${n === 1 ? um : several}`;
+
+    let textAlt = general
+        ? '🧹 *Flush geral das mensagens apagadas*\n\n'
+        : target
+            ? `🧹 *Flush das mensagens apagadas de:* ${target.nome}\n\n`
+            : '🧹 *Flush das mensagens apagadas deste chat*\n\n';
+
+    textAlt += `🗄️ Removidas: *${plural(res.changes, 'mensagem', 'mensagens')}*`;
+    textAlt += general ? ` de *${plural(byChat.length, 'chat', 'chats')}*\n` : '\n';
+    textAlt += `📎 Mídias apagadas do disco: *${files}*${files ? ` _(${humanSize(bytes)})_` : ''}\n`;
+
+    if (general) {
+        const LIMIT = 10;
+
+        textAlt += '\n*Por chat:*\n';
+        byChat.slice(0, LIMIT).forEach((c, i) => {
+            const iconAlt = c.is_group ? '👥' : '👤';
+            const nameAlt = c.chat_name || c.chat_id.split('@')[0];
+            textAlt += `${i + 1}. ${iconAlt} ${nameAlt} — *${c.total}*\n`;
+        });
+
+        if (byChat.length > LIMIT) {
+            textAlt += `_+${byChat.length - LIMIT} chat(s)_\n`;
+        }
+    } else if (!target) {
+        textAlt += '\n💡 _Para limpar as apagadas de todos os chats, use /show -f no seu privado._';
+    }
+
+    await msg.reply(textAlt);
+}
+
+async function cmdUndo({ msg, opts, chatId }) {
+    /*
+     * -c <no.|name>: picks another chat. Only in YOUR private chat; in a group this
+     * would republish there the deleted messages of other conversations.
+     */
+    let target = null;
+
+    if (opts.opt.chat) {
+        const inMyPrivate = (await chatCurrentIds(chatId)).includes(client.info.wid._serialized);
+
+        if (!msg.fromMe || !inMyPrivate) {
+            await msg.reply('⛔ A opção -c só pode ser usada no seu privado.');
+            return;
+        }
+
+        await dbReady;
+        target = await resolverChatTarget(String(opts.opt.chat));
+
+        if (target.erro) {
+            await msg.reply(target.erro);
+            return;
+        }
+    }
+
+    if (opts.opt.flush) {
+        await chatCleanDeleted({ msg, chatId, alvo: target });
+        return;
+    }
+
+    if (opts.opt.list) {
+        await listDeleted({ msg, opts, chatId });
+        return;
+    }
+
+    // "-3" is not a declared option, so the parser puts it in argv (just like "3")
+    const extras = opts.argv.filter(Boolean);
+    let n = 1;
+
+    if (extras.length > 1) {
+        await msg.reply('```' + getCommandSyntax('/show') + '```');
+        return;
+    }
+
+    if (extras.length === 1) {
+        const m = extras[0].match(/^-?(\d+)$/);
+
+        if (!m || Number(m[1]) < 1) {
+            await msg.reply('```' + getCommandSyntax('/show') + '```');
+            return;
+        }
+
+        n = Number(m[1]);
+    }
+
+    let notice = '';
+    if (n > UNDO_MAX) {
+        notice = `\n_(limitado a ${UNDO_MAX} por vez)_`;
+        n = UNDO_MAX;
+    }
+
+    const idsDoChat = target ? target.ids : await chatCurrentIds(chatId);
+
+    await dbReady;
+
+    const rows = await dbAll(
+        `SELECT *
+           FROM messages
+          WHERE revoked = 1
+            AND chat_id IN (${idsDoChat.map(() => '?').join(', ')})
+          ORDER BY revoked_at DESC, timestamp DESC
+          LIMIT ?`,
+        [...idsDoChat, n]
+    );
+
+    if (!rows.length) {
+        // In private, without -c, the intent was almost always to see another chat
+        const inMyPrivate = !target && idsDoChat.includes(client.info.wid._serialized);
+
+        await msg.reply(inMyPrivate
+            ? '♻️ Nenhuma mensagem apagada neste chat.\n💡 _Para ver as de outro chat: /show -l e depois /show -N -c <nº ou nome>._'
+            : '♻️ Nenhuma mensagem apagada registrada neste chat.');
+        return;
+    }
+
+    // Fetches the most recent, shows from oldest to newest
+    rows.reverse();
+
+    const destination = opts.opt.pv ? client.info.wid._serialized : chatId;
+    const missing = n > rows.length ? ` (pedidas ${n}, encontradas ${rows.length})` : '';
+    let summary = `♻️ *${rows.length} mensage${rows.length === 1 ? 'm apagada' : 'ns apagadas'}*${missing}${notice}`;
+
+    if (target) {
+        summary += `\n💬 *Chat:* ${target.nome}`;
+    }
+
+    if (opts.opt.pv && !target) {
+        await msg.reply('♻️ Enviado no seu privado.');
+        await client.sendMessage(destination, `${summary}\n💬 *Chat:* ${rows[0].chat_name || chatId}`);
+    } else {
+        await msg.reply(summary);
+    }
+
+    for (const [i, row] of rows.entries()) {
+        const info = await resolverAuthorDeleted(row);
+
+        try {
+            await sendMessageDeleted(destination, row, info, {
+                titulo: `❌ *MENSAGEM APAGADA* (${i + 1}/${rows.length})`,
+                extras: [`🗑️ *Apagada em:* ${formatData(row.revoked_at)}`]
+            });
+        } catch (err) {
+            printError(`/show: falha ao reenviar ${row.id}:`, err.message);
+            await client.sendMessage(destination, `⚠️ Não consegui reenviar a mensagem ${i + 1}/${rows.length}: ${err.message}`);
+        }
+
+        if (i < rows.length - 1) await wait(UNDO_DELAY_MS);
     }
 }
 
@@ -1750,9 +2239,9 @@ const HANDLERS = {
     '/monitor': cmdMonitor,
     '/crypto': cmdCrypto,
     '/sticker': cmdSticker,
-    '/show': cmdShow,
     '/get': cmdGet,
-    '/cache': cmdCache
+    '/cache': cmdCache,
+    '/show': cmdUndo
 };
 
 // Warns at boot if the bot-config has a command without a handler (or vice versa)
@@ -1776,7 +2265,8 @@ client.on('message_create', async (msg) => {
         const chatName =
             msg?._data?.chat?.name ||
             msg?._data?.chat?.formattedTitle ||
-            msg?._data?.notifyName ||
+            // notifyName is the name of who SENT: it only serves as the chat name in a private conversation
+            (isGroup ? null : msg?._data?.notifyName) ||
             (isGroup ? `Grupo ${chatId.split('@')[0]}` : chatId.split('@')[0]);
 
         /*
@@ -1874,15 +2364,37 @@ client.on('message_create', async (msg) => {
             }
         }
 
+        /*
+         * UPSERT instead of INSERT OR REPLACE: REPLACE deletes and recreates the row,
+         * what would reset revoked/revoked_at if WhatsApp resends the same id
+         * (sync, reconnection). A row already marked as deleted is not touched,
+         * and an existing media_path is not replaced by null.
+         */
+        await dbReady;
         await dbRun(
-            `INSERT OR REPLACE INTO messages
+            `INSERT INTO messages
                 (id, sender_name, sender_jid, sender_number,
                  chat_id, chat_name, is_group,
                  body, type, timestamp,
                  has_media, media_path,
                  location_lat, location_lng,
                  raw_json)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             ON CONFLICT(id) DO UPDATE SET
+                sender_name   = excluded.sender_name,
+                sender_jid    = excluded.sender_jid,
+                sender_number = excluded.sender_number,
+                chat_id       = excluded.chat_id,
+                chat_name     = excluded.chat_name,
+                is_group      = excluded.is_group,
+                body          = excluded.body,
+                type          = excluded.type,
+                has_media     = excluded.has_media,
+                media_path    = COALESCE(excluded.media_path, messages.media_path),
+                location_lat  = excluded.location_lat,
+                location_lng  = excluded.location_lng,
+                raw_json      = excluded.raw_json
+             WHERE messages.revoked = 0`,
             [
                 msgIdPure, senderName, senderJid, senderNumber,
                 chatId, chatName, isGroup,
@@ -1946,7 +2458,7 @@ client.on('message_create', async (msg) => {
 
         const quotedMsg = msg.hasQuotedMsg ? await msg.getQuotedMessage().catch(() => null) : null;
 
-        await handler({ msg, opts, args, quotedMsg, senderContact, senderName, isGroup, chatName });
+        await handler({ msg, opts, args, quotedMsg, senderContact, senderName, isGroup, chatId, chatName });
     } catch (error) {
         printError('[message_create] Erro geral controlado:', {
             error: error?.message || String(error),
