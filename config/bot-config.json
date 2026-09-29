@@ -291,7 +291,7 @@
                         "f"
                     ],
                     "values": [],
-                    "desc": "Remove as apagadas deste chat (no seu privado: de todos). Só o dono."
+                    "desc": "Remove as apagadas deste chat (no seu privado: de todos)."
                 },
                 {
                     "opts": [
@@ -317,7 +317,7 @@
                     "desc": "Quantidade de mensagens (padrão 1, máx. show.max). Ex: /show -3"
                 }
             ],
-            "onlyAdmin": false
+            "onlyAdmin": true
         },
         {
             "cmd": "/set",
