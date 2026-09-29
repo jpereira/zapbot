@@ -24,6 +24,7 @@
 
 const { Client, MessageMedia, LocalAuth, Location } = require('whatsapp-web.js');
 const { spawn } = require('child_process');
+const crypto = require('crypto');
 const dns = require('dns').promises;
 const net = require('net');
 const util = require('util');
@@ -2372,7 +2373,8 @@ async function cmdGet({ msg, opts, quotedMsg, senderName }) {
 }
 
 async function runGet({ msg, opts, quotedMsg, senderName }) {
-    const id = Date.now();
+    // Random: with Date.now() two /get in the same millisecond would use the same files
+    const id = crypto.randomUUID();
     let originalFile = null;
     let outputFile = null;
     let logCmdFile = null;
