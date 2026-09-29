@@ -476,6 +476,13 @@ argumento ou você pode dar reply numa mensagem que contenha o link.
 
 O arquivo final é limitado a 20 MB (setting `get.maxSizeMB`).
 
+Limites (o `/get` é liberado para qualquer um):
+
+- Download de no máximo 200 MB antes da conversão (setting `get.maxDownloadMB`).
+- Link de playlist baixa só o vídeo do link (`--no-playlist`).
+- yt-dlp e ffmpeg são interrompidos após 5 minutos cada.
+- No máximo 2 `/get` ao mesmo tempo. Os demais recebem um aviso para tentar de novo.
+
 URLs que apontam para a rede interna (`localhost`, `10.x`, `192.168.x`,
 `169.254.x`, IPv6 local etc.) são recusadas, para que o `/get` não sirva de
 ponte para a sua rede (SSRF). A checagem é feita no host informado; redirects
@@ -563,6 +570,7 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 | `sticker.author` | texto | `https://github.com/jpereira/zapbot/` | Autor das figurinhas |
 | `cache.revokedRetentionDays` | 1–365 | `30` | Dias que as mensagens apagadas ficam guardadas |
 | `get.maxSizeMB` | 1–100 | `20` | Tamanho máximo do arquivo do `/get` |
+| `get.maxDownloadMB` | 10–2000 | `200` | Tamanho máximo baixado pelo yt-dlp no `/get`, antes da conversão |
 | `show.max` | 1–100 | `20` | Máximo de mensagens por `/show -N` |
 | `show.delayMs` | 0–10000 | `700` | Intervalo entre os envios do `/show` |
 | `monitor.max` | 1–1000 | `20` | Máximo de números monitorados |
