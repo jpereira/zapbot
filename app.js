@@ -1118,10 +1118,12 @@ const client = new Client({
 
     webVersion: '2.3000.1023151854-alpha',
 
-    webVersionCache: {
-        type: 'remote',
-        remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/{version}.html'
-    },
+    /*
+     * Sem cache remoto: o HTML de um repo de terceiros (branch main) rodaria na
+     * origem web.whatsapp.com, com acesso à sessão. O WhatsApp Web é carregado
+     * direto do site oficial.
+     */
+    webVersionCache: { type: 'none' },
 
     puppeteer: {
         headless: true,
