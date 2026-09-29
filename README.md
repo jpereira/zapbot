@@ -673,12 +673,15 @@ O serviço `zapbot-dev` monta o código-fonte em `/workspace` e usa
 `config/.env.dev`. O `Makefile` tem atalhos:
 
 ```bash
+make help    # lista todos os alvos
 make build   # build da imagem zapbot-dev
 make shell   # shell dentro do container de dev; rode "node app.js" lá dentro
 ```
 
 Os alvos `deploy.*` do `Makefile` fazem deploy num Docker remoto via SSH;
-ajuste `DOCKER_REMOTE_SERVER` para o seu host antes de usá-los.
+ajuste `DOCKER_REMOTE_SERVER` para o seu host antes de usá-los. Eles usam
+`docker --context homelab` em cada comando, sem trocar o contexto global do
+Docker.
 
 ## Solução de problemas
 
