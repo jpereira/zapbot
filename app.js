@@ -35,6 +35,7 @@ const qrcode = require('qrcode');
 const qrcodeTerminal = require('qrcode-terminal');
 const colors = require('colors');
 const fs = require('fs-extra');
+const sharp = require('sharp');
 const dotenv = require('dotenv');
 const sqlite3 = require('sqlite3').verbose();
 const nodemailer = require('nodemailer');
@@ -2288,6 +2289,43 @@ async function cmdMonitor({ msg, opts }) {
     }
 }
 
+/*
+ * Sticker from an image: 512x512 square crop framed in the MIDDLE
+ * of the image (without this WhatsApp Web converts without centering). WebP is already
+ * sticker and goes as it is; videos keep the whatsapp-web.js conversion.
+ */
+const STICKER_SIZE = 512;
+const STICKER_MAX_BYTES = 100 * 1024;          // WhatsApp limit: static sticker
+const STICKER_ANIMATED_MAX_BYTES = 500 * 1024;  // WhatsApp limit: animated sticker
+
+async function fitSticker(media) {
+    if (!media?.mimetype?.startsWith('image/') || media.mimetype === 'image/webp') return media;
+
+    try {
+        const animated = media.mimetype === 'image/gif';
+        const maxBytes = animated ? STICKER_ANIMATED_MAX_BYTES : STICKER_MAX_BYTES;
+        const inputAlt = Buffer.from(media.data, 'base64');
+        let outputAlt;
+
+        // Lowers the quality until it fits WhatsApp's limit
+        for (const quality of [80, 60, 40, 20]) {
+            outputAlt = await sharp(inputAlt, { animated: animated })
+                .rotate() // respects the EXIF orientation of phone photos
+                .resize(STICKER_SIZE, STICKER_SIZE, { fit: 'cover', position: 'centre' })
+                .webp({ quality })
+                .toBuffer();
+
+            if (outputAlt.length <= maxBytes) break;
+        }
+
+        return new MessageMedia('image/webp', outputAlt.toString('base64'), 'sticker.webp');
+    } catch (err) {
+        // Without the crop the sticker still goes out, just not centered
+        printError('/sticker: falha ao enquadrar a imagem, enviando sem recorte:', err.message);
+        return media;
+    }
+}
+
 async function cmdSticker({ msg, quotedMsg }) {
     if (!quotedMsg) {
         await msg.reply("Syntax: Faça um 'reply' utilizando /sticker");
@@ -2296,7 +2334,7 @@ async function cmdSticker({ msg, quotedMsg }) {
 
     // 1. Real WhatsApp media
     if (quotedMsg.hasMedia) {
-        const media = await quotedMsg.downloadMedia();
+        const media = await fitSticker(await quotedMsg.downloadMedia());
         await msg.reply(media, null, { sendMediaAsSticker: true, ...stickerMeta() });
         return;
     }
@@ -2351,7 +2389,7 @@ async function cmdSticker({ msg, quotedMsg }) {
         return;
     }
 
-    await msg.reply(media, null, { sendMediaAsSticker: true, ...stickerMeta() });
+    await msg.reply(await fitSticker(media), null, { sendMediaAsSticker: true, ...stickerMeta() });
 }
 
 let getInProgress = 0;
