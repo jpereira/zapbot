@@ -1141,6 +1141,63 @@ const client = new Client({
 printSuccess('Client created');
 
 /*
+ * Mensagens enviadas pelo próprio bot também disparam 'message_create' com
+ * fromMe=true. Sem esta marca, uma resposta que começasse com "/" (ex.: o
+ * /noffa ecoando "/cache -c -f") rodaria como comando do dono.
+ *
+ * msg.reply() também passa por client.sendMessage(). O texto é registrado
+ * ANTES do envio porque o evento pode chegar antes do sendMessage resolver.
+ */
+const ENVIADAS_TTL_MS = 60 * 1000;
+const enviadasPeloBot = new Map(); // texto -> [expira em, ...]
+
+function textoDoEnvio(content, options = {}) {
+    if (typeof content === 'string') return content;
+    return options.caption ?? content?.description ?? null;
+}
+
+function marcarEnviadaPeloBot(texto) {
+    texto = String(texto ?? '').trim();
+    if (!texto.startsWith('/')) return; // só o que poderia virar comando
+
+    const agora = Date.now();
+    const validas = (enviadasPeloBot.get(texto) ?? []).filter(t => t > agora);
+    enviadasPeloBot.set(texto, [...validas, agora + ENVIADAS_TTL_MS]);
+}
+
+// Consome a marca: true se esta mensagem foi enviada pelo bot
+function foiEnviadaPeloBot(texto) {
+    texto = String(texto ?? '').trim();
+
+    const agora = Date.now();
+    const validas = (enviadasPeloBot.get(texto) ?? []).filter(t => t > agora);
+    if (!validas.length) {
+        enviadasPeloBot.delete(texto);
+        return false;
+    }
+
+    validas.shift();
+    if (validas.length) enviadasPeloBot.set(texto, validas);
+    else enviadasPeloBot.delete(texto);
+    return true;
+}
+
+const sendMessageOriginal = client.sendMessage.bind(client);
+
+client.sendMessage = (chatId, content, options = {}) => {
+    marcarEnviadaPeloBot(textoDoEnvio(content, options));
+    return sendMessageOriginal(chatId, content, options);
+};
+
+// Marcas que nunca viraram 'message_create' (envio falhou) expiram aqui
+setInterval(() => {
+    const agora = Date.now();
+    for (const [texto, expiracoes] of enviadasPeloBot) {
+        if (!expiracoes.some(t => t > agora)) enviadasPeloBot.delete(texto);
+    }
+}, ENVIADAS_TTL_MS);
+
+/*
  * Estado da conexão + reinício com trava.
  * Antes, watchdog, 'disconnected' e iniciarBot() podiam reiniciar o cliente
  * ao mesmo tempo, corrompendo a sessão e gerando QR Codes após a autenticação.
@@ -1553,10 +1610,12 @@ async function enviarMensagemApagada(destino, row, info, { titulo = '❌ *MENSAG
             '📇 *Tipo:* CARTÃO DE CONTATO\n' +
             '💡 *Nota:* O contato está anexado abaixo.';
 
-        await client.sendMessage(destino, alertaTexto);
-
-        if (row.body) {
-            await client.sendMessage(destino, row.body, { parseVCards: true });
+        // O body vem de quem enviou: só vai cru se for mesmo um vCard (nunca um texto como "/cache -c -f")
+        if (!row.body || /^BEGIN:VCARD/i.test(row.body.trim())) {
+            await client.sendMessage(destino, alertaTexto);
+            if (row.body) await client.sendMessage(destino, row.body, { parseVCards: true });
+        } else {
+            await client.sendMessage(destino, `${alertaTexto}\n💬 *Conteúdo:* "${row.body}"`);
         }
         return;
     }
@@ -1852,7 +1911,10 @@ async function cmdNoffa({ msg, args, quotedMsg }) {
     }
 
     let index = 0;
-    const rainbowText = text.replace(/ /g, () => ` ${rainbowHearts[index++ % rainbowHearts.length]} `);
+    let rainbowText = text.replace(/ /g, () => ` ${rainbowHearts[index++ % rainbowHearts.length]} `);
+
+    // A resposta nunca começa com "/": não pode ser lida como comando (ver marcarEnviadaPeloBot)
+    if (rainbowText.startsWith('/')) rainbowText = `${rainbowHearts[0]} ${rainbowText}`;
 
     await msg.reply(rainbowText);
 }
@@ -3236,7 +3298,11 @@ client.on('message_create', async (msg) => {
         ).catch(err => printError('Erro ao salvar mensagem:', err.message));
 
         const body = (msg.body || '').trim();
-        const caller = body.startsWith('/') ? body.split(/\s+/, 1)[0] : null;
+        // Resposta do próprio bot nunca é comando, mesmo começando com "/" (ver marcarEnviadaPeloBot)
+        const enviadaPeloBot = msg.fromMe && body.startsWith('/') && foiEnviadaPeloBot(body);
+        const caller = body.startsWith('/') && !enviadaPeloBot ? body.split(/\s+/, 1)[0] : null;
+
+        if (enviadaPeloBot) printInfo(`Mensagem do próprio bot começando com '/' ignorada como comando: ${body.slice(0, 60)}`);
         const command = caller ? findCommand(caller) : null;
 
         /*
