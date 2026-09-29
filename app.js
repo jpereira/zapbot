@@ -1,3 +1,27 @@
+/*
+ * ZapBot - Bot para WhatsApp baseado no whatsapp-web.js
+ *
+ * Recupera mensagens apagadas, baixa vídeos (/get), cria figurinhas,
+ * monitora contatos e mais. Os comandos são definidos em
+ * config/bot-config.json e implementados neste arquivo (ver HANDLERS).
+ *
+ * Versão:  veja package.json
+ * Autor:   Jorge Pereira <jpereiran@gmail.com>
+ * Site:    https://github.com/jpereira/zapbot
+ *
+ * Copyright (c) 2026 Jorge Pereira
+ *
+ * Licenciado sob a licença MIT. É permitido usar, copiar, modificar,
+ * mesclar, publicar, distribuir, sublicenciar e/ou vender cópias deste
+ * software, desde que este aviso de copyright seja mantido.
+ *
+ * O SOFTWARE É FORNECIDO "COMO ESTÁ", SEM GARANTIA DE QUALQUER TIPO.
+ *
+ * Projeto não oficial, sem vínculo com o WhatsApp ou a Meta. Usar bots em
+ * contas pessoais viola os Termos de Serviço do WhatsApp e pode levar ao
+ * banimento do número. Use por sua conta e risco.
+ */
+
 const { Client, MessageMedia, LocalAuth, Location } = require('whatsapp-web.js');
 const { spawn } = require('child_process');
 const util = require('util');
@@ -212,8 +236,17 @@ const dbPronto = inicializarBanco().catch((e) => {
  * Configuração dos comandos
  */
 const botConfig = require('./config/bot-config.json');
+
+// "disabled": true tira o comando do bot: não responde, não aparece no /help
+const disabledCommands = botConfig.commands.filter(c => c.disabled).map(c => c.cmd);
+botConfig.commands = botConfig.commands.filter(c => !c.disabled);
+
 const commands = botConfig.commands.map(c => c.cmd);
 printSuccess(`Loaded ${commands.length} callers (${commands.join(',')})`);
+
+if (disabledCommands.length) {
+    printInfo(`Disabled ${disabledCommands.length} callers (${disabledCommands.join(',')})`);
+}
 
 function findCommand(name) {
     return botConfig.commands.find(c => c.cmd === name || c.aliases?.includes(name));
@@ -1027,6 +1060,8 @@ client.on('ready', () => {
  * Presença dos números monitorados
  */
 client.on('presence_update', async (presence) => {
+    // Sem o /monitor carregado, números já cadastrados não geram avisos
+    if (!findCommand('/monitor')) return;
     if (!presence?.id) return;
 
     const myid = process.env.PHONE_NUMBER;
@@ -1373,14 +1408,14 @@ async function cmdPing({ msg }) {
     await msg.reply('pong');
 }
 
-async function cmdGay({ msg, args, quotedMsg }) {
+async function cmdNoffa({ msg, args, quotedMsg }) {
     const rainbowHearts = ['🌈', '🏳️‍🌈', '🏳️‍⚧️', '🧡', '💛', '💚', '💙', '💜'];
 
     // Antes usava só a primeira palavra (argv[1]) e gerava "undefined" sem argumento.
     const text = [args, quotedMsg?.body].filter(Boolean).join(' ').trim();
 
     if (!text) {
-        await msg.reply('Syntax: /gay <texto> (ou responda uma mensagem)');
+        await msg.reply('Syntax: /noffa <texto> (ou responda uma mensagem)');
         return;
     }
 
@@ -2234,7 +2269,7 @@ const HANDLERS = {
     '/debug': cmdDebug,
     '/uptime': cmdUptime,
     '/ping': cmdPing,
-    '/gay': cmdGay,
+    '/noffa': cmdNoffa,
     '/everyone': cmdEveryone,
     '/monitor': cmdMonitor,
     '/crypto': cmdCrypto,
