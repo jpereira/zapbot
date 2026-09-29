@@ -300,6 +300,11 @@ acontece no chat e você recebe um aviso no `PHONE_NUMBER`:
 ⚠️ Usuário 'Fulano' não pode executar '/monitor' no grupo 'Família'
 ```
 
+As **respostas do próprio bot** também saem pela sua conta, mas nunca são
+tratadas como comando, mesmo que comecem com `/`. Sem isso, alguém poderia
+usar um comando que ecoa texto (ex.: `/noffa /cache -c -f`) para fazer o bot
+"digitar" um comando de admin.
+
 ### Resumo
 
 | Comando | Aliases | Admin | Descrição |
@@ -370,6 +375,9 @@ Coloca emojis de arco-íris entre as palavras. Aceita texto ou reply numa mensag
 /noffa bom dia grupo
 → bom 🌈 dia 🏳️‍🌈 grupo
 ```
+
+Se o texto começar com `/`, a resposta ganha um 🌈 na frente, para nunca parecer
+um comando.
 
 ### `/everyone` · admin
 
