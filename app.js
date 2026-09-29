@@ -62,6 +62,10 @@ const TMP_DIR = path.join(CACHE_DIR, 'tmp');     // /get temporary files
 const BIN_FFMPEG = '/usr/bin/ffmpeg';
 const BIN_YT = '/venv/bin/yt-dlp';
 
+// /get: each yt-dlp/ffmpeg is killed after this time; at most N downloads at the same time
+const GET_TIMEOUT_MS = 5 * 60 * 1000;
+const GET_MAX_CONCURRENT = 2;
+
 /*
  * Time and log utilities
  */
@@ -306,6 +310,11 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 1, max: 100,
         desc: 'Tamanho máximo (MB) do arquivo enviado pelo /get.'
     },
+    'get.maxDownloadMB': {
+        default: 200,
+        type: 'number', min: 10, max: 2000,
+        desc: 'Tamanho máximo (MB) baixado pelo yt-dlp no /get, antes da conversão.'
+    },
     'show.max': {
         default: 20,
         type: 'number', min: 1, max: 100,
@@ -490,14 +499,23 @@ const transporter = nodemailer.createTransport({
 /*
  * Running external processes (yt-dlp / ffmpeg)
  */
-function runCommand(bin, args, logFd) {
+function runCommand(bin, args, logFd, timeoutMs = GET_TIMEOUT_MS) {
     return new Promise((resolve, reject) => {
         const child = spawn(bin, args, { stdio: ['ignore', logFd, logFd] });
 
-        child.on('error', reject);
-        child.on('close', code => {
+        // Without this, a stuck download/conversion holds /get (and the disk) forever
+        const timer = setTimeout(() => child.kill('SIGKILL'), timeoutMs);
+
+        child.on('error', (err) => {
+            clearTimeout(timer);
+            reject(err);
+        });
+        child.on('close', (code, signal) => {
+            clearTimeout(timer);
             if (code === 0) return resolve();
-            reject(new Error(`${bin} exited with code ${code}`));
+            reject(new Error(signal === 'SIGKILL'
+                ? `${bin} excedeu ${timeoutMs / 1000}s e foi interrompido`
+                : `${bin} exited with code ${code}`));
         });
     });
 }
@@ -2333,7 +2351,25 @@ async function cmdSticker({ msg, quotedMsg }) {
     await msg.reply(media, null, { sendMediaAsSticker: true, ...stickerMeta() });
 }
 
+let getInProgress = 0;
+
 async function cmdGet({ msg, opts, quotedMsg, senderName }) {
+    // Open to anyone: without a limit, several /get in a row exhaust CPU and disk
+    if (getInProgress >= GET_MAX_CONCURRENT) {
+        await msg.reply(`⏳ Já existem ${GET_MAX_CONCURRENT} downloads em andamento. Tente de novo em instantes.`);
+        return;
+    }
+
+    getInProgress++;
+
+    try {
+        await runGet({ msg, opts, quotedMsg, senderName });
+    } finally {
+        getInProgress--;
+    }
+}
+
+async function runGet({ msg, opts, quotedMsg, senderName }) {
     const id = Date.now();
     let originalFile = null;
     let outputFile = null;
@@ -2381,7 +2417,14 @@ async function cmdGet({ msg, opts, quotedMsg, senderName }) {
         printInfo(`> Todo o output dos comandos salvo em ${logCmdFile}`);
 
         // Download video
-        const cmdYtArgs = ['-f', 'mp4', '--merge-output-format', 'mp4', '-o', originalFile, urlInput];
+        // --no-playlist: a playlist link would download everything; --max-filesize: does not fill the disk
+        const cmdYtArgs = [
+            '-f', 'mp4', '--merge-output-format', 'mp4',
+            '--no-playlist',
+            '--max-filesize', `${getSetting('get.maxDownloadMB')}M`,
+            '-o', originalFile,
+            '--', urlInput
+        ];
         const cmdYt = [BIN_YT, ...cmdYtArgs].join(' ');
 
         try {
@@ -2390,6 +2433,11 @@ async function cmdGet({ msg, opts, quotedMsg, senderName }) {
             await runCommand(BIN_YT, cmdYtArgs, logCmd);
         } catch (inner) {
             throw new Error(`Problemas para baixar com '${BIN_YT}'`, { cause: { inner, cmd: cmdYt } });
+        }
+
+        // Above --max-filesize yt-dlp aborts with no error and no file
+        if (!fs.existsSync(originalFile)) {
+            throw new Error(`Nada foi baixado (acima de ${getSetting('get.maxDownloadMB')} MB? veja o setting get.maxDownloadMB)`);
         }
 
         // Converter
