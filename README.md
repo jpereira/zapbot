@@ -708,6 +708,8 @@ O serviço `zapbot-dev` monta o código-fonte em `/workspace` e usa
 make help    # lista todos os alvos
 make build   # build da imagem zapbot-dev
 make shell   # shell dentro do container de dev; rode "node app.js" lá dentro
+make clean   # remove a imagem zapbot-dev
+make destroy # clean + apaga os volumes de dev (sessão do WhatsApp e cache!)
 ```
 
 Os alvos `deploy.*` do `Makefile` fazem deploy num Docker remoto via SSH;
