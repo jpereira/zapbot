@@ -3484,7 +3484,9 @@ client.on('message_create', async (msg) => {
          * de uma pessoa seja executado por todos.
          */
         if (!msg.fromMe && command.onlyAdmin) {
-            messageToSelf(`⚠️ ${senderName} tentou executar ${command.cmd} dentro de ${chatName}, mas sem permissão`);
+            if (isDebugMode()) {
+                messageToSelf(`⚠️ ${senderName} tentou executar ${command.cmd} dentro de ${chatName}, mas sem permissão`);
+            }
             return;
         }
 
