@@ -10,6 +10,4 @@
 
 * Mega refactory para por cada comando separado por callback por arquivos tipo "cmd_XXX.js" e dai poder habilitar/desabilitar durante include.
 
-* Adicionar /watch <regex para mensagens>, deve detectar e avisar onde apareceu.
-
 * Adicionar comando /defi para pegar status das carteiras. salvando enderecos no banco. suportar Orca, Prjx
