@@ -1,24 +1,33 @@
 {
     "commands": [
         {
-            "cmd":  "/help",
-            "aliases": [ "/h" ],
+            "cmd": "/help",
+            "aliases": [
+                "/h"
+            ],
             "help": "Exibe este menu de ajuda.",
             "onlyAdmin": false
         },
         {
-            "cmd":  "/debug",
+            "cmd": "/debug",
             "usage": "/debug [OPTION]",
-            "aliases": [ "/d", "/dbg" ],
+            "aliases": [
+                "/d",
+                "/dbg"
+            ],
             "help": "Ajuda na depuração de problemas.",
             "cmd_opts": [
                 {
-                    "opts": [ "on" ],
+                    "opts": [
+                        "on"
+                    ],
                     "values": [],
                     "desc": "Ativa o debug mode."
                 },
                 {
-                    "opts": [ "off" ],
+                    "opts": [
+                        "off"
+                    ],
                     "values": [],
                     "desc": "Desativa o debug mode."
                 }
@@ -26,60 +35,84 @@
             "onlyAdmin": true
         },
         {
-            "cmd":  "/uptime",
+            "cmd": "/uptime",
             "usage": "/uptime",
-            "aliases": [ "/u" ],
+            "aliases": [
+                "/u"
+            ],
             "help": "Exibe o tempo que o bot está rodando.",
             "onlyAdmin": true
         },
         {
-            "cmd":  "/ping",
+            "cmd": "/ping",
             "usage": "/ping",
-            "aliases": [ "/p" ],
+            "aliases": [
+                "/p"
+            ],
             "help": "Verificar status do bot.",
             "onlyAdmin": true
         },
         {
-            "cmd":  "/gay",
+            "cmd": "/gay",
             "usage": "/gay",
-            "aliases": [ "/🌈", "/🏳️‍🌈", "/noffa" ],
+            "aliases": [
+                "/🌈",
+                "/🏳️‍🌈",
+                "/noffa"
+            ],
             "help": "Da uma gayzada no texto.",
             "onlyAdmin": false
         },
         {
-            "cmd":  "/everyone",
+            "cmd": "/everyone",
             "usage": "/everyone",
             "help": "Faz o reply marcando todos do grupo.",
             "onlyAdmin": true
         },
         {
-            "cmd":  "/monitor",
+            "cmd": "/monitor",
             "usage": "/monitor [OPTION]",
-            "aliases": [ "/m" ],
+            "aliases": [
+                "/m"
+            ],
             "help": "Números a serem monitorados. Obs: Max 20 numeros",
             "cmd_opts": [
                 {
-                    "opts": [ "list"],
+                    "opts": [
+                        "list"
+                    ],
                     "values": [],
                     "desc": "Lista numeros."
                 },
                 {
-                    "opts": [ "logs" ],
+                    "opts": [
+                        "logs"
+                    ],
                     "values": [],
                     "desc": "Lista logs."
                 },
                 {
-                    "opts": [ "add" ],
-                    "values": [ "numero" ],
+                    "opts": [
+                        "add"
+                    ],
+                    "values": [
+                        "numero"
+                    ],
                     "desc": "Adiciona número para ser monitorado."
                 },
                 {
-                    "opts": [ "del" ],
-                    "values": [ "numero" ],
+                    "opts": [
+                        "del"
+                    ],
+                    "values": [
+                        "numero"
+                    ],
                     "desc": "Deleta numero."
                 },
                 {
-                    "opts": [ "clean" ],
+                    "opts": [
+                        "clean"
+                    ],
                     "values": [],
                     "desc": "Limpa todos os números."
                 }
@@ -89,56 +122,81 @@
         {
             "cmd": "/crypto",
             "usage": "/crypto",
-            "aliases": [ "/bitcoio", "/btc", "/moedinha" ],
+            "aliases": [
+                "/bitcoio",
+                "/btc",
+                "/moedinha"
+            ],
             "help": "Exibe o preço atual das cryptos: BTC, ETH, DOGE e SOLANA.",
             "onlyAdmin": false
         },
         {
             "cmd": "/sticker",
             "usage": "/sticker",
-            "aliases": [ "/st" ],
+            "aliases": [
+                "/st"
+            ],
             "help": "Cria um 'sticker' a partir de uma imagem.",
             "onlyAdmin": false
         },
         {
-            "cmd": "/show",
-            "usage": "/show",
-            "help": "Exibe informações sobre medias deletada. (view once).",
-            "onlyAdmin": true
-        },
-        {
             "cmd": "/get",
             "usage": "/get [OPTION]... URL",
-            "aliases": [ "/download", "/wget", "/getright" ],
+            "aliases": [
+                "/download"
+            ],
             "help": "Caso seja válido, faz o download do video.",
             "cmd_opts": [
                 {
-                    "opts": [ "sticker", "st" ],
+                    "opts": [
+                        "sticker",
+                        "st"
+                    ],
                     "values": [],
                     "desc": "Enviar como sticker."
                 },
                 {
-                    "opts": [ "audio", "a" ],
+                    "opts": [
+                        "audio",
+                        "a"
+                    ],
                     "values": [],
                     "desc": "Extrai o audio e envia no formato .mp3."
                 },
                 {
-                    "opts": [ "startSec", "ss" ],
-                    "values": [ "<second>" ],
+                    "opts": [
+                        "startSec",
+                        "ss"
+                    ],
+                    "values": [
+                        "<second>"
+                    ],
                     "desc": "Iniciar a partir do segundo determinado."
                 },
                 {
-                    "opts": [ "endSec", "es" ],
-                    "values": [ "<second>" ],
+                    "opts": [
+                        "endSec",
+                        "es"
+                    ],
+                    "values": [
+                        "<second>"
+                    ],
                     "desc": "Cortar o video no segundo terminado."
                 },
                 {
-                    "opts": [ "verbose", "v" ],
-                    "values": [ "" ],
+                    "opts": [
+                        "verbose",
+                        "v"
+                    ],
+                    "values": [
+                        ""
+                    ],
                     "desc": "Exibe os parametros usados no yt-dlp/ffmpeg."
                 },
                 {
-                    "argv": [ "<url>" ],
+                    "argv": [
+                        "<url>"
+                    ],
                     "desc": "ex: Instagram,YouTube,X,..."
                 }
             ],
@@ -149,19 +207,77 @@
             "usage": "/cache [OPTION]",
             "cmd_opts": [
                 {
-                    "opts": [ "clean", "c" ],
+                    "opts": [
+                        "clean",
+                        "c"
+                    ],
                     "values": [],
                     "desc": "Limpa o cache."
                 },
                 {
-                    "opts": [ "force", "f" ],
+                    "opts": [
+                        "force",
+                        "f"
+                    ],
                     "values": [],
                     "desc": "Apaga tudo."
                 }
             ],
-            "aliases": [ "/c" ],
+            "aliases": [
+                "/c"
+            ],
             "help": "Exibe espaço ocupado em ${CACHE_DIR}",
             "onlyAdmin": true
+        },
+        {
+            "cmd": "/show",
+            "usage": "/show [-N] [OPTION]",
+            "aliases": [
+                "/undo"
+            ],
+            "help": "Reexibe as últimas mensagens apagadas deste chat.",
+            "cmd_opts": [
+                {
+                    "opts": [
+                        "list",
+                        "l"
+                    ],
+                    "values": [],
+                    "desc": "Mostra quantas mensagens apagadas existem no cache."
+                },
+                {
+                    "opts": [
+                        "flush",
+                        "f"
+                    ],
+                    "values": [],
+                    "desc": "Remove as apagadas deste chat (no seu privado: de todos). Só o dono."
+                },
+                {
+                    "opts": [
+                        "pv"
+                    ],
+                    "values": [],
+                    "desc": "Envia no seu privado em vez de expor no chat atual."
+                },
+                {
+                    "opts": [
+                        "chat",
+                        "c"
+                    ],
+                    "values": [
+                        "<nº|nome>"
+                    ],
+                    "desc": "(Só no seu privado) Chat alvo: nº do /show -l ou parte do nome."
+                },
+                {
+                    "argv": [
+                        "-N"
+                    ],
+                    "desc": "Quantidade de mensagens (padrão 1, máx 20). Ex: /show -3"
+                }
+            ],
+            "onlyAdmin": false
         }
     ]
 }
