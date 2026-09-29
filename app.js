@@ -1584,6 +1584,9 @@ const wait = (ms) => new Promise(r => setTimeout(r, ms));
 
 const plural = (n, um, several) => `${n} ${n === 1 ? um : several}`;
 
+// Status (stories) arrive through the 'status@broadcast' chat
+const isStatus = (row) => row.chat_id === 'status@broadcast';
+
 /**
  * Finds the chat and sender names of a deleted message.
  * With the event objects (after/before) it gets more precise names;
@@ -1777,7 +1780,9 @@ client.on('message_revoke_everyone', async (after, before) => {
             [Date.now(), info.nomeChat, info.nomeRemetente, info.numeroRemetente, row.id]
         );
 
-        await sendMessageDeleted(client.info.wid._serialized, row, info);
+        await sendMessageDeleted(client.info.wid._serialized, row, info, {
+            titulo: isStatus(row) ? '📸 *STATUS APAGADO DETECTADO*' : '❌ *MENSAGEM APAGADA DETECTADA*'
+        });
     } catch (sendError) {
         printError('[Revoke] Erro ao processar item apagado:', sendError.message);
     }
@@ -2964,7 +2969,7 @@ async function cmdUndo({ msg, opts, chatId }) {
 
         try {
             await sendMessageDeleted(destination, row, info, {
-                titulo: `❌ *MENSAGEM APAGADA* (${i + 1}/${rows.length})`,
+                titulo: `${isStatus(row) ? '📸 *STATUS APAGADO*' : '❌ *MENSAGEM APAGADA*'} (${i + 1}/${rows.length})`,
                 extras: [`🗑️ *Apagada em:* ${formatData(row.revoked_at)}`]
             });
         } catch (err) {
