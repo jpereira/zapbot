@@ -24,7 +24,7 @@
     "qrcode": "^1.5.4",
     "qrcode-terminal": "^0.12.0",
     "replicate": "^0.25.2",
-    "sharp": "^0.33.2",
+    "sharp": "^0.35.4",
     "sqlite3": "^6.0.1",
     "whatsapp-web.js": "v1.34.7"
   }
