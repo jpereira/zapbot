@@ -192,7 +192,7 @@
                         "st"
                     ],
                     "values": [],
-                    "desc": "Enviar como sticker."
+                    "desc": "Enviar como sticker (recorte quadrado no meio do vídeo)."
                 },
                 {
                     "opts": [
