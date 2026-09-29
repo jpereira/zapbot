@@ -1,4 +1,4 @@
-# 🤖 ZapBot v1.1
+# 🤖 ZapBot v1.2
 
 > 🇧🇷 **Projeto em português (pt_BR).** Documentação, comandos e mensagens do bot
 > estão em português do Brasil.
@@ -49,6 +49,11 @@ brincadeiras, tudo por comandos digitados no próprio chat (`/help`, `/get`,
   abre o WhatsApp Web num Chromium headless e pareia com o seu celular como um
   *aparelho conectado*. A sessão fica salva no volume `wwebjs_auth`, então o QR
   Code só precisa ser lido na primeira vez (ou quando a sessão for revogada).
+  A lib está fixada no commit [`58ddf15`](https://github.com/wwebjs/whatsapp-web.js/commit/58ddf1561cd783d6a548fa812eb70a05944604b4)
+  (ainda sem release): ele corrige o `id._serialized` → `id.$1` do WhatsApp Web
+  (jul/2026), que quebrava mensagem citada e download de mídia. O ajuste local
+  fica em `patches/` (aplicado pelo `patch-package`). Para instalar fora do
+  Docker: `PUPPETEER_SKIP_DOWNLOAD=true npm install`.
 - **Número do bot = seu número**: o bot age como a conta que leu o QR Code. As
   mensagens que *você* envia (de qualquer aparelho) também passam pelo bot.
 - **Persistência**: toda mensagem recebida é gravada no SQLite (mídias vão para
@@ -134,7 +139,7 @@ Depois de ler o QR Code você deve ver nos logs:
 
 ```
 [+] 🔐 Whatsapp authentication success!
-[+] 🤖 ZapBot 1.1 inicializado! Informando 5521999999999@c.us
+[+] 🤖 ZapBot 1.2 inicializado! Informando 5521999999999@c.us
 ```
 
 e receber a mesma mensagem no seu WhatsApp. Mande `/ping` para qualquer chat:
@@ -310,7 +315,7 @@ acontece no chat e você recebe um aviso no `PHONE_NUMBER`:
 | `/sticker` | `/st` | | Transforma imagem/vídeo em figurinha |
 | `/get` | `/download` | | Baixa vídeo/áudio de redes sociais |
 | `/cache` | `/c` | ✅ | Uso e limpeza do cache |
-| `/show` | `/undo` | | Reexibe mensagens apagadas |
+| `/show` | `/undo`, `/s` | | Reexibe mensagens apagadas |
 | `/set` | | ✅ | Lista e altera as configurações (settings) |
 | `/watch` | `/w` | ✅ | Avisa no seu privado quando uma mensagem casa com um texto/regex |
 
@@ -345,7 +350,7 @@ ligado só com `APP_ENV=dev`.
 
 ```
 /uptime
-🤖 ZapBot 1.1
+🤖 ZapBot 1.2
 ━━━━━━━━━━━━━━━━━━
 ⚡ Online: 2 dias, 3 horas
 🔐 Conectado: 2 dias, 2 horas, 58 minutos
@@ -486,7 +491,7 @@ Mostra o espaço ocupado em `cache/` (banco, mídias, temporários).
 /cache -c -f     → limpeza geral
 ```
 
-### `/show` (`/undo`)
+### `/show` (`/undo`, `/s`)
 
 Reexibe mensagens apagadas deste chat que ainda estão no cache (30 dias,
 setting `cache.revokedRetentionDays`). Os envios são espaçados por
