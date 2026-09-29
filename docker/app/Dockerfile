@@ -6,6 +6,10 @@ ENV TZ=America/Sao_Paulo
 ENV NODE_ENV=production
 ENV APP_ENV=prod
 
+# We use Alpine's chromium; puppeteer does not need to download Chrome
+# (including in the 'prepare' of whatsapp-web.js installed through git)
+ENV PUPPETEER_SKIP_DOWNLOAD=true
+
 USER root
 RUN apk add --no-cache \
     su-exec \
