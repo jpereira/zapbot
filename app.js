@@ -480,10 +480,9 @@ const transporter = nodemailer.createTransport({
     auth: {
         user: process.env.QRCODE_EMAIL_SMTP_USER,
         pass: process.env.QRCODE_EMAIL_SMTP_PASS
-    },
-    tls: {
-        rejectUnauthorized: false
     }
+    // Sem "tls.rejectUnauthorized: false": o certificado do SMTP precisa ser válido,
+    // senão um MITM captura a senha e o QR Code (= sessão do WhatsApp).
 });
 
 /*
