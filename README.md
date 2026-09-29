@@ -178,6 +178,17 @@ ficam disponíveis para o bot. Nunca faça commit dele (já está no `.gitignore
 |---|---|---|
 | `PHONE_NUMBER` | `5521999999999@c.us` | **Obrigatório.** Número da conta que será pareada, no formato `DDI + DDD + número` seguido de `@c.us`, sem `+`, espaços ou traços. É para ele que o bot manda o aviso de inicialização, as notificações do `/monitor` e os alertas de uso indevido de comandos. Também aparece (mascarado) no e-mail do QR. |
 
+### OpenAI e GIPHY (opcionais)
+
+| Variável | Exemplo | Descrição |
+|---|---|---|
+| `OPENAI_API_KEY` | `sk-proj-...` | Chave da OpenAI usada pelo `/gpt`. Sem ela o comando responde que não está configurado. |
+| `OPENAI_MODEL` | `gpt-4o-mini` | Modelo do `/gpt` (padrão: `gpt-4o-mini`). |
+| `GIPHY_API_KEY` | | Chave do GIPHY usada pelo `/gif` ([developers.giphy.com](https://developers.giphy.com/)). |
+
+As demais integrações novas (`/tempo`, `/kernel`, `/news`, `/cve`, `/joke`,
+`/meme`) usam APIs públicas sem chave.
+
 ### QR Code por e-mail
 
 | Variável | Exemplo | Descrição |
@@ -325,6 +336,20 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -c -f`) para fazer o bot
 | `/show` | `/undo`, `/s` | ✅ | Reexibe mensagens apagadas |
 | `/set` | | ✅ | Lista e altera as configurações (settings) |
 | `/watch` | `/w` | ✅ | Avisa no seu privado quando uma mensagem casa com um texto/regex |
+| `/gpt` | `/ai` | ✅ | Pergunta ao ChatGPT (OpenAI) |
+| `/tempo` | `/weather` | | Tempo agora e máx./mín. do dia (Open-Meteo) |
+| `/kernel` | | | Versões atuais do kernel Linux (kernel.org) |
+| `/news` | `/hacknews` | | Manchetes de hacking/segurança (RSS) |
+| `/cve` | | | Últimas CVEs publicadas (NVD) |
+| `/cvehighscore` | `/cvehs` | | CVEs críticas (CVSS ≥ 9) dos últimos 7 dias |
+| `/joke` | | | Piada aleatória em português |
+| `/meme` | | | Template de meme aleatório (imgflip) |
+| `/gif` | | | GIF aleatório (GIPHY) |
+| `/listageral` | | ✅ | Lista os membros do grupo |
+| `/boletos` | | ✅ | Sorteia 2 membros para "pagar um boleto" |
+| `/ualisu` | | ✅ | Marca 2 membros com uma CVE aleatória |
+| `/admin`, `/adminoff` | | ✅ | Liga/desliga o modo em que só você usa comandos |
+| `/stop`, `/run` | | ✅ | Pausa/retoma todos os comandos
 
 ### `/help`
 
@@ -587,6 +612,12 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 | `watch.max` | 1–100 | `20` | Máximo de regras do `/watch` |
 | `watch.showMax` | 1–100 | `20` | Máximo de ocorrências listadas por `/watch -show` |
 | `watch.hitsRetentionDays` | 1–365 | `30` | Dias que as ocorrências do `/watch` ficam guardadas |
+| `bot.adminMode` | on/off | `off` | Modo admin: só você usa comandos (o mesmo do `/admin`/`/adminoff`) |
+| `bot.paused` | on/off | `off` | Todos os comandos pausados, exceto o `/run` (o mesmo do `/stop`/`/run`) |
+| `news.feeds` | lista | The Hacker News, BleepingComputer, Krebs on Security | Feeds RSS juntados pelo `/news` |
+| `news.max` | 1–20 | `8` | Manchetes exibidas pelo `/news` |
+| `cve.max` | 1–20 | `10` | CVEs exibidas pelo `/cve` e `/cvehighscore` |
+| `gif.tag` | texto | `fail` | Tag padrão do `/gif` |
 
 Uma chave nova é declarada em `SETTINGS_SCHEMA` (`app.js`) com padrão, tipo,
 descrição e limites, e lida com `getSetting('<chave>')`. Valores inválidos no
@@ -652,6 +683,77 @@ Detalhes:
   a resposta vai para o seu privado.
 - As ocorrências ficam na tabela `watch_hits` por 30 dias (setting
   `watch.hitsRetentionDays`), ou até um `/watch -f`.
+
+### `/gpt` (`/ai`) · admin
+
+Pergunta ao ChatGPT pela API da OpenAI (`OPENAI_API_KEY` e `OPENAI_MODEL` no
+`config/.env`). Respondendo uma mensagem, o texto dela entra na pergunta. É
+admin por padrão para ninguém dos grupos gastar os seus créditos. A chave nunca
+é logada; em erro, só a mensagem da API volta para o chat.
+
+```
+/gpt explique o que é SSRF em 3 linhas
+/gpt resuma          (respondendo uma mensagem)
+```
+
+### `/tempo` (`/weather`)
+
+Tempo agora (temperatura, sensação, umidade, vento), máxima/mínima e chance de
+chuva do dia, pela [Open-Meteo](https://open-meteo.com/) (sem chave).
+
+```
+/tempo Rio de Janeiro
+```
+
+### `/kernel`
+
+Versões mainline, stable e longterm publicadas em `kernel.org/releases.json`.
+
+### `/news` (`/hacknews`)
+
+Junta as manchetes mais recentes dos feeds do setting `news.feeds` (padrão:
+The Hacker News, BleepingComputer e Krebs on Security), com fonte, data e link.
+Cada fonte ocupa no máximo a sua fatia da lista, e um feed fora do ar não
+derruba os outros.
+
+```
+/news
+/set news.feeds https://feeds.feedburner.com/TheHackersNews https://krebsonsecurity.com/feed/
+/set -r news.feeds
+```
+
+### `/cve` e `/cvehighscore` (`/cvehs`)
+
+Últimas CVEs publicadas no [NVD](https://nvd.nist.gov/) (últimos 2 dias) e as
+críticas (CVSS ≥ 9) dos últimos 7 dias, com nota, resumo e link. Sem chave o NVD
+aceita ~5 consultas a cada 30s.
+
+### `/joke`, `/meme [busca]` e `/gif [tag]`
+
+- `/joke`: piada em português da [JokeAPI](https://jokeapi.dev/) (safe-mode).
+- `/meme drake`: template aleatório do imgflip, filtrado pelo nome.
+- `/gif cat`: GIF aleatório do GIPHY (precisa de `GIPHY_API_KEY`), enviado como
+  vídeo em loop. Sem tag usa o setting `gif.tag`.
+
+### `/listageral`, `/boletos` e `/ualisu` · admin
+
+Só em grupos:
+
+- `/listageral`: membros do grupo (número, nome, 👑 dono, ⭐ admin).
+- `/boletos`: sorteia 2 membros diferentes (fora o bot) e os marca para "pagar um boleto".
+- `/ualisu`: o Walissu CVE BOT marca 2 membros com uma CVE aleatória do NVD.
+
+### `/admin`, `/adminoff`, `/stop` e `/run` · admin
+
+| Comando | Efeito |
+|---|---|
+| `/admin` | Só você usa comandos; os dos outros são ignorados em silêncio |
+| `/adminoff` | Volta ao normal (cada comando segue o seu `onlyAdmin`) |
+| `/stop` | Pausa **todos** os comandos, inclusive os seus, exceto o `/run` |
+| `/run` | Retoma |
+
+O estado fica nos settings `bot.adminMode` e `bot.paused` e sobrevive a
+reinícios. A recuperação de apagadas e o `/watch` continuam funcionando.
 
 ### Adicionando ou alterando comandos
 

@@ -407,6 +407,114 @@
                 }
             ],
             "onlyAdmin": true
+        },
+        {
+            "cmd": "/gpt",
+            "usage": "/gpt <pergunta>",
+            "aliases": [
+                "/ai"
+            ],
+            "help": "Pergunta ao ChatGPT (OpenAI). Também funciona respondendo uma mensagem.",
+            "onlyAdmin": true
+        },
+        {
+            "cmd": "/tempo",
+            "usage": "/tempo <cidade>",
+            "aliases": [
+                "/weather"
+            ],
+            "help": "Previsão do tempo agora e máx./mín. do dia (Open-Meteo).",
+            "onlyAdmin": false
+        },
+        {
+            "cmd": "/kernel",
+            "usage": "/kernel",
+            "help": "Versões atuais do kernel Linux (kernel.org).",
+            "onlyAdmin": false
+        },
+        {
+            "cmd": "/news",
+            "usage": "/news",
+            "help": "Manchetes de hacking/segurança (The Hacker News, BleepingComputer, Krebs). Feeds no setting news.feeds.",
+            "onlyAdmin": false,
+            "aliases": [
+                "/hacknews"
+            ]
+        },
+        {
+            "cmd": "/cve",
+            "usage": "/cve",
+            "help": "Últimas CVEs publicadas no NVD.",
+            "onlyAdmin": false
+        },
+        {
+            "cmd": "/cvehighscore",
+            "usage": "/cvehighscore",
+            "aliases": [
+                "/cvehs"
+            ],
+            "help": "CVEs críticas (CVSS ≥ 9) publicadas nos últimos 7 dias.",
+            "onlyAdmin": false
+        },
+        {
+            "cmd": "/joke",
+            "usage": "/joke",
+            "help": "Piada aleatória (JokeAPI, safe-mode).",
+            "onlyAdmin": false
+        },
+        {
+            "cmd": "/meme",
+            "usage": "/meme [busca]",
+            "help": "Template de meme aleatório do imgflip, opcionalmente filtrado pelo nome.",
+            "onlyAdmin": false
+        },
+        {
+            "cmd": "/gif",
+            "usage": "/gif [tag]",
+            "help": "GIF aleatório do GIPHY (tag padrão: setting gif.tag).",
+            "onlyAdmin": false
+        },
+        {
+            "cmd": "/listageral",
+            "usage": "/listageral",
+            "help": "Lista os membros do grupo (número, nome, admins).",
+            "onlyAdmin": true
+        },
+        {
+            "cmd": "/boletos",
+            "usage": "/boletos",
+            "help": "Sorteia 2 membros do grupo para pagar um boleto.",
+            "onlyAdmin": true
+        },
+        {
+            "cmd": "/ualisu",
+            "usage": "/ualisu",
+            "help": "Walissu CVE BOT: marca 2 membros do grupo com uma CVE aleatória.",
+            "onlyAdmin": true
+        },
+        {
+            "cmd": "/admin",
+            "usage": "/admin",
+            "help": "Modo admin: só você usa comandos; os dos outros são ignorados.",
+            "onlyAdmin": true
+        },
+        {
+            "cmd": "/adminoff",
+            "usage": "/adminoff",
+            "help": "Desativa o modo admin.",
+            "onlyAdmin": true
+        },
+        {
+            "cmd": "/stop",
+            "usage": "/stop",
+            "help": "Pausa todos os comandos (inclusive os seus) até o /run.",
+            "onlyAdmin": true
+        },
+        {
+            "cmd": "/run",
+            "usage": "/run",
+            "help": "Retoma os comandos pausados pelo /stop.",
+            "onlyAdmin": true
         }
     ]
 }

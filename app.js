@@ -361,6 +361,44 @@ const SETTINGS_SCHEMA = {
         default: 30,
         type: 'number', min: 1, max: 365,
         desc: 'Dias que as ocorrências do /watch ficam guardadas.'
+    },
+    'bot.adminMode': {
+        default: false,
+        type: 'boolean',
+        desc: 'Modo admin: só o dono usa comandos (o mesmo do /admin e /adminoff).'
+    },
+    'bot.paused': {
+        default: false,
+        type: 'boolean',
+        desc: 'Todos os comandos pausados, exceto o /run (o mesmo do /stop e /run).'
+    },
+    'news.feeds': {
+        default: [
+            'https://feeds.feedburner.com/TheHackersNews',
+            'https://www.bleepingcomputer.com/feed/',
+            'https://krebsonsecurity.com/feed/'
+        ],
+        type: 'list',
+        desc: 'Feeds RSS de hacking/segurança juntados pelo /news.',
+        item: (v) => {
+            if (!isValidHttpUrl(v)) throw new Error(`URL inválida: ${v}`);
+            return v;
+        }
+    },
+    'news.max': {
+        default: 8,
+        type: 'number', min: 1, max: 20,
+        desc: 'Manchetes exibidas pelo /news.'
+    },
+    'cve.max': {
+        default: 10,
+        type: 'number', min: 1, max: 20,
+        desc: 'CVEs exibidas pelo /cve e /cvehighscore.'
+    },
+    'gif.tag': {
+        default: 'fail',
+        type: 'string',
+        desc: 'Tag padrão do /gif quando nenhuma é informada.'
     }
 };
 
@@ -3282,6 +3320,491 @@ async function cmdWatch({ msg, opts, args, chatId }) {
     await ajuda();
 }
 
+/*
+ * /gpt: pergunta ao ChatGPT. A chave vem do OPENAI_API_KEY (config/.env) e
+ * nunca é logada nem ecoada: o erro devolvido é só a mensagem da API.
+ */
+const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
+const OPENAI_TIMEOUT_MS = 60 * 1000;
+
+async function cmdGpt({ msg, args, quotedMsg }) {
+    if (!process.env.OPENAI_API_KEY) {
+        await msg.reply('⚠️ OPENAI_API_KEY não configurada no config/.env.');
+        return;
+    }
+
+    const pergunta = [quotedMsg?.body, args].filter(Boolean).join('\n\n').trim();
+
+    if (!pergunta) {
+        await msg.reply('Syntax: /gpt <pergunta> (ou responda uma mensagem)');
+        return;
+    }
+
+    try {
+        const { data } = await axios.post(OPENAI_URL, {
+            model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+            messages: [
+                { role: 'system', content: 'Você é um assistente no WhatsApp. Responda de forma direta, em português, salvo se pedirem outro idioma.' },
+                { role: 'user', content: pergunta }
+            ]
+        }, {
+            headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
+            timeout: OPENAI_TIMEOUT_MS
+        });
+
+        let resposta = data.choices?.[0]?.message?.content?.trim() || '(resposta vazia)';
+
+        // A resposta nunca começa com "/": não pode ser lida como comando (ver marcarEnviadaPeloBot)
+        if (resposta.startsWith('/')) resposta = `🤖 ${resposta}`;
+
+        await msg.reply(resposta);
+    } catch (err) {
+        const detalhe = err.response?.data?.error?.message || err.message;
+        printError('/gpt:', detalhe);
+        await msg.reply(`❌ Erro no /gpt: ${detalhe}`);
+    }
+}
+
+/*
+ * Utilitários portados do zapzap. Tudo via HTTP direto (axios), sem shell:
+ * o zapzap montava "curl ... ${texto do usuário}" no exec().
+ */
+const HTTP_TIMEOUT_MS = 15 * 1000;
+const HTTP_MAX_BYTES = 10 * 1024 * 1024;
+
+const httpGet = (url, config = {}) =>
+    axios.get(url, { timeout: HTTP_TIMEOUT_MS, maxContentLength: HTTP_MAX_BYTES, ...config });
+
+// /tempo: Open-Meteo (sem chave de API)
+const CLIMA_WMO = {
+    0: ['☀️', 'Céu limpo'], 1: ['🌤️', 'Predominantemente limpo'], 2: ['⛅', 'Parcialmente nublado'],
+    3: ['☁️', 'Nublado'], 45: ['🌫️', 'Neblina'], 48: ['🌫️', 'Neblina com geada'],
+    51: ['🌦️', 'Garoa fraca'], 53: ['🌦️', 'Garoa'], 55: ['🌦️', 'Garoa forte'],
+    56: ['🌧️', 'Garoa congelante'], 57: ['🌧️', 'Garoa congelante forte'],
+    61: ['🌧️', 'Chuva fraca'], 63: ['🌧️', 'Chuva'], 65: ['🌧️', 'Chuva forte'],
+    66: ['🌧️', 'Chuva congelante'], 67: ['🌧️', 'Chuva congelante forte'],
+    71: ['🌨️', 'Neve fraca'], 73: ['🌨️', 'Neve'], 75: ['❄️', 'Neve forte'], 77: ['🌨️', 'Grãos de neve'],
+    80: ['🌦️', 'Pancadas de chuva'], 81: ['🌧️', 'Pancadas de chuva fortes'], 82: ['⛈️', 'Pancadas violentas'],
+    85: ['🌨️', 'Pancadas de neve'], 86: ['❄️', 'Pancadas de neve fortes'],
+    95: ['⛈️', 'Trovoada'], 96: ['⛈️', 'Trovoada com granizo'], 99: ['⛈️', 'Trovoada com granizo forte']
+};
+
+async function cmdTempo({ msg, args }) {
+    const cidade = args.split(',')[0].trim();
+
+    if (!cidade) {
+        await msg.reply('Syntax: /tempo <cidade>\nEx.: /tempo Rio de Janeiro');
+        return;
+    }
+
+    try {
+        const { data: geo } = await httpGet('https://geocoding-api.open-meteo.com/v1/search', {
+            params: { name: cidade, count: 1, language: 'pt' }
+        });
+        const local = geo.results?.[0];
+
+        if (!local) {
+            await msg.reply(`❌ Cidade não encontrada: ${cidade}`);
+            return;
+        }
+
+        const { data } = await httpGet('https://api.open-meteo.com/v1/forecast', {
+            params: {
+                latitude: local.latitude,
+                longitude: local.longitude,
+                current: 'temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m',
+                daily: 'temperature_2m_max,temperature_2m_min,precipitation_probability_max',
+                forecast_days: 1,
+                timezone: 'auto'
+            }
+        });
+
+        const c = data.current;
+        const [icone, descricao] = CLIMA_WMO[c.weather_code] ?? ['🌡️', `Código ${c.weather_code}`];
+        const onde = [local.name, local.admin1, local.country].filter(Boolean).join(', ');
+        const temp = Math.round(c.temperature_2m);
+
+        let texto =
+            `${icone} *Tempo em ${onde}*\n\n` +
+            `${descricao}\n` +
+            `🌡️ *Agora:* ${temp}°C _(sensação ${Math.round(c.apparent_temperature)}°C)_\n` +
+            `📈 *Máx:* ${Math.round(data.daily.temperature_2m_max[0])}°C  📉 *Mín:* ${Math.round(data.daily.temperature_2m_min[0])}°C\n` +
+            `💧 *Umidade:* ${c.relative_humidity_2m}%  🌬️ *Vento:* ${Math.round(c.wind_speed_10m)} km/h\n` +
+            `☔ *Chance de chuva:* ${data.daily.precipitation_probability_max[0] ?? '-'}%`;
+
+        if (temp <= 5) texto += '\n\n🥶 Tá congelando!';
+        if (temp >= 30) texto += '\n\n🔥 Que calor da porra!';
+
+        await msg.reply(texto);
+    } catch (err) {
+        printError('/tempo:', err.message);
+        await msg.reply('❌ Não consegui consultar o tempo agora.');
+    }
+}
+
+// /kernel: versões atuais publicadas em kernel.org
+async function cmdKernel({ msg }) {
+    try {
+        const { data } = await httpGet('https://www.kernel.org/releases.json');
+
+        const linhas = data.releases
+            .filter(r => ['mainline', 'stable', 'longterm'].includes(r.moniker))
+            .slice(0, 6)
+            .map(r => `${r.moniker.padEnd(9)} ${r.version.padEnd(12)} ${r.released?.isodate ?? ''}`);
+
+        await msg.reply(
+            `🐧 *Linux ${data.latest_stable.version}* _(latest stable)_\n\n` +
+            '```\n' + linhas.join('\n') + '\n```'
+        );
+    } catch (err) {
+        printError('/kernel:', err.message);
+        await msg.reply('❌ Não consegui consultar o kernel.org agora.');
+    }
+}
+
+// /news: manchetes de hacking/segurança, juntando os feeds RSS do setting 'news.feeds'
+const decodificarEntidades = (s) => String(s ?? '')
+    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
+    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
+    .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'").replace(/&amp;/g, '&')
+    .trim();
+
+async function lerFeed(url) {
+    // Alguns sites (ex.: BleepingComputer) recusam o User-Agent padrão do axios com 403
+    const { data } = await httpGet(url, { responseType: 'text', headers: { 'User-Agent': 'Mozilla/5.0 (ZapBot RSS reader)' } });
+    const xml = String(data);
+    const fonte = decodificarEntidades(xml.match(/<channel>[\s\S]*?<title>([\s\S]*?)<\/title>/)?.[1]) || new URL(url).hostname;
+
+    return [...xml.matchAll(/<item\b[\s\S]*?<\/item>/g)].map(([item]) => ({
+        fonte,
+        titulo: decodificarEntidades(item.match(/<title>([\s\S]*?)<\/title>/)?.[1]),
+        link: decodificarEntidades(item.match(/<link>([\s\S]*?)<\/link>/)?.[1]),
+        data: Date.parse(decodificarEntidades(item.match(/<pubDate>([\s\S]*?)<\/pubDate>/)?.[1])) || 0
+    })).filter(i => i.titulo);
+}
+
+async function cmdNews({ msg }) {
+    const feeds = getSetting('news.feeds');
+
+    if (!feeds.length) {
+        await msg.reply('ℹ️ Nenhum feed configurado.\n💡 _Adicione com /set news.feeds <url1> <url2>_');
+        return;
+    }
+
+    const resultados = await Promise.allSettled(feeds.map(lerFeed));
+
+    resultados.forEach((r, i) => {
+        if (r.status === 'rejected') printError(`/news: feed ${feeds[i]} falhou:`, r.reason?.message);
+    });
+
+    // Cada fonte ocupa no máximo a sua fatia: senão a que publica mais toma a lista toda
+    const max = getSetting('news.max');
+    const porFonte = resultados.filter(r => r.status === 'fulfilled').map(r => r.value.sort((a, b) => b.data - a.data));
+    const fatia = Math.ceil(max / Math.max(1, porFonte.length));
+
+    const itens = porFonte
+        .flatMap(lista => lista.slice(0, fatia))
+        .sort((a, b) => b.data - a.data)
+        .slice(0, max);
+
+    if (!itens.length) {
+        await msg.reply('❌ Não consegui buscar as manchetes agora.');
+        return;
+    }
+
+    const texto = '🏴‍☠️ *Hacking News*\n\n' +
+        itens.map((i, n) => `${n + 1}. *${i.titulo}*\n_${i.fonte}${i.data ? ` · ${formatarData(i.data)}` : ''}_${i.link ? `\n${i.link}` : ''}`).join('\n\n');
+
+    await msg.reply(texto, null, { linkPreview: false });
+}
+
+/*
+ * /cve e /cvehighscore: NVD (nvd.nist.gov). A API do cve.circl.lu que o zapzap
+ * usava mudou de formato e quase nunca traz a nota CVSS.
+ * Sem chave o NVD aceita ~5 consultas a cada 30s.
+ */
+const NVD_URL = 'https://services.nvd.nist.gov/rest/json/cves/2.0';
+
+const nvdData = (d) => d.toISOString().replace('Z', '');
+
+function notaCvss(cve) {
+    const m = cve.metrics ?? {};
+
+    for (const chave of ['cvssMetricV31', 'cvssMetricV40', 'cvssMetricV30', 'cvssMetricV2']) {
+        const metrica = m[chave]?.find(x => x.type === 'Primary') ?? m[chave]?.[0];
+        if (metrica?.cvssData?.baseScore != null) {
+            return { score: metrica.cvssData.baseScore, severity: metrica.cvssData.baseSeverity ?? metrica.baseSeverity ?? '' };
+        }
+    }
+
+    return null;
+}
+
+// As `max` CVEs publicadas mais recentemente nos últimos `dias` (NVD ordena da mais antiga para a mais nova)
+async function buscarCvesRecentes({ dias, max, critical = false }) {
+    const fim = new Date();
+    const params = {
+        pubStartDate: nvdData(new Date(fim.getTime() - dias * DAY_MS)),
+        pubEndDate: nvdData(fim),
+        noRejected: ''
+    };
+    if (critical) params.cvssV3Severity = 'CRITICAL';
+
+    const { data: total } = await httpGet(NVD_URL, { params: { ...params, resultsPerPage: 1 }, timeout: 30000 });
+    const startIndex = Math.max(0, total.totalResults - max);
+
+    const { data } = await httpGet(NVD_URL, { params: { ...params, resultsPerPage: max, startIndex }, timeout: 30000 });
+
+    return data.vulnerabilities.map(v => v.cve).reverse();
+}
+
+function formatarCve(cve) {
+    const nota = notaCvss(cve);
+    const descricao = cve.descriptions?.find(d => d.lang === 'en')?.value ?? '';
+
+    return `🛡️ *${cve.id}*${nota ? ` — ${nota.score} ${nota.severity}` : ''}\n` +
+           `${resumirTexto(descricao, 220)}\n` +
+           `https://nvd.nist.gov/vuln/detail/${cve.id}`;
+}
+
+async function cmdCve({ msg }) {
+    try {
+        const cves = await buscarCvesRecentes({ dias: 2, max: getSetting('cve.max') });
+
+        await msg.reply(
+            `🛡️ *Últimas ${cves.length} CVEs publicadas*\n\n` + cves.map(formatarCve).join('\n\n'),
+            null, { linkPreview: false }
+        );
+    } catch (err) {
+        printError('/cve:', err.message);
+        await msg.reply('❌ Não consegui consultar o NVD agora (limite de consultas? tente em 30s).');
+    }
+}
+
+async function cmdCveHighscore({ msg }) {
+    try {
+        const cves = await buscarCvesRecentes({ dias: 7, max: getSetting('cve.max'), critical: true });
+
+        if (!cves.length) {
+            await msg.reply('🛡️ Nenhuma CVE crítica publicada nos últimos 7 dias.');
+            return;
+        }
+
+        await msg.reply(
+            `🔥 *${cves.length} CVEs críticas mais recentes* _(CVSS ≥ 9, últimos 7 dias)_\n\n` +
+            cves.map(formatarCve).join('\n\n'),
+            null, { linkPreview: false }
+        );
+    } catch (err) {
+        printError('/cvehighscore:', err.message);
+        await msg.reply('❌ Não consegui consultar o NVD agora (limite de consultas? tente em 30s).');
+    }
+}
+
+// /joke: JokeAPI em português (safe-mode)
+async function cmdJoke({ msg }) {
+    try {
+        const { data } = await httpGet('https://v2.jokeapi.dev/joke/Any', { params: { lang: 'pt', 'safe-mode': '' } });
+
+        if (data.error) throw new Error(data.message || 'erro da JokeAPI');
+
+        await msg.reply(data.type === 'twopart' ? `${data.setup}\n\n... ${data.delivery} 🥁` : data.joke);
+    } catch (err) {
+        printError('/joke:', err.message);
+        await msg.reply('❌ Não consegui buscar uma piada agora.');
+    }
+}
+
+// /meme [busca]: template aleatório do imgflip
+async function cmdMeme({ msg, args }) {
+    try {
+        const { data } = await httpGet('https://api.imgflip.com/get_memes');
+        const busca = args.trim().toLowerCase();
+        const memes = data.data.memes.filter(m => !busca || m.name.toLowerCase().includes(busca));
+
+        if (!memes.length) {
+            await msg.reply(`❌ Nenhum meme com "${args.trim()}".`);
+            return;
+        }
+
+        const meme = memes[Math.floor(Math.random() * memes.length)];
+        const { data: imagem, headers } = await httpGet(meme.url, { responseType: 'arraybuffer' });
+        const media = new MessageMedia(headers['content-type'] || 'image/jpeg', Buffer.from(imagem).toString('base64'), 'meme.jpg');
+
+        await msg.reply(media, null, { caption: `🖼️ ${meme.name}` });
+    } catch (err) {
+        printError('/meme:', err.message);
+        await msg.reply('❌ Não consegui buscar um meme agora.');
+    }
+}
+
+// /gif [tag]: GIF aleatório do GIPHY (GIPHY_API_KEY no config/.env), enviado como MP4 em loop
+async function cmdGif({ msg, args }) {
+    if (!process.env.GIPHY_API_KEY) {
+        await msg.reply('⚠️ GIPHY_API_KEY não configurada no config/.env.');
+        return;
+    }
+
+    try {
+        const { data } = await httpGet('https://api.giphy.com/v1/gifs/random', {
+            params: { api_key: process.env.GIPHY_API_KEY, tag: args.trim() || getSetting('gif.tag'), rating: 'pg-13' }
+        });
+
+        const mp4 = data.data?.images?.original?.mp4;
+
+        if (!mp4) {
+            await msg.reply('❌ Nenhum GIF encontrado.');
+            return;
+        }
+
+        const { data: video } = await httpGet(mp4, { responseType: 'arraybuffer' });
+        const media = new MessageMedia('video/mp4', Buffer.from(video).toString('base64'), 'gif.mp4');
+
+        await msg.reply(media, null, { sendVideoAsGif: true });
+    } catch (err) {
+        printError('/gif:', err.message);
+        await msg.reply('❌ Não consegui buscar um GIF agora.');
+    }
+}
+
+/*
+ * Comandos de grupo: /listageral, /boletos, /ualisu
+ */
+async function participantesDoGrupo(msg) {
+    const chat = await msg.getChat().catch(() => null);
+    return chat?.isGroup ? chat : null;
+}
+
+// Sorteia `n` participantes diferentes (fora o próprio bot)
+function sortearParticipantes(participantes, n) {
+    const meuUser = client.info?.wid?.user;
+    const pool = participantes.filter(p => p.id.user !== meuUser);
+
+    for (let i = pool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+
+    return pool.slice(0, n);
+}
+
+async function cmdListaGeral({ msg }) {
+    const chat = await participantesDoGrupo(msg);
+
+    if (!chat) {
+        await msg.reply('Apenas utilizado dentro de grupos.');
+        return;
+    }
+
+    const linhas = [];
+
+    for (const p of chat.participants) {
+        const jid = removeDeviceSuffix(p.id._serialized);
+        const phoneJid = jid.endsWith('@lid') ? await resolveLidToPhone(jid) : jid;
+        const contato = await client.getContactById(phoneJid || jid).catch(() => null);
+        const nome = contato?.name || contato?.pushname || 'Desconhecido';
+        const numero = phoneJid?.endsWith('@c.us') ? `+${phoneJid.split('@')[0]}` : '(número oculto)';
+        const admin = p.isSuperAdmin ? ' 👑' : p.isAdmin ? ' ⭐' : '';
+
+        linhas.push(`${numero} - ${nome}${admin}`);
+    }
+
+    await msg.reply(`👥 *Membros de ${chat.name}* (${linhas.length})\n\n${linhas.join('\n')}`);
+}
+
+async function enviarSorteio(msg, chat, sorteados, montarTexto) {
+    const mentions = sorteados.map(p => p.id._serialized.split(':')[0]);
+    const tags = sorteados.map(p => `@${p.id.user}`);
+
+    await client.sendMessage(chat.id._serialized, montarTexto(tags), {
+        mentions,
+        quotedMessageId: msg.id._serialized
+    });
+}
+
+async function cmdBoletos({ msg }) {
+    const chat = await participantesDoGrupo(msg);
+
+    if (!chat) {
+        await msg.reply('Apenas utilizado dentro de grupos.');
+        return;
+    }
+
+    const sorteados = sortearParticipantes(chat.participants, 2);
+
+    if (sorteados.length < 2) {
+        await msg.reply('Membros insuficientes no grupo.');
+        return;
+    }
+
+    await enviarSorteio(msg, chat, sorteados, ([a, b]) =>
+        `🥳 Parabéns ${a} e ${b} 🎉\n` +
+        'Vocês foram sorteados para pagar um boleto! 💸✨\n' +
+        'Anote o número: 📝 001 9 337370000000100 05009 401448 16060680935031\n' +
+        'Boa sorte pagando! 😉💰'
+    );
+}
+
+async function cmdUalisu({ msg }) {
+    const chat = await participantesDoGrupo(msg);
+
+    if (!chat) {
+        await msg.reply('Apenas utilizado dentro de grupos.');
+        return;
+    }
+
+    const sorteados = sortearParticipantes(chat.participants, 2);
+
+    if (sorteados.length < 2) {
+        await msg.reply('Membros insuficientes no grupo.');
+        return;
+    }
+
+    try {
+        const cves = await buscarCvesRecentes({ dias: 2, max: 50 });
+        const cve = cves[Math.floor(Math.random() * cves.length)];
+
+        await enviarSorteio(msg, chat, sorteados, ([a, b]) =>
+            `Hey ${a} e ${b}, aqui é o Walissu CVE BOT! Dá uma olhada nesse CVE ou você vai sair da rave 😊\n\n` +
+            `${formatarCve(cve)}\n\n` +
+            'Cadê o exploit? Preciso sair de Brasília!'
+        );
+    } catch (err) {
+        printError('/ualisu:', err.message);
+        await msg.reply('❌ Não consegui consultar o NVD agora.');
+    }
+}
+
+/*
+ * Modo admin e pausa (settings 'bot.adminMode' e 'bot.paused', sobrevivem a reinícios)
+ *   /admin    → só você usa comandos (os dos outros são ignorados em silêncio)
+ *   /adminoff → volta ao normal (cada comando segue o seu onlyAdmin)
+ *   /stop     → pausa TODOS os comandos, inclusive os seus, exceto o /run
+ *   /run      → retoma
+ * A recuperação de apagadas e o /watch continuam funcionando.
+ */
+async function cmdAdmin({ msg }) {
+    await setSetting('bot.adminMode', true);
+    await msg.reply('🔒 Modo admin ativado: só o dono do bot pode usar comandos.');
+}
+
+async function cmdAdminOff({ msg }) {
+    await setSetting('bot.adminMode', false);
+    await msg.reply('🔓 Modo admin desativado: comandos liberados conforme a configuração.');
+}
+
+async function cmdStop({ msg }) {
+    await setSetting('bot.paused', true);
+    await msg.reply('⏸️ Todos os comandos pausados. Use /run para retomar.');
+}
+
+async function cmdRun({ msg }) {
+    await setSetting('bot.paused', false);
+    await msg.reply('▶️ Comandos retomados.');
+}
+
 // cmd do bot-config.json -> handler
 const HANDLERS = {
     '/help': cmdHelp,
@@ -3297,7 +3820,23 @@ const HANDLERS = {
     '/cache': cmdCache,
     '/show': cmdUndo,
     '/set': cmdSet,
-    '/watch': cmdWatch
+    '/watch': cmdWatch,
+    '/gpt': cmdGpt,
+    '/tempo': cmdTempo,
+    '/kernel': cmdKernel,
+    '/news': cmdNews,
+    '/cve': cmdCve,
+    '/cvehighscore': cmdCveHighscore,
+    '/joke': cmdJoke,
+    '/meme': cmdMeme,
+    '/gif': cmdGif,
+    '/listageral': cmdListaGeral,
+    '/boletos': cmdBoletos,
+    '/ualisu': cmdUalisu,
+    '/admin': cmdAdmin,
+    '/adminoff': cmdAdminOff,
+    '/stop': cmdStop,
+    '/run': cmdRun
 };
 
 // Avisa no boot se o bot-config tiver comando sem handler (ou vice-versa)
@@ -3492,6 +4031,15 @@ client.on('message_create', async (msg) => {
             if (isDebugMode()) printDebug(`Comando '${caller}' não encontrado`);
             return;
         }
+
+        // /stop: tudo pausado (inclusive os seus comandos) até o /run
+        if (getSetting('bot.paused') && command.cmd !== '/run') {
+            printInfo(`Comando '${command.cmd}' ignorado: bot pausado (/run para retomar)`);
+            return;
+        }
+
+        // /admin: comandos dos outros são ignorados em silêncio
+        if (getSetting('bot.adminMode') && !msg.fromMe) return;
 
         /*
          * Comando restrito ao dono do bot: ignora em silêncio no chat e só avisa
