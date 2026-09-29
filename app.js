@@ -1141,6 +1141,63 @@ const client = new Client({
 printSuccess('Client created');
 
 /*
+ * Messages sent by the bot itself also fire 'message_create' with
+ * fromMe=true. Without this mark, a reply starting with "/" (e.g.: the
+ * /noffa echoing "/cache -c -f") would run as an owner command.
+ *
+ * msg.reply() also goes through client.sendMessage(). The text is registered
+ * BEFORE the send because the event may arrive before sendMessage resolves.
+ */
+const SENT_TTL_MS = 60 * 1000;
+const sentByBotAlt = new Map(); // text -> [expires at, ...]
+
+function sendingText(content, options = {}) {
+    if (typeof content === 'string') return content;
+    return options.caption ?? content?.description ?? null;
+}
+
+function markSentByBot(textAlt) {
+    textAlt = String(textAlt ?? '').trim();
+    if (!textAlt.startsWith('/')) return; // only what could become a command
+
+    const nowAlt = Date.now();
+    const validAlt = (sentByBotAlt.get(textAlt) ?? []).filter(t => t > nowAlt);
+    sentByBotAlt.set(textAlt, [...validAlt, nowAlt + SENT_TTL_MS]);
+}
+
+// Consumes the mark: true if this message was sent by the bot
+function wasSentByBot(textAlt) {
+    textAlt = String(textAlt ?? '').trim();
+
+    const nowAlt = Date.now();
+    const validAlt = (sentByBotAlt.get(textAlt) ?? []).filter(t => t > nowAlt);
+    if (!validAlt.length) {
+        sentByBotAlt.delete(textAlt);
+        return false;
+    }
+
+    validAlt.shift();
+    if (validAlt.length) sentByBotAlt.set(textAlt, validAlt);
+    else sentByBotAlt.delete(textAlt);
+    return true;
+}
+
+const sendMessageOriginal = client.sendMessage.bind(client);
+
+client.sendMessage = (chatId, content, options = {}) => {
+    markSentByBot(sendingText(content, options));
+    return sendMessageOriginal(chatId, content, options);
+};
+
+// Marks that never became 'message_create' (send failed) expire here
+setInterval(() => {
+    const nowAlt = Date.now();
+    for (const [textAlt, expirations] of sentByBotAlt) {
+        if (!expirations.some(t => t > nowAlt)) sentByBotAlt.delete(textAlt);
+    }
+}, SENT_TTL_MS);
+
+/*
  * Connection state + restart with a lock.
  * Before, watchdog, 'disconnected' and startBot() could restart the client
  * at the same time, corrupting the session and generating QR Codes after authentication.
@@ -1553,10 +1610,12 @@ async function sendMessageDeleted(destination, row, info, { titulo: title = '❌
             '📇 *Tipo:* CARTÃO DE CONTATO\n' +
             '💡 *Nota:* O contato está anexado abaixo.';
 
-        await client.sendMessage(destination, alertText);
-
-        if (row.body) {
-            await client.sendMessage(destination, row.body, { parseVCards: true });
+        // The body comes from whoever sent it: it only goes raw if it really is a vCard (never a text like "/cache -c -f")
+        if (!row.body || /^BEGIN:VCARD/i.test(row.body.trim())) {
+            await client.sendMessage(destination, alertText);
+            if (row.body) await client.sendMessage(destination, row.body, { parseVCards: true });
+        } else {
+            await client.sendMessage(destination, `${alertText}\n💬 *Conteúdo:* "${row.body}"`);
         }
         return;
     }
@@ -1852,7 +1911,10 @@ async function cmdNoffa({ msg, args, quotedMsg }) {
     }
 
     let index = 0;
-    const rainbowText = text.replace(/ /g, () => ` ${rainbowHearts[index++ % rainbowHearts.length]} `);
+    let rainbowText = text.replace(/ /g, () => ` ${rainbowHearts[index++ % rainbowHearts.length]} `);
+
+    // The reply never starts with "/": it must not be read as a command (see markSentByBot)
+    if (rainbowText.startsWith('/')) rainbowText = `${rainbowHearts[0]} ${rainbowText}`;
 
     await msg.reply(rainbowText);
 }
@@ -3236,7 +3298,11 @@ client.on('message_create', async (msg) => {
         ).catch(err => printError('Erro ao salvar mensagem:', err.message));
 
         const body = (msg.body || '').trim();
-        const caller = body.startsWith('/') ? body.split(/\s+/, 1)[0] : null;
+        // The bot's own reply is never a command, even starting with "/" (see markSentByBot)
+        const sentByBot = msg.fromMe && body.startsWith('/') && wasSentByBot(body);
+        const caller = body.startsWith('/') && !sentByBot ? body.split(/\s+/, 1)[0] : null;
+
+        if (sentByBot) printInfo(`Mensagem do próprio bot começando com '/' ignorada como comando: ${body.slice(0, 60)}`);
         const command = caller ? findCommand(caller) : null;
 
         /*
