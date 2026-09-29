@@ -50,12 +50,8 @@ let BOT_AUTHENTICATED_TIME = 0;
 // Tempo máximo que o WhatsApp permite apagar para todos: 68 horas em milissegundos
 const MAX_DELETE_WINDOW = 68 * 60 * 60 * 1000;
 
-// Mensagens APAGADAS ficam guardadas mais tempo (para o /show): 30 dias
-const REVOKED_RETENTION = 30 * 24 * 60 * 60 * 1000;
-
-// /show: máximo de mensagens por chamada e intervalo entre envios (evita flood/ban)
-const UNDO_MAX = 20;
-const UNDO_DELAY_MS = 700;
+// 1 dia em milissegundos (retenção das apagadas: setting 'cache.revokedRetentionDays')
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 const CACHE_DIR = path.join(__dirname, 'cache');
 const MEDIA_DIR = path.join(CACHE_DIR, 'media'); // mídias salvas para recuperar mensagens apagadas
@@ -63,11 +59,6 @@ const TMP_DIR = path.join(CACHE_DIR, 'tmp');     // arquivos temporários do /ge
 
 const BIN_FFMPEG = '/usr/bin/ffmpeg';
 const BIN_YT = '/venv/bin/yt-dlp';
-
-const STICKER_META = {
-    stickerName: 'ZapBot',
-    stickerAuthor: 'https://github.com/jpereira/zapbot/'
-};
 
 /*
  * Utilitários de tempo e log
@@ -132,10 +123,8 @@ function printCall(senderContact, call) {
  */
 const APP_ENV = process.env.APP_ENV || 'dev';
 
-// Comparação sem diferenciar maiúsculas: antes "dev" !== "Dev" e o debug nunca ligava.
-let isDebugMode = APP_ENV.toLowerCase() === 'dev';
-
-printInfo(`Running in APP_ENV=${APP_ENV} QRCODE_EMAIL_ENABLE=${process.env.QRCODE_EMAIL_ENABLE} isDebugMode=${isDebugMode}`);
+// O debug mode vem do setting 'debug.enabled' (padrão: ligado se APP_ENV=dev, sem diferenciar maiúsculas)
+printInfo(`Running in APP_ENV=${APP_ENV} QRCODE_EMAIL_ENABLE=${process.env.QRCODE_EMAIL_ENABLE}`);
 
 /*
  * Banco de dados (SQLite)
@@ -219,12 +208,189 @@ async function inicializarBanco() {
     // Consulta do /show: apagadas de um chat, das mais recentes para as mais antigas
     await dbRun('CREATE INDEX IF NOT EXISTS idx_messages_chat_revoked ON messages (chat_id, revoked, revoked_at)');
 
+    // Configurações gerais do bot (chave -> valor em JSON)
+    await dbRun(`
+        CREATE TABLE IF NOT EXISTS settings (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+
+    await carregarSettings();
+
     for (const dir of [MEDIA_DIR, TMP_DIR]) {
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, { recursive: true });
             printInfo(`Creating ${dir}`);
         }
     }
+}
+
+/*
+ * Settings: configurações gerais persistidas na tabela `settings`.
+ * Carregadas no boot para `settings` (memória); getSetting() lê de lá e
+ * setSetting() valida, grava no banco e na memória. Alteráveis pelo /set.
+ *
+ * Cada chave declara: default (gravado no primeiro boot, sem sobrescrever o
+ * existente), type (boolean | number | string | list), desc e, opcionalmente,
+ * min/max (number) e item() para normalizar/validar cada item de uma list.
+ */
+const SETTINGS_SCHEMA = {
+    'debug.enabled': {
+        default: APP_ENV.toLowerCase() === 'dev',
+        type: 'boolean',
+        desc: 'Debug mode (o mesmo do /debug on|off).'
+    },
+    'commands.disabled': {
+        default: [],
+        type: 'list',
+        desc: 'Comandos desativados em tempo de execução (somem do /help).',
+        item: (v) => {
+            const nome = v.startsWith('/') ? v.toLowerCase() : `/${v.toLowerCase()}`;
+            const command = botConfig.commands.find(c => c.cmd === nome || c.aliases?.includes(nome));
+            if (!command) throw new Error(`comando desconhecido: ${nome}`);
+            if (command.cmd === '/set') throw new Error('o /set não pode ser desativado');
+            return command.cmd;
+        }
+    },
+    'crypto.coins': {
+        default: ['BTC', 'ETH', 'SOL', 'HYPE'],
+        type: 'list',
+        desc: 'Moedas exibidas pelo /crypto.',
+        item: (v) => {
+            const sym = v.toUpperCase().replace(/USDT$/, '');
+            if (!CRYPTO_SUPPORTED[sym]) throw new Error(`moeda não suportada: ${sym}`);
+            return sym;
+        }
+    },
+    'sticker.name': {
+        default: 'ZapBot',
+        type: 'string',
+        desc: 'Nome do pacote das figurinhas (/sticker e /get -st).'
+    },
+    'sticker.author': {
+        default: 'https://github.com/jpereira/zapbot/',
+        type: 'string',
+        desc: 'Autor das figurinhas (/sticker e /get -st).'
+    },
+    'cache.revokedRetentionDays': {
+        default: 30,
+        type: 'number', min: 1, max: 365,
+        desc: 'Dias que as mensagens apagadas ficam guardadas para o /show.'
+    },
+    'get.maxSizeMB': {
+        default: 20,
+        type: 'number', min: 1, max: 100,
+        desc: 'Tamanho máximo (MB) do arquivo enviado pelo /get.'
+    },
+    'show.max': {
+        default: 20,
+        type: 'number', min: 1, max: 100,
+        desc: 'Máximo de mensagens reexibidas por /show -N.'
+    },
+    'show.delayMs': {
+        default: 700,
+        type: 'number', min: 0, max: 10000,
+        desc: 'Intervalo (ms) entre os envios do /show (evita flood/ban).'
+    },
+    'monitor.max': {
+        default: 20,
+        type: 'number', min: 1, max: 1000,
+        desc: 'Máximo de números monitorados pelo /monitor.'
+    }
+};
+
+const settings = new Map();
+
+/*
+ * Valida/normaliza um valor para a chave. Aceita o valor já tipado (vindo do
+ * banco) ou texto (vindo do /set). Lança Error com a mensagem para o usuário.
+ */
+function validarSetting(key, value) {
+    const schema = SETTINGS_SCHEMA[key];
+    if (!schema) throw new Error(`setting desconhecido: ${key}`);
+
+    switch (schema.type) {
+        case 'boolean': {
+            if (typeof value === 'boolean') return value;
+            const v = String(value).trim().toLowerCase();
+            if (['on', 'true', '1', 'sim', 'yes'].includes(v)) return true;
+            if (['off', 'false', '0', 'nao', 'não', 'no'].includes(v)) return false;
+            throw new Error('use on|off');
+        }
+
+        case 'number': {
+            const n = Number(value);
+            if (String(value).trim() === '' || !Number.isInteger(n)) throw new Error('precisa ser um número inteiro');
+            if (n < schema.min || n > schema.max) throw new Error(`precisa estar entre ${schema.min} e ${schema.max}`);
+            return n;
+        }
+
+        case 'string': {
+            const s = String(value ?? '').trim();
+            if (!s || s.length > 100) throw new Error('precisa ter de 1 a 100 caracteres');
+            return s;
+        }
+
+        case 'list': {
+            const itens = Array.isArray(value)
+                ? value.map(String)
+                : String(value ?? '').split(/[\s,]+/);
+            const lista = itens.map(v => v.trim()).filter(Boolean).map(schema.item ?? (v => v));
+            return [...new Set(lista)];
+        }
+    }
+
+    throw new Error(`tipo inválido no schema: ${schema.type}`);
+}
+
+async function carregarSettings() {
+    for (const [key, schema] of Object.entries(SETTINGS_SCHEMA)) {
+        await dbRun('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)', [key, JSON.stringify(schema.default)]);
+    }
+
+    for (const row of await dbAll('SELECT key, value FROM settings')) {
+        if (!SETTINGS_SCHEMA[row.key]) {
+            printInfo(`Setting '${row.key}' desconhecido, ignorado.`);
+            continue;
+        }
+
+        try {
+            settings.set(row.key, validarSetting(row.key, JSON.parse(row.value)));
+        } catch (e) {
+            printError(`Setting '${row.key}' inválido (${e.message}), usando o padrão.`);
+        }
+    }
+
+    printSuccess(`Loaded ${settings.size} settings (${[...settings.keys()].join(',')})`);
+    printSuccess(`Loaded ${getSetting('crypto.coins').length} crypto coins (${getSetting('crypto.coins').join(',')})`);
+    printInfo(`debug.enabled=${getSetting('debug.enabled')} commands.disabled=${getSetting('commands.disabled').join(',') || '-'}`);
+}
+
+function getSetting(key) {
+    return settings.has(key) ? settings.get(key) : SETTINGS_SCHEMA[key]?.default;
+}
+
+async function setSetting(key, value) {
+    value = validarSetting(key, value);
+
+    await dbRun(
+        `INSERT INTO settings (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)
+         ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
+        [key, JSON.stringify(value)]
+    );
+    settings.set(key, value);
+
+    return value;
+}
+
+function isDebugMode() {
+    return getSetting('debug.enabled');
+}
+
+function stickerMeta() {
+    return { stickerName: getSetting('sticker.name'), stickerAuthor: getSetting('sticker.author') };
 }
 
 const dbPronto = inicializarBanco().catch((e) => {
@@ -248,8 +414,14 @@ if (disabledCommands.length) {
     printInfo(`Disabled ${disabledCommands.length} callers (${disabledCommands.join(',')})`);
 }
 
+// Comandos ativos: os do bot-config menos os do setting 'commands.disabled' (via /set)
+function activeCommands() {
+    const desativados = getSetting('commands.disabled');
+    return botConfig.commands.filter(c => !desativados.includes(c.cmd));
+}
+
 function findCommand(name) {
-    return botConfig.commands.find(c => c.cmd === name || c.aliases?.includes(name));
+    return activeCommands().find(c => c.cmd === name || c.aliases?.includes(name));
 }
 
 /*
@@ -585,11 +757,11 @@ function obterPastaMidia() {
  * Limpeza do banco + mídias:
  *  - mensagens normais: removidas após a janela de "apagar para todos" (68h),
  *    porque depois disso não podem mais ser apagadas;
- *  - mensagens APAGADAS (revoked=1): guardadas por REVOKED_RETENTION (30 dias),
+ *  - mensagens APAGADAS (revoked=1): guardadas por 'cache.revokedRetentionDays' (padrão 30),
  *    para o /show continuar funcionando.
  * Com o /cache -clean -force, as duas janelas são 0 e tudo é removido.
  */
-async function limparCacheAntigo(maxDeleteWin = MAX_DELETE_WINDOW, retencaoApagadas = REVOKED_RETENTION) {
+async function limparCacheAntigo(maxDeleteWin = MAX_DELETE_WINDOW, retencaoApagadas = getSetting('cache.revokedRetentionDays') * DAY_MS) {
     await dbPronto;
 
     const agora = Date.now();
@@ -986,7 +1158,7 @@ client.on('authenticated', () => {
     printSuccess('🔐 Whatsapp authentication success!');
     BOT_AUTHENTICATED_TIME = Date.now();
 
-    if (!isDebugMode) return;
+    if (!isDebugMode()) return;
 
     const page = client.pupPage;
 
@@ -1072,7 +1244,7 @@ client.on('presence_update', async (presence) => {
         const currentStatus = presence.status || (presence.type === 'available' ? 'available' : 'unavailable');
 
         // Antes isto mandava uma mensagem no WhatsApp para CADA evento de presença.
-        if (isDebugMode) {
+        if (isDebugMode()) {
             printDebug(`[Presence] ${number} -> ${currentStatus}`, presence);
         }
 
@@ -1380,17 +1552,18 @@ async function cmdHelp({ msg, args }) {
     // /help sozinho: todos os comandos
     const helpText =
         '🤖 *MENU DE AJUDA*\n\n```' +
-        botConfig.commands.map(formatCommandHelp).join('\n\n' + '─'.repeat(50) + '\n\n') +
+        activeCommands().map(formatCommandHelp).join('\n\n' + '─'.repeat(50) + '\n\n') +
         '\n```';
 
     await msg.reply(helpText);
 }
 
 async function cmdDebug({ msg, opts }) {
-    if (opts.opt.on) isDebugMode = true;
-    if (opts.opt.off) isDebugMode = false;
+    // Persistido no setting 'debug.enabled': sobrevive a reinícios
+    if (opts.opt.on) await setSetting('debug.enabled', true);
+    if (opts.opt.off) await setSetting('debug.enabled', false);
 
-    await msg.reply(isDebugMode ? '🪲 Debug Ativado.' : '🪲 Debug Desativado.');
+    await msg.reply(isDebugMode() ? '🪲 Debug Ativado.' : '🪲 Debug Desativado.');
 }
 
 async function cmdUptime({ msg }) {
@@ -1425,16 +1598,81 @@ async function cmdNoffa({ msg, args, quotedMsg }) {
     await msg.reply(rainbowText);
 }
 
-async function cmdCrypto({ msg }) {
+/*
+ * Moedas aceitas pelo /crypto -a (par <TOKEN>USDT na Binance) e seus ícones.
+ * As ativas ficam no setting 'crypto.coins'.
+ */
+const CRYPTO_SUPPORTED = {
+    BTC: '₿', ETH: 'Ξ', SOL: '◎', HYPE: 'Ⓗ', BNB: '🔶', XRP: '✕', DOGE: 'Ð',
+    ADA: '₳', TRX: '🔺', AVAX: '🔻', LINK: '🔗', DOT: '●', LTC: 'Ł', TON: '💎',
+    SUI: '💧', PEPE: '🐸', SHIB: '🐕', XLM: '🚀', NEAR: 'Ⓝ', UNI: '🦄'
+};
+
+async function cmdCrypto({ msg, opts }) {
+    await dbPronto;
+
+    const ativas = getSetting('crypto.coins');
+    const token = (v) => String(v ?? '').trim().toUpperCase().replace(/USDT$/, '');
+
+    if (opts.opt.list) {
+        const lista = Object.entries(CRYPTO_SUPPORTED)
+            .map(([sym, icon]) => `${ativas.includes(sym) ? '*' : ' '} ${icon} ${sym}`)
+            .join('\n');
+
+        await msg.reply('🪙 *MOEDAS SUPORTADAS*\n\n```\n' + lista + '\n```\n_* = ativada_');
+        return;
+    }
+
+    if (opts.opt.add !== null || opts.opt.del !== null) {
+        // Mexe na configuração global: só o dono do bot
+        if (!msg.fromMe) {
+            await msg.reply('⛔ Apenas o dono do bot pode alterar as moedas.');
+            return;
+        }
+
+        const adicionar = opts.opt.add !== null;
+        const sym = token(adicionar ? opts.opt.add : opts.opt.del);
+
+        if (!sym) {
+            await msg.reply('```' + getCommandSyntax('/crypto') + '```');
+            return;
+        }
+
+        if (adicionar) {
+            if (!CRYPTO_SUPPORTED[sym]) {
+                await msg.reply(`❌ Moeda não suportada: ${sym}\n💡 _Veja as suportadas com /crypto -l_`);
+                return;
+            }
+            if (ativas.includes(sym)) {
+                await msg.reply(`ℹ️ ${sym} já está ativada.`);
+                return;
+            }
+            await setSetting('crypto.coins', [...ativas, sym]);
+            await msg.reply(`✅ ${CRYPTO_SUPPORTED[sym]} ${sym} adicionada.`);
+            return;
+        }
+
+        if (!ativas.includes(sym)) {
+            await msg.reply(`ℹ️ ${sym} não está ativada.`);
+            return;
+        }
+        await setSetting('crypto.coins', ativas.filter(c => c !== sym));
+        await msg.reply(`🗑️ ${sym} removida.`);
+        return;
+    }
+
+    if (!ativas.length) {
+        await msg.reply('ℹ️ Nenhuma moeda ativada.\n💡 _Adicione com /crypto -a <TOKEN>_');
+        return;
+    }
+
     try {
-        const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'HYPEUSDT'];
+        const symbols = ativas.map(c => `${c}USDT`);
 
         const { data } = await axios.get('https://api.binance.com/api/v3/ticker/24hr', {
             params: { symbols: JSON.stringify(symbols) },
             timeout: 10000
         });
-
-        const icon = { BTCUSDT: '₿', ETHUSDT: 'Ξ', SOLUSDT: '◎', HYPEUSDT: 'Ⓗ' };
 
         const fmtPrice = (value) =>
             Number(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 6 });
@@ -1452,15 +1690,16 @@ async function cmdCrypto({ msg }) {
             return `${n >= 0 ? '🟢' : '🔴'} ${n >= 0 ? '+' : ''}${n.toFixed(2)}%`;
         };
 
+        // Mantém a ordem configurada (a Binance não garante a ordem da resposta)
         const coins = data.map(item => ({
-            symbol: item.symbol.replace('USDT', ''),
-            icon: icon[item.symbol] || '',
+            symbol: item.symbol.replace(/USDT$/, ''),
+            icon: CRYPTO_SUPPORTED[item.symbol.replace(/USDT$/, '')] || '',
             price: Number(item.lastPrice),
             change: Number(item.priceChangePercent),
             high: Number(item.highPrice),
             low: Number(item.lowPrice),
             volume: Number(item.quoteVolume)
-        }));
+        })).sort((a, b) => ativas.indexOf(a.symbol) - ativas.indexOf(b.symbol));
 
         const topGainer = [...coins].sort((a, b) => b.change - a.change)[0];
 
@@ -1576,7 +1815,7 @@ async function cmdMonitor({ msg, opts }) {
             }
 
             case 'list': {
-                const rows = await dbAll('SELECT phone_number, timestamp FROM monitored_numbers LIMIT 20');
+                const rows = await dbAll('SELECT phone_number, timestamp FROM monitored_numbers LIMIT ?', [getSetting('monitor.max')]);
 
                 if (!rows.length) {
                     await msg.reply('Nenhum número está sendo monitorado.');
@@ -1610,8 +1849,9 @@ async function cmdMonitor({ msg, opts }) {
                 }
 
                 const total = await dbGet('SELECT COUNT(*) AS n FROM monitored_numbers');
-                if (total.n >= 20) {
-                    await msg.reply('Limite de 20 números monitorados atingido.');
+                const max = getSetting('monitor.max');
+                if (total.n >= max) {
+                    await msg.reply(`Limite de ${max} números monitorados atingido.`);
                     return;
                 }
 
@@ -1662,7 +1902,7 @@ async function cmdSticker({ msg, quotedMsg }) {
     // 1. Mídia real do WhatsApp
     if (quotedMsg.hasMedia) {
         const media = await quotedMsg.downloadMedia();
-        await msg.reply(media, null, { sendMediaAsSticker: true, ...STICKER_META });
+        await msg.reply(media, null, { sendMediaAsSticker: true, ...stickerMeta() });
         return;
     }
 
@@ -1716,7 +1956,7 @@ async function cmdSticker({ msg, quotedMsg }) {
         return;
     }
 
-    await msg.reply(media, null, { sendMediaAsSticker: true, ...STICKER_META });
+    await msg.reply(media, null, { sendMediaAsSticker: true, ...stickerMeta() });
 }
 
 async function cmdGet({ msg, opts, quotedMsg, senderName }) {
@@ -1742,7 +1982,7 @@ async function cmdGet({ msg, opts, quotedMsg, senderName }) {
 
         const { audio: isAudio, sticker: isSticker, verbose: isVerbose } = opts.opt;
 
-        if (isDebugMode) {
+        if (isDebugMode()) {
             printDebug(`urlInput=${urlInput} opts=`, opts);
         }
 
@@ -1785,8 +2025,9 @@ async function cmdGet({ msg, opts, quotedMsg, senderName }) {
             throw new Error(`Problemas para decodificar com '${BIN_FFMPEG}'`, { cause: { inner, cmd: cmdFfmpeg } });
         }
 
-        if (fs.statSync(outputFile).size > 20 * 1024 * 1024) {
-            throw new Error('Arquivo muito grande para WhatsApp Web (máx. 20 MB)');
+        const maxSizeMB = getSetting('get.maxSizeMB');
+        if (fs.statSync(outputFile).size > maxSizeMB * 1024 * 1024) {
+            throw new Error(`Arquivo muito grande para WhatsApp Web (máx. ${maxSizeMB} MB)`);
         }
 
         try {
@@ -1801,7 +2042,7 @@ async function cmdGet({ msg, opts, quotedMsg, senderName }) {
                 await msg.reply(textMsg, null, { linkPreview: false });
             }
 
-            const msgOpts = { linkPreview: false, ...STICKER_META };
+            const msgOpts = { linkPreview: false, ...stickerMeta() };
 
             if (isSticker) {
                 msgOpts.sendMediaAsSticker = true;
@@ -1871,7 +2112,7 @@ async function cmdCache({ msg, opts }) {
  * Reexibe as últimas N mensagens apagadas DESTE chat (padrão: 1), no mesmo
  * formato do alerta do 'message_revoke_everyone'.
  *   /show        → a última apagada
- *   /show -3     → as 3 últimas (máx. UNDO_MAX)
+ *   /show -3     → as 3 últimas (máx. setting 'show.max')
  *   /show -3 -pv → envia no SEU privado em vez de expor no chat atual
  *   /show -list  → quantas mensagens apagadas existem no cache
  *   /show -flush → remove as apagadas deste chat (no seu privado: de todos os chats)
@@ -2005,8 +2246,8 @@ async function listarApagadas({ msg, opts, chatId }) {
     }
 
     if (geral.total > 0 && geral.mais_antiga) {
-        const expiraEm = paraMs(geral.mais_antiga) + REVOKED_RETENTION;
-        const dias = Math.max(0, Math.ceil((expiraEm - Date.now()) / (24 * 60 * 60 * 1000)));
+        const expiraEm = paraMs(geral.mais_antiga) + getSetting('cache.revokedRetentionDays') * DAY_MS;
+        const dias = Math.max(0, Math.ceil((expiraEm - Date.now()) / DAY_MS));
         texto += `⏳ *Mais antiga:* ${formatarData(geral.mais_antiga)} _(expira em ${dias} dia${dias === 1 ? '' : 's'})_\n`;
     }
 
@@ -2030,7 +2271,7 @@ async function listarApagadas({ msg, opts, chatId }) {
         }
     }
 
-    texto += `\n💡 _Use /show -N para reexibir (máx. ${UNDO_MAX})._`;
+    texto += `\n💡 _Use /show -N para reexibir (máx. ${getSetting('show.max')})._`;
 
     if (mostrarPorChat && geral.total > 0) {
         texto += '\n💡 _No seu privado: /show -N -c <nº ou nome> para ver as de um chat._';
@@ -2199,9 +2440,10 @@ async function cmdUndo({ msg, opts, chatId }) {
     }
 
     let aviso = '';
-    if (n > UNDO_MAX) {
-        aviso = `\n_(limitado a ${UNDO_MAX} por vez)_`;
-        n = UNDO_MAX;
+    const max = getSetting('show.max');
+    if (n > max) {
+        aviso = `\n_(limitado a ${max} por vez)_`;
+        n = max;
     }
 
     const idsDoChat = alvo ? alvo.ids : await idsDoChatAtual(chatId);
@@ -2259,7 +2501,76 @@ async function cmdUndo({ msg, opts, chatId }) {
             await client.sendMessage(destino, `⚠️ Não consegui reenviar a mensagem ${i + 1}/${rows.length}: ${err.message}`);
         }
 
-        if (i < rows.length - 1) await esperar(UNDO_DELAY_MS);
+        if (i < rows.length - 1) await esperar(getSetting('show.delayMs'));
+    }
+}
+
+/*
+ * /set
+ *   /set                  → lista todos os settings e seus valores
+ *   /set <chave>          → mostra valor, padrão e descrição
+ *   /set <chave> <valor>  → altera (lista: itens separados por vírgula ou espaço)
+ *   /set -reset <chave>   → volta ao padrão
+ */
+function formatarValorSetting(value) {
+    if (Array.isArray(value)) return value.length ? value.join(', ') : '(vazio)';
+    if (typeof value === 'boolean') return value ? 'on' : 'off';
+    return String(value);
+}
+
+async function cmdSet({ msg, opts }) {
+    await dbPronto;
+
+    if (opts.opt.reset !== null) {
+        const key = opts.opt.reset;
+        const schema = SETTINGS_SCHEMA[key];
+
+        if (!schema) {
+            await msg.reply(`❌ Setting desconhecido: ${key}\n💡 _Veja todos com /set_`);
+            return;
+        }
+
+        await setSetting(key, schema.default);
+        await msg.reply(`♻️ *${key}* = ${formatarValorSetting(getSetting(key))} _(padrão)_`);
+        return;
+    }
+
+    const [key, ...resto] = opts.argv;
+
+    if (!key) {
+        const width = Math.max(...Object.keys(SETTINGS_SCHEMA).map(k => k.length));
+        const lista = Object.keys(SETTINGS_SCHEMA)
+            .map(k => `${k.padEnd(width)}  ${formatarValorSetting(getSetting(k))}`)
+            .join('\n');
+
+        await msg.reply('⚙️ *SETTINGS*\n\n```\n' + lista + '\n```\n💡 _/set <chave> para detalhes_');
+        return;
+    }
+
+    const schema = SETTINGS_SCHEMA[key];
+
+    if (!schema) {
+        await msg.reply(`❌ Setting desconhecido: ${key}\n💡 _Veja todos com /set_`);
+        return;
+    }
+
+    if (!resto.length) {
+        const limites = schema.type === 'number' ? ` (${schema.min}..${schema.max})` : '';
+        await msg.reply(
+            `⚙️ *${key}*\n${schema.desc}\n\n` +
+            `*Valor:* ${formatarValorSetting(getSetting(key))}\n` +
+            `*Padrão:* ${formatarValorSetting(schema.default)}\n` +
+            `*Tipo:* ${schema.type}${limites}`
+        );
+        return;
+    }
+
+    try {
+        const valor = await setSetting(key, resto.join(' '));
+        printInfo(`Setting '${key}' alterado para ${JSON.stringify(valor)}`);
+        await msg.reply(`✅ *${key}* = ${formatarValorSetting(valor)}`);
+    } catch (e) {
+        await msg.reply(`❌ Valor inválido para *${key}*: ${e.message}`);
     }
 }
 
@@ -2276,7 +2587,8 @@ const HANDLERS = {
     '/sticker': cmdSticker,
     '/get': cmdGet,
     '/cache': cmdCache,
-    '/show': cmdUndo
+    '/show': cmdUndo,
+    '/set': cmdSet
 };
 
 // Avisa no boot se o bot-config tiver comando sem handler (ou vice-versa)
@@ -2354,7 +2666,7 @@ client.on('message_create', async (msg) => {
             pushname: msg?._data?.notifyName || senderName
         };
 
-        if (isDebugMode) {
+        if (isDebugMode()) {
             printDebug(`msgIdPure=${msgIdPure} senderName=${senderName} senderJid=${senderJid} senderNumber=${senderNumber} chatId=${chatId} chatName=${chatName}`);
             printDebug({
                 author: msg?.author,
@@ -2452,7 +2764,7 @@ client.on('message_create', async (msg) => {
         const command = findCommand(caller);
 
         if (!command) {
-            if (isDebugMode) printDebug(`Comando '${caller}' não encontrado`);
+            if (isDebugMode()) printDebug(`Comando '${caller}' não encontrado`);
             return;
         }
 
@@ -2472,7 +2784,7 @@ client.on('message_create', async (msg) => {
 
         const opts = GetOptFromCommand(args, command);
 
-        if (isDebugMode) {
+        if (isDebugMode()) {
             printDebug('GetOptFromCommand():', command.cmd, opts);
         }
 

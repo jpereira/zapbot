@@ -35,7 +35,7 @@ brincadeiras, tudo por comandos digitados no próprio chat (`/help`, `/get`,
  │                                                                │
  │   app.js ──► whatsapp-web.js ──► Puppeteer ──► Chromium        │──► WhatsApp Web
  │     │                                          (headless)      │
- │     ├──► SQLite  (cache/bot_database.db)  mensagens, monitor   │
+ │     ├──► SQLite  (cache/bot_database.db)  mensagens, settings  │
  │     ├──► cache/media   mídias p/ recuperar mensagens apagadas  │
  │     ├──► yt-dlp + ffmpeg   comando /get                        │
  │     └──► SMTP (nodemailer)  envio do QR Code por e-mail        │
@@ -54,10 +54,16 @@ brincadeiras, tudo por comandos digitados no próprio chat (`/help`, `/get`,
 - **Persistência**: toda mensagem recebida é gravada no SQLite (mídias vão para
   `cache/media`). Quando alguém apaga uma mensagem "para todos", o bot encontra
   a cópia no banco e a reenvia **no seu privado** (chat consigo mesmo). Mensagens
-  apagadas ficam guardadas por 30 dias e podem ser reexibidas com `/show`.
+  apagadas ficam guardadas por 30 dias (setting `cache.revokedRetentionDays`)
+  e podem ser reexibidas com `/show`.
 - **Limpeza automática**: a cada 10 minutos o bot remove do banco/disco as
   mensagens comuns com mais de 68 h (janela máxima que o WhatsApp permite
   apagar) e as apagadas com mais de 30 dias.
+- **Configurações (`settings`)**: configurações gerais que podem mudar em
+  tempo de execução (debug, moedas do `/crypto`, limites...) ficam na tabela
+  genérica `settings` do SQLite (`key` → `value` em JSON) e são alteradas pelo
+  [`/set`](#set--admin). No boot os valores padrão são gravados, se ainda não
+  existirem, e tudo é carregado em memória. Veja [Settings](#settings).
 - **Comandos**: definidos em [`config/bot-config.json`](config/bot-config.json)
   (nome, aliases, opções, ajuda, permissão) e implementados em `app.js`.
 - **Reconexão**: em caso de queda o cliente é reiniciado sozinho, exceto quando o
@@ -160,18 +166,6 @@ ficam disponíveis para o bot. Nunca faça commit dele (já está no `.gitignore
 |---|---|---|
 | `PHONE_NUMBER` | `5521999999999@c.us` | **Obrigatório.** Número da conta que será pareada, no formato `DDI + DDD + número` seguido de `@c.us`, sem `+`, espaços ou traços. É para ele que o bot manda o aviso de inicialização, as notificações do `/monitor` e os alertas de uso indevido de comandos. Também aparece (mascarado) no e-mail do QR. |
 
-### Integrações (opcionais)
-
-| Variável | Descrição |
-|---|---|
-| `OPENAI_API_KEY` | Chave da API da OpenAI. |
-| `ORGANIZATION_ID` | ID da organização na OpenAI. |
-| `REPLICATE_API_TOKEN` | Token da API do Replicate. |
-| `ELEVENLABS_API_KEY` | Chave da API da ElevenLabs. |
-
-> Estas chaves estão reservadas para funcionalidades futuras (ex.: `/gpt`) e
-> **não são usadas pelos comandos atuais**. Podem ficar em branco.
-
 ### QR Code por e-mail
 
 | Variável | Exemplo | Descrição |
@@ -212,11 +206,7 @@ WhatsApp**: mande-o apenas para um e-mail que só você lê.
 COMPOSE_PROJECT_NAME="zapbot"
 COMPOSE_FILE=docker/docker-compose.yml
 
-OPENAI_API_KEY=
-ORGANIZATION_ID=
 PHONE_NUMBER=5521999999999@c.us
-REPLICATE_API_TOKEN=
-ELEVENLABS_API_KEY=
 
 QRCODE_EMAIL_ENABLE="true"
 QRCODE_EMAIL_SMTP_HOST="smtp.gmail.com"
@@ -311,11 +301,12 @@ acontece no chat e você recebe um aviso no `PHONE_NUMBER`:
 | `/noffa` | `/🌈`, `/🏳️‍🌈` | | Enfeita o texto com arco-íris |
 | `/everyone` | | ✅ | Menciona todos do grupo |
 | `/monitor` 🚧 | `/m` | ✅ | Avisa quando números ficam online *(em desenvolvimento, desabilitado por padrão)* |
-| `/crypto` | `/bitcoio`, `/btc`, `/moedinha` | | Cotação de BTC, ETH, SOL e HYPE |
+| `/crypto` | `/bitcoio`, `/creptomoeda`, `/moedinha` | | Cotação das criptos ativadas (padrão: BTC, ETH, SOL e HYPE) |
 | `/sticker` | `/st` | | Transforma imagem/vídeo em figurinha |
 | `/get` | `/download` | | Baixa vídeo/áudio de redes sociais |
 | `/cache` | `/c` | ✅ | Uso e limpeza do cache |
 | `/show` | `/undo` | | Reexibe mensagens apagadas |
+| `/set` | | ✅ | Lista e altera as configurações (settings) |
 
 ### `/help`
 
@@ -329,8 +320,9 @@ Exibe o menu com todos os comandos, ou a ajuda de um só.
 
 ### `/debug` · admin
 
-Liga/desliga o modo debug (logs detalhados no container). Em produção começa
-desligado.
+Liga/desliga o modo debug (logs detalhados no container). O estado fica salvo
+no setting `debug.enabled` e sobrevive a reinícios. No primeiro boot começa
+ligado só com `APP_ENV=dev`.
 
 | Opção | Descrição |
 |---|---|
@@ -389,7 +381,7 @@ Só em grupos. Responde à sua mensagem mencionando todos os participantes
 > para números cadastrados antes. Para testar, remova a linha `"disabled": true`
 > (ou mude para `false`), refaça o build e recrie o container.
 
-Monitora números (máx. 20). Quando um deles fica online, você recebe no
+Monitora números (máx. 20, setting `monitor.max`). Quando um deles fica online, você recebe no
 `PHONE_NUMBER`: `🔔 *Fulano* (5521999999999) acabou de ficar online.` Cada
 evento também é registrado no banco.
 
@@ -414,16 +406,34 @@ Aceita também a forma sem hífen:
 
 ### `/crypto`
 
-Preço atual e variação de 24 h de BTC, ETH, SOL e HYPE (via API da Binance).
+Preço atual e variação de 24 h das moedas ativadas (via API da Binance, par
+`<TOKEN>USDT`). Por padrão: BTC, ETH, SOL e HYPE.
+
+| Opção | Descrição |
+|---|---|
+| *(nenhuma)* | Exibe as cotações |
+| `-l`, `-list` | Lista as moedas suportadas; as ativadas vêm marcadas com `*` |
+| `-a`, `-add <TOKEN>` | Ativa uma moeda suportada (só o dono do bot) |
+| `-d`, `-del <TOKEN>` | Desativa uma moeda (só o dono do bot) |
+
+Suportadas: BTC, ETH, SOL, HYPE, BNB, XRP, DOGE, ADA, TRX, AVAX, LINK, DOT, LTC,
+TON, SUI, PEPE, SHIB, XLM, NEAR e UNI (lista `CRYPTO_SUPPORTED` em `app.js`).
+
+As moedas ativadas ficam na tabela `settings`, chave `crypto.coins`, e
+sobrevivem a reinícios.
 
 ```
-/btc
+/creptomoeda
+/crypto -l
+/crypto -a doge
+/crypto -d hype
 ```
 
 ### `/sticker`
 
 Responda (reply) a uma imagem, vídeo/GIF ou mensagem com link com `/sticker`.
-Com link, o bot usa a miniatura do preview.
+Com link, o bot usa a miniatura do preview. Nome e autor da figurinha vêm dos
+settings `sticker.name` e `sticker.author`.
 
 ```
 (reply numa foto)  /sticker
@@ -445,6 +455,8 @@ argumento ou você pode dar reply numa mensagem que contenha o link.
 | `-verbose`, `-v` | | Mostra os parâmetros usados no yt-dlp/ffmpeg |
 | `<url>` | | Link do vídeo |
 
+O arquivo final é limitado a 20 MB (setting `get.maxSizeMB`).
+
 ```
 /get https://www.instagram.com/reel/XXXXXXXX/
 /get -a https://youtu.be/XXXXXXXXXXX
@@ -459,7 +471,7 @@ Mostra o espaço ocupado em `cache/` (banco, mídias, temporários).
 
 | Opção | Descrição |
 |---|---|
-| `-clean`, `-c` | Remove só o que passou da janela de retenção (68 h / 30 dias para apagadas) |
+| `-clean`, `-c` | Remove só o que passou da janela de retenção (68 h / `cache.revokedRetentionDays` para apagadas) |
 | `-force`, `-f` | Junto com `-clean`: apaga **todas** as mensagens (inclusive as guardadas para o `/show`), mídias e temporários, e compacta o banco. Números e logs do `/monitor` são mantidos |
 
 ```
@@ -470,11 +482,13 @@ Mostra o espaço ocupado em `cache/` (banco, mídias, temporários).
 
 ### `/show` (`/undo`)
 
-Reexibe mensagens apagadas deste chat que ainda estão no cache (30 dias).
+Reexibe mensagens apagadas deste chat que ainda estão no cache (30 dias,
+setting `cache.revokedRetentionDays`). Os envios são espaçados por
+`show.delayMs` (700 ms) para evitar flood.
 
 | Opção | Valor | Descrição |
 |---|---|---|
-| `-N` | | Quantidade (padrão 1, máx. 20). Ex.: `-3` |
+| `-N` | | Quantidade (padrão 1, máx. 20, setting `show.max`). Ex.: `-3` |
 | `-list`, `-l` | | Mostra quantas apagadas existem no cache |
 | `-pv` | | Envia no seu privado em vez de expor no chat atual |
 | `-chat`, `-c` | `<nº\|nome>` | *(Só no seu privado)* Escolhe outro chat: nº do `/show -l` ou parte do nome |
@@ -489,6 +503,48 @@ Reexibe mensagens apagadas deste chat que ainda estão no cache (30 dias).
 /show -c família     → (no seu privado) do chat cujo nome contém "família"
 /show -f             → apaga do cache as apagadas deste chat
 ```
+
+### `/set` · admin
+
+Lista e altera as configurações do bot guardadas na tabela `settings` (veja
+[Settings](#settings)). A mudança vale na hora e sobrevive a reinícios.
+
+| Opção | Valor | Descrição |
+|---|---|---|
+| *(nenhuma)* | | Lista todas as chaves e valores |
+| `<chave>` | | Mostra valor, padrão, tipo e descrição |
+| `<chave> <valor>` | | Altera. Listas: itens separados por vírgula ou espaço; `""` esvazia |
+| `-reset`, `-r` | `<chave>` | Volta ao valor padrão |
+
+```
+/set
+/set show.max
+/set show.max 10
+/set debug.enabled off
+/set sticker.name "Meu Bot"
+/set commands.disabled noffa everyone
+/set commands.disabled ""
+/set -r crypto.coins
+```
+
+#### Settings
+
+| Chave | Tipo | Padrão | Descrição |
+|---|---|---|---|
+| `debug.enabled` | on/off | `on` se `APP_ENV=dev` | Modo debug (o mesmo do `/debug`) |
+| `commands.disabled` | lista | *(vazia)* | Comandos desativados em tempo de execução: o bot os ignora e eles somem do `/help`. O `/set` não pode ser desativado |
+| `crypto.coins` | lista | `BTC, ETH, SOL, HYPE` | Moedas do `/crypto` (só as suportadas) |
+| `sticker.name` | texto | `ZapBot` | Nome do pacote das figurinhas |
+| `sticker.author` | texto | `https://github.com/jpereira/zapbot/` | Autor das figurinhas |
+| `cache.revokedRetentionDays` | 1–365 | `30` | Dias que as mensagens apagadas ficam guardadas |
+| `get.maxSizeMB` | 1–100 | `20` | Tamanho máximo do arquivo do `/get` |
+| `show.max` | 1–100 | `20` | Máximo de mensagens por `/show -N` |
+| `show.delayMs` | 0–10000 | `700` | Intervalo entre os envios do `/show` |
+| `monitor.max` | 1–1000 | `20` | Máximo de números monitorados |
+
+Uma chave nova é declarada em `SETTINGS_SCHEMA` (`app.js`) com padrão, tipo,
+descrição e limites, e lida com `getSetting('<chave>')`. Valores inválidos no
+banco são ignorados no boot (vale o padrão, com aviso nos logs).
 
 ### Adicionando ou alterando comandos
 
@@ -515,7 +571,8 @@ lista `commands`. Cada entrada de `commands` segue este formato:
   não exige código: basta refazer o build e recriar o container.
 - Com `"disabled": true` o comando não é carregado: o bot não responde a ele
   nem aos aliases, e ele some do `/help`. No boot aparece nos logs
-  `Disabled N callers (...)`.
+  `Disabled N callers (...)`. Para desativar sem rebuild, use o setting
+  `commands.disabled` (`/set commands.disabled noffa`).
 - Um comando **novo** precisa de uma função em `app.js` registrada no objeto
   `HANDLERS`. No boot, o bot avisa nos logs se existir comando no JSON sem
   handler.
@@ -531,6 +588,7 @@ Todos com `-f docker/docker-compose.yml` (ou `COMPOSE_FILE` exportado):
 | Parar | `docker compose stop zapbot-prod` |
 | Shell no container | `docker exec -it zapbot-prod bash -l` |
 | Consultar o banco | `docker exec -it zapbot-prod sqlite3 cache/bot_database.db` |
+| Ver configurações | `docker exec -it zapbot-prod sqlite3 cache/bot_database.db "SELECT * FROM settings"` |
 | Limpar mensagens/mídias | `docker exec -it zapbot-prod sh -c 'rm -rf cache/tmp cache/media && sqlite3 cache/bot_database.db "DELETE FROM messages"'` |
 | **Forçar novo QR** (apaga a sessão) | `docker compose down && docker volume rm zapbot_wwebjs_auth && docker compose up -d zapbot-prod` |
 
