@@ -2,7 +2,7 @@
  * ZapBot - WhatsApp bot based on whatsapp-web.js
  *
  * Recovers deleted messages, downloads videos (/get), creates stickers,
- * monitors contacts and more. The commands are defined in
+ * watches messages by text/regex (/watch), monitors contacts and more. The commands are defined in
  * config/bot-config.json e implementados neste arquivo (ver HANDLERS).
  *
  * Version:  see package.json
@@ -217,6 +217,25 @@ async function initializeDb() {
         )
     `);
 
+    // /watch occurrences: messages that matched some rule in the 'watch.rules' setting.
+    // UNIQUE(rule, message_id): the same message does not generate two notices for the same rule.
+    await dbRun(`
+        CREATE TABLE IF NOT EXISTS watch_hits (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            rule TEXT NOT NULL,
+            message_id TEXT NOT NULL,
+            chat_id TEXT,
+            chat_name TEXT,
+            is_group INTEGER DEFAULT 0,
+            sender_name TEXT,
+            sender_number TEXT,
+            body TEXT,
+            timestamp INTEGER,
+            UNIQUE (rule, message_id)
+        )
+    `);
+    await dbRun('CREATE INDEX IF NOT EXISTS idx_watch_hits_rule ON watch_hits (rule, timestamp)');
+
     await loadSettings();
 
     for (const dir of [MEDIA_DIR, TMP_DIR]) {
@@ -234,7 +253,8 @@ async function initializeDb() {
  *
  * Each key declares: default (stored on the first boot, without overwriting the
  * existente), type (boolean | number | string | list), desc e, opcionalmente,
- * min/max (number) and item() to normalize/validate each item of a list.
+ * min/max (number), item() to normalize/validate each item of a list and
+ * separator (list whose items may have spaces/commas: e.g. '\n', one per line).
  */
 const SETTINGS_SCHEMA = {
     'debug.enabled': {
@@ -298,6 +318,31 @@ const SETTINGS_SCHEMA = {
         default: 20,
         type: 'number', min: 1, max: 1000,
         desc: 'Máximo de números monitorados pelo /monitor.'
+    },
+    'watch.rules': {
+        default: [],
+        type: 'list',
+        separator: '\n',
+        desc: 'Regras do /watch, uma por linha: texto (sem diferenciar maiúsculas/acentos) ou /regex/flags.',
+        item: (v) => {
+            compileRuleWatch(v); // throws Error if the rule is invalid
+            return v;
+        }
+    },
+    'watch.max': {
+        default: 20,
+        type: 'number', min: 1, max: 100,
+        desc: 'Máximo de regras do /watch.'
+    },
+    'watch.showMax': {
+        default: 20,
+        type: 'number', min: 1, max: 100,
+        desc: 'Máximo de ocorrências listadas por /watch -show.'
+    },
+    'watch.hitsRetentionDays': {
+        default: 30,
+        type: 'number', min: 1, max: 365,
+        desc: 'Dias que as ocorrências do /watch ficam guardadas.'
     }
 };
 
@@ -336,7 +381,7 @@ function validateSetting(key, value) {
         case 'list': {
             const items = Array.isArray(value)
                 ? value.map(String)
-                : String(value ?? '').split(/[\s,]+/);
+                : String(value ?? '').split(schema.separator ?? /[\s,]+/);
             const list = items.map(v => v.trim()).filter(Boolean).map(schema.item ?? (v => v));
             return [...new Set(list)];
         }
@@ -366,6 +411,7 @@ async function loadSettings() {
     printSuccess(`Loaded ${settings.size} settings (${[...settings.keys()].join(',')})`);
     printSuccess(`Loaded ${getSetting('crypto.coins').length} crypto coins (${getSetting('crypto.coins').join(',')})`);
     printInfo(`debug.enabled=${getSetting('debug.enabled')} commands.disabled=${getSetting('commands.disabled').join(',') || '-'}`);
+    printInfo(`Loaded ${getSetting('watch.rules').length} watch rules`);
 }
 
 function getSetting(key) {
@@ -794,7 +840,7 @@ async function cleanCacheOld(maxDeleteWin = MAX_DELETE_WINDOW, retentionDeleted 
  * General cleanup (/cache -c -f): ALL messages (including the deleted ones
  * stored for /show), all the media and all the temporaries.
  * At the end, VACUUM gives the space back to the disk: DELETE alone does not shrink the .db.
- * Does not touch monitored_numbers or presence_logs (configuration and history).
+ * Does not touch monitored_numbers, presence_logs or watch_hits (configuration and history).
  */
 async function cleanAll() {
     await dbReady;
@@ -810,6 +856,22 @@ async function cleanAll() {
     await dbRun('VACUUM');
 
     return { total, apagadas: deletedAlt, liberado: Math.max(0, bytesBefore - getDirSize(CACHE_DIR)) };
+}
+
+// /watch occurrences older than 'watch.hitsRetentionDays'
+async function cleanWatchOld() {
+    await dbReady;
+
+    try {
+        const res = await dbRun('DELETE FROM watch_hits WHERE timestamp < ?',
+            [Date.now() - getSetting('watch.hitsRetentionDays') * DAY_MS]);
+
+        if (res.changes > 0) {
+            printInfo(`Limpeza: ${res.changes} ocorrências antigas do /watch removidas.`);
+        }
+    } catch (err) {
+        printError('Erro na limpeza do /watch:', err.message);
+    }
 }
 
 function cleanContentDirectory(dirPath) {
@@ -861,6 +923,7 @@ const CLEANUP_INTERVAL_MS = 10 * 60 * 1000;
 function runCleanup() {
     cleanCacheOld();
     cleanFilesOld();
+    cleanWatchOld();
 }
 
 // First run postponed: on the first boot the tables are still being created.
@@ -941,6 +1004,101 @@ async function resolveLidToPhone(lidJid) {
         printError('[LID] Falha ao converter LID para telefone:', normalizedLid, error?.message || String(error));
         return null;
     }
+}
+
+/*
+ * Real name of a group (chatId @g.us -> group subject).
+ * msg._data.chat is not always filled in (or comes with another chat's data),
+ * so we look the chat up by id. Short cache: the group subject may change.
+ */
+const GROUP_NAME_TTL_MS = 10 * 60 * 1000;
+const groupNameCache = new Map();
+
+async function groupResolverName(chatId) {
+    if (!chatId?.endsWith('@g.us')) return null;
+
+    const cache = groupNameCache.get(chatId);
+    if (cache && Date.now() - cache.at < GROUP_NAME_TTL_MS) return cache.name;
+
+    const chat = await client.getChatById(chatId).catch((err) => {
+        if (isDebugMode()) printDebug(`[GRUPO] getChatById falhou para ${chatId}: ${err?.message || err}`);
+        return null;
+    });
+
+    // getChatById builds the group's full model and breaks for some groups (@lid);
+    // in that case we read the subject straight from the WhatsApp Web collections.
+    const name =
+        chat?.name ||
+        chat?.groupMetadata?.subject ||
+        (await groupInStoreName(chatId)) ||
+        null;
+
+    if (name) groupNameCache.set(chatId, { name, at: Date.now() });
+    return name;
+}
+
+async function groupInStoreName(chatId) {
+    if (!client.pupPage) return null;
+
+    return client.pupPage.evaluate((id) => {
+        const { Chat, GroupMetadata } = window.require('WAWebCollections');
+        const wid = window.require('WAWebWidFactory').createWid(id);
+        const chat = Chat.get(wid);
+
+        return GroupMetadata?.get(wid)?.subject || chat?.name || chat?.formattedTitle || null;
+    }, chatId).catch((err) => {
+        if (isDebugMode()) printDebug(`[GRUPO] Store sem o grupo ${chatId}: ${err?.message || err}`);
+        return null;
+    });
+}
+
+/*
+ * Swaps the text's raw mentions (@100000000000001, which may be a LID or a phone)
+ * by the contact name: "@100000000000001" -> "@Fulano".
+ * mentionedIds (of the message) helps tell whether the number is @lid or @c.us;
+ * without it (old occurrences) we try both.
+ */
+const mentionNameCache = new Map();
+
+async function mentionName(user, mentionedIds = []) {
+    if (mentionNameCache.has(user)) return mentionNameCache.get(user);
+
+    const candidates = mentionedIds
+        .map(m => removeDeviceSuffix(typeof m === 'string' ? m : m?._serialized))
+        .filter(jid => jid?.split('@')[0] === user);
+
+    if (!candidates.length) candidates.push(`${user}@lid`, `${user}@c.us`);
+
+    let nameAlt = null;
+
+    for (const jid of candidates) {
+        // For a @lid, the contact by real phone usually has the name saved in the address book
+        const phoneJid = jid.endsWith('@lid') ? await resolveLidToPhone(jid) : null;
+
+        for (const id of [phoneJid, jid].filter(Boolean)) {
+            const contact = await client.getContactById(id).catch(() => null);
+            nameAlt = contact?.name || contact?.pushname || contact?.verifiedName || null;
+            if (nameAlt) break;
+        }
+
+        if (!nameAlt && phoneJid) nameAlt = `+${phoneJid.split('@')[0]}`;
+        if (nameAlt) break;
+    }
+
+    if (nameAlt) mentionNameCache.set(user, nameAlt);
+    return nameAlt;
+}
+
+async function resolverMentions(textAlt, mentionedIds = []) {
+    textAlt = String(textAlt ?? '');
+    const users = [...new Set([...textAlt.matchAll(/@(\d{6,})/g)].map(m => m[1]))];
+
+    for (const user of users) {
+        const nameAlt = await mentionName(user, mentionedIds);
+        if (nameAlt) textAlt = textAlt.replaceAll(`@${user}`, `@${nameAlt}`);
+    }
+
+    return textAlt;
 }
 
 /*
@@ -1290,6 +1448,8 @@ function formatData(valueAlt) {
 
 const wait = (ms) => new Promise(r => setTimeout(r, ms));
 
+const plural = (n, um, several) => `${n} ${n === 1 ? um : several}`;
+
 /**
  * Finds the chat and sender names of a deleted message.
  * With the event objects (after/before) it gets more precise names;
@@ -1486,6 +1646,104 @@ client.on('message_revoke_everyone', async (after, before) => {
         printError('[Revoke] Erro ao processar item apagado:', sendError.message);
     }
 });
+
+/*
+ * Watch: every received message (except yours and the commands) is tested against
+ * the rules from the 'watch.rules' setting. Each rule is:
+ * text        → "contains", case and accent insensitive
+ * /regex/flags → JavaScript RegExp (the g and y flags are ignored)
+ * When it matches, the occurrence goes to watch_hits and you are notified in private.
+ */
+const RULE_REGEX = /^\/(.+)\/([a-z]*)$/s;
+const RULE_MAX_LEN = 200;
+
+const withoutAccents = (s) => String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
+// rule -> test function (compiled once, not on every message)
+const rulesCompiled = new Map();
+
+function compileRuleWatch(rule) {
+    if (rulesCompiled.has(rule)) return rulesCompiled.get(rule);
+
+    if (!rule || rule.length > RULE_MAX_LEN) {
+        throw new Error(`a regra precisa ter de 1 a ${RULE_MAX_LEN} caracteres`);
+    }
+
+    let test;
+    const m = rule.match(RULE_REGEX);
+
+    if (m) {
+        let re;
+        try {
+            re = new RegExp(m[1], m[2].replace(/[gy]/g, ''));
+        } catch (e) {
+            throw new Error(`regex inválida: ${e.message}`);
+        }
+        test = (textAlt) => re.test(textAlt);
+    } else {
+        const target = withoutAccents(rule);
+        test = (textAlt) => withoutAccents(textAlt).includes(target);
+    }
+
+    rulesCompiled.set(rule, test);
+    return test;
+}
+
+async function checkWatch({ msg, msgIdPure, body, chatId, chatName, isGroup, senderName, senderNumber, timestamp }) {
+    // Your messages are left out: including /watch's own notices in your private chat
+    if (msg.fromMe || !body) return;
+    if (!findCommand('/watch')) return;
+
+    const rules = getSetting('watch.rules');
+    if (!rules.length) return;
+
+    const matched = rules
+        .map((rule, i) => ({ regra: rule, n: i + 1 }))
+        .filter(({ regra: rule }) => {
+            try {
+                return compileRuleWatch(rule)(body);
+            } catch {
+                return false;
+            }
+        });
+
+    if (!matched.length) return;
+
+    // Only notifies about new occurrences (WhatsApp may resend the same message)
+    const freshAlt2 = [];
+
+    for (const c of matched) {
+        const res = await dbRun(
+            `INSERT OR IGNORE INTO watch_hits
+                (rule, message_id, chat_id, chat_name, is_group, sender_name, sender_number, body, timestamp)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [c.regra, msgIdPure, chatId, chatName, isGroup, senderName, senderNumber, body, timestamp]
+        );
+
+        if (res.changes) freshAlt2.push(c);
+    }
+
+    if (!freshAlt2.length) return;
+
+    let textAlt = '👀 *WATCH: MENSAGEM DETECTADA*\n\n';
+
+    for (const c of freshAlt2) {
+        textAlt += `🔎 *Regra #${c.n}:* ${c.regra}\n`;
+    }
+
+    if (isGroup) {
+        textAlt += `👥 *Grupo:* ${chatName}\n`;
+    }
+
+    textAlt +=
+        `👤 *Nome:* ${senderName}\n` +
+        `📱 *Número:* ${senderNumber ? `+${senderNumber}` : 'Número indisponível'}\n` +
+        `📅 *Enviada em:* ${formatData(timestamp)}\n` +
+        `💬 *Texto:* "${await resolverMentions(body, msg.mentionedIds)}"`;
+
+    printInfo(`/watch: regra(s) ${freshAlt2.map(c => `#${c.n}`).join(',')} casaram em '${chatName}' (${senderName})`);
+    await client.sendMessage(client.info.wid._serialized, textAlt, { linkPreview: false });
+}
 
 /*
  * Initialization
@@ -2088,6 +2346,7 @@ async function cmdCache({ msg, opts }) {
             // Normal cleanup: only what is past the retention windows
             await cleanCacheOld();
             await cleanFilesOld();
+            await cleanWatchOld();
 
             textMsg = '🧹 Cache limpo (itens fora da janela de retenção).\n';
         } else {
@@ -2353,8 +2612,6 @@ async function chatCleanDeleted({ msg, chatId, alvo: target = null }) {
 
     printInfo(`/show -flush (${general ? 'geral' : chatId}): ${res.changes} mensagens e ${files} arquivos removidos`);
 
-    const plural = (n, um, several) => `${n} ${n === 1 ? um : several}`;
-
     let textAlt = general
         ? '🧹 *Flush geral das mensagens apagadas*\n\n'
         : target
@@ -2512,13 +2769,13 @@ async function cmdUndo({ msg, opts, chatId }) {
  * /set <key> <value>  → changes (list: items separated by comma or space)
  * /set -reset <key>   → back to default
  */
-function formatValueSetting(value) {
-    if (Array.isArray(value)) return value.length ? value.join(', ') : '(vazio)';
+function formatValueSetting(value, sep = ', ') {
+    if (Array.isArray(value)) return value.length ? value.join(sep) : '(vazio)';
     if (typeof value === 'boolean') return value ? 'on' : 'off';
     return String(value);
 }
 
-async function cmdSet({ msg, opts }) {
+async function cmdSet({ msg, opts, args }) {
     await dbReady;
 
     if (opts.opt.reset !== null) {
@@ -2539,8 +2796,8 @@ async function cmdSet({ msg, opts }) {
 
     if (!key) {
         const width = Math.max(...Object.keys(SETTINGS_SCHEMA).map(k => k.length));
-        const list = Object.keys(SETTINGS_SCHEMA)
-            .map(k => `${k.padEnd(width)}  ${formatValueSetting(getSetting(k))}`)
+        const list = Object.entries(SETTINGS_SCHEMA)
+            .map(([k, s]) => `${k.padEnd(width)}  ${formatValueSetting(getSetting(k), s.separator ? ' | ' : ', ')}`)
             .join('\n');
 
         await msg.reply('⚙️ *SETTINGS*\n\n```\n' + list + '\n```\n💡 _/set <chave> para detalhes_');
@@ -2556,22 +2813,244 @@ async function cmdSet({ msg, opts }) {
 
     if (!rest.length) {
         const limits = schema.type === 'number' ? ` (${schema.min}..${schema.max})` : '';
+        const valueAlt = getSetting(key);
+        // "One per line" list: one item per line in the display too
+        const valueText = schema.separator && valueAlt.length
+            ? '\n' + valueAlt.map((v, i) => `${i + 1}. ${v}`).join('\n')
+            : formatValueSetting(valueAlt);
+
         await msg.reply(
             `⚙️ *${key}*\n${schema.desc}\n\n` +
-            `*Valor:* ${formatValueSetting(getSetting(key))}\n` +
+            `*Valor:* ${valueText}\n` +
             `*Padrão:* ${formatValueSetting(schema.default)}\n` +
             `*Tipo:* ${schema.type}${limits}`
         );
         return;
     }
 
+    // With separator (e.g.: watch.rules, one per line) uses the raw text: the tokenizer
+    // would lose the line breaks and the quotes inside the rules
+    const raw = schema.separator
+        ? args.slice(args.indexOf(key) + key.length).trim().replace(/^(["'])([\s\S]*)\1$/, '$2')
+        : rest.join(' ');
+
     try {
-        const valueAlt = await setSetting(key, rest.join(' '));
+        const valueAlt = await setSetting(key, raw);
         printInfo(`Setting '${key}' alterado para ${JSON.stringify(valueAlt)}`);
-        await msg.reply(`✅ *${key}* = ${formatValueSetting(valueAlt)}`);
+        await msg.reply(`✅ *${key}* = ${formatValueSetting(valueAlt, schema.separator ? ' | ' : ', ')}`);
     } catch (e) {
         await msg.reply(`❌ Valor inválido para *${key}*: ${e.message}`);
     }
+}
+
+/*
+ * /watch (alias /w)
+ * /watch                     → the same as /watch -s (occurrences of all the rules)
+ * /watch -l                  → lists the rules (no., rule, occurrences)
+ * /watch -s [-N]             → summary of the messages that matched rule N (without N: all)
+ *   /watch -a <texto|/regex/>  → adiciona regra
+ * /watch -d -N               → removes rule N and its occurrences
+ * /watch -f [-N]             → deletes rule N's occurrences (without N: of all); keeps the rules
+ * The rules stay in the 'watch.rules' setting; the occurrences in the watch_hits table.
+ * -l and -s show other people's conversations: outside your private chat, the reply goes there.
+ */
+const summarizeText = (textAlt, max = 100) => {
+    const t = String(textAlt ?? '').replace(/\s+/g, ' ').trim();
+    return t.length > max ? `${t.slice(0, max - 1)}…` : t;
+};
+
+async function replyInPrivate({ msg, chatId }, textAlt) {
+    const myId = client.info.wid._serialized;
+
+    if ((await chatCurrentIds(chatId)).includes(myId)) {
+        await msg.reply(textAlt);
+        return;
+    }
+
+    await msg.reply('👀 Enviado no seu privado.');
+    await client.sendMessage(myId, textAlt);
+}
+
+// "-2" or "2" in argv → 2; otherwise null
+function ruleNumber(argv) {
+    const m = String(argv.filter(Boolean)[0] ?? '').match(/^-?(\d+)$/);
+    return m ? Number(m[1]) : null;
+}
+
+async function cmdWatch({ msg, opts, args, chatId }) {
+    await dbReady;
+
+    const rules = getSetting('watch.rules');
+    const help = () => msg.reply('```' + getCommandSyntax('/watch') + '```');
+
+    // -add uses the raw text: the rule can have spaces, quotes or start with "-"
+    const add = args.match(/^-(?:add|a)(?:\s+([\s\S]*))?$/);
+
+    if (add) {
+        const rule = (add[1] ?? '').trim().replace(/^(["'])([\s\S]*)\1$/, '$2').trim();
+
+        if (!rule) {
+            await help();
+            return;
+        }
+
+        if (rules.includes(rule)) {
+            await msg.reply(`ℹ️ A regra #${rules.indexOf(rule) + 1} já existe: ${rule}`);
+            return;
+        }
+
+        const max = getSetting('watch.max');
+        if (rules.length >= max) {
+            await msg.reply(`❌ Limite de ${max} regras atingido (setting watch.max).\n💡 _Remova uma com /watch -d -N_`);
+            return;
+        }
+
+        try {
+            await setSetting('watch.rules', [...rules, rule]);
+        } catch (e) {
+            await msg.reply(`❌ Regra inválida: ${e.message}`);
+            return;
+        }
+
+        const type = RULE_REGEX.test(rule) ? 'regex' : 'texto';
+        printInfo(`/watch: regra #${rules.length + 1} adicionada: ${rule}`);
+        await msg.reply(`✅ Regra *#${rules.length + 1}* adicionada _(${type})_: ${rule}\n💡 _Avisos chegam no seu privado._`);
+        return;
+    }
+
+    if (opts.opt.list) {
+        if (!rules.length) {
+            await msg.reply('👀 Nenhuma regra cadastrada.\n💡 _Adicione com /watch -a <texto|/regex/>_');
+            return;
+        }
+
+        const count = new Map(
+            (await dbAll('SELECT rule, COUNT(*) AS total FROM watch_hits GROUP BY rule'))
+                .map(r => [r.rule, r.total])
+        );
+
+        const width = String(rules.length).length + 1;
+        const list = rules
+            .map((r, i) => `${`#${i + 1}`.padEnd(width)}  ${r}  (${count.get(r) ?? 0})`)
+            .join('\n');
+
+        await replyInPrivate({ msg, chatId },
+            `👀 *WATCH: REGRAS* (${rules.length}/${getSetting('watch.max')})\n\n` +
+            '```\n' + list + '\n```\n' +
+            '_(entre parênteses: ocorrências guardadas)_\n' +
+            '💡 _/watch -s -N para ver as mensagens da regra N._');
+        return;
+    }
+
+    // With nothing: the same as /watch -s (occurrences of all the rules)
+    if (opts.opt.show || !args.trim()) {
+        let rule = null;
+
+        if (opts.argv.filter(Boolean).length) {
+            const n = ruleNumber(opts.argv);
+
+            if (!n || n > rules.length) {
+                await msg.reply(`❌ Regra inválida. Existem ${plural(rules.length, 'regra', 'regras')}: veja /watch -l`);
+                return;
+            }
+
+            rule = rules[n - 1];
+        }
+
+        const filter = rule === null ? '' : 'WHERE rule = ?';
+        const params = rule === null ? [] : [rule];
+        const max = getSetting('watch.showMax');
+
+        const { total } = await dbGet(`SELECT COUNT(*) AS total FROM watch_hits ${filter}`, params);
+        const rows = await dbAll(
+            `SELECT * FROM watch_hits ${filter} ORDER BY timestamp DESC LIMIT ?`,
+            [...params, max]
+        );
+
+        let textAlt = '👀 *WATCH: OCORRÊNCIAS*\n';
+        textAlt += rule === null
+            ? '🔎 *Regras:* todas\n'
+            : `🔎 *Regra #${rules.indexOf(rule) + 1}:* ${rule}\n`;
+        textAlt += `📦 *Total:* ${total}${total > rows.length ? ` _(exibindo as ${rows.length} mais recentes)_` : ''}\n`;
+
+        if (!rows.length) {
+            textAlt += '\n_Nenhuma mensagem casou ainda._';
+        }
+
+        for (const [i, h] of rows.entries()) {
+            // Current group name (the stored one may be the "Grupo <id>" fallback or out of date)
+            const group = h.is_group ? (await groupResolverName(h.chat_id)) || h.chat_name : null;
+            const whereAlt = h.is_group ? `👥 ${group} · 👤 ${h.sender_name}` : `👤 ${h.sender_name}`;
+            const n = rules.indexOf(h.rule) + 1;
+            const which = rule === null ? ` · 🔎 ${n ? `#${n}` : '(removida)'}` : '';
+
+            textAlt += `\n${i + 1}. 📅 ${formatData(h.timestamp)}${which}\n`;
+            textAlt += `    ${whereAlt}\n`;
+            textAlt += `    💬 "${summarizeText(await resolverMentions(h.body))}"\n`;
+        }
+
+        await replyInPrivate({ msg, chatId }, textAlt);
+        return;
+    }
+
+    if (opts.opt.del) {
+        const n = ruleNumber(opts.argv);
+
+        if (!n) {
+            await help();
+            return;
+        }
+
+        if (n > rules.length) {
+            await msg.reply(`❌ A regra #${n} não existe. Existem ${plural(rules.length, 'regra', 'regras')}: veja /watch -l`);
+            return;
+        }
+
+        const rule = rules[n - 1];
+
+        await setSetting('watch.rules', rules.filter((_, i) => i !== n - 1));
+        const res = await dbRun('DELETE FROM watch_hits WHERE rule = ?', [rule]);
+
+        printInfo(`/watch: regra #${n} removida: ${rule}`);
+        await msg.reply(
+            `🗑️ Regra *#${n}* removida: ${rule}\n` +
+            `🗄️ Ocorrências apagadas: *${res.changes}*` +
+            (n <= rules.length - 1 ? '\n💡 _As regras seguintes foram renumeradas: veja /watch -l_' : '')
+        );
+        return;
+    }
+
+    if (opts.opt.flush) {
+        let rule = null;
+
+        if (opts.argv.filter(Boolean).length) {
+            const n = ruleNumber(opts.argv);
+
+            if (!n || n > rules.length) {
+                await msg.reply(`❌ Regra inválida. Existem ${plural(rules.length, 'regra', 'regras')}: veja /watch -l`);
+                return;
+            }
+
+            rule = rules[n - 1];
+        }
+
+        // Without -N deletes everything, including occurrences of already removed rules
+        const res = rule === null
+            ? await dbRun('DELETE FROM watch_hits')
+            : await dbRun('DELETE FROM watch_hits WHERE rule = ?', [rule]);
+
+        printInfo(`/watch -flush (${rule === null ? 'todas' : rule}): ${res.changes} ocorrências removidas`);
+        await msg.reply(
+            (rule === null
+                ? '🧹 *Flush das ocorrências de todas as regras*\n'
+                : `🧹 *Flush das ocorrências da regra #${rules.indexOf(rule) + 1}:* ${rule}\n`) +
+            `🗄️ Ocorrências apagadas: *${res.changes}*\n` +
+            '💡 _As regras continuam ativas: veja /watch -l_'
+        );
+        return;
+    }
+
+    await help();
 }
 
 // bot-config.json cmd -> handler
@@ -2588,7 +3067,8 @@ const HANDLERS = {
     '/get': cmdGet,
     '/cache': cmdCache,
     '/show': cmdUndo,
-    '/set': cmdSet
+    '/set': cmdSet,
+    '/watch': cmdWatch
 };
 
 // Warns at boot if the bot-config has a command without a handler (or vice versa)
@@ -2609,7 +3089,9 @@ client.on('message_create', async (msg) => {
         const chatId = msg?.id?.remote || msg?.from || msg?.to || 'UNKNOWN';
         const isGroup = chatId.endsWith('@g.us') ? 1 : 0;
 
+        // Group: name looked up by chatId (_data.chat may carry the wrong name)
         const chatName =
+            (isGroup ? await groupResolverName(chatId) : null) ||
             msg?._data?.chat?.name ||
             msg?._data?.chat?.formattedTitle ||
             // notifyName is the name of who SENT: it only serves as the chat name in a private conversation
@@ -2752,16 +3234,25 @@ client.on('message_create', async (msg) => {
             ]
         ).catch(err => printError('Erro ao salvar mensagem:', err.message));
 
+        const body = (msg.body || '').trim();
+        const caller = body.startsWith('/') ? body.split(/\s+/, 1)[0] : null;
+        const command = caller ? findCommand(caller) : null;
+
+        /*
+         * Watch: messages that are not commands go through the /watch rules
+         */
+        if (!command) {
+            await checkWatch({
+                msg, msgIdPure, body, chatId, chatName, isGroup, senderName, senderNumber, timestamp
+            }).catch(err => printError('/watch: erro ao verificar regras:', err.message));
+        }
+
         /*
          * Comandos
          */
-        const body = (msg.body || '').trim();
-        if (!body.startsWith('/')) return;
+        if (!caller) return;
 
-        const caller = body.split(/\s+/, 1)[0];
         const args = body.slice(caller.length).trim();
-
-        const command = findCommand(caller);
 
         if (!command) {
             if (isDebugMode()) printDebug(`Comando '${caller}' não encontrado`);
