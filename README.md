@@ -1,4 +1,4 @@
-# 🤖 ZapBot v1.3
+# 🤖 ZapBot v1.4
 
 > 🇧🇷 **Projeto em português (pt_BR).** Documentação, comandos e mensagens do bot
 > estão em português do Brasil.
@@ -139,7 +139,7 @@ Depois de ler o QR Code você deve ver nos logs:
 
 ```
 [+] 🔐 Whatsapp authentication success!
-[+] 🤖 ZapBot 1.3 inicializado! Informando 5521999999999@c.us
+[+] 🤖 ZapBot 1.4 inicializado! Informando 5521999999999@c.us
 ```
 
 e receber a mesma mensagem no seu WhatsApp. Mande `/ping` para qualquer chat:
@@ -355,7 +355,7 @@ ligado só com `APP_ENV=dev`.
 
 ```
 /uptime
-🤖 ZapBot 1.3
+🤖 ZapBot 1.4
 ━━━━━━━━━━━━━━━━━━
 ⚡ Online: 2 dias, 3 horas
 🔐 Conectado: 2 dias, 2 horas, 58 minutos
