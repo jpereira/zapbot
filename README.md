@@ -60,7 +60,8 @@ brincadeiras, tudo por comandos digitados no próprio chat (`/help`, `/get`,
   `cache/media`). Quando alguém apaga uma mensagem "para todos", o bot encontra
   a cópia no banco e a reenvia **no seu privado** (chat consigo mesmo). Mensagens
   apagadas ficam guardadas por 30 dias (setting `cache.revokedRetentionDays`)
-  e podem ser reexibidas com `/show`.
+  e podem ser reexibidas com `/show`. Status (textos/fotos/vídeos) apagados
+  também são recuperados, com o título `📸 STATUS APAGADO DETECTADO`.
 - **Limpeza automática**: a cada 10 minutos o bot remove do banco/disco as
   mensagens comuns com mais de 68 h (janela máxima que o WhatsApp permite
   apagar), as apagadas com mais de 30 dias e as ocorrências do `/watch` com
