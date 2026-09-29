@@ -476,6 +476,11 @@ argumento ou você pode dar reply numa mensagem que contenha o link.
 
 O arquivo final é limitado a 20 MB (setting `get.maxSizeMB`).
 
+URLs que apontam para a rede interna (`localhost`, `10.x`, `192.168.x`,
+`169.254.x`, IPv6 local etc.) são recusadas, para que o `/get` não sirva de
+ponte para a sua rede (SSRF). A checagem é feita no host informado; redirects
+feitos depois pelo yt-dlp não são verificados.
+
 ```
 /get https://www.instagram.com/reel/XXXXXXXX/
 /get -a https://youtu.be/XXXXXXXXXXX
