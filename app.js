@@ -399,6 +399,24 @@ const SETTINGS_SCHEMA = {
         default: false,
         type: 'boolean',
         desc: 'Modo admin: só o dono usa comandos (o mesmo do /bot +admin|-admin).'
+    },
+    'news.feeds': {
+        default: [
+            'https://feeds.feedburner.com/TheHackersNews',
+            'https://www.bleepingcomputer.com/feed/',
+            'https://krebsonsecurity.com/feed/'
+        ],
+        type: 'list',
+        desc: 'Feeds RSS de hacking/segurança juntados pelo /news.',
+        item: (v) => {
+            if (!isValidHttpUrl(v)) throw new Error(`URL inválida: ${v}`);
+            return v;
+        }
+    },
+    'news.max': {
+        default: 8,
+        type: 'number', min: 1, max: 20,
+        desc: 'Manchetes exibidas pelo /news.'
     }
 };
 
@@ -3774,6 +3792,64 @@ async function cmdBot({ msg, opts }) {
     await msg.reply(estadoBot());
 }
 
+// /news: manchetes de hacking/segurança, juntando os feeds RSS do setting 'news.feeds'
+const decodificarEntidades = (s) => String(s ?? '')
+    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
+    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
+    .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'").replace(/&amp;/g, '&')
+    .trim();
+
+async function lerFeed(url) {
+    // Alguns sites (ex.: BleepingComputer) recusam o User-Agent padrão do axios com 403
+    const { data } = await axios.get(url, { responseType: 'text', timeout: 15000, headers: { 'User-Agent': 'Mozilla/5.0 (ZapBot RSS reader)' } });
+    const xml = String(data);
+    const fonte = decodificarEntidades(xml.match(/<channel>[\s\S]*?<title>([\s\S]*?)<\/title>/)?.[1]) || new URL(url).hostname;
+
+    return [...xml.matchAll(/<item\b[\s\S]*?<\/item>/g)].map(([item]) => ({
+        fonte,
+        titulo: decodificarEntidades(item.match(/<title>([\s\S]*?)<\/title>/)?.[1]),
+        link: decodificarEntidades(item.match(/<link>([\s\S]*?)<\/link>/)?.[1]),
+        data: Date.parse(decodificarEntidades(item.match(/<pubDate>([\s\S]*?)<\/pubDate>/)?.[1])) || 0
+    })).filter(i => i.titulo);
+}
+
+async function cmdNews({ msg }) {
+    const feeds = getSetting('news.feeds');
+
+    if (!feeds.length) {
+        await msg.reply('ℹ️ Nenhum feed configurado.\n💡 _Adicione com /set news.feeds <url1> <url2>_');
+        return;
+    }
+
+    const resultados = await Promise.allSettled(feeds.map(lerFeed));
+
+    resultados.forEach((r, i) => {
+        if (r.status === 'rejected') printError(`/news: feed ${feeds[i]} falhou:`, r.reason?.message);
+    });
+
+    // Cada fonte ocupa no máximo a sua fatia: senão a que publica mais toma a lista toda
+    const max = getSetting('news.max');
+    const porFonte = resultados.filter(r => r.status === 'fulfilled').map(r => r.value.sort((a, b) => b.data - a.data));
+    const fatia = Math.ceil(max / Math.max(1, porFonte.length));
+
+    const itens = porFonte
+        .flatMap(lista => lista.slice(0, fatia))
+        .sort((a, b) => b.data - a.data)
+        .slice(0, max);
+
+    if (!itens.length) {
+        await msg.reply('❌ Não consegui buscar as manchetes agora.');
+        return;
+    }
+
+    const texto = '🏴‍☠️ *Hacking News*\n\n' +
+        itens.map((i, n) => `${n + 1}. *${i.titulo}*\n_${i.fonte}${i.data ? ` · ${formatarData(i.data)}` : ''}_${i.link ? `\n${i.link}` : ''}`).join('\n\n');
+
+    await msg.reply(texto, null, { linkPreview: false });
+}
+
 // cmd do bot-config.json -> handler
 const HANDLERS = {
     '/help': cmdHelp,
@@ -3799,7 +3875,8 @@ const HANDLERS = {
     '/cve': cmdCve,
     '/tempo': cmdTempo,
     '/ualisu': cmdUalisu,
-    '/bot': cmdBot
+    '/bot': cmdBot,
+    '/news': cmdNews
 };
 
 // Avisa no boot se o bot-config tiver comando sem handler (ou vice-versa)
