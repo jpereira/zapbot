@@ -450,17 +450,20 @@
         },
         {
             "cmd": "/cve",
-            "usage": "/cve",
-            "help": "Últimas CVEs publicadas no NVD.",
-            "onlyAdmin": false
-        },
-        {
-            "cmd": "/cvehighscore",
-            "usage": "/cvehighscore",
-            "aliases": [
-                "/cvehs"
+            "usage": "/cve [-highscore [maxDays]]",
+            "help": "Últimas CVEs publicadas no NVD (quantidade: setting cve.max).",
+            "cmd_opts": [
+                {
+                    "opts": [
+                        "highscore",
+                        "high"
+                    ],
+                    "values": [
+                        "[maxDays]"
+                    ],
+                    "desc": "Só as críticas (CVSS ≥ 9) dos últimos maxDays dias (1–120; padrão: setting cve.maxDays)."
+                }
             ],
-            "help": "CVEs críticas (CVSS ≥ 9) publicadas nos últimos 7 dias.",
             "onlyAdmin": false
         }
     ]

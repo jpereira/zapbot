@@ -355,8 +355,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -c -f`) para fazer o bot
 | `/listageral` | | ✅ | Lista os membros do grupo |
 | `/gif` | | | GIF aleatório (GIPHY) |
 | `/joke` | `/piada`, `/humor` | | Piada aleatória em português |
-| `/cve` | | | Últimas CVEs publicadas (NVD) |
-| `/cvehighscore` | `/cvehs` | | CVEs críticas (CVSS ≥ 9) dos últimos 7 dias |
+| `/cve` | | | Últimas CVEs publicadas (NVD); `-highscore` só as críticas |
 
 ### `/help`
 
@@ -620,7 +619,8 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 | `watch.showMax` | 1–100 | `20` | Máximo de ocorrências listadas por `/watch -show` |
 | `watch.hitsRetentionDays` | 1–365 | `30` | Dias que as ocorrências do `/watch` ficam guardadas |
 | `gif.tag` | texto | `fail` | Tag padrão do `/gif` |
-| `cve.max` | 1–20 | `10` | CVEs exibidas pelo `/cve` e `/cvehighscore` |
+| `cve.max` | 1–20 | `10` | Quantidade de CVEs exibidas pelo `/cve` |
+| `cve.maxDays` | 1–120 | `7` | Janela do `/cve -highscore` quando `<maxDays>` não é informado |
 | `api.key.giphy` | texto (pode ser vazio) | *(vazio)* | Chave do GIPHY, usada quando `GIPHY_API_KEY` não está no `config/.env`. Exibida mascarada (`••••1234`); `/set -reset api.key.giphy` apaga |
 
 Uma chave nova é declarada em `SETTINGS_SCHEMA` (`app.js`) com padrão, tipo,
@@ -718,11 +718,12 @@ se ela não existir, o setting `api.key.giphy` (`/set api.key.giphy <chave>`).
 
 Piada em português da [JokeAPI](https://jokeapi.dev/) (safe-mode).
 
-### `/cve` e `/cvehighscore` (`/cvehs`)
+### `/cve`
 
-Últimas CVEs publicadas no [NVD](https://nvd.nist.gov/) (últimos 2 dias) e as
-críticas (CVSS ≥ 9) dos últimos 7 dias, com nota, resumo e link. Sem chave o NVD
-aceita ~5 consultas a cada 30s.
+Últimas CVEs publicadas no [NVD](https://nvd.nist.gov/) (últimos 2 dias), com
+nota, resumo e link. Com `-highscore`/`-high [maxDays]`, só as críticas
+(CVSS ≥ 9) dos últimos `maxDays` dias (padrão: setting `cve.maxDays`). Sem
+chave o NVD aceita ~5 consultas a cada 30s.
 
 ### Adicionando ou alterando comandos
 
