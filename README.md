@@ -358,6 +358,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -c -f`) para fazer o bot
 | `/cve` | | | Últimas CVEs publicadas (NVD); `-highscore` só as críticas |
 | `/tempo` | `/weather` | | Tempo agora e máx./mín. do dia (Open-Meteo); sem cidade usa `tempo.city` |
 | `/ualisu` | | ✅ | Marca 2 membros com uma CVE aleatória |
+| `/stop`, `/run` | | ✅ | Pausa/retoma todos os comandos |
 
 ### `/help`
 
@@ -624,6 +625,7 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 | `cve.max` | 1–20 | `10` | Quantidade de CVEs exibidas pelo `/cve` (o `/cve <max>` sobrepõe) |
 | `cve.maxDays` | 1–120 | `7` | Janela, em dias, do `/cve -highscore` |
 | `tempo.city` | texto | `Niteroi, Rio de Janeiro, Brazil` | Cidade do `/tempo` quando nenhuma é informada |
+| `bot.paused` | on/off | `off` | Todos os comandos pausados, exceto o `/run` (o mesmo do `/stop`/`/run`) |
 | `api.key.giphy` | texto (pode ser vazio) | *(vazio)* | Chave do GIPHY, usada quando `GIPHY_API_KEY` não está no `config/.env`. Exibida mascarada (`••••1234`); `/set -reset api.key.giphy` apaga |
 
 Uma chave nova é declarada em `SETTINGS_SCHEMA` (`app.js`) com padrão, tipo,
@@ -850,6 +852,12 @@ Detalhes:
   vale o limite do NVD sem chave (~5 consultas a cada 30 s).
 - A CVE pode vir de qualquer severidade; nos raros dias sem nenhuma publicação
   o bot avisa em vez de marcar alguém.
+
+### `/stop` e `/run` · admin
+
+`/stop` pausa **todos** os comandos, inclusive os seus, exceto o `/run`, que
+retoma. O estado fica no setting `bot.paused` e sobrevive a reinícios. A
+recuperação de apagadas e o `/watch` continuam funcionando.
 
 ### Adicionando ou alterando comandos
 
