@@ -293,7 +293,7 @@
                         "l"
                     ],
                     "values": [],
-                    "desc": "Mostra quantas mensagens apagadas existem no cache."
+                    "desc": "Lista as mensagens apagadas do cache por chat, marcando o chat atual."
                 },
                 {
                     "opts": [

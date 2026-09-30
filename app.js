@@ -2840,9 +2840,8 @@ async function resolverChatAlvo(valor) {
  * /show -list
  * Resumo das mensagens apagadas guardadas no cache.
  *
- * A quebra "por chat" mostra NOMES de outras conversas. Por isso só aparece
- * no seu próprio privado ou com -pv; em qualquer outro chat (ex.: um grupo)
- * saem apenas os totais, para não expor com quem você conversa.
+ * Em qualquer chat lista todas as apagadas, por chat (igual ao seu privado),
+ * marcando o chat onde o comando foi executado. Use -pv para receber no privado.
  */
 async function listarApagadas({ msg, opts, chatId }) {
     await dbPronto;
@@ -2850,7 +2849,6 @@ async function listarApagadas({ msg, opts, chatId }) {
     const meuId = client.info.wid._serialized;
     const idsDoChat = await idsDoChatAtual(chatId);
     const noPrivadoDoDono = idsDoChat.includes(meuId);
-    const mostrarPorChat = noPrivadoDoDono || opts.opt.pv;
 
     const geral = await dbGet(
         `SELECT COUNT(*) AS total,
@@ -2860,22 +2858,10 @@ async function listarApagadas({ msg, opts, chatId }) {
           WHERE revoked = 1`
     );
 
-    const noChat = await dbGet(
-        `SELECT COUNT(*) AS total
-           FROM messages
-          WHERE revoked = 1
-            AND chat_id IN (${idsDoChat.map(() => '?').join(', ')})`,
-        idsDoChat
-    );
-
     let texto = '🗑️ *Mensagens apagadas no cache*\n\n';
     texto += `📦 *Total:* ${geral.total}`;
     if (geral.com_midia > 0) texto += ` _(${geral.com_midia} com mídia)_`;
     texto += '\n';
-
-    if (!noPrivadoDoDono) {
-        texto += `💬 *Neste chat:* ${noChat.total}\n`;
-    }
 
     if (geral.total > 0 && geral.mais_antiga) {
         const expiraEm = paraMs(geral.mais_antiga) + getSetting('cache.revokedRetentionDays') * DAY_MS;
@@ -2883,7 +2869,7 @@ async function listarApagadas({ msg, opts, chatId }) {
         texto += `⏳ *Mais antiga:* ${formatarData(geral.mais_antiga)} _(expira em ${dias} dia${dias === 1 ? '' : 's'})_\n`;
     }
 
-    if (mostrarPorChat && geral.total > 0) {
+    if (geral.total > 0) {
         const LIMITE = 10;
 
         const porChat = await consultarChatsComApagadas();
@@ -2891,21 +2877,26 @@ async function listarApagadas({ msg, opts, chatId }) {
 
         texto += '\n*Por chat:*\n';
 
-        porChat.slice(0, LIMITE).forEach((c, i) => {
+        const linha = (c, i) => {
             const icone = c.is_group ? '👥' : '👤';
-            const nome = nomeDoChat(c);
             const atual = idsDoChat.includes(c.chat_id) ? ' ← _este chat_' : '';
-            texto += `${i + 1}. ${icone} ${nome} — *${c.total}* _(última ${formatarData(c.ultima)})_${atual}\n`;
-        });
+            return `${i + 1}. ${icone} ${nomeDoChat(c)} — *${c.total}* _(última ${formatarData(c.ultima)})_${atual}\n`;
+        };
+
+        porChat.slice(0, LIMITE).forEach((c, i) => { texto += linha(c, i); });
 
         if (porChat.length > LIMITE) {
             texto += `_+${porChat.length - LIMITE} chat(s)_\n`;
+
+            // O chat atual fora do top: aparece mesmo assim, com o nº para o -c
+            const i = porChat.findIndex(c => idsDoChat.includes(c.chat_id));
+            if (i >= LIMITE) texto += linha(porChat[i], i);
         }
     }
 
     texto += `\n💡 _Use /show -N para reexibir (máx. ${getSetting('show.max')})._`;
 
-    if (mostrarPorChat && geral.total > 0) {
+    if (geral.total > 0) {
         texto += '\n💡 _Use /show -N -c <nº ou nome> para ver as de um chat._';
     }
 
