@@ -361,6 +361,11 @@ const SETTINGS_SCHEMA = {
         default: 30,
         type: 'number', min: 1, max: 365,
         desc: 'Dias que as ocorrências do /watch ficam guardadas.'
+    },
+    'gif.tag': {
+        default: 'fail',
+        type: 'string',
+        desc: 'Tag padrão do /gif quando nenhuma é informada.'
     }
 };
 
@@ -3399,6 +3404,36 @@ async function cmdListGeneral({ msg }) {
     await msg.reply(`👥 *Membros de ${chat.name}* (${linesAlt.length})\n\n${linesAlt.join('\n')}`);
 }
 
+// /gif [tag]: random GIF from GIPHY (GIPHY_API_KEY in config/.env), sent as a looping MP4
+async function cmdGif({ msg, args }) {
+    if (!process.env.GIPHY_API_KEY) {
+        await msg.reply('⚠️ GIPHY_API_KEY não configurada no config/.env.');
+        return;
+    }
+
+    try {
+        const { data } = await axios.get('https://api.giphy.com/v1/gifs/random', {
+            timeout: 15000,
+            params: { api_key: process.env.GIPHY_API_KEY, tag: args.trim() || getSetting('gif.tag'), rating: 'pg-13' }
+        });
+
+        const mp4 = data.data?.images?.original?.mp4;
+
+        if (!mp4) {
+            await msg.reply('❌ Nenhum GIF encontrado.');
+            return;
+        }
+
+        const { data: video } = await axios.get(mp4, { responseType: 'arraybuffer', timeout: 15000, maxContentLength: 10 * 1024 * 1024 });
+        const media = new MessageMedia('video/mp4', Buffer.from(video).toString('base64'), 'gif.mp4');
+
+        await msg.reply(media, null, { sendVideoAsGif: true });
+    } catch (err) {
+        printError('/gif:', err.message);
+        await msg.reply('❌ Não consegui buscar um GIF agora.');
+    }
+}
+
 // bot-config.json cmd -> handler
 const HANDLERS = {
     '/help': cmdHelp,
@@ -3418,7 +3453,8 @@ const HANDLERS = {
     '/kernel': cmdKernel,
     '/boletos': cmdBills,
     '/meme': cmdMeme,
-    '/listageral': cmdListGeneral
+    '/listageral': cmdListGeneral,
+    '/gif': cmdGif
 };
 
 // Warns at boot if the bot-config has a command without a handler (or vice versa)
