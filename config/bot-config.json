@@ -488,6 +488,12 @@
                 }
             ],
             "onlyAdmin": false
+        },
+        {
+            "cmd": "/ualisu",
+            "usage": "/ualisu",
+            "help": "Walissu CVE BOT: marca 2 membros do grupo com uma CVE aleatória.",
+            "onlyAdmin": true
         }
     ]
 }
