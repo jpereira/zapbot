@@ -104,6 +104,10 @@ tudo por comandos digitados no próprio chat (`/help`, `/get`, `/show`, `/news`,
   comandos.
 - **Reconexão**: em caso de queda o cliente é reiniciado sozinho, exceto quando o
   motivo exige ação manual (`LOGOUT`, `CONFLICT`, `UNPAIRED`...).
+- **Saúde (heartbeat)**: a cada 30 s o bot confere se o WhatsApp Web responde e
+  grava `/tmp/zapbot-heartbeat.json`; o `HEALTHCHECK` do Docker marca o
+  container como `unhealthy` se o arquivo parar de ser atualizado. Veja
+  [Saúde do container](#saúde-do-container-heartbeat).
 - **Aviso de início**: quando fica pronto, o bot manda
   `🤖 ZapBot <versão> inicializado.` para o `PHONE_NUMBER`.
 - **Alertas por e-mail**: crash, queda, reconexão, falha de autenticação e
@@ -211,6 +215,8 @@ ficam disponíveis para o bot. Nunca faça commit dele (já está no `.gitignore
 | Variável | Exemplo | Descrição |
 |---|---|---|
 | `ZAPBOT_CACHE_DIR` | `/tmp/zapbot-cache` | Diretório do banco (`bot_database.db`) e das mídias. Padrão: `cache/` na raiz do projeto. Os [testes](#testes) usam uma pasta temporária. **No Docker, não defina**: o volume `app_cache` é montado em `/app/cache`. |
+| `ZAPBOT_HEARTBEAT_FILE` | `/tmp/zapbot-heartbeat.json` | Arquivo do [heartbeat](#saúde-do-container-heartbeat). Padrão: `zapbot-heartbeat.json` no diretório temporário. Lido pelo `docker/app/healthcheck.js`. |
+| `ZAPBOT_HEARTBEAT_MAX_AGE_S` | `90` | Idade máxima, em segundos, do heartbeat para o healthcheck considerar o bot saudável. |
 
 ### Serviços externos
 
@@ -380,6 +386,7 @@ padrão; desligue com `/set email.alerts off`. Sem `QRCODE_EMAIL_SMTP_HOST`,
 | `[ZapBot] ⛔ Falha de autenticação` | A sessão salva não autenticou |
 | `[ZapBot] 🔑 Sessão perdida: novo QR Code` | Pediu QR Code de novo depois de já ter autenticado |
 | `[ZapBot] ♻️ Browser caiu` | O Chromium morreu e o watchdog está reiniciando o cliente |
+| `[ZapBot] 🩺 WhatsApp sem resposta` | Conectado, mas o WhatsApp Web não respondeu `CONNECTED` em 3 verificações seguidas do [heartbeat](#saúde-do-container-heartbeat); o cliente é reiniciado |
 | `[ZapBot] ❌ Falha ao reiniciar` | O reinício do cliente falhou |
 | `[ZapBot] 💥 Crash` | Exceção ou promise rejeitada sem tratamento (com o stack). O processo sai e o Docker sobe de novo |
 | `[ZapBot] 🛑 Bot encerrado` | `docker stop`/`restart` ou Ctrl+C (SIGTERM/SIGINT) |
@@ -1421,6 +1428,7 @@ src/
   cliente.js            cliente do whatsapp-web.js e a marca dos envios do bot
   conexao.js            QR Code, eventos de conexão, reinício e watchdog
   email.js              SMTP e alertas por e-mail
+  heartbeat.js          prova de vida para o HEALTHCHECK do Docker
   processo.js           crash e sinais (docker stop)
   limpeza.js            retenção e limpeza periódica
   stats.js              contadores do /stats
@@ -1450,6 +1458,44 @@ Todos com `-f docker/docker-compose.yml` (ou `COMPOSE_FILE` exportado):
 
 O container usa `restart: unless-stopped`, então volta sozinho após reboot do
 host.
+
+### Saúde do container (heartbeat)
+
+O `restart: unless-stopped` só age quando o processo **morre**. Para o caso do
+bot travar com o processo vivo (Node preso, Chromium sem resposta, sessão num
+estado ruim), existe um heartbeat:
+
+1. A cada 30 s o bot (`src/heartbeat.js`) confere se está funcionando e, se
+   estiver, grava `/tmp/zapbot-heartbeat.json` com a hora e o estado.
+   "Funcionando" é: conectado e o WhatsApp Web respondendo `CONNECTED` em até
+   10 s; ou ainda não conectado (boot, esperando o QR Code, reconectando), em
+   que o processo vivo basta; ou reiniciando há menos de 5 minutos.
+2. O `HEALTHCHECK` da imagem (`docker/app/healthcheck.js`) só olha a idade do
+   arquivo: parado há mais de 90 s, o container fica `unhealthy` (há 2 min de
+   tolerância no boot).
+3. Conectado mas sem `CONNECTED` 3 vezes seguidas, o próprio bot reinicia o
+   cliente do WhatsApp e avisa por e-mail (`🩺 WhatsApp sem resposta`).
+
+```bash
+docker ps                                          # STATUS: Up 2 hours (healthy)
+docker inspect --format '{{json .State.Health}}' zapbot-prod
+docker exec zapbot-prod cat /tmp/zapbot-heartbeat.json
+```
+
+O Docker (fora do Swarm) **só marca** o container como `unhealthy`: não
+reinicia. Para reiniciar automaticamente, rode o
+[autoheal](https://github.com/willfarrell/docker-autoheal) ao lado do bot e
+adicione ao serviço `zapbot-prod` o label `autoheal=true`:
+
+```yaml
+  autoheal:
+    image: willfarrell/autoheal
+    restart: unless-stopped
+    environment:
+      AUTOHEAL_CONTAINER_LABEL: autoheal
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+```
 
 ### Desenvolvimento
 
@@ -1506,6 +1552,7 @@ entre os casos.
 | `grupo.test.js` | `/everyone`, `/boletos`, `/listageral`, `/ualisu`, `/enquete`, `/sticker` |
 | `get-cache.test.js` | `/get` (e o anti-SSRF), `/cache` e a limpeza periódica |
 | `conexao-email.test.js` | Eventos de conexão, reinício, watchdog, alertas por e-mail, crash e `docker stop` |
+| `heartbeat.test.js` | Heartbeat e o `docker/app/healthcheck.js` (executado de verdade) |
 | `util.test.js` | Formatação, contatos/`@lid`, menções e arquivos do cache |
 
 Um comando ou opção novos entram com os testes deles; o

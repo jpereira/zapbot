@@ -109,10 +109,7 @@ describe('eventos de conexão', () => {
         t.mock.timers.enable({ apis: ['setTimeout'] });
         const inicializacoes = bot.client.inicializado;
 
-        const queda = emitir('disconnected', 'NAVIGATION');
-        await new Promise(setImmediate); // até o restartClient chegar na pausa de 5 s
-        t.mock.timers.tick(5000);
-        await queda;
+        await bot.esperarComRelogio(t, emitir('disconnected', 'NAVIGATION')); // pausa de 5 s do restartClient
 
         assert.match(emails[0].subject, /\] 🔴 Desconectado$/);
         assert.equal(bot.client.inicializado, inicializacoes + 1);
@@ -123,11 +120,7 @@ describe('eventos de conexão', () => {
         t.mock.timers.enable({ apis: ['setTimeout'] });
         const destruidos = bot.client.destruido;
 
-        const primeiro = restartClient('teste 1');
-        const segundo = restartClient('teste 2');
-        await new Promise(setImmediate);
-        t.mock.timers.tick(5000);
-        await Promise.all([primeiro, segundo]);
+        await bot.esperarComRelogio(t, Promise.all([restartClient('teste 1'), restartClient('teste 2')]));
 
         assert.equal(bot.client.destruido, destruidos + 1);
         assert.ok(bot.logs.some(l => l.includes('Restart ignorado (já em andamento). Motivo: teste 2')));
@@ -178,10 +171,10 @@ describe('eventos de conexão', () => {
         const inicializacoes = bot.client.inicializado;
 
         iniciarWatchdog();
-        t.mock.timers.tick(30000);           // verificação de saúde e watchdog
-        await new Promise(setImmediate);
-        t.mock.timers.tick(5000);            // pausa do restartClient
-        for (let i = 0; i < 5; i++) await new Promise(setImmediate);
+        t.mock.timers.tick(30000);           // o watchdog roda
+        await bot.esperarComRelogio(t, (async () => {
+            while (bot.client.inicializado === inicializacoes) await new Promise(setImmediate);
+        })());                               // até passar a pausa de 5 s do restartClient
 
         assert.deepEqual(assuntos(), ['[ZapBot] ♻️ Browser caiu']);
         assert.equal(bot.client.inicializado, inicializacoes + 1);
