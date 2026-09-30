@@ -357,6 +357,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -c -f`) para fazer o bot
 | `/joke` | `/piada`, `/humor` | | Piada aleatória em português |
 | `/cve` | | | Últimas CVEs publicadas (NVD); `-highscore` só as críticas |
 | `/tempo` | `/weather` | | Tempo agora e máx./mín. do dia (Open-Meteo); sem cidade usa `tempo.city` |
+| `/ualisu` | | ✅ | Marca 2 membros com uma CVE aleatória |
 
 ### `/help`
 
@@ -819,6 +820,10 @@ A mudança vale na hora, sem reiniciar. Dicas:
   português ou inglês.
 - Se a cidade não for encontrada o bot responde `❌ Cidade não encontrada`;
   teste antes com `/tempo <cidade>` e só depois grave no `tempo.city`.
+
+### `/ualisu` · admin
+
+Só em grupos: o Walissu CVE BOT marca 2 membros com uma CVE aleatória do NVD.
 
 ### Adicionando ou alterando comandos
 
