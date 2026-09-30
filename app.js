@@ -27,6 +27,7 @@ const { spawn } = require('child_process');
 const crypto = require('crypto');
 const dns = require('dns').promises;
 const net = require('net');
+const os = require('os');
 const util = require('util');
 const path = require('path');
 
@@ -381,6 +382,11 @@ const SETTINGS_SCHEMA = {
         type: 'boolean',
         desc: 'Avisa no seu privado quando alguém edita uma mensagem; off só guarda para o /edit.'
     },
+    'email.alerts': {
+        default: true,
+        type: 'boolean',
+        desc: 'Avisa por e-mail (SMTP do QR Code) crash, queda, reconexão e outros eventos do bot.'
+    },
     'get.maxDownloadMB': {
         default: 200,
         type: 'number', min: 10, max: 2000,
@@ -703,6 +709,106 @@ const transporter = nodemailer.createTransport({
     // No "tls.rejectUnauthorized: false": the SMTP certificate must be valid,
     // otherwise a MITM captures the password and the QR Code (= the WhatsApp session).
 });
+
+/*
+ * Email alerts (setting 'email.alerts', default on)
+ * Crash, disconnection, reconnection, authentication failure, lost session,
+ * shutdown... go by email through the same SMTP as the QR Code (QRCODE_EMAIL_SMTP_*),
+ * for when WhatsApp itself is not working. The same event does not
+ * repeats before 5 minutes (avoids a flood in a reconnection loop).
+ */
+const ALERT_EMAIL_INTERVAL_MS = 5 * 60 * 1000;
+const lastAlertEmail = new Map(); // event -> when it was sent
+
+const smtpConfigured = () => ['QRCODE_EMAIL_SMTP_HOST', 'QRCODE_EMAIL_SMTP_USER', 'QRCODE_EMAIL_SMTP_TO']
+    .every(v => process.env[v]?.trim());
+
+const escapeHtml = (t) => String(t ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+/**
+ * @param {string} evento    title (goes in the subject), e.g.: '🔴 Desconectado'
+ * @param {string} detalhes  texto livre (motivo, stack...)
+ * @param {object} [o]
+ * @param {boolean} [o.forcar] ignores the minimum interval (crash, shutdown)
+ */
+async function alertPerEmail(event, details = '', { forcar: force = false } = {}) {
+    try {
+        // Before the database loads, getSetting returns the default (on)
+        if (!getSetting('email.alerts') || !smtpConfigured()) return;
+
+        const nowAlt = Date.now();
+        if (!force && nowAlt - (lastAlertEmail.get(event) ?? 0) < ALERT_EMAIL_INTERVAL_MS) {
+            printInfo(`Alerta por e-mail '${event}' não enviado: repetido em menos de 5 minutos.`);
+            return;
+        }
+        lastAlertEmail.set(event, nowAlt);
+
+        const when = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+        const phoneAlt = String(process.env.PHONE_NUMBER ?? '').split('@')[0].replace(/(\d{4})\d+(\d{4})$/, '$1XXXX$2');
+        const linesAlt = [
+            ['📅 Quando', when],
+            ['📱 Número', phoneAlt || '-'],
+            ['🤖 Versão', packageJson.version],
+            ['🖥️ Host', os.hostname()],
+            ['⏱️ Processo no ar há', getBotUptime(BOT_START_TIME)],
+            ['🛡️ Anti-Phishing Code', process.env.QRCODE_EMAIL_SMTP_ANTIPHISHING || '-']
+        ];
+
+        await transporter.sendMail({
+            from: process.env.QRCODE_EMAIL_SMTP_FROM,
+            to: process.env.QRCODE_EMAIL_SMTP_TO,
+            subject: `[ZapBot] ${event}`,
+            text: `${event}\n\n${details}\n\n${linesAlt.map(([k, v]) => `${k}: ${v}`).join('\n')}`,
+            html: `
+                <h3>${escapeHtml(event)}</h3>
+                ${details ? `<pre style="background:#f8f8f8;border:1px solid #ddd;padding:12px;white-space:pre-wrap;">${escapeHtml(details)}</pre>` : ''}
+                <table style="border-collapse:collapse;">
+                    ${linesAlt.map(([k, v]) => `<tr><td style="padding:4px 12px 4px 0;"><strong>${escapeHtml(k)}</strong></td><td>${escapeHtml(v)}</td></tr>`).join('')}
+                </table>
+            `
+        });
+
+        printInfo(`Alerta por e-mail enviado: ${event}`);
+    } catch (err) {
+        printError(`Alerta por e-mail '${event}' falhou:`, err.message);
+    }
+}
+
+// Waits for the email to go out, but does not block shutdown if SMTP does not respond
+const leaveAlertBefore = (event, details, ms) => Promise.race([
+    alertPerEmail(event, details, { forcar: true }),
+    new Promise(r => setTimeout(r, ms))
+]);
+
+/*
+ * Crash: Node would already end the process on an exception or rejected promise without
+ * handling; here we only warn beforehand. Docker (restart: unless-stopped) brings it up again.
+ */
+let closing = false;
+
+async function closePerCrash(type, err) {
+    printError(`💥 ${type}:`, err);
+    if (closing) return;
+    closing = true;
+
+    await leaveAlertBefore('💥 Crash', `${type}\n\n${err?.stack || err}`, 10000);
+    process.exit(1);
+}
+
+process.on('uncaughtException', err => closePerCrash('uncaughtException', err));
+process.on('unhandledRejection', err => closePerCrash('unhandledRejection', err));
+
+// docker stop / restart / Ctrl+C
+for (const signalAlt of ['SIGTERM', 'SIGINT']) {
+    process.on(signalAlt, async () => {
+        if (closing) return;
+        closing = true;
+
+        printInfo(`🛑 ${signalAlt} recebido, encerrando.`);
+        await leaveAlertBefore('🛑 Bot encerrado', `Sinal ${signalAlt} (docker stop/restart ou Ctrl+C).`, 5000);
+        process.exit(0);
+    });
+}
 
 /*
  * Running external processes (yt-dlp / ffmpeg)
@@ -1582,6 +1688,7 @@ async function restartClient(reasonAlt) {
         await client.initialize();
     } catch (e) {
         printError('initialize falhou:', e.message);
+        alertPerEmail('❌ Falha ao reiniciar', `Motivo do reinício: ${reasonAlt}\ninitialize falhou: ${e.message}`);
     } finally {
         isRestarting = false;
     }
@@ -1603,6 +1710,7 @@ setInterval(async () => {
     if (!isReady || isRestarting) return;
 
     if (!client.pupBrowser?.isConnected()) {
+        alertPerEmail('♻️ Browser caiu', 'O Chromium desconectou; o watchdog está reiniciando o cliente.');
         await restartClient('browser desconectado (watchdog)');
     }
 }, 30000);
@@ -1628,6 +1736,9 @@ client.on('qr', async (qr) => {
             '⚠️ QR recebido APÓS autenticação.',
             `lastDisconnect=${lastDisconnectReason} restarting=${isRestarting} ready=${isReady}`
         );
+        alertPerEmail('🔑 Sessão perdida: novo QR Code',
+            `O WhatsApp pediu um novo QR Code depois de já ter autenticado (último motivo: ${lastDisconnectReason ?? '-'}).\n` +
+            'Leia o QR Code no terminal (docker logs) ou no e-mail do QR Code, se QRCODE_EMAIL_ENABLE=true.');
     }
 
     if (!emailEnabled) {
@@ -1769,8 +1880,12 @@ client.on('disconnected', async (reason) => {
 
     if (NOT_RESTART.has(String(reason))) {
         printError(`Motivo '${reason}' exige ação manual (outra instância ou sessão revogada). Não vou reiniciar em loop.`);
+        alertPerEmail('🔴 Desconectado (ação manual)',
+            `Motivo: ${reason}\nO bot NÃO vai reiniciar sozinho: outra instância abriu a sessão ou ela foi revogada no celular.`);
         return;
     }
+
+    alertPerEmail('🔴 Desconectado', `Motivo: ${reason}\nO cliente será reiniciado automaticamente.`);
 
     await restartClient(`disconnected: ${reason}`);
 });
@@ -1781,25 +1896,39 @@ client.on('loading_screen', (percent, message) => {
 
 client.on('auth_failure', msg => {
     printError('[WA] auth_failure:', msg);
+    alertPerEmail('⛔ Falha de autenticação', `auth_failure: ${msg}`);
 });
+
+// States in which WhatsApp Web stopped working for this session
+const STATES_PROBLEM = new Set(['CONFLICT', 'UNPAIRED', 'UNPAIRED_IDLE', 'DEPRECATED_VERSION', 'PROXYBLOCK', 'SMB_TOS_BLOCK', 'TOS_BLOCK', 'UNLAUNCHED']);
 
 client.on('change_state', state => {
     printInfo(`[WA STATE]=${state}`);
+    if (STATES_PROBLEM.has(state)) alertPerEmail(`⚠️ Estado do WhatsApp: ${state}`, `O WhatsApp Web mudou para o estado ${state}.`);
 });
+
+let jaStayedReady = false;
 
 client.on('ready', async () => {
     isReady = true;
+    const dropReason = lastDisconnectReason;
     lastDisconnectReason = null;
 
     // The settings come from the database: warns right at boot if the bot is off or in admin mode
     await dbReady;
-    const notices = [
+    const listNotices = [
         getSetting('bot.paused') && 'Bot desligado: use /bot -on para ativar os comandos.',
         getSetting('bot.adminMode') && 'Modo admin ligado: só você usa comandos (/bot -admin desliga).'
-    ].filter(Boolean).map(a => ` ${a}`).join('');
+    ].filter(Boolean);
+    const notices = listNotices.map(a => ` ${a}`).join('');
 
     printSuccess(`🤖 ZapBot ${packageJson.version} inicializado! Informando ${process.env.PHONE_NUMBER}`);
     messageToSelf(`🤖 ZapBot ${packageJson.version} inicializado.${notices}`);
+
+    alertPerEmail(jaStayedReady ? '🔄 Reconectado' : '🟢 Bot iniciado',
+        [jaStayedReady ? `Conectado de novo${dropReason ? ` (a queda foi: ${dropReason})` : ''}.` : 'Conectado ao WhatsApp.',
+         ...listNotices].join('\n'));
+    jaStayedReady = true;
 });
 
 /*
