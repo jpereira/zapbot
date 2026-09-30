@@ -378,7 +378,12 @@ const SETTINGS_SCHEMA = {
     'cve.max': {
         default: 10,
         type: 'number', min: 1, max: 20,
-        desc: 'CVEs exibidas pelo /cve e /cvehighscore.'
+        desc: 'Quantidade de CVEs exibidas pelo /cve.'
+    },
+    'cve.maxDays': {
+        default: 7,
+        type: 'number', min: 1, max: 120,
+        desc: 'Janela (dias) do /cve -highscore quando <maxDays> não é informado.'
     }
 };
 
@@ -684,13 +689,16 @@ function isOption(token) {
  *
  * Opções com "values" vazios são booleanas; com values esperam um valor.
  * "-help" / "-h" são adicionados automaticamente a todo comando.
+ * `given` guarda o nome canônico das opções informadas: distingue "-x" sem
+ * valor (null, mas presente) de "-x" ausente (null).
  */
 function GetOptFromCommand(input, config = {}) {
     const tokens = tokenizeCommand(input);
 
     // Mesmo array em result.argv e result.opt.argv
     const argv = [];
-    const result = { opt: { argv }, argv };
+    const given = new Set();
+    const result = { opt: { argv }, argv, given };
 
     const commandOptions = [
         { opts: ['help', 'h'], values: [], desc: 'Exibe ajuda.' },
@@ -735,6 +743,7 @@ function GetOptFromCommand(input, config = {}) {
         }
 
         const { canonicalName } = option;
+        given.add(canonicalName);
 
         if (!option.expectsValue) {
             result.opt[canonicalName] = true;
@@ -3469,14 +3478,25 @@ async function cmdJoke({ msg }) {
 }
 
 /*
- * /cve e /cvehighscore: NVD (nvd.nist.gov). A API do cve.circl.lu que o zapzap
- * usava mudou de formato e quase nunca traz a nota CVSS.
- * Sem chave o NVD aceita ~5 consultas a cada 30s.
+ * /cve [-highscore|-high [maxDays]]: CVEs publicadas no NVD (nvd.nist.gov).
+ *   /cve             → as mais recentes dos últimos CVE_DIAS_RECENTES dias
+ *   /cve -high [N]   → as críticas (CVSS v3 CRITICAL, ≥ 9) dos últimos N dias;
+ *                      sem N usa o setting 'cve.maxDays'
+ * A quantidade exibida vem do setting 'cve.max'.
+ *
+ * A API do cve.circl.lu que o zapzap usava mudou de formato e quase nunca traz a
+ * nota CVSS. Sem chave o NVD aceita ~5 consultas a cada 30s.
  */
 const NVD_URL = 'https://services.nvd.nist.gov/rest/json/cves/2.0';
+const NVD_MAX_DIAS = 120; // janela máxima aceita pelo NVD (acima disso: 404)
+const CVE_DIAS_RECENTES = 2;
 
+// O NVD quer ISO-8601 sem o 'Z'
 const nvdData = (d) => d.toISOString().replace('Z', '');
 
+const periodoDias = (dias) => dias === 1 ? 'último dia' : `últimos ${dias} dias`;
+
+// Nota preferida: CVSS v3.1 > v4.0 > v3.0 > v2 (métrica Primary, senão a primeira)
 function notaCvss(cve) {
     const m = cve.metrics ?? {};
 
@@ -3490,22 +3510,29 @@ function notaCvss(cve) {
     return null;
 }
 
-// As `max` CVEs publicadas mais recentemente nos últimos `dias` (NVD ordena da mais antiga para a mais nova)
+/*
+ * As `max` CVEs publicadas mais recentemente nos últimos `dias`, da mais nova
+ * para a mais antiga. O NVD ordena da mais antiga para a mais nova e não tem
+ * ordenação reversa: uma consulta conta o total e a outra busca só o final.
+ */
 async function buscarCvesRecentes({ dias, max, critical = false }) {
     const fim = new Date();
-    const params = {
+    const filtro = {
         pubStartDate: nvdData(new Date(fim.getTime() - dias * DAY_MS)),
         pubEndDate: nvdData(fim),
-        noRejected: ''
+        noRejected: '',
+        ...(critical && { cvssV3Severity: 'CRITICAL' })
     };
-    if (critical) params.cvssV3Severity = 'CRITICAL';
 
-    const { data: total } = await axios.get(NVD_URL, { params: { ...params, resultsPerPage: 1 }, timeout: 30000 });
-    const startIndex = Math.max(0, total.totalResults - max);
+    const consultar = async (params) =>
+        (await axios.get(NVD_URL, { params: { ...filtro, ...params }, timeout: 30000 })).data;
 
-    const { data } = await axios.get(NVD_URL, { params: { ...params, resultsPerPage: max, startIndex }, timeout: 30000 });
+    const { totalResults } = await consultar({ resultsPerPage: 1 });
+    if (!totalResults) return [];
 
-    return data.vulnerabilities.map(v => v.cve).reverse();
+    const { vulnerabilities } = await consultar({ resultsPerPage: max, startIndex: Math.max(0, totalResults - max) });
+
+    return vulnerabilities.map(v => v.cve).reverse();
 }
 
 function formatarCve(cve) {
@@ -3517,36 +3544,36 @@ function formatarCve(cve) {
            `https://nvd.nist.gov/vuln/detail/${cve.id}`;
 }
 
-async function cmdCve({ msg }) {
-    try {
-        const cves = await buscarCvesRecentes({ dias: 2, max: getSetting('cve.max') });
+async function cmdCve({ msg, opts }) {
+    const critical = opts.given.has('highscore');
+    let dias = CVE_DIAS_RECENTES;
 
-        await msg.reply(
-            `🛡️ *Últimas ${cves.length} CVEs publicadas*\n\n` + cves.map(formatarCve).join('\n\n'),
-            null, { linkPreview: false }
-        );
-    } catch (err) {
-        printError('/cve:', err.message);
-        await msg.reply('❌ Não consegui consultar o NVD agora (limite de consultas? tente em 30s).');
+    if (critical) {
+        // <maxDays> informado sobrepõe o setting cve.maxDays
+        const valor = opts.opt.highscore ?? getSetting('cve.maxDays');
+        dias = Number(valor);
+
+        if (!Number.isInteger(dias) || dias < 1 || dias > NVD_MAX_DIAS) {
+            await msg.reply(`❌ maxDays inválido: ${valor}. Use de 1 a ${NVD_MAX_DIAS} (limite do NVD).\n💡 _/cve -high 30_`);
+            return;
+        }
     }
-}
 
-async function cmdCveHighscore({ msg }) {
     try {
-        const cves = await buscarCvesRecentes({ dias: 7, max: getSetting('cve.max'), critical: true });
+        const cves = await buscarCvesRecentes({ dias, max: getSetting('cve.max'), critical });
 
         if (!cves.length) {
-            await msg.reply('🛡️ Nenhuma CVE crítica publicada nos últimos 7 dias.');
+            await msg.reply(`🛡️ Nenhuma CVE${critical ? ' crítica' : ''} publicada no ${periodoDias(dias)}.`);
             return;
         }
 
-        await msg.reply(
-            `🔥 *${cves.length} CVEs críticas mais recentes* _(CVSS ≥ 9, últimos 7 dias)_\n\n` +
-            cves.map(formatarCve).join('\n\n'),
-            null, { linkPreview: false }
-        );
+        const titulo = critical
+            ? `🔥 *${cves.length} CVEs críticas mais recentes* _(CVSS ≥ 9, ${periodoDias(dias)})_`
+            : `🛡️ *Últimas ${cves.length} CVEs publicadas* _(${periodoDias(dias)})_`;
+
+        await msg.reply(`${titulo}\n\n${cves.map(formatarCve).join('\n\n')}`, null, { linkPreview: false });
     } catch (err) {
-        printError('/cvehighscore:', err.message);
+        printError('/cve:', err.response?.status ?? '', err.message);
         await msg.reply('❌ Não consegui consultar o NVD agora (limite de consultas? tente em 30s).');
     }
 }
@@ -3573,8 +3600,7 @@ const HANDLERS = {
     '/listageral': cmdListaGeral,
     '/gif': cmdGif,
     '/joke': cmdJoke,
-    '/cve': cmdCve,
-    '/cvehighscore': cmdCveHighscore
+    '/cve': cmdCve
 };
 
 // Avisa no boot se o bot-config tiver comando sem handler (ou vice-versa)
