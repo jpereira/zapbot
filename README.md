@@ -720,10 +720,45 @@ Piada em português da [JokeAPI](https://jokeapi.dev/) (safe-mode).
 
 ### `/cve`
 
-Últimas CVEs publicadas no [NVD](https://nvd.nist.gov/) (últimos 2 dias), com
-nota, resumo e link. Com `-highscore`/`-high [maxDays]`, só as críticas
-(CVSS ≥ 9) dos últimos `maxDays` dias (padrão: setting `cve.maxDays`). Sem
-chave o NVD aceita ~5 consultas a cada 30s.
+Lista as CVEs publicadas mais recentemente no [NVD](https://nvd.nist.gov/)
+(base oficial do NIST), da mais nova para a mais antiga. Cada uma vem com o ID,
+a nota CVSS e a severidade, um resumo da descrição e o link para a página no NVD.
+
+| Opção | Valor | Descrição |
+|---|---|---|
+| `-highscore`, `-high` | `[maxDays]` | Só as críticas (CVSS v3 `CRITICAL`, nota ≥ 9) dos últimos `maxDays` dias, de 1 a 120. Sem o valor usa o setting `cve.maxDays` (7) |
+
+```
+/cve                 → as 10 mais recentes dos últimos 2 dias
+/cve -high           → as 10 críticas mais recentes dos últimos 7 dias (cve.maxDays)
+/cve -highscore 30   → as 10 críticas mais recentes dos últimos 30 dias
+/set cve.max 5       → passa a exibir 5 por vez
+```
+
+Exemplo de resposta:
+
+```
+🔥 3 CVEs críticas mais recentes (CVSS ≥ 9, últimos 7 dias)
+
+🛡️ CVE-2026-103056 — 9 CRITICAL
+AiSOC versions 7.2.0 before 12.0.0 contain a command injection …
+https://nvd.nist.gov/vuln/detail/CVE-2026-103056
+```
+
+Detalhes:
+
+- A quantidade exibida vem do setting `cve.max` (padrão 10, máx. 20). O
+  `maxDays` do comando sobrepõe o `cve.maxDays` só naquela chamada.
+- O NVD não aceita janelas maiores que 120 dias; valores fora de 1–120 (ou que
+  não são números) são recusados com uma mensagem de ajuda.
+- A nota exibida segue a ordem CVSS v3.1 → v4.0 → v3.0 → v2, preferindo a
+  métrica principal (do NVD). CVEs recém-publicadas podem vir ainda sem nota.
+- O filtro de críticas usa a severidade CVSS v3: CVEs avaliadas só em v4.0 ou
+  v2 não entram no `-highscore`.
+- Sem chave de API, o NVD aceita cerca de 5 consultas a cada 30 s e às vezes
+  demora. Cada `/cve` faz 2 consultas (o NVD só ordena da mais antiga para a
+  mais nova: uma conta o total e a outra busca o final da lista). Em erro, o
+  bot pede para tentar de novo em 30 s.
 
 ### Adicionando ou alterando comandos
 
