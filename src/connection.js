@@ -44,18 +44,7 @@ async function restartClient(reasonAlt) {
     }
 }
 
-// Health check: only after the client is ready
-async function checkHealth() {
-    if (!stateAlt.pronto || stateAlt.reiniciando) return;
-
-    try {
-        await client.getState();
-    } catch {
-        printInfo('Healthcheck falhou');
-    }
-}
-
-// Watchdog: only watches a client that was already ready and is not restarting
+// Watchdog (the check that WhatsApp responds lives in heartbeat.js): only watches a client that was already ready and is not restarting
 async function watchBrowser() {
     if (!stateAlt.pronto || stateAlt.reiniciando) return;
 
@@ -67,7 +56,6 @@ async function watchBrowser() {
 
 // Called in app.js
 function startWatchdog() {
-    setInterval(checkHealth, 30000);
     setInterval(watchBrowser, 30000);
 }
 

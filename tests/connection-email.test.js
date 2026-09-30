@@ -109,10 +109,7 @@ describe('eventos de conexão', () => {
         t.mock.timers.enable({ apis: ['setTimeout'] });
         const initializations = bot.client.inicializado;
 
-        const drop = emit('disconnected', 'NAVIGATION');
-        await new Promise(setImmediate); // until restartClient reaches the 5 s pause
-        t.mock.timers.tick(5000);
-        await drop;
+        await bot.waitWithClock(t, emit('disconnected', 'NAVIGATION')); // restartClient's 5 s pause
 
         assert.match(emails[0].subject, /\] 🔴 Desconectado$/);
         assert.equal(bot.client.inicializado, initializations + 1);
@@ -123,11 +120,7 @@ describe('eventos de conexão', () => {
         t.mock.timers.enable({ apis: ['setTimeout'] });
         const destroyed = bot.client.destruido;
 
-        const first = restartClient('teste 1');
-        const second = restartClient('teste 2');
-        await new Promise(setImmediate);
-        t.mock.timers.tick(5000);
-        await Promise.all([first, second]);
+        await bot.waitWithClock(t, Promise.all([restartClient('teste 1'), restartClient('teste 2')]));
 
         assert.equal(bot.client.destruido, destroyed + 1);
         assert.ok(bot.logs.some(l => l.includes('Restart ignorado (já em andamento). Motivo: teste 2')));
@@ -178,10 +171,10 @@ describe('eventos de conexão', () => {
         const initializations = bot.client.inicializado;
 
         startWatchdog();
-        t.mock.timers.tick(30000);           // health check and watchdog
-        await new Promise(setImmediate);
-        t.mock.timers.tick(5000);            // restartClient's pause
-        for (let i = 0; i < 5; i++) await new Promise(setImmediate);
+        t.mock.timers.tick(30000);           // o watchdog roda
+        await bot.waitWithClock(t, (async () => {
+            while (bot.client.inicializado === initializations) await new Promise(setImmediate);
+        })());                               // until restartClient's 5 s pause passes
 
         assert.deepEqual(subjects(), ['[ZapBot] ♻️ Browser caiu']);
         assert.equal(bot.client.inicializado, initializations + 1);

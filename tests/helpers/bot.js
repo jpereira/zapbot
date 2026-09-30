@@ -208,6 +208,21 @@ async function edit(original, newText, { antigo: oldAlt2 = original.body, editad
     return client.enviadas.slice(beforeAlt).map(e => ({ ...e, texto: text(e.content, e.options) }));
 }
 
+/*
+ * With the simulated clock, advances time little by little until the promise ends:
+ * does not depend on how many async steps exist before each setTimeout.
+ */
+async function waitWithClock(t, promise, passoMs = 1000, maxSteps = 60) {
+    let ended = false;
+    promise.then(() => { ended = true; }, () => { ended = true; });
+
+    for (let i = 0; i < maxSteps && !ended; i++) {
+        for (let j = 0; j < 10; j++) await new Promise(setImmediate);
+        if (!ended) t.mock.timers.tick(passoMs);
+    }
+    return promise;
+}
+
 module.exports = {
     ...environment,
     GROUP,
@@ -222,6 +237,7 @@ module.exports = {
     dbRun,
     edit,
     deliver,
+    waitWithClock,
     errorsInLog,
     estado: stateAlt,
     executar: run,
