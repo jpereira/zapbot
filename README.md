@@ -4,11 +4,12 @@
 > estão em português do Brasil.
 
 Bot para WhatsApp escrito em Node.js que roda em cima de uma sessão real do
-WhatsApp Web. Ele recupera mensagens (e status) apagadas, baixa vídeos de redes
-sociais, cria figurinhas, vigia mensagens por texto/regex e te avisa no privado,
-monitora quando contatos ficam online (em desenvolvimento), traz notícias, tempo
-e CVEs, conversa com o ChatGPT e mais algumas brincadeiras, tudo por comandos
-digitados no próprio chat (`/help`, `/get`, `/show`, `/news`, `/gpt`...).
+WhatsApp Web. Ele recupera mensagens (e status) apagadas e editadas, baixa
+vídeos de redes sociais, cria figurinhas, vigia mensagens por texto/regex e te
+avisa no privado, monitora quando contatos ficam online (em desenvolvimento),
+traz notícias, tempo e CVEs, conversa com o ChatGPT e mais algumas brincadeiras,
+tudo por comandos digitados no próprio chat (`/help`, `/get`, `/show`, `/news`,
+`/gpt`...).
 
 **Autor:** Jorge Pereira ([@jpereira](https://github.com/jpereira)) · jpereiran@gmail.com
 **Licença:** MIT
@@ -65,10 +66,16 @@ digitados no próprio chat (`/help`, `/get`, `/show`, `/news`, `/gpt`...).
   e podem ser reexibidas com `/show`. Status (textos/fotos/vídeos) apagados
   também são recuperados, com o título `📸 STATUS APAGADO DETECTADO`
   (desative com `/set revoke.status off`).
+- **Editadas**: quando alguém edita uma mensagem, o bot grava o texto de antes
+  e o de depois (tabela `message_edits`) e te avisa **no seu privado** com o
+  título `✏️ MENSAGEM EDITADA DETECTADA` (desative o aviso com
+  `/set edit.alert off`; a edição continua guardada). As edições ficam 30 dias
+  (setting `cache.editedRetentionDays`) e podem ser reexibidas com
+  [`/edit`](#edit-e--admin). As suas próprias edições são ignoradas.
 - **Limpeza automática**: a cada 10 minutos o bot remove do banco/disco as
   mensagens comuns com mais de 68 h (janela máxima que o WhatsApp permite
-  apagar), as apagadas com mais de 30 dias e as ocorrências do `/watch` com
-  mais de 30 dias (setting `watch.hitsRetentionDays`).
+  apagar), as apagadas e as editadas com mais de 30 dias e as ocorrências do
+  `/watch` com mais de 30 dias (setting `watch.hitsRetentionDays`).
 - **Watch**: toda mensagem recebida que não é comando é testada contra as
   regras do [`/watch`](#watch-w--admin) (setting `watch.rules`); quando casa, a
   ocorrência é gravada na tabela `watch_hits` e você é avisado **no seu
@@ -383,6 +390,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -c -f`) para fazer o bot
 | `/get` | `/download` | | Baixa vídeo/áudio de redes sociais |
 | `/cache` | `/c` | ✅ | Uso e limpeza do cache |
 | `/show` | `/undo`, `/s` | ✅ | Reexibe mensagens apagadas |
+| `/edit` | `/e` | ✅ | Reexibe mensagens editadas (antes e depois) |
 | `/set` | | ✅ | Lista e altera as configurações (settings) |
 | `/watch` | `/w` | ✅ | Avisa no seu privado quando uma mensagem casa com um texto/regex |
 | `/kernel` | | | Versões atuais do kernel Linux (kernel.org) |
@@ -594,8 +602,8 @@ Mostra o espaço ocupado em `cache/` (banco, mídias, temporários).
 
 | Opção | Descrição |
 |---|---|
-| `-clean`, `-c` | Remove só o que passou da janela de retenção (68 h / `cache.revokedRetentionDays` para apagadas / `watch.hitsRetentionDays` para ocorrências do `/watch`) |
-| `-force`, `-f` | Junto com `-clean`: apaga **todas** as mensagens (inclusive as guardadas para o `/show`), mídias e temporários, e compacta o banco. Números e logs do `/monitor` e ocorrências do `/watch` são mantidos |
+| `-clean`, `-c` | Remove só o que passou da janela de retenção (68 h / `cache.revokedRetentionDays` para apagadas / `cache.editedRetentionDays` para editadas / `watch.hitsRetentionDays` para ocorrências do `/watch`) |
+| `-force`, `-f` | Junto com `-clean`: apaga **todas** as mensagens (inclusive as guardadas para o `/show` e o `/edit`), mídias e temporários, e compacta o banco. Números e logs do `/monitor` e ocorrências do `/watch` são mantidos |
 
 ```
 /cache           → lista o conteúdo de cache/ e total de mensagens
@@ -603,7 +611,7 @@ Mostra o espaço ocupado em `cache/` (banco, mídias, temporários).
 /cache -c -f     → limpeza geral
 ```
 
-### `/show` (`/undo`, `/s`)
+### `/show` (`/undo`, `/s`) · admin
 
 Reexibe mensagens apagadas deste chat que ainda estão no cache (30 dias,
 setting `cache.revokedRetentionDays`). Os envios são espaçados por
@@ -612,20 +620,73 @@ setting `cache.revokedRetentionDays`). Os envios são espaçados por
 | Opção | Valor | Descrição |
 |---|---|---|
 | `-N` | | Quantidade (padrão 1, máx. 20, setting `show.max`). Ex.: `-3` |
-| `-list`, `-l` | | Lista as apagadas do cache por chat (em qualquer chat), marcando com `← este chat` o chat atual |
+| `-list`, `-l` | | Lista as apagadas **e as editadas** do cache por chat (em qualquer chat), marcando com `← este chat` o chat atual. É a mesma lista do `/edit -l` |
 | `-pv` | | Envia no seu privado em vez de expor no chat atual |
-| `-chat`, `-c` | `<nº\|nome>` | Escolhe outro chat: nº do `/show -l` ou parte do nome. Funciona em qualquer chat; junte `-pv` para não expor as mensagens no chat atual |
+| `-chat`, `-c` | `<nº\|nome>` | Escolhe outro chat: nº da lista de **deletadas** do `/show -l` ou parte do nome. Funciona em qualquer chat; junte `-pv` para não expor as mensagens no chat atual |
 | `-flush`, `-f` | | Remove as apagadas deste chat (no seu privado: de todos) |
 
 ```
 /show                → última mensagem apagada deste chat
 /show -5             → as 5 últimas
 /undo -3 -pv         → as 3 últimas, enviadas no seu privado
-/show -l             → contagem por chat
+/show -l             → apagadas e editadas, por chat
 /show -l -pv         → a mesma lista, enviada no seu privado
-/show -c 2 -5        → 5 últimas do chat nº 2 da lista
+/show -c 2 -5        → 5 últimas do chat nº 2 da lista de deletadas
 /show -c família -pv → do chat cujo nome contém "família", no seu privado
 /show -f             → apaga do cache as apagadas deste chat
+```
+
+O `-l` (no `/show` ou no `/edit`) mostra os dois tipos, cada um com a sua
+numeração para o `-c`:
+
+```
+🗄️ Mensagens no cache
+
+🗑️ Deletadas: 3 (1 com mídia · a mais antiga expira em 29 dias)
+1. 👥 Família — 2 (última 30/09/2026, 10:02:11) ← este chat
+2. 👤 Beltrano — 1 (última 30/09/2026, 09:40:05)
+
+✏️ Editadas: 1 (a mais antiga expira em 30 dias)
+1. 👥 Trabalho — 1 (última 30/09/2026, 11:15:42)
+
+💡 /show -N reexibe as deletadas e /edit -N as editadas deste chat (máx. 20).
+💡 Junte -c <nº ou nome> para outro chat: o nº é o da lista do tipo (/show -c 2, /edit -c 1).
+💡 -pv envia no seu privado; -f remove do cache as deste chat (no seu privado: de todos).
+```
+
+### `/edit` (`/e`) · admin
+
+Reexibe mensagens editadas deste chat que ainda estão no cache (30 dias,
+setting `cache.editedRetentionDays`), com o texto de antes e o de depois.
+Funciona como o `/show`: mesmas opções, mesmo limite (`show.max`) e mesmo
+intervalo entre os envios (`show.delayMs`). Cada edição é um item: uma
+mensagem editada duas vezes aparece duas vezes.
+
+| Opção | Valor | Descrição |
+|---|---|---|
+| `-N` | | Quantidade (padrão 1, máx. 20, setting `show.max`). Ex.: `-3` |
+| `-list`, `-l` | | A mesma lista do `/show -l`: apagadas e editadas por chat |
+| `-pv` | | Envia no seu privado em vez de expor no chat atual |
+| `-chat`, `-c` | `<nº\|nome>` | Escolhe outro chat: nº da lista de **editadas** do `/edit -l` ou parte do nome |
+| `-flush`, `-f` | | Remove as editadas deste chat (no seu privado: de todos) |
+
+```
+/edit                → última mensagem editada deste chat
+/e -3 -pv            → as 3 últimas, enviadas no seu privado
+/edit -c 1 -5        → 5 últimas do chat nº 1 da lista de editadas
+/edit -f             → apaga do cache as editadas deste chat
+```
+
+```
+✏️ MENSAGEM EDITADA (1/1)
+
+👥 Grupo: Trabalho
+👤 Nome: Fulano
+📱 Número: +5521999999999
+📅 Enviada em: 30/09/2026, 11:14:03
+✏️ Editada em: 30/09/2026, 11:15:42
+📝 Antes: "reunião às 14h"
+💬 Depois: "reunião às 15h"
 ```
 
 ### `/set` · admin
@@ -658,12 +719,14 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 |---|---|---|---|
 | `bot.adminMode` | on/off | `on` | Modo admin: só você usa comandos (o mesmo do `/bot +admin`/`-admin`) |
 | `bot.paused` | on/off | `off` | Bot desligado: todos os comandos ignorados, exceto o `/bot` (o mesmo do `/bot -on`/`-off`) |
+| `cache.editedRetentionDays` | 1–365 | `30` | Dias que as mensagens editadas ficam guardadas para o `/edit` |
 | `cache.revokedRetentionDays` | 1–365 | `30` | Dias que as mensagens apagadas ficam guardadas |
 | `commands.disabled` | lista | *(vazia)* | Comandos desativados em tempo de execução: o bot os ignora e eles somem do `/help`. O `/set` não pode ser desativado |
 | `crypto.coins` | lista | `BTC, ETH, SOL, HYPE` | Moedas do `/crypto` (só as suportadas) |
 | `cve.max` | 1–20 | `10` | Quantidade de CVEs exibidas pelo `/cve` (o `/cve <max>` sobrepõe) |
 | `cve.maxDays` | 1–120 | `7` | Janela, em dias, do `/cve -highscore` |
 | `debug.enabled` | on/off | `on` se `APP_ENV=dev` | Modo debug (o mesmo do `/debug`) |
+| `edit.alert` | on/off | `on` | Avisa no seu privado quando alguém edita uma mensagem; `off` só guarda para o `/edit` |
 | `get.maxDownloadMB` | 10–2000 | `200` | Tamanho máximo baixado pelo yt-dlp no `/get`, antes da conversão |
 | `get.maxSizeMB` | 1–100 | `20` | Tamanho máximo do arquivo do `/get` |
 | `gif.giphy.api.key` | texto (pode ser vazio) | *(vazio)* | Chave do GIPHY, usada quando `GIPHY_API_KEY` não está no `config/.env`. Exibida mascarada (`••••1234`); `/set -reset gif.giphy.api.key` apaga |
@@ -677,8 +740,8 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 | `openai.api.key` | texto (pode ser vazio) | *(vazio)* | Chave da OpenAI, usada quando `OPENAI_API_KEY` não está no `config/.env`. Exibida mascarada (`••••1234`); `/set -reset openai.api.key` apaga |
 | `openai.timeout.ms` | 5000–300000 | `60000` | Timeout do `/gpt`, usado quando `OPENAI_TIMEOUT_MS` não está no `config/.env` |
 | `revoke.status` | on/off | `on` | Recupera status apagados; `off` ignora (nem alerta, nem `/show`) |
-| `show.delayMs` | 0–10000 | `700` | Intervalo entre os envios do `/show` |
-| `show.max` | 1–100 | `20` | Máximo de mensagens por `/show -N` |
+| `show.delayMs` | 0–10000 | `700` | Intervalo entre os envios do `/show` e do `/edit` |
+| `show.max` | 1–100 | `20` | Máximo de mensagens por `/show -N` e `/edit -N` |
 | `sticker.author` | texto | `https://github.com/jpereira/zapbot/` | Autor das figurinhas |
 | `sticker.name` | texto | `ZapBot` | Nome do pacote das figurinhas |
 | `tempo.city` | texto | `Niteroi, Rio de Janeiro, Brazil` | Cidade do `/tempo` quando nenhuma é informada |
@@ -963,8 +1026,8 @@ Detalhes:
   mesmo efeito das opções.
 - Se o bot reiniciar desligado ou em modo admin, a mensagem de inicialização
   no seu privado avisa.
-- Só os **comandos** são afetados: a recuperação de mensagens apagadas, o
-  `/watch` e as notificações do `/monitor` continuam funcionando.
+- Só os **comandos** são afetados: a recuperação de mensagens apagadas e
+  editadas, o `/watch` e as notificações do `/monitor` continuam funcionando.
 - Comandos ignorados aparecem no log: `Comando '/ping' ignorado: bot
   desligado` (sempre) e `Comando '/ping' de Fulano ignorado: modo admin` (só
   com o [debug](#debug--admin) ligado).
