@@ -326,6 +326,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -c -f`) para fazer o bot
 | `/set` | | ✅ | Lista e altera as configurações (settings) |
 | `/watch` | `/w` | ✅ | Avisa no seu privado quando uma mensagem casa com um texto/regex |
 | `/boletos` | | ✅ | Sorteia 2 membros para "pagar um boleto" |
+| `/meme` | | | Template de meme aleatório (imgflip) |
 
 ### `/help`
 
@@ -658,6 +659,10 @@ Detalhes:
 
 Só em grupos: sorteia 2 membros diferentes (fora o bot) e os marca para "pagar
 um boleto".
+### `/meme [busca]`
+
+Template de meme aleatório do [imgflip](https://imgflip.com/), opcionalmente
+filtrado pelo nome (`/meme drake`).
 
 ### Adicionando ou alterando comandos
 
