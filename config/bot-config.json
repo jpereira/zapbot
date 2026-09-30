@@ -1,7 +1,7 @@
 {
     "_about": {
         "project": "ZapBot - Bot para WhatsApp baseado no whatsapp-web.js",
-        "file": "Definição dos comandos do bot. Cada 'cmd' precisa de um handler em app.js (HANDLERS).",
+        "file": "Definição dos comandos do bot. Cada 'cmd' precisa de um handler em src/comandos/index.js (HANDLERS).",
         "author": "Jorge Pereira <jpereiran@gmail.com>",
         "url": "https://github.com/jpereira/zapbot",
         "copyright": "Copyright (c) 2026 Jorge Pereira",
