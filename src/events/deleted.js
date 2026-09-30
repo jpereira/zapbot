@@ -14,6 +14,14 @@ const { countStats, myIdStats } = require('../stats');
 const { mediaIsPath } = require('../util/files');
 const { formatData } = require('../util/format');
 
+/*
+ * Deleted message recovery
+ *
+ * The same renderer is used in two places:
+ * - event 'message_revoke_everyone' → sends to yourself, right away;
+ * - command /show                    → resends in the current chat, on demand.
+ */
+
 // Status (stories) arrive through the 'status@broadcast' chat
 const isStatus = (row) => row.chat_id === 'status@broadcast';
 

@@ -12,13 +12,7 @@ const CRYPTO_SUPPORTED = {
     SUI: '💧', PEPE: '🐸', SHIB: '🐕', XLM: '🚀', NEAR: 'Ⓝ', UNI: '🦄'
 };
 
-/*
- * /cotacao [MOEDA...]
- * Quote against the real: current value, open and previous close, high and
- * day low and change. Fiat currencies come from Yahoo Finance (if it fails,
- * of AwesomeAPI, which does not report the open); USDT comes from the daily candles
- * of Binance (Binance's "day" turns over at 21h Brasília).
- */
+// /cotacao currencies, against the real. The enabled ones stay in the 'cotacao.coins' setting.
 const QUOTE_SUPPORTED = {
     USD: { icone: '🇺🇸', nome: 'Dólar', fonte: 'fiat' },
     EUR: { icone: '🇪🇺', nome: 'Euro', fonte: 'fiat' },

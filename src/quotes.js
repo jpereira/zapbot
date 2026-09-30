@@ -7,6 +7,13 @@ const axios = require('axios');
 const { printError } = require('./log');
 const { QUOTE_SUPPORTED } = require('./currencies');
 
+/*
+ * /cotacao [CURRENCY...]: quote sources
+ * Quote against the real: current value, open and previous close, high and
+ * day low and change. Fiat currencies come from Yahoo Finance (if it fails,
+ * of AwesomeAPI, which does not report the open); USDT comes from the daily candles
+ * of Binance (Binance's "day" turns over at 21h Brasília).
+ */
 const fmtPriceCrypto = (value) =>
     Number(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 6 });
 

@@ -11,6 +11,18 @@ const { getSetting, setSetting } = require('../settings');
 const { formatData, plural, summarizeText } = require('../util/format');
 const { RULE_REGEX } = require('../watch/rules');
 
+/*
+ * /watch (alias /w)
+ * /watch                     → the same as /watch -s (occurrences of all the rules)
+ * /watch -l                  → lists the rules (no., rule, occurrences)
+ * /watch -s [-N]             → summary of the messages that matched rule N (without N: all)
+ *   /watch -a <texto|/regex/>  → adiciona regra
+ * /watch -d -N               → removes rule N and its occurrences
+ * /watch -f [-N]             → deletes rule N's occurrences (without N: of all); keeps the rules
+ * The rules stay in the 'watch.rules' setting; the occurrences in the watch_hits table.
+ * -l and -s show other people's conversations: outside your private chat, the reply goes there
+ * (responderNoPrivado).
+ */
 async function replyInPrivate({ msg, chatId }, textAlt) {
     const myId = client.info.wid._serialized;
 
