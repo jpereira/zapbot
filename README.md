@@ -1136,6 +1136,20 @@ ajuste `DOCKER_REMOTE_SERVER` para o seu host antes de usá-los. Eles usam
 `docker --context homelab` em cada comando, sem trocar o contexto global do
 Docker.
 
+### Nova versão
+
+O `bump.sh` incrementa a última tag `release-X.Y` (ex.: `release-X.Y` →
+`release-X.Y+1`), troca a versão no `package.json`, no `package-lock.json` e nos
+arquivos que citam a versão (ex.: README), commita e cria a tag anotada, as
+duas com a mensagem `Bump para X.Y`. Precisa do working tree limpo e não faz
+push.
+
+```bash
+./bump.sh -n    # dry-run: só mostra o que seria alterado
+./bump.sh       # commit "Bump para X.Y" + tag release-X.Y
+git push && git push origin release-X.Y
+```
+
 ## Solução de problemas
 
 | Sintoma | Causa provável / solução |
