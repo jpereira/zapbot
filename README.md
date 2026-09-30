@@ -76,6 +76,11 @@ tudo por comandos digitados no próprio chat (`/help`, `/get`, `/show`, `/news`,
   mensagens comuns com mais de 68 h (janela máxima que o WhatsApp permite
   apagar), as apagadas e as editadas com mais de 30 dias e as ocorrências do
   `/watch` com mais de 30 dias (setting `watch.hitsRetentionDays`).
+- **Estatísticas**: cada mensagem nova (e cada apagada/editada) soma 1 num
+  contador por chat, dia, hora e remetente (tabela `stats`), usado pelo
+  [`/stats`](#stats--admin). Só números, sem o texto; ficam 90 dias (setting
+  `stats.retentionDays`). As respostas do bot, o seu privado e os status não
+  entram. Desligue com `/set stats.enabled off`.
 - **Watch**: toda mensagem recebida que não é comando é testada contra as
   regras do [`/watch`](#watch-w--admin) (setting `watch.rules`); quando casa, a
   ocorrência é gravada na tabela `watch_hits` e você é avisado **no seu
@@ -399,6 +404,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -c -f`) para fazer o bot
 | `/ping` | `/p` | ✅ | Verifica se o bot está vivo |
 | `/set` | | ✅ | Lista e altera as configurações (settings) |
 | `/show` | `/undo`, `/s` | ✅ | Reexibe mensagens apagadas |
+| `/stats` | | ✅ | Ranking do chat: quem mais fala, apaga e edita, horários de pico |
 | `/sticker` | `/st` | | Transforma imagem/vídeo em figurinha |
 | `/tempo` | `/weather` | | Tempo agora e máx./mín. do dia (Open-Meteo); sem cidade usa `tempo.city` |
 | `/ualisu` | | ✅ | Marca 2 membros com uma CVE aleatória |
@@ -475,7 +481,7 @@ Mostra o espaço ocupado em `cache/` (banco, mídias, temporários).
 | Opção | Descrição |
 |---|---|
 | `-clean`, `-c` | Remove só o que passou da janela de retenção (68 h / `cache.revokedRetentionDays` para apagadas / `cache.editedRetentionDays` para editadas / `watch.hitsRetentionDays` para ocorrências do `/watch`) |
-| `-force`, `-f` | Junto com `-clean`: apaga **todas** as mensagens (inclusive as guardadas para o `/show` e o `/edit`), mídias e temporários, e compacta o banco. Números e logs do `/monitor` e ocorrências do `/watch` são mantidos |
+| `-force`, `-f` | Junto com `-clean`: apaga **todas** as mensagens (inclusive as guardadas para o `/show` e o `/edit`), mídias e temporários, e compacta o banco. Números e logs do `/monitor`, ocorrências do `/watch` e contadores do `/stats` são mantidos |
 
 ```
 /cache           → lista o conteúdo de cache/ e total de mensagens
@@ -890,6 +896,8 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 | `revoke.status` | on/off | `on` | Recupera status apagados; `off` ignora (nem alerta, nem `/show`) |
 | `show.delayMs` | 0–10000 | `700` | Intervalo entre os envios do `/show` e do `/edit` |
 | `show.max` | 1–100 | `20` | Máximo de mensagens por `/show -N` e `/edit -N` |
+| `stats.enabled` | on/off | `on` | Conta as mensagens de cada chat para o `/stats`; `off` para de contar (o histórico fica) |
+| `stats.retentionDays` | 7–365 | `90` | Dias que os contadores do `/stats` ficam guardados (e período máximo do `/stats -N`) |
 | `sticker.author` | texto | `https://github.com/jpereira/zapbot/` | Autor das figurinhas |
 | `sticker.name` | texto | `ZapBot` | Nome do pacote das figurinhas |
 | `tempo.city` | texto | `Niteroi, Rio de Janeiro, Brazil` | Cidade do `/tempo` quando nenhuma é informada |
@@ -947,6 +955,54 @@ numeração para o `-c`:
 💡 /show -N reexibe as deletadas e /edit -N as editadas deste chat (máx. 20).
 💡 Junte -c <nº ou nome> para outro chat: o nº é o da lista do tipo (/show -c 2, /edit -c 1).
 💡 -pv envia no seu privado; -f remove do cache as deste chat (no seu privado: de todos).
+```
+
+### `/stats` · admin
+
+Ranking do chat nos últimos N dias (padrão 7): total de mensagens, quem mais
+fala, quem mais apaga e edita, mensagens por faixa de horário, horário e dia de
+pico. Os números vêm dos contadores da tabela `stats`, que começam a ser
+preenchidos quando o bot é atualizado (não há histórico anterior).
+
+| Opção | Valor | Descrição |
+|---|---|---|
+| `-N` | | Período em dias (padrão 7, máx. 90, setting `stats.retentionDays`). Ex.: `-30` |
+| `-chat`, `-c` | `<nome>` | Estatísticas de outro chat, buscado pelo nome |
+| `-pv` | | Envia no seu privado em vez de expor no chat atual |
+
+```
+/stats               → últimos 7 dias deste chat
+/stats -30           → últimos 30 dias
+/stats -c família -pv → do chat "família", no seu privado
+```
+
+```
+📊 Estatísticas de Família
+Últimos 7 dias
+
+💬 Mensagens: 78 (média 11/dia)
+📎 Com mídia: 21
+👥 Participantes ativos: 4
+
+🏆 Quem mais fala
+🥇 Tia — 40 (51%)
+🥈 Tio — 25 (32%)
+🥉 Primo — 10 (13%)
+4. Vó — 3 (4%)
+
+🗑️ Quem mais apaga
+1. Tio — 2
+
+✏️ Quem mais edita
+1. Primo — 1
+
+🕐 Por horário
+09–12h █████      18
+12–15h ██████████ 34
+15–18h ████████   26
+...
+⏰ Horário de pico: 14h–15h (13 msgs)
+📅 Dia mais movimentado: 30/09/2026 (16 msgs)
 ```
 
 ### `/sticker`
