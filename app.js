@@ -2120,6 +2120,7 @@ async function cmdDebug({ msg, opts }) {
     await msg.reply(isDebugMode() ? '🪲 Debug Ativado.' : '🪲 Debug Desativado.');
 }
 
+// Também atende o /version: o banner já traz a versão
 async function cmdUptime({ msg }) {
     const conectado = BOT_AUTHENTICATED_TIME ? getBotUptime(BOT_AUTHENTICATED_TIME) : 'não conectado';
 
@@ -4035,6 +4036,7 @@ const HANDLERS = {
     '/help': cmdHelp,
     '/debug': cmdDebug,
     '/uptime': cmdUptime,
+    '/version': cmdUptime,
     '/ping': cmdPing,
     '/noffa': cmdNoffa,
     '/everyone': cmdEveryone,

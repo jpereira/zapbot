@@ -54,6 +54,15 @@
             "onlyAdmin": true
         },
         {
+            "cmd": "/version",
+            "usage": "/version",
+            "aliases": [
+                "/ver"
+            ],
+            "help": "Exibe a versão do bot (mesmo banner do /uptime).",
+            "onlyAdmin": true
+        },
+        {
             "cmd": "/ping",
             "usage": "/ping",
             "aliases": [
