@@ -418,7 +418,7 @@ Podem ser enviados em **qualquer chat** (privado, grupo ou no chat consigo mesmo
 
 Comandos marcados como **admin** só executam quando enviados **pela própria
 conta do bot** (você, de qualquer aparelho). Se outra pessoa tentar, nada
-acontece no chat; com o [debug](#debug--admin) ligado, você recebe um
+acontece no chat; com o [debug](#debug-d-dbg--admin) ligado, você recebe um
 aviso no `PHONE_NUMBER`:
 
 ```
@@ -530,11 +530,11 @@ Detalhes:
   continuam funcionando.
 - Comandos ignorados aparecem no log: `Comando '/ping' ignorado: bot
   desligado` (sempre) e `Comando '/ping' de Fulano ignorado: modo admin` (só
-  com o [debug](#debug--admin) ligado).
+  com o [debug](#debug-d-dbg--admin) ligado).
 - "Você" é a conta pareada ao bot, de qualquer aparelho. Para desligar só
   alguns comandos, para todos, use o setting `commands.disabled`.
 
-### `/cache` · admin
+### `/cache` (`/c`) · admin
 
 Mostra o espaço ocupado em `cache/` (banco, mídias, temporários).
 
@@ -630,7 +630,7 @@ lista e remove.
 📅 Alerta criado em 30/09/2026, 10:12:03
 ```
 
-### `/crypto`
+### `/crypto` (`/bitcoio`, `/creptomoeda`, `/moedinha`)
 
 Preço atual e variação de 24 h das moedas ativadas (via API da Binance, par
 `<TOKEN>USDT`). Por padrão: BTC, ETH, SOL e HYPE.
@@ -705,7 +705,7 @@ Detalhes:
   mais nova: uma conta o total e a outra busca o final da lista). Em erro, o
   bot pede para tentar de novo em 30 s.
 
-### `/debug` · admin
+### `/debug` (`/d`, `/dbg`) · admin
 
 Liga/desliga o modo debug (logs detalhados no container). O estado fica salvo
 no setting `debug.enabled` e sobrevive a reinícios. No primeiro boot começa
@@ -789,7 +789,7 @@ Só em grupos. Responde à sua mensagem mencionando todos os participantes
 /everyone
 ```
 
-### `/get`
+### `/get` (`/download`)
 
 Baixa vídeos de Instagram, YouTube, X/Twitter, TikTok e outros sites
 suportados pelo [yt-dlp](https://github.com/yt-dlp/yt-dlp). A URL pode vir como
@@ -872,7 +872,7 @@ Detalhes:
 - Se a resposta começar com `/`, o bot põe um `🤖` na frente, para ela não
   ser lida como comando.
 
-### `/help`
+### `/help` (`/h`)
 
 Exibe o menu com todos os comandos, ou a ajuda de um só.
 
@@ -899,7 +899,7 @@ Só em grupos: lista os membros (número, nome, 👑 dono, ⭐ admin).
 Template de meme aleatório do [imgflip](https://imgflip.com/), opcionalmente
 filtrado pelo nome (`/meme drake`).
 
-### `/monitor` · admin · 🚧 em desenvolvimento
+### `/monitor` (`/m`) · admin · 🚧 em desenvolvimento
 
 > 🚧 **Em desenvolvimento.** Este comando ainda não está finalizado: o
 > comportamento e as opções podem mudar, e algumas partes podem não funcionar
@@ -992,7 +992,7 @@ Detalhes:
 - Os feeds precisam ser RSS (`<item>`); feeds só em Atom (`<entry>`) não são
   lidos.
 
-### `/noffa`
+### `/noffa` (`/🌈`, `/🏳️‍🌈`)
 
 Coloca emojis de arco-íris entre as palavras. Aceita texto ou reply numa mensagem.
 
@@ -1004,7 +1004,7 @@ Coloca emojis de arco-íris entre as palavras. Aceita texto ou reply numa mensag
 Se o texto começar com `/`, a resposta ganha um 🌈 na frente, para nunca parecer
 um comando.
 
-### `/ping` · admin
+### `/ping` (`/p`) · admin
 
 ```
 /ping  → pong
@@ -1201,7 +1201,7 @@ para o seu número em qualquer chat, inclusive no privado.
 ...
 ```
 
-### `/sticker`
+### `/sticker` (`/st`)
 
 Responda (reply) a uma imagem, vídeo/GIF ou mensagem com link com `/sticker`.
 Com link, o bot usa a miniatura do preview. Nome e autor da figurinha vêm dos
