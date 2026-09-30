@@ -3419,6 +3419,37 @@ async function cmdBoletos({ msg }) {
     );
 }
 
+// /ualisu: Walissu CVE BOT (usa o sorteio do /boletos e as CVEs do /cve)
+async function cmdUalisu({ msg }) {
+    const chat = await msg.getChat().catch(() => null);
+
+    if (!chat?.isGroup) {
+        await msg.reply('Apenas utilizado dentro de grupos.');
+        return;
+    }
+
+    const sorteados = sortearParticipantes(chat.participants, 2);
+
+    if (sorteados.length < 2) {
+        await msg.reply('Membros insuficientes no grupo.');
+        return;
+    }
+
+    try {
+        const cves = await buscarCvesRecentes({ dias: 2, max: 50 });
+        const cve = cves[Math.floor(Math.random() * cves.length)];
+
+        await enviarSorteio(msg, chat, sorteados, ([a, b]) =>
+            `Hey ${a} e ${b}, aqui é o Walissu CVE BOT! Dá uma olhada nesse CVE ou você vai sair da rave 😊\n\n` +
+            `${formatarCve(cve)}\n\n` +
+            'Cadê o exploit? Preciso sair de Brasília!'
+        );
+    } catch (err) {
+        printError('/ualisu:', err.message);
+        await msg.reply('❌ Não consegui consultar o NVD agora.');
+    }
+}
+
 // cmd do bot-config.json -> handler
 const HANDLERS = {
     '/help': cmdHelp,
@@ -3437,7 +3468,8 @@ const HANDLERS = {
     '/watch': cmdWatch,
     '/cve': cmdCve,
     '/cvehighscore': cmdCveHighscore,
-    '/boletos': cmdBoletos
+    '/boletos': cmdBoletos,
+    '/ualisu': cmdUalisu
 };
 
 // Avisa no boot se o bot-config tiver comando sem handler (ou vice-versa)

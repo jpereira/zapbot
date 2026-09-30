@@ -328,6 +328,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -c -f`) para fazer o bot
 | `/cve` | | | Últimas CVEs publicadas (NVD) |
 | `/cvehighscore` | `/cvehs` | | CVEs críticas (CVSS ≥ 9) dos últimos 7 dias |
 | `/boletos` | | ✅ | Sorteia 2 membros para "pagar um boleto" |
+| `/ualisu` | | ✅ | Marca 2 membros com uma CVE aleatória |
 
 ### `/help`
 
@@ -667,6 +668,10 @@ aceita ~5 consultas a cada 30s.
 
 Só em grupos: sorteia 2 membros diferentes (fora o bot) e os marca para "pagar
 um boleto".
+
+### `/ualisu` · admin
+
+Só em grupos: o Walissu CVE BOT marca 2 membros com uma CVE aleatória do NVD.
 
 ### Adicionando ou alterando comandos
 
