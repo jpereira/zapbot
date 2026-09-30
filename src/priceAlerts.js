@@ -1,0 +1,246 @@
+/*
+ * Price alerts from /cotacao -alerta and /crypto -alerta.
+ */
+
+const axios = require('axios');
+
+const { estado: stateAlt } = require('./state');
+const { client } = require('./client');
+const { QUOTE_TIMEOUT_MS, searchQuote, fmtPriceCrypto, fmtReal, fmtChange } = require('./quotes');
+const { dbAll, dbGet, dbReady, dbRun } = require('./db');
+const { printError, printInfo } = require('./log');
+const { QUOTE_SUPPORTED, CRYPTO_SUPPORTED } = require('./currencies');
+const { getSetting } = require('./settings');
+const { formatData, plural } = require('./util/format');
+
+/*
+ * Price alerts: /cotacao -alerta and /crypto -alerta
+ * -alerta                 → lists the command's alerts, numbered
+ * -alerta USD > 5.30      → notifies your private chat when USD goes above R$ 5.30
+ * -alerta BTC < 90000     → (in /crypto) when BTC drops below $90,000
+ * -alerta -rm 2 | all     → removes alert no. 2 from the list (or all)
+ * Each alert fires ONCE and is removed. The check runs every
+ * 'alert.intervalMin' minutes. Only the owner creates and removes.
+ */
+const ALERT_TYPES = {
+    cotacao: {
+        cmd: '/cotacao',
+        suportada: (sym) => Boolean(QUOTE_SUPPORTED[sym]),
+        icone: (sym) => QUOTE_SUPPORTED[sym].icone,
+        par: (sym) => `${sym}/BRL`,
+        fmt: fmtReal,
+        exemplo: 'USD > 5.30',
+        precos: async (syms) => Object.fromEntries(
+            await Promise.all(syms.map(async sym => [sym, (await searchQuote(sym)).atual]))
+        )
+    },
+    crypto: {
+        cmd: '/crypto',
+        suportada: (sym) => Boolean(CRYPTO_SUPPORTED[sym]),
+        icone: (sym) => CRYPTO_SUPPORTED[sym],
+        par: (sym) => `${sym}/USDT`,
+        fmt: (v) => `$${fmtPriceCrypto(v)}`,
+        exemplo: 'BTC < 90000',
+        precos: async (syms) => {
+            const { data } = await axios.get('https://api.binance.com/api/v3/ticker/price', {
+                params: { symbols: JSON.stringify(syms.map(sym => `${sym}USDT`)) },
+                timeout: QUOTE_TIMEOUT_MS
+            });
+            return Object.fromEntries(data.map(d => [d.symbol.replace(/USDT$/, ''), Number(d.price)]));
+        }
+    }
+};
+
+const OPERATORS = {
+    '>': { testar: (price, target) => price > target, texto: 'acima de', icone: '📈' },
+    '<': { testar: (price, target) => price < target, texto: 'abaixo de', icone: '📉' }
+};
+
+// "5.30", "5,30" or "90000" (without a thousands separator)
+function readValueAlert(textAlt) {
+    const v = Number(String(textAlt).replace(',', '.'));
+    return Number.isFinite(v) && v > 0 ? v : null;
+}
+
+/**
+ * Reads "USD > 5.30", "USD>5,30" or "btc < 90000".
+ * @returns {{sym: string, op: string, alvo: number} | null}
+ */
+function readRuleAlert(textAlt) {
+    const m = String(textAlt).trim().match(/^([a-z0-9]+)\s*([<>])\s*([\d.,]+)$/i);
+    if (!m) return null;
+
+    const target = readValueAlert(m[3]);
+    return target ? { sym: m[1].toUpperCase(), op: m[2], alvo: target } : null;
+}
+
+const listAlerts = (kind) =>
+    dbAll('SELECT * FROM price_alerts WHERE kind = ? ORDER BY id', [kind]);
+
+function describeAlert(kind, a) {
+    const t = ALERT_TYPES[kind];
+    return `${t.icone(a.symbol)} ${t.par(a.symbol)} ${OPERATORS[a.op].texto} *${t.fmt(a.target)}*`;
+}
+
+async function priceHandleAlert(kind, { msg, opts }) {
+    const t = ALERT_TYPES[kind];
+
+    // The notices go to YOUR private chat: only the owner creates, lists and removes
+    if (!msg.fromMe) {
+        await msg.reply('⛔ Apenas o dono do bot pode usar os alertas.');
+        return;
+    }
+
+    const alerts = await listAlerts(kind);
+
+    // -rm <nº|all>
+    if (opts.given.has('rm')) {
+        const target = String(opts.opt.rm ?? '').trim().toLowerCase();
+
+        if (target === 'all') {
+            await dbRun('DELETE FROM price_alerts WHERE kind = ?', [kind]);
+            await msg.reply(`🗑️ ${plural(alerts.length, 'alerta removido', 'alertas removidos')}.`);
+            return;
+        }
+
+        const alert = /^\d+$/.test(target) ? alerts[Number(target) - 1] : null;
+
+        if (!alert) {
+            await msg.reply(`❌ Alerta nº ${target || '?'} não existe. Veja a lista com ${t.cmd} -alerta`);
+            return;
+        }
+
+        await dbRun('DELETE FROM price_alerts WHERE id = ?', [alert.id]);
+        await msg.reply(`🗑️ Alerta removido: ${describeAlert(kind, alert)}`);
+        return;
+    }
+
+    const ruleText = opts.argv.join(' ').trim();
+
+    // Without a rule: lists
+    if (!ruleText) {
+        if (!alerts.length) {
+            await msg.reply(`🔔 Nenhum alerta no ${t.cmd}.\n💡 _Crie com ${t.cmd} -alerta ${t.exemplo}_`);
+            return;
+        }
+
+        const linesAlt = alerts.map((a, i) => `${i + 1}. ${describeAlert(kind, a)} _(criado ${formatData(a.created_at)})_`);
+        await msg.reply(`🔔 *ALERTAS DE PREÇO* _(${t.cmd})_\n\n${linesAlt.join('\n')}\n\n` +
+            `💡 _Verificados a cada ${plural(getSetting('alerta.intervalMin'), 'minuto', 'minutos')}. Remova com ${t.cmd} -alerta -rm <nº|all>._`);
+        return;
+    }
+
+    const rule = readRuleAlert(ruleText);
+
+    if (!rule) {
+        await msg.reply(`❌ Regra inválida: "${ruleText}"\n💡 _Formato: ${t.cmd} -alerta ${t.exemplo} (use > ou <; sem separador de milhar)_`);
+        return;
+    }
+
+    if (!t.suportada(rule.sym)) {
+        await msg.reply(`❌ Moeda não suportada: ${rule.sym}\n💡 _Veja as suportadas com ${t.cmd} -l_`);
+        return;
+    }
+
+    const max = getSetting('alerta.max');
+    const total = (await dbGet('SELECT COUNT(*) AS n FROM price_alerts')).n;
+
+    if (total >= max) {
+        await msg.reply(`❌ Limite de ${max} alertas atingido (setting alerta.max). Remova algum antes.`);
+        return;
+    }
+
+    let price;
+    try {
+        price = (await t.precos([rule.sym]))[rule.sym];
+        if (!Number.isFinite(price)) throw new Error('sem preço');
+    } catch (err) {
+        printError(`${t.cmd} -alerta: preço de ${rule.sym}:`, err.message);
+        await msg.reply(`⚠️ Não consegui consultar o preço de ${rule.sym} agora. Tente de novo em instantes.`);
+        return;
+    }
+
+    const op = OPERATORS[rule.op];
+
+    // Already fulfilled: it would fire right away, which is not what you want from an alert
+    if (op.testar(price, rule.alvo)) {
+        await msg.reply(`ℹ️ ${t.par(rule.sym)} já está ${op.texto} ${t.fmt(rule.alvo)}: agora está em *${t.fmt(price)}*.`);
+        return;
+    }
+
+    await dbRun(
+        'INSERT INTO price_alerts (kind, symbol, op, target, price_at_creation, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+        [kind, rule.sym, rule.op, rule.alvo, price, Date.now()]
+    );
+
+    await msg.reply(`🔔 *Alerta criado*\n${describeAlert(kind, { symbol: rule.sym, op: rule.op, target: rule.alvo })}\n` +
+        `💰 Agora: ${t.fmt(price)}\n` +
+        `💡 _Aviso no seu privado; verificação a cada ${plural(getSetting('alerta.intervalMin'), 'minuto', 'minutos')}._`);
+}
+
+/*
+ * Periodic check: one tick per minute, which only queries the prices
+ * when 'alerta.intervalMin' has passed since the last time. One query per
+ * currency, even with several alerts on it.
+ */
+let lastCheckAlerts = 0;
+let checkingAlerts = false;
+
+async function priceCheckAlerts({ forcar: force = false } = {}) {
+    if (checkingAlerts || !stateAlt.pronto) return;
+    if (!force && Date.now() - lastCheckAlerts < getSetting('alerta.intervalMin') * 60 * 1000) return;
+
+    checkingAlerts = true;
+    lastCheckAlerts = Date.now();
+
+    try {
+        await dbReady;
+        const alerts = await dbAll('SELECT * FROM price_alerts ORDER BY id');
+
+        for (const [kind, t] of Object.entries(ALERT_TYPES)) {
+            const typeAlt = alerts.filter(a => a.kind === kind);
+            if (!typeAlt.length) continue;
+
+            let prices;
+            try {
+                prices = await t.precos([...new Set(typeAlt.map(a => a.symbol))]);
+            } catch (err) {
+                printError(`Alertas ${t.cmd}: falha ao consultar preços:`, err.message);
+                continue;
+            }
+
+            for (const a of typeAlt) {
+                const price = prices[a.symbol];
+                if (!Number.isFinite(price) || !OPERATORS[a.op].testar(price, a.target)) continue;
+
+                // Removes BEFORE notifying: if the send fails, the notice does not repeat on every check
+                await dbRun('DELETE FROM price_alerts WHERE id = ?', [a.id]);
+
+                const changeAlt = fmtChange(price, a.price_at_creation);
+                await client.sendMessage(client.info.wid._serialized,
+                    `🔔 *ALERTA DE PREÇO*\n\n` +
+                    `${OPERATORS[a.op].icone} ${t.icone(a.symbol)} *${t.par(a.symbol)}* ficou ${OPERATORS[a.op].texto} ${t.fmt(a.target)}\n` +
+                    `💰 Agora: *${t.fmt(price)}*${changeAlt ? ` _(${changeAlt} desde a criação)_` : ''}\n` +
+                    `📅 Alerta criado em ${formatData(a.created_at)}`
+                ).catch(err => printError('Alerta de preço: falha ao avisar:', err.message));
+
+                printInfo(`Alerta de preço disparado: ${a.symbol} ${a.op} ${a.target} (agora ${price})`);
+            }
+        }
+    } catch (err) {
+        printError('Erro ao verificar alertas de preço:', err.message);
+    } finally {
+        checkingAlerts = false;
+    }
+}
+
+// Called in app.js
+function priceStartAlerts() {
+    setInterval(priceCheckAlerts, 60 * 1000);
+}
+
+module.exports = {
+    priceStartAlerts,
+    priceHandleAlert,
+    priceCheckAlerts
+};
