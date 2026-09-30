@@ -358,8 +358,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -c -f`) para fazer o bot
 | `/cve` | | | Últimas CVEs publicadas (NVD); `-highscore` só as críticas |
 | `/tempo` | `/weather` | | Tempo agora e máx./mín. do dia (Open-Meteo); sem cidade usa `tempo.city` |
 | `/ualisu` | | ✅ | Marca 2 membros com uma CVE aleatória |
-| `/bot` | | ✅ | Liga (`-on`) e desliga (`-off`) todos os comandos |
-| `/admin`, `/adminoff` | | ✅ | Liga/desliga o modo em que só você usa comandos |
+| `/bot` | | ✅ | Liga/desliga todos os comandos (`-on`/`-off`) e o modo admin (`+admin`/`-admin`) |
 
 ### `/help`
 
@@ -627,7 +626,7 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 | `cve.maxDays` | 1–120 | `7` | Janela, em dias, do `/cve -highscore` |
 | `tempo.city` | texto | `Niteroi, Rio de Janeiro, Brazil` | Cidade do `/tempo` quando nenhuma é informada |
 | `bot.paused` | on/off | `off` | Bot desligado: todos os comandos ignorados, exceto o `/bot` (o mesmo do `/bot -on`/`-off`) |
-| `bot.adminMode` | on/off | `off` | Modo admin: só você usa comandos (o mesmo do `/admin`/`/adminoff`) |
+| `bot.adminMode` | on/off | `off` | Modo admin: só você usa comandos (o mesmo do `/bot +admin`/`-admin`) |
 | `api.key.giphy` | texto (pode ser vazio) | *(vazio)* | Chave do GIPHY, usada quando `GIPHY_API_KEY` não está no `config/.env`. Exibida mascarada (`••••1234`); `/set -reset api.key.giphy` apaga |
 
 Uma chave nova é declarada em `SETTINGS_SCHEMA` (`app.js`) com padrão, tipo,
@@ -885,12 +884,6 @@ Detalhes:
 - Comandos ignorados aparecem no log (`Comando '/ping' ignorado: bot
   desligado`). Quem não é o dono não recebe resposta, com o bot ligado ou não.
 - Para desligar só alguns comandos, use o setting `commands.disabled`.
-
-### `/admin` e `/adminoff` · admin
-
-`/admin` faz o bot ignorar em silêncio os comandos de qualquer outra pessoa;
-`/adminoff` volta ao normal (cada comando segue o seu `onlyAdmin`). O estado
-fica no setting `bot.adminMode` e sobrevive a reinícios.
 
 ### Adicionando ou alterando comandos
 
