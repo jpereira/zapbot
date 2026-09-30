@@ -213,6 +213,7 @@ outros funcionam sem configuração.
 | `/tempo` | [Open-Meteo](https://open-meteo.com/) | — |
 | `/cve`, `/ualisu` | [NVD](https://nvd.nist.gov/) (~5 consultas a cada 30 s) | — |
 | `/news` | Feeds RSS (g1, Gazeta do Povo, The Hacker News...) | — |
+| `/cotacao` | [Yahoo Finance](https://finance.yahoo.com/) (reserva: [AwesomeAPI](https://docs.awesomeapi.com.br/)) e [Binance](https://www.binance.com/) para o USDT | — |
 | `/crypto` | [Binance](https://www.binance.com/) | — |
 | `/kernel` | [kernel.org](https://www.kernel.org/) | — |
 | `/meme` | [imgflip](https://imgflip.com/) | — |
@@ -416,6 +417,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -c -f`) para fazer o bot
 | `/boletos` | | ✅ | Sorteia 2 membros para "pagar um boleto" |
 | `/bot` | | ✅ | Liga/desliga todos os comandos (`-on`/`-off`) e o modo admin (`+admin`/`-admin`) |
 | `/cache` | `/c` | ✅ | Uso e limpeza do cache |
+| `/cotacao` | `/cambio` | | Cotação de EUR e USDT (e USD, GBP) contra o real: atual, abertura, fechamento e variação |
 | `/crypto` | `/bitcoio`, `/creptomoeda`, `/moedinha` | | Cotação das criptos ativadas (padrão: BTC, ETH, SOL e HYPE) |
 | `/cve` | | | Últimas CVEs publicadas (NVD); `-highscore` só as críticas |
 | `/debug` | `/d`, `/dbg` | ✅ | Liga/desliga logs de debug |
@@ -518,6 +520,44 @@ Mostra o espaço ocupado em `cache/` (banco, mídias, temporários).
 /cache           → lista o conteúdo de cache/ e total de mensagens
 /c -clean        → limpeza normal
 /cache -c -f     → limpeza geral
+```
+
+### `/cotacao` (`/cambio`)
+
+Cotação contra o real das moedas do setting `cotacao.coins` (padrão: EUR e
+USDT), ou só das pedidas: valor atual, abertura e fechamento anterior, máxima e
+mínima do dia e variação (🟢 alta, 🔴 queda). Suportadas: `USD`, `EUR`, `GBP`
+e `USDT`.
+
+- **USD, EUR, GBP**: Yahoo Finance. Se ele falhar, a AwesomeAPI (que não
+  informa a abertura: aparece `—`).
+- **USDT**: candles diários da Binance. O "dia" da Binance vira às 21h de
+  Brasília (00h UTC), então a abertura é a desse horário.
+
+```
+/cotacao             → EUR e USDT (setting cotacao.coins)
+/cotacao usd         → só o dólar
+/cambio usd eur gbp  → dólar, euro e libra
+/set cotacao.coins USD EUR USDT
+```
+
+```
+💱 COTAÇÕES (em reais)
+
+🇪🇺 EUR/BRL (Euro)
+   💰 R$ 5,8569  🔴 -0,67%
+   🔔 Abertura: R$ 5,8811 (🔴 -0,41% desde a abertura)
+   🏁 Fechamento anterior: R$ 5,8962
+   📈 Máx: R$ 5,9117  📉 Mín: R$ 5,8531
+
+🪙 USDT/BRL (Tether)
+   💰 R$ 5,1816  🔴 -0,70%
+   🔔 Abertura: R$ 5,2181 (🔴 -0,70% desde a abertura)
+   🏁 Fechamento anterior: R$ 5,2181
+   📈 Máx: R$ 5,2259  📉 Mín: R$ 5,1725
+
+🕐 30/09/2026, 16:57 · Yahoo Finance, Binance
+💡 % ao lado do valor: variação desde o fechamento anterior.
 ```
 
 ### `/crypto`
@@ -907,6 +947,7 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 | `cache.editedRetentionDays` | 1–365 | `30` | Dias que as mensagens editadas ficam guardadas para o `/edit` |
 | `cache.revokedRetentionDays` | 1–365 | `30` | Dias que as mensagens apagadas ficam guardadas |
 | `commands.disabled` | lista | *(vazia)* | Comandos desativados em tempo de execução: o bot os ignora e eles somem do `/help`. O `/set` não pode ser desativado |
+| `cotacao.coins` | lista | `EUR, USDT` | Moedas do `/cotacao` (`USD`, `EUR`, `GBP`, `USDT`) |
 | `crypto.coins` | lista | `BTC, ETH, SOL, HYPE` | Moedas do `/crypto` (só as suportadas) |
 | `cve.max` | 1–20 | `10` | Quantidade de CVEs exibidas pelo `/cve` (o `/cve <max>` sobrepõe) |
 | `cve.maxDays` | 1–120 | `7` | Janela, em dias, do `/cve -highscore` |
