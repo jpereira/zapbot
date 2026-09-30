@@ -184,6 +184,24 @@ ficam disponíveis para o bot. Nunca faça commit dele (já está no `.gitignore
 |---|---|---|
 | `GIPHY_API_KEY` | | Chave do GIPHY usada pelo `/gif` ([developers.giphy.com](https://developers.giphy.com/)). Se estiver vazia, o bot usa o setting `api.key.giphy` (`/set api.key.giphy <chave>`). |
 
+#### Como gerar a chave do GIPHY (grátis)
+
+1. Crie uma conta (ou entre) em [developers.giphy.com](https://developers.giphy.com/)
+   e abra o **Dashboard**.
+2. Clique em **Create an API Key** e escolha a opção **API** (a opção SDK é
+   para apps mobile).
+3. Dê um nome ao app (ex.: `zapbot`) e uma descrição curta, aceite os termos
+   e confirme.
+4. A chave aparece no Dashboard. Copie e configure de um dos jeitos:
+   - no `config/.env`: `GIPHY_API_KEY=suachave` (vale no próximo start), ou
+   - pelo WhatsApp, sem reiniciar: `/set api.key.giphy suachave` (o
+     `GIPHY_API_KEY` do `.env`, se existir, tem prioridade).
+
+A chave nova é do tipo **beta**: gratuita, mas limitada a **100 chamadas por
+hora**, o que sobra para o `/gif`. Acima disso a API responde `429` e o
+comando avisa que não conseguiu buscar o GIF. Para mais que isso é preciso
+pedir a chave de produção no próprio Dashboard.
+
 ### QR Code por e-mail
 
 | Variável | Exemplo | Descrição |
