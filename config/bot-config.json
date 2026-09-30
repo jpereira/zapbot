@@ -474,7 +474,7 @@
         },
         {
             "cmd": "/tempo",
-            "usage": "/tempo <cidade>",
+            "usage": "/tempo [cidade]",
             "aliases": [
                 "/weather"
             ],

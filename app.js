@@ -384,6 +384,11 @@ const SETTINGS_SCHEMA = {
         default: 7,
         type: 'number', min: 1, max: 120, // 120: janela máxima aceita pelo NVD
         desc: 'Janela (dias) do /cve -highscore.'
+    },
+    'tempo.city': {
+        default: 'Niteroi, Rio de Janeiro, Brazil',
+        type: 'string',
+        desc: 'Cidade padrão do /tempo (ex.: "Niteroi, Rio de Janeiro, Brazil").'
     }
 };
 
@@ -3591,12 +3596,9 @@ const CLIMA_WMO = {
 };
 
 async function cmdTempo({ msg, args }) {
-    const cidade = args.split(',')[0].trim();
-
-    if (!cidade) {
-        await msg.reply('Syntax: /tempo <cidade>\nEx.: /tempo Rio de Janeiro');
-        return;
-    }
+    // Sem cidade usa o setting tempo.city. O texto vai inteiro para a geocodificação,
+    // que entende "cidade, estado, país" (ex.: "Niteroi, Sergipe")
+    const cidade = args.trim() || getSetting('tempo.city');
 
     try {
         const { data: geo } = await axios.get('https://geocoding-api.open-meteo.com/v1/search', {
