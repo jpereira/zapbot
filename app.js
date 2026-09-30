@@ -2748,9 +2748,9 @@ async function cmdCache({ msg, opts }) {
  *   /show -3 -pv → envia no SEU privado em vez de expor no chat atual
  *   /show -list  → quantas mensagens apagadas existem no cache
  *   /show -flush → remove as apagadas deste chat (no seu privado: de todos os chats)
- *   /show -2 -c 1       → (no seu privado) as 2 últimas do chat nº 1 do /show -l
- *   /show -2 -c zapbot  → (no seu privado) idem, buscando o chat pelo nome
- *   /show -f -c 1       → (no seu privado) flush só do chat nº 1
+ *   /show -2 -c 1       → as 2 últimas do chat nº 1 do /show -l
+ *   /show -2 -c zapbot  → idem, buscando o chat pelo nome
+ *   /show -f -c 1       → flush só do chat nº 1
  * Envia em ordem cronológica: a última enviada é a apagada mais recentemente.
  */
 // Em conversas privadas o mesmo chat pode aparecer como @lid ou @c.us
@@ -2906,7 +2906,7 @@ async function listarApagadas({ msg, opts, chatId }) {
     texto += `\n💡 _Use /show -N para reexibir (máx. ${getSetting('show.max')})._`;
 
     if (mostrarPorChat && geral.total > 0) {
-        texto += '\n💡 _No seu privado: /show -N -c <nº ou nome> para ver as de um chat._';
+        texto += '\n💡 _Use /show -N -c <nº ou nome> para ver as de um chat._';
     }
 
     if (opts.opt.pv && !noPrivadoDoDono) {
@@ -3018,20 +3018,10 @@ async function limparApagadasDoChat({ msg, chatId, alvo = null }) {
 }
 
 async function cmdUndo({ msg, opts, chatId }) {
-    /*
-     * -c <nº|nome>: escolhe outro chat. Só no SEU privado; num grupo isso
-     * republicaria ali as mensagens apagadas de outras conversas.
-     */
+    // -c <nº|nome>: escolhe outro chat (vale em qualquer chat; use -pv para não expor aqui)
     let alvo = null;
 
     if (opts.opt.chat) {
-        const noMeuPrivado = (await idsDoChatAtual(chatId)).includes(client.info.wid._serialized);
-
-        if (!msg.fromMe || !noMeuPrivado) {
-            await msg.reply('⛔ A opção -c só pode ser usada no seu privado.');
-            return;
-        }
-
         await dbPronto;
         alvo = await resolverChatAlvo(String(opts.opt.chat));
 
@@ -3113,9 +3103,10 @@ async function cmdUndo({ msg, opts, chatId }) {
         resumo += `\n💬 *Chat:* ${alvo.nome}`;
     }
 
-    if (opts.opt.pv && !alvo) {
+    if (opts.opt.pv) {
+        // O resumo (com o nome do chat) vai só para o privado
         await msg.reply('♻️ Enviado no seu privado.');
-        await client.sendMessage(destino, `${resumo}\n💬 *Chat:* ${rows[0].chat_name || chatId}`);
+        await client.sendMessage(destino, alvo ? resumo : `${resumo}\n💬 *Chat:* ${rows[0].chat_name || chatId}`);
     } else {
         await msg.reply(resumo);
     }
