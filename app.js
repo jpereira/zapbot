@@ -361,6 +361,11 @@ const SETTINGS_SCHEMA = {
         default: 30,
         type: 'number', min: 1, max: 365,
         desc: 'Dias que as ocorrências do /watch ficam guardadas.'
+    },
+    'bot.adminMode': {
+        default: false,
+        type: 'boolean',
+        desc: 'Modo admin: só o dono usa comandos (o mesmo do /admin e /adminoff).'
     }
 };
 
@@ -3282,6 +3287,21 @@ async function cmdWatch({ msg, opts, args, chatId }) {
     await ajuda();
 }
 
+/*
+ * Modo admin (setting 'bot.adminMode', sobrevive a reinícios)
+ *   /admin    → só você usa comandos (os dos outros são ignorados em silêncio)
+ *   /adminoff → volta ao normal (cada comando segue o seu onlyAdmin)
+ */
+async function cmdAdmin({ msg }) {
+    await setSetting('bot.adminMode', true);
+    await msg.reply('🔒 Modo admin ativado: só o dono do bot pode usar comandos.');
+}
+
+async function cmdAdminOff({ msg }) {
+    await setSetting('bot.adminMode', false);
+    await msg.reply('🔓 Modo admin desativado: comandos liberados conforme a configuração.');
+}
+
 // cmd do bot-config.json -> handler
 const HANDLERS = {
     '/help': cmdHelp,
@@ -3297,7 +3317,9 @@ const HANDLERS = {
     '/cache': cmdCache,
     '/show': cmdUndo,
     '/set': cmdSet,
-    '/watch': cmdWatch
+    '/watch': cmdWatch,
+    '/admin': cmdAdmin,
+    '/adminoff': cmdAdminOff
 };
 
 // Avisa no boot se o bot-config tiver comando sem handler (ou vice-versa)
@@ -3492,6 +3514,9 @@ client.on('message_create', async (msg) => {
             if (isDebugMode()) printDebug(`Comando '${caller}' não encontrado`);
             return;
         }
+
+        // /admin: comandos dos outros são ignorados em silêncio
+        if (getSetting('bot.adminMode') && !msg.fromMe) return;
 
         /*
          * Comando restrito ao dono do bot: ignora em silêncio no chat e só avisa

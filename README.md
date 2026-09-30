@@ -325,6 +325,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -c -f`) para fazer o bot
 | `/show` | `/undo`, `/s` | ✅ | Reexibe mensagens apagadas |
 | `/set` | | ✅ | Lista e altera as configurações (settings) |
 | `/watch` | `/w` | ✅ | Avisa no seu privado quando uma mensagem casa com um texto/regex |
+| `/admin`, `/adminoff` | | ✅ | Liga/desliga o modo em que só você usa comandos |
 
 ### `/help`
 
@@ -587,6 +588,7 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 | `watch.max` | 1–100 | `20` | Máximo de regras do `/watch` |
 | `watch.showMax` | 1–100 | `20` | Máximo de ocorrências listadas por `/watch -show` |
 | `watch.hitsRetentionDays` | 1–365 | `30` | Dias que as ocorrências do `/watch` ficam guardadas |
+| `bot.adminMode` | on/off | `off` | Modo admin: só você usa comandos (o mesmo do `/admin`/`/adminoff`) |
 
 Uma chave nova é declarada em `SETTINGS_SCHEMA` (`app.js`) com padrão, tipo,
 descrição e limites, e lida com `getSetting('<chave>')`. Valores inválidos no
@@ -652,6 +654,12 @@ Detalhes:
   a resposta vai para o seu privado.
 - As ocorrências ficam na tabela `watch_hits` por 30 dias (setting
   `watch.hitsRetentionDays`), ou até um `/watch -f`.
+
+### `/admin` e `/adminoff` · admin
+
+`/admin` faz o bot ignorar em silêncio os comandos de qualquer outra pessoa;
+`/adminoff` volta ao normal (cada comando segue o seu `onlyAdmin`). O estado
+fica no setting `bot.adminMode` e sobrevive a reinícios.
 
 ### Adicionando ou alterando comandos
 
