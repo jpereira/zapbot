@@ -10,132 +10,71 @@
     },
     "commands": [
         {
-            "cmd": "/help",
-            "aliases": [
-                "/h"
-            ],
-            "help": "Exibe este menu de ajuda.",
-            "onlyAdmin": false
+            "cmd": "/boletos",
+            "usage": "/boletos",
+            "help": "Sorteia 2 membros do grupo para pagar um boleto.",
+            "onlyAdmin": true
         },
         {
-            "cmd": "/debug",
-            "usage": "/debug [OPTION]",
-            "aliases": [
-                "/d",
-                "/dbg"
-            ],
-            "help": "Ajuda na depuração de problemas. O estado fica salvo (setting debug.enabled).",
+            "cmd": "/bot",
+            "usage": "/bot [-on|-off] [+admin|-admin]",
+            "help": "Liga/desliga o bot e o modo admin. Sem opção mostra o estado. As opções combinam: /bot -on +admin",
             "cmd_opts": [
                 {
                     "opts": [
                         "on"
                     ],
                     "values": [],
-                    "desc": "Ativa o debug mode."
+                    "desc": "Ativa o bot."
                 },
                 {
                     "opts": [
                         "off"
                     ],
                     "values": [],
-                    "desc": "Desativa o debug mode."
+                    "desc": "Desliga o bot: todos os comandos (inclusive os seus) são ignorados, exceto o /bot."
+                },
+                {
+                    "opts": [
+                        "admin"
+                    ],
+                    "values": [],
+                    "desc": "Desliga o modo admin (cada comando volta a seguir o seu onlyAdmin)."
+                },
+                {
+                    "argv": [
+                        "+admin"
+                    ],
+                    "desc": "Liga o modo admin: só você usa comandos; os dos outros são ignorados."
                 }
             ],
             "onlyAdmin": true
         },
         {
-            "cmd": "/uptime",
-            "usage": "/uptime",
-            "aliases": [
-                "/u",
-                "/up"
-            ],
-            "help": "Exibe o tempo que o bot está rodando.",
-            "onlyAdmin": true
-        },
-        {
-            "cmd": "/version",
-            "usage": "/version",
-            "aliases": [
-                "/ver"
-            ],
-            "help": "Exibe a versão do bot (mesmo banner do /uptime).",
-            "onlyAdmin": true
-        },
-        {
-            "cmd": "/ping",
-            "usage": "/ping",
-            "aliases": [
-                "/p"
-            ],
-            "help": "Verificar status do bot.",
-            "onlyAdmin": true
-        },
-        {
-            "cmd": "/noffa",
-            "usage": "/noffa",
-            "aliases": [
-                "/🌈",
-                "/🏳️‍🌈"
-            ],
-            "help": "Da uma floreada no texto.",
-            "onlyAdmin": false
-        },
-        {
-            "cmd": "/everyone",
-            "usage": "/everyone",
-            "help": "Faz o reply marcando todos do grupo.",
-            "onlyAdmin": true
-        },
-        {
-            "cmd": "/monitor",
-            "usage": "/monitor [OPTION]",
-            "aliases": [
-                "/m"
-            ],
-            "help": "🚧 [EM DESENVOLVIMENTO] Números a serem monitorados. Máx. definido em monitor.max (/set).",
-            "disabled": true,
+            "cmd": "/cache",
+            "usage": "/cache [OPTION]",
             "cmd_opts": [
                 {
                     "opts": [
-                        "list"
+                        "clean",
+                        "c"
                     ],
                     "values": [],
-                    "desc": "Lista numeros."
+                    "desc": "Limpa o cache."
                 },
                 {
                     "opts": [
-                        "logs"
+                        "force",
+                        "f"
                     ],
                     "values": [],
-                    "desc": "Lista logs."
-                },
-                {
-                    "opts": [
-                        "add"
-                    ],
-                    "values": [
-                        "numero"
-                    ],
-                    "desc": "Adiciona número para ser monitorado."
-                },
-                {
-                    "opts": [
-                        "del"
-                    ],
-                    "values": [
-                        "numero"
-                    ],
-                    "desc": "Deleta numero."
-                },
-                {
-                    "opts": [
-                        "clean"
-                    ],
-                    "values": [],
-                    "desc": "Limpa todos os números."
+                    "desc": "Apaga tudo."
                 }
             ],
+            "aliases": [
+                "/c"
+            ],
+            "help": "Exibe espaço ocupado em ${CACHE_DIR}",
             "onlyAdmin": true
         },
         {
@@ -180,13 +119,110 @@
             "onlyAdmin": false
         },
         {
-            "cmd": "/sticker",
-            "usage": "/sticker",
-            "aliases": [
-                "/st"
+            "cmd": "/cve",
+            "usage": "/cve [max] [-highscore [max]]",
+            "help": "Últimas CVEs publicadas no NVD (quantidade: setting cve.max).",
+            "cmd_opts": [
+                {
+                    "opts": [
+                        "highscore",
+                        "high"
+                    ],
+                    "values": [
+                        "[max]"
+                    ],
+                    "desc": "Só as max críticas (CVSS ≥ 9) mais recentes, de 1 a 20 (padrão: setting cve.max), dos últimos cve.maxDays dias."
+                },
+                {
+                    "argv": [
+                        "max"
+                    ],
+                    "desc": "Quantidade de CVEs, de 1 a 20 (padrão: setting cve.max). Ex: /cve 5"
+                }
             ],
-            "help": "Cria um 'sticker' a partir de uma imagem (recorte quadrado no meio da imagem).",
             "onlyAdmin": false
+        },
+        {
+            "cmd": "/debug",
+            "usage": "/debug [OPTION]",
+            "aliases": [
+                "/d",
+                "/dbg"
+            ],
+            "help": "Ajuda na depuração de problemas. O estado fica salvo (setting debug.enabled).",
+            "cmd_opts": [
+                {
+                    "opts": [
+                        "on"
+                    ],
+                    "values": [],
+                    "desc": "Ativa o debug mode."
+                },
+                {
+                    "opts": [
+                        "off"
+                    ],
+                    "values": [],
+                    "desc": "Desativa o debug mode."
+                }
+            ],
+            "onlyAdmin": true
+        },
+        {
+            "cmd": "/edit",
+            "usage": "/edit [-N] [OPTION]",
+            "aliases": [
+                "/e"
+            ],
+            "help": "Reexibe as últimas mensagens editadas deste chat (texto de antes e de depois).",
+            "cmd_opts": [
+                {
+                    "opts": [
+                        "list",
+                        "l"
+                    ],
+                    "values": [],
+                    "desc": "Lista as apagadas e as editadas do cache por chat, marcando o chat atual."
+                },
+                {
+                    "opts": [
+                        "flush",
+                        "f"
+                    ],
+                    "values": [],
+                    "desc": "Remove as editadas deste chat (no seu privado: de todos)."
+                },
+                {
+                    "opts": [
+                        "pv"
+                    ],
+                    "values": [],
+                    "desc": "Envia no seu privado em vez de expor no chat atual."
+                },
+                {
+                    "opts": [
+                        "chat",
+                        "c"
+                    ],
+                    "values": [
+                        "<nº|nome>"
+                    ],
+                    "desc": "Chat alvo: nº da lista de editadas do /edit -l ou parte do nome."
+                },
+                {
+                    "argv": [
+                        "-N"
+                    ],
+                    "desc": "Quantidade de mensagens (padrão 1, máx. show.max). Ex: /edit -3"
+                }
+            ],
+            "onlyAdmin": true
+        },
+        {
+            "cmd": "/everyone",
+            "usage": "/everyone",
+            "help": "Faz o reply marcando todos do grupo.",
+            "onlyAdmin": true
         },
         {
             "cmd": "/get",
@@ -252,30 +288,207 @@
             "onlyAdmin": false
         },
         {
-            "cmd": "/cache",
-            "usage": "/cache [OPTION]",
+            "cmd": "/gif",
+            "usage": "/gif [tag]",
+            "help": "GIF aleatório do GIPHY (tag padrão: setting gif.tag).",
+            "onlyAdmin": false
+        },
+        {
+            "cmd": "/gpt",
+            "usage": "/gpt <pergunta>",
+            "aliases": [
+                "/ai"
+            ],
+            "help": "Pergunta ao ChatGPT (OpenAI). Respondendo uma mensagem, o texto dela entra na pergunta. Precisa de OPENAI_API_KEY no config/.env ou do setting openai.api.key.",
+            "cmd_opts": [
+                {
+                    "argv": [
+                        "<pergunta>"
+                    ],
+                    "desc": "O que perguntar. Ex: /gpt explique SSRF em 3 linhas"
+                }
+            ],
+            "onlyAdmin": true
+        },
+        {
+            "cmd": "/help",
+            "aliases": [
+                "/h"
+            ],
+            "help": "Exibe este menu de ajuda.",
+            "onlyAdmin": false
+        },
+        {
+            "cmd": "/joke",
+            "usage": "/joke",
+            "aliases": [
+                "/piada",
+                "/humor"
+            ],
+            "help": "Piada aleatória (JokeAPI, safe-mode).",
+            "onlyAdmin": false
+        },
+        {
+            "cmd": "/kernel",
+            "usage": "/kernel",
+            "help": "Versões atuais do kernel Linux (kernel.org).",
+            "onlyAdmin": false
+        },
+        {
+            "cmd": "/listageral",
+            "usage": "/listageral",
+            "help": "Lista os membros do grupo (número, nome, admins).",
+            "onlyAdmin": true
+        },
+        {
+            "cmd": "/meme",
+            "usage": "/meme [busca]",
+            "help": "Template de meme aleatório do imgflip, opcionalmente filtrado pelo nome.",
+            "onlyAdmin": false
+        },
+        {
+            "cmd": "/monitor",
+            "usage": "/monitor [OPTION]",
+            "aliases": [
+                "/m"
+            ],
+            "help": "🚧 [EM DESENVOLVIMENTO] Números a serem monitorados. Máx. definido em monitor.max (/set).",
+            "disabled": true,
             "cmd_opts": [
                 {
                     "opts": [
-                        "clean",
-                        "c"
+                        "list"
                     ],
                     "values": [],
-                    "desc": "Limpa o cache."
+                    "desc": "Lista numeros."
                 },
                 {
                     "opts": [
-                        "force",
-                        "f"
+                        "logs"
                     ],
                     "values": [],
-                    "desc": "Apaga tudo."
+                    "desc": "Lista logs."
+                },
+                {
+                    "opts": [
+                        "add"
+                    ],
+                    "values": [
+                        "numero"
+                    ],
+                    "desc": "Adiciona número para ser monitorado."
+                },
+                {
+                    "opts": [
+                        "del"
+                    ],
+                    "values": [
+                        "numero"
+                    ],
+                    "desc": "Deleta numero."
+                },
+                {
+                    "opts": [
+                        "clean"
+                    ],
+                    "values": [],
+                    "desc": "Limpa todos os números."
                 }
             ],
-            "aliases": [
-                "/c"
+            "onlyAdmin": true
+        },
+        {
+            "cmd": "/news",
+            "usage": "/news <-hack|-g1|-gazeta|-brasil> [quantidade]",
+            "help": "Manchetes mais recentes dos feeds RSS, com fonte, data e link. Categorias combinam: /news -g1 -gazeta. Feeds de cada uma no setting news.<categoria>.",
+            "cmd_opts": [
+                {
+                    "opts": [
+                        "hack",
+                        "hacknews"
+                    ],
+                    "values": [],
+                    "desc": "Hacking/segurança: The Hacker News, BleepingComputer, Krebs."
+                },
+                {
+                    "opts": [
+                        "g1"
+                    ],
+                    "values": [],
+                    "desc": "g1 (últimas notícias)."
+                },
+                {
+                    "opts": [
+                        "gazeta",
+                        "gaz"
+                    ],
+                    "values": [],
+                    "desc": "Gazeta do Povo (Brasil)."
+                },
+                {
+                    "opts": [
+                        "brasil",
+                        "br"
+                    ],
+                    "values": [],
+                    "desc": "Blogs sobre o Brasil listados no feedspot (em inglês, na maioria)."
+                },
+                {
+                    "argv": [
+                        "quantidade"
+                    ],
+                    "desc": "Manchetes, de 1 a 10 (padrão: setting news.max, 5). Ex: /news -hack 3"
+                }
             ],
-            "help": "Exibe espaço ocupado em ${CACHE_DIR}",
+            "onlyAdmin": true
+        },
+        {
+            "cmd": "/noffa",
+            "usage": "/noffa",
+            "aliases": [
+                "/🌈",
+                "/🏳️‍🌈"
+            ],
+            "help": "Da uma floreada no texto.",
+            "onlyAdmin": false
+        },
+        {
+            "cmd": "/ping",
+            "usage": "/ping",
+            "aliases": [
+                "/p"
+            ],
+            "help": "Verificar status do bot.",
+            "onlyAdmin": true
+        },
+        {
+            "cmd": "/set",
+            "usage": "/set [OPTION] [<chave> [<valor>]]",
+            "help": "Lista, exibe e altera as configurações do bot (settings).",
+            "cmd_opts": [
+                {
+                    "opts": [
+                        "reset",
+                        "r"
+                    ],
+                    "values": [
+                        "<chave>"
+                    ],
+                    "desc": "Volta a chave ao valor padrão."
+                },
+                {
+                    "argv": [
+                        "<chave>"
+                    ],
+                    "desc": "Exibe valor, padrão e descrição da chave."
+                },
+                {
+                    "argv": [
+                        "<chave> <valor>"
+                    ],
+                    "desc": "Altera. Listas: itens separados por vírgula ou espaço (watch.rules: um por linha)."
+                }
+            ],
             "onlyAdmin": true
         },
         {
@@ -330,83 +543,54 @@
             "onlyAdmin": true
         },
         {
-            "cmd": "/edit",
-            "usage": "/edit [-N] [OPTION]",
+            "cmd": "/sticker",
+            "usage": "/sticker",
             "aliases": [
-                "/e"
+                "/st"
             ],
-            "help": "Reexibe as últimas mensagens editadas deste chat (texto de antes e de depois).",
+            "help": "Cria um 'sticker' a partir de uma imagem (recorte quadrado no meio da imagem).",
+            "onlyAdmin": false
+        },
+        {
+            "cmd": "/tempo",
+            "usage": "/tempo [cidade]",
+            "aliases": [
+                "/weather"
+            ],
+            "help": "Tempo agora, máx./mín. e chance de chuva do dia (Open-Meteo). Sem cidade usa o setting tempo.city; troque com /set tempo.city <cidade>.",
             "cmd_opts": [
                 {
-                    "opts": [
-                        "list",
-                        "l"
-                    ],
-                    "values": [],
-                    "desc": "Lista as apagadas e as editadas do cache por chat, marcando o chat atual."
-                },
-                {
-                    "opts": [
-                        "flush",
-                        "f"
-                    ],
-                    "values": [],
-                    "desc": "Remove as editadas deste chat (no seu privado: de todos)."
-                },
-                {
-                    "opts": [
-                        "pv"
-                    ],
-                    "values": [],
-                    "desc": "Envia no seu privado em vez de expor no chat atual."
-                },
-                {
-                    "opts": [
-                        "chat",
-                        "c"
-                    ],
-                    "values": [
-                        "<nº|nome>"
-                    ],
-                    "desc": "Chat alvo: nº da lista de editadas do /edit -l ou parte do nome."
-                },
-                {
                     "argv": [
-                        "-N"
+                        "[cidade]"
                     ],
-                    "desc": "Quantidade de mensagens (padrão 1, máx. show.max). Ex: /edit -3"
+                    "desc": "Cidade, opcionalmente com estado e país. Ex: /tempo Niteroi, Sergipe"
                 }
             ],
+            "onlyAdmin": false
+        },
+        {
+            "cmd": "/ualisu",
+            "usage": "/ualisu",
+            "help": "Walissu CVE BOT: marca 2 membros do grupo com uma CVE aleatória.",
             "onlyAdmin": true
         },
         {
-            "cmd": "/set",
-            "usage": "/set [OPTION] [<chave> [<valor>]]",
-            "help": "Lista, exibe e altera as configurações do bot (settings).",
-            "cmd_opts": [
-                {
-                    "opts": [
-                        "reset",
-                        "r"
-                    ],
-                    "values": [
-                        "<chave>"
-                    ],
-                    "desc": "Volta a chave ao valor padrão."
-                },
-                {
-                    "argv": [
-                        "<chave>"
-                    ],
-                    "desc": "Exibe valor, padrão e descrição da chave."
-                },
-                {
-                    "argv": [
-                        "<chave> <valor>"
-                    ],
-                    "desc": "Altera. Listas: itens separados por vírgula ou espaço (watch.rules: um por linha)."
-                }
+            "cmd": "/uptime",
+            "usage": "/uptime",
+            "aliases": [
+                "/u",
+                "/up"
             ],
+            "help": "Exibe o tempo que o bot está rodando.",
+            "onlyAdmin": true
+        },
+        {
+            "cmd": "/version",
+            "usage": "/version",
+            "aliases": [
+                "/ver"
+            ],
+            "help": "Exibe a versão do bot (mesmo banner do /uptime).",
             "onlyAdmin": true
         },
         {
@@ -464,190 +648,6 @@
                         "-N"
                     ],
                     "desc": "Nº da regra no /watch -l. Ex: /watch -d -2, /watch -f -2"
-                }
-            ],
-            "onlyAdmin": true
-        },
-        {
-            "cmd": "/kernel",
-            "usage": "/kernel",
-            "help": "Versões atuais do kernel Linux (kernel.org).",
-            "onlyAdmin": false
-        },
-        {
-            "cmd": "/boletos",
-            "usage": "/boletos",
-            "help": "Sorteia 2 membros do grupo para pagar um boleto.",
-            "onlyAdmin": true
-        },
-        {
-            "cmd": "/meme",
-            "usage": "/meme [busca]",
-            "help": "Template de meme aleatório do imgflip, opcionalmente filtrado pelo nome.",
-            "onlyAdmin": false
-        },
-        {
-            "cmd": "/listageral",
-            "usage": "/listageral",
-            "help": "Lista os membros do grupo (número, nome, admins).",
-            "onlyAdmin": true
-        },
-        {
-            "cmd": "/gif",
-            "usage": "/gif [tag]",
-            "help": "GIF aleatório do GIPHY (tag padrão: setting gif.tag).",
-            "onlyAdmin": false
-        },
-        {
-            "cmd": "/joke",
-            "usage": "/joke",
-            "aliases": [
-                "/piada",
-                "/humor"
-            ],
-            "help": "Piada aleatória (JokeAPI, safe-mode).",
-            "onlyAdmin": false
-        },
-        {
-            "cmd": "/cve",
-            "usage": "/cve [max] [-highscore [max]]",
-            "help": "Últimas CVEs publicadas no NVD (quantidade: setting cve.max).",
-            "cmd_opts": [
-                {
-                    "opts": [
-                        "highscore",
-                        "high"
-                    ],
-                    "values": [
-                        "[max]"
-                    ],
-                    "desc": "Só as max críticas (CVSS ≥ 9) mais recentes, de 1 a 20 (padrão: setting cve.max), dos últimos cve.maxDays dias."
-                },
-                {
-                    "argv": [
-                        "max"
-                    ],
-                    "desc": "Quantidade de CVEs, de 1 a 20 (padrão: setting cve.max). Ex: /cve 5"
-                }
-            ],
-            "onlyAdmin": false
-        },
-        {
-            "cmd": "/tempo",
-            "usage": "/tempo [cidade]",
-            "aliases": [
-                "/weather"
-            ],
-            "help": "Tempo agora, máx./mín. e chance de chuva do dia (Open-Meteo). Sem cidade usa o setting tempo.city; troque com /set tempo.city <cidade>.",
-            "cmd_opts": [
-                {
-                    "argv": [
-                        "[cidade]"
-                    ],
-                    "desc": "Cidade, opcionalmente com estado e país. Ex: /tempo Niteroi, Sergipe"
-                }
-            ],
-            "onlyAdmin": false
-        },
-        {
-            "cmd": "/ualisu",
-            "usage": "/ualisu",
-            "help": "Walissu CVE BOT: marca 2 membros do grupo com uma CVE aleatória.",
-            "onlyAdmin": true
-        },
-        {
-            "cmd": "/bot",
-            "usage": "/bot [-on|-off] [+admin|-admin]",
-            "help": "Liga/desliga o bot e o modo admin. Sem opção mostra o estado. As opções combinam: /bot -on +admin",
-            "cmd_opts": [
-                {
-                    "opts": [
-                        "on"
-                    ],
-                    "values": [],
-                    "desc": "Ativa o bot."
-                },
-                {
-                    "opts": [
-                        "off"
-                    ],
-                    "values": [],
-                    "desc": "Desliga o bot: todos os comandos (inclusive os seus) são ignorados, exceto o /bot."
-                },
-                {
-                    "opts": [
-                        "admin"
-                    ],
-                    "values": [],
-                    "desc": "Desliga o modo admin (cada comando volta a seguir o seu onlyAdmin)."
-                },
-                {
-                    "argv": [
-                        "+admin"
-                    ],
-                    "desc": "Liga o modo admin: só você usa comandos; os dos outros são ignorados."
-                }
-            ],
-            "onlyAdmin": true
-        },
-        {
-            "cmd": "/news",
-            "usage": "/news <-hack|-g1|-gazeta|-brasil> [quantidade]",
-            "help": "Manchetes mais recentes dos feeds RSS, com fonte, data e link. Categorias combinam: /news -g1 -gazeta. Feeds de cada uma no setting news.<categoria>.",
-            "cmd_opts": [
-                {
-                    "opts": [
-                        "hack",
-                        "hacknews"
-                    ],
-                    "values": [],
-                    "desc": "Hacking/segurança: The Hacker News, BleepingComputer, Krebs."
-                },
-                {
-                    "opts": [
-                        "g1"
-                    ],
-                    "values": [],
-                    "desc": "g1 (últimas notícias)."
-                },
-                {
-                    "opts": [
-                        "gazeta",
-                        "gaz"
-                    ],
-                    "values": [],
-                    "desc": "Gazeta do Povo (Brasil)."
-                },
-                {
-                    "opts": [
-                        "brasil",
-                        "br"
-                    ],
-                    "values": [],
-                    "desc": "Blogs sobre o Brasil listados no feedspot (em inglês, na maioria)."
-                },
-                {
-                    "argv": [
-                        "quantidade"
-                    ],
-                    "desc": "Manchetes, de 1 a 10 (padrão: setting news.max, 5). Ex: /news -hack 3"
-                }
-            ],
-            "onlyAdmin": true
-        },
-        {
-            "cmd": "/gpt",
-            "usage": "/gpt <pergunta>",
-            "aliases": [
-                "/ai"
-            ],
-            "help": "Pergunta ao ChatGPT (OpenAI). Respondendo uma mensagem, o texto dela entra na pergunta. Precisa de OPENAI_API_KEY no config/.env ou do setting openai.api.key.",
-            "cmd_opts": [
-                {
-                    "argv": [
-                        "<pergunta>"
-                    ],
-                    "desc": "O que perguntar. Ex: /gpt explique SSRF em 3 linhas"
                 }
             ],
             "onlyAdmin": true
