@@ -9,6 +9,7 @@
     "start:dev": "node app.js",
     "start:prod": "node app.js",
     "start": "[ \"$NODE_ENV\" = \"production\" ] && npm run start:prod || npm run start:dev",
+    "test": "node --test --disable-warning=ExperimentalWarning tests/*.test.js",
     "postinstall": "patch-package"
   },
   "dependencies": {

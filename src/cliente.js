@@ -124,6 +124,12 @@ function limparMarcasExpiradas() {
     }
 }
 
+// Esquece todas as marcas (os testes começam cada caso sem envios pendentes)
+function limparMarcas() {
+    enviadasPeloBot.clear();
+    enviosDoBotPorChat.clear();
+}
+
 // Chamada no app.js
 function iniciarLimpezaDasMarcas() {
     setInterval(limparMarcasExpiradas, ENVIADAS_TTL_MS);
@@ -134,6 +140,7 @@ module.exports = {
     consumirEnvioDoBot,
     foiEnviadaPeloBot,
     iniciarLimpezaDasMarcas,
+    limparMarcas,
     marcarEnviadaPeloBot,
     messageToSelf
 };

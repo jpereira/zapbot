@@ -1,0 +1,169 @@
+/*
+ * Evento 'message_create': gravação, roteamento dos comandos e permissões.
+ */
+const bot = require('./helpers/bot');
+
+const { test, describe, beforeEach } = require('node:test');
+const assert = require('node:assert/strict');
+
+const { DONO, GRUPO, OUTRO } = bot;
+
+beforeEach(bot.reiniciar);
+
+describe('gravação', () => {
+    test('grava a mensagem com remetente, chat e nome do grupo', async () => {
+        await bot.entregar(bot.criarMensagem({ texto: 'oi grupo', de: OUTRO.jid, id: 'M1' }));
+        const row = await bot.dbGet("SELECT * FROM messages WHERE id = 'M1'");
+
+        assert.equal(row.body, 'oi grupo');
+        assert.equal(row.chat_id, GRUPO);
+        assert.equal(row.chat_name, 'Família');
+        assert.equal(row.is_group, 1);
+        assert.equal(row.sender_number, OUTRO.user);
+        assert.equal(row.sender_name, OUTRO.nome);
+    });
+
+    test('grava a mídia em cache/media e a localização', async () => {
+        await bot.entregar(bot.criarMensagem({ de: OUTRO.jid, id: 'FOTO', tipo: 'image', midia: { mimetype: 'image/jpeg', data: Buffer.from('jpg').toString('base64') } }));
+        const foto = await bot.dbGet("SELECT * FROM messages WHERE id = 'FOTO'");
+        assert.equal(foto.has_media, 1);
+        assert.match(foto.media_path, /media.*FOTO\.jpeg$/);
+        assert.equal(require('fs').readFileSync(foto.media_path, 'utf8'), 'jpg');
+
+        await bot.entregar(bot.criarMensagem({ de: OUTRO.jid, id: 'LOC', tipo: 'location', extras: { location: { latitude: -22.9, longitude: -43.1 } } }));
+        const loc = await bot.dbGet("SELECT * FROM messages WHERE id = 'LOC'");
+        assert.deepEqual([loc.location_lat, loc.location_lng], [-22.9, -43.1]);
+    });
+
+    test('mídia que falha ao baixar é gravada sem mídia', async () => {
+        const msg = bot.criarMensagem({ de: OUTRO.jid, id: 'RUIM', midia: {} });
+        msg.downloadMedia = async () => { throw new Error('falhou'); };
+        await bot.entregar(msg, { erroEsperado: true });
+        assert.equal((await bot.dbGet("SELECT has_media FROM messages WHERE id = 'RUIM'")).has_media, 0);
+    });
+
+    test('@lid do remetente vira o telefone real', async () => {
+        bot.client.lids.set('999@lid', OUTRO.jid);
+        await bot.entregar(bot.criarMensagem({ de: '999:12@lid', id: 'LID' }));
+        assert.equal((await bot.dbGet("SELECT sender_number FROM messages WHERE id = 'LID'")).sender_number, OUTRO.user);
+    });
+});
+
+describe('comandos', () => {
+    test('comando por nome e por alias', async () => {
+        assert.deepEqual(await bot.responder('/ping'), ['pong']);
+        assert.deepEqual(await bot.responder('/p'), ['pong']);
+    });
+
+    test('resposta do bot é um reply da mensagem do comando', async () => {
+        const [r] = await bot.executar('/ping', { id: 'CMD1' });
+        assert.equal(r.chatId, GRUPO);
+        assert.match(r.options.quotedMessageId, /CMD1$/);
+    });
+
+    test('comando desconhecido ou texto comum: nenhuma resposta', async () => {
+        assert.deepEqual(await bot.responder('/naoexiste'), []);
+        assert.deepEqual(await bot.responder('ping'), []);
+    });
+
+    test('-h mostra a sintaxe do comando', async () => {
+        const [r] = await bot.responder('/ping -h');
+        assert.match(r, /Usage: \/ping/);
+    });
+
+    test('comando desativado por setting é ignorado', async () => {
+        await bot.setSetting('commands.disabled', 'ping');
+        assert.deepEqual(await bot.responder('/ping'), []);
+    });
+
+    test('a marca de "enviada pelo bot" expira em 1 minuto', async (t) => {
+        t.mock.timers.enable({ apis: ['Date', 'setInterval'], now: Date.now() });
+        const { iniciarLimpezaDasMarcas } = bot.src('cliente');
+        iniciarLimpezaDasMarcas();
+
+        // Envio que nunca voltou pelo message_create (falhou no WhatsApp)
+        await bot.client.sendMessage(GRUPO, '/ping');
+        t.mock.timers.tick(61 * 1000);
+
+        assert.deepEqual(await bot.responder('/ping'), ['pong'], 'marca vencida não bloqueia o dono');
+    });
+
+    test('resposta do próprio bot começando com "/" não vira comando', async () => {
+        // O /noffa ecoa o texto: sem a marca, "/ping" voltaria como comando do dono
+        await bot.client.sendMessage(GRUPO, '/ping');
+        const msg = bot.criarMensagem({ texto: '/ping' });
+        assert.deepEqual((await bot.entregar(msg)).map(e => e.texto), []);
+
+        // A marca é consumida: o dono digitando /ping depois funciona
+        assert.deepEqual(await bot.responder('/ping'), ['pong']);
+    });
+});
+
+describe('permissões', () => {
+    test('onlyAdmin: ignorado para os outros, sem resposta no chat', async () => {
+        assert.deepEqual(await bot.responder('/ping', { de: OUTRO.jid }), []);
+        assert.deepEqual(await bot.responder('/ping'), ['pong']);
+    });
+
+    test('onlyAdmin com debug ligado avisa no seu privado', async () => {
+        await bot.setSetting('debug.enabled', true);
+        const r = await bot.executar('/ping', { de: OUTRO.jid });
+        assert.equal(r.length, 1);
+        assert.equal(r[0].chatId, process.env.PHONE_NUMBER);
+        assert.match(r[0].texto, /Fulano tentou executar \/ping dentro de Família, mas sem permissão/);
+    });
+
+    test('comando liberado (onlyAdmin false) funciona para os outros', async () => {
+        const [r] = await bot.responder('/noffa oi gente', { de: OUTRO.jid });
+        assert.match(r, /oi .* gente/);
+    });
+
+    test('modo admin: comandos dos outros ignorados, os seus funcionam', async () => {
+        await bot.setSetting('bot.adminMode', true);
+        assert.deepEqual(await bot.responder('/noffa oi gente', { de: OUTRO.jid }), []);
+        assert.equal((await bot.responder('/noffa oi gente')).length, 1);
+    });
+
+    test('bot desligado: tudo ignorado, inclusive os seus, exceto o /bot', async () => {
+        await bot.setSetting('bot.paused', true);
+        assert.deepEqual(await bot.responder('/ping'), []);
+        assert.match((await bot.responder('/bot'))[0], /desligado/);
+    });
+});
+
+describe('contagem do /stats', () => {
+    const contagem = () => bot.dbAll('SELECT sender_id, SUM(msgs) AS msgs, SUM(media) AS media FROM stats GROUP BY sender_id ORDER BY sender_id');
+
+    test('conta mensagens novas por remetente, uma vez por id', async () => {
+        const msg = bot.criarMensagem({ texto: 'oi', de: OUTRO.jid, id: 'S1' });
+        await bot.entregar(msg);
+        await bot.entregar(msg); // reenviada numa reconexão
+        await bot.entregar(bot.criarMensagem({ texto: 'foto', de: OUTRO.jid, midia: { mimetype: 'image/png', data: 'AA==' } }));
+
+        assert.deepEqual(await contagem(), [{ sender_id: OUTRO.user, msgs: 2, media: 1 }]);
+    });
+
+    test('as respostas do bot não contam; as suas contam para o seu número', async () => {
+        await bot.executar('/ping'); // o "pong" sai pela sua conta...
+        await bot.entregar(bot.criarMensagem({ texto: 'pong' })); // ...e volta pelo message_create
+
+        assert.deepEqual(await contagem(), [{ sender_id: DONO.user, msgs: 1, media: 0 }]);
+    });
+
+    test('no privado, as suas mensagens contam para você (não para o outro)', async () => {
+        await bot.entregar(bot.criarMensagem({ texto: 'oi', chat: OUTRO.jid, de: DONO.jid }));
+        await bot.entregar(bot.criarMensagem({ texto: 'oi', chat: OUTRO.jid, de: OUTRO.jid }));
+
+        const porPessoa = await contagem();
+        assert.deepEqual(porPessoa.map(p => [p.sender_id, p.msgs]), [[DONO.user, 1], [OUTRO.user, 1]]);
+    });
+
+    test('status e o seu privado não contam; stats.enabled off para de contar', async () => {
+        await bot.entregar(bot.criarMensagem({ texto: 'status', chat: 'status@broadcast', de: OUTRO.jid }));
+        await bot.entregar(bot.criarMensagem({ texto: 'nota', chat: DONO.jid }));
+        await bot.setSetting('stats.enabled', false);
+        await bot.entregar(bot.criarMensagem({ texto: 'oi', de: OUTRO.jid }));
+
+        assert.deepEqual(await contagem(), []);
+    });
+});
