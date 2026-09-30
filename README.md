@@ -372,7 +372,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -c -f`) para fazer o bot
 |---|---|:-:|---|
 | `/help` | `/h` | | Menu de ajuda |
 | `/debug` | `/d`, `/dbg` | ✅ | Liga/desliga logs de debug |
-| `/uptime` | `/u` | ✅ | Tempo de execução e de conexão |
+| `/uptime` | `/u`, `/up` | ✅ | Tempo de execução e de conexão |
 | `/ping` | `/p` | ✅ | Verifica se o bot está vivo |
 | `/noffa` | `/🌈`, `/🏳️‍🌈` | | Enfeita o texto com arco-íris |
 | `/everyone` | | ✅ | Menciona todos do grupo |
@@ -424,7 +424,7 @@ ligado só com `APP_ENV=dev`.
 /debug          → mostra o estado atual
 ```
 
-### `/uptime` · admin
+### `/uptime` (`/u`, `/up`) · admin
 
 ```
 /uptime
