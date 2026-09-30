@@ -389,6 +389,11 @@ const SETTINGS_SCHEMA = {
         default: 'Niteroi, Rio de Janeiro, Brazil',
         type: 'string',
         desc: 'Cidade padrão do /tempo (ex.: "Niteroi, Rio de Janeiro, Brazil").'
+    },
+    'bot.paused': {
+        default: false,
+        type: 'boolean',
+        desc: 'Todos os comandos pausados, exceto o /run (o mesmo do /stop e /run).'
     }
 };
 
@@ -3722,6 +3727,22 @@ async function cmdUalisu({ msg }) {
     }
 }
 
+/*
+ * Pause (setting 'bot.paused', survives restarts)
+ * /stop → pauses ALL commands, including yours, except /run
+ *   /run  → retoma
+ * Deleted-message recovery and /watch keep working.
+ */
+async function cmdStop({ msg }) {
+    await setSetting('bot.paused', true);
+    await msg.reply('⏸️ Todos os comandos pausados. Use /run para retomar.');
+}
+
+async function cmdRun({ msg }) {
+    await setSetting('bot.paused', false);
+    await msg.reply('▶️ Comandos retomados.');
+}
+
 // bot-config.json cmd -> handler
 const HANDLERS = {
     '/help': cmdHelp,
@@ -3746,7 +3767,9 @@ const HANDLERS = {
     '/joke': cmdJoke,
     '/cve': cmdCve,
     '/tempo': cmdTime,
-    '/ualisu': cmdUalisu
+    '/ualisu': cmdUalisu,
+    '/stop': cmdStop,
+    '/run': cmdRun
 };
 
 // Warns at boot if the bot-config has a command without a handler (or vice versa)
@@ -3939,6 +3962,12 @@ client.on('message_create', async (msg) => {
 
         if (!command) {
             if (isDebugMode()) printDebug(`Comando '${caller}' não encontrado`);
+            return;
+        }
+
+        // /stop: everything paused (including your commands) until /run
+        if (getSetting('bot.paused') && command.cmd !== '/run') {
+            printInfo(`Comando '${command.cmd}' ignorado: bot pausado (/run para retomar)`);
             return;
         }
 
