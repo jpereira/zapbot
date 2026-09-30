@@ -407,6 +407,15 @@
                 }
             ],
             "onlyAdmin": true
+        },
+        {
+            "cmd": "/tempo",
+            "usage": "/tempo <cidade>",
+            "aliases": [
+                "/weather"
+            ],
+            "help": "Previsão do tempo agora e máx./mín. do dia (Open-Meteo).",
+            "onlyAdmin": false
         }
     ]
 }

@@ -325,6 +325,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -c -f`) para fazer o bot
 | `/show` | `/undo`, `/s` | ✅ | Reexibe mensagens apagadas |
 | `/set` | | ✅ | Lista e altera as configurações (settings) |
 | `/watch` | `/w` | ✅ | Avisa no seu privado quando uma mensagem casa com um texto/regex |
+| `/tempo` | `/weather` | | Tempo agora e máx./mín. do dia (Open-Meteo) |
 
 ### `/help`
 
@@ -652,6 +653,15 @@ Detalhes:
   a resposta vai para o seu privado.
 - As ocorrências ficam na tabela `watch_hits` por 30 dias (setting
   `watch.hitsRetentionDays`), ou até um `/watch -f`.
+
+### `/tempo` (`/weather`)
+
+Tempo agora (temperatura, sensação, umidade, vento), máxima/mínima e chance de
+chuva do dia, pela [Open-Meteo](https://open-meteo.com/) (sem chave de API).
+
+```
+/tempo Rio de Janeiro
+```
 
 ### Adicionando ou alterando comandos
 
