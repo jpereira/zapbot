@@ -3926,6 +3926,51 @@ async function cmdNews({ msg, opts }) {
     await msg.reply(`${title}\n\n${linesAlt.join('\n\n')}`, null, { linkPreview: false });
 }
 
+/*
+ * /gpt: asks ChatGPT. The key comes from OPENAI_API_KEY (config/.env) and
+ * is never logged nor echoed: the returned error is only the API message.
+ */
+const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
+const OPENAI_TIMEOUT_MS = 60 * 1000;
+
+async function cmdGpt({ msg, args, quotedMsg }) {
+    if (!process.env.OPENAI_API_KEY) {
+        await msg.reply('⚠️ OPENAI_API_KEY não configurada no config/.env.');
+        return;
+    }
+
+    const question = [quotedMsg?.body, args].filter(Boolean).join('\n\n').trim();
+
+    if (!question) {
+        await msg.reply('Syntax: /gpt <pergunta> (ou responda uma mensagem)');
+        return;
+    }
+
+    try {
+        const { data } = await axios.post(OPENAI_URL, {
+            model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+            messages: [
+                { role: 'system', content: 'Você é um assistente no WhatsApp. Responda de forma direta, em português, salvo se pedirem outro idioma.' },
+                { role: 'user', content: question }
+            ]
+        }, {
+            headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
+            timeout: OPENAI_TIMEOUT_MS
+        });
+
+        let reply = data.choices?.[0]?.message?.content?.trim() || '(resposta vazia)';
+
+        // The reply never starts with "/": it must not be read as a command (see markSentByBot)
+        if (reply.startsWith('/')) reply = `🤖 ${reply}`;
+
+        await msg.reply(reply);
+    } catch (err) {
+        const detail = err.response?.data?.error?.message || err.message;
+        printError('/gpt:', detail);
+        await msg.reply(`❌ Erro no /gpt: ${detail}`);
+    }
+}
+
 // bot-config.json cmd -> handler
 const HANDLERS = {
     '/help': cmdHelp,
@@ -3952,7 +3997,8 @@ const HANDLERS = {
     '/tempo': cmdTime,
     '/ualisu': cmdUalisu,
     '/bot': cmdBot,
-    '/news': cmdNews
+    '/news': cmdNews,
+    '/gpt': cmdGpt
 };
 
 // Warns at boot if the bot-config has a command without a handler (or vice versa)
