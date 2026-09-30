@@ -407,6 +407,12 @@
                 }
             ],
             "onlyAdmin": true
+        },
+        {
+            "cmd": "/meme",
+            "usage": "/meme [busca]",
+            "help": "Template de meme aleatório do imgflip, opcionalmente filtrado pelo nome.",
+            "onlyAdmin": false
         }
     ]
 }
