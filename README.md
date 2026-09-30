@@ -377,144 +377,110 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -c -f`) para fazer o bot
 
 | Comando | Aliases | Admin | Descrição |
 |---|---|:-:|---|
-| `/help` | `/h` | | Menu de ajuda |
-| `/debug` | `/d`, `/dbg` | ✅ | Liga/desliga logs de debug |
-| `/uptime` | `/u`, `/up` | ✅ | Tempo de execução e de conexão |
-| `/version` | `/ver` | ✅ | Versão do bot (mesmo banner do `/uptime`) |
-| `/ping` | `/p` | ✅ | Verifica se o bot está vivo |
-| `/noffa` | `/🌈`, `/🏳️‍🌈` | | Enfeita o texto com arco-íris |
-| `/everyone` | | ✅ | Menciona todos do grupo |
-| `/monitor` 🚧 | `/m` | ✅ | Avisa quando números ficam online *(em desenvolvimento, desabilitado por padrão)* |
-| `/crypto` | `/bitcoio`, `/creptomoeda`, `/moedinha` | | Cotação das criptos ativadas (padrão: BTC, ETH, SOL e HYPE) |
-| `/sticker` | `/st` | | Transforma imagem/vídeo em figurinha |
-| `/get` | `/download` | | Baixa vídeo/áudio de redes sociais |
-| `/cache` | `/c` | ✅ | Uso e limpeza do cache |
-| `/show` | `/undo`, `/s` | ✅ | Reexibe mensagens apagadas |
-| `/edit` | `/e` | ✅ | Reexibe mensagens editadas (antes e depois) |
-| `/set` | | ✅ | Lista e altera as configurações (settings) |
-| `/watch` | `/w` | ✅ | Avisa no seu privado quando uma mensagem casa com um texto/regex |
-| `/kernel` | | | Versões atuais do kernel Linux (kernel.org) |
 | `/boletos` | | ✅ | Sorteia 2 membros para "pagar um boleto" |
-| `/meme` | | | Template de meme aleatório (imgflip) |
-| `/listageral` | | ✅ | Lista os membros do grupo |
-| `/gif` | | | GIF aleatório (GIPHY) |
-| `/joke` | `/piada`, `/humor` | | Piada aleatória em português |
+| `/bot` | | ✅ | Liga/desliga todos os comandos (`-on`/`-off`) e o modo admin (`+admin`/`-admin`) |
+| `/cache` | `/c` | ✅ | Uso e limpeza do cache |
+| `/crypto` | `/bitcoio`, `/creptomoeda`, `/moedinha` | | Cotação das criptos ativadas (padrão: BTC, ETH, SOL e HYPE) |
 | `/cve` | | | Últimas CVEs publicadas (NVD); `-highscore` só as críticas |
+| `/debug` | `/d`, `/dbg` | ✅ | Liga/desliga logs de debug |
+| `/edit` | `/e` | ✅ | Reexibe mensagens editadas (antes e depois) |
+| `/everyone` | | ✅ | Menciona todos do grupo |
+| `/get` | `/download` | | Baixa vídeo/áudio de redes sociais |
+| `/gif` | | | GIF aleatório (GIPHY) |
+| `/gpt` | `/ai` | ✅ | Pergunta ao ChatGPT (OpenAI) |
+| `/help` | `/h` | | Menu de ajuda |
+| `/joke` | `/piada`, `/humor` | | Piada aleatória em português |
+| `/kernel` | | | Versões atuais do kernel Linux (kernel.org) |
+| `/listageral` | | ✅ | Lista os membros do grupo |
+| `/meme` | | | Template de meme aleatório (imgflip) |
+| `/monitor` 🚧 | `/m` | ✅ | Avisa quando números ficam online *(em desenvolvimento, desabilitado por padrão)* |
+| `/news` | | ✅ | Manchetes de feeds RSS: `-hack`, `-g1`, `-gazeta`, `-brasil` |
+| `/noffa` | `/🌈`, `/🏳️‍🌈` | | Enfeita o texto com arco-íris |
+| `/ping` | `/p` | ✅ | Verifica se o bot está vivo |
+| `/set` | | ✅ | Lista e altera as configurações (settings) |
+| `/show` | `/undo`, `/s` | ✅ | Reexibe mensagens apagadas |
+| `/sticker` | `/st` | | Transforma imagem/vídeo em figurinha |
 | `/tempo` | `/weather` | | Tempo agora e máx./mín. do dia (Open-Meteo); sem cidade usa `tempo.city` |
 | `/ualisu` | | ✅ | Marca 2 membros com uma CVE aleatória |
-| `/bot` | | ✅ | Liga/desliga todos os comandos (`-on`/`-off`) e o modo admin (`+admin`/`-admin`) |
-| `/news` | | ✅ | Manchetes de feeds RSS: `-hack`, `-g1`, `-gazeta`, `-brasil` |
-| `/gpt` | `/ai` | ✅ | Pergunta ao ChatGPT (OpenAI) |
+| `/uptime` | `/u`, `/up` | ✅ | Tempo de execução e de conexão |
+| `/version` | `/ver` | ✅ | Versão do bot (mesmo banner do `/uptime`) |
+| `/watch` | `/w` | ✅ | Avisa no seu privado quando uma mensagem casa com um texto/regex |
 
-### `/help`
+### `/boletos` · admin
 
-Exibe o menu com todos os comandos, ou a ajuda de um só.
+Só em grupos: sorteia 2 membros diferentes (fora o bot) e os marca para "pagar
+um boleto".
 
-```
-/help
-/help get
-/h /show
-```
+### `/bot` · admin
 
-### `/debug` · admin
+Controla quem pode usar o bot. Tem dois interruptores independentes, que
+sobrevivem a reinícios:
 
-Liga/desliga o modo debug (logs detalhados no container). O estado fica salvo
-no setting `debug.enabled` e sobrevive a reinícios. No primeiro boot começa
-ligado só com `APP_ENV=dev`.
+- **Ligado/desligado** (setting `bot.paused`, padrão ligado): desligado, o bot
+  ignora **todos** os comandos, inclusive os seus, exceto o próprio `/bot`.
+- **Modo admin** (setting `bot.adminMode`, padrão ligado): ligado, só você
+  usa comandos; os de qualquer outra pessoa são ignorados em silêncio, mesmo
+  os que normalmente são liberados (`/ping`, `/tempo`...).
 
 | Opção | Descrição |
 |---|---|
-| `-on` | Ativa o debug |
-| `-off` | Desativa o debug |
+| *(nenhuma)* | Mostra o estado dos dois |
+| `-on` | Liga o bot |
+| `-off` | Desliga o bot |
+| `+admin` | Liga o modo admin |
+| `-admin` | Desliga o modo admin (cada comando volta a seguir a coluna *Admin* da [tabela de comandos](#comandos)) |
+
+As opções combinam; `-on` com `-off` (ou `+admin` com `-admin`) no mesmo
+comando é recusado. A resposta sempre mostra o estado final:
 
 ```
-/debug -on      → 🪲 Debug Ativado.
-/dbg -off       → 🪲 Debug Desativado.
-/debug          → mostra o estado atual
+/bot               → ▶️ Bot: ativo
+                     🔓 Modo admin: desligado
+/bot +admin        → ▶️ Bot: ativo
+                     🔒 Modo admin: ligado (só o dono usa comandos)
+/bot -admin        → volta a liberar os comandos públicos para todos
+/bot -off          → ⏸️ Bot: desligado (todos os comandos são ignorados)
+/bot -on -admin    → liga o bot e desliga o modo admin de uma vez
+/bot -h            → ajuda do comando
 ```
 
-### `/uptime` (`/u`, `/up`) · admin
+Quando usar cada um:
+
+| Situação | Comando |
+|---|---|
+| Alguém está abusando dos comandos num grupo | `/bot +admin` |
+| Vários zapbots no mesmo grupo e você quer que só o seu responda a você | `/bot +admin` |
+| Parar o bot por completo por um tempo, sem derrubar o container | `/bot -off` |
+| Voltar ao normal | `/bot -on -admin` |
+
+Detalhes:
+
+- Com o bot desligado o `/set` também é ignorado: para ligar use sempre o
+  `/bot -on`. Com ele ligado, `/set bot.paused` e `/set bot.adminMode` têm o
+  mesmo efeito das opções.
+- Se o bot reiniciar desligado ou em modo admin, a mensagem de inicialização
+  no seu privado avisa.
+- Só os **comandos** são afetados: a recuperação de mensagens apagadas e
+  editadas, o `/watch` e as notificações do `/monitor` continuam funcionando.
+- Comandos ignorados aparecem no log: `Comando '/ping' ignorado: bot
+  desligado` (sempre) e `Comando '/ping' de Fulano ignorado: modo admin` (só
+  com o [debug](#debug--admin) ligado).
+- "Você" é a conta pareada ao bot, de qualquer aparelho. Para desligar só
+  alguns comandos, para todos, use o setting `commands.disabled`.
+
+### `/cache` · admin
+
+Mostra o espaço ocupado em `cache/` (banco, mídias, temporários).
+
+| Opção | Descrição |
+|---|---|
+| `-clean`, `-c` | Remove só o que passou da janela de retenção (68 h / `cache.revokedRetentionDays` para apagadas / `cache.editedRetentionDays` para editadas / `watch.hitsRetentionDays` para ocorrências do `/watch`) |
+| `-force`, `-f` | Junto com `-clean`: apaga **todas** as mensagens (inclusive as guardadas para o `/show` e o `/edit`), mídias e temporários, e compacta o banco. Números e logs do `/monitor` e ocorrências do `/watch` são mantidos |
 
 ```
-/uptime
-🤖 ZapBot 1.7
-━━━━━━━━━━━━━━━━━━
-⚡ Online: 2 dias, 3 horas
-🔐 Conectado: 2 dias, 2 horas, 58 minutos
-```
-
-### `/version` (`/ver`) · admin
-
-Exibe o mesmo banner do `/uptime`, com a versão do bot.
-
-```
-/ver
-🤖 ZapBot 1.7
-━━━━━━━━━━━━━━━━━━
-⚡ Online: 2 dias, 3 horas
-🔐 Conectado: 2 dias, 2 horas, 58 minutos
-```
-
-### `/ping` · admin
-
-```
-/ping  → pong
-```
-
-### `/noffa`
-
-Coloca emojis de arco-íris entre as palavras. Aceita texto ou reply numa mensagem.
-
-```
-/noffa bom dia grupo
-→ bom 🌈 dia 🏳️‍🌈 grupo
-```
-
-Se o texto começar com `/`, a resposta ganha um 🌈 na frente, para nunca parecer
-um comando.
-
-### `/everyone` · admin
-
-Só em grupos. Responde à sua mensagem mencionando todos os participantes
-(exceto você).
-
-```
-/everyone
-```
-
-### `/monitor` · admin · 🚧 em desenvolvimento
-
-> 🚧 **Em desenvolvimento.** Este comando ainda não está finalizado: o
-> comportamento e as opções podem mudar, e algumas partes podem não funcionar
-> como descrito abaixo. Use por sua conta e risco.
->
-> Por isso ele vem **desabilitado** (`"disabled": true` no
-> `config/bot-config.json`): o bot não responde a `/monitor` nem `/m`, o comando
-> não aparece no `/help` e os avisos de "ficou online" ficam desligados, mesmo
-> para números cadastrados antes. Para testar, remova a linha `"disabled": true`
-> (ou mude para `false`), refaça o build e recrie o container.
-
-Monitora números (máx. 20, setting `monitor.max`). Quando um deles fica online, você recebe no
-`PHONE_NUMBER`: `🔔 *Fulano* (5521999999999) acabou de ficar online.` Cada
-evento também é registrado no banco.
-
-| Opção | Valor | Descrição |
-|---|---|---|
-| `-list` | | Lista os números monitorados |
-| `-logs` | | Lista o histórico de eventos |
-| `-add` | `numero` | Adiciona um número |
-| `-del` | `numero` | Remove um número |
-| `-clean` | | Remove todos |
-
-Aceita também a forma sem hífen:
-
-```
-/monitor -add 5521999999999
-/monitor add +55 21 99999-9999
-/m -list
-/m logs
-/monitor -del 5521999999999
-/monitor -clean
+/cache           → lista o conteúdo de cache/ e total de mensagens
+/c -clean        → limpeza normal
+/cache -c -f     → limpeza geral
 ```
 
 ### `/crypto`
@@ -542,21 +508,112 @@ sobrevivem a reinícios.
 /crypto -d hype
 ```
 
-### `/sticker`
+### `/cve`
 
-Responda (reply) a uma imagem, vídeo/GIF ou mensagem com link com `/sticker`.
-Com link, o bot usa a miniatura do preview. Nome e autor da figurinha vêm dos
-settings `sticker.name` e `sticker.author`.
+Lista as CVEs publicadas mais recentemente no [NVD](https://nvd.nist.gov/)
+(base oficial do NIST), da mais nova para a mais antiga. Cada uma vem com o ID,
+a nota CVSS e a severidade, um resumo da descrição e o link para a página no NVD.
 
-Imagens (inclusive a miniatura do link) viram um quadrado 512x512 **enquadrado
-no meio da imagem**: numa foto deitada as laterais são cortadas, numa em pé o
-topo e a base. GIFs mantêm a animação. Figurinhas (WebP) vão como estão, e
-vídeos respondidos com `/sticker` seguem a conversão padrão (redimensionados
-sem corte). Já o `/get -sticker` enquadra o vídeo no meio, do mesmo jeito.
+| Opção | Valor | Descrição |
+|---|---|---|
+| `max` | | Quantidade de CVEs, de 1 a 20. Sem o valor usa o setting `cve.max` (10) |
+| `-highscore`, `-high` | `[max]` | Só as `max` críticas (CVSS v3 `CRITICAL`, nota ≥ 9) mais recentes, de 1 a 20, dos últimos `cve.maxDays` dias (7). Sem o valor usa o setting `cve.max` (10) |
 
 ```
-(reply numa foto)  /sticker
-(reply num link)   /st
+/cve                 → as 10 mais recentes dos últimos 2 dias
+/cve 5               → só as 5 mais recentes dos últimos 2 dias
+/cve -high           → as 10 críticas mais recentes dos últimos 7 dias
+/cve -high 2         → só as 2 críticas mais recentes dos últimos 7 dias
+/set cve.max 5       → passa a exibir 5 por vez
+/set cve.maxDays 30  → o -highscore passa a olhar os últimos 30 dias
+```
+
+Exemplo de resposta:
+
+```
+🔥 3 CVEs críticas mais recentes (CVSS ≥ 9, últimos 7 dias)
+
+🛡️ CVE-2026-103056 — 9 CRITICAL
+AiSOC versions 7.2.0 before 12.0.0 contain a command injection …
+https://nvd.nist.gov/vuln/detail/CVE-2026-103056
+```
+
+Detalhes:
+
+- A quantidade exibida vem do setting `cve.max` (padrão 10, máx. 20). O `max`
+  do comando (`/cve 5` ou `/cve -high 5`) sobrepõe o `cve.max` só naquela
+  chamada; valores fora de 1–20 (ou que não são números) são recusados com uma
+  mensagem de ajuda.
+- A janela do `-highscore` vem do setting `cve.maxDays` (padrão 7). O NVD não
+  aceita janelas maiores que 120 dias, por isso o setting vai de 1 a 120.
+- A nota exibida segue a ordem CVSS v3.1 → v4.0 → v3.0 → v2, preferindo a
+  métrica principal (do NVD). CVEs recém-publicadas podem vir ainda sem nota.
+- O filtro de críticas usa a severidade CVSS v3: CVEs avaliadas só em v4.0 ou
+  v2 não entram no `-highscore`.
+- Sem chave de API, o NVD aceita cerca de 5 consultas a cada 30 s e às vezes
+  demora. Cada `/cve` faz 2 consultas (o NVD só ordena da mais antiga para a
+  mais nova: uma conta o total e a outra busca o final da lista). Em erro, o
+  bot pede para tentar de novo em 30 s.
+
+### `/debug` · admin
+
+Liga/desliga o modo debug (logs detalhados no container). O estado fica salvo
+no setting `debug.enabled` e sobrevive a reinícios. No primeiro boot começa
+ligado só com `APP_ENV=dev`.
+
+| Opção | Descrição |
+|---|---|
+| `-on` | Ativa o debug |
+| `-off` | Desativa o debug |
+
+```
+/debug -on      → 🪲 Debug Ativado.
+/dbg -off       → 🪲 Debug Desativado.
+/debug          → mostra o estado atual
+```
+
+### `/edit` (`/e`) · admin
+
+Reexibe mensagens editadas deste chat que ainda estão no cache (30 dias,
+setting `cache.editedRetentionDays`), com o texto de antes e o de depois.
+Funciona como o `/show`: mesmas opções, mesmo limite (`show.max`) e mesmo
+intervalo entre os envios (`show.delayMs`). Cada edição é um item: uma
+mensagem editada duas vezes aparece duas vezes.
+
+| Opção | Valor | Descrição |
+|---|---|---|
+| `-N` | | Quantidade (padrão 1, máx. 20, setting `show.max`). Ex.: `-3` |
+| `-list`, `-l` | | A mesma lista do `/show -l`: apagadas e editadas por chat |
+| `-pv` | | Envia no seu privado em vez de expor no chat atual |
+| `-chat`, `-c` | `<nº\|nome>` | Escolhe outro chat: nº da lista de **editadas** do `/edit -l` ou parte do nome |
+| `-flush`, `-f` | | Remove as editadas deste chat (no seu privado: de todos) |
+
+```
+/edit                → última mensagem editada deste chat
+/e -3 -pv            → as 3 últimas, enviadas no seu privado
+/edit -c 1 -5        → 5 últimas do chat nº 1 da lista de editadas
+/edit -f             → apaga do cache as editadas deste chat
+```
+
+```
+✏️ MENSAGEM EDITADA (1/1)
+
+👥 Grupo: Trabalho
+👤 Nome: Fulano
+📱 Número: +5521999999999
+📅 Enviada em: 30/09/2026, 11:14:03
+✏️ Editada em: 30/09/2026, 11:15:42
+📝 Antes: "reunião às 14h"
+💬 Depois: "reunião às 15h"
+```
+
+### `/everyone` · admin
+
+Só em grupos. Responde à sua mensagem mencionando todos os participantes
+(exceto você).
+
+```
+/everyone
 ```
 
 ### `/get`
@@ -596,97 +653,188 @@ feitos depois pelo yt-dlp não são verificados.
 (reply numa mensagem com link)  /get -a
 ```
 
-### `/cache` · admin
+### `/gif [tag]`
 
-Mostra o espaço ocupado em `cache/` (banco, mídias, temporários).
+GIF aleatório do GIPHY, enviado como vídeo em loop. Sem tag usa o setting
+`gif.tag`. Precisa de uma chave do GIPHY: `GIPHY_API_KEY` no `config/.env` ou,
+se ela não existir, o setting `gif.giphy.api.key` (`/set gif.giphy.api.key <chave>`).
 
-| Opção | Descrição |
-|---|---|
-| `-clean`, `-c` | Remove só o que passou da janela de retenção (68 h / `cache.revokedRetentionDays` para apagadas / `cache.editedRetentionDays` para editadas / `watch.hitsRetentionDays` para ocorrências do `/watch`) |
-| `-force`, `-f` | Junto com `-clean`: apaga **todas** as mensagens (inclusive as guardadas para o `/show` e o `/edit`), mídias e temporários, e compacta o banco. Números e logs do `/monitor` e ocorrências do `/watch` são mantidos |
+### `/gpt` (`/ai`) · admin
+
+Pergunta ao ChatGPT pela API da OpenAI e responde no chat. Respondendo uma
+mensagem, o texto dela entra antes da pergunta. Enquanto espera a resposta, o
+bot aparece como "digitando...". Sem pergunta, mostra a ajuda.
 
 ```
-/cache           → lista o conteúdo de cache/ e total de mensagens
-/c -clean        → limpeza normal
-/cache -c -f     → limpeza geral
+/gpt explique o que é SSRF em 3 linhas
+/ai qual a capital da Mongólia?
+/gpt resuma          (respondendo uma mensagem)
+/gpt -h              → ajuda do comando
 ```
 
-### `/show` (`/undo`, `/s`) · admin
+#### Configurando a chave
 
-Reexibe mensagens apagadas deste chat que ainda estão no cache (30 dias,
-setting `cache.revokedRetentionDays`). Os envios são espaçados por
-`show.delayMs` (700 ms) para evitar flood.
+O `/gpt` precisa de uma API key da OpenAI (paga por uso: crie em
+[platform.openai.com/api-keys](https://platform.openai.com/api-keys)). Ela é
+procurada nesta ordem:
+
+1. `OPENAI_API_KEY` no `config/.env` (vale no próximo start);
+2. o setting `openai.api.key`, que dá para trocar pelo WhatsApp sem reiniciar:
+   `/set openai.api.key sk-proj-...` (exibido mascarado; `/set -reset
+   openai.api.key` apaga).
+
+Sem nenhuma das duas o `/gpt` fica **desativado** e responde `API key da
+OpenAI não encontrada`. O tempo máximo de espera segue a mesma ordem:
+`OPENAI_TIMEOUT_MS` no `.env` ou o setting `openai.timeout.ms` (padrão 60000,
+de 5000 a 300000). Um valor inválido no `.env` é ignorado (com aviso no log) e
+vale o setting. O modelo vem do `OPENAI_MODEL` (padrão `gpt-4o-mini`).
+
+Detalhes:
+
+- É só do dono do bot para ninguém dos grupos gastar os seus créditos.
+- Erros comuns têm resposta própria: chave inválida (`🔑`), limite ou créditos
+  esgotados (`💸`) e demora maior que o timeout (`⏱️`). Os outros mostram a
+  mensagem da API.
+- A chave nunca vai para o chat nem para o log.
+- Se a resposta começar com `/`, o bot põe um `🤖` na frente, para ela não
+  ser lida como comando.
+
+### `/help`
+
+Exibe o menu com todos os comandos, ou a ajuda de um só.
+
+```
+/help
+/help get
+/h /show
+```
+
+### `/joke` (`/piada`, `/humor`)
+
+Piada em português da [JokeAPI](https://jokeapi.dev/) (safe-mode).
+
+### `/kernel`
+
+Versões mainline, stable e longterm publicadas em `kernel.org/releases.json`.
+
+### `/listageral` · admin
+
+Só em grupos: lista os membros (número, nome, 👑 dono, ⭐ admin).
+
+### `/meme [busca]`
+
+Template de meme aleatório do [imgflip](https://imgflip.com/), opcionalmente
+filtrado pelo nome (`/meme drake`).
+
+### `/monitor` · admin · 🚧 em desenvolvimento
+
+> 🚧 **Em desenvolvimento.** Este comando ainda não está finalizado: o
+> comportamento e as opções podem mudar, e algumas partes podem não funcionar
+> como descrito abaixo. Use por sua conta e risco.
+>
+> Por isso ele vem **desabilitado** (`"disabled": true` no
+> `config/bot-config.json`): o bot não responde a `/monitor` nem `/m`, o comando
+> não aparece no `/help` e os avisos de "ficou online" ficam desligados, mesmo
+> para números cadastrados antes. Para testar, remova a linha `"disabled": true`
+> (ou mude para `false`), refaça o build e recrie o container.
+
+Monitora números (máx. 20, setting `monitor.max`). Quando um deles fica online, você recebe no
+`PHONE_NUMBER`: `🔔 *Fulano* (5521999999999) acabou de ficar online.` Cada
+evento também é registrado no banco.
 
 | Opção | Valor | Descrição |
 |---|---|---|
-| `-N` | | Quantidade (padrão 1, máx. 20, setting `show.max`). Ex.: `-3` |
-| `-list`, `-l` | | Lista as apagadas **e as editadas** do cache por chat (em qualquer chat), marcando com `← este chat` o chat atual. É a mesma lista do `/edit -l` |
-| `-pv` | | Envia no seu privado em vez de expor no chat atual |
-| `-chat`, `-c` | `<nº\|nome>` | Escolhe outro chat: nº da lista de **deletadas** do `/show -l` ou parte do nome. Funciona em qualquer chat; junte `-pv` para não expor as mensagens no chat atual |
-| `-flush`, `-f` | | Remove as apagadas deste chat (no seu privado: de todos) |
+| `-list` | | Lista os números monitorados |
+| `-logs` | | Lista o histórico de eventos |
+| `-add` | `numero` | Adiciona um número |
+| `-del` | `numero` | Remove um número |
+| `-clean` | | Remove todos |
+
+Aceita também a forma sem hífen:
 
 ```
-/show                → última mensagem apagada deste chat
-/show -5             → as 5 últimas
-/undo -3 -pv         → as 3 últimas, enviadas no seu privado
-/show -l             → apagadas e editadas, por chat
-/show -l -pv         → a mesma lista, enviada no seu privado
-/show -c 2 -5        → 5 últimas do chat nº 2 da lista de deletadas
-/show -c família -pv → do chat cujo nome contém "família", no seu privado
-/show -f             → apaga do cache as apagadas deste chat
+/monitor -add 5521999999999
+/monitor add +55 21 99999-9999
+/m -list
+/m logs
+/monitor -del 5521999999999
+/monitor -clean
 ```
 
-O `-l` (no `/show` ou no `/edit`) mostra os dois tipos, cada um com a sua
-numeração para o `-c`:
+### `/news` · admin
 
-```
-🗄️ Mensagens no cache
-
-🗑️ Deletadas: 3 (1 com mídia · a mais antiga expira em 29 dias)
-1. 👥 Família — 2 (última 30/09/2026, 10:02:11) ← este chat
-2. 👤 Beltrano — 1 (última 30/09/2026, 09:40:05)
-
-✏️ Editadas: 1 (a mais antiga expira em 30 dias)
-1. 👥 Trabalho — 1 (última 30/09/2026, 11:15:42)
-
-💡 /show -N reexibe as deletadas e /edit -N as editadas deste chat (máx. 20).
-💡 Junte -c <nº ou nome> para outro chat: o nº é o da lista do tipo (/show -c 2, /edit -c 1).
-💡 -pv envia no seu privado; -f remove do cache as deste chat (no seu privado: de todos).
-```
-
-### `/edit` (`/e`) · admin
-
-Reexibe mensagens editadas deste chat que ainda estão no cache (30 dias,
-setting `cache.editedRetentionDays`), com o texto de antes e o de depois.
-Funciona como o `/show`: mesmas opções, mesmo limite (`show.max`) e mesmo
-intervalo entre os envios (`show.delayMs`). Cada edição é um item: uma
-mensagem editada duas vezes aparece duas vezes.
+Junta as manchetes mais recentes dos feeds RSS de uma categoria, com fonte,
+data e link. Sem categoria, mostra a ajuda com todas as opções. Só o dono do
+bot usa: o `/news` de qualquer outra pessoa é ignorado em silêncio.
 
 | Opção | Valor | Descrição |
 |---|---|---|
-| `-N` | | Quantidade (padrão 1, máx. 20, setting `show.max`). Ex.: `-3` |
-| `-list`, `-l` | | A mesma lista do `/show -l`: apagadas e editadas por chat |
-| `-pv` | | Envia no seu privado em vez de expor no chat atual |
-| `-chat`, `-c` | `<nº\|nome>` | Escolhe outro chat: nº da lista de **editadas** do `/edit -l` ou parte do nome |
-| `-flush`, `-f` | | Remove as editadas deste chat (no seu privado: de todos) |
+| `-hack`, `-hacknews` | | Hacking/segurança: The Hacker News, BleepingComputer e Krebs on Security (setting `news.hack`) |
+| `-g1` | | Últimas notícias do [g1](https://g1.globo.com/) (setting `news.g1`) |
+| `-gazeta`, `-gaz` | | [Gazeta do Povo](https://www.gazetadopovo.com.br/), seção Brasil (setting `news.gazeta`) |
+| `-brasil`, `-br` | | Blogs sobre o Brasil listados no [feedspot](https://rss.feedspot.com/brazil_rss_feeds/), a maioria em inglês (setting `news.brasil`) |
+| `quantidade` | 1–10 | Quantas manchetes. Sem ela usa o setting `news.max` (5) |
 
 ```
-/edit                → última mensagem editada deste chat
-/e -3 -pv            → as 3 últimas, enviadas no seu privado
-/edit -c 1 -5        → 5 últimas do chat nº 1 da lista de editadas
-/edit -f             → apaga do cache as editadas deste chat
+/news                → ajuda com todas as opções
+/news -g1            → as 5 mais recentes do g1
+/news -gazeta 3      → as 3 mais recentes da Gazeta do Povo
+/news -br 5          → as 5 mais recentes dos blogs sobre o Brasil
+/news -hack 10       → as 10 mais recentes de hacking
+/news -g1 -gazeta 6  → g1 e Gazeta juntos (3 de cada, no máximo)
+/news -h             → ajuda do comando
 ```
 
-```
-✏️ MENSAGEM EDITADA (1/1)
+Exemplo de resposta:
 
-👥 Grupo: Trabalho
-👤 Nome: Fulano
-📱 Número: +5521999999999
-📅 Enviada em: 30/09/2026, 11:14:03
-✏️ Editada em: 30/09/2026, 11:15:42
-📝 Antes: "reunião às 14h"
-💬 Depois: "reunião às 15h"
+```
+📰 g1
+
+1. Debate com candidatos ao governo de Rondônia é marcado por acusações …
+g1 · 30/09/2026, 00:29:33
+https://g1.globo.com/ro/rondonia/eleicoes/2026/noticia/...
+```
+
+#### Alterando os feeds
+
+Cada categoria lê a lista do seu setting (`news.<categoria>`), que aceita
+qualquer feed RSS:
+
+```
+/set news.g1 https://g1.globo.com/rss/g1/economia/
+/set news.hack https://feeds.feedburner.com/TheHackersNews https://krebsonsecurity.com/feed/
+/set -reset news.g1                → volta ao padrão
+/set news.max 3                    → muda a quantidade padrão
+```
+
+Detalhes:
+
+- Várias categorias no mesmo comando somam os feeds.
+- Cada fonte ocupa no máximo a sua fatia da lista (ex.: 6 manchetes de 2
+  feeds → até 3 de cada); senão a que publica mais toma tudo.
+- Um feed fora do ar não derruba os outros: ele só aparece no log.
+- O `-brasil` lê cerca de 15 feeds de uma vez; a página do feedspot é HTML,
+  então os feeds dela foram copiados para o setting `news.brasil` (não é
+  lida a cada uso).
+- Os feeds precisam ser RSS (`<item>`); feeds só em Atom (`<entry>`) não são
+  lidos.
+
+### `/noffa`
+
+Coloca emojis de arco-íris entre as palavras. Aceita texto ou reply numa mensagem.
+
+```
+/noffa bom dia grupo
+→ bom 🌈 dia 🏳️‍🌈 grupo
+```
+
+Se o texto começar com `/`, a resposta ganha um 🌈 na frente, para nunca parecer
+um comando.
+
+### `/ping` · admin
+
+```
+/ping  → pong
 ```
 
 ### `/set` · admin
@@ -758,141 +906,65 @@ banco são ignorados no boot (vale o padrão, com aviso nos logs). Ao renomear
 uma chave, registre `antiga → nova` em `SETTINGS_RENOMEADOS`: no boot o valor
 salvo passa para o nome novo (ex.: `api.key.giphy` → `gif.giphy.api.key`).
 
-### `/watch` (`/w`) · admin
+### `/show` (`/undo`, `/s`) · admin
 
-Vigia as mensagens que chegam em **qualquer chat** (privados e grupos) e, quando
-alguma casa com uma regra, manda o alerta **no seu privado**:
-
-```
-👀 WATCH: MENSAGEM DETECTADA
-
-🔎 Regra #2: /pix\s*\d+/i
-👥 Grupo: Família
-👤 Nome: Fulano
-📱 Número: +5521999999999
-📅 Enviada em: 29/09/2026, 14:32:07
-💬 Texto: "me manda um pix 50 aí"
-```
-
-Tipos de regra:
-
-- **Texto**: casa se a mensagem *contém* o texto, sem diferenciar maiúsculas
-  nem acentos (`promoção` casa com `PROMOCAO`).
-- **`/regex/flags`**: expressão regular do JavaScript (ex.: `/^bom dia$/i`). As
-  flags `g` e `y` são ignoradas.
-
-As regras são testadas contra o texto original da mensagem (menções como
-`@111780869222483`), mas no alerta e no `-show` as menções aparecem com o nome
-do contato (`@Fulano`) e o grupo com o nome atual.
+Reexibe mensagens apagadas deste chat que ainda estão no cache (30 dias,
+setting `cache.revokedRetentionDays`). Os envios são espaçados por
+`show.delayMs` (700 ms) para evitar flood.
 
 | Opção | Valor | Descrição |
 |---|---|---|
-| *(nenhuma)* | | O mesmo que `-show`: ocorrências de todas as regras |
-| `-list`, `-l` | | Lista as regras, com o nº e a quantidade de ocorrências |
-| `-show`, `-s` | `[-N]` | Resumo das mensagens que casaram com a regra nº N (sem `-N`: de todas). Máx. 20 (setting `watch.showMax`) |
-| `-add`, `-a` | `<PATTERN\|/REGEX/>` | Adiciona uma regra (máx. 20, setting `watch.max`). Pode ter espaços |
-| `-del`, `-d` | `-N` | Remove a regra nº N e as ocorrências dela. As seguintes são renumeradas |
-| `-flush`, `-f` | `[-N]` | Apaga as ocorrências da regra nº N (sem `-N`: de todas, inclusive de regras já removidas). As regras são mantidas |
+| `-N` | | Quantidade (padrão 1, máx. 20, setting `show.max`). Ex.: `-3` |
+| `-list`, `-l` | | Lista as apagadas **e as editadas** do cache por chat (em qualquer chat), marcando com `← este chat` o chat atual. É a mesma lista do `/edit -l` |
+| `-pv` | | Envia no seu privado em vez de expor no chat atual |
+| `-chat`, `-c` | `<nº\|nome>` | Escolhe outro chat: nº da lista de **deletadas** do `/show -l` ou parte do nome. Funciona em qualquer chat; junte `-pv` para não expor as mensagens no chat atual |
+| `-flush`, `-f` | | Remove as apagadas deste chat (no seu privado: de todos) |
 
 ```
-/watch -a promoção
-/watch -a "bom dia grupo"
-/watch -a /pix\s*\d+/i
-/watch -l
-/watch -s -2       → mensagens que casaram com a regra 2
-/w -s              → de todas as regras (o mesmo que /watch)
-/watch -f -2       → apaga as ocorrências da regra 2
-/w -f              → apaga as ocorrências de todas as regras
-/watch -d -1
+/show                → última mensagem apagada deste chat
+/show -5             → as 5 últimas
+/undo -3 -pv         → as 3 últimas, enviadas no seu privado
+/show -l             → apagadas e editadas, por chat
+/show -l -pv         → a mesma lista, enviada no seu privado
+/show -c 2 -5        → 5 últimas do chat nº 2 da lista de deletadas
+/show -c família -pv → do chat cujo nome contém "família", no seu privado
+/show -f             → apaga do cache as apagadas deste chat
 ```
 
-Detalhes:
-
-- As regras ficam no setting `watch.rules` (sobrevivem a reinícios); dá para
-  vê-las também com `/set watch.rules`.
-- **Suas próprias mensagens e comandos são ignorados** (senão os próprios
-  alertas no seu privado casariam de novo).
-- A mesma mensagem não gera dois alertas para a mesma regra; se casar com várias
-  regras, vem um alerta só listando todas.
-- `-list` e `-show` mostram conversas de terceiros: usados fora do seu privado,
-  a resposta vai para o seu privado.
-- As ocorrências ficam na tabela `watch_hits` por 30 dias (setting
-  `watch.hitsRetentionDays`), ou até um `/watch -f`.
-
-### `/kernel`
-
-Versões mainline, stable e longterm publicadas em `kernel.org/releases.json`.
-
-### `/boletos` · admin
-
-Só em grupos: sorteia 2 membros diferentes (fora o bot) e os marca para "pagar
-um boleto".
-
-### `/meme [busca]`
-
-Template de meme aleatório do [imgflip](https://imgflip.com/), opcionalmente
-filtrado pelo nome (`/meme drake`).
-
-### `/listageral` · admin
-
-Só em grupos: lista os membros (número, nome, 👑 dono, ⭐ admin).
-
-### `/gif [tag]`
-
-GIF aleatório do GIPHY, enviado como vídeo em loop. Sem tag usa o setting
-`gif.tag`. Precisa de uma chave do GIPHY: `GIPHY_API_KEY` no `config/.env` ou,
-se ela não existir, o setting `gif.giphy.api.key` (`/set gif.giphy.api.key <chave>`).
-
-### `/joke` (`/piada`, `/humor`)
-
-Piada em português da [JokeAPI](https://jokeapi.dev/) (safe-mode).
-
-### `/cve`
-
-Lista as CVEs publicadas mais recentemente no [NVD](https://nvd.nist.gov/)
-(base oficial do NIST), da mais nova para a mais antiga. Cada uma vem com o ID,
-a nota CVSS e a severidade, um resumo da descrição e o link para a página no NVD.
-
-| Opção | Valor | Descrição |
-|---|---|---|
-| `max` | | Quantidade de CVEs, de 1 a 20. Sem o valor usa o setting `cve.max` (10) |
-| `-highscore`, `-high` | `[max]` | Só as `max` críticas (CVSS v3 `CRITICAL`, nota ≥ 9) mais recentes, de 1 a 20, dos últimos `cve.maxDays` dias (7). Sem o valor usa o setting `cve.max` (10) |
+O `-l` (no `/show` ou no `/edit`) mostra os dois tipos, cada um com a sua
+numeração para o `-c`:
 
 ```
-/cve                 → as 10 mais recentes dos últimos 2 dias
-/cve 5               → só as 5 mais recentes dos últimos 2 dias
-/cve -high           → as 10 críticas mais recentes dos últimos 7 dias
-/cve -high 2         → só as 2 críticas mais recentes dos últimos 7 dias
-/set cve.max 5       → passa a exibir 5 por vez
-/set cve.maxDays 30  → o -highscore passa a olhar os últimos 30 dias
+🗄️ Mensagens no cache
+
+🗑️ Deletadas: 3 (1 com mídia · a mais antiga expira em 29 dias)
+1. 👥 Família — 2 (última 30/09/2026, 10:02:11) ← este chat
+2. 👤 Beltrano — 1 (última 30/09/2026, 09:40:05)
+
+✏️ Editadas: 1 (a mais antiga expira em 30 dias)
+1. 👥 Trabalho — 1 (última 30/09/2026, 11:15:42)
+
+💡 /show -N reexibe as deletadas e /edit -N as editadas deste chat (máx. 20).
+💡 Junte -c <nº ou nome> para outro chat: o nº é o da lista do tipo (/show -c 2, /edit -c 1).
+💡 -pv envia no seu privado; -f remove do cache as deste chat (no seu privado: de todos).
 ```
 
-Exemplo de resposta:
+### `/sticker`
+
+Responda (reply) a uma imagem, vídeo/GIF ou mensagem com link com `/sticker`.
+Com link, o bot usa a miniatura do preview. Nome e autor da figurinha vêm dos
+settings `sticker.name` e `sticker.author`.
+
+Imagens (inclusive a miniatura do link) viram um quadrado 512x512 **enquadrado
+no meio da imagem**: numa foto deitada as laterais são cortadas, numa em pé o
+topo e a base. GIFs mantêm a animação. Figurinhas (WebP) vão como estão, e
+vídeos respondidos com `/sticker` seguem a conversão padrão (redimensionados
+sem corte). Já o `/get -sticker` enquadra o vídeo no meio, do mesmo jeito.
 
 ```
-🔥 3 CVEs críticas mais recentes (CVSS ≥ 9, últimos 7 dias)
-
-🛡️ CVE-2026-103056 — 9 CRITICAL
-AiSOC versions 7.2.0 before 12.0.0 contain a command injection …
-https://nvd.nist.gov/vuln/detail/CVE-2026-103056
+(reply numa foto)  /sticker
+(reply num link)   /st
 ```
-
-Detalhes:
-
-- A quantidade exibida vem do setting `cve.max` (padrão 10, máx. 20). O `max`
-  do comando (`/cve 5` ou `/cve -high 5`) sobrepõe o `cve.max` só naquela
-  chamada; valores fora de 1–20 (ou que não são números) são recusados com uma
-  mensagem de ajuda.
-- A janela do `-highscore` vem do setting `cve.maxDays` (padrão 7). O NVD não
-  aceita janelas maiores que 120 dias, por isso o setting vai de 1 a 120.
-- A nota exibida segue a ordem CVSS v3.1 → v4.0 → v3.0 → v2, preferindo a
-  métrica principal (do NVD). CVEs recém-publicadas podem vir ainda sem nota.
-- O filtro de críticas usa a severidade CVSS v3: CVEs avaliadas só em v4.0 ou
-  v2 não entram no `-highscore`.
-- Sem chave de API, o NVD aceita cerca de 5 consultas a cada 30 s e às vezes
-  demora. Cada `/cve` faz 2 consultas (o NVD só ordena da mais antiga para a
-  mais nova: uma conta o total e a outra busca o final da lista). Em erro, o
-  bot pede para tentar de novo em 30 s.
 
 ### `/tempo` (`/weather`)
 
@@ -977,160 +1049,88 @@ Detalhes:
 - A CVE pode vir de qualquer severidade; nos raros dias sem nenhuma publicação
   o bot avisa em vez de marcar alguém.
 
-### `/bot` · admin
-
-Controla quem pode usar o bot. Tem dois interruptores independentes, que
-sobrevivem a reinícios:
-
-- **Ligado/desligado** (setting `bot.paused`, padrão ligado): desligado, o bot
-  ignora **todos** os comandos, inclusive os seus, exceto o próprio `/bot`.
-- **Modo admin** (setting `bot.adminMode`, padrão ligado): ligado, só você
-  usa comandos; os de qualquer outra pessoa são ignorados em silêncio, mesmo
-  os que normalmente são liberados (`/ping`, `/tempo`...).
-
-| Opção | Descrição |
-|---|---|
-| *(nenhuma)* | Mostra o estado dos dois |
-| `-on` | Liga o bot |
-| `-off` | Desliga o bot |
-| `+admin` | Liga o modo admin |
-| `-admin` | Desliga o modo admin (cada comando volta a seguir a coluna *Admin* da [tabela de comandos](#comandos)) |
-
-As opções combinam; `-on` com `-off` (ou `+admin` com `-admin`) no mesmo
-comando é recusado. A resposta sempre mostra o estado final:
+### `/uptime` (`/u`, `/up`) · admin
 
 ```
-/bot               → ▶️ Bot: ativo
-                     🔓 Modo admin: desligado
-/bot +admin        → ▶️ Bot: ativo
-                     🔒 Modo admin: ligado (só o dono usa comandos)
-/bot -admin        → volta a liberar os comandos públicos para todos
-/bot -off          → ⏸️ Bot: desligado (todos os comandos são ignorados)
-/bot -on -admin    → liga o bot e desliga o modo admin de uma vez
-/bot -h            → ajuda do comando
+/uptime
+🤖 ZapBot 1.7
+━━━━━━━━━━━━━━━━━━
+⚡ Online: 2 dias, 3 horas
+🔐 Conectado: 2 dias, 2 horas, 58 minutos
 ```
 
-Quando usar cada um:
+### `/version` (`/ver`) · admin
 
-| Situação | Comando |
-|---|---|
-| Alguém está abusando dos comandos num grupo | `/bot +admin` |
-| Vários zapbots no mesmo grupo e você quer que só o seu responda a você | `/bot +admin` |
-| Parar o bot por completo por um tempo, sem derrubar o container | `/bot -off` |
-| Voltar ao normal | `/bot -on -admin` |
+Exibe o mesmo banner do `/uptime`, com a versão do bot.
 
-Detalhes:
+```
+/ver
+🤖 ZapBot 1.7
+━━━━━━━━━━━━━━━━━━
+⚡ Online: 2 dias, 3 horas
+🔐 Conectado: 2 dias, 2 horas, 58 minutos
+```
 
-- Com o bot desligado o `/set` também é ignorado: para ligar use sempre o
-  `/bot -on`. Com ele ligado, `/set bot.paused` e `/set bot.adminMode` têm o
-  mesmo efeito das opções.
-- Se o bot reiniciar desligado ou em modo admin, a mensagem de inicialização
-  no seu privado avisa.
-- Só os **comandos** são afetados: a recuperação de mensagens apagadas e
-  editadas, o `/watch` e as notificações do `/monitor` continuam funcionando.
-- Comandos ignorados aparecem no log: `Comando '/ping' ignorado: bot
-  desligado` (sempre) e `Comando '/ping' de Fulano ignorado: modo admin` (só
-  com o [debug](#debug--admin) ligado).
-- "Você" é a conta pareada ao bot, de qualquer aparelho. Para desligar só
-  alguns comandos, para todos, use o setting `commands.disabled`.
+### `/watch` (`/w`) · admin
 
-### `/news` · admin
+Vigia as mensagens que chegam em **qualquer chat** (privados e grupos) e, quando
+alguma casa com uma regra, manda o alerta **no seu privado**:
 
-Junta as manchetes mais recentes dos feeds RSS de uma categoria, com fonte,
-data e link. Sem categoria, mostra a ajuda com todas as opções. Só o dono do
-bot usa: o `/news` de qualquer outra pessoa é ignorado em silêncio.
+```
+👀 WATCH: MENSAGEM DETECTADA
+
+🔎 Regra #2: /pix\s*\d+/i
+👥 Grupo: Família
+👤 Nome: Fulano
+📱 Número: +5521999999999
+📅 Enviada em: 29/09/2026, 14:32:07
+💬 Texto: "me manda um pix 50 aí"
+```
+
+Tipos de regra:
+
+- **Texto**: casa se a mensagem *contém* o texto, sem diferenciar maiúsculas
+  nem acentos (`promoção` casa com `PROMOCAO`).
+- **`/regex/flags`**: expressão regular do JavaScript (ex.: `/^bom dia$/i`). As
+  flags `g` e `y` são ignoradas.
+
+As regras são testadas contra o texto original da mensagem (menções como
+`@111780869222483`), mas no alerta e no `-show` as menções aparecem com o nome
+do contato (`@Fulano`) e o grupo com o nome atual.
 
 | Opção | Valor | Descrição |
 |---|---|---|
-| `-hack`, `-hacknews` | | Hacking/segurança: The Hacker News, BleepingComputer e Krebs on Security (setting `news.hack`) |
-| `-g1` | | Últimas notícias do [g1](https://g1.globo.com/) (setting `news.g1`) |
-| `-gazeta`, `-gaz` | | [Gazeta do Povo](https://www.gazetadopovo.com.br/), seção Brasil (setting `news.gazeta`) |
-| `-brasil`, `-br` | | Blogs sobre o Brasil listados no [feedspot](https://rss.feedspot.com/brazil_rss_feeds/), a maioria em inglês (setting `news.brasil`) |
-| `quantidade` | 1–10 | Quantas manchetes. Sem ela usa o setting `news.max` (5) |
+| *(nenhuma)* | | O mesmo que `-show`: ocorrências de todas as regras |
+| `-list`, `-l` | | Lista as regras, com o nº e a quantidade de ocorrências |
+| `-show`, `-s` | `[-N]` | Resumo das mensagens que casaram com a regra nº N (sem `-N`: de todas). Máx. 20 (setting `watch.showMax`) |
+| `-add`, `-a` | `<PATTERN\|/REGEX/>` | Adiciona uma regra (máx. 20, setting `watch.max`). Pode ter espaços |
+| `-del`, `-d` | `-N` | Remove a regra nº N e as ocorrências dela. As seguintes são renumeradas |
+| `-flush`, `-f` | `[-N]` | Apaga as ocorrências da regra nº N (sem `-N`: de todas, inclusive de regras já removidas). As regras são mantidas |
 
 ```
-/news                → ajuda com todas as opções
-/news -g1            → as 5 mais recentes do g1
-/news -gazeta 3      → as 3 mais recentes da Gazeta do Povo
-/news -br 5          → as 5 mais recentes dos blogs sobre o Brasil
-/news -hack 10       → as 10 mais recentes de hacking
-/news -g1 -gazeta 6  → g1 e Gazeta juntos (3 de cada, no máximo)
-/news -h             → ajuda do comando
-```
-
-Exemplo de resposta:
-
-```
-📰 g1
-
-1. Debate com candidatos ao governo de Rondônia é marcado por acusações …
-g1 · 30/09/2026, 00:29:33
-https://g1.globo.com/ro/rondonia/eleicoes/2026/noticia/...
-```
-
-#### Alterando os feeds
-
-Cada categoria lê a lista do seu setting (`news.<categoria>`), que aceita
-qualquer feed RSS:
-
-```
-/set news.g1 https://g1.globo.com/rss/g1/economia/
-/set news.hack https://feeds.feedburner.com/TheHackersNews https://krebsonsecurity.com/feed/
-/set -reset news.g1                → volta ao padrão
-/set news.max 3                    → muda a quantidade padrão
+/watch -a promoção
+/watch -a "bom dia grupo"
+/watch -a /pix\s*\d+/i
+/watch -l
+/watch -s -2       → mensagens que casaram com a regra 2
+/w -s              → de todas as regras (o mesmo que /watch)
+/watch -f -2       → apaga as ocorrências da regra 2
+/w -f              → apaga as ocorrências de todas as regras
+/watch -d -1
 ```
 
 Detalhes:
 
-- Várias categorias no mesmo comando somam os feeds.
-- Cada fonte ocupa no máximo a sua fatia da lista (ex.: 6 manchetes de 2
-  feeds → até 3 de cada); senão a que publica mais toma tudo.
-- Um feed fora do ar não derruba os outros: ele só aparece no log.
-- O `-brasil` lê cerca de 15 feeds de uma vez; a página do feedspot é HTML,
-  então os feeds dela foram copiados para o setting `news.brasil` (não é
-  lida a cada uso).
-- Os feeds precisam ser RSS (`<item>`); feeds só em Atom (`<entry>`) não são
-  lidos.
-
-### `/gpt` (`/ai`) · admin
-
-Pergunta ao ChatGPT pela API da OpenAI e responde no chat. Respondendo uma
-mensagem, o texto dela entra antes da pergunta. Enquanto espera a resposta, o
-bot aparece como "digitando...". Sem pergunta, mostra a ajuda.
-
-```
-/gpt explique o que é SSRF em 3 linhas
-/ai qual a capital da Mongólia?
-/gpt resuma          (respondendo uma mensagem)
-/gpt -h              → ajuda do comando
-```
-
-#### Configurando a chave
-
-O `/gpt` precisa de uma API key da OpenAI (paga por uso: crie em
-[platform.openai.com/api-keys](https://platform.openai.com/api-keys)). Ela é
-procurada nesta ordem:
-
-1. `OPENAI_API_KEY` no `config/.env` (vale no próximo start);
-2. o setting `openai.api.key`, que dá para trocar pelo WhatsApp sem reiniciar:
-   `/set openai.api.key sk-proj-...` (exibido mascarado; `/set -reset
-   openai.api.key` apaga).
-
-Sem nenhuma das duas o `/gpt` fica **desativado** e responde `API key da
-OpenAI não encontrada`. O tempo máximo de espera segue a mesma ordem:
-`OPENAI_TIMEOUT_MS` no `.env` ou o setting `openai.timeout.ms` (padrão 60000,
-de 5000 a 300000). Um valor inválido no `.env` é ignorado (com aviso no log) e
-vale o setting. O modelo vem do `OPENAI_MODEL` (padrão `gpt-4o-mini`).
-
-Detalhes:
-
-- É só do dono do bot para ninguém dos grupos gastar os seus créditos.
-- Erros comuns têm resposta própria: chave inválida (`🔑`), limite ou créditos
-  esgotados (`💸`) e demora maior que o timeout (`⏱️`). Os outros mostram a
-  mensagem da API.
-- A chave nunca vai para o chat nem para o log.
-- Se a resposta começar com `/`, o bot põe um `🤖` na frente, para ela não
-  ser lida como comando.
+- As regras ficam no setting `watch.rules` (sobrevivem a reinícios); dá para
+  vê-las também com `/set watch.rules`.
+- **Suas próprias mensagens e comandos são ignorados** (senão os próprios
+  alertas no seu privado casariam de novo).
+- A mesma mensagem não gera dois alertas para a mesma regra; se casar com várias
+  regras, vem um alerta só listando todas.
+- `-list` e `-show` mostram conversas de terceiros: usados fora do seu privado,
+  a resposta vai para o seu privado.
+- As ocorrências ficam na tabela `watch_hits` por 30 dias (setting
+  `watch.hitsRetentionDays`), ou até um `/watch -f`.
 
 ### Adicionando ou alterando comandos
 
