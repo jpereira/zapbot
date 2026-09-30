@@ -1,0 +1,239 @@
+/*
+ * /get (/download), /cache (/c) and the cache cleanup routines.
+ * yt-dlp and ffmpeg are simulated: the fake spawn only creates the output files.
+ */
+const bot = require('./helpers/bot');
+
+const fs = require('fs');
+const path = require('path');
+const { test, describe, beforeEach } = require('node:test');
+const assert = require('node:assert/strict');
+
+const { CACHE_DIR, MessageMedia, OTHERAlt, processes } = bot;
+const { isUrlPublic, isValidHttpUrl, extractFirstUrl } = bot.src('util/url');
+const cleanup = bot.src('cleanup');
+
+const MEDIA_DIR = path.join(CACHE_DIR, 'media');
+const TMP_DIR = path.join(CACHE_DIR, 'tmp');
+const URL = 'http://8.8.8.8/video'; // IP literal: sem consulta de DNS
+const DAY = 24 * 60 * 60 * 1000;
+
+beforeEach(bot.restart);
+
+const binaries = () => processes.chamadas.map(c => path.basename(c.bin));
+const argsDo = (nameAlt) => processes.chamadas.find(c => path.basename(c.bin) === nameAlt).args;
+const filesTemporary = () => fs.readdirSync(TMP_DIR).filter(f => !f.startsWith('.'));
+
+describe('URLs (anti-SSRF do /get)', () => {
+    test('só http(s)', () => {
+        assert.equal(isValidHttpUrl('https://x.com'), true);
+        for (const u of ['ftp://x.com', 'file:///etc/passwd', 'javascript:alert(1)', 'nada']) assert.equal(isValidHttpUrl(u), false, u);
+    });
+
+    test('endereços privados, loopback e link-local são recusados', async () => {
+        for (const u of ['http://127.0.0.1/', 'http://10.1.2.3/', 'http://192.168.0.1/', 'http://172.16.5.4/',
+            'http://169.254.169.254/', 'http://0.0.0.0/', 'http://[::1]/', 'http://[fe80::1]/', 'http://[::ffff:10.0.0.1]/']) {
+            assert.equal(await isUrlPublic(u), false, u);
+        }
+        assert.equal(await isUrlPublic('http://8.8.8.8/'), true);
+        assert.equal(await isUrlPublic('http://[2001:4860:4860::8888]/'), true);
+    });
+
+    test('extrai a primeira URL de um texto', () => {
+        assert.equal(extractFirstUrl('olha isso https://a.com/x?y=1 e http://b.com'), 'https://a.com/x?y=1');
+        assert.equal(extractFirstUrl('sem link'), null);
+    });
+});
+
+describe('/get (/download)', () => {
+    test('vídeo: baixa com yt-dlp, converte com ffmpeg e manda como documento', async () => {
+        const r = await bot.executar(`/get ${URL}`, { de: OTHERAlt.jid });
+        assert.equal(r[0].texto, '💡 Processando sua mídia, aguarde.');
+        assert.ok(r[1].content instanceof MessageMedia);
+        assert.equal(r[1].options.sendMediaAsDocument, true);
+        assert.equal(r[1].options.caption, '📥 Aqui está a mídia para download.');
+
+        assert.deepEqual(binaries(), ['yt-dlp', 'ffmpeg']);
+        const yt = argsDo('yt-dlp');
+        assert.deepEqual(yt.slice(-2), ['--', URL]);
+        assert.ok(yt.includes('--no-playlist'));
+        assert.equal(yt[yt.indexOf('--max-filesize') + 1], '200M');
+        assert.deepEqual(argsDo('ffmpeg').slice(0, 3), ['-y', '-protocol_whitelist', 'file']);
+        assert.deepEqual(filesTemporary(), [], 'os temporários foram apagados');
+    });
+
+    test('-a: só o áudio em mp3', async () => {
+        await bot.executar(`/download -a ${URL}`);
+        const ff = argsDo('ffmpeg');
+        assert.ok(ff.includes('-vn') && ff.includes('libmp3lame'));
+        assert.match(ff.at(-1), /_output\.mp3$/);
+    });
+
+    test('-st: figurinha animada de até 6 s', async () => {
+        const r = await bot.executar(`/get -st ${URL}`);
+        assert.equal(r[0].texto, '💡 Processando seu sticker, aguarde.');
+        assert.equal(r[1].options.sendMediaAsSticker, true);
+        const ff = argsDo('ffmpeg');
+        assert.equal(ff[ff.indexOf('-t') + 1], '6');
+        assert.match(ff[ff.indexOf('-vf') + 1], /crop=512:512/);
+    });
+
+    test('-ss e -es cortam o trecho', async () => {
+        await bot.executar(`/get -ss 10 -es 25 ${URL}`);
+        const ff = argsDo('ffmpeg');
+        assert.equal(ff[ff.indexOf('-ss') + 1], '10');
+        assert.equal(ff[ff.indexOf('-t') + 1], '15');
+    });
+
+    test('-v manda os comandos executados antes da mídia', async () => {
+        const r = await bot.executar(`/get -v ${URL}`);
+        assert.match(r[1].texto, /🛠️ \*Verbose Mode\*[\s\S]*yt-dlp[\s\S]*ffmpeg/);
+        assert.ok(r[2].content instanceof MessageMedia);
+    });
+
+    test('link da mensagem respondida', async () => {
+        const quoted = bot.createMessage({ texto: `veja ${URL}`, de: OTHERAlt.jid });
+        await bot.executar('/get', { citada: quoted });
+        assert.equal(argsDo('yt-dlp').at(-1), URL);
+    });
+
+    test('sem URL mostra a sintaxe; URL inválida ou privada é recusada', async () => {
+        assert.match((await bot.replyAlt('/get'))[0], /^Syntax: \/get/);
+        assert.match((await bot.replyAlt('/get ftp://x.com', { erroEsperado: true }))[0], /A URL 'ftp:\/\/x\.com' é inválida/);
+        assert.match((await bot.replyAlt('/get http://127.0.0.1:2375/', { erroEsperado: true }))[0], /aponta para um endereço não permitido/);
+        assert.deepEqual(processes.chamadas, []);
+    });
+
+    test('falhas do yt-dlp, do ffmpeg, download vazio e arquivo grande demais', async () => {
+        processes.falhar = 'yt-dlp';
+        assert.match((await bot.replyAlt(`/get ${URL}`, { erroEsperado: true }))[1], /Problemas para baixar com '\/venv\/bin\/yt-dlp'[\s\S]*🛠️ \*Cmd\*/);
+
+        processes.falhar = 'ffmpeg';
+        assert.match((await bot.replyAlt(`/get ${URL}`, { erroEsperado: true }))[1], /Problemas para decodificar com '\/usr\/bin\/ffmpeg'/);
+
+        processes.falhar = null;
+        processes.naoBaixar = true;
+        assert.match((await bot.replyAlt(`/get ${URL}`, { erroEsperado: true }))[1], /Nada foi baixado \(acima de 200 MB\?/);
+
+        processes.naoBaixar = false;
+        await bot.setSetting('get.maxSizeMB', 1);
+        processes.tamanhoSaida = 2 * 1024 * 1024;
+        assert.match((await bot.replyAlt(`/get ${URL}`, { erroEsperado: true }))[1], /Arquivo muito grande para WhatsApp Web \(máx\. 1 MB\)/);
+
+        assert.deepEqual(filesTemporary(), [], 'os temporários foram apagados mesmo com erro');
+    });
+
+    test('no máximo 2 downloads ao mesmo tempo', async () => {
+        // The three run together: counts what the bot sent in total
+        await Promise.all([1, 2, 3].map(() => bot.executar(`/get ${URL}`)));
+        const texts = bot.client.enviadas.map(e => bot.text(e.content, e.options));
+        assert.equal(texts.filter(t => /⏳ Já existem 2 downloads em andamento/.test(t)).length, 1);
+        assert.equal(texts.filter(t => /Processando sua mídia/.test(t)).length, 2);
+        assert.deepEqual(binaries(), ['yt-dlp', 'yt-dlp', 'ffmpeg', 'ffmpeg']);
+    });
+});
+
+describe('/cache (/c)', () => {
+    test('sem opção: conteúdo do cache e contagem de mensagens', async () => {
+        await bot.executar('oi', { de: OTHERAlt.jid });
+        const [r] = await bot.replyAlt('/cache');
+        assert.match(r, new RegExp(`🗂️ Exibindo conteúdo de ${CACHE_DIR}`));
+        assert.match(r, /🗄️ Existem \d+ mensagens no cache \(0 apagadas\) e 0 edições\./);
+    });
+
+    test('-c: limpa só o que passou das janelas de retenção', async () => {
+        const oldAlt2 = Date.now() - 69 * 60 * 60 * 1000;
+        await bot.dbRun("INSERT INTO messages (id, timestamp, revoked) VALUES ('velha', ?, 0), ('nova', ?, 0)", [oldAlt2, Date.now()]);
+        await bot.dbRun("INSERT INTO messages (id, timestamp, revoked, revoked_at) VALUES ('apagada', ?, 1, ?)", [oldAlt2, oldAlt2]);
+
+        assert.deepEqual(await bot.replyAlt('/c -c'), ['🧹 Cache limpo (itens fora da janela de retenção).\n']);
+        // (the own message "/c -c" is also in the database: we only check the test's)
+        const ids = (await bot.dbAll("SELECT id FROM messages WHERE id IN ('velha', 'nova', 'apagada') ORDER BY id")).map(r => r.id);
+        assert.deepEqual(ids, ['apagada', 'nova'], 'a apagada fica 30 dias; a comum sai em 68 h');
+    });
+
+    test('-c -f: apaga tudo (mensagens, edições, mídias e temporários)', async () => {
+        await bot.executar('oi', { de: OTHERAlt.jid, midia: { mimetype: 'image/png', data: 'AA==' } });
+        await bot.dbRun("INSERT INTO message_edits (message_id, edited_at) VALUES ('x', 1)");
+        fs.writeFileSync(path.join(TMP_DIR, 'lixo.mp4'), 'x');
+
+        const [r] = await bot.replyAlt('/cache -c -f');
+        assert.match(r, /🧹 \*Limpeza geral concluída\* \(force\)\n\n🗄️ Mensagens removidas: \*\d+\* _\(0 apagadas\)_\n✏️ Edições removidas: \*1\*/);
+        assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM messages')).n, 0);
+        assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM message_edits')).n, 0);
+        assert.deepEqual(fs.readdirSync(MEDIA_DIR), []);
+        assert.deepEqual(fs.readdirSync(TMP_DIR), []);
+    });
+
+    test('só o dono usa', async () => {
+        assert.deepEqual(await bot.replyAlt('/cache -c -f', { de: OTHERAlt.jid }), []);
+    });
+});
+
+describe('limpeza periódica', () => {
+    test('editadas, ocorrências do /watch e contadores do /stats fora da retenção', async () => {
+        const oldAlt = Date.now() - 40 * DAY;
+        await bot.dbRun('INSERT INTO message_edits (message_id, edited_at) VALUES (?, ?), (?, ?)', ['velha', oldAlt, 'nova', Date.now()]);
+        await bot.dbRun('INSERT INTO watch_hits (rule, message_id, timestamp) VALUES (?, ?, ?), (?, ?, ?)', ['r', 'velha', oldAlt, 'r', 'nova', Date.now()]);
+        await bot.dbRun("INSERT INTO stats (chat_id, day, hour, sender_id, msgs) VALUES ('c', '2020-01-01', 1, 's', 1), ('c', '2999-01-01', 1, 's', 1)");
+
+        await cleanup.cleanEditedOld();
+        await cleanup.cleanWatchOld();
+        await cleanup.cleanStatsOld();
+
+        assert.deepEqual((await bot.dbAll('SELECT message_id FROM message_edits')).map(r => r.message_id), ['nova']);
+        assert.deepEqual((await bot.dbAll('SELECT message_id FROM watch_hits')).map(r => r.message_id), ['nova']);
+        assert.deepEqual((await bot.dbAll('SELECT day FROM stats')).map(r => r.day), ['2999-01-01']);
+    });
+
+    test('mensagem comum antiga sai com a mídia; a apagada fica com a dela', async () => {
+        const oldAlt2 = Date.now() - 69 * 60 * 60 * 1000;
+        const old = path.join(MEDIA_DIR, 'velha.jpg');
+        const saved = path.join(MEDIA_DIR, 'guardada.jpg');
+        fs.mkdirSync(MEDIA_DIR, { recursive: true });
+        fs.writeFileSync(old, 'x');
+        fs.writeFileSync(saved, 'x');
+        await bot.dbRun('INSERT INTO messages (id, timestamp, revoked, revoked_at, media_path) VALUES (?, ?, 0, NULL, ?), (?, ?, 1, ?, ?)',
+            ['velha', oldAlt2, old, 'guardada', oldAlt2, Date.now(), saved]);
+
+        await cleanup.cleanCacheOld();
+        assert.ok(!fs.existsSync(old));
+        assert.ok(fs.existsSync(saved));
+        fs.unlinkSync(saved);
+    });
+
+    test('a limpeza periódica roda 1 minuto depois do boot e a cada 10', async (t) => {
+        t.mock.timers.enable({ apis: ['setTimeout', 'setInterval'] });
+        const oldAlt = Date.now() - 40 * DAY;
+        const insertOld = () => bot.dbRun('INSERT INTO message_edits (message_id, edited_at) VALUES (?, ?)', [`v${Math.random()}`, oldAlt]);
+        const remaining = async () => (await bot.dbGet('SELECT COUNT(*) AS n FROM message_edits')).n;
+        const run = async (ms) => {
+            t.mock.timers.tick(ms);
+            for (let i = 0; i < 20; i++) await new Promise(setImmediate);
+        };
+
+        await insertOld();
+        cleanup.startCleanupPeriodic();
+        await run(59 * 1000);
+        assert.equal(await remaining(), 1);
+        await run(1000);
+        assert.equal(await remaining(), 0, 'primeira limpeza: 1 min');
+
+        await insertOld();
+        await run(10 * 60 * 1000);
+        assert.equal(await remaining(), 0, 'depois: a cada 10 min');
+    });
+
+    test('temporários com mais de 2 h são apagados', async () => {
+        const oldAlt = path.join(TMP_DIR, 'velho.mp4');
+        const freshAlt = path.join(TMP_DIR, 'novo.mp4');
+        fs.writeFileSync(oldAlt, 'x');
+        fs.writeFileSync(freshAlt, 'x');
+        const threeHoursBack = new Date(Date.now() - 3 * 60 * 60 * 1000);
+        fs.utimesSync(oldAlt, threeHoursBack, threeHoursBack);
+
+        await cleanup.cleanFilesOld();
+        assert.deepEqual(fs.readdirSync(TMP_DIR), ['novo.mp4']);
+        fs.unlinkSync(freshAlt);
+    });
+});

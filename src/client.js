@@ -124,6 +124,12 @@ function cleanMarksExpired() {
     }
 }
 
+// Forgets all the marks (the tests start each case with no pending sends)
+function cleanMarks() {
+    sentByBotAlt.clear();
+    botPerChatSendings.clear();
+}
+
 // Called in app.js
 function marksStartCleanup() {
     setInterval(cleanMarksExpired, SENT_TTL_MS);
@@ -134,6 +140,7 @@ module.exports = {
     botConsumeSending,
     wasSentByBot,
     marksStartCleanup,
+    cleanMarks,
     markSentByBot,
     messageToSelf
 };

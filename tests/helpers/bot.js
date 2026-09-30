@@ -1,0 +1,235 @@
+/*
+ * The bot loaded on top of the simulated environment, with shortcuts for the tests:
+ * send messages (which go through the real 'message_create'), delete,
+ * edit, create groups/contacts and read what the bot sent.
+ */
+const environment = require('./environment');
+
+const path = require('path');
+
+const src = (modulo) => require(path.join(environment.ROOT, 'src', modulo));
+
+const { client, cleanMarks } = src('client');
+src('events/presence');
+src('events/deleted');
+src('events/edited');
+src('events/messages');
+
+const { dbAll, dbGet, dbRun, markDbReady } = src('db');
+const { initializeDb } = src('initialization');
+const { loadSettings, getSetting, setSetting } = src('settings');
+const { estado: stateAlt } = src('state');
+
+const { OWNER, emails, logs, processes, network } = environment;
+
+const GROUP = '120363000000000001@g.us';
+const OTHERAlt = { jid: '5521911111111@c.us', user: '5521911111111', nome: 'Fulano' };
+
+let db = null;
+const prepare = () => (db ??= initializeDb().then(markDbReady));
+
+const TABLES = ['messages', 'message_edits', 'stats', 'watch_hits', 'price_alerts',
+    'presence_logs', 'monitored_numbers', 'settings'];
+
+/*
+ * Clean state for each test: empty tables, settings at default, no
+ * sent, with no network routes. Admin mode comes OFF (the default is on)
+ * so the tests can use other people's commands; whoever tests the mode
+ * admin turns it back on.
+ */
+async function restart() {
+    await prepare();
+
+    for (const t of TABLES) await dbRun(`DELETE FROM ${t}`);
+    await loadSettings();
+    await setSetting('bot.adminMode', false);
+
+    client.enviadas.length = 0;
+    cleanMarks();
+    client.contatos.clear();
+    client.chats.clear();
+    client.lids.clear();
+    network.limpar();
+    emails.length = 0;
+    logs.length = 0;
+    Object.assign(processes, { chamadas: [], falhar: null, naoBaixar: false, tamanhoSaida: 1024 });
+    stateAlt.pronto = true;
+
+    createContact(OTHERAlt.jid, OTHERAlt.nome);
+    createGroup(GROUP, 'Família', [OWNER.jid, OTHERAlt.jid]);
+}
+
+function createContact(jid, nameAlt) {
+    const [user] = jid.split('@');
+    const contactAlt = { id: { _serialized: jid, user }, number: user, name: nameAlt, pushname: nameAlt };
+    client.contatos.set(jid, contactAlt);
+    return contactAlt;
+}
+
+/**
+ * @param {string} id
+ * @param {string} nome
+ * @param {Array<string|{jid:string, isAdmin?:boolean, isSuperAdmin?:boolean}>} membros
+ */
+function createGroup(id, nameAlt, members = []) {
+    const chat = {
+        id: { _serialized: id, user: id.split('@')[0] },
+        isGroup: true,
+        name: nameAlt,
+        groupMetadata: { subject: nameAlt },
+        participants: members.map((m) => {
+            const { jid, isAdmin = false, isSuperAdmin = false } = typeof m === 'string' ? { jid: m } : m;
+            return { id: { _serialized: jid, user: jid.split('@')[0] }, isAdmin, isSuperAdmin };
+        }),
+        digitando: 0,
+        async sendStateTyping() { this.digitando++; }
+    };
+    client.chats.set(id, chat);
+    return chat;
+}
+
+let sequence = 0;
+
+/**
+ * Message in whatsapp-web.js format (only what the bot uses).
+ * @param {object} o
+ * @param {string} [o.texto]
+ * @param {string} [o.chat]      chat where the message is (default: the Família group)
+ * @param {string} [o.de]        who sent it (default: the owner)
+ * @param {object} [o.citada]    mensagem respondida (outra criarMensagem)
+ * @param {object} [o.midia]     { mimetype, data } returned by downloadMedia()
+ */
+function createMessage({ texto: textAlt = '', chat = GROUP, de = OWNER.jid, id, tipo: type = 'chat', citada: quoted = null,
+    midia: mediaAlt = null, links, mencoes: mentions = [], timestamp, extras = {} } = {}) {
+    const fromMe = de === OWNER.jid;
+    const group = chat.endsWith('@g.us');
+    const idMsg = id ?? `MSG${++sequence}`;
+
+    const msg = {
+        id: { id: idMsg, remote: chat, fromMe, _serialized: `${fromMe}_${chat}_${idMsg}` },
+        from: group ? chat : (fromMe ? OWNER.jid : de),
+        to: group ? chat : (fromMe ? chat : OWNER.jid),
+        author: group ? de : undefined,
+        fromMe,
+        body: textAlt,
+        type: type,
+        timestamp: timestamp ?? Math.floor(Date.now() / 1000),
+        hasMedia: Boolean(mediaAlt),
+        hasQuotedMsg: Boolean(quoted),
+        links: links ?? [...String(textAlt).matchAll(/https?:\/\/\S+/g)].map(([link]) => ({ link })),
+        mentionedIds: mentions,
+        _data: { notifyName: client.contatos.get(de)?.pushname },
+
+        async reply(content, chatId, options = {}) {
+            return client.sendMessage(chatId || chat, content, { ...options, quotedMessageId: this.id._serialized });
+        },
+        async getChat() {
+            return client.chats.get(chat) ?? { id: { _serialized: chat }, isGroup: false, name: chat, async sendStateTyping() {} };
+        },
+        async getContact() {
+            return client.contatos.get(de) ?? { id: { _serialized: de }, number: de.split('@')[0] };
+        },
+        async getQuotedMessage() { return quoted; },
+        async downloadMedia() { return mediaAlt; },
+        ...extras
+    };
+
+    return msg;
+}
+
+// Errors logged by the bot (printError) since the log's `desde` index
+const errorsInLog = (since = 0) => logs.slice(since).filter(l => / \[\*\] /.test(l));
+
+/**
+ * Delivers a message to the bot ('message_create' event) and waits for it to finish.
+ * Fails if the bot logs an error, unless `errorExpected` is true.
+ * @returns {Promise<Array<{chatId, content, options, texto}>>} what the bot sent
+ */
+async function deliver(msg, { erroEsperado: errorExpected = false } = {}) {
+    const sentBefore = client.enviadas.length;
+    const logBefore = logs.length;
+
+    for (const handler of client.listeners('message_create')) await handler(msg);
+
+    const errors = errorsInLog(logBefore);
+    if (errors.length && !errorExpected) {
+        throw new Error(`o bot registrou erro(s) inesperado(s):\n${errors.join('\n')}`);
+    }
+
+    return client.enviadas.slice(sentBefore).map(e => ({ ...e, texto: text(e.content, e.options) }));
+}
+
+// Text of a send (string, media caption, poll name...)
+function text(content, options = {}) {
+    if (typeof content === 'string') return content;
+    return options.caption ?? content?.pollName ?? '';
+}
+
+/**
+ * Shortcut: the owner (or `de`) types `linha` in `chat`.
+ * @returns what the bot sent
+ */
+function run(line, optionsAlt = {}) {
+    const { erroEsperado: errorExpected, ...rest } = optionsAlt;
+    return deliver(createMessage({ texto: line, ...rest }), { erroEsperado: errorExpected });
+}
+
+// Only the texts (the most common in asserts)
+async function replyAlt(line, optionsAlt) {
+    return (await run(line, optionsAlt)).map(e => e.texto);
+}
+
+/*
+ * Delete and edit events, in whatsapp-web.js format
+ */
+async function removeAlt(original, { porMim: byMim = original.fromMe } = {}) {
+    const after = {
+        fromMe: byMim,
+        id: { id: `REVOKE_${original.id.id}` },
+        _data: { protocolMessageKey: { id: original.id.id } },
+        getChat: original.getChat
+    };
+
+    const beforeAlt = client.enviadas.length;
+    for (const h of client.listeners('message_revoke_everyone')) await h(after, original);
+    return client.enviadas.slice(beforeAlt).map(e => ({ ...e, texto: text(e.content, e.options) }));
+}
+
+async function edit(original, newText, { antigo: oldAlt2 = original.body, editadaEm: editedIn = Date.now(), realmente: really = true } = {}) {
+    const msg = {
+        ...original,
+        latestEditSenderTimestampMs: really ? editedIn : undefined,
+        latestEditMsgKey: really ? { id: `EDIT_${original.id.id}` } : undefined,
+        body: newText
+    };
+
+    const beforeAlt = client.enviadas.length;
+    for (const h of client.listeners('message_edit')) await h(msg, newText, oldAlt2);
+    return client.enviadas.slice(beforeAlt).map(e => ({ ...e, texto: text(e.content, e.options) }));
+}
+
+module.exports = {
+    ...environment,
+    GROUP,
+    OTHERAlt,
+    apagar: removeAlt,
+    client,
+    createContact,
+    createGroup,
+    createMessage,
+    dbAll,
+    dbGet,
+    dbRun,
+    edit,
+    deliver,
+    errorsInLog,
+    estado: stateAlt,
+    executar: run,
+    getSetting,
+    prepare,
+    restart,
+    replyAlt,
+    setSetting,
+    src,
+    text
+};
