@@ -425,6 +425,12 @@
             "usage": "/meme [busca]",
             "help": "Template de meme aleatório do imgflip, opcionalmente filtrado pelo nome.",
             "onlyAdmin": false
+        },
+        {
+            "cmd": "/listageral",
+            "usage": "/listageral",
+            "help": "Lista os membros do grupo (número, nome, admins).",
+            "onlyAdmin": true
         }
     ]
 }

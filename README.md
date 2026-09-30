@@ -328,6 +328,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -c -f`) para fazer o bot
 | `/kernel` | | | Versões atuais do kernel Linux (kernel.org) |
 | `/boletos` | | ✅ | Sorteia 2 membros para "pagar um boleto" |
 | `/meme` | | | Template de meme aleatório (imgflip) |
+| `/listageral` | | ✅ | Lista os membros do grupo |
 
 ### `/help`
 
@@ -669,6 +670,10 @@ um boleto".
 
 Template de meme aleatório do [imgflip](https://imgflip.com/), opcionalmente
 filtrado pelo nome (`/meme drake`).
+
+### `/listageral` · admin
+
+Só em grupos: lista os membros (número, nome, 👑 dono, ⭐ admin).
 
 ### Adicionando ou alterando comandos
 
