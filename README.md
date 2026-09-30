@@ -81,6 +81,10 @@ tudo por comandos digitados no próprio chat (`/help`, `/get`, `/show`, `/news`,
   [`/stats`](#stats--admin). Só números, sem o texto; ficam 90 dias (setting
   `stats.retentionDays`). As respostas do bot, o seu privado e os status não
   entram. Desligue com `/set stats.enabled off`.
+- **Alertas de preço**: `/cotacao -alerta USD > 5.30` e `/crypto -alerta BTC <
+  90000` guardam a regra na tabela `price_alerts`; a cada 5 minutos (setting
+  `alerta.intervalMin`) o bot consulta os preços e avisa **no seu privado**
+  quando a regra é cumprida. Veja [Alertas de preço](#alertas-de-preço).
 - **Watch**: toda mensagem recebida que não é comando é testada contra as
   regras do [`/watch`](#watch-w--admin) (setting `watch.rules`); quando casa, a
   ocorrência é gravada na tabela `watch_hits` e você é avisado **no seu
@@ -417,8 +421,8 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -c -f`) para fazer o bot
 | `/boletos` | | ✅ | Sorteia 2 membros para "pagar um boleto" |
 | `/bot` | | ✅ | Liga/desliga todos os comandos (`-on`/`-off`) e o modo admin (`+admin`/`-admin`) |
 | `/cache` | `/c` | ✅ | Uso e limpeza do cache |
-| `/cotacao` | `/cambio` | | Cotação de EUR e USDT (e USD, GBP) contra o real: atual, abertura, fechamento e variação |
-| `/crypto` | `/bitcoio`, `/creptomoeda`, `/moedinha` | | Cotação das criptos ativadas (padrão: BTC, ETH, SOL e HYPE) |
+| `/cotacao` | `/cambio` | | Cotação de EUR e USDT (e USD, GBP) contra o real: atual, abertura, fechamento e variação; alertas de preço |
+| `/crypto` | `/bitcoio`, `/creptomoeda`, `/moedinha` | | Cotação das criptos ativadas (padrão: BTC, ETH, SOL e HYPE); alertas de preço |
 | `/cve` | | | Últimas CVEs publicadas (NVD); `-highscore` só as críticas |
 | `/debug` | `/d`, `/dbg` | ✅ | Liga/desliga logs de debug |
 | `/edit` | `/e` | ✅ | Reexibe mensagens editadas (antes e depois) |
@@ -525,10 +529,19 @@ Mostra o espaço ocupado em `cache/` (banco, mídias, temporários).
 
 ### `/cotacao` (`/cambio`)
 
-Cotação contra o real das moedas do setting `cotacao.coins` (padrão: EUR e
-USDT), ou só das pedidas: valor atual, abertura e fechamento anterior, máxima e
-mínima do dia e variação (🟢 alta, 🔴 queda). Suportadas: `USD`, `EUR`, `GBP`
-e `USDT`.
+Cotação contra o real das moedas habilitadas (setting `cotacao.coins`, padrão:
+EUR e USDT), ou só das pedidas: valor atual, abertura e fechamento anterior,
+máxima e mínima do dia e variação (🟢 alta, 🔴 queda). Suportadas: `USD`,
+`EUR`, `GBP` e `USDT`.
+
+| Opção | Valor | Descrição |
+|---|---|---|
+| *(nenhuma)* | `[MOEDA...]` | Cotação das habilitadas, ou só das moedas informadas |
+| `-list`, `-l` | | Lista as suportadas; as habilitadas vêm com ✅ |
+| `-add`, `-a` | `<MOEDA>` | Habilita uma moeda suportada (só o dono do bot) |
+| `-del`, `-d` | `<MOEDA>` | Desabilita uma moeda (só o dono do bot) |
+| `-alerta` | `[regra]` | Sem regra, lista os alertas; com regra, cria um. Veja [Alertas de preço](#alertas-de-preço) |
+| `-rm` | `<nº\|all>` | Junto com `-alerta`: remove o alerta nº N (ou todos) |
 
 - **USD, EUR, GBP**: Yahoo Finance. Se ele falhar, a AwesomeAPI (que não
   informa a abertura: aparece `—`).
@@ -536,10 +549,12 @@ e `USDT`.
   Brasília (00h UTC), então a abertura é a desse horário.
 
 ```
-/cotacao             → EUR e USDT (setting cotacao.coins)
+/cotacao             → as habilitadas (padrão: EUR e USDT)
 /cotacao usd         → só o dólar
 /cambio usd eur gbp  → dólar, euro e libra
-/set cotacao.coins USD EUR USDT
+/cotacao -l          → suportadas, com ✅ nas habilitadas
+/cotacao -a usd      → passa a mostrar o dólar
+/cotacao -d eur      → deixa de mostrar o euro
 ```
 
 ```
@@ -561,17 +576,51 @@ e `USDT`.
 💡 % ao lado do valor: variação desde o fechamento anterior.
 ```
 
+#### Alertas de preço
+
+O `/cotacao` e o `/crypto` avisam no **seu privado** quando um preço passa de
+um valor. Cada alerta dispara uma vez e é removido. Só o dono do bot cria,
+lista e remove.
+
+```
+/cotacao -alerta USD > 5.30    → quando o dólar passar de R$ 5,30
+/cotacao -alerta eur < 5,50    → quando o euro ficar abaixo de R$ 5,50
+/crypto -alerta BTC < 90000    → quando o BTC ficar abaixo de $90.000
+/cotacao -alerta               → lista os alertas do /cotacao, numerados
+/cotacao -alerta -rm 2         → remove o nº 2 da lista
+/crypto -alerta -rm all        → remove todos os do /crypto
+```
+
+- A regra é `<MOEDA> > valor` ou `<MOEDA> < valor`. O valor aceita `.` ou `,`
+  como decimal, **sem** separador de milhar (`90000`, não `90.000`).
+- O `/cotacao` compara em reais; o `/crypto`, em dólares (par `<TOKEN>USDT`).
+- Se o preço **já** está do lado pedido, o alerta não é criado (dispararia na
+  hora): o bot mostra o valor atual.
+- Os preços são consultados a cada 5 minutos (setting `alerta.intervalMin`),
+  uma vez por moeda. O limite é de 20 alertas no total (setting `alerta.max`).
+- Os alertas ficam na tabela `price_alerts` e sobrevivem a reinícios.
+
+```
+🔔 ALERTA DE PREÇO
+
+📈 🇺🇸 USD/BRL ficou acima de R$ 5,3000
+💰 Agora: R$ 5,3100 (🟢 +2,12% desde a criação)
+📅 Alerta criado em 30/09/2026, 10:12:03
+```
+
 ### `/crypto`
 
 Preço atual e variação de 24 h das moedas ativadas (via API da Binance, par
 `<TOKEN>USDT`). Por padrão: BTC, ETH, SOL e HYPE.
 
-| Opção | Descrição |
-|---|---|
-| *(nenhuma)* | Exibe as cotações |
-| `-l`, `-list` | Lista as moedas suportadas; as ativadas vêm marcadas com `*` |
-| `-a`, `-add <TOKEN>` | Ativa uma moeda suportada (só o dono do bot) |
-| `-d`, `-del <TOKEN>` | Desativa uma moeda (só o dono do bot) |
+| Opção | Valor | Descrição |
+|---|---|---|
+| *(nenhuma)* | | Exibe as cotações |
+| `-list`, `-l` | | Lista as moedas suportadas; as ativadas vêm marcadas com `*` |
+| `-add`, `-a` | `<TOKEN>` | Ativa uma moeda suportada (só o dono do bot) |
+| `-del`, `-d` | `<TOKEN>` | Desativa uma moeda (só o dono do bot) |
+| `-alerta` | `[regra]` | Sem regra, lista os alertas; com regra (ex.: `BTC < 90000`), cria um. Veja [Alertas de preço](#alertas-de-preço) |
+| `-rm` | `<nº\|all>` | Junto com `-alerta`: remove o alerta nº N (ou todos) |
 
 Suportadas: BTC, ETH, SOL, HYPE, BNB, XRP, DOGE, ADA, TRX, AVAX, LINK, DOT, LTC,
 TON, SUI, PEPE, SHIB, XLM, NEAR e UNI (lista `CRYPTO_SUPPORTED` em `app.js`).
@@ -584,6 +633,7 @@ sobrevivem a reinícios.
 /crypto -l
 /crypto -a doge
 /crypto -d hype
+/crypto -alerta ETH > 4000
 ```
 
 ### `/cve`
@@ -966,12 +1016,14 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 
 | Chave | Tipo | Padrão | Descrição |
 |---|---|---|---|
+| `alerta.intervalMin` | 1–60 | `5` | Intervalo, em minutos, entre as verificações dos [alertas de preço](#alertas-de-preço) |
+| `alerta.max` | 1–100 | `20` | Máximo de alertas de preço (somando `/cotacao` e `/crypto`) |
 | `bot.adminMode` | on/off | `on` | Modo admin: só você usa comandos (o mesmo do `/bot +admin`/`-admin`) |
 | `bot.paused` | on/off | `off` | Bot desligado: todos os comandos ignorados, exceto o `/bot` (o mesmo do `/bot -on`/`-off`) |
 | `cache.editedRetentionDays` | 1–365 | `30` | Dias que as mensagens editadas ficam guardadas para o `/edit` |
 | `cache.revokedRetentionDays` | 1–365 | `30` | Dias que as mensagens apagadas ficam guardadas |
 | `commands.disabled` | lista | *(vazia)* | Comandos desativados em tempo de execução: o bot os ignora e eles somem do `/help`. O `/set` não pode ser desativado |
-| `cotacao.coins` | lista | `EUR, USDT` | Moedas do `/cotacao` (`USD`, `EUR`, `GBP`, `USDT`) |
+| `cotacao.coins` | lista | `EUR, USDT` | Moedas habilitadas no `/cotacao` (`USD`, `EUR`, `GBP`, `USDT`); normalmente alterada pelo `/cotacao -a`/`-d` |
 | `crypto.coins` | lista | `BTC, ETH, SOL, HYPE` | Moedas do `/crypto` (só as suportadas) |
 | `cve.max` | 1–20 | `10` | Quantidade de CVEs exibidas pelo `/cve` (o `/cve <max>` sobrepõe) |
 | `cve.maxDays` | 1–120 | `7` | Janela, em dias, do `/cve -highscore` |
