@@ -516,6 +516,18 @@
                 }
             ],
             "onlyAdmin": true
+        },
+        {
+            "cmd": "/admin",
+            "usage": "/admin",
+            "help": "Modo admin: só você usa comandos; os dos outros são ignorados.",
+            "onlyAdmin": true
+        },
+        {
+            "cmd": "/adminoff",
+            "usage": "/adminoff",
+            "help": "Desativa o modo admin.",
+            "onlyAdmin": true
         }
     ]
 }
