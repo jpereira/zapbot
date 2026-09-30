@@ -7,9 +7,6 @@ const { dbRun } = require('./db');
 const { printError } = require('./log');
 const { getSetting } = require('./settings');
 
-/*
- * /stats counters
- */
 
 // Day (YYYY-MM-DD) and hour (0-23) in the São Paulo timezone
 function dayAndHour(ms) {

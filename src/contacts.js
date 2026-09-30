@@ -169,19 +169,6 @@ async function resolverMentions(textAlt, mentionedIds = []) {
     return textAlt;
 }
 
-/*
- * /show and /edit: re-show the DELETED (/show) and EDITED (/edit) messages
- * stored in the cache, in the same format as the alerts.
- * /show        → the last deleted one of this chat      (/edit: the last edited one)
- * /show -3     → the last 3 (max. setting 'show.max')
- * /show -3 -pv → sends to YOUR private chat instead of exposing it in the current chat
- * /show -list  → deleted and edited ones from the cache, per chat (the -l of both is the same)
- * /show -flush → removes the deleted ones of this chat (in your private chat: of all chats)
- * /show -2 -c 1       → the last 2 of chat no. 1 of the deleted list from -l
- * /edit -2 -c zapbot  → the last 2 edited ones of the chat whose name contains "zapbot"
- * /edit -f -c 1       → flush only the edited ones of chat no. 1
- * Sends in chronological order: the last one sent is the most recent.
- */
 // In private conversations the same chat may appear as @lid or @c.us
 async function chatCurrentIds(chatId) {
     const ids = [chatId];

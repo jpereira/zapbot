@@ -1,12 +1,9 @@
 /*
- * Comando /boletos.
+ * /boletos command: draw of group members. The draw is also used by /ualisu.
  */
 
 const { client } = require('../client');
 
-/*
- * /boletos: draw of group members
- */
 // Draws `n` different participants (other than the bot itself)
 function drawParticipants(participants, n) {
     const myUser = client.info?.wid?.user;

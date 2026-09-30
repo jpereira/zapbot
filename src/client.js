@@ -6,14 +6,6 @@ const { Client, LocalAuth } = require('whatsapp-web.js');
 
 const { printError, printSuccess } = require('./log');
 
-/*
- * Contact utilities
- */
-function messageToSelf(message) {
-    return client.sendMessage(process.env.PHONE_NUMBER, message)
-        .catch(err => printError('messageToSelf falhou:', err.message));
-}
-
 const client = new Client({
     authStrategy: new LocalAuth(),
 
@@ -40,6 +32,12 @@ const client = new Client({
 });
 
 printSuccess('Client created');
+
+// Message to your own number (PHONE_NUMBER): bot notices
+function messageToSelf(message) {
+    return client.sendMessage(process.env.PHONE_NUMBER, message)
+        .catch(err => printError('messageToSelf falhou:', err.message));
+}
 
 /*
  * Messages sent by the bot itself also fire 'message_create' with
