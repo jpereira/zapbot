@@ -325,6 +325,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -c -f`) para fazer o bot
 | `/show` | `/undo`, `/s` | ✅ | Reexibe mensagens apagadas |
 | `/set` | | ✅ | Lista e altera as configurações (settings) |
 | `/watch` | `/w` | ✅ | Avisa no seu privado quando uma mensagem casa com um texto/regex |
+| `/kernel` | | | Versões atuais do kernel Linux (kernel.org) |
 
 ### `/help`
 
@@ -652,6 +653,10 @@ Detalhes:
   a resposta vai para o seu privado.
 - As ocorrências ficam na tabela `watch_hits` por 30 dias (setting
   `watch.hitsRetentionDays`), ou até um `/watch -f`.
+
+### `/kernel`
+
+Versões mainline, stable e longterm publicadas em `kernel.org/releases.json`.
 
 ### Adicionando ou alterando comandos
 
