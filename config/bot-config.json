@@ -478,7 +478,15 @@
             "aliases": [
                 "/weather"
             ],
-            "help": "Previsão do tempo agora e máx./mín. do dia (Open-Meteo).",
+            "help": "Tempo agora, máx./mín. e chance de chuva do dia (Open-Meteo). Sem cidade usa o setting tempo.city; troque com /set tempo.city <cidade>.",
+            "cmd_opts": [
+                {
+                    "argv": [
+                        "[cidade]"
+                    ],
+                    "desc": "Cidade, opcionalmente com estado e país. Ex: /tempo Niteroi, Sergipe"
+                }
+            ],
             "onlyAdmin": false
         }
     ]
