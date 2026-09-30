@@ -359,7 +359,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -c -f`) para fazer o bot
 | `/tempo` | `/weather` | | Tempo agora e máx./mín. do dia (Open-Meteo); sem cidade usa `tempo.city` |
 | `/ualisu` | | ✅ | Marca 2 membros com uma CVE aleatória |
 | `/bot` | | ✅ | Liga/desliga todos os comandos (`-on`/`-off`) e o modo admin (`+admin`/`-admin`) |
-| `/news` | | ✅ | Manchetes de feeds RSS: `-hack`, `-g1`, `-gazeta`, `-brazil` |
+| `/news` | | ✅ | Manchetes de feeds RSS: `-hack`, `-g1`, `-gazeta`, `-brasil` |
 
 ### `/help`
 
@@ -631,7 +631,7 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 | `news.hack` | lista | The Hacker News, BleepingComputer, Krebs on Security | Feeds RSS do `/news -hack` |
 | `news.g1` | lista | `https://g1.globo.com/dynamo/rss2.xml` | Feeds RSS do `/news -g1` |
 | `news.gazeta` | lista | `https://www.gazetadopovo.com.br/feed/rss/brasil.xml` | Feeds RSS do `/news -gazeta` |
-| `news.brazil` | lista | 15 blogs do [feedspot](https://rss.feedspot.com/brazil_rss_feeds/) | Feeds RSS do `/news -brazil` |
+| `news.brasil` | lista | 15 blogs do [feedspot](https://rss.feedspot.com/brazil_rss_feeds/) | Feeds RSS do `/news -brasil` |
 | `news.max` | 1–10 | `5` | Manchetes exibidas pelo `/news` (o `/news <quantidade>` sobrepõe) |
 | `api.key.giphy` | texto (pode ser vazio) | *(vazio)* | Chave do GIPHY, usada quando `GIPHY_API_KEY` não está no `config/.env`. Exibida mascarada (`••••1234`); `/set -reset api.key.giphy` apaga |
 
@@ -920,20 +920,22 @@ Detalhes:
 ### `/news` · admin
 
 Junta as manchetes mais recentes dos feeds RSS de uma categoria, com fonte,
-data e link. Sem categoria, mostra a ajuda com todas as opções.
+data e link. Sem categoria, mostra a ajuda com todas as opções. Só o dono do
+bot usa: o `/news` de qualquer outra pessoa é ignorado em silêncio.
 
 | Opção | Valor | Descrição |
 |---|---|---|
 | `-hack`, `-hacknews` | | Hacking/segurança: The Hacker News, BleepingComputer e Krebs on Security (setting `news.hack`) |
 | `-g1` | | Últimas notícias do [g1](https://g1.globo.com/) (setting `news.g1`) |
-| `-gazeta` | | [Gazeta do Povo](https://www.gazetadopovo.com.br/), seção Brasil (setting `news.gazeta`) |
-| `-brazil` | | Blogs sobre o Brasil listados no [feedspot](https://rss.feedspot.com/brazil_rss_feeds/), a maioria em inglês (setting `news.brazil`) |
+| `-gazeta`, `-gaz` | | [Gazeta do Povo](https://www.gazetadopovo.com.br/), seção Brasil (setting `news.gazeta`) |
+| `-brasil`, `-br` | | Blogs sobre o Brasil listados no [feedspot](https://rss.feedspot.com/brazil_rss_feeds/), a maioria em inglês (setting `news.brasil`) |
 | `quantidade` | 1–10 | Quantas manchetes. Sem ela usa o setting `news.max` (5) |
 
 ```
 /news                → ajuda com todas as opções
 /news -g1            → as 5 mais recentes do g1
 /news -gazeta 3      → as 3 mais recentes da Gazeta do Povo
+/news -br 5          → as 5 mais recentes dos blogs sobre o Brasil
 /news -hack 10       → as 10 mais recentes de hacking
 /news -g1 -gazeta 6  → g1 e Gazeta juntos (3 de cada, no máximo)
 /news -h             → ajuda do comando
@@ -967,8 +969,8 @@ Detalhes:
 - Cada fonte ocupa no máximo a sua fatia da lista (ex.: 6 manchetes de 2
   feeds → até 3 de cada); senão a que publica mais toma tudo.
 - Um feed fora do ar não derruba os outros: ele só aparece no log.
-- O `-brazil` lê cerca de 15 feeds de uma vez; a página do feedspot é HTML,
-  então os feeds dela foram copiados para o setting `news.brazil` (não é
+- O `-brasil` lê cerca de 15 feeds de uma vez; a página do feedspot é HTML,
+  então os feeds dela foram copiados para o setting `news.brasil` (não é
   lida a cada uso).
 - Os feeds precisam ser RSS (`<item>`); feeds só em Atom (`<entry>`) não são
   lidos.
