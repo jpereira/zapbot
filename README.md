@@ -359,7 +359,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -c -f`) para fazer o bot
 | `/tempo` | `/weather` | | Tempo agora e máx./mín. do dia (Open-Meteo); sem cidade usa `tempo.city` |
 | `/ualisu` | | ✅ | Marca 2 membros com uma CVE aleatória |
 | `/bot` | | ✅ | Liga/desliga todos os comandos (`-on`/`-off`) e o modo admin (`+admin`/`-admin`) |
-| `/news` | | | Manchetes de hacking/segurança (RSS); `-hack` |
+| `/news` | | ✅ | Manchetes de feeds RSS: `-hack`, `-g1`, `-gazeta`, `-brazil` |
 
 ### `/help`
 
@@ -628,7 +628,10 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 | `tempo.city` | texto | `Niteroi, Rio de Janeiro, Brazil` | Cidade do `/tempo` quando nenhuma é informada |
 | `bot.paused` | on/off | `off` | Bot desligado: todos os comandos ignorados, exceto o `/bot` (o mesmo do `/bot -on`/`-off`) |
 | `bot.adminMode` | on/off | `off` | Modo admin: só você usa comandos (o mesmo do `/bot +admin`/`-admin`) |
-| `news.feeds` | lista | The Hacker News, BleepingComputer, Krebs on Security | Feeds RSS do `/news -hack` |
+| `news.hack` | lista | The Hacker News, BleepingComputer, Krebs on Security | Feeds RSS do `/news -hack` |
+| `news.g1` | lista | `https://g1.globo.com/dynamo/rss2.xml` | Feeds RSS do `/news -g1` |
+| `news.gazeta` | lista | `https://www.gazetadopovo.com.br/feed/rss/brasil.xml` | Feeds RSS do `/news -gazeta` |
+| `news.brazil` | lista | 15 blogs do [feedspot](https://rss.feedspot.com/brazil_rss_feeds/) | Feeds RSS do `/news -brazil` |
 | `news.max` | 1–10 | `5` | Manchetes exibidas pelo `/news` (o `/news <quantidade>` sobrepõe) |
 | `api.key.giphy` | texto (pode ser vazio) | *(vazio)* | Chave do GIPHY, usada quando `GIPHY_API_KEY` não está no `config/.env`. Exibida mascarada (`••••1234`); `/set -reset api.key.giphy` apaga |
 
@@ -914,40 +917,59 @@ Detalhes:
 - "Você" é a conta pareada ao bot, de qualquer aparelho. Para desligar só
   alguns comandos, para todos, use o setting `commands.disabled`.
 
-### `/news`
+### `/news` · admin
 
-Junta as manchetes mais recentes de feeds RSS, com fonte, data e link.
+Junta as manchetes mais recentes dos feeds RSS de uma categoria, com fonte,
+data e link. Sem categoria, mostra a ajuda com todas as opções.
 
 | Opção | Valor | Descrição |
 |---|---|---|
-| `-hack`, `-hacknews` | | Hacking/segurança: feeds do setting `news.feeds` (padrão: The Hacker News, BleepingComputer e Krebs on Security). Por enquanto é a única categoria, então é o padrão |
+| `-hack`, `-hacknews` | | Hacking/segurança: The Hacker News, BleepingComputer e Krebs on Security (setting `news.hack`) |
+| `-g1` | | Últimas notícias do [g1](https://g1.globo.com/) (setting `news.g1`) |
+| `-gazeta` | | [Gazeta do Povo](https://www.gazetadopovo.com.br/), seção Brasil (setting `news.gazeta`) |
+| `-brazil` | | Blogs sobre o Brasil listados no [feedspot](https://rss.feedspot.com/brazil_rss_feeds/), a maioria em inglês (setting `news.brazil`) |
 | `quantidade` | 1–10 | Quantas manchetes. Sem ela usa o setting `news.max` (5) |
 
 ```
-/news                → as 5 mais recentes
-/news -hack 3        → as 3 mais recentes
-/news 10             → as 10 mais recentes
-/set news.max 3      → muda o padrão para 3
-/set news.feeds https://feeds.feedburner.com/TheHackersNews https://krebsonsecurity.com/feed/
-/set -reset news.feeds
+/news                → ajuda com todas as opções
+/news -g1            → as 5 mais recentes do g1
+/news -gazeta 3      → as 3 mais recentes da Gazeta do Povo
+/news -hack 10       → as 10 mais recentes de hacking
+/news -g1 -gazeta 6  → g1 e Gazeta juntos (3 de cada, no máximo)
+/news -h             → ajuda do comando
 ```
 
 Exemplo de resposta:
 
 ```
-🏴‍☠️ Hacking News
+📰 g1
 
-1. Microsoft is rolling out Linux container support to WSL
-BleepingComputer · 29/09/2026, 21:40:57
-https://www.bleepingcomputer.com/news/...
+1. Debate com candidatos ao governo de Rondônia é marcado por acusações …
+g1 · 30/09/2026, 00:29:33
+https://g1.globo.com/ro/rondonia/eleicoes/2026/noticia/...
+```
+
+#### Alterando os feeds
+
+Cada categoria lê a lista do seu setting (`news.<categoria>`), que aceita
+qualquer feed RSS:
+
+```
+/set news.g1 https://g1.globo.com/rss/g1/economia/
+/set news.hack https://feeds.feedburner.com/TheHackersNews https://krebsonsecurity.com/feed/
+/set -reset news.g1                → volta ao padrão
+/set news.max 3                    → muda a quantidade padrão
 ```
 
 Detalhes:
 
-- Cada fonte ocupa no máximo a sua fatia da lista (ex.: 5 manchetes com 3
-  feeds → até 2 de cada); senão o The Hacker News, que publica muito, toma
-  tudo.
+- Várias categorias no mesmo comando somam os feeds.
+- Cada fonte ocupa no máximo a sua fatia da lista (ex.: 6 manchetes de 2
+  feeds → até 3 de cada); senão a que publica mais toma tudo.
 - Um feed fora do ar não derruba os outros: ele só aparece no log.
+- O `-brazil` lê cerca de 15 feeds de uma vez; a página do feedspot é HTML,
+  então os feeds dela foram copiados para o setting `news.brazil` (não é
+  lida a cada uso).
 - Os feeds precisam ser RSS (`<item>`); feeds só em Atom (`<entry>`) não são
   lidos.
 
