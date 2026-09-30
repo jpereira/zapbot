@@ -33,14 +33,15 @@ async function cmdCrypto(ctx) {
         return;
     }
 
-    if (opts.opt.add !== null || opts.opt.del !== null) {
+    // given: "-a" without a currency counts too (otherwise it would fall into the quote)
+    if (opts.given.has('add') || opts.given.has('del')) {
         // Touches the global configuration: bot owner only
         if (!msg.fromMe) {
             await msg.reply('⛔ Apenas o dono do bot pode alterar as moedas.');
             return;
         }
 
-        const addAlt = opts.opt.add !== null;
+        const addAlt = opts.given.has('add');
         const sym = token(addAlt ? opts.opt.add : opts.opt.del);
 
         if (!sym) {
