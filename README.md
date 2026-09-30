@@ -146,9 +146,10 @@ da imagem.
 ## Instalação (Docker)
 
 ```bash
-# 1. Clonar o projeto
+# 1. Clonar o projeto e ir para a última versão estável (tag release-X.Y mais recente)
 git clone https://github.com/jpereira/zapbot.git
 cd zapbot
+git checkout "$(git tag -l 'release-*' --sort=-v:refname | head -n1)"
 
 # 2. Criar o arquivo de configuração a partir do exemplo e editá-lo
 cp config/.env.example config/.env
@@ -183,13 +184,35 @@ o bot deve responder `pong`.
 
 ### Atualizar para uma nova versão
 
+A **versão estável** é a última tag `release-X.Y` (cada uma tem as notas em
+[Releases](https://github.com/jpereira/zapbot/releases)). Para ir para ela:
+
 ```bash
+git fetch --tags
+git checkout "$(git tag -l 'release-*' --sort=-v:refname | head -n1)"
+git describe --tags        # confere a versão: release-X.Y
+docker compose -f docker/docker-compose.yml build zapbot-prod
+docker compose -f docker/docker-compose.yml up -d --force-recreate zapbot-prod
+```
+
+O `git checkout` de uma tag deixa o repositório em *detached HEAD*; o aviso do
+git é esperado e não atrapalha. A sessão do WhatsApp e o banco ficam em
+volumes, então sobrevivem ao rebuild.
+
+#### Versão de desenvolvimento (HEAD)
+
+O branch `main` tem as mudanças mais recentes, que ainda não viraram release:
+pode ter recursos incompletos ou quebrados. Use só para testar ou desenvolver.
+
+```bash
+git checkout main
 git pull
 docker compose -f docker/docker-compose.yml build zapbot-prod
 docker compose -f docker/docker-compose.yml up -d --force-recreate zapbot-prod
 ```
 
-A sessão do WhatsApp e o banco ficam em volumes, então sobrevivem ao rebuild.
+Para voltar à estável, repita os comandos de cima (`git fetch --tags` e o
+`git checkout` da última tag).
 
 > ⚠️ O `config/` é copiado para dentro da imagem no build. Não publique a imagem
 > em registries públicos, pois ela contém o seu `config/.env`.
