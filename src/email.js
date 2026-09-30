@@ -88,10 +88,18 @@ async function alertPerEmail(event, details = '', { forcar: force = false } = {}
 }
 
 // Waits for the email to go out, but does not block shutdown if SMTP does not respond
-const leaveAlertBefore = (event, details, ms) => Promise.race([
-    alertPerEmail(event, details, { forcar: true }),
-    new Promise(r => setTimeout(r, ms))
-]);
+async function leaveAlertBefore(event, details, ms) {
+    let limitAlt;
+
+    try {
+        await Promise.race([
+            alertPerEmail(event, details, { forcar: true }),
+            new Promise(r => { limitAlt = setTimeout(r, ms); })
+        ]);
+    } finally {
+        clearTimeout(limitAlt);
+    }
+}
 
 module.exports = {
     leaveAlertBefore,
