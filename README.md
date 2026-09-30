@@ -325,6 +325,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -c -f`) para fazer o bot
 | `/show` | `/undo`, `/s` | ✅ | Reexibe mensagens apagadas |
 | `/set` | | ✅ | Lista e altera as configurações (settings) |
 | `/watch` | `/w` | ✅ | Avisa no seu privado quando uma mensagem casa com um texto/regex |
+| `/stop`, `/run` | | ✅ | Pausa/retoma todos os comandos |
 
 ### `/help`
 
@@ -587,6 +588,7 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 | `watch.max` | 1–100 | `20` | Máximo de regras do `/watch` |
 | `watch.showMax` | 1–100 | `20` | Máximo de ocorrências listadas por `/watch -show` |
 | `watch.hitsRetentionDays` | 1–365 | `30` | Dias que as ocorrências do `/watch` ficam guardadas |
+| `bot.paused` | on/off | `off` | Todos os comandos pausados, exceto o `/run` (o mesmo do `/stop`/`/run`) |
 
 Uma chave nova é declarada em `SETTINGS_SCHEMA` (`app.js`) com padrão, tipo,
 descrição e limites, e lida com `getSetting('<chave>')`. Valores inválidos no
@@ -652,6 +654,12 @@ Detalhes:
   a resposta vai para o seu privado.
 - As ocorrências ficam na tabela `watch_hits` por 30 dias (setting
   `watch.hitsRetentionDays`), ou até um `/watch -f`.
+
+### `/stop` e `/run` · admin
+
+`/stop` pausa **todos** os comandos, inclusive os seus, exceto o `/run`, que
+retoma. O estado fica no setting `bot.paused` e sobrevive a reinícios. A
+recuperação de apagadas e o `/watch` continuam funcionando.
 
 ### Adicionando ou alterando comandos
 

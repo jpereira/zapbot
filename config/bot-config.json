@@ -407,6 +407,18 @@
                 }
             ],
             "onlyAdmin": true
+        },
+        {
+            "cmd": "/stop",
+            "usage": "/stop",
+            "help": "Pausa todos os comandos (inclusive os seus) até o /run.",
+            "onlyAdmin": true
+        },
+        {
+            "cmd": "/run",
+            "usage": "/run",
+            "help": "Retoma os comandos pausados pelo /stop.",
+            "onlyAdmin": true
         }
     ]
 }
