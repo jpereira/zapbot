@@ -374,6 +374,11 @@ const SETTINGS_SCHEMA = {
         allowEmpty: true,
         secret: true,
         desc: 'Chave do GIPHY (/gif), usada quando GIPHY_API_KEY não está no config/.env.'
+    },
+    'cve.max': {
+        default: 10,
+        type: 'number', min: 1, max: 20,
+        desc: 'CVEs exibidas pelo /cve e /cvehighscore.'
     }
 };
 
@@ -3463,6 +3468,89 @@ async function cmdJoke({ msg }) {
     }
 }
 
+/*
+ * /cve and /cvehighscore: NVD (nvd.nist.gov). The cve.circl.lu API that zapzap
+ * used changed format and almost never brings the CVSS score.
+ * Without a key the NVD accepts ~5 queries every 30s.
+ */
+const NVD_URL = 'https://services.nvd.nist.gov/rest/json/cves/2.0';
+
+const nvdData = (d) => d.toISOString().replace('Z', '');
+
+function noteCvss(cve) {
+    const m = cve.metrics ?? {};
+
+    for (const keyAlt of ['cvssMetricV31', 'cvssMetricV40', 'cvssMetricV30', 'cvssMetricV2']) {
+        const metric = m[keyAlt]?.find(x => x.type === 'Primary') ?? m[keyAlt]?.[0];
+        if (metric?.cvssData?.baseScore != null) {
+            return { score: metric.cvssData.baseScore, severity: metric.cvssData.baseSeverity ?? metric.baseSeverity ?? '' };
+        }
+    }
+
+    return null;
+}
+
+// The `max` most recently published CVEs in the last `dias` (the NVD sorts from oldest to newest)
+async function searchCvesRecent({ dias: daysAlt, max, critical = false }) {
+    const end = new Date();
+    const params = {
+        pubStartDate: nvdData(new Date(end.getTime() - daysAlt * DAY_MS)),
+        pubEndDate: nvdData(end),
+        noRejected: ''
+    };
+    if (critical) params.cvssV3Severity = 'CRITICAL';
+
+    const { data: total } = await axios.get(NVD_URL, { params: { ...params, resultsPerPage: 1 }, timeout: 30000 });
+    const startIndex = Math.max(0, total.totalResults - max);
+
+    const { data } = await axios.get(NVD_URL, { params: { ...params, resultsPerPage: max, startIndex }, timeout: 30000 });
+
+    return data.vulnerabilities.map(v => v.cve).reverse();
+}
+
+function formatCve(cve) {
+    const note = noteCvss(cve);
+    const description = cve.descriptions?.find(d => d.lang === 'en')?.value ?? '';
+
+    return `🛡️ *${cve.id}*${note ? ` — ${note.score} ${note.severity}` : ''}\n` +
+           `${summarizeText(description, 220)}\n` +
+           `https://nvd.nist.gov/vuln/detail/${cve.id}`;
+}
+
+async function cmdCve({ msg }) {
+    try {
+        const cves = await searchCvesRecent({ dias: 2, max: getSetting('cve.max') });
+
+        await msg.reply(
+            `🛡️ *Últimas ${cves.length} CVEs publicadas*\n\n` + cves.map(formatCve).join('\n\n'),
+            null, { linkPreview: false }
+        );
+    } catch (err) {
+        printError('/cve:', err.message);
+        await msg.reply('❌ Não consegui consultar o NVD agora (limite de consultas? tente em 30s).');
+    }
+}
+
+async function cmdCveHighscore({ msg }) {
+    try {
+        const cves = await searchCvesRecent({ dias: 7, max: getSetting('cve.max'), critical: true });
+
+        if (!cves.length) {
+            await msg.reply('🛡️ Nenhuma CVE crítica publicada nos últimos 7 dias.');
+            return;
+        }
+
+        await msg.reply(
+            `🔥 *${cves.length} CVEs críticas mais recentes* _(CVSS ≥ 9, últimos 7 dias)_\n\n` +
+            cves.map(formatCve).join('\n\n'),
+            null, { linkPreview: false }
+        );
+    } catch (err) {
+        printError('/cvehighscore:', err.message);
+        await msg.reply('❌ Não consegui consultar o NVD agora (limite de consultas? tente em 30s).');
+    }
+}
+
 // bot-config.json cmd -> handler
 const HANDLERS = {
     '/help': cmdHelp,
@@ -3484,7 +3572,9 @@ const HANDLERS = {
     '/meme': cmdMeme,
     '/listageral': cmdListGeneral,
     '/gif': cmdGif,
-    '/joke': cmdJoke
+    '/joke': cmdJoke,
+    '/cve': cmdCve,
+    '/cvehighscore': cmdCveHighscore
 };
 
 // Warns at boot if the bot-config has a command without a handler (or vice versa)
