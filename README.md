@@ -325,6 +325,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -c -f`) para fazer o bot
 | `/show` | `/undo`, `/s` | ✅ | Reexibe mensagens apagadas |
 | `/set` | | ✅ | Lista e altera as configurações (settings) |
 | `/watch` | `/w` | ✅ | Avisa no seu privado quando uma mensagem casa com um texto/regex |
+| `/boletos` | | ✅ | Sorteia 2 membros para "pagar um boleto" |
 
 ### `/help`
 
@@ -652,6 +653,11 @@ Detalhes:
   a resposta vai para o seu privado.
 - As ocorrências ficam na tabela `watch_hits` por 30 dias (setting
   `watch.hitsRetentionDays`), ou até um `/watch -f`.
+
+### `/boletos` · admin
+
+Só em grupos: sorteia 2 membros diferentes (fora o bot) e os marca para "pagar
+um boleto".
 
 ### Adicionando ou alterando comandos
 
