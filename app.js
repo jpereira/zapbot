@@ -402,7 +402,7 @@ const SETTINGS_SCHEMA = {
         desc: 'Bot desligado: todos os comandos são ignorados, exceto o /bot (o mesmo do /bot -on|-off).'
     },
     'bot.adminMode': {
-        default: false,
+        default: true,
         type: 'boolean',
         desc: 'Modo admin: só o dono usa comandos (o mesmo do /bot +admin|-admin).'
     },
