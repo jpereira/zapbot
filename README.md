@@ -23,9 +23,10 @@ tudo por comandos digitados no próprio chat (`/help`, `/get`, `/show`, `/news`,
 - [Requisitos](#requisitos)
 - [Instalação (Docker)](#instalação-docker)
 - [Configuração do `config/.env`](#configuração-do-configenv)
-- [E-mail do QR Code](#e-mail-do-qr-code)
+- [E-mails do bot (QR Code e alertas)](#e-mails-do-bot-qr-code-e-alertas)
 - [Comandos](#comandos)
 - [Operação do dia a dia](#operação-do-dia-a-dia)
+- [Desenvolvimento](#desenvolvimento)
 - [Solução de problemas](#solução-de-problemas)
 
 ---
@@ -272,7 +273,7 @@ hora**, o que sobra para o `/gif`. Acima disso a API responde `429` e o
 comando avisa que não conseguiu buscar o GIF. Para mais que isso é preciso
 pedir a chave de produção no próprio Dashboard.
 
-### QR Code por e-mail
+### E-mail (QR Code e alertas)
 
 | Variável | Exemplo | Descrição |
 |---|---|---|
@@ -283,7 +284,7 @@ pedir a chave de produção no próprio Dashboard.
 | `QRCODE_EMAIL_SMTP_PASS` | `abcd efgh ijkl mnop` | Senha do SMTP. Em Gmail/Yahoo/Outlook use uma **senha de app** (exige 2FA ativo), não a senha normal da conta. |
 | `QRCODE_EMAIL_SMTP_FROM` | `ZapBot <minhaconta@yahoo.com.br>` | Remetente. O endereço deve ser o mesmo da conta SMTP, senão o provedor rejeita ou o e-mail cai no spam. |
 | `QRCODE_EMAIL_SMTP_TO` | `Fulano <fulano@gmail.com>` | Destinatário que vai receber o QR (e os [alertas por e-mail](#alertas-por-e-mail)). |
-| `QRCODE_EMAIL_SMTP_ANTIPHISHING` | `MinhaFraseSecreta42` | Código anti-phishing exibido no corpo do e-mail. Veja abaixo. |
+| `QRCODE_EMAIL_SMTP_ANTIPHISHING` | `MinhaFraseSecreta42` | Código anti-phishing exibido em todo e-mail do bot. Veja [Troque o código anti-phishing](#troque-o-código-anti-phishing). |
 
 #### Por que configurar o e-mail com cuidado
 
@@ -324,7 +325,13 @@ QRCODE_EMAIL_SMTP_TO="Eu <eu@exemplo.com>"
 QRCODE_EMAIL_SMTP_ANTIPHISHING="TroqueEstaFrase-7f3a"
 ```
 
-## E-mail do QR Code
+## E-mails do bot (QR Code e alertas)
+
+O bot manda dois tipos de e-mail, pelo mesmo SMTP (`QRCODE_EMAIL_SMTP_*`): o
+QR Code, quando `QRCODE_EMAIL_ENABLE="true"`, e os
+[alertas](#alertas-por-e-mail) de crash, queda, reconexão etc.
+
+### E-mail do QR Code
 
 Assunto: **`[ZapBot] WhatsApp QR Code Authentication`**
 
@@ -358,7 +365,7 @@ Corpo esperado:
 - **Phone Number**: o `PHONE_NUMBER` com os dígitos do meio mascarados.
 - **Generated At**: horário de geração (fuso `America/Sao_Paulo`).
 
-### 🛡️ Troque o código anti-phishing!
+### Troque o código anti-phishing
 
 O campo `QRCODE_EMAIL_SMTP_ANTIPHISHING` é uma frase secreta que **só você
 conhece**. Ela vem em todo e-mail legítimo do bot. Se chegar um e-mail
@@ -1416,38 +1423,6 @@ lista `commands`. Cada entrada de `commands` segue este formato:
   nos logs se existir comando no JSON sem handler. Comandos, handlers, a
   tabela [Resumo](#resumo) e as seções do README ficam em **ordem alfabética**.
 
-### Estrutura do código
-
-O `app.js` só faz o bootstrap (carrega o `.env`, prepara o banco, cria o
-cliente, registra os eventos e inicia as tarefas periódicas). O código fica em
-`src/`:
-
-```
-app.js                  bootstrap, na ordem de inicialização
-src/
-  constantes.js         diretórios, janelas de tempo, APP_ENV
-  estado.js             estado da conexão, compartilhado entre os módulos
-  log.js                print* coloridos
-  db.js                 SQLite (dbGet/dbAll/dbRun) e o sinal dbPronto
-  inicializacao.js      tabelas + carga dos settings
-  settings.js           SETTINGS_SCHEMA, getSetting/setSetting
-  botConfig.js          config/bot-config.json carregado
-  cliente.js            cliente do whatsapp-web.js e a marca dos envios do bot
-  conexao.js            QR Code, eventos de conexão, reinício e watchdog
-  email.js              SMTP e alertas por e-mail
-  heartbeat.js          prova de vida para o HEALTHCHECK do Docker
-  processo.js           crash e sinais (docker stop)
-  limpeza.js            retenção e limpeza periódica
-  stats.js              contadores do /stats
-  moedas.js, cotacoes.js, alertasPreco.js   /crypto, /cotacao e alertas de preço
-  contatos.js, opcoes.js                    contatos/@lid e o parser de opções
-  watch/                regras e verificação do /watch
-  eventos/              message_create, apagadas, editadas, presença
-  comandos/             um arquivo por comando + index.js (HANDLERS) e base.js
-  util/                 arquivos, formatação, processos externos, URLs
-tests/                  testes automatizados (veja Testes)
-```
-
 ## Operação do dia a dia
 
 Todos com `-f docker/docker-compose.yml` (ou `COMPOSE_FILE` exportado):
@@ -1504,7 +1479,9 @@ adicione ao serviço `zapbot-prod` o label `autoheal=true`:
       - /var/run/docker.sock:/var/run/docker.sock
 ```
 
-### Desenvolvimento
+## Desenvolvimento
+
+### Ambiente de desenvolvimento (Docker)
 
 O serviço `zapbot-dev` monta o código-fonte em `/workspace` e usa
 `config/.env.dev`. O `Makefile` tem atalhos:
@@ -1522,10 +1499,45 @@ ajuste `DOCKER_REMOTE_SERVER` para o seu host antes de usá-los. Eles usam
 `docker --context homelab` em cada comando, sem trocar o contexto global do
 Docker.
 
+### Estrutura do código
+
+O `app.js` só faz o bootstrap (carrega o `.env`, prepara o banco, cria o
+cliente, registra os eventos e inicia as tarefas periódicas). O código fica em
+`src/`:
+
+```
+app.js                  bootstrap, na ordem de inicialização
+src/
+  constantes.js         diretórios, janelas de tempo, APP_ENV
+  estado.js             estado da conexão, compartilhado entre os módulos
+  log.js                print* coloridos
+  db.js                 SQLite (dbGet/dbAll/dbRun) e o sinal dbPronto
+  inicializacao.js      tabelas + carga dos settings
+  settings.js           SETTINGS_SCHEMA, getSetting/setSetting
+  botConfig.js          config/bot-config.json carregado
+  cliente.js            cliente do whatsapp-web.js e a marca dos envios do bot
+  conexao.js            QR Code, eventos de conexão, reinício e watchdog
+  email.js              SMTP e alertas por e-mail
+  heartbeat.js          prova de vida para o HEALTHCHECK do Docker
+  processo.js           crash e sinais (docker stop)
+  limpeza.js            retenção e limpeza periódica
+  stats.js              contadores do /stats
+  moedas.js, cotacoes.js, alertasPreco.js   /crypto, /cotacao e alertas de preço
+  contatos.js, opcoes.js                    contatos/@lid e o parser de opções
+  watch/                regras e verificação do /watch
+  eventos/              message_create, apagadas, editadas, presença
+  comandos/             um arquivo por comando + index.js (HANDLERS) e base.js
+  util/                 arquivos, formatação, processos externos, URLs
+tests/                  testes automatizados (veja Testes)
+```
+
 ### Testes
 
 Os testes usam o test runner do próprio Node (`node:test`), sem dependência
-extra, e rodam fora do Docker em menos de um segundo:
+extra, e rodam em menos de um segundo. Fora do Docker precisam do **Node 22.13
+ou mais novo** (por causa do `node:sqlite`) e das dependências instaladas
+(`PUPPETEER_SKIP_DOWNLOAD=true npm install`); no container de dev (`make shell`)
+é só rodar `npm test`.
 
 ```bash
 npm test                                   # toda a suíte
@@ -1589,6 +1601,9 @@ git push && git push origin release-X.Y
 | `Erro ao enviar QR por email` | Host/porta/usuário/senha SMTP errados. Use porta 465 e senha de app. |
 | `Erro ao enviar QR por email: ... self-signed certificate` / `unable to verify` | O certificado do SMTP não é válido. Use o host oficial do provedor (o nome precisa bater com o certificado). |
 | E-mail do QR chega no spam | `QRCODE_EMAIL_SMTP_FROM` diferente da conta SMTP. |
+| Não chegam os alertas por e-mail | Confira `QRCODE_EMAIL_SMTP_HOST`, `_USER` e `_TO` (sem eles nada é enviado) e o setting `email.alerts` (`/set email.alerts`). Falhas do SMTP aparecem no log como `Alerta por e-mail '...' falhou`. |
+| `docker ps` mostra `(unhealthy)` | O bot parou de gravar o heartbeat. Veja o motivo com `docker inspect --format '{{json .State.Health}}' zapbot-prod` e os logs; reinicie com `docker compose restart zapbot-prod`. Veja [Saúde do container](#saúde-do-container-heartbeat). |
+| `npm test`: `No such built-in module: node:sqlite` | Node antigo: os testes precisam do Node 22.13+. |
 | `Motivo 'LOGOUT' exige ação manual` | Sessão desconectada pelo celular. Reinicie o container para gerar novo QR. |
 | `Motivo 'CONFLICT' ...` | O WhatsApp Web foi aberto em outro lugar com a mesma sessão, ou há dois containers rodando. |
 | `browser is already running` | Lock antigo do Chromium; o entrypoint limpa no boot. Reinicie o container. |
