@@ -15,7 +15,8 @@ const MAX_DELETE_WINDOW = 68 * 60 * 60 * 1000;
 // 1 dia em milissegundos (retenção das apagadas: setting 'cache.revokedRetentionDays')
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-const CACHE_DIR = path.join(ROOT_DIR, 'cache');
+// ZAPBOT_CACHE_DIR troca o diretório do banco e das mídias (os testes usam uma pasta temporária)
+const CACHE_DIR = process.env.ZAPBOT_CACHE_DIR || path.join(ROOT_DIR, 'cache');
 const MEDIA_DIR = path.join(CACHE_DIR, 'media'); // mídias salvas para recuperar mensagens apagadas
 const TMP_DIR = path.join(CACHE_DIR, 'tmp');     // arquivos temporários do /get
 
