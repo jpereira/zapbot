@@ -3706,6 +3706,11 @@ async function cmdUalisu({ msg }) {
         const cves = await buscarCvesRecentes({ dias: 2, max: 50 });
         const cve = cves[Math.floor(Math.random() * cves.length)];
 
+        if (!cve) {
+            await msg.reply('🛡️ Nenhuma CVE publicada nos últimos 2 dias.');
+            return;
+        }
+
         await enviarSorteio(msg, chat, sorteados, ([a, b]) =>
             `Hey ${a} e ${b}, aqui é o Walissu CVE BOT! Dá uma olhada nesse CVE ou você vai sair da rave 😊\n\n` +
             `${formatarCve(cve)}\n\n` +
