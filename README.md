@@ -1430,6 +1430,7 @@ src/
   eventos/              message_create, apagadas, editadas, presença
   comandos/             um arquivo por comando + index.js (HANDLERS) e base.js
   util/                 arquivos, formatação, processos externos, URLs
+tests/                  testes automatizados (veja Testes)
 ```
 
 ## Operação do dia a dia
@@ -1467,6 +1468,49 @@ Os alvos `deploy.*` do `Makefile` fazem deploy num Docker remoto via SSH;
 ajuste `DOCKER_REMOTE_SERVER` para o seu host antes de usá-los. Eles usam
 `docker --context homelab` em cada comando, sem trocar o contexto global do
 Docker.
+
+### Testes
+
+Os testes usam o test runner do próprio Node (`node:test`), sem dependência
+extra, e rodam fora do Docker em menos de um segundo:
+
+```bash
+npm test                                   # toda a suíte
+node --test tests/watch.test.js            # um arquivo
+DEBUG_TESTES=1 npm test                    # mostra o log do bot durante os testes
+node --test --experimental-test-coverage --test-coverage-include='src/**' tests/*.test.js
+```
+
+Nada sai da máquina: o `tests/helpers/ambiente.js` troca, antes de carregar o
+bot, o WhatsApp (um cliente falso que guarda o que o bot enviou), o SQLite (em
+memória), a rede (`axios` com respostas registradas por URL; uma URL sem
+resposta falha o teste), o SMTP, o `yt-dlp`/`ffmpeg` e o `sharp`. O banco e as
+mídias ficam numa pasta temporária (`ZAPBOT_CACHE_DIR`), nunca no `cache/`.
+
+As mensagens passam pelo `message_create` de verdade (gravação, `/stats`,
+`/watch`, permissões e o parser de opções), e o teste falha se o bot registrar
+um erro inesperado no log. O `tests/helpers/bot.js` tem os atalhos:
+`bot.responder('/show -2')` devolve o que o bot respondeu, `bot.apagar(msg)` e
+`bot.editar(msg, 'novo')` disparam os eventos, `bot.reiniciar()` limpa tudo
+entre os casos.
+
+| Arquivo | O que cobre |
+|---|---|
+| `configuracao.test.js` | `bot-config.json`, settings, parser de opções, ajuda e a coerência entre config, código e README (inclusive a ordem alfabética) |
+| `mensagens.test.js` | Gravação, roteamento, permissões (`onlyAdmin`, modo admin, bot desligado) e a contagem do `/stats` |
+| `comandos.test.js` | `/help`, `/debug`, `/uptime`, `/version`, `/ping`, `/noffa`, `/bot`, `/set` |
+| `apagadas-editadas.test.js` | Eventos de apagar/editar, `/show` e `/edit` |
+| `stats.test.js`, `watch.test.js`, `monitor.test.js` | `/stats`, `/watch`, `/monitor` e o aviso de presença |
+| `cotacoes.test.js` | `/cotacao`, `/crypto` e os alertas de preço |
+| `externos.test.js` | `/cve`, `/tempo`, `/news`, `/gpt`, `/gif`, `/meme`, `/joke`, `/kernel` |
+| `grupo.test.js` | `/everyone`, `/boletos`, `/listageral`, `/ualisu`, `/enquete`, `/sticker` |
+| `get-cache.test.js` | `/get` (e o anti-SSRF), `/cache` e a limpeza periódica |
+| `conexao-email.test.js` | Eventos de conexão, reinício, watchdog, alertas por e-mail, crash e `docker stop` |
+| `util.test.js` | Formatação, contatos/`@lid`, menções e arquivos do cache |
+
+Um comando ou opção novos entram com os testes deles; o
+`configuracao.test.js` falha se o comando não estiver no README ou fora de
+ordem.
 
 ### Nova versão
 
