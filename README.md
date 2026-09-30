@@ -101,6 +101,10 @@ tudo por comandos digitados no próprio chat (`/help`, `/get`, `/show`, `/news`,
   motivo exige ação manual (`LOGOUT`, `CONFLICT`, `UNPAIRED`...).
 - **Aviso de início**: quando fica pronto, o bot manda
   `🤖 ZapBot <versão> inicializado.` para o `PHONE_NUMBER`.
+- **Alertas por e-mail**: crash, queda, reconexão, falha de autenticação e
+  outros eventos também vão por e-mail, pelo mesmo SMTP do QR Code (veja
+  [Alertas por e-mail](#alertas-por-e-mail)). Ligado por padrão (setting
+  `email.alerts`).
 
 ## Autenticação: QR Code no terminal ou por e-mail
 
@@ -259,7 +263,7 @@ pedir a chave de produção no próprio Dashboard.
 | `QRCODE_EMAIL_SMTP_USER` | `minhaconta@yahoo.com.br` | Usuário de login no SMTP. |
 | `QRCODE_EMAIL_SMTP_PASS` | `abcd efgh ijkl mnop` | Senha do SMTP. Em Gmail/Yahoo/Outlook use uma **senha de app** (exige 2FA ativo), não a senha normal da conta. |
 | `QRCODE_EMAIL_SMTP_FROM` | `ZapBot <minhaconta@yahoo.com.br>` | Remetente. O endereço deve ser o mesmo da conta SMTP, senão o provedor rejeita ou o e-mail cai no spam. |
-| `QRCODE_EMAIL_SMTP_TO` | `Fulano <fulano@gmail.com>` | Destinatário que vai receber o QR. |
+| `QRCODE_EMAIL_SMTP_TO` | `Fulano <fulano@gmail.com>` | Destinatário que vai receber o QR (e os [alertas por e-mail](#alertas-por-e-mail)). |
 | `QRCODE_EMAIL_SMTP_ANTIPHISHING` | `MinhaFraseSecreta42` | Código anti-phishing exibido no corpo do e-mail. Veja abaixo. |
 
 #### Por que configurar o e-mail com cuidado
@@ -345,6 +349,33 @@ aparelho *deles*.
 
 - **Não use o valor do `.env.example`**: ele é público no repositório.
 - Escolha algo pessoal e difícil de adivinhar, e troque se suspeitar de vazamento.
+
+### Alertas por e-mail
+
+Quando o WhatsApp cai, o aviso no privado não chega. Por isso os eventos
+importantes também vão por e-mail, pelo mesmo SMTP do QR Code
+(`QRCODE_EMAIL_SMTP_*`, independente do `QRCODE_EMAIL_ENABLE`). Ligado por
+padrão; desligue com `/set email.alerts off`. Sem `QRCODE_EMAIL_SMTP_HOST`,
+`_USER` e `_TO` preenchidos, nada é enviado.
+
+| Assunto | Quando |
+|---|---|
+| `[ZapBot] 🟢 Bot iniciado` | O bot conectou ao WhatsApp depois de subir (avisa também se está desligado ou em modo admin) |
+| `[ZapBot] 🔄 Reconectado` | Conectou de novo depois de uma queda (com o motivo da queda) |
+| `[ZapBot] 🔴 Desconectado` | O WhatsApp desconectou; o cliente é reiniciado sozinho |
+| `[ZapBot] 🔴 Desconectado (ação manual)` | Desconectou por `LOGOUT`, `CONFLICT`, `UNPAIRED`...: o bot **não** reinicia sozinho |
+| `[ZapBot] ⚠️ Estado do WhatsApp: <estado>` | O WhatsApp Web entrou num estado de problema (`CONFLICT`, `UNPAIRED`, `TOS_BLOCK`...) |
+| `[ZapBot] ⛔ Falha de autenticação` | A sessão salva não autenticou |
+| `[ZapBot] 🔑 Sessão perdida: novo QR Code` | Pediu QR Code de novo depois de já ter autenticado |
+| `[ZapBot] ♻️ Browser caiu` | O Chromium morreu e o watchdog está reiniciando o cliente |
+| `[ZapBot] ❌ Falha ao reiniciar` | O reinício do cliente falhou |
+| `[ZapBot] 💥 Crash` | Exceção ou promise rejeitada sem tratamento (com o stack). O processo sai e o Docker sobe de novo |
+| `[ZapBot] 🛑 Bot encerrado` | `docker stop`/`restart` ou Ctrl+C (SIGTERM/SIGINT) |
+
+Cada e-mail traz o horário, o número mascarado, a versão, o host, há quanto
+tempo o processo está no ar e o código anti-phishing. O mesmo evento não se
+repete antes de 5 minutos (exceto crash e encerramento), para não lotar a
+caixa num loop de reconexão.
 
 ## Comandos
 
@@ -881,6 +912,7 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 | `cve.maxDays` | 1–120 | `7` | Janela, em dias, do `/cve -highscore` |
 | `debug.enabled` | on/off | `on` se `APP_ENV=dev` | Modo debug (o mesmo do `/debug`) |
 | `edit.alert` | on/off | `on` | Avisa no seu privado quando alguém edita uma mensagem; `off` só guarda para o `/edit` |
+| `email.alerts` | on/off | `on` | Alertas por e-mail (crash, queda, reconexão...) pelo SMTP do QR Code. Veja [Alertas por e-mail](#alertas-por-e-mail) |
 | `get.maxDownloadMB` | 10–2000 | `200` | Tamanho máximo baixado pelo yt-dlp no `/get`, antes da conversão |
 | `get.maxSizeMB` | 1–100 | `20` | Tamanho máximo do arquivo do `/get` |
 | `gif.giphy.api.key` | texto (pode ser vazio) | *(vazio)* | Chave do GIPHY, usada quando `GIPHY_API_KEY` não está no `config/.env`. Exibida mascarada (`••••1234`); `/set -reset gif.giphy.api.key` apaga |
