@@ -354,6 +354,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -c -f`) para fazer o bot
 | `/meme` | | | Template de meme aleatório (imgflip) |
 | `/listageral` | | ✅ | Lista os membros do grupo |
 | `/gif` | | | GIF aleatório (GIPHY) |
+| `/joke` | | | Piada aleatória em português |
 
 ### `/help`
 
@@ -709,6 +710,10 @@ Só em grupos: lista os membros (número, nome, 👑 dono, ⭐ admin).
 GIF aleatório do GIPHY, enviado como vídeo em loop. Sem tag usa o setting
 `gif.tag`. Precisa de uma chave do GIPHY: `GIPHY_API_KEY` no `config/.env` ou,
 se ela não existir, o setting `api.key.giphy` (`/set api.key.giphy <chave>`).
+
+### `/joke`
+
+Piada em português da [JokeAPI](https://jokeapi.dev/) (safe-mode).
 
 ### Adicionando ou alterando comandos
 
