@@ -182,8 +182,9 @@ ficam disponíveis para o bot. Nunca faça commit dele (já está no `.gitignore
 
 | Variável | Exemplo | Descrição |
 |---|---|---|
-| `OPENAI_API_KEY` | `sk-proj-...` | Chave da OpenAI usada pelo `/gpt`. Sem ela o comando responde que não está configurado. |
+| `OPENAI_API_KEY` | `sk-proj-...` | Chave da OpenAI usada pelo `/gpt`. Se estiver vazia, o bot usa o setting `openai.api.key`; sem nenhuma das duas o `/gpt` fica desativado. |
 | `OPENAI_MODEL` | `gpt-4o-mini` | Modelo do `/gpt` (padrão: `gpt-4o-mini`). |
+| `OPENAI_TIMEOUT_MS` | `60000` | Tempo máximo de espera pela resposta, em ms. Se estiver vazio, o bot usa o setting `openai.timeout.ms` (60000). |
 
 ### GIPHY (opcional)
 
@@ -640,6 +641,8 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 | `news.g1` | lista | `https://g1.globo.com/dynamo/rss2.xml` | Feeds RSS do `/news -g1` |
 | `news.gazeta` | lista | `https://www.gazetadopovo.com.br/feed/rss/brasil.xml` | Feeds RSS do `/news -gazeta` |
 | `news.brasil` | lista | 15 blogs do [feedspot](https://rss.feedspot.com/brazil_rss_feeds/) | Feeds RSS do `/news -brasil` |
+| `openai.api.key` | texto (pode ser vazio) | *(vazio)* | Chave da OpenAI, usada quando `OPENAI_API_KEY` não está no `config/.env`. Exibida mascarada (`••••1234`); `/set -reset openai.api.key` apaga |
+| `openai.timeout.ms` | 5000–300000 | `60000` | Timeout do `/gpt`, usado quando `OPENAI_TIMEOUT_MS` não está no `config/.env` |
 | `news.max` | 1–10 | `5` | Manchetes exibidas pelo `/news` (o `/news <quantidade>` sobrepõe) |
 | `api.key.giphy` | texto (pode ser vazio) | *(vazio)* | Chave do GIPHY, usada quando `GIPHY_API_KEY` não está no `config/.env`. Exibida mascarada (`••••1234`); `/set -reset api.key.giphy` apaga |
 

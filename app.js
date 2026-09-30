@@ -451,6 +451,18 @@ const SETTINGS_SCHEMA = {
         desc: 'Feeds RSS do /news -brasil (blogs sobre o Brasil, do feedspot).',
         item: validarUrlFeed
     },
+    'openai.api.key': {
+        default: '',
+        type: 'string',
+        allowEmpty: true,
+        secret: true,
+        desc: 'Chave da OpenAI (/gpt), usada quando OPENAI_API_KEY não está no config/.env.'
+    },
+    'openai.timeout.ms': {
+        default: 60000,
+        type: 'number', min: 5000, max: 300000,
+        desc: 'Timeout (ms) do /gpt, usado quando OPENAI_TIMEOUT_MS não está no config/.env.'
+    },
     'news.max': {
         default: 5,
         type: 'number', min: 1, max: 10,
@@ -3927,15 +3939,19 @@ async function cmdNews({ msg, opts }) {
 }
 
 /*
- * /gpt: pergunta ao ChatGPT. A chave vem do OPENAI_API_KEY (config/.env) e
- * nunca é logada nem ecoada: o erro devolvido é só a mensagem da API.
+ * /gpt: pergunta ao ChatGPT. Chave e timeout vêm do config/.env (OPENAI_API_KEY,
+ * OPENAI_TIMEOUT_MS) ou, na falta deles, dos settings 'openai.api.key' e
+ * 'openai.timeout.ms'. A chave nunca é logada nem ecoada: o erro devolvido é só
+ * a mensagem da API.
  */
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
-const OPENAI_TIMEOUT_MS = 60 * 1000;
 
 async function cmdGpt({ msg, args, quotedMsg }) {
-    if (!process.env.OPENAI_API_KEY) {
-        await msg.reply('⚠️ OPENAI_API_KEY não configurada no config/.env.');
+    const apiKey = process.env.OPENAI_API_KEY || getSetting('openai.api.key');
+    const timeout = Number(process.env.OPENAI_TIMEOUT_MS) || getSetting('openai.timeout.ms');
+
+    if (!apiKey) {
+        await msg.reply('⚠️ API key da OpenAI não encontrada: o /gpt está desativado.\n💡 _Defina OPENAI_API_KEY no config/.env ou use /set openai.api.key <chave>_');
         return;
     }
 
@@ -3954,8 +3970,8 @@ async function cmdGpt({ msg, args, quotedMsg }) {
                 { role: 'user', content: pergunta }
             ]
         }, {
-            headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
-            timeout: OPENAI_TIMEOUT_MS
+            headers: { Authorization: `Bearer ${apiKey}` },
+            timeout
         });
 
         let resposta = data.choices?.[0]?.message?.content?.trim() || '(resposta vazia)';
