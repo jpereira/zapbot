@@ -182,7 +182,7 @@ ficam disponíveis para o bot. Nunca faça commit dele (já está no `.gitignore
 
 | Variável | Exemplo | Descrição |
 |---|---|---|
-| `GIPHY_API_KEY` | | Chave do GIPHY usada pelo `/gif` ([developers.giphy.com](https://developers.giphy.com/)). |
+| `GIPHY_API_KEY` | | Chave do GIPHY usada pelo `/gif` ([developers.giphy.com](https://developers.giphy.com/)). Se estiver vazia, o bot usa o setting `api.key.giphy` (`/set api.key.giphy <chave>`). |
 
 ### QR Code por e-mail
 
@@ -599,9 +599,12 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 | `watch.showMax` | 1–100 | `20` | Máximo de ocorrências listadas por `/watch -show` |
 | `watch.hitsRetentionDays` | 1–365 | `30` | Dias que as ocorrências do `/watch` ficam guardadas |
 | `gif.tag` | texto | `fail` | Tag padrão do `/gif` |
+| `api.key.giphy` | texto (pode ser vazio) | *(vazio)* | Chave do GIPHY, usada quando `GIPHY_API_KEY` não está no `config/.env`. Exibida mascarada (`••••1234`); `/set -reset api.key.giphy` apaga |
 
 Uma chave nova é declarada em `SETTINGS_SCHEMA` (`app.js`) com padrão, tipo,
-descrição e limites, e lida com `getSetting('<chave>')`. Valores inválidos no
+descrição e limites (`allowEmpty` para texto que pode ficar vazio, `secret`
+para mascarar o valor no `/set` e nos logs), e lida com
+`getSetting('<chave>')`. Valores inválidos no
 banco são ignorados no boot (vale o padrão, com aviso nos logs).
 
 ### `/watch` (`/w`) · admin
@@ -685,8 +688,9 @@ Só em grupos: lista os membros (número, nome, 👑 dono, ⭐ admin).
 
 ### `/gif [tag]`
 
-GIF aleatório do GIPHY (precisa de `GIPHY_API_KEY`), enviado como vídeo em loop.
-Sem tag usa o setting `gif.tag`.
+GIF aleatório do GIPHY, enviado como vídeo em loop. Sem tag usa o setting
+`gif.tag`. Precisa de uma chave do GIPHY: `GIPHY_API_KEY` no `config/.env` ou,
+se ela não existir, o setting `api.key.giphy` (`/set api.key.giphy <chave>`).
 
 ### Adicionando ou alterando comandos
 

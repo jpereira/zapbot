@@ -261,8 +261,9 @@ async function inicializarBanco() {
  *
  * Cada chave declara: default (gravado no primeiro boot, sem sobrescrever o
  * existente), type (boolean | number | string | list), desc e, opcionalmente,
- * min/max (number), item() para normalizar/validar cada item de uma list e
- * separator (list cujos itens podem ter espaço/vírgula: ex. '\n', um por linha).
+ * min/max (number), item() para normalizar/validar cada item de uma list,
+ * separator (list cujos itens podem ter espaço/vírgula: ex. '\n', um por linha),
+ * allowEmpty (string que pode ficar vazia) e secret (valor mascarado no /set e nos logs).
  */
 const SETTINGS_SCHEMA = {
     'debug.enabled': {
@@ -366,6 +367,13 @@ const SETTINGS_SCHEMA = {
         default: 'fail',
         type: 'string',
         desc: 'Tag padrão do /gif quando nenhuma é informada.'
+    },
+    'api.key.giphy': {
+        default: '',
+        type: 'string',
+        allowEmpty: true,
+        secret: true,
+        desc: 'Chave do GIPHY (/gif), usada quando GIPHY_API_KEY não está no config/.env.'
     }
 };
 
@@ -397,6 +405,7 @@ function validarSetting(key, value) {
 
         case 'string': {
             const s = String(value ?? '').trim();
+            if (!s && schema.allowEmpty) return s;
             if (!s || s.length > 100) throw new Error('precisa ter de 1 a 100 caracteres');
             return s;
         }
@@ -3003,9 +3012,12 @@ async function cmdUndo({ msg, opts, chatId }) {
  *   /set <chave> <valor>  → altera (lista: itens separados por vírgula ou espaço)
  *   /set -reset <chave>   → volta ao padrão
  */
-function formatarValorSetting(value, sep = ', ') {
+function formatarValorSetting(value, sep = ', ', secret = false) {
     if (Array.isArray(value)) return value.length ? value.join(sep) : '(vazio)';
     if (typeof value === 'boolean') return value ? 'on' : 'off';
+    if (value === '') return '(vazio)';
+    // Segredo: mostra só os 4 últimos caracteres
+    if (secret) return `••••${String(value).slice(-4)}`;
     return String(value);
 }
 
@@ -3022,7 +3034,7 @@ async function cmdSet({ msg, opts, args }) {
         }
 
         await setSetting(key, schema.default);
-        await msg.reply(`♻️ *${key}* = ${formatarValorSetting(getSetting(key))} _(padrão)_`);
+        await msg.reply(`♻️ *${key}* = ${formatarValorSetting(getSetting(key), ', ', schema.secret)} _(padrão)_`);
         return;
     }
 
@@ -3031,7 +3043,7 @@ async function cmdSet({ msg, opts, args }) {
     if (!key) {
         const width = Math.max(...Object.keys(SETTINGS_SCHEMA).map(k => k.length));
         const lista = Object.entries(SETTINGS_SCHEMA)
-            .map(([k, s]) => `${k.padEnd(width)}  ${formatarValorSetting(getSetting(k), s.separator ? ' | ' : ', ')}`)
+            .map(([k, s]) => `${k.padEnd(width)}  ${formatarValorSetting(getSetting(k), s.separator ? ' | ' : ', ', s.secret)}`)
             .join('\n');
 
         await msg.reply('⚙️ *SETTINGS*\n\n```\n' + lista + '\n```\n💡 _/set <chave> para detalhes_');
@@ -3051,7 +3063,7 @@ async function cmdSet({ msg, opts, args }) {
         // Lista "uma por linha": um item por linha também na exibição
         const valorTexto = schema.separator && valor.length
             ? '\n' + valor.map((v, i) => `${i + 1}. ${v}`).join('\n')
-            : formatarValorSetting(valor);
+            : formatarValorSetting(valor, ', ', schema.secret);
 
         await msg.reply(
             `⚙️ *${key}*\n${schema.desc}\n\n` +
@@ -3070,8 +3082,8 @@ async function cmdSet({ msg, opts, args }) {
 
     try {
         const valor = await setSetting(key, bruto);
-        printInfo(`Setting '${key}' alterado para ${JSON.stringify(valor)}`);
-        await msg.reply(`✅ *${key}* = ${formatarValorSetting(valor, schema.separator ? ' | ' : ', ')}`);
+        printInfo(`Setting '${key}' alterado para ${schema.secret ? formatarValorSetting(valor, ', ', true) : JSON.stringify(valor)}`);
+        await msg.reply(`✅ *${key}* = ${formatarValorSetting(valor, schema.separator ? ' | ' : ', ', schema.secret)}`);
     } catch (e) {
         await msg.reply(`❌ Valor inválido para *${key}*: ${e.message}`);
     }
@@ -3404,17 +3416,20 @@ async function cmdListaGeral({ msg }) {
     await msg.reply(`👥 *Membros de ${chat.name}* (${linhas.length})\n\n${linhas.join('\n')}`);
 }
 
-// /gif [tag]: GIF aleatório do GIPHY (GIPHY_API_KEY no config/.env), enviado como MP4 em loop
+// /gif [tag]: GIF aleatório do GIPHY, enviado como MP4 em loop.
+// Chave: GIPHY_API_KEY no config/.env ou, na falta dela, o setting 'api.key.giphy'
 async function cmdGif({ msg, args }) {
-    if (!process.env.GIPHY_API_KEY) {
-        await msg.reply('⚠️ GIPHY_API_KEY não configurada no config/.env.');
+    const apiKey = process.env.GIPHY_API_KEY || getSetting('api.key.giphy');
+
+    if (!apiKey) {
+        await msg.reply('⚠️ Chave do GIPHY não configurada: defina GIPHY_API_KEY no config/.env ou use /set api.key.giphy <chave>.');
         return;
     }
 
     try {
         const { data } = await axios.get('https://api.giphy.com/v1/gifs/random', {
             timeout: 15000,
-            params: { api_key: process.env.GIPHY_API_KEY, tag: args.trim() || getSetting('gif.tag'), rating: 'pg-13' }
+            params: { api_key: apiKey, tag: args.trim() || getSetting('gif.tag'), rating: 'pg-13' }
         });
 
         const mp4 = data.data?.images?.original?.mp4;
