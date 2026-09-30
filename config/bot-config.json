@@ -318,7 +318,7 @@
                     "values": [
                         "<nº|nome>"
                     ],
-                    "desc": "(Só no seu privado) Chat alvo: nº do /show -l ou parte do nome."
+                    "desc": "Chat alvo: nº do /show -l ou parte do nome."
                 },
                 {
                     "argv": [
