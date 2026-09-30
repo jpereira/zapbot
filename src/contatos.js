@@ -169,19 +169,6 @@ async function resolverMencoes(texto, mentionedIds = []) {
     return texto;
 }
 
-/*
- * /show e /edit: reexibem as mensagens APAGADAS (/show) e EDITADAS (/edit)
- * guardadas no cache, no mesmo formato dos alertas.
- *   /show        → a última apagada deste chat      (/edit: a última editada)
- *   /show -3     → as 3 últimas (máx. setting 'show.max')
- *   /show -3 -pv → envia no SEU privado em vez de expor no chat atual
- *   /show -list  → apagadas e editadas do cache, por chat (o -l dos dois é o mesmo)
- *   /show -flush → remove as apagadas deste chat (no seu privado: de todos os chats)
- *   /show -2 -c 1       → as 2 últimas do chat nº 1 da lista de apagadas do -l
- *   /edit -2 -c zapbot  → as 2 últimas editadas do chat cujo nome contém "zapbot"
- *   /edit -f -c 1       → flush só das editadas do chat nº 1
- * Envia em ordem cronológica: a última enviada é a mais recente.
- */
 // Em conversas privadas o mesmo chat pode aparecer como @lid ou @c.us
 async function idsDoChatAtual(chatId) {
     const ids = [chatId];
