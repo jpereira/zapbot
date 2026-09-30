@@ -398,7 +398,7 @@ const SETTINGS_SCHEMA = {
     'bot.adminMode': {
         default: false,
         type: 'boolean',
-        desc: 'Modo admin: só o dono usa comandos (o mesmo do /admin e /adminoff).'
+        desc: 'Modo admin: só o dono usa comandos (o mesmo do /bot +admin|-admin).'
     }
 };
 
@@ -1564,12 +1564,15 @@ client.on('ready', async () => {
     isReady = true;
     lastDisconnectReason = null;
 
-    // bot.paused vem do banco: avisa já no boot se os comandos estão desligados
+    // Os settings vêm do banco: avisa já no boot se o bot está desligado ou em modo admin
     await dbPronto;
-    const desligado = getSetting('bot.paused') ? ' Bot desligado: use /bot -on para ativar os comandos.' : '';
+    const avisos = [
+        getSetting('bot.paused') && 'Bot desligado: use /bot -on para ativar os comandos.',
+        getSetting('bot.adminMode') && 'Modo admin ligado: só você usa comandos (/bot -admin desliga).'
+    ].filter(Boolean).map(a => ` ${a}`).join('');
 
     printSuccess(`🤖 ZapBot ${packageJson.version} inicializado! Informando ${process.env.PHONE_NUMBER}`);
-    messageToSelf(`🤖 ZapBot ${packageJson.version} inicializado.${desligado}`);
+    messageToSelf(`🤖 ZapBot ${packageJson.version} inicializado.${avisos}`);
 });
 
 /*
@@ -3737,38 +3740,38 @@ async function cmdUalisu({ msg }) {
 }
 
 /*
- * /bot -on|-off: liga/desliga o bot (setting 'bot.paused', sobrevive a reinícios)
- *   /bot      → mostra o estado
- *   /bot -on  → ativa
- *   /bot -off → desliga: TODOS os comandos são ignorados, inclusive os seus, exceto o /bot
- * A recuperação de apagadas e o /watch continuam funcionando.
+ * /bot: estado do bot (settings 'bot.paused' e 'bot.adminMode', sobrevivem a reinícios)
+ *   /bot        → mostra o estado
+ *   /bot -on    → ativa
+ *   /bot -off   → desliga: TODOS os comandos são ignorados, inclusive os seus, exceto o /bot
+ *   /bot +admin → modo admin: só o dono usa comandos (os dos outros são ignorados em silêncio)
+ *   /bot -admin → desliga o modo admin (cada comando volta a seguir o seu onlyAdmin)
+ * Opções combinam: /bot -on +admin. A recuperação de apagadas e o /watch continuam funcionando.
+ * O parser só reconhece opções com '-', então o '+admin' chega em opts.argv.
  */
+function estadoBot() {
+    return (getSetting('bot.paused')
+        ? '⏸️ *Bot:* desligado (todos os comandos são ignorados)'
+        : '▶️ *Bot:* ativo') + '\n' +
+        (getSetting('bot.adminMode')
+            ? '🔒 *Modo admin:* ligado (só o dono usa comandos)'
+            : '🔓 *Modo admin:* desligado');
+}
+
 async function cmdBot({ msg, opts }) {
-    if (opts.opt.on && opts.opt.off) {
-        await msg.reply('❌ Use só um: /bot -on ou /bot -off');
+    const { on, off, admin: adminOff } = opts.opt;
+    const adminOn = opts.argv.includes('+admin');
+    const desconhecidos = opts.argv.filter(a => a !== '+admin');
+
+    if (desconhecidos.length || (on && off) || (adminOn && adminOff)) {
+        await msg.reply('❌ Uso: /bot [-on|-off] [+admin|-admin]\n💡 _/bot -h para ajuda_');
         return;
     }
 
-    if (opts.opt.on || opts.opt.off) await setSetting('bot.paused', opts.opt.off);
+    if (on || off) await setSetting('bot.paused', off);
+    if (adminOn || adminOff) await setSetting('bot.adminMode', adminOn);
 
-    await msg.reply(getSetting('bot.paused')
-        ? '⏸️ Bot desligado: todos os comandos são ignorados. Use /bot -on para ativar.'
-        : '▶️ Bot ativo. Use /bot -off para desligar.');
-}
-
-/*
- * Modo admin (setting 'bot.adminMode', sobrevive a reinícios)
- *   /admin    → só você usa comandos (os dos outros são ignorados em silêncio)
- *   /adminoff → volta ao normal (cada comando segue o seu onlyAdmin)
- */
-async function cmdAdmin({ msg }) {
-    await setSetting('bot.adminMode', true);
-    await msg.reply('🔒 Modo admin ativado: só o dono do bot pode usar comandos.');
-}
-
-async function cmdAdminOff({ msg }) {
-    await setSetting('bot.adminMode', false);
-    await msg.reply('🔓 Modo admin desativado: comandos liberados conforme a configuração.');
+    await msg.reply(estadoBot());
 }
 
 // cmd do bot-config.json -> handler
@@ -3796,9 +3799,7 @@ const HANDLERS = {
     '/cve': cmdCve,
     '/tempo': cmdTempo,
     '/ualisu': cmdUalisu,
-    '/bot': cmdBot,
-    '/admin': cmdAdmin,
-    '/adminoff': cmdAdminOff
+    '/bot': cmdBot
 };
 
 // Avisa no boot se o bot-config tiver comando sem handler (ou vice-versa)
@@ -4000,8 +4001,11 @@ client.on('message_create', async (msg) => {
             return;
         }
 
-        // /admin: comandos dos outros são ignorados em silêncio
-        if (getSetting('bot.adminMode') && !msg.fromMe) return;
+        // Modo admin (/bot +admin): comandos dos outros são ignorados em silêncio
+        if (getSetting('bot.adminMode') && !msg.fromMe) {
+            printDebug(`Comando '${command.cmd}' de ${senderName} ignorado: modo admin`);
+            return;
+        }
 
         /*
          * Comando restrito ao dono do bot: ignora em silêncio no chat e só avisa
