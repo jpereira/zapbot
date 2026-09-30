@@ -4,10 +4,11 @@
 > estão em português do Brasil.
 
 Bot para WhatsApp escrito em Node.js que roda em cima de uma sessão real do
-WhatsApp Web. Ele recupera mensagens apagadas, baixa vídeos de redes sociais,
-cria figurinhas, vigia mensagens por texto/regex e te avisa no privado, monitora quando contatos ficam online (em desenvolvimento) e mais algumas
-brincadeiras, tudo por comandos digitados no próprio chat (`/help`, `/get`,
-`/show`...).
+WhatsApp Web. Ele recupera mensagens (e status) apagadas, baixa vídeos de redes
+sociais, cria figurinhas, vigia mensagens por texto/regex e te avisa no privado,
+monitora quando contatos ficam online (em desenvolvimento), traz notícias, tempo
+e CVEs, conversa com o ChatGPT e mais algumas brincadeiras, tudo por comandos
+digitados no próprio chat (`/help`, `/get`, `/show`, `/news`, `/gpt`...).
 
 **Autor:** Jorge Pereira ([@jpereira](https://github.com/jpereira)) · jpereiran@gmail.com
 **Licença:** MIT
@@ -38,6 +39,7 @@ brincadeiras, tudo por comandos digitados no próprio chat (`/help`, `/get`,
  │     ├──► SQLite  (cache/bot_database.db)  mensagens, settings  │
  │     ├──► cache/media   mídias p/ recuperar mensagens apagadas  │
  │     ├──► yt-dlp + ffmpeg   comando /get                        │
+ │     ├──► APIs HTTP (axios)  /gpt /tempo /cve /news /gif...     │
  │     └──► SMTP (nodemailer)  envio do QR Code por e-mail        │
  │                                                                │
  │  volumes:  wwebjs_auth  → sessão do WhatsApp (.wwebjs_auth)    │
@@ -77,7 +79,12 @@ brincadeiras, tudo por comandos digitados no próprio chat (`/help`, `/get`,
   [`/set`](#set--admin). No boot os valores padrão são gravados, se ainda não
   existirem, e tudo é carregado em memória. Veja [Settings](#settings).
 - **Comandos**: definidos em [`config/bot-config.json`](config/bot-config.json)
-  (nome, aliases, opções, ajuda, permissão) e implementados em `app.js`.
+  (nome, aliases, opções, ajuda, permissão) e implementados em `app.js`. Os que
+  consultam a internet (`/gpt`, `/tempo`, `/cve`, `/news`...) usam os serviços
+  da tabela [Serviços externos](#serviços-externos).
+- **Controle**: o [`/bot`](#bot--admin) liga/desliga todos os comandos
+  (`-on`/`-off`) e o modo admin (`+admin`/`-admin`), em que só você usa
+  comandos.
 - **Reconexão**: em caso de queda o cliente é reiniciado sozinho, exceto quando o
   motivo exige ação manual (`LOGOUT`, `CONFLICT`, `UNPAIRED`...).
 - **Aviso de início**: quando fica pronto, o bot manda
@@ -177,6 +184,26 @@ ficam disponíveis para o bot. Nunca faça commit dele (já está no `.gitignore
 | Variável | Exemplo | Descrição |
 |---|---|---|
 | `PHONE_NUMBER` | `5521999999999@c.us` | **Obrigatório.** Número da conta que será pareada, no formato `DDI + DDD + número` seguido de `@c.us`, sem `+`, espaços ou traços. É para ele que o bot manda o aviso de inicialização, as notificações do `/monitor` e os alertas de uso indevido de comandos. Também aparece (mascarado) no e-mail do QR. |
+
+### Serviços externos
+
+Comandos que consultam serviços na internet. Só dois precisam de chave; os
+outros funcionam sem configuração.
+
+| Comando | Serviço | Chave |
+|---|---|---|
+| `/gpt` | [OpenAI](https://platform.openai.com/) (pago por uso) | `OPENAI_API_KEY` ou setting `openai.api.key` |
+| `/gif` | [GIPHY](https://developers.giphy.com/) (grátis, 100 chamadas/hora) | `GIPHY_API_KEY` ou setting `gif.giphy.api.key` |
+| `/tempo` | [Open-Meteo](https://open-meteo.com/) | — |
+| `/cve`, `/ualisu` | [NVD](https://nvd.nist.gov/) (~5 consultas a cada 30 s) | — |
+| `/news` | Feeds RSS (g1, Gazeta do Povo, The Hacker News...) | — |
+| `/crypto` | [Binance](https://www.binance.com/) | — |
+| `/kernel` | [kernel.org](https://www.kernel.org/) | — |
+| `/meme` | [imgflip](https://imgflip.com/) | — |
+| `/joke` | [JokeAPI](https://jokeapi.dev/) | — |
+
+Para as chaves, a variável do `config/.env` tem prioridade; se estiver vazia,
+vale o setting, que dá para trocar pelo WhatsApp com `/set` sem reiniciar.
 
 ### OpenAI (opcional)
 
@@ -632,6 +659,7 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 | `watch.showMax` | 1–100 | `20` | Máximo de ocorrências listadas por `/watch -show` |
 | `watch.hitsRetentionDays` | 1–365 | `30` | Dias que as ocorrências do `/watch` ficam guardadas |
 | `gif.tag` | texto | `fail` | Tag padrão do `/gif` |
+| `gif.giphy.api.key` | texto (pode ser vazio) | *(vazio)* | Chave do GIPHY, usada quando `GIPHY_API_KEY` não está no `config/.env`. Exibida mascarada (`••••1234`); `/set -reset gif.giphy.api.key` apaga |
 | `cve.max` | 1–20 | `10` | Quantidade de CVEs exibidas pelo `/cve` (o `/cve <max>` sobrepõe) |
 | `cve.maxDays` | 1–120 | `7` | Janela, em dias, do `/cve -highscore` |
 | `tempo.city` | texto | `Niteroi, Rio de Janeiro, Brazil` | Cidade do `/tempo` quando nenhuma é informada |
@@ -641,10 +669,9 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 | `news.g1` | lista | `https://g1.globo.com/dynamo/rss2.xml` | Feeds RSS do `/news -g1` |
 | `news.gazeta` | lista | `https://www.gazetadopovo.com.br/feed/rss/brasil.xml` | Feeds RSS do `/news -gazeta` |
 | `news.brasil` | lista | 15 blogs do [feedspot](https://rss.feedspot.com/brazil_rss_feeds/) | Feeds RSS do `/news -brasil` |
+| `news.max` | 1–10 | `5` | Manchetes exibidas pelo `/news` (o `/news <quantidade>` sobrepõe) |
 | `openai.api.key` | texto (pode ser vazio) | *(vazio)* | Chave da OpenAI, usada quando `OPENAI_API_KEY` não está no `config/.env`. Exibida mascarada (`••••1234`); `/set -reset openai.api.key` apaga |
 | `openai.timeout.ms` | 5000–300000 | `60000` | Timeout do `/gpt`, usado quando `OPENAI_TIMEOUT_MS` não está no `config/.env` |
-| `news.max` | 1–10 | `5` | Manchetes exibidas pelo `/news` (o `/news <quantidade>` sobrepõe) |
-| `gif.giphy.api.key` | texto (pode ser vazio) | *(vazio)* | Chave do GIPHY, usada quando `GIPHY_API_KEY` não está no `config/.env`. Exibida mascarada (`••••1234`); `/set -reset gif.giphy.api.key` apaga |
 
 Uma chave nova é declarada em `SETTINGS_SCHEMA` (`app.js`) com padrão, tipo,
 descrição e limites (`allowEmpty` para texto que pode ficar vazio, `secret`
