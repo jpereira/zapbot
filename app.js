@@ -3576,6 +3576,75 @@ async function cmdCve({ msg, opts }) {
     }
 }
 
+// /tempo: Open-Meteo (sem chave de API)
+const CLIMA_WMO = {
+    0: ['☀️', 'Céu limpo'], 1: ['🌤️', 'Predominantemente limpo'], 2: ['⛅', 'Parcialmente nublado'],
+    3: ['☁️', 'Nublado'], 45: ['🌫️', 'Neblina'], 48: ['🌫️', 'Neblina com geada'],
+    51: ['🌦️', 'Garoa fraca'], 53: ['🌦️', 'Garoa'], 55: ['🌦️', 'Garoa forte'],
+    56: ['🌧️', 'Garoa congelante'], 57: ['🌧️', 'Garoa congelante forte'],
+    61: ['🌧️', 'Chuva fraca'], 63: ['🌧️', 'Chuva'], 65: ['🌧️', 'Chuva forte'],
+    66: ['🌧️', 'Chuva congelante'], 67: ['🌧️', 'Chuva congelante forte'],
+    71: ['🌨️', 'Neve fraca'], 73: ['🌨️', 'Neve'], 75: ['❄️', 'Neve forte'], 77: ['🌨️', 'Grãos de neve'],
+    80: ['🌦️', 'Pancadas de chuva'], 81: ['🌧️', 'Pancadas de chuva fortes'], 82: ['⛈️', 'Pancadas violentas'],
+    85: ['🌨️', 'Pancadas de neve'], 86: ['❄️', 'Pancadas de neve fortes'],
+    95: ['⛈️', 'Trovoada'], 96: ['⛈️', 'Trovoada com granizo'], 99: ['⛈️', 'Trovoada com granizo forte']
+};
+
+async function cmdTempo({ msg, args }) {
+    const cidade = args.split(',')[0].trim();
+
+    if (!cidade) {
+        await msg.reply('Syntax: /tempo <cidade>\nEx.: /tempo Rio de Janeiro');
+        return;
+    }
+
+    try {
+        const { data: geo } = await axios.get('https://geocoding-api.open-meteo.com/v1/search', {
+            timeout: 15000,
+            params: { name: cidade, count: 1, language: 'pt' }
+        });
+        const local = geo.results?.[0];
+
+        if (!local) {
+            await msg.reply(`❌ Cidade não encontrada: ${cidade}`);
+            return;
+        }
+
+        const { data } = await axios.get('https://api.open-meteo.com/v1/forecast', {
+            timeout: 15000,
+            params: {
+                latitude: local.latitude,
+                longitude: local.longitude,
+                current: 'temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m',
+                daily: 'temperature_2m_max,temperature_2m_min,precipitation_probability_max',
+                forecast_days: 1,
+                timezone: 'auto'
+            }
+        });
+
+        const c = data.current;
+        const [icone, descricao] = CLIMA_WMO[c.weather_code] ?? ['🌡️', `Código ${c.weather_code}`];
+        const onde = [local.name, local.admin1, local.country].filter(Boolean).join(', ');
+        const temp = Math.round(c.temperature_2m);
+
+        let texto =
+            `${icone} *Tempo em ${onde}*\n\n` +
+            `${descricao}\n` +
+            `🌡️ *Agora:* ${temp}°C _(sensação ${Math.round(c.apparent_temperature)}°C)_\n` +
+            `📈 *Máx:* ${Math.round(data.daily.temperature_2m_max[0])}°C  📉 *Mín:* ${Math.round(data.daily.temperature_2m_min[0])}°C\n` +
+            `💧 *Umidade:* ${c.relative_humidity_2m}%  🌬️ *Vento:* ${Math.round(c.wind_speed_10m)} km/h\n` +
+            `☔ *Chance de chuva:* ${data.daily.precipitation_probability_max[0] ?? '-'}%`;
+
+        if (temp <= 5) texto += '\n\n🥶 Tá congelando!';
+        if (temp >= 30) texto += '\n\n🔥 Que calor da porra!';
+
+        await msg.reply(texto);
+    } catch (err) {
+        printError('/tempo:', err.message);
+        await msg.reply('❌ Não consegui consultar o tempo agora.');
+    }
+}
+
 // cmd do bot-config.json -> handler
 const HANDLERS = {
     '/help': cmdHelp,
@@ -3598,7 +3667,8 @@ const HANDLERS = {
     '/listageral': cmdListaGeral,
     '/gif': cmdGif,
     '/joke': cmdJoke,
-    '/cve': cmdCve
+    '/cve': cmdCve,
+    '/tempo': cmdTempo
 };
 
 // Avisa no boot se o bot-config tiver comando sem handler (ou vice-versa)

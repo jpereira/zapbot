@@ -356,6 +356,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -c -f`) para fazer o bot
 | `/gif` | | | GIF aleatório (GIPHY) |
 | `/joke` | `/piada`, `/humor` | | Piada aleatória em português |
 | `/cve` | | | Últimas CVEs publicadas (NVD); `-highscore` só as críticas |
+| `/tempo` | `/weather` | | Tempo agora e máx./mín. do dia (Open-Meteo) |
 
 ### `/help`
 
@@ -764,6 +765,15 @@ Detalhes:
   demora. Cada `/cve` faz 2 consultas (o NVD só ordena da mais antiga para a
   mais nova: uma conta o total e a outra busca o final da lista). Em erro, o
   bot pede para tentar de novo em 30 s.
+
+### `/tempo` (`/weather`)
+
+Tempo agora (temperatura, sensação, umidade, vento), máxima/mínima e chance de
+chuva do dia, pela [Open-Meteo](https://open-meteo.com/) (sem chave de API).
+
+```
+/tempo Rio de Janeiro
+```
 
 ### Adicionando ou alterando comandos
 
