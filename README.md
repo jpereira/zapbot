@@ -855,10 +855,34 @@ Detalhes:
 
 ### `/bot` · admin
 
-`/bot -off` desliga **todos** os comandos, inclusive os seus, exceto o `/bot`;
-`/bot -on` ativa de novo. O estado fica no setting `bot.paused` (padrão
-`off`, ou seja, ativo) e sobrevive a reinícios. A recuperação de apagadas e o `/watch` continuam
-funcionando.
+Liga e desliga os comandos do bot. **Desligado, ele ignora todos os comandos**,
+inclusive os seus, exceto o próprio `/bot`. O bot começa ativo.
+
+| Opção | Descrição |
+|---|---|
+| *(nenhuma)* | Mostra se o bot está ativo ou desligado |
+| `-on` | Ativa o bot |
+| `-off` | Desliga o bot |
+
+```
+/bot        → ⏸️ Bot desligado: todos os comandos são ignorados. Use /bot -on para ativar.
+/bot -on    → ▶️ Bot ativo. Use /bot -off para desligar.
+/bot -off   → ⏸️ Bot desligado: todos os comandos são ignorados. Use /bot -on para ativar.
+/bot -h     → ajuda do comando
+```
+
+Detalhes:
+
+- O estado fica no setting `bot.paused` (padrão `off`, ou seja, ativo) e
+  sobrevive a reinícios. Com o bot desligado o `/set` também é ignorado, então
+  para ativar use sempre o `/bot -on`.
+- Se o bot reiniciar desligado, a mensagem de inicialização no seu privado
+  avisa.
+- Só os **comandos** param: a recuperação de mensagens apagadas, o `/watch` e
+  as notificações do `/monitor` continuam funcionando.
+- Comandos ignorados aparecem no log (`Comando '/ping' ignorado: bot
+  desligado`). Quem não é o dono não recebe resposta, com o bot ligado ou não.
+- Para desligar só alguns comandos, use o setting `commands.disabled`.
 
 ### Adicionando ou alterando comandos
 
