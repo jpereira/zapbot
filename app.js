@@ -272,10 +272,20 @@ function validarUrlFeed(v) {
 }
 
 const SETTINGS_SCHEMA = {
-    'debug.enabled': {
-        default: APP_ENV.toLowerCase() === 'dev',
+    'bot.adminMode': {
+        default: true,
         type: 'boolean',
-        desc: 'Debug mode (o mesmo do /debug on|off).'
+        desc: 'Modo admin: só o dono usa comandos (o mesmo do /bot +admin|-admin).'
+    },
+    'bot.paused': {
+        default: false,
+        type: 'boolean',
+        desc: 'Bot desligado: todos os comandos são ignorados, exceto o /bot (o mesmo do /bot -on|-off).'
+    },
+    'cache.revokedRetentionDays': {
+        default: 30,
+        type: 'number', min: 1, max: 365,
+        desc: 'Dias que as mensagens apagadas ficam guardadas para o /show.'
     },
     'commands.disabled': {
         default: [],
@@ -299,88 +309,6 @@ const SETTINGS_SCHEMA = {
             return sym;
         }
     },
-    'sticker.name': {
-        default: 'ZapBot',
-        type: 'string',
-        desc: 'Nome do pacote das figurinhas (/sticker e /get -st).'
-    },
-    'sticker.author': {
-        default: 'https://github.com/jpereira/zapbot/',
-        type: 'string',
-        desc: 'Autor das figurinhas (/sticker e /get -st).'
-    },
-    'cache.revokedRetentionDays': {
-        default: 30,
-        type: 'number', min: 1, max: 365,
-        desc: 'Dias que as mensagens apagadas ficam guardadas para o /show.'
-    },
-    'revoke.status': {
-        default: true,
-        type: 'boolean',
-        desc: 'Recupera status (stories) apagados; off ignora.'
-    },
-    'get.maxSizeMB': {
-        default: 20,
-        type: 'number', min: 1, max: 100,
-        desc: 'Tamanho máximo (MB) do arquivo enviado pelo /get.'
-    },
-    'get.maxDownloadMB': {
-        default: 200,
-        type: 'number', min: 10, max: 2000,
-        desc: 'Tamanho máximo (MB) baixado pelo yt-dlp no /get, antes da conversão.'
-    },
-    'show.max': {
-        default: 20,
-        type: 'number', min: 1, max: 100,
-        desc: 'Máximo de mensagens reexibidas por /show -N.'
-    },
-    'show.delayMs': {
-        default: 700,
-        type: 'number', min: 0, max: 10000,
-        desc: 'Intervalo (ms) entre os envios do /show (evita flood/ban).'
-    },
-    'monitor.max': {
-        default: 20,
-        type: 'number', min: 1, max: 1000,
-        desc: 'Máximo de números monitorados pelo /monitor.'
-    },
-    'watch.rules': {
-        default: [],
-        type: 'list',
-        separator: '\n',
-        desc: 'Regras do /watch, uma por linha: texto (sem diferenciar maiúsculas/acentos) ou /regex/flags.',
-        item: (v) => {
-            compilarRegraWatch(v); // lança Error se a regra for inválida
-            return v;
-        }
-    },
-    'watch.max': {
-        default: 20,
-        type: 'number', min: 1, max: 100,
-        desc: 'Máximo de regras do /watch.'
-    },
-    'watch.showMax': {
-        default: 20,
-        type: 'number', min: 1, max: 100,
-        desc: 'Máximo de ocorrências listadas por /watch -show.'
-    },
-    'watch.hitsRetentionDays': {
-        default: 30,
-        type: 'number', min: 1, max: 365,
-        desc: 'Dias que as ocorrências do /watch ficam guardadas.'
-    },
-    'gif.tag': {
-        default: 'fail',
-        type: 'string',
-        desc: 'Tag padrão do /gif quando nenhuma é informada.'
-    },
-    'gif.giphy.api.key': {
-        default: '',
-        type: 'string',
-        allowEmpty: true,
-        secret: true,
-        desc: 'Chave do GIPHY (/gif), usada quando GIPHY_API_KEY não está no config/.env.'
-    },
     'cve.max': {
         default: 10,
         type: 'number', min: 1, max: 20,
@@ -391,42 +319,37 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 1, max: 120, // 120: janela máxima aceita pelo NVD
         desc: 'Janela (dias) do /cve -highscore.'
     },
-    'tempo.city': {
-        default: 'Niteroi, Rio de Janeiro, Brazil',
+    'debug.enabled': {
+        default: APP_ENV.toLowerCase() === 'dev',
+        type: 'boolean',
+        desc: 'Debug mode (o mesmo do /debug on|off).'
+    },
+    'get.maxDownloadMB': {
+        default: 200,
+        type: 'number', min: 10, max: 2000,
+        desc: 'Tamanho máximo (MB) baixado pelo yt-dlp no /get, antes da conversão.'
+    },
+    'get.maxSizeMB': {
+        default: 20,
+        type: 'number', min: 1, max: 100,
+        desc: 'Tamanho máximo (MB) do arquivo enviado pelo /get.'
+    },
+    'gif.giphy.api.key': {
+        default: '',
         type: 'string',
-        desc: 'Cidade padrão do /tempo (ex.: "Niteroi, Rio de Janeiro, Brazil").'
+        allowEmpty: true,
+        secret: true,
+        desc: 'Chave do GIPHY (/gif), usada quando GIPHY_API_KEY não está no config/.env.'
     },
-    'bot.paused': {
-        default: false,
-        type: 'boolean',
-        desc: 'Bot desligado: todos os comandos são ignorados, exceto o /bot (o mesmo do /bot -on|-off).'
+    'gif.tag': {
+        default: 'fail',
+        type: 'string',
+        desc: 'Tag padrão do /gif quando nenhuma é informada.'
     },
-    'bot.adminMode': {
-        default: true,
-        type: 'boolean',
-        desc: 'Modo admin: só o dono usa comandos (o mesmo do /bot +admin|-admin).'
-    },
-    'news.hack': {
-        default: [
-            'https://feeds.feedburner.com/TheHackersNews',
-            'https://www.bleepingcomputer.com/feed/',
-            'https://krebsonsecurity.com/feed/'
-        ],
-        type: 'list',
-        desc: 'Feeds RSS do /news -hack (hacking/segurança).',
-        item: validarUrlFeed
-    },
-    'news.g1': {
-        default: ['https://g1.globo.com/dynamo/rss2.xml'],
-        type: 'list',
-        desc: 'Feeds RSS do /news -g1.',
-        item: validarUrlFeed
-    },
-    'news.gazeta': {
-        default: ['https://www.gazetadopovo.com.br/feed/rss/brasil.xml'],
-        type: 'list',
-        desc: 'Feeds RSS do /news -gazeta (Gazeta do Povo).',
-        item: validarUrlFeed
+    'monitor.max': {
+        default: 20,
+        type: 'number', min: 1, max: 1000,
+        desc: 'Máximo de números monitorados pelo /monitor.'
     },
     'news.brasil': {
         // Os feeds listados em https://rss.feedspot.com/brazil_rss_feeds/ (a página é HTML, não RSS)
@@ -451,6 +374,33 @@ const SETTINGS_SCHEMA = {
         desc: 'Feeds RSS do /news -brasil (blogs sobre o Brasil, do feedspot).',
         item: validarUrlFeed
     },
+    'news.g1': {
+        default: ['https://g1.globo.com/dynamo/rss2.xml'],
+        type: 'list',
+        desc: 'Feeds RSS do /news -g1.',
+        item: validarUrlFeed
+    },
+    'news.gazeta': {
+        default: ['https://www.gazetadopovo.com.br/feed/rss/brasil.xml'],
+        type: 'list',
+        desc: 'Feeds RSS do /news -gazeta (Gazeta do Povo).',
+        item: validarUrlFeed
+    },
+    'news.hack': {
+        default: [
+            'https://feeds.feedburner.com/TheHackersNews',
+            'https://www.bleepingcomputer.com/feed/',
+            'https://krebsonsecurity.com/feed/'
+        ],
+        type: 'list',
+        desc: 'Feeds RSS do /news -hack (hacking/segurança).',
+        item: validarUrlFeed
+    },
+    'news.max': {
+        default: 5,
+        type: 'number', min: 1, max: 10,
+        desc: 'Manchetes exibidas pelo /news (o /news <quantidade> sobrepõe).'
+    },
     'openai.api.key': {
         default: '',
         type: 'string',
@@ -463,10 +413,60 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 5000, max: 300000,
         desc: 'Timeout (ms) do /gpt, usado quando OPENAI_TIMEOUT_MS não está no config/.env.'
     },
-    'news.max': {
-        default: 5,
-        type: 'number', min: 1, max: 10,
-        desc: 'Manchetes exibidas pelo /news (o /news <quantidade> sobrepõe).'
+    'revoke.status': {
+        default: true,
+        type: 'boolean',
+        desc: 'Recupera status (stories) apagados; off ignora.'
+    },
+    'show.delayMs': {
+        default: 700,
+        type: 'number', min: 0, max: 10000,
+        desc: 'Intervalo (ms) entre os envios do /show (evita flood/ban).'
+    },
+    'show.max': {
+        default: 20,
+        type: 'number', min: 1, max: 100,
+        desc: 'Máximo de mensagens reexibidas por /show -N.'
+    },
+    'sticker.author': {
+        default: 'https://github.com/jpereira/zapbot/',
+        type: 'string',
+        desc: 'Autor das figurinhas (/sticker e /get -st).'
+    },
+    'sticker.name': {
+        default: 'ZapBot',
+        type: 'string',
+        desc: 'Nome do pacote das figurinhas (/sticker e /get -st).'
+    },
+    'tempo.city': {
+        default: 'Niteroi, Rio de Janeiro, Brazil',
+        type: 'string',
+        desc: 'Cidade padrão do /tempo (ex.: "Niteroi, Rio de Janeiro, Brazil").'
+    },
+    'watch.hitsRetentionDays': {
+        default: 30,
+        type: 'number', min: 1, max: 365,
+        desc: 'Dias que as ocorrências do /watch ficam guardadas.'
+    },
+    'watch.max': {
+        default: 20,
+        type: 'number', min: 1, max: 100,
+        desc: 'Máximo de regras do /watch.'
+    },
+    'watch.rules': {
+        default: [],
+        type: 'list',
+        separator: '\n',
+        desc: 'Regras do /watch, uma por linha: texto (sem diferenciar maiúsculas/acentos) ou /regex/flags.',
+        item: (v) => {
+            compilarRegraWatch(v); // lança Error se a regra for inválida
+            return v;
+        }
+    },
+    'watch.showMax': {
+        default: 20,
+        type: 'number', min: 1, max: 100,
+        desc: 'Máximo de ocorrências listadas por /watch -show.'
     }
 };
 
@@ -3157,6 +3157,7 @@ async function cmdSet({ msg, opts, args }) {
     if (!key) {
         const width = Math.max(...Object.keys(SETTINGS_SCHEMA).map(k => k.length));
         const lista = Object.entries(SETTINGS_SCHEMA)
+            .sort(([a], [b]) => a.localeCompare(b))
             .map(([k, s]) => `${k.padEnd(width)}  ${formatarValorSetting(getSetting(k), s.separator ? ' | ' : ', ', s.secret)}`)
             .join('\n');
 
