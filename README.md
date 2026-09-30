@@ -622,6 +622,7 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 | `gif.tag` | texto | `fail` | Tag padrão do `/gif` |
 | `cve.max` | 1–20 | `10` | Quantidade de CVEs exibidas pelo `/cve` (o `/cve <max>` sobrepõe) |
 | `cve.maxDays` | 1–120 | `7` | Janela, em dias, do `/cve -highscore` |
+| `tempo.city` | texto | `Niteroi, Rio de Janeiro, Brazil` | Cidade do `/tempo` quando nenhuma é informada |
 | `api.key.giphy` | texto (pode ser vazio) | *(vazio)* | Chave do GIPHY, usada quando `GIPHY_API_KEY` não está no `config/.env`. Exibida mascarada (`••••1234`); `/set -reset api.key.giphy` apaga |
 
 Uma chave nova é declarada em `SETTINGS_SCHEMA` (`app.js`) com padrão, tipo,
