@@ -359,7 +359,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -c -f`) para fazer o bot
 | `/tempo` | `/weather` | | Tempo agora e máx./mín. do dia (Open-Meteo); sem cidade usa `tempo.city` |
 | `/ualisu` | | ✅ | Marca 2 membros com uma CVE aleatória |
 | `/bot` | | ✅ | Liga/desliga todos os comandos (`-on`/`-off`) e o modo admin (`+admin`/`-admin`) |
-| `/news` | `/hacknews` | | Manchetes de hacking/segurança (RSS) |
+| `/news` | | | Manchetes de hacking/segurança (RSS); `-hack` |
 
 ### `/help`
 
@@ -628,8 +628,8 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 | `tempo.city` | texto | `Niteroi, Rio de Janeiro, Brazil` | Cidade do `/tempo` quando nenhuma é informada |
 | `bot.paused` | on/off | `off` | Bot desligado: todos os comandos ignorados, exceto o `/bot` (o mesmo do `/bot -on`/`-off`) |
 | `bot.adminMode` | on/off | `off` | Modo admin: só você usa comandos (o mesmo do `/bot +admin`/`-admin`) |
-| `news.feeds` | lista | The Hacker News, BleepingComputer, Krebs on Security | Feeds RSS juntados pelo `/news` |
-| `news.max` | 1–20 | `8` | Manchetes exibidas pelo `/news` |
+| `news.feeds` | lista | The Hacker News, BleepingComputer, Krebs on Security | Feeds RSS do `/news -hack` |
+| `news.max` | 1–10 | `5` | Manchetes exibidas pelo `/news` (o `/news <quantidade>` sobrepõe) |
 | `api.key.giphy` | texto (pode ser vazio) | *(vazio)* | Chave do GIPHY, usada quando `GIPHY_API_KEY` não está no `config/.env`. Exibida mascarada (`••••1234`); `/set -reset api.key.giphy` apaga |
 
 Uma chave nova é declarada em `SETTINGS_SCHEMA` (`app.js`) com padrão, tipo,
@@ -914,18 +914,42 @@ Detalhes:
 - "Você" é a conta pareada ao bot, de qualquer aparelho. Para desligar só
   alguns comandos, para todos, use o setting `commands.disabled`.
 
-### `/news` (`/hacknews`)
+### `/news`
 
-Junta as manchetes mais recentes dos feeds do setting `news.feeds` (padrão:
-The Hacker News, BleepingComputer e Krebs on Security), com fonte, data e link.
-Cada fonte ocupa no máximo a sua fatia da lista, e um feed fora do ar não
-derruba os outros.
+Junta as manchetes mais recentes de feeds RSS, com fonte, data e link.
+
+| Opção | Valor | Descrição |
+|---|---|---|
+| `-hack`, `-hacknews` | | Hacking/segurança: feeds do setting `news.feeds` (padrão: The Hacker News, BleepingComputer e Krebs on Security). Por enquanto é a única categoria, então é o padrão |
+| `quantidade` | 1–10 | Quantas manchetes. Sem ela usa o setting `news.max` (5) |
 
 ```
-/news
+/news                → as 5 mais recentes
+/news -hack 3        → as 3 mais recentes
+/news 10             → as 10 mais recentes
+/set news.max 3      → muda o padrão para 3
 /set news.feeds https://feeds.feedburner.com/TheHackersNews https://krebsonsecurity.com/feed/
-/set -r news.feeds
+/set -reset news.feeds
 ```
+
+Exemplo de resposta:
+
+```
+🏴‍☠️ Hacking News
+
+1. Microsoft is rolling out Linux container support to WSL
+BleepingComputer · 29/09/2026, 21:40:57
+https://www.bleepingcomputer.com/news/...
+```
+
+Detalhes:
+
+- Cada fonte ocupa no máximo a sua fatia da lista (ex.: 5 manchetes com 3
+  feeds → até 2 de cada); senão o The Hacker News, que publica muito, toma
+  tudo.
+- Um feed fora do ar não derruba os outros: ele só aparece no log.
+- Os feeds precisam ser RSS (`<item>`); feeds só em Atom (`<entry>`) não são
+  lidos.
 
 ### Adicionando ou alterando comandos
 
