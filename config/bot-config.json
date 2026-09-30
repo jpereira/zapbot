@@ -441,6 +441,10 @@
         {
             "cmd": "/joke",
             "usage": "/joke",
+            "aliases": [
+                "/piada",
+                "/humor"
+            ],
             "help": "Piada aleatória (JokeAPI, safe-mode).",
             "onlyAdmin": false
         }
