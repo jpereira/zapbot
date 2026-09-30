@@ -1,0 +1,54 @@
+/*
+ * Comando /cache.
+ */
+
+const { formatarErroComando } = require('./base');
+const { CACHE_DIR } = require('../constantes');
+const { dbGet } = require('../db');
+const { limparArquivosAntigos, limparCacheAntigo, limparEditadasAntigas, limparStatsAntigas, limparTudo, limparWatchAntigo } = require('../limpeza');
+const { printError } = require('../log');
+const { humanSize, listCacheLevelOnly } = require('../util/arquivos');
+
+async function cmdCache({ msg, opts }) {
+    try {
+        let textMsg;
+
+        if (opts.opt.clean && opts.opt.force) {
+            // Limpeza geral: mensagens, apagadas, mídias, temporários
+            const r = await limparTudo();
+
+            textMsg =
+                '🧹 *Limpeza geral concluída* (force)\n\n' +
+                `🗄️ Mensagens removidas: *${r.total}* _(${r.apagadas} apagada${r.apagadas === 1 ? '' : 's'})_\n` +
+                `✏️ Edições removidas: *${r.editadas}*\n` +
+                `💾 Espaço liberado: *${humanSize(r.liberado)}*`;
+        } else if (opts.opt.clean) {
+            // Limpeza normal: só o que passou das janelas de retenção
+            await limparCacheAntigo();
+            await limparArquivosAntigos();
+            await limparWatchAntigo();
+            await limparEditadasAntigas();
+            await limparStatsAntigas();
+
+            textMsg = '🧹 Cache limpo (itens fora da janela de retenção).\n';
+        } else {
+            const { total, apagadas } = await dbGet(
+                'SELECT COUNT(*) AS total, COALESCE(SUM(revoked), 0) AS apagadas FROM messages'
+            );
+            const { editadas } = await dbGet('SELECT COUNT(*) AS editadas FROM message_edits');
+
+            textMsg = `🗂️ Exibindo conteúdo de ${CACHE_DIR}/*`;
+            textMsg += '\n\n```' + listCacheLevelOnly(CACHE_DIR) + '```\n\n';
+            textMsg += `🗄️ Existem ${total} mensagens no cache (${apagadas} apagadas) e ${editadas} edições.`;
+        }
+
+        await msg.reply(textMsg, null, { linkPreview: false });
+    } catch (e) {
+        printError(e.message);
+        await msg.reply(formatarErroComando(e), null, { linkPreview: false });
+    }
+}
+
+module.exports = {
+    cmdCache
+};
