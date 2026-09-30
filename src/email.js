@@ -10,9 +10,7 @@ const { BOT_START_TIME } = require('./constants');
 const { getBotUptime, printError, printInfo } = require('./log');
 const { getSetting } = require('./settings');
 
-/*
- * QR Code email
- */
+// SMTP transport: used by the QR Code email and by the alerts below
 const transporter = nodemailer.createTransport({
     host: process.env.QRCODE_EMAIL_SMTP_HOST,
     port: process.env.QRCODE_EMAIL_SMTP_PORT,

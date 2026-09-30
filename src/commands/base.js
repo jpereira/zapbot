@@ -64,10 +64,6 @@ function getCommandSyntax(cmd) {
     return command ? formatCommandHelp(command) : null;
 }
 
-/*
- * Command handlers
- */
-
 // Default error reply of the /get and /cache commands
 function formatErrorCommand(e) {
     let textAlt = `⚠️💥 ${e.message}.`;

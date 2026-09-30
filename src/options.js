@@ -2,9 +2,6 @@
  * Getopt-style option parser for the commands ("-ss 10 -a https://...").
  */
 
-/*
- * Getopt-style option parser
- */
 function tokenizeCommand(input) {
     return [...input.matchAll(/"([^"]*)"|'([^']*)'|(\S+)/g)]
         .map(m => m[1] ?? m[2] ?? m[3]);

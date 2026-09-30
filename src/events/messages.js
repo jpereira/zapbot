@@ -18,9 +18,6 @@ const { mediaIsPath, nameSafe, getFolderMedia } = require('../util/files');
 const { paraMs } = require('../util/format');
 const { checkWatch } = require('../watch/check');
 
-/*
- * Mensagens
- */
 client.on('message_create', async (msg) => {
     try {
         const timestamp = Date.now();

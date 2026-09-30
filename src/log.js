@@ -5,9 +5,6 @@
 const util = require('util');
 const colors = require('colors');
 
-/*
- * Time and log utilities
- */
 function getBotUptime(startedTime) {
     const totalSeconds = Math.floor((Date.now() - startedTime) / 1000);
 
