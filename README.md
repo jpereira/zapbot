@@ -327,6 +327,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -c -f`) para fazer o bot
 | `/watch` | `/w` | ✅ | Avisa no seu privado quando uma mensagem casa com um texto/regex |
 | `/cve` | | | Últimas CVEs publicadas (NVD) |
 | `/cvehighscore` | `/cvehs` | | CVEs críticas (CVSS ≥ 9) dos últimos 7 dias |
+| `/boletos` | | ✅ | Sorteia 2 membros para "pagar um boleto" |
 
 ### `/help`
 
@@ -661,6 +662,11 @@ Detalhes:
 Últimas CVEs publicadas no [NVD](https://nvd.nist.gov/) (últimos 2 dias) e as
 críticas (CVSS ≥ 9) dos últimos 7 dias, com nota, resumo e link. Sem chave o NVD
 aceita ~5 consultas a cada 30s.
+
+### `/boletos` · admin
+
+Só em grupos: sorteia 2 membros diferentes (fora o bot) e os marca para "pagar
+um boleto".
 
 ### Adicionando ou alterando comandos
 
