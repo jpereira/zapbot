@@ -2748,9 +2748,9 @@ async function cmdCache({ msg, opts }) {
  * /show -3 -pv → sends to YOUR private chat instead of exposing it in the current chat
  * /show -list  → how many deleted messages exist in the cache
  * /show -flush → removes the deleted ones of this chat (in your private chat: of all chats)
- * /show -2 -c 1       → (in your private chat) the last 2 of chat no. 1 of /show -l
- * /show -2 -c zapbot  → (in your private chat) same, looking up the chat by name
- * /show -f -c 1       → (in your private chat) flush only chat no. 1
+ * /show -2 -c 1       → the last 2 of chat no. 1 of /show -l
+ * /show -2 -c zapbot  → same, looking up the chat by name
+ * /show -f -c 1       → flush only chat no. 1
  * Sends in chronological order: the last one sent is the most recently deleted.
  */
 // In private conversations the same chat may appear as @lid or @c.us
@@ -2906,7 +2906,7 @@ async function listDeleted({ msg, opts, chatId }) {
     textAlt += `\n💡 _Use /show -N para reexibir (máx. ${getSetting('show.max')})._`;
 
     if (showPerChat && general.total > 0) {
-        textAlt += '\n💡 _No seu privado: /show -N -c <nº ou nome> para ver as de um chat._';
+        textAlt += '\n💡 _Use /show -N -c <nº ou nome> para ver as de um chat._';
     }
 
     if (opts.opt.pv && !ownerInPrivate) {
@@ -3018,20 +3018,10 @@ async function chatCleanDeleted({ msg, chatId, alvo: target = null }) {
 }
 
 async function cmdUndo({ msg, opts, chatId }) {
-    /*
-     * -c <no.|name>: picks another chat. Only in YOUR private chat; in a group this
-     * would republish there the deleted messages of other conversations.
-     */
+    // -c <no.|name>: picks another chat (works in any chat; use -pv to avoid exposing it here)
     let target = null;
 
     if (opts.opt.chat) {
-        const inMyPrivate = (await chatCurrentIds(chatId)).includes(client.info.wid._serialized);
-
-        if (!msg.fromMe || !inMyPrivate) {
-            await msg.reply('⛔ A opção -c só pode ser usada no seu privado.');
-            return;
-        }
-
         await dbReady;
         target = await resolverChatTarget(String(opts.opt.chat));
 
@@ -3113,9 +3103,10 @@ async function cmdUndo({ msg, opts, chatId }) {
         summary += `\n💬 *Chat:* ${target.nome}`;
     }
 
-    if (opts.opt.pv && !target) {
+    if (opts.opt.pv) {
+        // The summary (with the chat name) goes only to the private chat
         await msg.reply('♻️ Enviado no seu privado.');
-        await client.sendMessage(destination, `${summary}\n💬 *Chat:* ${rows[0].chat_name || chatId}`);
+        await client.sendMessage(destination, target ? summary : `${summary}\n💬 *Chat:* ${rows[0].chat_name || chatId}`);
     } else {
         await msg.reply(summary);
     }
