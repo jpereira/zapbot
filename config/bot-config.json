@@ -79,11 +79,57 @@
         },
         {
             "cmd": "/cotacao",
-            "usage": "/cotacao [MOEDA...]",
+            "usage": "/cotacao [OPTION] [MOEDA...]",
             "aliases": [
                 "/cambio"
             ],
-            "help": "Cotação contra o real (padrão: EUR e USDT): atual, abertura, fechamento anterior, máx./mín. e variação. Suportadas: USD, EUR, GBP, USDT.",
+            "help": "Cotação contra o real das moedas habilitadas (padrão: EUR e USDT): atual, abertura, fechamento anterior, máx./mín. e variação.",
+            "cmd_opts": [
+                {
+                    "opts": [
+                        "add",
+                        "a"
+                    ],
+                    "values": [
+                        "<MOEDA>"
+                    ],
+                    "desc": "Habilita uma moeda suportada. Só o dono."
+                },
+                {
+                    "opts": [
+                        "alerta"
+                    ],
+                    "values": [],
+                    "desc": "Sem regra: lista os alertas. Com regra (ex.: USD > 5.30): avisa no seu privado quando o preço passar do valor. Só o dono."
+                },
+                {
+                    "opts": [
+                        "del",
+                        "d"
+                    ],
+                    "values": [
+                        "<MOEDA>"
+                    ],
+                    "desc": "Desabilita uma moeda. Só o dono."
+                },
+                {
+                    "opts": [
+                        "list",
+                        "l"
+                    ],
+                    "values": [],
+                    "desc": "Lista as moedas suportadas e quais estão habilitadas."
+                },
+                {
+                    "opts": [
+                        "rm"
+                    ],
+                    "values": [
+                        "<nº|all>"
+                    ],
+                    "desc": "Junto com -alerta: remove o alerta nº N da lista (ou todos)."
+                }
+            ],
             "onlyAdmin": false
         },
         {
@@ -98,14 +144,6 @@
             "cmd_opts": [
                 {
                     "opts": [
-                        "list",
-                        "l"
-                    ],
-                    "values": [],
-                    "desc": "Lista as moedas suportadas (* = ativada)."
-                },
-                {
-                    "opts": [
                         "add",
                         "a"
                     ],
@@ -116,6 +154,13 @@
                 },
                 {
                     "opts": [
+                        "alerta"
+                    ],
+                    "values": [],
+                    "desc": "Sem regra: lista os alertas. Com regra (ex.: BTC < 90000): avisa no seu privado quando o preço passar do valor. Só o dono."
+                },
+                {
+                    "opts": [
                         "del",
                         "d"
                     ],
@@ -123,6 +168,23 @@
                         "<TOKEN>"
                     ],
                     "desc": "Desativa uma moeda. Só o dono."
+                },
+                {
+                    "opts": [
+                        "list",
+                        "l"
+                    ],
+                    "values": [],
+                    "desc": "Lista as moedas suportadas (* = ativada)."
+                },
+                {
+                    "opts": [
+                        "rm"
+                    ],
+                    "values": [
+                        "<nº|all>"
+                    ],
+                    "desc": "Junto com -alerta: remove o alerta nº N da lista (ou todos)."
                 }
             ],
             "onlyAdmin": false
