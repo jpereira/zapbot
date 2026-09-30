@@ -422,6 +422,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -c -f`) para fazer o bot
 | `/cve` | | | Últimas CVEs publicadas (NVD); `-highscore` só as críticas |
 | `/debug` | `/d`, `/dbg` | ✅ | Liga/desliga logs de debug |
 | `/edit` | `/e` | ✅ | Reexibe mensagens editadas (antes e depois) |
+| `/enquete` | `/enq`, `/quiz` | ✅ | Cria uma enquete nativa do WhatsApp no chat |
 | `/everyone` | | ✅ | Menciona todos do grupo |
 | `/get` | `/download` | | Baixa vídeo/áudio de redes sociais |
 | `/gif` | | | GIF aleatório (GIPHY) |
@@ -683,6 +684,29 @@ mensagem editada duas vezes aparece duas vezes.
 📝 Antes: "reunião às 14h"
 💬 Depois: "reunião às 15h"
 ```
+
+### `/enquete` (`/enq`, `/quiz`) · admin
+
+Cria uma enquete nativa do WhatsApp no chat atual. A pergunta e as opções (2 a
+12) são separadas por `|` ou uma por linha (a 1ª linha é a pergunta). Por
+padrão cada pessoa marca uma opção; com `-m` no começo, pode marcar várias.
+
+| Opção | Descrição |
+|---|---|
+| `-multi`, `-m` | Permite marcar mais de uma opção. Só vale no começo do texto |
+
+```
+/enquete Pizza ou hambúrguer? | Pizza | Hambúrguer
+/enq -m Quais dias você pode? | Seg | Ter | Qua | Qui | Sex
+/quiz Onde vamos?
+Praia
+Montanha
+Campo
+```
+
+Limites do WhatsApp: pergunta com até 255 caracteres, opções com até 100 e sem
+repetir. O `/quiz` é só um atalho: o WhatsApp Web não oferece o modo quiz (com
+resposta certa) para bots.
 
 ### `/everyone` · admin
 

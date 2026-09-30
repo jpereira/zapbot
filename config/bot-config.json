@@ -228,6 +228,26 @@
             "onlyAdmin": true
         },
         {
+            "cmd": "/enquete",
+            "usage": "/enquete [-m] <pergunta> | <opção 1> | <opção 2> [| ...]",
+            "aliases": [
+                "/enq",
+                "/quiz"
+            ],
+            "help": "Cria uma enquete no chat. Separe pergunta e opções (2 a 12) com | ou uma por linha.",
+            "cmd_opts": [
+                {
+                    "opts": [
+                        "multi",
+                        "m"
+                    ],
+                    "values": [],
+                    "desc": "Permite marcar mais de uma opção (só no começo do texto)."
+                }
+            ],
+            "onlyAdmin": true
+        },
+        {
             "cmd": "/everyone",
             "usage": "/everyone",
             "help": "Faz o reply marcando todos do grupo.",
