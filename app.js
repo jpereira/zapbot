@@ -240,6 +240,29 @@ async function initializeDb() {
     `);
     await dbRun('CREATE INDEX IF NOT EXISTS idx_message_edits_chat ON message_edits (chat_id, edited_at)');
 
+    /*
+     * /stats statistics: counters per chat, day, hour and sender.
+     * Regular messages leave the database in 68 h; the counters stay
+     * 'stats.retentionDays' dias.
+     */
+    await dbRun(`
+        CREATE TABLE IF NOT EXISTS stats (
+            chat_id TEXT NOT NULL,
+            chat_name TEXT,
+            is_group INTEGER DEFAULT 0,
+            day TEXT NOT NULL,
+            hour INTEGER NOT NULL,
+            sender_id TEXT NOT NULL,
+            sender_name TEXT,
+            msgs INTEGER DEFAULT 0,
+            media INTEGER DEFAULT 0,
+            deleted INTEGER DEFAULT 0,
+            edited INTEGER DEFAULT 0,
+            PRIMARY KEY (chat_id, day, hour, sender_id)
+        )
+    `);
+    await dbRun('CREATE INDEX IF NOT EXISTS idx_stats_chat_day ON stats (chat_id, day)');
+
     // General bot settings (key -> value in JSON)
     await dbRun(`
         CREATE TABLE IF NOT EXISTS settings (
@@ -461,6 +484,16 @@ const SETTINGS_SCHEMA = {
         default: 20,
         type: 'number', min: 1, max: 100,
         desc: 'Máximo de mensagens reexibidas por /show -N.'
+    },
+    'stats.enabled': {
+        default: true,
+        type: 'boolean',
+        desc: 'Conta as mensagens de cada chat para o /stats; off para de contar (o histórico fica).'
+    },
+    'stats.retentionDays': {
+        default: 90,
+        type: 'number', min: 7, max: 365,
+        desc: 'Dias que os contadores do /stats ficam guardados.'
     },
     'sticker.author': {
         default: 'https://github.com/jpereira/zapbot/',
@@ -1129,6 +1162,22 @@ async function cleanEditedOld() {
     }
 }
 
+// /stats counters older than 'stats.retentionDays'
+async function cleanStatsOld() {
+    await dbReady;
+
+    try {
+        const { day } = dayAndHour(Date.now() - getSetting('stats.retentionDays') * DAY_MS);
+        const res = await dbRun('DELETE FROM stats WHERE day < ?', [day]);
+
+        if (res.changes > 0) {
+            printInfo(`Limpeza: ${res.changes} contadores antigos do /stats removidos.`);
+        }
+    } catch (err) {
+        printError('Erro na limpeza do /stats:', err.message);
+    }
+}
+
 // /watch occurrences older than 'watch.hitsRetentionDays'
 async function cleanWatchOld() {
     await dbReady;
@@ -1196,6 +1245,7 @@ function runCleanup() {
     cleanFilesOld();
     cleanWatchOld();
     cleanEditedOld();
+    cleanStatsOld();
 }
 
 // First run postponed: on the first boot the tables are still being created.
@@ -1455,10 +1505,35 @@ function wasSentByBot(textAlt) {
     return true;
 }
 
+/*
+ * /stats: the bot replies leave through your account and come back on 'message_create'
+ * as yours. Each send leaves a mark in the chat; your next message there
+ * consumes the mark and is not counted.
+ */
+const botPerChatSendings = new Map(); // chatId -> [expires at, ...]
+
+function botMarkSending(chatId) {
+    const nowAlt = Date.now();
+    const validAlt = (botPerChatSendings.get(chatId) ?? []).filter(t => t > nowAlt);
+    botPerChatSendings.set(chatId, [...validAlt, nowAlt + SENT_TTL_MS]);
+}
+
+function botConsumeSending(chatId) {
+    const nowAlt = Date.now();
+    const validAlt = (botPerChatSendings.get(chatId) ?? []).filter(t => t > nowAlt);
+    const found = validAlt.length > 0;
+
+    validAlt.shift();
+    if (validAlt.length) botPerChatSendings.set(chatId, validAlt);
+    else botPerChatSendings.delete(chatId);
+    return found;
+}
+
 const sendMessageOriginal = client.sendMessage.bind(client);
 
 client.sendMessage = (chatId, content, options = {}) => {
     markSentByBot(sendingText(content, options));
+    botMarkSending(chatId);
     return sendMessageOriginal(chatId, content, options);
 };
 
@@ -1467,6 +1542,9 @@ setInterval(() => {
     const nowAlt = Date.now();
     for (const [textAlt, expirations] of sentByBotAlt) {
         if (!expirations.some(t => t > nowAlt)) sentByBotAlt.delete(textAlt);
+    }
+    for (const [chatId, expirations] of botPerChatSendings) {
+        if (!expirations.some(t => t > nowAlt)) botPerChatSendings.delete(chatId);
     }
 }, SENT_TTL_MS);
 
@@ -1767,6 +1845,43 @@ client.on('presence_update', async (presence) => {
 });
 
 /*
+ * /stats counters
+ */
+
+// Day (YYYY-MM-DD) and hour (0-23) in the São Paulo timezone
+function dayAndHour(ms) {
+    const s = new Date(ms).toLocaleString('sv-SE', { timeZone: 'America/Sao_Paulo', hour12: false });
+    return { day: s.slice(0, 10), hour: Number(s.slice(11, 13)) % 24 };
+}
+
+/**
+ * Adds 1 to the sender's counter (msgs, media, deleted or edited).
+ * @param {object} c { chatId, chatName, isGroup, senderId, senderName, quando (ms), campos: {msgs, media, deleted, edited} }
+ */
+async function countStats({ chatId, chatName, isGroup, senderId, senderName, quando: when = Date.now(), campos: fields }) {
+    if (!getSetting('stats.enabled')) return;
+    if (!chatId || chatId === 'status@broadcast' || !senderId) return;
+    // Your private chat receives the bot alerts: it is not a conversation
+    if (chatId === client.info?.wid?._serialized) return;
+
+    const { day, hour } = dayAndHour(when);
+    const v = { msgs: 0, media: 0, deleted: 0, edited: 0, ...fields };
+
+    await dbRun(
+        `INSERT INTO stats (chat_id, chat_name, is_group, day, hour, sender_id, sender_name, msgs, media, deleted, edited)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT (chat_id, day, hour, sender_id) DO UPDATE SET
+            chat_name   = COALESCE(excluded.chat_name, stats.chat_name),
+            sender_name = COALESCE(excluded.sender_name, stats.sender_name),
+            msgs        = stats.msgs + excluded.msgs,
+            media       = stats.media + excluded.media,
+            deleted     = stats.deleted + excluded.deleted,
+            edited      = stats.edited + excluded.edited`,
+        [chatId, chatName, isGroup ? 1 : 0, day, hour, senderId, senderName, v.msgs, v.media, v.deleted, v.edited]
+    ).catch(err => printError('/stats: erro ao contar:', err.message));
+}
+
+/*
  * Deleted message recovery
  *
  * The same renderer is used in two places:
@@ -1989,6 +2104,12 @@ client.on('message_revoke_everyone', async (after, before) => {
             [Date.now(), info.nomeChat, info.nomeRemetente, info.numeroRemetente, row.id]
         );
 
+        await countStats({
+            chatId: row.chat_id, chatName: info.nomeChat, isGroup: row.is_group,
+            senderId: row.sender_number || row.sender_jid, senderName: info.nomeRemetente,
+            campos: { deleted: 1 }
+        });
+
         await sendMessageDeleted(client.info.wid._serialized, row, info, {
             titulo: isStatus(row) ? '📸 *STATUS APAGADO DETECTADO*' : '❌ *MENSAGEM APAGADA DETECTADA*'
         });
@@ -2086,6 +2207,13 @@ client.on('message_edit', async (msg, newBody, prevBody) => {
         await dbRun('UPDATE messages SET body = ? WHERE id = ? AND revoked = 0', [afterAlt, messageId]);
 
         printInfo(`[Edit] Mensagem ${messageId} editada em ${row.chat_name}`);
+
+        await countStats({
+            chatId, chatName: row.chat_name, isGroup: row.is_group,
+            senderId: original?.sender_number || original?.sender_jid || row.sender_number,
+            senderName: row.sender_name,
+            campos: { edited: 1 }
+        });
 
         if (getSetting('edit.alert')) {
             await sendMessageEdited(client.info.wid._serialized, row, info);
@@ -2874,6 +3002,7 @@ async function cmdCache({ msg, opts }) {
             await cleanFilesOld();
             await cleanWatchOld();
             await cleanEditedOld();
+            await cleanStatsOld();
 
             textMsg = '🧹 Cache limpo (itens fora da janela de retenção).\n';
         } else {
@@ -3346,6 +3475,151 @@ async function cmdUndo(ctx) {
 
 async function cmdEdit(ctx) {
     await cacheReshow('editadas', ctx);
+}
+
+/*
+ * /stats [-N] [-c <nome>] [-pv]
+ * Chat ranking over the last N days (default 7): who talks the most, who
+ * deletes and edits, times and peak day. It comes from the stats table counters.
+ */
+const MEDALS = ['🥇', '🥈', '🥉'];
+
+const fmtInA = (n) => Number(n).toLocaleString('pt-BR');
+
+async function cmdStats({ msg, opts, chatId }) {
+    await dbReady;
+
+    const extras = opts.argv.filter(Boolean);
+    const maxDays = getSetting('stats.retentionDays');
+    let daysAlt = 7;
+
+    if (extras.length > 1) {
+        await msg.reply('```' + getCommandSyntax('/stats') + '```');
+        return;
+    }
+
+    if (extras.length === 1) {
+        const m = extras[0].match(/^-?(\d+)$/);
+
+        if (!m || Number(m[1]) < 1) {
+            await msg.reply('```' + getCommandSyntax('/stats') + '```');
+            return;
+        }
+
+        daysAlt = Math.min(Number(m[1]), maxDays);
+    }
+
+    // -c <name>: another chat, looked up by name among those that have stats
+    let ids = await chatCurrentIds(chatId);
+
+    if (opts.opt.chat) {
+        const search = String(opts.opt.chat).toLowerCase();
+        const chats = await dbAll('SELECT chat_id, MAX(chat_name) AS chat_name FROM stats GROUP BY chat_id');
+        const foundAlt6 = chats.filter(c => (c.chat_name || '').toLowerCase().includes(search));
+        const exact = foundAlt6.find(c => c.chat_name.toLowerCase() === search);
+
+        if (!exact && foundAlt6.length !== 1) {
+            await msg.reply(foundAlt6.length
+                ? `🔎 "${opts.opt.chat}" corresponde a ${foundAlt6.length} chats. Seja mais específico:\n` +
+                  foundAlt6.slice(0, 10).map(c => `• ${c.chat_name}`).join('\n')
+                : `❌ Nenhum chat com estatísticas contém "${opts.opt.chat}".`);
+            return;
+        }
+
+        ids = [(exact || foundAlt6[0]).chat_id];
+    }
+
+    const { day: since } = dayAndHour(Date.now() - (daysAlt - 1) * DAY_MS);
+    const filter = `chat_id IN (${ids.map(() => '?').join(', ')}) AND day >= ?`;
+    const params = [...ids, since];
+
+    const people = await dbAll(
+        `SELECT sender_id,
+                MAX(sender_name) AS nome,
+                SUM(msgs) AS msgs,
+                SUM(media) AS media,
+                SUM(deleted) AS deleted,
+                SUM(edited) AS edited
+           FROM stats
+          WHERE ${filter}
+          GROUP BY sender_id`,
+        params
+    );
+
+    const total = people.reduce((s, p) => s + p.msgs, 0);
+    const destination = opts.opt.pv ? client.info.wid._serialized : chatId;
+
+    if (!total && !people.some(p => p.deleted || p.edited)) {
+        await msg.reply(`📊 Sem estatísticas deste chat nos últimos ${plural(daysAlt, 'dia', 'dias')}.` +
+            (getSetting('stats.enabled') ? '' : '\n💡 _A contagem está desligada: /set stats.enabled on_'));
+        return;
+    }
+
+    const { chat_name: nameChat } = await dbGet(`SELECT MAX(chat_name) AS chat_name FROM stats WHERE ${filter}`, params);
+    const byHour = await dbAll(`SELECT hour, SUM(msgs) AS msgs FROM stats WHERE ${filter} GROUP BY hour`, params);
+    const byDay = await dbAll(`SELECT day, SUM(msgs) AS msgs FROM stats WHERE ${filter} GROUP BY day ORDER BY msgs DESC, day DESC LIMIT 1`, params);
+
+    const assets = people.filter(p => p.msgs > 0).length;
+    const mediaAlt = people.reduce((s, p) => s + p.media, 0);
+
+    let textAlt = `📊 *Estatísticas${nameChat ? ` de ${nameChat}` : ''}*\n` +
+                `_Últimos ${plural(daysAlt, 'dia', 'dias')}_\n\n` +
+                `💬 *Mensagens:* ${fmtInA(total)} _(média ${fmtInA(Math.round(total / daysAlt))}/dia)_\n` +
+                `📎 *Com mídia:* ${fmtInA(mediaAlt)}\n` +
+                `👥 *Participantes ativos:* ${assets}\n`;
+
+    // Who talks the most
+    const speakers = people.filter(p => p.msgs > 0).sort((a, b) => b.msgs - a.msgs);
+
+    if (speakers.length) {
+        textAlt += '\n🏆 *Quem mais fala*\n';
+        speakers.slice(0, 10).forEach((p, i) => {
+            const pct = Math.round((p.msgs / total) * 100);
+            textAlt += `${MEDALS[i] || `${i + 1}.`} ${p.nome || p.sender_id} — *${fmtInA(p.msgs)}* _(${pct}%)_\n`;
+        });
+        if (speakers.length > 10) textAlt += `_+${speakers.length - 10} pessoa(s)_\n`;
+    }
+
+    // Who deletes / edits the most (only shows if someone deleted/edited)
+    for (const [campo, title] of [['deleted', '🗑️ *Quem mais apaga*'], ['edited', '✏️ *Quem mais edita*']]) {
+        const list = people.filter(p => p[campo] > 0).sort((a, b) => b[campo] - a[campo]).slice(0, 5);
+        if (!list.length) continue;
+
+        textAlt += `\n${title}\n`;
+        list.forEach((p, i) => { textAlt += `${i + 1}. ${p.nome || p.sender_id} — *${fmtInA(p[campo])}*\n`; });
+    }
+
+    // Times: 8 bands of 3 hours, with a proportional bar
+    if (total) {
+        const ranges = Array.from({ length: 8 }, (_, i) => ({ ini: i * 3, msgs: 0 }));
+        for (const h of byHour) ranges[Math.floor(h.hour / 3)].msgs += h.msgs;
+
+        const greater = Math.max(...ranges.map(f => f.msgs));
+        const pico = byHour.reduce((a, b) => (b.msgs > a.msgs ? b : a));
+
+        textAlt += '\n🕐 *Por horário*\n```\n';
+        for (const f of ranges) {
+            const bar = '█'.repeat(Math.round((f.msgs / greater) * 10)) || (f.msgs ? '▏' : '');
+            textAlt += `${String(f.ini).padStart(2, '0')}–${String(f.ini + 3).padStart(2, '0')}h ${bar.padEnd(10)} ${f.msgs}\n`;
+        }
+        textAlt += '```\n';
+
+        textAlt += `⏰ *Horário de pico:* ${pico.hour}h–${(pico.hour + 1) % 24}h _(${fmtInA(pico.msgs)} msgs)_\n`;
+
+        if (byDay[0]?.msgs) {
+            const [a, m, d] = byDay[0].day.split('-');
+            textAlt += `📅 *Dia mais movimentado:* ${d}/${m}/${a} _(${fmtInA(byDay[0].msgs)} msgs)_\n`;
+        }
+    }
+
+    textAlt += `\n💡 _/stats -N para outro período (máx. ${maxDays} dias)._`;
+
+    if (opts.opt.pv) {
+        await msg.reply('📊 Estatísticas enviadas no seu privado.');
+        await client.sendMessage(destination, textAlt);
+    } else {
+        await msg.reply(textAlt);
+    }
 }
 
 /*
@@ -4267,6 +4541,7 @@ const HANDLERS = {
     '/ping': cmdPing,
     '/set': cmdSet,
     '/show': cmdUndo,
+    '/stats': cmdStats,
     '/sticker': cmdSticker,
     '/tempo': cmdTime,
     '/ualisu': cmdUalisu,
@@ -4405,6 +4680,22 @@ client.on('message_create', async (msg) => {
          * and an existing media_path is not replaced by null.
          */
         await dbReady;
+
+        /*
+         * /stats: only new messages (WhatsApp may resend the same id in a
+         * reconnection) and never the bot's own replies.
+         */
+        const jaRecorded = await dbGet('SELECT 1 AS ok FROM messages WHERE id = ?', [msgIdPure]).catch(() => null);
+
+        if (!jaRecorded && !(msg.fromMe && botConsumeSending(chatId))) {
+            await countStats({
+                chatId, chatName, isGroup,
+                senderId: senderNumber || senderJid, senderName,
+                quando: paraMs(msg.timestamp) || timestamp,
+                campos: { msgs: 1, media: hasMedia }
+            });
+        }
+
         await dbRun(
             `INSERT INTO messages
                 (id, sender_name, sender_jid, sender_number,

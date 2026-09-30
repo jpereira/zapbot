@@ -543,6 +543,37 @@
             "onlyAdmin": true
         },
         {
+            "cmd": "/stats",
+            "usage": "/stats [-N] [OPTION]",
+            "help": "Ranking do chat: quem mais fala, apaga e edita, horários e dia de pico.",
+            "cmd_opts": [
+                {
+                    "opts": [
+                        "chat",
+                        "c"
+                    ],
+                    "values": [
+                        "<nome>"
+                    ],
+                    "desc": "Estatísticas de outro chat, buscado pelo nome."
+                },
+                {
+                    "opts": [
+                        "pv"
+                    ],
+                    "values": [],
+                    "desc": "Envia no seu privado em vez de expor no chat atual."
+                },
+                {
+                    "argv": [
+                        "-N"
+                    ],
+                    "desc": "Período em dias (padrão 7, máx. stats.retentionDays). Ex: /stats -30"
+                }
+            ],
+            "onlyAdmin": true
+        },
+        {
             "cmd": "/sticker",
             "usage": "/sticker",
             "aliases": [
