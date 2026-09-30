@@ -79,11 +79,13 @@ require('./src/events/edited');
 require('./src/events/messages');
 
 const { priceStartAlerts } = require('./src/priceAlerts');
+const { startHeartbeat } = require('./src/heartbeat');
 const { startCleanupPeriodic } = require('./src/cleanup');
 
 // Periodic tasks
 marksStartCleanup();
 startWatchdog();
+startHeartbeat();
 startCleanupPeriodic();
 priceStartAlerts();
 

@@ -69,6 +69,11 @@ COPY --chown=node:node . .
 
 #RUN chown -R node:node /app
 
+# Health: the bot writes /tmp/zapbot-heartbeat.json every 30 s while it works
+# (src/heartbeat.js); stopped for more than 90 s = unhealthy. start-period covers the boot.
+HEALTHCHECK --interval=30s --timeout=10s --start-period=2m --retries=3 \
+    CMD ["node", "/app/docker/app/healthcheck.js"]
+
 # Runs the boot script
 ENTRYPOINT ["/bin/sh", "-x", "/app/docker/app/entrypoint.sh"]
 CMD ["npm", "start"]
