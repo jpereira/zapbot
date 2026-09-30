@@ -614,7 +614,7 @@ setting `cache.revokedRetentionDays`). Os envios são espaçados por
 | `-N` | | Quantidade (padrão 1, máx. 20, setting `show.max`). Ex.: `-3` |
 | `-list`, `-l` | | Mostra quantas apagadas existem no cache |
 | `-pv` | | Envia no seu privado em vez de expor no chat atual |
-| `-chat`, `-c` | `<nº\|nome>` | *(Só no seu privado)* Escolhe outro chat: nº do `/show -l` ou parte do nome |
+| `-chat`, `-c` | `<nº\|nome>` | Escolhe outro chat: nº do `/show -l` ou parte do nome. Funciona em qualquer chat; junte `-pv` para não expor as mensagens no chat atual |
 | `-flush`, `-f` | | Remove as apagadas deste chat (no seu privado: de todos) |
 
 ```
@@ -622,8 +622,8 @@ setting `cache.revokedRetentionDays`). Os envios são espaçados por
 /show -5             → as 5 últimas
 /undo -3 -pv         → as 3 últimas, enviadas no seu privado
 /show -l             → contagem por chat
-/show -c 2 -5        → (no seu privado) 5 últimas do chat nº 2 da lista
-/show -c família     → (no seu privado) do chat cujo nome contém "família"
+/show -c 2 -5        → 5 últimas do chat nº 2 da lista
+/show -c família -pv → do chat cujo nome contém "família", no seu privado
 /show -f             → apaga do cache as apagadas deste chat
 ```
 
