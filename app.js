@@ -352,6 +352,16 @@ const SETTINGS_SCHEMA = {
             return command.cmd;
         }
     },
+    'cotacao.coins': {
+        default: ['EUR', 'USDT'],
+        type: 'list',
+        desc: 'Moedas exibidas pelo /cotacao (contra o real).',
+        item: (v) => {
+            const sym = v.toUpperCase();
+            if (!QUOTE_SUPPORTED[sym]) throw new Error(`moeda não suportada: ${sym}`);
+            return sym;
+        }
+    },
     'crypto.coins': {
         default: ['BTC', 'ETH', 'SOL', 'HYPE'],
         type: 'list',
@@ -2695,6 +2705,158 @@ async function cmdCrypto({ msg, opts }) {
     }
 }
 
+/*
+ * /cotacao [MOEDA...]
+ * Quote against the real: current value, open and previous close, high and
+ * day low and change. Fiat currencies come from Yahoo Finance (if it fails,
+ * of AwesomeAPI, which does not report the open); USDT comes from the daily candles
+ * of Binance (Binance's "day" turns over at 21h Brasília).
+ */
+const QUOTE_SUPPORTED = {
+    USD: { icone: '🇺🇸', nome: 'Dólar', fonte: 'fiat' },
+    EUR: { icone: '🇪🇺', nome: 'Euro', fonte: 'fiat' },
+    GBP: { icone: '🇬🇧', nome: 'Libra', fonte: 'fiat' },
+    USDT: { icone: '🪙', nome: 'Tether', fonte: 'binance' }
+};
+
+const QUOTE_TIMEOUT_MS = 10000;
+
+async function quoteYahoo(currency) {
+    const { data } = await axios.get(`https://query1.finance.yahoo.com/v8/finance/chart/${currency}BRL=X`, {
+        params: { interval: '1d', range: '5d' },
+        headers: { 'User-Agent': 'Mozilla/5.0' }, // without it Yahoo answers 429
+        timeout: QUOTE_TIMEOUT_MS
+    });
+
+    const r = data?.chart?.result?.[0];
+    const q = r?.indicators?.quote?.[0];
+    if (!r?.meta?.regularMarketPrice || !q) throw new Error('resposta sem cotação');
+
+    const n = q.close.length;
+    const valid = (v) => (Number.isFinite(v) ? v : null);
+
+    // Previous close: last valid close before today's candle
+    let closingAlt = null;
+    for (let i = n - 2; i >= 0 && closingAlt === null; i--) closingAlt = valid(q.close[i]);
+
+    return {
+        atual: r.meta.regularMarketPrice,
+        abertura: valid(q.open[n - 1]),
+        fechamento: closingAlt,
+        max: valid(r.meta.regularMarketDayHigh) ?? valid(q.high[n - 1]),
+        min: valid(r.meta.regularMarketDayLow) ?? valid(q.low[n - 1]),
+        fonte: 'Yahoo Finance'
+    };
+}
+
+// Yahoo fallback: no open; the previous close comes from bid - varBid
+async function quoteAwesome(currency) {
+    const { data } = await axios.get(`https://economia.awesomeapi.com.br/json/last/${currency}-BRL`, { timeout: QUOTE_TIMEOUT_MS });
+    const d = data?.[`${currency}BRL`];
+    if (!d?.bid) throw new Error('resposta sem cotação');
+
+    const current = Number(d.bid);
+    return {
+        atual: current,
+        abertura: null,
+        fechamento: current - Number(d.varBid),
+        max: Number(d.high),
+        min: Number(d.low),
+        fonte: 'AwesomeAPI'
+    };
+}
+
+async function quoteBinance(currency) {
+    const { data } = await axios.get('https://api.binance.com/api/v3/klines', {
+        params: { symbol: `${currency}BRL`, interval: '1d', limit: 2 },
+        timeout: QUOTE_TIMEOUT_MS
+    });
+
+    // [open at, open, high, low, close, ...]: yesterday and today
+    const [yesterday, today] = data;
+    if (!today) throw new Error('resposta sem cotação');
+
+    return {
+        atual: Number(today[4]),
+        abertura: Number(today[1]),
+        fechamento: Number(yesterday[4]),
+        max: Number(today[2]),
+        min: Number(today[3]),
+        fonte: 'Binance'
+    };
+}
+
+async function searchQuote(currency) {
+    if (QUOTE_SUPPORTED[currency].fonte === 'binance') return quoteBinance(currency);
+
+    try {
+        return await quoteYahoo(currency);
+    } catch (err) {
+        printError(`/cotacao: Yahoo falhou para ${currency} (${err.message}), usando a AwesomeAPI.`);
+        return quoteAwesome(currency);
+    }
+}
+
+const fmtReal = (v) => `R$ ${Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`;
+
+function fmtChange(current, base) {
+    if (!base) return null;
+    const pct = ((current - base) / base) * 100;
+    const signalAlt = pct > 0 ? '+' : '';
+    const iconAlt = pct > 0 ? '🟢' : pct < 0 ? '🔴' : '⚪';
+    return `${iconAlt} ${signalAlt}${pct.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`;
+}
+
+async function cmdQuote({ msg, args }) {
+    // Without arguments: the setting's currencies; with arguments: only the requested ones
+    const requestedAlt = args ? args.toUpperCase().split(/[\s,]+/).filter(Boolean) : getSetting('cotacao.coins');
+    const invalid = requestedAlt.filter(m => !QUOTE_SUPPORTED[m]);
+
+    if (invalid.length) {
+        await msg.reply(`❌ Moeda não suportada: ${invalid.join(', ')}\n💡 _Suportadas: ${Object.keys(QUOTE_SUPPORTED).join(', ')}_`);
+        return;
+    }
+
+    if (!requestedAlt.length) {
+        await msg.reply('ℹ️ Nenhuma moeda configurada.\n💡 _/set cotacao.coins EUR USDT_');
+        return;
+    }
+
+    const results = await Promise.allSettled(requestedAlt.map(searchQuote));
+    const sourcesAlt = new Set();
+    let textAlt = '💱 *COTAÇÕES* _(em reais)_\n';
+
+    requestedAlt.forEach((currency, i) => {
+        const { icone: iconAlt, nome: nameAlt } = QUOTE_SUPPORTED[currency];
+        const r = results[i];
+
+        textAlt += `\n${iconAlt} *${currency}/BRL* _(${nameAlt})_\n`;
+
+        if (r.status === 'rejected') {
+            printError(`/cotacao ${currency}:`, r.reason?.message);
+            textAlt += '   ⚠️ _Cotação indisponível agora._\n';
+            return;
+        }
+
+        const c = r.value;
+        sourcesAlt.add(c.fonte);
+
+        const dayAlt = fmtChange(c.atual, c.fechamento);
+        const sinceOpening = fmtChange(c.atual, c.abertura);
+
+        textAlt += `   💰 *${fmtReal(c.atual)}*${dayAlt ? `  ${dayAlt}` : ''}\n`;
+        textAlt += `   🔔 Abertura: ${c.abertura ? fmtReal(c.abertura) : '—'}${sinceOpening ? ` _(${sinceOpening} desde a abertura)_` : ''}\n`;
+        textAlt += `   🏁 Fechamento anterior: ${c.fechamento ? fmtReal(c.fechamento) : '—'}\n`;
+        if (c.max && c.min) textAlt += `   📈 Máx: ${fmtReal(c.max)}  📉 Mín: ${fmtReal(c.min)}\n`;
+    });
+
+    const nowAlt = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', dateStyle: 'short', timeStyle: 'short' });
+    textAlt += `\n🕐 _${nowAlt}${sourcesAlt.size ? ` · ${[...sourcesAlt].join(', ')}` : ''}_\n`;
+    textAlt += '💡 _% ao lado do valor: variação desde o fechamento anterior._';
+
+    await msg.reply(textAlt);
+}
+
 async function cmdEveryone({ msg, senderContact }) {
     const groupChat = await msg.getChat().catch(() => null);
 
@@ -4651,6 +4813,7 @@ const HANDLERS = {
     '/boletos': cmdBills,
     '/bot': cmdBot,
     '/cache': cmdCache,
+    '/cotacao': cmdQuote,
     '/crypto': cmdCrypto,
     '/cve': cmdCve,
     '/debug': cmdDebug,

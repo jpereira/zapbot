@@ -78,6 +78,15 @@
             "onlyAdmin": true
         },
         {
+            "cmd": "/cotacao",
+            "usage": "/cotacao [MOEDA...]",
+            "aliases": [
+                "/cambio"
+            ],
+            "help": "Cotação contra o real (padrão: EUR e USDT): atual, abertura, fechamento anterior, máx./mín. e variação. Suportadas: USD, EUR, GBP, USDT.",
+            "onlyAdmin": false
+        },
+        {
             "cmd": "/crypto",
             "usage": "/crypto [OPTION]",
             "aliases": [
