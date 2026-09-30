@@ -543,6 +543,23 @@ function getSetting(key) {
     return settings.has(key) ? settings.get(key) : SETTINGS_SCHEMA[key]?.default;
 }
 
+/*
+ * Valor do config/.env ou, se vazio, do setting (ex.: chaves de API, timeouts).
+ * O valor do .env passa pela mesma validação do setting: inválido é ignorado
+ * (com aviso no log) e vale o setting.
+ */
+function envOuSetting(env, key) {
+    const valor = process.env[env]?.trim();
+    if (!valor) return getSetting(key);
+
+    try {
+        return validarSetting(key, valor);
+    } catch (e) {
+        printError(`${env} inválido (${e.message}), usando o setting '${key}'.`);
+        return getSetting(key);
+    }
+}
+
 async function setSetting(key, value) {
     value = validarSetting(key, value);
 
@@ -3523,7 +3540,7 @@ async function cmdListaGeral({ msg }) {
 // /gif [tag]: GIF aleatório do GIPHY, enviado como MP4 em loop.
 // Chave: GIPHY_API_KEY no config/.env ou, na falta dela, o setting 'api.key.giphy'
 async function cmdGif({ msg, args }) {
-    const apiKey = process.env.GIPHY_API_KEY || getSetting('api.key.giphy');
+    const apiKey = envOuSetting('GIPHY_API_KEY', 'api.key.giphy');
 
     if (!apiKey) {
         await msg.reply('⚠️ Chave do GIPHY não configurada: defina GIPHY_API_KEY no config/.env ou use /set api.key.giphy <chave>.');
@@ -3945,28 +3962,43 @@ async function cmdNews({ msg, opts }) {
  * a mensagem da API.
  */
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
+const OPENAI_MODEL_PADRAO = 'gpt-4o-mini';
+const GPT_INSTRUCOES = 'Você é um assistente no WhatsApp. Responda de forma direta, em português, salvo se pedirem outro idioma.';
+
+// Erro da OpenAI → mensagem para o chat (nunca contém a chave)
+function erroOpenAi(err, timeout) {
+    if (err.code === 'ECONNABORTED') return `⏱️ A OpenAI não respondeu em ${timeout / 1000}s. Tente de novo ou aumente o openai.timeout.ms.`;
+    if (err.response?.status === 401) return '🔑 API key da OpenAI inválida. Confira o OPENAI_API_KEY ou o openai.api.key.';
+    if (err.response?.status === 429) return '💸 Limite ou créditos da OpenAI esgotados. Tente mais tarde.';
+    return `❌ Erro no /gpt: ${err.response?.data?.error?.message || err.message}`;
+}
 
 async function cmdGpt({ msg, args, quotedMsg }) {
-    const apiKey = process.env.OPENAI_API_KEY || getSetting('openai.api.key');
-    const timeout = Number(process.env.OPENAI_TIMEOUT_MS) || getSetting('openai.timeout.ms');
+    const apiKey = envOuSetting('OPENAI_API_KEY', 'openai.api.key');
 
     if (!apiKey) {
         await msg.reply('⚠️ API key da OpenAI não encontrada: o /gpt está desativado.\n💡 _Defina OPENAI_API_KEY no config/.env ou use /set openai.api.key <chave>_');
         return;
     }
 
+    // Respondendo uma mensagem, o texto dela entra antes da pergunta
     const pergunta = [quotedMsg?.body, args].filter(Boolean).join('\n\n').trim();
 
     if (!pergunta) {
-        await msg.reply('Syntax: /gpt <pergunta> (ou responda uma mensagem)');
+        await msg.reply('```' + getCommandSyntax('/gpt') + '```');
         return;
     }
 
+    const timeout = envOuSetting('OPENAI_TIMEOUT_MS', 'openai.timeout.ms');
+
     try {
+        // "digitando..." enquanto a OpenAI responde (pode levar alguns segundos)
+        msg.getChat().then(chat => chat.sendStateTyping()).catch(() => {});
+
         const { data } = await axios.post(OPENAI_URL, {
-            model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+            model: process.env.OPENAI_MODEL?.trim() || OPENAI_MODEL_PADRAO,
             messages: [
-                { role: 'system', content: 'Você é um assistente no WhatsApp. Responda de forma direta, em português, salvo se pedirem outro idioma.' },
+                { role: 'system', content: GPT_INSTRUCOES },
                 { role: 'user', content: pergunta }
             ]
         }, {
@@ -3981,9 +4013,10 @@ async function cmdGpt({ msg, args, quotedMsg }) {
 
         await msg.reply(resposta);
     } catch (err) {
-        const detalhe = err.response?.data?.error?.message || err.message;
-        printError('/gpt:', detalhe);
-        await msg.reply(`❌ Erro no /gpt: ${detalhe}`);
+        // No 401 a mensagem da OpenAI traz um pedaço da chave: não vai para o log
+        const status = err.response?.status;
+        printError('/gpt:', status ?? '', status === 401 ? 'API key inválida' : err.response?.data?.error?.message || err.message);
+        await msg.reply(erroOpenAi(err, timeout));
     }
 }
 
