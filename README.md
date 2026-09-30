@@ -325,6 +325,8 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -c -f`) para fazer o bot
 | `/show` | `/undo`, `/s` | ✅ | Reexibe mensagens apagadas |
 | `/set` | | ✅ | Lista e altera as configurações (settings) |
 | `/watch` | `/w` | ✅ | Avisa no seu privado quando uma mensagem casa com um texto/regex |
+| `/cve` | | | Últimas CVEs publicadas (NVD) |
+| `/cvehighscore` | `/cvehs` | | CVEs críticas (CVSS ≥ 9) dos últimos 7 dias |
 
 ### `/help`
 
@@ -587,6 +589,7 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 | `watch.max` | 1–100 | `20` | Máximo de regras do `/watch` |
 | `watch.showMax` | 1–100 | `20` | Máximo de ocorrências listadas por `/watch -show` |
 | `watch.hitsRetentionDays` | 1–365 | `30` | Dias que as ocorrências do `/watch` ficam guardadas |
+| `cve.max` | 1–20 | `10` | CVEs exibidas pelo `/cve` e `/cvehighscore` |
 
 Uma chave nova é declarada em `SETTINGS_SCHEMA` (`app.js`) com padrão, tipo,
 descrição e limites, e lida com `getSetting('<chave>')`. Valores inválidos no
@@ -652,6 +655,12 @@ Detalhes:
   a resposta vai para o seu privado.
 - As ocorrências ficam na tabela `watch_hits` por 30 dias (setting
   `watch.hitsRetentionDays`), ou até um `/watch -f`.
+
+### `/cve` e `/cvehighscore` (`/cvehs`)
+
+Últimas CVEs publicadas no [NVD](https://nvd.nist.gov/) (últimos 2 dias) e as
+críticas (CVSS ≥ 9) dos últimos 7 dias, com nota, resumo e link. Sem chave o NVD
+aceita ~5 consultas a cada 30s.
 
 ### Adicionando ou alterando comandos
 
