@@ -326,6 +326,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -c -f`) para fazer o bot
 | `/set` | | ✅ | Lista e altera as configurações (settings) |
 | `/watch` | `/w` | ✅ | Avisa no seu privado quando uma mensagem casa com um texto/regex |
 | `/kernel` | | | Versões atuais do kernel Linux (kernel.org) |
+| `/boletos` | | ✅ | Sorteia 2 membros para "pagar um boleto" |
 
 ### `/help`
 
@@ -657,6 +658,11 @@ Detalhes:
 ### `/kernel`
 
 Versões mainline, stable e longterm publicadas em `kernel.org/releases.json`.
+
+### `/boletos` · admin
+
+Só em grupos: sorteia 2 membros diferentes (fora o bot) e os marca para "pagar
+um boleto".
 
 ### Adicionando ou alterando comandos
 
