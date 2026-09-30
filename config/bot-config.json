@@ -407,6 +407,15 @@
                 }
             ],
             "onlyAdmin": true
+        },
+        {
+            "cmd": "/news",
+            "usage": "/news",
+            "help": "Manchetes de hacking/segurança (The Hacker News, BleepingComputer, Krebs). Feeds no setting news.feeds.",
+            "onlyAdmin": false,
+            "aliases": [
+                "/hacknews"
+            ]
         }
     ]
 }

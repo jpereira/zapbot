@@ -325,6 +325,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -c -f`) para fazer o bot
 | `/show` | `/undo`, `/s` | ✅ | Reexibe mensagens apagadas |
 | `/set` | | ✅ | Lista e altera as configurações (settings) |
 | `/watch` | `/w` | ✅ | Avisa no seu privado quando uma mensagem casa com um texto/regex |
+| `/news` | `/hacknews` | | Manchetes de hacking/segurança (RSS) |
 
 ### `/help`
 
@@ -587,6 +588,8 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 | `watch.max` | 1–100 | `20` | Máximo de regras do `/watch` |
 | `watch.showMax` | 1–100 | `20` | Máximo de ocorrências listadas por `/watch -show` |
 | `watch.hitsRetentionDays` | 1–365 | `30` | Dias que as ocorrências do `/watch` ficam guardadas |
+| `news.feeds` | lista | The Hacker News, BleepingComputer, Krebs on Security | Feeds RSS juntados pelo `/news` |
+| `news.max` | 1–20 | `8` | Manchetes exibidas pelo `/news` |
 
 Uma chave nova é declarada em `SETTINGS_SCHEMA` (`app.js`) com padrão, tipo,
 descrição e limites, e lida com `getSetting('<chave>')`. Valores inválidos no
@@ -652,6 +655,19 @@ Detalhes:
   a resposta vai para o seu privado.
 - As ocorrências ficam na tabela `watch_hits` por 30 dias (setting
   `watch.hitsRetentionDays`), ou até um `/watch -f`.
+
+### `/news` (`/hacknews`)
+
+Junta as manchetes mais recentes dos feeds do setting `news.feeds` (padrão:
+The Hacker News, BleepingComputer e Krebs on Security), com fonte, data e link.
+Cada fonte ocupa no máximo a sua fatia da lista, e um feed fora do ar não
+derruba os outros.
+
+```
+/news
+/set news.feeds https://feeds.feedburner.com/TheHackersNews https://krebsonsecurity.com/feed/
+/set -r news.feeds
+```
 
 ### Adicionando ou alterando comandos
 
