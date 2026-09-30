@@ -438,7 +438,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -c -f`) para fazer o bot
 | `/ping` | `/p` | ✅ | Verifica se o bot está vivo |
 | `/set` | | ✅ | Lista e altera as configurações (settings) |
 | `/show` | `/undo`, `/s` | ✅ | Reexibe mensagens apagadas |
-| `/stats` | | ✅ | Ranking do chat: quem mais fala, apaga e edita, horários de pico |
+| `/stats` | | ✅ | Ranking do chat (quem mais fala, apaga e edita, horários de pico); `-me` para as suas |
 | `/sticker` | `/st` | | Transforma imagem/vídeo em figurinha |
 | `/tempo` | `/weather` | | Tempo agora e máx./mín. do dia (Open-Meteo); sem cidade usa `tempo.city` |
 | `/ualisu` | | ✅ | Marca 2 membros com uma CVE aleatória |
@@ -1058,19 +1058,26 @@ numeração para o `-c`:
 
 Ranking do chat nos últimos N dias (padrão 7): total de mensagens, quem mais
 fala, quem mais apaga e edita, mensagens por faixa de horário, horário e dia de
-pico. Os números vêm dos contadores da tabela `stats`, que começam a ser
-preenchidos quando o bot é atualizado (não há histórico anterior).
+pico. Com `-me`, as **suas** mensagens somadas em todos os chats: em quais você
+mais fala, quantas apagou, seus horários e seu dia de pico.
+
+Os números vêm dos contadores da tabela `stats`, que começam a ser preenchidos
+quando o bot é atualizado (não há histórico anterior). As suas mensagens contam
+para o seu número em qualquer chat, inclusive no privado.
 
 | Opção | Valor | Descrição |
 |---|---|---|
 | `-N` | | Período em dias (padrão 7, máx. 90, setting `stats.retentionDays`). Ex.: `-30` |
-| `-chat`, `-c` | `<nome>` | Estatísticas de outro chat, buscado pelo nome |
+| `-chat`, `-c` | `<nome>` | Estatísticas de outro chat, buscado pelo nome. Com `-me`, só as suas nesse chat |
+| `-me` | | As suas estatísticas, somadas em todos os chats |
 | `-pv` | | Envia no seu privado em vez de expor no chat atual |
 
 ```
-/stats               → últimos 7 dias deste chat
-/stats -30           → últimos 30 dias
-/stats -c família -pv → do chat "família", no seu privado
+/stats                 → últimos 7 dias deste chat
+/stats -30             → últimos 30 dias
+/stats -c família -pv  → do chat "família", no seu privado
+/stats -me             → as suas, em todos os chats
+/stats -me -c família  → as suas, só no chat "família"
 ```
 
 ```
@@ -1100,6 +1107,24 @@ preenchidos quando o bot é atualizado (não há histórico anterior).
 ...
 ⏰ Horário de pico: 14h–15h (13 msgs)
 📅 Dia mais movimentado: 30/09/2026 (16 msgs)
+```
+
+```
+/stats -me
+📊 Suas estatísticas
+Últimos 7 dias, todos os chats
+
+💬 Mensagens: 17 (média 2/dia)
+📎 Com mídia: 5
+🗑️ Apagadas por você: 1
+👥 Chats em que você falou: 2
+
+🏆 Onde você mais fala
+🥇 👥 Família — 12 (71%)
+🥈 👤 Beltrano — 5 (29%)
+
+🕐 Por horário
+...
 ```
 
 ### `/sticker`
