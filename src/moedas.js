@@ -12,13 +12,7 @@ const CRYPTO_SUPPORTED = {
     SUI: '💧', PEPE: '🐸', SHIB: '🐕', XLM: '🚀', NEAR: 'Ⓝ', UNI: '🦄'
 };
 
-/*
- * /cotacao [MOEDA...]
- * Cotação contra o real: valor atual, abertura e fechamento anterior, máxima e
- * mínima do dia e variação. Moedas fiduciárias vêm do Yahoo Finance (se falhar,
- * da AwesomeAPI, que não informa a abertura); o USDT vem dos candles diários
- * da Binance (o "dia" da Binance vira às 21h de Brasília).
- */
+// Moedas do /cotacao, contra o real. As habilitadas ficam no setting 'cotacao.coins'.
 const COTACAO_SUPORTADAS = {
     USD: { icone: '🇺🇸', nome: 'Dólar', fonte: 'fiat' },
     EUR: { icone: '🇪🇺', nome: 'Euro', fonte: 'fiat' },
