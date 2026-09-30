@@ -407,16 +407,16 @@ const SETTINGS_SCHEMA = {
             'https://krebsonsecurity.com/feed/'
         ],
         type: 'list',
-        desc: 'Feeds RSS de hacking/segurança juntados pelo /news.',
+        desc: 'Feeds RSS de hacking/segurança do /news -hack.',
         item: (v) => {
             if (!isValidHttpUrl(v)) throw new Error(`URL inválida: ${v}`);
             return v;
         }
     },
     'news.max': {
-        default: 8,
-        type: 'number', min: 1, max: 20,
-        desc: 'Manchetes exibidas pelo /news.'
+        default: 5,
+        type: 'number', min: 1, max: 10,
+        desc: 'Manchetes exibidas pelo /news (o /news <quantidade> sobrepõe).'
     }
 };
 
@@ -3792,30 +3792,54 @@ async function cmdBot({ msg, opts }) {
     await msg.reply(estadoBot());
 }
 
-// /news: manchetes de hacking/segurança, juntando os feeds RSS do setting 'news.feeds'
+/*
+ * /news [-hack|-hacknews] [quantidade]: manchetes dos feeds RSS.
+ *   -hack → feeds de hacking/segurança (setting 'news.feeds'); é a única categoria
+ *           por enquanto, então também é o padrão
+ *   quantidade → 1 a 10 (padrão: setting 'news.max')
+ */
+const ENTIDADES_XML = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
+
+// Uma passada só: "&amp;lt;" vira "&lt;" (e não "<"), como deve ser
 const decodificarEntidades = (s) => String(s ?? '')
     .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
-    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
-    .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
-    .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"')
-    .replace(/&apos;/g, "'").replace(/&amp;/g, '&')
+    .replace(/&(?:#(\d+)|#x([0-9a-f]+)|([a-z]+));/gi, (ent, dec, hex, nome) => {
+        if (nome) return ENTIDADES_XML[nome.toLowerCase()] ?? ent;
+        const codigo = dec ? Number(dec) : parseInt(hex, 16);
+        return codigo <= 0x10FFFF ? String.fromCodePoint(codigo) : ent;
+    })
     .trim();
+
+// Conteúdo decodificado da primeira <tag> do trecho de XML
+const tagXml = (xml, tag) => decodificarEntidades(xml.match(new RegExp(`<${tag}>([\\s\\S]*?)</${tag}>`))?.[1]);
 
 async function lerFeed(url) {
     // Alguns sites (ex.: BleepingComputer) recusam o User-Agent padrão do axios com 403
-    const { data } = await axios.get(url, { responseType: 'text', timeout: 15000, headers: { 'User-Agent': 'Mozilla/5.0 (ZapBot RSS reader)' } });
-    const xml = String(data);
-    const fonte = decodificarEntidades(xml.match(/<channel>[\s\S]*?<title>([\s\S]*?)<\/title>/)?.[1]) || new URL(url).hostname;
+    const { data: xml } = await axios.get(url, { responseType: 'text', timeout: 15000, headers: { 'User-Agent': 'Mozilla/5.0 (ZapBot RSS reader)' } });
+    const fonte = tagXml(xml.match(/<channel>[\s\S]*?<\/title>/)?.[0] ?? '', 'title') || new URL(url).hostname;
 
-    return [...xml.matchAll(/<item\b[\s\S]*?<\/item>/g)].map(([item]) => ({
-        fonte,
-        titulo: decodificarEntidades(item.match(/<title>([\s\S]*?)<\/title>/)?.[1]),
-        link: decodificarEntidades(item.match(/<link>([\s\S]*?)<\/link>/)?.[1]),
-        data: Date.parse(decodificarEntidades(item.match(/<pubDate>([\s\S]*?)<\/pubDate>/)?.[1])) || 0
-    })).filter(i => i.titulo);
+    return [...xml.matchAll(/<item\b[\s\S]*?<\/item>/g)]
+        .map(([item]) => ({
+            fonte,
+            titulo: tagXml(item, 'title'),
+            link: tagXml(item, 'link'),
+            data: Date.parse(tagXml(item, 'pubDate')) || 0
+        }))
+        .filter(i => i.titulo)
+        .sort((a, b) => b.data - a.data);
 }
 
-async function cmdNews({ msg }) {
+async function cmdNews({ msg, opts }) {
+    const { max: limite } = SETTINGS_SCHEMA['news.max'];
+    const valor = opts.argv[0] ?? getSetting('news.max');
+    const max = Number(valor);
+
+    if (!Number.isInteger(max) || max < 1 || max > limite) {
+        await msg.reply(`❌ Quantidade inválida: ${valor}. Use de 1 a ${limite}.\n💡 _/news -hack 5_`);
+        return;
+    }
+
+    // -hack é a única categoria: com ou sem a opção, usa os feeds de hacking
     const feeds = getSetting('news.feeds');
 
     if (!feeds.length) {
@@ -3824,16 +3848,15 @@ async function cmdNews({ msg }) {
     }
 
     const resultados = await Promise.allSettled(feeds.map(lerFeed));
+    const porFonte = [];
 
     resultados.forEach((r, i) => {
-        if (r.status === 'rejected') printError(`/news: feed ${feeds[i]} falhou:`, r.reason?.message);
+        if (r.status === 'fulfilled') porFonte.push(r.value);
+        else printError(`/news: feed ${feeds[i]} falhou:`, r.reason?.message);
     });
 
     // Cada fonte ocupa no máximo a sua fatia: senão a que publica mais toma a lista toda
-    const max = getSetting('news.max');
-    const porFonte = resultados.filter(r => r.status === 'fulfilled').map(r => r.value.sort((a, b) => b.data - a.data));
     const fatia = Math.ceil(max / Math.max(1, porFonte.length));
-
     const itens = porFonte
         .flatMap(lista => lista.slice(0, fatia))
         .sort((a, b) => b.data - a.data)
@@ -3844,10 +3867,10 @@ async function cmdNews({ msg }) {
         return;
     }
 
-    const texto = '🏴‍☠️ *Hacking News*\n\n' +
-        itens.map((i, n) => `${n + 1}. *${i.titulo}*\n_${i.fonte}${i.data ? ` · ${formatarData(i.data)}` : ''}_${i.link ? `\n${i.link}` : ''}`).join('\n\n');
+    const linhas = itens.map((i, n) =>
+        `${n + 1}. *${i.titulo}*\n_${i.fonte}${i.data ? ` · ${formatarData(i.data)}` : ''}_${i.link ? `\n${i.link}` : ''}`);
 
-    await msg.reply(texto, null, { linkPreview: false });
+    await msg.reply(`🏴‍☠️ *Hacking News*\n\n${linhas.join('\n\n')}`, null, { linkPreview: false });
 }
 
 // cmd do bot-config.json -> handler

@@ -532,12 +532,25 @@
         },
         {
             "cmd": "/news",
-            "usage": "/news",
-            "help": "Manchetes de hacking/segurança (The Hacker News, BleepingComputer, Krebs). Feeds no setting news.feeds.",
-            "onlyAdmin": false,
-            "aliases": [
-                "/hacknews"
-            ]
+            "usage": "/news [-hack] [quantidade]",
+            "help": "Manchetes mais recentes dos feeds RSS, com fonte, data e link.",
+            "cmd_opts": [
+                {
+                    "opts": [
+                        "hack",
+                        "hacknews"
+                    ],
+                    "values": [],
+                    "desc": "Hacking/segurança: The Hacker News, BleepingComputer, Krebs (setting news.feeds). É o padrão."
+                },
+                {
+                    "argv": [
+                        "quantidade"
+                    ],
+                    "desc": "Manchetes, de 1 a 10 (padrão: setting news.max, 5). Ex: /news -hack 3"
+                }
+            ],
+            "onlyAdmin": false
         }
     ]
 }
