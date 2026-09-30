@@ -95,7 +95,8 @@ tudo por comandos digitados no próprio chat (`/help`, `/get`, `/show`, `/news`,
   [`/set`](#set--admin). No boot os valores padrão são gravados, se ainda não
   existirem, e tudo é carregado em memória. Veja [Settings](#settings).
 - **Comandos**: definidos em [`config/bot-config.json`](config/bot-config.json)
-  (nome, aliases, opções, ajuda, permissão) e implementados em `app.js`. Os que
+  (nome, aliases, opções, ajuda, permissão) e implementados em `src/comandos/`
+  (um arquivo por comando; veja [Estrutura do código](#estrutura-do-código)). Os que
   consultam a internet (`/gpt`, `/tempo`, `/cve`, `/news`...) usam os serviços
   da tabela [Serviços externos](#serviços-externos).
 - **Controle**: o [`/bot`](#bot--admin) liga/desliga todos os comandos
@@ -623,7 +624,7 @@ Preço atual e variação de 24 h das moedas ativadas (via API da Binance, par
 | `-rm` | `<nº\|all>` | Junto com `-alerta`: remove o alerta nº N (ou todos) |
 
 Suportadas: BTC, ETH, SOL, HYPE, BNB, XRP, DOGE, ADA, TRX, AVAX, LINK, DOT, LTC,
-TON, SUI, PEPE, SHIB, XLM, NEAR e UNI (lista `CRYPTO_SUPPORTED` em `app.js`).
+TON, SUI, PEPE, SHIB, XLM, NEAR e UNI (lista `CRYPTO_SUPPORTED` em `src/moedas.js`).
 
 As moedas ativadas ficam na tabela `settings`, chave `crypto.coins`, e
 sobrevivem a reinícios.
@@ -1055,7 +1056,8 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 | `watch.rules` | lista (uma por linha) | *(vazia)* | Regras do `/watch`: texto ou `/regex/flags`. Normalmente alterada pelo `/watch -a`/`-d` |
 | `watch.showMax` | 1–100 | `20` | Máximo de ocorrências listadas por `/watch -show` |
 
-Uma chave nova é declarada em `SETTINGS_SCHEMA` (`app.js`) com padrão, tipo,
+Uma chave nova é declarada em `SETTINGS_SCHEMA` (`src/settings.js`), **em ordem
+alfabética**, com padrão, tipo,
 descrição e limites (`allowEmpty` para texto que pode ficar vazio, `secret`
 para mascarar o valor no `/set` e nos logs), e lida com
 `getSetting('<chave>')`. Valores inválidos no
@@ -1389,9 +1391,40 @@ lista `commands`. Cada entrada de `commands` segue este formato:
   nem aos aliases, e ele some do `/help`. No boot aparece nos logs
   `Disabled N callers (...)`. Para desativar sem rebuild, use o setting
   `commands.disabled` (`/set commands.disabled noffa`).
-- Um comando **novo** precisa de uma função em `app.js` registrada no objeto
-  `HANDLERS`. No boot, o bot avisa nos logs se existir comando no JSON sem
-  handler.
+- Um comando **novo** precisa de um arquivo em `src/comandos/` e de uma
+  entrada no objeto `HANDLERS` de `src/comandos/index.js`. No boot, o bot avisa
+  nos logs se existir comando no JSON sem handler. Comandos, handlers, a
+  tabela [Resumo](#resumo) e as seções do README ficam em **ordem alfabética**.
+
+### Estrutura do código
+
+O `app.js` só faz o bootstrap (carrega o `.env`, prepara o banco, cria o
+cliente, registra os eventos e inicia as tarefas periódicas). O código fica em
+`src/`:
+
+```
+app.js                  bootstrap, na ordem de inicialização
+src/
+  constantes.js         diretórios, janelas de tempo, APP_ENV
+  estado.js             estado da conexão, compartilhado entre os módulos
+  log.js                print* coloridos
+  db.js                 SQLite (dbGet/dbAll/dbRun) e o sinal dbPronto
+  inicializacao.js      tabelas + carga dos settings
+  settings.js           SETTINGS_SCHEMA, getSetting/setSetting
+  botConfig.js          config/bot-config.json carregado
+  cliente.js            cliente do whatsapp-web.js e a marca dos envios do bot
+  conexao.js            QR Code, eventos de conexão, reinício e watchdog
+  email.js              SMTP e alertas por e-mail
+  processo.js           crash e sinais (docker stop)
+  limpeza.js            retenção e limpeza periódica
+  stats.js              contadores do /stats
+  moedas.js, cotacoes.js, alertasPreco.js   /crypto, /cotacao e alertas de preço
+  contatos.js, opcoes.js                    contatos/@lid e o parser de opções
+  watch/                regras e verificação do /watch
+  eventos/              message_create, apagadas, editadas, presença
+  comandos/             um arquivo por comando + index.js (HANDLERS) e base.js
+  util/                 arquivos, formatação, processos externos, URLs
+```
 
 ## Operação do dia a dia
 
