@@ -437,6 +437,12 @@
             "usage": "/gif [tag]",
             "help": "GIF aleatório do GIPHY (tag padrão: setting gif.tag).",
             "onlyAdmin": false
+        },
+        {
+            "cmd": "/joke",
+            "usage": "/joke",
+            "help": "Piada aleatória (JokeAPI, safe-mode).",
+            "onlyAdmin": false
         }
     ]
 }

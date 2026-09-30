@@ -3449,6 +3449,20 @@ async function cmdGif({ msg, args }) {
     }
 }
 
+// /joke: JokeAPI in Portuguese (safe-mode)
+async function cmdJoke({ msg }) {
+    try {
+        const { data } = await axios.get('https://v2.jokeapi.dev/joke/Any', { timeout: 15000, params: { lang: 'pt', 'safe-mode': '' } });
+
+        if (data.error) throw new Error(data.message || 'erro da JokeAPI');
+
+        await msg.reply(data.type === 'twopart' ? `${data.setup}\n\n... ${data.delivery} 🥁` : data.joke);
+    } catch (err) {
+        printError('/joke:', err.message);
+        await msg.reply('❌ Não consegui buscar uma piada agora.');
+    }
+}
+
 // bot-config.json cmd -> handler
 const HANDLERS = {
     '/help': cmdHelp,
@@ -3469,7 +3483,8 @@ const HANDLERS = {
     '/boletos': cmdBills,
     '/meme': cmdMeme,
     '/listageral': cmdListGeneral,
-    '/gif': cmdGif
+    '/gif': cmdGif,
+    '/joke': cmdJoke
 };
 
 // Warns at boot if the bot-config has a command without a handler (or vice versa)
