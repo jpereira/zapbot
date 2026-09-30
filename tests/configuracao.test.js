@@ -90,6 +90,26 @@ describe('README', () => {
         }
     });
 
+    test('título de cada comando: aliases e "· admin" iguais ao config', () => {
+        for (const [titulo, nome] of README.matchAll(/^### `(\/[a-z]+)`.*$/gm)) {
+            const c = CONFIG.commands.find(x => x.cmd === nome);
+            if (!c) continue;
+            const aliases = [...titulo.matchAll(/`(\/[^`]+)`/g)].map(m => m[1]).slice(1);
+            assert.deepEqual(aliases, c.aliases ?? [], `aliases no título de ${nome}`);
+            assert.equal(titulo.includes('· admin'), c.onlyAdmin, `"· admin" no título de ${nome}`);
+        }
+    });
+
+    // Âncora como o GitHub gera: minúsculas, sem pontuação/emoji, espaço vira hífen
+    const ancora = (titulo) => titulo.trim().toLowerCase().replace(/[^\p{L}\p{N}\s_-]/gu, '').replace(/\s/g, '-');
+
+    test('todo link interno (#...) aponta para um título que existe', () => {
+        const ancoras = new Set([...README.matchAll(/^#{1,6} (.+)$/gm)].map(m => ancora(m[1])));
+        const links = [...README.matchAll(/\]\(#([^)]+)\)/g)].map(m => m[1]);
+        assert.ok(links.length > 20);
+        for (const link of links) assert.ok(ancoras.has(link), `link quebrado: #${link}`);
+    });
+
     test('tabela Settings: as chaves do SETTINGS_SCHEMA, em ordem', () => {
         const chaves = linhasDaTabela('#### Settings', 'Uma chave nova').map(l => l.split('`')[1]);
         assert.deepEqual(chaves, Object.keys(SETTINGS_SCHEMA));
