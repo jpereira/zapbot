@@ -7,6 +7,13 @@ const axios = require('axios');
 const { printError } = require('./log');
 const { COTACAO_SUPORTADAS } = require('./moedas');
 
+/*
+ * /cotacao [MOEDA...]: fontes das cotações
+ * Cotação contra o real: valor atual, abertura e fechamento anterior, máxima e
+ * mínima do dia e variação. Moedas fiduciárias vêm do Yahoo Finance (se falhar,
+ * da AwesomeAPI, que não informa a abertura); o USDT vem dos candles diários
+ * da Binance (o "dia" da Binance vira às 21h de Brasília).
+ */
 const fmtPrecoCrypto = (value) =>
     Number(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 6 });
 

@@ -14,6 +14,14 @@ const { contarStats, meuIdStats } = require('../stats');
 const { isCaminhoDeMidia } = require('../util/arquivos');
 const { formatarData } = require('../util/formatar');
 
+/*
+ * Recuperação de mensagens apagadas
+ *
+ * O mesmo renderizador é usado em dois lugares:
+ *  - evento 'message_revoke_everyone' → envia para você mesmo, na hora;
+ *  - comando /show                    → reenvia no chat atual, sob demanda.
+ */
+
 // Status (stories) chegam pelo chat 'status@broadcast'
 const isStatus = (row) => row.chat_id === 'status@broadcast';
 
