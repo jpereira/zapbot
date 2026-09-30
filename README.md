@@ -678,7 +678,7 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 | `cve.maxDays` | 1–120 | `7` | Janela, em dias, do `/cve -highscore` |
 | `tempo.city` | texto | `Niteroi, Rio de Janeiro, Brazil` | Cidade do `/tempo` quando nenhuma é informada |
 | `bot.paused` | on/off | `off` | Bot desligado: todos os comandos ignorados, exceto o `/bot` (o mesmo do `/bot -on`/`-off`) |
-| `bot.adminMode` | on/off | `off` | Modo admin: só você usa comandos (o mesmo do `/bot +admin`/`-admin`) |
+| `bot.adminMode` | on/off | `on` | Modo admin: só você usa comandos (o mesmo do `/bot +admin`/`-admin`) |
 | `news.hack` | lista | The Hacker News, BleepingComputer, Krebs on Security | Feeds RSS do `/news -hack` |
 | `news.g1` | lista | `https://g1.globo.com/dynamo/rss2.xml` | Feeds RSS do `/news -g1` |
 | `news.gazeta` | lista | `https://www.gazetadopovo.com.br/feed/rss/brasil.xml` | Feeds RSS do `/news -gazeta` |
@@ -921,7 +921,7 @@ sobrevivem a reinícios:
 
 - **Ligado/desligado** (setting `bot.paused`, padrão ligado): desligado, o bot
   ignora **todos** os comandos, inclusive os seus, exceto o próprio `/bot`.
-- **Modo admin** (setting `bot.adminMode`, padrão desligado): ligado, só você
+- **Modo admin** (setting `bot.adminMode`, padrão ligado): ligado, só você
   usa comandos; os de qualquer outra pessoa são ignorados em silêncio, mesmo
   os que normalmente são liberados (`/ping`, `/tempo`...).
 
