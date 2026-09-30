@@ -293,7 +293,7 @@
                         "l"
                     ],
                     "values": [],
-                    "desc": "Lista as mensagens apagadas do cache por chat, marcando o chat atual."
+                    "desc": "Lista as apagadas e as editadas do cache por chat, marcando o chat atual."
                 },
                 {
                     "opts": [
@@ -318,13 +318,63 @@
                     "values": [
                         "<nº|nome>"
                     ],
-                    "desc": "Chat alvo: nº do /show -l ou parte do nome."
+                    "desc": "Chat alvo: nº da lista de deletadas do /show -l ou parte do nome."
                 },
                 {
                     "argv": [
                         "-N"
                     ],
                     "desc": "Quantidade de mensagens (padrão 1, máx. show.max). Ex: /show -3"
+                }
+            ],
+            "onlyAdmin": true
+        },
+        {
+            "cmd": "/edit",
+            "usage": "/edit [-N] [OPTION]",
+            "aliases": [
+                "/e"
+            ],
+            "help": "Reexibe as últimas mensagens editadas deste chat (texto de antes e de depois).",
+            "cmd_opts": [
+                {
+                    "opts": [
+                        "list",
+                        "l"
+                    ],
+                    "values": [],
+                    "desc": "Lista as apagadas e as editadas do cache por chat, marcando o chat atual."
+                },
+                {
+                    "opts": [
+                        "flush",
+                        "f"
+                    ],
+                    "values": [],
+                    "desc": "Remove as editadas deste chat (no seu privado: de todos)."
+                },
+                {
+                    "opts": [
+                        "pv"
+                    ],
+                    "values": [],
+                    "desc": "Envia no seu privado em vez de expor no chat atual."
+                },
+                {
+                    "opts": [
+                        "chat",
+                        "c"
+                    ],
+                    "values": [
+                        "<nº|nome>"
+                    ],
+                    "desc": "Chat alvo: nº da lista de editadas do /edit -l ou parte do nome."
+                },
+                {
+                    "argv": [
+                        "-N"
+                    ],
+                    "desc": "Quantidade de mensagens (padrão 1, máx. show.max). Ex: /edit -3"
                 }
             ],
             "onlyAdmin": true
