@@ -47,7 +47,8 @@
             "cmd": "/uptime",
             "usage": "/uptime",
             "aliases": [
-                "/u"
+                "/u",
+                "/up"
             ],
             "help": "Exibe o tempo que o bot está rodando.",
             "onlyAdmin": true
