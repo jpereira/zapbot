@@ -2840,9 +2840,8 @@ async function resolverChatTarget(valueAlt) {
  * /show -list
  * Summary of the deleted messages stored in the cache.
  *
- * The "per chat" breakdown shows NAMES of other conversations. So it only appears
- * in your own private chat or with -pv; in any other chat (e.g.: a group)
- * only the totals come out, so as not to expose who you talk to.
+ * In any chat lists all the deleted ones, per chat (same as your private chat),
+ * marking the chat where the command was executed. Use -pv to receive it in private.
  */
 async function listDeleted({ msg, opts, chatId }) {
     await dbReady;
@@ -2850,7 +2849,6 @@ async function listDeleted({ msg, opts, chatId }) {
     const myId = client.info.wid._serialized;
     const idsDoChat = await chatCurrentIds(chatId);
     const ownerInPrivate = idsDoChat.includes(myId);
-    const showPerChat = ownerInPrivate || opts.opt.pv;
 
     const general = await dbGet(
         `SELECT COUNT(*) AS total,
@@ -2860,22 +2858,10 @@ async function listDeleted({ msg, opts, chatId }) {
           WHERE revoked = 1`
     );
 
-    const inChat = await dbGet(
-        `SELECT COUNT(*) AS total
-           FROM messages
-          WHERE revoked = 1
-            AND chat_id IN (${idsDoChat.map(() => '?').join(', ')})`,
-        idsDoChat
-    );
-
     let textAlt = '🗑️ *Mensagens apagadas no cache*\n\n';
     textAlt += `📦 *Total:* ${general.total}`;
     if (general.com_midia > 0) textAlt += ` _(${general.com_midia} com mídia)_`;
     textAlt += '\n';
-
-    if (!ownerInPrivate) {
-        textAlt += `💬 *Neste chat:* ${inChat.total}\n`;
-    }
 
     if (general.total > 0 && general.mais_antiga) {
         const expiresIn = paraMs(general.mais_antiga) + getSetting('cache.revokedRetentionDays') * DAY_MS;
@@ -2883,7 +2869,7 @@ async function listDeleted({ msg, opts, chatId }) {
         textAlt += `⏳ *Mais antiga:* ${formatData(general.mais_antiga)} _(expira em ${daysAlt} dia${daysAlt === 1 ? '' : 's'})_\n`;
     }
 
-    if (showPerChat && general.total > 0) {
+    if (general.total > 0) {
         const LIMIT = 10;
 
         const byChat = await queryChatsWithDeleted();
@@ -2891,21 +2877,26 @@ async function listDeleted({ msg, opts, chatId }) {
 
         textAlt += '\n*Por chat:*\n';
 
-        byChat.slice(0, LIMIT).forEach((c, i) => {
+        const line = (c, i) => {
             const iconAlt = c.is_group ? '👥' : '👤';
-            const nameAlt = chatNameAlt(c);
             const current = idsDoChat.includes(c.chat_id) ? ' ← _este chat_' : '';
-            textAlt += `${i + 1}. ${iconAlt} ${nameAlt} — *${c.total}* _(última ${formatData(c.ultima)})_${current}\n`;
-        });
+            return `${i + 1}. ${iconAlt} ${chatNameAlt(c)} — *${c.total}* _(última ${formatData(c.ultima)})_${current}\n`;
+        };
+
+        byChat.slice(0, LIMIT).forEach((c, i) => { textAlt += line(c, i); });
 
         if (byChat.length > LIMIT) {
             textAlt += `_+${byChat.length - LIMIT} chat(s)_\n`;
+
+            // The current chat outside the top: shows up anyway, with the no. for -c
+            const i = byChat.findIndex(c => idsDoChat.includes(c.chat_id));
+            if (i >= LIMIT) textAlt += line(byChat[i], i);
         }
     }
 
     textAlt += `\n💡 _Use /show -N para reexibir (máx. ${getSetting('show.max')})._`;
 
-    if (showPerChat && general.total > 0) {
+    if (general.total > 0) {
         textAlt += '\n💡 _Use /show -N -c <nº ou nome> para ver as de um chat._';
     }
 
