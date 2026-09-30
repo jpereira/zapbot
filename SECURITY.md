@@ -1,21 +1,35 @@
-# Security Policy
+# Política de segurança
 
-## Supported Versions
+## Versões suportadas
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+Só a **última release** (tag `release-X.Y` mais recente) recebe correções de
+segurança. As correções saem numa release nova; atualize seguindo o
+[README](README.md#atualizar-para-uma-nova-versão).
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
+## Como reportar uma vulnerabilidade
 
-## Reporting a Vulnerability
+**Não abra uma issue pública.** Reporte em particular, de um destes jeitos:
 
-Use this section to tell people how to report a vulnerability.
+- pela aba **Security** do repositório no GitHub (**Report a vulnerability**);
+- por e-mail para **jpereiran@gmail.com**.
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+Inclua, se possível: a versão (ou o commit), os passos para reproduzir, o
+impacto que você observou e, se tiver, uma sugestão de correção. O projeto é
+mantido por uma pessoa: a resposta vem assim que possível, e você será avisado
+quando a correção for publicada.
+
+## O que é sensível neste projeto
+
+Alguns pontos merecem atenção especial num relato:
+
+- **Sessão do WhatsApp** (`.wwebjs_auth`) e o **QR Code**: quem tiver um dos
+  dois controla a conta. O QR pode ir por e-mail (veja o código anti-phishing
+  no README).
+- **Comandos de admin**: qualquer forma de alguém que não é o dono executar um
+  comando `onlyAdmin` (inclusive fazendo o bot "digitar" um comando).
+- **`/get`**: o `yt-dlp` roda na rede do servidor; URLs para a rede interna
+  são recusadas (anti-SSRF).
+- **Chaves de API** (OpenAI, GIPHY) e a senha do SMTP: nunca devem aparecer no
+  chat nem nos logs.
+- **Mensagens guardadas**: o banco (`cache/bot_database.db`) e as mídias em
+  `cache/media` têm conversas de terceiros.
