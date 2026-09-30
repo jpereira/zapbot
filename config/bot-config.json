@@ -574,7 +574,7 @@
         {
             "cmd": "/stats",
             "usage": "/stats [-N] [OPTION]",
-            "help": "Ranking do chat: quem mais fala, apaga e edita, horários e dia de pico.",
+            "help": "Ranking do chat (quem mais fala, apaga e edita, horários e dia de pico) ou, com -me, as suas estatísticas.",
             "cmd_opts": [
                 {
                     "opts": [
@@ -584,7 +584,14 @@
                     "values": [
                         "<nome>"
                     ],
-                    "desc": "Estatísticas de outro chat, buscado pelo nome."
+                    "desc": "Estatísticas de outro chat, buscado pelo nome (com -me: só as suas nesse chat)."
+                },
+                {
+                    "opts": [
+                        "me"
+                    ],
+                    "values": [],
+                    "desc": "As suas mensagens, somadas em todos os chats: onde você mais fala, horários e pico."
                 },
                 {
                     "opts": [
