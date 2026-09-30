@@ -7,9 +7,6 @@ const { dbRun } = require('./db');
 const { printError } = require('./log');
 const { getSetting } = require('./settings');
 
-/*
- * Contadores do /stats
- */
 
 // Dia (AAAA-MM-DD) e hora (0-23) no fuso de São Paulo
 function diaEHora(ms) {

@@ -18,9 +18,6 @@ const { isCaminhoDeMidia, nomeSeguro, obterPastaMidia } = require('../util/arqui
 const { paraMs } = require('../util/formatar');
 const { verificarWatch } = require('../watch/verificar');
 
-/*
- * Mensagens
- */
 client.on('message_create', async (msg) => {
     try {
         const timestamp = Date.now();

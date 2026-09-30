@@ -8,9 +8,6 @@ const fs = require('fs-extra');
 const { CACHE_DIR, MEDIA_DIR } = require('../constantes');
 const { printInfo } = require('../log');
 
-/*
- * Utilitários de cache
- */
 function getDirSize(dir) {
     let total = 0;
 

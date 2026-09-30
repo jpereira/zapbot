@@ -64,10 +64,6 @@ function getCommandSyntax(cmd) {
     return command ? formatCommandHelp(command) : null;
 }
 
-/*
- * Handlers de comandos
- */
-
 // Resposta padrão de erro dos comandos /get e /cache
 function formatarErroComando(e) {
     let texto = `⚠️💥 ${e.message}.`;

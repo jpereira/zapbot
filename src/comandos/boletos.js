@@ -1,12 +1,9 @@
 /*
- * Comando /boletos.
+ * Comando /boletos: sorteio de membros do grupo. O sorteio também é usado pelo /ualisu.
  */
 
 const { client } = require('../cliente');
 
-/*
- * /boletos: sorteio de membros do grupo
- */
 // Sorteia `n` participantes diferentes (fora o próprio bot)
 function sortearParticipantes(participantes, n) {
     const meuUser = client.info?.wid?.user;
