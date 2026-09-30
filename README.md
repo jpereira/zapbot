@@ -325,6 +325,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -c -f`) para fazer o bot
 | `/show` | `/undo`, `/s` | ✅ | Reexibe mensagens apagadas |
 | `/set` | | ✅ | Lista e altera as configurações (settings) |
 | `/watch` | `/w` | ✅ | Avisa no seu privado quando uma mensagem casa com um texto/regex |
+| `/meme` | | | Template de meme aleatório (imgflip) |
 
 ### `/help`
 
@@ -652,6 +653,11 @@ Detalhes:
   a resposta vai para o seu privado.
 - As ocorrências ficam na tabela `watch_hits` por 30 dias (setting
   `watch.hitsRetentionDays`), ou até um `/watch -f`.
+
+### `/meme [busca]`
+
+Template de meme aleatório do [imgflip](https://imgflip.com/), opcionalmente
+filtrado pelo nome (`/meme drake`).
 
 ### Adicionando ou alterando comandos
 
