@@ -581,7 +581,15 @@
             "aliases": [
                 "/ai"
             ],
-            "help": "Pergunta ao ChatGPT (OpenAI). Também funciona respondendo uma mensagem.",
+            "help": "Pergunta ao ChatGPT (OpenAI). Respondendo uma mensagem, o texto dela entra na pergunta. Precisa de OPENAI_API_KEY no config/.env ou do setting openai.api.key.",
+            "cmd_opts": [
+                {
+                    "argv": [
+                        "<pergunta>"
+                    ],
+                    "desc": "O que perguntar. Ex: /gpt explique SSRF em 3 linhas"
+                }
+            ],
             "onlyAdmin": true
         }
     ]
