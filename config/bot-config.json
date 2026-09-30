@@ -532,8 +532,8 @@
         },
         {
             "cmd": "/news",
-            "usage": "/news [-hack] [quantidade]",
-            "help": "Manchetes mais recentes dos feeds RSS, com fonte, data e link.",
+            "usage": "/news <-hack|-g1|-gazeta|-brasil> [quantidade]",
+            "help": "Manchetes mais recentes dos feeds RSS, com fonte, data e link. Categorias combinam: /news -g1 -gazeta. Feeds de cada uma no setting news.<categoria>.",
             "cmd_opts": [
                 {
                     "opts": [
@@ -541,7 +541,30 @@
                         "hacknews"
                     ],
                     "values": [],
-                    "desc": "Hacking/segurança: The Hacker News, BleepingComputer, Krebs (setting news.feeds). É o padrão."
+                    "desc": "Hacking/segurança: The Hacker News, BleepingComputer, Krebs."
+                },
+                {
+                    "opts": [
+                        "g1"
+                    ],
+                    "values": [],
+                    "desc": "g1 (últimas notícias)."
+                },
+                {
+                    "opts": [
+                        "gazeta",
+                        "gaz"
+                    ],
+                    "values": [],
+                    "desc": "Gazeta do Povo (Brasil)."
+                },
+                {
+                    "opts": [
+                        "brasil",
+                        "br"
+                    ],
+                    "values": [],
+                    "desc": "Blogs sobre o Brasil listados no feedspot (em inglês, na maioria)."
                 },
                 {
                     "argv": [
@@ -550,7 +573,7 @@
                     "desc": "Manchetes, de 1 a 10 (padrão: setting news.max, 5). Ex: /news -hack 3"
                 }
             ],
-            "onlyAdmin": false
+            "onlyAdmin": true
         }
     ]
 }

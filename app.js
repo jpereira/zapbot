@@ -265,6 +265,12 @@ async function inicializarBanco() {
  * separator (list cujos itens podem ter espaço/vírgula: ex. '\n', um por linha),
  * allowEmpty (string que pode ficar vazia) e secret (valor mascarado no /set e nos logs).
  */
+// item() das listas de feeds do /news
+function validarUrlFeed(v) {
+    if (!isValidHttpUrl(v)) throw new Error(`URL inválida: ${v}`);
+    return v;
+}
+
 const SETTINGS_SCHEMA = {
     'debug.enabled': {
         default: APP_ENV.toLowerCase() === 'dev',
@@ -400,18 +406,50 @@ const SETTINGS_SCHEMA = {
         type: 'boolean',
         desc: 'Modo admin: só o dono usa comandos (o mesmo do /bot +admin|-admin).'
     },
-    'news.feeds': {
+    'news.hack': {
         default: [
             'https://feeds.feedburner.com/TheHackersNews',
             'https://www.bleepingcomputer.com/feed/',
             'https://krebsonsecurity.com/feed/'
         ],
         type: 'list',
-        desc: 'Feeds RSS de hacking/segurança do /news -hack.',
-        item: (v) => {
-            if (!isValidHttpUrl(v)) throw new Error(`URL inválida: ${v}`);
-            return v;
-        }
+        desc: 'Feeds RSS do /news -hack (hacking/segurança).',
+        item: validarUrlFeed
+    },
+    'news.g1': {
+        default: ['https://g1.globo.com/dynamo/rss2.xml'],
+        type: 'list',
+        desc: 'Feeds RSS do /news -g1.',
+        item: validarUrlFeed
+    },
+    'news.gazeta': {
+        default: ['https://www.gazetadopovo.com.br/feed/rss/brasil.xml'],
+        type: 'list',
+        desc: 'Feeds RSS do /news -gazeta (Gazeta do Povo).',
+        item: validarUrlFeed
+    },
+    'news.brasil': {
+        // Os feeds listados em https://rss.feedspot.com/brazil_rss_feeds/ (a página é HTML, não RSS)
+        default: [
+            'http://lifeinrocinha.blogspot.com/feeds/posts/default?alt=rss',
+            'https://braziliangringo.com/feed/',
+            'https://brazilianspace.blogspot.com/feeds/posts/default?alt=rss',
+            'https://cursosbiblicos.teo.br/feed/',
+            'https://feeds.feedburner.com/aviacaobrasil',
+            'https://feeds.feedburner.com/Eatrionet',
+            'https://foodsafetybrazil.org/feed/',
+            'https://jornaldebrasilia.com.br/feed/',
+            'https://lyricalbrazil.com/feed/',
+            'https://nocoupinbrazil.wordpress.com/feed/',
+            'https://rioonwatch.org/?feed=rss2',
+            'https://riorealblog.com/feed/',
+            'https://vexus.com.br/en/feed/feed.xml',
+            'https://www.absoluterio.com.br/blog-feed.xml',
+            'https://www.brasilwire.com/feed/'
+        ],
+        type: 'list',
+        desc: 'Feeds RSS do /news -brasil (blogs sobre o Brasil, do feedspot).',
+        item: validarUrlFeed
     },
     'news.max': {
         default: 5,
@@ -3793,11 +3831,18 @@ async function cmdBot({ msg, opts }) {
 }
 
 /*
- * /news [-hack|-hacknews] [quantidade]: manchetes dos feeds RSS.
- *   -hack → feeds de hacking/segurança (setting 'news.feeds'); é a única categoria
- *           por enquanto, então também é o padrão
+ * /news <-categoria> [quantidade]: manchetes dos feeds RSS da categoria.
+ *   Categorias em NEWS_CATEGORIAS, cada uma com os feeds no setting 'news.<categoria>';
+ *   várias juntas somam os feeds (/news -g1 -gazeta). Sem categoria mostra a ajuda.
  *   quantidade → 1 a 10 (padrão: setting 'news.max')
  */
+const NEWS_CATEGORIAS = {
+    hack: '🏴‍☠️ *Hacking News*',
+    g1: '📰 *g1*',
+    gazeta: '📰 *Gazeta do Povo*',
+    brasil: '🇧🇷 *Brasil*'
+};
+
 const ENTIDADES_XML = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
 
 // Uma passada só: "&amp;lt;" vira "&lt;" (e não "<"), como deve ser
@@ -3830,20 +3875,26 @@ async function lerFeed(url) {
 }
 
 async function cmdNews({ msg, opts }) {
+    const categorias = Object.keys(NEWS_CATEGORIAS).filter(c => opts.opt[c]);
+
+    if (!categorias.length) {
+        await msg.reply('```' + getCommandSyntax('/news') + '```');
+        return;
+    }
+
     const { max: limite } = SETTINGS_SCHEMA['news.max'];
     const valor = opts.argv[0] ?? getSetting('news.max');
     const max = Number(valor);
 
     if (!Number.isInteger(max) || max < 1 || max > limite) {
-        await msg.reply(`❌ Quantidade inválida: ${valor}. Use de 1 a ${limite}.\n💡 _/news -hack 5_`);
+        await msg.reply(`❌ Quantidade inválida: ${valor}. Use de 1 a ${limite}.\n💡 _/news -g1 5_`);
         return;
     }
 
-    // -hack é a única categoria: com ou sem a opção, usa os feeds de hacking
-    const feeds = getSetting('news.feeds');
+    const feeds = categorias.flatMap(c => getSetting(`news.${c}`));
 
     if (!feeds.length) {
-        await msg.reply('ℹ️ Nenhum feed configurado.\n💡 _Adicione com /set news.feeds <url1> <url2>_');
+        await msg.reply(`ℹ️ Nenhum feed configurado.\n💡 _Adicione com /set news.${categorias[0]} <url1> <url2>_`);
         return;
     }
 
@@ -3870,7 +3921,9 @@ async function cmdNews({ msg, opts }) {
     const linhas = itens.map((i, n) =>
         `${n + 1}. *${i.titulo}*\n_${i.fonte}${i.data ? ` · ${formatarData(i.data)}` : ''}_${i.link ? `\n${i.link}` : ''}`);
 
-    await msg.reply(`🏴‍☠️ *Hacking News*\n\n${linhas.join('\n\n')}`, null, { linkPreview: false });
+    const titulo = categorias.length === 1 ? NEWS_CATEGORIAS[categorias[0]] : '📰 *News*';
+
+    await msg.reply(`${titulo}\n\n${linhas.join('\n\n')}`, null, { linkPreview: false });
 }
 
 // cmd do bot-config.json -> handler
