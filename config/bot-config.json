@@ -496,15 +496,25 @@
             "onlyAdmin": true
         },
         {
-            "cmd": "/stop",
-            "usage": "/stop",
-            "help": "Pausa todos os comandos (inclusive os seus) até o /run.",
-            "onlyAdmin": true
-        },
-        {
-            "cmd": "/run",
-            "usage": "/run",
-            "help": "Retoma os comandos pausados pelo /stop.",
+            "cmd": "/bot",
+            "usage": "/bot [-on|-off]",
+            "help": "Liga/desliga o bot. Desligado, todos os comandos (inclusive os seus) são ignorados, exceto o /bot. Sem opção mostra o estado.",
+            "cmd_opts": [
+                {
+                    "opts": [
+                        "on"
+                    ],
+                    "values": [],
+                    "desc": "Ativa o bot."
+                },
+                {
+                    "opts": [
+                        "off"
+                    ],
+                    "values": [],
+                    "desc": "Desliga o bot."
+                }
+            ],
             "onlyAdmin": true
         }
     ]
