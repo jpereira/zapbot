@@ -178,6 +178,13 @@ ficam disponíveis para o bot. Nunca faça commit dele (já está no `.gitignore
 |---|---|---|
 | `PHONE_NUMBER` | `5521999999999@c.us` | **Obrigatório.** Número da conta que será pareada, no formato `DDI + DDD + número` seguido de `@c.us`, sem `+`, espaços ou traços. É para ele que o bot manda o aviso de inicialização, as notificações do `/monitor` e os alertas de uso indevido de comandos. Também aparece (mascarado) no e-mail do QR. |
 
+### OpenAI (opcional)
+
+| Variável | Exemplo | Descrição |
+|---|---|---|
+| `OPENAI_API_KEY` | `sk-proj-...` | Chave da OpenAI usada pelo `/gpt`. Sem ela o comando responde que não está configurado. |
+| `OPENAI_MODEL` | `gpt-4o-mini` | Modelo do `/gpt` (padrão: `gpt-4o-mini`). |
+
 ### QR Code por e-mail
 
 | Variável | Exemplo | Descrição |
@@ -325,6 +332,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -c -f`) para fazer o bot
 | `/show` | `/undo`, `/s` | ✅ | Reexibe mensagens apagadas |
 | `/set` | | ✅ | Lista e altera as configurações (settings) |
 | `/watch` | `/w` | ✅ | Avisa no seu privado quando uma mensagem casa com um texto/regex |
+| `/gpt` | `/ai` | ✅ | Pergunta ao ChatGPT (OpenAI) |
 
 ### `/help`
 
@@ -652,6 +660,18 @@ Detalhes:
   a resposta vai para o seu privado.
 - As ocorrências ficam na tabela `watch_hits` por 30 dias (setting
   `watch.hitsRetentionDays`), ou até um `/watch -f`.
+
+### `/gpt` (`/ai`) · admin
+
+Pergunta ao ChatGPT pela API da OpenAI (`OPENAI_API_KEY` e `OPENAI_MODEL` no
+`config/.env`). Respondendo uma mensagem, o texto dela entra na pergunta. É
+admin por padrão para ninguém dos grupos gastar os seus créditos. A chave nunca
+é logada; em erro, só a mensagem da API volta para o chat.
+
+```
+/gpt explique o que é SSRF em 3 linhas
+/gpt resuma          (respondendo uma mensagem)
+```
 
 ### Adicionando ou alterando comandos
 

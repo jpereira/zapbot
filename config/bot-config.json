@@ -407,6 +407,15 @@
                 }
             ],
             "onlyAdmin": true
+        },
+        {
+            "cmd": "/gpt",
+            "usage": "/gpt <pergunta>",
+            "aliases": [
+                "/ai"
+            ],
+            "help": "Pergunta ao ChatGPT (OpenAI). Também funciona respondendo uma mensagem.",
+            "onlyAdmin": true
         }
     ]
 }
