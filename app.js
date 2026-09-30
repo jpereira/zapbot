@@ -393,7 +393,7 @@ const SETTINGS_SCHEMA = {
     'bot.paused': {
         default: false,
         type: 'boolean',
-        desc: 'Todos os comandos pausados, exceto o /run (o mesmo do /stop e /run).'
+        desc: 'Bot desligado: todos os comandos são ignorados, exceto o /bot (o mesmo do /bot -on|-off).'
     }
 };
 
@@ -1555,12 +1555,16 @@ client.on('change_state', state => {
     printInfo(`[WA STATE]=${state}`);
 });
 
-client.on('ready', () => {
+client.on('ready', async () => {
     isReady = true;
     lastDisconnectReason = null;
 
+    // bot.paused vem do banco: avisa já no boot se os comandos estão desligados
+    await dbPronto;
+    const desligado = getSetting('bot.paused') ? ' Bot desligado: use /bot -on para ativar os comandos.' : '';
+
     printSuccess(`🤖 ZapBot ${packageJson.version} inicializado! Informando ${process.env.PHONE_NUMBER}`);
-    messageToSelf(`🤖 ZapBot ${packageJson.version} inicializado.`);
+    messageToSelf(`🤖 ZapBot ${packageJson.version} inicializado.${desligado}`);
 });
 
 /*
@@ -3728,19 +3732,23 @@ async function cmdUalisu({ msg }) {
 }
 
 /*
- * Pausa (setting 'bot.paused', sobrevive a reinícios)
- *   /stop → pausa TODOS os comandos, inclusive os seus, exceto o /run
- *   /run  → retoma
+ * /bot -on|-off: liga/desliga o bot (setting 'bot.paused', sobrevive a reinícios)
+ *   /bot      → mostra o estado
+ *   /bot -on  → ativa
+ *   /bot -off → desliga: TODOS os comandos são ignorados, inclusive os seus, exceto o /bot
  * A recuperação de apagadas e o /watch continuam funcionando.
  */
-async function cmdStop({ msg }) {
-    await setSetting('bot.paused', true);
-    await msg.reply('⏸️ Todos os comandos pausados. Use /run para retomar.');
-}
+async function cmdBot({ msg, opts }) {
+    if (opts.opt.on && opts.opt.off) {
+        await msg.reply('❌ Use só um: /bot -on ou /bot -off');
+        return;
+    }
 
-async function cmdRun({ msg }) {
-    await setSetting('bot.paused', false);
-    await msg.reply('▶️ Comandos retomados.');
+    if (opts.opt.on || opts.opt.off) await setSetting('bot.paused', opts.opt.off);
+
+    await msg.reply(getSetting('bot.paused')
+        ? '⏸️ Bot desligado: todos os comandos são ignorados. Use /bot -on para ativar.'
+        : '▶️ Bot ativo. Use /bot -off para desligar.');
 }
 
 // cmd do bot-config.json -> handler
@@ -3768,8 +3776,7 @@ const HANDLERS = {
     '/cve': cmdCve,
     '/tempo': cmdTempo,
     '/ualisu': cmdUalisu,
-    '/stop': cmdStop,
-    '/run': cmdRun
+    '/bot': cmdBot
 };
 
 // Avisa no boot se o bot-config tiver comando sem handler (ou vice-versa)
@@ -3965,9 +3972,9 @@ client.on('message_create', async (msg) => {
             return;
         }
 
-        // /stop: tudo pausado (inclusive os seus comandos) até o /run
-        if (getSetting('bot.paused') && command.cmd !== '/run') {
-            printInfo(`Comando '${command.cmd}' ignorado: bot pausado (/run para retomar)`);
+        // Bot desligado: tudo ignorado (inclusive os seus comandos) até o /bot -on
+        if (getSetting('bot.paused') && command.cmd !== '/bot') {
+            printInfo(`Comando '${command.cmd}' ignorado: bot desligado (/bot -on para ativar)`);
             return;
         }
 
