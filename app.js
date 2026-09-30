@@ -394,6 +394,11 @@ const SETTINGS_SCHEMA = {
         default: false,
         type: 'boolean',
         desc: 'Bot desligado: todos os comandos são ignorados, exceto o /bot (o mesmo do /bot -on|-off).'
+    },
+    'bot.adminMode': {
+        default: false,
+        type: 'boolean',
+        desc: 'Modo admin: só o dono usa comandos (o mesmo do /admin e /adminoff).'
     }
 };
 
@@ -3751,6 +3756,21 @@ async function cmdBot({ msg, opts }) {
         : '▶️ Bot ativo. Use /bot -off para desligar.');
 }
 
+/*
+ * Modo admin (setting 'bot.adminMode', sobrevive a reinícios)
+ *   /admin    → só você usa comandos (os dos outros são ignorados em silêncio)
+ *   /adminoff → volta ao normal (cada comando segue o seu onlyAdmin)
+ */
+async function cmdAdmin({ msg }) {
+    await setSetting('bot.adminMode', true);
+    await msg.reply('🔒 Modo admin ativado: só o dono do bot pode usar comandos.');
+}
+
+async function cmdAdminOff({ msg }) {
+    await setSetting('bot.adminMode', false);
+    await msg.reply('🔓 Modo admin desativado: comandos liberados conforme a configuração.');
+}
+
 // cmd do bot-config.json -> handler
 const HANDLERS = {
     '/help': cmdHelp,
@@ -3776,7 +3796,9 @@ const HANDLERS = {
     '/cve': cmdCve,
     '/tempo': cmdTempo,
     '/ualisu': cmdUalisu,
-    '/bot': cmdBot
+    '/bot': cmdBot,
+    '/admin': cmdAdmin,
+    '/adminoff': cmdAdminOff
 };
 
 // Avisa no boot se o bot-config tiver comando sem handler (ou vice-versa)
@@ -3977,6 +3999,9 @@ client.on('message_create', async (msg) => {
             printInfo(`Comando '${command.cmd}' ignorado: bot desligado (/bot -on para ativar)`);
             return;
         }
+
+        // /admin: comandos dos outros são ignorados em silêncio
+        if (getSetting('bot.adminMode') && !msg.fromMe) return;
 
         /*
          * Comando restrito ao dono do bot: ignora em silêncio no chat e só avisa
