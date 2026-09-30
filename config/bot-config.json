@@ -447,6 +447,21 @@
             ],
             "help": "Piada aleatória (JokeAPI, safe-mode).",
             "onlyAdmin": false
+        },
+        {
+            "cmd": "/cve",
+            "usage": "/cve",
+            "help": "Últimas CVEs publicadas no NVD.",
+            "onlyAdmin": false
+        },
+        {
+            "cmd": "/cvehighscore",
+            "usage": "/cvehighscore",
+            "aliases": [
+                "/cvehs"
+            ],
+            "help": "CVEs críticas (CVSS ≥ 9) publicadas nos últimos 7 dias.",
+            "onlyAdmin": false
         }
     ]
 }
