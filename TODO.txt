@@ -1,7 +1,4 @@
-* Adicionar capacidade de enviar email quando tiver crash, bom para saber status.
 * Adicionar esquema para DeFi, tipo monitorar pools da Orca/Liquidswap/Morpho exibindo
   relatorios de fees/pnl/status. talvez um watch para report diario?
 * Adicionar comando /defi para pegar status das carteiras. salvando enderecos no banco.
   suportar Orca, Prjx
-* Adicionar suporte para /gif
-* Adicionar suporte para /gpt
