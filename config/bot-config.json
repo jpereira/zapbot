@@ -407,6 +407,12 @@
                 }
             ],
             "onlyAdmin": true
+        },
+        {
+            "cmd": "/kernel",
+            "usage": "/kernel",
+            "help": "Versões atuais do kernel Linux (kernel.org).",
+            "onlyAdmin": false
         }
     ]
 }
