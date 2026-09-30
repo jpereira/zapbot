@@ -497,8 +497,8 @@
         },
         {
             "cmd": "/bot",
-            "usage": "/bot [-on|-off]",
-            "help": "Liga/desliga o bot. Desligado, todos os comandos (inclusive os seus) são ignorados, exceto o /bot. Sem opção mostra o estado.",
+            "usage": "/bot [-on|-off] [+admin|-admin]",
+            "help": "Liga/desliga o bot e o modo admin. Sem opção mostra o estado. As opções combinam: /bot -on +admin",
             "cmd_opts": [
                 {
                     "opts": [
@@ -512,21 +512,22 @@
                         "off"
                     ],
                     "values": [],
-                    "desc": "Desliga o bot."
+                    "desc": "Desliga o bot: todos os comandos (inclusive os seus) são ignorados, exceto o /bot."
+                },
+                {
+                    "opts": [
+                        "admin"
+                    ],
+                    "values": [],
+                    "desc": "Desliga o modo admin (cada comando volta a seguir o seu onlyAdmin)."
+                },
+                {
+                    "argv": [
+                        "+admin"
+                    ],
+                    "desc": "Liga o modo admin: só você usa comandos; os dos outros são ignorados."
                 }
             ],
-            "onlyAdmin": true
-        },
-        {
-            "cmd": "/admin",
-            "usage": "/admin",
-            "help": "Modo admin: só você usa comandos; os dos outros são ignorados.",
-            "onlyAdmin": true
-        },
-        {
-            "cmd": "/adminoff",
-            "usage": "/adminoff",
-            "help": "Desativa o modo admin.",
             "onlyAdmin": true
         }
     ]
