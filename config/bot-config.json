@@ -407,6 +407,12 @@
                 }
             ],
             "onlyAdmin": true
+        },
+        {
+            "cmd": "/gif",
+            "usage": "/gif [tag]",
+            "help": "GIF aleatório do GIPHY (tag padrão: setting gif.tag).",
+            "onlyAdmin": false
         }
     ]
 }

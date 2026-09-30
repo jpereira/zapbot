@@ -178,6 +178,12 @@ ficam disponíveis para o bot. Nunca faça commit dele (já está no `.gitignore
 |---|---|---|
 | `PHONE_NUMBER` | `5521999999999@c.us` | **Obrigatório.** Número da conta que será pareada, no formato `DDI + DDD + número` seguido de `@c.us`, sem `+`, espaços ou traços. É para ele que o bot manda o aviso de inicialização, as notificações do `/monitor` e os alertas de uso indevido de comandos. Também aparece (mascarado) no e-mail do QR. |
 
+### GIPHY (opcional)
+
+| Variável | Exemplo | Descrição |
+|---|---|---|
+| `GIPHY_API_KEY` | | Chave do GIPHY usada pelo `/gif` ([developers.giphy.com](https://developers.giphy.com/)). |
+
 ### QR Code por e-mail
 
 | Variável | Exemplo | Descrição |
@@ -325,6 +331,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -c -f`) para fazer o bot
 | `/show` | `/undo`, `/s` | ✅ | Reexibe mensagens apagadas |
 | `/set` | | ✅ | Lista e altera as configurações (settings) |
 | `/watch` | `/w` | ✅ | Avisa no seu privado quando uma mensagem casa com um texto/regex |
+| `/gif` | | | GIF aleatório (GIPHY) |
 
 ### `/help`
 
@@ -587,6 +594,7 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 | `watch.max` | 1–100 | `20` | Máximo de regras do `/watch` |
 | `watch.showMax` | 1–100 | `20` | Máximo de ocorrências listadas por `/watch -show` |
 | `watch.hitsRetentionDays` | 1–365 | `30` | Dias que as ocorrências do `/watch` ficam guardadas |
+| `gif.tag` | texto | `fail` | Tag padrão do `/gif` |
 
 Uma chave nova é declarada em `SETTINGS_SCHEMA` (`app.js`) com padrão, tipo,
 descrição e limites, e lida com `getSetting('<chave>')`. Valores inválidos no
@@ -652,6 +660,11 @@ Detalhes:
   a resposta vai para o seu privado.
 - As ocorrências ficam na tabela `watch_hits` por 30 dias (setting
   `watch.hitsRetentionDays`), ou até um `/watch -f`.
+
+### `/gif [tag]`
+
+GIF aleatório do GIPHY (precisa de `GIPHY_API_KEY`), enviado como vídeo em loop.
+Sem tag usa o setting `gif.tag`.
 
 ### Adicionando ou alterando comandos
 

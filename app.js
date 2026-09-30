@@ -361,6 +361,11 @@ const SETTINGS_SCHEMA = {
         default: 30,
         type: 'number', min: 1, max: 365,
         desc: 'Dias que as ocorrências do /watch ficam guardadas.'
+    },
+    'gif.tag': {
+        default: 'fail',
+        type: 'string',
+        desc: 'Tag padrão do /gif quando nenhuma é informada.'
     }
 };
 
@@ -3282,6 +3287,36 @@ async function cmdWatch({ msg, opts, args, chatId }) {
     await ajuda();
 }
 
+// /gif [tag]: GIF aleatório do GIPHY (GIPHY_API_KEY no config/.env), enviado como MP4 em loop
+async function cmdGif({ msg, args }) {
+    if (!process.env.GIPHY_API_KEY) {
+        await msg.reply('⚠️ GIPHY_API_KEY não configurada no config/.env.');
+        return;
+    }
+
+    try {
+        const { data } = await axios.get('https://api.giphy.com/v1/gifs/random', {
+            timeout: 15000,
+            params: { api_key: process.env.GIPHY_API_KEY, tag: args.trim() || getSetting('gif.tag'), rating: 'pg-13' }
+        });
+
+        const mp4 = data.data?.images?.original?.mp4;
+
+        if (!mp4) {
+            await msg.reply('❌ Nenhum GIF encontrado.');
+            return;
+        }
+
+        const { data: video } = await axios.get(mp4, { responseType: 'arraybuffer', timeout: 15000, maxContentLength: 10 * 1024 * 1024 });
+        const media = new MessageMedia('video/mp4', Buffer.from(video).toString('base64'), 'gif.mp4');
+
+        await msg.reply(media, null, { sendVideoAsGif: true });
+    } catch (err) {
+        printError('/gif:', err.message);
+        await msg.reply('❌ Não consegui buscar um GIF agora.');
+    }
+}
+
 // cmd do bot-config.json -> handler
 const HANDLERS = {
     '/help': cmdHelp,
@@ -3297,7 +3332,8 @@ const HANDLERS = {
     '/cache': cmdCache,
     '/show': cmdUndo,
     '/set': cmdSet,
-    '/watch': cmdWatch
+    '/watch': cmdWatch,
+    '/gif': cmdGif
 };
 
 // Avisa no boot se o bot-config tiver comando sem handler (ou vice-versa)
