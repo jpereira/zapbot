@@ -619,8 +619,8 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 | `watch.showMax` | 1–100 | `20` | Máximo de ocorrências listadas por `/watch -show` |
 | `watch.hitsRetentionDays` | 1–365 | `30` | Dias que as ocorrências do `/watch` ficam guardadas |
 | `gif.tag` | texto | `fail` | Tag padrão do `/gif` |
-| `cve.max` | 1–20 | `10` | Quantidade de CVEs exibidas pelo `/cve` |
-| `cve.maxDays` | 1–120 | `7` | Janela do `/cve -highscore` quando `<maxDays>` não é informado |
+| `cve.max` | 1–20 | `10` | Quantidade de CVEs exibidas pelo `/cve` (o `/cve -highscore <max>` sobrepõe) |
+| `cve.maxDays` | 1–120 | `7` | Janela, em dias, do `/cve -highscore` |
 | `api.key.giphy` | texto (pode ser vazio) | *(vazio)* | Chave do GIPHY, usada quando `GIPHY_API_KEY` não está no `config/.env`. Exibida mascarada (`••••1234`); `/set -reset api.key.giphy` apaga |
 
 Uma chave nova é declarada em `SETTINGS_SCHEMA` (`app.js`) com padrão, tipo,
@@ -726,13 +726,14 @@ a nota CVSS e a severidade, um resumo da descrição e o link para a página no 
 
 | Opção | Valor | Descrição |
 |---|---|---|
-| `-highscore`, `-high` | `[maxDays]` | Só as críticas (CVSS v3 `CRITICAL`, nota ≥ 9) dos últimos `maxDays` dias, de 1 a 120. Sem o valor usa o setting `cve.maxDays` (7) |
+| `-highscore`, `-high` | `[max]` | Só as `max` críticas (CVSS v3 `CRITICAL`, nota ≥ 9) mais recentes, de 1 a 20, dos últimos `cve.maxDays` dias (7). Sem o valor usa o setting `cve.max` (10) |
 
 ```
 /cve                 → as 10 mais recentes dos últimos 2 dias
-/cve -high           → as 10 críticas mais recentes dos últimos 7 dias (cve.maxDays)
-/cve -highscore 30   → as 10 críticas mais recentes dos últimos 30 dias
+/cve -high           → as 10 críticas mais recentes dos últimos 7 dias
+/cve -high 2         → só as 2 críticas mais recentes dos últimos 7 dias
 /set cve.max 5       → passa a exibir 5 por vez
+/set cve.maxDays 30  → o -highscore passa a olhar os últimos 30 dias
 ```
 
 Exemplo de resposta:
@@ -747,10 +748,11 @@ https://nvd.nist.gov/vuln/detail/CVE-2026-103056
 
 Detalhes:
 
-- A quantidade exibida vem do setting `cve.max` (padrão 10, máx. 20). O
-  `maxDays` do comando sobrepõe o `cve.maxDays` só naquela chamada.
-- O NVD não aceita janelas maiores que 120 dias; valores fora de 1–120 (ou que
-  não são números) são recusados com uma mensagem de ajuda.
+- A quantidade exibida vem do setting `cve.max` (padrão 10, máx. 20). O `max`
+  do `-highscore` sobrepõe o `cve.max` só naquela chamada; valores fora de 1–20
+  (ou que não são números) são recusados com uma mensagem de ajuda.
+- A janela do `-highscore` vem do setting `cve.maxDays` (padrão 7). O NVD não
+  aceita janelas maiores que 120 dias, por isso o setting vai de 1 a 120.
 - A nota exibida segue a ordem CVSS v3.1 → v4.0 → v3.0 → v2, preferindo a
   métrica principal (do NVD). CVEs recém-publicadas podem vir ainda sem nota.
 - O filtro de críticas usa a severidade CVSS v3: CVEs avaliadas só em v4.0 ou
