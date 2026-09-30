@@ -450,7 +450,7 @@
         },
         {
             "cmd": "/cve",
-            "usage": "/cve [-highscore [maxDays]]",
+            "usage": "/cve [-highscore [max]]",
             "help": "Últimas CVEs publicadas no NVD (quantidade: setting cve.max).",
             "cmd_opts": [
                 {
@@ -459,9 +459,9 @@
                         "high"
                     ],
                     "values": [
-                        "[maxDays]"
+                        "[max]"
                     ],
-                    "desc": "Só as críticas (CVSS ≥ 9) dos últimos maxDays dias (1–120; padrão: setting cve.maxDays)."
+                    "desc": "Só as max críticas (CVSS ≥ 9) mais recentes, de 1 a 20 (padrão: setting cve.max), dos últimos cve.maxDays dias."
                 }
             ],
             "onlyAdmin": false

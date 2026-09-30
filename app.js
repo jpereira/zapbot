@@ -378,12 +378,12 @@ const SETTINGS_SCHEMA = {
     'cve.max': {
         default: 10,
         type: 'number', min: 1, max: 20,
-        desc: 'Quantidade de CVEs exibidas pelo /cve.'
+        desc: 'Quantidade de CVEs exibidas pelo /cve (o /cve -highscore <max> sobrepõe).'
     },
     'cve.maxDays': {
         default: 7,
-        type: 'number', min: 1, max: 120,
-        desc: 'Janela (dias) do /cve -highscore quando <maxDays> não é informado.'
+        type: 'number', min: 1, max: 120, // 120: maximum window accepted by the NVD
+        desc: 'Janela (dias) do /cve -highscore.'
     }
 };
 
@@ -3478,17 +3478,15 @@ async function cmdJoke({ msg }) {
 }
 
 /*
- * /cve [-highscore|-high [maxDays]]: CVEs published on the NVD (nvd.nist.gov).
- * /cve             → the most recent ones from the last CVE_DAYS_RECENT days
- * /cve -high [N]   → the critical ones (CVSS v3 CRITICAL, ≥ 9) from the last N days;
- * without N uses the 'cve.maxDays' setting
- * The amount shown comes from the 'cve.max' setting.
+ * /cve [-highscore|-high [max]]: CVEs published on the NVD (nvd.nist.gov).
+ * /cve             → the most recent 'cve.max' from the last CVE_DAYS_RECENT days
+ * /cve -high [N]   → the N most recent critical ones (CVSS v3 CRITICAL, ≥ 9) from the
+ * last 'cve.maxDays' days; without N uses the 'cve.max' setting
  *
  * The cve.circl.lu API that zapzap used changed format and almost never brings the
  * CVSS score. Without a key the NVD accepts ~5 queries every 30s.
  */
 const NVD_URL = 'https://services.nvd.nist.gov/rest/json/cves/2.0';
-const NVD_MAX_DAYS = 120; // maximum window accepted by the NVD (above it: 404)
 const CVE_DAYS_RECENT = 2;
 
 // The NVD wants ISO-8601 without the 'Z'
@@ -3546,21 +3544,20 @@ function formatCve(cve) {
 
 async function cmdCve({ msg, opts }) {
     const critical = opts.given.has('highscore');
-    let daysAlt = CVE_DAYS_RECENT;
+    const daysAlt = critical ? getSetting('cve.maxDays') : CVE_DAYS_RECENT;
 
-    if (critical) {
-        // the given <maxDays> overrides the cve.maxDays setting
-        const valueAlt = opts.opt.highscore ?? getSetting('cve.maxDays');
-        daysAlt = Number(valueAlt);
+    // the <max> given to -highscore overrides the cve.max setting
+    const { max: limitAlt } = SETTINGS_SCHEMA['cve.max'];
+    const valueAlt = opts.opt.highscore ?? getSetting('cve.max');
+    const max = Number(valueAlt);
 
-        if (!Number.isInteger(daysAlt) || daysAlt < 1 || daysAlt > NVD_MAX_DAYS) {
-            await msg.reply(`❌ maxDays inválido: ${valueAlt}. Use de 1 a ${NVD_MAX_DAYS} (limite do NVD).\n💡 _/cve -high 30_`);
-            return;
-        }
+    if (!Number.isInteger(max) || max < 1 || max > limitAlt) {
+        await msg.reply(`❌ Quantidade inválida: ${valueAlt}. Use de 1 a ${limitAlt}.\n💡 _/cve -high 5_`);
+        return;
     }
 
     try {
-        const cves = await searchCvesRecent({ dias: daysAlt, max: getSetting('cve.max'), critical });
+        const cves = await searchCvesRecent({ dias: daysAlt, max, critical });
 
         if (!cves.length) {
             await msg.reply(`🛡️ Nenhuma CVE${critical ? ' crítica' : ''} publicada no ${periodDays(daysAlt)}.`);
