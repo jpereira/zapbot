@@ -374,7 +374,7 @@ const SETTINGS_SCHEMA = {
         type: 'string',
         desc: 'Tag padrão do /gif quando nenhuma é informada.'
     },
-    'api.key.giphy': {
+    'gif.giphy.api.key': {
         default: '',
         type: 'string',
         allowEmpty: true,
@@ -515,7 +515,17 @@ function validateSetting(key, value) {
     throw new Error(`tipo inválido no schema: ${schema.type}`);
 }
 
+// Renamed keys (old → new): the value saved in the database moves to the new name
+const SETTINGS_RENAMED = {
+    'api.key.giphy': 'gif.giphy.api.key'
+};
+
 async function loadSettings() {
+    for (const [old, fresh] of Object.entries(SETTINGS_RENAMED)) {
+        await dbRun('UPDATE OR IGNORE settings SET key = ? WHERE key = ?', [fresh, old]);
+        await dbRun('DELETE FROM settings WHERE key = ?', [old]);
+    }
+
     for (const [key, schema] of Object.entries(SETTINGS_SCHEMA)) {
         await dbRun('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)', [key, JSON.stringify(schema.default)]);
     }
@@ -3538,12 +3548,12 @@ async function cmdListGeneral({ msg }) {
 }
 
 // /gif [tag]: random GIF from GIPHY, sent as a looping MP4.
-// Key: GIPHY_API_KEY in config/.env or, if missing, the 'api.key.giphy' setting
+// Key: GIPHY_API_KEY in config/.env or, if missing, the 'gif.giphy.api.key' setting
 async function cmdGif({ msg, args }) {
-    const apiKey = envOuSetting('GIPHY_API_KEY', 'api.key.giphy');
+    const apiKey = envOuSetting('GIPHY_API_KEY', 'gif.giphy.api.key');
 
     if (!apiKey) {
-        await msg.reply('⚠️ Chave do GIPHY não configurada: defina GIPHY_API_KEY no config/.env ou use /set api.key.giphy <chave>.');
+        await msg.reply('⚠️ Chave do GIPHY não configurada: defina GIPHY_API_KEY no config/.env ou use /set gif.giphy.api.key <chave>.');
         return;
     }
 
