@@ -15,7 +15,8 @@ const MAX_DELETE_WINDOW = 68 * 60 * 60 * 1000;
 // 1 day in milliseconds (retention of deleted ones: setting 'cache.revokedRetentionDays')
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-const CACHE_DIR = path.join(ROOT_DIR, 'cache');
+// ZAPBOT_CACHE_DIR swaps the directory of the database and media (the tests use a temporary folder)
+const CACHE_DIR = process.env.ZAPBOT_CACHE_DIR || path.join(ROOT_DIR, 'cache');
 const MEDIA_DIR = path.join(CACHE_DIR, 'media'); // media saved to recover deleted messages
 const TMP_DIR = path.join(CACHE_DIR, 'tmp');     // /get temporary files
 
