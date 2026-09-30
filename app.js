@@ -378,7 +378,7 @@ const SETTINGS_SCHEMA = {
     'cve.max': {
         default: 10,
         type: 'number', min: 1, max: 20,
-        desc: 'Quantidade de CVEs exibidas pelo /cve (o /cve -highscore <max> sobrepõe).'
+        desc: 'Quantidade de CVEs exibidas pelo /cve (o /cve <max> sobrepõe).'
     },
     'cve.maxDays': {
         default: 7,
@@ -3478,10 +3478,11 @@ async function cmdJoke({ msg }) {
 }
 
 /*
- * /cve [-highscore|-high [max]]: CVEs published on the NVD (nvd.nist.gov).
- * /cve             → the most recent 'cve.max' from the last CVE_DAYS_RECENT days
+ * /cve [max] [-highscore|-high [max]]: CVEs published on the NVD (nvd.nist.gov).
+ * /cve [N]         → the N most recent ones from the last CVE_DAYS_RECENT days
  * /cve -high [N]   → the N most recent critical ones (CVSS v3 CRITICAL, ≥ 9) from the
- * last 'cve.maxDays' days; without N uses the 'cve.max' setting
+ * last 'cve.maxDays' days
+ * Without N uses the 'cve.max' setting.
  *
  * The cve.circl.lu API that zapzap used changed format and almost never brings the
  * CVSS score. Without a key the NVD accepts ~5 queries every 30s.
@@ -3546,13 +3547,13 @@ async function cmdCve({ msg, opts }) {
     const critical = opts.given.has('highscore');
     const daysAlt = critical ? getSetting('cve.maxDays') : CVE_DAYS_RECENT;
 
-    // the <max> given to -highscore overrides the cve.max setting
+    // the given <max> (/cve 5 or /cve -high 5) overrides the cve.max setting
     const { max: limitAlt } = SETTINGS_SCHEMA['cve.max'];
-    const valueAlt = opts.opt.highscore ?? getSetting('cve.max');
+    const valueAlt = opts.opt.highscore ?? opts.argv[0] ?? getSetting('cve.max');
     const max = Number(valueAlt);
 
     if (!Number.isInteger(max) || max < 1 || max > limitAlt) {
-        await msg.reply(`❌ Quantidade inválida: ${valueAlt}. Use de 1 a ${limitAlt}.\n💡 _/cve -high 5_`);
+        await msg.reply(`❌ Quantidade inválida: ${valueAlt}. Use de 1 a ${limitAlt}.\n💡 _/cve 5 ou /cve -high 5_`);
         return;
     }
 
