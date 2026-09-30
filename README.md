@@ -41,7 +41,7 @@ tudo por comandos digitados no próprio chat (`/help`, `/get`, `/show`, `/news`,
  │     ├──► cache/media   mídias p/ recuperar mensagens apagadas  │
  │     ├──► yt-dlp + ffmpeg   comando /get                        │
  │     ├──► APIs HTTP (axios)  /gpt /tempo /cve /news /gif...     │
- │     └──► SMTP (nodemailer)  envio do QR Code por e-mail        │
+ │     └──► SMTP (nodemailer)  QR Code e alertas por e-mail       │
  │                                                                │
  │  volumes:  wwebjs_auth  → sessão do WhatsApp (.wwebjs_auth)    │
  │            app_cache    → banco SQLite + mídias (cache/)       │
@@ -74,8 +74,9 @@ tudo por comandos digitados no próprio chat (`/help`, `/get`, `/show`, `/news`,
   [`/edit`](#edit-e--admin). As suas próprias edições são ignoradas.
 - **Limpeza automática**: a cada 10 minutos o bot remove do banco/disco as
   mensagens comuns com mais de 68 h (janela máxima que o WhatsApp permite
-  apagar), as apagadas e as editadas com mais de 30 dias e as ocorrências do
-  `/watch` com mais de 30 dias (setting `watch.hitsRetentionDays`).
+  apagar), as apagadas e as editadas com mais de 30 dias, as ocorrências do
+  `/watch` com mais de 30 dias (setting `watch.hitsRetentionDays`) e os
+  contadores do `/stats` com mais de 90 dias (setting `stats.retentionDays`).
 - **Estatísticas**: cada mensagem nova (e cada apagada/editada) soma 1 num
   contador por chat, dia, hora e remetente (tabela `stats`), usado pelo
   [`/stats`](#stats--admin). Só números, sem o texto; ficam 90 dias (setting
@@ -208,7 +209,7 @@ ficam disponíveis para o bot. Nunca faça commit dele (já está no `.gitignore
 
 | Variável | Exemplo | Descrição |
 |---|---|---|
-| `PHONE_NUMBER` | `5521999999999@c.us` | **Obrigatório.** Número da conta que será pareada, no formato `DDI + DDD + número` seguido de `@c.us`, sem `+`, espaços ou traços. É para ele que o bot manda o aviso de inicialização, as notificações do `/monitor` e os alertas de uso indevido de comandos. Também aparece (mascarado) no e-mail do QR. |
+| `PHONE_NUMBER` | `5521999999999@c.us` | **Obrigatório.** Número da conta que será pareada, no formato `DDI + DDD + número` seguido de `@c.us`, sem `+`, espaços ou traços. É para ele que o bot manda o aviso de inicialização, as notificações do `/monitor` e, com o debug ligado, os avisos de uso indevido de comandos. Também aparece (mascarado) no e-mail do QR. |
 
 ### Avançado
 
@@ -417,11 +418,17 @@ Podem ser enviados em **qualquer chat** (privado, grupo ou no chat consigo mesmo
 
 Comandos marcados como **admin** só executam quando enviados **pela própria
 conta do bot** (você, de qualquer aparelho). Se outra pessoa tentar, nada
-acontece no chat e você recebe um aviso no `PHONE_NUMBER`:
+acontece no chat; com o [debug](#debug--admin) ligado, você recebe um
+aviso no `PHONE_NUMBER`:
 
 ```
 ⚠️ Fulano tentou executar /show dentro de Família, mas sem permissão
 ```
+
+O **modo admin vem ligado por padrão** (setting `bot.adminMode`): até você
+mandar `/bot -admin`, só você usa comandos, inclusive os que não são admin
+(`/get`, `/tempo`, `/sticker`...). Desligado, cada comando segue a coluna
+*Admin* do [Resumo](#resumo).
 
 As **respostas do próprio bot** também saem pela sua conta, mas nunca são
 tratadas como comando, mesmo que comecem com `/`. Sem isso, alguém poderia
@@ -478,7 +485,7 @@ sobrevivem a reinícios:
   ignora **todos** os comandos, inclusive os seus, exceto o próprio `/bot`.
 - **Modo admin** (setting `bot.adminMode`, padrão ligado): ligado, só você
   usa comandos; os de qualquer outra pessoa são ignorados em silêncio, mesmo
-  os que normalmente são liberados (`/ping`, `/tempo`...).
+  os que normalmente são liberados (`/get`, `/tempo`...).
 
 | Opção | Descrição |
 |---|---|
@@ -519,7 +526,8 @@ Detalhes:
 - Se o bot reiniciar desligado ou em modo admin, a mensagem de inicialização
   no seu privado avisa.
 - Só os **comandos** são afetados: a recuperação de mensagens apagadas e
-  editadas, o `/watch` e as notificações do `/monitor` continuam funcionando.
+  editadas, o `/watch`, os alertas de preço e as notificações do `/monitor`
+  continuam funcionando.
 - Comandos ignorados aparecem no log: `Comando '/ping' ignorado: bot
   desligado` (sempre) e `Comando '/ping' de Fulano ignorado: modo admin` (só
   com o [debug](#debug--admin) ligado).
@@ -532,7 +540,7 @@ Mostra o espaço ocupado em `cache/` (banco, mídias, temporários).
 
 | Opção | Descrição |
 |---|---|
-| `-clean`, `-c` | Remove só o que passou da janela de retenção (68 h / `cache.revokedRetentionDays` para apagadas / `cache.editedRetentionDays` para editadas / `watch.hitsRetentionDays` para ocorrências do `/watch`) |
+| `-clean`, `-c` | Remove só o que passou da janela de retenção (68 h / `cache.revokedRetentionDays` para apagadas / `cache.editedRetentionDays` para editadas / `watch.hitsRetentionDays` para ocorrências do `/watch` / `stats.retentionDays` para os contadores do `/stats`) |
 | `-force`, `-f` | Junto com `-clean`: apaga **todas** as mensagens (inclusive as guardadas para o `/show` e o `/edit`), mídias e temporários, e compacta o banco. Números e logs do `/monitor`, ocorrências do `/watch` e contadores do `/stats` são mantidos |
 
 ```
@@ -798,7 +806,7 @@ argumento ou você pode dar reply numa mensagem que contenha o link.
 
 O arquivo final é limitado a 20 MB (setting `get.maxSizeMB`).
 
-Limites (o `/get` é liberado para qualquer um):
+Limites (o `/get` não é admin: com o modo admin desligado, qualquer um usa):
 
 - Download de no máximo 200 MB antes da conversão (setting `get.maxDownloadMB`).
 - Link de playlist baixa só o vídeo do link (`--no-playlist`).
@@ -1035,10 +1043,10 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 | `bot.adminMode` | on/off | `on` | Modo admin: só você usa comandos (o mesmo do `/bot +admin`/`-admin`) |
 | `bot.paused` | on/off | `off` | Bot desligado: todos os comandos ignorados, exceto o `/bot` (o mesmo do `/bot -on`/`-off`) |
 | `cache.editedRetentionDays` | 1–365 | `30` | Dias que as mensagens editadas ficam guardadas para o `/edit` |
-| `cache.revokedRetentionDays` | 1–365 | `30` | Dias que as mensagens apagadas ficam guardadas |
+| `cache.revokedRetentionDays` | 1–365 | `30` | Dias que as mensagens apagadas ficam guardadas para o `/show` |
 | `commands.disabled` | lista | *(vazia)* | Comandos desativados em tempo de execução: o bot os ignora e eles somem do `/help`. O `/set` não pode ser desativado |
 | `cotacao.coins` | lista | `EUR, USDT` | Moedas habilitadas no `/cotacao` (`USD`, `EUR`, `GBP`, `USDT`); normalmente alterada pelo `/cotacao -a`/`-d` |
-| `crypto.coins` | lista | `BTC, ETH, SOL, HYPE` | Moedas do `/crypto` (só as suportadas) |
+| `crypto.coins` | lista | `BTC, ETH, SOL, HYPE` | Moedas do `/crypto` (só as suportadas); normalmente alterada pelo `/crypto -a`/`-d` |
 | `cve.max` | 1–20 | `10` | Quantidade de CVEs exibidas pelo `/cve` (o `/cve <max>` sobrepõe) |
 | `cve.maxDays` | 1–120 | `7` | Janela, em dias, do `/cve -highscore` |
 | `debug.enabled` | on/off | `on` se `APP_ENV=dev` | Modo debug (o mesmo do `/debug`) |
@@ -1070,13 +1078,12 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 | `watch.showMax` | 1–100 | `20` | Máximo de ocorrências listadas por `/watch -show` |
 
 Uma chave nova é declarada em `SETTINGS_SCHEMA` (`src/settings.js`), **em ordem
-alfabética**, com padrão, tipo,
-descrição e limites (`allowEmpty` para texto que pode ficar vazio, `secret`
-para mascarar o valor no `/set` e nos logs), e lida com
-`getSetting('<chave>')`. Valores inválidos no
-banco são ignorados no boot (vale o padrão, com aviso nos logs). Ao renomear
-uma chave, registre `antiga → nova` em `SETTINGS_RENOMEADOS`: no boot o valor
-salvo passa para o nome novo (ex.: `api.key.giphy` → `gif.giphy.api.key`).
+alfabética**, com padrão, tipo, descrição e limites (`allowEmpty` para texto
+que pode ficar vazio, `secret` para mascarar o valor no `/set` e nos logs), e
+lida com `getSetting('<chave>')`. Valores inválidos no banco são ignorados no
+boot (vale o padrão, com aviso nos logs). Ao renomear uma chave, registre
+`antiga → nova` em `SETTINGS_RENOMEADOS`: no boot o valor salvo passa para o
+nome novo (ex.: `api.key.giphy` → `gif.giphy.api.key`).
 
 ### `/show` (`/undo`, `/s`) · admin
 
