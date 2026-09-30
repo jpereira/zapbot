@@ -79,11 +79,13 @@ require('./src/eventos/editadas');
 require('./src/eventos/mensagens');
 
 const { iniciarAlertasDePreco } = require('./src/alertasPreco');
+const { iniciarHeartbeat } = require('./src/heartbeat');
 const { iniciarLimpezaPeriodica } = require('./src/limpeza');
 
 // Tarefas periódicas
 iniciarLimpezaDasMarcas();
 iniciarWatchdog();
+iniciarHeartbeat();
 iniciarLimpezaPeriodica();
 iniciarAlertasDePreco();
 

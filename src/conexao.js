@@ -44,18 +44,7 @@ async function restartClient(motivo) {
     }
 }
 
-// Health check: só depois que o cliente ficou pronto
-async function verificarSaude() {
-    if (!estado.pronto || estado.reiniciando) return;
-
-    try {
-        await client.getState();
-    } catch {
-        printInfo('Healthcheck falhou');
-    }
-}
-
-// Watchdog: só vigia um cliente que já esteve pronto e não está reiniciando
+// Watchdog (a verificação de que o WhatsApp responde fica no heartbeat.js): só vigia um cliente que já esteve pronto e não está reiniciando
 async function vigiarBrowser() {
     if (!estado.pronto || estado.reiniciando) return;
 
@@ -67,7 +56,6 @@ async function vigiarBrowser() {
 
 // Chamada no app.js
 function iniciarWatchdog() {
-    setInterval(verificarSaude, 30000);
     setInterval(vigiarBrowser, 30000);
 }
 

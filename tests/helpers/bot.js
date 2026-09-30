@@ -208,6 +208,21 @@ async function editar(original, novoTexto, { antigo = original.body, editadaEm =
     return client.enviadas.slice(antes).map(e => ({ ...e, texto: textoDe(e.content, e.options) }));
 }
 
+/*
+ * Com o relógio simulado, avança o tempo aos poucos até a promessa terminar:
+ * não depende de quantos passos assíncronos existem antes de cada setTimeout.
+ */
+async function esperarComRelogio(t, promessa, passoMs = 1000, maxPassos = 60) {
+    let terminou = false;
+    promessa.then(() => { terminou = true; }, () => { terminou = true; });
+
+    for (let i = 0; i < maxPassos && !terminou; i++) {
+        for (let j = 0; j < 10; j++) await new Promise(setImmediate);
+        if (!terminou) t.mock.timers.tick(passoMs);
+    }
+    return promessa;
+}
+
 module.exports = {
     ...ambiente,
     GRUPO,
@@ -222,6 +237,7 @@ module.exports = {
     dbRun,
     editar,
     entregar,
+    esperarComRelogio,
     errosNoLog,
     estado,
     executar,
