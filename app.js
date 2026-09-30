@@ -3282,6 +3282,26 @@ async function cmdWatch({ msg, opts, args, chatId }) {
     await help();
 }
 
+// /kernel: current versions published on kernel.org
+async function cmdKernel({ msg }) {
+    try {
+        const { data } = await axios.get('https://www.kernel.org/releases.json', { timeout: 15000 });
+
+        const linesAlt = data.releases
+            .filter(r => ['mainline', 'stable', 'longterm'].includes(r.moniker))
+            .slice(0, 6)
+            .map(r => `${r.moniker.padEnd(9)} ${r.version.padEnd(12)} ${r.released?.isodate ?? ''}`);
+
+        await msg.reply(
+            `🐧 *Linux ${data.latest_stable.version}* _(latest stable)_\n\n` +
+            '```\n' + linesAlt.join('\n') + '\n```'
+        );
+    } catch (err) {
+        printError('/kernel:', err.message);
+        await msg.reply('❌ Não consegui consultar o kernel.org agora.');
+    }
+}
+
 // bot-config.json cmd -> handler
 const HANDLERS = {
     '/help': cmdHelp,
@@ -3297,7 +3317,8 @@ const HANDLERS = {
     '/cache': cmdCache,
     '/show': cmdUndo,
     '/set': cmdSet,
-    '/watch': cmdWatch
+    '/watch': cmdWatch,
+    '/kernel': cmdKernel
 };
 
 // Warns at boot if the bot-config has a command without a handler (or vice versa)
