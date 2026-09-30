@@ -407,6 +407,12 @@
                 }
             ],
             "onlyAdmin": true
+        },
+        {
+            "cmd": "/joke",
+            "usage": "/joke",
+            "help": "Piada aleatória (JokeAPI, safe-mode).",
+            "onlyAdmin": false
         }
     ]
 }
