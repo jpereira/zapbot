@@ -88,10 +88,18 @@ async function alertarPorEmail(evento, detalhes = '', { forcar = false } = {}) {
 }
 
 // Espera o e-mail sair, mas não trava o encerramento se o SMTP não responder
-const alertarAntesDeSair = (evento, detalhes, ms) => Promise.race([
-    alertarPorEmail(evento, detalhes, { forcar: true }),
-    new Promise(r => setTimeout(r, ms))
-]);
+async function alertarAntesDeSair(evento, detalhes, ms) {
+    let limite;
+
+    try {
+        await Promise.race([
+            alertarPorEmail(evento, detalhes, { forcar: true }),
+            new Promise(r => { limite = setTimeout(r, ms); })
+        ]);
+    } finally {
+        clearTimeout(limite);
+    }
+}
 
 module.exports = {
     alertarAntesDeSair,
