@@ -6,9 +6,6 @@ const { spawn } = require('child_process');
 
 const { GET_TIMEOUT_MS } = require('../constantes');
 
-/*
- * Execução de processos externos (yt-dlp / ffmpeg)
- */
 function runCommand(bin, args, logFd, timeoutMs = GET_TIMEOUT_MS) {
     return new Promise((resolve, reject) => {
         const child = spawn(bin, args, { stdio: ['ignore', logFd, logFd] });

@@ -11,6 +11,18 @@ const { getSetting, setSetting } = require('../settings');
 const { formatarData, plural, resumirTexto } = require('../util/formatar');
 const { REGRA_REGEX } = require('../watch/regras');
 
+/*
+ * /watch (alias /w)
+ *   /watch                     → o mesmo que /watch -s (ocorrências de todas as regras)
+ *   /watch -l                  → lista as regras (nº, regra, ocorrências)
+ *   /watch -s [-N]             → resumo das mensagens que casaram com a regra N (sem N: todas)
+ *   /watch -a <texto|/regex/>  → adiciona regra
+ *   /watch -d -N               → remove a regra N e as ocorrências dela
+ *   /watch -f [-N]             → apaga as ocorrências da regra N (sem N: de todas); mantém as regras
+ * As regras ficam no setting 'watch.rules'; as ocorrências na tabela watch_hits.
+ * -l e -s mostram conversas de terceiros: fora do seu privado, a resposta vai para lá
+ * (responderNoPrivado).
+ */
 async function responderNoPrivado({ msg, chatId }, texto) {
     const meuId = client.info.wid._serialized;
 
