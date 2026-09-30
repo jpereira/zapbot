@@ -373,6 +373,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -c -f`) para fazer o bot
 | `/help` | `/h` | | Menu de ajuda |
 | `/debug` | `/d`, `/dbg` | ✅ | Liga/desliga logs de debug |
 | `/uptime` | `/u`, `/up` | ✅ | Tempo de execução e de conexão |
+| `/version` | `/ver` | ✅ | Versão do bot (mesmo banner do `/uptime`) |
 | `/ping` | `/p` | ✅ | Verifica se o bot está vivo |
 | `/noffa` | `/🌈`, `/🏳️‍🌈` | | Enfeita o texto com arco-íris |
 | `/everyone` | | ✅ | Menciona todos do grupo |
@@ -428,6 +429,18 @@ ligado só com `APP_ENV=dev`.
 
 ```
 /uptime
+🤖 ZapBot 1.6
+━━━━━━━━━━━━━━━━━━
+⚡ Online: 2 dias, 3 horas
+🔐 Conectado: 2 dias, 2 horas, 58 minutos
+```
+
+### `/version` (`/ver`) · admin
+
+Exibe o mesmo banner do `/uptime`, com a versão do bot.
+
+```
+/ver
 🤖 ZapBot 1.6
 ━━━━━━━━━━━━━━━━━━
 ⚡ Online: 2 dias, 3 horas
