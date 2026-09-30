@@ -3302,6 +3302,55 @@ async function cmdKernel({ msg }) {
     }
 }
 
+/*
+ * /boletos: draw of group members
+ */
+// Draws `n` different participants (other than the bot itself)
+function drawParticipants(participants, n) {
+    const myUser = client.info?.wid?.user;
+    const pool = participants.filter(p => p.id.user !== myUser);
+
+    for (let i = pool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+
+    return pool.slice(0, n);
+}
+
+async function sendDraw(msg, chat, drawn, assembleText) {
+    const mentions = drawn.map(p => p.id._serialized.split(':')[0]);
+    const tags = drawn.map(p => `@${p.id.user}`);
+
+    await client.sendMessage(chat.id._serialized, assembleText(tags), {
+        mentions,
+        quotedMessageId: msg.id._serialized
+    });
+}
+
+async function cmdBills({ msg }) {
+    const chat = await msg.getChat().catch(() => null);
+
+    if (!chat?.isGroup) {
+        await msg.reply('Apenas utilizado dentro de grupos.');
+        return;
+    }
+
+    const drawn = drawParticipants(chat.participants, 2);
+
+    if (drawn.length < 2) {
+        await msg.reply('Membros insuficientes no grupo.');
+        return;
+    }
+
+    await sendDraw(msg, chat, drawn, ([a, b]) =>
+        `🥳 Parabéns ${a} e ${b} 🎉\n` +
+        'Vocês foram sorteados para pagar um boleto! 💸✨\n' +
+        'Anote o número: 📝 001 9 337370000000100 05009 401448 16060680935031\n' +
+        'Boa sorte pagando! 😉💰'
+    );
+}
+
 // bot-config.json cmd -> handler
 const HANDLERS = {
     '/help': cmdHelp,
@@ -3318,7 +3367,8 @@ const HANDLERS = {
     '/show': cmdUndo,
     '/set': cmdSet,
     '/watch': cmdWatch,
-    '/kernel': cmdKernel
+    '/kernel': cmdKernel,
+    '/boletos': cmdBills
 };
 
 // Warns at boot if the bot-config has a command without a handler (or vice versa)
