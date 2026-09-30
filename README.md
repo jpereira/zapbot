@@ -190,7 +190,7 @@ ficam disponíveis para o bot. Nunca faça commit dele (já está no `.gitignore
 
 | Variável | Exemplo | Descrição |
 |---|---|---|
-| `GIPHY_API_KEY` | | Chave do GIPHY usada pelo `/gif` ([developers.giphy.com](https://developers.giphy.com/)). Se estiver vazia, o bot usa o setting `api.key.giphy` (`/set api.key.giphy <chave>`). |
+| `GIPHY_API_KEY` | | Chave do GIPHY usada pelo `/gif` ([developers.giphy.com](https://developers.giphy.com/)). Se estiver vazia, o bot usa o setting `gif.giphy.api.key` (`/set gif.giphy.api.key <chave>`). |
 
 #### Como gerar a chave do GIPHY (grátis)
 
@@ -202,7 +202,7 @@ ficam disponíveis para o bot. Nunca faça commit dele (já está no `.gitignore
    e confirme.
 4. A chave aparece no Dashboard. Copie e configure de um dos jeitos:
    - no `config/.env`: `GIPHY_API_KEY=suachave` (vale no próximo start), ou
-   - pelo WhatsApp, sem reiniciar: `/set api.key.giphy suachave` (o
+   - pelo WhatsApp, sem reiniciar: `/set gif.giphy.api.key suachave` (o
      `GIPHY_API_KEY` do `.env`, se existir, tem prioridade).
 
 A chave nova é do tipo **beta**: gratuita, mas limitada a **100 chamadas por
@@ -644,13 +644,15 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 | `openai.api.key` | texto (pode ser vazio) | *(vazio)* | Chave da OpenAI, usada quando `OPENAI_API_KEY` não está no `config/.env`. Exibida mascarada (`••••1234`); `/set -reset openai.api.key` apaga |
 | `openai.timeout.ms` | 5000–300000 | `60000` | Timeout do `/gpt`, usado quando `OPENAI_TIMEOUT_MS` não está no `config/.env` |
 | `news.max` | 1–10 | `5` | Manchetes exibidas pelo `/news` (o `/news <quantidade>` sobrepõe) |
-| `api.key.giphy` | texto (pode ser vazio) | *(vazio)* | Chave do GIPHY, usada quando `GIPHY_API_KEY` não está no `config/.env`. Exibida mascarada (`••••1234`); `/set -reset api.key.giphy` apaga |
+| `gif.giphy.api.key` | texto (pode ser vazio) | *(vazio)* | Chave do GIPHY, usada quando `GIPHY_API_KEY` não está no `config/.env`. Exibida mascarada (`••••1234`); `/set -reset gif.giphy.api.key` apaga |
 
 Uma chave nova é declarada em `SETTINGS_SCHEMA` (`app.js`) com padrão, tipo,
 descrição e limites (`allowEmpty` para texto que pode ficar vazio, `secret`
 para mascarar o valor no `/set` e nos logs), e lida com
 `getSetting('<chave>')`. Valores inválidos no
-banco são ignorados no boot (vale o padrão, com aviso nos logs).
+banco são ignorados no boot (vale o padrão, com aviso nos logs). Ao renomear
+uma chave, registre `antiga → nova` em `SETTINGS_RENOMEADOS`: no boot o valor
+salvo passa para o nome novo (ex.: `api.key.giphy` → `gif.giphy.api.key`).
 
 ### `/watch` (`/w`) · admin
 
@@ -735,7 +737,7 @@ Só em grupos: lista os membros (número, nome, 👑 dono, ⭐ admin).
 
 GIF aleatório do GIPHY, enviado como vídeo em loop. Sem tag usa o setting
 `gif.tag`. Precisa de uma chave do GIPHY: `GIPHY_API_KEY` no `config/.env` ou,
-se ela não existir, o setting `api.key.giphy` (`/set api.key.giphy <chave>`).
+se ela não existir, o setting `gif.giphy.api.key` (`/set gif.giphy.api.key <chave>`).
 
 ### `/joke` (`/piada`, `/humor`)
 
