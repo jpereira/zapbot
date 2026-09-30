@@ -9,9 +9,6 @@ const { dbGet, dbRun } = require('../db');
 const { printDebug, printError, printSuccess } = require('../log');
 const { isDebugMode } = require('../settings');
 
-/*
- * Presença dos números monitorados
- */
 client.on('presence_update', async (presence) => {
     // Sem o /monitor carregado, números já cadastrados não geram avisos
     if (!findCommand('/monitor')) return;

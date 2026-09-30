@@ -9,9 +9,6 @@ const sqlite3 = require('sqlite3').verbose();
 const { CACHE_DIR } = require('./constantes');
 const { printError, printInfo } = require('./log');
 
-/*
- * Banco de dados (SQLite)
- */
 const dbPath = path.join(CACHE_DIR, 'bot_database.db');
 fs.mkdirSync(CACHE_DIR, { recursive: true });
 
