@@ -23,6 +23,7 @@ const { cmdMonitor } = require('./monitor');
 const { cmdNews } = require('./news');
 const { cmdNoffa } = require('./noffa');
 const { cmdPing } = require('./ping');
+const { cmdResumo } = require('./resumo');
 const { cmdSet } = require('./set');
 const { cmdShow } = require('./show');
 const { cmdStats } = require('./stats');
@@ -56,6 +57,7 @@ const HANDLERS = {
     '/news': cmdNews,
     '/noffa': cmdNoffa,
     '/ping': cmdPing,
+    '/resumo': cmdResumo,
     '/set': cmdSet,
     '/show': cmdShow,
     '/stats': cmdStats,
