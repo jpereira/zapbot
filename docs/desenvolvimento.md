@@ -102,10 +102,10 @@ entre os casos.
 | `configuracao.test.js` | `comandos.json`, settings, parser de opções, ajuda e a coerência entre config, código, README e `docs/` (inclusive a ordem alfabética e os links) |
 | `mensagens.test.js` | Gravação, roteamento, permissões (`onlyAdmin`, modo admin, bot desligado) e a contagem do `/stats` |
 | `comandos.test.js` | `/help`, `/debug`, `/uptime`, `/version`, `/ping`, `/noffa`, `/bot`, `/set` |
-| `mudo.test.js` | `/mudo`: avisos de apagadas, editadas e status silenciados por pessoa ou grupo |
 | `apagadas-editadas.test.js` | Eventos de apagar/editar e o `/show` (apagadas e editadas) |
-| `status.test.js` | `/status`: o relatório e o envio diário |
+| `mudo.test.js` | `/mudo`: avisos de apagadas, editadas e status silenciados por pessoa ou grupo |
 | `stats.test.js`, `watch.test.js`, `monitor.test.js` | `/stats`, `/watch`, `/monitor` e o aviso de presença |
+| `status.test.js` | `/status`: o relatório e o envio diário |
 | `agenda.test.js` | Datas digitadas (`30m`, `às 18h`, `sexta`...) e o `/agendar`, nos modos mensagem e lembrete |
 | `backup.test.js` | `/backup` (criação, lista, restauração, envio) e o backup diário |
 | `cotacoes.test.js` | `/cotacao`, `/crypto` e os alertas de preço |
