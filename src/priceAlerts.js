@@ -6,10 +6,13 @@ const axios = require('axios');
 
 const { estado: stateAlt } = require('./state');
 const { client } = require('./client');
+const { findCommand } = require('./commands/base');
 const { QUOTE_TIMEOUT_MS, searchQuote, fmtPriceCrypto, fmtReal, fmtChange } = require('./quotes');
 const { dbAll, dbGet, dbReady, dbRun } = require('./db');
+const { describeDestination, extractDestination, resolverDestination } = require('./destinations');
 const { printError, printInfo } = require('./log');
 const { QUOTE_SUPPORTED, CRYPTO_SUPPORTED } = require('./currencies');
+const { GetOptFromCommand } = require('./options');
 const { getSetting } = require('./settings');
 const { formatData, plural } = require('./util/format');
 
@@ -19,6 +22,8 @@ const { formatData, plural } = require('./util/format');
  * -alerta USD > 5.30      → notifies your private chat when USD goes above R$ 5.30
  * -alerta BTC < 90000     → (in /crypto) when BTC drops below $90,000
  * -alerta -rm 2 | all     → removes alert no. 2 from the list (or all)
+ * -alerta BTC > 90000 -to /Grupo L200/  → notifies a group (or -to @number:
+ * in the person's private chat) instead of your private chat
  * Each alert fires ONCE and is removed. The check runs every
  * 'alert.intervalMin' minutes. Only the owner creates and removes.
  */
@@ -77,15 +82,27 @@ function readRuleAlert(textAlt) {
 const listAlerts = (kind) =>
     dbAll('SELECT * FROM price_alerts WHERE kind = ? ORDER BY id', [kind]);
 
+// Notice chat: the -to one or, without it, your private chat
+const alertDestination = (a) => (a.dest_id ? { id: a.dest_id, nome: a.dest_name, grupo: Boolean(a.dest_is_group) } : null);
+
 function describeAlert(kind, a) {
     const t = ALERT_TYPES[kind];
-    return `${t.icone(a.symbol)} ${t.par(a.symbol)} ${OPERATORS[a.op].texto} *${t.fmt(a.target)}*`;
+    const destination = alertDestination(a);
+    return `${t.icone(a.symbol)} ${t.par(a.symbol)} ${OPERATORS[a.op].texto} *${t.fmt(a.target)}*` +
+        (destination ? ` → ${describeDestination(destination)}` : '');
 }
 
-async function priceHandleAlert(kind, { msg, opts }) {
+async function priceHandleAlert(kind, { msg, args }) {
     const t = ALERT_TYPES[kind];
 
-    // The notices go to YOUR private chat: only the owner creates, lists and removes
+    /*
+     * -to accepts spaces (/Grupo L200/), which the option parser would split:
+     * goes out of the text first, and the rest is read again.
+     */
+    const { destino: destinationText, informado: withDestination, resto: rest } = extractDestination(args);
+    const opts = GetOptFromCommand(rest, findCommand(t.cmd));
+
+    // The notices use your account (in your private chat or in the -to chat): only the owner creates, lists and removes
     if (!msg.fromMe) {
         await msg.reply('⛔ Apenas o dono do bot pode usar os alertas.');
         return;
@@ -117,6 +134,11 @@ async function priceHandleAlert(kind, { msg, opts }) {
 
     const ruleText = opts.argv.join(' ').trim();
 
+    if (!ruleText && withDestination) {
+        await msg.reply(`❌ O -to só vale ao criar um alerta: ${t.cmd} -alerta ${t.exemplo} -to /Grupo L200/`);
+        return;
+    }
+
     // Without a rule: lists
     if (!ruleText) {
         if (!alerts.length) {
@@ -140,6 +162,17 @@ async function priceHandleAlert(kind, { msg, opts }) {
     if (!t.suportada(rule.sym)) {
         await msg.reply(`❌ Moeda não suportada: ${rule.sym}\n💡 _Veja as suportadas com ${t.cmd} -l_`);
         return;
+    }
+
+    let destination = null;
+
+    if (withDestination) {
+        destination = await resolverDestination(destinationText, { mencoes: msg.mentionedIds ?? [] });
+
+        if (destination.erro) {
+            await msg.reply(destination.erro);
+            return;
+        }
     }
 
     const max = getSetting('alerta.max');
@@ -169,13 +202,15 @@ async function priceHandleAlert(kind, { msg, opts }) {
     }
 
     await dbRun(
-        'INSERT INTO price_alerts (kind, symbol, op, target, price_at_creation, created_at) VALUES (?, ?, ?, ?, ?, ?)',
-        [kind, rule.sym, rule.op, rule.alvo, price, Date.now()]
+        `INSERT INTO price_alerts (kind, symbol, op, target, price_at_creation, created_at, dest_id, dest_name, dest_is_group)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [kind, rule.sym, rule.op, rule.alvo, price, Date.now(), destination?.id ?? null, destination?.nome ?? null, destination?.grupo ? 1 : 0]
     );
 
     await msg.reply(`🔔 *Alerta criado*\n${describeAlert(kind, { symbol: rule.sym, op: rule.op, target: rule.alvo })}\n` +
         `💰 Agora: ${t.fmt(price)}\n` +
-        `💡 _Aviso no seu privado; verificação a cada ${plural(getSetting('alerta.intervalMin'), 'minuto', 'minutos')}._`);
+        `💡 _Aviso ${destination ? `em ${describeDestination(destination)}` : 'no seu privado'}; ` +
+        `verificação a cada ${plural(getSetting('alerta.intervalMin'), 'minuto', 'minutos')}._`);
 }
 
 /*
@@ -217,14 +252,14 @@ async function priceCheckAlerts({ forcar: force = false } = {}) {
                 await dbRun('DELETE FROM price_alerts WHERE id = ?', [a.id]);
 
                 const changeAlt = fmtChange(price, a.price_at_creation);
-                await client.sendMessage(client.info.wid._serialized,
+                await client.sendMessage(a.dest_id || client.info.wid._serialized,
                     `🔔 *ALERTA DE PREÇO*\n\n` +
                     `${OPERATORS[a.op].icone} ${t.icone(a.symbol)} *${t.par(a.symbol)}* ficou ${OPERATORS[a.op].texto} ${t.fmt(a.target)}\n` +
                     `💰 Agora: *${t.fmt(price)}*${changeAlt ? ` _(${changeAlt} desde a criação)_` : ''}\n` +
                     `📅 Alerta criado em ${formatData(a.created_at)}`
                 ).catch(err => printError('Alerta de preço: falha ao avisar:', err.message));
 
-                printInfo(`Alerta de preço disparado: ${a.symbol} ${a.op} ${a.target} (agora ${price})`);
+                printInfo(`Alerta de preço disparado: ${a.symbol} ${a.op} ${a.target} (agora ${price})${a.dest_id ? ` → ${a.dest_id}` : ''}`);
             }
         }
     } catch (err) {

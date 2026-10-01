@@ -9,10 +9,10 @@
  * /regex/flags → JavaScript RegExp (the g and y flags are ignored)
  * When it matches, the occurrence goes to watch_hits and you are notified in private.
  */
+const { withoutAccents } = require('../util/format');
+
 const RULE_REGEX = /^\/(.+)\/([a-z]*)$/s;
 const RULE_MAX_LEN = 200;
-
-const withoutAccents = (s) => String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
 // rule -> test function (compiled once, not on every message)
 const rulesCompiled = new Map();
