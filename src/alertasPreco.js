@@ -9,7 +9,7 @@ const { client } = require('./cliente');
 const { findCommand } = require('./comandos/base');
 const { COTACAO_TIMEOUT_MS, buscarCotacao, fmtPrecoCrypto, fmtReal, fmtVariacao } = require('./cotacoes');
 const { dbAll, dbGet, dbPronto, dbRun } = require('./db');
-const { descreverDestino, extrairDestino, resolverDestino } = require('./destinos');
+const { descreverDestino, extrairDestino, resolverOuEscolher } = require('./destinos');
 const { printError, printInfo } = require('./log');
 const { COTACAO_SUPORTADAS, CRYPTO_SUPPORTED } = require('./moedas');
 const { GetOptFromCommand } = require('./opcoes');
@@ -22,8 +22,9 @@ const { formatarData, plural } = require('./util/formatar');
  *   -alerta USD > 5.30      → avisa no seu privado quando o USD passar de R$ 5,30
  *   -alerta BTC < 90000     → (no /crypto) quando o BTC ficar abaixo de $90.000
  *   -alerta -rm 2 | all     → remove o alerta nº 2 da lista (ou todos)
- *   -alerta BTC > 90000 -to /Grupo L200/  → avisa num grupo (ou -to @número:
- *                             no privado da pessoa) em vez do seu privado
+ *   -alerta BTC > 90000 -to /Grupo L200/  → avisa num grupo (ou num contato,
+ *                             -to /Jorge Pereira/, ou número, -to +5521999999999)
+ *                             em vez do seu privado
  * Cada alerta dispara UMA vez e é removido. A verificação roda a cada
  * 'alerta.intervalMin' minutos. Só o dono cria e remove.
  */
@@ -167,12 +168,8 @@ async function tratarAlertaDePreco(kind, { msg, args }) {
     let destino = null;
 
     if (comDestino) {
-        destino = await resolverDestino(destinoTexto, { mencoes: msg.mentionedIds ?? [] });
-
-        if (destino.erro) {
-            await msg.reply(destino.erro);
-            return;
-        }
+        destino = await resolverOuEscolher(msg, destinoTexto);
+        if (!destino) return;
     }
 
     const max = getSetting('alerta.max');

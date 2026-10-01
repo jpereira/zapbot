@@ -13,7 +13,7 @@ Faz algo na hora marcada. Tem dois modos, na mesma agenda:
 | Opção | Valor | Descrição |
 |---|---|---|
 | `<quando>` | | Quando: `30m`, `às 18h`, `amanhã 9h`, `sexta 18h`, `25/12 10:00`... Veja [Quando](#quando) |
-| `-to` | `<destino>` | Modo mensagem: envia no privado de uma pessoa (`@5521999999999`) ou num grupo, pelo nome ou parte dele (`/Grupo L200/`, `"Grupo L200"` ou `L200`). Veja [Avisar outra pessoa ou um grupo](cotacao.md#avisar-outra-pessoa-ou-um-grupo) |
+| `-to` | `<destino>` | Modo mensagem: envia num contato (`/Jorge Pereira/`), num grupo (`/Grupo L200/`) ou num número (`+5521999999999`) em vez do chat atual. O contato é buscado primeiro; vários com o nome: você escolhe na lista. Veja [Destinos](index.md#destinos-contato-grupo-ou-número) |
 | `-lembrete` | | Modo lembrete (o mesmo de chamar como `/lembrete`) |
 | `-pv` | | Modo lembrete: lembra no seu privado em vez do chat atual |
 | `-repetir`, `-r` | `<diario\|semanal\|mensal>` | Repete no mesmo horário: todo dia, toda semana ou todo mês |
@@ -24,7 +24,9 @@ Faz algo na hora marcada. Tem dois modos, na mesma agenda:
 /cron 25/12 00:00 Feliz Natal, família! 🎄
 /cron sexta 18h -to /Grupo L200/ Bom fim de semana!
 /cron seg 8h -repetir semanal -to trabalho Bom dia! Pauta da semana no drive.
-/agenda 05/11 9h -repetir mensal -to @5521999999999 Lembrete: aluguel vence hoje.
+/agenda 05/11 9h -repetir mensal -to +5521999999999 Lembrete: aluguel vence hoje.
+/cron amanhã 8h -to /Jorge Pereira/ Bom dia! Não esquece a reunião.
+/cron 20/10 -to /Família/ Parabéns, vó! 🎂
 /lembrete 30m tirar o bolo do forno
 /lembrete às 18h pagar o boleto
 /lembrete -pv amanhã 9h ligar pro banco

@@ -5,7 +5,7 @@
 const { estado } = require('./estado');
 const { client } = require('./cliente');
 const { dbAll, dbGet, dbPronto, dbRun } = require('./db');
-const { descreverDestino, extrairDestino, resolverDestino } = require('./destinos');
+const { descreverDestino, extrairDestino, resolverOuEscolher } = require('./destinos');
 const { printError, printInfo } = require('./log');
 const { textoDoStatus } = require('./status');
 const { getSetting } = require('./settings');
@@ -95,7 +95,7 @@ async function tratarAgenda({ msg, args, chatId, chatName, isGroup, quotedMsg })
     const itens = await listar();
 
     if (opt.pv && !t.aceitaPv) {
-        await msg.reply('❌ O -pv é do modo lembrete: use /lembrete (ou -lembrete) para lembrar no seu privado, ou -to @seu-número.');
+        await msg.reply('❌ O -pv é do modo lembrete: use /lembrete (ou -lembrete) para lembrar no seu privado.');
         return;
     }
 
@@ -181,11 +181,9 @@ async function tratarAgenda({ msg, args, chatId, chatName, isGroup, quotedMsg })
     let destino = { id: chatId, nome: chatName, grupo: Boolean(isGroup) };
 
     if (comDestino) {
-        destino = await resolverDestino(destinoTexto, { mencoes: msg.mentionedIds ?? [] });
-        if (destino.erro) {
-            await msg.reply(destino.erro);
-            return;
-        }
+        // Vários contatos ou grupos com o nome: espera você escolher na lista
+        destino = await resolverOuEscolher(msg, destinoTexto);
+        if (!destino) return;
     } else if (opt.pv) {
         destino = { id: meuId, nome: 'seu privado', grupo: false };
     }
