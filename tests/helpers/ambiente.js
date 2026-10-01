@@ -70,6 +70,9 @@ class ClienteFalso extends EventEmitter {
 
     async sendMessage(chatId, content, options = {}) {
         const enviada = { chatId, content, options };
+        // Como o Message do whatsapp-web.js: o id da mensagem enviada (fora dos deepEqual dos testes)
+        const id = `BOT${this.enviadas.length + 1}`;
+        Object.defineProperty(enviada, 'id', { value: { id, remote: chatId, fromMe: true, _serialized: `true_${chatId}_${id}` } });
         this.enviadas.push(enviada);
         return enviada;
     }

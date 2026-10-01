@@ -71,8 +71,9 @@ Por onde começar:
 - **Limpeza automática**: a cada 10 minutos o bot remove do banco/disco as
   mensagens comuns com mais de 68 h (janela máxima que o WhatsApp permite
   apagar), as apagadas e as editadas com mais de 30 dias, as ocorrências do
-  `/watch` com mais de 30 dias (setting `watch.hitsRetentionDays`) e os
-  contadores do `/stats` com mais de 90 dias (setting `stats.retentionDays`).
+  `/watch` com mais de 30 dias (setting `watch.hitsRetentionDays`), os
+  contadores do `/stats` com mais de 90 dias (setting `stats.retentionDays`) e
+  as enquetes com mais de 90 dias (setting `enquete.retentionDays`).
 - **Estatísticas**: cada mensagem nova (e cada apagada/editada) soma 1 num
   contador por chat, dia, hora e remetente (tabela `stats`), usado pelo
   [`/stats`](comandos/stats.md). Só números, sem o texto; ficam 90 dias (setting
@@ -82,6 +83,10 @@ Por onde começar:
   90000` guardam a regra na tabela `price_alerts`; a cada 5 minutos (setting
   `alerta.intervalMin`) o bot consulta os preços e avisa **no seu privado**
   (ou, com `-to`, numa pessoa ou num grupo) quando a regra é cumprida. Veja [Alertas de preço](comandos/cotacao.md#alertas-de-preço).
+- **Enquetes**: os votos das enquetes da sua conta (evento `vote_update`) vão
+  para as tabelas `polls` e `poll_votes`, e o
+  [`/enquete -r`](comandos/enquete.md#resultado) mostra o placar. Ficam 90 dias
+  (setting `enquete.retentionDays`).
 - **Watch**: toda mensagem recebida que não é comando é testada contra as
   regras do [`/watch`](comandos/watch.md) (setting `watch.rules`); quando casa, a
   ocorrência é gravada na tabela `watch_hits` e você é avisado **no seu
