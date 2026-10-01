@@ -281,14 +281,22 @@ function spawnFake(bin, args) {
 }
 
 /*
- * sharp: returns a fixed "webp"
+ * sharp: returns a fixed "webp". For /pixelart, a "png:WxH" image
+ * reports the dimensions in metadata() and png() returns "png:WxH" of the result
+ * (after the resize/extract).
  */
-const sharpFake = () => {
+const sharpFake = (inputAlt) => {
+    const [, w, h] = String(inputAlt).match(/^png:(\d+)x(\d+)$/) ?? [];
+    let dim = { width: Number(w), height: Number(h) };
+    let format = 'webp';
     const chainAlt = {
         rotate: () => chainAlt,
-        resize: () => chainAlt,
+        resize: (width, height) => { if (height) dim = { width, height }; return chainAlt; },
+        extract: ({ width, height }) => { dim = { width, height }; return chainAlt; },
         webp: () => chainAlt,
-        toBuffer: async () => Buffer.from('webp-enquadrado')
+        png: () => { format = 'png'; return chainAlt; },
+        metadata: async () => dim,
+        toBuffer: async () => Buffer.from(format === 'png' ? `png:${dim.width}x${dim.height}` : 'webp-enquadrado')
     };
     return chainAlt;
 };
