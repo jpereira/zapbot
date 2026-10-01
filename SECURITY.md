@@ -3,8 +3,8 @@
 ## Versões suportadas
 
 Só a **última release** (tag `release-X.Y` mais recente) recebe correções de
-segurança. As correções saem numa release nova; atualize seguindo o
-[README](README.md#atualizar-para-uma-nova-versão).
+segurança. As correções saem numa release nova; atualize seguindo a
+[documentação](https://jpereira.github.io/zapbot/instalacao/#atualizar-para-uma-nova-versão).
 
 ## Como reportar uma vulnerabilidade
 
@@ -24,7 +24,7 @@ Alguns pontos merecem atenção especial num relato:
 
 - **Sessão do WhatsApp** (`.wwebjs_auth`) e o **QR Code**: quem tiver um dos
   dois controla a conta. O QR pode ir por e-mail (veja o código anti-phishing
-  no README).
+  em [E-mails](https://jpereira.github.io/zapbot/emails/)).
 - **Comandos de admin**: qualquer forma de alguém que não é o dono executar um
   comando `onlyAdmin` (inclusive fazendo o bot "digitar" um comando).
 - **`/get`**: o `yt-dlp` roda na rede do servidor; URLs para a rede interna
