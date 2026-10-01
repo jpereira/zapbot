@@ -27,6 +27,7 @@ const { cmdMudo } = require('./mudo');
 const { cmdNews } = require('./news');
 const { cmdNoffa } = require('./noffa');
 const { cmdPing } = require('./ping');
+const { cmdPixelArt } = require('./pixelart');
 const { cmdSet } = require('./set');
 const { cmdShow } = require('./show');
 const { cmdStats } = require('./stats');
@@ -66,6 +67,7 @@ const HANDLERS = {
     '/news': cmdNews,
     '/noffa': cmdNoffa,
     '/ping': cmdPing,
+    '/pixelart': cmdPixelArt,
     '/set': cmdSet,
     '/show': cmdShow,
     '/stats': cmdStats,

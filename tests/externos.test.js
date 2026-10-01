@@ -1,6 +1,6 @@
 /*
  * Comandos que consultam serviços externos (todos simulados):
- * /cve, /tempo, /news, /gpt, /tldr, /traduzir, /giphy, /meme, /joke e /kernel.
+ * /cve, /tempo, /news, /gpt, /tldr, /traduzir, /giphy, /meme, /joke, /kernel e /pixelart.
  */
 const bot = require('./helpers/bot');
 
@@ -517,6 +517,87 @@ describe('/meme', () => {
         assert.deepEqual(await bot.responder('/meme xyz'), ['❌ Nenhum meme com "xyz".']);
         rede.responder('get', 'api.imgflip.com', erroHttp(500));
         assert.deepEqual(await bot.responder('/meme', { erroEsperado: true }), ['❌ Não consegui buscar um meme agora.']);
+    });
+});
+
+describe('/pixelart (/ansi, /px)', () => {
+    const { lerSauce, reiniciarPacks } = bot.src('comandos/pixelart');
+
+    beforeEach(reiniciarPacks);
+
+    // O sharp é simulado: a imagem "png:LxA" só carrega as dimensões
+    const png = (largura, altura) => Buffer.from(`png:${largura}x${altura}`);
+
+    // Arquivo com o registro SAUCE de 128 bytes no fim
+    function comSauce({ titulo = '', autor = '', grupo = '', data = '' }) {
+        const sauce = Buffer.alloc(128, 0);
+        sauce.write('SAUCE00', 0, 'latin1');
+        sauce.write(titulo, 7, 35, 'latin1');
+        sauce.write(autor, 42, 20, 'latin1');
+        sauce.write(grupo, 62, 20, 'latin1');
+        sauce.write(data, 82, 8, 'latin1');
+        return Buffer.concat([Buffer.from('\x1b[0marte'), sauce]);
+    }
+
+    function simularPack(nome, { arquivos = ['CHUCK.ANS'], altura = 100, sauce } = {}) {
+        rede.responder('get', `api.16colo.rs/v0/pack/${nome}`, { name: nome, year: 2021, files: arquivos.map(filename => ({ filename })) });
+        rede.responder('get', `16colo.rs/pack/${nome}/x1/`, png(80, altura));
+        rede.responder('get', `16colo.rs/pack/${nome}/raw/`, sauce ? comSauce(sauce) : erroHttp(404));
+    }
+
+    test('SAUCE: título, autor, grupo e data; sem registro é null', () => {
+        assert.deepEqual(lerSauce(comSauce({ titulo: 'Chuck', autor: 'lord jazz', grupo: 'ACiD', data: '20210401' })),
+            { titulo: 'Chuck', autor: 'lord jazz', grupo: 'ACiD', data: '01/04/2021' });
+        assert.equal(lerSauce(Buffer.from('sem sauce')), null);
+    });
+
+    test('pack padrão do setting, com a autoria do SAUCE na legenda e em HD', async () => {
+        simularPack('chuck-norris-lvl', { arquivos: ['FILE_ID.DIZ', 'LEIAME.TXT', 'CHUCK.ANS'], sauce: { titulo: 'Chuck', autor: 'lord jazz', grupo: 'ACiD', data: '20210401' } });
+
+        const [r] = await bot.executar('/px');
+        assert.equal(r.content.mimetype, 'image/png');
+        assert.equal(r.options.caption, '🎨 *Chuck*\n👤 lord jazz / ACiD\n📦 chuck-norris-lvl (01/04/2021)\n🔗 https://16colo.rs/pack/chuck-norris-lvl/CHUCK.ANS');
+        assert.equal(r.options.sendMediaAsHd, true);
+    });
+
+    test('sem SAUCE: nome do arquivo e ano do pack', async () => {
+        simularPack('mimic100');
+        const [r] = await bot.executar('/pixelart mimic100');
+        assert.equal(r.options.caption, '🎨 *CHUCK.ANS*\n📦 mimic100 (2021)\n🔗 https://16colo.rs/pack/mimic100/CHUCK.ANS');
+    });
+
+    test('arte alta vai em partes, até o pixelart.maxParts', async () => {
+        await bot.setSetting('pixelart.maxParts', 2);
+        simularPack('alta', { altura: 10000 });
+
+        const enviados = await bot.executar('/pixelart alta');
+        assert.equal(enviados.length, 2);
+        assert.match(enviados[0].options.caption, /🧩 Parte 1\/2 _\(arte cortada: veja inteira no link\)_$/);
+        assert.equal(enviados[1].options.caption, '🧩 Parte 2/2');
+    });
+
+    test('-y e -r sorteiam entre os packs do ano ou do arquivo', async () => {
+        rede.responder('get', 'api.16colo.rs/v0/year/1996', [{ name: 'acid-1096' }]);
+        simularPack('acid-1096');
+        assert.match((await bot.executar('/pixelart -y 1996'))[0].options.caption, /📦 acid-1096/);
+
+        rede.responder('get', /api\.16colo\.rs\/v0\/pack$/, [{ name: 'blocktronics' }]);
+        simularPack('blocktronics');
+        assert.match((await bot.executar('/pixelart -r'))[0].options.caption, /📦 blocktronics/);
+    });
+
+    test('ano ou pack inválidos, pack inexistente ou sem artes, 16colo.rs fora do ar', async () => {
+        assert.deepEqual(await bot.responder('/pixelart -y 1900'), ['❌ Ano inválido. Ex.: /pixelart -y 1996']);
+        assert.deepEqual(await bot.responder('/pixelart ../etc'), ['❌ Nome de pack inválido. Ex.: /pixelart chuck-norris-lvl']);
+
+        rede.responder('get', 'api.16colo.rs/v0/pack/nada', []);
+        assert.deepEqual(await bot.responder('/pixelart nada'), ['❌ Pack não encontrado: nada\n💡 _Veja os packs em https://16colo.rs_']);
+
+        rede.responder('get', 'api.16colo.rs/v0/pack/so-txt', { name: 'so-txt', year: 1995, files: [{ filename: 'LEIAME.TXT' }] });
+        assert.deepEqual(await bot.responder('/pixelart so-txt'), ['❌ O pack so-txt não tem artes ANSI/ASCII.']);
+
+        rede.responder('get', 'api.16colo.rs', erroHttp(500));
+        assert.deepEqual(await bot.responder('/pixelart', { erroEsperado: true }), ['❌ Não consegui buscar a arte no 16colo.rs agora.']);
     });
 });
 
