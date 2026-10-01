@@ -70,7 +70,7 @@ admin está ligado: só você usa comandos até `/bot -admin`
 
 | Comando | Aliases | Admin | Descrição |
 |---|---|:-:|---|
-| [`/agendar`](https://jpereira.github.io/zapbot/commands/agendar/) | `/agenda` | ✅ | Envia uma mensagem na hora marcada, no chat atual ou num grupo/pessoa (`-to`); pode repetir |
+| [`/agendar`](https://jpereira.github.io/zapbot/commands/agendar/) | `/agenda`, `/cron`, `/lemb`, `/lembrete` | ✅ | Na hora marcada (`30m`, `às 18h`, `sexta 9h`...): envia uma mensagem (aqui ou com `-to`) ou, como `/lembrete`, um ⏰ lembrete; pode repetir |
 | [`/backup`](https://jpereira.github.io/zapbot/commands/backup/) | `/bkp` | ✅ | Backup do banco: automático todo dia; lista, detalha, restaura e envia o arquivo |
 | [`/boletos`](https://jpereira.github.io/zapbot/commands/boletos/) | | ✅ | Sorteia 2 membros para "pagar um boleto" |
 | [`/bot`](https://jpereira.github.io/zapbot/commands/bot/) | | ✅ | Liga/desliga todos os comandos (`-on`/`-off`) e o modo admin (`+admin`/`-admin`) |
@@ -87,7 +87,6 @@ admin está ligado: só você usa comandos até `/bot -admin`
 | [`/help`](https://jpereira.github.io/zapbot/commands/help/) | `/h` | | Menu de ajuda |
 | [`/joke`](https://jpereira.github.io/zapbot/commands/joke/) | `/piada`, `/humor` | | Piada aleatória em português |
 | [`/kernel`](https://jpereira.github.io/zapbot/commands/kernel/) | | | Versões atuais do kernel Linux (kernel.org) |
-| [`/lembrete`](https://jpereira.github.io/zapbot/commands/lembrete/) | `/lemb` | ✅ | Lembrete na hora marcada (`30m`, `às 18h`, `sexta 9h`...), no chat ou no privado; pode repetir |
 | [`/listageral`](https://jpereira.github.io/zapbot/commands/listageral/) | `/list` | ✅ | Lista os membros do grupo |
 | [`/meme`](https://jpereira.github.io/zapbot/commands/meme/) | | | Template de meme aleatório (imgflip) |
 | [`/monitor`](https://jpereira.github.io/zapbot/commands/monitor/) 🚧 | `/m` | ✅ | Avisa quando números ficam online *(em desenvolvimento, desabilitado por padrão)* |

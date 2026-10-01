@@ -47,7 +47,7 @@ src/
   cleanup.js            retenção e limpeza periódica
   stats.js              contadores do /stats
   currencies.js, quotes.js, priceAlerts.js   /crypto, /cotacao e alertas de preço
-  schedule.js             /lembrete e /agendar: leitura, lista e envio na hora
+  schedule.js             /agendar (e /lembrete): leitura, lista e envio na hora
   openai.js             modelos aceitos pelo /gpt
   openaiChat.js         chamada ao chat da OpenAI (/gpt e /resumo)
   contacts.js, options.js                    contatos/@lid e o parser de opções
@@ -102,7 +102,7 @@ entre os casos.
 | `comandos.test.js` | `/help`, `/debug`, `/uptime`, `/version`, `/ping`, `/noffa`, `/bot`, `/set` |
 | `apagadas-editadas.test.js` | Eventos de apagar/editar e o `/show` (apagadas e editadas) |
 | `stats.test.js`, `watch.test.js`, `monitor.test.js` | `/stats`, `/watch`, `/monitor` e o aviso de presença |
-| `agenda.test.js` | Datas digitadas (`30m`, `às 18h`, `sexta`...), `/lembrete` e `/agendar` |
+| `agenda.test.js` | Datas digitadas (`30m`, `às 18h`, `sexta`...) e o `/agendar`, nos modos mensagem e lembrete |
 | `backup.test.js` | `/backup` (criação, lista, restauração, envio) e o backup diário |
 | `cotacoes.test.js` | `/cotacao`, `/crypto` e os alertas de preço |
 | `defi.test.js` | Solana (base58, PDA), contas da Orca (conferidas com o SDK oficial) e o `/defi` |

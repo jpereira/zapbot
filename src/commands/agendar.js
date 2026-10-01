@@ -1,11 +1,11 @@
 /*
- * /agendar command (the logic is in schedule.js, together with the /lembrete one).
+ * /agendar command (aliases /agenda, /cron, /lembrete and /lemb; the logic is in schedule.js).
  */
 
 const { handleSchedule } = require('../schedule');
 
 async function cmdSchedule(ctx) {
-    await handleSchedule('agendar', ctx);
+    await handleSchedule(ctx);
 }
 
 module.exports = {
