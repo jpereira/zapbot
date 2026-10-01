@@ -1,0 +1,109 @@
+# ZapBot documentation: https://jpereira.github.io/zapbot/
+# Published only on releases (v* tag) by .github/workflows/docs.yml.
+# To see it locally: pip install -r docs/requirements.txt && mkdocs serve
+site_name: ZapBot
+site_url: https://jpereira.github.io/zapbot/
+site_description: Bot para WhatsApp que recupera mensagens apagadas e editadas, baixa vídeos, cria figurinhas e mais.
+site_author: Jorge Pereira
+repo_url: https://github.com/jpereira/zapbot
+repo_name: jpereira/zapbot
+edit_uri: edit/main/docs/
+
+# List of the site's dependencies, not a page
+exclude_docs: |
+  requirements.txt
+
+# The release workflow fills in the published version
+copyright: !ENV [DOCS_COPYRIGHT, "ZapBot (desenvolvimento) · Licença MIT · Copyright &copy; 2026 Jorge Pereira"]
+
+theme:
+  name: material
+  language: pt-BR
+  icon:
+    logo: material/robot-happy-outline
+    repo: fontawesome/brands/github
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: green
+      accent: light green
+      toggle:
+        icon: material/weather-night
+        name: Modo escuro
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: green
+      accent: light green
+      toggle:
+        icon: material/weather-sunny
+        name: Modo claro
+  features:
+    - content.code.copy
+    - navigation.footer
+    - navigation.indexes
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+    - search.suggest
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - tables
+  - toc:
+      permalink: true
+      # Anchors like GitHub's (keeps accents): the links work on the site and on GitHub
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+
+validation:
+  links:
+    anchors: warn
+    unrecognized_links: warn
+
+nav:
+  - Início: index.md
+  - Instalação: installation.md
+  - Configuração: configuration.md
+  - E-mails: emails.md
+  - Comandos:
+      - commands/index.md
+      - /boletos: commands/boletos.md
+      - /bot: commands/bot.md
+      - /cache: commands/cache.md
+      - /cotacao: commands/cotacao.md
+      - /crypto: commands/crypto.md
+      - /cve: commands/cve.md
+      - /debug: commands/debug.md
+      - /edit: commands/edit.md
+      - /enquete: commands/enquete.md
+      - /everyone: commands/everyone.md
+      - /get: commands/get.md
+      - /gif: commands/gif.md
+      - /gpt: commands/gpt.md
+      - /help: commands/help.md
+      - /joke: commands/joke.md
+      - /kernel: commands/kernel.md
+      - /listageral: commands/listageral.md
+      - /meme: commands/meme.md
+      - /monitor: commands/monitor.md
+      - /news: commands/news.md
+      - /noffa: commands/noffa.md
+      - /ping: commands/ping.md
+      - /set: commands/set.md
+      - /show: commands/show.md
+      - /stats: commands/stats.md
+      - /sticker: commands/sticker.md
+      - /tempo: commands/tempo.md
+      - /ualisu: commands/ualisu.md
+      - /uptime: commands/uptime.md
+      - /version: commands/version.md
+      - /watch: commands/watch.md
+  - Settings: settings.md
+  - Operação: operation.md
+  - Desenvolvimento: development.md
