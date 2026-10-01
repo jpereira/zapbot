@@ -205,6 +205,18 @@ async function inicializarBanco() {
     `);
     await dbRun('CREATE INDEX IF NOT EXISTS idx_schedules_due ON schedules (due_at)');
 
+    // Posições DeFi do /defi (por enquanto, da Orca): o resto é lido on-chain a cada -show
+    await dbRun(`
+        CREATE TABLE IF NOT EXISTS defi_positions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            protocol TEXT NOT NULL,
+            position TEXT NOT NULL UNIQUE,
+            nft TEXT,
+            pool TEXT,
+            created_at INTEGER NOT NULL
+        )
+    `);
+
     // Configurações gerais do bot (chave -> valor em JSON)
     await dbRun(`
         CREATE TABLE IF NOT EXISTS settings (
