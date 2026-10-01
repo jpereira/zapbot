@@ -11,6 +11,7 @@ make build   # build da imagem zapbot-dev
 make shell   # shell dentro do container de dev; rode "node app.js" lá dentro
 make clean   # remove a imagem zapbot-dev
 make destroy # clean + apaga os volumes de dev (sessão do WhatsApp e cache!)
+make docs    # site da documentação local (veja Documentação)
 ```
 
 Os alvos `deploy.*` do `Makefile` fazem deploy num Docker remoto via SSH;
@@ -130,13 +131,22 @@ tem o menu e o tema). O site é publicado **só nas releases**: o workflow
 `.github/workflows/docs.yml` roda quando uma tag `release-*` chega ao GitHub,
 então ele sempre mostra a versão estável.
 
-Para ver localmente (Python 3.12, num virtualenv):
+Para ver o site com o conteúdo atual (o HEAD, não a última release):
 
 ```bash
-python3 -m venv .venv-docs && . .venv-docs/bin/activate
-pip install -r docs/requirements.txt
-mkdocs serve                  # http://127.0.0.1:8000, recarrega ao salvar
-mkdocs build --strict         # o que o workflow roda: falha em link quebrado
+make docs                     # 📖 Documentação em http://127.0.0.1:8000/zapbot/
+make docs DOCS_PORT=8001      # em outra porta (DOCS_HOST=0.0.0.0 abre para a rede)
+```
+
+Na primeira vez ele cria o virtualenv `.venv-docs` com o Python 3.12 (o mesmo
+do CI; no 3.14 o `mkdocs serve` ainda não instala) e o recria quando o
+`docs/requirements.txt` muda. Outro Python: `make docs DOCS_PYTHON=python3.13`.
+A página recarrega sozinha ao salvar um arquivo em `docs/` ou o `mkdocs.yml`.
+
+Para conferir o que o workflow gera (falha em link ou âncora quebrados):
+
+```bash
+.venv-docs/bin/mkdocs build --strict
 ```
 
 Ao mudar um comando, mude a página dele em `docs/comandos/` e as tabelas

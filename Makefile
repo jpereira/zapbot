@@ -26,9 +26,18 @@ VOLUMES      := zapbot_app_cache zapbot_wwebjs_auth
 PROJECT_LABEL := label=com.docker.compose.project=zapbot
 DEV_VOLUMES  := zapbot_app_cache_dev zapbot_wwebjs_auth_dev
 
+# Documentação (MkDocs) num virtualenv local, fora do Docker. Python 3.12, o
+# mesmo do CI (no 3.14 o watchdog do "mkdocs serve" ainda não tem pacote pronto)
+DOCS_PYTHON ?= $(shell command -v python3.12 || command -v python3)
+DOCS_VENV := .venv-docs
+DOCS_HOST ?= 127.0.0.1
+DOCS_PORT ?= 8000
+# O "mkdocs serve" usa o caminho do site_url (https://jpereira.github.io/zapbot/ → /zapbot/)
+DOCS_PATH := $(shell sed -nE 's|^site_url: *https?://[^/]+||p' mkdocs.yml)
+
 .DEFAULT_GOAL := build
 
-.PHONY: help all build shell clean destroy prune \
+.PHONY: help all build shell clean destroy prune docs \
 	deploy.context deploy.up deploy.logs deploy.ps deploy.shell deploy.images \
 	deploy.volume deploy.prune deploy.clean deploy.destroy
 
@@ -54,6 +63,17 @@ destroy: ## clean + apaga os volumes de dev (sessão e cache!)
 	-$(DOCKER) rm -f $(DEV_SERVICE)
 	-$(MAKE) clean
 	-$(DOCKER) volume rm -f $(DEV_VOLUMES)
+
+# O virtualenv é recriado do zero quando o docs/requirements.txt muda
+$(DOCS_VENV)/.instalado: docs/requirements.txt
+	rm -rf $(DOCS_VENV)
+	$(DOCS_PYTHON) -m venv $(DOCS_VENV)
+	$(DOCS_VENV)/bin/pip install -q -r docs/requirements.txt
+	@touch $@
+
+docs: $(DOCS_VENV)/.instalado ## Site da documentação (o HEAD) local, recarregando ao salvar
+	@echo "📖 Documentação em http://$(DOCS_HOST):$(DOCS_PORT)$(DOCS_PATH)  (Ctrl+C para parar)"
+	@NO_MKDOCS_2_WARNING=1 $(DOCS_VENV)/bin/mkdocs serve -q -a $(DOCS_HOST):$(DOCS_PORT)
 
 prune: ## Apaga mídia e mensagens do cache local
 	rm -rf cache/media/
