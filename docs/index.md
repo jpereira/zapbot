@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/logo.svg" alt="Logo do ZapBot: um robô sorridente num balão de conversa verde, com um selo de raio" width="180">
+</p>
+
 # ZapBot
 
 Bot para WhatsApp escrito em Node.js que roda em cima de uma sessão real do

@@ -19,8 +19,9 @@ copyright: !ENV [DOCS_COPYRIGHT, "ZapBot (desenvolvimento) · Licença MIT · Co
 theme:
   name: material
   language: pt-BR
+  logo: assets/logo.svg
+  favicon: assets/favicon.png
   icon:
-    logo: material/robot-happy-outline
     repo: fontawesome/brands/github
   palette:
     - media: "(prefers-color-scheme: light)"

@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="titulo">
+  <title id="titulo">ZapBot</title>
+  <defs>
+    <linearGradient id="balao" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#43C463"/>
+      <stop offset="1" stop-color="#1E8E3E"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Balão de conversa, com a ponta embaixo à esquerda -->
+  <path fill="url(#balao)" d="M128 20c62 0 108 40 108 92s-46 92-108 92c-14 0-27-2-39-6l-49 26 12-46C27 160 20 137 20 112 20 60 66 20 128 20z"/>
+
+  <!-- Antena -->
+  <line x1="128" y1="52" x2="128" y2="70" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="128" cy="46" r="10" fill="#FFD43B"/>
+
+  <!-- Cabeça do robô -->
+  <rect x="70" y="70" width="116" height="84" rx="26" fill="#FFFFFF"/>
+
+  <!-- Orelhas -->
+  <rect x="56" y="96" width="14" height="32" rx="7" fill="#FFFFFF"/>
+  <rect x="186" y="96" width="14" height="32" rx="7" fill="#FFFFFF"/>
+
+  <!-- Olhos -->
+  <circle cx="104" cy="106" r="12" fill="#14532D"/>
+  <circle cx="152" cy="106" r="12" fill="#14532D"/>
+  <circle cx="108" cy="102" r="4" fill="#FFFFFF"/>
+  <circle cx="156" cy="102" r="4" fill="#FFFFFF"/>
+
+  <!-- Sorriso -->
+  <path d="M106 132q22 16 44 0" fill="none" stroke="#14532D" stroke-width="7" stroke-linecap="round"/>
+
+  <!-- Selo com o raio (o "zap") -->
+  <circle cx="198" cy="186" r="38" fill="#FFD43B" stroke="#FFFFFF" stroke-width="7"/>
+  <path fill="#14532D" d="M203 160l-24 32h17l-7 22 26-33h-17l5-21z"/>
+</svg>
