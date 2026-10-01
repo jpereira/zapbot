@@ -18,7 +18,6 @@ const { getDirSize, isCaminhoDeMidia, limparConteudoDiretorio } = require('./uti
  *    porque depois disso não podem mais ser apagadas;
  *  - mensagens APAGADAS (revoked=1): guardadas por 'cache.revokedRetentionDays' (padrão 30),
  *    para o /show continuar funcionando.
- * Com o /cache -clean -force, as duas janelas são 0 e tudo é removido.
  */
 async function limparCacheAntigo(maxDeleteWin = MAX_DELETE_WINDOW, retencaoApagadas = getSetting('cache.revokedRetentionDays') * DAY_MS) {
     await dbPronto;
@@ -50,7 +49,7 @@ async function limparCacheAntigo(maxDeleteWin = MAX_DELETE_WINDOW, retencaoApaga
 }
 
 /*
- * Limpeza geral (/cache -c -f): TODAS as mensagens (inclusive as apagadas
+ * Limpeza geral (/cache -all): TODAS as mensagens (inclusive as apagadas
  * guardadas para o /show e as editadas do /edit), todas as mídias e todos os temporários.
  * No fim, VACUUM devolve o espaço ao disco: DELETE sozinho não encolhe o .db.
  * Não mexe em monitored_numbers, presence_logs nem watch_hits (configuração e histórico).
@@ -72,6 +71,40 @@ async function limparTudo() {
     await dbRun('VACUUM');
 
     return { total, apagadas, editadas, liberado: Math.max(0, bytesAntes - getDirSize(CACHE_DIR)) };
+}
+
+/*
+ * /cache -media: apaga as mídias baixadas (MEDIA_DIR). As mensagens ficam no
+ * banco sem o arquivo: uma apagada recuperada depois avisa "arquivo não
+ * disponível no cache".
+ */
+async function limparMidias() {
+    await dbPronto;
+
+    // As mídias ficam em subpastas por data (media/AAAA/MM/DD): conta todas antes de apagar
+    let arquivos = 0;
+    let bytes = 0;
+
+    const contar = (dir) => {
+        for (const entrada of fs.readdirSync(dir, { withFileTypes: true })) {
+            const caminho = path.join(dir, entrada.name);
+            if (entrada.isDirectory()) contar(caminho);
+            else if (entrada.isFile()) {
+                arquivos++;
+                bytes += fs.statSync(caminho).size;
+            }
+        }
+    };
+
+    if (fs.existsSync(MEDIA_DIR)) {
+        contar(MEDIA_DIR);
+        limparConteudoDiretorio(MEDIA_DIR);
+    }
+
+    const { changes } = await dbRun('UPDATE messages SET media_path = NULL WHERE media_path IS NOT NULL');
+    printInfo(`/cache -media: ${arquivos} arquivos (${bytes} bytes) apagados de ${MEDIA_DIR}; ${changes} mensagens sem mídia`);
+
+    return { arquivos, bytes };
 }
 
 // Edições mais antigas que 'cache.editedRetentionDays'
@@ -172,6 +205,7 @@ module.exports = {
     limparArquivosAntigos,
     limparCacheAntigo,
     limparEditadasAntigas,
+    limparMidias,
     limparStatsAntigas,
     limparTudo,
     limparWatchAntigo
