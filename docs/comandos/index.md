@@ -56,7 +56,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -a`) para fazer o bot
 | [`/help`](help.md) | `/h` | | Menu de ajuda |
 | [`/joke`](joke.md) | `/piada`, `/humor` | | Piada aleatória em português |
 | [`/kernel`](kernel.md) | | | Versões atuais do kernel Linux (kernel.org) |
-| [`/listageral`](listageral.md) | | ✅ | Lista os membros do grupo |
+| [`/listageral`](listageral.md) | `/list` | ✅ | Lista os membros do grupo |
 | [`/meme`](meme.md) | | | Template de meme aleatório (imgflip) |
 | [`/monitor`](monitor.md) 🚧 | `/m` | ✅ | Avisa quando números ficam online *(em desenvolvimento, desabilitado por padrão)* |
 | [`/news`](news.md) | | ✅ | Manchetes de feeds RSS: `-hack`, `-g1`, `-gazeta`, `-brasil` |
