@@ -1,5 +1,5 @@
 /*
- * Comando /gif.
+ * Comando /giphy (alias /gif).
  */
 
 const { MessageMedia } = require('whatsapp-web.js');
@@ -8,9 +8,9 @@ const axios = require('axios');
 const { printError } = require('../log');
 const { envOuSetting, getSetting } = require('../settings');
 
-// /gif [tag]: random GIF from GIPHY, sent as a looping MP4.
+// /giphy [tag]: random GIF from GIPHY, sent as a looping MP4.
 // Key: GIPHY_API_KEY in config/.env or, if missing, the 'gif.giphy.api.key' setting
-async function cmdGif({ msg, args }) {
+async function cmdGiphy({ msg, args }) {
     const apiKey = envOuSetting('GIPHY_API_KEY', 'gif.giphy.api.key');
 
     if (!apiKey) {
@@ -36,11 +36,11 @@ async function cmdGif({ msg, args }) {
 
         await msg.reply(media, null, { sendVideoAsGif: true });
     } catch (err) {
-        printError('/gif:', err.message);
+        printError('/giphy:', err.message);
         await msg.reply('❌ Não consegui buscar um GIF agora.');
     }
 }
 
 module.exports = {
-    cmdGif
+    cmdGiphy
 };

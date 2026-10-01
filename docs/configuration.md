@@ -41,7 +41,7 @@ outros funcionam sem configuração.
 | Comando | Serviço | Chave |
 |---|---|---|
 | `/gpt`, `/resumo` | [OpenAI](https://platform.openai.com/) (pago por uso) | `OPENAI_API_KEY` ou setting `openai.api.key` |
-| `/gif` | [GIPHY](https://developers.giphy.com/) (grátis, 100 chamadas/hora) | `GIPHY_API_KEY` ou setting `gif.giphy.api.key` |
+| `/giphy` | [GIPHY](https://developers.giphy.com/) (grátis, 100 chamadas/hora) | `GIPHY_API_KEY` ou setting `gif.giphy.api.key` |
 | `/traduzir` | [Google Cloud Translation](https://cloud.google.com/translate) (cota mensal grátis, depois pago por caractere) | `GOOGLE_TRANSLATE_API_KEY` ou setting `traduzir.api.key` |
 | `/tempo` | [Open-Meteo](https://open-meteo.com/) | — |
 | `/cve`, `/walissu` | [NVD](https://nvd.nist.gov/) (~5 consultas a cada 30 s) | — |
@@ -68,7 +68,7 @@ vale o setting, que dá para trocar pelo WhatsApp com `/set` sem reiniciar.
 
 | Variável | Exemplo | Descrição |
 |---|---|---|
-| `GIPHY_API_KEY` | | Chave do GIPHY usada pelo `/gif` ([developers.giphy.com](https://developers.giphy.com/)). Se estiver vazia, o bot usa o setting `gif.giphy.api.key` (`/set gif.giphy.api.key <chave>`). |
+| `GIPHY_API_KEY` | | Chave do GIPHY usada pelo `/giphy` ([developers.giphy.com](https://developers.giphy.com/)). Se estiver vazia, o bot usa o setting `gif.giphy.api.key` (`/set gif.giphy.api.key <chave>`). |
 
 ### Como gerar a chave do GIPHY (grátis)
 
@@ -84,7 +84,7 @@ vale o setting, que dá para trocar pelo WhatsApp com `/set` sem reiniciar.
      `GIPHY_API_KEY` do `.env`, se existir, tem prioridade).
 
 A chave nova é do tipo **beta**: gratuita, mas limitada a **100 chamadas por
-hora**, o que sobra para o `/gif`. Acima disso a API responde `429` e o
+hora**, o que sobra para o `/giphy`. Acima disso a API responde `429` e o
 comando avisa que não conseguiu buscar o GIF. Para mais que isso é preciso
 pedir a chave de produção no próprio Dashboard.
 
