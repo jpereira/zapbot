@@ -2,6 +2,7 @@
  * Settings: configurações gerais na tabela `settings`, alteráveis em tempo de execução pelo /set.
  */
 
+const { OPENAI_MODELOS } = require('./openai');
 const { botConfig } = require('./botConfig');
 const { APP_ENV } = require('./constantes');
 const { dbAll, dbRun } = require('./db');
@@ -199,6 +200,12 @@ const SETTINGS_SCHEMA = {
         secret: true,
         desc: 'Chave da OpenAI (/gpt), usada quando OPENAI_API_KEY não está no config/.env.'
     },
+    'openai.api.model': {
+        default: 'gpt-4o-mini',
+        type: 'string',
+        opcoes: OPENAI_MODELOS,
+        desc: 'Modelo do /gpt, usado quando OPENAI_MODEL não está no config/.env (o /gpt -m lista os aceitos).'
+    },
     'openai.timeout.ms': {
         default: 60000,
         type: 'number', min: 5000, max: 300000,
@@ -301,6 +308,7 @@ function validarSetting(key, value) {
             const s = String(value ?? '').trim();
             if (!s && schema.allowEmpty) return s;
             if (!s || s.length > 100) throw new Error('precisa ter de 1 a 100 caracteres');
+            if (schema.opcoes && !schema.opcoes.includes(s)) throw new Error(`não suportado: ${s} (aceitos: ${schema.opcoes.join(', ')})`);
             return s;
         }
 
