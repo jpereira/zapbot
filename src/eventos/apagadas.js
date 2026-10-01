@@ -9,6 +9,7 @@ const { client } = require('../cliente');
 const { resolveLidToPhone } = require('../contatos');
 const { dbGet, dbPronto, dbRun } = require('../db');
 const { printDebug, printError } = require('../log');
+const { ignorarAviso } = require('../mudo');
 const { getSetting } = require('../settings');
 const { contarStats, meuIdStats } = require('../stats');
 const { isCaminhoDeMidia } = require('../util/arquivos');
@@ -232,6 +233,10 @@ client.on('message_revoke_everyone', async (after, before) => {
             senderName: deMim ? (client.info?.pushname || 'Você') : info.nomeRemetente,
             campos: { deleted: 1 }
         });
+
+        // /mudo: o aviso deste chat ou desta pessoa está em silêncio (a mensagem fica guardada para o /show)
+        const remetentes = [row.sender_jid, row.sender_number, info.numeroRemetente];
+        if (await ignorarAviso(isStatus(row) ? 'status' : 'apagada', { chatId: row.chat_id, remetentes })) return;
 
         await enviarMensagemApagada(client.info.wid._serialized, row, info, {
             titulo: isStatus(row) ? '📸 *STATUS APAGADO DETECTADO*' : '❌ *MENSAGEM APAGADA DETECTADA*'

@@ -160,6 +160,20 @@ async function limparEnquetesAntigas() {
     }
 }
 
+// Avisos cortados pelo /mudo (mute_hits): 30 dias bastam para o /status
+const MUTE_HITS_DIAS = 30;
+
+async function limparIgnoradasAntigas() {
+    await dbPronto;
+
+    try {
+        const res = await dbRun('DELETE FROM mute_hits WHERE at < ?', [Date.now() - MUTE_HITS_DIAS * DAY_MS]);
+        if (res.changes > 0) printInfo(`Limpeza: ${res.changes} registros antigos do /mudo removidos.`);
+    } catch (err) {
+        printError('Erro na limpeza do /mudo:', err.message);
+    }
+}
+
 // Ocorrências do /watch mais antigas que 'watch.hitsRetentionDays'
 async function limparWatchAntigo() {
     await dbPronto;
@@ -214,6 +228,7 @@ function rodarLimpeza() {
     limparEditadasAntigas();
     limparStatsAntigas();
     limparEnquetesAntigas();
+    limparIgnoradasAntigas();
 }
 
 // Chamada no app.js. Primeira execução adiada: no primeiro boot as tabelas ainda estão sendo criadas.
@@ -228,6 +243,7 @@ module.exports = {
     limparCacheAntigo,
     limparEditadasAntigas,
     limparEnquetesAntigas,
+    limparIgnoradasAntigas,
     limparMidias,
     limparStatsAntigas,
     limparTudo,

@@ -60,6 +60,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -a`) para fazer o bot
 | [`/listageral`](listageral.md) | `/list` | ✅ | Lista os membros do grupo |
 | [`/meme`](meme.md) | | | Template de meme aleatório (imgflip) |
 | [`/monitor`](monitor.md) 🚧 | `/m` | ✅ | Avisa quando números ficam online *(em desenvolvimento, desabilitado por padrão)* |
+| [`/mudo`](mudo.md) | `/mute` | ✅ | Silencia os avisos de apagadas, editadas e status de uma pessoa ou grupo |
 | [`/news`](news.md) | | ✅ | Manchetes de feeds RSS: `-hack`, `-g1`, `-gazeta`, `-brasil` |
 | [`/noffa`](noffa.md) | `/🌈`, `/🏳️‍🌈` | | Enfeita o texto com arco-íris |
 | [`/ping`](ping.md) | `/p` | ✅ | Verifica se o bot está vivo |

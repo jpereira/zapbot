@@ -52,6 +52,7 @@ src/
   openaiChat.js         chamada ao chat da OpenAI (/gpt e /resumo)
   contatos.js, opcoes.js                    contatos/@lid e o parser de opções
   destinos.js           o -to dos avisos: pessoa pelo número ou grupo pelo nome
+  mudo.js               /mudo: quem está silenciado e os avisos cortados
   defi/                 Solana (base58, PDA, RPC) e as contas da Orca (/defi)
   watch/                regras e verificação do /watch
   eventos/              message_create, apagadas, editadas, presença
@@ -100,6 +101,7 @@ entre os casos.
 | `configuracao.test.js` | `comandos.json`, settings, parser de opções, ajuda e a coerência entre config, código, README e `docs/` (inclusive a ordem alfabética e os links) |
 | `mensagens.test.js` | Gravação, roteamento, permissões (`onlyAdmin`, modo admin, bot desligado) e a contagem do `/stats` |
 | `comandos.test.js` | `/help`, `/debug`, `/uptime`, `/version`, `/ping`, `/noffa`, `/bot`, `/set` |
+| `mudo.test.js` | `/mudo`: avisos de apagadas, editadas e status silenciados por pessoa ou grupo |
 | `apagadas-editadas.test.js` | Eventos de apagar/editar e o `/show` (apagadas e editadas) |
 | `stats.test.js`, `watch.test.js`, `monitor.test.js` | `/stats`, `/watch`, `/monitor` e o aviso de presença |
 | `agenda.test.js` | Datas digitadas (`30m`, `às 18h`, `sexta`...) e o `/agendar`, nos modos mensagem e lembrete |
