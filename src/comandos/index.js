@@ -20,7 +20,6 @@ const { cmdGpt } = require('./gpt');
 const { cmdHelp } = require('./help');
 const { cmdJoke } = require('./joke');
 const { cmdKernel } = require('./kernel');
-const { cmdLembrete } = require('./lembrete');
 const { cmdListaGeral } = require('./listageral');
 const { cmdMeme } = require('./meme');
 const { cmdMonitor } = require('./monitor');
@@ -59,7 +58,6 @@ const HANDLERS = {
     '/help': cmdHelp,
     '/joke': cmdJoke,
     '/kernel': cmdKernel,
-    '/lembrete': cmdLembrete,
     '/listageral': cmdListaGeral,
     '/meme': cmdMeme,
     '/monitor': cmdMonitor,

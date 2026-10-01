@@ -12,18 +12,18 @@ const { plural, resumirTexto, semAcentos } = require('./util/formatar');
 const { REPETICOES, fmtQuando, lerQuando, partesEmBrasilia, proximaRepeticao } = require('./util/quando');
 
 /*
- * Os dois tipos usam a tabela `schedules` e o mesmo timer:
+ * O /agendar (aliases /agenda, /cron, /lembrete e /lemb) tem dois modos, na mesma tabela
+ * `schedules` e no mesmo timer:
+ *   agendar  → o texto puro, como se você digitasse, no chat atual ou no do -to;
  *   lembrete → "⏰ Lembrete" no chat onde foi criado (respondendo a mensagem do
- *              comando, ou a mensagem que ele respondeu), ou no seu privado com -pv;
- *   agendar  → o texto puro, como se você digitasse, no chat atual ou no do -to.
+ *              comando, ou a mensagem que ele respondeu), ou no seu privado com
+ *              -pv. É o modo do /lembrete (e /lemb) e do -lembrete.
  * Os dois aceitam -repetir diario|semanal|mensal. Sai da sua conta: só o dono usa.
  */
 const TIPOS = {
     lembrete: {
         cmd: '/lembrete',
         icone: '⏰',
-        titulo: 'Lembretes',
-        nenhum: 'Nenhum lembrete',
         criado: 'Lembrete criado',
         exemplo: '/lembrete 18:30 pagar o boleto',
         aceitaTo: false,
@@ -32,14 +32,13 @@ const TIPOS = {
     agendar: {
         cmd: '/agendar',
         icone: '📅',
-        titulo: 'Mensagens agendadas',
-        nenhum: 'Nenhuma mensagem agendada',
         criado: 'Mensagem agendada',
         exemplo: '/agendar sexta 18h -to /Grupo L200/ Bom fim de semana!',
         aceitaTo: true,
         aceitaPv: false
     }
 };
+const EXEMPLOS = `💡 _Ex.: ${TIPOS.agendar.exemplo}\n${TIPOS.lembrete.exemplo}_`;
 
 const MAX_DIAS = 366;
 const ATRASO_TOLERADO_MS = 5 * 60_000;
@@ -47,7 +46,7 @@ const ATRASO_TOLERADO_MS = 5 * 60_000;
 /**
  * Lê "<quando> [opções] <texto>": as opções e o "quando" vêm no começo, em
  * qualquer ordem; o texto é o resto, como foi digitado (com as quebras de linha).
- * @returns {{ opt: {list?, rm?, repetir?, pv?}, quando: {ms}|null, texto: string,
+ * @returns {{ opt: {list?, lembrete?, rm?, repetir?, pv?}, quando: {ms}|null, texto: string,
  *            destino: string|null, comDestino: boolean }}
  */
 function lerAgendamento(args) {
@@ -62,7 +61,7 @@ function lerAgendamento(args) {
         const nome = p.startsWith('-') ? p.slice(1).toLowerCase() : null;
 
         if (nome === 'list' || nome === 'l') opt.list = true;
-        else if (nome === 'pv') opt.pv = true;
+        else if (nome === 'pv' || nome === 'lembrete') opt[nome] = true;
         else if (nome === 'rm' || nome === 'repetir') opt[nome] = palavras[++i]?.[0] ?? '';
         else if (!quando && (quando = lerQuando(palavras.slice(i).map(m => m[0])))) i += quando.usadas - 1;
         else break;
@@ -72,29 +71,34 @@ function lerAgendamento(args) {
     return { opt, quando, texto, destino, comDestino };
 }
 
-const listar = (kind) => dbAll('SELECT * FROM schedules WHERE kind = ? ORDER BY due_at, id', [kind]);
+// Lembretes e mensagens juntos, na ordem em que saem (os números do -rm)
+const listar = () => dbAll('SELECT * FROM schedules ORDER BY due_at, id');
 
 function linhaDaLista(s, i) {
     const repete = s.repeat ? ` 🔁 ${REPETICOES[s.repeat].rotulo}` : '';
     const onde = s.chat_id === client.info.wid._serialized ? 'seu privado' : `${s.is_group ? '👥' : '👤'} ${s.chat_name}`;
-    return `${i + 1}. *${fmtQuando(s.due_at)}*${repete} — ${resumirTexto(s.text, 60)}\n   → ${onde}`;
+    return `${i + 1}. ${TIPOS[s.kind]?.icone ?? '📅'} *${fmtQuando(s.due_at)}*${repete} — ${resumirTexto(s.text, 60)}\n   → ${onde}`;
 }
 
-async function tratarAgenda(kind, { msg, args, chatId, chatName, isGroup, quotedMsg }) {
-    const t = TIPOS[kind];
+async function tratarAgenda({ msg, args, chatId, chatName, isGroup, quotedMsg }) {
     await dbPronto;
 
-    const sintaxe = `💡 _Ex.: ${t.exemplo}_`;
     const { opt, quando, texto: digitado, destino: destinoTexto, comDestino } = lerAgendamento(args);
-    const itens = await listar(kind);
+
+    // Modo lembrete: chamado como /lembrete (ou /lemb), ou com -lembrete
+    const chamado = String(msg.body ?? '').trim().split(/\s+/, 1)[0].toLowerCase();
+    const kind = ['/lembrete', '/lemb'].includes(chamado) || opt.lembrete ? 'lembrete' : 'agendar';
+    const t = TIPOS[kind];
+    const sintaxe = `💡 _Ex.: ${t.exemplo}_`;
+    const itens = await listar();
 
     if (opt.pv && !t.aceitaPv) {
-        await msg.reply(`❌ O ${t.cmd} não tem -pv: use -to @seu-número para mandar no seu privado.`);
+        await msg.reply('❌ O -pv é do modo lembrete: use /lembrete (ou -lembrete) para lembrar no seu privado, ou -to @seu-número.');
         return;
     }
 
     if (comDestino && !t.aceitaTo) {
-        await msg.reply(`❌ O ${t.cmd} não tem -to: o lembrete vem neste chat (ou no seu privado, com -pv). Para mandar uma mensagem a outro chat, use o /agendar.`);
+        await msg.reply('❌ O lembrete não tem -to: ele vem neste chat (ou no seu privado, com -pv). Para mandar uma mensagem a outro chat, use o /agendar sem -lembrete.');
         return;
     }
 
@@ -103,14 +107,14 @@ async function tratarAgenda(kind, { msg, args, chatId, chatName, isGroup, quoted
         const alvo = semAcentos(opt.rm).trim();
 
         if (alvo === 'all') {
-            await dbRun('DELETE FROM schedules WHERE kind = ?', [kind]);
+            await dbRun('DELETE FROM schedules');
             await msg.reply(`🗑️ ${plural(itens.length, 'removido', 'removidos')}.`);
             return;
         }
 
         const item = /^\d+$/.test(alvo) ? itens[Number(alvo) - 1] : null;
         if (!item) {
-            await msg.reply(`❌ Nº ${opt.rm || '?'} não existe. Veja a lista com ${t.cmd} -l`);
+            await msg.reply(`❌ Nº ${opt.rm || '?'} não existe. Veja a lista com /agendar -l`);
             return;
         }
 
@@ -119,15 +123,15 @@ async function tratarAgenda(kind, { msg, args, chatId, chatName, isGroup, quoted
         return;
     }
 
-    // -l, ou nada: a lista
+    // -l, ou nada: a lista (lembretes e mensagens)
     if (opt.list || (!quando && !digitado && !quotedMsg)) {
         if (!itens.length) {
-            await msg.reply(`${t.icone} ${t.nenhum}.\n${sintaxe}`);
+            await msg.reply(`📅 Nada agendado.\n${EXEMPLOS}`);
             return;
         }
 
-        await msg.reply(`${t.icone} *${t.titulo}* (${itens.length})\n\n${itens.map(linhaDaLista).join('\n')}\n\n` +
-            `💡 _Remova com ${t.cmd} -rm <nº|all>._`);
+        await msg.reply(`📅 *Agenda* (${itens.length})\n\n${itens.map(linhaDaLista).join('\n')}\n\n` +
+            '💡 _📅 mensagem · ⏰ lembrete. Remova com /agendar -rm <nº|all>._');
         return;
     }
 
