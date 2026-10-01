@@ -19,7 +19,7 @@ evento também é registrado no banco.
 | `-list` | | Lista os números monitorados |
 | `-logs` | | Lista o histórico de eventos |
 | `-add` | `<número>` | Adiciona um número |
-| `-del` | `<número>` | Remove um número |
+| `-rem` | `<número>` | Remove um número |
 | `-clean` | | Remove todos |
 
 Aceita também a forma sem hífen:
@@ -29,6 +29,6 @@ Aceita também a forma sem hífen:
 /monitor add +55 21 99999-9999
 /m -list
 /m logs
-/monitor -del 5521999999999
+/monitor -rem 5521999999999
 /monitor -clean
 ```

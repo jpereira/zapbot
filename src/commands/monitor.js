@@ -24,7 +24,7 @@ async function cmdMonitor({ msg, opts }) {
 
     // "-add +55 21 99999-8888": the parser only takes "+55"; the rest of the number falls into argv
     if (typeof opts.opt.add === 'string') { sub = 'add'; target = [opts.opt.add, ...opts.argv].join(' '); }
-    if (typeof opts.opt.del === 'string') { sub = 'del'; target = [opts.opt.del, ...opts.argv].join(' '); }
+    if (typeof opts.opt.rem === 'string') { sub = 'rem'; target = [opts.opt.rem, ...opts.argv].join(' '); }
 
     if (!sub && opts.argv.length) {
         sub = opts.argv[0].toLowerCase();
@@ -110,7 +110,7 @@ async function cmdMonitor({ msg, opts }) {
                 return;
             }
 
-            case 'del': {
+            case 'rem': {
                 const phoneNumber = normalizerPhoneNumber(target);
 
                 if (!isPhoneNumber(phoneNumber)) {
