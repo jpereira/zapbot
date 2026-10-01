@@ -51,7 +51,7 @@ src/
   moedas.js, cotacoes.js, alertasPreco.js   /crypto, /cotacao e alertas de preço
   agenda.js             /cron (e /lembrete): leitura, lista e envio na hora
   openai.js             modelos aceitos pelo /gpt
-  openaiChat.js         chamada ao chat da OpenAI (/gpt e /resumo)
+  openaiChat.js         chamada ao chat da OpenAI (/gpt e /tldr)
   contatos.js, opcoes.js                    contatos/@lid e o parser de opções
   destinos.js           o -to/alvo: contato ou grupo pelo nome, ou número
   escolhas.js           a lista numerada para escolher (vários contatos/grupos) e a resposta com o nº
@@ -112,7 +112,7 @@ entre os casos.
 | `backup.test.js` | `/backup` (criação, lista, restauração, envio) e o backup diário |
 | `cotacoes.test.js` | `/cotacao`, `/crypto` e os alertas de preço |
 | `defi.test.js` | Solana (base58, PDA), contas da Orca (conferidas com o SDK oficial) e o `/defi` |
-| `externos.test.js` | `/cve`, `/tempo`, `/news`, `/gpt`, `/resumo`, `/traduzir`, `/giphy`, `/meme`, `/joke`, `/kernel` |
+| `externos.test.js` | `/cve`, `/tempo`, `/news`, `/gpt`, `/tldr`, `/traduzir`, `/giphy`, `/meme`, `/joke`, `/kernel` |
 | `grupo.test.js` | `/todos`, `/boletos`, `/listageral`, `/walissu`, `/enquete` (e o `-r`), `/sticker` |
 | `get-cache.test.js` | `/get` (e o anti-SSRF), `/cache` e a limpeza periódica |
 | `conexao-email.test.js` | Eventos de conexão, reinício, watchdog, alertas por e-mail, crash e `docker stop` |

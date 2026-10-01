@@ -1,6 +1,6 @@
 /*
  * Comandos que consultam serviços externos (todos simulados):
- * /cve, /tempo, /news, /gpt, /resumo, /traduzir, /giphy, /meme, /joke e /kernel.
+ * /cve, /tempo, /news, /gpt, /tldr, /traduzir, /giphy, /meme, /joke e /kernel.
  */
 const bot = require('./helpers/bot');
 
@@ -286,8 +286,8 @@ describe('/gpt (/ai)', () => {
     });
 });
 
-describe('/resumo (/tldr)', () => {
-    const { lerPeriodo } = bot.src('comandos/resumo');
+describe('/tldr (/resumo)', () => {
+    const { lerPeriodo } = bot.src('comandos/tldr');
 
     // Mensagens recebidas no grupo, gravadas há `minutos` minutos
     async function conversa(linhas, minutos = 10) {
@@ -319,7 +319,7 @@ describe('/resumo (/tldr)', () => {
         await bot.apagar(apagada);
         await bot.entregar(bot.criarMensagem({ de: bot.OUTRO.jid, tipo: 'image', midia: { mimetype: 'image/png', data: 'AA==' } }));
 
-        const [r] = await bot.responder('/resumo');
+        const [r] = await bot.responder('/tldr');
         assert.match(r, /^📝 \*Resumo de Família\*\n_3 mensagens · \d\d\/\d\d, \d\d:\d\d a \d\d\/\d\d, \d\d:\d\d_\n\n• Combinaram o almoço de domingo\.$/);
 
         const { cfg } = rede.chamadas.at(-1);
@@ -334,10 +334,10 @@ describe('/resumo (/tldr)', () => {
         await conversa([['velha 1'], ['velha 2'], ['velha 3']], 300);
         await conversa([['nova 1'], ['nova 2'], ['nova 3']], 30);
 
-        await bot.responder('/resumo 2h');
+        await bot.responder('/tldr 2h');
         assert.doesNotMatch(rede.chamadas.at(-1).cfg.body.messages[1].content, /velha/);
 
-        await bot.responder('/tldr -4');
+        await bot.responder('/resumo -4');
         const texto = rede.chamadas.at(-1).cfg.body.messages[1].content;
         assert.match(texto, /\(4 mensagens\)/);
         assert.match(texto, /velha 3[\s\S]*nova 3/);
@@ -346,8 +346,8 @@ describe('/resumo (/tldr)', () => {
     test('limites: resumo.maxMsgs e a janela de 68 h', async () => {
         await conversa([['a'], ['b'], ['c']]);
         await bot.setSetting('resumo.maxMsgs', 10);
-        assert.match((await bot.responder('/resumo 50'))[0], /_\(limitado a 10 mensagens \(setting resumo\.maxMsgs\)\)_/);
-        assert.match((await bot.responder('/resumo 100h'))[0], /_\(as mensagens comuns ficam só 68 h no banco\)_/);
+        assert.match((await bot.responder('/tldr 50'))[0], /_\(limitado a 10 mensagens \(setting resumo\.maxMsgs\)\)_/);
+        assert.match((await bot.responder('/tldr 100h'))[0], /_\(as mensagens comuns ficam só 68 h no banco\)_/);
     });
 
     test('-c pelo nome e -pv', async () => {
@@ -361,27 +361,27 @@ describe('/resumo (/tldr)', () => {
         for (const [texto, de] of [['oi', bot.OUTRO.jid], ['tudo bem?', bot.DONO.jid], ['tudo', bot.OUTRO.jid]]) {
             await bot.entregar(bot.criarMensagem({ texto, de, chat: bot.OUTRO.jid }));
         }
-        await bot.responder('/resumo', { chat: bot.OUTRO.jid });
+        await bot.responder('/tldr', { chat: bot.OUTRO.jid });
         assert.match(rede.chamadas.at(-1).cfg.body.messages[1].content, /Fulano: oi\n.*Dono: tudo bem\?\n.*Fulano: tudo$/);
 
-        const r = await bot.executar('/resumo -c "rio trabalho" -pv');
+        const r = await bot.executar('/tldr -c "rio trabalho" -pv');
         assert.equal(r[0].texto, '📝 Resumo enviado no seu privado.');
         assert.equal(r[1].chatId, bot.DONO.jid);
         assert.match(r[1].texto, /📝 \*Resumo de Trabalho Rio\*/);
 
-        assert.match((await bot.responder('/resumo -c xyz'))[0], /❌ Nenhum chat com mensagens guardadas tem "xyz" no nome/);
+        assert.match((await bot.responder('/tldr -c xyz'))[0], /❌ Nenhum chat com mensagens guardadas tem "xyz" no nome/);
     });
 
     test('poucas mensagens, período inválido, sem chave e erro da OpenAI', async () => {
-        assert.match((await bot.responder('/resumo'))[0], /📝 Poucas mensagens para resumir \(0\) em Família/);
-        assert.match((await bot.responder('/resumo ontem'))[0], /Usage: \/resumo/);
+        assert.match((await bot.responder('/tldr'))[0], /📝 Poucas mensagens para resumir \(0\) em Família/);
+        assert.match((await bot.responder('/tldr ontem'))[0], /Usage: \/tldr/);
 
         await conversa([['a'], ['b'], ['c']]);
         rede.responder('post', 'api.openai.com', erroHttp(429));
-        assert.deepEqual(await bot.responder('/resumo', { erroEsperado: true }), ['💸 Limite ou créditos da OpenAI esgotados. Tente mais tarde.']);
+        assert.deepEqual(await bot.responder('/tldr', { erroEsperado: true }), ['💸 Limite ou créditos da OpenAI esgotados. Tente mais tarde.']);
 
         await bot.setSetting('openai.api.key', '');
-        assert.match((await bot.responder('/resumo'))[0], /⚠️ API key da OpenAI não encontrada: o \/resumo está desativado/);
+        assert.match((await bot.responder('/tldr'))[0], /⚠️ API key da OpenAI não encontrada: o \/tldr está desativado/);
     });
 });
 
