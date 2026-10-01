@@ -159,12 +159,12 @@ const SETTINGS_SCHEMA = {
         type: 'string',
         allowEmpty: true,
         secret: true,
-        desc: 'Chave do GIPHY (/gif), usada quando GIPHY_API_KEY não está no config/.env.'
+        desc: 'Chave do GIPHY (/giphy), usada quando GIPHY_API_KEY não está no config/.env.'
     },
     'gif.tag': {
         default: 'fail',
         type: 'string',
-        desc: 'Tag padrão do /gif quando nenhuma é informada.'
+        desc: 'Tag padrão do /giphy quando nenhuma é informada.'
     },
     'monitor.max': {
         default: 20,
