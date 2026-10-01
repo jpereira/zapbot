@@ -1,32 +1,42 @@
 /*
- * Destination of a notice (-to): a person by number or a group by name.
- * Used by the price alerts (/cotacao and /crypto -alerta) and by /cron.
+ * Destination of a notice or target of a command: a contact, a group or a number.
+ * Used by the -to of /cron and of the price alerts (/cotacao and /crypto -alerta),
+ * by the /mudo target and by /defi -alerta's -send.
  */
 
 const { client } = require('./client');
+const { waitChoice } = require('./choices');
 const { withoutAccents } = require('./util/format');
 
 /*
  * Formas aceitas:
- * -to @5521999999999      → the person's private chat (the "@" is optional; also works
- * mention the contact with @ on WhatsApp)
- * -to /Grupo L200/        → group whose name has all the words, in any
- * -to "Grupo L200"          order and regardless of case or accents
- * -to L200                  ("Grupo sobre L200"); /.../ and quotes allow spaces
+ * +5521999999999   → the number's private chat: country code + area code + number (the "+" is optional)
+ * /Jorge Pereira/  → first, a contact in your address book with all the words
+ * "Jorge Pereira"    in the name; with no contact, a group. In any order, without
+ * Jorge              regardless of case or accents; /.../ and quotes
+ * allow spaces
+ * The same name (whole) beats one that only contains the words. If still
+ * more than one fits, the command lists and you reply with the no. (resolverOrChoose).
  */
 const DESTINATION = /(^|\s)-to(?=\s|$)(?:\s+("([^"]*)"|'([^']*)'|\/([^/]*)\/|(\S+)))?/;
+const EXAMPLE = '/Jorge Pereira/, /Grupo L200/ ou +5521999999999';
+const LIMIT = 10;
+
+// The same regex as -to for another option (e.g.: /defi's -send)
+const optionRegex = (optionAlt) => (optionAlt === 'to' ? DESTINATION
+    : new RegExp(DESTINATION.source.replace('-to', `-${optionAlt}`)));
 
 /**
- * Removes the "-to <destination>" from the command text.
+ * Removes the "-to <destination>" (or another option, like "-send") from the command text.
  * @returns {{ destino: string|null, informado: boolean, resto: string }}
- * given: -to appeared (even without a value, which is an error for the caller)
+ * given: the option appeared (even without a value, which is an error for the caller)
  */
-function extractDestination(textAlt) {
-    const m = String(textAlt ?? '').match(DESTINATION);
+function extractDestination(textAlt, optionAlt = 'to') {
+    const m = String(textAlt ?? '').match(optionRegex(optionAlt));
     if (!m) return { destino: null, informado: false, resto: String(textAlt ?? '') };
 
     const valueAlt = (m[3] ?? m[4] ?? m[5] ?? m[6] ?? '').trim();
-    // Only removes the -to snippet: the rest (including line breaks) stays as it came
+    // Only removes the option snippet: the rest (including line breaks) stays as it came
     const rest = (textAlt.slice(0, m.index) + m[1] + textAlt.slice(m.index + m[0].length)).trim();
 
     return { destino: valueAlt || null, informado: true, resto: rest };
@@ -34,61 +44,113 @@ function extractDestination(textAlt) {
 
 const normalize = (s) => withoutAccents(s).trim();
 
-/**
- * Resolves the destination to a chat.
- * @param {string} valor  what came after -to
- * @param {object} [o]
- * @param {string[]} [o.mencoes]  msg.mentionedIds (mentioning with @ on WhatsApp)
- * @returns {Promise<{ id: string, nome: string, grupo: boolean } | { erro: string }>}
+// "+5521999999999", "5521 99999-9999" → only the digits; null if it is not a number
+function readNumber(textAlt) {
+    if (!/^\+?[\d\s().-]+$/.test(textAlt)) return null;
+    return textAlt.replace(/\D/g, '');
+}
+
+/*
+ * The contacts saved in the address book (with a name). WhatsApp may bring the same
+ * person as @c.us and as @lid: with the same name, only the @c.us stays.
  */
-async function resolverDestination(valueAlt, { mencoes: mentions = [] } = {}) {
-    const textAlt = String(valueAlt ?? '').trim().replace(/^@/, '');
+async function scheduleContacts() {
+    const allAlt2 = (await client.getContacts?.().catch(() => []) ?? [])
+        .filter(c => c?.isMyContact && !c.isGroup && !c.isMe && c.name && c.id?._serialized);
+    const withPhone = new Set(allAlt2.filter(c => c.id._serialized.endsWith('@c.us')).map(c => normalize(c.name)));
 
-    if (!textAlt) return { erro: '❌ Informe o destino do -to: @número ou o nome do grupo.' };
+    return allAlt2.filter(c => c.id._serialized.endsWith('@c.us') || !withPhone.has(normalize(c.name)));
+}
 
-    // Person: digits only (with +, spaces or dashes, if they come between quotes)
-    const digits = textAlt.replace(/[\s()+-]/g, '');
+const contact = (c) => ({ id: c.id._serialized, nome: c.name, grupo: false, numero: c.number ?? null });
+const group = (g) => ({ id: g.id._serialized, nome: g.name, grupo: true });
 
-    if (/^\d+$/.test(digits)) {
-        // Mentioned with @: WhatsApp sends the id (sometimes @lid) in mentionedIds
-        const mentioned = mentions.find(id => id.split('@')[0] === digits);
-        if (mentioned) return { id: mentioned, nome: await contactName(mentioned, digits), grupo: false };
+/**
+ * Resolves the text to a chat.
+ * @param {string} valor  what came in -to (or in the /mudo target, in -send...)
+ * @param {object} [o]
+ * @param {string} [o.opcao]  what to call the destination in the error messages (default: "-to")
+ * @returns {Promise<{ id: string, nome: string, grupo: boolean }
+ *   | { erro: string }
+ * | { options: Array<{ id, name, group }>, search: string, more: number }>}
+ * options: more than one fit; the caller offers the choice (resolverOrChoose)
+ */
+async function resolverDestination(valueAlt, { opcao: optionAlt = '-to' } = {}) {
+    const textAlt = String(valueAlt ?? '').trim();
 
+    if (!textAlt) return { erro: `❌ Informe o destino do ${optionAlt}: um contato, um grupo ou um número (${EXAMPLE}).` };
+
+    // Number: digits only, with + and separators
+    const digits = readNumber(textAlt);
+    if (digits !== null) {
         if (digits.length < 10 || digits.length > 15) {
-            return { erro: `❌ Número inválido: ${textAlt}. Use DDI + DDD + número (ex.: @5521999999999).` };
+            return { erro: `❌ Número inválido: ${textAlt}. Use DDI + DDD + número (ex.: +5521999999999).` };
         }
 
         const wid = await client.getNumberId(digits).catch(() => null);
-        if (!wid) return { erro: `❌ O número ${digits} não está no WhatsApp.` };
+        if (!wid) return { erro: `❌ O número +${digits} não está no WhatsApp.` };
 
         return { id: wid._serialized, nome: await contactName(wid._serialized, digits), grupo: false };
     }
 
-    // Group: all the words in the name
-    const words = normalize(textAlt).split(/\s+/);
-    const groups = (await client.getChats().catch(() => [])).filter(c => c.isGroup);
-    const foundAlt6 = groups.filter(g => words.every(p => normalize(g.name).includes(p)));
-    const exact = foundAlt6.find(g => normalize(g.name) === normalize(textAlt));
+    // Name: all the words, first in the contacts, then in the groups
+    const search = normalize(textAlt);
+    const words = search.split(/\s+/);
+    const home = (nameAlt) => words.every(p => normalize(nameAlt).includes(p));
 
-    if (exact || foundAlt6.length === 1) {
-        const g = exact || foundAlt6[0];
-        return { id: g.id._serialized, nome: g.name, grupo: true };
+    const contacts = (await scheduleContacts()).filter(c => home(c.name));
+    const groups = (await client.getChats().catch(() => [])).filter(c => c.isGroup && c.name && home(c.name));
+
+    const exact = contacts.find(c => normalize(c.name) === search) ?? null;
+    const groupExact = groups.find(g => normalize(g.name) === search) ?? null;
+
+    if (exact && contacts.filter(c => normalize(c.name) === search).length === 1) return contact(exact);
+    if (!exact && groupExact && groups.filter(g => normalize(g.name) === search).length === 1) return group(groupExact);
+
+    const candidates = contacts.length ? contacts.map(contact) : groups.map(group);
+    if (candidates.length === 1) return candidates[0];
+
+    if (!candidates.length) {
+        return { erro: `❌ Nenhum contato ou grupo com "${textAlt}" no nome.\n💡 _Use o nome como está na sua agenda ou o número: ${EXAMPLE}_` };
     }
 
-    if (!foundAlt6.length) {
-        return { erro: `❌ Nenhum grupo com "${textAlt}" no nome.\n💡 _Para uma pessoa, use o número: -to @5521999999999_` };
+    return { opcoes: candidates.slice(0, LIMIT), busca: textAlt, mais: Math.max(0, candidates.length - LIMIT) };
+}
+
+/**
+ * Resolves the destination and, if more than one fits, shows the numbered list and waits
+ * you reply with the no. (up to 2 minutes). Errors and the timeout already go
+ * answered in the chat.
+ * @param {object} msg  the command message
+ * @param {string} valor
+ * @param {object} [o]  the same as resolverDestination
+ * @returns {Promise<{ id: string, nome: string, grupo: boolean } | null>}
+ */
+async function resolverOrChoose(msg, valueAlt, o = {}) {
+    const r = await resolverDestination(valueAlt, o);
+
+    if (r.erro) {
+        await msg.reply(r.erro);
+        return null;
     }
+    if (!r.opcoes) return r;
 
-    const LIMIT = 10;
-    const names = foundAlt6.slice(0, LIMIT).map(g => `• ${g.name}`).join('\n');
-    const more = foundAlt6.length > LIMIT ? `\n_+${foundAlt6.length - LIMIT} grupo(s)_` : '';
+    const type = r.opcoes[0].grupo ? 'grupos' : 'contatos';
+    const linesAlt = r.opcoes.map((d, i) => `${i + 1}. ${describeDestination(d)}${d.numero ? ` · +${d.numero}` : ''}`);
+    const more = r.mais ? `\n_+${r.mais} ${type}: use mais palavras do nome para ver os outros_` : '';
 
-    return { erro: `🔎 "${textAlt}" corresponde a ${foundAlt6.length} grupos:\n${names}${more}\n💡 _Use mais palavras do nome, entre /.../ ou aspas: -to /Grupo L200/_` };
+    await msg.reply(`🔎 "${r.busca}" corresponde a ${r.opcoes.length + r.mais} ${type}:\n\n${linesAlt.join('\n')}${more}\n\n` +
+        '💡 _Responda só com o nº (em até 2 minutos), ou repita o comando com mais palavras do nome._');
+
+    const chatId = msg.id?.remote ?? msg.from;
+    return waitChoice(chatId, r.opcoes, {
+        aoExpirar: () => msg.reply(`⌛ Nenhum nº escolhido para "${r.busca}" em 2 minutos: nada foi feito.`)
+    });
 }
 
 async function contactName(id, digits) {
     const contactAlt = await client.getContactById(id).catch(() => null);
-    return contactAlt?.name || contactAlt?.pushname || digits;
+    return contactAlt?.name || contactAlt?.pushname || `+${digits}`;
 }
 
 // "👥 Grupo sobre L200" / "👤 Fulano"
@@ -97,5 +159,6 @@ const describeDestination = (d) => `${d.grupo ? '👥' : '👤'} ${d.nome}`;
 module.exports = {
     describeDestination,
     extractDestination,
-    resolverDestination
+    resolverDestination,
+    resolverOrChoose
 };

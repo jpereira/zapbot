@@ -15,6 +15,40 @@ Podem ser enviados em **qualquer chat** (privado, grupo ou no chat consigo mesmo
 - `/help` lista todos; `/help get` ou `/help /get` mostram um específico.
 - Aliases funcionam igual ao comando original (`/download` = `/get`).
 
+## Destinos: contato, grupo ou número
+
+Os comandos que mandam algo para outro chat ou agem sobre uma pessoa ou um grupo
+usam a mesma busca: o `-to` do [`/cron`](cron.md) e dos alertas do
+[`/cotacao`](cotacao.md#avisar-outra-pessoa-ou-um-grupo) e do [`/crypto`](crypto.md),
+o alvo do [`/mudo`](mudo.md) e o `-send` do [`/defi -alerta`](defi.md).
+
+| Forma | Exemplo | Encontra |
+|---|---|---|
+| Nome | `/Jorge Pereira/`, `"Jorge Pereira"` ou `Jorge` | **Primeiro** um contato da sua agenda, pelo nome salvo; **se nenhum** casar, um grupo de que você participa |
+| Grupo | `/Grupo L200/`, `"Grupo L200"` ou `L200` | O grupo (quando nenhum contato tem essas palavras no nome) |
+| Número | `+5521999999999` | O privado do número: DDI + DDD + número (o `+` é opcional; o bot confere se ele está no WhatsApp) |
+
+- O nome casa quando tem **todas** as palavras, em qualquer ordem, sem
+  diferenciar maiúsculas nem acentos. Nomes com espaço vão entre `/.../` ou
+  aspas; sem eles, só a primeira palavra conta.
+- O nome **inteiro igual** ganha de um que só contém as palavras (e um
+  contato ganha de um grupo).
+- Se mais de um servir, o bot lista e espera você **responder só com o nº**,
+  no mesmo chat, em até 2 minutos:
+
+```
+/mudo -a /Jorge/
+🔎 "Jorge" corresponde a 2 contatos:
+
+1. 👤 Jorge Pereira · +5521999999999
+2. 👤 Jorge Silva · +5511988888888
+
+💡 Responda só com o nº (em até 2 minutos), ou repita o comando com mais palavras do nome.
+
+1
+🔇 Silenciado: 👤 Jorge Pereira — apagadas, editadas, status
+```
+
 ## Permissões (`onlyAdmin`)
 
 Comandos marcados como **admin** só executam quando enviados **pela própria

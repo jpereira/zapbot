@@ -9,7 +9,7 @@ const { client } = require('./client');
 const { findCommand } = require('./commands/base');
 const { QUOTE_TIMEOUT_MS, searchQuote, fmtPriceCrypto, fmtReal, fmtChange } = require('./quotes');
 const { dbAll, dbGet, dbReady, dbRun } = require('./db');
-const { describeDestination, extractDestination, resolverDestination } = require('./destinations');
+const { describeDestination, extractDestination, resolverOrChoose } = require('./destinations');
 const { printError, printInfo } = require('./log');
 const { QUOTE_SUPPORTED, CRYPTO_SUPPORTED } = require('./currencies');
 const { GetOptFromCommand } = require('./options');
@@ -22,8 +22,9 @@ const { formatData, plural } = require('./util/format');
  * -alerta USD > 5.30      → notifies your private chat when USD goes above R$ 5.30
  * -alerta BTC < 90000     → (in /crypto) when BTC drops below $90,000
  * -alerta -rm 2 | all     → removes alert no. 2 from the list (or all)
- * -alerta BTC > 90000 -to /Grupo L200/  → notifies a group (or -to @number:
- * in the person's private chat) instead of your private chat
+ * -alerta BTC > 90000 -to /Grupo L200/  → notifies a group (or a contact,
+ * -to /Jorge Pereira/, or number, -to +5521999999999)
+ * instead of your private chat
  * Each alert fires ONCE and is removed. The check runs every
  * 'alert.intervalMin' minutes. Only the owner creates and removes.
  */
@@ -167,12 +168,8 @@ async function priceHandleAlert(kind, { msg, args }) {
     let destination = null;
 
     if (withDestination) {
-        destination = await resolverDestination(destinationText, { mencoes: msg.mentionedIds ?? [] });
-
-        if (destination.erro) {
-            await msg.reply(destination.erro);
-            return;
-        }
+        destination = await resolverOrChoose(msg, destinationText);
+        if (!destination) return;
     }
 
     const max = getSetting('alerta.max');

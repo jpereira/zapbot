@@ -38,7 +38,7 @@ describe('/status', () => {
         await bot.dbRun("UPDATE messages SET revoked_at = ? WHERE body = 'duas'", [Date.now() - 2 * DAY]);
 
         // /mudo: an ignored notice
-        await bot.replyAlt('/mudo -d @5521911111111');
+        await bot.replyAlt('/mudo -d +5521911111111');
         await deleted('silenciada');
 
         const [r] = await bot.replyAlt('/status');
@@ -83,7 +83,7 @@ describe('/status', () => {
 
     test('-off desliga; hora inválida; o /cron -rm all não apaga o status diário', async () => {
         await bot.replyAlt('/status 7h');
-        await bot.replyAlt('/cron 1h -to @5521911111111 oi');
+        await bot.replyAlt('/cron 1h -to +5521911111111 oi');
         await bot.replyAlt('/cron -rm all');
         assert.equal((await bot.dbAll("SELECT * FROM schedules WHERE kind = 'status'")).length, 1);
 
