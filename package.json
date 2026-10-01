@@ -1,6 +1,6 @@
 {
   "name": "zapbot",
-  "version": "1.7",
+  "version": "1.8",
   "main": "app.js",
   "license": "MIT",
   "scripts": {
