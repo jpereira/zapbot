@@ -4,7 +4,7 @@ Exibe o mesmo banner do `/uptime`, com a versão do bot.
 
 ```
 /ver
-🤖 ZapBot 1.0.8
+🤖 ZapBot 1.0.9
 ━━━━━━━━━━━━━━━━━━
 ⚡ Online: 2 dias, 3 horas
 🔐 Conectado: 2 dias, 2 horas, 58 minutos
