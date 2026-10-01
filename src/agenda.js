@@ -1,21 +1,22 @@
 /*
- * Agenda: os lembretes (/lembrete), com a verificação periódica.
+ * Agenda: os lembretes (/lembrete) e as mensagens agendadas (/agendar), com a verificação periódica.
  */
 
 const { estado } = require('./estado');
 const { client } = require('./cliente');
 const { dbAll, dbGet, dbPronto, dbRun } = require('./db');
-const { descreverDestino, extrairDestino } = require('./destinos');
+const { descreverDestino, extrairDestino, resolverDestino } = require('./destinos');
 const { printError, printInfo } = require('./log');
 const { getSetting } = require('./settings');
 const { plural, resumirTexto, semAcentos } = require('./util/formatar');
 const { REPETICOES, fmtQuando, lerQuando, partesEmBrasilia, proximaRepeticao } = require('./util/quando');
 
 /*
- * Tabela `schedules`, verificada por um timer:
+ * Os dois tipos usam a tabela `schedules` e o mesmo timer:
  *   lembrete → "⏰ Lembrete" no chat onde foi criado (respondendo a mensagem do
- *              comando, ou a mensagem que ele respondeu), ou no seu privado com -pv.
- * Aceita -repetir diario|semanal|mensal. Sai da sua conta: só o dono usa.
+ *              comando, ou a mensagem que ele respondeu), ou no seu privado com -pv;
+ *   agendar  → o texto puro, como se você digitasse, no chat atual ou no do -to.
+ * Os dois aceitam -repetir diario|semanal|mensal. Sai da sua conta: só o dono usa.
  */
 const TIPOS = {
     lembrete: {
@@ -27,6 +28,16 @@ const TIPOS = {
         exemplo: '/lembrete 18:30 pagar o boleto',
         aceitaTo: false,
         aceitaPv: true
+    },
+    agendar: {
+        cmd: '/agendar',
+        icone: '📅',
+        titulo: 'Mensagens agendadas',
+        nenhum: 'Nenhuma mensagem agendada',
+        criado: 'Mensagem agendada',
+        exemplo: '/agendar sexta 18h -to /Grupo L200/ Bom fim de semana!',
+        aceitaTo: true,
+        aceitaPv: false
     }
 };
 
@@ -74,7 +85,7 @@ async function tratarAgenda(kind, { msg, args, chatId, chatName, isGroup, quoted
     await dbPronto;
 
     const sintaxe = `💡 _Ex.: ${t.exemplo}_`;
-    const { opt, quando, texto: digitado, comDestino } = lerAgendamento(args);
+    const { opt, quando, texto: digitado, destino: destinoTexto, comDestino } = lerAgendamento(args);
     const itens = await listar(kind);
 
     if (opt.pv && !t.aceitaPv) {
@@ -83,7 +94,7 @@ async function tratarAgenda(kind, { msg, args, chatId, chatName, isGroup, quoted
     }
 
     if (comDestino && !t.aceitaTo) {
-        await msg.reply(`❌ O ${t.cmd} não tem -to: o lembrete vem neste chat (ou no seu privado, com -pv).`);
+        await msg.reply(`❌ O ${t.cmd} não tem -to: o lembrete vem neste chat (ou no seu privado, com -pv). Para mandar uma mensagem a outro chat, use o /agendar.`);
         return;
     }
 
@@ -155,15 +166,21 @@ async function tratarAgenda(kind, { msg, args, chatId, chatName, isGroup, quoted
     const max = getSetting('agenda.max');
     const { n: total } = await dbGet('SELECT COUNT(*) AS n FROM schedules');
     if (total >= max) {
-        await msg.reply(`❌ Limite de ${max} lembretes (setting agenda.max). Remova algum antes.`);
+        await msg.reply(`❌ Limite de ${max} lembretes e mensagens agendadas (setting agenda.max). Remova algum antes.`);
         return;
     }
 
-    // Onde vai: -pv ou o chat atual
+    // Onde vai: -to (agendar), -pv (lembrete) ou o chat atual
     const meuId = client.info.wid._serialized;
     let destino = { id: chatId, nome: chatName, grupo: Boolean(isGroup) };
 
-    if (opt.pv) {
+    if (comDestino) {
+        destino = await resolverDestino(destinoTexto, { mencoes: msg.mentionedIds ?? [] });
+        if (destino.erro) {
+            await msg.reply(destino.erro);
+            return;
+        }
+    } else if (opt.pv) {
         destino = { id: meuId, nome: 'seu privado', grupo: false };
     }
 
@@ -198,12 +215,16 @@ async function dispararItem(s, agora) {
         await dbRun('DELETE FROM schedules WHERE id = ?', [s.id]);
     }
 
-    const texto = `⏰ *Lembrete*\n\n${s.text}` +
-        (atrasado ? `\n\n_(atrasado: era para ${fmtQuando(s.due_at)})_` : '');
+    if (s.kind === 'agendar') {
+        await client.sendMessage(s.chat_id, s.text);
+    } else {
+        const texto = `⏰ *Lembrete*\n\n${s.text}` +
+            (atrasado ? `\n\n_(atrasado: era para ${fmtQuando(s.due_at)})_` : '');
 
-    // A mensagem citada pode ter sumido: sem ela, vai sem citar
-    await client.sendMessage(s.chat_id, texto, s.quoted_id ? { quotedMessageId: s.quoted_id } : {})
-        .catch(() => client.sendMessage(s.chat_id, texto));
+        // A mensagem citada pode ter sumido: sem ela, vai sem citar
+        await client.sendMessage(s.chat_id, texto, s.quoted_id ? { quotedMessageId: s.quoted_id } : {})
+            .catch(() => client.sendMessage(s.chat_id, texto));
+    }
 
     printInfo(`${TIPOS[s.kind].cmd}: enviado para ${s.chat_id}${atrasado ? ' (atrasado)' : ''}${s.repeat ? ` (${s.repeat})` : ''}`);
 }
