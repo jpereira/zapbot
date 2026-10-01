@@ -76,7 +76,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -a`) para fazer o bot
 |---|---|:-:|---|
 | [`/backup`](backup.md) | `/bkp` | ✅ | Backup do banco: automático todo dia; lista, detalha, restaura e envia o arquivo |
 | [`/boletos`](boletos.md) | | ✅ | Sorteia 2 membros para "pagar um boleto" |
-| [`/bot`](bot.md) | | ✅ | Liga/desliga todos os comandos (`-on`/`-off`) e o modo admin (`+admin`/`-admin`) |
+| [`/bot`](bot.md) | | ✅ | Liga/desliga todos os comandos (`-on`/`-off`) e o modo admin (`+admin`/`-admin`); `-status`: relatório das últimas 24 h, e `-status 06h` manda todo dia |
 | [`/cache`](cache.md) | `/c` | ✅ | Uso e limpeza do cache |
 | [`/cotacao`](cotacao.md) | `/cambio` | | Cotação de EUR e USDT (e USD, GBP) contra o real: atual, abertura, fechamento e variação; alertas de preço |
 | [`/cron`](cron.md) | `/agenda`, `/lembrete` | ✅ | Na hora marcada (`30m`, `às 18h`, `sexta 9h`...): envia uma mensagem (aqui ou com `-to`) ou, como `/lembrete`, um ⏰ lembrete; pode repetir |
@@ -101,7 +101,6 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -a`) para fazer o bot
 | [`/set`](set.md) | `/config` | ✅ | Lista e altera as configurações (settings) |
 | [`/show`](show.md) | `/s` | ✅ | Reexibe mensagens apagadas ou editadas (`-e`) |
 | [`/stats`](stats.md) | | ✅ | Ranking do chat (quem mais fala, apaga e edita, horários de pico); `-me` para as suas |
-| [`/status`](status.md) | | ✅ | Relatório das últimas 24 h (cache, no ar, watch, apagadas, editadas, `/mudo`); `/status 06h` manda todo dia |
 | [`/sticker`](sticker.md) | `/st` | | Transforma imagem/vídeo em figurinha |
 | [`/tempo`](tempo.md) | `/t`, `/weather` | | Tempo agora e máx./mín. do dia (Open-Meteo); `/tempo 7d` mostra os próximos 7 dias; sem cidade usa `tempo.city` |
 | [`/tldr`](tldr.md) | `/resumo` | ✅ | Resume a conversa do chat pelo ChatGPT (`2h`, `300`...) |

@@ -47,7 +47,7 @@ src/
   processo.js           crash e sinais (docker stop)
   limpeza.js            retenção e limpeza periódica
   stats.js              contadores do /stats
-  status.js             relatório do /status e o envio diário (pela agenda)
+  status.js             relatório do /bot -status e o envio diário (pela agenda)
   moedas.js, cotacoes.js, alertasPreco.js   /crypto, /cotacao e alertas de preço
   agenda.js             /cron (e /lembrete): leitura, lista e envio na hora
   openai.js             modelos aceitos pelo /gpt
@@ -107,7 +107,7 @@ entre os casos.
 | `apagadas-editadas.test.js` | Eventos de apagar/editar e o `/show` (apagadas e editadas) |
 | `mudo.test.js` | `/mudo`: avisos de apagadas, editadas e status silenciados por pessoa ou grupo |
 | `stats.test.js`, `watch.test.js`, `monitor.test.js` | `/stats`, `/watch`, `/monitor` e o aviso de presença |
-| `status.test.js` | `/status`: o relatório e o envio diário |
+| `status.test.js` | `/bot -status`: o relatório e o envio diário |
 | `agenda.test.js` | Datas digitadas (`30m`, `às 18h`, `sexta`...) e o `/cron`, nos modos mensagem e lembrete |
 | `backup.test.js` | `/backup` (criação, lista, restauração, envio) e o backup diário |
 | `cotacoes.test.js` | `/cotacao`, `/crypto` e os alertas de preço |
