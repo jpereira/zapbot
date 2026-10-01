@@ -16,7 +16,7 @@ const { REGRA_REGEX } = require('../watch/regras');
  *   /watch -l                  → lista as regras (nº, regra, ocorrências)
  *   /watch -s [-N]             → resumo das mensagens que casaram com a regra N (sem N: todas)
  *   /watch -a <texto|/regex/>  → adiciona regra
- *   /watch -d -N               → remove a regra N e as ocorrências dela
+ *   /watch -r -N               → remove a regra N e as ocorrências dela
  *   /watch -f [-N]             → apaga as ocorrências da regra N (sem N: de todas); mantém as regras
  * As regras ficam no setting 'watch.rules'; as ocorrências na tabela watch_hits.
  * As respostas saem no chat onde o comando foi digitado.
@@ -52,7 +52,7 @@ async function cmdWatch({ msg, opts, args }) {
 
         const max = getSetting('watch.max');
         if (regras.length >= max) {
-            await msg.reply(`❌ Limite de ${max} regras atingido (setting watch.max).\n💡 _Remova uma com /watch -d -N_`);
+            await msg.reply(`❌ Limite de ${max} regras atingido (setting watch.max).\n💡 _Remova uma com /watch -r -N_`);
             return;
         }
 
@@ -140,11 +140,11 @@ async function cmdWatch({ msg, opts, args }) {
             texto += `    💬 "${resumirTexto(await resolverMencoes(h.body))}"\n`;
         }
 
-        await msg.reply( texto);
+        await msg.reply(texto);
         return;
     }
 
-    if (opts.opt.del) {
+    if (opts.opt.rem) {
         const n = numeroDaRegra(opts.argv);
 
         if (!n) {
