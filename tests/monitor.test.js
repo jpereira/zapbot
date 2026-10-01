@@ -42,11 +42,11 @@ describe('/monitor (/m)', () => {
         assert.deepEqual(await bot.responder('/monitor -add 5521955555555'), ['Limite de 1 números monitorados atingido.']);
     });
 
-    test('-del e -clean', async () => {
+    test('-rem e -clean', async () => {
         await bot.responder(`/monitor -add ${NUMERO}`);
-        assert.deepEqual(await bot.responder(`/monitor -del ${NUMERO}`), [`Número ${NUMERO} removido com sucesso.`]);
-        assert.deepEqual(await bot.responder(`/monitor -del ${NUMERO}`), [`O número ${NUMERO} não está sendo monitorado.`]);
-        assert.deepEqual(await bot.responder('/monitor -del abc'), ['Número inválido informado.']);
+        assert.deepEqual(await bot.responder(`/monitor -rem ${NUMERO}`), [`Número ${NUMERO} removido com sucesso.`]);
+        assert.deepEqual(await bot.responder(`/monitor -rem ${NUMERO}`), [`O número ${NUMERO} não está sendo monitorado.`]);
+        assert.deepEqual(await bot.responder('/monitor -rem abc'), ['Número inválido informado.']);
 
         assert.match((await bot.responder('/monitor -clean'))[0], /já estava vazia/);
         await bot.responder(`/monitor -add ${NUMERO}`);
