@@ -217,6 +217,32 @@ async function initializeDb() {
         )
     `);
 
+    /*
+     * /mudo: people and groups with muted notices (what: deleted, edited,
+     * status) and each cut notice (mute_hits, for /status; 30 days).
+     */
+    await dbRun(`
+        CREATE TABLE IF NOT EXISTS mutes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            target_id TEXT NOT NULL UNIQUE,
+            target_name TEXT,
+            is_group INTEGER DEFAULT 0,
+            deleted INTEGER DEFAULT 0,
+            edited INTEGER DEFAULT 0,
+            status INTEGER DEFAULT 0,
+            created_at INTEGER NOT NULL
+        )
+    `);
+    await dbRun(`
+        CREATE TABLE IF NOT EXISTS mute_hits (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            target_id TEXT NOT NULL,
+            kind TEXT NOT NULL,
+            at INTEGER NOT NULL
+        )
+    `);
+    await dbRun('CREATE INDEX IF NOT EXISTS idx_mute_hits_at ON mute_hits (at)');
+
     // General bot settings (key -> value in JSON)
     await dbRun(`
         CREATE TABLE IF NOT EXISTS settings (

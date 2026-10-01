@@ -90,6 +90,7 @@ admin está ligado: só você usa comandos até `/bot -admin`
 | [`/listageral`](https://jpereira.github.io/zapbot/commands/listageral/) | `/list` | ✅ | Lista os membros do grupo |
 | [`/meme`](https://jpereira.github.io/zapbot/commands/meme/) | | | Template de meme aleatório (imgflip) |
 | [`/monitor`](https://jpereira.github.io/zapbot/commands/monitor/) 🚧 | `/m` | ✅ | Avisa quando números ficam online *(em desenvolvimento, desabilitado por padrão)* |
+| [`/mudo`](https://jpereira.github.io/zapbot/commands/mudo/) | `/mute` | ✅ | Silencia os avisos de apagadas, editadas e status de uma pessoa ou grupo |
 | [`/news`](https://jpereira.github.io/zapbot/commands/news/) | | ✅ | Manchetes de feeds RSS: `-hack`, `-g1`, `-gazeta`, `-brasil` |
 | [`/noffa`](https://jpereira.github.io/zapbot/commands/noffa/) | `/🌈`, `/🏳️‍🌈` | | Enfeita o texto com arco-íris |
 | [`/ping`](https://jpereira.github.io/zapbot/commands/ping/) | `/p` | ✅ | Verifica se o bot está vivo |
