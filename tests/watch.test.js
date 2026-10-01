@@ -129,7 +129,7 @@ describe('/watch', () => {
         assert.match(r, /📦 \*Total:\* 2 _\(exibindo as 1 mais recentes\)_/);
     });
 
-    test('-d remove a regra e as ocorrências dela', async () => {
+    test('-rem (-r) remove a regra e as ocorrências dela', async () => {
         await bot.setSetting('watch.rules', 'pix\nboleto');
         await alguemEscreve('pix');
         const [r] = await bot.responder('/watch -r -1');
