@@ -77,6 +77,17 @@ describe('comandos', () => {
         assert.deepEqual(await bot.responder('ping'), []);
     });
 
+    test('o log diz quem usou o comando e onde (no privado de outra pessoa, é você)', async () => {
+        const usou = () => bot.logs.filter(l => / used '/.test(l)).at(-1);
+
+        bot.client.contatos.set(OUTRO.jid, { id: { _serialized: OUTRO.jid, user: OUTRO.user }, number: OUTRO.user, name: OUTRO.nome });
+        await bot.responder('/ping', { chat: OUTRO.jid });
+        assert.match(usou(), /\[\+\] 'Dono' used '\/ping' in '[^']+'$/);
+
+        await bot.responder('/help', { de: OUTRO.jid });
+        assert.match(usou(), /\[\+\] 'Fulano' used '\/help' in 'Família'$/);
+    });
+
     test('-h mostra a sintaxe do comando', async () => {
         const [r] = await bot.responder('/ping -h');
         assert.match(r, /Usage: \/ping/);
