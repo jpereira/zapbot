@@ -91,6 +91,9 @@ Por onde começar:
   mensagens do [`/agendar`](comandos/agendar.md) ficam na tabela `schedules`;
   a cada 30 s o bot envia o que venceu (os repetidos seguem para o próximo
   horário).
+- **Backup**: todo dia, às 3h (setting `backup.hour`), o bot guarda uma cópia
+  compactada do banco em `cache/backups`; o [`/backup`](comandos/backup.md)
+  lista, restaura e envia os arquivos.
 - **Watch**: toda mensagem recebida que não é comando é testada contra as
   regras do [`/watch`](comandos/watch.md) (setting `watch.rules`); quando casa, a
   ocorrência é gravada na tabela `watch_hits` e você é avisado **no seu

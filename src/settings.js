@@ -44,6 +44,21 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 1, max: 100,
         desc: 'Máximo de alertas de preço (somando /cotacao e /crypto).'
     },
+    'backup.enabled': {
+        default: true,
+        type: 'boolean',
+        desc: 'Backup automático do banco, uma vez por dia (/backup).'
+    },
+    'backup.hour': {
+        default: 3,
+        type: 'number', min: 0, max: 23,
+        desc: 'Hora (de Brasília) do backup automático diário.'
+    },
+    'backup.keep': {
+        default: 7,
+        type: 'number', min: 1, max: 90,
+        desc: 'Quantos backups automáticos (e de antes de restaurar) guardar; os manuais ficam até um /backup -rm.'
+    },
     'bot.adminMode': {
         default: true,
         type: 'boolean',

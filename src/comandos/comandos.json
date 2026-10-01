@@ -62,6 +62,79 @@
             "onlyAdmin": true
         },
         {
+            "cmd": "/backup",
+            "usage": "/backup [OPTION]",
+            "aliases": [
+                "/bkp"
+            ],
+            "help": "Backup do banco em ${BACKUP_DIR}: um automático por dia, e você lista, detalha, restaura, envia ou apaga. Sem opção, mostra o banco atual e os backups.",
+            "cmd_opts": [
+                {
+                    "opts": [
+                        "info",
+                        "i"
+                    ],
+                    "values": [
+                        "<nº>"
+                    ],
+                    "desc": "Detalhes do backup nº N: data, motivo, versão e as entradas de cada tabela, comparadas com o banco atual."
+                },
+                {
+                    "opts": [
+                        "list",
+                        "l"
+                    ],
+                    "values": [],
+                    "desc": "Lista os backups, do mais novo para o mais antigo."
+                },
+                {
+                    "opts": [
+                        "now",
+                        "n"
+                    ],
+                    "values": [],
+                    "desc": "Cria um backup agora (manual: fica até ser apagado)."
+                },
+                {
+                    "opts": [
+                        "restore",
+                        "r"
+                    ],
+                    "values": [
+                        "<nº|nome>"
+                    ],
+                    "desc": "Restaura o backup (pede confirmação com -sim). Antes, faz um backup do estado atual."
+                },
+                {
+                    "opts": [
+                        "rm"
+                    ],
+                    "values": [
+                        "<nº|all>"
+                    ],
+                    "desc": "Apaga o backup nº N (ou todos)."
+                },
+                {
+                    "opts": [
+                        "send",
+                        "s"
+                    ],
+                    "values": [
+                        "[nº]"
+                    ],
+                    "desc": "Envia o arquivo do backup no seu privado (sem nº: o mais recente)."
+                },
+                {
+                    "opts": [
+                        "sim"
+                    ],
+                    "values": [],
+                    "desc": "Junto com -restore: confirma a restauração."
+                }
+            ],
+            "onlyAdmin": true
+        },
+        {
             "cmd": "/boletos",
             "usage": "/boletos",
             "help": "Sorteia 2 membros do grupo para pagar um boleto.",

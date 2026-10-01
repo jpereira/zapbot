@@ -9,6 +9,9 @@ hora, sem reiniciar, e sobrevivem a reinícios. Para ver e alterar, use o
 | `agenda.max` | 1–500 | `50` | Máximo de lembretes e mensagens agendadas (somando [`/lembrete`](comandos/lembrete.md) e [`/agendar`](comandos/agendar.md)) |
 | `alerta.intervalMin` | 1–60 | `5` | Intervalo, em minutos, entre as verificações dos [alertas de preço](comandos/cotacao.md#alertas-de-preço) |
 | `alerta.max` | 1–100 | `20` | Máximo de alertas de preço (somando `/cotacao` e `/crypto`) |
+| `backup.enabled` | on/off | `on` | [Backup automático](comandos/backup.md#backup-automático) do banco, uma vez por dia |
+| `backup.hour` | 0–23 | `3` | Hora (de Brasília) do backup automático |
+| `backup.keep` | 1–90 | `7` | Quantos backups automáticos (e de antes de restaurar) guardar; os manuais ficam até um `/backup -rm` |
 | `bot.adminMode` | on/off | `on` | Modo admin: só você usa comandos (o mesmo do `/bot +admin`/`-admin`) |
 | `bot.paused` | on/off | `off` | Bot desligado: todos os comandos ignorados, exceto o `/bot` (o mesmo do `/bot -on`/`-off`) |
 | `cache.editedRetentionDays` | 1–365 | `30` | Dias que as mensagens editadas ficam guardadas para o `/show -e` |
