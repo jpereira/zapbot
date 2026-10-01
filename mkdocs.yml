@@ -100,9 +100,9 @@ nav:
       - /stats: commands/stats.md
       - /sticker: commands/sticker.md
       - /tempo: commands/tempo.md
-      - /ualisu: commands/ualisu.md
       - /uptime: commands/uptime.md
       - /version: commands/version.md
+      - /walissu: commands/walissu.md
       - /watch: commands/watch.md
   - Settings: settings.md
   - Operação: operation.md
