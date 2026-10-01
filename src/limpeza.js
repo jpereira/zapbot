@@ -160,7 +160,7 @@ async function limparEnquetesAntigas() {
     }
 }
 
-// Avisos cortados pelo /mudo (mute_hits): 30 dias bastam para o /status
+// Avisos cortados pelo /mudo (mute_hits): 30 dias bastam para o /bot -status
 const MUTE_HITS_DIAS = 30;
 
 async function limparIgnoradasAntigas() {

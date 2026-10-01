@@ -12,7 +12,7 @@ const { printInfo } = require('./log');
  * Num grupo, vale para todos dali; numa pessoa, para o que ela mandar em
  * qualquer chat (e para os status dela).
  *
- * Cada aviso cortado vai para `mute_hits` (o /status conta as ignoradas).
+ * Cada aviso cortado vai para `mute_hits` (o /bot -status conta as ignoradas).
  */
 const TIPOS = {
     apagada: { coluna: 'deleted', rotulo: 'apagadas' },
@@ -41,7 +41,7 @@ async function silenciado(tipo, { chatId, remetentes = [] }) {
     return mutes.find(m => chaves.has(chaveDoId(m.target_id))) ?? null;
 }
 
-// Registra um aviso cortado (para o /status e para a lista do /mudo)
+// Registra um aviso cortado (para o /bot -status e para a lista do /mudo)
 async function registrarIgnorada(mute, tipo) {
     await dbRun('INSERT INTO mute_hits (target_id, kind, at) VALUES (?, ?, ?)', [mute.target_id, tipo, Date.now()]);
     printInfo(`/mudo: aviso de ${tipo} de ${mute.target_name} ignorado`);
