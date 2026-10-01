@@ -19,6 +19,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const CACHE_DIR = process.env.ZAPBOT_CACHE_DIR || path.join(ROOT_DIR, 'cache');
 const MEDIA_DIR = path.join(CACHE_DIR, 'media'); // mídias salvas para recuperar mensagens apagadas
 const TMP_DIR = path.join(CACHE_DIR, 'tmp');     // arquivos temporários do /get
+const BACKUP_DIR = path.join(CACHE_DIR, 'backups'); // backups do banco (/backup)
 
 const BIN_FFMPEG = '/usr/bin/ffmpeg';
 const BIN_YT = '/venv/bin/yt-dlp';
@@ -34,6 +35,7 @@ const APP_ENV = process.env.APP_ENV || 'dev';
 
 module.exports = {
     APP_ENV,
+    BACKUP_DIR,
     BIN_FFMPEG,
     BIN_YT,
     BOT_START_TIME,
