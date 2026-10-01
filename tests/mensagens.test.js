@@ -77,15 +77,26 @@ describe('comandos', () => {
         assert.deepEqual(await bot.responder('ping'), []);
     });
 
-    test('o log diz quem usou o comando e onde (no privado de outra pessoa, é você)', async () => {
-        const usou = () => bot.logs.filter(l => / used '/.test(l)).at(-1);
+    test('o log diz quem executou o comando e onde (no privado de outra pessoa, é você)', async () => {
+        const executou = () => bot.logs.filter(l => / executed '/.test(l)).at(-1);
 
         bot.client.contatos.set(OUTRO.jid, { id: { _serialized: OUTRO.jid, user: OUTRO.user }, number: OUTRO.user, name: OUTRO.nome });
         await bot.responder('/ping', { chat: OUTRO.jid });
-        assert.match(usou(), /\[\+\] 'Dono' used '\/ping' in '[^']+'$/);
+        assert.match(executou(), /\[\+\] 'Dono' executed '\/ping' in 'Fulano'$/);
 
         await bot.responder('/help', { de: OUTRO.jid });
-        assert.match(usou(), /\[\+\] 'Fulano' used '\/help' in 'Família'$/);
+        assert.match(executou(), /\[\+\] 'Fulano' executed '\/help' in 'Família'$/);
+    });
+
+    test('no privado, o nome do chat é o do outro participante, também nas suas mensagens', async () => {
+        await bot.entregar(bot.criarMensagem({ texto: 'oi, Fulano', chat: OUTRO.jid, extras: { _data: { notifyName: 'Dono' } } }));
+        await bot.entregar(bot.criarMensagem({ texto: 'oi, Dono', chat: OUTRO.jid, de: OUTRO.jid }));
+
+        const nomes = await bot.dbAll('SELECT body, chat_name, from_me FROM messages ORDER BY timestamp, rowid');
+        assert.deepEqual(nomes, [
+            { body: 'oi, Fulano', chat_name: 'Fulano', from_me: 1 },
+            { body: 'oi, Dono', chat_name: 'Fulano', from_me: 0 }
+        ]);
     });
 
     test('-h mostra a sintaxe do comando', async () => {
