@@ -54,6 +54,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -a`) para fazer o bot
 | [`/help`](help.md) | `/h` | | Menu de ajuda |
 | [`/joke`](joke.md) | `/piada`, `/humor` | | Piada aleatória em português |
 | [`/kernel`](kernel.md) | | | Versões atuais do kernel Linux (kernel.org) |
+| [`/lembrete`](lembrete.md) | `/lemb` | ✅ | Lembrete na hora marcada (`30m`, `às 18h`, `sexta 9h`...), no chat ou no privado; pode repetir |
 | [`/listageral`](listageral.md) | `/list` | ✅ | Lista os membros do grupo |
 | [`/meme`](meme.md) | | | Template de meme aleatório (imgflip) |
 | [`/monitor`](monitor.md) 🚧 | `/m` | ✅ | Avisa quando números ficam online *(em desenvolvimento, desabilitado por padrão)* |
