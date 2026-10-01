@@ -1,0 +1,185 @@
+/*
+ * Agenda: a leitura de datas (util/quando.js) e o /lembrete (/lemb).
+ */
+const bot = require('./helpers/bot');
+
+const { test, describe, beforeEach } = require('node:test');
+const assert = require('node:assert/strict');
+
+const { DONO, GRUPO, OUTRO } = bot;
+const { fmtQuando, lerQuando, proximaRepeticao, instanteEmBrasilia } = bot.src('util/quando');
+const { lerAgendamento, verificarAgenda } = bot.src('agenda');
+
+const L200 = '120363000000000200@g.us';
+const HORA = 3600_000;
+
+beforeEach(async () => {
+    await bot.reiniciar();
+    bot.criarGrupo(L200, 'Grupo sobre L200', [DONO.jid]);
+});
+
+// Vence o item (ou todos) há `atrasoMs` e roda a verificação; devolve o que foi enviado
+async function vencer(atrasoMs = 1000) {
+    await bot.dbRun('UPDATE schedules SET due_at = ?', [Date.now() - atrasoMs]);
+    const antes = bot.client.enviadas.length;
+    await verificarAgenda();
+    return bot.client.enviadas.slice(antes);
+}
+
+const itens = () => bot.dbAll('SELECT * FROM schedules ORDER BY id');
+
+describe('datas (util/quando.js)', () => {
+    // qui 01/10/2026 09:00 em Brasília
+    const AGORA = instanteEmBrasilia(2026, 10, 1, 9, 0);
+    const quando = (texto) => {
+        const r = lerQuando(texto.split(' '), AGORA);
+        return r && `${fmtQuando(r.ms, AGORA)} (${r.usadas})`;
+    };
+
+    test('daqui a tanto tempo', () => {
+        assert.equal(quando('30m'), 'qui 01/10 09:30 (1)');
+        assert.equal(quando('1h30m'), 'qui 01/10 10:30 (1)');
+        assert.equal(quando('2d'), 'sáb 03/10 09:00 (1)');
+    });
+
+    test('hora: hoje, ou amanhã se já passou; "18h" sozinho é duração', () => {
+        assert.equal(quando('18:30'), 'qui 01/10 18:30 (1)');
+        assert.equal(quando('às 18h'), 'qui 01/10 18:00 (2)');
+        assert.equal(quando('as 8h15'), 'sex 02/10 08:15 (2)');
+        assert.equal(quando('18h'), 'sex 02/10 03:00 (1)');      // daqui a 18 horas
+        assert.equal(quando('25:00'), null);
+    });
+
+    test('hoje, amanhã e dias da semana (sem hora: 9h)', () => {
+        assert.equal(quando('hoje 23h'), 'qui 01/10 23:00 (2)');
+        assert.equal(quando('amanhã'), 'sex 02/10 09:00 (1)');
+        assert.equal(quando('amanha 10:00 texto'), 'sex 02/10 10:00 (2)');
+        assert.equal(quando('sexta 18h'), 'sex 02/10 18:00 (2)');
+        assert.equal(quando('qui 10h'), 'qui 01/10 10:00 (2)');   // hoje, ainda vai acontecer
+        assert.equal(quando('quinta 8h'), 'qui 08/10 08:00 (2)'); // hoje já passou: a próxima
+        assert.equal(quando('sábado'), 'sáb 03/10 09:00 (1)');
+    });
+
+    test('datas: a próxima, com ano, inexistentes', () => {
+        assert.equal(quando('25/12'), 'sex 25/12 09:00 (1)');
+        assert.equal(quando('25/12/2027 10:00'), 'sáb 25/12/2027 10:00 (2)');
+        assert.equal(quando('01/10 08:00'), 'sex 01/10/2027 08:00 (2)');  // já passou este ano
+        assert.equal(quando('31/02'), null);
+        assert.equal(quando('banana'), null);
+    });
+
+    test('repetição: diária, semanal e mensal (o dia 31 cai no último dia do mês)', () => {
+        const jan31 = instanteEmBrasilia(2026, 1, 31, 10, 0);
+        assert.equal(fmtQuando(proximaRepeticao(jan31, 'diario'), jan31), 'dom 01/02 10:00');
+        assert.equal(fmtQuando(proximaRepeticao(jan31, 'semanal'), jan31), 'sáb 07/02 10:00');
+        const fev28 = proximaRepeticao(jan31, 'mensal', 31);
+        assert.equal(fmtQuando(fev28, jan31), 'sáb 28/02 10:00');
+        assert.equal(fmtQuando(proximaRepeticao(fev28, 'mensal', 31), jan31), 'ter 31/03 10:00');
+    });
+
+    test('lerAgendamento: opções e "quando" no começo, em qualquer ordem; o texto fica como veio', () => {
+        const r = lerAgendamento('-repetir semanal amanhã 10h -to /Grupo L200/ Bom dia\nsegunda linha');
+        assert.deepEqual(r.opt, { repetir: 'semanal' });
+        assert.equal(r.quando.usadas, 2);
+        assert.equal(r.texto, 'Bom dia\nsegunda linha');
+        assert.equal(r.destino, 'Grupo L200');
+        assert.deepEqual(lerAgendamento('-rm 2').opt, { rm: '2' });
+        assert.equal(lerAgendamento('2h -pv 18h').texto, '18h');   // um "quando" só
+    });
+});
+
+describe('/lembrete (/lemb)', () => {
+    test('cria no chat atual, responde a mensagem do comando e sai depois de enviar', async () => {
+        const cmd = bot.criarMensagem({ texto: '/lembrete 30m pagar o boleto' });
+        const [r] = (await bot.entregar(cmd)).map(e => e.texto);
+        assert.match(r, /^⏰ \*Lembrete criado\* para \*\w{3} \d\d\/\d\d \d\d:\d\d\* neste chat\.\n📝 pagar o boleto$/);
+
+        const [item] = await itens();
+        assert.equal(item.chat_id, GRUPO);
+        assert.equal(item.quoted_id, cmd.id._serialized);
+        assert.ok(Math.abs(item.due_at - (Date.now() + 30 * 60_000)) < 5000);
+
+        const [enviado] = await vencer();
+        assert.equal(enviado.chatId, GRUPO);
+        assert.equal(enviado.content, '⏰ *Lembrete*\n\npagar o boleto');
+        assert.equal(enviado.options.quotedMessageId, cmd.id._serialized);
+        assert.deepEqual(await itens(), []);
+    });
+
+    test('-pv lembra no seu privado; respondendo uma mensagem, o texto dela', async () => {
+        await bot.responder('/lemb -pv 2h ligar pro banco');
+        const citada = bot.criarMensagem({ texto: 'reunião às 15h', de: OUTRO.jid });
+        await bot.responder('/lembrete 1h', { citada });
+
+        const [pv, respondida] = await itens();
+        assert.deepEqual([pv.chat_id, pv.quoted_id, pv.text], [DONO.jid, null, 'ligar pro banco']);
+        assert.deepEqual([respondida.chat_id, respondida.quoted_id, respondida.text], [GRUPO, citada.id._serialized, 'reunião às 15h']);
+    });
+
+    test('atrasado (bot fora do ar na hora) avisa; desconectado, espera', async () => {
+        await bot.responder('/lembrete às 18h tomar o remédio');
+
+        bot.estado.pronto = false;
+        assert.deepEqual(await vencer(), []);
+
+        bot.estado.pronto = true;
+        const [enviado] = await vencer(HORA);
+        assert.match(enviado.content, /^⏰ \*Lembrete\*\n\ntomar o remédio\n\n_\(atrasado: era para \w{3} \d\d\/\d\d \d\d:\d\d\)_$/);
+    });
+
+    test('-repetir: continua na lista com o próximo horário', async () => {
+        assert.match((await bot.responder('/lembrete amanhã 8h -repetir diário tomar água'))[0], /🔁 todo dia neste chat/);
+        await vencer();
+        const [item] = await itens();
+        assert.ok(item.due_at > Date.now() && item.due_at <= Date.now() + 24 * HORA, 'próximo envio nas próximas 24 h');
+        assert.equal(fmtQuando(item.due_at).slice(-5), fmtQuando(Date.now() - 1000).slice(-5), 'mesma hora');
+    });
+
+    test('sem a mensagem citada, envia sem citar', async () => {
+        await bot.responder('/lembrete 30m x');
+        const original = bot.client.sendMessage;
+        bot.client.sendMessage = async (chatId, content, options = {}) => {
+            if (options.quotedMessageId) throw new Error('mensagem citada não encontrada');
+            return original.call(bot.client, chatId, content, options);
+        };
+        try {
+            const [enviado] = await vencer();
+            assert.equal(enviado.content, '⏰ *Lembrete*\n\nx');
+            assert.equal(enviado.options.quotedMessageId, undefined);
+        } finally {
+            bot.client.sendMessage = original;
+        }
+    });
+
+    test('lista, -rm N e -rm all', async () => {
+        await bot.responder('/lembrete 2h segundo');
+        await bot.responder('/lembrete -pv 1h primeiro');
+
+        const [lista] = await bot.responder('/lembrete');
+        assert.match(lista, /^⏰ \*Lembretes\* \(2\)\n\n1\. \*[^*]+\* — primeiro\n   → seu privado\n2\. \*[^*]+\* — segundo\n   → 👥 Família\n\n💡 _Remova com \/lembrete -rm <nº\|all>\._$/);
+        assert.equal((await bot.responder('/lembrete -l'))[0], lista);
+
+        assert.match((await bot.responder('/lembrete -rm 1'))[0], /🗑️ Removido: \*[^*]+\* — primeiro/);
+        assert.match((await bot.responder('/lembrete -rm 5'))[0], /❌ Nº 5 não existe/);
+        assert.deepEqual(await bot.responder('/lembrete -rm all'), ['🗑️ 1 removido.']);
+        assert.match((await bot.responder('/lembrete'))[0], /⏰ Nenhum lembrete\.\n💡 _Ex\.: \/lembrete 18:30 pagar o boleto_/);
+    });
+
+    test('erros: sem "quando", sem texto, já passou, longe demais, -repetir inválido, -to, limite', async () => {
+        const erro = async (linha, esperado) => assert.match((await bot.responder(linha))[0], esperado, linha);
+        await erro('/lembrete pagar o boleto', /❌ Não entendi quando/);
+        await erro('/lembrete 30m', /❌ Faltou o texto/);
+        await erro('/lembrete 01/01/2020 x', /❌ \w{3} 01\/01\/2020 09:00 já passou/);
+        await erro('/lembrete 01/01/2099 x', /❌ No máximo 366 dias à frente/);
+        await erro('/lembrete 1h -repetir anual x', /❌ Use -repetir diario, semanal ou mensal/);
+        await erro('/lembrete 1h -to L200 x', /❌ O \/lembrete não tem -to/);
+
+        await bot.setSetting('agenda.max', 1);
+        await bot.responder('/lembrete 1h oi');
+        await erro('/lembrete 1h x', /❌ Limite de 1 lembretes \(setting agenda\.max\)/);
+    });
+
+    test('só o dono', async () => {
+        assert.deepEqual(await bot.responder('/lembrete 1h x', { de: OUTRO.jid }), []);
+    });
+});
