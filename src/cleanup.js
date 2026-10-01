@@ -18,7 +18,6 @@ const { getDirSize, mediaIsPath, cleanContentDirectory } = require('./util/files
  * because after that they can no longer be deleted;
  * - DELETED messages (revoked=1): kept for 'cache.revokedRetentionDays' (default 30),
  * so /show keeps working.
- * With /cache -clean -force, both windows are 0 and everything is removed.
  */
 async function cleanCacheOld(maxDeleteWin = MAX_DELETE_WINDOW, retentionDeleted = getSetting('cache.revokedRetentionDays') * DAY_MS) {
     await dbReady;
@@ -50,7 +49,7 @@ async function cleanCacheOld(maxDeleteWin = MAX_DELETE_WINDOW, retentionDeleted 
 }
 
 /*
- * General cleanup (/cache -c -f): ALL messages (including the deleted ones
+ * General cleanup (/cache -all): ALL messages (including the deleted ones
  * stored for /show and the edited ones for /edit), all the media and all the temporaries.
  * At the end, VACUUM gives the space back to the disk: DELETE alone does not shrink the .db.
  * Does not touch monitored_numbers, presence_logs or watch_hits (configuration and history).
@@ -72,6 +71,40 @@ async function cleanAll() {
     await dbRun('VACUUM');
 
     return { total, apagadas: deletedAlt, editadas: edited, liberado: Math.max(0, bytesBefore - getDirSize(CACHE_DIR)) };
+}
+
+/*
+ * /cache -media: deletes the downloaded media (MEDIA_DIR). The messages stay in the
+ * database without the file: a deleted one recovered later warns "file not
+ * available in the cache".
+ */
+async function cleanMedia() {
+    await dbReady;
+
+    // Media stays in date subfolders (media/YYYY/MM/DD): counts all of it before deleting
+    let files = 0;
+    let bytes = 0;
+
+    const countAlt = (dir) => {
+        for (const inputAlt of fs.readdirSync(dir, { withFileTypes: true })) {
+            const pathAlt = path.join(dir, inputAlt.name);
+            if (inputAlt.isDirectory()) countAlt(pathAlt);
+            else if (inputAlt.isFile()) {
+                files++;
+                bytes += fs.statSync(pathAlt).size;
+            }
+        }
+    };
+
+    if (fs.existsSync(MEDIA_DIR)) {
+        countAlt(MEDIA_DIR);
+        cleanContentDirectory(MEDIA_DIR);
+    }
+
+    const { changes } = await dbRun('UPDATE messages SET media_path = NULL WHERE media_path IS NOT NULL');
+    printInfo(`/cache -media: ${files} arquivos (${bytes} bytes) apagados de ${MEDIA_DIR}; ${changes} mensagens sem mídia`);
+
+    return { arquivos: files, bytes };
 }
 
 // Edits older than 'cache.editedRetentionDays'
@@ -172,6 +205,7 @@ module.exports = {
     cleanFilesOld,
     cleanCacheOld,
     cleanEditedOld,
+    cleanMedia,
     cleanStatsOld,
     cleanAll,
     cleanWatchOld
