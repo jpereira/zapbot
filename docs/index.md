@@ -80,7 +80,12 @@ Por onde começar:
 - **Alertas de preço**: `/cotacao -alerta USD > 5.30` e `/crypto -alerta BTC <
   90000` guardam a regra na tabela `price_alerts`; a cada 5 minutos (setting
   `alerta.intervalMin`) o bot consulta os preços e avisa **no seu privado**
-  (ou, com `-to`, numa pessoa ou num grupo) quando a regra é cumprida. Veja [Alertas de preço](comandos/cotacao.md#alertas-de-preço).
+  (ou, com `-to`, num contato, num grupo, num número ou por e-mail) quando a
+  regra é cumprida. Veja [Alertas de preço](comandos/cotacao.md#alertas-de-preço).
+- **DeFi**: o [`/defi`](comandos/defi.md) lê on-chain as posições de liquidez
+  da Orca cadastradas (tabela `defi_positions`) e, com o `-alerta`, confere a
+  cada 10 minutos (setting `defi.alerta.intervalMin`) e avisa sempre que uma
+  posição sai da faixa.
 - **Enquetes**: os votos das enquetes da sua conta (evento `vote_update`) vão
   para as tabelas `polls` e `poll_votes`, e o
   [`/enquete -r`](comandos/enquete.md#resultado) mostra o placar. Ficam 90 dias
@@ -93,7 +98,8 @@ Por onde começar:
   dia no seu privado.
 - **Backup**: todo dia, às 3h (setting `backup.hour`), o bot guarda uma cópia
   compactada do banco em `cache/backups`; o [`/backup`](comandos/backup.md)
-  lista, restaura e envia os arquivos.
+  lista, restaura e envia os arquivos (no seu privado, por e-mail ou, com
+  `-to`, noutro chat).
 - **Watch**: toda mensagem recebida que não é comando é testada contra as
   regras do [`/watch`](comandos/watch.md) (setting `watch.rules`); quando casa, a
   ocorrência é gravada na tabela `watch_hits` e você é avisado **no seu
@@ -110,7 +116,8 @@ Por onde começar:
   da tabela [Serviços externos](configuracao.md#serviços-externos).
 - **Controle**: o [`/bot`](comandos/bot.md) liga/desliga todos os comandos
   (`-on`/`-off`) e o modo admin (`+admin`/`-admin`), em que só você usa
-  comandos.
+  comandos; o `-status` mostra o relatório e o `-info`, as versões do que o bot
+  usa (Node.js, Chromium, yt-dlp, ffmpeg...).
 - **Reconexão**: em caso de queda o cliente é reiniciado sozinho, exceto quando o
   motivo exige ação manual (`LOGOUT`, `CONFLICT`, `UNPAIRED`...).
 - **Saúde (heartbeat)**: a cada 30 s o bot confere se o WhatsApp Web responde e
