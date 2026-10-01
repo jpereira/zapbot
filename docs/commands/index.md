@@ -34,8 +34,9 @@ arquivo do `/backup`) vão para o seu privado, e o `/cron`, para o chat atual.
 - O `/cron` e o `/mudo` não aceitam e-mail: a mensagem do `/cron` sai no
   WhatsApp, e o `/mudo` silencia uma pessoa ou um grupo.
 - O nome casa quando tem **todas** as palavras, em qualquer ordem, sem
-  diferenciar maiúsculas nem acentos. Nomes com espaço vão entre `/.../` ou
-  aspas; sem eles, só a primeira palavra conta.
+  diferenciar maiúsculas nem acentos. No `-to`, nomes com espaço vão entre
+  `/.../` ou aspas (sem eles, só a primeira palavra conta); no `/mudo`, o alvo
+  é o resto do texto, com ou sem `/.../`.
 - O nome **inteiro igual** ganha de um que só contém as palavras (e um
   contato ganha de um grupo).
 - Se mais de um servir, o bot lista e espera você **responder só com o nº**,
