@@ -104,6 +104,21 @@ describe('/bot', () => {
         assert.match(r, /🔓 \*Modo admin:\* desligado/);
     });
 
+    test('-info (-i): versões do bot, dos programas e o sistema', async () => {
+        for (const line of ['/bot -info', '/bot -i']) {
+            const [r] = await bot.replyAlt(line);
+            assert.match(r, new RegExp(`^ℹ️ \\*ZapBot ${packageJson.version.replace('.', '\\.')}\\* · informações do sistema\n\n🤖 \\*Bot\\*\n`), line);
+            assert.match(r, new RegExp(`• Node\\.js: ${process.version.replace(/\./g, '\\.')} \\(V8 `));
+            assert.match(r, /• whatsapp-web\.js: [\d.]+ \(commit [0-9a-f]{7}\)\n/);
+            assert.match(r, /• WhatsApp Web: _não encontrado_\n/);   // the simulated client has no getWWebVersion
+            assert.match(r, /• SQLite: \d+\.\d+\.\d+\n/);
+            assert.match(r, /🧰 \*Programas\*\n• Chromium: .+\n• yt-dlp: .+\n• ffmpeg: .+\n/);
+            assert.match(r, /🖥️ \*Sistema\*\n• .+\n• Host: .+\n• CPU: \d+× .+ · carga [\d.]+ · [\d.]+ · [\d.]+\n• Memória: .+ de .+ em uso · o bot usa .+\n• No ar: sistema há .+ · bot há .+ \(PID \d+\)$/);
+        }
+        assert.match((await bot.replyAlt('/bot -i -on'))[0], /❌ O -info não combina com as outras opções/);
+        assert.equal(bot.getSetting('bot.paused'), false);
+    });
+
     test('combinações inválidas mostram o uso', async () => {
         for (const line of ['/bot -on -off', '/bot +admin -admin', '/bot xyz']) {
             assert.match((await bot.replyAlt(line))[0], /❌ Uso: \/bot/, line);

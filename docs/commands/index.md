@@ -81,7 +81,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -a`) para fazer o bot
 |---|---|:-:|---|
 | [`/backup`](backup.md) | `/bkp` | ✅ | Backup do banco: automático todo dia; lista, detalha, restaura e envia o arquivo |
 | [`/boletos`](boletos.md) | | ✅ | Sorteia 2 membros para "pagar um boleto" |
-| [`/bot`](bot.md) | | ✅ | Liga/desliga todos os comandos (`-on`/`-off`) e o modo admin (`+admin`/`-admin`); `-status`: relatório das últimas 24 h, e `-status 06h` manda todo dia |
+| [`/bot`](bot.md) | | ✅ | Liga/desliga todos os comandos (`-on`/`-off`) e o modo admin (`+admin`/`-admin`); `-status` (`-s`): relatório das últimas 24 h, e `-s 06h` manda todo dia; `-info` (`-i`): versões e sistema |
 | [`/cache`](cache.md) | `/c` | ✅ | Uso e limpeza do cache |
 | [`/cotacao`](cotacao.md) | `/cambio` | | Cotação de EUR e USDT (e USD, GBP) contra o real: atual, abertura, fechamento e variação; alertas de preço |
 | [`/cron`](cron.md) | `/agenda`, `/lembrete` | ✅ | Na hora marcada (`30m`, `às 18h`, `sexta 9h`...): envia uma mensagem (aqui ou com `-to`) ou, como `/lembrete`, um ⏰ lembrete; pode repetir |

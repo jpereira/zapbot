@@ -88,7 +88,7 @@ describe('/bot -status', () => {
 
         assert.deepEqual(await bot.replyAlt('/bot -status off'), ['🔕 Status diário desligado.']);
         assert.deepEqual(await bot.replyAlt('/bot -status OFF'), ['ℹ️ O status diário já estava desligado.']);
-        assert.match((await bot.replyAlt('/bot -status'))[0], /🔕 Status diário desligado/);
+        assert.match((await bot.replyAlt('/bot -s'))[0], /🔕 Status diário desligado/);
         assert.match((await bot.replyAlt('/bot -status 25h'))[0], /❌ Não entendi a hora/);
         assert.match((await bot.replyAlt('/bot -on -status'))[0], /❌ O -status não combina com as outras opções/);
         assert.equal(bot.getSetting('bot.paused'), false);
