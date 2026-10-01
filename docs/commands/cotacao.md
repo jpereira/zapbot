@@ -13,7 +13,7 @@ máxima e mínima do dia e variação (🟢 alta, 🔴 queda). Suportadas: `USD`
 | `-del`, `-d` | `<MOEDA>` | Desabilita uma moeda (só o dono do bot) |
 | `-alerta` | `[regra]` | Sem regra, lista os alertas; com regra, cria um. Veja [Alertas de preço](#alertas-de-preço) |
 | `-rm` | `<nº\|all>` | Junto com `-alerta`: remove o alerta nº N (ou todos) |
-| `-to` | `<destino>` | Junto com `-alerta`: avisa numa pessoa ou num grupo em vez do seu privado. Veja [Avisar outra pessoa ou um grupo](#avisar-outra-pessoa-ou-um-grupo) |
+| `-to` | `<destino>` | Junto com `-alerta`: avisa num contato (`/Jorge Pereira/`), num grupo (`/Grupo L200/`) ou num número (`+5521999999999`) em vez do seu privado. Veja [Avisar outra pessoa ou um grupo](#avisar-outra-pessoa-ou-um-grupo) |
 
 - **USD, EUR, GBP**: Yahoo Finance. Se ele falhar, a AwesomeAPI (que não
   informa a abertura: aparece `—`).
@@ -76,24 +76,19 @@ lista e remove.
 ### Avisar outra pessoa ou um grupo
 
 Com `-to <destino>`, o aviso vai para outro chat em vez do seu privado. Ele sai
-da sua conta, como qualquer mensagem do bot.
-
-| Destino | Exemplo | Vai para |
-|---|---|---|
-| Número | `-to @5521999999999` | O privado da pessoa. Use DDI + DDD + número; o `@` é opcional |
-| Menção | `-to @Fulano` (escolhido na lista do `@` do WhatsApp) | O privado do contato mencionado |
-| Grupo | `-to /Grupo L200/`, `-to "Grupo L200"` ou `-to L200` | O grupo cujo nome tem **todas** as palavras, em qualquer ordem, sem diferenciar maiúsculas nem acentos |
+da sua conta, como qualquer mensagem do bot. O destino é um contato (buscado
+primeiro), um grupo ou um número, como em
+[Destinos: contato, grupo ou número](index.md#destinos-contato-grupo-ou-número).
 
 ```
 /crypto -alerta BTC < 90000 -to /Grupo L200/      → no grupo "Grupo sobre L200"
-/cotacao -alerta USD > 5.30 -to @5521999999999    → no privado do número
+/cotacao -alerta USD > 5.30 -to /Jorge Pereira/   → no privado do contato
+/cotacao -alerta USD > 5.30 -to +5521999999999    → no privado do número
 /cotacao -alerta -to familia EUR < 5,50           → o -to pode vir antes da regra
 ```
 
-- Nomes com espaço vão entre `/.../` ou aspas; sem eles, só a primeira palavra
-  é o destino.
-- Se as palavras servirem para mais de um grupo, o alerta não é criado e o bot
-  lista os grupos encontrados: use mais palavras do nome.
+- Se o nome servir para mais de um contato (ou grupo), o bot lista e você
+  responde com o nº; o alerta só é criado depois da escolha.
 - O grupo precisa ser um em que a sua conta está; o número, uma conta do
   WhatsApp (o bot confere).
 - A lista (`-alerta`) mostra o destino de cada alerta: `→ 👥 Grupo sobre L200`.

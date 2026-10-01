@@ -225,7 +225,7 @@
                     "values": [
                         "<destino>"
                     ],
-                    "desc": "Junto com -alerta: avisa no privado de uma pessoa (@5521999999999) ou num grupo, pelo nome ou parte dele (/Grupo L200/, \"Grupo L200\" ou L200)."
+                    "desc": "Junto com -alerta: avisa num contato, num grupo ou num número em vez do seu privado: /Jorge Pereira/, /Grupo L200/ ou +5521999999999 (vários com o nome: você escolhe na lista)."
                 }
             ],
             "onlyAdmin": false
@@ -287,7 +287,7 @@
                     "values": [
                         "<destino>"
                     ],
-                    "desc": "No modo mensagem: envia no privado de uma pessoa (@5521999999999) ou num grupo, pelo nome ou parte dele (/Grupo L200/, \"Grupo L200\" ou L200)."
+                    "desc": "No modo mensagem: envia num contato, num grupo ou num número em vez do chat atual. Ex: -to /Jorge Pereira/, -to /Grupo L200/, -to +5521999999999 (vários com o nome: você escolhe na lista)."
                 },
                 {
                     "argv": [
@@ -358,7 +358,7 @@
                     "values": [
                         "<destino>"
                     ],
-                    "desc": "Junto com -alerta: avisa no privado de uma pessoa (@5521999999999) ou num grupo, pelo nome ou parte dele (/Grupo L200/, \"Grupo L200\" ou L200)."
+                    "desc": "Junto com -alerta: avisa num contato, num grupo ou num número em vez do seu privado: /Jorge Pereira/, /Grupo L200/ ou +5521999999999 (vários com o nome: você escolhe na lista)."
                 }
             ],
             "onlyAdmin": false
@@ -709,7 +709,7 @@
         },
         {
             "cmd": "/mudo",
-            "usage": "/mudo <OPTION>... <@número|/nome do grupo/>",
+            "usage": "/mudo <OPTION>... </contato ou grupo/|+número>",
             "aliases": [
                 "/mute"
             ],
@@ -766,9 +766,9 @@
                 },
                 {
                     "argv": [
-                        "<@número|/nome do grupo/>"
+                        "</contato ou grupo/|+número>"
                     ],
-                    "desc": "Pessoa (@5521999999999 ou mencionada) ou grupo pelo nome ou parte dele (/Grupo L200/, \"Grupo L200\" ou L200)."
+                    "desc": "Primeiro um contato, depois um grupo, pelo nome ou parte dele (vários: você escolhe na lista), ou um número. Ex: /mudo -a /Jorge Pereira/, /mudo -a /Grupo L200/, /mudo -s +5521999999999"
                 }
             ],
             "onlyAdmin": true

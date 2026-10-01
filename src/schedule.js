@@ -5,7 +5,7 @@
 const { estado: stateAlt } = require('./state');
 const { client } = require('./client');
 const { dbAll, dbGet, dbReady, dbRun } = require('./db');
-const { describeDestination, extractDestination, resolverDestination } = require('./destinations');
+const { describeDestination, extractDestination, resolverOrChoose } = require('./destinations');
 const { printError, printInfo } = require('./log');
 const { statusText } = require('./status');
 const { getSetting } = require('./settings');
@@ -95,7 +95,7 @@ async function handleSchedule({ msg, args, chatId, chatName, isGroup, quotedMsg 
     const items = await listAlt();
 
     if (opt.pv && !t.aceitaPv) {
-        await msg.reply('❌ O -pv é do modo lembrete: use /lembrete (ou -lembrete) para lembrar no seu privado, ou -to @seu-número.');
+        await msg.reply('❌ O -pv é do modo lembrete: use /lembrete (ou -lembrete) para lembrar no seu privado.');
         return;
     }
 
@@ -181,11 +181,9 @@ async function handleSchedule({ msg, args, chatId, chatName, isGroup, quotedMsg 
     let destination = { id: chatId, nome: chatName, grupo: Boolean(isGroup) };
 
     if (withDestination) {
-        destination = await resolverDestination(destinationText, { mencoes: msg.mentionedIds ?? [] });
-        if (destination.erro) {
-            await msg.reply(destination.erro);
-            return;
-        }
+        // Several contacts or groups with the name: waits for you to choose from the list
+        destination = await resolverOrChoose(msg, destinationText);
+        if (!destination) return;
     } else if (opt.pv) {
         destination = { id: myId, nome: 'seu privado', grupo: false };
     }

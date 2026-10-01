@@ -5,18 +5,20 @@
 const { client } = require('../client');
 const { getCommandSyntax } = require('./base');
 const { dbAll, dbGet, dbReady, dbRun } = require('../db');
-const { describeDestination, resolverDestination } = require('../destinations');
+const { describeDestination, resolverOrChoose } = require('../destinations');
 const { TYPES } = require('../mudo');
 const { plural } = require('../util/format');
 
 /*
- * /mudo <option> <@number|/group name/>
+ * /mudo <option> </contact or group/|+number>
  * -d (-deleted)  mutes the deleted message notices
  * -e (-edited)   mutes the edit notices
  * -s (-status)   mutes the deleted status notices
  * -a (-all)      all of that
- * The options combine (-d -e). Muting the same target again adds to what
- * was. Without anything, lists; -rm <no.|all> undoes it.
+ * The options combine (-d -e). The target is looked up as in -to: first in the
+ * contacts, then in the groups (several: you choose from the list), or a number.
+ * Muting the same target again adds to what was there. Without anything, lists;
+ * -rm <nº|all> desfaz.
  */
 const OPTIONS = {
     d: 'deleted', deleted: 'deleted',
@@ -71,7 +73,7 @@ async function listAlt(msg) {
     );
 
     if (!mutes.length) {
-        await msg.reply('🔇 Ninguém silenciado.\n💡 _Ex.: /mudo -a /Grupo L200/ ou /mudo -s @5521999999999_');
+        await msg.reply('🔇 Ninguém silenciado.\n💡 _Ex.: /mudo -a /Jorge Pereira/, /mudo -a /Grupo L200/ ou /mudo -s +5521999999999_');
         return;
     }
 
@@ -121,15 +123,13 @@ async function cmdMuted({ msg, args }) {
         return;
     }
     if (!r.alvo) {
-        await msg.reply('❌ Informe quem: @número ou o nome do grupo (/Grupo L200/).');
+        await msg.reply('❌ Informe quem: um contato, um grupo ou um número (/Jorge Pereira/, /Grupo L200/ ou +5521999999999).');
         return;
     }
 
-    const destination = await resolverDestination(r.alvo, { mencoes: msg.mentionedIds ?? [] });
-    if (destination.erro) {
-        await msg.reply(destination.erro);
-        return;
-    }
+    // Several contacts or groups with the name: waits for you to choose from the list
+    const destination = await resolverOrChoose(msg, r.alvo);
+    if (!destination) return;
 
     if (destination.id === client.info.wid._serialized) {
         await msg.reply('❌ As suas mensagens já não geram avisos.');

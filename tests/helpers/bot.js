@@ -60,9 +60,10 @@ async function restart() {
     createGroup(GROUP, 'Família', [OWNER.jid, OTHERAlt.jid]);
 }
 
+// A contact saved in your address book (isMyContact), with its name
 function createContact(jid, nameAlt) {
     const [user] = jid.split('@');
-    const contactAlt = { id: { _serialized: jid, user }, number: user, name: nameAlt, pushname: nameAlt };
+    const contactAlt = { id: { _serialized: jid, user }, number: user, name: nameAlt, pushname: nameAlt, isMyContact: true, isGroup: false };
     client.contatos.set(jid, contactAlt);
     return contactAlt;
 }
@@ -185,6 +186,24 @@ async function replyAlt(line, optionsAlt) {
     return (await run(line, optionsAlt)).map(e => e.texto);
 }
 
+/**
+ * Command that lists options to choose from (several contacts or groups with the
+ * name): waits for the list to go out, replies `escolha` in the same chat and waits for the
+ * comando terminar.
+ * @returns the texts of everything the bot sent, from the list onward
+ */
+async function replyChoosing(line, choice, optionsAlt = {}) {
+    const beforeAlt = client.enviadas.length;
+    const commandAlt = run(line, optionsAlt);
+    const listed = () => client.enviadas.slice(beforeAlt).some(e => text(e.content).startsWith('🔎 '));
+
+    for (let i = 0; i < 200 && !listed(); i++) await new Promise(setImmediate);
+    if (!listed()) throw new Error(`${line}: o bot não listou opções para escolher`);
+
+    for (const n of [].concat(choice)) await run(String(n), { chat: optionsAlt.chat });
+    return (await commandAlt).map(e => e.texto);
+}
+
 /*
  * Delete and edit events, in whatsapp-web.js format
  */
@@ -274,6 +293,7 @@ module.exports = {
     prepare,
     restart,
     replyAlt,
+    replyChoosing,
     setSetting,
     src,
     text,

@@ -91,6 +91,10 @@ class ClientFake extends EventEmitter {
         return [...this.chats.values()];
     }
 
+    async getContacts() {
+        return [...this.contatos.values()];
+    }
+
     // As in whatsapp-web.js: the number's id on WhatsApp, or null if it has no account
     async getNumberId(numberAlt) {
         const jid = `${numberAlt}@c.us`;
