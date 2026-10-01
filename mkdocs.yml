@@ -74,12 +74,12 @@ nav:
   - E-mails: emails.md
   - Comandos:
       - comandos/index.md
-      - /agendar: comandos/agendar.md
       - /backup: comandos/backup.md
       - /boletos: comandos/boletos.md
       - /bot: comandos/bot.md
       - /cache: comandos/cache.md
       - /cotacao: comandos/cotacao.md
+      - /cron: comandos/cron.md
       - /crypto: comandos/crypto.md
       - /cve: comandos/cve.md
       - /debug: comandos/debug.md

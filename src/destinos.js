@@ -1,6 +1,6 @@
 /*
  * Destino de um aviso (-to): uma pessoa pelo número ou um grupo pelo nome.
- * Usado pelos alertas de preço (/cotacao e /crypto -alerta) e pelo /agendar.
+ * Usado pelos alertas de preço (/cotacao e /crypto -alerta) e pelo /cron.
  */
 
 const { client } = require('./cliente');
