@@ -52,7 +52,8 @@ async function limparCacheAntigo(maxDeleteWin = MAX_DELETE_WINDOW, retencaoApaga
  * Limpeza geral (/cache -all): TODAS as mensagens (inclusive as apagadas e as
  * editadas guardadas para o /show), todas as mídias e todos os temporários.
  * No fim, VACUUM devolve o espaço ao disco: DELETE sozinho não encolhe o .db.
- * Não mexe em monitored_numbers, presence_logs nem watch_hits (configuração e histórico).
+ * Não mexe em monitored_numbers, presence_logs, watch_hits, stats, polls, price_alerts
+ * nem settings (configuração e histórico).
  */
 async function limparTudo() {
     await dbPronto;
@@ -139,6 +140,23 @@ async function limparStatsAntigas() {
     }
 }
 
+// Enquetes (e os votos delas) mais antigas que 'enquete.retentionDays'
+async function limparEnquetesAntigas() {
+    await dbPronto;
+
+    try {
+        const limite = Date.now() - getSetting('enquete.retentionDays') * DAY_MS;
+        await dbRun('DELETE FROM poll_votes WHERE poll_id IN (SELECT id FROM polls WHERE created_at < ?)', [limite]);
+        const res = await dbRun('DELETE FROM polls WHERE created_at < ?', [limite]);
+
+        if (res.changes > 0) {
+            printInfo(`Limpeza: ${res.changes} enquetes antigas removidas.`);
+        }
+    } catch (err) {
+        printError('Erro na limpeza das enquetes:', err.message);
+    }
+}
+
 // Ocorrências do /watch mais antigas que 'watch.hitsRetentionDays'
 async function limparWatchAntigo() {
     await dbPronto;
@@ -192,6 +210,7 @@ function rodarLimpeza() {
     limparWatchAntigo();
     limparEditadasAntigas();
     limparStatsAntigas();
+    limparEnquetesAntigas();
 }
 
 // Chamada no app.js. Primeira execução adiada: no primeiro boot as tabelas ainda estão sendo criadas.
@@ -205,6 +224,7 @@ module.exports = {
     limparArquivosAntigos,
     limparCacheAntigo,
     limparEditadasAntigas,
+    limparEnquetesAntigas,
     limparMidias,
     limparStatsAntigas,
     limparTudo,

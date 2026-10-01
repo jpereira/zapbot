@@ -14,6 +14,7 @@ src('eventos/presenca');
 src('eventos/apagadas');
 src('eventos/editadas');
 src('eventos/mensagens');
+src('enquetes');
 
 const { dbAll, dbGet, dbRun, marcarBancoPronto } = src('db');
 const { inicializarBanco } = src('inicializacao');
@@ -29,7 +30,7 @@ let banco = null;
 const preparar = () => (banco ??= inicializarBanco().then(marcarBancoPronto));
 
 const TABELAS = ['messages', 'message_edits', 'stats', 'watch_hits', 'price_alerts',
-    'presence_logs', 'monitored_numbers', 'settings'];
+    'presence_logs', 'monitored_numbers', 'settings', 'polls', 'poll_votes'];
 
 /*
  * Estado limpo para cada teste: tabelas vazias, settings no padrão, nada
@@ -156,7 +157,12 @@ async function entregar(msg, { erroEsperado = false } = {}) {
         throw new Error(`o bot registrou erro(s) inesperado(s):\n${erros.join('\n')}`);
     }
 
-    return client.enviadas.slice(enviadasAntes).map(e => ({ ...e, texto: textoDe(e.content, e.options) }));
+    return client.enviadas.slice(enviadasAntes).map(comTexto);
+}
+
+// Envio com o texto à mão (o id, fora dos deepEqual, vem junto)
+function comTexto(e) {
+    return Object.defineProperty({ ...e, texto: textoDe(e.content, e.options) }, 'id', { value: e.id });
 }
 
 // Texto de um envio (string, legenda de mídia, nome de enquete...)
@@ -192,7 +198,7 @@ async function apagar(original, { porMim = original.fromMe } = {}) {
 
     const antes = client.enviadas.length;
     for (const h of client.listeners('message_revoke_everyone')) await h(after, original);
-    return client.enviadas.slice(antes).map(e => ({ ...e, texto: textoDe(e.content, e.options) }));
+    return client.enviadas.slice(antes).map(comTexto);
 }
 
 async function editar(original, novoTexto, { antigo = original.body, editadaEm = Date.now(), realmente = true } = {}) {
@@ -205,7 +211,30 @@ async function editar(original, novoTexto, { antigo = original.body, editadaEm =
 
     const antes = client.enviadas.length;
     for (const h of client.listeners('message_edit')) await h(msg, novoTexto, antigo);
-    return client.enviadas.slice(antes).map(e => ({ ...e, texto: textoDe(e.content, e.options) }));
+    return client.enviadas.slice(antes).map(comTexto);
+}
+
+/**
+ * Evento 'vote_update' do whatsapp-web.js: `voter` escolheu `opcoes` (lista
+ * vazia = tirou o voto) na enquete `enquete` (o envio do /enquete ou uma
+ * mensagem com pollName/pollOptions/id).
+ */
+async function votar(enquete, voter, opcoes, { quando = Date.now() } = {}) {
+    const poll = enquete.content ?? enquete;
+    const vote = {
+        voter,
+        selectedOptions: opcoes.map(name => ({ name, localId: poll.pollOptions.findIndex(o => o.name === name) })),
+        interractedAtTs: quando,
+        parentMessage: {
+            id: enquete.id,
+            pollName: poll.pollName,
+            pollOptions: poll.pollOptions,
+            allowMultipleAnswers: poll.options?.allowMultipleAnswers ?? poll.allowMultipleAnswers ?? false,
+            timestamp: Math.floor(quando / 1000)
+        }
+    };
+
+    for (const h of client.listeners('vote_update')) await h(vote);
 }
 
 /*
@@ -247,5 +276,6 @@ module.exports = {
     responder,
     setSetting,
     src,
-    textoDe
+    textoDe,
+    votar
 };
