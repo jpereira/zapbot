@@ -7,3 +7,25 @@
   mini /stats dos grupos e o /defi.
 * /transcrever: respondendo um audio, transcreve pela OpenAI (Whisper) com a chave do
   /gpt; um setting liga a transcricao automatica em chats escolhidos.
+* /cron: -edit <n> para trocar a hora ou o texto de um item, -pause/-resume, e -to com
+  mais de um destino (ex.: -to /Familia/ -to /Trabalho/).
+* /lembrete em linguagem natural pelo /gpt ("me lembra amanha as 9h de ligar pro banco").
+* /mudo -por <tempo> (ex.: -por 2h, -por 7d): silencio temporario, que expira sozinho.
+* Alertas de preco: -sempre (repete em vez de sair ao disparar) e por variacao
+  (ex.: BTC +-5% em 24h).
+* /defi -alerta: avisar tambem quando a posicao volta para a faixa e quando as taxas a
+  coletar passam de um valor (-taxas 50).
+* /watch -to: avisar as ocorrencias de uma regra em outro chat ou por e-mail.
+* /show -q <texto>: buscar nas apagadas e editadas.
+* /backup: senha no arquivo (age/gpg) antes de enviar por e-mail ou para outro chat, e
+  envio automatico semanal (setting backup.sendTo).
+* /bot -info: avisar quando houver versao nova do yt-dlp e do whatsapp-web.js
+  (PyPI e GitHub).
+* /gpt e /tldr: aceitar imagem respondida (visao) e /ocr para tirar o texto de uma imagem.
+* /sticker de texto: /sticker "bom dia" gera a figurinha com o texto.
+* Lista de escolha (destinos): aceitar 0 ou "cancelar" para desistir sem esperar os 2 min.
+* Settings: migracao de chaves renomeadas (ex.: resumo.maxMsgs -> tldr.maxMsgs) para nao
+  perder o valor salvo.
+* Admins extras (setting bot.admins): outras pessoas que podem usar os comandos admin.
+* Limite de uso por pessoa nos comandos publicos (ex.: /get, /gpt), contra abuso em grupo.
+* Dependabot/Renovate para npm e Docker, e um job no CI que avisa versao nova do yt-dlp.
