@@ -1016,6 +1016,35 @@
             "onlyAdmin": true
         },
         {
+            "cmd": "/status",
+            "usage": "/status [<hora>] [OPTION]",
+            "help": "Relatório do bot nas últimas 24 h: tempo no ar, cache, ocorrências do /watch, apagadas, editadas, status apagados, ignoradas pelo /mudo e o último backup. Com uma hora, chega todo dia nesse horário, no seu privado.",
+            "cmd_opts": [
+                {
+                    "opts": [
+                        "list",
+                        "l"
+                    ],
+                    "values": [],
+                    "desc": "Mostra o horário do envio diário e o próximo."
+                },
+                {
+                    "opts": [
+                        "off"
+                    ],
+                    "values": [],
+                    "desc": "Desliga o envio diário."
+                },
+                {
+                    "argv": [
+                        "<hora>"
+                    ],
+                    "desc": "Hora do envio diário (Brasília): 06h, 6h30, 06:00 ou às 18h. Ex: /status 06h"
+                }
+            ],
+            "onlyAdmin": true
+        },
+        {
             "cmd": "/sticker",
             "usage": "/sticker (respondendo uma imagem, vídeo ou link)",
             "aliases": [
