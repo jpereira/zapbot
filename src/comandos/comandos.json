@@ -420,6 +420,56 @@
             "onlyAdmin": false
         },
         {
+            "cmd": "/lembrete",
+            "usage": "/lembrete <quando> [OPTION] <texto>",
+            "aliases": [
+                "/lemb"
+            ],
+            "help": "Lembrete no chat atual (ou no seu privado com -pv) na hora marcada. Respondendo uma mensagem, o texto dela vira o lembrete.",
+            "cmd_opts": [
+                {
+                    "opts": [
+                        "list",
+                        "l"
+                    ],
+                    "values": [],
+                    "desc": "Lista os lembretes (também sem argumentos)."
+                },
+                {
+                    "opts": [
+                        "pv"
+                    ],
+                    "values": [],
+                    "desc": "Lembra no seu privado em vez do chat atual."
+                },
+                {
+                    "opts": [
+                        "repetir"
+                    ],
+                    "values": [
+                        "<diario|semanal|mensal>"
+                    ],
+                    "desc": "Repete no mesmo horário: todo dia, toda semana ou todo mês."
+                },
+                {
+                    "opts": [
+                        "rm"
+                    ],
+                    "values": [
+                        "<nº|all>"
+                    ],
+                    "desc": "Remove o lembrete nº N da lista (ou todos)."
+                },
+                {
+                    "argv": [
+                        "<quando>"
+                    ],
+                    "desc": "30m, 2h, 1h30m (daqui a tanto tempo), 18:30 ou às 18h (hoje ou amanhã), amanhã [9h], sexta [18h], 25/12 [10:00] ou 25/12/2027 [10h]. Sem hora: 9h."
+                }
+            ],
+            "onlyAdmin": true
+        },
+        {
             "cmd": "/listageral",
             "usage": "/listageral",
             "aliases": [
