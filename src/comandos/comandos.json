@@ -693,6 +693,9 @@
         {
             "cmd": "/todos",
             "usage": "/todos",
+            "aliases": [
+                "/todes"
+            ],
             "help": "Responde marcando todos do grupo (exceto você).",
             "onlyAdmin": true
         },

@@ -1,5 +1,5 @@
 /*
- * Comandos de grupo e de mídia: /todos, /boletos, /listageral, /walissu (/ualisu),
+ * Comandos de grupo e de mídia: /todos (/todes), /boletos, /listageral, /walissu (/ualisu),
  * /enquete (/enq, /quiz) e /sticker (/st).
  */
 const bot = require('./helpers/bot');
@@ -24,7 +24,7 @@ beforeEach(async () => {
 
 const somenteGrupo = 'Apenas utilizado dentro de grupos.';
 
-describe('/todos', () => {
+describe('/todos (/todes)', () => {
     test('marca todos menos quem chamou, respondendo a mensagem', async () => {
         const [r] = await bot.executar('/todos', { id: 'CHAMADA' });
         assert.equal(r.chatId, GRUPO);
@@ -35,6 +35,12 @@ describe('/todos', () => {
 
     test('fora de grupo', async () => {
         assert.deepEqual(await bot.responder('/todos', { chat: OUTRO.jid }), [somenteGrupo]);
+    });
+
+    test('o alias /todes', async () => {
+        const [r] = await bot.executar('/todes');
+        assert.equal(r.chatId, GRUPO);
+        assert.deepEqual(r.options.mentions, [OUTRO.jid, CICLANO.jid, '777@lid']);
     });
 
     test('o antigo /everyone não responde mais', async () => {
