@@ -87,20 +87,19 @@ describe('/watch', () => {
         assert.match((await bot.replyAlt('/watch -a outra'))[0], /❌ Limite de 1 regras atingido/);
     });
 
-    test('-l lista as regras com as ocorrências, no seu privado', async () => {
+    test('-l lista as regras com as ocorrências, no chat onde foi digitado', async () => {
         assert.match((await bot.replyAlt('/watch -l'))[0], /Nenhuma regra cadastrada/);
 
         await bot.setSetting('watch.rules', 'pix\nboleto');
         await someoneWrite('pix');
         const r = await bot.executar('/watch -l');
-        assert.equal(r[0].texto, '👀 Enviado no seu privado.');
-        assert.equal(r[1].chatId, OWNER.jid);
-        assert.match(r[1].texto, /#1  pix  \(1\)\n#2  boleto  \(0\)/);
+        assert.equal(r.length, 1);
+        assert.equal(r[0].chatId, bot.GROUP);
+        assert.match(r[0].texto, /#1  pix  \(1\)\n#2  boleto  \(0\)/);
 
-        // In your own private chat it replies right there
-        const [here] = await bot.executar('/watch -l', { chat: OWNER.jid });
-        assert.equal(here.chatId, OWNER.jid);
-        assert.match(here.texto, /WATCH: REGRAS/);
+        const [here] = await bot.executar('/watch -s');
+        assert.equal(here.chatId, bot.GROUP);
+        assert.match(here.texto, /WATCH/);
     });
 
     test('-s (e sem opção): ocorrências de todas; -s N de uma regra', async () => {

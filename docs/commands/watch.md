@@ -54,7 +54,7 @@ Detalhes:
   alertas no seu privado casariam de novo).
 - A mesma mensagem não gera dois alertas para a mesma regra; se casar com várias
   regras, vem um alerta só listando todas.
-- `-list` e `-show` mostram conversas de terceiros: usados fora do seu privado,
-  a resposta vai para o seu privado.
+- `-list` e `-show` respondem no chat onde foram digitados. Eles mostram
+  conversas de terceiros: num grupo, todos ali veem.
 - As ocorrências ficam na tabela `watch_hits` por 30 dias (setting
   `watch.hitsRetentionDays`), ou até um `/watch -f`.
