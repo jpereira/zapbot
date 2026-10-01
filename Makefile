@@ -20,7 +20,7 @@ RDOCKER              := docker --context $(REMOTE_CONTEXT)
 RCOMPOSE             := $(RDOCKER) compose -f $(COMPOSE_FILE)
 
 DEV_SERVICE  := zapbot-dev
-PROD_SERVICE := zapbot-prod
+PROD_SERVICE := zapbot
 VOLUMES      := zapbot_app_cache zapbot_wwebjs_auth
 DEV_VOLUMES  := zapbot_app_cache_dev zapbot_wwebjs_auth_dev
 
@@ -64,18 +64,18 @@ deploy.context: ## Creates the remote Docker context (if it does not exist)
 	@$(DOCKER) context inspect $(REMOTE_CONTEXT) >/dev/null 2>&1 || \
 		docker context create $(REMOTE_CONTEXT) --docker "host=$(DOCKER_REMOTE_SERVER)"
 
-deploy.up: deploy.context ## Build + (re)creates zapbot-prod on the server
+deploy.up: deploy.context ## Build + (re)creates zapbot on the server
 	$(RDOCKER) image prune -f
 	$(RCOMPOSE) build $(OPTS) $(PROD_SERVICE)
-	$(RCOMPOSE) up -d --force-recreate $(PROD_SERVICE)
+	$(RCOMPOSE) up -d --force-recreate --remove-orphans $(PROD_SERVICE)
 
-deploy.logs: deploy.context ## Follows zapbot-prod's logs
+deploy.logs: deploy.context ## Follows zapbot's logs
 	$(RDOCKER) logs -f $(PROD_SERVICE)
 
 deploy.ps: deploy.context ## Lists containers on the server
 	$(RDOCKER) ps
 
-deploy.shell: deploy.context ## Shell inside zapbot-prod
+deploy.shell: deploy.context ## Shell inside zapbot
 	$(RDOCKER) exec -it $(PROD_SERVICE) /bin/bash -l
 
 deploy.images: deploy.context ## Lists images on the server
