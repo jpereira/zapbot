@@ -2,8 +2,9 @@
  * Comando /cache.
  */
 
+const { apagarTodosBackups, listarBackups } = require('../backup');
 const { formatarErroComando } = require('./base');
-const { CACHE_DIR, MEDIA_DIR } = require('../constantes');
+const { BACKUP_DIR, CACHE_DIR, MEDIA_DIR } = require('../constantes');
 const { dbGet } = require('../db');
 const { limparArquivosAntigos, limparCacheAntigo, limparEditadasAntigas, limparEnquetesAntigas, limparMidias, limparStatsAntigas, limparTudo, limparWatchAntigo } = require('../limpeza');
 const { printError } = require('../log');
@@ -14,15 +15,16 @@ async function cmdCache({ msg, opts }) {
         let textMsg;
 
         if (opts.opt.all) {
-            // Tudo: mensagens, apagadas, editadas, mídias e temporários
+            // Tudo: mensagens, apagadas, editadas, mídias, temporários e backups
             const r = await limparTudo();
 
             textMsg =
                 `🧹 *Limpeza geral concluída* _(${CACHE_DIR})_\n\n` +
                 `🗄️ Mensagens removidas: *${r.total}* _(${r.apagadas} apagada${r.apagadas === 1 ? '' : 's'})_\n` +
                 `✏️ Edições removidas: *${r.editadas}*\n` +
+                `📦 Backups removidos: *${r.backups}*\n` +
                 `💾 Espaço liberado: *${humanSize(r.liberado)}*`;
-        } else if (opts.opt.clean || opts.opt.media) {
+        } else if (opts.opt.clean || opts.opt.media || opts.opt.backup) {
             const partes = [];
 
             // Limpeza normal: só o que passou das janelas de retenção
@@ -41,6 +43,11 @@ async function cmdCache({ msg, opts }) {
                 partes.push(`🖼️ Mídias apagadas de ${MEDIA_DIR}: *${r.arquivos}* _(${humanSize(r.bytes)})_`);
             }
 
+            if (opts.opt.backup) {
+                const r = await apagarTodosBackups();
+                partes.push(`📦 Backups apagados de ${BACKUP_DIR}: *${r.backups}* _(${humanSize(r.bytes)})_`);
+            }
+
             textMsg = partes.join('\n');
         } else {
             const { total, apagadas } = await dbGet(
@@ -50,7 +57,8 @@ async function cmdCache({ msg, opts }) {
 
             textMsg = `🗂️ Exibindo conteúdo de ${CACHE_DIR}/*`;
             textMsg += '\n\n```' + listCacheLevelOnly(CACHE_DIR) + '```\n\n';
-            textMsg += `🗄️ Existem ${total} mensagens no cache (${apagadas} apagadas) e ${editadas} edições.`;
+            textMsg += `🗄️ Existem ${total} mensagens no cache (${apagadas} apagadas) e ${editadas} edições.\n`;
+            textMsg += `📦 Backups: ${(await listarBackups()).length} _(veja /backup)_`;
         }
 
         await msg.reply(textMsg, null, { linkPreview: false });
