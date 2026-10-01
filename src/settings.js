@@ -329,17 +329,7 @@ function validarSetting(key, value) {
     throw new Error(`tipo inválido no schema: ${schema.type}`);
 }
 
-// Chaves renomeadas (antiga → nova): o valor salvo no banco vai para o nome novo
-const SETTINGS_RENOMEADOS = {
-    'api.key.giphy': 'gif.giphy.api.key'
-};
-
 async function carregarSettings() {
-    for (const [antiga, nova] of Object.entries(SETTINGS_RENOMEADOS)) {
-        await dbRun('UPDATE OR IGNORE settings SET key = ? WHERE key = ?', [nova, antiga]);
-        await dbRun('DELETE FROM settings WHERE key = ?', [antiga]);
-    }
-
     for (const [key, schema] of Object.entries(SETTINGS_SCHEMA)) {
         await dbRun('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)', [key, JSON.stringify(schema.default)]);
     }

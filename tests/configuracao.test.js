@@ -257,14 +257,6 @@ describe('settings', () => {
         assert.equal(getSetting('show.max'), 7);
     });
 
-    test('chave renomeada (api.key.giphy) é migrada para o nome novo', async () => {
-        await bot.dbRun('DELETE FROM settings WHERE key = ?', ['gif.giphy.api.key']);
-        await bot.dbRun('INSERT INTO settings (key, value) VALUES (?, ?)', ['api.key.giphy', JSON.stringify('chave-antiga')]);
-        await carregarSettings();
-        assert.equal(getSetting('gif.giphy.api.key'), 'chave-antiga');
-        assert.equal(await bot.dbGet("SELECT 1 FROM settings WHERE key = 'api.key.giphy'"), undefined);
-    });
-
     test('valor inválido no banco vale o padrão (com erro no log)', async () => {
         await bot.dbRun("UPDATE settings SET value = '999' WHERE key = 'show.max'");
         await setSetting('show.max', 20);
