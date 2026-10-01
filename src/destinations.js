@@ -29,6 +29,10 @@ const LIMIT = 10;
 const EMAIL = /^[^\s@<>,;]+@[^\s@<>,;]+\.[^\s@<>,;]+$/;
 const isWordEmail = (s) => /^e-?mail$/i.test(s);
 
+// The QRCODE_EMAIL_SMTP_TO addresses, which may come as "Me <me@example.com>, other@x.com"
+const emailsDoSmtpTo = () => String(process.env.QRCODE_EMAIL_SMTP_TO ?? '').split(',')
+    .map(e => (e.match(/<([^>]*)>/)?.[1] ?? e).trim());
+
 /**
  * Removes the "-to <destination>" from the command text.
  * @returns {{ destino: string|null, informado: boolean, resto: string }}
@@ -76,9 +80,7 @@ function readEmails(textAlt) {
     const partsAlt = textAlt.split(/[\s,;]+/).filter(Boolean);
     if (!partsAlt.length || !partsAlt.every(p => isWordEmail(p) || EMAIL.test(p))) return null;
 
-    const emails = partsAlt.flatMap(p => (isWordEmail(p)
-        ? String(process.env.QRCODE_EMAIL_SMTP_TO ?? '').split(/\s*,\s*/)
-        : [p])).map(e => e.trim());
+    const emails = partsAlt.flatMap(p => (isWordEmail(p) ? emailsDoSmtpTo() : [p])).map(e => e.trim());
 
     if (emails.some(e => !EMAIL.test(e))) {
         return { erro: '❌ O "email" usa o QRCODE_EMAIL_SMTP_TO, que está vazio (ou inválido) no config/.env. Informe o e-mail: -to voce@exemplo.com' };
@@ -210,6 +212,7 @@ const describeDestination = (d) => `${d.email ? '📧' : d.grupo ? '👥' : '�
 
 module.exports = {
     describeDestination,
+    emailsDoSmtpTo,
     sendOnDestination,
     extractDestination,
     resolverDestination,

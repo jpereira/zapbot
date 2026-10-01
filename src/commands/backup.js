@@ -10,7 +10,7 @@ const { REASONS, countInputs, createBackup, listBackups, nextBackupDaily, remove
 const { findCommand } = require('./base');
 const { client } = require('../client');
 const { BACKUP_DIR, CACHE_DIR } = require('../constants');
-const { describeDestination, extractDestination, resolverOrChoose } = require('../destinations');
+const { describeDestination, emailsDoSmtpTo, extractDestination, resolverOrChoose } = require('../destinations');
 const { sendFilePerEmail } = require('../email');
 const { printError } = require('../log');
 const { GetOptFromCommand } = require('../options');
@@ -168,7 +168,7 @@ async function cmdBackup({ msg, opts: commandOpts, args }) {
             return;
         }
 
-        const emailsOld = old.map(v => (/^e-?mail$/i.test(v) ? process.env.QRCODE_EMAIL_SMTP_TO?.trim() : v));
+        const emailsOld = old.flatMap(v => (/^e-?mail$/i.test(v) ? emailsDoSmtpTo() : [v]));
         const invalid = emailsOld.filter(e => !e || !/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(e));
 
         if (invalid.length) {
