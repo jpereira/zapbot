@@ -124,7 +124,7 @@ async function nomeDoGrupoNoStore(chatId) {
  * Troca as menções cruas do texto (@111780869222483, que pode ser LID ou telefone)
  * pelo nome do contato: "@111780869222483" -> "@Fulano".
  * mentionedIds (da mensagem) ajuda a saber se o número é @lid ou @c.us;
- * sem ele (ocorrências antigas) tentamos os dois.
+ * sem ele (ex.: as ocorrências do /watch, que não guardam os ids) tentamos os dois.
  */
 const mentionNameCache = new Map();
 
