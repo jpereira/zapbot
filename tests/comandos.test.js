@@ -22,7 +22,7 @@ describe('/help (/h)', () => {
     });
 
     test('um comando, com ou sem "/", por nome ou alias', async () => {
-        for (const linha of ['/help show', '/help /show', '/h undo']) {
+        for (const linha of ['/help show', '/help /show', '/h s']) {
             const [r] = await bot.responder(linha);
             assert.match(r, /AJUDA[\s\S]*Usage: \/show/, linha);
         }
