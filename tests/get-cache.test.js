@@ -146,27 +146,47 @@ describe('/cache (/c)', () => {
         await bot.dbRun("INSERT INTO messages (id, timestamp, revoked) VALUES ('velha', ?, 0), ('nova', ?, 0)", [antigo, Date.now()]);
         await bot.dbRun("INSERT INTO messages (id, timestamp, revoked, revoked_at) VALUES ('apagada', ?, 1, ?)", [antigo, antigo]);
 
-        assert.deepEqual(await bot.responder('/c -c'), ['🧹 Cache limpo (itens fora da janela de retenção).\n']);
+        assert.deepEqual(await bot.responder('/c -c'), ['🧹 Cache limpo (itens fora da janela de retenção).']);
         // (a própria mensagem "/c -c" também está no banco: conferimos só as do teste)
         const ids = (await bot.dbAll("SELECT id FROM messages WHERE id IN ('velha', 'nova', 'apagada') ORDER BY id")).map(r => r.id);
         assert.deepEqual(ids, ['apagada', 'nova'], 'a apagada fica 30 dias; a comum sai em 68 h');
     });
 
-    test('-c -f: apaga tudo (mensagens, edições, mídias e temporários)', async () => {
+    test('-a: apaga tudo (mensagens, edições, mídias e temporários)', async () => {
         await bot.executar('oi', { de: OUTRO.jid, midia: { mimetype: 'image/png', data: 'AA==' } });
         await bot.dbRun("INSERT INTO message_edits (message_id, edited_at) VALUES ('x', 1)");
         fs.writeFileSync(path.join(TMP_DIR, 'lixo.mp4'), 'x');
 
-        const [r] = await bot.responder('/cache -c -f');
-        assert.match(r, /🧹 \*Limpeza geral concluída\* \(force\)\n\n🗄️ Mensagens removidas: \*\d+\* _\(0 apagadas\)_\n✏️ Edições removidas: \*1\*/);
+        const [r] = await bot.responder('/cache -all');
+        assert.match(r, new RegExp(`🧹 \\*Limpeza geral concluída\\* _\\(${CACHE_DIR}\\)_\\n\\n🗄️ Mensagens removidas: \\*\\d+\\* _\\(0 apagadas\\)_\\n✏️ Edições removidas: \\*1\\*`));
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM messages')).n, 0);
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM message_edits')).n, 0);
         assert.deepEqual(fs.readdirSync(MEDIA_DIR), []);
         assert.deepEqual(fs.readdirSync(TMP_DIR), []);
     });
 
+    test('-m: apaga as mídias baixadas; as mensagens ficam, sem o arquivo', async () => {
+        await bot.executar('foto', { de: OUTRO.jid, id: 'COMFOTO', midia: { mimetype: 'image/png', data: Buffer.alloc(2048).toString('base64') } });
+        fs.writeFileSync(path.join(TMP_DIR, 'temporario.mp4'), 'x');
+
+        const [r] = await bot.responder('/cache -media');
+        assert.equal(r, `🖼️ Mídias apagadas de ${MEDIA_DIR}: *1* _(2.00 KB)_`);
+        assert.deepEqual(fs.readdirSync(MEDIA_DIR), []);
+        assert.deepEqual(fs.readdirSync(TMP_DIR), ['temporario.mp4'], 'os temporários não são mídias');
+
+        const row = await bot.dbGet("SELECT has_media, media_path FROM messages WHERE id = 'COMFOTO'");
+        assert.deepEqual([row.has_media, row.media_path], [1, null]);
+        fs.unlinkSync(path.join(TMP_DIR, 'temporario.mp4'));
+    });
+
+    test('-c e -m juntos: limpeza por retenção e mídias', async () => {
+        const [r] = await bot.responder('/cache -c -m');
+        assert.match(r, /^🧹 Cache limpo \(itens fora da janela de retenção\)\.\n🖼️ Mídias apagadas de .*: \*0\*/);
+    });
+
     test('só o dono usa', async () => {
-        assert.deepEqual(await bot.responder('/cache -c -f', { de: OUTRO.jid }), []);
+        assert.deepEqual(await bot.responder('/cache -a', { de: OUTRO.jid }), []);
+        assert.deepEqual(await bot.responder('/cache -m', { de: OUTRO.jid }), []);
     });
 });
 

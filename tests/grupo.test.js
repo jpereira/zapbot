@@ -125,7 +125,7 @@ describe('/enquete (/enq, /quiz)', () => {
     });
 
     test('pergunta começando com "/" nunca parece comando', async () => {
-        assert.equal((await enquete('/enquete /cache -c -f | sim | não')).pollName, '📊 /cache -c -f');
+        assert.equal((await enquete('/enquete /cache -a | sim | não')).pollName, '📊 /cache -a');
     });
 
     test('validações: menos de 2 opções, mais de 12, repetidas, longas', async () => {

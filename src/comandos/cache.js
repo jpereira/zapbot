@@ -3,9 +3,9 @@
  */
 
 const { formatarErroComando } = require('./base');
-const { CACHE_DIR } = require('../constantes');
+const { CACHE_DIR, MEDIA_DIR } = require('../constantes');
 const { dbGet } = require('../db');
-const { limparArquivosAntigos, limparCacheAntigo, limparEditadasAntigas, limparStatsAntigas, limparTudo, limparWatchAntigo } = require('../limpeza');
+const { limparArquivosAntigos, limparCacheAntigo, limparEditadasAntigas, limparMidias, limparStatsAntigas, limparTudo, limparWatchAntigo } = require('../limpeza');
 const { printError } = require('../log');
 const { humanSize, listCacheLevelOnly } = require('../util/arquivos');
 
@@ -13,24 +13,34 @@ async function cmdCache({ msg, opts }) {
     try {
         let textMsg;
 
-        if (opts.opt.clean && opts.opt.force) {
-            // Limpeza geral: mensagens, apagadas, mídias, temporários
+        if (opts.opt.all) {
+            // Tudo: mensagens, apagadas, editadas, mídias e temporários
             const r = await limparTudo();
 
             textMsg =
-                '🧹 *Limpeza geral concluída* (force)\n\n' +
+                `🧹 *Limpeza geral concluída* _(${CACHE_DIR})_\n\n` +
                 `🗄️ Mensagens removidas: *${r.total}* _(${r.apagadas} apagada${r.apagadas === 1 ? '' : 's'})_\n` +
                 `✏️ Edições removidas: *${r.editadas}*\n` +
                 `💾 Espaço liberado: *${humanSize(r.liberado)}*`;
-        } else if (opts.opt.clean) {
-            // Limpeza normal: só o que passou das janelas de retenção
-            await limparCacheAntigo();
-            await limparArquivosAntigos();
-            await limparWatchAntigo();
-            await limparEditadasAntigas();
-            await limparStatsAntigas();
+        } else if (opts.opt.clean || opts.opt.media) {
+            const partes = [];
 
-            textMsg = '🧹 Cache limpo (itens fora da janela de retenção).\n';
+            // Limpeza normal: só o que passou das janelas de retenção
+            if (opts.opt.clean) {
+                await limparCacheAntigo();
+                await limparArquivosAntigos();
+                await limparWatchAntigo();
+                await limparEditadasAntigas();
+                await limparStatsAntigas();
+                partes.push('🧹 Cache limpo (itens fora da janela de retenção).');
+            }
+
+            if (opts.opt.media) {
+                const r = await limparMidias();
+                partes.push(`🖼️ Mídias apagadas de ${MEDIA_DIR}: *${r.arquivos}* _(${humanSize(r.bytes)})_`);
+            }
+
+            textMsg = partes.join('\n');
         } else {
             const { total, apagadas } = await dbGet(
                 'SELECT COUNT(*) AS total, COALESCE(SUM(revoked), 0) AS apagadas FROM messages'
