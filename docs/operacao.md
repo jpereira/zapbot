@@ -10,7 +10,7 @@ Todos com `-f docker/docker-compose.yml` (ou `COMPOSE_FILE` exportado):
 | Shell no container | `docker exec -it zapbot bash -l` |
 | Consultar o banco | `docker exec -it zapbot sqlite3 cache/bot_database.db` |
 | Ver configurações | `docker exec -it zapbot sqlite3 cache/bot_database.db "SELECT * FROM settings"` |
-| Limpar mensagens/mídias | Pelo WhatsApp: `/cache -a` (tudo) ou `/cache -m` (só as mídias). Veja [`/cache`](comandos/cache.md) |
+| Limpar mensagens/mídias | Pelo WhatsApp: `/cache -a` (tudo, inclusive os backups), `/cache -m` (só as mídias) ou `/cache -b` (só os backups). Veja [`/cache`](comandos/cache.md) |
 | Backup do banco | Pelo WhatsApp: `/backup -now` (cria), `/backup -s` (envia o arquivo). Veja [`/backup`](comandos/backup.md) |
 | **Forçar novo QR** (apaga a sessão) | `docker compose down && docker volume rm zapbot_wwebjs_auth && docker compose up -d zapbot` |
 
