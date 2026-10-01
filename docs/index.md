@@ -1,0 +1,107 @@
+# ZapBot
+
+Bot para WhatsApp escrito em Node.js que roda em cima de uma sessão real do
+WhatsApp Web. Ele recupera mensagens (e status) apagadas e editadas, baixa
+vídeos de redes sociais, cria figurinhas, vigia mensagens por texto/regex e te
+avisa no privado, monitora quando contatos ficam online (em desenvolvimento),
+traz notícias, tempo e CVEs, conversa com o ChatGPT e mais algumas brincadeiras,
+tudo por comandos digitados no próprio chat (`/help`, `/get`, `/show`, `/news`,
+`/gpt`...).
+
+!!! warning "Projeto não oficial"
+    Sem vínculo com o WhatsApp ou a Meta. Usar bots em contas pessoais viola os
+    Termos de Serviço do WhatsApp e pode levar ao banimento do número. Use por
+    sua conta e risco.
+
+Por onde começar:
+
+- [Instalação](instalacao.md): requisitos, instalação pela última release e atualização.
+- [Configuração](configuracao.md): o `config/.env`, as chaves de API e o e-mail.
+- [Comandos](comandos/index.md): todos os comandos, com opções e exemplos.
+- [Operação](operacao.md): o dia a dia, a saúde do container e a solução de problemas.
+
+## Como funciona
+
+```
+ ┌──────────── container zapbot-prod (node:24-alpine) ────────────┐
+ │                                                                │
+ │   app.js ──► whatsapp-web.js ──► Puppeteer ──► Chromium        │──► WhatsApp Web
+ │     │                                          (headless)      │
+ │     ├──► SQLite  (cache/bot_database.db)  mensagens, settings  │
+ │     ├──► cache/media   mídias p/ recuperar mensagens apagadas  │
+ │     ├──► yt-dlp + ffmpeg   comando /get                        │
+ │     ├──► APIs HTTP (axios)  /gpt /tempo /cve /news /gif...     │
+ │     └──► SMTP (nodemailer)  QR Code e alertas por e-mail       │
+ │                                                                │
+ │  volumes:  wwebjs_auth  → sessão do WhatsApp (.wwebjs_auth)    │
+ │            app_cache    → banco SQLite + mídias (cache/)       │
+ └────────────────────────────────────────────────────────────────┘
+```
+
+- **Sessão WhatsApp**: o [`whatsapp-web.js`](https://github.com/pedroslopez/whatsapp-web.js)
+  abre o WhatsApp Web num Chromium headless e pareia com o seu celular como um
+  *aparelho conectado*. A sessão fica salva no volume `wwebjs_auth`, então o QR
+  Code só precisa ser lido na primeira vez (ou quando a sessão for revogada).
+  A lib está fixada no commit [`58ddf15`](https://github.com/wwebjs/whatsapp-web.js/commit/58ddf1561cd783d6a548fa812eb70a05944604b4)
+  (ainda sem release): ele corrige o `id._serialized` → `id.$1` do WhatsApp Web
+  (jul/2026), que quebrava mensagem citada e download de mídia. O ajuste local
+  fica em `patches/` (aplicado pelo `patch-package`). Para instalar fora do
+  Docker: `PUPPETEER_SKIP_DOWNLOAD=true npm install`.
+- **Número do bot = seu número**: o bot age como a conta que leu o QR Code. As
+  mensagens que *você* envia (de qualquer aparelho) também passam pelo bot.
+- **Persistência**: toda mensagem recebida é gravada no SQLite (mídias vão para
+  `cache/media`). Quando alguém apaga uma mensagem "para todos", o bot encontra
+  a cópia no banco e a reenvia **no seu privado** (chat consigo mesmo). Mensagens
+  apagadas ficam guardadas por 30 dias (setting `cache.revokedRetentionDays`)
+  e podem ser reexibidas com `/show`. Status (textos/fotos/vídeos) apagados
+  também são recuperados, com o título `📸 STATUS APAGADO DETECTADO`
+  (desative com `/set revoke.status off`).
+- **Editadas**: quando alguém edita uma mensagem, o bot grava o texto de antes
+  e o de depois (tabela `message_edits`) e te avisa **no seu privado** com o
+  título `✏️ MENSAGEM EDITADA DETECTADA` (desative o aviso com
+  `/set edit.alert off`; a edição continua guardada). As edições ficam 30 dias
+  (setting `cache.editedRetentionDays`) e podem ser reexibidas com
+  [`/edit`](comandos/edit.md). As suas próprias edições são ignoradas.
+- **Limpeza automática**: a cada 10 minutos o bot remove do banco/disco as
+  mensagens comuns com mais de 68 h (janela máxima que o WhatsApp permite
+  apagar), as apagadas e as editadas com mais de 30 dias, as ocorrências do
+  `/watch` com mais de 30 dias (setting `watch.hitsRetentionDays`) e os
+  contadores do `/stats` com mais de 90 dias (setting `stats.retentionDays`).
+- **Estatísticas**: cada mensagem nova (e cada apagada/editada) soma 1 num
+  contador por chat, dia, hora e remetente (tabela `stats`), usado pelo
+  [`/stats`](comandos/stats.md). Só números, sem o texto; ficam 90 dias (setting
+  `stats.retentionDays`). As respostas do bot, o seu privado e os status não
+  entram. Desligue com `/set stats.enabled off`.
+- **Alertas de preço**: `/cotacao -alerta USD > 5.30` e `/crypto -alerta BTC <
+  90000` guardam a regra na tabela `price_alerts`; a cada 5 minutos (setting
+  `alerta.intervalMin`) o bot consulta os preços e avisa **no seu privado**
+  quando a regra é cumprida. Veja [Alertas de preço](comandos/cotacao.md#alertas-de-preço).
+- **Watch**: toda mensagem recebida que não é comando é testada contra as
+  regras do [`/watch`](comandos/watch.md) (setting `watch.rules`); quando casa, a
+  ocorrência é gravada na tabela `watch_hits` e você é avisado **no seu
+  privado**.
+- **Configurações (`settings`)**: configurações gerais que podem mudar em
+  tempo de execução (debug, moedas do `/crypto`, limites...) ficam na tabela
+  genérica `settings` do SQLite (`key` → `value` em JSON) e são alteradas pelo
+  [`/set`](comandos/set.md). No boot os valores padrão são gravados, se ainda não
+  existirem, e tudo é carregado em memória. Veja [Settings](settings.md).
+- **Comandos**: definidos em [`config/bot-config.json`](https://github.com/jpereira/zapbot/blob/main/config/bot-config.json)
+  (nome, aliases, opções, ajuda, permissão) e implementados em `src/comandos/`
+  (um arquivo por comando; veja [Estrutura do código](desenvolvimento.md#estrutura-do-código)). Os que
+  consultam a internet (`/gpt`, `/tempo`, `/cve`, `/news`...) usam os serviços
+  da tabela [Serviços externos](configuracao.md#serviços-externos).
+- **Controle**: o [`/bot`](comandos/bot.md) liga/desliga todos os comandos
+  (`-on`/`-off`) e o modo admin (`+admin`/`-admin`), em que só você usa
+  comandos.
+- **Reconexão**: em caso de queda o cliente é reiniciado sozinho, exceto quando o
+  motivo exige ação manual (`LOGOUT`, `CONFLICT`, `UNPAIRED`...).
+- **Saúde (heartbeat)**: a cada 30 s o bot confere se o WhatsApp Web responde e
+  grava `/tmp/zapbot-heartbeat.json`; o `HEALTHCHECK` do Docker marca o
+  container como `unhealthy` se o arquivo parar de ser atualizado. Veja
+  [Saúde do container](operacao.md#saúde-do-container-heartbeat).
+- **Aviso de início**: quando fica pronto, o bot manda
+  `🤖 ZapBot <versão> inicializado.` para o `PHONE_NUMBER`.
+- **Alertas por e-mail**: crash, queda, reconexão, falha de autenticação e
+  outros eventos também vão por e-mail, pelo mesmo SMTP do QR Code (veja
+  [Alertas por e-mail](emails.md#alertas-por-e-mail)). Ligado por padrão (setting
+  `email.alerts`).
