@@ -94,6 +94,7 @@ admin está ligado: só você usa comandos até `/bot -admin`
 | [`/news`](https://jpereira.github.io/zapbot/commands/news/) | | ✅ | Manchetes de feeds RSS: `-hack`, `-g1`, `-gazeta`, `-brasil` |
 | [`/noffa`](https://jpereira.github.io/zapbot/commands/noffa/) | `/🌈`, `/🏳️‍🌈` | | Enfeita o texto com arco-íris |
 | [`/ping`](https://jpereira.github.io/zapbot/commands/ping/) | `/p` | ✅ | Verifica se o bot está vivo |
+| [`/resumo`](https://jpereira.github.io/zapbot/commands/resumo/) | `/tldr` | ✅ | Resume a conversa do chat pelo ChatGPT (`2h`, `300`...) |
 | [`/set`](https://jpereira.github.io/zapbot/commands/set/) | `/config` | ✅ | Lista e altera as configurações (settings) |
 | [`/show`](https://jpereira.github.io/zapbot/commands/show/) | `/undo`, `/s` | ✅ | Reexibe mensagens apagadas ou editadas (`-e`) |
 | [`/stats`](https://jpereira.github.io/zapbot/commands/stats/) | | ✅ | Ranking do chat (quem mais fala, apaga e edita, horários de pico); `-me` para as suas |

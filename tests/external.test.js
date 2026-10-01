@@ -1,6 +1,6 @@
 /*
  * Commands that query external services (all simulated):
- * /cve, /tempo, /news, /gpt, /gif, /meme, /joke e /kernel.
+ * /cve, /tempo, /news, /gpt, /resumo, /gif, /meme, /joke e /kernel.
  */
 const bot = require('./helpers/bot');
 
@@ -283,6 +283,105 @@ describe('/gpt (/ai)', () => {
             assert.match((await bot.replyAlt('/gpt oi', { erroEsperado: true }))[0], expected);
             assert.ok(!bot.logs.slice(logBefore).some(l => l.includes('sk-tes')), 'a chave apareceu no log');
         }
+    });
+});
+
+describe('/resumo (/tldr)', () => {
+    const { readPeriod } = bot.src('commands/resumo');
+
+    // Messages received in the group, saved `minutos` minutes ago
+    async function chat(linesAlt, minutes = 10) {
+        for (const [i, [textAlt, de = bot.OTHERAlt.jid]] of linesAlt.entries()) {
+            const msg = bot.createMessage({ texto: textAlt, de });
+            await bot.deliver(msg);
+            await bot.dbRun('UPDATE messages SET timestamp = ? WHERE id = ?', [Date.now() - minutes * 60_000 + i * 1000, msg.id.id]);
+        }
+    }
+
+    beforeEach(async () => {
+        await bot.setSetting('openai.api.key', 'sk-teste');
+        network.responder('post', 'api.openai.com', { choices: [{ message: { content: '• Combinaram o almoço de domingo.' } }] });
+    });
+
+    test('lerPeriodo: horas, minutos ou quantidade, com ou sem "-"', () => {
+        assert.deepEqual(readPeriod('2h'), { ms: 2 * 3600_000 });
+        assert.deepEqual(readPeriod('-30m'), { ms: 30 * 60_000 });
+        assert.deepEqual(readPeriod('-300'), { n: 300 });
+        assert.equal(readPeriod('0'), null);
+        assert.equal(readPeriod('ontem'), null);
+    });
+
+    test('resume as mensagens do chat; comandos, apagadas e mídias sem legenda ficam de fora', async () => {
+        await chat([['almoço domingo?'], ['bora', bot.OWNER.jid], ['eu levo a sobremesa']]);
+        await chat([['/ping']]);
+        const deleted = bot.createMessage({ texto: 'segredo', de: bot.OTHERAlt.jid });
+        await bot.deliver(deleted);
+        await bot.apagar(deleted);
+        await bot.deliver(bot.createMessage({ de: bot.OTHERAlt.jid, tipo: 'image', midia: { mimetype: 'image/png', data: 'AA==' } }));
+
+        const [r] = await bot.replyAlt('/resumo');
+        assert.match(r, /^📝 \*Resumo de Família\*\n_3 mensagens · \d\d\/\d\d, \d\d:\d\d a \d\d\/\d\d, \d\d:\d\d_\n\n• Combinaram o almoço de domingo\.$/);
+
+        const { cfg } = network.chamadas.at(-1);
+        assert.equal(cfg.headers.Authorization, 'Bearer sk-teste');
+        assert.match(cfg.body.messages[0].content, /resume conversas de WhatsApp/);
+        const textAlt = cfg.body.messages[1].content;
+        assert.match(textAlt, /^Conversa "Família" \(3 mensagens\):\n\n\[\d\d\/\d\d, \d\d:\d\d\] Fulano: almoço domingo\?\n.*Dono: bora\n.*Fulano: eu levo a sobremesa$/);
+        assert.doesNotMatch(textAlt, /ping|segredo/);
+    });
+
+    test('período: 2h pega só as recentes; N limita a quantidade', async () => {
+        await chat([['velha 1'], ['velha 2'], ['velha 3']], 300);
+        await chat([['nova 1'], ['nova 2'], ['nova 3']], 30);
+
+        await bot.replyAlt('/resumo 2h');
+        assert.doesNotMatch(network.chamadas.at(-1).cfg.body.messages[1].content, /velha/);
+
+        await bot.replyAlt('/tldr -4');
+        const textAlt = network.chamadas.at(-1).cfg.body.messages[1].content;
+        assert.match(textAlt, /\(4 mensagens\)/);
+        assert.match(textAlt, /velha 3[\s\S]*nova 3/);
+    });
+
+    test('limites: resumo.maxMsgs e a janela de 68 h', async () => {
+        await chat([['a'], ['b'], ['c']]);
+        await bot.setSetting('resumo.maxMsgs', 10);
+        assert.match((await bot.replyAlt('/resumo 50'))[0], /_\(limitado a 10 mensagens \(setting resumo\.maxMsgs\)\)_/);
+        assert.match((await bot.replyAlt('/resumo 100h'))[0], /_\(as mensagens comuns ficam só 68 h no banco\)_/);
+    });
+
+    test('-c pelo nome e -pv', async () => {
+        const WORK = '120363000000000002@g.us';
+        bot.createGroup(WORK, 'Trabalho Rio', [bot.OWNER.jid, bot.OTHERAlt.jid]);
+        for (const textAlt of ['reunião às 15h', 'ok', 'levo o projetor']) {
+            await bot.deliver(bot.createMessage({ texto: textAlt, de: bot.OTHERAlt.jid, chat: WORK }));
+        }
+
+        // In private, your messages have the other participant as the sender: from_me tells them apart
+        for (const [textAlt, de] of [['oi', bot.OTHERAlt.jid], ['tudo bem?', bot.OWNER.jid], ['tudo', bot.OTHERAlt.jid]]) {
+            await bot.deliver(bot.createMessage({ texto: textAlt, de, chat: bot.OTHERAlt.jid }));
+        }
+        await bot.replyAlt('/resumo', { chat: bot.OTHERAlt.jid });
+        assert.match(network.chamadas.at(-1).cfg.body.messages[1].content, /Fulano: oi\n.*Dono: tudo bem\?\n.*Fulano: tudo$/);
+
+        const r = await bot.executar('/resumo -c "rio trabalho" -pv');
+        assert.equal(r[0].texto, '📝 Resumo enviado no seu privado.');
+        assert.equal(r[1].chatId, bot.OWNER.jid);
+        assert.match(r[1].texto, /📝 \*Resumo de Trabalho Rio\*/);
+
+        assert.match((await bot.replyAlt('/resumo -c xyz'))[0], /❌ Nenhum chat com mensagens guardadas tem "xyz" no nome/);
+    });
+
+    test('poucas mensagens, período inválido, sem chave e erro da OpenAI', async () => {
+        assert.match((await bot.replyAlt('/resumo'))[0], /📝 Poucas mensagens para resumir \(0\) em Família/);
+        assert.match((await bot.replyAlt('/resumo ontem'))[0], /Usage: \/resumo/);
+
+        await chat([['a'], ['b'], ['c']]);
+        network.responder('post', 'api.openai.com', errorHttp(429));
+        assert.deepEqual(await bot.replyAlt('/resumo', { erroEsperado: true }), ['💸 Limite ou créditos da OpenAI esgotados. Tente mais tarde.']);
+
+        await bot.setSetting('openai.api.key', '');
+        assert.match((await bot.replyAlt('/resumo'))[0], /⚠️ API key da OpenAI não encontrada: o \/resumo está desativado/);
     });
 });
 

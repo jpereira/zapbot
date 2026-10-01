@@ -94,6 +94,7 @@ nav:
       - /news: commands/news.md
       - /noffa: commands/noffa.md
       - /ping: commands/ping.md
+      - /resumo: commands/resumo.md
       - /set: commands/set.md
       - /show: commands/show.md
       - /stats: commands/stats.md
