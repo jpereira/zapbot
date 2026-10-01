@@ -1,6 +1,6 @@
 /*
  * Comandos que consultam serviços externos (todos simulados):
- * /cve, /tempo, /news, /gpt, /resumo, /traduzir, /gif, /meme, /joke e /kernel.
+ * /cve, /tempo, /news, /gpt, /resumo, /traduzir, /giphy, /meme, /joke e /kernel.
  */
 const bot = require('./helpers/bot');
 
@@ -471,9 +471,9 @@ describe('/traduzir (/tr, /translate)', () => {
     });
 });
 
-describe('/gif', () => {
+describe('/giphy (/gif)', () => {
     test('sem chave', async () => {
-        assert.match((await bot.responder('/gif'))[0], /⚠️ Chave do GIPHY não configurada/);
+        assert.match((await bot.responder('/giphy'))[0], /⚠️ Chave do GIPHY não configurada/);
     });
 
     test('tag padrão (gif.tag) ou informada; envia como GIF', async () => {
@@ -481,7 +481,7 @@ describe('/gif', () => {
         rede.responder('get', 'api.giphy.com', { data: { images: { original: { mp4: 'https://media.giphy.com/x.mp4' } } } });
         rede.responder('get', 'https://media.giphy.com/', Buffer.from('mp4'));
 
-        const [r] = await bot.executar('/gif');
+        const [r] = await bot.executar('/giphy');
         assert.equal(rede.chamadas[0].cfg.params.tag, 'fail');
         assert.ok(r.content instanceof MessageMedia);
         assert.equal(r.content.mimetype, 'video/mp4');
