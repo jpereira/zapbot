@@ -47,6 +47,7 @@ src/
   moedas.js, cotacoes.js, alertasPreco.js   /crypto, /cotacao e alertas de preço
   openai.js             modelos aceitos pelo /gpt
   contatos.js, opcoes.js                    contatos/@lid e o parser de opções
+  destinos.js           o -to dos avisos: pessoa pelo número ou grupo pelo nome
   watch/                regras e verificação do /watch
   eventos/              message_create, apagadas, editadas, presença
   comandos/             comandos.json (definição), um arquivo por comando,

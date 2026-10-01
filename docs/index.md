@@ -81,7 +81,7 @@ Por onde começar:
 - **Alertas de preço**: `/cotacao -alerta USD > 5.30` e `/crypto -alerta BTC <
   90000` guardam a regra na tabela `price_alerts`; a cada 5 minutos (setting
   `alerta.intervalMin`) o bot consulta os preços e avisa **no seu privado**
-  quando a regra é cumprida. Veja [Alertas de preço](comandos/cotacao.md#alertas-de-preço).
+  (ou, com `-to`, numa pessoa ou num grupo) quando a regra é cumprida. Veja [Alertas de preço](comandos/cotacao.md#alertas-de-preço).
 - **Watch**: toda mensagem recebida que não é comando é testada contra as
   regras do [`/watch`](comandos/watch.md) (setting `watch.rules`); quando casa, a
   ocorrência é gravada na tabela `watch_hits` e você é avisado **no seu
