@@ -1,4 +1,4 @@
-# `/resumo` (`/tldr`) · admin
+# `/tldr` (`/resumo`) · admin
 
 Resume a conversa de um chat pelo ChatGPT: assuntos principais, decisões,
 combinados e pendências, em tópicos. Usa a mesma chave e o mesmo modelo do
@@ -11,11 +11,11 @@ combinados e pendências, em tópicos. Usa a mesma chave e o mesmo modelo do
 | `-pv` | | Envia no seu privado em vez de expor no chat atual |
 
 ```
-/resumo              → as últimas 100 mensagens deste chat
-/resumo 2h           → as das últimas 2 horas
-/tldr 30m            → as dos últimos 30 minutos
-/resumo 300 -pv      → as últimas 300, no seu privado
-/resumo -c família 3h -pv
+/tldr                → as últimas 100 mensagens deste chat
+/tldr 2h             → as das últimas 2 horas
+/resumo 30m          → as dos últimos 30 minutos (pelo alias)
+/tldr 300 -pv        → as últimas 300, no seu privado
+/tldr -c família 3h -pv
 ```
 
 ```
