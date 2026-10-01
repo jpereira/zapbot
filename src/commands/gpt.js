@@ -10,9 +10,9 @@ const { OPENAI_MODELS } = require('../openai');
 const { envOuSetting, getSetting, setSetting } = require('../settings');
 
 /*
- * /gpt: asks ChatGPT. Key and timeout come from config/.env (OPENAI_API_KEY,
- * OPENAI_TIMEOUT_MS) or, if they are missing, from the settings 'openai.api.key' and
- * 'openai.timeout.ms'. The key is never logged nor echoed: the returned error is only
+ * /gpt: asks ChatGPT. Key, model and timeout come from config/.env
+ * (OPENAI_API_KEY, OPENAI_MODEL, OPENAI_TIMEOUT_MS) or, if they are missing, from the
+ * settings 'openai.api.key', 'openai.api.model' and 'openai.timeout.ms'. The key is never logged nor echoed: the returned error is only
  * the API message.
  */
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
