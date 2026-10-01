@@ -3,7 +3,7 @@
 O bot manda quatro tipos de e-mail, pelo mesmo SMTP (`QRCODE_EMAIL_SMTP_*`): o
 QR Code, quando `QRCODE_EMAIL_ENABLE="true"`, os
 [alertas](#alertas-por-e-mail) de crash, queda, reconexão etc., os backups
-pedidos com [`/backup -s <e-mail>`](comandos/backup.md#enviar-por-e-mail) e os
+pedidos com [`/backup -s -to <e-mail>`](comandos/backup.md#enviar-o-arquivo) e os
 alertas criados com `-to email` (ou um endereço): o
 [`/defi -alerta`](comandos/defi.md#alerta-de-saída-da-faixa) (assunto
 `[ZapBot] DeFi: a posição ... saiu da faixa`) e os alertas de preço do
