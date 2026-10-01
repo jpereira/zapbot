@@ -12,6 +12,10 @@ da imagem.
 
 ## Instalação (Docker)
 
+A versão estável atual é a `release-2.0` (de 01/10/2026); os passos abaixo
+instalam essa versão. As notas de cada uma ficam em
+[Releases](https://github.com/jpereira/zapbot/releases).
+
 ```bash
 # 1. Clonar o projeto e ir para a última versão estável
 git clone https://github.com/jpereira/zapbot.git
