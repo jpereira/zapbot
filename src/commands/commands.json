@@ -836,40 +836,6 @@
             "onlyAdmin": true
         },
         {
-            "cmd": "/resumo",
-            "usage": "/resumo [OPTION] [período]",
-            "aliases": [
-                "/tldr"
-            ],
-            "help": "Resume a conversa do chat pelo ChatGPT: assuntos, decisões e pendências.",
-            "cmd_opts": [
-                {
-                    "opts": [
-                        "chat",
-                        "c"
-                    ],
-                    "values": [
-                        "<nome>"
-                    ],
-                    "desc": "Resume outro chat, buscado pelo nome (todas as palavras, sem diferenciar acentos)."
-                },
-                {
-                    "opts": [
-                        "pv"
-                    ],
-                    "values": [],
-                    "desc": "Envia no seu privado em vez de expor no chat atual."
-                },
-                {
-                    "argv": [
-                        "[período]"
-                    ],
-                    "desc": "2h ou 30m: as mensagens desse tempo para cá; 300: as últimas 300 (máx. resumo.maxMsgs). Padrão: as últimas 100."
-                }
-            ],
-            "onlyAdmin": true
-        },
-        {
             "cmd": "/set",
             "usage": "/set [OPTION] [<chave> [<valor>]]",
             "aliases": [
@@ -1073,6 +1039,40 @@
                 }
             ],
             "onlyAdmin": false
+        },
+        {
+            "cmd": "/tldr",
+            "usage": "/tldr [OPTION] [período]",
+            "aliases": [
+                "/resumo"
+            ],
+            "help": "Resume a conversa do chat pelo ChatGPT: assuntos, decisões e pendências.",
+            "cmd_opts": [
+                {
+                    "opts": [
+                        "chat",
+                        "c"
+                    ],
+                    "values": [
+                        "<nome>"
+                    ],
+                    "desc": "Resume outro chat, buscado pelo nome (todas as palavras, sem diferenciar acentos)."
+                },
+                {
+                    "opts": [
+                        "pv"
+                    ],
+                    "values": [],
+                    "desc": "Envia no seu privado em vez de expor no chat atual."
+                },
+                {
+                    "argv": [
+                        "[período]"
+                    ],
+                    "desc": "2h ou 30m: as mensagens desse tempo para cá; 300: as últimas 300 (máx. resumo.maxMsgs). Padrão: as últimas 100."
+                }
+            ],
+            "onlyAdmin": true
         },
         {
             "cmd": "/todos",

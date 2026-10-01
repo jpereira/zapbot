@@ -1,5 +1,5 @@
 /*
- * Comando /resumo.
+ * Comando /tldr (alias /resumo).
  */
 
 const { client } = require('../client');
@@ -12,12 +12,12 @@ const { getSetting } = require('../settings');
 const { plural, withoutAccents } = require('../util/format');
 
 /*
- * /resumo: summarizes a chat's conversation through ChatGPT (same key and model as /gpt).
- * /resumo              → the last 100 messages of this chat
- * /resumo 2h | 30m     → those of the last 2 hours | 30 minutes (the "-" in front is optional)
- * /resumo 300          → the last 300 (max. setting 'resumo.maxMsgs')
- * /resumo -c família   → from another chat, looked up by name
- * /resumo -pv          → in your private chat instead of exposing it in the current chat
+ * /tldr: summarizes a chat's conversation through ChatGPT (same key and model as /gpt).
+ * /tldr              → the last 100 messages of this chat
+ * /tldr 2h | 30m     → those of the last 2 hours | 30 minutes (the "-" in front is optional)
+ *   /tldr 300          → as últimas 300 (máx. setting 'resumo.maxMsgs')
+ * /tldr -c família   → from another chat, looked up by name
+ * /tldr -pv          → in your private chat instead of exposing it in the current chat
  * Uses the text already stored in the database: regular messages stay 68 h. They stay
  * except the commands, the deleted ones and the media without a caption.
  */
@@ -68,9 +68,9 @@ const hour = (ms) => new Date(ms).toLocaleString('pt-BR', {
     timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
 });
 
-async function cmdSummary({ msg, opts, chatId, chatName }) {
+async function cmdTldr({ msg, opts, chatId, chatName }) {
     if (!keyOpenAi()) {
-        await msg.reply(WITHOUT_KEY('/resumo'));
+        await msg.reply(WITHOUT_KEY('/tldr'));
         return;
     }
 
@@ -78,7 +78,7 @@ async function cmdSummary({ msg, opts, chatId, chatName }) {
     const period = extras.length ? readPeriod(extras.join('')) : { n: SUMMARY_DEFAULT };
 
     if (!period) {
-        await msg.reply('```' + getCommandSyntax('/resumo') + '```');
+        await msg.reply('```' + getCommandSyntax('/tldr') + '```');
         return;
     }
 
@@ -152,7 +152,7 @@ async function cmdSummary({ msg, opts, chatId, chatName }) {
         msg.getChat().then(chat => chat.sendStateTyping()).catch(() => {});
 
         const summary = await askOnChat({
-            cmd: '/resumo',
+            cmd: '/tldr',
             sistema: SUMMARY_INSTRUCTIONS,
             texto: `Conversa "${nameAlt}" (${linesAlt.length} mensagens):\n\n${linesAlt.join('\n')}`
         });
@@ -169,11 +169,11 @@ async function cmdSummary({ msg, opts, chatId, chatName }) {
             await msg.reply(textAlt);
         }
     } catch (err) {
-        await msg.reply(errorOpenAi(err, '/resumo'));
+        await msg.reply(errorOpenAi(err, '/tldr'));
     }
 }
 
 module.exports = {
-    cmdSummary,
+    cmdTldr,
     readPeriod
 };

@@ -27,13 +27,13 @@ const { cmdMuted } = require('./mudo');
 const { cmdNews } = require('./news');
 const { cmdNoffa } = require('./noffa');
 const { cmdPing } = require('./ping');
-const { cmdSummary } = require('./resumo');
 const { cmdSet } = require('./set');
 const { cmdShow } = require('./show');
 const { cmdStats } = require('./stats');
 const { cmdStatus } = require('./status');
 const { cmdSticker } = require('./sticker');
 const { cmdTime } = require('./tempo');
+const { cmdTldr } = require('./tldr');
 const { cmdAll } = require('./todos');
 const { cmdTranslate } = require('./traduzir');
 const { cmdUptime } = require('./uptime');
@@ -67,13 +67,13 @@ const HANDLERS = {
     '/news': cmdNews,
     '/noffa': cmdNoffa,
     '/ping': cmdPing,
-    '/resumo': cmdSummary,
     '/set': cmdSet,
     '/show': cmdShow,
     '/stats': cmdStats,
     '/status': cmdStatus,
     '/sticker': cmdSticker,
     '/tempo': cmdTime,
+    '/tldr': cmdTldr,
     '/todos': cmdAll,
     '/traduzir': cmdTranslate,
     '/uptime': cmdUptime,
