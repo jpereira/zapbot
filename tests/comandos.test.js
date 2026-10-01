@@ -111,7 +111,7 @@ describe('/bot', () => {
     });
 });
 
-describe('/set', () => {
+describe('/set (/config)', () => {
     test('sem argumento lista todas as chaves, em ordem', async () => {
         const [r] = await bot.responder('/set');
         const chaves = [...r.matchAll(/^([a-z][\w.]+)\s{2}/gm)].map(m => m[1]);
@@ -127,6 +127,8 @@ describe('/set', () => {
     test('<chave> <valor> altera; valor inválido é recusado', async () => {
         assert.deepEqual(await bot.responder('/set show.max 10'), ['✅ *show.max* = 10']);
         assert.equal(bot.getSetting('show.max'), 10);
+        assert.deepEqual(await bot.responder('/config show.max 12'), ['✅ *show.max* = 12']);
+        assert.equal(bot.getSetting('show.max'), 12);
         assert.match((await bot.responder('/set show.max 500'))[0], /❌ Valor inválido para \*show.max\*: precisa estar entre 1 e 100/);
     });
 
