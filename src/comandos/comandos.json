@@ -845,7 +845,7 @@
             "aliases": [
                 "/config"
             ],
-            "help": "Lista, exibe e altera as configurações do bot (settings).",
+            "help": "Lista, exibe e altera as configurações do bot (settings). No seu privado, mostra também o config/.env (somente leitura).",
             "cmd_opts": [
                 {
                     "opts": [
@@ -862,6 +862,12 @@
                         "<chave>"
                     ],
                     "desc": "Exibe valor, padrão e descrição da chave."
+                },
+                {
+                    "argv": [
+                        "<trecho|/regex/>"
+                    ],
+                    "desc": "Não sendo uma chave: lista as chaves que casam. Ex: /set alerta"
                 },
                 {
                     "argv": [
