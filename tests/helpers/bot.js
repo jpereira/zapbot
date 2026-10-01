@@ -60,9 +60,10 @@ async function reiniciar() {
     criarGrupo(GRUPO, 'Família', [DONO.jid, OUTRO.jid]);
 }
 
+// Um contato salvo na sua agenda (isMyContact), com o nome dela
 function criarContato(jid, nome) {
     const [user] = jid.split('@');
-    const contato = { id: { _serialized: jid, user }, number: user, name: nome, pushname: nome };
+    const contato = { id: { _serialized: jid, user }, number: user, name: nome, pushname: nome, isMyContact: true, isGroup: false };
     client.contatos.set(jid, contato);
     return contato;
 }
@@ -185,6 +186,24 @@ async function responder(linha, opcoes) {
     return (await executar(linha, opcoes)).map(e => e.texto);
 }
 
+/**
+ * Comando que lista opções para escolher (vários contatos ou grupos com o
+ * nome): espera a lista sair, responde `escolha` no mesmo chat e espera o
+ * comando terminar.
+ * @returns os textos de tudo o que o bot enviou, da lista em diante
+ */
+async function responderEscolhendo(linha, escolha, opcoes = {}) {
+    const antes = client.enviadas.length;
+    const comando = executar(linha, opcoes);
+    const listou = () => client.enviadas.slice(antes).some(e => textoDe(e.content).startsWith('🔎 '));
+
+    for (let i = 0; i < 200 && !listou(); i++) await new Promise(setImmediate);
+    if (!listou()) throw new Error(`${linha}: o bot não listou opções para escolher`);
+
+    for (const n of [].concat(escolha)) await executar(String(n), { chat: opcoes.chat });
+    return (await comando).map(e => e.texto);
+}
+
 /*
  * Eventos de apagar e editar, no formato do whatsapp-web.js
  */
@@ -274,6 +293,7 @@ module.exports = {
     preparar,
     reiniciar,
     responder,
+    responderEscolhendo,
     setSetting,
     src,
     textoDe,
