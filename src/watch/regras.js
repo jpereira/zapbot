@@ -9,10 +9,10 @@
  *   /regex/flags → RegExp do JavaScript (as flags g e y são ignoradas)
  * Quando casa, a ocorrência vai para watch_hits e você é avisado no privado.
  */
+const { semAcentos } = require('../util/formatar');
+
 const REGRA_REGEX = /^\/(.+)\/([a-z]*)$/s;
 const REGRA_MAX_LEN = 200;
-
-const semAcentos = (s) => String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
 // regra -> função de teste (compilada uma vez, não a cada mensagem)
 const regrasCompiladas = new Map();
