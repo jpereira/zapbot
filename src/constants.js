@@ -21,6 +21,7 @@ const MEDIA_DIR = path.join(CACHE_DIR, 'media'); // media saved to recover delet
 const TMP_DIR = path.join(CACHE_DIR, 'tmp');     // /get temporary files
 const BACKUP_DIR = path.join(CACHE_DIR, 'backups'); // database backups (/backup)
 
+const BIN_CHROMIUM = '/usr/bin/chromium-browser';
 const BIN_FFMPEG = '/usr/bin/ffmpeg';
 const BIN_YT = '/venv/bin/yt-dlp';
 
@@ -36,6 +37,7 @@ const APP_ENV = process.env.APP_ENV || 'dev';
 module.exports = {
     APP_ENV,
     BACKUP_DIR,
+    BIN_CHROMIUM,
     BIN_FFMPEG,
     BIN_YT,
     BOT_START_TIME,
