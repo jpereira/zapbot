@@ -1,5 +1,5 @@
 /*
- * Agenda: a leitura de datas (util/quando.js) e o /agendar (/agenda, /cron, /lembrete, /lemb),
+ * Agenda: a leitura de datas (util/quando.js) e o /cron (/agenda, /lembrete),
  * com os dois modos: mensagem (texto puro) e lembrete (⏰ Lembrete).
  */
 const bot = require('./helpers/bot');
@@ -89,7 +89,7 @@ describe('datas (util/quando.js)', () => {
     });
 });
 
-describe('/lembrete (/lemb)', () => {
+describe('/lembrete', () => {
     test('cria no chat atual, responde a mensagem do comando e sai depois de enviar', async () => {
         const cmd = bot.criarMensagem({ texto: '/lembrete 30m pagar o boleto' });
         const [r] = (await bot.entregar(cmd)).map(e => e.texto);
@@ -108,7 +108,7 @@ describe('/lembrete (/lemb)', () => {
     });
 
     test('-pv lembra no seu privado; respondendo uma mensagem, o texto dela', async () => {
-        await bot.responder('/lemb -pv 2h ligar pro banco');
+        await bot.responder('/lembrete -pv 2h ligar pro banco');
         const citada = bot.criarMensagem({ texto: 'reunião às 15h', de: OUTRO.jid });
         await bot.responder('/lembrete 1h', { citada });
 
@@ -157,13 +157,13 @@ describe('/lembrete (/lemb)', () => {
         await bot.responder('/lembrete -pv 1h primeiro');
 
         const [lista] = await bot.responder('/lembrete');
-        assert.match(lista, /^📅 \*Agenda\* \(2\)\n\n1\. ⏰ \*[^*]+\* — primeiro\n   → seu privado\n2\. ⏰ \*[^*]+\* — segundo\n   → 👥 Família\n\n💡 _📅 mensagem · ⏰ lembrete\. Remova com \/agendar -rm <nº\|all>\._$/);
+        assert.match(lista, /^📅 \*Agenda\* \(2\)\n\n1\. ⏰ \*[^*]+\* — primeiro\n   → seu privado\n2\. ⏰ \*[^*]+\* — segundo\n   → 👥 Família\n\n💡 _📅 mensagem · ⏰ lembrete\. Remova com \/cron -rm <nº\|all>\._$/);
         assert.equal((await bot.responder('/lembrete -l'))[0], lista);
 
         assert.match((await bot.responder('/lembrete -rm 1'))[0], /🗑️ Removido: \*[^*]+\* — primeiro/);
         assert.match((await bot.responder('/lembrete -rm 5'))[0], /❌ Nº 5 não existe/);
         assert.deepEqual(await bot.responder('/lembrete -rm all'), ['🗑️ 1 removido.']);
-        assert.match((await bot.responder('/lembrete'))[0], /^📅 Nada agendado\.\n💡 _Ex\.: \/agendar sexta 18h .*\n\/lembrete 18:30 pagar o boleto_$/);
+        assert.match((await bot.responder('/lembrete'))[0], /^📅 Nada agendado\.\n💡 _Ex\.: \/cron sexta 18h .*\n\/lembrete 18:30 pagar o boleto_$/);
     });
 
     test('erros: sem "quando", sem texto, já passou, longe demais, -repetir inválido, -to, limite', async () => {
@@ -172,11 +172,11 @@ describe('/lembrete (/lemb)', () => {
         await erro('/lembrete 30m', /❌ Faltou o texto/);
         await erro('/lembrete 01/01/2020 x', /❌ \w{3} 01\/01\/2020 09:00 já passou/);
         await erro('/lembrete 01/01/2099 x', /❌ No máximo 366 dias à frente/);
-        await erro('/lembrete 1h -repetir anual x', /❌ Use -repetir diario, semanal ou mensal/);
+        await erro('/lembrete 1h -repetir anual x', /❌ Use -repetir \(-r\) diario, semanal ou mensal/);
         await erro('/lembrete 1h -to L200 x', /❌ O lembrete não tem -to/);
 
         await bot.setSetting('agenda.max', 1);
-        await bot.responder('/agendar 1h oi');
+        await bot.responder('/cron 1h oi');
         await erro('/lembrete 1h x', /❌ Limite de 1 lembretes e mensagens agendadas \(setting agenda\.max\)/);
     });
 
@@ -185,9 +185,9 @@ describe('/lembrete (/lemb)', () => {
     });
 });
 
-describe('/agendar (/agenda)', () => {
+describe('/cron (/agenda)', () => {
     test('-to grupo: envia o texto puro, sem citar, e sai da lista', async () => {
-        const [r] = await bot.responder('/agendar sexta 18h -to /Grupo L200/ Bom fim de semana!\nAté segunda.');
+        const [r] = await bot.responder('/cron sexta 18h -to /Grupo L200/ Bom fim de semana!\nAté segunda.');
         assert.match(r, /^📅 \*Mensagem agendada\* para \*sex \d\d\/\d\d 18:00\* em 👥 Grupo sobre L200\.\n📝 Bom fim de semana! Até segunda\.$/);
 
         const [lista] = await bot.responder('/agenda -l');
@@ -201,8 +201,8 @@ describe('/agendar (/agenda)', () => {
     });
 
     test('sem -to: no chat atual; -to @número: no privado da pessoa; mensal', async () => {
-        await bot.responder('/agendar 25/12 10:00 Feliz Natal!');
-        await bot.responder('/agendar 05/11 -repetir mensal -to @5521911111111 Lembrete do aluguel');
+        await bot.responder('/cron 25/12 10:00 Feliz Natal!');
+        await bot.responder('/cron 05/11 -repetir mensal -to @5521911111111 Lembrete do aluguel');
 
         const [natal, aluguel] = await itens();
         assert.deepEqual([natal.chat_id, natal.repeat], [GRUPO, null]);
@@ -210,7 +210,7 @@ describe('/agendar (/agenda)', () => {
     });
 
     test('texto começando com "/" é enviado, mas nunca roda como comando', async () => {
-        await bot.responder('/agendar 1h /cache -a');
+        await bot.responder('/cron 1h /cache -a');
         const [enviado] = await vencer();
         assert.equal(enviado.content, '/cache -a');
 
@@ -219,29 +219,30 @@ describe('/agendar (/agenda)', () => {
     });
 
     test('erros: destino inválido e -pv', async () => {
-        assert.match((await bot.responder('/agendar 1h -to xyz oi'))[0], /❌ Nenhum grupo com "xyz" no nome/);
-        assert.match((await bot.responder('/agendar 1h -pv oi'))[0], /❌ O -pv é do modo lembrete/);
+        assert.match((await bot.responder('/cron 1h -to xyz oi'))[0], /❌ Nenhum grupo com "xyz" no nome/);
+        assert.match((await bot.responder('/cron 1h -pv oi'))[0], /❌ O -pv é do modo lembrete/);
         assert.deepEqual(await itens(), []);
     });
 });
 
-describe('/agendar: os dois modos', () => {
-    test('/cron é o /agendar; -lembrete (ou /lembrete, /lemb) é o modo lembrete', async () => {
-        assert.match((await bot.responder('/cron 1h -to L200 oi'))[0], /^📅 \*Mensagem agendada\*/);
-        assert.match((await bot.responder('/agendar -lembrete 2h -pv beber água'))[0], /^⏰ \*Lembrete criado\* .* no seu privado\./);
-        assert.match((await bot.responder('/lemb 3h alongar'))[0], /^⏰ \*Lembrete criado\* .* neste chat\./);
+describe('/cron: os dois modos', () => {
+    test('/agenda é o /cron; -lembrete (ou /lembrete) é o modo lembrete; -r é o -repetir', async () => {
+        assert.match((await bot.responder('/agenda 1h -to L200 oi'))[0], /^📅 \*Mensagem agendada\*/);
+        assert.match((await bot.responder('/cron -lembrete 2h -pv beber água'))[0], /^⏰ \*Lembrete criado\* .* no seu privado\./);
+        assert.match((await bot.responder('/lembrete 3h -r diario alongar'))[0], /^⏰ \*Lembrete criado\* .* 🔁 todo dia neste chat\./);
 
-        assert.deepEqual((await itens()).map(i => [i.kind, i.chat_id]), [['agendar', L200], ['lembrete', DONO.jid], ['lembrete', GRUPO]]);
+        assert.deepEqual((await itens()).map(i => [i.kind, i.chat_id, i.repeat]),
+            [['agendar', L200, null], ['lembrete', DONO.jid, null], ['lembrete', GRUPO, 'diario']]);
     });
 
     test('uma lista só, com os dois tipos, e o -rm vale para qualquer um', async () => {
-        await bot.responder('/agendar 2h -to L200 mensagem');
+        await bot.responder('/cron 2h -to L200 mensagem');
         await bot.responder('/lembrete 1h lembrete');
 
         const [lista] = await bot.responder('/cron -l');
         assert.match(lista, /1\. ⏰ \*[^*]+\* — lembrete\n   → 👥 Família\n2\. 📅 \*[^*]+\* — mensagem\n   → 👥 Grupo sobre L200/);
 
-        assert.match((await bot.responder('/agendar -rm 1'))[0], /🗑️ Removido: \*[^*]+\* — lembrete/);
+        assert.match((await bot.responder('/cron -rm 1'))[0], /🗑️ Removido: \*[^*]+\* — lembrete/);
         assert.deepEqual(await bot.responder('/lembrete -rm all'), ['🗑️ 1 removido.']);
         assert.deepEqual(await itens(), []);
     });
