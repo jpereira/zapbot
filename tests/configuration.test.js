@@ -329,7 +329,7 @@ describe('ajuda', () => {
         assert.match(textAlt, /^Usage: \/show \[-N\] \[OPTION\]/);
         assert.match(textAlt, /-chat, -c <nº\|nome>/);
         assert.match(textAlt, /Arguments:\n  -N/);
-        assert.match(textAlt, /Aliases: \/undo, \/s/);
+        assert.match(textAlt, /Aliases: \/s$/);
     });
 
     test('${CACHE_DIR}, ${MEDIA_DIR} e ${TMP_DIR} viram os caminhos reais na ajuda', () => {

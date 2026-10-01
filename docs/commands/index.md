@@ -66,7 +66,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -a`) para fazer o bot
 | [`/ping`](ping.md) | `/p` | ✅ | Verifica se o bot está vivo |
 | [`/resumo`](resumo.md) | `/tldr` | ✅ | Resume a conversa do chat pelo ChatGPT (`2h`, `300`...) |
 | [`/set`](set.md) | `/config` | ✅ | Lista e altera as configurações (settings) |
-| [`/show`](show.md) | `/undo`, `/s` | ✅ | Reexibe mensagens apagadas ou editadas (`-e`) |
+| [`/show`](show.md) | `/s` | ✅ | Reexibe mensagens apagadas ou editadas (`-e`) |
 | [`/stats`](stats.md) | | ✅ | Ranking do chat (quem mais fala, apaga e edita, horários de pico); `-me` para as suas |
 | [`/sticker`](sticker.md) | `/st` | | Transforma imagem/vídeo em figurinha |
 | [`/tempo`](tempo.md) | `/weather` | | Tempo agora e máx./mín. do dia (Open-Meteo); `/tempo 7d` mostra os próximos 7 dias; sem cidade usa `tempo.city` |
