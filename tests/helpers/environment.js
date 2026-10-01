@@ -43,6 +43,7 @@ const logs = [];
 const consoleLog = console.log;
 console.log = (...args) => {
     const line = args.map(a => (typeof a === 'string' ? a : require('util').inspect(a))).join(' ')
+        // eslint-disable-next-line no-control-regex -- removes the ANSI colors (\x1b[...m) from the log
         .replace(/\x1b\[[0-9;]*m/g, '');
     logs.push(line);
     if (process.env.DEBUG_TESTES) consoleLog(line);
