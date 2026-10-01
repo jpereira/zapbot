@@ -1,5 +1,5 @@
 /*
- * Chamada ao chat da OpenAI, compartilhada pelo /gpt e pelo /resumo.
+ * Chamada ao chat da OpenAI, compartilhada pelo /gpt e pelo /tldr.
  */
 
 const axios = require('axios');
