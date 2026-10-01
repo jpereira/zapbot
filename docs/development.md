@@ -46,6 +46,7 @@ src/
   cleanup.js            retenção e limpeza periódica
   stats.js              contadores do /stats
   currencies.js, quotes.js, priceAlerts.js   /crypto, /cotacao e alertas de preço
+  schedule.js             /lembrete: leitura, lista e envio na hora
   openai.js             modelos aceitos pelo /gpt
   openaiChat.js         chamada ao chat da OpenAI (/gpt e /resumo)
   contacts.js, options.js                    contatos/@lid e o parser de opções
@@ -54,7 +55,7 @@ src/
   events/              message_create, apagadas, editadas, presença
   commands/             commands.json (definição), um arquivo por comando,
                         index.js (HANDLERS) e base.js (ajuda e utilitários)
-  util/                 arquivos, formatação, processos externos, URLs
+  util/                 arquivos, formatação, datas digitadas (when.js), processos externos, URLs
 tests/                  testes automatizados (veja Testes)
 ```
 
@@ -99,6 +100,7 @@ entre os casos.
 | `comandos.test.js` | `/help`, `/debug`, `/uptime`, `/version`, `/ping`, `/noffa`, `/bot`, `/set` |
 | `apagadas-editadas.test.js` | Eventos de apagar/editar e o `/show` (apagadas e editadas) |
 | `stats.test.js`, `watch.test.js`, `monitor.test.js` | `/stats`, `/watch`, `/monitor` e o aviso de presença |
+| `agenda.test.js` | Datas digitadas (`30m`, `às 18h`, `sexta`...) e `/lembrete` |
 | `cotacoes.test.js` | `/cotacao`, `/crypto` e os alertas de preço |
 | `externos.test.js` | `/cve`, `/tempo`, `/news`, `/gpt`, `/resumo`, `/gif`, `/meme`, `/joke`, `/kernel` |
 | `grupo.test.js` | `/todos`, `/boletos`, `/listageral`, `/walissu`, `/enquete` (e o `-r`), `/sticker` |

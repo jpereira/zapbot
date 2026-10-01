@@ -183,6 +183,28 @@ async function initializeDb() {
         )
     `);
 
+    /*
+     * Schedule: reminders (/lembrete). due_at is
+     * the next send; with repeat, it advances on each send (day_of_month stores
+     * the monthly's original day, so a 31 goes back to 31 after February).
+     */
+    await dbRun(`
+        CREATE TABLE IF NOT EXISTS schedules (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            kind TEXT NOT NULL,
+            chat_id TEXT NOT NULL,
+            chat_name TEXT,
+            is_group INTEGER DEFAULT 0,
+            text TEXT NOT NULL,
+            due_at INTEGER NOT NULL,
+            repeat TEXT,
+            day_of_month INTEGER,
+            quoted_id TEXT,
+            created_at INTEGER NOT NULL
+        )
+    `);
+    await dbRun('CREATE INDEX IF NOT EXISTS idx_schedules_due ON schedules (due_at)');
+
     // General bot settings (key -> value in JSON)
     await dbRun(`
         CREATE TABLE IF NOT EXISTS settings (
