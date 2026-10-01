@@ -22,6 +22,7 @@ hora, sem reiniciar, e sobrevivem a reinícios. Para ver e alterar, use o
 | `cve.max` | 1–20 | `10` | Quantidade de CVEs exibidas pelo `/cve` (o `/cve <max>` sobrepõe) |
 | `cve.maxDays` | 1–120 | `7` | Janela, em dias, do `/cve -highscore` |
 | `debug.enabled` | on/off | `on` se `APP_ENV=dev` | Modo debug (o mesmo do `/debug`) |
+| `defi.alerta.intervalMin` | 1–1440 | `10` | Intervalo (minutos) entre as verificações do [`/defi -alerta`](comandos/defi.md#alerta-de-saída-da-faixa); cada uma lê as posições no RPC da Solana |
 | `defi.solana.rpc` | URL | `https://api.mainnet-beta.solana.com` | RPC da Solana usado pelo [`/defi`](comandos/defi.md#rpc-da-solana). Exibido mascarado (a URL costuma levar a chave) |
 | `email.alerts` | on/off | `on` | Alertas por e-mail (crash, queda, reconexão...) pelo SMTP do QR Code. Veja [Alertas por e-mail](emails.md#alertas-por-e-mail) |
 | `enquete.retentionDays` | 1–365 | `90` | Dias que as enquetes e os votos ficam guardados para o [`/enquete -r`](comandos/enquete.md#resultado) |

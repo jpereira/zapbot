@@ -205,7 +205,12 @@ async function inicializarBanco() {
     `);
     await dbRun('CREATE INDEX IF NOT EXISTS idx_schedules_due ON schedules (due_at)');
 
-    // Posições DeFi do /defi (por enquanto, da Orca): o resto é lido on-chain a cada -show
+    /*
+     * Posições DeFi do /defi (por enquanto, da Orca): o resto é lido on-chain a
+     * cada -show. O -alerta guarda para onde avisar (alert_dest_*: um chat;
+     * alert_email: e-mails; nenhum: o seu privado) e se a posição estava na
+     * faixa na última verificação (in_range; NULL: ainda não lida).
+     */
     await dbRun(`
         CREATE TABLE IF NOT EXISTS defi_positions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -216,6 +221,14 @@ async function inicializarBanco() {
             created_at INTEGER NOT NULL
         )
     `);
+    await adicionarColunas('defi_positions', {
+        alert: 'INTEGER DEFAULT 0',
+        alert_dest_id: 'TEXT',
+        alert_dest_name: 'TEXT',
+        alert_dest_is_group: 'INTEGER DEFAULT 0',
+        alert_email: 'TEXT',
+        in_range: 'INTEGER'
+    });
 
     /*
      * /mudo: pessoas e grupos com os avisos em silêncio (o que: deleted, edited,

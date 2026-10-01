@@ -91,10 +91,13 @@ async function alertarPorEmail(evento, detalhes = '', { forcar = false } = {}) {
 const smtpParaEnviar = () => ['QRCODE_EMAIL_SMTP_HOST', 'QRCODE_EMAIL_SMTP_USER'].every(v => process.env[v]?.trim());
 
 /**
- * Envia um arquivo em anexo pelo SMTP do bot (ex.: o /backup -send).
- * Lança o erro do SMTP para quem chamou responder no chat.
+ * Envia um e-mail pelo SMTP do bot (ex.: o alerta do /defi), opcionalmente com
+ * anexos. Lança o erro do SMTP para quem chamou responder no chat.
+ * @param {object} o
+ * @param {string[]} o.para
+ * @param {Array<{filename: string, path: string}>} [o.anexos]
  */
-async function enviarArquivoPorEmail({ para, assunto, texto, arquivo, nomeArquivo }) {
+async function enviarEmail({ para, assunto, texto, anexos = [] }) {
     if (!smtpParaEnviar()) throw new Error('SMTP não configurado (QRCODE_EMAIL_SMTP_HOST e QRCODE_EMAIL_SMTP_USER no config/.env)');
 
     const antiPhishing = process.env.QRCODE_EMAIL_SMTP_ANTIPHISHING || '-';
@@ -103,11 +106,15 @@ async function enviarArquivoPorEmail({ para, assunto, texto, arquivo, nomeArquiv
         to: para.join(', '),
         subject: `[ZapBot] ${assunto}`,
         text: `${texto}\n\n🛡️ Anti-Phishing Code: ${antiPhishing}`,
-        attachments: [{ filename: nomeArquivo, path: arquivo }]
+        ...(anexos.length ? { attachments: anexos } : {})
     });
 
     printInfo(`E-mail '${assunto}' enviado para ${para.join(', ')}`);
 }
+
+// Um arquivo em anexo (ex.: o /backup -send)
+const enviarArquivoPorEmail = ({ para, assunto, texto, arquivo, nomeArquivo }) =>
+    enviarEmail({ para, assunto, texto, anexos: [{ filename: nomeArquivo, path: arquivo }] });
 
 // Espera o e-mail sair, mas não trava o encerramento se o SMTP não responder
 async function alertarAntesDeSair(evento, detalhes, ms) {
@@ -127,6 +134,7 @@ module.exports = {
     alertarAntesDeSair,
     alertarPorEmail,
     enviarArquivoPorEmail,
+    enviarEmail,
     smtpParaEnviar,
     transporter
 };
