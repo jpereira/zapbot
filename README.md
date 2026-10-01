@@ -102,7 +102,7 @@ admin está ligado: só você usa comandos até `/bot -admin`
 | [`/show`](https://jpereira.github.io/zapbot/comandos/show/) | `/undo`, `/s` | ✅ | Reexibe mensagens apagadas |
 | [`/stats`](https://jpereira.github.io/zapbot/comandos/stats/) | | ✅ | Ranking do chat (quem mais fala, apaga e edita, horários de pico); `-me` para as suas |
 | [`/sticker`](https://jpereira.github.io/zapbot/comandos/sticker/) | `/st` | | Transforma imagem/vídeo em figurinha |
-| [`/tempo`](https://jpereira.github.io/zapbot/comandos/tempo/) | `/weather` | | Tempo agora e máx./mín. do dia (Open-Meteo); sem cidade usa `tempo.city` |
+| [`/tempo`](https://jpereira.github.io/zapbot/comandos/tempo/) | `/weather` | | Tempo agora e máx./mín. do dia (Open-Meteo); `/tempo 7d` mostra os próximos 7 dias; sem cidade usa `tempo.city` |
 | [`/ualisu`](https://jpereira.github.io/zapbot/comandos/ualisu/) | | ✅ | Marca 2 membros com uma CVE aleatória |
 | [`/uptime`](https://jpereira.github.io/zapbot/comandos/uptime/) | `/u`, `/up` | ✅ | Tempo de execução e de conexão |
 | [`/version`](https://jpereira.github.io/zapbot/comandos/version/) | `/ver` | ✅ | Versão do bot (mesmo banner do `/uptime`) |

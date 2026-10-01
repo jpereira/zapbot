@@ -55,15 +55,18 @@ async function geocodificarCidade(cidade) {
     return local;
 }
 
-async function consultarTempo({ latitude, longitude }) {
+// O limite da Open-Meteo para forecast_days (o setting tempo.maxDays não passa disso)
+const TEMPO_DIAS_API = 16;
+
+async function consultarTempo({ latitude, longitude }, dias = 1) {
     const { data } = await axios.get(OPEN_METEO_URL, {
         timeout: 15000,
         params: {
             latitude,
             longitude,
             current: 'temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m',
-            daily: 'temperature_2m_max,temperature_2m_min,precipitation_probability_max',
-            forecast_days: 1,
+            daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max',
+            forecast_days: dias,
             timezone: 'auto'
         }
     });
@@ -93,9 +96,46 @@ function formatarTempo(local, { current: c, daily: d }) {
     return texto;
 }
 
+// "2026-09-30" → "qua 30/09" (a data já vem no fuso da cidade: timezone=auto)
+function rotuloDoDia(iso) {
+    const [, mes, dia] = iso.split('-');
+    const semana = new Date(`${iso}T12:00:00Z`).toLocaleDateString('pt-BR', { weekday: 'short', timeZone: 'UTC' }).replace('.', '');
+    return `${semana} ${dia}/${mes}`;
+}
+
+// Uma linha por dia: ícone, dia, máx/mín, chance de chuva e condição
+function formatarPrevisao({ daily: d }) {
+    const linhas = d.time.map((iso, i) => {
+        const [icone, descricao] = CLIMA_WMO[d.weather_code?.[i]] ?? ['🌡️', `Código ${d.weather_code?.[i]}`];
+        const quando = i === 0 ? `Hoje (${rotuloDoDia(iso)})` : rotuloDoDia(iso);
+        return `${icone} *${quando}:* ${medida(d.temperature_2m_max?.[i], '°')}/${medida(d.temperature_2m_min?.[i], '°')}` +
+               ` · ☔ ${medida(d.precipitation_probability_max?.[i], '%')} · ${descricao}`;
+    });
+
+    const titulo = d.time.length === 1 ? 'Previsão de hoje' : `Próximos ${d.time.length} dias`;
+    return `📅 *${titulo}*\n${linhas.join('\n')}`;
+}
+
+/**
+ * "7d Niteroi" → { dias: 7, cidade: 'Niteroi' }; "Niteroi" → { dias: null, cidade: 'Niteroi' }.
+ * Os dias (N ou Nd) só valem como primeiro argumento.
+ */
+function lerArgumentosTempo(args) {
+    const m = args.trim().match(/^(\d+)d?(?:\s+|$)([\s\S]*)$/i);
+    return m ? { dias: Number(m[1]), cidade: m[2].trim() } : { dias: null, cidade: args.trim() };
+}
+
 async function cmdTempo({ msg, args }) {
+    const pedido = lerArgumentosTempo(args);
+    const max = getSetting('tempo.maxDays');
+
+    if (pedido.dias !== null && (pedido.dias < 1 || pedido.dias > max)) {
+        await msg.reply(`❌ Quantidade de dias inválida: ${pedido.dias}. Use de 1 a ${max}.\n💡 _/tempo 7d Niteroi (máximo no setting tempo.maxDays, até ${TEMPO_DIAS_API})_`);
+        return;
+    }
+
     // Sem cidade usa o setting tempo.city
-    const cidade = args.trim() || getSetting('tempo.city');
+    const cidade = pedido.cidade || getSetting('tempo.city');
 
     try {
         const local = await geocodificarCidade(cidade);
@@ -105,7 +145,11 @@ async function cmdTempo({ msg, args }) {
             return;
         }
 
-        await msg.reply(formatarTempo(local, await consultarTempo(local)));
+        const dados = await consultarTempo(local, pedido.dias ?? 1);
+        let texto = formatarTempo(local, dados);
+        if (pedido.dias) texto += `\n\n${formatarPrevisao(dados)}`;
+
+        await msg.reply(texto);
     } catch (err) {
         printError('/tempo:', err.response?.status ?? '', err.message);
         await msg.reply('❌ Não consegui consultar o tempo agora.');

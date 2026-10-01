@@ -41,6 +41,7 @@ hora, sem reiniciar, e sobrevivem a reinícios. Para ver e alterar, use o
 | `sticker.author` | texto | `https://github.com/jpereira/zapbot/` | Autor das figurinhas |
 | `sticker.name` | texto | `ZapBot` | Nome do pacote das figurinhas |
 | `tempo.city` | texto | `Niteroi, Rio de Janeiro, Brazil` | Cidade do `/tempo` quando nenhuma é informada |
+| `tempo.maxDays` | 1–16 | `7` | Máximo de dias do `/tempo N` (ou `Nd`); 16 é o limite da Open-Meteo |
 | `watch.hitsRetentionDays` | 1–365 | `30` | Dias que as ocorrências do `/watch` ficam guardadas |
 | `watch.max` | 1–100 | `20` | Máximo de regras do `/watch` |
 | `watch.rules` | lista (uma por linha) | *(vazia)* | Regras do `/watch`: texto ou `/regex/flags`. Normalmente alterada pelo `/watch -a`/`-d` |
