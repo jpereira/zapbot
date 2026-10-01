@@ -5,7 +5,7 @@
 const { formatarErroComando } = require('./base');
 const { CACHE_DIR, MEDIA_DIR } = require('../constantes');
 const { dbGet } = require('../db');
-const { limparArquivosAntigos, limparCacheAntigo, limparEditadasAntigas, limparMidias, limparStatsAntigas, limparTudo, limparWatchAntigo } = require('../limpeza');
+const { limparArquivosAntigos, limparCacheAntigo, limparEditadasAntigas, limparEnquetesAntigas, limparMidias, limparStatsAntigas, limparTudo, limparWatchAntigo } = require('../limpeza');
 const { printError } = require('../log');
 const { humanSize, listCacheLevelOnly } = require('../util/arquivos');
 
@@ -32,6 +32,7 @@ async function cmdCache({ msg, opts }) {
                 await limparWatchAntigo();
                 await limparEditadasAntigas();
                 await limparStatsAntigas();
+                await limparEnquetesAntigas();
                 partes.push('🧹 Cache limpo (itens fora da janela de retenção).');
             }
 
