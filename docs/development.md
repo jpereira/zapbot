@@ -56,7 +56,7 @@ src/
   destinations.js           o -to/alvo: contato ou grupo pelo nome, ou número
   choices.js           a lista numerada para escolher (vários contatos/grupos) e a resposta com o nº
   mudo.js               /mudo: quem está silenciado e os avisos cortados
-  defi/                 Solana (base58, PDA, RPC) e as contas da Orca (/defi)
+  defi/                 Solana (base58, PDA, RPC), as contas da Orca (/defi) e o -alerta de saída da faixa
   watch/                regras e verificação do /watch
   events/              message_create, apagadas, editadas, presença
   commands/             commands.json (definição), um arquivo por comando,

@@ -127,6 +127,11 @@ const SETTINGS_SCHEMA = {
         type: 'boolean',
         desc: 'Debug mode (o mesmo do /debug on|off).'
     },
+    'defi.alerta.intervalMin': {
+        default: 10,
+        type: 'number', min: 1, max: 1440,
+        desc: 'Intervalo (minutos) entre as verificações do /defi -alerta (cada uma lê as posições no RPC da Solana).'
+    },
     'defi.solana.rpc': {
         default: 'https://api.mainnet-beta.solana.com',
         type: 'string',

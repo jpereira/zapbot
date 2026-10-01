@@ -205,7 +205,12 @@ async function initializeDb() {
     `);
     await dbRun('CREATE INDEX IF NOT EXISTS idx_schedules_due ON schedules (due_at)');
 
-    // /defi DeFi positions (for now, from Orca): the rest is read on-chain on each -show
+    /*
+     * /defi DeFi positions (for now, from Orca): the rest is read on-chain on
+     * each -show. -alerta keeps where to notify (alert_dest_*: one chat;
+     * alert_email: emails; none: your private chat) and whether the position was in the
+     * range at the last check (in_range; NULL: not read yet).
+     */
     await dbRun(`
         CREATE TABLE IF NOT EXISTS defi_positions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -216,6 +221,14 @@ async function initializeDb() {
             created_at INTEGER NOT NULL
         )
     `);
+    await addColumns('defi_positions', {
+        alert: 'INTEGER DEFAULT 0',
+        alert_dest_id: 'TEXT',
+        alert_dest_name: 'TEXT',
+        alert_dest_is_group: 'INTEGER DEFAULT 0',
+        alert_email: 'TEXT',
+        in_range: 'INTEGER'
+    });
 
     /*
      * /mudo: people and groups with muted notices (what: deleted, edited,
