@@ -71,7 +71,7 @@ async function inicializarBanco() {
     await dbRun('CREATE INDEX IF NOT EXISTS idx_messages_chat_revoked ON messages (chat_id, revoked, revoked_at)');
 
     /*
-     * Mensagens editadas (para o /edit): uma linha por edição, com o texto de
+     * Mensagens editadas (para o /show -e): uma linha por edição, com o texto de
      * antes e o de depois. UNIQUE(message_id, edited_at): o WhatsApp Web avisa
      * a mesma edição mais de uma vez (body e caption), mas ela é gravada uma só.
      */

@@ -81,7 +81,6 @@ nav:
       - /crypto: comandos/crypto.md
       - /cve: comandos/cve.md
       - /debug: comandos/debug.md
-      - /edit: comandos/edit.md
       - /enquete: comandos/enquete.md
       - /everyone: comandos/everyone.md
       - /get: comandos/get.md

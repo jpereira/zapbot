@@ -60,7 +60,7 @@
                         "a"
                     ],
                     "values": [],
-                    "desc": "Apaga todo o cache em ${CACHE_DIR}: as mensagens (inclusive as guardadas para o /show e o /edit), os temporários e as mídias baixadas em ${MEDIA_DIR}."
+                    "desc": "Apaga todo o cache em ${CACHE_DIR}: as mensagens (inclusive as guardadas para o /show), os temporários e as mídias baixadas em ${MEDIA_DIR}."
                 },
                 {
                     "opts": [
@@ -242,56 +242,6 @@
                     ],
                     "values": [],
                     "desc": "Desativa o modo debug."
-                }
-            ],
-            "onlyAdmin": true
-        },
-        {
-            "cmd": "/edit",
-            "usage": "/edit [-N] [OPTION]",
-            "aliases": [
-                "/e"
-            ],
-            "help": "Reexibe as últimas mensagens editadas deste chat (texto de antes e de depois).",
-            "cmd_opts": [
-                {
-                    "opts": [
-                        "list",
-                        "l"
-                    ],
-                    "values": [],
-                    "desc": "Lista as apagadas e as editadas do cache por chat, marcando o chat atual."
-                },
-                {
-                    "opts": [
-                        "flush",
-                        "f"
-                    ],
-                    "values": [],
-                    "desc": "Remove as editadas deste chat (no seu privado: de todos)."
-                },
-                {
-                    "opts": [
-                        "pv"
-                    ],
-                    "values": [],
-                    "desc": "Envia no seu privado em vez de expor no chat atual."
-                },
-                {
-                    "opts": [
-                        "chat",
-                        "c"
-                    ],
-                    "values": [
-                        "<nº|nome>"
-                    ],
-                    "desc": "Chat alvo: nº da lista de editadas do /edit -l ou parte do nome."
-                },
-                {
-                    "argv": [
-                        "-N"
-                    ],
-                    "desc": "Quantidade de mensagens (padrão 1, máx. show.max). Ex: /edit -3"
                 }
             ],
             "onlyAdmin": true
@@ -616,8 +566,24 @@
                 "/undo",
                 "/s"
             ],
-            "help": "Reexibe as últimas mensagens apagadas deste chat.",
+            "help": "Reexibe as últimas mensagens apagadas (padrão) ou editadas (-e) deste chat.",
             "cmd_opts": [
+                {
+                    "opts": [
+                        "deleted",
+                        "d"
+                    ],
+                    "values": [],
+                    "desc": "Mensagens apagadas (o padrão)."
+                },
+                {
+                    "opts": [
+                        "edited",
+                        "e"
+                    ],
+                    "values": [],
+                    "desc": "Mensagens editadas, com o texto de antes e o de depois."
+                },
                 {
                     "opts": [
                         "list",
@@ -632,7 +598,7 @@
                         "f"
                     ],
                     "values": [],
-                    "desc": "Remove as apagadas deste chat (no seu privado: de todos)."
+                    "desc": "Remove as apagadas (ou as editadas, com -e) deste chat (no seu privado: de todos)."
                 },
                 {
                     "opts": [
@@ -649,7 +615,7 @@
                     "values": [
                         "<nº|nome>"
                     ],
-                    "desc": "Chat alvo: nº da lista de deletadas do /show -l ou parte do nome."
+                    "desc": "Chat alvo: nº da lista do tipo no /show -l ou parte do nome."
                 },
                 {
                     "argv": [

@@ -94,7 +94,7 @@ entre os casos.
 | `configuracao.test.js` | `comandos.json`, settings, parser de opções, ajuda e a coerência entre config, código, README e `docs/` (inclusive a ordem alfabética e os links) |
 | `mensagens.test.js` | Gravação, roteamento, permissões (`onlyAdmin`, modo admin, bot desligado) e a contagem do `/stats` |
 | `comandos.test.js` | `/help`, `/debug`, `/uptime`, `/version`, `/ping`, `/noffa`, `/bot`, `/set` |
-| `apagadas-editadas.test.js` | Eventos de apagar/editar, `/show` e `/edit` |
+| `apagadas-editadas.test.js` | Eventos de apagar/editar e o `/show` (apagadas e editadas) |
 | `stats.test.js`, `watch.test.js`, `monitor.test.js` | `/stats`, `/watch`, `/monitor` e o aviso de presença |
 | `cotacoes.test.js` | `/cotacao`, `/crypto` e os alertas de preço |
 | `externos.test.js` | `/cve`, `/tempo`, `/news`, `/gpt`, `/gif`, `/meme`, `/joke`, `/kernel` |

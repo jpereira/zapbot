@@ -3,7 +3,7 @@
 * Adicionar comando /defi para pegar status das carteiras. salvando enderecos no banco.
   suportar Orca, Prjx
 * /view: salvar a foto/video de visualizacao unica quando chega, com o mesmo cache de
-  midias e o mesmo -l do /show e do /edit (terceira secao "Visualizacao unica").
+  midias e o mesmo -l do /show, com um -v ao lado do -d e do -e (terceira secao "Visualizacao unica").
 * /resumo: resumo do grupo pelo /gpt, ex.: "/resumo -2h -pv". O texto das ultimas 68 h
   ja esta no banco.
 * /enquete -r: placar das enquetes, guardando os votos do evento vote_update; opcional:
