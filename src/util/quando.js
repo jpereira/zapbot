@@ -1,5 +1,5 @@
 /*
- * Datas e horas digitadas nos comandos (/lembrete), no fuso de Brasília.
+ * Datas e horas digitadas nos comandos (/lembrete, /agendar), no fuso de Brasília.
  */
 
 const { semAcentos } = require('./formatar');

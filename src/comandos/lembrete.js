@@ -1,5 +1,5 @@
 /*
- * Comando /lembrete (a lógica fica no agenda.js).
+ * Comando /lembrete (a lógica fica no agenda.js, junto com a do /agendar).
  */
 
 const { tratarAgenda } = require('../agenda');
