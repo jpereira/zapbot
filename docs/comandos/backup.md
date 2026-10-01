@@ -11,8 +11,9 @@ opção, mostra o banco atual e os backups.
 | `-list`, `-l` | | Lista os backups, numerados do mais novo para o mais antigo, com data, tamanho e motivo |
 | `-info`, `-i` | `<nº>` | Detalhes do backup: data, motivo, versão do bot e as entradas de cada tabela, comparadas com o banco atual |
 | `-restore`, `-r` | `<nº\|nome>` | Restaura o backup. Sem `-sim`, só mostra o que vai acontecer e o comando para confirmar |
-| `-sim` | | Junto com `-restore`: confirma a restauração |
-| `-send`, `-s` | `[nº] [e-mail...]` | Envia o arquivo do backup (sem nº: o mais recente) no seu privado ou, com e-mails, como anexo. Veja [Enviar por e-mail](#enviar-por-e-mail) |
+| `-sim` | | Confirma: junto com `-restore`, a restauração; junto com `-send -to` outro chat, o envio |
+| `-send`, `-s` | `[nº]` | Envia o arquivo do backup (sem nº: o mais recente) no seu privado ou no destino do `-to`. Veja [Enviar o arquivo](#enviar-o-arquivo) |
+| `-to` | `<destino>` | Junto com `-send`: por e-mail, como anexo (`email` é o `QRCODE_EMAIL_SMTP_TO`, ou um endereço), ou noutro chat: contato, grupo ou número (pede `-sim`). Veja [Destinos](index.md#destinos-contato-grupo-número-ou-e-mail) |
 | `-rm` | `<nº\|all>` | Apaga o backup nº N (ou todos) |
 
 ```
@@ -23,8 +24,9 @@ opção, mostra o banco atual e os backups.
 /backup -r 2           → mostra o que vai acontecer e pede confirmação
 /backup -r zapbot-20261001-030000 -sim   → restaura
 /backup -s             → o arquivo do mais recente no seu privado
-/backup -s eu@gmail.com          → o mais recente, por e-mail
-/backup -s 2 email     → o nº 2, para o QRCODE_EMAIL_SMTP_TO
+/backup -s -to eu@gmail.com      → o mais recente, por e-mail
+/backup -s 2 -to email → o nº 2, para o QRCODE_EMAIL_SMTP_TO
+/backup -s -to /Jorge Pereira/ -sim   → no privado de um contato
 /backup -rm 3          → apaga o nº 3
 ```
 
@@ -98,23 +100,34 @@ message_edits 10 · messages 1.180 · settings 47 · ...
 - Um backup de uma versão anterior também serve: as tabelas e colunas que ele
   não tinha ficam vazias.
 
-## Enviar por e-mail
+## Enviar o arquivo
 
-Com um ou mais e-mails (separados por espaço ou vírgula), o `-send` manda o
-arquivo como anexo, pelo mesmo SMTP do QR Code e dos alertas
-(`QRCODE_EMAIL_SMTP_*`, veja [Configuração](../configuracao.md#e-mail-qr-code-e-alertas)).
-A palavra `email` vale pelo destinatário do `QRCODE_EMAIL_SMTP_TO`.
+O `-send` manda o arquivo `.db.gz` no seu privado. Com o `-to`, vai para outro
+lugar, como nos outros comandos ([Destinos](index.md#destinos-contato-grupo-número-ou-e-mail)):
+
+- **E-mail**: `-to email` (o `QRCODE_EMAIL_SMTP_TO`) ou um ou mais endereços
+  (`-to "a@x.com, b@y.com"`). Vai como anexo, pelo mesmo SMTP do QR Code e dos
+  alertas (`QRCODE_EMAIL_SMTP_*`, veja [Configuração](../configuracao.md#e-mail-qr-code-e-alertas)).
+- **Outro chat**: um contato, um grupo ou um número. Como o banco tem as
+  mensagens guardadas de **todos** os chats, o bot pede confirmação: repita com
+  `-sim`.
 
 ```
-/backup -s fulano@gmail.com
+/backup -s -to fulano@gmail.com
 📧 Backup de qui 01/10 03:00 enviado para fulano@gmail.com.
+
+/backup -s -to /Jorge Pereira/
+⚠️ O backup tem o banco inteiro: as mensagens guardadas de todos os chats, as apagadas, os settings...
+Para enviar mesmo em 👤 Jorge Pereira, repita com -sim: /backup -send -to /Jorge Pereira/ -sim
 ```
 
 - O e-mail traz o código anti-phishing, como os outros do bot, e as instruções
   para restaurar.
 - Backups acima de 20 MB não vão por e-mail (os provedores recusam anexos
-  grandes): use o `-s` sem e-mail.
+  grandes): use o `-s` sem `-to`.
 - Sem o SMTP configurado (`QRCODE_EMAIL_SMTP_HOST` e `_USER`), o bot avisa.
+- A forma antiga, com os e-mails direto no `-s` (`/backup -s 2 email`), ainda
+  funciona.
 
 ## Guardar fora do servidor
 
@@ -122,7 +135,7 @@ Os backups ficam no mesmo volume do banco: se o volume for apagado (ex.:
 `make deploy.destroy`), eles vão junto. O [`/cache -a`](cache.md) e o
 `/cache -b` também apagam os backups. Para guardar uma cópia fora, use
 `/backup -s` (o arquivo chega no seu WhatsApp), mande por e-mail
-(`/backup -s seu@email.com`) ou copie a pasta:
+(`/backup -s -to seu@email.com`) ou copie a pasta:
 
 ```bash
 docker cp zapbot:/app/cache/backups ./backups-zapbot
