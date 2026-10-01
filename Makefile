@@ -22,6 +22,8 @@ RCOMPOSE             := $(RDOCKER) compose -f $(COMPOSE_FILE)
 DEV_SERVICE  := zapbot-dev
 PROD_SERVICE := zapbot
 VOLUMES      := zapbot_app_cache zapbot_wwebjs_auth
+# Compose marks with this label everything it creates (containers and images of the project)
+PROJECT_LABEL := label=com.docker.compose.project=zapbot
 DEV_VOLUMES  := zapbot_app_cache_dev zapbot_wwebjs_auth_dev
 
 .DEFAULT_GOAL := build
@@ -94,5 +96,8 @@ deploy.clean: deploy.context ## Removes the production container, image and buil
 	-$(RDOCKER) rmi -f $(PROD_SERVICE)
 	$(RDOCKER) builder prune -a -f
 
-deploy.destroy: deploy.clean ## deploy.clean + deletes the volumes (session and cache!)
+deploy.destroy: deploy.clean ## Removes zapbot's containers, images and volumes (session and cache!)
+	ids=$$($(RDOCKER) ps -aq --filter $(PROJECT_LABEL)); [ -z "$$ids" ] || $(RDOCKER) rm -f $$ids
+	ids=$$($(RDOCKER) images -q --filter $(PROJECT_LABEL) | sort -u); [ -z "$$ids" ] || $(RDOCKER) rmi -f $$ids
+	$(RDOCKER) image prune -f
 	-$(RDOCKER) volume rm -f $(VOLUMES)
