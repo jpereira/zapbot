@@ -17,17 +17,17 @@ opção, mostra o banco atual e os backups.
 | `-rm` | `<nº\|all>` | Apaga o backup nº N (ou todos) |
 
 ```
-/backup                → o banco atual e os backups
-/backup -now           → cria um agora
-/bkp -l                → a lista
-/backup -i 2           → o que tem no nº 2, comparado com o banco atual
-/backup -r 2           → mostra o que vai acontecer e pede confirmação
-/backup -r zapbot-20261001-030000 -sim   → restaura
-/backup -s             → o arquivo do mais recente no seu privado
-/backup -s -to eu@gmail.com      → o mais recente, por e-mail
-/backup -s 2 -to email → o nº 2, para o QRCODE_EMAIL_SMTP_TO
-/backup -s -to /Jorge Pereira/ -sim   → no privado de um contato
-/backup -rm 3          → apaga o nº 3
+/backup                                 → o banco atual e os backups
+/backup -now                            → cria um agora
+/bkp -l                                 → a lista
+/backup -i 2                            → o que tem no nº 2, comparado com o banco atual
+/backup -r 2                            → mostra o que vai acontecer e pede confirmação
+/backup -r zapbot-20261001-030000 -sim  → restaura
+/backup -s                              → o arquivo do mais recente no seu privado
+/backup -s -to eu@gmail.com             → o mais recente, por e-mail
+/backup -s 2 -to email                  → o nº 2, para o QRCODE_EMAIL_SMTP_TO
+/backup -s -to /Jorge Pereira/ -sim     → no privado de um contato
+/backup -rm 3                           → apaga o nº 3
 ```
 
 ```
