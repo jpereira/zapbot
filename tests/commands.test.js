@@ -177,11 +177,29 @@ describe('/set (/config)', () => {
         }
     });
 
+    test('<trecho> ou /regex/ que não é uma chave: lista as que casam; nada casa: erro', async () => {
+        const [r] = await bot.replyAlt('/set alerta');
+        assert.match(r, /^⚙️ \*SETTINGS\* com "alerta" \(2\)\n\n```\nalerta\.intervalMin  5\nalerta\.max          20\n```\n💡 _\/set <chave> para detalhes_$/);
+
+        const keys = (textAlt) => [...textAlt.matchAll(/^([a-z][\w.]+)\s{2}/gm)].map(m => m[1]);
+        assert.deepEqual(keys((await bot.replyAlt('/set OPENAI'))[0]), ['openai.api.key', 'openai.api.model', 'openai.timeout.ms']);
+        assert.deepEqual(keys((await bot.replyAlt('/set /^show\\./'))[0]), ['show.alert.edit', 'show.delayMs', 'show.max', 'show.revoke.status']);
+        assert.deepEqual(keys((await bot.replyAlt('/set /max$/'))[0]).length > 3, true);
+
+        assert.deepEqual(await bot.replyAlt('/set xyz'), ['❌ Nenhum setting com "xyz".\n💡 _Veja todos com /set_']);
+        assert.deepEqual(await bot.replyAlt('/set /[/'), ['❌ Regex inválida: /[/']);
+
+        // An exact key still shows the details; with a value, the snippet does not count
+        assert.match((await bot.replyAlt('/set alerta.max'))[0], /^⚙️ \*alerta\.max\*\n/);
+        assert.match((await bot.replyAlt('/set alerta 5'))[0], /❌ Setting desconhecido: alerta/);
+    });
+
     test('-reset volta ao padrão; chave desconhecida', async () => {
         await bot.setSetting('show.max', 5);
         assert.deepEqual(await bot.replyAlt('/set -reset show.max'), ['♻️ *show.max* = 20 _(padrão)_']);
         assert.match((await bot.replyAlt('/set -r naoexiste'))[0], /❌ Setting desconhecido: naoexiste/);
         assert.match((await bot.replyAlt('/set naoexiste 1'))[0], /❌ Setting desconhecido: naoexiste/);
+        assert.match((await bot.replyAlt('/set naoexiste'))[0], /❌ Nenhum setting com "naoexiste"/);
     });
 
     test('só o dono usa', async () => {
