@@ -12,7 +12,7 @@ opção, mostra o banco atual e os backups.
 | `-info`, `-i` | `<nº>` | Detalhes do backup: data, motivo, versão do bot e as entradas de cada tabela, comparadas com o banco atual |
 | `-restore`, `-r` | `<nº\|nome>` | Restaura o backup. Sem `-sim`, só mostra o que vai acontecer e o comando para confirmar |
 | `-sim` | | Junto com `-restore`: confirma a restauração |
-| `-send`, `-s` | `[nº]` | Envia o arquivo do backup no seu privado (sem nº: o mais recente) |
+| `-send`, `-s` | `[nº] [e-mail...]` | Envia o arquivo do backup (sem nº: o mais recente) no seu privado ou, com e-mails, como anexo. Veja [Enviar por e-mail](#enviar-por-e-mail) |
 | `-rm` | `<nº\|all>` | Apaga o backup nº N (ou todos) |
 
 ```
@@ -23,6 +23,8 @@ opção, mostra o banco atual e os backups.
 /backup -r 2           → mostra o que vai acontecer e pede confirmação
 /backup -r zapbot-20261001-030000 -sim   → restaura
 /backup -s             → o arquivo do mais recente no seu privado
+/backup -s eu@gmail.com          → o mais recente, por e-mail
+/backup -s 2 email     → o nº 2, para o QRCODE_EMAIL_SMTP_TO
 /backup -rm 3          → apaga o nº 3
 ```
 
@@ -96,12 +98,31 @@ message_edits 10 · messages 1.180 · settings 47 · ...
 - Um backup de uma versão anterior também serve: as tabelas e colunas que ele
   não tinha ficam vazias.
 
+## Enviar por e-mail
+
+Com um ou mais e-mails (separados por espaço ou vírgula), o `-send` manda o
+arquivo como anexo, pelo mesmo SMTP do QR Code e dos alertas
+(`QRCODE_EMAIL_SMTP_*`, veja [Configuração](../configuracao.md#e-mail-qr-code-e-alertas)).
+A palavra `email` vale pelo destinatário do `QRCODE_EMAIL_SMTP_TO`.
+
+```
+/backup -s fulano@gmail.com
+📧 Backup de qui 01/10 03:00 enviado para fulano@gmail.com.
+```
+
+- O e-mail traz o código anti-phishing, como os outros do bot, e as instruções
+  para restaurar.
+- Backups acima de 20 MB não vão por e-mail (os provedores recusam anexos
+  grandes): use o `-s` sem e-mail.
+- Sem o SMTP configurado (`QRCODE_EMAIL_SMTP_HOST` e `_USER`), o bot avisa.
+
 ## Guardar fora do servidor
 
 Os backups ficam no mesmo volume do banco: se o volume for apagado (ex.:
 `make deploy.destroy`), eles vão junto. O [`/cache -a`](cache.md) e o
 `/cache -b` também apagam os backups. Para guardar uma cópia fora, use
-`/backup -s` (o arquivo chega no seu WhatsApp) ou copie a pasta:
+`/backup -s` (o arquivo chega no seu WhatsApp), mande por e-mail
+(`/backup -s seu@email.com`) ou copie a pasta:
 
 ```bash
 docker cp zapbot:/app/cache/backups ./backups-zapbot
