@@ -1,0 +1,4 @@
+# Gerador da documentação (mkdocs.yml). Versões fixas: o site da release não muda sozinho
+# (e o MkDocs 2.0 não é compatível com o Material).
+mkdocs==1.6.1
+mkdocs-material==9.7.7
