@@ -3,7 +3,7 @@
  *
  * Recovers deleted messages, downloads videos (/get), creates stickers,
  * watches messages by text/regex (/watch), monitors contacts and more. The commands are defined in
- * config/bot-config.json and implemented in src/commands/ (see src/commands/index.js).
+ * src/commands/commands.json and implemented in src/commands/ (see src/commands/index.js).
  *
  * This file only does the bootstrap, in the order below; the code lives in src/:
  * constantes, log, db, settings  → base (database, settings, log)
