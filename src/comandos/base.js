@@ -3,7 +3,7 @@
  */
 
 const { botConfig } = require('../botConfig');
-const { CACHE_DIR, MEDIA_DIR, TMP_DIR } = require('../constantes');
+const { BACKUP_DIR, CACHE_DIR, MEDIA_DIR, TMP_DIR } = require('../constantes');
 const { getSetting } = require('../settings');
 
 // Comandos ativos: os do comandos.json menos os do setting 'commands.disabled' (via /set)
@@ -21,7 +21,7 @@ function findCommand(name) {
  * ocupado em ${CACHE_DIR}"): o JSON não tem template strings, então a ajuda
  * troca cada ${NOME} conhecido pelo valor. Um ${NOME} desconhecido fica como está.
  */
-const VARIAVEIS_DA_AJUDA = { CACHE_DIR, MEDIA_DIR, TMP_DIR };
+const VARIAVEIS_DA_AJUDA = { BACKUP_DIR, CACHE_DIR, MEDIA_DIR, TMP_DIR };
 
 const interpolar = (texto) => String(texto ?? '')
     .replace(/\$\{(\w+)\}/g, (original, nome) => VARIAVEIS_DA_AJUDA[nome] ?? original);

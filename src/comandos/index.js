@@ -4,6 +4,7 @@
 
 const { botConfig } = require('../botConfig');
 const { cmdAgendar } = require('./agendar');
+const { cmdBackup } = require('./backup');
 const { cmdBoletos } = require('./boletos');
 const { cmdBot } = require('./bot');
 const { cmdCache } = require('./cache');
@@ -41,6 +42,7 @@ const { printError } = require('../log');
 // cmd do comandos.json -> handler
 const HANDLERS = {
     '/agendar': cmdAgendar,
+    '/backup': cmdBackup,
     '/boletos': cmdBoletos,
     '/bot': cmdBot,
     '/cache': cmdCache,

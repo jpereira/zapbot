@@ -69,6 +69,7 @@ padrão; desligue com `/set email.alerts off`. Sem `QRCODE_EMAIL_SMTP_HOST`,
 | `[ZapBot] ♻️ Browser caiu` | O Chromium morreu e o watchdog está reiniciando o cliente |
 | `[ZapBot] 🩺 WhatsApp sem resposta` | Conectado, mas o WhatsApp Web não respondeu `CONNECTED` em 3 verificações seguidas do [heartbeat](operacao.md#saúde-do-container-heartbeat); o cliente é reiniciado |
 | `[ZapBot] ❌ Falha ao reiniciar` | O reinício do cliente falhou |
+| `[ZapBot] 💾 Backup falhou` | O [backup diário](comandos/backup.md#backup-automático) do banco deu erro (ex.: disco cheio) |
 | `[ZapBot] 💥 Crash` | Exceção ou promise rejeitada sem tratamento (com o stack). O processo sai e o Docker sobe de novo |
 | `[ZapBot] 🛑 Bot encerrado` | `docker stop`/`restart` ou Ctrl+C (SIGTERM/SIGINT) |
 
