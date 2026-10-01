@@ -1,5 +1,5 @@
 /*
- * Edited messages: 'message_edit' event and the renderer also used by /edit.
+ * Edited messages: 'message_edit' event and the renderer also used by /show -e.
  */
 
 const { client } = require('../client');
@@ -15,7 +15,7 @@ const { formatData } = require('../util/format');
  *
  * Same idea as the deleted ones: the 'message_edit' event saves the edit (text of
  * before and after) in the message_edits table and notifies you in private (setting
- * 'edit.alert'); o /edit reexibe sob demanda.
+ * 'edit.alert'); o /show -e reexibe sob demanda.
  */
 async function sendMessageEdited(destination, row, info, { titulo: title = '✏️ *MENSAGEM EDITADA DETECTADA*' } = {}) {
     let textAlt = `${title}\n\n`;

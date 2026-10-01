@@ -47,7 +47,6 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -a`) para fazer o bot
 | [`/crypto`](crypto.md) | `/bitcoio`, `/creptomoeda` | | Cotação das criptos ativadas (padrão: BTC, ETH, SOL e HYPE); alertas de preço |
 | [`/cve`](cve.md) | | | Últimas CVEs publicadas (NVD); `-highscore` só as críticas |
 | [`/debug`](debug.md) | `/d`, `/dbg` | ✅ | Liga/desliga logs de debug |
-| [`/edit`](edit.md) | `/e` | ✅ | Reexibe mensagens editadas (antes e depois) |
 | [`/enquete`](enquete.md) | `/enq`, `/quiz` | ✅ | Cria uma enquete nativa do WhatsApp no chat |
 | [`/everyone`](everyone.md) | | ✅ | Menciona todos do grupo |
 | [`/get`](get.md) | `/download` | | Baixa vídeo/áudio de redes sociais |
@@ -63,7 +62,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -a`) para fazer o bot
 | [`/noffa`](noffa.md) | `/🌈`, `/🏳️‍🌈` | | Enfeita o texto com arco-íris |
 | [`/ping`](ping.md) | `/p` | ✅ | Verifica se o bot está vivo |
 | [`/set`](set.md) | | ✅ | Lista e altera as configurações (settings) |
-| [`/show`](show.md) | `/undo`, `/s` | ✅ | Reexibe mensagens apagadas |
+| [`/show`](show.md) | `/undo`, `/s` | ✅ | Reexibe mensagens apagadas ou editadas (`-e`) |
 | [`/stats`](stats.md) | | ✅ | Ranking do chat (quem mais fala, apaga e edita, horários de pico); `-me` para as suas |
 | [`/sticker`](sticker.md) | `/st` | | Transforma imagem/vídeo em figurinha |
 | [`/tempo`](tempo.md) | `/weather` | | Tempo agora e máx./mín. do dia (Open-Meteo); `/tempo 7d` mostra os próximos 7 dias; sem cidade usa `tempo.city` |

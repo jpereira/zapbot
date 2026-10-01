@@ -52,7 +52,7 @@ const SETTINGS_SCHEMA = {
     'cache.editedRetentionDays': {
         default: 30,
         type: 'number', min: 1, max: 365,
-        desc: 'Dias que as mensagens editadas ficam guardadas para o /edit.'
+        desc: 'Dias que as mensagens editadas ficam guardadas para o /show -e.'
     },
     'cache.revokedRetentionDays': {
         default: 30,
@@ -109,7 +109,7 @@ const SETTINGS_SCHEMA = {
     'edit.alert': {
         default: true,
         type: 'boolean',
-        desc: 'Avisa no seu privado quando alguém edita uma mensagem; off só guarda para o /edit.'
+        desc: 'Avisa no seu privado quando alguém edita uma mensagem; off só guarda para o /show -e.'
     },
     'email.alerts': {
         default: true,

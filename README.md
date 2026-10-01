@@ -81,7 +81,6 @@ admin está ligado: só você usa comandos até `/bot -admin`
 | [`/crypto`](https://jpereira.github.io/zapbot/commands/crypto/) | `/bitcoio`, `/creptomoeda` | | Cotação das criptos ativadas (padrão: BTC, ETH, SOL e HYPE); alertas de preço |
 | [`/cve`](https://jpereira.github.io/zapbot/commands/cve/) | | | Últimas CVEs publicadas (NVD); `-highscore` só as críticas |
 | [`/debug`](https://jpereira.github.io/zapbot/commands/debug/) | `/d`, `/dbg` | ✅ | Liga/desliga logs de debug |
-| [`/edit`](https://jpereira.github.io/zapbot/commands/edit/) | `/e` | ✅ | Reexibe mensagens editadas (antes e depois) |
 | [`/enquete`](https://jpereira.github.io/zapbot/commands/enquete/) | `/enq`, `/quiz` | ✅ | Cria uma enquete nativa do WhatsApp no chat |
 | [`/everyone`](https://jpereira.github.io/zapbot/commands/everyone/) | | ✅ | Menciona todos do grupo |
 | [`/get`](https://jpereira.github.io/zapbot/commands/get/) | `/download` | | Baixa vídeo/áudio de redes sociais |
@@ -97,7 +96,7 @@ admin está ligado: só você usa comandos até `/bot -admin`
 | [`/noffa`](https://jpereira.github.io/zapbot/commands/noffa/) | `/🌈`, `/🏳️‍🌈` | | Enfeita o texto com arco-íris |
 | [`/ping`](https://jpereira.github.io/zapbot/commands/ping/) | `/p` | ✅ | Verifica se o bot está vivo |
 | [`/set`](https://jpereira.github.io/zapbot/commands/set/) | | ✅ | Lista e altera as configurações (settings) |
-| [`/show`](https://jpereira.github.io/zapbot/commands/show/) | `/undo`, `/s` | ✅ | Reexibe mensagens apagadas |
+| [`/show`](https://jpereira.github.io/zapbot/commands/show/) | `/undo`, `/s` | ✅ | Reexibe mensagens apagadas ou editadas (`-e`) |
 | [`/stats`](https://jpereira.github.io/zapbot/commands/stats/) | | ✅ | Ranking do chat (quem mais fala, apaga e edita, horários de pico); `-me` para as suas |
 | [`/sticker`](https://jpereira.github.io/zapbot/commands/sticker/) | `/st` | | Transforma imagem/vídeo em figurinha |
 | [`/tempo`](https://jpereira.github.io/zapbot/commands/tempo/) | `/weather` | | Tempo agora e máx./mín. do dia (Open-Meteo); `/tempo 7d` mostra os próximos 7 dias; sem cidade usa `tempo.city` |
