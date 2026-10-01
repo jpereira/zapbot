@@ -7,7 +7,7 @@ const axios = require('axios');
 const { printError } = require('../log');
 const { getSetting } = require('../settings');
 
-// /tempo [city]: Open-Meteo (no API key)
+// /tempo [N|Nd] [city]: Open-Meteo (no API key); with N, the forecast for the next N days
 const WEATHER_WMO = {
     0: ['☀️', 'Céu limpo'], 1: ['🌤️', 'Predominantemente limpo'], 2: ['⛅', 'Parcialmente nublado'],
     3: ['☁️', 'Nublado'], 45: ['🌫️', 'Neblina'], 48: ['🌫️', 'Neblina com geada'],
