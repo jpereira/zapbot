@@ -78,7 +78,7 @@ admin está ligado: só você usa comandos até `/bot -admin`
 | [`/bot`](https://jpereira.github.io/zapbot/comandos/bot/) | | ✅ | Liga/desliga todos os comandos (`-on`/`-off`) e o modo admin (`+admin`/`-admin`) |
 | [`/cache`](https://jpereira.github.io/zapbot/comandos/cache/) | `/c` | ✅ | Uso e limpeza do cache |
 | [`/cotacao`](https://jpereira.github.io/zapbot/comandos/cotacao/) | `/cambio` | | Cotação de EUR e USDT (e USD, GBP) contra o real: atual, abertura, fechamento e variação; alertas de preço |
-| [`/crypto`](https://jpereira.github.io/zapbot/comandos/crypto/) | `/bitcoio`, `/creptomoeda`, `/moedinha` | | Cotação das criptos ativadas (padrão: BTC, ETH, SOL e HYPE); alertas de preço |
+| [`/crypto`](https://jpereira.github.io/zapbot/comandos/crypto/) | `/bitcoio`, `/creptomoeda` | | Cotação das criptos ativadas (padrão: BTC, ETH, SOL e HYPE); alertas de preço |
 | [`/cve`](https://jpereira.github.io/zapbot/comandos/cve/) | | | Últimas CVEs publicadas (NVD); `-highscore` só as críticas |
 | [`/debug`](https://jpereira.github.io/zapbot/comandos/debug/) | `/d`, `/dbg` | ✅ | Liga/desliga logs de debug |
 | [`/edit`](https://jpereira.github.io/zapbot/comandos/edit/) | `/e` | ✅ | Reexibe mensagens editadas (antes e depois) |
