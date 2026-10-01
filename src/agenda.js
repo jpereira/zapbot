@@ -7,6 +7,7 @@ const { client } = require('./cliente');
 const { dbAll, dbGet, dbPronto, dbRun } = require('./db');
 const { descreverDestino, extrairDestino, resolverDestino } = require('./destinos');
 const { printError, printInfo } = require('./log');
+const { textoDoStatus } = require('./status');
 const { getSetting } = require('./settings');
 const { plural, resumirTexto, semAcentos } = require('./util/formatar');
 const { REPETICOES, fmtQuando, lerQuando, partesEmBrasilia, proximaRepeticao } = require('./util/quando');
@@ -71,8 +72,8 @@ function lerAgendamento(args) {
     return { opt, quando, texto, destino, comDestino };
 }
 
-// Lembretes e mensagens juntos, na ordem em que saem (os números do -rm)
-const listar = () => dbAll('SELECT * FROM schedules ORDER BY due_at, id');
+// Lembretes e mensagens juntos, na ordem em que saem (os números do -rm). O status diário (/status) fica de fora
+const listar = () => dbAll("SELECT * FROM schedules WHERE kind != 'status' ORDER BY due_at, id");
 
 function linhaDaLista(s, i) {
     const repete = s.repeat ? ` 🔁 ${REPETICOES[s.repeat].rotulo}` : '';
@@ -107,7 +108,7 @@ async function tratarAgenda({ msg, args, chatId, chatName, isGroup, quotedMsg })
         const alvo = semAcentos(opt.rm).trim();
 
         if (alvo === 'all') {
-            await dbRun('DELETE FROM schedules');
+            await dbRun("DELETE FROM schedules WHERE kind != 'status'");
             await msg.reply(`🗑️ ${plural(itens.length, 'removido', 'removidos')}.`);
             return;
         }
@@ -168,7 +169,7 @@ async function tratarAgenda({ msg, args, chatId, chatName, isGroup, quotedMsg })
     }
 
     const max = getSetting('agenda.max');
-    const { n: total } = await dbGet('SELECT COUNT(*) AS n FROM schedules');
+    const { n: total } = await dbGet("SELECT COUNT(*) AS n FROM schedules WHERE kind != 'status'");
     if (total >= max) {
         await msg.reply(`❌ Limite de ${max} lembretes e mensagens agendadas (setting agenda.max). Remova algum antes.`);
         return;
@@ -219,7 +220,10 @@ async function dispararItem(s, agora) {
         await dbRun('DELETE FROM schedules WHERE id = ?', [s.id]);
     }
 
-    if (s.kind === 'agendar') {
+    if (s.kind === 'status') {
+        // O relatório do /status, montado na hora
+        await client.sendMessage(s.chat_id, await textoDoStatus(agora));
+    } else if (s.kind === 'agendar') {
         await client.sendMessage(s.chat_id, s.text);
     } else {
         const texto = `⏰ *Lembrete*\n\n${s.text}` +
@@ -230,7 +234,7 @@ async function dispararItem(s, agora) {
             .catch(() => client.sendMessage(s.chat_id, texto));
     }
 
-    printInfo(`${TIPOS[s.kind].cmd}: enviado para ${s.chat_id}${atrasado ? ' (atrasado)' : ''}${s.repeat ? ` (${s.repeat})` : ''}`);
+    printInfo(`${TIPOS[s.kind]?.cmd ?? '/status'}: enviado para ${s.chat_id}${atrasado ? ' (atrasado)' : ''}${s.repeat ? ` (${s.repeat})` : ''}`);
 }
 
 /*

@@ -46,6 +46,7 @@ Detalhes:
 - As opções se combinam (`-d -e`), e silenciar de novo o mesmo alvo soma ao
   que já estava.
 - Os silenciados ficam na tabela `mutes`; cada aviso cortado, em `mute_hits`
-  (30 dias), de onde sai o número de ignorados da lista.
+  (30 dias), de onde saem os números de ignorados da lista e do
+  [`/status`](status.md).
 - Para desligar os avisos de todo mundo: `/set show.alert.edit off` (edições)
   e `/set show.revoke.status off` (status).

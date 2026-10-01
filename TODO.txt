@@ -3,7 +3,7 @@
 * /view: salvar a foto/video de visualizacao unica quando chega, com o mesmo cache de
   midias e o mesmo -l do /show, com um -v ao lado do -d e do -e (terceira secao "Visualizacao unica").
 * /enquete: avisar no privado quando todos do grupo votarem.
-* Relatorio diario no privado, no horario do setting daily.time: cotacoes, cripto,
-  tempo, CVEs criticas, ocorrencias do /watch, mini /stats dos grupos e o /defi.
+* /status: incluir no relatorio diario cotacoes, cripto, tempo, CVEs criticas, um
+  mini /stats dos grupos e o /defi.
 * /transcrever: respondendo um audio, transcreve pela OpenAI (Whisper) com a chave do
   /gpt; um setting liga a transcricao automatica em chats escolhidos.
