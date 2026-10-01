@@ -149,6 +149,34 @@ describe('/set (/config)', () => {
         assert.match((await bot.responder('/set'))[0], /openai\.api\.key\s+••••3456/);
     });
 
+    test('config/.env: somente leitura, só no seu privado, com os segredos mascarados', async () => {
+        process.env.OPENAI_API_KEY = 'sk-env-abcd1234';
+        process.env.OPENAI_MODEL = 'gpt-4.1';
+        try {
+            const [privado] = await bot.responder('/set', { chat: bot.DONO.jid });
+            assert.match(privado, /🔒 \*config\/\.env\* _\(somente leitura: mude no arquivo e recrie o container\)_\n\n```\n/);
+            assert.match(privado, /OPENAI_API_KEY\s+••••1234\n/);
+            assert.match(privado, /OPENAI_MODEL\s+gpt-4\.1\n/);
+            assert.match(privado, /PHONE_NUMBER\s+5521900000000@c\.us\n/);
+            assert.match(privado, /GIPHY_API_KEY\s+\(vazio\)\n/);
+            assert.doesNotMatch(privado, /sk-env/);
+
+            const [grupo] = await bot.responder('/set');
+            assert.match(grupo, /⚙️ \*SETTINGS\*/);
+            assert.match(grupo, /🔒 _As variáveis do config\/\.env \(somente leitura\) aparecem só no seu privado\._$/);
+            assert.doesNotMatch(grupo, /OPENAI_MODEL|PHONE_NUMBER/);
+
+            assert.deepEqual(await bot.responder('/set OPENAI_API_KEY', { chat: bot.DONO.jid }), ['🔒 *OPENAI_API_KEY* = ••••1234\n_config/.env, somente leitura_']);
+            assert.deepEqual(await bot.responder('/set OPENAI_MODEL'), ['🔒 _As variáveis do config/.env (somente leitura) aparecem só no seu privado._']);
+            assert.deepEqual(await bot.responder('/set OPENAI_MODEL gpt-6-sol', { chat: bot.DONO.jid }),
+                ['❌ OPENAI_MODEL é do config/.env (somente leitura): mude no arquivo e recrie o container.']);
+            assert.equal(process.env.OPENAI_MODEL, 'gpt-4.1');
+        } finally {
+            delete process.env.OPENAI_API_KEY;
+            delete process.env.OPENAI_MODEL;
+        }
+    });
+
     test('-reset volta ao padrão; chave desconhecida', async () => {
         await bot.setSetting('show.max', 5);
         assert.deepEqual(await bot.responder('/set -reset show.max'), ['♻️ *show.max* = 20 _(padrão)_']);
