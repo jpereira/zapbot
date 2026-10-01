@@ -130,8 +130,11 @@ push.
 ```bash
 ./bump.sh -n    # dry-run: só mostra o que seria alterado
 ./bump.sh       # commit "Bump para X.Y" + tag release-X.Y
-git push && git push origin release-X.Y
+git push && git push origin release-X.Y   # o push da tag publica o site
 ```
+
+O push da tag dispara o workflow da [documentação](#documentação), que publica
+o site da release em alguns minutos (acompanhe em **Actions › Documentação**).
 
 ## Adicionando ou alterando comandos
 
