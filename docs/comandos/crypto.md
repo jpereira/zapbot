@@ -11,6 +11,7 @@ Preço atual e variação de 24 h das moedas ativadas (via API da Binance, par
 | `-del`, `-d` | `<TOKEN>` | Desativa uma moeda (só o dono do bot) |
 | `-alerta` | `[regra]` | Sem regra, lista os alertas; com regra (ex.: `BTC < 90000`), cria um. Veja [Alertas de preço](cotacao.md#alertas-de-preço) |
 | `-rm` | `<nº\|all>` | Junto com `-alerta`: remove o alerta nº N (ou todos) |
+| `-to` | `<destino>` | Junto com `-alerta`: avisa numa pessoa ou num grupo em vez do seu privado. Veja [Avisar outra pessoa ou um grupo](cotacao.md#avisar-outra-pessoa-ou-um-grupo) |
 
 Suportadas: BTC, ETH, SOL, HYPE, BNB, XRP, DOGE, ADA, TRX, AVAX, LINK, DOT, LTC,
 TON, SUI, PEPE, SHIB, XLM, NEAR e UNI (lista `CRYPTO_SUPPORTED` em `src/moedas.js`).
@@ -24,4 +25,5 @@ sobrevivem a reinícios.
 /crypto -a doge
 /crypto -d hype
 /crypto -alerta ETH > 4000
+/crypto -alerta BTC < 90000 -to /Grupo L200/
 ```
