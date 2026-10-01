@@ -1,10 +1,12 @@
 /*
- * Destino de um aviso ou alvo de um comando: um contato, um grupo ou um número.
- * Usado pelo -to do /cron e dos alertas de preço (/cotacao e /crypto -alerta),
- * pelo alvo do /mudo e pelo -send do /defi -alerta.
+ * Destino de um aviso ou alvo de um comando: um contato, um grupo, um número
+ * ou (onde faz sentido) e-mails. É o -to de todos os comandos: /cron, os
+ * alertas de preço (/cotacao e /crypto -alerta), o /defi -alerta e o
+ * /backup -send; e o alvo do /mudo.
  */
 
 const { client } = require('./cliente');
+const { enviarEmail, smtpParaEnviar } = require('./email');
 const { aguardarEscolha } = require('./escolhas');
 const { semAcentos } = require('./util/formatar');
 
@@ -15,6 +17,8 @@ const { semAcentos } = require('./util/formatar');
  *   "Jorge Pereira"    no nome; sem contato, um grupo. Em qualquer ordem, sem
  *   Jorge              diferenciar maiúsculas nem acentos; /.../ e aspas
  *                      permitem espaços
+ *   email            → (aceitaEmail) o QRCODE_EMAIL_SMTP_TO, pelo SMTP do bot
+ *   voce@exemplo.com → (aceitaEmail) um ou mais e-mails, separados por vírgula
  * O nome igual (inteiro) ganha de um que só contém as palavras. Se ainda assim
  * mais de um servir, o comando lista e você responde com o nº (resolverOuEscolher).
  */
@@ -22,17 +26,16 @@ const DESTINO = /(^|\s)-to(?=\s|$)(?:\s+("([^"]*)"|'([^']*)'|\/([^/]*)\/|(\S+)))
 const EXEMPLO = '/Jorge Pereira/, /Grupo L200/ ou +5521999999999';
 const LIMITE = 10;
 
-// A mesma regex do -to para outra opção (ex.: o -send do /defi)
-const regexDaOpcao = (opcao) => (opcao === 'to' ? DESTINO
-    : new RegExp(DESTINO.source.replace('-to', `-${opcao}`)));
+const EMAIL = /^[^\s@<>,;]+@[^\s@<>,;]+\.[^\s@<>,;]+$/;
+const ehPalavraEmail = (s) => /^e-?mail$/i.test(s);
 
 /**
- * Tira o "-to <destino>" (ou outra opção, como "-send") do texto do comando.
+ * Tira o "-to <destino>" do texto do comando.
  * @returns {{ destino: string|null, informado: boolean, resto: string }}
- *   informado: a opção apareceu (mesmo sem valor, que é um erro para quem chama)
+ *   informado: o -to apareceu (mesmo sem valor, que é um erro para quem chama)
  */
-function extrairDestino(texto, opcao = 'to') {
-    const m = String(texto ?? '').match(regexDaOpcao(opcao));
+function extrairDestino(texto) {
+    const m = String(texto ?? '').match(DESTINO);
     if (!m) return { destino: null, informado: false, resto: String(texto ?? '') };
 
     const valor = (m[3] ?? m[4] ?? m[5] ?? m[6] ?? '').trim();
@@ -66,19 +69,51 @@ const doContato = (c) => ({ id: c.id._serialized, nome: c.name, grupo: false, nu
 const doGrupo = (g) => ({ id: g.id._serialized, nome: g.name, grupo: true });
 
 /**
- * Resolve o texto para um chat.
- * @param {string} valor  o que veio no -to (ou no alvo do /mudo, no -send...)
+ * "email" e/ou endereços → o destino por e-mail; null se o texto não é isso.
+ * @returns {{ email: string, nome: string, grupo: false } | { erro: string } | null}
+ */
+function lerEmails(texto) {
+    const partes = texto.split(/[\s,;]+/).filter(Boolean);
+    if (!partes.length || !partes.every(p => ehPalavraEmail(p) || EMAIL.test(p))) return null;
+
+    const emails = partes.flatMap(p => (ehPalavraEmail(p)
+        ? String(process.env.QRCODE_EMAIL_SMTP_TO ?? '').split(/\s*,\s*/)
+        : [p])).map(e => e.trim());
+
+    if (emails.some(e => !EMAIL.test(e))) {
+        return { erro: '❌ O "email" usa o QRCODE_EMAIL_SMTP_TO, que está vazio (ou inválido) no config/.env. Informe o e-mail: -to voce@exemplo.com' };
+    }
+    if (!smtpParaEnviar()) {
+        return { erro: '❌ SMTP não configurado (QRCODE_EMAIL_SMTP_HOST e QRCODE_EMAIL_SMTP_USER no config/.env): não há como enviar por e-mail.' };
+    }
+
+    const lista = [...new Set(emails)].join(', ');
+    return { email: lista, nome: lista, grupo: false };
+}
+
+/**
+ * Resolve o texto para um chat (ou para e-mails).
+ * @param {string} valor  o que veio no -to (ou no alvo do /mudo)
  * @param {object} [o]
- * @param {string} [o.opcao]  como chamar o destino nas mensagens de erro (padrão: "-to")
+ * @param {boolean} [o.aceitaEmail]  "email" e endereços valem (alertas, /backup); senão, erro
+ * @param {string} [o.semEmail]      o erro quando não aceita (o porquê do comando)
  * @returns {Promise<{ id: string, nome: string, grupo: boolean }
+ *   | { email: string, nome: string, grupo: false }
  *   | { erro: string }
  *   | { opcoes: Array<{ id, nome, grupo }>, busca: string, mais: number }>}
  *   opcoes: mais de um serviu; quem chama oferece a escolha (resolverOuEscolher)
  */
-async function resolverDestino(valor, { opcao = '-to' } = {}) {
+async function resolverDestino(valor, { aceitaEmail = false, semEmail = '❌ Aqui o destino não pode ser um e-mail.' } = {}) {
     const texto = String(valor ?? '').trim();
 
-    if (!texto) return { erro: `❌ Informe o destino do ${opcao}: um contato, um grupo ou um número (${EXEMPLO}).` };
+    if (!texto) {
+        return { erro: `❌ Informe o destino do -to: um contato, um grupo ou um número (${EXEMPLO})` +
+            `${aceitaEmail ? ', ou email (o QRCODE_EMAIL_SMTP_TO) e e-mails' : ''}.` };
+    }
+
+    // E-mail: "email" (o QRCODE_EMAIL_SMTP_TO) e/ou endereços
+    const porEmail = lerEmails(texto);
+    if (porEmail) return aceitaEmail ? porEmail : { erro: semEmail };
 
     // Número: só dígitos, com + e separadores
     const digitos = lerNumero(texto);
@@ -148,16 +183,34 @@ async function resolverOuEscolher(msg, valor, o = {}) {
     });
 }
 
+/**
+ * Envia um texto do bot ao destino: o chat (sem destino: o seu privado) ou,
+ * por e-mail, sem a formatação do WhatsApp (*negrito*, _itálico_).
+ * Lança o erro do envio para quem chamou.
+ * @param {object|null} destino  o de resolverDestino (ou null)
+ * @param {string} texto
+ * @param {object} [o]
+ * @param {string} [o.assunto]  do e-mail
+ */
+async function enviarAoDestino(destino, texto, { assunto = 'Aviso' } = {}) {
+    if (destino?.email) {
+        await enviarEmail({ para: destino.email.split(/\s*,\s*/), assunto, texto: texto.replace(/[*_]/g, '') });
+        return;
+    }
+    await client.sendMessage(destino?.id || client.info.wid._serialized, texto);
+}
+
 async function nomeDoContato(id, digitos) {
     const contato = await client.getContactById(id).catch(() => null);
     return contato?.name || contato?.pushname || `+${digitos}`;
 }
 
-// "👥 Grupo sobre L200" / "👤 Fulano"
-const descreverDestino = (d) => `${d.grupo ? '👥' : '👤'} ${d.nome}`;
+// "👥 Grupo sobre L200" / "👤 Fulano" / "📧 voce@exemplo.com"
+const descreverDestino = (d) => `${d.email ? '📧' : d.grupo ? '👥' : '👤'} ${d.email ?? d.nome}`;
 
 module.exports = {
     descreverDestino,
+    enviarAoDestino,
     extrairDestino,
     resolverDestino,
     resolverOuEscolher

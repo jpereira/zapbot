@@ -17,7 +17,7 @@ mensagem continua guardada, e o [`/show`](show.md) (ou o `/show -e`) a mostra.
 | `-list`, `-l` | | Lista os silenciados (o mesmo que `/mudo` sem nada), com quantos avisos foram ignorados |
 | `-rm` | `<nº\|all>` | Desfaz o silêncio do nº N da lista (ou de todos) |
 
-O alvo é buscado como no `-to` ([Destinos](index.md#destinos-contato-grupo-ou-número)):
+O alvo é buscado como no `-to` ([Destinos](index.md#destinos-contato-grupo-número-ou-e-mail)):
 **primeiro** um contato da sua agenda pelo nome (`/Jorge Pereira/`); se nenhum
 casar, um grupo (`/Grupo L200/`, `"Grupo L200"` ou `L200`); ou um número
 (`+5521999999999`). Se o nome servir para mais de um, o bot lista e você
