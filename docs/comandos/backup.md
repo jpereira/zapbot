@@ -31,10 +31,10 @@ opção, mostra o banco atual e os backups.
 ```
 💾 Backup
 
-🗄️ Banco atual: 4,2 MB
+🗄️ Banco atual: 4.20 MB
    message_edits 12 · messages 1.234 · polls 3 · price_alerts 2 · settings 47 · stats 980 · ...
-📦 Backups: 7 (8,4 MB) em /app/cache/backups
-🕐 Último: qui 01/10 03:00 (automático, 1,1 MB)
+📦 Backups: 7 (8.40 MB) em /app/cache/backups
+🕐 Último: qui 01/10 03:00 (automático, 1.10 MB)
 ⏭️ Próximo automático: sex 02/10 03:00 (todo dia às 3h, guarda 7)
 ```
 
@@ -42,9 +42,9 @@ opção, mostra o banco atual e os backups.
 /backup -l
 💾 Backups (3)
 
-1. qui 01/10 03:00 · 1,1 MB · automático
-2. qua 30/09 15:20 · 1,0 MB · manual
-3. qua 30/09 03:00 · 1,0 MB · automático
+1. qui 01/10 03:00 · 1.10 MB · automático
+2. qua 30/09 15:20 · 1.00 MB · manual
+3. qua 30/09 03:00 · 1.00 MB · automático
 ```
 
 ## Backup automático
