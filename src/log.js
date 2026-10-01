@@ -56,8 +56,9 @@ function printError(...args) {
     console.log(colors.red(`[${getTimestamp()}] [*] [${getCaller()}] ${util.format(...args)}`));
 }
 
-function printCall(senderContact, call) {
-    console.log(colors.blue(`[${getTimestamp()}] [+] '${senderContact?.pushname}' used '${call}'`));
+// Who used a command, and where: [+] 'Fulano' used '/help' in 'Família'
+function printCall(who, call, chat) {
+    console.log(colors.blue(`[${getTimestamp()}] [+] '${who}' used '${call}'${chat ? ` in '${chat}'` : ''}`));
 }
 
 module.exports = {
