@@ -4,6 +4,7 @@
 
 const { Client, LocalAuth } = require('whatsapp-web.js');
 
+const { BIN_CHROMIUM } = require('./constantes');
 const { printError, printSuccess } = require('./log');
 
 const client = new Client({
@@ -21,7 +22,7 @@ const client = new Client({
     puppeteer: {
         headless: true,
         // No Windows, remova executablePath e args.
-        executablePath: '/usr/bin/chromium-browser',
+        executablePath: BIN_CHROMIUM,
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
