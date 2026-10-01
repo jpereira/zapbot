@@ -53,7 +53,7 @@ src/
   openai.js             modelos aceitos pelo /gpt
   openaiChat.js         chamada ao chat da OpenAI (/gpt e /tldr)
   contatos.js, opcoes.js                    contatos/@lid e o parser de opções
-  destinos.js           o -to/alvo: contato ou grupo pelo nome, ou número
+  destinos.js           o -to/alvo: contato ou grupo pelo nome, número ou e-mail, e o envio ao destino
   escolhas.js           a lista numerada para escolher (vários contatos/grupos) e a resposta com o nº
   mudo.js               /mudo: quem está silenciado e os avisos cortados
   defi/                 Solana (base58, PDA, RPC), as contas da Orca (/defi) e o -alerta de saída da faixa
