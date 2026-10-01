@@ -876,7 +876,6 @@
             "cmd": "/show",
             "usage": "/show [-N] [OPTION]",
             "aliases": [
-                "/undo",
                 "/s"
             ],
             "help": "Reexibe as últimas mensagens apagadas (padrão) ou editadas (-e) deste chat.",
