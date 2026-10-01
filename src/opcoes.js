@@ -56,11 +56,9 @@ function GetOptFromCommand(input, config = {}) {
         }
     }
 
+    // `input` são só os argumentos (sem o "/comando"): um 1º argumento começando com "/" é argumento
     for (let i = 0; i < tokens.length; i++) {
         const token = tokens[i];
-
-        // Ignora o próprio comando (/get, /download...)
-        if (i === 0 && token.startsWith('/')) continue;
 
         if (!isOption(token)) {
             argv.push(normalizeArg(token));
