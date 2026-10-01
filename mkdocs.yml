@@ -75,6 +75,7 @@ nav:
   - Comandos:
       - commands/index.md
       - /agendar: commands/agendar.md
+      - /backup: commands/backup.md
       - /boletos: commands/boletos.md
       - /bot: commands/bot.md
       - /cache: commands/cache.md
