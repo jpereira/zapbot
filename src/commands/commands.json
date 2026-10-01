@@ -56,25 +56,33 @@
             "cmd_opts": [
                 {
                     "opts": [
+                        "all",
+                        "a"
+                    ],
+                    "values": [],
+                    "desc": "Apaga todo o cache em ${CACHE_DIR}: as mensagens (inclusive as guardadas para o /show e o /edit), os temporários e as mídias baixadas em ${MEDIA_DIR}."
+                },
+                {
+                    "opts": [
                         "clean",
                         "c"
                     ],
                     "values": [],
-                    "desc": "Limpa o cache."
+                    "desc": "Limpa só o que passou das janelas de retenção."
                 },
                 {
                     "opts": [
-                        "force",
-                        "f"
+                        "media",
+                        "m"
                     ],
                     "values": [],
-                    "desc": "Apaga tudo."
+                    "desc": "Apaga as mídias baixadas em ${MEDIA_DIR} (as mensagens ficam, sem o arquivo)."
                 }
             ],
             "aliases": [
                 "/c"
             ],
-            "help": "Exibe espaço ocupado em ${CACHE_DIR}",
+            "help": "Exibe o espaço ocupado em ${CACHE_DIR} e limpa o cache.",
             "onlyAdmin": true
         },
         {

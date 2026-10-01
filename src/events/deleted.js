@@ -127,7 +127,7 @@ async function sendMessageDeleted(destination, row, info, { titulo: title = '❌
             '📇 *Tipo:* CARTÃO DE CONTATO\n' +
             '💡 *Nota:* O contato está anexado abaixo.';
 
-        // The body comes from whoever sent it: it only goes raw if it really is a vCard (never a text like "/cache -c -f")
+        // The body comes from whoever sent it: it only goes raw if it really is a vCard (never a text like "/cache -a")
         if (!row.body || /^BEGIN:VCARD/i.test(row.body.trim())) {
             await client.sendMessage(destination, alertText);
             if (row.body) await client.sendMessage(destination, row.body, { parseVCards: true });
