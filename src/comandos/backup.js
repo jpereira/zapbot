@@ -7,10 +7,13 @@ const path = require('path');
 const { MessageMedia } = require('whatsapp-web.js');
 
 const { MOTIVOS, contarEntradas, criarBackup, listarBackups, proximoBackupDiario, removerBackup, restaurarBackup } = require('../backup');
+const { findCommand } = require('./base');
 const { client } = require('../cliente');
 const { BACKUP_DIR, CACHE_DIR } = require('../constantes');
+const { descreverDestino, extrairDestino, resolverOuEscolher } = require('../destinos');
 const { enviarArquivoPorEmail } = require('../email');
 const { printError } = require('../log');
+const { GetOptFromCommand } = require('../opcoes');
 const { getSetting } = require('../settings');
 const { humanSize } = require('../util/arquivos');
 const { fmtNum, plural } = require('../util/formatar');
@@ -22,14 +25,17 @@ const { fmtQuando, partesEmBrasilia } = require('../util/quando');
  * /backup -l            → lista os backups, numerados do mais novo para o mais antigo
  * /backup -i <nº>       → detalhes: data, motivo, versão e entradas (comparadas com o banco atual)
  * /backup -r <nº|nome>  → mostra o que vai acontecer; com -sim, restaura
- * /backup -s [nº] [e-mail...] → envia o arquivo no seu privado ou, com e-mails, como
- *                         anexo pelo SMTP do bot ("email" = QRCODE_EMAIL_SMTP_TO). Sem nº: o mais recente
+ * /backup -s [nº] [-to <destino>] → envia o arquivo (sem nº: o mais recente) no seu
+ *                         privado ou no -to: por e-mail, como anexo pelo SMTP do bot ("email" =
+ *                         QRCODE_EMAIL_SMTP_TO), ou noutro chat (contato, grupo ou número: pede -sim,
+ *                         já que o banco tem as mensagens de todos os chats). A forma antiga, com os
+ *                         e-mails direto no -s (/backup -s 2 email), continua valendo
  * /backup -rm <nº|all>  → apaga
  */
 // Anexo grande demais é recusado pela maioria dos provedores (Gmail: 25 MB)
 const MAX_ANEXO_BYTES = 20 * 1024 * 1024;
 
-const AJUDA = '💡 _-now cria um agora · -l lista · -i <nº> detalha · -r <nº> restaura · -s [nº] [e-mail] envia o arquivo · -rm <nº|all> apaga_';
+const AJUDA = '💡 _-now cria um agora · -l lista · -i <nº> detalha · -r <nº> restaura · -s [nº] [-to <destino>] envia o arquivo · -rm <nº|all> apaga_';
 
 const entradasEmLinha = (entradas) => Object.entries(entradas)
     .map(([t, n]) => `${t} ${fmtNum(n)}`).join(' · ');
@@ -71,8 +77,20 @@ async function status(msg) {
     await msg.reply(`${texto}\n${AJUDA}`, null, { linkPreview: false });
 }
 
-async function cmdBackup({ msg, opts }) {
+async function cmdBackup({ msg, opts: optsDoComando, args }) {
+    /*
+     * O -to aceita espaços (/Jorge Pereira/), que o parser de opções
+     * separaria: sai do texto antes, e o resto é lido de novo.
+     */
+    const { destino: destinoTexto, informado: comDestino, resto } = extrairDestino(args);
+    const opts = comDestino ? GetOptFromCommand(resto, findCommand('/backup')) : optsDoComando;
     const o = opts.opt;
+
+    if (comDestino && !opts.given.has('send')) {
+        await msg.reply('❌ O -to é do -send: /backup -send [nº] -to <destino>');
+        return;
+    }
+
     const lista = await listarBackups();
     const semBackups = '💾 Nenhum backup ainda. Crie um com /backup -now';
 
@@ -137,17 +155,25 @@ async function cmdBackup({ msg, opts }) {
         return;
     }
 
-    // -send [nº] [e-mail...]: no seu privado ou, com e-mails, como anexo
+    // -send [nº] [-to <destino>]: no seu privado, por e-mail ou noutro chat
     if (opts.given.has('send')) {
         const valores = [o.send, ...opts.argv].filter(Boolean).flatMap(v => String(v).split(','))
             .map(v => v.trim()).filter(Boolean);
         const numero = valores.find(v => /^\d+$/.test(v));
-        const emails = valores.filter(v => v !== numero).map(v => (/^e-?mail$/i.test(v) ? process.env.QRCODE_EMAIL_SMTP_TO?.trim() : v));
-        const invalidos = emails.filter(e => !e || !/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(e));
+        // A forma antiga: os e-mails direto no -send (/backup -s 2 email)
+        const antigos = valores.filter(v => v !== numero);
+
+        if (antigos.length && comDestino) {
+            await msg.reply('❌ Informe o destino só no -to: /backup -send [nº] -to <destino>');
+            return;
+        }
+
+        const emailsAntigos = antigos.map(v => (/^e-?mail$/i.test(v) ? process.env.QRCODE_EMAIL_SMTP_TO?.trim() : v));
+        const invalidos = emailsAntigos.filter(e => !e || !/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(e));
 
         if (invalidos.length) {
             await msg.reply(`❌ E-mail inválido: ${invalidos.map(e => e || '(QRCODE_EMAIL_SMTP_TO vazio)').join(', ')}\n` +
-                '💡 _/backup -s [nº] [e-mail...]: sem e-mail, vai no seu privado; "email" usa o QRCODE_EMAIL_SMTP_TO._');
+                '💡 _/backup -s [nº] -to <destino>: sem -to, vai no seu privado; -to email usa o QRCODE_EMAIL_SMTP_TO._');
             return;
         }
 
@@ -157,9 +183,27 @@ async function cmdBackup({ msg, opts }) {
             return;
         }
 
-        if (emails.length) {
+        let destino = emailsAntigos.length ? { email: emailsAntigos.join(', ') } : null;
+        if (comDestino) {
+            // E-mail ou chat; vários contatos ou grupos com o nome: espera você escolher na lista
+            destino = await resolverOuEscolher(msg, destinoTexto, { aceitaEmail: true });
+            if (!destino) return;
+        }
+
+        const meuId = client.info.wid._serialized;
+
+        // Noutro chat: o banco tem as mensagens guardadas de TODOS os chats, então pede -sim
+        if (destino?.id && destino.id !== meuId && !o.sim) {
+            await msg.reply(`⚠️ O backup tem o banco inteiro: as mensagens guardadas de todos os chats, as apagadas, os settings...\n` +
+                `Para enviar mesmo em ${descreverDestino(destino)}, repita com -sim: ` +
+                `/backup -send${numero ? ` ${numero}` : ''} -to ${/\s/.test(destinoTexto) ? `/${destinoTexto}/` : destinoTexto} -sim`);
+            return;
+        }
+
+        if (destino?.email) {
+            const emails = destino.email.split(/\s*,\s*/);
             if (b.bytes > MAX_ANEXO_BYTES) {
-                await msg.reply(`❌ O backup tem ${humanSize(b.bytes)}: grande demais para anexar (máx. ${humanSize(MAX_ANEXO_BYTES)}). Use /backup -s sem e-mail.`);
+                await msg.reply(`❌ O backup tem ${humanSize(b.bytes)}: grande demais para anexar (máx. ${humanSize(MAX_ANEXO_BYTES)}). Use /backup -s sem -to (vai no seu privado).`);
                 return;
             }
 
@@ -180,12 +224,13 @@ async function cmdBackup({ msg, opts }) {
             return;
         }
 
-        const meuId = client.info.wid._serialized;
-        await client.sendMessage(meuId, MessageMedia.fromFilePath(b.arquivo), {
+        const alvo = destino?.id ?? meuId;
+        await client.sendMessage(alvo, MessageMedia.fromFilePath(b.arquivo), {
             sendMediaAsDocument: true,
             caption: `💾 Backup de ${fmtQuando(b.criadoEm)} (${b.motivo})`
         });
-        if (msg.id?.remote !== meuId) await msg.reply('💾 Backup enviado no seu privado.');
+        if (alvo !== meuId) await msg.reply(`💾 Backup enviado em ${descreverDestino(destino)}.`);
+        else if (msg.id?.remote !== meuId) await msg.reply('💾 Backup enviado no seu privado.');
         return;
     }
 
