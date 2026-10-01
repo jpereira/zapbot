@@ -305,6 +305,14 @@ describe('settings', () => {
         assert.ok(bot.errosNoLog().some(l => l.includes("Setting 'show.max' inválido")));
     });
 
+    test('lista no banco com item que deixou de existir: fica com os outros; comando renomeado vira o novo', async () => {
+        // Um bot da 1.8 com o /status (hoje /bot -status) e o /agendar (hoje /cron) desativados
+        await bot.dbRun("UPDATE settings SET value = ? WHERE key = 'commands.disabled'", [JSON.stringify(['/walissu', '/status', '/agendar'])]);
+        await carregarSettings();
+        assert.deepEqual(getSetting('commands.disabled'), ['/walissu', '/cron']);
+        assert.ok(bot.errosNoLog().some(l => l.includes("Setting 'commands.disabled' com item inválido")));
+    });
+
     test('envOuSetting: .env vence; .env inválido cai no setting', async () => {
         await setSetting('openai.timeout.ms', 60000);
         process.env.OPENAI_TIMEOUT_MS = '9000';
