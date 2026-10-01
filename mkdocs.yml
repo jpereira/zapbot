@@ -98,6 +98,7 @@ nav:
       - /news: comandos/news.md
       - /noffa: comandos/noffa.md
       - /ping: comandos/ping.md
+      - /pixelart: comandos/pixelart.md
       - /set: comandos/set.md
       - /show: comandos/show.md
       - /stats: comandos/stats.md

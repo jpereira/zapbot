@@ -53,6 +53,7 @@ outros funcionam sem configuração.
 | `/defi` | RPC da Solana (setting `defi.solana.rpc`) e a [API da Orca](https://www.orca.so/) | — |
 | `/kernel` | [kernel.org](https://www.kernel.org/) | — |
 | `/meme` | [imgflip](https://imgflip.com/) | — |
+| `/pixelart` | [16colo.rs](https://16colo.rs/) | — |
 
 Para as chaves, a variável do `config/.env` tem prioridade; se estiver vazia,
 vale o setting, que dá para trocar pelo WhatsApp com `/set` sem reiniciar.

@@ -281,14 +281,22 @@ function spawnFalso(bin, args) {
 }
 
 /*
- * sharp: devolve um "webp" fixo
+ * sharp: devolve um "webp" fixo. Para o /pixelart, uma imagem "png:LxA"
+ * informa as dimensões no metadata() e o png() devolve "png:LxA" do resultado
+ * (depois do resize/extract).
  */
-const sharpFalso = () => {
+const sharpFalso = (entrada) => {
+    const [, w, h] = String(entrada).match(/^png:(\d+)x(\d+)$/) ?? [];
+    let dim = { width: Number(w), height: Number(h) };
+    let formato = 'webp';
     const cadeia = {
         rotate: () => cadeia,
-        resize: () => cadeia,
+        resize: (width, height) => { if (height) dim = { width, height }; return cadeia; },
+        extract: ({ width, height }) => { dim = { width, height }; return cadeia; },
         webp: () => cadeia,
-        toBuffer: async () => Buffer.from('webp-enquadrado')
+        png: () => { formato = 'png'; return cadeia; },
+        metadata: async () => dim,
+        toBuffer: async () => Buffer.from(formato === 'png' ? `png:${dim.width}x${dim.height}` : 'webp-enquadrado')
     };
     return cadeia;
 };
