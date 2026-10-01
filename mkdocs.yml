@@ -82,7 +82,6 @@ nav:
       - /cve: commands/cve.md
       - /debug: commands/debug.md
       - /enquete: commands/enquete.md
-      - /everyone: commands/everyone.md
       - /get: commands/get.md
       - /gif: commands/gif.md
       - /gpt: commands/gpt.md
@@ -100,6 +99,7 @@ nav:
       - /stats: commands/stats.md
       - /sticker: commands/sticker.md
       - /tempo: commands/tempo.md
+      - /todos: commands/todos.md
       - /uptime: commands/uptime.md
       - /version: commands/version.md
       - /walissu: commands/walissu.md

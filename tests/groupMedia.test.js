@@ -1,5 +1,5 @@
 /*
- * Group and media commands: /everyone, /boletos, /listageral, /walissu (/ualisu),
+ * Group and media commands: /todos, /boletos, /listageral, /walissu (/ualisu),
  * /enquete (/enq, /quiz) e /sticker (/st).
  */
 const bot = require('./helpers/bot');
@@ -24,9 +24,9 @@ beforeEach(async () => {
 
 const onlyGroup = 'Apenas utilizado dentro de grupos.';
 
-describe('/everyone', () => {
+describe('/todos', () => {
     test('marca todos menos quem chamou, respondendo a mensagem', async () => {
-        const [r] = await bot.executar('/everyone', { id: 'CHAMADA' });
+        const [r] = await bot.executar('/todos', { id: 'CHAMADA' });
         assert.equal(r.chatId, GROUP);
         assert.equal(r.texto, `@${OTHERAlt.jid.split('@')[0]} @${CICLANO.jid.split('@')[0]} @777 `);
         assert.deepEqual(r.options.mentions, [OTHERAlt.jid, CICLANO.jid, '777@lid']);
@@ -34,7 +34,11 @@ describe('/everyone', () => {
     });
 
     test('fora de grupo', async () => {
-        assert.deepEqual(await bot.replyAlt('/everyone', { chat: OTHERAlt.jid }), [onlyGroup]);
+        assert.deepEqual(await bot.replyAlt('/todos', { chat: OTHERAlt.jid }), [onlyGroup]);
+    });
+
+    test('o antigo /everyone não responde mais', async () => {
+        assert.deepEqual(await bot.replyAlt('/everyone'), []);
     });
 });
 

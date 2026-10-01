@@ -16,7 +16,7 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 /set show.max 10
 /set debug.enabled off
 /set sticker.name "Meu Bot"
-/set commands.disabled noffa everyone
+/set commands.disabled noffa todos
 /set commands.disabled ""
 /set -r crypto.coins
 /set watch.rules ""
