@@ -42,6 +42,17 @@ describe('gravação', () => {
         assert.equal((await bot.dbGet("SELECT has_media FROM messages WHERE id = 'RUIM'")).has_media, 0);
     });
 
+    test('from_me marca as suas mensagens (no privado o remetente gravado é o outro participante)', async () => {
+        await bot.entregar(bot.criarMensagem({ texto: 'minha', chat: bot.OUTRO.jid, id: 'MINHA' }));
+        await bot.entregar(bot.criarMensagem({ texto: 'dele', chat: bot.OUTRO.jid, de: bot.OUTRO.jid, id: 'DELE' }));
+
+        const rows = await bot.dbAll("SELECT id, sender_jid, from_me FROM messages WHERE id IN ('MINHA', 'DELE') ORDER BY id");
+        assert.deepEqual(rows, [
+            { id: 'DELE', sender_jid: bot.OUTRO.jid, from_me: 0 },
+            { id: 'MINHA', sender_jid: bot.OUTRO.jid, from_me: 1 }
+        ]);
+    });
+
     test('@lid do remetente vira o telefone real', async () => {
         bot.client.lids.set('999@lid', OUTRO.jid);
         await bot.entregar(bot.criarMensagem({ de: '999:12@lid', id: 'LID' }));
