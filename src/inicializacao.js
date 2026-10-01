@@ -183,6 +183,28 @@ async function inicializarBanco() {
         )
     `);
 
+    /*
+     * Agenda: lembretes (/lembrete). due_at é
+     * o próximo envio; com repeat, ele avança a cada envio (day_of_month guarda
+     * o dia original do mensal, para um 31 voltar a 31 depois de fevereiro).
+     */
+    await dbRun(`
+        CREATE TABLE IF NOT EXISTS schedules (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            kind TEXT NOT NULL,
+            chat_id TEXT NOT NULL,
+            chat_name TEXT,
+            is_group INTEGER DEFAULT 0,
+            text TEXT NOT NULL,
+            due_at INTEGER NOT NULL,
+            repeat TEXT,
+            day_of_month INTEGER,
+            quoted_id TEXT,
+            created_at INTEGER NOT NULL
+        )
+    `);
+    await dbRun('CREATE INDEX IF NOT EXISTS idx_schedules_due ON schedules (due_at)');
+
     // Configurações gerais do bot (chave -> valor em JSON)
     await dbRun(`
         CREATE TABLE IF NOT EXISTS settings (

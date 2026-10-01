@@ -6,6 +6,7 @@ hora, sem reiniciar, e sobrevivem a reinícios. Para ver e alterar, use o
 
 | Chave | Tipo | Padrão | Descrição |
 |---|---|---|---|
+| `agenda.max` | 1–500 | `50` | Máximo de lembretes do [`/lembrete`](comandos/lembrete.md) |
 | `alerta.intervalMin` | 1–60 | `5` | Intervalo, em minutos, entre as verificações dos [alertas de preço](comandos/cotacao.md#alertas-de-preço) |
 | `alerta.max` | 1–100 | `20` | Máximo de alertas de preço (somando `/cotacao` e `/crypto`) |
 | `bot.adminMode` | on/off | `on` | Modo admin: só você usa comandos (o mesmo do `/bot +admin`/`-admin`) |

@@ -29,6 +29,11 @@ function validarUrlFeed(v) {
 }
 
 const SETTINGS_SCHEMA = {
+    'agenda.max': {
+        default: 50,
+        type: 'number', min: 1, max: 500,
+        desc: 'Máximo de lembretes do /lembrete.'
+    },
     'alerta.intervalMin': {
         default: 5,
         type: 'number', min: 1, max: 60,

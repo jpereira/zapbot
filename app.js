@@ -10,7 +10,7 @@
  *   cliente, conexao               → cliente do WhatsApp, QR Code, reconexão
  *   eventos/                       → mensagens, apagadas, editadas, presença
  *   comandos/                      → um arquivo por comando
- *   limpeza, alertasPreco, email   → tarefas periódicas e alertas
+ *   limpeza, alertasPreco, agenda, email → tarefas periódicas e alertas
  *
  * Versão:  veja package.json
  * Autor:   Jorge Pereira <jpereiran@gmail.com>
@@ -88,6 +88,7 @@ require('./src/eventos/editadas');
 require('./src/eventos/mensagens');
 require('./src/enquetes');
 
+const { iniciarAgenda } = require('./src/agenda');
 const { iniciarAlertasDePreco } = require('./src/alertasPreco');
 const { iniciarHeartbeat } = require('./src/heartbeat');
 const { iniciarLimpezaPeriodica } = require('./src/limpeza');
@@ -98,5 +99,6 @@ iniciarWatchdog();
 iniciarHeartbeat();
 iniciarLimpezaPeriodica();
 iniciarAlertasDePreco();
+iniciarAgenda();
 
 iniciarBot();
