@@ -74,6 +74,7 @@ nav:
   - E-mails: emails.md
   - Comandos:
       - commands/index.md
+      - /agendar: commands/agendar.md
       - /boletos: commands/boletos.md
       - /bot: commands/bot.md
       - /cache: commands/cache.md

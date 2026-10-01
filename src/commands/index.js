@@ -3,6 +3,7 @@
  */
 
 const { botConfig } = require('../botConfig');
+const { cmdSchedule } = require('./agendar');
 const { cmdBills } = require('./boletos');
 const { cmdBot } = require('./bot');
 const { cmdCache } = require('./cache');
@@ -38,6 +39,7 @@ const { printError } = require('../log');
 
 // commands.json cmd -> handler
 const HANDLERS = {
+    '/agendar': cmdSchedule,
     '/boletos': cmdBills,
     '/bot': cmdBot,
     '/cache': cmdCache,

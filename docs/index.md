@@ -87,9 +87,10 @@ Por onde começar:
   para as tabelas `polls` e `poll_votes`, e o
   [`/enquete -r`](commands/enquete.md#resultado) mostra o placar. Ficam 90 dias
   (setting `enquete.retentionDays`).
-- **Agenda**: os lembretes do [`/lembrete`](commands/lembrete.md) ficam na
-  tabela `schedules`; a cada 30 s o bot envia o que venceu (os repetidos seguem
-  para o próximo horário).
+- **Agenda**: os lembretes do [`/lembrete`](commands/lembrete.md) e as
+  mensagens do [`/agendar`](commands/agendar.md) ficam na tabela `schedules`;
+  a cada 30 s o bot envia o que venceu (os repetidos seguem para o próximo
+  horário).
 - **Watch**: toda mensagem recebida que não é comando é testada contra as
   regras do [`/watch`](commands/watch.md) (setting `watch.rules`); quando casa, a
   ocorrência é gravada na tabela `watch_hits` e você é avisado **no seu
