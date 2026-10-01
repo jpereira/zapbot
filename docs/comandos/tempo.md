@@ -1,4 +1,4 @@
-# `/tempo` (`/weather`)
+# `/tempo` (`/t`, `/weather`)
 
 Tempo agora (condição, temperatura, sensação, umidade e vento), máxima, mínima e
 chance de chuva do dia, pela [Open-Meteo](https://open-meteo.com/) (gratuita,
@@ -16,6 +16,7 @@ próximos dias.
 /tempo Niteroi, Sergipe        → Niterói de Sergipe (não a do RJ)
 /tempo Paris, Texas            → Paris dos EUA (não a da França)
 /weather Lisboa                → o mesmo, pelo alias
+/t Lisboa                      → idem, pelo alias curto
 /tempo 7d Niteroi              → agora + previsão dos próximos 7 dias
 /tempo 3                       → cidade padrão, próximos 3 dias
 /tempo -h                      → ajuda do comando
