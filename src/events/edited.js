@@ -6,6 +6,7 @@ const { client } = require('../client');
 const { dbGet, dbReady, dbRun } = require('../db');
 const { resolverAuthorDeleted } = require('./deleted');
 const { printError, printInfo } = require('../log');
+const { ignoreNotice } = require('../mudo');
 const { getSetting } = require('../settings');
 const { countStats } = require('../stats');
 const { formatData } = require('../util/format');
@@ -107,7 +108,9 @@ client.on('message_edit', async (msg, newBody, prevBody) => {
             campos: { edited: 1 }
         });
 
-        if (getSetting('show.alert.edit')) {
+        // /mudo: this chat's or this person's notice is muted (the edit stays saved for /show -e)
+        const senders = [original?.sender_jid, original?.sender_number, row.sender_number];
+        if (getSetting('show.alert.edit') && !(await ignoreNotice('editada', { chatId, remetentes: senders }))) {
             await sendMessageEdited(client.info.wid._serialized, row, info);
         }
     } catch (err) {

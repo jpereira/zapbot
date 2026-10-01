@@ -30,7 +30,7 @@ let db = null;
 const prepare = () => (db ??= initializeDb().then(markDbReady));
 
 const TABLES = ['messages', 'message_edits', 'stats', 'watch_hits', 'price_alerts',
-    'presence_logs', 'monitored_numbers', 'settings', 'polls', 'poll_votes', 'schedules', 'defi_positions'];
+    'presence_logs', 'monitored_numbers', 'settings', 'polls', 'poll_votes', 'schedules', 'defi_positions', 'mutes', 'mute_hits'];
 
 /*
  * Clean state for each test: empty tables, settings at default, no

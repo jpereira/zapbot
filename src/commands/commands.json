@@ -709,6 +709,72 @@
             "onlyAdmin": true
         },
         {
+            "cmd": "/mudo",
+            "usage": "/mudo <OPTION>... <@número|/nome do grupo/>",
+            "aliases": [
+                "/mute"
+            ],
+            "help": "Silencia os avisos de apagadas, editadas e/ou status apagados de uma pessoa ou de um grupo. As mensagens continuam guardadas para o /show. Sem nada, lista os silenciados.",
+            "cmd_opts": [
+                {
+                    "opts": [
+                        "all",
+                        "a"
+                    ],
+                    "values": [],
+                    "desc": "Silencia tudo: apagadas, editadas e status."
+                },
+                {
+                    "opts": [
+                        "deleted",
+                        "d"
+                    ],
+                    "values": [],
+                    "desc": "Silencia os avisos de mensagens apagadas."
+                },
+                {
+                    "opts": [
+                        "edited",
+                        "e"
+                    ],
+                    "values": [],
+                    "desc": "Silencia os avisos de edições."
+                },
+                {
+                    "opts": [
+                        "list",
+                        "l"
+                    ],
+                    "values": [],
+                    "desc": "Lista os silenciados (também sem argumentos), com quantos avisos foram ignorados."
+                },
+                {
+                    "opts": [
+                        "rm"
+                    ],
+                    "values": [
+                        "<nº|all>"
+                    ],
+                    "desc": "Desfaz o silêncio do nº N da lista (ou de todos)."
+                },
+                {
+                    "opts": [
+                        "status",
+                        "s"
+                    ],
+                    "values": [],
+                    "desc": "Silencia os avisos de status apagados."
+                },
+                {
+                    "argv": [
+                        "<@número|/nome do grupo/>"
+                    ],
+                    "desc": "Pessoa (@5521999999999 ou mencionada) ou grupo pelo nome ou parte dele (/Grupo L200/, \"Grupo L200\" ou L200)."
+                }
+            ],
+            "onlyAdmin": true
+        },
+        {
             "cmd": "/news",
             "usage": "/news <-hack|-g1|-gazeta|-brasil> [quantidade]",
             "help": "Manchetes mais recentes dos feeds RSS, com fonte, data e link. Categorias combinam: /news -g1 -gazeta. Feeds de cada uma no setting news.<categoria>.",

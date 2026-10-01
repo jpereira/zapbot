@@ -160,6 +160,20 @@ async function cleanPollsOld() {
     }
 }
 
+// Notices cut by /mudo (mute_hits): 30 days are enough for /status
+const MUTE_HITS_DAYS = 30;
+
+async function cleanIgnoredOld() {
+    await dbReady;
+
+    try {
+        const res = await dbRun('DELETE FROM mute_hits WHERE at < ?', [Date.now() - MUTE_HITS_DAYS * DAY_MS]);
+        if (res.changes > 0) printInfo(`Limpeza: ${res.changes} registros antigos do /mudo removidos.`);
+    } catch (err) {
+        printError('Erro na limpeza do /mudo:', err.message);
+    }
+}
+
 // /watch occurrences older than 'watch.hitsRetentionDays'
 async function cleanWatchOld() {
     await dbReady;
@@ -214,6 +228,7 @@ function runCleanup() {
     cleanEditedOld();
     cleanStatsOld();
     cleanPollsOld();
+    cleanIgnoredOld();
 }
 
 // Called in app.js. First run postponed: on the first boot the tables are still being created.
@@ -228,6 +243,7 @@ module.exports = {
     cleanCacheOld,
     cleanEditedOld,
     cleanPollsOld,
+    cleanIgnoredOld,
     cleanMedia,
     cleanStatsOld,
     cleanAll,
