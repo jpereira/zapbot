@@ -82,7 +82,6 @@ admin está ligado: só você usa comandos até `/bot -admin`
 | [`/cve`](https://jpereira.github.io/zapbot/comandos/cve/) | | | Últimas CVEs publicadas (NVD); `-highscore` só as críticas |
 | [`/debug`](https://jpereira.github.io/zapbot/comandos/debug/) | `/d`, `/dbg` | ✅ | Liga/desliga logs de debug |
 | [`/enquete`](https://jpereira.github.io/zapbot/comandos/enquete/) | `/enq`, `/quiz` | ✅ | Cria uma enquete nativa do WhatsApp no chat |
-| [`/everyone`](https://jpereira.github.io/zapbot/comandos/everyone/) | | ✅ | Menciona todos do grupo |
 | [`/get`](https://jpereira.github.io/zapbot/comandos/get/) | `/download` | | Baixa vídeo/áudio de redes sociais |
 | [`/gif`](https://jpereira.github.io/zapbot/comandos/gif/) | | | GIF aleatório (GIPHY) |
 | [`/gpt`](https://jpereira.github.io/zapbot/comandos/gpt/) | `/ai` | ✅ | Pergunta ao ChatGPT (OpenAI) |
@@ -100,6 +99,7 @@ admin está ligado: só você usa comandos até `/bot -admin`
 | [`/stats`](https://jpereira.github.io/zapbot/comandos/stats/) | | ✅ | Ranking do chat (quem mais fala, apaga e edita, horários de pico); `-me` para as suas |
 | [`/sticker`](https://jpereira.github.io/zapbot/comandos/sticker/) | `/st` | | Transforma imagem/vídeo em figurinha |
 | [`/tempo`](https://jpereira.github.io/zapbot/comandos/tempo/) | `/weather` | | Tempo agora e máx./mín. do dia (Open-Meteo); `/tempo 7d` mostra os próximos 7 dias; sem cidade usa `tempo.city` |
+| [`/todos`](https://jpereira.github.io/zapbot/comandos/todos/) | | ✅ | Menciona todos do grupo |
 | [`/uptime`](https://jpereira.github.io/zapbot/comandos/uptime/) | `/u`, `/up` | ✅ | Tempo de execução e de conexão |
 | [`/version`](https://jpereira.github.io/zapbot/comandos/version/) | `/ver` | ✅ | Versão do bot (mesmo banner do `/uptime`) |
 | [`/walissu`](https://jpereira.github.io/zapbot/comandos/walissu/) | `/ualisu` | ✅ | Walissu CVE BOT: marca 2 membros com uma CVE aleatória |
