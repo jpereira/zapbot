@@ -6,7 +6,8 @@ const axios = require('axios');
 
 const { getCommandSyntax } = require('./base');
 const { printError } = require('../log');
-const { envOuSetting } = require('../settings');
+const { OPENAI_MODELOS } = require('../openai');
+const { envOuSetting, getSetting, setSetting } = require('../settings');
 
 /*
  * /gpt: pergunta ao ChatGPT. Chave e timeout vêm do config/.env (OPENAI_API_KEY,
@@ -15,7 +16,6 @@ const { envOuSetting } = require('../settings');
  * a mensagem da API.
  */
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
-const OPENAI_MODEL_PADRAO = 'gpt-4o-mini';
 const GPT_INSTRUCOES = 'Você é um assistente no WhatsApp. Responda de forma direta, em português, salvo se pedirem outro idioma.';
 
 // Erro da OpenAI → mensagem para o chat (nunca contém a chave)
@@ -26,7 +26,34 @@ function erroOpenAi(err, timeout) {
     return `❌ Erro no /gpt: ${err.response?.data?.error?.message || err.message}`;
 }
 
-async function cmdGpt({ msg, args, quotedMsg }) {
+// /gpt -m: sem modelo lista o atual e os aceitos; com modelo, grava o setting
+async function trocarModelo(msg, modelo) {
+    const doEnv = process.env.OPENAI_MODEL?.trim();
+
+    if (!modelo) {
+        const atual = envOuSetting('OPENAI_MODEL', 'openai.api.model');
+        await msg.reply(`🤖 *Modelo do /gpt:* ${atual}${doEnv ? ' _(do OPENAI_MODEL no .env)_' : ''}\n\n` +
+            '*Aceitos:*\n' + OPENAI_MODELOS.map(m => `${m === atual ? '✅' : '▫️'} ${m}`).join('\n') +
+            '\n\n💡 _/gpt -m <modelo> troca (setting openai.api.model)._');
+        return;
+    }
+
+    try {
+        await setSetting('openai.api.model', modelo);
+    } catch (e) {
+        await msg.reply(`❌ Modelo ${e.message}`);
+        return;
+    }
+    await msg.reply(`✅ Modelo do /gpt: *${getSetting('openai.api.model')}*` +
+        (doEnv ? `\n⚠️ _O OPENAI_MODEL do .env (${doEnv}) tem prioridade enquanto estiver definido._` : ''));
+}
+
+async function cmdGpt({ msg, args, opts, quotedMsg }) {
+    if (opts?.given.has('model')) {
+        await trocarModelo(msg, opts.opt.model);
+        return;
+    }
+
     const apiKey = envOuSetting('OPENAI_API_KEY', 'openai.api.key');
 
     if (!apiKey) {
@@ -49,7 +76,7 @@ async function cmdGpt({ msg, args, quotedMsg }) {
         msg.getChat().then(chat => chat.sendStateTyping()).catch(() => {});
 
         const { data } = await axios.post(OPENAI_URL, {
-            model: process.env.OPENAI_MODEL?.trim() || OPENAI_MODEL_PADRAO,
+            model: envOuSetting('OPENAI_MODEL', 'openai.api.model'),
             messages: [
                 { role: 'system', content: GPT_INSTRUCOES },
                 { role: 'user', content: pergunta }
