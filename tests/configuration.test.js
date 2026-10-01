@@ -1,5 +1,5 @@
 /*
- * Configuration: bot-config.json, settings, option parser, help and the
+ * Configuration: commands.json, settings, option parser, help and the
  * consistency between config, code and README (alphabetical order included).
  */
 const bot = require('./helpers/bot');
@@ -14,14 +14,14 @@ const { GetOptFromCommand } = bot.src('options');
 const { findCommand, formatCommandHelp, getCommandSyntax, activeCommands } = bot.src('commands/base');
 const { HANDLERS } = bot.src('commands/index');
 
-const CONFIG = JSON.parse(fs.readFileSync(path.join(bot.ROOT, 'config/bot-config.json'), 'utf8'));
+const CONFIG = JSON.parse(fs.readFileSync(path.join(bot.ROOT, 'src/commands/commands.json'), 'utf8'));
 const README = fs.readFileSync(path.join(bot.ROOT, 'README.md'), 'utf8');
 
 const sorted = (list) => [...list].sort((a, b) => a.localeCompare(b));
 
 beforeEach(bot.restart);
 
-describe('bot-config.json', () => {
+describe('commands.json', () => {
     test('comandos em ordem alfabética', () => {
         const cmds = CONFIG.commands.map(c => c.cmd);
         assert.deepEqual(cmds, sorted(cmds));
@@ -171,7 +171,7 @@ describe('documentação', () => {
 
     test('links para o site (jpereira.github.io/zapbot) apontam para páginas e âncoras do docs/', () => {
         const SITE = /https:\/\/jpereira\.github\.io\/zapbot\/([^)\s"'`]*)/g;
-        const files = ['README.md', 'SECURITY.md', 'config/bot-config.json', ...pagesDocs().map(f => `docs/${f}`)];
+        const files = ['README.md', 'SECURITY.md', 'src/commands/commands.json', ...pagesDocs().map(f => `docs/${f}`)];
         let total = 0;
 
         for (const fileAlt of files) {

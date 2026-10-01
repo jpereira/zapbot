@@ -5,7 +5,7 @@
 const { botConfig } = require('../botConfig');
 const { getSetting } = require('../settings');
 
-// Active commands: those in bot-config minus those in the 'commands.disabled' setting (via /set)
+// Active commands: those in commands.json minus those in the 'commands.disabled' setting (via /set)
 function activeCommands() {
     const disabled = getSetting('commands.disabled');
     return botConfig.commands.filter(c => !disabled.includes(c.cmd));

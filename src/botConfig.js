@@ -1,10 +1,10 @@
 /*
- * Command definition (config/bot-config.json), without those marked "disabled": true.
+ * Command definition (src/commands/commands.json), without those marked "disabled": true.
  */
 
 const { printInfo, printSuccess } = require('./log');
 
-const botConfig = require('../config/bot-config.json');
+const botConfig = require('./commands/commands.json');
 
 // "disabled": true takes the command out of the bot: it does not answer, it does not show in /help
 const disabledCommands = botConfig.commands.filter(c => c.disabled).map(c => c.cmd);

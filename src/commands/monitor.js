@@ -10,7 +10,7 @@ const { getSetting } = require('../settings');
 
 /*
  * /monitor
- * Accepts both the bot-config option style (/monitor -add 5521...)
+ * Accepts both the commands.json option style (/monitor -add 5521...)
  * quanto o posicional (/monitor add 5521...).
  * The switch used to use argv[0], which is always "/monitor": no subcommand worked.
  */
