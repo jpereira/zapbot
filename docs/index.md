@@ -85,7 +85,7 @@ Por onde começar:
   genérica `settings` do SQLite (`key` → `value` em JSON) e são alteradas pelo
   [`/set`](comandos/set.md). No boot os valores padrão são gravados, se ainda não
   existirem, e tudo é carregado em memória. Veja [Settings](settings.md).
-- **Comandos**: definidos em [`config/bot-config.json`](https://github.com/jpereira/zapbot/blob/main/config/bot-config.json)
+- **Comandos**: definidos em [`src/comandos/comandos.json`](https://github.com/jpereira/zapbot/blob/main/src/comandos/comandos.json)
   (nome, aliases, opções, ajuda, permissão) e implementados em `src/comandos/`
   (um arquivo por comando; veja [Estrutura do código](desenvolvimento.md#estrutura-do-código)). Os que
   consultam a internet (`/gpt`, `/tempo`, `/cve`, `/news`...) usam os serviços

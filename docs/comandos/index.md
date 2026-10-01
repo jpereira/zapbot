@@ -1,6 +1,6 @@
 # Comandos
 
-Os comandos são definidos em [`config/bot-config.json`](https://github.com/jpereira/zapbot/blob/main/config/bot-config.json).
+Os comandos são definidos em [`src/comandos/comandos.json`](https://github.com/jpereira/zapbot/blob/main/src/comandos/comandos.json).
 Podem ser enviados em **qualquer chat** (privado, grupo ou no chat consigo mesmo).
 
 ## Sintaxe geral

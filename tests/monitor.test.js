@@ -13,7 +13,7 @@ const assert = require('node:assert/strict');
 const { OUTRO } = bot;
 const { botConfig } = bot.src('botConfig');
 
-const CONFIG = JSON.parse(fs.readFileSync(path.join(bot.RAIZ, 'config/bot-config.json'), 'utf8'));
+const CONFIG = JSON.parse(fs.readFileSync(path.join(bot.RAIZ, 'src/comandos/comandos.json'), 'utf8'));
 const MONITOR = CONFIG.commands.find(c => c.cmd === '/monitor');
 
 before(() => {

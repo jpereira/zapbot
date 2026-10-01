@@ -1,5 +1,5 @@
 /*
- * Mapa comando -> handler. Cada 'cmd' do bot-config.json precisa de um handler aqui.
+ * Mapa comando -> handler. Cada 'cmd' do comandos.json precisa de um handler aqui.
  */
 
 const { botConfig } = require('../botConfig');
@@ -34,7 +34,7 @@ const { cmdWalissu } = require('./walissu');
 const { cmdWatch } = require('./watch');
 const { printError } = require('../log');
 
-// cmd do bot-config.json -> handler
+// cmd do comandos.json -> handler
 const HANDLERS = {
     '/boletos': cmdBoletos,
     '/bot': cmdBot,
@@ -69,9 +69,9 @@ const HANDLERS = {
     '/watch': cmdWatch
 };
 
-// Avisa no boot se o bot-config tiver comando sem handler (ou vice-versa)
+// Avisa no boot se o comandos.json tiver comando sem handler (ou vice-versa)
 for (const c of botConfig.commands) {
-    if (!HANDLERS[c.cmd]) printError(`Comando '${c.cmd}' está no bot-config.json mas não tem handler.`);
+    if (!HANDLERS[c.cmd]) printError(`Comando '${c.cmd}' está no comandos.json mas não tem handler.`);
 }
 
 module.exports = {

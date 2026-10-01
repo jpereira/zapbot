@@ -33,7 +33,7 @@ src/
   db.js                 SQLite (dbGet/dbAll/dbRun) e o sinal dbPronto
   inicializacao.js      tabelas + carga dos settings
   settings.js           SETTINGS_SCHEMA, getSetting/setSetting
-  botConfig.js          config/bot-config.json carregado
+  botConfig.js          src/comandos/comandos.json carregado
   cliente.js            cliente do whatsapp-web.js e a marca dos envios do bot
   conexao.js            QR Code, eventos de conexão, reinício e watchdog
   email.js              SMTP e alertas por e-mail
@@ -80,7 +80,7 @@ entre os casos.
 
 | Arquivo | O que cobre |
 |---|---|
-| `configuracao.test.js` | `bot-config.json`, settings, parser de opções, ajuda e a coerência entre config, código, README e `docs/` (inclusive a ordem alfabética e os links) |
+| `configuracao.test.js` | `comandos.json`, settings, parser de opções, ajuda e a coerência entre config, código, README e `docs/` (inclusive a ordem alfabética e os links) |
 | `mensagens.test.js` | Gravação, roteamento, permissões (`onlyAdmin`, modo admin, bot desligado) e a contagem do `/stats` |
 | `comandos.test.js` | `/help`, `/debug`, `/uptime`, `/version`, `/ping`, `/noffa`, `/bot`, `/set` |
 | `apagadas-editadas.test.js` | Eventos de apagar/editar, `/show` e `/edit` |
@@ -138,8 +138,9 @@ o site da release em alguns minutos (acompanhe em **Actions › Documentação**
 
 ## Adicionando ou alterando comandos
 
-O arquivo tem uma chave `_about` (metadados do projeto, ignorada pelo bot) e a
-lista `commands`. Cada entrada de `commands` segue este formato:
+Os comandos são definidos em `src/comandos/comandos.json`, ao lado dos
+handlers. O arquivo tem uma chave `_about` (metadados do projeto, ignorada pelo
+bot) e a lista `commands`. Cada entrada de `commands` segue este formato:
 
 ```jsonc
 {
