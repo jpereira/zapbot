@@ -5,6 +5,7 @@
 const path = require('path');
 const fs = require('fs-extra');
 
+const { deleteAllBackups } = require('./backup');
 const { CACHE_DIR, DAY_MS, MAX_DELETE_WINDOW, MEDIA_DIR, TMP_DIR } = require('./constants');
 const { dbAll, dbGet, dbReady, dbRun } = require('./db');
 const { printError, printInfo } = require('./log');
@@ -50,7 +51,8 @@ async function cleanCacheOld(maxDeleteWin = MAX_DELETE_WINDOW, retentionDeleted 
 
 /*
  * General cleanup (/cache -all): ALL messages (including the deleted ones and the
- * edited stored for /show), all the media and all the temporaries.
+ * edited stored for /show), all the media, all the temporaries and
+ * all the /backup backups.
  * At the end, VACUUM gives the space back to the disk: DELETE alone does not shrink the .db.
  * Does not touch monitored_numbers, presence_logs, watch_hits, stats, polls, price_alerts
  * nor settings (configuration and history).
@@ -69,9 +71,10 @@ async function cleanAll() {
     await dbRun('DELETE FROM message_edits');
     cleanContentDirectory(MEDIA_DIR);
     cleanContentDirectory(TMP_DIR);
+    const { backups } = await deleteAllBackups();
     await dbRun('VACUUM');
 
-    return { total, apagadas: deletedAlt, editadas: edited, liberado: Math.max(0, bytesBefore - getDirSize(CACHE_DIR)) };
+    return { total, apagadas: deletedAlt, editadas: edited, backups, liberado: Math.max(0, bytesBefore - getDirSize(CACHE_DIR)) };
 }
 
 /*
