@@ -105,7 +105,7 @@ pedir a chave de produção no próprio Dashboard.
 | `QRCODE_EMAIL_SMTP_USER` | `minhaconta@yahoo.com.br` | Usuário de login no SMTP. |
 | `QRCODE_EMAIL_SMTP_PASS` | `abcd efgh ijkl mnop` | Senha do SMTP. Em Gmail/Yahoo/Outlook use uma **senha de app** (exige 2FA ativo), não a senha normal da conta. |
 | `QRCODE_EMAIL_SMTP_FROM` | `ZapBot <minhaconta@yahoo.com.br>` | Remetente. O endereço deve ser o mesmo da conta SMTP, senão o provedor rejeita ou o e-mail cai no spam. |
-| `QRCODE_EMAIL_SMTP_TO` | `Fulano <fulano@gmail.com>` | Destinatário que vai receber o QR (e os [alertas por e-mail](emails.md#alertas-por-e-mail)). |
+| `QRCODE_EMAIL_SMTP_TO` | `Fulano <fulano@gmail.com>` | Destinatário que vai receber o QR (e os [alertas por e-mail](emails.md#alertas-por-e-mail)). É também o `email` do `-to` (alertas e `/backup -send`). |
 | `QRCODE_EMAIL_SMTP_ANTIPHISHING` | `MinhaFraseSecreta42` | Código anti-phishing exibido em todo e-mail do bot. Veja [Troque o código anti-phishing](emails.md#troque-o-código-anti-phishing). |
 
 ### Por que configurar o e-mail com cuidado

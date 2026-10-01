@@ -3,7 +3,7 @@
 Faz algo na hora marcada. Tem dois modos, na mesma agenda:
 
 - **Mensagem** (`/cron`, `/agenda`): envia o texto como se você
-  digitasse, no chat atual ou, com `-to`, no privado de uma pessoa ou num grupo.
+  digitasse, no chat atual ou, com `-to`, num contato, num grupo ou num número.
   Serve para aniversários, avisos e mensagens recorrentes.
 - **Lembrete** (`/lembrete`, ou qualquer um com `-lembrete`): envia
   `⏰ Lembrete` e o texto, respondendo a mensagem do comando, no chat atual (ou
