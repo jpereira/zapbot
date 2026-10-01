@@ -1,4 +1,4 @@
-# `/crypto` (`/bitcoio`, `/creptomoeda`, `/moedinha`)
+# `/crypto` (`/bitcoio`, `/creptomoeda`)
 
 Preço atual e variação de 24 h das moedas ativadas (via API da Binance, par
 `<TOKEN>USDT`). Por padrão: BTC, ETH, SOL e HYPE.

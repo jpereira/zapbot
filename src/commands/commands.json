@@ -145,8 +145,7 @@
             "usage": "/crypto [OPTION]",
             "aliases": [
                 "/bitcoio",
-                "/creptomoeda",
-                "/moedinha"
+                "/creptomoeda"
             ],
             "help": "Exibe o preço atual das cryptos ativadas.",
             "cmd_opts": [

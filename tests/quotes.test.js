@@ -117,7 +117,7 @@ describe('/cotacao (/cambio)', () => {
     });
 });
 
-describe('/crypto (/bitcoio, /creptomoeda, /moedinha)', () => {
+describe('/crypto (/bitcoio, /creptomoeda)', () => {
     test('preços das ativadas, na ordem configurada, com o top', async () => {
         const [r] = await bot.replyAlt('/crypto');
         assert.match(r, /🚀 \*CRYPTO MARKET\*/);
@@ -128,7 +128,7 @@ describe('/crypto (/bitcoio, /creptomoeda, /moedinha)', () => {
     });
 
     test('-l lista as suportadas com * nas ativadas', async () => {
-        const [r] = await bot.replyAlt('/moedinha -l');
+        const [r] = await bot.replyAlt('/creptomoeda -l');
         assert.match(r, /\* ₿ BTC/);
         assert.match(r, /\n {2}\S+ DOGE\n/);        // supported, without the mark
         assert.doesNotMatch(r, /\* \S+ DOGE/);
@@ -142,6 +142,10 @@ describe('/crypto (/bitcoio, /creptomoeda, /moedinha)', () => {
         assert.match((await bot.replyAlt('/crypto -a xyz'))[0], /❌ Moeda não suportada: XYZ/);
         assert.match((await bot.replyAlt('/crypto -a'))[0], /Usage: \/crypto/);
         assert.deepEqual(await bot.replyAlt('/crypto -a sol', { de: OTHERAlt.jid }), ['⛔ Apenas o dono do bot pode alterar as moedas.']);
+    });
+
+    test('/moedinha não é mais alias', async () => {
+        assert.deepEqual(await bot.replyAlt('/moedinha'), []);
     });
 
     test('nenhuma ativada; Binance fora do ar', async () => {
