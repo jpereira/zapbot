@@ -219,7 +219,7 @@ async function inicializarBanco() {
 
     /*
      * /mudo: pessoas e grupos com os avisos em silêncio (o que: deleted, edited,
-     * status) e cada aviso cortado (mute_hits, para o /status; 30 dias).
+     * status) e cada aviso cortado (mute_hits, para o /bot -status; 30 dias).
      */
     await dbRun(`
         CREATE TABLE IF NOT EXISTS mutes (
