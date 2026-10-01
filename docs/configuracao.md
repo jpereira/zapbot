@@ -50,7 +50,7 @@ vale o setting, que dá para trocar pelo WhatsApp com `/set` sem reiniciar.
 | Variável | Exemplo | Descrição |
 |---|---|---|
 | `OPENAI_API_KEY` | `sk-proj-...` | Chave da OpenAI usada pelo `/gpt`. Se estiver vazia, o bot usa o setting `openai.api.key`; sem nenhuma das duas o `/gpt` fica desativado. |
-| `OPENAI_MODEL` | `gpt-4o-mini` | Modelo do `/gpt` (padrão: `gpt-4o-mini`). |
+| `OPENAI_MODEL` | `gpt-4o-mini` | Modelo do `/gpt`. Se estiver vazio, o bot usa o setting `openai.api.model` (padrão `gpt-4o-mini`), que dá para trocar pelo WhatsApp com `/gpt -m`. Preenchido, tem prioridade sobre o setting. |
 | `OPENAI_TIMEOUT_MS` | `60000` | Tempo máximo de espera pela resposta, em ms. Se estiver vazio, o bot usa o setting `openai.timeout.ms` (60000). |
 
 ## GIPHY (opcional)
