@@ -1,0 +1,63 @@
+# CI: lint and tests on every push to main and on every pull request, and the
+# documentation generated in strict mode (a broken link fails).
+# The README and site "Tests" badge shows the result of the last run on main.
+name: Testes
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A new push cancels the previous run of the same branch
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  codigo:
+    name: Lint e testes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Node 24: the same as the image (node:24-alpine)
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      # Without downloading Puppeteer's Chrome: the tests simulate WhatsApp
+      - name: Instala as dependências
+        run: npm ci --no-audit --no-fund
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: 'true'
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: Testes
+        run: npm test
+
+  documentacao:
+    name: Documentação
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: docs/requirements.txt
+
+      - name: Instala o MkDocs Material
+        run: pip install -r docs/requirements.txt
+
+      - name: Gera o site (--strict)
+        run: mkdocs build --strict
+        env:
+          NO_MKDOCS_2_WARNING: '1'
