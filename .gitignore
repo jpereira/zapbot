@@ -138,3 +138,7 @@ config/*.db
 cache/
 *.sublime-workspace
 !README.md
+
+# Documentation (mkdocs build / local virtualenv)
+site/
+.venv-docs/
