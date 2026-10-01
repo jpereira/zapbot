@@ -445,6 +445,9 @@
         {
             "cmd": "/listageral",
             "usage": "/listageral",
+            "aliases": [
+                "/list"
+            ],
             "help": "Lista os membros do grupo (número, nome, admins).",
             "onlyAdmin": true
         },

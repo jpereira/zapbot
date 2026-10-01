@@ -1,3 +1,3 @@
-# `/listageral` · admin
+# `/listageral` (`/list`) · admin
 
 Só em grupos: lista os membros (número, nome, 👑 dono, ⭐ admin).

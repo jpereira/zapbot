@@ -86,6 +86,10 @@ describe('/listageral', () => {
         assert.match(r, /\(número oculto\) - Desconhecido/);
     });
 
+    test('pelo alias /list', async () => {
+        assert.match((await bot.responder('/list'))[0], /👥 \*Membros de Família\* \(4\)/);
+    });
+
     test('@lid com telefone conhecido mostra o número', async () => {
         bot.client.lids.set('777@lid', '5521933333333@c.us');
         assert.match((await bot.responder('/listageral'))[0], /\+5521933333333 - Desconhecido/);
