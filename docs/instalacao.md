@@ -13,10 +13,10 @@ da imagem.
 ## Instalação (Docker)
 
 ```bash
-# 1. Clonar o projeto e ir para a última versão estável (tag release-X.Y mais recente)
+# 1. Clonar o projeto e ir para a última versão estável
 git clone https://github.com/jpereira/zapbot.git
 cd zapbot
-git checkout "$(git tag -l 'release-*' --sort=-v:refname | head -n1)"
+git checkout release-1.8
 
 # 2. Criar o arquivo de configuração a partir do exemplo e editá-lo
 cp config/.env.example config/.env
@@ -51,13 +51,14 @@ o bot deve responder `pong`.
 
 ### Atualizar para uma nova versão
 
-A **versão estável** é a última tag `release-X.Y` (cada uma tem as notas em
-[Releases](https://github.com/jpereira/zapbot/releases)). Para ir para ela:
+A **versão estável** é a última release, hoje a `release-1.8` (cada uma tem as
+notas em [Releases](https://github.com/jpereira/zapbot/releases)). Para ir para
+ela:
 
 ```bash
 git fetch --tags
-git checkout "$(git tag -l 'release-*' --sort=-v:refname | head -n1)"
-git describe --tags        # confere a versão: release-X.Y
+git checkout release-1.8
+git describe --tags        # confere a versão: release-1.8
 docker compose -f docker/docker-compose.yml build zapbot
 docker compose -f docker/docker-compose.yml up -d --force-recreate --remove-orphans zapbot
 ```
