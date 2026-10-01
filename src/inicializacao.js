@@ -5,9 +5,23 @@
 const fs = require('fs-extra');
 
 const { MEDIA_DIR, TMP_DIR } = require('./constantes');
-const { dbRun } = require('./db');
+const { dbAll, dbRun } = require('./db');
 const { printInfo } = require('./log');
 const { carregarSettings } = require('./settings');
+
+/*
+ * Colunas novas numa tabela que já existe: o CREATE TABLE IF NOT EXISTS não
+ * mexe numa tabela criada por uma versão anterior.
+ */
+async function adicionarColunas(tabela, colunas) {
+    const existentes = new Set((await dbAll(`PRAGMA table_info(${tabela})`)).map(c => c.name));
+
+    for (const [coluna, tipo] of Object.entries(colunas)) {
+        if (existentes.has(coluna)) continue;
+        await dbRun(`ALTER TABLE ${tabela} ADD COLUMN ${coluna} ${tipo}`);
+        printInfo(`Coluna ${tabela}.${coluna} criada`);
+    }
+}
 
 /*
  * Criação das tabelas.
@@ -117,7 +131,10 @@ async function inicializarBanco() {
     `);
     await dbRun('CREATE INDEX IF NOT EXISTS idx_stats_chat_day ON stats (chat_id, day)');
 
-    // Alertas de preço do /cotacao -alerta e do /crypto -alerta (disparam uma vez e saem)
+    /*
+     * Alertas de preço do /cotacao -alerta e do /crypto -alerta (disparam uma
+     * vez e saem). dest_*: o chat do aviso (-to); vazio = o seu privado.
+     */
     await dbRun(`
         CREATE TABLE IF NOT EXISTS price_alerts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -126,9 +143,13 @@ async function inicializarBanco() {
             op TEXT NOT NULL,
             target REAL NOT NULL,
             price_at_creation REAL,
-            created_at INTEGER NOT NULL
+            created_at INTEGER NOT NULL,
+            dest_id TEXT,
+            dest_name TEXT,
+            dest_is_group INTEGER DEFAULT 0
         )
     `);
+    await adicionarColunas('price_alerts', { dest_id: 'TEXT', dest_name: 'TEXT', dest_is_group: 'INTEGER DEFAULT 0' });
 
     // Configurações gerais do bot (chave -> valor em JSON)
     await dbRun(`
@@ -169,5 +190,6 @@ async function inicializarBanco() {
 }
 
 module.exports = {
+    adicionarColunas,
     inicializarBanco
 };
