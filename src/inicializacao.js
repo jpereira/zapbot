@@ -77,9 +77,13 @@ async function inicializarBanco() {
             raw_json TEXT,
 
             revoked INTEGER DEFAULT 0,
-            revoked_at INTEGER
+            revoked_at INTEGER,
+
+            from_me INTEGER DEFAULT 0
         )
     `);
+    // from_me: enviada pela sua conta (no privado, sender_* é o outro participante)
+    await adicionarColunas('messages', { from_me: 'INTEGER DEFAULT 0' });
 
     // Consulta do /show: apagadas de um chat, das mais recentes para as mais antigas
     await dbRun('CREATE INDEX IF NOT EXISTS idx_messages_chat_revoked ON messages (chat_id, revoked, revoked_at)');
