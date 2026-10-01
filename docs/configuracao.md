@@ -35,13 +35,14 @@ Docker o bot ainda espera os programas nos caminhos da imagem: Chromium em
 
 ## Serviços externos
 
-Comandos que consultam serviços na internet. Só dois precisam de chave; os
+Comandos que consultam serviços na internet. Só três precisam de chave; os
 outros funcionam sem configuração.
 
 | Comando | Serviço | Chave |
 |---|---|---|
 | `/gpt`, `/resumo` | [OpenAI](https://platform.openai.com/) (pago por uso) | `OPENAI_API_KEY` ou setting `openai.api.key` |
 | `/gif` | [GIPHY](https://developers.giphy.com/) (grátis, 100 chamadas/hora) | `GIPHY_API_KEY` ou setting `gif.giphy.api.key` |
+| `/traduzir` | [Google Cloud Translation](https://cloud.google.com/translate) (cota mensal grátis, depois pago por caractere) | `GOOGLE_TRANSLATE_API_KEY` ou setting `traduzir.api.key` |
 | `/tempo` | [Open-Meteo](https://open-meteo.com/) | — |
 | `/cve`, `/walissu` | [NVD](https://nvd.nist.gov/) (~5 consultas a cada 30 s) | — |
 | `/news` | Feeds RSS (g1, Gazeta do Povo, The Hacker News...) | — |
@@ -85,6 +86,12 @@ A chave nova é do tipo **beta**: gratuita, mas limitada a **100 chamadas por
 hora**, o que sobra para o `/gif`. Acima disso a API responde `429` e o
 comando avisa que não conseguiu buscar o GIF. Para mais que isso é preciso
 pedir a chave de produção no próprio Dashboard.
+
+## Google Translate (opcional)
+
+| Variável | Exemplo | Descrição |
+|---|---|---|
+| `GOOGLE_TRANSLATE_API_KEY` | `AIza...` | Chave da Cloud Translation API usada pelo `/traduzir`. Se estiver vazia, o bot usa o setting `traduzir.api.key`; sem nenhuma das duas o `/traduzir` fica desativado. Veja [Configurando a chave do Google](comandos/traduzir.md#configurando-a-chave-do-google). |
 
 ## E-mail (QR Code e alertas)
 

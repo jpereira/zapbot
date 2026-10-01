@@ -271,6 +271,18 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 1, max: 16, // 16: limite da Open-Meteo
         desc: 'Máximo de dias do /tempo N (ou Nd), ex.: /tempo 7d Niteroi.'
     },
+    'traduzir.api.key': {
+        default: '',
+        type: 'string',
+        allowEmpty: true,
+        secret: true,
+        desc: 'Chave do Google Cloud Translation (/traduzir), usada quando GOOGLE_TRANSLATE_API_KEY não está no config/.env.'
+    },
+    'traduzir.lang': {
+        default: 'pt',
+        type: 'string',
+        desc: 'Idioma de destino padrão do /traduzir (código: pt, en, es...).'
+    },
     'watch.hitsRetentionDays': {
         default: 30,
         type: 'number', min: 1, max: 365,
