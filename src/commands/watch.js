@@ -2,9 +2,8 @@
  * Comando /watch.
  */
 
-const { client } = require('../client');
 const { getCommandSyntax } = require('./base');
-const { chatCurrentIds, resolverMentions, groupResolverName } = require('../contacts');
+const { resolverMentions, groupResolverName } = require('../contacts');
 const { dbAll, dbGet, dbReady, dbRun } = require('../db');
 const { printInfo } = require('../log');
 const { getSetting, setSetting } = require('../settings');
@@ -20,20 +19,8 @@ const { RULE_REGEX } = require('../watch/rules');
  * /watch -d -N               → removes rule N and its occurrences
  * /watch -f [-N]             → deletes rule N's occurrences (without N: of all); keeps the rules
  * The rules stay in the 'watch.rules' setting; the occurrences in the watch_hits table.
- * -l and -s show other people's conversations: outside your private chat, the reply goes there
- * (responderNoPrivado).
+ * The replies go out in the chat where the command was typed.
  */
-async function replyInPrivate({ msg, chatId }, textAlt) {
-    const myId = client.info.wid._serialized;
-
-    if ((await chatCurrentIds(chatId)).includes(myId)) {
-        await msg.reply(textAlt);
-        return;
-    }
-
-    await msg.reply('👀 Enviado no seu privado.');
-    await client.sendMessage(myId, textAlt);
-}
 
 // "-2" or "2" in argv → 2; otherwise null
 function ruleNumber(argv) {
@@ -41,7 +28,7 @@ function ruleNumber(argv) {
     return m ? Number(m[1]) : null;
 }
 
-async function cmdWatch({ msg, opts, args, chatId }) {
+async function cmdWatch({ msg, opts, args }) {
     await dbReady;
 
     const rules = getSetting('watch.rules');
@@ -98,7 +85,7 @@ async function cmdWatch({ msg, opts, args, chatId }) {
             .map((r, i) => `${`#${i + 1}`.padEnd(width)}  ${r}  (${count.get(r) ?? 0})`)
             .join('\n');
 
-        await replyInPrivate({ msg, chatId },
+        await msg.reply(
             `👀 *WATCH: REGRAS* (${rules.length}/${getSetting('watch.max')})\n\n` +
             '```\n' + list + '\n```\n' +
             '_(entre parênteses: ocorrências guardadas)_\n' +
@@ -153,7 +140,7 @@ async function cmdWatch({ msg, opts, args, chatId }) {
             textAlt += `    💬 "${summarizeText(await resolverMentions(h.body))}"\n`;
         }
 
-        await replyInPrivate({ msg, chatId }, textAlt);
+        await msg.reply( textAlt);
         return;
     }
 
