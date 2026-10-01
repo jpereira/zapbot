@@ -46,6 +46,7 @@ src/
   stats.js              contadores do /stats
   currencies.js, quotes.js, priceAlerts.js   /crypto, /cotacao e alertas de preço
   openai.js             modelos aceitos pelo /gpt
+  openaiChat.js         chamada ao chat da OpenAI (/gpt)
   contacts.js, options.js                    contatos/@lid e o parser de opções
   destinations.js           o -to dos avisos: pessoa pelo número ou grupo pelo nome
   watch/                regras e verificação do /watch
