@@ -721,7 +721,7 @@
                 },
                 {
                     "opts": [
-                        "del"
+                        "rem"
                     ],
                     "values": [
                         "<número>"
@@ -1115,8 +1115,8 @@
                 },
                 {
                     "opts": [
-                        "del",
-                        "d"
+                        "rem",
+                        "r"
                     ],
                     "values": [],
                     "desc": "Remove a regra -N e as ocorrências dela."
@@ -1133,7 +1133,7 @@
                     "argv": [
                         "-N"
                     ],
-                    "desc": "Nº da regra no /watch -l. Ex: /watch -d -2, /watch -f -2"
+                    "desc": "Nº da regra no /watch -l. Ex: /watch -r -2, /watch -f -2"
                 }
             ],
             "onlyAdmin": true
