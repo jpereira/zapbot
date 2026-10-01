@@ -317,6 +317,17 @@ describe('ajuda', () => {
         assert.match(texto, /Aliases: \/undo, \/s/);
     });
 
+    test('${CACHE_DIR}, ${MEDIA_DIR} e ${TMP_DIR} viram os caminhos reais na ajuda', () => {
+        const { CACHE_DIR, MEDIA_DIR } = bot.src('constantes');
+        const ajuda = getCommandSyntax('/cache');
+        assert.ok(ajuda.includes(`Exibe o espaço ocupado em ${CACHE_DIR} e limpa o cache.`), ajuda);
+        assert.ok(ajuda.includes(`mídias baixadas em ${MEDIA_DIR}`));
+        assert.doesNotMatch(ajuda, /\$\{/);
+
+        const { interpolar } = bot.src('comandos/base');
+        assert.equal(interpolar('em ${TMP_DIR}, ${NAO_EXISTE}'), `em ${bot.src('constantes').TMP_DIR}, \${NAO_EXISTE}`);
+    });
+
     test('getCommandSyntax de comando inexistente é null', () => {
         assert.equal(getCommandSyntax('/naoexiste'), null);
     });

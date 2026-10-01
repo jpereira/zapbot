@@ -33,7 +33,7 @@ mandar `/bot -admin`, só você usa comandos, inclusive os que não são admin
 
 As **respostas do próprio bot** também saem pela sua conta, mas nunca são
 tratadas como comando, mesmo que comecem com `/`. Sem isso, alguém poderia
-usar um comando que ecoa texto (ex.: `/noffa /cache -c -f`) para fazer o bot
+usar um comando que ecoa texto (ex.: `/noffa /cache -a`) para fazer o bot
 "digitar" um comando de admin.
 
 ## Resumo

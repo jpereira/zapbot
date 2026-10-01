@@ -125,9 +125,9 @@ describe('evento: mensagem apagada', () => {
     });
 
     test('contato com texto que não é vCard vai só como texto (nunca cru)', async () => {
-        const { alerta } = await mensagemApagada('/cache -c -f', { tipo: 'vcard' });
+        const { alerta } = await mensagemApagada('/cache -a', { tipo: 'vcard' });
         assert.equal(alerta.length, 1);
-        assert.match(alerta[0].texto, /CARTÃO DE CONTATO[\s\S]*💬 \*Conteúdo:\* "\/cache -c -f"/);
+        assert.match(alerta[0].texto, /CARTÃO DE CONTATO[\s\S]*💬 \*Conteúdo:\* "\/cache -a"/);
     });
 
     test('conta no /stats para o autor; apagada por você conta para você', async () => {
