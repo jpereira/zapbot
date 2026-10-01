@@ -90,7 +90,7 @@ admin está ligado: só você usa comandos até `/bot -admin`
 | [`/help`](https://jpereira.github.io/zapbot/commands/help/) | `/h` | | Menu de ajuda |
 | [`/joke`](https://jpereira.github.io/zapbot/commands/joke/) | `/piada`, `/humor` | | Piada aleatória em português |
 | [`/kernel`](https://jpereira.github.io/zapbot/commands/kernel/) | | | Versões atuais do kernel Linux (kernel.org) |
-| [`/listageral`](https://jpereira.github.io/zapbot/commands/listageral/) | | ✅ | Lista os membros do grupo |
+| [`/listageral`](https://jpereira.github.io/zapbot/commands/listageral/) | `/list` | ✅ | Lista os membros do grupo |
 | [`/meme`](https://jpereira.github.io/zapbot/commands/meme/) | | | Template de meme aleatório (imgflip) |
 | [`/monitor`](https://jpereira.github.io/zapbot/commands/monitor/) 🚧 | `/m` | ✅ | Avisa quando números ficam online *(em desenvolvimento, desabilitado por padrão)* |
 | [`/news`](https://jpereira.github.io/zapbot/commands/news/) | | ✅ | Manchetes de feeds RSS: `-hack`, `-g1`, `-gazeta`, `-brasil` |
