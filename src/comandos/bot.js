@@ -4,6 +4,7 @@
 
 const { getCommandSyntax } = require('./base');
 const { getSetting, setSetting } = require('../settings');
+const { textoDoInfo } = require('../sistema');
 const { agendarStatusDiario, desligarStatusDiario, textoDoStatus } = require('../status');
 const { fmtQuando, lerHora } = require('../util/quando');
 
@@ -17,10 +18,12 @@ const { fmtQuando, lerHora } = require('../util/quando');
  * Opções combinam: /bot -on +admin. A recuperação de apagadas e o /watch continuam funcionando.
  * O parser só reconhece opções com '-', então o '+admin' chega em opts.argv.
  *
- * E o relatório do bot (src/status.js), que não combina com as outras:
- *   /bot -status        → o relatório agora (últimas 24 h) e, no fim, o envio diário
- *   /bot -status 06h    → todo dia às 06:00 (Brasília), no seu privado ("6h", "06:00", "às 6h30"...)
- *   /bot -status off    → desliga o envio diário
+ * E o relatório do bot (src/status.js) e as versões (src/sistema.js), que não
+ * combinam com as outras:
+ *   /bot -status (-s)   → o relatório agora (últimas 24 h) e, no fim, o envio diário
+ *   /bot -s 06h         → todo dia às 06:00 (Brasília), no seu privado ("6h", "06:00", "às 6h30"...)
+ *   /bot -s off         → desliga o envio diário
+ *   /bot -info (-i)     → versões (Node.js, whatsapp-web.js, Chromium, yt-dlp, ffmpeg...) e o sistema
  */
 function estadoBot() {
     return (getSetting('bot.paused')
@@ -59,10 +62,21 @@ async function tratarStatus(msg, valores) {
 async function cmdBot({ msg, opts }) {
     const { on, off, admin: adminOff } = opts.opt;
     const adminOn = opts.argv.includes('+admin');
+    const outras = on || off || adminOn || adminOff;
+
+    // -info: versões e sistema
+    if (opts.given.has('info')) {
+        if (outras || opts.given.has('status') || opts.argv.length) {
+            await msg.reply('❌ O -info não combina com as outras opções.\n💡 _/bot -info_');
+            return;
+        }
+        await msg.reply(await textoDoInfo());
+        return;
+    }
 
     // -status [<hora>|off]: o parser pega um valor; "às 18h" deixa o resto em argv
     if (opts.given.has('status')) {
-        if (on || off || adminOn || adminOff) {
+        if (outras) {
             await msg.reply('❌ O -status não combina com as outras opções.\n💡 _/bot -status [<hora>|off]_');
             return;
         }
@@ -73,7 +87,7 @@ async function cmdBot({ msg, opts }) {
     const desconhecidos = opts.argv.filter(a => a !== '+admin');
 
     if (desconhecidos.length || (on && off) || (adminOn && adminOff)) {
-        await msg.reply('❌ Uso: /bot [-on|-off] [+admin|-admin]  ou  /bot -status [<hora>|off]\n💡 _/bot -h para ajuda_');
+        await msg.reply('❌ Uso: /bot [-on|-off] [+admin|-admin]  ou  /bot -status [<hora>|off]  ou  /bot -info\n💡 _/bot -h para ajuda_');
         return;
     }
 
