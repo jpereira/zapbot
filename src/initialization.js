@@ -77,9 +77,13 @@ async function initializeDb() {
             raw_json TEXT,
 
             revoked INTEGER DEFAULT 0,
-            revoked_at INTEGER
+            revoked_at INTEGER,
+
+            from_me INTEGER DEFAULT 0
         )
     `);
+    // from_me: sent by your account (in private, sender_* is the other participant)
+    await addColumns('messages', { from_me: 'INTEGER DEFAULT 0' });
 
     // /show query: a chat's deleted messages, from most recent to oldest
     await dbRun('CREATE INDEX IF NOT EXISTS idx_messages_chat_revoked ON messages (chat_id, revoked, revoked_at)');
