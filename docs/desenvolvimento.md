@@ -67,6 +67,11 @@ DEBUG_TESTES=1 npm test                    # mostra o log do bot durante os test
 node --test --experimental-test-coverage --test-coverage-include='src/**' tests/*.test.js
 ```
 
+No GitHub, o workflow **Testes** (`.github/workflows/ci.yml`) roda o
+`npm run lint`, o `npm test` e o `mkdocs build --strict` a cada push no `main` e
+em cada pull request; o selo no topo do README e da página inicial mostra o
+resultado do último run.
+
 Nada sai da máquina: o `tests/helpers/ambiente.js` troca, antes de carregar o
 bot, o WhatsApp (um cliente falso que guarda o que o bot enviou), o SQLite (em
 memória), a rede (`axios` com respostas registradas por URL; uma URL sem

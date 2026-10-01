@@ -1,0 +1,63 @@
+# CI: lint e testes a cada push no main e em cada pull request, e a
+# documentação gerada em modo estrito (link quebrado falha).
+# O selo "Testes" do README e do site mostra o resultado do último run no main.
+name: Testes
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Um push novo cancela o run anterior do mesmo branch
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  codigo:
+    name: Lint e testes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Node 24: o mesmo da imagem (node:24-alpine)
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      # Sem baixar o Chrome do Puppeteer: os testes simulam o WhatsApp
+      - name: Instala as dependências
+        run: npm ci --no-audit --no-fund
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: 'true'
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: Testes
+        run: npm test
+
+  documentacao:
+    name: Documentação
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: docs/requirements.txt
+
+      - name: Instala o MkDocs Material
+        run: pip install -r docs/requirements.txt
+
+      - name: Gera o site (--strict)
+        run: mkdocs build --strict
+        env:
+          NO_MKDOCS_2_WARNING: '1'
