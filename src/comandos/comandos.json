@@ -13,17 +13,34 @@
             "cmd": "/agendar",
             "usage": "/agendar <quando> [OPTION] <texto>",
             "aliases": [
-                "/agenda"
+                "/agenda",
+                "/cron",
+                "/lemb",
+                "/lembrete"
             ],
-            "help": "Envia o texto na hora marcada, como se você digitasse, no chat atual ou no chat do -to.",
+            "help": "Na hora marcada, envia o texto como se você digitasse (no chat atual ou no do -to) ou, como /lembrete (ou com -lembrete), um ⏰ Lembrete neste chat ou no seu privado (-pv).",
             "cmd_opts": [
+                {
+                    "opts": [
+                        "lembrete"
+                    ],
+                    "values": [],
+                    "desc": "Modo lembrete (o mesmo de chamar como /lembrete): ⏰ Lembrete respondendo a mensagem do comando."
+                },
                 {
                     "opts": [
                         "list",
                         "l"
                     ],
                     "values": [],
-                    "desc": "Lista as mensagens agendadas (também sem argumentos)."
+                    "desc": "Lista os lembretes e as mensagens agendadas (também sem argumentos)."
+                },
+                {
+                    "opts": [
+                        "pv"
+                    ],
+                    "values": [],
+                    "desc": "No modo lembrete: lembra no seu privado em vez do chat atual."
                 },
                 {
                     "opts": [
@@ -41,7 +58,7 @@
                     "values": [
                         "<nº|all>"
                     ],
-                    "desc": "Remove a mensagem nº N da lista (ou todas)."
+                    "desc": "Remove o item nº N da lista (ou todos)."
                 },
                 {
                     "opts": [
@@ -624,56 +641,6 @@
             "usage": "/kernel",
             "help": "Versões atuais do kernel Linux (kernel.org).",
             "onlyAdmin": false
-        },
-        {
-            "cmd": "/lembrete",
-            "usage": "/lembrete <quando> [OPTION] <texto>",
-            "aliases": [
-                "/lemb"
-            ],
-            "help": "Lembrete no chat atual (ou no seu privado com -pv) na hora marcada. Respondendo uma mensagem, o texto dela vira o lembrete.",
-            "cmd_opts": [
-                {
-                    "opts": [
-                        "list",
-                        "l"
-                    ],
-                    "values": [],
-                    "desc": "Lista os lembretes (também sem argumentos)."
-                },
-                {
-                    "opts": [
-                        "pv"
-                    ],
-                    "values": [],
-                    "desc": "Lembra no seu privado em vez do chat atual."
-                },
-                {
-                    "opts": [
-                        "repetir"
-                    ],
-                    "values": [
-                        "<diario|semanal|mensal>"
-                    ],
-                    "desc": "Repete no mesmo horário: todo dia, toda semana ou todo mês."
-                },
-                {
-                    "opts": [
-                        "rm"
-                    ],
-                    "values": [
-                        "<nº|all>"
-                    ],
-                    "desc": "Remove o lembrete nº N da lista (ou todos)."
-                },
-                {
-                    "argv": [
-                        "<quando>"
-                    ],
-                    "desc": "30m, 2h, 1h30m (daqui a tanto tempo), 18:30 ou às 18h (hoje ou amanhã), amanhã [9h], sexta [18h], 25/12 [10:00] ou 25/12/2027 [10h]. Sem hora: 9h."
-                }
-            ],
-            "onlyAdmin": true
         },
         {
             "cmd": "/listageral",

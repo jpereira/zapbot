@@ -40,7 +40,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -a`) para fazer o bot
 
 | Comando | Aliases | Admin | Descrição |
 |---|---|:-:|---|
-| [`/agendar`](agendar.md) | `/agenda` | ✅ | Envia uma mensagem na hora marcada, no chat atual ou num grupo/pessoa (`-to`); pode repetir |
+| [`/agendar`](agendar.md) | `/agenda`, `/cron`, `/lemb`, `/lembrete` | ✅ | Na hora marcada (`30m`, `às 18h`, `sexta 9h`...): envia uma mensagem (aqui ou com `-to`) ou, como `/lembrete`, um ⏰ lembrete; pode repetir |
 | [`/backup`](backup.md) | `/bkp` | ✅ | Backup do banco: automático todo dia; lista, detalha, restaura e envia o arquivo |
 | [`/boletos`](boletos.md) | | ✅ | Sorteia 2 membros para "pagar um boleto" |
 | [`/bot`](bot.md) | | ✅ | Liga/desliga todos os comandos (`-on`/`-off`) e o modo admin (`+admin`/`-admin`) |
@@ -57,7 +57,6 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -a`) para fazer o bot
 | [`/help`](help.md) | `/h` | | Menu de ajuda |
 | [`/joke`](joke.md) | `/piada`, `/humor` | | Piada aleatória em português |
 | [`/kernel`](kernel.md) | | | Versões atuais do kernel Linux (kernel.org) |
-| [`/lembrete`](lembrete.md) | `/lemb` | ✅ | Lembrete na hora marcada (`30m`, `às 18h`, `sexta 9h`...), no chat ou no privado; pode repetir |
 | [`/listageral`](listageral.md) | `/list` | ✅ | Lista os membros do grupo |
 | [`/meme`](meme.md) | | | Template de meme aleatório (imgflip) |
 | [`/monitor`](monitor.md) 🚧 | `/m` | ✅ | Avisa quando números ficam online *(em desenvolvimento, desabilitado por padrão)* |
