@@ -60,7 +60,7 @@ git fetch --tags
 git checkout release-1.8
 git describe --tags        # confere a versão: release-1.8
 docker compose -f docker/docker-compose.yml build zapbot
-docker compose -f docker/docker-compose.yml up -d --force-recreate --remove-orphans zapbot
+docker compose -f docker/docker-compose.yml up -d --force-recreate zapbot
 ```
 
 O `git checkout` de uma tag deixa o repositório em *detached HEAD*; o aviso do
@@ -76,7 +76,7 @@ pode ter recursos incompletos ou quebrados. Use só para testar ou desenvolver.
 git checkout main
 git pull
 docker compose -f docker/docker-compose.yml build zapbot
-docker compose -f docker/docker-compose.yml up -d --force-recreate --remove-orphans zapbot
+docker compose -f docker/docker-compose.yml up -d --force-recreate zapbot
 ```
 
 Para voltar à estável, repita os comandos de cima (`git fetch --tags` e o

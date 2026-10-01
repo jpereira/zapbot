@@ -67,7 +67,7 @@ deploy.context: ## Cria o contexto Docker remoto (se não existir)
 deploy.up: deploy.context ## Build + (re)cria o zapbot no servidor
 	$(RDOCKER) image prune -f
 	$(RCOMPOSE) build $(OPTS) $(PROD_SERVICE)
-	$(RCOMPOSE) up -d --force-recreate --remove-orphans $(PROD_SERVICE)
+	$(RCOMPOSE) up -d --force-recreate $(PROD_SERVICE)
 
 deploy.logs: deploy.context ## Segue os logs do zapbot
 	$(RDOCKER) logs -f $(PROD_SERVICE)

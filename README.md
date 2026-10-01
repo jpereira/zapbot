@@ -123,7 +123,8 @@ admin está ligado: só você usa comandos até `/bot -admin`
 ## Desenvolvimento
 
 ```bash
-npm test          # 270+ testes, sem rede nem WhatsApp (Node 22.13+)
+npm test          # 280+ testes, sem rede nem WhatsApp (Node 22.13+)
+npm run lint      # ESLint
 ```
 
 O código fica em `src/` (o `app.js` só faz o bootstrap). Veja
