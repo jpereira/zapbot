@@ -211,6 +211,11 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 5000, max: 300000,
         desc: 'Timeout (ms) do /gpt, usado quando OPENAI_TIMEOUT_MS não está no config/.env.'
     },
+    'resumo.maxMsgs': {
+        default: 500,
+        type: 'number', min: 10, max: 2000,
+        desc: 'Máximo de mensagens enviadas à OpenAI por /resumo.'
+    },
     'revoke.status': {
         default: true,
         type: 'boolean',
