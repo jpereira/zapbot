@@ -99,8 +99,8 @@
         },
         {
             "cmd": "/bot",
-            "usage": "/bot [-on|-off] [+admin|-admin]  ou  /bot -status [<hora>|off]",
-            "help": "Liga/desliga o bot e o modo admin (sem opção mostra o estado; as opções combinam: /bot -on +admin) e mostra o relatório do bot (-status).",
+            "usage": "/bot [-on|-off] [+admin|-admin]  ou  /bot -status [<hora>|off]  ou  /bot -info",
+            "help": "Liga/desliga o bot e o modo admin (sem opção mostra o estado; as opções combinam: /bot -on +admin), mostra o relatório do bot (-status) e as versões do que ele usa (-info).",
             "cmd_opts": [
                 {
                     "opts": [
@@ -125,12 +125,21 @@
                 },
                 {
                     "opts": [
-                        "status"
+                        "info",
+                        "i"
+                    ],
+                    "values": [],
+                    "desc": "Versões do que o bot usa (ZapBot, Node.js, whatsapp-web.js, WhatsApp Web, SQLite, Chromium, yt-dlp, ffmpeg) e o sistema: uname -a, host, CPU, memória e há quanto tempo estão no ar."
+                },
+                {
+                    "opts": [
+                        "status",
+                        "s"
                     ],
                     "values": [
                         "[<hora>|off]"
                     ],
-                    "desc": "Sem valor: relatório das últimas 24 h (no ar, cache, /watch, apagadas, editadas, status apagados, ignoradas pelo /mudo, último backup) e, no fim, o envio diário. Com uma hora (Brasília: 06h, 6h30, 06:00 ou às 18h), envia todo dia nesse horário, no seu privado. Ex: /bot -status 06h. Com off, desliga o envio diário."
+                    "desc": "Sem valor: relatório das últimas 24 h (no ar, cache, /watch, apagadas, editadas, status apagados, ignoradas pelo /mudo, último backup) e, no fim, o envio diário. Com uma hora (Brasília: 06h, 6h30, 06:00 ou às 18h), envia todo dia nesse horário, no seu privado. Ex: /bot -s 06h. Com off, desliga o envio diário."
                 },
                 {
                     "argv": [
