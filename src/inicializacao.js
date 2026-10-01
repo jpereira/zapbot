@@ -217,6 +217,32 @@ async function inicializarBanco() {
         )
     `);
 
+    /*
+     * /mudo: pessoas e grupos com os avisos em silêncio (o que: deleted, edited,
+     * status) e cada aviso cortado (mute_hits, para o /status; 30 dias).
+     */
+    await dbRun(`
+        CREATE TABLE IF NOT EXISTS mutes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            target_id TEXT NOT NULL UNIQUE,
+            target_name TEXT,
+            is_group INTEGER DEFAULT 0,
+            deleted INTEGER DEFAULT 0,
+            edited INTEGER DEFAULT 0,
+            status INTEGER DEFAULT 0,
+            created_at INTEGER NOT NULL
+        )
+    `);
+    await dbRun(`
+        CREATE TABLE IF NOT EXISTS mute_hits (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            target_id TEXT NOT NULL,
+            kind TEXT NOT NULL,
+            at INTEGER NOT NULL
+        )
+    `);
+    await dbRun('CREATE INDEX IF NOT EXISTS idx_mute_hits_at ON mute_hits (at)');
+
     // Configurações gerais do bot (chave -> valor em JSON)
     await dbRun(`
         CREATE TABLE IF NOT EXISTS settings (

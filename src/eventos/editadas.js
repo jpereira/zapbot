@@ -6,6 +6,7 @@ const { client } = require('../cliente');
 const { dbGet, dbPronto, dbRun } = require('../db');
 const { resolverAutorApagada } = require('./apagadas');
 const { printError, printInfo } = require('../log');
+const { ignorarAviso } = require('../mudo');
 const { getSetting } = require('../settings');
 const { contarStats } = require('../stats');
 const { formatarData } = require('../util/formatar');
@@ -107,7 +108,9 @@ client.on('message_edit', async (msg, newBody, prevBody) => {
             campos: { edited: 1 }
         });
 
-        if (getSetting('show.alert.edit')) {
+        // /mudo: o aviso deste chat ou desta pessoa está em silêncio (a edição fica guardada para o /show -e)
+        const remetentes = [original?.sender_jid, original?.sender_number, row.sender_number];
+        if (getSetting('show.alert.edit') && !(await ignorarAviso('editada', { chatId, remetentes }))) {
             await enviarMensagemEditada(client.info.wid._serialized, row, info);
         }
     } catch (err) {
