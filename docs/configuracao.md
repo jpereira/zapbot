@@ -1,7 +1,12 @@
 # Configuração do `config/.env`
 
-O arquivo é carregado pelo Compose (`env_file: ../config/.env`) e as variáveis
-ficam disponíveis para o bot. Nunca faça commit dele (já está no `.gitignore`).
+O Compose lê o arquivo na sua máquina (`env_file: ../config/.env`) e passa as
+variáveis para o container ao criá-lo: o arquivo não vai para dentro da imagem.
+Nunca faça commit dele (já está no `.gitignore`).
+
+Rodando fora do Docker (`node app.js`), o bot lê o mesmo arquivo que o Compose
+usaria: `config/.env` com `APP_ENV=prod` e `config/.env.dev` nos outros casos.
+Variáveis já definidas no ambiente têm prioridade sobre as do arquivo.
 
 ## Docker Compose
 

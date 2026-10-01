@@ -29,8 +29,17 @@
  * banimento do número. Use por sua conta e risco.
  */
 
-// Carrega o .env antes de qualquer outro módulo: vários leem process.env ao carregar
-require('dotenv').config();
+/*
+ * Variáveis de ambiente, antes de qualquer outro módulo (vários leem process.env
+ * ao carregar). No Docker elas já chegam pelo env_file do Compose e o arquivo nem
+ * está na imagem; fora dele (node app.js), vêm do mesmo arquivo que o Compose
+ * usaria: config/.env com APP_ENV=prod, senão config/.env.dev. O dotenv nunca
+ * sobrescreve uma variável que já existe.
+ */
+require('dotenv').config({
+    path: require('path').join(__dirname, 'config', process.env.APP_ENV === 'prod' ? '.env' : '.env.dev'),
+    quiet: true
+});
 
 const colors = require('colors');
 
