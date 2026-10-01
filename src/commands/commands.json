@@ -1054,6 +1054,7 @@
             "cmd": "/tempo",
             "usage": "/tempo [N|Nd] [cidade]",
             "aliases": [
+                "/t",
                 "/weather"
             ],
             "help": "Tempo agora, máx./mín. e chance de chuva do dia (Open-Meteo); com N (ou Nd), a previsão dos próximos N dias. Sem cidade usa o setting tempo.city.",

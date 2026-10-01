@@ -60,7 +60,7 @@ describe('/cve', () => {
     });
 });
 
-describe('/tempo (/weather)', () => {
+describe('/tempo (/t, /weather)', () => {
     const local = { name: 'Niterói', admin1: 'Rio de Janeiro', country: 'Brasil', latitude: -22.9, longitude: -43.1 };
     const forecast = (temp, codeAlt = 0) => ({
         current: { temperature_2m: temp, apparent_temperature: temp + 1, relative_humidity_2m: 70, weather_code: codeAlt, wind_speed_10m: 12.4 },
@@ -84,7 +84,7 @@ describe('/tempo (/weather)', () => {
         assert.equal(network.chamadas[0].cfg.params.name, 'Recife');
 
         network.responder('get', 'api.open-meteo.com/v1/forecast', { ...forecast(2), daily: { temperature_2m_max: [null], temperature_2m_min: [null], precipitation_probability_max: [null] } });
-        const [cold] = await bot.replyAlt('/tempo Curitiba');
+        const [cold] = await bot.replyAlt('/t Curitiba');
         assert.match(cold, /🥶 Tá congelando!/);
         assert.match(cold, /📈 \*Máx:\* -  📉 \*Mín:\* -/);
     });
