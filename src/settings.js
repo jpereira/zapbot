@@ -20,9 +20,10 @@ const { compilarRegraWatch } = require('./watch/regras');
  * existente), type (boolean | number | string | list), desc e, opcionalmente,
  * min/max (number), item() para normalizar/validar cada item de uma list,
  * separator (list cujos itens podem ter espaço/vírgula: ex. '\n', um por linha),
- * allowEmpty (string que pode ficar vazia) e secret (valor mascarado no /set e nos logs).
+ * allowEmpty (string que pode ficar vazia), validar() (string: lança Error se
+ * inválida) e secret (valor mascarado no /set e nos logs).
  */
-// item() das listas de feeds do /news
+// item() das listas de feeds do /news e validar() do defi.solana.rpc
 function validarUrlFeed(v) {
     if (!isValidHttpUrl(v)) throw new Error(`URL inválida: ${v}`);
     return v;
@@ -125,6 +126,13 @@ const SETTINGS_SCHEMA = {
         default: APP_ENV.toLowerCase() === 'dev',
         type: 'boolean',
         desc: 'Debug mode (o mesmo do /debug on|off).'
+    },
+    'defi.solana.rpc': {
+        default: 'https://api.mainnet-beta.solana.com',
+        type: 'string',
+        secret: true,
+        validar: validarUrlFeed,
+        desc: 'RPC da Solana usado pelo /defi (o público limita as consultas; um RPC próprio costuma ter a chave na URL).'
     },
     'edit.alert': {
         default: true,
@@ -356,7 +364,7 @@ function validarSetting(key, value) {
             if (!s && schema.allowEmpty) return s;
             if (!s || s.length > 100) throw new Error('precisa ter de 1 a 100 caracteres');
             if (schema.opcoes && !schema.opcoes.includes(s)) throw new Error(`não suportado: ${s} (aceitos: ${schema.opcoes.join(', ')})`);
-            return s;
+            return schema.validar ? schema.validar(s) : s;
         }
 
         case 'list': {
