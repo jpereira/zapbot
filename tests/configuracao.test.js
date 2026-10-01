@@ -315,6 +315,8 @@ describe('parser de opções', () => {
 
     test('aspas agrupam', () => {
         assert.deepEqual(GetOptFromCommand('"a b" \'c d\'', cmd('/noffa')).argv, ['a b', 'c d']);
+        // O 1º argumento pode começar com "/" (uma regex, um texto): não é o comando
+        assert.deepEqual(GetOptFromCommand('/^show\\./ x', cmd('/set')).argv, ['/^show\\./', 'x']);
     });
 
     test('-h e -help em qualquer comando', () => {
