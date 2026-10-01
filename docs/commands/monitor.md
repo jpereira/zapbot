@@ -18,8 +18,8 @@ evento também é registrado no banco.
 |---|---|---|
 | `-list` | | Lista os números monitorados |
 | `-logs` | | Lista o histórico de eventos |
-| `-add` | `numero` | Adiciona um número |
-| `-del` | `numero` | Remove um número |
+| `-add` | `<número>` | Adiciona um número |
+| `-del` | `<número>` | Remove um número |
 | `-clean` | | Remove todos |
 
 Aceita também a forma sem hífen:

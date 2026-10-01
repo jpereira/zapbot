@@ -147,7 +147,7 @@
                 "/bitcoio",
                 "/creptomoeda"
             ],
-            "help": "Exibe o preço atual das cryptos ativadas.",
+            "help": "Preço atual e variação de 24 h das criptomoedas ativadas (Binance).",
             "cmd_opts": [
                 {
                     "opts": [
@@ -227,21 +227,21 @@
                 "/d",
                 "/dbg"
             ],
-            "help": "Ajuda na depuração de problemas. O estado fica salvo (setting debug.enabled).",
+            "help": "Liga/desliga os logs de depuração. O estado fica salvo (setting debug.enabled).",
             "cmd_opts": [
                 {
                     "opts": [
                         "on"
                     ],
                     "values": [],
-                    "desc": "Ativa o debug mode."
+                    "desc": "Ativa o modo debug."
                 },
                 {
                     "opts": [
                         "off"
                     ],
                     "values": [],
-                    "desc": "Desativa o debug mode."
+                    "desc": "Desativa o modo debug."
                 }
             ],
             "onlyAdmin": true
@@ -319,16 +319,16 @@
         {
             "cmd": "/everyone",
             "usage": "/everyone",
-            "help": "Faz o reply marcando todos do grupo.",
+            "help": "Responde marcando todos do grupo (exceto você).",
             "onlyAdmin": true
         },
         {
             "cmd": "/get",
-            "usage": "/get [OPTION]... URL",
+            "usage": "/get [OPTION]... <url>",
             "aliases": [
                 "/download"
             ],
-            "help": "Caso seja válido, faz o download do video.",
+            "help": "Baixa vídeo ou áudio de redes sociais (Instagram, YouTube, X, TikTok e outros sites do yt-dlp). Também funciona respondendo uma mensagem com link.",
             "cmd_opts": [
                 {
                     "opts": [
@@ -336,7 +336,7 @@
                         "st"
                     ],
                     "values": [],
-                    "desc": "Enviar como sticker (recorte quadrado no meio do vídeo)."
+                    "desc": "Envia como figurinha animada (até 6 s, recorte quadrado no meio do vídeo)."
                 },
                 {
                     "opts": [
@@ -344,7 +344,7 @@
                         "a"
                     ],
                     "values": [],
-                    "desc": "Extrai o audio e envia no formato .mp3."
+                    "desc": "Só o áudio, em .mp3."
                 },
                 {
                     "opts": [
@@ -352,9 +352,9 @@
                         "ss"
                     ],
                     "values": [
-                        "<second>"
+                        "<segundo>"
                     ],
-                    "desc": "Iniciar a partir do segundo determinado."
+                    "desc": "Começa a partir deste segundo."
                 },
                 {
                     "opts": [
@@ -362,25 +362,23 @@
                         "es"
                     ],
                     "values": [
-                        "<second>"
+                        "<segundo>"
                     ],
-                    "desc": "Cortar o video no segundo terminado."
+                    "desc": "Corta neste segundo."
                 },
                 {
                     "opts": [
                         "verbose",
                         "v"
                     ],
-                    "values": [
-                        ""
-                    ],
-                    "desc": "Exibe os parametros usados no yt-dlp/ffmpeg."
+                    "values": [],
+                    "desc": "Mostra os comandos usados no yt-dlp e no ffmpeg."
                 },
                 {
                     "argv": [
                         "<url>"
                     ],
-                    "desc": "ex: Instagram,YouTube,X,..."
+                    "desc": "Link do vídeo. Ex: https://youtu.be/..."
                 }
             ],
             "onlyAdmin": false
@@ -420,10 +418,19 @@
         },
         {
             "cmd": "/help",
+            "usage": "/help [comando]",
             "aliases": [
                 "/h"
             ],
-            "help": "Exibe este menu de ajuda.",
+            "help": "Exibe o menu de ajuda; com um comando, só a ajuda dele. Ex: /help show",
+            "cmd_opts": [
+                {
+                    "argv": [
+                        "[comando]"
+                    ],
+                    "desc": "Comando (com ou sem /, nome ou alias). Ex: /help get"
+                }
+            ],
             "onlyAdmin": false
         },
         {
@@ -433,7 +440,7 @@
                 "/piada",
                 "/humor"
             ],
-            "help": "Piada aleatória (JokeAPI, safe-mode).",
+            "help": "Piada aleatória em português (JokeAPI, safe-mode).",
             "onlyAdmin": false
         },
         {
@@ -471,39 +478,39 @@
                         "list"
                     ],
                     "values": [],
-                    "desc": "Lista numeros."
+                    "desc": "Lista os números monitorados."
                 },
                 {
                     "opts": [
                         "logs"
                     ],
                     "values": [],
-                    "desc": "Lista logs."
+                    "desc": "Lista o histórico de quando ficaram online."
                 },
                 {
                     "opts": [
                         "add"
                     ],
                     "values": [
-                        "numero"
+                        "<número>"
                     ],
-                    "desc": "Adiciona número para ser monitorado."
+                    "desc": "Adiciona um número para monitorar."
                 },
                 {
                     "opts": [
                         "del"
                     ],
                     "values": [
-                        "numero"
+                        "<número>"
                     ],
-                    "desc": "Deleta numero."
+                    "desc": "Remove um número."
                 },
                 {
                     "opts": [
                         "clean"
                     ],
                     "values": [],
-                    "desc": "Limpa todos os números."
+                    "desc": "Remove todos os números."
                 }
             ],
             "onlyAdmin": true
@@ -555,12 +562,12 @@
         },
         {
             "cmd": "/noffa",
-            "usage": "/noffa",
+            "usage": "/noffa <texto>",
             "aliases": [
                 "/🌈",
                 "/🏳️‍🌈"
             ],
-            "help": "Da uma floreada no texto.",
+            "help": "Dá uma floreada no texto com emojis de arco-íris. Aceita texto ou resposta a uma mensagem.",
             "onlyAdmin": false
         },
         {
@@ -569,7 +576,7 @@
             "aliases": [
                 "/p"
             ],
-            "help": "Verificar status do bot.",
+            "help": "Verifica se o bot está respondendo (responde pong).",
             "onlyAdmin": true
         },
         {
@@ -597,7 +604,7 @@
                     "argv": [
                         "<chave> <valor>"
                     ],
-                    "desc": "Altera. Listas: itens separados por vírgula ou espaço (watch.rules: um por linha)."
+                    "desc": "Altera. Listas: itens separados por vírgula ou espaço (watch.rules: uma regra por linha)."
                 }
             ],
             "onlyAdmin": true
@@ -693,11 +700,11 @@
         },
         {
             "cmd": "/sticker",
-            "usage": "/sticker",
+            "usage": "/sticker (respondendo uma imagem, vídeo ou link)",
             "aliases": [
                 "/st"
             ],
-            "help": "Cria um 'sticker' a partir de uma imagem (recorte quadrado no meio da imagem).",
+            "help": "Cria uma figurinha a partir da imagem, do vídeo ou da prévia do link respondido (imagens com recorte quadrado no meio).",
             "onlyAdmin": false
         },
         {
@@ -730,7 +737,7 @@
                 "/u",
                 "/up"
             ],
-            "help": "Exibe o tempo que o bot está rodando.",
+            "help": "Exibe há quanto tempo o bot está rodando e conectado.",
             "onlyAdmin": true
         },
         {
