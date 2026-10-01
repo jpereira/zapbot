@@ -9,12 +9,12 @@ const { printError } = require('../log');
 const { envOuSetting, getSetting } = require('../settings');
 
 // /giphy [tag]: GIF aleatório do GIPHY, enviado como MP4 em loop.
-// Chave: GIPHY_API_KEY no config/.env ou, na falta dela, o setting 'gif.giphy.api.key'
+// Chave: GIPHY_API_KEY no config/.env ou, na falta dela, o setting 'giphy.api.key'
 async function cmdGiphy({ msg, args }) {
-    const apiKey = envOuSetting('GIPHY_API_KEY', 'gif.giphy.api.key');
+    const apiKey = envOuSetting('GIPHY_API_KEY', 'giphy.api.key');
 
     if (!apiKey) {
-        await msg.reply('⚠️ Chave do GIPHY não configurada: defina GIPHY_API_KEY no config/.env ou use /set gif.giphy.api.key <chave>.');
+        await msg.reply('⚠️ Chave do GIPHY não configurada: defina GIPHY_API_KEY no config/.env ou use /set giphy.api.key <chave>.');
         return;
     }
 
