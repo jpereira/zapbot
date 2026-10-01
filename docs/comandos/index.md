@@ -49,6 +49,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -a`) para fazer o bot
 | [`/crypto`](crypto.md) | `/bitcoio`, `/creptomoeda` | | Cotação das criptos ativadas (padrão: BTC, ETH, SOL e HYPE); alertas de preço |
 | [`/cve`](cve.md) | | | Últimas CVEs publicadas (NVD); `-highscore` só as críticas |
 | [`/debug`](debug.md) | `/d`, `/dbg` | ✅ | Liga/desliga logs de debug |
+| [`/defi`](defi.md) | | ✅ | Posições de liquidez da Orca: saldo, faixa, preço e taxas a coletar, lidos on-chain |
 | [`/enquete`](enquete.md) | `/enq`, `/quiz` | ✅ | Cria uma enquete nativa do WhatsApp no chat; `-r` mostra o resultado |
 | [`/get`](get.md) | `/download` | | Baixa vídeo/áudio de redes sociais |
 | [`/gif`](gif.md) | | | GIF aleatório (GIPHY) |

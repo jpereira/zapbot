@@ -52,6 +52,7 @@ src/
   openaiChat.js         chamada ao chat da OpenAI (/gpt e /resumo)
   contatos.js, opcoes.js                    contatos/@lid e o parser de opções
   destinos.js           o -to dos avisos: pessoa pelo número ou grupo pelo nome
+  defi/                 Solana (base58, PDA, RPC) e as contas da Orca (/defi)
   watch/                regras e verificação do /watch
   eventos/              message_create, apagadas, editadas, presença
   comandos/             comandos.json (definição), um arquivo por comando,
@@ -104,6 +105,7 @@ entre os casos.
 | `agenda.test.js` | Datas digitadas (`30m`, `às 18h`, `sexta`...), `/lembrete` e `/agendar` |
 | `backup.test.js` | `/backup` (criação, lista, restauração, envio) e o backup diário |
 | `cotacoes.test.js` | `/cotacao`, `/crypto` e os alertas de preço |
+| `defi.test.js` | Solana (base58, PDA), contas da Orca (conferidas com o SDK oficial) e o `/defi` |
 | `externos.test.js` | `/cve`, `/tempo`, `/news`, `/gpt`, `/resumo`, `/traduzir`, `/gif`, `/meme`, `/joke`, `/kernel` |
 | `grupo.test.js` | `/todos`, `/boletos`, `/listageral`, `/walissu`, `/enquete` (e o `-r`), `/sticker` |
 | `get-cache.test.js` | `/get` (e o anti-SSRF), `/cache` e a limpeza periódica |

@@ -398,6 +398,76 @@
             "onlyAdmin": true
         },
         {
+            "cmd": "/defi",
+            "usage": "/defi -orca -position <endereço> [-nft <mint>] [-pool <endereço>]  ou  /defi [OPTION]",
+            "help": "Posições de liquidez cadastradas (por enquanto, da Orca): saldo, faixa, preço e taxas a coletar, lidos on-chain.",
+            "cmd_opts": [
+                {
+                    "opts": [
+                        "list",
+                        "l"
+                    ],
+                    "values": [],
+                    "desc": "Lista as posições cadastradas (também sem argumentos)."
+                },
+                {
+                    "opts": [
+                        "nft"
+                    ],
+                    "values": [
+                        "<mint>"
+                    ],
+                    "desc": "Com -position: o NFT da posição (opcional; o bot confere se bate)."
+                },
+                {
+                    "opts": [
+                        "orca"
+                    ],
+                    "values": [],
+                    "desc": "Protocolo da posição a cadastrar (por enquanto, o único)."
+                },
+                {
+                    "opts": [
+                        "pool"
+                    ],
+                    "values": [
+                        "<endereço>"
+                    ],
+                    "desc": "Com -position: a pool (opcional; o bot confere se bate)."
+                },
+                {
+                    "opts": [
+                        "position",
+                        "p"
+                    ],
+                    "values": [
+                        "<endereço>"
+                    ],
+                    "desc": "Cadastra a posição (com -orca)."
+                },
+                {
+                    "opts": [
+                        "rm"
+                    ],
+                    "values": [
+                        "<nº|all>"
+                    ],
+                    "desc": "Remove a posição nº N (ou todas)."
+                },
+                {
+                    "opts": [
+                        "show",
+                        "s"
+                    ],
+                    "values": [
+                        "[nº]"
+                    ],
+                    "desc": "Position Details de todas as posições (ou da nº N): saldo, faixa, preço atual e taxas a coletar."
+                }
+            ],
+            "onlyAdmin": true
+        },
+        {
             "cmd": "/enquete",
             "usage": "/enquete [-m] <pergunta> | <opção 1> | <opção 2> [| ...]  ou  /enquete -r",
             "aliases": [
