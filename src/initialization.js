@@ -184,7 +184,7 @@ async function initializeDb() {
     `);
 
     /*
-     * /agendar schedule: messages and reminders (kind). due_at is
+     * /cron schedule: messages and reminders (kind). due_at is
      * the next send; with repeat, it advances on each send (day_of_month stores
      * the monthly's original day, so a 31 goes back to 31 after February).
      */

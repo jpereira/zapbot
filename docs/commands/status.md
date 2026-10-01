@@ -48,5 +48,5 @@ O que entra:
 - **Último backup**: o mais recente do [`/backup`](backup.md).
 
 O envio diário fica na agenda do bot (tabela `schedules`), mas não aparece no
-[`/agendar`](agendar.md) nem conta no limite dele. Se o bot estiver fora do ar
+[`/cron`](cron.md) nem conta no limite dele. Se o bot estiver fora do ar
 no horário, o relatório sai quando ele voltar.

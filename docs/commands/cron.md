@@ -1,11 +1,11 @@
-# `/agendar` (`/agenda`, `/cron`, `/lemb`, `/lembrete`) · admin
+# `/cron` (`/agenda`, `/lembrete`) · admin
 
 Faz algo na hora marcada. Tem dois modos, na mesma agenda:
 
-- **Mensagem** (`/agendar`, `/agenda`, `/cron`): envia o texto como se você
+- **Mensagem** (`/cron`, `/agenda`): envia o texto como se você
   digitasse, no chat atual ou, com `-to`, no privado de uma pessoa ou num grupo.
   Serve para aniversários, avisos e mensagens recorrentes.
-- **Lembrete** (`/lembrete`, `/lemb`, ou qualquer um com `-lembrete`): envia
+- **Lembrete** (`/lembrete`, ou qualquer um com `-lembrete`): envia
   `⏰ Lembrete` e o texto, respondendo a mensagem do comando, no chat atual (ou
   no seu privado, com `-pv`). Respondendo (reply) uma mensagem, o lembrete cita
   essa mensagem, e o texto dela vira o lembrete se você não escrever outro.
@@ -16,22 +16,22 @@ Faz algo na hora marcada. Tem dois modos, na mesma agenda:
 | `-to` | `<destino>` | Modo mensagem: envia no privado de uma pessoa (`@5521999999999`) ou num grupo, pelo nome ou parte dele (`/Grupo L200/`, `"Grupo L200"` ou `L200`). Veja [Avisar outra pessoa ou um grupo](cotacao.md#avisar-outra-pessoa-ou-um-grupo) |
 | `-lembrete` | | Modo lembrete (o mesmo de chamar como `/lembrete`) |
 | `-pv` | | Modo lembrete: lembra no seu privado em vez do chat atual |
-| `-repetir` | `<diario\|semanal\|mensal>` | Repete no mesmo horário: todo dia, toda semana ou todo mês |
+| `-repetir`, `-r` | `<diario\|semanal\|mensal>` | Repete no mesmo horário: todo dia, toda semana ou todo mês |
 | `-list`, `-l` | | Lista os lembretes e as mensagens (o mesmo que o comando sem nada) |
 | `-rm` | `<nº\|all>` | Remove o item nº N da lista (ou todos) |
 
 ```
-/agendar 25/12 00:00 Feliz Natal, família! 🎄
-/agendar sexta 18h -to /Grupo L200/ Bom fim de semana!
+/cron 25/12 00:00 Feliz Natal, família! 🎄
+/cron sexta 18h -to /Grupo L200/ Bom fim de semana!
 /cron seg 8h -repetir semanal -to trabalho Bom dia! Pauta da semana no drive.
 /agenda 05/11 9h -repetir mensal -to @5521999999999 Lembrete: aluguel vence hoje.
 /lembrete 30m tirar o bolo do forno
 /lembrete às 18h pagar o boleto
-/lemb -pv amanhã 9h ligar pro banco
-/agendar -lembrete sexta 18h -repetir semanal enviar o relatório
+/lembrete -pv amanhã 9h ligar pro banco
+/cron -lembrete sexta 18h -r semanal enviar o relatório
 /lembrete 2h                    (respondendo uma mensagem: lembra dela)
-/agendar                        → a lista
-/agendar -rm 2                  → remove o nº 2
+/cron                           → a lista
+/cron -rm 2                     → remove o nº 2
 ```
 
 ```
@@ -54,7 +54,7 @@ A lista mostra os dois tipos juntos, na ordem em que vão sair (📅 mensagem,
 ⏰ lembrete), e os números são os do `-rm`:
 
 ```
-/agendar -l
+/cron -l
 📅 Agenda (3)
 
 1. ⏰ qui 01/10 18:00 — pagar o boleto
@@ -79,7 +79,7 @@ Brasília.
 | Dia da semana | `sexta`, `seg 8h`, `sábado 10:00` | O próximo (hoje, se a hora ainda não passou). Sem hora: 9h |
 | Data | `25/12`, `25/12 10:00`, `25/12/2027 10h` | Sem ano: a próxima vez que a data chega. Sem hora: 9h |
 
-Até 366 dias à frente. O `-repetir mensal` mantém o dia do mês: um item do dia
+Até 366 dias à frente. O `-repetir mensal` (ou `-r mensal`) mantém o dia do mês: um item do dia
 31 vai no último dia dos meses mais curtos e volta ao 31 depois.
 
 ## Detalhes

@@ -20,7 +20,7 @@ const { fmtWhen, instantInBrasilia, partsInBrasilia } = require('./util/when');
 /*
  * The daily send is a schedule item (`schedules` table, kind 'status',
  * repetir 'diario'), in your private chat: the schedule already handles the time, the
- * repetition and the delayed send when the bot comes back. It does not show in /agendar.
+ * repetition and the delayed send when the bot comes back. It does not show in /cron.
  */
 const KIND = 'status';
 

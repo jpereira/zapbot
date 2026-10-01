@@ -1,6 +1,6 @@
 /*
  * Destination of a notice (-to): a person by number or a group by name.
- * Used by the price alerts (/cotacao and /crypto -alerta) and by /agendar.
+ * Used by the price alerts (/cotacao and /crypto -alerta) and by /cron.
  */
 
 const { client } = require('./client');
