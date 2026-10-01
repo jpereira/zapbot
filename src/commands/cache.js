@@ -5,7 +5,7 @@
 const { formatErrorCommand } = require('./base');
 const { CACHE_DIR, MEDIA_DIR } = require('../constants');
 const { dbGet } = require('../db');
-const { cleanFilesOld, cleanCacheOld, cleanEditedOld, cleanMedia, cleanStatsOld, cleanAll, cleanWatchOld } = require('../cleanup');
+const { cleanFilesOld, cleanCacheOld, cleanEditedOld, cleanPollsOld, cleanMedia, cleanStatsOld, cleanAll, cleanWatchOld } = require('../cleanup');
 const { printError } = require('../log');
 const { humanSize, listCacheLevelOnly } = require('../util/files');
 
@@ -32,6 +32,7 @@ async function cmdCache({ msg, opts }) {
                 await cleanWatchOld();
                 await cleanEditedOld();
                 await cleanStatsOld();
+                await cleanPollsOld();
                 partsAlt.push('🧹 Cache limpo (itens fora da janela de retenção).');
             }
 
