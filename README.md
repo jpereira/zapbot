@@ -83,6 +83,7 @@ admin está ligado: só você usa comandos até `/bot -admin`
 | [`/crypto`](https://jpereira.github.io/zapbot/commands/crypto/) | `/bitcoio`, `/creptomoeda` | | Cotação das criptos ativadas (padrão: BTC, ETH, SOL e HYPE); alertas de preço |
 | [`/cve`](https://jpereira.github.io/zapbot/commands/cve/) | | | Últimas CVEs publicadas (NVD); `-highscore` só as críticas |
 | [`/debug`](https://jpereira.github.io/zapbot/commands/debug/) | `/d`, `/dbg` | ✅ | Liga/desliga logs de debug |
+| [`/defi`](https://jpereira.github.io/zapbot/commands/defi/) | | ✅ | Posições de liquidez da Orca: saldo, faixa, preço e taxas a coletar, lidos on-chain |
 | [`/enquete`](https://jpereira.github.io/zapbot/commands/enquete/) | `/enq`, `/quiz` | ✅ | Cria uma enquete nativa do WhatsApp no chat; `-r` mostra o resultado |
 | [`/get`](https://jpereira.github.io/zapbot/commands/get/) | `/download` | | Baixa vídeo/áudio de redes sociais |
 | [`/gif`](https://jpereira.github.io/zapbot/commands/gif/) | | | GIF aleatório (GIPHY) |

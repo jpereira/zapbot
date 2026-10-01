@@ -83,6 +83,7 @@ nav:
       - /crypto: commands/crypto.md
       - /cve: commands/cve.md
       - /debug: commands/debug.md
+      - /defi: commands/defi.md
       - /enquete: commands/enquete.md
       - /get: commands/get.md
       - /gif: commands/gif.md
