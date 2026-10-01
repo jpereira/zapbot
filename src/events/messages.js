@@ -165,8 +165,8 @@ client.on('message_create', async (msg) => {
                  body, type, timestamp,
                  has_media, media_path,
                  location_lat, location_lng,
-                 raw_json)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 raw_json, from_me)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
              ON CONFLICT(id) DO UPDATE SET
                 sender_name   = excluded.sender_name,
                 sender_jid    = excluded.sender_jid,
@@ -180,7 +180,8 @@ client.on('message_create', async (msg) => {
                 media_path    = COALESCE(excluded.media_path, messages.media_path),
                 location_lat  = excluded.location_lat,
                 location_lng  = excluded.location_lng,
-                raw_json      = excluded.raw_json
+                raw_json      = excluded.raw_json,
+                from_me       = excluded.from_me
              WHERE messages.revoked = 0`,
             [
                 msgIdPure, senderName, senderJid, senderNumber,
@@ -188,7 +189,7 @@ client.on('message_create', async (msg) => {
                 msg.body || '', msgType, timestamp,
                 hasMedia, localMediaPath,
                 lat, lng,
-                'desativado'
+                'desativado', msg.fromMe ? 1 : 0
             ]
         ).catch(err => printError('Erro ao salvar mensagem:', err.message));
 
