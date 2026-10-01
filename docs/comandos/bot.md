@@ -82,7 +82,7 @@ desligado).
 ```
 
 ```
-📊 Status do ZapBot 1.8 · últimas 24 h
+📊 Status do ZapBot 2.0 · últimas 24 h
 qui 01/10 06:00
 
 🤖 No ar: 2 dias, 3 horas · conectado: 2 dias, 2 horas
