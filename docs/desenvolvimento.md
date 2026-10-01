@@ -106,7 +106,7 @@ entre os casos.
 | `backup.test.js` | `/backup` (criação, lista, restauração, envio) e o backup diário |
 | `cotacoes.test.js` | `/cotacao`, `/crypto` e os alertas de preço |
 | `defi.test.js` | Solana (base58, PDA), contas da Orca (conferidas com o SDK oficial) e o `/defi` |
-| `externos.test.js` | `/cve`, `/tempo`, `/news`, `/gpt`, `/resumo`, `/traduzir`, `/gif`, `/meme`, `/joke`, `/kernel` |
+| `externos.test.js` | `/cve`, `/tempo`, `/news`, `/gpt`, `/resumo`, `/traduzir`, `/giphy`, `/meme`, `/joke`, `/kernel` |
 | `grupo.test.js` | `/todos`, `/boletos`, `/listageral`, `/walissu`, `/enquete` (e o `-r`), `/sticker` |
 | `get-cache.test.js` | `/get` (e o anti-SSRF), `/cache` e a limpeza periódica |
 | `conexao-email.test.js` | Eventos de conexão, reinício, watchdog, alertas por e-mail, crash e `docker stop` |
