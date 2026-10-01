@@ -2,6 +2,8 @@
  * Comando /set.
  */
 
+const { client } = require('../client');
+const { chatCurrentIds } = require('../contacts');
 const { dbReady } = require('../db');
 const { printInfo } = require('../log');
 const { SETTINGS_SCHEMA, getSetting, setSetting } = require('../settings');
@@ -12,7 +14,44 @@ const { SETTINGS_SCHEMA, getSetting, setSetting } = require('../settings');
  * /set <key>          → shows value, default and description
  * /set <key> <value>  → changes (list: items separated by comma or space)
  * /set -reset <key>   → back to default
+ *
+ * The config/.env variables the bot reads show up too, read-only
+ * (they change in the file, with the container recreated), and only in your private chat: in the
+ * other chats, a notice in their place. The secret ones go masked.
  */
+const ENV_VARIABLES = [
+    { nome: 'APP_ENV' },
+    { nome: 'GIPHY_API_KEY', secret: true },
+    { nome: 'GOOGLE_TRANSLATE_API_KEY', secret: true },
+    { nome: 'OPENAI_API_KEY', secret: true },
+    { nome: 'OPENAI_MODEL' },
+    { nome: 'OPENAI_TIMEOUT_MS' },
+    { nome: 'PHONE_NUMBER' },
+    { nome: 'QRCODE_EMAIL_ENABLE' },
+    { nome: 'QRCODE_EMAIL_SMTP_ANTIPHISHING', secret: true },
+    { nome: 'QRCODE_EMAIL_SMTP_FROM' },
+    { nome: 'QRCODE_EMAIL_SMTP_HOST' },
+    { nome: 'QRCODE_EMAIL_SMTP_PASS', secret: true },
+    { nome: 'QRCODE_EMAIL_SMTP_PORT' },
+    { nome: 'QRCODE_EMAIL_SMTP_TO' },
+    { nome: 'QRCODE_EMAIL_SMTP_USER' },
+    { nome: 'ZAPBOT_CACHE_DIR' },
+    { nome: 'ZAPBOT_HEARTBEAT_FILE' },
+    { nome: 'ZAPBOT_HEARTBEAT_MAX_AGE_S' }
+];
+
+const SO_IN_PRIVATE = '🔒 _As variáveis do config/.env (somente leitura) aparecem só no seu privado._';
+
+const inMyPrivate = async (chatId) => (await chatCurrentIds(chatId)).includes(client.info.wid._serialized);
+
+// Block of the .env variables (only in your private chat)
+function envText() {
+    const widthAlt = Math.max(...ENV_VARIABLES.map(v => v.nome.length));
+    const linesAlt = ENV_VARIABLES
+        .map(v => `${v.nome.padEnd(widthAlt)}  ${formatValueSetting(process.env[v.nome] ?? '', ', ', v.secret)}`)
+        .join('\n');
+    return '🔒 *config/.env* _(somente leitura: mude no arquivo e recrie o container)_\n\n```\n' + linesAlt + '\n```';
+}
 function formatValueSetting(value, sep = ', ', secret = false) {
     if (Array.isArray(value)) return value.length ? value.join(sep) : '(vazio)';
     if (typeof value === 'boolean') return value ? 'on' : 'off';
@@ -22,7 +61,7 @@ function formatValueSetting(value, sep = ', ', secret = false) {
     return String(value);
 }
 
-async function cmdSet({ msg, opts, args }) {
+async function cmdSet({ msg, opts, args, chatId }) {
     await dbReady;
 
     if (opts.opt.reset !== null) {
@@ -48,7 +87,22 @@ async function cmdSet({ msg, opts, args }) {
             .map(([k, s]) => `${k.padEnd(width)}  ${formatValueSetting(getSetting(k), s.separator ? ' | ' : ', ', s.secret)}`)
             .join('\n');
 
-        await msg.reply('⚙️ *SETTINGS*\n\n```\n' + list + '\n```\n💡 _/set <chave> para detalhes_');
+        const env = await inMyPrivate(chatId) ? envText() : SO_IN_PRIVATE;
+        await msg.reply('⚙️ *SETTINGS*\n\n```\n' + list + '\n```\n💡 _/set <chave> para detalhes_\n\n' + env);
+        return;
+    }
+
+    // A .env variable: read-only, and only in your private chat
+    const variable = ENV_VARIABLES.find(v => v.nome === key);
+
+    if (variable) {
+        if (rest.length) {
+            await msg.reply(`❌ ${key} é do config/.env (somente leitura): mude no arquivo e recrie o container.`);
+        } else if (!(await inMyPrivate(chatId))) {
+            await msg.reply(SO_IN_PRIVATE);
+        } else {
+            await msg.reply(`🔒 *${key}* = ${formatValueSetting(process.env[key] ?? '', ', ', variable.secret)}\n_config/.env, somente leitura_`);
+        }
         return;
     }
 
