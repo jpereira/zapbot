@@ -29,6 +29,12 @@ function validateUrlFeed(v) {
     return v;
 }
 
+// Renamed commands: a commands.disabled saved with the old name applies to the new one
+const COMMANDS_RENAMED = {
+    '/agendar': '/cron',
+    '/lemb': '/cron'
+};
+
 const SETTINGS_SCHEMA = {
     'agenda.max': {
         default: 50,
@@ -85,7 +91,9 @@ const SETTINGS_SCHEMA = {
         type: 'list',
         desc: 'Comandos desativados em tempo de execução (somem do /help).',
         item: (v) => {
-            const nameAlt = v.startsWith('/') ? v.toLowerCase() : `/${v.toLowerCase()}`;
+            const typed = v.startsWith('/') ? v.toLowerCase() : `/${v.toLowerCase()}`;
+            // Names of earlier versions (stored in the database) that became another command
+            const nameAlt = COMMANDS_RENAMED[typed] ?? typed;
             const command = botConfig.commands.find(c => c.cmd === nameAlt || c.aliases?.includes(nameAlt));
             if (!command) throw new Error(`comando desconhecido: ${nameAlt}`);
             if (command.cmd === '/set') throw new Error('o /set não pode ser desativado');
@@ -384,6 +392,32 @@ function validateSetting(key, value) {
     throw new Error(`tipo inválido no schema: ${schema.type}`);
 }
 
+/*
+ * A saved list with some item that stopped being valid (e.g.: a removed command
+ * in a new version): validates item by item and keeps the valid ones. If it is not a
+ * list, null (the default applies).
+ */
+function listWithoutOsInvalid(key, valueSalvo) {
+    if (SETTINGS_SCHEMA[key]?.type !== 'list') return null;
+
+    let items;
+    try {
+        items = JSON.parse(valueSalvo);
+    } catch {
+        return null;
+    }
+    if (!Array.isArray(items)) return null;
+
+    const valid = items.flatMap((item) => {
+        try {
+            return validateSetting(key, [item]);
+        } catch {
+            return [];
+        }
+    });
+    return [...new Set(valid)];
+}
+
 async function loadSettings() {
     for (const [key, schema] of Object.entries(SETTINGS_SCHEMA)) {
         await dbRun('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)', [key, JSON.stringify(schema.default)]);
@@ -398,6 +432,13 @@ async function loadSettings() {
         try {
             settings.set(row.key, validateSetting(row.key, JSON.parse(row.value)));
         } catch (e) {
+            const list = listWithoutOsInvalid(row.key, row.value);
+            if (list) {
+                // E.g.: commands.disabled with a command that no longer exists (/status): the others stay
+                settings.set(row.key, list);
+                printError(`Setting '${row.key}' com item inválido (${e.message}), ignorado: ${list.join(',') || '(vazio)'}`);
+                continue;
+            }
             printError(`Setting '${row.key}' inválido (${e.message}), usando o padrão.`);
         }
     }
