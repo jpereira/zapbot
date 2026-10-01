@@ -244,7 +244,7 @@ describe('alertas de preço (-alerta)', () => {
         assert.match((await bot.responder('/crypto -alerta'))[0], /1\. ₿ BTC\/USDT abaixo de \*\$90,000\.00\* → 👥 Grupo sobre L200/);
 
         // Outras formas: aspas, uma palavra, com @, -to antes da regra
-        for (const linha of ['/cotacao -alerta USD > 6 -to "l200 grupo"', '/cotacao -alerta -to @L200 EUR > 7', '/cotacao -alerta USD > 8 -to onibus']) {
+        for (const linha of ['/cotacao -alerta USD > 6 -to "l200 grupo"', '/cotacao -alerta -to L200 EUR > 7', '/cotacao -alerta USD > 8 -to onibus']) {
             assert.match((await bot.responder(linha))[0], /🔔 \*Alerta criado\*/, linha);
         }
         const destinos = await bot.dbAll("SELECT dest_name FROM price_alerts WHERE kind = 'cotacao' ORDER BY id");
@@ -258,14 +258,14 @@ describe('alertas de preço (-alerta)', () => {
         assert.match(aviso.content, /🔔 \*ALERTA DE PREÇO\*/);
     });
 
-    test('-to: pessoa pelo número ou pela menção', async () => {
-        await bot.responder('/cotacao -alerta USD > 6 -to @5521911111111');
-        await bot.responder('/cotacao -alerta EUR > 7 -to @100000000000001', { mencoes: ['100000000000001@lid'] });
+    test('-to: contato pelo número ou pelo nome', async () => {
+        await bot.responder('/cotacao -alerta USD > 6 -to +5521911111111');
+        await bot.responder('/cotacao -alerta EUR > 7 -to fulano');
 
         const destinos = await bot.dbAll('SELECT dest_id, dest_name, dest_is_group FROM price_alerts ORDER BY id');
         assert.deepEqual(destinos, [
             { dest_id: OUTRO.jid, dest_name: 'Fulano', dest_is_group: 0 },
-            { dest_id: '100000000000001@lid', dest_name: '100000000000001', dest_is_group: 0 }
+            { dest_id: OUTRO.jid, dest_name: 'Fulano', dest_is_group: 0 }
         ]);
         assert.match((await bot.responder('/cotacao -alerta'))[0], /USD\/BRL acima de \*R\$ 6,0000\* → 👤 Fulano/);
 
@@ -279,14 +279,16 @@ describe('alertas de preço (-alerta)', () => {
         bot.criarGrupo('120363000000000300@g.us', 'Trabalho Rio', [DONO.jid]);
         bot.criarGrupo('120363000000000301@g.us', 'Trabalho SP', [DONO.jid]);
 
-        assert.match((await bot.responder('/cotacao -alerta USD > 6 -to trabalho'))[0], /🔎 "trabalho" corresponde a 2 grupos:\n• Trabalho Rio\n• Trabalho SP/);
+        const [lista, criado] = await bot.responderEscolhendo('/cotacao -alerta USD > 6 -to trabalho', 1);
+        assert.match(lista, /^🔎 "trabalho" corresponde a 2 grupos:\n\n1\. 👥 Trabalho Rio\n2\. 👥 Trabalho SP\n/);
+        assert.match(criado, /💡 _Aviso em 👥 Trabalho Rio;/);
         assert.match((await bot.responder('/cotacao -alerta USD > 6 -to /trabalho sp/'))[0], /💡 _Aviso em 👥 Trabalho SP;/);
-        assert.match((await bot.responder('/cotacao -alerta USD > 6 -to xyz'))[0], /❌ Nenhum grupo com "xyz" no nome/);
-        assert.match((await bot.responder('/cotacao -alerta USD > 6 -to @5521988888888'))[0], /❌ O número 5521988888888 não está no WhatsApp/);
-        assert.match((await bot.responder('/cotacao -alerta USD > 6 -to @123'))[0], /❌ Número inválido: 123/);
+        assert.match((await bot.responder('/cotacao -alerta USD > 6 -to xyz'))[0], /❌ Nenhum contato ou grupo com "xyz" no nome/);
+        assert.match((await bot.responder('/cotacao -alerta USD > 6 -to +5521988888888'))[0], /❌ O número \+5521988888888 não está no WhatsApp/);
+        assert.match((await bot.responder('/cotacao -alerta USD > 6 -to +123'))[0], /❌ Número inválido: \+123/);
         assert.match((await bot.responder('/cotacao -alerta USD > 6 -to'))[0], /❌ Informe o destino do -to/);
         assert.match((await bot.responder('/cotacao -alerta -to trabalho'))[0], /❌ O -to só vale ao criar um alerta/);
-        assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM price_alerts')).n, 1);
+        assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM price_alerts')).n, 2);
     });
 
     test('verificação: respeita o intervalo, espera a conexão e sobrevive a falhas', async () => {

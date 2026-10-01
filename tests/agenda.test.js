@@ -200,9 +200,9 @@ describe('/cron (/agenda)', () => {
         assert.deepEqual(await itens(), []);
     });
 
-    test('sem -to: no chat atual; -to @número: no privado da pessoa; mensal', async () => {
+    test('sem -to: no chat atual; -to +número: no privado da pessoa; mensal', async () => {
         await bot.responder('/cron 25/12 10:00 Feliz Natal!');
-        await bot.responder('/cron 05/11 -repetir mensal -to @5521911111111 Lembrete do aluguel');
+        await bot.responder('/cron 05/11 -repetir mensal -to +5521911111111 Lembrete do aluguel');
 
         const [natal, aluguel] = await itens();
         assert.deepEqual([natal.chat_id, natal.repeat], [GRUPO, null]);
@@ -219,7 +219,7 @@ describe('/cron (/agenda)', () => {
     });
 
     test('erros: destino inválido e -pv', async () => {
-        assert.match((await bot.responder('/cron 1h -to xyz oi'))[0], /❌ Nenhum grupo com "xyz" no nome/);
+        assert.match((await bot.responder('/cron 1h -to xyz oi'))[0], /❌ Nenhum contato ou grupo com "xyz" no nome/);
         assert.match((await bot.responder('/cron 1h -pv oi'))[0], /❌ O -pv é do modo lembrete/);
         assert.deepEqual(await itens(), []);
     });

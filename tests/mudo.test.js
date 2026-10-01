@@ -58,7 +58,7 @@ describe('/mudo (/mute)', () => {
     });
 
     test('-a numa pessoa: apagadas, editadas e status dela, em qualquer chat', async () => {
-        await bot.responder('/mute -a @5521911111111');
+        await bot.responder('/mute -a +5521911111111');
 
         assert.deepEqual(await apagada('x', { chat: GRUPO }), []);
         assert.deepEqual(await editada('a', 'b', { chat: L200 }), []);
@@ -72,11 +72,11 @@ describe('/mudo (/mute)', () => {
     });
 
     test('-s só os status; silenciar de novo soma; a lista mostra os ignorados', async () => {
-        await bot.responder('/mudo -s @5521911111111');
+        await bot.responder('/mudo -s +5521911111111');
         assert.equal((await apagada('normal')).length, 1);
         assert.deepEqual(await apagada('status', { chat: 'status@broadcast' }), []);
 
-        assert.match((await bot.responder('/mudo -e @5521911111111'))[0], /^🔇 \*Atualizado:\* 👤 Fulano — editadas, status/);
+        assert.match((await bot.responder('/mudo -e +5521911111111'))[0], /^🔇 \*Atualizado:\* 👤 Fulano — editadas, status/);
         await bot.responder('/mudo -d -e L200');
 
         const [lista] = await bot.responder('/mudo');
@@ -88,7 +88,7 @@ describe('/mudo (/mute)', () => {
     });
 
     test('-rm N e -rm all: os avisos voltam', async () => {
-        await bot.responder('/mudo -a @5521911111111');
+        await bot.responder('/mudo -a +5521911111111');
         await bot.responder('/mudo -d L200');
 
         assert.deepEqual(await bot.responder('/mudo -rm 1'), ['🔊 Os avisos de 👤 Fulano voltam.']);
@@ -101,10 +101,53 @@ describe('/mudo (/mute)', () => {
     test('erros: sem opção, sem alvo, alvo inválido, você mesmo', async () => {
         assert.match((await bot.responder('/mudo L200'))[0], /❌ Escolha o que silenciar/);
         assert.match((await bot.responder('/mudo -d'))[0], /❌ Informe quem/);
-        assert.match((await bot.responder('/mudo -d xyz'))[0], /❌ Nenhum grupo com "xyz" no nome/);
+        assert.match((await bot.responder('/mudo -d xyz'))[0], /❌ Nenhum contato ou grupo com "xyz" no nome/);
         bot.criarContato(DONO.jid, DONO.nome);
-        assert.deepEqual(await bot.responder('/mudo -d @5521900000000'), ['❌ As suas mensagens já não geram avisos.']);
+        assert.deepEqual(await bot.responder('/mudo -d +5521900000000'), ['❌ As suas mensagens já não geram avisos.']);
         assert.deepEqual(await bot.dbAll('SELECT * FROM mutes'), []);
+    });
+
+    test('alvo pelo nome: o contato antes do grupo; o nome inteiro igual ganha', async () => {
+        bot.criarGrupo('120363000000000201@g.us', 'Fulano e amigos', [DONO.jid]);
+        bot.criarGrupo('120363000000000202@g.us', 'Ciclano', [DONO.jid]);
+
+        assert.match((await bot.responder('/mudo -s fulano'))[0], /^🔇 \*Silenciado:\* 👤 Fulano — status/);
+        assert.match((await bot.responder('/mudo -d /amigos/'))[0], /^🔇 \*Silenciado:\* 👥 Fulano e amigos — apagadas/);
+        assert.match((await bot.responder('/mudo -e "Ciclano"'))[0], /^🔇 \*Silenciado:\* 👤 Ciclano — editadas/);
+        assert.match((await bot.responder('/mudo -e +55 21 92222-2222'))[0], /^🔇 \*Atualizado:\* 👤 Ciclano — editadas/);
+    });
+
+    test('vários contatos com o nome: a lista, e o nº respondido escolhe', async () => {
+        bot.criarContato('5521933333333@c.us', 'Jorge Pereira');
+        bot.criarContato('5511944444444@c.us', 'Jorge Silva');
+
+        const r = await bot.responderEscolhendo('/mudo -a /jorge/', [9, 2]);
+        assert.deepEqual(r, [
+            '🔎 "jorge" corresponde a 2 contatos:\n\n1. 👤 Jorge Pereira · +5521933333333\n2. 👤 Jorge Silva · +5511944444444\n\n' +
+                '💡 _Responda só com o nº (em até 2 minutos), ou repita o comando com mais palavras do nome._',
+            '❌ Escolha um nº de 1 a 2.',
+            '🔇 *Silenciado:* 👤 Jorge Silva — apagadas, editadas, status\n' +
+                '💡 _Só o aviso some: as mensagens continuam guardadas para o /show. Veja a lista com /mudo._'
+        ]);
+        assert.deepEqual((await bot.dbAll('SELECT target_id FROM mutes')).map(m => m.target_id), ['5511944444444@c.us']);
+
+        // Sem escolha pendente, um nº é uma mensagem comum
+        assert.deepEqual(await bot.responder('1'), []);
+    });
+
+    test('a escolha expira em 2 minutos sem fazer nada', async (t) => {
+        t.mock.timers.enable({ apis: ['setTimeout'] });
+        bot.criarContato('5521933333333@c.us', 'Jorge Pereira');
+        bot.criarContato('5511944444444@c.us', 'Jorge Silva');
+
+        const comando = bot.executar('/mudo -a jorge');
+        for (let i = 0; i < 50; i++) await new Promise(setImmediate);
+        t.mock.timers.tick(bot.src('escolhas').ESCOLHA_MS);
+
+        const r = (await comando).map(e => e.texto);
+        assert.equal(r.at(-1), '⌛ Nenhum nº escolhido para "jorge" em 2 minutos: nada foi feito.');
+        assert.deepEqual(await bot.dbAll('SELECT * FROM mutes'), []);
+        assert.deepEqual(await bot.responder('1'), []);
     });
 
     test('só o dono', async () => {
