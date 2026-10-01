@@ -132,12 +132,12 @@ describe('/watch', () => {
     test('-d remove a regra e as ocorrências dela', async () => {
         await bot.setSetting('watch.rules', 'pix\nboleto');
         await someoneWrite('pix');
-        const [r] = await bot.replyAlt('/watch -d -1');
+        const [r] = await bot.replyAlt('/watch -r -1');
         assert.match(r, /🗑️ Regra \*#1\* removida: pix\n🗄️ Ocorrências apagadas: \*1\*\n💡 _As regras seguintes foram renumeradas/);
         assert.deepEqual(bot.getSetting('watch.rules'), ['boleto']);
 
-        assert.match((await bot.replyAlt('/watch -d 5'))[0], /❌ A regra #5 não existe/);
-        assert.match((await bot.replyAlt('/watch -d'))[0], /Usage: \/watch/);
+        assert.match((await bot.replyAlt('/watch -r 5'))[0], /❌ A regra #5 não existe/);
+        assert.match((await bot.replyAlt('/watch -r'))[0], /Usage: \/watch/);
     });
 
     test('-f apaga as ocorrências (de todas ou de uma) e mantém as regras', async () => {
