@@ -29,6 +29,12 @@ function validarUrlFeed(v) {
     return v;
 }
 
+// Comandos renomeados: um commands.disabled salvo com o nome antigo vale para o novo
+const COMANDOS_RENOMEADOS = {
+    '/agendar': '/cron',
+    '/lemb': '/cron'
+};
+
 const SETTINGS_SCHEMA = {
     'agenda.max': {
         default: 50,
@@ -85,7 +91,9 @@ const SETTINGS_SCHEMA = {
         type: 'list',
         desc: 'Comandos desativados em tempo de execução (somem do /help).',
         item: (v) => {
-            const nome = v.startsWith('/') ? v.toLowerCase() : `/${v.toLowerCase()}`;
+            const digitado = v.startsWith('/') ? v.toLowerCase() : `/${v.toLowerCase()}`;
+            // Nomes de versões anteriores (salvos no banco) que viraram outro comando
+            const nome = COMANDOS_RENOMEADOS[digitado] ?? digitado;
             const command = botConfig.commands.find(c => c.cmd === nome || c.aliases?.includes(nome));
             if (!command) throw new Error(`comando desconhecido: ${nome}`);
             if (command.cmd === '/set') throw new Error('o /set não pode ser desativado');
@@ -384,6 +392,32 @@ function validarSetting(key, value) {
     throw new Error(`tipo inválido no schema: ${schema.type}`);
 }
 
+/*
+ * Uma lista salva com algum item que deixou de valer (ex.: um comando removido
+ * numa versão nova): valida item por item e fica com os válidos. Não sendo uma
+ * lista, null (vale o padrão).
+ */
+function listaSemOsInvalidos(key, valorSalvo) {
+    if (SETTINGS_SCHEMA[key]?.type !== 'list') return null;
+
+    let itens;
+    try {
+        itens = JSON.parse(valorSalvo);
+    } catch {
+        return null;
+    }
+    if (!Array.isArray(itens)) return null;
+
+    const validos = itens.flatMap((item) => {
+        try {
+            return validarSetting(key, [item]);
+        } catch {
+            return [];
+        }
+    });
+    return [...new Set(validos)];
+}
+
 async function carregarSettings() {
     for (const [key, schema] of Object.entries(SETTINGS_SCHEMA)) {
         await dbRun('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)', [key, JSON.stringify(schema.default)]);
@@ -398,6 +432,13 @@ async function carregarSettings() {
         try {
             settings.set(row.key, validarSetting(row.key, JSON.parse(row.value)));
         } catch (e) {
+            const lista = listaSemOsInvalidos(row.key, row.value);
+            if (lista) {
+                // Ex.: commands.disabled com um comando que não existe mais (/status): ficam os outros
+                settings.set(row.key, lista);
+                printError(`Setting '${row.key}' com item inválido (${e.message}), ignorado: ${lista.join(',') || '(vazio)'}`);
+                continue;
+            }
             printError(`Setting '${row.key}' inválido (${e.message}), usando o padrão.`);
         }
     }
