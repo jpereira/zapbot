@@ -267,7 +267,8 @@ client.on('message_create', async (msg) => {
             return;
         }
 
-        printCall(senderContact, body);
+        // No privado, o senderName das suas mensagens é o do OUTRO participante (ver rawSenderId)
+        printCall(msg.fromMe ? (client.info?.pushname || 'Você') : senderName, body, chatName);
 
         const handler = HANDLERS[command.cmd];
 
