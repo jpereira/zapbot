@@ -1,5 +1,5 @@
 /*
- * /mudo (/mute): mute the notices of deleted, edited and deleted-status messages
+ * /mudo (/m, /mute): mute the notices of deleted, edited and deleted-status messages
  * of a person or a group.
  */
 const bot = require('./helpers/bot');
@@ -34,7 +34,7 @@ async function edited(textAlt, freshAlt, optionsAlt = {}) {
 
 const hits = () => bot.dbAll('SELECT target_id, kind FROM mute_hits ORDER BY id');
 
-describe('/mudo (/mute)', () => {
+describe('/mudo (/m, /mute)', () => {
     test('lerMudo: opções antes do alvo; /nome/ e aspas', () => {
         assert.deepEqual([...readMuted('-d -e /Grupo L200/').colunas], ['deleted', 'edited']);
         assert.equal(readMuted('-d -e /Grupo L200/').alvo, 'Grupo L200');
@@ -121,7 +121,7 @@ describe('/mudo (/mute)', () => {
         bot.createContact('5521933333333@c.us', 'Jorge Pereira');
         bot.createContact('5511944444444@c.us', 'Jorge Silva');
 
-        const r = await bot.replyChoosing('/mudo -a /jorge/', [9, 2]);
+        const r = await bot.replyChoosing('/m -a /jorge/', [9, 2]);
         assert.deepEqual(r, [
             '🔎 "jorge" corresponde a 2 contatos:\n\n1. 👤 Jorge Pereira · +5521933333333\n2. 👤 Jorge Silva · +5511944444444\n\n' +
                 '💡 _Responda só com o nº (em até 2 minutos), ou repita o comando com mais palavras do nome._',
