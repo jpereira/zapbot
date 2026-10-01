@@ -116,6 +116,11 @@ const SETTINGS_SCHEMA = {
         type: 'boolean',
         desc: 'Avisa por e-mail (SMTP do QR Code) crash, queda, reconexão e outros eventos do bot.'
     },
+    'enquete.retentionDays': {
+        default: 90,
+        type: 'number', min: 1, max: 365,
+        desc: 'Dias que as enquetes e os votos ficam guardados para o /enquete -r.'
+    },
     'get.maxDownloadMB': {
         default: 200,
         type: 'number', min: 10, max: 2000,

@@ -4,8 +4,7 @@
   suportar Orca, Prjx
 * /view: salvar a foto/video de visualizacao unica quando chega, com o mesmo cache de
   midias e o mesmo -l do /show, com um -v ao lado do -d e do -e (terceira secao "Visualizacao unica").
-* /enquete -r: placar das enquetes, guardando os votos do evento vote_update; opcional:
-  avisar no privado quando todos votarem.
+* /enquete: avisar no privado quando todos do grupo votarem.
 * /lembrete: "/lembrete 18:30 pagar boleto", "/lembrete 2d revisar PR". Tabela no SQLite,
   verificada pelo mesmo timer da limpeza automatica.
 * /agendar: mensagem agendada para um chat numa data/hora (aniversarios, avisos

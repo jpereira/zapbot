@@ -155,6 +155,34 @@ async function inicializarBanco() {
     `);
     await adicionarColunas('price_alerts', { dest_id: 'TEXT', dest_name: 'TEXT', dest_is_group: 'INTEGER DEFAULT 0' });
 
+    /*
+     * Enquetes da sua conta (as do /enquete e as que chegam com os votos) e os
+     * votos, um por pessoa: o 'vote_update' traz a escolha atual de quem votou.
+     */
+    await dbRun(`
+        CREATE TABLE IF NOT EXISTS polls (
+            id TEXT PRIMARY KEY,
+            chat_id TEXT NOT NULL,
+            chat_name TEXT,
+            question TEXT,
+            options TEXT,
+            multi INTEGER DEFAULT 0,
+            created_at INTEGER NOT NULL
+        )
+    `);
+    await dbRun('CREATE INDEX IF NOT EXISTS idx_polls_chat ON polls (chat_id, created_at)');
+
+    await dbRun(`
+        CREATE TABLE IF NOT EXISTS poll_votes (
+            poll_id TEXT NOT NULL,
+            voter TEXT NOT NULL,
+            voter_name TEXT,
+            options TEXT,
+            voted_at INTEGER,
+            PRIMARY KEY (poll_id, voter)
+        )
+    `);
+
     // Configurações gerais do bot (chave -> valor em JSON)
     await dbRun(`
         CREATE TABLE IF NOT EXISTS settings (
