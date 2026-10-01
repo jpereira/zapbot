@@ -7,7 +7,7 @@ pedidos com [`/backup -s -to <e-mail>`](comandos/backup.md#enviar-o-arquivo) e o
 alertas criados com `-to email` (ou um endereço): o
 [`/defi -alerta`](comandos/defi.md#alerta-de-saída-da-faixa) (assunto
 `[ZapBot] DeFi: a posição ... saiu da faixa`) e os alertas de preço do
-[`/cotacao`](comandos/cotacao.md#avisar-outra-pessoa-ou-um-grupo) e do `/crypto`
+[`/cotacao`](comandos/cotacao.md#avisar-em-outro-chat-ou-por-e-mail) e do `/crypto`
 (assunto `[ZapBot] 🔔 Alerta de preço: ...`).
 
 ## E-mail do QR Code
