@@ -557,8 +557,11 @@
             "onlyAdmin": false
         },
         {
-            "cmd": "/gif",
-            "usage": "/gif [tag]",
+            "cmd": "/giphy",
+            "usage": "/giphy [tag]",
+            "aliases": [
+                "/gif"
+            ],
             "help": "GIF aleatório do GIPHY (tag padrão: setting gif.tag).",
             "onlyAdmin": false
         },

@@ -26,7 +26,7 @@ release; a do `main` fica em [`docs/`](docs/index.md)).
  │     ├──► SQLite  (cache/bot_database.db)  mensagens, settings  │
  │     ├──► cache/media   mídias p/ recuperar mensagens apagadas  │
  │     ├──► yt-dlp + ffmpeg   comando /get                        │
- │     ├──► APIs HTTP (axios)  /gpt /tempo /cve /news /gif...     │
+ │     ├──► APIs HTTP (axios)  /gpt /tempo /cve /news /giphy...   │
  │     └──► SMTP (nodemailer)  QR Code e alertas por e-mail       │
  │                                                                │
  │  volumes:  wwebjs_auth  → sessão do WhatsApp (.wwebjs_auth)    │
@@ -82,7 +82,7 @@ admin está ligado: só você usa comandos até `/bot -admin`
 | [`/defi`](https://jpereira.github.io/zapbot/comandos/defi/) | | ✅ | Posições de liquidez da Orca: saldo, faixa, preço e taxas a coletar, lidos on-chain |
 | [`/enquete`](https://jpereira.github.io/zapbot/comandos/enquete/) | `/enq`, `/quiz` | ✅ | Cria uma enquete nativa do WhatsApp no chat; `-r` mostra o resultado |
 | [`/get`](https://jpereira.github.io/zapbot/comandos/get/) | `/download` | | Baixa vídeo/áudio de redes sociais |
-| [`/gif`](https://jpereira.github.io/zapbot/comandos/gif/) | | | GIF aleatório (GIPHY) |
+| [`/giphy`](https://jpereira.github.io/zapbot/comandos/giphy/) | `/gif` | | GIF aleatório (GIPHY) |
 | [`/gpt`](https://jpereira.github.io/zapbot/comandos/gpt/) | `/ai` | ✅ | Pergunta ao ChatGPT (OpenAI) |
 | [`/help`](https://jpereira.github.io/zapbot/comandos/help/) | `/h` | | Menu de ajuda |
 | [`/joke`](https://jpereira.github.io/zapbot/comandos/joke/) | `/piada`, `/humor` | | Piada aleatória em português |
