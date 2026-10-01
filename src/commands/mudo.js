@@ -128,7 +128,9 @@ async function cmdMuted({ msg, args }) {
     }
 
     // Several contacts or groups with the name: waits for you to choose from the list
-    const destination = await resolverOrChoose(msg, r.alvo);
+    const destination = await resolverOrChoose(msg, r.alvo, {
+        semEmail: '❌ O /mudo silencia uma pessoa ou um grupo: informe um contato, um grupo ou um número, não um e-mail.'
+    });
     if (!destination) return;
 
     if (destination.id === client.info.wid._serialized) {

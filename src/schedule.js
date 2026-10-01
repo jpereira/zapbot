@@ -182,7 +182,9 @@ async function handleSchedule({ msg, args, chatId, chatName, isGroup, quotedMsg 
 
     if (withDestination) {
         // Several contacts or groups with the name: waits for you to choose from the list
-        destination = await resolverOrChoose(msg, destinationText);
+        destination = await resolverOrChoose(msg, destinationText, {
+            semEmail: '❌ O /cron envia a mensagem como se você digitasse, no WhatsApp: o -to é um contato, um grupo ou um número, não um e-mail.'
+        });
         if (!destination) return;
     } else if (opt.pv) {
         destination = { id: myId, nome: 'seu privado', grupo: false };

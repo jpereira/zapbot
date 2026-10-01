@@ -1,10 +1,12 @@
 /*
- * Destination of a notice or target of a command: a contact, a group or a number.
- * Used by the -to of /cron and of the price alerts (/cotacao and /crypto -alerta),
- * by the /mudo target and by /defi -alerta's -send.
+ * Destination of a notice or target of a command: a contact, a group, a number
+ * or (where it makes sense) emails. It is the -to of all commands: /cron, the
+ * price alerts (/cotacao and /crypto -alerta), /defi -alerta and the
+ * /backup -send; and the target of /mudo.
  */
 
 const { client } = require('./client');
+const { sendEmail, smtpForSend } = require('./email');
 const { waitChoice } = require('./choices');
 const { withoutAccents } = require('./util/format');
 
@@ -15,6 +17,8 @@ const { withoutAccents } = require('./util/format');
  * "Jorge Pereira"    in the name; with no contact, a group. In any order, without
  * Jorge              regardless of case or accents; /.../ and quotes
  * allow spaces
+ * email            → (acceptsEmail) the QRCODE_EMAIL_SMTP_TO, through the bot's SMTP
+ * voce@exemplo.com → (acceptsEmail) one or more emails, comma-separated
  * The same name (whole) beats one that only contains the words. If still
  * more than one fits, the command lists and you reply with the no. (resolverOrChoose).
  */
@@ -22,17 +26,16 @@ const DESTINATION = /(^|\s)-to(?=\s|$)(?:\s+("([^"]*)"|'([^']*)'|\/([^/]*)\/|(\S
 const EXAMPLE = '/Jorge Pereira/, /Grupo L200/ ou +5521999999999';
 const LIMIT = 10;
 
-// The same regex as -to for another option (e.g.: /defi's -send)
-const optionRegex = (optionAlt) => (optionAlt === 'to' ? DESTINATION
-    : new RegExp(DESTINATION.source.replace('-to', `-${optionAlt}`)));
+const EMAIL = /^[^\s@<>,;]+@[^\s@<>,;]+\.[^\s@<>,;]+$/;
+const isWordEmail = (s) => /^e-?mail$/i.test(s);
 
 /**
- * Removes the "-to <destination>" (or another option, like "-send") from the command text.
+ * Removes the "-to <destination>" from the command text.
  * @returns {{ destino: string|null, informado: boolean, resto: string }}
- * given: the option appeared (even without a value, which is an error for the caller)
+ * given: -to appeared (even without a value, which is an error for the caller)
  */
-function extractDestination(textAlt, optionAlt = 'to') {
-    const m = String(textAlt ?? '').match(optionRegex(optionAlt));
+function extractDestination(textAlt) {
+    const m = String(textAlt ?? '').match(DESTINATION);
     if (!m) return { destino: null, informado: false, resto: String(textAlt ?? '') };
 
     const valueAlt = (m[3] ?? m[4] ?? m[5] ?? m[6] ?? '').trim();
@@ -66,19 +69,51 @@ const contact = (c) => ({ id: c.id._serialized, nome: c.name, grupo: false, nume
 const group = (g) => ({ id: g.id._serialized, nome: g.name, grupo: true });
 
 /**
- * Resolves the text to a chat.
- * @param {string} valor  what came in -to (or in the /mudo target, in -send...)
+ * "email" and/or addresses → the email destination; null if the text is not that.
+ * @returns {{ email: string, nome: string, grupo: false } | { erro: string } | null}
+ */
+function readEmails(textAlt) {
+    const partsAlt = textAlt.split(/[\s,;]+/).filter(Boolean);
+    if (!partsAlt.length || !partsAlt.every(p => isWordEmail(p) || EMAIL.test(p))) return null;
+
+    const emails = partsAlt.flatMap(p => (isWordEmail(p)
+        ? String(process.env.QRCODE_EMAIL_SMTP_TO ?? '').split(/\s*,\s*/)
+        : [p])).map(e => e.trim());
+
+    if (emails.some(e => !EMAIL.test(e))) {
+        return { erro: '❌ O "email" usa o QRCODE_EMAIL_SMTP_TO, que está vazio (ou inválido) no config/.env. Informe o e-mail: -to voce@exemplo.com' };
+    }
+    if (!smtpForSend()) {
+        return { erro: '❌ SMTP não configurado (QRCODE_EMAIL_SMTP_HOST e QRCODE_EMAIL_SMTP_USER no config/.env): não há como enviar por e-mail.' };
+    }
+
+    const list = [...new Set(emails)].join(', ');
+    return { email: list, nome: list, grupo: false };
+}
+
+/**
+ * Resolves the text to a chat (or to emails).
+ * @param {string} valor  what came in -to (or in the /mudo target)
  * @param {object} [o]
- * @param {string} [o.opcao]  what to call the destination in the error messages (default: "-to")
+ * @param {boolean} [o.acceptsEmail]  "email" and addresses count (alerts, /backup); otherwise, error
+ * @param {string} [o.withoutEmail]      the error when it does not accept (the command's why)
  * @returns {Promise<{ id: string, nome: string, grupo: boolean }
+ *   | { email: string, nome: string, grupo: false }
  *   | { erro: string }
  * | { options: Array<{ id, name, group }>, search: string, more: number }>}
  * options: more than one fit; the caller offers the choice (resolverOrChoose)
  */
-async function resolverDestination(valueAlt, { opcao: optionAlt = '-to' } = {}) {
+async function resolverDestination(valueAlt, { aceitaEmail: acceptsEmail = false, semEmail: withoutEmail = '❌ Aqui o destino não pode ser um e-mail.' } = {}) {
     const textAlt = String(valueAlt ?? '').trim();
 
-    if (!textAlt) return { erro: `❌ Informe o destino do ${optionAlt}: um contato, um grupo ou um número (${EXAMPLE}).` };
+    if (!textAlt) {
+        return { erro: `❌ Informe o destino do -to: um contato, um grupo ou um número (${EXAMPLE})` +
+            `${acceptsEmail ? ', ou email (o QRCODE_EMAIL_SMTP_TO) e e-mails' : ''}.` };
+    }
+
+    // Email: "email" (the QRCODE_EMAIL_SMTP_TO) and/or addresses
+    const byEmail = readEmails(textAlt);
+    if (byEmail) return acceptsEmail ? byEmail : { erro: withoutEmail };
 
     // Number: digits only, with + and separators
     const digits = readNumber(textAlt);
@@ -148,16 +183,34 @@ async function resolverOrChoose(msg, valueAlt, o = {}) {
     });
 }
 
+/**
+ * Sends a bot text to the destination: the chat (without a destination: your private chat) or,
+ * by email, without WhatsApp formatting (*bold*, _italic_).
+ * Throws the send error for whoever called.
+ * @param {object|null} destino  the one from resolverDestination (or null)
+ * @param {string} texto
+ * @param {object} [o]
+ * @param {string} [o.assunto]  of the email
+ */
+async function sendOnDestination(destination, textAlt, { assunto: subject = 'Aviso' } = {}) {
+    if (destination?.email) {
+        await sendEmail({ para: destination.email.split(/\s*,\s*/), assunto: subject, texto: textAlt.replace(/[*_]/g, '') });
+        return;
+    }
+    await client.sendMessage(destination?.id || client.info.wid._serialized, textAlt);
+}
+
 async function contactName(id, digits) {
     const contactAlt = await client.getContactById(id).catch(() => null);
     return contactAlt?.name || contactAlt?.pushname || `+${digits}`;
 }
 
-// "👥 Grupo sobre L200" / "👤 Fulano"
-const describeDestination = (d) => `${d.grupo ? '👥' : '👤'} ${d.nome}`;
+// "👥 Grupo sobre L200" / "👤 Fulano" / "📧 voce@exemplo.com"
+const describeDestination = (d) => `${d.email ? '📧' : d.grupo ? '👥' : '👤'} ${d.email ?? d.nome}`;
 
 module.exports = {
     describeDestination,
+    sendOnDestination,
     extractDestination,
     resolverDestination,
     resolverOrChoose

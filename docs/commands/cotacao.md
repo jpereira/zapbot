@@ -13,7 +13,7 @@ máxima e mínima do dia e variação (🟢 alta, 🔴 queda). Suportadas: `USD`
 | `-del`, `-d` | `<MOEDA>` | Desabilita uma moeda (só o dono do bot) |
 | `-alerta` | `[regra]` | Sem regra, lista os alertas; com regra, cria um. Veja [Alertas de preço](#alertas-de-preço) |
 | `-rm` | `<nº\|all>` | Junto com `-alerta`: remove o alerta nº N (ou todos) |
-| `-to` | `<destino>` | Junto com `-alerta`: avisa num contato (`/Jorge Pereira/`), num grupo (`/Grupo L200/`) ou num número (`+5521999999999`) em vez do seu privado. Veja [Avisar outra pessoa ou um grupo](#avisar-outra-pessoa-ou-um-grupo) |
+| `-to` | `<destino>` | Junto com `-alerta`: avisa num contato (`/Jorge Pereira/`), num grupo (`/Grupo L200/`), num número (`+5521999999999`) ou por e-mail (`email`) em vez do seu privado. Veja [Avisar outra pessoa ou um grupo](#avisar-outra-pessoa-ou-um-grupo) |
 
 - **USD, EUR, GBP**: Yahoo Finance. Se ele falhar, a AwesomeAPI (que não
   informa a abertura: aparece `—`).
@@ -77,13 +77,14 @@ lista e remove.
 
 Com `-to <destino>`, o aviso vai para outro chat em vez do seu privado. Ele sai
 da sua conta, como qualquer mensagem do bot. O destino é um contato (buscado
-primeiro), um grupo ou um número, como em
-[Destinos: contato, grupo ou número](index.md#destinos-contato-grupo-ou-número).
+primeiro), um grupo, um número ou e-mail, como em
+[Destinos: contato, grupo, número ou e-mail](index.md#destinos-contato-grupo-número-ou-e-mail).
 
 ```
 /crypto -alerta BTC < 90000 -to /Grupo L200/      → no grupo "Grupo sobre L200"
 /cotacao -alerta USD > 5.30 -to /Jorge Pereira/   → no privado do contato
 /cotacao -alerta USD > 5.30 -to +5521999999999    → no privado do número
+/crypto -alerta SOL > 200 -to email               → por e-mail (QRCODE_EMAIL_SMTP_TO)
 /cotacao -alerta -to familia EUR < 5,50           → o -to pode vir antes da regra
 ```
 

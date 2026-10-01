@@ -15,18 +15,23 @@ Podem ser enviados em **qualquer chat** (privado, grupo ou no chat consigo mesmo
 - `/help` lista todos; `/help get` ou `/help /get` mostram um específico.
 - Aliases funcionam igual ao comando original (`/download` = `/get`).
 
-## Destinos: contato, grupo ou número
+## Destinos: contato, grupo, número ou e-mail
 
-Os comandos que mandam algo para outro chat ou agem sobre uma pessoa ou um grupo
-usam a mesma busca: o `-to` do [`/cron`](cron.md) e dos alertas do
-[`/cotacao`](cotacao.md#avisar-outra-pessoa-ou-um-grupo) e do [`/crypto`](crypto.md),
-o alvo do [`/mudo`](mudo.md) e o `-send` do [`/defi -alerta`](defi.md).
+"Para onde" é sempre o **`-to`**, em todos os comandos: o [`/cron`](cron.md),
+os alertas do [`/cotacao`](cotacao.md#avisar-outra-pessoa-ou-um-grupo) e do
+[`/crypto`](crypto.md) e o [`/defi -alerta`](defi.md#alerta-de-saída-da-faixa).
+O alvo do [`/mudo`](mudo.md) usa a mesma busca. Sem `-to`, os avisos vão para
+o seu privado (e o `/cron`, para o chat atual).
 
 | Forma | Exemplo | Encontra |
 |---|---|---|
 | Nome | `/Jorge Pereira/`, `"Jorge Pereira"` ou `Jorge` | **Primeiro** um contato da sua agenda, pelo nome salvo; **se nenhum** casar, um grupo de que você participa |
 | Grupo | `/Grupo L200/`, `"Grupo L200"` ou `L200` | O grupo (quando nenhum contato tem essas palavras no nome) |
 | Número | `+5521999999999` | O privado do número: DDI + DDD + número (o `+` é opcional; o bot confere se ele está no WhatsApp) |
+| E-mail | `email`, `voce@exemplo.com` ou `"a@x.com, b@y.com"` | Só nos alertas (`/cotacao`, `/crypto` e `/defi`): `email` é o `QRCODE_EMAIL_SMTP_TO`; sai pelo SMTP do bot, sem a formatação do WhatsApp ([E-mails](../emails.md)) |
+
+- O `/cron` e o `/mudo` não aceitam e-mail: a mensagem do `/cron` sai no
+  WhatsApp, e o `/mudo` silencia uma pessoa ou um grupo.
 
 - O nome casa quando tem **todas** as palavras, em qualquer ordem, sem
   diferenciar maiúsculas nem acentos. Nomes com espaço vão entre `/.../` ou
