@@ -18,6 +18,9 @@ const plural = (n, um, varios) => `${n} ${n === 1 ? um : varios}`;
 
 const fmtNum = (n) => Number(n).toLocaleString('pt-BR');
 
+// Sem acentos e em minúsculas: comparações que não diferenciam "promoção" de "PROMOCAO"
+const semAcentos = (s) => String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
 const resumirTexto = (texto, max = 100) => {
     const t = String(texto ?? '').replace(/\s+/g, ' ').trim();
     return t.length > max ? `${t.slice(0, max - 1)}…` : t;
@@ -29,5 +32,6 @@ module.exports = {
     formatarData,
     paraMs,
     plural,
-    resumirTexto
+    resumirTexto,
+    semAcentos
 };
