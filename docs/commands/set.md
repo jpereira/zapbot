@@ -1,4 +1,4 @@
-# `/set` · admin
+# `/set` (`/config`) · admin
 
 Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 [Settings](../settings.md)). A mudança vale na hora e sobrevive a reinícios.
@@ -14,6 +14,7 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 /set
 /set show.max
 /set show.max 10
+/config show.max 10  → o mesmo, pelo alias
 /set debug.enabled off
 /set sticker.name "Meu Bot"
 /set commands.disabled noffa todos
