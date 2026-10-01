@@ -39,6 +39,7 @@ src/
   botConfig.js          src/comandos/comandos.json carregado
   cliente.js            cliente do whatsapp-web.js e a marca dos envios do bot
   conexao.js            QR Code, eventos de conexão, reinício e watchdog
+  backup.js             backup do banco (/backup): criação, diário, retenção e restauração
   email.js              SMTP e alertas por e-mail
   enquetes.js           votos das enquetes (vote_update) e o placar do /enquete -r
   heartbeat.js          prova de vida para o HEALTHCHECK do Docker
@@ -101,6 +102,7 @@ entre os casos.
 | `apagadas-editadas.test.js` | Eventos de apagar/editar e o `/show` (apagadas e editadas) |
 | `stats.test.js`, `watch.test.js`, `monitor.test.js` | `/stats`, `/watch`, `/monitor` e o aviso de presença |
 | `agenda.test.js` | Datas digitadas (`30m`, `às 18h`, `sexta`...), `/lembrete` e `/agendar` |
+| `backup.test.js` | `/backup` (criação, lista, restauração, envio) e o backup diário |
 | `cotacoes.test.js` | `/cotacao`, `/crypto` e os alertas de preço |
 | `externos.test.js` | `/cve`, `/tempo`, `/news`, `/gpt`, `/resumo`, `/traduzir`, `/gif`, `/meme`, `/joke`, `/kernel` |
 | `grupo.test.js` | `/todos`, `/boletos`, `/listageral`, `/walissu`, `/enquete` (e o `-r`), `/sticker` |
