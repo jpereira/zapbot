@@ -23,10 +23,6 @@
  * software, desde que este aviso de copyright seja mantido.
  *
  * O SOFTWARE É FORNECIDO "COMO ESTÁ", SEM GARANTIA DE QUALQUER TIPO.
- *
- * Projeto não oficial, sem vínculo com o WhatsApp ou a Meta. Usar bots em
- * contas pessoais viola os Termos de Serviço do WhatsApp e pode levar ao
- * banimento do número. Use por sua conta e risco.
  */
 
 /*
