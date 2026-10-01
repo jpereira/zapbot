@@ -1,0 +1,64 @@
+# Publishes the documentation (docs/ + mkdocs.yml) at https://jpereira.github.io/zapbot/
+#
+# Releases only: runs when a v* tag reaches GitHub (bump.sh creates the
+# tag; "git push origin vX.Y.Z" triggers this workflow). So the site always
+# shows the stable version. It can be run by hand (Actions › Documentation › Run
+# workflow), but only choosing a v* tag: from a branch it refuses.
+#
+# Requires, once: Settings › Pages › Build and deployment › Source: GitHub Actions.
+name: Documentação
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One publish at a time; a new release does not cancel the previous one midway
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: docs/requirements.txt
+
+      - name: Instala o MkDocs Material
+        run: pip install -r docs/requirements.txt
+
+      # --strict: a broken link or anchor fails the publish
+      - name: Gera o site
+        run: mkdocs build --strict
+        env:
+          NO_MKDOCS_2_WARNING: '1'
+          DOCS_COPYRIGHT: 'ZapBot ${{ github.ref_name }} · Licença MIT · Copyright &copy; 2026 Jorge Pereira'
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4
