@@ -102,7 +102,7 @@ entre os casos.
 | `stats.test.js`, `watch.test.js`, `monitor.test.js` | `/stats`, `/watch`, `/monitor` e o aviso de presença |
 | `agenda.test.js` | Datas digitadas (`30m`, `às 18h`, `sexta`...), `/lembrete` e `/agendar` |
 | `cotacoes.test.js` | `/cotacao`, `/crypto` e os alertas de preço |
-| `externos.test.js` | `/cve`, `/tempo`, `/news`, `/gpt`, `/resumo`, `/gif`, `/meme`, `/joke`, `/kernel` |
+| `externos.test.js` | `/cve`, `/tempo`, `/news`, `/gpt`, `/resumo`, `/traduzir`, `/gif`, `/meme`, `/joke`, `/kernel` |
 | `grupo.test.js` | `/todos`, `/boletos`, `/listageral`, `/walissu`, `/enquete` (e o `-r`), `/sticker` |
 | `get-cache.test.js` | `/get` (e o anti-SSRF), `/cache` e a limpeza periódica |
 | `conexao-email.test.js` | Eventos de conexão, reinício, watchdog, alertas por e-mail, crash e `docker stop` |

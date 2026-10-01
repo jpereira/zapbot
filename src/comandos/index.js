@@ -32,6 +32,7 @@ const { cmdStats } = require('./stats');
 const { cmdSticker } = require('./sticker');
 const { cmdTempo } = require('./tempo');
 const { cmdTodos } = require('./todos');
+const { cmdTraduzir } = require('./traduzir');
 const { cmdUptime } = require('./uptime');
 const { cmdWalissu } = require('./walissu');
 const { cmdWatch } = require('./watch');
@@ -68,6 +69,7 @@ const HANDLERS = {
     '/sticker': cmdSticker,
     '/tempo': cmdTempo,
     '/todos': cmdTodos,
+    '/traduzir': cmdTraduzir,
     '/uptime': cmdUptime,
     '/version': cmdUptime,
     '/walissu': cmdWalissu,
