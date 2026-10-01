@@ -154,17 +154,17 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 1, max: 100,
         desc: 'Tamanho máximo (MB) do arquivo enviado pelo /get.'
     },
-    'gif.giphy.api.key': {
+    'gif.tag': {
+        default: 'fail',
+        type: 'string',
+        desc: 'Tag padrão do /giphy quando nenhuma é informada.'
+    },
+    'giphy.api.key': {
         default: '',
         type: 'string',
         allowEmpty: true,
         secret: true,
         desc: 'Chave do GIPHY (/giphy), usada quando GIPHY_API_KEY não está no config/.env.'
-    },
-    'gif.tag': {
-        default: 'fail',
-        type: 'string',
-        desc: 'Tag padrão do /giphy quando nenhuma é informada.'
     },
     'monitor.max': {
         default: 20,
