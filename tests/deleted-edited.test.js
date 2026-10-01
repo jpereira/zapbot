@@ -1,6 +1,6 @@
 /*
  * Deleted and edited messages: the WhatsApp events and the commands
- * /show (/undo, /s): the deleted ones (default, or -d) and the edited ones (-e).
+ * /show (/s): the deleted ones (default, or -d) and the edited ones (-e).
  */
 const bot = require('./helpers/bot');
 
@@ -188,7 +188,7 @@ describe('evento: mensagem editada', () => {
     });
 });
 
-describe('/show (/undo, /s)', () => {
+describe('/show (/s)', () => {
     test('sem apagadas neste chat', async () => {
         assert.deepEqual(await bot.replyAlt('/show'), ['♻️ Nenhuma mensagem apagada registrada neste chat.']);
     });
@@ -200,7 +200,7 @@ describe('/show (/undo, /s)', () => {
         assert.equal(summary, '♻️ *1 mensagem apagada*');
         assert.match(single, /❌ \*MENSAGEM APAGADA\* \(1\/1\)[\s\S]*"três"/);
 
-        const r = await bot.replyAlt('/undo -2');
+        const r = await bot.replyAlt('/s -2');
         assert.equal(r[0], '♻️ *2 mensagens apagadas*');
         assert.match(r[1], /"dois"/);
         assert.match(r[2], /"três"/);
