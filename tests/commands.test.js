@@ -179,7 +179,7 @@ describe('/set (/config)', () => {
 
     test('<trecho> ou /regex/ que não é uma chave: lista as que casam; nada casa: erro', async () => {
         const [r] = await bot.replyAlt('/set alerta');
-        assert.match(r, /^⚙️ \*SETTINGS\* com "alerta" \(2\)\n\n```\nalerta\.intervalMin  5\nalerta\.max          20\n```\n💡 _\/set <chave> para detalhes_$/);
+        assert.match(r, /^⚙️ \*SETTINGS\* com "alerta" \(3\)\n\n```\nalerta\.intervalMin       5\nalerta\.max               20\ndefi\.alerta\.intervalMin  10\n```\n💡 _\/set <chave> para detalhes_$/);
 
         const keys = (textAlt) => [...textAlt.matchAll(/^([a-z][\w.]+)\s{2}/gm)].map(m => m[1]);
         assert.deepEqual(keys((await bot.replyAlt('/set OPENAI'))[0]), ['openai.api.key', 'openai.api.model', 'openai.timeout.ms']);

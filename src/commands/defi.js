@@ -2,11 +2,15 @@
  * Comando /defi.
  */
 
-const { getCommandSyntax } = require('./base');
+const { findCommand, getCommandSyntax } = require('./base');
 const { dbAll, dbGet, dbReady, dbRun } = require('../db');
 const { positionDetails, validatePosition } = require('../defi/orca');
 const { isEnderecoSolana: isAddressSolana } = require('../defi/solana');
+const { describeDestination, extractDestination, resolverOrChoose } = require('../destinations');
+const { smtpForSend } = require('../email');
 const { printError } = require('../log');
+const { GetOptFromCommand } = require('../options');
+const { getSetting } = require('../settings');
 const { formatData, plural } = require('../util/format');
 
 /*
@@ -16,6 +20,13 @@ const { formatData, plural } = require('../util/format');
  * /defi -l           → lists the registered ones
  *   /defi -rm <nº|all> → remove
  * -nft and -pool are optional: if they come, the bot checks that they match the position.
+ *
+ * And the out-of-range alert (the check lives in src/defi/alerts.js):
+ * /defi -alerta                         → lists the alerts
+ * /defi -alerta <no.|all> [-send <dest>] → notifies whenever the position leaves the range:
+ * in your private chat or in -send (email, emails,
+ * contact, group or number)
+ *   /defi -alerta -rm <nº|all>            → desliga
  */
 const MAX_POSITIONS = 20;
 
@@ -162,9 +173,162 @@ async function showAlt(msg, positions) {
     }
 }
 
-async function cmdDefi({ msg, opts }) {
+/*
+ * -alerta
+ */
+const EMAIL = /^[^\s@<>,;]+@[^\s@<>,;]+\.[^\s@<>,;]+$/;
+const isEmail = (s) => /^e-?mail$/i.test(s) || EMAIL.test(s);
+
+/**
+ * Where the position notice goes: "seu privado", "👥 Grupo", "📧 a@b.com".
+ */
+function alertDescribeDestination(p) {
+    if (p.alert_email) return `📧 ${p.alert_email}`;
+    if (p.alert_dest_id) return describeDestination({ nome: p.alert_dest_name, grupo: p.alert_dest_is_group });
+    return 'seu privado';
+}
+
+const RANGE_STATE = { 1: '✅ na faixa', 0: '⚠️ fora da faixa' };
+const rangeState = (p) => RANGE_STATE[p.in_range] ?? '❔ ainda não lida';
+const eachMinutes = () => plural(getSetting('defi.alerta.intervalMin'), 'minuto', 'minutos');
+
+/**
+ * The -send destination: "email" (the QRCODE_EMAIL_SMTP_TO), one or more emails, or
+ * a contact, a group or a number (several with the name: you choose from the list).
+ * @returns {Promise<{ email?: string, id?: string, nome?: string, grupo?: boolean } | null>} null: already replied the error
+ */
+async function sendDestination(msg, valueAlt) {
+    const partsAlt = String(valueAlt ?? '').split(/[\s,;]+/).filter(Boolean);
+
+    if (!partsAlt.length) {
+        await msg.reply('❌ Informe o destino do -send: email, um e-mail, um contato, um grupo ou um número.\n' +
+            '💡 _/defi -alerta 1 -send email, -send /Jorge Pereira/, -send /Grupo L200/ ou -send +5521999999999_');
+        return null;
+    }
+
+    if (!partsAlt.every(isEmail)) return resolverOrChoose(msg, valueAlt, { opcao: '-send' });
+
+    const emails = partsAlt.flatMap(p => (/^e-?mail$/i.test(p)
+        ? String(process.env.QRCODE_EMAIL_SMTP_TO ?? '').split(/\s*,\s*/)
+        : [p])).map(e => e.trim());
+
+    if (emails.some(e => !EMAIL.test(e))) {
+        await msg.reply('❌ O "email" do -send usa o QRCODE_EMAIL_SMTP_TO, que está vazio (ou inválido) no config/.env. Informe o e-mail: -send voce@exemplo.com');
+        return null;
+    }
+    if (!smtpForSend()) {
+        await msg.reply('❌ SMTP não configurado (QRCODE_EMAIL_SMTP_HOST e QRCODE_EMAIL_SMTP_USER no config/.env): o alerta não teria como sair por e-mail.');
+        return null;
+    }
+
+    return { email: [...new Set(emails)].join(', ') };
+}
+
+async function listAlerts(msg, positions) {
+    const withAlert = positions.map((p, i) => ({ p, n: i + 1 })).filter(({ p }) => p.alert);
+
+    if (!withAlert.length) {
+        await msg.reply('🔕 Nenhum alerta no /defi.\n💡 _Ligue com /defi -alerta <nº> (avisa sempre que a posição sair da faixa)._');
+        return;
+    }
+
+    await msg.reply(`🔔 *Alertas do /defi* (${withAlert.length})\n\n` +
+        withAlert.map(({ p, n }) => `${n}. Orca · ${short(p.position)} · ${rangeState(p)} → ${alertDescribeDestination(p)}`).join('\n') +
+        `\n\n💡 _Verificados a cada ${eachMinutes()}. Desligue com /defi -alerta -rm <nº|all>._`);
+}
+
+async function handleAlert(msg, opts, positions, { comSend: withSend, sendTexto: sendText }) {
     const o = opts.opt;
+    const byNumber = (v) => (/^\d+$/.test(v) ? positions[Number(v) - 1] : null);
+
+    // -alerta -rm <nº|all>: desliga
+    if (opts.given.has('rm')) {
+        const rm = String(o.rm ?? '').trim().toLowerCase();
+        const targets = rm === 'all' ? positions.filter(p => p.alert) : [byNumber(rm)].filter(Boolean);
+
+        if (rm !== 'all' && !targets.length) {
+            await msg.reply(`❌ Posição nº ${o.rm ?? '?'} não existe. Veja a lista com /defi -l`);
+            return;
+        }
+
+        for (const p of targets) {
+            await dbRun(`UPDATE defi_positions SET alert = 0, alert_dest_id = NULL, alert_dest_name = NULL,
+                alert_dest_is_group = 0, alert_email = NULL, in_range = NULL WHERE id = ?`, [p.id]);
+        }
+        await msg.reply(rm === 'all'
+            ? `🔕 ${plural(targets.length, 'alerta desligado', 'alertas desligados')}.`
+            : `🔕 Alerta desligado: Orca · ${short(targets[0].position)}`);
+        return;
+    }
+
+    const target = String(o.alerta ?? '').trim().toLowerCase();
+
+    if (!target) {
+        if (withSend) {
+            await msg.reply('❌ Informe a posição: /defi -alerta <nº|all> -send <destino>');
+            return;
+        }
+        await listAlerts(msg, positions);
+        return;
+    }
+
+    const chosen = target === 'all' ? positions : [byNumber(target)].filter(Boolean);
+    if (!chosen.length) {
+        await msg.reply(target === 'all'
+            ? '🌊 Nenhuma posição cadastrada.\n💡 _/defi -orca -position <endereço> -nft <mint> -pool <endereço>_'
+            : `❌ Posição nº ${o.alerta} não existe. Veja a lista com /defi -l`);
+        return;
+    }
+
+    let destination = {};
+    if (withSend) {
+        destination = await sendDestination(msg, sendText);
+        if (!destination) return;
+    }
+
+    // The current state becomes the reference: the notice goes out when the position goes from inside to outside
+    const linesAlt = [];
+    for (const p of chosen) {
+        const inRange = await positionDetails(p.position, p.pool)
+            .then(d => (d.calculo.naFaixa ? 1 : 0))
+            .catch((err) => {
+                printError(`/defi -alerta ${p.position}:`, err.response?.status ?? '', err.message);
+                return null;
+            });
+
+        await dbRun(`UPDATE defi_positions SET alert = 1, alert_dest_id = ?, alert_dest_name = ?,
+            alert_dest_is_group = ?, alert_email = ?, in_range = ? WHERE id = ?`,
+        [destination.id ?? null, destination.nome ?? null, destination.grupo ? 1 : 0, destination.email ?? null, inRange, p.id]);
+
+        const updated = { ...p, in_range: inRange };
+        linesAlt.push(`${positions.indexOf(p) + 1}. Orca · ${short(p.position)} · ${rangeState(updated)}` +
+            (inRange === 0 ? ' _(avisa quando voltar para a faixa e sair de novo)_' : ''));
+    }
+
+    const whereWarn = alertDescribeDestination({
+        alert_email: destination.email, alert_dest_id: destination.id, alert_dest_name: destination.nome, alert_dest_is_group: destination.grupo
+    });
+
+    await msg.reply(`🔔 *Alerta do /defi ligado* (${chosen.length})\n\n${linesAlt.join('\n')}\n\n` +
+        `📣 Aviso: ${whereWarn}, sempre que a posição sair da faixa (verificada a cada ${eachMinutes()}).\n` +
+        '💡 _Veja com /defi -alerta; desligue com /defi -alerta -rm <nº|all>._');
+}
+
+async function cmdDefi({ msg, opts: commandOpts, args }) {
     await dbReady;
+
+    /*
+     * -send accepts spaces (/Jorge Pereira/), which the option parser
+     * would split: goes out of the text first, and the rest is read again.
+     */
+    const { destino: sendText, informado: withSend, resto: rest } = extractDestination(args, 'send');
+    const opts = withSend ? GetOptFromCommand(rest, findCommand('/defi')) : commandOpts;
+    const o = opts.opt;
+
+    if (withSend && !opts.given.has('alerta')) {
+        await msg.reply('❌ O -send é do -alerta: /defi -alerta <nº|all> -send <destino>');
+        return;
+    }
 
     if (o.orca || opts.given.has('position')) {
         await register(msg, o);
@@ -172,6 +336,12 @@ async function cmdDefi({ msg, opts }) {
     }
 
     const positions = await dbAll('SELECT * FROM defi_positions ORDER BY id');
+
+    if (opts.given.has('alerta')) {
+        await handleAlert(msg, opts, positions, { comSend: withSend, sendTexto: sendText });
+        return;
+    }
+
     const empty = '🌊 Nenhuma posição cadastrada.\n💡 _/defi -orca -position <endereço> -nft <mint> -pool <endereço>_';
 
     if (opts.given.has('rm')) {
@@ -214,8 +384,9 @@ async function cmdDefi({ msg, opts }) {
         }
 
         await msg.reply(`🌊 *Posições DeFi* (${positions.length})\n\n` +
-            positions.map((p, i) => `${i + 1}. Orca · ${short(p.position)} · pool ${short(p.pool)} _(desde ${formatData(p.created_at).split(',')[0]})_`).join('\n') +
-            '\n\n💡 _/defi -show mostra os detalhes; /defi -rm <nº> remove._');
+            positions.map((p, i) => `${i + 1}. Orca · ${short(p.position)} · pool ${short(p.pool)} _(desde ${formatData(p.created_at).split(',')[0]})_` +
+                (p.alert ? ' 🔔' : '')).join('\n') +
+            '\n\n💡 _/defi -show mostra os detalhes; /defi -rm <nº> remove; 🔔 = com alerta (/defi -alerta)._');
         return;
     }
 
@@ -225,5 +396,6 @@ async function cmdDefi({ msg, opts }) {
 module.exports = {
     rangeBar,
     cmdDefi,
+    alertDescribeDestination,
     positionText
 };

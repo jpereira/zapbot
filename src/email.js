@@ -91,10 +91,13 @@ async function alertPerEmail(event, details = '', { forcar: force = false } = {}
 const smtpForSend = () => ['QRCODE_EMAIL_SMTP_HOST', 'QRCODE_EMAIL_SMTP_USER'].every(v => process.env[v]?.trim());
 
 /**
- * Sends a file as an attachment through the bot's SMTP (e.g.: /backup -send).
- * Throws the SMTP error for whoever called to reply in the chat.
+ * Sends an email through the bot's SMTP (e.g.: the /defi alert), optionally with
+ * attachments. Throws the SMTP error for whoever called to reply in the chat.
+ * @param {object} o
+ * @param {string[]} o.para
+ * @param {Array<{filename: string, path: string}>} [o.anexos]
  */
-async function sendFilePerEmail({ para, assunto: subject, texto: textAlt, arquivo: fileAlt, nomeArquivo: nameFile }) {
+async function sendEmail({ para, assunto: subject, texto: textAlt, anexos: attachments = [] }) {
     if (!smtpForSend()) throw new Error('SMTP não configurado (QRCODE_EMAIL_SMTP_HOST e QRCODE_EMAIL_SMTP_USER no config/.env)');
 
     const antiPhishing = process.env.QRCODE_EMAIL_SMTP_ANTIPHISHING || '-';
@@ -103,11 +106,15 @@ async function sendFilePerEmail({ para, assunto: subject, texto: textAlt, arquiv
         to: para.join(', '),
         subject: `[ZapBot] ${subject}`,
         text: `${textAlt}\n\n🛡️ Anti-Phishing Code: ${antiPhishing}`,
-        attachments: [{ filename: nameFile, path: fileAlt }]
+        ...(attachments.length ? { attachments: attachments } : {})
     });
 
     printInfo(`E-mail '${subject}' enviado para ${para.join(', ')}`);
 }
+
+// A file as an attachment (e.g.: /backup -send)
+const sendFilePerEmail = ({ para, assunto: subject, texto: textAlt, arquivo: fileAlt, nomeArquivo: nameFile }) =>
+    sendEmail({ para, assunto: subject, texto: textAlt, anexos: [{ filename: nameFile, path: fileAlt }] });
 
 // Waits for the email to go out, but does not block shutdown if SMTP does not respond
 async function leaveAlertBefore(event, details, ms) {
@@ -127,6 +134,7 @@ module.exports = {
     leaveAlertBefore,
     alertPerEmail,
     sendFilePerEmail,
+    sendEmail,
     smtpForSend,
     transporter
 };

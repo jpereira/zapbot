@@ -1,5 +1,5 @@
-* /defi: outros protocolos alem da Orca (Prjx, Liquidswap, Morpho), PnL da posicao
-  (precisa do historico de depositos/saques) e alerta quando a posicao sair da faixa.
+* /defi: outros protocolos alem da Orca (Prjx, Liquidswap, Morpho) e PnL da posicao
+  (precisa do historico de depositos/saques).
 * /view: salvar a foto/video de visualizacao unica quando chega, com o mesmo cache de
   midias e o mesmo -l do /show, com um -v ao lado do -d e do -e (terceira secao "Visualizacao unica").
 * /enquete: avisar no privado quando todos do grupo votarem.

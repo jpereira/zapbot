@@ -13,10 +13,11 @@ const path = require('path');
 const { test, describe, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { OTHERAlt, network } = bot;
+const { OWNER, OTHERAlt, emails, nodemailer, network } = bot;
 const solana = bot.src('defi/solana');
 const orca = bot.src('defi/orca');
 const { rangeBar } = bot.src('commands/defi');
+const { checkAlertsDefi } = bot.src('defi/alerts');
 
 const FIXTURES = path.join(__dirname, 'fixtures', 'orca');
 const ACCOUNTS = require(path.join(FIXTURES, 'accounts.json'));
@@ -211,5 +212,128 @@ describe('/defi', () => {
 
     test('só o dono', async () => {
         assert.deepEqual(await bot.replyAlt(REGISTRATION, { de: OTHERAlt.jid }), []);
+    });
+});
+
+/*
+ * The pool with the price way down (half the sqrtPrice), as in the "out of the
+ * range" of calculatePosition: sqrtPrice is u128 at offset 65 and the current tick, i32 at 81.
+ */
+function rangePoolOutside() {
+    const b = account(POOL);
+    const half = solana.u128(b, 65) / 2n;
+    b.writeBigUInt64LE(half & 0xffffffffffffffffn, 65);
+    b.writeBigUInt64LE(half >> 64n, 73);
+    b.writeInt32LE(-100000, 81);
+    return b.toString('base64');
+}
+
+const rangeOutside = () => simulateSolana({ contas: { ...ACCOUNTS, [POOL]: rangePoolOutside() } });
+const inRange = () => simulateSolana();
+
+// A -alerta check; returns what the bot sent
+async function check() {
+    const beforeAlt = bot.client.enviadas.length;
+    await checkAlertsDefi({ forcar: true });
+    return bot.client.enviadas.slice(beforeAlt);
+}
+
+describe('/defi -alerta (-a)', () => {
+    beforeEach(() => bot.replyAlt(REGISTRATION));
+
+    test('liga no seu privado; avisa ao sair da faixa, uma vez; volta e sai: avisa de novo', async () => {
+        const [r] = await bot.replyAlt('/defi -alerta 1');
+        assert.match(r, /^🔔 \*Alerta do \/defi ligado\* \(1\)\n\n1\. Orca · ime1…VPcg · ✅ na faixa\n\n📣 Aviso: seu privado, sempre que a posição sair da faixa \(verificada a cada 10 minutos\)\./);
+        assert.deepEqual(await check(), [], 'na faixa: nada');
+
+        rangeOutside();
+        const [notice] = await check();
+        assert.equal(notice.chatId, OWNER.jid);
+        assert.match(notice.content, /^🚨 \*DeFi: a posição ime1…VPcg saiu da faixa\*\n\n🌊 \*Orca · SOL\/cbBTC\*[\s\S]*⚠️ \*fora da faixa\* \(preço abaixo/);
+        assert.match(notice.content, /💡 _Desligue com \/defi -alerta -rm 1\._$/);
+        assert.deepEqual(await check(), [], 'continua fora: não repete');
+
+        inRange();
+        assert.deepEqual(await check(), []);
+        rangeOutside();
+        assert.equal((await check()).length, 1, 'saiu de novo: avisa');
+    });
+
+    test('a lista, o 🔔 no /defi -l e o -rm desliga', async () => {
+        assert.match((await bot.replyAlt('/defi -a'))[0], /^🔕 Nenhum alerta no \/defi\./);
+        await bot.replyAlt('/defi -a all');
+
+        assert.match((await bot.replyAlt('/defi -alerta'))[0], /^🔔 \*Alertas do \/defi\* \(1\)\n\n1\. Orca · ime1…VPcg · ✅ na faixa → seu privado\n\n💡 _Verificados a cada 10 minutos\./);
+        assert.match((await bot.replyAlt('/defi -l'))[0], /1\. Orca · ime1…VPcg · pool J7Hz…bHCh _\(desde [\d/]+\)_ 🔔\n/);
+
+        assert.deepEqual(await bot.replyAlt('/defi -alerta -rm 1'), ['🔕 Alerta desligado: Orca · ime1…VPcg']);
+        assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM defi_positions')).n, 1, 'a posição fica');
+        rangeOutside();
+        assert.deepEqual(await check(), []);
+        assert.deepEqual(await bot.replyAlt('/defi -a -rm all'), ['🔕 0 alertas desligados.']);
+    });
+
+    test('ligado já fora da faixa: só avisa depois de voltar e sair de novo', async () => {
+        rangeOutside();
+        assert.match((await bot.replyAlt('/defi -a 1'))[0], /1\. Orca · ime1…VPcg · ⚠️ fora da faixa _\(avisa quando voltar para a faixa e sair de novo\)_/);
+        assert.deepEqual(await check(), []);
+    });
+
+    test('RPC fora: liga sem o estado e avisa na primeira leitura fora da faixa', async () => {
+        network.responder('post', 'api.mainnet-beta.solana.com', { error: { code: 429, message: 'Too many requests' } });
+        assert.match((await bot.replyAlt('/defi -a 1', { erroEsperado: true }))[0], /· ❔ ainda não lida/);
+        assert.deepEqual(await check(), []);
+
+        rangeOutside();
+        assert.equal((await check()).length, 1);
+    });
+
+    test('-send: contato, grupo (com escolha) ou número', async () => {
+        await bot.replyAlt('/defi -alerta 1 -send /Fulano/');
+        rangeOutside();
+        assert.equal((await check())[0].chatId, OTHERAlt.jid);
+
+        bot.createGroup('120363000000000300@g.us', 'Cripto Rio', [OWNER.jid]);
+        bot.createGroup('120363000000000301@g.us', 'Cripto SP', [OWNER.jid]);
+        const r = await bot.replyChoosing('/defi -a 1 -send cripto', 2);
+        assert.match(r[0], /^🔎 "cripto" corresponde a 2 grupos:\n\n1\. 👥 Cripto Rio\n2\. 👥 Cripto SP/);
+        assert.match(r.at(-1), /📣 Aviso: 👥 Cripto SP, sempre que/);
+
+        assert.match((await bot.replyAlt('/defi -a 1 -send +5521911111111'))[0], /📣 Aviso: 👤 Fulano,/);
+        assert.match((await bot.replyAlt('/defi -a 1 -send xyz'))[0], /❌ Nenhum contato ou grupo com "xyz" no nome/);
+        assert.match((await bot.replyAlt('/defi -a 1 -send'))[0], /❌ Informe o destino do -send/);
+        assert.match((await bot.replyAlt('/defi -send email'))[0], /❌ O -send é do -alerta/);
+        assert.match((await bot.replyAlt('/defi -a 7'))[0], /❌ Posição nº 7 não existe/);
+    });
+
+    test('-send email: pelo SMTP do bot, sem a formatação do WhatsApp', async () => {
+        assert.match((await bot.replyAlt('/defi -a 1 -send email'))[0], /❌ O "email" do -send usa o QRCODE_EMAIL_SMTP_TO/);
+        assert.match((await bot.replyAlt('/defi -a 1 -send eu@exemplo.com'))[0], /❌ SMTP não configurado/);
+
+        const env = { QRCODE_EMAIL_SMTP_HOST: 'smtp.exemplo.com', QRCODE_EMAIL_SMTP_USER: 'bot@exemplo.com', QRCODE_EMAIL_SMTP_TO: 'eu@exemplo.com' };
+        Object.assign(process.env, env);
+        try {
+            assert.match((await bot.replyAlt('/defi -a 1 -send "email, outro@exemplo.com"'))[0], /📣 Aviso: 📧 eu@exemplo\.com, outro@exemplo\.com,/);
+
+            rangeOutside();
+            assert.deepEqual(await check(), [], 'nada no WhatsApp');
+            const [m] = emails;
+            assert.equal(m.to, 'eu@exemplo.com, outro@exemplo.com');
+            assert.equal(m.subject, '[ZapBot] DeFi: a posição ime1…VPcg saiu da faixa');
+            assert.match(m.text, /^🚨 DeFi: a posição ime1…VPcg saiu da faixa\n\n🌊 Orca · SOL\/cbBTC/);
+            assert.doesNotMatch(m.text, /[*_]/);
+
+            // An email that fails does not repeat on every check
+            nodemailer.falhar = true;
+            inRange();
+            await check();
+            rangeOutside();
+            await checkAlertsDefi({ forcar: true });
+            nodemailer.falhar = false;
+            assert.equal(emails.length, 1);
+            assert.equal((await bot.dbGet('SELECT in_range FROM defi_positions')).in_range, 0);
+        } finally {
+            for (const v of Object.keys(env)) delete process.env[v];
+        }
     });
 });
