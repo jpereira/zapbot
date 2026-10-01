@@ -1,5 +1,5 @@
 /*
- * Comando /boletos: sorteio de membros do grupo. O sorteio também é usado pelo /ualisu.
+ * Comando /boletos: sorteio de membros do grupo. O sorteio também é usado pelo /walissu.
  */
 
 const { client } = require('../cliente');

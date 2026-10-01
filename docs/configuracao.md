@@ -34,7 +34,7 @@ outros funcionam sem configuração.
 | `/gpt` | [OpenAI](https://platform.openai.com/) (pago por uso) | `OPENAI_API_KEY` ou setting `openai.api.key` |
 | `/gif` | [GIPHY](https://developers.giphy.com/) (grátis, 100 chamadas/hora) | `GIPHY_API_KEY` ou setting `gif.giphy.api.key` |
 | `/tempo` | [Open-Meteo](https://open-meteo.com/) | — |
-| `/cve`, `/ualisu` | [NVD](https://nvd.nist.gov/) (~5 consultas a cada 30 s) | — |
+| `/cve`, `/walissu` | [NVD](https://nvd.nist.gov/) (~5 consultas a cada 30 s) | — |
 | `/news` | Feeds RSS (g1, Gazeta do Povo, The Hacker News...) | — |
 | `/cotacao` | [Yahoo Finance](https://finance.yahoo.com/) (reserva: [AwesomeAPI](https://docs.awesomeapi.com.br/)) e [Binance](https://www.binance.com/) para o USDT | — |
 | `/crypto` | [Binance](https://www.binance.com/) | — |
