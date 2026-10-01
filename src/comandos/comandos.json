@@ -526,6 +526,9 @@
         {
             "cmd": "/set",
             "usage": "/set [OPTION] [<chave> [<valor>]]",
+            "aliases": [
+                "/config"
+            ],
             "help": "Lista, exibe e altera as configurações do bot (settings).",
             "cmd_opts": [
                 {
