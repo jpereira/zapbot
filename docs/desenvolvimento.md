@@ -46,7 +46,7 @@ src/
   stats.js              contadores do /stats
   moedas.js, cotacoes.js, alertasPreco.js   /crypto, /cotacao e alertas de preço
   openai.js             modelos aceitos pelo /gpt
-  openaiChat.js         chamada ao chat da OpenAI (/gpt)
+  openaiChat.js         chamada ao chat da OpenAI (/gpt e /resumo)
   contatos.js, opcoes.js                    contatos/@lid e o parser de opções
   destinos.js           o -to dos avisos: pessoa pelo número ou grupo pelo nome
   watch/                regras e verificação do /watch
@@ -99,7 +99,7 @@ entre os casos.
 | `apagadas-editadas.test.js` | Eventos de apagar/editar e o `/show` (apagadas e editadas) |
 | `stats.test.js`, `watch.test.js`, `monitor.test.js` | `/stats`, `/watch`, `/monitor` e o aviso de presença |
 | `cotacoes.test.js` | `/cotacao`, `/crypto` e os alertas de preço |
-| `externos.test.js` | `/cve`, `/tempo`, `/news`, `/gpt`, `/gif`, `/meme`, `/joke`, `/kernel` |
+| `externos.test.js` | `/cve`, `/tempo`, `/news`, `/gpt`, `/resumo`, `/gif`, `/meme`, `/joke`, `/kernel` |
 | `grupo.test.js` | `/todos`, `/boletos`, `/listageral`, `/walissu`, `/enquete`, `/sticker` |
 | `get-cache.test.js` | `/get` (e o anti-SSRF), `/cache` e a limpeza periódica |
 | `conexao-email.test.js` | Eventos de conexão, reinício, watchdog, alertas por e-mail, crash e `docker stop` |
