@@ -89,8 +89,8 @@ admin está ligado: só você usa comandos até `/bot -admin`
 | [`/kernel`](https://jpereira.github.io/zapbot/comandos/kernel/) | | | Versões atuais do kernel Linux (kernel.org) |
 | [`/listageral`](https://jpereira.github.io/zapbot/comandos/listageral/) | `/list` | ✅ | Lista os membros do grupo |
 | [`/meme`](https://jpereira.github.io/zapbot/comandos/meme/) | | | Template de meme aleatório (imgflip) |
-| [`/monitor`](https://jpereira.github.io/zapbot/comandos/monitor/) 🚧 | `/m` | ✅ | Avisa quando números ficam online *(em desenvolvimento, desabilitado por padrão)* |
-| [`/mudo`](https://jpereira.github.io/zapbot/comandos/mudo/) | `/mute` | ✅ | Silencia os avisos de apagadas, editadas e status de uma pessoa ou grupo |
+| [`/monitor`](https://jpereira.github.io/zapbot/comandos/monitor/) 🚧 | | ✅ | Avisa quando números ficam online *(em desenvolvimento, desabilitado por padrão)* |
+| [`/mudo`](https://jpereira.github.io/zapbot/comandos/mudo/) | `/m`, `/mute` | ✅ | Silencia os avisos de apagadas, editadas e status de uma pessoa ou grupo |
 | [`/news`](https://jpereira.github.io/zapbot/comandos/news/) | | ✅ | Manchetes de feeds RSS: `-hack`, `-g1`, `-gazeta`, `-brasil` |
 | [`/noffa`](https://jpereira.github.io/zapbot/comandos/noffa/) | `/🌈`, `/🏳️‍🌈` | | Enfeita o texto com arco-íris |
 | [`/ping`](https://jpereira.github.io/zapbot/comandos/ping/) | `/p` | ✅ | Verifica se o bot está vivo |

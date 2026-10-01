@@ -1,5 +1,5 @@
 /*
- * /monitor (/m) e o aviso de presença. O comando está desativado no config
+ * /monitor e o aviso de presença. O comando está desativado no config
  * ("em desenvolvimento"): aqui ele é recolocado no botConfig carregado, só
  * neste processo de teste.
  */
@@ -28,10 +28,10 @@ beforeEach(bot.reiniciar);
 const NUMERO = '5521944444444';
 const online = (id, extras = {}) => bot.client.listeners('presence_update')[0]({ id: { _serialized: id }, status: 'available', ...extras });
 
-describe('/monitor (/m)', () => {
+describe('/monitor', () => {
     test('-add, -list e número repetido', async () => {
         assert.deepEqual(await bot.responder('/monitor -add +55 21 94444-4444'), [`🔔 O número ${NUMERO} agora está sendo monitorado.`]);
-        assert.deepEqual(await bot.responder(`/m add ${NUMERO}`), [`🔔 O número ${NUMERO} já está sendo monitorado.`]);
+        assert.deepEqual(await bot.responder(`/monitor add ${NUMERO}`), [`🔔 O número ${NUMERO} já está sendo monitorado.`]);
         assert.match((await bot.responder('/monitor -list'))[0], new RegExp(`📲🔔 \\*Números Monitorados:\\*\\n\\n\\* ${NUMERO} adicionado em:`));
     });
 

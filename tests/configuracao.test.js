@@ -64,7 +64,6 @@ describe('comandos.json', () => {
     test('comando "disabled" não é carregado (/monitor)', () => {
         assert.equal(CONFIG.commands.find(c => c.cmd === '/monitor').disabled, true);
         assert.equal(findCommand('/monitor'), undefined);
-        assert.equal(findCommand('/m'), undefined);
     });
 });
 
