@@ -659,9 +659,6 @@
         {
             "cmd": "/monitor",
             "usage": "/monitor [OPTION]",
-            "aliases": [
-                "/m"
-            ],
             "help": "🚧 [EM DESENVOLVIMENTO] Números a serem monitorados. Máx. definido em monitor.max (/set).",
             "disabled": true,
             "cmd_opts": [
@@ -711,6 +708,7 @@
             "cmd": "/mudo",
             "usage": "/mudo <OPTION>... </contato ou grupo/|+número>",
             "aliases": [
+                "/m",
                 "/mute"
             ],
             "help": "Silencia os avisos de apagadas, editadas e/ou status apagados de uma pessoa ou de um grupo. As mensagens continuam guardadas para o /show. Sem nada, lista os silenciados.",
