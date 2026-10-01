@@ -85,7 +85,7 @@ Por onde começar:
   para as tabelas `polls` e `poll_votes`, e o
   [`/enquete -r`](comandos/enquete.md#resultado) mostra o placar. Ficam 90 dias
   (setting `enquete.retentionDays`).
-- **Agenda**: os lembretes e as mensagens do [`/agendar`](comandos/agendar.md)
+- **Agenda**: os lembretes e as mensagens do [`/cron`](comandos/cron.md)
   (também `/lembrete` e `/cron`) ficam na tabela `schedules`; a cada 30 s o
   bot envia o que venceu (os repetidos seguem para o próximo horário).
 - **Status diário**: com [`/status 06h`](comandos/status.md), um relatório das

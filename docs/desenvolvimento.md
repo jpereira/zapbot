@@ -49,7 +49,7 @@ src/
   stats.js              contadores do /stats
   status.js             relatório do /status e o envio diário (pela agenda)
   moedas.js, cotacoes.js, alertasPreco.js   /crypto, /cotacao e alertas de preço
-  agenda.js             /agendar (e /lembrete): leitura, lista e envio na hora
+  agenda.js             /cron (e /lembrete): leitura, lista e envio na hora
   openai.js             modelos aceitos pelo /gpt
   openaiChat.js         chamada ao chat da OpenAI (/gpt e /resumo)
   contatos.js, opcoes.js                    contatos/@lid e o parser de opções
@@ -107,7 +107,7 @@ entre os casos.
 | `mudo.test.js` | `/mudo`: avisos de apagadas, editadas e status silenciados por pessoa ou grupo |
 | `stats.test.js`, `watch.test.js`, `monitor.test.js` | `/stats`, `/watch`, `/monitor` e o aviso de presença |
 | `status.test.js` | `/status`: o relatório e o envio diário |
-| `agenda.test.js` | Datas digitadas (`30m`, `às 18h`, `sexta`...) e o `/agendar`, nos modos mensagem e lembrete |
+| `agenda.test.js` | Datas digitadas (`30m`, `às 18h`, `sexta`...) e o `/cron`, nos modos mensagem e lembrete |
 | `backup.test.js` | `/backup` (criação, lista, restauração, envio) e o backup diário |
 | `cotacoes.test.js` | `/cotacao`, `/crypto` e os alertas de preço |
 | `defi.test.js` | Solana (base58, PDA), contas da Orca (conferidas com o SDK oficial) e o `/defi` |
