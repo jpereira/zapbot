@@ -61,6 +61,7 @@ ou mais novo** (por causa do `node:sqlite`) e das dependências instaladas
 
 ```bash
 npm test                                   # toda a suíte
+npm run lint                               # ESLint (regras recomendadas, eslint.config.js)
 node --test tests/watch.test.js            # um arquivo
 DEBUG_TESTES=1 npm test                    # mostra o log do bot durante os testes
 node --test --experimental-test-coverage --test-coverage-include='src/**' tests/*.test.js
