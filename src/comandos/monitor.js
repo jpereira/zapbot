@@ -10,7 +10,7 @@ const { getSetting } = require('../settings');
 
 /*
  * /monitor
- * Aceita tanto o estilo das opções do bot-config (/monitor -add 5521...)
+ * Aceita tanto o estilo das opções do comandos.json (/monitor -add 5521...)
  * quanto o posicional (/monitor add 5521...).
  * Antes o switch usava argv[0], que é sempre "/monitor": nenhum subcomando funcionava.
  */
