@@ -139,6 +139,13 @@ async function removerBackup(b) {
     await fs.remove(path.join(BACKUP_DIR, `${b.nome}.json`));
 }
 
+// Apaga todos os backups (/cache -backup e /cache -all)
+async function apagarTodosBackups() {
+    const lista = await listarBackups();
+    for (const b of lista) await removerBackup(b);
+    return { backups: lista.length, bytes: lista.reduce((s, b) => s + b.bytes, 0) };
+}
+
 /**
  * Restaura um backup por cima do banco atual. Antes, faz um backup do estado
  * atual ('antes de restaurar'). Copia tabela por tabela, só as colunas que
@@ -236,6 +243,7 @@ function iniciarBackup() {
 
 module.exports = {
     MOTIVOS,
+    apagarTodosBackups,
     contarEntradas,
     criarBackup,
     iniciarBackup,

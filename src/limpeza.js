@@ -5,6 +5,7 @@
 const path = require('path');
 const fs = require('fs-extra');
 
+const { apagarTodosBackups } = require('./backup');
 const { CACHE_DIR, DAY_MS, MAX_DELETE_WINDOW, MEDIA_DIR, TMP_DIR } = require('./constantes');
 const { dbAll, dbGet, dbPronto, dbRun } = require('./db');
 const { printError, printInfo } = require('./log');
@@ -50,7 +51,8 @@ async function limparCacheAntigo(maxDeleteWin = MAX_DELETE_WINDOW, retencaoApaga
 
 /*
  * Limpeza geral (/cache -all): TODAS as mensagens (inclusive as apagadas e as
- * editadas guardadas para o /show), todas as mídias e todos os temporários.
+ * editadas guardadas para o /show), todas as mídias, todos os temporários e
+ * todos os backups do /backup.
  * No fim, VACUUM devolve o espaço ao disco: DELETE sozinho não encolhe o .db.
  * Não mexe em monitored_numbers, presence_logs, watch_hits, stats, polls, price_alerts
  * nem settings (configuração e histórico).
@@ -69,9 +71,10 @@ async function limparTudo() {
     await dbRun('DELETE FROM message_edits');
     limparConteudoDiretorio(MEDIA_DIR);
     limparConteudoDiretorio(TMP_DIR);
+    const { backups } = await apagarTodosBackups();
     await dbRun('VACUUM');
 
-    return { total, apagadas, editadas, liberado: Math.max(0, bytesAntes - getDirSize(CACHE_DIR)) };
+    return { total, apagadas, editadas, backups, liberado: Math.max(0, bytesAntes - getDirSize(CACHE_DIR)) };
 }
 
 /*
