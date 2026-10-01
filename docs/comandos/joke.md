@@ -1,18 +1,20 @@
 # `/joke` (`/piada`, `/humor`)
 
-Piada em português da [JokeAPI](https://jokeapi.dev/) (safe-mode). Piadas de
-pergunta e resposta vêm com a resposta separada e um 🥁 no fim.
+Piada em português, no estilo "piada de tiozão", sorteada da lista em
+[`src/comandos/piadas.json`](https://github.com/jpereira/zapbot/blob/main/src/comandos/piadas.json).
+Nenhuma se repete até todas terem saído, e a mesma nunca vem duas vezes
+seguidas.
 
 ```
 /joke
-O que é um cheiro verde?
+O que a impressora falou para a outra impressora?
 
-... Peido do Hulk. 🥁
+... Essa folha é sua ou é impressão minha? 🥁
 ```
 
 ```
 /piada          → o mesmo, pelo alias
 ```
 
-Se a JokeAPI não responder, o bot avisa: `❌ Não consegui buscar uma piada
-agora.`
+Não depende de serviço externo. Para incluir piadas, acrescente
+`{ "pergunta": "...", "resposta": "..." }` no `piadas.json` e refaça o build.
