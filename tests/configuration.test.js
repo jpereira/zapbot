@@ -60,59 +60,113 @@ describe('bot-config.json', () => {
     });
 });
 
-describe('README', () => {
-    const tableLines = (title, ate) => {
-        const snippet = README.slice(README.indexOf(title), README.indexOf(ate, README.indexOf(title)));
-        return snippet.split('\n').filter(l => /^\| `/.test(l));
-    };
+/*
+ * Documentation: README.md and docs/ (the MkDocs site)
+ */
+const DOCS = path.join(bot.ROOT, 'docs');
+const readDoc = (rel) => fs.readFileSync(path.join(DOCS, rel), 'utf8');
 
-    // Includes the disabled ones ("disabled": true): the README documents /monitor as under development
-    test('tabela Resumo: todos os comandos do config, em ordem, com os aliases do config', () => {
-        const linesAlt = tableLines('### Resumo', '### `/');
-        const names = linesAlt.map(l => l.split('`')[1]);
+// All the .md files in docs/ (paths relative to docs/)
+const pagesDocs = (dir = DOCS) => fs.readdirSync(dir, { withFileTypes: true }).flatMap(e => e.isDirectory()
+    ? pagesDocs(path.join(dir, e.name))
+    : e.name.endsWith('.md') ? [path.relative(DOCS, path.join(dir, e.name))] : []);
 
-        assert.deepEqual(names, sorted(names), 'Resumo fora de ordem');
-        assert.deepEqual(sorted(names), sorted(CONFIG.commands.map(c => c.cmd)));
+// Without the code blocks: a bash "# comment" is not a heading
+const withoutCode = (md) => md.replace(/^```[\s\S]*?^```/gm, '');
 
+// Anchor as GitHub (and the pymdownx.slugs of mkdocs.yml) generates it: lowercase, no punctuation/emoji, space becomes a hyphen
+const ancora = (title) => title.trim().toLowerCase().replace(/[^\p{L}\p{N}\s_-]/gu, '').replace(/\s/g, '-');
+const anchors = (md) => new Set([...withoutCode(md).matchAll(/^#{1,6} (.+)$/gm)].map(m => ancora(m[1])));
+
+// Rows "| `/cmd` ..." or "| [`/cmd`](cmd.md) ..." of the table that comes after `titulo`
+function commandsTable(md, title) {
+    const ini = md.indexOf(title);
+    assert.ok(ini >= 0, `sem a seção ${title}`);
+    const linesAlt = md.slice(ini).split('\n').slice(1);
+    const table = [];
+    for (const l of linesAlt) {
+        if (/^\| (\[)?`\//.test(l)) table.push(l);
+        else if (table.length) break;
+    }
+    return table.map(l => ({ linha: l, cmd: l.match(/`(\/[a-z]+)`/)[1], colunas: l.split('|') }));
+}
+
+function checkSummary(md, title, whereAlt, { comLinks: withLinks }) {
+    const linesAlt = commandsTable(md, title);
+    const names = linesAlt.map(l => l.cmd);
+
+    // Includes the disabled ones ("disabled": true): /monitor is documented as under development
+    assert.deepEqual(names, sorted(names), `${whereAlt}: Resumo fora de ordem`);
+    assert.deepEqual(sorted(names), sorted(CONFIG.commands.map(c => c.cmd)), `${whereAlt}: Resumo diferente do config`);
+
+    for (const c of CONFIG.commands) {
+        const { linha: line, colunas: columns } = linesAlt.find(l => l.cmd === c.cmd);
+        const aliases = [...columns[2].matchAll(/`([^`]+)`/g)].map(m => m[1]);
+        assert.deepEqual(aliases, c.aliases ?? [], `${whereAlt}: aliases de ${c.cmd} no Resumo`);
+        assert.equal(columns[3].includes('✅'), c.onlyAdmin, `${whereAlt}: coluna Admin de ${c.cmd}`);
+        if (withLinks) assert.ok(line.includes(`](${c.cmd.slice(1)}.md)`), `${whereAlt}: ${c.cmd} sem link para a página`);
+    }
+}
+
+describe('documentação', () => {
+    test('uma página por comando, com o título igual ao config (aliases e "· admin")', () => {
         for (const c of CONFIG.commands) {
-            const line = linesAlt.find(l => l.startsWith(`| \`${c.cmd}\``));
-            const aliases = [...line.split('|')[2].matchAll(/`([^`]+)`/g)].map(m => m[1]);
-            assert.deepEqual(aliases, c.aliases ?? [], `aliases de ${c.cmd} no Resumo`);
-            assert.equal(line.split('|')[3].includes('✅'), c.onlyAdmin, `coluna Admin de ${c.cmd}`);
-        }
-    });
+            const fileAlt = `commands/${c.cmd.slice(1)}.md`;
+            assert.ok(fs.existsSync(path.join(DOCS, fileAlt)), `sem a página docs/${fileAlt}`);
 
-    test('uma seção por comando, em ordem alfabética', () => {
-        const sections = [...README.matchAll(/^### `(\/[a-z]+)/gm)].map(m => m[1]);
-        assert.deepEqual(sections, sorted(sections));
-        for (const c of CONFIG.commands.filter(c => !c.disabled)) {
-            assert.ok(sections.includes(c.cmd), `README sem seção para ${c.cmd}`);
-        }
-    });
-
-    test('título de cada comando: aliases e "· admin" iguais ao config', () => {
-        for (const [title, nameAlt] of README.matchAll(/^### `(\/[a-z]+)`.*$/gm)) {
-            const c = CONFIG.commands.find(x => x.cmd === nameAlt);
-            if (!c) continue;
+            const title = readDoc(fileAlt).split('\n')[0];
+            assert.ok(title.startsWith(`# \`${c.cmd}\``), `docs/${fileAlt}: o título não começa com ${c.cmd}`);
             const aliases = [...title.matchAll(/`(\/[^`]+)`/g)].map(m => m[1]).slice(1);
-            assert.deepEqual(aliases, c.aliases ?? [], `aliases no título de ${nameAlt}`);
-            assert.equal(title.includes('· admin'), c.onlyAdmin, `"· admin" no título de ${nameAlt}`);
+            assert.deepEqual(aliases, c.aliases ?? [], `docs/${fileAlt}: aliases no título`);
+            assert.equal(title.includes('· admin'), c.onlyAdmin, `docs/${fileAlt}: "· admin" no título`);
         }
+
+        const extras = pagesDocs(path.join(DOCS, 'commands')).map(f => `/${path.basename(f, '.md')}`)
+            .filter(n => n !== '/index' && !CONFIG.commands.some(c => c.cmd === n));
+        assert.deepEqual(extras, [], 'página de comando que não está no config');
     });
 
-    // Anchor as GitHub generates it: lowercase, no punctuation/emoji, space becomes a hyphen
-    const ancora = (title) => title.trim().toLowerCase().replace(/[^\p{L}\p{N}\s_-]/gu, '').replace(/\s/g, '-');
-
-    test('todo link interno (#...) aponta para um título que existe', () => {
-        const anchors = new Set([...README.matchAll(/^#{1,6} (.+)$/gm)].map(m => ancora(m[1])));
-        const links = [...README.matchAll(/\]\(#([^)]+)\)/g)].map(m => m[1]);
-        assert.ok(links.length > 20);
-        for (const link of links) assert.ok(anchors.has(link), `link quebrado: #${link}`);
+    test('tabela Resumo do site e do README: todos os comandos, em ordem, iguais ao config', () => {
+        checkSummary(readDoc('commands/index.md'), '## Resumo', 'docs/commands/index.md', { comLinks: true });
+        checkSummary(README, '## Comandos', 'README.md', { comLinks: false });
     });
 
-    test('tabela Settings: as chaves do SETTINGS_SCHEMA, em ordem', () => {
-        const keys = tableLines('#### Settings', 'Uma chave nova').map(l => l.split('`')[1]);
+    test('menu do mkdocs.yml: todas as páginas, comandos em ordem alfabética', () => {
+        const yml = fs.readFileSync(path.join(bot.ROOT, 'mkdocs.yml'), 'utf8');
+        const inMenu = [...yml.slice(yml.indexOf('\nnav:')).matchAll(/([\w/]+\.md)\s*$/gm)].map(m => m[1]);
+
+        assert.deepEqual(sorted(inMenu), sorted(pagesDocs()), 'página fora do menu (ou menu com página inexistente)');
+        const commands = inMenu.filter(p => p.startsWith('commands/') && p !== 'commands/index.md');
+        assert.deepEqual(commands, sorted(commands), 'comandos fora de ordem no menu');
+    });
+
+    test('tabela de settings: as chaves do SETTINGS_SCHEMA, em ordem', () => {
+        const keys = withoutCode(readDoc('settings.md')).split('\n')
+            .filter(l => /^\| `[a-z]/.test(l)).map(l => l.split('`')[1]);
         assert.deepEqual(keys, Object.keys(SETTINGS_SCHEMA));
+    });
+
+    test('nenhum link entre os .md quebrado (arquivo e âncora), no docs/ e no README', () => {
+        const files = [...pagesDocs().map(f => path.join(DOCS, f)), path.join(bot.ROOT, 'README.md')];
+        let total = 0;
+
+        for (const fileAlt of files) {
+            const md = fs.readFileSync(fileAlt, 'utf8');
+            for (const [, target] of withoutCode(md).matchAll(/\]\(([^)\s]+)\)/g)) {
+                if (/^(https?:|mailto:)/.test(target)) continue;
+                total++;
+
+                const [pathAlt, anc] = target.split('#');
+                const destination = pathAlt ? path.resolve(path.dirname(fileAlt), pathAlt) : fileAlt;
+                const whereAlt = `${path.relative(bot.ROOT, fileAlt)} → ${target}`;
+
+                assert.ok(fs.existsSync(destination), `link quebrado (arquivo): ${whereAlt}`);
+                if (anc && destination.endsWith('.md')) {
+                    assert.ok(anchors(fs.readFileSync(destination, 'utf8')).has(decodeURIComponent(anc)), `link quebrado (âncora): ${whereAlt}`);
+                }
+            }
+        }
+        assert.ok(total > 50, `poucos links conferidos (${total})`);
     });
 });
 
