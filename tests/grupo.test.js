@@ -1,5 +1,5 @@
 /*
- * Comandos de grupo e de mídia: /everyone, /boletos, /listageral, /ualisu,
+ * Comandos de grupo e de mídia: /everyone, /boletos, /listageral, /walissu (/ualisu),
  * /enquete (/enq, /quiz) e /sticker (/st).
  */
 const bot = require('./helpers/bot');
@@ -38,7 +38,7 @@ describe('/everyone', () => {
     });
 });
 
-describe('/boletos e /ualisu', () => {
+describe('/boletos e /walissu', () => {
     test('/boletos sorteia 2 membros diferentes (nunca o bot)', async () => {
         for (let i = 0; i < 10; i++) {
             const [r] = await bot.executar('/boletos');
@@ -53,24 +53,24 @@ describe('/boletos e /ualisu', () => {
     test('membros insuficientes e fora de grupo', async () => {
         bot.criarGrupo(GRUPO, 'Família', [DONO.jid, OUTRO.jid]);
         assert.deepEqual(await bot.responder('/boletos'), ['Membros insuficientes no grupo.']);
-        assert.deepEqual(await bot.responder('/ualisu'), ['Membros insuficientes no grupo.']);
+        assert.deepEqual(await bot.responder('/walissu'), ['Membros insuficientes no grupo.']);
         assert.deepEqual(await bot.responder('/boletos', { chat: OUTRO.jid }), [somenteGrupo]);
-        assert.deepEqual(await bot.responder('/ualisu', { chat: OUTRO.jid }), [somenteGrupo]);
+        assert.deepEqual(await bot.responder('/walissu', { chat: OUTRO.jid }), [somenteGrupo]);
     });
 
-    test('/ualisu: 2 membros e uma CVE recente', async () => {
+    test('/walissu: 2 membros e uma CVE recente', async () => {
         rede.responder('get', 'services.nvd.nist.gov', (url, cfg) => cfg.params.startIndex === undefined
             ? { totalResults: 1 }
             : { vulnerabilities: [{ cve: { id: 'CVE-2026-0001', descriptions: [{ lang: 'en', value: 'Bug.' }], metrics: {} } }] });
 
-        const [r] = await bot.executar('/ualisu');
+        const [r] = await bot.executar('/walissu');
         assert.equal(r.options.mentions.length, 2);
         assert.match(r.texto, /Walissu CVE BOT[\s\S]*\*CVE-2026-0001\*[\s\S]*Preciso sair de Brasília!/);
     });
 
-    test('/ualisu sem CVE ou com o NVD fora do ar', async () => {
+    test('/walissu (e o alias /ualisu) sem CVE ou com o NVD fora do ar', async () => {
         rede.responder('get', 'services.nvd.nist.gov', { totalResults: 0 });
-        assert.deepEqual(await bot.responder('/ualisu'), ['🛡️ Nenhuma CVE publicada nos últimos 2 dias.']);
+        assert.deepEqual(await bot.responder('/walissu'), ['🛡️ Nenhuma CVE publicada nos últimos 2 dias.']);
         rede.responder('get', 'services.nvd.nist.gov', new Error('503'));
         assert.deepEqual(await bot.responder('/ualisu', { erroEsperado: true }), ['❌ Não consegui consultar o NVD agora.']);
     });
