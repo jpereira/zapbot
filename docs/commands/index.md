@@ -18,7 +18,7 @@ Podem ser enviados em **qualquer chat** (privado, grupo ou no chat consigo mesmo
 ## Destinos: contato, grupo, número ou e-mail
 
 "Para onde" é sempre o **`-to`**, em todos os comandos: o [`/cron`](cron.md),
-os alertas do [`/cotacao`](cotacao.md#avisar-outra-pessoa-ou-um-grupo) e do
+os alertas do [`/cotacao`](cotacao.md#avisar-em-outro-chat-ou-por-e-mail) e do
 [`/crypto`](crypto.md), o [`/defi -alerta`](defi.md#alerta-de-saída-da-faixa) e o
 [`/backup -send`](backup.md#enviar-o-arquivo).
 O alvo do [`/mudo`](mudo.md) usa a mesma busca. Sem `-to`, os avisos (e o
@@ -33,7 +33,6 @@ arquivo do `/backup`) vão para o seu privado, e o `/cron`, para o chat atual.
 
 - O `/cron` e o `/mudo` não aceitam e-mail: a mensagem do `/cron` sai no
   WhatsApp, e o `/mudo` silencia uma pessoa ou um grupo.
-
 - O nome casa quando tem **todas** as palavras, em qualquer ordem, sem
   diferenciar maiúsculas nem acentos. Nomes com espaço vão entre `/.../` ou
   aspas; sem eles, só a primeira palavra conta.

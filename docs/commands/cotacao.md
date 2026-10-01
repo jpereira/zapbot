@@ -13,7 +13,7 @@ máxima e mínima do dia e variação (🟢 alta, 🔴 queda). Suportadas: `USD`
 | `-del`, `-d` | `<MOEDA>` | Desabilita uma moeda (só o dono do bot) |
 | `-alerta` | `[regra]` | Sem regra, lista os alertas; com regra, cria um. Veja [Alertas de preço](#alertas-de-preço) |
 | `-rm` | `<nº\|all>` | Junto com `-alerta`: remove o alerta nº N (ou todos) |
-| `-to` | `<destino>` | Junto com `-alerta`: avisa num contato (`/Jorge Pereira/`), num grupo (`/Grupo L200/`), num número (`+5521999999999`) ou por e-mail (`email`) em vez do seu privado. Veja [Avisar outra pessoa ou um grupo](#avisar-outra-pessoa-ou-um-grupo) |
+| `-to` | `<destino>` | Junto com `-alerta`: avisa num contato (`/Jorge Pereira/`), num grupo (`/Grupo L200/`), num número (`+5521999999999`) ou por e-mail (`email`) em vez do seu privado. Veja [Avisar em outro chat ou por e-mail](#avisar-em-outro-chat-ou-por-e-mail) |
 
 - **USD, EUR, GBP**: Yahoo Finance. Se ele falhar, a AwesomeAPI (que não
   informa a abertura: aparece `—`).
@@ -51,7 +51,7 @@ máxima e mínima do dia e variação (🟢 alta, 🔴 queda). Suportadas: `USD`
 ## Alertas de preço
 
 O `/cotacao` e o `/crypto` avisam no **seu privado** (ou, com
-[`-to`](#avisar-outra-pessoa-ou-um-grupo), numa pessoa ou num grupo) quando
+[`-to`](#avisar-em-outro-chat-ou-por-e-mail), numa pessoa ou num grupo) quando
 um preço passa de um valor. Cada alerta dispara uma vez e é removido. Só o dono do bot cria,
 lista e remove.
 
@@ -73,10 +73,10 @@ lista e remove.
   uma vez por moeda. O limite é de 20 alertas no total (setting `alerta.max`).
 - Os alertas ficam na tabela `price_alerts` e sobrevivem a reinícios.
 
-### Avisar outra pessoa ou um grupo
+### Avisar em outro chat ou por e-mail
 
-Com `-to <destino>`, o aviso vai para outro chat em vez do seu privado. Ele sai
-da sua conta, como qualquer mensagem do bot. O destino é um contato (buscado
+Com `-to <destino>`, o aviso vai para outro chat (ou por e-mail) em vez do seu
+privado. No WhatsApp, ele sai da sua conta, como qualquer mensagem do bot. O destino é um contato (buscado
 primeiro), um grupo, um número ou e-mail, como em
 [Destinos: contato, grupo, número ou e-mail](index.md#destinos-contato-grupo-número-ou-e-mail).
 
@@ -92,7 +92,8 @@ primeiro), um grupo, um número ou e-mail, como em
   responde com o nº; o alerta só é criado depois da escolha.
 - O grupo precisa ser um em que a sua conta está; o número, uma conta do
   WhatsApp (o bot confere).
-- A lista (`-alerta`) mostra o destino de cada alerta: `→ 👥 Grupo sobre L200`.
+- A lista (`-alerta`) mostra o destino de cada alerta: `→ 👥 Grupo sobre L200`
+  ou `→ 📧 voce@exemplo.com`.
 
 ```
 🔔 ALERTA DE PREÇO
