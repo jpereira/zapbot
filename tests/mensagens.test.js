@@ -169,10 +169,10 @@ describe('contagem do /stats', () => {
         assert.deepEqual(porPessoa.map(p => [p.sender_id, p.msgs]), [[DONO.user, 1], [OUTRO.user, 1]]);
     });
 
-    test('status e o seu privado não contam; stats.enabled off para de contar', async () => {
+    test('status e o seu privado não contam; stats.enable off para de contar', async () => {
         await bot.entregar(bot.criarMensagem({ texto: 'status', chat: 'status@broadcast', de: OUTRO.jid }));
         await bot.entregar(bot.criarMensagem({ texto: 'nota', chat: DONO.jid }));
-        await bot.setSetting('stats.enabled', false);
+        await bot.setSetting('stats.enable', false);
         await bot.entregar(bot.criarMensagem({ texto: 'oi', de: OUTRO.jid }));
 
         assert.deepEqual(await contagem(), []);
