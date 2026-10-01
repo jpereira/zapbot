@@ -288,32 +288,32 @@ describe('/defi -alerta (-a)', () => {
         assert.equal((await check()).length, 1);
     });
 
-    test('-send: contato, grupo (com escolha) ou número', async () => {
-        await bot.replyAlt('/defi -alerta 1 -send /Fulano/');
+    test('-to: contato, grupo (com escolha) ou número', async () => {
+        await bot.replyAlt('/defi -alerta 1 -to /Fulano/');
         rangeOutside();
         assert.equal((await check())[0].chatId, OTHERAlt.jid);
 
         bot.createGroup('120363000000000300@g.us', 'Cripto Rio', [OWNER.jid]);
         bot.createGroup('120363000000000301@g.us', 'Cripto SP', [OWNER.jid]);
-        const r = await bot.replyChoosing('/defi -a 1 -send cripto', 2);
+        const r = await bot.replyChoosing('/defi -a 1 -to cripto', 2);
         assert.match(r[0], /^🔎 "cripto" corresponde a 2 grupos:\n\n1\. 👥 Cripto Rio\n2\. 👥 Cripto SP/);
         assert.match(r.at(-1), /📣 Aviso: 👥 Cripto SP, sempre que/);
 
-        assert.match((await bot.replyAlt('/defi -a 1 -send +5521911111111'))[0], /📣 Aviso: 👤 Fulano,/);
-        assert.match((await bot.replyAlt('/defi -a 1 -send xyz'))[0], /❌ Nenhum contato ou grupo com "xyz" no nome/);
-        assert.match((await bot.replyAlt('/defi -a 1 -send'))[0], /❌ Informe o destino do -send/);
-        assert.match((await bot.replyAlt('/defi -send email'))[0], /❌ O -send é do -alerta/);
+        assert.match((await bot.replyAlt('/defi -a 1 -to +5521911111111'))[0], /📣 Aviso: 👤 Fulano,/);
+        assert.match((await bot.replyAlt('/defi -a 1 -to xyz'))[0], /❌ Nenhum contato ou grupo com "xyz" no nome/);
+        assert.match((await bot.replyAlt('/defi -a 1 -to'))[0], /❌ Informe o destino do -to/);
+        assert.match((await bot.replyAlt('/defi -to email'))[0], /❌ O -to é do -alerta/);
         assert.match((await bot.replyAlt('/defi -a 7'))[0], /❌ Posição nº 7 não existe/);
     });
 
-    test('-send email: pelo SMTP do bot, sem a formatação do WhatsApp', async () => {
-        assert.match((await bot.replyAlt('/defi -a 1 -send email'))[0], /❌ O "email" do -send usa o QRCODE_EMAIL_SMTP_TO/);
-        assert.match((await bot.replyAlt('/defi -a 1 -send eu@exemplo.com'))[0], /❌ SMTP não configurado/);
+    test('-to email: pelo SMTP do bot, sem a formatação do WhatsApp', async () => {
+        assert.match((await bot.replyAlt('/defi -a 1 -to email'))[0], /❌ O "email" usa o QRCODE_EMAIL_SMTP_TO/);
+        assert.match((await bot.replyAlt('/defi -a 1 -to eu@exemplo.com'))[0], /❌ SMTP não configurado/);
 
         const env = { QRCODE_EMAIL_SMTP_HOST: 'smtp.exemplo.com', QRCODE_EMAIL_SMTP_USER: 'bot@exemplo.com', QRCODE_EMAIL_SMTP_TO: 'eu@exemplo.com' };
         Object.assign(process.env, env);
         try {
-            assert.match((await bot.replyAlt('/defi -a 1 -send "email, outro@exemplo.com"'))[0], /📣 Aviso: 📧 eu@exemplo\.com, outro@exemplo\.com,/);
+            assert.match((await bot.replyAlt('/defi -a 1 -to "email, outro@exemplo.com"'))[0], /📣 Aviso: 📧 eu@exemplo\.com, outro@exemplo\.com,/);
 
             rangeOutside();
             assert.deepEqual(await check(), [], 'nada no WhatsApp');

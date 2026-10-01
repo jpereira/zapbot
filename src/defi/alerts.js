@@ -3,10 +3,9 @@
  */
 
 const { estado: stateAlt } = require('../state');
-const { client } = require('../client');
-const { alertDescribeDestination, positionText } = require('../commands/defi');
+const { alertDescribeDestination, alertDestination, positionText } = require('../commands/defi');
 const { dbAll, dbReady, dbRun } = require('../db');
-const { sendEmail } = require('../email');
+const { sendOnDestination } = require('../destinations');
 const { printError, printInfo } = require('../log');
 const { getSetting } = require('../settings');
 const { positionDetails } = require('./orca');
@@ -20,23 +19,11 @@ const { positionDetails } = require('./orca');
  */
 const short = (address) => `${address.slice(0, 4)}…${address.slice(-4)}`;
 
-// The WhatsApp text without *bold* and _italic_, for the email
-const textPure = (t) => t.replace(/[*_]/g, '');
-
 async function notify(p, n, d) {
     const title = `🚨 *DeFi: a posição ${short(p.position)} saiu da faixa*`;
     const textAlt = `${title}\n\n${positionText(d)}\n\n💡 _Desligue com /defi -alerta -rm ${n}._`;
 
-    if (p.alert_email) {
-        await sendEmail({
-            para: p.alert_email.split(/\s*,\s*/),
-            assunto: `DeFi: a posição ${short(p.position)} saiu da faixa`,
-            texto: textPure(textAlt)
-        });
-        return;
-    }
-
-    await client.sendMessage(p.alert_dest_id || client.info.wid._serialized, textAlt);
+    await sendOnDestination(alertDestination(p), textAlt, { assunto: `DeFi: a posição ${short(p.position)} saiu da faixa` });
 }
 
 let lastCheck = 0;

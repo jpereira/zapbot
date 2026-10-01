@@ -6,7 +6,7 @@ const bot = require('./helpers/bot');
 const { test, describe, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { OWNER, OTHERAlt, network } = bot;
+const { OWNER, OTHERAlt, emails, network } = bot;
 const { priceCheckAlerts } = bot.src('priceAlerts');
 
 /*
@@ -273,6 +273,28 @@ describe('alertas de preço (-alerta)', () => {
         const beforeAlt = bot.client.enviadas.length;
         await priceCheckAlerts({ forcar: true });
         assert.equal(bot.client.enviadas[beforeAlt].chatId, OTHERAlt.jid);
+    });
+
+    test('-to email: o aviso sai por e-mail, sem a formatação do WhatsApp', async () => {
+        assert.match((await bot.replyAlt('/cotacao -alerta USD > 6 -to email'))[0], /❌ O "email" usa o QRCODE_EMAIL_SMTP_TO/);
+
+        const env = { QRCODE_EMAIL_SMTP_HOST: 'smtp.exemplo.com', QRCODE_EMAIL_SMTP_USER: 'bot@exemplo.com', QRCODE_EMAIL_SMTP_TO: 'eu@exemplo.com' };
+        Object.assign(process.env, env);
+        try {
+            assert.match((await bot.replyAlt('/cotacao -alerta USD > 6 -to email'))[0], /💡 _Aviso em 📧 eu@exemplo\.com;/);
+            assert.match((await bot.replyAlt('/cotacao -alerta'))[0], /USD\/BRL acima de \*R\$ 6,0000\* → 📧 eu@exemplo\.com/);
+
+            prices.USD = 6.1;
+            const beforeAlt = bot.client.enviadas.length;
+            await priceCheckAlerts({ forcar: true });
+            assert.equal(bot.client.enviadas.length, beforeAlt, 'nada no WhatsApp');
+            const [m] = emails;
+            assert.equal(m.to, 'eu@exemplo.com');
+            assert.equal(m.subject, '[ZapBot] 🔔 Alerta de preço: USD/BRL acima de R$ 6,0000');
+            assert.match(m.text, /^🔔 ALERTA DE PREÇO\n\n📈 🇺🇸 USD\/BRL ficou acima de R\$ 6,0000\n💰 Agora: R\$ 6,1000/);
+        } finally {
+            for (const v of Object.keys(env)) delete process.env[v];
+        }
     });
 
     test('-to: destino inválido, ambíguo, sem valor ou sem regra', async () => {

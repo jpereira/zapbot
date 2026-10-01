@@ -102,6 +102,7 @@ describe('/mudo (/m, /mute)', () => {
         assert.match((await bot.replyAlt('/mudo L200'))[0], /❌ Escolha o que silenciar/);
         assert.match((await bot.replyAlt('/mudo -d'))[0], /❌ Informe quem/);
         assert.match((await bot.replyAlt('/mudo -d xyz'))[0], /❌ Nenhum contato ou grupo com "xyz" no nome/);
+        assert.match((await bot.replyAlt('/mudo -d email'))[0], /❌ O \/mudo silencia uma pessoa ou um grupo/);
         bot.createContact(OWNER.jid, OWNER.nome);
         assert.deepEqual(await bot.replyAlt('/mudo -d +5521900000000'), ['❌ As suas mensagens já não geram avisos.']);
         assert.deepEqual(await bot.dbAll('SELECT * FROM mutes'), []);
