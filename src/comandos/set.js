@@ -12,6 +12,7 @@ const { SETTINGS_SCHEMA, getSetting, setSetting } = require('../settings');
  * /set
  *   /set                  → lista todos os settings e seus valores
  *   /set <chave>          → mostra valor, padrão e descrição
+ *   /set <trecho|/regex/> → lista as chaves que casam (ex.: /set alerta)
  *   /set <chave> <valor>  → altera (lista: itens separados por vírgula ou espaço)
  *   /set -reset <chave>   → volta ao padrão
  *
@@ -52,6 +53,40 @@ function textoDoEnv() {
         .join('\n');
     return '🔒 *config/.env* _(somente leitura: mude no arquivo e recrie o container)_\n\n```\n' + linhas + '\n```';
 }
+// "chave  valor" alinhados, em ordem alfabética
+function listaDeSettings(chaves) {
+    const width = Math.max(...chaves.map(k => k.length));
+    return [...chaves]
+        .sort((a, b) => a.localeCompare(b))
+        .map(k => {
+            const s = SETTINGS_SCHEMA[k];
+            return `${k.padEnd(width)}  ${formatarValorSetting(getSetting(k), s.separator ? ' | ' : ', ', s.secret)}`;
+        })
+        .join('\n');
+}
+
+/**
+ * Chaves que casam com o filtro: /regex/flags ou um trecho (sem diferenciar maiúsculas).
+ * @returns {string[]|null} null se a regex é inválida
+ */
+function filtrarChaves(filtro) {
+    const regex = filtro.match(/^\/(.+)\/([a-z]*)$/);
+    let testar;
+
+    if (regex) {
+        try {
+            const re = new RegExp(regex[1], regex[2].replace(/[gy]/g, '') || 'i');
+            testar = (k) => re.test(k);
+        } catch {
+            return null;
+        }
+    } else {
+        testar = (k) => k.toLowerCase().includes(filtro.toLowerCase());
+    }
+
+    return Object.keys(SETTINGS_SCHEMA).filter(testar);
+}
+
 function formatarValorSetting(value, sep = ', ', secret = false) {
     if (Array.isArray(value)) return value.length ? value.join(sep) : '(vazio)';
     if (typeof value === 'boolean') return value ? 'on' : 'off';
@@ -81,14 +116,8 @@ async function cmdSet({ msg, opts, args, chatId }) {
     const [key, ...resto] = opts.argv;
 
     if (!key) {
-        const width = Math.max(...Object.keys(SETTINGS_SCHEMA).map(k => k.length));
-        const lista = Object.entries(SETTINGS_SCHEMA)
-            .sort(([a], [b]) => a.localeCompare(b))
-            .map(([k, s]) => `${k.padEnd(width)}  ${formatarValorSetting(getSetting(k), s.separator ? ' | ' : ', ', s.secret)}`)
-            .join('\n');
-
         const env = await noMeuPrivado(chatId) ? textoDoEnv() : SO_NO_PRIVADO;
-        await msg.reply('⚙️ *SETTINGS*\n\n```\n' + lista + '\n```\n💡 _/set <chave> para detalhes_\n\n' + env);
+        await msg.reply('⚙️ *SETTINGS*\n\n```\n' + listaDeSettings(Object.keys(SETTINGS_SCHEMA)) + '\n```\n💡 _/set <chave> para detalhes_\n\n' + env);
         return;
     }
 
@@ -107,6 +136,20 @@ async function cmdSet({ msg, opts, args, chatId }) {
     }
 
     const schema = SETTINGS_SCHEMA[key];
+
+    // Não é uma chave: sem valor, filtra as chaves pelo trecho (ou /regex/)
+    if (!schema && !resto.length) {
+        const chaves = filtrarChaves(key);
+
+        if (chaves === null) {
+            await msg.reply(`❌ Regex inválida: ${key}`);
+        } else if (!chaves.length) {
+            await msg.reply(`❌ Nenhum setting com "${key}".\n💡 _Veja todos com /set_`);
+        } else {
+            await msg.reply(`⚙️ *SETTINGS* com "${key}" (${chaves.length})\n\n\`\`\`\n${listaDeSettings(chaves)}\n\`\`\`\n💡 _/set <chave> para detalhes_`);
+        }
+        return;
+    }
 
     if (!schema) {
         await msg.reply(`❌ Setting desconhecido: ${key}\n💡 _Veja todos com /set_`);
