@@ -22,8 +22,6 @@ release; a do `main` fica em [`docs/`](docs/index.md)).
 
 ## Como funciona
 
-## Como funciona
-
 ```
  ┌────────────── container zapbot (node:24-alpine) ───────────────┐
  │                                                                │

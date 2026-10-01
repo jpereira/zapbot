@@ -5,7 +5,7 @@
 - Docker com o plugin **Docker Compose v2** (`docker compose ...`)
 - Git
 - Um celular com WhatsApp para parear
-- (Opcional) Uma conta SMTP para o envio do QR por e-mail
+- (Opcional) Uma conta SMTP, para o QR Code e os alertas por e-mail
 
 Não é preciso ter Node, Chromium, ffmpeg ou yt-dlp instalados: tudo vai dentro
 da imagem.
