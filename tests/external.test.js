@@ -1,6 +1,6 @@
 /*
  * Commands that query external services (all simulated):
- * /cve, /tempo, /news, /gpt, /resumo, /gif, /meme, /joke e /kernel.
+ * /cve, /tempo, /news, /gpt, /resumo, /traduzir, /gif, /meme, /joke e /kernel.
  */
 const bot = require('./helpers/bot');
 
@@ -382,6 +382,92 @@ describe('/resumo (/tldr)', () => {
 
         await bot.setSetting('openai.api.key', '');
         assert.match((await bot.replyAlt('/resumo'))[0], /⚠️ API key da OpenAI não encontrada: o \/resumo está desativado/);
+    });
+});
+
+describe('/traduzir (/tr, /translate)', () => {
+    const translation = (translatedText, detectedSourceLanguage = 'en') =>
+        ({ data: { translations: [{ translatedText, detectedSourceLanguage }] } });
+
+    test('sem chave: desativado, com o link do passo a passo', async () => {
+        assert.match((await bot.replyAlt('/traduzir hello'))[0], /⚠️ Chave do Google Translate não encontrada[\s\S]*commands\/traduzir/);
+    });
+
+    test('traduz para o idioma padrão; a chave vai no header, nunca na URL', async () => {
+        await bot.setSetting('traduzir.api.key', 'AIza-teste');
+        network.responder('post', 'translation.googleapis.com/language/translate/v2', translation('Olá, mundo!\nTudo bem?'));
+
+        assert.deepEqual(await bot.replyAlt('/traduzir Hello, world!\nHow are you?'), ['🌐 *Tradução* _(en → pt)_\n\nOlá, mundo!\nTudo bem?']);
+
+        const { url, cfg } = network.chamadas.at(-1);
+        assert.doesNotMatch(url, /AIza/);
+        assert.equal(cfg.headers['X-Goog-Api-Key'], 'AIza-teste');
+        assert.deepEqual(cfg.body, { q: 'Hello, world!\nHow are you?', target: 'pt', format: 'text' });
+    });
+
+    test('-para, mensagem respondida, setting traduzir.lang e o .env vencendo o setting', async () => {
+        await bot.setSetting('traduzir.api.key', 'do-setting');
+        network.responder('post', 'translation.googleapis.com', translation('Good morning', 'pt'));
+
+        await bot.replyAlt('/tr -para en bom dia');
+        assert.deepEqual(network.chamadas.at(-1).cfg.body, { q: 'bom dia', target: 'en', format: 'text' });
+
+        const quoted = bot.createMessage({ texto: 'buenos días', de: bot.OTHERAlt.jid });
+        await bot.replyAlt('/translate -p fr', { citada: quoted });
+        assert.deepEqual(network.chamadas.at(-1).cfg.body, { q: 'buenos días', target: 'fr', format: 'text' });
+
+        await bot.setSetting('traduzir.lang', 'es');
+        process.env.GOOGLE_TRANSLATE_API_KEY = 'do-env';
+        try {
+            await bot.replyAlt('/traduzir oi');
+            assert.equal(network.chamadas.at(-1).cfg.body.target, 'es');
+            assert.equal(network.chamadas.at(-1).cfg.headers['X-Goog-Api-Key'], 'do-env');
+        } finally {
+            delete process.env.GOOGLE_TRANSLATE_API_KEY;
+        }
+    });
+
+    test('texto já no idioma de destino ganha uma dica', async () => {
+        await bot.setSetting('traduzir.api.key', 'k');
+        network.responder('post', 'translation.googleapis.com', translation('bom dia', 'pt'));
+        assert.match((await bot.replyAlt('/traduzir bom dia'))[0], /_\(pt → pt\)_\n\nbom dia\n\n💡 _O texto já estava em pt/);
+    });
+
+    test('-l lista os idiomas', async () => {
+        await bot.setSetting('traduzir.api.key', 'k');
+        network.responder('get', 'translation.googleapis.com/language/translate/v2/languages',
+            { data: { languages: [{ language: 'en', name: 'Inglês' }, { language: 'es', name: 'Espanhol' }] } });
+
+        const [r] = await bot.replyAlt('/traduzir -l');
+        assert.match(r, /🌐 \*Idiomas do \/traduzir\* \(2\)\n\n```en Inglês\nes Espanhol```/);
+        assert.deepEqual(network.chamadas.at(-1).cfg.params, { target: 'pt' });
+    });
+
+    test('validações e erros do Google', async () => {
+        await bot.setSetting('traduzir.api.key', 'k');
+        assert.match((await bot.replyAlt('/traduzir'))[0], /Usage: \/traduzir/);
+        assert.match((await bot.replyAlt('/traduzir -para português oi'))[0], /❌ Idioma inválido: português/);
+        assert.match((await bot.replyAlt(`/traduzir ${'a'.repeat(5001)}`))[0], /❌ Texto grande demais: 5001 caracteres/);
+
+        const errorGoogle = (status, reason, message = 'x') =>
+            errorHttp(status, 'falhou', { data: { error: { message, details: [{ reason }] } } });
+        const cases = [
+            [errorGoogle(400, 'API_KEY_INVALID'), /🔑 Chave do Google Translate inválida/],
+            [errorGoogle(403, 'SERVICE_DISABLED'), /A Cloud Translation API não está ativada/],
+            [errorGoogle(403, 'BILLING_DISABLED'), /💳 O projeto da chave está sem faturamento/],
+            [errorGoogle(429, 'RATE_LIMIT_EXCEEDED'), /💸 Cota do Google Translate esgotada/],
+            [errorGoogle(400, 'badRequest', 'Invalid Value'), /❌ Idioma inválido: pt\. Veja os aceitos/]
+        ];
+        for (const [errorAlt, expected] of cases) {
+            network.responder('post', 'translation.googleapis.com', errorAlt);
+            assert.match((await bot.replyAlt('/traduzir hi', { erroEsperado: true }))[0], expected);
+        }
+    });
+
+    test('qualquer pessoa usa (com o modo admin desligado)', async () => {
+        await bot.setSetting('traduzir.api.key', 'k');
+        network.responder('post', 'translation.googleapis.com', translation('olá'));
+        assert.match((await bot.replyAlt('/tr hello', { de: bot.OTHERAlt.jid }))[0], /olá/);
     });
 });
 
