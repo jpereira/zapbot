@@ -51,7 +51,8 @@ máxima e mínima do dia e variação (🟢 alta, 🔴 queda). Suportadas: `USD`
 ## Alertas de preço
 
 O `/cotacao` e o `/crypto` avisam no **seu privado** (ou, com
-[`-to`](#avisar-em-outro-chat-ou-por-e-mail), numa pessoa ou num grupo) quando
+[`-to`](#avisar-em-outro-chat-ou-por-e-mail), num contato, num grupo, num número ou por
+e-mail) quando
 um preço passa de um valor. Cada alerta dispara uma vez e é removido. Só o dono do bot cria,
 lista e remove.
 
