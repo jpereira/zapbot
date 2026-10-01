@@ -43,6 +43,7 @@ const logs = [];
 const consoleLog = console.log;
 console.log = (...args) => {
     const linha = args.map(a => (typeof a === 'string' ? a : require('util').inspect(a))).join(' ')
+        // eslint-disable-next-line no-control-regex -- tira as cores ANSI (\x1b[...m) do log
         .replace(/\x1b\[[0-9;]*m/g, '');
     logs.push(linha);
     if (process.env.DEBUG_TESTES) consoleLog(linha);
