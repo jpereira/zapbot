@@ -1,11 +1,11 @@
-# `/monitor` (`/m`) · admin · 🚧 em desenvolvimento
+# `/monitor` · admin · 🚧 em desenvolvimento
 
 > 🚧 **Em desenvolvimento.** Este comando ainda não está finalizado: o
 > comportamento e as opções podem mudar, e algumas partes podem não funcionar
 > como descrito abaixo. Use por sua conta e risco.
 >
 > Por isso ele vem **desabilitado** (`"disabled": true` no
-> `src/comandos/comandos.json`): o bot não responde a `/monitor` nem `/m`, o comando
+> `src/comandos/comandos.json`): o bot não responde a `/monitor`, o comando
 > não aparece no `/help` e os avisos de "ficou online" ficam desligados, mesmo
 > para números cadastrados antes. Para testar, remova a linha `"disabled": true`
 > (ou mude para `false`), refaça o build e recrie o container.
@@ -27,8 +27,8 @@ Aceita também a forma sem hífen:
 ```
 /monitor -add 5521999999999
 /monitor add +55 21 99999-9999
-/m -list
-/m logs
+/monitor -list
+/monitor logs
 /monitor -rem 5521999999999
 /monitor -clean
 ```
