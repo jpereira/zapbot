@@ -1,11 +1,11 @@
 /*
- * Comando /everyone.
+ * Comando /todos.
  */
 
 const { client } = require('../cliente');
 const { printDebug, printError, printSuccess } = require('../log');
 
-async function cmdEveryone({ msg, senderContact }) {
+async function cmdTodos({ msg, senderContact }) {
     const groupChat = await msg.getChat().catch(() => null);
 
     if (!groupChat?.isGroup) {
@@ -37,12 +37,12 @@ async function cmdEveryone({ msg, senderContact }) {
             mentions,
             quotedMessageId: msg.id._serialized
         });
-        printSuccess('/everyone responded OK');
+        printSuccess('/todos responded OK');
     } catch (replyError) {
         printError('Erro interno do WhatsApp Web ao processar menções:', replyError.message);
     }
 }
 
 module.exports = {
-    cmdEveryone
+    cmdTodos
 };

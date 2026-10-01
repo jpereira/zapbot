@@ -267,12 +267,6 @@
             "onlyAdmin": true
         },
         {
-            "cmd": "/everyone",
-            "usage": "/everyone",
-            "help": "Responde marcando todos do grupo (exceto você).",
-            "onlyAdmin": true
-        },
-        {
             "cmd": "/get",
             "usage": "/get [OPTION]... <url>",
             "aliases": [
@@ -695,6 +689,12 @@
                 }
             ],
             "onlyAdmin": false
+        },
+        {
+            "cmd": "/todos",
+            "usage": "/todos",
+            "help": "Responde marcando todos do grupo (exceto você).",
+            "onlyAdmin": true
         },
         {
             "cmd": "/uptime",
