@@ -521,18 +521,31 @@ describe('/meme', () => {
 });
 
 describe('/joke (/piada, /humor)', () => {
-    test('piada de uma parte e de duas partes', async () => {
-        network.responder('get', 'jokeapi.dev', { type: 'single', joke: 'Uma piada.' });
-        assert.deepEqual(await bot.replyAlt('/joke'), ['Uma piada.']);
-        assert.equal(network.chamadas[0].cfg.params.lang, 'pt');
+    const { JOKES, restartJokes } = bot.src('commands/joke');
 
-        network.responder('get', 'jokeapi.dev', { type: 'twopart', setup: 'Pergunta?', delivery: 'Resposta' });
-        assert.deepEqual(await bot.replyAlt('/piada'), ['Pergunta?\n\n... Resposta 🥁']);
+    test('pergunta e resposta, sem rede', async () => {
+        const [r] = await bot.replyAlt('/joke');
+        assert.match(r, /^.+\?\n\n\.\.\. .+ 🥁$/);
+        assert.ok(JOKES.some(p => r === `${p.pergunta}\n\n... ${p.resposta} 🥁`));
+        assert.equal(network.chamadas.length, 0);
     });
 
-    test('erro da API', async () => {
-        network.responder('get', 'jokeapi.dev', { error: true, message: 'sem piadas' });
-        assert.deepEqual(await bot.replyAlt('/humor', { erroEsperado: true }), ['❌ Não consegui buscar uma piada agora.']);
+    test('nenhuma se repete até todas saírem, nem na virada de uma rodada para a outra', async () => {
+        restartJokes();
+        const counted = [];
+        for (let i = 0; i < JOKES.length * 10; i++) counted.push((await bot.replyAlt(i % 2 ? '/piada' : '/humor'))[0]);
+
+        for (let r = 0; r < 10; r++) {
+            const round = counted.slice(r * JOKES.length, (r + 1) * JOKES.length);
+            assert.equal(new Set(round).size, JOKES.length, `rodada ${r}: repetiu antes de acabar`);
+        }
+        for (let i = 1; i < counted.length; i++) assert.notEqual(counted[i], counted[i - 1], `a mesma duas vezes seguidas (${i})`);
+    });
+
+    test('a lista: perguntas únicas, todas com resposta', () => {
+        assert.ok(JOKES.length >= 40);
+        assert.equal(new Set(JOKES.map(p => p.pergunta)).size, JOKES.length);
+        assert.ok(JOKES.every(p => p.pergunta.trim() && p.resposta.trim()));
     });
 });
 
