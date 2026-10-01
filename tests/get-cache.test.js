@@ -15,6 +15,8 @@ const limpeza = bot.src('limpeza');
 
 const MEDIA_DIR = path.join(CACHE_DIR, 'media');
 const TMP_DIR = path.join(CACHE_DIR, 'tmp');
+const { BACKUP_DIR } = bot.src('constantes');
+const { criarBackup, listarBackups } = bot.src('backup');
 const URL = 'http://8.8.8.8/video'; // IP literal: sem consulta de DNS
 const DIA = 24 * 60 * 60 * 1000;
 
@@ -138,7 +140,7 @@ describe('/cache (/c)', () => {
         await bot.executar('oi', { de: OUTRO.jid });
         const [r] = await bot.responder('/cache');
         assert.match(r, new RegExp(`🗂️ Exibindo conteúdo de ${CACHE_DIR}`));
-        assert.match(r, /🗄️ Existem \d+ mensagens no cache \(0 apagadas\) e 0 edições\./);
+        assert.match(r, /🗄️ Existem \d+ mensagens no cache \(0 apagadas\) e 0 edições\.\n📦 Backups: 0 _\(veja \/backup\)_$/);
     });
 
     test('-c: limpa só o que passou das janelas de retenção', async () => {
@@ -152,17 +154,32 @@ describe('/cache (/c)', () => {
         assert.deepEqual(ids, ['apagada', 'nova'], 'a apagada fica 30 dias; a comum sai em 68 h');
     });
 
-    test('-a: apaga tudo (mensagens, edições, mídias e temporários)', async () => {
+    test('-a: apaga tudo (mensagens, edições, mídias, temporários e backups)', async () => {
         await bot.executar('oi', { de: OUTRO.jid, midia: { mimetype: 'image/png', data: 'AA==' } });
         await bot.dbRun("INSERT INTO message_edits (message_id, edited_at) VALUES ('x', 1)");
         fs.writeFileSync(path.join(TMP_DIR, 'lixo.mp4'), 'x');
+        await criarBackup();
 
         const [r] = await bot.responder('/cache -all');
-        assert.match(r, new RegExp(`🧹 \\*Limpeza geral concluída\\* _\\(${CACHE_DIR}\\)_\\n\\n🗄️ Mensagens removidas: \\*\\d+\\* _\\(0 apagadas\\)_\\n✏️ Edições removidas: \\*1\\*`));
+        assert.match(r, new RegExp(`🧹 \\*Limpeza geral concluída\\* _\\(${CACHE_DIR}\\)_\\n\\n🗄️ Mensagens removidas: \\*\\d+\\* _\\(0 apagadas\\)_\\n✏️ Edições removidas: \\*1\\*\\n📦 Backups removidos: \\*1\\*`));
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM messages')).n, 0);
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM message_edits')).n, 0);
         assert.deepEqual(fs.readdirSync(MEDIA_DIR), []);
         assert.deepEqual(fs.readdirSync(TMP_DIR), []);
+        assert.deepEqual(await listarBackups(), []);
+    });
+
+    test('-b: apaga só os backups; junta com -c e -m', async () => {
+        await criarBackup();
+        await criarBackup();
+        await bot.executar('oi', { de: OUTRO.jid });
+
+        const [r] = await bot.responder('/cache -backup');
+        assert.match(r, new RegExp(`^📦 Backups apagados de ${BACKUP_DIR}: \\*2\\* _\\([\\d.]+ \\w+\\)_$`));
+        assert.deepEqual(await listarBackups(), []);
+        assert.ok((await bot.dbGet('SELECT COUNT(*) AS n FROM messages')).n > 0, 'as mensagens ficam');
+
+        assert.match((await bot.responder('/c -c -m -b'))[0], /^🧹 Cache limpo .*\n🖼️ Mídias apagadas .*\n📦 Backups apagados .*: \*0\*/);
     });
 
     test('-m: apaga as mídias baixadas; as mensagens ficam, sem o arquivo', async () => {

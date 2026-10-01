@@ -185,7 +185,15 @@
                         "a"
                     ],
                     "values": [],
-                    "desc": "Apaga todo o cache em ${CACHE_DIR}: as mensagens (inclusive as guardadas para o /show), os temporários e as mídias baixadas em ${MEDIA_DIR}."
+                    "desc": "Apaga TUDO em ${CACHE_DIR}: as mensagens (inclusive as guardadas para o /show), os temporários, as mídias baixadas em ${MEDIA_DIR} e os backups em ${BACKUP_DIR}."
+                },
+                {
+                    "opts": [
+                        "backup",
+                        "b"
+                    ],
+                    "values": [],
+                    "desc": "Apaga os backups do /backup em ${BACKUP_DIR}."
                 },
                 {
                     "opts": [
