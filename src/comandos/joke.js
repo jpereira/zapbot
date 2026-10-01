@@ -2,24 +2,52 @@
  * Comando /joke.
  */
 
-const axios = require('axios');
+const PIADAS = require('./piadas.json');
 
-const { printError } = require('../log');
+/*
+ * /joke: piada em português da lista do piadas.json. A JokeAPI, usada antes,
+ * só tem 2 piadas em português (1 no safe-mode): saía sempre a mesma.
+ *
+ * Saco embaralhado: cada rodada passa por todas as piadas numa ordem
+ * aleatória, então nenhuma se repete antes de todas saírem, e a rodada nova
+ * não começa pela última da anterior.
+ */
+let saco = [];
+let ultima = null;
 
-// /joke: JokeAPI em português (safe-mode)
-async function cmdJoke({ msg }) {
-    try {
-        const { data } = await axios.get('https://v2.jokeapi.dev/joke/Any', { timeout: 15000, params: { lang: 'pt', 'safe-mode': '' } });
-
-        if (data.error) throw new Error(data.message || 'erro da JokeAPI');
-
-        await msg.reply(data.type === 'twopart' ? `${data.setup}\n\n... ${data.delivery} 🥁` : data.joke);
-    } catch (err) {
-        printError('/joke:', err.message);
-        await msg.reply('❌ Não consegui buscar uma piada agora.');
+function embaralhar(lista) {
+    const l = [...lista];
+    for (let i = l.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [l[i], l[j]] = [l[j], l[i]];
     }
+    return l;
+}
+
+function proximaPiada() {
+    if (!saco.length) {
+        saco = embaralhar(PIADAS);
+        // A última da rodada anterior não abre a nova
+        if (saco.length > 1 && saco[saco.length - 1] === ultima) [saco[0], saco[saco.length - 1]] = [saco[saco.length - 1], saco[0]];
+    }
+
+    ultima = saco.pop();
+    return ultima;
+}
+
+// Começa uma rodada nova (os testes partem do começo de uma)
+function reiniciarPiadas() {
+    saco = [];
+    ultima = null;
+}
+
+async function cmdJoke({ msg }) {
+    const { pergunta, resposta } = proximaPiada();
+    await msg.reply(`${pergunta}\n\n... ${resposta} 🥁`);
 }
 
 module.exports = {
-    cmdJoke
+    PIADAS,
+    cmdJoke,
+    reiniciarPiadas
 };
