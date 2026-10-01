@@ -202,8 +202,8 @@ client.on('message_revoke_everyone', async (after, before) => {
         return;
     }
 
-    if (isStatus(row) && !getSetting('revoke.status')) {
-        printDebug(`[Revoke] Status apagado ID ${targetId} ignorado (revoke.status off).`);
+    if (isStatus(row) && !getSetting('show.revoke.status')) {
+        printDebug(`[Revoke] Status apagado ID ${targetId} ignorado (show.revoke.status off).`);
         return;
     }
 
