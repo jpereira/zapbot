@@ -46,7 +46,8 @@ src/
   contatos.js, opcoes.js                    contatos/@lid e o parser de opções
   watch/                regras e verificação do /watch
   eventos/              message_create, apagadas, editadas, presença
-  comandos/             um arquivo por comando + index.js (HANDLERS) e base.js
+  comandos/             comandos.json (definição), um arquivo por comando,
+                        index.js (HANDLERS) e base.js (ajuda e utilitários)
   util/                 arquivos, formatação, processos externos, URLs
 tests/                  testes automatizados (veja Testes)
 ```
@@ -122,9 +123,9 @@ mkdocs serve                  # http://127.0.0.1:8000, recarrega ao salvar
 mkdocs build --strict         # o que o workflow roda: falha em link quebrado
 ```
 
-Ao mudar um comando, mude a página dele em `docs/comandos/` (e a tabela
-[Resumo](comandos/index.md#resumo)); um comando novo também entra no `nav` do
-`mkdocs.yml`, em ordem alfabética.
+Ao mudar um comando, mude a página dele em `docs/comandos/` e as tabelas
+Resumo (a do [site](comandos/index.md#resumo) e a do README); um comando novo
+também entra no `nav` do `mkdocs.yml`, em ordem alfabética.
 
 ## Nova versão
 
@@ -152,12 +153,12 @@ bot) e a lista `commands`. Cada entrada de `commands` segue este formato:
 ```jsonc
 {
   "cmd": "/get",                     // nome principal
-  "usage": "/get [OPTION]... URL",   // linha "Usage:" no -help
+  "usage": "/get [OPTION]... <url>", // linha "Usage:" no -help
   "aliases": ["/download"],          // nomes alternativos
-  "help": "Caso seja válido, ...",   // descrição curta
+  "help": "Baixa vídeo ou áudio...", // descrição curta
   "cmd_opts": [
     { "opts": ["audio", "a"], "values": [], "desc": "..." },          // flag
-    { "opts": ["startSec", "ss"], "values": ["<second>"], "desc": "..." }, // opção com valor
+    { "opts": ["startSec", "ss"], "values": ["<segundo>"], "desc": "..." }, // opção com valor
     { "argv": ["<url>"], "desc": "..." }                              // argumento posicional (só doc)
   ],
   "onlyAdmin": false,                // true = só a conta do bot pode usar
@@ -167,6 +168,9 @@ bot) e a lista `commands`. Cada entrada de `commands` segue este formato:
 
 - Alterar `help`, `usage`, `aliases`, descrições, `onlyAdmin` ou `disabled`
   não exige código: basta refazer o build e recriar o container.
+- Os textos (`usage`, `help` e `desc`) podem citar `${CACHE_DIR}`,
+  `${MEDIA_DIR}` e `${TMP_DIR}`: a ajuda troca pelo caminho real (ex.: o
+  `/cache -h`).
 - Com `"disabled": true` o comando não é carregado: o bot não responde a ele
   nem aos aliases, e ele some do `/help`. No boot aparece nos logs
   `Disabled N callers (...)`. Para desativar sem rebuild, use o setting
