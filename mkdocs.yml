@@ -91,7 +91,6 @@ nav:
       - /help: comandos/help.md
       - /joke: comandos/joke.md
       - /kernel: comandos/kernel.md
-      - /lembrete: comandos/lembrete.md
       - /listageral: comandos/listageral.md
       - /meme: comandos/meme.md
       - /monitor: comandos/monitor.md
