@@ -31,6 +31,7 @@ hora, sem reiniciar, e sobrevivem a reinícios. Para ver e alterar, use o
 | `news.hack` | lista | The Hacker News, BleepingComputer, Krebs on Security | Feeds RSS do `/news -hack` |
 | `news.max` | 1–10 | `5` | Manchetes exibidas pelo `/news` (o `/news <quantidade>` sobrepõe) |
 | `openai.api.key` | texto (pode ser vazio) | *(vazio)* | Chave da OpenAI, usada quando `OPENAI_API_KEY` não está no `config/.env`. Exibida mascarada (`••••1234`); `/set -reset openai.api.key` apaga |
+| `openai.api.model` | texto (da lista) | `gpt-4o-mini` | Modelo do `/gpt`, usado quando `OPENAI_MODEL` não está no `config/.env`. Aceitos: os listados por `/gpt -m` |
 | `openai.timeout.ms` | 5000–300000 | `60000` | Timeout do `/gpt`, usado quando `OPENAI_TIMEOUT_MS` não está no `config/.env` |
 | `revoke.status` | on/off | `on` | Recupera status apagados; `off` ignora (nem alerta, nem `/show`) |
 | `show.delayMs` | 0–10000 | `700` | Intervalo entre os envios do `/show` e do `/edit` |
