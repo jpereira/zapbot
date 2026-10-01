@@ -51,6 +51,5 @@ Uma chave nova é declarada em `SETTINGS_SCHEMA` (`src/settings.js`), **em ordem
 alfabética**, com padrão, tipo, descrição e limites (`allowEmpty` para texto
 que pode ficar vazio, `secret` para mascarar o valor no `/set` e nos logs), e
 lida com `getSetting('<chave>')`. Valores inválidos no banco são ignorados no
-boot (vale o padrão, com aviso nos logs). Ao renomear uma chave, registre
-`antiga → nova` em `SETTINGS_RENOMEADOS`: no boot o valor salvo passa para o
-nome novo (ex.: `api.key.giphy` → `gif.giphy.api.key`).
+boot (vale o padrão, com aviso nos logs), e chaves que não existem mais no
+schema são ignoradas.
