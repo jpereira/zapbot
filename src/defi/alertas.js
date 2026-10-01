@@ -3,10 +3,9 @@
  */
 
 const { estado } = require('../estado');
-const { client } = require('../cliente');
-const { descreverDestinoDoAlerta, textoDaPosicao } = require('../comandos/defi');
+const { descreverDestinoDoAlerta, destinoDoAlerta, textoDaPosicao } = require('../comandos/defi');
 const { dbAll, dbPronto, dbRun } = require('../db');
-const { enviarEmail } = require('../email');
+const { enviarAoDestino } = require('../destinos');
 const { printError, printInfo } = require('../log');
 const { getSetting } = require('../settings');
 const { detalhesDaPosicao } = require('./orca');
@@ -20,23 +19,11 @@ const { detalhesDaPosicao } = require('./orca');
  */
 const curto = (endereco) => `${endereco.slice(0, 4)}…${endereco.slice(-4)}`;
 
-// O texto do WhatsApp sem *negrito* e _itálico_, para o e-mail
-const textoPuro = (t) => t.replace(/[*_]/g, '');
-
 async function avisar(p, n, d) {
     const titulo = `🚨 *DeFi: a posição ${curto(p.position)} saiu da faixa*`;
     const texto = `${titulo}\n\n${textoDaPosicao(d)}\n\n💡 _Desligue com /defi -alerta -rm ${n}._`;
 
-    if (p.alert_email) {
-        await enviarEmail({
-            para: p.alert_email.split(/\s*,\s*/),
-            assunto: `DeFi: a posição ${curto(p.position)} saiu da faixa`,
-            texto: textoPuro(texto)
-        });
-        return;
-    }
-
-    await client.sendMessage(p.alert_dest_id || client.info.wid._serialized, texto);
+    await enviarAoDestino(destinoDoAlerta(p), texto, { assunto: `DeFi: a posição ${curto(p.position)} saiu da faixa` });
 }
 
 let ultimaVerificacao = 0;

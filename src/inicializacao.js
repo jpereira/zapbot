@@ -137,7 +137,8 @@ async function inicializarBanco() {
 
     /*
      * Alertas de preço do /cotacao -alerta e do /crypto -alerta (disparam uma
-     * vez e saem). dest_*: o chat do aviso (-to); vazio = o seu privado.
+     * vez e saem). dest_*: o chat do aviso (-to); dest_email: os e-mails (-to email);
+     * vazio = o seu privado.
      */
     await dbRun(`
         CREATE TABLE IF NOT EXISTS price_alerts (
@@ -153,7 +154,7 @@ async function inicializarBanco() {
             dest_is_group INTEGER DEFAULT 0
         )
     `);
-    await adicionarColunas('price_alerts', { dest_id: 'TEXT', dest_name: 'TEXT', dest_is_group: 'INTEGER DEFAULT 0' });
+    await adicionarColunas('price_alerts', { dest_id: 'TEXT', dest_name: 'TEXT', dest_is_group: 'INTEGER DEFAULT 0', dest_email: 'TEXT' });
 
     /*
      * Enquetes da sua conta (as do /enquete e as que chegam com os votos) e os
