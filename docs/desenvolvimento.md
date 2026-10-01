@@ -16,7 +16,10 @@ make destroy # clean + apaga os volumes de dev (sessão do WhatsApp e cache!)
 Os alvos `deploy.*` do `Makefile` fazem deploy num Docker remoto via SSH;
 ajuste `DOCKER_REMOTE_SERVER` para o seu host antes de usá-los. Eles usam
 `docker --context homelab` em cada comando, sem trocar o contexto global do
-Docker.
+Docker. O `make deploy.destroy` remove do servidor os containers (mesmo rodando),
+as imagens do zapbot (inclusive as de builds e nomes antigos) e os volumes: a
+sessão do WhatsApp e o cache se perdem, e o próximo `make deploy.up` pede o QR
+Code de novo.
 
 ## Estrutura do código
 
