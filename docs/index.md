@@ -14,11 +14,6 @@ traz notícias, tempo e CVEs, conversa com o ChatGPT e mais algumas brincadeiras
 tudo por comandos digitados no próprio chat (`/help`, `/get`, `/show`, `/news`,
 `/gpt`...).
 
-!!! warning "Projeto não oficial"
-    Sem vínculo com o WhatsApp ou a Meta. Usar bots em contas pessoais viola os
-    Termos de Serviço do WhatsApp e pode levar ao banimento do número. Use por
-    sua conta e risco.
-
 Por onde começar:
 
 - [Instalação](instalacao.md): requisitos, instalação pela última release e atualização.
