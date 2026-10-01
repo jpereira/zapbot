@@ -252,6 +252,20 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 5000, max: 300000,
         desc: 'Timeout (ms) do /gpt, usado quando OPENAI_TIMEOUT_MS não está no config/.env.'
     },
+    'pixelart.maxParts': {
+        default: 3,
+        type: 'number', min: 1, max: 10,
+        desc: 'Máximo de partes enviadas pelo /pixelart quando a arte é mais alta que 4096 px.'
+    },
+    'pixelart.packs': {
+        default: ['chuck-norris-lvl'],
+        type: 'list',
+        desc: 'Packs do 16colo.rs sorteados pelo /pixelart sem argumentos.',
+        item: (v) => {
+            if (!/^[A-Za-z0-9._-]{1,100}$/.test(v)) throw new Error(`nome de pack inválido: ${v}`);
+            return v;
+        }
+    },
     'resumo.maxMsgs': {
         default: 500,
         type: 'number', min: 10, max: 2000,
