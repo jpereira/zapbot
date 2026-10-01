@@ -1,8 +1,9 @@
 # E-mails do bot (QR Code e alertas)
 
-O bot manda dois tipos de e-mail, pelo mesmo SMTP (`QRCODE_EMAIL_SMTP_*`): o
-QR Code, quando `QRCODE_EMAIL_ENABLE="true"`, e os
-[alertas](#alertas-por-e-mail) de crash, queda, reconexão etc.
+O bot manda três tipos de e-mail, pelo mesmo SMTP (`QRCODE_EMAIL_SMTP_*`): o
+QR Code, quando `QRCODE_EMAIL_ENABLE="true"`, os
+[alertas](#alertas-por-e-mail) de crash, queda, reconexão etc. e os backups
+pedidos com [`/backup -s <e-mail>`](comandos/backup.md#enviar-por-e-mail).
 
 ## E-mail do QR Code
 

@@ -87,6 +87,28 @@ async function alertarPorEmail(evento, detalhes = '', { forcar = false } = {}) {
     }
 }
 
+// Dá para enviar um e-mail qualquer (o destino vem de quem chama)?
+const smtpParaEnviar = () => ['QRCODE_EMAIL_SMTP_HOST', 'QRCODE_EMAIL_SMTP_USER'].every(v => process.env[v]?.trim());
+
+/**
+ * Envia um arquivo em anexo pelo SMTP do bot (ex.: o /backup -send).
+ * Lança o erro do SMTP para quem chamou responder no chat.
+ */
+async function enviarArquivoPorEmail({ para, assunto, texto, arquivo, nomeArquivo }) {
+    if (!smtpParaEnviar()) throw new Error('SMTP não configurado (QRCODE_EMAIL_SMTP_HOST e QRCODE_EMAIL_SMTP_USER no config/.env)');
+
+    const antiPhishing = process.env.QRCODE_EMAIL_SMTP_ANTIPHISHING || '-';
+    await transporter.sendMail({
+        from: process.env.QRCODE_EMAIL_SMTP_FROM || process.env.QRCODE_EMAIL_SMTP_USER,
+        to: para.join(', '),
+        subject: `[ZapBot] ${assunto}`,
+        text: `${texto}\n\n🛡️ Anti-Phishing Code: ${antiPhishing}`,
+        attachments: [{ filename: nomeArquivo, path: arquivo }]
+    });
+
+    printInfo(`E-mail '${assunto}' enviado para ${para.join(', ')}`);
+}
+
 // Espera o e-mail sair, mas não trava o encerramento se o SMTP não responder
 async function alertarAntesDeSair(evento, detalhes, ms) {
     let limite;
@@ -104,5 +126,7 @@ async function alertarAntesDeSair(evento, detalhes, ms) {
 module.exports = {
     alertarAntesDeSair,
     alertarPorEmail,
+    enviarArquivoPorEmail,
+    smtpParaEnviar,
     transporter
 };
