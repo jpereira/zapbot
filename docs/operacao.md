@@ -10,7 +10,7 @@ Todos com `-f docker/docker-compose.yml` (ou `COMPOSE_FILE` exportado):
 | Shell no container | `docker exec -it zapbot bash -l` |
 | Consultar o banco | `docker exec -it zapbot sqlite3 cache/bot_database.db` |
 | Ver configurações | `docker exec -it zapbot sqlite3 cache/bot_database.db "SELECT * FROM settings"` |
-| Limpar mensagens/mídias | `docker exec -it zapbot sh -c 'rm -rf cache/tmp cache/media && sqlite3 cache/bot_database.db "DELETE FROM messages"'` |
+| Limpar mensagens/mídias | Pelo WhatsApp: `/cache -a` (tudo) ou `/cache -m` (só as mídias). Veja [`/cache`](comandos/cache.md) |
 | **Forçar novo QR** (apaga a sessão) | `docker compose down && docker volume rm zapbot_wwebjs_auth && docker compose up -d zapbot` |
 
 O container usa `restart: unless-stopped`, então volta sozinho após reboot do
@@ -69,7 +69,7 @@ adicione ao serviço `zapbot` o label `autoheal=true`:
 | `Motivo 'LOGOUT' exige ação manual` | Sessão desconectada pelo celular. Reinicie o container para gerar novo QR. |
 | `Motivo 'CONFLICT' ...` | O WhatsApp Web foi aberto em outro lugar com a mesma sessão, ou há dois containers rodando. |
 | `browser is already running` | Lock antigo do Chromium; o entrypoint limpa no boot. Reinicie o container. |
-| Comando admin não responde a outra pessoa | Esperado: veja [Permissões](comandos/index.md#permissões-onlyadmin). |
+| Nenhum comando responde a outra pessoa | O modo admin vem ligado: só você usa comandos até `/bot -admin`. Os comandos admin continuam só seus. Veja [Permissões](comandos/index.md#permissões-onlyadmin). |
 | `/get` falha em algum site | O site mudou; refaça o build (`--no-cache`) para pegar o yt-dlp mais recente. |
 
 ---

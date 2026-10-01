@@ -1,5 +1,7 @@
 # `/uptime` (`/u`, `/up`) · admin
 
+Mostra a versão e há quanto tempo o bot está no ar e conectado ao WhatsApp.
+
 ```
 /uptime
 🤖 ZapBot 1.7
