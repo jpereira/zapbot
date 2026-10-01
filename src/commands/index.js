@@ -3,12 +3,12 @@
  */
 
 const { botConfig } = require('../botConfig');
-const { cmdSchedule } = require('./agendar');
 const { cmdBackup } = require('./backup');
 const { cmdBills } = require('./boletos');
 const { cmdBot } = require('./bot');
 const { cmdCache } = require('./cache');
 const { cmdQuote } = require('./cotacao');
+const { cmdCron } = require('./cron');
 const { cmdCrypto } = require('./crypto');
 const { cmdCve } = require('./cve');
 const { cmdDebug } = require('./debug');
@@ -43,12 +43,12 @@ const { printError } = require('../log');
 
 // commands.json cmd -> handler
 const HANDLERS = {
-    '/agendar': cmdSchedule,
     '/backup': cmdBackup,
     '/boletos': cmdBills,
     '/bot': cmdBot,
     '/cache': cmdCache,
     '/cotacao': cmdQuote,
+    '/cron': cmdCron,
     '/crypto': cmdCrypto,
     '/cve': cmdCve,
     '/debug': cmdDebug,
