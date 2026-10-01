@@ -9,6 +9,8 @@ const { MessageMedia } = require('whatsapp-web.js');
 const { REASONS, countInputs, createBackup, listBackups, nextBackupDaily, removeBackup, restoreBackup } = require('../backup');
 const { client } = require('../client');
 const { BACKUP_DIR, CACHE_DIR } = require('../constants');
+const { sendFilePerEmail } = require('../email');
+const { printError } = require('../log');
 const { getSetting } = require('../settings');
 const { humanSize } = require('../util/files');
 const { fmtInA, plural } = require('../util/format');
@@ -20,10 +22,14 @@ const { fmtWhen, partsInBrasilia } = require('../util/when');
  * /backup -l            → lists the backups, numbered from newest to oldest
  * /backup -i <no.>       → details: date, reason, version and entries (compared with the current database)
  * /backup -r <no.|name>  → shows what will happen; with -sim, restores
- * /backup -s [no.]       → sends the file to your private chat (without no.: the most recent)
+ * /backup -s [no.] [email...] → sends the file to your private chat or, with emails, as
+ * attachment through the bot's SMTP ("email" = QRCODE_EMAIL_SMTP_TO). Without a no.: the most recent
  * /backup -rm <nº|all>  → apaga
  */
-const HELP = '💡 _-now cria um agora · -l lista · -i <nº> detalha · -r <nº> restaura · -s [nº] envia o arquivo · -rm <nº|all> apaga_';
+// An attachment that is too big is refused by most providers (Gmail: 25 MB)
+const MAX_ATTACHMENT_BYTES = 20 * 1024 * 1024;
+
+const HELP = '💡 _-now cria um agora · -l lista · -i <nº> detalha · -r <nº> restaura · -s [nº] [e-mail] envia o arquivo · -rm <nº|all> apaga_';
 
 const inputsInLine = (inputs) => Object.entries(inputs)
     .map(([t, n]) => `${t} ${fmtInA(n)}`).join(' · ');
@@ -131,11 +137,46 @@ async function cmdBackup({ msg, opts }) {
         return;
     }
 
-    // -send [nº]
+    // -send [no.] [email...]: in your private chat or, with emails, as an attachment
     if (opts.given.has('send')) {
-        const b = o.send ? findBackup(list, o.send) : list[0];
+        const values = [o.send, ...opts.argv].filter(Boolean).flatMap(v => String(v).split(','))
+            .map(v => v.trim()).filter(Boolean);
+        const numberAlt = values.find(v => /^\d+$/.test(v));
+        const emails = values.filter(v => v !== numberAlt).map(v => (/^e-?mail$/i.test(v) ? process.env.QRCODE_EMAIL_SMTP_TO?.trim() : v));
+        const invalid = emails.filter(e => !e || !/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(e));
+
+        if (invalid.length) {
+            await msg.reply(`❌ E-mail inválido: ${invalid.map(e => e || '(QRCODE_EMAIL_SMTP_TO vazio)').join(', ')}\n` +
+                '💡 _/backup -s [nº] [e-mail...]: sem e-mail, vai no seu privado; "email" usa o QRCODE_EMAIL_SMTP_TO._');
+            return;
+        }
+
+        const b = numberAlt ? findBackup(list, numberAlt) : list[0];
         if (!b) {
-            await msg.reply(list.length ? `❌ Backup ${o.send} não existe. Veja a lista com /backup -l` : withoutBackups);
+            await msg.reply(list.length ? `❌ Backup ${numberAlt} não existe. Veja a lista com /backup -l` : withoutBackups);
+            return;
+        }
+
+        if (emails.length) {
+            if (b.bytes > MAX_ATTACHMENT_BYTES) {
+                await msg.reply(`❌ O backup tem ${humanSize(b.bytes)}: grande demais para anexar (máx. ${humanSize(MAX_ATTACHMENT_BYTES)}). Use /backup -s sem e-mail.`);
+                return;
+            }
+
+            try {
+                await sendFilePerEmail({
+                    para: emails,
+                    assunto: `💾 Backup de ${fmtWhen(b.criadoEm)}`,
+                    texto: `Backup do banco do ZapBot de ${fmtWhen(b.criadoEm)} (${b.motivo}, ZapBot ${b.versao}).\n` +
+                        `Para restaurar: copie o arquivo para ${BACKUP_DIR} e use /backup -r ${b.nome} -sim.`,
+                    arquivo: b.arquivo,
+                    nomeArquivo: `${b.nome}.db.gz`
+                });
+                await msg.reply(`📧 Backup de ${fmtWhen(b.criadoEm)} enviado para ${emails.join(', ')}.`);
+            } catch (err) {
+                printError('/backup -send por e-mail:', err.message);
+                await msg.reply(`❌ Não consegui enviar o e-mail: ${err.message}`);
+            }
             return;
         }
 

@@ -9,7 +9,7 @@ const zlib = require('zlib');
 const { test, describe, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { OWNER, MessageMedia } = bot;
+const { OWNER, MessageMedia, emails, nodemailer } = bot;
 const { BACKUP_DIR } = bot.src('constants');
 const { createBackup, listBackups, checkBackupDaily } = bot.src('backup');
 const { instantInBrasilia } = bot.src('util/when');
@@ -131,6 +131,39 @@ describe('/backup (/bkp)', () => {
         assert.deepEqual(await bot.replyAlt('/backup -rm all'), ['🗑️ 1 backup removido.']);
         assert.equal((await names()).length, 0);
         assert.deepEqual(await bot.replyAlt('/backup -l'), ['💾 Nenhum backup ainda. Crie um com /backup -now']);
+    });
+
+    test('-s com e-mails: anexo pelo SMTP do bot; "email" usa o QRCODE_EMAIL_SMTP_TO', async () => {
+        const env = { QRCODE_EMAIL_SMTP_HOST: 'smtp.exemplo.com', QRCODE_EMAIL_SMTP_USER: 'bot@exemplo.com',
+            QRCODE_EMAIL_SMTP_FROM: 'ZapBot <bot@exemplo.com>', QRCODE_EMAIL_SMTP_TO: 'eu@exemplo.com', QRCODE_EMAIL_SMTP_ANTIPHISHING: 'Frase42' };
+        Object.assign(process.env, env);
+        try {
+            await createBackup('manual', Date.now() - 60_000);
+            const b = await createBackup();
+
+            assert.match((await bot.replyAlt('/backup -s fulano@x.com,ciclano@y.com'))[0], /^📧 Backup de .* enviado para fulano@x\.com, ciclano@y\.com\.$/);
+            const [m] = emails;
+            assert.equal(m.to, 'fulano@x.com, ciclano@y.com');
+            assert.equal(m.from, 'ZapBot <bot@exemplo.com>');
+            assert.match(m.subject, /^\[ZapBot\] 💾 Backup de /);
+            assert.match(m.text, /Anti-Phishing Code: Frase42/);
+            assert.deepEqual(m.attachments, [{ filename: `${b.nome}.db.gz`, path: b.arquivo }]);
+
+            await bot.replyAlt('/backup -s 2 email');
+            assert.equal(emails[1].to, 'eu@exemplo.com');
+            assert.notEqual(emails[1].attachments[0].filename, `${b.nome}.db.gz`, 'o nº 2 é o mais antigo');
+
+            assert.match((await bot.replyAlt('/backup -s fulano@'))[0], /❌ E-mail inválido: fulano@/);
+
+            nodemailer.falhar = true;
+            assert.match((await bot.replyAlt('/backup -s a@b.com', { erroEsperado: true }))[0], /❌ Não consegui enviar o e-mail: SMTP fora do ar/);
+        } finally {
+            nodemailer.falhar = false;
+            for (const k of Object.keys(env)) delete process.env[k];
+        }
+
+        await createBackup();
+        assert.match((await bot.replyAlt('/backup -s a@b.com', { erroEsperado: true }))[0], /❌ Não consegui enviar o e-mail: SMTP não configurado/);
     });
 
     test('só o dono', async () => {

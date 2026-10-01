@@ -137,9 +137,9 @@
                         "s"
                     ],
                     "values": [
-                        "[nº]"
+                        "[nº] [e-mail...]"
                     ],
-                    "desc": "Envia o arquivo do backup no seu privado (sem nº: o mais recente)."
+                    "desc": "Envia o arquivo do backup (sem nº: o mais recente) no seu privado ou, com e-mails, como anexo pelo SMTP do bot (\"email\" = QRCODE_EMAIL_SMTP_TO)."
                 },
                 {
                     "opts": [

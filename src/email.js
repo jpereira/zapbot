@@ -87,6 +87,28 @@ async function alertPerEmail(event, details = '', { forcar: force = false } = {}
     }
 }
 
+// Can any email be sent (the destination comes from whoever calls)?
+const smtpForSend = () => ['QRCODE_EMAIL_SMTP_HOST', 'QRCODE_EMAIL_SMTP_USER'].every(v => process.env[v]?.trim());
+
+/**
+ * Sends a file as an attachment through the bot's SMTP (e.g.: /backup -send).
+ * Throws the SMTP error for whoever called to reply in the chat.
+ */
+async function sendFilePerEmail({ para, assunto: subject, texto: textAlt, arquivo: fileAlt, nomeArquivo: nameFile }) {
+    if (!smtpForSend()) throw new Error('SMTP não configurado (QRCODE_EMAIL_SMTP_HOST e QRCODE_EMAIL_SMTP_USER no config/.env)');
+
+    const antiPhishing = process.env.QRCODE_EMAIL_SMTP_ANTIPHISHING || '-';
+    await transporter.sendMail({
+        from: process.env.QRCODE_EMAIL_SMTP_FROM || process.env.QRCODE_EMAIL_SMTP_USER,
+        to: para.join(', '),
+        subject: `[ZapBot] ${subject}`,
+        text: `${textAlt}\n\n🛡️ Anti-Phishing Code: ${antiPhishing}`,
+        attachments: [{ filename: nameFile, path: fileAlt }]
+    });
+
+    printInfo(`E-mail '${subject}' enviado para ${para.join(', ')}`);
+}
+
 // Waits for the email to go out, but does not block shutdown if SMTP does not respond
 async function leaveAlertBefore(event, details, ms) {
     let limitAlt;
@@ -104,5 +126,7 @@ async function leaveAlertBefore(event, details, ms) {
 module.exports = {
     leaveAlertBefore,
     alertPerEmail,
+    sendFilePerEmail,
+    smtpForSend,
     transporter
 };
