@@ -169,6 +169,16 @@ describe('documentação', () => {
         assert.ok(total > 50, `poucos links conferidos (${total})`);
     });
 
+    test('nenhum título repetido na mesma página (a âncora ficaria ambígua), no docs/ e no README', () => {
+        const files = [...pagesDocs().map(f => `docs/${f}`), 'README.md'];
+        for (const fileAlt of files) {
+            const titles = [...withoutCode(fs.readFileSync(path.join(bot.ROOT, fileAlt), 'utf8')).matchAll(/^#{1,6} (.+)$/gm)]
+                .map(m => ancora(m[1]));
+            const repeated = titles.filter((t, i) => titles.indexOf(t) !== i);
+            assert.deepEqual(repeated, [], `${fileAlt}: título repetido`);
+        }
+    });
+
     test('links para o site (jpereira.github.io/zapbot) apontam para páginas e âncoras do docs/', () => {
         const SITE = /https:\/\/jpereira\.github\.io\/zapbot\/([^)\s"'`]*)/g;
         const files = ['README.md', 'SECURITY.md', 'src/commands/commands.json', ...pagesDocs().map(f => `docs/${f}`)];
