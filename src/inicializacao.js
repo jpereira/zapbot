@@ -184,7 +184,7 @@ async function inicializarBanco() {
     `);
 
     /*
-     * Agenda: lembretes (/lembrete). due_at é
+     * Agenda: lembretes (/lembrete) e mensagens agendadas (/agendar). due_at é
      * o próximo envio; com repeat, ele avança a cada envio (day_of_month guarda
      * o dia original do mensal, para um 31 voltar a 31 depois de fevereiro).
      */
