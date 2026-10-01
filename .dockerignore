@@ -1,7 +1,6 @@
 *
 
 !src/
-!config/
 !dist/
 !docker/
 !babel.config.js
