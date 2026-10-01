@@ -1,4 +1,4 @@
-# `/show` (`/undo`, `/s`) · admin
+# `/show` (`/s`) · admin
 
 Reexibe as mensagens apagadas (padrão, ou `-d`) ou editadas (`-e`) deste chat
 que ainda estão no cache: as apagadas por 30 dias (setting
@@ -23,7 +23,7 @@ O `-d` e o `-e` não podem ser usados juntos.
 /show -5             → as 5 últimas
 /show -2 -d          → as 2 últimas apagadas (o -d é o padrão)
 /show -2 -e          → as 2 últimas editadas
-/undo -3 -pv         → as 3 últimas apagadas, enviadas no seu privado
+/s -3 -pv            → as 3 últimas apagadas, enviadas no seu privado
 /show -l             → apagadas e editadas, por chat
 /show -l -pv         → a mesma lista, enviada no seu privado
 /show -c 2 -5        → 5 últimas do chat nº 2 da lista de deletadas
