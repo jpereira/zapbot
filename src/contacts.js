@@ -124,7 +124,7 @@ async function groupInStoreName(chatId) {
  * Swaps the text's raw mentions (@100000000000001, which may be a LID or a phone)
  * by the contact name: "@100000000000001" -> "@Fulano".
  * mentionedIds (of the message) helps tell whether the number is @lid or @c.us;
- * without it (old occurrences) we try both.
+ * without it (e.g.: the /watch occurrences, which do not store the ids) we try both.
  */
 const mentionNameCache = new Map();
 
