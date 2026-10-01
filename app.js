@@ -23,10 +23,6 @@
  * software, provided that this copyright notice is kept.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
- *
- * Unofficial project, with no link to WhatsApp or Meta. Using bots on
- * personal accounts violates WhatsApp's Terms of Service and may lead to
- * number ban. Use at your own risk.
  */
 
 /*

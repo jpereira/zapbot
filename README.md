@@ -16,10 +16,6 @@ tudo por comandos digitados no próprio chat (`/help`, `/get`, `/show`, `/news`,
 📖 **Documentação completa: [jpereira.github.io/zapbot](https://jpereira.github.io/zapbot/)** (da última
 release; a do `main` fica em [`docs/`](docs/index.md)).
 
-> ⚠️ Projeto não oficial, sem vínculo com o WhatsApp ou a Meta. Usar bots em
-> contas pessoais viola os Termos de Serviço do WhatsApp e pode levar ao
-> banimento do número. Use por sua conta e risco.
-
 ## Como funciona
 
 ```
