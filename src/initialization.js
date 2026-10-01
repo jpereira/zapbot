@@ -205,6 +205,18 @@ async function initializeDb() {
     `);
     await dbRun('CREATE INDEX IF NOT EXISTS idx_schedules_due ON schedules (due_at)');
 
+    // /defi DeFi positions (for now, from Orca): the rest is read on-chain on each -show
+    await dbRun(`
+        CREATE TABLE IF NOT EXISTS defi_positions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            protocol TEXT NOT NULL,
+            position TEXT NOT NULL UNIQUE,
+            nft TEXT,
+            pool TEXT,
+            created_at INTEGER NOT NULL
+        )
+    `);
+
     // General bot settings (key -> value in JSON)
     await dbRun(`
         CREATE TABLE IF NOT EXISTS settings (
