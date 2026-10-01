@@ -5,11 +5,10 @@
 const axios = require('axios');
 
 const { estado } = require('./estado');
-const { client } = require('./cliente');
 const { findCommand } = require('./comandos/base');
 const { COTACAO_TIMEOUT_MS, buscarCotacao, fmtPrecoCrypto, fmtReal, fmtVariacao } = require('./cotacoes');
 const { dbAll, dbGet, dbPronto, dbRun } = require('./db');
-const { descreverDestino, extrairDestino, resolverOuEscolher } = require('./destinos');
+const { descreverDestino, enviarAoDestino, extrairDestino, resolverOuEscolher } = require('./destinos');
 const { printError, printInfo } = require('./log');
 const { COTACAO_SUPORTADAS, CRYPTO_SUPPORTED } = require('./moedas');
 const { GetOptFromCommand } = require('./opcoes');
@@ -23,8 +22,8 @@ const { formatarData, plural } = require('./util/formatar');
  *   -alerta BTC < 90000     → (no /crypto) quando o BTC ficar abaixo de $90.000
  *   -alerta -rm 2 | all     → remove o alerta nº 2 da lista (ou todos)
  *   -alerta BTC > 90000 -to /Grupo L200/  → avisa num grupo (ou num contato,
- *                             -to /Jorge Pereira/, ou número, -to +5521999999999)
- *                             em vez do seu privado
+ *                             -to /Jorge Pereira/, num número, -to +5521999999999,
+ *                             ou por e-mail, -to email) em vez do seu privado
  * Cada alerta dispara UMA vez e é removido. A verificação roda a cada
  * 'alerta.intervalMin' minutos. Só o dono cria e remove.
  */
@@ -83,8 +82,11 @@ function lerRegraAlerta(texto) {
 const listarAlertas = (kind) =>
     dbAll('SELECT * FROM price_alerts WHERE kind = ? ORDER BY id', [kind]);
 
-// Chat do aviso: o do -to ou, sem ele, o seu privado
-const destinoDoAlerta = (a) => (a.dest_id ? { id: a.dest_id, nome: a.dest_name, grupo: Boolean(a.dest_is_group) } : null);
+// Para onde vai o aviso: o chat ou os e-mails do -to; sem ele (null), o seu privado
+function destinoDoAlerta(a) {
+    if (a.dest_email) return { email: a.dest_email, nome: a.dest_email, grupo: false };
+    return a.dest_id ? { id: a.dest_id, nome: a.dest_name, grupo: Boolean(a.dest_is_group) } : null;
+}
 
 function descreverAlerta(kind, a) {
     const t = ALERTA_TIPOS[kind];
@@ -168,7 +170,7 @@ async function tratarAlertaDePreco(kind, { msg, args }) {
     let destino = null;
 
     if (comDestino) {
-        destino = await resolverOuEscolher(msg, destinoTexto);
+        destino = await resolverOuEscolher(msg, destinoTexto, { aceitaEmail: true });
         if (!destino) return;
     }
 
@@ -199,9 +201,10 @@ async function tratarAlertaDePreco(kind, { msg, args }) {
     }
 
     await dbRun(
-        `INSERT INTO price_alerts (kind, symbol, op, target, price_at_creation, created_at, dest_id, dest_name, dest_is_group)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [kind, regra.sym, regra.op, regra.alvo, preco, Date.now(), destino?.id ?? null, destino?.nome ?? null, destino?.grupo ? 1 : 0]
+        `INSERT INTO price_alerts (kind, symbol, op, target, price_at_creation, created_at, dest_id, dest_name, dest_is_group, dest_email)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [kind, regra.sym, regra.op, regra.alvo, preco, Date.now(), destino?.id ?? null, destino?.email ? null : destino?.nome ?? null,
+            destino?.grupo ? 1 : 0, destino?.email ?? null]
     );
 
     await msg.reply(`🔔 *Alerta criado*\n${descreverAlerta(kind, { symbol: regra.sym, op: regra.op, target: regra.alvo })}\n` +
@@ -249,14 +252,16 @@ async function verificarAlertasDePreco({ forcar = false } = {}) {
                 await dbRun('DELETE FROM price_alerts WHERE id = ?', [a.id]);
 
                 const variacao = fmtVariacao(preco, a.price_at_creation);
-                await client.sendMessage(a.dest_id || client.info.wid._serialized,
+                const destino = destinoDoAlerta(a);
+                await enviarAoDestino(destino,
                     `🔔 *ALERTA DE PREÇO*\n\n` +
                     `${OPERADORES[a.op].icone} ${t.icone(a.symbol)} *${t.par(a.symbol)}* ficou ${OPERADORES[a.op].texto} ${t.fmt(a.target)}\n` +
                     `💰 Agora: *${t.fmt(preco)}*${variacao ? ` _(${variacao} desde a criação)_` : ''}\n` +
-                    `📅 Alerta criado em ${formatarData(a.created_at)}`
+                    `📅 Alerta criado em ${formatarData(a.created_at)}`,
+                    { assunto: `🔔 Alerta de preço: ${t.par(a.symbol)} ${OPERADORES[a.op].texto} ${t.fmt(a.target)}` }
                 ).catch(err => printError('Alerta de preço: falha ao avisar:', err.message));
 
-                printInfo(`Alerta de preço disparado: ${a.symbol} ${a.op} ${a.target} (agora ${preco})${a.dest_id ? ` → ${a.dest_id}` : ''}`);
+                printInfo(`Alerta de preço disparado: ${a.symbol} ${a.op} ${a.target} (agora ${preco})${destino ? ` → ${destino.email ?? destino.id}` : ''}`);
             }
         }
     } catch (err) {

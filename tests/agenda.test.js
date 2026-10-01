@@ -221,6 +221,7 @@ describe('/cron (/agenda)', () => {
     test('erros: destino inválido e -pv', async () => {
         assert.match((await bot.responder('/cron 1h -to xyz oi'))[0], /❌ Nenhum contato ou grupo com "xyz" no nome/);
         assert.match((await bot.responder('/cron 1h -pv oi'))[0], /❌ O -pv é do modo lembrete/);
+        assert.match((await bot.responder('/cron 1h -to voce@exemplo.com oi'))[0], /❌ O \/cron envia a mensagem como se você digitasse/);
         assert.deepEqual(await itens(), []);
     });
 });
