@@ -105,6 +105,33 @@ async function resolverNomeDoGrupo(chatId) {
     return name;
 }
 
+/*
+ * Nome de uma conversa privada: o contato do OUTRO participante (o nome salvo
+ * na sua agenda, senão o do perfil). O notifyName da mensagem não serve: é o
+ * de quem enviou, e nas suas mensagens seria o seu. Para um @lid, tenta antes
+ * o contato pelo telefone real. Mesmo cache curto dos grupos.
+ */
+const privateNameCache = new Map();
+
+async function resolverNomeDoPrivado(chatId) {
+    if (!chatId || chatId.endsWith('@g.us') || chatId === 'status@broadcast') return null;
+
+    const cache = privateNameCache.get(chatId);
+    if (cache && Date.now() - cache.at < GROUP_NAME_TTL_MS) return cache.name;
+
+    const telefone = chatId.endsWith('@lid') ? await resolveLidToPhone(chatId) : null;
+    let name = null;
+
+    for (const id of [telefone, chatId].filter(Boolean)) {
+        const contato = await client.getContactById(id).catch(() => null);
+        name = contato?.name || contato?.pushname || contato?.verifiedName || null;
+        if (name) break;
+    }
+
+    if (name) privateNameCache.set(chatId, { name, at: Date.now() });
+    return name;
+}
+
 async function nomeDoGrupoNoStore(chatId) {
     if (!client.pupPage) return null;
 
@@ -189,5 +216,6 @@ module.exports = {
     removeDeviceSuffix,
     resolveLidToPhone,
     resolverMencoes,
-    resolverNomeDoGrupo
+    resolverNomeDoGrupo,
+    resolverNomeDoPrivado
 };
