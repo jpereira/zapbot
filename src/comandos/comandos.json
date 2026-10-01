@@ -266,12 +266,12 @@
         },
         {
             "cmd": "/enquete",
-            "usage": "/enquete [-m] <pergunta> | <opção 1> | <opção 2> [| ...]",
+            "usage": "/enquete [-m] <pergunta> | <opção 1> | <opção 2> [| ...]  ou  /enquete -r",
             "aliases": [
                 "/enq",
                 "/quiz"
             ],
-            "help": "Cria uma enquete no chat. Separe pergunta e opções (2 a 12) com | ou uma por linha.",
+            "help": "Cria uma enquete no chat (separe pergunta e opções, de 2 a 12, com | ou uma por linha) ou mostra o resultado com -r.",
             "cmd_opts": [
                 {
                     "opts": [
@@ -280,6 +280,14 @@
                     ],
                     "values": [],
                     "desc": "Permite marcar mais de uma opção (só no começo do texto)."
+                },
+                {
+                    "opts": [
+                        "result",
+                        "r"
+                    ],
+                    "values": [],
+                    "desc": "Resultado da enquete mais recente do chat (ou da enquete respondida): votos por opção e quem votou."
                 }
             ],
             "onlyAdmin": true

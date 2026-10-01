@@ -86,6 +86,7 @@ require('./src/eventos/presenca');
 require('./src/eventos/apagadas');
 require('./src/eventos/editadas');
 require('./src/eventos/mensagens');
+require('./src/enquetes');
 
 const { iniciarAlertasDePreco } = require('./src/alertasPreco');
 const { iniciarHeartbeat } = require('./src/heartbeat');
