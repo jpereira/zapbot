@@ -182,7 +182,9 @@ async function tratarAgenda({ msg, args, chatId, chatName, isGroup, quotedMsg })
 
     if (comDestino) {
         // Vários contatos ou grupos com o nome: espera você escolher na lista
-        destino = await resolverOuEscolher(msg, destinoTexto);
+        destino = await resolverOuEscolher(msg, destinoTexto, {
+            semEmail: '❌ O /cron envia a mensagem como se você digitasse, no WhatsApp: o -to é um contato, um grupo ou um número, não um e-mail.'
+        });
         if (!destino) return;
     } else if (opt.pv) {
         destino = { id: meuId, nome: 'seu privado', grupo: false };
