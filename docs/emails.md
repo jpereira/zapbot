@@ -1,9 +1,12 @@
 # E-mails do bot (QR Code e alertas)
 
-O bot manda três tipos de e-mail, pelo mesmo SMTP (`QRCODE_EMAIL_SMTP_*`): o
+O bot manda quatro tipos de e-mail, pelo mesmo SMTP (`QRCODE_EMAIL_SMTP_*`): o
 QR Code, quando `QRCODE_EMAIL_ENABLE="true"`, os
-[alertas](#alertas-por-e-mail) de crash, queda, reconexão etc. e os backups
-pedidos com [`/backup -s <e-mail>`](comandos/backup.md#enviar-por-e-mail).
+[alertas](#alertas-por-e-mail) de crash, queda, reconexão etc., os backups
+pedidos com [`/backup -s <e-mail>`](comandos/backup.md#enviar-por-e-mail) e os
+avisos de posição fora da faixa do
+[`/defi -alerta -send email`](comandos/defi.md#alerta-de-saída-da-faixa)
+(assunto `[ZapBot] DeFi: a posição ... saiu da faixa`).
 
 ## E-mail do QR Code
 
