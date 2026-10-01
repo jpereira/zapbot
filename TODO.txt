@@ -7,8 +7,6 @@
 * /enquete: avisar no privado quando todos do grupo votarem.
 * Relatorio diario no privado, no horario do setting daily.time: cotacoes, cripto,
   tempo, CVEs criticas, ocorrencias do /watch, mini /stats dos grupos e o /defi.
-* /agendar: mensagem agendada para um chat numa data/hora (aniversarios, avisos
-  recorrentes, cron simples).
 * /transcrever: respondendo um audio, transcreve pela OpenAI (Whisper) com a chave do
   /gpt; um setting liga a transcricao automatica em chats escolhidos.
 * /traduzir: respondendo uma mensagem, traduz para pt-BR ou o idioma pedido (pelo /gpt

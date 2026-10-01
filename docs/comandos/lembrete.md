@@ -59,4 +59,7 @@ dia 31 vai no último dia dos meses mais curtos e volta ao 31 depois.
 - Se o bot estiver fora do ar na hora, o lembrete vai quando ele voltar, com
   `(atrasado: era para ...)`. Um repetido vai uma vez e segue para o próximo
   horário.
-- O limite é de 50 lembretes (setting `agenda.max`).
+- O limite é de 50, somando os do [`/agendar`](agendar.md) (setting
+  `agenda.max`).
+- Para mandar uma mensagem a outra pessoa ou grupo na hora marcada, use o
+  [`/agendar`](agendar.md).

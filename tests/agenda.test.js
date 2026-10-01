@@ -1,5 +1,5 @@
 /*
- * Agenda: a leitura de datas (util/quando.js) e o /lembrete (/lemb).
+ * Agenda: a leitura de datas (util/quando.js), o /lembrete (/lemb) e o /agendar (/agenda).
  */
 const bot = require('./helpers/bot');
 
@@ -175,11 +175,51 @@ describe('/lembrete (/lemb)', () => {
         await erro('/lembrete 1h -to L200 x', /❌ O \/lembrete não tem -to/);
 
         await bot.setSetting('agenda.max', 1);
-        await bot.responder('/lembrete 1h oi');
-        await erro('/lembrete 1h x', /❌ Limite de 1 lembretes \(setting agenda\.max\)/);
+        await bot.responder('/agendar 1h oi');
+        await erro('/lembrete 1h x', /❌ Limite de 1 lembretes e mensagens agendadas \(setting agenda\.max\)/);
     });
 
     test('só o dono', async () => {
         assert.deepEqual(await bot.responder('/lembrete 1h x', { de: OUTRO.jid }), []);
+    });
+});
+
+describe('/agendar (/agenda)', () => {
+    test('-to grupo: envia o texto puro, sem citar, e sai da lista', async () => {
+        const [r] = await bot.responder('/agendar sexta 18h -to /Grupo L200/ Bom fim de semana!\nAté segunda.');
+        assert.match(r, /^📅 \*Mensagem agendada\* para \*sex \d\d\/\d\d 18:00\* em 👥 Grupo sobre L200\.\n📝 Bom fim de semana! Até segunda\.$/);
+
+        const [lista] = await bot.responder('/agenda -l');
+        assert.match(lista, /📅 \*Mensagens agendadas\* \(1\)\n\n1\. \*sex \d\d\/\d\d 18:00\* — Bom fim de semana! Até segunda\.\n   → 👥 Grupo sobre L200/);
+
+        const [enviado] = await vencer();
+        assert.equal(enviado.chatId, L200);
+        assert.equal(enviado.content, 'Bom fim de semana!\nAté segunda.');
+        assert.deepEqual(enviado.options, {});
+        assert.deepEqual(await itens(), []);
+    });
+
+    test('sem -to: no chat atual; -to @número: no privado da pessoa; mensal', async () => {
+        await bot.responder('/agendar 25/12 10:00 Feliz Natal!');
+        await bot.responder('/agendar 05/11 -repetir mensal -to @5521911111111 Lembrete do aluguel');
+
+        const [natal, aluguel] = await itens();
+        assert.deepEqual([natal.chat_id, natal.repeat], [GRUPO, null]);
+        assert.deepEqual([aluguel.chat_id, aluguel.chat_name, aluguel.repeat, aluguel.day_of_month], [OUTRO.jid, 'Fulano', 'mensal', 5]);
+    });
+
+    test('texto começando com "/" é enviado, mas nunca roda como comando', async () => {
+        await bot.responder('/agendar 1h /cache -a');
+        const [enviado] = await vencer();
+        assert.equal(enviado.content, '/cache -a');
+
+        // O WhatsApp devolve o envio no message_create: a marca do bot impede o comando
+        assert.deepEqual(await bot.responder('/cache -a'), []);
+    });
+
+    test('erros: destino inválido e -pv', async () => {
+        assert.match((await bot.responder('/agendar 1h -to xyz oi'))[0], /❌ Nenhum grupo com "xyz" no nome/);
+        assert.match((await bot.responder('/agendar 1h -pv oi'))[0], /❌ O \/agendar não tem -pv/);
+        assert.deepEqual(await itens(), []);
     });
 });
