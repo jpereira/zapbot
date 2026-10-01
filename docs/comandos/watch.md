@@ -31,7 +31,7 @@ do contato (`@Fulano`) e o grupo com o nome atual.
 | `-list`, `-l` | | Lista as regras, com o nº e a quantidade de ocorrências |
 | `-show`, `-s` | `[-N]` | Resumo das mensagens que casaram com a regra nº N (sem `-N`: de todas). Máx. 20 (setting `watch.showMax`) |
 | `-add`, `-a` | `<PATTERN\|/REGEX/>` | Adiciona uma regra (máx. 20, setting `watch.max`). Pode ter espaços |
-| `-del`, `-d` | `-N` | Remove a regra nº N e as ocorrências dela. As seguintes são renumeradas |
+| `-rem`, `-r` | `-N` | Remove a regra nº N e as ocorrências dela. As seguintes são renumeradas |
 | `-flush`, `-f` | `[-N]` | Apaga as ocorrências da regra nº N (sem `-N`: de todas, inclusive de regras já removidas). As regras são mantidas |
 
 ```
@@ -43,7 +43,7 @@ do contato (`@Fulano`) e o grupo com o nome atual.
 /w -s              → de todas as regras (o mesmo que /watch)
 /watch -f -2       → apaga as ocorrências da regra 2
 /w -f              → apaga as ocorrências de todas as regras
-/watch -d -1
+/watch -r -1
 ```
 
 Detalhes:
