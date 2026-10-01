@@ -89,6 +89,58 @@ describe('/tempo (/weather)', () => {
         assert.match(frio, /📈 \*Máx:\* -  📉 \*Mín:\* -/);
     });
 
+    // Previsão de N dias: daily com um item por dia
+    const previsaoDias = (n) => ({
+        ...previsao(24),
+        daily: {
+            time: Array.from({ length: n }, (_, i) => `2026-10-0${i + 1}`),
+            weather_code: Array.from({ length: n }, (_, i) => [0, 63, 95][i % 3]),
+            temperature_2m_max: Array.from({ length: n }, (_, i) => 30 + i),
+            temperature_2m_min: Array.from({ length: n }, (_, i) => 20 + i),
+            precipitation_probability_max: Array.from({ length: n }, (_, i) => i * 10)
+        }
+    });
+
+    test('N ou Nd: previsão dos próximos N dias, com ou sem cidade', async () => {
+        rede.responder('get', 'geocoding-api.open-meteo.com', (url, cfg) => ({ results: [{ ...local, name: cfg.params.name }] }));
+        rede.responder('get', 'api.open-meteo.com/v1/forecast', (url, cfg) => previsaoDias(cfg.params.forecast_days));
+
+        // Cidade nova (o /tempo guarda a geocodificação em cache entre os testes)
+        const [r] = await bot.responder('/tempo 3d Olinda');
+        assert.equal(rede.chamadas.at(-1).cfg.params.forecast_days, 3);
+        assert.equal(rede.chamadas.find(c => c.url.includes('geocoding')).cfg.params.name, 'Olinda', 'o "3d" não entra no nome');
+        assert.match(r, /🌡️ \*Agora:\* 24°C/, 'mantém o tempo de agora');
+        assert.match(r, /📅 \*Próximos 3 dias\*\n☀️ \*Hoje \(qui 01\/10\):\* 30°\/20° · ☔ 0% · Céu limpo\n🌧️ \*sex 02\/10:\* 31°\/21° · ☔ 10% · Chuva\n⛈️ \*sáb 03\/10:\* 32°\/22° · ☔ 20% · Trovoada/);
+
+        await bot.setSetting('tempo.city', 'Maricá');
+        await bot.responder('/weather 5');
+        assert.equal(rede.chamadas.at(-1).cfg.params.forecast_days, 5);
+        assert.equal(rede.chamadas.at(-2).cfg.params.name, 'Maricá', 'sem cidade: tempo.city');
+
+        assert.match((await bot.responder('/tempo 1d'))[0], /📅 \*Previsão de hoje\*\n/);
+        assert.match((await bot.responder('/tempo 7D Recife'))[0], /Próximos 7 dias/);
+    });
+
+    test('sem N: só o dia de hoje (forecast_days 1), sem a lista', async () => {
+        rede.responder('get', 'geocoding-api.open-meteo.com', { results: [local] });
+        rede.responder('get', 'api.open-meteo.com/v1/forecast', (url, cfg) => previsaoDias(cfg.params.forecast_days));
+        const [r] = await bot.responder('/tempo Niteroi');
+        assert.equal(rede.chamadas.at(-1).cfg.params.forecast_days, 1);
+        assert.doesNotMatch(r, /Próximos|Previsão de hoje/);
+    });
+
+    test('N fora de 1..tempo.maxDays é recusado; o máximo vem do setting (até 16)', async () => {
+        assert.match((await bot.responder('/tempo 8d Recife'))[0], /❌ Quantidade de dias inválida: 8\. Use de 1 a 7\./);
+        assert.match((await bot.responder('/tempo 0'))[0], /Quantidade de dias inválida: 0/);
+        assert.deepEqual(rede.chamadas, [], 'nem consulta a API');
+
+        await bot.setSetting('tempo.maxDays', 16);
+        rede.responder('get', 'geocoding-api.open-meteo.com', { results: [local] });
+        rede.responder('get', 'api.open-meteo.com/v1/forecast', (url, cfg) => previsaoDias(cfg.params.forecast_days));
+        assert.match((await bot.responder('/tempo 16'))[0], /Próximos 16 dias/);
+        await assert.rejects(bot.setSetting('tempo.maxDays', 17), /entre 1 e 16/);
+    });
+
     test('cidade não encontrada; serviço fora do ar', async () => {
         rede.responder('get', 'geocoding-api.open-meteo.com', { results: [] });
         assert.match((await bot.responder('/tempo Xyzabc'))[0], /❌ Cidade não encontrada: Xyzabc/);
