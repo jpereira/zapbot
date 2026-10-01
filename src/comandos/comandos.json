@@ -616,7 +616,7 @@
                 "/piada",
                 "/humor"
             ],
-            "help": "Piada aleatória em português (JokeAPI, safe-mode).",
+            "help": "Piada aleatória em português (nenhuma se repete até todas saírem).",
             "onlyAdmin": false
         },
         {

@@ -521,18 +521,31 @@ describe('/meme', () => {
 });
 
 describe('/joke (/piada, /humor)', () => {
-    test('piada de uma parte e de duas partes', async () => {
-        rede.responder('get', 'jokeapi.dev', { type: 'single', joke: 'Uma piada.' });
-        assert.deepEqual(await bot.responder('/joke'), ['Uma piada.']);
-        assert.equal(rede.chamadas[0].cfg.params.lang, 'pt');
+    const { PIADAS, reiniciarPiadas } = bot.src('comandos/joke');
 
-        rede.responder('get', 'jokeapi.dev', { type: 'twopart', setup: 'Pergunta?', delivery: 'Resposta' });
-        assert.deepEqual(await bot.responder('/piada'), ['Pergunta?\n\n... Resposta 🥁']);
+    test('pergunta e resposta, sem rede', async () => {
+        const [r] = await bot.responder('/joke');
+        assert.match(r, /^.+\?\n\n\.\.\. .+ 🥁$/);
+        assert.ok(PIADAS.some(p => r === `${p.pergunta}\n\n... ${p.resposta} 🥁`));
+        assert.equal(rede.chamadas.length, 0);
     });
 
-    test('erro da API', async () => {
-        rede.responder('get', 'jokeapi.dev', { error: true, message: 'sem piadas' });
-        assert.deepEqual(await bot.responder('/humor', { erroEsperado: true }), ['❌ Não consegui buscar uma piada agora.']);
+    test('nenhuma se repete até todas saírem, nem na virada de uma rodada para a outra', async () => {
+        reiniciarPiadas();
+        const contadas = [];
+        for (let i = 0; i < PIADAS.length * 10; i++) contadas.push((await bot.responder(i % 2 ? '/piada' : '/humor'))[0]);
+
+        for (let r = 0; r < 10; r++) {
+            const rodada = contadas.slice(r * PIADAS.length, (r + 1) * PIADAS.length);
+            assert.equal(new Set(rodada).size, PIADAS.length, `rodada ${r}: repetiu antes de acabar`);
+        }
+        for (let i = 1; i < contadas.length; i++) assert.notEqual(contadas[i], contadas[i - 1], `a mesma duas vezes seguidas (${i})`);
+    });
+
+    test('a lista: perguntas únicas, todas com resposta', () => {
+        assert.ok(PIADAS.length >= 40);
+        assert.equal(new Set(PIADAS.map(p => p.pergunta)).size, PIADAS.length);
+        assert.ok(PIADAS.every(p => p.pergunta.trim() && p.resposta.trim()));
     });
 });
 
