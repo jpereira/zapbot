@@ -1,5 +1,5 @@
 /*
- * /status: the bot report (last 24 h) and the daily send.
+ * /bot -status: the bot report (last 24 h) and the daily send.
  */
 
 const fs = require('fs');
@@ -70,12 +70,20 @@ async function statusText(nowAlt = Date.now()) {
         (totalIgnored ? ` _(${ignored.map(r => `${LABELS[r.kind] ?? r.kind} ${fmtInA(r.n)}`).join(', ')})_` : '') + '\n' +
         `💾 *Último backup:* ${lastBackup ? `${fmtWhen(lastBackup.criadoEm, nowAlt)} (${lastBackup.motivo})` : 'nenhum'}`;
 
-    const daily = await schedulingDaily();
-    textAlt += daily
-        ? `\n\n⏰ _Próximo status: ${fmtWhen(daily.due_at, nowAlt)} (todo dia às ${itemHour(daily)})_`
-        : '\n\n💡 _Receba todo dia com /status 06h (no horário que quiser)._';
+    // At the end, the daily send (the same as the previous /bot -status -l)
+    return `${textAlt}\n\n${await sendingDailyText(nowAlt)}`;
+}
 
-    return textAlt;
+/**
+ * The daily send time and the next one, or that it is off.
+ */
+async function sendingDailyText(nowAlt = Date.now()) {
+    const daily = await schedulingDaily();
+
+    return daily
+        ? `⏰ *Status diário:* todo dia às *${itemHour(daily)}*, no seu privado.\n📅 Próximo: ${fmtWhen(daily.due_at, nowAlt)}\n` +
+            '💡 _Mude com /bot -status <hora> ou desligue com /bot -status off._'
+        : '🔕 Status diário desligado.\n💡 _Ligue com /bot -status 06h (no horário que quiser)._';
 }
 
 const schedulingDaily = () => dbGet('SELECT * FROM schedules WHERE kind = ?', [KIND]);
@@ -116,5 +124,6 @@ module.exports = {
     scheduleStatusDaily,
     turnOffStatusDaily,
     itemHour,
+    sendingDailyText,
     statusText
 };
