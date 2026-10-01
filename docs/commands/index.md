@@ -67,7 +67,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -c -f`) para fazer o bot
 | [`/stats`](stats.md) | | ✅ | Ranking do chat (quem mais fala, apaga e edita, horários de pico); `-me` para as suas |
 | [`/sticker`](sticker.md) | `/st` | | Transforma imagem/vídeo em figurinha |
 | [`/tempo`](tempo.md) | `/weather` | | Tempo agora e máx./mín. do dia (Open-Meteo); `/tempo 7d` mostra os próximos 7 dias; sem cidade usa `tempo.city` |
-| [`/ualisu`](ualisu.md) | | ✅ | Marca 2 membros com uma CVE aleatória |
 | [`/uptime`](uptime.md) | `/u`, `/up` | ✅ | Tempo de execução e de conexão |
 | [`/version`](version.md) | `/ver` | ✅ | Versão do bot (mesmo banner do `/uptime`) |
+| [`/walissu`](walissu.md) | `/ualisu` | ✅ | Walissu CVE BOT: marca 2 membros com uma CVE aleatória |
 | [`/watch`](watch.md) | `/w` | ✅ | Avisa no seu privado quando uma mensagem casa com um texto/regex |

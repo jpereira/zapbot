@@ -1,5 +1,5 @@
 /*
- * /boletos command: draw of group members. The draw is also used by /ualisu.
+ * /boletos command: draw of group members. The draw is also used by /walissu.
  */
 
 const { client } = require('../client');

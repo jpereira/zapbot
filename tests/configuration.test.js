@@ -235,6 +235,8 @@ describe('settings', () => {
 
     test('commands.disabled: aceita nome ou alias, recusa o /set', async () => {
         assert.deepEqual(await setSetting('commands.disabled', 'noffa /p'), ['/noffa', '/ping']);
+        // A value saved under the old name (/ualisu, today an alias) becomes the current name
+        assert.deepEqual(await setSetting('commands.disabled', ['/ualisu']), ['/walissu']);
         await assert.rejects(setSetting('commands.disabled', 'set'), /não pode ser desativado/);
         await assert.rejects(setSetting('commands.disabled', 'naoexiste'), /desconhecido/);
     });
