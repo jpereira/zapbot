@@ -98,13 +98,13 @@ nav:
       - /news: comandos/news.md
       - /noffa: comandos/noffa.md
       - /ping: comandos/ping.md
-      - /resumo: comandos/resumo.md
       - /set: comandos/set.md
       - /show: comandos/show.md
       - /stats: comandos/stats.md
       - /status: comandos/status.md
       - /sticker: comandos/sticker.md
       - /tempo: comandos/tempo.md
+      - /tldr: comandos/tldr.md
       - /todos: comandos/todos.md
       - /traduzir: comandos/traduzir.md
       - /uptime: comandos/uptime.md
