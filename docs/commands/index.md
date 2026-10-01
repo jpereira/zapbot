@@ -68,6 +68,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -a`) para fazer o bot
 | [`/set`](set.md) | `/config` | ✅ | Lista e altera as configurações (settings) |
 | [`/show`](show.md) | `/s` | ✅ | Reexibe mensagens apagadas ou editadas (`-e`) |
 | [`/stats`](stats.md) | | ✅ | Ranking do chat (quem mais fala, apaga e edita, horários de pico); `-me` para as suas |
+| [`/status`](status.md) | | ✅ | Relatório das últimas 24 h (cache, no ar, watch, apagadas, editadas, `/mudo`); `/status 06h` manda todo dia |
 | [`/sticker`](sticker.md) | `/st` | | Transforma imagem/vídeo em figurinha |
 | [`/tempo`](tempo.md) | `/weather` | | Tempo agora e máx./mín. do dia (Open-Meteo); `/tempo 7d` mostra os próximos 7 dias; sem cidade usa `tempo.city` |
 | [`/todos`](todos.md) | `/todes` | ✅ | Menciona todos do grupo |

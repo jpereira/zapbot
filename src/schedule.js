@@ -7,6 +7,7 @@ const { client } = require('./client');
 const { dbAll, dbGet, dbReady, dbRun } = require('./db');
 const { describeDestination, extractDestination, resolverDestination } = require('./destinations');
 const { printError, printInfo } = require('./log');
+const { statusText } = require('./status');
 const { getSetting } = require('./settings');
 const { plural, summarizeText, withoutAccents } = require('./util/format');
 const { REPETITIONS, fmtWhen, readWhen, partsInBrasilia, nextRepetition } = require('./util/when');
@@ -71,8 +72,8 @@ function readScheduling(args) {
     return { opt, quando: when, texto: textAlt, destino: destination, comDestino: withDestination };
 }
 
-// Reminders and messages together, in the order they go out (the -rm numbers)
-const listAlt = () => dbAll('SELECT * FROM schedules ORDER BY due_at, id');
+// Reminders and messages together, in the order they go out (the -rm numbers). The daily status (/status) is left out
+const listAlt = () => dbAll("SELECT * FROM schedules WHERE kind != 'status' ORDER BY due_at, id");
 
 function listLine(s, i) {
     const repeat = s.repeat ? ` 🔁 ${REPETITIONS[s.repeat].rotulo}` : '';
@@ -107,7 +108,7 @@ async function handleSchedule({ msg, args, chatId, chatName, isGroup, quotedMsg 
         const target = withoutAccents(opt.rm).trim();
 
         if (target === 'all') {
-            await dbRun('DELETE FROM schedules');
+            await dbRun("DELETE FROM schedules WHERE kind != 'status'");
             await msg.reply(`🗑️ ${plural(items.length, 'removido', 'removidos')}.`);
             return;
         }
@@ -168,7 +169,7 @@ async function handleSchedule({ msg, args, chatId, chatName, isGroup, quotedMsg 
     }
 
     const max = getSetting('agenda.max');
-    const { n: total } = await dbGet('SELECT COUNT(*) AS n FROM schedules');
+    const { n: total } = await dbGet("SELECT COUNT(*) AS n FROM schedules WHERE kind != 'status'");
     if (total >= max) {
         await msg.reply(`❌ Limite de ${max} lembretes e mensagens agendadas (setting agenda.max). Remova algum antes.`);
         return;
@@ -219,7 +220,10 @@ async function triggerItem(s, nowAlt) {
         await dbRun('DELETE FROM schedules WHERE id = ?', [s.id]);
     }
 
-    if (s.kind === 'agendar') {
+    if (s.kind === 'status') {
+        // The /status report, built on the spot
+        await client.sendMessage(s.chat_id, await statusText(nowAlt));
+    } else if (s.kind === 'agendar') {
         await client.sendMessage(s.chat_id, s.text);
     } else {
         const textAlt = `⏰ *Lembrete*\n\n${s.text}` +
@@ -230,7 +234,7 @@ async function triggerItem(s, nowAlt) {
             .catch(() => client.sendMessage(s.chat_id, textAlt));
     }
 
-    printInfo(`${TYPES[s.kind].cmd}: enviado para ${s.chat_id}${late ? ' (atrasado)' : ''}${s.repeat ? ` (${s.repeat})` : ''}`);
+    printInfo(`${TYPES[s.kind]?.cmd ?? '/status'}: enviado para ${s.chat_id}${late ? ' (atrasado)' : ''}${s.repeat ? ` (${s.repeat})` : ''}`);
 }
 
 /*
