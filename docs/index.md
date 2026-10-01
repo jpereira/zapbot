@@ -31,7 +31,7 @@ Por onde começar:
  │     ├──► SQLite  (cache/bot_database.db)  mensagens, settings  │
  │     ├──► cache/media   mídias p/ recuperar mensagens apagadas  │
  │     ├──► yt-dlp + ffmpeg   comando /get                        │
- │     ├──► APIs HTTP (axios)  /gpt /tempo /cve /news /gif...     │
+ │     ├──► APIs HTTP (axios)  /gpt /tempo /cve /news /giphy...   │
  │     └──► SMTP (nodemailer)  QR Code e alertas por e-mail       │
  │                                                                │
  │  volumes:  wwebjs_auth  → sessão do WhatsApp (.wwebjs_auth)    │

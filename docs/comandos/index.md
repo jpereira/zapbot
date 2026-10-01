@@ -52,7 +52,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -a`) para fazer o bot
 | [`/defi`](defi.md) | | ✅ | Posições de liquidez da Orca: saldo, faixa, preço e taxas a coletar, lidos on-chain |
 | [`/enquete`](enquete.md) | `/enq`, `/quiz` | ✅ | Cria uma enquete nativa do WhatsApp no chat; `-r` mostra o resultado |
 | [`/get`](get.md) | `/download` | | Baixa vídeo/áudio de redes sociais |
-| [`/gif`](gif.md) | | | GIF aleatório (GIPHY) |
+| [`/giphy`](giphy.md) | `/gif` | | GIF aleatório (GIPHY) |
 | [`/gpt`](gpt.md) | `/ai` | ✅ | Pergunta ao ChatGPT (OpenAI) |
 | [`/help`](help.md) | `/h` | | Menu de ajuda |
 | [`/joke`](joke.md) | `/piada`, `/humor` | | Piada aleatória em português |
