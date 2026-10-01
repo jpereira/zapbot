@@ -61,11 +61,9 @@ docker logs -f zapbot           # leia o QR Code em WhatsApp › Aparelhos conec
 ```
 
 Para atualizar, use `git fetch --tags`, o mesmo `git checkout` e o build de
-novo, com `up -d --force-recreate --remove-orphans zapbot`. Vindo de uma versão
-com o serviço `zapbot-prod`, o `--remove-orphans` remove o container antigo
-(senão os dois disputam a mesma sessão). O passo a passo (inclusive a versão de desenvolvimento, `main`) está em
-[Instalação](https://jpereira.github.io/zapbot/instalacao/); as variáveis do `config/.env`, em
-[Configuração](https://jpereira.github.io/zapbot/configuracao/).
+novo. O passo a passo (inclusive a versão de desenvolvimento, `main`) está em
+[Instalação](https://jpereira.github.io/zapbot/instalacao/); as variáveis do
+`config/.env`, em [Configuração](https://jpereira.github.io/zapbot/configuracao/).
 
 ## Comandos
 
