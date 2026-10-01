@@ -102,6 +102,7 @@ nav:
       - /set: comandos/set.md
       - /show: comandos/show.md
       - /stats: comandos/stats.md
+      - /status: comandos/status.md
       - /sticker: comandos/sticker.md
       - /tempo: comandos/tempo.md
       - /todos: comandos/todos.md
