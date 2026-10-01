@@ -165,6 +165,53 @@ describe('/gpt (/ai)', () => {
         }
     });
 
+    test('modelo: setting openai.api.model (padrão gpt-4o-mini); o OPENAI_MODEL do .env vence', async () => {
+        await bot.setSetting('openai.api.key', 'sk-teste');
+        network.responder('post', 'api.openai.com', { choices: [{ message: { content: 'ok' } }] });
+
+        await bot.replyAlt('/gpt oi');
+        assert.equal(network.chamadas.at(-1).cfg.body.model, 'gpt-4o-mini');
+
+        await bot.setSetting('openai.api.model', 'gpt-6-luna');
+        await bot.replyAlt('/gpt oi');
+        assert.equal(network.chamadas.at(-1).cfg.body.model, 'gpt-6-luna');
+
+        process.env.OPENAI_MODEL = 'gpt-4.1';
+        try {
+            await bot.replyAlt('/gpt oi');
+            assert.equal(network.chamadas.at(-1).cfg.body.model, 'gpt-4.1');
+        } finally {
+            delete process.env.OPENAI_MODEL;
+        }
+    });
+
+    test('-m sem modelo: o atual e a lista dos aceitos', async () => {
+        const [r] = await bot.replyAlt('/gpt -m');
+        assert.match(r, /🤖 \*Modelo do \/gpt:\* gpt-4o-mini\n/);
+        assert.match(r, /✅ gpt-4o-mini/);
+        assert.match(r, /▫️ gpt-6-astra/);
+        assert.doesNotMatch(r, /do OPENAI_MODEL/);
+    });
+
+    test('-m <modelo> troca o setting; modelo fora da lista é recusado', async () => {
+        assert.deepEqual(await bot.replyAlt('/gpt -model gpt-6-sol'), ['✅ Modelo do /gpt: *gpt-6-sol*']);
+        assert.equal(bot.getSetting('openai.api.model'), 'gpt-6-sol');
+
+        assert.match((await bot.replyAlt('/gpt -m gpt-5-pro'))[0], /❌ Modelo não suportado: gpt-5-pro \(aceitos: gpt-6-astra/);
+        assert.equal(bot.getSetting('openai.api.model'), 'gpt-6-sol');
+        await assert.rejects(bot.setSetting('openai.api.model', 'o1'), /não suportado: o1/);
+    });
+
+    test('-m com OPENAI_MODEL no .env: troca o setting e avisa da prioridade', async () => {
+        process.env.OPENAI_MODEL = 'gpt-4.1';
+        try {
+            assert.match((await bot.replyAlt('/gpt -m'))[0], /Modelo do \/gpt:\* gpt-4\.1 _\(do OPENAI_MODEL no \.env\)_/);
+            assert.match((await bot.replyAlt('/gpt -m gpt-6-luna'))[0], /✅ Modelo do \/gpt: \*gpt-6-luna\*\n⚠️ _O OPENAI_MODEL do \.env \(gpt-4\.1\) tem prioridade/);
+        } finally {
+            delete process.env.OPENAI_MODEL;
+        }
+    });
+
     test('sem pergunta mostra a sintaxe', async () => {
         await bot.setSetting('openai.api.key', 'sk-teste');
         assert.match((await bot.replyAlt('/gpt'))[0], /Usage: \/gpt/);
