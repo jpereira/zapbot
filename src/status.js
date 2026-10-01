@@ -20,7 +20,7 @@ const { fmtQuando, instanteEmBrasilia, partesEmBrasilia } = require('./util/quan
 /*
  * O envio diário é um item da agenda (tabela `schedules`, kind 'status',
  * repetir 'diario'), no seu privado: a agenda já cuida do horário, da
- * repetição e do envio atrasado quando o bot volta. Ele não aparece no /agendar.
+ * repetição e do envio atrasado quando o bot volta. Ele não aparece no /cron.
  */
 const KIND = 'status';
 
