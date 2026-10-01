@@ -865,6 +865,42 @@
             "onlyAdmin": true
         },
         {
+            "cmd": "/traduzir",
+            "usage": "/traduzir [-para <idioma>] [texto]",
+            "aliases": [
+                "/tr",
+                "/translate"
+            ],
+            "help": "Traduz o texto (ou a mensagem respondida) pelo Google Translate. O idioma de origem é detectado.",
+            "cmd_opts": [
+                {
+                    "opts": [
+                        "list",
+                        "l"
+                    ],
+                    "values": [],
+                    "desc": "Lista os idiomas aceitos, com o código."
+                },
+                {
+                    "opts": [
+                        "para",
+                        "p"
+                    ],
+                    "values": [
+                        "<idioma>"
+                    ],
+                    "desc": "Idioma de destino: en, es, fr, zh-CN... Padrão: setting traduzir.lang (pt)."
+                },
+                {
+                    "argv": [
+                        "[texto]"
+                    ],
+                    "desc": "Texto a traduzir (até 5000 caracteres). Sem ele, a mensagem respondida."
+                }
+            ],
+            "onlyAdmin": false
+        },
+        {
             "cmd": "/uptime",
             "usage": "/uptime",
             "aliases": [

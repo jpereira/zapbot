@@ -103,6 +103,7 @@ nav:
       - /sticker: comandos/sticker.md
       - /tempo: comandos/tempo.md
       - /todos: comandos/todos.md
+      - /traduzir: comandos/traduzir.md
       - /uptime: comandos/uptime.md
       - /version: comandos/version.md
       - /walissu: comandos/walissu.md
