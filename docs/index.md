@@ -63,6 +63,8 @@ Por onde começar:
   `/set show.alert.edit off`; a edição continua guardada). As edições ficam 30 dias
   (setting `cache.editedRetentionDays`) e podem ser reexibidas com
   [`/show -e`](comandos/show.md). As suas próprias edições são ignoradas.
+- **Silenciar**: o [`/mudo`](comandos/mudo.md) corta os avisos de apagadas,
+  editadas e status de uma pessoa ou de um grupo (a mensagem continua guardada).
 - **Limpeza automática**: a cada 10 minutos o bot remove do banco/disco as
   mensagens comuns com mais de 68 h (janela máxima que o WhatsApp permite
   apagar), as apagadas e as editadas com mais de 30 dias, as ocorrências do
