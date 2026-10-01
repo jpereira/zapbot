@@ -67,7 +67,7 @@
                     "values": [
                         "<destino>"
                     ],
-                    "desc": "Envia no privado de uma pessoa (@5521999999999) ou num grupo, pelo nome ou parte dele (/Grupo L200/, \"Grupo L200\" ou L200)."
+                    "desc": "No modo mensagem: envia no privado de uma pessoa (@5521999999999) ou num grupo, pelo nome ou parte dele (/Grupo L200/, \"Grupo L200\" ou L200)."
                 },
                 {
                     "argv": [
