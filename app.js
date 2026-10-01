@@ -10,7 +10,7 @@
  * client, conexao               → WhatsApp client, QR Code, reconnection
  * events/                       → messages, deleted, edited, presence
  * commands/                      → one file per command
- * limpeza, alertasPreco, agenda, email → periodic tasks and alerts
+ * limpeza, alertasPreco, agenda, backup, email → periodic tasks and alerts
  *
  * Version:  see package.json
  * Author:   Jorge Pereira <jpereiran@gmail.com>
@@ -90,6 +90,7 @@ require('./src/polls');
 
 const { startSchedule } = require('./src/schedule');
 const { priceStartAlerts } = require('./src/priceAlerts');
+const { startBackup } = require('./src/backup');
 const { startHeartbeat } = require('./src/heartbeat');
 const { startCleanupPeriodic } = require('./src/cleanup');
 
@@ -100,5 +101,6 @@ startHeartbeat();
 startCleanupPeriodic();
 priceStartAlerts();
 startSchedule();
+startBackup();
 
 startBot();
