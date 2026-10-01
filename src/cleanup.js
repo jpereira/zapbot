@@ -160,7 +160,7 @@ async function cleanPollsOld() {
     }
 }
 
-// Notices cut by /mudo (mute_hits): 30 days are enough for /status
+// Notices cut by /mudo (mute_hits): 30 days are enough for /bot -status
 const MUTE_HITS_DAYS = 30;
 
 async function cleanIgnoredOld() {

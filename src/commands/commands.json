@@ -90,8 +90,8 @@
         },
         {
             "cmd": "/bot",
-            "usage": "/bot [-on|-off] [+admin|-admin]",
-            "help": "Liga/desliga o bot e o modo admin. Sem opção mostra o estado. As opções combinam: /bot -on +admin",
+            "usage": "/bot [-on|-off] [+admin|-admin]  ou  /bot -status [<hora>|off]",
+            "help": "Liga/desliga o bot e o modo admin (sem opção mostra o estado; as opções combinam: /bot -on +admin) e mostra o relatório do bot (-status).",
             "cmd_opts": [
                 {
                     "opts": [
@@ -113,6 +113,15 @@
                     ],
                     "values": [],
                     "desc": "Desliga o modo admin (cada comando volta a seguir o seu onlyAdmin)."
+                },
+                {
+                    "opts": [
+                        "status"
+                    ],
+                    "values": [
+                        "[<hora>|off]"
+                    ],
+                    "desc": "Sem valor: relatório das últimas 24 h (no ar, cache, /watch, apagadas, editadas, status apagados, ignoradas pelo /mudo, último backup) e, no fim, o envio diário. Com uma hora (Brasília: 06h, 6h30, 06:00 ou às 18h), envia todo dia nesse horário, no seu privado. Ex: /bot -status 06h. Com off, desliga o envio diário."
                 },
                 {
                     "argv": [
@@ -974,35 +983,6 @@
                         "-N"
                     ],
                     "desc": "Período em dias (padrão 7, máx. stats.retentionDays). Ex: /stats -30"
-                }
-            ],
-            "onlyAdmin": true
-        },
-        {
-            "cmd": "/status",
-            "usage": "/status [<hora>] [OPTION]",
-            "help": "Relatório do bot nas últimas 24 h: tempo no ar, cache, ocorrências do /watch, apagadas, editadas, status apagados, ignoradas pelo /mudo e o último backup. Com uma hora, chega todo dia nesse horário, no seu privado.",
-            "cmd_opts": [
-                {
-                    "opts": [
-                        "list",
-                        "l"
-                    ],
-                    "values": [],
-                    "desc": "Mostra o horário do envio diário e o próximo."
-                },
-                {
-                    "opts": [
-                        "off"
-                    ],
-                    "values": [],
-                    "desc": "Desliga o envio diário."
-                },
-                {
-                    "argv": [
-                        "<hora>"
-                    ],
-                    "desc": "Hora do envio diário (Brasília): 06h, 6h30, 06:00 ou às 18h. Ex: /status 06h"
                 }
             ],
             "onlyAdmin": true

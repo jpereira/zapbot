@@ -219,7 +219,7 @@ async function initializeDb() {
 
     /*
      * /mudo: people and groups with muted notices (what: deleted, edited,
-     * status) and each cut notice (mute_hits, for /status; 30 days).
+     * status) and each cut notice (mute_hits, for /bot -status; 30 days).
      */
     await dbRun(`
         CREATE TABLE IF NOT EXISTS mutes (

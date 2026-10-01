@@ -1,5 +1,5 @@
 /*
- * /status: the report of the last 24 h and the daily send (by the schedule).
+ * /bot -status: the report of the last 24 h and the daily send (by the schedule).
  */
 const bot = require('./helpers/bot');
 
@@ -20,7 +20,7 @@ async function deleted(textAlt, optionsAlt = {}) {
     return bot.apagar(msg);
 }
 
-describe('/status', () => {
+describe('/bot -status', () => {
     test('relatório das últimas 24 h, com cada contagem', async () => {
         await bot.setSetting('watch.rules', 'pix\nboleto');
         await bot.deliver(bot.createMessage({ texto: 'manda o pix', de: OTHERAlt.jid }));
@@ -41,7 +41,7 @@ describe('/status', () => {
         await bot.replyAlt('/mudo -d +5521911111111');
         await deleted('silenciada');
 
-        const [r] = await bot.replyAlt('/status');
+        const [r] = await bot.replyAlt('/bot -status');
         assert.match(r, /^📊 \*Status do ZapBot [\d.]+\* · últimas 24 h\n_\w{3} \d\d\/\d\d \d\d:\d\d_\n\n/);
         assert.match(r, /🤖 \*No ar:\* .* · conectado: /);
         assert.match(r, /🗄️ \*Cache:\* [\d.]+ \w+ _\(banco [\d.]+ \w+ · mídias [\d.]+ \w+\)_ · \d+ mensagens/);
@@ -51,21 +51,20 @@ describe('/status', () => {
         assert.match(r, /📸 \*Status apagados:\* 1\n/);
         assert.match(r, /🔇 \*Ignoradas \(\/mudo\):\* 1 _\(apagadas 1\)_/);
         assert.match(r, /💾 \*Último backup:\* nenhum/);
-        assert.match(r, /💡 _Receba todo dia com \/status 06h/);
+        assert.match(r, /\n\n🔕 Status diário desligado\.\n💡 _Ligue com \/bot -status 06h \(no horário que quiser\)\._$/);
     });
 
-    test('/status 06h agenda no seu privado; -l mostra; o envio sai pela agenda, todo dia', async () => {
-        const [r] = await bot.replyAlt('/status 06h');
+    test('-status 06h agenda no seu privado; o relatório mostra no fim; o envio sai pela agenda, todo dia', async () => {
+        const [r] = await bot.replyAlt('/bot -status 06h');
         assert.match(r, /^⏰ \*Status diário:\* todo dia às \*06:00\*, no seu privado\.\n📅 Próximo: \w{3} \d\d\/\d\d 06:00$/);
 
-        assert.match((await bot.replyAlt('/status -l'))[0], /^⏰ \*Status diário:\* todo dia às \*06:00\*/);
-        assert.match((await bot.replyAlt('/status'))[0], /⏰ _Próximo status: \w{3} \d\d\/\d\d 06:00 \(todo dia às 06:00\)_/);
+        assert.match((await bot.replyAlt('/bot -status'))[0], /\n\n⏰ \*Status diário:\* todo dia às \*06:00\*, no seu privado\.\n📅 Próximo: \w{3} \d\d\/\d\d 06:00\n💡 _Mude com \/bot -status <hora> ou desligue com \/bot -status off\._$/);
 
         // Does not appear in the /cron schedule, nor count toward the limit
         assert.match((await bot.replyAlt('/cron'))[0], /📅 Nada agendado/);
 
         // Trocar a hora substitui; formatos aceitos
-        await bot.replyAlt('/status às 18h30');
+        await bot.replyAlt('/bot -status às 18h30');
         const items = await bot.dbAll("SELECT * FROM schedules WHERE kind = 'status'");
         assert.equal(items.length, 1);
         assert.equal(fmtWhen(items[0].due_at).slice(-5), '18:30');
@@ -81,19 +80,22 @@ describe('/status', () => {
         assert.ok(next.due_at > Date.now() && next.due_at <= Date.now() + DAY);
     });
 
-    test('-off desliga; hora inválida; o /cron -rm all não apaga o status diário', async () => {
-        await bot.replyAlt('/status 7h');
+    test('-status off desliga; hora inválida; não combina; o /cron -rm all não apaga o status diário', async () => {
+        await bot.replyAlt('/bot -status 7h');
         await bot.replyAlt('/cron 1h -to +5521911111111 oi');
         await bot.replyAlt('/cron -rm all');
         assert.equal((await bot.dbAll("SELECT * FROM schedules WHERE kind = 'status'")).length, 1);
 
-        assert.deepEqual(await bot.replyAlt('/status -off'), ['🔕 Status diário desligado.']);
-        assert.deepEqual(await bot.replyAlt('/status -off'), ['ℹ️ O status diário já estava desligado.']);
-        assert.match((await bot.replyAlt('/status -l'))[0], /🔕 Status diário desligado/);
-        assert.match((await bot.replyAlt('/status 25h'))[0], /❌ Não entendi a hora/);
+        assert.deepEqual(await bot.replyAlt('/bot -status off'), ['🔕 Status diário desligado.']);
+        assert.deepEqual(await bot.replyAlt('/bot -status OFF'), ['ℹ️ O status diário já estava desligado.']);
+        assert.match((await bot.replyAlt('/bot -status'))[0], /🔕 Status diário desligado/);
+        assert.match((await bot.replyAlt('/bot -status 25h'))[0], /❌ Não entendi a hora/);
+        assert.match((await bot.replyAlt('/bot -on -status'))[0], /❌ O -status não combina com as outras opções/);
+        assert.equal(bot.getSetting('bot.paused'), false);
     });
 
     test('só o dono', async () => {
-        assert.deepEqual(await bot.replyAlt('/status', { de: OTHERAlt.jid, chat: GROUP }), []);
+        assert.deepEqual(await bot.replyAlt('/bot -status', { de: OTHERAlt.jid, chat: GROUP }), []);
+        assert.deepEqual(await bot.replyAlt('/status'), [], 'o /status virou /bot -status');
     });
 });
