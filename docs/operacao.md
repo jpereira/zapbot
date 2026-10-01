@@ -4,14 +4,14 @@ Todos com `-f docker/docker-compose.yml` (ou `COMPOSE_FILE` exportado):
 
 | Ação | Comando |
 |---|---|
-| Ver logs | `docker logs -f zapbot-prod` |
-| Reiniciar | `docker compose restart zapbot-prod` |
-| Parar | `docker compose stop zapbot-prod` |
-| Shell no container | `docker exec -it zapbot-prod bash -l` |
-| Consultar o banco | `docker exec -it zapbot-prod sqlite3 cache/bot_database.db` |
-| Ver configurações | `docker exec -it zapbot-prod sqlite3 cache/bot_database.db "SELECT * FROM settings"` |
-| Limpar mensagens/mídias | `docker exec -it zapbot-prod sh -c 'rm -rf cache/tmp cache/media && sqlite3 cache/bot_database.db "DELETE FROM messages"'` |
-| **Forçar novo QR** (apaga a sessão) | `docker compose down && docker volume rm zapbot_wwebjs_auth && docker compose up -d zapbot-prod` |
+| Ver logs | `docker logs -f zapbot` |
+| Reiniciar | `docker compose restart zapbot` |
+| Parar | `docker compose stop zapbot` |
+| Shell no container | `docker exec -it zapbot bash -l` |
+| Consultar o banco | `docker exec -it zapbot sqlite3 cache/bot_database.db` |
+| Ver configurações | `docker exec -it zapbot sqlite3 cache/bot_database.db "SELECT * FROM settings"` |
+| Limpar mensagens/mídias | `docker exec -it zapbot sh -c 'rm -rf cache/tmp cache/media && sqlite3 cache/bot_database.db "DELETE FROM messages"'` |
+| **Forçar novo QR** (apaga a sessão) | `docker compose down && docker volume rm zapbot_wwebjs_auth && docker compose up -d zapbot` |
 
 O container usa `restart: unless-stopped`, então volta sozinho após reboot do
 host.
@@ -35,14 +35,14 @@ estado ruim), existe um heartbeat:
 
 ```bash
 docker ps                                          # STATUS: Up 2 hours (healthy)
-docker inspect --format '{{json .State.Health}}' zapbot-prod
-docker exec zapbot-prod cat /tmp/zapbot-heartbeat.json
+docker inspect --format '{{json .State.Health}}' zapbot
+docker exec zapbot cat /tmp/zapbot-heartbeat.json
 ```
 
 O Docker (fora do Swarm) **só marca** o container como `unhealthy`: não
 reinicia. Para reiniciar automaticamente, rode o
 [autoheal](https://github.com/willfarrell/docker-autoheal) ao lado do bot e
-adicione ao serviço `zapbot-prod` o label `autoheal=true`:
+adicione ao serviço `zapbot` o label `autoheal=true`:
 
 ```yaml
   autoheal:
@@ -64,7 +64,7 @@ adicione ao serviço `zapbot-prod` o label `autoheal=true`:
 | `Erro ao enviar QR por email: ... self-signed certificate` / `unable to verify` | O certificado do SMTP não é válido. Use o host oficial do provedor (o nome precisa bater com o certificado). |
 | E-mail do QR chega no spam | `QRCODE_EMAIL_SMTP_FROM` diferente da conta SMTP. |
 | Não chegam os alertas por e-mail | Confira `QRCODE_EMAIL_SMTP_HOST`, `_USER` e `_TO` (sem eles nada é enviado) e o setting `email.alerts` (`/set email.alerts`). Falhas do SMTP aparecem no log como `Alerta por e-mail '...' falhou`. |
-| `docker ps` mostra `(unhealthy)` | O bot parou de gravar o heartbeat. Veja o motivo com `docker inspect --format '{{json .State.Health}}' zapbot-prod` e os logs; reinicie com `docker compose restart zapbot-prod`. Veja [Saúde do container](#saúde-do-container-heartbeat). |
+| `docker ps` mostra `(unhealthy)` | O bot parou de gravar o heartbeat. Veja o motivo com `docker inspect --format '{{json .State.Health}}' zapbot` e os logs; reinicie com `docker compose restart zapbot`. Veja [Saúde do container](#saúde-do-container-heartbeat). |
 | `npm test`: `No such built-in module: node:sqlite` | Node antigo: os testes precisam do Node 22.13+. |
 | `Motivo 'LOGOUT' exige ação manual` | Sessão desconectada pelo celular. Reinicie o container para gerar novo QR. |
 | `Motivo 'CONFLICT' ...` | O WhatsApp Web foi aberto em outro lugar com a mesma sessão, ou há dois containers rodando. |

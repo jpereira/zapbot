@@ -35,15 +35,15 @@ services:
   #
   # Production
   #
-  zapbot-prod:
+  zapbot:
     user: "root:root"
-    image: zapbot-prod
-    container_name: zapbot-prod
+    image: zapbot
+    container_name: zapbot
     build:
       context: ..
       dockerfile: docker/app/Dockerfile
 
-    hostname: DOCKER:zapbot-prod
+    hostname: DOCKER:zapbot
     env_file:
       - ../config/.env
 
