@@ -94,6 +94,7 @@ nav:
       - /listageral: comandos/listageral.md
       - /meme: comandos/meme.md
       - /monitor: comandos/monitor.md
+      - /mudo: comandos/mudo.md
       - /news: comandos/news.md
       - /noffa: comandos/noffa.md
       - /ping: comandos/ping.md
