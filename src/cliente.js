@@ -42,7 +42,7 @@ function messageToSelf(message) {
 /*
  * Mensagens enviadas pelo próprio bot também disparam 'message_create' com
  * fromMe=true. Sem esta marca, uma resposta que começasse com "/" (ex.: o
- * /noffa ecoando "/cache -c -f") rodaria como comando do dono.
+ * /noffa ecoando "/cache -a") rodaria como comando do dono.
  *
  * msg.reply() também passa por client.sendMessage(). O texto é registrado
  * ANTES do envio porque o evento pode chegar antes do sendMessage resolver.

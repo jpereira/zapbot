@@ -209,8 +209,8 @@ describe('/gpt (/ai)', () => {
     test('.env vence o setting; resposta começando com "/" ganha um 🤖', async () => {
         process.env.OPENAI_API_KEY = 'sk-env';
         try {
-            rede.responder('post', 'api.openai.com', { choices: [{ message: { content: '/cache -c -f' } }] });
-            assert.deepEqual(await bot.responder('/gpt diga um comando'), ['🤖 /cache -c -f']);
+            rede.responder('post', 'api.openai.com', { choices: [{ message: { content: '/cache -a' } }] });
+            assert.deepEqual(await bot.responder('/gpt diga um comando'), ['🤖 /cache -a']);
             assert.equal(rede.chamadas.at(-1).cfg.headers.Authorization, 'Bearer sk-env');
         } finally {
             delete process.env.OPENAI_API_KEY;

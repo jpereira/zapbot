@@ -127,7 +127,7 @@ async function enviarMensagemApagada(destino, row, info, { titulo = '❌ *MENSAG
             '📇 *Tipo:* CARTÃO DE CONTATO\n' +
             '💡 *Nota:* O contato está anexado abaixo.';
 
-        // O body vem de quem enviou: só vai cru se for mesmo um vCard (nunca um texto como "/cache -c -f")
+        // O body vem de quem enviou: só vai cru se for mesmo um vCard (nunca um texto como "/cache -a")
         if (!row.body || /^BEGIN:VCARD/i.test(row.body.trim())) {
             await client.sendMessage(destino, alertaTexto);
             if (row.body) await client.sendMessage(destino, row.body, { parseVCards: true });
