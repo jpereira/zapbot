@@ -169,6 +169,11 @@ describe('documentação', () => {
         assert.ok(total > 50, `poucos links conferidos (${total})`);
     });
 
+    test('instalação: a release atual (a do package.json) com a data dela', () => {
+        const { version } = require('../package.json');
+        assert.match(lerDoc('instalacao.md'), new RegExp(`\`release-${version.replace('.', '\\.')}\` \\(de \\d{2}/\\d{2}/\\d{4}\\)`));
+    });
+
     test('nenhum título repetido na mesma página (a âncora ficaria ambígua), no docs/ e no README', () => {
         const arquivos = [...paginasDocs().map(f => `docs/${f}`), 'README.md'];
         for (const arquivo of arquivos) {
