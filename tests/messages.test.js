@@ -77,6 +77,17 @@ describe('comandos', () => {
         assert.deepEqual(await bot.replyAlt('ping'), []);
     });
 
+    test('o log diz quem usou o comando e onde (no privado de outra pessoa, é você)', async () => {
+        const used = () => bot.logs.filter(l => / used '/.test(l)).at(-1);
+
+        bot.client.contatos.set(OTHERAlt.jid, { id: { _serialized: OTHERAlt.jid, user: OTHERAlt.user }, number: OTHERAlt.user, name: OTHERAlt.nome });
+        await bot.replyAlt('/ping', { chat: OTHERAlt.jid });
+        assert.match(used(), /\[\+\] 'Dono' used '\/ping' in '[^']+'$/);
+
+        await bot.replyAlt('/help', { de: OTHERAlt.jid });
+        assert.match(used(), /\[\+\] 'Fulano' used '\/help' in 'Família'$/);
+    });
+
     test('-h mostra a sintaxe do comando', async () => {
         const [r] = await bot.replyAlt('/ping -h');
         assert.match(r, /Usage: \/ping/);
