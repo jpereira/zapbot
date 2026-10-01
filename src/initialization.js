@@ -71,7 +71,7 @@ async function initializeDb() {
     await dbRun('CREATE INDEX IF NOT EXISTS idx_messages_chat_revoked ON messages (chat_id, revoked, revoked_at)');
 
     /*
-     * Edited messages (for /edit): one row per edit, with the text of
+     * Edited messages (for /show -e): one row per edit, with the text of
      * before and the after. UNIQUE(message_id, edited_at): WhatsApp Web notifies
      * the same edit more than once (body and caption), but it is stored only once.
      */

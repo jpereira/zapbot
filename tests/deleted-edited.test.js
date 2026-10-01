@@ -1,6 +1,6 @@
 /*
  * Deleted and edited messages: the WhatsApp events and the commands
- * /show (/undo, /s) e /edit (/e).
+ * /show (/undo, /s): the deleted ones (default, or -d) and the edited ones (-e).
  */
 const bot = require('./helpers/bot');
 
@@ -243,8 +243,8 @@ describe('/show (/undo, /s)', () => {
         assert.match(r, /✏️ \*Editadas:\* 1[^\n]*\n1\. 👥 Trabalho — \*1\*/);
         assert.doesNotMatch(r.split('Editadas')[1], /← _este chat_/);
 
-        // /edit -l is the same list
-        assert.equal((await bot.replyAlt('/edit -l'))[0], r);
+        // With -e the list is the same
+        assert.equal((await bot.replyAlt('/show -e -l'))[0], r);
     });
 
     test('-l -pv manda a lista no seu privado', async () => {
@@ -303,41 +303,68 @@ describe('/show (/undo, /s)', () => {
     });
 });
 
-describe('/edit (/e)', () => {
+describe('/show -e (editadas)', () => {
     test('sem editadas neste chat', async () => {
-        assert.deepEqual(await bot.replyAlt('/edit'), ['✏️ Nenhuma mensagem editada registrada neste chat.']);
+        assert.deepEqual(await bot.replyAlt('/show -e'), ['✏️ Nenhuma mensagem editada registrada neste chat.']);
+    });
+
+    test('-d (o padrão) mostra as apagadas, -e as editadas; os dois juntos não', async () => {
+        await messageDeleted('apagada');
+        await messageEdited('antes', 'depois');
+
+        assert.match((await bot.replyAlt('/show -d'))[1], /MENSAGEM APAGADA[\s\S]*"apagada"/);
+        assert.match((await bot.replyAlt('/show -deleted'))[1], /"apagada"/);
+        assert.match((await bot.replyAlt('/show -edited'))[1], /MENSAGEM EDITADA[\s\S]*"depois"/);
+        assert.deepEqual(await bot.replyAlt('/show -d -e'), ['❌ Use -d (apagadas) ou -e (editadas), não os dois.']);
+    });
+
+    test('/edit e /e não existem mais', async () => {
+        await messageEdited('x', 'y');
+        assert.deepEqual(await bot.replyAlt('/edit'), []);
+        assert.deepEqual(await bot.replyAlt('/e'), []);
     });
 
     test('a última e as N últimas, com antes e depois', async () => {
         await messageEdited('a1', 'a2');
         await messageEdited('b1', 'b2');
 
-        const [summary, item] = await bot.replyAlt('/edit');
+        const [summary, item] = await bot.replyAlt('/show -e');
         assert.equal(summary, '✏️ *1 mensagem editada*');
         assert.match(item, /✏️ \*MENSAGEM EDITADA\* \(1\/1\)[\s\S]*Antes:\* "b1"\n💬 \*Depois:\* "b2"/);
 
-        const r = await bot.replyAlt('/e -2');
+        const r = await bot.replyAlt('/s -2 -e');
         assert.equal(r[0], '✏️ *2 mensagens editadas*');
         assert.match(r[1], /"a2"/);
     });
 
     test('-c e -pv', async () => {
         await messageEdited('x', 'y', { chat: WORK });
-        const r = await bot.executar('/edit -c trabalho -pv');
+        const r = await bot.executar('/show -e -c trabalho -pv');
         assert.equal(r[0].texto, '✏️ Enviado no seu privado.');
         assert.match(r[1].texto, /💬 \*Chat:\* Trabalho/);
         assert.equal(r[2].chatId, PRIVATE_OWNER);
     });
 
-    test('-c sem editadas', async () => {
-        assert.equal((await bot.replyAlt('/edit -c 1'))[0], '✏️ Nenhuma mensagem editada no cache.');
+    test('-c sem editadas; o nº é o da lista de editadas', async () => {
+        assert.equal((await bot.replyAlt('/show -e -c 1'))[0], '✏️ Nenhuma mensagem editada no cache.');
+
+        await messageDeleted('a');
+        await messageEdited('x', 'y', { chat: WORK });
+        await bot.replyAlt('/show -l');
+        assert.match((await bot.replyAlt('/show -e -c 1'))[0], /💬 \*Chat:\* Trabalho/);
+        assert.match((await bot.replyAlt('/show -c 1'))[0], /💬 \*Chat:\* Família/);
+    });
+
+    test('dica no seu privado aponta para o -e', async () => {
+        const [r] = await bot.replyAlt('/show -e', { chat: PRIVATE_OWNER });
+        assert.match(r, /\/show -l e depois \/show -e -N -c <nº ou nome>/);
     });
 
     test('-f remove as editadas deste chat; não mexe nas apagadas', async () => {
         await messageEdited('x', 'y');
         await messageDeleted('z');
-        const [r] = await bot.replyAlt('/edit -f');
-        assert.match(r, /Flush das mensagens editadas deste chat[\s\S]*\*1 mensagem\*/);
+        const [r] = await bot.replyAlt('/show -e -f');
+        assert.match(r, /Flush das mensagens editadas deste chat[\s\S]*\*1 mensagem\*[\s\S]*use \/show -e -f no seu privado/);
         assert.doesNotMatch(r, /Mídias/);
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM message_edits')).n, 0);
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM messages WHERE revoked = 1')).n, 1);

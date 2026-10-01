@@ -49,8 +49,8 @@ async function cleanCacheOld(maxDeleteWin = MAX_DELETE_WINDOW, retentionDeleted 
 }
 
 /*
- * General cleanup (/cache -all): ALL messages (including the deleted ones
- * stored for /show and the edited ones for /edit), all the media and all the temporaries.
+ * General cleanup (/cache -all): ALL messages (including the deleted ones and the
+ * edited stored for /show), all the media and all the temporaries.
  * At the end, VACUUM gives the space back to the disk: DELETE alone does not shrink the .db.
  * Does not touch monitored_numbers, presence_logs or watch_hits (configuration and history).
  */
