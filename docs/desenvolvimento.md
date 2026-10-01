@@ -157,7 +157,8 @@ também entra no `nav` do `mkdocs.yml`, em ordem alfabética.
 ## Nova versão
 
 O `bump.sh` incrementa a última tag `release-X.Y` (ex.: `release-X.Y` →
-`release-X.Y+1`), troca a versão no `package.json`, no `package-lock.json` e nos
+`release-X.Y+1`) ou usa a versão informada, que precisa ser maior que a atual
+(ex.: `./bump.sh 2.0`, para sair da 1.x). Depois, troca a versão no `package.json`, no `package-lock.json` e nos
 arquivos que citam a versão (ex.: README e `docs/`), põe a data de hoje ao lado
 dela onde aparece `release-X.Y (de DD/MM/AAAA)` (a seção de instalação),
 commita e cria a tag anotada, as
@@ -165,8 +166,10 @@ duas com a mensagem `Bump para X.Y`. Precisa do working tree limpo e não faz
 push.
 
 ```bash
-./bump.sh -n    # dry-run: só mostra o que seria alterado
-./bump.sh       # commit "Bump para X.Y" + tag release-X.Y
+./bump.sh -n        # dry-run: só mostra o que seria alterado
+./bump.sh           # commit "Bump para X.Y" + tag release-X.Y (X.Y+1)
+./bump.sh -n 2.0    # dry-run para uma versão escolhida
+./bump.sh 2.0       # commit "Bump para 2.0" + tag release-2.0
 git push && git push origin release-X.Y   # o push da tag publica o site
 ```
 

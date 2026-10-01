@@ -2,13 +2,15 @@
 #
 # bump.sh - Gera uma nova release do ZapBot
 #
-#   1. Incrementa a última tag release-X.Y (ex.: release-1.5 -> release-1.6)
+#   1. Incrementa a última tag release-X.Y (ex.: release-1.5 -> release-1.6) ou
+#      usa a versão informada (ex.: ./bump.sh 2.0, para sair da 1.x)
 #   2. Troca a versão antiga pela nova nos arquivos do repositório (e a data ao
 #      lado dela, em "release-X.Y (de DD/MM/AAAA)", pela de hoje)
 #   3. Commita e aplica a tag no branch atual com a mensagem "Bump para X.Y"
 #
-# Uso: ./bump.sh [-n|--dry-run]
+# Uso: ./bump.sh [-n|--dry-run] [X.Y]
 #   -n, --dry-run   só mostra o que seria alterado (não altera nada)
+#   X.Y             a nova versão (maior que a atual); sem ela, X.(Y+1)
 #
 # O push fica por sua conta: git push && git push origin release-X.Y
 #
@@ -17,12 +19,29 @@ set -euo pipefail
 
 cd "$(dirname "$0")"
 
+uso() {
+    echo "Uso: $0 [-n|--dry-run] [X.Y]" >&2
+    exit 1
+}
+
 DRY_RUN=0
-case "${1:-}" in
-    -n|--dry-run) DRY_RUN=1 ;;
-    "") ;;
-    *) echo "Uso: $0 [-n|--dry-run]" >&2; exit 1 ;;
-esac
+versao_pedida=""
+for arg in "$@"; do
+    case "$arg" in
+        -n|--dry-run) DRY_RUN=1 ;;
+        -h|--help) uso ;;
+        -*) echo "❌ Opção desconhecida: $arg" >&2; uso ;;
+        *)
+            [ -z "$versao_pedida" ] || { echo "❌ Informe uma versão só." >&2; uso; }
+            versao_pedida="$arg"
+            ;;
+    esac
+done
+
+if [ -n "$versao_pedida" ] && ! [[ "$versao_pedida" =~ ^[0-9]+\.[0-9]+$ ]]; then
+    echo "❌ Versão '$versao_pedida' fora do formato X.Y (ex.: 2.0)." >&2
+    exit 1
+fi
 
 if [ "$DRY_RUN" -eq 0 ] && [ -n "$(git status --porcelain)" ]; then
     echo "❌ Há alterações não commitadas. Commite ou descarte antes do bump." >&2
@@ -43,8 +62,15 @@ if ! [[ "$versao_atual" =~ ^([0-9]+)\.([0-9]+)$ ]]; then
     exit 1
 fi
 
-nova_versao="${BASH_REMATCH[1]}.$((BASH_REMATCH[2] + 1))"
+nova_versao="${versao_pedida:-${BASH_REMATCH[1]}.$((BASH_REMATCH[2] + 1))}"
 nova_tag="release-${nova_versao}"
+
+# A versão informada precisa ser maior que a atual (comparando X e Y como números: 1.10 > 1.9)
+if [ "$(printf '%s\n%s\n' "$versao_atual" "$nova_versao" | sort -t. -k1,1n -k2,2n | tail -n1)" != "$nova_versao" ] \
+    || [ "$nova_versao" = "$versao_atual" ]; then
+    echo "❌ A versão ${nova_versao} não é maior que a atual (${versao_atual})." >&2
+    exit 1
+fi
 
 if git rev-parse -q --verify "refs/tags/${nova_tag}" >/dev/null; then
     echo "❌ A tag '$nova_tag' já existe." >&2
