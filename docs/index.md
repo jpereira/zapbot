@@ -69,8 +69,9 @@ Por onde começar:
   mensagens comuns com mais de 68 h (janela máxima que o WhatsApp permite
   apagar), as apagadas e as editadas com mais de 30 dias, as ocorrências do
   `/watch` com mais de 30 dias (setting `watch.hitsRetentionDays`), os
-  contadores do `/stats` com mais de 90 dias (setting `stats.retentionDays`) e
-  as enquetes com mais de 90 dias (setting `enquete.retentionDays`).
+  contadores do `/stats` com mais de 90 dias (setting `stats.retentionDays`),
+  as enquetes com mais de 90 dias (setting `enquete.retentionDays`) e os
+  avisos ignorados pelo `/mudo` com mais de 30 dias.
 - **Estatísticas**: cada mensagem nova (e cada apagada/editada) soma 1 num
   contador por chat, dia, hora e remetente (tabela `stats`), usado pelo
   [`/stats`](comandos/stats.md). Só números, sem o texto; ficam 90 dias (setting
