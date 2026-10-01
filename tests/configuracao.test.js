@@ -53,6 +53,14 @@ describe('comandos.json', () => {
         }
     });
 
+    test('nomes de opção não se repetem dentro de um comando', () => {
+        for (const c of CONFIG.commands) {
+            const nomes = (c.cmd_opts ?? []).flatMap(o => o.opts ?? []);
+            assert.equal(new Set(nomes).size, nomes.length, `${c.cmd}: opção repetida (${nomes.join(', ')})`);
+            assert.ok(!nomes.includes('help') && !nomes.includes('h'), `${c.cmd}: -help/-h são de todo comando`);
+        }
+    });
+
     test('comando "disabled" não é carregado (/monitor)', () => {
         assert.equal(CONFIG.commands.find(c => c.cmd === '/monitor').disabled, true);
         assert.equal(findCommand('/monitor'), undefined);
@@ -124,6 +132,23 @@ describe('documentação', () => {
         const extras = paginasDocs(path.join(DOCS, 'comandos')).map(f => `/${path.basename(f, '.md')}`)
             .filter(n => n !== '/index' && !CONFIG.commands.some(c => c.cmd === n));
         assert.deepEqual(extras, [], 'página de comando que não está no config');
+    });
+
+    test('a tabela de opções de cada página tem as mesmas opções do comandos.json', () => {
+        for (const c of CONFIG.commands) {
+            const arquivo = `comandos/${c.cmd.slice(1)}.md`;
+            const doConfig = new Set((c.cmd_opts ?? []).flatMap(o => o.opts ?? []));
+
+            // 1ª coluna das tabelas: "| `-nome`, `-n` |" (as linhas de argumento, como `<url>` ou `-N`, ficam de fora)
+            const daPagina = new Set();
+            for (const linha of semCodigo(lerDoc(arquivo)).split('\n')) {
+                const m = linha.match(/^\| ((?:`[-+][^`]+`(?:, )?)+) \|/);
+                if (m) for (const [, op] of m[1].matchAll(/`[-+]([^`]+)`/g)) if (op !== 'N') daPagina.add(op);
+            }
+
+            assert.deepEqual([...daPagina].filter(o => !doConfig.has(o)), [], `docs/${arquivo}: opção que não está no config`);
+            assert.deepEqual([...doConfig].filter(o => !daPagina.has(o)), [], `docs/${arquivo}: opção do config sem linha na tabela`);
+        }
     });
 
     test('tabela Resumo do site e do README: todos os comandos, em ordem, iguais ao config', () => {
