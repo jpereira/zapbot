@@ -29,7 +29,7 @@ Alguns pontos merecem atenção especial num relato:
   comando `onlyAdmin` (inclusive fazendo o bot "digitar" um comando).
 - **`/get`**: o `yt-dlp` roda na rede do servidor; URLs para a rede interna
   são recusadas (anti-SSRF).
-- **Chaves de API** (OpenAI, GIPHY) e a senha do SMTP: nunca devem aparecer no
+- **Chaves de API** (OpenAI, GIPHY, Google Translate) e a senha do SMTP: nunca devem aparecer no
   chat nem nos logs.
 - **Mensagens guardadas**: o banco (`cache/bot_database.db`) e as mídias em
   `cache/media` têm conversas de terceiros.
