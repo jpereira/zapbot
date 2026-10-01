@@ -1,5 +1,5 @@
 /*
- * /mudo (/mute): silenciar os avisos de apagadas, editadas e status apagados
+ * /mudo (/m, /mute): silenciar os avisos de apagadas, editadas e status apagados
  * de uma pessoa ou de um grupo.
  */
 const bot = require('./helpers/bot');
@@ -34,7 +34,7 @@ async function editada(texto, novo, opcoes = {}) {
 
 const hits = () => bot.dbAll('SELECT target_id, kind FROM mute_hits ORDER BY id');
 
-describe('/mudo (/mute)', () => {
+describe('/mudo (/m, /mute)', () => {
     test('lerMudo: opções antes do alvo; /nome/ e aspas', () => {
         assert.deepEqual([...lerMudo('-d -e /Grupo L200/').colunas], ['deleted', 'edited']);
         assert.equal(lerMudo('-d -e /Grupo L200/').alvo, 'Grupo L200');
@@ -121,7 +121,7 @@ describe('/mudo (/mute)', () => {
         bot.criarContato('5521933333333@c.us', 'Jorge Pereira');
         bot.criarContato('5511944444444@c.us', 'Jorge Silva');
 
-        const r = await bot.responderEscolhendo('/mudo -a /jorge/', [9, 2]);
+        const r = await bot.responderEscolhendo('/m -a /jorge/', [9, 2]);
         assert.deepEqual(r, [
             '🔎 "jorge" corresponde a 2 contatos:\n\n1. 👤 Jorge Pereira · +5521933333333\n2. 👤 Jorge Silva · +5511944444444\n\n' +
                 '💡 _Responda só com o nº (em até 2 minutos), ou repita o comando com mais palavras do nome._',

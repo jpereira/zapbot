@@ -1,4 +1,4 @@
-# `/mudo` (`/mute`) · admin
+# `/mudo` (`/m`, `/mute`) · admin
 
 Silencia os avisos que chegam no seu privado quando uma pessoa ou um grupo
 apaga mensagens, edita mensagens ou apaga status. **Só o aviso some**: a
@@ -29,6 +29,7 @@ o que ela fizer em qualquer chat, inclusive os status dela.
 /mudo -a /Jorge Pereira/       → nada do contato avisa
 /mudo -d -e +5521999999999     → apagadas e editadas desse número
 /mute -s Fulano                → só os status apagados do contato
+/m -a /Jorge/                  → vários Jorge: lista, e você responde com o nº
 /mudo                          → a lista
 /mudo -rm 2                    → os avisos do nº 2 voltam
 ```
