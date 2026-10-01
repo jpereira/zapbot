@@ -4,6 +4,8 @@
 
 # ZapBot
 
+[![Testes](https://github.com/jpereira/zapbot/actions/workflows/ci.yml/badge.svg)](https://github.com/jpereira/zapbot/actions/workflows/ci.yml)
+
 Bot para WhatsApp escrito em Node.js que roda em cima de uma sessão real do
 WhatsApp Web. Ele recupera mensagens (e status) apagadas e editadas, baixa
 vídeos de redes sociais, cria figurinhas, vigia mensagens por texto/regex e te

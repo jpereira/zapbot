@@ -1,5 +1,7 @@
 # 🤖 ZapBot v1.7
 
+[![Testes](https://github.com/jpereira/zapbot/actions/workflows/ci.yml/badge.svg)](https://github.com/jpereira/zapbot/actions/workflows/ci.yml)
+
 > 🇧🇷 **Projeto em português (pt_BR).** Documentação, comandos e mensagens do bot
 > estão em português do Brasil.
 
