@@ -7,6 +7,7 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 |---|---|---|
 | *(nenhuma)* | | Lista todas as chaves e valores e, no seu privado, as variáveis do `config/.env` |
 | `<chave>` | | Mostra valor, padrão, tipo e descrição |
+| `<trecho>` ou `/regex/` | | Não sendo uma chave: lista as chaves que contêm o trecho (sem diferenciar maiúsculas) ou casam com a regex. Ex.: `/set alerta`, `/set /^show\./` |
 | `<chave> <valor>` | | Altera. Listas: itens separados por vírgula ou espaço (`watch.rules`: uma regra por linha); `""` esvazia |
 | `-reset`, `-r` | `<chave>` | Volta ao valor padrão |
 | `<VARIÁVEL>` | | Uma variável do `config/.env` (ex.: `OPENAI_MODEL`): mostra o valor, só no seu privado |
@@ -14,6 +15,8 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 ```
 /set
 /set show.max
+/set alerta          → só as chaves com "alerta" (alerta.intervalMin, alerta.max)
+/set /^news\./       → as que casam com a regex
 /set show.max 10
 /config show.max 10  → o mesmo, pelo alias
 /set debug.enabled off
