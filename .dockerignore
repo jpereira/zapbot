@@ -1,12 +1,9 @@
 *
 
 !src/
-!dist/
 !docker/
-!babel.config.js
-!tsconfig.json
 !patches/
 !patches/**
 !package.json
+!package-lock.json
 !app.js
-!bot-config.json
