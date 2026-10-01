@@ -86,7 +86,7 @@ nav:
       - /defi: comandos/defi.md
       - /enquete: comandos/enquete.md
       - /get: comandos/get.md
-      - /gif: comandos/gif.md
+      - /giphy: comandos/giphy.md
       - /gpt: comandos/gpt.md
       - /help: comandos/help.md
       - /joke: comandos/joke.md
