@@ -100,7 +100,7 @@ admin está ligado: só você usa comandos até `/bot -admin`
 | [`/stats`](https://jpereira.github.io/zapbot/commands/stats/) | | ✅ | Ranking do chat (quem mais fala, apaga e edita, horários de pico); `-me` para as suas |
 | [`/status`](https://jpereira.github.io/zapbot/commands/status/) | | ✅ | Relatório das últimas 24 h (cache, no ar, watch, apagadas, editadas, `/mudo`); `/status 06h` manda todo dia |
 | [`/sticker`](https://jpereira.github.io/zapbot/commands/sticker/) | `/st` | | Transforma imagem/vídeo em figurinha |
-| [`/tempo`](https://jpereira.github.io/zapbot/commands/tempo/) | `/weather` | | Tempo agora e máx./mín. do dia (Open-Meteo); `/tempo 7d` mostra os próximos 7 dias; sem cidade usa `tempo.city` |
+| [`/tempo`](https://jpereira.github.io/zapbot/commands/tempo/) | `/t`, `/weather` | | Tempo agora e máx./mín. do dia (Open-Meteo); `/tempo 7d` mostra os próximos 7 dias; sem cidade usa `tempo.city` |
 | [`/todos`](https://jpereira.github.io/zapbot/commands/todos/) | `/todes` | ✅ | Menciona todos do grupo |
 | [`/traduzir`](https://jpereira.github.io/zapbot/commands/traduzir/) | `/tr`, `/translate` | | Traduz o texto ou a mensagem respondida (Google Translate); `-para en` muda o idioma |
 | [`/uptime`](https://jpereira.github.io/zapbot/commands/uptime/) | `/u`, `/up` | ✅ | Tempo de execução e de conexão |
