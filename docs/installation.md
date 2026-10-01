@@ -67,13 +67,6 @@ O `git checkout` de uma tag deixa o repositório em *detached HEAD*; o aviso do
 git é esperado e não atrapalha. A sessão do WhatsApp e o banco ficam em
 volumes, então sobrevivem ao rebuild.
 
-!!! note "Vindo de uma versão com o serviço `zapbot-prod`"
-    O serviço e o container passaram a se chamar `zapbot`. O `--remove-orphans`
-    remove o container antigo `zapbot-prod` (senão os dois rodariam com a mesma
-    sessão e o WhatsApp desconectaria um deles com `CONFLICT`). A sessão e o
-    banco continuam: os volumes são os mesmos. A imagem antiga pode ser
-    apagada com `docker rmi zapbot-prod`.
-
 #### Versão de desenvolvimento (HEAD)
 
 O branch `main` tem as mudanças mais recentes, que ainda não viraram release:
