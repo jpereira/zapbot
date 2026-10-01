@@ -6,7 +6,7 @@ hora, sem reiniciar, e sobrevivem a reinícios. Para ver e alterar, use o
 
 | Chave | Tipo | Padrão | Descrição |
 |---|---|---|---|
-| `agenda.max` | 1–500 | `50` | Máximo de itens do [`/agendar`](comandos/agendar.md), somando lembretes e mensagens |
+| `agenda.max` | 1–500 | `50` | Máximo de itens do [`/cron`](comandos/cron.md), somando lembretes e mensagens |
 | `alerta.intervalMin` | 1–60 | `5` | Intervalo, em minutos, entre as verificações dos [alertas de preço](comandos/cotacao.md#alertas-de-preço) |
 | `alerta.max` | 1–100 | `20` | Máximo de alertas de preço (somando `/cotacao` e `/crypto`) |
 | `backup.enabled` | on/off | `on` | [Backup automático](comandos/backup.md#backup-automático) do banco, uma vez por dia |
