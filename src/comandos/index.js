@@ -11,7 +11,6 @@ const { cmdCrypto } = require('./crypto');
 const { cmdCve } = require('./cve');
 const { cmdDebug } = require('./debug');
 const { cmdEnquete } = require('./enquete');
-const { cmdEveryone } = require('./everyone');
 const { cmdGet } = require('./get');
 const { cmdGif } = require('./gif');
 const { cmdGpt } = require('./gpt');
@@ -29,6 +28,7 @@ const { cmdShow } = require('./show');
 const { cmdStats } = require('./stats');
 const { cmdSticker } = require('./sticker');
 const { cmdTempo } = require('./tempo');
+const { cmdTodos } = require('./todos');
 const { cmdUptime } = require('./uptime');
 const { cmdWalissu } = require('./walissu');
 const { cmdWatch } = require('./watch');
@@ -44,7 +44,6 @@ const HANDLERS = {
     '/cve': cmdCve,
     '/debug': cmdDebug,
     '/enquete': cmdEnquete,
-    '/everyone': cmdEveryone,
     '/get': cmdGet,
     '/gif': cmdGif,
     '/gpt': cmdGpt,
@@ -62,6 +61,7 @@ const HANDLERS = {
     '/stats': cmdStats,
     '/sticker': cmdSticker,
     '/tempo': cmdTempo,
+    '/todos': cmdTodos,
     '/uptime': cmdUptime,
     '/version': cmdUptime,
     '/walissu': cmdWalissu,

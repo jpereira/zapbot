@@ -48,7 +48,6 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -a`) para fazer o bot
 | [`/cve`](cve.md) | | | Últimas CVEs publicadas (NVD); `-highscore` só as críticas |
 | [`/debug`](debug.md) | `/d`, `/dbg` | ✅ | Liga/desliga logs de debug |
 | [`/enquete`](enquete.md) | `/enq`, `/quiz` | ✅ | Cria uma enquete nativa do WhatsApp no chat |
-| [`/everyone`](everyone.md) | | ✅ | Menciona todos do grupo |
 | [`/get`](get.md) | `/download` | | Baixa vídeo/áudio de redes sociais |
 | [`/gif`](gif.md) | | | GIF aleatório (GIPHY) |
 | [`/gpt`](gpt.md) | `/ai` | ✅ | Pergunta ao ChatGPT (OpenAI) |
@@ -66,6 +65,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -a`) para fazer o bot
 | [`/stats`](stats.md) | | ✅ | Ranking do chat (quem mais fala, apaga e edita, horários de pico); `-me` para as suas |
 | [`/sticker`](sticker.md) | `/st` | | Transforma imagem/vídeo em figurinha |
 | [`/tempo`](tempo.md) | `/weather` | | Tempo agora e máx./mín. do dia (Open-Meteo); `/tempo 7d` mostra os próximos 7 dias; sem cidade usa `tempo.city` |
+| [`/todos`](todos.md) | | ✅ | Menciona todos do grupo |
 | [`/uptime`](uptime.md) | `/u`, `/up` | ✅ | Tempo de execução e de conexão |
 | [`/version`](version.md) | `/ver` | ✅ | Versão do bot (mesmo banner do `/uptime`) |
 | [`/walissu`](walissu.md) | `/ualisu` | ✅ | Walissu CVE BOT: marca 2 membros com uma CVE aleatória |
