@@ -714,12 +714,6 @@
             "onlyAdmin": false
         },
         {
-            "cmd": "/ualisu",
-            "usage": "/ualisu",
-            "help": "Walissu CVE BOT: marca 2 membros do grupo com uma CVE aleatória.",
-            "onlyAdmin": true
-        },
-        {
             "cmd": "/uptime",
             "usage": "/uptime",
             "aliases": [
@@ -736,6 +730,15 @@
                 "/ver"
             ],
             "help": "Exibe a versão do bot (mesmo banner do /uptime).",
+            "onlyAdmin": true
+        },
+        {
+            "cmd": "/walissu",
+            "usage": "/walissu",
+            "aliases": [
+                "/ualisu"
+            ],
+            "help": "Walissu CVE BOT: marca 2 membros do grupo com uma CVE aleatória.",
             "onlyAdmin": true
         },
         {

@@ -1,11 +1,12 @@
-# `/ualisu` · admin
+# `/walissu` (`/ualisu`) · admin
 
 Só em grupos: o Walissu CVE BOT sorteia 2 membros diferentes (fora o bot), os
 marca e responde com uma CVE aleatória entre as 50 publicadas mais
 recentemente no [NVD](https://nvd.nist.gov/) nos últimos 2 dias.
 
 ```
-/ualisu
+/walissu
+/ualisu        → o mesmo, pelo alias
 ```
 
 Exemplo de resposta:

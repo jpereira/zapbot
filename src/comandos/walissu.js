@@ -1,13 +1,13 @@
 /*
- * Comando /ualisu.
+ * Comando /walissu (alias /ualisu).
  */
 
 const { enviarSorteio, sortearParticipantes } = require('./boletos');
 const { buscarCvesRecentes, formatarCve } = require('./cve');
 const { printError } = require('../log');
 
-// /ualisu: Walissu CVE BOT (usa o sorteio do /boletos e as CVEs do /cve)
-async function cmdUalisu({ msg }) {
+// /walissu: Walissu CVE BOT (usa o sorteio do /boletos e as CVEs do /cve)
+async function cmdWalissu({ msg }) {
     const chat = await msg.getChat().catch(() => null);
 
     if (!chat?.isGroup) {
@@ -37,11 +37,11 @@ async function cmdUalisu({ msg }) {
             'Cadê o exploit? Preciso sair de Brasília!'
         );
     } catch (err) {
-        printError('/ualisu:', err.message);
+        printError('/walissu:', err.message);
         await msg.reply('❌ Não consegui consultar o NVD agora.');
     }
 }
 
 module.exports = {
-    cmdUalisu
+    cmdWalissu
 };
