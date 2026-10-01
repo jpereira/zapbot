@@ -96,8 +96,8 @@ describe('/stats', () => {
 
     test('sem dados; com a contagem desligada, a dica', async () => {
         assert.deepEqual(await stats('/stats'), ['📊 Sem estatísticas deste chat nos últimos 7 dias.']);
-        await bot.setSetting('stats.enabled', false);
-        assert.match((await stats('/stats'))[0], /\/set stats\.enabled on/);
+        await bot.setSetting('stats.enable', false);
+        assert.match((await stats('/stats'))[0], /\/set stats\.enable on/);
     });
 
     test('-c <nome>: outro chat; sem correspondência ou ambíguo', async () => {

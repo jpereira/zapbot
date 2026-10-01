@@ -216,9 +216,9 @@ describe('SETTINGS_SCHEMA', () => {
 
 describe('settings', () => {
     test('boolean aceita on/off e sinônimos', async () => {
-        for (const v of ['on', 'true', '1', 'sim', 'yes']) assert.equal(await setSetting('edit.alert', v), true);
-        for (const v of ['off', 'false', '0', 'nao', 'não', 'no']) assert.equal(await setSetting('edit.alert', v), false);
-        await assert.rejects(setSetting('edit.alert', 'talvez'), /use on\|off/);
+        for (const v of ['on', 'true', '1', 'sim', 'yes']) assert.equal(await setSetting('show.alert.edit', v), true);
+        for (const v of ['off', 'false', '0', 'nao', 'não', 'no']) assert.equal(await setSetting('show.alert.edit', v), false);
+        await assert.rejects(setSetting('show.alert.edit', 'talvez'), /use on\|off/);
     });
 
     test('number: inteiro dentro dos limites', async () => {
