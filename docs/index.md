@@ -56,11 +56,11 @@ Por onde começar:
   apagadas ficam guardadas por 30 dias (setting `cache.revokedRetentionDays`)
   e podem ser reexibidas com `/show`. Status (textos/fotos/vídeos) apagados
   também são recuperados, com o título `📸 STATUS APAGADO DETECTADO`
-  (desative com `/set revoke.status off`).
+  (desative com `/set show.revoke.status off`).
 - **Editadas**: quando alguém edita uma mensagem, o bot grava o texto de antes
   e o de depois (tabela `message_edits`) e te avisa **no seu privado** com o
   título `✏️ MENSAGEM EDITADA DETECTADA` (desative o aviso com
-  `/set edit.alert off`; a edição continua guardada). As edições ficam 30 dias
+  `/set show.alert.edit off`; a edição continua guardada). As edições ficam 30 dias
   (setting `cache.editedRetentionDays`) e podem ser reexibidas com
   [`/show -e`](comandos/show.md). As suas próprias edições são ignoradas.
 - **Limpeza automática**: a cada 10 minutos o bot remove do banco/disco as
@@ -73,7 +73,7 @@ Por onde começar:
   contador por chat, dia, hora e remetente (tabela `stats`), usado pelo
   [`/stats`](comandos/stats.md). Só números, sem o texto; ficam 90 dias (setting
   `stats.retentionDays`). As respostas do bot, o seu privado e os status não
-  entram. Desligue com `/set stats.enabled off`.
+  entram. Desligue com `/set stats.enable off`.
 - **Alertas de preço**: `/cotacao -alerta USD > 5.30` e `/crypto -alerta BTC <
   90000` guardam a regra na tabela `price_alerts`; a cada 5 minutos (setting
   `alerta.intervalMin`) o bot consulta os preços e avisa **no seu privado**

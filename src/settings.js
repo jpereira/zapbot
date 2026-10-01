@@ -134,11 +134,6 @@ const SETTINGS_SCHEMA = {
         validar: validarUrlFeed,
         desc: 'RPC da Solana usado pelo /defi (o público limita as consultas; um RPC próprio costuma ter a chave na URL).'
     },
-    'edit.alert': {
-        default: true,
-        type: 'boolean',
-        desc: 'Avisa no seu privado quando alguém edita uma mensagem; off só guarda para o /show -e.'
-    },
     'email.alerts': {
         default: true,
         type: 'boolean',
@@ -249,10 +244,10 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 10, max: 2000,
         desc: 'Máximo de mensagens enviadas à OpenAI por /resumo.'
     },
-    'revoke.status': {
+    'show.alert.edit': {
         default: true,
         type: 'boolean',
-        desc: 'Recupera status (stories) apagados; off ignora.'
+        desc: 'Avisa no seu privado quando alguém edita uma mensagem; off só guarda para o /show -e.'
     },
     'show.delayMs': {
         default: 700,
@@ -264,7 +259,12 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 1, max: 100,
         desc: 'Máximo de mensagens reexibidas por /show -N.'
     },
-    'stats.enabled': {
+    'show.revoke.status': {
+        default: true,
+        type: 'boolean',
+        desc: 'Recupera status (stories) apagados; off ignora.'
+    },
+    'stats.enable': {
         default: true,
         type: 'boolean',
         desc: 'Conta as mensagens de cada chat para o /stats; off para de contar (o histórico fica).'

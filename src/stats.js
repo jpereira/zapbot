@@ -19,7 +19,7 @@ function diaEHora(ms) {
  * @param {object} c { chatId, chatName, isGroup, senderId, senderName, quando (ms), campos: {msgs, media, deleted, edited} }
  */
 async function contarStats({ chatId, chatName, isGroup, senderId, senderName, quando = Date.now(), campos }) {
-    if (!getSetting('stats.enabled')) return;
+    if (!getSetting('stats.enable')) return;
     if (!chatId || chatId === 'status@broadcast' || !senderId) return;
     // O seu privado recebe os alertas do bot: não é conversa
     if (chatId === client.info?.wid?._serialized) return;
