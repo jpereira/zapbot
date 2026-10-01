@@ -82,9 +82,6 @@ docker compose -f docker/docker-compose.yml up -d --force-recreate --remove-orph
 Para voltar à estável, repita os comandos de cima (`git fetch --tags` e o
 `git checkout` da última tag).
 
-> ⚠️ O `config/` é copiado para dentro da imagem no build. Não publique a imagem
-> em registries públicos, pois ela contém o seu `config/.env`.
-
 ## Autenticação: QR Code no terminal ou por e-mail
 
 Na primeira execução (ou se a sessão expirar) o WhatsApp exige a leitura de um
