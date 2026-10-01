@@ -56,9 +56,9 @@ function printError(...args) {
     console.log(colors.red(`[${getTimestamp()}] [*] [${getCaller()}] ${util.format(...args)}`));
 }
 
-// Who used a command, and where: [+] 'Fulano' used '/help' in 'Família'
+// Who ran a command, and where: [+] 'Fulano' executed '/help' in 'Família'
 function printCall(who, call, chat) {
-    console.log(colors.blue(`[${getTimestamp()}] [+] '${who}' used '${call}'${chat ? ` in '${chat}'` : ''}`));
+    console.log(colors.blue(`[${getTimestamp()}] [+] '${who}' executed '${call}'${chat ? ` in '${chat}'` : ''}`));
 }
 
 module.exports = {

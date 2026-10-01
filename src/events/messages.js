@@ -8,7 +8,7 @@ const fs = require('fs-extra');
 const { client, botConsumeSending, wasSentByBot, messageToSelf } = require('../client');
 const { findCommand, getCommandSyntax } = require('../commands/base');
 const { HANDLERS } = require('../commands/index');
-const { removeDeviceSuffix, resolveLidToPhone, groupResolverName } = require('../contacts');
+const { removeDeviceSuffix, resolveLidToPhone, groupResolverName, privateResolverName } = require('../contacts');
 const { dbGet, dbReady, dbRun } = require('../db');
 const { replyChoice } = require('../choices');
 const { printCall, printDebug, printError, printInfo } = require('../log');
@@ -34,8 +34,10 @@ client.on('message_create', async (msg) => {
             (isGroup ? await groupResolverName(chatId) : null) ||
             msg?._data?.chat?.name ||
             msg?._data?.chat?.formattedTitle ||
-            // notifyName is the name of who SENT: it only serves as the chat name in a private conversation
-            (isGroup ? null : msg?._data?.notifyName) ||
+            // Private: the other participant's contact (the chatId)
+            (isGroup ? null : await privateResolverName(chatId)) ||
+            // notifyName is the name of who SENT: it only serves as the chat name when it was the other
+            (isGroup || msg?.fromMe ? null : msg?._data?.notifyName) ||
             (isGroup ? `Grupo ${chatId.split('@')[0]}` : chatId.split('@')[0]);
 
         /*

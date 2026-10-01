@@ -105,6 +105,33 @@ async function groupResolverName(chatId) {
     return name;
 }
 
+/*
+ * Name of a private conversation: the OTHER participant's contact (the saved name
+ * in your address book, otherwise the profile one). The message's notifyName does not work: it is the
+ * whoever sent, and in your messages it would be yours. For a @lid, first tries
+ * the contact by real phone. Same short cache as the groups.
+ */
+const privateNameCache = new Map();
+
+async function privateResolverName(chatId) {
+    if (!chatId || chatId.endsWith('@g.us') || chatId === 'status@broadcast') return null;
+
+    const cache = privateNameCache.get(chatId);
+    if (cache && Date.now() - cache.at < GROUP_NAME_TTL_MS) return cache.name;
+
+    const phoneAlt = chatId.endsWith('@lid') ? await resolveLidToPhone(chatId) : null;
+    let name = null;
+
+    for (const id of [phoneAlt, chatId].filter(Boolean)) {
+        const contactAlt = await client.getContactById(id).catch(() => null);
+        name = contactAlt?.name || contactAlt?.pushname || contactAlt?.verifiedName || null;
+        if (name) break;
+    }
+
+    if (name) privateNameCache.set(chatId, { name, at: Date.now() });
+    return name;
+}
+
 async function groupInStoreName(chatId) {
     if (!client.pupPage) return null;
 
@@ -189,5 +216,6 @@ module.exports = {
     removeDeviceSuffix,
     resolveLidToPhone,
     resolverMentions,
-    groupResolverName
+    groupResolverName,
+    privateResolverName
 };
