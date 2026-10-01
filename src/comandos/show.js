@@ -1,5 +1,5 @@
 /*
- * Comando /show e /edit.
+ * Comando /show: mensagens apagadas e editadas.
  */
 
 const fs = require('fs-extra');
@@ -17,22 +17,22 @@ const { humanSize, isCaminhoDeMidia } = require('../util/arquivos');
 const { esperar, formatarData, paraMs, plural } = require('../util/formatar');
 
 /*
- * /show e /edit: reexibem as mensagens APAGADAS (/show) e EDITADAS (/edit)
+ * /show: reexibe as mensagens APAGADAS (padrão, ou -d) ou EDITADAS (-e)
  * guardadas no cache, no mesmo formato dos alertas.
- *   /show        → a última apagada deste chat      (/edit: a última editada)
+ *   /show        → a última apagada deste chat      (/show -e: a última editada)
  *   /show -3     → as 3 últimas (máx. setting 'show.max')
  *   /show -3 -pv → envia no SEU privado em vez de expor no chat atual
- *   /show -list  → apagadas e editadas do cache, por chat (o -l dos dois é o mesmo)
+ *   /show -list  → apagadas e editadas do cache, por chat
  *   /show -flush → remove as apagadas deste chat (no seu privado: de todos os chats)
- *   /show -2 -c 1       → as 2 últimas do chat nº 1 da lista de apagadas do -l
- *   /edit -2 -c zapbot  → as 2 últimas editadas do chat cujo nome contém "zapbot"
- *   /edit -f -c 1       → flush só das editadas do chat nº 1
+ *   /show -2 -c 1          → as 2 últimas do chat nº 1 da lista de apagadas do -l
+ *   /show -e -2 -c zapbot  → as 2 últimas editadas do chat cujo nome contém "zapbot"
+ *   /show -e -f -c 1       → flush só das editadas do chat nº 1
  * Envia em ordem cronológica: a última enviada é a mais recente.
  */
-// O que muda entre as apagadas (/show) e as editadas (/edit)
+// O que muda entre as apagadas (-d, o padrão) e as editadas (-e)
 const TIPOS_CACHE = {
     apagadas: {
-        cmd: '/show',
+        cmd: '/show',          // como o tipo aparece nas dicas
         tabela: 'messages',
         filtro: 'revoked = 1',
         quando: 'revoked_at',
@@ -46,7 +46,7 @@ const TIPOS_CACHE = {
         plural: 'apagadas'
     },
     editadas: {
-        cmd: '/edit',
+        cmd: '/show -e',
         tabela: 'message_edits',
         filtro: '1 = 1',
         quando: 'edited_at',
@@ -109,7 +109,7 @@ async function resolverChatAlvo(tipo, valor) {
         const chat = chats.find(c => c.chat_id === chatId);
 
         if (!chat) {
-            return { erro: `❌ Chat nº ${indice} não existe (ou não tem mais ${t.plural}). Rode ${t.cmd} -l para ver a lista atual.` };
+            return { erro: `❌ Chat nº ${indice} não existe (ou não tem mais ${t.plural}). Rode /show -l para ver a lista atual.` };
         }
 
         return { ids: [chat.chat_id], nome: nomeDoChat(chat) };
@@ -126,7 +126,7 @@ async function resolverChatAlvo(tipo, valor) {
     }
 
     if (!encontrados.length) {
-        return { erro: `❌ Nenhum chat com ${t.plural} contém "${valor}". Rode ${t.cmd} -l para ver a lista.` };
+        return { erro: `❌ Nenhum chat com ${t.plural} contém "${valor}". Rode /show -l para ver a lista.` };
     }
 
     return {
@@ -136,9 +136,9 @@ async function resolverChatAlvo(tipo, valor) {
 }
 
 /*
- * /show -list e /edit -list (a mesma lista nos dois)
+ * /show -list (com ou sem -d/-e, a lista é a mesma)
  * Apagadas e editadas guardadas no cache, de todos os chats, cada tipo com a
- * sua numeração (a do /show -c e a do /edit -c). O chat onde o comando foi
+ * sua numeração (a do /show -c e a do /show -e -c). O chat onde o comando foi
  * executado vem marcado. Use -pv para receber no privado.
  */
 async function listarCache({ msg, opts, chatId }) {
@@ -200,10 +200,10 @@ async function listarCache({ msg, opts, chatId }) {
         }
     }
 
-    texto += `\n💡 _/show -N reexibe as deletadas e /edit -N as editadas deste chat (máx. ${getSetting('show.max')})._`;
+    texto += `\n💡 _/show -N reexibe as deletadas e /show -e -N as editadas deste chat (máx. ${getSetting('show.max')})._`;
 
     if (algum) {
-        texto += '\n💡 _Junte -c <nº ou nome> para outro chat: o nº é o da lista do tipo (/show -c 2, /edit -c 1)._' +
+        texto += '\n💡 _Junte -c <nº ou nome> para outro chat: o nº é o da lista do tipo (/show -c 2, /show -e -c 1)._' +
                  '\n💡 _-pv envia no seu privado; -f remove do cache as deste chat (no seu privado: de todos)._';
     }
 
@@ -216,7 +216,7 @@ async function listarCache({ msg, opts, chatId }) {
 }
 
 /*
- * /show -flush e /edit -flush
+ * /show -flush e /show -e -flush
  * Remove do cache as mensagens do tipo (as apagadas levam junto os arquivos de mídia):
  *   - num chat qualquer      → só as DESTE chat;
  *   - no seu próprio privado → as de TODOS os chats.
@@ -322,7 +322,7 @@ async function limparDoCache({ msg, chatId, tipo, alvo = null }) {
     await msg.reply(texto);
 }
 
-// Reenvio de um item do /show ou do /edit
+// Reenvio de um item, conforme o tipo
 const REENVIO_CACHE = {
     apagadas: async (destino, row, i, total) => {
         const info = await resolverAutorApagada(row);
@@ -341,8 +341,14 @@ const REENVIO_CACHE = {
     }
 };
 
-// Parte comum do /show e do /edit
-async function reexibirDoCache(tipo, { msg, opts, chatId }) {
+async function cmdShow({ msg, opts, chatId }) {
+    // -e escolhe as editadas; -d (ou nada) as apagadas
+    if (opts.opt.deleted && opts.opt.edited) {
+        await msg.reply('❌ Use -d (apagadas) ou -e (editadas), não os dois.');
+        return;
+    }
+
+    const tipo = opts.opt.edited ? 'editadas' : 'apagadas';
     const t = TIPOS_CACHE[tipo];
 
     // -c <nº|nome>: escolhe outro chat (vale em qualquer chat; use -pv para não expor aqui)
@@ -373,7 +379,7 @@ async function reexibirDoCache(tipo, { msg, opts, chatId }) {
     let n = 1;
 
     if (extras.length > 1) {
-        await msg.reply('```' + getCommandSyntax(t.cmd) + '```');
+        await msg.reply('```' + getCommandSyntax('/show') + '```');
         return;
     }
 
@@ -381,7 +387,7 @@ async function reexibirDoCache(tipo, { msg, opts, chatId }) {
         const m = extras[0].match(/^-?(\d+)$/);
 
         if (!m || Number(m[1]) < 1) {
-            await msg.reply('```' + getCommandSyntax(t.cmd) + '```');
+            await msg.reply('```' + getCommandSyntax('/show') + '```');
             return;
         }
 
@@ -414,7 +420,7 @@ async function reexibirDoCache(tipo, { msg, opts, chatId }) {
         const noMeuPrivado = !alvo && idsDoChat.includes(client.info.wid._serialized);
 
         await msg.reply(noMeuPrivado
-            ? `${t.icone} Nenhuma mensagem ${t.singular} neste chat.\n💡 _Para ver as de outro chat: ${t.cmd} -l e depois ${t.cmd} -N -c <nº ou nome>._`
+            ? `${t.icone} Nenhuma mensagem ${t.singular} neste chat.\n💡 _Para ver as de outro chat: /show -l e depois ${t.cmd} -N -c <nº ou nome>._`
             : `${t.icone} Nenhuma mensagem ${t.singular} registrada neste chat.`);
         return;
     }
@@ -450,15 +456,6 @@ async function reexibirDoCache(tipo, { msg, opts, chatId }) {
     }
 }
 
-async function cmdUndo(ctx) {
-    await reexibirDoCache('apagadas', ctx);
-}
-
-async function cmdEdit(ctx) {
-    await reexibirDoCache('editadas', ctx);
-}
-
 module.exports = {
-    cmdEdit,
-    cmdUndo
+    cmdShow
 };

@@ -25,7 +25,7 @@ const { cmdNews } = require('./news');
 const { cmdNoffa } = require('./noffa');
 const { cmdPing } = require('./ping');
 const { cmdSet } = require('./set');
-const { cmdEdit, cmdUndo } = require('./show');
+const { cmdShow } = require('./show');
 const { cmdStats } = require('./stats');
 const { cmdSticker } = require('./sticker');
 const { cmdTempo } = require('./tempo');
@@ -43,7 +43,6 @@ const HANDLERS = {
     '/crypto': cmdCrypto,
     '/cve': cmdCve,
     '/debug': cmdDebug,
-    '/edit': cmdEdit,
     '/enquete': cmdEnquete,
     '/everyone': cmdEveryone,
     '/get': cmdGet,
@@ -59,7 +58,7 @@ const HANDLERS = {
     '/noffa': cmdNoffa,
     '/ping': cmdPing,
     '/set': cmdSet,
-    '/show': cmdUndo,
+    '/show': cmdShow,
     '/stats': cmdStats,
     '/sticker': cmdSticker,
     '/tempo': cmdTempo,

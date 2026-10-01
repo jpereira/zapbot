@@ -1,5 +1,5 @@
 /*
- * Mensagens editadas: evento 'message_edit' e o renderizador usado também pelo /edit.
+ * Mensagens editadas: evento 'message_edit' e o renderizador usado também pelo /show -e.
  */
 
 const { client } = require('../cliente');
@@ -15,7 +15,7 @@ const { formatarData } = require('../util/formatar');
  *
  * Mesma ideia das apagadas: o evento 'message_edit' grava a edição (texto de
  * antes e de depois) na tabela message_edits e avisa você no privado (setting
- * 'edit.alert'); o /edit reexibe sob demanda.
+ * 'edit.alert'); o /show -e reexibe sob demanda.
  */
 async function enviarMensagemEditada(destino, row, info, { titulo = '✏️ *MENSAGEM EDITADA DETECTADA*' } = {}) {
     let texto = `${titulo}\n\n`;
