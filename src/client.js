@@ -42,7 +42,7 @@ function messageToSelf(message) {
 /*
  * Messages sent by the bot itself also fire 'message_create' with
  * fromMe=true. Without this mark, a reply starting with "/" (e.g.: the
- * /noffa echoing "/cache -c -f") would run as an owner command.
+ * /noffa echoing "/cache -a") would run as an owner command.
  *
  * msg.reply() also goes through client.sendMessage(). The text is registered
  * BEFORE the send because the event may arrive before sendMessage resolves.

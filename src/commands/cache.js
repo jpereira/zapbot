@@ -3,9 +3,9 @@
  */
 
 const { formatErrorCommand } = require('./base');
-const { CACHE_DIR } = require('../constants');
+const { CACHE_DIR, MEDIA_DIR } = require('../constants');
 const { dbGet } = require('../db');
-const { cleanFilesOld, cleanCacheOld, cleanEditedOld, cleanStatsOld, cleanAll, cleanWatchOld } = require('../cleanup');
+const { cleanFilesOld, cleanCacheOld, cleanEditedOld, cleanMedia, cleanStatsOld, cleanAll, cleanWatchOld } = require('../cleanup');
 const { printError } = require('../log');
 const { humanSize, listCacheLevelOnly } = require('../util/files');
 
@@ -13,24 +13,34 @@ async function cmdCache({ msg, opts }) {
     try {
         let textMsg;
 
-        if (opts.opt.clean && opts.opt.force) {
-            // General cleanup: messages, deleted ones, media, temporaries
+        if (opts.opt.all) {
+            // Everything: messages, deleted, edited, media and temporaries
             const r = await cleanAll();
 
             textMsg =
-                '🧹 *Limpeza geral concluída* (force)\n\n' +
+                `🧹 *Limpeza geral concluída* _(${CACHE_DIR})_\n\n` +
                 `🗄️ Mensagens removidas: *${r.total}* _(${r.apagadas} apagada${r.apagadas === 1 ? '' : 's'})_\n` +
                 `✏️ Edições removidas: *${r.editadas}*\n` +
                 `💾 Espaço liberado: *${humanSize(r.liberado)}*`;
-        } else if (opts.opt.clean) {
-            // Normal cleanup: only what is past the retention windows
-            await cleanCacheOld();
-            await cleanFilesOld();
-            await cleanWatchOld();
-            await cleanEditedOld();
-            await cleanStatsOld();
+        } else if (opts.opt.clean || opts.opt.media) {
+            const partsAlt = [];
 
-            textMsg = '🧹 Cache limpo (itens fora da janela de retenção).\n';
+            // Normal cleanup: only what is past the retention windows
+            if (opts.opt.clean) {
+                await cleanCacheOld();
+                await cleanFilesOld();
+                await cleanWatchOld();
+                await cleanEditedOld();
+                await cleanStatsOld();
+                partsAlt.push('🧹 Cache limpo (itens fora da janela de retenção).');
+            }
+
+            if (opts.opt.media) {
+                const r = await cleanMedia();
+                partsAlt.push(`🖼️ Mídias apagadas de ${MEDIA_DIR}: *${r.arquivos}* _(${humanSize(r.bytes)})_`);
+            }
+
+            textMsg = partsAlt.join('\n');
         } else {
             const { total, apagadas: deletedAlt } = await dbGet(
                 'SELECT COUNT(*) AS total, COALESCE(SUM(revoked), 0) AS apagadas FROM messages'

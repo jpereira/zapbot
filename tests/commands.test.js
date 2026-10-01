@@ -81,7 +81,7 @@ describe('/noffa', () => {
     });
 
     test('texto começando com "/" ganha um 🌈 na frente (nunca vira comando)', async () => {
-        const [r] = await bot.replyAlt('/noffa /cache -c -f');
+        const [r] = await bot.replyAlt('/noffa /cache -a');
         assert.ok(r.startsWith('🌈 /cache'));
     });
 });
