@@ -1,5 +1,5 @@
 /*
- * Dates and times typed in the commands (/lembrete), in Brasília time.
+ * Dates and times typed in the commands (/lembrete, /agendar), in Brasília time.
  */
 
 const { withoutAccents } = require('./format');

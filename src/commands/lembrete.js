@@ -1,5 +1,5 @@
 /*
- * /lembrete command (the logic is in schedule.js).
+ * /lembrete command (the logic is in schedule.js, together with the /agendar one).
  */
 
 const { handleSchedule } = require('../schedule');

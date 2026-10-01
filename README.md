@@ -74,6 +74,7 @@ admin está ligado: só você usa comandos até `/bot -admin`
 
 | Comando | Aliases | Admin | Descrição |
 |---|---|:-:|---|
+| [`/agendar`](https://jpereira.github.io/zapbot/commands/agendar/) | `/agenda` | ✅ | Envia uma mensagem na hora marcada, no chat atual ou num grupo/pessoa (`-to`); pode repetir |
 | [`/boletos`](https://jpereira.github.io/zapbot/commands/boletos/) | | ✅ | Sorteia 2 membros para "pagar um boleto" |
 | [`/bot`](https://jpereira.github.io/zapbot/commands/bot/) | | ✅ | Liga/desliga todos os comandos (`-on`/`-off`) e o modo admin (`+admin`/`-admin`) |
 | [`/cache`](https://jpereira.github.io/zapbot/commands/cache/) | `/c` | ✅ | Uso e limpeza do cache |

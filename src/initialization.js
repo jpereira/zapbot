@@ -184,7 +184,7 @@ async function initializeDb() {
     `);
 
     /*
-     * Schedule: reminders (/lembrete). due_at is
+     * Schedule: reminders (/lembrete) and scheduled messages (/agendar). due_at is
      * the next send; with repeat, it advances on each send (day_of_month stores
      * the monthly's original day, so a 31 goes back to 31 after February).
      */

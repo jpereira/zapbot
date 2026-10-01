@@ -10,6 +10,58 @@
     },
     "commands": [
         {
+            "cmd": "/agendar",
+            "usage": "/agendar <quando> [OPTION] <texto>",
+            "aliases": [
+                "/agenda"
+            ],
+            "help": "Envia o texto na hora marcada, como se você digitasse, no chat atual ou no chat do -to.",
+            "cmd_opts": [
+                {
+                    "opts": [
+                        "list",
+                        "l"
+                    ],
+                    "values": [],
+                    "desc": "Lista as mensagens agendadas (também sem argumentos)."
+                },
+                {
+                    "opts": [
+                        "repetir"
+                    ],
+                    "values": [
+                        "<diario|semanal|mensal>"
+                    ],
+                    "desc": "Repete no mesmo horário: todo dia, toda semana ou todo mês."
+                },
+                {
+                    "opts": [
+                        "rm"
+                    ],
+                    "values": [
+                        "<nº|all>"
+                    ],
+                    "desc": "Remove a mensagem nº N da lista (ou todas)."
+                },
+                {
+                    "opts": [
+                        "to"
+                    ],
+                    "values": [
+                        "<destino>"
+                    ],
+                    "desc": "Envia no privado de uma pessoa (@5521999999999) ou num grupo, pelo nome ou parte dele (/Grupo L200/, \"Grupo L200\" ou L200)."
+                },
+                {
+                    "argv": [
+                        "<quando>"
+                    ],
+                    "desc": "30m, 2h, 1h30m (daqui a tanto tempo), 18:30 ou às 18h (hoje ou amanhã), amanhã [9h], sexta [18h], 25/12 [10:00] ou 25/12/2027 [10h]. Sem hora: 9h."
+                }
+            ],
+            "onlyAdmin": true
+        },
+        {
             "cmd": "/boletos",
             "usage": "/boletos",
             "help": "Sorteia 2 membros do grupo para pagar um boleto.",

@@ -40,6 +40,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -a`) para fazer o bot
 
 | Comando | Aliases | Admin | Descrição |
 |---|---|:-:|---|
+| [`/agendar`](agendar.md) | `/agenda` | ✅ | Envia uma mensagem na hora marcada, no chat atual ou num grupo/pessoa (`-to`); pode repetir |
 | [`/boletos`](boletos.md) | | ✅ | Sorteia 2 membros para "pagar um boleto" |
 | [`/bot`](bot.md) | | ✅ | Liga/desliga todos os comandos (`-on`/`-off`) e o modo admin (`+admin`/`-admin`) |
 | [`/cache`](cache.md) | `/c` | ✅ | Uso e limpeza do cache |
