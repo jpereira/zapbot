@@ -1,5 +1,5 @@
 /*
- * Agenda: os lembretes (/lembrete) e as mensagens agendadas (/agendar), com a verificação periódica.
+ * Agenda: os lembretes (/lembrete) e as mensagens agendadas (/cron), com a verificação periódica.
  */
 
 const { estado } = require('./estado');
@@ -13,13 +13,13 @@ const { plural, resumirTexto, semAcentos } = require('./util/formatar');
 const { REPETICOES, fmtQuando, lerQuando, partesEmBrasilia, proximaRepeticao } = require('./util/quando');
 
 /*
- * O /agendar (aliases /agenda, /cron, /lembrete e /lemb) tem dois modos, na mesma tabela
+ * O /cron (aliases /agenda e /lembrete) tem dois modos, na mesma tabela
  * `schedules` e no mesmo timer:
- *   agendar  → o texto puro, como se você digitasse, no chat atual ou no do -to;
+ *   agendar  → (modo mensagem) o texto puro, como se você digitasse, no chat atual ou no do -to;
  *   lembrete → "⏰ Lembrete" no chat onde foi criado (respondendo a mensagem do
  *              comando, ou a mensagem que ele respondeu), ou no seu privado com
- *              -pv. É o modo do /lembrete (e /lemb) e do -lembrete.
- * Os dois aceitam -repetir diario|semanal|mensal. Sai da sua conta: só o dono usa.
+ *              -pv. É o modo do /lembrete e do -lembrete.
+ * Os dois aceitam -repetir (-r) diario|semanal|mensal. Sai da sua conta: só o dono usa.
  */
 const TIPOS = {
     lembrete: {
@@ -31,10 +31,10 @@ const TIPOS = {
         aceitaPv: true
     },
     agendar: {
-        cmd: '/agendar',
+        cmd: '/cron',
         icone: '📅',
         criado: 'Mensagem agendada',
-        exemplo: '/agendar sexta 18h -to /Grupo L200/ Bom fim de semana!',
+        exemplo: '/cron sexta 18h -to /Grupo L200/ Bom fim de semana!',
         aceitaTo: true,
         aceitaPv: false
     }
@@ -63,7 +63,8 @@ function lerAgendamento(args) {
 
         if (nome === 'list' || nome === 'l') opt.list = true;
         else if (nome === 'pv' || nome === 'lembrete') opt[nome] = true;
-        else if (nome === 'rm' || nome === 'repetir') opt[nome] = palavras[++i]?.[0] ?? '';
+        else if (nome === 'rm') opt.rm = palavras[++i]?.[0] ?? '';
+        else if (nome === 'repetir' || nome === 'r') opt.repetir = palavras[++i]?.[0] ?? '';
         else if (!quando && (quando = lerQuando(palavras.slice(i).map(m => m[0])))) i += quando.usadas - 1;
         else break;
     }
@@ -86,9 +87,9 @@ async function tratarAgenda({ msg, args, chatId, chatName, isGroup, quotedMsg })
 
     const { opt, quando, texto: digitado, destino: destinoTexto, comDestino } = lerAgendamento(args);
 
-    // Modo lembrete: chamado como /lembrete (ou /lemb), ou com -lembrete
+    // Modo lembrete: chamado como /lembrete, ou com -lembrete
     const chamado = String(msg.body ?? '').trim().split(/\s+/, 1)[0].toLowerCase();
-    const kind = ['/lembrete', '/lemb'].includes(chamado) || opt.lembrete ? 'lembrete' : 'agendar';
+    const kind = chamado === '/lembrete' || opt.lembrete ? 'lembrete' : 'agendar';
     const t = TIPOS[kind];
     const sintaxe = `💡 _Ex.: ${t.exemplo}_`;
     const itens = await listar();
@@ -99,7 +100,7 @@ async function tratarAgenda({ msg, args, chatId, chatName, isGroup, quotedMsg })
     }
 
     if (comDestino && !t.aceitaTo) {
-        await msg.reply('❌ O lembrete não tem -to: ele vem neste chat (ou no seu privado, com -pv). Para mandar uma mensagem a outro chat, use o /agendar sem -lembrete.');
+        await msg.reply('❌ O lembrete não tem -to: ele vem neste chat (ou no seu privado, com -pv). Para mandar uma mensagem a outro chat, use o /cron sem -lembrete.');
         return;
     }
 
@@ -115,7 +116,7 @@ async function tratarAgenda({ msg, args, chatId, chatName, isGroup, quotedMsg })
 
         const item = /^\d+$/.test(alvo) ? itens[Number(alvo) - 1] : null;
         if (!item) {
-            await msg.reply(`❌ Nº ${opt.rm || '?'} não existe. Veja a lista com /agendar -l`);
+            await msg.reply(`❌ Nº ${opt.rm || '?'} não existe. Veja a lista com /cron -l`);
             return;
         }
 
@@ -132,7 +133,7 @@ async function tratarAgenda({ msg, args, chatId, chatName, isGroup, quotedMsg })
         }
 
         await msg.reply(`📅 *Agenda* (${itens.length})\n\n${itens.map(linhaDaLista).join('\n')}\n\n` +
-            '💡 _📅 mensagem · ⏰ lembrete. Remova com /agendar -rm <nº|all>._');
+            '💡 _📅 mensagem · ⏰ lembrete. Remova com /cron -rm <nº|all>._');
         return;
     }
 
@@ -163,7 +164,7 @@ async function tratarAgenda({ msg, args, chatId, chatName, isGroup, quotedMsg })
     if (opt.repetir !== undefined) {
         repetir = semAcentos(opt.repetir).trim();
         if (!REPETICOES[repetir]) {
-            await msg.reply('❌ Use -repetir diario, semanal ou mensal.');
+            await msg.reply('❌ Use -repetir (-r) diario, semanal ou mensal.');
             return;
         }
     }
@@ -175,7 +176,7 @@ async function tratarAgenda({ msg, args, chatId, chatName, isGroup, quotedMsg })
         return;
     }
 
-    // Onde vai: -to (agendar), -pv (lembrete) ou o chat atual
+    // Onde vai: -to (mensagem), -pv (lembrete) ou o chat atual
     const meuId = client.info.wid._serialized;
     let destino = { id: chatId, nome: chatName, grupo: Boolean(isGroup) };
 

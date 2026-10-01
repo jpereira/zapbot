@@ -61,8 +61,8 @@ describe('/status', () => {
         assert.match((await bot.responder('/status -l'))[0], /^⏰ \*Status diário:\* todo dia às \*06:00\*/);
         assert.match((await bot.responder('/status'))[0], /⏰ _Próximo status: \w{3} \d\d\/\d\d 06:00 \(todo dia às 06:00\)_/);
 
-        // Não aparece na agenda do /agendar, nem conta no limite
-        assert.match((await bot.responder('/agendar'))[0], /📅 Nada agendado/);
+        // Não aparece na agenda do /cron, nem conta no limite
+        assert.match((await bot.responder('/cron'))[0], /📅 Nada agendado/);
 
         // Trocar a hora substitui; formatos aceitos
         await bot.responder('/status às 18h30');
@@ -81,10 +81,10 @@ describe('/status', () => {
         assert.ok(proximo.due_at > Date.now() && proximo.due_at <= Date.now() + DIA);
     });
 
-    test('-off desliga; hora inválida; o /agendar -rm all não apaga o status diário', async () => {
+    test('-off desliga; hora inválida; o /cron -rm all não apaga o status diário', async () => {
         await bot.responder('/status 7h');
-        await bot.responder('/agendar 1h -to @5521911111111 oi');
-        await bot.responder('/agendar -rm all');
+        await bot.responder('/cron 1h -to @5521911111111 oi');
+        await bot.responder('/cron -rm all');
         assert.equal((await bot.dbAll("SELECT * FROM schedules WHERE kind = 'status'")).length, 1);
 
         assert.deepEqual(await bot.responder('/status -off'), ['🔕 Status diário desligado.']);

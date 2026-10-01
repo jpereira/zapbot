@@ -33,7 +33,7 @@ const SETTINGS_SCHEMA = {
     'agenda.max': {
         default: 50,
         type: 'number', min: 1, max: 500,
-        desc: 'Máximo de itens do /agendar, somando lembretes e mensagens.'
+        desc: 'Máximo de itens do /cron, somando lembretes e mensagens.'
     },
     'alerta.intervalMin': {
         default: 5,
