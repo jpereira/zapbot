@@ -278,7 +278,8 @@ describe('alertas de preço (-alerta)', () => {
     test('-to email: o aviso sai por e-mail, sem a formatação do WhatsApp', async () => {
         assert.match((await bot.responder('/cotacao -alerta USD > 6 -to email'))[0], /❌ O "email" usa o QRCODE_EMAIL_SMTP_TO/);
 
-        const env = { QRCODE_EMAIL_SMTP_HOST: 'smtp.exemplo.com', QRCODE_EMAIL_SMTP_USER: 'bot@exemplo.com', QRCODE_EMAIL_SMTP_TO: 'eu@exemplo.com' };
+        // O QRCODE_EMAIL_SMTP_TO no formato da documentação: "Nome <e-mail>"
+        const env = { QRCODE_EMAIL_SMTP_HOST: 'smtp.exemplo.com', QRCODE_EMAIL_SMTP_USER: 'bot@exemplo.com', QRCODE_EMAIL_SMTP_TO: 'Eu <eu@exemplo.com>' };
         Object.assign(process.env, env);
         try {
             assert.match((await bot.responder('/cotacao -alerta USD > 6 -to email'))[0], /💡 _Aviso em 📧 eu@exemplo\.com;/);
