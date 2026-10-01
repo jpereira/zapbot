@@ -70,6 +70,9 @@ class ClientFake extends EventEmitter {
 
     async sendMessage(chatId, content, options = {}) {
         const sent = { chatId, content, options };
+        // Like whatsapp-web.js' Message: the id of the sent message (outside the tests' deepEqual)
+        const id = `BOT${this.enviadas.length + 1}`;
+        Object.defineProperty(sent, 'id', { value: { id, remote: chatId, fromMe: true, _serialized: `true_${chatId}_${id}` } });
         this.enviadas.push(sent);
         return sent;
     }

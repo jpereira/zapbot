@@ -86,6 +86,7 @@ require('./src/events/presence');
 require('./src/events/deleted');
 require('./src/events/edited');
 require('./src/events/messages');
+require('./src/polls');
 
 const { priceStartAlerts } = require('./src/priceAlerts');
 const { startHeartbeat } = require('./src/heartbeat');

@@ -157,6 +157,78 @@ describe('/enquete (/enq, /quiz)', () => {
     });
 });
 
+describe('/enquete -r (resultado)', () => {
+    const CICLANO_JID = '5521922222222@c.us';
+
+    beforeEach(() => bot.createContact(CICLANO_JID, 'Ciclano'));
+
+    test('placar da enquete mais recente do chat, com quem votou', async () => {
+        const [sent] = await bot.executar('/enquete Pizza ou hambúrguer? | Pizza | Hambúrguer | Salada');
+
+        // Before they vote: the poll is already registered
+        assert.match((await bot.replyAlt('/enquete -r'))[0], /📊 \*Resultado: Pizza ou hambúrguer\?\*\n_0 votos de 0 pessoas · criada em [^_]+_\n[\s\S]*_Ninguém votou ainda\._/);
+
+        await bot.voteAlt(sent, OTHERAlt.jid, ['Pizza']);
+        await bot.voteAlt(sent, CICLANO_JID, ['Hambúrguer']);
+        await bot.voteAlt(sent, OWNER.jid, ['Pizza']);
+
+        const [r] = await bot.replyAlt('/enq -r');
+        assert.match(r, /_3 votos de 3 pessoas · criada em/);
+        assert.match(r, /🏆 \*Pizza\* — 2 \(67%\) █{7}\n   _Fulano, Dono_/);
+        assert.match(r, /▫️ \*Hambúrguer\* — 1 \(33%\) ███\n   _Ciclano_/);
+        assert.match(r, /▫️ \*Salada\* — 0 \(0%\) ▏$/);
+    });
+
+    test('mudar ou tirar o voto; várias respostas', async () => {
+        const [sent] = await bot.executar('/enquete -m Dias? | Seg | Ter');
+        await bot.voteAlt(sent, OTHERAlt.jid, ['Seg']);
+        await bot.voteAlt(sent, OTHERAlt.jid, ['Seg', 'Ter']);   // changed: the last one counts
+        await bot.voteAlt(sent, CICLANO_JID, ['Ter']);
+        await bot.voteAlt(sent, CICLANO_JID, []);             // tirou o voto
+
+        const [r] = await bot.replyAlt('/enquete -result');
+        assert.match(r, /_2 votos de 1 pessoa · várias respostas ·/);
+        assert.match(r, /🏆 \*Seg\* — 1 \(50%\)[^\n]*\n   _Fulano_/);
+        assert.match(r, /🏆 \*Ter\* — 1 \(50%\)[^\n]*\n   _Fulano_/);
+    });
+
+    test('enquete criada no celular entra com o primeiro voto; respondendo a enquete, o placar é o dela', async () => {
+        const phone = {
+            id: { id: 'POLL1', remote: bot.GROUP, fromMe: true, _serialized: `true_${bot.GROUP}_POLL1` },
+            pollName: 'Churrasco?',
+            pollOptions: [{ name: 'Sim', localId: 0 }, { name: 'Não', localId: 1 }]
+        };
+        await bot.voteAlt(phone, OTHERAlt.jid, ['Sim']);
+        await bot.executar('/enquete Outra? | a | b');   // most recent
+
+        assert.match((await bot.replyAlt('/enquete -r'))[0], /Resultado: Outra\?/);
+
+        const quoted = bot.createMessage({ tipo: 'poll_creation', id: 'POLL1' });
+        const [r] = await bot.replyAlt('/enquete -r', { citada: quoted });
+        assert.match(r, /Resultado: Churrasco\?[\s\S]*🏆 \*Sim\* — 1 \(100%\)/);
+
+        const unknown = bot.createMessage({ tipo: 'poll_creation', id: 'NAOSEI' });
+        assert.match((await bot.replyAlt('/enquete -r', { citada: unknown }))[0], /📊 Não tenho os votos dessa enquete/);
+    });
+
+    test('sem enquete no chat; -r no meio faz parte da pergunta', async () => {
+        assert.match((await bot.replyAlt('/enquete -r'))[0], /📊 Nenhuma enquete registrada neste chat/);
+        const [r] = await bot.executar('/enquete Vale -r aqui? | sim | não');
+        assert.equal(r.content.pollName, 'Vale -r aqui?');
+    });
+
+    test('limpeza: enquetes mais antigas que enquete.retentionDays saem com os votos', async () => {
+        const { cleanPollsOld } = bot.src('cleanup');
+        const [sent] = await bot.executar('/enquete Velha? | a | b');
+        await bot.voteAlt(sent, OTHERAlt.jid, ['a']);
+        await bot.dbRun('UPDATE polls SET created_at = ?', [Date.now() - 91 * 86400_000]);
+
+        await cleanPollsOld();
+        assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM polls')).n, 0);
+        assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM poll_votes')).n, 0);
+    });
+});
+
 describe('/sticker (/st)', () => {
     const photo = { mimetype: 'image/jpeg', data: Buffer.from('jpg').toString('base64') };
 

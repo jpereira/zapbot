@@ -6,20 +6,31 @@ const { Poll } = require('whatsapp-web.js');
 
 const { client } = require('../client');
 const { getCommandSyntax } = require('./base');
+const { chatCurrentIds } = require('../contacts');
+const { pollScoreboard, registerPoll } = require('../polls');
 
 /*
  * /enquete [-m] Question | option 1 | option 2 ...
  * Sends a native WhatsApp poll in the chat. Separators: "|" or one per
  * line (the 1st line is the question). -m (or -multi) allows picking several options.
  * -m only counts at the start: in the middle of the text it is part of the question.
+ *
+ * /enquete -r: scoreboard of the chat's most recent poll (or of the poll
+ * replied), with who voted for each option. It also only counts at the start.
  */
 const POLL_MAX_OPTIONS = 12;
 const POLL_MAX_QUESTION = 255;
 const POLL_MAX_OPTION = 100;
 
-async function cmdPoll({ msg, args, chatId }) {
+async function cmdPoll({ msg, args, chatId, chatName, quotedMsg }) {
     let textAlt = String(args ?? '').trim();
     let multi = false;
+
+    if (/^-(r|result)(\s|$)/i.test(textAlt)) {
+        const pollId = quotedMsg?.type === 'poll_creation' ? quotedMsg.id._serialized : null;
+        await msg.reply(await pollScoreboard({ chatIds: await chatCurrentIds(chatId), pollId }));
+        return;
+    }
 
     const flag = textAlt.match(/^-(m|multi)(\s+|$)/i);
     if (flag) {
@@ -59,7 +70,12 @@ async function cmdPoll({ msg, args, chatId }) {
     // The poll comes back in 'message_create' as yours: it can never look like a command
     if (question.startsWith('/')) question = `📊 ${question}`;
 
-    await client.sendMessage(chatId, new Poll(question, optionsAlt, { allowMultipleAnswers: multi }));
+    const sent = await client.sendMessage(chatId, new Poll(question, optionsAlt, { allowMultipleAnswers: multi }));
+
+    // Registered right at creation: -r works before the first vote
+    if (sent?.id?._serialized) {
+        await registerPoll({ id: sent.id._serialized, chatId, chatName, pergunta: question, opcoes: optionsAlt, multi });
+    }
 }
 
 module.exports = {

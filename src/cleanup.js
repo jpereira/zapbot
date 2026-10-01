@@ -52,7 +52,8 @@ async function cleanCacheOld(maxDeleteWin = MAX_DELETE_WINDOW, retentionDeleted 
  * General cleanup (/cache -all): ALL messages (including the deleted ones and the
  * edited stored for /show), all the media and all the temporaries.
  * At the end, VACUUM gives the space back to the disk: DELETE alone does not shrink the .db.
- * Does not touch monitored_numbers, presence_logs or watch_hits (configuration and history).
+ * Does not touch monitored_numbers, presence_logs, watch_hits, stats, polls, price_alerts
+ * nor settings (configuration and history).
  */
 async function cleanAll() {
     await dbReady;
@@ -139,6 +140,23 @@ async function cleanStatsOld() {
     }
 }
 
+// Polls (and their votes) older than 'enquete.retentionDays'
+async function cleanPollsOld() {
+    await dbReady;
+
+    try {
+        const limitAlt = Date.now() - getSetting('enquete.retentionDays') * DAY_MS;
+        await dbRun('DELETE FROM poll_votes WHERE poll_id IN (SELECT id FROM polls WHERE created_at < ?)', [limitAlt]);
+        const res = await dbRun('DELETE FROM polls WHERE created_at < ?', [limitAlt]);
+
+        if (res.changes > 0) {
+            printInfo(`Limpeza: ${res.changes} enquetes antigas removidas.`);
+        }
+    } catch (err) {
+        printError('Erro na limpeza das enquetes:', err.message);
+    }
+}
+
 // /watch occurrences older than 'watch.hitsRetentionDays'
 async function cleanWatchOld() {
     await dbReady;
@@ -192,6 +210,7 @@ function runCleanup() {
     cleanWatchOld();
     cleanEditedOld();
     cleanStatsOld();
+    cleanPollsOld();
 }
 
 // Called in app.js. First run postponed: on the first boot the tables are still being created.
@@ -205,6 +224,7 @@ module.exports = {
     cleanFilesOld,
     cleanCacheOld,
     cleanEditedOld,
+    cleanPollsOld,
     cleanMedia,
     cleanStatsOld,
     cleanAll,

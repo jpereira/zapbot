@@ -14,6 +14,7 @@ src('events/presence');
 src('events/deleted');
 src('events/edited');
 src('events/messages');
+src('polls');
 
 const { dbAll, dbGet, dbRun, markDbReady } = src('db');
 const { initializeDb } = src('initialization');
@@ -29,7 +30,7 @@ let db = null;
 const prepare = () => (db ??= initializeDb().then(markDbReady));
 
 const TABLES = ['messages', 'message_edits', 'stats', 'watch_hits', 'price_alerts',
-    'presence_logs', 'monitored_numbers', 'settings'];
+    'presence_logs', 'monitored_numbers', 'settings', 'polls', 'poll_votes'];
 
 /*
  * Clean state for each test: empty tables, settings at default, no
@@ -156,7 +157,12 @@ async function deliver(msg, { erroEsperado: errorExpected = false } = {}) {
         throw new Error(`o bot registrou erro(s) inesperado(s):\n${errors.join('\n')}`);
     }
 
-    return client.enviadas.slice(sentBefore).map(e => ({ ...e, texto: text(e.content, e.options) }));
+    return client.enviadas.slice(sentBefore).map(withText);
+}
+
+// Send with the text at hand (the id, outside the deepEqual, comes along)
+function withText(e) {
+    return Object.defineProperty({ ...e, texto: text(e.content, e.options) }, 'id', { value: e.id });
 }
 
 // Text of a send (string, media caption, poll name...)
@@ -192,7 +198,7 @@ async function removeAlt(original, { porMim: byMim = original.fromMe } = {}) {
 
     const beforeAlt = client.enviadas.length;
     for (const h of client.listeners('message_revoke_everyone')) await h(after, original);
-    return client.enviadas.slice(beforeAlt).map(e => ({ ...e, texto: text(e.content, e.options) }));
+    return client.enviadas.slice(beforeAlt).map(withText);
 }
 
 async function edit(original, newText, { antigo: oldAlt2 = original.body, editadaEm: editedIn = Date.now(), realmente: really = true } = {}) {
@@ -205,7 +211,30 @@ async function edit(original, newText, { antigo: oldAlt2 = original.body, editad
 
     const beforeAlt = client.enviadas.length;
     for (const h of client.listeners('message_edit')) await h(msg, newText, oldAlt2);
-    return client.enviadas.slice(beforeAlt).map(e => ({ ...e, texto: text(e.content, e.options) }));
+    return client.enviadas.slice(beforeAlt).map(withText);
+}
+
+/**
+ * whatsapp-web.js 'vote_update' event: `voter` chose `opcoes` (list
+ * empty = withdrew the vote) in the `enquete` poll (the /enquete send or a
+ * message with pollName/pollOptions/id).
+ */
+async function voteAlt(pollAlt, voter, optionsAlt, { quando: when = Date.now() } = {}) {
+    const poll = pollAlt.content ?? pollAlt;
+    const vote = {
+        voter,
+        selectedOptions: optionsAlt.map(name => ({ name, localId: poll.pollOptions.findIndex(o => o.name === name) })),
+        interractedAtTs: when,
+        parentMessage: {
+            id: pollAlt.id,
+            pollName: poll.pollName,
+            pollOptions: poll.pollOptions,
+            allowMultipleAnswers: poll.options?.allowMultipleAnswers ?? poll.allowMultipleAnswers ?? false,
+            timestamp: Math.floor(when / 1000)
+        }
+    };
+
+    for (const h of client.listeners('vote_update')) await h(vote);
 }
 
 /*
@@ -247,5 +276,6 @@ module.exports = {
     replyAlt,
     setSetting,
     src,
-    text
+    text,
+    voteAlt
 };
