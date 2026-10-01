@@ -477,7 +477,7 @@ describe('/giphy (/gif)', () => {
     });
 
     test('tag padrão (gif.tag) ou informada; envia como GIF', async () => {
-        await bot.setSetting('gif.giphy.api.key', 'giphy');
+        await bot.setSetting('giphy.api.key', 'giphy');
         network.responder('get', 'api.giphy.com', { data: { images: { original: { mp4: 'https://media.giphy.com/x.mp4' } } } });
         network.responder('get', 'https://media.giphy.com/', Buffer.from('mp4'));
 
@@ -492,7 +492,7 @@ describe('/giphy (/gif)', () => {
     });
 
     test('nenhum GIF; GIPHY fora do ar', async () => {
-        await bot.setSetting('gif.giphy.api.key', 'giphy');
+        await bot.setSetting('giphy.api.key', 'giphy');
         network.responder('get', 'api.giphy.com', { data: {} });
         assert.deepEqual(await bot.replyAlt('/gif'), ['❌ Nenhum GIF encontrado.']);
         network.responder('get', 'api.giphy.com', errorHttp(500));
