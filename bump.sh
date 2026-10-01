@@ -3,7 +3,8 @@
 # bump.sh - Gera uma nova release do ZapBot
 #
 #   1. Incrementa a última tag release-X.Y (ex.: release-1.5 -> release-1.6)
-#   2. Troca a versão antiga pela nova nos arquivos do repositório
+#   2. Troca a versão antiga pela nova nos arquivos do repositório (e a data ao
+#      lado dela, em "release-X.Y (de DD/MM/AAAA)", pela de hoje)
 #   3. Commita e aplica a tag no branch atual com a mensagem "Bump para X.Y"
 #
 # Uso: ./bump.sh [-n|--dry-run]
@@ -76,6 +77,13 @@ for arq in "${arquivos[@]}"; do
     # Repete para pegar ocorrências vizinhas (o separador de uma é consumido pela outra)
     perl -pi -e "1 while s/(^|[^0-9.])${atual_re}([^0-9.]|\$)/\${1}${nova_versao}\${2}/" "$arq"
 done
+
+# A data da release ao lado da versão: "release-X.Y (de DD/MM/AAAA)" (a versão pode estar entre crases)
+hoje="$(date +%d/%m/%Y)"
+nova_re="${nova_versao//./\\.}"
+while IFS= read -r arq; do
+    perl -pi -e "s|(release-${nova_re}\`? \\(de )\\d{2}/\\d{2}/\\d{4}|\${1}${hoje}|g" "$arq"
+done < <(git grep -lIE "release-${nova_re}\`? \\(de [0-9]{2}/" -- . ':!bump.sh' || true)
 
 node -e '
     const fs = require("fs");
