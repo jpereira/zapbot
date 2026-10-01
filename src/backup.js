@@ -139,6 +139,13 @@ async function removeBackup(b) {
     await fs.remove(path.join(BACKUP_DIR, `${b.nome}.json`));
 }
 
+// Deletes all the backups (/cache -backup and /cache -all)
+async function deleteAllBackups() {
+    const list = await listBackups();
+    for (const b of list) await removeBackup(b);
+    return { backups: list.length, bytes: list.reduce((s, b) => s + b.bytes, 0) };
+}
+
 /**
  * Restores a backup over the current database. First, makes a backup of the state
  * current ('antes de restaurar'). Copies table by table, only the columns that
@@ -236,6 +243,7 @@ function startBackup() {
 
 module.exports = {
     REASONS,
+    deleteAllBackups,
     countInputs,
     createBackup,
     startBackup,

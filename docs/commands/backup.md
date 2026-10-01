@@ -99,7 +99,8 @@ message_edits 10 · messages 1.180 · settings 47 · ...
 ## Guardar fora do servidor
 
 Os backups ficam no mesmo volume do banco: se o volume for apagado (ex.:
-`make deploy.destroy`), eles vão junto. Para guardar uma cópia fora, use
+`make deploy.destroy`), eles vão junto. O [`/cache -a`](cache.md) e o
+`/cache -b` também apagam os backups. Para guardar uma cópia fora, use
 `/backup -s` (o arquivo chega no seu WhatsApp) ou copie a pasta:
 
 ```bash
