@@ -44,7 +44,7 @@ Por onde começar:
  └────────────────────────────────────────────────────────────────┘
 ```
 
-- **Sessão WhatsApp**: o [`whatsapp-web.js`](https://github.com/pedroslopez/whatsapp-web.js)
+- **Sessão WhatsApp**: o [`whatsapp-web.js`](https://github.com/wwebjs/whatsapp-web.js)
   abre o WhatsApp Web num Chromium headless e pareia com o seu celular como um
   *aparelho conectado*. A sessão fica salva no volume `wwebjs_auth`, então o QR
   Code só precisa ser lido na primeira vez (ou quando a sessão for revogada).

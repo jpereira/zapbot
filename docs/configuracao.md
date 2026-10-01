@@ -6,7 +6,11 @@ Nunca faça commit dele (já está no `.gitignore`).
 
 Rodando fora do Docker (`node app.js`), o bot lê o mesmo arquivo que o Compose
 usaria: `config/.env` com `APP_ENV=prod` e `config/.env.dev` nos outros casos.
-Variáveis já definidas no ambiente têm prioridade sobre as do arquivo.
+Variáveis já definidas no ambiente têm prioridade sobre as do arquivo. Fora do
+Docker o bot ainda espera os programas nos caminhos da imagem: Chromium em
+`/usr/bin/chromium-browser`, `ffmpeg` em `/usr/bin/ffmpeg` e `yt-dlp` em
+`/venv/bin/yt-dlp`; o jeito suportado de desenvolver é o
+[container de dev](desenvolvimento.md#ambiente-de-desenvolvimento-docker).
 
 ## Docker Compose
 
@@ -86,7 +90,7 @@ pedir a chave de produção no próprio Dashboard.
 
 | Variável | Exemplo | Descrição |
 |---|---|---|
-| `QRCODE_EMAIL_ENABLE` | `"true"` / `"false"` | Liga o envio por e-mail. Com `false`, o QR aparece só no terminal. |
+| `QRCODE_EMAIL_ENABLE` | `"true"` / `"false"` | Liga o envio do QR Code por e-mail. Com `false`, ele aparece só no terminal. Os [alertas por e-mail](emails.md#alertas-por-e-mail) não dependem dele. |
 | `QRCODE_EMAIL_SMTP_HOST` | `smtp.mail.yahoo.com` | Servidor SMTP. |
 | `QRCODE_EMAIL_SMTP_PORT` | `465` | Porta SMTP. **Use uma porta SSL/TLS implícita (465)**: o bot conecta com `secure: true`, portas STARTTLS como 587 não funcionam. O certificado do servidor é validado: servidores com certificado autoassinado/inválido são recusados, porque um MITM capturaria a senha e o QR Code (que dá acesso à conta). |
 | `QRCODE_EMAIL_SMTP_USER` | `minhaconta@yahoo.com.br` | Usuário de login no SMTP. |
