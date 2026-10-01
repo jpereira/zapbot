@@ -38,7 +38,7 @@ Quando usar cada um:
 | Alguém está abusando dos comandos num grupo | `/bot +admin` |
 | Vários zapbots no mesmo grupo e você quer que só o seu responda a você | `/bot +admin` |
 | Parar o bot por completo por um tempo, sem derrubar o container | `/bot -off` |
-| Voltar ao normal | `/bot -on -admin` |
+| Religar o bot e liberar os comandos para todos | `/bot -on -admin` |
 
 Detalhes:
 
