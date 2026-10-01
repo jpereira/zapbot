@@ -42,6 +42,7 @@ src/
   limpeza.js            retenção e limpeza periódica
   stats.js              contadores do /stats
   moedas.js, cotacoes.js, alertasPreco.js   /crypto, /cotacao e alertas de preço
+  openai.js             modelos aceitos pelo /gpt
   contatos.js, opcoes.js                    contatos/@lid e o parser de opções
   watch/                regras e verificação do /watch
   eventos/              message_create, apagadas, editadas, presença

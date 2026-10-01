@@ -10,9 +10,9 @@ const { OPENAI_MODELOS } = require('../openai');
 const { envOuSetting, getSetting, setSetting } = require('../settings');
 
 /*
- * /gpt: pergunta ao ChatGPT. Chave e timeout vêm do config/.env (OPENAI_API_KEY,
- * OPENAI_TIMEOUT_MS) ou, na falta deles, dos settings 'openai.api.key' e
- * 'openai.timeout.ms'. A chave nunca é logada nem ecoada: o erro devolvido é só
+ * /gpt: pergunta ao ChatGPT. Chave, modelo e timeout vêm do config/.env
+ * (OPENAI_API_KEY, OPENAI_MODEL, OPENAI_TIMEOUT_MS) ou, na falta deles, dos
+ * settings 'openai.api.key', 'openai.api.model' e 'openai.timeout.ms'. A chave nunca é logada nem ecoada: o erro devolvido é só
  * a mensagem da API.
  */
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
