@@ -2,7 +2,9 @@
 
 O Compose lê o arquivo na sua máquina (`env_file: ../config/.env`) e passa as
 variáveis para o container ao criá-lo: o arquivo não vai para dentro da imagem.
-Nunca faça commit dele (já está no `.gitignore`).
+Nunca faça commit dele (já está no `.gitignore`). Para conferir os valores que
+o bot está usando, mande `/set` no seu privado (veja
+[Variáveis do `config/.env`](comandos/set.md#variáveis-do-configenv)).
 
 Rodando fora do Docker (`node app.js`), o bot lê o mesmo arquivo que o Compose
 usaria: `config/.env` com `APP_ENV=prod` e `config/.env.dev` nos outros casos.
