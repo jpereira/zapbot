@@ -19,7 +19,7 @@ function dayAndHour(ms) {
  * @param {object} c { chatId, chatName, isGroup, senderId, senderName, quando (ms), campos: {msgs, media, deleted, edited} }
  */
 async function countStats({ chatId, chatName, isGroup, senderId, senderName, quando: when = Date.now(), campos: fields }) {
-    if (!getSetting('stats.enabled')) return;
+    if (!getSetting('stats.enable')) return;
     if (!chatId || chatId === 'status@broadcast' || !senderId) return;
     // Your private chat receives the bot alerts: it is not a conversation
     if (chatId === client.info?.wid?._serialized) return;

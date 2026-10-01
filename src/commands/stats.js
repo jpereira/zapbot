@@ -214,7 +214,7 @@ async function cmdStats({ msg, opts, chatId }) {
     if (!textAlt) {
         const whereAlt = opts.opt.me ? (opts.opt.chat ? 'suas neste chat' : 'suas') : 'deste chat';
         await msg.reply(`📊 Sem estatísticas ${whereAlt} nos últimos ${plural(daysAlt, 'dia', 'dias')}.` +
-            (getSetting('stats.enabled') ? '' : '\n💡 _A contagem está desligada: /set stats.enabled on_'));
+            (getSetting('stats.enable') ? '' : '\n💡 _A contagem está desligada: /set stats.enable on_'));
         return;
     }
 
