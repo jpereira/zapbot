@@ -2,29 +2,15 @@
  * Comando /gpt.
  */
 
-const axios = require('axios');
-
 const { getCommandSyntax } = require('./base');
-const { printError } = require('../log');
 const { OPENAI_MODELS } = require('../openai');
+const { WITHOUT_KEY, keyOpenAi, errorOpenAi, askOnChat } = require('../openaiChat');
 const { envOuSetting, getSetting, setSetting } = require('../settings');
 
 /*
- * /gpt: asks ChatGPT. Key, model and timeout come from config/.env
- * (OPENAI_API_KEY, OPENAI_MODEL, OPENAI_TIMEOUT_MS) or, if they are missing, from the
- * settings 'openai.api.key', 'openai.api.model' and 'openai.timeout.ms'. The key is never logged nor echoed: the returned error is only
- * the API message.
+ * /gpt: asks ChatGPT (the call and the errors live in openaiChat.js).
  */
-const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
 const GPT_INSTRUCTIONS = 'Você é um assistente no WhatsApp. Responda de forma direta, em português, salvo se pedirem outro idioma.';
-
-// OpenAI error → message for the chat (never contains the key)
-function errorOpenAi(err, timeout) {
-    if (err.code === 'ECONNABORTED') return `⏱️ A OpenAI não respondeu em ${timeout / 1000}s. Tente de novo ou aumente o openai.timeout.ms.`;
-    if (err.response?.status === 401) return '🔑 API key da OpenAI inválida. Confira o OPENAI_API_KEY ou o openai.api.key.';
-    if (err.response?.status === 429) return '💸 Limite ou créditos da OpenAI esgotados. Tente mais tarde.';
-    return `❌ Erro no /gpt: ${err.response?.data?.error?.message || err.message}`;
-}
 
 // /gpt -m: without a model lists the current one and the accepted ones; with a model, saves the setting
 async function swapModel(msg, modelAlt) {
@@ -54,10 +40,8 @@ async function cmdGpt({ msg, args, opts, quotedMsg }) {
         return;
     }
 
-    const apiKey = envOuSetting('OPENAI_API_KEY', 'openai.api.key');
-
-    if (!apiKey) {
-        await msg.reply('⚠️ API key da OpenAI não encontrada: o /gpt está desativado.\n💡 _Defina OPENAI_API_KEY no config/.env ou use /set openai.api.key <chave>_');
+    if (!keyOpenAi()) {
+        await msg.reply(WITHOUT_KEY('/gpt'));
         return;
     }
 
@@ -69,34 +53,18 @@ async function cmdGpt({ msg, args, opts, quotedMsg }) {
         return;
     }
 
-    const timeout = envOuSetting('OPENAI_TIMEOUT_MS', 'openai.timeout.ms');
-
     try {
         // "digitando..." enquanto a OpenAI responde (pode levar alguns segundos)
         msg.getChat().then(chat => chat.sendStateTyping()).catch(() => {});
 
-        const { data } = await axios.post(OPENAI_URL, {
-            model: envOuSetting('OPENAI_MODEL', 'openai.api.model'),
-            messages: [
-                { role: 'system', content: GPT_INSTRUCTIONS },
-                { role: 'user', content: question }
-            ]
-        }, {
-            headers: { Authorization: `Bearer ${apiKey}` },
-            timeout
-        });
-
-        let reply = data.choices?.[0]?.message?.content?.trim() || '(resposta vazia)';
+        let reply = await askOnChat({ cmd: '/gpt', sistema: GPT_INSTRUCTIONS, texto: question });
 
         // The reply never starts with "/": it must not be read as a command (see markSentByBot)
         if (reply.startsWith('/')) reply = `🤖 ${reply}`;
 
         await msg.reply(reply);
     } catch (err) {
-        // On a 401 OpenAI's message carries a piece of the key: it does not go to the log
-        const status = err.response?.status;
-        printError('/gpt:', status ?? '', status === 401 ? 'API key inválida' : err.response?.data?.error?.message || err.message);
-        await msg.reply(errorOpenAi(err, timeout));
+        await msg.reply(errorOpenAi(err, '/gpt'));
     }
 }
 
