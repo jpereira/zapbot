@@ -10,6 +10,7 @@ const { findCommand, getCommandSyntax } = require('../comandos/base');
 const { HANDLERS } = require('../comandos/index');
 const { removeDeviceSuffix, resolveLidToPhone, resolverNomeDoGrupo } = require('../contatos');
 const { dbGet, dbPronto, dbRun } = require('../db');
+const { responderEscolha } = require('../escolhas');
 const { printCall, printDebug, printError, printInfo } = require('../log');
 const { GetOptFromCommand } = require('../opcoes');
 const { getSetting, isDebugMode } = require('../settings');
@@ -194,6 +195,10 @@ client.on('message_create', async (msg) => {
         ).catch(err => printError('Erro ao salvar mensagem:', err.message));
 
         const body = (msg.body || '').trim();
+
+        // Só o nº, respondendo a lista de um comando (ex.: vários contatos com o nome): não passa pelo /watch
+        if (await responderEscolha(msg, chatId, body)) return;
+
         // Resposta do próprio bot nunca é comando, mesmo começando com "/" (ver marcarEnviadaPeloBot)
         const enviadaPeloBot = msg.fromMe && body.startsWith('/') && foiEnviadaPeloBot(body);
         const caller = body.startsWith('/') && !enviadaPeloBot ? body.split(/\s+/, 1)[0] : null;

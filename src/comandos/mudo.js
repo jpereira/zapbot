@@ -5,18 +5,20 @@
 const { client } = require('../cliente');
 const { getCommandSyntax } = require('./base');
 const { dbAll, dbGet, dbPronto, dbRun } = require('../db');
-const { descreverDestino, resolverDestino } = require('../destinos');
+const { descreverDestino, resolverOuEscolher } = require('../destinos');
 const { TIPOS } = require('../mudo');
 const { plural } = require('../util/formatar');
 
 /*
- * /mudo <opção> <@número|/nome do grupo/>
+ * /mudo <opção> </contato ou grupo/|+número>
  *   -d (-deleted)  silencia os avisos de mensagens apagadas
  *   -e (-edited)   silencia os avisos de edições
  *   -s (-status)   silencia os avisos de status apagados
  *   -a (-all)      tudo isso
- * As opções se combinam (-d -e). Silenciar de novo o mesmo alvo soma ao que já
- * estava. Sem nada, lista; -rm <nº|all> desfaz.
+ * As opções se combinam (-d -e). O alvo é buscado como no -to: primeiro nos
+ * contatos, depois nos grupos (vários: você escolhe na lista), ou um número.
+ * Silenciar de novo o mesmo alvo soma ao que já estava. Sem nada, lista;
+ * -rm <nº|all> desfaz.
  */
 const OPCOES = {
     d: 'deleted', deleted: 'deleted',
@@ -71,7 +73,7 @@ async function listar(msg) {
     );
 
     if (!mutes.length) {
-        await msg.reply('🔇 Ninguém silenciado.\n💡 _Ex.: /mudo -a /Grupo L200/ ou /mudo -s @5521999999999_');
+        await msg.reply('🔇 Ninguém silenciado.\n💡 _Ex.: /mudo -a /Jorge Pereira/, /mudo -a /Grupo L200/ ou /mudo -s +5521999999999_');
         return;
     }
 
@@ -121,15 +123,13 @@ async function cmdMudo({ msg, args }) {
         return;
     }
     if (!r.alvo) {
-        await msg.reply('❌ Informe quem: @número ou o nome do grupo (/Grupo L200/).');
+        await msg.reply('❌ Informe quem: um contato, um grupo ou um número (/Jorge Pereira/, /Grupo L200/ ou +5521999999999).');
         return;
     }
 
-    const destino = await resolverDestino(r.alvo, { mencoes: msg.mentionedIds ?? [] });
-    if (destino.erro) {
-        await msg.reply(destino.erro);
-        return;
-    }
+    // Vários contatos ou grupos com o nome: espera você escolher na lista
+    const destino = await resolverOuEscolher(msg, r.alvo);
+    if (!destino) return;
 
     if (destino.id === client.info.wid._serialized) {
         await msg.reply('❌ As suas mensagens já não geram avisos.');
