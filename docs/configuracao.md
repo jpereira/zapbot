@@ -42,7 +42,7 @@ outros funcionam sem configuração.
 
 | Comando | Serviço | Chave |
 |---|---|---|
-| `/gpt`, `/resumo` | [OpenAI](https://platform.openai.com/) (pago por uso) | `OPENAI_API_KEY` ou setting `openai.api.key` |
+| `/gpt`, `/tldr` | [OpenAI](https://platform.openai.com/) (pago por uso) | `OPENAI_API_KEY` ou setting `openai.api.key` |
 | `/giphy` | [GIPHY](https://developers.giphy.com/) (grátis, 100 chamadas/hora) | `GIPHY_API_KEY` ou setting `giphy.api.key` |
 | `/traduzir` | [Google Cloud Translation](https://cloud.google.com/translate) (cota mensal grátis, depois pago por caractere) | `GOOGLE_TRANSLATE_API_KEY` ou setting `traduzir.api.key` |
 | `/tempo` | [Open-Meteo](https://open-meteo.com/) | — |
@@ -61,8 +61,8 @@ vale o setting, que dá para trocar pelo WhatsApp com `/set` sem reiniciar.
 
 | Variável | Exemplo | Descrição |
 |---|---|---|
-| `OPENAI_API_KEY` | `sk-proj-...` | Chave da OpenAI usada pelo `/gpt` e pelo `/resumo`. Se estiver vazia, o bot usa o setting `openai.api.key`; sem nenhuma das duas o `/gpt` e o `/resumo` ficam desativados. |
-| `OPENAI_MODEL` | `gpt-4o-mini` | Modelo do `/gpt` e do `/resumo`. Se estiver vazio, o bot usa o setting `openai.api.model` (padrão `gpt-4o-mini`), que dá para trocar pelo WhatsApp com `/gpt -m`. Preenchido, tem prioridade sobre o setting. |
+| `OPENAI_API_KEY` | `sk-proj-...` | Chave da OpenAI usada pelo `/gpt` e pelo `/tldr`. Se estiver vazia, o bot usa o setting `openai.api.key`; sem nenhuma das duas o `/gpt` e o `/tldr` ficam desativados. |
+| `OPENAI_MODEL` | `gpt-4o-mini` | Modelo do `/gpt` e do `/tldr`. Se estiver vazio, o bot usa o setting `openai.api.model` (padrão `gpt-4o-mini`), que dá para trocar pelo WhatsApp com `/gpt -m`. Preenchido, tem prioridade sobre o setting. |
 | `OPENAI_TIMEOUT_MS` | `60000` | Tempo máximo de espera pela resposta, em ms. Se estiver vazio, o bot usa o setting `openai.timeout.ms` (60000). |
 
 ## GIPHY (opcional)
