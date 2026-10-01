@@ -1,5 +1,5 @@
 /*
- * Comando /resumo.
+ * Comando /tldr (alias /resumo).
  */
 
 const { client } = require('../cliente');
@@ -12,12 +12,12 @@ const { getSetting } = require('../settings');
 const { plural, semAcentos } = require('../util/formatar');
 
 /*
- * /resumo: resume a conversa de um chat pelo ChatGPT (mesma chave e modelo do /gpt).
- *   /resumo              → as últimas 100 mensagens deste chat
- *   /resumo 2h | 30m     → as das últimas 2 horas | 30 minutos (o "-" na frente é opcional)
- *   /resumo 300          → as últimas 300 (máx. setting 'resumo.maxMsgs')
- *   /resumo -c família   → de outro chat, buscado pelo nome
- *   /resumo -pv          → no seu privado em vez de expor no chat atual
+ * /tldr: resume a conversa de um chat pelo ChatGPT (mesma chave e modelo do /gpt).
+ *   /tldr              → as últimas 100 mensagens deste chat
+ *   /tldr 2h | 30m     → as das últimas 2 horas | 30 minutos (o "-" na frente é opcional)
+ *   /tldr 300          → as últimas 300 (máx. setting 'resumo.maxMsgs')
+ *   /tldr -c família   → de outro chat, buscado pelo nome
+ *   /tldr -pv          → no seu privado em vez de expor no chat atual
  * Usa o texto já gravado no banco: as mensagens comuns ficam 68 h. Ficam de
  * fora os comandos, as apagadas e as mídias sem legenda.
  */
@@ -68,9 +68,9 @@ const hora = (ms) => new Date(ms).toLocaleString('pt-BR', {
     timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
 });
 
-async function cmdResumo({ msg, opts, chatId, chatName }) {
+async function cmdTldr({ msg, opts, chatId, chatName }) {
     if (!chaveOpenAi()) {
-        await msg.reply(SEM_CHAVE('/resumo'));
+        await msg.reply(SEM_CHAVE('/tldr'));
         return;
     }
 
@@ -78,7 +78,7 @@ async function cmdResumo({ msg, opts, chatId, chatName }) {
     const periodo = extras.length ? lerPeriodo(extras.join('')) : { n: RESUMO_PADRAO };
 
     if (!periodo) {
-        await msg.reply('```' + getCommandSyntax('/resumo') + '```');
+        await msg.reply('```' + getCommandSyntax('/tldr') + '```');
         return;
     }
 
@@ -152,7 +152,7 @@ async function cmdResumo({ msg, opts, chatId, chatName }) {
         msg.getChat().then(chat => chat.sendStateTyping()).catch(() => {});
 
         const resumo = await perguntarAoChat({
-            cmd: '/resumo',
+            cmd: '/tldr',
             sistema: RESUMO_INSTRUCOES,
             texto: `Conversa "${nome}" (${linhas.length} mensagens):\n\n${linhas.join('\n')}`
         });
@@ -169,11 +169,11 @@ async function cmdResumo({ msg, opts, chatId, chatName }) {
             await msg.reply(texto);
         }
     } catch (err) {
-        await msg.reply(erroOpenAi(err, '/resumo'));
+        await msg.reply(erroOpenAi(err, '/tldr'));
     }
 }
 
 module.exports = {
-    cmdResumo,
+    cmdTldr,
     lerPeriodo
 };
