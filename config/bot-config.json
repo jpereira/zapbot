@@ -6,7 +6,7 @@
         "url": "https://github.com/jpereira/zapbot",
         "copyright": "Copyright (c) 2026 Jorge Pereira",
         "license": "MIT",
-        "docs": "Veja a seção 'Comandos' do README.md para o formato de cada campo."
+        "docs": "Formato de cada campo: docs/desenvolvimento.md, seção 'Adicionando ou alterando comandos' (https://jpereira.github.io/zapbot/desenvolvimento/)."
     },
     "commands": [
         {

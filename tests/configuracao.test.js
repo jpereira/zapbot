@@ -168,6 +168,26 @@ describe('documentação', () => {
         }
         assert.ok(total > 50, `poucos links conferidos (${total})`);
     });
+
+    test('links para o site (jpereira.github.io/zapbot) apontam para páginas e âncoras do docs/', () => {
+        const SITE = /https:\/\/jpereira\.github\.io\/zapbot\/([^)\s"'`]*)/g;
+        const arquivos = ['README.md', 'SECURITY.md', 'config/bot-config.json', ...paginasDocs().map(f => `docs/${f}`)];
+        let total = 0;
+
+        for (const arquivo of arquivos) {
+            for (const [, url] of fs.readFileSync(path.join(bot.RAIZ, arquivo), 'utf8').matchAll(SITE)) {
+                total++;
+                // "comandos/show/" → docs/comandos/show.md; "comandos/" → docs/comandos/index.md; "" → docs/index.md
+                const [caminho, anc] = url.split('#');
+                const pagina = caminho.replace(/\/$/, '');
+                const md = [`${pagina}.md`, `${pagina ? `${pagina}/` : ''}index.md`].find(f => fs.existsSync(path.join(DOCS, f)));
+
+                assert.ok(md, `${arquivo}: página do site não existe: ${url}`);
+                if (anc) assert.ok(ancorasDe(lerDoc(md)).has(decodeURIComponent(anc)), `${arquivo}: âncora não existe: ${url}`);
+            }
+        }
+        assert.ok(total > 40, `poucos links para o site (${total})`);
+    });
 });
 
 describe('SETTINGS_SCHEMA', () => {
