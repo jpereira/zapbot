@@ -15,7 +15,7 @@ const { formatarData } = require('../util/formatar');
  *
  * Mesma ideia das apagadas: o evento 'message_edit' grava a edição (texto de
  * antes e de depois) na tabela message_edits e avisa você no privado (setting
- * 'edit.alert'); o /show -e reexibe sob demanda.
+ * 'show.alert.edit'); o /show -e reexibe sob demanda.
  */
 async function enviarMensagemEditada(destino, row, info, { titulo = '✏️ *MENSAGEM EDITADA DETECTADA*' } = {}) {
     let texto = `${titulo}\n\n`;
@@ -107,7 +107,7 @@ client.on('message_edit', async (msg, newBody, prevBody) => {
             campos: { edited: 1 }
         });
 
-        if (getSetting('edit.alert')) {
+        if (getSetting('show.alert.edit')) {
             await enviarMensagemEditada(client.info.wid._serialized, row, info);
         }
     } catch (err) {
