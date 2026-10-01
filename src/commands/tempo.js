@@ -55,15 +55,18 @@ async function geocodeCity(city) {
     return local;
 }
 
-async function queryTime({ latitude, longitude }) {
+// Open-Meteo's limit for forecast_days (the tempo.maxDays setting does not go past it)
+const TIME_DAYS_API = 16;
+
+async function queryTime({ latitude, longitude }, daysAlt = 1) {
     const { data } = await axios.get(OPEN_METEO_URL, {
         timeout: 15000,
         params: {
             latitude,
             longitude,
             current: 'temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m',
-            daily: 'temperature_2m_max,temperature_2m_min,precipitation_probability_max',
-            forecast_days: 1,
+            daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max',
+            forecast_days: daysAlt,
             timezone: 'auto'
         }
     });
@@ -93,9 +96,46 @@ function formatTime(local, { current: c, daily: d }) {
     return textAlt;
 }
 
+// "2026-09-30" → "qua 30/09" (the date already comes in the city timezone: timezone=auto)
+function dayLabel(iso) {
+    const [, mes, day] = iso.split('-');
+    const week = new Date(`${iso}T12:00:00Z`).toLocaleDateString('pt-BR', { weekday: 'short', timeZone: 'UTC' }).replace('.', '');
+    return `${week} ${day}/${mes}`;
+}
+
+// One line per day: icon, day, max/min, chance of rain and condition
+function formatForecast({ daily: d }) {
+    const linesAlt = d.time.map((iso, i) => {
+        const [iconAlt, description] = WEATHER_WMO[d.weather_code?.[i]] ?? ['🌡️', `Código ${d.weather_code?.[i]}`];
+        const when = i === 0 ? `Hoje (${dayLabel(iso)})` : dayLabel(iso);
+        return `${iconAlt} *${when}:* ${measure(d.temperature_2m_max?.[i], '°')}/${measure(d.temperature_2m_min?.[i], '°')}` +
+               ` · ☔ ${measure(d.precipitation_probability_max?.[i], '%')} · ${description}`;
+    });
+
+    const title = d.time.length === 1 ? 'Previsão de hoje' : `Próximos ${d.time.length} dias`;
+    return `📅 *${title}*\n${linesAlt.join('\n')}`;
+}
+
+/**
+ * "7d Niteroi" → { dias: 7, cidade: 'Niteroi' }; "Niteroi" → { dias: null, cidade: 'Niteroi' }.
+ * The days (N or Nd) only count as the first argument.
+ */
+function readArgumentsTime(args) {
+    const m = args.trim().match(/^(\d+)d?(?:\s+|$)([\s\S]*)$/i);
+    return m ? { dias: Number(m[1]), cidade: m[2].trim() } : { dias: null, cidade: args.trim() };
+}
+
 async function cmdTime({ msg, args }) {
+    const request = readArgumentsTime(args);
+    const max = getSetting('tempo.maxDays');
+
+    if (request.dias !== null && (request.dias < 1 || request.dias > max)) {
+        await msg.reply(`❌ Quantidade de dias inválida: ${request.dias}. Use de 1 a ${max}.\n💡 _/tempo 7d Niteroi (máximo no setting tempo.maxDays, até ${TIME_DAYS_API})_`);
+        return;
+    }
+
     // Without a city uses the tempo.city setting
-    const city = args.trim() || getSetting('tempo.city');
+    const city = request.cidade || getSetting('tempo.city');
 
     try {
         const local = await geocodeCity(city);
@@ -105,7 +145,11 @@ async function cmdTime({ msg, args }) {
             return;
         }
 
-        await msg.reply(formatTime(local, await queryTime(local)));
+        const dataAlt = await queryTime(local, request.dias ?? 1);
+        let textAlt = formatTime(local, dataAlt);
+        if (request.dias) textAlt += `\n\n${formatForecast(dataAlt)}`;
+
+        await msg.reply(textAlt);
     } catch (err) {
         printError('/tempo:', err.response?.status ?? '', err.message);
         await msg.reply('❌ Não consegui consultar o tempo agora.');

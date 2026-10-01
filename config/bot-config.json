@@ -692,12 +692,18 @@
         },
         {
             "cmd": "/tempo",
-            "usage": "/tempo [cidade]",
+            "usage": "/tempo [N|Nd] [cidade]",
             "aliases": [
                 "/weather"
             ],
-            "help": "Tempo agora, máx./mín. e chance de chuva do dia (Open-Meteo). Sem cidade usa o setting tempo.city; troque com /set tempo.city <cidade>.",
+            "help": "Tempo agora, máx./mín. e chance de chuva do dia (Open-Meteo); com N (ou Nd), a previsão dos próximos N dias. Sem cidade usa o setting tempo.city.",
             "cmd_opts": [
+                {
+                    "argv": [
+                        "[N|Nd]"
+                    ],
+                    "desc": "Previsão dos próximos N dias (1 a tempo.maxDays, padrão 7). Ex: /tempo 7d Niteroi"
+                },
                 {
                     "argv": [
                         "[cidade]"
