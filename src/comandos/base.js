@@ -3,6 +3,7 @@
  */
 
 const { botConfig } = require('../botConfig');
+const { CACHE_DIR, MEDIA_DIR, TMP_DIR } = require('../constantes');
 const { getSetting } = require('../settings');
 
 // Comandos ativos: os do comandos.json menos os do setting 'commands.disabled' (via /set)
@@ -15,14 +16,24 @@ function findCommand(name) {
     return activeCommands().find(c => c.cmd === name || c.aliases?.includes(name));
 }
 
+/*
+ * Variáveis que os textos do comandos.json podem citar (ex.: "Exibe o espaço
+ * ocupado em ${CACHE_DIR}"): o JSON não tem template strings, então a ajuda
+ * troca cada ${NOME} conhecido pelo valor. Um ${NOME} desconhecido fica como está.
+ */
+const VARIAVEIS_DA_AJUDA = { CACHE_DIR, MEDIA_DIR, TMP_DIR };
+
+const interpolar = (texto) => String(texto ?? '')
+    .replace(/\$\{(\w+)\}/g, (original, nome) => VARIAVEIS_DA_AJUDA[nome] ?? original);
+
 /**
  * Formata a ajuda de um comando no estilo "command -help".
  * (Antes existiam duas funções quase idênticas; agora só esta.)
  */
 function formatCommandHelp(command) {
-    const lines = [`Usage: ${command.usage ?? command.cmd}`];
+    const lines = [`Usage: ${interpolar(command.usage ?? command.cmd)}`];
 
-    if (command.help) lines.push(command.help);
+    if (command.help) lines.push(interpolar(command.help));
 
     const cmdOpts = command.cmd_opts ?? [];
     const notEmpty = v => v != null && v !== '';
@@ -32,12 +43,12 @@ function formatCommandHelp(command) {
         .map(o => {
             const opts = o.opts.filter(Boolean).map(opt => `-${opt}`).join(', ');
             const values = (o.values ?? []).filter(notEmpty).join(' ');
-            return { syntax: values ? `${opts} ${values}` : opts, desc: o.desc ?? '' };
+            return { syntax: values ? `${opts} ${values}` : opts, desc: interpolar(o.desc) };
         });
 
     const positional = cmdOpts
         .filter(o => o?.argv?.length)
-        .map(o => ({ syntax: o.argv.filter(Boolean).join(' '), desc: o.desc ?? '' }));
+        .map(o => ({ syntax: o.argv.filter(Boolean).join(' '), desc: interpolar(o.desc) }));
 
     // Uma única coluna para Options e Arguments ficarem alinhados
     const width = Math.max(0, ...[...options, ...positional].map(o => o.syntax.length));
@@ -79,5 +90,6 @@ module.exports = {
     findCommand,
     formatCommandHelp,
     formatarErroComando,
-    getCommandSyntax
+    getCommandSyntax,
+    interpolar
 };
