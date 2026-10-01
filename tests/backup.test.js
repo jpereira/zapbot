@@ -133,7 +133,7 @@ describe('/backup (/bkp)', () => {
         assert.deepEqual(await bot.replyAlt('/backup -l'), ['💾 Nenhum backup ainda. Crie um com /backup -now']);
     });
 
-    test('-s com e-mails: anexo pelo SMTP do bot; "email" usa o QRCODE_EMAIL_SMTP_TO', async () => {
+    test('-s -to e-mails: anexo pelo SMTP do bot; "email" usa o QRCODE_EMAIL_SMTP_TO; a forma antiga vale', async () => {
         const env = { QRCODE_EMAIL_SMTP_HOST: 'smtp.exemplo.com', QRCODE_EMAIL_SMTP_USER: 'bot@exemplo.com',
             QRCODE_EMAIL_SMTP_FROM: 'ZapBot <bot@exemplo.com>', QRCODE_EMAIL_SMTP_TO: 'eu@exemplo.com', QRCODE_EMAIL_SMTP_ANTIPHISHING: 'Frase42' };
         Object.assign(process.env, env);
@@ -141,7 +141,7 @@ describe('/backup (/bkp)', () => {
             await createBackup('manual', Date.now() - 60_000);
             const b = await createBackup();
 
-            assert.match((await bot.replyAlt('/backup -s fulano@x.com,ciclano@y.com'))[0], /^📧 Backup de .* enviado para fulano@x\.com, ciclano@y\.com\.$/);
+            assert.match((await bot.replyAlt('/backup -s -to "fulano@x.com, ciclano@y.com"'))[0], /^📧 Backup de .* enviado para fulano@x\.com, ciclano@y\.com\.$/);
             const [m] = emails;
             assert.equal(m.to, 'fulano@x.com, ciclano@y.com');
             assert.equal(m.from, 'ZapBot <bot@exemplo.com>');
@@ -149,11 +149,15 @@ describe('/backup (/bkp)', () => {
             assert.match(m.text, /Anti-Phishing Code: Frase42/);
             assert.deepEqual(m.attachments, [{ filename: `${b.nome}.db.gz`, path: b.arquivo }]);
 
-            await bot.replyAlt('/backup -s 2 email');
+            await bot.replyAlt('/backup -s 2 -to email');
             assert.equal(emails[1].to, 'eu@exemplo.com');
             assert.notEqual(emails[1].attachments[0].filename, `${b.nome}.db.gz`, 'o nº 2 é o mais antigo');
 
+            // The old form: the emails straight in -s
+            await bot.replyAlt('/backup -s 2 email');
+            assert.equal(emails[2].to, 'eu@exemplo.com');
             assert.match((await bot.replyAlt('/backup -s fulano@'))[0], /❌ E-mail inválido: fulano@/);
+            assert.match((await bot.replyAlt('/backup -s a@b.com -to email'))[0], /❌ Informe o destino só no -to/);
 
             nodemailer.falhar = true;
             assert.match((await bot.replyAlt('/backup -s a@b.com', { erroEsperado: true }))[0], /❌ Não consegui enviar o e-mail: SMTP fora do ar/);
@@ -164,6 +168,25 @@ describe('/backup (/bkp)', () => {
 
         await createBackup();
         assert.match((await bot.replyAlt('/backup -s a@b.com', { erroEsperado: true }))[0], /❌ Não consegui enviar o e-mail: SMTP não configurado/);
+    });
+
+    test('-s -to outro chat: pede -sim (o banco tem as mensagens de todos os chats)', async () => {
+        await createBackup();
+
+        const [notice] = await bot.replyAlt('/backup -s -to /Fulano/');
+        assert.match(notice, /^⚠️ O backup tem o banco inteiro: .*\nPara enviar mesmo em 👤 Fulano, repita com -sim: \/backup -send -to Fulano -sim$/);
+
+        const r = await bot.executar('/backup -s 1 -to +5521911111111 -sim');
+        assert.equal(r[0].chatId, bot.OTHERAlt.jid);
+        assert.ok(r[0].content instanceof MessageMedia);
+        assert.equal(r[1].texto, '💾 Backup enviado em 👤 Fulano.');
+
+        // For yourself it does not need -sim; -to without -send is an error
+        bot.createContact(OWNER.jid, OWNER.nome);
+        const eu = await bot.executar('/backup -s -to +5521900000000');
+        assert.equal(eu[0].chatId, OWNER.jid);
+        assert.equal(eu[1].texto, '💾 Backup enviado no seu privado.');
+        assert.match((await bot.replyAlt('/backup -to email'))[0], /❌ O -to é do -send/);
     });
 
     test('só o dono', async () => {

@@ -68,16 +68,25 @@
                         "s"
                     ],
                     "values": [
-                        "[nº] [e-mail...]"
+                        "[nº]"
                     ],
-                    "desc": "Envia o arquivo do backup (sem nº: o mais recente) no seu privado ou, com e-mails, como anexo pelo SMTP do bot (\"email\" = QRCODE_EMAIL_SMTP_TO)."
+                    "desc": "Envia o arquivo do backup (sem nº: o mais recente) no seu privado ou no destino do -to."
                 },
                 {
                     "opts": [
                         "sim"
                     ],
                     "values": [],
-                    "desc": "Junto com -restore: confirma a restauração."
+                    "desc": "Confirma: junto com -restore, a restauração; junto com -send -to outro chat, o envio (o banco tem as mensagens de todos os chats)."
+                },
+                {
+                    "opts": [
+                        "to"
+                    ],
+                    "values": [
+                        "<destino>"
+                    ],
+                    "desc": "Junto com -send: por e-mail, como anexo (email = o QRCODE_EMAIL_SMTP_TO, ou voce@exemplo.com), ou noutro chat: um contato, um grupo ou um número (/Jorge Pereira/, /Grupo L200/ ou +5521999999999; pede -sim)."
                 }
             ],
             "onlyAdmin": true
