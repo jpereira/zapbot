@@ -27,13 +27,13 @@ vim config/.env            # veja a página "Configuração"
 touch config/.env.dev
 
 # 4. Build da imagem
-docker compose -f docker/docker-compose.yml build zapbot-prod
+docker compose -f docker/docker-compose.yml build zapbot
 
 # 5. Subir o container em background
-docker compose -f docker/docker-compose.yml up -d zapbot-prod
+docker compose -f docker/docker-compose.yml up -d zapbot
 
 # 6. Acompanhar os logs (e ler o QR Code, se estiver no modo terminal)
-docker logs -f zapbot-prod
+docker logs -f zapbot
 ```
 
 > 💡 Para não repetir `-f docker/docker-compose.yml` em todo comando:
@@ -58,13 +58,20 @@ A **versão estável** é a última tag `release-X.Y` (cada uma tem as notas em
 git fetch --tags
 git checkout "$(git tag -l 'release-*' --sort=-v:refname | head -n1)"
 git describe --tags        # confere a versão: release-X.Y
-docker compose -f docker/docker-compose.yml build zapbot-prod
-docker compose -f docker/docker-compose.yml up -d --force-recreate zapbot-prod
+docker compose -f docker/docker-compose.yml build zapbot
+docker compose -f docker/docker-compose.yml up -d --force-recreate --remove-orphans zapbot
 ```
 
 O `git checkout` de uma tag deixa o repositório em *detached HEAD*; o aviso do
 git é esperado e não atrapalha. A sessão do WhatsApp e o banco ficam em
 volumes, então sobrevivem ao rebuild.
+
+!!! note "Vindo de uma versão com o serviço `zapbot-prod`"
+    O serviço e o container passaram a se chamar `zapbot`. O `--remove-orphans`
+    remove o container antigo `zapbot-prod` (senão os dois rodariam com a mesma
+    sessão e o WhatsApp desconectaria um deles com `CONFLICT`). A sessão e o
+    banco continuam: os volumes são os mesmos. A imagem antiga pode ser
+    apagada com `docker rmi zapbot-prod`.
 
 #### Versão de desenvolvimento (HEAD)
 
@@ -74,8 +81,8 @@ pode ter recursos incompletos ou quebrados. Use só para testar ou desenvolver.
 ```bash
 git checkout main
 git pull
-docker compose -f docker/docker-compose.yml build zapbot-prod
-docker compose -f docker/docker-compose.yml up -d --force-recreate zapbot-prod
+docker compose -f docker/docker-compose.yml build zapbot
+docker compose -f docker/docker-compose.yml up -d --force-recreate --remove-orphans zapbot
 ```
 
 Para voltar à estável, repita os comandos de cima (`git fetch --tags` e o
@@ -91,7 +98,7 @@ QR Code. O ZapBot oferece dois modos, escolhidos por `QRCODE_EMAIL_ENABLE`:
 
 | Modo | `QRCODE_EMAIL_ENABLE` | Onde aparece o QR |
 |------|------|------|
-| Terminal | `false` | Desenhado em ASCII nos logs do container (`docker logs -f zapbot-prod`) |
+| Terminal | `false` | Desenhado em ASCII nos logs do container (`docker logs -f zapbot`) |
 | E-mail   | `true`  | Enviado como imagem PNG para `QRCODE_EMAIL_SMTP_TO` |
 
 O modo e-mail é útil quando o bot roda num servidor remoto/homelab e você não

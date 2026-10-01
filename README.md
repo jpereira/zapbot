@@ -23,7 +23,7 @@ release; a do `main` fica em [`docs/`](docs/index.md)).
 ## Como funciona
 
 ```
- ┌──────────── container zapbot-prod (node:24-alpine) ────────────┐
+ ┌────────────── container zapbot (node:24-alpine) ───────────────┐
  │                                                                │
  │   app.js ──► whatsapp-web.js ──► Puppeteer ──► Chromium        │──► WhatsApp Web
  │     │                                          (headless)      │
@@ -55,13 +55,15 @@ git checkout "$(git tag -l 'release-*' --sort=-v:refname | head -n1)"
 cp config/.env.example config/.env   # preencha o PHONE_NUMBER (veja Configuração)
 touch config/.env.dev
 
-docker compose -f docker/docker-compose.yml build zapbot-prod
-docker compose -f docker/docker-compose.yml up -d zapbot-prod
-docker logs -f zapbot-prod           # leia o QR Code em WhatsApp › Aparelhos conectados
+docker compose -f docker/docker-compose.yml build zapbot
+docker compose -f docker/docker-compose.yml up -d zapbot
+docker logs -f zapbot           # leia o QR Code em WhatsApp › Aparelhos conectados
 ```
 
 Para atualizar, use `git fetch --tags`, o mesmo `git checkout` e o build de
-novo. O passo a passo (inclusive a versão de desenvolvimento, `main`) está em
+novo, com `up -d --force-recreate --remove-orphans zapbot`. Vindo de uma versão
+com o serviço `zapbot-prod`, o `--remove-orphans` remove o container antigo
+(senão os dois disputam a mesma sessão). O passo a passo (inclusive a versão de desenvolvimento, `main`) está em
 [Instalação](https://jpereira.github.io/zapbot/instalacao/); as variáveis do `config/.env`, em
 [Configuração](https://jpereira.github.io/zapbot/configuracao/).
 
