@@ -9,7 +9,5 @@
   tempo, CVEs criticas, ocorrencias do /watch, mini /stats dos grupos e o /defi.
 * /transcrever: respondendo um audio, transcreve pela OpenAI (Whisper) com a chave do
   /gpt; um setting liga a transcricao automatica em chats escolhidos.
-* /traduzir: respondendo uma mensagem, traduz para pt-BR ou o idioma pedido (pelo /gpt
-  ou pelo LibreTranslate, sem chave).
 * /backup: .db compactado (settings, regras do /watch, apagadas, editadas e stats)
   enviado no privado ou por e-mail; com opcao de agendar.
