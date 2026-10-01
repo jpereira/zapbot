@@ -72,7 +72,7 @@ admin está ligado: só você usa comandos até `/bot -admin`
 |---|---|:-:|---|
 | [`/backup`](https://jpereira.github.io/zapbot/comandos/backup/) | `/bkp` | ✅ | Backup do banco: automático todo dia; lista, detalha, restaura e envia o arquivo |
 | [`/boletos`](https://jpereira.github.io/zapbot/comandos/boletos/) | | ✅ | Sorteia 2 membros para "pagar um boleto" |
-| [`/bot`](https://jpereira.github.io/zapbot/comandos/bot/) | | ✅ | Liga/desliga todos os comandos (`-on`/`-off`) e o modo admin (`+admin`/`-admin`) |
+| [`/bot`](https://jpereira.github.io/zapbot/comandos/bot/) | | ✅ | Liga/desliga todos os comandos (`-on`/`-off`) e o modo admin (`+admin`/`-admin`); `-status`: relatório das últimas 24 h, e `-status 06h` manda todo dia |
 | [`/cache`](https://jpereira.github.io/zapbot/comandos/cache/) | `/c` | ✅ | Uso e limpeza do cache |
 | [`/cotacao`](https://jpereira.github.io/zapbot/comandos/cotacao/) | `/cambio` | | Cotação de EUR e USDT (e USD, GBP) contra o real: atual, abertura, fechamento e variação; alertas de preço |
 | [`/cron`](https://jpereira.github.io/zapbot/comandos/cron/) | `/agenda`, `/lembrete` | ✅ | Na hora marcada (`30m`, `às 18h`, `sexta 9h`...): envia uma mensagem (aqui ou com `-to`) ou, como `/lembrete`, um ⏰ lembrete; pode repetir |
@@ -97,7 +97,6 @@ admin está ligado: só você usa comandos até `/bot -admin`
 | [`/set`](https://jpereira.github.io/zapbot/comandos/set/) | `/config` | ✅ | Lista e altera as configurações (settings) |
 | [`/show`](https://jpereira.github.io/zapbot/comandos/show/) | `/s` | ✅ | Reexibe mensagens apagadas ou editadas (`-e`) |
 | [`/stats`](https://jpereira.github.io/zapbot/comandos/stats/) | | ✅ | Ranking do chat (quem mais fala, apaga e edita, horários de pico); `-me` para as suas |
-| [`/status`](https://jpereira.github.io/zapbot/comandos/status/) | | ✅ | Relatório das últimas 24 h (cache, no ar, watch, apagadas, editadas, `/mudo`); `/status 06h` manda todo dia |
 | [`/sticker`](https://jpereira.github.io/zapbot/comandos/sticker/) | `/st` | | Transforma imagem/vídeo em figurinha |
 | [`/tempo`](https://jpereira.github.io/zapbot/comandos/tempo/) | `/t`, `/weather` | | Tempo agora e máx./mín. do dia (Open-Meteo); `/tempo 7d` mostra os próximos 7 dias; sem cidade usa `tempo.city` |
 | [`/tldr`](https://jpereira.github.io/zapbot/comandos/tldr/) | `/resumo` | ✅ | Resume a conversa do chat pelo ChatGPT (`2h`, `300`...) |

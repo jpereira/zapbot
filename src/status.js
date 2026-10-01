@@ -1,5 +1,5 @@
 /*
- * /status: o relatório do bot (últimas 24 h) e o envio diário.
+ * /bot -status: o relatório do bot (últimas 24 h) e o envio diário.
  */
 
 const fs = require('fs');
@@ -70,12 +70,20 @@ async function textoDoStatus(agora = Date.now()) {
         (totalIgnoradas ? ` _(${ignoradas.map(r => `${ROTULOS[r.kind] ?? r.kind} ${fmtNum(r.n)}`).join(', ')})_` : '') + '\n' +
         `💾 *Último backup:* ${ultimoBackup ? `${fmtQuando(ultimoBackup.criadoEm, agora)} (${ultimoBackup.motivo})` : 'nenhum'}`;
 
-    const diario = await agendamentoDiario();
-    texto += diario
-        ? `\n\n⏰ _Próximo status: ${fmtQuando(diario.due_at, agora)} (todo dia às ${horaDoItem(diario)})_`
-        : '\n\n💡 _Receba todo dia com /status 06h (no horário que quiser)._';
+    // No fim, o envio diário (o mesmo do /bot -status -l de antes)
+    return `${texto}\n\n${await textoDoEnvioDiario(agora)}`;
+}
 
-    return texto;
+/**
+ * O horário do envio diário e o próximo, ou que ele está desligado.
+ */
+async function textoDoEnvioDiario(agora = Date.now()) {
+    const diario = await agendamentoDiario();
+
+    return diario
+        ? `⏰ *Status diário:* todo dia às *${horaDoItem(diario)}*, no seu privado.\n📅 Próximo: ${fmtQuando(diario.due_at, agora)}\n` +
+            '💡 _Mude com /bot -status <hora> ou desligue com /bot -status off._'
+        : '🔕 Status diário desligado.\n💡 _Ligue com /bot -status 06h (no horário que quiser)._';
 }
 
 const agendamentoDiario = () => dbGet('SELECT * FROM schedules WHERE kind = ?', [KIND]);
@@ -116,5 +124,6 @@ module.exports = {
     agendarStatusDiario,
     desligarStatusDiario,
     horaDoItem,
+    textoDoEnvioDiario,
     textoDoStatus
 };

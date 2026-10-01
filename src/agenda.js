@@ -73,7 +73,7 @@ function lerAgendamento(args) {
     return { opt, quando, texto, destino, comDestino };
 }
 
-// Lembretes e mensagens juntos, na ordem em que saem (os números do -rm). O status diário (/status) fica de fora
+// Lembretes e mensagens juntos, na ordem em que saem (os números do -rm). O status diário (/bot -status) fica de fora
 const listar = () => dbAll("SELECT * FROM schedules WHERE kind != 'status' ORDER BY due_at, id");
 
 function linhaDaLista(s, i) {
@@ -220,7 +220,7 @@ async function dispararItem(s, agora) {
     }
 
     if (s.kind === 'status') {
-        // O relatório do /status, montado na hora
+        // O relatório do /bot -status, montado na hora
         await client.sendMessage(s.chat_id, await textoDoStatus(agora));
     } else if (s.kind === 'agendar') {
         await client.sendMessage(s.chat_id, s.text);
@@ -233,7 +233,7 @@ async function dispararItem(s, agora) {
             .catch(() => client.sendMessage(s.chat_id, texto));
     }
 
-    printInfo(`${TIPOS[s.kind]?.cmd ?? '/status'}: enviado para ${s.chat_id}${atrasado ? ' (atrasado)' : ''}${s.repeat ? ` (${s.repeat})` : ''}`);
+    printInfo(`${TIPOS[s.kind]?.cmd ?? '/bot -status'}: enviado para ${s.chat_id}${atrasado ? ' (atrasado)' : ''}${s.repeat ? ` (${s.repeat})` : ''}`);
 }
 
 /*
