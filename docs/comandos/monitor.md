@@ -5,7 +5,7 @@
 > como descrito abaixo. Use por sua conta e risco.
 >
 > Por isso ele vem **desabilitado** (`"disabled": true` no
-> `config/bot-config.json`): o bot não responde a `/monitor` nem `/m`, o comando
+> `src/comandos/comandos.json`): o bot não responde a `/monitor` nem `/m`, o comando
 > não aparece no `/help` e os avisos de "ficou online" ficam desligados, mesmo
 > para números cadastrados antes. Para testar, remova a linha `"disabled": true`
 > (ou mude para `false`), refaça o build e recrie o container.

@@ -3,7 +3,7 @@
  *
  * Recupera mensagens apagadas, baixa vídeos (/get), cria figurinhas,
  * vigia mensagens por texto/regex (/watch), monitora contatos e mais. Os comandos são definidos em
- * config/bot-config.json e implementados em src/comandos/ (ver src/comandos/index.js).
+ * src/comandos/comandos.json e implementados em src/comandos/ (ver src/comandos/index.js).
  *
  * Este arquivo só faz o bootstrap, na ordem abaixo; o código fica em src/:
  *   constantes, log, db, settings  → base (banco, configurações, log)
