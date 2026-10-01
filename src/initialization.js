@@ -5,9 +5,23 @@
 const fs = require('fs-extra');
 
 const { MEDIA_DIR, TMP_DIR } = require('./constants');
-const { dbRun } = require('./db');
+const { dbAll, dbRun } = require('./db');
 const { printInfo } = require('./log');
 const { loadSettings } = require('./settings');
+
+/*
+ * New columns on a table that already exists: CREATE TABLE IF NOT EXISTS does not
+ * touches a table created by an earlier version.
+ */
+async function addColumns(table, columns) {
+    const existingAlt = new Set((await dbAll(`PRAGMA table_info(${table})`)).map(c => c.name));
+
+    for (const [column, type] of Object.entries(columns)) {
+        if (existingAlt.has(column)) continue;
+        await dbRun(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`);
+        printInfo(`Coluna ${table}.${column} criada`);
+    }
+}
 
 /*
  * Creation of the tables.
@@ -117,7 +131,10 @@ async function initializeDb() {
     `);
     await dbRun('CREATE INDEX IF NOT EXISTS idx_stats_chat_day ON stats (chat_id, day)');
 
-    // Price alerts from /cotacao -alerta and /crypto -alerta (fire once and go away)
+    /*
+     * Price alerts from /cotacao -alerta and /crypto -alerta (fire once
+     * time and go away). dest_*: the notice chat (-to); empty = your private chat.
+     */
     await dbRun(`
         CREATE TABLE IF NOT EXISTS price_alerts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -126,9 +143,13 @@ async function initializeDb() {
             op TEXT NOT NULL,
             target REAL NOT NULL,
             price_at_creation REAL,
-            created_at INTEGER NOT NULL
+            created_at INTEGER NOT NULL,
+            dest_id TEXT,
+            dest_name TEXT,
+            dest_is_group INTEGER DEFAULT 0
         )
     `);
+    await addColumns('price_alerts', { dest_id: 'TEXT', dest_name: 'TEXT', dest_is_group: 'INTEGER DEFAULT 0' });
 
     // General bot settings (key -> value in JSON)
     await dbRun(`
@@ -169,5 +190,6 @@ async function initializeDb() {
 }
 
 module.exports = {
+    addColumns,
     initializeDb
 };

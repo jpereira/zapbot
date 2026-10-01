@@ -233,6 +233,62 @@ describe('alertas de preço (-alerta)', () => {
         assert.match((await bot.replyAlt('/crypto -alerta'))[0], /🔔 Nenhum alerta no \/crypto\.\n💡 _Crie com \/crypto -alerta BTC < 90000_/);
     });
 
+    test('-to: grupo por parte do nome (palavras em qualquer ordem, sem acento)', async () => {
+        const L200 = '120363000000000200@g.us';
+        bot.createGroup(L200, 'Grupo sobre L200', [OWNER.jid]);
+        bot.createGroup('120363000000000201@g.us', 'Família Ônibus', [OWNER.jid]);
+
+        const [created] = await bot.replyAlt('/crypto -alerta BTC < 90000 -to /Grupo L200/');
+        assert.match(created, /₿ BTC\/USDT abaixo de \*\$90,000\.00\*\n💰 Agora: \$95,000\.00\n💡 _Aviso em 👥 Grupo sobre L200;/);
+
+        assert.match((await bot.replyAlt('/crypto -alerta'))[0], /1\. ₿ BTC\/USDT abaixo de \*\$90,000\.00\* → 👥 Grupo sobre L200/);
+
+        // Other forms: quotes, one word, with @, -to before the rule
+        for (const line of ['/cotacao -alerta USD > 6 -to "l200 grupo"', '/cotacao -alerta -to @L200 EUR > 7', '/cotacao -alerta USD > 8 -to onibus']) {
+            assert.match((await bot.replyAlt(line))[0], /🔔 \*Alerta criado\*/, line);
+        }
+        const destinations = await bot.dbAll("SELECT dest_name FROM price_alerts WHERE kind = 'cotacao' ORDER BY id");
+        assert.deepEqual(destinations.map(d => d.dest_name), ['Grupo sobre L200', 'Grupo sobre L200', 'Família Ônibus']);
+
+        prices.BTC = 89000;
+        const beforeAlt = bot.client.enviadas.length;
+        await priceCheckAlerts({ forcar: true });
+        const notice = bot.client.enviadas.slice(beforeAlt).find(e => e.content.includes('BTC'));
+        assert.equal(notice.chatId, L200);
+        assert.match(notice.content, /🔔 \*ALERTA DE PREÇO\*/);
+    });
+
+    test('-to: pessoa pelo número ou pela menção', async () => {
+        await bot.replyAlt('/cotacao -alerta USD > 6 -to @5521911111111');
+        await bot.replyAlt('/cotacao -alerta EUR > 7 -to @100000000000001', { mencoes: ['100000000000001@lid'] });
+
+        const destinations = await bot.dbAll('SELECT dest_id, dest_name, dest_is_group FROM price_alerts ORDER BY id');
+        assert.deepEqual(destinations, [
+            { dest_id: OTHERAlt.jid, dest_name: 'Fulano', dest_is_group: 0 },
+            { dest_id: '100000000000001@lid', dest_name: '100000000000001', dest_is_group: 0 }
+        ]);
+        assert.match((await bot.replyAlt('/cotacao -alerta'))[0], /USD\/BRL acima de \*R\$ 6,0000\* → 👤 Fulano/);
+
+        prices.USD = 6.1;
+        const beforeAlt = bot.client.enviadas.length;
+        await priceCheckAlerts({ forcar: true });
+        assert.equal(bot.client.enviadas[beforeAlt].chatId, OTHERAlt.jid);
+    });
+
+    test('-to: destino inválido, ambíguo, sem valor ou sem regra', async () => {
+        bot.createGroup('120363000000000300@g.us', 'Trabalho Rio', [OWNER.jid]);
+        bot.createGroup('120363000000000301@g.us', 'Trabalho SP', [OWNER.jid]);
+
+        assert.match((await bot.replyAlt('/cotacao -alerta USD > 6 -to trabalho'))[0], /🔎 "trabalho" corresponde a 2 grupos:\n• Trabalho Rio\n• Trabalho SP/);
+        assert.match((await bot.replyAlt('/cotacao -alerta USD > 6 -to /trabalho sp/'))[0], /💡 _Aviso em 👥 Trabalho SP;/);
+        assert.match((await bot.replyAlt('/cotacao -alerta USD > 6 -to xyz'))[0], /❌ Nenhum grupo com "xyz" no nome/);
+        assert.match((await bot.replyAlt('/cotacao -alerta USD > 6 -to @5521988888888'))[0], /❌ O número 5521988888888 não está no WhatsApp/);
+        assert.match((await bot.replyAlt('/cotacao -alerta USD > 6 -to @123'))[0], /❌ Número inválido: 123/);
+        assert.match((await bot.replyAlt('/cotacao -alerta USD > 6 -to'))[0], /❌ Informe o destino do -to/);
+        assert.match((await bot.replyAlt('/cotacao -alerta -to trabalho'))[0], /❌ O -to só vale ao criar um alerta/);
+        assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM price_alerts')).n, 1);
+    });
+
     test('verificação: respeita o intervalo, espera a conexão e sobrevive a falhas', async () => {
         await bot.replyAlt('/cotacao -alerta USD > 5.30');
         prices.USD = 6;

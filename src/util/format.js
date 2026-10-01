@@ -18,6 +18,9 @@ const plural = (n, um, several) => `${n} ${n === 1 ? um : several}`;
 
 const fmtInA = (n) => Number(n).toLocaleString('pt-BR');
 
+// Without accents and lowercase: comparisons that do not tell "promoção" from "PROMOCAO"
+const withoutAccents = (s) => String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
 const summarizeText = (textAlt, max = 100) => {
     const t = String(textAlt ?? '').replace(/\s+/g, ' ').trim();
     return t.length > max ? `${t.slice(0, max - 1)}…` : t;
@@ -29,5 +32,6 @@ module.exports = {
     formatData,
     paraMs,
     plural,
-    summarizeText
+    summarizeText,
+    withoutAccents
 };

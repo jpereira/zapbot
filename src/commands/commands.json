@@ -108,7 +108,7 @@
                         "alerta"
                     ],
                     "values": [],
-                    "desc": "Sem regra: lista os alertas. Com regra (ex.: USD > 5.30): avisa no seu privado quando o preço passar do valor. Só o dono."
+                    "desc": "Sem regra: lista os alertas. Com regra (ex.: USD > 5.30): avisa no seu privado (ou no destino do -to) quando o preço passar do valor. Só o dono."
                 },
                 {
                     "opts": [
@@ -136,6 +136,15 @@
                         "<nº|all>"
                     ],
                     "desc": "Junto com -alerta: remove o alerta nº N da lista (ou todos)."
+                },
+                {
+                    "opts": [
+                        "to"
+                    ],
+                    "values": [
+                        "<destino>"
+                    ],
+                    "desc": "Junto com -alerta: avisa no privado de uma pessoa (@5521999999999) ou num grupo, pelo nome ou parte dele (/Grupo L200/, \"Grupo L200\" ou L200)."
                 }
             ],
             "onlyAdmin": false
@@ -164,7 +173,7 @@
                         "alerta"
                     ],
                     "values": [],
-                    "desc": "Sem regra: lista os alertas. Com regra (ex.: BTC < 90000): avisa no seu privado quando o preço passar do valor. Só o dono."
+                    "desc": "Sem regra: lista os alertas. Com regra (ex.: BTC < 90000): avisa no seu privado (ou no destino do -to) quando o preço passar do valor. Só o dono."
                 },
                 {
                     "opts": [
@@ -192,6 +201,15 @@
                         "<nº|all>"
                     ],
                     "desc": "Junto com -alerta: remove o alerta nº N da lista (ou todos)."
+                },
+                {
+                    "opts": [
+                        "to"
+                    ],
+                    "values": [
+                        "<destino>"
+                    ],
+                    "desc": "Junto com -alerta: avisa no privado de uma pessoa (@5521999999999) ou num grupo, pelo nome ou parte dele (/Grupo L200/, \"Grupo L200\" ou L200)."
                 }
             ],
             "onlyAdmin": false

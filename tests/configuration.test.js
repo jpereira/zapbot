@@ -348,3 +348,19 @@ describe('ajuda', () => {
         assert.ok(!activeCommands().some(c => c.cmd === '/noffa'));
     });
 });
+
+describe('banco', () => {
+    test('adicionarColunas: cria só as que faltam numa tabela de uma versão anterior', async () => {
+        const { addColumns } = bot.src('initialization');
+        await bot.prepare();
+        await bot.dbRun('DROP TABLE IF EXISTS teste_antiga');
+        await bot.dbRun('CREATE TABLE teste_antiga (id INTEGER PRIMARY KEY, nome TEXT)');
+        await bot.dbRun("INSERT INTO teste_antiga (nome) VALUES ('antes')");
+
+        await addColumns('teste_antiga', { nome: 'TEXT', extra: 'INTEGER DEFAULT 7' });
+        await addColumns('teste_antiga', { extra: 'INTEGER DEFAULT 7' }); // again: does nothing
+
+        assert.deepEqual(await bot.dbAll('SELECT * FROM teste_antiga'), [{ id: 1, nome: 'antes', extra: 7 }]);
+        await bot.dbRun('DROP TABLE teste_antiga');
+    });
+});
