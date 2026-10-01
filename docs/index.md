@@ -67,7 +67,7 @@ Por onde começar:
   título `✏️ MENSAGEM EDITADA DETECTADA` (desative o aviso com
   `/set edit.alert off`; a edição continua guardada). As edições ficam 30 dias
   (setting `cache.editedRetentionDays`) e podem ser reexibidas com
-  [`/edit`](comandos/edit.md). As suas próprias edições são ignoradas.
+  [`/show -e`](comandos/show.md). As suas próprias edições são ignoradas.
 - **Limpeza automática**: a cada 10 minutos o bot remove do banco/disco as
   mensagens comuns com mais de 68 h (janela máxima que o WhatsApp permite
   apagar), as apagadas e as editadas com mais de 30 dias, as ocorrências do

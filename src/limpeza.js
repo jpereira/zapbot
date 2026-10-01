@@ -49,8 +49,8 @@ async function limparCacheAntigo(maxDeleteWin = MAX_DELETE_WINDOW, retencaoApaga
 }
 
 /*
- * Limpeza geral (/cache -all): TODAS as mensagens (inclusive as apagadas
- * guardadas para o /show e as editadas do /edit), todas as mídias e todos os temporários.
+ * Limpeza geral (/cache -all): TODAS as mensagens (inclusive as apagadas e as
+ * editadas guardadas para o /show), todas as mídias e todos os temporários.
  * No fim, VACUUM devolve o espaço ao disco: DELETE sozinho não encolhe o .db.
  * Não mexe em monitored_numbers, presence_logs nem watch_hits (configuração e histórico).
  */
