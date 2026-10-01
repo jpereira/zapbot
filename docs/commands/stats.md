@@ -5,9 +5,9 @@ fala, quem mais apaga e edita, mensagens por faixa de horário, horário e dia d
 pico. Com `-me`, as **suas** mensagens somadas em todos os chats: em quais você
 mais fala, quantas apagou, seus horários e seu dia de pico.
 
-Os números vêm dos contadores da tabela `stats`, que começam a ser preenchidos
-quando o bot é atualizado (não há histórico anterior). As suas mensagens contam
-para o seu número em qualquer chat, inclusive no privado.
+Os números vêm dos contadores da tabela `stats`, preenchidos a cada mensagem
+recebida. As suas mensagens contam para o seu número em qualquer chat,
+inclusive no privado.
 
 | Opção | Valor | Descrição |
 |---|---|---|
