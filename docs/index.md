@@ -87,6 +87,9 @@ Por onde começar:
 - **Agenda**: os lembretes e as mensagens do [`/agendar`](comandos/agendar.md)
   (também `/lembrete` e `/cron`) ficam na tabela `schedules`; a cada 30 s o
   bot envia o que venceu (os repetidos seguem para o próximo horário).
+- **Status diário**: com [`/status 06h`](comandos/status.md), um relatório das
+  últimas 24 h (no ar, cache, watch, apagadas, editadas, `/mudo`) chega todo
+  dia no seu privado.
 - **Backup**: todo dia, às 3h (setting `backup.hour`), o bot guarda uma cópia
   compactada do banco em `cache/backups`; o [`/backup`](comandos/backup.md)
   lista, restaura e envia os arquivos.
