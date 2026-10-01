@@ -45,12 +45,12 @@ em [Como funciona](https://jpereira.github.io/zapbot/#como-funciona).
 ## Instalação
 
 Precisa só de Docker com o Compose v2, Git e um celular com WhatsApp. A versão
-estável é a última tag `release-X.Y`:
+estável é a última release, hoje a `release-1.8`:
 
 ```bash
 git clone https://github.com/jpereira/zapbot.git
 cd zapbot
-git checkout "$(git tag -l 'release-*' --sort=-v:refname | head -n1)"
+git checkout release-1.8
 
 cp config/.env.example config/.env   # preencha o PHONE_NUMBER (veja Configuração)
 touch config/.env.dev
