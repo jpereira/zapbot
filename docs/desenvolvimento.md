@@ -48,6 +48,7 @@ src/
   limpeza.js            retenção e limpeza periódica
   stats.js              contadores do /stats
   status.js             relatório do /bot -status e o envio diário (pela agenda)
+  sistema.js            /bot -info: versões (Node.js, whatsapp-web.js, Chromium, yt-dlp, ffmpeg...) e o sistema
   moedas.js, cotacoes.js, alertasPreco.js   /crypto, /cotacao e alertas de preço
   agenda.js             /cron (e /lembrete): leitura, lista e envio na hora
   openai.js             modelos aceitos pelo /gpt

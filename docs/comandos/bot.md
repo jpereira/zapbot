@@ -1,7 +1,8 @@
 # `/bot` · admin
 
 Controla quem pode usar o bot e mostra o relatório dele
-([Status do bot](#status-do-bot)). Tem dois interruptores independentes, que
+([Status do bot](#status-do-bot)) e as versões do que ele usa
+([Informações do sistema](#informações-do-sistema)). Tem dois interruptores independentes, que
 sobrevivem a reinícios:
 
 - **Ligado/desligado** (setting `bot.paused`, padrão ligado): desligado, o bot
@@ -17,7 +18,8 @@ sobrevivem a reinícios:
 | `-off` | Desliga o bot |
 | `+admin` | Liga o modo admin |
 | `-admin` | Desliga o modo admin (cada comando volta a seguir a coluna *Admin* da [tabela de comandos](index.md#resumo)) |
-| `-status` | Relatório do bot e o envio diário dele (`[<hora>\|off]`). Não combina com as outras. Veja [Status do bot](#status-do-bot) |
+| `-status`, `-s` | Relatório do bot e o envio diário dele (`[<hora>\|off]`). Não combina com as outras. Veja [Status do bot](#status-do-bot) |
+| `-info`, `-i` | Versões do bot e dos programas que ele usa, e o sistema. Não combina com as outras. Veja [Informações do sistema](#informações-do-sistema) |
 
 As opções combinam; `-on` com `-off` (ou `+admin` com `-admin`) no mesmo
 comando é recusado. A resposta sempre mostra o estado final:
@@ -73,9 +75,10 @@ desligado).
 
 ```
 /bot -status             → o relatório agora
+/bot -s                  → o mesmo, pelo atalho
 /bot -status 06h         → todo dia às 06:00
-/bot -status às 18h30    → todo dia às 18:30 (no lugar das 06:00)
-/bot -status off         → para de enviar
+/bot -s às 18h30         → todo dia às 18:30 (no lugar das 06:00)
+/bot -s off              → para de enviar
 ```
 
 ```
@@ -113,3 +116,40 @@ O que entra:
 O envio diário fica na agenda do bot (tabela `schedules`), mas não aparece no
 [`/cron`](cron.md) nem conta no limite dele. Se o bot estiver fora do ar
 no horário, o relatório sai quando ele voltar.
+
+## Informações do sistema
+
+`/bot -info` (ou `-i`) mostra as versões do que o bot usa e onde ele está
+rodando: útil para saber se a imagem precisa ser refeita (o `yt-dlp`, por
+exemplo, muda com frequência) e para relatar um problema.
+
+```
+/bot -info
+ℹ️ ZapBot 2.0 · informações do sistema
+
+🤖 Bot
+• ZapBot: 2.0 (APP_ENV=prod)
+• Node.js: v24.9.0 (V8 13.6.233.10-node.27)
+• whatsapp-web.js: 1.34.7 (commit 58ddf15)
+• WhatsApp Web: 2.3000.1027123456
+• SQLite: 3.50.4
+
+🧰 Programas
+• Chromium: Chromium 141.0.7390.54
+• yt-dlp: 2026.09.21
+• ffmpeg: 7.1.1
+
+🖥️ Sistema
+• Linux 9f2c1a7d3e4b 6.8.0-85-generic #85-Ubuntu SMP x86_64 Linux
+• Host: 9f2c1a7d3e4b (Docker)
+• CPU: 4× Intel(R) Core(TM) i5-8500T CPU @ 2.10GHz · carga 0.32 · 0.41 · 0.38
+• Memória: 2.10 GB de 7.66 GB em uso · o bot usa 412.30 MB
+• No ar: sistema há 12 dias, 3 horas · bot há 2 dias, 1 hora (PID 1)
+```
+
+- **WhatsApp Web** é a versão que o WhatsApp está servindo para o bot (só
+  aparece conectado); o **Chromium** vem do navegador do Puppeteer, ou do
+  binário quando ainda não conectou.
+- Um programa que não responde em 5 s (ou não existe, como o `yt-dlp` fora do
+  Docker) aparece como _não encontrado_.
+- **Carga** é a média de processos na fila do sistema em 1, 5 e 15 minutos.
