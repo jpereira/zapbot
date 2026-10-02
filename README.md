@@ -117,7 +117,7 @@ admin está ligado: só você usa comandos até `/bot -admin`
 |---|---|:-:|---|
 | [`/backup`](https://jpereira.github.io/zapbot/commands/backup/) | `/bkp` | ✅ | Backup do banco: automático todo dia; lista, detalha, restaura e envia o arquivo |
 | [`/boletos`](https://jpereira.github.io/zapbot/commands/boletos/) | | ✅ | Sorteia 2 membros para "pagar um boleto" |
-| [`/bot`](https://jpereira.github.io/zapbot/commands/bot/) | | ✅ | Liga/desliga todos os comandos (`-on`/`-off`) e diz quem usa: admins (`+o`/`-o`), usuários (`+v`/`-v`), todos (`-admin`) ou só você (`+admin`); `-status` (`-s`): relatório das últimas 24 h, e `-s 06h` manda todo dia; `-info` (`-i`): versões e sistema |
+| [`/bot`](https://jpereira.github.io/zapbot/commands/bot/) | | ✅ | Liga/desliga todos os comandos (`-on`/`-off`) e diz quem usa: admins (`+o`/`-o`), usuários (`+v`/`-v`), todos (`-admin`) ou só você (`+admin`); `-reset` volta ao padrão; `-status` (`-s`): relatório das últimas 24 h, e `-s 06h` manda todo dia; `-info` (`-i`): versões e sistema |
 | [`/cache`](https://jpereira.github.io/zapbot/commands/cache/) | `/c` | ✅ | Uso e limpeza do cache |
 | [`/cotacao`](https://jpereira.github.io/zapbot/commands/cotacao/) | `/cambio` | | Cotação de EUR e USDT (e USD, GBP) contra o real: atual, abertura, fechamento e variação; alertas de preço |
 | [`/cron`](https://jpereira.github.io/zapbot/commands/cron/) | `/agenda`, `/lembrete` | ✅ | Na hora marcada (`30m`, `às 18h`, `sexta 9h`...): envia uma mensagem (aqui ou com `-to`, em um ou vários chats) ou, como `/lembrete`, um ⏰ lembrete; pode repetir, editar e pausar, e rodar comandos no texto (`{/crypto}`) |
@@ -151,7 +151,7 @@ admin está ligado: só você usa comandos até `/bot -admin`
 | [`/uptime`](https://jpereira.github.io/zapbot/commands/uptime/) | `/u`, `/up` | ✅ | Tempo de execução e de conexão |
 | [`/version`](https://jpereira.github.io/zapbot/commands/version/) | `/ver` | ✅ | Versão do bot (mesmo banner do `/uptime`) |
 | [`/walissu`](https://jpereira.github.io/zapbot/commands/walissu/) | `/ualisu` | ✅ | Walissu CVE BOT: marca 2 membros com uma CVE aleatória |
-| [`/watch`](https://jpereira.github.io/zapbot/commands/watch/) | `/w` | ✅ | Avisa no seu privado (ou, com `-to`, em outro chat ou por e-mail) quando uma mensagem casa com um texto/regex |
+| [`/watch`](https://jpereira.github.io/zapbot/commands/watch/) | `/w` | ✅ | Avisa no seu privado (ou, com um ou vários `-to`, em outros chats ou por e-mail) quando uma mensagem casa com um texto/regex |
 
 ## Documentação
 
