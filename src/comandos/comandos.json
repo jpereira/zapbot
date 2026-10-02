@@ -1392,7 +1392,7 @@
                     "values": [
                         "<destino|off>"
                     ],
-                    "desc": "Para onde vão os avisos de uma regra: com -add (a regra nova) ou com -N (troca o destino). Contato, menção, grupo, número ou e-mail; off volta ao seu privado. Ex: -to /Jorge Pereira/, -to @Fulano, -to /Grupo L200/, -to +5521999999999, -to email, -to off"
+                    "desc": "Para onde vão os avisos de uma regra: com -add (a regra nova) ou com -N (troca o destino). Contato, menção, grupo, número ou e-mail; off volta ao seu privado. Repita para avisar em vários. Ex: -to /Jorge Pereira/, -to @Fulano, -to /Grupo L200/, -to +5521999999999, -to email, -to off"
                 },
                 {
                     "argv": [
