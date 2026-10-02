@@ -110,7 +110,7 @@ entre os casos.
 | `mudo.test.js` | `/mudo`: avisos silenciados por pessoa ou grupo, e a busca do alvo (contato antes de grupo, menção, a lista para escolher pelo nº) |
 | `stats.test.js`, `watch.test.js`, `monitor.test.js` | `/stats`, `/watch` (e o `-to`), `/monitor` e o aviso de presença |
 | `status.test.js` | `/bot -status`: o relatório (com o aviso `show.alert.*` desligado e os silenciados do `/mudo`) e o envio diário |
-| `agenda.test.js` | Datas digitadas (`6h`, `+2h`, `às 18h`, `sexta`...) e o `/cron`, nos modos mensagem e lembrete, com vários `-to`, `-edit` e `-pause`/`-resume` |
+| `agenda.test.js` | Datas digitadas (`6h`, `+2h`, `às 18h`, `sexta`...) e o `/cron`, nos modos mensagem e lembrete, com vários `-to`, `-edit`, `-pause`/`-resume` e os `{/comando}` no texto (e o `-test`) |
 | `backup.test.js` | `/backup` (criação, lista, restauração, envio no privado, por e-mail e com `-to`) e o backup diário |
 | `cotacoes.test.js` | `/cotacao`, `/crypto` (e o filtro por moeda) e os alertas de preço (com o `-to`) |
 | `defi.test.js` | Solana (base58, PDA), contas da Orca (conferidas com o SDK oficial) e o `/defi`, com o `-alerta` de saída da faixa |
@@ -218,13 +218,20 @@ bot) e a lista `commands`. Cada entrada de `commands` segue este formato:
   "cmd_opts": [
     { "opts": ["audio", "a"], "values": [], "desc": "..." },          // flag
     { "opts": ["startSec", "ss"], "values": ["<segundo>"], "desc": "..." }, // opção com valor
-    { "argv": ["<url>"], "desc": "..." }                              // argumento posicional (só doc)
+    { "argv": ["<url>"], "desc": "..." },                             // argumento posicional (só doc)
+    { "opts": ["add"], "values": ["<x>"], "desc": "...", "cron": false } // opcional; não roda num {/comando} do /cron
   ],
+  "cron": true,                      // opcional; true = roda num {/comando} do texto do /cron
   "onlyAdmin": false,                // true = só a conta do bot pode usar
   "disabled": false                  // opcional; true = o bot ignora o comando
 }
 ```
 
+- `"cron": true` deixa o comando rodar dentro do texto do
+  [`/cron`](comandos/cron.md#comandos-no-texto) (`{/crypto}`), na hora do envio.
+  Só para comandos de consulta, que respondem com `msg.reply` (o texto entra no
+  lugar e as mídias saem depois). Uma opção que muda algo (`-add`, `-alerta`...)
+  leva `"cron": false` e é recusada ao criar o item.
 - Alterar `help`, `usage`, `aliases`, descrições, `onlyAdmin` ou `disabled`
   não exige código: basta refazer o build e recriar o container.
 - Os textos (`usage`, `help` e `desc`) podem citar `${CACHE_DIR}`,

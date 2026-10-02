@@ -2,6 +2,7 @@
  * Agenda: os lembretes (/lembrete) e as mensagens agendadas (/cron), com a verificação periódica.
  */
 
+const { enviarMidias, erroDosComandos, montarTexto } = require('./agendaComandos');
 const { estado } = require('./estado');
 const { client } = require('./cliente');
 const { dbAll, dbGet, dbPronto, dbRun } = require('./db');
@@ -22,6 +23,8 @@ const { REPETICOES, fmtQuando, lerQuando, partesEmBrasilia, proximaRepeticao } =
  * Os dois aceitam -repetir (-r) diario|semanal|mensal. O modo mensagem aceita
  * vários -to (um item por destino). Na lista, -edit <nº> troca a hora, o texto
  * ou a repetição de um item, e -pause/-resume <nº|all> o seguram e soltam.
+ * Um {/comando} no texto roda na hora do envio e a resposta entra no lugar
+ * (veja agendaComandos.js); -test <nº> mostra agora como a mensagem sairia.
  * Sai da sua conta: só o dono usa.
  */
 const TIPOS = {
@@ -50,7 +53,7 @@ const ATRASO_TOLERADO_MS = 5 * 60_000;
 /**
  * Lê "<quando> [opções] <texto>": as opções e o "quando" vêm no começo, em
  * qualquer ordem; o texto é o resto, como foi digitado (com as quebras de linha).
- * @returns {{ opt: {list?, lembrete?, rm?, repetir?, pv?, edit?, pause?, resume?}, quando: {ms}|null,
+ * @returns {{ opt: {list?, lembrete?, rm?, repetir?, pv?, edit?, pause?, resume?, test?}, quando: {ms}|null,
  *            texto: string, destinos: Array<string|null>, comDestino: boolean }}
  */
 function lerAgendamento(args) {
@@ -67,7 +70,7 @@ function lerAgendamento(args) {
         if (nome === 'list' || nome === 'l') opt.list = true;
         else if (nome === 'pv') opt.pv = true;
         else if (nome === 'lembrete' || nome === 'lem') opt.lembrete = true;
-        else if (['rm', 'edit', 'pause', 'resume'].includes(nome)) opt[nome] = palavras[++i]?.[0] ?? '';
+        else if (['rm', 'edit', 'pause', 'resume', 'test'].includes(nome)) opt[nome] = palavras[++i]?.[0] ?? '';
         else if (nome === 'repetir' || nome === 'r') opt.repetir = palavras[++i]?.[0] ?? '';
         else if (!quando && (quando = lerQuando(palavras.slice(i).map(m => m[0])))) i += quando.usadas - 1;
         else break;
@@ -80,11 +83,21 @@ function lerAgendamento(args) {
 // Lembretes e mensagens juntos, na ordem em que saem (os números do -rm). O status diário (/bot -status) fica de fora
 const listar = () => dbAll("SELECT * FROM schedules WHERE kind != 'status' ORDER BY due_at, id");
 
+// Para onde vai um item: "👥 Grupo", "👤 Contato" ou "seu privado"
+const ondeDoItem = (s) => (s.chat_id === client.info.wid._serialized ? 'seu privado' : `${s.is_group ? '👥' : '👤'} ${s.chat_name}`);
+
+// O mesmo, com o id (grupo) ou o número (pessoa), para o log
+function ondeNoLog(s) {
+    const onde = ondeDoItem(s);
+    if (onde === 'seu privado') return onde;
+    const numero = !s.is_group && s.chat_id.endsWith('@c.us') ? `+${s.chat_id.split('@')[0]}` : s.chat_id;
+    return `${onde} (${numero})`;
+}
+
 function linhaDaLista(s, i) {
     const repete = s.repeat ? ` 🔁 ${REPETICOES[s.repeat].rotulo}` : '';
     const pausado = s.paused ? ' ⏸️ _pausado_' : '';
-    const onde = s.chat_id === client.info.wid._serialized ? 'seu privado' : `${s.is_group ? '👥' : '👤'} ${s.chat_name}`;
-    return `${i + 1}. ${TIPOS[s.kind]?.icone ?? '📅'} *${fmtQuando(s.due_at)}*${repete}${pausado} — ${resumirTexto(s.text, 60)}\n   → ${onde}`;
+    return `${i + 1}. ${TIPOS[s.kind]?.icone ?? '📅'} *${fmtQuando(s.due_at)}*${repete}${pausado} — ${resumirTexto(s.text, 60)}\n   → ${ondeDoItem(s)}`;
 }
 
 // "2" → [item 2]; "all" → todos; senão null
@@ -159,6 +172,12 @@ async function editar(msg, itens, { opt, quando, texto }) {
             await msg.reply('❌ Use -repetir (-r) diario, semanal, mensal ou nao.');
             return;
         }
+    }
+
+    const erroComando = texto ? erroDosComandos(texto) : null;
+    if (erroComando) {
+        await msg.reply(erroComando);
+        return;
     }
 
     const dueAt = quando?.ms ?? s.due_at;
@@ -237,6 +256,12 @@ async function tratarAgenda({ msg, args, chatId, chatName, isGroup, quotedMsg })
         return;
     }
 
+    // -test <nº>: monta agora (rodando os {/comando}) e mostra aqui, sem enviar ao destino
+    if (opt.test !== undefined) {
+        await testar(msg, itens, opt.test);
+        return;
+    }
+
     // -l, ou nada: a lista (lembretes e mensagens)
     if (opt.list || (!quando && !digitado && !quotedMsg)) {
         if (!itens.length) {
@@ -259,6 +284,13 @@ async function tratarAgenda({ msg, args, chatId, chatName, isGroup, quotedMsg })
 
     if (!texto) {
         await msg.reply(`❌ Faltou o texto.\n${sintaxe}`);
+        return;
+    }
+
+    // {/comando} no texto: existe e pode rodar no /cron (o erro aparece agora, não na hora do envio)
+    const erroComando = erroDosComandos(texto);
+    if (erroComando) {
+        await msg.reply(erroComando);
         return;
     }
 
@@ -328,6 +360,31 @@ async function tratarAgenda({ msg, args, chatId, chatName, isGroup, quotedMsg })
         `📝 ${resumirTexto(texto, 100)}`);
 }
 
+// O que sai no chat: o texto puro (modo mensagem) ou o ⏰ Lembrete
+function textoDoItem(s, texto, atrasado = false) {
+    if (s.kind === 'agendar') return texto;
+    return `⏰ *Lembrete*\n\n${texto}` + (atrasado ? `\n\n_(atrasado: era para ${fmtQuando(s.due_at)})_` : '');
+}
+
+/*
+ * -test <nº>: monta o item agora, rodando os {/comando} como no chat de destino,
+ * e mostra aqui como ele sairia. Não envia ao destino nem mexe no horário.
+ */
+async function testar(msg, itens, valor) {
+    const [s] = itensDoNumero(itens, valor ?? '') ?? [];
+
+    if (!s || semAcentos(valor).trim() === 'all') {
+        await msg.reply(`❌ Nº ${valor || '?'} não existe. Veja a lista com /cron -l\n💡 _/cron -test <nº>_`);
+        return;
+    }
+
+    const { texto, midias } = await montarTexto(s.text, s);
+
+    await msg.reply(`🧪 *Teste do nº ${valor.trim()}* _(sai em ${fmtQuando(s.due_at)} → ${ondeDoItem(s)})_\n\n` +
+        (texto ? textoDoItem(s, texto) : '_(só mídia)_'));
+    for (const { content, options } of midias) await msg.reply(content, undefined, { caption: options?.caption });
+}
+
 // Envia um item vencido; com repetição, agenda o próximo
 async function dispararItem(s, agora) {
     const atrasado = agora - s.due_at > ATRASO_TOLERADO_MS;
@@ -341,21 +398,30 @@ async function dispararItem(s, agora) {
         await dbRun('DELETE FROM schedules WHERE id = ?', [s.id]);
     }
 
+    let comandos = [];
     if (s.kind === 'status') {
         // O relatório do /bot -status, montado na hora
         await client.sendMessage(s.chat_id, await textoDoStatus(agora));
-    } else if (s.kind === 'agendar') {
-        await client.sendMessage(s.chat_id, s.text);
     } else {
-        const texto = `⏰ *Lembrete*\n\n${s.text}` +
-            (atrasado ? `\n\n_(atrasado: era para ${fmtQuando(s.due_at)})_` : '');
+        // Os {/comando} rodam agora; as mídias deles saem depois da mensagem
+        const { texto: montado, midias, comandos: executados } = await montarTexto(s.text, s);
+        comandos = executados;
+        const texto = textoDoItem(s, montado, atrasado);
 
-        // A mensagem citada pode ter sumido: sem ela, vai sem citar
-        await client.sendMessage(s.chat_id, texto, s.quoted_id ? { quotedMessageId: s.quoted_id } : {})
-            .catch(() => client.sendMessage(s.chat_id, texto));
+        // Só mídia (ex.: "{/meme}"): não há texto a enviar
+        if (texto && s.kind === 'agendar') {
+            await client.sendMessage(s.chat_id, texto);
+        } else if (texto) {
+            // A mensagem citada pode ter sumido: sem ela, vai sem citar
+            await client.sendMessage(s.chat_id, texto, s.quoted_id ? { quotedMessageId: s.quoted_id } : {})
+                .catch(() => client.sendMessage(s.chat_id, texto));
+        }
+        await enviarMidias(s.chat_id, midias);
     }
 
-    printInfo(`${TIPOS[s.kind]?.cmd ?? '/bot -status'}: enviado para ${s.chat_id}${atrasado ? ' (atrasado)' : ''}${s.repeat ? ` (${s.repeat})` : ''}`);
+    printInfo(`${TIPOS[s.kind]?.cmd ?? '/bot -status'}: enviado para ${ondeNoLog(s)}` +
+        (comandos.length ? `, com ${comandos.map(c => `{${c}}`).join(', ')}` : '') +
+        `${atrasado ? ' (atrasado)' : ''}${s.repeat ? ` (${s.repeat})` : ''}`);
 }
 
 /*
