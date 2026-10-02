@@ -70,7 +70,7 @@
                     "values": [
                         "[nº]"
                     ],
-                    "desc": "Envia o arquivo do backup (sem nº: o mais recente) no seu privado ou no destino do -to."
+                    "desc": "Envia o arquivo do backup (sem nº: o mais recente) no seu privado ou nos destinos do -to."
                 },
                 {
                     "opts": [
@@ -125,7 +125,7 @@
                         "-"
                     ],
                     "values": [],
-                    "desc": "+admin: só você (e os admins) usa comandos; a lista de usuários sai. -admin: todos usam os comandos comuns, em qualquer chat (o /bot mostra um aviso)."
+                    "desc": "Com +admin, só você (e os admins) usa comandos, e a lista de usuários sai. Com -admin, todos usam os comandos comuns, em qualquer chat (o /bot mostra um aviso)."
                 },
                 {
                     "opts": [
@@ -227,7 +227,7 @@
         },
         {
             "cmd": "/cotacao",
-            "usage": "/cotacao [OPTION] [MOEDA...]",
+            "usage": "/cotacao [OPTION] [MOEDA...]  ou  /cotacao [MOEDA] -alerta [regra] [-to <destino>]... [-msg <texto>]  ou  /cotacao -alerta -rm <nº...|all>",
             "aliases": [
                 "/cambio"
             ],
@@ -249,7 +249,7 @@
                         "alerta"
                     ],
                     "values": [],
-                    "desc": "Sem regra: lista os alertas. Com regra (ex.: USD > 5.30): avisa no seu privado (ou no destino do -to) quando o preço passar do valor. A moeda também pode vir antes: /cotacao USD -alerta > 5.30. Só o dono (ou um admin do bot.admins).",
+                    "desc": "Sem regra: lista os alertas. Com regra (ex.: USD > 5.30): avisa no seu privado (ou nos destinos do -to) quando o preço passar do valor. A moeda também pode vir antes: /cotacao USD -alerta > 5.30. Só o dono (ou um admin do bot.admins).",
                     "cron": false
                 },
                 {
@@ -288,7 +288,7 @@
                     "values": [
                         "<nº...|all>"
                     ],
-                    "desc": "Junto com -alerta: remove os alertas com esses nºs da lista (ou todos). Ex: -rm 2, -rm 1 2 3, -rm all"
+                    "desc": "Junto com -alerta: remove o alerta nº N da lista, vários de uma vez (-rm 1 2 3 ou -rm 1,2,3) ou todos. Se algum nº não existe, nenhum sai."
                 },
                 {
                     "opts": [
@@ -297,7 +297,7 @@
                     "values": [
                         "<destino>"
                     ],
-                    "desc": "Junto com -alerta: avisa num contato, num grupo, num número ou por e-mail em vez do seu privado (vários com o nome: você escolhe na lista). Repita para vários: um alerta só, que avisa em todos. Ex: -to /Jorge Pereira/, -to @Fulano (menção), -to /Grupo L200/ -to email, -to +5521999999999, -to email (o QRCODE_EMAIL_SMTP_TO), -to voce@exemplo.com"
+                    "desc": "Junto com -alerta: avisa num contato, num grupo, num número ou por e-mail em vez do seu privado (vários com o nome: você escolhe na lista). Repita para vários: um alerta só, que avisa em todos. Ex: -to /Jorge Pereira/, -to @Fulano (menção), -to /Grupo L200/ -to /Família/, -to +5521999999999, -to email (o QRCODE_EMAIL_SMTP_TO), -to voce@exemplo.com"
                 }
             ],
             "cron": true,
@@ -410,7 +410,7 @@
         },
         {
             "cmd": "/crypto",
-            "usage": "/crypto [OPTION] [MOEDA...]",
+            "usage": "/crypto [OPTION] [MOEDA...]  ou  /crypto [MOEDA] -alerta [regra] [-to <destino>]... [-msg <texto>]  ou  /crypto -alerta -rm <nº...|all>",
             "aliases": [
                 "/bitcoio",
                 "/creptomoeda"
@@ -433,7 +433,7 @@
                         "alerta"
                     ],
                     "values": [],
-                    "desc": "Sem regra: lista os alertas. Com regra (ex.: BTC < 90000): avisa no seu privado (ou no destino do -to) quando o preço passar do valor. A moeda também pode vir antes: /crypto BTC -alerta < 90000. Só o dono (ou um admin do bot.admins).",
+                    "desc": "Sem regra: lista os alertas. Com regra (ex.: BTC < 90000): avisa no seu privado (ou nos destinos do -to) quando o preço passar do valor. A moeda também pode vir antes: /crypto BTC -alerta < 90000. Só o dono (ou um admin do bot.admins).",
                     "cron": false
                 },
                 {
@@ -472,7 +472,7 @@
                     "values": [
                         "<nº...|all>"
                     ],
-                    "desc": "Junto com -alerta: remove os alertas com esses nºs da lista (ou todos). Ex: -rm 2, -rm 1 2 3, -rm all"
+                    "desc": "Junto com -alerta: remove o alerta nº N da lista, vários de uma vez (-rm 1 2 3 ou -rm 1,2,3) ou todos. Se algum nº não existe, nenhum sai."
                 },
                 {
                     "opts": [
@@ -481,7 +481,7 @@
                     "values": [
                         "<destino>"
                     ],
-                    "desc": "Junto com -alerta: avisa num contato, num grupo, num número ou por e-mail em vez do seu privado (vários com o nome: você escolhe na lista). Repita para vários: um alerta só, que avisa em todos. Ex: -to /Jorge Pereira/, -to @Fulano (menção), -to /Grupo L200/ -to email, -to +5521999999999, -to email (o QRCODE_EMAIL_SMTP_TO), -to voce@exemplo.com"
+                    "desc": "Junto com -alerta: avisa num contato, num grupo, num número ou por e-mail em vez do seu privado (vários com o nome: você escolhe na lista). Repita para vários: um alerta só, que avisa em todos. Ex: -to /Jorge Pereira/, -to @Fulano (menção), -to /Grupo L200/ -to /Família/, -to +5521999999999, -to email (o QRCODE_EMAIL_SMTP_TO), -to voce@exemplo.com"
                 }
             ],
             "cron": true,
@@ -540,7 +540,7 @@
         },
         {
             "cmd": "/defi",
-            "usage": "/defi [orca|prjx]  ou  /defi -l  ou  /defi -rm <nº...|all>  ou  /defi -alerta <nº|all> [-to <destino>] [-taxas <valor>]  ou  /defi orca -address <endereço> [-pool <endereço>] [-nft <mint>] [-alerta [valor]]  ou  /defi prjx -address <0x...> [-alerta [valor]]",
+            "usage": "/defi [orca|prjx]  ou  /defi -l  ou  /defi -rm <nº...|all>  ou  /defi -alerta <nº|all> [-to <destino>]... [-taxas <valor>]  ou  /defi orca -address <endereço> [-pool <endereço>] [-nft <mint>] [-alerta [valor]]  ou  /defi prjx -address <0x...> [-alerta [valor]]",
             "help": "Posições de liquidez da Orca (Solana) e do Project X (HyperEVM): saldo, faixa, preço e taxas a coletar, lidos on-chain. Sem nada, mostra todas; com orca ou prjx, só as daquele protocolo. Com -alerta, avisa quando uma posição sai da faixa, quando volta e, com -taxas, quando as taxas a coletar passam de um valor.",
             "cmd_opts": [
                 {
@@ -561,7 +561,7 @@
                     "values": [
                         "[nº|all|valor]"
                     ],
-                    "desc": "Sem nº: lista os alertas. Com nº (ou all): avisa quando a posição sair da faixa e quando voltar, no seu privado ou no destino do -to (verificada a cada defi.alerta.intervalMin minutos). Com -rm: desliga. No cadastro (com -address), liga o alerta da posição nova; o valor é o limite das taxas em dólar (como o -taxas). Ex: /defi -alerta 1, /defi orca -address <endereço> -alerta 2000",
+                    "desc": "Sem nº: lista os alertas. Com nº (ou all): avisa quando a posição sair da faixa e quando voltar, no seu privado ou nos destinos do -to (verificada a cada defi.alerta.intervalMin minutos). Com -rm: desliga. No cadastro (com -address), liga o alerta da posição nova; o valor é o limite das taxas em dólar (como o -taxas). Ex: /defi -alerta 1, /defi orca -address <endereço> -alerta 2000",
                     "cron": false
                 },
                 {
@@ -619,7 +619,7 @@
                     "values": [
                         "<destino>"
                     ],
-                    "desc": "Junto com -alerta: avisa num contato, num grupo, num número ou por e-mail em vez do seu privado (vários com o nome: você escolhe na lista). Repita para avisar em vários. Ex: -to /Jorge Pereira/, -to @Fulano (menção), -to /Grupo L200/ -to email, -to +5521999999999, -to email (o QRCODE_EMAIL_SMTP_TO), -to voce@exemplo.com",
+                    "desc": "Junto com -alerta: avisa num contato, num grupo, num número ou por e-mail em vez do seu privado (vários com o nome: você escolhe na lista). Repita para avisar em vários. Ex: -to /Jorge Pereira/, -to @Fulano (menção), -to /Grupo L200/ -to /Família/, -to +5521999999999, -to email (o QRCODE_EMAIL_SMTP_TO), -to voce@exemplo.com",
                     "cron": false
                 },
                 {
@@ -1042,7 +1042,7 @@
                     "values": [
                         "<chave>"
                     ],
-                    "desc": "Numa lista, acrescenta os itens que vierem depois da chave. No bot.admins, vale o nome do contato. Ex: /set -a bot.admins /Jorge Pereira/"
+                    "desc": "Numa lista, acrescenta os itens que vierem depois da chave. No bot.admins e no bot.users, vale o nome do contato (no bot.users, também o do grupo). Ex: /set -a bot.admins /Jorge Pereira/"
                 },
                 {
                     "opts": [
@@ -1389,11 +1389,11 @@
         },
         {
             "cmd": "/watch",
-            "usage": "/watch [OPTION] [-N | <PATTERN|/REGEX/>] [-to <destino>]",
+            "usage": "/watch [OPTION] [-N | <PATTERN|/REGEX/>] [-to <destino>]...",
             "aliases": [
                 "/w"
             ],
-            "help": "Vigia as mensagens recebidas e avisa no seu privado (ou no destino do -to da regra) quando alguma casar com uma regra (setting watch.rules).",
+            "help": "Vigia as mensagens recebidas e avisa no seu privado (ou nos destinos do -to da regra) quando alguma casar com uma regra (setting watch.rules).",
             "cmd_opts": [
                 {
                     "opts": [
@@ -1444,7 +1444,7 @@
                     "values": [
                         "<destino|off>"
                     ],
-                    "desc": "Para onde vão os avisos de uma regra: com -add (a regra nova) ou com -N (troca o destino). Contato, menção, grupo, número ou e-mail; off volta ao seu privado. Repita para avisar em vários. Ex: -to /Jorge Pereira/, -to @Fulano, -to /Grupo L200/, -to +5521999999999, -to email, -to off"
+                    "desc": "Para onde vão os avisos de uma regra: com -add (a regra nova) ou com -N (troca o destino). Contato, menção, grupo, número ou e-mail; off volta ao seu privado. Repita para avisar em vários. Ex: -to /Jorge Pereira/, -to @Fulano, -to /Grupo L200/ -to email, -to +5521999999999, -to off"
                 },
                 {
                     "argv": [

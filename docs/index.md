@@ -86,13 +86,15 @@ Por onde começar:
 - **Alertas de preço**: `/cotacao -alerta USD > 5.30` e `/crypto -alerta BTC <
   90000` guardam a regra na tabela `price_alerts`; a cada 5 minutos (setting
   `alerta.intervalMin`) o bot consulta os preços e avisa **no seu privado**
-  (ou, com `-to`, num contato, num grupo, num número ou por e-mail) quando a
-  regra é cumprida. Veja [Alertas de preço](comandos/cotacao.md#alertas-de-preço).
+  (ou, com um ou vários `-to`, em contatos, grupos, números ou por e-mail) quando
+  a regra é cumprida; com o `-msg`, um texto seu vai no início do aviso. Veja
+  [Alertas de preço](comandos/cotacao.md#alertas-de-preço).
 - **DeFi**: o [`/defi`](comandos/defi.md) lê on-chain as posições de liquidez
   da Orca e do Project X (pela carteira) cadastradas (tabela `defi_positions`)
   e, com o `-alerta`, confere a cada 10 minutos (setting `defi.alerta.intervalMin`)
-  e avisa quando uma posição sai da faixa, quando volta e, com o `-taxas`, quando
-  as taxas a coletar passam de um valor.
+  e avisa (no seu privado ou nos destinos do `-to`) quando uma posição sai da
+  faixa, quando volta e, com o `-taxas`, quando as taxas a coletar passam de um
+  valor.
 - **Enquetes**: os votos das enquetes da sua conta (evento `vote_update`) vão
   para as tabelas `polls` e `poll_votes`, e o
   [`/enquete -r`](comandos/enquete.md#resultado) mostra o placar. Ficam 90 dias
@@ -106,12 +108,12 @@ Por onde começar:
   dia no seu privado.
 - **Backup**: todo dia, às 3h (setting `backup.hour`), o bot guarda uma cópia
   compactada do banco em `cache/backups`; o [`/backup`](comandos/backup.md)
-  lista, restaura e envia os arquivos (no seu privado, por e-mail ou, com
-  `-to`, noutro chat).
+  lista, restaura e envia os arquivos (no seu privado, por e-mail ou, com um
+  ou vários `-to`, noutros chats).
 - **Watch**: toda mensagem recebida que não é comando é testada contra as
   regras do [`/watch`](comandos/watch.md) (setting `watch.rules`); quando casa, a
   ocorrência é gravada na tabela `watch_hits` e você é avisado **no seu
-  privado**.
+  privado** (ou nos destinos do `-to` da regra: outros chats ou e-mails).
 - **Configurações (`settings`)**: configurações gerais que podem mudar em
   tempo de execução (debug, moedas do `/crypto`, limites...) ficam na tabela
   genérica `settings` do SQLite (`key` → `value` em JSON) e são alteradas pelo
@@ -119,15 +121,16 @@ Por onde começar:
   existirem, e tudo é carregado em memória. Veja [Settings](settings.md).
 - **Comandos**: definidos em [`src/comandos/comandos.json`](https://github.com/jpereira/zapbot/blob/main/src/comandos/comandos.json)
   (nome, aliases, opções, ajuda, permissão) e implementados em `src/comandos/`
-  (um arquivo por comando; veja [Estrutura do código](desenvolvimento.md#estrutura-do-código)). Os que
+  (um arquivo por comando; veja
+  [Estrutura do código](desenvolvimento.md#estrutura-do-código)). Os que
   consultam a internet (`/gpt`, `/tempo`, `/cve`, `/news`...) usam os serviços
   da tabela [Serviços externos](configuracao.md#serviços-externos).
 - **Controle**: o [`/bot`](comandos/bot.md) liga/desliga todos os comandos
   (`-on`/`-off`) e diz quem usa: você, os
   [admins extras](comandos/bot.md#admins-extras) (`+o`/`-o`) e os
   [usuários](comandos/bot.md#usuários) (`+v`/`-v`: pessoas e grupos, ou todos
-  com `-admin`); o `-status` mostra o relatório e o `-info`, as versões do que o bot
-  usa (Node.js, Chromium, yt-dlp, ffmpeg...).
+  com `-admin`), e o `-reset` volta ao padrão; o `-status` mostra o relatório e
+  o `-info`, as versões do que o bot usa (Node.js, Chromium, yt-dlp, ffmpeg...).
 - **Reconexão**: em caso de queda o cliente é reiniciado sozinho, exceto quando o
   motivo exige ação manual (`LOGOUT`, `CONFLICT`, `UNPAIRED`...).
 - **Saúde (heartbeat)**: a cada 30 s o bot confere se o WhatsApp Web responde e

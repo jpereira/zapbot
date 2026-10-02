@@ -79,7 +79,7 @@ As mesmas formas, num comando só:
 Comandos marcados como **admin** só executam quando enviados **pela própria
 conta do bot** (você, de qualquer aparelho) ou por um **admin extra**: as
 pessoas que você puser no setting `bot.admins`
-(`/set -a bot.admins /Jorge Pereira/`, `@Fulano Da Silva` ou `+5521999999999`;
+(`/bot +o /Jorge Pereira/`, `@Fulano Da Silva` ou `+5521999999999`;
 veja [Admins extras](bot.md#admins-extras)). Se outra pessoa tentar, nada
 acontece no chat; com o [debug](debug.md) ligado, você recebe um
 aviso no `PHONE_NUMBER`:
@@ -105,7 +105,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -a`) para fazer o bot
 |---|---|:-:|---|
 | [`/backup`](backup.md) | `/bkp` | ✅ | Backup do banco: automático todo dia; lista, detalha, restaura e envia o arquivo |
 | [`/boletos`](boletos.md) | | ✅ | Sorteia 2 membros para "pagar um boleto" |
-| [`/bot`](bot.md) | | ✅ | Liga/desliga todos os comandos (`-on`/`-off`) e diz quem usa: admins (`+o`/`-o`), usuários (`+v`/`-v`), todos (`-admin`) ou só você (`+admin`); `-status` (`-s`): relatório das últimas 24 h, e `-s 06h` manda todo dia; `-info` (`-i`): versões e sistema |
+| [`/bot`](bot.md) | | ✅ | Liga/desliga todos os comandos (`-on`/`-off`) e diz quem usa: admins (`+o`/`-o`), usuários (`+v`/`-v`), todos (`-admin`) ou só você (`+admin`); `-reset` volta ao padrão; `-status` (`-s`): relatório das últimas 24 h, e `-s 06h` manda todo dia; `-info` (`-i`): versões e sistema |
 | [`/cache`](cache.md) | `/c` | ✅ | Uso e limpeza do cache |
 | [`/cotacao`](cotacao.md) | `/cambio` | | Cotação de EUR e USDT (e USD, GBP) contra o real: atual, abertura, fechamento e variação; alertas de preço |
 | [`/cron`](cron.md) | `/agenda`, `/lembrete` | ✅ | Na hora marcada (`30m`, `às 18h`, `sexta 9h`...): envia uma mensagem (aqui ou com `-to`, em um ou vários chats) ou, como `/lembrete`, um ⏰ lembrete; pode repetir, editar e pausar, e rodar comandos no texto (`{/crypto}`) |
@@ -139,4 +139,4 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -a`) para fazer o bot
 | [`/uptime`](uptime.md) | `/u`, `/up` | ✅ | Tempo de execução e de conexão |
 | [`/version`](version.md) | `/ver` | ✅ | Versão do bot (mesmo banner do `/uptime`) |
 | [`/walissu`](walissu.md) | `/ualisu` | ✅ | Walissu CVE BOT: marca 2 membros com uma CVE aleatória |
-| [`/watch`](watch.md) | `/w` | ✅ | Avisa no seu privado (ou, com `-to`, em outro chat ou por e-mail) quando uma mensagem casa com um texto/regex |
+| [`/watch`](watch.md) | `/w` | ✅ | Avisa no seu privado (ou, com um ou vários `-to`, em outros chats ou por e-mail) quando uma mensagem casa com um texto/regex |
