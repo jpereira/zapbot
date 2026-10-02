@@ -9,7 +9,7 @@ const { client } = require('./client');
 const { resolveLidToPhone } = require('./contacts');
 const { sendEmail, smtpForSend } = require('./email');
 const { waitChoice } = require('./choices');
-const { printDebug } = require('./log');
+const { printDebug, printError } = require('./log');
 const { isDebugMode } = require('./settings');
 const { withoutAccents } = require('./util/format');
 
@@ -90,8 +90,68 @@ async function withoutAsCopiesByLid(contacts) {
     return contacts.filter(c => !copies.has(c));
 }
 
-const scheduleContacts = async () => (await client.getContacts?.().catch(() => []) ?? [])
-    .filter(c => c?.isMyContact && !c.isGroup && !c.isMe && c.name && c.id?._serialized);
+/*
+ * Contacts and groups with all the words in the name, read straight from the memory of the
+ * WhatsApp Web. Does NOT use client.getContacts() nor client.getChats(): they
+ * build the full model of everything, and getChats() queries the servers of the
+ * WhatsApp for EACH group (groupMetadata.update); with many groups, the page
+ * stays busy for minutes and the next messages wait in the queue.
+ * Here the filter runs inside and only what is needed comes back. A LID contact
+ * (the internal id) comes with its phone, if WhatsApp knows which one it is.
+ */
+const SEARCH_TIMEOUT_MS = 20_000;
+
+function searchInWhatsApp(words) {
+    const search = client.pupPage.evaluate((words) => {
+        const { Contact, Chat } = window.require('WAWebCollections');
+        const { getAlternateUserWid } = window.require('WAWebApiContact');
+        const norm = (s) => String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+        const home = (nameAlt) => Boolean(nameAlt) && words.every(p => norm(nameAlt).includes(p));
+        const serial = (wid) => wid?._serialized ?? null;
+
+        const contacts = Contact.getModelsArray()
+            .filter(c => c.isMyContact && !c.isMe && c.id?.server !== 'g.us' && home(c.name))
+            .map((c) => {
+                const id = serial(c.id);
+                const phoneAlt = id?.endsWith('@lid')
+                    ? serial(c.phoneNumber) ?? serial((() => { try { return getAlternateUserWid(c.id); } catch { return null; } })())
+                    : null;
+                return { id: phoneAlt ?? id, nome: c.name };
+            });
+
+        const groups = Chat.getModelsArray()
+            .filter(ch => ch.id?.server === 'g.us' && home(ch.formattedTitle || ch.name))
+            .map(ch => ({ id: serial(ch.id), nome: ch.formattedTitle || ch.name }));
+
+        return { contatos: contacts, grupos: groups };
+    }, words);
+
+    let limitAlt;
+    const time = new Promise((_, reject) => {
+        limitAlt = setTimeout(() => reject(new Error(`o WhatsApp Web não respondeu em ${SEARCH_TIMEOUT_MS / 1000} s`)), SEARCH_TIMEOUT_MS);
+    });
+    return Promise.race([search, time]).finally(() => clearTimeout(limitAlt));
+}
+
+// Same shape as whatsapp-web.js (Contact and Chat), so the rest of the code does not depend on the origin
+async function contactsAndGroups(words) {
+    if (client.pupPage) {
+        const { contatos: contacts, grupos: groups } = await searchInWhatsApp(words);
+        const unique = [...new Map(contacts.filter(c => c.id).map(c => [c.id, c])).values()];
+        return {
+            contatos: unique.map(c => ({ id: { _serialized: c.id }, name: c.nome, number: c.id.split('@')[0], isMyContact: true })),
+            grupos: groups.filter(g => g.id).map(g => ({ id: { _serialized: g.id }, name: g.nome, isGroup: true }))
+        };
+    }
+
+    // Without the page (the tests): the client's lists
+    const [contacts, chats] = await Promise.all([client.getContacts?.().catch(() => []) ?? [], client.getChats().catch(() => [])]);
+    const home = (nameAlt) => words.every(p => normalize(nameAlt).includes(p));
+    return {
+        contatos: contacts.filter(c => c?.isMyContact && !c.isGroup && !c.isMe && c.name && c.id?._serialized && home(c.name)),
+        grupos: chats.filter(c => c.isGroup && c.name && home(c.name))
+    };
+}
 
 const contact = (c) => ({ id: c.id._serialized, nome: c.name, grupo: false, numero: c.number ?? null });
 const group = (g) => ({ id: g.id._serialized, nome: g.name, grupo: true });
@@ -157,12 +217,16 @@ async function resolverDestination(valueAlt, { aceitaEmail: acceptsEmail = false
     // Name: all the words, first in the contacts, then in the groups
     const search = normalize(textAlt);
     const words = search.split(/\s+/);
-    const home = (nameAlt) => words.every(p => normalize(nameAlt).includes(p));
 
-    // Both lists come from WhatsApp Web (slow with many contacts): at the same time
-    const [schedule, chats] = await Promise.all([scheduleContacts(), client.getChats().catch(() => [])]);
-    const contacts = await withoutAsCopiesByLid(schedule.filter(c => home(c.name)));
-    const groups = chats.filter(c => c.isGroup && c.name && home(c.name));
+    let foundAlt6;
+    try {
+        foundAlt6 = await contactsAndGroups(words);
+    } catch (err) {
+        printError(`[DESTINO] busca por "${textAlt}" falhou:`, err.message);
+        return { erro: `⚠️ Não consegui buscar "${textAlt}" nos contatos e grupos agora (${err.message}). Tente de novo ou use o número: +5521999999999` };
+    }
+    const contacts = await withoutAsCopiesByLid(foundAlt6.contatos);
+    const groups = foundAlt6.grupos;
 
     if (isDebugMode()) {
         printDebug(`[DESTINO] "${textAlt}": contatos ${contacts.map(c => `${c.name}=${c.id._serialized}`).join(', ') || '-'}; ` +
