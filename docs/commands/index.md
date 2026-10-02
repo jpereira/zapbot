@@ -37,7 +37,7 @@ As mesmas formas, num comando só (o `/cron` aceita vários `-to`; os outros, um
 ```
 /cron 8h -r diario -to /Jorge Pereira/ -to @Fulano Da Silva -to /Grupo L200/ -to +5521999999999 Bom dia!
 /cotacao -alerta USD > 5.30 -to email           → por e-mail (o QRCODE_EMAIL_SMTP_TO)
-/mudo -a @Fulano Da Silva                       → o alvo do /mudo, mencionando
+/mudo @Fulano Da Silva                          → o alvo do /mudo, mencionando
 /set -a bot.admins /Jorge Pereira/ +5511988887777 → o bot.admins aceita várias pessoas de uma vez
 ```
 
@@ -59,7 +59,7 @@ As mesmas formas, num comando só (o `/cron` aceita vários `-to`; os outros, um
   no mesmo chat, em até 2 minutos:
 
 ```
-/mudo -a /Jorge/
+/mudo /Jorge/
 🔎 "Jorge" corresponde a 2 contatos:
 
 1. 👤 Jorge Pereira · +5521999999999

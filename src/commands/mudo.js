@@ -15,8 +15,9 @@ const { plural } = require('../util/format');
  * -e (-edited)   mutes the edit notices
  * -s (-status)   mutes the deleted status notices
  * -a (-all)      all of that
- * The options combine (-d -e). The target is looked up as in -to: first in the
- * contacts, then in the groups (several: you choose from the list), or a number.
+ * The options combine (-d -e); only the target, without an option, is -a. The target is looked up
+ * as in -to: first in the contacts, then in the groups (several: you choose from the
+ * list), or a number.
  * Muting the same target again adds to what was there. Without anything, lists;
  * -rm <nº|all> desfaz.
  */
@@ -73,7 +74,7 @@ async function listAlt(msg) {
     );
 
     if (!mutes.length) {
-        await msg.reply('🔇 Ninguém silenciado.\n💡 _Ex.: /mudo -a /Jorge Pereira/, /mudo -a /Grupo L200/ ou /mudo -s +5521999999999_');
+        await msg.reply('🔇 Ninguém silenciado.\n💡 _Ex.: /mudo /Jorge Pereira/, /mudo /Grupo L200/ ou /mudo -s +5521999999999_');
         return;
     }
 
@@ -118,14 +119,13 @@ async function cmdMuted({ msg, args }) {
         return;
     }
 
-    if (!r.colunas.size) {
-        await msg.reply('❌ Escolha o que silenciar: -d (apagadas), -e (editadas), -s (status) ou -a (tudo).\n💡 _Ex.: /mudo -a /Grupo L200/_');
-        return;
-    }
     if (!r.alvo) {
         await msg.reply('❌ Informe quem: um contato, um grupo ou um número (/Jorge Pereira/, /Grupo L200/ ou +5521999999999).');
         return;
     }
+
+    // Only the target (/mudo /Grupo L200/): mutes everything, like -a
+    if (!r.colunas.size) COLUMNS.forEach(c => r.colunas.add(c));
 
     // Several contacts or groups with the name: waits for you to choose from the list
     const destination = await resolverOrChoose(msg, r.alvo, {
