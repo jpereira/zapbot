@@ -79,7 +79,8 @@ padrão; desligue com `/set email.alerts off`. Sem `QRCODE_EMAIL_SMTP_HOST`,
 | `[ZapBot] 💥 Crash` | Exceção ou promise rejeitada sem tratamento (com o stack). O processo sai e o Docker sobe de novo |
 | `[ZapBot] 🛑 Bot encerrado` | `docker stop`/`restart` ou Ctrl+C (SIGTERM/SIGINT) |
 
-Cada e-mail traz o horário, o número mascarado, a versão, o host, há quanto
-tempo o processo está no ar e o código anti-phishing. O mesmo evento não se
+Cada e-mail traz o horário, o número mascarado, a versão com o commit que
+está rodando (`2.1 (git+25b0870)`, veja o [`/version`](comandos/version.md)),
+o host, há quanto tempo o processo está no ar e o código anti-phishing. O mesmo evento não se
 repete antes de 5 minutos (exceto crash e encerramento), para não lotar a
 caixa num loop de reconexão.
