@@ -9,7 +9,7 @@ const { isEnderecoEvm } = require('../defi/hyperevm');
 const { detalhesDaPosicao, validarPosicao } = require('../defi/orca');
 const { posicoesDaCarteira } = require('../defi/prjx');
 const { isEnderecoSolana } = require('../defi/solana');
-const { descreverDestino, extrairDestino, resolverOuEscolher } = require('../destinos');
+const { descreverDestinos, destinosSalvos, extrairDestinos, recipientsDe, resolverDestinos } = require('../destinos');
 const { printError } = require('../log');
 const { GetOptFromCommand } = require('../opcoes');
 const { getSetting } = require('../settings');
@@ -29,7 +29,7 @@ const { formatarData, plural } = require('../util/formatar');
  *   /defi -alerta                         → lista os alertas
  *   /defi -alerta <nº|all> [-to <dest>]   → avisa quando a posição sai da faixa e quando
  *                                           volta: no seu privado ou no -to (email, e-mails,
- *                                           contato, grupo ou número)
+ *                                           contato, grupo ou número; repita para vários)
  *   /defi -alerta <nº|all> -taxas <US$>   → e quando as taxas a coletar passam do valor
  *   /defi -alerta -rm <nº|all>            → desliga
  */
@@ -296,14 +296,16 @@ async function mostrar(msg, posicoes) {
  * Para onde vai o aviso da posição: "seu privado", "👥 Grupo", "📧 a@b.com".
  */
 function descreverDestinoDoAlerta(p) {
-    const destino = destinoDoAlerta(p);
-    return destino ? descreverDestino(destino) : 'seu privado';
+    const destinos = destinosDoAlerta(p);
+    return destinos.length ? descreverDestinos(destinos) : 'seu privado';
 }
 
-// O destino guardado na posição (o do -to); null: o seu privado
-function destinoDoAlerta(p) {
-    if (p.alert_email) return { email: p.alert_email, nome: p.alert_email, grupo: false };
-    return p.alert_dest_id ? { id: p.alert_dest_id, nome: p.alert_dest_name, grupo: Boolean(p.alert_dest_is_group) } : null;
+// Os destinos guardados na posição (os do -to); []: o seu privado
+function destinosDoAlerta(p) {
+    const unico = p.alert_email
+        ? { email: p.alert_email, nome: p.alert_email, grupo: false }
+        : p.alert_dest_id ? { id: p.alert_dest_id, nome: p.alert_dest_name, grupo: Boolean(p.alert_dest_is_group) } : null;
+    return destinosSalvos(p.alert_recipients, unico);
 }
 
 const ESTADO_DA_FAIXA = { 1: '✅ na faixa', 0: '⚠️ fora da faixa' };
@@ -324,7 +326,7 @@ async function listarAlertas(msg, posicoes) {
         `\n\n💡 _Verificados a cada ${cadaMinutos()}. Desligue com /defi -alerta -rm <nº|all>._`);
 }
 
-async function tratarAlerta(msg, opts, posicoes, { comDestino, destinoTexto }) {
+async function tratarAlerta(msg, opts, posicoes, { comDestino, destinosTexto }) {
     const o = opts.opt;
     const porNumero = (v) => (/^\d+$/.test(v) ? posicoes[Number(v) - 1] : null);
 
@@ -340,7 +342,8 @@ async function tratarAlerta(msg, opts, posicoes, { comDestino, destinoTexto }) {
 
         for (const p of alvos) {
             await dbRun(`UPDATE defi_positions SET alert = 0, alert_dest_id = NULL, alert_dest_name = NULL,
-                alert_dest_is_group = 0, alert_email = NULL, alert_fees = NULL, fees_notified = 0, in_range = NULL WHERE id = ?`, [p.id]);
+                alert_dest_is_group = 0, alert_email = NULL, alert_recipients = NULL, alert_fees = NULL, fees_notified = 0,
+                in_range = NULL WHERE id = ?`, [p.id]);
         }
         await msg.reply(rm === 'all'
             ? `🔕 ${plural(alvos.length, 'alerta desligado', 'alertas desligados')}.`
@@ -378,12 +381,14 @@ async function tratarAlerta(msg, opts, posicoes, { comDestino, destinoTexto }) {
         }
     }
 
-    let destino = {};
+    // E-mail ou chat (vários -to: avisa em todos); vários contatos ou grupos com o nome,
+    // espera você escolher na lista
+    let destinos = [];
     if (comDestino) {
-        // E-mail ou chat; vários contatos ou grupos com o nome: espera você escolher na lista
-        destino = await resolverOuEscolher(msg, destinoTexto, { aceitaEmail: true });
-        if (!destino) return;
+        destinos = await resolverDestinos(msg, destinosTexto, { aceitaEmail: true });
+        if (!destinos) return;
     }
+    const [destino = {}] = destinos;
 
     // O estado de agora vira a referência: o aviso sai quando a posição passar de dentro para fora
     const linhas = [];
@@ -397,17 +402,17 @@ async function tratarAlerta(msg, opts, posicoes, { comDestino, destinoTexto }) {
             });
 
         await dbRun(`UPDATE defi_positions SET alert = 1, alert_dest_id = ?, alert_dest_name = ?,
-            alert_dest_is_group = ?, alert_email = ?, alert_fees = ?, fees_notified = 0, in_range = ? WHERE id = ?`,
-        [destino.id ?? null, destino.email ? null : destino.nome ?? null, destino.grupo ? 1 : 0, destino.email ?? null, limite ?? null, naFaixa, p.id]);
+            alert_dest_is_group = ?, alert_email = ?, alert_recipients = ?, alert_fees = ?, fees_notified = 0, in_range = ?
+            WHERE id = ?`,
+        [destino.id ?? null, destino.email ? null : destino.nome ?? null, destino.grupo ? 1 : 0, destino.email ?? null,
+            recipientsDe(destinos), limite ?? null, naFaixa, p.id]);
 
         const atualizada = { ...p, in_range: naFaixa, alert_fees: limite };
         linhas.push(`${posicoes.indexOf(p) + 1}. ${descrever(p)} · ${estadoDaFaixa(atualizada)}${limiteDasTaxas(atualizada)}` +
             (naFaixa === 0 ? ' _(avisa quando voltar para a faixa)_' : ''));
     }
 
-    const ondeAvisa = descreverDestinoDoAlerta({
-        alert_email: destino.email, alert_dest_id: destino.id, alert_dest_name: destino.nome, alert_dest_is_group: destino.grupo
-    });
+    const ondeAvisa = destinos.length ? descreverDestinos(destinos) : 'seu privado';
 
     await msg.reply(`🔔 *Alerta do /defi ligado* (${escolhidas.length})\n\n${linhas.join('\n')}\n\n` +
         `📣 Aviso: ${ondeAvisa}, quando a posição sair da faixa e quando voltar` +
@@ -490,7 +495,7 @@ async function cmdDefi({ msg, opts: optsDoComando, args, chatId }) {
      * O -to aceita espaços (/Jorge Pereira/), que o parser de opções
      * separaria: sai do texto antes, e o resto é lido de novo.
      */
-    const { destino: destinoTexto, informado: comDestino, resto } = extrairDestino(args);
+    const { destinos: destinosTexto, informado: comDestino, resto } = extrairDestinos(args);
     const opts = comDestino ? GetOptFromCommand(resto, findCommand('/defi')) : optsDoComando;
     const o = opts.opt;
 
@@ -505,14 +510,14 @@ async function cmdDefi({ msg, opts: optsDoComando, args, chatId }) {
     const protocolo = protocoloDe(palavra);
 
     if (opts.given.has('address')) {
-        await cadastrarComAlerta(msg, opts, protocolo, { comDestino, destinoTexto });
+        await cadastrarComAlerta(msg, opts, protocolo, { comDestino, destinosTexto });
         return;
     }
 
     const posicoes = await dbAll('SELECT * FROM defi_positions ORDER BY id');
 
     if (opts.given.has('alerta')) {
-        await tratarAlerta(msg, opts, posicoes, { comDestino, destinoTexto });
+        await tratarAlerta(msg, opts, posicoes, { comDestino, destinosTexto });
         return;
     }
 
@@ -547,8 +552,8 @@ module.exports = {
     cmdDefi,
     descrever,
     descreverDestinoDoAlerta,
+    destinosDoAlerta,
     fmtUsd,
-    destinoDoAlerta,
     lerCadastro,
     textoDaPosicao,
     textoDaPosicaoPrjx

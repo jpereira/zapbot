@@ -567,7 +567,7 @@
                     "values": [
                         "<destino>"
                     ],
-                    "desc": "Junto com -alerta: avisa num contato, num grupo, num número ou por e-mail em vez do seu privado (vários com o nome: você escolhe na lista). Ex: -to /Jorge Pereira/, -to @Fulano (menção), -to /Grupo L200/, -to +5521999999999, -to email (o QRCODE_EMAIL_SMTP_TO), -to voce@exemplo.com",
+                    "desc": "Junto com -alerta: avisa num contato, num grupo, num número ou por e-mail em vez do seu privado (vários com o nome: você escolhe na lista). Repita para avisar em vários. Ex: -to /Jorge Pereira/, -to @Fulano (menção), -to /Grupo L200/ -to email, -to +5521999999999, -to email (o QRCODE_EMAIL_SMTP_TO), -to voce@exemplo.com",
                     "cron": false
                 },
                 {
