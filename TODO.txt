@@ -17,4 +17,3 @@
 * /sticker de texto: /sticker "bom dia" gera a figurinha com o texto.
 * Lista de escolha (destinos): aceitar 0 ou "cancelar" para desistir sem esperar os 2 min.
 * Limite de uso por pessoa nos comandos publicos (ex.: /get, /gpt), contra abuso em grupo.
-* Dependabot/Renovate para npm e Docker, e um job no CI que avisa versao nova do yt-dlp.
