@@ -256,11 +256,15 @@ bot) e a lista `commands`. Cada entrada de `commands` segue este formato:
   leva `"cron": false` e é recusada ao criar o item.
 - Alterar `help`, `usage`, `aliases`, descrições, `onlyAdmin` ou `disabled`
   não exige código: basta refazer o build e recriar o container.
-- No `-h`, cada forma do `usage` separada por `"  ou  "` sai numa linha, e os
-  exemplos de um `desc` depois do `Ex:`, separados por vírgula
-  (`Ex: /defi, /defi orca`), saem um por linha, à esquerda (no celular, a
-  coluna da descrição fica longe). Cada exemplo começa com `/` ou `-`; uma vírgula dentro de um exemplo
-  (`/tempo Niteroi, Sergipe`) não o divide.
+- O `-h` é lido no celular, então o formatador quebra as linhas:
+  - cada forma do `usage` separada por `"  ou  "` sai numa linha;
+  - o `help` e cada `desc` saem com uma frase por linha (fim de frase é `. `
+    seguido de maiúscula: `Máx. 20` e `(ex.: -taxas 50)` não quebram); numa opção,
+    a 1ª frase fica ao lado dela, e as outras, recuadas;
+  - o `Ex:` vai sempre para a linha de baixo, à esquerda, e os exemplos
+    separados por vírgula (`Ex: /defi, /defi orca`) saem um por linha. Cada
+    exemplo começa com `/` ou `-`: a vírgula dentro de um (`/tempo Niteroi,
+    Sergipe`) não o divide. Por isso o `Ex:` fica sempre no fim do texto.
 - Os textos (`usage`, `help` e `desc`) podem citar `${CACHE_DIR}`,
   `${MEDIA_DIR}` e `${TMP_DIR}`: a ajuda troca pelo caminho real (ex.: o
   `/cache -h`).
