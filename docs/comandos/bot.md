@@ -82,7 +82,7 @@ desligado).
 ```
 
 ```
-📊 Status do ZapBot 2.0 · últimas 24 h
+📊 Status do ZapBot 2.1 · últimas 24 h
 qui 01/10 06:00
 
 🤖 No ar: 2 dias, 3 horas · conectado: 2 dias, 2 horas
@@ -125,10 +125,10 @@ exemplo, muda com frequência) e para relatar um problema.
 
 ```
 /bot -info
-ℹ️ ZapBot 2.0 · informações do sistema
+ℹ️ ZapBot 2.1 · informações do sistema
 
 🤖 Bot
-• ZapBot: 2.0 (APP_ENV=prod)
+• ZapBot: 2.1 (APP_ENV=prod)
 • Node.js: v24.9.0 (V8 13.6.233.10-node.27)
 • whatsapp-web.js: 1.34.7 (commit 58ddf15)
 • WhatsApp Web: 2.3000.1027123456
