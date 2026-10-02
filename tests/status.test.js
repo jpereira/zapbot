@@ -82,7 +82,7 @@ describe('/bot -status', () => {
 
     test('-status off desliga; hora inválida; não combina; o /cron -rm all não apaga o status diário', async () => {
         await bot.replyAlt('/bot -status 7h');
-        await bot.replyAlt('/cron 1h -to +5521911111111 oi');
+        await bot.replyAlt('/cron +1h -to +5521911111111 oi');
         await bot.replyAlt('/cron -rm all');
         assert.equal((await bot.dbAll("SELECT * FROM schedules WHERE kind = 'status'")).length, 1);
 

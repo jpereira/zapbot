@@ -73,7 +73,7 @@ describe('/backup (/bkp)', () => {
     test('-r pede confirmação; com -sim restaura tudo e guarda o estado de antes', async () => {
         await bot.setSetting('watch.rules', 'promoção');
         await bot.setSetting('tempo.city', 'Recife');
-        await bot.replyAlt('/lembrete 2h antes do backup');
+        await bot.replyAlt('/lembrete +2h antes do backup');
         const b = await createBackup();
 
         // After the backup
