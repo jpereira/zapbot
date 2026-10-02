@@ -8,12 +8,13 @@ Acompanha posições de liquidez em DeFi, de dois protocolos:
   ([Project X](#project-x)).
 
 O `/defi -show` lê tudo on-chain na hora e mostra o equivalente ao "Position
-Details" de cada posição. Com o `-alerta`, o bot avisa sempre que uma posição
-sair da faixa ([Alerta de saída da faixa](#alerta-de-saída-da-faixa)).
+Details" de cada posição. Com o `-alerta`, o bot avisa quando uma posição sai
+da faixa, quando volta e, com o `-taxas`, quando as taxas a coletar passam de
+um valor ([Alerta de saída da faixa](#alerta-de-saída-da-faixa)).
 
 | Opção | Valor | Descrição |
 |---|---|---|
-| `-alerta`, `-a` | `[nº\|all]` | Sem nº: lista os alertas. Com nº (ou `all`): avisa sempre que a posição sair da faixa. Veja [Alerta de saída da faixa](#alerta-de-saída-da-faixa) |
+| `-alerta`, `-a` | `[nº\|all]` | Sem nº: lista os alertas. Com nº (ou `all`): avisa quando a posição sair da faixa e quando voltar. Veja [Alerta de saída da faixa](#alerta-de-saída-da-faixa) |
 | `-orca` | | Protocolo da posição a cadastrar: a Orca, na Solana (com `-position`) |
 | `-position`, `-p` | `<endereço>` | Cadastra a posição da Orca (com `-orca`) |
 | `-nft` | `<mint>` | Com `-position`: o NFT da posição. Opcional; se vier, o bot confere se bate |
@@ -23,6 +24,7 @@ sair da faixa ([Alerta de saída da faixa](#alerta-de-saída-da-faixa)).
 | `-show`, `-s` | `[nº]` | Position Details de todas as posições (ou da nº N) |
 | `-list`, `-l` | | Lista as posições cadastradas (o mesmo que `/defi` sem nada) |
 | `-rm` | `<nº\|all>` | Remove a posição nº N (ou todas). Junto com `-alerta`: só desliga o alerta da nº N (ou de todas) |
+| `-taxas` | `<valor\|off>` | Junto com `-alerta`: avisa também quando as taxas a coletar passarem do valor, em dólar (ex.: `-taxas 50`). Avisa uma vez e de novo depois de você coletar; `off` tira. Veja [Alerta de saída da faixa](#alerta-de-saída-da-faixa) |
 | `-to` | `<destino>` | Junto com `-alerta`: para onde vai o aviso. Um contato (`/Jorge Pereira/`), uma menção (`@Fulano Da Silva`), um grupo (`/Grupo L200/`), um número (`+5521999999999`) ou e-mail (`email` é o `QRCODE_EMAIL_SMTP_TO`) ([Destinos](index.md#destinos-contato-grupo-número-ou-e-mail)). Sem ele, o seu privado |
 
 ```
@@ -33,7 +35,8 @@ sair da faixa ([Alerta de saída da faixa](#alerta-de-saída-da-faixa)).
 /defi -s 2             → só a nº 2
 /defi                  → a lista
 /defi -rm 1            → remove a nº 1
-/defi -alerta 1        → avisa no seu privado quando a nº 1 sair da faixa
+/defi -alerta 1        → avisa no seu privado quando a nº 1 sair da faixa (e voltar)
+/defi -a 1 -taxas 50   → e quando as taxas a coletar da nº 1 passarem de $50
 ```
 
 Para receber o `-show` todo dia, num chat ou junto com outros comandos, use o
@@ -107,10 +110,15 @@ posições, na carteira de quem a abriu. Por isso o cadastro é a **carteira**, 
 ## Alerta de saída da faixa
 
 Fora da faixa, a posição fica toda num token só e para de render taxas. Com o
-`-alerta`, o bot lê a posição (ou, no Project X, as posições da carteira) a cada 10 minutos (setting
-`defi.alerta.intervalMin`) e avisa **sempre que ela sair da faixa**: uma vez
-por saída. Enquanto continua fora, não repete; se voltar para a faixa e sair
-de novo, avisa de novo.
+`-alerta`, o bot lê a posição (no Project X, as posições da carteira) a cada 10
+minutos (setting `defi.alerta.intervalMin`) e avisa:
+
+- **🚨 quando ela sai da faixa**: uma vez por saída. Enquanto continua fora, não
+  repete.
+- **✅ quando ela volta para a faixa**: também uma vez.
+- **💸 quando as taxas a coletar passam do valor do `-taxas`** (em dólar, opcional):
+  uma vez. Depois que você coleta e elas caem abaixo do valor, o aviso se arma de
+  novo. Num par sem stablecoin (só no Project X), sem preço em dólar, não avisa.
 
 ```
 /defi -alerta 1                  → no seu privado
@@ -120,6 +128,8 @@ de novo, avisa de novo.
 /defi -a 1 -to /Grupo L200/      → no grupo
 /defi -a 1 -to +5521999999999    → no privado do número
 /defi -a 1 -to @Fulano Da Silva  → num grupo, mencionando a pessoa
+/defi -a 1 -taxas 50             → e quando as taxas a coletar passarem de $50
+/defi -a 1 -taxas off            → tira o aviso das taxas (o da faixa continua)
 /defi -alerta                    → a lista dos alertas
 /defi -alerta -rm 1              → desliga o da nº 1 (a posição continua cadastrada)
 ```
@@ -133,10 +143,11 @@ O `-to` aceita:
   buscado primeiro; se o nome servir para mais de um, o bot lista e você responde com
   o nº ([Destinos](index.md#destinos-contato-grupo-número-ou-e-mail)).
 
-Ligar de novo uma posição troca o destino. Ao ligar, o bot já lê a posição: se
-ela estiver fora da faixa nesse momento, a resposta mostra, e o aviso fica para
-a próxima saída. Se o RPC não responder, a posição fica `❔ ainda não lida`, e a
-primeira leitura fora da faixa já avisa.
+Ligar de novo uma posição troca o destino (e mantém o `-taxas`, se você não
+mandar outro). Ao ligar, o bot já lê a posição: se ela estiver fora da faixa
+nesse momento, a resposta mostra, e o próximo aviso é o da volta. Se o RPC não
+responder, a posição fica `❔ ainda não lida`, e a primeira leitura fora da faixa
+já avisa.
 
 ```
 /defi -alerta 1 -to email
@@ -144,7 +155,7 @@ primeira leitura fora da faixa já avisa.
 
 1. Orca · Hz15…RaPZ · ✅ na faixa
 
-📣 Aviso: 📧 voce@exemplo.com, sempre que a posição sair da faixa (verificada a cada 10 minutos).
+📣 Aviso: 📧 voce@exemplo.com, quando a posição sair da faixa e quando voltar (verificada a cada 10 minutos).
 💡 Veja com /defi -alerta; desligue com /defi -alerta -rm <nº|all>.
 ```
 
@@ -160,6 +171,13 @@ que saíram:
 ...
 
 💡 Desligue com /defi -alerta -rm 1.
+```
+
+E os outros avisos, com o mesmo "Position Details":
+
+```
+✅ DeFi: Orca · Hz15…RaPZ voltou para a faixa
+💸 DeFi: Project X · carteira 0x92…0444 tem $98.50 em taxas a coletar (passou de $50.00)
 ```
 
 Na lista do `/defi -l`, as posições com alerta aparecem com 🔔. Cada leitura
