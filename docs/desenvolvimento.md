@@ -88,6 +88,18 @@ No GitHub, o workflow **Testes** (`.github/workflows/ci.yml`) roda o
 em cada pull request; o selo no topo do README e da página inicial mostra o
 resultado do último run.
 
+Dois avisos de versão nova ficam no GitHub:
+
+- **Dependabot** (`.github/dependabot.yml`): toda segunda de manhã, abre PRs com
+  as versões novas das dependências npm (as de desenvolvimento num PR só) e da
+  imagem base do Docker (`docker/app`). Ficam de fora o `whatsapp-web.js`, que é
+  um commit fixado do `main` (o [`/bot -info`](comandos/bot.md#informações-do-sistema)
+  avisa as novidades dele), e a troca de major do Node, que é manual.
+- **yt-dlp** (`.github/workflows/yt-dlp.yml`): todo dia às 09:00, confere a última
+  versão no PyPI e, se for nova, abre a issue "yt-dlp X disponível", com os
+  comandos para refazer a imagem, e fecha a da versão anterior. A imagem instala
+  a última a cada build: o aviso é para saber quando refazer.
+
 Nada sai da máquina: o `tests/helpers/ambiente.js` troca, antes de carregar o
 bot, o WhatsApp (um cliente falso que guarda o que o bot enviou), o SQLite (em
 memória), a rede (`axios` com respostas registradas por URL; uma URL sem

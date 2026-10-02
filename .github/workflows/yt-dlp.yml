@@ -1,0 +1,52 @@
+# Avisa quando sai uma versão nova do yt-dlp (o /get depende dele, e os sites mudam
+# toda hora). A imagem instala a última a cada build; o que falta é saber quando
+# refazer. Todo dia confere o PyPI e, se a versão for nova, abre uma issue
+# "yt-dlp X disponível" (uma por versão) e fecha a da versão anterior.
+name: yt-dlp
+
+on:
+  schedule:
+    - cron: '0 12 * * *'   # 09:00 em Brasília
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  versao:
+    name: Versão nova do yt-dlp
+    runs-on: ubuntu-latest
+    steps:
+      - name: Confere o PyPI e avisa numa issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          versao="$(curl -fsS https://pypi.org/pypi/yt-dlp/json | jq -r .info.version)"
+          titulo="yt-dlp ${versao} disponível"
+          echo "Última versão no PyPI: **${versao}**" >> "$GITHUB_STEP_SUMMARY"
+
+          # Já avisada (aberta ou fechada): nada a fazer
+          existentes="$(gh issue list -R "$REPO" --state all --limit 100 --search 'yt-dlp in:title' --json number,title,state)"
+          if jq -e --arg t "$titulo" 'any(.[]; .title == $t)' <<< "$existentes" > /dev/null; then
+            echo "Já avisada numa issue." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          nova="$(gh issue create -R "$REPO" --title "$titulo" --body "Saiu o [yt-dlp ${versao}](https://pypi.org/project/yt-dlp/${versao}/) ([notas](https://github.com/yt-dlp/yt-dlp/releases)).
+
+          A imagem instala a última versão a cada build. Para o \`/get\` usar esta:
+
+          \`\`\`bash
+          docker compose -f docker/docker-compose.yml build --no-cache zapbot
+          docker compose -f docker/docker-compose.yml up -d --force-recreate zapbot
+          \`\`\`
+
+          O \`/bot -info\` mostra a versão em uso. Feche esta issue depois de refazer a imagem.")"
+          echo "Aberta: ${nova}" >> "$GITHUB_STEP_SUMMARY"
+
+          # As das versões anteriores que ficaram abertas: substituídas por esta
+          jq -r --arg t "$titulo" '.[] | select(.state == "OPEN" and (.title | test("^yt-dlp .* disponível$")) and .title != $t) | .number' <<< "$existentes" |
+            while read -r n; do gh issue close "$n" -R "$REPO" --comment "Substituída por ${nova}."; done
