@@ -13,7 +13,7 @@ opção, mostra o banco atual e os backups.
 | `-restore`, `-r` | `<nº\|nome>` | Restaura o backup. Sem `-sim`, só mostra o que vai acontecer e o comando para confirmar |
 | `-sim` | | Confirma: junto com `-restore`, a restauração; junto com `-send -to` outro chat, o envio |
 | `-send`, `-s` | `[nº]` | Envia o arquivo do backup (sem nº: o mais recente) no seu privado ou no destino do `-to`. Veja [Enviar o arquivo](#enviar-o-arquivo) |
-| `-to` | `<destino>` | Junto com `-send`: por e-mail, como anexo (`email` é o `QRCODE_EMAIL_SMTP_TO`, ou um endereço), ou noutro chat: um contato (`/Jorge Pereira/`), uma menção (`@Fulano Da Silva`), um grupo (`/Grupo L200/`) ou um número (`+5521999999999`) (pede `-sim`). Veja [Destinos](index.md#destinos-contato-grupo-número-ou-e-mail) |
+| `-to` | `<destino>` | Junto com `-send`: por e-mail, como anexo (`email` é o `QRCODE_EMAIL_SMTP_TO`, ou um endereço), ou noutro chat: um contato (`/Jorge Pereira/`), uma menção (`@Fulano Da Silva`), um grupo (`/Grupo L200/`) ou um número (`+5521999999999`) (pede `-sim`). Repita para vários. Veja [Destinos](index.md#destinos-contato-grupo-número-ou-e-mail) |
 | `-rm` | `<nº\|all>` | Apaga o backup nº N (ou todos) |
 
 ```
@@ -28,6 +28,7 @@ opção, mostra o banco atual e os backups.
 /backup -s 2 -to email                  → o nº 2, para o QRCODE_EMAIL_SMTP_TO
 /backup -s -to /Jorge Pereira/ -sim     → no privado de um contato
 /backup -s -to @Fulano Da Silva -sim    → num grupo, mencionando a pessoa
+/backup -s -to email -to /Jorge Pereira/ -sim  → por e-mail e no privado do contato
 /backup -rm 3                           → apaga o nº 3
 ```
 
@@ -112,6 +113,8 @@ lugar, como nos outros comandos ([Destinos](index.md#destinos-contato-grupo-núm
 - **Outro chat**: um contato, um grupo ou um número. Como o banco tem as
   mensagens guardadas de **todos** os chats, o bot pede confirmação: repita com
   `-sim`.
+- **Vários**: repita o `-to`. Os e-mails de todos vão num e-mail só; cada chat
+  recebe o arquivo (se falhar num, os outros recebem assim mesmo).
 
 ```
 /backup -s -to fulano@gmail.com
