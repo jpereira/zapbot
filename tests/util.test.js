@@ -127,6 +127,16 @@ describe('versão com o commit (version.js)', () => {
     const TAG = '1111111111111111111111111111111111111111';     // the "tag" object of an annotated tag
     const c = (commit, ref) => ({ commit: commit.slice(0, 7), ref });
 
+    test('num branch no commit de uma tag (o main logo depois do bump.sh): a tag', () => {
+        const main = { HEAD: 'ref: refs/heads/main\n', 'refs/heads/main': `${HASH}\n` };
+        assert.deepEqual(readCommit(project({ ...main, 'refs/tags/v2.0.0': `${HASH}\n` })), c(HASH, 'v2.0.0'));
+        // Annotated, after git pack-refs --all (what bump.sh runs): the "^<commit>" in packed-refs
+        assert.deepEqual(readCommit(project({ HEAD: 'ref: refs/heads/main\n',
+            'packed-refs': `# pack-refs with: peeled\n${HASH} refs/heads/main\n${TAG} refs/tags/v2.0.0\n^${HASH}\n` })), c(HASH, 'v2.0.0'));
+        // Annotated and loose, without the object or the reflog: there is no way to know
+        assert.deepEqual(readCommit(project({ ...main, 'refs/tags/v2.0.0': `${TAG}\n` })), c(HASH, 'HEAD'));
+    });
+
     test('branch (em refs/heads ou no packed-refs): o commit e HEAD; sem .git: null', () => {
         assert.deepEqual(readCommit(project({ HEAD: 'ref: refs/heads/main\n', 'refs/heads/main': `${HASH}\n` })), c(HASH, 'HEAD'));
         assert.deepEqual(readCommit(project({ HEAD: 'ref: refs/heads/main\n', 'packed-refs': `# pack-refs\n${'f'.repeat(40)} refs/heads/outro\n${HASH} refs/heads/main\n` })), c(HASH, 'HEAD'));
@@ -143,14 +153,14 @@ describe('versão com o commit (version.js)', () => {
             c(HASH, 'v2.0.0'));
 
         // Annotated loose, with the object (outside Docker)
-        const object = require('zlib').deflateSync(Buffer.from(`tag 100\0object ${HASH}\ntype commit\ntag v2.0.1\n`));
-        assert.deepEqual(readCommit(project({ HEAD: `${HASH}\n`, 'refs/tags/v2.0.1': `${TAG}\n`, [`objects/11/${TAG.slice(2)}`]: object })),
-            c(HASH, 'v2.0.1'));
+        const object = require('zlib').deflateSync(Buffer.from(`tag 100\0object ${HASH}\ntype commit\ntag v2.0.0\n`));
+        assert.deepEqual(readCommit(project({ HEAD: `${HASH}\n`, 'refs/tags/v2.0.0': `${TAG}\n`, [`objects/11/${TAG.slice(2)}`]: object })),
+            c(HASH, 'v2.0.0'));
 
         // Annotated loose, without the object (the Docker image): the last checkout in the reflog, if it went to this commit
-        const reflog = (para) => `${'0'.repeat(40)} ${para} Fulano <f@x> 1790000000 -0300\tcheckout: moving from main to v2.0.1\n`;
-        assert.deepEqual(readCommit(project({ HEAD: `${HASH}\n`, 'refs/tags/v2.0.1': `${TAG}\n`, 'logs/HEAD': reflog(HASH) })), c(HASH, 'v2.0.1'));
-        assert.deepEqual(readCommit(project({ HEAD: `${HASH}\n`, 'refs/tags/v2.0.1': `${TAG}\n`, 'logs/HEAD': reflog('f'.repeat(40)) })), c(HASH, 'HEAD'),
+        const reflog = (para) => `${'0'.repeat(40)} ${para} Fulano <f@x> 1790000000 -0300\tcheckout: moving from main to v2.0.0\n`;
+        assert.deepEqual(readCommit(project({ HEAD: `${HASH}\n`, 'refs/tags/v2.0.0': `${TAG}\n`, 'logs/HEAD': reflog(HASH) })), c(HASH, 'v2.0.0'));
+        assert.deepEqual(readCommit(project({ HEAD: `${HASH}\n`, 'refs/tags/v2.0.0': `${TAG}\n`, 'logs/HEAD': reflog('f'.repeat(40)) })), c(HASH, 'HEAD'),
             'o reflog foi para outro commit');
 
         // Detached on a commit without a tag; two tags on the same commit: the higher version

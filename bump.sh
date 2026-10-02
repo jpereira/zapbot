@@ -7,6 +7,8 @@
 # 2. Swaps the old version for the new one in the repository files (and the date
 # beside it, in "vX.Y.Z (from DD/MM/YYYY)", by today's)
 # 3. Commits and applies the tag on the current branch with the message "Bump to X.Y"
+# 4. Writes the refs to .git/packed-refs (git pack-refs --all), for the image
+# Docker knows the tag commit without the git objects (src/version.js)
 #
 # Uso: ./bump.sh [-n|--dry-run] [X.Y]
 # -n, --dry-run   only shows what would change (changes nothing)
@@ -128,6 +130,10 @@ git --no-pager diff --stat
 
 git commit -qam "Bump to ${new_version}"
 git tag -a "$new_tag" -m "Bump to ${new_version}"
+
+# Writes the tags to .git/packed-refs with each one's commit: the Docker image does not
+# carries the git objects, and that is how /version shows "(git+<commit>/<tag>)"
+git pack-refs --all
 
 echo "✅ Commit e tag '${new_tag}' criados em '$(git branch --show-current)'."
 echo "💡 Para publicar: git push && git push origin ${new_tag}"
