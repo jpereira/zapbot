@@ -4,9 +4,9 @@
  */
 
 const { estado: stateAlt } = require('../state');
-const { describe, alertDescribeDestination, alertDestination, fmtUsd, readRegistration } = require('../commands/defi');
+const { describe, alertDescribeDestination, alertDestinations, fmtUsd, readRegistration } = require('../commands/defi');
 const { dbAll, dbReady, dbRun } = require('../db');
-const { sendOnDestination } = require('../destinations');
+const { sendToDestinations } = require('../destinations');
 const { printError, printInfo } = require('../log');
 const { getSetting } = require('../settings');
 
@@ -20,7 +20,7 @@ const { getSetting } = require('../settings');
  */
 async function notify(p, n, emoji, title, texts) {
     const textAlt = `${emoji} *${title}*\n\n${texts.join('\n\n')}\n\n💡 _Desligue com /defi -alerta -rm ${n}._`;
-    await sendOnDestination(alertDestination(p), textAlt, { assunto: title })
+    await sendToDestinations(alertDestinations(p), textAlt, { assunto: title })
         .then(() => printInfo(`/defi -alerta: ${title} → ${alertDescribeDestination(p)}`))
         .catch(err => printError(`/defi -alerta: falha ao avisar (${p.position}):`, err.message));
 }

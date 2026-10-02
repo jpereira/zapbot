@@ -222,8 +222,9 @@ async function initializeDb() {
     /*
      * /defi DeFi positions (for now, from Orca): the rest is read on-chain on
      * each -show. -alerta keeps where to notify (alert_dest_*: one chat;
-     * alert_email: emails; none: your private chat) and whether the position was in the
-     * range at the last check (in_range; NULL: not read yet).
+     * alert_email: emails; alert_recipients: several -to; none: your private chat)
+     * and whether the position was in the range at the last check (in_range; NULL:
+     * not read yet).
      */
     await dbRun(`
         CREATE TABLE IF NOT EXISTS defi_positions (
@@ -241,6 +242,7 @@ async function initializeDb() {
         alert_dest_name: 'TEXT',
         alert_dest_is_group: 'INTEGER DEFAULT 0',
         alert_email: 'TEXT',
+        alert_recipients: 'TEXT',           // JSON with the destinations of several -to (the alert_dest_*: the first)
         alert_fees: 'REAL',                 // -taxas: notifies when the fees to collect go above that (US$)
         fees_notified: 'INTEGER DEFAULT 0', // already notified about this value (goes back to 0 when collected)
         in_range: 'INTEGER'

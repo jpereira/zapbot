@@ -330,6 +330,26 @@ describe('/defi -alerta (-a)', () => {
         assert.match((await bot.replyAlt('/defi -a 7'))[0], /❌ Posição nº 7 não existe/);
     });
 
+    test('vários -to: avisa em todos; -rm desliga e limpa os destinos', async () => {
+        const L200 = '120363000000000200@g.us';
+        bot.createGroup(L200, 'Grupo sobre L200', [OWNER.jid]);
+
+        assert.match((await bot.replyAlt('/defi -a 1 -to /Fulano/ -to /Grupo L200/ -to /Fulano/'))[0],
+            /📣 Aviso: 👤 Fulano, 👥 Grupo sobre L200, quando a posição sair/);
+        assert.match((await bot.replyAlt('/defi -alerta'))[0], /→ 👤 Fulano, 👥 Grupo sobre L200/);
+
+        rangeOutside();
+        assert.deepEqual((await check()).map(e => e.chatId), [OTHERAlt.jid, L200]);
+
+        // Without -to, goes back to your private chat; -rm clears everything
+        await bot.replyAlt('/defi -a 1');
+        assert.equal((await bot.dbGet('SELECT alert_recipients FROM defi_positions')).alert_recipients, null);
+        await bot.replyAlt('/defi -a 1 -to /Fulano/ -to /Grupo L200/');
+        await bot.replyAlt('/defi -a -rm 1');
+        assert.deepEqual(await bot.dbGet('SELECT alert, alert_dest_id, alert_recipients FROM defi_positions'),
+            { alert: 0, alert_dest_id: null, alert_recipients: null });
+    });
+
     test('-to email: pelo SMTP do bot, sem a formatação do WhatsApp', async () => {
         assert.match((await bot.replyAlt('/defi -a 1 -to email'))[0], /❌ O "email" usa o QRCODE_EMAIL_SMTP_TO/);
         assert.match((await bot.replyAlt('/defi -a 1 -to eu@exemplo.com'))[0], /❌ SMTP não configurado/);
