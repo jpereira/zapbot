@@ -13,7 +13,7 @@ máxima e mínima do dia e variação (🟢 alta, 🔴 queda). Suportadas: `USD`
 | `-del`, `-d` | `<MOEDA>` | Desabilita uma moeda (só o dono do bot ou um admin do [`bot.admins`](bot.md#admins-extras)) |
 | `-alerta` | `[regra]` | Sem regra, lista os alertas; com regra, cria um. Veja [Alertas de preço](#alertas-de-preço) |
 | `-rm` | `<nº\|all>` | Junto com `-alerta`: remove o alerta nº N (ou todos) |
-| `-to` | `<destino>` | Junto com `-alerta`: avisa num contato (`/Jorge Pereira/`), numa menção (`@Fulano Da Silva`), num grupo (`/Grupo L200/`), num número (`+5521999999999`) ou por e-mail (`email`) em vez do seu privado. Veja [Avisar em outro chat ou por e-mail](#avisar-em-outro-chat-ou-por-e-mail) |
+| `-to` | `<destino>` | Junto com `-alerta`: avisa num contato (`/Jorge Pereira/`), numa menção (`@Fulano Da Silva`), num grupo (`/Grupo L200/`), num número (`+5521999999999`) ou por e-mail (`email`) em vez do seu privado. Repita para vários: um alerta só, que avisa em todos. Veja [Avisar em outro chat ou por e-mail](#avisar-em-outro-chat-ou-por-e-mail) |
 
 - **USD, EUR, GBP**: Yahoo Finance. Se ele falhar, a AwesomeAPI (que não
   informa a abertura: aparece `—`).
@@ -87,15 +87,19 @@ primeiro), um grupo, um número ou e-mail, como em
 /cotacao -alerta USD > 5.30 -to +5521999999999    → no privado do número
 /cotacao -alerta EUR < 5,50 -to @Fulano Da Silva  → num grupo, mencionando a pessoa
 /crypto -alerta SOL > 200 -to email               → por e-mail (QRCODE_EMAIL_SMTP_TO)
+/crypto -alerta BTC < 90000 -to /Grupo L200/ -to email  → no grupo e por e-mail
 /cotacao -alerta -to familia EUR < 5,50           → o -to pode vir antes da regra
 ```
 
+- Com vários `-to`, é um alerta só (conta 1 no `alerta.max`): ele dispara uma
+  vez e avisa em todos os destinos. Se o envio falhar num, os outros recebem
+  assim mesmo. O mesmo destino repetido conta uma vez.
 - Se o nome servir para mais de um contato (ou grupo), o bot lista e você
   responde com o nº; o alerta só é criado depois da escolha.
 - O grupo precisa ser um em que a sua conta está; o número, uma conta do
   WhatsApp (o bot confere).
 - A lista (`-alerta`) mostra o destino de cada alerta: `→ 👥 Grupo sobre L200`
-  ou `→ 📧 voce@exemplo.com`.
+  ou `→ 📧 voce@exemplo.com` (vários: `→ 👥 Grupo sobre L200, 📧 voce@exemplo.com`).
 
 ```
 🔔 ALERTA DE PREÇO

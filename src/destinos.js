@@ -1,8 +1,8 @@
 /*
  * Destino de um aviso ou alvo de um comando: um contato, um grupo, um número
  * ou (onde faz sentido) e-mails. É o -to de todos os comandos: /cron, os
- * alertas de preço (/cotacao e /crypto -alerta), o /defi -alerta e o
- * /backup -send; e o alvo do /mudo.
+ * alertas de preço (/cotacao e /crypto -alerta), o /defi -alerta, o /watch e
+ * o /backup -send; e o alvo do /mudo. Todos aceitam vários -to.
  */
 
 const { client } = require('./cliente');
@@ -56,7 +56,7 @@ function extrairDestino(texto) {
 }
 
 /**
- * Tira todos os "-to <destino>" do texto (o /cron aceita vários).
+ * Tira todos os "-to <destino>" do texto (todo comando com -to aceita vários).
  * @returns {{ destinos: Array<string|null>, informado: boolean, resto: string }}
  *   destinos: um por -to, na ordem (null: -to sem valor)
  */
@@ -346,6 +346,27 @@ async function resolverOuEscolher(msg, valor, o = {}) {
     });
 }
 
+// Para não repetir o mesmo destino: o chat ou os e-mails
+const chaveDoDestino = (d) => (d.email ? `email:${d.email}` : d.id);
+
+/**
+ * Resolve os vários -to, um de cada vez (cada um pode pedir a escolha na
+ * lista). O repetido conta uma vez.
+ * @param {object} msg  a mensagem do comando
+ * @param {Array<string|null>} textos  os de extrairDestinos
+ * @param {object} [o]  as mesmas de resolverDestino
+ * @returns {Promise<Array<object>|null>}  null: algum falhou (o erro já foi respondido)
+ */
+async function resolverDestinos(msg, textos, o = {}) {
+    const destinos = [];
+    for (const texto of textos) {
+        const d = await resolverOuEscolher(msg, texto, o);
+        if (!d) return null;
+        if (!destinos.some(x => chaveDoDestino(x) === chaveDoDestino(d))) destinos.push(d);
+    }
+    return destinos;
+}
+
 /**
  * Envia um texto do bot ao destino: o chat (sem destino: o seu privado) ou,
  * por e-mail, sem a formatação do WhatsApp (*negrito*, _itálico_).
@@ -364,6 +385,19 @@ async function enviarAoDestino(destino, texto, { assunto = 'Aviso', opcoes = {} 
     await client.sendMessage(destino?.id || client.info.wid._serialized, texto, opcoes);
 }
 
+/**
+ * O mesmo, para cada destino (nenhum: o seu privado). Um que falha não segura
+ * os outros: no fim, lança um erro só, com os que falharam.
+ */
+async function enviarAosDestinos(destinos, texto, o = {}) {
+    const falhas = [];
+    for (const d of destinos.length ? destinos : [null]) {
+        await enviarAoDestino(d, texto, o)
+            .catch(err => falhas.push(`${d ? descreverDestino(d) : 'seu privado'}: ${err.message}`));
+    }
+    if (falhas.length) throw new Error(falhas.join('; '));
+}
+
 // Uma linha salva (dest_id, dest_name, dest_is_group, dest_email) → o destino; null: o seu privado
 function destinoDaLinha(r) {
     if (r?.dest_email) return { email: r.dest_email, nome: r.dest_email, grupo: false };
@@ -377,6 +411,18 @@ const colunasDoDestino = (d) => ({
     dest_is_group: d?.grupo ? 1 : 0,
     dest_email: d?.email ?? null
 });
+
+/*
+ * Vários -to numa linha: a coluna recipients (ou alert_recipients) guarda o
+ * JSON com todos, e as dest_* ficam com o primeiro. Com um só, fica null.
+ */
+const salvavel = (d) => (d.email
+    ? { email: d.email, nome: d.email, grupo: false }
+    : { id: d.id, nome: d.nome, grupo: Boolean(d.grupo) });
+const recipientsDe = (destinos) => (destinos.length > 1 ? JSON.stringify(destinos.map(salvavel)) : null);
+
+// O contrário: o JSON (ou o destino único das dest_*) → a lista; [] = o seu privado
+const destinosSalvos = (recipients, unico) => (recipients ? JSON.parse(recipients) : unico ? [unico] : []);
 
 /*
  * A pessoa de uma menção. O id costuma ser um LID (o id interno): vale o
@@ -401,15 +447,21 @@ async function nomeDoContato(id, digitos) {
 
 // "👥 Grupo sobre L200" / "👤 Fulano" / "📧 voce@exemplo.com"
 const descreverDestino = (d) => `${d.email ? '📧' : d.grupo ? '👥' : '👤'} ${d.email ?? d.nome}`;
+const descreverDestinos = (destinos) => destinos.map(descreverDestino).join(', ');
 
 module.exports = {
     colunasDoDestino,
     descreverDestino,
+    descreverDestinos,
     destinoDaLinha,
+    destinosSalvos,
     emailsDoSmtpTo,
     enviarAoDestino,
+    enviarAosDestinos,
     extrairDestino,
     extrairDestinos,
+    recipientsDe,
     resolverDestino,
+    resolverDestinos,
     resolverOuEscolher
 };
