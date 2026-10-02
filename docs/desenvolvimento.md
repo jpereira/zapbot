@@ -58,7 +58,7 @@ src/
   destinos.js           o -to/alvo: contato ou grupo pelo nome, menção (@), número ou e-mail, e o envio ao destino
   escolhas.js           a lista numerada para escolher (vários contatos/grupos) e a resposta com o nº (só de quem deu o comando)
   mudo.js               /mudo: quem está silenciado e os avisos cortados
-  defi/                 Solana (base58, PDA, RPC), as contas da Orca (/defi) e o -alerta de saída da faixa
+  defi/                 Solana e HyperEVM (RPC), a Orca e o Project X (/defi) e o -alerta de saída da faixa
   watch/                regras e verificação do /watch
   eventos/              message_create, apagadas, editadas, presença
   comandos/             comandos.json (definição), um arquivo por comando,
@@ -113,7 +113,7 @@ entre os casos.
 | `agenda.test.js` | Datas digitadas (`6h`, `+2h`, `às 18h`, `sexta`...) e o `/cron`, nos modos mensagem e lembrete, com vários `-to`, `-edit`, `-pause`/`-resume` e os `{/comando}` no texto (e o `-test`) |
 | `backup.test.js` | `/backup` (criação, lista, restauração, envio no privado, por e-mail e com `-to`) e o backup diário |
 | `cotacoes.test.js` | `/cotacao`, `/crypto` (e o filtro por moeda) e os alertas de preço (com o `-to`) |
-| `defi.test.js` | Solana (base58, PDA), contas da Orca (conferidas com o SDK oficial) e o `/defi`, com o `-alerta` de saída da faixa |
+| `defi.test.js` | Solana (base58, PDA), contas da Orca (conferidas com o SDK oficial), o Project X (HyperEVM simulada) e o `/defi`, com o `-alerta` de saída da faixa |
 | `externos.test.js` | `/cve`, `/tempo`, `/news`, `/gpt`, `/tldr`, `/traduzir`, `/giphy`, `/meme`, `/joke`, `/kernel`, `/pixelart` |
 | `grupo.test.js` | `/todos`, `/boletos`, `/listageral`, `/walissu`, `/enquete` (e o `-r`), `/sticker` |
 | `get-cache.test.js` | `/get` (e o anti-SSRF), `/cache` e a limpeza periódica |
@@ -211,7 +211,7 @@ bot) e a lista `commands`. Cada entrada de `commands` segue este formato:
 ```jsonc
 {
   "cmd": "/get",                     // nome principal
-  "usage": "/get [OPTION]... <url>", // linha "Usage:" no -help
+  "usage": "/get [OPTION]... <url>", // linha "Usage:" no -help (outras formas: "  ou  ", uma por linha)
   "aliases": ["/download"],          // nomes alternativos
   "help": "Baixa vídeo ou áudio...", // descrição curta
   "cmd_opts": [
