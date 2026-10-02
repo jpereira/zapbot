@@ -232,17 +232,16 @@ async function registerWallet(msg, o) {
     await msg.reply(`✅ *Carteira do Project X cadastrada:* ${short(wallet)}\n` +
         (openAlt ? `📍 ${plural(openAlt, 'posição aberta', 'posições abertas')}.` : 'ℹ️ Nenhuma posição aberta agora: o /defi -show mostra quando houver.') +
         '\n💡 _Veja com /defi -show_');
+    return wallet.toLowerCase();
 }
 
+// The registered address, or null (the error was already replied)
 async function register(msg, o, protocol) {
     if (!protocol) {
         await msg.reply(`❌ Informe o protocolo: orca ou prjx, antes do -address.\n${EXAMPLES}`);
-        return;
+        return null;
     }
-    if (protocol === 'prjx') {
-        await registerWallet(msg, o);
-        return;
-    }
+    if (protocol === 'prjx') return registerWallet(msg, o);
 
     const [address, nft, pool] = [o.address, o.nft, o.pool].map(v => (v ? String(v).trim() : null));
 
@@ -269,6 +268,7 @@ async function register(msg, o, protocol) {
         ['orca', address, r.posicao.mint, r.posicao.whirlpool, Date.now()]);
 
     await msg.reply(`✅ *Posição da Orca cadastrada:* ${short(address)}\n💡 _Veja com /defi -show_`);
+    return address;
 }
 
 const TIP_RPC = {
@@ -416,6 +416,35 @@ async function handleAlert(msg, opts, positions, { comDestino: withDestination, 
         '💡 _Veja com /defi -alerta; desligue com /defi -alerta -rm <nº|all>._');
 }
 
+/*
+ * Registration with -alerta [value]: turns on the new position's alert, in your private chat (or in the -to).
+ * The value is the fee limit in dollars (the same as -taxas): -alerta 2000.
+ */
+async function registerWithAlert(msg, opts, protocol, destination) {
+    const o = opts.opt;
+    let limitAlt = null;
+    if (opts.given.has('alerta')) {
+        const v = String(o.alerta ?? '').trim().replace(/^\$/, '').replace(',', '.');
+        limitAlt = v ? Number(v) : null;
+        if (v && !(limitAlt > 0)) {
+            await msg.reply('❌ No cadastro, o -alerta leva o limite das taxas em dólar (ex.: -alerta 2000) ou nada.');
+            return;
+        }
+    }
+
+    const address = await register(msg, o, protocol);
+    if (!address || !opts.given.has('alerta')) return;
+
+    const positions = await dbAll('SELECT * FROM defi_positions ORDER BY id');
+    const n = positions.findIndex(p => p.position.toLowerCase() === address.toLowerCase()) + 1;
+    const rates = o.taxas ?? (limitAlt ? String(limitAlt) : null);
+    await handleAlert(msg, {
+        opt: { ...o, alerta: String(n), taxas: rates },
+        given: new Set(['alerta', ...(rates ? ['taxas'] : [])]),
+        argv: []
+    }, positions, destination);
+}
+
 // -rm 2, -rm 1 3 5, -rm 1,3 (the numbers from the previous list) or all; if any does not exist: none is removed
 async function removeAlt2(msg, o, argv, positions) {
     const partsAlt = [o.rm, ...argv].join(' ').toLowerCase().split(/[\s,]+/).filter(Boolean);
@@ -476,7 +505,7 @@ async function cmdDefi({ msg, opts: commandOpts, args, chatId }) {
     // Registration: -address, or just the protocol word (then it says what is missing)
     const soProtocol = word && !['show', 'list', 'rm', 'alerta'].some(n => opts.given.has(n));
     if (opts.given.has('address') || soProtocol) {
-        await register(msg, o, protocol);
+        await registerWithAlert(msg, opts, protocol, { comDestino: withDestination, destinoTexto: destinationText });
         return;
     }
 

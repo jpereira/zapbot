@@ -262,6 +262,22 @@ describe('/defi -alerta (-a)', () => {
         assert.equal((await check()).length, 1, 'saiu de novo: avisa');
     });
 
+    test('no cadastro: -alerta [valor] liga o alerta da posição nova, no seu privado; o valor é o -taxas', async () => {
+        await bot.replyAlt('/defi -rm all');
+        const [registered, on] = await bot.replyAlt(`${REGISTRATION} -alerta 2000`);
+        assert.match(registered, /^✅ \*Posição da Orca cadastrada:\* ime1…VPcg/);
+        assert.match(on, /^🔔 \*Alerta do \/defi ligado\* \(1\)\n\n1\. Orca · ime1…VPcg · ✅ na faixa · 💸 ≥ \$2,000\.00\n\n📣 Aviso: seu privado,/);
+        assert.equal((await bot.dbGet('SELECT alert, alert_fees, alert_dest_id FROM defi_positions')).alert_fees, 2000);
+
+        await bot.replyAlt('/defi -rm all');
+        const [, withoutValue] = await bot.replyAlt(`${REGISTRATION} -alerta -to /Fulano/`);
+        assert.match(withoutValue, /1\. Orca · ime1…VPcg · ✅ na faixa\n\n📣 Aviso: 👤 Fulano, quando a posição sair/);
+
+        await bot.replyAlt('/defi -rm all');
+        assert.deepEqual(await bot.replyAlt(`${REGISTRATION} -alerta abc`), ['❌ No cadastro, o -alerta leva o limite das taxas em dólar (ex.: -alerta 2000) ou nada.']);
+        assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM defi_positions')).n, 0, 'erro: nem cadastra');
+    });
+
     test('a lista, o 🔔 no /defi -l e o -rm desliga', async () => {
         assert.match((await bot.replyAlt('/defi -a'))[0], /^🔕 Nenhum alerta no \/defi\./);
         await bot.replyAlt('/defi -a all');
