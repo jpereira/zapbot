@@ -12,7 +12,8 @@ Podem ser enviados em **qualquer chat** (privado, grupo ou no chat consigo mesmo
 - Opções usam **um único hífen** e aceitam o nome longo ou o curto:
   `-audio` = `-a`, `-startSec 10` = `-ss 10`.
 - Todo comando aceita `-help` / `-h`: `/get -h` mostra a ajuda só dele.
-- `/help` lista todos; `/help get` ou `/help /get` mostram um específico.
+- `/help` lista os comandos que você pode usar (o dono e os admins veem
+  todos); `/help get` ou `/help /get` mostram um específico.
 - Aliases funcionam igual ao comando original (`/download` = `/get`).
 
 ## Destinos: contato, grupo, número ou e-mail
@@ -117,7 +118,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -a`) para fazer o bot
 | [`/get`](get.md) | `/download` | | Baixa vídeo/áudio de redes sociais |
 | [`/giphy`](giphy.md) | `/gif` | | GIF aleatório (GIPHY) |
 | [`/gpt`](gpt.md) | `/ai` | ✅ | Pergunta ao ChatGPT (OpenAI) |
-| [`/help`](help.md) | `/h` | | Menu de ajuda |
+| [`/help`](help.md) | `/h` | | Menu de ajuda, só com os comandos que quem pediu pode usar |
 | [`/joke`](joke.md) | `/piada`, `/humor` | | Piada aleatória em português |
 | [`/kernel`](kernel.md) | | | Versões atuais do kernel Linux (kernel.org) |
 | [`/listageral`](listageral.md) | `/list` | ✅ | Lista os membros do grupo |
