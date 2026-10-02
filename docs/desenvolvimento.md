@@ -100,6 +100,16 @@ Dois avisos de versão nova ficam no GitHub:
   comandos para refazer a imagem, e fecha a da versão anterior. A imagem instala
   a última a cada build: o aviso é para saber quando refazer.
 
+Quando um alerta de segurança é numa dependência indireta que ainda pede a
+versão vulnerável, a correção vai no `overrides` do `package.json`, que força a
+versão no lock. Hoje há um:
+
+- `basic-ftp` `^6.2.1`
+  ([GHSA-c475-qrg2-pj4r](https://github.com/advisories/GHSA-c475-qrg2-pj4r)):
+  vem de `whatsapp-web.js → puppeteer → … → get-uri`, que ainda pede `^5.3.1`.
+  Tire o override quando o `get-uri` passar a aceitar a 6 (`npm ls basic-ftp`
+  mostra quem pede o quê).
+
 Nada sai da máquina: o `tests/helpers/ambiente.js` troca, antes de carregar o
 bot, o WhatsApp (um cliente falso que guarda o que o bot enviou), o SQLite (em
 memória), a rede (`axios` com respostas registradas por URL; uma URL sem
