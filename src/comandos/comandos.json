@@ -961,7 +961,7 @@
                     "values": [
                         "<chave>"
                     ],
-                    "desc": "Numa lista, acrescenta os itens que vierem depois da chave. Ex: /set -a bot.admins +5521999999999"
+                    "desc": "Numa lista, acrescenta os itens que vierem depois da chave. No bot.admins, vale o nome do contato. Ex: /set -a bot.admins /Jorge Pereira/"
                 },
                 {
                     "opts": [
