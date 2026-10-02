@@ -234,8 +234,9 @@ client.on('message_revoke_everyone', async (after, before) => {
             campos: { deleted: 1 }
         });
 
-        // /mudo: o aviso deste chat ou desta pessoa está em silêncio (a mensagem fica guardada para o /show)
+        // show.alert.deleted off ou /mudo: sem aviso (a mensagem fica guardada para o /show)
         const remetentes = [row.sender_jid, row.sender_number, info.numeroRemetente];
+        if (!isStatus(row) && !getSetting('show.alert.deleted')) return;
         if (await ignorarAviso(isStatus(row) ? 'status' : 'apagada', { chatId: row.chat_id, remetentes })) return;
 
         await enviarMensagemApagada(client.info.wid._serialized, row, info, {
