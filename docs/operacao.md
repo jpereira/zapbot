@@ -67,6 +67,7 @@ adicione ao serviço `zapbot` o label `autoheal=true`:
 | `Erro ao enviar QR por email: ... self-signed certificate` / `unable to verify` | O certificado do SMTP não é válido. Use o host oficial do provedor (o nome precisa bater com o certificado). |
 | E-mail do QR chega no spam | `QRCODE_EMAIL_SMTP_FROM` diferente da conta SMTP. |
 | Não chegam os alertas por e-mail | Confira `QRCODE_EMAIL_SMTP_HOST`, `_USER` e `_TO` (sem eles nada é enviado) e o setting `email.alerts` (`/set email.alerts`). Falhas do SMTP aparecem no log como `Alerta por e-mail '...' falhou`. |
+| Um comando não responde | Veja nos logs se aparece `executed unknown command`: o nome está errado ou o comando está desativado (`commands.disabled`, ou `"disabled": true` no `comandos.json`). Dos outros, só aparece com o [`/debug`](comandos/debug.md) ligado. |
 | `docker ps` mostra `(unhealthy)` | O bot parou de gravar o heartbeat. Veja o motivo com `docker inspect --format '{{json .State.Health}}' zapbot` e os logs; reinicie com `docker compose restart zapbot`. Veja [Saúde do container](#saúde-do-container-heartbeat). |
 | `npm test`: `No such built-in module: node:sqlite` | Node antigo: os testes precisam do Node 22.13+. |
 | `Motivo 'LOGOUT' exige ação manual` | Sessão desconectada pelo celular. Reinicie o container para gerar novo QR. |

@@ -61,9 +61,22 @@ function printCall(quem, call, chat) {
     console.log(colors.blue(`[${getTimestamp()}] [+] '${quem}' executed '${call}'${chat ? ` in '${chat}'` : ''}`));
 }
 
+/*
+ * Comando que não existe (ou está desativado): o do dono sempre aparece; o dos outros,
+ * só no modo debug (senão, qualquer "/" digitado num grupo encheria o log).
+ *   [!] ⚠️ 'Jorge' executed unknown command: '/tapioca'
+ *   [DEBUG] ⚠️ 'Fulano' executed unknown command: '/tapioca'
+ */
+function printComandoDesconhecido(quem, call, { doDono }) {
+    const texto = `⚠️ '${quem}' executed unknown command: '${call}'`;
+    if (doDono) console.log(colors.yellow(`[${getTimestamp()}] [!] ${texto}`));
+    else console.log(colors.white(`[${getTimestamp()}] [DEBUG] ${texto}`));
+}
+
 module.exports = {
     getBotUptime,
     printCall,
+    printComandoDesconhecido,
     printDebug,
     printError,
     printInfo,
