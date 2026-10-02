@@ -99,7 +99,7 @@
         },
         {
             "cmd": "/bot",
-            "usage": "/bot [-on|-off] [+admin|-admin]  ou  /bot +o|-o|+v|-v [pessoa...]  ou  /bot -reset  ou  /bot -status [<hora>|off]  ou  /bot -info",
+            "usage": "/bot [-on|-off] [+admin|-admin] [-au]  ou  /bot +o|-o|+v|-v [pessoa...] [-au]  ou  /bot -reset  ou  /bot -status [<hora>|off]  ou  /bot -info",
             "help": "Liga/desliga o bot e diz quem usa os comandos: você e os admins usam tudo; os usuários, os comandos comuns. Sem opção mostra o estado e a lista de quem usa; -on/-off e +admin/-admin combinam (/bot -on +admin). Mostra também o relatório do bot (-status) e as versões do que ele usa (-info).",
             "cmd_opts": [
                 {
@@ -152,6 +152,14 @@
                         "[pessoa|grupo...]"
                     ],
                     "desc": "Põe (+v) e tira (-v) usuários, que usam os comandos comuns: pessoas, em qualquer chat, e grupos, qualquer um dentro dele. Sem ninguém, o chat atual: o grupo ou a pessoa do privado. Só o dono. Ex: /bot +v /Camila Gama/ /Grupo Familia/, /bot -v"
+                },
+                {
+                    "opts": [
+                        "all-users",
+                        "au"
+                    ],
+                    "values": [],
+                    "desc": "Na lista de quem usa, mostra todos. Sem ele, a lista é a deste chat: num grupo, quem participa dele (e o grupo); no privado de alguém, só a pessoa; no seu privado, todos. Ex: /bot -au, /bot +v /Sofia Izabel/ -au"
                 },
                 {
                     "opts": [
