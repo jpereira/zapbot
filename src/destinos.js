@@ -98,25 +98,42 @@ async function semAsCopiasPeloLid(contatos) {
  * fica ocupada por minutos e as mensagens seguintes esperam na fila.
  * Aqui o filtro roda lá dentro e só volta o necessário. Um contato de LID
  * (o id interno) vem com o telefone dele, se o WhatsApp souber qual é.
+ * O nome e o "está na agenda" saem das mesmas funções que o whatsapp-web.js
+ * usa (WAWebContactGetters e WAWebFrontendContactGetters): no modelo cru do
+ * contato, c.name e c.isMyContact vêm vazios.
  */
 const BUSCA_TIMEOUT_MS = 20_000;
 
 function buscarNoWhatsApp(palavras) {
     const busca = client.pupPage.evaluate((palavras) => {
+        const tentar = (fn, padrao = null) => {
+            try {
+                return fn() ?? padrao;
+            } catch {
+                return padrao;
+            }
+        };
+
+        // Sem algum módulo (outra versão do WhatsApp Web), valem as propriedades do modelo
         const { Contact, Chat } = window.require('WAWebCollections');
-        const { getAlternateUserWid } = window.require('WAWebApiContact');
+        const { getAlternateUserWid } = tentar(() => window.require('WAWebApiContact'), {});
+        const getters = tentar(() => window.require('WAWebContactGetters'), {});
+        const { getIsMyContact } = tentar(() => window.require('WAWebFrontendContactGetters'), {});
         const norm = (s) => String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
         const casa = (nome) => Boolean(nome) && palavras.every(p => norm(nome).includes(p));
         const serial = (wid) => wid?._serialized ?? null;
 
         const contatos = Contact.getModelsArray()
-            .filter(c => c.isMyContact && !c.isMe && c.id?.server !== 'g.us' && casa(c.name))
-            .map((c) => {
+            .filter(c => c.id?.server !== 'g.us')
+            .map(c => ({ c, nome: tentar(() => getters.getName(c), c.name) }))
+            .filter(({ c, nome }) => casa(nome) &&
+                tentar(() => getIsMyContact(c), c.isMyContact) && !tentar(() => getters.getIsMe(c), c.isMe))
+            .map(({ c, nome }) => {
                 const id = serial(c.id);
                 const telefone = id?.endsWith('@lid')
-                    ? serial(c.phoneNumber) ?? serial((() => { try { return getAlternateUserWid(c.id); } catch { return null; } })())
+                    ? serial(c.phoneNumber) ?? serial(tentar(() => getAlternateUserWid(c.id)))
                     : null;
-                return { id: telefone ?? id, nome: c.name };
+                return { id: telefone ?? id, nome };
             });
 
         const grupos = Chat.getModelsArray()
