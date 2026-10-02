@@ -195,42 +195,13 @@ async function withName(numberAlt) {
 const showItems = async (key, items) => (PEOPLE.includes(key) ? Promise.all(items.map(withName)) : items);
 
 /*
- * The role of a people-list item, by the highest: 🤖 the owner (the account
- * of the bot, who already uses everything), 👑 admin (bot.admins) or 🗣️ user (bot.users).
+ * veja: where to see the items (in the "does not have"). /bot swaps the reply (reply:
+ * (change, value) → text) and the way of showing the items in the "already has"/"does not have"
+ * (show: items → texts), to hide the phone of whoever is not in the group.
  */
-const ROLES = { dono: '🤖', admin: '👑', usuario: '🗣️' };
-function role(item) {
-    if (isOOwner(item)) return ROLES.dono;
-    if (getSetting('bot.admins').includes(item)) return ROLES.admin;
-    return ROLES.usuario;
-}
-
-/*
- * The reply of /bot +o|-o|+v|-v, one thing per line: what changed and the list
- * whole, each item with the role.
- */
-async function replyPerLine(key, change, valueAlt, append) {
-    const withRole = async (i) => `${await withName(i)} ${role(i)}`;
-    const changed = await Promise.all(change.map(async i => (append
-        ? `✅ *${key}* + ${await withRole(i)}`
-        : `🗑️ *${key}* − ${await withName(i)}`)));
-
-    const list = valueAlt.filter(i => i !== 'all');
-    const linesAlt = list.length
-        ? (await Promise.all(list.map(async i => `- ${await withRole(i)}`))).join('\n')
-        : '_(vazio)_';
-    return `${changed.join('\n')}\n\n*${key}* (${list.length})\n${linesAlt}\n` +
-        `💡 _${ROLES.dono} dono · ${ROLES.admin} admin (+o) · ${ROLES.usuario} usuário (+v)_`;
-}
-
-/*
- * -append / -rem <key> <value>: adds or removes items of a list. The
- * items go through the same validation as /set (e.g.: a number becomes just digits),
- * so "+55 21 9..." drops the "5521...".
- */
-// veja: where to see the items (in the "does not have"); byLine: the /bot reply, one thing per line
 async function changeList(msg, optionsAlt) {
-    const { key, bruto: raw, acrescentar: append, veja: see = `/set ${key}`, porLinha: byLine = false } = optionsAlt;
+    const { key, bruto: raw, acrescentar: append, veja: see = `/set ${key}`, resposta: reply = null } = optionsAlt;
+    const showAlt = optionsAlt.mostrar ?? ((items) => showItems(key, items));
     const schema = SETTINGS_SCHEMA[key];
     const optionAlt = append ? '-append' : '-rem';
 
@@ -260,7 +231,7 @@ async function changeList(msg, optionsAlt) {
     const change = append ? items.filter(i => !current.includes(i)) : items.filter(i => current.includes(i));
 
     if (!change.length) {
-        const which = (await showItems(key, items)).join(', ');
+        const which = (await showAlt(items)).join(', ');
         await msg.reply(append
             ? `ℹ️ *${key}* já tem ${which}.`
             : `❌ *${key}* não tem ${which}.\n💡 _Veja os itens com ${see}_`);
@@ -277,8 +248,8 @@ async function changeList(msg, optionsAlt) {
     }
     const sep = schema.separator ? ' | ' : ', ';
     printInfo(`Setting '${key}' ${append ? '+' : '-'} ${schema.secret ? '(segredo)' : JSON.stringify(change)}`);
-    if (byLine) {
-        await msg.reply(await replyPerLine(key, change, valueAlt, append));
+    if (reply) {
+        await msg.reply(await reply(change, valueAlt));
         return;
     }
     await msg.reply(`✅ *${key}* ${append ? '+' : '−'} ${formatValueSetting(await showItems(key, change), sep, schema.secret)}\n` +
@@ -409,14 +380,14 @@ async function cmdSet({ msg, opts, args, chatId }) {
  * With itemsReady, the text is already the items (the phone or the group id of the
  * current chat): does not go through the search.
  */
-async function peopleChangeList(msg, key, textAlt, append, { itensProntos: itemsReady = false } = {}) {
+async function peopleChangeList(msg, key, textAlt, append, optionsAlt = {}) {
+    const { itensProntos: itemsReady = false, resposta: reply, mostrar: showAlt } = optionsAlt;
     const raw = itemsReady ? textAlt : await peopleItems(msg, key, textAlt);
     if (raw === null) return;
-    await changeList(msg, { key, bruto: raw, acrescentar: append, veja: '/bot', porLinha: true });
+    await changeList(msg, { key, bruto: raw, acrescentar: append, veja: '/bot', resposta: reply, mostrar: showAlt });
 }
 
 module.exports = {
-    ROLES,
     cmdSet,
     isOOwner,
     peopleChangeList

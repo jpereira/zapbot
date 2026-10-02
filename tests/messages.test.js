@@ -8,8 +8,9 @@ const assert = require('node:assert/strict');
 
 const { OWNER, GROUP, OTHERAlt } = bot;
 
-// The caption at the end of the /bot +o|-o|+v|-v replies
-const CAPTION = '\n💡 _🤖 dono · 👑 admin (+o) · 🗣️ usuário (+v)_';
+// The captions at the end of the /bot list (the owner's, with only you in the list)
+const CAPTION = '💡 _👑 +o: admin, usa tudo (bot.admins) · 🗣️ +v: usuário, usa os comandos comuns (bot.users)_';
+const CAPTION_OWNER = '💡 _🤖 dono: você, que já usa tudo_\n';
 
 beforeEach(bot.restart);
 
@@ -292,32 +293,32 @@ describe('permissões', () => {
         }
     });
 
-    test('/bot +o|-o|+v|-v: os atalhos do bot.admins e do bot.users; grupo não vira admin', async () => {
-        assert.deepEqual(await bot.replyAlt('/bot +o /Fulano/'),
-            ['✅ *bot.admins* + 5521911111111 (Fulano) 👑\n\n*bot.admins* (1)\n- 5521911111111 (Fulano) 👑' + CAPTION]);
+    test('/bot +o|-o|+v|-v: o que mudou e a mesma lista do /bot; grupo não vira admin', async () => {
+        assert.deepEqual(await bot.replyAlt('/bot +o /Fulano/'), ['✅ *bot.admins* + 5521911111111 (Fulano) 👑\n\n' +
+            '*Quem usa* (1)\n• 👑 +o · 👤 Fulano · +5521911111111\n' + CAPTION]);
         assert.deepEqual(bot.getSetting('bot.admins'), ['5521911111111']);
         assert.match((await bot.replyAlt('/bot +o /Família/'))[0],
             /^❌ Família é um grupo: .*\n💡 _Um grupo não pode ser admin \(todos ali mandariam no bot\)\. Para liberar os comandos comuns dentro dele: \/bot \+v \/Família\/_$/);
-        assert.deepEqual(await bot.replyAlt('/bot -o +5521911111111'),
-            ['🗑️ *bot.admins* − 5521911111111 (Fulano)\n\n*bot.admins* (0)\n_(vazio)_' + CAPTION]);
+
+        // Nobody on the list: the line of who uses the commands (here, everyone)
+        assert.match((await bot.replyAlt('/bot -o +5521911111111'))[0],
+            /^🗑️ \*bot\.admins\* − 5521911111111 \(Fulano\)\n\n🔓 \*Comandos:\* todos usam os comuns\n⚠️/);
 
         await bot.replyAlt('/set bot.users false');
-        assert.deepEqual(await bot.replyAlt('/bot +v /Família/ /Fulano/'),
-            ['✅ *bot.users* + 👥 Família 🗣️\n✅ *bot.users* + 5521911111111 (Fulano) 🗣️\n\n' +
-                '*bot.users* (2)\n- 👥 Família 🗣️\n- 5521911111111 (Fulano) 🗣️' + CAPTION]);
+        assert.deepEqual(await bot.replyAlt('/bot +v /Família/ /Fulano/'), [
+            '✅ *bot.users* + 👥 Família 🗣️\n✅ *bot.users* + 5521911111111 (Fulano) 🗣️\n\n' +
+            '*Quem usa* (2)\n• 🗣️ +v · 👥 Família\n• 🗣️ +v · 👤 Fulano · +5521911111111\n' + CAPTION]);
         assert.match((await bot.replyAlt('/bot'))[0], /👥 \*Comandos:\* o dono e quem está na lista abaixo\n\n\*Quem usa\* \(2\)\n• 🗣️ \+v · 👥 Família\n• 🗣️ \+v · 👤 Fulano · \+5521911111111\n/);
-        assert.deepEqual(await bot.replyAlt('/bot -v /Família/'),
-            ['🗑️ *bot.users* − 👥 Família\n\n*bot.users* (1)\n- 5521911111111 (Fulano) 🗣️' + CAPTION]);
+        assert.deepEqual(await bot.replyAlt('/bot -v /Família/'), ['🗑️ *bot.users* − 👥 Família\n\n' +
+            '*Quem usa* (1)\n• 🗣️ +v · 👤 Fulano · +5521911111111\n' + CAPTION]);
 
         // Each with the highest role: the owner (you) 🤖, the admin 👑
         await bot.setSetting('bot.admins', ['5521911111111']);
-        assert.deepEqual(await bot.replyAlt('/bot +v +5521900000000'),
-            ['✅ *bot.users* + 5521900000000 (Dono) 🤖\n\n*bot.users* (2)\n- 5521911111111 (Fulano) 👑\n- 5521900000000 (Dono) 🤖' + CAPTION]);
-        assert.match((await bot.replyAlt('/bot'))[0], /• 👑 \+o 🗣️ \+v · 👤 Fulano · \+5521911111111\n• 🤖 dono 🗣️ \+v · 👤 Dono · \+5521900000000\n💡 _🤖 dono: você, que já usa tudo_\n/);
-        await bot.setSetting('bot.admins', []);
+        assert.deepEqual(await bot.replyAlt('/bot +v +5521900000000'), ['✅ *bot.users* + 5521900000000 (Dono) 🤖\n\n' +
+            '*Quem usa* (2)\n• 👑 +o 🗣️ +v · 👤 Fulano · +5521911111111\n• 🤖 dono 🗣️ +v · 👤 Dono · +5521900000000\n' +
+            CAPTION_OWNER + CAPTION]);
 
-        // Owner only (not even an extra admin); with nobody, the usage
-        await bot.setSetting('bot.admins', ['5521911111111']);
+        // Owner only (not even an extra admin)
         assert.deepEqual(await bot.replyAlt('/bot +o /Fulano/', { de: OTHERAlt.jid }), ['⛔ Só o dono do bot altera o *bot.admins*.']);
         assert.deepEqual(await bot.replyAlt('/bot -v /Fulano/', { de: OTHERAlt.jid }), ['⛔ Só o dono do bot altera o *bot.users*.']);
     });
@@ -326,11 +327,11 @@ describe('permissões', () => {
         await bot.setSetting('bot.users', []);
 
         // In the group: the group; +o refuses (a group does not become admin)
-        assert.deepEqual(await bot.replyAlt('/bot +v'), ['✅ *bot.users* + 👥 Família 🗣️\n\n*bot.users* (1)\n- 👥 Família 🗣️' + CAPTION]);
+        assert.deepEqual(await bot.replyAlt('/bot +v'), ['✅ *bot.users* + 👥 Família 🗣️\n\n*Quem usa* (1)\n• 🗣️ +v · 👥 Família\n' + CAPTION]);
         assert.deepEqual(bot.getSetting('bot.users'), [GROUP]);
         assert.deepEqual(await bot.replyAlt('/bot +v'), ['ℹ️ *bot.users* já tem 👥 Família.']);
         assert.match((await bot.replyAlt('/bot +o'))[0], /^❌ Um grupo não pode ser admin .*\n💡 _Para liberar os comandos comuns neste grupo: \/bot \+v_$/);
-        assert.deepEqual(await bot.replyAlt('/bot -v'), ['🗑️ *bot.users* − 👥 Família\n\n*bot.users* (0)\n_(vazio)_' + CAPTION]);
+        assert.deepEqual(await bot.replyAlt('/bot -v'), ['🗑️ *bot.users* − 👥 Família\n\n🔒 *Comandos:* só o dono']);
         assert.deepEqual(await bot.replyAlt('/bot -v'), ['❌ *bot.users* não tem 👥 Família.\n💡 _Veja os itens com /bot_']);
 
         // In someone's private chat: the person, by phone (also when the chat is the LID)
@@ -357,18 +358,51 @@ describe('permissões', () => {
         assert.match((await bot.replyAlt('/bot -r -on'))[0], /❌ O -reset não combina com as outras opções/);
     });
 
-    test('/bot: admins (+o) e usuários (+v) numa lista só, com o tipo, o nome e o número', async () => {
+    test('/bot: a lista é a do chat (o grupo, a pessoa do privado ou, no seu privado, todos); -au mostra todos', async () => {
         bot.createContact('5521933333333@c.us', 'Jorge Pereira');
         await bot.setSetting('bot.admins', ['5521933333333', '5521911111111']);
         await bot.setSetting('bot.users', ['5521911111111', GROUP, '5521977777777']);
+        const list = (r) => r.slice(r.indexOf('*Quem usa*'));
 
-        const [r] = await bot.replyAlt('/bot');
-        assert.equal(r.slice(r.indexOf('*Quem usa*')), '*Quem usa* (4)\n' +
-            '• 👑 +o · 👤 Jorge Pereira · +5521933333333\n' +
+        // In the Família group (the owner and Fulano): only Fulano and the group itself
+        assert.equal(list((await bot.replyAlt('/bot'))[0]), '*Quem usa* (2)\n' +
+            '• 👑 +o 🗣️ +v · 👤 Fulano · +5521911111111\n' +
+            '• 🗣️ +v · 👥 Família\n' + CAPTION + '\n' +
+            '💡 _Só quem é deste grupo; mais 2 fora daqui. Todos: /bot -au_');
+
+        // -au: everyone; the phone of whoever is not in the group is hidden
+        assert.equal(list((await bot.replyAlt('/bot -au'))[0]), '*Quem usa* (4)\n' +
+            '• 👑 +o · 👤 Jorge Pereira · +5521•••••3333\n' +
             '• 👑 +o 🗣️ +v · 👤 Fulano · +5521911111111\n' +
             '• 🗣️ +v · 👥 Família\n' +
-            '• 🗣️ +v · 👤 +5521977777777\n' +
-            '💡 _👑 +o: admin, usa tudo (bot.admins) · 🗣️ +v: usuário, usa os comandos comuns (bot.users)_');
+            '• 🗣️ +v · 👤 +5521•••••7777\n' + CAPTION);
+        assert.equal(list((await bot.replyAlt('/bot -all-users'))[0]), list((await bot.replyAlt('/bot -au'))[0]));
+
+        // In your private chat: all of them, in full
+        const [inPrivate] = await bot.replyAlt('/bot', { chat: OWNER.jid });
+        assert.match(inPrivate, /\*Quem usa\* \(4\)\n• 👑 \+o · 👤 Jorge Pereira · \+5521933333333\n[\s\S]*• 🗣️ \+v · 👤 \+5521977777777\n💡[^\n]*$/);
+
+        // In someone's private chat: only that person
+        const [someoneIn] = await bot.replyAlt('/bot', { chat: OTHERAlt.jid });
+        assert.equal(list(someoneIn), '*Quem usa* (1)\n• 👑 +o 🗣️ +v · 👤 Fulano · +5521911111111\n' + CAPTION + '\n' +
+            '💡 _Só quem é deste chat; mais 3 fora daqui. Todos: /bot -au_');
+
+        // In a group where the person is there by LID (the internal id), they count as from the group
+        const LID = '100000000000003@lid';
+        bot.client.lids.set(LID, '5521977777777@c.us');
+        bot.createGroup('120363000000000400@g.us', 'Trabalho', [OWNER.jid, LID]);
+        const [inWork] = await bot.replyAlt('/bot', { chat: '120363000000000400@g.us' });
+        assert.match(list(inWork), /^\*Quem usa\* \(1\)\n• 🗣️ \+v · 👤 \+5521977777777\n/);
+
+        // Nobody in this chat: says so, and how to see everyone
+        bot.createGroup('120363000000000500@g.us', 'Vazio', [OWNER.jid]);
+        assert.equal(list((await bot.replyAlt('/bot', { chat: '120363000000000500@g.us' }))[0]),
+            '*Quem usa* (0)\n_Ninguém deste grupo._\n💡 _Só quem é deste grupo; mais 4 fora daqui. Todos: /bot -au_');
+
+        // The line of what changed and the "already has" also hide
+        await bot.setSetting('bot.users', ['5521911111111']);
+        assert.match((await bot.replyAlt('/bot +v +5521977777777'))[0], /^✅ \*bot\.users\* \+ 5521•••••7777 🗣️\n\n/);
+        assert.deepEqual(await bot.replyAlt('/bot +v +5521977777777'), ['ℹ️ *bot.users* já tem 5521•••••7777.']);
 
         // Nobody in the lists: without the list; with true, the warning
         await bot.setSetting('bot.admins', []);
@@ -376,6 +410,24 @@ describe('permissões', () => {
         assert.equal((await bot.replyAlt('/bot'))[0], '▶️ *Bot:* ativo\n🔓 *Comandos:* todos usam os comuns\n' +
             '⚠️ _Atenção: qualquer pessoa pode executar os comandos comuns do bot, em qualquer chat. ' +
             'Para restringir: /bot +admin (e depois /bot +v para liberar alguns)._');
+    });
+
+    test('/bot +v no privado de alguém mostra só ela; num grupo, os do grupo; com -au, todos', async () => {
+        await bot.setSetting('bot.users', ['5521977777777']);
+
+        // In Fulano's private chat: +v with nobody is him, and the list is only him
+        assert.deepEqual(await bot.replyAlt('/bot +v', { chat: OTHERAlt.jid }), ['✅ *bot.users* + 5521911111111 (Fulano) 🗣️\n\n' +
+            '*Quem usa* (1)\n• 🗣️ +v · 👤 Fulano · +5521911111111\n' + CAPTION + '\n' +
+            '💡 _Só quem é deste chat; mais 1 fora daqui. Todos: /bot -au_']);
+
+        // In the group: someone from outside enters (hidden), and the list is the group's; -au, everyone
+        bot.createContact('5521944444444@c.us', 'Sofia Izabel');
+        const [r] = await bot.replyAlt('/bot +v /Sofia Izabel/');
+        assert.match(r, /^✅ \*bot\.users\* \+ 5521•••••4444 \(Sofia Izabel\) 🗣️\n\n\*Quem usa\* \(1\)\n• 🗣️ \+v · 👤 Fulano · \+5521911111111\n/);
+        assert.match(r, /mais 2 fora daqui\. Todos: \/bot -au_$/);
+        const [allAlt2] = await bot.replyAlt('/bot -v /Sofia Izabel/ -au');
+        assert.match(allAlt2, /^🗑️ \*bot\.users\* − 5521•••••4444 \(Sofia Izabel\)\n\n\*Quem usa\* \(2\)\n/);
+        assert.doesNotMatch(allAlt2, /fora daqui/);
     });
 
     test('bot desligado: tudo ignorado, inclusive os seus, exceto o /bot', async () => {

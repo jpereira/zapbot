@@ -108,7 +108,7 @@ describe('/bot', () => {
         const [r] = await bot.replyAlt('/bot -h');
         const linesAlt = r.split('\n').filter(l => /^  [+-]/.test(l)).map(l => l.trim().split(/\s{2,}/)[0]);
         assert.deepEqual(linesAlt, ['-on', '-off', '+admin, -admin', '+o, -o [pessoa...]', '+v, -v [pessoa|grupo...]',
-            '-reset, -r', '-status, -s [<hora>|off]', '-info, -i']);
+            '-all-users, -au', '-reset, -r', '-status, -s [<hora>|off]', '-info, -i']);
         assert.doesNotMatch(r, /Arguments:/);
     });
 
