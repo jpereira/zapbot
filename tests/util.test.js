@@ -124,18 +124,46 @@ describe('versão com o commit (versao.js)', () => {
         return raiz;
     }
 
-    test('tag (HEAD com o hash), branch em refs/heads ou no packed-refs; sem .git: null', () => {
-        assert.equal(lerCommit(projeto({ HEAD: `${HASH}\n` })), '25b0870');
-        assert.equal(lerCommit(projeto({ HEAD: 'ref: refs/heads/main\n', 'refs/heads/main': `${HASH}\n` })), '25b0870');
-        assert.equal(lerCommit(projeto({ HEAD: 'ref: refs/heads/main\n', 'packed-refs': `# pack-refs\n${'f'.repeat(40)} refs/heads/outro\n${HASH} refs/heads/main\n` })), '25b0870');
+    const TAG = '1111111111111111111111111111111111111111';     // o objeto "tag" de uma tag anotada
+    const c = (commit, ref) => ({ commit: commit.slice(0, 7), ref });
+
+    test('branch (em refs/heads ou no packed-refs): o commit e HEAD; sem .git: null', () => {
+        assert.deepEqual(lerCommit(projeto({ HEAD: 'ref: refs/heads/main\n', 'refs/heads/main': `${HASH}\n` })), c(HASH, 'HEAD'));
+        assert.deepEqual(lerCommit(projeto({ HEAD: 'ref: refs/heads/main\n', 'packed-refs': `# pack-refs\n${'f'.repeat(40)} refs/heads/outro\n${HASH} refs/heads/main\n` })), c(HASH, 'HEAD'));
         assert.equal(lerCommit(projeto({ HEAD: 'ref: refs/heads/sumiu\n' })), null);
         assert.equal(lerCommit(fs.mkdtempSync(path.join(os.tmpdir(), 'zapbot-sem-git-'))), null);
     });
 
-    test('ZAPBOT_COMMIT tem prioridade', () => {
-        process.env.ZAPBOT_COMMIT = 'abcdef0123456789';
+    test('HEAD destacado numa tag: lightweight, anotada no packed-refs, anotada solta (pelo objeto ou pelo reflog)', () => {
+        // Lightweight: a ref aponta para o commit
+        assert.deepEqual(lerCommit(projeto({ HEAD: `${HASH}\n`, 'refs/tags/release-2.0': `${HASH}\n` })), c(HASH, 'release-2.0'));
+
+        // Anotada num clone: "^<commit>" na linha seguinte do packed-refs
+        assert.deepEqual(lerCommit(projeto({ HEAD: `${HASH}\n`, 'packed-refs': `# pack-refs with: peeled\n${TAG} refs/tags/release-2.0\n^${HASH}\n` })),
+            c(HASH, 'release-2.0'));
+
+        // Anotada solta, com o objeto (fora do Docker)
+        const objeto = require('zlib').deflateSync(Buffer.from(`tag 100\0object ${HASH}\ntype commit\ntag release-2.1\n`));
+        assert.deepEqual(lerCommit(projeto({ HEAD: `${HASH}\n`, 'refs/tags/release-2.1': `${TAG}\n`, [`objects/11/${TAG.slice(2)}`]: objeto })),
+            c(HASH, 'release-2.1'));
+
+        // Anotada solta, sem o objeto (a imagem Docker): o último checkout do reflog, se foi para este commit
+        const reflog = (para) => `${'0'.repeat(40)} ${para} Fulano <f@x> 1790000000 -0300\tcheckout: moving from main to release-2.1\n`;
+        assert.deepEqual(lerCommit(projeto({ HEAD: `${HASH}\n`, 'refs/tags/release-2.1': `${TAG}\n`, 'logs/HEAD': reflog(HASH) })), c(HASH, 'release-2.1'));
+        assert.deepEqual(lerCommit(projeto({ HEAD: `${HASH}\n`, 'refs/tags/release-2.1': `${TAG}\n`, 'logs/HEAD': reflog('f'.repeat(40)) })), c(HASH, 'HEAD'),
+            'o reflog foi para outro commit');
+
+        // Destacado num commit sem tag; duas tags no mesmo commit: a de maior versão
+        assert.deepEqual(lerCommit(projeto({ HEAD: `${HASH}\n` })), c(HASH, 'HEAD'));
+        assert.deepEqual(lerCommit(projeto({ HEAD: `${HASH}\n`, 'refs/tags/release-1.9': `${HASH}\n`, 'refs/tags/release-1.10': `${HASH}\n` })), c(HASH, 'release-1.10'));
+    });
+
+    test('ZAPBOT_COMMIT tem prioridade ("commit" ou "commit/ref")', () => {
         try {
-            assert.equal(lerCommit(projeto({ HEAD: `${HASH}\n` })), 'abcdef0');
+            process.env.ZAPBOT_COMMIT = 'abcdef0123456789';
+            assert.deepEqual(lerCommit(projeto({ HEAD: `${HASH}\n` })), { commit: 'abcdef0', ref: 'HEAD' });
+            process.env.ZAPBOT_COMMIT = 'abcdef0123456789/release-2.0';
+            assert.deepEqual(lerCommit(projeto({ HEAD: `${HASH}\n` })), { commit: 'abcdef0', ref: 'release-2.0' });
         } finally {
             delete process.env.ZAPBOT_COMMIT;
         }

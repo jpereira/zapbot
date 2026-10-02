@@ -80,7 +80,7 @@ padrão; desligue com `/set email.alerts off`. Sem `QRCODE_EMAIL_SMTP_HOST`,
 | `[ZapBot] 🛑 Bot encerrado` | `docker stop`/`restart` ou Ctrl+C (SIGTERM/SIGINT) |
 
 Cada e-mail traz o horário, o número mascarado, a versão com o commit que
-está rodando (`2.1 (git+25b0870)`, veja o [`/version`](comandos/version.md)),
+está rodando (`2.1 (git+9029cfb/release-2.1)`, veja o [`/version`](comandos/version.md)),
 o host, há quanto tempo o processo está no ar e o código anti-phishing. O mesmo evento não se
 repete antes de 5 minutos (exceto crash e encerramento), para não lotar a
 caixa num loop de reconexão.
