@@ -4,20 +4,20 @@ Exibe o mesmo banner do `/uptime`, com a versão do bot.
 
 ```
 /ver
-🤖 ZapBot 2.1 (git+9029cfb/release-2.1)
+🤖 ZapBot 2.2 (git+9029cfb/release-2.2)
 ━━━━━━━━━━━━━━━━━━
 ⚡ Online: 2 dias, 3 horas
 🔐 Conectado: 2 dias, 2 horas, 58 minutos
 ```
 
-O `git+9029cfb/release-2.1` diz de onde vem o código que está rodando: o commit
+O `git+9029cfb/release-2.2` diz de onde vem o código que está rodando: o commit
 e, depois da `/`, a **tag** dele. Vale com a tag em checkout ou num branch que
 está no commit dela (o `main` logo depois do `bump.sh -r`). Num commit sem tag, no
 lugar dela vem `HEAD`:
 
 ```
-🤖 ZapBot 2.1 (git+9029cfb/release-2.1)   → o commit da release 2.1 (checkout da tag, ou o main nele)
-🤖 ZapBot 2.1 (git+7f68066/HEAD)          → um commit sem tag (ex.: o main depois da release)
+🤖 ZapBot 2.2 (git+9029cfb/release-2.2)   → o commit da release 2.2 (checkout da tag, ou o main nele)
+🤖 ZapBot 2.2 (git+7f68066/HEAD)          → um commit sem tag (ex.: o main depois da release)
 ```
 
 Os dois são lidos do `.git` do projeto, sem o `git`. O `.dockerignore` deixa a
@@ -32,5 +32,5 @@ cada tag (um clone novo já vem assim). Depois de um `git fetch --tags`, o
 checkout da tag (`git checkout release-2.1`) também resolve, pelo reflog. Se
 mesmo assim aparecer `HEAD` num commit com tag, rode `git pack-refs --all` e
 refaça o build. Para montar a imagem de outro jeito
-(ex.: sem o `.git`), defina `ZAPBOT_COMMIT` (`9029cfb` ou `9029cfb/release-2.1`;
+(ex.: sem o `.git`), defina `ZAPBOT_COMMIT` (`9029cfb` ou `9029cfb/release-2.2`;
 veja [Configuração](../configuracao.md)). Sem nenhum dos dois, aparece só a versão.
