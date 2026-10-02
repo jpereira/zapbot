@@ -167,7 +167,7 @@
                         "r"
                     ],
                     "values": [],
-                    "desc": "Volta ao padrão: bot ligado, sem admins extras e sem usuários (só você usa comandos). O envio diário do -status fica. Não combina com as outras. Só o dono."
+                    "desc": "Volta ao padrão: bot ligado, sem admins extras e sem usuários (só você usa comandos). O envio diário do -status fica. Não combina com as outras opções. Só o dono."
                 },
                 {
                     "opts": [
@@ -177,7 +177,7 @@
                     "values": [
                         "[<hora>|off]"
                     ],
-                    "desc": "Sem valor: relatório das últimas 24 h (no ar, cache, /watch, apagadas, editadas, status apagados, avisos cortados pelo /mudo e quantos estão silenciados, último backup; com o aviso desligado por show.alert.deleted, show.alert.edited ou show.alert.status, a linha diz como ligar) e, no fim, o envio diário. Com uma hora (Brasília: 06h, 6h30, 06:00 ou às 18h), envia todo dia nesse horário, no seu privado. Com off, desliga o envio diário. Ex: /bot -s, /bot -s 06h, /bot -s off"
+                    "desc": "Sem valor: relatório das últimas 24 h (no ar, cache, /watch, apagadas, editadas, status apagados, avisos cortados pelo /mudo e quantos estão silenciados, último backup; com o aviso desligado por show.alert.deleted, show.alert.edited ou show.alert.status, a linha diz como ligar) e, no fim, o envio diário. Com uma hora (Brasília: 06h, 6h30, 06:00 ou às 18h), envia todo dia nesse horário, no seu privado. Com off, desliga o envio diário. Não combina com as outras opções. Ex: /bot -s, /bot -s 06h, /bot -s off"
                 },
                 {
                     "opts": [
@@ -185,7 +185,7 @@
                         "i"
                     ],
                     "values": [],
-                    "desc": "Versões do que o bot usa (ZapBot, Node.js, whatsapp-web.js, WhatsApp Web, SQLite, Chromium, yt-dlp, ffmpeg), se há versão nova do yt-dlp (PyPI) e do whatsapp-web.js (GitHub), e o sistema: uname -a, host, CPU, memória e há quanto tempo estão no ar."
+                    "desc": "Versões do que o bot usa (ZapBot, Node.js, whatsapp-web.js, WhatsApp Web, SQLite, Chromium, yt-dlp, ffmpeg), se há versão nova do yt-dlp (PyPI) e do whatsapp-web.js (GitHub), e o sistema: uname -a, host, CPU, memória e há quanto tempo estão no ar. Não combina com as outras opções."
                 }
             ],
             "onlyAdmin": true
@@ -1452,7 +1452,7 @@
                     "values": [
                         "<destino|off>"
                     ],
-                    "desc": "Para onde vão os avisos de uma regra: com -add (a regra nova) ou com -N (troca o destino). Contato, menção, grupo, número ou e-mail; off volta ao seu privado. Repita para avisar em vários. Ex: -to /Jorge Pereira/, -to @Fulano, -to /Grupo L200/ -to email, -to +5521999999999, -to off"
+                    "desc": "Para onde vão os avisos de uma regra: com -add (a regra nova) ou com -N (troca os destinos). Contato, menção, grupo, número ou e-mail; off volta ao seu privado. Repita para avisar em vários. Ex: -to /Jorge Pereira/, -to @Fulano, -to /Grupo L200/ -to email, -to +5521999999999, -to off"
                 },
                 {
                     "argv": [
@@ -1470,7 +1470,7 @@
                 "/who",
                 "/id"
             ],
-            "help": "Mostra quem é e o que pode no bot, neste chat: 🤖 dono, 👑 admin (+o), 🗣️ usuário (+v) ou 🚫 sem permissão. Sozinho, você; com pessoas (ou respondendo uma mensagem), elas, só para o dono e os admins. Ex: /whois, /whois /Rafael Silva/",
+            "help": "Mostra quem é e o que pode no bot, neste chat: 🤖 dono, 👑 admin (+o), 🗣️ usuário (+v) ou 🚫 sem permissão. Sozinho, mostra você. Com pessoas (ou respondendo uma mensagem), mostra elas, mas só para o dono e os admins. Ex: /whois, /whois /Rafael Silva/",
             "cmd_opts": [
                 {
                     "argv": [

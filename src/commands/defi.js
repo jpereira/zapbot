@@ -27,8 +27,8 @@ const { formatData, plural } = require('../util/format');
  *
  * And the out-of-range alert (the check lives in src/defi/alerts.js):
  * /defi -alerta                         → lists the alerts
- * /defi -alerta <no.|all> [-to <dest>]   → notifies when the position leaves the range and when
- * returns: in your private chat or in -to (email, emails,
+ * /defi -alerta <no.|all> [-to <dest>]... → notifies when the position leaves the range and when
+ * returns: in your private chat or in the -to (email, emails,
  * contact, group or number; repeat for several)
  * /defi -alerta <no.|all> -taxas <US$>   → and when the fees to collect pass the value
  *   /defi -alerta -rm <nº|all>            → desliga

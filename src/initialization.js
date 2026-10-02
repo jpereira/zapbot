@@ -303,7 +303,7 @@ async function initializeDb() {
     `);
     await dbRun('CREATE INDEX IF NOT EXISTS idx_watch_hits_rule ON watch_hits (rule, timestamp)');
 
-    // Destination of each /watch rule's notices (-to); no row = your private chat
+    // Destinations of each /watch rule's notices (-to); no row = your private chat
     await dbRun(`
         CREATE TABLE IF NOT EXISTS watch_destinations (
             rule TEXT PRIMARY KEY,

@@ -27,12 +27,12 @@ const { fmtWhen, partsInBrasilia } = require('../util/when');
  * /backup -l            → lists the backups, numbered from newest to oldest
  * /backup -i <no.>       → details: date, reason, version and entries (compared with the current database)
  * /backup -r <no.|name>  → shows what will happen; with -sim, restores
- * /backup -s [no.] [-to <destination>] → sends the file (without no.: the most recent) in your
- * private or in -to: by email, as an attachment through the bot's SMTP ("email" =
- * QRCODE_EMAIL_SMTP_TO), or in another chat (contact, group or number: asks for -sim,
- * since the database has the messages of all chats). Repeat -to for
- * several. The old form, with the emails straight in -s (/backup -s 2 email),
- *                         continua valendo
+ * /backup -s [no.] [-to <destination>]... → sends the file (without no.: the most recent) in
+ * your private chat or in the -to destinations: by email, as an attachment through the
+ * The bot's SMTP ("email" = QRCODE_EMAIL_SMTP_TO), or in another chat
+ * (contact, group or number: asks for -yes, since the database has the
+ * messages of all chats). Repeat -to for several. The form
+ * old, with the emails straight in -s (/backup -s 2 email), counts
  * /backup -rm <nº|all>  → apaga
  */
 // An attachment that is too big is refused by most providers (Gmail: 25 MB)
@@ -158,7 +158,7 @@ async function cmdBackup({ msg, opts: commandOpts, args }) {
         return;
     }
 
-    // -send [no.] [-to <destination>]: in your private chat, by email or in another chat
+    // -send [no.] [-to <destination>]...: in your private chat, by email or in other chats
     if (opts.given.has('send')) {
         const values = [o.send, ...opts.argv].filter(Boolean).flatMap(v => String(v).split(','))
             .map(v => v.trim()).filter(Boolean);
