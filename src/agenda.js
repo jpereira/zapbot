@@ -102,7 +102,9 @@ function ondeNoLog(s) {
 function linhaDaLista(s, i) {
     const repete = s.repeat ? ` 🔁 ${REPETICOES[s.repeat].rotulo}` : '';
     const pausado = s.paused ? ' ⏸️ _pausado_' : '';
-    return `${i + 1}. ${TIPOS[s.kind]?.icone ?? '📅'} *${fmtQuando(s.due_at)}*${repete}${pausado} — ${resumirTexto(s.text, 60)}\n   → ${ondeDoItem(s)}`;
+    // O texto inteiro, como foi cadastrado; as linhas seguintes recuadas, como a do destino
+    const texto = s.text.replace(/\n/g, '\n   ');
+    return `${i + 1}. ${TIPOS[s.kind]?.icone ?? '📅'} *${fmtQuando(s.due_at)}*${repete}${pausado} — ${texto}\n   → ${ondeDoItem(s)}`;
 }
 
 // "2" → [item 2]; "all" → todos; senão null
