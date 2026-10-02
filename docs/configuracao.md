@@ -9,9 +9,9 @@ o bot está usando, mande `/set` no seu privado (veja
 Rodando fora do Docker (`node app.js`), o bot lê o mesmo arquivo que o Compose
 usaria: `config/.env` com `APP_ENV=prod` e `config/.env.dev` nos outros casos.
 Variáveis já definidas no ambiente têm prioridade sobre as do arquivo. Fora do
-Docker o bot ainda espera os programas nos caminhos da imagem: Chromium em
-`/usr/bin/chromium-browser`, `ffmpeg` em `/usr/bin/ffmpeg` e `yt-dlp` em
-`/venv/bin/yt-dlp`; o jeito suportado de desenvolver é o
+Docker o bot ainda espera os programas nos caminhos da imagem (Debian):
+Chromium em `/usr/bin/chromium` (ou no `PUPPETEER_EXECUTABLE_PATH`), `ffmpeg`
+em `/usr/bin/ffmpeg` e `yt-dlp` em `/venv/bin/yt-dlp`; o jeito suportado de desenvolver é o
 [container de dev](desenvolvimento.md#ambiente-de-desenvolvimento-docker).
 
 ## Docker Compose
