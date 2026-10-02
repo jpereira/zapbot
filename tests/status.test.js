@@ -54,6 +54,17 @@ describe('/bot -status', () => {
         assert.match(r, /\n\n🔕 Status diário desligado\.\n💡 _Ligue com \/bot -status 06h \(no horário que quiser\)\._$/);
     });
 
+    test('com o aviso desligado, a linha diz como ligar de novo', async () => {
+        await bot.setSetting('show.alert.deleted', false);
+        await bot.setSetting('show.alert.edited', false);
+        await bot.setSetting('show.alert.status', false);
+
+        const [r] = await bot.responder('/bot -status');
+        assert.match(r, /🗑️ \*Apagadas:\* 0 _\(aviso desligado; ligue com \/set show\.alert\.deleted on\)_\n/);
+        assert.match(r, /✏️ \*Editadas:\* 0 _\(aviso desligado; ligue com \/set show\.alert\.edited on\)_\n/);
+        assert.match(r, /📸 \*Status apagados:\* 0 _\(recuperação desligada; ligue com \/set show\.alert\.status on\)_\n/);
+    });
+
     test('-status 06h agenda no seu privado; o relatório mostra no fim; o envio sai pela agenda, todo dia', async () => {
         const [r] = await bot.responder('/bot -status 06h');
         assert.match(r, /^⏰ \*Status diário:\* todo dia às \*06:00\*, no seu privado\.\n📅 Próximo: \w{3} \d\d\/\d\d 06:00$/);

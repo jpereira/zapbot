@@ -24,6 +24,9 @@ const { fmtQuando, instanteEmBrasilia, partesEmBrasilia } = require('./util/quan
  */
 const KIND = 'status';
 
+// Ao lado da contagem, quando o setting do aviso está off: como ligar de novo
+const desligado = (chave, oQue) => (getSetting(chave) ? '' : ` _(${oQue}; ligue com /set ${chave} on)_`);
+
 const tamanho = (p) => (fs.existsSync(p) ? (fs.statSync(p).isDirectory() ? getDirSize(p) : fs.statSync(p).size) : 0);
 
 /**
@@ -63,9 +66,9 @@ async function textoDoStatus(agora = Date.now()) {
         `🤖 *No ar:* ${getBotUptime(BOT_START_TIME)} · conectado: ${conectado}\n` +
         `🗄️ *Cache:* ${humanSize(tamanho(CACHE_DIR))} _(banco ${humanSize(banco)} · mídias ${humanSize(tamanho(MEDIA_DIR))})_ · ${fmtNum(mensagens)} mensagens\n` +
         `👀 *Watch:* ${fmtNum(totalWatch)} ocorrência${totalWatch === 1 ? '' : 's'}${detalheWatch ? ` _(${detalheWatch})_` : ''}\n` +
-        `🗑️ *Apagadas:* ${fmtNum(apagadas)}\n` +
-        `✏️ *Editadas:* ${fmtNum(editadas)}\n` +
-        `📸 *Status apagados:* ${fmtNum(statusApagados)}\n` +
+        `🗑️ *Apagadas:* ${fmtNum(apagadas)}${desligado('show.alert.deleted', 'aviso desligado')}\n` +
+        `✏️ *Editadas:* ${fmtNum(editadas)}${desligado('show.alert.edited', 'aviso desligado')}\n` +
+        `📸 *Status apagados:* ${fmtNum(statusApagados)}${desligado('show.alert.status', 'recuperação desligada')}\n` +
         `🔇 *Ignoradas (/mudo):* ${fmtNum(totalIgnoradas)}` +
         (totalIgnoradas ? ` _(${ignoradas.map(r => `${ROTULOS[r.kind] ?? r.kind} ${fmtNum(r.n)}`).join(', ')})_` : '') + '\n' +
         `💾 *Último backup:* ${ultimoBackup ? `${fmtQuando(ultimoBackup.criadoEm, agora)} (${ultimoBackup.motivo})` : 'nenhum'}`;
