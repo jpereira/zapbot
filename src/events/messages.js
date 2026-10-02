@@ -19,6 +19,12 @@ const { mediaIsPath, nameSafe, getFolderMedia } = require('../util/files');
 const { paraMs } = require('../util/format');
 const { checkWatch } = require('../watch/check');
 
+// WhatsApp's own notices (joined the group, changed the name, encryption, call...): they have no author
+const SYSTEM_TYPES = new Set([
+    'broadcast_notification', 'call_log', 'e2e_notification', 'gp2',
+    'notification', 'notification_template', 'protocol'
+]);
+
 client.on('message_create', async (msg) => {
     try {
         const timestamp = Date.now();
@@ -146,11 +152,13 @@ client.on('message_create', async (msg) => {
 
         /*
          * /stats: only new messages (WhatsApp may resend the same id in a
-         * reconnection) and never the bot's own replies.
+         * reconnection), never the bot's own replies, and only from someone: the notices
+         * of the system and those without an author became an "Unknown" participant.
          */
         const jaRecorded = await dbGet('SELECT 1 AS ok FROM messages WHERE id = ?', [msgIdPure]).catch(() => null);
+        const withoutAuthor = SYSTEM_TYPES.has(msgType) || (!msg.fromMe && senderJid === 'UNKNOWN');
 
-        if (!jaRecorded && !(msg.fromMe && botConsumeSending(chatId))) {
+        if (!jaRecorded && !withoutAuthor && !(msg.fromMe && botConsumeSending(chatId))) {
             // In private, senderJid of your messages is the OTHER participant's (see rawSenderId)
             await countStats({
                 chatId, chatName, isGroup,
