@@ -116,10 +116,10 @@ Vários comandos e vários destinos no mesmo item (um item por destino, e cada
 um roda os comandos na hora dele):
 
 ```
-/cron 06:00 -r diario -to /Krishina Da Silva/ -to /Grupo da Faculdade/ ⏰ Status da DeFi! {/defi -s} Preço do BTC! {/crypto BTC} Preço do Dólar! {/cotacao USD}
+/cron 06:00 -r diario -to /Krishina Da Silva/ -to /Grupo da Faculdade/ ⏰ Status da DeFi! {/defi} Preço do BTC! {/crypto BTC} Preço do Dólar! {/cotacao USD}
 /cron 07:30 -r diario -to /Família/ Bom dia! ☀️ {/tempo Recife} Cripto: {/crypto BTC ETH} Câmbio: {/cotacao USD EUR}
 /cron seg 08:00 -r semanal -to /Trabalho/ -to @Fulano Da Silva Resumo da semana: {/news -hack 5} CVEs: {/cve 3}
-/lembrete -pv 23:00 -r diario Fechamento do dia: {/crypto} {/defi -s}
+/lembrete -pv 23:00 -r diario Fechamento do dia: {/crypto} {/defi}
 ```
 
 Cada resposta de várias linhas vira um parágrafo, e o texto em volta fica
@@ -154,7 +154,7 @@ Preço do Dólar!
 - A resposta em texto entra no lugar do `{...}`. Uma de várias linhas (o
   `/crypto`, o `/tempo`...) vira um parágrafo, com uma linha em branco antes e
   depois, para não colar no texto em volta; uma de uma linha só fica na frase.
-  Um comando que responde mais de uma vez (o `/defi -s`, uma por posição) tem
+  Um comando que responde mais de uma vez (o `/defi`, uma por posição) tem
   as respostas separadas por uma linha em branco. Mídias (`/meme`, `/giphy`,
   `/pixelart`) saem logo depois da mensagem.
 - Só os comandos de consulta rodam aí: `/cotacao`, `/crypto`, `/cve`, `/defi`,
@@ -162,8 +162,8 @@ Preço do Dólar!
   `/tempo`, `/uptime` e `/version` (no `comandos.json`, os com `"cron": true`).
   As opções que mudam algo também não: o `-add`, o `-del` e o `-alerta` do
   `/crypto` e do `/cotacao`; o `-address`, o `-pool`, o `-nft`, o `-rm`, o
-  `-alerta`, o `-taxas` e o `-to` do `/defi` (rodam o `-s` e o `-l`, inclusive
-  `{/defi -s orca}`); e o `-pv` do `/stats`.
+  `-alerta`, o `-taxas` e o `-to` do `/defi` (rodam o `/defi`, o `{/defi orca}`,
+  o `{/defi prjx}` e o `-l`); e o `-pv` do `/stats`.
 - O comando é conferido ao criar (e no `-edit`): um que não existe ou que não
   roda no `/cron` dá erro na hora, não no envio.
 - Se o comando falhar na hora do envio, a mensagem sai assim mesmo, com

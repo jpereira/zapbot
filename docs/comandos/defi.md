@@ -7,17 +7,17 @@ Acompanha posições de liquidez em DeFi, de dois protocolos:
   cadastra a carteira, e o bot lê as posições abertas dela
   ([Project X](#project-x)).
 
-O `/defi -s` lê tudo on-chain na hora e mostra o equivalente ao "Position
-Details" de cada posição. Com o `-alerta`, o bot avisa quando uma posição sai
-da faixa, quando volta e, com o `-taxas`, quando as taxas a coletar passam de
-um valor ([Alerta de saída da faixa](#alerta-de-saída-da-faixa)).
+O `/defi` lê tudo on-chain na hora e mostra o equivalente ao "Position Details"
+de cada posição; com `orca` ou `prjx`, só as daquele protocolo. Com o `-alerta`,
+o bot avisa quando uma posição sai da faixa, quando volta e, com o `-taxas`,
+quando as taxas a coletar passam de um valor
+([Alerta de saída da faixa](#alerta-de-saída-da-faixa)).
 
 Para todos os protocolos:
 
 ```
-/defi -s                       → o Position Details de todos
-/defi -s 2                     → só o nº 2 da lista
-/defi -l                       → a lista (também /defi sem nada)
+/defi                          → o Position Details de todos
+/defi -l                       → a lista dos cadastros
 /defi -rm 2                    → remove o nº 2
 /defi -rm 1 3                  → remove o 1 e o 3 (ou -rm 1,3; -rm all remove todos)
 /defi -alerta <nº|all> [-to <destino>] [-taxas <valor>]
@@ -26,24 +26,23 @@ Para todos os protocolos:
 Para a Orca:
 
 ```
-/defi -s orca                  → só as posições da Orca (ou /defi orca -s)
+/defi orca                     → só as posições da Orca
 /defi orca -address <endereço> -pool <endereço> -nft <mint>
 /defi orca -address <endereço> -alerta 2000   → cadastra e já liga o alerta (no seu privado)
 ```
 
-Para o Project X (`prjx` ou `projectx`):
+Para o Project X:
 
 ```
-/defi prjx -s                  → só as do Project X (ou /defi -s prjx)
+/defi prjx                     → só as do Project X
 /defi prjx -address <0x...>    → cadastra a carteira
 /defi prjx -address <0x...> -alerta   → cadastra e já liga o alerta (no seu privado)
 ```
 
 | Opção | Valor | Descrição |
 |---|---|---|
-| *(protocolo)* | `orca`, `prjx` ou `projectx` | Com `-address`, cadastra; com `-s`, mostra só ele |
-| `-show`, `-s` | `[nº\|orca\|prjx]` | Position Details de todas as posições, só da nº N ou só de um protocolo |
-| `-list`, `-l` | | Lista os cadastros (o mesmo que `/defi` sem nada), com 🔔 nos que têm alerta (e o limite das taxas: `🔔 ≥ $2,000.00`). No seu privado, com os endereços inteiros; fora dele, abreviados (`Hz15…RaPZ`) |
+| *(protocolo)* | `orca` ou `prjx` | Sozinho, mostra o Position Details só dele; com `-address`, cadastra. Sem protocolo, o `/defi` mostra todos |
+| `-list`, `-l` | | Lista os cadastros, com 🔔 nos que têm alerta (e o limite das taxas: `🔔 ≥ $2,000.00`). No seu privado, com os endereços inteiros; fora dele, abreviados (`Hz15…RaPZ`) |
 | `-rm` | `<nº...\|all>` | Remove o cadastro nº N, vários (`-rm 1 3` ou `-rm 1,3`) ou todos; se algum nº não existe, nenhum sai. Junto com `-alerta`: só desliga o alerta da nº N (ou de todas) |
 | `-alerta`, `-a` | `[nº\|all\|valor]` | Sem nº: lista os alertas. Com nº (ou `all`): avisa quando a posição sair da faixa e quando voltar. No cadastro (com `-address`), liga o alerta da posição nova, no seu privado (ou no `-to`); o valor é o limite das taxas, como o `-taxas` (`-alerta 2000`). Veja [Alerta de saída da faixa](#alerta-de-saída-da-faixa) |
 | `-taxas` | `<valor\|off>` | Junto com `-alerta`: avisa também quando as taxas a coletar passarem do valor, em dólar (ex.: `-taxas 50`). Avisa uma vez e de novo depois de você coletar; `off` tira |
@@ -55,7 +54,6 @@ Para o Project X (`prjx` ou `projectx`):
 ```
 /defi orca -address Hz15TavvC8p9S7EihCbWa694kWFJGXFzs7AVpvWKRaPZ -pool CeaZcxBNLpJWtxzt58qQmfMBtJY8pQLvursXTJYGQpbN -nft C1MEDy3xt3gxiDtFkHt7HBWxxUVSarKZgt22FUzsKoji
 /defi prjx -address 0x926024824BAEAf3ee0b7A2EEFA5A216743230444
-/defi projectx -address 0x926024824BAEAf3ee0b7A2EEFA5A216743230444   → o mesmo
 /defi -alerta 1        → avisa no seu privado quando a nº 1 sair da faixa (e voltar)
 /defi -a 1 -taxas 50   → e quando as taxas a coletar da nº 1 passarem de $50
 ```
@@ -70,20 +68,21 @@ no cadastro), o limite das taxas:
 1. Orca · Hz15…RaPZ · pool CeaZ…QpbN (desde 02/10/2026) 🔔 ≥ $2,000.00
 2. Project X · carteira 0x92…0444 (desde 02/10/2026) 🔔
 
-💡 /defi -s mostra os detalhes; /defi -rm <nº> remove; 🔔 = com alerta (/defi -alerta), ≥ $ é o limite das taxas.
+💡 /defi mostra os detalhes; /defi -rm <nº> remove; 🔔 = com alerta (/defi -alerta), ≥ $ é o limite das taxas.
 ```
 
 No seu privado, os endereços saem inteiros.
 
-Para receber o `-show` todo dia, num chat ou junto com outros comandos, use o
-[`/cron`](cron.md#comandos-no-texto) (só o `-show` e o `-list` rodam lá):
+Para receber o Position Details todo dia, num chat ou junto com outros comandos,
+use o [`/cron`](cron.md#comandos-no-texto) (lá rodam o `/defi`, o `/defi orca|prjx`
+e o `-l`; o cadastro e o `-alerta`, não):
 
 ```
-/cron 06:00 -r diario -to /Grupo da Faculdade/ ⏰ Status da DeFi! {/defi -s} Preço do BTC! {/crypto BTC}
+/cron 06:00 -r diario -to /Grupo da Faculdade/ ⏰ Status da DeFi! {/defi} Preço do BTC! {/crypto BTC}
 ```
 
 ```
-/defi -s
+/defi orca
 🌊 Orca · SOL/cbBTC · taxa 0.16%
 📍 7xKp…3mQa · ✅ dentro da faixa
 
@@ -109,14 +108,14 @@ Para receber o `-show` todo dia, num chat ou junto com outros comandos, use o
 O [Project X](https://www.prjx.com/portfolio) é uma DEX da HyperEVM (a rede EVM
 da Hyperliquid), um fork do Uniswap V3: cada posição é um NFT do contrato de
 posições, na carteira de quem a abriu. Por isso o cadastro é a **carteira**, e o
-`/defi prjx -s` mostra cada posição aberta dela, da mais nova para a mais velha:
+`/defi prjx` mostra cada posição aberta dela, da mais nova para a mais velha:
 
 ```
 /defi prjx -address 0x926024824BAEAf3ee0b7A2EEFA5A216743230444
 ✅ Carteira do Project X cadastrada: 0x92…0444
 📍 2 posições abertas.
 
-/defi prjx -s
+/defi prjx
 🌊 Project X · UBTC/USD₮0 · taxa 0.05%
 📍 #558492 · ✅ dentro da faixa
 
@@ -140,7 +139,7 @@ posições, na carteira de quem a abriu. Por isso o cadastro é a **carteira**, 
   chamasse; é o valor exato que o botão "Collect" coletaria.
 - **Dólar**: vem do lado estável do par (USD₮0, USDC, USDe, USDH...). Num par sem
   stablecoin, aparecem só as quantidades.
-- Cadastrar uma carteira sem posição aberta vale (o bot avisa): o `/defi -s`
+- Cadastrar uma carteira sem posição aberta vale (o bot avisa): o `/defi prjx`
   mostra as posições quando houver.
 
 ## Alerta de saída da faixa
@@ -254,7 +253,7 @@ estão na conta da posição.
 
 As contas são lidas pelo RPC do setting `defi.solana.rpc` (padrão: o público,
 `https://api.mainnet-beta.solana.com`). Ele limita as consultas: se o
-`/defi -s` responder que não conseguiu ler a posição, tente de novo em
+`/defi` responder que não conseguiu ler a posição, tente de novo em
 instantes ou use um RPC próprio (Helius, QuickNode, Alchemy... têm planos
 grátis):
 
@@ -271,7 +270,7 @@ posições cadastradas (e o alerta de cada uma) ficam na tabela `defi_positions`
 O Project X é lido pelo RPC do setting `defi.hyperevm.rpc` (padrão: o público
 da Hyperliquid, `https://rpc.hyperliquid.xyz/evm`, chain 999). Ele também limita
 as consultas e recusa lotes grandes: o bot manda as chamadas em lotes de 10.
-Se o `/defi -s` não conseguir ler a carteira, tente de novo em instantes ou
+Se o `/defi prjx` não conseguir ler a carteira, tente de novo em instantes ou
 use um RPC próprio:
 
 ```
