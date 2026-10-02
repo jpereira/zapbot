@@ -161,7 +161,8 @@ async function inicializarBanco() {
         dest_name: 'TEXT',
         dest_is_group: 'INTEGER DEFAULT 0',
         dest_email: 'TEXT',
-        recipients: 'TEXT'   // JSON [{ id, nome, grupo } | { email }]: vários -to
+        recipients: 'TEXT',  // JSON [{ id, nome, grupo } | { email }]: vários -to
+        message: 'TEXT'      // o texto do -msg, no início do aviso
     });
 
     /*

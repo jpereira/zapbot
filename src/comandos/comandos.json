@@ -217,7 +217,7 @@
                         "alerta"
                     ],
                     "values": [],
-                    "desc": "Sem regra: lista os alertas. Com regra (ex.: USD > 5.30): avisa no seu privado (ou no destino do -to) quando o preço passar do valor. Só o dono (ou um admin do bot.admins).",
+                    "desc": "Sem regra: lista os alertas. Com regra (ex.: USD > 5.30): avisa no seu privado (ou no destino do -to) quando o preço passar do valor. A moeda também pode vir antes: /cotacao USD -alerta > 5.30. Só o dono (ou um admin do bot.admins).",
                     "cron": false
                 },
                 {
@@ -241,12 +241,22 @@
                 },
                 {
                     "opts": [
+                        "msg"
+                    ],
+                    "values": [
+                        "<texto>"
+                    ],
+                    "desc": "Junto com -alerta: o texto vai no início do aviso. Vai até o fim do comando (pode ter espaços). Ex: -msg Hora de vender!",
+                    "cron": false
+                },
+                {
+                    "opts": [
                         "rm"
                     ],
                     "values": [
-                        "<nº|all>"
+                        "<nº...|all>"
                     ],
-                    "desc": "Junto com -alerta: remove o alerta nº N da lista (ou todos)."
+                    "desc": "Junto com -alerta: remove os alertas com esses nºs da lista (ou todos). Ex: -rm 2, -rm 1 2 3, -rm all"
                 },
                 {
                     "opts": [
@@ -391,7 +401,7 @@
                         "alerta"
                     ],
                     "values": [],
-                    "desc": "Sem regra: lista os alertas. Com regra (ex.: BTC < 90000): avisa no seu privado (ou no destino do -to) quando o preço passar do valor. Só o dono (ou um admin do bot.admins).",
+                    "desc": "Sem regra: lista os alertas. Com regra (ex.: BTC < 90000): avisa no seu privado (ou no destino do -to) quando o preço passar do valor. A moeda também pode vir antes: /crypto BTC -alerta < 90000. Só o dono (ou um admin do bot.admins).",
                     "cron": false
                 },
                 {
@@ -415,12 +425,22 @@
                 },
                 {
                     "opts": [
+                        "msg"
+                    ],
+                    "values": [
+                        "<texto>"
+                    ],
+                    "desc": "Junto com -alerta: o texto vai no início do aviso. Vai até o fim do comando (pode ter espaços). Ex: -msg Hora de vender!",
+                    "cron": false
+                },
+                {
+                    "opts": [
                         "rm"
                     ],
                     "values": [
-                        "<nº|all>"
+                        "<nº...|all>"
                     ],
-                    "desc": "Junto com -alerta: remove o alerta nº N da lista (ou todos)."
+                    "desc": "Junto com -alerta: remove os alertas com esses nºs da lista (ou todos). Ex: -rm 2, -rm 1 2 3, -rm all"
                 },
                 {
                     "opts": [

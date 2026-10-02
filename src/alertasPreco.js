@@ -23,11 +23,14 @@ const { formatarData, plural } = require('./util/formatar');
  *   -alerta                 → lista os alertas do comando, numerados
  *   -alerta USD > 5.30      → avisa no seu privado quando o USD passar de R$ 5,30
  *   -alerta BTC < 90000     → (no /crypto) quando o BTC ficar abaixo de $90.000
- *   -alerta -rm 2 | all     → remove o alerta nº 2 da lista (ou todos)
+ *   BTC -alerta > 90000     → o mesmo, com a moeda antes do -alerta
+ *   -alerta -rm 2 | all     → remove o alerta nº 2 da lista (ou todos); -rm 1 2 3 remove vários
  *   -alerta BTC > 90000 -to /Grupo L200/  → avisa num grupo (ou num contato,
  *                             -to /Jorge Pereira/, num número, -to +5521999999999,
  *                             ou por e-mail, -to email) em vez do seu privado;
  *                             repita o -to para avisar em vários
+ *   -alerta BTC > 90000 -msg Hora de vender!  → o texto vai no início do aviso; o
+ *                             -msg vai até o fim (o texto só não pode ter um " -to " solto)
  * Cada alerta dispara UMA vez e é removido. A verificação roda a cada
  * 'alerta.intervalMin' minutos. Só o dono cria e remove.
  */
@@ -89,6 +92,22 @@ const listarAlertas = (kind) =>
 // Para onde vai o aviso: os chats ou os e-mails dos -to; sem eles ([]), o seu privado
 const destinosDoAlerta = (a) => destinosSalvos(a.recipients, destinoDaLinha(a));
 
+/*
+ * "-msg <texto>": do -msg até o fim, com espaços e o que mais vier (o -to já
+ * saiu antes, então ele pode vir depois do -msg).
+ */
+const MENSAGEM = /(^|\s)-msg(?=\s|$)([\s\S]*)$/;
+
+function extrairMensagem(texto) {
+    const m = texto.match(MENSAGEM);
+    if (!m) return { mensagem: null, informado: false, resto: texto };
+    const resto = texto.slice(0, m.index).trim();
+    return { mensagem: m[2].trim() || null, informado: true, resto };
+}
+
+// A mensagem do -msg, recuada embaixo do alerta (na lista e na confirmação)
+const linhaDaMensagem = (a) => (a.message ? `\n   💬 ${a.message.replace(/\n/g, '\n   ')}` : '');
+
 function descreverAlerta(kind, a) {
     const t = ALERTA_TIPOS[kind];
     const destinos = destinosDoAlerta(a);
@@ -103,7 +122,9 @@ async function tratarAlertaDePreco(kind, { msg, args, admin }) {
      * O -to aceita espaços (/Grupo L200/), que o parser de opções separaria:
      * sai do texto antes, e o resto é lido de novo.
      */
-    const { destinos: destinosTexto, informado: comDestino, resto } = extrairDestinos(args);
+    const { destinos: destinosTexto, informado: comDestino, resto: semDestino } =
+        extrairDestinos(args);
+    const { mensagem, informado: comMensagem, resto } = extrairMensagem(semDestino);
     const opts = GetOptFromCommand(resto, findCommand(t.cmd));
 
     // Os avisos usam a sua conta (no seu privado ou no chat do -to): só o dono (e os admins do bot.admins)
@@ -114,25 +135,34 @@ async function tratarAlertaDePreco(kind, { msg, args, admin }) {
 
     const alertas = await listarAlertas(kind);
 
-    // -rm <nº|all>
+    // -rm <nº...|all>: -rm 2, -rm 1 2 3 ou -rm 1,3 (os nºs da lista). Algum não existe? Nenhum sai,
+    // que remover pela metade é pior que não remover
     if (opts.given.has('rm')) {
-        const alvo = String(opts.opt.rm ?? '').trim().toLowerCase();
+        const partes = [opts.opt.rm, ...opts.argv].join(' ').toLowerCase()
+            .split(/[\s,]+/).filter(Boolean);
 
-        if (alvo === 'all') {
+        if (partes.includes('all')) {
             await dbRun('DELETE FROM price_alerts WHERE kind = ?', [kind]);
             await msg.reply(`🗑️ ${plural(alertas.length, 'alerta removido', 'alertas removidos')}.`);
             return;
         }
 
-        const alerta = /^\d+$/.test(alvo) ? alertas[Number(alvo) - 1] : null;
+        const numeros = [...new Set(partes)].sort((a, b) => a - b);
+        const faltando = numeros.filter(n => !/^\d+$/.test(n) || !alertas[Number(n) - 1]);
 
-        if (!alerta) {
-            await msg.reply(`❌ Alerta nº ${alvo || '?'} não existe. Veja a lista com ${t.cmd} -alerta`);
+        if (!numeros.length || faltando.length) {
+            await msg.reply(faltando.length > 1
+                ? `❌ Alertas nº ${faltando.join(', ')} não existem. Nada foi removido; veja a lista com ${t.cmd} -alerta`
+                : `❌ Alerta nº ${faltando[0] ?? '?'} não existe. Veja a lista com ${t.cmd} -alerta`);
             return;
         }
 
-        await dbRun('DELETE FROM price_alerts WHERE id = ?', [alerta.id]);
-        await msg.reply(`🗑️ Alerta removido: ${descreverAlerta(kind, alerta)}`);
+        const removidos = numeros.map(n => alertas[Number(n) - 1]);
+        for (const a of removidos) await dbRun('DELETE FROM price_alerts WHERE id = ?', [a.id]);
+        await msg.reply(removidos.length === 1
+            ? `🗑️ Alerta removido: ${descreverAlerta(kind, removidos[0])}`
+            : `🗑️ *Alertas removidos* (${removidos.length})\n` +
+              removidos.map(a => `• ${descreverAlerta(kind, a)}`).join('\n'));
         return;
     }
 
@@ -143,6 +173,16 @@ async function tratarAlertaDePreco(kind, { msg, args, admin }) {
         return;
     }
 
+    if (!regraTexto && comMensagem) {
+        await msg.reply(`❌ O -msg só vale ao criar um alerta: ${t.cmd} -alerta ${t.exemplo} -msg <texto>`);
+        return;
+    }
+
+    if (comMensagem && !mensagem) {
+        await msg.reply(`❌ Informe o texto do -msg: ${t.cmd} -alerta ${t.exemplo} -msg <texto>`);
+        return;
+    }
+
     // Sem regra: lista
     if (!regraTexto) {
         if (!alertas.length) {
@@ -150,9 +190,10 @@ async function tratarAlertaDePreco(kind, { msg, args, admin }) {
             return;
         }
 
-        const linhas = alertas.map((a, i) => `${i + 1}. ${descreverAlerta(kind, a)} _(criado ${formatarData(a.created_at)})_`);
+        const linhas = alertas.map((a, i) => `${i + 1}. ${descreverAlerta(kind, a)} _(criado ${formatarData(a.created_at)})_` +
+            linhaDaMensagem(a));
         await msg.reply(`🔔 *ALERTAS DE PREÇO* _(${t.cmd})_\n\n${linhas.join('\n')}\n\n` +
-            `💡 _Verificados a cada ${plural(getSetting('alerta.intervalMin'), 'minuto', 'minutos')}. Remova com ${t.cmd} -alerta -rm <nº|all>._`);
+            `💡 _Verificados a cada ${plural(getSetting('alerta.intervalMin'), 'minuto', 'minutos')}. Remova com ${t.cmd} -alerta -rm <nº...|all>._`);
         return;
     }
 
@@ -204,13 +245,15 @@ async function tratarAlertaDePreco(kind, { msg, args, admin }) {
 
     const c = colunasDoDestino(destinos[0]);
     await dbRun(
-        `INSERT INTO price_alerts (kind, symbol, op, target, price_at_creation, created_at, dest_id, dest_name, dest_is_group, dest_email, recipients)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO price_alerts (kind, symbol, op, target, price_at_creation, created_at, dest_id, dest_name, dest_is_group, dest_email,
+            recipients, message)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [kind, regra.sym, regra.op, regra.alvo, preco, Date.now(), c.dest_id, c.dest_name, c.dest_is_group, c.dest_email,
-            recipientsDe(destinos)]
+            recipientsDe(destinos), mensagem]
     );
 
-    await msg.reply(`🔔 *Alerta criado*\n${descreverAlerta(kind, { symbol: regra.sym, op: regra.op, target: regra.alvo })}\n` +
+    await msg.reply(`🔔 *Alerta criado*\n${descreverAlerta(kind, { symbol: regra.sym, op: regra.op, target: regra.alvo })}` +
+        `${linhaDaMensagem({ message: mensagem })}\n` +
         `💰 Agora: ${t.fmt(preco)}\n` +
         `💡 _Aviso ${destinos.length ? `em ${descreverDestinos(destinos)}` : 'no seu privado'}; ` +
         `verificação a cada ${plural(getSetting('alerta.intervalMin'), 'minuto', 'minutos')}._`);
@@ -256,7 +299,9 @@ async function verificarAlertasDePreco({ forcar = false } = {}) {
 
                 const variacao = fmtVariacao(preco, a.price_at_creation);
                 const destinos = destinosDoAlerta(a);
+                // A mensagem do -msg vem antes de tudo
                 await enviarAosDestinos(destinos,
+                    (a.message ? `${a.message}\n\n` : '') +
                     `🔔 *ALERTA DE PREÇO*\n\n` +
                     `${OPERADORES[a.op].icone} ${t.icone(a.symbol)} *${t.par(a.symbol)}* ficou ${OPERADORES[a.op].texto} ${t.fmt(a.target)}\n` +
                     `💰 Agora: *${t.fmt(preco)}*${variacao ? ` _(${variacao} desde a criação)_` : ''}\n` +
