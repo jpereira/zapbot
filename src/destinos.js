@@ -122,7 +122,8 @@ async function semAsCopiasPeloLid(contatos) {
  * (o id interno) vem com o telefone dele, se o WhatsApp souber qual é.
  * O nome e o "está na agenda" saem das mesmas funções que o whatsapp-web.js
  * usa (WAWebContactGetters e WAWebFrontendContactGetters): no modelo cru do
- * contato, c.name e c.isMyContact vêm vazios.
+ * contato, c.name e c.isMyContact vêm vazios. A sua própria conta também vale
+ * (pelo nome salvo ou pelo seu nome de perfil): vira o seu privado.
  */
 const BUSCA_TIMEOUT_MS = 20_000;
 
@@ -147,10 +148,12 @@ function buscarNoWhatsApp(palavras) {
 
         const contatos = Contact.getModelsArray()
             .filter(c => c.id?.server !== 'g.us')
-            .map(c => ({ c, nome: tentar(() => getters.getName(c), c.name) }))
-            .filter(({ c, nome }) => casa(nome) &&
-                tentar(() => getIsMyContact(c), c.isMyContact) && !tentar(() => getters.getIsMe(c), c.isMe))
-            .map(({ c, nome }) => {
+            .map(c => ({ c, nome: tentar(() => getters.getName(c), c.name), eu: Boolean(tentar(() => getters.getIsMe(c), c.isMe)) }))
+            .filter(({ c, nome, eu }) => casa(nome) && (eu || tentar(() => getIsMyContact(c), c.isMyContact)))
+            .map(({ c, nome, eu }) => {
+                // Você: quem chama troca pelo seu id (o do modelo pode ser o LID)
+                if (eu) return { id: null, nome, eu };
+
                 const id = serial(c.id);
                 const telefone = id?.endsWith('@lid')
                     ? serial(c.phoneNumber) ?? serial(tentar(() => getAlternateUserWid(c.id)))
@@ -172,11 +175,27 @@ function buscarNoWhatsApp(palavras) {
     return Promise.race([busca, tempo]).finally(() => clearTimeout(limite));
 }
 
+/*
+ * Você (a conta do bot) entra com o seu id, achado pelo nome salvo na agenda
+ * ou pelo seu nome de perfil (pushname): -to /Seu Nome/ é o seu privado.
+ */
+function comVoce(contatos, casa) {
+    const meuId = client.info?.wid?._serialized;
+    if (!meuId) return contatos.filter(c => !c.eu);
+
+    const meuNome = contatos.find(c => c.eu)?.nome ?? (casa(client.info.pushname) ? client.info.pushname : null);
+    const outros = contatos.filter(c => !c.eu && c.id !== meuId);
+    return meuNome ? [{ id: meuId, nome: meuNome }, ...outros] : outros;
+}
+
 // Mesma forma do whatsapp-web.js (Contact e Chat), para o resto do código não depender da origem
 async function contatosEGrupos(palavras) {
+    const casa = (nome) => Boolean(nome) && palavras.every(p => normalizar(nome).includes(p));
+
     if (client.pupPage) {
         const { contatos, grupos } = await buscarNoWhatsApp(palavras);
-        const unicos = [...new Map(contatos.filter(c => c.id).map(c => [c.id, c])).values()];
+        const todos = comVoce(contatos, casa).filter(c => c.id);
+        const unicos = [...new Map(todos.map(c => [c.id, c])).values()];
         return {
             contatos: unicos.map(c => ({ id: { _serialized: c.id }, name: c.nome, number: c.id.split('@')[0], isMyContact: true })),
             grupos: grupos.filter(g => g.id).map(g => ({ id: { _serialized: g.id }, name: g.nome, isGroup: true }))
@@ -185,9 +204,11 @@ async function contatosEGrupos(palavras) {
 
     // Sem a página (os testes): as listas do cliente
     const [contatos, chats] = await Promise.all([client.getContacts?.().catch(() => []) ?? [], client.getChats().catch(() => [])]);
-    const casa = (nome) => palavras.every(p => normalizar(nome).includes(p));
+    const daAgenda = contatos
+        .filter(c => (c?.isMyContact || c?.isMe) && !c.isGroup && c.name && c.id?._serialized && casa(c.name))
+        .map(c => ({ id: c.id._serialized, nome: c.name, eu: Boolean(c.isMe) }));
     return {
-        contatos: contatos.filter(c => c?.isMyContact && !c.isGroup && !c.isMe && c.name && c.id?._serialized && casa(c.name)),
+        contatos: comVoce(daAgenda, casa).map(c => ({ id: { _serialized: c.id }, name: c.nome, number: c.id.split('@')[0], isMyContact: true })),
         grupos: chats.filter(c => c.isGroup && c.name && casa(c.name))
     };
 }
