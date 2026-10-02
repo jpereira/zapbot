@@ -128,7 +128,7 @@ qui 01/10 06:00
 🗑️ Apagadas: 12
 ✏️ Editadas: 4
 📸 Status apagados: 2
-🔇 Ignoradas (/mudo): 7 (apagadas 5, editadas 2)
+🔇 Ignoradas (/mudo): 7 (apagadas 5, editadas 2) · 3 silenciados
 💾 Último backup: qui 01/10 03:00 (automático)
 
 ⏰ Status diário: todo dia às 06:00, no seu privado.
@@ -149,7 +149,9 @@ O que entra:
   desligado (`show.alert.deleted`, `show.alert.edited` ou `show.alert.status`
   em `off`), a linha diz como ligar de novo:
   `✏️ Editadas: 4 (aviso desligado; ligue com /set show.alert.edited on)`.
-- **Ignoradas (/mudo)**: os avisos que o `/mudo` cortou, por tipo.
+- **Ignoradas (/mudo)**: os avisos que o `/mudo` cortou nas últimas 24 h, por tipo,
+  e quantos estão silenciados agora. Com alguém silenciado, o 0 só quer dizer
+  que nenhum aviso dele chegou nas 24 h.
 - **Último backup**: o mais recente do [`/backup`](backup.md).
 - **Status diário**: o horário e o próximo envio, ou `🔕 Status diário desligado`.
 
