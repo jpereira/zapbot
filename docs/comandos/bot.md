@@ -22,6 +22,7 @@ Controla quem pode usar o bot e mostra o relatório dele
 | `+admin`, `-admin` | `+admin`: só você (e os admins) usa comandos; a lista de usuários sai. `-admin`: todos usam os comandos comuns, em qualquer chat (o `/bot` mostra um aviso) |
 | `+o`, `-o` | `[pessoa...]`: põe (`+o`) e tira (`-o`) admins. Sem ninguém, a pessoa do privado onde você digitou. Veja [Admins extras](#admins-extras) |
 | `+v`, `-v` | `[pessoa\|grupo...]`: põe (`+v`) e tira (`-v`) usuários. Sem ninguém, o chat atual: o grupo ou a pessoa do privado. Veja [Usuários](#usuários) |
+| `-all-users`, `-au` | Na lista de quem usa, mostra todos. Sem ele, a lista é a deste chat: num grupo, quem participa dele (e o grupo); no privado de alguém, só a pessoa; no seu privado, todos. Veja [Quem aparece na lista](#quem-aparece-na-lista) |
 | `-reset`, `-r` | Volta ao padrão: bot ligado, sem admins extras e sem usuários. Não combina com as outras. Veja [Voltar ao padrão](#voltar-ao-padrão) |
 | `-status`, `-s` | Relatório do bot e o envio diário dele (`[<hora>\|off]`). Não combina com as outras. Veja [Status do bot](#status-do-bot) |
 | `-info`, `-i` | Versões do bot e dos programas que ele usa, e o sistema. Não combina com as outras. Veja [Informações do sistema](#informações-do-sistema) |
@@ -48,6 +49,33 @@ um destino: `👤 Nome · +número` (ou só `👤 +número`, sem o contato na ag
 `👥 Grupo`. Quem está nas duas aparece uma vez, com as duas marcas. Se você
 mesmo estiver na lista, sai com `🤖 dono` (você já usa tudo). Sem ninguém, a
 lista não aparece.
+
+### Quem aparece na lista
+
+A lista (do `/bot` e da resposta do `+o`/`-o`/`+v`/`-v`) é a do chat onde você
+digitou:
+
+| Onde | Quem aparece |
+|---|---|
+| No seu privado | Todos |
+| Num grupo | Quem participa dele e o próprio grupo |
+| No privado de alguém | Só essa pessoa |
+| Em qualquer lugar, com `-all-users` (`-au`) | Todos |
+
+Quando alguém fica de fora, a lista diz quantos e como ver todos:
+
+```
+/bot                      (no Grupo Familia)
+...
+Quem usa (2)
+• 🗣️ +v · 👤 Rafael Silva · +5521977776666
+• 🗣️ +v · 👥 Grupo Familia
+💡 👑 +o: admin, usa tudo (bot.admins) · 🗣️ +v: usuário, usa os comandos comuns (bot.users)
+💡 Só quem é deste grupo; mais 3 fora daqui. Todos: /bot -au
+```
+
+O `-au` vale também nos atalhos: `/bot +v /Sofia Izabel/ -au`. Num grupo, mesmo
+com o `-au`, o telefone de quem não participa dele sai escondido (veja abaixo).
 
 Com todos liberados (`/bot -admin`), a lista mostra só os admins, e o `/bot`
 avisa que qualquer pessoa está usando os comandos:
@@ -164,18 +192,28 @@ admin continuam só seus e dos admins.
 /bot                                       → a lista: 🗣️ +v · 👤 Camila Gama · +5521988887777
 ```
 
-A resposta do `+o`/`-o`/`+v`/`-v` vem uma coisa por linha: o que mudou e, embaixo,
-a lista inteira, cada um com o papel (🤖 você, o dono; 👑 admin; 🗣️ usuário,
-pelo mais alto):
+A resposta do `+o`/`-o`/`+v`/`-v` traz o que mudou (uma linha por item, com o
+papel: 🤖 você, o dono; 👑 admin; 🗣️ usuário, pelo mais alto) e, embaixo, a
+mesma lista do `/bot`:
 
 ```
-/bot +v /Jorge Pereira/
-✅ bot.users + 5521999981111 (Jorge Pereira) 🤖
+/bot +v /Camila Gama/
+✅ bot.users + 5521999982222 (Camila Gama) 🗣️
 
-bot.users (2)
-- 5521999983333 (Jorge Chip L200) 🗣️
-- 5521999981111 (Jorge Pereira) 🤖
-💡 🤖 dono · 👑 admin (+o) · 🗣️ usuário (+v)
+Quem usa (3)
+• 🗣️ +v · 👤 Jorge Chip L200 · +5521999983333
+• 🤖 dono 🗣️ +v · 👤 Jorge Pereira · +5521999981111
+• 🗣️ +v · 👤 Camila Gama · +5521999982222
+💡 🤖 dono: você, que já usa tudo
+💡 👑 +o: admin, usa tudo (bot.admins) · 🗣️ +v: usuário, usa os comandos comuns (bot.users)
+```
+
+Num **grupo**, o telefone de quem não participa dele sai escondido (o DDI, o
+DDD e os 4 últimos), na lista e na resposta: o grupo não precisa saber o número
+de todo mundo que usa o bot. No seu privado (ou no da pessoa), sai inteiro.
+
+```
+• 🗣️ +v · 👤 Camila Gama · +5521•••••2222
 ```
 
 - As pessoas são buscadas como no `bot.admins` (nome, menção ou número), e os
