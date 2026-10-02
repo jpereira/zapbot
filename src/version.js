@@ -20,15 +20,17 @@ const { ROOT_DIR } = require('./constants');
  * .dockerignore), so each "docker compose build" records the commit and the
  * tag of the code that went into it.
  *
- * The tag is the one that points to the detached HEAD commit (git checkout v2.0.0).
- * An annotated tag (bump.sh's) points to a "tag" object, not to the
- * commit; its commit comes from one of these:
- * - the "^<commit>" line right below it in packed-refs (in a clone);
+ * The tag is the one that points to the commit in use: with a detached HEAD (git checkout
+ * v2.0.0) or on a branch that is on the tag commit (main right after the
+ * bump.sh). An annotated tag (those of bump.sh) points to a "tag" object, not
+ * to the commit; its commit comes from one of these:
+ * - the "^<commit>" line right below it in packed-refs (in a clone, or after
+ * of a git pack-refs --all, which bump.sh runs when creating the tag);
  * - the object itself in .git/objects (outside Docker, where .git is whole);
  * - the last line of the reflog (.git/logs/HEAD): "checkout: moving from main to
  * v2.0.0", with the commit it went to (after a git fetch --tags,
  * the new tag stays loose and the object does not go into the image).
- * On a branch, or without a tag for the commit: "HEAD".
+ * Without a tag for the commit: "HEAD".
  *
  * Read once, on load: it is that of the code that is running, even if the
  * repository to change afterward.
@@ -118,19 +120,19 @@ function readGit(root = ROOT_DIR) {
     const head = read('HEAD');
     if (!head) return null;
 
-    // On a branch: its commit, and the ref is HEAD
-    if (!HASH.test(head)) {
+    // The commit in use: the detached HEAD's, or the branch's (in refs/heads/ or in packed-refs)
+    let commit = HASH.test(head) ? head : null;
+    if (!commit) {
         const branch = head.match(/^ref:\s*(\S+)$/)?.[1];
         if (!branch) return null;
 
         const doRef = read(branch);
         const doPacked = (read('packed-refs') ?? '').split('\n').find(l => l.endsWith(` ${branch}`))?.split(' ')[0];
-        const commit = [doRef, doPacked].find(h => h && HASH.test(h));
-        return commit ? { commit, ref: 'HEAD' } : null;
+        commit = [doRef, doPacked].find(h => h && HASH.test(h));
+        if (!commit) return null;
     }
 
-    // Detached HEAD: the tag that points to this commit (direct, peeled, by object or by reflog)
-    const commit = head;
+    // The tag that points to this commit (direct, peeled, by object or by reflog)
     const tags = readTags(read, root);
     const daTag = [...tags.entries()]
         .filter(([, t]) => t.ref === commit || t.commit === commit || objectTagCommit(read, t.ref) === commit)
