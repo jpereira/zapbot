@@ -504,7 +504,7 @@ describe('/cron: comandos no texto ({/comando})', () => {
         const enviados = await vencer();
         assert.deepEqual(enviados.map(e => e.chatId), [L200, OUTRO.jid]);
         for (const e of enviados) {
-            assert.match(e.content, /^⏰ Status da DeFi!\n\n🌊 Nenhuma posição cadastrada\.\n💡 _\/defi -orca[^\n]*_\n\nVersão:\n\n🤖 \*ZapBot/);
+            assert.match(e.content, /^⏰ Status da DeFi!\n\n🌊 Nenhuma posição cadastrada\.\n💡 _\/defi -orca[^\n]*\n\/defi -project-x[^\n]*_\n\nVersão:\n\n🤖 \*ZapBot/);
         }
     });
 

@@ -51,7 +51,7 @@ outros funcionam sem configuração.
 | `/news` | Feeds RSS (g1, Gazeta do Povo, The Hacker News...) | — |
 | `/cotacao` | [Yahoo Finance](https://finance.yahoo.com/) (reserva: [AwesomeAPI](https://docs.awesomeapi.com.br/)) e [Binance](https://www.binance.com/) para o USDT | — |
 | `/crypto` | [Binance](https://www.binance.com/) | — |
-| `/defi` | RPC da Solana (setting `defi.solana.rpc`) e a [API da Orca](https://www.orca.so/) | — |
+| `/defi` | RPC da Solana (setting `defi.solana.rpc`), a [API da Orca](https://www.orca.so/) e o RPC da HyperEVM (setting `defi.hyperevm.rpc`, para o Project X) | — |
 | `/kernel` | [kernel.org](https://www.kernel.org/) | — |
 | `/meme` | [imgflip](https://imgflip.com/) | — |
 | `/pixelart` | [16colo.rs](https://16colo.rs/) | — |
