@@ -42,7 +42,7 @@ describe('/bot -status', () => {
         await deleted('silenciada');
 
         const [r] = await bot.replyAlt('/bot -status');
-        assert.match(r, /^📊 \*Status do ZapBot [\d.]+\* · últimas 24 h\n_\w{3} \d\d\/\d\d \d\d:\d\d_\n\n/);
+        assert.match(r, /^📊 \*Status do ZapBot [\d.]+\* · últimas 24 h\n_[a-zá]{3} \d\d\/\d\d \d\d:\d\d_\n\n/);
         assert.match(r, /🤖 \*No ar:\* .* · conectado: /);
         assert.match(r, /🗄️ \*Cache:\* [\d.]+ \w+ _\(banco [\d.]+ \w+ · mídias [\d.]+ \w+\)_ · \d+ mensagens/);
         assert.match(r, /👀 \*Watch:\* 3 ocorrências _\(#1 pix: 2, #2 boleto: 1\)_/);
@@ -68,9 +68,9 @@ describe('/bot -status', () => {
 
     test('-status 06h agenda no seu privado; o relatório mostra no fim; o envio sai pela agenda, todo dia', async () => {
         const [r] = await bot.replyAlt('/bot -status 06h');
-        assert.match(r, /^⏰ \*Status diário:\* todo dia às \*06:00\*, no seu privado\.\n📅 Próximo: \w{3} \d\d\/\d\d 06:00$/);
+        assert.match(r, /^⏰ \*Status diário:\* todo dia às \*06:00\*, no seu privado\.\n📅 Próximo: [a-zá]{3} \d\d\/\d\d 06:00$/);
 
-        assert.match((await bot.replyAlt('/bot -status'))[0], /\n\n⏰ \*Status diário:\* todo dia às \*06:00\*, no seu privado\.\n📅 Próximo: \w{3} \d\d\/\d\d 06:00\n💡 _Mude com \/bot -status <hora> ou desligue com \/bot -status off\._$/);
+        assert.match((await bot.replyAlt('/bot -status'))[0], /\n\n⏰ \*Status diário:\* todo dia às \*06:00\*, no seu privado\.\n📅 Próximo: [a-zá]{3} \d\d\/\d\d 06:00\n💡 _Mude com \/bot -status <hora> ou desligue com \/bot -status off\._$/);
 
         // Does not appear in the /cron schedule, nor count toward the limit
         assert.match((await bot.replyAlt('/cron'))[0], /📅 Nada agendado/);

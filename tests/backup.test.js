@@ -49,7 +49,7 @@ describe('/backup (/bkp)', () => {
         await createBackup();
         [r] = await bot.replyAlt('/backup');
         assert.match(r, /📦 \*Backups:\* 1 \(/);
-        assert.match(r, /🕐 \*Último:\* \w{3} \d\d\/\d\d \d\d:\d\d \(manual, /);
+        assert.match(r, /🕐 \*Último:\* [a-zá]{3} \d\d\/\d\d \d\d:\d\d \(manual, /);
 
         await bot.setSetting('backup.enabled', false);
         assert.match((await bot.replyAlt('/backup'))[0], /⏭️ Backup automático desligado/);
