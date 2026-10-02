@@ -103,13 +103,13 @@ entre os casos.
 
 | Arquivo | O que cobre |
 |---|---|
-| `configuracao.test.js` | `comandos.json`, settings (e a migração dos renomeados), parser de opções, ajuda e a coerência entre config, código, README e `docs/` (inclusive a ordem alfabética e os links) |
+| `configuracao.test.js` | `comandos.json`, settings (e a migração dos renomeados), parser de opções, ajuda e a coerência entre config, código, README e `docs/` (inclusive a ordem alfabética, os links e a versão estável da instalação) |
 | `mensagens.test.js` | Gravação, roteamento, permissões (`onlyAdmin`, modo admin, bot desligado, admins extras do `bot.admins`) e a contagem do `/stats` |
 | `comandos.test.js` | `/help`, `/debug`, `/uptime`, `/version`, `/ping`, `/noffa`, `/bot` (e o `-info`), `/set` (e o `-append`/`-rem`) |
-| `apagadas-editadas.test.js` | Eventos de apagar/editar e o `/show` (apagadas e editadas, e a busca `-q`) |
+| `apagadas-editadas.test.js` | Eventos de apagar/editar (e os avisos `show.alert.*`) e o `/show` (apagadas e editadas, e a busca `-q`) |
 | `mudo.test.js` | `/mudo`: avisos silenciados por pessoa ou grupo, e a busca do alvo (contato antes de grupo, menção, a lista para escolher pelo nº) |
 | `stats.test.js`, `watch.test.js`, `monitor.test.js` | `/stats`, `/watch` (e o `-to`), `/monitor` e o aviso de presença |
-| `status.test.js` | `/bot -status`: o relatório e o envio diário |
+| `status.test.js` | `/bot -status`: o relatório (com o aviso `show.alert.*` desligado e os silenciados do `/mudo`) e o envio diário |
 | `agenda.test.js` | Datas digitadas (`6h`, `+2h`, `às 18h`, `sexta`...) e o `/cron`, nos modos mensagem e lembrete, com vários `-to`, `-edit` e `-pause`/`-resume` |
 | `backup.test.js` | `/backup` (criação, lista, restauração, envio no privado, por e-mail e com `-to`) e o backup diário |
 | `cotacoes.test.js` | `/cotacao`, `/crypto` e os alertas de preço (com o `-to`) |
@@ -200,6 +200,8 @@ git push && git push origin release-X.Y   # o push da tag publica o site
 
 O push da tag dispara o workflow da [documentação](#documentação), que publica
 o site da release em alguns minutos (acompanhe em **Actions › Documentação**).
+As notas ficam na release do GitHub (`gh release create release-X.Y`), com o
+que mudou desde a anterior (`git log release-X.W..release-X.Y`).
 
 ## Adicionando ou alterando comandos
 
