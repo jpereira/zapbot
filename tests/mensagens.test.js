@@ -132,6 +132,28 @@ describe('comandos', () => {
     });
 });
 
+describe('comando desconhecido', () => {
+    const desconhecidos = (desde) => bot.logs.slice(desde).filter(l => l.includes('executed unknown command'));
+
+    test('do dono: sempre no log, com o comando inteiro; dos outros: só no modo debug', async () => {
+        let antes = bot.logs.length;
+        assert.deepEqual(await bot.responder('/tapioca de frango'), []);
+        assert.deepEqual(await bot.responder('/monitor'), [], 'desativado no config: também é desconhecido');
+        const doDono = desconhecidos(antes);
+        assert.equal(doDono.length, 2);
+        assert.match(doDono[0], /\[!\] ⚠️ 'Dono' executed unknown command: '\/tapioca de frango'$/);
+
+        antes = bot.logs.length;
+        await bot.responder('/tapioca', { de: OUTRO.jid });
+        assert.deepEqual(desconhecidos(antes), [], 'sem debug, o dos outros não aparece');
+
+        await bot.setSetting('debug.enabled', true);
+        antes = bot.logs.length;
+        await bot.responder('/tapioca', { de: OUTRO.jid });
+        assert.match(desconhecidos(antes)[0], /\[DEBUG\] ⚠️ 'Fulano' executed unknown command: '\/tapioca'$/);
+    });
+});
+
 describe('permissões', () => {
     test('onlyAdmin: ignorado para os outros, sem resposta no chat', async () => {
         assert.deepEqual(await bot.responder('/ping', { de: OUTRO.jid }), []);
