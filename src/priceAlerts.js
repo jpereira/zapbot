@@ -127,7 +127,7 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
     const { mensagem: messageAlt, informado: withMessage, resto: rest } = extractMessage(withoutDestination);
     const opts = GetOptFromCommand(rest, findCommand(t.cmd));
 
-    // The notices use your account (in your private chat or in the -to chat): owner only (and the bot.admins admins)
+    // The notices use your account (in your private chat or in the -to chats): owner and admins only
     if (!admin) {
         await msg.reply('⛔ Apenas o dono do bot (ou um admin) pode usar os alertas.');
         return;

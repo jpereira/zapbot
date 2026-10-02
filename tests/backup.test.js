@@ -214,6 +214,22 @@ describe('/backup (/bkp)', () => {
         } finally {
             for (const k of Object.keys(env)) delete process.env[k];
         }
+
+        // A chat that fails does not hold up the others: the bot says which one failed
+        const send = bot.client.sendMessage;
+        bot.client.sendMessage = (chatId, ...rest) => (chatId === L200
+            ? Promise.reject(new Error('fora do ar'))
+            : send.call(bot.client, chatId, ...rest));
+        try {
+            const line = '/backup -s -to /Grupo L200/ -to Fulano -sim';
+            const f = await bot.executar(line, { erroEsperado: true });
+            assert.equal(f[0].texto, '❌ Não consegui enviar o backup em 👥 Grupo sobre L200: fora do ar');
+            assert.equal(f[1].chatId, bot.OTHERAlt.jid);
+            assert.ok(f[1].content instanceof MessageMedia);
+            assert.equal(f[2].texto, '💾 Backup enviado em 👤 Fulano.');
+        } finally {
+            bot.client.sendMessage = send;
+        }
     });
 
     test('só o dono', async () => {
