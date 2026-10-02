@@ -2,6 +2,7 @@
  * Schedule: the reminders (/lembrete) and the scheduled messages (/cron), with the periodic check.
  */
 
+const { sendMedia, commandsError, assembleText } = require('./scheduleCommands');
 const { estado: stateAlt } = require('./state');
 const { client } = require('./client');
 const { dbAll, dbGet, dbReady, dbRun } = require('./db');
@@ -22,6 +23,8 @@ const { REPETITIONS, fmtWhen, readWhen, partsInBrasilia, nextRepetition } = requ
  * Both accept -repetir (-r) diario|semanal|mensal. The message mode accepts
  * several -to (one item per destination). In the list, -edit <no.> changes the time, the text
  * or an item's repetition, and -pause/-resume <no.|all> hold and release it.
+ * A {/command} in the text runs at send time and the reply goes in its place
+ * (see scheduleCommands.js); -test <no.> shows now how the message would come out.
  * It comes out of your account: owner only.
  */
 const TYPES = {
@@ -50,7 +53,7 @@ const DELAY_TOLERATED_MS = 5 * 60_000;
 /**
  * Reads "<when> [options] <text>": the options and the "when" come at the start, in
  * any order; the text is the rest, as typed (with the line breaks).
- * @returns {{ opt: {list?, lembrete?, rm?, repetir?, pv?, edit?, pause?, resume?}, quando: {ms}|null,
+ * @returns {{ opt: {list?, lembrete?, rm?, repetir?, pv?, edit?, pause?, resume?, test?}, quando: {ms}|null,
  *            texto: string, destinos: Array<string|null>, comDestino: boolean }}
  */
 function readScheduling(args) {
@@ -67,7 +70,7 @@ function readScheduling(args) {
         if (nameAlt === 'list' || nameAlt === 'l') opt.list = true;
         else if (nameAlt === 'pv') opt.pv = true;
         else if (nameAlt === 'lembrete' || nameAlt === 'lem') opt.lembrete = true;
-        else if (['rm', 'edit', 'pause', 'resume'].includes(nameAlt)) opt[nameAlt] = words[++i]?.[0] ?? '';
+        else if (['rm', 'edit', 'pause', 'resume', 'test'].includes(nameAlt)) opt[nameAlt] = words[++i]?.[0] ?? '';
         else if (nameAlt === 'repetir' || nameAlt === 'r') opt.repetir = words[++i]?.[0] ?? '';
         else if (!when && (when = readWhen(words.slice(i).map(m => m[0])))) i += when.usadas - 1;
         else break;
@@ -80,11 +83,21 @@ function readScheduling(args) {
 // Reminders and messages together, in the order they go out (the -rm numbers). The daily status (/bot -status) is left out
 const listAlt = () => dbAll("SELECT * FROM schedules WHERE kind != 'status' ORDER BY due_at, id");
 
+// Where an item goes: "👥 Grupo", "👤 Contato" or "seu privado"
+const itemWhere = (s) => (s.chat_id === client.info.wid._serialized ? 'seu privado' : `${s.is_group ? '👥' : '👤'} ${s.chat_name}`);
+
+// The same, with the id (group) or the number (person), for the log
+function whereInLog(s) {
+    const whereAlt = itemWhere(s);
+    if (whereAlt === 'seu privado') return whereAlt;
+    const numberAlt = !s.is_group && s.chat_id.endsWith('@c.us') ? `+${s.chat_id.split('@')[0]}` : s.chat_id;
+    return `${whereAlt} (${numberAlt})`;
+}
+
 function listLine(s, i) {
     const repeat = s.repeat ? ` 🔁 ${REPETITIONS[s.repeat].rotulo}` : '';
     const paused = s.paused ? ' ⏸️ _pausado_' : '';
-    const whereAlt = s.chat_id === client.info.wid._serialized ? 'seu privado' : `${s.is_group ? '👥' : '👤'} ${s.chat_name}`;
-    return `${i + 1}. ${TYPES[s.kind]?.icone ?? '📅'} *${fmtWhen(s.due_at)}*${repeat}${paused} — ${summarizeText(s.text, 60)}\n   → ${whereAlt}`;
+    return `${i + 1}. ${TYPES[s.kind]?.icone ?? '📅'} *${fmtWhen(s.due_at)}*${repeat}${paused} — ${summarizeText(s.text, 60)}\n   → ${itemWhere(s)}`;
 }
 
 // "2" → [item 2]; "all" → all; otherwise null
@@ -159,6 +172,12 @@ async function edit(msg, items, { opt, quando: when, texto: textAlt }) {
             await msg.reply('❌ Use -repetir (-r) diario, semanal, mensal ou nao.');
             return;
         }
+    }
+
+    const errorCommand = textAlt ? commandsError(textAlt) : null;
+    if (errorCommand) {
+        await msg.reply(errorCommand);
+        return;
     }
 
     const dueAt = when?.ms ?? s.due_at;
@@ -237,6 +256,12 @@ async function handleSchedule({ msg, args, chatId, chatName, isGroup, quotedMsg 
         return;
     }
 
+    // -test <no.>: builds now (running the {/command}s) and shows here, without sending to the destination
+    if (opt.test !== undefined) {
+        await test(msg, items, opt.test);
+        return;
+    }
+
     // -l, or nothing: the list (reminders and messages)
     if (opt.list || (!when && !typed && !quotedMsg)) {
         if (!items.length) {
@@ -259,6 +284,13 @@ async function handleSchedule({ msg, args, chatId, chatName, isGroup, quotedMsg 
 
     if (!textAlt) {
         await msg.reply(`❌ Faltou o texto.\n${syntax}`);
+        return;
+    }
+
+    // {/command} in the text: it exists and can run in /cron (the error shows now, not at send time)
+    const errorCommand = commandsError(textAlt);
+    if (errorCommand) {
+        await msg.reply(errorCommand);
         return;
     }
 
@@ -328,6 +360,31 @@ async function handleSchedule({ msg, args, chatId, chatName, isGroup, quotedMsg 
         `📝 ${summarizeText(textAlt, 100)}`);
 }
 
+// What goes out in the chat: the plain text (message mode) or the ⏰ Reminder
+function itemText(s, textAlt, late = false) {
+    if (s.kind === 'agendar') return textAlt;
+    return `⏰ *Lembrete*\n\n${textAlt}` + (late ? `\n\n_(atrasado: era para ${fmtWhen(s.due_at)})_` : '');
+}
+
+/*
+ * -test <no.>: builds the item now, running the {/command}s as in the destination chat,
+ * and shows here how it would come out. Does not send to the destination nor touch the schedule.
+ */
+async function test(msg, items, valueAlt) {
+    const [s] = numberItems(items, valueAlt ?? '') ?? [];
+
+    if (!s || withoutAccents(valueAlt).trim() === 'all') {
+        await msg.reply(`❌ Nº ${valueAlt || '?'} não existe. Veja a lista com /cron -l\n💡 _/cron -test <nº>_`);
+        return;
+    }
+
+    const { texto: textAlt, midias: mediaAltAlt } = await assembleText(s.text, s);
+
+    await msg.reply(`🧪 *Teste do nº ${valueAlt.trim()}* _(sai em ${fmtWhen(s.due_at)} → ${itemWhere(s)})_\n\n` +
+        (textAlt ? itemText(s, textAlt) : '_(só mídia)_'));
+    for (const { content, options } of mediaAltAlt) await msg.reply(content, undefined, { caption: options?.caption });
+}
+
 // Sends an expired item; with repetition, schedules the next one
 async function triggerItem(s, nowAlt) {
     const late = nowAlt - s.due_at > DELAY_TOLERATED_MS;
@@ -341,21 +398,30 @@ async function triggerItem(s, nowAlt) {
         await dbRun('DELETE FROM schedules WHERE id = ?', [s.id]);
     }
 
+    let commands = [];
     if (s.kind === 'status') {
         // The /bot -status report, built on the spot
         await client.sendMessage(s.chat_id, await statusText(nowAlt));
-    } else if (s.kind === 'agendar') {
-        await client.sendMessage(s.chat_id, s.text);
     } else {
-        const textAlt = `⏰ *Lembrete*\n\n${s.text}` +
-            (late ? `\n\n_(atrasado: era para ${fmtWhen(s.due_at)})_` : '');
+        // The {/command}s run now; their media goes out after the message
+        const { texto: assembled, midias: mediaAltAlt, comandos: executed } = await assembleText(s.text, s);
+        commands = executed;
+        const textAlt = itemText(s, assembled, late);
 
-        // The quoted message may be gone: without it, it goes without quoting
-        await client.sendMessage(s.chat_id, textAlt, s.quoted_id ? { quotedMessageId: s.quoted_id } : {})
-            .catch(() => client.sendMessage(s.chat_id, textAlt));
+        // Media only (e.g.: "{/meme}"): there is no text to send
+        if (textAlt && s.kind === 'agendar') {
+            await client.sendMessage(s.chat_id, textAlt);
+        } else if (textAlt) {
+            // The quoted message may be gone: without it, it goes without quoting
+            await client.sendMessage(s.chat_id, textAlt, s.quoted_id ? { quotedMessageId: s.quoted_id } : {})
+                .catch(() => client.sendMessage(s.chat_id, textAlt));
+        }
+        await sendMedia(s.chat_id, mediaAltAlt);
     }
 
-    printInfo(`${TYPES[s.kind]?.cmd ?? '/bot -status'}: enviado para ${s.chat_id}${late ? ' (atrasado)' : ''}${s.repeat ? ` (${s.repeat})` : ''}`);
+    printInfo(`${TYPES[s.kind]?.cmd ?? '/bot -status'}: enviado para ${whereInLog(s)}` +
+        (commands.length ? `, com ${commands.map(c => `{${c}}`).join(', ')}` : '') +
+        `${late ? ' (atrasado)' : ''}${s.repeat ? ` (${s.repeat})` : ''}`);
 }
 
 /*
