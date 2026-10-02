@@ -98,7 +98,8 @@ Por onde começar:
   (setting `enquete.retentionDays`).
 - **Agenda**: os lembretes e as mensagens do [`/cron`](comandos/cron.md)
   (também `/agenda` e `/lembrete`) ficam na tabela `schedules`; a cada 30 s o
-  bot envia o que venceu (os repetidos seguem para o próximo horário).
+  bot envia o que venceu (os repetidos seguem para o próximo horário). Um
+  `{/comando}` no texto roda na hora do envio e a resposta entra no lugar.
 - **Status diário**: com [`/bot -status 06h`](comandos/bot.md#status-do-bot), um relatório das
   últimas 24 h (no ar, cache, watch, apagadas, editadas, `/mudo`) chega todo
   dia no seu privado.
