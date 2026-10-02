@@ -20,7 +20,8 @@ mensagem continua guardada, e o [`/show`](show.md) (ou o `/show -e`) a mostra.
 O alvo é buscado como no `-to` ([Destinos](index.md#destinos-contato-grupo-número-ou-e-mail)):
 **primeiro** um contato da sua agenda pelo nome (`/Jorge Pereira/`); se nenhum
 casar, um grupo (`/Grupo L200/`, `"Grupo L200"` ou `L200`); ou um número
-(`+5521999999999`). Se o nome servir para mais de um, o bot lista e você
+(`+5521999999999`), ou alguém mencionado com `@` (num grupo, escolhendo a pessoa
+na lista do WhatsApp). Se o nome servir para mais de um, o bot lista e você
 responde só com o nº. Num **grupo**, vale para todos dali; numa **pessoa**, para
 o que ela fizer em qualquer chat, inclusive os status dela.
 
@@ -29,6 +30,7 @@ o que ela fizer em qualquer chat, inclusive os status dela.
 /mudo -a /Jorge Pereira/       → nada do contato avisa
 /mudo -d -e +5521999999999     → apagadas e editadas desse número
 /mute -s Fulano                → só os status apagados do contato
+/m -a @Fulano                  → num grupo, mencionando a pessoa
 /m -a /Jorge/                  → vários Jorge: lista, e você responde com o nº
 /mudo                          → a lista
 /mudo -rm 2                    → os avisos do nº 2 voltam

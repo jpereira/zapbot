@@ -165,6 +165,12 @@ describe('/mudo (/m, /mute)', () => {
         assert.deepEqual(await bot.responder('1'), []);
     });
 
+    test('alvo por menção (@ no WhatsApp): o LID vira o telefone', async () => {
+        bot.client.lids.set('66147630248178@lid', CICLANO.jid);
+        assert.match((await bot.responder('/m -a @66147630248178', { mencoes: ['66147630248178@lid'] }))[0], /^🔇 \*Silenciado:\* 👤 Ciclano — /);
+        assert.deepEqual((await bot.dbAll('SELECT target_id FROM mutes')).map(m => m.target_id), [CICLANO.jid]);
+    });
+
     test('só o dono', async () => {
         assert.deepEqual(await bot.responder('/mudo -a L200', { de: OUTRO.jid }), []);
     });
