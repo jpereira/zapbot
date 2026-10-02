@@ -249,17 +249,26 @@ describe('/cron (/agenda)', () => {
 
     test('-to busca direto na memória do WhatsApp Web (sem getContacts/getChats); o LID vira o telefone', async (t) => {
         const wid = (s) => ({ _serialized: s, server: s.split('@')[1] });
+        /*
+         * As in WhatsApp Web: the raw contact model does NOT have name nor
+         * isMyContact; they come from the WAWebContactGetters functions and
+         * WAWebFrontendContactGetters (the same ones whatsapp-web.js uses).
+         */
+        const contactAlt = (id, nameAlt, { naAgenda: inSchedule = true, eu = false, telefone: phoneAlt = null } = {}) =>
+            ({ id: wid(id), _nome: nameAlt, _naAgenda: inSchedule, _eu: eu, ...(phoneAlt ? { phoneNumber: wid(phoneAlt) } : {}) });
         const collections = {
             WAWebCollections: {
                 Contact: { getModelsArray: () => [
-                    { id: wid('15559998888@c.us'), name: 'Rafael Silva', isMyContact: true },
-                    { id: wid('100000000000005@lid'), name: 'Rafael Silva', isMyContact: true, phoneNumber: wid('15559998888@c.us') },
-                    { id: wid('5521900000000@c.us'), name: 'Eu', isMyContact: true, isMe: true },
-                    { id: wid('5521977777777@c.us'), name: 'Rafael Souza', isMyContact: false }
+                    contactAlt('15559998888@c.us', 'Rafael Silva'),
+                    contactAlt('100000000000005@lid', 'Rafael Silva', { telefone: '15559998888@c.us' }),
+                    contactAlt('5521900000000@c.us', 'Rafael Eu', { eu: true }),
+                    contactAlt('5521977777777@c.us', 'Rafael Souza', { naAgenda: false })
                 ] },
                 Chat: { getModelsArray: () => [{ id: wid(L200), formattedTitle: 'Grupo sobre L200' }] }
             },
-            WAWebApiContact: { getAlternateUserWid: () => null }
+            WAWebApiContact: { getAlternateUserWid: () => null },
+            WAWebContactGetters: { getName: c => c._nome, getIsMe: c => c._eu },
+            WAWebFrontendContactGetters: { getIsMyContact: c => c._naAgenda }
         };
         globalThis.window = { require: (m) => collections[m] };
         bot.client.pupPage = { evaluate: async (fn, arg) => fn(arg) };
@@ -275,6 +284,9 @@ describe('/cron (/agenda)', () => {
         assert.match((await bot.replyAlt('/cron 06:00 -r diario -to /Rafael Silva/ Bom dia!'))[0], /em 👤 Rafael Silva\./);
         assert.equal((await items())[0].chat_id, '15559998888@c.us');
         assert.match((await bot.replyAlt('/cron 07:00 -to l200 oi'))[0], /em 👥 Grupo sobre L200\./);
+        // Outside the address book and yourself do not enter
+        assert.match((await bot.replyAlt('/cron 07:00 -to /Rafael Souza/ oi'))[0], /❌ Nenhum contato ou grupo com "Rafael Souza"/);
+        assert.match((await bot.replyAlt('/cron 07:00 -to /Rafael Eu/ oi'))[0], /❌ Nenhum contato ou grupo com "Rafael Eu"/);
 
         // The page does not respond: error, without hanging
         bot.client.pupPage = { evaluate: async () => { throw new Error('página fechada'); } };
