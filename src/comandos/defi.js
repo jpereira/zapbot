@@ -232,17 +232,16 @@ async function cadastrarCarteira(msg, o) {
     await msg.reply(`✅ *Carteira do Project X cadastrada:* ${curto(carteira)}\n` +
         (abertas ? `📍 ${plural(abertas, 'posição aberta', 'posições abertas')}.` : 'ℹ️ Nenhuma posição aberta agora: o /defi -show mostra quando houver.') +
         '\n💡 _Veja com /defi -show_');
+    return carteira.toLowerCase();
 }
 
+// O endereço cadastrado, ou null (o erro já foi respondido)
 async function cadastrar(msg, o, protocolo) {
     if (!protocolo) {
         await msg.reply(`❌ Informe o protocolo: orca ou prjx, antes do -address.\n${EXEMPLOS}`);
-        return;
+        return null;
     }
-    if (protocolo === 'prjx') {
-        await cadastrarCarteira(msg, o);
-        return;
-    }
+    if (protocolo === 'prjx') return cadastrarCarteira(msg, o);
 
     const [endereco, nft, pool] = [o.address, o.nft, o.pool].map(v => (v ? String(v).trim() : null));
 
@@ -269,6 +268,7 @@ async function cadastrar(msg, o, protocolo) {
         ['orca', endereco, r.posicao.mint, r.posicao.whirlpool, Date.now()]);
 
     await msg.reply(`✅ *Posição da Orca cadastrada:* ${curto(endereco)}\n💡 _Veja com /defi -show_`);
+    return endereco;
 }
 
 const DICA_RPC = {
@@ -416,6 +416,35 @@ async function tratarAlerta(msg, opts, posicoes, { comDestino, destinoTexto }) {
         '💡 _Veja com /defi -alerta; desligue com /defi -alerta -rm <nº|all>._');
 }
 
+/*
+ * Cadastro com -alerta [valor]: liga o alerta da posição nova, no seu privado (ou no -to).
+ * O valor é o limite das taxas em dólar (o mesmo que -taxas): -alerta 2000.
+ */
+async function cadastrarComAlerta(msg, opts, protocolo, destino) {
+    const o = opts.opt;
+    let limite = null;
+    if (opts.given.has('alerta')) {
+        const v = String(o.alerta ?? '').trim().replace(/^\$/, '').replace(',', '.');
+        limite = v ? Number(v) : null;
+        if (v && !(limite > 0)) {
+            await msg.reply('❌ No cadastro, o -alerta leva o limite das taxas em dólar (ex.: -alerta 2000) ou nada.');
+            return;
+        }
+    }
+
+    const endereco = await cadastrar(msg, o, protocolo);
+    if (!endereco || !opts.given.has('alerta')) return;
+
+    const posicoes = await dbAll('SELECT * FROM defi_positions ORDER BY id');
+    const n = posicoes.findIndex(p => p.position.toLowerCase() === endereco.toLowerCase()) + 1;
+    const taxas = o.taxas ?? (limite ? String(limite) : null);
+    await tratarAlerta(msg, {
+        opt: { ...o, alerta: String(n), taxas },
+        given: new Set(['alerta', ...(taxas ? ['taxas'] : [])]),
+        argv: []
+    }, posicoes, destino);
+}
+
 // -rm 2, -rm 1 3 5, -rm 1,3 (os números da lista de antes) ou all; algum que não existe: nenhum sai
 async function remover(msg, o, argv, posicoes) {
     const partes = [o.rm, ...argv].join(' ').toLowerCase().split(/[\s,]+/).filter(Boolean);
@@ -476,7 +505,7 @@ async function cmdDefi({ msg, opts: optsDoComando, args, chatId }) {
     // Cadastro: -address, ou só a palavra do protocolo (aí diz o que falta)
     const soProtocolo = palavra && !['show', 'list', 'rm', 'alerta'].some(n => opts.given.has(n));
     if (opts.given.has('address') || soProtocolo) {
-        await cadastrar(msg, o, protocolo);
+        await cadastrarComAlerta(msg, opts, protocolo, { comDestino, destinoTexto });
         return;
     }
 
