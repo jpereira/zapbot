@@ -1,0 +1,31 @@
+# Dependabot: PRs com as versões novas das dependências npm e da imagem Docker,
+# toda segunda de manhã (horário de Brasília).
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: America/Sao_Paulo
+    open-pull-requests-limit: 5
+    groups:
+      # As de desenvolvimento (ESLint...) num PR só
+      desenvolvimento:
+        dependency-type: development
+    ignore:
+      # Commit fixado do main (no package.json): o /bot -info avisa as novidades
+      - dependency-name: whatsapp-web.js
+
+  - package-ecosystem: docker
+    directory: /docker/app
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: America/Sao_Paulo
+    ignore:
+      # Node 24 é a LTS da imagem: trocar de major é manual (e testado)
+      - dependency-name: node
+        update-types: ['version-update:semver-major']
