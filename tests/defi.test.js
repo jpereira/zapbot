@@ -142,7 +142,7 @@ describe('Orca (defi/orca.js)', () => {
 
 describe('/defi', () => {
     test('cadastra (conferindo NFT e pool), lista e mostra o Position Details', async () => {
-        assert.deepEqual(await bot.responder(CADASTRO), [`✅ *Posição da Orca cadastrada:* Hz15…RaPZ\n💡 _Veja com /defi -show_`]);
+        assert.deepEqual(await bot.responder(CADASTRO), [`✅ *Posição da Orca cadastrada:* Hz15…RaPZ\n💡 _Veja com /defi -s_`]);
         assert.deepEqual(await bot.dbGet('SELECT protocol, position, nft, pool FROM defi_positions'),
             { protocol: 'orca', position: POSICAO, nft: NFT, pool: POOL });
 
@@ -268,6 +268,7 @@ describe('/defi -alerta (-a)', () => {
         assert.match(cadastrada, /^✅ \*Posição da Orca cadastrada:\* Hz15…RaPZ/);
         assert.match(ligado, /^🔔 \*Alerta do \/defi ligado\* \(1\)\n\n1\. Orca · Hz15…RaPZ · ✅ na faixa · 💸 ≥ \$2,000\.00\n\n📣 Aviso: seu privado,/);
         assert.equal((await bot.dbGet('SELECT alert, alert_fees, alert_dest_id FROM defi_positions')).alert_fees, 2000);
+        assert.match((await bot.responder('/defi -l'))[0], /1\. Orca · Hz15…RaPZ · pool CeaZ…QpbN _\(desde [\d/]+\)_ 🔔 ≥ \$2,000\.00\n/);
 
         await bot.responder('/defi -rm all');
         const [, semValor] = await bot.responder(`${CADASTRO} -alerta -to /Fulano/`);
@@ -534,6 +535,7 @@ describe('/defi: Project X (HyperEVM)', () => {
         assert.match(ligado, /1\. Project X · carteira 0x92…0444 · ⚠️ fora da faixa · 💸 ≥ \$50\.00/);
         assert.match(ligado, /e quando as taxas a coletar passarem de \$50\.00 \(verificada/);
         assert.match((await bot.responder('/defi -alerta'))[0], /· 💸 ≥ \$50\.00 → seu privado/);
+        assert.match((await bot.responder('/defi -l'))[0], /1\. Project X · carteira 0x92…0444 _\(desde [\d/]+\)_ 🔔 ≥ \$50\.00\n/);
 
         // $98.50 na do BTC (a do HYPE não tem taxa)
         const [aviso] = await verificarAgora();

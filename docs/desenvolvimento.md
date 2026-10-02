@@ -32,9 +32,9 @@ cliente, registra os eventos e inicia as tarefas periódicas). O código fica em
 app.js                  bootstrap, na ordem de inicialização
 src/
   constantes.js         diretórios, janelas de tempo, APP_ENV
-  versao.js             a versão com o commit e a tag (ou HEAD) que estão rodando, lidos do .git
+  versao.js             a versão com o commit e a tag (ou HEAD e o (devel)) que estão rodando, lidos do .git
   estado.js             estado da conexão, compartilhado entre os módulos
-  log.js                print* coloridos
+  log.js                print* coloridos (e a linha dos comandos desconhecidos)
   db.js                 SQLite (dbGet/dbAll/dbRun) e o sinal dbPronto
   inicializacao.js      tabelas + carga dos settings
   settings.js           SETTINGS_SCHEMA, getSetting/setSetting e a migração dos renomeados
@@ -49,9 +49,10 @@ src/
   limpeza.js            retenção e limpeza periódica
   stats.js              contadores do /stats
   status.js             relatório do /bot -status e o envio diário (pela agenda)
-  sistema.js            /bot -info: versões (Node.js, whatsapp-web.js, Chromium, yt-dlp, ffmpeg...) e o sistema
+  sistema.js            /bot -info: versões (Node.js, whatsapp-web.js, Chromium, yt-dlp, ffmpeg...), as novas e o sistema
   moedas.js, cotacoes.js, alertasPreco.js   /crypto, /cotacao e alertas de preço
   agenda.js             /cron (e /lembrete): leitura, lista e envio na hora
+  agendaComandos.js     os {/comando} no texto do /cron: conferidos ao criar e rodados no envio
   openai.js             modelos aceitos pelo /gpt
   openaiChat.js         chamada ao chat da OpenAI (/gpt e /tldr)
   contatos.js, opcoes.js                    contatos/@lid e o parser de opções
@@ -125,23 +126,23 @@ entre os casos.
 
 | Arquivo | O que cobre |
 |---|---|
-| `configuracao.test.js` | `comandos.json`, settings (e a migração dos renomeados), parser de opções, ajuda e a coerência entre config, código, README e `docs/` (inclusive a ordem alfabética, os links e a versão estável da instalação) |
-| `mensagens.test.js` | Gravação, roteamento, permissões (`onlyAdmin`, modo admin, bot desligado, admins extras do `bot.admins`) e a contagem do `/stats` |
-| `comandos.test.js` | `/help`, `/debug`, `/uptime`, `/version`, `/ping`, `/noffa`, `/bot` (e o `-info`), `/set` (e o `-append`/`-rem`) |
+| `configuracao.test.js` | `comandos.json`, settings (e a migração dos renomeados), parser de opções, ajuda (uma forma do uso e um exemplo por linha) e a coerência entre config, código, README e `docs/` (inclusive a ordem alfabética, os links e a versão estável da instalação) |
+| `mensagens.test.js` | Gravação, roteamento, permissões (`onlyAdmin`, modo admin, bot desligado, admins extras do `bot.admins`), o log dos comandos desconhecidos e a contagem do `/stats` |
+| `comandos.test.js` | `/help`, `/debug`, `/uptime`, `/version`, `/ping`, `/noffa`, `/bot` (e o `-info`, com as versões novas do yt-dlp e do whatsapp-web.js), `/set` (e o `-append`/`-rem`) |
 | `apagadas-editadas.test.js` | Eventos de apagar/editar (e os avisos `show.alert.*`) e o `/show` (apagadas e editadas, e a busca `-q`) |
-| `mudo.test.js` | `/mudo`: avisos silenciados por pessoa ou grupo, e a busca do alvo (contato antes de grupo, menção, a lista para escolher pelo nº) |
+| `mudo.test.js` | `/mudo`: avisos silenciados por pessoa ou grupo (só o alvo é o `-a`), e a busca do alvo (contato antes de grupo, menção, a lista para escolher pelo nº) |
 | `stats.test.js`, `watch.test.js`, `monitor.test.js` | `/stats`, `/watch` (e o `-to`), `/monitor` e o aviso de presença |
 | `status.test.js` | `/bot -status`: o relatório (com o aviso `show.alert.*` desligado e os silenciados do `/mudo`) e o envio diário |
 | `agenda.test.js` | Datas digitadas (`6h`, `+2h`, `às 18h`, `sexta`...) e o `/cron`, nos modos mensagem e lembrete, com vários `-to`, `-edit`, `-pause`/`-resume` e os `{/comando}` no texto (e o `-test`) |
 | `backup.test.js` | `/backup` (criação, lista, restauração, envio no privado, por e-mail e com `-to`) e o backup diário |
 | `cotacoes.test.js` | `/cotacao`, `/crypto` (e o filtro por moeda) e os alertas de preço (com o `-to`) |
-| `defi.test.js` | Solana (base58, PDA), contas da Orca (conferidas com o SDK oficial), o Project X (HyperEVM simulada) e o `/defi`, com o `-alerta` (saída e volta da faixa, e o `-taxas`) |
+| `defi.test.js` | Solana (base58, PDA), contas da Orca (conferidas com o SDK oficial), o Project X (HyperEVM simulada) e o `/defi`: o `-s` por protocolo, o `-rm` de vários, a lista (inteira só no privado, com o 🔔 e o limite) e o `-alerta` (saída e volta da faixa, o `-taxas` e o `-alerta` no cadastro) |
 | `externos.test.js` | `/cve`, `/tempo`, `/news`, `/gpt`, `/tldr`, `/traduzir`, `/giphy`, `/meme`, `/joke`, `/kernel`, `/pixelart` |
 | `grupo.test.js` | `/todos`, `/boletos`, `/listageral`, `/walissu`, `/enquete` (e o `-r`), `/sticker` |
 | `get-cache.test.js` | `/get` (e o anti-SSRF), `/cache` e a limpeza periódica |
 | `conexao-email.test.js` | Eventos de conexão, reinício, watchdog, alertas por e-mail, crash e `docker stop` |
 | `heartbeat.test.js` | Heartbeat e o `docker/app/healthcheck.js` (executado de verdade) |
-| `util.test.js` | Formatação, contatos/`@lid`, menções, arquivos do cache e a versão com o commit (`versao.js`) |
+| `util.test.js` | Formatação, contatos/`@lid`, menções, arquivos do cache e a versão com o commit e o `(devel)` (`versao.js`) |
 
 Um comando ou opção novos entram com os testes deles; o
 `configuracao.test.js` falha se o comando não tiver a página dele em
