@@ -397,6 +397,15 @@ describe('ajuda', () => {
         assert.match(texto, /Aliases: \/s$/);
     });
 
+    test('as formas do uso ("  ou  ") saem uma por linha, alinhadas', () => {
+        const linhas = formatCommandHelp(findCommand('/defi')).split('\n');
+        assert.match(linhas[0], /^Usage: \/defi -orca -position <endereço>/);
+        assert.match(linhas[1], /^ {7}\/defi -project-x -wallet <0x\.\.\.>$/);
+        assert.match(linhas[2], /^ {7}\/defi -alerta <nº\|all> \[-to <destino>\]/);
+        assert.match(linhas[3], /^ {7}\/defi \[OPTION\]$/);
+        assert.doesNotMatch(linhas.join('\n'), / {2}ou {2}/);
+    });
+
     test('${CACHE_DIR}, ${MEDIA_DIR} e ${TMP_DIR} viram os caminhos reais na ajuda', () => {
         const { CACHE_DIR, MEDIA_DIR } = bot.src('constantes');
         const ajuda = getCommandSyntax('/cache');
