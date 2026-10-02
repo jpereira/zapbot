@@ -30,6 +30,22 @@ const interpolar = (texto) => String(texto ?? '')
  * Formata a ajuda de um comando no estilo "command -help".
  * (Antes existiam duas funções quase idênticas; agora só esta.)
  */
+/*
+ * Vários exemplos depois do "Ex:" ("Ex: /a 1, /a 2") vão um por linha, à esquerda
+ * (no celular, a coluna da descrição fica longe); um exemplo só fica na mesma linha.
+ */
+function linhasDaOpcao(inicio, desc) {
+    const m = String(desc ?? '').match(/^(.*?)\s*Ex\.?:\s*(.+)$/s);
+    const exemplos = m ? m[2].split(/,\s+(?=[/-])/) : [];
+    if (exemplos.length < 2) return [`${inicio}${desc}`];
+
+    return [
+        `${inicio}${m[1]}`,
+        `    Ex: ${exemplos[0]}`,
+        ...exemplos.slice(1).map(e => `        ${e}`)
+    ];
+}
+
 function formatCommandHelp(command) {
     // Cada forma do uso ("... ou ...") numa linha, alinhada embaixo da primeira
     const formas = interpolar(command.usage ?? command.cmd).split(/\s{2}ou\s{2}/);
@@ -54,15 +70,16 @@ function formatCommandHelp(command) {
 
     // Uma única coluna para Options e Arguments ficarem alinhados
     const width = Math.max(0, ...[...options, ...positional].map(o => o.syntax.length));
+    const linha = (o) => linhasDaOpcao(`  ${o.syntax.padEnd(width)}  `, o.desc);
 
     if (options.length) {
         lines.push('', 'Options:');
-        options.forEach(o => lines.push(`  ${o.syntax.padEnd(width)}  ${o.desc}`));
+        options.forEach(o => lines.push(...linha(o)));
     }
 
     if (positional.length) {
         lines.push('', 'Arguments:');
-        positional.forEach(a => lines.push(`  ${a.syntax.padEnd(width)}  ${a.desc}`));
+        positional.forEach(a => lines.push(...linha(a)));
     }
 
     if (command.aliases?.length) {

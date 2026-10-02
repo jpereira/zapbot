@@ -86,7 +86,7 @@
                     "values": [
                         "<destino>"
                     ],
-                    "desc": "Junto com -send: por e-mail, como anexo (email = o QRCODE_EMAIL_SMTP_TO, ou voce@exemplo.com), ou noutro chat: um contato, uma menção, um grupo ou um número (/Jorge Pereira/, @Fulano (menção), /Grupo L200/ ou +5521999999999; pede -sim)."
+                    "desc": "Junto com -send: por e-mail, como anexo (email = o QRCODE_EMAIL_SMTP_TO), ou noutro chat: um contato, uma menção, um grupo ou um número (pede -sim). Ex: -to email, -to voce@exemplo.com, -to /Jorge Pereira/, -to @Fulano (menção), -to /Grupo L200/, -to +5521999999999"
                 }
             ],
             "onlyAdmin": true
@@ -255,7 +255,7 @@
                     "values": [
                         "<destino>"
                     ],
-                    "desc": "Junto com -alerta: avisa num contato, num grupo, num número ou por e-mail em vez do seu privado: /Jorge Pereira/, @Fulano (menção), /Grupo L200/, +5521999999999, email (o QRCODE_EMAIL_SMTP_TO) ou voce@exemplo.com (vários com o nome: você escolhe na lista)."
+                    "desc": "Junto com -alerta: avisa num contato, num grupo, num número ou por e-mail em vez do seu privado (vários com o nome: você escolhe na lista). Ex: -to /Jorge Pereira/, -to @Fulano (menção), -to /Grupo L200/, -to +5521999999999, -to email (o QRCODE_EMAIL_SMTP_TO), -to voce@exemplo.com"
                 }
             ],
             "cron": true,
@@ -355,7 +355,7 @@
                     "values": [
                         "<destino>"
                     ],
-                    "desc": "No modo mensagem: envia num contato, num grupo ou num número em vez do chat atual (e-mail não: a mensagem sai no WhatsApp). Repita para vários (um item por destino). Ex: -to /Jorge Pereira/, -to @Fulano (menção), -to /Grupo L200/ -to /Família/, -to +5521999999999 (vários com o nome: você escolhe na lista)."
+                    "desc": "No modo mensagem: envia num contato, num grupo ou num número em vez do chat atual (e-mail não: a mensagem sai no WhatsApp). Repita para vários (um item por destino); vários com o nome: você escolhe na lista. Ex: -to /Jorge Pereira/, -to @Fulano (menção), -to /Grupo L200/ -to /Família/, -to +5521999999999"
                 },
                 {
                     "argv": [
@@ -429,7 +429,7 @@
                     "values": [
                         "<destino>"
                     ],
-                    "desc": "Junto com -alerta: avisa num contato, num grupo, num número ou por e-mail em vez do seu privado: /Jorge Pereira/, @Fulano (menção), /Grupo L200/, +5521999999999, email (o QRCODE_EMAIL_SMTP_TO) ou voce@exemplo.com (vários com o nome: você escolhe na lista)."
+                    "desc": "Junto com -alerta: avisa num contato, num grupo, num número ou por e-mail em vez do seu privado (vários com o nome: você escolhe na lista). Ex: -to /Jorge Pereira/, -to @Fulano (menção), -to /Grupo L200/, -to +5521999999999, -to email (o QRCODE_EMAIL_SMTP_TO), -to voce@exemplo.com"
                 }
             ],
             "cron": true,
@@ -577,7 +577,7 @@
                     "values": [
                         "<destino>"
                     ],
-                    "desc": "Junto com -alerta: avisa num contato, num grupo, num número ou por e-mail em vez do seu privado: /Jorge Pereira/, @Fulano (menção), /Grupo L200/, +5521999999999, email (o QRCODE_EMAIL_SMTP_TO) ou voce@exemplo.com (vários com o nome: você escolhe na lista).",
+                    "desc": "Junto com -alerta: avisa num contato, num grupo, num número ou por e-mail em vez do seu privado (vários com o nome: você escolhe na lista). Ex: -to /Jorge Pereira/, -to @Fulano (menção), -to /Grupo L200/, -to +5521999999999, -to email (o QRCODE_EMAIL_SMTP_TO), -to voce@exemplo.com",
                     "cron": false
                 },
                 {
@@ -1358,7 +1358,7 @@
                     "values": [
                         "<destino|off>"
                     ],
-                    "desc": "Para onde vão os avisos de uma regra: com -add (a regra nova) ou com -N (troca o destino). Contato, menção, grupo, número ou e-mail (/Jorge Pereira/, @Fulano, /Grupo L200/, +5521999999999, email); off volta ao seu privado."
+                    "desc": "Para onde vão os avisos de uma regra: com -add (a regra nova) ou com -N (troca o destino). Contato, menção, grupo, número ou e-mail; off volta ao seu privado. Ex: -to /Jorge Pereira/, -to @Fulano, -to /Grupo L200/, -to +5521999999999, -to email, -to off"
                 },
                 {
                     "argv": [
