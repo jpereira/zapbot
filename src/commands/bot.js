@@ -3,7 +3,7 @@
  */
 
 const { getCommandSyntax } = require('./base');
-const { peopleChangeList } = require('./set');
+const { ROLES, isOOwner, peopleChangeList } = require('./set');
 const { client } = require('../client');
 const { chatCurrentIds, groupResolverName } = require('../contacts');
 const { describeDestination } = require('../destinations');
@@ -60,8 +60,10 @@ async function describeItem(item) {
         return describeDestination({ id: item, nome: nameAlt || item, grupo: true });
     }
 
+    // You are rarely in your own address book: your profile name counts
     const contactAlt = await client.getContactById(`${item}@c.us`).catch(() => null);
-    const nameAlt = contactAlt?.name || contactAlt?.pushname;
+    const nameAlt = contactAlt?.name || contactAlt?.pushname ||
+        (isOOwner(item) ? client.info.pushname : null);
     return nameAlt ? `${describeDestination({ nome: nameAlt, grupo: false })} · +${item}` : `👤 +${item}`;
 }
 
@@ -76,13 +78,18 @@ async function whoUsesList() {
     if (!items.length) return '';
 
     const linesAlt = await Promise.all(items.map(async (item) => {
-        const marks = [admins.includes(item) && '👑 +o', users.includes(item) && '🗣️ +v']
-            .filter(Boolean);
+        const marks = [
+            isOOwner(item) && `${ROLES.dono} dono`,
+            admins.includes(item) && `${ROLES.admin} +o`,
+            users.includes(item) && `${ROLES.usuario} +v`
+        ].filter(Boolean);
         return `• ${marks.join(' ')} · ${await describeItem(item)}`;
     }));
 
     return `\n\n*Quem usa* (${items.length})\n${linesAlt.join('\n')}\n` +
-        '💡 _👑 +o: admin, usa tudo (bot.admins) · 🗣️ +v: usuário, usa os comandos comuns (bot.users)_';
+        (items.some(isOOwner) ? `💡 _${ROLES.dono} dono: você, que já usa tudo_\n` : '') +
+        `💡 _${ROLES.admin} +o: admin, usa tudo (bot.admins) · ` +
+        `${ROLES.usuario} +v: usuário, usa os comandos comuns (bot.users)_`;
 }
 
 async function stateBot() {
