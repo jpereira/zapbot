@@ -247,6 +247,41 @@ describe('/cron (/agenda)', () => {
         assert.equal((await items())[1].chat_id, PHONE);
     });
 
+    test('-to busca direto na memória do WhatsApp Web (sem getContacts/getChats); o LID vira o telefone', async (t) => {
+        const wid = (s) => ({ _serialized: s, server: s.split('@')[1] });
+        const collections = {
+            WAWebCollections: {
+                Contact: { getModelsArray: () => [
+                    { id: wid('15559998888@c.us'), name: 'Rafael Silva', isMyContact: true },
+                    { id: wid('100000000000005@lid'), name: 'Rafael Silva', isMyContact: true, phoneNumber: wid('15559998888@c.us') },
+                    { id: wid('5521900000000@c.us'), name: 'Eu', isMyContact: true, isMe: true },
+                    { id: wid('5521977777777@c.us'), name: 'Rafael Souza', isMyContact: false }
+                ] },
+                Chat: { getModelsArray: () => [{ id: wid(L200), formattedTitle: 'Grupo sobre L200' }] }
+            },
+            WAWebApiContact: { getAlternateUserWid: () => null }
+        };
+        globalThis.window = { require: (m) => collections[m] };
+        bot.client.pupPage = { evaluate: async (fn, arg) => fn(arg) };
+        bot.client.getContacts = () => assert.fail('não pode usar o getContacts');
+        bot.client.getChats = () => assert.fail('não pode usar o getChats');
+        t.after(() => {
+            delete globalThis.window;
+            delete bot.client.pupPage;
+            delete bot.client.getContacts;
+            delete bot.client.getChats;
+        });
+
+        assert.match((await bot.replyAlt('/cron 06:00 -r diario -to /Rafael Silva/ Bom dia!'))[0], /em 👤 Rafael Silva\./);
+        assert.equal((await items())[0].chat_id, '15559998888@c.us');
+        assert.match((await bot.replyAlt('/cron 07:00 -to l200 oi'))[0], /em 👥 Grupo sobre L200\./);
+
+        // The page does not respond: error, without hanging
+        bot.client.pupPage = { evaluate: async () => { throw new Error('página fechada'); } };
+        assert.match((await bot.replyAlt('/cron 08:00 -to /Rafael/ oi', { erroEsperado: true }))[0],
+            /⚠️ Não consegui buscar "Rafael" nos contatos e grupos agora \(página fechada\)/);
+    });
+
     test('texto começando com "/" é enviado, mas nunca roda como comando', async () => {
         await bot.replyAlt('/cron +1h /cache -a');
         const [sentAlt] = await expire();
