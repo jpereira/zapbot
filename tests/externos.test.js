@@ -343,10 +343,10 @@ describe('/tldr (/resumo)', () => {
         assert.match(texto, /velha 3[\s\S]*nova 3/);
     });
 
-    test('limites: resumo.maxMsgs e a janela de 68 h', async () => {
+    test('limites: tldr.maxMsgs e a janela de 68 h', async () => {
         await conversa([['a'], ['b'], ['c']]);
-        await bot.setSetting('resumo.maxMsgs', 10);
-        assert.match((await bot.responder('/tldr 50'))[0], /_\(limitado a 10 mensagens \(setting resumo\.maxMsgs\)\)_/);
+        await bot.setSetting('tldr.maxMsgs', 10);
+        assert.match((await bot.responder('/tldr 50'))[0], /_\(limitado a 10 mensagens \(setting tldr\.maxMsgs\)\)_/);
         assert.match((await bot.responder('/tldr 100h'))[0], /_\(as mensagens comuns ficam só 68 h no banco\)_/);
     });
 
