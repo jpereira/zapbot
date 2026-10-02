@@ -464,7 +464,7 @@ describe('/traduzir (/tr, /translate)', () => {
         }
     });
 
-    test('qualquer pessoa usa (com o modo admin desligado)', async () => {
+    test('qualquer pessoa usa (com o bot.users true)', async () => {
         await bot.setSetting('traduzir.api.key', 'k');
         network.responder('post', 'translation.googleapis.com', translation('olá'));
         assert.match((await bot.replyAlt('/tr hello', { de: bot.OTHERAlt.jid }))[0], /olá/);

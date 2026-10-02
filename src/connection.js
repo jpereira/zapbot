@@ -258,11 +258,12 @@ client.on('ready', async () => {
     const dropReason = stateAlt.ultimaQueda;
     stateAlt.ultimaQueda = null;
 
-    // The settings come from the database: warns right at boot if the bot is off or in admin mode
+    // The settings come from the database: warns right at boot if the bot is off or only you use it
     await dbReady;
     const listNotices = [
         getSetting('bot.paused') && 'Bot desligado: use /bot -on para ativar os comandos.',
-        getSetting('bot.adminMode') && 'Modo admin ligado: só você usa comandos (/bot -admin desliga).'
+        !getSetting('bot.users').length &&
+            'Só você (e o bot.admins) usa comandos: /bot -admin libera para todos, /bot +v <pessoa|grupo> para alguns.'
     ].filter(Boolean);
     const notices = listNotices.map(a => ` ${a}`).join('');
 

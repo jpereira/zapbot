@@ -34,16 +34,16 @@ const TABLES = ['messages', 'message_edits', 'stats', 'watch_hits', 'watch_desti
 
 /*
  * Clean state for each test: empty tables, settings at default, no
- * sent, with no network routes. Admin mode comes OFF (the default is on)
- * so the tests can use other people's commands; whoever tests the mode
- * admin turns it back on.
+ * sent, with no network routes. bot.users comes true (the default is false: only the
+ * owner) so the tests can use other people's commands; whoever tests the
+ * the restriction changes again.
  */
 async function restart() {
     await prepare();
 
     for (const t of TABLES) await dbRun(`DELETE FROM ${t}`);
     await loadSettings();
-    await setSetting('bot.adminMode', false);
+    await setSetting('bot.users', ['all']);
 
     client.enviadas.length = 0;
     cleanMarks();

@@ -3,7 +3,7 @@
  */
 
 const { client } = require('../client');
-const { chatCurrentIds, resolveLidToPhone } = require('../contacts');
+const { chatCurrentIds, resolveLidToPhone, groupResolverName } = require('../contacts');
 const { dbReady } = require('../db');
 const { resolverOrChoose } = require('../destinations');
 const { printInfo } = require('../log');
@@ -18,9 +18,11 @@ const { SETTINGS_SCHEMA, getSetting, setSetting, validateSetting } = require('..
  *   /set -append <chave> <valor> → numa lista, acrescenta itens (-a)
  *   /set -rem <chave> <valor>    → numa lista, tira itens
  * /set -reset <key>   → back to default
- * bot.admins (who else uses the admin commands) is changed only by the owner. In it, besides
- * of the number, the contact name (/Jorge Pereira/) counts, looked up as in -to; the
- * that is stored is the phone, and the display shows the name beside it.
+ * bot.admins (who else uses the admin commands) and bot.users (who uses the
+ * common commands) is changed only by the owner. In them, besides the number, the name of the
+ * contact (/Jorge Pereira/) or the mention, looked up as in -to; what is left
+ * stored is the phone, and the display shows the name beside it. bot.users accepts
+ * also groups (stores the id) and true/false (everyone/nobody).
  *
  * The config/.env variables the bot reads show up too, read-only
  * (they change in the file, with the container recreated), and only in your private chat: in the
@@ -106,10 +108,14 @@ function formatValueSetting(value, sep = ', ', secret = false) {
 const valueRaw = (args, key) => args.slice(args.indexOf(key) + key.length).trim().replace(/^(["'])([\s\S]*)\1$/, '$2');
 
 // Keys that only the owner changes, even if an extra admin uses /set
-const SO_O_OWNER = ['bot.admins'];
+const SO_O_OWNER = ['bot.admins', 'bot.users'];
 
 // People lists: accept the contact name besides the number, and show the name
-const PEOPLE = ['bot.admins'];
+const PEOPLE = ['bot.admins', 'bot.users'];
+
+// Lists that accept groups (the @g.us id) and the words true/false (these go straight to validation)
+const WITH_GROUPS = ['bot.users'];
+const WORDS = /^(all|todos|true|on|sim|yes|false|off|n[aã]o|no|ningu[eé]m)$/i;
 
 // The text after the key, without removing anything (quotes and slashes separate the names)
 const keyTextAfter = (args, key) => args.slice(args.indexOf(key) + key.length).trim();
@@ -122,25 +128,38 @@ const textItems = (textAlt) => [...textAlt.matchAll(/\/([^/]+)\/|"([^"]*)"|'([^'
 /**
  * The items of a people list become phones: the number goes as it came
  * (the setting validation checks), the name is looked up in the contacts (several: the
- * list to choose from). Group, email and a contact with no known phone are refused.
- * @returns {Promise<string|null>} the comma-separated numbers; null: already replied the error
+ * list to choose from). Email and a contact with no known phone are refused;
+ * group, only in the WITH_GROUPS lists (becomes the id).
+ * @returns {Promise<string|null>} the comma-separated items; null: already replied the error
  */
-async function peoplePhones(msg, key, textAlt) {
-    const numbers = [];
+async function peopleItems(msg, key, textAlt) {
+    const items = [];
+    const withGroups = WITH_GROUPS.includes(key);
 
     for (const item of textItems(textAlt)) {
-        if (/^\+?[\d().-]+$/.test(item)) {
-            numbers.push(item);
+        if (/^\+?[\d().-]+$/.test(item) || (withGroups && WORDS.test(item))) {
+            items.push(item);
             continue;
         }
 
         const person = await resolverOrChoose(msg, item, {
-            semEmail: `❌ O *${key}* é de pessoas: informe um contato ou um número, não um e-mail.`
+            semEmail: withGroups
+                ? `❌ O *${key}* é de pessoas e grupos: informe um contato, um grupo ou um número, não um e-mail.`
+                : `❌ O *${key}* é de pessoas: informe um contato ou um número, não um e-mail.`
         });
         if (!person) return null;
 
+        if (person.grupo && withGroups) {
+            items.push(person.id);
+            continue;
+        }
+
+        // Admin group: everyone there would command the bot (/set, /backup -send...). Better not
         if (person.grupo) {
-            await msg.reply(`❌ ${person.nome} é um grupo: o *${key}* é de pessoas (um contato ou um número).`);
+            await msg.reply(`❌ ${person.nome} é um grupo: o *${key}* é de pessoas (um contato ou um número).` +
+                (key === 'bot.admins'
+                    ? `\n💡 _Um grupo não pode ser admin (todos ali mandariam no bot). Para liberar os comandos comuns dentro dele: /bot +v /${person.nome}/_`
+                    : ''));
             return null;
         }
 
@@ -149,14 +168,20 @@ async function peoplePhones(msg, key, textAlt) {
             await msg.reply(`❌ Não sei o telefone de ${person.nome} (o WhatsApp só informou o id interno): use o número, ex.: +5521999999999.`);
             return null;
         }
-        numbers.push(phoneAlt.split('@')[0]);
+        items.push(phoneAlt.split('@')[0]);
     }
 
-    return numbers.join(',');
+    return items.join(',');
 }
 
-// "5521999999999 (Jorge Pereira)": the saved contact name, if any
+// "5521999999999 (Jorge Pereira)": the saved contact name, if any; a group, "👥 Família";
+// o all, "true (todos)"
 async function withName(numberAlt) {
+    if (numberAlt === 'all') return 'true (todos)';
+    if (numberAlt.endsWith('@g.us')) {
+        return `👥 ${await groupResolverName(numberAlt).catch(() => null) || numberAlt}`;
+    }
+
     const contactAlt = await client.getContactById(`${numberAlt}@c.us`).catch(() => null);
     const nameAlt = contactAlt?.name || contactAlt?.pushname;
     return nameAlt ? `${numberAlt} (${nameAlt})` : numberAlt;
@@ -205,7 +230,14 @@ async function changeList(msg, { key, bruto: raw, acrescentar: append }) {
         return;
     }
 
-    const valueAlt = await setSetting(key, append ? [...current, ...change] : current.filter(i => !change.includes(i)));
+    let valueAlt;
+    try {
+        const freshAlt = append ? [...current, ...change] : current.filter(i => !change.includes(i));
+        valueAlt = await setSetting(key, freshAlt);
+    } catch (e) {
+        await msg.reply(`❌ Valor inválido para *${key}*: ${e.message}`);
+        return;
+    }
     const sep = schema.separator ? ' | ' : ', ';
     printInfo(`Setting '${key}' ${append ? '+' : '-'} ${schema.secret ? '(segredo)' : JSON.stringify(change)}`);
     await msg.reply(`✅ *${key}* ${append ? '+' : '−'} ${formatValueSetting(await showItems(key, change), sep, schema.secret)}\n` +
@@ -229,7 +261,7 @@ async function cmdSet({ msg, opts, args, chatId }) {
 
         // People list: the names become phones before validation
         if (PEOPLE.includes(key) && raw) {
-            raw = await peoplePhones(msg, key, keyTextAfter(args, key));
+            raw = await peopleItems(msg, key, keyTextAfter(args, key));
             if (raw === null) return;
         }
 
@@ -317,7 +349,7 @@ async function cmdSet({ msg, opts, args, chatId }) {
 
     // People list: the names become phones ("" still empties it)
     if (PEOPLE.includes(key) && !/^(["'])\1$/.test(keyTextAfter(args, key))) {
-        raw = await peoplePhones(msg, key, keyTextAfter(args, key));
+        raw = await peopleItems(msg, key, keyTextAfter(args, key));
         if (raw === null) return;
     }
 
@@ -330,6 +362,18 @@ async function cmdSet({ msg, opts, args, chatId }) {
     }
 }
 
+/**
+ * The -append/-rem of a people list (bot.admins, bot.users) from the
+ * text with the names, mentions and numbers: the /bot +o|-o|+v|-v shortcut.
+ */
+async function peopleChangeList(msg, key, textAlt, append) {
+    const raw = await peopleItems(msg, key, textAlt);
+    if (raw === null) return;
+    await changeList(msg, { key, bruto: raw, acrescentar: append });
+}
+
 module.exports = {
-    cmdSet
+    cmdSet,
+    showItems,
+    peopleChangeList
 };
