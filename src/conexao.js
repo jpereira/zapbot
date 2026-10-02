@@ -4,7 +4,6 @@
 
 const qrcode = require('qrcode');
 const qrcodeTerminal = require('qrcode-terminal');
-const packageJson = require('../package.json');
 
 const { estado } = require('./estado');
 const { client, messageToSelf } = require('./cliente');
@@ -12,6 +11,7 @@ const { dbPronto } = require('./db');
 const { alertarPorEmail, transporter } = require('./email');
 const { printDebug, printError, printInfo, printSuccess } = require('./log');
 const { getSetting, isDebugMode } = require('./settings');
+const { versaoComCommit } = require('./versao');
 
 // Motivos em que reiniciar não resolve: exigem ação manual.
 const NAO_REINICIAR = new Set(['LOGOUT', 'CONFLICT', 'UNPAIRED', 'UNPAIRED_IDLE']);
@@ -266,8 +266,8 @@ client.on('ready', async () => {
     ].filter(Boolean);
     const avisos = listaAvisos.map(a => ` ${a}`).join('');
 
-    printSuccess(`🤖 ZapBot ${packageJson.version} inicializado! Informando ${process.env.PHONE_NUMBER}`);
-    messageToSelf(`🤖 ZapBot ${packageJson.version} inicializado.${avisos}`);
+    printSuccess(`🤖 ZapBot ${versaoComCommit()} inicializado! Informando ${process.env.PHONE_NUMBER}`);
+    messageToSelf(`🤖 ZapBot ${versaoComCommit()} inicializado.${avisos}`);
 
     alertarPorEmail(jaFicouPronto ? '🔄 Reconectado' : '🟢 Bot iniciado',
         [jaFicouPronto ? `Conectado de novo${motivoDaQueda ? ` (a queda foi: ${motivoDaQueda})` : ''}.` : 'Conectado ao WhatsApp.',
