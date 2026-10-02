@@ -2,10 +2,12 @@
  * Comando /watch.
  */
 
-const { getCommandSyntax } = require('./base');
+const { findCommand, getCommandSyntax } = require('./base');
 const { resolverMentions, groupResolverName } = require('../contacts');
 const { dbAll, dbGet, dbReady, dbRun } = require('../db');
+const { destinationColumns, describeDestination, lineDestination, extractDestination, resolverOrChoose } = require('../destinations');
 const { printInfo } = require('../log');
+const { GetOptFromCommand } = require('../options');
 const { getSetting, setSetting } = require('../settings');
 const { formatData, plural, summarizeText } = require('../util/format');
 const { RULE_REGEX } = require('../watch/rules');
@@ -18,7 +20,10 @@ const { RULE_REGEX } = require('../watch/rules');
  *   /watch -a <texto|/regex/>  → adiciona regra
  * /watch -r -N               → removes rule N and its occurrences
  * /watch -f [-N]             → deletes rule N's occurrences (without N: of all); keeps the rules
- * The rules stay in the 'watch.rules' setting; the occurrences in the watch_hits table.
+ * /watch -a <rule> -to <destination>  → the rule notifies another chat or by email
+ * /watch -N -to <destination|off>      → changes rule N's destination (off: back to your private chat)
+ * The rules stay in the 'watch.rules' setting; the occurrences in the watch_hits table;
+ * each rule's destination, in watch_destinations (no row: your private chat).
  * The replies go out in the chat where the command was typed.
  */
 
@@ -28,8 +33,51 @@ function ruleNumber(argv) {
     return m ? Number(m[1]) : null;
 }
 
-async function cmdWatch({ msg, opts, args }) {
+// rule → the destination of its notices (only those with -to)
+async function rulesDestinations() {
+    const linesAlt = await dbAll('SELECT * FROM watch_destinations');
+    return new Map(linesAlt.map(r => [r.rule, lineDestination(r)]));
+}
+
+async function recordDestination(rule, destination) {
+    if (!destination) {
+        await dbRun('DELETE FROM watch_destinations WHERE rule = ?', [rule]);
+        return;
+    }
+
+    const c = destinationColumns(destination);
+    await dbRun(
+        `INSERT INTO watch_destinations (rule, dest_id, dest_name, dest_is_group, dest_email) VALUES (?, ?, ?, ?, ?)
+         ON CONFLICT(rule) DO UPDATE SET dest_id = excluded.dest_id, dest_name = excluded.dest_name,
+            dest_is_group = excluded.dest_is_group, dest_email = excluded.dest_email`,
+        [rule, c.dest_id, c.dest_name, c.dest_is_group, c.dest_email]
+    );
+}
+
+const whereWarn = (destination) => (destination ? describeDestination(destination) : 'seu privado');
+
+/**
+ * The -to destination: "off" (or "privado") goes back to your private chat; otherwise, contact,
+ * group, number or email (several with the name: you choose from the list).
+ * @returns {Promise<{ destino: object|null } | null>}  null: already replied the error
+ */
+async function toReadDestination(msg, textAlt) {
+    if (/^(off|privado)$/i.test(String(textAlt ?? '').trim())) return { destino: null };
+    const destination = await resolverOrChoose(msg, textAlt, { aceitaEmail: true });
+    return destination ? { destino: destination } : null;
+}
+
+async function cmdWatch({ msg, opts: commandOpts, args: commandArgs }) {
     await dbReady;
+
+    /*
+     * -to accepts spaces (/Grupo L200/), which the option parser would split:
+     * goes out of the text first, and the rest is read again. The -add rule cannot
+     * have a loose " -to ", then.
+     */
+    const { destino: destinationText, informado: withDestination, resto: rest } = extractDestination(commandArgs);
+    const args = withDestination ? rest : commandArgs;
+    const opts = withDestination ? GetOptFromCommand(rest, findCommand('/watch')) : commandOpts;
 
     const rules = getSetting('watch.rules');
     const help = () => msg.reply('```' + getCommandSyntax('/watch') + '```');
@@ -46,7 +94,8 @@ async function cmdWatch({ msg, opts, args }) {
         }
 
         if (rules.includes(rule)) {
-            await msg.reply(`ℹ️ A regra #${rules.indexOf(rule) + 1} já existe: ${rule}`);
+            await msg.reply(`ℹ️ A regra #${rules.indexOf(rule) + 1} já existe: ${rule}` +
+                (withDestination ? `\n💡 _Para trocar o destino: /watch -${rules.indexOf(rule) + 1} -to <destino>_` : ''));
             return;
         }
 
@@ -56,16 +105,46 @@ async function cmdWatch({ msg, opts, args }) {
             return;
         }
 
+        // The destination before the rule: if it fails (or nobody picks from the list), nothing is created
+        let destination = null;
+        if (withDestination) {
+            const lido = await toReadDestination(msg, destinationText);
+            if (!lido) return;
+            destination = lido.destino;
+        }
+
         try {
             await setSetting('watch.rules', [...rules, rule]);
         } catch (e) {
             await msg.reply(`❌ Regra inválida: ${e.message}`);
             return;
         }
+        await recordDestination(rule, destination);
 
         const type = RULE_REGEX.test(rule) ? 'regex' : 'texto';
-        printInfo(`/watch: regra #${rules.length + 1} adicionada: ${rule}`);
-        await msg.reply(`✅ Regra *#${rules.length + 1}* adicionada _(${type})_: ${rule}\n💡 _Avisos chegam no seu privado._`);
+        printInfo(`/watch: regra #${rules.length + 1} adicionada: ${rule}${destination ? ` → ${destination.email ?? destination.id}` : ''}`);
+        await msg.reply(`✅ Regra *#${rules.length + 1}* adicionada _(${type})_: ${rule}\n` +
+            `💡 _Avisos ${destination ? `em ${whereWarn(destination)}` : 'no seu privado'}._`);
+        return;
+    }
+
+    // -N -to <destination|off>: changes the destination of a rule
+    if (withDestination) {
+        const n = ruleNumber(opts.argv);
+
+        if (!n || n > rules.length || opts.opt.list || opts.opt.show || opts.opt.rem || opts.opt.flush) {
+            await msg.reply(`❌ Use o -to ao adicionar (/watch -a <regra> -to <destino>) ou com o nº de uma regra: /watch -N -to <destino|off>.` +
+                (n > rules.length ? ` A regra #${n} não existe: veja /watch -l` : ''));
+            return;
+        }
+
+        const lido = await toReadDestination(msg, destinationText);
+        if (!lido) return;
+
+        const rule = rules[n - 1];
+        await recordDestination(rule, lido.destino);
+        printInfo(`/watch: regra #${n} agora avisa em ${lido.destino ? (lido.destino.email ?? lido.destino.id) : 'privado'}`);
+        await msg.reply(`📣 Regra *#${n}* (${rule}): os avisos vão para *${whereWarn(lido.destino)}*.`);
         return;
     }
 
@@ -79,17 +158,19 @@ async function cmdWatch({ msg, opts, args }) {
             (await dbAll('SELECT rule, COUNT(*) AS total FROM watch_hits GROUP BY rule'))
                 .map(r => [r.rule, r.total])
         );
+        const destinations = await rulesDestinations();
 
         const width = String(rules.length).length + 1;
         const list = rules
-            .map((r, i) => `${`#${i + 1}`.padEnd(width)}  ${r}  (${count.get(r) ?? 0})`)
+            .map((r, i) => `${`#${i + 1}`.padEnd(width)}  ${r}  (${count.get(r) ?? 0})` +
+                (destinations.get(r) ? `  → ${describeDestination(destinations.get(r))}` : ''))
             .join('\n');
 
         await msg.reply(
             `👀 *WATCH: REGRAS* (${rules.length}/${getSetting('watch.max')})\n\n` +
             '```\n' + list + '\n```\n' +
-            '_(entre parênteses: ocorrências guardadas)_\n' +
-            '💡 _/watch -s -N para ver as mensagens da regra N._');
+            '_(entre parênteses: ocorrências guardadas; → o destino dos avisos, se não for o seu privado)_\n' +
+            '💡 _/watch -s -N para ver as mensagens da regra N; /watch -N -to <destino|off> troca o destino._');
         return;
     }
 
@@ -161,6 +242,7 @@ async function cmdWatch({ msg, opts, args }) {
 
         await setSetting('watch.rules', rules.filter((_, i) => i !== n - 1));
         const res = await dbRun('DELETE FROM watch_hits WHERE rule = ?', [rule]);
+        await recordDestination(rule, null);
 
         printInfo(`/watch: regra #${n} removida: ${rule}`);
         await msg.reply(

@@ -1240,11 +1240,11 @@
         },
         {
             "cmd": "/watch",
-            "usage": "/watch [OPTION] [-N | <PATTERN|/REGEX/>]",
+            "usage": "/watch [OPTION] [-N | <PATTERN|/REGEX/>] [-to <destino>]",
             "aliases": [
                 "/w"
             ],
-            "help": "Vigia as mensagens recebidas e avisa no seu privado quando alguma casar com uma regra (setting watch.rules).",
+            "help": "Vigia as mensagens recebidas e avisa no seu privado (ou no destino do -to da regra) quando alguma casar com uma regra (setting watch.rules).",
             "cmd_opts": [
                 {
                     "opts": [
@@ -1287,6 +1287,15 @@
                     ],
                     "values": [],
                     "desc": "Apaga as ocorrências da regra -N (sem -N: de todas). As regras são mantidas."
+                },
+                {
+                    "opts": [
+                        "to"
+                    ],
+                    "values": [
+                        "<destino|off>"
+                    ],
+                    "desc": "Para onde vão os avisos de uma regra: com -add (a regra nova) ou com -N (troca o destino). Contato, grupo, número ou e-mail (/Grupo L200/, +5521999999999, email); off volta ao seu privado."
                 },
                 {
                     "argv": [

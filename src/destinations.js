@@ -324,14 +324,29 @@ async function resolverOrChoose(msg, valueAlt, o = {}) {
  * @param {string} texto
  * @param {object} [o]
  * @param {string} [o.assunto]  of the email
+ * @param {object} [o.opcoes]   for client.sendMessage (e.g.: { linkPreview: false })
  */
-async function sendOnDestination(destination, textAlt, { assunto: subject = 'Aviso' } = {}) {
+async function sendOnDestination(destination, textAlt, { assunto: subject = 'Aviso', opcoes: optionsAlt = {} } = {}) {
     if (destination?.email) {
         await sendEmail({ para: destination.email.split(/\s*,\s*/), assunto: subject, texto: textAlt.replace(/[*_]/g, '') });
         return;
     }
-    await client.sendMessage(destination?.id || client.info.wid._serialized, textAlt);
+    await client.sendMessage(destination?.id || client.info.wid._serialized, textAlt, optionsAlt);
 }
+
+// A stored row (dest_id, dest_name, dest_is_group, dest_email) → the destination; null: your private chat
+function lineDestination(r) {
+    if (r?.dest_email) return { email: r.dest_email, nome: r.dest_email, grupo: false };
+    return r?.dest_id ? { id: r.dest_id, nome: r.dest_name, grupo: Boolean(r.dest_is_group) } : null;
+}
+
+// The reverse: the destination → the dest_* columns of a row
+const destinationColumns = (d) => ({
+    dest_id: d?.email ? null : d?.id ?? null,
+    dest_name: d?.email ? null : d?.nome ?? null,
+    dest_is_group: d?.grupo ? 1 : 0,
+    dest_email: d?.email ?? null
+});
 
 async function contactName(id, digits) {
     const contactAlt = await client.getContactById(id).catch(() => null);
@@ -342,7 +357,9 @@ async function contactName(id, digits) {
 const describeDestination = (d) => `${d.email ? '📧' : d.grupo ? '👥' : '👤'} ${d.email ?? d.nome}`;
 
 module.exports = {
+    destinationColumns,
     describeDestination,
+    lineDestination,
     emailsDoSmtpTo,
     sendOnDestination,
     extractDestination,
