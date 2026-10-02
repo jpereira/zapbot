@@ -20,6 +20,9 @@ const { semAcentos } = require('./util/formatar');
  *   "Jorge Pereira"    no nome; sem contato, um grupo. Em qualquer ordem, sem
  *   Jorge              diferenciar maiúsculas nem acentos; /.../ e aspas
  *                      permitem espaços
+ *   @Fulano          → a pessoa mencionada (escolhida na lista do @ do WhatsApp):
+ *                      no texto vem "@<id>", e o id de verdade, em msg.mentionedIds.
+ *                      Um "@número" digitado, sem ser menção, é recusado
  *   email            → (aceitaEmail) o QRCODE_EMAIL_SMTP_TO, pelo SMTP do bot
  *   voce@exemplo.com → (aceitaEmail) um ou mais e-mails, separados por vírgula
  * O nome igual (inteiro) ganha de um que só contém as palavras. Se ainda assim
@@ -219,19 +222,24 @@ function lerEmails(texto) {
  * @param {object} [o]
  * @param {boolean} [o.aceitaEmail]  "email" e endereços valem (alertas, /backup); senão, erro
  * @param {string} [o.semEmail]      o erro quando não aceita (o porquê do comando)
+ * @param {Array<string|{_serialized: string}>} [o.mencoes]  msg.mentionedIds (as menções com @)
  * @returns {Promise<{ id: string, nome: string, grupo: boolean }
  *   | { email: string, nome: string, grupo: false }
  *   | { erro: string }
  *   | { opcoes: Array<{ id, nome, grupo }>, busca: string, mais: number }>}
  *   opcoes: mais de um serviu; quem chama oferece a escolha (resolverOuEscolher)
  */
-async function resolverDestino(valor, { aceitaEmail = false, semEmail = '❌ Aqui o destino não pode ser um e-mail.' } = {}) {
+async function resolverDestino(valor, { aceitaEmail = false, semEmail = '❌ Aqui o destino não pode ser um e-mail.', mencoes = [] } = {}) {
     const texto = String(valor ?? '').trim();
 
     if (!texto) {
         return { erro: `❌ Informe o destino do -to: um contato, um grupo ou um número (${EXEMPLO})` +
             `${aceitaEmail ? ', ou email (o QRCODE_EMAIL_SMTP_TO) e e-mails' : ''}.` };
     }
+
+    // Menção: "@<id>" no texto, com o mesmo id em msg.mentionedIds
+    const mencao = texto.match(/^@(\d+)$/);
+    if (mencao) return pessoaMencionada(mencao[1], mencoes);
 
     // E-mail: "email" (o QRCODE_EMAIL_SMTP_TO) e/ou endereços
     const porEmail = lerEmails(texto);
@@ -295,7 +303,7 @@ async function resolverDestino(valor, { aceitaEmail = false, semEmail = '❌ Aqu
  * @returns {Promise<{ id: string, nome: string, grupo: boolean } | null>}
  */
 async function resolverOuEscolher(msg, valor, o = {}) {
-    const r = await resolverDestino(valor, o);
+    const r = await resolverDestino(valor, { mencoes: msg.mentionedIds ?? [], ...o });
 
     if (r.erro) {
         await msg.reply(r.erro);
@@ -348,6 +356,22 @@ const colunasDoDestino = (d) => ({
     dest_is_group: d?.grupo ? 1 : 0,
     dest_email: d?.email ?? null
 });
+
+/*
+ * A pessoa de uma menção. O id costuma ser um LID (o id interno): vale o
+ * telefone dele, se o WhatsApp souber (é o que o /mudo e o bot.admins comparam
+ * com quem manda a mensagem); senão, o próprio LID (dá para enviar a ele).
+ */
+async function pessoaMencionada(digitos, mencoes) {
+    const id = mencoes.map(m => (typeof m === 'string' ? m : m?._serialized)).find(m => m?.split('@')[0] === digitos);
+    if (!id) {
+        return { erro: `❌ "@${digitos}" não é uma menção: mencione a pessoa escolhendo na lista do @ do WhatsApp, ou use o nome ou o número (${EXEMPLO}).` };
+    }
+
+    const telefone = id.endsWith('@lid') ? await resolveLidToPhone(id) : id;
+    const final = telefone ?? id;
+    return { id: final, nome: await nomeDoContato(final, final.split('@')[0]), grupo: false };
+}
 
 async function nomeDoContato(id, digitos) {
     const contato = await client.getContactById(id).catch(() => null);

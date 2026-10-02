@@ -28,6 +28,7 @@ arquivo do `/backup`) vão para o seu privado, e o `/cron`, para o chat atual.
 |---|---|---|
 | Nome | `/Jorge Pereira/`, `"Jorge Pereira"` ou `Jorge` | **Primeiro** um contato da sua agenda, pelo nome salvo; **se nenhum** casar, um grupo de que você participa |
 | Grupo | `/Grupo L200/`, `"Grupo L200"` ou `L200` | O grupo (quando nenhum contato tem essas palavras no nome) |
+| Menção | `@Fulano` (escolhido na lista do `@` do WhatsApp) | A pessoa mencionada. Útil num grupo, para quem não está na sua agenda. Um `@número` digitado, sem ser menção, é recusado |
 | Número | `+5521999999999` | O privado do número: DDI + DDD + número (o `+` é opcional; o bot confere se ele está no WhatsApp) |
 | E-mail | `email`, `voce@exemplo.com` ou `"a@x.com, b@y.com"` | Nos alertas (`/cotacao`, `/crypto` e `/defi`) e no `/backup -send`: `email` é o `QRCODE_EMAIL_SMTP_TO`; sai pelo SMTP do bot, sem a formatação do WhatsApp ([E-mails](../emails.md)) |
 
