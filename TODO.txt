@@ -13,8 +13,6 @@
   (ex.: BTC +-5% em 24h).
 * /backup: senha no arquivo (age/gpg) antes de enviar por e-mail ou para outro chat, e
   envio automatico semanal (setting backup.sendTo).
-* /bot -info: avisar quando houver versao nova do yt-dlp e do whatsapp-web.js
-  (PyPI e GitHub).
 * /gpt e /tldr: aceitar imagem respondida (visao) e /ocr para tirar o texto de uma imagem.
 * /sticker de texto: /sticker "bom dia" gera a figurinha com o texto.
 * Lista de escolha (destinos): aceitar 0 ou "cancelar" para desistir sem esperar os 2 min.
