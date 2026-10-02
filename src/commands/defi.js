@@ -3,6 +3,7 @@
  */
 
 const { findCommand, getCommandSyntax } = require('./base');
+const { client } = require('../client');
 const { dbAll, dbGet, dbReady, dbRun } = require('../db');
 const { isAddressEvm } = require('../defi/hyperevm');
 const { positionDetails, validatePosition } = require('../defi/orca');
@@ -16,11 +17,12 @@ const { formatData, plural } = require('../util/format');
 
 /*
  * /defi: registered liquidity positions, from Orca (Solana) and Project X (HyperEVM).
- * /defi -orca -position <address> [-nft <mint>] [-pool <address>]  → registers a position
- * /defi -project-x -wallet <0x...>   → registers the wallet (the bot reads its positions)
- * /defi -show [no.]   → "Position Details" of all (or of no. N)
- * /defi -l           → lists the registered ones
- *   /defi -rm <nº|all> → remove
+ * /defi -s [no.|orca|prjx]    → "Position Details" of all, of no. N or of a protocol
+ * /defi orca|prjx -s         → the same, only the protocol's
+ * /defi -l                   → lists the registrations (full address only in your private chat)
+ *   /defi -rm <nº...|all>      → remove
+ * /defi orca -address <address> [-pool <address>] [-nft <mint>]  → registers a position
+ * /defi prjx|projectx -address <0x...>  → registers the wallet (the bot reads its positions)
  * -nft and -pool are optional: if they come, the bot checks that they match the position.
  *
  * And the out-of-range alert (the check lives in src/defi/alerts.js):
@@ -184,7 +186,11 @@ function positionText(d) {
     return textAlt;
 }
 
-const EXAMPLES = '💡 _/defi -orca -position <endereço> -nft <mint> -pool <endereço>\n/defi -project-x -wallet <0x...>_';
+const EXAMPLES = '💡 _/defi orca -address <endereço> -pool <endereço> -nft <mint>\n/defi prjx -address <0x...>_';
+
+// The protocol word: /defi orca ..., /defi prjx ..., /defi -s projectx
+const WORDS = { orca: 'orca', prjx: 'prjx', projectx: 'prjx', 'project-x': 'prjx' };
+const protocolAlt2 = (word) => WORDS[String(word ?? '').toLowerCase()] ?? null;
 
 async function limitOrRepeated(msg, address) {
     if (await dbGet('SELECT 1 AS ok FROM defi_positions WHERE lower(position) = lower(?)', [address])) {
@@ -198,16 +204,16 @@ async function limitOrRepeated(msg, address) {
     return false;
 }
 
-// -project-x -wallet <0x...>: saves the wallet; the positions are read on each -show
+// prjx -address <0x...>: stores the wallet; the positions are read on each -s
 async function registerWallet(msg, o) {
-    const wallet = String(o.wallet ?? '').trim().replace(/^<(.*)>$/, '$1');
+    const wallet = String(o.address ?? '').trim().replace(/^<(.*)>$/, '$1');
 
     if (!wallet) {
-        await msg.reply('❌ Informe a carteira: -wallet <0x...>\n💡 _/defi -project-x -wallet 0x12b2C3d4E5f60718293A4b5C6d7E8f9012345678_');
+        await msg.reply('❌ Informe a carteira: -address <0x...>\n💡 _/defi prjx -address 0x12b2C3d4E5f60718293A4b5C6d7E8f9012345678_');
         return;
     }
     if (!isAddressEvm(wallet)) {
-        await msg.reply(`❌ -wallet: "${wallet}" não é um endereço da HyperEVM (0x e 40 caracteres hexadecimais).`);
+        await msg.reply(`❌ -address: "${wallet}" não é um endereço da HyperEVM (0x e 40 caracteres hexadecimais).`);
         return;
     }
     if (await limitOrRepeated(msg, wallet)) return;
@@ -217,7 +223,7 @@ async function registerWallet(msg, o) {
     try {
         openAlt = (await walletPositions(wallet)).length;
     } catch (err) {
-        printError(`/defi -project-x ${wallet}:`, err.message);
+        printError(`/defi prjx ${wallet}:`, err.message);
         await msg.reply(`⚠️ Não consegui ler a carteira agora: ${err.message}.\n💡 _O RPC público da HyperEVM limita as consultas; um RPC próprio vai no setting defi.hyperevm.rpc._`);
         return;
     }
@@ -228,24 +234,24 @@ async function registerWallet(msg, o) {
         '\n💡 _Veja com /defi -show_');
 }
 
-async function register(msg, o) {
-    if (o['project-x']) {
+async function register(msg, o, protocol) {
+    if (!protocol) {
+        await msg.reply(`❌ Informe o protocolo: orca ou prjx, antes do -address.\n${EXAMPLES}`);
+        return;
+    }
+    if (protocol === 'prjx') {
         await registerWallet(msg, o);
         return;
     }
 
-    const [address, nft, pool] = [o.position, o.nft, o.pool].map(v => (v ? String(v).trim() : null));
+    const [address, nft, pool] = [o.address, o.nft, o.pool].map(v => (v ? String(v).trim() : null));
 
-    if (!o.orca) {
-        await msg.reply(`❌ Informe o protocolo: -orca (com -position) ou -project-x (com -wallet).\n${EXAMPLES}`);
-        return;
-    }
     if (!address) {
-        await msg.reply('❌ Informe o endereço da posição: -position <endereço>');
+        await msg.reply('❌ Informe o endereço da posição: -address <endereço>');
         return;
     }
 
-    const invalid = [['-position', address], ['-nft', nft], ['-pool', pool]].find(([, v]) => v && !isAddressSolana(v));
+    const invalid = [['-address', address], ['-nft', nft], ['-pool', pool]].find(([, v]) => v && !isAddressSolana(v));
     if (invalid) {
         await msg.reply(`❌ ${invalid[0]}: "${invalid[1]}" não é um endereço da Solana.`);
         return;
@@ -410,7 +416,42 @@ async function handleAlert(msg, opts, positions, { comDestino: withDestination, 
         '💡 _Veja com /defi -alerta; desligue com /defi -alerta -rm <nº|all>._');
 }
 
-async function cmdDefi({ msg, opts: commandOpts, args }) {
+// -rm 2, -rm 1 3 5, -rm 1,3 (the numbers from the previous list) or all; if any does not exist: none is removed
+async function removeAlt2(msg, o, argv, positions) {
+    const partsAlt = [o.rm, ...argv].join(' ').toLowerCase().split(/[\s,]+/).filter(Boolean);
+
+    if (partsAlt.includes('all')) {
+        await dbRun('DELETE FROM defi_positions');
+        await msg.reply(`🗑️ ${plural(positions.length, 'cadastro removido', 'cadastros removidos')}.`);
+        return;
+    }
+
+    const numbers = [...new Set(partsAlt.map(Number))].sort((a, b) => a - b);
+    const missing = numbers.filter(n => !positions[n - 1]);
+    if (!numbers.length || missing.length) {
+        await msg.reply(`❌ Nº ${missing.join(', ') || '?'} não existe${missing.length > 1 ? 'm' : ''}. Nada foi removido; veja a lista com /defi -l`);
+        return;
+    }
+
+    const removed = numbers.map(n => positions[n - 1]);
+    for (const p of removed) await dbRun('DELETE FROM defi_positions WHERE id = ?', [p.id]);
+    await msg.reply(removed.length === 1
+        ? `🗑️ Removido: ${describe(removed[0])}`
+        : `🗑️ *Removidos* (${removed.length})\n${removed.map(p => `• ${describe(p)}`).join('\n')}`);
+}
+
+// The list: in your private chat, the full addresses; outside it, abbreviated
+function listText(positions, inPrivate) {
+    const address = (e) => (inPrivate ? e : short(e));
+    const line = (p, i) => `${i + 1}. ${PROTOCOLS[p.protocol] ?? p.protocol} · ` +
+        (p.protocol === 'prjx' ? `carteira ${address(p.position)}` : `${address(p.position)} · pool ${address(p.pool)}`) +
+        ` _(desde ${formatData(p.created_at).split(',')[0]})_${p.alert ? ' 🔔' : ''}`;
+
+    return `🌊 *Posições DeFi* (${positions.length})\n\n${positions.map(line).join('\n')}\n\n` +
+        '💡 _/defi -s mostra os detalhes; /defi -rm <nº> remove; 🔔 = com alerta (/defi -alerta)._';
+}
+
+async function cmdDefi({ msg, opts: commandOpts, args, chatId }) {
     await dbReady;
 
     /*
@@ -426,8 +467,16 @@ async function cmdDefi({ msg, opts: commandOpts, args }) {
         return;
     }
 
-    if (o.orca || o['project-x'] || opts.given.has('position') || opts.given.has('wallet')) {
-        await register(msg, o);
+    // The protocol comes as a word (/defi orca ..., /defi prjx -s) or in -s (/defi -s orca)
+    const word = opts.argv.find(protocolAlt2);
+    const argv = opts.argv.filter(a => a !== word);
+    const doShow = /^\d+$/.test(String(o.show ?? '')) ? null : protocolAlt2(o.show);
+    const protocol = protocolAlt2(word) ?? doShow;
+
+    // Registration: -address, or just the protocol word (then it says what is missing)
+    const soProtocol = word && !['show', 'list', 'rm', 'alerta'].some(n => opts.given.has(n));
+    if (opts.given.has('address') || soProtocol) {
+        await register(msg, o, protocol);
         return;
     }
 
@@ -438,51 +487,37 @@ async function cmdDefi({ msg, opts: commandOpts, args }) {
         return;
     }
 
-    const empty = `🌊 Nenhuma posição cadastrada.\n${EXAMPLES}`;
-
     if (opts.given.has('rm')) {
-        if (String(o.rm ?? '').toLowerCase() === 'all') {
-            await dbRun('DELETE FROM defi_positions');
-            await msg.reply(`🗑️ ${plural(positions.length, 'posição removida', 'posições removidas')}.`);
-            return;
-        }
-
-        const p = /^\d+$/.test(String(o.rm ?? '')) ? positions[Number(o.rm) - 1] : null;
-        if (!p) {
-            await msg.reply(`❌ Posição nº ${o.rm ?? '?'} não existe. Veja a lista com /defi -l`);
-            return;
-        }
-        await dbRun('DELETE FROM defi_positions WHERE id = ?', [p.id]);
-        await msg.reply(`🗑️ Posição removida: ${short(p.position)}`);
+        await removeAlt2(msg, o, argv, positions);
         return;
     }
 
+    const empty = `🌊 Nenhuma posição cadastrada.\n${EXAMPLES}`;
+
     if (opts.given.has('show')) {
-        if (!positions.length) {
-            await msg.reply(empty);
+        const numberAlt = /^\d+$/.test(String(o.show ?? '')) ? Number(o.show) : null;
+        if (o.show && !numberAlt && !doShow) {
+            await msg.reply(`❌ -s: "${o.show}" não é um nº da lista nem um protocolo (orca, prjx).`);
             return;
         }
 
-        const p = o.show ? positions[Number(o.show) - 1] : null;
-        if (o.show && !p) {
-            await msg.reply(`❌ Posição nº ${o.show} não existe. Veja a lista com /defi -l`);
+        const p = numberAlt ? positions[numberAlt - 1] : null;
+        if (numberAlt && !p) {
+            await msg.reply(`❌ Posição nº ${numberAlt} não existe. Veja a lista com /defi -l`);
             return;
         }
 
-        await showAlt(msg, p ? [p] : positions);
+        const chosen = p ? [p] : positions.filter(x => !protocol || x.protocol === protocol);
+        if (!chosen.length) {
+            await msg.reply(protocol ? `🌊 Nada cadastrado ${protocol === 'prjx' ? 'do Project X' : 'da Orca'}.\n${EXAMPLES}` : empty);
+            return;
+        }
+        await showAlt(msg, chosen);
         return;
     }
 
     if (o.list || !opts.argv.length) {
-        if (!positions.length) {
-            await msg.reply(empty);
-            return;
-        }
-
-        await msg.reply(`🌊 *Posições DeFi* (${positions.length})\n\n` +
-            positions.map((p, i) => `${i + 1}. ${describe(p)}${p.pool ? ` · pool ${short(p.pool)}` : ''} _(desde ${formatData(p.created_at).split(',')[0]})_` +
-                (p.alert ? ' 🔔' : '')).join('\n') +
-            '\n\n💡 _/defi -show mostra os detalhes; /defi -rm <nº> remove; 🔔 = com alerta (/defi -alerta)._');
+        await msg.reply(positions.length ? listText(positions, chatId === client.info?.wid?._serialized) : empty);
         return;
     }
 
