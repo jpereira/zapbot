@@ -951,8 +951,27 @@
             "aliases": [
                 "/config"
             ],
-            "help": "Lista, exibe e altera as configurações do bot (settings). No seu privado, mostra também o config/.env (somente leitura).",
+            "help": "Lista, exibe e altera as configurações do bot (settings); nas listas, -append (-a) e -rem acrescentam e tiram itens. No seu privado, mostra também o config/.env (somente leitura).",
             "cmd_opts": [
+                {
+                    "opts": [
+                        "append",
+                        "a"
+                    ],
+                    "values": [
+                        "<chave>"
+                    ],
+                    "desc": "Numa lista, acrescenta os itens que vierem depois da chave. Ex: /set -a bot.admins +5521999999999"
+                },
+                {
+                    "opts": [
+                        "rem"
+                    ],
+                    "values": [
+                        "<chave>"
+                    ],
+                    "desc": "Numa lista, tira os itens que vierem depois da chave. Ex: /set -rem commands.disabled noffa"
+                },
                 {
                     "opts": [
                         "reset",
