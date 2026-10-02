@@ -25,9 +25,10 @@ const { formatarData, plural } = require('../util/formatar');
  *
  * E o alerta de saída da faixa (a verificação fica em src/defi/alertas.js):
  *   /defi -alerta                         → lista os alertas
- *   /defi -alerta <nº|all> [-to <dest>]   → avisa sempre que a posição sair da faixa:
- *                                           no seu privado ou no -to (email, e-mails,
+ *   /defi -alerta <nº|all> [-to <dest>]   → avisa quando a posição sai da faixa e quando
+ *                                           volta: no seu privado ou no -to (email, e-mails,
  *                                           contato, grupo ou número)
+ *   /defi -alerta <nº|all> -taxas <US$>   → e quando as taxas a coletar passam do valor
  *   /defi -alerta -rm <nº|all>            → desliga
  */
 const MAX_POSICOES = 20;
@@ -87,22 +88,31 @@ function textoDaPosicaoPrjx(x) {
 
 /**
  * Lê um cadastro, de qualquer protocolo.
- * @returns {Promise<{ naFaixa: boolean|null, textos: string[], foraDaFaixa: string[] }>}
+ * @returns {Promise<{ naFaixa: boolean|null, textos: string[], foraDaFaixa: string[], taxasUsd: number|null }>}
  *   naFaixa: todas as posições na faixa (null: a carteira não tem nenhuma aberta)
+ *   taxasUsd: as taxas a coletar em dólar (null: sem preço, num par sem stablecoin)
  */
 async function lerCadastro(p) {
     if (p.protocol === 'prjx') {
         const posicoes = await posicoesDaCarteira(p.position);
+        const comPreco = posicoes.filter(x => x.usd1 !== null);
         return {
             naFaixa: posicoes.length ? posicoes.every(x => x.naFaixa) : null,
             textos: posicoes.map(textoDaPosicaoPrjx),
-            foraDaFaixa: posicoes.filter(x => !x.naFaixa).map(textoDaPosicaoPrjx)
+            foraDaFaixa: posicoes.filter(x => !x.naFaixa).map(textoDaPosicaoPrjx),
+            taxasUsd: comPreco.length ? comPreco.reduce((s, x) => s + x.taxa0 * x.usd0 + x.taxa1 * x.usd1, 0) : null
         };
     }
 
     const d = await detalhesDaPosicao(p.position, p.pool);
     const texto = textoDaPosicao(d);
-    return { naFaixa: d.calculo.naFaixa, textos: [texto], foraDaFaixa: d.calculo.naFaixa ? [] : [texto] };
+    const emUsd = (qtd, token) => (Number(qtd) / 10 ** token.decimals) * Number(token.priceUsdc ?? 0);
+    return {
+        naFaixa: d.calculo.naFaixa,
+        textos: [texto],
+        foraDaFaixa: d.calculo.naFaixa ? [] : [texto],
+        taxasUsd: emUsd(d.calculo.taxaA, d.tokenA) + emUsd(d.calculo.taxaB, d.tokenB)
+    };
 }
 
 /**
@@ -291,6 +301,7 @@ function destinoDoAlerta(p) {
 }
 
 const ESTADO_DA_FAIXA = { 1: '✅ na faixa', 0: '⚠️ fora da faixa' };
+const limiteDasTaxas = (p) => (p.alert_fees ? ` · 💸 ≥ ${fmtUsd(p.alert_fees)}` : '');
 const estadoDaFaixa = (p) => ESTADO_DA_FAIXA[p.in_range] ?? '❔ ainda não lida';
 const cadaMinutos = () => plural(getSetting('defi.alerta.intervalMin'), 'minuto', 'minutos');
 
@@ -298,12 +309,12 @@ async function listarAlertas(msg, posicoes) {
     const comAlerta = posicoes.map((p, i) => ({ p, n: i + 1 })).filter(({ p }) => p.alert);
 
     if (!comAlerta.length) {
-        await msg.reply('🔕 Nenhum alerta no /defi.\n💡 _Ligue com /defi -alerta <nº> (avisa sempre que a posição sair da faixa)._');
+        await msg.reply('🔕 Nenhum alerta no /defi.\n💡 _Ligue com /defi -alerta <nº> (avisa quando a posição sair da faixa e quando voltar)._');
         return;
     }
 
     await msg.reply(`🔔 *Alertas do /defi* (${comAlerta.length})\n\n` +
-        comAlerta.map(({ p, n }) => `${n}. ${descrever(p)} · ${estadoDaFaixa(p)} → ${descreverDestinoDoAlerta(p)}`).join('\n') +
+        comAlerta.map(({ p, n }) => `${n}. ${descrever(p)} · ${estadoDaFaixa(p)}${limiteDasTaxas(p)} → ${descreverDestinoDoAlerta(p)}`).join('\n') +
         `\n\n💡 _Verificados a cada ${cadaMinutos()}. Desligue com /defi -alerta -rm <nº|all>._`);
 }
 
@@ -323,7 +334,7 @@ async function tratarAlerta(msg, opts, posicoes, { comDestino, destinoTexto }) {
 
         for (const p of alvos) {
             await dbRun(`UPDATE defi_positions SET alert = 0, alert_dest_id = NULL, alert_dest_name = NULL,
-                alert_dest_is_group = 0, alert_email = NULL, in_range = NULL WHERE id = ?`, [p.id]);
+                alert_dest_is_group = 0, alert_email = NULL, alert_fees = NULL, fees_notified = 0, in_range = NULL WHERE id = ?`, [p.id]);
         }
         await msg.reply(rm === 'all'
             ? `🔕 ${plural(alvos.length, 'alerta desligado', 'alertas desligados')}.`
@@ -350,6 +361,17 @@ async function tratarAlerta(msg, opts, posicoes, { comDestino, destinoTexto }) {
         return;
     }
 
+    // -taxas <valor>: o limite em dólar; off (ou 0) tira; sem -taxas, fica o que estava
+    let taxas;
+    if (opts.given.has('taxas')) {
+        const t = String(o.taxas ?? '').trim().toLowerCase().replace(/^\$/, '').replace(',', '.');
+        taxas = t === 'off' || t === '0' ? null : Number(t);
+        if (taxas !== null && !(taxas > 0)) {
+            await msg.reply('❌ -taxas: informe o valor em dólar (ex.: -taxas 50) ou off.');
+            return;
+        }
+    }
+
     let destino = {};
     if (comDestino) {
         // E-mail ou chat; vários contatos ou grupos com o nome: espera você escolher na lista
@@ -360,6 +382,7 @@ async function tratarAlerta(msg, opts, posicoes, { comDestino, destinoTexto }) {
     // O estado de agora vira a referência: o aviso sai quando a posição passar de dentro para fora
     const linhas = [];
     for (const p of escolhidas) {
+        const limite = taxas === undefined ? p.alert_fees : taxas;
         const naFaixa = await lerCadastro(p)
             .then(({ naFaixa: f }) => (f === null ? null : f ? 1 : 0))
             .catch((err) => {
@@ -368,12 +391,12 @@ async function tratarAlerta(msg, opts, posicoes, { comDestino, destinoTexto }) {
             });
 
         await dbRun(`UPDATE defi_positions SET alert = 1, alert_dest_id = ?, alert_dest_name = ?,
-            alert_dest_is_group = ?, alert_email = ?, in_range = ? WHERE id = ?`,
-        [destino.id ?? null, destino.email ? null : destino.nome ?? null, destino.grupo ? 1 : 0, destino.email ?? null, naFaixa, p.id]);
+            alert_dest_is_group = ?, alert_email = ?, alert_fees = ?, fees_notified = 0, in_range = ? WHERE id = ?`,
+        [destino.id ?? null, destino.email ? null : destino.nome ?? null, destino.grupo ? 1 : 0, destino.email ?? null, limite ?? null, naFaixa, p.id]);
 
-        const atualizada = { ...p, in_range: naFaixa };
-        linhas.push(`${posicoes.indexOf(p) + 1}. ${descrever(p)} · ${estadoDaFaixa(atualizada)}` +
-            (naFaixa === 0 ? ' _(avisa quando voltar para a faixa e sair de novo)_' : ''));
+        const atualizada = { ...p, in_range: naFaixa, alert_fees: limite };
+        linhas.push(`${posicoes.indexOf(p) + 1}. ${descrever(p)} · ${estadoDaFaixa(atualizada)}${limiteDasTaxas(atualizada)}` +
+            (naFaixa === 0 ? ' _(avisa quando voltar para a faixa)_' : ''));
     }
 
     const ondeAvisa = descreverDestinoDoAlerta({
@@ -381,7 +404,9 @@ async function tratarAlerta(msg, opts, posicoes, { comDestino, destinoTexto }) {
     });
 
     await msg.reply(`🔔 *Alerta do /defi ligado* (${escolhidas.length})\n\n${linhas.join('\n')}\n\n` +
-        `📣 Aviso: ${ondeAvisa}, sempre que a posição sair da faixa (verificada a cada ${cadaMinutos()}).\n` +
+        `📣 Aviso: ${ondeAvisa}, quando a posição sair da faixa e quando voltar` +
+        (taxas ? `, e quando as taxas a coletar passarem de ${fmtUsd(taxas)}` : '') +
+        ` (verificada a cada ${cadaMinutos()}).\n` +
         '💡 _Veja com /defi -alerta; desligue com /defi -alerta -rm <nº|all>._');
 }
 
@@ -469,6 +494,7 @@ module.exports = {
     cmdDefi,
     descrever,
     descreverDestinoDoAlerta,
+    fmtUsd,
     destinoDoAlerta,
     lerCadastro,
     textoDaPosicao,
