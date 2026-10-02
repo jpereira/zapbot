@@ -47,7 +47,7 @@ Depois de ler o QR Code você deve ver nos logs:
 
 ```
 [+] 🔐 Whatsapp authentication success!
-[+] 🤖 ZapBot 2.1 inicializado! Informando 5521999999999@c.us
+[+] 🤖 ZapBot 2.1 (git+25b0870) inicializado! Informando 5521999999999@c.us
 ```
 
 e receber a mesma mensagem no seu WhatsApp. Mande `/ping` para qualquer chat:
