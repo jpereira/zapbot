@@ -4,8 +4,10 @@
 #
 #   1. Incrementa a última tag release-X.Y (ex.: release-1.5 -> release-1.6) ou
 #      usa a versão informada (ex.: ./bump.sh 2.0, para sair da 1.x)
-#   2. Troca a versão antiga pela nova nos arquivos do repositório (e a data ao
-#      lado dela, em "release-X.Y (de DD/MM/AAAA)", pela de hoje)
+#   2. Troca a versão antiga pela nova no README.md e no docs/ (e a data ao lado
+#      dela, em "release-X.Y (de DD/MM/AAAA)", pela de hoje). Só nesses: no código
+#      e nos testes, "2.0" pode ser outra coisa (a API do NVD, o JSON-RPC da Solana).
+#      As linhas que citam o próprio bump.sh (os exemplos dele) ficam como estão
 #   3. Commita e aplica a tag no branch atual com a mensagem "Bump para X.Y"
 #   4. Grava as refs no .git/packed-refs (git pack-refs --all), para a imagem
 #      Docker saber o commit da tag sem os objetos do git (src/versao.js)
@@ -85,25 +87,27 @@ echo "🔖 ${ultima_tag} -> ${nova_tag}"
 atual_re="${versao_atual//./\\.}"
 padrao="(^|[^0-9.])${atual_re}([^0-9.]|$)"
 
-# package.json/package-lock.json: só a versão do próprio projeto (as dependências
-# também têm "1.5" e não podem ser tocadas). Os binários e os patches ficam de fora.
+# Só o README e o docs/ (fora o requirements.txt, que tem as versões do MkDocs).
+# O package.json/package-lock.json vão à parte: só a versão do próprio projeto (as
+# dependências também têm "1.5" e não podem ser tocadas).
+ONDE=(README.md docs ':!docs/requirements.txt')
 arquivos=()
 while IFS= read -r arq; do
     arquivos+=("$arq")
-done < <(git grep -lIE "$padrao" -- . ':!package.json' ':!package-lock.json' ':!patches/' ':!bump.sh' || true)
+done < <(git grep -lIE "$padrao" -- "${ONDE[@]}" || true)
 
 if [ "$DRY_RUN" -eq 1 ]; then
     echo "📝 Seriam alterados:"
     echo "   package.json, package-lock.json (versão do projeto)"
     for arq in "${arquivos[@]}"; do
-        git grep -nIE "$padrao" -- "$arq" | sed 's/^/   /'
+        git grep -nIE "$padrao" -- "$arq" | grep -v 'bump\.sh' | sed 's/^/   /'
     done
     exit 0
 fi
 
 for arq in "${arquivos[@]}"; do
     # Repete para pegar ocorrências vizinhas (o separador de uma é consumido pela outra)
-    perl -pi -e "1 while s/(^|[^0-9.])${atual_re}([^0-9.]|\$)/\${1}${nova_versao}\${2}/" "$arq"
+    perl -pi -e "next if /bump\\.sh/; 1 while s/(^|[^0-9.])${atual_re}([^0-9.]|\$)/\${1}${nova_versao}\${2}/" "$arq"
 done
 
 # A data da release ao lado da versão: "release-X.Y (de DD/MM/AAAA)" (a versão pode estar entre crases)
@@ -111,7 +115,7 @@ hoje="$(date +%d/%m/%Y)"
 nova_re="${nova_versao//./\\.}"
 while IFS= read -r arq; do
     perl -pi -e "s|(release-${nova_re}\`? \\(de )\\d{2}/\\d{2}/\\d{4}|\${1}${hoje}|g" "$arq"
-done < <(git grep -lIE "release-${nova_re}\`? \\(de [0-9]{2}/" -- . ':!bump.sh' || true)
+done < <(git grep -lIE "release-${nova_re}\`? \\(de [0-9]{2}/" -- "${ONDE[@]}" || true)
 
 node -e '
     const fs = require("fs");
