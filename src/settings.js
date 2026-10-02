@@ -86,7 +86,7 @@ const SETTINGS_SCHEMA = {
     'bot.admins': {
         default: [],
         type: 'list',
-        desc: 'Outras pessoas (número com DDI, ex.: 5521999999999) que também usam os comandos admin, inclusive no modo admin. Só o dono altera (/set -a bot.admins <número>).',
+        desc: 'Outras pessoas (número com DDI, ex.: 5521999999999) que também usam os comandos admin, inclusive no modo admin. Só o dono altera; pelo /set vale o nome do contato (/set -a bot.admins /Jorge Pereira/).',
         item: (v) => {
             const digitos = v.replace(/[()+-]/g, '');
             if (!/^\d{10,15}$/.test(digitos)) throw new Error(`número inválido: ${v} (use DDI + DDD + número, ex.: +5521999999999)`);
