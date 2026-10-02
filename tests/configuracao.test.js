@@ -193,9 +193,18 @@ describe('documentação', () => {
         assert.ok(total > 50, `poucos links conferidos (${total})`);
     });
 
-    test('instalação: a release atual (a do package.json) com a data dela', () => {
+    test('instalação e README: a versão estável é uma release com data, até a do package.json (a seguinte só no bump.sh -r)', () => {
         const { version } = require('../package.json');
-        assert.match(lerDoc('instalacao.md'), new RegExp(`\`release-${version.replace('.', '\\.')}\` \\(de \\d{2}/\\d{2}/\\d{4}\\)`));
+        const numeros = (v) => v.split('.').map(Number);
+        const [x, y] = numeros(version);
+
+        const m = lerDoc('instalacao.md').match(/`release-(\d+\.\d+)` \(de \d{2}\/\d{2}\/\d{4}\)/);
+        assert.ok(m, 'instalacao.md: sem "release-X.Y (de DD/MM/AAAA)"');
+        const [ex, ey] = numeros(m[1]);
+        assert.ok(ex < x || (ex === x && ey <= y), `a estável (${m[1]}) passa da versão do package.json (${version})`);
+
+        assert.match(README, new RegExp(`hoje a \`release-${m[1].replace('.', '\\.')}\``));
+        assert.match(README, new RegExp(`git checkout release-${m[1].replace('.', '\\.')}\n`));
     });
 
     test('nenhum título repetido na mesma página (a âncora ficaria ambígua), no docs/ e no README', () => {
