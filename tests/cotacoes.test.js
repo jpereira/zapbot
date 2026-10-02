@@ -120,7 +120,7 @@ describe('/cotacao (/cambio)', () => {
 describe('/crypto (/bitcoio, /creptomoeda)', () => {
     test('preços das ativadas, na ordem configurada, com o top', async () => {
         const [r] = await bot.responder('/crypto');
-        assert.match(r, /🚀 \*CRYPTO MARKET\*/);
+        assert.match(r, /^🚀 \*MERCADO CRIPTO\*\n```\n₿ BTC\n/);   // uma linha só entre o título e o bloco
         assert.match(r, /₿ BTC\n    💰 \$95,000\.00 +🟢 \+1\.50%/);
         assert.ok(r.indexOf('BTC') < r.indexOf('ETH') && r.indexOf('ETH') < r.indexOf('SOL'));
         assert.match(r, /📊 \$12\.35M/);
