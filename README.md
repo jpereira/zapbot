@@ -154,6 +154,7 @@ comandos: libere os comuns para todos com `/bot -admin` ou para alguns com
 | [`/version`](https://jpereira.github.io/zapbot/comandos/version/) | `/ver` | ✅ | Versão do bot (mesmo banner do `/uptime`) |
 | [`/walissu`](https://jpereira.github.io/zapbot/comandos/walissu/) | `/ualisu` | ✅ | Walissu CVE BOT: marca 2 membros com uma CVE aleatória |
 | [`/watch`](https://jpereira.github.io/zapbot/comandos/watch/) | `/w` | ✅ | Avisa no seu privado (ou, com um ou vários `-to`, em outros chats ou por e-mail) quando uma mensagem casa com um texto/regex |
+| [`/whois`](https://jpereira.github.io/zapbot/comandos/whois/) | `/who`, `/id` | | Quem é e o que pode no bot, neste chat: 🤖 dono, 👑 admin, 🗣️ usuário ou 🚫 sem permissão; o dono e os admins veem os outros |
 
 ## Documentação
 

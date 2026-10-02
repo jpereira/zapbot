@@ -53,7 +53,7 @@ function quemUsa() {
  * O papel de cada um, pelo mais alto: 🤖 o dono (a conta do bot, que já usa
  * tudo), 👑 admin (bot.admins) ou 🗣️ usuário (bot.users).
  */
-const PAPEIS = { dono: '🤖', admin: '👑', usuario: '🗣️' };
+const PAPEIS = { dono: '🤖', admin: '👑', usuario: '🗣️', nenhum: '🚫' };
 function papelDe(item) {
     if (ehODono(item)) return PAPEIS.dono;
     if (getSetting('bot.admins').includes(item)) return PAPEIS.admin;
@@ -157,10 +157,15 @@ async function listaDeQuemUsa({ membros, mostra, onde }) {
         return `• ${marcas.join(' ')} · ${await descreverItem(item, membros)}`;
     }));
 
-    return `*Quem usa* (${itens.length})\n${linhas.join('\n')}\n` +
-        (itens.some(ehODono) ? `💡 _${PAPEIS.dono} dono: você, que já usa tudo_\n` : '') +
+    return `*Quem usa* (${itens.length})\n${linhas.join('\n')}\n` + legenda({ dono: itens.some(ehODono) }) + dica;
+}
+
+// A legenda das listas (a do dono, só com você nela; a do sem permissão, a do /whois)
+function legenda({ dono = false, semPermissao = false } = {}) {
+    return (dono ? `💡 _${PAPEIS.dono} dono: você, que já usa tudo_\n` : '') +
         `💡 _${PAPEIS.admin} +o: admin, usa tudo (bot.admins) · ` +
-        `${PAPEIS.usuario} +v: usuário, usa os comandos comuns (bot.users)_` + dica;
+        `${PAPEIS.usuario} +v: usuário, usa os comandos comuns (bot.users)_` +
+        (semPermissao ? `\n💡 _${PAPEIS.nenhum} sem permissão: o bot ignora os comandos dela_` : '');
 }
 
 async function estadoBot(chat) {
@@ -353,5 +358,9 @@ async function cmdBot({ msg, opts, args, chatId, isGroup }) {
 }
 
 module.exports = {
-    cmdBot
+    PAPEIS,
+    cmdBot,
+    descreverItem,
+    escopoDoChat,
+    legenda
 };

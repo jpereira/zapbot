@@ -430,6 +430,45 @@ describe('permissões', () => {
         assert.doesNotMatch(todos, /fora daqui/);
     });
 
+    test('/whois (/who, /id): o seu nível neste chat; o dos outros, só para o dono e os admins', async () => {
+        const RODAPE = '\n\nDigite /help para saber quais comandos estão disponíveis.';
+        const CICLANO = '5521922222222@c.us';
+        const TRABALHO = '120363000000000300@g.us';
+        bot.criarContato(CICLANO, 'Ciclano');
+        bot.criarGrupo(TRABALHO, 'Trabalho', [DONO.jid, CICLANO]);
+
+        // Você: usuário pela lista, por todos (true) ou pelo grupo
+        await bot.setSetting('bot.users', ['5521911111111', TRABALHO]);
+        for (const linha of ['/whois', '/who', '/id']) {
+            assert.deepEqual(await bot.responder(linha, { de: OUTRO.jid }),
+                ['*Quem é?* (1)\n• 🗣️ +v · 👤 Fulano · +5521911111111\n' + LEGENDA + RODAPE], linha);
+        }
+        assert.match((await bot.responder('/whois', { de: CICLANO, chat: TRABALHO }))[0], /^\*Quem é\?\* \(1\)\n• 🗣️ \+v pelo grupo · 👤 Ciclano · \+5521922222222\n/);
+        await bot.setSetting('bot.users', ['all']);
+        assert.match((await bot.responder('/whois', { de: CICLANO }))[0], /• 🗣️ todos \(bot\.users true\) · 👤 Ciclano · \+5521•••••2222\n/);
+
+        // Os outros: só o dono e os admins
+        assert.deepEqual(await bot.responder('/whois /Ciclano/', { de: OUTRO.jid }),
+            ['⛔ Só o dono do bot (e os admins) vê o nível dos outros.\n💡 _/whois sozinho mostra o seu._']);
+
+        // O dono: ele mesmo, várias pessoas (o sem permissão com a legenda), e quem escreveu a mensagem respondida
+        await bot.setSetting('bot.users', []);
+        await bot.setSetting('bot.admins', ['5521911111111']);
+        assert.deepEqual(await bot.responder('/whois'),
+            ['*Quem é?* (1)\n• 🤖 dono · 👤 Dono · +5521900000000\n' + LEGENDA_DONO + LEGENDA + RODAPE]);
+        assert.deepEqual(await bot.responder('/whois /Fulano/ +5521977777777'), ['*Quem é?* (2)\n' +
+            '• 👑 +o · 👤 Fulano · +5521911111111\n' +
+            '• 🚫 sem permissão · 👤 +5521•••••7777\n' + LEGENDA +
+            '\n💡 _🚫 sem permissão: o bot ignora os comandos dela_' + RODAPE]);
+        const citada = bot.criarMensagem({ texto: 'oi', de: OUTRO.jid });
+        assert.match((await bot.responder('/whois', { citada }))[0], /^\*Quem é\?\* \(1\)\n• 👑 \+o · 👤 Fulano · \+5521911111111\n/);
+
+        // O admin extra também vê os outros; grupo e e-mail não são pessoas
+        assert.match((await bot.responder('/whois /Ciclano/', { de: OUTRO.jid }))[0], /• 🚫 sem permissão · 👤 Ciclano · \+5521•••••2222\n/);
+        assert.match((await bot.responder('/whois /Trabalho/'))[0], /❌ Trabalho é um grupo: o \/whois é de pessoas/);
+        assert.match((await bot.responder('/whois email'))[0], /❌ O \/whois é de pessoas/);
+    });
+
     test('bot desligado: tudo ignorado, inclusive os seus, exceto o /bot', async () => {
         await bot.setSetting('bot.paused', true);
         assert.deepEqual(await bot.responder('/ping'), []);
