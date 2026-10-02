@@ -2,37 +2,48 @@
 
 Controla quem pode usar o bot e mostra o relatório dele
 ([Status do bot](#status-do-bot)) e as versões do que ele usa
-([Informações do sistema](#informações-do-sistema)). Tem dois interruptores independentes, que
-sobrevivem a reinícios:
+([Informações do sistema](#informações-do-sistema)). Tudo sobrevive a reinícios:
 
 - **Ligado/desligado** (setting `bot.paused`, padrão ligado): desligado, o bot
   ignora **todos** os comandos, inclusive os seus, exceto o próprio `/bot`.
-- **Modo admin** (setting `bot.adminMode`, padrão ligado): ligado, só você
-  (e os [admins extras](#admins-extras)) usa comandos; os de qualquer outra
-  pessoa são ignorados em silêncio, mesmo os que normalmente são liberados
-  (`/get`, `/tempo`...).
+- **Quem usa os comandos** (settings `bot.admins` e `bot.users`):
+    - **Você** (o dono) usa tudo.
+    - Os **admins** do [`bot.admins`](#admins-extras) também usam tudo.
+    - Os **usuários** do [`bot.users`](#usuários) usam os comandos comuns (os
+      sem ✅ na [tabela de comandos](index.md#resumo): `/get`, `/tempo`...).
+    - Os outros são ignorados em silêncio. Por padrão o `bot.users` é `false`:
+      só você (e os admins) usa comandos.
 
 | Opção | Descrição |
 |---|---|
-| *(nenhuma)* | Mostra o estado dos dois |
+| *(nenhuma)* | Mostra o estado, com os admins e os usuários |
 | `-on` | Liga o bot |
 | `-off` | Desliga o bot |
-| `+admin` | Liga o modo admin: só você (e os admins do [`bot.admins`](#admins-extras)) usa comandos |
-| `-admin` | Desliga o modo admin (cada comando volta a seguir a coluna *Admin* da [tabela de comandos](index.md#resumo)) |
+| `+admin` | Só você (e os admins) usa comandos: o mesmo que `/set bot.users false` (a lista de usuários sai) |
+| `-admin` | Todos usam os comandos comuns: o mesmo que `/set bot.users true` |
+| `+o`, `-o` | `<pessoa...>`: põe e tira admins (o mesmo que `/set -append`/`-rem bot.admins`). Veja [Admins extras](#admins-extras) |
+| `+v`, `-v` | `<pessoa\|grupo...>`: põe e tira usuários (o mesmo que `/set -append`/`-rem bot.users`). Veja [Usuários](#usuários) |
 | `-status`, `-s` | Relatório do bot e o envio diário dele (`[<hora>\|off]`). Não combina com as outras. Veja [Status do bot](#status-do-bot) |
 | `-info`, `-i` | Versões do bot e dos programas que ele usa, e o sistema. Não combina com as outras. Veja [Informações do sistema](#informações-do-sistema) |
 
-As opções combinam; `-on` com `-off` (ou `+admin` com `-admin`) no mesmo
-comando é recusado. A resposta sempre mostra o estado final:
+O `-on`/`-off` e o `+admin`/`-admin` combinam; `-on` com `-off` (ou `+admin`
+com `-admin`) no mesmo comando é recusado. Os `+o`/`-o`/`+v`/`-v` vão
+sozinhos, um de cada vez. A resposta mostra o estado final:
 
 ```
 /bot               → ▶️ Bot: ativo
-                     🔓 Modo admin: desligado
-/bot +admin        → ▶️ Bot: ativo
-                     🔒 Modo admin: ligado (só o dono usa comandos)
-/bot -admin        → volta a liberar os comandos públicos para todos
+                     👥 Comandos: o dono e os admins e os usuários abaixo
+
+                     👑 Admins (bot.admins)
+                     • 5521999999999 (Jorge Pereira)
+
+                     🗣️ Usuários (bot.users)
+                     • 5521988887777 (Camila Gama)
+                     • 👥 Grupo Familia
+/bot +admin        → 🔒 Comandos: só o dono
+/bot -admin        → 🔓 Comandos: todos usam os comuns
 /bot -off          → ⏸️ Bot: desligado (todos os comandos são ignorados)
-/bot -on -admin    → liga o bot e desliga o modo admin de uma vez
+/bot -on -admin    → liga o bot e libera os comandos comuns para todos de uma vez
 /bot -h            → ajuda do comando
 ```
 
@@ -40,49 +51,59 @@ Quando usar cada um:
 
 | Situação | Comando |
 |---|---|
-| Alguém está abusando dos comandos num grupo | `/bot +admin` |
+| Alguém está abusando dos comandos num grupo | `/bot +admin` (ou tire o grupo: `/bot -v /Grupo/`) |
 | Vários zapbots no mesmo grupo e você quer que só o seu responda a você | `/bot +admin` |
+| Liberar o bot para a família, só no grupo dela | `/bot +v /Grupo Familia/` |
+| Liberar para uma pessoa, em qualquer chat | `/bot +v /Camila Gama/` |
+| Dar a alguém os comandos admin | `/bot +o /Jorge Pereira/` |
 | Parar o bot por completo por um tempo, sem derrubar o container | `/bot -off` |
 | Religar o bot e liberar os comandos para todos | `/bot -on -admin` |
 
 Detalhes:
 
 - Com o bot desligado o `/set` também é ignorado: para ligar use sempre o
-  `/bot -on`. Com ele ligado, `/set bot.paused` e `/set bot.adminMode` têm o
+  `/bot -on`. Com ele ligado, `/set bot.paused` e `/set bot.users` têm o
   mesmo efeito das opções.
-- Se o bot reiniciar desligado ou em modo admin, a mensagem de inicialização
-  no seu privado avisa.
+- Se o bot reiniciar desligado, ou só com você usando comandos, a mensagem de
+  inicialização no seu privado avisa.
 - Só os **comandos** são afetados: a recuperação de mensagens apagadas e
   editadas, o `/watch`, os alertas de preço e as notificações do `/monitor`
   continuam funcionando.
 - Comandos ignorados aparecem no log: `Comando '/ping' ignorado: bot
-  desligado` (sempre) e `Comando '/ping' de Fulano ignorado: modo admin` (só
-  com o [debug](debug.md) ligado).
+  desligado` (sempre) e `Comando '/ping' de Fulano ignorado: fora do bot.users`
+  (só com o [debug](debug.md) ligado).
 - "Você" é a conta pareada ao bot, de qualquer aparelho. Para desligar só
   alguns comandos, para todos, use o setting `commands.disabled`.
+- Até a 2.2, isso era o setting `bot.adminMode`. Ao atualizar, ele vira o
+  `bot.users`: o modo admin desligado (todos usavam) vira `true`; ligado, o
+  padrão (`false`).
 
 ## Admins extras
 
 Outras pessoas podem usar os comandos **admin** (os marcados com ✅ na
-[tabela de comandos](index.md#resumo)), e também os comandos no modo admin, se
-o número delas estiver no setting `bot.admins`:
+[tabela de comandos](index.md#resumo)), e também os comuns, se o número delas
+estiver no setting `bot.admins`:
 
 ```
-/set -a bot.admins /Jorge Pereira/    → acrescenta, pelo nome do contato
-/set -a bot.admins +5521999999999     → ou pelo número
-/set -a bot.admins @Fulano Da Silva   → ou, num grupo, mencionando a pessoa
-/set -rem bot.admins /Jorge Pereira/  → tira
+/bot +o /Jorge Pereira/               → acrescenta, pelo nome do contato
+/bot +o +5521999999999                → ou pelo número
+/bot +o @Fulano Da Silva              → ou, num grupo, mencionando a pessoa
+/bot -o /Jorge Pereira/               → tira
+/set -a bot.admins /Jorge Pereira/    → o mesmo que o /bot +o, pelo /set
 /set bot.admins                       → a lista: 5521999999999 (Jorge Pereira)
 ```
 
 O nome é buscado como no `-to` ([Destinos](index.md#destinos-contato-grupo-número-ou-e-mail)):
 contato da sua agenda, e se mais de um servir, a lista para responder com o nº.
 Nomes com espaço vão entre `/.../` ou aspas; vários de uma vez, separados por
-espaço (`/set -a bot.admins /Jorge Pereira/ "Ana Souza" +5511988887777`). Fica
+espaço (`/bot +o /Jorge Pereira/ "Ana Souza" +5511988887777`). Fica
 guardado o **telefone** (é ele que o bot compara com quem manda o comando), e a
-lista mostra o nome ao lado. Grupo e e-mail são recusados, e um contato de quem
+lista mostra o nome ao lado. E-mail é recusado, e um contato de quem
 o WhatsApp só informa o id interno (LID), sem o telefone, também: use o número.
 
+- **Grupo não pode ser admin**: todo mundo ali mandaria no bot (`/set`,
+  `/backup -send` com o banco inteiro...). O `/bot +o /Grupo/` é recusado e
+  sugere o `/bot +v /Grupo/`, que libera só os comandos comuns.
 - Só **você** (o dono, a conta pareada) altera o `bot.admins`: um admin extra
   não consegue se dar (nem dar a outros) esse acesso.
 - O número é comparado com o telefone de quem mandou a mensagem. Se o WhatsApp
@@ -96,6 +117,37 @@ o WhatsApp só informa o id interno (LID), sem o telefone, também: use o númer
   responde com o nº.
 - Dê esse acesso só a quem você confia: um admin pode, por exemplo, apagar o
   cache (`/cache -a`) ou restaurar um backup.
+
+## Usuários
+
+O setting `bot.users` diz quem, além de você e dos admins, usa os comandos
+**comuns** (os sem ✅ na [tabela de comandos](index.md#resumo)). Os comandos
+admin continuam só seus e dos admins.
+
+| Valor | Quem usa os comandos comuns |
+|---|---|
+| `false` (ou vazio), o padrão | Ninguém: só você e os admins |
+| `true` | Todos |
+| Pessoas e grupos | Só esses. A pessoa, em qualquer chat; o grupo, qualquer um dentro dele (no privado de cada um, não) |
+
+```
+/set bot.users false                       → só você e os admins (o mesmo que /bot +admin)
+/set bot.users true                        → todos (o mesmo que /bot -admin)
+/set bot.users /Camila Gama/ /Grupo Familia/  → só a Camila (em qualquer chat) e o grupo
+/bot +v /Camila Gama/                      → acrescenta (o mesmo que /set -a bot.users)
+/bot +v /Grupo Familia/ @Fulano +5521999999999  → vários de uma vez
+/bot -v /Grupo Familia/                    → tira
+/set bot.users                             → a lista: 5521988887777 (Camila Gama), 👥 Grupo Familia
+```
+
+- As pessoas são buscadas como no `bot.admins` (nome, menção ou número), e os
+  grupos, pelo nome, como no `-to`. Fica guardado o telefone da pessoa e o id
+  do grupo; a lista mostra os nomes.
+- O `true` não se mistura com nomes: com o `bot.users` em `true`, o
+  `/bot +v /Fulano/` é recusado. Para liberar só alguns, `/set bot.users false`
+  antes.
+- O `/bot +admin` esvazia a lista (volta ao `false`).
+- Só **você** altera o `bot.users`, como o `bot.admins`.
 
 ## Status do bot
 

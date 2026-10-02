@@ -20,9 +20,18 @@ const { compilarRegraWatch } = require('./watch/regras');
  * existente), type (boolean | number | string | list), desc e, opcionalmente,
  * min/max (number), item() para normalizar/validar cada item de uma list,
  * separator (list cujos itens podem ter espaço/vírgula: ex. '\n', um por linha),
+ * lista() (list: confere a lista inteira, depois dos itens; o item() pode
+ * devolver null para sumir com uma palavra, como o "false" do bot.users),
  * allowEmpty (string que pode ficar vazia), validar() (string: lança Error se
  * inválida) e secret (valor mascarado no /set e nos logs).
  */
+// Um telefone com DDI (bot.admins e bot.users): "+55 (21) 99999-9999" → "5521999999999"
+function telefoneDoItem(v) {
+    const digitos = v.replace(/[\s()+-]/g, '');
+    if (!/^\d{10,15}$/.test(digitos)) throw new Error(`número inválido: ${v} (use DDI + DDD + número, ex.: +5521999999999)`);
+    return digitos;
+}
+
 // item() das listas de feeds do /news e validar() dos RPCs do /defi
 function validarUrlFeed(v) {
     if (!isValidHttpUrl(v)) throw new Error(`URL inválida: ${v}`);
@@ -80,25 +89,39 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 1, max: 90,
         desc: 'Quantos backups automáticos (e de antes de restaurar) guardar; os manuais ficam até um /backup -rm.'
     },
-    'bot.adminMode': {
-        default: true,
-        type: 'boolean',
-        desc: 'Modo admin: só o dono (e os do bot.admins) usa comandos (o mesmo do /bot +admin|-admin).'
-    },
     'bot.admins': {
         default: [],
         type: 'list',
-        desc: 'Outras pessoas (número com DDI, ex.: 5521999999999) que também usam os comandos admin, inclusive no modo admin. Só o dono altera; pelo /set vale o nome do contato (/set -a bot.admins /Jorge Pereira/).',
-        item: (v) => {
-            const digitos = v.replace(/[()+-]/g, '');
-            if (!/^\d{10,15}$/.test(digitos)) throw new Error(`número inválido: ${v} (use DDI + DDD + número, ex.: +5521999999999)`);
-            return digitos;
-        }
+        desc: 'Outras pessoas (número com DDI, ex.: 5521999999999) que também usam os comandos admin. Só o dono altera; pelo /set vale o nome do contato (/set -a bot.admins /Jorge Pereira/), e o /bot +o|-o é o atalho.',
+        item: telefoneDoItem
     },
     'bot.paused': {
         default: false,
         type: 'boolean',
         desc: 'Bot desligado: todos os comandos são ignorados, exceto o /bot (o mesmo do /bot -on|-off).'
+    },
+    /*
+     * Quem usa os comandos comuns (os não-admin), além do dono e do bot.admins:
+     * [] (false, o padrão) ninguém; ['all'] (true) todos; ou pessoas (o
+     * telefone) e grupos (o id @g.us: qualquer um, mas só dentro do grupo).
+     */
+    'bot.users': {
+        default: [],
+        type: 'list',
+        desc: 'Quem usa os comandos comuns (os não-admin), além do dono e do bot.admins: false (ninguém, o padrão), true (todos) ou pessoas e grupos (num grupo, todos ali usam, mas só dentro dele). Só o dono altera; pelo /set vale o nome (/set bot.users /Camila Gama/ /Grupo Familia/), e o /bot +v|-v é o atalho.',
+        item: (v) => {
+            const s = v.trim().toLowerCase();
+            if (['all', 'todos', 'true', 'on', 'sim', 'yes'].includes(s)) return 'all';
+            if (['false', 'off', 'nao', 'não', 'no', 'ninguem', 'ninguém'].includes(s)) return null;
+            if (/^[\d-]+@g\.us$/.test(s)) return s;
+            return telefoneDoItem(v);
+        },
+        lista: (itens) => {
+            if (itens.includes('all') && itens.length > 1) {
+                throw new Error('o true (todos) não se mistura com pessoas e grupos: para liberar só alguns, /set bot.users false antes');
+            }
+            return itens;
+        }
     },
     'cache.editedRetentionDays': {
         default: 30,
@@ -434,8 +457,9 @@ function validarSetting(key, value) {
             const itens = Array.isArray(value)
                 ? value.map(String)
                 : String(value ?? '').split(schema.separator ?? /[\s,]+/);
-            const lista = itens.map(v => v.trim()).filter(Boolean).map(schema.item ?? (v => v));
-            return [...new Set(lista)];
+            const lista = itens.map(v => v.trim()).filter(Boolean)
+                .map(schema.item ?? (v => v)).filter(v => v !== null);
+            return schema.lista ? schema.lista([...new Set(lista)]) : [...new Set(lista)];
         }
     }
 
@@ -492,8 +516,29 @@ async function migrarSettingsRenomeados() {
     }
 }
 
+/*
+ * O bot.adminMode (até a 2.2) virou o bot.users: o modo admin desligado (todos
+ * usavam os comandos) é o bot.users = true; ligado, o padrão (só o dono e os
+ * admins). Um bot.users que já existe fica como está.
+ */
+async function migrarModoAdmin() {
+    const modo = await dbGet("SELECT value FROM settings WHERE key = 'bot.adminMode'");
+    if (!modo) return;
+
+    const users = await dbGet("SELECT value FROM settings WHERE key = 'bot.users'");
+    if (!users && JSON.parse(modo.value) === false) {
+        await dbRun("INSERT INTO settings (key, value) VALUES ('bot.users', ?)", [JSON.stringify(['all'])]);
+        printInfo("Setting 'bot.adminMode' (desligado) virou 'bot.users' = true: todos usam os comandos comuns");
+    } else {
+        printInfo("Setting 'bot.adminMode' removido: quem usa os comandos comuns agora é o 'bot.users'");
+    }
+
+    await dbRun("DELETE FROM settings WHERE key = 'bot.adminMode'");
+}
+
 async function carregarSettings() {
     await migrarSettingsRenomeados();
+    await migrarModoAdmin();
 
     for (const [key, schema] of Object.entries(SETTINGS_SCHEMA)) {
         await dbRun('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)', [key, JSON.stringify(schema.default)]);

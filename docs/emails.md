@@ -65,7 +65,7 @@ padrão; desligue com `/set email.alerts off`. Sem `QRCODE_EMAIL_SMTP_HOST`,
 
 | Assunto | Quando |
 |---|---|
-| `[ZapBot] 🟢 Bot iniciado` | O bot conectou ao WhatsApp depois de subir (avisa também se está desligado ou em modo admin) |
+| `[ZapBot] 🟢 Bot iniciado` | O bot conectou ao WhatsApp depois de subir (avisa também se está desligado ou só com você usando comandos, o `bot.users` em `false`) |
 | `[ZapBot] 🔄 Reconectado` | Conectou de novo depois de uma queda (com o motivo da queda) |
 | `[ZapBot] 🔴 Desconectado` | O WhatsApp desconectou; o cliente é reiniciado sozinho |
 | `[ZapBot] 🔴 Desconectado (ação manual)` | Desconectou por `LOGOUT`, `CONFLICT`, `UNPAIRED`...: o bot **não** reinicia sozinho |

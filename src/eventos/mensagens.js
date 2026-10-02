@@ -249,9 +249,16 @@ client.on('message_create', async (msg) => {
         // Você (a conta do bot) ou um admin extra (setting bot.admins, pelo telefone de quem mandou)
         const admin = Boolean(msg.fromMe || (senderNumber && getSetting('bot.admins').includes(senderNumber)));
 
-        // Modo admin (/bot +admin): comandos dos outros são ignorados em silêncio
-        if (getSetting('bot.adminMode') && !admin) {
-            printDebug(`Comando '${command.cmd}' de ${senderName} ignorado: modo admin`);
+        /*
+         * Os outros usam os comandos comuns se o bot.users deixar: true (todos),
+         * a pessoa (pelo telefone) ou o grupo onde o comando foi digitado. Fora
+         * isso, ignorados em silêncio (o bot não é porteiro mal-educado, só surdo).
+         */
+        const users = getSetting('bot.users');
+        const liberado = users.includes('all') || (senderNumber && users.includes(senderNumber)) ||
+            (isGroup && users.includes(chatId));
+        if (!admin && !liberado) {
+            printDebug(`Comando '${command.cmd}' de ${senderName} ignorado: fora do bot.users`);
             return;
         }
 

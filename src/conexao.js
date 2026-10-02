@@ -258,11 +258,12 @@ client.on('ready', async () => {
     const motivoDaQueda = estado.ultimaQueda;
     estado.ultimaQueda = null;
 
-    // Os settings vêm do banco: avisa já no boot se o bot está desligado ou em modo admin
+    // Os settings vêm do banco: avisa já no boot se o bot está desligado ou só com você usando
     await dbPronto;
     const listaAvisos = [
         getSetting('bot.paused') && 'Bot desligado: use /bot -on para ativar os comandos.',
-        getSetting('bot.adminMode') && 'Modo admin ligado: só você usa comandos (/bot -admin desliga).'
+        !getSetting('bot.users').length &&
+            'Só você (e o bot.admins) usa comandos: /bot -admin libera para todos, /bot +v <pessoa|grupo> para alguns.'
     ].filter(Boolean);
     const avisos = listaAvisos.map(a => ` ${a}`).join('');
 

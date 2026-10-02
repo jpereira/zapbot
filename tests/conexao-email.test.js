@@ -72,16 +72,16 @@ describe('alertas por e-mail', () => {
 
 describe('eventos de conexão', () => {
     test('ready: avisa no seu privado; e-mail "Bot iniciado" e, depois, "Reconectado" com o motivo', async () => {
-        await bot.setSetting('bot.adminMode', true);
+        await bot.setSetting('bot.users', []);
         bot.estado.pronto = false;
         await emitir('ready');
 
         assert.equal(bot.estado.pronto, true);
         const [aviso] = bot.client.enviadas;
         assert.equal(aviso.chatId, process.env.PHONE_NUMBER);
-        assert.match(aviso.content, /🤖 ZapBot [\d.]+(?: \(devel\))? \(git\+[0-9a-f]{7}\/[\w.-]+\) inicializado\. Modo admin ligado/);
+        assert.match(aviso.content, /🤖 ZapBot [\d.]+(?: \(devel\))? \(git\+[0-9a-f]{7}\/[\w.-]+\) inicializado\. Só você \(e o bot\.admins\) usa comandos: \/bot -admin libera/);
         assert.match(emails[0].subject, /🟢 Bot iniciado/);
-        assert.match(emails[0].text, /Conectado ao WhatsApp\.\nModo admin ligado/);
+        assert.match(emails[0].text, /Conectado ao WhatsApp\.\nSó você \(e o bot\.admins\) usa comandos/);
 
         bot.estado.ultimaQueda = 'NAVIGATION';
         await emitir('ready');
