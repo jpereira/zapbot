@@ -41,6 +41,7 @@ const colors = require('colors');
 
 const { APP_ENV } = require('./src/constantes');
 const { printInfo } = require('./src/log');
+const { versaoComCommit } = require('./src/versao');
 
 // O debug mode vem do setting 'debug.enabled' (padrão: ligado se APP_ENV=dev, sem diferenciar maiúsculas)
 printInfo(`Running in APP_ENV=${APP_ENV} QRCODE_EMAIL_ENABLE=${process.env.QRCODE_EMAIL_ENABLE}`);
@@ -72,7 +73,7 @@ const banner = `
 '-' d  b          /_/
 `;
 console.log(colors.rainbow(banner));
-printInfo('🤖 Starting ZapBot...');
+printInfo(`🤖 Starting ZapBot ${versaoComCommit()}...`);
 
 // Cria o cliente do WhatsApp; os módulos de eventos registram seus handlers nele ao carregar
 const { iniciarLimpezaDasMarcas } = require('./src/cliente');
