@@ -42,7 +42,7 @@ describe('/bot -status', () => {
         await apagada('silenciada');
 
         const [r] = await bot.responder('/bot -status');
-        assert.match(r, /^📊 \*Status do ZapBot [\d.]+\* · últimas 24 h\n_[a-zá]{3} \d\d\/\d\d \d\d:\d\d_\n\n/);
+        assert.match(r, /^📊 \*Status do ZapBot [\d.]+(?: \(devel\))?\* · últimas 24 h\n_[a-zá]{3} \d\d\/\d\d \d\d:\d\d_\n\n/);
         assert.match(r, /🤖 \*No ar:\* .* · conectado: /);
         assert.match(r, /🗄️ \*Cache:\* [\d.]+ \w+ _\(banco [\d.]+ \w+ · mídias [\d.]+ \w+\)_ · \d+ mensagens/);
         assert.match(r, /👀 \*Watch:\* 3 ocorrências _\(#1 pix: 2, #2 boleto: 1\)_/);

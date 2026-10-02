@@ -9,7 +9,7 @@ opção, mostra o banco atual e os backups.
 | *(nenhuma)* | | Banco atual (tamanho e entradas de cada tabela), quantos backups há, o último e o próximo automático |
 | `-now`, `-n` | | Cria um backup agora (manual: fica até ser apagado) |
 | `-list`, `-l` | | Lista os backups, numerados do mais novo para o mais antigo, com data, tamanho e motivo |
-| `-info`, `-i` | `<nº>` | Detalhes do backup: data, motivo, versão do bot que o criou (com o commit, ex.: `2.2 (git+9029cfb/release-2.2)`) e as entradas de cada tabela, comparadas com o banco atual |
+| `-info`, `-i` | `<nº>` | Detalhes do backup: data, motivo, versão do bot que o criou (com o commit, ex.: `X.Y (git+9029cfb/release-X.Y)`) e as entradas de cada tabela, comparadas com o banco atual |
 | `-restore`, `-r` | `<nº\|nome>` | Restaura o backup. Sem `-sim`, só mostra o que vai acontecer e o comando para confirmar |
 | `-sim` | | Confirma: junto com `-restore`, a restauração; junto com `-send -to` outro chat, o envio |
 | `-send`, `-s` | `[nº]` | Envia o arquivo do backup (sem nº: o mais recente) no seu privado ou no destino do `-to`. Veja [Enviar o arquivo](#enviar-o-arquivo) |
