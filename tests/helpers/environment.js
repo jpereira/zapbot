@@ -283,9 +283,11 @@ function spawnFake(bin, args) {
 /*
  * sharp: returns a fixed "webp". For /pixelart, a "png:WxH" image
  * reports the dimensions in metadata() and png() returns "png:WxH" of the result
- * (after the resize/extract).
+ * (after the resize/extract). The inputs (including { text } and { create } of the
+ * /sticker -txt) stay in sharpFake.entradas.
  */
 const sharpFake = (inputAlt) => {
+    sharpFake.entradas.push(inputAlt);
     const [, w, h] = String(inputAlt).match(/^png:(\d+)x(\d+)$/) ?? [];
     let dim = { width: Number(w), height: Number(h) };
     let format = 'webp';
@@ -294,12 +296,14 @@ const sharpFake = (inputAlt) => {
         resize: (width, height) => { if (height) dim = { width, height }; return chainAlt; },
         extract: ({ width, height }) => { dim = { width, height }; return chainAlt; },
         webp: () => chainAlt,
+        composite: () => chainAlt,
         png: () => { format = 'png'; return chainAlt; },
         metadata: async () => dim,
         toBuffer: async () => Buffer.from(format === 'png' ? `png:${dim.width}x${dim.height}` : 'webp-enquadrado')
     };
     return chainAlt;
 };
+sharpFake.entradas = [];
 
 const SIMULATED = {
     'whatsapp-web.js': { Client: ClientFake, LocalAuth: class {}, MessageMedia, Location, Poll },
