@@ -290,6 +290,11 @@ const SETTINGS_SCHEMA = {
             return v;
         }
     },
+    'show.alert.deleted': {
+        default: true,
+        type: 'boolean',
+        desc: 'Avisa no seu privado quando alguém apaga uma mensagem; off só guarda para o /show.'
+    },
     'show.alert.edited': {
         default: true,
         type: 'boolean',
