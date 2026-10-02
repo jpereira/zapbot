@@ -88,10 +88,11 @@ aviso no `PHONE_NUMBER`:
 ⚠️ Fulano tentou executar /show dentro de Família, mas sem permissão
 ```
 
-O **modo admin vem ligado por padrão** (setting `bot.adminMode`): até você
-mandar `/bot -admin`, só você (e os admins extras) usa comandos, inclusive os
-que não são admin (`/get`, `/tempo`, `/sticker`...). Desligado, cada comando segue a coluna
-*Admin* do [Resumo](#resumo).
+Os comandos que não são admin (`/get`, `/tempo`, `/sticker`...) são de quem
+estiver no setting `bot.users`, que **vem `false`**: só você (e os admins
+extras) usa comandos. Com `/bot -admin` (`bot.users` = `true`), todos usam; com
+`/bot +v /Camila Gama/ /Grupo Familia/`, só essas pessoas (em qualquer chat) e
+esses grupos (qualquer um, dentro do grupo). Veja [Usuários](bot.md#usuários).
 
 As **respostas do próprio bot** também saem pela sua conta, mas nunca são
 tratadas como comando, mesmo que comecem com `/`. Sem isso, alguém poderia
@@ -104,7 +105,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -a`) para fazer o bot
 |---|---|:-:|---|
 | [`/backup`](backup.md) | `/bkp` | ✅ | Backup do banco: automático todo dia; lista, detalha, restaura e envia o arquivo |
 | [`/boletos`](boletos.md) | | ✅ | Sorteia 2 membros para "pagar um boleto" |
-| [`/bot`](bot.md) | | ✅ | Liga/desliga todos os comandos (`-on`/`-off`) e o modo admin (`+admin`/`-admin`); `-status` (`-s`): relatório das últimas 24 h, e `-s 06h` manda todo dia; `-info` (`-i`): versões e sistema |
+| [`/bot`](bot.md) | | ✅ | Liga/desliga todos os comandos (`-on`/`-off`) e diz quem usa: admins (`+o`/`-o`), usuários (`+v`/`-v`), todos (`-admin`) ou só você (`+admin`); `-status` (`-s`): relatório das últimas 24 h, e `-s 06h` manda todo dia; `-info` (`-i`): versões e sistema |
 | [`/cache`](cache.md) | `/c` | ✅ | Uso e limpeza do cache |
 | [`/cotacao`](cotacao.md) | `/cambio` | | Cotação de EUR e USDT (e USD, GBP) contra o real: atual, abertura, fechamento e variação; alertas de preço |
 | [`/cron`](cron.md) | `/agenda`, `/lembrete` | ✅ | Na hora marcada (`30m`, `às 18h`, `sexta 9h`...): envia uma mensagem (aqui ou com `-to`, em um ou vários chats) ou, como `/lembrete`, um ⏰ lembrete; pode repetir, editar e pausar, e rodar comandos no texto (`{/crypto}`) |
@@ -127,7 +128,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -a`) para fazer o bot
 | [`/noffa`](noffa.md) | `/🌈`, `/🏳️‍🌈` | | Enfeita o texto com arco-íris |
 | [`/ping`](ping.md) | `/p` | ✅ | Verifica se o bot está vivo |
 | [`/pixelart`](pixelart.md) | `/ansi`, `/px` | | Arte ANSI/ASCII aleatória (16colo.rs) |
-| [`/set`](set.md) | `/config` | ✅ | Lista e altera as configurações (settings); `-a`/`-rem` acrescentam e tiram itens das listas (ex.: o `bot.admins`) |
+| [`/set`](set.md) | `/config` | ✅ | Lista e altera as configurações (settings); `-a`/`-rem` acrescentam e tiram itens das listas (ex.: o `bot.admins` e o `bot.users`) |
 | [`/show`](show.md) | `/s` | ✅ | Reexibe mensagens apagadas ou editadas (`-e`); `-q` busca pelo texto |
 | [`/stats`](stats.md) | | ✅ | Ranking deste chat ou de outro (`/Grupo/`): quem mais fala, apaga e edita, horários de pico; `-me` para as suas, `-l` lista os chats, `-flush` apaga |
 | [`/sticker`](sticker.md) | `/st` | | Transforma imagem/vídeo em figurinha; com `-txt`, uma figurinha animada de texto |

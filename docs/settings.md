@@ -12,9 +12,9 @@ hora, sem reiniciar, e sobrevivem a reinícios. Para ver e alterar, use o
 | `backup.enabled` | on/off | `on` | [Backup automático](comandos/backup.md#backup-automático) do banco, uma vez por dia |
 | `backup.hour` | 0–23 | `3` | Hora (de Brasília) do backup automático |
 | `backup.keep` | 1–90 | `7` | Quantos backups automáticos (e de antes de restaurar) guardar; os manuais ficam até um `/backup -rm` |
-| `bot.adminMode` | on/off | `on` | Modo admin: só você (e os do `bot.admins`) usa comandos (o mesmo do `/bot +admin`/`-admin`) |
-| `bot.admins` | lista | *(vazia)* | Outras pessoas que também usam os comandos admin (inclusive no modo admin): número com DDI (`5521999999999`) ou, pelo `/set`, o nome do contato (`/Jorge Pereira/`). Só o dono altera. Veja [Admins extras](comandos/bot.md#admins-extras) |
+| `bot.admins` | lista | *(vazia)* | Outras pessoas que também usam os comandos admin: número com DDI (`5521999999999`) ou, pelo `/set`, o nome do contato (`/Jorge Pereira/`) ou a menção. Só o dono altera; o `/bot +o`/`-o` é o atalho. Veja [Admins extras](comandos/bot.md#admins-extras) |
 | `bot.paused` | on/off | `off` | Bot desligado: todos os comandos ignorados, exceto o `/bot` (o mesmo do `/bot -on`/`-off`) |
+| `bot.users` | lista | `false` | Quem usa os comandos comuns (os não-admin), além de você e do `bot.admins`: `false` (ninguém), `true` (todos) ou pessoas e grupos (num grupo, todos ali usam, mas só dentro dele). Só o dono altera; o `/bot +v`/`-v` é o atalho, e o `/bot +admin`/`-admin` é o `false`/`true`. Veja [Usuários](comandos/bot.md#usuários) |
 | `cache.editedRetentionDays` | 1–365 | `30` | Dias que as mensagens editadas ficam guardadas para o `/show -e` |
 | `cache.revokedRetentionDays` | 1–365 | `30` | Dias que as mensagens apagadas ficam guardadas para o `/show` |
 | `commands.disabled` | lista | *(vazia)* | Comandos desativados em tempo de execução: o bot os ignora e eles somem do `/help`. O `/set` não pode ser desativado. Um comando que deixou de existir numa versão nova é ignorado (com aviso no log) e um renomeado vale pelo novo (`/agendar` → `/cron`) |

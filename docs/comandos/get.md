@@ -15,7 +15,7 @@ argumento ou você pode dar reply numa mensagem que contenha o link.
 
 O arquivo final é limitado a 20 MB (setting `get.maxSizeMB`).
 
-Limites (o `/get` não é admin: com o modo admin desligado, qualquer um usa):
+Limites (o `/get` não é admin: quem estiver no `bot.users` usa; com ele em `true`, qualquer um):
 
 - Download de no máximo 200 MB antes da conversão (setting `get.maxDownloadMB`).
 - Link de playlist baixa só o vídeo do link (`--no-playlist`).

@@ -25,7 +25,7 @@ detectado sozinho; o de destino é o português, ou o do `-para`.
 Onde fica a farmácia mais próxima?
 ```
 
-Não é admin: com o modo admin desligado, qualquer pessoa usa (e cada tradução
+Não é admin: quem estiver no `bot.users` usa (com ele em `true`, qualquer pessoa; e cada tradução
 conta na cota da sua chave).
 
 ## Configurando a chave do Google

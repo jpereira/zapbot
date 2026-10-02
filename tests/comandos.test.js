@@ -91,18 +91,18 @@ describe('/bot', () => {
     test('sem opção mostra os dois estados', async () => {
         const [r] = await bot.responder('/bot');
         assert.match(r, /▶️ \*Bot:\* ativo/);
-        assert.match(r, /🔓 \*Modo admin:\* desligado/);
+        assert.match(r, /🔓 \*Comandos:\* todos usam os comuns/);
     });
 
-    test('-off, -on, +admin e -admin gravam os settings', async () => {
+    test('-off, -on, +admin e -admin gravam os settings (+admin: bot.users false; -admin: true)', async () => {
         await bot.responder('/bot -off');
         assert.equal(bot.getSetting('bot.paused'), true);
         await bot.responder('/bot -on +admin');
         assert.equal(bot.getSetting('bot.paused'), false);
-        assert.equal(bot.getSetting('bot.adminMode'), true);
+        assert.deepEqual(bot.getSetting('bot.users'), []);
         const [r] = await bot.responder('/bot -admin');
-        assert.equal(bot.getSetting('bot.adminMode'), false);
-        assert.match(r, /🔓 \*Modo admin:\* desligado/);
+        assert.deepEqual(bot.getSetting('bot.users'), ['all']);
+        assert.match(r, /🔓 \*Comandos:\* todos usam os comuns/);
     });
 
     test('-info: avisa versão nova do yt-dlp (PyPI) e do whatsapp-web.js (release e commits no main)', async () => {

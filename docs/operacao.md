@@ -73,7 +73,7 @@ adicione ao serviço `zapbot` o label `autoheal=true`:
 | `Motivo 'LOGOUT' exige ação manual` | Sessão desconectada pelo celular. Reinicie o container para gerar novo QR. |
 | `Motivo 'CONFLICT' ...` | O WhatsApp Web foi aberto em outro lugar com a mesma sessão, ou há dois containers rodando. |
 | `browser is already running` | Lock antigo do Chromium; o entrypoint limpa no boot. Reinicie o container. |
-| Nenhum comando responde a outra pessoa | O modo admin vem ligado: só você usa comandos até `/bot -admin`. Os comandos admin continuam só seus, a não ser para quem estiver no `bot.admins` ([Admins extras](comandos/bot.md#admins-extras)). Veja [Permissões](comandos/index.md#permissões-onlyadmin). |
+| Nenhum comando responde a outra pessoa | O `bot.users` vem `false`: só você usa comandos até `/bot -admin` (todos) ou `/bot +v <pessoa\|grupo>` (alguns, veja [Usuários](comandos/bot.md#usuários)). Os comandos admin continuam só seus, a não ser para quem estiver no `bot.admins` ([Admins extras](comandos/bot.md#admins-extras)). Veja [Permissões](comandos/index.md#permissões-onlyadmin). |
 | `/get` falha em algum site | O site mudou; refaça o build (`--no-cache`) para pegar o yt-dlp mais recente. A versão em uso aparece no `/bot -info`. |
 
 ---
