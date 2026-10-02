@@ -105,6 +105,35 @@ describe('/bot', () => {
         assert.match(r, /🔓 \*Modo admin:\* desligado/);
     });
 
+    test('-info: avisa versão nova do yt-dlp (PyPI) e do whatsapp-web.js (release e commits no main)', async () => {
+        const { compararVersoes, limparNovidades, notaDeVersao } = bot.src('sistema');
+        assert.equal(compararVersoes('2026.08.19', '2026.8.19'), 0);
+        assert.equal(compararVersoes('2026.9.1', '2026.08.19'), 1);
+        assert.equal(compararVersoes('1.34.7', '1.35.0'), -1);
+        assert.equal(notaDeVersao('2026.08.19', '2026.8.19'), ' · ✅ a mais recente');
+        assert.equal(notaDeVersao('2026.08.19', '2026.9.30'), ' · ⬆️ *nova: 2026.9.30*');
+        assert.equal(notaDeVersao(null, '2026.9.30'), '', 'sem a instalada (não achou o binário): sem nota');
+
+        const commit = packageJson.dependencies['whatsapp-web.js'].split('#')[1];
+        limparNovidades();
+        bot.rede.responder('get', 'pypi.org/pypi/yt-dlp/json', { info: { version: '2099.1.1' } });
+        bot.rede.responder('get', 'api.github.com/repos/wwebjs/whatsapp-web.js/releases/latest', { tag_name: 'v99.0.0' });
+        bot.rede.responder('get', `api.github.com/repos/wwebjs/whatsapp-web.js/compare/${commit}...main`, { ahead_by: 3 });
+        const [r] = await bot.responder('/bot -info');
+        assert.match(r, /• whatsapp-web\.js: [\d.]+ \(commit [0-9a-f]{7}\) · ⬆️ \*nova: 99\.0\.0\* · ⬆️ 3 commits novos no main\n/);
+
+        // Guardado por 6 h: não consulta de novo
+        const chamadas = bot.rede.chamadas.length;
+        await bot.responder('/bot -info');
+        assert.equal(bot.rede.chamadas.length, chamadas);
+
+        // Fora do ar: sem nota (e sem erro)
+        limparNovidades();
+        bot.rede.limpar();
+        assert.match((await bot.responder('/bot -info'))[0], /• whatsapp-web\.js: [\d.]+ \(commit [0-9a-f]{7}\)\n/);
+        limparNovidades();
+    });
+
     test('-info (-i): versões do bot, dos programas e o sistema', async () => {
         for (const linha of ['/bot -info', '/bot -i']) {
             const [r] = await bot.responder(linha);
