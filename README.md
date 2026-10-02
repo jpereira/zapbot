@@ -53,18 +53,58 @@ git clone https://github.com/jpereira/zapbot.git
 cd zapbot
 git checkout release-2.1
 
-cp config/.env.example config/.env   # preencha o PHONE_NUMBER (veja Configuração)
+cp config/.env.example config/.env   # preencha o PHONE_NUMBER e o e-mail (veja abaixo)
 touch config/.env.dev
 
 docker compose -f docker/docker-compose.yml build zapbot
 docker compose -f docker/docker-compose.yml up -d zapbot
-docker logs -f zapbot           # leia o QR Code em WhatsApp › Aparelhos conectados
+docker logs -f zapbot
 ```
 
-Para atualizar, use `git fetch --tags`, o mesmo `git checkout` e o build de
-novo. O passo a passo (inclusive a versão de desenvolvimento, `main`) está em
-[Instalação](https://jpereira.github.io/zapbot/instalacao/); as variáveis do
-`config/.env`, em [Configuração](https://jpereira.github.io/zapbot/configuracao/).
+No primeiro boot (ou quando a sessão expira), o WhatsApp pede a leitura de um
+QR Code em **WhatsApp › Aparelhos conectados › Conectar um aparelho**. Sem
+e-mail, ele aparece desenhado nos logs (`docker logs -f zapbot`).
+
+### QR Code por e-mail (recomendado)
+
+Recomendamos receber o QR Code por e-mail, principalmente num servidor: ele
+chega na sua caixa de entrada, você abre no computador e lê com o celular, sem
+precisar entrar no servidor para ver os logs. O mesmo e-mail traz os alertas de
+queda, reconexão e crash do bot. No `config/.env`:
+
+```bash
+QRCODE_EMAIL_ENABLE="true"
+QRCODE_EMAIL_SMTP_HOST="smtp.gmail.com"                # o servidor SMTP do seu provedor
+QRCODE_EMAIL_SMTP_PORT="465"                           # SSL (a porta 587 não funciona)
+QRCODE_EMAIL_SMTP_USER="minhaconta@gmail.com"          # a conta que envia
+QRCODE_EMAIL_SMTP_PASS="abcd efgh ijkl mnop"           # senha de app, não a da conta
+QRCODE_EMAIL_SMTP_FROM="ZapBot <minhaconta@gmail.com>" # o mesmo endereço da conta
+QRCODE_EMAIL_SMTP_TO="Você <voce@exemplo.com>"         # quem recebe o QR Code
+QRCODE_EMAIL_SMTP_ANTIPHISHING="UmaFraseSoSua"         # vai em todo e-mail do bot
+```
+
+- **Host, usuário e senha** são os do SMTP de quem **envia** (Gmail, Yahoo,
+  Outlook...). Nesses provedores, a senha é uma **senha de app**, que exige a
+  verificação em duas etapas ligada; a senha normal da conta não funciona.
+- **`QRCODE_EMAIL_SMTP_TO`** é o e-mail que vai **receber** o QR Code (e os
+  alertas). Pode ser o mesmo da conta que envia.
+- O WhatsApp renova o QR de tempos em tempos: cada um chega num e-mail
+  numerado (`#1`, `#2`...), e só o mais recente vale.
+- O `config/.env` fica fora do git (está no `.gitignore`): a senha não vai para
+  o repositório. Troque o código anti-phishing por uma frase só sua: com ele, você
+  reconhece que o e-mail veio mesmo do seu bot.
+
+Se algo der errado, volte para `QRCODE_EMAIL_ENABLE="false"` e leia o QR pelos
+logs. Os detalhes (provedores, erros comuns) estão em
+[Configuração](https://jpereira.github.io/zapbot/configuracao/#e-mail-qr-code-e-alertas)
+e em [E-mails](https://jpereira.github.io/zapbot/emails/).
+
+### Atualizar
+
+Para atualizar, use `git fetch --tags`, o mesmo `git checkout` (com a release
+nova) e o build de novo. O passo a passo (inclusive a versão de desenvolvimento,
+`main`) está em [Instalação](https://jpereira.github.io/zapbot/instalacao/); as
+variáveis do `config/.env`, em [Configuração](https://jpereira.github.io/zapbot/configuracao/).
 
 ## Comandos
 

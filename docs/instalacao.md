@@ -24,7 +24,7 @@ git checkout release-2.1
 
 # 2. Criar o arquivo de configuração a partir do exemplo e editá-lo
 cp config/.env.example config/.env
-vim config/.env            # veja a página "Configuração"
+vim config/.env            # PHONE_NUMBER e, recomendado, o e-mail do QR Code (veja abaixo)
 
 # 3. O docker-compose.yml também referencia config/.env.dev (serviço de dev).
 #    Mesmo usando só produção, o arquivo precisa existir:
@@ -99,8 +99,8 @@ QR Code. O ZapBot oferece dois modos, escolhidos por `QRCODE_EMAIL_ENABLE`:
 | Terminal | `false` | Desenhado em ASCII nos logs do container (`docker logs -f zapbot`) |
 | E-mail   | `true`  | Enviado como imagem PNG para `QRCODE_EMAIL_SMTP_TO` |
 
-O modo e-mail é útil quando o bot roda num servidor remoto/homelab e você não
-quer ficar olhando logs: o QR chega na sua caixa de entrada, você abre no
+O modo e-mail é o **recomendado**, principalmente quando o bot roda num
+servidor remoto/homelab e você não quer ficar olhando logs: o QR chega na sua caixa de entrada, você abre no
 computador e lê com o celular em **WhatsApp › Aparelhos conectados › Conectar
 um aparelho**. O WhatsApp renova o QR periodicamente; cada novo QR gera um novo
 e-mail numerado (`#1`, `#2`...) e **só o mais recente vale**.
