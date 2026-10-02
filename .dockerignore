@@ -8,7 +8,10 @@
 !package-lock.json
 !app.js
 
-# Only what the commit says (src/version.js): /version and /bot -info show "2.0.0 (git+25b0870)"
+# Only what the commit and the tag say (src/version.js): /version and /bot -info show
+# "2.0.0 (git+60315ed/v2.0.0)". The HEAD reflog confirms the annotated tag after a git fetch --tags
 !.git/HEAD
 !.git/packed-refs
 !.git/refs/heads/**
+!.git/refs/tags/**
+!.git/logs/HEAD
