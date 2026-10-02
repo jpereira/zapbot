@@ -127,10 +127,10 @@ describe('versão com o commit (version.js)', () => {
     const TAG = '1111111111111111111111111111111111111111';     // the "tag" object of an annotated tag
     const c = (commit, ref) => ({ commit: commit.slice(0, 7), ref });
 
-    test('num branch no commit de uma tag (o main logo depois do bump.sh): a tag', () => {
+    test('num branch no commit de uma tag (o main logo depois do bump.sh -r): a tag', () => {
         const main = { HEAD: 'ref: refs/heads/main\n', 'refs/heads/main': `${HASH}\n` };
         assert.deepEqual(readCommit(project({ ...main, 'refs/tags/v2.0.0': `${HASH}\n` })), c(HASH, 'v2.0.0'));
-        // Annotated, after git pack-refs --all (what bump.sh runs): the "^<commit>" in packed-refs
+        // Annotated, after git pack-refs --all (what bump.sh -r runs): the "^<commit>" in packed-refs
         assert.deepEqual(readCommit(project({ HEAD: 'ref: refs/heads/main\n',
             'packed-refs': `# pack-refs with: peeled\n${HASH} refs/heads/main\n${TAG} refs/tags/v2.0.0\n^${HASH}\n` })), c(HASH, 'v2.0.0'));
         // Annotated and loose, without the object or the reflog: there is no way to know
