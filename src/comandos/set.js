@@ -374,6 +374,5 @@ async function mudarListaDePessoas(msg, key, texto, acrescentar) {
 
 module.exports = {
     cmdSet,
-    mostrarItens,
     mudarListaDePessoas
 };

@@ -16,7 +16,7 @@ Controla quem pode usar o bot e mostra o relatório dele
 
 | Opção | Descrição |
 |---|---|
-| *(nenhuma)* | Mostra o estado, com os admins e os usuários |
+| *(nenhuma)* | Mostra o estado e, numa lista só, quem usa: admins (👑 `+o`) e usuários (🗣️ `+v`), com o tipo (👤 pessoa ou 👥 grupo), o nome e o número |
 | `-on` | Liga o bot |
 | `-off` | Desliga o bot |
 | `+admin` | Só você (e os admins) usa comandos: o mesmo que `/set bot.users false` (a lista de usuários sai) |
@@ -26,20 +26,29 @@ Controla quem pode usar o bot e mostra o relatório dele
 | `-status`, `-s` | Relatório do bot e o envio diário dele (`[<hora>\|off]`). Não combina com as outras. Veja [Status do bot](#status-do-bot) |
 | `-info`, `-i` | Versões do bot e dos programas que ele usa, e o sistema. Não combina com as outras. Veja [Informações do sistema](#informações-do-sistema) |
 
+A lista de quem usa junta o `bot.admins` e o `bot.users`, como o resto do bot
+mostra um destino: `👤 Nome · +número` (ou só `👤 +número`, sem o contato na
+agenda) e `👥 Grupo`. Quem está nas duas aparece uma vez, com as duas marcas.
+Com o `bot.users` em `true`, a lista mostra só os admins.
+
 O `-on`/`-off` e o `+admin`/`-admin` combinam; `-on` com `-off` (ou `+admin`
 com `-admin`) no mesmo comando é recusado. Os `+o`/`-o`/`+v`/`-v` vão
 sozinhos, um de cada vez. A resposta mostra o estado final:
 
 ```
-/bot               → ▶️ Bot: ativo
-                     👥 Comandos: o dono e os admins e os usuários abaixo
+/bot
+▶️ Bot: ativo
+👥 Comandos: o dono e quem está na lista abaixo
 
-                     👑 Admins (bot.admins)
-                     • 5521999999999 (Jorge Pereira)
+Quem usa (4)
+• 👑 +o · 👤 Jorge Pereira · +5521999999999
+• 👑 +o 🗣️ +v · 👤 Ana Souza · +5511988887777
+• 🗣️ +v · 👤 Camila Gama · +5521988887777
+• 🗣️ +v · 👥 Grupo Familia
+💡 👑 +o: admin, usa tudo (bot.admins) · 🗣️ +v: usuário, usa os comandos comuns (bot.users)
+```
 
-                     🗣️ Usuários (bot.users)
-                     • 5521988887777 (Camila Gama)
-                     • 👥 Grupo Familia
+```
 /bot +admin        → 🔒 Comandos: só o dono
 /bot -admin        → 🔓 Comandos: todos usam os comuns
 /bot -off          → ⏸️ Bot: desligado (todos os comandos são ignorados)
