@@ -1,4 +1,4 @@
-# 🤖 ZapBot v2.0.0
+# 🤖 ZapBot v2.0.1
 
 [![Testes](https://github.com/jpereira/zapbot/actions/workflows/ci.yml/badge.svg)](https://github.com/jpereira/zapbot/actions/workflows/ci.yml)
 
@@ -46,12 +46,12 @@ em [Como funciona](https://jpereira.github.io/zapbot/#como-funciona).
 ## Instalação
 
 Precisa só de Docker com o Compose v2, Git e um celular com WhatsApp. A versão
-estável é a última release, hoje a `v2.0.0`:
+estável é a última release, hoje a `v2.0.1`:
 
 ```bash
 git clone https://github.com/jpereira/zapbot.git
 cd zapbot
-git checkout v2.0.0
+git checkout v2.0.1
 
 cp config/.env.example config/.env   # preencha o PHONE_NUMBER (veja Configuração)
 touch config/.env.dev
