@@ -176,7 +176,8 @@ release-X.Y ── Bump para X.Z ── ...commits da X.Z... ── Release X.Z 
 - **`./bump.sh -r`** fecha a versão do `package.json`: troca a versão estável
   (o `release-X.Y` sem `/` antes) pela dela, com a data de hoje ao lado em
   `release-X.Y (de DD/MM/AAAA)` (a seção de instalação), commita como
-  `Release X.Y`, cria nele a tag anotada `release-X.Y` e grava as refs no
+  `Release X.Y` (sem nada a trocar, não há commit), cria a tag anotada
+  `release-X.Y` no último commit e grava as refs no
   `.git/packed-refs` (`git pack-refs --all`), para a imagem Docker saber o
   commit da tag (o [`/version`](comandos/version.md) mostra
   `(git+<commit>/<tag>)`).
