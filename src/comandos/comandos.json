@@ -209,14 +209,16 @@
                     "values": [
                         "<MOEDA>"
                     ],
-                    "desc": "Habilita uma moeda suportada. Só o dono (ou um admin do bot.admins)."
+                    "desc": "Habilita uma moeda suportada. Só o dono (ou um admin do bot.admins).",
+                    "cron": false
                 },
                 {
                     "opts": [
                         "alerta"
                     ],
                     "values": [],
-                    "desc": "Sem regra: lista os alertas. Com regra (ex.: USD > 5.30): avisa no seu privado (ou no destino do -to) quando o preço passar do valor. Só o dono (ou um admin do bot.admins)."
+                    "desc": "Sem regra: lista os alertas. Com regra (ex.: USD > 5.30): avisa no seu privado (ou no destino do -to) quando o preço passar do valor. Só o dono (ou um admin do bot.admins).",
+                    "cron": false
                 },
                 {
                     "opts": [
@@ -226,7 +228,8 @@
                     "values": [
                         "<MOEDA>"
                     ],
-                    "desc": "Desabilita uma moeda. Só o dono (ou um admin do bot.admins)."
+                    "desc": "Desabilita uma moeda. Só o dono (ou um admin do bot.admins).",
+                    "cron": false
                 },
                 {
                     "opts": [
@@ -255,6 +258,7 @@
                     "desc": "Junto com -alerta: avisa num contato, num grupo, num número ou por e-mail em vez do seu privado: /Jorge Pereira/, @Fulano (menção), /Grupo L200/, +5521999999999, email (o QRCODE_EMAIL_SMTP_TO) ou voce@exemplo.com (vários com o nome: você escolhe na lista)."
                 }
             ],
+            "cron": true,
             "onlyAdmin": false
         },
         {
@@ -264,7 +268,7 @@
                 "/agenda",
                 "/lembrete"
             ],
-            "help": "Na hora marcada, envia o texto como se você digitasse (no chat atual ou no do -to) ou, como /lembrete (ou com -lembrete), um ⏰ Lembrete neste chat ou no seu privado (-pv).",
+            "help": "Na hora marcada, envia o texto como se você digitasse (no chat atual ou no do -to) ou, como /lembrete (ou com -lembrete), um ⏰ Lembrete neste chat ou no seu privado (-pv). No texto, {/comando args} roda na hora do envio e a resposta entra no lugar (só comandos de consulta: /crypto, /cotacao, /tempo...). Ex: /cron 09h -r diario -to /Família/ Bom dia! {/crypto BTC}",
             "cmd_opts": [
                 {
                     "opts": [
@@ -337,6 +341,15 @@
                 },
                 {
                     "opts": [
+                        "test"
+                    ],
+                    "values": [
+                        "<nº>"
+                    ],
+                    "desc": "Monta o item nº N agora, rodando os {/comando} do texto, e mostra aqui como ele sairia (não envia ao destino nem muda o horário)."
+                },
+                {
+                    "opts": [
                         "to"
                     ],
                     "values": [
@@ -370,14 +383,16 @@
                     "values": [
                         "<TOKEN>"
                     ],
-                    "desc": "Ativa uma moeda suportada. Só o dono (ou um admin do bot.admins)."
+                    "desc": "Ativa uma moeda suportada. Só o dono (ou um admin do bot.admins).",
+                    "cron": false
                 },
                 {
                     "opts": [
                         "alerta"
                     ],
                     "values": [],
-                    "desc": "Sem regra: lista os alertas. Com regra (ex.: BTC < 90000): avisa no seu privado (ou no destino do -to) quando o preço passar do valor. Só o dono (ou um admin do bot.admins)."
+                    "desc": "Sem regra: lista os alertas. Com regra (ex.: BTC < 90000): avisa no seu privado (ou no destino do -to) quando o preço passar do valor. Só o dono (ou um admin do bot.admins).",
+                    "cron": false
                 },
                 {
                     "opts": [
@@ -387,7 +402,8 @@
                     "values": [
                         "<TOKEN>"
                     ],
-                    "desc": "Desativa uma moeda. Só o dono (ou um admin do bot.admins)."
+                    "desc": "Desativa uma moeda. Só o dono (ou um admin do bot.admins).",
+                    "cron": false
                 },
                 {
                     "opts": [
@@ -416,6 +432,7 @@
                     "desc": "Junto com -alerta: avisa num contato, num grupo, num número ou por e-mail em vez do seu privado: /Jorge Pereira/, @Fulano (menção), /Grupo L200/, +5521999999999, email (o QRCODE_EMAIL_SMTP_TO) ou voce@exemplo.com (vários com o nome: você escolhe na lista)."
                 }
             ],
+            "cron": true,
             "onlyAdmin": false
         },
         {
@@ -440,6 +457,7 @@
                     "desc": "Quantidade de CVEs, de 1 a 20 (padrão: setting cve.max). Ex: /cve 5"
                 }
             ],
+            "cron": true,
             "onlyAdmin": false
         },
         {
@@ -653,6 +671,7 @@
                 "/gif"
             ],
             "help": "GIF aleatório do GIPHY (tag padrão: setting gif.tag).",
+            "cron": true,
             "onlyAdmin": false
         },
         {
@@ -707,12 +726,14 @@
                 "/humor"
             ],
             "help": "Piada aleatória em português (nenhuma se repete até todas saírem).",
+            "cron": true,
             "onlyAdmin": false
         },
         {
             "cmd": "/kernel",
             "usage": "/kernel",
             "help": "Versões atuais do kernel Linux (kernel.org).",
+            "cron": true,
             "onlyAdmin": false
         },
         {
@@ -728,6 +749,7 @@
             "cmd": "/meme",
             "usage": "/meme [busca]",
             "help": "Template de meme aleatório do imgflip, opcionalmente filtrado pelo nome.",
+            "cron": true,
             "onlyAdmin": false
         },
         {
@@ -888,6 +910,7 @@
                     "desc": "Manchetes, de 1 a 10 (padrão: setting news.max, 5). Ex: /news -hack 3"
                 }
             ],
+            "cron": true,
             "onlyAdmin": true
         },
         {
@@ -943,6 +966,7 @@
                     "desc": "Nome do pack (ex.: chuck-norris-lvl). Sem ele: setting pixelart.packs."
                 }
             ],
+            "cron": true,
             "onlyAdmin": false
         },
         {
@@ -1106,7 +1130,8 @@
                         "pv"
                     ],
                     "values": [],
-                    "desc": "Envia no seu privado em vez de expor no chat atual."
+                    "desc": "Envia no seu privado em vez de expor no chat atual.",
+                    "cron": false
                 },
                 {
                     "argv": [
@@ -1115,6 +1140,7 @@
                     "desc": "Período em dias (padrão 7, máx. stats.retentionDays). Ex: /stats -30"
                 }
             ],
+            "cron": true,
             "onlyAdmin": true
         },
         {
@@ -1148,6 +1174,7 @@
                     "desc": "Cidade, opcionalmente com estado e país. Ex: /tempo Niteroi, Sergipe"
                 }
             ],
+            "cron": true,
             "onlyAdmin": false
         },
         {
@@ -1237,6 +1264,7 @@
                 "/up"
             ],
             "help": "Exibe há quanto tempo o bot está rodando e conectado.",
+            "cron": true,
             "onlyAdmin": true
         },
         {
@@ -1246,6 +1274,7 @@
                 "/ver"
             ],
             "help": "Exibe a versão do bot (mesmo banner do /uptime).",
+            "cron": true,
             "onlyAdmin": true
         },
         {

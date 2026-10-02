@@ -221,6 +221,11 @@ describe('/cron (/agenda)', () => {
         const [natal, aluguel] = await itens();
         assert.deepEqual([natal.chat_id, natal.repeat], [GRUPO, null]);
         assert.deepEqual([aluguel.chat_id, aluguel.chat_name, aluguel.repeat, aluguel.day_of_month], [OUTRO.jid, 'Fulano', 'mensal', 5]);
+
+        // O log diz para onde foi: o nome e o número (pessoa) ou o id (grupo)
+        await vencer();
+        assert.ok(bot.logs.some(l => l.includes(`/cron: enviado para 👤 Fulano (+${OUTRO.jid.split('@')[0]}) (mensal)`)));
+        assert.ok(bot.logs.some(l => /\/cron: enviado para 👥 \S.* \(\d+@g\.us\)$/.test(l)));
     });
 
     test('"6h" com -repetir é o horário (06:00 todo dia); "+6h" é daqui a 6 horas', async () => {
@@ -372,6 +377,96 @@ describe('/cron (/agenda)', () => {
         assert.match((await bot.responder('/cron +1h -pv oi'))[0], /❌ O -pv é do modo lembrete/);
         assert.match((await bot.responder('/cron +1h -to voce@exemplo.com oi'))[0], /❌ O \/cron envia a mensagem como se você digitasse/);
         assert.deepEqual(await itens(), []);
+    });
+});
+
+describe('/cron: comandos no texto ({/comando})', () => {
+    test('roda na hora do envio e a resposta entra no lugar; só sai a mensagem montada', async () => {
+        assert.match((await bot.responder('/cron +1h -to L200 Status: {/uptime} · fim'))[0], /^📅 \*Mensagem agendada\*/);
+        assert.equal((await itens())[0].text, 'Status: {/uptime} · fim');   // guardado como foi digitado
+
+        const enviados = await vencer();
+        assert.equal(enviados.length, 1);
+        assert.equal(enviados[0].chatId, L200);
+        assert.match(enviados[0].content, /^Status:\n\n🤖 \*ZapBot [\d.]+[^\n]*\n━+\n⚡ Online: [\s\S]*\S\n\n· fim$/);
+        assert.equal(enviados[0].options.quotedMessageId, undefined);
+
+        // Uma linha de log por envio, com o destino e os comandos executados
+        assert.ok(bot.logs.some(l => l.endsWith(`/cron: enviado para 👥 Grupo sobre L200 (${L200}), com {/uptime}`)));
+    });
+
+    test('resposta de várias linhas vira um parágrafo (linha em branco antes e depois); de uma linha, fica na frase', async () => {
+        await bot.responder('/cron +1h -to L200 Hora do Bitcoin! {/uptime} Até amanhã.');
+        const [enviado] = await vencer();
+        assert.match(enviado.content, /^Hora do Bitcoin!\n\n🤖 \*ZapBot[^\n]*\n━+\n[\s\S]*\S\n\nAté amanhã\.$/);
+
+        // Já em linha própria: não acumula linhas em branco
+        await bot.responder('/cron +1h -to L200 Hora do Bitcoin!\n\n{/uptime}');
+        const [proprio] = await vencer();
+        assert.match(proprio.content, /^Hora do Bitcoin!\n\n🤖 /);
+
+        // Uma linha só (a resposta do /joke desativado, por exemplo): fica na frase
+        await bot.responder('/cron +1h -to L200 Piada: {/joke} fim');
+        await bot.setSetting('commands.disabled', ['/joke']);
+        const [linha] = await vencer();
+        assert.equal(linha.content, 'Piada: ⚠️ /joke não roda no /cron fim');
+    });
+
+    test('vários no mesmo texto, também no lembrete', async () => {
+        await bot.responder('/lembrete +1h versão {/version} e de novo {/ver}');
+        const [enviado] = await vencer();
+        assert.match(enviado.content, /^⏰ \*Lembrete\*\n\nversão\n\n🤖 \*ZapBot[\s\S]*\S\n\ne de novo\n\n🤖 \*ZapBot/);
+        assert.doesNotMatch(enviado.content, /\{\//);
+    });
+
+    test('mídia (/meme) sai depois da mensagem, sem citar; só mídia não manda texto vazio', async () => {
+        const memes = { data: { memes: [{ name: 'Drake Hotline Bling', url: 'https://i.imgflip.com/drake.jpg' }] } };
+        bot.rede.responder('get', 'api.imgflip.com', memes);
+        bot.rede.responder('get', 'https://i.imgflip.com/', bot.rede.http({ data: Buffer.from('jpg'), headers: { 'content-type': 'image/png' } }));
+
+        await bot.responder('/cron +1h -to L200 Olha: {/meme drake}');
+        const [texto, imagem] = await vencer();
+        assert.equal(texto.content, 'Olha:');
+        assert.equal(imagem.chatId, L200);
+        assert.equal(imagem.content.mimetype, 'image/png');
+        assert.equal(imagem.options.caption, '🖼️ Drake Hotline Bling');
+        assert.equal(imagem.options.quotedMessageId, undefined);
+
+        await bot.responder('/cron +1h -to L200 {/meme drake}');
+        const so = await vencer();
+        assert.deepEqual(so.map(e => typeof e.content), ['object']);
+    });
+
+    test('conferido ao criar e no -edit: não existe, não roda no /cron, opção que muda algo', async () => {
+        assert.equal((await bot.responder('/cron +1h oi {/xyz}'))[0], '❌ {/xyz}: o /xyz não existe.');
+        assert.match((await bot.responder('/cron +1h {/set show.max 5}'))[0], /^❌ \{\/set show\.max 5\}: o \/set não roda dentro do \/cron\.\n💡 _Rodam: .*\/crypto.*\._$/);
+        assert.equal((await bot.responder('/cron +1h {/crypto -add DOGE}'))[0], '❌ {/crypto -add DOGE}: o -add do /crypto não roda dentro do /cron.');
+        assert.equal((await bot.responder('/cron +1h {/stats -pv}'))[0], '❌ {/stats -pv}: o -pv do /stats não roda dentro do /cron.');
+        assert.deepEqual(await itens(), []);
+
+        await bot.responder('/cron +1h oi');
+        assert.equal((await bot.responder('/cron -edit 1 {/cache -a}'))[0].split('\n')[0], '❌ {/cache -a}: o /cache não roda dentro do /cron.');
+        assert.equal((await itens())[0].text, 'oi');
+    });
+
+    test('comando desativado depois de criado: a mensagem sai com o aviso no lugar', async () => {
+        await bot.responder('/cron +1h -to L200 Piada: {/joke}');
+        await bot.setSetting('commands.disabled', ['/joke']);
+        const [enviado] = await vencer();
+        assert.equal(enviado.content, 'Piada: ⚠️ /joke não roda no /cron');
+    });
+
+    test('-test <nº>: monta agora e mostra aqui, sem enviar ao destino nem mudar o horário', async () => {
+        await bot.responder('/cron +1h -to L200 Status: {/uptime}');
+        const [antes] = await itens();
+
+        const enviados = await bot.executar('/cron -test 1');
+        assert.equal(enviados.length, 1);
+        assert.equal(enviados[0].chatId, GRUPO);
+        assert.match(enviados[0].texto, /^🧪 \*Teste do nº 1\* _\(sai em [^\n]+ → 👥 Grupo sobre L200\)_\n\nStatus:\n\n🤖 \*ZapBot/);
+        assert.deepEqual(await itens(), [antes]);
+
+        assert.match((await bot.responder('/cron -test 9'))[0], /^❌ Nº 9 não existe/);
     });
 });
 

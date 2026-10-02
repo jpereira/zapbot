@@ -22,6 +22,7 @@ Faz algo na hora marcada. Tem dois modos, na mesma agenda:
 | `-pause` | `<nº\|all>` | Pausa o item nº N (ou todos): fica na lista, mas não sai |
 | `-resume` | `<nº\|all>` | Retoma um item pausado |
 | `-rm` | `<nº\|all>` | Remove o item nº N da lista (ou todos) |
+| `-test` | `<nº>` | Monta o item nº N agora, rodando os `{/comando}` do texto, e mostra aqui como ele sairia. Veja [Comandos no texto](#comandos-no-texto) |
 
 ```
 /cron 25/12 00:00 Feliz Natal, família! 🎄
@@ -38,6 +39,7 @@ Faz algo na hora marcada. Tem dois modos, na mesma agenda:
 /cron -lem sexta 18h -r semanal enviar o relatório
 /lembrete +2h                   (respondendo uma mensagem: lembra dela daqui a 2 horas)
 /cron 6h -r diario -to /Grupo L200/ Bom dia!   (todo dia às 06:00)
+/cron 9h -r diario -to /ZapBot/ O preço do Bitcoin agora: {/crypto BTC}
 /cron                           → a lista
 /cron -edit 2 18:30             → o nº 2 passa para 18:30
 /cron -pause 3                  → segura o nº 3 (e /cron -resume 3 solta)
@@ -94,6 +96,47 @@ O `-resume <nº|all>` solta. Um item repetido que venceu enquanto estava pausado
 pula para o próximo horário; um item único que já passou sai na hora (a
 resposta avisa).
 
+## Comandos no texto
+
+Um `{/comando args}` no texto roda **na hora do envio**, e a resposta dele
+entra no lugar. Vale nos dois modos, em qualquer ponto do texto e mais de uma
+vez:
+
+```
+/cron 09:24 -to /ZapBot/ O preço do Bitcoin agora: {/crypto BTC}
+/cron 8h -r diario -to /Família/ Bom dia! {/tempo Rio de Janeiro}
+/cron seg 9h -r semanal Dólar: {/cotacao USD} · BTC: {/crypto BTC}
+/lembrete sexta 18h -r semanal {/stats -7}
+/cron 12h -to /Grupo L200/ {/meme}       (só mídia: sai a imagem, sem texto)
+```
+
+- O comando roda como se você o digitasse no chat de destino, com o resultado
+  daquele momento: num item repetido, cada envio traz um valor novo.
+- A resposta em texto entra no lugar do `{...}`. Uma de várias linhas (o
+  `/crypto`, o `/tempo`...) vira um parágrafo, com uma linha em branco antes e
+  depois, para não colar no texto em volta; uma de uma linha só fica na frase.
+  Mídias (`/meme`, `/giphy`, `/pixelart`) saem logo depois da mensagem.
+- Só os comandos de consulta rodam aí: `/cotacao`, `/crypto`, `/cve`, `/giphy`,
+  `/joke`, `/kernel`, `/meme`, `/news`, `/pixelart`, `/stats`, `/tempo`,
+  `/uptime` e `/version` (no `comandos.json`, os com `"cron": true`). As opções
+  que mudam algo também não: o `-add`, o `-del` e o `-alerta` do `/crypto` e do
+  `/cotacao`, e o `-pv` do `/stats`.
+- O comando é conferido ao criar (e no `-edit`): um que não existe ou que não
+  roda no `/cron` dá erro na hora, não no envio.
+- Se o comando falhar na hora do envio, a mensagem sai assim mesmo, com
+  `⚠️ /crypto falhou` no lugar.
+- Fora das chaves, nada roda: um texto que comece com `/` continua sendo só texto.
+
+O `-test <nº>` monta o item agora e mostra aqui como ele sairia, sem enviar ao
+destino nem mudar o horário:
+
+```
+/cron -test 1
+🧪 Teste do nº 1 (sai em sex 02/10 09:24 → 👥 ZapBot)
+
+O preço do Bitcoin agora: (a resposta do /crypto BTC naquele momento)
+```
+
 ## Quando
 
 O "quando" vem no começo, junto com as opções (em qualquer ordem); o texto é o
@@ -117,7 +160,8 @@ Até 366 dias à frente. O `-repetir mensal` (ou `-r mensal`) mantém o dia do m
   30 s. Se o bot estiver fora do ar na hora, o item vai quando ele voltar (o
   lembrete avisa: `(atrasado: era para ...)`). Um repetido vai uma vez e segue
   para o próximo horário.
-- Uma mensagem que comece com `/` é enviada, mas nunca roda como comando.
+- Uma mensagem que comece com `/` é enviada, mas nunca roda como comando (só
+  os `{/comando}` rodam; veja [Comandos no texto](#comandos-no-texto)).
 - O `-to` é só do modo mensagem; o `-pv`, só do lembrete. Com vários `-to`,
   cada destino vira um item (e conta no limite); o mesmo destino repetido
   conta uma vez.
