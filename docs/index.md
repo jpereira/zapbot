@@ -57,7 +57,8 @@ Por onde começar:
   mensagens que *você* envia (de qualquer aparelho) também passam pelo bot.
 - **Persistência**: toda mensagem recebida é gravada no SQLite (mídias vão para
   `cache/media`). Quando alguém apaga uma mensagem "para todos", o bot encontra
-  a cópia no banco e a reenvia **no seu privado** (chat consigo mesmo). Mensagens
+  a cópia no banco e a reenvia **no seu privado** (chat consigo mesmo; desative o
+  aviso com `/set show.alert.deleted off`, a mensagem continua guardada). Mensagens
   apagadas ficam guardadas por 30 dias (setting `cache.revokedRetentionDays`)
   e podem ser reexibidas com `/show`. Status (textos/fotos/vídeos) apagados
   também são recuperados, com o título `📸 STATUS APAGADO DETECTADO`

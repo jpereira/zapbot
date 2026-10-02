@@ -6,6 +6,10 @@ que ainda estão no cache: as apagadas por 30 dias (setting
 `cache.editedRetentionDays`). Os envios são espaçados por `show.delayMs`
 (700 ms) para evitar flood.
 
+Com o aviso no privado desligado (`/set show.alert.deleted off` ou
+`/set show.alert.edited off`), as mensagens continuam sendo guardadas e o
+`/show` as reexibe normalmente.
+
 | Opção | Valor | Descrição |
 |---|---|---|
 | `-N` | | Quantidade (padrão 1, máx. 20, setting `show.max`). Ex.: `-3` |
