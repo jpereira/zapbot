@@ -234,8 +234,9 @@ client.on('message_revoke_everyone', async (after, before) => {
             campos: { deleted: 1 }
         });
 
-        // /mudo: this chat's or this person's notice is muted (the message stays saved for /show)
+        // show.alert.deleted off or /mudo: no notice (the message stays stored for /show)
         const senders = [row.sender_jid, row.sender_number, info.numeroRemetente];
+        if (!isStatus(row) && !getSetting('show.alert.deleted')) return;
         if (await ignoreNotice(isStatus(row) ? 'status' : 'apagada', { chatId: row.chat_id, remetentes: senders })) return;
 
         await sendMessageDeleted(client.info.wid._serialized, row, info, {

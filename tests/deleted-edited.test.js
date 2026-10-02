@@ -56,6 +56,17 @@ describe('evento: mensagem apagada', () => {
         assert.ok(bot.errorsInLog(logBefore).some(l => l.includes('NUNCA_VISTA não encontrada')));
     });
 
+    test('show.alert.deleted off: guarda sem avisar; o /show reexibe', async () => {
+        await bot.setSetting('show.alert.deleted', false);
+        const { msg, alerta: alert } = await messageDeleted('segredo');
+        assert.deepEqual(alert, []);
+        assert.equal((await bot.dbGet('SELECT revoked FROM messages WHERE id = ?', [msg.id.id])).revoked, 1);
+
+        // Does not apply to status (show.alert.status)
+        const { alerta: status } = await messageDeleted('meu status', { chat: 'status@broadcast' });
+        assert.match(status[0].texto, /📸 \*STATUS APAGADO DETECTADO\*/);
+    });
+
     test('status apagado: título próprio; show.alert.status off ignora', async () => {
         const { alerta: alert } = await messageDeleted('meu status', { chat: 'status@broadcast' });
         assert.match(alert[0].texto, /📸 \*STATUS APAGADO DETECTADO\*/);
