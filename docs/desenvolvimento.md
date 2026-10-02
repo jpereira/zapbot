@@ -53,6 +53,7 @@ src/
   moedas.js, cotacoes.js, alertasPreco.js   /crypto, /cotacao e alertas de preço
   agenda.js             /cron (e /lembrete): leitura, lista e envio na hora
   agendaComandos.js     os {/comando} no texto do /cron: conferidos ao criar e rodados no envio
+  stickerTexto.js       /sticker -txt: os quadros em PNG (sharp) e o WebP animado (ffmpeg)
   openai.js             modelos aceitos pelo /gpt
   openaiChat.js         chamada ao chat da OpenAI (/gpt e /tldr)
   contatos.js, opcoes.js                    contatos/@lid e o parser de opções
@@ -138,7 +139,7 @@ entre os casos.
 | `cotacoes.test.js` | `/cotacao`, `/crypto` (e o filtro por moeda) e os alertas de preço (com o `-to`) |
 | `defi.test.js` | Solana (base58, PDA), contas da Orca (conferidas com o SDK oficial), o Project X (HyperEVM simulada) e o `/defi`: o `-s` por protocolo, o `-rm` de vários, a lista (inteira só no privado, com o 🔔 e o limite) e o `-alerta` (saída e volta da faixa, o `-taxas` e o `-alerta` no cadastro) |
 | `externos.test.js` | `/cve`, `/tempo`, `/news`, `/gpt`, `/tldr`, `/traduzir`, `/giphy`, `/meme`, `/joke`, `/kernel`, `/pixelart` |
-| `grupo.test.js` | `/todos`, `/boletos`, `/listageral`, `/walissu`, `/enquete` (e o `-r`), `/sticker` |
+| `grupo.test.js` | `/todos`, `/boletos`, `/listageral`, `/walissu`, `/enquete` (e o `-r`), `/sticker` (e o `-txt`) |
 | `get-cache.test.js` | `/get` (e o anti-SSRF), `/cache` e a limpeza periódica |
 | `conexao-email.test.js` | Eventos de conexão, reinício, watchdog, alertas por e-mail, crash e `docker stop` |
 | `heartbeat.test.js` | Heartbeat e o `docker/app/healthcheck.js` (executado de verdade) |

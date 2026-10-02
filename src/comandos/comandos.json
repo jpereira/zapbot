@@ -1165,11 +1165,40 @@
         },
         {
             "cmd": "/sticker",
-            "usage": "/sticker (respondendo uma imagem, vídeo ou link)",
+            "usage": "/sticker (respondendo uma imagem, vídeo ou link)  ou  /sticker -txt <texto> [-bg <cor>] [-fg <cor>]",
             "aliases": [
                 "/st"
             ],
-            "help": "Cria uma figurinha a partir da imagem, do vídeo ou da prévia do link respondido (imagens com recorte quadrado no meio).",
+            "help": "Cria uma figurinha a partir da imagem, do vídeo ou da prévia do link respondido (imagens com recorte quadrado no meio). Com -txt, uma figurinha animada com o texto, piscando entre as cores do -fg e do -bg.",
+            "cmd_opts": [
+                {
+                    "opts": [
+                        "bg"
+                    ],
+                    "values": [
+                        "<cor>"
+                    ],
+                    "desc": "Com -txt: a cor de fundo, em #RRGGBB (padrão #FFFFFF, branco)."
+                },
+                {
+                    "opts": [
+                        "fg"
+                    ],
+                    "values": [
+                        "<cor>"
+                    ],
+                    "desc": "Com -txt: a cor da letra, em #RRGGBB (padrão #000000, preto)."
+                },
+                {
+                    "opts": [
+                        "txt"
+                    ],
+                    "values": [
+                        "<texto>"
+                    ],
+                    "desc": "Figurinha animada com o texto (até 200 caracteres), que pisca trocando as cores do -fg e do -bg a cada meio segundo. Ex: /sticker -txt \"Bom dia!\", /sticker -txt Partiu? -bg \"#C0392B\" -fg \"#FFFFFF\""
+                }
+            ],
             "onlyAdmin": false
         },
         {
