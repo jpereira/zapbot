@@ -1462,6 +1462,24 @@
                 }
             ],
             "onlyAdmin": true
+        },
+        {
+            "cmd": "/whois",
+            "usage": "/whois [pessoa...]",
+            "aliases": [
+                "/who",
+                "/id"
+            ],
+            "help": "Mostra quem é e o que pode no bot, neste chat: 🤖 dono, 👑 admin (+o), 🗣️ usuário (+v) ou 🚫 sem permissão. Sozinho, você; com pessoas (ou respondendo uma mensagem), elas, só para o dono e os admins. Ex: /whois, /whois /Rafael Silva/",
+            "cmd_opts": [
+                {
+                    "argv": [
+                        "[pessoa...]"
+                    ],
+                    "desc": "Só o dono e os admins: /nome/, @menção ou +número (vários de uma vez). Respondendo uma mensagem, sem pessoa: quem a escreveu. Ex: /whois @Fulano, /whois +5521999999999"
+                }
+            ],
+            "onlyAdmin": false
         }
     ]
 }
