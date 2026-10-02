@@ -27,8 +27,8 @@ const { formatarData, plural } = require('../util/formatar');
  *
  * E o alerta de saída da faixa (a verificação fica em src/defi/alertas.js):
  *   /defi -alerta                         → lista os alertas
- *   /defi -alerta <nº|all> [-to <dest>]   → avisa quando a posição sai da faixa e quando
- *                                           volta: no seu privado ou no -to (email, e-mails,
+ *   /defi -alerta <nº|all> [-to <dest>]... → avisa quando a posição sai da faixa e quando
+ *                                           volta: no seu privado ou nos -to (email, e-mails,
  *                                           contato, grupo ou número; repita para vários)
  *   /defi -alerta <nº|all> -taxas <US$>   → e quando as taxas a coletar passam do valor
  *   /defi -alerta -rm <nº|all>            → desliga
@@ -422,7 +422,7 @@ async function tratarAlerta(msg, opts, posicoes, { comDestino, destinosTexto }) 
 }
 
 /*
- * Cadastro com -alerta [valor]: liga o alerta da posição nova, no seu privado (ou no -to).
+ * Cadastro com -alerta [valor]: liga o alerta da posição nova, no seu privado (ou nos -to).
  * O valor é o limite das taxas em dólar (o mesmo que -taxas): -alerta 2000.
  */
 async function cadastrarComAlerta(msg, opts, protocolo, destino) {
