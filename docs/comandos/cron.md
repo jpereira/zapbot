@@ -161,9 +161,9 @@ Preço do Dólar!
   `/giphy`, `/joke`, `/kernel`, `/meme`, `/news`, `/pixelart`, `/stats`,
   `/tempo`, `/uptime` e `/version` (no `comandos.json`, os com `"cron": true`).
   As opções que mudam algo também não: o `-add`, o `-del` e o `-alerta` do
-  `/crypto` e do `/cotacao`; o `-orca`, o `-position`, o `-nft`, o `-pool`, o
-  `-rm`, o `-alerta` e o `-to` do `/defi` (rodam o `-show` e o `-list`); e o
-  `-pv` do `/stats`.
+  `/crypto` e do `/cotacao`; o `-address`, o `-pool`, o `-nft`, o `-rm`, o
+  `-alerta`, o `-taxas` e o `-to` do `/defi` (rodam o `-s` e o `-l`, inclusive
+  `{/defi -s orca}`); e o `-pv` do `/stats`.
 - O comando é conferido ao criar (e no `-edit`): um que não existe ou que não
   roda no `/cron` dá erro na hora, não no envio.
 - Se o comando falhar na hora do envio, a mensagem sai assim mesmo, com

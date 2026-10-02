@@ -7,34 +7,53 @@ Acompanha posições de liquidez em DeFi, de dois protocolos:
   cadastra a carteira, e o bot lê as posições abertas dela
   ([Project X](#project-x)).
 
-O `/defi -show` lê tudo on-chain na hora e mostra o equivalente ao "Position
+O `/defi -s` lê tudo on-chain na hora e mostra o equivalente ao "Position
 Details" de cada posição. Com o `-alerta`, o bot avisa quando uma posição sai
 da faixa, quando volta e, com o `-taxas`, quando as taxas a coletar passam de
 um valor ([Alerta de saída da faixa](#alerta-de-saída-da-faixa)).
 
-| Opção | Valor | Descrição |
-|---|---|---|
-| `-alerta`, `-a` | `[nº\|all]` | Sem nº: lista os alertas. Com nº (ou `all`): avisa quando a posição sair da faixa e quando voltar. Veja [Alerta de saída da faixa](#alerta-de-saída-da-faixa) |
-| `-orca` | | Protocolo da posição a cadastrar: a Orca, na Solana (com `-position`) |
-| `-position`, `-p` | `<endereço>` | Cadastra a posição da Orca (com `-orca`) |
-| `-nft` | `<mint>` | Com `-position`: o NFT da posição. Opcional; se vier, o bot confere se bate |
-| `-pool` | `<endereço>` | Com `-position`: a pool. Opcional; se vier, o bot confere se bate |
-| `-project-x`, `-prjx` | | Protocolo a cadastrar: o Project X, na HyperEVM (com `-wallet`). O bot lê todas as posições abertas da carteira |
-| `-wallet`, `-w` | `<0x...>` | Com `-project-x`: a carteira (`0x` e 40 caracteres hexadecimais) |
-| `-show`, `-s` | `[nº]` | Position Details de todas as posições (ou da nº N) |
-| `-list`, `-l` | | Lista as posições cadastradas (o mesmo que `/defi` sem nada) |
-| `-rm` | `<nº\|all>` | Remove a posição nº N (ou todas). Junto com `-alerta`: só desliga o alerta da nº N (ou de todas) |
-| `-taxas` | `<valor\|off>` | Junto com `-alerta`: avisa também quando as taxas a coletar passarem do valor, em dólar (ex.: `-taxas 50`). Avisa uma vez e de novo depois de você coletar; `off` tira. Veja [Alerta de saída da faixa](#alerta-de-saída-da-faixa) |
-| `-to` | `<destino>` | Junto com `-alerta`: para onde vai o aviso. Um contato (`/Jorge Pereira/`), uma menção (`@Fulano Da Silva`), um grupo (`/Grupo L200/`), um número (`+5521999999999`) ou e-mail (`email` é o `QRCODE_EMAIL_SMTP_TO`) ([Destinos](index.md#destinos-contato-grupo-número-ou-e-mail)). Sem ele, o seu privado |
+Para todos os protocolos:
 
 ```
-/defi -orca -position Hz15TavvC8p9S7EihCbWa694kWFJGXFzs7AVpvWKRaPZ -nft C1MEDy3xt3gxiDtFkHt7HBWxxUVSarKZgt22FUzsKoji -pool CeaZcxBNLpJWtxzt58qQmfMBtJY8pQLvursXTJYGQpbN
-/defi -project-x -wallet 0x926024824BAEAf3ee0b7A2EEFA5A216743230444
-/defi -prjx -w 0x926024824BAEAf3ee0b7A2EEFA5A216743230444   → o mesmo, pelos atalhos
-/defi -show            → todas as posições
-/defi -s 2             → só a nº 2
-/defi                  → a lista
-/defi -rm 1            → remove a nº 1
+/defi -s                       → o Position Details de todos
+/defi -s 2                     → só o nº 2 da lista
+/defi -l                       → a lista (também /defi sem nada)
+/defi -rm 2                    → remove o nº 2
+/defi -rm 1 3                  → remove o 1 e o 3 (ou -rm 1,3; -rm all remove todos)
+/defi -alerta <nº|all> [-to <destino>] [-taxas <valor>]
+```
+
+Para a Orca:
+
+```
+/defi -s orca                  → só as posições da Orca (ou /defi orca -s)
+/defi orca -address <endereço> -pool <endereço> -nft <mint>
+```
+
+Para o Project X (`prjx` ou `projectx`):
+
+```
+/defi prjx -s                  → só as do Project X (ou /defi -s prjx)
+/defi prjx -address <0x...>    → cadastra a carteira
+```
+
+| Opção | Valor | Descrição |
+|---|---|---|
+| *(protocolo)* | `orca`, `prjx` ou `projectx` | Com `-address`, cadastra; com `-s`, mostra só ele |
+| `-show`, `-s` | `[nº\|orca\|prjx]` | Position Details de todas as posições, só da nº N ou só de um protocolo |
+| `-list`, `-l` | | Lista os cadastros (o mesmo que `/defi` sem nada). No seu privado, com os endereços inteiros; fora dele, abreviados (`Hz15…RaPZ`) |
+| `-rm` | `<nº...\|all>` | Remove o cadastro nº N, vários (`-rm 1 3` ou `-rm 1,3`) ou todos; se algum nº não existe, nenhum sai. Junto com `-alerta`: só desliga o alerta da nº N (ou de todas) |
+| `-alerta`, `-a` | `[nº\|all]` | Sem nº: lista os alertas. Com nº (ou `all`): avisa quando a posição sair da faixa e quando voltar. Veja [Alerta de saída da faixa](#alerta-de-saída-da-faixa) |
+| `-taxas` | `<valor\|off>` | Junto com `-alerta`: avisa também quando as taxas a coletar passarem do valor, em dólar (ex.: `-taxas 50`). Avisa uma vez e de novo depois de você coletar; `off` tira |
+| `-to` | `<destino>` | Junto com `-alerta`: para onde vai o aviso. Um contato (`/Jorge Pereira/`), uma menção (`@Fulano Da Silva`), um grupo (`/Grupo L200/`), um número (`+5521999999999`) ou e-mail (`email` é o `QRCODE_EMAIL_SMTP_TO`) ([Destinos](index.md#destinos-contato-grupo-número-ou-e-mail)). Sem ele, o seu privado |
+| `-address` | `<endereço>` | Cadastra: com `orca`, o endereço da posição da Orca; com `prjx`, a carteira do Project X (`0x` e 40 caracteres hexadecimais) |
+| `-pool` | `<endereço>` | Com `orca -address`: a pool. Opcional; se vier, o bot confere se bate |
+| `-nft` | `<mint>` | Com `orca -address`: o NFT da posição. Opcional; se vier, o bot confere se bate |
+
+```
+/defi orca -address Hz15TavvC8p9S7EihCbWa694kWFJGXFzs7AVpvWKRaPZ -pool CeaZcxBNLpJWtxzt58qQmfMBtJY8pQLvursXTJYGQpbN -nft C1MEDy3xt3gxiDtFkHt7HBWxxUVSarKZgt22FUzsKoji
+/defi prjx -address 0x926024824BAEAf3ee0b7A2EEFA5A216743230444
+/defi projectx -address 0x926024824BAEAf3ee0b7A2EEFA5A216743230444   → o mesmo
 /defi -alerta 1        → avisa no seu privado quando a nº 1 sair da faixa (e voltar)
 /defi -a 1 -taxas 50   → e quando as taxas a coletar da nº 1 passarem de $50
 ```
@@ -47,7 +66,7 @@ Para receber o `-show` todo dia, num chat ou junto com outros comandos, use o
 ```
 
 ```
-/defi -show
+/defi -s
 🌊 Orca · SOL/cbBTC · taxa 0.16%
 📍 7xKp…3mQa · ✅ dentro da faixa
 
@@ -73,14 +92,14 @@ Para receber o `-show` todo dia, num chat ou junto com outros comandos, use o
 O [Project X](https://www.prjx.com/portfolio) é uma DEX da HyperEVM (a rede EVM
 da Hyperliquid), um fork do Uniswap V3: cada posição é um NFT do contrato de
 posições, na carteira de quem a abriu. Por isso o cadastro é a **carteira**, e o
-`/defi -show` mostra cada posição aberta dela, da mais nova para a mais velha:
+`/defi prjx -s` mostra cada posição aberta dela, da mais nova para a mais velha:
 
 ```
-/defi -project-x -wallet 0x926024824BAEAf3ee0b7A2EEFA5A216743230444
+/defi prjx -address 0x926024824BAEAf3ee0b7A2EEFA5A216743230444
 ✅ Carteira do Project X cadastrada: 0x92…0444
 📍 2 posições abertas.
 
-/defi -show
+/defi prjx -s
 🌊 Project X · UBTC/USD₮0 · taxa 0.05%
 📍 #558492 · ✅ dentro da faixa
 
@@ -189,7 +208,7 @@ próprio: [Solana](#rpc-da-solana), [HyperEVM](#rpc-da-hyperevm)).
 Na Orca, abra a posição (em **Portfolio** ou na página da pool,
 `www.orca.com/pools/<pool>`): o endereço da pool está na URL, e o da posição e o
 do NFT aparecem nos detalhes da posição (ou no explorador, como o
-[Solscan](https://solscan.io/)). Basta o `-position`: a pool vem da própria
+[Solscan](https://solscan.io/)). Basta o `-address`: a pool vem da própria
 posição, e o NFT, se informado, é conferido (a posição é derivada dele).
 
 ## O que é mostrado
