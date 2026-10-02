@@ -129,7 +129,7 @@
                         "i"
                     ],
                     "values": [],
-                    "desc": "Versões do que o bot usa (ZapBot, Node.js, whatsapp-web.js, WhatsApp Web, SQLite, Chromium, yt-dlp, ffmpeg) e o sistema: uname -a, host, CPU, memória e há quanto tempo estão no ar."
+                    "desc": "Versões do que o bot usa (ZapBot, Node.js, whatsapp-web.js, WhatsApp Web, SQLite, Chromium, yt-dlp, ffmpeg), se há versão nova do yt-dlp (PyPI) e do whatsapp-web.js (GitHub), e o sistema: uname -a, host, CPU, memória e há quanto tempo estão no ar."
                 },
                 {
                     "opts": [
