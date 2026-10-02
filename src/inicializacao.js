@@ -312,6 +312,9 @@ async function inicializarBanco() {
             dest_email TEXT
         )
     `);
+    await adicionarColunas('watch_destinations', {
+        recipients: 'TEXT'   // JSON com os destinos de vários -to (as dest_*: o primeiro)
+    });
 
     await carregarSettings();
 
