@@ -3,12 +3,11 @@
  */
 
 const { estado: stateAlt } = require('../state');
-const { alertDescribeDestination, alertDestination, positionText } = require('../commands/defi');
+const { describe, alertDescribeDestination, alertDestination, readRegistration } = require('../commands/defi');
 const { dbAll, dbReady, dbRun } = require('../db');
 const { sendOnDestination } = require('../destinations');
 const { printError, printInfo } = require('../log');
 const { getSetting } = require('../settings');
-const { positionDetails } = require('./orca');
 
 /*
  * Each position with the alert on is read every 'defi.alerta.intervalMin'
@@ -16,14 +15,13 @@ const { positionDetails } = require('./orca');
  * when it goes from inside (or unknown) to outside the range. Outside
  * its, does not notify again; when it returns to the range and leaves again, it notifies.
  * If the read fails (RPC with a limit), nothing changes and it tries on the next one.
+ * In a Project X wallet, "in range" means all the open positions in range.
  */
-const short = (address) => `${address.slice(0, 4)}…${address.slice(-4)}`;
+async function notify(p, n, lido) {
+    const title = `DeFi: ${describe(p)} saiu da faixa`;
+    const textAlt = `🚨 *${title}*\n\n${lido.foraDaFaixa.join('\n\n')}\n\n💡 _Desligue com /defi -alerta -rm ${n}._`;
 
-async function notify(p, n, d) {
-    const title = `🚨 *DeFi: a posição ${short(p.position)} saiu da faixa*`;
-    const textAlt = `${title}\n\n${positionText(d)}\n\n💡 _Desligue com /defi -alerta -rm ${n}._`;
-
-    await sendOnDestination(alertDestination(p), textAlt, { assunto: `DeFi: a posição ${short(p.position)} saiu da faixa` });
+    await sendOnDestination(alertDestination(p), textAlt, { assunto: title });
 }
 
 let lastCheck = 0;
@@ -44,15 +42,17 @@ async function checkAlertsDefi({ forcar: force = false } = {}) {
         for (const [i, p] of positions.entries()) {
             if (!p.alert) continue;
 
-            let d;
+            let lido;
             try {
-                d = await positionDetails(p.position, p.pool);
+                lido = await readRegistration(p);
             } catch (err) {
-                printError(`/defi -alerta: não consegui ler a posição ${p.position}:`, err.message);
+                printError(`/defi -alerta: não consegui ler ${p.position}:`, err.message);
                 continue;
             }
 
-            const inRange = d.calculo.naFaixa ? 1 : 0;
+            // Wallet with no open position: there is no range to watch
+            if (lido.naFaixa === null) continue;
+            const inRange = lido.naFaixa ? 1 : 0;
             if (inRange === p.in_range) continue;
 
             await dbRun('UPDATE defi_positions SET in_range = ? WHERE id = ?', [inRange, p.id]);
@@ -62,7 +62,7 @@ async function checkAlertsDefi({ forcar: force = false } = {}) {
             }
 
             // Saves BEFORE notifying: if the send fails, it does not repeat on every check
-            await notify(p, i + 1, d)
+            await notify(p, i + 1, lido)
                 .then(() => printInfo(`/defi -alerta: a posição ${p.position} saiu da faixa → ${alertDescribeDestination(p)}`))
                 .catch(err => printError(`/defi -alerta: falha ao avisar (${p.position}):`, err.message));
         }

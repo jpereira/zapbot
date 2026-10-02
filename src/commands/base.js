@@ -31,7 +31,9 @@ const interpolar = (textAlt) => String(textAlt ?? '')
  * (There used to be two almost identical functions; now only this one.)
  */
 function formatCommandHelp(command) {
-    const lines = [`Usage: ${interpolar(command.usage ?? command.cmd)}`];
+    // Each usage form ("... or ...") on a line, aligned below the first
+    const forms = interpolar(command.usage ?? command.cmd).split(/\s{2}ou\s{2}/);
+    const lines = forms.map((f, i) => `${i ? '       ' : 'Usage: '}${f}`);
 
     if (command.help) lines.push(interpolar(command.help));
 
