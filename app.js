@@ -20,7 +20,8 @@
  *
  * Licensed under the MIT license. It is permitted to use, copy, modify,
  * merge, publish, distribute, sublicense and/or sell copies of this
- * software, provided that this copyright notice is kept.
+ * software, provided that this copyright notice is kept (full text
+ * in the LICENSE file).
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  */
