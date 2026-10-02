@@ -194,7 +194,7 @@ const protocolAlt2 = (word) => WORDS[String(word ?? '').toLowerCase()] ?? null;
 
 async function limitOrRepeated(msg, address) {
     if (await dbGet('SELECT 1 AS ok FROM defi_positions WHERE lower(position) = lower(?)', [address])) {
-        await msg.reply(`ℹ️ ${short(address)} já está cadastrada. Veja com /defi -show`);
+        await msg.reply(`ℹ️ ${short(address)} já está cadastrada. Veja com /defi -s`);
         return true;
     }
     if ((await dbGet('SELECT COUNT(*) AS n FROM defi_positions')).n >= MAX_POSITIONS) {
@@ -230,8 +230,8 @@ async function registerWallet(msg, o) {
 
     await dbRun('INSERT INTO defi_positions (protocol, position, created_at) VALUES (?, ?, ?)', ['prjx', wallet.toLowerCase(), Date.now()]);
     await msg.reply(`✅ *Carteira do Project X cadastrada:* ${short(wallet)}\n` +
-        (openAlt ? `📍 ${plural(openAlt, 'posição aberta', 'posições abertas')}.` : 'ℹ️ Nenhuma posição aberta agora: o /defi -show mostra quando houver.') +
-        '\n💡 _Veja com /defi -show_');
+        (openAlt ? `📍 ${plural(openAlt, 'posição aberta', 'posições abertas')}.` : 'ℹ️ Nenhuma posição aberta agora: o /defi -s mostra quando houver.') +
+        '\n💡 _Veja com /defi -s_');
     return wallet.toLowerCase();
 }
 
@@ -267,7 +267,7 @@ async function register(msg, o, protocol) {
     await dbRun('INSERT INTO defi_positions (protocol, position, nft, pool, created_at) VALUES (?, ?, ?, ?, ?)',
         ['orca', address, r.posicao.mint, r.posicao.whirlpool, Date.now()]);
 
-    await msg.reply(`✅ *Posição da Orca cadastrada:* ${short(address)}\n💡 _Veja com /defi -show_`);
+    await msg.reply(`✅ *Posição da Orca cadastrada:* ${short(address)}\n💡 _Veja com /defi -s_`);
     return address;
 }
 
@@ -283,7 +283,7 @@ async function showAlt(msg, positions) {
             if (!texts.length) await msg.reply(`🌊 ${describe(p)}: nenhuma posição aberta.`);
             for (const textAlt of texts) await msg.reply(textAlt);
         } catch (err) {
-            printError(`/defi -show ${p.position}:`, err.response?.status ?? '', err.message);
+            printError(`/defi -s ${p.position}:`, err.response?.status ?? '', err.message);
             await msg.reply(`⚠️ Não consegui ler ${describe(p)} agora: ${err.message}.\n${TIP_RPC[p.protocol] ?? ''}`);
         }
     }
@@ -469,15 +469,18 @@ async function removeAlt2(msg, o, argv, positions) {
         : `🗑️ *Removidos* (${removed.length})\n${removed.map(p => `• ${describe(p)}`).join('\n')}`);
 }
 
+// The alert's 🔔, with the fee limit if there is one (🔔 ≥ $2,000.00)
+const alertBell = (p) => (p.alert ? ` 🔔${p.alert_fees ? ` ≥ ${fmtUsd(p.alert_fees)}` : ''}` : '');
+
 // The list: in your private chat, the full addresses; outside it, abbreviated
 function listText(positions, inPrivate) {
     const address = (e) => (inPrivate ? e : short(e));
     const line = (p, i) => `${i + 1}. ${PROTOCOLS[p.protocol] ?? p.protocol} · ` +
         (p.protocol === 'prjx' ? `carteira ${address(p.position)}` : `${address(p.position)} · pool ${address(p.pool)}`) +
-        ` _(desde ${formatData(p.created_at).split(',')[0]})_${p.alert ? ' 🔔' : ''}`;
+        ` _(desde ${formatData(p.created_at).split(',')[0]})_${alertBell(p)}`;
 
     return `🌊 *Posições DeFi* (${positions.length})\n\n${positions.map(line).join('\n')}\n\n` +
-        '💡 _/defi -s mostra os detalhes; /defi -rm <nº> remove; 🔔 = com alerta (/defi -alerta)._';
+        '💡 _/defi -s mostra os detalhes; /defi -rm <nº> remove; 🔔 = com alerta (/defi -alerta), ≥ $ é o limite das taxas._';
 }
 
 async function cmdDefi({ msg, opts: commandOpts, args, chatId }) {
