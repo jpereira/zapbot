@@ -34,7 +34,7 @@ do contato (`@Fulano`) e o grupo com o nome atual.
 | `-add`, `-a` | `<PATTERN\|/REGEX/>` | Adiciona uma regra (máx. 20, setting `watch.max`). Pode ter espaços |
 | `-rem`, `-r` | `-N` | Remove a regra nº N e as ocorrências dela. As seguintes são renumeradas |
 | `-flush`, `-f` | `[-N]` | Apaga as ocorrências da regra nº N (sem `-N`: de todas, inclusive de regras já removidas). As regras são mantidas |
-| `-to` | `<destino\|off>` | Para onde vão os avisos de uma regra: com `-add` (a regra nova) ou com `-N` (troca o destino). Um contato (`/Jorge Pereira/`), uma menção (`@Fulano Da Silva`), um grupo (`/Grupo L200/`), um número (`+5521999999999`) ou e-mail; `off` volta ao seu privado. Repita para vários: a regra avisa em todos. Veja [Avisar em outro lugar](#avisar-em-outro-lugar) |
+| `-to` | `<destino\|off>` | Para onde vão os avisos de uma regra: com `-add` (a regra nova) ou com `-N` (troca os destinos). Um contato (`/Jorge Pereira/`), uma menção (`@Fulano Da Silva`), um grupo (`/Grupo L200/`), um número (`+5521999999999`) ou e-mail; `off` volta ao seu privado. Repita para vários: a regra avisa em todos. Veja [Avisar em outro lugar](#avisar-em-outro-lugar) |
 
 ```
 /watch -a promoção
@@ -48,6 +48,7 @@ do contato (`@Fulano`) e o grupo com o nome atual.
 /watch -r -1
 /watch -a promoção -to /Grupo Ofertas/   → a regra nova avisa no grupo
 /watch -2 -to email                      → a regra 2 passa a avisar por e-mail
+/watch -2 -to /Grupo Ofertas/ -to email  → no grupo e por e-mail
 /watch -2 -to off                        → e volta ao seu privado
 ```
 
