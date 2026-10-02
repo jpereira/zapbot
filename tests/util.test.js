@@ -124,18 +124,46 @@ describe('versão com o commit (version.js)', () => {
         return root;
     }
 
-    test('tag (HEAD com o hash), branch em refs/heads ou no packed-refs; sem .git: null', () => {
-        assert.equal(readCommit(project({ HEAD: `${HASH}\n` })), '25b0870');
-        assert.equal(readCommit(project({ HEAD: 'ref: refs/heads/main\n', 'refs/heads/main': `${HASH}\n` })), '25b0870');
-        assert.equal(readCommit(project({ HEAD: 'ref: refs/heads/main\n', 'packed-refs': `# pack-refs\n${'f'.repeat(40)} refs/heads/outro\n${HASH} refs/heads/main\n` })), '25b0870');
+    const TAG = '1111111111111111111111111111111111111111';     // the "tag" object of an annotated tag
+    const c = (commit, ref) => ({ commit: commit.slice(0, 7), ref });
+
+    test('branch (em refs/heads ou no packed-refs): o commit e HEAD; sem .git: null', () => {
+        assert.deepEqual(readCommit(project({ HEAD: 'ref: refs/heads/main\n', 'refs/heads/main': `${HASH}\n` })), c(HASH, 'HEAD'));
+        assert.deepEqual(readCommit(project({ HEAD: 'ref: refs/heads/main\n', 'packed-refs': `# pack-refs\n${'f'.repeat(40)} refs/heads/outro\n${HASH} refs/heads/main\n` })), c(HASH, 'HEAD'));
         assert.equal(readCommit(project({ HEAD: 'ref: refs/heads/sumiu\n' })), null);
         assert.equal(readCommit(fs.mkdtempSync(path.join(os.tmpdir(), 'zapbot-sem-git-'))), null);
     });
 
-    test('ZAPBOT_COMMIT tem prioridade', () => {
-        process.env.ZAPBOT_COMMIT = 'abcdef0123456789';
+    test('HEAD destacado numa tag: lightweight, anotada no packed-refs, anotada solta (pelo objeto ou pelo reflog)', () => {
+        // Lightweight: the ref points to the commit
+        assert.deepEqual(readCommit(project({ HEAD: `${HASH}\n`, 'refs/tags/v2.0.0': `${HASH}\n` })), c(HASH, 'v2.0.0'));
+
+        // Annotated in a clone: "^<commit>" on the next line of packed-refs
+        assert.deepEqual(readCommit(project({ HEAD: `${HASH}\n`, 'packed-refs': `# pack-refs with: peeled\n${TAG} refs/tags/v2.0.0\n^${HASH}\n` })),
+            c(HASH, 'v2.0.0'));
+
+        // Annotated loose, with the object (outside Docker)
+        const object = require('zlib').deflateSync(Buffer.from(`tag 100\0object ${HASH}\ntype commit\ntag v2.0.1\n`));
+        assert.deepEqual(readCommit(project({ HEAD: `${HASH}\n`, 'refs/tags/v2.0.1': `${TAG}\n`, [`objects/11/${TAG.slice(2)}`]: object })),
+            c(HASH, 'v2.0.1'));
+
+        // Annotated loose, without the object (the Docker image): the last checkout in the reflog, if it went to this commit
+        const reflog = (para) => `${'0'.repeat(40)} ${para} Fulano <f@x> 1790000000 -0300\tcheckout: moving from main to v2.0.1\n`;
+        assert.deepEqual(readCommit(project({ HEAD: `${HASH}\n`, 'refs/tags/v2.0.1': `${TAG}\n`, 'logs/HEAD': reflog(HASH) })), c(HASH, 'v2.0.1'));
+        assert.deepEqual(readCommit(project({ HEAD: `${HASH}\n`, 'refs/tags/v2.0.1': `${TAG}\n`, 'logs/HEAD': reflog('f'.repeat(40)) })), c(HASH, 'HEAD'),
+            'o reflog foi para outro commit');
+
+        // Detached on a commit without a tag; two tags on the same commit: the higher version
+        assert.deepEqual(readCommit(project({ HEAD: `${HASH}\n` })), c(HASH, 'HEAD'));
+        assert.deepEqual(readCommit(project({ HEAD: `${HASH}\n`, 'refs/tags/v1.9.0': `${HASH}\n`, 'refs/tags/v1.10.0': `${HASH}\n` })), c(HASH, 'v1.10.0'));
+    });
+
+    test('ZAPBOT_COMMIT tem prioridade ("commit" ou "commit/ref")', () => {
         try {
-            assert.equal(readCommit(project({ HEAD: `${HASH}\n` })), 'abcdef0');
+            process.env.ZAPBOT_COMMIT = 'abcdef0123456789';
+            assert.deepEqual(readCommit(project({ HEAD: `${HASH}\n` })), { commit: 'abcdef0', ref: 'HEAD' });
+            process.env.ZAPBOT_COMMIT = 'abcdef0123456789/v2.0.0';
+            assert.deepEqual(readCommit(project({ HEAD: `${HASH}\n` })), { commit: 'abcdef0', ref: 'v2.0.0' });
         } finally {
             delete process.env.ZAPBOT_COMMIT;
         }

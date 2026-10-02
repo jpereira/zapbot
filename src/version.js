@@ -1,64 +1,167 @@
 /*
- * The bot version with the commit that is running: "2.0.0 (git+25b0870)".
+ * The bot version with the commit that is running and where it came from:
+ * "2.0.0 (git+60315ed/v2.0.0)" numa tag, "2.0.0 (git+60315ed/HEAD)" fora dela.
  */
 
 const fs = require('fs');
 const path = require('path');
+const zlib = require('zlib');
 const packageJson = require('../package.json');
 
 const { ROOT_DIR } = require('./constants');
 
 /*
- * O commit vem, nesta ordem:
- * 1. from ZAPBOT_COMMIT (for whoever builds the image another way, e.g.: CI);
- * 2. from the project's .git: the HEAD (on a tag checkout, it is already the hash) or the
- * its branch, in .git/refs/heads/ or in .git/packed-refs. The image
- * Docker carries only these files (see .dockerignore), so each
- * "docker compose build" records the commit of the code that went into it.
- * Read once, on load: it is the commit of the code that is running, even
- * for the repository to change afterward.
+ * The commit and the ref come, in this order:
+ * 1. from ZAPBOT_COMMIT ("60315ed" or "60315ed/v2.0.0"; without the ref, HEAD),
+ * for whoever builds the image another way (e.g.: CI);
+ * 2. from the project's .git, read without git: the HEAD (on a tag checkout, it is already
+ * the hash) or its branch, in .git/refs/heads/ or in .git/packed-refs.
+ * The Docker image carries only these files, the tags and the HEAD reflog (see
+ * .dockerignore), so each "docker compose build" records the commit and the
+ * tag of the code that went into it.
+ *
+ * The tag is the one that points to the detached HEAD commit (git checkout v2.0.0).
+ * An annotated tag (bump.sh's) points to a "tag" object, not to the
+ * commit; its commit comes from one of these:
+ * - the "^<commit>" line right below it in packed-refs (in a clone);
+ * - the object itself in .git/objects (outside Docker, where .git is whole);
+ * - the last line of the reflog (.git/logs/HEAD): "checkout: moving from main to
+ * v2.0.0", with the commit it went to (after a git fetch --tags,
+ * the new tag stays loose and the object does not go into the image).
+ * On a branch, or without a tag for the commit: "HEAD".
+ *
+ * Read once, on load: it is that of the code that is running, even if the
+ * repository to change afterward.
  */
 const HASH = /^[0-9a-f]{40}$/;
 
-function gitReadCommit(root = ROOT_DIR) {
+function gitReader(root) {
     const git = path.join(root, '.git');
-    const read = (fileAlt) => {
+    return (fileAlt, binary = false) => {
         try {
-            return fs.readFileSync(path.join(git, fileAlt), 'utf8').trim();
+            const content = fs.readFileSync(path.join(git, fileAlt));
+            return binary ? content : content.toString('utf8').trim();
         } catch {
             return null;
         }
     };
+}
 
+// The tags: name → { ref (what the ref points to), commit (if already known) }
+function readTags(read, root) {
+    const tags = new Map();
+
+    // packed-refs: "<hash> refs/tags/X", and "^<commit>" on the next line if X is annotated
+    let last = null;
+    for (const line of (read('packed-refs') ?? '').split('\n')) {
+        const peeled = line.match(/^\^([0-9a-f]{40})$/);
+        if (peeled && last) {
+            last.commit = peeled[1];
+            continue;
+        }
+
+        const m = line.match(/^([0-9a-f]{40}) refs\/tags\/(.+)$/);
+        last = m ? { ref: m[1], commit: null } : null;
+        if (m) tags.set(m[2], last);
+    }
+
+    // Loose tags (they beat those from packed-refs with the same name)
+    const folder = path.join(root, '.git', 'refs', 'tags');
+    const loose = (dir, prefix = '') => {
+        let inputs = [];
+        try {
+            inputs = fs.readdirSync(dir, { withFileTypes: true });
+        } catch {
+            return;
+        }
+        for (const e of inputs) {
+            const nameAlt = `${prefix}${e.name}`;
+            if (e.isDirectory()) loose(path.join(dir, e.name), `${nameAlt}/`);
+            else {
+                const ref = read(`refs/tags/${nameAlt}`);
+                if (ref && HASH.test(ref)) tags.set(nameAlt, { ref, commit: null });
+            }
+        }
+    };
+    loose(folder);
+
+    return tags;
+}
+
+// The commit of a "tag" object (annotated), if the object is in .git/objects; otherwise null
+function objectTagCommit(read, hash) {
+    const raw = read(`objects/${hash.slice(0, 2)}/${hash.slice(2)}`, true);
+    if (!raw) return null;
+
+    try {
+        // "tag <tamanho>\0object <commit>\ntype commit\n..."
+        const textAlt = zlib.inflateSync(raw).toString('utf8');
+        return textAlt.startsWith('tag ') ? (textAlt.match(/\0object ([0-9a-f]{40})\n/)?.[1] ?? null) : null;
+    } catch {
+        return null;
+    }
+}
+
+// The tag of the last checkout in the reflog, if it went to this commit
+function tagDoReflog(read, commit, tags) {
+    const lastLine = (read('logs/HEAD') ?? '').split('\n').filter(Boolean).at(-1) ?? '';
+    const m = lastLine.match(/^[0-9a-f]{40} ([0-9a-f]{40}) .*\tcheckout: moving from .+ to (.+)$/);
+    return m && m[1] === commit && tags.has(m[2]) ? m[2] : null;
+}
+
+/**
+ * The commit and ref from .git (without git).
+ * @returns {{ commit: string, ref: string } | null}  ref: the tag name, or "HEAD"
+ */
+function readGit(root = ROOT_DIR) {
+    const read = gitReader(root);
     const head = read('HEAD');
     if (!head) return null;
-    if (HASH.test(head)) return head;
 
-    const ref = head.match(/^ref:\s*(\S+)$/)?.[1];
-    if (!ref) return null;
+    // On a branch: its commit, and the ref is HEAD
+    if (!HASH.test(head)) {
+        const branch = head.match(/^ref:\s*(\S+)$/)?.[1];
+        if (!branch) return null;
 
-    const doRef = read(ref);
-    if (doRef && HASH.test(doRef)) return doRef;
+        const doRef = read(branch);
+        const doPacked = (read('packed-refs') ?? '').split('\n').find(l => l.endsWith(` ${branch}`))?.split(' ')[0];
+        const commit = [doRef, doPacked].find(h => h && HASH.test(h));
+        return commit ? { commit, ref: 'HEAD' } : null;
+    }
 
-    // Packed branch: "<hash> refs/heads/main" in packed-refs
-    const line = (read('packed-refs') ?? '').split('\n').find(l => l.endsWith(` ${ref}`));
-    const doPacked = line?.split(' ')[0];
-    return doPacked && HASH.test(doPacked) ? doPacked : null;
+    // Detached HEAD: the tag that points to this commit (direct, peeled, by object or by reflog)
+    const commit = head;
+    const tags = readTags(read, root);
+    const daTag = [...tags.entries()]
+        .filter(([, t]) => t.ref === commit || t.commit === commit || objectTagCommit(read, t.ref) === commit)
+        .map(([nameAlt]) => nameAlt)
+        // More than one tag on the same commit: the higher version (v1.10.0 after v1.9.0)
+        .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+
+    return { commit, ref: daTag.at(-1) ?? tagDoReflog(read, commit, tags) ?? 'HEAD' };
 }
 
+/**
+ * @returns {{ commit: string, ref: string } | null}  commit with 7 characters
+ */
 function readCommit(root = ROOT_DIR) {
     const doEnv = String(process.env.ZAPBOT_COMMIT ?? '').trim();
-    const commit = doEnv || gitReadCommit(root);
-    return commit ? commit.slice(0, 7) : null;
+    if (doEnv) {
+        const [commit, ref] = doEnv.split('/');
+        return { commit: commit.slice(0, 7), ref: ref || 'HEAD' };
+    }
+
+    const git = readGit(root);
+    return git ? { commit: git.commit.slice(0, 7), ref: git.ref } : null;
 }
 
-const COMMIT = readCommit();
+const ORIGIN = readCommit();
 
-// "2.0.0 (git+25b0870)", or just "2.0" without the commit
-const versionWithCommit = () => (COMMIT ? `${packageJson.version} (git+${COMMIT})` : packageJson.version);
+// "2.0.0 (git+60315ed/v2.0.0)", or just "2.0" without the commit
+const versionWithCommit = () => (ORIGIN ? `${packageJson.version} (git+${ORIGIN.commit}/${ORIGIN.ref})` : packageJson.version);
 
 module.exports = {
-    COMMIT,
+    ORIGIN,
     readCommit,
     versionWithCommit
 };
