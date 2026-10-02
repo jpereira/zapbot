@@ -195,42 +195,13 @@ async function comNome(numero) {
 const mostrarItens = async (key, itens) => (DE_PESSOAS.includes(key) ? Promise.all(itens.map(comNome)) : itens);
 
 /*
- * O papel de um item das listas de pessoas, pelo mais alto: 🤖 o dono (a conta
- * do bot, que já usa tudo), 👑 admin (bot.admins) ou 🗣️ usuário (bot.users).
+ * veja: onde ver os itens (no "não tem"). O /bot troca a resposta (resposta:
+ * (mudam, valor) → texto) e o jeito de mostrar os itens no "já tem"/"não tem"
+ * (mostrar: itens → textos), para esconder o telefone de quem não está no grupo.
  */
-const PAPEIS = { dono: '🤖', admin: '👑', usuario: '🗣️' };
-function papelDe(item) {
-    if (ehODono(item)) return PAPEIS.dono;
-    if (getSetting('bot.admins').includes(item)) return PAPEIS.admin;
-    return PAPEIS.usuario;
-}
-
-/*
- * A resposta do /bot +o|-o|+v|-v, uma coisa por linha: o que mudou e a lista
- * inteira, cada item com o papel.
- */
-async function respostaPorLinha(key, mudam, valor, acrescentar) {
-    const comPapel = async (i) => `${await comNome(i)} ${papelDe(i)}`;
-    const mudou = await Promise.all(mudam.map(async i => (acrescentar
-        ? `✅ *${key}* + ${await comPapel(i)}`
-        : `🗑️ *${key}* − ${await comNome(i)}`)));
-
-    const lista = valor.filter(i => i !== 'all');
-    const linhas = lista.length
-        ? (await Promise.all(lista.map(async i => `- ${await comPapel(i)}`))).join('\n')
-        : '_(vazio)_';
-    return `${mudou.join('\n')}\n\n*${key}* (${lista.length})\n${linhas}\n` +
-        `💡 _${PAPEIS.dono} dono · ${PAPEIS.admin} admin (+o) · ${PAPEIS.usuario} usuário (+v)_`;
-}
-
-/*
- * -append / -rem <chave> <valor>: acrescenta ou tira itens de uma lista. Os
- * itens passam pela mesma validação do /set (ex.: um número vira só dígitos),
- * então "+55 21 9..." tira o "5521...".
- */
-// veja: onde ver os itens (no "não tem"); porLinha: a resposta do /bot, uma coisa por linha
 async function mudarLista(msg, opcoes) {
-    const { key, bruto, acrescentar, veja = `/set ${key}`, porLinha = false } = opcoes;
+    const { key, bruto, acrescentar, veja = `/set ${key}`, resposta = null } = opcoes;
+    const mostrar = opcoes.mostrar ?? ((itens) => mostrarItens(key, itens));
     const schema = SETTINGS_SCHEMA[key];
     const opcao = acrescentar ? '-append' : '-rem';
 
@@ -260,7 +231,7 @@ async function mudarLista(msg, opcoes) {
     const mudam = acrescentar ? itens.filter(i => !atual.includes(i)) : itens.filter(i => atual.includes(i));
 
     if (!mudam.length) {
-        const quais = (await mostrarItens(key, itens)).join(', ');
+        const quais = (await mostrar(itens)).join(', ');
         await msg.reply(acrescentar
             ? `ℹ️ *${key}* já tem ${quais}.`
             : `❌ *${key}* não tem ${quais}.\n💡 _Veja os itens com ${veja}_`);
@@ -277,8 +248,8 @@ async function mudarLista(msg, opcoes) {
     }
     const sep = schema.separator ? ' | ' : ', ';
     printInfo(`Setting '${key}' ${acrescentar ? '+' : '-'} ${schema.secret ? '(segredo)' : JSON.stringify(mudam)}`);
-    if (porLinha) {
-        await msg.reply(await respostaPorLinha(key, mudam, valor, acrescentar));
+    if (resposta) {
+        await msg.reply(await resposta(mudam, valor));
         return;
     }
     await msg.reply(`✅ *${key}* ${acrescentar ? '+' : '−'} ${formatarValorSetting(await mostrarItens(key, mudam), sep, schema.secret)}\n` +
@@ -409,14 +380,14 @@ async function cmdSet({ msg, opts, args, chatId }) {
  * Com itensProntos, o texto já são os itens (o telefone ou o id do grupo do
  * chat atual): não passa pela busca.
  */
-async function mudarListaDePessoas(msg, key, texto, acrescentar, { itensProntos = false } = {}) {
+async function mudarListaDePessoas(msg, key, texto, acrescentar, opcoes = {}) {
+    const { itensProntos = false, resposta, mostrar } = opcoes;
     const bruto = itensProntos ? texto : await itensDasPessoas(msg, key, texto);
     if (bruto === null) return;
-    await mudarLista(msg, { key, bruto, acrescentar, veja: '/bot', porLinha: true });
+    await mudarLista(msg, { key, bruto, acrescentar, veja: '/bot', resposta, mostrar });
 }
 
 module.exports = {
-    PAPEIS,
     cmdSet,
     ehODono,
     mudarListaDePessoas
