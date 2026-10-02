@@ -138,7 +138,7 @@ async function tratarAgenda({ msg, args, chatId, chatName, isGroup, quotedMsg })
     }
 
     if (!quando) {
-        await msg.reply(`❌ Não entendi quando. Use 30m, 2h, 18:30, às 18h, amanhã 9h, sexta 18h ou 25/12 10:00.\n${sintaxe}`);
+        await msg.reply(`❌ Não entendi quando. Use 6h, 18:30, às 18h (horário), +2h ou 30m (daqui a tanto tempo), amanhã 9h, sexta 18h ou 25/12 10:00.\n${sintaxe}`);
         return;
     }
 
