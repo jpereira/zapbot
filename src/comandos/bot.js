@@ -3,7 +3,10 @@
  */
 
 const { getCommandSyntax } = require('./base');
-const { mostrarItens, mudarListaDePessoas } = require('./set');
+const { mudarListaDePessoas } = require('./set');
+const { client } = require('../cliente');
+const { resolverNomeDoGrupo } = require('../contatos');
+const { descreverDestino } = require('../destinos');
 const { getSetting, setSetting } = require('../settings');
 const { textoDoInfo } = require('../sistema');
 const { agendarStatusDiario, desligarStatusDiario, textoDoStatus } = require('../status');
@@ -11,7 +14,7 @@ const { fmtQuando, lerHora } = require('../util/quando');
 
 /*
  * /bot: estado do bot (settings 'bot.paused', 'bot.admins' e 'bot.users', sobrevivem a reinícios)
- *   /bot        → mostra o estado, com os admins e os usuários
+ *   /bot        → mostra o estado e quem usa: admins (+o) e usuários (+v) numa lista só
  *   /bot -on    → ativa
  *   /bot -off   → desliga: TODOS os comandos são ignorados, inclusive os seus, exceto o /bot
  *   /bot +admin → só o dono (e o bot.admins) usa comandos: bot.users = false (a lista sai)
@@ -39,15 +42,43 @@ function quemUsa() {
     const admins = getSetting('bot.admins').length ? ' e os admins' : '';
     if (users.includes('all')) return '🔓 *Comandos:* todos usam os comuns';
     if (!users.length) return `🔒 *Comandos:* só o dono${admins}`;
-    return `👥 *Comandos:* o dono${admins} e os usuários abaixo`;
+    return '👥 *Comandos:* o dono e quem está na lista abaixo';
 }
 
-// Uma lista de pessoas com os nomes, um por linha (vazia: nada)
-async function linhasDaLista(titulo, key) {
-    const itens = getSetting(key).filter(i => i !== 'all');
+/*
+ * Um item do bot.admins/bot.users como o resto do bot mostra um destino:
+ * "👤 Camila Gama · +5521988887777", "👤 +5521977777777" (sem nome) ou
+ * "👥 Grupo Familia".
+ */
+async function descreverItem(item) {
+    if (item.endsWith('@g.us')) {
+        const nome = await resolverNomeDoGrupo(item).catch(() => null);
+        return descreverDestino({ id: item, nome: nome || item, grupo: true });
+    }
+
+    const contato = await client.getContactById(`${item}@c.us`).catch(() => null);
+    const nome = contato?.name || contato?.pushname;
+    return nome ? `${descreverDestino({ nome, grupo: false })} · +${item}` : `👤 +${item}`;
+}
+
+/*
+ * Admins (+o) e usuários (+v) numa lista só: quem está nas duas aparece uma
+ * vez, com as duas marcas. Primeiro os admins, na ordem de cada setting.
+ */
+async function listaDeQuemUsa() {
+    const admins = getSetting('bot.admins');
+    const users = getSetting('bot.users').filter(i => i !== 'all');
+    const itens = [...new Set([...admins, ...users])];
     if (!itens.length) return '';
-    const linhas = (await mostrarItens(key, itens)).map(i => `• ${i}`);
-    return `\n\n${titulo} _(${key})_\n${linhas.join('\n')}`;
+
+    const linhas = await Promise.all(itens.map(async (item) => {
+        const marcas = [admins.includes(item) && '👑 +o', users.includes(item) && '🗣️ +v']
+            .filter(Boolean);
+        return `• ${marcas.join(' ')} · ${await descreverItem(item)}`;
+    }));
+
+    return `\n\n*Quem usa* (${itens.length})\n${linhas.join('\n')}\n` +
+        '💡 _👑 +o: admin, usa tudo (bot.admins) · 🗣️ +v: usuário, usa os comandos comuns (bot.users)_';
 }
 
 async function estadoBot() {
@@ -55,8 +86,7 @@ async function estadoBot() {
         ? '⏸️ *Bot:* desligado (todos os comandos são ignorados)'
         : '▶️ *Bot:* ativo') + '\n' +
         quemUsa() +
-        await linhasDaLista('👑 *Admins*', 'bot.admins') +
-        await linhasDaLista('🗣️ *Usuários*', 'bot.users');
+        await listaDeQuemUsa();
 }
 
 // +o/-o (bot.admins) e +v/-v (bot.users)
