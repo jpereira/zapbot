@@ -32,6 +32,22 @@ describe('/help (/h)', () => {
         assert.deepEqual(await bot.replyAlt('/help naoexiste'), ['❌ Comando não encontrado: /naoexiste']);
     });
 
+    test('quem não é admin vê só os comandos comuns; o admin extra vê tudo', async () => {
+        const [r] = await bot.replyAlt('/help', { de: OTHERAlt.jid });
+        assert.match(r, /^🤖 \*MENU DE AJUDA\* _\(os comandos que você pode usar\)_/);
+        assert.match(r, /Usage: \/cotacao/);
+        assert.doesNotMatch(r, /Usage: \/(show|backup|bot|set)\b/);
+
+        assert.deepEqual(await bot.replyAlt('/help show', { de: OTHERAlt.jid }),
+            ['⛔ O /show é só do dono do bot (e dos admins).\n💡 _Veja os que você pode usar com /help_']);
+        assert.match((await bot.replyAlt('/help cotacao', { de: OTHERAlt.jid }))[0], /Usage: \/cotacao/);
+
+        await bot.setSetting('bot.admins', [OTHERAlt.user]);
+        const [admin] = await bot.replyAlt('/help', { de: OTHERAlt.jid });
+        assert.match(admin, /^🤖 \*MENU DE AJUDA\*\n/);
+        assert.match(admin, /Usage: \/show/);
+    });
+
     test('comando desativado por setting some do menu', async () => {
         await bot.setSetting('commands.disabled', 'noffa');
         assert.doesNotMatch((await bot.replyAlt('/help'))[0], /Usage: \/noffa/);

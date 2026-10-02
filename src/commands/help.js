@@ -4,7 +4,14 @@
 
 const { activeCommands, findCommand, formatCommandHelp } = require('./base');
 
-async function cmdHelp({ msg, args }) {
+/*
+ * Each sees only what they can use: the owner and the admins (bot.admins), everything; the
+ * others (those in bot.users), only the common commands, without the onlyAdmin ones. Showing
+ * /backup to whoever cannot use it is like showing the kitchen menu.
+ */
+async function cmdHelp({ msg, args, admin }) {
+    const can = (command) => admin || !command.onlyAdmin;
+
     // Reads straight from the text: the option parser discards a first token that starts with "/"
     let requestedCommand = args.split(/\s+/)[0];
 
@@ -21,14 +28,20 @@ async function cmdHelp({ msg, args }) {
             return;
         }
 
+        if (!can(command)) {
+            await msg.reply(`⛔ O ${command.cmd} é só do dono do bot (e dos admins).\n💡 _Veja os que você pode usar com /help_`);
+            return;
+        }
+
         await msg.reply('🤖 *AJUDA*\n\n```' + formatCommandHelp(command) + '\n```');
         return;
     }
 
-    // /help alone: all the commands
+    // /help alone: all the commands the requester can use
     const helpText =
-        '🤖 *MENU DE AJUDA*\n\n```' +
-        activeCommands().map(formatCommandHelp).join('\n\n' + '─'.repeat(50) + '\n\n') +
+        '🤖 *MENU DE AJUDA*' + (admin ? '' : ' _(os comandos que você pode usar)_') + '\n\n```' +
+        activeCommands().filter(can).map(formatCommandHelp)
+            .join('\n\n' + '─'.repeat(50) + '\n\n') +
         '\n```';
 
     await msg.reply(helpText);
