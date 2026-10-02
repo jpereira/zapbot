@@ -13,7 +13,7 @@ Faz algo na hora marcada. Tem dois modos, na mesma agenda:
 | Opção | Valor | Descrição |
 |---|---|---|
 | `<quando>` | | Quando: `6h`, `às 18h`, `+2h`, `30m`, `amanhã 9h`, `sexta 18h`, `25/12 10:00`... Veja [Quando](#quando) |
-| `-to` | `<destino>` | Modo mensagem: envia num contato (`/Jorge Pereira/`), num grupo (`/Grupo L200/`) ou num número (`+5521999999999`) em vez do chat atual. Repita para vários: um item por destino. O contato é buscado primeiro; vários com o nome: você escolhe na lista. E-mail não vale: a mensagem sai no WhatsApp. Veja [Destinos](index.md#destinos-contato-grupo-número-ou-e-mail) |
+| `-to` | `<destino>` | Modo mensagem: envia num contato (`/Jorge Pereira/`), numa menção (`@Fulano Da Silva`), num grupo (`/Grupo L200/`) ou num número (`+5521999999999`) em vez do chat atual. Repita para vários: um item por destino. O contato é buscado primeiro; vários com o nome: você escolhe na lista. E-mail não vale: a mensagem sai no WhatsApp. Veja [Destinos](index.md#destinos-contato-grupo-número-ou-e-mail) |
 | `-lembrete`, `-lem` | | Modo lembrete (o mesmo de chamar como `/lembrete`) |
 | `-pv` | | Modo lembrete: lembra no seu privado em vez do chat atual |
 | `-repetir`, `-r` | `<diario\|semanal\|mensal>` | Repete no mesmo horário: todo dia, toda semana ou todo mês |
@@ -29,6 +29,7 @@ Faz algo na hora marcada. Tem dois modos, na mesma agenda:
 /cron seg 8h -repetir semanal -to trabalho Bom dia! Pauta da semana no drive.
 /agenda 05/11 9h -repetir mensal -to +5521999999999 Lembrete: aluguel vence hoje.
 /cron amanhã 8h -to /Jorge Pereira/ Bom dia! Não esquece a reunião.
+/cron 18h -to @Fulano Da Silva Já saiu do trabalho?   (num grupo, mencionando)
 /cron 20/10 -to /Família/ Parabéns, vó! 🎂
 /cron 8h -r diario -to /Família/ -to /Trabalho/ Bom dia!   (um item em cada grupo)
 /lembrete 30m tirar o bolo do forno

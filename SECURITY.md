@@ -25,8 +25,10 @@ Alguns pontos merecem atenção especial num relato:
 - **Sessão do WhatsApp** (`.wwebjs_auth`) e o **QR Code**: quem tiver um dos
   dois controla a conta. O QR pode ir por e-mail (veja o código anti-phishing
   em [E-mails](https://jpereira.github.io/zapbot/emails/)).
-- **Comandos de admin**: qualquer forma de alguém que não é o dono executar um
-  comando `onlyAdmin` (inclusive fazendo o bot "digitar" um comando).
+- **Comandos de admin**: qualquer forma de alguém que não é o dono (nem um
+  admin extra do setting `bot.admins`) executar um comando `onlyAdmin`
+  (inclusive fazendo o bot "digitar" um comando), ou de um admin extra alterar
+  o `bot.admins`, que só o dono pode mudar.
 - **`/get`**: o `yt-dlp` roda na rede do servidor; URLs para a rede interna
   são recusadas (anti-SSRF).
 - **Chaves de API** (OpenAI, GIPHY, Google Translate) e a senha do SMTP: nunca devem aparecer no
