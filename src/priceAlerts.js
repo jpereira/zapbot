@@ -8,7 +8,10 @@ const { estado: stateAlt } = require('./state');
 const { findCommand } = require('./commands/base');
 const { QUOTE_TIMEOUT_MS, searchQuote, fmtPriceCrypto, fmtReal, fmtChange } = require('./quotes');
 const { dbAll, dbGet, dbReady, dbRun } = require('./db');
-const { describeDestination, sendOnDestination, extractDestination, resolverOrChoose } = require('./destinations');
+const {
+    destinationColumns, describeDestinations, lineDestination, destinationsSaved, sendToDestinations, extractDestinations,
+    recipientsDe, resolverDestinations
+} = require('./destinations');
 const { printError, printInfo } = require('./log');
 const { QUOTE_SUPPORTED, CRYPTO_SUPPORTED } = require('./currencies');
 const { GetOptFromCommand } = require('./options');
@@ -23,7 +26,8 @@ const { formatData, plural } = require('./util/format');
  * -alerta -rm 2 | all     → removes alert no. 2 from the list (or all)
  * -alerta BTC > 90000 -to /Grupo L200/  → notifies a group (or a contact,
  * -to /Jorge Pereira/, a number, -to +5521999999999,
- * or by email, -to email) instead of your private chat
+ * or by email, -to email) instead of your private chat;
+ * repeat -to to notify several
  * Each alert fires ONCE and is removed. The check runs every
  * 'alert.intervalMin' minutes. Only the owner creates and removes.
  */
@@ -82,17 +86,14 @@ function readRuleAlert(textAlt) {
 const listAlerts = (kind) =>
     dbAll('SELECT * FROM price_alerts WHERE kind = ? ORDER BY id', [kind]);
 
-// Where the notice goes: the -to chat or emails; without it (null), your private chat
-function alertDestination(a) {
-    if (a.dest_email) return { email: a.dest_email, nome: a.dest_email, grupo: false };
-    return a.dest_id ? { id: a.dest_id, nome: a.dest_name, grupo: Boolean(a.dest_is_group) } : null;
-}
+// Where the notice goes: the -to chats or emails; without them ([]), your private chat
+const alertDestinations = (a) => destinationsSaved(a.recipients, lineDestination(a));
 
 function describeAlert(kind, a) {
     const t = ALERT_TYPES[kind];
-    const destination = alertDestination(a);
+    const destinations = alertDestinations(a);
     return `${t.icone(a.symbol)} ${t.par(a.symbol)} ${OPERATORS[a.op].texto} *${t.fmt(a.target)}*` +
-        (destination ? ` → ${describeDestination(destination)}` : '');
+        (destinations.length ? ` → ${describeDestinations(destinations)}` : '');
 }
 
 async function priceHandleAlert(kind, { msg, args, admin }) {
@@ -102,7 +103,7 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
      * -to accepts spaces (/Grupo L200/), which the option parser would split:
      * goes out of the text first, and the rest is read again.
      */
-    const { destino: destinationText, informado: withDestination, resto: rest } = extractDestination(args);
+    const { destinos: destinationsText, informado: withDestination, resto: rest } = extractDestinations(args);
     const opts = GetOptFromCommand(rest, findCommand(t.cmd));
 
     // The notices use your account (in your private chat or in the -to chat): owner only (and the bot.admins admins)
@@ -167,11 +168,12 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
         return;
     }
 
-    let destination = null;
+    // Several -to: a single alert, which notifies all of them
+    let destinations = [];
 
     if (withDestination) {
-        destination = await resolverOrChoose(msg, destinationText, { aceitaEmail: true });
-        if (!destination) return;
+        destinations = await resolverDestinations(msg, destinationsText, { aceitaEmail: true });
+        if (!destinations) return;
     }
 
     const max = getSetting('alerta.max');
@@ -200,16 +202,17 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
         return;
     }
 
+    const c = destinationColumns(destinations[0]);
     await dbRun(
-        `INSERT INTO price_alerts (kind, symbol, op, target, price_at_creation, created_at, dest_id, dest_name, dest_is_group, dest_email)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [kind, rule.sym, rule.op, rule.alvo, price, Date.now(), destination?.id ?? null, destination?.email ? null : destination?.nome ?? null,
-            destination?.grupo ? 1 : 0, destination?.email ?? null]
+        `INSERT INTO price_alerts (kind, symbol, op, target, price_at_creation, created_at, dest_id, dest_name, dest_is_group, dest_email, recipients)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [kind, rule.sym, rule.op, rule.alvo, price, Date.now(), c.dest_id, c.dest_name, c.dest_is_group, c.dest_email,
+            recipientsDe(destinations)]
     );
 
     await msg.reply(`🔔 *Alerta criado*\n${describeAlert(kind, { symbol: rule.sym, op: rule.op, target: rule.alvo })}\n` +
         `💰 Agora: ${t.fmt(price)}\n` +
-        `💡 _Aviso ${destination ? `em ${describeDestination(destination)}` : 'no seu privado'}; ` +
+        `💡 _Aviso ${destinations.length ? `em ${describeDestinations(destinations)}` : 'no seu privado'}; ` +
         `verificação a cada ${plural(getSetting('alerta.intervalMin'), 'minuto', 'minutos')}._`);
 }
 
@@ -252,8 +255,8 @@ async function priceCheckAlerts({ forcar: force = false } = {}) {
                 await dbRun('DELETE FROM price_alerts WHERE id = ?', [a.id]);
 
                 const changeAlt = fmtChange(price, a.price_at_creation);
-                const destination = alertDestination(a);
-                await sendOnDestination(destination,
+                const destinations = alertDestinations(a);
+                await sendToDestinations(destinations,
                     `🔔 *ALERTA DE PREÇO*\n\n` +
                     `${OPERATORS[a.op].icone} ${t.icone(a.symbol)} *${t.par(a.symbol)}* ficou ${OPERATORS[a.op].texto} ${t.fmt(a.target)}\n` +
                     `💰 Agora: *${t.fmt(price)}*${changeAlt ? ` _(${changeAlt} desde a criação)_` : ''}\n` +
@@ -261,7 +264,8 @@ async function priceCheckAlerts({ forcar: force = false } = {}) {
                     { assunto: `🔔 Alerta de preço: ${t.par(a.symbol)} ${OPERATORS[a.op].texto} ${t.fmt(a.target)}` }
                 ).catch(err => printError('Alerta de preço: falha ao avisar:', err.message));
 
-                printInfo(`Alerta de preço disparado: ${a.symbol} ${a.op} ${a.target} (agora ${price})${destination ? ` → ${destination.email ?? destination.id}` : ''}`);
+                printInfo(`Alerta de preço disparado: ${a.symbol} ${a.op} ${a.target} (agora ${price})` +
+                    (destinations.length ? ` → ${destinations.map(d => d.email ?? d.id).join(', ')}` : ''));
             }
         }
     } catch (err) {

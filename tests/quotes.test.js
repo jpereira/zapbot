@@ -294,6 +294,44 @@ describe('alertas de preço (-alerta)', () => {
         assert.equal(bot.client.enviadas[beforeAlt].chatId, OTHERAlt.jid);
     });
 
+    test('vários -to: um alerta só, que avisa em todos (o repetido conta uma vez)', async () => {
+        const L200 = '120363000000000200@g.us';
+        bot.createGroup(L200, 'Grupo sobre L200', [OWNER.jid]);
+
+        const [created] = await bot.replyAlt('/cotacao -alerta USD > 6 -to /Grupo L200/ -to fulano -to +5521911111111');
+        assert.match(created, /💡 _Aviso em 👥 Grupo sobre L200, 👤 Fulano;/);
+        assert.match((await bot.replyAlt('/cotacao -alerta'))[0], /USD\/BRL acima de \*R\$ 6,0000\* → 👥 Grupo sobre L200, 👤 Fulano/);
+
+        const [a] = await bot.dbAll('SELECT dest_id, recipients FROM price_alerts');
+        assert.equal(a.dest_id, L200, 'as dest_* ficam com o primeiro');
+        assert.deepEqual(JSON.parse(a.recipients).map(d => d.id), [L200, OTHERAlt.jid]);
+
+        prices.USD = 6.1;
+        const beforeAlt = bot.client.enviadas.length;
+        await priceCheckAlerts({ forcar: true });
+        assert.deepEqual(bot.client.enviadas.slice(beforeAlt).map(e => e.chatId), [L200, OTHERAlt.jid]);
+        assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM price_alerts')).n, 0);
+
+        // A destination that fails does not hold up the others
+        await bot.replyAlt('/cotacao -alerta EUR > 7 -to /Grupo L200/ -to fulano');
+        const send = bot.client.sendMessage;
+        bot.client.sendMessage = (chatId, ...rest) => (chatId === L200
+            ? Promise.reject(new Error('fora do ar'))
+            : send.call(bot.client, chatId, ...rest));
+        try {
+            prices.EUR = 7.1;
+            const afterAlt = bot.client.enviadas.length;
+            await priceCheckAlerts({ forcar: true });
+            assert.deepEqual(bot.client.enviadas.slice(afterAlt).map(e => e.chatId), [OTHERAlt.jid]);
+        } finally {
+            bot.client.sendMessage = send;
+        }
+
+        // A -to that fails: nothing is created
+        assert.match((await bot.replyAlt('/cotacao -alerta USD > 8 -to fulano -to xyz'))[0], /❌ Nenhum contato ou grupo com "xyz"/);
+        assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM price_alerts')).n, 0);
+    });
+
     test('-to email: o aviso sai por e-mail, sem a formatação do WhatsApp', async () => {
         assert.match((await bot.replyAlt('/cotacao -alerta USD > 6 -to email'))[0], /❌ O "email" usa o QRCODE_EMAIL_SMTP_TO/);
 
