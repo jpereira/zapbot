@@ -17,7 +17,7 @@ lugar dela vem `HEAD`:
 
 ```
 🤖 ZapBot 2.2 (git+9029cfb/release-2.2)   → o commit da release 2.2 (checkout da tag, ou o main nele)
-🤖 ZapBot 2.2 (git+7f68066/HEAD)          → um commit sem tag (ex.: o main depois da release)
+🤖 ZapBot 2.2 (git+7f68066/HEAD)          → um commit sem tag (ex.: o main em desenvolvimento)
 ```
 
 Os dois são lidos do `.git` do projeto, sem o `git`. O `.dockerignore` deixa a
@@ -29,7 +29,7 @@ As tags do `bump.sh -r` são *anotadas*: a ref aponta para um objeto do git, nã
 para o commit, e a imagem não leva os objetos. Por isso o `bump.sh -r` roda
 `git pack-refs --all` ao criar a tag, gravando no `.git/packed-refs` o commit de
 cada tag (um clone novo já vem assim). Depois de um `git fetch --tags`, o
-checkout da tag (`git checkout release-2.1`) também resolve, pelo reflog. Se
+checkout da tag (`git checkout release-X.Y`) também resolve, pelo reflog. Se
 mesmo assim aparecer `HEAD` num commit com tag, rode `git pack-refs --all` e
 refaça o build. Para montar a imagem de outro jeito
 (ex.: sem o `.git`), defina `ZAPBOT_COMMIT` (`9029cfb` ou `9029cfb/release-2.2`;
