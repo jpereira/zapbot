@@ -139,4 +139,4 @@ documentação e o `bump.sh` das releases.
 ---
 
 **Autor:** Jorge Pereira ([@jpereira](https://github.com/jpereira)) · jpereiran@gmail.com
-**Licença:** MIT
+**Licença:** [MIT](LICENSE)
