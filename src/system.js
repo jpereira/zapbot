@@ -14,6 +14,7 @@ const { APP_ENV, BIN_CHROMIUM, BIN_FFMPEG, BIN_YT, BOT_START_TIME } = require('.
 const { dbGet, dbReady } = require('./db');
 const { getBotUptime } = require('./log');
 const { humanSize } = require('./util/files');
+const { versionWithCommit } = require('./version');
 
 // Each external program has this long to report its version
 const VERSION_TIMEOUT_MS = 5000;
@@ -79,7 +80,7 @@ async function infoText() {
 
     return `ℹ️ *ZapBot ${packageJson.version}* · informações do sistema\n\n` +
         '🤖 *Bot*\n' +
-        `• ZapBot: ${packageJson.version} (APP_ENV=${APP_ENV})\n` +
+        `• ZapBot: ${versionWithCommit()} (APP_ENV=${APP_ENV})\n` +
         `• Node.js: ${process.version} (V8 ${process.versions.v8})\n` +
         `• whatsapp-web.js: ${wwebjsVersion()}\n` +
         `• WhatsApp Web: ${whatsappWeb ?? (stateAlt.pronto ? NOT_FOUND : '_não conectado_')}\n` +
