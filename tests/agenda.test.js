@@ -490,11 +490,22 @@ describe('/cron: comandos no texto ({/comando})', () => {
         assert.match((await bot.responder('/cron +1h {/set show.max 5}'))[0], /^❌ \{\/set show\.max 5\}: o \/set não roda dentro do \/cron\.\n💡 _Rodam: .*\/crypto.*\._$/);
         assert.equal((await bot.responder('/cron +1h {/crypto -add DOGE}'))[0], '❌ {/crypto -add DOGE}: o -add do /crypto não roda dentro do /cron.');
         assert.equal((await bot.responder('/cron +1h {/stats -pv}'))[0], '❌ {/stats -pv}: o -pv do /stats não roda dentro do /cron.');
+        assert.equal((await bot.responder('/cron +1h {/defi -rm 1}'))[0], '❌ {/defi -rm 1}: o -rm do /defi não roda dentro do /cron.');
+        assert.equal((await bot.responder('/cron +1h {/defi -alerta all}'))[0], '❌ {/defi -alerta all}: o -alerta do /defi não roda dentro do /cron.');
         assert.deepEqual(await itens(), []);
 
         await bot.responder('/cron +1h oi');
         assert.equal((await bot.responder('/cron -edit 1 {/cache -a}'))[0].split('\n')[0], '❌ {/cache -a}: o /cache não roda dentro do /cron.');
         assert.equal((await itens())[0].text, 'oi');
+    });
+
+    test('/defi -s roda (só consulta); vários comandos e vários -to no mesmo item', async () => {
+        await bot.responder('/cron 06:00 -r diario -to L200 -to +5521911111111 ⏰ Status da DeFi!{/defi -s} Versão: {/version}');
+        const enviados = await vencer();
+        assert.deepEqual(enviados.map(e => e.chatId), [L200, OUTRO.jid]);
+        for (const e of enviados) {
+            assert.match(e.content, /^⏰ Status da DeFi!\n\n🌊 Nenhuma posição cadastrada\.\n💡 _\/defi -orca[^\n]*_\n\nVersão:\n\n🤖 \*ZapBot/);
+        }
     });
 
     test('comando desativado depois de criado: a mensagem sai com o aviso no lugar', async () => {
