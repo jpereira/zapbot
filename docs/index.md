@@ -123,9 +123,10 @@ Por onde começar:
   consultam a internet (`/gpt`, `/tempo`, `/cve`, `/news`...) usam os serviços
   da tabela [Serviços externos](configuracao.md#serviços-externos).
 - **Controle**: o [`/bot`](comandos/bot.md) liga/desliga todos os comandos
-  (`-on`/`-off`) e o modo admin (`+admin`/`-admin`), em que só você (e os
-  [admins extras](comandos/bot.md#admins-extras) do `bot.admins`) usa
-  comandos; o `-status` mostra o relatório e o `-info`, as versões do que o bot
+  (`-on`/`-off`) e diz quem usa: você, os
+  [admins extras](comandos/bot.md#admins-extras) (`+o`/`-o`) e os
+  [usuários](comandos/bot.md#usuários) (`+v`/`-v`: pessoas e grupos, ou todos
+  com `-admin`); o `-status` mostra o relatório e o `-info`, as versões do que o bot
   usa (Node.js, Chromium, yt-dlp, ffmpeg...).
 - **Reconexão**: em caso de queda o cliente é reiniciado sozinho, exceto quando o
   motivo exige ação manual (`LOGOUT`, `CONFLICT`, `UNPAIRED`...).

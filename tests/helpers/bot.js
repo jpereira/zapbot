@@ -34,16 +34,16 @@ const TABELAS = ['messages', 'message_edits', 'stats', 'watch_hits', 'watch_dest
 
 /*
  * Estado limpo para cada teste: tabelas vazias, settings no padrão, nada
- * enviado, sem rotas de rede. O modo admin vem DESLIGADO (o padrão é ligado)
- * para os testes poderem usar comandos de outras pessoas; quem testa o modo
- * admin liga de novo.
+ * enviado, sem rotas de rede. O bot.users vem true (o padrão é false: só o
+ * dono) para os testes poderem usar comandos de outras pessoas; quem testa a
+ * restrição muda de novo.
  */
 async function reiniciar() {
     await preparar();
 
     for (const t of TABELAS) await dbRun(`DELETE FROM ${t}`);
     await carregarSettings();
-    await setSetting('bot.adminMode', false);
+    await setSetting('bot.users', ['all']);
 
     client.enviadas.length = 0;
     limparMarcas();
