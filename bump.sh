@@ -7,6 +7,8 @@
 #   2. Troca a versão antiga pela nova nos arquivos do repositório (e a data ao
 #      lado dela, em "release-X.Y (de DD/MM/AAAA)", pela de hoje)
 #   3. Commita e aplica a tag no branch atual com a mensagem "Bump para X.Y"
+#   4. Grava as refs no .git/packed-refs (git pack-refs --all), para a imagem
+#      Docker saber o commit da tag sem os objetos do git (src/versao.js)
 #
 # Uso: ./bump.sh [-n|--dry-run] [X.Y]
 #   -n, --dry-run   só mostra o que seria alterado (não altera nada)
@@ -128,6 +130,10 @@ git --no-pager diff --stat
 
 git commit -qam "Bump para ${nova_versao}"
 git tag -a "$nova_tag" -m "Bump para ${nova_versao}"
+
+# Grava as tags no .git/packed-refs com o commit de cada uma: a imagem Docker não
+# leva os objetos do git, e é por aí que o /version mostra "(git+<commit>/<tag>)"
+git pack-refs --all
 
 echo "✅ Commit e tag '${nova_tag}' criados em '$(git branch --show-current)'."
 echo "💡 Para publicar: git push && git push origin ${nova_tag}"

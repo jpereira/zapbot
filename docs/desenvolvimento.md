@@ -164,8 +164,10 @@ O `bump.sh` incrementa a última tag `release-X.Y` (ex.: `release-X.Y` →
 arquivos que citam a versão (ex.: README e `docs/`), põe a data de hoje ao lado
 dela onde aparece `release-X.Y (de DD/MM/AAAA)` (a seção de instalação),
 commita e cria a tag anotada, as
-duas com a mensagem `Bump para X.Y`. Precisa do working tree limpo e não faz
-push.
+duas com a mensagem `Bump para X.Y`, e grava as refs no `.git/packed-refs`
+(`git pack-refs --all`), para a imagem Docker saber o commit da tag (o
+[`/version`](comandos/version.md) mostra `(git+<commit>/<tag>)`). Precisa do
+working tree limpo e não faz push.
 
 ```bash
 ./bump.sh -n        # dry-run: só mostra o que seria alterado

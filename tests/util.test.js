@@ -127,6 +127,16 @@ describe('versão com o commit (versao.js)', () => {
     const TAG = '1111111111111111111111111111111111111111';     // o objeto "tag" de uma tag anotada
     const c = (commit, ref) => ({ commit: commit.slice(0, 7), ref });
 
+    test('num branch no commit de uma tag (o main logo depois do bump.sh): a tag', () => {
+        const main = { HEAD: 'ref: refs/heads/main\n', 'refs/heads/main': `${HASH}\n` };
+        assert.deepEqual(lerCommit(projeto({ ...main, 'refs/tags/release-2.0': `${HASH}\n` })), c(HASH, 'release-2.0'));
+        // Anotada, depois do git pack-refs --all (o que o bump.sh roda): o "^<commit>" no packed-refs
+        assert.deepEqual(lerCommit(projeto({ HEAD: 'ref: refs/heads/main\n',
+            'packed-refs': `# pack-refs with: peeled\n${HASH} refs/heads/main\n${TAG} refs/tags/release-2.0\n^${HASH}\n` })), c(HASH, 'release-2.0'));
+        // Anotada e solta, sem o objeto nem o reflog: não dá para saber
+        assert.deepEqual(lerCommit(projeto({ ...main, 'refs/tags/release-2.0': `${TAG}\n` })), c(HASH, 'HEAD'));
+    });
+
     test('branch (em refs/heads ou no packed-refs): o commit e HEAD; sem .git: null', () => {
         assert.deepEqual(lerCommit(projeto({ HEAD: 'ref: refs/heads/main\n', 'refs/heads/main': `${HASH}\n` })), c(HASH, 'HEAD'));
         assert.deepEqual(lerCommit(projeto({ HEAD: 'ref: refs/heads/main\n', 'packed-refs': `# pack-refs\n${'f'.repeat(40)} refs/heads/outro\n${HASH} refs/heads/main\n` })), c(HASH, 'HEAD'));
@@ -143,14 +153,14 @@ describe('versão com o commit (versao.js)', () => {
             c(HASH, 'release-2.0'));
 
         // Anotada solta, com o objeto (fora do Docker)
-        const objeto = require('zlib').deflateSync(Buffer.from(`tag 100\0object ${HASH}\ntype commit\ntag release-2.1\n`));
-        assert.deepEqual(lerCommit(projeto({ HEAD: `${HASH}\n`, 'refs/tags/release-2.1': `${TAG}\n`, [`objects/11/${TAG.slice(2)}`]: objeto })),
-            c(HASH, 'release-2.1'));
+        const objeto = require('zlib').deflateSync(Buffer.from(`tag 100\0object ${HASH}\ntype commit\ntag release-2.0\n`));
+        assert.deepEqual(lerCommit(projeto({ HEAD: `${HASH}\n`, 'refs/tags/release-2.0': `${TAG}\n`, [`objects/11/${TAG.slice(2)}`]: objeto })),
+            c(HASH, 'release-2.0'));
 
         // Anotada solta, sem o objeto (a imagem Docker): o último checkout do reflog, se foi para este commit
-        const reflog = (para) => `${'0'.repeat(40)} ${para} Fulano <f@x> 1790000000 -0300\tcheckout: moving from main to release-2.1\n`;
-        assert.deepEqual(lerCommit(projeto({ HEAD: `${HASH}\n`, 'refs/tags/release-2.1': `${TAG}\n`, 'logs/HEAD': reflog(HASH) })), c(HASH, 'release-2.1'));
-        assert.deepEqual(lerCommit(projeto({ HEAD: `${HASH}\n`, 'refs/tags/release-2.1': `${TAG}\n`, 'logs/HEAD': reflog('f'.repeat(40)) })), c(HASH, 'HEAD'),
+        const reflog = (para) => `${'0'.repeat(40)} ${para} Fulano <f@x> 1790000000 -0300\tcheckout: moving from main to release-2.0\n`;
+        assert.deepEqual(lerCommit(projeto({ HEAD: `${HASH}\n`, 'refs/tags/release-2.0': `${TAG}\n`, 'logs/HEAD': reflog(HASH) })), c(HASH, 'release-2.0'));
+        assert.deepEqual(lerCommit(projeto({ HEAD: `${HASH}\n`, 'refs/tags/release-2.0': `${TAG}\n`, 'logs/HEAD': reflog('f'.repeat(40)) })), c(HASH, 'HEAD'),
             'o reflog foi para outro commit');
 
         // Destacado num commit sem tag; duas tags no mesmo commit: a de maior versão
