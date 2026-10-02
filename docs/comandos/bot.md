@@ -8,8 +8,9 @@ sobrevivem a reinícios:
 - **Ligado/desligado** (setting `bot.paused`, padrão ligado): desligado, o bot
   ignora **todos** os comandos, inclusive os seus, exceto o próprio `/bot`.
 - **Modo admin** (setting `bot.adminMode`, padrão ligado): ligado, só você
-  usa comandos; os de qualquer outra pessoa são ignorados em silêncio, mesmo
-  os que normalmente são liberados (`/get`, `/tempo`...).
+  (e os [admins extras](#admins-extras)) usa comandos; os de qualquer outra
+  pessoa são ignorados em silêncio, mesmo os que normalmente são liberados
+  (`/get`, `/tempo`...).
 
 | Opção | Descrição |
 |---|---|
@@ -67,11 +68,11 @@ Outras pessoas podem usar os comandos **admin** (os marcados com ✅ na
 o número delas estiver no setting `bot.admins`:
 
 ```
-/set -a bot.admins /Jorge Pereira/  → acrescenta, pelo nome do contato
-/set -a bot.admins +5521999999999   → ou pelo número
-/set -a bot.admins @Fulano          → ou, num grupo, mencionando a pessoa
-/set -rem bot.admins /Jorge Pereira/ → tira
-/set bot.admins                     → a lista: 5521999999999 (Jorge Pereira)
+/set -a bot.admins /Jorge Pereira/    → acrescenta, pelo nome do contato
+/set -a bot.admins +5521999999999     → ou pelo número
+/set -a bot.admins @Fulano Da Silva   → ou, num grupo, mencionando a pessoa
+/set -rem bot.admins /Jorge Pereira/  → tira
+/set bot.admins                       → a lista: 5521999999999 (Jorge Pereira)
 ```
 
 O nome é buscado como no `-to` ([Destinos](index.md#destinos-contato-grupo-número-ou-e-mail)):

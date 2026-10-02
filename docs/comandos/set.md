@@ -9,7 +9,7 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 | `<chave>` | | Mostra valor, padrão, tipo e descrição |
 | `<trecho>` ou `/regex/` | | Não sendo uma chave: lista as chaves que contêm o trecho (sem diferenciar maiúsculas) ou casam com a regex. Ex.: `/set alerta`, `/set /^show\./` |
 | `<chave> <valor>` | | Altera. Listas: itens separados por vírgula ou espaço (`watch.rules`: uma regra por linha); `""` esvazia |
-| `-append`, `-a` | `<chave> <valor>` | Numa lista, acrescenta os itens (os que já estão ficam). Ex.: `/set -a bot.admins +5521999999999` |
+| `-append`, `-a` | `<chave> <valor>` | Numa lista, acrescenta os itens (os que já estão ficam). Ex.: `/set -a bot.admins +5521999999999` (no `bot.admins` vale também `/Jorge Pereira/` e `@Fulano Da Silva`) |
 | `-rem` | `<chave> <valor>` | Numa lista, tira os itens. Ex.: `/set -rem commands.disabled noffa` |
 | `-reset`, `-r` | `<chave>` | Volta ao valor padrão |
 | `<VARIÁVEL>` | | Uma variável do `config/.env` (ex.: `OPENAI_MODEL`): mostra o valor, só no seu privado |

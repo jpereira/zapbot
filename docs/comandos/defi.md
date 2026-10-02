@@ -16,7 +16,7 @@ sempre que uma posição sair da faixa ([Alerta de saída da faixa](#alerta-de-s
 | `-show`, `-s` | `[nº]` | Position Details de todas as posições (ou da nº N) |
 | `-list`, `-l` | | Lista as posições cadastradas (o mesmo que `/defi` sem nada) |
 | `-rm` | `<nº\|all>` | Remove a posição nº N (ou todas). Junto com `-alerta`: só desliga o alerta da nº N (ou de todas) |
-| `-to` | `<destino>` | Junto com `-alerta`: para onde vai o aviso. Um contato, um grupo, um número ou e-mail (`email` é o `QRCODE_EMAIL_SMTP_TO`) ([Destinos](index.md#destinos-contato-grupo-número-ou-e-mail)). Sem ele, o seu privado |
+| `-to` | `<destino>` | Junto com `-alerta`: para onde vai o aviso. Um contato (`/Jorge Pereira/`), uma menção (`@Fulano Da Silva`), um grupo (`/Grupo L200/`), um número (`+5521999999999`) ou e-mail (`email` é o `QRCODE_EMAIL_SMTP_TO`) ([Destinos](index.md#destinos-contato-grupo-número-ou-e-mail)). Sem ele, o seu privado |
 
 ```
 /defi -orca -position <endereço da posição> -nft <mint do NFT> -pool <endereço da pool>
@@ -58,14 +58,15 @@ por saída. Enquanto continua fora, não repete; se voltar para a faixa e sair
 de novo, avisa de novo.
 
 ```
-/defi -alerta 1                        → no seu privado
-/defi -a all -to email                 → todas, por e-mail (QRCODE_EMAIL_SMTP_TO)
-/defi -a 2 -to voce@exemplo.com        → por e-mail, para esse endereço
-/defi -a 1 -to /Jorge Pereira/         → no privado do contato
-/defi -a 1 -to /Grupo L200/            → no grupo
-/defi -a 1 -to +5521999999999          → no privado do número
-/defi -alerta                          → a lista dos alertas
-/defi -alerta -rm 1                    → desliga o da nº 1 (a posição continua cadastrada)
+/defi -alerta 1                  → no seu privado
+/defi -a all -to email           → todas, por e-mail (QRCODE_EMAIL_SMTP_TO)
+/defi -a 2 -to voce@exemplo.com  → por e-mail, para esse endereço
+/defi -a 1 -to /Jorge Pereira/   → no privado do contato
+/defi -a 1 -to /Grupo L200/      → no grupo
+/defi -a 1 -to +5521999999999    → no privado do número
+/defi -a 1 -to @Fulano Da Silva  → num grupo, mencionando a pessoa
+/defi -alerta                    → a lista dos alertas
+/defi -alerta -rm 1              → desliga o da nº 1 (a posição continua cadastrada)
 ```
 
 O `-to` aceita:

@@ -2,7 +2,8 @@
 
 Junta as manchetes mais recentes dos feeds RSS de uma categoria, com fonte,
 data e link. Sem categoria, mostra a ajuda com todas as opções. Só o dono do
-bot usa: o `/news` de qualquer outra pessoa é ignorado em silêncio.
+bot (e os [admins extras](bot.md#admins-extras)) usa: o `/news` de qualquer
+outra pessoa é ignorado em silêncio.
 
 | Opção | Valor | Descrição |
 |---|---|---|
