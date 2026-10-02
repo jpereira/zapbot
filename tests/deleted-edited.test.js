@@ -221,6 +221,38 @@ describe('/show (/s)', () => {
         }
     });
 
+    test('-q: busca pelo texto (sem acentos); no seu privado, em todos os chats; sem -N, as 5 mais recentes', async () => {
+        await messageDeleted('manda o PIX');
+        await messageDeleted('nada a ver');
+        await messageDeleted('pix no trabalho', { chat: WORK });
+
+        const r = await bot.replyAlt('/show -q pix');
+        assert.equal(r[0], '♻️ *1 mensagem apagada* com "pix"');
+        assert.match(r[1], /"manda o PIX"/);
+
+        const allAlt2 = await bot.replyAlt('/show -q pix', { chat: PRIVATE_OWNER });
+        assert.equal(allAlt2[0], '♻️ *2 mensagens apagadas* com "pix"\n💬 *Chats:* todos');
+
+        for (let i = 0; i < 6; i++) await messageDeleted(`pix ${i}`);
+        assert.equal((await bot.replyAlt('/show -q pix'))[0], '♻️ *5 mensagens apagadas* com "pix" _(as 5 mais recentes de 7; use -N para mais)_');
+        assert.equal((await bot.replyAlt('/show -q pix -2')).length, 3);
+
+        assert.deepEqual(await bot.replyAlt('/show -q boleto'), ['♻️ Nenhuma mensagem apagada com "boleto" neste chat.']);
+        assert.deepEqual(await bot.replyAlt('/show -q boleto', { chat: PRIVATE_OWNER }), ['♻️ Nenhuma mensagem apagada com "boleto" em nenhum chat.']);
+    });
+
+    test('-e -q: busca no texto de antes e no de depois; -q não combina com -f e -l', async () => {
+        await messageEdited('reunião às 10h', 'reuniao às 11h');
+        await messageEdited('oi', 'olá');
+
+        const r = await bot.replyAlt('/show -e -q REUNIAO');
+        assert.equal(r[0], '✏️ *1 mensagem editada* com "REUNIAO"');
+        assert.equal((await bot.replyAlt('/show -e -q olá'))[0], '✏️ *1 mensagem editada* com "olá"');
+
+        assert.match((await bot.replyAlt('/show -q x -f'))[0], /❌ O -q não combina com o -f nem com o -l/);
+        assert.match((await bot.replyAlt('/show -q'))[0], /❌ Informe o que buscar/);
+    });
+
     test('-pv manda o resumo e as mensagens no seu privado', async () => {
         await messageDeleted('privado');
         const r = await bot.executar('/show -pv');

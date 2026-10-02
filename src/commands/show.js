@@ -14,7 +14,7 @@ const { sendMessageEdited } = require('../events/edited');
 const { printError, printInfo } = require('../log');
 const { getSetting } = require('../settings');
 const { humanSize, mediaIsPath } = require('../util/files');
-const { wait, formatData, paraMs, plural } = require('../util/format');
+const { wait, formatData, paraMs, plural, withoutAccents } = require('../util/format');
 
 /*
  * /show: re-shows the DELETED (default, or -d) or EDITED (-e) messages
@@ -27,8 +27,12 @@ const { wait, formatData, paraMs, plural } = require('../util/format');
  * /show -2 -c 1          → the last 2 of chat no. 1 of the deleted list from -l
  * /show -e -2 -c zapbot  → the last 2 edited ones of the chat whose name contains "zapbot"
  * /show -e -f -c 1       → flush only the edited ones of chat no. 1
+ * /show -q pix           → the deleted ones with "pix" (case and accent insensitive);
+ * in this chat, in the -c one or, in your private chat, in all. Without -N: the 5 most recent
+ * /show -e -q pix        → the edited ones with "pix" in the before or the after text
  * Sends in chronological order: the last one sent is the most recent.
  */
+const SEARCH_DEFAULT = 5;
 // What changes between the deleted (-d, the default) and the edited (-e)
 const TYPES_CACHE = {
     apagadas: {
@@ -39,6 +43,7 @@ const TYPES_CACHE = {
         ordem: 'revoked_at DESC, timestamp DESC',
         retencao: 'cache.revokedRetentionDays',
         comMidia: true,
+        textos: (r) => [r.body],
         icone: '♻️',
         rotulo: 'Deletadas',
         iconeLista: '🗑️',
@@ -53,6 +58,7 @@ const TYPES_CACHE = {
         ordem: 'edited_at DESC, id DESC',
         retencao: 'cache.editedRetentionDays',
         comMidia: false,
+        textos: (r) => [r.old_body, r.new_body],
         icone: '✏️',
         rotulo: 'Editadas',
         iconeLista: '✏️',
@@ -364,6 +370,15 @@ async function cmdShow({ msg, opts, chatId }) {
         }
     }
 
+    // -q <text>: searches the deleted (or edited) ones; does not combine with -f and -l
+    const search = opts.given.has('query') ? String(opts.opt.query ?? '').trim() : null;
+    if (search !== null && (!search || opts.opt.flush || opts.opt.list)) {
+        await msg.reply(search
+            ? '❌ O -q não combina com o -f nem com o -l.'
+            : `❌ Informe o que buscar: ${t.cmd} -q <texto> (com espaços, entre aspas: -q "bom dia").`);
+        return;
+    }
+
     if (opts.opt.flush) {
         await cacheClean({ msg, chatId, tipo: type, alvo: target });
         return;
@@ -376,7 +391,7 @@ async function cmdShow({ msg, opts, chatId }) {
 
     // "-3" is not a declared option, so the parser puts it in argv (just like "3")
     const extras = opts.argv.filter(Boolean);
-    let n = 1;
+    let n = search ? SEARCH_DEFAULT : 1;
 
     if (extras.length > 1) {
         await msg.reply('```' + getCommandSyntax('/show') + '```');
@@ -402,26 +417,44 @@ async function cmdShow({ msg, opts, chatId }) {
     }
 
     const idsDoChat = target ? target.ids : await chatCurrentIds(chatId);
+    const inMyPrivate = !target && idsDoChat.includes(client.info.wid._serialized);
 
     await dbReady;
 
-    const rows = await dbAll(
-        `SELECT *
-           FROM ${t.tabela}
-          WHERE ${t.filtro}
-            AND chat_id IN (${idsDoChat.map(() => '?').join(', ')})
-          ORDER BY ${t.ordem}
-          LIMIT ?`,
-        [...idsDoChat, n]
-    );
+    let rows;
+    let foundAlt5 = 0;
+
+    if (search) {
+        // The search, in your private chat and without -c, covers all chats
+        const doChat = inMyPrivate ? '' : `AND chat_id IN (${idsDoChat.map(() => '?').join(', ')})`;
+        const allAlt = await dbAll(`SELECT * FROM ${t.tabela} WHERE ${t.filtro} ${doChat} ORDER BY ${t.ordem}`,
+            inMyPrivate ? [] : idsDoChat);
+        const searchTarget = withoutAccents(search);
+        const match = allAlt.filter(r => t.textos(r).some(textAlt => withoutAccents(textAlt).includes(searchTarget)));
+
+        foundAlt5 = match.length;
+        rows = match.slice(0, n);
+    } else {
+        rows = await dbAll(
+            `SELECT *
+               FROM ${t.tabela}
+              WHERE ${t.filtro}
+                AND chat_id IN (${idsDoChat.map(() => '?').join(', ')})
+              ORDER BY ${t.ordem}
+              LIMIT ?`,
+            [...idsDoChat, n]
+        );
+    }
 
     if (!rows.length) {
-        // In private, without -c, the intent was almost always to see another chat
-        const inMyPrivate = !target && idsDoChat.includes(client.info.wid._serialized);
+        const whereAlt = search && inMyPrivate ? 'em nenhum chat' : target ? `em ${target.nome}` : 'neste chat';
 
-        await msg.reply(inMyPrivate
-            ? `${t.icone} Nenhuma mensagem ${t.singular} neste chat.\n💡 _Para ver as de outro chat: /show -l e depois ${t.cmd} -N -c <nº ou nome>._`
-            : `${t.icone} Nenhuma mensagem ${t.singular} registrada neste chat.`);
+        // In private, without -c, the intent was almost always to see another chat
+        await msg.reply(search
+            ? `${t.icone} Nenhuma mensagem ${t.singular} com "${search}" ${whereAlt}.`
+            : inMyPrivate
+                ? `${t.icone} Nenhuma mensagem ${t.singular} neste chat.\n💡 _Para ver as de outro chat: /show -l e depois ${t.cmd} -N -c <nº ou nome>. Para buscar em todos: ${t.cmd} -q <texto>._`
+                : `${t.icone} Nenhuma mensagem ${t.singular} registrada neste chat.`);
         return;
     }
 
@@ -429,8 +462,13 @@ async function cmdShow({ msg, opts, chatId }) {
     rows.reverse();
 
     const destination = opts.opt.pv ? client.info.wid._serialized : chatId;
-    const missing = n > rows.length ? ` (pedidas ${n}, encontradas ${rows.length})` : '';
+    const missing = !search && n > rows.length ? ` (pedidas ${n}, encontradas ${rows.length})` : '';
     let summary = `${t.icone} *${rows.length} mensage${rows.length === 1 ? `m ${t.singular}` : `ns ${t.plural}`}*${missing}${notice}`;
+
+    if (search) {
+        summary += ` com "${search}"` + (foundAlt5 > rows.length ? ` _(as ${rows.length} mais recentes de ${foundAlt5}; use -N para mais)_` : '');
+        if (inMyPrivate) summary += '\n💬 *Chats:* todos';
+    }
 
     if (target) {
         summary += `\n💬 *Chat:* ${target.nome}`;
@@ -439,7 +477,7 @@ async function cmdShow({ msg, opts, chatId }) {
     if (opts.opt.pv) {
         // The summary (with the chat name) goes only to the private chat
         await msg.reply(`${t.icone} Enviado no seu privado.`);
-        await client.sendMessage(destination, target ? summary : `${summary}\n💬 *Chat:* ${rows[0].chat_name || chatId}`);
+        await client.sendMessage(destination, target || (search && inMyPrivate) ? summary : `${summary}\n💬 *Chat:* ${rows[0].chat_name || chatId}`);
     } else {
         await msg.reply(summary);
     }
