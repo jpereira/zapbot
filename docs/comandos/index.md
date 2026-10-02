@@ -116,4 +116,4 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -a`) para fazer o bot
 | [`/uptime`](uptime.md) | `/u`, `/up` | ✅ | Tempo de execução e de conexão |
 | [`/version`](version.md) | `/ver` | ✅ | Versão do bot (mesmo banner do `/uptime`) |
 | [`/walissu`](walissu.md) | `/ualisu` | ✅ | Walissu CVE BOT: marca 2 membros com uma CVE aleatória |
-| [`/watch`](watch.md) | `/w` | ✅ | Avisa no seu privado quando uma mensagem casa com um texto/regex |
+| [`/watch`](watch.md) | `/w` | ✅ | Avisa no seu privado (ou, com `-to`, em outro chat ou por e-mail) quando uma mensagem casa com um texto/regex |
