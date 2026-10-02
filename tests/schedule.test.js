@@ -229,6 +229,24 @@ describe('/cron (/agenda)', () => {
         assert.ok(Math.abs(fromHere.due_at - (Date.now() + 6 * HOUR)) < 60_000);
     });
 
+    test('-to: o mesmo contato pelo telefone e pelo LID (como @c.us ou @lid) é um só', async () => {
+        const PHONE = '5521999985555@c.us';
+        bot.createContact(PHONE, 'Lourival Vieira Neto');
+        bot.createContact('100000000000004@c.us', 'Lourival Vieira Neto');   // the LID, coming as @c.us
+        bot.client.lids.set('100000000000004@lid', PHONE);
+
+        assert.match((await bot.replyAlt('/cron 06:00 -r diario -to /Lourival Neto/ Bom dia!'))[0],
+            /^📅 \*Mensagem agendada\* .* 🔁 todo dia em 👤 Lourival Vieira Neto\./);
+        assert.equal((await items())[0].chat_id, PHONE);
+
+        // The LID as @lid, without WhatsApp's map: the @c.us stays
+        bot.client.lids.clear();
+        bot.client.contatos.delete('100000000000004@c.us');
+        bot.createContact('100000000000004@lid', 'Lourival Vieira Neto');
+        assert.match((await bot.replyAlt('/cron 07:00 -to /Lourival Neto/ Bom dia!'))[0], /em 👤 Lourival Vieira Neto\./);
+        assert.equal((await items())[1].chat_id, PHONE);
+    });
+
     test('texto começando com "/" é enviado, mas nunca roda como comando', async () => {
         await bot.replyAlt('/cron +1h /cache -a');
         const [sentAlt] = await expire();
