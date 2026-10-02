@@ -324,14 +324,29 @@ async function resolverOuEscolher(msg, valor, o = {}) {
  * @param {string} texto
  * @param {object} [o]
  * @param {string} [o.assunto]  do e-mail
+ * @param {object} [o.opcoes]   do client.sendMessage (ex.: { linkPreview: false })
  */
-async function enviarAoDestino(destino, texto, { assunto = 'Aviso' } = {}) {
+async function enviarAoDestino(destino, texto, { assunto = 'Aviso', opcoes = {} } = {}) {
     if (destino?.email) {
         await enviarEmail({ para: destino.email.split(/\s*,\s*/), assunto, texto: texto.replace(/[*_]/g, '') });
         return;
     }
-    await client.sendMessage(destino?.id || client.info.wid._serialized, texto);
+    await client.sendMessage(destino?.id || client.info.wid._serialized, texto, opcoes);
 }
+
+// Uma linha salva (dest_id, dest_name, dest_is_group, dest_email) → o destino; null: o seu privado
+function destinoDaLinha(r) {
+    if (r?.dest_email) return { email: r.dest_email, nome: r.dest_email, grupo: false };
+    return r?.dest_id ? { id: r.dest_id, nome: r.dest_name, grupo: Boolean(r.dest_is_group) } : null;
+}
+
+// O contrário: o destino → as colunas dest_* de uma linha
+const colunasDoDestino = (d) => ({
+    dest_id: d?.email ? null : d?.id ?? null,
+    dest_name: d?.email ? null : d?.nome ?? null,
+    dest_is_group: d?.grupo ? 1 : 0,
+    dest_email: d?.email ?? null
+});
 
 async function nomeDoContato(id, digitos) {
     const contato = await client.getContactById(id).catch(() => null);
@@ -342,7 +357,9 @@ async function nomeDoContato(id, digitos) {
 const descreverDestino = (d) => `${d.email ? '📧' : d.grupo ? '👥' : '👤'} ${d.email ?? d.nome}`;
 
 module.exports = {
+    colunasDoDestino,
     descreverDestino,
+    destinoDaLinha,
     emailsDoSmtpTo,
     enviarAoDestino,
     extrairDestino,

@@ -111,7 +111,7 @@ admin está ligado: só você usa comandos até `/bot -admin`
 | [`/uptime`](https://jpereira.github.io/zapbot/comandos/uptime/) | `/u`, `/up` | ✅ | Tempo de execução e de conexão |
 | [`/version`](https://jpereira.github.io/zapbot/comandos/version/) | `/ver` | ✅ | Versão do bot (mesmo banner do `/uptime`) |
 | [`/walissu`](https://jpereira.github.io/zapbot/comandos/walissu/) | `/ualisu` | ✅ | Walissu CVE BOT: marca 2 membros com uma CVE aleatória |
-| [`/watch`](https://jpereira.github.io/zapbot/comandos/watch/) | `/w` | ✅ | Avisa no seu privado quando uma mensagem casa com um texto/regex |
+| [`/watch`](https://jpereira.github.io/zapbot/comandos/watch/) | `/w` | ✅ | Avisa no seu privado (ou, com `-to`, em outro chat ou por e-mail) quando uma mensagem casa com um texto/regex |
 
 ## Documentação
 

@@ -1,7 +1,8 @@
 # `/watch` (`/w`) · admin
 
 Vigia as mensagens que chegam em **qualquer chat** (privados e grupos) e, quando
-alguma casa com uma regra, manda o alerta **no seu privado**:
+alguma casa com uma regra, manda o alerta **no seu privado** (ou, com `-to`, em
+outro chat ou por e-mail; veja [Avisar em outro lugar](#avisar-em-outro-lugar)):
 
 ```
 👀 WATCH: MENSAGEM DETECTADA
@@ -33,6 +34,7 @@ do contato (`@Fulano`) e o grupo com o nome atual.
 | `-add`, `-a` | `<PATTERN\|/REGEX/>` | Adiciona uma regra (máx. 20, setting `watch.max`). Pode ter espaços |
 | `-rem`, `-r` | `-N` | Remove a regra nº N e as ocorrências dela. As seguintes são renumeradas |
 | `-flush`, `-f` | `[-N]` | Apaga as ocorrências da regra nº N (sem `-N`: de todas, inclusive de regras já removidas). As regras são mantidas |
+| `-to` | `<destino\|off>` | Para onde vão os avisos de uma regra: com `-add` (a regra nova) ou com `-N` (troca o destino). `off` volta ao seu privado. Veja [Avisar em outro lugar](#avisar-em-outro-lugar) |
 
 ```
 /watch -a promoção
@@ -44,6 +46,9 @@ do contato (`@Fulano`) e o grupo com o nome atual.
 /watch -f -2       → apaga as ocorrências da regra 2
 /w -f              → apaga as ocorrências de todas as regras
 /watch -r -1
+/watch -a promoção -to /Grupo Ofertas/   → a regra nova avisa no grupo
+/watch -2 -to email                      → a regra 2 passa a avisar por e-mail
+/watch -2 -to off                        → e volta ao seu privado
 ```
 
 Detalhes:
@@ -53,8 +58,34 @@ Detalhes:
 - **Suas próprias mensagens e comandos são ignorados** (senão os próprios
   alertas no seu privado casariam de novo).
 - A mesma mensagem não gera dois alertas para a mesma regra; se casar com várias
-  regras, vem um alerta só listando todas.
+  regras, vem um alerta só listando todas (um por destino, se elas tiverem
+  `-to` diferentes).
 - `-list` e `-show` respondem no chat onde foram digitados. Eles mostram
   conversas de terceiros: num grupo, todos ali veem.
 - As ocorrências ficam na tabela `watch_hits` por 30 dias (setting
   `watch.hitsRetentionDays`), ou até um `/watch -f`.
+
+## Avisar em outro lugar
+
+Cada regra pode mandar os avisos para outro lugar em vez do seu privado: um
+contato, um grupo, um número ou e-mail, com a mesma busca dos outros comandos
+([Destinos](index.md#destinos-contato-grupo-número-ou-e-mail)).
+
+```
+/watch -a "vaga de emprego" -to /Grupo Carreira/   → cria a regra já com o destino
+/watch -3 -to /Jorge Pereira/                      → troca o destino da regra 3
+/watch -3 -to email                                → por e-mail (QRCODE_EMAIL_SMTP_TO)
+/watch -3 -to off                                  → volta ao seu privado
+```
+
+- O `/watch -l` mostra o destino de cada regra que não avisa no seu privado:
+  `#3  vaga de emprego  (2)  → 👥 Grupo Carreira`.
+- Se uma mensagem casar com regras de destinos diferentes, cada destino recebe
+  um aviso só com as regras dele.
+- O aviso sai da sua conta, como qualquer mensagem do bot; por e-mail, vai sem
+  a formatação do WhatsApp (assunto `[ZapBot] 👀 Watch: #3 vaga de emprego`).
+  Num grupo, todos ali veem a mensagem que casou.
+- A regra do `-add` não pode ter um ` -to ` solto no meio: ele é lido como o
+  destino.
+- Os destinos ficam na tabela `watch_destinations`; remover a regra (`-rem`)
+  apaga o destino dela.
