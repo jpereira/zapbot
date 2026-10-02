@@ -14,7 +14,7 @@ const { APP_ENV, BIN_CHROMIUM, BIN_FFMPEG, BIN_YT, BOT_START_TIME } = require('.
 const { dbGet, dbPronto } = require('./db');
 const { getBotUptime } = require('./log');
 const { humanSize } = require('./util/arquivos');
-const { versaoComCommit } = require('./versao');
+const { versaoComCommit, versaoDoBot } = require('./versao');
 
 // Cada programa externo tem este tempo para responder a versão
 const VERSAO_TIMEOUT_MS = 5000;
@@ -78,7 +78,7 @@ async function textoDoInfo() {
     const cpus = os.cpus();
     const carga = os.loadavg().map(n => n.toFixed(2)).join(' · ');
 
-    return `ℹ️ *ZapBot ${packageJson.version}* · informações do sistema\n\n` +
+    return `ℹ️ *ZapBot ${versaoDoBot()}* · informações do sistema\n\n` +
         '🤖 *Bot*\n' +
         `• ZapBot: ${versaoComCommit()} (APP_ENV=${APP_ENV})\n` +
         `• Node.js: ${process.version} (V8 ${process.versions.v8})\n` +

@@ -158,43 +158,42 @@ também entra no `nav` do `mkdocs.yml`, em ordem alfabética.
 
 ## Nova versão
 
-O `bump.sh` **abre** uma versão (o primeiro commit dela) e o `bump.sh -r` a
-**fecha** (a tag vai no último):
+Uma execução do `./bump.sh` **fecha** a versão atual (a do `package.json`) e
+**abre** a próxima:
 
 ```
-vX.Y.Z ── Bump para X.Z ── ...commits da X.Z... ── Release X.Z (tag vX.Z.0)
+... commits da X.Y ── Release X.Y (tag vX.Y.Z) ── Bump para X.Z ── commits da X.Z ...
 ```
 
-- **`./bump.sh [X.Y]`** abre a próxima versão: X.Y+1 da atual (a do
-  `package.json`) ou a informada, que precisa ser maior (ex.: `./bump.sh 3.0`,
-  para ir da 2.x para a 3.x). Troca a versão no `package.json`, no
-  `package-lock.json`, no README e no `docs/` (`ZapBot X.Y`, os exemplos
-  `git+<commit>/vX.Y.Z`) e commita como `Bump para X.Y`, sem tag. A versão
-  **estável** (`hoje a vX.Y.Z`, `git checkout vX.Y.Z`) continua a
-  última release: quem instala segue nela enquanto a nova está em
-  desenvolvimento. Recusa se a versão atual ainda não foi fechada.
-- **`./bump.sh -r`** fecha a versão do `package.json`: troca a versão estável
-  (o `vX.Y.Z` sem `/` antes) pela dela, com a data de hoje ao lado em
-  `vX.Y.Z (de DD/MM/AAAA)` (a seção de instalação), commita como
-  `Release X.Y` (sem nada a trocar, não há commit), cria a tag anotada
-  `vX.Y.Z` no último commit e grava as refs no
-  `.git/packed-refs` (`git pack-refs --all`), para a imagem Docker saber o
-  commit da tag (o [`/version`](comandos/version.md) mostra
-  `(git+<commit>/<tag>)`).
+1. **Release X.Y** (pula se a tag `vX.Y.Z` já existe): a versão estável do
+   README e da instalação (o `vX.Y.Z` sem `/` antes: `hoje a v…`,
+   `git checkout v…`) passa para a atual, com a data de hoje ao lado em
+   `vX.Y.Z (de DD/MM/AAAA)`. Os exemplos de saída perdem o rótulo
+   `(devel)`: `X.Y.Z (devel) (git+<commit>/HEAD)` vira `X.Y.Z (git+<commit>/vX.Y.Z)`.
+   Commit `Release X.Y`, com a tag anotada `vX.Y.Z` nele.
+2. **Bump para X.Z** (X.Y+1, ou a versão informada: `./bump.sh 3.0`): o
+   `package.json` e o `package-lock.json` passam para a nova, e os exemplos
+   voltam a ser da versão em desenvolvimento, com o rótulo: `X.Y.Z (git+…/vX.Y.Z)`
+   vira `X.Z (devel) (git+…/HEAD)` e `ZapBot X.Y` vira `ZapBot X.Z (devel)`. A
+   versão estável continua a release que acabou de sair. Commit `Bump para X.Z`,
+   sem tag.
+3. Grava as refs no `.git/packed-refs` (`git pack-refs --all`), para a imagem
+   Docker saber o commit da tag (o [`/version`](comandos/version.md) mostra
+   `(git+<commit>/<tag>)`).
 
-Os dois precisam do working tree limpo e não fazem push. A troca da versão fica
-**só** no README e no `docs/` (fora o `requirements.txt`, que tem as versões do
-MkDocs), e pula as linhas que citam o próprio `bump.sh` (os exemplos abaixo). No
-código e nos testes, o mesmo número pode ser outra coisa, como a versão da API
-do NVD ou do JSON-RPC da Solana: os testes conferem as duas.
+O bot mostra o mesmo rótulo sozinho: fora de uma tag `v*`, a versão vem
+como `X.Y.Z (devel)` no `/version`, no `/bot -info`, no boot e nos e-mails.
+
+Precisa do working tree limpo e não faz push. A troca fica **só** no README e
+no `docs/`, e pula as linhas que citam o próprio `bump.sh` (os exemplos abaixo).
+As que explicam o formato usam `X.Y`, que o `bump.sh` não troca. No código e
+nos testes, o mesmo número pode ser outra coisa, como a versão da API do NVD ou
+do JSON-RPC da Solana: os testes conferem as duas.
 
 ```bash
-./bump.sh -n        # dry-run: só mostra o que seria alterado
-./bump.sh           # abre a X.Y+1: commit "Bump para X.Y" (sem tag)
-./bump.sh 3.0       # abre a 3.0: commit "Bump para 3.0.0"
-git push            # o main com a versão nova, em desenvolvimento
-./bump.sh -n -r     # dry-run do fechamento
-./bump.sh -r        # fecha a versão: commit "Release X.Y" + tag vX.Y.Z
+./bump.sh -n        # dry-run: mostra o que seria alterado nos dois passos
+./bump.sh           # Release X.Y (com a tag) + Bump para X.Y+1
+./bump.sh 3.0       # Release X.Y (com a tag) + Bump para 3.0.0
 git push && git push origin vX.Y.Z   # o push da tag publica o site
 ```
 
