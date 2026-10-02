@@ -194,7 +194,7 @@ const mostrarItens = async (key, itens) => (DE_PESSOAS.includes(key) ? Promise.a
  * itens passam pela mesma validação do /set (ex.: um número vira só dígitos),
  * então "+55 21 9..." tira o "5521...".
  */
-async function mudarLista(msg, { key, bruto, acrescentar }) {
+async function mudarLista(msg, { key, bruto, acrescentar, veja = `/set ${key}` }) {
     const schema = SETTINGS_SCHEMA[key];
     const opcao = acrescentar ? '-append' : '-rem';
 
@@ -224,9 +224,10 @@ async function mudarLista(msg, { key, bruto, acrescentar }) {
     const mudam = acrescentar ? itens.filter(i => !atual.includes(i)) : itens.filter(i => atual.includes(i));
 
     if (!mudam.length) {
+        const quais = (await mostrarItens(key, itens)).join(', ');
         await msg.reply(acrescentar
-            ? `ℹ️ *${key}* já tem ${itens.join(', ')}.`
-            : `❌ *${key}* não tem ${itens.join(', ')}.\n💡 _Veja os itens com /set ${key}_`);
+            ? `ℹ️ *${key}* já tem ${quais}.`
+            : `❌ *${key}* não tem ${quais}.\n💡 _Veja os itens com ${veja}_`);
         return;
     }
 
@@ -365,11 +366,13 @@ async function cmdSet({ msg, opts, args, chatId }) {
 /**
  * O -append/-rem de uma lista de pessoas (bot.admins, bot.users) a partir do
  * texto com os nomes, as menções e os números: o atalho do /bot +o|-o|+v|-v.
+ * Com itensProntos, o texto já são os itens (o telefone ou o id do grupo do
+ * chat atual): não passa pela busca.
  */
-async function mudarListaDePessoas(msg, key, texto, acrescentar) {
-    const bruto = await itensDasPessoas(msg, key, texto);
+async function mudarListaDePessoas(msg, key, texto, acrescentar, { itensProntos = false } = {}) {
+    const bruto = itensProntos ? texto : await itensDasPessoas(msg, key, texto);
     if (bruto === null) return;
-    await mudarLista(msg, { key, bruto, acrescentar });
+    await mudarLista(msg, { key, bruto, acrescentar, veja: '/bot' });
 }
 
 module.exports = {

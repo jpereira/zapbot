@@ -268,7 +268,7 @@ describe('permissões', () => {
         assert.match((await bot.responder('/set -a bot.users true'))[0], /❌ Valor inválido para \*bot\.users\*: o true \(todos\) não se mistura/);
         assert.deepEqual(await bot.responder('/set bot.users true'), ['✅ *bot.users* = true (todos)']);
         assert.equal((await bot.responder('/noffa oi', { de: CICLANO })).length, 1);
-        assert.match((await bot.responder('/set -a bot.users /Fulano/'))[0], /não se mistura com pessoas e grupos: para liberar só alguns, \/set bot\.users false antes/);
+        assert.match((await bot.responder('/set -a bot.users /Fulano/'))[0], /não se mistura com pessoas e grupos: para liberar só alguns, \/bot \+admin antes/);
         assert.deepEqual(await bot.responder('/set bot.users false'), ['✅ *bot.users* = (vazio)']);
         assert.deepEqual(bot.getSetting('bot.users'), []);
         assert.match((await bot.responder('/set -a bot.users email'))[0], /❌ O \*bot\.users\* é de pessoas e grupos: .*não um e-mail/);
@@ -306,7 +306,41 @@ describe('permissões', () => {
         await bot.setSetting('bot.admins', ['5521911111111']);
         assert.deepEqual(await bot.responder('/bot +o /Fulano/', { de: OUTRO.jid }), ['⛔ Só o dono do bot altera o *bot.admins*.']);
         assert.deepEqual(await bot.responder('/bot -v /Fulano/', { de: OUTRO.jid }), ['⛔ Só o dono do bot altera o *bot.users*.']);
-        assert.match((await bot.responder('/bot +v'))[0], /❌ Informe quem: \/bot \+v <pessoa\|grupo\.\.\.>/);
+    });
+
+    test('/bot +v|-v|+o|-o sem ninguém: o chat atual (o grupo ou a pessoa do privado)', async () => {
+        await bot.setSetting('bot.users', []);
+
+        // No grupo: o grupo; +o recusa (grupo não vira admin)
+        assert.deepEqual(await bot.responder('/bot +v'), ['✅ *bot.users* + 👥 Família\n= 👥 Família']);
+        assert.deepEqual(bot.getSetting('bot.users'), [GRUPO]);
+        assert.deepEqual(await bot.responder('/bot +v'), ['ℹ️ *bot.users* já tem 👥 Família.']);
+        assert.match((await bot.responder('/bot +o'))[0], /^❌ Um grupo não pode ser admin .*\n💡 _Para liberar os comandos comuns neste grupo: \/bot \+v_$/);
+        assert.deepEqual(await bot.responder('/bot -v'), ['✅ *bot.users* − 👥 Família\n= (vazio)']);
+        assert.deepEqual(await bot.responder('/bot -v'), ['❌ *bot.users* não tem 👥 Família.\n💡 _Veja os itens com /bot_']);
+
+        // No privado de alguém: a pessoa, pelo telefone (também quando o chat é o LID)
+        assert.deepEqual(await bot.responder('/bot +o', { chat: OUTRO.jid }), ['✅ *bot.admins* + 5521911111111 (Fulano)\n= 5521911111111 (Fulano)']);
+        const LID = '100000000000002@lid';
+        bot.criarContato('5521966666666@c.us', 'Ciclano');
+        bot.client.lids.set(LID, '5521966666666@c.us');
+        assert.deepEqual(await bot.responder('/bot +v', { chat: LID }), ['✅ *bot.users* + 5521966666666 (Ciclano)\n= 5521966666666 (Ciclano)']);
+
+        // No seu privado, não há quem; LID sem telefone, use o número
+        assert.match((await bot.responder('/bot +v', { chat: DONO.jid }))[0], /^❌ Este é o seu privado: você \(o dono\) já usa tudo\./);
+        assert.match((await bot.responder('/bot +v', { chat: '999999999999999@lid' }))[0], /❌ Não sei o telefone desta pessoa/);
+    });
+
+    test('/bot -reset (-r): ligado, sem admins e sem usuários; só o dono', async () => {
+        await bot.setSetting('bot.admins', ['5521911111111']);
+        await bot.setSetting('bot.users', [GRUPO]);
+        await bot.setSetting('bot.paused', true);
+
+        assert.deepEqual(await bot.responder('/bot -r', { de: OUTRO.jid }), ['⛔ Só o dono do bot volta o /bot ao padrão.'], 'admin extra');
+        assert.deepEqual(await bot.responder('/bot -reset'),
+            ['♻️ *Padrão restaurado:* bot ligado, sem admins extras e sem usuários.\n\n▶️ *Bot:* ativo\n🔒 *Comandos:* só o dono']);
+        assert.deepEqual([bot.getSetting('bot.paused'), bot.getSetting('bot.admins'), bot.getSetting('bot.users')], [false, [], []]);
+        assert.match((await bot.responder('/bot -r -on'))[0], /❌ O -reset não combina com as outras opções/);
     });
 
     test('/bot: admins (+o) e usuários (+v) numa lista só, com o tipo, o nome e o número', async () => {
@@ -322,10 +356,12 @@ describe('permissões', () => {
             '• 🗣️ +v · 👤 +5521977777777\n' +
             '💡 _👑 +o: admin, usa tudo (bot.admins) · 🗣️ +v: usuário, usa os comandos comuns (bot.users)_');
 
-        // Ninguém nas listas: sem a lista; com o true, só os admins
+        // Ninguém nas listas: sem a lista; com o true, o aviso
         await bot.setSetting('bot.admins', []);
         await bot.setSetting('bot.users', ['all']);
-        assert.equal((await bot.responder('/bot'))[0], '▶️ *Bot:* ativo\n🔓 *Comandos:* todos usam os comuns');
+        assert.equal((await bot.responder('/bot'))[0], '▶️ *Bot:* ativo\n🔓 *Comandos:* todos usam os comuns\n' +
+            '⚠️ _Atenção: qualquer pessoa pode executar os comandos comuns do bot, em qualquer chat. ' +
+            'Para restringir: /bot +admin (e depois /bot +v para liberar alguns)._');
     });
 
     test('bot desligado: tudo ignorado, inclusive os seus, exceto o /bot', async () => {

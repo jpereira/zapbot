@@ -88,6 +88,14 @@ describe('/noffa', () => {
 });
 
 describe('/bot', () => {
+    test('-h: os pares +admin/-admin, +o/-o e +v/-v juntos, uma linha cada', async () => {
+        const [r] = await bot.responder('/bot -h');
+        const linhas = r.split('\n').filter(l => /^  [+-]/.test(l)).map(l => l.trim().split(/\s{2,}/)[0]);
+        assert.deepEqual(linhas, ['-on', '-off', '+admin, -admin', '+o, -o [pessoa...]', '+v, -v [pessoa|grupo...]',
+            '-reset, -r', '-status, -s [<hora>|off]', '-info, -i']);
+        assert.doesNotMatch(r, /Arguments:/);
+    });
+
     test('sem opção mostra os dois estados', async () => {
         const [r] = await bot.responder('/bot');
         assert.match(r, /▶️ \*Bot:\* ativo/);
