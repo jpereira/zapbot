@@ -3,9 +3,10 @@
 Silencia os avisos que chegam no seu privado quando uma pessoa ou um grupo
 apaga mensagens, edita mensagens ou apaga status. **Só o aviso some**: a
 mensagem continua guardada, e o [`/show`](show.md) (ou o `/show -e`) a mostra.
+Só o alvo, sem opção, silencia tudo (o mesmo que o `-a`).
 
 ```
-/mudo <OPÇÃO>... </contato ou grupo/|@menção|+número>
+/mudo [OPÇÃO]... </contato ou grupo/|@menção|+número>
 ```
 
 | Opção | Valor | Descrição |
@@ -13,7 +14,7 @@ mensagem continua guardada, e o [`/show`](show.md) (ou o `/show -e`) a mostra.
 | `-deleted`, `-d` | | Silencia os avisos de mensagens apagadas |
 | `-edited`, `-e` | | Silencia os avisos de edições |
 | `-status`, `-s` | | Silencia os avisos de status apagados |
-| `-all`, `-a` | | Tudo isso |
+| `-all`, `-a` | | Tudo isso. É o padrão: `/mudo /Grupo L200/` é o mesmo que `/mudo -a /Grupo L200/` |
 | `-list`, `-l` | | Lista os silenciados (o mesmo que `/mudo` sem nada), com quantos avisos foram ignorados |
 | `-rm` | `<nº\|all>` | Desfaz o silêncio do nº N da lista (ou de todos) |
 
@@ -26,12 +27,12 @@ responde só com o nº. Num **grupo**, vale para todos dali; numa **pessoa**, pa
 o que ela fizer em qualquer chat, inclusive os status dela.
 
 ```
-/mudo -a /Grupo L200/       → nada do grupo avisa
-/mudo -a /Jorge Pereira/    → nada do contato avisa
+/mudo /Grupo L200/          → nada do grupo avisa (o mesmo que /mudo -a /Grupo L200/)
+/mudo /Jorge Pereira/       → nada do contato avisa
 /mudo -d -e +5521999999999  → apagadas e editadas desse número
 /mute -s Fulano             → só os status apagados do contato
-/m -a @Fulano Da Silva      → num grupo, mencionando a pessoa
-/m -a /Jorge/               → vários Jorge: lista, e você responde com o nº
+/m @Fulano Da Silva         → num grupo, mencionando a pessoa
+/m /Jorge/                  → vários Jorge: lista, e você responde com o nº
 /mudo                       → a lista
 /mudo -rm 2                 → os avisos do nº 2 voltam
 ```
