@@ -20,15 +20,17 @@ const { ROOT_DIR } = require('./constantes');
  *      o .dockerignore), então cada "docker compose build" grava o commit e a
  *      tag do código que foi para ela.
  *
- * A tag é a que aponta para o commit do HEAD destacado (git checkout release-2.0).
- * Uma tag anotada (as do bump.sh) aponta para um objeto "tag", não para o
- * commit; o commit dela vem de um destes:
- *   - a linha "^<commit>" logo abaixo dela no packed-refs (num clone);
+ * A tag é a que aponta para o commit em uso: com o HEAD destacado (git checkout
+ * release-2.0) ou num branch que está no commit da tag (o main logo depois do
+ * bump.sh). Uma tag anotada (as do bump.sh) aponta para um objeto "tag", não
+ * para o commit; o commit dela vem de um destes:
+ *   - a linha "^<commit>" logo abaixo dela no packed-refs (num clone, ou depois
+ *     de um git pack-refs --all, que o bump.sh roda ao criar a tag);
  *   - o próprio objeto em .git/objects (fora do Docker, onde o .git está inteiro);
  *   - a última linha do reflog (.git/logs/HEAD): "checkout: moving from main to
  *     release-2.0", com o commit para onde foi (depois de um git fetch --tags,
  *     a tag nova fica solta e o objeto não vai para a imagem).
- * Num branch, ou sem tag para o commit: "HEAD".
+ * Sem tag para o commit: "HEAD".
  *
  * Lido uma vez, ao carregar: é o do código que está rodando, mesmo que o
  * repositório mude depois.
@@ -118,19 +120,19 @@ function lerGit(raiz = ROOT_DIR) {
     const head = ler('HEAD');
     if (!head) return null;
 
-    // Num branch: o commit dele, e a ref é HEAD
-    if (!HASH.test(head)) {
+    // O commit em uso: o do HEAD destacado, ou o do branch (em refs/heads/ ou no packed-refs)
+    let commit = HASH.test(head) ? head : null;
+    if (!commit) {
         const branch = head.match(/^ref:\s*(\S+)$/)?.[1];
         if (!branch) return null;
 
         const doRef = ler(branch);
         const doPacked = (ler('packed-refs') ?? '').split('\n').find(l => l.endsWith(` ${branch}`))?.split(' ')[0];
-        const commit = [doRef, doPacked].find(h => h && HASH.test(h));
-        return commit ? { commit, ref: 'HEAD' } : null;
+        commit = [doRef, doPacked].find(h => h && HASH.test(h));
+        if (!commit) return null;
     }
 
-    // HEAD destacado: a tag que aponta para este commit (direto, peeled, pelo objeto ou pelo reflog)
-    const commit = head;
+    // A tag que aponta para este commit (direto, peeled, pelo objeto ou pelo reflog)
     const tags = lerTags(ler, raiz);
     const daTag = [...tags.entries()]
         .filter(([, t]) => t.ref === commit || t.commit === commit || commitDoObjetoTag(ler, t.ref) === commit)
