@@ -222,8 +222,9 @@ async function inicializarBanco() {
     /*
      * Posições DeFi do /defi (por enquanto, da Orca): o resto é lido on-chain a
      * cada -show. O -alerta guarda para onde avisar (alert_dest_*: um chat;
-     * alert_email: e-mails; nenhum: o seu privado) e se a posição estava na
-     * faixa na última verificação (in_range; NULL: ainda não lida).
+     * alert_email: e-mails; alert_recipients: vários -to; nenhum: o seu privado)
+     * e se a posição estava na faixa na última verificação (in_range; NULL:
+     * ainda não lida).
      */
     await dbRun(`
         CREATE TABLE IF NOT EXISTS defi_positions (
@@ -241,6 +242,7 @@ async function inicializarBanco() {
         alert_dest_name: 'TEXT',
         alert_dest_is_group: 'INTEGER DEFAULT 0',
         alert_email: 'TEXT',
+        alert_recipients: 'TEXT',           // JSON com os destinos de vários -to (as alert_dest_*: o primeiro)
         alert_fees: 'REAL',                 // -taxas: avisa quando as taxas a coletar passam disso (US$)
         fees_notified: 'INTEGER DEFAULT 0', // já avisou desse valor (volta a 0 quando coletar)
         in_range: 'INTEGER'
