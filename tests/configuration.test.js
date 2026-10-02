@@ -400,18 +400,18 @@ describe('ajuda', () => {
     test('as formas do uso ("  ou  ") saem uma por linha, alinhadas', () => {
         const textAlt = formatCommandHelp(findCommand('/defi'));
         const linesAlt = textAlt.split('\n');
-        assert.equal(linesAlt[0], 'Usage: /defi -s [nº|orca|prjx]');
-        assert.equal(linesAlt[1], '       /defi orca|prjx -s');
-        assert.equal(linesAlt[6], '       /defi prjx|projectx -address <0x...> [-alerta [valor]]');
+        assert.equal(linesAlt[0], 'Usage: /defi [orca|prjx]');
+        assert.equal(linesAlt[1], '       /defi -l');
+        assert.equal(linesAlt[5], '       /defi prjx -address <0x...> [-alerta [valor]]');
         assert.doesNotMatch(textAlt, / {2}ou {2}/);
     });
 
     test('vários exemplos depois do "Ex:" saem um por linha, à esquerda (para o celular)', () => {
         const linesAlt = formatCommandHelp(findCommand('/defi')).split('\n');
-        const i = linesAlt.findIndex(l => l.startsWith('  -show, -s'));
-        assert.equal(linesAlt[i + 1], '    Ex: /defi -s');
-        assert.equal(linesAlt[i + 2], '        /defi -s 2');
-        assert.equal(linesAlt[i + 4], '        /defi prjx -s');
+        const i = linesAlt.findIndex(l => l.startsWith('  [orca|prjx]'));
+        assert.equal(linesAlt[i + 1], '    Ex: /defi');
+        assert.equal(linesAlt[i + 2], '        /defi orca');
+        assert.equal(linesAlt[i + 3], '        /defi prjx');
 
         // A single example: on the same line; and "Niteroi, Sergipe" is one example, not two
         assert.match(formatCommandHelp(findCommand('/tempo')), /Ex: \/tempo Niteroi, Sergipe/);

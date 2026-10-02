@@ -17,12 +17,12 @@ const { formatData, plural } = require('../util/format');
 
 /*
  * /defi: registered liquidity positions, from Orca (Solana) and Project X (HyperEVM).
- * /defi -s [no.|orca|prjx]    → "Position Details" of all, of no. N or of a protocol
- * /defi orca|prjx -s         → the same, only the protocol's
+ * /defi                      → the "Position Details" of all of them
+ * /defi orca|prjx            → only those of that protocol
  * /defi -l                   → lists the registrations (full address only in your private chat)
  *   /defi -rm <nº...|all>      → remove
  * /defi orca -address <address> [-pool <address>] [-nft <mint>]  → registers a position
- * /defi prjx|projectx -address <0x...>  → registers the wallet (the bot reads its positions)
+ * /defi prjx -address <0x...>  → registers the wallet (the bot reads its positions)
  * -nft and -pool are optional: if they come, the bot checks that they match the position.
  *
  * And the out-of-range alert (the check lives in src/defi/alerts.js):
@@ -188,13 +188,13 @@ function positionText(d) {
 
 const EXAMPLES = '💡 _/defi orca -address <endereço> -pool <endereço> -nft <mint>\n/defi prjx -address <0x...>_';
 
-// The protocol word: /defi orca ..., /defi prjx ..., /defi -s projectx
-const WORDS = { orca: 'orca', prjx: 'prjx', projectx: 'prjx', 'project-x': 'prjx' };
+// The protocol word: /defi orca, /defi prjx -address ...
+const WORDS = { orca: 'orca', prjx: 'prjx' };
 const protocolAlt2 = (word) => WORDS[String(word ?? '').toLowerCase()] ?? null;
 
 async function limitOrRepeated(msg, address) {
     if (await dbGet('SELECT 1 AS ok FROM defi_positions WHERE lower(position) = lower(?)', [address])) {
-        await msg.reply(`ℹ️ ${short(address)} já está cadastrada. Veja com /defi -s`);
+        await msg.reply(`ℹ️ ${short(address)} já está cadastrada. Veja com /defi`);
         return true;
     }
     if ((await dbGet('SELECT COUNT(*) AS n FROM defi_positions')).n >= MAX_POSITIONS) {
@@ -230,8 +230,8 @@ async function registerWallet(msg, o) {
 
     await dbRun('INSERT INTO defi_positions (protocol, position, created_at) VALUES (?, ?, ?)', ['prjx', wallet.toLowerCase(), Date.now()]);
     await msg.reply(`✅ *Carteira do Project X cadastrada:* ${short(wallet)}\n` +
-        (openAlt ? `📍 ${plural(openAlt, 'posição aberta', 'posições abertas')}.` : 'ℹ️ Nenhuma posição aberta agora: o /defi -s mostra quando houver.') +
-        '\n💡 _Veja com /defi -s_');
+        (openAlt ? `📍 ${plural(openAlt, 'posição aberta', 'posições abertas')}.` : 'ℹ️ Nenhuma posição aberta agora: o /defi prjx mostra quando houver.') +
+        '\n💡 _Veja com /defi prjx_');
     return wallet.toLowerCase();
 }
 
@@ -267,7 +267,7 @@ async function register(msg, o, protocol) {
     await dbRun('INSERT INTO defi_positions (protocol, position, nft, pool, created_at) VALUES (?, ?, ?, ?, ?)',
         ['orca', address, r.posicao.mint, r.posicao.whirlpool, Date.now()]);
 
-    await msg.reply(`✅ *Posição da Orca cadastrada:* ${short(address)}\n💡 _Veja com /defi -s_`);
+    await msg.reply(`✅ *Posição da Orca cadastrada:* ${short(address)}\n💡 _Veja com /defi orca_`);
     return address;
 }
 
@@ -283,7 +283,7 @@ async function showAlt(msg, positions) {
             if (!texts.length) await msg.reply(`🌊 ${describe(p)}: nenhuma posição aberta.`);
             for (const textAlt of texts) await msg.reply(textAlt);
         } catch (err) {
-            printError(`/defi -s ${p.position}:`, err.response?.status ?? '', err.message);
+            printError(`/defi ${p.position}:`, err.response?.status ?? '', err.message);
             await msg.reply(`⚠️ Não consegui ler ${describe(p)} agora: ${err.message}.\n${TIP_RPC[p.protocol] ?? ''}`);
         }
     }
@@ -480,7 +480,7 @@ function listText(positions, inPrivate) {
         ` _(desde ${formatData(p.created_at).split(',')[0]})_${alertBell(p)}`;
 
     return `🌊 *Posições DeFi* (${positions.length})\n\n${positions.map(line).join('\n')}\n\n` +
-        '💡 _/defi -s mostra os detalhes; /defi -rm <nº> remove; 🔔 = com alerta (/defi -alerta), ≥ $ é o limite das taxas._';
+        '💡 _/defi mostra os detalhes; /defi -rm <nº> remove; 🔔 = com alerta (/defi -alerta), ≥ $ é o limite das taxas._';
 }
 
 async function cmdDefi({ msg, opts: commandOpts, args, chatId }) {
@@ -499,15 +499,12 @@ async function cmdDefi({ msg, opts: commandOpts, args, chatId }) {
         return;
     }
 
-    // The protocol comes as a word (/defi orca ..., /defi prjx -s) or in -s (/defi -s orca)
+    // The protocol comes as a word: /defi orca, /defi prjx -address ...
     const word = opts.argv.find(protocolAlt2);
     const argv = opts.argv.filter(a => a !== word);
-    const doShow = /^\d+$/.test(String(o.show ?? '')) ? null : protocolAlt2(o.show);
-    const protocol = protocolAlt2(word) ?? doShow;
+    const protocol = protocolAlt2(word);
 
-    // Registration: -address, or just the protocol word (then it says what is missing)
-    const soProtocol = word && !['show', 'list', 'rm', 'alerta'].some(n => opts.given.has(n));
-    if (opts.given.has('address') || soProtocol) {
+    if (opts.given.has('address')) {
         await registerWithAlert(msg, opts, protocol, { comDestino: withDestination, destinoTexto: destinationText });
         return;
     }
@@ -526,34 +523,23 @@ async function cmdDefi({ msg, opts: commandOpts, args, chatId }) {
 
     const empty = `🌊 Nenhuma posição cadastrada.\n${EXAMPLES}`;
 
-    if (opts.given.has('show')) {
-        const numberAlt = /^\d+$/.test(String(o.show ?? '')) ? Number(o.show) : null;
-        if (o.show && !numberAlt && !doShow) {
-            await msg.reply(`❌ -s: "${o.show}" não é um nº da lista nem um protocolo (orca, prjx).`);
-            return;
-        }
-
-        const p = numberAlt ? positions[numberAlt - 1] : null;
-        if (numberAlt && !p) {
-            await msg.reply(`❌ Posição nº ${numberAlt} não existe. Veja a lista com /defi -l`);
-            return;
-        }
-
-        const chosen = p ? [p] : positions.filter(x => !protocol || x.protocol === protocol);
-        if (!chosen.length) {
-            await msg.reply(protocol ? `🌊 Nada cadastrado ${protocol === 'prjx' ? 'do Project X' : 'da Orca'}.\n${EXAMPLES}` : empty);
-            return;
-        }
-        await showAlt(msg, chosen);
-        return;
-    }
-
-    if (o.list || !opts.argv.length) {
+    if (o.list) {
         await msg.reply(positions.length ? listText(positions, chatId === client.info?.wid?._serialized) : empty);
         return;
     }
 
-    await msg.reply('```' + getCommandSyntax('/defi') + '```');
+    if (argv.length) {
+        await msg.reply(`❌ "${argv[0]}" não é um protocolo: use orca ou prjx.\n\n\`\`\`${getCommandSyntax('/defi')}\`\`\``);
+        return;
+    }
+
+    // /defi: the Position Details of all; /defi orca or /defi prjx: only that one
+    const chosen = positions.filter(x => !protocol || x.protocol === protocol);
+    if (!chosen.length) {
+        await msg.reply(protocol ? `🌊 Nada cadastrado ${protocol === 'prjx' ? 'do Project X' : 'da Orca'}.\n${EXAMPLES}` : empty);
+        return;
+    }
+    await showAlt(msg, chosen);
 }
 
 module.exports = {

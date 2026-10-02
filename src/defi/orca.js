@@ -211,7 +211,7 @@ async function validatePosition({ endereco: address, nft = null, pool = null }) 
 const orcaApi = async (pathAlt) => (await axios.get(`${ORCA_API}/${pathAlt}`, { timeout: API_TIMEOUT_MS })).data.data;
 
 /**
- * Everything /defi -s shows about a position. Two RPC reads: the
+ * Everything /defi shows about a position. Two RPC reads: the
  * position with the pool (stored in the registration) and the limit tick arrays.
  */
 async function positionDetails(address, addressPool, nowAlt = Date.now()) {
