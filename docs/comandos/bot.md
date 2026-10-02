@@ -145,7 +145,10 @@ O que entra:
 - **Watch**: ocorrências das regras do [`/watch`](watch.md), com o nº de cada
   regra (as 5 que mais casaram).
 - **Apagadas**, **editadas** e **status apagados**: o que foi recuperado nas
-  últimas 24 h, inclusive o que o [`/mudo`](mudo.md) silenciou.
+  últimas 24 h, inclusive o que o [`/mudo`](mudo.md) silenciou. Com o aviso
+  desligado (`show.alert.deleted`, `show.alert.edited` ou `show.alert.status`
+  em `off`), a linha diz como ligar de novo:
+  `✏️ Editadas: 4 (aviso desligado; ligue com /set show.alert.edited on)`.
 - **Ignoradas (/mudo)**: os avisos que o `/mudo` cortou, por tipo.
 - **Último backup**: o mais recente do [`/backup`](backup.md).
 - **Status diário**: o horário e o próximo envio, ou `🔕 Status diário desligado`.
