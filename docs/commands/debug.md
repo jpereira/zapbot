@@ -14,3 +14,12 @@ ligado só com `APP_ENV=dev`.
 /dbg -off       → 🪲 Debug Desativado.
 /debug          → mostra o estado atual
 ```
+
+Um comando que não existe (ou que está desativado) aparece no log: o seu,
+sempre; o dos outros, só com o debug ligado (senão, qualquer texto começando com
+`/` num grupo encheria o log):
+
+```
+[!] ⚠️ 'Jorge' executed unknown command: '/tapioca'
+[DEBUG] ⚠️ 'Fulano' executed unknown command: '/tapioca'
+```
