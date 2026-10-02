@@ -134,6 +134,8 @@ async function initializeDb() {
         )
     `);
     await dbRun('CREATE INDEX IF NOT EXISTS idx_stats_chat_day ON stats (chat_id, day)');
+    // System notices counted as an "Unknown" participant (until 2.0.2): they go away
+    await dbRun("DELETE FROM stats WHERE sender_id = 'UNKNOWN'");
 
     /*
      * Price alerts from /cotacao -alerta and /crypto -alerta (fire once
