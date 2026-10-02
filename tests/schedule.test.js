@@ -504,7 +504,7 @@ describe('/cron: comandos no texto ({/comando})', () => {
         const sentAlt3 = await expire();
         assert.deepEqual(sentAlt3.map(e => e.chatId), [L200, OTHERAlt.jid]);
         for (const e of sentAlt3) {
-            assert.match(e.content, /^⏰ Status da DeFi!\n\n🌊 Nenhuma posição cadastrada\.\n💡 _\/defi -orca[^\n]*\n\/defi -project-x[^\n]*_\n\nVersão:\n\n🤖 \*ZapBot/);
+            assert.match(e.content, /^⏰ Status da DeFi!\n\n🌊 Nenhuma posição cadastrada\.\n💡 _\/defi orca[^\n]*\n\/defi prjx[^\n]*_\n\nVersão:\n\n🤖 \*ZapBot/);
         }
     });
 
