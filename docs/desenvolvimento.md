@@ -37,7 +37,7 @@ src/
   log.js                print* coloridos
   db.js                 SQLite (dbGet/dbAll/dbRun) e o sinal dbPronto
   inicializacao.js      tabelas + carga dos settings
-  settings.js           SETTINGS_SCHEMA, getSetting/setSetting
+  settings.js           SETTINGS_SCHEMA, getSetting/setSetting e a migração dos renomeados
   botConfig.js          src/comandos/comandos.json carregado
   cliente.js            cliente do whatsapp-web.js e a marca dos envios do bot
   conexao.js            QR Code, eventos de conexão, reinício e watchdog
@@ -55,8 +55,8 @@ src/
   openai.js             modelos aceitos pelo /gpt
   openaiChat.js         chamada ao chat da OpenAI (/gpt e /tldr)
   contatos.js, opcoes.js                    contatos/@lid e o parser de opções
-  destinos.js           o -to/alvo: contato ou grupo pelo nome, número ou e-mail, e o envio ao destino
-  escolhas.js           a lista numerada para escolher (vários contatos/grupos) e a resposta com o nº
+  destinos.js           o -to/alvo: contato ou grupo pelo nome, menção (@), número ou e-mail, e o envio ao destino
+  escolhas.js           a lista numerada para escolher (vários contatos/grupos) e a resposta com o nº (só de quem deu o comando)
   mudo.js               /mudo: quem está silenciado e os avisos cortados
   defi/                 Solana (base58, PDA, RPC), as contas da Orca (/defi) e o -alerta de saída da faixa
   watch/                regras e verificação do /watch
@@ -103,12 +103,12 @@ entre os casos.
 
 | Arquivo | O que cobre |
 |---|---|
-| `configuracao.test.js` | `comandos.json`, settings, parser de opções, ajuda e a coerência entre config, código, README e `docs/` (inclusive a ordem alfabética e os links) |
-| `mensagens.test.js` | Gravação, roteamento, permissões (`onlyAdmin`, modo admin, bot desligado) e a contagem do `/stats` |
-| `comandos.test.js` | `/help`, `/debug`, `/uptime`, `/version`, `/ping`, `/noffa`, `/bot` (e o `-info`), `/set` |
-| `apagadas-editadas.test.js` | Eventos de apagar/editar e o `/show` (apagadas e editadas) |
-| `mudo.test.js` | `/mudo`: avisos silenciados por pessoa ou grupo, e a busca do alvo (contato antes de grupo, a lista para escolher pelo nº) |
-| `stats.test.js`, `watch.test.js`, `monitor.test.js` | `/stats`, `/watch`, `/monitor` e o aviso de presença |
+| `configuracao.test.js` | `comandos.json`, settings (e a migração dos renomeados), parser de opções, ajuda e a coerência entre config, código, README e `docs/` (inclusive a ordem alfabética e os links) |
+| `mensagens.test.js` | Gravação, roteamento, permissões (`onlyAdmin`, modo admin, bot desligado, admins extras do `bot.admins`) e a contagem do `/stats` |
+| `comandos.test.js` | `/help`, `/debug`, `/uptime`, `/version`, `/ping`, `/noffa`, `/bot` (e o `-info`), `/set` (e o `-append`/`-rem`) |
+| `apagadas-editadas.test.js` | Eventos de apagar/editar e o `/show` (apagadas e editadas, e a busca `-q`) |
+| `mudo.test.js` | `/mudo`: avisos silenciados por pessoa ou grupo, e a busca do alvo (contato antes de grupo, menção, a lista para escolher pelo nº) |
+| `stats.test.js`, `watch.test.js`, `monitor.test.js` | `/stats`, `/watch` (e o `-to`), `/monitor` e o aviso de presença |
 | `status.test.js` | `/bot -status`: o relatório e o envio diário |
 | `agenda.test.js` | Datas digitadas (`6h`, `+2h`, `às 18h`, `sexta`...) e o `/cron`, nos modos mensagem e lembrete, com vários `-to`, `-edit` e `-pause`/`-resume` |
 | `backup.test.js` | `/backup` (criação, lista, restauração, envio no privado, por e-mail e com `-to`) e o backup diário |
@@ -119,7 +119,7 @@ entre os casos.
 | `get-cache.test.js` | `/get` (e o anti-SSRF), `/cache` e a limpeza periódica |
 | `conexao-email.test.js` | Eventos de conexão, reinício, watchdog, alertas por e-mail, crash e `docker stop` |
 | `heartbeat.test.js` | Heartbeat e o `docker/app/healthcheck.js` (executado de verdade) |
-| `util.test.js` | Formatação, contatos/`@lid`, menções e arquivos do cache |
+| `util.test.js` | Formatação, contatos/`@lid`, menções, arquivos do cache e a versão com o commit (`versao.js`) |
 
 Um comando ou opção novos entram com os testes deles; o
 `configuracao.test.js` falha se o comando não tiver a página dele em

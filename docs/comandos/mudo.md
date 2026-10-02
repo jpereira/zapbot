@@ -5,7 +5,7 @@ apaga mensagens, edita mensagens ou apaga status. **Só o aviso some**: a
 mensagem continua guardada, e o [`/show`](show.md) (ou o `/show -e`) a mostra.
 
 ```
-/mudo <OPÇÃO>... </contato ou grupo/|+número>
+/mudo <OPÇÃO>... </contato ou grupo/|@menção|+número>
 ```
 
 | Opção | Valor | Descrição |
@@ -26,14 +26,14 @@ responde só com o nº. Num **grupo**, vale para todos dali; numa **pessoa**, pa
 o que ela fizer em qualquer chat, inclusive os status dela.
 
 ```
-/mudo -a /Grupo L200/          → nada do grupo avisa
-/mudo -a /Jorge Pereira/       → nada do contato avisa
-/mudo -d -e +5521999999999     → apagadas e editadas desse número
-/mute -s Fulano                → só os status apagados do contato
-/m -a @Fulano                  → num grupo, mencionando a pessoa
-/m -a /Jorge/                  → vários Jorge: lista, e você responde com o nº
-/mudo                          → a lista
-/mudo -rm 2                    → os avisos do nº 2 voltam
+/mudo -a /Grupo L200/       → nada do grupo avisa
+/mudo -a /Jorge Pereira/    → nada do contato avisa
+/mudo -d -e +5521999999999  → apagadas e editadas desse número
+/mute -s Fulano             → só os status apagados do contato
+/m -a @Fulano Da Silva      → num grupo, mencionando a pessoa
+/m -a /Jorge/               → vários Jorge: lista, e você responde com o nº
+/mudo                       → a lista
+/mudo -rm 2                 → os avisos do nº 2 voltam
 ```
 
 ```

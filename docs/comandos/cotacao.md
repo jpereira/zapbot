@@ -9,11 +9,11 @@ máxima e mínima do dia e variação (🟢 alta, 🔴 queda). Suportadas: `USD`
 |---|---|---|
 | *(nenhuma)* | `[MOEDA...]` | Cotação das habilitadas, ou só das moedas informadas |
 | `-list`, `-l` | | Lista as suportadas; as habilitadas vêm com ✅ |
-| `-add`, `-a` | `<MOEDA>` | Habilita uma moeda suportada (só o dono do bot) |
-| `-del`, `-d` | `<MOEDA>` | Desabilita uma moeda (só o dono do bot) |
+| `-add`, `-a` | `<MOEDA>` | Habilita uma moeda suportada (só o dono do bot ou um admin do [`bot.admins`](bot.md#admins-extras)) |
+| `-del`, `-d` | `<MOEDA>` | Desabilita uma moeda (só o dono do bot ou um admin do [`bot.admins`](bot.md#admins-extras)) |
 | `-alerta` | `[regra]` | Sem regra, lista os alertas; com regra, cria um. Veja [Alertas de preço](#alertas-de-preço) |
 | `-rm` | `<nº\|all>` | Junto com `-alerta`: remove o alerta nº N (ou todos) |
-| `-to` | `<destino>` | Junto com `-alerta`: avisa num contato (`/Jorge Pereira/`), num grupo (`/Grupo L200/`), num número (`+5521999999999`) ou por e-mail (`email`) em vez do seu privado. Veja [Avisar em outro chat ou por e-mail](#avisar-em-outro-chat-ou-por-e-mail) |
+| `-to` | `<destino>` | Junto com `-alerta`: avisa num contato (`/Jorge Pereira/`), numa menção (`@Fulano Da Silva`), num grupo (`/Grupo L200/`), num número (`+5521999999999`) ou por e-mail (`email`) em vez do seu privado. Veja [Avisar em outro chat ou por e-mail](#avisar-em-outro-chat-ou-por-e-mail) |
 
 - **USD, EUR, GBP**: Yahoo Finance. Se ele falhar, a AwesomeAPI (que não
   informa a abertura: aparece `—`).
@@ -53,8 +53,8 @@ máxima e mínima do dia e variação (🟢 alta, 🔴 queda). Suportadas: `USD`
 O `/cotacao` e o `/crypto` avisam no **seu privado** (ou, com
 [`-to`](#avisar-em-outro-chat-ou-por-e-mail), num contato, num grupo, num número ou por
 e-mail) quando
-um preço passa de um valor. Cada alerta dispara uma vez e é removido. Só o dono do bot cria,
-lista e remove.
+um preço passa de um valor. Cada alerta dispara uma vez e é removido. Só o dono do bot (e os
+[admins extras](bot.md#admins-extras)) cria, lista e remove.
 
 ```
 /cotacao -alerta USD > 5.30    → quando o dólar passar de R$ 5,30
@@ -85,6 +85,7 @@ primeiro), um grupo, um número ou e-mail, como em
 /crypto -alerta BTC < 90000 -to /Grupo L200/      → no grupo "Grupo sobre L200"
 /cotacao -alerta USD > 5.30 -to /Jorge Pereira/   → no privado do contato
 /cotacao -alerta USD > 5.30 -to +5521999999999    → no privado do número
+/cotacao -alerta EUR < 5,50 -to @Fulano Da Silva  → num grupo, mencionando a pessoa
 /crypto -alerta SOL > 200 -to email               → por e-mail (QRCODE_EMAIL_SMTP_TO)
 /cotacao -alerta -to familia EUR < 5,50           → o -to pode vir antes da regra
 ```
