@@ -1,9 +1,10 @@
 /*
- * /defi -alerta: notifies whenever a position leaves the range.
+ * /defi -alerta: notifies when a position leaves the range, when it comes back and (with -taxas)
+ * when the fees to collect go over a value.
  */
 
 const { estado: stateAlt } = require('../state');
-const { describe, alertDescribeDestination, alertDestination, readRegistration } = require('../commands/defi');
+const { describe, alertDescribeDestination, alertDestination, fmtUsd, readRegistration } = require('../commands/defi');
 const { dbAll, dbReady, dbRun } = require('../db');
 const { sendOnDestination } = require('../destinations');
 const { printError, printInfo } = require('../log');
@@ -11,17 +12,41 @@ const { getSetting } = require('../settings');
 
 /*
  * Each position with the alert on is read every 'defi.alerta.intervalMin'
- * minutes. The in_range column stores the state of the last read: the notice goes out
- * when it goes from inside (or unknown) to outside the range. Outside
- * its, does not notify again; when it returns to the range and leaves again, it notifies.
- * If the read fails (RPC with a limit), nothing changes and it tries on the next one.
+ * minutes. The in_range column stores the state of the last read: notifies when
+ * goes from inside (or unknown) to outside, and from outside to inside. The
+ * fees_notified holds the fee notice: once per "filled up", until collected.
+ * Read failed (RPC with a limit)? Nothing changes; tries again on the next one.
  * In a Project X wallet, "in range" means all the open positions in range.
  */
-async function notify(p, n, lido) {
-    const title = `DeFi: ${describe(p)} saiu da faixa`;
-    const textAlt = `🚨 *${title}*\n\n${lido.foraDaFaixa.join('\n\n')}\n\n💡 _Desligue com /defi -alerta -rm ${n}._`;
+async function notify(p, n, emoji, title, texts) {
+    const textAlt = `${emoji} *${title}*\n\n${texts.join('\n\n')}\n\n💡 _Desligue com /defi -alerta -rm ${n}._`;
+    await sendOnDestination(alertDestination(p), textAlt, { assunto: title })
+        .then(() => printInfo(`/defi -alerta: ${title} → ${alertDescribeDestination(p)}`))
+        .catch(err => printError(`/defi -alerta: falha ao avisar (${p.position}):`, err.message));
+}
 
-    await sendOnDestination(alertDestination(p), textAlt, { assunto: title });
+// Saves BEFORE notifying: if the send fails, it does not repeat on every check
+async function checkRange(p, n, lido) {
+    if (lido.naFaixa === null) return;   // wallet without an open position: nothing to watch
+    const inRange = lido.naFaixa ? 1 : 0;
+    if (inRange === p.in_range) return;
+
+    await dbRun('UPDATE defi_positions SET in_range = ? WHERE id = ?', [inRange, p.id]);
+    if (inRange && p.in_range === null) return;   // first read, already in range: only records
+
+    if (inRange) await notify(p, n, '✅', `DeFi: ${describe(p)} voltou para a faixa`, lido.textos);
+    else await notify(p, n, '🚨', `DeFi: ${describe(p)} saiu da faixa`, lido.foraDaFaixa);
+}
+
+async function checkRates(p, n, lido) {
+    if (!p.alert_fees || lido.taxasUsd === null) return;
+    const passed = lido.taxasUsd >= p.alert_fees ? 1 : 0;
+    if (passed === p.fees_notified) return;
+
+    await dbRun('UPDATE defi_positions SET fees_notified = ? WHERE id = ?', [passed, p.id]);
+    if (passed) {
+        await notify(p, n, '💸', `DeFi: ${describe(p)} tem ${fmtUsd(lido.taxasUsd)} em taxas a coletar (passou de ${fmtUsd(p.alert_fees)})`, lido.textos);
+    }
 }
 
 let lastCheck = 0;
@@ -50,21 +75,8 @@ async function checkAlertsDefi({ forcar: force = false } = {}) {
                 continue;
             }
 
-            // Wallet with no open position: there is no range to watch
-            if (lido.naFaixa === null) continue;
-            const inRange = lido.naFaixa ? 1 : 0;
-            if (inRange === p.in_range) continue;
-
-            await dbRun('UPDATE defi_positions SET in_range = ? WHERE id = ?', [inRange, p.id]);
-            if (inRange) {
-                printInfo(`/defi -alerta: a posição ${p.position} está na faixa`);
-                continue;
-            }
-
-            // Saves BEFORE notifying: if the send fails, it does not repeat on every check
-            await notify(p, i + 1, lido)
-                .then(() => printInfo(`/defi -alerta: a posição ${p.position} saiu da faixa → ${alertDescribeDestination(p)}`))
-                .catch(err => printError(`/defi -alerta: falha ao avisar (${p.position}):`, err.message));
+            await checkRange(p, i + 1, lido);
+            await checkRates(p, i + 1, lido);
         }
     } catch (err) {
         printError('Erro ao verificar os alertas do /defi:', err.message);

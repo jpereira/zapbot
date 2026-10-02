@@ -242,9 +242,9 @@ async function check() {
 describe('/defi -alerta (-a)', () => {
     beforeEach(() => bot.replyAlt(REGISTRATION));
 
-    test('liga no seu privado; avisa ao sair da faixa, uma vez; volta e sai: avisa de novo', async () => {
+    test('liga no seu privado; avisa ao sair da faixa, uma vez, e ao voltar', async () => {
         const [r] = await bot.replyAlt('/defi -alerta 1');
-        assert.match(r, /^🔔 \*Alerta do \/defi ligado\* \(1\)\n\n1\. Orca · ime1…VPcg · ✅ na faixa\n\n📣 Aviso: seu privado, sempre que a posição sair da faixa \(verificada a cada 10 minutos\)\./);
+        assert.match(r, /^🔔 \*Alerta do \/defi ligado\* \(1\)\n\n1\. Orca · ime1…VPcg · ✅ na faixa\n\n📣 Aviso: seu privado, quando a posição sair da faixa e quando voltar \(verificada a cada 10 minutos\)\./);
         assert.deepEqual(await check(), [], 'na faixa: nada');
 
         rangeOutside();
@@ -255,7 +255,9 @@ describe('/defi -alerta (-a)', () => {
         assert.deepEqual(await check(), [], 'continua fora: não repete');
 
         inRange();
-        assert.deepEqual(await check(), []);
+        const [volta] = await check();
+        assert.match(volta.content, /^✅ \*DeFi: Orca · ime1…VPcg voltou para a faixa\*\n\n🌊 \*Orca · SOL\/cbBTC\*[\s\S]*✅ dentro da faixa/);
+        assert.deepEqual(await check(), [], 'continua na faixa: não repete');
         rangeOutside();
         assert.equal((await check()).length, 1, 'saiu de novo: avisa');
     });
@@ -274,10 +276,12 @@ describe('/defi -alerta (-a)', () => {
         assert.deepEqual(await bot.replyAlt('/defi -a -rm all'), ['🔕 0 alertas desligados.']);
     });
 
-    test('ligado já fora da faixa: só avisa depois de voltar e sair de novo', async () => {
+    test('ligado já fora da faixa: não avisa a saída; avisa quando voltar', async () => {
         rangeOutside();
-        assert.match((await bot.replyAlt('/defi -a 1'))[0], /1\. Orca · ime1…VPcg · ⚠️ fora da faixa _\(avisa quando voltar para a faixa e sair de novo\)_/);
+        assert.match((await bot.replyAlt('/defi -a 1'))[0], /1\. Orca · ime1…VPcg · ⚠️ fora da faixa _\(avisa quando voltar para a faixa\)_/);
         assert.deepEqual(await check(), []);
+        inRange();
+        assert.match((await check())[0].content, /voltou para a faixa/);
     });
 
     test('RPC fora: liga sem o estado e avisa na primeira leitura fora da faixa', async () => {
@@ -298,7 +302,7 @@ describe('/defi -alerta (-a)', () => {
         bot.createGroup('120363000000000301@g.us', 'Cripto SP', [OWNER.jid]);
         const r = await bot.replyChoosing('/defi -a 1 -to cripto', 2);
         assert.match(r[0], /^🔎 "cripto" corresponde a 2 grupos:\n\n1\. 👥 Cripto Rio\n2\. 👥 Cripto SP/);
-        assert.match(r.at(-1), /📣 Aviso: 👥 Cripto SP, sempre que/);
+        assert.match(r.at(-1), /📣 Aviso: 👥 Cripto SP, quando a posição sair/);
 
         assert.match((await bot.replyAlt('/defi -a 1 -to +5521911111111'))[0], /📣 Aviso: 👤 Fulano,/);
         assert.match((await bot.replyAlt('/defi -a 1 -to xyz'))[0], /❌ Nenhum contato ou grupo com "xyz" no nome/);
@@ -476,6 +480,47 @@ describe('/defi: Project X (HyperEVM)', () => {
         network.responder('post', 'rpc.hyperliquid.xyz/evm', { jsonrpc: '2.0', id: null, error: { code: -32005, message: 'rate limited' } });
         assert.match((await bot.replyAlt('/defi -show', { erroEsperado: true }))[0],
             /^⚠️ Não consegui ler Project X · carteira 0x12…5678 agora: RPC da HyperEVM: rate limited\.\n💡 _O RPC público da HyperEVM/);
+    });
+
+    test('-alerta -taxas: avisa uma vez quando as taxas passam do valor; depois de coletar, de novo', async () => {
+        const checkNow = async () => {
+            const beforeAlt = bot.client.enviadas.length;
+            bot.estado.pronto = true;
+            await checkAlertsDefi({ forcar: true });
+            return bot.client.enviadas.slice(beforeAlt).map(e => e.content);
+        };
+        await bot.replyAlt(`/defi -prjx -w ${WALLET}`);
+
+        assert.match((await bot.replyAlt('/defi -a 1 -taxas abc'))[0], /❌ -taxas: informe o valor em dólar/);
+        const [on] = await bot.replyAlt('/defi -a 1 -taxas $50');
+        assert.match(on, /1\. Project X · carteira 0x12…5678 · ⚠️ fora da faixa · 💸 ≥ \$50\.00/);
+        assert.match(on, /e quando as taxas a coletar passarem de \$50\.00 \(verificada/);
+        assert.match((await bot.replyAlt('/defi -alerta'))[0], /· 💸 ≥ \$50\.00 → seu privado/);
+
+        // $98.50 on the BTC one (the HYPE one has no fee)
+        const [notice] = await checkNow();
+        assert.match(notice, /^💸 \*DeFi: Project X · carteira 0x12…5678 tem \$98\.50 em taxas a coletar \(passou de \$50\.00\)\*\n\n🌊/);
+        assert.deepEqual(await checkNow(), [], 'continua acima: não repete');
+
+        chainAlt.coleta[7] = [0n, 0n];       // coletou
+        assert.deepEqual(await checkNow(), []);
+        chainAlt.coleta[7] = [0n, 60000000n]; // filled up again: $60
+        assert.match((await checkNow())[0], /tem \$60\.00 em taxas a coletar/);
+
+        // Turning on again without -taxas keeps the value; -taxas off removes it
+        assert.match((await bot.replyAlt('/defi -a 1'))[0], /💸 ≥ \$50\.00/);
+        assert.doesNotMatch((await bot.replyAlt('/defi -a 1 -taxas off'))[0], /💸/);
+    });
+
+    test('-alerta: na carteira, avisa ao voltar para a faixa, com todas as posições', async () => {
+        await bot.replyAlt(`/defi -prjx -w ${WALLET}`);
+        await bot.replyAlt('/defi -a 1');
+        chainAlt.slot0[POOL_HYPE] = RAW_HYPE * 1.0001 ** 2000;
+        const beforeAlt = bot.client.enviadas.length;
+        bot.estado.pronto = true;
+        await checkAlertsDefi({ forcar: true });
+        const [volta] = bot.client.enviadas.slice(beforeAlt);
+        assert.match(volta.content, /^✅ \*DeFi: Project X · carteira 0x12…5678 voltou para a faixa\*\n\n🌊 \*Project X · WHYPE\/USD₮0\*[\s\S]*🌊 \*Project X · UBTC\/USD₮0\*/);
     });
 
     test('-alerta: na carteira, avisa quando alguma posição sai da faixa, só com as de fora', async () => {

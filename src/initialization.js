@@ -230,6 +230,8 @@ async function initializeDb() {
         alert_dest_name: 'TEXT',
         alert_dest_is_group: 'INTEGER DEFAULT 0',
         alert_email: 'TEXT',
+        alert_fees: 'REAL',                 // -taxas: notifies when the fees to collect go above that (US$)
+        fees_notified: 'INTEGER DEFAULT 0', // already notified about this value (goes back to 0 when collected)
         in_range: 'INTEGER'
     });
 
