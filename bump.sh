@@ -21,6 +21,7 @@
 #      "git checkout release-2.1") pela atual, com a data de hoje ao lado dela em
 #      "release-X.Y (de DD/MM/AAAA)"
 #   2. Commita com a mensagem "Release X.Y" e cria a tag anotada release-X.Y nele
+#      (sem nada a trocar, a tag vai no commit atual)
 #   3. Grava as refs no .git/packed-refs (git pack-refs --all), para a imagem
 #      Docker saber o commit da tag sem os objetos do git (src/versao.js)
 #
@@ -142,8 +143,13 @@ if [ "$RELEASE" -eq 1 ]; then
         s|(${nova_re}\`? \\(de )\\d{2}/\\d{2}/\\d{4}|\${1}${hoje}|g;"
     [ "$DRY_RUN" -eq 1 ] && exit 0
 
-    git --no-pager diff --stat
-    git commit -qam "Release ${versao_atual}"
+    # Sem nada a trocar (os docs já estão na versão), a tag vai no commit atual
+    if git diff --quiet; then
+        echo "ℹ️ A versão estável já está em ${nova_tag}: a tag vai no commit atual."
+    else
+        git --no-pager diff --stat
+        git commit -qam "Release ${versao_atual}"
+    fi
     git tag -a "$nova_tag" -m "Release ${versao_atual}"
 
     # Grava as tags no .git/packed-refs com o commit de cada uma: a imagem Docker não
