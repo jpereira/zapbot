@@ -28,6 +28,7 @@ Para a Orca:
 ```
 /defi -s orca                  → só as posições da Orca (ou /defi orca -s)
 /defi orca -address <endereço> -pool <endereço> -nft <mint>
+/defi orca -address <endereço> -alerta 2000   → cadastra e já liga o alerta (no seu privado)
 ```
 
 Para o Project X (`prjx` ou `projectx`):
@@ -35,6 +36,7 @@ Para o Project X (`prjx` ou `projectx`):
 ```
 /defi prjx -s                  → só as do Project X (ou /defi -s prjx)
 /defi prjx -address <0x...>    → cadastra a carteira
+/defi prjx -address <0x...> -alerta   → cadastra e já liga o alerta (no seu privado)
 ```
 
 | Opção | Valor | Descrição |
@@ -43,7 +45,7 @@ Para o Project X (`prjx` ou `projectx`):
 | `-show`, `-s` | `[nº\|orca\|prjx]` | Position Details de todas as posições, só da nº N ou só de um protocolo |
 | `-list`, `-l` | | Lista os cadastros (o mesmo que `/defi` sem nada). No seu privado, com os endereços inteiros; fora dele, abreviados (`Hz15…RaPZ`) |
 | `-rm` | `<nº...\|all>` | Remove o cadastro nº N, vários (`-rm 1 3` ou `-rm 1,3`) ou todos; se algum nº não existe, nenhum sai. Junto com `-alerta`: só desliga o alerta da nº N (ou de todas) |
-| `-alerta`, `-a` | `[nº\|all]` | Sem nº: lista os alertas. Com nº (ou `all`): avisa quando a posição sair da faixa e quando voltar. Veja [Alerta de saída da faixa](#alerta-de-saída-da-faixa) |
+| `-alerta`, `-a` | `[nº\|all\|valor]` | Sem nº: lista os alertas. Com nº (ou `all`): avisa quando a posição sair da faixa e quando voltar. No cadastro (com `-address`), liga o alerta da posição nova, no seu privado (ou no `-to`); o valor é o limite das taxas, como o `-taxas` (`-alerta 2000`). Veja [Alerta de saída da faixa](#alerta-de-saída-da-faixa) |
 | `-taxas` | `<valor\|off>` | Junto com `-alerta`: avisa também quando as taxas a coletar passarem do valor, em dólar (ex.: `-taxas 50`). Avisa uma vez e de novo depois de você coletar; `off` tira |
 | `-to` | `<destino>` | Junto com `-alerta`: para onde vai o aviso. Um contato (`/Jorge Pereira/`), uma menção (`@Fulano Da Silva`), um grupo (`/Grupo L200/`), um número (`+5521999999999`) ou e-mail (`email` é o `QRCODE_EMAIL_SMTP_TO`) ([Destinos](index.md#destinos-contato-grupo-número-ou-e-mail)). Sem ele, o seu privado |
 | `-address` | `<endereço>` | Cadastra: com `orca`, o endereço da posição da Orca; com `prjx`, a carteira do Project X (`0x` e 40 caracteres hexadecimais) |
@@ -149,6 +151,7 @@ minutos (setting `defi.alerta.intervalMin`) e avisa:
 /defi -a 1 -to @Fulano Da Silva  → num grupo, mencionando a pessoa
 /defi -a 1 -taxas 50             → e quando as taxas a coletar passarem de $50
 /defi -a 1 -taxas off            → tira o aviso das taxas (o da faixa continua)
+/defi orca -address <endereço> -alerta 2000   → no cadastro: liga já, com o limite de $2000
 /defi -alerta                    → a lista dos alertas
 /defi -alerta -rm 1              → desliga o da nº 1 (a posição continua cadastrada)
 ```

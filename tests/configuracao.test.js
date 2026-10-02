@@ -402,7 +402,7 @@ describe('ajuda', () => {
         const linhas = texto.split('\n');
         assert.equal(linhas[0], 'Usage: /defi -s [nº|orca|prjx]');
         assert.equal(linhas[1], '       /defi orca|prjx -s');
-        assert.equal(linhas[6], '       /defi prjx|projectx -address <0x...>');
+        assert.equal(linhas[6], '       /defi prjx|projectx -address <0x...> [-alerta [valor]]');
         assert.doesNotMatch(texto, / {2}ou {2}/);
     });
 
