@@ -27,6 +27,13 @@ sempre que uma posição sair da faixa ([Alerta de saída da faixa](#alerta-de-s
 /defi -alerta 1        → avisa no seu privado quando a nº 1 sair da faixa
 ```
 
+Para receber o `-show` todo dia, num chat ou junto com outros comandos, use o
+[`/cron`](cron.md#comandos-no-texto) (só o `-show` e o `-list` rodam lá):
+
+```
+/cron 06:00 -r diario -to /Grupo da Faculdade/ ⏰ Status da DeFi! {/defi -s} Preço do BTC! {/crypto BTC}
+```
+
 ```
 /defi -show
 🌊 Orca · SOL/cbBTC · taxa 0.16%
