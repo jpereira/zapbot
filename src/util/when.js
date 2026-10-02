@@ -59,8 +59,9 @@ function readDuration(token) {
 
 /**
  * Reads the "when" at the start of a list of words.
- * 30m | 2h | 1d | 1h30m          → this long from now ("18h" alone too: 18 hours from now)
- * 18:30 | 18h30 | às 18h         → today at that time (or tomorrow, if it has passed)
+ * +2h | em 2h | daqui (a) 2h     → this long from now
+ * 30m | 1d | 1h30m               → this long from now (without "+": they are not confused with a time of day)
+ * 6h | 07h | 18:30 | 18h30 | às 18h → today at that time (or tomorrow, if it has passed)
  * hoje 18h | amanhã [9h]         → today / tomorrow (without a time: 9h)
  * sexta [18h] | seg [8:00]       → the next weekday (today, if the time has not passed)
  * 25/12 [10:00] | 25/12/2027 [10h] → the date (without a year: the next one; without a time: 9h)
@@ -69,10 +70,22 @@ function readDuration(token) {
  * @returns {{ ms: number, usadas: number } | null}  usadas: how many words the "when" took
  */
 function readWhen(words, nowAlt = Date.now()) {
-    const [first, monday] = words.map(withoutAccents);
+    const [first, monday, third] = words.map(withoutAccents);
     if (!first) return null;
 
-    const duration = readDuration(first);
+    // This long from now, explicit: "+2h", "em 2h", "daqui 2h", "daqui a 2h"
+    if (first.startsWith('+')) {
+        const duration = readDuration(first.slice(1));
+        return duration ? { ms: nowAlt + duration, usadas: 1 } : null;
+    }
+    if (first === 'em' || first === 'daqui') {
+        const comA = first === 'daqui' && monday === 'a';
+        const duration = readDuration(comA ? third : monday);
+        if (duration) return { ms: nowAlt + duration, usadas: comA ? 3 : 2 };
+    }
+
+    // "6h" and "07h" alone are a time of day; "30m", "1d" and "1h30m", a duration
+    const duration = /^\d{1,2}h$/.test(first) && readHour(first) ? null : readDuration(first);
     if (duration) return { ms: nowAlt + duration, usadas: 1 };
 
     const today = partsInBrasilia(nowAlt);
