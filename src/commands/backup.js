@@ -10,7 +10,9 @@ const { REASONS, countInputs, createBackup, listBackups, nextBackupDaily, remove
 const { findCommand } = require('./base');
 const { client } = require('../client');
 const { BACKUP_DIR, CACHE_DIR } = require('../constants');
-const { describeDestination, emailsDoSmtpTo, extractDestination, resolverOrChoose } = require('../destinations');
+const {
+    describeDestinations, emailsDoSmtpTo, extractDestinations, resolverDestinations
+} = require('../destinations');
 const { sendFilePerEmail } = require('../email');
 const { printError } = require('../log');
 const { GetOptFromCommand } = require('../options');
@@ -28,8 +30,9 @@ const { fmtWhen, partsInBrasilia } = require('../util/when');
  * /backup -s [no.] [-to <destination>] → sends the file (without no.: the most recent) in your
  * private or in -to: by email, as an attachment through the bot's SMTP ("email" =
  * QRCODE_EMAIL_SMTP_TO), or in another chat (contact, group or number: asks for -sim,
- * since the database has the messages of all chats). The old form, with the
- * emails straight in -s (/backup -s 2 email), still counts
+ * since the database has the messages of all chats). Repeat -to for
+ * several. The old form, with the emails straight in -s (/backup -s 2 email),
+ *                         continua valendo
  * /backup -rm <nº|all>  → apaga
  */
 // An attachment that is too big is refused by most providers (Gmail: 25 MB)
@@ -82,7 +85,7 @@ async function cmdBackup({ msg, opts: commandOpts, args }) {
      * -to accepts spaces (/Jorge Pereira/), which the option parser
      * would split: goes out of the text first, and the rest is read again.
      */
-    const { destino: destinationText, informado: withDestination, resto: rest } = extractDestination(args);
+    const { destinos: destinationsText, informado: withDestination, resto: rest } = extractDestinations(args);
     const opts = withDestination ? GetOptFromCommand(rest, findCommand('/backup')) : commandOpts;
     const o = opts.opt;
 
@@ -183,25 +186,32 @@ async function cmdBackup({ msg, opts: commandOpts, args }) {
             return;
         }
 
-        let destination = emailsOld.length ? { email: emailsOld.join(', ') } : null;
+        let destinations = emailsOld.length ? [{ email: emailsOld.join(', ') }] : [];
         if (withDestination) {
-            // Email or chat; several contacts or groups with the name: waits for you to choose from the list
-            destination = await resolverOrChoose(msg, destinationText, { aceitaEmail: true });
-            if (!destination) return;
+            // Email or chat (several -to: all); several contacts or groups with the name, waits for you
+            // choose from the list
+            destinations = await resolverDestinations(msg, destinationsText, { aceitaEmail: true });
+            if (!destinations) return;
         }
 
         const myId = client.info.wid._serialized;
+        const otherChats = destinations.filter(d => d.id && d.id !== myId);
 
         // In another chat: the database has the stored messages of ALL chats, so it asks for -sim
-        if (destination?.id && destination.id !== myId && !o.sim) {
+        if (otherChats.length && !o.sim) {
+            const tos = destinationsText.map(t => `-to ${/\s/.test(t) ? `/${t}/` : t}`).join(' ');
             await msg.reply(`⚠️ O backup tem o banco inteiro: as mensagens guardadas de todos os chats, as apagadas, os settings...\n` +
-                `Para enviar mesmo em ${describeDestination(destination)}, repita com -sim: ` +
-                `/backup -send${numberAlt ? ` ${numberAlt}` : ''} -to ${/\s/.test(destinationText) ? `/${destinationText}/` : destinationText} -sim`);
+                `Para enviar mesmo em ${describeDestinations(otherChats)}, repita com -sim: ` +
+                `/backup -send${numberAlt ? ` ${numberAlt}` : ''} ${tos} -sim`);
             return;
         }
 
-        if (destination?.email) {
-            const emails = destination.email.split(/\s*,\s*/);
+        // The emails of all the -to in a single email; the chats (without a destination: your private chat), one by one
+        const emails = [...new Set(destinations.filter(d => d.email)
+            .flatMap(d => d.email.split(/\s*,\s*/)))];
+        const chats = destinations.length ? destinations.filter(d => d.id) : [{ id: myId }];
+
+        if (emails.length) {
             if (b.bytes > MAX_ATTACHMENT_BYTES) {
                 await msg.reply(`❌ O backup tem ${humanSize(b.bytes)}: grande demais para anexar (máx. ${humanSize(MAX_ATTACHMENT_BYTES)}). Use /backup -s sem -to (vai no seu privado).`);
                 return;
@@ -221,16 +231,30 @@ async function cmdBackup({ msg, opts: commandOpts, args }) {
                 printError('/backup -send por e-mail:', err.message);
                 await msg.reply(`❌ Não consegui enviar o e-mail: ${err.message}`);
             }
-            return;
         }
 
-        const target = destination?.id ?? myId;
-        await client.sendMessage(target, MessageMedia.fromFilePath(b.arquivo), {
-            sendMediaAsDocument: true,
-            caption: `💾 Backup de ${fmtWhen(b.criadoEm)} (${b.motivo})`
-        });
-        if (target !== myId) await msg.reply(`💾 Backup enviado em ${describeDestination(destination)}.`);
-        else if (msg.id?.remote !== myId) await msg.reply('💾 Backup enviado no seu privado.');
+        // A chat that fails does not hold up the others
+        const sentAlt3 = [];
+        for (const d of chats) {
+            try {
+                await client.sendMessage(d.id, MessageMedia.fromFilePath(b.arquivo), {
+                    sendMediaAsDocument: true,
+                    caption: `💾 Backup de ${fmtWhen(b.criadoEm)} (${b.motivo})`
+                });
+                sentAlt3.push(d);
+            } catch (err) {
+                printError(`/backup -send para ${d.id}:`, err.message);
+                const whereAlt = d.id === myId ? 'seu privado' : describeDestinations([d]);
+                await msg.reply(`❌ Não consegui enviar o backup em ${whereAlt}: ${err.message}`);
+            }
+        }
+
+        // "in your private chat" only if the command did not come from there (or if it came together with other chats)
+        const other = sentAlt3.filter(d => d.id !== myId);
+        const inPrivate = sentAlt3.some(d => d.id === myId) && (other.length || msg.id?.remote !== myId);
+        const whereAlt = [inPrivate && 'no seu privado', other.length && `em ${describeDestinations(other)}`]
+            .filter(Boolean);
+        if (whereAlt.length) await msg.reply(`💾 Backup enviado ${whereAlt.join(' e ')}.`);
         return;
     }
 

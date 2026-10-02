@@ -190,6 +190,32 @@ describe('/backup (/bkp)', () => {
         assert.match((await bot.replyAlt('/backup -to email'))[0], /❌ O -to é do -send/);
     });
 
+    test('-s com vários -to: o -sim repete todos; os chats, um a um, e os e-mails num e-mail só', async () => {
+        const L200 = '120363000000000200@g.us';
+        bot.createGroup(L200, 'Grupo sobre L200', [OWNER.jid]);
+        await createBackup();
+
+        const [notice] = await bot.replyAlt('/backup -s -to /Fulano/ -to /Grupo L200/ -to /Fulano/');
+        assert.match(notice, /\nPara enviar mesmo em 👤 Fulano, 👥 Grupo sobre L200, repita com -sim: \/backup -send -to Fulano -to \/Grupo L200\/ -to Fulano -sim$/);
+
+        const r = await bot.executar('/backup -s -to Fulano -to /Grupo L200/ -sim');
+        assert.deepEqual(r.slice(0, 2).map(e => e.chatId), [bot.OTHERAlt.jid, L200]);
+        assert.ok(r.slice(0, 2).every(e => e.content instanceof MessageMedia));
+        assert.equal(r[2].texto, '💾 Backup enviado em 👤 Fulano, 👥 Grupo sobre L200.');
+
+        const env = { QRCODE_EMAIL_SMTP_HOST: 'smtp.exemplo.com', QRCODE_EMAIL_SMTP_USER: 'bot@exemplo.com', QRCODE_EMAIL_SMTP_TO: 'eu@exemplo.com' };
+        Object.assign(process.env, env);
+        try {
+            const m = await bot.executar('/backup -s -to email -to outro@x.com -to /Fulano/ -sim');
+            assert.equal(emails.at(-1).to, 'eu@exemplo.com, outro@x.com');
+            assert.match(m[0].texto, /^📧 Backup de .* enviado para eu@exemplo\.com, outro@x\.com\.$/);
+            assert.equal(m[1].chatId, bot.OTHERAlt.jid);
+            assert.equal(m[2].texto, '💾 Backup enviado em 👤 Fulano.');
+        } finally {
+            for (const k of Object.keys(env)) delete process.env[k];
+        }
+    });
+
     test('só o dono', async () => {
         assert.deepEqual(await bot.replyAlt('/backup -now', { de: bot.OTHERAlt.jid }), []);
     });
