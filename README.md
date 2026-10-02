@@ -24,7 +24,7 @@ release; a do `main` fica em [`docs/`](docs/index.md)).
 ## Como funciona
 
 ```
- ┌────────────── container zapbot (node:24-alpine) ───────────────┐
+ ┌─────────── container zapbot (node:24-trixie-slim) ─────────────┐
  │                                                                │
  │   app.js ──► whatsapp-web.js ──► Puppeteer ──► Chromium        │──► WhatsApp Web
  │     │                                          (headless)      │
