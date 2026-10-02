@@ -40,6 +40,8 @@ describe('alertas por e-mail', () => {
         assert.equal(e.subject, '[ZapBot] 🧪 Teste formato');
         assert.equal(e.to, 'dono@teste');
         assert.match(e.text, /motivo <b>[\s\S]*📱 Número: 5521XXXX0000[\s\S]*🛡️ Anti-Phishing Code: frase-secreta/);
+        assert.match(e.text, /🤖 Versão: [\d.]+ \(git\+[0-9a-f]{7}\)\n/);
+        assert.match(e.html, /🤖 Versão<\/strong><\/td><td>[\d.]+ \(git\+[0-9a-f]{7}\)</);
         assert.match(e.html, /motivo &lt;b&gt;/);
     });
 

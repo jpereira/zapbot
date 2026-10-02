@@ -4,11 +4,11 @@
 
 const os = require('os');
 const nodemailer = require('nodemailer');
-const packageJson = require('../package.json');
 
 const { BOT_START_TIME } = require('./constantes');
 const { getBotUptime, printError, printInfo } = require('./log');
 const { getSetting } = require('./settings');
+const { versaoComCommit } = require('./versao');
 
 // Transporte SMTP: usado pelo e-mail do QR Code e pelos alertas abaixo
 const transporter = nodemailer.createTransport({
@@ -61,7 +61,7 @@ async function alertarPorEmail(evento, detalhes = '', { forcar = false } = {}) {
         const linhas = [
             ['📅 Quando', quando],
             ['📱 Número', telefone || '-'],
-            ['🤖 Versão', packageJson.version],
+            ['🤖 Versão', versaoComCommit()],
             ['🖥️ Host', os.hostname()],
             ['⏱️ Processo no ar há', getBotUptime(BOT_START_TIME)],
             ['🛡️ Anti-Phishing Code', process.env.QRCODE_EMAIL_SMTP_ANTIPHISHING || '-']
