@@ -108,9 +108,11 @@ variáveis do `config/.env`, em [Configuração](https://jpereira.github.io/zapb
 
 ## Comandos
 
-Digite no próprio chat. `/help` lista todos; `/<comando> -h` mostra a ajuda de
-um. Os marcados como **Admin** só respondem à sua conta e, por padrão, o modo
-admin está ligado: só você usa comandos até `/bot -admin`
+Digite no próprio chat. `/help` lista os comandos que você pode usar;
+`/<comando> -h` mostra a ajuda de um. Os marcados como **Admin** só respondem à
+sua conta (e aos admins extras: `/bot +o <pessoa>`). Por padrão, só você usa
+comandos: libere os comuns para todos com `/bot -admin` ou para alguns com
+`/bot +v <pessoa|grupo>`
 ([Permissões](https://jpereira.github.io/zapbot/comandos/#permissões-onlyadmin)).
 
 | Comando | Aliases | Admin | Descrição |
@@ -129,7 +131,7 @@ admin está ligado: só você usa comandos até `/bot -admin`
 | [`/get`](https://jpereira.github.io/zapbot/comandos/get/) | `/download` | | Baixa vídeo/áudio de redes sociais |
 | [`/giphy`](https://jpereira.github.io/zapbot/comandos/giphy/) | `/gif` | | GIF aleatório (GIPHY) |
 | [`/gpt`](https://jpereira.github.io/zapbot/comandos/gpt/) | `/ai` | ✅ | Pergunta ao ChatGPT (OpenAI) |
-| [`/help`](https://jpereira.github.io/zapbot/comandos/help/) | `/h` | | Menu de ajuda |
+| [`/help`](https://jpereira.github.io/zapbot/comandos/help/) | `/h` | | Menu de ajuda, só com os comandos que quem pediu pode usar |
 | [`/joke`](https://jpereira.github.io/zapbot/comandos/joke/) | `/piada`, `/humor` | | Piada aleatória em português |
 | [`/kernel`](https://jpereira.github.io/zapbot/comandos/kernel/) | | | Versões atuais do kernel Linux (kernel.org) |
 | [`/listageral`](https://jpereira.github.io/zapbot/comandos/listageral/) | `/list` | ✅ | Lista os membros do grupo |
