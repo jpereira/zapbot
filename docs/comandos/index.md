@@ -19,8 +19,10 @@ Podem ser enviados em **qualquer chat** (privado, grupo ou no chat consigo mesmo
 
 "Para onde" é sempre o **`-to`**, em todos os comandos: o [`/cron`](cron.md),
 os alertas do [`/cotacao`](cotacao.md#avisar-em-outro-chat-ou-por-e-mail) e do
-[`/crypto`](crypto.md), o [`/defi -alerta`](defi.md#alerta-de-saída-da-faixa) e o
-[`/backup -send`](backup.md#enviar-o-arquivo).
+[`/crypto`](crypto.md), o [`/defi -alerta`](defi.md#alerta-de-saída-da-faixa), o
+[`/watch`](watch.md#avisar-em-outro-lugar) e o [`/backup -send`](backup.md#enviar-o-arquivo).
+Todos aceitam vários `-to`: o aviso (ou a mensagem, ou o arquivo) sai em cada
+destino.
 O alvo do [`/mudo`](mudo.md) usa a mesma busca. Sem `-to`, os avisos (e o
 arquivo do `/backup`) vão para o seu privado, e o `/cron`, para o chat atual.
 
@@ -32,11 +34,12 @@ arquivo do `/backup`) vão para o seu privado, e o `/cron`, para o chat atual.
 | Número | `+5521999999999` | O privado do número: DDI + DDD + número (o `+` é opcional; o bot confere se ele está no WhatsApp) |
 | E-mail | `email`, `voce@exemplo.com` ou `"a@x.com, b@y.com"` | Nos alertas (`/cotacao`, `/crypto` e `/defi`) e no `/backup -send`: `email` é o `QRCODE_EMAIL_SMTP_TO`; sai pelo SMTP do bot, sem a formatação do WhatsApp ([E-mails](../emails.md)) |
 
-As mesmas formas, num comando só (o `/cron` aceita vários `-to`; os outros, um):
+As mesmas formas, num comando só:
 
 ```
 /cron 8h -r diario -to /Jorge Pereira/ -to @Fulano Da Silva -to /Grupo L200/ -to +5521999999999 Bom dia!
 /cotacao -alerta USD > 5.30 -to email           → por e-mail (o QRCODE_EMAIL_SMTP_TO)
+/crypto -alerta BTC < 90000 -to /Grupo L200/ -to email  → no grupo e por e-mail
 /mudo @Fulano Da Silva                          → o alvo do /mudo, mencionando
 /set -a bot.admins /Jorge Pereira/ +5511988887777 → o bot.admins aceita várias pessoas de uma vez
 ```

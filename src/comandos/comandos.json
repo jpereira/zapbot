@@ -86,7 +86,7 @@
                     "values": [
                         "<destino>"
                     ],
-                    "desc": "Junto com -send: por e-mail, como anexo (email = o QRCODE_EMAIL_SMTP_TO), ou noutro chat: um contato, uma menção, um grupo ou um número (pede -sim). Ex: -to email, -to voce@exemplo.com, -to /Jorge Pereira/, -to @Fulano (menção), -to /Grupo L200/, -to +5521999999999"
+                    "desc": "Junto com -send: por e-mail, como anexo (email = o QRCODE_EMAIL_SMTP_TO), ou noutro chat: um contato, uma menção, um grupo ou um número (pede -sim). Repita para vários. Ex: -to email, -to voce@exemplo.com, -to /Jorge Pereira/, -to @Fulano (menção), -to /Grupo L200/, -to +5521999999999"
                 }
             ],
             "onlyAdmin": true
