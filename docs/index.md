@@ -131,7 +131,7 @@ Por onde começar:
   container como `unhealthy` se o arquivo parar de ser atualizado. Veja
   [Saúde do container](operacao.md#saúde-do-container-heartbeat).
 - **Aviso de início**: quando fica pronto, o bot manda
-  `🤖 ZapBot <versão> (git+<commit>) inicializado.` para o `PHONE_NUMBER`
+  `🤖 ZapBot <versão> (git+<commit>/<tag ou HEAD>) inicializado.` para o `PHONE_NUMBER`
   (o commit é o do código que está rodando; veja o [`/version`](comandos/version.md)).
 - **Alertas por e-mail**: crash, queda, reconexão, falha de autenticação e
   outros eventos também vão por e-mail, pelo mesmo SMTP do QR Code (veja

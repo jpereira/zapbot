@@ -40,8 +40,8 @@ describe('alertas por e-mail', () => {
         assert.equal(e.subject, '[ZapBot] 🧪 Teste formato');
         assert.equal(e.to, 'dono@teste');
         assert.match(e.text, /motivo <b>[\s\S]*📱 Número: 5521XXXX0000[\s\S]*🛡️ Anti-Phishing Code: frase-secreta/);
-        assert.match(e.text, /🤖 Versão: [\d.]+ \(git\+[0-9a-f]{7}\)\n/);
-        assert.match(e.html, /🤖 Versão<\/strong><\/td><td>[\d.]+ \(git\+[0-9a-f]{7}\)</);
+        assert.match(e.text, /🤖 Versão: [\d.]+ \(git\+[0-9a-f]{7}\/[\w.-]+\)\n/);
+        assert.match(e.html, /🤖 Versão<\/strong><\/td><td>[\d.]+ \(git\+[0-9a-f]{7}\/[\w.-]+\)</);
         assert.match(e.html, /motivo &lt;b&gt;/);
     });
 
@@ -79,7 +79,7 @@ describe('eventos de conexão', () => {
         assert.equal(bot.estado.pronto, true);
         const [aviso] = bot.client.enviadas;
         assert.equal(aviso.chatId, process.env.PHONE_NUMBER);
-        assert.match(aviso.content, /🤖 ZapBot [\d.]+ \(git\+[0-9a-f]{7}\) inicializado\. Modo admin ligado/);
+        assert.match(aviso.content, /🤖 ZapBot [\d.]+ \(git\+[0-9a-f]{7}\/[\w.-]+\) inicializado\. Modo admin ligado/);
         assert.match(emails[0].subject, /🟢 Bot iniciado/);
         assert.match(emails[0].text, /Conectado ao WhatsApp\.\nModo admin ligado/);
 
