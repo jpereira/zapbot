@@ -233,7 +233,7 @@ describe('/sticker (/st)', () => {
     const foto = { mimetype: 'image/jpeg', data: Buffer.from('jpg').toString('base64') };
 
     test('sem responder uma mensagem', async () => {
-        assert.deepEqual(await bot.responder('/sticker'), ["Syntax: Faça um 'reply' utilizando /sticker"]);
+        assert.deepEqual(await bot.responder('/sticker'), ["Syntax: Faça um 'reply' utilizando /sticker, ou /sticker -txt \"Bom dia!\" para uma figurinha de texto"]);
     });
 
     test('imagem: enquadrada em webp, com o nome e o autor do setting', async () => {
@@ -270,5 +270,45 @@ describe('/sticker (/st)', () => {
             ['A mensagem respondida não tem mídia nem link.']);
         assert.deepEqual(await bot.responder('/sticker', { citada: bot.criarMensagem({ texto: 'https://x.com/a', de: OUTRO.jid }) }),
             ['Não encontrei thumbnail baixável para:\nhttps://x.com/a']);
+    });
+
+    test('-txt: os dois quadros em PNG (letra fg no fundo bg, e o contrário), juntados pelo ffmpeg num WEBP animado', async () => {
+        const { quadrosDoTexto, lerCor } = bot.src('stickerTexto');
+        const sharp = require('sharp');   // o falso do ambiente: guarda o que foi pedido
+
+        sharp.entradas.length = 0;
+        await quadrosDoTexto('Bom dia <b>&', { fg: '#000000', bg: '#FFFF00' });
+        const [t0, c0, t1, c1] = sharp.entradas;
+        assert.equal(t0.text.text, '<span foreground="#000000">Bom dia &lt;b&gt;&amp;</span>', 'o texto vai escapado');
+        assert.deepEqual([t0.text.width, t0.text.height, c0.create.width, c0.create.background], [432, 432, 512, '#FFFF00']);
+        assert.deepEqual([t1.text.text.slice(0, 26), c1.create.background], ['<span foreground="#FFFF00"', '#000000'], 'o 2º quadro inverte');
+        assert.deepEqual([lerCor('#fff'), lerCor('C0392B'), lerCor('azul')], ['#FFFFFF', '#C0392B', null]);
+
+        bot.processos.chamadas.length = 0;
+        const [r] = await bot.executar('/sticker -txt "Bom dia, grupo!" -bg "#C0392B" -fg #fff');
+        assert.equal(r.content.mimetype, 'image/webp');
+        assert.equal(r.options.sendMediaAsSticker, true);
+
+        const [ffmpeg] = bot.processos.chamadas;
+        assert.match(ffmpeg.bin, /ffmpeg$/);
+        assert.deepEqual(ffmpeg.args.slice(ffmpeg.args.indexOf('-c:v'), ffmpeg.args.indexOf('-c:v') + 2), ['-c:v', 'libwebp']);
+        assert.ok(ffmpeg.args.join(' ').includes('-framerate 2') && ffmpeg.args.join(' ').includes('-loop 0'));
+        assert.match(ffmpeg.args[ffmpeg.args.indexOf('-i') + 1], /quadro_%d\.png$/);
+
+        // Sem aspas e sem cores: o padrão (letra preta, fundo branco)
+        assert.equal((await bot.executar('/st -txt Partiu praia?'))[0].content.mimetype, 'image/webp');
+    });
+
+    test('-txt: erros de texto, cor e ffmpeg', async () => {
+        const erro = async (linha, esperado) => assert.deepEqual(await bot.responder(linha, { erroEsperado: true }), [esperado], linha);
+        await erro('/sticker -txt', '❌ Informe o texto: /sticker -txt "Bom dia!"');
+        await erro(`/sticker -txt ${'a'.repeat(201)}`, '❌ Texto longo demais: até 200 caracteres.');
+        await erro('/sticker -txt oi -bg azul', '❌ -bg: "azul" não é uma cor. Use #RRGGBB (ex.: #FFFFFF).');
+        await erro('/sticker -txt oi -fg #12', '❌ -fg: "#12" não é uma cor. Use #RRGGBB (ex.: #000000).');
+        await erro('/sticker -txt oi -bg #000 -fg #000000', '❌ O -bg e o -fg são a mesma cor: o texto não apareceria.');
+        await erro('/sticker -bg #fff', '❌ O -bg e o -fg são do -txt: /sticker -txt "Bom dia!" -bg "#FFFFFF" -fg "#000000"');
+
+        bot.processos.falhar = 'ffmpeg';
+        await erro('/sticker -txt oi', '❌ Não consegui gerar a figurinha: /usr/bin/ffmpeg exited with code 1');
     });
 });

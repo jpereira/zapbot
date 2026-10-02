@@ -283,9 +283,11 @@ function spawnFalso(bin, args) {
 /*
  * sharp: devolve um "webp" fixo. Para o /pixelart, uma imagem "png:LxA"
  * informa as dimensões no metadata() e o png() devolve "png:LxA" do resultado
- * (depois do resize/extract).
+ * (depois do resize/extract). As entradas (inclusive { text } e { create } do
+ * /sticker -txt) ficam em sharpFalso.entradas.
  */
 const sharpFalso = (entrada) => {
+    sharpFalso.entradas.push(entrada);
     const [, w, h] = String(entrada).match(/^png:(\d+)x(\d+)$/) ?? [];
     let dim = { width: Number(w), height: Number(h) };
     let formato = 'webp';
@@ -294,12 +296,14 @@ const sharpFalso = (entrada) => {
         resize: (width, height) => { if (height) dim = { width, height }; return cadeia; },
         extract: ({ width, height }) => { dim = { width, height }; return cadeia; },
         webp: () => cadeia,
+        composite: () => cadeia,
         png: () => { formato = 'png'; return cadeia; },
         metadata: async () => dim,
         toBuffer: async () => Buffer.from(formato === 'png' ? `png:${dim.width}x${dim.height}` : 'webp-enquadrado')
     };
     return cadeia;
 };
+sharpFalso.entradas = [];
 
 const SIMULADOS = {
     'whatsapp-web.js': { Client: ClienteFalso, LocalAuth: class {}, MessageMedia, Location, Poll },
