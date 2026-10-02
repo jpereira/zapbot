@@ -764,7 +764,7 @@
             "aliases": [
                 "/h"
             ],
-            "help": "Exibe o menu de ajuda; com um comando, só a ajuda dele. Ex: /help show",
+            "help": "Exibe o menu de ajuda, só com os comandos que você pode usar (o dono e os admins veem todos); com um comando, só a ajuda dele. Ex: /help show",
             "cmd_opts": [
                 {
                     "argv": [
