@@ -406,15 +406,24 @@ describe('ajuda', () => {
         assert.doesNotMatch(texto, / {2}ou {2}/);
     });
 
-    test('vários exemplos depois do "Ex:" saem um por linha, à esquerda (para o celular)', () => {
+    test('ajuda para o celular: uma frase por linha e o "Ex:" na linha de baixo, um exemplo por linha', () => {
+        // No texto do comando: as frases e o Ex: começam na coluna 0
+        const cron = formatCommandHelp(findCommand('/cron')).split('\n');
+        assert.match(cron[2], /^Na hora marcada, .* \(-pv\)\.$/);
+        assert.match(cron[3], /^No texto, \{\/comando args\} roda/);
+        assert.equal(cron[4], 'Ex: /cron 09h -r diario -to /Família/ Bom dia! {/crypto BTC}');
+
+        // Nas opções: a 1ª frase ao lado; as outras e o Ex:, recuadas 4 espaços
         const linhas = formatCommandHelp(findCommand('/defi')).split('\n');
         const i = linhas.findIndex(l => l.startsWith('  [orca|prjx]'));
-        assert.equal(linhas[i + 1], '    Ex: /defi');
-        assert.equal(linhas[i + 2], '        /defi orca');
-        assert.equal(linhas[i + 3], '        /defi prjx');
+        assert.match(linhas[i], /\(Project X, na HyperEVM\)\.$/);
+        assert.match(linhas[i + 1], /^ {4}Sozinho, mostra/);
+        assert.equal(linhas[i + 2], '    Ex: /defi');
+        assert.equal(linhas[i + 3], '        /defi orca');
+        assert.equal(linhas[i + 4], '        /defi prjx');
 
-        // Um exemplo só: na mesma linha; e "Niteroi, Sergipe" é um exemplo, não dois
-        assert.match(formatCommandHelp(findCommand('/tempo')), /Ex: \/tempo Niteroi, Sergipe/);
+        // Um exemplo só também vai para a linha de baixo; "Niteroi, Sergipe" é um exemplo, não dois
+        assert.match(formatCommandHelp(findCommand('/tempo')), /\n {4}Ex: \/tempo Niteroi, Sergipe\n/);
     });
 
     test('${CACHE_DIR}, ${MEDIA_DIR} e ${TMP_DIR} viram os caminhos reais na ajuda', () => {
