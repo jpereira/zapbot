@@ -40,6 +40,7 @@ const conta = (endereco) => Buffer.from(CONTAS[endereco], 'base64');
 function simularSolana({ dono = orca.WHIRLPOOL_PROGRAMA, contas = CONTAS } = {}) {
     rede.responder('post', 'api.mainnet-beta.solana.com', (url, cfg) => {
         assert.equal(cfg.body.method, 'getMultipleAccounts');
+        assert.equal(cfg.body.jsonrpc, '2.0', 'a versão do protocolo JSON-RPC (não a do bot)');
         return { result: { value: cfg.body.params[0].map(e => (contas[e] ? { data: [contas[e], 'base64'], owner: dono } : null)) } };
     });
 }
