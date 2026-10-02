@@ -12,7 +12,7 @@ Faz algo na hora marcada. Tem dois modos, na mesma agenda:
 
 | Opção | Valor | Descrição |
 |---|---|---|
-| `<quando>` | | Quando: `30m`, `às 18h`, `amanhã 9h`, `sexta 18h`, `25/12 10:00`... Veja [Quando](#quando) |
+| `<quando>` | | Quando: `6h`, `às 18h`, `+2h`, `30m`, `amanhã 9h`, `sexta 18h`, `25/12 10:00`... Veja [Quando](#quando) |
 | `-to` | `<destino>` | Modo mensagem: envia num contato (`/Jorge Pereira/`), num grupo (`/Grupo L200/`) ou num número (`+5521999999999`) em vez do chat atual. O contato é buscado primeiro; vários com o nome: você escolhe na lista. E-mail não vale: a mensagem sai no WhatsApp. Veja [Destinos](index.md#destinos-contato-grupo-número-ou-e-mail) |
 | `-lembrete` | | Modo lembrete (o mesmo de chamar como `/lembrete`) |
 | `-pv` | | Modo lembrete: lembra no seu privado em vez do chat atual |
@@ -31,7 +31,8 @@ Faz algo na hora marcada. Tem dois modos, na mesma agenda:
 /lembrete às 18h pagar o boleto
 /lembrete -pv amanhã 9h ligar pro banco
 /cron -lembrete sexta 18h -r semanal enviar o relatório
-/lembrete 2h                    (respondendo uma mensagem: lembra dela)
+/lembrete +2h                   (respondendo uma mensagem: lembra dela daqui a 2 horas)
+/cron 6h -r diario -to /Grupo L200/ Bom dia!   (todo dia às 06:00)
 /cron                           → a lista
 /cron -rm 2                     → remove o nº 2
 ```
@@ -75,8 +76,8 @@ Brasília.
 
 | Forma | Exemplo | Significa |
 |---|---|---|
-| Duração | `30m`, `2h`, `1d`, `1h30m` | Daqui a tanto tempo (`18h` sozinho é "daqui a 18 horas") |
-| Horário | `18:30`, `18h30`, `às 18h` | Hoje nesse horário; se já passou, amanhã |
+| Horário | `6h`, `07h`, `18:30`, `18h30`, `às 18h` | Hoje nesse horário; se já passou, amanhã |
+| Duração | `+2h`, `em 2h`, `daqui a 2h`, `30m`, `1d`, `1h30m` | Daqui a tanto tempo. Horas sozinhas são horário (`6h` é 06:00): para "daqui a 6 horas", use `+6h` ou `em 6h` |
 | Hoje / amanhã | `hoje 22h`, `amanhã`, `amanhã 10:00` | Sem hora: 9h |
 | Dia da semana | `sexta`, `seg 8h`, `sábado 10:00` | O próximo (hoje, se a hora ainda não passou). Sem hora: 9h |
 | Data | `25/12`, `25/12 10:00`, `25/12/2027 10h` | Sem ano: a próxima vez que a data chega. Sem hora: 9h |

@@ -59,8 +59,9 @@ function lerDuracao(token) {
 
 /**
  * Lê o "quando" no começo de uma lista de palavras.
- *   30m | 2h | 1d | 1h30m          → daqui a tanto tempo ("18h" sozinho também: daqui a 18 horas)
- *   18:30 | 18h30 | às 18h         → hoje nesse horário (ou amanhã, se já passou)
+ *   +2h | em 2h | daqui (a) 2h     → daqui a tanto tempo
+ *   30m | 1d | 1h30m               → daqui a tanto tempo (sem "+": não confundem com um horário)
+ *   6h | 07h | 18:30 | 18h30 | às 18h → hoje nesse horário (ou amanhã, se já passou)
  *   hoje 18h | amanhã [9h]         → hoje / amanhã (sem hora: 9h)
  *   sexta [18h] | seg [8:00]       → o próximo dia da semana (hoje, se a hora ainda não passou)
  *   25/12 [10:00] | 25/12/2027 [10h] → a data (sem ano: a próxima; sem hora: 9h)
@@ -69,10 +70,22 @@ function lerDuracao(token) {
  * @returns {{ ms: number, usadas: number } | null}  usadas: quantas palavras o "quando" ocupou
  */
 function lerQuando(palavras, agora = Date.now()) {
-    const [primeira, segunda] = palavras.map(semAcentos);
+    const [primeira, segunda, terceira] = palavras.map(semAcentos);
     if (!primeira) return null;
 
-    const duracao = lerDuracao(primeira);
+    // Daqui a tanto tempo, explícito: "+2h", "em 2h", "daqui 2h", "daqui a 2h"
+    if (primeira.startsWith('+')) {
+        const duracao = lerDuracao(primeira.slice(1));
+        return duracao ? { ms: agora + duracao, usadas: 1 } : null;
+    }
+    if (primeira === 'em' || primeira === 'daqui') {
+        const comA = primeira === 'daqui' && segunda === 'a';
+        const duracao = lerDuracao(comA ? terceira : segunda);
+        if (duracao) return { ms: agora + duracao, usadas: comA ? 3 : 2 };
+    }
+
+    // "6h" e "07h" sozinhos são um horário; "30m", "1d" e "1h30m", uma duração
+    const duracao = /^\d{1,2}h$/.test(primeira) && lerHora(primeira) ? null : lerDuracao(primeira);
     if (duracao) return { ms: agora + duracao, usadas: 1 };
 
     const hoje = partesEmBrasilia(agora);
