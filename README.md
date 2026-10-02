@@ -100,7 +100,7 @@ admin está ligado: só você usa comandos até `/bot -admin`
 | [`/noffa`](https://jpereira.github.io/zapbot/commands/noffa/) | `/🌈`, `/🏳️‍🌈` | | Enfeita o texto com arco-íris |
 | [`/ping`](https://jpereira.github.io/zapbot/commands/ping/) | `/p` | ✅ | Verifica se o bot está vivo |
 | [`/pixelart`](https://jpereira.github.io/zapbot/commands/pixelart/) | `/ansi`, `/px` | | Arte ANSI/ASCII aleatória (16colo.rs) |
-| [`/set`](https://jpereira.github.io/zapbot/commands/set/) | `/config` | ✅ | Lista e altera as configurações (settings) |
+| [`/set`](https://jpereira.github.io/zapbot/commands/set/) | `/config` | ✅ | Lista e altera as configurações (settings); `-a`/`-rem` acrescentam e tiram itens das listas (ex.: o `bot.admins`) |
 | [`/show`](https://jpereira.github.io/zapbot/commands/show/) | `/s` | ✅ | Reexibe mensagens apagadas ou editadas (`-e`); `-q` busca pelo texto |
 | [`/stats`](https://jpereira.github.io/zapbot/commands/stats/) | | ✅ | Ranking do chat (quem mais fala, apaga e edita, horários de pico); `-me` para as suas |
 | [`/sticker`](https://jpereira.github.io/zapbot/commands/sticker/) | `/st` | | Transforma imagem/vídeo em figurinha |
