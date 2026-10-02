@@ -188,6 +188,7 @@ async function inicializarBanco() {
      * Agenda do /cron: mensagens e lembretes (kind). due_at é
      * o próximo envio; com repeat, ele avança a cada envio (day_of_month guarda
      * o dia original do mensal, para um 31 voltar a 31 depois de fevereiro).
+     * paused: o /cron -pause tira o item da verificação até o -resume.
      */
     await dbRun(`
         CREATE TABLE IF NOT EXISTS schedules (
@@ -204,6 +205,7 @@ async function inicializarBanco() {
             created_at INTEGER NOT NULL
         )
     `);
+    await adicionarColunas('schedules', { paused: 'INTEGER DEFAULT 0' });
     await dbRun('CREATE INDEX IF NOT EXISTS idx_schedules_due ON schedules (due_at)');
 
     /*

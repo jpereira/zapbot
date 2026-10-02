@@ -110,7 +110,7 @@ entre os casos.
 | `mudo.test.js` | `/mudo`: avisos silenciados por pessoa ou grupo, e a busca do alvo (contato antes de grupo, a lista para escolher pelo nº) |
 | `stats.test.js`, `watch.test.js`, `monitor.test.js` | `/stats`, `/watch`, `/monitor` e o aviso de presença |
 | `status.test.js` | `/bot -status`: o relatório e o envio diário |
-| `agenda.test.js` | Datas digitadas (`30m`, `às 18h`, `sexta`...) e o `/cron`, nos modos mensagem e lembrete |
+| `agenda.test.js` | Datas digitadas (`6h`, `+2h`, `às 18h`, `sexta`...) e o `/cron`, nos modos mensagem e lembrete, com vários `-to`, `-edit` e `-pause`/`-resume` |
 | `backup.test.js` | `/backup` (criação, lista, restauração, envio no privado, por e-mail e com `-to`) e o backup diário |
 | `cotacoes.test.js` | `/cotacao`, `/crypto` e os alertas de preço (com o `-to`) |
 | `defi.test.js` | Solana (base58, PDA), contas da Orca (conferidas com o SDK oficial) e o `/defi`, com o `-alerta` de saída da faixa |
