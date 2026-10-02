@@ -105,6 +105,35 @@ describe('/bot', () => {
         assert.match(r, /🔓 \*Modo admin:\* desligado/);
     });
 
+    test('-info: avisa versão nova do yt-dlp (PyPI) e do whatsapp-web.js (release e commits no main)', async () => {
+        const { compareVersions, cleanNews, versionNote } = bot.src('system');
+        assert.equal(compareVersions('2026.08.19', '2026.8.19'), 0);
+        assert.equal(compareVersions('2026.9.1', '2026.08.19'), 1);
+        assert.equal(compareVersions('1.34.7', '1.35.0'), -1);
+        assert.equal(versionNote('2026.08.19', '2026.8.19'), ' · ✅ a mais recente');
+        assert.equal(versionNote('2026.08.19', '2026.9.30'), ' · ⬆️ *nova: 2026.9.30*');
+        assert.equal(versionNote(null, '2026.9.30'), '', 'sem a instalada (não achou o binário): sem nota');
+
+        const commit = packageJson.dependencies['whatsapp-web.js'].split('#')[1];
+        cleanNews();
+        bot.network.responder('get', 'pypi.org/pypi/yt-dlp/json', { info: { version: '2099.1.1' } });
+        bot.network.responder('get', 'api.github.com/repos/wwebjs/whatsapp-web.js/releases/latest', { tag_name: 'v99.0.0' });
+        bot.network.responder('get', `api.github.com/repos/wwebjs/whatsapp-web.js/compare/${commit}...main`, { ahead_by: 3 });
+        const [r] = await bot.replyAlt('/bot -info');
+        assert.match(r, /• whatsapp-web\.js: [\d.]+ \(commit [0-9a-f]{7}\) · ⬆️ \*nova: 99\.0\.0\* · ⬆️ 3 commits novos no main\n/);
+
+        // Kept for 6 h: does not query again
+        const calls = bot.network.chamadas.length;
+        await bot.replyAlt('/bot -info');
+        assert.equal(bot.network.chamadas.length, calls);
+
+        // Down: no note (and no error)
+        cleanNews();
+        bot.network.limpar();
+        assert.match((await bot.replyAlt('/bot -info'))[0], /• whatsapp-web\.js: [\d.]+ \(commit [0-9a-f]{7}\)\n/);
+        cleanNews();
+    });
+
     test('-info (-i): versões do bot, dos programas e o sistema', async () => {
         for (const line of ['/bot -info', '/bot -i']) {
             const [r] = await bot.replyAlt(line);
