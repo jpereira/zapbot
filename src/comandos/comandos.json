@@ -488,8 +488,8 @@
         },
         {
             "cmd": "/defi",
-            "usage": "/defi -orca -position <endereço> [-nft <mint>] [-pool <endereço>]  ou  /defi -alerta <nº|all> [-to <destino>]  ou  /defi [OPTION]",
-            "help": "Posições de liquidez cadastradas (por enquanto, da Orca): saldo, faixa, preço e taxas a coletar, lidos on-chain. Com -alerta, avisa sempre que uma posição sair da faixa.",
+            "usage": "/defi -orca -position <endereço> [-nft <mint>] [-pool <endereço>]  ou  /defi -project-x -wallet <0x...>  ou  /defi -alerta <nº|all> [-to <destino>]  ou  /defi [OPTION]",
+            "help": "Posições de liquidez da Orca (Solana) e do Project X (HyperEVM): saldo, faixa, preço e taxas a coletar, lidos on-chain. Com -alerta, avisa sempre que uma posição sair da faixa.",
             "cmd_opts": [
                 {
                     "opts": [
@@ -525,7 +525,7 @@
                         "orca"
                     ],
                     "values": [],
-                    "desc": "Protocolo da posição a cadastrar (por enquanto, o único).",
+                    "desc": "Protocolo da posição a cadastrar: a Orca, na Solana (com -position).",
                     "cron": false
                 },
                 {
@@ -546,7 +546,16 @@
                     "values": [
                         "<endereço>"
                     ],
-                    "desc": "Cadastra a posição (com -orca).",
+                    "desc": "Cadastra a posição da Orca (com -orca).",
+                    "cron": false
+                },
+                {
+                    "opts": [
+                        "project-x",
+                        "prjx"
+                    ],
+                    "values": [],
+                    "desc": "Protocolo a cadastrar: o Project X (prjx.com), na HyperEVM (com -wallet). O bot lê todas as posições abertas da carteira.",
                     "cron": false
                 },
                 {
@@ -577,6 +586,17 @@
                         "<destino>"
                     ],
                     "desc": "Junto com -alerta: avisa num contato, num grupo, num número ou por e-mail em vez do seu privado: /Jorge Pereira/, @Fulano (menção), /Grupo L200/, +5521999999999, email (o QRCODE_EMAIL_SMTP_TO) ou voce@exemplo.com (vários com o nome: você escolhe na lista).",
+                    "cron": false
+                },
+                {
+                    "opts": [
+                        "wallet",
+                        "w"
+                    ],
+                    "values": [
+                        "<0x...>"
+                    ],
+                    "desc": "Com -project-x: a carteira (0x e 40 caracteres hexadecimais).",
                     "cron": false
                 }
             ],

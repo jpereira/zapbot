@@ -3,12 +3,11 @@
  */
 
 const { estado } = require('../estado');
-const { descreverDestinoDoAlerta, destinoDoAlerta, textoDaPosicao } = require('../comandos/defi');
+const { descrever, descreverDestinoDoAlerta, destinoDoAlerta, lerCadastro } = require('../comandos/defi');
 const { dbAll, dbPronto, dbRun } = require('../db');
 const { enviarAoDestino } = require('../destinos');
 const { printError, printInfo } = require('../log');
 const { getSetting } = require('../settings');
-const { detalhesDaPosicao } = require('./orca');
 
 /*
  * Cada posição com o alerta ligado é lida a cada 'defi.alerta.intervalMin'
@@ -16,14 +15,13 @@ const { detalhesDaPosicao } = require('./orca');
  * quando ela passa de dentro (ou de desconhecido) para fora da faixa. Fora
  * dela, não avisa de novo; quando volta para a faixa e sai outra vez, avisa.
  * Se a leitura falhar (RPC com limite), nada muda e tenta na próxima.
+ * Numa carteira do Project X, "na faixa" é todas as posições abertas na faixa.
  */
-const curto = (endereco) => `${endereco.slice(0, 4)}…${endereco.slice(-4)}`;
+async function avisar(p, n, lido) {
+    const titulo = `DeFi: ${descrever(p)} saiu da faixa`;
+    const texto = `🚨 *${titulo}*\n\n${lido.foraDaFaixa.join('\n\n')}\n\n💡 _Desligue com /defi -alerta -rm ${n}._`;
 
-async function avisar(p, n, d) {
-    const titulo = `🚨 *DeFi: a posição ${curto(p.position)} saiu da faixa*`;
-    const texto = `${titulo}\n\n${textoDaPosicao(d)}\n\n💡 _Desligue com /defi -alerta -rm ${n}._`;
-
-    await enviarAoDestino(destinoDoAlerta(p), texto, { assunto: `DeFi: a posição ${curto(p.position)} saiu da faixa` });
+    await enviarAoDestino(destinoDoAlerta(p), texto, { assunto: titulo });
 }
 
 let ultimaVerificacao = 0;
@@ -44,15 +42,17 @@ async function verificarAlertasDefi({ forcar = false } = {}) {
         for (const [i, p] of posicoes.entries()) {
             if (!p.alert) continue;
 
-            let d;
+            let lido;
             try {
-                d = await detalhesDaPosicao(p.position, p.pool);
+                lido = await lerCadastro(p);
             } catch (err) {
-                printError(`/defi -alerta: não consegui ler a posição ${p.position}:`, err.message);
+                printError(`/defi -alerta: não consegui ler ${p.position}:`, err.message);
                 continue;
             }
 
-            const naFaixa = d.calculo.naFaixa ? 1 : 0;
+            // Carteira sem posição aberta: não há faixa para vigiar
+            if (lido.naFaixa === null) continue;
+            const naFaixa = lido.naFaixa ? 1 : 0;
             if (naFaixa === p.in_range) continue;
 
             await dbRun('UPDATE defi_positions SET in_range = ? WHERE id = ?', [naFaixa, p.id]);
@@ -62,7 +62,7 @@ async function verificarAlertasDefi({ forcar = false } = {}) {
             }
 
             // Grava ANTES de avisar: se o envio falhar, não repete a cada verificação
-            await avisar(p, i + 1, d)
+            await avisar(p, i + 1, lido)
                 .then(() => printInfo(`/defi -alerta: a posição ${p.position} saiu da faixa → ${descreverDestinoDoAlerta(p)}`))
                 .catch(err => printError(`/defi -alerta: falha ao avisar (${p.position}):`, err.message));
         }
