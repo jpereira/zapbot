@@ -175,7 +175,7 @@ describe('/defi', () => {
     test('cadastro: só -position basta; erros de protocolo, endereço, conta, NFT, pool e repetida', async () => {
         const errorAlt = async (line, expected) => assert.match((await bot.replyAlt(line))[0], expected, line);
 
-        await errorAlt(`/defi -position ${POSITION}`, /❌ Informe o protocolo: por enquanto só a Orca/);
+        await errorAlt(`/defi -position ${POSITION}`, /❌ Informe o protocolo: -orca \(com -position\) ou -project-x \(com -wallet\)/);
         await errorAlt('/defi -orca', /❌ Informe o endereço da posição/);
         await errorAlt('/defi -orca -position xyz', /❌ -position: "xyz" não é um endereço da Solana/);
         await errorAlt(`/defi -orca -position ${POSITION} -nft ${POOL}`, /❌ O NFT .* não é o desta posição \(o dela é 9UkH/);
@@ -188,7 +188,7 @@ describe('/defi', () => {
 
         simulateSolana();
         await errorAlt(`/defi -orca -p ${POSITION}`, /✅ \*Posição da Orca cadastrada/);
-        await errorAlt(REGISTRATION, /ℹ️ A posição ime1…VPcg já está cadastrada/);
+        await errorAlt(REGISTRATION, /ℹ️ ime1…VPcg já está cadastrada/);
     });
 
     test('RPC com limite ou posição fechada: avisa e sugere o defi.solana.rpc', async () => {
@@ -196,7 +196,7 @@ describe('/defi', () => {
 
         network.responder('post', 'api.mainnet-beta.solana.com', { error: { code: 429, message: 'Too many requests' } });
         const [r] = await bot.replyAlt('/defi -show', { erroEsperado: true });
-        assert.match(r, /⚠️ Não consegui ler a posição ime1…VPcg agora: RPC da Solana: Too many requests\.\n💡 _O RPC público da Solana limita as consultas; um RPC próprio vai no setting defi\.solana\.rpc\._/);
+        assert.match(r, /⚠️ Não consegui ler Orca · ime1…VPcg agora: RPC da Solana: Too many requests\.\n💡 _O RPC público da Solana limita as consultas; um RPC próprio vai no setting defi\.solana\.rpc\._/);
 
         simulateSolana({ contas: { [POOL]: ACCOUNTS[POOL] } });
         assert.match((await bot.replyAlt('/defi -show', { erroEsperado: true }))[0], /a posição não existe mais \(foi fechada\?\)/);
@@ -250,7 +250,7 @@ describe('/defi -alerta (-a)', () => {
         rangeOutside();
         const [notice] = await check();
         assert.equal(notice.chatId, OWNER.jid);
-        assert.match(notice.content, /^🚨 \*DeFi: a posição ime1…VPcg saiu da faixa\*\n\n🌊 \*Orca · SOL\/cbBTC\*[\s\S]*⚠️ \*fora da faixa\* \(preço abaixo/);
+        assert.match(notice.content, /^🚨 \*DeFi: Orca · ime1…VPcg saiu da faixa\*\n\n🌊 \*Orca · SOL\/cbBTC\*[\s\S]*⚠️ \*fora da faixa\* \(preço abaixo/);
         assert.match(notice.content, /💡 _Desligue com \/defi -alerta -rm 1\._$/);
         assert.deepEqual(await check(), [], 'continua fora: não repete');
 
@@ -320,8 +320,8 @@ describe('/defi -alerta (-a)', () => {
             assert.deepEqual(await check(), [], 'nada no WhatsApp');
             const [m] = emails;
             assert.equal(m.to, 'eu@exemplo.com, outro@exemplo.com');
-            assert.equal(m.subject, '[ZapBot] DeFi: a posição ime1…VPcg saiu da faixa');
-            assert.match(m.text, /^🚨 DeFi: a posição ime1…VPcg saiu da faixa\n\n🌊 Orca · SOL\/cbBTC/);
+            assert.equal(m.subject, '[ZapBot] DeFi: Orca · ime1…VPcg saiu da faixa');
+            assert.match(m.text, /^🚨 DeFi: Orca · ime1…VPcg saiu da faixa\n\n🌊 Orca · SOL\/cbBTC/);
             assert.doesNotMatch(m.text, /[*_]/);
 
             // An email that fails does not repeat on every check
@@ -336,5 +336,161 @@ describe('/defi -alerta (-a)', () => {
         } finally {
             for (const v of Object.keys(env)) delete process.env[v];
         }
+    });
+});
+
+/*
+ * Project X: the simulated HyperEVM answers each eth_call by contract and by
+ * selector. The wallet has 3 NFTs: no. 3 closed (no liquidity), no. 7 in range
+ * (UBTC/USD₮0) and the 9 below the range (WHYPE/USD₮0).
+ */
+describe('/defi: Project X (HyperEVM)', () => {
+    const prjx = bot.src('defi/prjx');
+    const WALLET = '0x12b2C3d4E5f60718293A4b5C6d7E8f9012345678';
+    const EMPTY = '0x1111111111111111111111111111111111111111';
+    const UBTC = `0x${'a'.repeat(40)}`;
+    const USDT0 = `0x${'b'.repeat(40)}`;
+    const WHYPE = '0x5555555555555555555555555555555555555555';
+    const POOL_BTC = `0x${'c'.repeat(40)}`;
+    const POOL_HYPE = `0x${'d'.repeat(40)}`;
+
+    const w = (n) => BigInt.asUintN(256, BigInt(n)).toString(16).padStart(64, '0');
+    const a = (e) => e.slice(2).toLowerCase().padStart(64, '0');
+    const s = (t) => w(32) + w(Buffer.byteLength(t)) + Buffer.from(t).toString('hex').padEnd(64, '0');   // in bytes: the ₮ takes 3
+    const tickDe = (price) => Math.floor(Math.log(price) / Math.log(1.0001));
+    const sqrtX96 = (price) => BigInt(Math.floor(Math.sqrt(price) * 2 ** 96));
+
+    // Raw prices (token1 per token0, in the smallest units): BTC at $86,000 and HYPE at $30
+    const RAW_BTC = 86000 * 10 ** (6 - 8);
+    const RAW_HYPE = 30 * 10 ** (6 - 18);
+    let chainAlt;
+
+    function newChain() {
+        const tickHype = tickDe(RAW_HYPE);
+        return {
+            slot0: { [POOL_BTC]: RAW_BTC, [POOL_HYPE]: RAW_HYPE },
+            posicoes: {
+                3: { t0: UBTC, t1: USDT0, taxa: 500, tl: 67000, tu: 68200, L: 0n },
+                7: { t0: UBTC, t1: USDT0, taxa: 500, tl: 67000, tu: 68200, L: 10n ** 10n },
+                9: { t0: WHYPE, t1: USDT0, taxa: 3000, tl: tickHype + 1000, tu: tickHype + 3000, L: 10n ** 15n }
+            },
+            coleta: { 7: [100000n, 12500000n], 9: [0n, 0n] },
+            tokens: { [UBTC]: ['UBTC', 8], [USDT0]: ['USD₮0', 6], [WHYPE]: ['WHYPE', 18] }
+        };
+    }
+
+    function replyCall({ to, data, from }) {
+        const sel = data.slice(0, 10);
+        const args = data.slice(10);
+        const arg = (i) => args.slice(i * 64, (i + 1) * 64);
+        const target = to.toLowerCase();
+
+        if (target === prjx.POSITIONS.toLowerCase()) {
+            const owner = `0x${arg(0).slice(24)}`;
+            if (sel === prjx.SEL.balanceOf) return w(owner === WALLET.toLowerCase() ? 3 : 0);
+            if (sel === prjx.SEL.tokenOfOwnerByIndex) return w([3, 7, 9][Number(BigInt(`0x${arg(1)}`))]);
+            const id = Number(BigInt(`0x${arg(0)}`));
+            const p = chainAlt.posicoes[id];
+            if (sel === prjx.SEL.positions) return w(0) + w(0) + a(p.t0) + a(p.t1) + w(p.taxa) + w(p.tl) + w(p.tu) + w(p.L) + w(0).repeat(4);
+            if (sel === prjx.SEL.collect) {
+                assert.equal(from, WALLET.toLowerCase(), 'o collect simulado sai da carteira dona do NFT');
+                return w(chainAlt.coleta[id][0]) + w(chainAlt.coleta[id][1]);
+            }
+        }
+        if (target === prjx.FACTORY.toLowerCase() && sel === prjx.SEL.getPool) return a(`0x${arg(0).slice(24)}` === UBTC ? POOL_BTC : POOL_HYPE);
+        if (chainAlt.slot0[target] && sel === prjx.SEL.slot0) {
+            const price = chainAlt.slot0[target];
+            return w(sqrtX96(price)) + w(tickDe(price)) + w(0).repeat(5);
+        }
+        if (chainAlt.tokens[target] && sel === prjx.SEL.symbol) return s(chainAlt.tokens[target][0]);
+        if (chainAlt.tokens[target] && sel === prjx.SEL.decimals) return w(chainAlt.tokens[target][1]);
+        throw new Error(`eth_call não simulado: ${to} ${sel}`);
+    }
+
+    function simulateHyperEvm() {
+        network.responder('post', 'rpc.hyperliquid.xyz/evm', (url, cfg) => {
+            assert.ok(Array.isArray(cfg.body) && cfg.body.length <= 10, 'em lotes de até 10 (o RPC público recusa maiores)');
+            return cfg.body.map(c => ({ jsonrpc: '2.0', id: c.id, result: `0x${replyCall(c.params[0])}` }));
+        });
+    }
+
+    // Amounts by the Uniswap V3 formulas, to compare with the text
+    function expected(p, price, dec0, dec1) {
+        const sp = Math.sqrt(price);
+        const [sa, sb] = [p.tl, p.tu].map(t => 1.0001 ** (t / 2));
+        const L = Number(p.L);
+        const q0 = sp <= sa ? L * (1 / sa - 1 / sb) : sp >= sb ? 0 : L * (1 / sp - 1 / sb);
+        const q1 = sp <= sa ? 0 : sp >= sb ? L * (sb - sa) : L * (sp - sa);
+        return [q0 / 10 ** dec0, q1 / 10 ** dec1];
+    }
+    const dollars = (textAlt) => Number(textAlt.match(/💰 \*Saldo:\* \$([\d,.]+)/)[1].replace(/,/g, ''));
+
+    beforeEach(() => {
+        chainAlt = newChain();
+        simulateHyperEvm();
+    });
+
+    test('-project-x -wallet: cadastra a carteira; erros de endereço, repetida e sem -wallet', async () => {
+        const errorAlt = async (line, expectedRe) => assert.match((await bot.replyAlt(line))[0], expectedRe, line);
+
+        await errorAlt('/defi -prjx', /❌ Informe a carteira: -wallet <0x\.\.\.>/);
+        await errorAlt('/defi -prjx -w xyz', /❌ -wallet: "xyz" não é um endereço da HyperEVM/);
+        await errorAlt(`/defi -project-x -wallet <${WALLET}>`, /^✅ \*Carteira do Project X cadastrada:\* 0x12…5678\n📍 2 posições abertas\./);
+        await errorAlt(`/defi -prjx -w ${WALLET.toLowerCase()}`, /ℹ️ 0x12…5678 já está cadastrada/);
+
+        const [list] = await bot.replyAlt('/defi -l');
+        assert.match(list, /^🌊 \*Posições DeFi\* \(1\)\n\n1\. Project X · carteira 0x12…5678 _\(desde /);
+        assert.equal((await bot.dbGet('SELECT protocol, position FROM defi_positions')).position, WALLET.toLowerCase());
+    });
+
+    test('-show: uma resposta por posição aberta, da mais nova para a mais velha (a fechada fica de fora)', async () => {
+        await bot.replyAlt(`/defi -prjx -w ${WALLET}`);
+        const [hype, btc, ...rest] = await bot.replyAlt('/defi -show');
+        assert.deepEqual(rest, []);
+
+        assert.match(btc, /^🌊 \*Project X · UBTC\/USD₮0\* · taxa 0\.05%\n📍 #7 · ✅ dentro da faixa\n\n💰 \*Saldo:\* \$/);
+        const [q0, q1] = expected(chainAlt.posicoes[7], RAW_BTC, 8, 6);
+        assert.ok(Math.abs(dollars(btc) - (q0 * 86000 + q1)) < 0.01, `saldo ${dollars(btc)} ≠ ${q0 * 86000 + q1}`);
+        assert.match(btc, /📏 \*Faixa:\* [\d,.]+ – [\d,.]+ USD₮0 por UBTC\n🎯 \*Preço atual:\* 86,000 USD₮0 por UBTC\n {3}▕─+●─+▏ \d+% da faixa/);
+        assert.match(btc, /💸 \*Taxas a coletar:\* \$98\.50\n {3}• 0\.001 UBTC \(\$86\.00\)\n {3}• 12\.5 USD₮0 \(\$12\.50\)$/);
+
+        assert.match(hype, /^🌊 \*Project X · WHYPE\/USD₮0\* · taxa 0\.3%\n📍 #9 · ⚠️ \*fora da faixa\* \(preço abaixo: a posição não rende taxas\)/);
+        const [h0] = expected(chainAlt.posicoes[9], RAW_HYPE, 18, 6);
+        assert.ok(Math.abs(dollars(hype) - h0 * 30) < 0.01);
+        assert.match(hype, /• 0 USD₮0 \(\$0\.00\)\n\n📏/);   // below the range: all in WHYPE
+    });
+
+    test('carteira sem posição aberta: cadastra e avisa; -show diz que não há nenhuma', async () => {
+        assert.match((await bot.replyAlt(`/defi -prjx -w ${EMPTY}`))[0], /ℹ️ Nenhuma posição aberta agora/);
+        assert.deepEqual(await bot.replyAlt('/defi -show'), ['🌊 Project X · carteira 0x11…1111: nenhuma posição aberta.']);
+    });
+
+    test('RPC com limite: não cadastra; no -show, avisa e sugere o defi.hyperevm.rpc', async () => {
+        network.responder('post', 'rpc.hyperliquid.xyz/evm', { jsonrpc: '2.0', id: null, error: { code: -32005, message: 'rate limited' } });
+        assert.match((await bot.replyAlt(`/defi -prjx -w ${WALLET}`, { erroEsperado: true }))[0],
+            /⚠️ Não consegui ler a carteira agora: RPC da HyperEVM: rate limited\.\n💡 _.*defi\.hyperevm\.rpc/);
+        assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM defi_positions')).n, 0);
+
+        simulateHyperEvm();
+        await bot.replyAlt(`/defi -prjx -w ${WALLET}`);
+        network.responder('post', 'rpc.hyperliquid.xyz/evm', { jsonrpc: '2.0', id: null, error: { code: -32005, message: 'rate limited' } });
+        assert.match((await bot.replyAlt('/defi -show', { erroEsperado: true }))[0],
+            /^⚠️ Não consegui ler Project X · carteira 0x12…5678 agora: RPC da HyperEVM: rate limited\.\n💡 _O RPC público da HyperEVM/);
+    });
+
+    test('-alerta: na carteira, avisa quando alguma posição sai da faixa, só com as de fora', async () => {
+        chainAlt.slot0[POOL_HYPE] = RAW_HYPE * 1.0001 ** 2000;   // the HYPE one enters the range
+        await bot.replyAlt(`/defi -prjx -w ${WALLET}`);
+        assert.match((await bot.replyAlt('/defi -alerta 1'))[0], /1\. Project X · carteira 0x12…5678 · ✅ na faixa/);
+
+        chainAlt.slot0[POOL_HYPE] = RAW_HYPE;                     // sai
+        const beforeAlt = bot.client.enviadas.length;
+        bot.estado.pronto = true;
+        await checkAlertsDefi({ forcar: true });
+        const [notice, ...more] = bot.client.enviadas.slice(beforeAlt);
+        assert.deepEqual(more, []);
+        assert.equal(notice.chatId, OWNER.jid);
+        assert.match(notice.content, /^🚨 \*DeFi: Project X · carteira 0x12…5678 saiu da faixa\*\n\n🌊 \*Project X · WHYPE\/USD₮0\*/);
+        assert.doesNotMatch(notice.content, /UBTC/);   // the BTC one stays in range: left out
     });
 });

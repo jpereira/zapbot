@@ -23,7 +23,7 @@ const { compileRuleWatch } = require('./watch/rules');
  * allowEmpty (string that may be empty), validar() (string: throws Error if
  * invalid) and secret (value masked in /set and in the logs).
  */
-// item() of the /news feed lists and validar() of defi.solana.rpc
+// item() of the /news feed lists and validar() of the /defi RPCs
 function validateUrlFeed(v) {
     if (!isValidHttpUrl(v)) throw new Error(`URL inválida: ${v}`);
     return v;
@@ -163,6 +163,13 @@ const SETTINGS_SCHEMA = {
         default: 10,
         type: 'number', min: 1, max: 1440,
         desc: 'Intervalo (minutos) entre as verificações do /defi -alerta (cada uma lê as posições no RPC da Solana).'
+    },
+    'defi.hyperevm.rpc': {
+        default: 'https://rpc.hyperliquid.xyz/evm',
+        type: 'string',
+        secret: true,
+        validar: validateUrlFeed,
+        desc: 'RPC da HyperEVM usado pelo /defi no Project X (o público limita as consultas).'
     },
     'defi.solana.rpc': {
         default: 'https://api.mainnet-beta.solana.com',
