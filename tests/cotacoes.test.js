@@ -247,6 +247,42 @@ describe('alertas de preço (-alerta)', () => {
         assert.match((await bot.responder('/crypto -alerta'))[0], /1\. ₿ BTC\/USDT acima de/);
     });
 
+    test('-rm com vários nºs (espaço ou vírgula); algum que não existe: nenhum sai', async () => {
+        for (const v of [96000, 97000, 98000, 99000]) await bot.responder(`/crypto -alerta BTC > ${v}`);
+
+        assert.match((await bot.responder('/crypto -alerta -rm 1 7 9'))[0],
+            /^❌ Alertas nº 7, 9 não existem\. Nada foi removido; veja a lista com \/crypto -alerta$/);
+        assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM price_alerts')).n, 4);
+
+        const [r] = await bot.responder('/crypto -alerta -rm 3 1,3');
+        assert.match(r, /^🗑️ \*Alertas removidos\* \(2\)\n• ₿ BTC\/USDT acima de \*\$96,000\.00\*\n• ₿ BTC\/USDT acima de \*\$98,000\.00\*$/);
+        const [lista] = await bot.responder('/crypto -alerta');
+        assert.match(lista, /1\. ₿ BTC\/USDT acima de \*\$97,000\.00\*.*\n2\. ₿ BTC\/USDT acima de \*\$99,000\.00\*/);
+    });
+
+    test('a moeda antes do -alerta; -msg vai no início do aviso', async () => {
+        const [criado] = await bot.responder('/crypto BTC -alerta > 96000 -to /Fulano/ -msg Isso é uma mensagem: hora de vender!');
+        assert.match(criado, /^🔔 \*Alerta criado\*\n₿ BTC\/USDT acima de \*\$96,000\.00\*\n   💬 Isso é uma mensagem: hora de vender!\n💰 Agora/);
+        assert.match((await bot.responder('/crypto -alerta'))[0], /→ 👤 Fulano _\(criado .*\)_\n   💬 Isso é uma mensagem: hora de vender!/);
+
+        // O -to também pode vir depois do -msg; e no /cotacao
+        await bot.responder('/cotacao USD -alerta > 6 -msg Dólar subiu! -to /Fulano/');
+        assert.deepEqual(await bot.dbAll('SELECT symbol, dest_name, message FROM price_alerts ORDER BY id'), [
+            { symbol: 'BTC', dest_name: 'Fulano', message: 'Isso é uma mensagem: hora de vender!' },
+            { symbol: 'USD', dest_name: 'Fulano', message: 'Dólar subiu!' }
+        ]);
+
+        precos.BTC = 97000;
+        const antes = bot.client.enviadas.length;
+        await verificarAlertasDePreco({ forcar: true });
+        const [aviso] = bot.client.enviadas.slice(antes);
+        assert.equal(aviso.chatId, OUTRO.jid);
+        assert.match(aviso.content, /^Isso é uma mensagem: hora de vender!\n\n🔔 \*ALERTA DE PREÇO\*\n\n📈 ₿ \*BTC\/USDT\*/);
+
+        assert.match((await bot.responder('/crypto -alerta BTC > 99000 -msg'))[0], /❌ Informe o texto do -msg/);
+        assert.match((await bot.responder('/crypto -alerta -msg oi'))[0], /❌ O -msg só vale ao criar um alerta/);
+    });
+
     test('só o dono; lista vazia', async () => {
         assert.deepEqual(await bot.responder('/cotacao -alerta USD > 6', { de: OUTRO.jid }), ['⛔ Apenas o dono do bot (ou um admin) pode usar os alertas.']);
         assert.match((await bot.responder('/crypto -alerta'))[0], /🔔 Nenhum alerta no \/crypto\.\n💡 _Crie com \/crypto -alerta BTC < 90000_/);

@@ -12,7 +12,8 @@ máxima e mínima do dia e variação (🟢 alta, 🔴 queda). Suportadas: `USD`
 | `-add`, `-a` | `<MOEDA>` | Habilita uma moeda suportada (só o dono do bot ou um admin do [`bot.admins`](bot.md#admins-extras)) |
 | `-del`, `-d` | `<MOEDA>` | Desabilita uma moeda (só o dono do bot ou um admin do [`bot.admins`](bot.md#admins-extras)) |
 | `-alerta` | `[regra]` | Sem regra, lista os alertas; com regra, cria um. Veja [Alertas de preço](#alertas-de-preço) |
-| `-rm` | `<nº\|all>` | Junto com `-alerta`: remove o alerta nº N (ou todos) |
+| `-msg` | `<texto>` | Junto com `-alerta`: o texto vai no início do aviso. Vai até o fim do comando. Veja [Mensagem no aviso](#mensagem-no-aviso) |
+| `-rm` | `<nº...\|all>` | Junto com `-alerta`: remove os alertas com esses nºs (`-rm 1 2 3`), ou todos |
 | `-to` | `<destino>` | Junto com `-alerta`: avisa num contato (`/Jorge Pereira/`), numa menção (`@Fulano Da Silva`), num grupo (`/Grupo L200/`), num número (`+5521999999999`) ou por e-mail (`email`) em vez do seu privado. Repita para vários: um alerta só, que avisa em todos. Veja [Avisar em outro chat ou por e-mail](#avisar-em-outro-chat-ou-por-e-mail) |
 
 - **USD, EUR, GBP**: Yahoo Finance. Se ele falhar, a AwesomeAPI (que não
@@ -60,8 +61,10 @@ um preço passa de um valor. Cada alerta dispara uma vez e é removido. Só o do
 /cotacao -alerta USD > 5.30    → quando o dólar passar de R$ 5,30
 /cotacao -alerta eur < 5,50    → quando o euro ficar abaixo de R$ 5,50
 /crypto -alerta BTC < 90000    → quando o BTC ficar abaixo de $90.000
+/crypto BTC -alerta > 120000   → a moeda também pode vir antes do -alerta
 /cotacao -alerta               → lista os alertas do /cotacao, numerados
 /cotacao -alerta -rm 2         → remove o nº 2 da lista
+/crypto -alerta -rm 1 2 3      → remove os nº 1, 2 e 3 (também -rm 1,2,3)
 /crypto -alerta -rm all        → remove todos os do /crypto
 ```
 
@@ -72,7 +75,34 @@ um preço passa de um valor. Cada alerta dispara uma vez e é removido. Só o do
   hora): o bot mostra o valor atual.
 - Os preços são consultados a cada 5 minutos (setting `alerta.intervalMin`),
   uma vez por moeda. O limite é de 20 alertas no total (setting `alerta.max`).
+- No `-rm` com vários nºs, se algum não existir, nenhum é removido (o bot diz
+  quais faltam). Os nºs são os da lista de antes de remover.
 - Os alertas ficam na tabela `price_alerts` e sobrevivem a reinícios.
+
+### Mensagem no aviso
+
+Com `-msg <texto>`, o texto vai no início do aviso, antes do `🔔 ALERTA DE
+PREÇO`. Ele vai até o fim do comando, então pode ter espaços e pontuação; o
+`-to` pode vir antes ou depois dele.
+
+```
+/crypto BTC -alerta > 90000 -to /Jorge Pereira/ -msg Isso é uma mensagem que vai no início!
+/cotacao USD -alerta > 6 -msg Dólar nas alturas! -to /Família/
+```
+
+```
+Isso é uma mensagem que vai no início!
+
+🔔 ALERTA DE PREÇO
+
+📈 ₿ BTC/USDT ficou acima de $90,000.00
+💰 Agora: $90,512.30 (+5,21% desde a criação)
+📅 Alerta criado em 02/10/2026, 18:40
+```
+
+- A lista (`-alerta`) mostra o texto embaixo do alerta: `💬 Isso é uma
+  mensagem...`.
+- O texto só não pode ter um ` -to ` solto no meio: ele é lido como destino.
 
 ### Avisar em outro chat ou por e-mail
 
