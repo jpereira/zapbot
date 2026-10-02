@@ -96,10 +96,10 @@ não mudam: para isso, remova (`-rm`) e crie de novo.
 /cron -edit 2 -r nao                      → deixa de repetir
 ```
 
-O `-pause <nº...|all>` segura o item (ou vários: `-pause 1 3`): ele continua na lista (com ⏸️), mas não sai.
-O `-resume <nº...|all>` solta. Um item repetido que venceu enquanto estava pausado
-pula para o próximo horário; um item único que já passou sai na hora (a
-resposta avisa).
+O `-pause <nº...|all>` segura o item (ou vários: `-pause 1 3`): ele continua
+na lista (com ⏸️), mas não sai. O `-resume <nº...|all>` solta. Um item repetido
+que venceu enquanto estava pausado pula para o próximo horário; um item único
+que já passou sai na hora (a resposta avisa).
 
 ## Comandos no texto
 
