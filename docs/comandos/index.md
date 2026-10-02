@@ -32,8 +32,23 @@ arquivo do `/backup`) vão para o seu privado, e o `/cron`, para o chat atual.
 | Número | `+5521999999999` | O privado do número: DDI + DDD + número (o `+` é opcional; o bot confere se ele está no WhatsApp) |
 | E-mail | `email`, `voce@exemplo.com` ou `"a@x.com, b@y.com"` | Nos alertas (`/cotacao`, `/crypto` e `/defi`) e no `/backup -send`: `email` é o `QRCODE_EMAIL_SMTP_TO`; sai pelo SMTP do bot, sem a formatação do WhatsApp ([E-mails](../emails.md)) |
 
+As mesmas formas, num comando só (o `/cron` aceita vários `-to`; os outros, um):
+
+```
+/cron 8h -r diario -to /Jorge Pereira/ -to @Fulano Da Silva -to /Grupo L200/ -to +5521999999999 Bom dia!
+/cotacao -alerta USD > 5.30 -to email           → por e-mail (o QRCODE_EMAIL_SMTP_TO)
+/mudo -a @Fulano Da Silva                       → o alvo do /mudo, mencionando
+/set -a bot.admins /Jorge Pereira/ +5511988887777 → o bot.admins aceita várias pessoas de uma vez
+```
+
+- **Menção:** num grupo, digite `@` e escolha a pessoa na lista do WhatsApp. No
+  texto da mensagem ela vira um id (`@66147630248178`), e o bot pega a pessoa
+  pelo id que o WhatsApp manda junto. Serve para quem está no grupo mas não na
+  sua agenda. Um `@número` digitado à mão, sem escolher na lista, é recusado:
+  para um número, use o `+5521999999999`.
 - O `/cron` e o `/mudo` não aceitam e-mail: a mensagem do `/cron` sai no
-  WhatsApp, e o `/mudo` silencia uma pessoa ou um grupo.
+  WhatsApp, e o `/mudo` silencia uma pessoa ou um grupo. O `bot.admins` aceita
+  só pessoas (contato, menção ou número).
 - O nome casa quando tem **todas** as palavras, em qualquer ordem, sem
   diferenciar maiúsculas nem acentos. No `-to`, nomes com espaço vão entre
   `/.../` ou aspas (sem eles, só a primeira palavra conta); no `/mudo`, o alvo
@@ -59,7 +74,10 @@ arquivo do `/backup`) vão para o seu privado, e o `/cron`, para o chat atual.
 ## Permissões (`onlyAdmin`)
 
 Comandos marcados como **admin** só executam quando enviados **pela própria
-conta do bot** (você, de qualquer aparelho). Se outra pessoa tentar, nada
+conta do bot** (você, de qualquer aparelho) ou por um **admin extra**: as
+pessoas que você puser no setting `bot.admins`
+(`/set -a bot.admins /Jorge Pereira/`, `@Fulano Da Silva` ou `+5521999999999`;
+veja [Admins extras](bot.md#admins-extras)). Se outra pessoa tentar, nada
 acontece no chat; com o [debug](debug.md) ligado, você recebe um
 aviso no `PHONE_NUMBER`:
 
@@ -68,8 +86,8 @@ aviso no `PHONE_NUMBER`:
 ```
 
 O **modo admin vem ligado por padrão** (setting `bot.adminMode`): até você
-mandar `/bot -admin`, só você usa comandos, inclusive os que não são admin
-(`/get`, `/tempo`, `/sticker`...). Desligado, cada comando segue a coluna
+mandar `/bot -admin`, só você (e os admins extras) usa comandos, inclusive os
+que não são admin (`/get`, `/tempo`, `/sticker`...). Desligado, cada comando segue a coluna
 *Admin* do [Resumo](#resumo).
 
 As **respostas do próprio bot** também saem pela sua conta, mas nunca são
@@ -106,7 +124,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -a`) para fazer o bot
 | [`/noffa`](noffa.md) | `/🌈`, `/🏳️‍🌈` | | Enfeita o texto com arco-íris |
 | [`/ping`](ping.md) | `/p` | ✅ | Verifica se o bot está vivo |
 | [`/pixelart`](pixelart.md) | `/ansi`, `/px` | | Arte ANSI/ASCII aleatória (16colo.rs) |
-| [`/set`](set.md) | `/config` | ✅ | Lista e altera as configurações (settings) |
+| [`/set`](set.md) | `/config` | ✅ | Lista e altera as configurações (settings); `-a`/`-rem` acrescentam e tiram itens das listas (ex.: o `bot.admins`) |
 | [`/show`](show.md) | `/s` | ✅ | Reexibe mensagens apagadas ou editadas (`-e`); `-q` busca pelo texto |
 | [`/stats`](stats.md) | | ✅ | Ranking do chat (quem mais fala, apaga e edita, horários de pico); `-me` para as suas |
 | [`/sticker`](sticker.md) | `/st` | | Transforma imagem/vídeo em figurinha |

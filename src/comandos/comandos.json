@@ -86,7 +86,7 @@
                     "values": [
                         "<destino>"
                     ],
-                    "desc": "Junto com -send: por e-mail, como anexo (email = o QRCODE_EMAIL_SMTP_TO, ou voce@exemplo.com), ou noutro chat: um contato, um grupo ou um número (/Jorge Pereira/, /Grupo L200/ ou +5521999999999; pede -sim)."
+                    "desc": "Junto com -send: por e-mail, como anexo (email = o QRCODE_EMAIL_SMTP_TO, ou voce@exemplo.com), ou noutro chat: um contato, uma menção, um grupo ou um número (/Jorge Pereira/, @Fulano (menção), /Grupo L200/ ou +5521999999999; pede -sim)."
                 }
             ],
             "onlyAdmin": true
@@ -145,7 +145,7 @@
                     "argv": [
                         "+admin"
                     ],
-                    "desc": "Liga o modo admin: só você usa comandos; os dos outros são ignorados."
+                    "desc": "Liga o modo admin: só você (e os do setting bot.admins) usa comandos; os dos outros são ignorados."
                 }
             ],
             "onlyAdmin": true
@@ -209,14 +209,14 @@
                     "values": [
                         "<MOEDA>"
                     ],
-                    "desc": "Habilita uma moeda suportada. Só o dono."
+                    "desc": "Habilita uma moeda suportada. Só o dono (ou um admin do bot.admins)."
                 },
                 {
                     "opts": [
                         "alerta"
                     ],
                     "values": [],
-                    "desc": "Sem regra: lista os alertas. Com regra (ex.: USD > 5.30): avisa no seu privado (ou no destino do -to) quando o preço passar do valor. Só o dono."
+                    "desc": "Sem regra: lista os alertas. Com regra (ex.: USD > 5.30): avisa no seu privado (ou no destino do -to) quando o preço passar do valor. Só o dono (ou um admin do bot.admins)."
                 },
                 {
                     "opts": [
@@ -226,7 +226,7 @@
                     "values": [
                         "<MOEDA>"
                     ],
-                    "desc": "Desabilita uma moeda. Só o dono."
+                    "desc": "Desabilita uma moeda. Só o dono (ou um admin do bot.admins)."
                 },
                 {
                     "opts": [
@@ -370,14 +370,14 @@
                     "values": [
                         "<TOKEN>"
                     ],
-                    "desc": "Ativa uma moeda suportada. Só o dono."
+                    "desc": "Ativa uma moeda suportada. Só o dono (ou um admin do bot.admins)."
                 },
                 {
                     "opts": [
                         "alerta"
                     ],
                     "values": [],
-                    "desc": "Sem regra: lista os alertas. Com regra (ex.: BTC < 90000): avisa no seu privado (ou no destino do -to) quando o preço passar do valor. Só o dono."
+                    "desc": "Sem regra: lista os alertas. Com regra (ex.: BTC < 90000): avisa no seu privado (ou no destino do -to) quando o preço passar do valor. Só o dono (ou um admin do bot.admins)."
                 },
                 {
                     "opts": [
@@ -387,7 +387,7 @@
                     "values": [
                         "<TOKEN>"
                     ],
-                    "desc": "Desativa uma moeda. Só o dono."
+                    "desc": "Desativa uma moeda. Só o dono (ou um admin do bot.admins)."
                 },
                 {
                     "opts": [
@@ -780,7 +780,7 @@
         },
         {
             "cmd": "/mudo",
-            "usage": "/mudo <OPTION>... </contato ou grupo/|+número>",
+            "usage": "/mudo <OPTION>... </contato ou grupo/|@menção|+número>",
             "aliases": [
                 "/m",
                 "/mute"
@@ -838,9 +838,9 @@
                 },
                 {
                     "argv": [
-                        "</contato ou grupo/|+número>"
+                        "</contato ou grupo/|@menção|+número>"
                     ],
-                    "desc": "Primeiro um contato, depois um grupo, pelo nome ou parte dele (vários: você escolhe na lista), um número ou alguém mencionado com @. Ex: /mudo -a /Jorge Pereira/, /mudo -a /Grupo L200/, /mudo -s +5521999999999"
+                    "desc": "Primeiro um contato, depois um grupo, pelo nome ou parte dele (vários: você escolhe na lista), alguém mencionado com @ ou um número. Ex: /mudo -a /Jorge Pereira/, /mudo -a /Grupo L200/, /m -a @Fulano, /mudo -s +5521999999999"
                 }
             ],
             "onlyAdmin": true
@@ -1314,7 +1314,7 @@
                     "values": [
                         "<destino|off>"
                     ],
-                    "desc": "Para onde vão os avisos de uma regra: com -add (a regra nova) ou com -N (troca o destino). Contato, grupo, número ou e-mail (/Grupo L200/, +5521999999999, email); off volta ao seu privado."
+                    "desc": "Para onde vão os avisos de uma regra: com -add (a regra nova) ou com -N (troca o destino). Contato, menção, grupo, número ou e-mail (/Jorge Pereira/, @Fulano, /Grupo L200/, +5521999999999, email); off volta ao seu privado."
                 },
                 {
                     "argv": [
