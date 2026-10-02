@@ -135,7 +135,7 @@ entre os casos.
 | `stats.test.js`, `watch.test.js`, `monitor.test.js` | `/stats` (com o `/chat/`, o `-l` e o `-flush`), `/watch` (e um ou vários `-to`), `/monitor` e o aviso de presença |
 | `status.test.js` | `/bot -status`: o relatório (com o aviso `show.alert.*` desligado e os silenciados do `/mudo`) e o envio diário |
 | `agenda.test.js` | Datas digitadas (`6h`, `+2h`, `às 18h`, `sexta`...) e o `/cron`, nos modos mensagem e lembrete, com vários `-to` num item só, `-edit`, `-pause`/`-resume` e os `{/comando}` no texto (e o `-test`) |
-| `backup.test.js` | `/backup` (criação, lista, restauração, envio no privado, por e-mail e com `-to`) e o backup diário |
+| `backup.test.js` | `/backup` (criação, lista, restauração, envio no privado, por e-mail e com um ou vários `-to`) e o backup diário |
 | `cotacoes.test.js` | `/cotacao`, `/crypto` (e o filtro por moeda) e os alertas de preço (com um ou vários `-to`) |
 | `defi.test.js` | Solana (base58, PDA), contas da Orca (conferidas com o SDK oficial), o Project X (HyperEVM simulada) e o `/defi`: o `-s` por protocolo, o `-rm` de vários, a lista (inteira só no privado, com o 🔔 e o limite) e o `-alerta` (saída e volta da faixa, o `-taxas`, o `-alerta` no cadastro e vários `-to`) |
 | `externos.test.js` | `/cve`, `/tempo`, `/news`, `/gpt`, `/tldr`, `/traduzir`, `/giphy`, `/meme`, `/joke`, `/kernel`, `/pixelart` |
