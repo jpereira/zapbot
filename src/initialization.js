@@ -312,6 +312,9 @@ async function initializeDb() {
             dest_email TEXT
         )
     `);
+    await addColumns('watch_destinations', {
+        recipients: 'TEXT'   // JSON with the destinations of several -to (the dest_*: the first)
+    });
 
     await loadSettings();
 

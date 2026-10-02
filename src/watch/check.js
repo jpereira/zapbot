@@ -1,12 +1,12 @@
 /*
  * Watch: tests the received messages against the rules and notifies you in private
- * (or in the -to destination of each rule: another chat or email).
+ * (or in the -to destinations of each rule: other chats or emails).
  */
 
 const { findCommand } = require('../commands/base');
 const { resolverMentions } = require('../contacts');
 const { dbAll, dbRun } = require('../db');
-const { lineDestination, sendOnDestination } = require('../destinations');
+const { lineDestination, destinationsSaved, sendOnDestination } = require('../destinations');
 const { printError, printInfo } = require('../log');
 const { getSetting } = require('../settings');
 const { formatData } = require('../util/format');
@@ -55,24 +55,31 @@ async function checkWatch({ msg, msgIdPure, body, chatId, chatName, isGroup, sen
         `📅 *Enviada em:* ${formatData(timestamp)}\n` +
         `💬 *Texto:* "${await resolverMentions(body, msg.mentionedIds)}"`;
 
-    // One notice per destination, with only its rules (without -to: your private chat)
+    /*
+     * One notice per destination, with only its rules (without -to: your private chat). A
+     * a rule with several -to goes into each one's notice.
+     */
     const linesAlt = await dbAll(
         `SELECT * FROM watch_destinations WHERE rule IN (${freshAlt2.map(() => '?').join(', ')})`, freshAlt2.map(c => c.regra));
-    const destinationAlt = new Map(linesAlt.map(r => [r.rule, lineDestination(r)]));
-    const byDestination = Map.groupBy(freshAlt2, (c) => {
-        const d = destinationAlt.get(c.regra);
-        return d ? (d.email ? `email:${d.email}` : d.id) : 'privado';
-    });
+    const destinationsAlt = new Map(linesAlt.map(r => [r.rule, destinationsSaved(r.recipients, lineDestination(r))]));
+    const byDestination = new Map();
+    for (const c of freshAlt2) {
+        const destinations = destinationsAlt.get(c.regra) ?? [];
+        for (const d of destinations.length ? destinations : [null]) {
+            const keyAlt = d ? (d.email ? `email:${d.email}` : d.id) : 'privado';
+            if (!byDestination.has(keyAlt)) byDestination.set(keyAlt, { destino: d, regras: [] });
+            byDestination.get(keyAlt).regras.push(c);
+        }
+    }
 
     printInfo(`/watch: regra(s) ${freshAlt2.map(c => `#${c.n}`).join(',')} casaram em '${chatName}' (${senderName})`);
 
-    for (const destinationAlt2 of byDestination.values()) {
-        const destination = destinationAlt.get(destinationAlt2[0].regra) ?? null;
+    for (const { destino: destination, regras: rules } of byDestination.values()) {
         const textAlt = '👀 *WATCH: MENSAGEM DETECTADA*\n\n' +
-            destinationAlt2.map(c => `🔎 *Regra #${c.n}:* ${c.regra}\n`).join('') + details;
+            rules.map(c => `🔎 *Regra #${c.n}:* ${c.regra}\n`).join('') + details;
 
         await sendOnDestination(destination, textAlt, {
-            assunto: `👀 Watch: ${destinationAlt2.map(c => `#${c.n} ${c.regra}`).join(', ')}`,
+            assunto: `👀 Watch: ${rules.map(c => `#${c.n} ${c.regra}`).join(', ')}`,
             opcoes: { linkPreview: false }
         }).catch(err => printError('/watch: falha ao avisar:', err.message));
     }

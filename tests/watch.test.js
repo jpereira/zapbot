@@ -188,6 +188,23 @@ describe('/watch -to', () => {
         assert.deepEqual(await bot.dbAll('SELECT * FROM watch_destinations'), []);
     });
 
+    test('vários -to: a regra avisa em todos, juntando as regras de cada destino', async () => {
+        assert.match((await bot.replyAlt('/watch -a promoção -to /Grupo sobre L200/ -to /Fulano/ -to /Fulano/'))[0],
+            /💡 _Avisos em 👥 Grupo sobre L200, 👤 Fulano\._$/);
+        await bot.replyAlt('/watch -a pix -to /Fulano/');
+
+        const notices = await someoneWrite('promoção no pix');
+        assert.deepEqual(notices.map(a => a.chatId).sort(), [L200, OTHERAlt.jid].sort());
+        assert.match(notices.find(a => a.chatId === OTHERAlt.jid).texto, /🔎 \*Regra #1:\* promoção\n🔎 \*Regra #2:\* pix\n/);
+        assert.match((await bot.replyAlt('/watch -l'))[0], /#1  promoção  \(1\)  → 👥 Grupo sobre L200, 👤 Fulano\n/);
+
+        // -N with several -to changes all; off does not mix with others
+        assert.deepEqual(await bot.replyAlt('/watch -2 -to /Fulano/ -to /Grupo sobre L200/'),
+            ['📣 Regra *#2* (pix): os avisos vão para *👤 Fulano, 👥 Grupo sobre L200*.']);
+        assert.match((await bot.replyAlt('/watch -2 -to off -to /Fulano/'))[0], /❌ O -to off volta ao seu privado: use-o sozinho/);
+        assert.deepEqual(await bot.replyAlt('/watch -2 -to off'), ['📣 Regra *#2* (pix): os avisos vão para *seu privado*.']);
+    });
+
     test('-to email: o aviso vai por e-mail', async () => {
         const env = { QRCODE_EMAIL_SMTP_HOST: 'smtp.exemplo.com', QRCODE_EMAIL_SMTP_USER: 'bot@exemplo.com', QRCODE_EMAIL_SMTP_TO: 'Eu <eu@exemplo.com>' };
         Object.assign(process.env, env);
