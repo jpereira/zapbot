@@ -142,7 +142,7 @@ describe('Orca (defi/orca.js)', () => {
 
 describe('/defi', () => {
     test('cadastra (conferindo NFT e pool), lista e mostra o Position Details', async () => {
-        assert.deepEqual(await bot.replyAlt(REGISTRATION), [`✅ *Posição da Orca cadastrada:* ime1…VPcg\n💡 _Veja com /defi -show_`]);
+        assert.deepEqual(await bot.replyAlt(REGISTRATION), [`✅ *Posição da Orca cadastrada:* ime1…VPcg\n💡 _Veja com /defi -s_`]);
         assert.deepEqual(await bot.dbGet('SELECT protocol, position, nft, pool FROM defi_positions'),
             { protocol: 'orca', position: POSITION, nft: NFT, pool: POOL });
 
@@ -268,6 +268,7 @@ describe('/defi -alerta (-a)', () => {
         assert.match(registered, /^✅ \*Posição da Orca cadastrada:\* ime1…VPcg/);
         assert.match(on, /^🔔 \*Alerta do \/defi ligado\* \(1\)\n\n1\. Orca · ime1…VPcg · ✅ na faixa · 💸 ≥ \$2,000\.00\n\n📣 Aviso: seu privado,/);
         assert.equal((await bot.dbGet('SELECT alert, alert_fees, alert_dest_id FROM defi_positions')).alert_fees, 2000);
+        assert.match((await bot.replyAlt('/defi -l'))[0], /1\. Orca · ime1…VPcg · pool J7Hz…bHCh _\(desde [\d/]+\)_ 🔔 ≥ \$2,000\.00\n/);
 
         await bot.replyAlt('/defi -rm all');
         const [, withoutValue] = await bot.replyAlt(`${REGISTRATION} -alerta -to /Fulano/`);
@@ -534,6 +535,7 @@ describe('/defi: Project X (HyperEVM)', () => {
         assert.match(on, /1\. Project X · carteira 0x12…5678 · ⚠️ fora da faixa · 💸 ≥ \$50\.00/);
         assert.match(on, /e quando as taxas a coletar passarem de \$50\.00 \(verificada/);
         assert.match((await bot.replyAlt('/defi -alerta'))[0], /· 💸 ≥ \$50\.00 → seu privado/);
+        assert.match((await bot.replyAlt('/defi -l'))[0], /1\. Project X · carteira 0x12…5678 _\(desde [\d/]+\)_ 🔔 ≥ \$50\.00\n/);
 
         // $98.50 on the BTC one (the HYPE one has no fee)
         const [notice] = await checkNow();

@@ -101,7 +101,7 @@ async function runCommand(chatId, line, { chatName, isGroup }) {
 
     const texts = replies.filter(r => typeof r.content === 'string').map(r => r.content.trim());
     const mediaAltAlt = replies.filter(r => typeof r.content !== 'string');
-    // Several replies (/defi -show sends one per position): separated by a blank line
+    // Several replies (/defi -s sends one per position): separated by a blank line
     return { texto: texts.join('\n\n'), midias: mediaAltAlt };
 }
 
