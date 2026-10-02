@@ -3,7 +3,7 @@
  */
 
 const { getCommandSyntax } = require('./base');
-const { mudarListaDePessoas } = require('./set');
+const { PAPEIS, ehODono, mudarListaDePessoas } = require('./set');
 const { client } = require('../cliente');
 const { idsDoChatAtual, resolverNomeDoGrupo } = require('../contatos');
 const { descreverDestino } = require('../destinos');
@@ -60,8 +60,10 @@ async function descreverItem(item) {
         return descreverDestino({ id: item, nome: nome || item, grupo: true });
     }
 
+    // Você raramente está na própria agenda: vale o nome do seu perfil
     const contato = await client.getContactById(`${item}@c.us`).catch(() => null);
-    const nome = contato?.name || contato?.pushname;
+    const nome = contato?.name || contato?.pushname ||
+        (ehODono(item) ? client.info.pushname : null);
     return nome ? `${descreverDestino({ nome, grupo: false })} · +${item}` : `👤 +${item}`;
 }
 
@@ -76,13 +78,18 @@ async function listaDeQuemUsa() {
     if (!itens.length) return '';
 
     const linhas = await Promise.all(itens.map(async (item) => {
-        const marcas = [admins.includes(item) && '👑 +o', users.includes(item) && '🗣️ +v']
-            .filter(Boolean);
+        const marcas = [
+            ehODono(item) && `${PAPEIS.dono} dono`,
+            admins.includes(item) && `${PAPEIS.admin} +o`,
+            users.includes(item) && `${PAPEIS.usuario} +v`
+        ].filter(Boolean);
         return `• ${marcas.join(' ')} · ${await descreverItem(item)}`;
     }));
 
     return `\n\n*Quem usa* (${itens.length})\n${linhas.join('\n')}\n` +
-        '💡 _👑 +o: admin, usa tudo (bot.admins) · 🗣️ +v: usuário, usa os comandos comuns (bot.users)_';
+        (itens.some(ehODono) ? `💡 _${PAPEIS.dono} dono: você, que já usa tudo_\n` : '') +
+        `💡 _${PAPEIS.admin} +o: admin, usa tudo (bot.admins) · ` +
+        `${PAPEIS.usuario} +v: usuário, usa os comandos comuns (bot.users)_`;
 }
 
 async function estadoBot() {
