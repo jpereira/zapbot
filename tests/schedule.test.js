@@ -293,9 +293,10 @@ describe('/cron (/agenda)', () => {
         assert.match((await bot.replyAlt('/cron 06:00 -r diario -to /Rafael Silva/ Bom dia!'))[0], /em 👤 Rafael Silva\./);
         assert.equal((await items())[0].chat_id, '15559998888@c.us');
         assert.match((await bot.replyAlt('/cron 07:00 -to l200 oi'))[0], /em 👥 Grupo sobre L200\./);
-        // Outside the address book and yourself do not enter
+        // Outside the address book does not enter; yourself (by the saved name) is your private chat, with your id
         assert.match((await bot.replyAlt('/cron 07:00 -to /Rafael Souza/ oi'))[0], /❌ Nenhum contato ou grupo com "Rafael Souza"/);
-        assert.match((await bot.replyAlt('/cron 07:00 -to /Rafael Eu/ oi'))[0], /❌ Nenhum contato ou grupo com "Rafael Eu"/);
+        assert.match((await bot.replyAlt('/cron 07:00 -to /Rafael Eu/ oi'))[0], /no seu privado\.\n📝 oi$/);
+        assert.equal((await items()).at(-1).chat_id, OWNER.jid);
 
         // The page does not respond: error, without hanging
         bot.client.pupPage = { evaluate: async () => { throw new Error('página fechada'); } };
@@ -370,6 +371,13 @@ describe('/cron (/agenda)', () => {
 
         // WhatsApp returns the send in message_create: the bot mark prevents the command
         assert.deepEqual(await bot.replyAlt('/cache -a'), []);
+    });
+
+    test('-to você mesmo: pelo nome salvo ou pelo nome de perfil, é o seu privado', async () => {
+        bot.createContact(OWNER.jid, 'Jorge Pereira').isMe = true;
+        assert.match((await bot.replyAlt('/cron +1h -to /Jorge Pereira/ Preço: {/uptime}'))[0], /no seu privado\.\n📝 Preço: \{\/uptime\}$/);
+        assert.match((await bot.replyAlt(`/cron +1h -to /${OWNER.nome}/ oi`))[0], /no seu privado\./);   // o pushname
+        assert.deepEqual((await items()).map(s => s.chat_id), [OWNER.jid, OWNER.jid]);
     });
 
     test('erros: destino inválido e -pv', async () => {

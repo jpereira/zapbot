@@ -122,7 +122,8 @@ async function withoutAsCopiesByLid(contacts) {
  * (the internal id) comes with its phone, if WhatsApp knows which one it is.
  * The name and the "is in the address book" come from the same functions as whatsapp-web.js
  * uses (WAWebContactGetters and WAWebFrontendContactGetters): in the raw model of the
- * contact, c.name and c.isMyContact come empty.
+ * contact, c.name and c.isMyContact come empty. Your own account also counts
+ * (by the saved name or by your profile name): becomes your private chat.
  */
 const SEARCH_TIMEOUT_MS = 20_000;
 
@@ -147,10 +148,12 @@ function searchInWhatsApp(words) {
 
         const contacts = Contact.getModelsArray()
             .filter(c => c.id?.server !== 'g.us')
-            .map(c => ({ c, nome: attempt(() => getters.getName(c), c.name) }))
-            .filter(({ c, nome: nameAlt }) => home(nameAlt) &&
-                attempt(() => getIsMyContact(c), c.isMyContact) && !attempt(() => getters.getIsMe(c), c.isMe))
-            .map(({ c, nome: nameAlt }) => {
+            .map(c => ({ c, nome: attempt(() => getters.getName(c), c.name), eu: Boolean(attempt(() => getters.getIsMe(c), c.isMe)) }))
+            .filter(({ c, nome: nameAlt, eu }) => home(nameAlt) && (eu || attempt(() => getIsMyContact(c), c.isMyContact)))
+            .map(({ c, nome: nameAlt, eu }) => {
+                // You: whoever calls swaps in their own id (the model's may be the LID)
+                if (eu) return { id: null, nome: nameAlt, eu };
+
                 const id = serial(c.id);
                 const phoneAlt = id?.endsWith('@lid')
                     ? serial(c.phoneNumber) ?? serial(attempt(() => getAlternateUserWid(c.id)))
@@ -172,11 +175,27 @@ function searchInWhatsApp(words) {
     return Promise.race([search, time]).finally(() => clearTimeout(limitAlt));
 }
 
+/*
+ * You (the bot account) enter with your id, found by the name saved in the address book
+ * or by your profile name (pushname): -to /Your Name/ is your private chat.
+ */
+function withYou(contacts, home) {
+    const myId = client.info?.wid?._serialized;
+    if (!myId) return contacts.filter(c => !c.eu);
+
+    const myName = contacts.find(c => c.eu)?.nome ?? (home(client.info.pushname) ? client.info.pushname : null);
+    const other = contacts.filter(c => !c.eu && c.id !== myId);
+    return myName ? [{ id: myId, nome: myName }, ...other] : other;
+}
+
 // Same shape as whatsapp-web.js (Contact and Chat), so the rest of the code does not depend on the origin
 async function contactsAndGroups(words) {
+    const home = (nameAlt) => Boolean(nameAlt) && words.every(p => normalize(nameAlt).includes(p));
+
     if (client.pupPage) {
         const { contatos: contacts, grupos: groups } = await searchInWhatsApp(words);
-        const unique = [...new Map(contacts.filter(c => c.id).map(c => [c.id, c])).values()];
+        const allAlt2 = withYou(contacts, home).filter(c => c.id);
+        const unique = [...new Map(allAlt2.map(c => [c.id, c])).values()];
         return {
             contatos: unique.map(c => ({ id: { _serialized: c.id }, name: c.nome, number: c.id.split('@')[0], isMyContact: true })),
             grupos: groups.filter(g => g.id).map(g => ({ id: { _serialized: g.id }, name: g.nome, isGroup: true }))
@@ -185,9 +204,11 @@ async function contactsAndGroups(words) {
 
     // Without the page (the tests): the client's lists
     const [contacts, chats] = await Promise.all([client.getContacts?.().catch(() => []) ?? [], client.getChats().catch(() => [])]);
-    const home = (nameAlt) => words.every(p => normalize(nameAlt).includes(p));
+    const schedule = contacts
+        .filter(c => (c?.isMyContact || c?.isMe) && !c.isGroup && c.name && c.id?._serialized && home(c.name))
+        .map(c => ({ id: c.id._serialized, nome: c.name, eu: Boolean(c.isMe) }));
     return {
-        contatos: contacts.filter(c => c?.isMyContact && !c.isGroup && !c.isMe && c.name && c.id?._serialized && home(c.name)),
+        contatos: withYou(schedule, home).map(c => ({ id: { _serialized: c.id }, name: c.nome, number: c.id.split('@')[0], isMyContact: true })),
         grupos: chats.filter(c => c.isGroup && c.name && home(c.name))
     };
 }
