@@ -6,8 +6,11 @@
  */
 
 const { client } = require('./client');
+const { resolveLidToPhone } = require('./contacts');
 const { sendEmail, smtpForSend } = require('./email');
 const { waitChoice } = require('./choices');
+const { printDebug } = require('./log');
+const { isDebugMode } = require('./settings');
 const { withoutAccents } = require('./util/format');
 
 /*
@@ -59,15 +62,36 @@ function readNumber(textAlt) {
 
 /*
  * The contacts saved in the address book (with a name). WhatsApp may bring the same
- * person as @c.us and as @lid: with the same name, only the @c.us stays.
+ * person twice: by phone and by LID (the internal id, of ~15 digits),
+ * and the LID's sometimes comes as @lid, sometimes as a @c.us with the digits of the
+ * LID. Among those with the same name, the one that is another's LID in the list leaves (by the map
+ * LID → WhatsApp phone) and the @lid when there is a @c.us.
  */
-async function scheduleContacts() {
-    const allAlt2 = (await client.getContacts?.().catch(() => []) ?? [])
-        .filter(c => c?.isMyContact && !c.isGroup && !c.isMe && c.name && c.id?._serialized);
-    const withPhone = new Set(allAlt2.filter(c => c.id._serialized.endsWith('@c.us')).map(c => normalize(c.name)));
+async function withoutAsCopiesByLid(contacts) {
+    const byName = Map.groupBy(contacts, c => normalize(c.name));
+    const copies = new Set();
 
-    return allAlt2.filter(c => c.id._serialized.endsWith('@c.us') || !withPhone.has(normalize(c.name)));
+    for (const name of byName.values()) {
+        if (name.length < 2) continue;
+
+        const ids = new Set(name.map(c => c.id._serialized));
+        for (const c of name) {
+            const lid = c.id._serialized.endsWith('@lid') ? c.id._serialized : `${c.id._serialized.split('@')[0]}@lid`;
+            const phoneAlt = await resolveLidToPhone(lid);
+            if (phoneAlt && phoneAlt !== c.id._serialized && ids.has(phoneAlt)) copies.add(c);
+        }
+
+        // Without the map: the @lid leaves if the same name has a @c.us
+        if (name.some(c => c.id._serialized.endsWith('@c.us') && !copies.has(c))) {
+            name.filter(c => c.id._serialized.endsWith('@lid')).forEach(c => copies.add(c));
+        }
+    }
+
+    return contacts.filter(c => !copies.has(c));
 }
+
+const scheduleContacts = async () => (await client.getContacts?.().catch(() => []) ?? [])
+    .filter(c => c?.isMyContact && !c.isGroup && !c.isMe && c.name && c.id?._serialized);
 
 const contact = (c) => ({ id: c.id._serialized, nome: c.name, grupo: false, numero: c.number ?? null });
 const group = (g) => ({ id: g.id._serialized, nome: g.name, grupo: true });
@@ -135,8 +159,15 @@ async function resolverDestination(valueAlt, { aceitaEmail: acceptsEmail = false
     const words = search.split(/\s+/);
     const home = (nameAlt) => words.every(p => normalize(nameAlt).includes(p));
 
-    const contacts = (await scheduleContacts()).filter(c => home(c.name));
-    const groups = (await client.getChats().catch(() => [])).filter(c => c.isGroup && c.name && home(c.name));
+    // Both lists come from WhatsApp Web (slow with many contacts): at the same time
+    const [schedule, chats] = await Promise.all([scheduleContacts(), client.getChats().catch(() => [])]);
+    const contacts = await withoutAsCopiesByLid(schedule.filter(c => home(c.name)));
+    const groups = chats.filter(c => c.isGroup && c.name && home(c.name));
+
+    if (isDebugMode()) {
+        printDebug(`[DESTINO] "${textAlt}": contatos ${contacts.map(c => `${c.name}=${c.id._serialized}`).join(', ') || '-'}; ` +
+            `grupos ${groups.map(g => `${g.name}=${g.id._serialized}`).join(', ') || '-'}`);
+    }
 
     const exact = contacts.find(c => normalize(c.name) === search) ?? null;
     const groupExact = groups.find(g => normalize(g.name) === search) ?? null;
