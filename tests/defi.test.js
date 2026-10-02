@@ -40,6 +40,7 @@ const account = (address) => Buffer.from(ACCOUNTS[address], 'base64');
 function simulateSolana({ dono: owner = orca.WHIRLPOOL_PROGRAM, contas: accounts = ACCOUNTS } = {}) {
     network.responder('post', 'api.mainnet-beta.solana.com', (url, cfg) => {
         assert.equal(cfg.body.method, 'getMultipleAccounts');
+        assert.equal(cfg.body.jsonrpc, '2.0', 'a versão do protocolo JSON-RPC (não a do bot)');
         return { result: { value: cfg.body.params[0].map(e => (accounts[e] ? { data: [accounts[e], 'base64'], owner: owner } : null)) } };
     });
 }

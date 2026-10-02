@@ -22,7 +22,7 @@ describe('/cve', () => {
 
     // The NVD answers from oldest to newest; the 1st query only counts
     function simulateNvd(list) {
-        network.responder('get', 'services.nvd.nist.gov', (url, cfg) => cfg.params.startIndex === undefined
+        network.responder('get', /services\.nvd\.nist\.gov\/rest\/json\/cves\/2\.0$/, (url, cfg) => cfg.params.startIndex === undefined
             ? { totalResults: list.length }
             : { vulnerabilities: list.slice(cfg.params.startIndex, cfg.params.startIndex + cfg.params.resultsPerPage) });
     }
@@ -55,7 +55,7 @@ describe('/cve', () => {
     test('nenhuma publicada; NVD fora do ar', async () => {
         simulateNvd([]);
         assert.deepEqual(await bot.replyAlt('/cve'), ['🛡️ Nenhuma CVE publicada no últimos 2 dias.']);
-        network.responder('get', 'services.nvd.nist.gov', errorHttp(503));
+        network.responder('get', /services\.nvd\.nist\.gov\/rest\/json\/cves\/2\.0$/, errorHttp(503));
         assert.match((await bot.replyAlt('/cve', { erroEsperado: true }))[0], /❌ Não consegui consultar o NVD agora/);
     });
 });
