@@ -89,9 +89,10 @@ Por onde começar:
   (ou, com `-to`, num contato, num grupo, num número ou por e-mail) quando a
   regra é cumprida. Veja [Alertas de preço](comandos/cotacao.md#alertas-de-preço).
 - **DeFi**: o [`/defi`](comandos/defi.md) lê on-chain as posições de liquidez
-  da Orca e do Project X (pela carteira) cadastradas (tabela `defi_positions`) e, com o `-alerta`, confere a
-  cada 10 minutos (setting `defi.alerta.intervalMin`) e avisa sempre que uma
-  posição sai da faixa.
+  da Orca e do Project X (pela carteira) cadastradas (tabela `defi_positions`)
+  e, com o `-alerta`, confere a cada 10 minutos (setting `defi.alerta.intervalMin`)
+  e avisa quando uma posição sai da faixa, quando volta e, com o `-taxas`, quando
+  as taxas a coletar passam de um valor.
 - **Enquetes**: os votos das enquetes da sua conta (evento `vote_update`) vão
   para as tabelas `polls` e `poll_votes`, e o
   [`/enquete -r`](comandos/enquete.md#resultado) mostra o placar. Ficam 90 dias

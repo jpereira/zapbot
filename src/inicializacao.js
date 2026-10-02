@@ -230,6 +230,8 @@ async function inicializarBanco() {
         alert_dest_name: 'TEXT',
         alert_dest_is_group: 'INTEGER DEFAULT 0',
         alert_email: 'TEXT',
+        alert_fees: 'REAL',                 // -taxas: avisa quando as taxas a coletar passam disso (US$)
+        fees_notified: 'INTEGER DEFAULT 0', // já avisou desse valor (volta a 0 quando coletar)
         in_range: 'INTEGER'
     });
 
