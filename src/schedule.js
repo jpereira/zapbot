@@ -22,7 +22,7 @@ const { REPETITIONS, fmtWhen, readWhen, partsInBrasilia, nextRepetition } = requ
  * -pv. It is the mode of /lembrete and of -lembrete.
  * Both accept -repetir (-r) diario|semanal|mensal. The message mode accepts
  * several -to (one item per destination). In the list, -edit <no.> changes the time, the text
- * or an item's repetition, and -pause/-resume <no.|all> hold and release it.
+ * or an item's repetition, and -pause/-resume <no....|all> hold and release it.
  * A {/command} in the text runs at send time and the reply goes in its place
  * (see scheduleCommands.js); -test <no.> shows now how the message would come out.
  * It comes out of your account: owner only.
@@ -70,7 +70,12 @@ function readScheduling(args) {
         if (nameAlt === 'list' || nameAlt === 'l') opt.list = true;
         else if (nameAlt === 'pv') opt.pv = true;
         else if (nameAlt === 'lembrete' || nameAlt === 'lem') opt.lembrete = true;
-        else if (['rm', 'edit', 'pause', 'resume', 'test'].includes(nameAlt)) opt[nameAlt] = words[++i]?.[0] ?? '';
+        else if (['rm', 'pause', 'resume'].includes(nameAlt)) {
+            // One or several numbers (-rm 2, -rm 1 3 5, -rm 1,3,5) or all
+            const nums = [];
+            while (/^(\d+,?)+$|^all$/i.test(words[i + 1]?.[0] ?? '')) nums.push(words[++i][0]);
+            opt[nameAlt] = nums.join(' ');
+        } else if (['edit', 'test'].includes(nameAlt)) opt[nameAlt] = words[++i]?.[0] ?? '';
         else if (nameAlt === 'repetir' || nameAlt === 'r') opt.repetir = words[++i]?.[0] ?? '';
         else if (!when && (when = readWhen(words.slice(i).map(m => m[0])))) i += when.usadas - 1;
         else break;
@@ -108,6 +113,26 @@ function numberItems(items, valueAlt) {
     return item ? [item] : null;
 }
 
+/*
+ * "1 3,5" → items 1, 3 and 5 (the list numbers, in order; a repeat counts
+ * once); "all" → all. If any does not exist: { missing }, and the caller does not
+ * touches none.
+ * @returns {{ alvos: object[] } | { faltando: string[] }}
+ */
+function numbersItems(items, valueAlt) {
+    const partsAlt = withoutAccents(valueAlt ?? '').split(/[\s,]+/).filter(Boolean);
+    if (partsAlt.includes('all')) return { alvos: items };
+
+    const numbers = [...new Set(partsAlt.map(Number))].sort((a, b) => a - b);
+    const missing = numbers.filter(n => !items[n - 1]);
+    if (!numbers.length || missing.length) return { faltando: missing.length ? missing.map(String) : ['?'] };
+    return { alvos: numbers.map(n => items[n - 1]) };
+}
+
+// "❌ Nº 7, 9 não existem. Nada foi <feito>; ..."
+const numbersError = (missing, done, usage) =>
+    `❌ Nº ${missing.join(', ')} não existe${missing.length > 1 ? 'm' : ''}. Nada foi ${done}; veja a lista com /cron -l\n💡 _${usage}_`;
+
 // The "when" of a new or edited item: in the future and up to MAX_DAYS
 function whenError(ms, nowAlt = Date.now()) {
     if (ms <= nowAlt) return `❌ ${fmtWhen(ms)} já passou.`;
@@ -116,15 +141,15 @@ function whenError(ms, nowAlt = Date.now()) {
 }
 
 /*
- * -pause / -resume <no.|all>. When resuming, a repeated item that expired while
+ * -pause / -resume <no....|all>. When resuming, a repeated item that expired while
  * was paused jumps to the next time; a one-off goes out on the next check.
  */
 async function pauseOrResume(msg, items, pause, valueAlt) {
     const optionAlt = pause ? '-pause' : '-resume';
-    const targets = numberItems(items, valueAlt ?? '');
+    const { alvos: targets, faltando: missing } = numbersItems(items, valueAlt);
 
-    if (!targets) {
-        await msg.reply(`❌ Nº ${valueAlt || '?'} não existe. Veja a lista com /cron -l\n💡 _/cron ${optionAlt} <nº|all>_`);
+    if (missing) {
+        await msg.reply(numbersError(missing, pause ? 'pausado' : 'retomado', `/cron ${optionAlt} <nº> [nº...] ou ${optionAlt} all`));
         return;
     }
 
@@ -219,24 +244,27 @@ async function handleSchedule({ msg, args, chatId, chatName, isGroup, quotedMsg 
         return;
     }
 
-    // -rm <nº|all>
+    // -rm <no....|all>: the numbers are those of the list, all read before removing
     if (opt.rm !== undefined) {
-        const target = withoutAccents(opt.rm).trim();
-
-        if (target === 'all') {
+        if (/\ball\b/i.test(opt.rm)) {
             await dbRun("DELETE FROM schedules WHERE kind != 'status'");
             await msg.reply(`🗑️ ${plural(items.length, 'removido', 'removidos')}.`);
             return;
         }
 
-        const item = /^\d+$/.test(target) ? items[Number(target) - 1] : null;
-        if (!item) {
-            await msg.reply(`❌ Nº ${opt.rm || '?'} não existe. Veja a lista com /cron -l`);
+        // If any does not exist: none is removed (the list stays as it was)
+        const { alvos: removed, faltando: missing } = numbersItems(items, opt.rm);
+        if (missing) {
+            await msg.reply(numbersError(missing, 'removido', '/cron -rm <nº> [nº...] ou -rm all'));
             return;
         }
 
-        await dbRun('DELETE FROM schedules WHERE id = ?', [item.id]);
-        await msg.reply(`🗑️ Removido: *${fmtWhen(item.due_at)}* — ${summarizeText(item.text, 60)}`);
+        for (const s of removed) await dbRun('DELETE FROM schedules WHERE id = ?', [s.id]);
+
+        const line = (s) => `*${fmtWhen(s.due_at)}* — ${summarizeText(s.text, 60)}`;
+        await msg.reply(removed.length === 1
+            ? `🗑️ Removido: ${line(removed[0])}`
+            : `🗑️ *Removidos* (${removed.length})\n${removed.map(s => `• ${line(s)}`).join('\n')}`);
         return;
     }
 
@@ -270,7 +298,7 @@ async function handleSchedule({ msg, args, chatId, chatName, isGroup, quotedMsg 
         }
 
         await msg.reply(`📅 *Agenda* (${items.length})\n\n${items.map(listLine).join('\n')}\n\n` +
-            '💡 _📅 mensagem · ⏰ lembrete. -edit <nº> muda, -pause/-resume <nº> segura e solta, -rm <nº|all> remove._');
+            '💡 _📅 mensagem · ⏰ lembrete. -edit <nº> muda, -pause/-resume <nº...> segura e solta, -rm <nº...|all> remove._');
         return;
     }
 
