@@ -32,6 +32,7 @@ Docker o bot ainda espera os programas nos caminhos da imagem: Chromium em
 | Variável | Exemplo | Descrição |
 |---|---|---|
 | `ZAPBOT_CACHE_DIR` | `/tmp/zapbot-cache` | Diretório do banco (`bot_database.db`) e das mídias. Padrão: `cache/` na raiz do projeto. Os [testes](desenvolvimento.md#testes) usam uma pasta temporária. **No Docker, não defina**: o volume `app_cache` é montado em `/app/cache`. |
+| `ZAPBOT_COMMIT` | `25b0870` | Commit mostrado no [`/version`](comandos/version.md) e no `/bot -info` (`2.1 (git+25b0870)`). Normalmente fica vazio: o bot lê o commit do `.git`, que vai para a imagem a cada build. Defina só se montar a imagem sem o `.git`. |
 | `ZAPBOT_HEARTBEAT_FILE` | `/tmp/zapbot-heartbeat.json` | Arquivo do [heartbeat](operacao.md#saúde-do-container-heartbeat). Padrão: `zapbot-heartbeat.json` no diretório temporário. Lido pelo `docker/app/healthcheck.js`. |
 | `ZAPBOT_HEARTBEAT_MAX_AGE_S` | `90` | Idade máxima, em segundos, do heartbeat para o healthcheck considerar o bot saudável. |
 

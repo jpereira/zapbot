@@ -128,7 +128,7 @@ exemplo, muda com frequência) e para relatar um problema.
 ℹ️ ZapBot 2.1 · informações do sistema
 
 🤖 Bot
-• ZapBot: 2.1 (APP_ENV=prod)
+• ZapBot: 2.1 (git+25b0870) (APP_ENV=prod)
 • Node.js: v24.9.0 (V8 13.6.233.10-node.27)
 • whatsapp-web.js: 1.34.7 (commit 58ddf15)
 • WhatsApp Web: 2.3000.1027123456
@@ -147,6 +147,8 @@ exemplo, muda com frequência) e para relatar um problema.
 • No ar: sistema há 12 dias, 3 horas · bot há 2 dias, 1 hora (PID 1)
 ```
 
+- **ZapBot** traz o commit que está rodando (`git+25b0870`), gravado na
+  imagem a cada `docker compose build` (veja o [`/version`](version.md)).
 - **WhatsApp Web** é a versão que o WhatsApp está servindo para o bot (só
   aparece conectado); o **Chromium** vem do navegador do Puppeteer, ou do
   binário quando ainda não conectou.

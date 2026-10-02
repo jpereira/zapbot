@@ -7,3 +7,8 @@
 !package.json
 !package-lock.json
 !app.js
+
+# Só o que diz o commit (src/versao.js): o /version e o /bot -info mostram "2.0 (git+25b0870)"
+!.git/HEAD
+!.git/packed-refs
+!.git/refs/heads/**

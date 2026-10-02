@@ -106,3 +106,38 @@ describe('contatos', () => {
         assert.equal(await contatos.resolverMencoes('oi @123', []), 'oi @123', 'curto demais: não é menção');
     });
 });
+
+describe('versão com o commit (versao.js)', () => {
+    const { lerCommit } = bot.src('versao');
+    const fs = require('fs');
+    const os = require('os');
+    const path = require('path');
+    const HASH = '25b0870123456789abcdef0123456789abcdef01';
+
+    // Um projeto falso com os arquivos do .git que a imagem Docker leva
+    function projeto(arquivos) {
+        const raiz = fs.mkdtempSync(path.join(os.tmpdir(), 'zapbot-git-'));
+        for (const [arquivo, conteudo] of Object.entries(arquivos)) {
+            fs.mkdirSync(path.dirname(path.join(raiz, '.git', arquivo)), { recursive: true });
+            fs.writeFileSync(path.join(raiz, '.git', arquivo), conteudo);
+        }
+        return raiz;
+    }
+
+    test('tag (HEAD com o hash), branch em refs/heads ou no packed-refs; sem .git: null', () => {
+        assert.equal(lerCommit(projeto({ HEAD: `${HASH}\n` })), '25b0870');
+        assert.equal(lerCommit(projeto({ HEAD: 'ref: refs/heads/main\n', 'refs/heads/main': `${HASH}\n` })), '25b0870');
+        assert.equal(lerCommit(projeto({ HEAD: 'ref: refs/heads/main\n', 'packed-refs': `# pack-refs\n${'f'.repeat(40)} refs/heads/outro\n${HASH} refs/heads/main\n` })), '25b0870');
+        assert.equal(lerCommit(projeto({ HEAD: 'ref: refs/heads/sumiu\n' })), null);
+        assert.equal(lerCommit(fs.mkdtempSync(path.join(os.tmpdir(), 'zapbot-sem-git-'))), null);
+    });
+
+    test('ZAPBOT_COMMIT tem prioridade', () => {
+        process.env.ZAPBOT_COMMIT = 'abcdef0123456789';
+        try {
+            assert.equal(lerCommit(projeto({ HEAD: `${HASH}\n` })), 'abcdef0');
+        } finally {
+            delete process.env.ZAPBOT_COMMIT;
+        }
+    });
+});
