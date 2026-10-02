@@ -14,7 +14,7 @@ const { enviarMensagemEditada } = require('../eventos/editadas');
 const { printError, printInfo } = require('../log');
 const { getSetting } = require('../settings');
 const { humanSize, isCaminhoDeMidia } = require('../util/arquivos');
-const { esperar, formatarData, paraMs, plural } = require('../util/formatar');
+const { esperar, formatarData, paraMs, plural, semAcentos } = require('../util/formatar');
 
 /*
  * /show: reexibe as mensagens APAGADAS (padrão, ou -d) ou EDITADAS (-e)
@@ -27,8 +27,12 @@ const { esperar, formatarData, paraMs, plural } = require('../util/formatar');
  *   /show -2 -c 1          → as 2 últimas do chat nº 1 da lista de apagadas do -l
  *   /show -e -2 -c zapbot  → as 2 últimas editadas do chat cujo nome contém "zapbot"
  *   /show -e -f -c 1       → flush só das editadas do chat nº 1
+ *   /show -q pix           → as apagadas com "pix" (sem diferenciar maiúsculas/acentos);
+ *                            neste chat, no do -c ou, no seu privado, em todos. Sem -N: as 5 mais recentes
+ *   /show -e -q pix        → as editadas com "pix" no texto de antes ou no de depois
  * Envia em ordem cronológica: a última enviada é a mais recente.
  */
+const BUSCA_PADRAO = 5;
 // O que muda entre as apagadas (-d, o padrão) e as editadas (-e)
 const TIPOS_CACHE = {
     apagadas: {
@@ -39,6 +43,7 @@ const TIPOS_CACHE = {
         ordem: 'revoked_at DESC, timestamp DESC',
         retencao: 'cache.revokedRetentionDays',
         comMidia: true,
+        textos: (r) => [r.body],
         icone: '♻️',
         rotulo: 'Deletadas',
         iconeLista: '🗑️',
@@ -53,6 +58,7 @@ const TIPOS_CACHE = {
         ordem: 'edited_at DESC, id DESC',
         retencao: 'cache.editedRetentionDays',
         comMidia: false,
+        textos: (r) => [r.old_body, r.new_body],
         icone: '✏️',
         rotulo: 'Editadas',
         iconeLista: '✏️',
@@ -364,6 +370,15 @@ async function cmdShow({ msg, opts, chatId }) {
         }
     }
 
+    // -q <texto>: busca nas apagadas (ou editadas); não combina com -f e -l
+    const busca = opts.given.has('query') ? String(opts.opt.query ?? '').trim() : null;
+    if (busca !== null && (!busca || opts.opt.flush || opts.opt.list)) {
+        await msg.reply(busca
+            ? '❌ O -q não combina com o -f nem com o -l.'
+            : `❌ Informe o que buscar: ${t.cmd} -q <texto> (com espaços, entre aspas: -q "bom dia").`);
+        return;
+    }
+
     if (opts.opt.flush) {
         await limparDoCache({ msg, chatId, tipo, alvo });
         return;
@@ -376,7 +391,7 @@ async function cmdShow({ msg, opts, chatId }) {
 
     // "-3" não é uma opção declarada, então o parser o coloca em argv (assim como "3")
     const extras = opts.argv.filter(Boolean);
-    let n = 1;
+    let n = busca ? BUSCA_PADRAO : 1;
 
     if (extras.length > 1) {
         await msg.reply('```' + getCommandSyntax('/show') + '```');
@@ -402,26 +417,44 @@ async function cmdShow({ msg, opts, chatId }) {
     }
 
     const idsDoChat = alvo ? alvo.ids : await idsDoChatAtual(chatId);
+    const noMeuPrivado = !alvo && idsDoChat.includes(client.info.wid._serialized);
 
     await dbPronto;
 
-    const rows = await dbAll(
-        `SELECT *
-           FROM ${t.tabela}
-          WHERE ${t.filtro}
-            AND chat_id IN (${idsDoChat.map(() => '?').join(', ')})
-          ORDER BY ${t.ordem}
-          LIMIT ?`,
-        [...idsDoChat, n]
-    );
+    let rows;
+    let encontradas = 0;
+
+    if (busca) {
+        // A busca, no seu privado e sem -c, vale para todos os chats
+        const doChat = noMeuPrivado ? '' : `AND chat_id IN (${idsDoChat.map(() => '?').join(', ')})`;
+        const todas = await dbAll(`SELECT * FROM ${t.tabela} WHERE ${t.filtro} ${doChat} ORDER BY ${t.ordem}`,
+            noMeuPrivado ? [] : idsDoChat);
+        const alvoDaBusca = semAcentos(busca);
+        const casam = todas.filter(r => t.textos(r).some(texto => semAcentos(texto).includes(alvoDaBusca)));
+
+        encontradas = casam.length;
+        rows = casam.slice(0, n);
+    } else {
+        rows = await dbAll(
+            `SELECT *
+               FROM ${t.tabela}
+              WHERE ${t.filtro}
+                AND chat_id IN (${idsDoChat.map(() => '?').join(', ')})
+              ORDER BY ${t.ordem}
+              LIMIT ?`,
+            [...idsDoChat, n]
+        );
+    }
 
     if (!rows.length) {
-        // No privado, sem -c, quase sempre a intenção era ver outro chat
-        const noMeuPrivado = !alvo && idsDoChat.includes(client.info.wid._serialized);
+        const onde = busca && noMeuPrivado ? 'em nenhum chat' : alvo ? `em ${alvo.nome}` : 'neste chat';
 
-        await msg.reply(noMeuPrivado
-            ? `${t.icone} Nenhuma mensagem ${t.singular} neste chat.\n💡 _Para ver as de outro chat: /show -l e depois ${t.cmd} -N -c <nº ou nome>._`
-            : `${t.icone} Nenhuma mensagem ${t.singular} registrada neste chat.`);
+        // No privado, sem -c, quase sempre a intenção era ver outro chat
+        await msg.reply(busca
+            ? `${t.icone} Nenhuma mensagem ${t.singular} com "${busca}" ${onde}.`
+            : noMeuPrivado
+                ? `${t.icone} Nenhuma mensagem ${t.singular} neste chat.\n💡 _Para ver as de outro chat: /show -l e depois ${t.cmd} -N -c <nº ou nome>. Para buscar em todos: ${t.cmd} -q <texto>._`
+                : `${t.icone} Nenhuma mensagem ${t.singular} registrada neste chat.`);
         return;
     }
 
@@ -429,8 +462,13 @@ async function cmdShow({ msg, opts, chatId }) {
     rows.reverse();
 
     const destino = opts.opt.pv ? client.info.wid._serialized : chatId;
-    const faltaram = n > rows.length ? ` (pedidas ${n}, encontradas ${rows.length})` : '';
+    const faltaram = !busca && n > rows.length ? ` (pedidas ${n}, encontradas ${rows.length})` : '';
     let resumo = `${t.icone} *${rows.length} mensage${rows.length === 1 ? `m ${t.singular}` : `ns ${t.plural}`}*${faltaram}${aviso}`;
+
+    if (busca) {
+        resumo += ` com "${busca}"` + (encontradas > rows.length ? ` _(as ${rows.length} mais recentes de ${encontradas}; use -N para mais)_` : '');
+        if (noMeuPrivado) resumo += '\n💬 *Chats:* todos';
+    }
 
     if (alvo) {
         resumo += `\n💬 *Chat:* ${alvo.nome}`;
@@ -439,7 +477,7 @@ async function cmdShow({ msg, opts, chatId }) {
     if (opts.opt.pv) {
         // O resumo (com o nome do chat) vai só para o privado
         await msg.reply(`${t.icone} Enviado no seu privado.`);
-        await client.sendMessage(destino, alvo ? resumo : `${resumo}\n💬 *Chat:* ${rows[0].chat_name || chatId}`);
+        await client.sendMessage(destino, alvo || (busca && noMeuPrivado) ? resumo : `${resumo}\n💬 *Chat:* ${rows[0].chat_name || chatId}`);
     } else {
         await msg.reply(resumo);
     }

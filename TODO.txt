@@ -14,7 +14,6 @@
 * /defi -alerta: avisar tambem quando a posicao volta para a faixa e quando as taxas a
   coletar passam de um valor (-taxas 50).
 * /watch -to: avisar as ocorrencias de uma regra em outro chat ou por e-mail.
-* /show -q <texto>: buscar nas apagadas e editadas.
 * /backup: senha no arquivo (age/gpg) antes de enviar por e-mail ou para outro chat, e
   envio automatico semanal (setting backup.sendTo).
 * /bot -info: avisar quando houver versao nova do yt-dlp e do whatsapp-web.js

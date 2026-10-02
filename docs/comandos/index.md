@@ -106,7 +106,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -a`) para fazer o bot
 | [`/ping`](ping.md) | `/p` | ✅ | Verifica se o bot está vivo |
 | [`/pixelart`](pixelart.md) | `/ansi`, `/px` | | Arte ANSI/ASCII aleatória (16colo.rs) |
 | [`/set`](set.md) | `/config` | ✅ | Lista e altera as configurações (settings) |
-| [`/show`](show.md) | `/s` | ✅ | Reexibe mensagens apagadas ou editadas (`-e`) |
+| [`/show`](show.md) | `/s` | ✅ | Reexibe mensagens apagadas ou editadas (`-e`); `-q` busca pelo texto |
 | [`/stats`](stats.md) | | ✅ | Ranking do chat (quem mais fala, apaga e edita, horários de pico); `-me` para as suas |
 | [`/sticker`](sticker.md) | `/st` | | Transforma imagem/vídeo em figurinha |
 | [`/tempo`](tempo.md) | `/t`, `/weather` | | Tempo agora e máx./mín. do dia (Open-Meteo); `/tempo 7d` mostra os próximos 7 dias; sem cidade usa `tempo.city` |

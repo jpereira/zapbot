@@ -986,7 +986,7 @@
         },
         {
             "cmd": "/show",
-            "usage": "/show [-N] [OPTION]",
+            "usage": "/show [-N] [OPTION]  ou  /show -q <texto> [-N]",
             "aliases": [
                 "/s"
             ],
@@ -1030,6 +1030,16 @@
                     ],
                     "values": [],
                     "desc": "Envia no seu privado em vez de expor no chat atual."
+                },
+                {
+                    "opts": [
+                        "query",
+                        "q"
+                    ],
+                    "values": [
+                        "<texto>"
+                    ],
+                    "desc": "Busca nas apagadas (ou nas editadas, com -e) as que têm o texto, sem diferenciar maiúsculas nem acentos: neste chat, no do -c ou, no seu privado, em todos. Sem -N: as 5 mais recentes. Com espaços, entre aspas: -q \"bom dia\""
                 },
                 {
                     "opts": [
