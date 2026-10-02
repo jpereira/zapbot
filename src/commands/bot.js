@@ -53,7 +53,7 @@ function whoUses() {
  * Each one's role, by the highest: 🤖 the owner (the bot account, which already uses
  * everything), 👑 admin (bot.admins) or 🗣️ user (bot.users).
  */
-const ROLES = { dono: '🤖', admin: '👑', usuario: '🗣️' };
+const ROLES = { dono: '🤖', admin: '👑', usuario: '🗣️', nenhum: '🚫' };
 function role(item) {
     if (isOOwner(item)) return ROLES.dono;
     if (getSetting('bot.admins').includes(item)) return ROLES.admin;
@@ -157,10 +157,15 @@ async function whoUsesList({ membros: members, mostra: show, onde: whereAlt }) {
         return `• ${marks.join(' ')} · ${await describeItem(item, members)}`;
     }));
 
-    return `*Quem usa* (${items.length})\n${linesAlt.join('\n')}\n` +
-        (items.some(isOOwner) ? `💡 _${ROLES.dono} dono: você, que já usa tudo_\n` : '') +
+    return `*Quem usa* (${items.length})\n${linesAlt.join('\n')}\n` + captionAlt({ dono: items.some(isOOwner) }) + tip;
+}
+
+// The list captions (the owner's, with only you in it; the no-permission one, the /whois one)
+function captionAlt({ dono: owner = false, semPermissao: withoutPermission = false } = {}) {
+    return (owner ? `💡 _${ROLES.dono} dono: você, que já usa tudo_\n` : '') +
         `💡 _${ROLES.admin} +o: admin, usa tudo (bot.admins) · ` +
-        `${ROLES.usuario} +v: usuário, usa os comandos comuns (bot.users)_` + tip;
+        `${ROLES.usuario} +v: usuário, usa os comandos comuns (bot.users)_` +
+        (withoutPermission ? `\n💡 _${ROLES.nenhum} sem permissão: o bot ignora os comandos dela_` : '');
 }
 
 async function stateBot(chat) {
@@ -353,5 +358,9 @@ async function cmdBot({ msg, opts, args, chatId, isGroup }) {
 }
 
 module.exports = {
-    cmdBot
+    ROLES,
+    cmdBot,
+    describeItem,
+    chatScope,
+    captionAlt
 };

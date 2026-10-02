@@ -389,6 +389,7 @@ async function peopleChangeList(msg, key, textAlt, append, optionsAlt = {}) {
 
 module.exports = {
     cmdSet,
+    textItems,
     isOOwner,
     peopleChangeList
 };
