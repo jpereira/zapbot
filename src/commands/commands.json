@@ -99,8 +99,8 @@
         },
         {
             "cmd": "/bot",
-            "usage": "/bot [-on|-off] [+admin|-admin]  ou  /bot +o|-o|+v|-v <pessoa...>  ou  /bot -status [<hora>|off]  ou  /bot -info",
-            "help": "Liga/desliga o bot e diz quem usa os comandos: você e os admins (bot.admins) usam tudo; os usuários (bot.users), os comandos comuns. Sem opção mostra o estado; -on/-off e +admin/-admin combinam (/bot -on +admin). Mostra também o relatório do bot (-status) e as versões do que ele usa (-info).",
+            "usage": "/bot [-on|-off] [+admin|-admin]  ou  /bot +o|-o|+v|-v [pessoa...]  ou  /bot -reset  ou  /bot -status [<hora>|off]  ou  /bot -info",
+            "help": "Liga/desliga o bot e diz quem usa os comandos: você e os admins usam tudo; os usuários, os comandos comuns. Sem opção mostra o estado e a lista de quem usa; -on/-off e +admin/-admin combinam (/bot -on +admin). Mostra também o relatório do bot (-status) e as versões do que ele usa (-info).",
             "cmd_opts": [
                 {
                     "opts": [
@@ -120,25 +120,46 @@
                     "opts": [
                         "admin"
                     ],
-                    "values": [],
-                    "desc": "Todos usam os comandos comuns: o mesmo que /set bot.users true."
-                },
-                {
-                    "opts": [
-                        "info",
-                        "i"
+                    "sinais": [
+                        "+",
+                        "-"
                     ],
                     "values": [],
-                    "desc": "Versões do que o bot usa (ZapBot, Node.js, whatsapp-web.js, WhatsApp Web, SQLite, Chromium, yt-dlp, ffmpeg), se há versão nova do yt-dlp (PyPI) e do whatsapp-web.js (GitHub), e o sistema: uname -a, host, CPU, memória e há quanto tempo estão no ar."
+                    "desc": "+admin: só você (e os admins) usa comandos; a lista de usuários sai. -admin: todos usam os comandos comuns, em qualquer chat (o /bot mostra um aviso)."
                 },
                 {
                     "opts": [
                         "o"
                     ],
-                    "values": [
-                        "<pessoa...>"
+                    "sinais": [
+                        "+",
+                        "-"
                     ],
-                    "desc": "Tira admins do bot.admins: o mesmo que /set -rem bot.admins. Só o dono. Ex: /bot -o /Jorge Pereira/"
+                    "values": [
+                        "[pessoa...]"
+                    ],
+                    "desc": "Põe (+o) e tira (-o) admins, que usam todos os comandos: pessoa por /nome/, @menção ou +número; grupo não. Sem ninguém, a pessoa do privado onde o comando foi digitado. Só o dono. Ex: /bot +o /Jorge Pereira/, /bot -o"
+                },
+                {
+                    "opts": [
+                        "v"
+                    ],
+                    "sinais": [
+                        "+",
+                        "-"
+                    ],
+                    "values": [
+                        "[pessoa|grupo...]"
+                    ],
+                    "desc": "Põe (+v) e tira (-v) usuários, que usam os comandos comuns: pessoas, em qualquer chat, e grupos, qualquer um dentro dele. Sem ninguém, o chat atual: o grupo ou a pessoa do privado. Só o dono. Ex: /bot +v /Camila Gama/ /Grupo Familia/, /bot -v"
+                },
+                {
+                    "opts": [
+                        "reset",
+                        "r"
+                    ],
+                    "values": [],
+                    "desc": "Volta ao padrão: bot ligado, sem admins extras e sem usuários (só você usa comandos). O envio diário do -status fica. Não combina com as outras. Só o dono."
                 },
                 {
                     "opts": [
@@ -152,30 +173,11 @@
                 },
                 {
                     "opts": [
-                        "v"
+                        "info",
+                        "i"
                     ],
-                    "values": [
-                        "<pessoa|grupo...>"
-                    ],
-                    "desc": "Tira usuários do bot.users: o mesmo que /set -rem bot.users. Só o dono. Ex: /bot -v /Grupo Familia/"
-                },
-                {
-                    "argv": [
-                        "+admin"
-                    ],
-                    "desc": "Só você (e os admins do bot.admins) usa comandos: o mesmo que /set bot.users false (a lista de usuários sai)."
-                },
-                {
-                    "argv": [
-                        "+o"
-                    ],
-                    "desc": "Põe admins no bot.admins (usam todos os comandos): o mesmo que /set -append bot.admins. Pessoa por /nome/, @menção ou +número; grupo não. Só o dono. Ex: /bot +o /Jorge Pereira/"
-                },
-                {
-                    "argv": [
-                        "+v"
-                    ],
-                    "desc": "Põe usuários no bot.users (usam os comandos comuns): pessoas, em qualquer chat, e grupos, qualquer um dentro dele. O mesmo que /set -append bot.users. Só o dono. Ex: /bot +v /Camila Gama/ /Grupo Familia/"
+                    "values": [],
+                    "desc": "Versões do que o bot usa (ZapBot, Node.js, whatsapp-web.js, WhatsApp Web, SQLite, Chromium, yt-dlp, ffmpeg), se há versão nova do yt-dlp (PyPI) e do whatsapp-web.js (GitHub), e o sistema: uname -a, host, CPU, memória e há quanto tempo estão no ar."
                 }
             ],
             "onlyAdmin": true

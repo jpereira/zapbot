@@ -5,9 +5,9 @@
 const { getCommandSyntax } = require('./base');
 const { peopleChangeList } = require('./set');
 const { client } = require('../client');
-const { groupResolverName } = require('../contacts');
+const { chatCurrentIds, groupResolverName } = require('../contacts');
 const { describeDestination } = require('../destinations');
-const { getSetting, setSetting } = require('../settings');
+const { SETTINGS_SCHEMA, getSetting, setSetting } = require('../settings');
 const { infoText } = require('../system');
 const { scheduleStatusDaily, turnOffStatusDaily, statusText } = require('../status');
 const { fmtWhen, readHour } = require('../util/when');
@@ -18,16 +18,16 @@ const { fmtWhen, readHour } = require('../util/when');
  *   /bot -on    → ativa
  * /bot -off   → turns off: ALL commands are ignored, including yours, except /bot
  * /bot +admin → only the owner (and bot.admins) uses commands: bot.users = false (the list goes away)
- * /bot -admin → everyone uses the common commands: bot.users = true
+ * /bot -admin → everyone uses the common commands: bot.users = true (/bot shows a warning)
+ * /bot -reset → back to default: on, no extra admins and no users (owner only)
  * Options combine: /bot -on +admin. Deleted-message recovery and /watch keep working.
  * The parser only recognizes options with '-', so '+admin' arrives in opts.argv.
  *
  * The IRC shortcuts (o: operator, commands; v: voice, only speaks), owner only, one at a time:
- *   /bot +o <pessoa...>        → /set -append bot.admins <pessoa...>
- *   /bot -o <pessoa...>        → /set -rem bot.admins <pessoa...>
- *   /bot +v <pessoa|grupo...>  → /set -append bot.users <pessoa|grupo...>
- *   /bot -v <pessoa|grupo...>  → /set -rem bot.users <pessoa|grupo...>
- * The person is /Name/, "Name", @mention or +number, as in -to.
+ * /bot +o|-o <person...>        → adds and removes admins (bot.admins)
+ * /bot +v|-v <person|group...>  → adds and removes users (bot.users)
+ * The person is /Name/, "Name", @mention or +number, as in -to. With nobody, the
+ * the current chat: in a group, the group (which does not become admin); in someone's private chat, the person.
  *
  * And the bot report (src/status.js) and the versions (src/system.js), which do not
  * combine with the others:
@@ -40,7 +40,11 @@ const { fmtWhen, readHour } = require('../util/when');
 function whoUses() {
     const users = getSetting('bot.users');
     const admins = getSetting('bot.admins').length ? ' e os admins' : '';
-    if (users.includes('all')) return '🔓 *Comandos:* todos usam os comuns';
+    if (users.includes('all')) {
+        return '🔓 *Comandos:* todos usam os comuns\n' +
+            '⚠️ _Atenção: qualquer pessoa pode executar os comandos comuns do bot, em qualquer chat. ' +
+            'Para restringir: /bot +admin (e depois /bot +v para liberar alguns)._';
+    }
     if (!users.length) return `🔒 *Comandos:* só o dono${admins}`;
     return '👥 *Comandos:* o dono e quem está na lista abaixo';
 }
@@ -93,7 +97,38 @@ async function stateBot() {
 const SHORTCUT = /^([+-])([ov])(?:\s+([\s\S]*))?$/;
 const SHORTCUT_LIST = { o: 'bot.admins', v: 'bot.users' };
 
-async function handleShortcut(msg, [, signalAlt, letter, textAlt]) {
+/*
+ * Nobody, the chat where the command was typed: in a group, the group; in the
+ * someone's private chat, the person (by phone). In your private chat, there is no one.
+ */
+async function shortcutInChat(msg, key, append, { chatId, isGroup }) {
+    if (isGroup) {
+        if (key === 'bot.admins') {
+            await msg.reply('❌ Um grupo não pode ser admin (todos ali mandariam no bot).\n' +
+                '💡 _Para liberar os comandos comuns neste grupo: /bot +v_');
+            return;
+        }
+        await peopleChangeList(msg, key, chatId, append, { itensProntos: true });
+        return;
+    }
+
+    const ids = await chatCurrentIds(chatId);
+    if (ids.includes(client.info.wid._serialized)) {
+        await msg.reply('❌ Este é o seu privado: você (o dono) já usa tudo.\n' +
+            '💡 _Use num grupo ou no privado de alguém, ou informe quem: /bot +v /Nome/_');
+        return;
+    }
+
+    const phoneAlt = ids.find(i => i.endsWith('@c.us'));
+    if (!phoneAlt) {
+        await msg.reply('❌ Não sei o telefone desta pessoa (o WhatsApp só informou o id interno): use o número, ex.: /bot +v +5521999999999.');
+        return;
+    }
+    const numberAlt = phoneAlt.split('@')[0];
+    await peopleChangeList(msg, key, numberAlt, append, { itensProntos: true });
+}
+
+async function handleShortcut(msg, [, signalAlt, letter, textAlt], chat) {
     const key = SHORTCUT_LIST[letter];
 
     // Owner only, as in /set: an extra admin promotes nobody (not even themselves)
@@ -102,9 +137,7 @@ async function handleShortcut(msg, [, signalAlt, letter, textAlt]) {
         return;
     }
     if (!textAlt?.trim()) {
-        const who = letter === 'o' ? '<pessoa...>' : '<pessoa|grupo...>';
-        await msg.reply(`❌ Informe quem: /bot ${signalAlt}${letter} ${who}` +
-            ' (/Nome/, @menção ou +número)');
+        await shortcutInChat(msg, key, signalAlt === '+', chat);
         return;
     }
 
@@ -136,10 +169,24 @@ async function handleStatus(msg, values) {
     await msg.reply(`⏰ *Status diário:* todo dia às *${two(hour.h)}:${two(hour.m)}*, no seu privado.\n📅 Próximo: ${fmtWhen(next)}`);
 }
 
-async function cmdBot({ msg, opts, args }) {
+// What -reset puts back to default (the daily send of -status stays)
+const DO_RESET = ['bot.paused', 'bot.admins', 'bot.users'];
+
+async function reset(msg) {
+    if (!msg.fromMe) {
+        await msg.reply('⛔ Só o dono do bot volta o /bot ao padrão.');
+        return;
+    }
+
+    for (const key of DO_RESET) await setSetting(key, SETTINGS_SCHEMA[key].default);
+    await msg.reply('♻️ *Padrão restaurado:* bot ligado, sem admins extras e sem usuários.\n\n' +
+        await stateBot());
+}
+
+async function cmdBot({ msg, opts, args, chatId, isGroup }) {
     const shortcut = String(args ?? '').trim().match(SHORTCUT);
     if (shortcut) {
-        await handleShortcut(msg, shortcut);
+        await handleShortcut(msg, shortcut, { chatId, isGroup });
         return;
     }
 
@@ -157,6 +204,16 @@ async function cmdBot({ msg, opts, args }) {
         return;
     }
 
+    // -reset: alone, like -info
+    if (opts.given.has('reset')) {
+        if (other || opts.given.has('status') || opts.argv.length) {
+            await msg.reply('❌ O -reset não combina com as outras opções.\n💡 _/bot -reset_');
+            return;
+        }
+        await reset(msg);
+        return;
+    }
+
     // -status [<time>|off]: the parser takes one value; "às 18h" leaves the rest in argv
     if (opts.given.has('status')) {
         if (other) {
@@ -170,7 +227,7 @@ async function cmdBot({ msg, opts, args }) {
     const unknown = opts.argv.filter(a => a !== '+admin');
 
     if (unknown.length || (on && off) || (adminOn && adminOff)) {
-        await msg.reply('❌ Uso: /bot [-on|-off] [+admin|-admin]  ou  /bot +o|-o|+v|-v <pessoa...>  ou  /bot -status [<hora>|off]  ou  /bot -info\n' +
+        await msg.reply('❌ Uso: /bot [-on|-off] [+admin|-admin]  ou  /bot +o|-o|+v|-v [pessoa...]  ou  /bot -reset  ou  /bot -status [<hora>|off]  ou  /bot -info\n' +
             '💡 _/bot -h para ajuda_');
         return;
     }
