@@ -15,7 +15,7 @@ const { plural, withoutAccents } = require('../util/format');
  * /tldr: summarizes a chat's conversation through ChatGPT (same key and model as /gpt).
  * /tldr              → the last 100 messages of this chat
  * /tldr 2h | 30m     → those of the last 2 hours | 30 minutes (the "-" in front is optional)
- *   /tldr 300          → as últimas 300 (máx. setting 'resumo.maxMsgs')
+ * /tldr 300          → the last 300 (max. setting 'tldr.maxMsgs')
  * /tldr -c família   → from another chat, looked up by name
  * /tldr -pv          → in your private chat instead of exposing it in the current chat
  * Uses the text already stored in the database: regular messages stay 68 h. They stay
@@ -82,11 +82,11 @@ async function cmdTldr({ msg, opts, chatId, chatName }) {
         return;
     }
 
-    const max = getSetting('resumo.maxMsgs');
+    const max = getSetting('tldr.maxMsgs');
     const notices = [];
 
     if (period.n > max) {
-        notices.push(`limitado a ${max} mensagens (setting resumo.maxMsgs)`);
+        notices.push(`limitado a ${max} mensagens (setting tldr.maxMsgs)`);
         period.n = max;
     }
 
