@@ -101,7 +101,7 @@ async function rodarComando(chatId, linha, { chatName, isGroup }) {
 
     const textos = respostas.filter(r => typeof r.content === 'string').map(r => r.content.trim());
     const midias = respostas.filter(r => typeof r.content !== 'string');
-    // Várias respostas (o /defi -show manda uma por posição): separadas por uma linha em branco
+    // Várias respostas (o /defi -s manda uma por posição): separadas por uma linha em branco
     return { texto: textos.join('\n\n'), midias };
 }
 

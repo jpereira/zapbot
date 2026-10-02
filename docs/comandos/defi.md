@@ -43,7 +43,7 @@ Para o Project X (`prjx` ou `projectx`):
 |---|---|---|
 | *(protocolo)* | `orca`, `prjx` ou `projectx` | Com `-address`, cadastra; com `-s`, mostra só ele |
 | `-show`, `-s` | `[nº\|orca\|prjx]` | Position Details de todas as posições, só da nº N ou só de um protocolo |
-| `-list`, `-l` | | Lista os cadastros (o mesmo que `/defi` sem nada). No seu privado, com os endereços inteiros; fora dele, abreviados (`Hz15…RaPZ`) |
+| `-list`, `-l` | | Lista os cadastros (o mesmo que `/defi` sem nada), com 🔔 nos que têm alerta (e o limite das taxas: `🔔 ≥ $2,000.00`). No seu privado, com os endereços inteiros; fora dele, abreviados (`Hz15…RaPZ`) |
 | `-rm` | `<nº...\|all>` | Remove o cadastro nº N, vários (`-rm 1 3` ou `-rm 1,3`) ou todos; se algum nº não existe, nenhum sai. Junto com `-alerta`: só desliga o alerta da nº N (ou de todas) |
 | `-alerta`, `-a` | `[nº\|all\|valor]` | Sem nº: lista os alertas. Com nº (ou `all`): avisa quando a posição sair da faixa e quando voltar. No cadastro (com `-address`), liga o alerta da posição nova, no seu privado (ou no `-to`); o valor é o limite das taxas, como o `-taxas` (`-alerta 2000`). Veja [Alerta de saída da faixa](#alerta-de-saída-da-faixa) |
 | `-taxas` | `<valor\|off>` | Junto com `-alerta`: avisa também quando as taxas a coletar passarem do valor, em dólar (ex.: `-taxas 50`). Avisa uma vez e de novo depois de você coletar; `off` tira |
@@ -59,6 +59,21 @@ Para o Project X (`prjx` ou `projectx`):
 /defi -alerta 1        → avisa no seu privado quando a nº 1 sair da faixa (e voltar)
 /defi -a 1 -taxas 50   → e quando as taxas a coletar da nº 1 passarem de $50
 ```
+
+A lista mostra o 🔔 de quem tem alerta e, com o `-taxas` (ou o `-alerta <valor>`
+no cadastro), o limite das taxas:
+
+```
+/defi -l
+🌊 Posições DeFi (2)
+
+1. Orca · Hz15…RaPZ · pool CeaZ…QpbN (desde 02/10/2026) 🔔 ≥ $2,000.00
+2. Project X · carteira 0x92…0444 (desde 02/10/2026) 🔔
+
+💡 /defi -s mostra os detalhes; /defi -rm <nº> remove; 🔔 = com alerta (/defi -alerta), ≥ $ é o limite das taxas.
+```
+
+No seu privado, os endereços saem inteiros.
 
 Para receber o `-show` todo dia, num chat ou junto com outros comandos, use o
 [`/cron`](cron.md#comandos-no-texto) (só o `-show` e o `-list` rodam lá):
@@ -125,7 +140,7 @@ posições, na carteira de quem a abriu. Por isso o cadastro é a **carteira**, 
   chamasse; é o valor exato que o botão "Collect" coletaria.
 - **Dólar**: vem do lado estável do par (USD₮0, USDC, USDe, USDH...). Num par sem
   stablecoin, aparecem só as quantidades.
-- Cadastrar uma carteira sem posição aberta vale (o bot avisa): o `/defi -show`
+- Cadastrar uma carteira sem posição aberta vale (o bot avisa): o `/defi -s`
   mostra as posições quando houver.
 
 ## Alerta de saída da faixa
@@ -202,7 +217,8 @@ E os outros avisos, com o mesmo "Position Details":
 💸 DeFi: Project X · carteira 0x92…0444 tem $98.50 em taxas a coletar (passou de $50.00)
 ```
 
-Na lista do `/defi -l`, as posições com alerta aparecem com 🔔. Cada leitura
+Na lista do `/defi -l`, as posições com alerta aparecem com 🔔 (e o limite das
+taxas, se tiver: `🔔 ≥ $2,000.00`). Cada leitura
 gasta consultas no RPC: com os públicos, prefira um intervalo maior (ou um RPC
 próprio: [Solana](#rpc-da-solana), [HyperEVM](#rpc-da-hyperevm)).
 
@@ -238,7 +254,7 @@ estão na conta da posição.
 
 As contas são lidas pelo RPC do setting `defi.solana.rpc` (padrão: o público,
 `https://api.mainnet-beta.solana.com`). Ele limita as consultas: se o
-`/defi -show` responder que não conseguiu ler a posição, tente de novo em
+`/defi -s` responder que não conseguiu ler a posição, tente de novo em
 instantes ou use um RPC próprio (Helius, QuickNode, Alchemy... têm planos
 grátis):
 
@@ -255,7 +271,7 @@ posições cadastradas (e o alerta de cada uma) ficam na tabela `defi_positions`
 O Project X é lido pelo RPC do setting `defi.hyperevm.rpc` (padrão: o público
 da Hyperliquid, `https://rpc.hyperliquid.xyz/evm`, chain 999). Ele também limita
 as consultas e recusa lotes grandes: o bot manda as chamadas em lotes de 10.
-Se o `/defi -show` não conseguir ler a carteira, tente de novo em instantes ou
+Se o `/defi -s` não conseguir ler a carteira, tente de novo em instantes ou
 use um RPC próprio:
 
 ```
