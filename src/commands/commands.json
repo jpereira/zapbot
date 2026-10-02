@@ -355,12 +355,12 @@
         },
         {
             "cmd": "/crypto",
-            "usage": "/crypto [OPTION]",
+            "usage": "/crypto [OPTION] [MOEDA...]",
             "aliases": [
                 "/bitcoio",
                 "/creptomoeda"
             ],
-            "help": "Preço atual e variação de 24 h das criptomoedas ativadas (Binance).",
+            "help": "Preço atual e variação de 24 h das criptomoedas ativadas (Binance) ou só das pedidas (ex.: /crypto BTC ETH).",
             "cmd_opts": [
                 {
                     "opts": [

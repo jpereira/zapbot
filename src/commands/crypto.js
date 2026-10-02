@@ -72,13 +72,25 @@ async function cmdCrypto(ctx) {
         return;
     }
 
-    if (!active.length) {
+    // Without arguments: the enabled currencies; with arguments (BTC, "btc eth", "BTC,ETH"): only the requested ones, enabled or not
+    const requestedAlt = opts.argv.length
+        ? [...new Set(opts.argv.join(' ').split(/[\s,]+/).filter(Boolean).map(token))]
+        : active;
+    const invalid = requestedAlt.filter(sym => !CRYPTO_SUPPORTED[sym]);
+
+    if (invalid.length) {
+        await msg.reply(`❌ ${invalid.length === 1 ? 'Moeda não suportada' : 'Moedas não suportadas'}: ${invalid.join(', ')}\n` +
+            `💡 _Suportadas: ${Object.keys(CRYPTO_SUPPORTED).join(', ')}_`);
+        return;
+    }
+
+    if (!requestedAlt.length) {
         await msg.reply('ℹ️ Nenhuma moeda ativada.\n💡 _Adicione com /crypto -a <TOKEN>_');
         return;
     }
 
     try {
-        const symbols = active.map(c => `${c}USDT`);
+        const symbols = requestedAlt.map(c => `${c}USDT`);
 
         const { data } = await axios.get('https://api.binance.com/api/v3/ticker/24hr', {
             params: { symbols: JSON.stringify(symbols) },
@@ -100,7 +112,7 @@ async function cmdCrypto(ctx) {
             return `${n >= 0 ? '🟢' : '🔴'} ${n >= 0 ? '+' : ''}${n.toFixed(2)}%`;
         };
 
-        // Keeps the configured order (Binance does not guarantee the response order)
+        // Keeps the requested order (or the configured one; Binance does not guarantee the response order)
         const coins = data.map(item => ({
             symbol: item.symbol.replace(/USDT$/, ''),
             icon: CRYPTO_SUPPORTED[item.symbol.replace(/USDT$/, '')] || '',
@@ -109,7 +121,7 @@ async function cmdCrypto(ctx) {
             high: Number(item.highPrice),
             low: Number(item.lowPrice),
             volume: Number(item.quoteVolume)
-        })).sort((a, b) => active.indexOf(a.symbol) - active.indexOf(b.symbol));
+        })).sort((a, b) => requestedAlt.indexOf(a.symbol) - requestedAlt.indexOf(b.symbol));
 
         const topGainer = [...coins].sort((a, b) => b.change - a.change)[0];
 
