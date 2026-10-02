@@ -182,6 +182,18 @@ describe('permissões', () => {
         assert.deepEqual(await bot.responder('/set bot.admins ""'), ['✅ *bot.admins* = (vazio)']);
     });
 
+    test('bot.admins por menção (@ no WhatsApp): o LID da menção vira o telefone', async () => {
+        const LID = '100000000000002@lid';
+        bot.criarContato('5521966666666@c.us', 'Fulano Da Silva');
+        bot.client.lids.set(LID, '5521966666666@c.us');
+
+        assert.deepEqual(await bot.responder('/set -a bot.admins @100000000000002', { mencoes: [LID] }),
+            ['✅ *bot.admins* + 5521966666666 (Fulano Da Silva)\n= 5521966666666 (Fulano Da Silva)']);
+
+        // "@número" digitado, sem ser menção: recusado
+        assert.match((await bot.responder('/set -a bot.admins @5521977777777'))[0], /❌ "@5521977777777" não é uma menção: mencione a pessoa escolhendo na lista do @/);
+    });
+
     test('bot.admins pelo nome: grupo, e-mail e contato sem telefone são recusados', async () => {
         assert.match((await bot.responder('/set -a bot.admins /Família/'))[0], /❌ Família é um grupo: o \*bot\.admins\* é de pessoas/);
         assert.match((await bot.responder('/set -a bot.admins email'))[0], /❌ O \*bot\.admins\* é de pessoas: informe um contato ou um número, não um e-mail/);

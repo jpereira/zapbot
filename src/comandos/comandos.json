@@ -252,7 +252,7 @@
                     "values": [
                         "<destino>"
                     ],
-                    "desc": "Junto com -alerta: avisa num contato, num grupo, num número ou por e-mail em vez do seu privado: /Jorge Pereira/, /Grupo L200/, +5521999999999, email (o QRCODE_EMAIL_SMTP_TO) ou voce@exemplo.com (vários com o nome: você escolhe na lista)."
+                    "desc": "Junto com -alerta: avisa num contato, num grupo, num número ou por e-mail em vez do seu privado: /Jorge Pereira/, @Fulano (menção), /Grupo L200/, +5521999999999, email (o QRCODE_EMAIL_SMTP_TO) ou voce@exemplo.com (vários com o nome: você escolhe na lista)."
                 }
             ],
             "onlyAdmin": false
@@ -342,7 +342,7 @@
                     "values": [
                         "<destino>"
                     ],
-                    "desc": "No modo mensagem: envia num contato, num grupo ou num número em vez do chat atual (e-mail não: a mensagem sai no WhatsApp). Repita para vários (um item por destino). Ex: -to /Jorge Pereira/, -to /Grupo L200/ -to /Família/, -to +5521999999999 (vários com o nome: você escolhe na lista)."
+                    "desc": "No modo mensagem: envia num contato, num grupo ou num número em vez do chat atual (e-mail não: a mensagem sai no WhatsApp). Repita para vários (um item por destino). Ex: -to /Jorge Pereira/, -to @Fulano (menção), -to /Grupo L200/ -to /Família/, -to +5521999999999 (vários com o nome: você escolhe na lista)."
                 },
                 {
                     "argv": [
@@ -413,7 +413,7 @@
                     "values": [
                         "<destino>"
                     ],
-                    "desc": "Junto com -alerta: avisa num contato, num grupo, num número ou por e-mail em vez do seu privado: /Jorge Pereira/, /Grupo L200/, +5521999999999, email (o QRCODE_EMAIL_SMTP_TO) ou voce@exemplo.com (vários com o nome: você escolhe na lista)."
+                    "desc": "Junto com -alerta: avisa num contato, num grupo, num número ou por e-mail em vez do seu privado: /Jorge Pereira/, @Fulano (menção), /Grupo L200/, +5521999999999, email (o QRCODE_EMAIL_SMTP_TO) ou voce@exemplo.com (vários com o nome: você escolhe na lista)."
                 }
             ],
             "onlyAdmin": false
@@ -552,7 +552,7 @@
                     "values": [
                         "<destino>"
                     ],
-                    "desc": "Junto com -alerta: avisa num contato, num grupo, num número ou por e-mail em vez do seu privado: /Jorge Pereira/, /Grupo L200/, +5521999999999, email (o QRCODE_EMAIL_SMTP_TO) ou voce@exemplo.com (vários com o nome: você escolhe na lista)."
+                    "desc": "Junto com -alerta: avisa num contato, num grupo, num número ou por e-mail em vez do seu privado: /Jorge Pereira/, @Fulano (menção), /Grupo L200/, +5521999999999, email (o QRCODE_EMAIL_SMTP_TO) ou voce@exemplo.com (vários com o nome: você escolhe na lista)."
                 }
             ],
             "onlyAdmin": true
@@ -840,7 +840,7 @@
                     "argv": [
                         "</contato ou grupo/|+número>"
                     ],
-                    "desc": "Primeiro um contato, depois um grupo, pelo nome ou parte dele (vários: você escolhe na lista), ou um número. Ex: /mudo -a /Jorge Pereira/, /mudo -a /Grupo L200/, /mudo -s +5521999999999"
+                    "desc": "Primeiro um contato, depois um grupo, pelo nome ou parte dele (vários: você escolhe na lista), um número ou alguém mencionado com @. Ex: /mudo -a /Jorge Pereira/, /mudo -a /Grupo L200/, /mudo -s +5521999999999"
                 }
             ],
             "onlyAdmin": true
