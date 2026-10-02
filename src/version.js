@@ -22,10 +22,10 @@ const { ROOT_DIR } = require('./constants');
  *
  * The tag is the one that points to the commit in use: with a detached HEAD (git checkout
  * v2.0.0) or on a branch that is on the tag commit (main right after the
- * bump.sh). An annotated tag (those of bump.sh) points to a "tag" object, not
+ * bump.sh -r). An annotated tag (those of bump.sh -r) points to a "tag" object, not
  * to the commit; its commit comes from one of these:
  * - the "^<commit>" line right below it in packed-refs (in a clone, or after
- * of a git pack-refs --all, which bump.sh runs when creating the tag);
+ * of a git pack-refs --all, which bump.sh -r runs when creating the tag);
  * - the object itself in .git/objects (outside Docker, where .git is whole);
  * - the last line of the reflog (.git/logs/HEAD): "checkout: moving from main to
  * v2.0.0", with the commit it went to (after a git fetch --tags,
