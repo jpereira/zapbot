@@ -13,6 +13,7 @@ que ainda estão no cache: as apagadas por 30 dias (setting
 | `-edited`, `-e` | | Mensagens editadas, com o texto de antes e o de depois. Cada edição é um item: uma mensagem editada duas vezes aparece duas vezes |
 | `-list`, `-l` | | Lista as apagadas **e as editadas** do cache por chat (em qualquer chat), marcando com `← este chat` o chat atual |
 | `-pv` | | Envia no seu privado em vez de expor no chat atual |
+| `-query`, `-q` | `<texto>` | Busca nas apagadas (ou nas editadas, com `-e`) as que têm o texto, sem diferenciar maiúsculas nem acentos: neste chat, no do `-c` ou, no seu privado, em todos. Sem `-N`: as 5 mais recentes. Veja [Buscar](#buscar) |
 | `-chat`, `-c` | `<nº\|nome>` | Escolhe outro chat: nº da lista do tipo no `/show -l` (a de **deletadas**, ou a de **editadas** com `-e`) ou parte do nome. Funciona em qualquer chat; junte `-pv` para não expor as mensagens no chat atual |
 | `-flush`, `-f` | | Remove as apagadas (ou as editadas, com `-e`) deste chat (no seu privado: de todos) |
 
@@ -31,7 +32,25 @@ O `-d` e o `-e` não podem ser usados juntos.
 /show -c família -pv → do chat cujo nome contém "família", no seu privado
 /show -f             → apaga do cache as apagadas deste chat
 /show -e -f          → apaga do cache as editadas deste chat
+/show -q pix         → as apagadas com "pix" (no seu privado: de todos os chats)
+/show -e -q "bom dia" -10 → até 10 editadas com "bom dia"
 ```
+
+## Buscar
+
+O `-q <texto>` filtra as apagadas (ou as editadas, com `-e`, pelo texto de antes
+ou pelo de depois) pelo trecho, sem diferenciar maiúsculas nem acentos. Com
+espaços, vai entre aspas (`-q "bom dia"`). O escopo é o de sempre: este chat, o
+do `-c` ou, **no seu privado, todos os chats**. Sem `-N`, vêm as 5 mais
+recentes que casam; o resumo diz quantas foram encontradas no total.
+
+```
+/show -q pix
+♻️ 2 mensagens apagadas com "pix" (as 2 mais recentes de 4; use -N para mais)
+💬 Chats: todos
+```
+
+O `-q` não combina com o `-l` nem com o `-f`.
 
 O `-l` mostra os dois tipos, cada um com a sua numeração para o `-c`:
 
