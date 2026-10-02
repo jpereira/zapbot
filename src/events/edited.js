@@ -16,7 +16,7 @@ const { formatData } = require('../util/format');
  *
  * Same idea as the deleted ones: the 'message_edit' event saves the edit (text of
  * before and after) in the message_edits table and notifies you in private (setting
- * 'show.alert.edit'); o /show -e reexibe sob demanda.
+ * 'show.alert.edited'); o /show -e reexibe sob demanda.
  */
 async function sendMessageEdited(destination, row, info, { titulo: title = '✏️ *MENSAGEM EDITADA DETECTADA*' } = {}) {
     let textAlt = `${title}\n\n`;
@@ -110,7 +110,7 @@ client.on('message_edit', async (msg, newBody, prevBody) => {
 
         // /mudo: this chat's or this person's notice is muted (the edit stays saved for /show -e)
         const senders = [original?.sender_jid, original?.sender_number, row.sender_number];
-        if (getSetting('show.alert.edit') && !(await ignoreNotice('editada', { chatId, remetentes: senders }))) {
+        if (getSetting('show.alert.edited') && !(await ignoreNotice('editada', { chatId, remetentes: senders }))) {
             await sendMessageEdited(client.info.wid._serialized, row, info);
         }
     } catch (err) {

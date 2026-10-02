@@ -200,7 +200,7 @@ describe('/set (/config)', () => {
 
         const keys = (textAlt) => [...textAlt.matchAll(/^([a-z][\w.]+)\s{2}/gm)].map(m => m[1]);
         assert.deepEqual(keys((await bot.replyAlt('/set OPENAI'))[0]), ['openai.api.key', 'openai.api.model', 'openai.timeout.ms']);
-        assert.deepEqual(keys((await bot.replyAlt('/set /^show\\./'))[0]), ['show.alert.edit', 'show.delayMs', 'show.max', 'show.revoke.status']);
+        assert.deepEqual(keys((await bot.replyAlt('/set /^show\\./'))[0]), ['show.alert.edited', 'show.alert.status', 'show.delayMs', 'show.max']);
         assert.deepEqual(keys((await bot.replyAlt('/set /max$/'))[0]).length > 3, true);
 
         assert.deepEqual(await bot.replyAlt('/set xyz'), ['❌ Nenhum setting com "xyz".\n💡 _Veja todos com /set_']);
