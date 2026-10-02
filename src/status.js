@@ -14,7 +14,7 @@ const { dbAll, dbGet, dbPronto, dbRun } = require('./db');
 const { getBotUptime } = require('./log');
 const { getSetting } = require('./settings');
 const { getDirSize, humanSize } = require('./util/arquivos');
-const { fmtNum } = require('./util/formatar');
+const { fmtNum, plural } = require('./util/formatar');
 const { fmtQuando, instanteEmBrasilia, partesEmBrasilia } = require('./util/quando');
 
 /*
@@ -57,6 +57,7 @@ async function textoDoStatus(agora = Date.now()) {
     const ignoradas = await dbAll('SELECT kind, COUNT(*) AS n FROM mute_hits WHERE at >= ? GROUP BY kind ORDER BY kind', [desde]);
     const totalIgnoradas = ignoradas.reduce((s, r) => s + r.n, 0);
     const ROTULOS = { apagada: 'apagadas', editada: 'editadas', status: 'status' };
+    const silenciados = await conta('SELECT COUNT(*) AS n FROM mutes', []);
 
     const [ultimoBackup] = await listarBackups();
     const conectado = estado.autenticadoEm ? getBotUptime(estado.autenticadoEm) : 'não conectado';
@@ -70,7 +71,8 @@ async function textoDoStatus(agora = Date.now()) {
         `✏️ *Editadas:* ${fmtNum(editadas)}${desligado('show.alert.edited', 'aviso desligado')}\n` +
         `📸 *Status apagados:* ${fmtNum(statusApagados)}${desligado('show.alert.status', 'recuperação desligada')}\n` +
         `🔇 *Ignoradas (/mudo):* ${fmtNum(totalIgnoradas)}` +
-        (totalIgnoradas ? ` _(${ignoradas.map(r => `${ROTULOS[r.kind] ?? r.kind} ${fmtNum(r.n)}`).join(', ')})_` : '') + '\n' +
+        (totalIgnoradas ? ` _(${ignoradas.map(r => `${ROTULOS[r.kind] ?? r.kind} ${fmtNum(r.n)}`).join(', ')})_` : '') +
+        (silenciados ? ` · ${plural(silenciados, 'silenciado', 'silenciados')}` : '') + '\n' +
         `💾 *Último backup:* ${ultimoBackup ? `${fmtQuando(ultimoBackup.criadoEm, agora)} (${ultimoBackup.motivo})` : 'nenhum'}`;
 
     // No fim, o envio diário (o mesmo do /bot -status -l de antes)
