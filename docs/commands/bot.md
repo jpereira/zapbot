@@ -69,6 +69,7 @@ o número delas estiver no setting `bot.admins`:
 ```
 /set -a bot.admins /Jorge Pereira/  → acrescenta, pelo nome do contato
 /set -a bot.admins +5521999999999   → ou pelo número
+/set -a bot.admins @Fulano          → ou, num grupo, mencionando a pessoa
 /set -rem bot.admins /Jorge Pereira/ → tira
 /set bot.admins                     → a lista: 5521999999999 (Jorge Pereira)
 ```
