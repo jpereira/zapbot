@@ -102,7 +102,9 @@ function whereInLog(s) {
 function listLine(s, i) {
     const repeat = s.repeat ? ` 🔁 ${REPETITIONS[s.repeat].rotulo}` : '';
     const paused = s.paused ? ' ⏸️ _pausado_' : '';
-    return `${i + 1}. ${TYPES[s.kind]?.icone ?? '📅'} *${fmtWhen(s.due_at)}*${repeat}${paused} — ${summarizeText(s.text, 60)}\n   → ${itemWhere(s)}`;
+    // The whole text, as registered; the following lines indented, like the destination's
+    const textAlt = s.text.replace(/\n/g, '\n   ');
+    return `${i + 1}. ${TYPES[s.kind]?.icone ?? '📅'} *${fmtWhen(s.due_at)}*${repeat}${paused} — ${textAlt}\n   → ${itemWhere(s)}`;
 }
 
 // "2" → [item 2]; "all" → all; otherwise null
