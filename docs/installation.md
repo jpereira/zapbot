@@ -43,9 +43,12 @@ docker logs -f zapbot
 > 💡 Para não repetir `-f docker/docker-compose.yml` em todo comando:
 > `export COMPOSE_FILE=docker/docker-compose.yml`
 
-Depois de ler o QR Code você deve ver nos logs:
+Logo no início dos logs aparece a versão, com o commit e a tag (veja o
+[`/version`](commands/version.md)), e depois de ler o QR Code você deve ver:
 
 ```
+[!] 🤖 Starting ZapBot 1.0.10 (git+9029cfb/v1.0.10)...
+...
 [+] 🔐 Whatsapp authentication success!
 [+] 🤖 ZapBot 1.0.10 (git+9029cfb/v1.0.10) inicializado! Informando 5521999999999@c.us
 ```
