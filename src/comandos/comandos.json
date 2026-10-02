@@ -259,7 +259,7 @@
         },
         {
             "cmd": "/cron",
-            "usage": "/cron <quando> [OPTION] <texto>",
+            "usage": "/cron <quando> [OPTION] <texto>  ou  /cron -edit <nº> [quando] [texto]",
             "aliases": [
                 "/agenda",
                 "/lembrete"
@@ -268,7 +268,17 @@
             "cmd_opts": [
                 {
                     "opts": [
-                        "lembrete"
+                        "edit"
+                    ],
+                    "values": [
+                        "<nº>"
+                    ],
+                    "desc": "Edita o item nº N da lista: o que vier depois troca a hora, o texto e/ou o -repetir (-r nao tira a repetição). Ex: /cron -edit 2 18h, /cron -edit 2 novo texto"
+                },
+                {
+                    "opts": [
+                        "lembrete",
+                        "lem"
                     ],
                     "values": [],
                     "desc": "Modo lembrete (o mesmo de chamar como /lembrete): ⏰ Lembrete respondendo a mensagem do comando."
@@ -280,6 +290,15 @@
                     ],
                     "values": [],
                     "desc": "Lista os lembretes e as mensagens agendadas (também sem argumentos)."
+                },
+                {
+                    "opts": [
+                        "pause"
+                    ],
+                    "values": [
+                        "<nº|all>"
+                    ],
+                    "desc": "Pausa o item nº N (ou todos): fica na lista, mas não sai até o -resume."
                 },
                 {
                     "opts": [
@@ -300,6 +319,15 @@
                 },
                 {
                     "opts": [
+                        "resume"
+                    ],
+                    "values": [
+                        "<nº|all>"
+                    ],
+                    "desc": "Retoma um item pausado. Um repetido que venceu enquanto pausado pula para o próximo horário; um único sai na hora."
+                },
+                {
+                    "opts": [
                         "rm"
                     ],
                     "values": [
@@ -314,7 +342,7 @@
                     "values": [
                         "<destino>"
                     ],
-                    "desc": "No modo mensagem: envia num contato, num grupo ou num número em vez do chat atual (e-mail não: a mensagem sai no WhatsApp). Ex: -to /Jorge Pereira/, -to /Grupo L200/, -to +5521999999999 (vários com o nome: você escolhe na lista)."
+                    "desc": "No modo mensagem: envia num contato, num grupo ou num número em vez do chat atual (e-mail não: a mensagem sai no WhatsApp). Repita para vários (um item por destino). Ex: -to /Jorge Pereira/, -to /Grupo L200/ -to /Família/, -to +5521999999999 (vários com o nome: você escolhe na lista)."
                 },
                 {
                     "argv": [

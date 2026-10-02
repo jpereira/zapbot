@@ -5,7 +5,7 @@
 const { estado } = require('./estado');
 const { client } = require('./cliente');
 const { dbAll, dbGet, dbPronto, dbRun } = require('./db');
-const { descreverDestino, extrairDestino, resolverOuEscolher } = require('./destinos');
+const { descreverDestino, extrairDestinos, resolverOuEscolher } = require('./destinos');
 const { printError, printInfo } = require('./log');
 const { textoDoStatus } = require('./status');
 const { getSetting } = require('./settings');
@@ -19,7 +19,10 @@ const { REPETICOES, fmtQuando, lerQuando, partesEmBrasilia, proximaRepeticao } =
  *   lembrete → "⏰ Lembrete" no chat onde foi criado (respondendo a mensagem do
  *              comando, ou a mensagem que ele respondeu), ou no seu privado com
  *              -pv. É o modo do /lembrete e do -lembrete.
- * Os dois aceitam -repetir (-r) diario|semanal|mensal. Sai da sua conta: só o dono usa.
+ * Os dois aceitam -repetir (-r) diario|semanal|mensal. O modo mensagem aceita
+ * vários -to (um item por destino). Na lista, -edit <nº> troca a hora, o texto
+ * ou a repetição de um item, e -pause/-resume <nº|all> o seguram e soltam.
+ * Sai da sua conta: só o dono usa.
  */
 const TIPOS = {
     lembrete: {
@@ -47,11 +50,11 @@ const ATRASO_TOLERADO_MS = 5 * 60_000;
 /**
  * Lê "<quando> [opções] <texto>": as opções e o "quando" vêm no começo, em
  * qualquer ordem; o texto é o resto, como foi digitado (com as quebras de linha).
- * @returns {{ opt: {list?, lembrete?, rm?, repetir?, pv?}, quando: {ms}|null, texto: string,
- *            destino: string|null, comDestino: boolean }}
+ * @returns {{ opt: {list?, lembrete?, rm?, repetir?, pv?, edit?, pause?, resume?}, quando: {ms}|null,
+ *            texto: string, destinos: Array<string|null>, comDestino: boolean }}
  */
 function lerAgendamento(args) {
-    const { destino, informado: comDestino, resto } = extrairDestino(args);
+    const { destinos, informado: comDestino, resto } = extrairDestinos(args);
     const palavras = [...resto.matchAll(/\S+/g)];
     const opt = {};
     let quando = null;
@@ -62,15 +65,16 @@ function lerAgendamento(args) {
         const nome = p.startsWith('-') ? p.slice(1).toLowerCase() : null;
 
         if (nome === 'list' || nome === 'l') opt.list = true;
-        else if (nome === 'pv' || nome === 'lembrete') opt[nome] = true;
-        else if (nome === 'rm') opt.rm = palavras[++i]?.[0] ?? '';
+        else if (nome === 'pv') opt.pv = true;
+        else if (nome === 'lembrete' || nome === 'lem') opt.lembrete = true;
+        else if (['rm', 'edit', 'pause', 'resume'].includes(nome)) opt[nome] = palavras[++i]?.[0] ?? '';
         else if (nome === 'repetir' || nome === 'r') opt.repetir = palavras[++i]?.[0] ?? '';
         else if (!quando && (quando = lerQuando(palavras.slice(i).map(m => m[0])))) i += quando.usadas - 1;
         else break;
     }
 
     const texto = i < palavras.length ? resto.slice(palavras[i].index).trim() : '';
-    return { opt, quando, texto, destino, comDestino };
+    return { opt, quando, texto, destinos, comDestino };
 }
 
 // Lembretes e mensagens juntos, na ordem em que saem (os números do -rm). O status diário (/bot -status) fica de fora
@@ -78,14 +82,106 @@ const listar = () => dbAll("SELECT * FROM schedules WHERE kind != 'status' ORDER
 
 function linhaDaLista(s, i) {
     const repete = s.repeat ? ` 🔁 ${REPETICOES[s.repeat].rotulo}` : '';
+    const pausado = s.paused ? ' ⏸️ _pausado_' : '';
     const onde = s.chat_id === client.info.wid._serialized ? 'seu privado' : `${s.is_group ? '👥' : '👤'} ${s.chat_name}`;
-    return `${i + 1}. ${TIPOS[s.kind]?.icone ?? '📅'} *${fmtQuando(s.due_at)}*${repete} — ${resumirTexto(s.text, 60)}\n   → ${onde}`;
+    return `${i + 1}. ${TIPOS[s.kind]?.icone ?? '📅'} *${fmtQuando(s.due_at)}*${repete}${pausado} — ${resumirTexto(s.text, 60)}\n   → ${onde}`;
+}
+
+// "2" → [item 2]; "all" → todos; senão null
+function itensDoNumero(itens, valor) {
+    const alvo = semAcentos(valor).trim();
+    if (alvo === 'all') return itens;
+    const item = /^\d+$/.test(alvo) ? itens[Number(alvo) - 1] : null;
+    return item ? [item] : null;
+}
+
+// O "quando" de um item novo ou editado: no futuro e até MAX_DIAS
+function erroDoQuando(ms, agora = Date.now()) {
+    if (ms <= agora) return `❌ ${fmtQuando(ms)} já passou.`;
+    if (ms > agora + MAX_DIAS * 86400_000) return `❌ No máximo ${MAX_DIAS} dias à frente.`;
+    return null;
+}
+
+/*
+ * -pause / -resume <nº|all>. Ao retomar, um item repetido que venceu enquanto
+ * estava pausado pula para o próximo horário; um único sai na próxima verificação.
+ */
+async function pausarOuRetomar(msg, itens, pausar, valor) {
+    const opcao = pausar ? '-pause' : '-resume';
+    const alvos = itensDoNumero(itens, valor ?? '');
+
+    if (!alvos) {
+        await msg.reply(`❌ Nº ${valor || '?'} não existe. Veja a lista com /cron -l\n💡 _/cron ${opcao} <nº|all>_`);
+        return;
+    }
+
+    const agora = Date.now();
+    const linhas = [];
+    for (const s of alvos.filter(s => Boolean(s.paused) !== pausar)) {
+        let dueAt = s.due_at;
+        if (!pausar && s.repeat) while (dueAt <= agora) dueAt = proximaRepeticao(dueAt, s.repeat, s.day_of_month);
+
+        await dbRun('UPDATE schedules SET paused = ?, due_at = ? WHERE id = ?', [pausar ? 1 : 0, dueAt, s.id]);
+        const vencido = !pausar && dueAt <= agora ? ' _(já passou: sai agora)_' : '';
+        linhas.push(`• *${fmtQuando(dueAt)}* — ${resumirTexto(s.text, 60)}${vencido}`);
+    }
+
+    if (!linhas.length) {
+        await msg.reply(pausar ? 'ℹ️ Já estava pausado.' : 'ℹ️ Não estava pausado.');
+        return;
+    }
+
+    await msg.reply(`${pausar ? '⏸️ *Pausado*' : '▶️ *Retomado*'} (${linhas.length})\n${linhas.join('\n')}` +
+        (pausar ? '\n💡 _Volta com /cron -resume <nº|all>._' : ''));
+}
+
+/*
+ * -edit <nº> [quando] [-repetir ...] [texto]: troca o que vier. O destino e o
+ * modo não mudam (para isso, remova e crie de novo).
+ */
+async function editar(msg, itens, { opt, quando, texto }) {
+    const [s] = itensDoNumero(itens, opt.edit ?? '') ?? [];
+
+    if (!s || semAcentos(opt.edit).trim() === 'all') {
+        await msg.reply(`❌ Nº ${opt.edit || '?'} não existe. Veja a lista com /cron -l\n💡 _/cron -edit <nº> [quando] [texto]_`);
+        return;
+    }
+    if (!quando && !texto && opt.repetir === undefined) {
+        await msg.reply('❌ Informe o que mudar: a hora, o texto e/ou o -repetir.\n💡 _/cron -edit 2 18h · /cron -edit 2 novo texto · /cron -edit 2 sexta 9h -r semanal outro texto_');
+        return;
+    }
+
+    let repetir = s.repeat;
+    if (opt.repetir !== undefined) {
+        repetir = semAcentos(opt.repetir).trim();
+        if (['nao', 'off', 'no'].includes(repetir)) repetir = null;
+        else if (!REPETICOES[repetir]) {
+            await msg.reply('❌ Use -repetir (-r) diario, semanal, mensal ou nao.');
+            return;
+        }
+    }
+
+    const dueAt = quando?.ms ?? s.due_at;
+    if (quando) {
+        const erro = erroDoQuando(dueAt);
+        if (erro) {
+            await msg.reply(erro);
+            return;
+        }
+    }
+
+    await dbRun('UPDATE schedules SET due_at = ?, day_of_month = ?, text = ?, repeat = ? WHERE id = ?',
+        [dueAt, quando ? partesEmBrasilia(dueAt).dia : s.day_of_month, texto || s.text, repetir, s.id]);
+
+    await msg.reply(`✏️ *Editado:* ${TIPOS[s.kind]?.icone ?? '📅'} *${fmtQuando(dueAt)}*` +
+        (repetir ? ` 🔁 ${REPETICOES[repetir].rotulo}` : '') + (s.paused ? ' ⏸️ _pausado_' : '') +
+        `\n📝 ${resumirTexto(texto || s.text, 100)}`);
 }
 
 async function tratarAgenda({ msg, args, chatId, chatName, isGroup, quotedMsg }) {
     await dbPronto;
 
-    const { opt, quando, texto: digitado, destino: destinoTexto, comDestino } = lerAgendamento(args);
+    const { opt, quando, texto: digitado, destinos: destinosTexto, comDestino } = lerAgendamento(args);
 
     // Modo lembrete: chamado como /lembrete, ou com -lembrete
     const chamado = String(msg.body ?? '').trim().split(/\s+/, 1)[0].toLowerCase();
@@ -125,6 +221,22 @@ async function tratarAgenda({ msg, args, chatId, chatName, isGroup, quotedMsg })
         return;
     }
 
+    // -pause / -resume <nº|all>
+    if (opt.pause !== undefined || opt.resume !== undefined) {
+        await pausarOuRetomar(msg, itens, opt.pause !== undefined, opt.pause ?? opt.resume);
+        return;
+    }
+
+    // -edit <nº> [quando] [-repetir ...] [texto]
+    if (opt.edit !== undefined) {
+        if (comDestino || opt.pv || opt.lembrete) {
+            await msg.reply('❌ O -edit troca só a hora, o texto e o -repetir. Para mudar o destino ou o modo, remova (-rm) e crie de novo.');
+            return;
+        }
+        await editar(msg, itens, { opt, quando, texto: digitado });
+        return;
+    }
+
     // -l, ou nada: a lista (lembretes e mensagens)
     if (opt.list || (!quando && !digitado && !quotedMsg)) {
         if (!itens.length) {
@@ -133,7 +245,7 @@ async function tratarAgenda({ msg, args, chatId, chatName, isGroup, quotedMsg })
         }
 
         await msg.reply(`📅 *Agenda* (${itens.length})\n\n${itens.map(linhaDaLista).join('\n')}\n\n` +
-            '💡 _📅 mensagem · ⏰ lembrete. Remova com /cron -rm <nº|all>._');
+            '💡 _📅 mensagem · ⏰ lembrete. -edit <nº> muda, -pause/-resume <nº> segura e solta, -rm <nº|all> remove._');
         return;
     }
 
@@ -151,12 +263,9 @@ async function tratarAgenda({ msg, args, chatId, chatName, isGroup, quotedMsg })
     }
 
     const agora = Date.now();
-    if (quando.ms <= agora) {
-        await msg.reply(`❌ ${fmtQuando(quando.ms)} já passou.`);
-        return;
-    }
-    if (quando.ms > agora + MAX_DIAS * 86400_000) {
-        await msg.reply(`❌ No máximo ${MAX_DIAS} dias à frente.`);
+    const erroQuando = erroDoQuando(quando.ms, agora);
+    if (erroQuando) {
+        await msg.reply(erroQuando);
         return;
     }
 
@@ -170,41 +279,52 @@ async function tratarAgenda({ msg, args, chatId, chatName, isGroup, quotedMsg })
     }
 
     const max = getSetting('agenda.max');
+    const novos = Math.max(1, destinosTexto.length);
     const { n: total } = await dbGet("SELECT COUNT(*) AS n FROM schedules WHERE kind != 'status'");
-    if (total >= max) {
-        await msg.reply(`❌ Limite de ${max} lembretes e mensagens agendadas (setting agenda.max). Remova algum antes.`);
+    if (total + novos > max) {
+        await msg.reply(`❌ Limite de ${max} lembretes e mensagens agendadas (setting agenda.max)` +
+            (novos > 1 ? `: estes ${novos} não cabem` : '') + '. Remova algum antes.');
         return;
     }
 
-    // Onde vai: -to (mensagem), -pv (lembrete) ou o chat atual
+    // Onde vai: -to (mensagem; um item por destino), -pv (lembrete) ou o chat atual
     const meuId = client.info.wid._serialized;
-    let destino = { id: chatId, nome: chatName, grupo: Boolean(isGroup) };
+    let destinos = [{ id: chatId, nome: chatName, grupo: Boolean(isGroup) }];
 
     if (comDestino) {
-        // Vários contatos ou grupos com o nome: espera você escolher na lista
-        destino = await resolverOuEscolher(msg, destinoTexto, {
-            semEmail: '❌ O /cron envia a mensagem como se você digitasse, no WhatsApp: o -to é um contato, um grupo ou um número, não um e-mail.'
-        });
-        if (!destino) return;
+        destinos = [];
+        for (const destinoTexto of destinosTexto) {
+            // Vários contatos ou grupos com o nome: espera você escolher na lista
+            const destino = await resolverOuEscolher(msg, destinoTexto, {
+                semEmail: '❌ O /cron envia a mensagem como se você digitasse, no WhatsApp: o -to é um contato, um grupo ou um número, não um e-mail.'
+            });
+            if (!destino) return;
+            if (!destinos.some(d => d.id === destino.id)) destinos.push(destino);
+        }
     } else if (opt.pv) {
-        destino = { id: meuId, nome: 'seu privado', grupo: false };
+        destinos = [{ id: meuId, nome: 'seu privado', grupo: false }];
     }
 
-    // O lembrete responde a mensagem respondida pelo comando, ou o próprio comando (só no mesmo chat)
-    const citada = kind === 'lembrete' && destino.id === chatId
-        ? (quotedMsg?.id?._serialized ?? msg.id?._serialized ?? null)
-        : null;
+    for (const destino of destinos) {
+        // O lembrete responde a mensagem respondida pelo comando, ou o próprio comando (só no mesmo chat)
+        const citada = kind === 'lembrete' && destino.id === chatId
+            ? (quotedMsg?.id?._serialized ?? msg.id?._serialized ?? null)
+            : null;
 
-    await dbRun(
-        `INSERT INTO schedules (kind, chat_id, chat_name, is_group, text, due_at, repeat, day_of_month, quoted_id, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [kind, destino.id, destino.nome, destino.grupo ? 1 : 0, texto, quando.ms, repetir,
-            partesEmBrasilia(quando.ms).dia, citada, agora]
-    );
+        await dbRun(
+            `INSERT INTO schedules (kind, chat_id, chat_name, is_group, text, due_at, repeat, day_of_month, quoted_id, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [kind, destino.id, destino.nome, destino.grupo ? 1 : 0, texto, quando.ms, repetir,
+                partesEmBrasilia(quando.ms).dia, citada, agora]
+        );
+    }
 
-    const onde = destino.id === meuId ? 'no seu privado' : destino.id === chatId ? 'neste chat' : `em ${descreverDestino(destino)}`;
+    const onde = (d) => (d.id === meuId ? 'no seu privado' : d.id === chatId ? 'neste chat' : `em ${descreverDestino(d)}`);
     await msg.reply(`${t.icone} *${t.criado}* para *${fmtQuando(quando.ms)}*` +
-        (repetir ? ` 🔁 ${REPETICOES[repetir].rotulo}` : '') + ` ${onde}.\n` +
+        (repetir ? ` 🔁 ${REPETICOES[repetir].rotulo}` : '') +
+        (destinos.length > 1
+            ? ` em ${destinos.length} chats _(um item para cada)_:\n${destinos.map(d => `• ${descreverDestino(d)}`).join('\n')}\n`
+            : ` ${onde(destinos[0])}.\n`) +
         `📝 ${resumirTexto(texto, 100)}`);
 }
 
@@ -251,7 +371,7 @@ async function verificarAgenda() {
     try {
         await dbPronto;
         const agora = Date.now();
-        const vencidos = await dbAll('SELECT * FROM schedules WHERE due_at <= ? ORDER BY due_at, id', [agora]);
+        const vencidos = await dbAll('SELECT * FROM schedules WHERE due_at <= ? AND paused = 0 ORDER BY due_at, id', [agora]);
 
         for (const s of vencidos) {
             await dispararItem(s, agora).catch(err => printError(`${TIPOS[s.kind]?.cmd ?? s.kind}: falha ao enviar ${s.id}:`, err.message));

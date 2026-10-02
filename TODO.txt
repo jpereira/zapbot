@@ -7,8 +7,6 @@
   mini /stats dos grupos e o /defi.
 * /transcrever: respondendo um audio, transcreve pela OpenAI (Whisper) com a chave do
   /gpt; um setting liga a transcricao automatica em chats escolhidos.
-* /cron: -edit <n> para trocar a hora ou o texto de um item, -pause/-resume, e -to com
-  mais de um destino (ex.: -to /Familia/ -to /Trabalho/).
 * /lembrete em linguagem natural pelo /gpt ("me lembra amanha as 9h de ligar pro banco").
 * /mudo -por <tempo> (ex.: -por 2h, -por 7d): silencio temporario, que expira sozinho.
 * Alertas de preco: -sempre (repete em vez de sair ao disparar) e por variacao
