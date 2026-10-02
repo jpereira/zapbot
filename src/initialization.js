@@ -188,6 +188,7 @@ async function initializeDb() {
      * /cron schedule: messages and reminders (kind). due_at is
      * the next send; with repeat, it advances on each send (day_of_month stores
      * the monthly's original day, so a 31 goes back to 31 after February).
+     * paused: /cron -pause takes the item out of the check until -resume.
      */
     await dbRun(`
         CREATE TABLE IF NOT EXISTS schedules (
@@ -204,6 +205,7 @@ async function initializeDb() {
             created_at INTEGER NOT NULL
         )
     `);
+    await addColumns('schedules', { paused: 'INTEGER DEFAULT 0' });
     await dbRun('CREATE INDEX IF NOT EXISTS idx_schedules_due ON schedules (due_at)');
 
     /*

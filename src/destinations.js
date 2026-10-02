@@ -52,6 +52,25 @@ function extractDestination(textAlt) {
     return { destino: valueAlt || null, informado: true, resto: rest };
 }
 
+/**
+ * Removes all the "-to <destination>" from the text (/cron accepts several).
+ * @returns {{ destinos: Array<string|null>, informado: boolean, resto: string }}
+ * destinations: one per -to, in order (null: -to without a value)
+ */
+function extractDestinations(textAlt) {
+    const destinations = [];
+    let rest = String(textAlt ?? '');
+
+    for (;;) {
+        const r = extractDestination(rest);
+        if (!r.informado) break;
+        destinations.push(r.destino);
+        rest = r.resto;
+    }
+
+    return { destinos: destinations, informado: destinations.length > 0, resto: rest };
+}
+
 const normalize = (s) => withoutAccents(s).trim();
 
 // "+5521999999999", "5521 99999-9999" → only the digits; null if it is not a number
@@ -327,6 +346,7 @@ module.exports = {
     emailsDoSmtpTo,
     sendOnDestination,
     extractDestination,
+    extractDestinations,
     resolverDestination,
     resolverOrChoose
 };
