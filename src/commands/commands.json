@@ -320,7 +320,7 @@
                     "argv": [
                         "<quando>"
                     ],
-                    "desc": "30m, 2h, 1h30m (daqui a tanto tempo), 18:30 ou às 18h (hoje ou amanhã), amanhã [9h], sexta [18h], 25/12 [10:00] ou 25/12/2027 [10h]. Sem hora: 9h."
+                    "desc": "6h, 07h, 18:30 ou às 18h (horário: hoje ou amanhã), +2h, em 2h, 30m ou 1h30m (daqui a tanto tempo), amanhã [9h], sexta [18h], 25/12 [10:00] ou 25/12/2027 [10h]. Sem hora: 9h."
                 }
             ],
             "onlyAdmin": true
