@@ -95,9 +95,11 @@ describe('datas (util/quando.js)', () => {
         assert.equal(r.texto, 'Bom dia\nsegunda linha');
         assert.deepEqual(r.destinos, ['Grupo L200']);
         assert.deepEqual(lerAgendamento('-rm 2').opt, { rm: '2' });
+        assert.deepEqual(lerAgendamento('-rm 1 3,5 texto').opt, { rm: '1 3,5' });
         assert.deepEqual(lerAgendamento('8h -to /Família/ -to Trabalho -to +5521999999999 oi').destinos, ['Família', 'Trabalho', '+5521999999999']);
         assert.deepEqual(lerAgendamento('-edit 3 18h novo texto').opt, { edit: '3' });
         assert.deepEqual(lerAgendamento('-pause all').opt, { pause: 'all' });
+        assert.deepEqual(lerAgendamento('-resume 2 4').opt, { resume: '2 4' });
         assert.deepEqual(lerAgendamento('-lem 2h x').opt, { lembrete: true });
         assert.equal(lerAgendamento('2h -pv 18h').texto, '18h');   // um "quando" só
     });
@@ -171,13 +173,41 @@ describe('/lembrete', () => {
         await bot.responder('/lembrete -pv +1h primeiro');
 
         const [lista] = await bot.responder('/lembrete');
-        assert.match(lista, /^📅 \*Agenda\* \(2\)\n\n1\. ⏰ \*[^*]+\* — primeiro\n   → seu privado\n2\. ⏰ \*[^*]+\* — segundo\n   → 👥 Família\n\n💡 _📅 mensagem · ⏰ lembrete\. -edit <nº> muda, -pause\/-resume <nº> segura e solta, -rm <nº\|all> remove\._$/);
+        assert.match(lista, /^📅 \*Agenda\* \(2\)\n\n1\. ⏰ \*[^*]+\* — primeiro\n   → seu privado\n2\. ⏰ \*[^*]+\* — segundo\n   → 👥 Família\n\n💡 _📅 mensagem · ⏰ lembrete\. -edit <nº> muda, -pause\/-resume <nº\.\.\.> segura e solta, -rm <nº\.\.\.\|all> remove\._$/);
         assert.equal((await bot.responder('/lembrete -l'))[0], lista);
 
         assert.match((await bot.responder('/lembrete -rm 1'))[0], /🗑️ Removido: \*[^*]+\* — primeiro/);
         assert.match((await bot.responder('/lembrete -rm 5'))[0], /❌ Nº 5 não existe/);
         assert.deepEqual(await bot.responder('/lembrete -rm all'), ['🗑️ 1 removido.']);
         assert.match((await bot.responder('/lembrete'))[0], /^📅 Nada agendado\.\n💡 _Ex\.: \/cron sexta 18h .*\n\/lembrete 18:30 pagar o boleto_$/);
+    });
+
+    test('-pause/-resume com vários números; algum que não existe: nenhum muda', async () => {
+        for (const [i, t] of ['um', 'dois', 'três'].entries()) await bot.responder(`/lembrete +${i + 1}h ${t}`);
+
+        assert.equal((await bot.responder('/cron -pause 1 5'))[0].split('\n')[0], '❌ Nº 5 não existe. Nada foi pausado; veja a lista com /cron -l');
+        assert.deepEqual((await itens()).map(s => s.paused), [0, 0, 0]);
+
+        assert.match((await bot.responder('/cron -pause 1,3'))[0], /^⏸️ \*Pausado\* \(2\)\n• .* — um\n• .* — três\n💡/);
+        assert.deepEqual((await itens()).map(s => s.paused), [1, 0, 1]);
+
+        assert.match((await bot.responder('/cron -resume 3 1'))[0], /^▶️ \*Retomado\* \(2\)\n• .* — um\n• .* — três$/);
+        assert.deepEqual((await itens()).map(s => s.paused), [0, 0, 0]);
+    });
+
+    test('-rm com vários números (com espaço ou vírgula); algum que não existe: nenhum sai', async () => {
+        for (const [i, t] of ['um', 'dois', 'três', 'quatro', 'cinco'].entries()) await bot.responder(`/lembrete +${i + 1}h ${t}`);
+
+        const [erro] = await bot.responder('/cron -rm 2 9 7');
+        assert.equal(erro.split('\n')[0], '❌ Nº 7, 9 não existem. Nada foi removido; veja a lista com /cron -l');
+        assert.equal((await itens()).length, 5);
+
+        const [ok] = await bot.responder('/cron -rm 4 2,2');   // os números da lista de antes; repetido conta uma vez
+        assert.match(ok, /^🗑️ \*Removidos\* \(2\)\n• \*[^*]+\* — dois\n• \*[^*]+\* — quatro$/);
+        assert.deepEqual((await itens()).map(s => s.text), ['um', 'três', 'cinco']);
+
+        await bot.responder('/cron -rm 1 3');
+        assert.deepEqual((await itens()).map(s => s.text), ['três']);
     });
 
     test('erros: sem "quando", sem texto, já passou, longe demais, -repetir inválido, -to, limite', async () => {
