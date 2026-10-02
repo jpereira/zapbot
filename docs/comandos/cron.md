@@ -19,9 +19,9 @@ Faz algo na hora marcada. Tem dois modos, na mesma agenda:
 | `-repetir`, `-r` | `<diario\|semanal\|mensal>` | Repete no mesmo horário: todo dia, toda semana ou todo mês |
 | `-list`, `-l` | | Lista os lembretes e as mensagens (o mesmo que o comando sem nada) |
 | `-edit` | `<nº>` | Edita o item nº N: troca a hora, o texto e/ou o `-repetir`. Veja [Editar, pausar e retomar](#editar-pausar-e-retomar) |
-| `-pause` | `<nº\|all>` | Pausa o item nº N (ou todos): fica na lista, mas não sai |
-| `-resume` | `<nº\|all>` | Retoma um item pausado |
-| `-rm` | `<nº\|all>` | Remove o item nº N da lista (ou todos) |
+| `-pause` | `<nº...\|all>` | Pausa o item nº N, vários (`-pause 1 3` ou `1,3`) ou todos: fica na lista, mas não sai. Se algum nº não existe, nenhum é pausado |
+| `-resume` | `<nº...\|all>` | Retoma itens pausados: um, vários ou todos |
+| `-rm` | `<nº...\|all>` | Remove o item nº N da lista, vários de uma vez (`-rm 1 3 5` ou `-rm 1,3,5`) ou todos. Se algum nº não existe, nenhum sai |
 | `-test` | `<nº>` | Monta o item nº N agora, rodando os `{/comando}` do texto, e mostra aqui como ele sairia. Veja [Comandos no texto](#comandos-no-texto) |
 
 ```
@@ -44,6 +44,7 @@ Faz algo na hora marcada. Tem dois modos, na mesma agenda:
 /cron -edit 2 18:30             → o nº 2 passa para 18:30
 /cron -pause 3                  → segura o nº 3 (e /cron -resume 3 solta)
 /cron -rm 2                     → remove o nº 2
+/cron -rm 1 3 5                 → remove o 1, o 3 e o 5 (os números da lista de antes)
 ```
 
 ```
@@ -91,8 +92,8 @@ não mudam: para isso, remova (`-rm`) e crie de novo.
 /cron -edit 2 -r nao                      → deixa de repetir
 ```
 
-O `-pause <nº|all>` segura o item: ele continua na lista (com ⏸️), mas não sai.
-O `-resume <nº|all>` solta. Um item repetido que venceu enquanto estava pausado
+O `-pause <nº...|all>` segura o item (ou vários: `-pause 1 3`): ele continua na lista (com ⏸️), mas não sai.
+O `-resume <nº...|all>` solta. Um item repetido que venceu enquanto estava pausado
 pula para o próximo horário; um item único que já passou sai na hora (a
 resposta avisa).
 
