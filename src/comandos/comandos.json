@@ -139,7 +139,7 @@
                     "values": [
                         "[<hora>|off]"
                     ],
-                    "desc": "Sem valor: relatório das últimas 24 h (no ar, cache, /watch, apagadas, editadas, status apagados, ignoradas pelo /mudo, último backup; com o aviso desligado por show.alert.deleted, show.alert.edited ou show.alert.status, a linha diz como ligar) e, no fim, o envio diário. Com uma hora (Brasília: 06h, 6h30, 06:00 ou às 18h), envia todo dia nesse horário, no seu privado. Ex: /bot -s 06h. Com off, desliga o envio diário."
+                    "desc": "Sem valor: relatório das últimas 24 h (no ar, cache, /watch, apagadas, editadas, status apagados, avisos cortados pelo /mudo e quantos estão silenciados, último backup; com o aviso desligado por show.alert.deleted, show.alert.edited ou show.alert.status, a linha diz como ligar) e, no fim, o envio diário. Com uma hora (Brasília: 06h, 6h30, 06:00 ou às 18h), envia todo dia nesse horário, no seu privado. Ex: /bot -s 06h. Com off, desliga o envio diário."
                 },
                 {
                     "argv": [
