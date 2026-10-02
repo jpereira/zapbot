@@ -127,6 +127,25 @@ describe('/crypto (/bitcoio, /creptomoeda)', () => {
         assert.match(r, /🔥 \*Top:\*/);
     });
 
+    test('com argumentos: só as pedidas, na ordem pedida, ativadas ou não', async () => {
+        const [so] = await bot.responder('/crypto BTC');
+        assert.match(so, /₿ BTC\n/);
+        assert.doesNotMatch(so, /ETH|SOL|HYPE/);
+
+        precos.DOGE = 0.25;
+        const [duas] = await bot.responder('/crypto doge, eth btcusdt');
+        assert.match(duas, /Ð DOGE\n[\s\S]*Ξ ETH\n[\s\S]*₿ BTC\n/);
+        assert.doesNotMatch(duas, /SOL|HYPE/);
+    });
+
+    test('moeda não suportada: avisa e lista as suportadas (sem buscar preço)', async () => {
+        const suportadas = /💡 _Suportadas: BTC, ETH, SOL, HYPE, BNB, .*, UNI_$/;
+        const [r] = await bot.responder('/crypto FOO');
+        assert.match(r, /^❌ Moeda não suportada: FOO\n/);
+        assert.match(r, suportadas);
+        assert.match((await bot.responder('/crypto btc foo bar'))[0], /^❌ Moedas não suportadas: FOO, BAR\n/);
+    });
+
     test('-l lista as suportadas com * nas ativadas', async () => {
         const [r] = await bot.responder('/creptomoeda -l');
         assert.match(r, /\* ₿ BTC/);
