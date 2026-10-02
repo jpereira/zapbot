@@ -221,6 +221,38 @@ describe('/show (/s)', () => {
         }
     });
 
+    test('-q: busca pelo texto (sem acentos); no seu privado, em todos os chats; sem -N, as 5 mais recentes', async () => {
+        await mensagemApagada('manda o PIX');
+        await mensagemApagada('nada a ver');
+        await mensagemApagada('pix no trabalho', { chat: TRABALHO });
+
+        const r = await bot.responder('/show -q pix');
+        assert.equal(r[0], '♻️ *1 mensagem apagada* com "pix"');
+        assert.match(r[1], /"manda o PIX"/);
+
+        const todos = await bot.responder('/show -q pix', { chat: PRIVADO_DONO });
+        assert.equal(todos[0], '♻️ *2 mensagens apagadas* com "pix"\n💬 *Chats:* todos');
+
+        for (let i = 0; i < 6; i++) await mensagemApagada(`pix ${i}`);
+        assert.equal((await bot.responder('/show -q pix'))[0], '♻️ *5 mensagens apagadas* com "pix" _(as 5 mais recentes de 7; use -N para mais)_');
+        assert.equal((await bot.responder('/show -q pix -2')).length, 3);
+
+        assert.deepEqual(await bot.responder('/show -q boleto'), ['♻️ Nenhuma mensagem apagada com "boleto" neste chat.']);
+        assert.deepEqual(await bot.responder('/show -q boleto', { chat: PRIVADO_DONO }), ['♻️ Nenhuma mensagem apagada com "boleto" em nenhum chat.']);
+    });
+
+    test('-e -q: busca no texto de antes e no de depois; -q não combina com -f e -l', async () => {
+        await mensagemEditada('reunião às 10h', 'reuniao às 11h');
+        await mensagemEditada('oi', 'olá');
+
+        const r = await bot.responder('/show -e -q REUNIAO');
+        assert.equal(r[0], '✏️ *1 mensagem editada* com "REUNIAO"');
+        assert.equal((await bot.responder('/show -e -q olá'))[0], '✏️ *1 mensagem editada* com "olá"');
+
+        assert.match((await bot.responder('/show -q x -f'))[0], /❌ O -q não combina com o -f nem com o -l/);
+        assert.match((await bot.responder('/show -q'))[0], /❌ Informe o que buscar/);
+    });
+
     test('-pv manda o resumo e as mensagens no seu privado', async () => {
         await mensagemApagada('privado');
         const r = await bot.executar('/show -pv');
