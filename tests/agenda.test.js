@@ -37,18 +37,28 @@ describe('datas (util/quando.js)', () => {
         return r && `${fmtQuando(r.ms, AGORA)} (${r.usadas})`;
     };
 
-    test('daqui a tanto tempo', () => {
+    test('daqui a tanto tempo: 30m, 1d, 1h30m, e +2h, em 2h, daqui (a) 2h', () => {
         assert.equal(quando('30m'), 'qui 01/10 09:30 (1)');
         assert.equal(quando('1h30m'), 'qui 01/10 10:30 (1)');
         assert.equal(quando('2d'), 'sáb 03/10 09:00 (1)');
+        assert.equal(quando('+2h'), 'qui 01/10 11:00 (1)');
+        assert.equal(quando('+18h'), 'sex 02/10 03:00 (1)');
+        assert.equal(quando('em 2h texto'), 'qui 01/10 11:00 (2)');
+        assert.equal(quando('daqui 30m'), 'qui 01/10 09:30 (2)');
+        assert.equal(quando('daqui a 1d'), 'sex 02/10 09:00 (3)');
+        assert.equal(quando('+banana'), null);
+        assert.equal(quando('em casa'), null);
     });
 
-    test('hora: hoje, ou amanhã se já passou; "18h" sozinho é duração', () => {
+    test('hora: hoje, ou amanhã se já passou; "6h" e "07h" sozinhos são horário', () => {
         assert.equal(quando('18:30'), 'qui 01/10 18:30 (1)');
         assert.equal(quando('às 18h'), 'qui 01/10 18:00 (2)');
         assert.equal(quando('as 8h15'), 'sex 02/10 08:15 (2)');
-        assert.equal(quando('18h'), 'sex 02/10 03:00 (1)');      // daqui a 18 horas
+        assert.equal(quando('18h'), 'qui 01/10 18:00 (1)');
+        assert.equal(quando('6h'), 'sex 02/10 06:00 (1)');       // já passou hoje: amanhã
+        assert.equal(quando('07h'), 'sex 02/10 07:00 (1)');
         assert.equal(quando('25:00'), null);
+        assert.equal(quando('25h'), 'sex 02/10 10:00 (1)');      // não é horário: daqui a 25 horas
     });
 
     test('hoje, amanhã e dias da semana (sem hora: 9h)', () => {
@@ -207,6 +217,16 @@ describe('/cron (/agenda)', () => {
         const [natal, aluguel] = await itens();
         assert.deepEqual([natal.chat_id, natal.repeat], [GRUPO, null]);
         assert.deepEqual([aluguel.chat_id, aluguel.chat_name, aluguel.repeat, aluguel.day_of_month], [OUTRO.jid, 'Fulano', 'mensal', 5]);
+    });
+
+    test('"6h" com -repetir é o horário (06:00 todo dia); "+6h" é daqui a 6 horas', async () => {
+        assert.match((await bot.responder('/cron 6h -repetir diario -to L200 Bom dia!'))[0],
+            /^📅 \*Mensagem agendada\* para \*\w{3} \d\d\/\d\d 06:00\* 🔁 todo dia em 👥 Grupo sobre L200\./);
+        assert.match((await bot.responder('/cron 07h -to L200 Bom dia!'))[0], /para \*\w{3} \d\d\/\d\d 07:00\*/);
+
+        await bot.responder('/cron +6h -to L200 Daqui a pouco');
+        const [, , daqui] = await itens();
+        assert.ok(Math.abs(daqui.due_at - (Date.now() + 6 * HORA)) < 60_000);
     });
 
     test('texto começando com "/" é enviado, mas nunca roda como comando', async () => {
