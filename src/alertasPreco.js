@@ -95,7 +95,7 @@ function descreverAlerta(kind, a) {
         (destino ? ` → ${descreverDestino(destino)}` : '');
 }
 
-async function tratarAlertaDePreco(kind, { msg, args }) {
+async function tratarAlertaDePreco(kind, { msg, args, admin }) {
     const t = ALERTA_TIPOS[kind];
 
     /*
@@ -105,9 +105,9 @@ async function tratarAlertaDePreco(kind, { msg, args }) {
     const { destino: destinoTexto, informado: comDestino, resto } = extrairDestino(args);
     const opts = GetOptFromCommand(resto, findCommand(t.cmd));
 
-    // Os avisos usam a sua conta (no seu privado ou no chat do -to): só o dono cria, lista e remove
-    if (!msg.fromMe) {
-        await msg.reply('⛔ Apenas o dono do bot pode usar os alertas.');
+    // Os avisos usam a sua conta (no seu privado ou no chat do -to): só o dono (e os admins do bot.admins)
+    if (!admin) {
+        await msg.reply('⛔ Apenas o dono do bot (ou um admin) pode usar os alertas.');
         return;
     }
 

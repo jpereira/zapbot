@@ -226,13 +226,13 @@ async function listarCache({ msg, opts, chatId }) {
  * Remove do cache as mensagens do tipo (as apagadas levam junto os arquivos de mídia):
  *   - num chat qualquer      → só as DESTE chat;
  *   - no seu próprio privado → as de TODOS os chats.
- * Destrutivo: só o dono do bot executa, mesmo que o comando seja liberado no config.
+ * Destrutivo: só o dono do bot (ou um admin do bot.admins) executa, mesmo que o comando seja liberado no config.
  */
-async function limparDoCache({ msg, chatId, tipo, alvo = null }) {
+async function limparDoCache({ msg, chatId, tipo, alvo = null, admin = false }) {
     const t = TIPOS_CACHE[tipo];
 
-    if (!msg.fromMe) {
-        await msg.reply(`⛔ Só o dono do bot pode usar ${t.cmd} -flush.`);
+    if (!admin) {
+        await msg.reply(`⛔ Só o dono do bot (ou um admin) pode usar ${t.cmd} -flush.`);
         return;
     }
 
@@ -347,7 +347,7 @@ const REENVIO_CACHE = {
     }
 };
 
-async function cmdShow({ msg, opts, chatId }) {
+async function cmdShow({ msg, opts, chatId, admin }) {
     // -e escolhe as editadas; -d (ou nada) as apagadas
     if (opts.opt.deleted && opts.opt.edited) {
         await msg.reply('❌ Use -d (apagadas) ou -e (editadas), não os dois.');
@@ -380,7 +380,7 @@ async function cmdShow({ msg, opts, chatId }) {
     }
 
     if (opts.opt.flush) {
-        await limparDoCache({ msg, chatId, tipo, alvo });
+        await limparDoCache({ msg, chatId, tipo, alvo, admin });
         return;
     }
 

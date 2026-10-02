@@ -6,7 +6,7 @@ const { client } = require('../cliente');
 const { idsDoChatAtual } = require('../contatos');
 const { dbPronto } = require('../db');
 const { printInfo } = require('../log');
-const { SETTINGS_SCHEMA, getSetting, setSetting } = require('../settings');
+const { SETTINGS_SCHEMA, getSetting, setSetting, validarSetting } = require('../settings');
 
 /*
  * /set
@@ -14,7 +14,10 @@ const { SETTINGS_SCHEMA, getSetting, setSetting } = require('../settings');
  *   /set <chave>          → mostra valor, padrão e descrição
  *   /set <trecho|/regex/> → lista as chaves que casam (ex.: /set alerta)
  *   /set <chave> <valor>  → altera (lista: itens separados por vírgula ou espaço)
+ *   /set -append <chave> <valor> → numa lista, acrescenta itens (-a)
+ *   /set -rem <chave> <valor>    → numa lista, tira itens
  *   /set -reset <chave>   → volta ao padrão
+ * O bot.admins (quem mais usa os comandos admin) só o dono altera.
  *
  * As variáveis do config/.env que o bot lê aparecem junto, só para leitura
  * (mudam no arquivo, com o container recriado), e só no seu privado: nos
@@ -96,8 +99,76 @@ function formatarValorSetting(value, sep = ', ', secret = false) {
     return String(value);
 }
 
+// O valor depois da chave, como foi digitado (com as quebras de linha e sem as aspas de fora)
+const valorCru = (args, key) => args.slice(args.indexOf(key) + key.length).trim().replace(/^(["'])([\s\S]*)\1$/, '$2');
+
+// Chaves que só o dono altera, mesmo que um admin extra use o /set
+const SO_O_DONO = ['bot.admins'];
+
+/*
+ * -append / -rem <chave> <valor>: acrescenta ou tira itens de uma lista. Os
+ * itens passam pela mesma validação do /set (ex.: um número vira só dígitos),
+ * então "+55 21 9..." tira o "5521...".
+ */
+async function mudarLista(msg, { key, bruto, acrescentar }) {
+    const schema = SETTINGS_SCHEMA[key];
+    const opcao = acrescentar ? '-append' : '-rem';
+
+    if (!schema) {
+        await msg.reply(`❌ Setting desconhecido: ${key ?? ''}\n💡 _Veja todos com /set_`);
+        return;
+    }
+    if (schema.type !== 'list') {
+        await msg.reply(`❌ *${key}* não é uma lista: o ${opcao} vale só para chaves com várias entradas.\n` +
+            `💡 _Troque o valor com /set ${key} <valor> ou volte ao padrão com /set -reset ${key} (-r)._`);
+        return;
+    }
+    if (!bruto) {
+        await msg.reply(`❌ Informe o que ${acrescentar ? 'acrescentar a' : 'tirar de'} *${key}*: /set ${opcao} ${key} <valor>`);
+        return;
+    }
+
+    let itens;
+    try {
+        itens = validarSetting(key, bruto);
+    } catch (e) {
+        await msg.reply(`❌ Valor inválido para *${key}*: ${e.message}`);
+        return;
+    }
+
+    const atual = getSetting(key);
+    const mudam = acrescentar ? itens.filter(i => !atual.includes(i)) : itens.filter(i => atual.includes(i));
+
+    if (!mudam.length) {
+        await msg.reply(acrescentar
+            ? `ℹ️ *${key}* já tem ${itens.join(', ')}.`
+            : `❌ *${key}* não tem ${itens.join(', ')}.\n💡 _Veja os itens com /set ${key}_`);
+        return;
+    }
+
+    const valor = await setSetting(key, acrescentar ? [...atual, ...mudam] : atual.filter(i => !mudam.includes(i)));
+    const sep = schema.separator ? ' | ' : ', ';
+    printInfo(`Setting '${key}' ${acrescentar ? '+' : '-'} ${schema.secret ? '(segredo)' : JSON.stringify(mudam)}`);
+    await msg.reply(`✅ *${key}* ${acrescentar ? '+' : '−'} ${formatarValorSetting(mudam, sep, schema.secret)}\n` +
+        `= ${formatarValorSetting(valor, sep, schema.secret)}`);
+}
+
 async function cmdSet({ msg, opts, args, chatId }) {
     await dbPronto;
+
+    // A chave da opção (-reset, -append, -rem) ou a 1ª palavra
+    const chaveAlvo = opts.opt.reset ?? opts.opt.append ?? opts.opt.rem ?? opts.argv[0];
+    if (SO_O_DONO.includes(chaveAlvo) && !msg.fromMe && (opts.opt.reset || opts.opt.append || opts.opt.rem || opts.argv.length > 1)) {
+        await msg.reply(`⛔ Só o dono do bot altera o *${chaveAlvo}*.`);
+        return;
+    }
+
+    if (opts.given.has('append') || opts.given.has('rem')) {
+        const acrescentar = opts.given.has('append');
+        const key = acrescentar ? opts.opt.append : opts.opt.rem;
+        await mudarLista(msg, { key, bruto: key ? valorCru(args, key) : '', acrescentar });
+        return;
+    }
 
     if (opts.opt.reset !== null) {
         const key = opts.opt.reset;
@@ -175,9 +246,7 @@ async function cmdSet({ msg, opts, args, chatId }) {
 
     // Com separator (ex.: watch.rules, uma por linha) usa o texto cru: o tokenizador
     // perderia as quebras de linha e as aspas de dentro das regras
-    const bruto = schema.separator
-        ? args.slice(args.indexOf(key) + key.length).trim().replace(/^(["'])([\s\S]*)\1$/, '$2')
-        : resto.join(' ');
+    const bruto = schema.separator ? valorCru(args, key) : resto.join(' ');
 
     try {
         const valor = await setSetting(key, bruto);

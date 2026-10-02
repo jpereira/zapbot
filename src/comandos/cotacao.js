@@ -32,9 +32,9 @@ async function cmdCotacao(ctx) {
     }
 
     if (opts.given.has('add') || opts.given.has('del')) {
-        // Mexe na configuração global: só o dono do bot
-        if (!msg.fromMe) {
-            await msg.reply('⛔ Apenas o dono do bot pode alterar as moedas.');
+        // Mexe na configuração global: só o dono do bot (e os admins do bot.admins)
+        if (!ctx.admin) {
+            await msg.reply('⛔ Apenas o dono do bot (ou um admin) pode alterar as moedas.');
             return;
         }
 

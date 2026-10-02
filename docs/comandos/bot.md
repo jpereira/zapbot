@@ -16,7 +16,7 @@ sobrevivem a reinícios:
 | *(nenhuma)* | Mostra o estado dos dois |
 | `-on` | Liga o bot |
 | `-off` | Desliga o bot |
-| `+admin` | Liga o modo admin |
+| `+admin` | Liga o modo admin: só você (e os admins do [`bot.admins`](#admins-extras)) usa comandos |
 | `-admin` | Desliga o modo admin (cada comando volta a seguir a coluna *Admin* da [tabela de comandos](index.md#resumo)) |
 | `-status`, `-s` | Relatório do bot e o envio diário dele (`[<hora>\|off]`). Não combina com as outras. Veja [Status do bot](#status-do-bot) |
 | `-info`, `-i` | Versões do bot e dos programas que ele usa, e o sistema. Não combina com as outras. Veja [Informações do sistema](#informações-do-sistema) |
@@ -59,6 +59,32 @@ Detalhes:
   com o [debug](debug.md) ligado).
 - "Você" é a conta pareada ao bot, de qualquer aparelho. Para desligar só
   alguns comandos, para todos, use o setting `commands.disabled`.
+
+## Admins extras
+
+Outras pessoas podem usar os comandos **admin** (os marcados com ✅ na
+[tabela de comandos](index.md#resumo)), e também os comandos no modo admin, se
+o número delas estiver no setting `bot.admins`:
+
+```
+/set -a bot.admins +5521999999999   → acrescenta
+/set -rem bot.admins 5521999999999  → tira
+/set bot.admins                     → a lista
+```
+
+- Só **você** (o dono, a conta pareada) altera o `bot.admins`: um admin extra
+  não consegue se dar (nem dar a outros) esse acesso.
+- O número é comparado com o telefone de quem mandou a mensagem. Se o WhatsApp
+  só informar o LID (o id interno) da pessoa e o bot não conseguir o telefone,
+  ela não é reconhecida como admin.
+- Os comandos de um admin extra agem como os seus: os avisos que vão "para o
+  seu privado" (alertas, `-pv`, `/watch`...) vão para o **seu** privado, não
+  para o dele. As checagens internas que eram só do dono (moedas do `/cotacao`
+  e do `/crypto`, alertas de preço, `/show -f`) também valem para os admins.
+- Numa lista de escolha (vários contatos com o nome), só quem deu o comando
+  responde com o nº.
+- Dê esse acesso só a quem você confia: um admin pode, por exemplo, apagar o
+  cache (`/cache -a`) ou restaurar um backup.
 
 ## Status do bot
 
