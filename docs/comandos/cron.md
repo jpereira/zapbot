@@ -112,17 +112,58 @@ vez:
 /cron 12h -to /Grupo L200/ {/meme}       (só mídia: sai a imagem, sem texto)
 ```
 
+Vários comandos e vários destinos no mesmo item (um item por destino, e cada
+um roda os comandos na hora dele):
+
+```
+/cron 06:00 -r diario -to /Krishina Da Silva/ -to /Grupo da Faculdade/ ⏰ Status da DeFi! {/defi -s} Preço do BTC! {/crypto BTC} Preço do Dólar! {/cotacao USD}
+/cron 07:30 -r diario -to /Família/ Bom dia! ☀️ {/tempo Recife} Cripto: {/crypto BTC ETH} Câmbio: {/cotacao USD EUR}
+/cron seg 08:00 -r semanal -to /Trabalho/ -to @Fulano Da Silva Resumo da semana: {/news -hack 5} CVEs: {/cve 3}
+/lembrete -pv 23:00 -r diario Fechamento do dia: {/crypto} {/defi -s}
+```
+
+Cada resposta de várias linhas vira um parágrafo, e o texto em volta fica
+entre elas. O primeiro exemplo chega assim, todo dia às 06:00, nos dois chats:
+
+```
+⏰ Status da DeFi!
+
+🌊 Orca · SOL/cbBTC · taxa 0.16%
+📍 7xKp…3mQa · ✅ dentro da faixa
+
+💰 Saldo: $2,476.30
+   ...
+
+Preço do BTC!
+
+🚀 MERCADO CRIPTO
+₿ BTC
+    💰 $86,906.96  🟢 +3.81%
+    ...
+
+Preço do Dólar!
+
+💱 COTAÇÕES (em reais)
+🇺🇸 USD/BRL (Dólar)
+   💰 R$ 5,2000  🟢 +0,50%
+   ...
+```
+
 - O comando roda como se você o digitasse no chat de destino, com o resultado
   daquele momento: num item repetido, cada envio traz um valor novo.
 - A resposta em texto entra no lugar do `{...}`. Uma de várias linhas (o
   `/crypto`, o `/tempo`...) vira um parágrafo, com uma linha em branco antes e
   depois, para não colar no texto em volta; uma de uma linha só fica na frase.
-  Mídias (`/meme`, `/giphy`, `/pixelart`) saem logo depois da mensagem.
-- Só os comandos de consulta rodam aí: `/cotacao`, `/crypto`, `/cve`, `/giphy`,
-  `/joke`, `/kernel`, `/meme`, `/news`, `/pixelart`, `/stats`, `/tempo`,
-  `/uptime` e `/version` (no `comandos.json`, os com `"cron": true`). As opções
-  que mudam algo também não: o `-add`, o `-del` e o `-alerta` do `/crypto` e do
-  `/cotacao`, e o `-pv` do `/stats`.
+  Um comando que responde mais de uma vez (o `/defi -s`, uma por posição) tem
+  as respostas separadas por uma linha em branco. Mídias (`/meme`, `/giphy`,
+  `/pixelart`) saem logo depois da mensagem.
+- Só os comandos de consulta rodam aí: `/cotacao`, `/crypto`, `/cve`, `/defi`,
+  `/giphy`, `/joke`, `/kernel`, `/meme`, `/news`, `/pixelart`, `/stats`,
+  `/tempo`, `/uptime` e `/version` (no `comandos.json`, os com `"cron": true`).
+  As opções que mudam algo também não: o `-add`, o `-del` e o `-alerta` do
+  `/crypto` e do `/cotacao`; o `-orca`, o `-position`, o `-nft`, o `-pool`, o
+  `-rm`, o `-alerta` e o `-to` do `/defi` (rodam o `-show` e o `-list`); e o
+  `-pv` do `/stats`.
 - O comando é conferido ao criar (e no `-edit`): um que não existe ou que não
   roda no `/cron` dá erro na hora, não no envio.
 - Se o comando falhar na hora do envio, a mensagem sai assim mesmo, com
