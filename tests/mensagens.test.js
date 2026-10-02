@@ -148,7 +148,7 @@ describe('permissões', () => {
 
     test('bot.admins: o admin extra usa os comandos admin, também no modo admin e nas checagens do dono', async () => {
         assert.deepEqual(await bot.responder('/ping', { de: OUTRO.jid }), []);
-        assert.deepEqual(await bot.responder('/set -a bot.admins +5521911111111'), ['✅ *bot.admins* + 5521911111111\n= 5521911111111']);
+        assert.deepEqual(await bot.responder('/set -a bot.admins +5521911111111'), ['✅ *bot.admins* + 5521911111111 (Fulano)\n= 5521911111111 (Fulano)']);
 
         assert.deepEqual(await bot.responder('/ping', { de: OUTRO.jid }), ['pong']);
         await bot.setSetting('bot.adminMode', true);
@@ -160,6 +160,35 @@ describe('permissões', () => {
         const CICLANO = '5521922222222@c.us';
         bot.criarContato(CICLANO, 'Ciclano');
         assert.deepEqual(await bot.responder('/ping', { de: CICLANO }), []);
+    });
+
+    test('bot.admins pelo nome do contato: guarda o telefone, mostra o nome; vários: a lista', async () => {
+        const JORGE = '5521933333333@c.us';
+        bot.criarContato(JORGE, 'Jorge Pereira');
+        bot.criarContato('5511944444444@c.us', 'Jorge Silva');
+
+        assert.deepEqual(await bot.responder('/set -a bot.admins /Jorge Pereira/ "Fulano"'),
+            ['✅ *bot.admins* + 5521933333333 (Jorge Pereira), 5521911111111 (Fulano)\n= 5521933333333 (Jorge Pereira), 5521911111111 (Fulano)']);
+        assert.deepEqual(bot.getSetting('bot.admins'), ['5521933333333', '5521911111111']);
+        assert.match((await bot.responder('/set bot.admins'))[0], /\*Valor:\* \n1\. 5521933333333 \(Jorge Pereira\)\n2\. 5521911111111 \(Fulano\)\n/);
+
+        assert.deepEqual(await bot.responder('/set -rem bot.admins /Jorge Pereira/'), ['✅ *bot.admins* − 5521933333333 (Jorge Pereira)\n= 5521911111111 (Fulano)']);
+
+        // Vários com o nome: a lista; e o "<chave> <valor>" também aceita nomes
+        const r = await bot.responderEscolhendo('/set bot.admins jorge', 2);
+        assert.match(r[0], /^🔎 "jorge" corresponde a 2 contatos:/);
+        assert.equal(r.at(-1), '✅ *bot.admins* = 5511944444444 (Jorge Silva)');
+
+        assert.deepEqual(await bot.responder('/set bot.admins ""'), ['✅ *bot.admins* = (vazio)']);
+    });
+
+    test('bot.admins pelo nome: grupo, e-mail e contato sem telefone são recusados', async () => {
+        assert.match((await bot.responder('/set -a bot.admins /Família/'))[0], /❌ Família é um grupo: o \*bot\.admins\* é de pessoas/);
+        assert.match((await bot.responder('/set -a bot.admins email'))[0], /❌ O \*bot\.admins\* é de pessoas: informe um contato ou um número, não um e-mail/);
+        bot.criarContato('267550843736089@lid', 'Sem Telefone');
+        assert.match((await bot.responder('/set -a bot.admins /Sem Telefone/'))[0], /❌ Não sei o telefone de Sem Telefone .*use o número/);
+        assert.match((await bot.responder('/set -a bot.admins xyz'))[0], /❌ Nenhum contato ou grupo com "xyz"/);
+        assert.deepEqual(bot.getSetting('bot.admins'), []);
     });
 
     test('bot.admins: só o dono altera (nem o próprio admin extra)', async () => {
