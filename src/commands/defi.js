@@ -9,7 +9,7 @@ const { isAddressEvm } = require('../defi/hyperevm');
 const { positionDetails, validatePosition } = require('../defi/orca');
 const { walletPositions } = require('../defi/prjx');
 const { isEnderecoSolana: isAddressSolana } = require('../defi/solana');
-const { describeDestination, extractDestination, resolverOrChoose } = require('../destinations');
+const { describeDestinations, destinationsSaved, extractDestinations, recipientsDe, resolverDestinations } = require('../destinations');
 const { printError } = require('../log');
 const { GetOptFromCommand } = require('../options');
 const { getSetting } = require('../settings');
@@ -29,7 +29,7 @@ const { formatData, plural } = require('../util/format');
  * /defi -alerta                         → lists the alerts
  * /defi -alerta <no.|all> [-to <dest>]   → notifies when the position leaves the range and when
  * returns: in your private chat or in -to (email, emails,
- * contact, group or number)
+ * contact, group or number; repeat for several)
  * /defi -alerta <no.|all> -taxas <US$>   → and when the fees to collect pass the value
  *   /defi -alerta -rm <nº|all>            → desliga
  */
@@ -296,14 +296,16 @@ async function showAlt(msg, positions) {
  * Where the position notice goes: "seu privado", "👥 Grupo", "📧 a@b.com".
  */
 function alertDescribeDestination(p) {
-    const destination = alertDestination(p);
-    return destination ? describeDestination(destination) : 'seu privado';
+    const destinations = alertDestinations(p);
+    return destinations.length ? describeDestinations(destinations) : 'seu privado';
 }
 
-// The destination stored on the position (the -to one); null: your private chat
-function alertDestination(p) {
-    if (p.alert_email) return { email: p.alert_email, nome: p.alert_email, grupo: false };
-    return p.alert_dest_id ? { id: p.alert_dest_id, nome: p.alert_dest_name, grupo: Boolean(p.alert_dest_is_group) } : null;
+// The destinations stored on the position (the -to ones); []: your private chat
+function alertDestinations(p) {
+    const single = p.alert_email
+        ? { email: p.alert_email, nome: p.alert_email, grupo: false }
+        : p.alert_dest_id ? { id: p.alert_dest_id, nome: p.alert_dest_name, grupo: Boolean(p.alert_dest_is_group) } : null;
+    return destinationsSaved(p.alert_recipients, single);
 }
 
 const RANGE_STATE = { 1: '✅ na faixa', 0: '⚠️ fora da faixa' };
@@ -324,7 +326,7 @@ async function listAlerts(msg, positions) {
         `\n\n💡 _Verificados a cada ${eachMinutes()}. Desligue com /defi -alerta -rm <nº|all>._`);
 }
 
-async function handleAlert(msg, opts, positions, { comDestino: withDestination, destinoTexto: destinationText }) {
+async function handleAlert(msg, opts, positions, { comDestino: withDestination, destinosTexto: destinationsText }) {
     const o = opts.opt;
     const byNumber = (v) => (/^\d+$/.test(v) ? positions[Number(v) - 1] : null);
 
@@ -340,7 +342,8 @@ async function handleAlert(msg, opts, positions, { comDestino: withDestination, 
 
         for (const p of targets) {
             await dbRun(`UPDATE defi_positions SET alert = 0, alert_dest_id = NULL, alert_dest_name = NULL,
-                alert_dest_is_group = 0, alert_email = NULL, alert_fees = NULL, fees_notified = 0, in_range = NULL WHERE id = ?`, [p.id]);
+                alert_dest_is_group = 0, alert_email = NULL, alert_recipients = NULL, alert_fees = NULL, fees_notified = 0,
+                in_range = NULL WHERE id = ?`, [p.id]);
         }
         await msg.reply(rm === 'all'
             ? `🔕 ${plural(targets.length, 'alerta desligado', 'alertas desligados')}.`
@@ -378,12 +381,14 @@ async function handleAlert(msg, opts, positions, { comDestino: withDestination, 
         }
     }
 
-    let destination = {};
+    // Email or chat (several -to: notifies all); several contacts or groups with the name,
+    // waits for you to choose from the list
+    let destinations = [];
     if (withDestination) {
-        // Email or chat; several contacts or groups with the name: waits for you to choose from the list
-        destination = await resolverOrChoose(msg, destinationText, { aceitaEmail: true });
-        if (!destination) return;
+        destinations = await resolverDestinations(msg, destinationsText, { aceitaEmail: true });
+        if (!destinations) return;
     }
+    const [destination = {}] = destinations;
 
     // The current state becomes the reference: the notice goes out when the position goes from inside to outside
     const linesAlt = [];
@@ -397,17 +402,17 @@ async function handleAlert(msg, opts, positions, { comDestino: withDestination, 
             });
 
         await dbRun(`UPDATE defi_positions SET alert = 1, alert_dest_id = ?, alert_dest_name = ?,
-            alert_dest_is_group = ?, alert_email = ?, alert_fees = ?, fees_notified = 0, in_range = ? WHERE id = ?`,
-        [destination.id ?? null, destination.email ? null : destination.nome ?? null, destination.grupo ? 1 : 0, destination.email ?? null, limitAlt ?? null, inRange, p.id]);
+            alert_dest_is_group = ?, alert_email = ?, alert_recipients = ?, alert_fees = ?, fees_notified = 0, in_range = ?
+            WHERE id = ?`,
+        [destination.id ?? null, destination.email ? null : destination.nome ?? null, destination.grupo ? 1 : 0, destination.email ?? null,
+            recipientsDe(destinations), limitAlt ?? null, inRange, p.id]);
 
         const updated = { ...p, in_range: inRange, alert_fees: limitAlt };
         linesAlt.push(`${positions.indexOf(p) + 1}. ${describe(p)} · ${rangeState(updated)}${ratesLimit(updated)}` +
             (inRange === 0 ? ' _(avisa quando voltar para a faixa)_' : ''));
     }
 
-    const whereWarn = alertDescribeDestination({
-        alert_email: destination.email, alert_dest_id: destination.id, alert_dest_name: destination.nome, alert_dest_is_group: destination.grupo
-    });
+    const whereWarn = destinations.length ? describeDestinations(destinations) : 'seu privado';
 
     await msg.reply(`🔔 *Alerta do /defi ligado* (${chosen.length})\n\n${linesAlt.join('\n')}\n\n` +
         `📣 Aviso: ${whereWarn}, quando a posição sair da faixa e quando voltar` +
@@ -490,7 +495,7 @@ async function cmdDefi({ msg, opts: commandOpts, args, chatId }) {
      * -to accepts spaces (/Jorge Pereira/), which the option parser
      * would split: goes out of the text first, and the rest is read again.
      */
-    const { destino: destinationText, informado: withDestination, resto: rest } = extractDestination(args);
+    const { destinos: destinationsText, informado: withDestination, resto: rest } = extractDestinations(args);
     const opts = withDestination ? GetOptFromCommand(rest, findCommand('/defi')) : commandOpts;
     const o = opts.opt;
 
@@ -505,14 +510,14 @@ async function cmdDefi({ msg, opts: commandOpts, args, chatId }) {
     const protocol = protocolAlt2(word);
 
     if (opts.given.has('address')) {
-        await registerWithAlert(msg, opts, protocol, { comDestino: withDestination, destinoTexto: destinationText });
+        await registerWithAlert(msg, opts, protocol, { comDestino: withDestination, destinosTexto: destinationsText });
         return;
     }
 
     const positions = await dbAll('SELECT * FROM defi_positions ORDER BY id');
 
     if (opts.given.has('alerta')) {
-        await handleAlert(msg, opts, positions, { comDestino: withDestination, destinoTexto: destinationText });
+        await handleAlert(msg, opts, positions, { comDestino: withDestination, destinosTexto: destinationsText });
         return;
     }
 
@@ -547,8 +552,8 @@ module.exports = {
     cmdDefi,
     describe,
     alertDescribeDestination,
+    alertDestinations,
     fmtUsd,
-    alertDestination,
     readRegistration,
     positionText,
     positionPrjxText

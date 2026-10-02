@@ -46,7 +46,7 @@ Para o Project X:
 | `-rm` | `<nº...\|all>` | Remove o cadastro nº N, vários (`-rm 1 3` ou `-rm 1,3`) ou todos; se algum nº não existe, nenhum sai. Junto com `-alerta`: só desliga o alerta da nº N (ou de todas) |
 | `-alerta`, `-a` | `[nº\|all\|valor]` | Sem nº: lista os alertas. Com nº (ou `all`): avisa quando a posição sair da faixa e quando voltar. No cadastro (com `-address`), liga o alerta da posição nova, no seu privado (ou no `-to`); o valor é o limite das taxas, como o `-taxas` (`-alerta 2000`). Veja [Alerta de saída da faixa](#alerta-de-saída-da-faixa) |
 | `-taxas` | `<valor\|off>` | Junto com `-alerta`: avisa também quando as taxas a coletar passarem do valor, em dólar (ex.: `-taxas 50`). Avisa uma vez e de novo depois de você coletar; `off` tira |
-| `-to` | `<destino>` | Junto com `-alerta`: para onde vai o aviso. Um contato (`/Jorge Pereira/`), uma menção (`@Fulano Da Silva`), um grupo (`/Grupo L200/`), um número (`+5521999999999`) ou e-mail (`email` é o `QRCODE_EMAIL_SMTP_TO`) ([Destinos](index.md#destinos-contato-grupo-número-ou-e-mail)). Sem ele, o seu privado |
+| `-to` | `<destino>` | Junto com `-alerta`: para onde vai o aviso. Um contato (`/Jorge Pereira/`), uma menção (`@Fulano Da Silva`), um grupo (`/Grupo L200/`), um número (`+5521999999999`) ou e-mail (`email` é o `QRCODE_EMAIL_SMTP_TO`) ([Destinos](index.md#destinos-contato-grupo-número-ou-e-mail)). Repita para vários: o aviso sai em todos. Sem ele, o seu privado |
 | `-address` | `<endereço>` | Cadastra: com `orca`, o endereço da posição da Orca; com `prjx`, a carteira do Project X (`0x` e 40 caracteres hexadecimais) |
 | `-pool` | `<endereço>` | Com `orca -address`: a pool. Opcional; se vier, o bot confere se bate |
 | `-nft` | `<mint>` | Com `orca -address`: o NFT da posição. Opcional; se vier, o bot confere se bate |
@@ -163,6 +163,7 @@ minutos (setting `defi.alerta.intervalMin`) e avisa:
 /defi -a 1 -to /Grupo L200/      → no grupo
 /defi -a 1 -to +5521999999999    → no privado do número
 /defi -a 1 -to @Fulano Da Silva  → num grupo, mencionando a pessoa
+/defi -a 1 -to /Grupo L200/ -to email  → no grupo e por e-mail
 /defi -a 1 -taxas 50             → e quando as taxas a coletar passarem de $50
 /defi -a 1 -taxas off            → tira o aviso das taxas (o da faixa continua)
 /defi orca -address <endereço> -alerta 2000   → no cadastro: liga já, com o limite de $2000
@@ -178,6 +179,8 @@ O `-to` aceita:
 - Um contato, um grupo ou um número, como nos outros comandos: o contato é
   buscado primeiro; se o nome servir para mais de um, o bot lista e você responde com
   o nº ([Destinos](index.md#destinos-contato-grupo-número-ou-e-mail)).
+- Vários `-to`, para avisar em todos (o mesmo repetido conta uma vez). Se o envio
+  falhar num, os outros recebem assim mesmo.
 
 Ligar de novo uma posição troca o destino (e mantém o `-taxas`, se você não
 mandar outro). Ao ligar, o bot já lê a posição: se ela estiver fora da faixa
