@@ -72,13 +72,25 @@ async function cmdCrypto(ctx) {
         return;
     }
 
-    if (!ativas.length) {
+    // Sem argumentos: as moedas ativadas; com argumentos (BTC, "btc eth", "BTC,ETH"): só as pedidas, ativadas ou não
+    const pedidas = opts.argv.length
+        ? [...new Set(opts.argv.join(' ').split(/[\s,]+/).filter(Boolean).map(token))]
+        : ativas;
+    const invalidas = pedidas.filter(sym => !CRYPTO_SUPPORTED[sym]);
+
+    if (invalidas.length) {
+        await msg.reply(`❌ ${invalidas.length === 1 ? 'Moeda não suportada' : 'Moedas não suportadas'}: ${invalidas.join(', ')}\n` +
+            `💡 _Suportadas: ${Object.keys(CRYPTO_SUPPORTED).join(', ')}_`);
+        return;
+    }
+
+    if (!pedidas.length) {
         await msg.reply('ℹ️ Nenhuma moeda ativada.\n💡 _Adicione com /crypto -a <TOKEN>_');
         return;
     }
 
     try {
-        const symbols = ativas.map(c => `${c}USDT`);
+        const symbols = pedidas.map(c => `${c}USDT`);
 
         const { data } = await axios.get('https://api.binance.com/api/v3/ticker/24hr', {
             params: { symbols: JSON.stringify(symbols) },
@@ -100,7 +112,7 @@ async function cmdCrypto(ctx) {
             return `${n >= 0 ? '🟢' : '🔴'} ${n >= 0 ? '+' : ''}${n.toFixed(2)}%`;
         };
 
-        // Mantém a ordem configurada (a Binance não garante a ordem da resposta)
+        // Mantém a ordem pedida (ou a configurada; a Binance não garante a ordem da resposta)
         const coins = data.map(item => ({
             symbol: item.symbol.replace(/USDT$/, ''),
             icon: CRYPTO_SUPPORTED[item.symbol.replace(/USDT$/, '')] || '',
@@ -109,7 +121,7 @@ async function cmdCrypto(ctx) {
             high: Number(item.highPrice),
             low: Number(item.lowPrice),
             volume: Number(item.quoteVolume)
-        })).sort((a, b) => ativas.indexOf(a.symbol) - ativas.indexOf(b.symbol));
+        })).sort((a, b) => pedidas.indexOf(a.symbol) - pedidas.indexOf(b.symbol));
 
         const topGainer = [...coins].sort((a, b) => b.change - a.change)[0];
 
