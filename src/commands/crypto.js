@@ -125,7 +125,7 @@ async function cmdCrypto(ctx) {
 
         const topGainer = [...coins].sort((a, b) => b.change - a.change)[0];
 
-        let text = '🚀 *CRYPTO MARKET*\n\n```\n';
+        let text = '🚀 *MERCADO CRIPTO*\n```\n';
 
         for (const c of coins) {
             const priceLine = `💰 $${fmtPrice(c.price)}`.padEnd(14);
