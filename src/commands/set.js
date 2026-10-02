@@ -374,6 +374,5 @@ async function peopleChangeList(msg, key, textAlt, append) {
 
 module.exports = {
     cmdSet,
-    showItems,
     peopleChangeList
 };
