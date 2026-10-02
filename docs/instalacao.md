@@ -12,7 +12,7 @@ da imagem.
 
 ## Instalação (Docker)
 
-A versão estável atual é a `release-2.1` (de 02/10/2026); os passos abaixo
+A versão estável atual é a `release-2.2` (de 02/10/2026); os passos abaixo
 instalam essa versão. As notas de cada uma ficam em
 [Releases](https://github.com/jpereira/zapbot/releases).
 
@@ -20,7 +20,7 @@ instalam essa versão. As notas de cada uma ficam em
 # 1. Clonar o projeto e ir para a última versão estável
 git clone https://github.com/jpereira/zapbot.git
 cd zapbot
-git checkout release-2.1
+git checkout release-2.2
 
 # 2. Criar o arquivo de configuração a partir do exemplo e editá-lo
 cp config/.env.example config/.env
@@ -58,14 +58,14 @@ o bot deve responder `pong`.
 
 ### Atualizar para uma nova versão
 
-A **versão estável** é a última release, hoje a `release-2.1` (cada uma tem as
+A **versão estável** é a última release, hoje a `release-2.2` (cada uma tem as
 notas em [Releases](https://github.com/jpereira/zapbot/releases)). Para ir para
 ela:
 
 ```bash
 git fetch --tags
-git checkout release-2.1
-git describe --tags        # confere a versão: release-2.1
+git checkout release-2.2
+git describe --tags        # confere a versão: release-2.2
 docker compose -f docker/docker-compose.yml build zapbot
 docker compose -f docker/docker-compose.yml up -d --force-recreate zapbot
 ```
