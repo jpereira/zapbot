@@ -26,23 +26,27 @@ const HELP_VARIABLES = { BACKUP_DIR, CACHE_DIR, MEDIA_DIR, TMP_DIR };
 const interpolar = (textAlt) => String(textAlt ?? '')
     .replace(/\$\{(\w+)\}/g, (original, nameAlt) => HELP_VARIABLES[nameAlt] ?? original);
 
-/**
- * Formats a command's help in the "command -help" style.
- * (There used to be two almost identical functions; now only this one.)
- */
 /*
- * Several examples after the "Ex:" ("Ex: /a 1, /a 2") go one per line, on the left
- * (on the phone, the description column is far away); a single example stays on the same line.
+ * The help is read on the phone: each sentence on a line, and the "Ex:" always on the line of
+ * below, on the left, with one example per line ("Ex: /a 1, /a 2"). End of sentence is
+ * ". " followed by an uppercase letter (or "{"): "Max. 20" and "(e.g.: -rates 50)" do not break.
  */
-function optionLines(start, desc) {
-    const m = String(desc ?? '').match(/^(.*?)\s*Ex\.?:\s*(.+)$/s);
+const PHRASE_END = /(?<=[.!?])\s+(?=[A-ZÀ-ÖØ-Þ{])/u;
+
+/**
+ * @param {string} texto
+ * @param {string} inicio  what comes before the 1st sentence ("" or the option column)
+ * @param {string} recuo   the start of the following lines
+ */
+function textLines(textAlt, start = '', indent = '') {
+    const m = String(textAlt ?? '').match(/^(.*?)\s*Ex\.?:\s*(.+)$/s);
+    const phrases = (m ? m[1] : String(textAlt ?? '')).split(PHRASE_END).filter(Boolean);
     const examples = m ? m[2].split(/,\s+(?=[/-])/) : [];
-    if (examples.length < 2) return [`${start}${desc}`];
 
     return [
-        `${start}${m[1]}`,
-        `    Ex: ${examples[0]}`,
-        ...examples.slice(1).map(e => `        ${e}`)
+        `${start}${phrases[0] ?? ''}`,
+        ...phrases.slice(1).map(f => `${indent}${f}`),
+        ...examples.map((e, k) => `${indent}${k ? '    ' : 'Ex: '}${e}`)
     ];
 }
 
@@ -51,7 +55,7 @@ function formatCommandHelp(command) {
     const forms = interpolar(command.usage ?? command.cmd).split(/\s{2}ou\s{2}/);
     const lines = forms.map((f, i) => `${i ? '       ' : 'Usage: '}${f}`);
 
-    if (command.help) lines.push(interpolar(command.help));
+    if (command.help) lines.push(...textLines(interpolar(command.help)));
 
     const cmdOpts = command.cmd_opts ?? [];
     const notEmpty = v => v != null && v !== '';
@@ -70,7 +74,7 @@ function formatCommandHelp(command) {
 
     // A single column so Options and Arguments line up
     const width = Math.max(0, ...[...options, ...positional].map(o => o.syntax.length));
-    const line = (o) => optionLines(`  ${o.syntax.padEnd(width)}  `, o.desc);
+    const line = (o) => textLines(o.desc, `  ${o.syntax.padEnd(width)}  `, '    ');
 
     if (options.length) {
         lines.push('', 'Options:');
