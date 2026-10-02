@@ -77,7 +77,7 @@ describe('eventos de conexão', () => {
         assert.equal(bot.estado.pronto, true);
         const [notice] = bot.client.enviadas;
         assert.equal(notice.chatId, process.env.PHONE_NUMBER);
-        assert.match(notice.content, /🤖 ZapBot [\d.]+ inicializado\. Modo admin ligado/);
+        assert.match(notice.content, /🤖 ZapBot [\d.]+ \(git\+[0-9a-f]{7}\) inicializado\. Modo admin ligado/);
         assert.match(emails[0].subject, /🟢 Bot iniciado/);
         assert.match(emails[0].text, /Conectado ao WhatsApp\.\nModo admin ligado/);
 
