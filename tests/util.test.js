@@ -109,6 +109,20 @@ describe('contatos', () => {
 
 describe('versão com o commit (version.js)', () => {
     const { readCommit } = bot.src('version');
+
+    test('(devel) fora de uma release; numa tag v*, sem rótulo; sem o commit, só a versão', () => {
+        const { inDevelopment, versionWithCommit, botVersion } = bot.src('version');
+        const { version } = require('../package.json');
+        const release = { commit: 'abc1234', ref: `release-${version}` };
+        const main = { commit: 'def5678', ref: 'HEAD' };
+
+        assert.equal(versionWithCommit(release), `${version} (git+abc1234/release-${version})`);
+        assert.equal(versionWithCommit(main), `${version} (devel) (git+def5678/HEAD)`);
+        assert.equal(versionWithCommit({ commit: 'def5678', ref: 'v9-teste' }), `${version} (devel) (git+def5678/v9-teste)`);
+        assert.deepEqual([botVersion(release), botVersion(main)], [version, `${version} (devel)`]);
+        assert.equal(inDevelopment(null), false);
+        assert.equal(versionWithCommit(null), version);
+    });
     const fs = require('fs');
     const os = require('os');
     const path = require('path');
@@ -127,10 +141,10 @@ describe('versão com o commit (version.js)', () => {
     const TAG = '1111111111111111111111111111111111111111';     // the "tag" object of an annotated tag
     const c = (commit, ref) => ({ commit: commit.slice(0, 7), ref });
 
-    test('num branch no commit de uma tag (o main logo depois do bump.sh -r): a tag', () => {
+    test('num branch no commit de uma tag (o main logo depois do bump.sh, no commit da release): a tag', () => {
         const main = { HEAD: 'ref: refs/heads/main\n', 'refs/heads/main': `${HASH}\n` };
         assert.deepEqual(readCommit(project({ ...main, 'refs/tags/v2.0.0': `${HASH}\n` })), c(HASH, 'v2.0.0'));
-        // Annotated, after git pack-refs --all (what bump.sh -r runs): the "^<commit>" in packed-refs
+        // Annotated, after git pack-refs --all (what bump.sh runs): the "^<commit>" in packed-refs
         assert.deepEqual(readCommit(project({ HEAD: 'ref: refs/heads/main\n',
             'packed-refs': `# pack-refs with: peeled\n${HASH} refs/heads/main\n${TAG} refs/tags/v2.0.0\n^${HASH}\n` })), c(HASH, 'v2.0.0'));
         // Annotated and loose, without the object or the reflog: there is no way to know

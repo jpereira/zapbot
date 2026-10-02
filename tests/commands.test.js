@@ -50,7 +50,7 @@ describe('/debug (/d, /dbg)', () => {
 
 describe('/uptime (/u, /up) e /version (/ver)', () => {
     // With the commit that is running (in the tests, the one from the project's .git)
-    const banner = new RegExp(`🤖 \\*ZapBot ${packageJson.version.replace('.', '\\.')} \\(git\\+[0-9a-f]{7}/[\\w.-]+\\)\\*[\\s\\S]*⚡ Online:[\\s\\S]*🔐 Conectado:`);
+    const banner = new RegExp(`🤖 \\*ZapBot ${packageJson.version.replace('.', '\\.')}(?: \\(devel\\))? \\(git\\+[0-9a-f]{7}/[\\w.-]+\\)\\*[\\s\\S]*⚡ Online:[\\s\\S]*🔐 Conectado:`);
 
     test('o mesmo banner com a versão em todos os nomes', async () => {
         for (const line of ['/uptime', '/u', '/up', '/version', '/ver']) {
@@ -108,9 +108,9 @@ describe('/bot', () => {
     test('-info (-i): versões do bot, dos programas e o sistema', async () => {
         for (const line of ['/bot -info', '/bot -i']) {
             const [r] = await bot.replyAlt(line);
-            assert.match(r, new RegExp(`^ℹ️ \\*ZapBot ${packageJson.version.replace('.', '\\.')}\\* · informações do sistema\n\n🤖 \\*Bot\\*\n`), line);
+            assert.match(r, new RegExp(`^ℹ️ \\*ZapBot ${packageJson.version.replace('.', '\\.')}(?: \\(devel\\))?\\* · informações do sistema\n\n🤖 \\*Bot\\*\n`), line);
             assert.match(r, new RegExp(`• Node\\.js: ${process.version.replace(/\./g, '\\.')} \\(V8 `));
-            assert.match(r, new RegExp(`• ZapBot: ${packageJson.version.replace('.', '\\.')} \\(git\\+[0-9a-f]{7}/[\\w.-]+\\) \\(APP_ENV=test\\)\n`));
+            assert.match(r, new RegExp(`• ZapBot: ${packageJson.version.replace('.', '\\.')}(?: \\(devel\\))? \\(git\\+[0-9a-f]{7}/[\\w.-]+\\) \\(APP_ENV=test\\)\n`));
             assert.match(r, /• whatsapp-web\.js: [\d.]+ \(commit [0-9a-f]{7}\)\n/);
             assert.match(r, /• WhatsApp Web: _não encontrado_\n/);   // the simulated client has no getWWebVersion
             assert.match(r, /• SQLite: \d+\.\d+\.\d+\n/);

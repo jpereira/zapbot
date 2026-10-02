@@ -1,6 +1,6 @@
 /*
  * The bot version with the commit that is running and where it came from:
- * "2.0.0 (git+60315ed/v2.0.0)" numa tag, "2.0.0 (git+60315ed/HEAD)" fora dela.
+ * "2.0.0 (git+60315ed/v2.0.0)" numa tag, "2.0.1 (devel) (git+60315ed/HEAD)" fora dela.
  */
 
 const fs = require('fs');
@@ -21,11 +21,11 @@ const { ROOT_DIR } = require('./constants');
  * tag of the code that went into it.
  *
  * The tag is the one that points to the commit in use: with a detached HEAD (git checkout
- * v2.0.0) or on a branch that is on the tag commit (main right after the
- * bump.sh -r). An annotated tag (those of bump.sh -r) points to a "tag" object, not
+ * v2.0.0) or on a branch that is on the tag commit. An annotated tag (those of
+ * bump.sh) points to a "tag" object, not
  * to the commit; its commit comes from one of these:
  * - the "^<commit>" line right below it in packed-refs (in a clone, or after
- * of a git pack-refs --all, which bump.sh -r runs when creating the tag);
+ * of a git pack-refs --all, which bump.sh runs when creating the tag);
  * - the object itself in .git/objects (outside Docker, where .git is whole);
  * - the last line of the reflog (.git/logs/HEAD): "checkout: moving from main to
  * v2.0.0", with the commit it went to (after a git fetch --tags,
@@ -159,11 +159,25 @@ function readCommit(root = ROOT_DIR) {
 
 const ORIGIN = readCommit();
 
-// "2.0.0 (git+60315ed/v2.0.0)", or just "2.0" without the commit
-const versionWithCommit = () => (ORIGIN ? `${packageJson.version} (git+${ORIGIN.commit}/${ORIGIN.ref})` : packageJson.version);
+/*
+ * Outside a v* tag the code has not been released yet: it is main (or a
+ * branch) between a bump and the next release. Then the version gets the "(devel)",
+ * so nobody thinks they are running the stable one. Without knowing the commit (neither .git,
+ * nor ZAPBOT_COMMIT), it cannot be told: stays without a label, in good faith.
+ */
+const inDevelopment = (origin = ORIGIN) => Boolean(origin) && !/^v\d+\.\d+\.\d+$/.test(origin.ref);
+
+// "2.0.1", or "2.0.1 (devel)" outside a release
+const botVersion = (origin = ORIGIN) => `${packageJson.version}${inDevelopment(origin) ? ' (devel)' : ''}`;
+
+// "2.0.0 (git+60315ed/v2.0.0)", "2.0.1 (devel) (git+60315ed/HEAD)", or just "2.0" without the commit
+const versionWithCommit = (origin = ORIGIN) =>
+    (origin ? `${botVersion(origin)} (git+${origin.commit}/${origin.ref})` : packageJson.version);
 
 module.exports = {
     ORIGIN,
+    inDevelopment,
     readCommit,
-    versionWithCommit
+    versionWithCommit,
+    botVersion
 };
