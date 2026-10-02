@@ -817,12 +817,12 @@
         },
         {
             "cmd": "/mudo",
-            "usage": "/mudo <OPTION>... </contato ou grupo/|@menção|+número>",
+            "usage": "/mudo [OPTION]... </contato ou grupo/|@menção|+número>",
             "aliases": [
                 "/m",
                 "/mute"
             ],
-            "help": "Silencia os avisos de apagadas, editadas e/ou status apagados de uma pessoa ou de um grupo. As mensagens continuam guardadas para o /show. Sem nada, lista os silenciados.",
+            "help": "Silencia os avisos de apagadas, editadas e/ou status apagados de uma pessoa ou de um grupo; só o alvo, sem opção, silencia tudo (o -a). As mensagens continuam guardadas para o /show. Sem nada, lista os silenciados.",
             "cmd_opts": [
                 {
                     "opts": [
@@ -830,7 +830,7 @@
                         "a"
                     ],
                     "values": [],
-                    "desc": "Silencia tudo: apagadas, editadas e status."
+                    "desc": "Silencia tudo: apagadas, editadas e status. É o padrão: só o alvo, sem opção, faz o mesmo."
                 },
                 {
                     "opts": [
@@ -877,7 +877,7 @@
                     "argv": [
                         "</contato ou grupo/|@menção|+número>"
                     ],
-                    "desc": "Primeiro um contato, depois um grupo, pelo nome ou parte dele (vários: você escolhe na lista), alguém mencionado com @ ou um número. Ex: /mudo -a /Jorge Pereira/, /mudo -a /Grupo L200/, /m -a @Fulano, /mudo -s +5521999999999"
+                    "desc": "Primeiro um contato, depois um grupo, pelo nome ou parte dele (vários: você escolhe na lista), alguém mencionado com @ ou um número. Ex: /mudo /Grupo L200/, /mudo /Jorge Pereira/, /m @Fulano, /mudo -s +5521999999999"
                 }
             ],
             "onlyAdmin": true
