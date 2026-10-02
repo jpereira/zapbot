@@ -19,6 +19,12 @@ const { isCaminhoDeMidia, nomeSeguro, obterPastaMidia } = require('../util/arqui
 const { paraMs } = require('../util/formatar');
 const { verificarWatch } = require('../watch/verificar');
 
+// Avisos do próprio WhatsApp (entrou no grupo, mudou o nome, criptografia, chamada...): não têm autor
+const TIPOS_DO_SISTEMA = new Set([
+    'broadcast_notification', 'call_log', 'e2e_notification', 'gp2',
+    'notification', 'notification_template', 'protocol'
+]);
+
 client.on('message_create', async (msg) => {
     try {
         const timestamp = Date.now();
@@ -146,11 +152,13 @@ client.on('message_create', async (msg) => {
 
         /*
          * /stats: só mensagens novas (o WhatsApp pode reenviar o mesmo id numa
-         * reconexão) e nunca as respostas do próprio bot.
+         * reconexão), nunca as respostas do próprio bot, e só de alguém: os avisos
+         * do sistema e os sem autor viravam um participante "Desconhecido".
          */
         const jaGravada = await dbGet('SELECT 1 AS ok FROM messages WHERE id = ?', [msgIdPure]).catch(() => null);
+        const semAutor = TIPOS_DO_SISTEMA.has(msgType) || (!msg.fromMe && senderJid === 'UNKNOWN');
 
-        if (!jaGravada && !(msg.fromMe && consumirEnvioDoBot(chatId))) {
+        if (!jaGravada && !semAutor && !(msg.fromMe && consumirEnvioDoBot(chatId))) {
             // No privado, senderJid das suas mensagens é o do OUTRO participante (ver rawSenderId)
             await contarStats({
                 chatId, chatName, isGroup,

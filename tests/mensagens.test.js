@@ -264,6 +264,21 @@ describe('contagem do /stats', () => {
         assert.deepEqual(await contagem(), [{ sender_id: OUTRO.user, msgs: 2, media: 1 }]);
     });
 
+    test('avisos do sistema e mensagens sem autor não contam (não viram um participante "Desconhecido")', async () => {
+        await bot.entregar(bot.criarMensagem({ tipo: 'notification_template', de: OUTRO.jid }));
+        await bot.entregar(bot.criarMensagem({ tipo: 'gp2', de: OUTRO.jid }));
+        await bot.entregar(bot.criarMensagem({ texto: 'sem autor', de: OUTRO.jid, extras: { author: undefined } }), { erroEsperado: true });
+        await bot.entregar(bot.criarMensagem({ texto: 'oi', de: OUTRO.jid }));
+        assert.deepEqual(await contagem(), [{ sender_id: OUTRO.user, msgs: 1, media: 0 }]);
+    });
+
+    test('no boot, as linhas antigas do "Desconhecido" saem', async () => {
+        await bot.dbRun(`INSERT INTO stats (chat_id, day, hour, sender_id, sender_name, msgs)
+                         VALUES (?, '2026-10-01', 10, 'UNKNOWN', 'Desconhecido', 5)`, [GRUPO]);
+        await bot.src('inicializacao').inicializarBanco();
+        assert.deepEqual(await bot.dbAll("SELECT * FROM stats WHERE sender_id = 'UNKNOWN'"), []);
+    });
+
     test('as respostas do bot não contam; as suas contam para o seu número', async () => {
         await bot.executar('/ping'); // o "pong" sai pela sua conta...
         await bot.entregar(bot.criarMensagem({ texto: 'pong' })); // ...e volta pelo message_create
