@@ -5,7 +5,7 @@
 const { OPENAI_MODELOS } = require('./openai');
 const { botConfig } = require('./botConfig');
 const { APP_ENV } = require('./constantes');
-const { dbAll, dbRun } = require('./db');
+const { dbAll, dbGet, dbRun } = require('./db');
 const { printError, printInfo, printSuccess } = require('./log');
 const { COTACAO_SUPORTADAS, CRYPTO_SUPPORTED } = require('./moedas');
 const { isValidHttpUrl } = require('./util/url');
@@ -28,6 +28,18 @@ function validarUrlFeed(v) {
     if (!isValidHttpUrl(v)) throw new Error(`URL inválida: ${v}`);
     return v;
 }
+
+/*
+ * Settings renomeados: no boot, o valor salvo com o nome antigo passa para o
+ * novo (veja migrarSettingsRenomeados). Em ordem alfabética do nome antigo.
+ */
+const SETTINGS_RENOMEADOS = {
+    'edit.alert': 'show.alert.edit',
+    'gif.giphy.api.key': 'giphy.api.key',
+    'resumo.maxMsgs': 'tldr.maxMsgs',
+    'revoke.status': 'show.revoke.status',
+    'stats.enabled': 'stats.enable'
+};
 
 // Comandos renomeados: um commands.disabled salvo com o nome antigo vale para o novo
 const COMANDOS_RENOMEADOS = {
@@ -266,11 +278,6 @@ const SETTINGS_SCHEMA = {
             return v;
         }
     },
-    'resumo.maxMsgs': {
-        default: 500,
-        type: 'number', min: 10, max: 2000,
-        desc: 'Máximo de mensagens enviadas à OpenAI por /tldr (/resumo).'
-    },
     'show.alert.edit': {
         default: true,
         type: 'boolean',
@@ -320,6 +327,11 @@ const SETTINGS_SCHEMA = {
         default: 7,
         type: 'number', min: 1, max: 16, // 16: limite da Open-Meteo
         desc: 'Máximo de dias do /tempo N (ou Nd), ex.: /tempo 7d Niteroi.'
+    },
+    'tldr.maxMsgs': {
+        default: 500,
+        type: 'number', min: 10, max: 2000,
+        desc: 'Máximo de mensagens enviadas à OpenAI por /tldr (/resumo).'
     },
     'traduzir.api.key': {
         default: '',
@@ -432,7 +444,33 @@ function listaSemOsInvalidos(key, valorSalvo) {
     return [...new Set(validos)];
 }
 
+/*
+ * O valor de um setting renomeado vai para o nome novo e o antigo sai do banco.
+ * Se o novo já existe com um valor seu (diferente do padrão), ele fica: o
+ * antigo só preenche o novo que ainda está no padrão (o caso de quem atualizou
+ * para a versão que renomeou, criando o novo com o padrão, sem migrar).
+ */
+async function migrarSettingsRenomeados() {
+    for (const [antigo, novo] of Object.entries(SETTINGS_RENOMEADOS)) {
+        const velho = await dbGet('SELECT value FROM settings WHERE key = ?', [antigo]);
+        if (!velho) continue;
+
+        const atual = await dbGet('SELECT value FROM settings WHERE key = ?', [novo]);
+        if (!atual || atual.value === JSON.stringify(SETTINGS_SCHEMA[novo].default)) {
+            await dbRun(`INSERT INTO settings (key, value) VALUES (?, ?)
+                         ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP`, [novo, velho.value]);
+            printInfo(`Setting '${antigo}' renomeado para '${novo}': o valor salvo foi mantido`);
+        } else {
+            printInfo(`Setting '${antigo}' renomeado para '${novo}': o '${novo}' já tinha valor, o antigo foi descartado`);
+        }
+
+        await dbRun('DELETE FROM settings WHERE key = ?', [antigo]);
+    }
+}
+
 async function carregarSettings() {
+    await migrarSettingsRenomeados();
+
     for (const [key, schema] of Object.entries(SETTINGS_SCHEMA)) {
         await dbRun('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)', [key, JSON.stringify(schema.default)]);
     }

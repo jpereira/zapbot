@@ -1160,7 +1160,7 @@
                     "argv": [
                         "[período]"
                     ],
-                    "desc": "2h ou 30m: as mensagens desse tempo para cá; 300: as últimas 300 (máx. resumo.maxMsgs). Padrão: as últimas 100."
+                    "desc": "2h ou 30m: as mensagens desse tempo para cá; 300: as últimas 300 (máx. tldr.maxMsgs). Padrão: as últimas 100."
                 }
             ],
             "onlyAdmin": true
