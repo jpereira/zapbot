@@ -524,7 +524,7 @@ describe('/cron: comandos no texto ({/comando})', () => {
         assert.equal((await bot.responder('/cron +1h oi {/xyz}'))[0], '❌ {/xyz}: o /xyz não existe.');
         assert.match((await bot.responder('/cron +1h {/set show.max 5}'))[0], /^❌ \{\/set show\.max 5\}: o \/set não roda dentro do \/cron\.\n💡 _Rodam: .*\/crypto.*\._$/);
         assert.equal((await bot.responder('/cron +1h {/crypto -add DOGE}'))[0], '❌ {/crypto -add DOGE}: o -add do /crypto não roda dentro do /cron.');
-        assert.equal((await bot.responder('/cron +1h {/stats -pv}'))[0], '❌ {/stats -pv}: o -pv do /stats não roda dentro do /cron.');
+        assert.equal((await bot.responder('/cron +1h {/stats -flush-all}'))[0], '❌ {/stats -flush-all}: o -flush-all do /stats não roda dentro do /cron.');
         assert.equal((await bot.responder('/cron +1h {/defi -rm 1}'))[0], '❌ {/defi -rm 1}: o -rm do /defi não roda dentro do /cron.');
         assert.equal((await bot.responder('/cron +1h {/defi -alerta all}'))[0], '❌ {/defi -alerta all}: o -alerta do /defi não roda dentro do /cron.');
         assert.deepEqual(await itens(), []);

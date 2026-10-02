@@ -166,7 +166,7 @@ Preço do Dólar!
   As opções que mudam algo também não: o `-add`, o `-del` e o `-alerta` do
   `/crypto` e do `/cotacao`; o `-address`, o `-pool`, o `-nft`, o `-rm`, o
   `-alerta`, o `-taxas` e o `-to` do `/defi` (rodam o `/defi`, o `{/defi orca}`,
-  o `{/defi prjx}` e o `-l`); e o `-pv` do `/stats`.
+  o `{/defi prjx}` e o `-l`); e o `-flush` e o `-flush-all` do `/stats`.
 - O comando é conferido ao criar (e no `-edit`): um que não existe ou que não
   roda no `/cron` dá erro na hora, não no envio.
 - Se o comando falhar na hora do envio, a mensagem sai assim mesmo, com
