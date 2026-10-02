@@ -205,7 +205,10 @@ async function inicializarBanco() {
             created_at INTEGER NOT NULL
         )
     `);
-    await adicionarColunas('schedules', { paused: 'INTEGER DEFAULT 0' });
+    await adicionarColunas('schedules', {
+        paused: 'INTEGER DEFAULT 0',
+        recipients: 'TEXT'   // JSON [{ id, nome, grupo }]: um item com vários -to (sem ele, o chat_id)
+    });
     await dbRun('CREATE INDEX IF NOT EXISTS idx_schedules_due ON schedules (due_at)');
 
     /*

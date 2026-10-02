@@ -355,7 +355,7 @@
                     "values": [
                         "<destino>"
                     ],
-                    "desc": "No modo mensagem: envia num contato, num grupo ou num número em vez do chat atual (e-mail não: a mensagem sai no WhatsApp). Repita para vários (um item por destino); vários com o nome: você escolhe na lista. Ex: -to /Jorge Pereira/, -to @Fulano (menção), -to /Grupo L200/ -to /Família/, -to +5521999999999"
+                    "desc": "No modo mensagem: envia num contato, num grupo ou num número em vez do chat atual (e-mail não: a mensagem sai no WhatsApp). Repita para vários: um item só, que sai em todos; vários com o nome: você escolhe na lista. Ex: -to /Jorge Pereira/, -to @Fulano (menção), -to /Grupo L200/ -to /Família/, -to +5521999999999"
                 },
                 {
                     "argv": [
