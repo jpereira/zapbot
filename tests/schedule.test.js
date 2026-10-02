@@ -344,14 +344,49 @@ describe('/cron (/agenda)', () => {
             /⚠️ Não consegui buscar "Rafael" nos contatos e grupos agora \(página fechada\)/);
     });
 
-    test('vários -to: um item por destino (o repetido conta uma vez); o limite conta todos', async () => {
-        const [r] = await bot.replyAlt('/cron +1h -to L200 -to /Fulano/ -to l200 Reunião às 10h!');
-        assert.match(r, /^📅 \*Mensagem agendada\* para \*[^*]+\* em 2 chats _\(um item para cada\)_:\n• 👥 Grupo sobre L200\n• 👤 Fulano\n📝 Reunião às 10h!$/);
-        assert.deepEqual((await items()).map(i => [i.chat_id, i.text]), [[L200, 'Reunião às 10h!'], [OTHERAlt.jid, 'Reunião às 10h!']]);
+    test('vários -to: um item só, com todos os destinos (o repetido conta uma vez); conta 1 no limite', async () => {
+        const [r] = await bot.replyAlt('/cron +1h -r diario -to L200 -to /Fulano/ -to l200 Reunião às 10h! {/version}');
+        assert.match(r, /^📅 \*Mensagem agendada\* para \*[^*]+\* 🔁 todo dia em 2 chats:\n• 👥 Grupo sobre L200\n• 👤 Fulano\n📝 Reunião/);
+        const [item, ...more] = await items();
+        assert.deepEqual(more, []);
+        assert.equal(item.chat_id, L200);
 
-        await bot.setSetting('agenda.max', 3);
-        assert.match((await bot.replyAlt('/cron +2h -to L200 -to /Fulano/ oi'))[0], /❌ Limite de 3 .*: estes 2 não cabem/);
-        assert.equal((await items()).length, 2);
+        // In the list: one item, one destination per line
+        assert.match((await bot.replyAlt('/cron -l'))[0],
+            /\n1\. 📅 \*[^*]+\* 🔁 todo dia — Reunião às 10h! \{\/version\}\n {3}→ 👥 Grupo sobre L200\n {3}→ 👤 Fulano\n\n💡/);
+        assert.match((await bot.replyAlt('/cron -test 1'))[0], /_\(sai em [^→]+→ 👥 Grupo sobre L200, 👤 Fulano\)_/);
+
+        // At once: the same message to each destination, with the {/command}s running for each one; one log per destination
+        const beforeAlt = bot.logs.length;
+        const sentAlt3 = await expire();
+        assert.deepEqual(sentAlt3.map(e => e.chatId), [L200, OTHERAlt.jid]);
+        for (const e of sentAlt3) assert.match(e.content, /^Reunião às 10h!\n\n🤖 \*ZapBot/);
+        const logs = bot.logs.slice(beforeAlt).filter(l => l.includes('/cron: enviado para'));
+        assert.equal(logs.length, 2);
+        assert.match(logs[1], /enviado para 👤 Fulano \(\+\d+\), com \{\/version\} \(diario\)$/);
+        assert.equal((await items()).length, 1, 'repetido: continua um item');
+
+        // Counts 1 against the limit, with any number of -to
+        await bot.setSetting('agenda.max', 2);
+        assert.match((await bot.replyAlt('/cron +2h -to L200 -to /Fulano/ oi'))[0], /^📅 \*Mensagem agendada\*/);
+        assert.match((await bot.replyAlt('/cron +3h -to L200 oi'))[0], /❌ Limite de 2 /);
+    });
+
+    test('vários -to: um destino que falha não segura os outros', async () => {
+        await bot.replyAlt('/cron +1h -to L200 -to /Fulano/ oi');
+        const send = bot.client.sendMessage;
+        bot.client.sendMessage = async (chatId, ...rest) => {
+            if (chatId === L200) throw new Error('grupo fora do ar');
+            return send.call(bot.client, chatId, ...rest);
+        };
+        try {
+            const beforeAlt = bot.logs.length;
+            const sentAlt3 = await expire();
+            assert.deepEqual(sentAlt3.map(e => e.chatId), [OTHERAlt.jid]);
+            assert.ok(bot.errorsInLog(beforeAlt).some(l => /falha ao enviar \d+ para 👥 Grupo sobre L200.*grupo fora do ar/.test(l)));
+        } finally {
+            bot.client.sendMessage = send;
+        }
     });
 
     test('-edit <nº>: troca a hora, o texto e/ou a repetição; o destino fica', async () => {
@@ -396,8 +431,8 @@ describe('/cron (/agenda)', () => {
     test('-to por menção (@ no WhatsApp), junto com outros destinos', async () => {
         bot.client.lids.set('100000000000002@lid', OTHERAlt.jid);
         assert.match((await bot.replyAlt('/cron +1h -to @100000000000002 -to L200 oi', { mencoes: ['100000000000002@lid'] }))[0],
-            /em 2 chats _\(um item para cada\)_:\n• 👤 Fulano\n• 👥 Grupo sobre L200/);
-        assert.deepEqual((await items()).map(i => i.chat_id), [OTHERAlt.jid, L200]);
+            /em 2 chats:\n• 👤 Fulano\n• 👥 Grupo sobre L200/);
+        assert.deepEqual(JSON.parse((await items())[0].recipients).map(d => d.id), [OTHERAlt.jid, L200]);
     });
 
     test('-lem é o -lembrete', async () => {

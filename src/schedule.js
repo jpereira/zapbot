@@ -21,7 +21,7 @@ const { REPETITIONS, fmtWhen, readWhen, partsInBrasilia, nextRepetition } = requ
  * command, or the message it replied to), or in your private chat with
  * -pv. It is the mode of /lembrete and of -lembrete.
  * Both accept -repetir (-r) diario|semanal|mensal. The message mode accepts
- * several -to (one item per destination). In the list, -edit <no.> changes the time, the text
+ * several -to (a single item, with all the destinations). In the list, -edit <no.> changes the time, the text
  * or an item's repetition, and -pause/-resume <no....|all> hold and release it.
  * A {/command} in the text runs at send time and the reply goes in its place
  * (see scheduleCommands.js); -test <no.> shows now how the message would come out.
@@ -88,14 +88,20 @@ function readScheduling(args) {
 // Reminders and messages together, in the order they go out (the -rm numbers). The daily status (/bot -status) is left out
 const listAlt = () => dbAll("SELECT * FROM schedules WHERE kind != 'status' ORDER BY due_at, id");
 
-// Where an item goes: "👥 Grupo", "👤 Contato" or "seu privado"
-const itemWhere = (s) => (s.chat_id === client.info.wid._serialized ? 'seu privado' : `${s.is_group ? '👥' : '👤'} ${s.chat_name}`);
+// An item's destinations: the several -to (recipients) or its chat
+const itemDestinations = (s) => (s.recipients
+    ? JSON.parse(s.recipients)
+    : [{ id: s.chat_id, nome: s.chat_name, grupo: Boolean(s.is_group) }]);
+
+// Where it goes: "👥 Grupo", "👤 Contato" or "seu privado"
+const destinationWhere = (d) => (d.id === client.info.wid._serialized ? 'seu privado' : `${d.grupo ? '👥' : '👤'} ${d.nome}`);
+const itemWhere = (s) => itemDestinations(s).map(destinationWhere).join(', ');
 
 // The same, with the id (group) or the number (person), for the log
-function whereInLog(s) {
-    const whereAlt = itemWhere(s);
+function whereInLog(d) {
+    const whereAlt = destinationWhere(d);
     if (whereAlt === 'seu privado') return whereAlt;
-    const numberAlt = !s.is_group && s.chat_id.endsWith('@c.us') ? `+${s.chat_id.split('@')[0]}` : s.chat_id;
+    const numberAlt = !d.grupo && d.id.endsWith('@c.us') ? `+${d.id.split('@')[0]}` : d.id;
     return `${whereAlt} (${numberAlt})`;
 }
 
@@ -104,7 +110,8 @@ function listLine(s, i) {
     const paused = s.paused ? ' ⏸️ _pausado_' : '';
     // The whole text, as registered; the following lines indented, like the destination's
     const textAlt = s.text.replace(/\n/g, '\n   ');
-    return `${i + 1}. ${TYPES[s.kind]?.icone ?? '📅'} *${fmtWhen(s.due_at)}*${repeat}${paused} — ${textAlt}\n   → ${itemWhere(s)}`;
+    const destinations = itemDestinations(s).map(d => `\n   → ${destinationWhere(d)}`).join('');
+    return `${i + 1}. ${TYPES[s.kind]?.icone ?? '📅'} *${fmtWhen(s.due_at)}*${repeat}${paused} — ${textAlt}${destinations}`;
 }
 
 // "2" → [item 2]; "all" → all; otherwise null
@@ -341,15 +348,13 @@ async function handleSchedule({ msg, args, chatId, chatName, isGroup, quotedMsg 
     }
 
     const max = getSetting('agenda.max');
-    const freshAlt3 = Math.max(1, destinationsText.length);
     const { n: total } = await dbGet("SELECT COUNT(*) AS n FROM schedules WHERE kind != 'status'");
-    if (total + freshAlt3 > max) {
-        await msg.reply(`❌ Limite de ${max} lembretes e mensagens agendadas (setting agenda.max)` +
-            (freshAlt3 > 1 ? `: estes ${freshAlt3} não cabem` : '') + '. Remova algum antes.');
+    if (total + 1 > max) {
+        await msg.reply(`❌ Limite de ${max} lembretes e mensagens agendadas (setting agenda.max). Remova algum antes.`);
         return;
     }
 
-    // Where it goes: -to (message; one item per destination), -pv (reminder) or the current chat
+    // Where it goes: -to (message; several -to, one item with all), -pv (reminder) or the current chat
     const myId = client.info.wid._serialized;
     let destinations = [{ id: chatId, nome: chatName, grupo: Boolean(isGroup) }];
 
@@ -367,25 +372,27 @@ async function handleSchedule({ msg, args, chatId, chatName, isGroup, quotedMsg 
         destinations = [{ id: myId, nome: 'seu privado', grupo: false }];
     }
 
-    for (const destination of destinations) {
-        // The reminder replies to the message replied by the command, or the command itself (only in the same chat)
-        const quoted = kind === 'lembrete' && destination.id === chatId
-            ? (quotedMsg?.id?._serialized ?? msg.id?._serialized ?? null)
-            : null;
+    // The reminder replies to the message replied by the command, or the command itself (only in the same chat)
+    const [first] = destinations;
+    const quoted = kind === 'lembrete' && first.id === chatId
+        ? (quotedMsg?.id?._serialized ?? msg.id?._serialized ?? null)
+        : null;
+    const recipients = destinations.length > 1
+        ? JSON.stringify(destinations.map(d => ({ id: d.id, nome: d.nome, grupo: Boolean(d.grupo) })))
+        : null;
 
-        await dbRun(
-            `INSERT INTO schedules (kind, chat_id, chat_name, is_group, text, due_at, repeat, day_of_month, quoted_id, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [kind, destination.id, destination.nome, destination.grupo ? 1 : 0, textAlt, when.ms, repeatAlt,
-                partsInBrasilia(when.ms).dia, quoted, nowAlt]
-        );
-    }
+    await dbRun(
+        `INSERT INTO schedules (kind, chat_id, chat_name, is_group, text, due_at, repeat, day_of_month, quoted_id, created_at, recipients)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [kind, first.id, first.nome, first.grupo ? 1 : 0, textAlt, when.ms, repeatAlt,
+            partsInBrasilia(when.ms).dia, quoted, nowAlt, recipients]
+    );
 
     const whereAlt = (d) => (d.id === myId ? 'no seu privado' : d.id === chatId ? 'neste chat' : `em ${describeDestination(d)}`);
     await msg.reply(`${t.icone} *${t.criado}* para *${fmtWhen(when.ms)}*` +
         (repeatAlt ? ` 🔁 ${REPETITIONS[repeatAlt].rotulo}` : '') +
         (destinations.length > 1
-            ? ` em ${destinations.length} chats _(um item para cada)_:\n${destinations.map(d => `• ${describeDestination(d)}`).join('\n')}\n`
+            ? ` em ${destinations.length} chats:\n${destinations.map(d => `• ${describeDestination(d)}`).join('\n')}\n`
             : ` ${whereAlt(destinations[0])}.\n`) +
         `📝 ${summarizeText(textAlt, 100)}`);
 }
@@ -408,6 +415,7 @@ async function test(msg, items, valueAlt) {
         return;
     }
 
+    // The {/command}s run as in the first destination
     const { texto: textAlt, midias: mediaAltAlt } = await assembleText(s.text, s);
 
     await msg.reply(`🧪 *Teste do nº ${valueAlt.trim()}* _(sai em ${fmtWhen(s.due_at)} → ${itemWhere(s)})_\n\n` +
@@ -428,28 +436,40 @@ async function triggerItem(s, nowAlt) {
         await dbRun('DELETE FROM schedules WHERE id = ?', [s.id]);
     }
 
-    let commands = [];
     if (s.kind === 'status') {
         // The /bot -status report, built on the spot
         await client.sendMessage(s.chat_id, await statusText(nowAlt));
-    } else {
-        // The {/command}s run now; their media goes out after the message
-        const { texto: assembled, midias: mediaAltAlt, comandos: executed } = await assembleText(s.text, s);
-        commands = executed;
-        const textAlt = itemText(s, assembled, late);
-
-        // Media only (e.g.: "{/meme}"): there is no text to send
-        if (textAlt && s.kind === 'agendar') {
-            await client.sendMessage(s.chat_id, textAlt);
-        } else if (textAlt) {
-            // The quoted message may be gone: without it, it goes without quoting
-            await client.sendMessage(s.chat_id, textAlt, s.quoted_id ? { quotedMessageId: s.quoted_id } : {})
-                .catch(() => client.sendMessage(s.chat_id, textAlt));
-        }
-        await sendMedia(s.chat_id, mediaAltAlt);
+        printInfo(`/bot -status: enviado para ${whereInLog(itemDestinations(s)[0])}${late ? ' (atrasado)' : ''}`);
+        return;
     }
 
-    printInfo(`${TYPES[s.kind]?.cmd ?? '/bot -status'}: enviado para ${whereInLog(s)}` +
+    // A destination that fails does not hold up the others
+    for (const d of itemDestinations(s)) {
+        await itemSendOnDestination(s, d, late)
+            .catch(err => printError(`${TYPES[s.kind]?.cmd}: falha ao enviar ${s.id} para ${whereInLog(d)}:`, err.message));
+    }
+}
+
+/*
+ * An item destination: the {/command}s run in the context of its chat (/stats
+ * of a group is the group's) and the media goes out after the message.
+ */
+async function itemSendOnDestination(s, d, late) {
+    const inChat = { ...s, chat_id: d.id, chat_name: d.nome, is_group: d.grupo ? 1 : 0 };
+    const { texto: assembled, midias: mediaAltAlt, comandos: commands } = await assembleText(s.text, inChat);
+    const textAlt = itemText(s, assembled, late);
+
+    // Media only (e.g.: "{/meme}"): there is no text to send
+    if (textAlt && s.kind === 'agendar') {
+        await client.sendMessage(d.id, textAlt);
+    } else if (textAlt) {
+        // The quoted message may be gone: without it, it goes without quoting
+        await client.sendMessage(d.id, textAlt, s.quoted_id ? { quotedMessageId: s.quoted_id } : {})
+            .catch(() => client.sendMessage(d.id, textAlt));
+    }
+    await sendMedia(d.id, mediaAltAlt);
+
+    printInfo(`${TYPES[s.kind]?.cmd}: enviado para ${whereInLog(d)}` +
         (commands.length ? `, com ${commands.map(c => `{${c}}`).join(', ')}` : '') +
         `${late ? ' (atrasado)' : ''}${s.repeat ? ` (${s.repeat})` : ''}`);
 }

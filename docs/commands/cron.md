@@ -13,7 +13,7 @@ Faz algo na hora marcada. Tem dois modos, na mesma agenda:
 | Opção | Valor | Descrição |
 |---|---|---|
 | `<quando>` | | Quando: `6h`, `às 18h`, `+2h`, `30m`, `amanhã 9h`, `sexta 18h`, `25/12 10:00`... Veja [Quando](#quando) |
-| `-to` | `<destino>` | Modo mensagem: envia num contato (`/Jorge Pereira/`), numa menção (`@Fulano Da Silva`), num grupo (`/Grupo L200/`) ou num número (`+5521999999999`) em vez do chat atual. Repita para vários: um item por destino. O contato é buscado primeiro; vários com o nome: você escolhe na lista. E-mail não vale: a mensagem sai no WhatsApp. Veja [Destinos](index.md#destinos-contato-grupo-número-ou-e-mail) |
+| `-to` | `<destino>` | Modo mensagem: envia num contato (`/Jorge Pereira/`), numa menção (`@Fulano Da Silva`), num grupo (`/Grupo L200/`) ou num número (`+5521999999999`) em vez do chat atual. Repita para vários: um item só, que sai em todos os destinos. O contato é buscado primeiro; vários com o nome: você escolhe na lista. E-mail não vale: a mensagem sai no WhatsApp. Veja [Destinos](index.md#destinos-contato-grupo-número-ou-e-mail) |
 | `-lembrete`, `-lem` | | Modo lembrete (o mesmo de chamar como `/lembrete`) |
 | `-pv` | | Modo lembrete: lembra no seu privado em vez do chat atual |
 | `-repetir`, `-r` | `<diario\|semanal\|mensal>` | Repete no mesmo horário: todo dia, toda semana ou todo mês |
@@ -32,7 +32,7 @@ Faz algo na hora marcada. Tem dois modos, na mesma agenda:
 /cron amanhã 8h -to /Jorge Pereira/ Bom dia! Não esquece a reunião.
 /cron 18h -to @Fulano Da Silva Já saiu do trabalho?   (num grupo, mencionando)
 /cron 20/10 -to /Família/ Parabéns, vó! 🎂
-/cron 8h -r diario -to /Família/ -to /Trabalho/ Bom dia!   (um item em cada grupo)
+/cron 8h -r diario -to /Família/ -to /Trabalho/ Bom dia!   (um item, nos dois grupos)
 /lembrete 30m tirar o bolo do forno
 /lembrete às 18h pagar o boleto
 /lembrete -pv amanhã 9h ligar pro banco
@@ -65,7 +65,8 @@ enviar o relatório
 
 A lista mostra os dois tipos juntos, na ordem em que vão sair (📅 mensagem,
 ⏰ lembrete), com o texto inteiro, como foi cadastrado (os `{/comando}` também),
-e os números são os do `-edit`, do `-pause`/`-resume` e do `-rm`:
+e os números são os do `-edit`, do `-pause`/`-resume` e do `-rm`. Um item com
+vários `-to` mostra um destino por linha:
 
 ```
 /cron -l
@@ -75,6 +76,8 @@ e os números são os do `-edit`, do `-pause`/`-resume` e do `-rm`:
    → 👥 Família
 2. 📅 sex 02/10 18:00 — Bom fim de semana!
    → 👥 Grupo sobre L200
+   → 👥 Família
+   → 👤 Lourival Neto
 3. 📅 qui 05/11 09:00 🔁 todo mês ⏸️ pausado — Lembrete: aluguel vence hoje.
    → 👤 Fulano
 ```
@@ -112,8 +115,8 @@ vez:
 /cron 12h -to /Grupo L200/ {/meme}       (só mídia: sai a imagem, sem texto)
 ```
 
-Vários comandos e vários destinos no mesmo item (um item por destino, e cada
-um roda os comandos na hora dele):
+Vários comandos e vários destinos no mesmo item (um item só; na hora, ele sai
+em cada destino, com os comandos rodando para cada chat):
 
 ```
 /cron 06:00 -r diario -to /Krishina Da Silva/ -to /Grupo da Faculdade/ ⏰ Status da DeFi! {/defi} Preço do BTC! {/crypto BTC} Preço do Dólar! {/cotacao USD}
@@ -206,6 +209,7 @@ Até 366 dias à frente. O `-repetir mensal` (ou `-r mensal`) mantém o dia do m
 - Uma mensagem que comece com `/` é enviada, mas nunca roda como comando (só
   os `{/comando}` rodam; veja [Comandos no texto](#comandos-no-texto)).
 - O `-to` é só do modo mensagem; o `-pv`, só do lembrete. Com vários `-to`,
-  cada destino vira um item (e conta no limite); o mesmo destino repetido
-  conta uma vez.
+  é um item só, que sai em todos os destinos (e conta 1 no limite); o mesmo
+  destino repetido conta uma vez. Se o envio falhar num destino, os outros
+  recebem assim mesmo. Os `-edit`, `-pause` e `-rm` valem para o item inteiro.
 - O limite é de 50 itens, somando os dois tipos (setting `agenda.max`).

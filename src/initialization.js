@@ -205,7 +205,10 @@ async function initializeDb() {
             created_at INTEGER NOT NULL
         )
     `);
-    await addColumns('schedules', { paused: 'INTEGER DEFAULT 0' });
+    await addColumns('schedules', {
+        paused: 'INTEGER DEFAULT 0',
+        recipients: 'TEXT'   // JSON [{ id, name, group }]: an item with several -to (without it, the chat_id)
+    });
     await dbRun('CREATE INDEX IF NOT EXISTS idx_schedules_due ON schedules (due_at)');
 
     /*
