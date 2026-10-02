@@ -158,28 +158,42 @@ também entra no `nav` do `mkdocs.yml`, em ordem alfabética.
 
 ## Nova versão
 
-O `bump.sh` incrementa a última tag `vX.Y.Z` (ex.: `vX.Y.Z` →
-`vX.Y.Z+1`) ou usa a versão informada, que precisa ser maior que a atual
-(ex.: `./bump.sh 3.0`, para ir da 2.x para a 3.x). Depois, troca a versão no
-`package.json`, no `package-lock.json`, no README e no `docs/`, põe a data de hoje
-ao lado dela onde aparece `vX.Y.Z (de DD/MM/AAAA)` (a seção de instalação),
-commita e cria a tag anotada, as
-duas com a mensagem `Bump para X.Y`, e grava as refs no `.git/packed-refs`
-(`git pack-refs --all`), para a imagem Docker saber o commit da tag (o
-[`/version`](comandos/version.md) mostra `(git+<commit>/<tag>)`). Precisa do
-working tree limpo e não faz push.
+O `bump.sh` **abre** uma versão (o primeiro commit dela) e o `bump.sh -r` a
+**fecha** (a tag vai no último):
 
-A troca da versão fica **só** no README e no `docs/` (fora o `requirements.txt`,
-que tem as versões do MkDocs), e pula as linhas que citam o próprio `bump.sh`
-(os exemplos abaixo). No código e nos testes, o mesmo número pode ser outra
-coisa, como a versão da API do NVD ou do JSON-RPC da Solana: os testes conferem
-as duas.
+```
+vX.Y.Z ── Bump para X.Z ── ...commits da X.Z... ── Release X.Z (tag vX.Z.0)
+```
+
+- **`./bump.sh [X.Y]`** abre a próxima versão: X.Y+1 da atual (a do
+  `package.json`) ou a informada, que precisa ser maior (ex.: `./bump.sh 3.0`,
+  para ir da 2.x para a 3.x). Troca a versão no `package.json`, no
+  `package-lock.json`, no README e no `docs/` (`ZapBot X.Y`, os exemplos
+  `git+<commit>/vX.Y.Z`) e commita como `Bump para X.Y`, sem tag. A versão
+  **estável** (`hoje a vX.Y.Z`, `git checkout vX.Y.Z`) continua a
+  última release: quem instala segue nela enquanto a nova está em
+  desenvolvimento. Recusa se a versão atual ainda não foi fechada.
+- **`./bump.sh -r`** fecha a versão do `package.json`: troca a versão estável
+  (o `vX.Y.Z` sem `/` antes) pela dela, com a data de hoje ao lado em
+  `vX.Y.Z (de DD/MM/AAAA)` (a seção de instalação), commita como
+  `Release X.Y`, cria nele a tag anotada `vX.Y.Z` e grava as refs no
+  `.git/packed-refs` (`git pack-refs --all`), para a imagem Docker saber o
+  commit da tag (o [`/version`](comandos/version.md) mostra
+  `(git+<commit>/<tag>)`).
+
+Os dois precisam do working tree limpo e não fazem push. A troca da versão fica
+**só** no README e no `docs/` (fora o `requirements.txt`, que tem as versões do
+MkDocs), e pula as linhas que citam o próprio `bump.sh` (os exemplos abaixo). No
+código e nos testes, o mesmo número pode ser outra coisa, como a versão da API
+do NVD ou do JSON-RPC da Solana: os testes conferem as duas.
 
 ```bash
 ./bump.sh -n        # dry-run: só mostra o que seria alterado
-./bump.sh           # commit "Bump para X.Y" + tag vX.Y.Z (X.Y+1)
-./bump.sh -n 3.0    # dry-run para uma versão escolhida
-./bump.sh 3.0       # commit "Bump para 3.0.0" + tag v3.0.0
+./bump.sh           # abre a X.Y+1: commit "Bump para X.Y" (sem tag)
+./bump.sh 3.0       # abre a 3.0: commit "Bump para 3.0.0"
+git push            # o main com a versão nova, em desenvolvimento
+./bump.sh -n -r     # dry-run do fechamento
+./bump.sh -r        # fecha a versão: commit "Release X.Y" + tag vX.Y.Z
 git push && git push origin vX.Y.Z   # o push da tag publica o site
 ```
 
