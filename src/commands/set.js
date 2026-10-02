@@ -194,7 +194,7 @@ const showItems = async (key, items) => (PEOPLE.includes(key) ? Promise.all(item
  * items go through the same validation as /set (e.g.: a number becomes just digits),
  * so "+55 21 9..." drops the "5521...".
  */
-async function changeList(msg, { key, bruto: raw, acrescentar: append }) {
+async function changeList(msg, { key, bruto: raw, acrescentar: append, veja: see = `/set ${key}` }) {
     const schema = SETTINGS_SCHEMA[key];
     const optionAlt = append ? '-append' : '-rem';
 
@@ -224,9 +224,10 @@ async function changeList(msg, { key, bruto: raw, acrescentar: append }) {
     const change = append ? items.filter(i => !current.includes(i)) : items.filter(i => current.includes(i));
 
     if (!change.length) {
+        const which = (await showItems(key, items)).join(', ');
         await msg.reply(append
-            ? `ℹ️ *${key}* já tem ${items.join(', ')}.`
-            : `❌ *${key}* não tem ${items.join(', ')}.\n💡 _Veja os itens com /set ${key}_`);
+            ? `ℹ️ *${key}* já tem ${which}.`
+            : `❌ *${key}* não tem ${which}.\n💡 _Veja os itens com ${see}_`);
         return;
     }
 
@@ -365,11 +366,13 @@ async function cmdSet({ msg, opts, args, chatId }) {
 /**
  * The -append/-rem of a people list (bot.admins, bot.users) from the
  * text with the names, mentions and numbers: the /bot +o|-o|+v|-v shortcut.
+ * With itemsReady, the text is already the items (the phone or the group id of the
+ * current chat): does not go through the search.
  */
-async function peopleChangeList(msg, key, textAlt, append) {
-    const raw = await peopleItems(msg, key, textAlt);
+async function peopleChangeList(msg, key, textAlt, append, { itensProntos: itemsReady = false } = {}) {
+    const raw = itemsReady ? textAlt : await peopleItems(msg, key, textAlt);
     if (raw === null) return;
-    await changeList(msg, { key, bruto: raw, acrescentar: append });
+    await changeList(msg, { key, bruto: raw, acrescentar: append, veja: '/bot' });
 }
 
 module.exports = {

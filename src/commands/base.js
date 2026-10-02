@@ -63,7 +63,9 @@ function formatCommandHelp(command) {
     const options = cmdOpts
         .filter(o => o?.opts?.length)
         .map(o => {
-            const opts = o.opts.filter(Boolean).map(opt => `-${opt}`).join(', ');
+            // signs: ['+', '-'] joins the pair on a single line (+o, -o), instead of one in each section
+            const opts = o.opts.filter(Boolean)
+                .flatMap(opt => (o.sinais ?? ['-']).map(signalAlt => `${signalAlt}${opt}`)).join(', ');
             const values = (o.values ?? []).filter(notEmpty).join(' ');
             return { syntax: values ? `${opts} ${values}` : opts, desc: interpolar(o.desc) };
         });
