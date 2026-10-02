@@ -22,10 +22,10 @@ const { ROOT_DIR } = require('./constantes');
  *
  * A tag é a que aponta para o commit em uso: com o HEAD destacado (git checkout
  * release-2.0) ou num branch que está no commit da tag (o main logo depois do
- * bump.sh). Uma tag anotada (as do bump.sh) aponta para um objeto "tag", não
+ * bump.sh -r). Uma tag anotada (as do bump.sh -r) aponta para um objeto "tag", não
  * para o commit; o commit dela vem de um destes:
  *   - a linha "^<commit>" logo abaixo dela no packed-refs (num clone, ou depois
- *     de um git pack-refs --all, que o bump.sh roda ao criar a tag);
+ *     de um git pack-refs --all, que o bump.sh -r roda ao criar a tag);
  *   - o próprio objeto em .git/objects (fora do Docker, onde o .git está inteiro);
  *   - a última linha do reflog (.git/logs/HEAD): "checkout: moving from main to
  *     release-2.0", com o commit para onde foi (depois de um git fetch --tags,

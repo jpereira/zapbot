@@ -1,6 +1,6 @@
 # Publica a documentação (docs/ + mkdocs.yml) em https://jpereira.github.io/zapbot/
 #
-# Só nas releases: roda quando uma tag release-* chega ao GitHub (o bump.sh cria a
+# Só nas releases: roda quando uma tag release-* chega ao GitHub (o bump.sh -r cria a
 # tag; o "git push origin release-X.Y" dispara este workflow). Assim o site sempre
 # mostra a versão estável. Pode ser rodado à mão (Actions › Documentação › Run
 # workflow), mas só escolhendo uma tag release-*: a partir de um branch ele recusa.

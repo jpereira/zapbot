@@ -12,7 +12,7 @@ Exibe o mesmo banner do `/uptime`, com a versão do bot.
 
 O `git+9029cfb/release-2.1` diz de onde vem o código que está rodando: o commit
 e, depois da `/`, a **tag** dele. Vale com a tag em checkout ou num branch que
-está no commit dela (o `main` logo depois do `bump.sh`). Num commit sem tag, no
+está no commit dela (o `main` logo depois do `bump.sh -r`). Num commit sem tag, no
 lugar dela vem `HEAD`:
 
 ```
@@ -25,8 +25,8 @@ imagem levar só o necessário: o `.git/HEAD`, as refs dos branches e das tags, 
 `packed-refs` e o reflog do `HEAD`. Assim, cada `docker compose build` grava o
 commit e a tag do código que foi para ela, sem passo extra.
 
-As tags do `bump.sh` são *anotadas*: a ref aponta para um objeto do git, não
-para o commit, e a imagem não leva os objetos. Por isso o `bump.sh` roda
+As tags do `bump.sh -r` são *anotadas*: a ref aponta para um objeto do git, não
+para o commit, e a imagem não leva os objetos. Por isso o `bump.sh -r` roda
 `git pack-refs --all` ao criar a tag, gravando no `.git/packed-refs` o commit de
 cada tag (um clone novo já vem assim). Depois de um `git fetch --tags`, o
 checkout da tag (`git checkout release-2.1`) também resolve, pelo reflog. Se
