@@ -32,6 +32,7 @@ cliente, registra os eventos e inicia as tarefas periódicas). O código fica em
 app.js                  bootstrap, na ordem de inicialização
 src/
   constants.js         diretórios, janelas de tempo, APP_ENV
+  version.js             a versão com o commit que está rodando (1.0.10 (git+25b0870)), lida do .git
   state.js             estado da conexão, compartilhado entre os módulos
   log.js                print* coloridos
   db.js                 SQLite (dbGet/dbAll/dbRun) e o sinal dbPronto
