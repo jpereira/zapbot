@@ -21,6 +21,7 @@
 # "git checkout v2.1.0") with the current one, with today's date beside it in
 # "vX.Y.Z (from DD/MM/YYYY)"
 # 2. Commits with the message "Release X.Y" and creates the annotated tag vX.Y.Z on it
+# (with nothing to swap, the tag goes on the current commit)
 # 3. Writes the refs to .git/packed-refs (git pack-refs --all), for the image
 # Docker knows the tag commit without the git objects (src/version.js)
 #
@@ -142,8 +143,13 @@ if [ "$RELEASE" -eq 1 ]; then
         s|(${new_re}\`? \\(de )\\d{2}/\\d{2}/\\d{4}|\${1}${hoje}|g;"
     [ "$DRY_RUN" -eq 1 ] && exit 0
 
-    git --no-pager diff --stat
-    git commit -qam "Release ${version_current}"
+    # With nothing to swap (the docs are already at the version), the tag goes on the current commit
+    if git diff --quiet; then
+        echo "ℹ️ A versão estável já está em ${new_tag}: a tag vai no commit atual."
+    else
+        git --no-pager diff --stat
+        git commit -qam "Release ${version_current}"
+    fi
     git tag -a "$new_tag" -m "Release ${version_current}"
 
     # Writes the tags to .git/packed-refs with each one's commit: the Docker image does not
