@@ -32,9 +32,9 @@ async function cmdQuote(ctx) {
     }
 
     if (opts.given.has('add') || opts.given.has('del')) {
-        // Touches the global configuration: bot owner only
-        if (!msg.fromMe) {
-            await msg.reply('⛔ Apenas o dono do bot pode alterar as moedas.');
+        // Touches the global configuration: bot owner only (and the bot.admins admins)
+        if (!ctx.admin) {
+            await msg.reply('⛔ Apenas o dono do bot (ou um admin) pode alterar as moedas.');
             return;
         }
 

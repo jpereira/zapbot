@@ -226,13 +226,13 @@ async function listCache({ msg, opts, chatId }) {
  * Removes the messages of the type from the cache (deleted ones take the media files along):
  * - in any chat      → only those of THIS chat;
  * - in your own private chat → those of ALL chats.
- * Destructive: only the bot owner runs it, even if the command is opened up in the config.
+ * Destructive: only the bot owner (or a bot.admins admin) runs it, even if the command is opened up in the config.
  */
-async function cacheClean({ msg, chatId, tipo: type, alvo: target = null }) {
+async function cacheClean({ msg, chatId, tipo: type, alvo: target = null, admin = false }) {
     const t = TYPES_CACHE[type];
 
-    if (!msg.fromMe) {
-        await msg.reply(`⛔ Só o dono do bot pode usar ${t.cmd} -flush.`);
+    if (!admin) {
+        await msg.reply(`⛔ Só o dono do bot (ou um admin) pode usar ${t.cmd} -flush.`);
         return;
     }
 
@@ -347,7 +347,7 @@ const RESEND_CACHE = {
     }
 };
 
-async function cmdShow({ msg, opts, chatId }) {
+async function cmdShow({ msg, opts, chatId, admin }) {
     // -e picks the edited ones; -d (or nothing) the deleted ones
     if (opts.opt.deleted && opts.opt.edited) {
         await msg.reply('❌ Use -d (apagadas) ou -e (editadas), não os dois.');
@@ -380,7 +380,7 @@ async function cmdShow({ msg, opts, chatId }) {
     }
 
     if (opts.opt.flush) {
-        await cacheClean({ msg, chatId, tipo: type, alvo: target });
+        await cacheClean({ msg, chatId, tipo: type, alvo: target, admin });
         return;
     }
 
