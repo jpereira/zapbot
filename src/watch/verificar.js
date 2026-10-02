@@ -1,12 +1,12 @@
 /*
  * Watch: testa as mensagens recebidas contra as regras e avisa no seu privado
- * (ou no destino do -to de cada regra: outro chat ou e-mail).
+ * (ou nos destinos dos -to de cada regra: outros chats ou e-mails).
  */
 
 const { findCommand } = require('../comandos/base');
 const { resolverMencoes } = require('../contatos');
 const { dbAll, dbRun } = require('../db');
-const { destinoDaLinha, enviarAoDestino } = require('../destinos');
+const { destinoDaLinha, destinosSalvos, enviarAoDestino } = require('../destinos');
 const { printError, printInfo } = require('../log');
 const { getSetting } = require('../settings');
 const { formatarData } = require('../util/formatar');
@@ -55,24 +55,31 @@ async function verificarWatch({ msg, msgIdPure, body, chatId, chatName, isGroup,
         `📅 *Enviada em:* ${formatarData(timestamp)}\n` +
         `💬 *Texto:* "${await resolverMencoes(body, msg.mentionedIds)}"`;
 
-    // Um aviso por destino, só com as regras dele (sem -to: o seu privado)
+    /*
+     * Um aviso por destino, só com as regras dele (sem -to: o seu privado). Uma
+     * regra com vários -to entra no aviso de cada um.
+     */
     const linhas = await dbAll(
         `SELECT * FROM watch_destinations WHERE rule IN (${novas.map(() => '?').join(', ')})`, novas.map(c => c.regra));
-    const destinoDe = new Map(linhas.map(r => [r.rule, destinoDaLinha(r)]));
-    const porDestino = Map.groupBy(novas, (c) => {
-        const d = destinoDe.get(c.regra);
-        return d ? (d.email ? `email:${d.email}` : d.id) : 'privado';
-    });
+    const destinosDe = new Map(linhas.map(r => [r.rule, destinosSalvos(r.recipients, destinoDaLinha(r))]));
+    const porDestino = new Map();
+    for (const c of novas) {
+        const destinos = destinosDe.get(c.regra) ?? [];
+        for (const d of destinos.length ? destinos : [null]) {
+            const chave = d ? (d.email ? `email:${d.email}` : d.id) : 'privado';
+            if (!porDestino.has(chave)) porDestino.set(chave, { destino: d, regras: [] });
+            porDestino.get(chave).regras.push(c);
+        }
+    }
 
     printInfo(`/watch: regra(s) ${novas.map(c => `#${c.n}`).join(',')} casaram em '${chatName}' (${senderName})`);
 
-    for (const doDestino of porDestino.values()) {
-        const destino = destinoDe.get(doDestino[0].regra) ?? null;
+    for (const { destino, regras } of porDestino.values()) {
         const texto = '👀 *WATCH: MENSAGEM DETECTADA*\n\n' +
-            doDestino.map(c => `🔎 *Regra #${c.n}:* ${c.regra}\n`).join('') + detalhes;
+            regras.map(c => `🔎 *Regra #${c.n}:* ${c.regra}\n`).join('') + detalhes;
 
         await enviarAoDestino(destino, texto, {
-            assunto: `👀 Watch: ${doDestino.map(c => `#${c.n} ${c.regra}`).join(', ')}`,
+            assunto: `👀 Watch: ${regras.map(c => `#${c.n} ${c.regra}`).join(', ')}`,
             opcoes: { linkPreview: false }
         }).catch(err => printError('/watch: falha ao avisar:', err.message));
     }

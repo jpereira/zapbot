@@ -5,7 +5,10 @@
 const { findCommand, getCommandSyntax } = require('./base');
 const { resolverMencoes, resolverNomeDoGrupo } = require('../contatos');
 const { dbAll, dbGet, dbPronto, dbRun } = require('../db');
-const { colunasDoDestino, descreverDestino, destinoDaLinha, extrairDestino, resolverOuEscolher } = require('../destinos');
+const {
+    colunasDoDestino, descreverDestinos, destinoDaLinha, destinosSalvos, extrairDestinos, recipientsDe,
+    resolverDestinos
+} = require('../destinos');
 const { printInfo } = require('../log');
 const { GetOptFromCommand } = require('../opcoes');
 const { getSetting, setSetting } = require('../settings');
@@ -20,10 +23,11 @@ const { REGRA_REGEX } = require('../watch/regras');
  *   /watch -a <texto|/regex/>  → adiciona regra
  *   /watch -r -N               → remove a regra N e as ocorrências dela
  *   /watch -f [-N]             → apaga as ocorrências da regra N (sem N: de todas); mantém as regras
- *   /watch -a <regra> -to <destino>  → a regra avisa noutro chat ou por e-mail
+ *   /watch -a <regra> -to <destino>  → a regra avisa noutro chat ou por e-mail (repita o -to
+ *                                      para avisar em vários)
  *   /watch -N -to <destino|off>      → troca o destino da regra N (off: volta ao seu privado)
  * As regras ficam no setting 'watch.rules'; as ocorrências na tabela watch_hits;
- * o destino de cada regra, em watch_destinations (sem linha: o seu privado).
+ * os destinos de cada regra, em watch_destinations (sem linha: o seu privado).
  * As respostas saem no chat onde o comando foi digitado.
  */
 
@@ -33,38 +37,48 @@ function numeroDaRegra(argv) {
     return m ? Number(m[1]) : null;
 }
 
-// regra → o destino dos avisos dela (só as que têm -to)
+// Os destinos dos avisos de uma linha de watch_destinations
+const destinosDaLinha = (r) => destinosSalvos(r.recipients, destinoDaLinha(r));
+
+// regra → os destinos dos avisos dela (só as que têm -to)
 async function destinosDasRegras() {
     const linhas = await dbAll('SELECT * FROM watch_destinations');
-    return new Map(linhas.map(r => [r.rule, destinoDaLinha(r)]));
+    return new Map(linhas.map(r => [r.rule, destinosDaLinha(r)]));
 }
 
-async function gravarDestino(regra, destino) {
-    if (!destino) {
+// Sem destinos ([]): a linha sai, e os avisos voltam ao seu privado
+async function gravarDestinos(regra, destinos) {
+    if (!destinos.length) {
         await dbRun('DELETE FROM watch_destinations WHERE rule = ?', [regra]);
         return;
     }
 
-    const c = colunasDoDestino(destino);
+    const c = colunasDoDestino(destinos[0]);
     await dbRun(
-        `INSERT INTO watch_destinations (rule, dest_id, dest_name, dest_is_group, dest_email) VALUES (?, ?, ?, ?, ?)
+        `INSERT INTO watch_destinations (rule, dest_id, dest_name, dest_is_group, dest_email, recipients) VALUES (?, ?, ?, ?, ?, ?)
          ON CONFLICT(rule) DO UPDATE SET dest_id = excluded.dest_id, dest_name = excluded.dest_name,
-            dest_is_group = excluded.dest_is_group, dest_email = excluded.dest_email`,
-        [regra, c.dest_id, c.dest_name, c.dest_is_group, c.dest_email]
+            dest_is_group = excluded.dest_is_group, dest_email = excluded.dest_email, recipients = excluded.recipients`,
+        [regra, c.dest_id, c.dest_name, c.dest_is_group, c.dest_email, recipientsDe(destinos)]
     );
 }
 
-const ondeAvisa = (destino) => (destino ? descreverDestino(destino) : 'seu privado');
+const ondeAvisa = (destinos) => (destinos.length ? descreverDestinos(destinos) : 'seu privado');
 
 /**
- * O destino do -to: "off" (ou "privado") volta ao seu privado; senão, contato,
- * grupo, número ou e-mail (vários com o nome: você escolhe na lista).
- * @returns {Promise<{ destino: object|null } | null>}  null: já respondeu o erro
+ * Os destinos dos -to: "off" (ou "privado") volta ao seu privado; senão, cada um
+ * é contato, grupo, número ou e-mail (vários com o nome: você escolhe na lista).
+ * @returns {Promise<{ destinos: object[] } | null>}  null: já respondeu o erro
  */
-async function lerDestinoDoTo(msg, texto) {
-    if (/^(off|privado)$/i.test(String(texto ?? '').trim())) return { destino: null };
-    const destino = await resolverOuEscolher(msg, texto, { aceitaEmail: true });
-    return destino ? { destino } : null;
+async function lerDestinosDoTo(msg, textos) {
+    if (textos.some(t => /^(off|privado)$/i.test(String(t ?? '').trim()))) {
+        if (textos.length > 1) {
+            await msg.reply('❌ O -to off volta ao seu privado: use-o sozinho, sem outros -to.');
+            return null;
+        }
+        return { destinos: [] };
+    }
+    const destinos = await resolverDestinos(msg, textos, { aceitaEmail: true });
+    return destinos ? { destinos } : null;
 }
 
 async function cmdWatch({ msg, opts: optsDoComando, args: argsDoComando }) {
@@ -75,7 +89,7 @@ async function cmdWatch({ msg, opts: optsDoComando, args: argsDoComando }) {
      * sai do texto antes, e o resto é lido de novo. A regra do -add não pode
      * ter um " -to " solto, então.
      */
-    const { destino: destinoTexto, informado: comDestino, resto } = extrairDestino(argsDoComando);
+    const { destinos: destinosTexto, informado: comDestino, resto } = extrairDestinos(argsDoComando);
     const args = comDestino ? resto : argsDoComando;
     const opts = comDestino ? GetOptFromCommand(resto, findCommand('/watch')) : optsDoComando;
 
@@ -105,12 +119,12 @@ async function cmdWatch({ msg, opts: optsDoComando, args: argsDoComando }) {
             return;
         }
 
-        // O destino antes da regra: se ele falhar (ou ninguém escolher na lista), nada é criado
-        let destino = null;
+        // Os destinos antes da regra: se algum falhar (ou ninguém escolher na lista), nada é criado
+        let destinos = [];
         if (comDestino) {
-            const lido = await lerDestinoDoTo(msg, destinoTexto);
+            const lido = await lerDestinosDoTo(msg, destinosTexto);
             if (!lido) return;
-            destino = lido.destino;
+            destinos = lido.destinos;
         }
 
         try {
@@ -119,12 +133,13 @@ async function cmdWatch({ msg, opts: optsDoComando, args: argsDoComando }) {
             await msg.reply(`❌ Regra inválida: ${e.message}`);
             return;
         }
-        await gravarDestino(regra, destino);
+        await gravarDestinos(regra, destinos);
 
         const tipo = REGRA_REGEX.test(regra) ? 'regex' : 'texto';
-        printInfo(`/watch: regra #${regras.length + 1} adicionada: ${regra}${destino ? ` → ${destino.email ?? destino.id}` : ''}`);
+        printInfo(`/watch: regra #${regras.length + 1} adicionada: ${regra}` +
+            (destinos.length ? ` → ${destinos.map(d => d.email ?? d.id).join(', ')}` : ''));
         await msg.reply(`✅ Regra *#${regras.length + 1}* adicionada _(${tipo})_: ${regra}\n` +
-            `💡 _Avisos ${destino ? `em ${ondeAvisa(destino)}` : 'no seu privado'}._`);
+            `💡 _Avisos ${destinos.length ? `em ${ondeAvisa(destinos)}` : 'no seu privado'}._`);
         return;
     }
 
@@ -138,13 +153,14 @@ async function cmdWatch({ msg, opts: optsDoComando, args: argsDoComando }) {
             return;
         }
 
-        const lido = await lerDestinoDoTo(msg, destinoTexto);
+        const lido = await lerDestinosDoTo(msg, destinosTexto);
         if (!lido) return;
 
         const regra = regras[n - 1];
-        await gravarDestino(regra, lido.destino);
-        printInfo(`/watch: regra #${n} agora avisa em ${lido.destino ? (lido.destino.email ?? lido.destino.id) : 'privado'}`);
-        await msg.reply(`📣 Regra *#${n}* (${regra}): os avisos vão para *${ondeAvisa(lido.destino)}*.`);
+        await gravarDestinos(regra, lido.destinos);
+        printInfo(`/watch: regra #${n} agora avisa em ` +
+            (lido.destinos.length ? lido.destinos.map(d => d.email ?? d.id).join(', ') : 'privado'));
+        await msg.reply(`📣 Regra *#${n}* (${regra}): os avisos vão para *${ondeAvisa(lido.destinos)}*.`);
         return;
     }
 
@@ -163,7 +179,7 @@ async function cmdWatch({ msg, opts: optsDoComando, args: argsDoComando }) {
         const width = String(regras.length).length + 1;
         const lista = regras
             .map((r, i) => `${`#${i + 1}`.padEnd(width)}  ${r}  (${contagem.get(r) ?? 0})` +
-                (destinos.get(r) ? `  → ${descreverDestino(destinos.get(r))}` : ''))
+                (destinos.get(r)?.length ? `  → ${descreverDestinos(destinos.get(r))}` : ''))
             .join('\n');
 
         await msg.reply(
@@ -242,7 +258,7 @@ async function cmdWatch({ msg, opts: optsDoComando, args: argsDoComando }) {
 
         await setSetting('watch.rules', regras.filter((_, i) => i !== n - 1));
         const res = await dbRun('DELETE FROM watch_hits WHERE rule = ?', [regra]);
-        await gravarDestino(regra, null);
+        await gravarDestinos(regra, []);
 
         printInfo(`/watch: regra #${n} removida: ${regra}`);
         await msg.reply(

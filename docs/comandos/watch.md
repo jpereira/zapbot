@@ -34,7 +34,7 @@ do contato (`@Fulano`) e o grupo com o nome atual.
 | `-add`, `-a` | `<PATTERN\|/REGEX/>` | Adiciona uma regra (máx. 20, setting `watch.max`). Pode ter espaços |
 | `-rem`, `-r` | `-N` | Remove a regra nº N e as ocorrências dela. As seguintes são renumeradas |
 | `-flush`, `-f` | `[-N]` | Apaga as ocorrências da regra nº N (sem `-N`: de todas, inclusive de regras já removidas). As regras são mantidas |
-| `-to` | `<destino\|off>` | Para onde vão os avisos de uma regra: com `-add` (a regra nova) ou com `-N` (troca o destino). Um contato (`/Jorge Pereira/`), uma menção (`@Fulano Da Silva`), um grupo (`/Grupo L200/`), um número (`+5521999999999`) ou e-mail; `off` volta ao seu privado. Veja [Avisar em outro lugar](#avisar-em-outro-lugar) |
+| `-to` | `<destino\|off>` | Para onde vão os avisos de uma regra: com `-add` (a regra nova) ou com `-N` (troca o destino). Um contato (`/Jorge Pereira/`), uma menção (`@Fulano Da Silva`), um grupo (`/Grupo L200/`), um número (`+5521999999999`) ou e-mail; `off` volta ao seu privado. Repita para vários: a regra avisa em todos. Veja [Avisar em outro lugar](#avisar-em-outro-lugar) |
 
 ```
 /watch -a promoção
@@ -77,11 +77,14 @@ contato, um grupo, um número ou e-mail, com a mesma busca dos outros comandos
 /watch -3 -to @Fulano Da Silva                    → num grupo, mencionando a pessoa
 /watch -3 -to +5521999999999                      → no privado do número
 /watch -3 -to email                               → por e-mail (QRCODE_EMAIL_SMTP_TO)
+/watch -3 -to /Grupo Carreira/ -to email          → no grupo e por e-mail
 /watch -3 -to off                                 → volta ao seu privado
 ```
 
 - O `/watch -l` mostra o destino de cada regra que não avisa no seu privado:
-  `#3  vaga de emprego  (2)  → 👥 Grupo Carreira`.
+  `#3  vaga de emprego  (2)  → 👥 Grupo Carreira, 📧 voce@exemplo.com`.
+- Com vários `-to`, a regra avisa em todos (o mesmo repetido conta uma vez); o
+  `-N -to` troca todos de uma vez. O `-to off` vai sozinho, sem outros `-to`.
 - Se uma mensagem casar com regras de destinos diferentes, cada destino recebe
   um aviso só com as regras dele.
 - O aviso sai da sua conta, como qualquer mensagem do bot; por e-mail, vai sem
@@ -90,4 +93,4 @@ contato, um grupo, um número ou e-mail, com a mesma busca dos outros comandos
 - A regra do `-add` não pode ter um ` -to ` solto no meio: ele é lido como o
   destino.
 - Os destinos ficam na tabela `watch_destinations`; remover a regra (`-rem`)
-  apaga o destino dela.
+  apaga os destinos dela.
