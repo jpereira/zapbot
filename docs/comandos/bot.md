@@ -163,7 +163,8 @@ no horário, o relatório sai quando ele voltar.
 
 `/bot -info` (ou `-i`) mostra as versões do que o bot usa e onde ele está
 rodando: útil para saber se a imagem precisa ser refeita (o `yt-dlp`, por
-exemplo, muda com frequência) e para relatar um problema.
+exemplo, muda com frequência) e para relatar um problema. Ele também avisa
+quando há versão nova do `yt-dlp` e do `whatsapp-web.js`.
 
 ```
 /bot -info
@@ -172,13 +173,13 @@ exemplo, muda com frequência) e para relatar um problema.
 🤖 Bot
 • ZapBot: 2.2 (devel) (git+9029cfb/HEAD) (APP_ENV=prod)
 • Node.js: v24.9.0 (V8 13.6.233.10-node.27)
-• whatsapp-web.js: 1.34.7 (commit 58ddf15)
+• whatsapp-web.js: 1.34.7 (commit 58ddf15) · ✅ a mais recente · ⬆️ 1 commit novo no main
 • WhatsApp Web: 2.3000.1027123456
 • SQLite: 3.50.4
 
 🧰 Programas
 • Chromium: Chromium 141.0.7390.54
-• yt-dlp: 2026.09.21
+• yt-dlp: 2026.09.21 · ⬆️ nova: 2026.9.30
 • ffmpeg: 7.1.1
 
 🖥️ Sistema
@@ -195,6 +196,13 @@ exemplo, muda com frequência) e para relatar um problema.
 - **WhatsApp Web** é a versão que o WhatsApp está servindo para o bot (só
   aparece conectado); o **Chromium** vem do navegador do Puppeteer, ou do
   binário quando ainda não conectou.
+- **Versões novas**: o `yt-dlp` é comparado com a última do
+  [PyPI](https://pypi.org/project/yt-dlp/), e o `whatsapp-web.js` com a última
+  release do [GitHub](https://github.com/wwebjs/whatsapp-web.js/releases). Como o
+  bot usa um commit fixado do `main` (no `package.json`), aparecem também os
+  commits novos do `main` depois dele. As consultas ficam guardadas por 6 h; sem
+  internet (ou com a API fora do ar), a linha sai sem a nota. Para atualizar o
+  `yt-dlp`, refaça a imagem (`docker compose build --no-cache zapbot`).
 - Um programa que não responde em 5 s (ou não existe, como o `yt-dlp` fora do
   Docker) aparece como _não encontrado_.
 - **Carga** é a média de processos na fila do sistema em 1, 5 e 15 minutos.
