@@ -6,7 +6,7 @@ const { client } = require('../client');
 const { chatCurrentIds } = require('../contacts');
 const { dbReady } = require('../db');
 const { printInfo } = require('../log');
-const { SETTINGS_SCHEMA, getSetting, setSetting } = require('../settings');
+const { SETTINGS_SCHEMA, getSetting, setSetting, validateSetting } = require('../settings');
 
 /*
  * /set
@@ -14,7 +14,10 @@ const { SETTINGS_SCHEMA, getSetting, setSetting } = require('../settings');
  * /set <key>          → shows value, default and description
  * /set <snippet|/regex/> → lists the keys that match (e.g.: /set alerta)
  * /set <key> <value>  → changes (list: items separated by comma or space)
+ *   /set -append <chave> <valor> → numa lista, acrescenta itens (-a)
+ *   /set -rem <chave> <valor>    → numa lista, tira itens
  * /set -reset <key>   → back to default
+ * bot.admins (who else uses the admin commands) is changed only by the owner.
  *
  * The config/.env variables the bot reads show up too, read-only
  * (they change in the file, with the container recreated), and only in your private chat: in the
@@ -96,8 +99,76 @@ function formatValueSetting(value, sep = ', ', secret = false) {
     return String(value);
 }
 
+// The value after the key, as typed (with the line breaks and without the outer quotes)
+const valueRaw = (args, key) => args.slice(args.indexOf(key) + key.length).trim().replace(/^(["'])([\s\S]*)\1$/, '$2');
+
+// Keys that only the owner changes, even if an extra admin uses /set
+const SO_O_OWNER = ['bot.admins'];
+
+/*
+ * -append / -rem <key> <value>: adds or removes items of a list. The
+ * items go through the same validation as /set (e.g.: a number becomes just digits),
+ * so "+55 21 9..." drops the "5521...".
+ */
+async function changeList(msg, { key, bruto: raw, acrescentar: append }) {
+    const schema = SETTINGS_SCHEMA[key];
+    const optionAlt = append ? '-append' : '-rem';
+
+    if (!schema) {
+        await msg.reply(`❌ Setting desconhecido: ${key ?? ''}\n💡 _Veja todos com /set_`);
+        return;
+    }
+    if (schema.type !== 'list') {
+        await msg.reply(`❌ *${key}* não é uma lista: o ${optionAlt} vale só para chaves com várias entradas.\n` +
+            `💡 _Troque o valor com /set ${key} <valor> ou volte ao padrão com /set -reset ${key} (-r)._`);
+        return;
+    }
+    if (!raw) {
+        await msg.reply(`❌ Informe o que ${append ? 'acrescentar a' : 'tirar de'} *${key}*: /set ${optionAlt} ${key} <valor>`);
+        return;
+    }
+
+    let items;
+    try {
+        items = validateSetting(key, raw);
+    } catch (e) {
+        await msg.reply(`❌ Valor inválido para *${key}*: ${e.message}`);
+        return;
+    }
+
+    const current = getSetting(key);
+    const change = append ? items.filter(i => !current.includes(i)) : items.filter(i => current.includes(i));
+
+    if (!change.length) {
+        await msg.reply(append
+            ? `ℹ️ *${key}* já tem ${items.join(', ')}.`
+            : `❌ *${key}* não tem ${items.join(', ')}.\n💡 _Veja os itens com /set ${key}_`);
+        return;
+    }
+
+    const valueAlt = await setSetting(key, append ? [...current, ...change] : current.filter(i => !change.includes(i)));
+    const sep = schema.separator ? ' | ' : ', ';
+    printInfo(`Setting '${key}' ${append ? '+' : '-'} ${schema.secret ? '(segredo)' : JSON.stringify(change)}`);
+    await msg.reply(`✅ *${key}* ${append ? '+' : '−'} ${formatValueSetting(change, sep, schema.secret)}\n` +
+        `= ${formatValueSetting(valueAlt, sep, schema.secret)}`);
+}
+
 async function cmdSet({ msg, opts, args, chatId }) {
     await dbReady;
+
+    // The option key (-reset, -append, -rem) or the 1st word
+    const keyTarget = opts.opt.reset ?? opts.opt.append ?? opts.opt.rem ?? opts.argv[0];
+    if (SO_O_OWNER.includes(keyTarget) && !msg.fromMe && (opts.opt.reset || opts.opt.append || opts.opt.rem || opts.argv.length > 1)) {
+        await msg.reply(`⛔ Só o dono do bot altera o *${keyTarget}*.`);
+        return;
+    }
+
+    if (opts.given.has('append') || opts.given.has('rem')) {
+        const append = opts.given.has('append');
+        const key = append ? opts.opt.append : opts.opt.rem;
+        await changeList(msg, { key, bruto: key ? valueRaw(args, key) : '', acrescentar: append });
+        return;
+    }
 
     if (opts.opt.reset !== null) {
         const key = opts.opt.reset;
@@ -175,9 +246,7 @@ async function cmdSet({ msg, opts, args, chatId }) {
 
     // With separator (e.g.: watch.rules, one per line) uses the raw text: the tokenizer
     // would lose the line breaks and the quotes inside the rules
-    const raw = schema.separator
-        ? args.slice(args.indexOf(key) + key.length).trim().replace(/^(["'])([\s\S]*)\1$/, '$2')
-        : rest.join(' ');
+    const raw = schema.separator ? valueRaw(args, key) : rest.join(' ');
 
     try {
         const valueAlt = await setSetting(key, raw);

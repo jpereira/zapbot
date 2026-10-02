@@ -95,7 +95,7 @@ function describeAlert(kind, a) {
         (destination ? ` → ${describeDestination(destination)}` : '');
 }
 
-async function priceHandleAlert(kind, { msg, args }) {
+async function priceHandleAlert(kind, { msg, args, admin }) {
     const t = ALERT_TYPES[kind];
 
     /*
@@ -105,9 +105,9 @@ async function priceHandleAlert(kind, { msg, args }) {
     const { destino: destinationText, informado: withDestination, resto: rest } = extractDestination(args);
     const opts = GetOptFromCommand(rest, findCommand(t.cmd));
 
-    // The notices use your account (in your private chat or in the -to chat): only the owner creates, lists and removes
-    if (!msg.fromMe) {
-        await msg.reply('⛔ Apenas o dono do bot pode usar os alertas.');
+    // The notices use your account (in your private chat or in the -to chat): owner only (and the bot.admins admins)
+    if (!admin) {
+        await msg.reply('⛔ Apenas o dono do bot (ou um admin) pode usar os alertas.');
         return;
     }
 

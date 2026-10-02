@@ -235,8 +235,11 @@ client.on('message_create', async (msg) => {
             return;
         }
 
+        // You (the bot account) or an extra admin (setting bot.admins, by the sender's phone)
+        const admin = Boolean(msg.fromMe || (senderNumber && getSetting('bot.admins').includes(senderNumber)));
+
         // Admin mode (/bot +admin): other people's commands are silently ignored
-        if (getSetting('bot.adminMode') && !msg.fromMe) {
+        if (getSetting('bot.adminMode') && !admin) {
             printDebug(`Comando '${command.cmd}' de ${senderName} ignorado: modo admin`);
             return;
         }
@@ -246,7 +249,7 @@ client.on('message_create', async (msg) => {
          * in your private chat. Avoids that, with several zapbots in the same group, the command
          * of one person be executed by everyone.
          */
-        if (!msg.fromMe && command.onlyAdmin) {
+        if (!admin && command.onlyAdmin) {
             if (isDebugMode()) {
                 messageToSelf(`⚠️ ${senderName} tentou executar ${command.cmd} dentro de ${chatName}, mas sem permissão`);
             }
@@ -281,7 +284,7 @@ client.on('message_create', async (msg) => {
 
         const quotedMsg = msg.hasQuotedMsg ? await msg.getQuotedMessage().catch(() => null) : null;
 
-        await handler({ msg, opts, args, quotedMsg, senderContact, senderName, isGroup, chatId, chatName });
+        await handler({ msg, opts, args, quotedMsg, senderContact, senderName, isGroup, chatId, chatName, admin });
     } catch (error) {
         printError('[message_create] Erro geral controlado:', {
             error: error?.message || String(error),
