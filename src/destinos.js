@@ -6,8 +6,11 @@
  */
 
 const { client } = require('./cliente');
+const { resolveLidToPhone } = require('./contatos');
 const { enviarEmail, smtpParaEnviar } = require('./email');
 const { aguardarEscolha } = require('./escolhas');
+const { printDebug } = require('./log');
+const { isDebugMode } = require('./settings');
 const { semAcentos } = require('./util/formatar');
 
 /*
@@ -59,15 +62,36 @@ function lerNumero(texto) {
 
 /*
  * Os contatos salvos na agenda (com nome). O WhatsApp pode trazer a mesma
- * pessoa como @c.us e como @lid: com o mesmo nome, fica só o @c.us.
+ * pessoa duas vezes: pelo telefone e pelo LID (o id interno, de ~15 dígitos),
+ * e o do LID às vezes vem como @lid, às vezes como um @c.us com os dígitos do
+ * LID. Entre os de mesmo nome, sai o que é o LID de outro da lista (pelo mapa
+ * LID → telefone do WhatsApp) e o @lid quando há um @c.us.
  */
-async function contatosDaAgenda() {
-    const todos = (await client.getContacts?.().catch(() => []) ?? [])
-        .filter(c => c?.isMyContact && !c.isGroup && !c.isMe && c.name && c.id?._serialized);
-    const comTelefone = new Set(todos.filter(c => c.id._serialized.endsWith('@c.us')).map(c => normalizar(c.name)));
+async function semAsCopiasPeloLid(contatos) {
+    const porNome = Map.groupBy(contatos, c => normalizar(c.name));
+    const copias = new Set();
 
-    return todos.filter(c => c.id._serialized.endsWith('@c.us') || !comTelefone.has(normalizar(c.name)));
+    for (const doNome of porNome.values()) {
+        if (doNome.length < 2) continue;
+
+        const ids = new Set(doNome.map(c => c.id._serialized));
+        for (const c of doNome) {
+            const lid = c.id._serialized.endsWith('@lid') ? c.id._serialized : `${c.id._serialized.split('@')[0]}@lid`;
+            const telefone = await resolveLidToPhone(lid);
+            if (telefone && telefone !== c.id._serialized && ids.has(telefone)) copias.add(c);
+        }
+
+        // Sem o mapa: o @lid sai se o mesmo nome tem um @c.us
+        if (doNome.some(c => c.id._serialized.endsWith('@c.us') && !copias.has(c))) {
+            doNome.filter(c => c.id._serialized.endsWith('@lid')).forEach(c => copias.add(c));
+        }
+    }
+
+    return contatos.filter(c => !copias.has(c));
 }
+
+const contatosDaAgenda = async () => (await client.getContacts?.().catch(() => []) ?? [])
+    .filter(c => c?.isMyContact && !c.isGroup && !c.isMe && c.name && c.id?._serialized);
 
 const doContato = (c) => ({ id: c.id._serialized, nome: c.name, grupo: false, numero: c.number ?? null });
 const doGrupo = (g) => ({ id: g.id._serialized, nome: g.name, grupo: true });
@@ -135,8 +159,15 @@ async function resolverDestino(valor, { aceitaEmail = false, semEmail = '❌ Aqu
     const palavras = busca.split(/\s+/);
     const casa = (nome) => palavras.every(p => normalizar(nome).includes(p));
 
-    const contatos = (await contatosDaAgenda()).filter(c => casa(c.name));
-    const grupos = (await client.getChats().catch(() => [])).filter(c => c.isGroup && c.name && casa(c.name));
+    // As duas listas vêm do WhatsApp Web (lento com muitos contatos): ao mesmo tempo
+    const [agenda, chats] = await Promise.all([contatosDaAgenda(), client.getChats().catch(() => [])]);
+    const contatos = await semAsCopiasPeloLid(agenda.filter(c => casa(c.name)));
+    const grupos = chats.filter(c => c.isGroup && c.name && casa(c.name));
+
+    if (isDebugMode()) {
+        printDebug(`[DESTINO] "${texto}": contatos ${contatos.map(c => `${c.name}=${c.id._serialized}`).join(', ') || '-'}; ` +
+            `grupos ${grupos.map(g => `${g.name}=${g.id._serialized}`).join(', ') || '-'}`);
+    }
 
     const exato = contatos.find(c => normalizar(c.name) === busca) ?? null;
     const grupoExato = grupos.find(g => normalizar(g.name) === busca) ?? null;
