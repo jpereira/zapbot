@@ -34,10 +34,12 @@ function validarUrlFeed(v) {
  * novo (veja migrarSettingsRenomeados). Em ordem alfabética do nome antigo.
  */
 const SETTINGS_RENOMEADOS = {
-    'edit.alert': 'show.alert.edit',
+    'edit.alert': 'show.alert.edited',
     'gif.giphy.api.key': 'giphy.api.key',
     'resumo.maxMsgs': 'tldr.maxMsgs',
-    'revoke.status': 'show.revoke.status',
+    'revoke.status': 'show.alert.status',
+    'show.alert.edit': 'show.alert.edited',
+    'show.revoke.status': 'show.alert.status',
     'stats.enabled': 'stats.enable'
 };
 
@@ -288,10 +290,15 @@ const SETTINGS_SCHEMA = {
             return v;
         }
     },
-    'show.alert.edit': {
+    'show.alert.edited': {
         default: true,
         type: 'boolean',
         desc: 'Avisa no seu privado quando alguém edita uma mensagem; off só guarda para o /show -e.'
+    },
+    'show.alert.status': {
+        default: true,
+        type: 'boolean',
+        desc: 'Recupera status (stories) apagados; off ignora.'
     },
     'show.delayMs': {
         default: 700,
@@ -302,11 +309,6 @@ const SETTINGS_SCHEMA = {
         default: 20,
         type: 'number', min: 1, max: 100,
         desc: 'Máximo de mensagens reexibidas por /show -N.'
-    },
-    'show.revoke.status': {
-        default: true,
-        type: 'boolean',
-        desc: 'Recupera status (stories) apagados; off ignora.'
     },
     'stats.enable': {
         default: true,
