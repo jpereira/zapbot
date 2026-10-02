@@ -1,8 +1,8 @@
 /*
  * Destination of a notice or target of a command: a contact, a group, a number
  * or (where it makes sense) emails. It is the -to of all commands: /cron, the
- * price alerts (/cotacao and /crypto -alerta), /defi -alerta and the
- * /backup -send; and the target of /mudo.
+ * price alerts (/cotacao and /crypto -alerta), /defi -alerta, /watch and
+ * /backup -send; and the /mudo target. All accept several -to.
  */
 
 const { client } = require('./client');
@@ -56,7 +56,7 @@ function extractDestination(textAlt) {
 }
 
 /**
- * Removes all the "-to <destination>" from the text (/cron accepts several).
+ * Removes all the "-to <destination>" from the text (every command with -to accepts several).
  * @returns {{ destinos: Array<string|null>, informado: boolean, resto: string }}
  * destinations: one per -to, in order (null: -to without a value)
  */
@@ -346,6 +346,27 @@ async function resolverOrChoose(msg, valueAlt, o = {}) {
     });
 }
 
+// So as not to repeat the same destination: the chat or the emails
+const destinationKey = (d) => (d.email ? `email:${d.email}` : d.id);
+
+/**
+ * Resolves the several -to, one at a time (each may ask for the choice in the
+ * list). A repeat counts once.
+ * @param {object} msg  the command message
+ * @param {Array<string|null>} textos  those from extractDestinations
+ * @param {object} [o]  the same as resolverDestination
+ * @returns {Promise<Array<object>|null>}  null: one failed (the error was already replied)
+ */
+async function resolverDestinations(msg, texts, o = {}) {
+    const destinations = [];
+    for (const textAlt of texts) {
+        const d = await resolverOrChoose(msg, textAlt, o);
+        if (!d) return null;
+        if (!destinations.some(x => destinationKey(x) === destinationKey(d))) destinations.push(d);
+    }
+    return destinations;
+}
+
 /**
  * Sends a bot text to the destination: the chat (without a destination: your private chat) or,
  * by email, without WhatsApp formatting (*bold*, _italic_).
@@ -364,6 +385,19 @@ async function sendOnDestination(destination, textAlt, { assunto: subject = 'Avi
     await client.sendMessage(destination?.id || client.info.wid._serialized, textAlt, optionsAlt);
 }
 
+/**
+ * The same, for each destination (none: your private chat). One that fails does not hold up
+ * the others: at the end, throws a single error, with those that failed.
+ */
+async function sendToDestinations(destinations, textAlt, o = {}) {
+    const failures = [];
+    for (const d of destinations.length ? destinations : [null]) {
+        await sendOnDestination(d, textAlt, o)
+            .catch(err => failures.push(`${d ? describeDestination(d) : 'seu privado'}: ${err.message}`));
+    }
+    if (failures.length) throw new Error(failures.join('; '));
+}
+
 // A stored row (dest_id, dest_name, dest_is_group, dest_email) → the destination; null: your private chat
 function lineDestination(r) {
     if (r?.dest_email) return { email: r.dest_email, nome: r.dest_email, grupo: false };
@@ -377,6 +411,18 @@ const destinationColumns = (d) => ({
     dest_is_group: d?.grupo ? 1 : 0,
     dest_email: d?.email ?? null
 });
+
+/*
+ * Several -to on one line: the recipients (or alert_recipients) column stores the
+ * JSON with all of them, and the dest_* keep the first. With a single one, it stays null.
+ */
+const saveable = (d) => (d.email
+    ? { email: d.email, nome: d.email, grupo: false }
+    : { id: d.id, nome: d.nome, grupo: Boolean(d.grupo) });
+const recipientsDe = (destinations) => (destinations.length > 1 ? JSON.stringify(destinations.map(saveable)) : null);
+
+// The reverse: the JSON (or the single dest_* destination) → the list; [] = your private chat
+const destinationsSaved = (recipients, single) => (recipients ? JSON.parse(recipients) : single ? [single] : []);
 
 /*
  * The person of a mention. The id is usually a LID (the internal id): the
@@ -401,15 +447,21 @@ async function contactName(id, digits) {
 
 // "👥 Grupo sobre L200" / "👤 Fulano" / "📧 voce@exemplo.com"
 const describeDestination = (d) => `${d.email ? '📧' : d.grupo ? '👥' : '👤'} ${d.email ?? d.nome}`;
+const describeDestinations = (destinations) => destinations.map(describeDestination).join(', ');
 
 module.exports = {
     destinationColumns,
     describeDestination,
+    describeDestinations,
     lineDestination,
+    destinationsSaved,
     emailsDoSmtpTo,
     sendOnDestination,
+    sendToDestinations,
     extractDestination,
     extractDestinations,
+    recipientsDe,
     resolverDestination,
+    resolverDestinations,
     resolverOrChoose
 };

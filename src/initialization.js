@@ -140,7 +140,7 @@ async function initializeDb() {
     /*
      * Price alerts from /cotacao -alerta and /crypto -alerta (fire once
      * time and go away). dest_*: the notice chat (-to); dest_email: the emails (-to email);
-     * empty = your private chat.
+     * empty = your private chat. With several -to, recipients has all of them (and the dest_*, the first).
      */
     await dbRun(`
         CREATE TABLE IF NOT EXISTS price_alerts (
@@ -156,7 +156,13 @@ async function initializeDb() {
             dest_is_group INTEGER DEFAULT 0
         )
     `);
-    await addColumns('price_alerts', { dest_id: 'TEXT', dest_name: 'TEXT', dest_is_group: 'INTEGER DEFAULT 0', dest_email: 'TEXT' });
+    await addColumns('price_alerts', {
+        dest_id: 'TEXT',
+        dest_name: 'TEXT',
+        dest_is_group: 'INTEGER DEFAULT 0',
+        dest_email: 'TEXT',
+        recipients: 'TEXT'   // JSON [{ id, name, group } | { email }]: several -to
+    });
 
     /*
      * Your account's polls (those from /enquete and those that arrive with votes) and the
