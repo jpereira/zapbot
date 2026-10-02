@@ -30,7 +30,7 @@ function estadoBot() {
         ? '⏸️ *Bot:* desligado (todos os comandos são ignorados)'
         : '▶️ *Bot:* ativo') + '\n' +
         (getSetting('bot.adminMode')
-            ? '🔒 *Modo admin:* ligado (só o dono usa comandos)'
+            ? `🔒 *Modo admin:* ligado (só o dono${getSetting('bot.admins').length ? ' e os admins do bot.admins usam' : ' usa'} comandos)`
             : '🔓 *Modo admin:* desligado');
 }
 
