@@ -111,6 +111,7 @@ nav:
       - /version: comandos/version.md
       - /walissu: comandos/walissu.md
       - /watch: comandos/watch.md
+      - /whois: comandos/whois.md
   - Settings: settings.md
   - Operação: operacao.md
   - Desenvolvimento: desenvolvimento.md

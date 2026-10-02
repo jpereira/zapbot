@@ -389,6 +389,7 @@ async function mudarListaDePessoas(msg, key, texto, acrescentar, opcoes = {}) {
 
 module.exports = {
     cmdSet,
+    itensDoTexto,
     ehODono,
     mudarListaDePessoas
 };

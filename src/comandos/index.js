@@ -39,6 +39,7 @@ const { cmdTraduzir } = require('./traduzir');
 const { cmdUptime } = require('./uptime');
 const { cmdWalissu } = require('./walissu');
 const { cmdWatch } = require('./watch');
+const { cmdWhois } = require('./whois');
 const { printError } = require('../log');
 
 // cmd do comandos.json -> handler
@@ -79,7 +80,8 @@ const HANDLERS = {
     '/uptime': cmdUptime,
     '/version': cmdUptime,
     '/walissu': cmdWalissu,
-    '/watch': cmdWatch
+    '/watch': cmdWatch,
+    '/whois': cmdWhois
 };
 
 // Avisa no boot se o comandos.json tiver comando sem handler (ou vice-versa)

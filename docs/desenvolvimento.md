@@ -128,7 +128,7 @@ entre os casos.
 | Arquivo | O que cobre |
 |---|---|
 | `configuracao.test.js` | `comandos.json`, settings (e a migração dos renomeados), parser de opções, ajuda (uma forma do uso e um exemplo por linha) e a coerência entre config, código, README e `docs/` (inclusive a ordem alfabética, os links e a versão estável da instalação) |
-| `mensagens.test.js` | Gravação, roteamento, permissões (`onlyAdmin`, o `bot.users` com pessoas, grupos, `true`/`false` e a migração do `bot.adminMode`, bot desligado, admins extras do `bot.admins`, os atalhos `/bot +o`/`+v`), o log dos comandos desconhecidos e a contagem do `/stats` (sem os avisos do sistema) |
+| `mensagens.test.js` | Gravação, roteamento, permissões (`onlyAdmin`, o `bot.users` com pessoas, grupos, `true`/`false` e a migração do `bot.adminMode`, bot desligado, admins extras do `bot.admins`, os atalhos `/bot +o`/`+v` e o `/whois`), o log dos comandos desconhecidos e a contagem do `/stats` (sem os avisos do sistema) |
 | `comandos.test.js` | `/help`, `/debug`, `/uptime`, `/version`, `/ping`, `/noffa`, `/bot` (e o `-info`, com as versões novas do yt-dlp e do whatsapp-web.js), `/set` (e o `-append`/`-rem`) |
 | `apagadas-editadas.test.js` | Eventos de apagar/editar (e os avisos `show.alert.*`) e o `/show` (apagadas e editadas, e a busca `-q`) |
 | `mudo.test.js` | `/mudo`: avisos silenciados por pessoa ou grupo (só o alvo é o `-a`), e a busca do alvo (contato antes de grupo, menção, a lista para escolher pelo nº) |

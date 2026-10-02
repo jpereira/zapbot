@@ -94,6 +94,8 @@ estiver no setting `bot.users`, que **vem `false`**: só você (e os admins
 extras) usa comandos. Com `/bot -admin` (`bot.users` = `true`), todos usam; com
 `/bot +v /Camila Gama/ /Grupo Familia/`, só essas pessoas (em qualquer chat) e
 esses grupos (qualquer um, dentro do grupo). Veja [Usuários](bot.md#usuários).
+Para saber o seu nível (ou, sendo dono ou admin, o de alguém), use o
+[`/whois`](whois.md).
 
 As **respostas do próprio bot** também saem pela sua conta, mas nunca são
 tratadas como comando, mesmo que comecem com `/`. Sem isso, alguém poderia
@@ -141,3 +143,4 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -a`) para fazer o bot
 | [`/version`](version.md) | `/ver` | ✅ | Versão do bot (mesmo banner do `/uptime`) |
 | [`/walissu`](walissu.md) | `/ualisu` | ✅ | Walissu CVE BOT: marca 2 membros com uma CVE aleatória |
 | [`/watch`](watch.md) | `/w` | ✅ | Avisa no seu privado (ou, com um ou vários `-to`, em outros chats ou por e-mail) quando uma mensagem casa com um texto/regex |
+| [`/whois`](whois.md) | `/who`, `/id` | | Quem é e o que pode no bot, neste chat: 🤖 dono, 👑 admin, 🗣️ usuário ou 🚫 sem permissão; o dono e os admins veem os outros |

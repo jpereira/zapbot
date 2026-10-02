@@ -302,7 +302,7 @@ client.on('message_create', async (msg) => {
 
         const quotedMsg = msg.hasQuotedMsg ? await msg.getQuotedMessage().catch(() => null) : null;
 
-        await handler({ msg, opts, args, quotedMsg, senderContact, senderName, isGroup, chatId, chatName, admin });
+        await handler({ msg, opts, args, quotedMsg, senderContact, senderName, senderNumber, isGroup, chatId, chatName, admin });
     } catch (error) {
         printError('[message_create] Erro geral controlado:', {
             error: error?.message || String(error),
