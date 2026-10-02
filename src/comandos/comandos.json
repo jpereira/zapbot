@@ -1110,39 +1110,54 @@
         },
         {
             "cmd": "/stats",
-            "usage": "/stats [-N] [OPTION]",
-            "help": "Ranking do chat (quem mais fala, apaga e edita, horários e dia de pico) ou, com -me, as suas estatísticas.",
+            "usage": "/stats [-N] [/chat/] [-me]  ou  /stats -l  ou  /stats -flush </chat/>  ou  /stats -flush-all",
+            "help": "Ranking do chat atual ou de outro (/Grupo/): quem mais fala, apaga e edita, horários e dia de pico. Com -me, as suas estatísticas. O -l lista os chats com estatísticas; o -flush apaga as de um chat e o -flush-all, todas.",
             "cmd_opts": [
                 {
                     "opts": [
-                        "chat",
-                        "c"
+                        "flush",
+                        "f"
                     ],
                     "values": [
-                        "<nome>"
+                        "</chat/>"
                     ],
-                    "desc": "Estatísticas de outro chat, buscado pelo nome (com -me: só as suas nesse chat)."
+                    "desc": "Apaga as estatísticas de um chat: um grupo, ou o privado com uma pessoa, buscado pelo nome entre os que têm estatísticas. Ex: /stats -flush /Grupo Família/",
+                    "cron": false
+                },
+                {
+                    "opts": [
+                        "flush-all"
+                    ],
+                    "values": [],
+                    "desc": "Apaga as estatísticas de todos os chats.",
+                    "cron": false
+                },
+                {
+                    "opts": [
+                        "list",
+                        "l"
+                    ],
+                    "values": [],
+                    "desc": "Lista os chats com estatísticas, do que mais fala para o que menos, com o total e o dia da última mensagem."
                 },
                 {
                     "opts": [
                         "me"
                     ],
                     "values": [],
-                    "desc": "As suas mensagens, somadas em todos os chats: onde você mais fala, horários e pico."
-                },
-                {
-                    "opts": [
-                        "pv"
-                    ],
-                    "values": [],
-                    "desc": "Envia no seu privado em vez de expor no chat atual.",
-                    "cron": false
+                    "desc": "As suas mensagens, somadas em todos os chats (ou só no /chat/): onde você mais fala, horários e pico."
                 },
                 {
                     "argv": [
                         "-N"
                     ],
-                    "desc": "Período em dias (padrão 7, máx. stats.retentionDays). Ex: /stats -30"
+                    "desc": "Período em dias (padrão 7, máx. stats.retentionDays). Vem antes ou depois do /chat/. Ex: /stats -30, /stats /Grupo Família/ -10"
+                },
+                {
+                    "argv": [
+                        "</chat/>"
+                    ],
+                    "desc": "Outro chat em vez do atual: um grupo, ou o privado com uma pessoa, buscado pelo nome (sem diferenciar maiúsculas e acentos) entre os que têm estatísticas; vários com o nome: você escolhe na lista. Ex: /stats /Grupo Família/, /stats -10 /Família/, /stats -me /Família/"
                 }
             ],
             "cron": true,
