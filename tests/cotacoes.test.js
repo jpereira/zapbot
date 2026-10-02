@@ -386,6 +386,12 @@ describe('alertas de preço (-alerta)', () => {
             assert.equal(m.to, 'eu@exemplo.com');
             assert.equal(m.subject, '[ZapBot] 🔔 Alerta de preço: USD/BRL acima de R$ 6,0000');
             assert.match(m.text, /^🔔 ALERTA DE PREÇO\n\n📈 🇺🇸 USD\/BRL ficou acima de R\$ 6,0000\n💰 Agora: R\$ 6,1000/);
+
+            // O -msg vai no início do e-mail também, sem a formatação do WhatsApp
+            await bot.responder('/cotacao -alerta EUR > 7 -to email -msg *Euro* nas alturas!');
+            precos.EUR = 7.1;
+            await verificarAlertasDePreco({ forcar: true });
+            assert.match(emails.at(-1).text, /^Euro nas alturas!\n\n🔔 ALERTA DE PREÇO\n\n📈 🇪🇺 EUR\/BRL/);
         } finally {
             for (const v of Object.keys(env)) delete process.env[v];
         }

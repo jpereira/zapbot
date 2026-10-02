@@ -27,19 +27,19 @@ Controla quem pode usar o bot e mostra o relatório dele
 | `-status`, `-s` | Relatório do bot e o envio diário dele (`[<hora>\|off]`). Não combina com as outras. Veja [Status do bot](#status-do-bot) |
 | `-info`, `-i` | Versões do bot e dos programas que ele usa, e o sistema. Não combina com as outras. Veja [Informações do sistema](#informações-do-sistema) |
 
-O `-on`/`-off` e o `+admin`/`-admin` combinam; `-on` com `-off` (ou `+admin`
-com `-admin`) no mesmo comando é recusado. Os `+o`/`-o`/`+v`/`-v` vão
-sozinhos, um de cada vez. A resposta mostra o estado final:
+O `-on`/`-off`, o `+admin`/`-admin` e o `-au` combinam; `-on` com `-off` (ou
+`+admin` com `-admin`) no mesmo comando é recusado. Os `+o`/`-o`/`+v`/`-v` vão
+um de cada vez (com o `-au`, se quiser). A resposta mostra o estado final:
 
 ```
-/bot
+/bot                      (no seu privado)
 ▶️ Bot: ativo
 👥 Comandos: o dono e quem está na lista abaixo
 
 Quem usa (4)
 • 👑 +o · 👤 Jorge Pereira · +5521999999999
 • 👑 +o 🗣️ +v · 👤 Ana Souza · +5511988887777
-• 🗣️ +v · 👤 Camila Gama · +5521988887777
+• 🗣️ +v · 👤 Camila Gama · +5521999982222
 • 🗣️ +v · 👥 Grupo Familia
 💡 👑 +o: admin, usa tudo (bot.admins) · 🗣️ +v: usuário, usa os comandos comuns (bot.users)
 ```
@@ -189,15 +189,16 @@ admin continuam só seus e dos admins.
 /bot +v                                    → digitado num grupo: o grupo; no privado de alguém: a pessoa
 /bot -v /Grupo Familia/                    → tira
 /bot -v                                    → tira o chat atual
-/bot                                       → a lista: 🗣️ +v · 👤 Camila Gama · +5521988887777
+/bot                                       → a lista: 🗣️ +v · 👤 Camila Gama · +5521999982222
 ```
 
 A resposta do `+o`/`-o`/`+v`/`-v` traz o que mudou (uma linha por item, com o
 papel: 🤖 você, o dono; 👑 admin; 🗣️ usuário, pelo mais alto) e, embaixo, a
-mesma lista do `/bot`:
+mesma lista do `/bot`, a do chat ([Quem aparece na lista](#quem-aparece-na-lista)).
+Sem ninguém nela, vem a linha de quem usa os comandos (`🔒 Comandos: só o dono`):
 
 ```
-/bot +v /Camila Gama/
+/bot +v /Camila Gama/     (no seu privado)
 ✅ bot.users + 5521999982222 (Camila Gama) 🗣️
 
 Quem usa (3)

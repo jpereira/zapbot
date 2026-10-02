@@ -27,12 +27,12 @@ const { fmtQuando, partesEmBrasilia } = require('../util/quando');
  * /backup -l            → lista os backups, numerados do mais novo para o mais antigo
  * /backup -i <nº>       → detalhes: data, motivo, versão e entradas (comparadas com o banco atual)
  * /backup -r <nº|nome>  → mostra o que vai acontecer; com -sim, restaura
- * /backup -s [nº] [-to <destino>] → envia o arquivo (sem nº: o mais recente) no seu
- *                         privado ou no -to: por e-mail, como anexo pelo SMTP do bot ("email" =
- *                         QRCODE_EMAIL_SMTP_TO), ou noutro chat (contato, grupo ou número: pede -sim,
- *                         já que o banco tem as mensagens de todos os chats). Repita o -to para
- *                         vários. A forma antiga, com os e-mails direto no -s (/backup -s 2 email),
- *                         continua valendo
+ * /backup -s [nº] [-to <destino>]... → envia o arquivo (sem nº: o mais recente) no
+ *                         seu privado ou nos destinos do -to: por e-mail, como anexo pelo
+ *                         SMTP do bot ("email" = QRCODE_EMAIL_SMTP_TO), ou noutro chat
+ *                         (contato, grupo ou número: pede -sim, já que o banco tem as
+ *                         mensagens de todos os chats). Repita o -to para vários. A forma
+ *                         antiga, com os e-mails direto no -s (/backup -s 2 email), vale
  * /backup -rm <nº|all>  → apaga
  */
 // Anexo grande demais é recusado pela maioria dos provedores (Gmail: 25 MB)
@@ -158,7 +158,7 @@ async function cmdBackup({ msg, opts: optsDoComando, args }) {
         return;
     }
 
-    // -send [nº] [-to <destino>]: no seu privado, por e-mail ou noutro chat
+    // -send [nº] [-to <destino>]...: no seu privado, por e-mail ou noutros chats
     if (opts.given.has('send')) {
         const valores = [o.send, ...opts.argv].filter(Boolean).flatMap(v => String(v).split(','))
             .map(v => v.trim()).filter(Boolean);

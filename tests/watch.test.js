@@ -175,7 +175,7 @@ describe('/watch -to', () => {
         assert.match(lista, /#1  promoção  \(1\)  → 👥 Grupo sobre L200\n#2  pix  \(1\)\n/);
     });
 
-    test('-N -to troca o destino; off volta ao privado; -rem apaga o destino', async () => {
+    test('-N -to troca os destinos; off volta ao privado; -rem apaga os destinos', async () => {
         await bot.responder('/watch -a pix');
         assert.deepEqual(await bot.responder('/watch -1 -to /Fulano/'), ['📣 Regra *#1* (pix): os avisos vão para *👤 Fulano*.']);
         assert.equal((await alguemEscreve('pix'))[0].chatId, OUTRO.jid);

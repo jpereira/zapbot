@@ -303,7 +303,7 @@ async function inicializarBanco() {
     `);
     await dbRun('CREATE INDEX IF NOT EXISTS idx_watch_hits_rule ON watch_hits (rule, timestamp)');
 
-    // Destino dos avisos de cada regra do /watch (-to); sem linha = o seu privado
+    // Destinos dos avisos de cada regra do /watch (-to); sem linha = o seu privado
     await dbRun(`
         CREATE TABLE IF NOT EXISTS watch_destinations (
             rule TEXT PRIMARY KEY,

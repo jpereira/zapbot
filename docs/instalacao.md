@@ -102,5 +102,6 @@ QR Code. O ZapBot oferece dois modos, escolhidos por `QRCODE_EMAIL_ENABLE`:
 O modo e-mail é o **recomendado**, principalmente quando o bot roda num
 servidor remoto/homelab e você não quer ficar olhando logs: o QR chega na sua
 caixa de entrada, você abre no computador e lê com o celular em **WhatsApp ›
-Aparelhos conectados › Conectar um aparelho**. O WhatsApp renova o QR periodicamente; cada novo QR gera um novo
-e-mail numerado (`#1`, `#2`...) e **só o mais recente vale**.
+Aparelhos conectados › Conectar um aparelho**. O WhatsApp renova o QR
+periodicamente; cada novo QR gera um novo e-mail numerado (`#1`, `#2`...) e
+**só o mais recente vale**.
