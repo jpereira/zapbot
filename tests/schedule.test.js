@@ -347,6 +347,13 @@ describe('/cron (/agenda)', () => {
         assert.match((await bot.replyAlt('/cron -resume 7'))[0], /❌ Nº 7 não existe/);
     });
 
+    test('-to por menção (@ no WhatsApp), junto com outros destinos', async () => {
+        bot.client.lids.set('100000000000002@lid', OTHERAlt.jid);
+        assert.match((await bot.replyAlt('/cron +1h -to @100000000000002 -to L200 oi', { mencoes: ['100000000000002@lid'] }))[0],
+            /em 2 chats _\(um item para cada\)_:\n• 👤 Fulano\n• 👥 Grupo sobre L200/);
+        assert.deepEqual((await items()).map(i => i.chat_id), [OTHERAlt.jid, L200]);
+    });
+
     test('-lem é o -lembrete', async () => {
         assert.match((await bot.replyAlt('/cron -lem +2h beber água'))[0], /^⏰ \*Lembrete criado\*/);
     });
