@@ -402,7 +402,7 @@ describe('ajuda', () => {
         const linesAlt = textAlt.split('\n');
         assert.equal(linesAlt[0], 'Usage: /defi -s [nº|orca|prjx]');
         assert.equal(linesAlt[1], '       /defi orca|prjx -s');
-        assert.equal(linesAlt[6], '       /defi prjx|projectx -address <0x...>');
+        assert.equal(linesAlt[6], '       /defi prjx|projectx -address <0x...> [-alerta [valor]]');
         assert.doesNotMatch(textAlt, / {2}ou {2}/);
     });
 
