@@ -20,7 +20,8 @@
  *
  * Licenciado sob a licença MIT. É permitido usar, copiar, modificar,
  * mesclar, publicar, distribuir, sublicenciar e/ou vender cópias deste
- * software, desde que este aviso de copyright seja mantido.
+ * software, desde que este aviso de copyright seja mantido (texto completo
+ * no arquivo LICENSE).
  *
  * O SOFTWARE É FORNECIDO "COMO ESTÁ", SEM GARANTIA DE QUALQUER TIPO.
  */
