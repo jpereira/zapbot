@@ -1,6 +1,6 @@
 /*
  * Versão do bot com o commit que está rodando e de onde ele veio:
- * "2.0 (git+60315ed/release-2.0)" numa tag, "2.0 (git+60315ed/HEAD)" fora dela.
+ * "2.0 (git+60315ed/release-2.0)" numa tag, "2.1 (devel) (git+60315ed/HEAD)" fora dela.
  */
 
 const fs = require('fs');
@@ -21,11 +21,11 @@ const { ROOT_DIR } = require('./constantes');
  *      tag do código que foi para ela.
  *
  * A tag é a que aponta para o commit em uso: com o HEAD destacado (git checkout
- * release-2.0) ou num branch que está no commit da tag (o main logo depois do
- * bump.sh -r). Uma tag anotada (as do bump.sh -r) aponta para um objeto "tag", não
+ * release-2.0) ou num branch que está no commit da tag. Uma tag anotada (as do
+ * bump.sh) aponta para um objeto "tag", não
  * para o commit; o commit dela vem de um destes:
  *   - a linha "^<commit>" logo abaixo dela no packed-refs (num clone, ou depois
- *     de um git pack-refs --all, que o bump.sh -r roda ao criar a tag);
+ *     de um git pack-refs --all, que o bump.sh roda ao criar a tag);
  *   - o próprio objeto em .git/objects (fora do Docker, onde o .git está inteiro);
  *   - a última linha do reflog (.git/logs/HEAD): "checkout: moving from main to
  *     release-2.0", com o commit para onde foi (depois de um git fetch --tags,
@@ -159,11 +159,25 @@ function lerCommit(raiz = ROOT_DIR) {
 
 const ORIGEM = lerCommit();
 
-// "2.0 (git+60315ed/release-2.0)", ou só "2.0" sem o commit
-const versaoComCommit = () => (ORIGEM ? `${packageJson.version} (git+${ORIGEM.commit}/${ORIGEM.ref})` : packageJson.version);
+/*
+ * Fora de uma tag release-* o código ainda não foi liberado: é o main (ou um
+ * branch) entre um bump e a release seguinte. Aí a versão ganha o "(devel)",
+ * para ninguém achar que está rodando a estável. Sem saber o commit (nem .git,
+ * nem ZAPBOT_COMMIT), não dá para dizer: fica sem rótulo, na boa-fé.
+ */
+const emDesenvolvimento = (origem = ORIGEM) => Boolean(origem) && !/^release-/.test(origem.ref);
+
+// "2.1", ou "2.1 (devel)" fora de uma release
+const versaoDoBot = (origem = ORIGEM) => `${packageJson.version}${emDesenvolvimento(origem) ? ' (devel)' : ''}`;
+
+// "2.0 (git+60315ed/release-2.0)", "2.1 (devel) (git+60315ed/HEAD)", ou só "2.0" sem o commit
+const versaoComCommit = (origem = ORIGEM) =>
+    (origem ? `${versaoDoBot(origem)} (git+${origem.commit}/${origem.ref})` : packageJson.version);
 
 module.exports = {
     ORIGEM,
+    emDesenvolvimento,
     lerCommit,
-    versaoComCommit
+    versaoComCommit,
+    versaoDoBot
 };

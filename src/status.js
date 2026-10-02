@@ -4,7 +4,6 @@
 
 const fs = require('fs');
 const path = require('path');
-const packageJson = require('../package.json');
 
 const { estado } = require('./estado');
 const { listarBackups } = require('./backup');
@@ -13,6 +12,7 @@ const { BOT_START_TIME, CACHE_DIR, DAY_MS, MEDIA_DIR } = require('./constantes')
 const { dbAll, dbGet, dbPronto, dbRun } = require('./db');
 const { getBotUptime } = require('./log');
 const { getSetting } = require('./settings');
+const { versaoDoBot } = require('./versao');
 const { getDirSize, humanSize } = require('./util/arquivos');
 const { fmtNum, plural } = require('./util/formatar');
 const { fmtQuando, instanteEmBrasilia, partesEmBrasilia } = require('./util/quando');
@@ -63,7 +63,7 @@ async function textoDoStatus(agora = Date.now()) {
     const conectado = estado.autenticadoEm ? getBotUptime(estado.autenticadoEm) : 'não conectado';
     const banco = tamanho(path.join(CACHE_DIR, 'bot_database.db'));
 
-    let texto = `📊 *Status do ZapBot ${packageJson.version}* · últimas 24 h\n_${fmtQuando(agora, agora)}_\n\n` +
+    let texto = `📊 *Status do ZapBot ${versaoDoBot()}* · últimas 24 h\n_${fmtQuando(agora, agora)}_\n\n` +
         `🤖 *No ar:* ${getBotUptime(BOT_START_TIME)} · conectado: ${conectado}\n` +
         `🗄️ *Cache:* ${humanSize(tamanho(CACHE_DIR))} _(banco ${humanSize(banco)} · mídias ${humanSize(tamanho(MEDIA_DIR))})_ · ${fmtNum(mensagens)} mensagens\n` +
         `👀 *Watch:* ${fmtNum(totalWatch)} ocorrência${totalWatch === 1 ? '' : 's'}${detalheWatch ? ` _(${detalheWatch})_` : ''}\n` +

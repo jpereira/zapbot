@@ -47,10 +47,10 @@ Logo no início dos logs aparece a versão, com o commit e a tag (veja o
 [`/version`](comandos/version.md)), e depois de ler o QR Code você deve ver:
 
 ```
-[!] 🤖 Starting ZapBot 2.2 (git+9029cfb/release-2.2)...
+[!] 🤖 Starting ZapBot X.Y (git+9029cfb/release-X.Y)...
 ...
 [+] 🔐 Whatsapp authentication success!
-[+] 🤖 ZapBot 2.2 (git+9029cfb/release-2.2) inicializado! Informando 5521999999999@c.us
+[+] 🤖 ZapBot X.Y (git+9029cfb/release-X.Y) inicializado! Informando 5521999999999@c.us
 ```
 
 e receber a mesma mensagem no seu WhatsApp. Mande `/ping` para qualquer chat:

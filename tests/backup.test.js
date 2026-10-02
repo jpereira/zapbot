@@ -38,7 +38,7 @@ describe('/backup (/bkp)', () => {
         const meta = JSON.parse(fs.readFileSync(path.join(BACKUP_DIR, `${b.nome}.json`), 'utf8'));
         assert.equal(meta.motivo, 'manual');
         // A versão com o commit e a tag que criaram o backup: "2.0 (git+9029cfb/release-2.0)"
-        assert.match(meta.versao, new RegExp(`^${require('../package.json').version.replace('.', '\\.')} \\(git\\+[0-9a-f]{7}/[\\w.-]+\\)$`));
+        assert.match(meta.versao, new RegExp(`^${require('../package.json').version.replace('.', '\\.')}(?: \\(devel\\))? \\(git\\+[0-9a-f]{7}/[\\w.-]+\\)$`));
         assert.equal(meta.entradas.messages, 2);
     });
 
@@ -65,7 +65,7 @@ describe('/backup (/bkp)', () => {
 
         await bot.entregar(bot.criarMensagem({ texto: 'mais uma', de: bot.OUTRO.jid }));
         const [info] = await bot.responder('/backup -i 2');
-        assert.match(info, /💾 \*Backup 2\*\n📄 zapbot-\d{8}-\d{6}\n🕐 .* · manual · ZapBot [\d.]+ \(git\+[0-9a-f]{7}\/[\w.-]+\)\n/);
+        assert.match(info, /💾 \*Backup 2\*\n📄 zapbot-\d{8}-\d{6}\n🕐 .* · manual · ZapBot [\d.]+(?: \(devel\))? \(git\+[0-9a-f]{7}\/[\w.-]+\)\n/);
         assert.match(info, /messages: 0 → 4/); // 2 recebidas + os 2 comandos /backup
 
         assert.match((await bot.responder('/backup -i 9'))[0], /❌ Backup 9 não existe/);

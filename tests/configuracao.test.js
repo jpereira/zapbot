@@ -193,7 +193,7 @@ describe('documentação', () => {
         assert.ok(total > 50, `poucos links conferidos (${total})`);
     });
 
-    test('instalação e README: a versão estável é uma release com data, até a do package.json (a seguinte só no bump.sh -r)', () => {
+    test('instalação e README: a versão estável é uma release com data, até a do package.json (a seguinte só no bump.sh)', () => {
         const { version } = require('../package.json');
         const numeros = (v) => v.split('.').map(Number);
         const [x, y] = numeros(version);
