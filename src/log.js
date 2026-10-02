@@ -61,9 +61,22 @@ function printCall(who, call, chat) {
     console.log(colors.blue(`[${getTimestamp()}] [+] '${who}' executed '${call}'${chat ? ` in '${chat}'` : ''}`));
 }
 
+/*
+ * A command that does not exist (or is disabled): the owner's always shows up; the others',
+ * only in debug mode (otherwise any "/" typed in a group would flood the log).
+ *   [!] ⚠️ 'Jorge' executed unknown command: '/tapioca'
+ *   [DEBUG] ⚠️ 'Fulano' executed unknown command: '/tapioca'
+ */
+function printCommandUnknown(who, call, { doDono: owner }) {
+    const textAlt = `⚠️ '${who}' executed unknown command: '${call}'`;
+    if (owner) console.log(colors.yellow(`[${getTimestamp()}] [!] ${textAlt}`));
+    else console.log(colors.white(`[${getTimestamp()}] [DEBUG] ${textAlt}`));
+}
+
 module.exports = {
     getBotUptime,
     printCall,
+    printCommandUnknown,
     printDebug,
     printError,
     printInfo,

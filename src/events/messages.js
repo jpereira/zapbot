@@ -11,7 +11,7 @@ const { HANDLERS } = require('../commands/index');
 const { removeDeviceSuffix, resolveLidToPhone, groupResolverName, privateResolverName } = require('../contacts');
 const { dbGet, dbReady, dbRun } = require('../db');
 const { replyChoice } = require('../choices');
-const { printCall, printDebug, printError, printInfo } = require('../log');
+const { printCall, printCommandUnknown, printDebug, printError, printInfo } = require('../log');
 const { GetOptFromCommand } = require('../options');
 const { getSetting, isDebugMode } = require('../settings');
 const { countStats, myIdStats } = require('../stats');
@@ -225,7 +225,10 @@ client.on('message_create', async (msg) => {
         const args = body.slice(caller.length).trim();
 
         if (!command) {
-            if (isDebugMode()) printDebug(`Comando '${caller}' não encontrado`);
+            if (msg.fromMe || isDebugMode()) {
+                const who = msg.fromMe ? (client.info?.pushname || 'Você') : senderName;
+                printCommandUnknown(who, body.length > 100 ? `${body.slice(0, 100)}…` : body, { doDono: msg.fromMe });
+            }
             return;
         }
 
