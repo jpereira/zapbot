@@ -98,8 +98,12 @@ describe('/mudo (/m, /mute)', () => {
         assert.match((await bot.responder('/mudo -rm 9'))[0], /❌ Nº 9 não existe/);
     });
 
-    test('erros: sem opção, sem alvo, alvo inválido, você mesmo', async () => {
-        assert.match((await bot.responder('/mudo L200'))[0], /❌ Escolha o que silenciar/);
+    test('só o alvo, sem opção, é o -a: silencia tudo', async () => {
+        assert.match((await bot.responder('/mudo /Grupo sobre L200/'))[0], /^🔇 \*Silenciado:\* 👥 Grupo sobre L200 — apagadas, editadas, status\n/);
+        assert.match((await bot.responder('/mudo +5521911111111'))[0], /^🔇 \*Silenciado:\* 👤 Fulano — apagadas, editadas, status\n/);
+    });
+
+    test('erros: sem alvo, alvo inválido, você mesmo', async () => {
         assert.match((await bot.responder('/mudo -d'))[0], /❌ Informe quem/);
         assert.match((await bot.responder('/mudo -d xyz'))[0], /❌ Nenhum contato ou grupo com "xyz" no nome/);
         assert.match((await bot.responder('/mudo -d email'))[0], /❌ O \/mudo silencia uma pessoa ou um grupo/);

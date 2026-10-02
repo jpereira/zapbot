@@ -15,8 +15,9 @@ const { plural } = require('../util/formatar');
  *   -e (-edited)   silencia os avisos de edições
  *   -s (-status)   silencia os avisos de status apagados
  *   -a (-all)      tudo isso
- * As opções se combinam (-d -e). O alvo é buscado como no -to: primeiro nos
- * contatos, depois nos grupos (vários: você escolhe na lista), ou um número.
+ * As opções se combinam (-d -e); só o alvo, sem opção, é o -a. O alvo é buscado
+ * como no -to: primeiro nos contatos, depois nos grupos (vários: você escolhe na
+ * lista), ou um número.
  * Silenciar de novo o mesmo alvo soma ao que já estava. Sem nada, lista;
  * -rm <nº|all> desfaz.
  */
@@ -73,7 +74,7 @@ async function listar(msg) {
     );
 
     if (!mutes.length) {
-        await msg.reply('🔇 Ninguém silenciado.\n💡 _Ex.: /mudo -a /Jorge Pereira/, /mudo -a /Grupo L200/ ou /mudo -s +5521999999999_');
+        await msg.reply('🔇 Ninguém silenciado.\n💡 _Ex.: /mudo /Jorge Pereira/, /mudo /Grupo L200/ ou /mudo -s +5521999999999_');
         return;
     }
 
@@ -118,14 +119,13 @@ async function cmdMudo({ msg, args }) {
         return;
     }
 
-    if (!r.colunas.size) {
-        await msg.reply('❌ Escolha o que silenciar: -d (apagadas), -e (editadas), -s (status) ou -a (tudo).\n💡 _Ex.: /mudo -a /Grupo L200/_');
-        return;
-    }
     if (!r.alvo) {
         await msg.reply('❌ Informe quem: um contato, um grupo ou um número (/Jorge Pereira/, /Grupo L200/ ou +5521999999999).');
         return;
     }
+
+    // Só o alvo (/mudo /Grupo L200/): silencia tudo, como o -a
+    if (!r.colunas.size) COLUNAS.forEach(c => r.colunas.add(c));
 
     // Vários contatos ou grupos com o nome: espera você escolher na lista
     const destino = await resolverOuEscolher(msg, r.alvo, {
