@@ -41,7 +41,6 @@ hora, sem reiniciar, e sobrevivem a reinícios. Para ver e alterar, use o
 | `openai.timeout.ms` | 5000–300000 | `60000` | Timeout do `/gpt`, usado quando `OPENAI_TIMEOUT_MS` não está no `config/.env` |
 | `pixelart.maxParts` | 1–10 | `3` | Máximo de partes do [`/pixelart`](comandos/pixelart.md) quando a arte é mais alta que 4096 px |
 | `pixelart.packs` | lista | `chuck-norris-lvl` | Packs do 16colo.rs sorteados pelo [`/pixelart`](comandos/pixelart.md) sem argumentos |
-| `resumo.maxMsgs` | 10–2000 | `500` | Máximo de mensagens enviadas à OpenAI por [`/tldr`](comandos/tldr.md) |
 | `show.alert.edit` | on/off | `on` | Avisa no seu privado quando alguém edita uma mensagem; `off` só guarda para o `/show -e` |
 | `show.delayMs` | 0–10000 | `700` | Intervalo entre os envios do `/show` |
 | `show.max` | 1–100 | `20` | Máximo de mensagens por `/show -N` |
@@ -52,11 +51,12 @@ hora, sem reiniciar, e sobrevivem a reinícios. Para ver e alterar, use o
 | `sticker.name` | texto | `ZapBot` | Nome do pacote das figurinhas |
 | `tempo.city` | texto | `Niteroi, Rio de Janeiro, Brazil` | Cidade do `/tempo` quando nenhuma é informada |
 | `tempo.maxDays` | 1–16 | `7` | Máximo de dias do `/tempo N` (ou `Nd`); 16 é o limite da Open-Meteo |
+| `tldr.maxMsgs` | 10–2000 | `500` | Máximo de mensagens enviadas à OpenAI por [`/tldr`](comandos/tldr.md) |
 | `traduzir.api.key` | texto (pode ser vazio) | *(vazio)* | Chave do Google Cloud Translation, usada quando `GOOGLE_TRANSLATE_API_KEY` não está no `config/.env`. Exibida mascarada (`••••1234`); `/set -reset traduzir.api.key` apaga |
 | `traduzir.lang` | texto | `pt` | Idioma de destino padrão do [`/traduzir`](comandos/traduzir.md) (código: `pt`, `en`, `es`...) |
 | `watch.hitsRetentionDays` | 1–365 | `30` | Dias que as ocorrências do `/watch` ficam guardadas |
 | `watch.max` | 1–100 | `20` | Máximo de regras do `/watch` |
-| `watch.rules` | lista (uma por linha) | *(vazia)* | Regras do `/watch`: texto ou `/regex/flags`. Normalmente alterada pelo `/watch -a`/`-d` |
+| `watch.rules` | lista (uma por linha) | *(vazia)* | Regras do `/watch`: texto ou `/regex/flags`. Normalmente alterada pelo `/watch -a`/`-rem` |
 | `watch.showMax` | 1–100 | `20` | Máximo de ocorrências listadas por `/watch -show` |
 
 Uma chave nova é declarada em `SETTINGS_SCHEMA` (`src/settings.js`), **em ordem
@@ -64,3 +64,10 @@ alfabética**, com padrão, tipo, descrição e limites (`allowEmpty` para texto
 que pode ficar vazio, `secret` para mascarar o valor no `/set` e nos logs), e
 lida com `getSetting('<chave>')`. Valores inválidos no banco são ignorados no
 boot (vale o padrão, com aviso nos logs).
+
+Para **renomear** uma chave sem perder o valor salvo, além de trocar o nome no
+`SETTINGS_SCHEMA`, ponha `'antigo': 'novo'` em `SETTINGS_RENOMEADOS`: no boot, o
+valor do nome antigo passa para o novo (se o novo ainda estiver no padrão) e o
+antigo sai do banco. Assim já foram `edit.alert` → `show.alert.edit`,
+`revoke.status` → `show.revoke.status`, `stats.enabled` → `stats.enable`,
+`gif.giphy.api.key` → `giphy.api.key` e `resumo.maxMsgs` → `tldr.maxMsgs`.

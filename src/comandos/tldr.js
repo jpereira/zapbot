@@ -15,7 +15,7 @@ const { plural, semAcentos } = require('../util/formatar');
  * /tldr: resume a conversa de um chat pelo ChatGPT (mesma chave e modelo do /gpt).
  *   /tldr              → as últimas 100 mensagens deste chat
  *   /tldr 2h | 30m     → as das últimas 2 horas | 30 minutos (o "-" na frente é opcional)
- *   /tldr 300          → as últimas 300 (máx. setting 'resumo.maxMsgs')
+ *   /tldr 300          → as últimas 300 (máx. setting 'tldr.maxMsgs')
  *   /tldr -c família   → de outro chat, buscado pelo nome
  *   /tldr -pv          → no seu privado em vez de expor no chat atual
  * Usa o texto já gravado no banco: as mensagens comuns ficam 68 h. Ficam de
@@ -82,11 +82,11 @@ async function cmdTldr({ msg, opts, chatId, chatName }) {
         return;
     }
 
-    const max = getSetting('resumo.maxMsgs');
+    const max = getSetting('tldr.maxMsgs');
     const avisos = [];
 
     if (periodo.n > max) {
-        avisos.push(`limitado a ${max} mensagens (setting resumo.maxMsgs)`);
+        avisos.push(`limitado a ${max} mensagens (setting tldr.maxMsgs)`);
         periodo.n = max;
     }
 

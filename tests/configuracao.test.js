@@ -313,6 +313,26 @@ describe('settings', () => {
         assert.ok(bot.errosNoLog().some(l => l.includes("Setting 'commands.disabled' com item inválido")));
     });
 
+    test('settings renomeados: o valor antigo vai para o novo (se ele está no padrão) e o antigo sai', async () => {
+        // Um bot da 1.8/2.0: os nomes antigos com valores seus; os novos, criados com o padrão
+        const salvar = (key, value) => bot.dbRun(
+            'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value', [key, JSON.stringify(value)]);
+        await salvar('resumo.maxMsgs', 50);
+        await salvar('edit.alert', false);
+        await salvar('stats.enabled', true);
+        await salvar('stats.enable', false);     // já mudado no nome novo (o padrão é on): fica o novo
+        await salvar('show.max', 20);
+
+        await carregarSettings();
+        assert.equal(getSetting('tldr.maxMsgs'), 50);
+        assert.equal(getSetting('show.alert.edit'), false);
+        assert.equal(getSetting('stats.enable'), false);
+
+        const antigos = await bot.dbAll("SELECT key FROM settings WHERE key IN ('resumo.maxMsgs', 'edit.alert', 'stats.enabled')");
+        assert.deepEqual(antigos, []);
+        assert.ok(bot.logs.some(l => l.includes("Setting 'resumo.maxMsgs' renomeado para 'tldr.maxMsgs': o valor salvo foi mantido")));
+    });
+
     test('envOuSetting: .env vence; .env inválido cai no setting', async () => {
         await setSetting('openai.timeout.ms', 60000);
         process.env.OPENAI_TIMEOUT_MS = '9000';

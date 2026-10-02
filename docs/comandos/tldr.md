@@ -6,7 +6,7 @@ combinados e pendências, em tópicos. Usa a mesma chave e o mesmo modelo do
 
 | Opção | Valor | Descrição |
 |---|---|---|
-| `[período]` | | `2h` ou `30m`: as mensagens desse tempo para cá; `300`: as últimas 300 (máx. 500, setting `resumo.maxMsgs`). Padrão: as últimas 100. O `-` na frente é opcional (`-2h`) |
+| `[período]` | | `2h` ou `30m`: as mensagens desse tempo para cá; `300`: as últimas 300 (máx. 500, setting `tldr.maxMsgs`). Padrão: as últimas 100. O `-` na frente é opcional (`-2h`) |
 | `-chat`, `-c` | `<nome>` | Resume outro chat, buscado pelo nome: todas as palavras, em qualquer ordem, sem diferenciar acentos. Nome com espaço vai entre aspas: `-c "trabalho rio"` |
 | `-pv` | | Envia no seu privado em vez de expor no chat atual |
 
