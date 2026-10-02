@@ -45,8 +45,9 @@ Quem usa (4)
 
 A lista de quem usa junta os admins e os usuários, como o resto do bot mostra
 um destino: `👤 Nome · +número` (ou só `👤 +número`, sem o contato na agenda) e
-`👥 Grupo`. Quem está nas duas aparece uma vez, com as duas marcas. Sem
-ninguém, a lista não aparece.
+`👥 Grupo`. Quem está nas duas aparece uma vez, com as duas marcas. Se você
+mesmo estiver na lista, sai com `🤖 dono` (você já usa tudo). Sem ninguém, a
+lista não aparece.
 
 Com todos liberados (`/bot -admin`), a lista mostra só os admins, e o `/bot`
 avisa que qualquer pessoa está usando os comandos:
@@ -161,6 +162,20 @@ admin continuam só seus e dos admins.
 /bot -v /Grupo Familia/                    → tira
 /bot -v                                    → tira o chat atual
 /bot                                       → a lista: 🗣️ +v · 👤 Camila Gama · +5521988887777
+```
+
+A resposta do `+o`/`-o`/`+v`/`-v` vem uma coisa por linha: o que mudou e, embaixo,
+a lista inteira, cada um com o papel (🤖 você, o dono; 👑 admin; 🗣️ usuário,
+pelo mais alto):
+
+```
+/bot +v /Jorge Pereira/
+✅ bot.users + 5521999981111 (Jorge Pereira) 🤖
+
+bot.users (2)
+- 5521999983333 (Jorge Chip L200) 🗣️
+- 5521999981111 (Jorge Pereira) 🤖
+💡 🤖 dono · 👑 admin (+o) · 🗣️ usuário (+v)
 ```
 
 - As pessoas são buscadas como no `bot.admins` (nome, menção ou número), e os
