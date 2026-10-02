@@ -398,12 +398,12 @@ describe('ajuda', () => {
     });
 
     test('as formas do uso ("  ou  ") saem uma por linha, alinhadas', () => {
-        const linhas = formatCommandHelp(findCommand('/defi')).split('\n');
-        assert.match(linhas[0], /^Usage: \/defi -orca -position <endereço>/);
-        assert.match(linhas[1], /^ {7}\/defi -project-x -wallet <0x\.\.\.>$/);
-        assert.match(linhas[2], /^ {7}\/defi -alerta <nº\|all> \[-to <destino>\]/);
-        assert.match(linhas[3], /^ {7}\/defi \[OPTION\]$/);
-        assert.doesNotMatch(linhas.join('\n'), / {2}ou {2}/);
+        const texto = formatCommandHelp(findCommand('/defi'));
+        const linhas = texto.split('\n');
+        assert.equal(linhas[0], 'Usage: /defi -s [nº|orca|prjx]');
+        assert.equal(linhas[1], '       /defi orca|prjx -s');
+        assert.equal(linhas[6], '       /defi prjx|projectx -address <0x...>');
+        assert.doesNotMatch(texto, / {2}ou {2}/);
     });
 
     test('${CACHE_DIR}, ${MEDIA_DIR} e ${TMP_DIR} viram os caminhos reais na ajuda', () => {

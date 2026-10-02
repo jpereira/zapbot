@@ -488,9 +488,19 @@
         },
         {
             "cmd": "/defi",
-            "usage": "/defi -orca -position <endereço> [-nft <mint>] [-pool <endereço>]  ou  /defi -project-x -wallet <0x...>  ou  /defi -alerta <nº|all> [-to <destino>] [-taxas <valor>]  ou  /defi [OPTION]",
+            "usage": "/defi -s [nº|orca|prjx]  ou  /defi orca|prjx -s  ou  /defi -l  ou  /defi -rm <nº...|all>  ou  /defi -alerta <nº|all> [-to <destino>] [-taxas <valor>]  ou  /defi orca -address <endereço> [-pool <endereço>] [-nft <mint>]  ou  /defi prjx|projectx -address <0x...>",
             "help": "Posições de liquidez da Orca (Solana) e do Project X (HyperEVM): saldo, faixa, preço e taxas a coletar, lidos on-chain. Com -alerta, avisa quando uma posição sai da faixa, quando volta e, com -taxas, quando as taxas a coletar passam de um valor.",
             "cmd_opts": [
+                {
+                    "opts": [
+                        "address"
+                    ],
+                    "values": [
+                        "<endereço>"
+                    ],
+                    "desc": "Cadastra: com orca, o endereço da posição da Orca; com prjx (ou projectx), a carteira do Project X (0x e 40 caracteres hexadecimais), da qual o bot lê todas as posições abertas.",
+                    "cron": false
+                },
                 {
                     "opts": [
                         "alerta",
@@ -508,7 +518,7 @@
                         "l"
                     ],
                     "values": [],
-                    "desc": "Lista as posições cadastradas (também sem argumentos)."
+                    "desc": "Lista os cadastros (também sem argumentos). No seu privado, com os endereços inteiros; fora dele, abreviados."
                 },
                 {
                     "opts": [
@@ -517,15 +527,7 @@
                     "values": [
                         "<mint>"
                     ],
-                    "desc": "Com -position: o NFT da posição (opcional; o bot confere se bate).",
-                    "cron": false
-                },
-                {
-                    "opts": [
-                        "orca"
-                    ],
-                    "values": [],
-                    "desc": "Protocolo da posição a cadastrar: a Orca, na Solana (com -position).",
+                    "desc": "Com orca -address: o NFT da posição (opcional; o bot confere se bate).",
                     "cron": false
                 },
                 {
@@ -535,27 +537,7 @@
                     "values": [
                         "<endereço>"
                     ],
-                    "desc": "Com -position: a pool (opcional; o bot confere se bate).",
-                    "cron": false
-                },
-                {
-                    "opts": [
-                        "position",
-                        "p"
-                    ],
-                    "values": [
-                        "<endereço>"
-                    ],
-                    "desc": "Cadastra a posição da Orca (com -orca).",
-                    "cron": false
-                },
-                {
-                    "opts": [
-                        "project-x",
-                        "prjx"
-                    ],
-                    "values": [],
-                    "desc": "Protocolo a cadastrar: o Project X (prjx.com), na HyperEVM (com -wallet). O bot lê todas as posições abertas da carteira.",
+                    "desc": "Com orca -address: a pool (opcional; o bot confere se bate).",
                     "cron": false
                 },
                 {
@@ -563,9 +545,9 @@
                         "rm"
                     ],
                     "values": [
-                        "<nº|all>"
+                        "<nº...|all>"
                     ],
-                    "desc": "Remove a posição nº N (ou todas). Junto com -alerta: só desliga o alerta da nº N (ou de todas).",
+                    "desc": "Remove o cadastro nº N, vários (-rm 1 3 ou 1,3) ou todos; se algum nº não existe, nenhum sai. Junto com -alerta: só desliga o alerta da nº N (ou de todas).",
                     "cron": false
                 },
                 {
@@ -574,9 +556,9 @@
                         "s"
                     ],
                     "values": [
-                        "[nº]"
+                        "[nº|orca|prjx]"
                     ],
-                    "desc": "Position Details de todas as posições (ou da nº N): saldo, faixa, preço atual e taxas a coletar."
+                    "desc": "Position Details de todas as posições, só da nº N ou só de um protocolo: saldo, faixa, preço atual e taxas a coletar. Ex: /defi -s, /defi -s 2, /defi -s orca, /defi prjx -s"
                 },
                 {
                     "opts": [
@@ -599,15 +581,10 @@
                     "cron": false
                 },
                 {
-                    "opts": [
-                        "wallet",
-                        "w"
+                    "argv": [
+                        "<orca|prjx|projectx>"
                     ],
-                    "values": [
-                        "<0x...>"
-                    ],
-                    "desc": "Com -project-x: a carteira (0x e 40 caracteres hexadecimais).",
-                    "cron": false
+                    "desc": "O protocolo: orca (Orca, na Solana) ou prjx/projectx (Project X, na HyperEVM). Cadastra com -address; com -s, mostra só ele."
                 }
             ],
             "cron": true,

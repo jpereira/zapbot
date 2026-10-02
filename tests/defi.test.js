@@ -32,7 +32,7 @@ const NFT = 'C1MEDy3xt3gxiDtFkHt7HBWxxUVSarKZgt22FUzsKoji';
 const POOL = 'CeaZcxBNLpJWtxzt58qQmfMBtJY8pQLvursXTJYGQpbN';
 const SOL = 'So11111111111111111111111111111111111111112';
 const CBBTC = 'cbbtcf3aa214zXHbiAZQwf4122FBYbraNdFqgw4iMij';
-const CADASTRO = `/defi -orca -position ${POSICAO} -nft ${NFT} -pool ${POOL}`;
+const CADASTRO = `/defi orca -address ${POSICAO} -pool ${POOL} -nft ${NFT}`;
 
 const conta = (endereco) => Buffer.from(CONTAS[endereco], 'base64');
 
@@ -167,27 +167,27 @@ describe('/defi', () => {
         assert.match((await bot.responder('/defi -s 1'))[0], /Orca · SOL\/cbBTC/);
         assert.match((await bot.responder('/defi -s 5'))[0], /❌ Posição nº 5 não existe/);
 
-        assert.deepEqual(await bot.responder('/defi -rm 1'), ['🗑️ Posição removida: Hz15…RaPZ']);
+        assert.deepEqual(await bot.responder('/defi -rm 1'), ['🗑️ Removido: Orca · Hz15…RaPZ']);
         assert.match((await bot.responder('/defi -show'))[0], /🌊 Nenhuma posição cadastrada/);
         assert.match((await bot.responder('/defi -l'))[0], /🌊 Nenhuma posição cadastrada/);
     });
 
-    test('cadastro: só -position basta; erros de protocolo, endereço, conta, NFT, pool e repetida', async () => {
+    test('cadastro: só -address basta; erros de protocolo, endereço, conta, NFT, pool e repetida', async () => {
         const erro = async (linha, esperado) => assert.match((await bot.responder(linha))[0], esperado, linha);
 
-        await erro(`/defi -position ${POSICAO}`, /❌ Informe o protocolo: -orca \(com -position\) ou -project-x \(com -wallet\)/);
-        await erro('/defi -orca', /❌ Informe o endereço da posição/);
-        await erro('/defi -orca -position xyz', /❌ -position: "xyz" não é um endereço da Solana/);
-        await erro(`/defi -orca -position ${POSICAO} -nft ${POOL}`, /❌ O NFT .* não é o desta posição \(o dela é C1ME/);
-        await erro(`/defi -orca -position ${POSICAO} -pool ${NFT}`, /❌ A posição é da pool CeaZ.*, não da C1ME/);
-        await erro(`/defi -orca -position ${POOL}`, /não é uma posição da Orca/);
-        await erro(`/defi -orca -position ${'1'.repeat(32)}`, /❌ A conta 1{32} não existe na Solana/);
+        await erro(`/defi -address ${POSICAO}`, /❌ Informe o protocolo: orca ou prjx, antes do -address/);
+        await erro('/defi orca', /❌ Informe o endereço da posição/);
+        await erro('/defi orca -address xyz', /❌ -address: "xyz" não é um endereço da Solana/);
+        await erro(`/defi orca -address ${POSICAO} -nft ${POOL}`, /❌ O NFT .* não é o desta posição \(o dela é C1ME/);
+        await erro(`/defi orca -address ${POSICAO} -pool ${NFT}`, /❌ A posição é da pool CeaZ.*, não da C1ME/);
+        await erro(`/defi orca -address ${POOL}`, /não é uma posição da Orca/);
+        await erro(`/defi orca -address ${'1'.repeat(32)}`, /❌ A conta 1{32} não existe na Solana/);
 
         simularSolana({ dono: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' });
-        await erro(`/defi -orca -position ${POSICAO}`, /não é uma posição da Orca/);
+        await erro(`/defi orca -address ${POSICAO}`, /não é uma posição da Orca/);
 
         simularSolana();
-        await erro(`/defi -orca -p ${POSICAO}`, /✅ \*Posição da Orca cadastrada/);
+        await erro(`/defi orca -address ${POSICAO}`, /✅ \*Posição da Orca cadastrada/);
         await erro(CADASTRO, /ℹ️ Hz15…RaPZ já está cadastrada/);
     });
 
@@ -205,7 +205,7 @@ describe('/defi', () => {
     test('defi.solana.rpc: troca o RPC e só aceita URL', async () => {
         await bot.setSetting('defi.solana.rpc', 'https://meu-rpc.exemplo.com/?api-key=x');
         rede.responder('post', 'meu-rpc.exemplo.com', { result: { value: [null] } });
-        await bot.responder(`/defi -orca -position ${POSICAO}`);
+        await bot.responder(`/defi orca -address ${POSICAO}`);
         assert.match(rede.chamadas.at(-1).url, /meu-rpc\.exemplo\.com/);
 
         await assert.rejects(bot.setSetting('defi.solana.rpc', 'não é url'), /URL inválida/);
@@ -434,13 +434,13 @@ describe('/defi: Project X (HyperEVM)', () => {
         simularHyperEvm();
     });
 
-    test('-project-x -wallet: cadastra a carteira; erros de endereço, repetida e sem -wallet', async () => {
+    test('prjx|projectx -address: cadastra a carteira; erros de endereço, repetida e sem -address', async () => {
         const erro = async (linha, esperadoRe) => assert.match((await bot.responder(linha))[0], esperadoRe, linha);
 
-        await erro('/defi -prjx', /❌ Informe a carteira: -wallet <0x\.\.\.>/);
-        await erro('/defi -prjx -w xyz', /❌ -wallet: "xyz" não é um endereço da HyperEVM/);
-        await erro(`/defi -project-x -wallet <${CARTEIRA}>`, /^✅ \*Carteira do Project X cadastrada:\* 0x92…0444\n📍 2 posições abertas\./);
-        await erro(`/defi -prjx -w ${CARTEIRA.toLowerCase()}`, /ℹ️ 0x92…0444 já está cadastrada/);
+        await erro('/defi prjx', /❌ Informe a carteira: -address <0x\.\.\.>/);
+        await erro('/defi prjx -address xyz', /❌ -address: "xyz" não é um endereço da HyperEVM/);
+        await erro(`/defi projectx -address <${CARTEIRA}>`, /^✅ \*Carteira do Project X cadastrada:\* 0x92…0444\n📍 2 posições abertas\./);
+        await erro(`/defi prjx -address ${CARTEIRA.toLowerCase()}`, /ℹ️ 0x92…0444 já está cadastrada/);
 
         const [lista] = await bot.responder('/defi -l');
         assert.match(lista, /^🌊 \*Posições DeFi\* \(1\)\n\n1\. Project X · carteira 0x92…0444 _\(desde /);
@@ -448,7 +448,7 @@ describe('/defi: Project X (HyperEVM)', () => {
     });
 
     test('-show: uma resposta por posição aberta, da mais nova para a mais velha (a fechada fica de fora)', async () => {
-        await bot.responder(`/defi -prjx -w ${CARTEIRA}`);
+        await bot.responder(`/defi prjx -address ${CARTEIRA}`);
         const [hype, btc, ...resto] = await bot.responder('/defi -show');
         assert.deepEqual(resto, []);
 
@@ -464,19 +464,41 @@ describe('/defi: Project X (HyperEVM)', () => {
         assert.match(hype, /• 0 USD₮0 \(\$0\.00\)\n\n📏/);   // abaixo da faixa: tudo em WHYPE
     });
 
+    test('-s por protocolo (orca, prjx, projectx), -rm de vários e a lista: inteira só no seu privado', async () => {
+        await bot.responder(CADASTRO);
+        await bot.responder(`/defi prjx -address ${CARTEIRA}`);
+
+        const soOrca = await bot.responder('/defi -s orca');
+        assert.deepEqual(soOrca.map(t => t.split('\n')[0].split(' ·')[0]), ['🌊 *Orca']);
+        for (const linha of ['/defi prjx -s', '/defi -s projectx', '/defi projectx -s']) {
+            assert.deepEqual((await bot.responder(linha)).map(t => t.split(' ·')[0]), ['🌊 *Project X', '🌊 *Project X'], linha);
+        }
+        assert.match((await bot.responder('/defi -s xyz'))[0], /❌ -s: "xyz" não é um nº da lista nem um protocolo/);
+
+        const [noGrupo] = await bot.responder('/defi -l');
+        assert.match(noGrupo, /1\. Orca · Hz15…RaPZ · pool CeaZ…QpbN _\(desde [\d/]+\)_\n2\. Project X · carteira 0x92…0444 _/);
+        const [noPrivado] = await bot.responder('/defi -l', { chat: DONO.jid });
+        assert.ok(noPrivado.includes(`1. Orca · ${POSICAO} · pool ${POOL} _`));
+        assert.ok(noPrivado.includes(`2. Project X · carteira ${CARTEIRA.toLowerCase()} _`));
+
+        assert.match((await bot.responder('/defi -rm 1 3'))[0], /^❌ Nº 3 não existe\. Nada foi removido/);
+        assert.equal((await bot.responder('/defi -rm 2,1'))[0], '🗑️ *Removidos* (2)\n• Orca · Hz15…RaPZ\n• Project X · carteira 0x92…0444');
+        assert.match((await bot.responder('/defi prjx -s'))[0], /🌊 Nada cadastrado do Project X/);
+    });
+
     test('carteira sem posição aberta: cadastra e avisa; -show diz que não há nenhuma', async () => {
-        assert.match((await bot.responder(`/defi -prjx -w ${VAZIA}`))[0], /ℹ️ Nenhuma posição aberta agora/);
+        assert.match((await bot.responder(`/defi prjx -address ${VAZIA}`))[0], /ℹ️ Nenhuma posição aberta agora/);
         assert.deepEqual(await bot.responder('/defi -show'), ['🌊 Project X · carteira 0x11…1111: nenhuma posição aberta.']);
     });
 
     test('RPC com limite: não cadastra; no -show, avisa e sugere o defi.hyperevm.rpc', async () => {
         rede.responder('post', 'rpc.hyperliquid.xyz/evm', { jsonrpc: '2.0', id: null, error: { code: -32005, message: 'rate limited' } });
-        assert.match((await bot.responder(`/defi -prjx -w ${CARTEIRA}`, { erroEsperado: true }))[0],
+        assert.match((await bot.responder(`/defi prjx -address ${CARTEIRA}`, { erroEsperado: true }))[0],
             /⚠️ Não consegui ler a carteira agora: RPC da HyperEVM: rate limited\.\n💡 _.*defi\.hyperevm\.rpc/);
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM defi_positions')).n, 0);
 
         simularHyperEvm();
-        await bot.responder(`/defi -prjx -w ${CARTEIRA}`);
+        await bot.responder(`/defi prjx -address ${CARTEIRA}`);
         rede.responder('post', 'rpc.hyperliquid.xyz/evm', { jsonrpc: '2.0', id: null, error: { code: -32005, message: 'rate limited' } });
         assert.match((await bot.responder('/defi -show', { erroEsperado: true }))[0],
             /^⚠️ Não consegui ler Project X · carteira 0x92…0444 agora: RPC da HyperEVM: rate limited\.\n💡 _O RPC público da HyperEVM/);
@@ -489,7 +511,7 @@ describe('/defi: Project X (HyperEVM)', () => {
             await verificarAlertasDefi({ forcar: true });
             return bot.client.enviadas.slice(antes).map(e => e.content);
         };
-        await bot.responder(`/defi -prjx -w ${CARTEIRA}`);
+        await bot.responder(`/defi prjx -address ${CARTEIRA}`);
 
         assert.match((await bot.responder('/defi -a 1 -taxas abc'))[0], /❌ -taxas: informe o valor em dólar/);
         const [ligado] = await bot.responder('/defi -a 1 -taxas $50');
@@ -513,7 +535,7 @@ describe('/defi: Project X (HyperEVM)', () => {
     });
 
     test('-alerta: na carteira, avisa ao voltar para a faixa, com todas as posições', async () => {
-        await bot.responder(`/defi -prjx -w ${CARTEIRA}`);
+        await bot.responder(`/defi prjx -address ${CARTEIRA}`);
         await bot.responder('/defi -a 1');
         cadeia.slot0[POOL_HYPE] = BRUTO_HYPE * 1.0001 ** 2000;
         const antes = bot.client.enviadas.length;
@@ -525,7 +547,7 @@ describe('/defi: Project X (HyperEVM)', () => {
 
     test('-alerta: na carteira, avisa quando alguma posição sai da faixa, só com as de fora', async () => {
         cadeia.slot0[POOL_HYPE] = BRUTO_HYPE * 1.0001 ** 2000;   // a do HYPE entra na faixa
-        await bot.responder(`/defi -prjx -w ${CARTEIRA}`);
+        await bot.responder(`/defi prjx -address ${CARTEIRA}`);
         assert.match((await bot.responder('/defi -alerta 1'))[0], /1\. Project X · carteira 0x92…0444 · ✅ na faixa/);
 
         cadeia.slot0[POOL_HYPE] = BRUTO_HYPE;                     // sai
