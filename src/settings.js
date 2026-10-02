@@ -118,7 +118,7 @@ const SETTINGS_SCHEMA = {
         },
         lista: (itens) => {
             if (itens.includes('all') && itens.length > 1) {
-                throw new Error('o true (todos) não se mistura com pessoas e grupos: para liberar só alguns, /set bot.users false antes');
+                throw new Error('o true (todos) não se mistura com pessoas e grupos: para liberar só alguns, /bot +admin antes');
             }
             return itens;
         }

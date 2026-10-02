@@ -242,6 +242,7 @@ bot) e a lista `commands`. Cada entrada de `commands` segue este formato:
     { "opts": ["audio", "a"], "values": [], "desc": "..." },          // flag
     { "opts": ["startSec", "ss"], "values": ["<segundo>"], "desc": "..." }, // opção com valor
     { "argv": ["<url>"], "desc": "..." },                             // argumento posicional (só doc)
+    { "opts": ["o"], "sinais": ["+", "-"], "values": ["[x]"], "desc": "..." }, // par +o/-o numa linha (só doc)
     { "opts": ["add"], "values": ["<x>"], "desc": "...", "cron": false } // opcional; não roda num {/comando} do /cron
   ],
   "cron": true,                      // opcional; true = roda num {/comando} do texto do /cron
@@ -266,6 +267,10 @@ bot) e a lista `commands`. Cada entrada de `commands` segue este formato:
     separados por vírgula (`Ex: /defi, /defi orca`) saem um por linha. Cada
     exemplo começa com `/` ou `-`: a vírgula dentro de um (`/tempo Niteroi,
     Sergipe`) não o divide. Por isso o `Ex:` fica sempre no fim do texto.
+- `"sinais": ["+", "-"]` mostra o par numa linha só no `-h` (`+o, -o`), em vez
+  do `-o` em Options e do `+o` em Arguments, longe um do outro. O parser
+  continua lendo só o `-o`: o `+o` chega em `argv`, e o handler trata (como o
+  `/bot +admin`).
 - Os textos (`usage`, `help` e `desc`) podem citar `${CACHE_DIR}`,
   `${MEDIA_DIR}` e `${TMP_DIR}`: a ajuda troca pelo caminho real (ex.: o
   `/cache -h`).
