@@ -107,7 +107,7 @@ describe('/lembrete', () => {
     test('cria no chat atual, responde a mensagem do comando e sai depois de enviar', async () => {
         const cmd = bot.criarMensagem({ texto: '/lembrete 30m pagar o boleto' });
         const [r] = (await bot.entregar(cmd)).map(e => e.texto);
-        assert.match(r, /^⏰ \*Lembrete criado\* para \*\w{3} \d\d\/\d\d \d\d:\d\d\* neste chat\.\n📝 pagar o boleto$/);
+        assert.match(r, /^⏰ \*Lembrete criado\* para \*[a-zá]{3} \d\d\/\d\d \d\d:\d\d\* neste chat\.\n📝 pagar o boleto$/);
 
         const [item] = await itens();
         assert.equal(item.chat_id, GRUPO);
@@ -139,7 +139,7 @@ describe('/lembrete', () => {
 
         bot.estado.pronto = true;
         const [enviado] = await vencer(HORA);
-        assert.match(enviado.content, /^⏰ \*Lembrete\*\n\ntomar o remédio\n\n_\(atrasado: era para \w{3} \d\d\/\d\d \d\d:\d\d\)_$/);
+        assert.match(enviado.content, /^⏰ \*Lembrete\*\n\ntomar o remédio\n\n_\(atrasado: era para [a-zá]{3} \d\d\/\d\d \d\d:\d\d\)_$/);
     });
 
     test('-repetir: continua na lista com o próximo horário', async () => {
@@ -184,7 +184,7 @@ describe('/lembrete', () => {
         const erro = async (linha, esperado) => assert.match((await bot.responder(linha))[0], esperado, linha);
         await erro('/lembrete pagar o boleto', /❌ Não entendi quando/);
         await erro('/lembrete 30m', /❌ Faltou o texto/);
-        await erro('/lembrete 01/01/2020 x', /❌ \w{3} 01\/01\/2020 09:00 já passou/);
+        await erro('/lembrete 01/01/2020 x', /❌ [a-zá]{3} 01\/01\/2020 09:00 já passou/);
         await erro('/lembrete 01/01/2099 x', /❌ No máximo 366 dias à frente/);
         await erro('/lembrete +1h -repetir anual x', /❌ Use -repetir \(-r\) diario, semanal ou mensal/);
         await erro('/lembrete +1h -to L200 x', /❌ O lembrete não tem -to/);
@@ -225,8 +225,8 @@ describe('/cron (/agenda)', () => {
 
     test('"6h" com -repetir é o horário (06:00 todo dia); "+6h" é daqui a 6 horas', async () => {
         assert.match((await bot.responder('/cron 6h -repetir diario -to L200 Bom dia!'))[0],
-            /^📅 \*Mensagem agendada\* para \*\w{3} \d\d\/\d\d 06:00\* 🔁 todo dia em 👥 Grupo sobre L200\./);
-        assert.match((await bot.responder('/cron 07h -to L200 Bom dia!'))[0], /para \*\w{3} \d\d\/\d\d 07:00\*/);
+            /^📅 \*Mensagem agendada\* para \*[a-zá]{3} \d\d\/\d\d 06:00\* 🔁 todo dia em 👥 Grupo sobre L200\./);
+        assert.match((await bot.responder('/cron 07h -to L200 Bom dia!'))[0], /para \*[a-zá]{3} \d\d\/\d\d 07:00\*/);
 
         await bot.responder('/cron +6h -to L200 Daqui a pouco');
         const [, , daqui] = await itens();
@@ -311,7 +311,7 @@ describe('/cron (/agenda)', () => {
     test('-edit <nº>: troca a hora, o texto e/ou a repetição; o destino fica', async () => {
         await bot.responder('/cron +1h -to L200 texto antigo');
 
-        assert.match((await bot.responder('/cron -edit 1 18:30'))[0], /^✏️ \*Editado:\* 📅 \*\w{3} \d\d\/\d\d 18:30\*\n📝 texto antigo$/);
+        assert.match((await bot.responder('/cron -edit 1 18:30'))[0], /^✏️ \*Editado:\* 📅 \*[a-zá]{3} \d\d\/\d\d 18:30\*\n📝 texto antigo$/);
         assert.match((await bot.responder('/cron -edit 1 texto novo'))[0], /📝 texto novo$/);
         assert.match((await bot.responder('/cron -edit 1 -r semanal'))[0], /18:30\* 🔁 toda semana\n/);
         assert.doesNotMatch((await bot.responder('/cron -edit 1 -r nao'))[0], /🔁/);
