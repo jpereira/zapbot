@@ -128,7 +128,7 @@ admin está ligado: só você usa comandos até `/bot -admin`
 ## Desenvolvimento
 
 ```bash
-npm test          # 390+ testes, sem rede nem WhatsApp (Node 22.13+)
+npm test          # 420+ testes, sem rede nem WhatsApp (Node 22.13+)
 npm run lint      # ESLint
 ```
 
