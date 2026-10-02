@@ -1,11 +1,11 @@
 # `/crypto` (`/bitcoio`, `/creptomoeda`)
 
 Preço atual e variação de 24 h das moedas ativadas (via API da Binance, par
-`<TOKEN>USDT`). Por padrão: BTC, ETH, SOL e HYPE.
+`<TOKEN>USDT`), ou só das pedidas. Por padrão: BTC, ETH, SOL e HYPE.
 
 | Opção | Valor | Descrição |
 |---|---|---|
-| *(nenhuma)* | | Exibe as cotações |
+| *(nenhuma)* | `[TOKEN...]` | Cotação das ativadas, ou só das moedas informadas (ativadas ou não), na ordem pedida. Uma que não é suportada: avisa e lista as suportadas |
 | `-list`, `-l` | | Lista as moedas suportadas; as ativadas vêm marcadas com `*` |
 | `-add`, `-a` | `<TOKEN>` | Ativa uma moeda suportada (só o dono do bot ou um admin do [`bot.admins`](bot.md#admins-extras)) |
 | `-del`, `-d` | `<TOKEN>` | Desativa uma moeda (só o dono do bot ou um admin do [`bot.admins`](bot.md#admins-extras)) |
@@ -20,6 +20,11 @@ As moedas ativadas ficam na tabela `settings`, chave `crypto.coins`, e
 sobrevivem a reinícios.
 
 ```
+/crypto              → as ativadas (padrão: BTC, ETH, SOL e HYPE)
+/crypto BTC          → só o bitcoin
+/crypto btc eth      → bitcoin e ether (também "BTC,ETH")
+/crypto doge         → uma suportada, mesmo sem estar ativada
+/crypto FOO          → ❌ Moeda não suportada: FOO, com a lista das suportadas
 /creptomoeda
 /crypto -l
 /crypto -a doge

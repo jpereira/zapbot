@@ -112,7 +112,7 @@ entre os casos.
 | `status.test.js` | `/bot -status`: o relatório (com o aviso `show.alert.*` desligado e os silenciados do `/mudo`) e o envio diário |
 | `agenda.test.js` | Datas digitadas (`6h`, `+2h`, `às 18h`, `sexta`...) e o `/cron`, nos modos mensagem e lembrete, com vários `-to`, `-edit` e `-pause`/`-resume` |
 | `backup.test.js` | `/backup` (criação, lista, restauração, envio no privado, por e-mail e com `-to`) e o backup diário |
-| `cotacoes.test.js` | `/cotacao`, `/crypto` e os alertas de preço (com o `-to`) |
+| `cotacoes.test.js` | `/cotacao`, `/crypto` (e o filtro por moeda) e os alertas de preço (com o `-to`) |
 | `defi.test.js` | Solana (base58, PDA), contas da Orca (conferidas com o SDK oficial) e o `/defi`, com o `-alerta` de saída da faixa |
 | `externos.test.js` | `/cve`, `/tempo`, `/news`, `/gpt`, `/tldr`, `/traduzir`, `/giphy`, `/meme`, `/joke`, `/kernel`, `/pixelart` |
 | `grupo.test.js` | `/todos`, `/boletos`, `/listageral`, `/walissu`, `/enquete` (e o `-r`), `/sticker` |
