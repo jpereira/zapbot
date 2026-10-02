@@ -17,7 +17,7 @@ Faz algo na hora marcada. Tem dois modos, na mesma agenda:
 | `-lembrete`, `-lem` | | Modo lembrete (o mesmo de chamar como `/lembrete`) |
 | `-pv` | | Modo lembrete: lembra no seu privado em vez do chat atual |
 | `-repetir`, `-r` | `<diario\|semanal\|mensal>` | Repete no mesmo horário: todo dia, toda semana ou todo mês |
-| `-list`, `-l` | | Lista os lembretes e as mensagens (o mesmo que o comando sem nada) |
+| `-list`, `-l` | | Lista os lembretes e as mensagens, com o texto inteiro (o mesmo que o comando sem nada) |
 | `-edit` | `<nº>` | Edita o item nº N: troca a hora, o texto e/ou o `-repetir`. Veja [Editar, pausar e retomar](#editar-pausar-e-retomar) |
 | `-pause` | `<nº...\|all>` | Pausa o item nº N, vários (`-pause 1 3` ou `1,3`) ou todos: fica na lista, mas não sai. Se algum nº não existe, nenhum é pausado |
 | `-resume` | `<nº...\|all>` | Retoma itens pausados: um, vários ou todos |
@@ -64,7 +64,8 @@ enviar o relatório
 ```
 
 A lista mostra os dois tipos juntos, na ordem em que vão sair (📅 mensagem,
-⏰ lembrete), e os números são os do `-edit`, do `-pause`/`-resume` e do `-rm`:
+⏰ lembrete), com o texto inteiro, como foi cadastrado (os `{/comando}` também),
+e os números são os do `-edit`, do `-pause`/`-resume` e do `-rm`:
 
 ```
 /cron -l

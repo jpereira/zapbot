@@ -182,6 +182,16 @@ describe('/lembrete', () => {
         assert.match((await bot.responder('/lembrete'))[0], /^📅 Nada agendado\.\n💡 _Ex\.: \/cron sexta 18h .*\n\/lembrete 18:30 pagar o boleto_$/);
     });
 
+    test('-l mostra o texto inteiro, sem cortar; as linhas seguintes recuadas', async () => {
+        const longo = 'Hora de um café seguido do preço do Bitcoin, das notícias e da previsão do tempo de hoje! {/crypto BTC}';
+        await bot.responder(`/cron +1h -to L200 ${longo}`);
+        await bot.responder('/cron +2h -to L200 linha um\nlinha dois');
+
+        const [lista] = await bot.responder('/cron -l');
+        assert.ok(lista.includes(`— ${longo}\n   → 👥 Grupo sobre L200`));
+        assert.match(lista, /— linha um\n {3}linha dois\n {3}→ 👥 Grupo sobre L200/);
+    });
+
     test('-pause/-resume com vários números; algum que não existe: nenhum muda', async () => {
         for (const [i, t] of ['um', 'dois', 'três'].entries()) await bot.responder(`/lembrete +${i + 1}h ${t}`);
 
@@ -235,7 +245,7 @@ describe('/cron (/agenda)', () => {
         assert.match(r, /^📅 \*Mensagem agendada\* para \*sex \d\d\/\d\d 18:00\* em 👥 Grupo sobre L200\.\n📝 Bom fim de semana! Até segunda\.$/);
 
         const [lista] = await bot.responder('/agenda -l');
-        assert.match(lista, /📅 \*Agenda\* \(1\)\n\n1\. 📅 \*sex \d\d\/\d\d 18:00\* — Bom fim de semana! Até segunda\.\n   → 👥 Grupo sobre L200/);
+        assert.match(lista, /📅 \*Agenda\* \(1\)\n\n1\. 📅 \*sex \d\d\/\d\d 18:00\* — Bom fim de semana!\n   Até segunda\.\n   → 👥 Grupo sobre L200/);
 
         const [enviado] = await vencer();
         assert.equal(enviado.chatId, L200);

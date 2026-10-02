@@ -293,7 +293,7 @@
                         "l"
                     ],
                     "values": [],
-                    "desc": "Lista os lembretes e as mensagens agendadas (também sem argumentos)."
+                    "desc": "Lista os lembretes e as mensagens agendadas, com o texto inteiro (também sem argumentos)."
                 },
                 {
                     "opts": [
