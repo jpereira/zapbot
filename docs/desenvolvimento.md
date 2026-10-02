@@ -258,7 +258,7 @@ bot) e a lista `commands`. Cada entrada de `commands` segue este formato:
   não exige código: basta refazer o build e recriar o container.
 - No `-h`, cada forma do `usage` separada por `"  ou  "` sai numa linha, e os
   exemplos de um `desc` depois do `Ex:`, separados por vírgula
-  (`Ex: /defi -s, /defi -s 2`), saem um por linha, à esquerda (no celular, a
+  (`Ex: /defi, /defi orca`), saem um por linha, à esquerda (no celular, a
   coluna da descrição fica longe). Cada exemplo começa com `/` ou `-`; uma vírgula dentro de um exemplo
   (`/tempo Niteroi, Sergipe`) não o divide.
 - Os textos (`usage`, `help` e `desc`) podem citar `${CACHE_DIR}`,

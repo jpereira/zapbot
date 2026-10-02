@@ -499,8 +499,8 @@ describe('/cron: comandos no texto ({/comando})', () => {
         assert.equal((await itens())[0].text, 'oi');
     });
 
-    test('/defi -s roda (só consulta); vários comandos e vários -to no mesmo item', async () => {
-        await bot.responder('/cron 06:00 -r diario -to L200 -to +5521911111111 ⏰ Status da DeFi!{/defi -s} Versão: {/version}');
+    test('/defi roda (só consulta); vários comandos e vários -to no mesmo item', async () => {
+        await bot.responder('/cron 06:00 -r diario -to L200 -to +5521911111111 ⏰ Status da DeFi!{/defi} Versão: {/version}');
         const enviados = await vencer();
         assert.deepEqual(enviados.map(e => e.chatId), [L200, OUTRO.jid]);
         for (const e of enviados) {

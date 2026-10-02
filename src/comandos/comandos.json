@@ -488,8 +488,8 @@
         },
         {
             "cmd": "/defi",
-            "usage": "/defi -s [nº|orca|prjx]  ou  /defi orca|prjx -s  ou  /defi -l  ou  /defi -rm <nº...|all>  ou  /defi -alerta <nº|all> [-to <destino>] [-taxas <valor>]  ou  /defi orca -address <endereço> [-pool <endereço>] [-nft <mint>] [-alerta [valor]]  ou  /defi prjx|projectx -address <0x...> [-alerta [valor]]",
-            "help": "Posições de liquidez da Orca (Solana) e do Project X (HyperEVM): saldo, faixa, preço e taxas a coletar, lidos on-chain. Com -alerta, avisa quando uma posição sai da faixa, quando volta e, com -taxas, quando as taxas a coletar passam de um valor.",
+            "usage": "/defi [orca|prjx]  ou  /defi -l  ou  /defi -rm <nº...|all>  ou  /defi -alerta <nº|all> [-to <destino>] [-taxas <valor>]  ou  /defi orca -address <endereço> [-pool <endereço>] [-nft <mint>] [-alerta [valor]]  ou  /defi prjx -address <0x...> [-alerta [valor]]",
+            "help": "Posições de liquidez da Orca (Solana) e do Project X (HyperEVM): saldo, faixa, preço e taxas a coletar, lidos on-chain. Sem nada, mostra todas; com orca ou prjx, só as daquele protocolo. Com -alerta, avisa quando uma posição sai da faixa, quando volta e, com -taxas, quando as taxas a coletar passam de um valor.",
             "cmd_opts": [
                 {
                     "opts": [
@@ -498,7 +498,7 @@
                     "values": [
                         "<endereço>"
                     ],
-                    "desc": "Cadastra: com orca, o endereço da posição da Orca; com prjx (ou projectx), a carteira do Project X (0x e 40 caracteres hexadecimais), da qual o bot lê todas as posições abertas.",
+                    "desc": "Cadastra: com orca, o endereço da posição da Orca; com prjx, a carteira do Project X (0x e 40 caracteres hexadecimais), da qual o bot lê todas as posições abertas.",
                     "cron": false
                 },
                 {
@@ -518,7 +518,7 @@
                         "l"
                     ],
                     "values": [],
-                    "desc": "Lista os cadastros (também sem argumentos). No seu privado, com os endereços inteiros; fora dele, abreviados."
+                    "desc": "Lista os cadastros, com 🔔 nos que têm alerta (e o limite das taxas). No seu privado, com os endereços inteiros; fora dele, abreviados."
                 },
                 {
                     "opts": [
@@ -552,16 +552,6 @@
                 },
                 {
                     "opts": [
-                        "show",
-                        "s"
-                    ],
-                    "values": [
-                        "[nº|orca|prjx]"
-                    ],
-                    "desc": "Position Details de todas as posições, só da nº N ou só de um protocolo: saldo, faixa, preço atual e taxas a coletar. Ex: /defi -s, /defi -s 2, /defi -s orca, /defi prjx -s"
-                },
-                {
-                    "opts": [
                         "taxas"
                     ],
                     "values": [
@@ -582,9 +572,9 @@
                 },
                 {
                     "argv": [
-                        "<orca|prjx|projectx>"
+                        "[orca|prjx]"
                     ],
-                    "desc": "O protocolo: orca (Orca, na Solana) ou prjx/projectx (Project X, na HyperEVM). Cadastra com -address; com -s, mostra só ele."
+                    "desc": "O protocolo: orca (Orca, na Solana) ou prjx (Project X, na HyperEVM). Sozinho, mostra o Position Details só dele; com -address, cadastra. Ex: /defi, /defi orca, /defi prjx"
                 }
             ],
             "cron": true,
