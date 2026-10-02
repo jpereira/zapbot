@@ -5,9 +5,9 @@
 const { getCommandSyntax } = require('./base');
 const { mudarListaDePessoas } = require('./set');
 const { client } = require('../cliente');
-const { resolverNomeDoGrupo } = require('../contatos');
+const { idsDoChatAtual, resolverNomeDoGrupo } = require('../contatos');
 const { descreverDestino } = require('../destinos');
-const { getSetting, setSetting } = require('../settings');
+const { SETTINGS_SCHEMA, getSetting, setSetting } = require('../settings');
 const { textoDoInfo } = require('../sistema');
 const { agendarStatusDiario, desligarStatusDiario, textoDoStatus } = require('../status');
 const { fmtQuando, lerHora } = require('../util/quando');
@@ -18,16 +18,16 @@ const { fmtQuando, lerHora } = require('../util/quando');
  *   /bot -on    → ativa
  *   /bot -off   → desliga: TODOS os comandos são ignorados, inclusive os seus, exceto o /bot
  *   /bot +admin → só o dono (e o bot.admins) usa comandos: bot.users = false (a lista sai)
- *   /bot -admin → todos usam os comandos comuns: bot.users = true
+ *   /bot -admin → todos usam os comandos comuns: bot.users = true (o /bot mostra um aviso)
+ *   /bot -reset → volta ao padrão: ligado, sem admins extras e sem usuários (só o dono)
  * Opções combinam: /bot -on +admin. A recuperação de apagadas e o /watch continuam funcionando.
  * O parser só reconhece opções com '-', então o '+admin' chega em opts.argv.
  *
  * Os atalhos do IRC (o: operador, manda; v: voz, só fala), só do dono, um de cada vez:
- *   /bot +o <pessoa...>        → /set -append bot.admins <pessoa...>
- *   /bot -o <pessoa...>        → /set -rem bot.admins <pessoa...>
- *   /bot +v <pessoa|grupo...>  → /set -append bot.users <pessoa|grupo...>
- *   /bot -v <pessoa|grupo...>  → /set -rem bot.users <pessoa|grupo...>
- * A pessoa é /Nome/, "Nome", @menção ou +número, como no -to.
+ *   /bot +o|-o <pessoa...>        → põe e tira admins (bot.admins)
+ *   /bot +v|-v <pessoa|grupo...>  → põe e tira usuários (bot.users)
+ * A pessoa é /Nome/, "Nome", @menção ou +número, como no -to. Sem ninguém, vale
+ * o chat atual: no grupo, o grupo (que não vira admin); no privado de alguém, a pessoa.
  *
  * E o relatório do bot (src/status.js) e as versões (src/sistema.js), que não
  * combinam com as outras:
@@ -40,7 +40,11 @@ const { fmtQuando, lerHora } = require('../util/quando');
 function quemUsa() {
     const users = getSetting('bot.users');
     const admins = getSetting('bot.admins').length ? ' e os admins' : '';
-    if (users.includes('all')) return '🔓 *Comandos:* todos usam os comuns';
+    if (users.includes('all')) {
+        return '🔓 *Comandos:* todos usam os comuns\n' +
+            '⚠️ _Atenção: qualquer pessoa pode executar os comandos comuns do bot, em qualquer chat. ' +
+            'Para restringir: /bot +admin (e depois /bot +v para liberar alguns)._';
+    }
     if (!users.length) return `🔒 *Comandos:* só o dono${admins}`;
     return '👥 *Comandos:* o dono e quem está na lista abaixo';
 }
@@ -93,7 +97,38 @@ async function estadoBot() {
 const ATALHO = /^([+-])([ov])(?:\s+([\s\S]*))?$/;
 const LISTA_DO_ATALHO = { o: 'bot.admins', v: 'bot.users' };
 
-async function tratarAtalho(msg, [, sinal, letra, texto]) {
+/*
+ * Sem ninguém, o chat onde o comando foi digitado: no grupo, o grupo; no
+ * privado de alguém, a pessoa (pelo telefone). No seu privado, não há quem.
+ */
+async function atalhoNoChat(msg, key, acrescentar, { chatId, isGroup }) {
+    if (isGroup) {
+        if (key === 'bot.admins') {
+            await msg.reply('❌ Um grupo não pode ser admin (todos ali mandariam no bot).\n' +
+                '💡 _Para liberar os comandos comuns neste grupo: /bot +v_');
+            return;
+        }
+        await mudarListaDePessoas(msg, key, chatId, acrescentar, { itensProntos: true });
+        return;
+    }
+
+    const ids = await idsDoChatAtual(chatId);
+    if (ids.includes(client.info.wid._serialized)) {
+        await msg.reply('❌ Este é o seu privado: você (o dono) já usa tudo.\n' +
+            '💡 _Use num grupo ou no privado de alguém, ou informe quem: /bot +v /Nome/_');
+        return;
+    }
+
+    const telefone = ids.find(i => i.endsWith('@c.us'));
+    if (!telefone) {
+        await msg.reply('❌ Não sei o telefone desta pessoa (o WhatsApp só informou o id interno): use o número, ex.: /bot +v +5521999999999.');
+        return;
+    }
+    const numero = telefone.split('@')[0];
+    await mudarListaDePessoas(msg, key, numero, acrescentar, { itensProntos: true });
+}
+
+async function tratarAtalho(msg, [, sinal, letra, texto], chat) {
     const key = LISTA_DO_ATALHO[letra];
 
     // Só o dono, como no /set: um admin extra não promove ninguém (nem a si mesmo)
@@ -102,9 +137,7 @@ async function tratarAtalho(msg, [, sinal, letra, texto]) {
         return;
     }
     if (!texto?.trim()) {
-        const quem = letra === 'o' ? '<pessoa...>' : '<pessoa|grupo...>';
-        await msg.reply(`❌ Informe quem: /bot ${sinal}${letra} ${quem}` +
-            ' (/Nome/, @menção ou +número)');
+        await atalhoNoChat(msg, key, sinal === '+', chat);
         return;
     }
 
@@ -136,10 +169,24 @@ async function tratarStatus(msg, valores) {
     await msg.reply(`⏰ *Status diário:* todo dia às *${dois(hora.h)}:${dois(hora.m)}*, no seu privado.\n📅 Próximo: ${fmtQuando(proximo)}`);
 }
 
-async function cmdBot({ msg, opts, args }) {
+// O que o -reset volta ao padrão (o envio diário do -status fica)
+const DO_RESET = ['bot.paused', 'bot.admins', 'bot.users'];
+
+async function resetar(msg) {
+    if (!msg.fromMe) {
+        await msg.reply('⛔ Só o dono do bot volta o /bot ao padrão.');
+        return;
+    }
+
+    for (const key of DO_RESET) await setSetting(key, SETTINGS_SCHEMA[key].default);
+    await msg.reply('♻️ *Padrão restaurado:* bot ligado, sem admins extras e sem usuários.\n\n' +
+        await estadoBot());
+}
+
+async function cmdBot({ msg, opts, args, chatId, isGroup }) {
     const atalho = String(args ?? '').trim().match(ATALHO);
     if (atalho) {
-        await tratarAtalho(msg, atalho);
+        await tratarAtalho(msg, atalho, { chatId, isGroup });
         return;
     }
 
@@ -157,6 +204,16 @@ async function cmdBot({ msg, opts, args }) {
         return;
     }
 
+    // -reset: sozinho, como o -info
+    if (opts.given.has('reset')) {
+        if (outras || opts.given.has('status') || opts.argv.length) {
+            await msg.reply('❌ O -reset não combina com as outras opções.\n💡 _/bot -reset_');
+            return;
+        }
+        await resetar(msg);
+        return;
+    }
+
     // -status [<hora>|off]: o parser pega um valor; "às 18h" deixa o resto em argv
     if (opts.given.has('status')) {
         if (outras) {
@@ -170,7 +227,7 @@ async function cmdBot({ msg, opts, args }) {
     const desconhecidos = opts.argv.filter(a => a !== '+admin');
 
     if (desconhecidos.length || (on && off) || (adminOn && adminOff)) {
-        await msg.reply('❌ Uso: /bot [-on|-off] [+admin|-admin]  ou  /bot +o|-o|+v|-v <pessoa...>  ou  /bot -status [<hora>|off]  ou  /bot -info\n' +
+        await msg.reply('❌ Uso: /bot [-on|-off] [+admin|-admin]  ou  /bot +o|-o|+v|-v [pessoa...]  ou  /bot -reset  ou  /bot -status [<hora>|off]  ou  /bot -info\n' +
             '💡 _/bot -h para ajuda_');
         return;
     }

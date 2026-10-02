@@ -58,7 +58,6 @@ acesso. Neles, além do número, vale o nome do contato (`/Jorge Pereira/`) ou a
 menção: o bot guarda o telefone e mostra o nome ao lado
 ([Admins extras](bot.md#admins-extras)). O `bot.users` aceita também grupos
 (guarda o id e mostra `👥 Nome`) e `true`/`false` ([Usuários](bot.md#usuários)).
-Os atalhos do `/bot` (`+o`/`-o` e `+v`/`-v`) fazem o mesmo `-append`/`-rem`.
 
 ## Variáveis do `config/.env`
 
