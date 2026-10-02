@@ -3,8 +3,9 @@
  */
 
 const { client } = require('../client');
-const { chatCurrentIds } = require('../contacts');
+const { chatCurrentIds, resolveLidToPhone } = require('../contacts');
 const { dbReady } = require('../db');
+const { resolverOrChoose } = require('../destinations');
 const { printInfo } = require('../log');
 const { SETTINGS_SCHEMA, getSetting, setSetting, validateSetting } = require('../settings');
 
@@ -17,7 +18,9 @@ const { SETTINGS_SCHEMA, getSetting, setSetting, validateSetting } = require('..
  *   /set -append <chave> <valor> → numa lista, acrescenta itens (-a)
  *   /set -rem <chave> <valor>    → numa lista, tira itens
  * /set -reset <key>   → back to default
- * bot.admins (who else uses the admin commands) is changed only by the owner.
+ * bot.admins (who else uses the admin commands) is changed only by the owner. In it, besides
+ * of the number, the contact name (/Jorge Pereira/) counts, looked up as in -to; the
+ * that is stored is the phone, and the display shows the name beside it.
  *
  * The config/.env variables the bot reads show up too, read-only
  * (they change in the file, with the container recreated), and only in your private chat: in the
@@ -105,6 +108,62 @@ const valueRaw = (args, key) => args.slice(args.indexOf(key) + key.length).trim(
 // Keys that only the owner changes, even if an extra admin uses /set
 const SO_O_OWNER = ['bot.admins'];
 
+// People lists: accept the contact name besides the number, and show the name
+const PEOPLE = ['bot.admins'];
+
+// The text after the key, without removing anything (quotes and slashes separate the names)
+const keyTextAfter = (args, key) => args.slice(args.indexOf(key) + key.length).trim();
+
+// "/Jorge Pereira/ +5521999999999 Fulano" → ['Jorge Pereira', '+5521999999999', 'Fulano']
+const textItems = (textAlt) => [...textAlt.matchAll(/\/([^/]+)\/|"([^"]*)"|'([^']*)'|([^\s,]+)/g)]
+    .map(m => (m[1] ?? m[2] ?? m[3] ?? m[4]).trim())
+    .filter(Boolean);
+
+/**
+ * The items of a people list become phones: the number goes as it came
+ * (the setting validation checks), the name is looked up in the contacts (several: the
+ * list to choose from). Group, email and a contact with no known phone are refused.
+ * @returns {Promise<string|null>} the comma-separated numbers; null: already replied the error
+ */
+async function peoplePhones(msg, key, textAlt) {
+    const numbers = [];
+
+    for (const item of textItems(textAlt)) {
+        if (/^\+?[\d().-]+$/.test(item)) {
+            numbers.push(item);
+            continue;
+        }
+
+        const person = await resolverOrChoose(msg, item, {
+            semEmail: `❌ O *${key}* é de pessoas: informe um contato ou um número, não um e-mail.`
+        });
+        if (!person) return null;
+
+        if (person.grupo) {
+            await msg.reply(`❌ ${person.nome} é um grupo: o *${key}* é de pessoas (um contato ou um número).`);
+            return null;
+        }
+
+        const phoneAlt = person.id.endsWith('@c.us') ? person.id : await resolveLidToPhone(person.id);
+        if (!phoneAlt?.endsWith('@c.us')) {
+            await msg.reply(`❌ Não sei o telefone de ${person.nome} (o WhatsApp só informou o id interno): use o número, ex.: +5521999999999.`);
+            return null;
+        }
+        numbers.push(phoneAlt.split('@')[0]);
+    }
+
+    return numbers.join(',');
+}
+
+// "5521999999999 (Jorge Pereira)": the saved contact name, if any
+async function withName(numberAlt) {
+    const contactAlt = await client.getContactById(`${numberAlt}@c.us`).catch(() => null);
+    const nameAlt = contactAlt?.name || contactAlt?.pushname;
+    return nameAlt ? `${numberAlt} (${nameAlt})` : numberAlt;
+}
+
+const showItems = async (key, items) => (PEOPLE.includes(key) ? Promise.all(items.map(withName)) : items);
+
 /*
  * -append / -rem <key> <value>: adds or removes items of a list. The
  * items go through the same validation as /set (e.g.: a number becomes just digits),
@@ -149,8 +208,8 @@ async function changeList(msg, { key, bruto: raw, acrescentar: append }) {
     const valueAlt = await setSetting(key, append ? [...current, ...change] : current.filter(i => !change.includes(i)));
     const sep = schema.separator ? ' | ' : ', ';
     printInfo(`Setting '${key}' ${append ? '+' : '-'} ${schema.secret ? '(segredo)' : JSON.stringify(change)}`);
-    await msg.reply(`✅ *${key}* ${append ? '+' : '−'} ${formatValueSetting(change, sep, schema.secret)}\n` +
-        `= ${formatValueSetting(valueAlt, sep, schema.secret)}`);
+    await msg.reply(`✅ *${key}* ${append ? '+' : '−'} ${formatValueSetting(await showItems(key, change), sep, schema.secret)}\n` +
+        `= ${formatValueSetting(await showItems(key, valueAlt), sep, schema.secret)}`);
 }
 
 async function cmdSet({ msg, opts, args, chatId }) {
@@ -166,7 +225,15 @@ async function cmdSet({ msg, opts, args, chatId }) {
     if (opts.given.has('append') || opts.given.has('rem')) {
         const append = opts.given.has('append');
         const key = append ? opts.opt.append : opts.opt.rem;
-        await changeList(msg, { key, bruto: key ? valueRaw(args, key) : '', acrescentar: append });
+        let raw = key ? valueRaw(args, key) : '';
+
+        // People list: the names become phones before validation
+        if (PEOPLE.includes(key) && raw) {
+            raw = await peoplePhones(msg, key, keyTextAfter(args, key));
+            if (raw === null) return;
+        }
+
+        await changeList(msg, { key, bruto: raw, acrescentar: append });
         return;
     }
 
@@ -230,9 +297,9 @@ async function cmdSet({ msg, opts, args, chatId }) {
     if (!rest.length) {
         const limits = schema.type === 'number' ? ` (${schema.min}..${schema.max})` : '';
         const valueAlt = getSetting(key);
-        // "One per line" list: one item per line in the display too
-        const valueText = schema.separator && valueAlt.length
-            ? '\n' + valueAlt.map((v, i) => `${i + 1}. ${v}`).join('\n')
+        // "One per line" list (and the people one, with the name): one item per line in the display too
+        const valueText = (schema.separator || PEOPLE.includes(key)) && valueAlt.length
+            ? '\n' + (await showItems(key, valueAlt)).map((v, i) => `${i + 1}. ${v}`).join('\n')
             : formatValueSetting(valueAlt, ', ', schema.secret);
 
         await msg.reply(
@@ -246,12 +313,18 @@ async function cmdSet({ msg, opts, args, chatId }) {
 
     // With separator (e.g.: watch.rules, one per line) uses the raw text: the tokenizer
     // would lose the line breaks and the quotes inside the rules
-    const raw = schema.separator ? valueRaw(args, key) : rest.join(' ');
+    let raw = schema.separator ? valueRaw(args, key) : rest.join(' ');
+
+    // People list: the names become phones ("" still empties it)
+    if (PEOPLE.includes(key) && !/^(["'])\1$/.test(keyTextAfter(args, key))) {
+        raw = await peoplePhones(msg, key, keyTextAfter(args, key));
+        if (raw === null) return;
+    }
 
     try {
         const valueAlt = await setSetting(key, raw);
         printInfo(`Setting '${key}' alterado para ${schema.secret ? formatValueSetting(valueAlt, ', ', true) : JSON.stringify(valueAlt)}`);
-        await msg.reply(`✅ *${key}* = ${formatValueSetting(valueAlt, schema.separator ? ' | ' : ', ', schema.secret)}`);
+        await msg.reply(`✅ *${key}* = ${formatValueSetting(await showItems(key, valueAlt), schema.separator ? ' | ' : ', ', schema.secret)}`);
     } catch (e) {
         await msg.reply(`❌ Valor inválido para *${key}*: ${e.message}`);
     }

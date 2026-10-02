@@ -67,10 +67,19 @@ Outras pessoas podem usar os comandos **admin** (os marcados com ✅ na
 o número delas estiver no setting `bot.admins`:
 
 ```
-/set -a bot.admins +5521999999999   → acrescenta
-/set -rem bot.admins 5521999999999  → tira
-/set bot.admins                     → a lista
+/set -a bot.admins /Jorge Pereira/  → acrescenta, pelo nome do contato
+/set -a bot.admins +5521999999999   → ou pelo número
+/set -rem bot.admins /Jorge Pereira/ → tira
+/set bot.admins                     → a lista: 5521999999999 (Jorge Pereira)
 ```
+
+O nome é buscado como no `-to` ([Destinos](index.md#destinos-contato-grupo-número-ou-e-mail)):
+contato da sua agenda, e se mais de um servir, a lista para responder com o nº.
+Nomes com espaço vão entre `/.../` ou aspas; vários de uma vez, separados por
+espaço (`/set -a bot.admins /Jorge Pereira/ "Ana Souza" +5511988887777`). Fica
+guardado o **telefone** (é ele que o bot compara com quem manda o comando), e a
+lista mostra o nome ao lado. Grupo e e-mail são recusados, e um contato de quem
+o WhatsApp só informa o id interno (LID), sem o telefone, também: use o número.
 
 - Só **você** (o dono, a conta pareada) altera o `bot.admins`: um admin extra
   não consegue se dar (nem dar a outros) esse acesso.

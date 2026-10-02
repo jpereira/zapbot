@@ -29,7 +29,7 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 /set watch.rules ""
 /set -a commands.disabled walissu   → desativa mais um, sem reescrever a lista
 /set -rem commands.disabled noffa   → reativa só esse
-/set -a bot.admins +5521999999999   → um admin extra (veja o /bot)
+/set -a bot.admins /Jorge Pereira/  → um admin extra, pelo nome do contato (veja o /bot)
 ```
 
 ## Listas: `-append` e `-rem`
@@ -52,7 +52,9 @@ Numa chave que não é lista (`show.max`, `debug.enabled`...), o `-append` e o
 padrão com `/set -reset <chave>` (`-r`).
 
 O `bot.admins` só o dono altera (inclusive com `-append`, `-rem` e `-reset`):
-um admin extra não pode se dar (nem dar a outros) esse acesso.
+um admin extra não pode se dar (nem dar a outros) esse acesso. Nele, além do
+número, vale o nome do contato (`/Jorge Pereira/`): o bot guarda o telefone e
+mostra o nome ao lado ([Admins extras](bot.md#admins-extras)).
 
 ## Variáveis do `config/.env`
 
