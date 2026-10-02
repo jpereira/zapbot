@@ -24,7 +24,8 @@ os alertas do [`/cotacao`](cotacao.md#avisar-em-outro-chat-ou-por-e-mail) e do
 [`/watch`](watch.md#avisar-em-outro-lugar) e o [`/backup -send`](backup.md#enviar-o-arquivo).
 Todos aceitam vários `-to`: o aviso (ou a mensagem, ou o arquivo) sai em cada
 destino.
-O alvo do [`/mudo`](mudo.md) usa a mesma busca. Sem `-to`, os avisos (e o
+O alvo do [`/mudo`](mudo.md), as pessoas do [`/bot +o`/`+v`](bot.md#admins-extras) e do
+[`/whois`](whois.md) usam a mesma busca. Sem `-to`, os avisos (e o
 arquivo do `/backup`) vão para o seu privado, e o `/cron`, para o chat atual.
 
 | Forma | Exemplo | Encontra |
@@ -42,7 +43,7 @@ As mesmas formas, num comando só:
 /cotacao -alerta USD > 5.30 -to email           → por e-mail (o QRCODE_EMAIL_SMTP_TO)
 /crypto -alerta BTC < 90000 -to /Grupo L200/ -to email  → no grupo e por e-mail
 /mudo @Fulano Da Silva                          → o alvo do /mudo, mencionando
-/set -a bot.admins /Jorge Pereira/ +5511988887777 → o bot.admins aceita várias pessoas de uma vez
+/bot +o /Jorge Pereira/ +5511988887777         → o /bot +o (e o +v) aceita várias pessoas de uma vez
 ```
 
 - **Menção:** num grupo, digite `@` e escolha a pessoa na lista do WhatsApp. No
@@ -51,8 +52,9 @@ As mesmas formas, num comando só:
   sua agenda. Um `@número` digitado à mão, sem escolher na lista, é recusado:
   para um número, use o `+5521999999999`.
 - O `/cron` e o `/mudo` não aceitam e-mail: a mensagem do `/cron` sai no
-  WhatsApp, e o `/mudo` silencia uma pessoa ou um grupo. O `bot.admins` aceita
-  só pessoas (contato, menção ou número).
+  WhatsApp, e o `/mudo` silencia uma pessoa ou um grupo. Os admins (`/bot +o`)
+  e o `/whois` aceitam só pessoas (contato, menção ou número); os usuários
+  (`/bot +v`), pessoas e grupos.
 - O nome casa quando tem **todas** as palavras, em qualquer ordem, sem
   diferenciar maiúsculas nem acentos. No `-to`, nomes com espaço vão entre
   `/.../` ou aspas (sem eles, só a primeira palavra conta); no `/mudo`, o alvo

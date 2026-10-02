@@ -74,7 +74,7 @@ contato, um grupo, um número ou e-mail, com a mesma busca dos outros comandos
 
 ```
 /watch -a "vaga de emprego" -to /Grupo Carreira/  → cria a regra já com o destino
-/watch -3 -to /Jorge Pereira/                     → troca o destino da regra 3
+/watch -3 -to /Jorge Pereira/                     → troca os destinos da regra 3
 /watch -3 -to @Fulano Da Silva                    → num grupo, mencionando a pessoa
 /watch -3 -to +5521999999999                      → no privado do número
 /watch -3 -to email                               → por e-mail (QRCODE_EMAIL_SMTP_TO)

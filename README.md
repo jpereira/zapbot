@@ -112,7 +112,7 @@ Digite no próprio chat. `/help` lista os comandos que você pode usar;
 `/<comando> -h` mostra a ajuda de um. Os marcados como **Admin** só respondem à
 sua conta (e aos admins extras: `/bot +o <pessoa>`). Por padrão, só você usa
 comandos: libere os comuns para todos com `/bot -admin` ou para alguns com
-`/bot +v <pessoa|grupo>`
+`/bot +v <pessoa|grupo>`; o `/whois` diz o seu nível
 ([Permissões](https://jpereira.github.io/zapbot/comandos/#permissões-onlyadmin)).
 
 | Comando | Aliases | Admin | Descrição |

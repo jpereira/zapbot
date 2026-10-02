@@ -131,6 +131,7 @@ Por onde começar:
   [usuários](comandos/bot.md#usuários) (`+v`/`-v`: pessoas e grupos, ou todos
   com `-admin`), e o `-reset` volta ao padrão; o `-status` mostra o relatório e
   o `-info`, as versões do que o bot usa (Node.js, Chromium, yt-dlp, ffmpeg...).
+  O [`/whois`](comandos/whois.md) diz o nível de cada um no chat.
 - **Reconexão**: em caso de queda o cliente é reiniciado sozinho, exceto quando o
   motivo exige ação manual (`LOGOUT`, `CONFLICT`, `UNPAIRED`...).
 - **Saúde (heartbeat)**: a cada 30 s o bot confere se o WhatsApp Web responde e

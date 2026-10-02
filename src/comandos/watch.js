@@ -25,7 +25,7 @@ const { REGRA_REGEX } = require('../watch/regras');
  *   /watch -f [-N]             → apaga as ocorrências da regra N (sem N: de todas); mantém as regras
  *   /watch -a <regra> -to <destino>  → a regra avisa noutro chat ou por e-mail (repita o -to
  *                                      para avisar em vários)
- *   /watch -N -to <destino|off>      → troca o destino da regra N (off: volta ao seu privado)
+ *   /watch -N -to <destino|off>      → troca os destinos da regra N (off: volta ao seu privado)
  * As regras ficam no setting 'watch.rules'; as ocorrências na tabela watch_hits;
  * os destinos de cada regra, em watch_destinations (sem linha: o seu privado).
  * As respostas saem no chat onde o comando foi digitado.
@@ -143,7 +143,7 @@ async function cmdWatch({ msg, opts: optsDoComando, args: argsDoComando }) {
         return;
     }
 
-    // -N -to <destino|off>: troca o destino de uma regra
+    // -N -to <destino|off>: troca os destinos de uma regra
     if (comDestino) {
         const n = numeroDaRegra(opts.argv);
 
@@ -186,7 +186,7 @@ async function cmdWatch({ msg, opts: optsDoComando, args: argsDoComando }) {
             `👀 *WATCH: REGRAS* (${regras.length}/${getSetting('watch.max')})\n\n` +
             '```\n' + lista + '\n```\n' +
             '_(entre parênteses: ocorrências guardadas; → o destino dos avisos, se não for o seu privado)_\n' +
-            '💡 _/watch -s -N para ver as mensagens da regra N; /watch -N -to <destino|off> troca o destino._');
+            '💡 _/watch -s -N para ver as mensagens da regra N; /watch -N -to <destino|off> troca os destinos._');
         return;
     }
 

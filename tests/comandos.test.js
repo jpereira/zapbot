@@ -13,7 +13,7 @@ const { OUTRO } = bot;
 beforeEach(bot.reiniciar);
 
 describe('/help (/h)', () => {
-    test('sem argumento: todos os comandos ativos', async () => {
+    test('sem argumento (o dono): todos os comandos ativos', async () => {
         const [r] = await bot.responder('/help');
         assert.match(r, /MENU DE AJUDA/);
         assert.match(r, /Usage: \/show/);
@@ -172,6 +172,15 @@ describe('/bot', () => {
         }
         assert.match((await bot.responder('/bot -i -on'))[0], /❌ O -info não combina com as outras opções/);
         assert.equal(bot.getSetting('bot.paused'), false);
+    });
+
+    test('-au combina com as outras: -on -au liga e mostra todos', async () => {
+        await bot.setSetting('bot.paused', true);
+        await bot.setSetting('bot.users', ['5521911111111', '5521977777777']);
+        const [r] = await bot.responder('/bot -on -au');
+        assert.equal(bot.getSetting('bot.paused'), false);
+        assert.match(r, /^▶️ \*Bot:\* ativo\n[\s\S]*\*Quem usa\* \(2\)\n/);
+        assert.doesNotMatch(r, /fora daqui/);
     });
 
     test('combinações inválidas mostram o uso', async () => {
