@@ -1,12 +1,13 @@
 /*
- * Watch: tests the received messages against the rules and notifies you in private.
+ * Watch: tests the received messages against the rules and notifies you in private
+ * (or in the -to destination of each rule: another chat or email).
  */
 
-const { client } = require('../client');
 const { findCommand } = require('../commands/base');
 const { resolverMentions } = require('../contacts');
-const { dbRun } = require('../db');
-const { printInfo } = require('../log');
+const { dbAll, dbRun } = require('../db');
+const { lineDestination, sendOnDestination } = require('../destinations');
+const { printError, printInfo } = require('../log');
 const { getSetting } = require('../settings');
 const { formatData } = require('../util/format');
 const { compileRuleWatch } = require('./rules');
@@ -47,24 +48,34 @@ async function checkWatch({ msg, msgIdPure, body, chatId, chatName, isGroup, sen
 
     if (!freshAlt2.length) return;
 
-    let textAlt = '👀 *WATCH: MENSAGEM DETECTADA*\n\n';
-
-    for (const c of freshAlt2) {
-        textAlt += `🔎 *Regra #${c.n}:* ${c.regra}\n`;
-    }
-
-    if (isGroup) {
-        textAlt += `👥 *Grupo:* ${chatName}\n`;
-    }
-
-    textAlt +=
+    const details =
+        (isGroup ? `👥 *Grupo:* ${chatName}\n` : '') +
         `👤 *Nome:* ${senderName}\n` +
         `📱 *Número:* ${senderNumber ? `+${senderNumber}` : 'Número indisponível'}\n` +
         `📅 *Enviada em:* ${formatData(timestamp)}\n` +
         `💬 *Texto:* "${await resolverMentions(body, msg.mentionedIds)}"`;
 
+    // One notice per destination, with only its rules (without -to: your private chat)
+    const linesAlt = await dbAll(
+        `SELECT * FROM watch_destinations WHERE rule IN (${freshAlt2.map(() => '?').join(', ')})`, freshAlt2.map(c => c.regra));
+    const destinationAlt = new Map(linesAlt.map(r => [r.rule, lineDestination(r)]));
+    const byDestination = Map.groupBy(freshAlt2, (c) => {
+        const d = destinationAlt.get(c.regra);
+        return d ? (d.email ? `email:${d.email}` : d.id) : 'privado';
+    });
+
     printInfo(`/watch: regra(s) ${freshAlt2.map(c => `#${c.n}`).join(',')} casaram em '${chatName}' (${senderName})`);
-    await client.sendMessage(client.info.wid._serialized, textAlt, { linkPreview: false });
+
+    for (const destinationAlt2 of byDestination.values()) {
+        const destination = destinationAlt.get(destinationAlt2[0].regra) ?? null;
+        const textAlt = '👀 *WATCH: MENSAGEM DETECTADA*\n\n' +
+            destinationAlt2.map(c => `🔎 *Regra #${c.n}:* ${c.regra}\n`).join('') + details;
+
+        await sendOnDestination(destination, textAlt, {
+            assunto: `👀 Watch: ${destinationAlt2.map(c => `#${c.n} ${c.regra}`).join(', ')}`,
+            opcoes: { linkPreview: false }
+        }).catch(err => printError('/watch: falha ao avisar:', err.message));
+    }
 }
 
 module.exports = {

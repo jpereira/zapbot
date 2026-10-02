@@ -29,7 +29,7 @@ const OTHERAlt = { jid: '5521911111111@c.us', user: '5521911111111', nome: 'Fula
 let db = null;
 const prepare = () => (db ??= initializeDb().then(markDbReady));
 
-const TABLES = ['messages', 'message_edits', 'stats', 'watch_hits', 'price_alerts',
+const TABLES = ['messages', 'message_edits', 'stats', 'watch_hits', 'watch_destinations', 'price_alerts',
     'presence_logs', 'monitored_numbers', 'settings', 'polls', 'poll_votes', 'schedules', 'defi_positions', 'mutes', 'mute_hits'];
 
 /*

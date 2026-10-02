@@ -155,3 +155,59 @@ describe('/watch', () => {
         assert.deepEqual(bot.getSetting('watch.rules'), []);
     });
 });
+
+describe('/watch -to', () => {
+    const L200 = '120363000000000200@g.us';
+
+    beforeEach(() => bot.createGroup(L200, 'Grupo sobre L200', [OWNER.jid]));
+
+    test('-a com -to: a regra avisa no destino; as sem -to, no seu privado (um aviso por destino)', async () => {
+        assert.match((await bot.replyAlt('/watch -a promoção -to /Grupo sobre L200/'))[0],
+            /^✅ Regra \*#1\* adicionada _\(texto\)_: promoção\n💡 _Avisos em 👥 Grupo sobre L200\._$/);
+        await bot.replyAlt('/watch -a pix');
+
+        const notices = await someoneWrite('promoção no pix');
+        assert.deepEqual(notices.map(a => a.chatId).sort(), [OWNER.jid, L200].sort());
+        assert.match(notices.find(a => a.chatId === L200).texto, /🔎 \*Regra #1:\* promoção\n👥/);
+        assert.match(notices.find(a => a.chatId === OWNER.jid).texto, /🔎 \*Regra #2:\* pix\n👥/);
+
+        const [list] = await bot.replyAlt('/watch -l');
+        assert.match(list, /#1  promoção  \(1\)  → 👥 Grupo sobre L200\n#2  pix  \(1\)\n/);
+    });
+
+    test('-N -to troca o destino; off volta ao privado; -rem apaga o destino', async () => {
+        await bot.replyAlt('/watch -a pix');
+        assert.deepEqual(await bot.replyAlt('/watch -1 -to /Fulano/'), ['📣 Regra *#1* (pix): os avisos vão para *👤 Fulano*.']);
+        assert.equal((await someoneWrite('pix'))[0].chatId, OTHERAlt.jid);
+
+        assert.deepEqual(await bot.replyAlt('/watch -1 -to off'), ['📣 Regra *#1* (pix): os avisos vão para *seu privado*.']);
+        assert.equal((await someoneWrite('outro pix'))[0].chatId, OWNER.jid);
+
+        await bot.replyAlt('/watch -1 -to /Fulano/');
+        await bot.replyAlt('/watch -r -1');
+        assert.deepEqual(await bot.dbAll('SELECT * FROM watch_destinations'), []);
+    });
+
+    test('-to email: o aviso vai por e-mail', async () => {
+        const env = { QRCODE_EMAIL_SMTP_HOST: 'smtp.exemplo.com', QRCODE_EMAIL_SMTP_USER: 'bot@exemplo.com', QRCODE_EMAIL_SMTP_TO: 'Eu <eu@exemplo.com>' };
+        Object.assign(process.env, env);
+        try {
+            await bot.replyAlt('/watch -a "vaga" -to email');
+            assert.deepEqual(await someoneWrite('tem vaga aqui'), [], 'nada no WhatsApp');
+            const [m] = bot.emails;
+            assert.equal(m.to, 'eu@exemplo.com');
+            assert.equal(m.subject, '[ZapBot] 👀 Watch: #1 vaga');
+            assert.match(m.text, /^👀 WATCH: MENSAGEM DETECTADA\n\n🔎 Regra #1: vaga\n/);
+        } finally {
+            for (const v of Object.keys(env)) delete process.env[v];
+        }
+    });
+
+    test('erros: -to sem regra, regra que não existe, destino inválido (a regra não é criada)', async () => {
+        await bot.replyAlt('/watch -a pix');
+        assert.match((await bot.replyAlt('/watch -to /Fulano/'))[0], /❌ Use o -to ao adicionar/);
+        assert.match((await bot.replyAlt('/watch -9 -to /Fulano/'))[0], /A regra #9 não existe/);
+        assert.match((await bot.replyAlt('/watch -a boleto -to xyz'))[0], /❌ Nenhum contato ou grupo com "xyz"/);
+        assert.deepEqual(bot.getSetting('watch.rules'), ['pix']);
+    });
+});
