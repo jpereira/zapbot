@@ -29,7 +29,7 @@ Por onde começar:
 ## Como funciona
 
 ```
- ┌────────────── container zapbot (node:24-alpine) ───────────────┐
+ ┌─────────── container zapbot (node:24-trixie-slim) ─────────────┐
  │                                                                │
  │   app.js ──► whatsapp-web.js ──► Puppeteer ──► Chromium        │──► WhatsApp Web
  │     │                                          (headless)      │

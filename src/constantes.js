@@ -21,7 +21,8 @@ const MEDIA_DIR = path.join(CACHE_DIR, 'media'); // mídias salvas para recupera
 const TMP_DIR = path.join(CACHE_DIR, 'tmp');     // arquivos temporários do /get
 const BACKUP_DIR = path.join(CACHE_DIR, 'backups'); // backups do banco (/backup)
 
-const BIN_CHROMIUM = '/usr/bin/chromium-browser';
+// O da imagem (Debian); fora dela, PUPPETEER_EXECUTABLE_PATH aponta outro
+const BIN_CHROMIUM = process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium';
 const BIN_FFMPEG = '/usr/bin/ffmpeg';
 const BIN_YT = '/venv/bin/yt-dlp';
 
