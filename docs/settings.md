@@ -42,10 +42,10 @@ hora, sem reiniciar, e sobrevivem a reinícios. Para ver e alterar, use o
 | `openai.timeout.ms` | 5000–300000 | `60000` | Timeout do `/gpt`, usado quando `OPENAI_TIMEOUT_MS` não está no `config/.env` |
 | `pixelart.maxParts` | 1–10 | `3` | Máximo de partes do [`/pixelart`](comandos/pixelart.md) quando a arte é mais alta que 4096 px |
 | `pixelart.packs` | lista | `chuck-norris-lvl` | Packs do 16colo.rs sorteados pelo [`/pixelart`](comandos/pixelart.md) sem argumentos |
-| `show.alert.edit` | on/off | `on` | Avisa no seu privado quando alguém edita uma mensagem; `off` só guarda para o `/show -e` |
+| `show.alert.edited` | on/off | `on` | Avisa no seu privado quando alguém edita uma mensagem; `off` só guarda para o `/show -e` |
+| `show.alert.status` | on/off | `on` | Recupera status apagados; `off` ignora (nem alerta, nem `/show`) |
 | `show.delayMs` | 0–10000 | `700` | Intervalo entre os envios do `/show` |
 | `show.max` | 1–100 | `20` | Máximo de mensagens por `/show -N` |
-| `show.revoke.status` | on/off | `on` | Recupera status apagados; `off` ignora (nem alerta, nem `/show`) |
 | `stats.enable` | on/off | `on` | Conta as mensagens de cada chat para o `/stats`; `off` para de contar (o histórico fica) |
 | `stats.retentionDays` | 7–365 | `90` | Dias que os contadores do `/stats` ficam guardados (e período máximo do `/stats -N`) |
 | `sticker.author` | texto | `https://github.com/jpereira/zapbot/` | Autor das figurinhas |
@@ -69,6 +69,6 @@ boot (vale o padrão, com aviso nos logs).
 Para **renomear** uma chave sem perder o valor salvo, além de trocar o nome no
 `SETTINGS_SCHEMA`, ponha `'antigo': 'novo'` em `SETTINGS_RENOMEADOS`: no boot, o
 valor do nome antigo passa para o novo (se o novo ainda estiver no padrão) e o
-antigo sai do banco. Assim já foram `edit.alert` → `show.alert.edit`,
-`revoke.status` → `show.revoke.status`, `stats.enabled` → `stats.enable`,
+antigo sai do banco. Assim já foram `edit.alert` → `show.alert.edit` → `show.alert.edited`,
+`revoke.status` → `show.revoke.status` → `show.alert.status`, `stats.enabled` → `stats.enable`,
 `gif.giphy.api.key` → `giphy.api.key` e `resumo.maxMsgs` → `tldr.maxMsgs`.

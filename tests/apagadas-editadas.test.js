@@ -56,11 +56,11 @@ describe('evento: mensagem apagada', () => {
         assert.ok(bot.errosNoLog(logAntes).some(l => l.includes('NUNCA_VISTA não encontrada')));
     });
 
-    test('status apagado: título próprio; show.revoke.status off ignora', async () => {
+    test('status apagado: título próprio; show.alert.status off ignora', async () => {
         const { alerta } = await mensagemApagada('meu status', { chat: 'status@broadcast' });
         assert.match(alerta[0].texto, /📸 \*STATUS APAGADO DETECTADO\*/);
 
-        await bot.setSetting('show.revoke.status', false);
+        await bot.setSetting('show.alert.status', false);
         const { msg, alerta: nada } = await mensagemApagada('outro status', { chat: 'status@broadcast' });
         assert.deepEqual(nada, []);
         assert.equal((await bot.dbGet('SELECT revoked FROM messages WHERE id = ?', [msg.id.id])).revoked, 0);
@@ -179,8 +179,8 @@ describe('evento: mensagem editada', () => {
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM message_edits')).n, 2);
     });
 
-    test('show.alert.edit off: guarda sem avisar; conta no /stats', async () => {
-        await bot.setSetting('show.alert.edit', false);
+    test('show.alert.edited off: guarda sem avisar; conta no /stats', async () => {
+        await bot.setSetting('show.alert.edited', false);
         const { msg, alerta } = await mensagemEditada('a', 'b');
         assert.deepEqual(alerta, []);
         assert.ok(await bot.dbGet('SELECT 1 FROM message_edits WHERE message_id = ?', [msg.id.id]));

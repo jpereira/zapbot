@@ -245,9 +245,9 @@ describe('SETTINGS_SCHEMA', () => {
 
 describe('settings', () => {
     test('boolean aceita on/off e sinônimos', async () => {
-        for (const v of ['on', 'true', '1', 'sim', 'yes']) assert.equal(await setSetting('show.alert.edit', v), true);
-        for (const v of ['off', 'false', '0', 'nao', 'não', 'no']) assert.equal(await setSetting('show.alert.edit', v), false);
-        await assert.rejects(setSetting('show.alert.edit', 'talvez'), /use on\|off/);
+        for (const v of ['on', 'true', '1', 'sim', 'yes']) assert.equal(await setSetting('show.alert.edited', v), true);
+        for (const v of ['off', 'false', '0', 'nao', 'não', 'no']) assert.equal(await setSetting('show.alert.edited', v), false);
+        await assert.rejects(setSetting('show.alert.edited', 'talvez'), /use on\|off/);
     });
 
     test('number: inteiro dentro dos limites', async () => {
@@ -319,16 +319,18 @@ describe('settings', () => {
             'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value', [key, JSON.stringify(value)]);
         await salvar('resumo.maxMsgs', 50);
         await salvar('edit.alert', false);
+        await salvar('show.revoke.status', false);
         await salvar('stats.enabled', true);
         await salvar('stats.enable', false);     // já mudado no nome novo (o padrão é on): fica o novo
         await salvar('show.max', 20);
 
         await carregarSettings();
         assert.equal(getSetting('tldr.maxMsgs'), 50);
-        assert.equal(getSetting('show.alert.edit'), false);
+        assert.equal(getSetting('show.alert.edited'), false);
+        assert.equal(getSetting('show.alert.status'), false);
         assert.equal(getSetting('stats.enable'), false);
 
-        const antigos = await bot.dbAll("SELECT key FROM settings WHERE key IN ('resumo.maxMsgs', 'edit.alert', 'stats.enabled')");
+        const antigos = await bot.dbAll("SELECT key FROM settings WHERE key IN ('resumo.maxMsgs', 'edit.alert', 'show.revoke.status', 'stats.enabled')");
         assert.deepEqual(antigos, []);
         assert.ok(bot.logs.some(l => l.includes("Setting 'resumo.maxMsgs' renomeado para 'tldr.maxMsgs': o valor salvo foi mantido")));
     });
