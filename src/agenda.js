@@ -21,7 +21,7 @@ const { REPETICOES, fmtQuando, lerQuando, partesEmBrasilia, proximaRepeticao } =
  *              comando, ou a mensagem que ele respondeu), ou no seu privado com
  *              -pv. É o modo do /lembrete e do -lembrete.
  * Os dois aceitam -repetir (-r) diario|semanal|mensal. O modo mensagem aceita
- * vários -to (um item por destino). Na lista, -edit <nº> troca a hora, o texto
+ * vários -to (um item só, com todos os destinos). Na lista, -edit <nº> troca a hora, o texto
  * ou a repetição de um item, e -pause/-resume <nº...|all> o seguram e soltam.
  * Um {/comando} no texto roda na hora do envio e a resposta entra no lugar
  * (veja agendaComandos.js); -test <nº> mostra agora como a mensagem sairia.
@@ -88,14 +88,20 @@ function lerAgendamento(args) {
 // Lembretes e mensagens juntos, na ordem em que saem (os números do -rm). O status diário (/bot -status) fica de fora
 const listar = () => dbAll("SELECT * FROM schedules WHERE kind != 'status' ORDER BY due_at, id");
 
-// Para onde vai um item: "👥 Grupo", "👤 Contato" ou "seu privado"
-const ondeDoItem = (s) => (s.chat_id === client.info.wid._serialized ? 'seu privado' : `${s.is_group ? '👥' : '👤'} ${s.chat_name}`);
+// Os destinos de um item: os vários -to (recipients) ou o chat dele
+const destinosDoItem = (s) => (s.recipients
+    ? JSON.parse(s.recipients)
+    : [{ id: s.chat_id, nome: s.chat_name, grupo: Boolean(s.is_group) }]);
+
+// Para onde vai: "👥 Grupo", "👤 Contato" ou "seu privado"
+const ondeDoDestino = (d) => (d.id === client.info.wid._serialized ? 'seu privado' : `${d.grupo ? '👥' : '👤'} ${d.nome}`);
+const ondeDoItem = (s) => destinosDoItem(s).map(ondeDoDestino).join(', ');
 
 // O mesmo, com o id (grupo) ou o número (pessoa), para o log
-function ondeNoLog(s) {
-    const onde = ondeDoItem(s);
+function ondeNoLog(d) {
+    const onde = ondeDoDestino(d);
     if (onde === 'seu privado') return onde;
-    const numero = !s.is_group && s.chat_id.endsWith('@c.us') ? `+${s.chat_id.split('@')[0]}` : s.chat_id;
+    const numero = !d.grupo && d.id.endsWith('@c.us') ? `+${d.id.split('@')[0]}` : d.id;
     return `${onde} (${numero})`;
 }
 
@@ -104,7 +110,8 @@ function linhaDaLista(s, i) {
     const pausado = s.paused ? ' ⏸️ _pausado_' : '';
     // O texto inteiro, como foi cadastrado; as linhas seguintes recuadas, como a do destino
     const texto = s.text.replace(/\n/g, '\n   ');
-    return `${i + 1}. ${TIPOS[s.kind]?.icone ?? '📅'} *${fmtQuando(s.due_at)}*${repete}${pausado} — ${texto}\n   → ${ondeDoItem(s)}`;
+    const destinos = destinosDoItem(s).map(d => `\n   → ${ondeDoDestino(d)}`).join('');
+    return `${i + 1}. ${TIPOS[s.kind]?.icone ?? '📅'} *${fmtQuando(s.due_at)}*${repete}${pausado} — ${texto}${destinos}`;
 }
 
 // "2" → [item 2]; "all" → todos; senão null
@@ -341,15 +348,13 @@ async function tratarAgenda({ msg, args, chatId, chatName, isGroup, quotedMsg })
     }
 
     const max = getSetting('agenda.max');
-    const novos = Math.max(1, destinosTexto.length);
     const { n: total } = await dbGet("SELECT COUNT(*) AS n FROM schedules WHERE kind != 'status'");
-    if (total + novos > max) {
-        await msg.reply(`❌ Limite de ${max} lembretes e mensagens agendadas (setting agenda.max)` +
-            (novos > 1 ? `: estes ${novos} não cabem` : '') + '. Remova algum antes.');
+    if (total + 1 > max) {
+        await msg.reply(`❌ Limite de ${max} lembretes e mensagens agendadas (setting agenda.max). Remova algum antes.`);
         return;
     }
 
-    // Onde vai: -to (mensagem; um item por destino), -pv (lembrete) ou o chat atual
+    // Onde vai: -to (mensagem; vários -to, um item com todos), -pv (lembrete) ou o chat atual
     const meuId = client.info.wid._serialized;
     let destinos = [{ id: chatId, nome: chatName, grupo: Boolean(isGroup) }];
 
@@ -367,25 +372,27 @@ async function tratarAgenda({ msg, args, chatId, chatName, isGroup, quotedMsg })
         destinos = [{ id: meuId, nome: 'seu privado', grupo: false }];
     }
 
-    for (const destino of destinos) {
-        // O lembrete responde a mensagem respondida pelo comando, ou o próprio comando (só no mesmo chat)
-        const citada = kind === 'lembrete' && destino.id === chatId
-            ? (quotedMsg?.id?._serialized ?? msg.id?._serialized ?? null)
-            : null;
+    // O lembrete responde a mensagem respondida pelo comando, ou o próprio comando (só no mesmo chat)
+    const [primeiro] = destinos;
+    const citada = kind === 'lembrete' && primeiro.id === chatId
+        ? (quotedMsg?.id?._serialized ?? msg.id?._serialized ?? null)
+        : null;
+    const recipients = destinos.length > 1
+        ? JSON.stringify(destinos.map(d => ({ id: d.id, nome: d.nome, grupo: Boolean(d.grupo) })))
+        : null;
 
-        await dbRun(
-            `INSERT INTO schedules (kind, chat_id, chat_name, is_group, text, due_at, repeat, day_of_month, quoted_id, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [kind, destino.id, destino.nome, destino.grupo ? 1 : 0, texto, quando.ms, repetir,
-                partesEmBrasilia(quando.ms).dia, citada, agora]
-        );
-    }
+    await dbRun(
+        `INSERT INTO schedules (kind, chat_id, chat_name, is_group, text, due_at, repeat, day_of_month, quoted_id, created_at, recipients)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [kind, primeiro.id, primeiro.nome, primeiro.grupo ? 1 : 0, texto, quando.ms, repetir,
+            partesEmBrasilia(quando.ms).dia, citada, agora, recipients]
+    );
 
     const onde = (d) => (d.id === meuId ? 'no seu privado' : d.id === chatId ? 'neste chat' : `em ${descreverDestino(d)}`);
     await msg.reply(`${t.icone} *${t.criado}* para *${fmtQuando(quando.ms)}*` +
         (repetir ? ` 🔁 ${REPETICOES[repetir].rotulo}` : '') +
         (destinos.length > 1
-            ? ` em ${destinos.length} chats _(um item para cada)_:\n${destinos.map(d => `• ${descreverDestino(d)}`).join('\n')}\n`
+            ? ` em ${destinos.length} chats:\n${destinos.map(d => `• ${descreverDestino(d)}`).join('\n')}\n`
             : ` ${onde(destinos[0])}.\n`) +
         `📝 ${resumirTexto(texto, 100)}`);
 }
@@ -408,6 +415,7 @@ async function testar(msg, itens, valor) {
         return;
     }
 
+    // Os {/comando} rodam como no primeiro destino
     const { texto, midias } = await montarTexto(s.text, s);
 
     await msg.reply(`🧪 *Teste do nº ${valor.trim()}* _(sai em ${fmtQuando(s.due_at)} → ${ondeDoItem(s)})_\n\n` +
@@ -428,28 +436,40 @@ async function dispararItem(s, agora) {
         await dbRun('DELETE FROM schedules WHERE id = ?', [s.id]);
     }
 
-    let comandos = [];
     if (s.kind === 'status') {
         // O relatório do /bot -status, montado na hora
         await client.sendMessage(s.chat_id, await textoDoStatus(agora));
-    } else {
-        // Os {/comando} rodam agora; as mídias deles saem depois da mensagem
-        const { texto: montado, midias, comandos: executados } = await montarTexto(s.text, s);
-        comandos = executados;
-        const texto = textoDoItem(s, montado, atrasado);
-
-        // Só mídia (ex.: "{/meme}"): não há texto a enviar
-        if (texto && s.kind === 'agendar') {
-            await client.sendMessage(s.chat_id, texto);
-        } else if (texto) {
-            // A mensagem citada pode ter sumido: sem ela, vai sem citar
-            await client.sendMessage(s.chat_id, texto, s.quoted_id ? { quotedMessageId: s.quoted_id } : {})
-                .catch(() => client.sendMessage(s.chat_id, texto));
-        }
-        await enviarMidias(s.chat_id, midias);
+        printInfo(`/bot -status: enviado para ${ondeNoLog(destinosDoItem(s)[0])}${atrasado ? ' (atrasado)' : ''}`);
+        return;
     }
 
-    printInfo(`${TIPOS[s.kind]?.cmd ?? '/bot -status'}: enviado para ${ondeNoLog(s)}` +
+    // Um destino que falha não segura os outros
+    for (const d of destinosDoItem(s)) {
+        await enviarAoDestinoDoItem(s, d, atrasado)
+            .catch(err => printError(`${TIPOS[s.kind]?.cmd}: falha ao enviar ${s.id} para ${ondeNoLog(d)}:`, err.message));
+    }
+}
+
+/*
+ * Um destino do item: os {/comando} rodam no contexto do chat dele (o /stats
+ * de um grupo é dele) e as mídias saem depois da mensagem.
+ */
+async function enviarAoDestinoDoItem(s, d, atrasado) {
+    const noChat = { ...s, chat_id: d.id, chat_name: d.nome, is_group: d.grupo ? 1 : 0 };
+    const { texto: montado, midias, comandos } = await montarTexto(s.text, noChat);
+    const texto = textoDoItem(s, montado, atrasado);
+
+    // Só mídia (ex.: "{/meme}"): não há texto a enviar
+    if (texto && s.kind === 'agendar') {
+        await client.sendMessage(d.id, texto);
+    } else if (texto) {
+        // A mensagem citada pode ter sumido: sem ela, vai sem citar
+        await client.sendMessage(d.id, texto, s.quoted_id ? { quotedMessageId: s.quoted_id } : {})
+            .catch(() => client.sendMessage(d.id, texto));
+    }
+    await enviarMidias(d.id, midias);
+
+    printInfo(`${TIPOS[s.kind]?.cmd}: enviado para ${ondeNoLog(d)}` +
         (comandos.length ? `, com ${comandos.map(c => `{${c}}`).join(', ')}` : '') +
         `${atrasado ? ' (atrasado)' : ''}${s.repeat ? ` (${s.repeat})` : ''}`);
 }

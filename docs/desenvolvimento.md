@@ -133,7 +133,7 @@ entre os casos.
 | `mudo.test.js` | `/mudo`: avisos silenciados por pessoa ou grupo (só o alvo é o `-a`), e a busca do alvo (contato antes de grupo, menção, a lista para escolher pelo nº) |
 | `stats.test.js`, `watch.test.js`, `monitor.test.js` | `/stats`, `/watch` (e o `-to`), `/monitor` e o aviso de presença |
 | `status.test.js` | `/bot -status`: o relatório (com o aviso `show.alert.*` desligado e os silenciados do `/mudo`) e o envio diário |
-| `agenda.test.js` | Datas digitadas (`6h`, `+2h`, `às 18h`, `sexta`...) e o `/cron`, nos modos mensagem e lembrete, com vários `-to`, `-edit`, `-pause`/`-resume` e os `{/comando}` no texto (e o `-test`) |
+| `agenda.test.js` | Datas digitadas (`6h`, `+2h`, `às 18h`, `sexta`...) e o `/cron`, nos modos mensagem e lembrete, com vários `-to` num item só, `-edit`, `-pause`/`-resume` e os `{/comando}` no texto (e o `-test`) |
 | `backup.test.js` | `/backup` (criação, lista, restauração, envio no privado, por e-mail e com `-to`) e o backup diário |
 | `cotacoes.test.js` | `/cotacao`, `/crypto` (e o filtro por moeda) e os alertas de preço (com o `-to`) |
 | `defi.test.js` | Solana (base58, PDA), contas da Orca (conferidas com o SDK oficial), o Project X (HyperEVM simulada) e o `/defi`: o `-s` por protocolo, o `-rm` de vários, a lista (inteira só no privado, com o 🔔 e o limite) e o `-alerta` (saída e volta da faixa, o `-taxas` e o `-alerta` no cadastro) |
