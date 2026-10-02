@@ -2,21 +2,26 @@
  * Comando /stats.
  */
 
-const { client } = require('../cliente');
 const { getCommandSyntax } = require('./base');
 const { DAY_MS } = require('../constantes');
 const { idsDoChatAtual } = require('../contatos');
-const { dbAll, dbGet, dbPronto } = require('../db');
+const { dbAll, dbGet, dbPronto, dbRun } = require('../db');
+const { aguardarEscolha, autorDe } = require('../escolhas');
 const { getSetting } = require('../settings');
 const { diaEHora, meuIdStats } = require('../stats');
-const { fmtNum, plural } = require('../util/formatar');
+const { fmtNum, plural, semAcentos } = require('../util/formatar');
 
 /*
- * /stats [-N] [-me] [-c <nome>] [-pv]
+ * /stats [-N] [/chat/] [-me]
  * Estatísticas dos últimos N dias (padrão 7), vindas dos contadores da tabela stats:
- *   sem -me → ranking DESTE chat (ou do -c): quem mais fala, quem mais apaga e edita;
- *   com -me → as SUAS mensagens, somadas em todos os chats (ou só no -c): onde você mais fala.
+ *   sem -me → ranking DESTE chat (ou do /chat/): quem mais fala, quem mais apaga e edita;
+ *   com -me → as SUAS mensagens, somadas em todos os chats (ou só no /chat/).
  * Nos dois: mensagens por faixa de horário, horário e dia de pico.
+ *   -l                → os chats que têm estatísticas
+ *   -f /chat/         → apaga as de um chat (grupo, ou o privado com a pessoa)
+ *   -flush-all        → apaga todas
+ * O /chat/ é buscado pelo nome entre os chats com estatísticas; o -N pode vir
+ * antes ou depois dele.
  */
 const MEDALHAS = ['🥇', '🥈', '🥉'];
 
@@ -144,52 +149,129 @@ async function textoStatsMeu(filtro, params, dias, umChat) {
     return texto + await textoHorariosStats(filtro, params);
 }
 
-async function cmdStats({ msg, opts, chatId }) {
-    await dbPronto;
+/**
+ * "-10 /Grupo Familia/ -me" → { dias, alvo, me, list, flush, flushAll }, ou { erro }.
+ * O alvo vem entre barras ou aspas (com espaços) ou como o resto das palavras.
+ */
+function lerStats(args) {
+    const r = { dias: null, alvo: '', me: false, list: false, flush: false, flushAll: false };
+    let resto = String(args ?? '');
 
-    const extras = opts.argv.filter(Boolean);
-    const maxDias = getSetting('stats.retentionDays');
-    let dias = 7;
+    const delimitado = resto.match(/(^|\s)(\/[^/]+\/|"[^"]+"|'[^']+')(?=\s|$)/);
+    if (delimitado) {
+        r.alvo = delimitado[2].slice(1, -1).trim();
+        resto = resto.replace(delimitado[2], ' ');
+    }
 
-    if (extras.length > 1) {
-        await msg.reply('```' + getCommandSyntax('/stats') + '```');
+    const palavras = [];
+    for (const t of resto.split(/\s+/).filter(Boolean)) {
+        const nome = t.startsWith('-') ? t.slice(1).toLowerCase() : null;
+        if (nome === null) palavras.push(t);
+        else if (/^\d+$/.test(nome)) r.dias = Number(nome);
+        else if (nome === 'l' || nome === 'list') r.list = true;
+        else if (nome === 'me') r.me = true;
+        else if (nome === 'f' || nome === 'flush') r.flush = true;
+        else if (nome === 'flush-all') r.flushAll = true;
+        else return { erro: `❌ Opção desconhecida: ${t}` };
+    }
+
+    if (!r.alvo) r.alvo = palavras.join(' ');
+    return r;
+}
+
+// Os chats com estatísticas, do que mais fala para o que menos
+const chatsComStats = () => dbAll(
+    `SELECT chat_id, MAX(chat_name) AS nome, MAX(is_group) AS grupo, SUM(msgs) AS msgs, MAX(day) AS ultimo
+       FROM stats GROUP BY chat_id ORDER BY msgs DESC`
+);
+
+const descreverChat = (c) => `${c.grupo ? '👥' : '👤'} ${c.nome || c.chat_id.split('@')[0]}`;
+
+/*
+ * O chat com estatísticas cujo nome tem todas as palavras do alvo (o nome exato
+ * ganha). Vários: lista e espera o nº, como no -to. Null: já respondeu.
+ */
+async function acharChat(msg, alvo) {
+    const palavras = semAcentos(alvo).split(/\s+/).filter(Boolean);
+    const chats = await chatsComStats();
+    const casam = chats.filter(c => palavras.every(p => semAcentos(c.nome ?? '').includes(p)));
+    const exato = casam.find(c => semAcentos(c.nome ?? '') === palavras.join(' '));
+
+    if (exato || casam.length === 1) return exato ?? casam[0];
+    if (!casam.length) {
+        await msg.reply(`❌ Nenhum chat com estatísticas tem "${alvo}" no nome.\n💡 _Veja os que têm com /stats -l_`);
+        return null;
+    }
+
+    await msg.reply(`🔎 "${alvo}" corresponde a ${casam.length} chats:\n\n` +
+        casam.slice(0, 10).map((c, i) => `${i + 1}. ${descreverChat(c)}`).join('\n') +
+        '\n\n💡 _Responda só com o nº (em até 2 minutos), ou repita o comando com mais palavras do nome._');
+    return aguardarEscolha(msg.id?.remote ?? msg.from, casam.slice(0, 10), {
+        autor: autorDe(msg),
+        aoExpirar: () => msg.reply(`⌛ Nenhum nº escolhido para "${alvo}" em 2 minutos: nada foi feito.`)
+    });
+}
+
+async function listarChats(msg) {
+    const chats = await chatsComStats();
+    if (!chats.length) {
+        await msg.reply('📊 Nenhuma estatística guardada ainda.');
         return;
     }
 
-    if (extras.length === 1) {
-        const m = extras[0].match(/^-?(\d+)$/);
+    const data = (dia) => dia.split('-').reverse().slice(0, 2).join('/');
+    await msg.reply(`📊 *Chats com estatísticas* (${chats.length})\n` +
+        `_Até ${plural(getSetting('stats.retentionDays'), 'dia', 'dias')} guardados_\n\n` +
+        chats.map((c, i) => `${i + 1}. ${descreverChat(c)} — ${fmtNum(c.msgs)} msgs _(última em ${data(c.ultimo)})_`).join('\n') +
+        '\n\n💡 _/stats /nome/ mostra um; /stats -f /nome/ apaga as dele._');
+}
 
-        if (!m || Number(m[1]) < 1) {
-            await msg.reply('```' + getCommandSyntax('/stats') + '```');
-            return;
-        }
+async function cmdStats({ msg, args, chatId }) {
+    await dbPronto;
 
-        dias = Math.min(Number(m[1]), maxDias);
+    const r = lerStats(args);
+    if (r.erro) {
+        await msg.reply(`${r.erro}\n\n\`\`\`${getCommandSyntax('/stats')}\`\`\``);
+        return;
     }
 
-    /*
-     * Chats considerados:
-     *   -c <nome> → o chat buscado pelo nome, entre os que têm estatísticas;
-     *   -me       → todos (null);
-     *   senão     → o chat atual.
-     */
-    let ids = opts.opt.me ? null : await idsDoChatAtual(chatId);
+    if (r.list) {
+        await listarChats(msg);
+        return;
+    }
 
-    if (opts.opt.chat) {
-        const busca = String(opts.opt.chat).toLowerCase();
-        const chats = await dbAll('SELECT chat_id, MAX(chat_name) AS chat_name FROM stats GROUP BY chat_id');
-        const encontrados = chats.filter(c => (c.chat_name || '').toLowerCase().includes(busca));
-        const exato = encontrados.find(c => c.chat_name.toLowerCase() === busca);
+    if (r.flushAll) {
+        const { n } = await dbGet('SELECT COUNT(DISTINCT chat_id) AS n FROM stats');
+        await dbRun('DELETE FROM stats');
+        await msg.reply(`🗑️ Estatísticas apagadas: ${plural(n, 'chat', 'chats')}.`);
+        return;
+    }
 
-        if (!exato && encontrados.length !== 1) {
-            await msg.reply(encontrados.length
-                ? `🔎 "${opts.opt.chat}" corresponde a ${encontrados.length} chats. Seja mais específico:\n` +
-                  encontrados.slice(0, 10).map(c => `• ${c.chat_name}`).join('\n')
-                : `❌ Nenhum chat com estatísticas contém "${opts.opt.chat}".`);
-            return;
-        }
+    if (r.flush && !r.alvo) {
+        await msg.reply('❌ Informe o chat: /stats -flush /Grupo/ (ou /stats -flush-all para todos).');
+        return;
+    }
 
-        ids = [(exato || encontrados[0]).chat_id];
+    // O chat: o do alvo (/Grupo/) ou o atual; com -me sem alvo, todos
+    let ids = r.me ? null : await idsDoChatAtual(chatId);
+    let chat = null;
+    if (r.alvo) {
+        chat = await acharChat(msg, r.alvo);
+        if (!chat) return;
+        ids = await idsDoChatAtual(chat.chat_id);
+    }
+
+    if (r.flush) {
+        await dbRun(`DELETE FROM stats WHERE chat_id IN (${ids.map(() => '?').join(', ')})`, ids);
+        await msg.reply(`🗑️ Estatísticas de ${descreverChat(chat)} apagadas.`);
+        return;
+    }
+
+    const maxDias = getSetting('stats.retentionDays');
+    const dias = Math.min(r.dias ?? 7, maxDias);
+    if (dias < 1) {
+        await msg.reply('```' + getCommandSyntax('/stats') + '```');
+        return;
     }
 
     const { day: desde } = diaEHora(Date.now() - (dias - 1) * DAY_MS);
@@ -201,31 +283,25 @@ async function cmdStats({ msg, opts, chatId }) {
         params.push(...ids);
     }
 
-    if (opts.opt.me) {
+    if (r.me) {
         condicoes.push('sender_id = ?');
         params.push(meuIdStats());
     }
 
     const filtro = condicoes.join(' AND ');
-    let texto = opts.opt.me
-        ? await textoStatsMeu(filtro, params, dias, Boolean(opts.opt.chat))
+    let texto = r.me
+        ? await textoStatsMeu(filtro, params, dias, Boolean(chat))
         : await textoStatsDoChat(filtro, params, dias);
 
     if (!texto) {
-        const onde = opts.opt.me ? (opts.opt.chat ? 'suas neste chat' : 'suas') : 'deste chat';
+        const onde = r.me ? (chat ? `suas em ${descreverChat(chat)}` : 'suas') : chat ? `de ${descreverChat(chat)}` : 'deste chat';
         await msg.reply(`📊 Sem estatísticas ${onde} nos últimos ${plural(dias, 'dia', 'dias')}.` +
             (getSetting('stats.enable') ? '' : '\n💡 _A contagem está desligada: /set stats.enable on_'));
         return;
     }
 
-    texto += `\n💡 _/stats -N para outro período (máx. ${maxDias} dias)${opts.opt.me ? '' : '; /stats -me para as suas'}._`;
-
-    if (opts.opt.pv) {
-        await msg.reply('📊 Estatísticas enviadas no seu privado.');
-        await client.sendMessage(client.info.wid._serialized, texto);
-    } else {
-        await msg.reply(texto);
-    }
+    texto += `\n💡 _/stats -N para outro período (máx. ${maxDias} dias)${r.me ? '' : '; /stats -me para as suas'}; /stats -l para os outros chats._`;
+    await msg.reply(texto);
 }
 
 module.exports = {
