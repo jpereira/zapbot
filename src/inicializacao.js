@@ -134,6 +134,8 @@ async function inicializarBanco() {
         )
     `);
     await dbRun('CREATE INDEX IF NOT EXISTS idx_stats_chat_day ON stats (chat_id, day)');
+    // Avisos do sistema contados como um participante "Desconhecido" (até a 2.2): saem
+    await dbRun("DELETE FROM stats WHERE sender_id = 'UNKNOWN'");
 
     /*
      * Alertas de preço do /cotacao -alerta e do /crypto -alerta (disparam uma

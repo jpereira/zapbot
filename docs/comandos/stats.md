@@ -7,7 +7,9 @@ mais fala, quantas apagou, seus horários e seu dia de pico.
 
 Os números vêm dos contadores da tabela `stats`, preenchidos a cada mensagem
 recebida. As suas mensagens contam para o seu número em qualquer chat,
-inclusive no privado.
+inclusive no privado. Não contam as respostas do próprio bot nem os avisos do
+WhatsApp (alguém entrou no grupo, o nome mudou, a criptografia, uma chamada...),
+que não têm autor.
 
 | Opção | Valor | Descrição |
 |---|---|---|
