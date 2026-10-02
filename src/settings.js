@@ -81,7 +81,17 @@ const SETTINGS_SCHEMA = {
     'bot.adminMode': {
         default: true,
         type: 'boolean',
-        desc: 'Modo admin: só o dono usa comandos (o mesmo do /bot +admin|-admin).'
+        desc: 'Modo admin: só o dono (e os do bot.admins) usa comandos (o mesmo do /bot +admin|-admin).'
+    },
+    'bot.admins': {
+        default: [],
+        type: 'list',
+        desc: 'Outras pessoas (número com DDI, ex.: 5521999999999) que também usam os comandos admin, inclusive no modo admin. Só o dono altera (/set -a bot.admins <número>).',
+        item: (v) => {
+            const digitos = v.replace(/[()+-]/g, '');
+            if (!/^\d{10,15}$/.test(digitos)) throw new Error(`número inválido: ${v} (use DDI + DDD + número, ex.: +5521999999999)`);
+            return digitos;
+        }
     },
     'bot.paused': {
         default: false,
@@ -550,5 +560,6 @@ module.exports = {
     getSetting,
     isDebugMode,
     setSetting,
+    validarSetting,
     stickerMeta
 };

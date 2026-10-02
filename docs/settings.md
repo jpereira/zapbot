@@ -12,7 +12,8 @@ hora, sem reiniciar, e sobrevivem a reinícios. Para ver e alterar, use o
 | `backup.enabled` | on/off | `on` | [Backup automático](comandos/backup.md#backup-automático) do banco, uma vez por dia |
 | `backup.hour` | 0–23 | `3` | Hora (de Brasília) do backup automático |
 | `backup.keep` | 1–90 | `7` | Quantos backups automáticos (e de antes de restaurar) guardar; os manuais ficam até um `/backup -rm` |
-| `bot.adminMode` | on/off | `on` | Modo admin: só você usa comandos (o mesmo do `/bot +admin`/`-admin`) |
+| `bot.adminMode` | on/off | `on` | Modo admin: só você (e os do `bot.admins`) usa comandos (o mesmo do `/bot +admin`/`-admin`) |
+| `bot.admins` | lista | *(vazia)* | Outras pessoas que também usam os comandos admin (inclusive no modo admin): número com DDI, ex.: `5521999999999`. Só o dono altera. Veja [Admins extras](comandos/bot.md#admins-extras) |
 | `bot.paused` | on/off | `off` | Bot desligado: todos os comandos ignorados, exceto o `/bot` (o mesmo do `/bot -on`/`-off`) |
 | `cache.editedRetentionDays` | 1–365 | `30` | Dias que as mensagens editadas ficam guardadas para o `/show -e` |
 | `cache.revokedRetentionDays` | 1–365 | `30` | Dias que as mensagens apagadas ficam guardadas para o `/show` |

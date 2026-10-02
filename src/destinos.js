@@ -8,7 +8,7 @@
 const { client } = require('./cliente');
 const { resolveLidToPhone } = require('./contatos');
 const { enviarEmail, smtpParaEnviar } = require('./email');
-const { aguardarEscolha } = require('./escolhas');
+const { aguardarEscolha, autorDe } = require('./escolhas');
 const { printDebug, printError } = require('./log');
 const { isDebugMode } = require('./settings');
 const { semAcentos } = require('./util/formatar');
@@ -312,6 +312,7 @@ async function resolverOuEscolher(msg, valor, o = {}) {
 
     const chatId = msg.id?.remote ?? msg.from;
     return aguardarEscolha(chatId, r.opcoes, {
+        autor: autorDe(msg),
         aoExpirar: () => msg.reply(`⌛ Nenhum nº escolhido para "${r.busca}" em 2 minutos: nada foi feito.`)
     });
 }

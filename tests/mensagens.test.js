@@ -146,6 +146,31 @@ describe('permissões', () => {
         assert.match(r[0].texto, /Fulano tentou executar \/ping dentro de Família, mas sem permissão/);
     });
 
+    test('bot.admins: o admin extra usa os comandos admin, também no modo admin e nas checagens do dono', async () => {
+        assert.deepEqual(await bot.responder('/ping', { de: OUTRO.jid }), []);
+        assert.deepEqual(await bot.responder('/set -a bot.admins +5521911111111'), ['✅ *bot.admins* + 5521911111111\n= 5521911111111']);
+
+        assert.deepEqual(await bot.responder('/ping', { de: OUTRO.jid }), ['pong']);
+        await bot.setSetting('bot.adminMode', true);
+        assert.deepEqual(await bot.responder('/ping', { de: OUTRO.jid }), ['pong'], 'modo admin');
+        assert.match((await bot.responder('/bot'))[0], /🔒 \*Modo admin:\* ligado \(só o dono e os admins do bot\.admins usam comandos\)/);
+        assert.deepEqual(await bot.responder('/cotacao -a gbp', { de: OUTRO.jid }), ['✅ 🇬🇧 GBP habilitada.']);
+
+        // Outra pessoa continua de fora
+        const CICLANO = '5521922222222@c.us';
+        bot.criarContato(CICLANO, 'Ciclano');
+        assert.deepEqual(await bot.responder('/ping', { de: CICLANO }), []);
+    });
+
+    test('bot.admins: só o dono altera (nem o próprio admin extra)', async () => {
+        await bot.setSetting('bot.admins', ['5521911111111']);
+        for (const linha of ['/set -a bot.admins 5521922222222', '/set -rem bot.admins 5521911111111', '/set -r bot.admins', '/set bot.admins 5521922222222']) {
+            assert.deepEqual(await bot.responder(linha, { de: OUTRO.jid }), ['⛔ Só o dono do bot altera o *bot.admins*.'], linha);
+        }
+        assert.deepEqual(bot.getSetting('bot.admins'), ['5521911111111']);
+        assert.match((await bot.responder('/set bot.admins', { de: OUTRO.jid }))[0], /⚙️ \*bot\.admins\*/, 'ver pode');
+    });
+
     test('comando liberado (onlyAdmin false) funciona para os outros', async () => {
         const [r] = await bot.responder('/noffa oi gente', { de: OUTRO.jid });
         assert.match(r, /oi .* gente/);

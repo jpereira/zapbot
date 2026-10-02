@@ -136,6 +136,20 @@ describe('/mudo (/m, /mute)', () => {
         assert.deepEqual(await bot.responder('1'), []);
     });
 
+    test('lista de escolha de um admin extra: só ele responde (o seu nº não conta)', async () => {
+        await bot.setSetting('bot.admins', [OUTRO.user]);
+        bot.criarContato('5521933333333@c.us', 'Jorge Pereira');
+        bot.criarContato('5511944444444@c.us', 'Jorge Silva');
+
+        const comando = bot.executar('/mudo -a jorge', { de: OUTRO.jid });
+        for (let i = 0; i < 50; i++) await new Promise(setImmediate);
+
+        assert.deepEqual(await bot.responder('1'), [], 'o dono respondendo: mensagem comum');
+        await bot.executar('2', { de: OUTRO.jid });
+        await comando;
+        assert.deepEqual((await bot.dbAll('SELECT target_id FROM mutes')).map(m => m.target_id), ['5511944444444@c.us']);
+    });
+
     test('a escolha expira em 2 minutos sem fazer nada', async (t) => {
         t.mock.timers.enable({ apis: ['setTimeout'] });
         bot.criarContato('5521933333333@c.us', 'Jorge Pereira');

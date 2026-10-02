@@ -211,6 +211,24 @@ describe('/set (/config)', () => {
         assert.match((await bot.responder('/set alerta 5'))[0], /❌ Setting desconhecido: alerta/);
     });
 
+    test('-append (-a) e -rem: acrescentam e tiram itens de uma lista; em outra chave, recusa e sugere o -reset', async () => {
+        assert.deepEqual(await bot.responder('/set -a commands.disabled noffa /p'), ['✅ *commands.disabled* + /noffa, /ping\n= /noffa, /ping']);
+        assert.deepEqual(await bot.responder('/set -append commands.disabled walissu'), ['✅ *commands.disabled* + /walissu\n= /noffa, /ping, /walissu']);
+        assert.deepEqual(await bot.responder('/set -a commands.disabled noffa'), ['ℹ️ *commands.disabled* já tem /noffa.']);
+        assert.deepEqual(await bot.responder('/set -rem commands.disabled /ping'), ['✅ *commands.disabled* − /ping\n= /noffa, /walissu']);
+        assert.match((await bot.responder('/set -rem commands.disabled ping'))[0], /❌ \*commands\.disabled\* não tem \/ping/);
+        assert.match((await bot.responder('/set -a commands.disabled naoexiste'))[0], /❌ Valor inválido para \*commands\.disabled\*: comando desconhecido/);
+
+        // watch.rules (uma por linha): o texto cru, com espaços e vírgulas
+        assert.deepEqual(await bot.responder('/set -a watch.rules oi, tudo bem'), ['✅ *watch.rules* + oi, tudo bem\n= oi, tudo bem']);
+
+        assert.deepEqual(await bot.responder('/set -a show.max 5'), [
+            '❌ *show.max* não é uma lista: o -append vale só para chaves com várias entradas.\n' +
+            '💡 _Troque o valor com /set show.max <valor> ou volte ao padrão com /set -reset show.max (-r)._']);
+        assert.match((await bot.responder('/set -rem naoexiste x'))[0], /❌ Setting desconhecido: naoexiste/);
+        assert.match((await bot.responder('/set -a commands.disabled'))[0], /❌ Informe o que acrescentar a \*commands\.disabled\*/);
+    });
+
     test('-reset volta ao padrão; chave desconhecida', async () => {
         await bot.setSetting('show.max', 5);
         assert.deepEqual(await bot.responder('/set -reset show.max'), ['♻️ *show.max* = 20 _(padrão)_']);
