@@ -6,7 +6,6 @@ const path = require('path');
 const zlib = require('zlib');
 const { pipeline } = require('stream/promises');
 const fs = require('fs-extra');
-const packageJson = require('../package.json');
 
 const { BACKUP_DIR, TMP_DIR } = require('./constantes');
 const { dbAll, dbGet, dbPronto, dbRun } = require('./db');
@@ -14,6 +13,7 @@ const { alertarPorEmail } = require('./email');
 const { printError, printInfo } = require('./log');
 const { carregarSettings, getSetting } = require('./settings');
 const { instanteEmBrasilia, partesEmBrasilia } = require('./util/quando');
+const { versaoComCommit } = require('./versao');
 
 /*
  * Cada backup é um par de arquivos em BACKUP_DIR:
@@ -112,7 +112,7 @@ async function criarBackup(motivo = MOTIVOS.manual, agora = Date.now()) {
 
         await pipeline(fs.createReadStream(copia), zlib.createGzip(), fs.createWriteStream(arquivo));
         await fs.writeJson(path.join(BACKUP_DIR, `${nome}.json`),
-            { criadoEm: agora, motivo, versao: packageJson.version, bytesBanco, entradas }, { spaces: 2 });
+            { criadoEm: agora, motivo, versao: versaoComCommit(), bytesBanco, entradas }, { spaces: 2 });
 
         printInfo(`Backup ${nome} criado (${motivo})`);
     } finally {
