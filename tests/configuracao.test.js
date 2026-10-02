@@ -406,6 +406,17 @@ describe('ajuda', () => {
         assert.doesNotMatch(texto, / {2}ou {2}/);
     });
 
+    test('vários exemplos depois do "Ex:" saem um por linha, à esquerda (para o celular)', () => {
+        const linhas = formatCommandHelp(findCommand('/defi')).split('\n');
+        const i = linhas.findIndex(l => l.startsWith('  -show, -s'));
+        assert.equal(linhas[i + 1], '    Ex: /defi -s');
+        assert.equal(linhas[i + 2], '        /defi -s 2');
+        assert.equal(linhas[i + 4], '        /defi prjx -s');
+
+        // Um exemplo só: na mesma linha; e "Niteroi, Sergipe" é um exemplo, não dois
+        assert.match(formatCommandHelp(findCommand('/tempo')), /Ex: \/tempo Niteroi, Sergipe/);
+    });
+
     test('${CACHE_DIR}, ${MEDIA_DIR} e ${TMP_DIR} viram os caminhos reais na ajuda', () => {
         const { CACHE_DIR, MEDIA_DIR } = bot.src('constantes');
         const ajuda = getCommandSyntax('/cache');
