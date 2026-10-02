@@ -1,18 +1,20 @@
-# Node.js 24 LTS
-FROM node:24-alpine
+# Node.js 24 LTS no Debian 13 (trixie), a versão estável do Debian
+FROM node:24-trixie-slim
 
 # fuso horário
 ENV TZ=America/Sao_Paulo
 ENV NODE_ENV=production
 ENV APP_ENV=prod
 
-# Usamos o chromium do Alpine; o puppeteer não precisa baixar o Chrome
+# Usamos o chromium do Debian; o puppeteer não precisa baixar o Chrome
 # (inclusive no 'prepare' do whatsapp-web.js instalado via git)
 ENV PUPPETEER_SKIP_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 USER root
-RUN apk add --no-cache \
-    su-exec \
+# gosu: troca para o usuário node no entrypoint (o su-exec do Alpine)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gosu \
     tzdata \
     git \
     bash \
@@ -25,23 +27,25 @@ RUN apk add --no-cache \
     sed \
     coreutils \
     findutils \
+    procps \
     chromium \
-    nss \
-    freetype \
-    harfbuzz \
+    libnss3 \
+    libfreetype6 \
+    libharfbuzz0b \
     ca-certificates \
-    ttf-freefont \
+    fonts-freefont-ttf \
     html2text \
-    sqlite \
+    sqlite3 \
     python3 \
-    py3-pip \
+    python3-venv \
+    python3-pip \
     ffmpeg \
-    curl \
     htop \
     strace \
     lsof \
     tcpdump \
-    net-tools
+    net-tools \
+ && rm -rf /var/lib/apt/lists/*
 
 # cria venv
 RUN python3 -m venv /venv

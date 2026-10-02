@@ -22,4 +22,4 @@ chown -R node:node $PWD/cache || true
 # busyloop
 echo "Starting as node:"
 echo "CMD: $@"
-exec su-exec node $@
+exec gosu node "$@"
