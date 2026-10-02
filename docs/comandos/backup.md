@@ -12,7 +12,7 @@ opção, mostra o banco atual e os backups.
 | `-info`, `-i` | `<nº>` | Detalhes do backup: data, motivo, versão do bot que o criou (com o commit, ex.: `X.Y (git+9029cfb/release-X.Y)`) e as entradas de cada tabela, comparadas com o banco atual |
 | `-restore`, `-r` | `<nº\|nome>` | Restaura o backup. Sem `-sim`, só mostra o que vai acontecer e o comando para confirmar |
 | `-sim` | | Confirma: junto com `-restore`, a restauração; junto com `-send -to` outro chat, o envio |
-| `-send`, `-s` | `[nº]` | Envia o arquivo do backup (sem nº: o mais recente) no seu privado ou no destino do `-to`. Veja [Enviar o arquivo](#enviar-o-arquivo) |
+| `-send`, `-s` | `[nº]` | Envia o arquivo do backup (sem nº: o mais recente) no seu privado ou nos destinos do `-to`. Veja [Enviar o arquivo](#enviar-o-arquivo) |
 | `-to` | `<destino>` | Junto com `-send`: por e-mail, como anexo (`email` é o `QRCODE_EMAIL_SMTP_TO`, ou um endereço), ou noutro chat: um contato (`/Jorge Pereira/`), uma menção (`@Fulano Da Silva`), um grupo (`/Grupo L200/`) ou um número (`+5521999999999`) (pede `-sim`). Repita para vários. Veja [Destinos](index.md#destinos-contato-grupo-número-ou-e-mail) |
 | `-rm` | `<nº\|all>` | Apaga o backup nº N (ou todos) |
 
@@ -123,6 +123,10 @@ lugar, como nos outros comandos ([Destinos](index.md#destinos-contato-grupo-núm
 /backup -s -to /Jorge Pereira/
 ⚠️ O backup tem o banco inteiro: as mensagens guardadas de todos os chats, as apagadas, os settings...
 Para enviar mesmo em 👤 Jorge Pereira, repita com -sim: /backup -send -to /Jorge Pereira/ -sim
+
+/backup -s -to email -to /Jorge Pereira/ -to /Grupo L200/
+⚠️ O backup tem o banco inteiro: as mensagens guardadas de todos os chats, as apagadas, os settings...
+Para enviar mesmo em 👤 Jorge Pereira, 👥 Grupo sobre L200, repita com -sim: /backup -send -to email -to /Jorge Pereira/ -to /Grupo L200/ -sim
 ```
 
 - O e-mail traz o código anti-phishing, como os outros do bot, e as instruções

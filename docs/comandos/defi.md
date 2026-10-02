@@ -20,7 +20,7 @@ Para todos os protocolos:
 /defi -l                       → a lista dos cadastros
 /defi -rm 2                    → remove o nº 2
 /defi -rm 1 3                  → remove o 1 e o 3 (ou -rm 1,3; -rm all remove todos)
-/defi -alerta <nº|all> [-to <destino>] [-taxas <valor>]
+/defi -alerta <nº|all> [-to <destino>]... [-taxas <valor>]
 ```
 
 Para a Orca:
@@ -182,11 +182,11 @@ O `-to` aceita:
 - Vários `-to`, para avisar em todos (o mesmo repetido conta uma vez). Se o envio
   falhar num, os outros recebem assim mesmo.
 
-Ligar de novo uma posição troca o destino (e mantém o `-taxas`, se você não
-mandar outro). Ao ligar, o bot já lê a posição: se ela estiver fora da faixa
-nesse momento, a resposta mostra, e o próximo aviso é o da volta. Se o RPC não
-responder, a posição fica `❔ ainda não lida`, e a primeira leitura fora da faixa
-já avisa.
+Ligar de novo uma posição troca os destinos pelos do novo `-to` (sem `-to`,
+volta ao seu privado) e mantém o `-taxas`, se você não mandar outro. Ao ligar,
+o bot já lê a posição: se ela estiver fora da faixa nesse momento, a resposta
+mostra, e o próximo aviso é o da volta. Se o RPC não responder, a posição fica
+`❔ ainda não lida`, e a primeira leitura fora da faixa já avisa.
 
 ```
 /defi -alerta 1 -to email

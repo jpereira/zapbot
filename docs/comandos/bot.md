@@ -26,19 +26,6 @@ Controla quem pode usar o bot e mostra o relatório dele
 | `-status`, `-s` | Relatório do bot e o envio diário dele (`[<hora>\|off]`). Não combina com as outras. Veja [Status do bot](#status-do-bot) |
 | `-info`, `-i` | Versões do bot e dos programas que ele usa, e o sistema. Não combina com as outras. Veja [Informações do sistema](#informações-do-sistema) |
 
-A lista de quem usa junta o `bot.admins` e o `bot.users`, como o resto do bot
-mostra um destino: `👤 Nome · +número` (ou só `👤 +número`, sem o contato na
-agenda) e `👥 Grupo`. Quem está nas duas aparece uma vez, com as duas marcas.
-Com o `bot.users` em `true`, a lista mostra só os admins, e o `/bot` avisa que
-qualquer pessoa está usando os comandos:
-
-```
-/bot
-▶️ Bot: ativo
-🔓 Comandos: todos usam os comuns
-⚠️ Atenção: qualquer pessoa pode executar os comandos comuns do bot, em qualquer chat. Para restringir: /bot +admin (e depois /bot +v para liberar alguns).
-```
-
 O `-on`/`-off` e o `+admin`/`-admin` combinam; `-on` com `-off` (ou `+admin`
 com `-admin`) no mesmo comando é recusado. Os `+o`/`-o`/`+v`/`-v` vão
 sozinhos, um de cada vez. A resposta mostra o estado final:
@@ -56,11 +43,30 @@ Quem usa (4)
 💡 👑 +o: admin, usa tudo (bot.admins) · 🗣️ +v: usuário, usa os comandos comuns (bot.users)
 ```
 
+A lista de quem usa junta os admins e os usuários, como o resto do bot mostra
+um destino: `👤 Nome · +número` (ou só `👤 +número`, sem o contato na agenda) e
+`👥 Grupo`. Quem está nas duas aparece uma vez, com as duas marcas. Sem
+ninguém, a lista não aparece.
+
+Com todos liberados (`/bot -admin`), a lista mostra só os admins, e o `/bot`
+avisa que qualquer pessoa está usando os comandos:
+
+```
+/bot
+▶️ Bot: ativo
+🔓 Comandos: todos usam os comuns
+⚠️ Atenção: qualquer pessoa pode executar os comandos comuns do bot, em qualquer chat. Para restringir: /bot +admin (e depois /bot +v para liberar alguns).
+```
+
+Os outros:
+
 ```
 /bot +admin        → 🔒 Comandos: só o dono
 /bot -admin        → 🔓 Comandos: todos usam os comuns
 /bot -off          → ⏸️ Bot: desligado (todos os comandos são ignorados)
 /bot -on -admin    → liga o bot e libera os comandos comuns para todos de uma vez
+/bot +v            → digitado num grupo: libera os comandos comuns ali
+/bot -reset        → volta ao padrão (veja abaixo)
 /bot -h            → ajuda do comando
 ```
 

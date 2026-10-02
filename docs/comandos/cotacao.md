@@ -11,9 +11,9 @@ máxima e mínima do dia e variação (🟢 alta, 🔴 queda). Suportadas: `USD`
 | `-list`, `-l` | | Lista as suportadas; as habilitadas vêm com ✅ |
 | `-add`, `-a` | `<MOEDA>` | Habilita uma moeda suportada (só o dono do bot ou um admin do [`bot.admins`](bot.md#admins-extras)) |
 | `-del`, `-d` | `<MOEDA>` | Desabilita uma moeda (só o dono do bot ou um admin do [`bot.admins`](bot.md#admins-extras)) |
-| `-alerta` | `[regra]` | Sem regra, lista os alertas; com regra, cria um. Veja [Alertas de preço](#alertas-de-preço) |
+| `-alerta` | `[regra]` | Sem regra, lista os alertas; com regra (ex.: `USD > 5.30`), cria um. A moeda também pode vir antes: `/cotacao USD -alerta > 5.30`. Veja [Alertas de preço](#alertas-de-preço) |
 | `-msg` | `<texto>` | Junto com `-alerta`: o texto vai no início do aviso. Vai até o fim do comando. Veja [Mensagem no aviso](#mensagem-no-aviso) |
-| `-rm` | `<nº...\|all>` | Junto com `-alerta`: remove os alertas com esses nºs (`-rm 1 2 3`), ou todos |
+| `-rm` | `<nº...\|all>` | Junto com `-alerta`: remove os alertas com esses nºs (`-rm 2`, `-rm 1 2 3` ou `-rm 1,2,3`), ou todos (`all`). Se algum nº não existe, nenhum sai |
 | `-to` | `<destino>` | Junto com `-alerta`: avisa num contato (`/Jorge Pereira/`), numa menção (`@Fulano Da Silva`), num grupo (`/Grupo L200/`), num número (`+5521999999999`) ou por e-mail (`email`) em vez do seu privado. Repita para vários: um alerta só, que avisa em todos. Veja [Avisar em outro chat ou por e-mail](#avisar-em-outro-chat-ou-por-e-mail) |
 
 - **USD, EUR, GBP**: Yahoo Finance. Se ele falhar, a AwesomeAPI (que não
@@ -52,10 +52,11 @@ máxima e mínima do dia e variação (🟢 alta, 🔴 queda). Suportadas: `USD`
 ## Alertas de preço
 
 O `/cotacao` e o `/crypto` avisam no **seu privado** (ou, com
-[`-to`](#avisar-em-outro-chat-ou-por-e-mail), num contato, num grupo, num número ou por
-e-mail) quando
-um preço passa de um valor. Cada alerta dispara uma vez e é removido. Só o dono do bot (e os
-[admins extras](bot.md#admins-extras)) cria, lista e remove.
+[`-to`](#avisar-em-outro-chat-ou-por-e-mail), em contatos, grupos, números ou
+por e-mail) quando um preço passa de um valor, com um texto seu no início, se
+quiser ([`-msg`](#mensagem-no-aviso)). Cada alerta dispara uma vez e é
+removido. Só o dono do bot (e os [admins extras](bot.md#admins-extras)) cria,
+lista e remove.
 
 ```
 /cotacao -alerta USD > 5.30    → quando o dólar passar de R$ 5,30
@@ -96,8 +97,8 @@ Isso é uma mensagem que vai no início!
 🔔 ALERTA DE PREÇO
 
 📈 ₿ BTC/USDT ficou acima de $90,000.00
-💰 Agora: $90,512.30 (+5,21% desde a criação)
-📅 Alerta criado em 02/10/2026, 18:40
+💰 Agora: $90,512.30 (🟢 +0,57% desde a criação)
+📅 Alerta criado em 02/10/2026, 18:40:12
 ```
 
 - A lista (`-alerta`) mostra o texto embaixo do alerta: `💬 Isso é uma
@@ -107,7 +108,8 @@ Isso é uma mensagem que vai no início!
 ### Avisar em outro chat ou por e-mail
 
 Com `-to <destino>`, o aviso vai para outro chat (ou por e-mail) em vez do seu
-privado. No WhatsApp, ele sai da sua conta, como qualquer mensagem do bot. O destino é um contato (buscado
+privado; repita o `-to` para avisar em vários. No WhatsApp, ele sai da sua
+conta, como qualquer mensagem do bot. O destino é um contato (buscado
 primeiro), um grupo, um número ou e-mail, como em
 [Destinos: contato, grupo, número ou e-mail](index.md#destinos-contato-grupo-número-ou-e-mail).
 
