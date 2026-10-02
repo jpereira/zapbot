@@ -22,7 +22,7 @@ const { REPETICOES, fmtQuando, lerQuando, partesEmBrasilia, proximaRepeticao } =
  *              -pv. É o modo do /lembrete e do -lembrete.
  * Os dois aceitam -repetir (-r) diario|semanal|mensal. O modo mensagem aceita
  * vários -to (um item por destino). Na lista, -edit <nº> troca a hora, o texto
- * ou a repetição de um item, e -pause/-resume <nº|all> o seguram e soltam.
+ * ou a repetição de um item, e -pause/-resume <nº...|all> o seguram e soltam.
  * Um {/comando} no texto roda na hora do envio e a resposta entra no lugar
  * (veja agendaComandos.js); -test <nº> mostra agora como a mensagem sairia.
  * Sai da sua conta: só o dono usa.
@@ -70,7 +70,12 @@ function lerAgendamento(args) {
         if (nome === 'list' || nome === 'l') opt.list = true;
         else if (nome === 'pv') opt.pv = true;
         else if (nome === 'lembrete' || nome === 'lem') opt.lembrete = true;
-        else if (['rm', 'edit', 'pause', 'resume', 'test'].includes(nome)) opt[nome] = palavras[++i]?.[0] ?? '';
+        else if (['rm', 'pause', 'resume'].includes(nome)) {
+            // Um ou vários números (-rm 2, -rm 1 3 5, -rm 1,3,5) ou all
+            const nums = [];
+            while (/^(\d+,?)+$|^all$/i.test(palavras[i + 1]?.[0] ?? '')) nums.push(palavras[++i][0]);
+            opt[nome] = nums.join(' ');
+        } else if (['edit', 'test'].includes(nome)) opt[nome] = palavras[++i]?.[0] ?? '';
         else if (nome === 'repetir' || nome === 'r') opt.repetir = palavras[++i]?.[0] ?? '';
         else if (!quando && (quando = lerQuando(palavras.slice(i).map(m => m[0])))) i += quando.usadas - 1;
         else break;
@@ -108,6 +113,26 @@ function itensDoNumero(itens, valor) {
     return item ? [item] : null;
 }
 
+/*
+ * "1 3,5" → os itens 1, 3 e 5 (os números da lista, na ordem; repetido conta
+ * uma vez); "all" → todos. Algum que não existe: { faltando }, e quem chama não
+ * mexe em nenhum.
+ * @returns {{ alvos: object[] } | { faltando: string[] }}
+ */
+function itensDosNumeros(itens, valor) {
+    const partes = semAcentos(valor ?? '').split(/[\s,]+/).filter(Boolean);
+    if (partes.includes('all')) return { alvos: itens };
+
+    const numeros = [...new Set(partes.map(Number))].sort((a, b) => a - b);
+    const faltando = numeros.filter(n => !itens[n - 1]);
+    if (!numeros.length || faltando.length) return { faltando: faltando.length ? faltando.map(String) : ['?'] };
+    return { alvos: numeros.map(n => itens[n - 1]) };
+}
+
+// "❌ Nº 7, 9 não existem. Nada foi <feito>; ..."
+const erroDosNumeros = (faltando, feito, uso) =>
+    `❌ Nº ${faltando.join(', ')} não existe${faltando.length > 1 ? 'm' : ''}. Nada foi ${feito}; veja a lista com /cron -l\n💡 _${uso}_`;
+
 // O "quando" de um item novo ou editado: no futuro e até MAX_DIAS
 function erroDoQuando(ms, agora = Date.now()) {
     if (ms <= agora) return `❌ ${fmtQuando(ms)} já passou.`;
@@ -116,15 +141,15 @@ function erroDoQuando(ms, agora = Date.now()) {
 }
 
 /*
- * -pause / -resume <nº|all>. Ao retomar, um item repetido que venceu enquanto
+ * -pause / -resume <nº...|all>. Ao retomar, um item repetido que venceu enquanto
  * estava pausado pula para o próximo horário; um único sai na próxima verificação.
  */
 async function pausarOuRetomar(msg, itens, pausar, valor) {
     const opcao = pausar ? '-pause' : '-resume';
-    const alvos = itensDoNumero(itens, valor ?? '');
+    const { alvos, faltando } = itensDosNumeros(itens, valor);
 
-    if (!alvos) {
-        await msg.reply(`❌ Nº ${valor || '?'} não existe. Veja a lista com /cron -l\n💡 _/cron ${opcao} <nº|all>_`);
+    if (faltando) {
+        await msg.reply(erroDosNumeros(faltando, pausar ? 'pausado' : 'retomado', `/cron ${opcao} <nº> [nº...] ou ${opcao} all`));
         return;
     }
 
@@ -219,24 +244,27 @@ async function tratarAgenda({ msg, args, chatId, chatName, isGroup, quotedMsg })
         return;
     }
 
-    // -rm <nº|all>
+    // -rm <nº...|all>: os números são os da lista, todos lidos antes de remover
     if (opt.rm !== undefined) {
-        const alvo = semAcentos(opt.rm).trim();
-
-        if (alvo === 'all') {
+        if (/\ball\b/i.test(opt.rm)) {
             await dbRun("DELETE FROM schedules WHERE kind != 'status'");
             await msg.reply(`🗑️ ${plural(itens.length, 'removido', 'removidos')}.`);
             return;
         }
 
-        const item = /^\d+$/.test(alvo) ? itens[Number(alvo) - 1] : null;
-        if (!item) {
-            await msg.reply(`❌ Nº ${opt.rm || '?'} não existe. Veja a lista com /cron -l`);
+        // Algum que não existe: não remove nenhum (a lista fica como estava)
+        const { alvos: removidos, faltando } = itensDosNumeros(itens, opt.rm);
+        if (faltando) {
+            await msg.reply(erroDosNumeros(faltando, 'removido', '/cron -rm <nº> [nº...] ou -rm all'));
             return;
         }
 
-        await dbRun('DELETE FROM schedules WHERE id = ?', [item.id]);
-        await msg.reply(`🗑️ Removido: *${fmtQuando(item.due_at)}* — ${resumirTexto(item.text, 60)}`);
+        for (const s of removidos) await dbRun('DELETE FROM schedules WHERE id = ?', [s.id]);
+
+        const linha = (s) => `*${fmtQuando(s.due_at)}* — ${resumirTexto(s.text, 60)}`;
+        await msg.reply(removidos.length === 1
+            ? `🗑️ Removido: ${linha(removidos[0])}`
+            : `🗑️ *Removidos* (${removidos.length})\n${removidos.map(s => `• ${linha(s)}`).join('\n')}`);
         return;
     }
 
@@ -270,7 +298,7 @@ async function tratarAgenda({ msg, args, chatId, chatName, isGroup, quotedMsg })
         }
 
         await msg.reply(`📅 *Agenda* (${itens.length})\n\n${itens.map(linhaDaLista).join('\n')}\n\n` +
-            '💡 _📅 mensagem · ⏰ lembrete. -edit <nº> muda, -pause/-resume <nº> segura e solta, -rm <nº|all> remove._');
+            '💡 _📅 mensagem · ⏰ lembrete. -edit <nº> muda, -pause/-resume <nº...> segura e solta, -rm <nº...|all> remove._');
         return;
     }
 
