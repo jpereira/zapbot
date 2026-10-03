@@ -12,7 +12,10 @@ const stateAlt = {
     autenticadoEm: 0,       // when it authenticated (0 = not authenticated); used by /uptime
     pronto: false,          // 'ready' event received and no drop since
     reiniciando: false,     // restartClient() in progress
-    ultimaQueda: null       // reason of the last 'disconnected' (null after 'ready')
+    ultimaQueda: null,      // reason of the last 'disconnected' (null after 'ready')
+    tentativas: 0,          // consecutive failures when connecting (initialize); 0 after 'ready'
+    foraDesde: null,        // since when it cannot connect (null after 'ready')
+    aguardandoQr: false     // WhatsApp showed the QR Code and nobody has read it yet
 };
 
 module.exports = {

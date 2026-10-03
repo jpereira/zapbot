@@ -10,7 +10,9 @@
  * - connected (state.ready): WhatsApp Web answers CONNECTED to
  * getState() within 10 s;
  * - not connected yet (boot, waiting for the QR Code, reconnecting): the
- * the process being alive is enough. Restarting would not help read the QR;
+ * the process being alive is enough. Restarting would not help read the QR, nor
+ * bring the internet back: between one connect attempt and another
+ * (connection.js), the state says how many have already failed;
  * - restarting: valid for up to 5 min; a stuck restart stops hitting.
  *
  * Without a beat the file ages: stuck Node, unresponsive Chromium or the
@@ -64,7 +66,12 @@ async function evaluateHealth() {
 
     restartingSince = null;
 
-    if (!stateAlt.pronto) return { saudavel: true, estado: 'aguardando conexão' };
+    if (!stateAlt.pronto) {
+        const statusAlt = stateAlt.tentativas
+            ? `reconectando (${stateAlt.tentativas} falhas seguidas)`
+            : 'aguardando conexão';
+        return { saudavel: true, estado: statusAlt };
+    }
 
     try {
         const state = await getStateWithTimeout(GETSTATE_TIMEOUT_MS);

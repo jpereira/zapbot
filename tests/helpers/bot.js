@@ -55,6 +55,11 @@ async function restart() {
     logs.length = 0;
     Object.assign(processes, { chamadas: [], falhar: null, naoBaixar: false, tamanhoSaida: 1024 });
     stateAlt.pronto = true;
+    // One test's reconnection does not leak into the next
+    Object.assign(stateAlt, { tentativas: 0, foraDesde: null, aguardandoQr: false });
+    stateAlt.reiniciando = false;
+    src('connection').stopReconnection();
+    src('email').cleanAlertsSent();
 
     createContact(OTHERAlt.jid, OTHERAlt.nome);
     createGroup(GROUP, 'Família', [OWNER.jid, OTHERAlt.jid]);
