@@ -16,6 +16,65 @@ const { versionWithCommit } = require('./version');
 // Reasons where restarting does not help: they need manual action.
 const NOT_RESTART = new Set(['LOGOUT', 'CONFLICT', 'UNPAIRED', 'UNPAIRED_IDLE']);
 
+/*
+ * Reconnection: if initialize fails (internet down: ERR_NAME_NOT_RESOLVED,
+ * ERR_INTERNET_DISCONNECTED...), tries again by itself, with growing waits,
+ * until it works. Before, a failure left the bot stopped forever: without
+ * 'ready', the heartbeat thought it was just the boot and the watchdog did not look.
+ * And if initialize goes through but 'ready' does not come within CONNECTION_MAX_MS (the page
+ * opened and the network dropped in the middle), it restarts too, unless waiting for the QR Code.
+ */
+const WAITS_MS = [15, 30, 60, 120, 300].map(s => s * 1000);   // then, every 5 min
+const CONNECTION_MAX_MS = 3 * 60 * 1000;
+
+let newAttempt = null;     // the setTimeout of the next attempt
+let reasonOriginal = null;    // what led to the 1st restart that failed (that of the following attempts)
+let vigiaDoReady = null;      // the setTimeout that waits for 'ready' after initialize
+
+// Both timers do not hold the process (unref) and leave together (ready, tests)
+function stopReconnection() {
+    reasonOriginal = null;
+    clearTimeout(newAttempt);
+    clearTimeout(vigiaDoReady);
+    newAttempt = null;
+    vigiaDoReady = null;
+}
+
+function scheduleNewAttempt(reasonAlt, errorAlt) {
+    const wait = WAITS_MS[Math.min(stateAlt.tentativas, WAITS_MS.length - 1)];
+    stateAlt.tentativas++;
+    stateAlt.foraDesde ??= Date.now();
+
+    // A single email, on the 1st failure (with the internet down, it does not even go out: the "Reconectado" counts the rest)
+    if (stateAlt.tentativas === 1) {
+        reasonOriginal = reasonAlt;
+        alertPerEmail('❌ Falha ao reiniciar', `Motivo do reinício: ${reasonAlt}
+initialize falhou: ${errorAlt}
+` +
+            'O bot vai tentar de novo sozinho, com espera crescente, até conectar.');
+    }
+
+    printInfo(`♻️ Nova tentativa de conectar em ${wait / 1000}s (falhas seguidas: ${stateAlt.tentativas}).`);
+    clearTimeout(newAttempt);
+    newAttempt = setTimeout(() => {
+        newAttempt = null;
+        restartClient(`nova tentativa nº ${stateAlt.tentativas + 1} (${reasonOriginal})`);
+    }, wait);
+    newAttempt.unref?.();
+}
+
+// After an initialize that went through: if 'ready' does not come, restarts (except while waiting for the QR Code)
+function watchReady() {
+    clearTimeout(vigiaDoReady);
+    vigiaDoReady = setTimeout(() => {
+        vigiaDoReady = null;
+        if (stateAlt.pronto || stateAlt.reiniciando || stateAlt.aguardandoQr) return;
+        printError(`Sem conexão ${CONNECTION_MAX_MS / 60000} min depois de iniciar: reiniciando o cliente.`);
+        restartClient(`sem 'ready' em ${CONNECTION_MAX_MS / 60000} min`);
+    }, CONNECTION_MAX_MS);
+    vigiaDoReady.unref?.();
+}
+
 async function restartClient(reasonAlt) {
     if (stateAlt.reiniciando) {
         printInfo(`Restart ignorado (já em andamento). Motivo: ${reasonAlt}`);
@@ -34,14 +93,18 @@ async function restartClient(reasonAlt) {
 
     await new Promise(r => setTimeout(r, 5000));
 
+    let errorAlt = null;
     try {
         await client.initialize();
     } catch (e) {
+        errorAlt = e;
         printError('initialize falhou:', e.message);
-        alertPerEmail('❌ Falha ao reiniciar', `Motivo do reinício: ${reasonAlt}\ninitialize falhou: ${e.message}`);
     } finally {
         stateAlt.reiniciando = false;
     }
+
+    if (errorAlt) scheduleNewAttempt(reasonAlt, errorAlt.message);
+    else watchReady();
 }
 
 // Watchdog (the check that WhatsApp responds lives in heartbeat.js): only watches a client that was already ready and is not restarting
@@ -67,6 +130,9 @@ let qrEmailSending = false;
 let qrEmailCounter = 0;
 
 client.on('qr', async (qr) => {
+    // Waiting for someone to read the QR: the 'ready' watcher does not restart (the QR would change on every restart)
+    stateAlt.aguardandoQr = true;
+
     const currentdatetimeday =
         new Date().toLocaleString('sv-SE', { timeZone: 'America/Sao_Paulo', hour12: false }) + ' BRT';
 
@@ -179,6 +245,7 @@ client.on('qr', async (qr) => {
 client.on('authenticated', () => {
     printSuccess('🔐 Whatsapp authentication success!');
     stateAlt.autenticadoEm = Date.now();
+    stateAlt.aguardandoQr = false;
 
     if (!isDebugMode()) return;
 
@@ -255,8 +322,19 @@ let jaStayedReady = false;
 
 client.on('ready', async () => {
     stateAlt.pronto = true;
+    stateAlt.aguardandoQr = false;
     const dropReason = stateAlt.ultimaQueda;
     stateAlt.ultimaQueda = null;
+
+    // Connected: the attempts stop, and the email says how long it was out
+    const { tentativas: attempts, foraDesde: outsideSince } = stateAlt;
+    stateAlt.tentativas = 0;
+    stateAlt.foraDesde = null;
+    stopReconnection();
+    const minutesOutside = outsideSince ? Math.max(1, Math.round((Date.now() - outsideSince) / 60000)) : 0;
+    const outsidePer = outsideSince
+        ? `Ficou ${minutesOutside} min sem conseguir conectar (${attempts} tentativa${attempts === 1 ? '' : 's'} falharam).`
+        : null;
 
     // The settings come from the database: warns right at boot if the bot is off or only you use it
     await dbReady;
@@ -272,7 +350,7 @@ client.on('ready', async () => {
 
     alertPerEmail(jaStayedReady ? '🔄 Reconectado' : '🟢 Bot iniciado',
         [jaStayedReady ? `Conectado de novo${dropReason ? ` (a queda foi: ${dropReason})` : ''}.` : 'Conectado ao WhatsApp.',
-         ...listNotices].join('\n'));
+         outsidePer, ...listNotices].filter(Boolean).join('\n'));
     jaStayedReady = true;
 });
 
@@ -283,6 +361,7 @@ async function startBot() {
     try {
         printInfo('Starting WhatsApp authentication...');
         await client.initialize();
+        watchReady();
     } catch (error) {
         printError('Erro capturado na inicialização:', error.message);
 
@@ -297,12 +376,19 @@ async function startBot() {
         if (error.message.includes('Execution context was destroyed') || error.message.includes('browser is already running')) {
             printInfo('Reiniciando o processo de inicialização em 5 segundos...');
             setTimeout(startBot, 5000);
+            return;
         }
+
+        // Any other error (e.g.: no internet at boot): tries again, with growing waits
+        scheduleNewAttempt('inicialização', error.message);
     }
 }
 
 module.exports = {
+    CONNECTION_MAX_MS,
+    WAITS_MS,
     startBot,
     startWatchdog,
+    stopReconnection,
     restartClient
 };

@@ -33,6 +33,9 @@ const transporter = nodemailer.createTransport({
 const ALERT_EMAIL_INTERVAL_MS = 5 * 60 * 1000;
 const lastAlertEmail = new Map(); // event -> when it was sent
 
+// Forgets the alerts already sent (the tests start from zero)
+const cleanAlertsSent = () => lastAlertEmail.clear();
+
 const smtpConfigured = () => ['QRCODE_EMAIL_SMTP_HOST', 'QRCODE_EMAIL_SMTP_USER', 'QRCODE_EMAIL_SMTP_TO']
     .every(v => process.env[v]?.trim());
 
@@ -135,6 +138,7 @@ module.exports = {
     alertPerEmail,
     sendFilePerEmail,
     sendEmail,
+    cleanAlertsSent,
     smtpForSend,
     transporter
 };
