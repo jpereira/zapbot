@@ -12,7 +12,10 @@ const estado = {
     autenticadoEm: 0,       // quando autenticou (0 = não autenticado); usado pelo /uptime
     pronto: false,          // evento 'ready' recebido e sem queda desde então
     reiniciando: false,     // restartClient() em andamento
-    ultimaQueda: null       // motivo do último 'disconnected' (null depois do 'ready')
+    ultimaQueda: null,      // motivo do último 'disconnected' (null depois do 'ready')
+    tentativas: 0,          // falhas seguidas ao conectar (initialize); 0 depois do 'ready'
+    foraDesde: null,        // desde quando não consegue conectar (null depois do 'ready')
+    aguardandoQr: false     // o WhatsApp mostrou o QR Code e ninguém leu ainda
 };
 
 module.exports = {

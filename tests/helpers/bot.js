@@ -55,6 +55,11 @@ async function reiniciar() {
     logs.length = 0;
     Object.assign(processos, { chamadas: [], falhar: null, naoBaixar: false, tamanhoSaida: 1024 });
     estado.pronto = true;
+    // A reconexão de um teste não vaza para o próximo
+    Object.assign(estado, { tentativas: 0, foraDesde: null, aguardandoQr: false });
+    estado.reiniciando = false;
+    src('conexao').pararReconexao();
+    src('email').limparAlertasEnviados();
 
     criarContato(OUTRO.jid, OUTRO.nome);
     criarGrupo(GRUPO, 'Família', [DONO.jid, OUTRO.jid]);
