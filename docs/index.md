@@ -133,7 +133,9 @@ Por onde começar:
   o `-info`, as versões do que o bot usa (Node.js, Chromium, yt-dlp, ffmpeg...).
   O [`/whois`](comandos/whois.md) diz o nível de cada um no chat.
 - **Reconexão**: em caso de queda o cliente é reiniciado sozinho, exceto quando o
-  motivo exige ação manual (`LOGOUT`, `CONFLICT`, `UNPAIRED`...).
+  motivo exige ação manual (`LOGOUT`, `CONFLICT`, `UNPAIRED`...). Sem internet,
+  ele tenta de novo, com espera crescente, até conectar
+  ([Queda da internet](operacao.md#queda-da-internet)).
 - **Saúde (heartbeat)**: a cada 30 s o bot confere se o WhatsApp Web responde e
   grava `/tmp/zapbot-heartbeat.json`; o `HEALTHCHECK` do Docker marca o
   container como `unhealthy` se o arquivo parar de ser atualizado. Veja

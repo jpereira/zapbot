@@ -42,6 +42,10 @@ describe('heartbeat', () => {
         bot.client.getState = async () => { throw new Error('não deveria perguntar'); };
         assert.deepEqual(await baterCoracao(), { saudavel: true, estado: 'aguardando conexão' });
         assert.equal(lerHeartbeat().estado, 'aguardando conexão');
+
+        // Entre uma tentativa e outra de conectar (internet fora): continua vivo, e diz quantas falharam
+        bot.estado.tentativas = 2;
+        assert.deepEqual(await baterCoracao(), { saudavel: true, estado: 'reconectando (2 falhas seguidas)' });
     });
 
     test('conectado sem CONNECTED: não bate; na 3ª seguida avisa e reinicia', async (t) => {

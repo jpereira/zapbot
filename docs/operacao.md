@@ -36,6 +36,30 @@ estado ruim), existe um heartbeat:
 3. Conectado mas sem `CONNECTED` 3 vezes seguidas, o próprio bot reinicia o
    cliente do WhatsApp e avisa por e-mail (`🩺 WhatsApp sem resposta`).
 
+### Queda da internet
+
+Sem internet, o reinício falha (`initialize falhou: net::ERR_NAME_NOT_RESOLVED`).
+O bot não para: tenta de novo sozinho, com espera crescente (15 s, 30 s, 1 min,
+2 min e depois a cada 5 min), até conectar. No boot sem internet, o mesmo.
+
+```
+♻️ Reiniciando cliente. Motivo: heartbeat: OPENING
+initialize falhou: net::ERR_NAME_NOT_RESOLVED at https://web.whatsapp.com/
+♻️ Nova tentativa de conectar em 15s (falhas seguidas: 1).
+♻️ Reiniciando cliente. Motivo: nova tentativa nº 2 (heartbeat: OPENING)
+...
+🤖 ZapBot 2.2 inicializado!
+```
+
+- Um e-mail só, na primeira falha (`❌ Falha ao reiniciar`); com a internet
+  fora, ele também falha, e o `🔄 Reconectado` diz quanto tempo o bot ficou sem
+  conseguir conectar e quantas tentativas falharam.
+- Enquanto tenta, o heartbeat continua batendo, com o estado
+  `reconectando (N falhas seguidas)`: reiniciar o container não traria a
+  internet de volta.
+- Se a página abrir mas a conexão não terminar em 3 minutos (a rede caiu no
+  meio), o bot reinicia o cliente. Esperando alguém ler o QR Code, não.
+
 ```bash
 docker ps                                          # STATUS: Up 2 hours (healthy)
 docker inspect --format '{{json .State.Health}}' zapbot

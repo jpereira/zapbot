@@ -8,7 +8,7 @@ const assert = require('node:assert/strict');
 
 const { emails, nodemailer } = bot;
 const { alertarPorEmail } = bot.src('email');
-const { iniciarBot, iniciarWatchdog, restartClient } = bot.src('conexao');
+const { CONEXAO_MAX_MS, iniciarBot, iniciarWatchdog, restartClient } = bot.src('conexao');
 
 const SMTP = {
     QRCODE_EMAIL_SMTP_HOST: 'smtp.teste',
@@ -215,17 +215,92 @@ describe('eventos de conexão', () => {
         assert.equal(tentativas, 2);
     });
 
-    test('iniciarBot: outro erro não tenta de novo', async (t) => {
+    test('iniciarBot sem internet: não fica parado, tenta de novo com espera crescente', async (t) => {
         t.mock.timers.enable({ apis: ['setTimeout'] });
         const original = bot.client.initialize;
         let tentativas = 0;
-        bot.client.initialize = async () => { tentativas++; throw new Error('outro erro'); };
+        bot.client.initialize = async () => {
+            tentativas++;
+            if (tentativas === 1) throw new Error('net::ERR_INTERNET_DISCONNECTED at https://web.whatsapp.com/');
+        };
         t.after(() => { bot.client.initialize = original; });
 
         await iniciarBot();
-        t.mock.timers.tick(10000);
-        await new Promise(setImmediate);
         assert.equal(tentativas, 1);
+        assert.ok(bot.logs.some(l => l.includes('Nova tentativa de conectar em 15s (falhas seguidas: 1)')));
+
+        // 15 s de espera e os 5 s do restartClient: conecta
+        await bot.esperarComRelogio(t, (async () => {
+            while (tentativas < 2) await new Promise(setImmediate);
+        })());
+        assert.equal(tentativas, 2);
+        assert.ok(bot.logs.some(l => l.includes('Motivo: nova tentativa nº 2 (inicialização)')));
+    });
+
+    test('initialize falhando (internet fora): tenta de novo até conectar; um e-mail só; o "Reconectado" conta quanto tempo', async (t) => {
+        t.mock.timers.enable({ apis: ['setTimeout'] });
+        const original = bot.client.initialize;
+        let tentativas = 0;
+        bot.client.initialize = async () => {
+            tentativas++;
+            if (tentativas <= 3) throw new Error('net::ERR_NAME_NOT_RESOLVED at https://web.whatsapp.com/');
+        };
+        t.after(() => { bot.client.initialize = original; });
+        const ate = (n) => bot.esperarComRelogio(t, (async () => {
+            while (tentativas < n) await new Promise(setImmediate);
+        })(), 1000, 200);
+
+        await bot.esperarComRelogio(t, restartClient('heartbeat: OPENING'));
+        assert.equal(tentativas, 1);
+        assert.equal(bot.estado.tentativas, 1);
+        assert.equal(bot.estado.reiniciando, false, 'a trava sai entre as tentativas');
+
+        // 15 s, 30 s, 60 s: a 4ª conecta
+        await ate(4);
+        const esperas = bot.logs.filter(l => l.includes('Nova tentativa de conectar em'))
+            .map(l => l.match(/em (\d+)s/)[1]);
+        assert.deepEqual(esperas, ['15', '30', '60']);
+        assert.ok(bot.logs.some(l => l.includes('Motivo: nova tentativa nº 4 (heartbeat: OPENING)')));
+        assert.deepEqual(assuntos(), ['[ZapBot] ❌ Falha ao reiniciar'], 'um e-mail só, na 1ª falha');
+        assert.match(emails[0].text, /initialize falhou: net::ERR_NAME_NOT_RESOLVED[\s\S]*vai tentar de novo sozinho/);
+
+        // Conectou: zera, e o e-mail diz quanto tempo ficou fora
+        await emitir('ready');
+        assert.equal(bot.estado.tentativas, 0);
+        assert.equal(bot.estado.foraDesde, null);
+        assert.match(emails.at(-1).text, /Ficou \d+ min sem conseguir conectar \(3 tentativas falharam\)\./);
+    });
+
+    test('initialize passou mas o ready não veio em 3 min: reinicia; esperando o QR Code ou já pronto, não', async (t) => {
+        t.mock.timers.enable({ apis: ['setTimeout'] });
+        bot.estado.autenticadoEm = 0;
+        bot.estado.ultimaQueda = null;
+        const inicializacoes = bot.client.inicializado;
+
+        // Pronto (o 'ready' chegou): nada
+        await iniciarBot();
+        await emitir('ready');
+        t.mock.timers.tick(CONEXAO_MAX_MS);
+        await new Promise(setImmediate);
+        assert.equal(bot.client.inicializado, inicializacoes + 1);
+
+        // Esperando alguém ler o QR Code: nada (reiniciar trocaria o QR)
+        bot.estado.pronto = false;
+        await iniciarBot();
+        await emitir('qr', 'codigo-qr');
+        t.mock.timers.tick(CONEXAO_MAX_MS);
+        await new Promise(setImmediate);
+        assert.equal(bot.client.inicializado, inicializacoes + 2);
+
+        // Sem 'ready' e sem QR: reinicia o cliente
+        bot.estado.aguardandoQr = false;
+        await iniciarBot();
+        t.mock.timers.tick(CONEXAO_MAX_MS);
+        await bot.esperarComRelogio(t, (async () => {
+            while (bot.client.inicializado < inicializacoes + 4) await new Promise(setImmediate);
+        })());
+        assert.ok(bot.logs.some(l => l.includes('Sem conexão 3 min depois de iniciar: reiniciando o cliente.')));
+        assert.ok(bot.logs.some(l => l.includes("Motivo: sem 'ready' em 3 min")));
     });
 
     test('authenticated com debug ligado liga o log do browser', async (t) => {

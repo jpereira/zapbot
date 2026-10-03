@@ -66,7 +66,7 @@ padrão; desligue com `/set email.alerts off`. Sem `QRCODE_EMAIL_SMTP_HOST`,
 | Assunto | Quando |
 |---|---|
 | `[ZapBot] 🟢 Bot iniciado` | O bot conectou ao WhatsApp depois de subir (avisa também se está desligado ou só com você usando comandos, o `bot.users` em `false`) |
-| `[ZapBot] 🔄 Reconectado` | Conectou de novo depois de uma queda (com o motivo da queda) |
+| `[ZapBot] 🔄 Reconectado` | Conectou de novo depois de uma queda (com o motivo da queda e, se ficou sem conseguir conectar, por quanto tempo e quantas tentativas falharam) |
 | `[ZapBot] 🔴 Desconectado` | O WhatsApp desconectou; o cliente é reiniciado sozinho |
 | `[ZapBot] 🔴 Desconectado (ação manual)` | Desconectou por `LOGOUT`, `CONFLICT`, `UNPAIRED`...: o bot **não** reinicia sozinho |
 | `[ZapBot] ⚠️ Estado do WhatsApp: <estado>` | O WhatsApp Web entrou num estado de problema (`CONFLICT`, `UNPAIRED`, `TOS_BLOCK`...) |
@@ -74,7 +74,7 @@ padrão; desligue com `/set email.alerts off`. Sem `QRCODE_EMAIL_SMTP_HOST`,
 | `[ZapBot] 🔑 Sessão perdida: novo QR Code` | Pediu QR Code de novo depois de já ter autenticado |
 | `[ZapBot] ♻️ Browser caiu` | O Chromium morreu e o watchdog está reiniciando o cliente |
 | `[ZapBot] 🩺 WhatsApp sem resposta` | Conectado, mas o WhatsApp Web não respondeu `CONNECTED` em 3 verificações seguidas do [heartbeat](operacao.md#saúde-do-container-heartbeat); o cliente é reiniciado |
-| `[ZapBot] ❌ Falha ao reiniciar` | O reinício do cliente falhou |
+| `[ZapBot] ❌ Falha ao reiniciar` | O reinício do cliente falhou (ex.: sem internet); o bot tenta de novo sozinho, com espera crescente. Um e-mail só, na primeira falha ([Queda da internet](operacao.md#queda-da-internet)) |
 | `[ZapBot] 💾 Backup falhou` | O [backup diário](comandos/backup.md#backup-automático) do banco deu erro (ex.: disco cheio) |
 | `[ZapBot] 💥 Crash` | Exceção ou promise rejeitada sem tratamento (com o stack). O processo sai e o Docker sobe de novo |
 | `[ZapBot] 🛑 Bot encerrado` | `docker stop`/`restart` ou Ctrl+C (SIGTERM/SIGINT) |
