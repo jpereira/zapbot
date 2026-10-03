@@ -141,7 +141,7 @@ entre os casos.
 | `externos.test.js` | `/cve`, `/tempo`, `/news`, `/gpt`, `/tldr`, `/traduzir`, `/giphy`, `/meme`, `/joke`, `/kernel`, `/pixelart` |
 | `grupo.test.js` | `/todos`, `/boletos`, `/listageral`, `/walissu`, `/enquete` (e o `-r`), `/sticker` (e o `-txt`) |
 | `get-cache.test.js` | `/get` (e o anti-SSRF), `/cache` e a limpeza periódica |
-| `conexao-email.test.js` | Eventos de conexão, reinício, watchdog, alertas por e-mail, crash e `docker stop` |
+| `conexao-email.test.js` | Eventos de conexão, reinício (e as novas tentativas sem internet, no boot e no reinício, e o vigia do `ready`), watchdog, alertas por e-mail, crash e `docker stop` |
 | `heartbeat.test.js` | Heartbeat e o `docker/app/healthcheck.js` (executado de verdade) |
 | `util.test.js` | Formatação, contatos/`@lid`, menções, arquivos do cache e a versão com o commit e o `(devel)` (`versao.js`) |
 

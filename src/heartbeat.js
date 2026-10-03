@@ -10,7 +10,9 @@
  *   - conectado (estado.pronto): o WhatsApp Web responde CONNECTED ao
  *     getState() em até 10 s;
  *   - ainda não conectado (boot, esperando o QR Code, reconectando): o
- *     processo estar vivo basta. Reiniciar não ajudaria a ler o QR;
+ *     processo estar vivo basta. Reiniciar não ajudaria a ler o QR, nem a
+ *     trazer a internet de volta: entre uma tentativa e outra de conectar
+ *     (conexao.js), o estado diz quantas já falharam;
  *   - reiniciando: vale por até 5 min; um reinício travado para de bater.
  *
  * Sem batimento o arquivo envelhece: Node travado, Chromium sem resposta ou a
@@ -64,7 +66,12 @@ async function avaliarSaude() {
 
     reiniciandoDesde = null;
 
-    if (!estado.pronto) return { saudavel: true, estado: 'aguardando conexão' };
+    if (!estado.pronto) {
+        const situacao = estado.tentativas
+            ? `reconectando (${estado.tentativas} falhas seguidas)`
+            : 'aguardando conexão';
+        return { saudavel: true, estado: situacao };
+    }
 
     try {
         const state = await getStateComTimeout(GETSTATE_TIMEOUT_MS);

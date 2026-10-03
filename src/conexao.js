@@ -16,6 +16,65 @@ const { versaoComCommit } = require('./versao');
 // Motivos em que reiniciar não resolve: exigem ação manual.
 const NAO_REINICIAR = new Set(['LOGOUT', 'CONFLICT', 'UNPAIRED', 'UNPAIRED_IDLE']);
 
+/*
+ * Reconexão: se o initialize falhar (internet fora: ERR_NAME_NOT_RESOLVED,
+ * ERR_INTERNET_DISCONNECTED...), tenta de novo sozinho, com espera crescente,
+ * até conseguir. Antes, uma falha deixava o bot parado para sempre: sem
+ * 'ready', o heartbeat achava que era só o boot e o watchdog não olhava.
+ * E se o initialize passar mas o 'ready' não vier em CONEXAO_MAX_MS (a página
+ * abriu e a rede caiu no meio), reinicia também, a não ser esperando o QR Code.
+ */
+const ESPERAS_MS = [15, 30, 60, 120, 300].map(s => s * 1000);   // depois, a cada 5 min
+const CONEXAO_MAX_MS = 3 * 60 * 1000;
+
+let novaTentativa = null;     // o setTimeout da próxima tentativa
+let motivoOriginal = null;    // o que levou ao 1º reinício que falhou (o das tentativas seguintes)
+let vigiaDoReady = null;      // o setTimeout que espera o 'ready' depois do initialize
+
+// Os dois temporizadores não seguram o processo (unref) e saem juntos (ready, testes)
+function pararReconexao() {
+    motivoOriginal = null;
+    clearTimeout(novaTentativa);
+    clearTimeout(vigiaDoReady);
+    novaTentativa = null;
+    vigiaDoReady = null;
+}
+
+function agendarNovaTentativa(motivo, erro) {
+    const espera = ESPERAS_MS[Math.min(estado.tentativas, ESPERAS_MS.length - 1)];
+    estado.tentativas++;
+    estado.foraDesde ??= Date.now();
+
+    // Um e-mail só, na 1ª falha (com a internet fora, ele nem sai: o "Reconectado" conta o resto)
+    if (estado.tentativas === 1) {
+        motivoOriginal = motivo;
+        alertarPorEmail('❌ Falha ao reiniciar', `Motivo do reinício: ${motivo}
+initialize falhou: ${erro}
+` +
+            'O bot vai tentar de novo sozinho, com espera crescente, até conectar.');
+    }
+
+    printInfo(`♻️ Nova tentativa de conectar em ${espera / 1000}s (falhas seguidas: ${estado.tentativas}).`);
+    clearTimeout(novaTentativa);
+    novaTentativa = setTimeout(() => {
+        novaTentativa = null;
+        restartClient(`nova tentativa nº ${estado.tentativas + 1} (${motivoOriginal})`);
+    }, espera);
+    novaTentativa.unref?.();
+}
+
+// Depois de um initialize que passou: se o 'ready' não vier, reinicia (exceto esperando o QR Code)
+function vigiarReady() {
+    clearTimeout(vigiaDoReady);
+    vigiaDoReady = setTimeout(() => {
+        vigiaDoReady = null;
+        if (estado.pronto || estado.reiniciando || estado.aguardandoQr) return;
+        printError(`Sem conexão ${CONEXAO_MAX_MS / 60000} min depois de iniciar: reiniciando o cliente.`);
+        restartClient(`sem 'ready' em ${CONEXAO_MAX_MS / 60000} min`);
+    }, CONEXAO_MAX_MS);
+    vigiaDoReady.unref?.();
+}
+
 async function restartClient(motivo) {
     if (estado.reiniciando) {
         printInfo(`Restart ignorado (já em andamento). Motivo: ${motivo}`);
@@ -34,14 +93,18 @@ async function restartClient(motivo) {
 
     await new Promise(r => setTimeout(r, 5000));
 
+    let erro = null;
     try {
         await client.initialize();
     } catch (e) {
+        erro = e;
         printError('initialize falhou:', e.message);
-        alertarPorEmail('❌ Falha ao reiniciar', `Motivo do reinício: ${motivo}\ninitialize falhou: ${e.message}`);
     } finally {
         estado.reiniciando = false;
     }
+
+    if (erro) agendarNovaTentativa(motivo, erro.message);
+    else vigiarReady();
 }
 
 // Watchdog (a verificação de que o WhatsApp responde fica no heartbeat.js): só vigia um cliente que já esteve pronto e não está reiniciando
@@ -67,6 +130,9 @@ let qrEmailSending = false;
 let qrEmailCounter = 0;
 
 client.on('qr', async (qr) => {
+    // Esperando alguém ler o QR: o vigia do 'ready' não reinicia (o QR mudaria a cada reinício)
+    estado.aguardandoQr = true;
+
     const currentdatetimeday =
         new Date().toLocaleString('sv-SE', { timeZone: 'America/Sao_Paulo', hour12: false }) + ' BRT';
 
@@ -179,6 +245,7 @@ client.on('qr', async (qr) => {
 client.on('authenticated', () => {
     printSuccess('🔐 Whatsapp authentication success!');
     estado.autenticadoEm = Date.now();
+    estado.aguardandoQr = false;
 
     if (!isDebugMode()) return;
 
@@ -255,8 +322,19 @@ let jaFicouPronto = false;
 
 client.on('ready', async () => {
     estado.pronto = true;
+    estado.aguardandoQr = false;
     const motivoDaQueda = estado.ultimaQueda;
     estado.ultimaQueda = null;
+
+    // Conectou: as tentativas param, e o e-mail conta quanto tempo ficou fora
+    const { tentativas, foraDesde } = estado;
+    estado.tentativas = 0;
+    estado.foraDesde = null;
+    pararReconexao();
+    const minutosFora = foraDesde ? Math.max(1, Math.round((Date.now() - foraDesde) / 60000)) : 0;
+    const foraPor = foraDesde
+        ? `Ficou ${minutosFora} min sem conseguir conectar (${tentativas} tentativa${tentativas === 1 ? '' : 's'} falharam).`
+        : null;
 
     // Os settings vêm do banco: avisa já no boot se o bot está desligado ou só com você usando
     await dbPronto;
@@ -272,7 +350,7 @@ client.on('ready', async () => {
 
     alertarPorEmail(jaFicouPronto ? '🔄 Reconectado' : '🟢 Bot iniciado',
         [jaFicouPronto ? `Conectado de novo${motivoDaQueda ? ` (a queda foi: ${motivoDaQueda})` : ''}.` : 'Conectado ao WhatsApp.',
-         ...listaAvisos].join('\n'));
+         foraPor, ...listaAvisos].filter(Boolean).join('\n'));
     jaFicouPronto = true;
 });
 
@@ -283,6 +361,7 @@ async function iniciarBot() {
     try {
         printInfo('Starting WhatsApp authentication...');
         await client.initialize();
+        vigiarReady();
     } catch (error) {
         printError('Erro capturado na inicialização:', error.message);
 
@@ -297,12 +376,19 @@ async function iniciarBot() {
         if (error.message.includes('Execution context was destroyed') || error.message.includes('browser is already running')) {
             printInfo('Reiniciando o processo de inicialização em 5 segundos...');
             setTimeout(iniciarBot, 5000);
+            return;
         }
+
+        // Qualquer outro erro (ex.: sem internet no boot): tenta de novo, com espera crescente
+        agendarNovaTentativa('inicialização', error.message);
     }
 }
 
 module.exports = {
+    CONEXAO_MAX_MS,
+    ESPERAS_MS,
     iniciarBot,
     iniciarWatchdog,
+    pararReconexao,
     restartClient
 };
