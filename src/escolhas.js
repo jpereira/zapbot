@@ -1,14 +1,15 @@
 /*
  * Escolha numa lista: quando um comando acha mais de uma opção (ex.: vários
  * contatos com "Jorge" no nome), ele mostra a lista numerada e espera você
- * responder, no mesmo chat, só com o nº.
+ * responder, no mesmo chat, só com o nº. E a confirmação (ex.: o /bot -reset):
+ * espera um "sim" (ou "não") de quem deu o comando.
  */
 
 const { printInfo } = require('./log');
 
 const ESCOLHA_MS = 2 * 60_000;
 
-// chatId -> { opcoes, resolver, timer, autor }: uma escolha pendente por chat
+// chatId -> { opcoes | confirmacao, resolver, timer, autor }: uma pendente por chat
 const pendentes = new Map();
 
 // Quem mandou a mensagem: você ("dono") ou o jid da pessoa (um admin do bot.admins)
@@ -48,12 +49,46 @@ function aguardarEscolha(chatId, opcoes, { aoExpirar, autor = 'dono' } = {}) {
 }
 
 /**
- * Uma mensagem só com um nº, de quem deu o comando, responde a escolha pendente do chat.
+ * Espera um "sim" (true) ou um "não" (false) de quem deu o comando, neste chat.
+ * @param {string} chatId
+ * @param {object} [o]
+ * @param {number} [o.ms]  o prazo
+ * @param {() => Promise<void>} [o.aoExpirar]  avisa no chat que o tempo acabou
+ * @param {string} [o.autor]  quem pode responder (padrão: você)
+ * @returns {Promise<boolean|null>} null se o tempo acabou ou se outra pendência começou no chat
+ */
+function aguardarConfirmacao(chatId, { ms = 10_000, aoExpirar, autor = 'dono' } = {}) {
+    encerrar(chatId, null);
+
+    return new Promise((resolver) => {
+        const timer = setTimeout(() => {
+            encerrar(chatId, null);
+            aoExpirar?.().catch(() => {});
+        }, ms);
+        timer.unref?.();
+
+        pendentes.set(chatId, { confirmacao: true, resolver, timer, autor });
+    });
+}
+
+/**
+ * A resposta da pendência do chat, de quem deu o comando: só um nº (escolha)
+ * ou "sim"/"não" (confirmação). Qualquer outra mensagem segue o caminho normal.
  * @returns {Promise<boolean>} true = era a resposta (não é mensagem para mais nada)
  */
 async function responderEscolha(msg, chatId, texto) {
     const p = pendentes.get(chatId);
-    if (!p || autorDe(msg) !== p.autor || !/^\d{1,2}$/.test(texto)) return false;
+    if (!p || autorDe(msg) !== p.autor) return false;
+
+    if (p.confirmacao) {
+        const resposta = /^sim$/i.test(texto) ? true : /^n[aã]o$/i.test(texto) ? false : null;
+        if (resposta === null) return false;
+        printInfo(`Confirmação em ${chatId}: ${texto}`);
+        encerrar(chatId, resposta);
+        return true;
+    }
+
+    if (!/^\d{1,2}$/.test(texto)) return false;
 
     const n = Number(texto);
     if (n < 1 || n > p.opcoes.length) {
@@ -68,6 +103,7 @@ async function responderEscolha(msg, chatId, texto) {
 
 module.exports = {
     ESCOLHA_MS,
+    aguardarConfirmacao,
     aguardarEscolha,
     autorDe,
     responderEscolha

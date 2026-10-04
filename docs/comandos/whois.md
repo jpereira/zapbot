@@ -14,7 +14,10 @@ respondendo uma mensagem), mostra elas, mas só para o dono e os admins.
 /whois
 Quem é? (1)
 • 🗣️ +v · 👤 Rafael Silva · +15559998888
-💡 👑 +o: admin, usa tudo (bot.admins) · 🗣️ +v: usuário, usa os comandos comuns (bot.users)
+
+Permissões
+👑 +o: admin, usa tudo
+🗣️ +v: usuário, usa os comandos comuns
 
 Digite /help para saber quais comandos estão disponíveis.
 ```
@@ -31,10 +34,12 @@ O nível é o mais alto que vale **no chat onde você digitou**:
 | Nível | Quando |
 |---|---|
 | 🤖 dono | É a conta do bot: usa tudo |
-| 👑 +o | Está no `bot.admins` (`/bot +o`): usa tudo |
-| 🗣️ +v | Está no `bot.users` (`/bot +v`): usa os comandos comuns em qualquer chat |
-| 🗣️ todos (bot.users true) | O `bot.users` está em `true` (`/bot -admin`): todos usam os comuns |
-| 🗣️ +v pelo grupo | O grupo onde você digitou está no `bot.users`: todos ali usam os comuns, só dentro dele |
+| 👑 +o | É admin (`/bot +o`): usa tudo |
+| 🗣️ +v | É usuário (`/bot +v`): usa os comandos comuns em qualquer chat |
+| 🗣️ todos | Todos estão liberados (`/set bot.users true`) |
+| 🗣️ +v pelo grupo | O grupo onde você digitou está liberado: todos ali usam os comuns, só dentro dele |
+| 🗣️ +v neste grupo | A pessoa é usuária só neste grupo (o `/bot +v` digitado nele) |
+| 🚫 sem permissão aqui (só em 👥 …) | A pessoa é usuária só noutros grupos: aqui, o bot ignora os comandos dela |
 | 🚫 sem permissão | Nenhum dos de cima: o bot ignora os comandos da pessoa |
 
 - Quem não tem permissão nenhuma não consegue usar o `/whois` (o bot ignora os
@@ -42,4 +47,6 @@ O nível é o mais alto que vale **no chat onde você digitou**:
   de qualquer um.
 - Num grupo, o telefone de quem não participa dele sai escondido
   (`+5521•••••2222`), como no [`/bot`](bot.md#quem-aparece-na-lista).
+- Quem está limitado a alguns comandos ([`/bot +cmd`](bot.md#comandos-de-cada-usuário))
+  tem a regra embaixo: `→ Apenas: /cotacao, /crypto` ou `→ Todos, menos: /meme`.
 - Para ver todos os admins e usuários de uma vez, use o [`/bot`](bot.md).

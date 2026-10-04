@@ -99,33 +99,26 @@
         },
         {
             "cmd": "/bot",
-            "usage": "/bot [-on|-off] [+admin|-admin] [-au]  ou  /bot +o|-o|+v|-v [pessoa...] [-au]  ou  /bot -reset  ou  /bot -status [<hora>|off]  ou  /bot -info",
-            "help": "Liga/desliga o bot e diz quem usa os comandos: você e os admins usam tudo; os usuários, os comandos comuns. Sem opção mostra o estado e a lista de quem usa; -on/-off e +admin/-admin combinam (/bot -on +admin). Mostra também o relatório do bot (-status) e as versões do que ele usa (-info).",
+            "usage": "/bot [-on|-off] [-users|-all-users]  ou  /bot +o|-o|+v|-v [+cmd|-cmd <comandos>] [pessoa...] [-all-users]  ou  /bot -reset [force]  ou  /bot -status [<hora>|off] [-to <destino>]...  ou  /bot -info",
+            "aliases": [
+                "/b"
+            ],
+            "help": "Liga/desliga o bot e diz quem usa os comandos: você e os admins usam tudo; os usuários, os comandos comuns. Sem opção, mostra o status (o mesmo do -status). O -info mostra as versões do que ele usa.",
+            "espacado": true,
             "cmd_opts": [
                 {
                     "opts": [
                         "on"
                     ],
                     "values": [],
-                    "desc": "Ativa o bot."
+                    "desc": "Liga o bot."
                 },
                 {
                     "opts": [
                         "off"
                     ],
                     "values": [],
-                    "desc": "Desliga o bot: todos os comandos (inclusive os seus) são ignorados, exceto o /bot."
-                },
-                {
-                    "opts": [
-                        "admin"
-                    ],
-                    "sinais": [
-                        "+",
-                        "-"
-                    ],
-                    "values": [],
-                    "desc": "Com +admin, só você (e os admins) usa comandos, e a lista de usuários sai. Com -admin, todos usam os comandos comuns, em qualquer chat (o /bot mostra um aviso)."
+                    "desc": "Desliga o bot: todos os comandos (inclusive os seus) são ignorados, exceto o /bot. Os admins e os usuários continuam nas listas."
                 },
                 {
                     "opts": [
@@ -138,7 +131,7 @@
                     "values": [
                         "[pessoa...]"
                     ],
-                    "desc": "Põe (+o) e tira (-o) admins, que usam todos os comandos: pessoa por /nome/, @menção ou +número; grupo não. Sem ninguém, a pessoa do privado onde o comando foi digitado. Só o dono. Ex: /bot +o /Jorge Pereira/, /bot -o"
+                    "desc": "Põe (+o) e tira (-o) admins, que usam todos os comandos: /nome/, @menção ou +número (grupo não). Sem ninguém, a pessoa do privado onde o comando foi digitado. Só o dono. Ex: /bot +o /Jorge Pereira/, /bot -o"
                 },
                 {
                     "opts": [
@@ -151,7 +144,28 @@
                     "values": [
                         "[pessoa|grupo...]"
                     ],
-                    "desc": "Põe (+v) e tira (-v) usuários, que usam os comandos comuns: pessoas, em qualquer chat, e grupos, qualquer um dentro dele. Sem ninguém, o chat atual: o grupo ou a pessoa do privado. Só o dono. Ex: /bot +v /Camila Gama/ /Grupo Familia/, /bot -v"
+                    "desc": "Põe (+v) e tira (-v) usuários, que usam os comandos comuns: pessoas, em qualquer chat, e grupos, qualquer um dentro dele. Digitado num grupo, o +v de uma pessoa vale só nesse grupo (no privado, ela não usa). Sem ninguém, o chat atual: o grupo ou a pessoa do privado. Só o dono. Ex: /bot +v /Camila Gama/ /Grupo Familia/, /bot -v"
+                },
+                {
+                    "opts": [
+                        "cmd"
+                    ],
+                    "sinais": [
+                        "+",
+                        "-"
+                    ],
+                    "values": [
+                        "<comandos>"
+                    ],
+                    "desc": "Os comandos de um usuário (vírgula entre eles). Com o +v, define: +v +cmd /a,/b, só esses; +v -cmd /a, todos menos esse. Sozinho, +cmd libera e -cmd tira (quem não é usuário entra só com eles); +cmd all libera todos de novo. Na lista, embaixo da pessoa: → Apenas: ... O /help e o /whois sempre passam. Só o dono. Ex: /bot +cmd /cotacao,/crypto +v /Sofia Izabel/, /bot -cmd /meme /Fulano/, /bot +v +cmd /cotacao"
+                },
+                {
+                    "opts": [
+                        "users",
+                        "u"
+                    ],
+                    "values": [],
+                    "desc": "Os usuários deste chat: num grupo, quem participa dele (e o grupo); no privado de alguém, só a pessoa; no seu privado, todos. Ex: /bot -users, /bot -u"
                 },
                 {
                     "opts": [
@@ -159,15 +173,17 @@
                         "au"
                     ],
                     "values": [],
-                    "desc": "Na lista de quem usa, mostra todos. Sem ele, a lista é a deste chat: num grupo, quem participa dele (e o grupo); no privado de alguém, só a pessoa; no seu privado, todos. Ex: /bot -au, /bot +v /Sofia Izabel/ -au"
+                    "desc": "Todos os usuários, em qualquer chat. Num grupo, mostra também quem não é de lá (com o telefone escondido): cuidado para não expor ninguém. Junto do +o/+v, a resposta traz todos. Ex: /bot -all-users, /bot +v /Sofia Izabel/ -au"
                 },
                 {
                     "opts": [
                         "reset",
                         "r"
                     ],
-                    "values": [],
-                    "desc": "Volta ao padrão: bot ligado, sem admins extras e sem usuários (só você usa comandos). O envio diário do -status fica. Não combina com as outras opções. Só o dono."
+                    "values": [
+                        "[force]"
+                    ],
+                    "desc": "Volta ao padrão: bot ligado, sem admins extras e sem usuários (só você usa comandos). Pergunta antes: responda sim em 10 s. Com force, volta direto. O envio diário do -status fica. Não combina com as outras opções. Só o dono. Ex: /bot -r, /bot -r force"
                 },
                 {
                     "opts": [
@@ -177,7 +193,16 @@
                     "values": [
                         "[<hora>|off]"
                     ],
-                    "desc": "Sem valor: relatório das últimas 24 h (no ar, cache, /watch, apagadas, editadas, status apagados, avisos cortados pelo /mudo e quantos estão silenciados, último backup; com o aviso desligado por show.alert.deleted, show.alert.edited ou show.alert.status, a linha diz como ligar) e, no fim, o envio diário. Com uma hora (Brasília: 06h, 6h30, 06:00 ou às 18h), envia todo dia nesse horário, no seu privado. Com off, desliga o envio diário. Não combina com as outras opções. Ex: /bot -s, /bot -s 06h, /bot -s off"
+                    "desc": "O status (o mesmo do /bot sem opção): o relatório das últimas 24 h (no ar, cache, /watch, apagadas, editadas, status apagados, /mudo e último backup), quem usa o bot e o envio diário. Com uma hora (Brasília: 06h, 6h30, 06:00 ou às 18h), envia todo dia nesse horário, no seu privado ou nos destinos do -to. Com -to e sem hora, envia agora. Com off, desliga o envio diário. Não combina com as outras opções. Ex: /bot -s, /bot -s 06h, /bot -s 06h -to voce@exemplo.com, /bot -s off"
+                },
+                {
+                    "opts": [
+                        "to"
+                    ],
+                    "values": [
+                        "<destino>"
+                    ],
+                    "desc": "Junto com -status: para onde vai o relatório, em vez do seu privado. Uma pessoa, um grupo ou um e-mail (email = o QRCODE_EMAIL_SMTP_TO); repita para vários. No fim do relatório, o envio diário mostra os destinos: 👤 pessoa, 👥 grupo ou 📧 e-mail. Ex: -to /Jorge Pereira/, -to /Grupo Familia/ -to email"
                 },
                 {
                     "opts": [
@@ -185,7 +210,7 @@
                         "i"
                     ],
                     "values": [],
-                    "desc": "Versões do que o bot usa (ZapBot, Node.js, whatsapp-web.js, WhatsApp Web, SQLite, Chromium, yt-dlp, ffmpeg), se há versão nova do yt-dlp (PyPI) e do whatsapp-web.js (GitHub), e o sistema: uname -a, host, CPU, memória e há quanto tempo estão no ar. Não combina com as outras opções."
+                    "desc": "Versões do bot e do que ele usa (Node.js, whatsapp-web.js, WhatsApp Web, SQLite, Chromium, yt-dlp, ffmpeg), com aviso de versão nova, e o sistema (host, CPU, memória e há quanto tempo estão no ar). Não combina com as outras opções."
                 }
             ],
             "onlyAdmin": true

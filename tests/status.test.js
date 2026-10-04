@@ -51,7 +51,7 @@ describe('/bot -status', () => {
         assert.match(r, /📸 \*Status apagados:\* 1\n/);
         assert.match(r, /🔇 \*Ignoradas \(\/mudo\):\* 1 _\(apagadas 1\)_ · 1 silenciado\n/);
         assert.match(r, /💾 \*Último backup:\* nenhum/);
-        assert.match(r, /\n\n🔕 Status diário desligado\.\n💡 _Ligue com \/bot -status 06h \(no horário que quiser\)\._$/);
+        assert.match(r, /\n\n🔕 Status diário desligado\.\n💡 _Ligue com \/bot -status 06h \(no horário que quiser\)\._\n\nℹ️ _Mais informações em \/bot -h_$/);
     });
 
     test('com o aviso desligado, a linha diz como ligar de novo', async () => {
@@ -70,7 +70,7 @@ describe('/bot -status', () => {
         const [r] = await bot.responder('/bot -status 06h');
         assert.match(r, /^⏰ \*Status diário:\* todo dia às \*06:00\*, no seu privado\.\n📅 Próximo: [a-zá]{3} \d\d\/\d\d 06:00$/);
 
-        assert.match((await bot.responder('/bot -status'))[0], /\n\n⏰ \*Status diário:\* todo dia às \*06:00\*, no seu privado\.\n📅 Próximo: [a-zá]{3} \d\d\/\d\d 06:00\n💡 _Mude com \/bot -status <hora> ou desligue com \/bot -status off\._$/);
+        assert.match((await bot.responder('/bot -status'))[0], /\n\n⏰ \*Status diário:\* todo dia às \*06:00\*, no seu privado\.\n📅 Próximo: [a-zá]{3} \d\d\/\d\d 06:00\n💡 _Mude com \/bot -status <hora> ou desligue com \/bot -status off\._\n\nℹ️ _Mais informações em \/bot -h_$/);
 
         // Não aparece na agenda do /cron, nem conta no limite
         assert.match((await bot.responder('/cron'))[0], /📅 Nada agendado/);
@@ -104,6 +104,43 @@ describe('/bot -status', () => {
         assert.match((await bot.responder('/bot -status 25h'))[0], /❌ Não entendi a hora/);
         assert.match((await bot.responder('/bot -on -status'))[0], /❌ O -status não combina com as outras opções/);
         assert.equal(bot.getSetting('bot.paused'), false);
+    });
+
+    test('-status -to: o envio diário em pessoas, grupos e e-mails; sem hora, envia agora', async () => {
+        const env = { QRCODE_EMAIL_SMTP_HOST: 'smtp.exemplo.com', QRCODE_EMAIL_SMTP_USER: 'bot@exemplo.com', QRCODE_EMAIL_SMTP_TO: 'eu@exemplo.com' };
+        Object.assign(process.env, env);
+        try {
+            const [r] = await bot.responder('/bot -s 06h -to /Fulano/ -to email');
+            assert.match(r, /^⏰ \*Status diário:\* todo dia às \*06:00\* → 👤 Fulano, 📧 eu@exemplo\.com\n📅 Próximo: /);
+            assert.match((await bot.responder('/bot -s'))[0], /\n⏰ \*Status diário:\* todo dia às \*06:00\* → 👤 Fulano, 📧 eu@exemplo\.com\n/);
+
+            // Trocar só a hora mantém os destinos
+            assert.match((await bot.responder('/bot -s 07h'))[0], /às \*07:00\* → 👤 Fulano, 📧 eu@exemplo\.com\n/);
+
+            // Na hora: no Fulano e por e-mail (sem a formatação do WhatsApp)
+            await bot.dbRun("UPDATE schedules SET due_at = ? WHERE kind = 'status'", [Date.now() - 1000]);
+            const antes = bot.client.enviadas.length;
+            await verificarAgenda();
+            const enviados = bot.client.enviadas.slice(antes);
+            assert.deepEqual(enviados.map(e => e.chatId), [OUTRO.jid]);
+            assert.match(enviados[0].content, /^📊 \*Status do ZapBot/);
+            assert.equal(bot.emails.at(-1).to, 'eu@exemplo.com');
+            assert.match(bot.emails.at(-1).subject, /📊 Status do ZapBot/);
+            assert.match(bot.emails.at(-1).text, /^📊 Status do ZapBot/);
+
+            // Sem hora: envia agora, sem a lista de quem usa
+            await bot.setSetting('bot.users', ['5521911111111']);
+            const agora = await bot.executar('/bot -s -to /Fulano/');
+            assert.equal(agora[0].chatId, OUTRO.jid);
+            assert.doesNotMatch(agora[0].texto, /Usuários/);
+            assert.equal(agora[1].texto, '📊 Status enviado em 👤 Fulano.');
+
+            // Erros: -to sem -status, -to com off
+            assert.match((await bot.responder('/bot -to /Fulano/'))[0], /❌ O -to é do -status/);
+            assert.match((await bot.responder('/bot -s off -to /Fulano/'))[0], /❌ O -to não vale com o off/);
+        } finally {
+            for (const k of Object.keys(env)) delete process.env[k];
+        }
     });
 
     test('só o dono', async () => {

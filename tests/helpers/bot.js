@@ -35,8 +35,9 @@ const TABELAS = ['messages', 'message_edits', 'stats', 'watch_hits', 'watch_dest
 /*
  * Estado limpo para cada teste: tabelas vazias, settings no padrão, nada
  * enviado, sem rotas de rede. O bot.users vem true (o padrão é false: só o
- * dono) para os testes poderem usar comandos de outras pessoas; quem testa a
- * restrição muda de novo.
+ * dono) para os testes poderem usar comandos de outras pessoas, e a proteção
+ * contra flood vem desligada (os testes repetem comandos em sequência); quem
+ * testa a restrição ou o flood muda de novo.
  */
 async function reiniciar() {
     await preparar();
@@ -44,6 +45,7 @@ async function reiniciar() {
     for (const t of TABELAS) await dbRun(`DELETE FROM ${t}`);
     await carregarSettings();
     await setSetting('bot.users', ['all']);
+    await setSetting('flood.maxCommandRepeated', 0);
 
     client.enviadas.length = 0;
     limparMarcas();
@@ -60,6 +62,7 @@ async function reiniciar() {
     estado.reiniciando = false;
     src('conexao').pararReconexao();
     src('email').limparAlertasEnviados();
+    src('flood').limparFlood();
 
     criarContato(OUTRO.jid, OUTRO.nome);
     criarGrupo(GRUPO, 'Família', [DONO.jid, OUTRO.jid]);

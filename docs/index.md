@@ -125,12 +125,12 @@ Por onde começar:
   [Estrutura do código](desenvolvimento.md#estrutura-do-código)). Os que
   consultam a internet (`/gpt`, `/tempo`, `/cve`, `/news`...) usam os serviços
   da tabela [Serviços externos](configuracao.md#serviços-externos).
-- **Controle**: o [`/bot`](comandos/bot.md) liga/desliga todos os comandos
-  (`-on`/`-off`) e diz quem usa: você, os
-  [admins extras](comandos/bot.md#admins-extras) (`+o`/`-o`) e os
-  [usuários](comandos/bot.md#usuários) (`+v`/`-v`: pessoas e grupos, ou todos
-  com `-admin`), e o `-reset` volta ao padrão; o `-status` mostra o relatório e
-  o `-info`, as versões do que o bot usa (Node.js, Chromium, yt-dlp, ffmpeg...).
+- **Controle**: o [`/bot`](comandos/bot.md) mostra o status (o relatório de 24 h
+  e quem usa), liga/desliga todos os comandos (`-on`/`-off`) e diz quem usa:
+  você, os [admins extras](comandos/bot.md#admins-extras) (`+o`/`-o`) e os
+  [usuários](comandos/bot.md#usuários) (`+v`/`-v`: pessoas e grupos); o `-reset`
+  volta ao padrão, o `-status 06h` manda o relatório todo dia (no seu privado,
+  noutros chats ou por e-mail) e o `-info` mostra as versões do que o bot usa.
   O [`/whois`](comandos/whois.md) diz o nível de cada um no chat.
 - **Reconexão**: em caso de queda o cliente é reiniciado sozinho, exceto quando o
   motivo exige ação manual (`LOGOUT`, `CONFLICT`, `UNPAIRED`...). Sem internet,
