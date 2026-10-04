@@ -27,6 +27,7 @@ Para todos os protocolos:
 ```
 /defi                          → o Position Details de todos
 /defi -help                    → a ajuda de todos (/defi orca -help: só a da Orca)
+/defi -mask                    → o mesmo, com os números da carteira escondidos ($**,***.**)
 /defi -l                       → a lista dos cadastros
 /defi -rm 2                    → remove o nº 2
 /defi -rm 1 3                  → remove o 1 e o 3 (ou -rm 1,3; -rm all remove todos)
@@ -79,6 +80,7 @@ Para o Aave:
 | `-pool` | `<endereço>` | Com `orca -address`: a pool. Opcional; se vier, o bot confere se bate |
 | `-nft` | `<mint>` | Com `orca -address`: o NFT da posição. Opcional; se vier, o bot confere se bate |
 | `-wallet`, `-w` | `<0x...>` | Com `prjx`, `morpho` ou `aave`: cadastra a carteira (`0x` e 40 caracteres hexadecimais), e o bot lê todas as posições abertas dela |
+| `-mask`, `-m` | | Esconde os números da carteira com `*`, mantendo o formato (`$**,***.**`): saldos, quantidades, valores, taxas a coletar e o rendimento. Preço, faixa, pool, Health Factor, LTV e APY continuam. Vale com qualquer protocolo (`/defi -m`, `/defi aave -mask`) |
 | `-name`, `-n` | `<nome>` | Com `-address` ou `-wallet`: um nome para a posição ou a carteira (opcional, até 40 caracteres), mostrado junto do endereço (`Orca · Posição TAL (Hz15…RaPZ)`, `Project X · Carteira Hare (0x92…0444)`). Com espaços, com ou sem aspas. Numa já cadastrada, troca o nome |
 | `-full`, `-f` | | Com `aave`: os detalhes da posição: LTV, liquidation threshold, available borrows, o APY de cada ativo, o que é colateral, eMode e isolation mode. Veja [Aave V3](#aave-v3) |
 

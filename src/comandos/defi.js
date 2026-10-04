@@ -86,15 +86,25 @@ const descrever = (p, end = curto) => (DE_CARTEIRA.includes(p.protocol)
     ? `${PROTOCOLOS[p.protocol]} · ${carteiraComNome(p, end)}`
     : `${PROTOCOLOS[p.protocol] ?? p.protocol} · ${posicaoComNome(p, end)}`);
 
+/*
+ * -mask: os números da carteira (saldos, quantidades, valores e taxas a
+ * coletar) viram * mantendo o formato ($**,***.**); os do mercado (preço,
+ * faixa, pool, HF, LTV, APY) continuam. Bom para mandar print sem mostrar o
+ * tamanho do bolso.
+ */
+const MOSTRAR = (t) => t;
+const ESCONDER = (t) => String(t).replace(/\d/g, '*');
+
 // O nome da posição ou da carteira (-name): até 40 caracteres, numa linha
 const MAX_NOME = 40;
 
 /**
  * Texto do "Position Details" de uma posição do Project X (de posicoesDaCarteira).
  */
-function textoDaPosicaoPrjx(x, nome = null) {
-    const usd = (q, preco) => (preco === null ? '' : ` (${fmtUsd(q * preco)})`);
-    const total = (a, b) => (x.usd1 === null ? '' : ` ${fmtUsd(a * x.usd0 + b * x.usd1)}`);
+function textoDaPosicaoPrjx(x, nome = null, m = MOSTRAR) {
+    const usd = (q, preco) => (preco === null ? '' : ` (${m(fmtUsd(q * preco))})`);
+    const total = (a, b) => (x.usd1 === null ? '' : ` ${m(fmtUsd(a * x.usd0 + b * x.usd1))}`);
+    const qtd = (q) => m(fmtQtd(q));
     const status = x.naFaixa
         ? '✅ dentro da faixa'
         : `⚠️ *fora da faixa* (preço ${x.preco < x.inferior ? 'abaixo' : 'acima'}: a posição não rende taxas)`;
@@ -102,14 +112,14 @@ function textoDaPosicaoPrjx(x, nome = null) {
     return `🌊 *Project X · ${x.simbolo0}/${x.simbolo1}* · taxa ${(x.taxa / 10000).toLocaleString('en-US', { maximumFractionDigits: 2 })}%\n` +
         `📍 #${x.id}${nome ? ` · 👛 ${nome}` : ''} · ${status}\n\n` +
         `💰 *Saldo:*${total(x.qtd0, x.qtd1)}\n` +
-        `   • ${fmtQtd(x.qtd0)} ${x.simbolo0}${usd(x.qtd0, x.usd0)}\n` +
-        `   • ${fmtQtd(x.qtd1)} ${x.simbolo1}${usd(x.qtd1, x.usd1)}\n\n` +
+        `   • ${qtd(x.qtd0)} ${x.simbolo0}${usd(x.qtd0, x.usd0)}\n` +
+        `   • ${qtd(x.qtd1)} ${x.simbolo1}${usd(x.qtd1, x.usd1)}\n\n` +
         `📏 *Faixa:* ${fmtPreco(x.inferior)} – ${fmtPreco(x.superior)} ${x.simbolo1} por ${x.simbolo0}\n` +
         `🎯 *Preço atual:* ${fmtPreco(x.preco)} ${x.simbolo1} por ${x.simbolo0}\n` +
         `   ${barraDaFaixa(x.preco, x.inferior, x.superior)}\n\n` +
         `💸 *Taxas a coletar:*${total(x.taxa0, x.taxa1)}\n` +
-        `   • ${fmtQtd(x.taxa0)} ${x.simbolo0}${usd(x.taxa0, x.usd0)}\n` +
-        `   • ${fmtQtd(x.taxa1)} ${x.simbolo1}${usd(x.taxa1, x.usd1)}`;
+        `   • ${qtd(x.taxa0)} ${x.simbolo0}${usd(x.taxa0, x.usd0)}\n` +
+        `   • ${qtd(x.taxa1)} ${x.simbolo1}${usd(x.taxa1, x.usd1)}`;
 }
 
 /**
@@ -118,16 +128,16 @@ function textoDaPosicaoPrjx(x, nome = null) {
  *   naFaixa: todas as posições na faixa (null: a carteira não tem nenhuma aberta)
  *   taxasUsd: as taxas a coletar em dólar (null: sem preço, num par sem stablecoin)
  */
-async function lerCadastro(p, end = curto, { full = false } = {}) {
+async function lerCadastro(p, end = curto, { full = false, m = MOSTRAR } = {}) {
     if (p.protocol === 'aave') {
         const r = await posicoesAave(p.wallet);
         const algo = r.redes.length || r.falhas.length;
-        return { naFaixa: null, textos: algo ? [textoAave(r, end, p.name, { full })] : [], foraDaFaixa: [], taxasUsd: null };
+        return { naFaixa: null, textos: algo ? [textoAave(r, end, p.name, { full, m })] : [], foraDaFaixa: [], taxasUsd: null };
     }
 
     if (p.protocol === 'morpho') {
         const r = await posicoesMorpho(p.wallet);
-        return { naFaixa: null, textos: r.posicoes.length ? [textoMorpho(r, end, p.name)] : [], foraDaFaixa: [], taxasUsd: null };
+        return { naFaixa: null, textos: r.posicoes.length ? [textoMorpho(r, end, p.name, m)] : [], foraDaFaixa: [], taxasUsd: null };
     }
 
     if (p.protocol === 'prjx') {
@@ -135,14 +145,14 @@ async function lerCadastro(p, end = curto, { full = false } = {}) {
         const comPreco = posicoes.filter(x => x.usd1 !== null);
         return {
             naFaixa: posicoes.length ? posicoes.every(x => x.naFaixa) : null,
-            textos: posicoes.map(x => textoDaPosicaoPrjx(x, p.name)),
-            foraDaFaixa: posicoes.filter(x => !x.naFaixa).map(x => textoDaPosicaoPrjx(x, p.name)),
+            textos: posicoes.map(x => textoDaPosicaoPrjx(x, p.name, m)),
+            foraDaFaixa: posicoes.filter(x => !x.naFaixa).map(x => textoDaPosicaoPrjx(x, p.name, m)),
             taxasUsd: comPreco.length ? comPreco.reduce((s, x) => s + x.taxa0 * x.usd0 + x.taxa1 * x.usd1, 0) : null
         };
     }
 
     const d = await detalhesDaPosicao(p.address, p.pool);
-    const texto = textoDaPosicao(d, end, p.name);
+    const texto = textoDaPosicao(d, end, p.name, m);
     const emUsd = (qtd, token) => (Number(qtd) / 10 ** token.decimals) * Number(token.priceUsdc ?? 0);
     return {
         naFaixa: d.calculo.naFaixa,
@@ -155,7 +165,7 @@ async function lerCadastro(p, end = curto, { full = false } = {}) {
 /**
  * Texto do "Position Details" de uma posição da Orca.
  */
-function textoDaPosicao(d, end = curto, nome = null) {
+function textoDaPosicao(d, end = curto, nome = null, m = MOSTRAR) {
     const { calculo: c, tokenA, tokenB, infoPool } = d;
     const simA = tokenA.metadata?.symbol ?? infoPool.tokenA?.symbol ?? 'A';
     const simB = tokenB.metadata?.symbol ?? infoPool.tokenB?.symbol ?? 'B';
@@ -181,16 +191,16 @@ function textoDaPosicao(d, end = curto, nome = null) {
 
     let texto = `🌊 *Orca · ${simA}/${simB}* · taxa ${(d.pool.feeRate / 10000).toLocaleString('en-US', { maximumFractionDigits: 2 })}%\n` +
         `📍 ${nome ? `${nome} (${end(d.endereco)})` : end(d.endereco)} · ${status}\n\n` +
-        `💰 *Saldo:* ${fmtUsd(qtdA * usdA + qtdB * usdB)}\n` +
-        `   • ${fmtQtd(qtdA)} ${simA} (${fmtUsd(qtdA * usdA)})\n` +
-        `   • ${fmtQtd(qtdB)} ${simB} (${fmtUsd(qtdB * usdB)})\n\n` +
+        `💰 *Saldo:* ${m(fmtUsd(qtdA * usdA + qtdB * usdB))}\n` +
+        `   • ${m(fmtQtd(qtdA))} ${simA} (${m(fmtUsd(qtdA * usdA))})\n` +
+        `   • ${m(fmtQtd(qtdB))} ${simB} (${m(fmtUsd(qtdB * usdB))})\n\n` +
         `📏 *Faixa:* ${fmtPreco(inferior)} – ${fmtPreco(superior)} ${simB} por ${simA}\n` +
         `🎯 *Preço atual:* ${fmtPreco(atual)} ${simB} por ${simA}\n` +
         `   ${barraDaFaixa(atual, inferior, superior)}\n` +
         `   _(1 ${simB} = ${fmtPreco(1 / atual)} ${simA})_\n\n` +
-        `💸 *Taxas a coletar:* ${fmtUsd(taxaA * usdA + taxaB * usdB)}\n` +
-        `   • ${fmtQtd(taxaA)} ${simA} (${fmtUsd(taxaA * usdA)})\n` +
-        `   • ${fmtQtd(taxaB)} ${simB} (${fmtUsd(taxaB * usdB)})\n`;
+        `💸 *Taxas a coletar:* ${m(fmtUsd(taxaA * usdA + taxaB * usdB))}\n` +
+        `   • ${m(fmtQtd(taxaA))} ${simA} (${m(fmtUsd(taxaA * usdA))})\n` +
+        `   • ${m(fmtQtd(taxaB))} ${simB} (${m(fmtUsd(taxaB * usdB))})\n`;
 
     // Recompensas: só as que têm algo a coletar
     const recompensas = c.recompensas
@@ -200,7 +210,7 @@ function textoDaPosicao(d, end = curto, nome = null) {
     if (recompensas.length) {
         texto += '🎁 *Recompensas a coletar:*\n' + recompensas.map(r => {
             const qtd = Number(r.quantidade) / 10 ** r.token.decimals;
-            return `   • ${fmtQtd(qtd)} ${r.token.metadata?.symbol ?? curto(r.mint)} (${fmtUsd(qtd * Number(r.token.priceUsdc ?? 0))})`;
+            return `   • ${m(fmtQtd(qtd))} ${r.token.metadata?.symbol ?? curto(r.mint)} (${m(fmtUsd(qtd * Number(r.token.priceUsdc ?? 0)))})`;
         }).join('\n') + '\n';
     }
 
@@ -213,7 +223,7 @@ function textoDaPosicao(d, end = curto, nome = null) {
     if (c.naFaixa && d.pool.liquidez > 0n && Number(s24.fees) > 0) {
         const fatia = Number(d.posicao.liquidez) / Number(d.pool.liquidez);
         const dosLps = Number(s24.fees) * (1 - d.pool.taxaProtocolo / 10000);
-        texto += `📊 *Rende ~${fmtUsd(fatia * dosLps)}/dia* _(estimativa: ${(fatia * 100).toLocaleString('en-US', { maximumSignificantDigits: 3 })}% da liquidez ativa × as taxas 24h dos LPs)_\n`;
+        texto += `📊 *Rende ~${m(fmtUsd(fatia * dosLps))}/dia* _(estimativa: ${(fatia * 100).toLocaleString('en-US', { maximumSignificantDigits: 3 })}% da liquidez ativa × as taxas 24h dos LPs)_\n`;
     }
 
     texto += `\n🏊 *Pool:* TVL ${fmtCompacto(infoPool.tvlUsdc ?? 0)} · volume 24h ${fmtCompacto(s24.volume ?? 0)} · taxas 24h ${fmtCompacto(s24.fees ?? 0)}`;
@@ -249,12 +259,12 @@ const LER_CARTEIRA = {
     prjx: async (carteira) => ({ abertas: (await posicoesDaCarteira(carteira)).length }),
     morpho: async (carteira) => {
         const r = await posicoesMorpho(carteira);
-        return { abertas: r.posicoes.length, texto: (end, nome) => textoMorpho(r, end, nome) };
+        return { abertas: r.posicoes.length, texto: (end, nome, { m }) => textoMorpho(r, end, nome, m) };
     },
     aave: async (carteira) => {
         const r = await posicoesAave(carteira);
         const abertas = r.redes.reduce((s, x) => s + x.fornecidos.length + x.dividas.length, 0);
-        return { abertas, texto: (end, nome, full) => textoAave(r, end, nome, { full }) };
+        return { abertas, texto: (end, nome, opcoes) => textoAave(r, end, nome, opcoes) };
     }
 };
 const DICA_DA_CARTEIRA = {
@@ -305,7 +315,7 @@ async function cadastrarCarteira(msg, o, protocolo, end) {
     await msg.reply(`✅ *Carteira do ${protocoloNome} cadastrada:* ${apelido ? `${apelido} (${end(carteira)})` : end(carteira)}\n` +
         (abertas ? `📍 ${plural(abertas, 'posição aberta', 'posições abertas')}.` : `ℹ️ Nenhuma posição aberta agora: o /defi ${protocolo} mostra quando houver.`) +
         `\n💡 _Veja com /defi ${protocolo}_`);
-    if (abertas && texto) await msg.reply(texto(end, apelido, Boolean(o.full)));
+    if (abertas && texto) await msg.reply(texto(end, apelido, { full: Boolean(o.full), m: o.mask ? ESCONDER : MOSTRAR }));
     return carteira.toLowerCase();
 }
 
@@ -371,10 +381,10 @@ const DICA_RPC = {
     prjx: '💡 _O RPC público da HyperEVM limita as consultas; um RPC próprio vai no setting defi.hyperevm.rpc._'
 };
 
-async function mostrar(msg, posicoes, end, { full = false } = {}) {
+async function mostrar(msg, posicoes, end, { full = false, m = MOSTRAR } = {}) {
     for (const p of posicoes) {
         try {
-            const { textos } = await lerCadastro(p, end, { full });
+            const { textos } = await lerCadastro(p, end, { full, m });
             if (!textos.length) await msg.reply(`🌊 ${descrever(p, end)}: nenhuma posição aberta.`);
             for (const texto of textos) await msg.reply(texto);
         } catch (err) {
@@ -415,11 +425,11 @@ function fmtQtdToken(qtd, t) {
 const iconeDoToken = (simbolo) => (/BTC/i.test(simbolo) ? '₿' : ESTAVEL.test(simbolo) ? '💵' : /ETH/i.test(simbolo) ? 'Ξ' : '🪙');
 
 // O token: quantidade e valor (só o que a API trouxe)
-function textoDoItem(item, rotulo = '') {
+function textoDoItem(item, rotulo = '', m = MOSTRAR) {
     return [
         `${iconeDoToken(item.simbolo)} *${item.simbolo}*${rotulo}`,
-        item.qtd !== null && `Quantidade: \`${fmtQtdToken(item.qtd, item)} ${item.simbolo}\``,
-        item.usd !== null && `Valor: \`${fmtUsd(item.usd)}\``
+        item.qtd !== null && `Quantidade: \`${m(fmtQtdToken(item.qtd, item))} ${item.simbolo}\``,
+        item.usd !== null && `Valor: \`${m(fmtUsd(item.usd))}\``
     ].filter(Boolean).join('\n');
 }
 
@@ -432,21 +442,21 @@ const destaqueDoHf = (p) => (temHf(p) ? `❤️ *Health Rate*\n\`${fmtHf(p.hf)}\
  * hfNoRisco, o Health Rate vai no bloco do risco (com várias posições); sem,
  * ele fica no topo da mensagem (destaqueDoHf).
  */
-function textoDaPosicaoMorpho(p, { hfNoRisco }) {
+function textoDaPosicaoMorpho(p, { hfNoRisco, m = MOSTRAR }) {
     const blocos = [];
 
     if (p.tipo === 'vault') {
-        blocos.push(`📥 *SUPPLIED*\n\n${textoDoItem(p.fornecido, ` _(vault ${p.nome})_`)}`);
+        blocos.push(`📥 *SUPPLIED*\n\n${textoDoItem(p.fornecido, ` _(vault ${p.nome})_`, m)}`);
         return blocos;
     }
 
     const entrou = [
-        p.colateral && textoDoItem(p.colateral),
-        p.fornecido && textoDoItem(p.fornecido, p.colateral ? ' _(fornecido)_' : '')
+        p.colateral && textoDoItem(p.colateral, '', m),
+        p.fornecido && textoDoItem(p.fornecido, p.colateral ? ' _(fornecido)_' : '', m)
     ].filter(Boolean);
     if (entrou.length) blocos.push(`📥 *SUPPLIED / COLLATERAL*\n\n${entrou.join('\n')}`);
 
-    if (p.emprestado) blocos.push(`📤 *BORROWED*\n\n${textoDoItem(p.emprestado)}`);
+    if (p.emprestado) blocos.push(`📤 *BORROWED*\n\n${textoDoItem(p.emprestado, '', m)}`);
 
     // Risco: só faz sentido com dívida ou colateral
     if (p.emprestado || p.colateral) {
@@ -473,7 +483,7 @@ const tituloDaPosicao = (p) => (p.tipo === 'vault'
  * A mensagem do /defi morpho: com uma posição, ela direto; com várias, os
  * totais e cada uma com o seu Health Rate (o de um mercado não vale para outro).
  */
-function textoMorpho(r, end = curto, nome = null) {
+function textoMorpho(r, end = curto, nome = null, m = MOSTRAR) {
     const { posicoes, totais: t } = r;
     const rodape = `👛 Carteira: ${nome ? `${nome} · ` : ''}\`${end(r.carteira)}\`\n` +
         `🌐 ${posicoes.length > 1 ? 'Redes' : 'Rede'}: \`${[...new Set(posicoes.map(p => p.rede))].join(', ')}\`\n` +
@@ -482,17 +492,17 @@ function textoMorpho(r, end = curto, nome = null) {
 
     if (posicoes.length === 1) {
         const [p] = posicoes;
-        const liquido = t.semPreco.length ? semPreco.trim() : `💰 *Posição líquida*\n\`${fmtUsdComSinal(t.liquido)}\``;
+        const liquido = t.semPreco.length ? semPreco.trim() : `💰 *Posição líquida*\n\`${m(fmtUsdComSinal(t.liquido))}\``;
         const topo = [`🦋 *MORPHO* · ${tituloDaPosicao(p)}`, liquido, destaqueDoHf(p)].filter(Boolean).join('\n\n');
-        return [topo, ...textoDaPosicaoMorpho(p, { hfNoRisco: false }), rodape].join(`\n\n${SEPARADOR}\n\n`);
+        return [topo, ...textoDaPosicaoMorpho(p, { hfNoRisco: false, m }), rodape].join(`\n\n${SEPARADOR}\n\n`);
     }
 
     const topo = '🦋 *MORPHO*\n\n' +
-        `💰 *Total líquido*\n\`${fmtUsdComSinal(t.liquido)}\`\n\n` +
-        `📥 *Total supplied/collateral*\n\`${fmtUsd(t.fornecido)}\`\n\n` +
-        `📤 *Total borrowed*\n\`${fmtUsd(t.emprestado)}\`${semPreco}`;
+        `💰 *Total líquido*\n\`${m(fmtUsdComSinal(t.liquido))}\`\n\n` +
+        `📥 *Total supplied/collateral*\n\`${m(fmtUsd(t.fornecido))}\`\n\n` +
+        `📤 *Total borrowed*\n\`${m(fmtUsd(t.emprestado))}\`${semPreco}`;
     const cada = posicoes.map((p, i) =>
-        [`*POSIÇÃO ${i + 1}* · ${tituloDaPosicao(p)}`, ...textoDaPosicaoMorpho(p, { hfNoRisco: true })].join('\n\n'));
+        [`*POSIÇÃO ${i + 1}* · ${tituloDaPosicao(p)}`, ...textoDaPosicaoMorpho(p, { hfNoRisco: true, m })].join('\n\n'));
 
     return [topo, ...cada, rodape].join(`\n\n${SEPARADOR}\n\n`);
 }
@@ -502,19 +512,19 @@ function textoMorpho(r, end = curto, nome = null) {
  * Health Factor e os ativos; o -full, o risco, as taxas, o que é colateral e
  * a configuração. Cada rede tem o seu Health Factor: nunca um só, misturado.
  */
-function itemAaveCurto(x) {
+function itemAaveCurto(x, m = MOSTRAR) {
     return [
         `${iconeDoToken(x.simbolo)} *${x.simbolo}*`,
-        x.qtd !== null && `\`${fmtQtdToken(x.qtd, x)} ${x.simbolo}\``,
-        x.usd !== null && `\`${fmtUsd(x.usd)}\``
+        x.qtd !== null && `\`${m(fmtQtdToken(x.qtd, x))} ${x.simbolo}\``,
+        x.usd !== null && `\`${m(fmtUsd(x.usd))}\``
     ].filter(Boolean).join('\n');
 }
 
-function itemAaveFull(x, divida) {
+function itemAaveFull(x, divida, m = MOSTRAR) {
     return [
         `*${x.simbolo}*`,
-        x.qtd !== null && `Amount: \`${fmtQtdToken(x.qtd, x)}\``,
-        x.usd !== null && `Value: \`${fmtUsd(x.usd)}\``,
+        x.qtd !== null && `Amount: \`${m(fmtQtdToken(x.qtd, x))}\``,
+        x.usd !== null && `Value: \`${m(fmtUsd(x.usd))}\``,
         !divida && `Collateral: \`${x.colateral ? 'Yes' : 'No'}\``,
         x.apy !== null && `${divida ? 'Borrow' : 'Supply'} APY: \`${fmtPct(x.apy)}\``,
         divida && `Rate Mode: \`${x.modo}\``
@@ -522,36 +532,36 @@ function itemAaveFull(x, divida) {
 }
 
 // O resumo da rede: o curto (com destaque, numa rede só) ou o técnico (-full)
-function resumoAave(x, { full, destaque }) {
+function resumoAave(x, { full, destaque, m = MOSTRAR }) {
     const semPreco = x.semPreco.length ? `\n_Sem preço (fora dos totais): ${x.semPreco.join(', ')}_` : '';
     if (!full) {
         return destaque
-            ? `💰 *Posição líquida*\n\`${fmtUsdComSinal(x.liquidoUsd)}\`\n\n❤️ *Health Factor*\n\`${fmtHf(x.hf)}\`${semPreco}`
-            : `Net: \`${fmtUsdComSinal(x.liquidoUsd)}\`\nHealth Factor: \`${fmtHf(x.hf)}\`${semPreco}`;
+            ? `💰 *Posição líquida*\n\`${m(fmtUsdComSinal(x.liquidoUsd))}\`\n\n❤️ *Health Factor*\n\`${fmtHf(x.hf)}\`${semPreco}`
+            : `Net: \`${m(fmtUsdComSinal(x.liquidoUsd))}\`\nHealth Factor: \`${fmtHf(x.hf)}\`${semPreco}`;
     }
 
     const risco = [
         x.ltvAtual !== null && `LTV atual: \`${fmtPct(x.ltvAtual)}\``,
         `LTV máximo: \`${fmtPct(x.ltvMaximo)}\``,
         `Liquidation Threshold: \`${fmtPct(x.liquidationThreshold)}\``,
-        `Available Borrows: \`${fmtUsd(x.disponivelUsd)}\``,
-        `Collateral (risco): \`${fmtUsd(x.colateralUsd)}\``,
+        `Available Borrows: \`${m(fmtUsd(x.disponivelUsd))}\``,
+        `Collateral (risco): \`${m(fmtUsd(x.colateralUsd))}\``,
         x.precoLiquidacao && `Preço de liquidação (${x.precoLiquidacao.simbolo}): \`${fmtUsd(x.precoLiquidacao.usd)}\``,
         x.liquidacaoAmbigua && '⚠️ _Preço de liquidação individual não é determinístico com múltiplos collaterals._'
     ].filter(Boolean).join('\n');
 
-    return `💰 Net Position: \`${fmtUsdComSinal(x.liquidoUsd)}\`\n` +
-        `📥 Supplied: \`${fmtUsd(x.fornecidoUsd)}\`\n` +
-        `📤 Borrowed: \`${fmtUsd(x.dividaUsd)}\`${semPreco}\n\n` +
+    return `💰 Net Position: \`${m(fmtUsdComSinal(x.liquidoUsd))}\`\n` +
+        `📥 Supplied: \`${m(fmtUsd(x.fornecidoUsd))}\`\n` +
+        `📤 Borrowed: \`${m(fmtUsd(x.dividaUsd))}\`${semPreco}\n\n` +
         `❤️ Health Factor: \`${fmtHf(x.hf)}\`\n\n📊 *Risco*\n${risco}`;
 }
 
 // As seções de uma rede: o resumo e os ativos (e, no -full, a configuração)
-function secoesAave(x, { full, titulo }) {
+function secoesAave(x, { full, titulo, m = MOSTRAR }) {
     const { fornecidos, dividas } = x;
-    const lista = (itens, divida) => itens.map(i => (full ? itemAaveFull(i, divida) : itemAaveCurto(i))).join('\n\n');
+    const lista = (itens, divida) => itens.map(i => (full ? itemAaveFull(i, divida, m) : itemAaveCurto(i, m))).join('\n\n');
     const secoes = [
-        `${titulo}${resumoAave(x, { full, destaque: !titulo.startsWith('🌐') })}`,
+        `${titulo}${resumoAave(x, { full, m, destaque: !titulo.startsWith('🌐') })}`,
         fornecidos.length && `📥 *SUPPLIED*\n\n${lista(fornecidos, false)}`,
         dividas.length && `📤 *${full ? 'DEBT' : 'BORROWED'}*\n\n${lista(dividas, true)}`
     ];
@@ -570,17 +580,17 @@ function secoesAave(x, { full, titulo }) {
  * A mensagem do /defi aave: numa rede só, ela direto; em várias, o total
  * global e cada rede com o seu Health Factor.
  */
-function textoAave(r, end = curto, nome = null, { full = false } = {}) {
+function textoAave(r, end = curto, nome = null, { full = false, m = MOSTRAR } = {}) {
     const titulo = `🟣 *AAVE V3${full ? ' — FULL' : ''}*`;
     const redes = r.redes;
     const secoes = [];
 
     if (redes.length === 1) {
-        secoes.push(...secoesAave(redes[0], { full, titulo: `${titulo} · ${redes[0].rede}\n\n` }));
+        secoes.push(...secoesAave(redes[0], { full, m, titulo: `${titulo} · ${redes[0].rede}\n\n` }));
     } else {
         const total = redes.reduce((s, x) => s + x.liquidoUsd, 0);
-        secoes.push(`${titulo}\n\n💰 *TOTAL GLOBAL*\nNet: \`${fmtUsdComSinal(total)}\``);
-        for (const x of redes) secoes.push(secoesAave(x, { full, titulo: `🌐 *${x.rede}*\n\n` }).join('\n\n'));
+        secoes.push(`${titulo}\n\n💰 *TOTAL GLOBAL*\nNet: \`${m(fmtUsdComSinal(total))}\``);
+        for (const x of redes) secoes.push(secoesAave(x, { full, m, titulo: `🌐 *${x.rede}*\n\n` }).join('\n\n'));
     }
 
     if (r.falhas.length) {
@@ -603,17 +613,17 @@ const DO_ENV = {
         nome: 'Morpho', env: 'MORPHO_WALLET_ADDRESS', setting: 'defi.morpho.wallet', ler: posicoesMorpho,
         vazio: (r) => !r.posicoes.length,
         semPosicao: (end, carteira) => `🦋 *MORPHO*\n\nNenhuma posição aberta na carteira \`${end(carteira)}\` (chain ${getSetting('defi.morpho.chains').join(', ')}).`,
-        texto: (r, end) => textoMorpho(r, end)
+        texto: (r, end, { m }) => textoMorpho(r, end, null, m)
     },
     aave: {
         nome: 'Aave', env: 'AAVE_WALLET_ADDRESS', setting: 'defi.aave.wallet', ler: posicoesAave,
         vazio: (r) => !r.redes.length && !r.falhas.length,
         semPosicao: (end, carteira) => `🟣 *AAVE V3*\n\nNenhuma posição aberta na carteira \`${end(carteira)}\` (chain ${getSetting('defi.aave.chains').join(', ')}).`,
-        texto: (r, end, full) => textoAave(r, end, null, { full })
+        texto: (r, end, opcoes) => textoAave(r, end, null, opcoes)
     }
 };
 
-async function mostrarDoEnv(msg, protocolo, end, full) {
+async function mostrarDoEnv(msg, protocolo, end, opcoes) {
     const d = DO_ENV[protocolo];
     const carteira = envOuSetting(d.env, d.setting);
     if (!carteira) {
@@ -633,7 +643,7 @@ async function mostrarDoEnv(msg, protocolo, end, full) {
         return;
     }
 
-    await msg.reply(d.vazio(r) ? d.semPosicao(end, carteira) : d.texto(r, end, full));
+    await msg.reply(d.vazio(r) ? d.semPosicao(end, carteira) : d.texto(r, end, opcoes));
 }
 
 /*
@@ -919,12 +929,15 @@ async function cmdDefi({ msg, opts: optsDoComando, args, chatId }) {
         return;
     }
 
+    // -full (o Aave completo) e -mask (os números da carteira com *)
+    const exibir = { full: Boolean(o.full), m: o.mask ? ESCONDER : MOSTRAR };
+
     // /defi: o Position Details de todos; /defi orca, prjx ou morpho: só dele
     const escolhidas = posicoes.filter(x => !protocolo || x.protocol === protocolo);
 
     // Morpho e Aave sem cadastro: a carteira do .env (ou do setting), consultada na hora
     if (DO_ENV[protocolo] && !escolhidas.length) {
-        await mostrarDoEnv(msg, protocolo, end, Boolean(o.full));
+        await mostrarDoEnv(msg, protocolo, end, exibir);
         return;
     }
 
@@ -932,7 +945,7 @@ async function cmdDefi({ msg, opts: optsDoComando, args, chatId }) {
         await msg.reply(protocolo ? `🌊 Nada cadastrado ${protocolo === 'prjx' ? 'do Project X' : 'da Orca'}.\n${EXEMPLOS}` : vazio);
         return;
     }
-    await mostrar(msg, escolhidas, end, { full: Boolean(o.full) });
+    await mostrar(msg, escolhidas, end, exibir);
 }
 
 module.exports = {
