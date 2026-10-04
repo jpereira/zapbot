@@ -14,7 +14,7 @@ Acompanha posições em DeFi, de quatro protocolos:
   nos contratos do Aave ([Aave V3](#aave-v3)).
 
 A Orca cadastra a **posição** (`-address`); o Project X, o Morpho e o Aave, a
-**carteira** (`-wallet`), com um nome opcional (`-name`). O `/defi` lê tudo na hora e mostra o equivalente ao
+**carteira** (`-wallet`). Todos aceitam um nome opcional (`-name`). O `/defi` lê tudo na hora e mostra o equivalente ao
 "Position Details" de cada posição; com `orca`, `prjx` ou `morpho`, só as
 daquele protocolo (`orca`, `prjx`, `morpho` ou `aave`). No seu privado, os endereços e as carteiras aparecem
 inteiros; fora dele, abreviados (`0x92…0444`). Com o `-alerta`,
@@ -39,6 +39,7 @@ Para a Orca:
 /defi orca                     → só as posições da Orca
 /defi orca -address <endereço> -pool <endereço> -nft <mint>
 /defi orca -address <endereço> -alerta 2000   → cadastra e já liga o alerta (no seu privado)
+/defi orca -address <endereço> -n "Posição TAL"   → com um nome
 ```
 
 Para o Project X:
@@ -78,7 +79,7 @@ Para o Aave:
 | `-pool` | `<endereço>` | Com `orca -address`: a pool. Opcional; se vier, o bot confere se bate |
 | `-nft` | `<mint>` | Com `orca -address`: o NFT da posição. Opcional; se vier, o bot confere se bate |
 | `-wallet`, `-w` | `<0x...>` | Com `prjx`, `morpho` ou `aave`: cadastra a carteira (`0x` e 40 caracteres hexadecimais), e o bot lê todas as posições abertas dela |
-| `-name`, `-n` | `<nome>` | Com `-wallet`: um nome para a carteira (opcional, até 40 caracteres), mostrado junto do endereço (`Project X · Carteira Hare (0x92…0444)`). Com espaços, sem aspas. Numa carteira já cadastrada, troca o nome |
+| `-name`, `-n` | `<nome>` | Com `-address` ou `-wallet`: um nome para a posição ou a carteira (opcional, até 40 caracteres), mostrado junto do endereço (`Orca · Posição TAL (Hz15…RaPZ)`, `Project X · Carteira Hare (0x92…0444)`). Com espaços, com ou sem aspas. Numa já cadastrada, troca o nome |
 | `-full`, `-f` | | Com `aave`: os detalhes da posição: LTV, liquidation threshold, available borrows, o APY de cada ativo, o que é colateral, eMode e isolation mode. Veja [Aave V3](#aave-v3) |
 
 ```
