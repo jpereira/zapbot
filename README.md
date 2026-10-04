@@ -143,7 +143,7 @@ todos, com `/set bot.users true`); o `/whois` diz o seu nível
 | [`/ping`](https://jpereira.github.io/zapbot/commands/ping/) | `/p` | ✅ | Verifica se o bot está vivo |
 | [`/pixelart`](https://jpereira.github.io/zapbot/commands/pixelart/) | `/ansi`, `/px` | | Arte ANSI/ASCII aleatória (16colo.rs) |
 | [`/set`](https://jpereira.github.io/zapbot/commands/set/) | `/config` | ✅ | Lista e altera as configurações (settings); `-a`/`-rem` acrescentam e tiram itens das listas (ex.: o `bot.admins` e o `bot.users`) |
-| [`/show`](https://jpereira.github.io/zapbot/commands/show/) | `/s` | ✅ | Reexibe mensagens apagadas ou editadas (`-e`); `-q` busca pelo texto |
+| [`/show`](https://jpereira.github.io/zapbot/commands/show/) | `/s` | ✅ | Reexibe mensagens apagadas, editadas (`-e`) e status apagados (`-s`), deste chat ou de outro; `-q` busca pelo texto |
 | [`/stats`](https://jpereira.github.io/zapbot/commands/stats/) | | ✅ | Ranking deste chat ou de outro (`/Grupo/`): quem mais fala, apaga e edita, horários de pico; `-me` para as suas, `-l` lista os chats, `-flush` apaga |
 | [`/sticker`](https://jpereira.github.io/zapbot/commands/sticker/) | `/st` | | Transforma imagem/vídeo em figurinha; com `-txt`, uma figurinha animada de texto |
 | [`/tempo`](https://jpereira.github.io/zapbot/commands/tempo/) | `/t`, `/weather` | | Tempo agora e máx./mín. do dia (Open-Meteo); `/tempo 7d` mostra os próximos 7 dias; sem cidade usa `tempo.city` |
