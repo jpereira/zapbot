@@ -79,9 +79,9 @@ describe('eventos de conexão', () => {
         assert.equal(bot.estado.pronto, true);
         const [notice] = bot.client.enviadas;
         assert.equal(notice.chatId, process.env.PHONE_NUMBER);
-        assert.match(notice.content, /🤖 ZapBot [\d.]+(?: \(devel\))? \(git\+[0-9a-f]{7}\/[\w.-]+\) inicializado\. Só você \(e o bot\.admins\) usa comandos: \/bot -admin libera/);
+        assert.match(notice.content, /🤖 ZapBot [\d.]+(?: \(devel\))? \(git\+[0-9a-f]{7}\/[\w.-]+\) inicializado\. Só você \(e os admins\) usa comandos: \/bot \+v <pessoa\|grupo> libera para alguns\./);
         assert.match(emails[0].subject, /🟢 Bot iniciado/);
-        assert.match(emails[0].text, /Conectado ao WhatsApp\.\nSó você \(e o bot\.admins\) usa comandos/);
+        assert.match(emails[0].text, /Conectado ao WhatsApp\.\nSó você \(e os admins\) usa comandos/);
 
         bot.estado.ultimaQueda = 'NAVIGATION';
         await emit('ready');

@@ -6,9 +6,11 @@ const { sendMedia, commandsError, assembleText } = require('./scheduleCommands')
 const { estado: stateAlt } = require('./state');
 const { client } = require('./client');
 const { dbAll, dbGet, dbReady, dbRun } = require('./db');
-const { describeDestination, extractDestinations, resolverOrChoose } = require('./destinations');
+const {
+    describeDestination, sendToDestinations, extractDestinations, resolverOrChoose
+} = require('./destinations');
 const { printError, printInfo } = require('./log');
-const { statusText } = require('./status');
+const { statusDestinations, statusText } = require('./status');
 const { getSetting } = require('./settings');
 const { plural, summarizeText, withoutAccents } = require('./util/format');
 const { REPETITIONS, fmtWhen, readWhen, partsInBrasilia, nextRepetition } = require('./util/when');
@@ -437,9 +439,13 @@ async function triggerItem(s, nowAlt) {
     }
 
     if (s.kind === 'status') {
-        // The /bot -status report, built on the spot
-        await client.sendMessage(s.chat_id, await statusText(nowAlt));
-        printInfo(`/bot -status: enviado para ${whereInLog(itemDestinations(s)[0])}${late ? ' (atrasado)' : ''}`);
+        // The /bot -status report, built on the spot, in the -to destinations (without them, the private chat)
+        const destinations = statusDestinations(s);
+        const textAlt = await statusText(nowAlt);
+        await sendToDestinations(destinations, textAlt, { assunto: '📊 Status do ZapBot' })
+            .catch(err => printError('/bot -status: falha ao enviar:', err.message));
+        printInfo(`/bot -status: enviado para ${destinations.length ? destinations.map(d => d.email ?? d.id).join(', ') : 'seu privado'}` +
+            (late ? ' (atrasado)' : ''));
         return;
     }
 

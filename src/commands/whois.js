@@ -2,10 +2,11 @@
  * Comando /whois.
  */
 
-const { ROLES, describeItem, chatScope, captionAlt } = require('./bot');
+const { ROLES, describeItem, chatScope, permissions } = require('./bot');
 const { isOOwner, textItems } = require('./set');
 const { client } = require('../client');
-const { resolveLidToPhone } = require('../contacts');
+const { resolveLidToPhone, groupResolverName } = require('../contacts');
+const { describeRule, permissionHere } = require('../permissions');
 const { resolverOrChoose } = require('../destinations');
 const { getSetting } = require('../settings');
 
@@ -20,13 +21,22 @@ const { getSetting } = require('../settings');
  */
 
 // Someone's level in this chat, from highest to lowest
-function levelAlt(numberAlt, { chatId, isGroup }) {
+async function levelAlt(numberAlt, { chatId, isGroup }) {
     const users = getSetting('bot.users');
+    const soInGroups = users.filter(u => u.startsWith(`${numberAlt}:`))
+        .map(u => u.slice(u.indexOf(':') + 1));
     if (isOOwner(numberAlt)) return `${ROLES.dono} dono`;
     if (getSetting('bot.admins').includes(numberAlt)) return `${ROLES.admin} +o`;
     if (users.includes(numberAlt)) return `${ROLES.usuario} +v`;
-    if (users.includes('all')) return `${ROLES.usuario} todos (bot.users true)`;
+    if (users.includes('all')) return `${ROLES.usuario} todos`;
     if (isGroup && users.includes(chatId)) return `${ROLES.usuario} +v pelo grupo`;
+    if (isGroup && soInGroups.includes(chatId)) return `${ROLES.usuario} +v neste grupo`;
+
+    // Only in other groups: says where
+    if (soInGroups.length) {
+        const groups = await Promise.all(soInGroups.map(async g => `👥 ${await groupResolverName(g).catch(() => null) || g}`));
+        return `${ROLES.nenhum} sem permissão aqui (só em ${groups.join(', ')})`;
+    }
     return `${ROLES.nenhum} sem permissão`;
 }
 
@@ -106,13 +116,18 @@ async function cmdWhois({ msg, args, quotedMsg, senderNumber, chatId, isGroup, a
     }
 
     const chat = { chatId, isGroup };
-    const { membros: members } = await chatScope(chat);
-    const levels = numbers.map(n => levelAlt(n, chat));
-    const linesAlt = await Promise.all(numbers.map(async (n, i) =>
-        `• ${levels[i]} · ${await describeItem(n, members)}`));
+    const scope = await chatScope(chat);
+    const levels = await Promise.all(numbers.map(n => levelAlt(n, chat)));
+    // User with a rule (/bot +cmd|-cmd): their commands here, below
+    const linesAlt = await Promise.all(numbers.map(async (n, i) => {
+        const { regras: rules } = permissionHere({ numero: n, chatId, isGroup });
+        const user = levels[i].startsWith(ROLES.usuario);
+        return `• ${levels[i]} · ${await describeItem(n, scope)}` +
+            (user && rules.length ? `\n → ${rules.map(describeRule).join('; ')}` : '');
+    }));
 
-    await msg.reply(`*Quem é?* (${numbers.length})\n${linesAlt.join('\n')}\n` +
-        captionAlt({
+    await msg.reply(`*Quem é?* (${numbers.length})\n${linesAlt.join('\n')}\n\n` +
+        permissions({
             dono: numbers.some(isOOwner),
             semPermissao: levels.some(n => n.startsWith(ROLES.nenhum))
         }) +
