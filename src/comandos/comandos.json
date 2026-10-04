@@ -573,8 +573,8 @@
         },
         {
             "cmd": "/defi",
-            "usage": "/defi [orca|prjx]  ou  /defi -l  ou  /defi -rm <nº...|all>  ou  /defi -alerta <nº|all> [-to <destino>]... [-taxas <valor>]  ou  /defi orca -address <endereço> [-pool <endereço>] [-nft <mint>] [-alerta [valor]]  ou  /defi prjx -address <0x...> [-alerta [valor]]",
-            "help": "Posições de liquidez da Orca (Solana) e do Project X (HyperEVM): saldo, faixa, preço e taxas a coletar, lidos on-chain. Sem nada, mostra todas; com orca ou prjx, só as daquele protocolo. Com -alerta, avisa quando uma posição sai da faixa, quando volta e, com -taxas, quando as taxas a coletar passam de um valor.",
+            "usage": "/defi [orca|prjx]  ou  /defi -l  ou  /defi -rm <nº...|all>  ou  /defi -alerta <nº|all> [-to <destino>]... [-taxas <valor>]  ou  /defi orca -address <endereço> [-pool <endereço>] [-nft <mint>] [-alerta [valor]]  ou  /defi prjx -address <0x...> [-alerta [valor]]  ou  /defi morpho [-wallet <0x...>]",
+            "help": "Posições de liquidez da Orca (Solana) e do Project X (HyperEVM): saldo, faixa, preço e taxas a coletar, lidos on-chain. Sem nada, mostra todas; com orca ou prjx, só as daquele protocolo. Com -alerta, avisa quando uma posição sai da faixa, quando volta e, com -taxas, quando as taxas a coletar passam de um valor. Com morpho, mostra posição, empréstimos e risco no Morpho.",
             "cmd_opts": [
                 {
                     "opts": [
@@ -656,10 +656,20 @@
                     "cron": false
                 },
                 {
-                    "argv": [
-                        "[orca|prjx]"
+                    "opts": [
+                        "wallet",
+                        "w"
                     ],
-                    "desc": "O protocolo: orca (Orca, na Solana) ou prjx (Project X, na HyperEVM). Sozinho, mostra o Position Details só dele; com -address, cadastra. Ex: /defi, /defi orca, /defi prjx"
+                    "values": [
+                        "<0x...>"
+                    ],
+                    "desc": "Com morpho: a carteira consultada (sem ele, a do MORPHO_WALLET_ADDRESS no config/.env ou do setting defi.morpho.wallet). Mostra colateral, dívida, Health Rate, LTV, LLTV e preço de liquidação de cada mercado, e os vaults, nas redes do defi.morpho.chains. Ex: /defi morpho -w 0x1234...abcd"
+                },
+                {
+                    "argv": [
+                        "[orca|prjx|morpho]"
+                    ],
+                    "desc": "O protocolo: orca (Orca, na Solana), prjx (Project X, na HyperEVM) ou morpho (Morpho, consultado na hora). Sozinho, mostra o Position Details só dele; com -address (orca e prjx), cadastra. Ex: /defi, /defi orca, /defi morpho"
                 }
             ],
             "cron": true,

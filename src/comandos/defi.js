@@ -6,19 +6,23 @@ const { findCommand, getCommandSyntax } = require('./base');
 const { client } = require('../cliente');
 const { dbAll, dbGet, dbPronto, dbRun } = require('../db');
 const { isEnderecoEvm } = require('../defi/hyperevm');
+const { ErroMorpho, posicoesMorpho } = require('../defi/morpho');
 const { detalhesDaPosicao, validarPosicao } = require('../defi/orca');
 const { posicoesDaCarteira } = require('../defi/prjx');
 const { isEnderecoSolana } = require('../defi/solana');
 const { descreverDestinos, destinosSalvos, extrairDestinos, recipientsDe, resolverDestinos } = require('../destinos');
 const { printError } = require('../log');
 const { GetOptFromCommand } = require('../opcoes');
-const { getSetting } = require('../settings');
+const { envOuSetting, getSetting } = require('../settings');
 const { formatarData, plural } = require('../util/formatar');
 
 /*
- * /defi: posições de liquidez cadastradas, da Orca (Solana) e do Project X (HyperEVM).
+ * /defi: posições de liquidez cadastradas, da Orca (Solana) e do Project X (HyperEVM),
+ * e os empréstimos no Morpho (consultados na hora, sem cadastro).
  *   /defi                      → o "Position Details" de todas
  *   /defi orca|prjx            → só das daquele protocolo
+ *   /defi morpho [-w <0x...>]  → as posições Morpho da carteira (sem -w: a do
+ *                                MORPHO_WALLET_ADDRESS ou do setting defi.morpho.wallet)
  *   /defi -l                   → lista os cadastros (endereço inteiro só no seu privado)
  *   /defi -rm <nº...|all>      → remove
  *   /defi orca -address <endereço> [-pool <endereço>] [-nft <mint>]  → cadastra uma posição
@@ -186,10 +190,10 @@ function textoDaPosicao(d) {
     return texto;
 }
 
-const EXEMPLOS = '💡 _/defi orca -address <endereço> -pool <endereço> -nft <mint>\n/defi prjx -address <0x...>_';
+const EXEMPLOS = '💡 _/defi orca -address <endereço> -pool <endereço> -nft <mint>\n/defi prjx -address <0x...>\n/defi morpho -wallet <0x...>_';
 
-// A palavra do protocolo: /defi orca, /defi prjx -address ...
-const PALAVRAS = { orca: 'orca', prjx: 'prjx' };
+// A palavra do protocolo: /defi orca, /defi prjx -address ..., /defi morpho
+const PALAVRAS = { morpho: 'morpho', orca: 'orca', prjx: 'prjx' };
 const protocoloDe = (palavra) => PALAVRAS[String(palavra ?? '').toLowerCase()] ?? null;
 
 async function limiteOuRepetida(msg, endereco) {
@@ -287,6 +291,158 @@ async function mostrar(msg, posicoes) {
             await msg.reply(`⚠️ Não consegui ler ${descrever(p)} agora: ${err.message}.\n${DICA_RPC[p.protocol] ?? ''}`);
         }
     }
+}
+
+/*
+ * Morpho: o texto da consulta (os dados vêm de src/defi/morpho.js)
+ */
+const SEPARADOR = '━━━━━━━━━━━━━━━━━━';
+const ESTAVEL = /USD|DAI|EUR|GHO|FRAX|LUSD/i;
+
+// $1,234.56 (e -$1,234.56 quando a dívida passa do colateral)
+const fmtUsdComSinal = (v) => (v < 0 ? `-${fmtUsd(-v)}` : fmtUsd(v));
+const fmtPct = (v) => `${(v * 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`;
+
+// Health Rate: ∞ sem dívida, N/A sem como calcular, senão 2 casas
+const fmtHf = (hf) => (hf === Infinity ? '∞' : hf === null ? 'N/A'
+    : hf.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+
+/*
+ * Quantidade de um token: stablecoin com 2 casas; o resto (cbBTC, WETH...) com
+ * até 8, sem os zeros que sobram no fim.
+ */
+function fmtQtdToken(qtd, t) {
+    if (ESTAVEL.test(t.simbolo)) return qtd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const max = Math.min(Number.isInteger(t.decimals) ? t.decimals : 8, 8);
+    return qtd.toLocaleString('en-US', { minimumFractionDigits: Math.min(2, max), maximumFractionDigits: max });
+}
+
+const iconeDoToken = (simbolo) => (/BTC/i.test(simbolo) ? '₿' : ESTAVEL.test(simbolo) ? '💵' : /ETH/i.test(simbolo) ? 'Ξ' : '🪙');
+
+// O token: quantidade e valor (só o que a API trouxe)
+function textoDoItem(item, rotulo = '') {
+    return [
+        `${iconeDoToken(item.simbolo)} *${item.simbolo}*${rotulo}`,
+        item.qtd !== null && `Quantidade: \`${fmtQtdToken(item.qtd, item)} ${item.simbolo}\``,
+        item.usd !== null && `Valor: \`${fmtUsd(item.usd)}\``
+    ].filter(Boolean).join('\n');
+}
+
+// O Health Rate em destaque: num mercado com colateral ou dívida (sem dívida, ∞)
+const temHf = (p) => p.tipo === 'mercado' && Boolean(p.emprestado || p.colateral);
+const destaqueDoHf = (p) => (temHf(p) ? `❤️ *Health Rate*\n\`${fmtHf(p.hf)}\`` : null);
+
+/*
+ * Os blocos de uma posição: o que entrou, o que saiu e o risco. Com
+ * hfNoRisco, o Health Rate vai no bloco do risco (com várias posições); sem,
+ * ele fica no topo da mensagem (destaqueDoHf).
+ */
+function textoDaPosicaoMorpho(p, { hfNoRisco }) {
+    const blocos = [];
+
+    if (p.tipo === 'vault') {
+        blocos.push(`📥 *SUPPLIED*\n\n${textoDoItem(p.fornecido, ` _(vault ${p.nome})_`)}`);
+        return blocos;
+    }
+
+    const entrou = [
+        p.colateral && textoDoItem(p.colateral),
+        p.fornecido && textoDoItem(p.fornecido, p.colateral ? ' _(fornecido)_' : '')
+    ].filter(Boolean);
+    if (entrou.length) blocos.push(`📥 *SUPPLIED / COLLATERAL*\n\n${entrou.join('\n')}`);
+
+    if (p.emprestado) blocos.push(`📤 *BORROWED*\n\n${textoDoItem(p.emprestado)}`);
+
+    // Risco: só faz sentido com dívida ou colateral
+    if (p.emprestado || p.colateral) {
+        const linhas = [];
+        if (hfNoRisco) linhas.push(`Health Rate: \`${fmtHf(p.hf)}\``);
+        if (p.emprestado && p.ltv !== null) linhas.push(`LTV atual: \`${fmtPct(p.ltv)}\``);
+        linhas.push(`LLTV: \`${fmtPct(p.lltv)}\``);
+
+        const emEmprestimo = (v) => `${fmtQtdToken(v, { simbolo: p.simboloEmprestimo, decimals: 8 })} ${p.simboloEmprestimo}`;
+        if (p.precoOraculo !== null) linhas.push(`Preço ${p.simboloColateral} (oráculo): \`${emEmprestimo(p.precoOraculo)}\``);
+        if (p.precoLiquidacao !== null) linhas.push(`Preço de liquidação: \`${emEmprestimo(p.precoLiquidacao)}\``);
+        if (p.utilizacao !== null) linhas.push(`Utilização do mercado: \`${fmtPct(p.utilizacao)}\``);
+        blocos.push(`📊 *RISCO*\n\n${linhas.join('\n')}`);
+    }
+
+    return blocos;
+}
+
+const tituloDaPosicao = (p) => (p.tipo === 'vault'
+    ? `Vault ${p.nome} · ${p.rede}`
+    : `${p.simboloColateral}/${p.simboloEmprestimo} · ${p.rede}`);
+
+/**
+ * A mensagem do /defi morpho: com uma posição, ela direto; com várias, os
+ * totais e cada uma com o seu Health Rate (o de um mercado não vale para outro).
+ */
+function textoMorpho(r) {
+    const { posicoes, totais: t } = r;
+    const rodape = `👛 Carteira: \`${curto(r.carteira)}\`\n` +
+        `🌐 ${posicoes.length > 1 ? 'Redes' : 'Rede'}: \`${[...new Set(posicoes.map(p => p.rede))].join(', ')}\`\n` +
+        `🕐 Atualizado: \`${new Date(r.quando).toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo' })}\``;
+    const semPreco = t.semPreco.length ? `\n_Sem preço em USD (fora dos totais): ${t.semPreco.join(', ')}_` : '';
+
+    if (posicoes.length === 1) {
+        const [p] = posicoes;
+        const liquido = t.semPreco.length ? semPreco.trim() : `💰 *Posição líquida*\n\`${fmtUsdComSinal(t.liquido)}\``;
+        const topo = [`🦋 *MORPHO* · ${tituloDaPosicao(p)}`, liquido, destaqueDoHf(p)].filter(Boolean).join('\n\n');
+        return [topo, ...textoDaPosicaoMorpho(p, { hfNoRisco: false }), rodape].join(`\n\n${SEPARADOR}\n\n`);
+    }
+
+    const topo = '🦋 *MORPHO*\n\n' +
+        `💰 *Total líquido*\n\`${fmtUsdComSinal(t.liquido)}\`\n\n` +
+        `📥 *Total supplied/collateral*\n\`${fmtUsd(t.fornecido)}\`\n\n` +
+        `📤 *Total borrowed*\n\`${fmtUsd(t.emprestado)}\`${semPreco}`;
+    const cada = posicoes.map((p, i) =>
+        [`*POSIÇÃO ${i + 1}* · ${tituloDaPosicao(p)}`, ...textoDaPosicaoMorpho(p, { hfNoRisco: true })].join('\n\n'));
+
+    return [topo, ...cada, rodape].join(`\n\n${SEPARADOR}\n\n`);
+}
+
+// /defi morpho [-wallet <0x...>]
+async function mostrarMorpho(msg, opts) {
+    let carteira;
+    if (opts.given.has('wallet')) {
+        carteira = String(opts.opt.wallet ?? '').trim().replace(/^<(.*)>$/, '$1');
+        if (!carteira) {
+            await msg.reply('❌ Informe a carteira: /defi morpho -wallet <0x...>');
+            return;
+        }
+    } else {
+        carteira = envOuSetting('MORPHO_WALLET_ADDRESS', 'defi.morpho.wallet');
+        if (!carteira) {
+            await msg.reply('❌ Endereço da carteira Morpho não configurado.\n\n' +
+                'Configure MORPHO_WALLET_ADDRESS no arquivo .env (ou /set defi.morpho.wallet <0x...>), ' +
+                'ou informe a carteira: /defi morpho -wallet <0x...>');
+            return;
+        }
+    }
+
+    if (!isEnderecoEvm(carteira)) {
+        await msg.reply(`❌ "${carteira}" não é uma carteira EVM (0x e 40 caracteres hexadecimais).`);
+        return;
+    }
+
+    let r;
+    try {
+        r = await posicoesMorpho(carteira);
+    } catch (err) {
+        if (!(err instanceof ErroMorpho)) printError('[MORPHO] Erro inesperado:', err.message);
+        await msg.reply(`❌ *Erro ao consultar Morpho*\n\n${err instanceof ErroMorpho ? err.motivo : 'Não foi possível obter os dados neste momento.'}\n\n` +
+            'Tente novamente em alguns instantes.');
+        return;
+    }
+
+    if (!r.posicoes.length) {
+        const redes = getSetting('defi.morpho.chains').join(', ');
+        await msg.reply(`🦋 *MORPHO*\n\nNenhuma posição aberta na carteira \`${curto(carteira)}\` (chain ${redes}).`);
+        return;
+    }
+
+    await msg.reply(textoMorpho(r));
 }
 
 /*
@@ -509,6 +665,19 @@ async function cmdDefi({ msg, opts: optsDoComando, args, chatId }) {
     const argv = opts.argv.filter(a => a !== palavra);
     const protocolo = protocoloDe(palavra);
 
+    // Morpho: consulta na hora, sem cadastro
+    if (protocolo === 'morpho' || opts.given.has('wallet')) {
+        const outra = ['address', 'alerta', 'list', 'nft', 'pool', 'rm', 'taxas'].find(k => opts.given.has(k));
+        if (protocolo !== 'morpho' || outra || argv.length) {
+            await msg.reply(protocolo !== 'morpho'
+                ? '❌ O -wallet é do morpho: /defi morpho -wallet <0x...>'
+                : `❌ O morpho só aceita o -wallet: /defi morpho [-wallet <0x...>]${outra ? ` (o -${outra} é da Orca e do Project X)` : ''}.`);
+            return;
+        }
+        await mostrarMorpho(msg, opts);
+        return;
+    }
+
     if (opts.given.has('address')) {
         await cadastrarComAlerta(msg, opts, protocolo, { comDestino, destinosTexto });
         return;
@@ -534,7 +703,7 @@ async function cmdDefi({ msg, opts: optsDoComando, args, chatId }) {
     }
 
     if (argv.length) {
-        await msg.reply(`❌ "${argv[0]}" não é um protocolo: use orca ou prjx.\n\n\`\`\`${getCommandSyntax('/defi')}\`\`\``);
+        await msg.reply(`❌ "${argv[0]}" não é um protocolo: use orca, prjx ou morpho.\n\n\`\`\`${getCommandSyntax('/defi')}\`\`\``);
         return;
     }
 
@@ -556,5 +725,6 @@ module.exports = {
     fmtUsd,
     lerCadastro,
     textoDaPosicao,
-    textoDaPosicaoPrjx
+    textoDaPosicaoPrjx,
+    textoMorpho
 };
