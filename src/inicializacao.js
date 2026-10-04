@@ -26,7 +26,7 @@ async function adicionarColunas(tabela, colunas) {
 /*
  * /defi: os cadastros. As colunas têm o nome das opções: address (o -address
  * da Orca, a posição) e wallet (o -wallet do Project X e do Morpho, a
- * carteira); um cadastro tem uma ou a outra.
+ * carteira); um cadastro tem uma ou a outra. O name é o -name da carteira.
  */
 const CRIAR_DEFI_POSITIONS = `
     CREATE TABLE IF NOT EXISTS defi_positions (
@@ -34,6 +34,7 @@ const CRIAR_DEFI_POSITIONS = `
         protocol TEXT NOT NULL,
         address TEXT,
         wallet TEXT,
+        name TEXT,
         nft TEXT,
         pool TEXT,
         created_at INTEGER NOT NULL,
@@ -285,7 +286,7 @@ async function inicializarBanco() {
      */
     await migrarDefiParaAddressEWallet();
     await dbRun(CRIAR_DEFI_POSITIONS);
-    await adicionarColunas('defi_positions', COLUNAS_DO_ALERTA_DEFI);
+    await adicionarColunas('defi_positions', { name: 'TEXT', ...COLUNAS_DO_ALERTA_DEFI });
 
     /*
      * /mute: pessoas e grupos com os avisos em silêncio (o que: deleted, edited,

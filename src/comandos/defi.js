@@ -74,17 +74,22 @@ const COM_FAIXA = ['orca', 'prjx'];
 const enderecoDo = (p) => p.address ?? p.wallet;
 
 /*
- * "Orca · Hz15…RaPZ" ou "Project X · carteira 0x92…0444". O end diz como o
- * endereço aparece: abreviado (o padrão) ou inteiro (no seu privado).
+ * "Orca · Hz15…RaPZ", "Project X · carteira 0x92…0444" ou, com o -name,
+ * "Project X · Carteira Hare (0x92…0444)". O end diz como o endereço aparece:
+ * abreviado (o padrão) ou inteiro (no seu privado).
  */
+const carteiraComNome = (p, end) => (p.name ? `${p.name} (${end(p.wallet)})` : `carteira ${end(p.wallet)}`);
 const descrever = (p, end = curto) => (DE_CARTEIRA.includes(p.protocol)
-    ? `${PROTOCOLOS[p.protocol]} · carteira ${end(p.wallet)}`
+    ? `${PROTOCOLOS[p.protocol]} · ${carteiraComNome(p, end)}`
     : `${PROTOCOLOS[p.protocol] ?? p.protocol} · ${end(p.address)}`);
+
+// O nome da carteira (-name): até 40 caracteres, numa linha
+const MAX_NOME = 40;
 
 /**
  * Texto do "Position Details" de uma posição do Project X (de posicoesDaCarteira).
  */
-function textoDaPosicaoPrjx(x) {
+function textoDaPosicaoPrjx(x, nome = null) {
     const usd = (q, preco) => (preco === null ? '' : ` (${fmtUsd(q * preco)})`);
     const total = (a, b) => (x.usd1 === null ? '' : ` ${fmtUsd(a * x.usd0 + b * x.usd1)}`);
     const status = x.naFaixa
@@ -92,7 +97,7 @@ function textoDaPosicaoPrjx(x) {
         : `⚠️ *fora da faixa* (preço ${x.preco < x.inferior ? 'abaixo' : 'acima'}: a posição não rende taxas)`;
 
     return `🌊 *Project X · ${x.simbolo0}/${x.simbolo1}* · taxa ${(x.taxa / 10000).toLocaleString('en-US', { maximumFractionDigits: 2 })}%\n` +
-        `📍 #${x.id} · ${status}\n\n` +
+        `📍 #${x.id}${nome ? ` · 👛 ${nome}` : ''} · ${status}\n\n` +
         `💰 *Saldo:*${total(x.qtd0, x.qtd1)}\n` +
         `   • ${fmtQtd(x.qtd0)} ${x.simbolo0}${usd(x.qtd0, x.usd0)}\n` +
         `   • ${fmtQtd(x.qtd1)} ${x.simbolo1}${usd(x.qtd1, x.usd1)}\n\n` +
@@ -113,7 +118,7 @@ function textoDaPosicaoPrjx(x) {
 async function lerCadastro(p, end = curto) {
     if (p.protocol === 'morpho') {
         const r = await posicoesMorpho(p.wallet);
-        return { naFaixa: null, textos: r.posicoes.length ? [textoMorpho(r, end)] : [], foraDaFaixa: [], taxasUsd: null };
+        return { naFaixa: null, textos: r.posicoes.length ? [textoMorpho(r, end, p.name)] : [], foraDaFaixa: [], taxasUsd: null };
     }
 
     if (p.protocol === 'prjx') {
@@ -121,8 +126,8 @@ async function lerCadastro(p, end = curto) {
         const comPreco = posicoes.filter(x => x.usd1 !== null);
         return {
             naFaixa: posicoes.length ? posicoes.every(x => x.naFaixa) : null,
-            textos: posicoes.map(textoDaPosicaoPrjx),
-            foraDaFaixa: posicoes.filter(x => !x.naFaixa).map(textoDaPosicaoPrjx),
+            textos: posicoes.map(x => textoDaPosicaoPrjx(x, p.name)),
+            foraDaFaixa: posicoes.filter(x => !x.naFaixa).map(x => textoDaPosicaoPrjx(x, p.name)),
             taxasUsd: comPreco.length ? comPreco.reduce((s, x) => s + x.taxa0 * x.usd0 + x.taxa1 * x.usd1, 0) : null
         };
     }
@@ -242,7 +247,8 @@ const DICA_DA_CARTEIRA = {
 
 async function cadastrarCarteira(msg, o, protocolo, end) {
     const carteira = String(o.wallet ?? '').trim().replace(/^<(.*)>$/, '$1');
-    const nome = PROTOCOLOS[protocolo];
+    const protocoloNome = PROTOCOLOS[protocolo];
+    const apelido = o.name || null;
 
     if (!carteira) {
         await msg.reply(`❌ Informe a carteira: -wallet <0x...>\n💡 _/defi ${protocolo} -wallet 0x926024824BAEAf3ee0b7A2EEFA5A216743230444_`);
@@ -250,6 +256,14 @@ async function cadastrarCarteira(msg, o, protocolo, end) {
     }
     if (!isEnderecoEvm(carteira)) {
         await msg.reply(`❌ -wallet: "${carteira}" não é uma carteira EVM (0x e 40 caracteres hexadecimais).`);
+        return;
+    }
+
+    // Já cadastrada, com -name: troca o nome
+    const existente = await dbGet('SELECT * FROM defi_positions WHERE protocol = ? AND wallet = ?', [protocolo, carteira.toLowerCase()]);
+    if (existente && apelido) {
+        await dbRun('UPDATE defi_positions SET name = ? WHERE id = ?', [apelido, existente.id]);
+        await msg.reply(`✏️ *Nome trocado:* ${descrever({ ...existente, name: apelido }, end)}`);
         return;
     }
     if (await limiteOuRepetida(msg, protocolo, carteira, end)) return;
@@ -263,8 +277,9 @@ async function cadastrarCarteira(msg, o, protocolo, end) {
         return;
     }
 
-    await dbRun('INSERT INTO defi_positions (protocol, wallet, created_at) VALUES (?, ?, ?)', [protocolo, carteira.toLowerCase(), Date.now()]);
-    await msg.reply(`✅ *Carteira do ${nome} cadastrada:* ${end(carteira)}\n` +
+    await dbRun('INSERT INTO defi_positions (protocol, wallet, name, created_at) VALUES (?, ?, ?, ?)',
+        [protocolo, carteira.toLowerCase(), apelido, Date.now()]);
+    await msg.reply(`✅ *Carteira do ${protocoloNome} cadastrada:* ${apelido ? `${apelido} (${end(carteira)})` : end(carteira)}\n` +
         (abertas ? `📍 ${plural(abertas, 'posição aberta', 'posições abertas')}.` : `ℹ️ Nenhuma posição aberta agora: o /defi ${protocolo} mostra quando houver.`) +
         `\n💡 _Veja com /defi ${protocolo}_`);
     return carteira.toLowerCase();
@@ -425,9 +440,9 @@ const tituloDaPosicao = (p) => (p.tipo === 'vault'
  * A mensagem do /defi morpho: com uma posição, ela direto; com várias, os
  * totais e cada uma com o seu Health Rate (o de um mercado não vale para outro).
  */
-function textoMorpho(r, end = curto) {
+function textoMorpho(r, end = curto, nome = null) {
     const { posicoes, totais: t } = r;
-    const rodape = `👛 Carteira: \`${end(r.carteira)}\`\n` +
+    const rodape = `👛 Carteira: ${nome ? `${nome} · ` : ''}\`${end(r.carteira)}\`\n` +
         `🌐 ${posicoes.length > 1 ? 'Redes' : 'Rede'}: \`${[...new Set(posicoes.map(p => p.rede))].join(', ')}\`\n` +
         `🕐 Atualizado: \`${new Date(r.quando).toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo' })}\``;
     const semPreco = t.semPreco.length ? `\n_Sem preço em USD (fora dos totais): ${t.semPreco.join(', ')}_` : '';
@@ -684,7 +699,7 @@ const sinoDoAlerta = (p) => (p.alert ? ` 🔔${p.alert_fees ? ` ≥ ${fmtUsd(p.a
 // A lista: no seu privado, os endereços inteiros; fora dele, abreviados
 function textoDaLista(posicoes, end) {
     const linha = (p, i) => `${i + 1}. ${PROTOCOLOS[p.protocol] ?? p.protocol} · ` +
-        (DE_CARTEIRA.includes(p.protocol) ? `carteira ${end(p.wallet)}` : `${end(p.address)} · pool ${end(p.pool)}`) +
+        (DE_CARTEIRA.includes(p.protocol) ? carteiraComNome(p, end) : `${end(p.address)} · pool ${end(p.pool)}`) +
         ` _(desde ${formatarData(p.created_at).split(',')[0]})_${sinoDoAlerta(p)}`;
 
     return `🌊 *Posições DeFi* (${posicoes.length})\n\n${posicoes.map(linha).join('\n')}\n\n` +
@@ -715,6 +730,24 @@ async function cmdDefi({ msg, opts: optsDoComando, args, chatId }) {
     const palavra = opts.argv.find(protocoloDe);
     const argv = opts.argv.filter(a => a !== palavra);
     const protocolo = protocoloDe(palavra);
+
+    /*
+     * -name: o nome da carteira, com espaços (-n Carteira Hare). O parser
+     * separa as palavras; as que sobram no argv são do nome.
+     */
+    if (opts.given.has('name')) {
+        const nome = [o.name, ...argv].filter(Boolean).join(' ').trim();
+        argv.length = 0;
+        const erro = !opts.given.has('wallet')
+            ? `❌ O -name vai junto com o -wallet: /defi ${protocolo && DE_CARTEIRA.includes(protocolo) ? protocolo : 'prjx'} -wallet <0x...> -n <nome>`
+            : !nome ? '❌ Informe o nome: -n <nome> (ex.: -n Carteira Hare).'
+                : nome.length > MAX_NOME ? `❌ O nome tem até ${MAX_NOME} caracteres.` : null;
+        if (erro) {
+            await msg.reply(erro);
+            return;
+        }
+        o.name = nome;
+    }
 
     if (opts.given.has('address') || opts.given.has('wallet')) {
         await cadastrarComAlerta(msg, opts, protocolo, { comDestino, destinosTexto }, end);
