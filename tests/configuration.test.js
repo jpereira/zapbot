@@ -403,6 +403,7 @@ describe('ajuda', () => {
         assert.equal(linesAlt[0], 'Usage: /defi [orca|prjx]');
         assert.equal(linesAlt[1], '       /defi -l');
         assert.equal(linesAlt[5], '       /defi prjx -address <0x...> [-alerta [valor]]');
+        assert.equal(linesAlt[6], '       /defi morpho [-wallet <0x...>]');
         assert.doesNotMatch(textAlt, / {2}ou {2}/);
     });
 
@@ -415,12 +416,12 @@ describe('ajuda', () => {
 
         // In the options: the 1st sentence beside; the others and the Ex:, indented 4 spaces
         const linesAlt = formatCommandHelp(findCommand('/defi')).split('\n');
-        const i = linesAlt.findIndex(l => l.startsWith('  [orca|prjx]'));
-        assert.match(linesAlt[i], /\(Project X, na HyperEVM\)\.$/);
+        const i = linesAlt.findIndex(l => l.startsWith('  [orca|prjx|morpho]'));
+        assert.match(linesAlt[i], /\(Morpho, consultado na hora\)\.$/);
         assert.match(linesAlt[i + 1], /^ {4}Sozinho, mostra/);
         assert.equal(linesAlt[i + 2], '    Ex: /defi');
         assert.equal(linesAlt[i + 3], '        /defi orca');
-        assert.equal(linesAlt[i + 4], '        /defi prjx');
+        assert.equal(linesAlt[i + 4], '        /defi morpho');
 
         // A single example also goes to the line below; "Niteroi, Sergipe" is one example, not two
         assert.match(formatCommandHelp(findCommand('/tempo')), /\n {4}Ex: \/tempo Niteroi, Sergipe\n/);

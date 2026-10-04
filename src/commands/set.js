@@ -32,6 +32,7 @@ const ENV_VARIABLES = [
     { nome: 'APP_ENV' },
     { nome: 'GIPHY_API_KEY', secret: true },
     { nome: 'GOOGLE_TRANSLATE_API_KEY', secret: true },
+    { nome: 'MORPHO_WALLET_ADDRESS' },
     { nome: 'OPENAI_API_KEY', secret: true },
     { nome: 'OPENAI_MODEL' },
     { nome: 'OPENAI_TIMEOUT_MS' },
