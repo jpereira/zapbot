@@ -43,6 +43,7 @@ Para o Project X:
 ```
 /defi prjx                     → só as do Project X
 /defi prjx -wallet <0x...>     → cadastra a carteira
+/defi prjx -wallet <0x...> -n Carteira Hare   → com um nome (de novo, com outro: troca o nome)
 /defi prjx -wallet <0x...> -alerta    → cadastra e já liga o alerta (no seu privado)
 ```
 
@@ -51,6 +52,7 @@ Para o Morpho:
 ```
 /defi morpho                   → as carteiras cadastradas (sem nenhuma: a do MORPHO_WALLET_ADDRESS)
 /defi morpho -wallet <0x...>   → cadastra a carteira
+/defi morpho -wallet <0x...> -n Carteira Empre   → com um nome
 ```
 
 | Opção | Valor | Descrição |
@@ -65,6 +67,7 @@ Para o Morpho:
 | `-pool` | `<endereço>` | Com `orca -address`: a pool. Opcional; se vier, o bot confere se bate |
 | `-nft` | `<mint>` | Com `orca -address`: o NFT da posição. Opcional; se vier, o bot confere se bate |
 | `-wallet`, `-w` | `<0x...>` | Com `prjx` ou `morpho`: cadastra a carteira (`0x` e 40 caracteres hexadecimais), e o bot lê todas as posições abertas dela |
+| `-name`, `-n` | `<nome>` | Com `-wallet`: um nome para a carteira (opcional, até 40 caracteres), mostrado junto do endereço (`Project X · Carteira Hare (0x92…0444)`). Com espaços, sem aspas. Numa carteira já cadastrada, troca o nome |
 
 ```
 /defi orca -address Hz15TavvC8p9S7EihCbWa694kWFJGXFzs7AVpvWKRaPZ -pool CeaZcxBNLpJWtxzt58qQmfMBtJY8pQLvursXTJYGQpbN -nft C1MEDy3xt3gxiDtFkHt7HBWxxUVSarKZgt22FUzsKoji

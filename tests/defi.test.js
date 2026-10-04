@@ -527,6 +527,24 @@ describe('/defi: Project X (HyperEVM)', () => {
         assert.match((await bot.responder('/defi prjx'))[0], /🌊 Nada cadastrado do Project X/);
     });
 
+    test('-name: o nome da carteira (com espaços), na lista, no /defi e no -rm; de novo, troca', async () => {
+        const erro = async (linha, esperadoRe) => assert.match((await bot.responder(linha))[0], esperadoRe, linha);
+        assert.equal((await bot.responder(`/defi prjx -wallet ${CARTEIRA} -n Carteira Hare`))[0].split('\n')[0],
+            '✅ *Carteira do Project X cadastrada:* Carteira Hare (0x92…0444)');
+        assert.equal((await bot.dbGet('SELECT name FROM defi_positions')).name, 'Carteira Hare');
+
+        assert.match((await bot.responder('/defi -l'))[0], /1\. Project X · Carteira Hare \(0x92…0444\) _\(desde /);
+        assert.match((await bot.responder('/defi prjx'))[0], /\n📍 #9 · 👛 Carteira Hare · ⚠️/);
+
+        // Antes do -wallet também vale; na carteira já cadastrada, troca o nome
+        assert.equal((await bot.responder(`/defi prjx -n Hare 2 -wallet ${CARTEIRA}`))[0],
+            '✏️ *Nome trocado:* Project X · Hare 2 (0x92…0444)');
+
+        await erro('/defi prjx -n Sozinho', /❌ O -name vai junto com o -wallet: \/defi prjx -wallet <0x\.\.\.> -n <nome>/);
+        await erro(`/defi prjx -wallet ${VAZIA} -n ${'x'.repeat(41)}`, /❌ O nome tem até 40 caracteres/);
+        assert.equal((await bot.responder('/defi -rm 1'))[0], '🗑️ Removido: Project X · Hare 2 (0x92…0444)');
+    });
+
     test('no seu privado, o /defi mostra os endereços inteiros', async () => {
         await bot.responder(CADASTRO);
         await bot.responder(`/defi prjx -wallet ${VAZIA}`);
@@ -832,6 +850,11 @@ describe('/defi morpho', () => {
         assert.match((await bot.responder('/defi -alerta 1'))[0], /❌ O alerta do \/defi é de faixa, só da Orca e do Project X: a nº 1 é do Morpho/);
         assert.match((await bot.responder('/defi -alerta all'))[0], /🌊 Nenhuma posição da Orca ou do Project X cadastrada/);
         assert.equal((await bot.responder('/defi -rm 1'))[0], '🗑️ Removido: Morpho · carteira 0x74…97c4');
+
+        // Com o -name, o nome vai no rodapé
+        await bot.responder(`/defi morpho -w ${CARTEIRA} -n Carteira Empre`);
+        assert.match((await bot.responder('/defi morpho'))[0], /👛 Carteira: Carteira Empre · `0x74…97c4`/);
+        await bot.responder('/defi -rm 1');
 
         // A mesma carteira no Morpho e no Project X: dois cadastros
         await bot.dbRun("INSERT INTO defi_positions (protocol, wallet, created_at) VALUES ('prjx', ?, 0)", [CARTEIRA.toLowerCase()]);
