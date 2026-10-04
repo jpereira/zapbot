@@ -11,6 +11,8 @@ const { HANDLERS } = require('../comandos/index');
 const { removeDeviceSuffix, resolveLidToPhone, resolverNomeDoGrupo, resolverNomeDoPrivado } = require('../contatos');
 const { dbGet, dbPronto, dbRun } = require('../db');
 const { responderEscolha } = require('../escolhas');
+const { verificarFlood } = require('../flood');
+const { SEMPRE_LIBERADOS, avisoDeLimite, permissaoAqui } = require('../permissoes');
 const { printCall, printComandoDesconhecido, printDebug, printError, printInfo } = require('../log');
 const { GetOptFromCommand } = require('../opcoes');
 const { getSetting, isDebugMode } = require('../settings');
@@ -251,14 +253,20 @@ client.on('message_create', async (msg) => {
 
         /*
          * Os outros usam os comandos comuns se o bot.users deixar: true (todos),
-         * a pessoa (pelo telefone) ou o grupo onde o comando foi digitado. Fora
-         * isso, ignorados em silêncio (o bot não é porteiro mal-educado, só surdo).
+         * a pessoa (pelo telefone), o grupo onde o comando foi digitado ou a
+         * pessoa só nesse grupo ("telefone:grupo"), e só os da regra de cada um
+         * (src/permissoes.js). Fora isso, ignorados em silêncio (o bot não é
+         * porteiro mal-educado, só surdo). A exceção: quem só tem permissão em
+         * grupos e tenta no privado fica sabendo onde pode.
          */
-        const users = getSetting('bot.users');
-        const liberado = users.includes('all') || (senderNumber && users.includes(senderNumber)) ||
-            (isGroup && users.includes(chatId));
-        if (!admin && !liberado) {
+        const permissao = permissaoAqui({ numero: senderNumber, chatId, isGroup });
+        if (!admin && !permissao.liberado) {
             printDebug(`Comando '${command.cmd}' de ${senderName} ignorado: fora do bot.users`);
+            if (!isGroup && permissao.soNosGrupos.length) {
+                const grupos = await Promise.all(permissao.soNosGrupos.map(async (id) =>
+                    `👥 ${await resolverNomeDoGrupo(id).catch(() => null) || id}`));
+                await msg.reply(`🚫 Sem permissão para comandos no privado. Permitido apenas em: ${grupos.join(', ')}.`);
+            }
             return;
         }
 
@@ -271,6 +279,27 @@ client.on('message_create', async (msg) => {
             if (isDebugMode()) {
                 messageToSelf(`⚠️ ${senderName} tentou executar ${command.cmd} dentro de ${chatName}, mas sem permissão`);
             }
+            return;
+        }
+
+        // Proteção contra flood (só de quem não é admin): passou do limite, um aviso e depois silêncio
+        if (!admin) {
+            const flood = verificarFlood(senderNumber || senderJid, command.cmd);
+            if (!flood.liberado) {
+                if (flood.avisar) {
+                    printInfo(`Flood: ${senderName} repetiu ${command.cmd}; ignorado por ${flood.segundos}s`);
+                    const maximo = getSetting('flood.maxCommandRepeated');
+                    await msg.reply(`⚠️ Não é permitido executar o mesmo comando mais de ${maximo} ${maximo === 1 ? 'vez' : 'vezes'} seguidas. ` +
+                        `Aguarde ${flood.segundos} ${flood.segundos === 1 ? 'segundo' : 'segundos'}.`);
+                }
+                return;
+            }
+        }
+
+        // Os comandos da regra (o /bot +cmd|-cmd); o /help e o /whois sempre passam
+        if (!admin && !SEMPRE_LIBERADOS.includes(command.cmd) && !permissao.pode(command.cmd)) {
+            printDebug(`Comando '${command.cmd}' de ${senderName} ignorado: fora dos comandos dele`);
+            await msg.reply(avisoDeLimite(permissao.regras, command.cmd));
             return;
         }
 
@@ -302,7 +331,11 @@ client.on('message_create', async (msg) => {
 
         const quotedMsg = msg.hasQuotedMsg ? await msg.getQuotedMessage().catch(() => null) : null;
 
-        await handler({ msg, opts, args, quotedMsg, senderContact, senderName, senderNumber, isGroup, chatId, chatName, admin });
+        await handler({
+            msg, opts, args, quotedMsg, senderContact, senderName, senderNumber, isGroup, chatId, chatName,
+            admin,
+            podeUsar: admin ? () => true : permissao.pode
+        });
     } catch (error) {
         printError('[message_create] Erro geral controlado:', {
             error: error?.message || String(error),

@@ -9,8 +9,9 @@ const { activeCommands, findCommand, formatCommandHelp } = require('./base');
  * outros (os do bot.users), só os comandos comuns, sem os onlyAdmin. Mostrar
  * o /backup para quem não pode usar é como mostrar o cardápio da cozinha.
  */
-async function cmdHelp({ msg, args, admin }) {
-    const pode = (command) => admin || !command.onlyAdmin;
+async function cmdHelp({ msg, args, admin, podeUsar = () => true }) {
+    // Os admin, só para o dono e os admins; os outros, só os da regra deles (o /bot +cmd)
+    const pode = (command) => admin || (!command.onlyAdmin && podeUsar(command.cmd));
 
     // Lê direto do texto: o parser de opções descarta um primeiro token que começa com "/"
     let requestedCommand = args.split(/\s+/)[0];
@@ -29,7 +30,10 @@ async function cmdHelp({ msg, args, admin }) {
         }
 
         if (!pode(command)) {
-            await msg.reply(`⛔ O ${command.cmd} é só do dono do bot (e dos admins).\n💡 _Veja os que você pode usar com /help_`);
+            await msg.reply((command.onlyAdmin
+                ? `⛔ O ${command.cmd} é só do dono do bot (e dos admins).`
+                : `⛔ O ${command.cmd} não está liberado para você.`) +
+                '\n💡 _Veja os que você pode usar com /help_');
             return;
         }
 

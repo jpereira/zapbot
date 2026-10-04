@@ -111,15 +111,15 @@ variáveis do `config/.env`, em [Configuração](https://jpereira.github.io/zapb
 Digite no próprio chat. `/help` lista os comandos que você pode usar;
 `/<comando> -h` mostra a ajuda de um. Os marcados como **Admin** só respondem à
 sua conta (e aos admins extras: `/bot +o <pessoa>`). Por padrão, só você usa
-comandos: libere os comuns para todos com `/bot -admin` ou para alguns com
-`/bot +v <pessoa|grupo>`; o `/whois` diz o seu nível
+comandos: libere os comuns para alguns com `/bot +v <pessoa|grupo>` (ou para
+todos, com `/set bot.users true`); o `/whois` diz o seu nível
 ([Permissões](https://jpereira.github.io/zapbot/comandos/#permissões-onlyadmin)).
 
 | Comando | Aliases | Admin | Descrição |
 |---|---|:-:|---|
 | [`/backup`](https://jpereira.github.io/zapbot/comandos/backup/) | `/bkp` | ✅ | Backup do banco: automático todo dia; lista, detalha, restaura e envia o arquivo |
 | [`/boletos`](https://jpereira.github.io/zapbot/comandos/boletos/) | | ✅ | Sorteia 2 membros para "pagar um boleto" |
-| [`/bot`](https://jpereira.github.io/zapbot/comandos/bot/) | | ✅ | Liga/desliga todos os comandos (`-on`/`-off`) e diz quem usa: admins (`+o`/`-o`), usuários (`+v`/`-v`), todos (`-admin`) ou só você (`+admin`); `-reset` volta ao padrão; `-status` (`-s`): relatório das últimas 24 h, e `-s 06h` manda todo dia; `-info` (`-i`): versões e sistema |
+| [`/bot`](https://jpereira.github.io/zapbot/comandos/bot/) | `/b` | ✅ | Status do bot (relatório de 24 h e os usuários); liga/desliga os comandos (`-on`/`-off`) e diz quem usa: admins (`+o`/`-o`) e usuários (`+v`/`-v`, em qualquer chat ou só num grupo); `-reset` volta ao padrão; `-status` (`-s`): relatório das últimas 24 h, e `-s 06h` manda todo dia; `-info` (`-i`): versões e sistema |
 | [`/cache`](https://jpereira.github.io/zapbot/comandos/cache/) | `/c` | ✅ | Uso e limpeza do cache |
 | [`/cotacao`](https://jpereira.github.io/zapbot/comandos/cotacao/) | `/cambio` | | Cotação de EUR e USDT (e USD, GBP) contra o real: atual, abertura, fechamento e variação; alertas de preço |
 | [`/cron`](https://jpereira.github.io/zapbot/comandos/cron/) | `/agenda`, `/lembrete` | ✅ | Na hora marcada (`30m`, `às 18h`, `sexta 9h`...): envia uma mensagem (aqui ou com `-to`, em um ou vários chats) ou, como `/lembrete`, um ⏰ lembrete; pode repetir, editar e pausar, e rodar comandos no texto (`{/crypto}`) |
