@@ -62,7 +62,7 @@ src/
   flood.js              proteção contra flood (o mesmo comando além do limite: um aviso e silêncio)
   permissoes.js         quem usa os comandos comuns, e quais (bot.users e o +cmd|-cmd de cada um)
   mudo.js               /mute: quem está silenciado, os avisos cortados e a origem de cada aviso
-  defi/                 Solana e HyperEVM (RPC), a Orca e o Project X (/defi) e o -alerta de saída da faixa
+  defi/                 Solana e HyperEVM (RPC), a Orca, o Project X e o Morpho (/defi) e o -alerta de saída da faixa
   watch/                regras e verificação do /watch
   eventos/              message_create, apagadas, editadas, presença
   comandos/             comandos.json (definição), um arquivo por comando,
@@ -139,7 +139,7 @@ entre os casos.
 | `agenda.test.js` | Datas digitadas (`6h`, `+2h`, `às 18h`, `sexta`...) e o `/cron`, nos modos mensagem e lembrete, com vários `-to` num item só, `-edit`, `-pause`/`-resume` e os `{/comando}` no texto (e o `-test`) |
 | `backup.test.js` | `/backup` (criação, lista, restauração, envio no privado, por e-mail e com um ou vários `-to`) e o backup diário |
 | `cotacoes.test.js` | `/cotacao`, `/crypto` (e o filtro por moeda) e os alertas de preço (com um ou vários `-to`, o `-msg` e o `-rm` de vários) |
-| `defi.test.js` | Solana (base58, PDA), contas da Orca (conferidas com o SDK oficial), o Project X (HyperEVM simulada) e o `/defi`: o `-s` por protocolo, o `-rm` de vários, a lista (inteira só no privado, com o 🔔 e o limite) e o `-alerta` (saída e volta da faixa, o `-taxas`, o `-alerta` no cadastro e vários `-to`) |
+| `defi.test.js` | Solana (base58, PDA), contas da Orca (conferidas com o SDK oficial), o Project X (HyperEVM simulada), o Morpho (API simulada, com as contas conferidas com as da API) e o `/defi`: o filtro por protocolo, o `-rm` de vários, os endereços (inteiros só no privado), a lista (com o 🔔 e o limite) e o `-alerta` (saída e volta da faixa, o `-taxas`, o `-alerta` no cadastro e vários `-to`) |
 | `externos.test.js` | `/cve`, `/tempo`, `/news`, `/gpt`, `/tldr`, `/traduzir`, `/giphy`, `/meme`, `/joke`, `/kernel`, `/pixelart` |
 | `grupo.test.js` | `/todos`, `/boletos`, `/listageral`, `/walissu`, `/enquete` (e o `-r`), `/sticker` (e o `-txt`) |
 | `get-cache.test.js` | `/get` (e o anti-SSRF), `/cache` e a limpeza periódica |
@@ -275,6 +275,12 @@ bot) e a lista `commands`. Cada entrada de `commands` segue este formato:
   `/bot +o`).
 - `"espacado": true` (no comando) separa as opções do `-h` com uma linha em
   branco: para ajudas longas, como a do `/bot`.
+- `"protocolos"` (no comando) dá uma ajuda para cada protocolo, como no
+  `/defi`: `{ "orca": { "nome": "Orca", "usage": "...", "help": "..." } }`, e cada
+  opção diz de quais é (`"protocolos": ["orca"]`; sem a lista, vale para todos).
+  O `/defi orca -help` (ou `/help defi orca`) mostra o `usage` e o `help` do
+  protocolo e só as opções que valem nele; o `/defi -help` mostra todas,
+  agrupadas (` > Orca`, ` > Project X e Morpho`, ` > Todos`).
 - Os textos (`usage`, `help` e `desc`) podem citar `${CACHE_DIR}`,
   `${MEDIA_DIR}` e `${TMP_DIR}`: a ajuda troca pelo caminho real (ex.: o
   `/cache -h`).

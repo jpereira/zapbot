@@ -6,11 +6,15 @@ Acompanha posições em DeFi, de três protocolos:
 - [Project X](https://www.prjx.com/portfolio) (na HyperEVM, da Hyperliquid): você
   cadastra a carteira, e o bot lê as posições abertas dela
   ([Project X](#project-x)).
-- [Morpho](https://morpho.org/) (empréstimos, na Base e em outras redes): sem
-  cadastro, o bot consulta a carteira na hora ([Morpho](#morpho)).
+- [Morpho](https://morpho.org/) (empréstimos, na Base e em outras redes): você
+  cadastra a carteira, e o bot lê o colateral, a dívida e o risco dela
+  ([Morpho](#morpho)).
 
-O `/defi` lê tudo on-chain na hora e mostra o equivalente ao "Position Details"
-de cada posição; com `orca` ou `prjx`, só as daquele protocolo. Com o `-alerta`,
+A Orca cadastra a **posição** (`-address`); o Project X e o Morpho, a
+**carteira** (`-wallet`). O `/defi` lê tudo na hora e mostra o equivalente ao
+"Position Details" de cada posição; com `orca`, `prjx` ou `morpho`, só as
+daquele protocolo. No seu privado, os endereços e as carteiras aparecem
+inteiros; fora dele, abreviados (`0x92…0444`). Com o `-alerta`,
 o bot avisa quando uma posição sai da faixa, quando volta e, com o `-taxas`,
 quando as taxas a coletar passam de um valor
 ([Alerta de saída da faixa](#alerta-de-saída-da-faixa)).
@@ -19,6 +23,7 @@ Para todos os protocolos:
 
 ```
 /defi                          → o Position Details de todos
+/defi -help                    → a ajuda de todos (/defi orca -help: só a da Orca)
 /defi -l                       → a lista dos cadastros
 /defi -rm 2                    → remove o nº 2
 /defi -rm 1 3                  → remove o 1 e o 3 (ou -rm 1,3; -rm all remove todos)
@@ -37,33 +42,34 @@ Para o Project X:
 
 ```
 /defi prjx                     → só as do Project X
-/defi prjx -address <0x...>    → cadastra a carteira
-/defi prjx -address <0x...> -alerta   → cadastra e já liga o alerta (no seu privado)
+/defi prjx -wallet <0x...>     → cadastra a carteira
+/defi prjx -wallet <0x...> -alerta    → cadastra e já liga o alerta (no seu privado)
 ```
 
 Para o Morpho:
 
 ```
-/defi morpho                   → a carteira do MORPHO_WALLET_ADDRESS (ou do defi.morpho.wallet)
-/defi morpho -w <0x...>        → outra carteira
+/defi morpho                   → as carteiras cadastradas (sem nenhuma: a do MORPHO_WALLET_ADDRESS)
+/defi morpho -wallet <0x...>   → cadastra a carteira
 ```
 
 | Opção | Valor | Descrição |
 |---|---|---|
-| *(protocolo)* | `orca`, `prjx` ou `morpho` | Sozinho, mostra o Position Details só dele; com `-address` (`orca` e `prjx`), cadastra. Sem protocolo, o `/defi` mostra todos os cadastrados |
+| *(protocolo)* | `orca`, `prjx` ou `morpho` | Sozinho, mostra o Position Details só dele; com `-address` (`orca`) ou `-wallet` (`prjx` e `morpho`), cadastra; com `-help`, mostra a ajuda só dele. Sem protocolo, o `/defi` mostra todos os cadastrados |
 | `-list`, `-l` | | Lista os cadastros, com 🔔 nos que têm alerta (e o limite das taxas: `🔔 ≥ $2,000.00`). No seu privado, com os endereços inteiros; fora dele, abreviados (`Hz15…RaPZ`) |
 | `-rm` | `<nº...\|all>` | Remove o cadastro nº N, vários (`-rm 1 3` ou `-rm 1,3`) ou todos; se algum nº não existe, nenhum sai. Junto com `-alerta`: só desliga o alerta da nº N (ou de todas) |
-| `-alerta`, `-a` | `[nº\|all\|valor]` | Sem nº: lista os alertas. Com nº (ou `all`): avisa quando a posição sair da faixa e quando voltar. No cadastro (com `-address`), liga o alerta da posição nova, no seu privado (ou no `-to`); o valor é o limite das taxas, como o `-taxas` (`-alerta 2000`). Veja [Alerta de saída da faixa](#alerta-de-saída-da-faixa) |
+| `-alerta`, `-a` | `[nº\|all\|valor]` | Sem nº: lista os alertas. Com nº (ou `all`): avisa quando a posição sair da faixa e quando voltar. Só da Orca e do Project X (o Morpho não tem faixa). No cadastro (com `-address` ou `-wallet`), liga o alerta da posição nova, no seu privado (ou no `-to`); o valor é o limite das taxas, como o `-taxas` (`-alerta 2000`). Veja [Alerta de saída da faixa](#alerta-de-saída-da-faixa) |
 | `-taxas` | `<valor\|off>` | Junto com `-alerta`: avisa também quando as taxas a coletar passarem do valor, em dólar (ex.: `-taxas 50`). Avisa uma vez e de novo depois de você coletar; `off` tira |
 | `-to` | `<destino>` | Junto com `-alerta`: para onde vai o aviso. Um contato (`/Jorge Pereira/`), uma menção (`@Fulano Da Silva`), um grupo (`/Grupo L200/`), um número (`+5521999999999`) ou e-mail (`email` é o `QRCODE_EMAIL_SMTP_TO`) ([Destinos](index.md#destinos-contato-grupo-número-ou-e-mail)). Repita para vários: o aviso sai em todos. Sem ele, o seu privado |
-| `-address` | `<endereço>` | Cadastra: com `orca`, o endereço da posição da Orca; com `prjx`, a carteira do Project X (`0x` e 40 caracteres hexadecimais) |
+| `-address` | `<endereço>` | Com `orca`: cadastra a posição da Orca pelo endereço dela |
 | `-pool` | `<endereço>` | Com `orca -address`: a pool. Opcional; se vier, o bot confere se bate |
 | `-nft` | `<mint>` | Com `orca -address`: o NFT da posição. Opcional; se vier, o bot confere se bate |
-| `-wallet`, `-w` | `<0x...>` | Com `morpho`: a carteira consultada. Sem ele, a do `MORPHO_WALLET_ADDRESS` (no `config/.env`) ou do setting `defi.morpho.wallet`. Veja [Morpho](#morpho) |
+| `-wallet`, `-w` | `<0x...>` | Com `prjx` ou `morpho`: cadastra a carteira (`0x` e 40 caracteres hexadecimais), e o bot lê todas as posições abertas dela |
 
 ```
 /defi orca -address Hz15TavvC8p9S7EihCbWa694kWFJGXFzs7AVpvWKRaPZ -pool CeaZcxBNLpJWtxzt58qQmfMBtJY8pQLvursXTJYGQpbN -nft C1MEDy3xt3gxiDtFkHt7HBWxxUVSarKZgt22FUzsKoji
-/defi prjx -address 0x926024824BAEAf3ee0b7A2EEFA5A216743230444
+/defi prjx -wallet 0x926024824BAEAf3ee0b7A2EEFA5A216743230444
+/defi morpho -wallet 0x74459EA7df673CFd90afbe39F635AcE08Ccb97C4
 /defi -alerta 1        → avisa no seu privado quando a nº 1 sair da faixa (e voltar)
 /defi -a 1 -taxas 50   → e quando as taxas a coletar da nº 1 passarem de $50
 ```
@@ -121,7 +127,7 @@ posições, na carteira de quem a abriu. Por isso o cadastro é a **carteira**, 
 `/defi prjx` mostra cada posição aberta dela, da mais nova para a mais velha:
 
 ```
-/defi prjx -address 0x926024824BAEAf3ee0b7A2EEFA5A216743230444
+/defi prjx -wallet 0x926024824BAEAf3ee0b7A2EEFA5A216743230444
 ✅ Carteira do Project X cadastrada: 0x92…0444
 📍 2 posições abertas.
 
@@ -162,8 +168,11 @@ por todas as redes do setting `defi.morpho.chains` (padrão: `8453`, a Base;
 para incluir a Ethereum, `/set defi.morpho.chains 8453 1`). A consulta é só de
 leitura: o bot não pede nem usa chave privada.
 
-A carteira vem do `-wallet` ou, sem ele, do `MORPHO_WALLET_ADDRESS` no
-`config/.env` (ou do setting `defi.morpho.wallet`, que vale quando a variável
+Cadastre a carteira com `/defi morpho -wallet <0x...>` (o bot confere na API
+antes de guardar): ela entra no `/defi`, no `-l` e no `-rm`, junto com as
+outras. O `-alerta` não vale para o Morpho, que não tem faixa. Sem nenhuma
+carteira cadastrada, o `/defi morpho` consulta a do `MORPHO_WALLET_ADDRESS` no
+`config/.env` (ou a do setting `defi.morpho.wallet`, que vale quando a variável
 está vazia). A resposta fica 30 segundos em memória: repetir o comando nesse
 intervalo não consulta a API de novo.
 

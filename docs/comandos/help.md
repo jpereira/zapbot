@@ -15,4 +15,5 @@ usar:
 /help
 /help get
 /h /show
+/help defi orca    → só a ajuda da Orca no /defi (o mesmo que /defi orca -help)
 ```

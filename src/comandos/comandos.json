@@ -573,8 +573,8 @@
         },
         {
             "cmd": "/defi",
-            "usage": "/defi [orca|prjx]  ou  /defi -l  ou  /defi -rm <nº...|all>  ou  /defi -alerta <nº|all> [-to <destino>]... [-taxas <valor>]  ou  /defi orca -address <endereço> [-pool <endereço>] [-nft <mint>] [-alerta [valor]]  ou  /defi prjx -address <0x...> [-alerta [valor]]  ou  /defi morpho [-wallet <0x...>]",
-            "help": "Posições de liquidez da Orca (Solana) e do Project X (HyperEVM): saldo, faixa, preço e taxas a coletar, lidos on-chain. Sem nada, mostra todas; com orca ou prjx, só as daquele protocolo. Com -alerta, avisa quando uma posição sai da faixa, quando volta e, com -taxas, quando as taxas a coletar passam de um valor. Com morpho, mostra posição, empréstimos e risco no Morpho.",
+            "usage": "/defi [orca|prjx|morpho]  ou  /defi -l  ou  /defi -rm <nº...|all>  ou  /defi -alerta <nº|all> [-to <destino>]... [-taxas <valor>]  ou  /defi <protocolo> <opções>",
+            "help": "Posições da Orca (Solana), do Project X (HyperEVM) e do Morpho, lidas na hora: saldo, faixa e taxas a coletar das de liquidez; colateral, dívida e risco das de empréstimo. Sem nada, mostra todas; com o protocolo, só as dele. Cada protocolo tem a sua ajuda. Ex: /defi orca -help, /defi prjx -help, /defi morpho -help",
             "cmd_opts": [
                 {
                     "opts": [
@@ -583,8 +583,11 @@
                     "values": [
                         "<endereço>"
                     ],
-                    "desc": "Cadastra: com orca, o endereço da posição da Orca; com prjx, a carteira do Project X (0x e 40 caracteres hexadecimais), da qual o bot lê todas as posições abertas.",
-                    "cron": false
+                    "desc": "Cadastra a posição da Orca pelo endereço dela.",
+                    "cron": false,
+                    "protocolos": [
+                        "orca"
+                    ]
                 },
                 {
                     "opts": [
@@ -594,8 +597,12 @@
                     "values": [
                         "[nº|all|valor]"
                     ],
-                    "desc": "Sem nº: lista os alertas. Com nº (ou all): avisa quando a posição sair da faixa e quando voltar, no seu privado ou nos destinos do -to (verificada a cada defi.alerta.intervalMin minutos). Com -rm: desliga. No cadastro (com -address), liga o alerta da posição nova; o valor é o limite das taxas em dólar (como o -taxas). Ex: /defi -alerta 1, /defi orca -address <endereço> -alerta 2000",
-                    "cron": false
+                    "desc": "Sem nº: lista os alertas. Com nº (ou all): avisa quando a posição sair da faixa e quando voltar, no seu privado ou nos destinos do -to (verificada a cada defi.alerta.intervalMin minutos). Com -rm: desliga. No cadastro (com -address ou -wallet), liga o alerta da posição nova; o valor é o limite das taxas em dólar (como o -taxas). Ex: /defi -alerta 1, /defi orca -address <endereço> -alerta 2000",
+                    "cron": false,
+                    "protocolos": [
+                        "orca",
+                        "prjx"
+                    ]
                 },
                 {
                     "opts": [
@@ -613,7 +620,10 @@
                         "<mint>"
                     ],
                     "desc": "Com orca -address: o NFT da posição (opcional; o bot confere se bate).",
-                    "cron": false
+                    "cron": false,
+                    "protocolos": [
+                        "orca"
+                    ]
                 },
                 {
                     "opts": [
@@ -623,7 +633,10 @@
                         "<endereço>"
                     ],
                     "desc": "Com orca -address: a pool (opcional; o bot confere se bate).",
-                    "cron": false
+                    "cron": false,
+                    "protocolos": [
+                        "orca"
+                    ]
                 },
                 {
                     "opts": [
@@ -643,7 +656,11 @@
                         "<valor|off>"
                     ],
                     "desc": "Junto com -alerta: avisa também quando as taxas a coletar passarem do valor, em dólar (ex.: -taxas 50). Avisa uma vez e de novo depois de você coletar. off tira.",
-                    "cron": false
+                    "cron": false,
+                    "protocolos": [
+                        "orca",
+                        "prjx"
+                    ]
                 },
                 {
                     "opts": [
@@ -653,7 +670,11 @@
                         "<destino>"
                     ],
                     "desc": "Junto com -alerta: avisa num contato, num grupo, num número ou por e-mail em vez do seu privado (vários com o nome: você escolhe na lista). Repita para avisar em vários. Ex: -to /Jorge Pereira/, -to @Fulano (menção), -to /Grupo L200/ -to /Família/, -to +5521999999999, -to email (o QRCODE_EMAIL_SMTP_TO), -to voce@exemplo.com",
-                    "cron": false
+                    "cron": false,
+                    "protocolos": [
+                        "orca",
+                        "prjx"
+                    ]
                 },
                 {
                     "opts": [
@@ -663,17 +684,39 @@
                     "values": [
                         "<0x...>"
                     ],
-                    "desc": "Com morpho: a carteira consultada (sem ele, a do MORPHO_WALLET_ADDRESS no config/.env ou do setting defi.morpho.wallet). Mostra colateral, dívida, Health Rate, LTV, LLTV e preço de liquidação de cada mercado, e os vaults, nas redes do defi.morpho.chains. Ex: /defi morpho -w 0x1234...abcd"
+                    "desc": "Cadastra a carteira (0x e 40 caracteres hexadecimais): o bot lê todas as posições abertas dela. Ex: /defi prjx -wallet <0x...>, /defi morpho -w <0x...>",
+                    "protocolos": [
+                        "prjx",
+                        "morpho"
+                    ],
+                    "cron": false
                 },
                 {
                     "argv": [
                         "[orca|prjx|morpho]"
                     ],
-                    "desc": "O protocolo: orca (Orca, na Solana), prjx (Project X, na HyperEVM) ou morpho (Morpho, consultado na hora). Sozinho, mostra o Position Details só dele; com -address (orca e prjx), cadastra. Ex: /defi, /defi orca, /defi morpho"
+                    "desc": "O protocolo: orca (Orca, na Solana), prjx (Project X, na HyperEVM) ou morpho (Morpho). Sozinho, mostra só as posições dele. Ex: /defi, /defi orca, /defi morpho"
                 }
             ],
             "cron": true,
-            "onlyAdmin": true
+            "onlyAdmin": true,
+            "protocolos": {
+                "orca": {
+                    "nome": "Orca",
+                    "usage": "/defi orca  ou  /defi orca -address <endereço> [-pool <endereço>] [-nft <mint>] [-alerta [valor]]",
+                    "help": "Posições de liquidez da Orca (Whirlpools, na Solana): saldo, faixa, preço e taxas a coletar, lidos on-chain. Cada posição é cadastrada pelo endereço dela (-address). Ex: /defi orca, /defi orca -address <endereço> -alerta 2000"
+                },
+                "prjx": {
+                    "nome": "Project X",
+                    "usage": "/defi prjx  ou  /defi prjx -wallet <0x...> [-alerta [valor]]",
+                    "help": "Posições de liquidez do Project X (na HyperEVM): saldo, faixa, preço e taxas a coletar, lidos on-chain. Cadastre a carteira (-wallet): o bot lê todas as posições abertas dela. Ex: /defi prjx, /defi prjx -wallet <0x...> -alerta"
+                },
+                "morpho": {
+                    "nome": "Morpho",
+                    "usage": "/defi morpho  ou  /defi morpho -wallet <0x...>",
+                    "help": "Posição, empréstimos e risco no Morpho (na Base e nas redes do setting defi.morpho.chains): colateral, dívida, Health Rate, LTV, LLTV e preço de liquidação de cada mercado, e os vaults. Cadastre a carteira (-wallet); sem cadastro, vale a do MORPHO_WALLET_ADDRESS (ou do setting defi.morpho.wallet). Ex: /defi morpho, /defi morpho -wallet <0x...>"
+                }
+            }
         },
         {
             "cmd": "/enquete",
@@ -803,7 +846,7 @@
         },
         {
             "cmd": "/help",
-            "usage": "/help [comando]",
+            "usage": "/help [comando] [protocolo]",
             "aliases": [
                 "/h"
             ],
@@ -814,6 +857,12 @@
                         "[comando]"
                     ],
                     "desc": "Comando (com ou sem /, nome ou alias). Ex: /help get"
+                },
+                {
+                    "argv": [
+                        "[protocolo]"
+                    ],
+                    "desc": "No /defi, só a ajuda de um protocolo (orca, prjx ou morpho), como o /defi orca -help. Ex: /help defi orca"
                 }
             ],
             "onlyAdmin": false
