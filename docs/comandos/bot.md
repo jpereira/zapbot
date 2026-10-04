@@ -34,8 +34,8 @@ reinícios:
 
 O `-on`/`-off` combina com o `-users` e o `-all-users` (`/bot -on -users` liga e
 mostra os usuários); `-on` com `-off` no mesmo comando é recusado. Os
-`+o`/`-o`/`+v`/`-v` vão um de cada vez (com o `-all-users`, se quiser a
-resposta com todos).
+`+o`/`-o`/`+v`/`-v` vão um de cada vez; junto deles, o `+cmd`/`-cmd` (só com
+usuários) e o `-all-users` (a resposta com todos).
 
 ## Lista de usuários
 
@@ -108,6 +108,7 @@ Quando usar cada opção:
 | Alguém está abusando dos comandos num grupo | `/bot -v`, digitado no grupo (ou `/bot -v /Grupo/`) |
 | Liberar o bot para a família, só no grupo dela | `/bot +v`, digitado no grupo (ou `/bot +v /Grupo Familia/` de qualquer chat) |
 | Liberar para uma pessoa, em qualquer chat | `/bot +v /Camila Gama/` |
+| Liberar só alguns comandos para alguém | `/bot +v +cmd /cotacao,/crypto /Sofia Izabel/` |
 | Dar a alguém os comandos admin | `/bot +o /Jorge Pereira/` |
 | Parar o bot por completo por um tempo, sem derrubar o container | `/bot -off` |
 | Desfazer tudo: só você de novo, sem admins nem usuários | `/bot -reset` |
@@ -306,7 +307,8 @@ vez e ignora todos os comandos da pessoa até o intervalo acabar:
 ## Voltar ao padrão
 
 O `/bot -reset` (`-r`) desfaz tudo o que o `/bot` mudou: liga o bot, tira os
-admins extras e os usuários, e volta só você usando comandos. Antes, ele
+admins extras, os usuários e os limites de comandos deles, e volta só você
+usando comandos. Antes, ele
 pergunta: responda **sim** em até 10 segundos, no mesmo chat, para confirmar
 (**não**, ou nada, deixa tudo como está). Com `force`, volta direto, sem
 perguntar. O envio diário do [`-status`](#status-do-bot) fica como está. Só o

@@ -128,11 +128,13 @@ Por onde começar:
   consultam a internet (`/gpt`, `/tempo`, `/cve`, `/news`...) usam os serviços
   da tabela [Serviços externos](configuracao.md#serviços-externos).
 - **Controle**: o [`/bot`](comandos/bot.md) mostra o status (o relatório de 24 h
-  e quem usa), liga/desliga todos os comandos (`-on`/`-off`) e diz quem usa:
+  e os usuários), liga/desliga todos os comandos (`-on`/`-off`) e diz quem usa:
   você, os [admins extras](comandos/bot.md#admins-extras) (`+o`/`-o`) e os
-  [usuários](comandos/bot.md#usuários) (`+v`/`-v`: pessoas e grupos); o `-reset`
-  volta ao padrão, o `-status 06h` manda o relatório todo dia (no seu privado,
-  noutros chats ou por e-mail) e o `-info` mostra as versões do que o bot usa.
+  [usuários](comandos/bot.md#usuários) (`+v`/`-v`: pessoas e grupos, com os
+  comandos de cada um limitados pelo `+cmd`/`-cmd`, se quiser); o `-reset` volta
+  ao padrão, o `-status 06h` manda o relatório todo dia (no seu privado, noutros
+  chats ou por e-mail) e o `-info` mostra as versões do que o bot usa. Quem não é
+  admin tem uma [proteção contra flood](comandos/bot.md#proteção-contra-flood).
   O [`/whois`](comandos/whois.md) diz o nível de cada um no chat.
 - **Reconexão**: em caso de queda o cliente é reiniciado sozinho, exceto quando o
   motivo exige ação manual (`LOGOUT`, `CONFLICT`, `UNPAIRED`...). Sem internet,
