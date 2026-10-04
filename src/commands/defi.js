@@ -74,17 +74,22 @@ const WITH_RANGE = ['orca', 'prjx'];
 const addressAlt2 = (p) => p.address ?? p.wallet;
 
 /*
- * "Orca · ime1…VPcg" or "Project X · wallet 0x12…5678". The end says how the
- * address appears: abbreviated (the default) or in full (in your private chat).
+ * "Orca · ime1…VPcg", "Project X · wallet 0x12…5678" or, with -name,
+ * "Project X · Wallet Hare (0x12…5678)". The end says how the address appears:
+ * abbreviated (the default) or in full (in your private chat).
  */
+const walletWithName = (p, end) => (p.name ? `${p.name} (${end(p.wallet)})` : `carteira ${end(p.wallet)}`);
 const describe = (p, end = short) => (WALLET.includes(p.protocol)
-    ? `${PROTOCOLS[p.protocol]} · carteira ${end(p.wallet)}`
+    ? `${PROTOCOLS[p.protocol]} · ${walletWithName(p, end)}`
     : `${PROTOCOLS[p.protocol] ?? p.protocol} · ${end(p.address)}`);
+
+// The wallet name (-name): up to 40 characters, on one line
+const MAX_NAME = 40;
 
 /**
  * "Position Details" text of a Project X position (from walletPositions).
  */
-function positionPrjxText(x) {
+function positionPrjxText(x, nameAlt = null) {
     const usd = (q, price) => (price === null ? '' : ` (${fmtUsd(q * price)})`);
     const total = (a, b) => (x.usd1 === null ? '' : ` ${fmtUsd(a * x.usd0 + b * x.usd1)}`);
     const status = x.naFaixa
@@ -92,7 +97,7 @@ function positionPrjxText(x) {
         : `⚠️ *fora da faixa* (preço ${x.preco < x.inferior ? 'abaixo' : 'acima'}: a posição não rende taxas)`;
 
     return `🌊 *Project X · ${x.simbolo0}/${x.simbolo1}* · taxa ${(x.taxa / 10000).toLocaleString('en-US', { maximumFractionDigits: 2 })}%\n` +
-        `📍 #${x.id} · ${status}\n\n` +
+        `📍 #${x.id}${nameAlt ? ` · 👛 ${nameAlt}` : ''} · ${status}\n\n` +
         `💰 *Saldo:*${total(x.qtd0, x.qtd1)}\n` +
         `   • ${fmtQtd(x.qtd0)} ${x.simbolo0}${usd(x.qtd0, x.usd0)}\n` +
         `   • ${fmtQtd(x.qtd1)} ${x.simbolo1}${usd(x.qtd1, x.usd1)}\n\n` +
@@ -113,7 +118,7 @@ function positionPrjxText(x) {
 async function readRegistration(p, end = short) {
     if (p.protocol === 'morpho') {
         const r = await positionsMorpho(p.wallet);
-        return { naFaixa: null, textos: r.posicoes.length ? [textMorpho(r, end)] : [], foraDaFaixa: [], taxasUsd: null };
+        return { naFaixa: null, textos: r.posicoes.length ? [textMorpho(r, end, p.name)] : [], foraDaFaixa: [], taxasUsd: null };
     }
 
     if (p.protocol === 'prjx') {
@@ -121,8 +126,8 @@ async function readRegistration(p, end = short) {
         const withPrice = positions.filter(x => x.usd1 !== null);
         return {
             naFaixa: positions.length ? positions.every(x => x.naFaixa) : null,
-            textos: positions.map(positionPrjxText),
-            foraDaFaixa: positions.filter(x => !x.naFaixa).map(positionPrjxText),
+            textos: positions.map(x => positionPrjxText(x, p.name)),
+            foraDaFaixa: positions.filter(x => !x.naFaixa).map(x => positionPrjxText(x, p.name)),
             taxasUsd: withPrice.length ? withPrice.reduce((s, x) => s + x.taxa0 * x.usd0 + x.taxa1 * x.usd1, 0) : null
         };
     }
@@ -242,7 +247,8 @@ const WALLET_TIP = {
 
 async function registerWallet(msg, o, protocol, end) {
     const wallet = String(o.wallet ?? '').trim().replace(/^<(.*)>$/, '$1');
-    const nameAlt = PROTOCOLS[protocol];
+    const protocolName = PROTOCOLS[protocol];
+    const nickname = o.name || null;
 
     if (!wallet) {
         await msg.reply(`❌ Informe a carteira: -wallet <0x...>\n💡 _/defi ${protocol} -wallet 0x12b2C3d4E5f60718293A4b5C6d7E8f9012345678_`);
@@ -250,6 +256,14 @@ async function registerWallet(msg, o, protocol, end) {
     }
     if (!isAddressEvm(wallet)) {
         await msg.reply(`❌ -wallet: "${wallet}" não é uma carteira EVM (0x e 40 caracteres hexadecimais).`);
+        return;
+    }
+
+    // Already registered, with -name: changes the name
+    const existing = await dbGet('SELECT * FROM defi_positions WHERE protocol = ? AND wallet = ?', [protocol, wallet.toLowerCase()]);
+    if (existing && nickname) {
+        await dbRun('UPDATE defi_positions SET name = ? WHERE id = ?', [nickname, existing.id]);
+        await msg.reply(`✏️ *Nome trocado:* ${describe({ ...existing, name: nickname }, end)}`);
         return;
     }
     if (await limitOrRepeated(msg, protocol, wallet, end)) return;
@@ -263,8 +277,9 @@ async function registerWallet(msg, o, protocol, end) {
         return;
     }
 
-    await dbRun('INSERT INTO defi_positions (protocol, wallet, created_at) VALUES (?, ?, ?)', [protocol, wallet.toLowerCase(), Date.now()]);
-    await msg.reply(`✅ *Carteira do ${nameAlt} cadastrada:* ${end(wallet)}\n` +
+    await dbRun('INSERT INTO defi_positions (protocol, wallet, name, created_at) VALUES (?, ?, ?, ?)',
+        [protocol, wallet.toLowerCase(), nickname, Date.now()]);
+    await msg.reply(`✅ *Carteira do ${protocolName} cadastrada:* ${nickname ? `${nickname} (${end(wallet)})` : end(wallet)}\n` +
         (openAlt ? `📍 ${plural(openAlt, 'posição aberta', 'posições abertas')}.` : `ℹ️ Nenhuma posição aberta agora: o /defi ${protocol} mostra quando houver.`) +
         `\n💡 _Veja com /defi ${protocol}_`);
     return wallet.toLowerCase();
@@ -425,9 +440,9 @@ const positionTitle = (p) => (p.tipo === 'vault'
  * The /defi morpho message: with one position, it directly; with several, the
  * totals and each with its own Health Rate (one market's does not apply to another).
  */
-function textMorpho(r, end = short) {
+function textMorpho(r, end = short, nameAlt = null) {
     const { posicoes: positions, totais: t } = r;
-    const footer = `👛 Carteira: \`${end(r.carteira)}\`\n` +
+    const footer = `👛 Carteira: ${nameAlt ? `${nameAlt} · ` : ''}\`${end(r.carteira)}\`\n` +
         `🌐 ${positions.length > 1 ? 'Redes' : 'Rede'}: \`${[...new Set(positions.map(p => p.rede))].join(', ')}\`\n` +
         `🕐 Atualizado: \`${new Date(r.quando).toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo' })}\``;
     const withoutPrice = t.semPreco.length ? `\n_Sem preço em USD (fora dos totais): ${t.semPreco.join(', ')}_` : '';
@@ -684,7 +699,7 @@ const alertBell = (p) => (p.alert ? ` 🔔${p.alert_fees ? ` ≥ ${fmtUsd(p.aler
 // The list: in your private chat, the full addresses; outside it, abbreviated
 function listText(positions, end) {
     const line = (p, i) => `${i + 1}. ${PROTOCOLS[p.protocol] ?? p.protocol} · ` +
-        (WALLET.includes(p.protocol) ? `carteira ${end(p.wallet)}` : `${end(p.address)} · pool ${end(p.pool)}`) +
+        (WALLET.includes(p.protocol) ? walletWithName(p, end) : `${end(p.address)} · pool ${end(p.pool)}`) +
         ` _(desde ${formatData(p.created_at).split(',')[0]})_${alertBell(p)}`;
 
     return `🌊 *Posições DeFi* (${positions.length})\n\n${positions.map(line).join('\n')}\n\n` +
@@ -715,6 +730,24 @@ async function cmdDefi({ msg, opts: commandOpts, args, chatId }) {
     const word = opts.argv.find(protocolAlt2);
     const argv = opts.argv.filter(a => a !== word);
     const protocol = protocolAlt2(word);
+
+    /*
+     * -name: the wallet name, with spaces (-n Carteira Hare). The parser
+     * splits the words; those left in argv are the name's.
+     */
+    if (opts.given.has('name')) {
+        const nameAlt = [o.name, ...argv].filter(Boolean).join(' ').trim();
+        argv.length = 0;
+        const errorAlt = !opts.given.has('wallet')
+            ? `❌ O -name vai junto com o -wallet: /defi ${protocol && WALLET.includes(protocol) ? protocol : 'prjx'} -wallet <0x...> -n <nome>`
+            : !nameAlt ? '❌ Informe o nome: -n <nome> (ex.: -n Carteira Hare).'
+                : nameAlt.length > MAX_NAME ? `❌ O nome tem até ${MAX_NAME} caracteres.` : null;
+        if (errorAlt) {
+            await msg.reply(errorAlt);
+            return;
+        }
+        o.name = nameAlt;
+    }
 
     if (opts.given.has('address') || opts.given.has('wallet')) {
         await registerWithAlert(msg, opts, protocol, { comDestino: withDestination, destinosTexto: destinationsText }, end);

@@ -26,7 +26,7 @@ async function addColumns(table, columns) {
 /*
  * /defi: the registrations. The columns have the option names: address (the -address
  * of Orca, the position) and wallet (the -wallet of Project X and Morpho, the
- * wallet); a registration has one or the other.
+ * wallet); a registration has one or the other. The name is the wallet's -name.
  */
 const CREATE_DEFI_POSITIONS = `
     CREATE TABLE IF NOT EXISTS defi_positions (
@@ -34,6 +34,7 @@ const CREATE_DEFI_POSITIONS = `
         protocol TEXT NOT NULL,
         address TEXT,
         wallet TEXT,
+        name TEXT,
         nft TEXT,
         pool TEXT,
         created_at INTEGER NOT NULL,
@@ -285,7 +286,7 @@ async function initializeDb() {
      */
     await migrateDefiForAddressAndWallet();
     await dbRun(CREATE_DEFI_POSITIONS);
-    await addColumns('defi_positions', ALERT_DEFI_COLUMNS);
+    await addColumns('defi_positions', { name: 'TEXT', ...ALERT_DEFI_COLUMNS });
 
     /*
      * /mute: people and groups with muted notices (what: deleted, edited,

@@ -413,9 +413,9 @@ describe('ajuda', () => {
         assert.match(general, / > Orca\n {2}-address <endereço> +Cadastra a posição da Orca/);
 
         const morpho = formatCommandHelp(findCommand('/defi'), { protocolo: 'morpho' });
-        assert.match(morpho, /^Usage: \/defi morpho\n {7}\/defi morpho -wallet <0x\.\.\.>\nPosição, empréstimos e risco no Morpho/);
+        assert.match(morpho, /^Usage: \/defi morpho\n {7}\/defi morpho -wallet <0x\.\.\.> \[-name <nome>\]\nPosição, empréstimos e risco no Morpho/);
         const optionsAlt = morpho.match(/^ {2}-\S+/gm);
-        assert.deepEqual(optionsAlt, ['  -list,', '  -rm', '  -wallet,']);
+        assert.deepEqual(optionsAlt, ['  -list,', '  -name,', '  -rm', '  -wallet,']);
         assert.doesNotMatch(morpho, / > |Arguments:/);
 
         const orca = formatCommandHelp(findCommand('/defi'), { protocolo: 'orca' });
