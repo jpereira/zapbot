@@ -1,5 +1,5 @@
 /*
- * Comando /show: mensagens apagadas e editadas.
+ * Comando /show: mensagens apagadas, editadas e status apagados.
  */
 
 const fs = require('fs-extra');
@@ -9,6 +9,8 @@ const { getCommandSyntax } = require('./base');
 const { DAY_MS } = require('../constantes');
 const { idsDoChatAtual } = require('../contatos');
 const { dbAll, dbGet, dbPronto, dbRun } = require('../db');
+const { resolverDestino } = require('../destinos');
+const { aguardarEscolha, autorDe } = require('../escolhas');
 const { enviarMensagemApagada, isStatus, resolverAutorApagada } = require('../eventos/apagadas');
 const { enviarMensagemEditada } = require('../eventos/editadas');
 const { printError, printInfo } = require('../log');
@@ -17,154 +19,228 @@ const { humanSize, isCaminhoDeMidia } = require('../util/arquivos');
 const { esperar, formatarData, paraMs, plural, semAcentos } = require('../util/formatar');
 
 /*
- * /show: reexibe as mensagens APAGADAS (padrão, ou -d) ou EDITADAS (-e)
- * guardadas no cache, no mesmo formato dos alertas.
- *   /show        → a última apagada deste chat      (/show -e: a última editada)
- *   /show -3     → as 3 últimas (máx. setting 'show.max')
- *   /show -3 -pv → envia no SEU privado em vez de expor no chat atual
- *   /show -list  → apagadas e editadas do cache, por chat
- *   /show -flush → remove as apagadas deste chat (no seu privado: de todos os chats)
- *   /show -2 -c 1          → as 2 últimas do chat nº 1 da lista de apagadas do -l
- *   /show -e -2 -c zapbot  → as 2 últimas editadas do chat cujo nome contém "zapbot"
- *   /show -e -f -c 1       → flush só das editadas do chat nº 1
- *   /show -q pix           → as apagadas com "pix" (sem diferenciar maiúsculas/acentos);
- *                            neste chat, no do -c ou, no seu privado, em todos. Sem -N: as 5 mais recentes
- *   /show -e -q pix        → as editadas com "pix" no texto de antes ou no de depois
- * Envia em ordem cronológica: a última enviada é a mais recente.
+ * /show [-N] [-d] [-e] [-s] [chat]: reexibe o que está no cache, no mesmo
+ * formato dos alertas: as APAGADAS (-d), as EDITADAS (-e) e os STATUS
+ * apagados (-s), que se somam. Sem nenhum dos três: com chat (ou na busca em
+ * todos), tudo junto, por data; senão, só as apagadas deste chat.
+ *   /show              → a última apagada deste chat
+ *   /show -3           → as 3 últimas
+ *   /show -2 /^Camila/ → as 2 últimas (apagada, editada ou status) do chat que casa
+ *   /show -e Trabalho  → a última editada do chat com "Trabalho" no nome
+ *   /show 2            → a última do chat nº 2 do último -l
+ *   /show -list        → os chats com algo no cache
+ *   /show -flush       → remove as apagadas deste chat (no seu privado: de todos os chats)
+ *   /show -q pix       → as que têm "pix" (sem diferenciar maiúsculas/acentos);
+ *                        neste chat, no chat pedido ou, no seu privado, em todos.
+ *                        Sem -N: as 5 mais recentes
+ * O chat: o nº da lista do -l, parte do nome, @menção ou /regex/. Num privado,
+ * os status são os da pessoa. Envia em ordem cronológica: a última é a mais recente.
+ * Quem tem um id @lid e um @c.us pode aparecer duas vezes no -l (é a mesma
+ * pessoa, só que com crise de identidade).
  */
 const BUSCA_PADRAO = 5;
-// O que muda entre as apagadas (-d, o padrão) e as editadas (-e)
-const TIPOS_CACHE = {
+const STATUS = 'status@broadcast';
+
+// O que muda entre as apagadas (-d), as editadas (-e) e os status (-s)
+const TIPOS = {
     apagadas: {
-        cmd: '/show',          // como o tipo aparece nas dicas
+        opt: 'deleted',
+        flag: '-d',
         tabela: 'messages',
-        filtro: 'revoked = 1',
+        filtro: `revoked = 1 AND chat_id <> '${STATUS}'`,
+        doChat: 'chat_id',          // de qual chat é (nos status: de qual pessoa)
+        nome: 'chat_name',
+        grupo: 'is_group',
         quando: 'revoked_at',
         ordem: 'revoked_at DESC, timestamp DESC',
         retencao: 'cache.revokedRetentionDays',
         comMidia: true,
         textos: (r) => [r.body],
         icone: '♻️',
-        rotulo: 'Deletadas',
         iconeLista: '🗑️',
-        singular: 'apagada',
-        plural: 'apagadas'
+        rotulo: 'Apagadas',
+        um: 'mensagem apagada',
+        varios: 'mensagens apagadas',
+        unidade: ['mensagem', 'mensagens'],
+        nenhuma: 'Nenhuma mensagem apagada',
+        registrada: 'registrada'
     },
     editadas: {
-        cmd: '/show -e',
+        opt: 'edited',
+        flag: '-e',
         tabela: 'message_edits',
         filtro: '1 = 1',
+        doChat: 'chat_id',
+        nome: 'chat_name',
+        grupo: 'is_group',
         quando: 'edited_at',
         ordem: 'edited_at DESC, id DESC',
         retencao: 'cache.editedRetentionDays',
         comMidia: false,
         textos: (r) => [r.old_body, r.new_body],
         icone: '✏️',
-        rotulo: 'Editadas',
         iconeLista: '✏️',
-        singular: 'editada',
-        plural: 'editadas'
+        rotulo: 'Editadas',
+        um: 'mensagem editada',
+        varios: 'mensagens editadas',
+        unidade: ['mensagem', 'mensagens'],
+        nenhuma: 'Nenhuma mensagem editada',
+        registrada: 'registrada'
+    },
+    status: {
+        opt: 'status',
+        flag: '-s',
+        tabela: 'messages',
+        filtro: `revoked = 1 AND chat_id = '${STATUS}'`,
+        doChat: 'sender_jid',
+        nome: 'sender_name',
+        grupo: '0',
+        quando: 'revoked_at',
+        ordem: 'revoked_at DESC, timestamp DESC',
+        retencao: 'cache.revokedRetentionDays',
+        comMidia: true,
+        textos: (r) => [r.body],
+        icone: '📸',
+        iconeLista: '📸',
+        rotulo: 'Status',
+        um: 'status apagado',
+        varios: 'status apagados',
+        unidade: ['status', 'status'],
+        nenhuma: 'Nenhum status apagado',
+        registrada: 'registrado'
     }
 };
 
-/*
- * Numeração do último -l (índice → chat_id), uma por tipo.
- * Guardamos o snapshot porque a ordem da lista muda a cada nova mensagem
- * apagada/editada: sem ele, "chat 2" poderia apontar para outro chat entre o -l e o -c.
- */
-const ultimaListaDeChats = { apagadas: [], editadas: [] };
+// Vários tipos juntos: o que muda nos textos
+const JUNTOS = { icone: '🗄️', nenhuma: 'Nada no cache', registrada: 'registrado' };
 
-// Chats com mensagens do tipo, na mesma ordem do -l
-function consultarChatsDoCache(tipo) {
-    const t = TIPOS_CACHE[tipo];
+// O filtro do tipo, só nos ids (null: de todos os chats)
+function ondeDo(t, ids) {
+    if (!ids) return { where: t.filtro, params: [] };
+    const marcas = ids.map(() => '?').join(', ');
+    return { where: `${t.filtro} AND ${t.doChat} IN (${marcas})`, params: ids };
+}
+
+/*
+ * Numeração do último -l (índice → chat_id). Guardamos o snapshot porque a
+ * ordem da lista muda a cada mensagem nova no cache: sem ele, o "chat 2"
+ * poderia apontar para outro chat entre o -l e o /show 2.
+ */
+let ultimaListaDeChats = [];
+
+// Os chats com algo no cache (nos status, a pessoa), na ordem do -l
+function chatsDoCache() {
+    const partes = Object.entries(TIPOS).map(([tipo, t]) =>
+        `SELECT ${t.doChat} AS chat_id, ${t.nome} AS chat_name, ${t.grupo} AS is_group,
+                '${tipo}' AS tipo, ${t.quando} AS quando
+           FROM ${t.tabela}
+          WHERE ${t.filtro}`);
 
     return dbAll(
         `SELECT chat_id,
                 MAX(chat_name) AS chat_name,
                 MAX(is_group) AS is_group,
+                SUM(tipo = 'apagadas') AS apagadas,
+                SUM(tipo = 'editadas') AS editadas,
+                SUM(tipo = 'status') AS status,
                 COUNT(*) AS total,
-                MAX(${t.quando}) AS ultima
-           FROM ${t.tabela}
-          WHERE ${t.filtro}
+                MAX(quando) AS ultima
+           FROM (${partes.join(' UNION ALL ')})
+          WHERE chat_id IS NOT NULL
           GROUP BY chat_id
           ORDER BY total DESC, ultima DESC`
     );
 }
 
 const nomeDoChat = (c) => c.chat_name || c.chat_id.split('@')[0];
+const descreverChat = (c) => `${c.is_group ? '👥' : '👤'} ${nomeDoChat(c)}`;
+// Como o semAcentos, mas sem mexer nas maiúsculas: \D e \d são coisas bem diferentes numa regex
+const tirarAcentos = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '');
+const paraAlvo = async (c) => ({ ids: await idsDoChatAtual(c.chat_id), nome: nomeDoChat(c) });
 
 /**
- * Resolve o valor do -c para um chat:
- *   número → posição na lista do tipo no último -l
- *   texto  → busca pelo nome (sem diferenciar maiúsculas)
- * @returns {Promise<{ids: string[], nome: string} | {erro: string}>}
+ * O chat pedido: @menção, o nº da lista do último -l, /regex/ ou o nome (todas
+ * as palavras; o nome exato ganha), sem diferenciar maiúsculas nem acentos.
+ * Vários: lista e espera o nº, como no /stats.
+ * @returns {Promise<{ ids: string[], nome: string } | null>} null: já respondeu
  */
-async function resolverChatAlvo(tipo, valor) {
-    const t = TIPOS_CACHE[tipo];
-    const chats = await consultarChatsDoCache(tipo);
-
-    if (!chats.length) {
-        return { erro: `${t.icone} Nenhuma mensagem ${t.singular} no cache.` };
-    }
-
-    // Por número
-    if (/^\d+$/.test(valor)) {
-        const indice = Number(valor);
-        const lista = ultimaListaDeChats[tipo].length ? ultimaListaDeChats[tipo] : chats.map(c => c.chat_id);
-        const chatId = lista[indice - 1];
-        const chat = chats.find(c => c.chat_id === chatId);
-
-        if (!chat) {
-            return { erro: `❌ Chat nº ${indice} não existe (ou não tem mais ${t.plural}). Rode /show -l para ver a lista atual.` };
+async function resolverAlvo(msg, texto) {
+    if (/^@\d+$/.test(texto)) {
+        const r = await resolverDestino(texto, { mencoes: msg.mentionedIds ?? [] });
+        if (r.erro) {
+            await msg.reply(r.erro);
+            return null;
         }
-
-        return { ids: [chat.chat_id], nome: nomeDoChat(chat) };
+        return { ids: await idsDoChatAtual(r.id), nome: r.nome };
     }
 
-    // Por nome
-    const busca = valor.toLowerCase();
-    const encontrados = chats.filter(c => nomeDoChat(c).toLowerCase().includes(busca));
-    const exato = encontrados.find(c => nomeDoChat(c).toLowerCase() === busca);
-
-    if (exato || encontrados.length === 1) {
-        const chat = exato || encontrados[0];
-        return { ids: [chat.chat_id], nome: nomeDoChat(chat) };
+    const chats = await chatsDoCache();
+    if (!chats.length) {
+        await msg.reply('🗄️ Nada no cache: nenhuma mensagem apagada, editada ou status apagado.');
+        return null;
     }
 
-    if (!encontrados.length) {
-        return { erro: `❌ Nenhum chat com ${t.plural} contém "${valor}". Rode /show -l para ver a lista.` };
+    if (/^\d+$/.test(texto)) {
+        const lista = ultimaListaDeChats.length ? ultimaListaDeChats : chats.map(c => c.chat_id);
+        const chat = chats.find(c => c.chat_id === lista[Number(texto) - 1]);
+        if (!chat) {
+            await msg.reply(`❌ Chat nº ${texto} não existe (ou não tem mais nada no cache). Rode /show -l para ver a lista atual.`);
+            return null;
+        }
+        return paraAlvo(chat);
     }
 
-    return {
-        erro: `🔎 "${valor}" corresponde a ${encontrados.length} chats. Seja mais específico ou use o número:\n` +
-              encontrados.map(c => `• ${nomeDoChat(c)}`).join('\n')
-    };
+    let casam;
+    let exato;
+    const regex = texto.match(/^\/(.+)\/$/);
+
+    if (regex) {
+        let re;
+        try {
+            re = new RegExp(tirarAcentos(regex[1]), 'i');
+        } catch (err) {
+            await msg.reply(`❌ Regex inválida: ${texto} (${err.message}).`);
+            return null;
+        }
+        casam = chats.filter(c => re.test(tirarAcentos(nomeDoChat(c))));
+    } else {
+        // "@Camila Gama" digitado, sem escolher na lista do @: vale o nome
+        const palavras = semAcentos(texto.replace(/^@/, '')).split(/\s+/).filter(Boolean);
+        casam = chats.filter(c => palavras.every(p => semAcentos(nomeDoChat(c)).includes(p)));
+        exato = casam.find(c => semAcentos(nomeDoChat(c)) === palavras.join(' '));
+    }
+
+    if (exato || casam.length === 1) return paraAlvo(exato ?? casam[0]);
+
+    if (!casam.length) {
+        await msg.reply(`❌ Nenhum chat no cache casa com "${texto}".\n💡 _Veja os que têm algo com /show -l_`);
+        return null;
+    }
+
+    const opcoes = casam.slice(0, 10);
+    await msg.reply(`🔎 "${texto}" corresponde a ${casam.length} chats:\n\n` +
+        opcoes.map((c, i) => `${i + 1}. ${descreverChat(c)}`).join('\n') +
+        '\n\n💡 _Responda só com o nº (em até 2 minutos), ou repita o comando com mais do nome._');
+
+    const escolhido = await aguardarEscolha(msg.id?.remote ?? msg.from, opcoes, {
+        autor: autorDe(msg),
+        aoExpirar: () => msg.reply(`⌛ Nenhum nº escolhido para "${texto}" em 2 minutos: nada foi feito.`)
+    });
+    return escolhido ? paraAlvo(escolhido) : null;
 }
 
 /*
- * /show -list (com ou sem -d/-e, a lista é a mesma)
- * Apagadas e editadas guardadas no cache, de todos os chats, cada tipo com a
- * sua numeração (a do /show -c e a do /show -e -c). O chat onde o comando foi
- * executado vem marcado. Use -pv para receber no privado.
+ * /show -list (os tipos não mudam a lista)
+ * O que tem no cache, por tipo, e os chats numerados (o nº do /show <nº>),
+ * com o chat atual marcado.
  */
-async function listarCache({ msg, opts, chatId }) {
-    await dbPronto;
-
-    const meuId = client.info.wid._serialized;
+async function listarCache({ msg, chatId }) {
     const idsDoChat = await idsDoChatAtual(chatId);
-    const noPrivadoDoDono = idsDoChat.includes(meuId);
     const LIMITE = 10;
 
-    const linha = (c, i) => {
-        const icone = c.is_group ? '👥' : '👤';
-        const atual = idsDoChat.includes(c.chat_id) ? ' ← _este chat_' : '';
-        return `${i + 1}. ${icone} ${nomeDoChat(c)} — *${c.total}* _(última ${formatarData(c.ultima)})_${atual}\n`;
-    };
+    let texto = '🗄️ *Mensagens no cache*\n\n';
 
-    let texto = '🗄️ *Mensagens no cache*\n';
-    let algum = false;
-
-    for (const [tipo, t] of Object.entries(TIPOS_CACHE)) {
+    for (const t of Object.values(TIPOS)) {
         const resumo = await dbGet(
             `SELECT COUNT(*) AS total,
                     ${t.comMidia ? 'COALESCE(SUM(has_media), 0)' : '0'} AS com_midia,
@@ -179,165 +255,163 @@ async function listarCache({ msg, opts, chatId }) {
         if (resumo.total > 0 && resumo.mais_antiga) {
             const expiraEm = paraMs(resumo.mais_antiga) + getSetting(t.retencao) * DAY_MS;
             const dias = Math.max(0, Math.ceil((expiraEm - Date.now()) / DAY_MS));
-            detalhes.push(`a mais antiga expira em ${dias} dia${dias === 1 ? '' : 's'}`);
+            detalhes.push(`a mais antiga expira em ${plural(dias, 'dia', 'dias')}`);
         }
 
-        texto += `\n${t.iconeLista} *${t.rotulo}:* ${resumo.total}`;
+        texto += `${t.iconeLista} *${t.rotulo}:* ${resumo.total}`;
         texto += detalhes.length ? ` _(${detalhes.join(' · ')})_\n` : '\n';
+    }
 
-        if (!resumo.total) {
-            ultimaListaDeChats[tipo] = [];
-            continue;
+    const chats = await chatsDoCache();
+    ultimaListaDeChats = chats.map(c => c.chat_id);
+
+    const linha = (c, i) => {
+        const contas = Object.entries(TIPOS)
+            .filter(([tipo]) => c[tipo] > 0)
+            .map(([tipo, t]) => `${t.iconeLista} ${c[tipo]}`)
+            .join(' · ');
+        const atual = idsDoChat.includes(c.chat_id) ? ' ← _este chat_' : '';
+        return `${i + 1}. ${descreverChat(c)} — ${contas} _(última ${formatarData(c.ultima)})_${atual}\n`;
+    };
+
+    if (chats.length) {
+        texto += '\n';
+        chats.slice(0, LIMITE).forEach((c, i) => { texto += linha(c, i); });
+
+        if (chats.length > LIMITE) {
+            texto += `_+${chats.length - LIMITE} chat(s)_\n`;
+
+            // O chat atual fora do top: aparece mesmo assim, com o nº
+            const i = chats.findIndex(c => idsDoChat.includes(c.chat_id));
+            if (i >= LIMITE) texto += linha(chats[i], i);
         }
 
-        algum = true;
-
-        const porChat = await consultarChatsDoCache(tipo);
-        ultimaListaDeChats[tipo] = porChat.map(c => c.chat_id);
-
-        porChat.slice(0, LIMITE).forEach((c, i) => { texto += linha(c, i); });
-
-        if (porChat.length > LIMITE) {
-            texto += `_+${porChat.length - LIMITE} chat(s)_\n`;
-
-            // O chat atual fora do top: aparece mesmo assim, com o nº para o -c
-            const i = porChat.findIndex(c => idsDoChat.includes(c.chat_id));
-            if (i >= LIMITE) texto += linha(porChat[i], i);
-        }
-    }
-
-    texto += `\n💡 _/show -N reexibe as deletadas e /show -e -N as editadas deste chat (máx. ${getSetting('show.max')})._`;
-
-    if (algum) {
-        texto += '\n💡 _Junte -c <nº ou nome> para outro chat: o nº é o da lista do tipo (/show -c 2, /show -e -c 1)._' +
-                 '\n💡 _-pv envia no seu privado; -f remove do cache as deste chat (no seu privado: de todos)._';
-    }
-
-    if (opts.opt.pv && !noPrivadoDoDono) {
-        await msg.reply('🗄️ Resumo enviado no seu privado.');
-        await client.sendMessage(meuId, texto);
-    } else {
-        await msg.reply(texto);
-    }
-}
-
-/*
- * /show -flush e /show -e -flush
- * Remove do cache as mensagens do tipo (as apagadas levam junto os arquivos de mídia):
- *   - num chat qualquer      → só as DESTE chat;
- *   - no seu próprio privado → as de TODOS os chats.
- * Destrutivo: só o dono do bot (ou um admin do bot.admins) executa, mesmo que o comando seja liberado no config.
- */
-async function limparDoCache({ msg, chatId, tipo, alvo = null, admin = false }) {
-    const t = TIPOS_CACHE[tipo];
-
-    if (!admin) {
-        await msg.reply(`⛔ Só o dono do bot (ou um admin) pode usar ${t.cmd} -flush.`);
-        return;
-    }
-
-    await dbPronto;
-
-    const meuId = client.info.wid._serialized;
-    // Com -c, o alvo é o chat escolhido; sem ele, o chat atual
-    const idsDoChat = alvo ? alvo.ids : await idsDoChatAtual(chatId);
-    const geral = !alvo && idsDoChat.includes(meuId);
-
-    // Filtro: todas do tipo (privado do dono) ou só as do chat alvo
-    const filtro = geral
-        ? t.filtro
-        : `${t.filtro} AND chat_id IN (${idsDoChat.map(() => '?').join(', ')})`;
-    const params = geral ? [] : idsDoChat;
-
-    // Levanta o que vai sair ANTES de apagar, para a mensagem de resumo
-    const porChat = await dbAll(
-        `SELECT chat_id,
-                MAX(chat_name) AS chat_name,
-                MAX(is_group) AS is_group,
-                COUNT(*) AS total
-           FROM ${t.tabela}
-          WHERE ${filtro}
-          GROUP BY chat_id
-          ORDER BY total DESC`,
-        params
-    );
-
-    const total = porChat.reduce((soma, c) => soma + c.total, 0);
-
-    if (!total) {
-        await msg.reply(geral
-            ? `${t.icone} Nenhuma mensagem ${t.singular} no cache.`
-            : `${t.icone} Nenhuma mensagem ${t.singular} registrada neste chat.`);
-        return;
-    }
-
-    // Apaga as mídias do disco
-    let arquivos = 0;
-    let bytes = 0;
-
-    if (t.comMidia) {
-        const midias = await dbAll(`SELECT media_path FROM ${t.tabela} WHERE ${filtro} AND media_path IS NOT NULL`, params);
-
-        for (const { media_path } of midias) {
-            if (!isCaminhoDeMidia(media_path)) continue;
-
-            try {
-                bytes += fs.statSync(media_path).size;
-                fs.unlinkSync(media_path);
-                arquivos++;
-            } catch {
-                // arquivo já não existe
-            }
-        }
-    }
-
-    // Apaga as linhas do banco
-    const res = await dbRun(`DELETE FROM ${t.tabela} WHERE ${filtro}`, params);
-
-    printInfo(`${t.cmd} -flush (${geral ? 'geral' : chatId}): ${res.changes} mensagens ${t.plural}${t.comMidia ? ` e ${arquivos} arquivos` : ''} removidos`);
-
-    let texto = geral
-        ? `🧹 *Flush geral das mensagens ${t.plural}*\n\n`
-        : alvo
-            ? `🧹 *Flush das mensagens ${t.plural} de:* ${alvo.nome}\n\n`
-            : `🧹 *Flush das mensagens ${t.plural} deste chat*\n\n`;
-
-    texto += `🗄️ Removidas: *${plural(res.changes, 'mensagem', 'mensagens')}*`;
-    texto += geral ? ` de *${plural(porChat.length, 'chat', 'chats')}*\n` : '\n';
-
-    if (t.comMidia) {
-        texto += `📎 Mídias apagadas do disco: *${arquivos}*${arquivos ? ` _(${humanSize(bytes)})_` : ''}\n`;
-    }
-
-    if (geral) {
-        const LIMITE = 10;
-
-        texto += '\n*Por chat:*\n';
-        porChat.slice(0, LIMITE).forEach((c, i) => {
-            const icone = c.is_group ? '👥' : '👤';
-            texto += `${i + 1}. ${icone} ${nomeDoChat(c)} — *${c.total}*\n`;
-        });
-
-        if (porChat.length > LIMITE) {
-            texto += `_+${porChat.length - LIMITE} chat(s)_\n`;
-        }
-    } else if (!alvo) {
-        texto += `\n💡 _Para limpar as ${t.plural} de todos os chats, use ${t.cmd} -f no seu privado._`;
+        texto += `\n💡 _/show <nº, nome, @menção ou /regex/> reexibe as de um chat: apagadas, editadas e status juntos; -d, -e e -s filtram; -N para mais (máx. ${getSetting('show.max')})._` +
+                 '\n💡 _-f remove do cache as deste chat (no seu privado: de todos)._';
     }
 
     await msg.reply(texto);
 }
 
-// Reenvio de um item, conforme o tipo
-const REENVIO_CACHE = {
-    apagadas: async (destino, row, i, total) => {
-        const info = await resolverAutorApagada(row);
+/*
+ * /show -flush: remove do cache os tipos pedidos (as mídias saem do disco junto):
+ *   - com chat (/show -f Trabalho) → só as dele;
+ *   - num chat qualquer            → só as DESTE chat;
+ *   - no seu próprio privado       → as de TODOS os chats.
+ * Destrutivo: só o dono do bot (ou um admin do bot.admins), mesmo que o /show seja liberado.
+ */
+async function limparDoCache({ msg, tipos, alvo, ids, geral, admin, cmd }) {
+    if (!admin) {
+        await msg.reply('⛔ Só o dono do bot (ou um admin) pode usar o /show -flush.');
+        return;
+    }
 
-        await enviarMensagemApagada(destino, row, info, {
-            titulo: `${isStatus(row) ? '📸 *STATUS APAGADO*' : '❌ *MENSAGEM APAGADA*'} (${i + 1}/${total})`,
-            extras: [`🗑️ *Apagada em:* ${formatarData(row.revoked_at)}`]
+    const removidas = [];
+    const porChat = new Map();
+    let arquivos = 0;
+    let bytes = 0;
+
+    for (const tipo of tipos) {
+        const t = TIPOS[tipo];
+        const { where, params } = ondeDo(t, geral ? null : ids);
+
+        // O que vai sair, por chat, ANTES de apagar: para o resumo do geral
+        if (geral) {
+            const chats = await dbAll(
+                `SELECT ${t.doChat} AS chat_id,
+                        MAX(${t.nome}) AS chat_name,
+                        MAX(${t.grupo}) AS is_group,
+                        COUNT(*) AS total
+                   FROM ${t.tabela}
+                  WHERE ${where}
+                  GROUP BY ${t.doChat}`,
+                params
+            );
+            for (const c of chats) {
+                const antes = porChat.get(c.chat_id)?.total ?? 0;
+                porChat.set(c.chat_id, { ...c, total: c.total + antes });
+            }
+        }
+
+        if (t.comMidia) {
+            const midias = await dbAll(
+                `SELECT media_path FROM ${t.tabela} WHERE ${where} AND media_path IS NOT NULL`, params);
+
+            for (const { media_path } of midias) {
+                if (!isCaminhoDeMidia(media_path)) continue;
+
+                try {
+                    bytes += fs.statSync(media_path).size;
+                    fs.unlinkSync(media_path);
+                    arquivos++;
+                } catch {
+                    // arquivo já não existe
+                }
+            }
+        }
+
+        const res = await dbRun(`DELETE FROM ${t.tabela} WHERE ${where}`, params);
+        removidas.push({ t, n: res.changes });
+    }
+
+    const total = removidas.reduce((soma, r) => soma + r.n, 0);
+    const u = tipos.length === 1 ? TIPOS[tipos[0]] : JUNTOS;
+
+    if (!total) {
+        await msg.reply(geral
+            ? `${u.icone} ${u.nenhuma} no cache.`
+            : alvo
+                ? `${u.icone} ${u.nenhuma} de ${alvo.nome}.`
+                : `${u.icone} ${u.nenhuma} ${u.registrada} neste chat.`);
+        return;
+    }
+
+    const contas = removidas.map(r => `${r.n} ${r.t.rotulo.toLowerCase()}`).join(', ');
+    printInfo(`/show -flush (${geral ? 'geral' : alvo?.nome ?? ids[0]}): ${contas}; ${arquivos} arquivos removidos`);
+
+    let texto = geral
+        ? '🧹 *Flush geral do cache*\n\n'
+        : alvo
+            ? `🧹 *Flush do cache de:* ${alvo.nome}\n\n`
+            : '🧹 *Flush do cache deste chat*\n\n';
+
+    for (const { t, n } of removidas) {
+        texto += `${t.iconeLista} ${t.rotulo}: *${plural(n, ...t.unidade)}*\n`;
+    }
+
+    if (removidas.some(r => r.t.comMidia)) {
+        texto += `📎 Mídias apagadas do disco: *${arquivos}*${arquivos ? ` _(${humanSize(bytes)})_` : ''}\n`;
+    }
+
+    if (geral) {
+        const LIMITE = 10;
+        const chats = [...porChat.values()].sort((a, b) => b.total - a.total);
+
+        texto += `\n*Por chat* (${chats.length}):\n`;
+        chats.slice(0, LIMITE).forEach((c, i) => {
+            texto += `${i + 1}. ${descreverChat(c)} — *${c.total}*\n`;
         });
-    },
+        if (chats.length > LIMITE) texto += `_+${chats.length - LIMITE} chat(s)_\n`;
+    } else if (!alvo) {
+        texto += `\n💡 _Para limpar as de todos os chats, use ${cmd} -f no seu privado._`;
+    }
+
+    await msg.reply(texto);
+}
+
+// Reenvio de um item, conforme o tipo (o status é uma apagada com título próprio)
+async function reenviarApagada(destino, row, i, total) {
+    const info = await resolverAutorApagada(row);
+
+    await enviarMensagemApagada(destino, row, info, {
+        titulo: `${isStatus(row) ? '📸 *STATUS APAGADO*' : '❌ *MENSAGEM APAGADA*'} (${i + 1}/${total})`,
+        extras: [`🗑️ *Apagada em:* ${formatarData(row.revoked_at)}`]
+    });
+}
+
+const REENVIO_CACHE = {
+    apagadas: reenviarApagada,
+    status: reenviarApagada,
     editadas: async (destino, row, i, total) => {
         await enviarMensagemEditada(destino, row, {
             nomeChat: row.chat_name || 'Conversa desconhecida',
@@ -347,67 +421,78 @@ const REENVIO_CACHE = {
     }
 };
 
+// "♻️ *2 mensagens apagadas*" (um tipo) ou "🗄️ *3 mensagens* (🗑️ 2 · 📸 1)" (vários)
+function resumoDosItens(tipos, rows) {
+    if (tipos.length === 1) {
+        const t = TIPOS[tipos[0]];
+        return `${t.icone} *${plural(rows.length, t.um, t.varios)}*`;
+    }
+
+    const contas = Object.entries(TIPOS)
+        .map(([tipo, t]) => [t, rows.filter(r => r._tipo === tipo).length])
+        .filter(([, n]) => n)
+        .map(([t, n]) => `${t.iconeLista} ${n}`);
+    const total = plural(rows.length, 'mensagem', 'mensagens');
+    return `${JUNTOS.icone} *${total}* (${contas.join(' · ')})`;
+}
+
 async function cmdShow({ msg, opts, chatId, admin }) {
-    // -e escolhe as editadas; -d (ou nada) as apagadas
-    if (opts.opt.deleted && opts.opt.edited) {
-        await msg.reply('❌ Use -d (apagadas) ou -e (editadas), não os dois.');
-        return;
+    await dbPronto;
+
+    const sintaxe = () => msg.reply('```' + getCommandSyntax('/show') + '```');
+
+    // "-3" não é uma opção declarada: vem no argv, junto com o chat
+    let n = null;
+    const palavras = [];
+
+    for (const a of opts.argv.filter(Boolean)) {
+        const m = a.match(/^-(\d+)$/);
+        if (m && n === null && Number(m[1]) >= 1) n = Number(m[1]);
+        else if (a.startsWith('-')) return sintaxe();
+        else palavras.push(a);
     }
 
-    const tipo = opts.opt.edited ? 'editadas' : 'apagadas';
-    const t = TIPOS_CACHE[tipo];
+    const pedidos = Object.keys(TIPOS).filter(tipo => opts.opt[TIPOS[tipo].opt]);
+    const cmd = ['/show', ...pedidos.map(tipo => TIPOS[tipo].flag)].join(' ');
 
-    // -c <nº|nome>: escolhe outro chat (vale em qualquer chat; use -pv para não expor aqui)
-    let alvo = null;
-
-    if (opts.opt.chat) {
-        await dbPronto;
-        alvo = await resolverChatAlvo(tipo, String(opts.opt.chat));
-
-        if (alvo.erro) {
-            await msg.reply(alvo.erro);
-            return;
-        }
-    }
-
-    // -q <texto>: busca nas apagadas (ou editadas); não combina com -f e -l
+    // -q <texto>: busca nos tipos pedidos; não combina com -f e -l
     const busca = opts.given.has('query') ? String(opts.opt.query ?? '').trim() : null;
     if (busca !== null && (!busca || opts.opt.flush || opts.opt.list)) {
         await msg.reply(busca
             ? '❌ O -q não combina com o -f nem com o -l.'
-            : `❌ Informe o que buscar: ${t.cmd} -q <texto> (com espaços, entre aspas: -q "bom dia").`);
-        return;
-    }
-
-    if (opts.opt.flush) {
-        await limparDoCache({ msg, chatId, tipo, alvo, admin });
+            : `❌ Informe o que buscar: ${cmd} -q <texto> (com espaços, entre aspas: -q "bom dia").`);
         return;
     }
 
     if (opts.opt.list) {
-        await listarCache({ msg, opts, chatId });
+        await listarCache({ msg, chatId });
         return;
     }
 
-    // "-3" não é uma opção declarada, então o parser o coloca em argv (assim como "3")
-    const extras = opts.argv.filter(Boolean);
-    let n = busca ? BUSCA_PADRAO : 1;
+    // O chat pedido (vale em qualquer chat)
+    let alvo = null;
+    if (palavras.length) {
+        alvo = await resolverAlvo(msg, palavras.join(' '));
+        if (!alvo) return;
+    }
 
-    if (extras.length > 1) {
-        await msg.reply('```' + getCommandSyntax('/show') + '```');
+    const meuId = client.info.wid._serialized;
+    const ids = alvo ? alvo.ids : await idsDoChatAtual(chatId);
+    const noMeuPrivado = !alvo && ids.includes(meuId);
+
+    // No seu privado, sem chat: a busca e os status valem para todos os chats
+    const todos = noMeuPrivado && !opts.opt.flush && (busca !== null || pedidos.includes('status'));
+
+    // Sem -d/-e/-s: com chat (ou em todos), tudo junto; senão, só as apagadas
+    const tipos = pedidos.length ? pedidos : alvo || todos ? Object.keys(TIPOS) : ['apagadas'];
+
+    if (opts.opt.flush) {
+        await limparDoCache({ msg, tipos, alvo, ids, geral: noMeuPrivado, admin, cmd });
         return;
     }
+    const u = tipos.length === 1 ? TIPOS[tipos[0]] : JUNTOS;
 
-    if (extras.length === 1) {
-        const m = extras[0].match(/^-?(\d+)$/);
-
-        if (!m || Number(m[1]) < 1) {
-            await msg.reply('```' + getCommandSyntax('/show') + '```');
-            return;
-        }
-
-        n = Number(m[1]);
-    }
+    n ??= busca ? BUSCA_PADRAO : 1;
 
     let aviso = '';
     const max = getSetting('show.max');
@@ -416,78 +501,65 @@ async function cmdShow({ msg, opts, chatId, admin }) {
         n = max;
     }
 
-    const idsDoChat = alvo ? alvo.ids : await idsDoChatAtual(chatId);
-    const noMeuPrivado = !alvo && idsDoChat.includes(client.info.wid._serialized);
-
-    await dbPronto;
-
-    let rows;
-    let encontradas = 0;
-
-    if (busca) {
-        // A busca, no seu privado e sem -c, vale para todos os chats
-        const doChat = noMeuPrivado ? '' : `AND chat_id IN (${idsDoChat.map(() => '?').join(', ')})`;
-        const todas = await dbAll(`SELECT * FROM ${t.tabela} WHERE ${t.filtro} ${doChat} ORDER BY ${t.ordem}`,
-            noMeuPrivado ? [] : idsDoChat);
-        const alvoDaBusca = semAcentos(busca);
-        const casam = todas.filter(r => t.textos(r).some(texto => semAcentos(texto).includes(alvoDaBusca)));
-
-        encontradas = casam.length;
-        rows = casam.slice(0, n);
-    } else {
-        rows = await dbAll(
-            `SELECT *
+    // As mais recentes de cada tipo, depois as mais recentes de todos
+    let rows = [];
+    for (const tipo of tipos) {
+        const t = TIPOS[tipo];
+        const { where, params } = ondeDo(t, todos ? null : ids);
+        const doTipo = await dbAll(
+            `SELECT *, '${tipo}' AS _tipo, ${t.quando} AS _quando
                FROM ${t.tabela}
-              WHERE ${t.filtro}
-                AND chat_id IN (${idsDoChat.map(() => '?').join(', ')})
+              WHERE ${where}
               ORDER BY ${t.ordem}
-              LIMIT ?`,
-            [...idsDoChat, n]
+              ${busca ? '' : 'LIMIT ?'}`,
+            busca ? params : [...params, n]
         );
+
+        const alvoDaBusca = semAcentos(busca);
+        rows.push(...(busca
+            ? doTipo.filter(r => t.textos(r).some(texto => semAcentos(texto).includes(alvoDaBusca)))
+            : doTipo));
     }
 
-    if (!rows.length) {
-        const onde = busca && noMeuPrivado ? 'em nenhum chat' : alvo ? `em ${alvo.nome}` : 'neste chat';
+    rows.sort((a, b) => paraMs(b._quando) - paraMs(a._quando));
+    const encontradas = rows.length;
+    rows = rows.slice(0, n);
 
-        // No privado, sem -c, quase sempre a intenção era ver outro chat
+    if (!rows.length) {
+        const onde = todos ? 'em nenhum chat' : alvo ? `em ${alvo.nome}` : 'neste chat';
+
+        // No privado, sem chat, quase sempre a intenção era ver outro chat
         await msg.reply(busca
-            ? `${t.icone} Nenhuma mensagem ${t.singular} com "${busca}" ${onde}.`
-            : noMeuPrivado
-                ? `${t.icone} Nenhuma mensagem ${t.singular} neste chat.\n💡 _Para ver as de outro chat: /show -l e depois ${t.cmd} -N -c <nº ou nome>. Para buscar em todos: ${t.cmd} -q <texto>._`
-                : `${t.icone} Nenhuma mensagem ${t.singular} registrada neste chat.`);
+            ? `${u.icone} ${u.nenhuma} com "${busca}" ${onde}.`
+            : alvo || todos
+                ? `${u.icone} ${u.nenhuma} ${onde}.`
+                : noMeuPrivado
+                    ? `${u.icone} ${u.nenhuma} neste chat.\n💡 _Para ver as de outro chat: /show -l e depois ${cmd} -N <chat>. Para buscar em todos: ${cmd} -q <texto>._`
+                    : `${u.icone} ${u.nenhuma} ${u.registrada} neste chat.`);
         return;
     }
 
     // Busca as mais recentes, exibe da mais antiga para a mais recente
     rows.reverse();
 
-    const destino = opts.opt.pv ? client.info.wid._serialized : chatId;
     const faltaram = !busca && n > rows.length ? ` (pedidas ${n}, encontradas ${rows.length})` : '';
-    let resumo = `${t.icone} *${rows.length} mensage${rows.length === 1 ? `m ${t.singular}` : `ns ${t.plural}`}*${faltaram}${aviso}`;
+    let resumo = `${resumoDosItens(tipos, rows)}${faltaram}${aviso}`;
 
     if (busca) {
         resumo += ` com "${busca}"` + (encontradas > rows.length ? ` _(as ${rows.length} mais recentes de ${encontradas}; use -N para mais)_` : '');
-        if (noMeuPrivado) resumo += '\n💬 *Chats:* todos';
     }
 
-    if (alvo) {
-        resumo += `\n💬 *Chat:* ${alvo.nome}`;
-    }
+    if (todos) resumo += '\n💬 *Chats:* todos';
+    if (alvo) resumo += `\n💬 *Chat:* ${alvo.nome}`;
 
-    if (opts.opt.pv) {
-        // O resumo (com o nome do chat) vai só para o privado
-        await msg.reply(`${t.icone} Enviado no seu privado.`);
-        await client.sendMessage(destino, alvo || (busca && noMeuPrivado) ? resumo : `${resumo}\n💬 *Chat:* ${rows[0].chat_name || chatId}`);
-    } else {
-        await msg.reply(resumo);
-    }
+    await msg.reply(resumo);
 
     for (const [i, row] of rows.entries()) {
         try {
-            await REENVIO_CACHE[tipo](destino, row, i, rows.length);
+            await REENVIO_CACHE[row._tipo](chatId, row, i, rows.length);
         } catch (err) {
-            printError(`${t.cmd}: falha ao reenviar ${row.id}:`, err.message);
-            await client.sendMessage(destino, `⚠️ Não consegui reenviar a mensagem ${i + 1}/${rows.length}: ${err.message}`);
+            printError(`/show: falha ao reenviar ${row.id}:`, err.message);
+            await client.sendMessage(chatId, `⚠️ Não consegui reenviar a mensagem ${i + 1}/${rows.length}: ${err.message}`);
         }
 
         if (i < rows.length - 1) await esperar(getSetting('show.delayMs'));
