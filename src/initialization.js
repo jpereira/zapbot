@@ -24,6 +24,62 @@ async function addColumns(table, columns) {
 }
 
 /*
+ * /defi: the registrations. The columns have the option names: address (the -address
+ * of Orca, the position) and wallet (the -wallet of Project X and Morpho, the
+ * wallet); a registration has one or the other.
+ */
+const CREATE_DEFI_POSITIONS = `
+    CREATE TABLE IF NOT EXISTS defi_positions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        protocol TEXT NOT NULL,
+        address TEXT,
+        wallet TEXT,
+        nft TEXT,
+        pool TEXT,
+        created_at INTEGER NOT NULL,
+        UNIQUE (protocol, address),
+        UNIQUE (protocol, wallet)
+    )
+`;
+const ALERT_DEFI_COLUMNS = {
+    alert: 'INTEGER DEFAULT 0',
+    alert_dest_id: 'TEXT',
+    alert_dest_name: 'TEXT',
+    alert_dest_is_group: 'INTEGER DEFAULT 0',
+    alert_email: 'TEXT',
+    alert_recipients: 'TEXT',           // JSON with the destinations of several -to (the alert_dest_*: the first)
+    alert_fees: 'REAL',                 // -taxas: notifies when the fees to collect go above that (US$)
+    fees_notified: 'INTEGER DEFAULT 0', // already notified about this value (goes back to 0 when collected)
+    in_range: 'INTEGER'
+};
+
+/*
+ * defi_positions from an earlier version: the address in a single column
+ * (position, unique across all protocols). Passes to address (Orca) and
+ * wallet (the wallets); the rest goes as it was.
+ */
+async function migrateDefiForAddressAndWallet() {
+    const columns = (await dbAll('PRAGMA table_info(defi_positions)')).map(c => c.name);
+    if (!columns.includes('position')) return;
+
+    await dbRun('ALTER TABLE defi_positions RENAME TO defi_positions_antiga');
+    await dbRun(CREATE_DEFI_POSITIONS);
+    await addColumns('defi_positions', ALERT_DEFI_COLUMNS);
+
+    const freshAlt2 = new Set((await dbAll('PRAGMA table_info(defi_positions)')).map(c => c.name));
+    const equal = columns.filter(c => c !== 'position' && freshAlt2.has(c)).join(', ');
+    await dbRun(`
+        INSERT INTO defi_positions (${equal}, address, wallet)
+        SELECT ${equal},
+               CASE WHEN protocol = 'orca' THEN position END,
+               CASE WHEN protocol <> 'orca' THEN position END
+          FROM defi_positions_antiga
+    `);
+    await dbRun('DROP TABLE defi_positions_antiga');
+    printInfo('defi_positions: o position virou address (Orca) e wallet (carteiras)');
+}
+
+/*
  * Creation of the tables.
  * All in sequence (await): before, CREATE TABLE might not yet have
  * finished when the first query arrived.
@@ -221,33 +277,15 @@ async function initializeDb() {
     await dbRun('CREATE INDEX IF NOT EXISTS idx_schedules_due ON schedules (due_at)');
 
     /*
-     * /defi DeFi positions (for now, from Orca): the rest is read on-chain on
-     * each -show. -alerta keeps where to notify (alert_dest_*: one chat;
+     * /defi registrations (the Orca positions and the Project X and
+     * Morpho): the rest is read on the spot, on each /defi. The -alerta keeps where to notify (alert_dest_*: one chat;
      * alert_email: emails; alert_recipients: several -to; none: your private chat)
      * and whether the position was in the range at the last check (in_range; NULL:
      * not read yet).
      */
-    await dbRun(`
-        CREATE TABLE IF NOT EXISTS defi_positions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            protocol TEXT NOT NULL,
-            position TEXT NOT NULL UNIQUE,
-            nft TEXT,
-            pool TEXT,
-            created_at INTEGER NOT NULL
-        )
-    `);
-    await addColumns('defi_positions', {
-        alert: 'INTEGER DEFAULT 0',
-        alert_dest_id: 'TEXT',
-        alert_dest_name: 'TEXT',
-        alert_dest_is_group: 'INTEGER DEFAULT 0',
-        alert_email: 'TEXT',
-        alert_recipients: 'TEXT',           // JSON with the destinations of several -to (the alert_dest_*: the first)
-        alert_fees: 'REAL',                 // -taxas: notifies when the fees to collect go above that (US$)
-        fees_notified: 'INTEGER DEFAULT 0', // already notified about this value (goes back to 0 when collected)
-        in_range: 'INTEGER'
-    });
+    await migrateDefiForAddressAndWallet();
+    await dbRun(CREATE_DEFI_POSITIONS);
+    await addColumns('defi_positions', ALERT_DEFI_COLUMNS);
 
     /*
      * /mute: people and groups with muted notices (what: deleted, edited,

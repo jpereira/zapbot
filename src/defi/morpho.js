@@ -320,7 +320,8 @@ async function positionsMorpho(wallet) {
     const networks = getSetting('defi.morpho.chains').map(Number);
     const keyAlt = `${wallet.toLowerCase()}|${networks.join(',')}`;
     const saved = cache.get(keyAlt);
-    if (saved && Date.now() - saved.quando < CACHE_MS) return { ...saved, doCache: true };
+    // The same wallet in another case (0xAb.. and 0xab..) is the same: only the display follows the request
+    if (saved && Date.now() - saved.quando < CACHE_MS) return { ...saved, carteira: wallet, doCache: true };
 
     const start = Date.now();
     printInfo(`[MORPHO] Consultando carteira ${abbreviate(wallet)}`);

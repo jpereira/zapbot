@@ -143,8 +143,8 @@ describe('Orca (defi/orca.js)', () => {
 describe('/defi', () => {
     test('cadastra (conferindo NFT e pool), lista e mostra o Position Details', async () => {
         assert.deepEqual(await bot.replyAlt(REGISTRATION), [`✅ *Posição da Orca cadastrada:* ime1…VPcg\n💡 _Veja com /defi orca_`]);
-        assert.deepEqual(await bot.dbGet('SELECT protocol, position, nft, pool FROM defi_positions'),
-            { protocol: 'orca', position: POSITION, nft: NFT, pool: POOL });
+        assert.deepEqual(await bot.dbGet('SELECT protocol, address, wallet, nft, pool FROM defi_positions'),
+            { protocol: 'orca', address: POSITION, wallet: null, nft: NFT, pool: POOL });
 
         assert.match((await bot.replyAlt('/defi -l'))[0], /^🌊 \*Posições DeFi\* \(1\)\n\n1\. Orca · ime1…VPcg · pool J7Hz…bHCh _\(desde \d\d\/\d\d\/\d{4}\)_\n\n💡 /);
 
@@ -166,7 +166,7 @@ describe('/defi', () => {
     test('/defi orca, palavra desconhecida, -rm e as mensagens de lista vazia', async () => {
         await bot.replyAlt(REGISTRATION);
         assert.match((await bot.replyAlt('/defi orca'))[0], /Orca · SOL\/cbBTC/);
-        assert.match((await bot.replyAlt('/defi xyz'))[0], /^❌ "xyz" não é um protocolo: use orca, prjx ou morpho\.\n\n```Usage: \/defi \[orca\|prjx\]/);
+        assert.match((await bot.replyAlt('/defi xyz'))[0], /^❌ "xyz" não é um protocolo: use orca, prjx ou morpho\.\n\n```Usage: \/defi \[orca\|prjx\|morpho\]/);
 
         assert.deepEqual(await bot.replyAlt('/defi -rm 1'), ['🗑️ Removido: Orca · ime1…VPcg']);
         assert.match((await bot.replyAlt('/defi'))[0], /🌊 Nenhuma posição cadastrada/);
@@ -177,7 +177,7 @@ describe('/defi', () => {
     test('cadastro: só -address basta; erros de protocolo, endereço, conta, NFT, pool e repetida', async () => {
         const errorAlt = async (line, expected) => assert.match((await bot.replyAlt(line))[0], expected, line);
 
-        await errorAlt(`/defi -address ${POSITION}`, /❌ Informe o protocolo: orca ou prjx, antes do -address/);
+        await errorAlt(`/defi -address ${POSITION}`, /❌ Informe o protocolo antes do -address ou do -wallet: orca, prjx ou morpho/);
         await errorAlt('/defi orca -address', /❌ Informe o endereço da posição/);
         await errorAlt('/defi orca -address xyz', /❌ -address: "xyz" não é um endereço da Solana/);
         await errorAlt(`/defi orca -address ${POSITION} -nft ${POOL}`, /❌ O NFT .* não é o desta posição \(o dela é 9UkH/);
@@ -473,21 +473,24 @@ describe('/defi: Project X (HyperEVM)', () => {
         simulateHyperEvm();
     });
 
-    test('prjx -address: cadastra a carteira; erros de endereço, repetida e sem -address', async () => {
+    test('prjx -wallet: cadastra a carteira; erros de endereço, repetida, sem -wallet e com -address', async () => {
         const errorAlt = async (line, expectedRe) => assert.match((await bot.replyAlt(line))[0], expectedRe, line);
 
-        await errorAlt('/defi prjx -address', /❌ Informe a carteira: -address <0x\.\.\.>/);
-        await errorAlt('/defi prjx -address xyz', /❌ -address: "xyz" não é um endereço da HyperEVM/);
-        await errorAlt(`/defi prjx -address <${WALLET}>`, /^✅ \*Carteira do Project X cadastrada:\* 0x12…5678\n📍 2 posições abertas\./);
-        await errorAlt(`/defi prjx -address ${WALLET.toLowerCase()}`, /ℹ️ 0x12…5678 já está cadastrada/);
+        await errorAlt('/defi prjx -wallet', /❌ Informe a carteira: -wallet <0x\.\.\.>/);
+        await errorAlt('/defi prjx -wallet xyz', /❌ -wallet: "xyz" não é uma carteira EVM/);
+        await errorAlt(`/defi prjx -address ${WALLET}`, /❌ No Project X, a carteira vai no -wallet: \/defi prjx -wallet <0x\.\.\.>/);
+        await errorAlt(`/defi orca -wallet ${WALLET}`, /❌ Na Orca, a posição vai no -address/);
+        await errorAlt(`/defi prjx -wallet <${WALLET}>`, /^✅ \*Carteira do Project X cadastrada:\* 0x12…5678\n📍 2 posições abertas\./);
+        await errorAlt(`/defi prjx -wallet ${WALLET.toLowerCase()}`, /ℹ️ 0x12…5678 já está cadastrada no Project X/);
 
         const [list] = await bot.replyAlt('/defi -l');
         assert.match(list, /^🌊 \*Posições DeFi\* \(1\)\n\n1\. Project X · carteira 0x12…5678 _\(desde /);
-        assert.equal((await bot.dbGet('SELECT protocol, position FROM defi_positions')).position, WALLET.toLowerCase());
+        assert.deepEqual(await bot.dbGet('SELECT protocol, address, wallet FROM defi_positions'),
+            { protocol: 'prjx', address: null, wallet: WALLET.toLowerCase() });
     });
 
     test('/defi prjx: uma resposta por posição aberta, da mais nova para a mais velha (a fechada fica de fora)', async () => {
-        await bot.replyAlt(`/defi prjx -address ${WALLET}`);
+        await bot.replyAlt(`/defi prjx -wallet ${WALLET}`);
         const [hype, btc, ...rest] = await bot.replyAlt('/defi prjx');
         assert.deepEqual(rest, []);
 
@@ -505,7 +508,7 @@ describe('/defi: Project X (HyperEVM)', () => {
 
     test('/defi orca e /defi prjx filtram, -rm de vários e a lista: inteira só no seu privado', async () => {
         await bot.replyAlt(REGISTRATION);
-        await bot.replyAlt(`/defi prjx -address ${WALLET}`);
+        await bot.replyAlt(`/defi prjx -wallet ${WALLET}`);
 
         const soOrca = await bot.replyAlt('/defi orca');
         assert.deepEqual(soOrca.map(t => t.split('\n')[0].split(' ·')[0]), ['🌊 *Orca']);
@@ -524,19 +527,28 @@ describe('/defi: Project X (HyperEVM)', () => {
         assert.match((await bot.replyAlt('/defi prjx'))[0], /🌊 Nada cadastrado do Project X/);
     });
 
+    test('no seu privado, o /defi mostra os endereços inteiros', async () => {
+        await bot.replyAlt(REGISTRATION);
+        await bot.replyAlt(`/defi prjx -wallet ${EMPTY}`);
+        const r = await bot.replyAlt('/defi', { chat: OWNER.jid });
+        assert.match(r[0], new RegExp(`^🌊 \\*Orca · SOL/cbBTC\\* · taxa [\\d.]+%\n📍 ${POSITION} · `));
+        assert.equal(r[1], `🌊 Project X · carteira ${EMPTY}: nenhuma posição aberta.`);
+        assert.equal((await bot.replyAlt('/defi -rm 2', { chat: OWNER.jid }))[0], `🗑️ Removido: Project X · carteira ${EMPTY}`);
+    });
+
     test('carteira sem posição aberta: cadastra e avisa; o /defi diz que não há nenhuma', async () => {
-        assert.match((await bot.replyAlt(`/defi prjx -address ${EMPTY}`))[0], /ℹ️ Nenhuma posição aberta agora/);
+        assert.match((await bot.replyAlt(`/defi prjx -wallet ${EMPTY}`))[0], /ℹ️ Nenhuma posição aberta agora/);
         assert.deepEqual(await bot.replyAlt('/defi'), ['🌊 Project X · carteira 0x11…1111: nenhuma posição aberta.']);
     });
 
     test('RPC com limite: não cadastra; no /defi, avisa e sugere o defi.hyperevm.rpc', async () => {
         network.responder('post', 'rpc.hyperliquid.xyz/evm', { jsonrpc: '2.0', id: null, error: { code: -32005, message: 'rate limited' } });
-        assert.match((await bot.replyAlt(`/defi prjx -address ${WALLET}`, { erroEsperado: true }))[0],
+        assert.match((await bot.replyAlt(`/defi prjx -wallet ${WALLET}`, { erroEsperado: true }))[0],
             /⚠️ Não consegui ler a carteira agora: RPC da HyperEVM: rate limited\.\n💡 _.*defi\.hyperevm\.rpc/);
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM defi_positions')).n, 0);
 
         simulateHyperEvm();
-        await bot.replyAlt(`/defi prjx -address ${WALLET}`);
+        await bot.replyAlt(`/defi prjx -wallet ${WALLET}`);
         network.responder('post', 'rpc.hyperliquid.xyz/evm', { jsonrpc: '2.0', id: null, error: { code: -32005, message: 'rate limited' } });
         assert.match((await bot.replyAlt('/defi', { erroEsperado: true }))[0],
             /^⚠️ Não consegui ler Project X · carteira 0x12…5678 agora: RPC da HyperEVM: rate limited\.\n💡 _O RPC público da HyperEVM/);
@@ -549,7 +561,7 @@ describe('/defi: Project X (HyperEVM)', () => {
             await checkAlertsDefi({ forcar: true });
             return bot.client.enviadas.slice(beforeAlt).map(e => e.content);
         };
-        await bot.replyAlt(`/defi prjx -address ${WALLET}`);
+        await bot.replyAlt(`/defi prjx -wallet ${WALLET}`);
 
         assert.match((await bot.replyAlt('/defi -a 1 -taxas abc'))[0], /❌ -taxas: informe o valor em dólar/);
         const [on] = await bot.replyAlt('/defi -a 1 -taxas $50');
@@ -574,7 +586,7 @@ describe('/defi: Project X (HyperEVM)', () => {
     });
 
     test('-alerta: na carteira, avisa ao voltar para a faixa, com todas as posições', async () => {
-        await bot.replyAlt(`/defi prjx -address ${WALLET}`);
+        await bot.replyAlt(`/defi prjx -wallet ${WALLET}`);
         await bot.replyAlt('/defi -a 1');
         chainAlt.slot0[POOL_HYPE] = RAW_HYPE * 1.0001 ** 2000;
         const beforeAlt = bot.client.enviadas.length;
@@ -586,7 +598,7 @@ describe('/defi: Project X (HyperEVM)', () => {
 
     test('-alerta: na carteira, avisa quando alguma posição sai da faixa, só com as de fora', async () => {
         chainAlt.slot0[POOL_HYPE] = RAW_HYPE * 1.0001 ** 2000;   // the HYPE one enters the range
-        await bot.replyAlt(`/defi prjx -address ${WALLET}`);
+        await bot.replyAlt(`/defi prjx -wallet ${WALLET}`);
         assert.match((await bot.replyAlt('/defi -alerta 1'))[0], /1\. Project X · carteira 0x12…5678 · ✅ na faixa/);
 
         chainAlt.slot0[POOL_HYPE] = RAW_HYPE;                     // sai
@@ -649,7 +661,7 @@ describe('/defi morpho', () => {
 
     beforeEach(() => {
         morpho.cleanCacheMorpho();
-        delete process.env.MORPHO_WALLET_ADDRESS;
+        process.env.MORPHO_WALLET_ADDRESS = WALLET;   // without a registration, the .env one applies
         byNetwork = { 8453: user({ marketPositions: [MARKET_BTC] }) };
         replyApi((url, cfg) => ({
             data: Object.fromEntries(Object.entries(byNetwork)
@@ -686,7 +698,7 @@ describe('/defi morpho', () => {
     });
 
     test('uma posição: líquido, Health Rate, colateral, dívida e risco', async () => {
-        const [r] = await bot.replyAlt(`/defi morpho -wallet ${WALLET}`);
+        const [r] = await bot.replyAlt('/defi morpho');
         const SEP = '\n\n━━━━━━━━━━━━━━━━━━\n\n';
         assert.equal(r.split(SEP).slice(0, -1).join(SEP), [
             '🦋 *MORPHO* · cbBTC/USDC · Base\n\n💰 *Posição líquida*\n`$11,236,161.74`\n\n❤️ *Health Rate*\n`2.73`',
@@ -713,7 +725,7 @@ describe('/defi morpho', () => {
             healthFactor: null,
             state: { ...MARKET_BTC.state, borrowAssets: 0, borrowAssetsUsd: 0 }
         }];
-        const [r] = await bot.replyAlt('/defi morpho -w ' + WALLET);
+        const [r] = await bot.replyAlt('/defi morpho');
         assert.match(r, /💰 \*Posição líquida\*\n`\$16,407,882\.93`\n\n❤️ \*Health Rate\*\n`∞`/);
         assert.doesNotMatch(r, /BORROWED|LTV atual|liquidação/);
         assert.match(r, /LLTV: `86\.00%`/);
@@ -725,7 +737,7 @@ describe('/defi morpho', () => {
             healthFactor: null,
             state: { collateral: 0, collateralUsd: 0, borrowAssets: 0, borrowAssetsUsd: 0, supplyAssets: 1000000, supplyAssetsUsd: 0.99 }
         }];
-        const [r] = await bot.replyAlt(`/defi morpho -w ${WALLET}`);
+        const [r] = await bot.replyAlt('/defi morpho');
         assert.match(r, /💰 \*Posição líquida\*\n`\$0\.99`\n\n━+\n\n📥 \*SUPPLIED \/ COLLATERAL\*\n\n💵 \*USDC\*\nQuantidade: `1\.00 USDC`/);
         assert.doesNotMatch(r, /Health Rate|RISCO|BORROWED/);
 
@@ -754,7 +766,7 @@ describe('/defi morpho', () => {
             }]
         });
 
-        const [r] = await bot.replyAlt(`/defi morpho -w ${WALLET}`);
+        const [r] = await bot.replyAlt('/defi morpho');
         // Fornecido: 16,407,882.93 + 2,499.97 + 8,000; emprestado: 5,171,721.19 + 4,950
         assert.match(r, /💰 \*Total líquido\*\n`\$11,241,711\.71`\n\n📥 \*Total supplied\/collateral\*\n`\$16,418,382\.90`\n\n📤 \*Total borrowed\*\n`\$5,176,671\.19`/);
         assert.match(r, /\*POSIÇÃO 1\* · cbBTC\/USDC · Base[\s\S]*Health Rate: `2\.73`/);
@@ -780,17 +792,18 @@ describe('/defi morpho', () => {
             }
         }];
 
-        const [r] = await bot.replyAlt(`/defi morpho -w ${WALLET}`);
+        const [r] = await bot.replyAlt('/defi morpho');
         assert.match(r, /^🦋 \*MORPHO\* · RSS\/eUSD · Base\n\n_Sem preço em USD \(fora dos totais\): RSS, eUSD_\n\n❤️ \*Health Rate\*\n`325\.91`/);
         assert.doesNotMatch(r, /Valor:|Posição líquida/);
         assert.match(r, /Quantidade: `9,497,294\.99999998 RSS`/);
         assert.match(r, /Preço de liquidação: `153\.42 eUSD`/);
     });
 
-    test('carteira: o -wallet, o MORPHO_WALLET_ADDRESS, o setting e as inválidas', async () => {
+    test('sem cadastro: o MORPHO_WALLET_ADDRESS, o setting ou o aviso de não configurado', async () => {
+        delete process.env.MORPHO_WALLET_ADDRESS;
         assert.deepEqual(await bot.replyAlt('/defi morpho'), [
             '❌ Endereço da carteira Morpho não configurado.\n\n' +
-            'Configure MORPHO_WALLET_ADDRESS no arquivo .env (ou /set defi.morpho.wallet <0x...>), ou informe a carteira: /defi morpho -wallet <0x...>']);
+            'Configure MORPHO_WALLET_ADDRESS no arquivo .env (ou /set defi.morpho.wallet <0x...>), ou cadastre a carteira: /defi morpho -wallet <0x...>']);
 
         await bot.setSetting('defi.morpho.wallet', OTHER);
         await bot.replyAlt('/defi morpho');
@@ -799,17 +812,47 @@ describe('/defi morpho', () => {
         process.env.MORPHO_WALLET_ADDRESS = WALLET;   // the .env has priority
         await bot.replyAlt('/defi morpho');
         assert.equal(network.chamadas.at(-1).cfg.body.variables.carteira, WALLET);
-
-        assert.deepEqual(await bot.replyAlt('/defi morpho -w 0x123'), ['❌ "0x123" não é uma carteira EVM (0x e 40 caracteres hexadecimais).']);
-        assert.deepEqual(await bot.replyAlt('/defi morpho -w'), ['❌ Informe a carteira: /defi morpho -wallet <0x...>']);
-        assert.deepEqual(await bot.replyAlt(`/defi -w ${WALLET}`), ['❌ O -wallet é do morpho: /defi morpho -wallet <0x...>']);
-        assert.match((await bot.replyAlt(`/defi morpho -address ${WALLET}`))[0], /❌ O morpho só aceita o -wallet.*o -address é da Orca/);
         await assert.rejects(bot.setSetting('defi.morpho.wallet', 'xyz'), /0x e 40 caracteres/);
+    });
+
+    test('-wallet cadastra: /defi e /defi morpho mostram, -l e -rm valem, o -alerta não', async () => {
+        delete process.env.MORPHO_WALLET_ADDRESS;
+        assert.equal((await bot.replyAlt(`/defi morpho -w ${WALLET}`))[0],
+            '✅ *Carteira do Morpho cadastrada:* 0x74…97C4\n📍 1 posição aberta.\n💡 _Veja com /defi morpho_');
+        assert.match((await bot.replyAlt(`/defi morpho -wallet ${WALLET}`))[0], /ℹ️ 0x74…97C4 já está cadastrada no Morpho/);
+        assert.match((await bot.replyAlt('/defi morpho -w 0x123'))[0], /❌ -wallet: "0x123" não é uma carteira EVM/);
+        assert.match((await bot.replyAlt(`/defi morpho -address ${WALLET}`))[0], /❌ No Morpho, a carteira vai no -wallet/);
+        assert.match((await bot.replyAlt(`/defi morpho -w ${OTHER} -alerta`))[0], /❌ O alerta do \/defi é de faixa, só da Orca e do Project X: o Morpho não tem/);
+
+        assert.match((await bot.replyAlt('/defi morpho'))[0], /^🦋 \*MORPHO\* · cbBTC\/USDC · Base[\s\S]*👛 Carteira: `0x74…97c4`/);
+        assert.match((await bot.replyAlt('/defi'))[0], /^🦋 \*MORPHO\*/);
+        assert.match((await bot.replyAlt('/defi morpho', { chat: OWNER.jid }))[0], new RegExp(`👛 Carteira: \`${WALLET.toLowerCase()}\``));
+
+        assert.match((await bot.replyAlt('/defi -l'))[0], /1\. Morpho · carteira 0x74…97c4 _/);
+        assert.match((await bot.replyAlt('/defi -alerta 1'))[0], /❌ O alerta do \/defi é de faixa, só da Orca e do Project X: a nº 1 é do Morpho/);
+        assert.match((await bot.replyAlt('/defi -alerta all'))[0], /🌊 Nenhuma posição da Orca ou do Project X cadastrada/);
+        assert.equal((await bot.replyAlt('/defi -rm 1'))[0], '🗑️ Removido: Morpho · carteira 0x74…97c4');
+
+        // The same wallet in Morpho and Project X: two registrations
+        await bot.dbRun("INSERT INTO defi_positions (protocol, wallet, created_at) VALUES ('prjx', ?, 0)", [WALLET.toLowerCase()]);
+        assert.match((await bot.replyAlt(`/defi morpho -w ${WALLET}`))[0], /✅ \*Carteira do Morpho cadastrada/);
+    });
+
+    test('cadastrada com a API fora do ar: não cadastra; depois, o /defi avisa', async () => {
+        network.limpar();
+        replyApi(errorHttp(503));
+        assert.equal((await bot.replyAlt(`/defi morpho -w ${WALLET}`, { erroEsperado: true }))[0],
+            '⚠️ Não consegui ler a carteira agora: A API do Morpho está fora do ar.\n💡 _Tente de novo em alguns instantes._');
+        assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM defi_positions')).n, 0);
+
+        await bot.dbRun("INSERT INTO defi_positions (protocol, wallet, created_at) VALUES ('morpho', ?, 0)", [WALLET.toLowerCase()]);
+        assert.deepEqual(await bot.replyAlt('/defi', { erroEsperado: true }),
+            ['⚠️ Não consegui ler Morpho · carteira 0x74…97c4 agora: A API do Morpho está fora do ar.\n💡 _Tente de novo em alguns instantes._']);
     });
 
     test('nenhuma posição aberta (as zeradas não contam)', async () => {
         byNetwork[8453] = user({ vaultPositions: [{ ...VAULT, state: { assets: 0, assetsUsd: 0 } }] });
-        assert.deepEqual(await bot.replyAlt(`/defi morpho -w ${WALLET}`),
+        assert.deepEqual(await bot.replyAlt('/defi morpho'),
             ['🦋 *MORPHO*\n\nNenhuma posição aberta na carteira `0x74…97C4` (chain 8453).']);
     });
 
@@ -818,7 +861,7 @@ describe('/defi morpho', () => {
             morpho.cleanCacheMorpho();
             network.limpar();
             replyApi(reply);
-            const [r] = await bot.replyAlt(`/defi morpho -w ${WALLET}`, { erroEsperado: true });
+            const [r] = await bot.replyAlt('/defi morpho', { erroEsperado: true });
             assert.match(r, /^❌ \*Erro ao consultar Morpho\*\n\n.*\n\nTente novamente em alguns instantes\.$/);
             return r.split('\n')[2];
         };
@@ -843,10 +886,13 @@ describe('/defi morpho', () => {
     });
 
     test('cache de 30 s: a mesma carteira não consulta a API de novo', async () => {
-        await bot.replyAlt(`/defi morpho -w ${WALLET}`);
-        await bot.replyAlt(`/defi morpho -w ${WALLET.toLowerCase()}`);
+        await bot.replyAlt('/defi morpho');
+        await bot.replyAlt('/defi morpho');
         assert.equal(network.chamadas.length, 1);
 
+        // The registration (in lowercase) is the same wallet; another query
+        await bot.replyAlt(`/defi morpho -w ${WALLET}`);
+        assert.equal(network.chamadas.length, 1);
         await bot.replyAlt(`/defi morpho -w ${OTHER}`);
         assert.equal(network.chamadas.length, 2, 'outra carteira consulta');
     });

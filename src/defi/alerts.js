@@ -4,7 +4,7 @@
  */
 
 const { estado: stateAlt } = require('../state');
-const { describe, alertDescribeDestination, alertDestinations, fmtUsd, readRegistration } = require('../commands/defi');
+const { describe, alertDescribeDestination, alertDestinations, addressAlt2, fmtUsd, readRegistration } = require('../commands/defi');
 const { dbAll, dbReady, dbRun } = require('../db');
 const { sendToDestinations } = require('../destinations');
 const { printError, printInfo } = require('../log');
@@ -22,7 +22,7 @@ async function notify(p, n, emoji, title, texts) {
     const textAlt = `${emoji} *${title}*\n\n${texts.join('\n\n')}\n\n💡 _Desligue com /defi -alerta -rm ${n}._`;
     await sendToDestinations(alertDestinations(p), textAlt, { assunto: title })
         .then(() => printInfo(`/defi -alerta: ${title} → ${alertDescribeDestination(p)}`))
-        .catch(err => printError(`/defi -alerta: falha ao avisar (${p.position}):`, err.message));
+        .catch(err => printError(`/defi -alerta: falha ao avisar (${addressAlt2(p)}):`, err.message));
 }
 
 // Saves BEFORE notifying: if the send fails, it does not repeat on every check
@@ -71,7 +71,7 @@ async function checkAlertsDefi({ forcar: force = false } = {}) {
             try {
                 lido = await readRegistration(p);
             } catch (err) {
-                printError(`/defi -alerta: não consegui ler ${p.position}:`, err.message);
+                printError(`/defi -alerta: não consegui ler ${addressAlt2(p)}:`, err.message);
                 continue;
             }
 
