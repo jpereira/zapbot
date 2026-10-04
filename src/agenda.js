@@ -6,9 +6,11 @@ const { enviarMidias, erroDosComandos, montarTexto } = require('./agendaComandos
 const { estado } = require('./estado');
 const { client } = require('./cliente');
 const { dbAll, dbGet, dbPronto, dbRun } = require('./db');
-const { descreverDestino, extrairDestinos, resolverOuEscolher } = require('./destinos');
+const {
+    descreverDestino, enviarAosDestinos, extrairDestinos, resolverOuEscolher
+} = require('./destinos');
 const { printError, printInfo } = require('./log');
-const { textoDoStatus } = require('./status');
+const { destinosDoStatus, textoDoStatus } = require('./status');
 const { getSetting } = require('./settings');
 const { plural, resumirTexto, semAcentos } = require('./util/formatar');
 const { REPETICOES, fmtQuando, lerQuando, partesEmBrasilia, proximaRepeticao } = require('./util/quando');
@@ -437,9 +439,13 @@ async function dispararItem(s, agora) {
     }
 
     if (s.kind === 'status') {
-        // O relatório do /bot -status, montado na hora
-        await client.sendMessage(s.chat_id, await textoDoStatus(agora));
-        printInfo(`/bot -status: enviado para ${ondeNoLog(destinosDoItem(s)[0])}${atrasado ? ' (atrasado)' : ''}`);
+        // O relatório do /bot -status, montado na hora, nos destinos do -to (sem eles, o privado)
+        const destinos = destinosDoStatus(s);
+        const texto = await textoDoStatus(agora);
+        await enviarAosDestinos(destinos, texto, { assunto: '📊 Status do ZapBot' })
+            .catch(err => printError('/bot -status: falha ao enviar:', err.message));
+        printInfo(`/bot -status: enviado para ${destinos.length ? destinos.map(d => d.email ?? d.id).join(', ') : 'seu privado'}` +
+            (atrasado ? ' (atrasado)' : ''));
         return;
     }
 

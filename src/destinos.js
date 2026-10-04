@@ -421,6 +421,11 @@ const salvavel = (d) => (d.email
     : { id: d.id, nome: d.nome, grupo: Boolean(d.grupo) });
 const recipientsDe = (destinos) => (destinos.length > 1 ? JSON.stringify(destinos.map(salvavel)) : null);
 
+// O mesmo, com qualquer quantidade (o status diário: sem nenhum, null = o seu privado)
+const destinosParaSalvar = (destinos) => (destinos.length
+    ? JSON.stringify(destinos.map(salvavel))
+    : null);
+
 // O contrário: o JSON (ou o destino único das dest_*) → a lista; [] = o seu privado
 const destinosSalvos = (recipients, unico) => (recipients ? JSON.parse(recipients) : unico ? [unico] : []);
 
@@ -454,6 +459,7 @@ module.exports = {
     descreverDestino,
     descreverDestinos,
     destinoDaLinha,
+    destinosParaSalvar,
     destinosSalvos,
     emailsDoSmtpTo,
     enviarAoDestino,

@@ -8,7 +8,8 @@ usar:
 - **Os outros** (os [usuários](bot.md#usuários)): só os comandos comuns, os sem
   ✅ na [tabela de comandos](index.md#resumo). O menu vem com
   `(os comandos que você pode usar)` no título, e o `/help` de um comando admin
-  responde `⛔ O /show é só do dono do bot (e dos admins).`
+  responde `⛔ O /show é só do dono do bot (e dos admins).` Quem está limitado a
+  alguns comandos ([`/bot +cmd`](bot.md#comandos-de-cada-usuário)) vê só esses.
 
 ```
 /help

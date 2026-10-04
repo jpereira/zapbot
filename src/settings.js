@@ -32,6 +32,26 @@ function telefoneDoItem(v) {
     return digitos;
 }
 
+// Um item do bot.users: 'all', null (false), um grupo, uma pessoa ou uma pessoa só num grupo
+function itemDeUsuario(v) {
+    const s = v.trim().toLowerCase();
+    if (['all', 'todos', 'true', 'on', 'sim', 'yes'].includes(s)) return 'all';
+    if (['false', 'off', 'nao', 'não', 'no', 'ninguem', 'ninguém'].includes(s)) return null;
+    if (/^[\d-]+@g\.us$/.test(s)) return s;
+    const soNoGrupo = s.match(/^(.+):([\d-]+@g\.us)$/);
+    if (soNoGrupo) return `${telefoneDoItem(soNoGrupo[1])}:${soNoGrupo[2]}`;
+    return telefoneDoItem(v);
+}
+
+// "/creptomoeda" ou "crypto" → "/crypto"; comando que não existe ou admin: erro
+function comandoDeUsuario(v) {
+    const nome = v.startsWith('/') ? v.toLowerCase() : `/${v.toLowerCase()}`;
+    const command = botConfig.commands.find(c => c.cmd === nome || c.aliases?.includes(nome));
+    if (!command) throw new Error(`comando desconhecido: ${nome}`);
+    if (command.onlyAdmin) throw new Error(`o ${command.cmd} é só do dono e dos admins`);
+    return command.cmd;
+}
+
 // item() das listas de feeds do /news e validar() dos RPCs do /defi
 function validarUrlFeed(v) {
     if (!isValidHttpUrl(v)) throw new Error(`URL inválida: ${v}`);
@@ -103,24 +123,38 @@ const SETTINGS_SCHEMA = {
     /*
      * Quem usa os comandos comuns (os não-admin), além do dono e do bot.admins:
      * [] (false, o padrão) ninguém; ['all'] (true) todos; ou pessoas (o
-     * telefone) e grupos (o id @g.us: qualquer um, mas só dentro do grupo).
+     * telefone), grupos (o id @g.us: qualquer um, mas só dentro do grupo) e
+     * pessoas só num grupo ("telefone:id@g.us", o /bot +v digitado no grupo).
      */
     'bot.users': {
         default: [],
         type: 'list',
-        desc: 'Quem usa os comandos comuns (os não-admin), além do dono e do bot.admins: false (ninguém, o padrão), true (todos) ou pessoas e grupos (num grupo, todos ali usam, mas só dentro dele). Só o dono altera; pelo /set vale o nome (/set bot.users /Camila Gama/ /Grupo Familia/), e o /bot +v|-v é o atalho.',
-        item: (v) => {
-            const s = v.trim().toLowerCase();
-            if (['all', 'todos', 'true', 'on', 'sim', 'yes'].includes(s)) return 'all';
-            if (['false', 'off', 'nao', 'não', 'no', 'ninguem', 'ninguém'].includes(s)) return null;
-            if (/^[\d-]+@g\.us$/.test(s)) return s;
-            return telefoneDoItem(v);
-        },
+        desc: 'Quem usa os comandos comuns (os não-admin), além do dono e do bot.admins: false (ninguém, o padrão), true (todos) ou pessoas e grupos (num grupo, todos ali usam, mas só dentro dele); uma pessoa só num grupo fica como telefone:grupo. Só o dono altera; pelo /set vale o nome (/set bot.users /Camila Gama/ /Grupo Familia/), e o /bot +v|-v é o atalho.',
+        item: itemDeUsuario,
         lista: (itens) => {
             if (itens.includes('all') && itens.length > 1) {
-                throw new Error('o true (todos) não se mistura com pessoas e grupos: para liberar só alguns, /bot +admin antes');
+                throw new Error('o true (todos) não se mistura com pessoas e grupos: para liberar só alguns, /set bot.users false antes');
             }
             return itens;
+        }
+    },
+    /*
+     * Os comandos de cada usuário (o /bot +cmd|-cmd): "item=/a,/b" (só esses) ou
+     * "item=!/a,/b" (todos os comuns, menos esses), em que o item é o mesmo do
+     * bot.users. Sem linha: todos os comuns. Um por linha (ou separados por espaço).
+     */
+    'bot.users.cmds': {
+        default: [],
+        type: 'list',
+        separator: /\s+/,
+        desc: 'Os comandos de cada usuário (o /bot +cmd|-cmd): item=/a,/b (só esses) ou item=!/a,/b (todos os comuns, menos esses), com o item do bot.users. Sem linha: todos os comuns.',
+        item: (v) => {
+            const m = v.match(/^(.+)=(!?)(.+)$/);
+            if (!m) throw new Error(`use item=/cmd,/cmd (ou item=!/cmd para todos menos esse): ${v}`);
+            const alvo = itemDeUsuario(m[1]);
+            if (!alvo || alvo === 'all') throw new Error(`item inválido: ${m[1]}`);
+            const comandos = [...new Set(m[3].split(',').filter(Boolean).map(comandoDeUsuario))];
+            return `${alvo}=${m[2]}${comandos.join(',')}`;
         }
     },
     'cache.editedRetentionDays': {
@@ -210,6 +244,16 @@ const SETTINGS_SCHEMA = {
         default: 90,
         type: 'number', min: 1, max: 365,
         desc: 'Dias que as enquetes e os votos ficam guardados para o /enquete -r.'
+    },
+    'flood.intervalCommand': {
+        default: 2,
+        type: 'number', min: 1, max: 3600,
+        desc: 'Proteção contra flood: a janela, em segundos, em que se conta o flood.maxCommandRepeated, e quanto tempo o bot ignora quem passou do limite.'
+    },
+    'flood.maxCommandRepeated': {
+        default: 3,
+        type: 'number', min: 0, max: 100,
+        desc: 'Proteção contra flood: quantas vezes quem não é admin pode repetir o mesmo comando em flood.intervalCommand segundos; passou, o bot avisa uma vez e ignora a pessoa até o intervalo acabar. 0 desliga.'
     },
     'get.maxDownloadMB': {
         default: 200,
@@ -615,6 +659,7 @@ function stickerMeta() {
 module.exports = {
     SETTINGS_SCHEMA,
     carregarSettings,
+    comandoDeUsuario,
     envOuSetting,
     getSetting,
     isDebugMode,

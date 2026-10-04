@@ -2,10 +2,11 @@
  * Comando /whois.
  */
 
-const { PAPEIS, descreverItem, escopoDoChat, legenda } = require('./bot');
+const { PAPEIS, descreverItem, escopoDoChat, permissoes } = require('./bot');
 const { ehODono, itensDoTexto } = require('./set');
 const { client } = require('../cliente');
-const { resolveLidToPhone } = require('../contatos');
+const { resolveLidToPhone, resolverNomeDoGrupo } = require('../contatos');
+const { descreverRegra, permissaoAqui } = require('../permissoes');
 const { resolverOuEscolher } = require('../destinos');
 const { getSetting } = require('../settings');
 
@@ -20,13 +21,22 @@ const { getSetting } = require('../settings');
  */
 
 // O nível de alguém neste chat, do mais alto ao mais baixo
-function nivelDe(numero, { chatId, isGroup }) {
+async function nivelDe(numero, { chatId, isGroup }) {
     const users = getSetting('bot.users');
+    const soNosGrupos = users.filter(u => u.startsWith(`${numero}:`))
+        .map(u => u.slice(u.indexOf(':') + 1));
     if (ehODono(numero)) return `${PAPEIS.dono} dono`;
     if (getSetting('bot.admins').includes(numero)) return `${PAPEIS.admin} +o`;
     if (users.includes(numero)) return `${PAPEIS.usuario} +v`;
-    if (users.includes('all')) return `${PAPEIS.usuario} todos (bot.users true)`;
+    if (users.includes('all')) return `${PAPEIS.usuario} todos`;
     if (isGroup && users.includes(chatId)) return `${PAPEIS.usuario} +v pelo grupo`;
+    if (isGroup && soNosGrupos.includes(chatId)) return `${PAPEIS.usuario} +v neste grupo`;
+
+    // Só noutros grupos: diz onde
+    if (soNosGrupos.length) {
+        const grupos = await Promise.all(soNosGrupos.map(async g => `👥 ${await resolverNomeDoGrupo(g).catch(() => null) || g}`));
+        return `${PAPEIS.nenhum} sem permissão aqui (só em ${grupos.join(', ')})`;
+    }
     return `${PAPEIS.nenhum} sem permissão`;
 }
 
@@ -106,13 +116,18 @@ async function cmdWhois({ msg, args, quotedMsg, senderNumber, chatId, isGroup, a
     }
 
     const chat = { chatId, isGroup };
-    const { membros } = await escopoDoChat(chat);
-    const niveis = numeros.map(n => nivelDe(n, chat));
-    const linhas = await Promise.all(numeros.map(async (n, i) =>
-        `• ${niveis[i]} · ${await descreverItem(n, membros)}`));
+    const escopo = await escopoDoChat(chat);
+    const niveis = await Promise.all(numeros.map(n => nivelDe(n, chat)));
+    // Usuário com regra (o /bot +cmd|-cmd): os comandos dele aqui, embaixo
+    const linhas = await Promise.all(numeros.map(async (n, i) => {
+        const { regras } = permissaoAqui({ numero: n, chatId, isGroup });
+        const usuario = niveis[i].startsWith(PAPEIS.usuario);
+        return `• ${niveis[i]} · ${await descreverItem(n, escopo)}` +
+            (usuario && regras.length ? `\n → ${regras.map(descreverRegra).join('; ')}` : '');
+    }));
 
-    await msg.reply(`*Quem é?* (${numeros.length})\n${linhas.join('\n')}\n` +
-        legenda({
+    await msg.reply(`*Quem é?* (${numeros.length})\n${linhas.join('\n')}\n\n` +
+        permissoes({
             dono: numeros.some(ehODono),
             semPermissao: niveis.some(n => n.startsWith(PAPEIS.nenhum))
         }) +

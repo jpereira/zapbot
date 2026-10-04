@@ -93,11 +93,14 @@ aviso no `PHONE_NUMBER`:
 
 Os comandos que não são admin (`/get`, `/tempo`, `/sticker`...) são de quem
 estiver no setting `bot.users`, que **vem `false`**: só você (e os admins
-extras) usa comandos. Com `/bot -admin` (`bot.users` = `true`), todos usam; com
-`/bot +v /Camila Gama/ /Grupo Familia/`, só essas pessoas (em qualquer chat) e
-esses grupos (qualquer um, dentro do grupo). Veja [Usuários](bot.md#usuários).
+extras) usa comandos. Com `/bot +v /Camila Gama/ /Grupo Familia/`, essas
+pessoas (em qualquer chat) e esses grupos (qualquer um, dentro do grupo) também
+usam; o `/bot +v` de uma pessoa digitado num grupo vale só nesse grupo; com
+`/set bot.users true`, todos. Veja [Usuários](bot.md#usuários).
 Para saber o seu nível (ou, sendo dono ou admin, o de alguém), use o
-[`/whois`](whois.md).
+[`/whois`](whois.md). Quem não é admin tem uma
+[proteção contra flood](bot.md#proteção-contra-flood): o mesmo comando, no
+máximo 3 vezes em 2 segundos.
 
 As **respostas do próprio bot** também saem pela sua conta, mas nunca são
 tratadas como comando, mesmo que comecem com `/`. Sem isso, alguém poderia
@@ -110,7 +113,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -a`) para fazer o bot
 |---|---|:-:|---|
 | [`/backup`](backup.md) | `/bkp` | ✅ | Backup do banco: automático todo dia; lista, detalha, restaura e envia o arquivo |
 | [`/boletos`](boletos.md) | | ✅ | Sorteia 2 membros para "pagar um boleto" |
-| [`/bot`](bot.md) | | ✅ | Liga/desliga todos os comandos (`-on`/`-off`) e diz quem usa: admins (`+o`/`-o`), usuários (`+v`/`-v`), todos (`-admin`) ou só você (`+admin`); `-reset` volta ao padrão; `-status` (`-s`): relatório das últimas 24 h, e `-s 06h` manda todo dia; `-info` (`-i`): versões e sistema |
+| [`/bot`](bot.md) | `/b` | ✅ | Status do bot (relatório de 24 h e os usuários); liga/desliga os comandos (`-on`/`-off`) e diz quem usa: admins (`+o`/`-o`) e usuários (`+v`/`-v`, em qualquer chat ou só num grupo); `-reset` volta ao padrão; `-status` (`-s`): relatório das últimas 24 h, e `-s 06h` manda todo dia; `-info` (`-i`): versões e sistema |
 | [`/cache`](cache.md) | `/c` | ✅ | Uso e limpeza do cache |
 | [`/cotacao`](cotacao.md) | `/cambio` | | Cotação de EUR e USDT (e USD, GBP) contra o real: atual, abertura, fechamento e variação; alertas de preço |
 | [`/cron`](cron.md) | `/agenda`, `/lembrete` | ✅ | Na hora marcada (`30m`, `às 18h`, `sexta 9h`...): envia uma mensagem (aqui ou com `-to`, em um ou vários chats) ou, como `/lembrete`, um ⏰ lembrete; pode repetir, editar e pausar, e rodar comandos no texto (`{/crypto}`) |

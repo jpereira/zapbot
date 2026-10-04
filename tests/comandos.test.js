@@ -104,29 +104,34 @@ describe('/noffa', () => {
 });
 
 describe('/bot', () => {
-    test('-h: os pares +admin/-admin, +o/-o e +v/-v juntos, uma linha cada', async () => {
+    test('-h: os pares +o/-o, +v/-v e +cmd/-cmd juntos, uma opção por bloco (separadas por uma linha em branco)', async () => {
         const [r] = await bot.responder('/bot -h');
         const linhas = r.split('\n').filter(l => /^  [+-]/.test(l)).map(l => l.trim().split(/\s{2,}/)[0]);
-        assert.deepEqual(linhas, ['-on', '-off', '+admin, -admin', '+o, -o [pessoa...]', '+v, -v [pessoa|grupo...]',
-            '-all-users, -au', '-reset, -r', '-status, -s [<hora>|off]', '-info, -i']);
-        assert.doesNotMatch(r, /Arguments:/);
+        assert.deepEqual(linhas, ['-on', '-off', '+o, -o [pessoa...]', '+v, -v [pessoa|grupo...]', '+cmd, -cmd <comandos>', '-users, -u',
+            '-all-users, -au', '-reset, -r [force]', '-status, -s [<hora>|off]', '-to <destino>', '-info, -i']);
+        assert.match(r, /\n  -on {2,}Liga o bot\.\n\n  -off /);
+        assert.doesNotMatch(r, /admin, -admin|Arguments:/);
     });
 
-    test('sem opção mostra os dois estados', async () => {
+    test('sem opção: o status (o mesmo do -status), com o estado no topo e quem usa', async () => {
         const [r] = await bot.responder('/bot');
-        assert.match(r, /▶️ \*Bot:\* ativo/);
-        assert.match(r, /🔓 \*Comandos:\* todos usam os comuns/);
+        assert.match(r, /^📊 \*Status do ZapBot .*\n_.*_\n\n▶️ \*Bot:\* ativo\n🔓 \*Comandos:\* todos usam os comuns\n⚠️ .*\/set bot\.users false/);
+        assert.match(r, /\n💾 \*Último backup:\* nenhum\n\n🔕 Status diário desligado\./);
+        assert.match(r, /\n\nℹ️ _Mais informações em \/bot -h_$/);
+        // O mesmo do -status (a hora e as mensagens, que contam o próprio comando, à parte)
+        const sem = (t) => t.replace(/_\S{3} [\d/: ]+_/, '').replace(/· \d+ mensage[mn]s?/, '');
+        assert.equal(sem((await bot.responder('/bot -status'))[0]), sem(r));
     });
 
-    test('-off, -on, +admin e -admin gravam os settings (+admin: bot.users false; -admin: true)', async () => {
-        await bot.responder('/bot -off');
+    test('-off e -on só ligam e desligam: os admins e os usuários ficam', async () => {
+        await bot.setSetting('bot.admins', ['5521933333333']);
+        await bot.setSetting('bot.users', ['5521911111111']);
+        const [desligado] = await bot.responder('/bot -off');
         assert.equal(bot.getSetting('bot.paused'), true);
-        await bot.responder('/bot -on +admin');
+        assert.match(desligado, /^⏸️ \*Bot:\* desligado/);
+        await bot.responder('/bot -on');
         assert.equal(bot.getSetting('bot.paused'), false);
-        assert.deepEqual(bot.getSetting('bot.users'), []);
-        const [r] = await bot.responder('/bot -admin');
-        assert.deepEqual(bot.getSetting('bot.users'), ['all']);
-        assert.match(r, /🔓 \*Comandos:\* todos usam os comuns/);
+        assert.deepEqual([bot.getSetting('bot.admins'), bot.getSetting('bot.users')], [['5521933333333'], ['5521911111111']]);
     });
 
     test('-info: avisa versão nova do yt-dlp (PyPI) e do whatsapp-web.js (release e commits no main)', async () => {
@@ -174,17 +179,18 @@ describe('/bot', () => {
         assert.equal(bot.getSetting('bot.paused'), false);
     });
 
-    test('-au combina com as outras: -on -au liga e mostra todos', async () => {
+    test('-users e -all-users combinam com -on/-off: -on -all-users liga e mostra todos', async () => {
         await bot.setSetting('bot.paused', true);
         await bot.setSetting('bot.users', ['5521911111111', '5521977777777']);
-        const [r] = await bot.responder('/bot -on -au');
+        const [r] = await bot.responder('/bot -on -all-users');
         assert.equal(bot.getSetting('bot.paused'), false);
-        assert.match(r, /^▶️ \*Bot:\* ativo\n[\s\S]*\*Quem usa\* \(2\)\n/);
+        assert.match(r, /^▶️ \*Bot:\* ativo\n[\s\S]*\n\n\*Usuários\* \(2\)\n/);
         assert.doesNotMatch(r, /fora daqui/);
+        assert.match((await bot.responder('/b -on -u'))[0], /\n\n\*Usuários\* \(1\) neste grupo\n/);
     });
 
     test('combinações inválidas mostram o uso', async () => {
-        for (const linha of ['/bot -on -off', '/bot +admin -admin', '/bot xyz']) {
+        for (const linha of ['/bot -on -off', '/bot +admin', '/bot -admin', '/bot xyz']) {
             assert.match((await bot.responder(linha))[0], /❌ Uso: \/bot/, linha);
         }
     });

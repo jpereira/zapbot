@@ -181,6 +181,9 @@ const ehODono = (numero) => numero === client.info?.wid?.user;
 // o all, "true (todos)"
 async function comNome(numero) {
     if (numero === 'all') return 'true (todos)';
+    // A pessoa só num grupo: "5521999999999 (Maria) só em 👥 Amigos"
+    const soNoGrupo = numero.match(/^(\d+):(.+@g\.us)$/);
+    if (soNoGrupo) return `${await comNome(soNoGrupo[1])} só em ${await comNome(soNoGrupo[2])}`;
     if (numero.endsWith('@g.us')) {
         return `👥 ${await resolverNomeDoGrupo(numero).catch(() => null) || numero}`;
     }
@@ -389,7 +392,8 @@ async function mudarListaDePessoas(msg, key, texto, acrescentar, opcoes = {}) {
 
 module.exports = {
     cmdSet,
-    itensDoTexto,
     ehODono,
+    itensDasPessoas,
+    itensDoTexto,
     mudarListaDePessoas
 };

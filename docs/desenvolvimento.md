@@ -58,7 +58,9 @@ src/
   openaiChat.js         chamada ao chat da OpenAI (/gpt e /tldr)
   contatos.js, opcoes.js                    contatos/@lid e o parser de opções
   destinos.js           o -to/alvo: contato ou grupo pelo nome, menção (@), número ou e-mail, e o envio ao destino
-  escolhas.js           a lista numerada para escolher (vários contatos/grupos) e a resposta com o nº (só de quem deu o comando)
+  escolhas.js           a lista numerada para escolher (vários contatos/grupos) e a confirmação sim/não (só de quem deu o comando)
+  flood.js              proteção contra flood (o mesmo comando além do limite: um aviso e silêncio)
+  permissoes.js         quem usa os comandos comuns, e quais (bot.users e o +cmd|-cmd de cada um)
   mudo.js               /mudo: quem está silenciado e os avisos cortados
   defi/                 Solana e HyperEVM (RPC), a Orca e o Project X (/defi) e o -alerta de saída da faixa
   watch/                regras e verificação do /watch
@@ -128,7 +130,7 @@ entre os casos.
 | Arquivo | O que cobre |
 |---|---|
 | `configuracao.test.js` | `comandos.json`, settings (e a migração dos renomeados), parser de opções, ajuda (uma forma do uso e um exemplo por linha) e a coerência entre config, código, README e `docs/` (inclusive a ordem alfabética, os links e a versão estável da instalação) |
-| `mensagens.test.js` | Gravação, roteamento, permissões (`onlyAdmin`, o `bot.users` com pessoas, grupos, `true`/`false` e a migração do `bot.adminMode`, bot desligado, admins extras do `bot.admins`, os atalhos `/bot +o`/`+v` e o `/whois`), o log dos comandos desconhecidos e a contagem do `/stats` (sem os avisos do sistema) |
+| `mensagens.test.js` | Gravação, roteamento, permissões (`onlyAdmin`, o `bot.users` com pessoas, grupos, `true`/`false` e a migração do `bot.adminMode`, bot desligado, admins extras do `bot.admins`, os atalhos `/bot +o`/`+v`, os comandos de cada usuário (`+cmd`/`-cmd`), o `/whois` e a proteção contra flood), o log dos comandos desconhecidos e a contagem do `/stats` (sem os avisos do sistema) |
 | `comandos.test.js` | `/help`, `/debug`, `/uptime`, `/version`, `/ping`, `/noffa`, `/bot` (e o `-info`, com as versões novas do yt-dlp e do whatsapp-web.js), `/set` (e o `-append`/`-rem`) |
 | `apagadas-editadas.test.js` | Eventos de apagar/editar (e os avisos `show.alert.*`) e o `/show` (apagadas e editadas, e a busca `-q`) |
 | `mudo.test.js` | `/mudo`: avisos silenciados por pessoa ou grupo (só o alvo é o `-a`), e a busca do alvo (contato antes de grupo, menção, a lista para escolher pelo nº) |
@@ -270,7 +272,9 @@ bot) e a lista `commands`. Cada entrada de `commands` segue este formato:
 - `"sinais": ["+", "-"]` mostra o par numa linha só no `-h` (`+o, -o`), em vez
   do `-o` em Options e do `+o` em Arguments, longe um do outro. O parser
   continua lendo só o `-o`: o `+o` chega em `argv`, e o handler trata (como o
-  `/bot +admin`).
+  `/bot +o`).
+- `"espacado": true` (no comando) separa as opções do `-h` com uma linha em
+  branco: para ajudas longas, como a do `/bot`.
 - Os textos (`usage`, `help` e `desc`) podem citar `${CACHE_DIR}`,
   `${MEDIA_DIR}` e `${TMP_DIR}`: a ajuda troca pelo caminho real (ex.: o
   `/cache -h`).
