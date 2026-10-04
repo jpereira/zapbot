@@ -400,7 +400,7 @@ describe('ajuda', () => {
     test('as formas do uso ("  ou  ") saem uma por linha, alinhadas', () => {
         const textAlt = formatCommandHelp(findCommand('/defi'));
         const linesAlt = textAlt.split('\n');
-        assert.equal(linesAlt[0], 'Usage: /defi [orca|prjx|morpho|aave]');
+        assert.equal(linesAlt[0], 'Usage: /defi [orca|prjx|morpho|aave] [-mask]');
         assert.equal(linesAlt[1], '       /defi -l');
         assert.equal(linesAlt[4], '       /defi <protocolo> <opções>');
         assert.doesNotMatch(textAlt, / {2}ou {2}/);
@@ -413,9 +413,9 @@ describe('ajuda', () => {
         assert.match(general, / > Orca\n {2}-address <endereço> +Cadastra a posição da Orca/);
 
         const morpho = formatCommandHelp(findCommand('/defi'), { protocolo: 'morpho' });
-        assert.match(morpho, /^Usage: \/defi morpho\n {7}\/defi morpho -wallet <0x\.\.\.> \[-name <nome>\]\nPosição, empréstimos e risco no Morpho/);
+        assert.match(morpho, /^Usage: \/defi morpho \[-mask\]\n {7}\/defi morpho -wallet <0x\.\.\.> \[-name <nome>\]\nPosição, empréstimos e risco no Morpho/);
         const optionsAlt = morpho.match(/^ {2}-\S+/gm);
-        assert.deepEqual(optionsAlt, ['  -list,', '  -name,', '  -rm', '  -wallet,']);
+        assert.deepEqual(optionsAlt, ['  -list,', '  -mask,', '  -name,', '  -rm', '  -wallet,']);
         assert.doesNotMatch(morpho, / > |Arguments:/);
 
         const orca = formatCommandHelp(findCommand('/defi'), { protocolo: 'orca' });
@@ -424,7 +424,7 @@ describe('ajuda', () => {
 
         // By the command's -help and by /help
         assert.equal((await bot.replyAlt('/defi prjx -help'))[0], '```' + formatCommandHelp(findCommand('/defi'), { protocolo: 'prjx' }) + '```');
-        assert.match((await bot.replyAlt('/help defi orca'))[0], /^🤖 \*AJUDA\*\n\n```Usage: \/defi orca\n/);
+        assert.match((await bot.replyAlt('/help defi orca'))[0], /^🤖 \*AJUDA\*\n\n```Usage: \/defi orca \[-mask\]\n/);
         assert.match((await bot.replyAlt('/defi xyz -help'))[0], /^```Usage: \/defi \[orca\|prjx\|morpho\|aave\]/, 'protocolo desconhecido: a geral');
     });
 

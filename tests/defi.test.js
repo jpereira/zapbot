@@ -163,6 +163,22 @@ describe('/defi', () => {
         assert.match(r, new RegExp(`778\\.16\\d* SOL \\(\\$${Math.round(778.16 * usdSol).toLocaleString('en-US').slice(0, 4)}`));
     });
 
+    test('-mask: os números da carteira viram *; preço, faixa e pool continuam', async () => {
+        await bot.replyAlt(REGISTRATION);
+        const [normal] = await bot.replyAlt('/defi orca');
+        const [r] = await bot.replyAlt('/defi orca -m');
+
+        assert.match(r, /💰 \*Saldo:\* \$[*,]+\.\*\*\n {3}• [*,]+\.?\** SOL \(\$[*,]+\.\*\*\)/);
+        assert.match(r, /💸 \*Taxas a coletar:\* \$[*,]+\.\*\*/);
+        assert.match(r, /📊 \*Rende ~\$[*,]+\.\*\*\/dia\* _\(estimativa: [\d.]+% da liquidez/);
+        // What belongs to the market stays the same
+        const equal = (re) => assert.equal(r.match(re)?.[0], normal.match(re)[0], String(re));
+        equal(/📏 \*Faixa:\*.*/);
+        equal(/🎯 \*Preço atual:\*.*/);
+        equal(/🏊 \*Pool:\*.*/);
+        assert.match((await bot.replyAlt('/defi -mask'))[0], /💰 \*Saldo:\* \$[*,]+\.\*\*/);
+    });
+
     test('orca -name: entre aspas, na lista, no /defi e no -rm; de novo, troca', async () => {
         assert.equal((await bot.replyAlt(`${REGISTRATION} -n "Posição TAL"`))[0],
             '✅ *Posição da Orca cadastrada:* Posição TAL (ime1…VPcg)\n💡 _Veja com /defi orca_');
@@ -918,6 +934,13 @@ describe('/defi morpho', () => {
         assert.ok(bot.logs.some(l => l.includes('[MORPHO] Erro na API: HTTP 503')));
     });
 
+    test('-mask: valores e quantidades com *; HF, LTV e preços continuam', async () => {
+        const [r] = await bot.replyAlt('/defi morpho -mask');
+        assert.match(r, /💰 \*Posição líquida\*\n`\$\*\*,\*\*\*,\*\*\*\.\*\*`\n\n❤️ \*Health Rate\*\n`2\.73`/);
+        assert.match(r, /Quantidade: `\*\*\*\.\*\*\*\*\*\*\*\* cbBTC`\nValor: `\$\*\*,\*\*\*,\*\*\*\.\*\*`/);
+        assert.match(r, /LTV atual: `31\.52%`\nLLTV: `86\.00%`\nPreço cbBTC \(oráculo\): `84,909\.56 USDC`/);
+    });
+
     test('cache de 30 s: a mesma carteira não consulta a API de novo', async () => {
         await bot.replyAlt('/defi morpho');
         await bot.replyAlt('/defi morpho');
@@ -1169,6 +1192,14 @@ describe('/defi aave', () => {
         assert.match((await bot.replyAlt('/defi -alerta 1'))[0], /a nº 1 é do Aave/);
         assert.match((await bot.replyAlt(`/defi aave -w ${OTHER} -alerta`))[0], /o Aave não tem/);
         await assert.rejects(bot.setSetting('defi.aave.chains', '137'), /rede sem Aave V3 no bot/);
+    });
+
+    test('-mask: os valores da carteira com *; HF, LTV e APY continuam', async () => {
+        await bot.setSetting('defi.aave.chains', '1');
+        const [r] = await bot.replyAlt('/defi aave -full -m');
+        assert.match(r, /💰 Net Position: `\$\*\*\*,\*\*\*\.\*\*`\n📥 Supplied: `\$\*\*\*,\*\*\*\.\*\*`/);
+        assert.match(r, /❤️ Health Factor: `1\.62`[\s\S]*LTV atual: `50\.00%`[\s\S]*Available Borrows: `\$\*\*\*,\*\*\*\.\*\*`/);
+        assert.match(r, /\*WETH\*\nAmount: `\*\*\*\.\*\*`\nValue: `\$\*\*\*,\*\*\*\.\*\*`\nCollateral: `Yes`\nSupply APY: `3\.05%`/);
     });
 
     test('cache de 30 s por carteira e rede', async () => {
