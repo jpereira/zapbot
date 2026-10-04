@@ -1119,11 +1119,11 @@
         },
         {
             "cmd": "/show",
-            "usage": "/show [-N] [OPTION]  ou  /show -q <texto> [-N]",
+            "usage": "/show [-N] [OPTION] [chat]  ou  /show -q <texto> [-N] [chat]",
             "aliases": [
                 "/s"
             ],
-            "help": "Reexibe as últimas mensagens apagadas (padrão) ou editadas (-e) deste chat.",
+            "help": "Reexibe as mensagens apagadas, editadas e os status apagados que estão no cache: deste chat ou de outro (pelo nº do -l, nome, @menção ou /regex/).",
             "cmd_opts": [
                 {
                     "opts": [
@@ -1131,7 +1131,7 @@
                         "d"
                     ],
                     "values": [],
-                    "desc": "Mensagens apagadas (o padrão)."
+                    "desc": "Mensagens apagadas (sem chat, o padrão)."
                 },
                 {
                     "opts": [
@@ -1143,11 +1143,19 @@
                 },
                 {
                     "opts": [
+                        "status",
+                        "s"
+                    ],
+                    "values": [],
+                    "desc": "Status apagados: num privado, os da pessoa; no seu privado, sem chat, de todos."
+                },
+                {
+                    "opts": [
                         "list",
                         "l"
                     ],
                     "values": [],
-                    "desc": "Lista as apagadas e as editadas do cache por chat, marcando o chat atual."
+                    "desc": "Lista o que tem no cache por chat, numerado para o /show <nº>, marcando o chat atual."
                 },
                 {
                     "opts": [
@@ -1155,14 +1163,7 @@
                         "f"
                     ],
                     "values": [],
-                    "desc": "Remove as apagadas (ou as editadas, com -e) deste chat (no seu privado: de todos)."
-                },
-                {
-                    "opts": [
-                        "pv"
-                    ],
-                    "values": [],
-                    "desc": "Envia no seu privado em vez de expor no chat atual."
+                    "desc": "Remove do cache as apagadas deste chat ou, com -e/-s/chat, o que foi pedido (no seu privado, sem chat: de todos)."
                 },
                 {
                     "opts": [
@@ -1172,23 +1173,19 @@
                     "values": [
                         "<texto>"
                     ],
-                    "desc": "Busca nas apagadas (ou nas editadas, com -e) as que têm o texto, sem diferenciar maiúsculas nem acentos: neste chat, no do -c ou, no seu privado, em todos. Sem -N: as 5 mais recentes. Com espaços, entre aspas: -q \"bom dia\""
-                },
-                {
-                    "opts": [
-                        "chat",
-                        "c"
-                    ],
-                    "values": [
-                        "<nº|nome>"
-                    ],
-                    "desc": "Chat alvo: nº da lista do tipo no /show -l ou parte do nome."
+                    "desc": "Busca as que têm o texto, sem diferenciar maiúsculas nem acentos: neste chat, no chat pedido ou, no seu privado, em todos. Sem -N: as 5 mais recentes. Com espaços, entre aspas: -q \"bom dia\""
                 },
                 {
                     "argv": [
                         "-N"
                     ],
                     "desc": "Quantidade de mensagens (padrão 1, máx. show.max). Ex: /show -3"
+                },
+                {
+                    "argv": [
+                        "chat"
+                    ],
+                    "desc": "Outro chat: o nº da lista do -l, parte do nome, @menção ou /regex/ (sem diferenciar maiúsculas nem acentos). Sem -d, -e e -s, vêm apagadas, editadas e status juntos, por data. Ex: /show -3 /^Camila/"
                 }
             ],
             "onlyAdmin": true

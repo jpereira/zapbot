@@ -216,7 +216,7 @@ describe('/show (/s)', () => {
         assert.match(r[1], /"dois"/);
         assert.match(r[2], /"três"/);
 
-        assert.equal((await bot.responder('/s 5'))[0], '♻️ *3 mensagens apagadas* (pedidas 5, encontradas 3)');
+        assert.equal((await bot.responder('/s -5'))[0], '♻️ *3 mensagens apagadas* (pedidas 5, encontradas 3)');
     });
 
     test('acima do show.max é limitado', async () => {
@@ -227,7 +227,7 @@ describe('/show (/s)', () => {
     });
 
     test('argumento inválido mostra a sintaxe', async () => {
-        for (const linha of ['/show abc', '/show 1 2', '/show -0']) {
+        for (const linha of ['/show -2 -3', '/show -0', '/show -xyz']) {
             assert.match((await bot.responder(linha))[0], /Usage: \/show/, linha);
         }
     });
@@ -241,15 +241,16 @@ describe('/show (/s)', () => {
         assert.equal(r[0], '♻️ *1 mensagem apagada* com "pix"');
         assert.match(r[1], /"manda o PIX"/);
 
+        // No seu privado: em todos os chats e em todos os tipos
         const todos = await bot.responder('/show -q pix', { chat: PRIVADO_DONO });
-        assert.equal(todos[0], '♻️ *2 mensagens apagadas* com "pix"\n💬 *Chats:* todos');
+        assert.equal(todos[0], '🗄️ *2 mensagens* (🗑️ 2) com "pix"\n💬 *Chats:* todos');
 
         for (let i = 0; i < 6; i++) await mensagemApagada(`pix ${i}`);
         assert.equal((await bot.responder('/show -q pix'))[0], '♻️ *5 mensagens apagadas* com "pix" _(as 5 mais recentes de 7; use -N para mais)_');
         assert.equal((await bot.responder('/show -q pix -2')).length, 3);
 
         assert.deepEqual(await bot.responder('/show -q boleto'), ['♻️ Nenhuma mensagem apagada com "boleto" neste chat.']);
-        assert.deepEqual(await bot.responder('/show -q boleto', { chat: PRIVADO_DONO }), ['♻️ Nenhuma mensagem apagada com "boleto" em nenhum chat.']);
+        assert.deepEqual(await bot.responder('/show -q boleto', { chat: PRIVADO_DONO }), ['🗄️ Nada no cache com "boleto" em nenhum chat.']);
     });
 
     test('-e -q: busca no texto de antes e no de depois; -q não combina com -f e -l', async () => {
@@ -264,62 +265,109 @@ describe('/show (/s)', () => {
         assert.match((await bot.responder('/show -q'))[0], /❌ Informe o que buscar/);
     });
 
-    test('-pv manda o resumo e as mensagens no seu privado', async () => {
-        await mensagemApagada('privado');
-        const r = await bot.executar('/show -pv');
-        assert.equal(r[0].chatId, GRUPO);
-        assert.equal(r[0].texto, '♻️ Enviado no seu privado.');
-        assert.ok(r.slice(1).every(e => e.chatId === PRIVADO_DONO));
-        assert.match(r[1].texto, /💬 \*Chat:\* Família/);
+    test('-q com chat: só nele', async () => {
+        await mensagemApagada('pix aqui');
+        await mensagemApagada('pix no trabalho', { chat: TRABALHO });
+
+        const r = await bot.responder('/show -q pix Trabalho');
+        assert.equal(r[0], '🗄️ *1 mensagem* (🗑️ 1) com "pix"\n💬 *Chat:* Trabalho');
+        assert.match(r[1], /"pix no trabalho"/);
     });
 
-    test('-l: apagadas e editadas de todos os chats, marcando o atual', async () => {
+    test('-l: o que tem no cache por tipo e os chats numerados, marcando o atual', async () => {
         await mensagemApagada('a');
         await mensagemApagada('b');
-        await mensagemApagada('c', { chat: TRABALHO });
+        await mensagemApagada('c');
+        await mensagemApagada('d', { chat: TRABALHO });
         await mensagemEditada('x', 'y', { chat: TRABALHO });
+        await mensagemApagada('meu status', { chat: 'status@broadcast' });
 
         const [r] = await bot.responder('/show -l');
-        assert.match(r, /🗑️ \*Deletadas:\* 3/);
-        assert.match(r, /1\. 👥 Família — \*2\*.*← _este chat_/);
-        assert.match(r, /2\. 👥 Trabalho — \*1\*/);
-        assert.match(r, /✏️ \*Editadas:\* 1[^\n]*\n1\. 👥 Trabalho — \*1\*/);
-        assert.doesNotMatch(r.split('Editadas')[1], /← _este chat_/);
+        assert.match(r, /🗑️ \*Apagadas:\* 4 [^\n]*\n✏️ \*Editadas:\* 1 [^\n]*\n📸 \*Status:\* 1 /);
+        assert.match(r, /1\. 👥 Família — 🗑️ 3 .*← _este chat_/);
+        assert.match(r, /2\. 👥 Trabalho — 🗑️ 1 · ✏️ 1 /);
+        assert.match(r, /3\. 👤 Fulano — 📸 1 /);
+        assert.match(r, /💡 _\/show <nº, nome, @menção ou \/regex\/>/);
 
-        // Com -e a lista é a mesma
+        // Os tipos não mudam a lista
         assert.equal((await bot.responder('/show -e -l'))[0], r);
     });
 
-    test('-l -pv manda a lista no seu privado', async () => {
-        await mensagemApagada('a');
-        const r = await bot.executar('/show -l -pv');
-        assert.equal(r[0].texto, '🗄️ Resumo enviado no seu privado.');
-        assert.equal(r[1].chatId, PRIVADO_DONO);
-    });
-
-    test('-c pelo nº da lista ou pelo nome (em qualquer chat)', async () => {
+    test('chat pelo nº da lista, pelo nome ou por /regex/ (em qualquer chat)', async () => {
         await mensagemApagada('do trabalho', { chat: TRABALHO });
         await mensagemApagada('da família');
         // Empate em quantidade: a apagada mais recente vem antes (Família = nº 1)
+        await bot.dbRun("UPDATE messages SET revoked_at = revoked_at - 1000 WHERE body = 'do trabalho'");
         await bot.responder('/show -l');
 
-        const porNumero = await bot.responder('/show -c 1', { chat: OUTRO.jid });
-        assert.match(porNumero[0], /💬 \*Chat:\* Família/);
+        const porNumero = await bot.responder('/show 1', { chat: OUTRO.jid });
+        assert.equal(porNumero[0], '🗄️ *1 mensagem* (🗑️ 1)\n💬 *Chat:* Família');
         assert.match(porNumero[1], /"da família"/);
 
-        const porNome = await bot.responder('/show -c trab');
-        assert.match(porNome[1], /"do trabalho"/);
+        assert.match((await bot.responder('/show trab'))[1], /"do trabalho"/);
+        assert.match((await bot.responder('/show "familia"'))[1], /"da família"/);
+        assert.match((await bot.responder('/show /^trab/'))[1], /"do trabalho"/);
+        assert.match((await bot.responder('/show /LIA$/'))[1], /"da família"/);
     });
 
-    test('-c inexistente, sem correspondência ou ambíguo', async () => {
+    test('chat: tudo junto, por data; -d, -e e -s filtram e se somam', async () => {
+        await mensagemApagada('apagada', { chat: OUTRO.jid });
+        await mensagemEditada('antes', 'depois', { chat: OUTRO.jid });
+        await mensagemApagada('meu status', { chat: 'status@broadcast' });
+        await mensagemApagada('no grupo');
+        // Um segundo de diferença entre cada um: a ordem é a da data
+        const agora = Date.now();
+        await bot.dbRun("UPDATE messages SET revoked_at = ? WHERE body = 'apagada'", [agora - 3000]);
+        await bot.dbRun('UPDATE message_edits SET edited_at = ?', [agora - 2000]);
+
+        const r = await bot.responder('/show -5 Fulano');
+        assert.equal(r[0], '🗄️ *3 mensagens* (🗑️ 1 · ✏️ 1 · 📸 1) (pedidas 5, encontradas 3)\n💬 *Chat:* Fulano');
+        assert.match(r[1], /MENSAGEM APAGADA[\s\S]*"apagada"/);
+        assert.match(r[2], /MENSAGEM EDITADA[\s\S]*"depois"/);
+        assert.match(r[3], /STATUS APAGADO[\s\S]*"meu status"/);
+
+        assert.equal((await bot.responder('/show -5 -e Fulano'))[0], '✏️ *1 mensagem editada* (pedidas 5, encontradas 1)\n💬 *Chat:* Fulano');
+        assert.match((await bot.responder('/show -s Fulano'))[1], /"meu status"/);
+        assert.equal((await bot.responder('/show -5 -d -s /fulano/'))[0],
+            '🗄️ *2 mensagens* (🗑️ 1 · 📸 1) (pedidas 5, encontradas 2)\n💬 *Chat:* Fulano');
+    });
+
+    test('-s: no privado da pessoa, os status dela; no seu privado, de todos', async () => {
+        await mensagemApagada('meu status', { chat: 'status@broadcast' });
+
+        assert.match((await bot.responder('/show -s', { chat: OUTRO.jid }))[1], /"meu status"/);
+        assert.equal((await bot.responder('/show -s', { chat: PRIVADO_DONO }))[0], '📸 *1 status apagado*\n💬 *Chats:* todos');
+        assert.deepEqual(await bot.responder('/show -s'), ['📸 Nenhum status apagado registrado neste chat.']);
+    });
+
+    test('@menção: o privado da pessoa', async () => {
+        await mensagemApagada('oi', { chat: OUTRO.jid });
+        await mensagemApagada('meu status', { chat: 'status@broadcast' }); // o nome "Fulano" no cache
+
+        const r = await bot.responder(`/show -2 @${OUTRO.user}`, { mencoes: [OUTRO.jid] });
+        assert.equal(r[0], '🗄️ *2 mensagens* (🗑️ 1 · 📸 1)\n💬 *Chat:* Fulano');
+        assert.match((await bot.responder(`/show @${OUTRO.user}`))[0], /não é uma menção/);
+        assert.match((await bot.responder('/show @Fulano -d'))[1], /"oi"/, '@ digitado: vale o nome');
+    });
+
+    test('chat inexistente, sem correspondência, regex inválida ou ambíguo', async () => {
+        assert.deepEqual(await bot.responder('/show xyz'),
+            ['🗄️ Nada no cache: nenhuma mensagem apagada, editada ou status apagado.']);
+
         await mensagemApagada('a');
         await mensagemApagada('b', { chat: TRABALHO });
-        assert.match((await bot.responder('/show -c 9'))[0], /❌ Chat nº 9 não existe/);
-        assert.match((await bot.responder('/show -c xyz'))[0], /❌ Nenhum chat com apagadas contém "xyz"/);
-        assert.match((await bot.responder('/show -c a'))[0], /🔎 "a" corresponde a 2 chats/);
+        assert.match((await bot.responder('/show 9'))[0], /❌ Chat nº 9 não existe/);
+        assert.match((await bot.responder('/show xyz'))[0], /❌ Nenhum chat no cache casa com "xyz"/);
+        assert.match((await bot.responder('/show /(/'))[0], /❌ Regex inválida: \/\(\//);
+
+        // Empate em quantidade: o mais recente vem antes
+        await bot.dbRun("UPDATE messages SET revoked_at = revoked_at - 1000 WHERE body = 'a'");
+        const r = await bot.responderEscolhendo('/show a', 1);
+        assert.match(r[0], /🔎 "a" corresponde a 2 chats:\n\n1\. 👥 Trabalho\n2\. 👥 Família/);
+        assert.match(r.at(-1), /"b"/);
     });
 
-    test('-f: só o dono; remove só as deste chat (e as mídias)', async () => {
+    test('-f: só o dono; remove só as apagadas deste chat (e as mídias)', async () => {
         const { msg } = await mensagemApagada('foto', { midia: { mimetype: 'image/png', data: 'AA==' } });
         await mensagemApagada('b', { chat: TRABALHO });
         const { media_path } = await bot.dbGet('SELECT media_path FROM messages WHERE id = ?', [msg.id.id]);
@@ -327,22 +375,25 @@ describe('/show (/s)', () => {
         assert.deepEqual(await bot.responder('/show -f', { de: OUTRO.jid }), []); // onlyAdmin
 
         const [r] = await bot.responder('/show -f');
-        assert.match(r, /🧹 \*Flush das mensagens apagadas deste chat\*[\s\S]*Removidas: \*1 mensagem\*[\s\S]*Mídias apagadas do disco: \*1\*/);
+        assert.equal(r, '🧹 *Flush do cache deste chat*\n\n🗑️ Apagadas: *1 mensagem*\n📎 Mídias apagadas do disco: *1* _(1 B)_\n' +
+            '\n💡 _Para limpar as de todos os chats, use /show -f no seu privado._');
         assert.ok(!fs.existsSync(media_path));
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM messages WHERE revoked = 1')).n, 1);
     });
 
-    test('-f no seu privado remove de todos; -f -c de um chat', async () => {
+    test('-f no seu privado remove de todos; -f com chat, tudo dele', async () => {
         await mensagemApagada('a');
         await mensagemApagada('b', { chat: TRABALHO });
         await mensagemApagada('c', { chat: TRABALHO });
+        await mensagemEditada('x', 'y', { chat: TRABALHO });
 
-        const [umChat] = await bot.responder('/show -f -c trabalho');
-        assert.match(umChat, /Flush das mensagens apagadas de:\* Trabalho[\s\S]*\*2 mensagens\*/);
+        const [umChat] = await bot.responder('/show -f trabalho');
+        assert.match(umChat, /Flush do cache de:\* Trabalho\n\n🗑️ Apagadas: \*2 mensagens\*\n✏️ Editadas: \*1 mensagem\*\n📸 Status: \*0 status\*/);
 
         const [geral] = await bot.responder('/show -f', { chat: PRIVADO_DONO });
-        assert.match(geral, /🧹 \*Flush geral das mensagens apagadas\*[\s\S]*\*1 mensagem\* de \*1 chat\*/);
+        assert.match(geral, /🧹 \*Flush geral do cache\*\n\n🗑️ Apagadas: \*1 mensagem\*[\s\S]*\*Por chat\* \(1\):\n1\. 👥 Família — \*1\*/);
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM messages WHERE revoked = 1')).n, 0);
+        assert.deepEqual(await bot.responder('/show -f', { chat: PRIVADO_DONO }), ['♻️ Nenhuma mensagem apagada no cache.']);
     });
 });
 
@@ -351,14 +402,14 @@ describe('/show -e (editadas)', () => {
         assert.deepEqual(await bot.responder('/show -e'), ['✏️ Nenhuma mensagem editada registrada neste chat.']);
     });
 
-    test('-d (o padrão) mostra as apagadas, -e as editadas; os dois juntos não', async () => {
+    test('-d (o padrão) mostra as apagadas, -e as editadas; os dois juntos, por data', async () => {
         await mensagemApagada('apagada');
         await mensagemEditada('antes', 'depois');
 
         assert.match((await bot.responder('/show -d'))[1], /MENSAGEM APAGADA[\s\S]*"apagada"/);
         assert.match((await bot.responder('/show -deleted'))[1], /"apagada"/);
         assert.match((await bot.responder('/show -edited'))[1], /MENSAGEM EDITADA[\s\S]*"depois"/);
-        assert.deepEqual(await bot.responder('/show -d -e'), ['❌ Use -d (apagadas) ou -e (editadas), não os dois.']);
+        assert.equal((await bot.responder('/show -d -e -2'))[0], '🗄️ *2 mensagens* (🗑️ 1 · ✏️ 1)');
     });
 
     test('/edit e /e não existem mais', async () => {
@@ -380,35 +431,22 @@ describe('/show -e (editadas)', () => {
         assert.match(r[1], /"a2"/);
     });
 
-    test('-c e -pv', async () => {
-        await mensagemEditada('x', 'y', { chat: TRABALHO });
-        const r = await bot.executar('/show -e -c trabalho -pv');
-        assert.equal(r[0].texto, '✏️ Enviado no seu privado.');
-        assert.match(r[1].texto, /💬 \*Chat:\* Trabalho/);
-        assert.equal(r[2].chatId, PRIVADO_DONO);
-    });
-
-    test('-c sem editadas; o nº é o da lista de editadas', async () => {
-        assert.equal((await bot.responder('/show -e -c 1'))[0], '✏️ Nenhuma mensagem editada no cache.');
-
+    test('chat sem editadas', async () => {
         await mensagemApagada('a');
-        await mensagemEditada('x', 'y', { chat: TRABALHO });
-        await bot.responder('/show -l');
-        assert.match((await bot.responder('/show -e -c 1'))[0], /💬 \*Chat:\* Trabalho/);
-        assert.match((await bot.responder('/show -c 1'))[0], /💬 \*Chat:\* Família/);
+        assert.deepEqual(await bot.responder('/show -e 1'), ['✏️ Nenhuma mensagem editada em Família.']);
     });
 
     test('dica no seu privado aponta para o -e', async () => {
         const [r] = await bot.responder('/show -e', { chat: PRIVADO_DONO });
-        assert.match(r, /\/show -l e depois \/show -e -N -c <nº ou nome>/);
+        assert.match(r, /\/show -l e depois \/show -e -N <chat>/);
     });
 
     test('-f remove as editadas deste chat; não mexe nas apagadas', async () => {
         await mensagemEditada('x', 'y');
         await mensagemApagada('z');
         const [r] = await bot.responder('/show -e -f');
-        assert.match(r, /Flush das mensagens editadas deste chat[\s\S]*\*1 mensagem\*[\s\S]*use \/show -e -f no seu privado/);
-        assert.doesNotMatch(r, /Mídias/);
+        assert.equal(r, '🧹 *Flush do cache deste chat*\n\n✏️ Editadas: *1 mensagem*\n' +
+            '\n💡 _Para limpar as de todos os chats, use /show -e -f no seu privado._');
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM message_edits')).n, 0);
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM messages WHERE revoked = 1')).n, 1);
     });

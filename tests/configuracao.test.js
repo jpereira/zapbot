@@ -367,9 +367,9 @@ describe('parser de opções', () => {
     });
 
     test('opção com valor sem valor: null, mas presente em given', () => {
-        const o = GetOptFromCommand('-c', cmd('/show'));
-        assert.equal(o.opt.chat, null);
-        assert.ok(o.given.has('chat'));
+        const o = GetOptFromCommand('-q', cmd('/show'));
+        assert.equal(o.opt.query, null);
+        assert.ok(o.given.has('query'));
     });
 
     test('opção desconhecida e número negativo vão para argv', () => {
@@ -392,7 +392,7 @@ describe('ajuda', () => {
     test('formatCommandHelp traz uso, opções, argumentos e aliases', () => {
         const texto = formatCommandHelp(findCommand('/show'));
         assert.match(texto, /^Usage: \/show \[-N\] \[OPTION\]/);
-        assert.match(texto, /-chat, -c <nº\|nome>/);
+        assert.match(texto, /-query, -q <texto>/);
         assert.match(texto, /Arguments:\n  -N/);
         assert.match(texto, /Aliases: \/s$/);
     });
