@@ -400,7 +400,7 @@ describe('ajuda', () => {
     test('as formas do uso ("  ou  ") saem uma por linha, alinhadas', () => {
         const textAlt = formatCommandHelp(findCommand('/defi'));
         const linesAlt = textAlt.split('\n');
-        assert.equal(linesAlt[0], 'Usage: /defi [orca|prjx|morpho]');
+        assert.equal(linesAlt[0], 'Usage: /defi [orca|prjx|morpho|aave]');
         assert.equal(linesAlt[1], '       /defi -l');
         assert.equal(linesAlt[4], '       /defi <protocolo> <opções>');
         assert.doesNotMatch(textAlt, / {2}ou {2}/);
@@ -409,7 +409,7 @@ describe('ajuda', () => {
     test('ajuda por protocolo: a geral agrupa as opções; a de um protocolo só traz as dele', async () => {
         const general = formatCommandHelp(findCommand('/defi'));
         const groups = general.split('\n').filter(l => l.startsWith(' > '));
-        assert.deepEqual(groups, [' > Orca', ' > Orca e Project X', ' > Project X e Morpho', ' > Todos']);
+        assert.deepEqual(groups, [' > Orca', ' > Aave', ' > Orca e Project X', ' > Project X, Morpho e Aave', ' > Todos']);
         assert.match(general, / > Orca\n {2}-address <endereço> +Cadastra a posição da Orca/);
 
         const morpho = formatCommandHelp(findCommand('/defi'), { protocolo: 'morpho' });
@@ -425,7 +425,7 @@ describe('ajuda', () => {
         // By the command's -help and by /help
         assert.equal((await bot.replyAlt('/defi prjx -help'))[0], '```' + formatCommandHelp(findCommand('/defi'), { protocolo: 'prjx' }) + '```');
         assert.match((await bot.replyAlt('/help defi orca'))[0], /^🤖 \*AJUDA\*\n\n```Usage: \/defi orca\n/);
-        assert.match((await bot.replyAlt('/defi aave -help'))[0], /^```Usage: \/defi \[orca\|prjx\|morpho\]/, 'protocolo desconhecido: a geral');
+        assert.match((await bot.replyAlt('/defi xyz -help'))[0], /^```Usage: \/defi \[orca\|prjx\|morpho\|aave\]/, 'protocolo desconhecido: a geral');
     });
 
     test('ajuda para o celular: uma frase por linha e o "Ex:" na linha de baixo, um exemplo por linha', () => {
@@ -437,12 +437,12 @@ describe('ajuda', () => {
 
         // In the options: the 1st sentence beside; the others and the Ex:, indented 4 spaces
         const linesAlt = formatCommandHelp(findCommand('/defi')).split('\n');
-        const i = linesAlt.findIndex(l => l.startsWith('  [orca|prjx|morpho]'));
-        assert.match(linesAlt[i], /ou morpho \(Morpho\)\.$/);
+        const i = linesAlt.findIndex(l => l.startsWith('  [orca|prjx|morpho|aave]'));
+        assert.match(linesAlt[i], /ou aave \(Aave V3\)\.$/);
         assert.match(linesAlt[i + 1], /^ {4}Sozinho, mostra/);
         assert.equal(linesAlt[i + 2], '    Ex: /defi');
         assert.equal(linesAlt[i + 3], '        /defi orca');
-        assert.equal(linesAlt[i + 4], '        /defi morpho');
+        assert.equal(linesAlt[i + 4], '        /defi aave');
 
         // A single example also goes to the line below; "Niteroi, Sergipe" is one example, not two
         assert.match(formatCommandHelp(findCommand('/tempo')), /\n {4}Ex: \/tempo Niteroi, Sergipe\n/);

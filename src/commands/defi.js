@@ -6,8 +6,9 @@ const { findCommand, getCommandSyntax } = require('./base');
 const { client } = require('../client');
 const { chatCurrentIds } = require('../contacts');
 const { dbAll, dbGet, dbReady, dbRun } = require('../db');
+const { positionsAave } = require('../defi/aave');
 const { isAddressEvm } = require('../defi/hyperevm');
-const { ErrorMorpho, positionsMorpho } = require('../defi/morpho');
+const { positionsMorpho } = require('../defi/morpho');
 const { positionDetails, validatePosition } = require('../defi/orca');
 const { walletPositions } = require('../defi/prjx');
 const { isEnderecoSolana: isAddressSolana } = require('../defi/solana');
@@ -64,9 +65,9 @@ function rangeBar(current, inferior, superior) {
     return `▕${'─'.repeat(k)}●${'─'.repeat(N - k)}▏ ${Math.round(((current - inferior) / (superior - inferior)) * 100)}% da faixa`;
 }
 
-const PROTOCOLS = { morpho: 'Morpho', orca: 'Orca', prjx: 'Project X' };
+const PROTOCOLS = { aave: 'Aave', morpho: 'Morpho', orca: 'Orca', prjx: 'Project X' };
 // Those that register a wallet (-wallet), and not a position (-address)
-const WALLET = ['morpho', 'prjx'];
+const WALLET = ['aave', 'morpho', 'prjx'];
 // Those that have a range (the -alerta)
 const WITH_RANGE = ['orca', 'prjx'];
 
@@ -115,7 +116,13 @@ function positionPrjxText(x, nameAlt = null) {
  * inRange: all the positions in range (null: the wallet has none open)
  * ratesUsd: the fees to collect in dollars (null: no price, in a pair without a stablecoin)
  */
-async function readRegistration(p, end = short) {
+async function readRegistration(p, end = short, { full = false } = {}) {
+    if (p.protocol === 'aave') {
+        const r = await positionsAave(p.wallet);
+        const something = r.redes.length || r.falhas.length;
+        return { naFaixa: null, textos: something ? [textAave(r, end, p.name, { full })] : [], foraDaFaixa: [], taxasUsd: null };
+    }
+
     if (p.protocol === 'morpho') {
         const r = await positionsMorpho(p.wallet);
         return { naFaixa: null, textos: r.posicoes.length ? [textMorpho(r, end, p.name)] : [], foraDaFaixa: [], taxasUsd: null };
@@ -212,10 +219,10 @@ function positionText(d, end = short) {
     return textAlt;
 }
 
-const EXAMPLES = '💡 _/defi orca -address <endereço> -pool <endereço> -nft <mint>\n/defi prjx -wallet <0x...>\n/defi morpho -wallet <0x...>_';
+const EXAMPLES = '💡 _/defi orca -address <endereço> -pool <endereço> -nft <mint>\n/defi prjx -wallet <0x...>\n/defi morpho -wallet <0x...>\n/defi aave -wallet <0x...>_';
 
 // The protocol word: /defi orca, /defi prjx -wallet ..., /defi morpho
-const WORDS = { morpho: 'morpho', orca: 'orca', prjx: 'prjx' };
+const WORDS = { aave: 'aave', morpho: 'morpho', orca: 'orca', prjx: 'prjx' };
 const protocolAlt2 = (word) => WORDS[String(word ?? '').toLowerCase()] ?? null;
 
 async function limitOrRepeated(msg, protocol, address, end) {
@@ -237,14 +244,27 @@ async function limitOrRepeated(msg, protocol, address, end) {
  * open position, registers and warns.
  */
 const READ_WALLET = {
-    prjx: async (wallet) => (await walletPositions(wallet)).length,
-    morpho: async (wallet) => (await positionsMorpho(wallet)).posicoes.length
+    prjx: async (wallet) => ({ abertas: (await walletPositions(wallet)).length }),
+    morpho: async (wallet) => {
+        const r = await positionsMorpho(wallet);
+        return { abertas: r.posicoes.length, texto: (end, nameAlt) => textMorpho(r, end, nameAlt) };
+    },
+    aave: async (wallet) => {
+        const r = await positionsAave(wallet);
+        const openAlt = r.redes.reduce((s, x) => s + x.fornecidos.length + x.dividas.length, 0);
+        return { abertas: openAlt, texto: (end, nameAlt, full) => textAave(r, end, nameAlt, { full }) };
+    }
 };
 const WALLET_TIP = {
     prjx: '💡 _O RPC público da HyperEVM limita as consultas; um RPC próprio vai no setting defi.hyperevm.rpc._',
-    morpho: '💡 _Tente de novo em alguns instantes._'
+    morpho: '💡 _Tente de novo em alguns instantes._',
+    aave: '💡 _Tente de novo em alguns instantes; um RPC próprio vai no ETHEREUM_RPC_URL e no BASE_RPC_URL._'
 };
 
+/*
+ * Morpho and Aave already show the position in the registration (with -full, Aave's
+ * full one); Project X, which tends to have several, is left for /defi prjx.
+ */
 async function registerWallet(msg, o, protocol, end) {
     const wallet = String(o.wallet ?? '').trim().replace(/^<(.*)>$/, '$1');
     const protocolName = PROTOCOLS[protocol];
@@ -269,8 +289,9 @@ async function registerWallet(msg, o, protocol, end) {
     if (await limitOrRepeated(msg, protocol, wallet, end)) return;
 
     let openAlt;
+    let textAlt;
     try {
-        openAlt = await READ_WALLET[protocol](wallet);
+        ({ abertas: openAlt, texto: textAlt } = await READ_WALLET[protocol](wallet));
     } catch (err) {
         printError(`/defi ${protocol} ${wallet}:`, err.message);
         await msg.reply(`⚠️ Não consegui ler a carteira agora: ${err.motivo ?? `${err.message}.`}\n${WALLET_TIP[protocol]}`);
@@ -282,6 +303,7 @@ async function registerWallet(msg, o, protocol, end) {
     await msg.reply(`✅ *Carteira do ${protocolName} cadastrada:* ${nickname ? `${nickname} (${end(wallet)})` : end(wallet)}\n` +
         (openAlt ? `📍 ${plural(openAlt, 'posição aberta', 'posições abertas')}.` : `ℹ️ Nenhuma posição aberta agora: o /defi ${protocol} mostra quando houver.`) +
         `\n💡 _Veja com /defi ${protocol}_`);
+    if (openAlt && textAlt) await msg.reply(textAlt(end, nickname, Boolean(o.full)));
     return wallet.toLowerCase();
 }
 
@@ -291,7 +313,7 @@ async function registerWallet(msg, o, protocol, end) {
  */
 async function register(msg, { opt: o, given }, protocol, end) {
     if (!protocol) {
-        await msg.reply(`❌ Informe o protocolo antes do -address ou do -wallet: orca, prjx ou morpho.\n${EXAMPLES}`);
+        await msg.reply(`❌ Informe o protocolo antes do -address ou do -wallet: orca, prjx, morpho ou aave.\n${EXAMPLES}`);
         return null;
     }
     if (WALLET.includes(protocol)) {
@@ -339,17 +361,17 @@ const TIP_RPC = {
     prjx: '💡 _O RPC público da HyperEVM limita as consultas; um RPC próprio vai no setting defi.hyperevm.rpc._'
 };
 
-async function showAlt(msg, positions, end) {
+async function showAlt(msg, positions, end, { full = false } = {}) {
     for (const p of positions) {
         try {
-            const { textos: texts } = await readRegistration(p, end);
+            const { textos: texts } = await readRegistration(p, end, { full });
             if (!texts.length) await msg.reply(`🌊 ${describe(p, end)}: nenhuma posição aberta.`);
             for (const textAlt of texts) await msg.reply(textAlt);
         } catch (err) {
             printError(`/defi ${addressAlt2(p)}:`, err.response?.status ?? '', err.message);
-            // Morpho already brings the readable reason (and the details stayed in the log)
-            await msg.reply(err instanceof ErrorMorpho
-                ? `⚠️ Não consegui ler ${describe(p, end)} agora: ${err.motivo}\n${WALLET_TIP.morpho}`
+            // Morpho and Aave already bring the readable reason (and the details stayed in the log)
+            await msg.reply(err.motivo
+                ? `⚠️ Não consegui ler ${describe(p, end)} agora: ${err.motivo}\n${WALLET_TIP[p.protocol] ?? ''}`
                 : `⚠️ Não consegui ler ${describe(p, end)} agora: ${err.message}.\n${TIP_RPC[p.protocol] ?? ''}`);
         }
     }
@@ -370,12 +392,13 @@ const fmtHf = (hf) => (hf === Infinity ? '∞' : hf === null ? 'N/A'
     : hf.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
 
 /*
- * A token's amount: stablecoin with 2 decimals; the rest (cbBTC, WETH...) with
- * up to 8, without the trailing zeros.
+ * A token's amount: stablecoin with 2 decimals; BTC (cbBTC, WBTC...) with up to
+ * 8; ETH and the others with up to 6. Without the trailing zeros.
  */
 function fmtQtdToken(qtd, t) {
     if (STABLE.test(t.simbolo)) return qtd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const max = Math.min(Number.isInteger(t.decimals) ? t.decimals : 8, 8);
+    const places = /BTC/i.test(t.simbolo) ? 8 : 6;
+    const max = Math.min(Number.isInteger(t.decimals) ? t.decimals : places, places);
     return qtd.toLocaleString('en-US', { minimumFractionDigits: Math.min(2, max), maximumFractionDigits: max });
 }
 
@@ -465,35 +488,142 @@ function textMorpho(r, end = short, nameAlt = null) {
 }
 
 /*
- * /defi morpho with nothing registered: the wallet from MORPHO_WALLET_ADDRESS (or from the
- * defi.morpho.wallet setting), queried on the spot.
+ * Aave: the text (the data comes from src/defi/aave.js). The short one brings the net, the
+ * Health Factor and the assets; with -full, the risk, the fees, what is collateral and
+ * the configuration. Each network has its own Health Factor: never a single, mixed one.
  */
-async function envShowMorpho(msg, end) {
-    const wallet = envOuSetting('MORPHO_WALLET_ADDRESS', 'defi.morpho.wallet');
+function itemAaveShort(x) {
+    return [
+        `${tokenIcon(x.simbolo)} *${x.simbolo}*`,
+        x.qtd !== null && `\`${fmtQtdToken(x.qtd, x)} ${x.simbolo}\``,
+        x.usd !== null && `\`${fmtUsd(x.usd)}\``
+    ].filter(Boolean).join('\n');
+}
+
+function itemAaveFull(x, debt) {
+    return [
+        `*${x.simbolo}*`,
+        x.qtd !== null && `Amount: \`${fmtQtdToken(x.qtd, x)}\``,
+        x.usd !== null && `Value: \`${fmtUsd(x.usd)}\``,
+        !debt && `Collateral: \`${x.colateral ? 'Yes' : 'No'}\``,
+        x.apy !== null && `${debt ? 'Borrow' : 'Supply'} APY: \`${fmtPct(x.apy)}\``,
+        debt && `Rate Mode: \`${x.modo}\``
+    ].filter(Boolean).join('\n');
+}
+
+// The network summary: the short one (with highlight, on a single network) or the technical one (-full)
+function summaryAave(x, { full, destaque: highlight }) {
+    const withoutPrice = x.semPreco.length ? `\n_Sem preço (fora dos totais): ${x.semPreco.join(', ')}_` : '';
+    if (!full) {
+        return highlight
+            ? `💰 *Posição líquida*\n\`${fmtUsdWithSignal(x.liquidoUsd)}\`\n\n❤️ *Health Factor*\n\`${fmtHf(x.hf)}\`${withoutPrice}`
+            : `Net: \`${fmtUsdWithSignal(x.liquidoUsd)}\`\nHealth Factor: \`${fmtHf(x.hf)}\`${withoutPrice}`;
+    }
+
+    const risk = [
+        x.ltvAtual !== null && `LTV atual: \`${fmtPct(x.ltvAtual)}\``,
+        `LTV máximo: \`${fmtPct(x.ltvMaximo)}\``,
+        `Liquidation Threshold: \`${fmtPct(x.liquidationThreshold)}\``,
+        `Available Borrows: \`${fmtUsd(x.disponivelUsd)}\``,
+        `Collateral (risco): \`${fmtUsd(x.colateralUsd)}\``,
+        x.precoLiquidacao && `Preço de liquidação (${x.precoLiquidacao.simbolo}): \`${fmtUsd(x.precoLiquidacao.usd)}\``,
+        x.liquidacaoAmbigua && '⚠️ _Preço de liquidação individual não é determinístico com múltiplos collaterals._'
+    ].filter(Boolean).join('\n');
+
+    return `💰 Net Position: \`${fmtUsdWithSignal(x.liquidoUsd)}\`\n` +
+        `📥 Supplied: \`${fmtUsd(x.fornecidoUsd)}\`\n` +
+        `📤 Borrowed: \`${fmtUsd(x.dividaUsd)}\`${withoutPrice}\n\n` +
+        `❤️ Health Factor: \`${fmtHf(x.hf)}\`\n\n📊 *Risco*\n${risk}`;
+}
+
+// A network's sections: the summary and the assets (and, with -full, the configuration)
+function sectionsAave(x, { full, titulo: title }) {
+    const { fornecidos: provided, dividas: debts } = x;
+    const list = (items, debt) => items.map(i => (full ? itemAaveFull(i, debt) : itemAaveShort(i))).join('\n\n');
+    const sections = [
+        `${title}${summaryAave(x, { full, destaque: !title.startsWith('🌐') })}`,
+        provided.length && `📥 *SUPPLIED*\n\n${list(provided, false)}`,
+        debts.length && `📤 *${full ? 'DEBT' : 'BORROWED'}*\n\n${list(debts, true)}`
+    ];
+
+    if (full) {
+        const emode = x.emode ? `Enabled (${x.emode.nome || `categoria ${x.emode.id}`})` : 'Disabled';
+        const isolation = x.isolamento
+            ? `Yes (${x.isolamento.simbolo}, debt ceiling ${fmtUsd(x.isolamento.tetoUsd)})`
+            : 'No';
+        sections.push(`⚙️ *CONFIGURAÇÃO*\n\neMode: \`${emode}\`\nIsolation Mode: \`${isolation}\``);
+    }
+    return sections.filter(Boolean);
+}
+
+/**
+ * The /defi aave message: on a single network, it directly; on several, the total
+ * global and each network with its own Health Factor.
+ */
+function textAave(r, end = short, nameAlt = null, { full = false } = {}) {
+    const title = `🟣 *AAVE V3${full ? ' — FULL' : ''}*`;
+    const networks = r.redes;
+    const sections = [];
+
+    if (networks.length === 1) {
+        sections.push(...sectionsAave(networks[0], { full, titulo: `${title} · ${networks[0].rede}\n\n` }));
+    } else {
+        const total = networks.reduce((s, x) => s + x.liquidoUsd, 0);
+        sections.push(`${title}\n\n💰 *TOTAL GLOBAL*\nNet: \`${fmtUsdWithSignal(total)}\``);
+        for (const x of networks) sections.push(sectionsAave(x, { full, titulo: `🌐 *${x.rede}*\n\n` }).join('\n\n'));
+    }
+
+    if (r.falhas.length) {
+        sections.push(r.falhas.map(f => `⚠️ *${f.rede}*: ${f.motivo}`).join('\n'));
+    }
+
+    sections.push(`👛 Carteira: ${nameAlt ? `${nameAlt} · ` : ''}\`${end(r.carteira)}\`\n` +
+        `🌐 ${networks.length > 1 ? 'Redes' : 'Rede'}: \`${networks.map(x => x.rede).join(', ') || '-'}\`\n` +
+        `🕐 Atualizado: \`${new Date(r.quando).toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo' })}\``);
+
+    return sections.join(`\n\n${SEPARATOR}\n\n`);
+}
+
+/*
+ * /defi morpho or /defi aave with nothing registered: the wallet from .env
+ * (MORPHO_WALLET_ADDRESS, AAVE_WALLET_ADDRESS) or from the setting, queried on the spot.
+ */
+const DO_ENV = {
+    morpho: {
+        nome: 'Morpho', env: 'MORPHO_WALLET_ADDRESS', setting: 'defi.morpho.wallet', ler: positionsMorpho,
+        vazio: (r) => !r.posicoes.length,
+        semPosicao: (end, wallet) => `🦋 *MORPHO*\n\nNenhuma posição aberta na carteira \`${end(wallet)}\` (chain ${getSetting('defi.morpho.chains').join(', ')}).`,
+        texto: (r, end) => textMorpho(r, end)
+    },
+    aave: {
+        nome: 'Aave', env: 'AAVE_WALLET_ADDRESS', setting: 'defi.aave.wallet', ler: positionsAave,
+        vazio: (r) => !r.redes.length && !r.falhas.length,
+        semPosicao: (end, wallet) => `🟣 *AAVE V3*\n\nNenhuma posição aberta na carteira \`${end(wallet)}\` (chain ${getSetting('defi.aave.chains').join(', ')}).`,
+        texto: (r, end, full) => textAave(r, end, null, { full })
+    }
+};
+
+async function envShow(msg, protocol, end, full) {
+    const d = DO_ENV[protocol];
+    const wallet = envOuSetting(d.env, d.setting);
     if (!wallet) {
-        await msg.reply('❌ Endereço da carteira Morpho não configurado.\n\n' +
-            'Configure MORPHO_WALLET_ADDRESS no arquivo .env (ou /set defi.morpho.wallet <0x...>), ' +
-            'ou cadastre a carteira: /defi morpho -wallet <0x...>');
+        await msg.reply(`❌ Endereço da carteira ${d.nome} não configurado.\n\n` +
+            `Configure ${d.env} no arquivo .env (ou /set ${d.setting} <0x...>), ` +
+            `ou cadastre a carteira: /defi ${protocol} -wallet <0x...>`);
         return;
     }
 
     let r;
     try {
-        r = await positionsMorpho(wallet);
+        r = await d.ler(wallet);
     } catch (err) {
-        if (!(err instanceof ErrorMorpho)) printError('[MORPHO] Erro inesperado:', err.message);
-        await msg.reply(`❌ *Erro ao consultar Morpho*\n\n${err instanceof ErrorMorpho ? err.motivo : 'Não foi possível obter os dados neste momento.'}\n\n` +
+        if (!err.motivo) printError(`[${d.nome.toUpperCase()}] Erro inesperado:`, err.message);
+        await msg.reply(`❌ *Erro ao consultar ${d.nome}*\n\n${err.motivo ?? 'Não foi possível obter os dados neste momento.'}\n\n` +
             'Tente novamente em alguns instantes.');
         return;
     }
 
-    if (!r.posicoes.length) {
-        const networks = getSetting('defi.morpho.chains').join(', ');
-        await msg.reply(`🦋 *MORPHO*\n\nNenhuma posição aberta na carteira \`${end(wallet)}\` (chain ${networks}).`);
-        return;
-    }
-
-    await msg.reply(textMorpho(r, end));
+    await msg.reply(d.vazio(r) ? d.semPosicao(end, wallet) : d.texto(r, end, full));
 }
 
 /*
@@ -774,16 +904,16 @@ async function cmdDefi({ msg, opts: commandOpts, args, chatId }) {
     }
 
     if (argv.length) {
-        await msg.reply(`❌ "${argv[0]}" não é um protocolo: use orca, prjx ou morpho.\n\n\`\`\`${getCommandSyntax('/defi')}\`\`\``);
+        await msg.reply(`❌ "${argv[0]}" não é um protocolo: use orca, prjx, morpho ou aave.\n\n\`\`\`${getCommandSyntax('/defi')}\`\`\``);
         return;
     }
 
     // /defi: the Position Details of all; /defi orca, prjx or morpho: only that one
     const chosen = positions.filter(x => !protocol || x.protocol === protocol);
 
-    // Morpho with no registration: the .env wallet (or the setting's), queried on the spot
-    if (protocol === 'morpho' && !chosen.length) {
-        await envShowMorpho(msg, end);
+    // Morpho and Aave with no registration: the .env wallet (or the setting's), queried on the spot
+    if (DO_ENV[protocol] && !chosen.length) {
+        await envShow(msg, protocol, end, Boolean(o.full));
         return;
     }
 
@@ -791,7 +921,7 @@ async function cmdDefi({ msg, opts: commandOpts, args, chatId }) {
         await msg.reply(protocol ? `🌊 Nada cadastrado ${protocol === 'prjx' ? 'do Project X' : 'da Orca'}.\n${EXAMPLES}` : empty);
         return;
     }
-    await showAlt(msg, chosen, end);
+    await showAlt(msg, chosen, end, { full: Boolean(o.full) });
 }
 
 module.exports = {
@@ -804,6 +934,7 @@ module.exports = {
     fmtUsd,
     readRegistration,
     positionText,
+    textAave,
     positionPrjxText,
     textMorpho
 };
