@@ -24,7 +24,11 @@ hora, sem reiniciar, e sobrevivem a reinícios. Para ver e alterar, use o
 | `cve.max` | 1–20 | `10` | Quantidade de CVEs exibidas pelo `/cve` (o `/cve <max>` sobrepõe) |
 | `cve.maxDays` | 1–120 | `7` | Janela, em dias, do `/cve -highscore` |
 | `debug.enabled` | on/off | `on` se `APP_ENV=dev` | Modo debug (o mesmo do `/debug`) |
+| `defi.aave.chains` | lista | `1 8453` | Redes (chain id) em que o [`/defi aave`](comandos/defi.md#aave-v3) procura as posições: `1` (Ethereum), `8453` (Base) |
+| `defi.aave.wallet` | texto (pode ser vazio) | *(vazio)* | Carteira do [`/defi aave`](comandos/defi.md#aave-v3) quando não há carteira cadastrada, usada quando `AAVE_WALLET_ADDRESS` não está no `config/.env` |
 | `defi.alerta.intervalMin` | 1–1440 | `10` | Intervalo (minutos) entre as verificações do [`/defi -alerta`](comandos/defi.md#alerta-de-saída-da-faixa); cada uma lê as posições no RPC da Solana |
+| `defi.base.rpc` | URL | `https://mainnet.base.org` | RPC da Base usado pelo [`/defi aave`](comandos/defi.md#aave-v3), quando `BASE_RPC_URL` não está no `config/.env`. O público limita as consultas. Exibido mascarado |
+| `defi.ethereum.rpc` | URL | `https://ethereum-rpc.publicnode.com` | RPC da Ethereum usado pelo [`/defi aave`](comandos/defi.md#aave-v3), quando `ETHEREUM_RPC_URL` não está no `config/.env`. O público limita as consultas. Exibido mascarado |
 | `defi.hyperevm.rpc` | URL | `https://rpc.hyperliquid.xyz/evm` | RPC da HyperEVM usado pelo [`/defi`](comandos/defi.md) no Project X. O público limita as consultas; um RPC próprio costuma ter a chave na URL. Exibido mascarado |
 | `defi.morpho.api` | URL | `https://api.morpho.org/graphql` | API GraphQL oficial do Morpho, usada pelo [`/defi morpho`](comandos/defi.md#morpho) |
 | `defi.morpho.chains` | lista | `8453` | Redes (chain id) em que o [`/defi morpho`](comandos/defi.md#morpho) procura as posições: `8453` (Base), `1` (Ethereum)... |
