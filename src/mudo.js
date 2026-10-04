@@ -1,8 +1,8 @@
 /*
- * /mudo: pessoas e grupos cujos avisos de apagadas, editadas e status apagados ficam em silêncio.
+ * /mute: pessoas e grupos cujos avisos de apagadas, editadas e status apagados ficam em silêncio.
  */
 
-const { dbAll, dbPronto, dbRun } = require('./db');
+const { dbAll, dbGet, dbPronto, dbRun } = require('./db');
 const { printInfo } = require('./log');
 
 /*
@@ -41,10 +41,10 @@ async function silenciado(tipo, { chatId, remetentes = [] }) {
     return mutes.find(m => chaves.has(chaveDoId(m.target_id))) ?? null;
 }
 
-// Registra um aviso cortado (para o /bot -status e para a lista do /mudo)
+// Registra um aviso cortado (para o /bot -status e para a lista do /mute)
 async function registrarIgnorada(mute, tipo) {
     await dbRun('INSERT INTO mute_hits (target_id, kind, at) VALUES (?, ?, ?)', [mute.target_id, tipo, Date.now()]);
-    printInfo(`/mudo: aviso de ${tipo} de ${mute.target_name} ignorado`);
+    printInfo(`/mute: aviso de ${tipo} de ${mute.target_name} ignorado`);
 }
 
 /**
@@ -58,9 +58,35 @@ async function ignorarAviso(tipo, origem) {
     return true;
 }
 
+/**
+ * Guarda de onde veio um aviso enviado (o /mute respondendo ele sabe quem silenciar).
+ * @param {object} enviada  o Message devolvido pelo client.sendMessage
+ * @param {object} origem
+ * @param {string} origem.chatId     o chat da mensagem avisada
+ * @param {string} [origem.remetente]  o telefone (ou o id) de quem a mandou
+ */
+async function registrarAviso(enviada, { chatId, remetente }) {
+    const id = enviada?.id?.id;
+    if (!id || !chatId) return;
+    await dbRun(
+        'INSERT OR REPLACE INTO alerts (message_id, chat_id, sender, created_at) VALUES (?, ?, ?, ?)',
+        [id, chatId, remetente ?? null, Date.now()]
+    ).catch(() => {});
+}
+
+// De onde veio o aviso com esse id: { chat_id, sender }, ou null
+async function origemDoAviso(messageId) {
+    if (!messageId) return null;
+    await dbPronto;
+    const origem = await dbGet('SELECT chat_id, sender FROM alerts WHERE message_id = ?', [messageId]);
+    return origem ?? null;
+}
+
 module.exports = {
     TIPOS,
     chaveDoId,
     ignorarAviso,
+    origemDoAviso,
+    registrarAviso,
     silenciado
 };

@@ -6,7 +6,7 @@ const { client } = require('../cliente');
 const { dbGet, dbPronto, dbRun } = require('../db');
 const { resolverAutorApagada } = require('./apagadas');
 const { printError, printInfo } = require('../log');
-const { ignorarAviso } = require('../mudo');
+const { ignorarAviso, registrarAviso } = require('../mudo');
 const { getSetting } = require('../settings');
 const { contarStats } = require('../stats');
 const { formatarData } = require('../util/formatar');
@@ -33,7 +33,10 @@ async function enviarMensagemEditada(destino, row, info, { titulo = '✏️ *MEN
         `📝 *Antes:* "${row.old_body || '(vazio)'}"\n` +
         `💬 *Depois:* "${row.new_body || '(vazio)'}"`;
 
-    await client.sendMessage(destino, texto, { linkPreview: false });
+    // Guarda de onde veio (o /mute respondendo o aviso)
+    const enviada = await client.sendMessage(destino, texto, { linkPreview: false });
+    const remetente = info.numeroRemetente || row.sender_number;
+    await registrarAviso(enviada, { chatId: row.chat_id, remetente });
 }
 
 client.on('message_edit', async (msg, newBody, prevBody) => {
@@ -108,7 +111,7 @@ client.on('message_edit', async (msg, newBody, prevBody) => {
             campos: { edited: 1 }
         });
 
-        // /mudo: o aviso deste chat ou desta pessoa está em silêncio (a edição fica guardada para o /show -e)
+        // /mute: o aviso deste chat ou desta pessoa está em silêncio (a edição fica guardada para o /show -e)
         const remetentes = [original?.sender_jid, original?.sender_number, row.sender_number];
         if (getSetting('show.alert.edited') && !(await ignorarAviso('editada', { chatId, remetentes }))) {
             await enviarMensagemEditada(client.info.wid._serialized, row, info);

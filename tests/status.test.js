@@ -37,8 +37,8 @@ describe('/bot -status', () => {
         // Uma apagada antiga não entra nas 24 h
         await bot.dbRun("UPDATE messages SET revoked_at = ? WHERE body = 'duas'", [Date.now() - 2 * DIA]);
 
-        // /mudo: um aviso ignorado
-        await bot.responder('/mudo -d +5521911111111');
+        // /mute: um aviso ignorado
+        await bot.responder('/mute -d +5521911111111');
         await apagada('silenciada');
 
         const [r] = await bot.responder('/bot -status');
@@ -49,7 +49,7 @@ describe('/bot -status', () => {
         assert.match(r, /🗑️ \*Apagadas:\* 2\n/);   // "uma" e a silenciada (a "duas" é antiga)
         assert.match(r, /✏️ \*Editadas:\* 1\n/);
         assert.match(r, /📸 \*Status apagados:\* 1\n/);
-        assert.match(r, /🔇 \*Ignoradas \(\/mudo\):\* 1 _\(apagadas 1\)_ · 1 silenciado\n/);
+        assert.match(r, /🔇 \*Ignoradas \(\/mute\):\* 1 _\(apagadas 1\)_ · 1 silenciado\n/);
         assert.match(r, /💾 \*Último backup:\* nenhum/);
         assert.match(r, /\n\n🔕 Status diário desligado\.\n💡 _Ligue com \/bot -status 06h \(no horário que quiser\)\._\n\nℹ️ _Mais informações em \/bot -h_$/);
     });
@@ -63,7 +63,7 @@ describe('/bot -status', () => {
         assert.match(r, /🗑️ \*Apagadas:\* 0 _\(aviso desligado; ligue com \/set show\.alert\.deleted on\)_\n/);
         assert.match(r, /✏️ \*Editadas:\* 0 _\(aviso desligado; ligue com \/set show\.alert\.edited on\)_\n/);
         assert.match(r, /📸 \*Status apagados:\* 0 _\(recuperação desligada; ligue com \/set show\.alert\.status on\)_\n/);
-        assert.match(r, /🔇 \*Ignoradas \(\/mudo\):\* 0\n/);   // ninguém silenciado: sem o "· N silenciados"
+        assert.match(r, /🔇 \*Ignoradas \(\/mute\):\* 0\n/);   // ninguém silenciado: sem o "· N silenciados"
     });
 
     test('-status 06h agenda no seu privado; o relatório mostra no fim; o envio sai pela agenda, todo dia', async () => {

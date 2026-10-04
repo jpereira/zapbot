@@ -61,7 +61,7 @@ src/
   escolhas.js           a lista numerada para escolher (vários contatos/grupos) e a confirmação sim/não (só de quem deu o comando)
   flood.js              proteção contra flood (o mesmo comando além do limite: um aviso e silêncio)
   permissoes.js         quem usa os comandos comuns, e quais (bot.users e o +cmd|-cmd de cada um)
-  mudo.js               /mudo: quem está silenciado e os avisos cortados
+  mudo.js               /mute: quem está silenciado, os avisos cortados e a origem de cada aviso
   defi/                 Solana e HyperEVM (RPC), a Orca e o Project X (/defi) e o -alerta de saída da faixa
   watch/                regras e verificação do /watch
   eventos/              message_create, apagadas, editadas, presença
@@ -133,9 +133,9 @@ entre os casos.
 | `mensagens.test.js` | Gravação, roteamento, permissões (`onlyAdmin`, o `bot.users` com pessoas, grupos, `true`/`false` e a migração do `bot.adminMode`, bot desligado, admins extras do `bot.admins`, os atalhos `/bot +o`/`+v`, os comandos de cada usuário (`+cmd`/`-cmd`), o `/whois` e a proteção contra flood), o log dos comandos desconhecidos e a contagem do `/stats` (sem os avisos do sistema) |
 | `comandos.test.js` | `/help`, `/debug`, `/uptime`, `/version`, `/ping`, `/noffa`, `/bot` (e o `-info`, com as versões novas do yt-dlp e do whatsapp-web.js), `/set` (e o `-append`/`-rem`) |
 | `apagadas-editadas.test.js` | Eventos de apagar/editar (e os avisos `show.alert.*`) e o `/show` (apagadas e editadas, e a busca `-q`) |
-| `mudo.test.js` | `/mudo`: avisos silenciados por pessoa ou grupo (só o alvo é o `-a`), e a busca do alvo (contato antes de grupo, menção, a lista para escolher pelo nº) |
+| `mute.test.js` | `/mute` e `/unmute`: avisos silenciados por pessoa, grupo ou comunidade (só o alvo é o `-a`), a busca do alvo (contato antes de grupo, menção, a lista para escolher pelo nº) e a resposta a um aviso (de onde ele veio) |
 | `stats.test.js`, `watch.test.js`, `monitor.test.js` | `/stats` (com o `/chat/`, o `-l` e o `-flush`), `/watch` (e um ou vários `-to`), `/monitor` e o aviso de presença |
-| `status.test.js` | `/bot -status`: o relatório (com o aviso `show.alert.*` desligado e os silenciados do `/mudo`) e o envio diário |
+| `status.test.js` | `/bot -status`: o relatório (com o aviso `show.alert.*` desligado e os silenciados do `/mute`) e o envio diário |
 | `agenda.test.js` | Datas digitadas (`6h`, `+2h`, `às 18h`, `sexta`...) e o `/cron`, nos modos mensagem e lembrete, com vários `-to` num item só, `-edit`, `-pause`/`-resume` e os `{/comando}` no texto (e o `-test`) |
 | `backup.test.js` | `/backup` (criação, lista, restauração, envio no privado, por e-mail e com um ou vários `-to`) e o backup diário |
 | `cotacoes.test.js` | `/cotacao`, `/crypto` (e o filtro por moeda) e os alertas de preço (com um ou vários `-to`, o `-msg` e o `-rm` de vários) |
