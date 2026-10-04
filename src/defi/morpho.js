@@ -320,7 +320,8 @@ async function posicoesMorpho(carteira) {
     const redes = getSetting('defi.morpho.chains').map(Number);
     const chave = `${carteira.toLowerCase()}|${redes.join(',')}`;
     const guardado = cache.get(chave);
-    if (guardado && Date.now() - guardado.quando < CACHE_MS) return { ...guardado, doCache: true };
+    // A mesma carteira em outra caixa (0xAb.. e 0xab..) é a mesma: só a exibição segue o pedido
+    if (guardado && Date.now() - guardado.quando < CACHE_MS) return { ...guardado, carteira, doCache: true };
 
     const inicio = Date.now();
     printInfo(`[MORPHO] Consultando carteira ${abreviar(carteira)}`);

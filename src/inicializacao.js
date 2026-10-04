@@ -24,6 +24,62 @@ async function adicionarColunas(tabela, colunas) {
 }
 
 /*
+ * /defi: os cadastros. As colunas têm o nome das opções: address (o -address
+ * da Orca, a posição) e wallet (o -wallet do Project X e do Morpho, a
+ * carteira); um cadastro tem uma ou a outra.
+ */
+const CRIAR_DEFI_POSITIONS = `
+    CREATE TABLE IF NOT EXISTS defi_positions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        protocol TEXT NOT NULL,
+        address TEXT,
+        wallet TEXT,
+        nft TEXT,
+        pool TEXT,
+        created_at INTEGER NOT NULL,
+        UNIQUE (protocol, address),
+        UNIQUE (protocol, wallet)
+    )
+`;
+const COLUNAS_DO_ALERTA_DEFI = {
+    alert: 'INTEGER DEFAULT 0',
+    alert_dest_id: 'TEXT',
+    alert_dest_name: 'TEXT',
+    alert_dest_is_group: 'INTEGER DEFAULT 0',
+    alert_email: 'TEXT',
+    alert_recipients: 'TEXT',           // JSON com os destinos de vários -to (as alert_dest_*: o primeiro)
+    alert_fees: 'REAL',                 // -taxas: avisa quando as taxas a coletar passam disso (US$)
+    fees_notified: 'INTEGER DEFAULT 0', // já avisou desse valor (volta a 0 quando coletar)
+    in_range: 'INTEGER'
+};
+
+/*
+ * defi_positions de uma versão anterior: o endereço numa coluna só
+ * (position, única entre todos os protocolos). Passa para address (a Orca) e
+ * wallet (as carteiras); o resto vai como estava.
+ */
+async function migrarDefiParaAddressEWallet() {
+    const colunas = (await dbAll('PRAGMA table_info(defi_positions)')).map(c => c.name);
+    if (!colunas.includes('position')) return;
+
+    await dbRun('ALTER TABLE defi_positions RENAME TO defi_positions_antiga');
+    await dbRun(CRIAR_DEFI_POSITIONS);
+    await adicionarColunas('defi_positions', COLUNAS_DO_ALERTA_DEFI);
+
+    const novas = new Set((await dbAll('PRAGMA table_info(defi_positions)')).map(c => c.name));
+    const iguais = colunas.filter(c => c !== 'position' && novas.has(c)).join(', ');
+    await dbRun(`
+        INSERT INTO defi_positions (${iguais}, address, wallet)
+        SELECT ${iguais},
+               CASE WHEN protocol = 'orca' THEN position END,
+               CASE WHEN protocol <> 'orca' THEN position END
+          FROM defi_positions_antiga
+    `);
+    await dbRun('DROP TABLE defi_positions_antiga');
+    printInfo('defi_positions: o position virou address (Orca) e wallet (carteiras)');
+}
+
+/*
  * Criação das tabelas.
  * Tudo em sequência (await): antes, o CREATE TABLE podia ainda não ter
  * terminado quando a primeira consulta chegava.
@@ -221,33 +277,15 @@ async function inicializarBanco() {
     await dbRun('CREATE INDEX IF NOT EXISTS idx_schedules_due ON schedules (due_at)');
 
     /*
-     * Posições DeFi do /defi (por enquanto, da Orca): o resto é lido on-chain a
-     * cada -show. O -alerta guarda para onde avisar (alert_dest_*: um chat;
+     * Cadastros do /defi (as posições da Orca e as carteiras do Project X e do
+     * Morpho): o resto é lido na hora, a cada /defi. O -alerta guarda para onde avisar (alert_dest_*: um chat;
      * alert_email: e-mails; alert_recipients: vários -to; nenhum: o seu privado)
      * e se a posição estava na faixa na última verificação (in_range; NULL:
      * ainda não lida).
      */
-    await dbRun(`
-        CREATE TABLE IF NOT EXISTS defi_positions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            protocol TEXT NOT NULL,
-            position TEXT NOT NULL UNIQUE,
-            nft TEXT,
-            pool TEXT,
-            created_at INTEGER NOT NULL
-        )
-    `);
-    await adicionarColunas('defi_positions', {
-        alert: 'INTEGER DEFAULT 0',
-        alert_dest_id: 'TEXT',
-        alert_dest_name: 'TEXT',
-        alert_dest_is_group: 'INTEGER DEFAULT 0',
-        alert_email: 'TEXT',
-        alert_recipients: 'TEXT',           // JSON com os destinos de vários -to (as alert_dest_*: o primeiro)
-        alert_fees: 'REAL',                 // -taxas: avisa quando as taxas a coletar passam disso (US$)
-        fees_notified: 'INTEGER DEFAULT 0', // já avisou desse valor (volta a 0 quando coletar)
-        in_range: 'INTEGER'
-    });
+    await migrarDefiParaAddressEWallet();
+    await dbRun(CRIAR_DEFI_POSITIONS);
+    await adicionarColunas('defi_positions', COLUNAS_DO_ALERTA_DEFI);
 
     /*
      * /mute: pessoas e grupos com os avisos em silêncio (o que: deleted, edited,

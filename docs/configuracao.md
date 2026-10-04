@@ -71,7 +71,7 @@ vale o setting, que dá para trocar pelo WhatsApp com `/set` sem reiniciar.
 
 | Variável | Exemplo | Descrição |
 |---|---|---|
-| `MORPHO_WALLET_ADDRESS` | `0x1234...abcd` | Carteira (endereço público, `0x` e 40 caracteres hexadecimais) consultada pelo [`/defi morpho`](comandos/defi.md#morpho) sem o `-wallet`. Se estiver vazia, o bot usa o setting `defi.morpho.wallet`. Nunca coloque aqui chave privada nem seed: a consulta é só de leitura. |
+| `MORPHO_WALLET_ADDRESS` | `0x1234...abcd` | Carteira (endereço público, `0x` e 40 caracteres hexadecimais) consultada pelo [`/defi morpho`](comandos/defi.md#morpho) quando não há carteira cadastrada (`/defi morpho -wallet`). Se estiver vazia, o bot usa o setting `defi.morpho.wallet`. Nunca coloque aqui chave privada nem seed: a consulta é só de leitura. |
 
 ## GIPHY (opcional)
 
