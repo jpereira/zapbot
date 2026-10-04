@@ -86,15 +86,25 @@ const describe = (p, end = short) => (WALLET.includes(p.protocol)
     ? `${PROTOCOLS[p.protocol]} · ${walletWithName(p, end)}`
     : `${PROTOCOLS[p.protocol] ?? p.protocol} · ${positionWithName(p, end)}`);
 
+/*
+ * -mask: the wallet numbers (balances, amounts, values and fees to
+ * collect) become * keeping the format ($**,***.**); the market's (price,
+ * range, pool, HF, LTV, APY) remain. Good for sending a screenshot without showing the
+ * pocket size.
+ */
+const SHOW = (t) => t;
+const HIDE = (t) => String(t).replace(/\d/g, '*');
+
 // The position or wallet name (-name): up to 40 characters, on one line
 const MAX_NAME = 40;
 
 /**
  * "Position Details" text of a Project X position (from walletPositions).
  */
-function positionPrjxText(x, nameAlt = null) {
-    const usd = (q, price) => (price === null ? '' : ` (${fmtUsd(q * price)})`);
-    const total = (a, b) => (x.usd1 === null ? '' : ` ${fmtUsd(a * x.usd0 + b * x.usd1)}`);
+function positionPrjxText(x, nameAlt = null, m = SHOW) {
+    const usd = (q, price) => (price === null ? '' : ` (${m(fmtUsd(q * price))})`);
+    const total = (a, b) => (x.usd1 === null ? '' : ` ${m(fmtUsd(a * x.usd0 + b * x.usd1))}`);
+    const qtd = (q) => m(fmtQtd(q));
     const status = x.naFaixa
         ? '✅ dentro da faixa'
         : `⚠️ *fora da faixa* (preço ${x.preco < x.inferior ? 'abaixo' : 'acima'}: a posição não rende taxas)`;
@@ -102,14 +112,14 @@ function positionPrjxText(x, nameAlt = null) {
     return `🌊 *Project X · ${x.simbolo0}/${x.simbolo1}* · taxa ${(x.taxa / 10000).toLocaleString('en-US', { maximumFractionDigits: 2 })}%\n` +
         `📍 #${x.id}${nameAlt ? ` · 👛 ${nameAlt}` : ''} · ${status}\n\n` +
         `💰 *Saldo:*${total(x.qtd0, x.qtd1)}\n` +
-        `   • ${fmtQtd(x.qtd0)} ${x.simbolo0}${usd(x.qtd0, x.usd0)}\n` +
-        `   • ${fmtQtd(x.qtd1)} ${x.simbolo1}${usd(x.qtd1, x.usd1)}\n\n` +
+        `   • ${qtd(x.qtd0)} ${x.simbolo0}${usd(x.qtd0, x.usd0)}\n` +
+        `   • ${qtd(x.qtd1)} ${x.simbolo1}${usd(x.qtd1, x.usd1)}\n\n` +
         `📏 *Faixa:* ${fmtPrice(x.inferior)} – ${fmtPrice(x.superior)} ${x.simbolo1} por ${x.simbolo0}\n` +
         `🎯 *Preço atual:* ${fmtPrice(x.preco)} ${x.simbolo1} por ${x.simbolo0}\n` +
         `   ${rangeBar(x.preco, x.inferior, x.superior)}\n\n` +
         `💸 *Taxas a coletar:*${total(x.taxa0, x.taxa1)}\n` +
-        `   • ${fmtQtd(x.taxa0)} ${x.simbolo0}${usd(x.taxa0, x.usd0)}\n` +
-        `   • ${fmtQtd(x.taxa1)} ${x.simbolo1}${usd(x.taxa1, x.usd1)}`;
+        `   • ${qtd(x.taxa0)} ${x.simbolo0}${usd(x.taxa0, x.usd0)}\n` +
+        `   • ${qtd(x.taxa1)} ${x.simbolo1}${usd(x.taxa1, x.usd1)}`;
 }
 
 /**
@@ -118,16 +128,16 @@ function positionPrjxText(x, nameAlt = null) {
  * inRange: all the positions in range (null: the wallet has none open)
  * ratesUsd: the fees to collect in dollars (null: no price, in a pair without a stablecoin)
  */
-async function readRegistration(p, end = short, { full = false } = {}) {
+async function readRegistration(p, end = short, { full = false, m = SHOW } = {}) {
     if (p.protocol === 'aave') {
         const r = await positionsAave(p.wallet);
         const something = r.redes.length || r.falhas.length;
-        return { naFaixa: null, textos: something ? [textAave(r, end, p.name, { full })] : [], foraDaFaixa: [], taxasUsd: null };
+        return { naFaixa: null, textos: something ? [textAave(r, end, p.name, { full, m })] : [], foraDaFaixa: [], taxasUsd: null };
     }
 
     if (p.protocol === 'morpho') {
         const r = await positionsMorpho(p.wallet);
-        return { naFaixa: null, textos: r.posicoes.length ? [textMorpho(r, end, p.name)] : [], foraDaFaixa: [], taxasUsd: null };
+        return { naFaixa: null, textos: r.posicoes.length ? [textMorpho(r, end, p.name, m)] : [], foraDaFaixa: [], taxasUsd: null };
     }
 
     if (p.protocol === 'prjx') {
@@ -135,14 +145,14 @@ async function readRegistration(p, end = short, { full = false } = {}) {
         const withPrice = positions.filter(x => x.usd1 !== null);
         return {
             naFaixa: positions.length ? positions.every(x => x.naFaixa) : null,
-            textos: positions.map(x => positionPrjxText(x, p.name)),
-            foraDaFaixa: positions.filter(x => !x.naFaixa).map(x => positionPrjxText(x, p.name)),
+            textos: positions.map(x => positionPrjxText(x, p.name, m)),
+            foraDaFaixa: positions.filter(x => !x.naFaixa).map(x => positionPrjxText(x, p.name, m)),
             taxasUsd: withPrice.length ? withPrice.reduce((s, x) => s + x.taxa0 * x.usd0 + x.taxa1 * x.usd1, 0) : null
         };
     }
 
     const d = await positionDetails(p.address, p.pool);
-    const textAlt = positionText(d, end, p.name);
+    const textAlt = positionText(d, end, p.name, m);
     const inUsd = (qtd, token) => (Number(qtd) / 10 ** token.decimals) * Number(token.priceUsdc ?? 0);
     return {
         naFaixa: d.calculo.naFaixa,
@@ -155,7 +165,7 @@ async function readRegistration(p, end = short, { full = false } = {}) {
 /**
  * "Position Details" text of an Orca position.
  */
-function positionText(d, end = short, nameAlt = null) {
+function positionText(d, end = short, nameAlt = null, m = SHOW) {
     const { calculo: c, tokenA, tokenB, infoPool } = d;
     const simA = tokenA.metadata?.symbol ?? infoPool.tokenA?.symbol ?? 'A';
     const simB = tokenB.metadata?.symbol ?? infoPool.tokenB?.symbol ?? 'B';
@@ -181,16 +191,16 @@ function positionText(d, end = short, nameAlt = null) {
 
     let textAlt = `🌊 *Orca · ${simA}/${simB}* · taxa ${(d.pool.feeRate / 10000).toLocaleString('en-US', { maximumFractionDigits: 2 })}%\n` +
         `📍 ${nameAlt ? `${nameAlt} (${end(d.endereco)})` : end(d.endereco)} · ${status}\n\n` +
-        `💰 *Saldo:* ${fmtUsd(qtdA * usdA + qtdB * usdB)}\n` +
-        `   • ${fmtQtd(qtdA)} ${simA} (${fmtUsd(qtdA * usdA)})\n` +
-        `   • ${fmtQtd(qtdB)} ${simB} (${fmtUsd(qtdB * usdB)})\n\n` +
+        `💰 *Saldo:* ${m(fmtUsd(qtdA * usdA + qtdB * usdB))}\n` +
+        `   • ${m(fmtQtd(qtdA))} ${simA} (${m(fmtUsd(qtdA * usdA))})\n` +
+        `   • ${m(fmtQtd(qtdB))} ${simB} (${m(fmtUsd(qtdB * usdB))})\n\n` +
         `📏 *Faixa:* ${fmtPrice(inferior)} – ${fmtPrice(superior)} ${simB} por ${simA}\n` +
         `🎯 *Preço atual:* ${fmtPrice(current)} ${simB} por ${simA}\n` +
         `   ${rangeBar(current, inferior, superior)}\n` +
         `   _(1 ${simB} = ${fmtPrice(1 / current)} ${simA})_\n\n` +
-        `💸 *Taxas a coletar:* ${fmtUsd(rateA * usdA + rateB * usdB)}\n` +
-        `   • ${fmtQtd(rateA)} ${simA} (${fmtUsd(rateA * usdA)})\n` +
-        `   • ${fmtQtd(rateB)} ${simB} (${fmtUsd(rateB * usdB)})\n`;
+        `💸 *Taxas a coletar:* ${m(fmtUsd(rateA * usdA + rateB * usdB))}\n` +
+        `   • ${m(fmtQtd(rateA))} ${simA} (${m(fmtUsd(rateA * usdA))})\n` +
+        `   • ${m(fmtQtd(rateB))} ${simB} (${m(fmtUsd(rateB * usdB))})\n`;
 
     // Rewards: only those with something to collect
     const rewards = c.recompensas
@@ -200,7 +210,7 @@ function positionText(d, end = short, nameAlt = null) {
     if (rewards.length) {
         textAlt += '🎁 *Recompensas a coletar:*\n' + rewards.map(r => {
             const qtd = Number(r.quantidade) / 10 ** r.token.decimals;
-            return `   • ${fmtQtd(qtd)} ${r.token.metadata?.symbol ?? short(r.mint)} (${fmtUsd(qtd * Number(r.token.priceUsdc ?? 0))})`;
+            return `   • ${m(fmtQtd(qtd))} ${r.token.metadata?.symbol ?? short(r.mint)} (${m(fmtUsd(qtd * Number(r.token.priceUsdc ?? 0)))})`;
         }).join('\n') + '\n';
     }
 
@@ -213,7 +223,7 @@ function positionText(d, end = short, nameAlt = null) {
     if (c.naFaixa && d.pool.liquidez > 0n && Number(s24.fees) > 0) {
         const slice = Number(d.posicao.liquidez) / Number(d.pool.liquidez);
         const dosLps = Number(s24.fees) * (1 - d.pool.taxaProtocolo / 10000);
-        textAlt += `📊 *Rende ~${fmtUsd(slice * dosLps)}/dia* _(estimativa: ${(slice * 100).toLocaleString('en-US', { maximumSignificantDigits: 3 })}% da liquidez ativa × as taxas 24h dos LPs)_\n`;
+        textAlt += `📊 *Rende ~${m(fmtUsd(slice * dosLps))}/dia* _(estimativa: ${(slice * 100).toLocaleString('en-US', { maximumSignificantDigits: 3 })}% da liquidez ativa × as taxas 24h dos LPs)_\n`;
     }
 
     textAlt += `\n🏊 *Pool:* TVL ${fmtCompact(infoPool.tvlUsdc ?? 0)} · volume 24h ${fmtCompact(s24.volume ?? 0)} · taxas 24h ${fmtCompact(s24.fees ?? 0)}`;
@@ -249,12 +259,12 @@ const READ_WALLET = {
     prjx: async (wallet) => ({ abertas: (await walletPositions(wallet)).length }),
     morpho: async (wallet) => {
         const r = await positionsMorpho(wallet);
-        return { abertas: r.posicoes.length, texto: (end, nameAlt) => textMorpho(r, end, nameAlt) };
+        return { abertas: r.posicoes.length, texto: (end, nameAlt, { m }) => textMorpho(r, end, nameAlt, m) };
     },
     aave: async (wallet) => {
         const r = await positionsAave(wallet);
         const openAlt = r.redes.reduce((s, x) => s + x.fornecidos.length + x.dividas.length, 0);
-        return { abertas: openAlt, texto: (end, nameAlt, full) => textAave(r, end, nameAlt, { full }) };
+        return { abertas: openAlt, texto: (end, nameAlt, optionsAlt) => textAave(r, end, nameAlt, optionsAlt) };
     }
 };
 const WALLET_TIP = {
@@ -305,7 +315,7 @@ async function registerWallet(msg, o, protocol, end) {
     await msg.reply(`✅ *Carteira do ${protocolName} cadastrada:* ${nickname ? `${nickname} (${end(wallet)})` : end(wallet)}\n` +
         (openAlt ? `📍 ${plural(openAlt, 'posição aberta', 'posições abertas')}.` : `ℹ️ Nenhuma posição aberta agora: o /defi ${protocol} mostra quando houver.`) +
         `\n💡 _Veja com /defi ${protocol}_`);
-    if (openAlt && textAlt) await msg.reply(textAlt(end, nickname, Boolean(o.full)));
+    if (openAlt && textAlt) await msg.reply(textAlt(end, nickname, { full: Boolean(o.full), m: o.mask ? HIDE : SHOW }));
     return wallet.toLowerCase();
 }
 
@@ -371,10 +381,10 @@ const TIP_RPC = {
     prjx: '💡 _O RPC público da HyperEVM limita as consultas; um RPC próprio vai no setting defi.hyperevm.rpc._'
 };
 
-async function showAlt(msg, positions, end, { full = false } = {}) {
+async function showAlt(msg, positions, end, { full = false, m = SHOW } = {}) {
     for (const p of positions) {
         try {
-            const { textos: texts } = await readRegistration(p, end, { full });
+            const { textos: texts } = await readRegistration(p, end, { full, m });
             if (!texts.length) await msg.reply(`🌊 ${describe(p, end)}: nenhuma posição aberta.`);
             for (const textAlt of texts) await msg.reply(textAlt);
         } catch (err) {
@@ -415,11 +425,11 @@ function fmtQtdToken(qtd, t) {
 const tokenIcon = (symbolAlt) => (/BTC/i.test(symbolAlt) ? '₿' : STABLE.test(symbolAlt) ? '💵' : /ETH/i.test(symbolAlt) ? 'Ξ' : '🪙');
 
 // The token: amount and value (only what the API brought)
-function itemText(item, label = '') {
+function itemText(item, label = '', m = SHOW) {
     return [
         `${tokenIcon(item.simbolo)} *${item.simbolo}*${label}`,
-        item.qtd !== null && `Quantidade: \`${fmtQtdToken(item.qtd, item)} ${item.simbolo}\``,
-        item.usd !== null && `Valor: \`${fmtUsd(item.usd)}\``
+        item.qtd !== null && `Quantidade: \`${m(fmtQtdToken(item.qtd, item))} ${item.simbolo}\``,
+        item.usd !== null && `Valor: \`${m(fmtUsd(item.usd))}\``
     ].filter(Boolean).join('\n');
 }
 
@@ -432,21 +442,21 @@ const hfHighlight = (p) => (hasHf(p) ? `❤️ *Health Rate*\n\`${fmtHf(p.hf)}\`
  * hfInRisk, the Health Rate goes in the risk block (with several positions); without,
  * it stays at the top of the message (hfHighlight).
  */
-function positionMorphoText(p, { hfNoRisco: hfInRisk }) {
+function positionMorphoText(p, { hfNoRisco: hfInRisk, m = SHOW }) {
     const blocks = [];
 
     if (p.tipo === 'vault') {
-        blocks.push(`📥 *SUPPLIED*\n\n${itemText(p.fornecido, ` _(vault ${p.nome})_`)}`);
+        blocks.push(`📥 *SUPPLIED*\n\n${itemText(p.fornecido, ` _(vault ${p.nome})_`, m)}`);
         return blocks;
     }
 
     const entered = [
-        p.colateral && itemText(p.colateral),
-        p.fornecido && itemText(p.fornecido, p.colateral ? ' _(fornecido)_' : '')
+        p.colateral && itemText(p.colateral, '', m),
+        p.fornecido && itemText(p.fornecido, p.colateral ? ' _(fornecido)_' : '', m)
     ].filter(Boolean);
     if (entered.length) blocks.push(`📥 *SUPPLIED / COLLATERAL*\n\n${entered.join('\n')}`);
 
-    if (p.emprestado) blocks.push(`📤 *BORROWED*\n\n${itemText(p.emprestado)}`);
+    if (p.emprestado) blocks.push(`📤 *BORROWED*\n\n${itemText(p.emprestado, '', m)}`);
 
     // Risk: only makes sense with debt or collateral
     if (p.emprestado || p.colateral) {
@@ -473,7 +483,7 @@ const positionTitle = (p) => (p.tipo === 'vault'
  * The /defi morpho message: with one position, it directly; with several, the
  * totals and each with its own Health Rate (one market's does not apply to another).
  */
-function textMorpho(r, end = short, nameAlt = null) {
+function textMorpho(r, end = short, nameAlt = null, m = SHOW) {
     const { posicoes: positions, totais: t } = r;
     const footer = `👛 Carteira: ${nameAlt ? `${nameAlt} · ` : ''}\`${end(r.carteira)}\`\n` +
         `🌐 ${positions.length > 1 ? 'Redes' : 'Rede'}: \`${[...new Set(positions.map(p => p.rede))].join(', ')}\`\n` +
@@ -482,17 +492,17 @@ function textMorpho(r, end = short, nameAlt = null) {
 
     if (positions.length === 1) {
         const [p] = positions;
-        const net = t.semPreco.length ? withoutPrice.trim() : `💰 *Posição líquida*\n\`${fmtUsdWithSignal(t.liquido)}\``;
+        const net = t.semPreco.length ? withoutPrice.trim() : `💰 *Posição líquida*\n\`${m(fmtUsdWithSignal(t.liquido))}\``;
         const top = [`🦋 *MORPHO* · ${positionTitle(p)}`, net, hfHighlight(p)].filter(Boolean).join('\n\n');
-        return [top, ...positionMorphoText(p, { hfNoRisco: false }), footer].join(`\n\n${SEPARATOR}\n\n`);
+        return [top, ...positionMorphoText(p, { hfNoRisco: false, m }), footer].join(`\n\n${SEPARATOR}\n\n`);
     }
 
     const top = '🦋 *MORPHO*\n\n' +
-        `💰 *Total líquido*\n\`${fmtUsdWithSignal(t.liquido)}\`\n\n` +
-        `📥 *Total supplied/collateral*\n\`${fmtUsd(t.fornecido)}\`\n\n` +
-        `📤 *Total borrowed*\n\`${fmtUsd(t.emprestado)}\`${withoutPrice}`;
+        `💰 *Total líquido*\n\`${m(fmtUsdWithSignal(t.liquido))}\`\n\n` +
+        `📥 *Total supplied/collateral*\n\`${m(fmtUsd(t.fornecido))}\`\n\n` +
+        `📤 *Total borrowed*\n\`${m(fmtUsd(t.emprestado))}\`${withoutPrice}`;
     const each = positions.map((p, i) =>
-        [`*POSIÇÃO ${i + 1}* · ${positionTitle(p)}`, ...positionMorphoText(p, { hfNoRisco: true })].join('\n\n'));
+        [`*POSIÇÃO ${i + 1}* · ${positionTitle(p)}`, ...positionMorphoText(p, { hfNoRisco: true, m })].join('\n\n'));
 
     return [top, ...each, footer].join(`\n\n${SEPARATOR}\n\n`);
 }
@@ -502,19 +512,19 @@ function textMorpho(r, end = short, nameAlt = null) {
  * Health Factor and the assets; with -full, the risk, the fees, what is collateral and
  * the configuration. Each network has its own Health Factor: never a single, mixed one.
  */
-function itemAaveShort(x) {
+function itemAaveShort(x, m = SHOW) {
     return [
         `${tokenIcon(x.simbolo)} *${x.simbolo}*`,
-        x.qtd !== null && `\`${fmtQtdToken(x.qtd, x)} ${x.simbolo}\``,
-        x.usd !== null && `\`${fmtUsd(x.usd)}\``
+        x.qtd !== null && `\`${m(fmtQtdToken(x.qtd, x))} ${x.simbolo}\``,
+        x.usd !== null && `\`${m(fmtUsd(x.usd))}\``
     ].filter(Boolean).join('\n');
 }
 
-function itemAaveFull(x, debt) {
+function itemAaveFull(x, debt, m = SHOW) {
     return [
         `*${x.simbolo}*`,
-        x.qtd !== null && `Amount: \`${fmtQtdToken(x.qtd, x)}\``,
-        x.usd !== null && `Value: \`${fmtUsd(x.usd)}\``,
+        x.qtd !== null && `Amount: \`${m(fmtQtdToken(x.qtd, x))}\``,
+        x.usd !== null && `Value: \`${m(fmtUsd(x.usd))}\``,
         !debt && `Collateral: \`${x.colateral ? 'Yes' : 'No'}\``,
         x.apy !== null && `${debt ? 'Borrow' : 'Supply'} APY: \`${fmtPct(x.apy)}\``,
         debt && `Rate Mode: \`${x.modo}\``
@@ -522,36 +532,36 @@ function itemAaveFull(x, debt) {
 }
 
 // The network summary: the short one (with highlight, on a single network) or the technical one (-full)
-function summaryAave(x, { full, destaque: highlight }) {
+function summaryAave(x, { full, destaque: highlight, m = SHOW }) {
     const withoutPrice = x.semPreco.length ? `\n_Sem preço (fora dos totais): ${x.semPreco.join(', ')}_` : '';
     if (!full) {
         return highlight
-            ? `💰 *Posição líquida*\n\`${fmtUsdWithSignal(x.liquidoUsd)}\`\n\n❤️ *Health Factor*\n\`${fmtHf(x.hf)}\`${withoutPrice}`
-            : `Net: \`${fmtUsdWithSignal(x.liquidoUsd)}\`\nHealth Factor: \`${fmtHf(x.hf)}\`${withoutPrice}`;
+            ? `💰 *Posição líquida*\n\`${m(fmtUsdWithSignal(x.liquidoUsd))}\`\n\n❤️ *Health Factor*\n\`${fmtHf(x.hf)}\`${withoutPrice}`
+            : `Net: \`${m(fmtUsdWithSignal(x.liquidoUsd))}\`\nHealth Factor: \`${fmtHf(x.hf)}\`${withoutPrice}`;
     }
 
     const risk = [
         x.ltvAtual !== null && `LTV atual: \`${fmtPct(x.ltvAtual)}\``,
         `LTV máximo: \`${fmtPct(x.ltvMaximo)}\``,
         `Liquidation Threshold: \`${fmtPct(x.liquidationThreshold)}\``,
-        `Available Borrows: \`${fmtUsd(x.disponivelUsd)}\``,
-        `Collateral (risco): \`${fmtUsd(x.colateralUsd)}\``,
+        `Available Borrows: \`${m(fmtUsd(x.disponivelUsd))}\``,
+        `Collateral (risco): \`${m(fmtUsd(x.colateralUsd))}\``,
         x.precoLiquidacao && `Preço de liquidação (${x.precoLiquidacao.simbolo}): \`${fmtUsd(x.precoLiquidacao.usd)}\``,
         x.liquidacaoAmbigua && '⚠️ _Preço de liquidação individual não é determinístico com múltiplos collaterals._'
     ].filter(Boolean).join('\n');
 
-    return `💰 Net Position: \`${fmtUsdWithSignal(x.liquidoUsd)}\`\n` +
-        `📥 Supplied: \`${fmtUsd(x.fornecidoUsd)}\`\n` +
-        `📤 Borrowed: \`${fmtUsd(x.dividaUsd)}\`${withoutPrice}\n\n` +
+    return `💰 Net Position: \`${m(fmtUsdWithSignal(x.liquidoUsd))}\`\n` +
+        `📥 Supplied: \`${m(fmtUsd(x.fornecidoUsd))}\`\n` +
+        `📤 Borrowed: \`${m(fmtUsd(x.dividaUsd))}\`${withoutPrice}\n\n` +
         `❤️ Health Factor: \`${fmtHf(x.hf)}\`\n\n📊 *Risco*\n${risk}`;
 }
 
 // A network's sections: the summary and the assets (and, with -full, the configuration)
-function sectionsAave(x, { full, titulo: title }) {
+function sectionsAave(x, { full, titulo: title, m = SHOW }) {
     const { fornecidos: provided, dividas: debts } = x;
-    const list = (items, debt) => items.map(i => (full ? itemAaveFull(i, debt) : itemAaveShort(i))).join('\n\n');
+    const list = (items, debt) => items.map(i => (full ? itemAaveFull(i, debt, m) : itemAaveShort(i, m))).join('\n\n');
     const sections = [
-        `${title}${summaryAave(x, { full, destaque: !title.startsWith('🌐') })}`,
+        `${title}${summaryAave(x, { full, m, destaque: !title.startsWith('🌐') })}`,
         provided.length && `📥 *SUPPLIED*\n\n${list(provided, false)}`,
         debts.length && `📤 *${full ? 'DEBT' : 'BORROWED'}*\n\n${list(debts, true)}`
     ];
@@ -570,17 +580,17 @@ function sectionsAave(x, { full, titulo: title }) {
  * The /defi aave message: on a single network, it directly; on several, the total
  * global and each network with its own Health Factor.
  */
-function textAave(r, end = short, nameAlt = null, { full = false } = {}) {
+function textAave(r, end = short, nameAlt = null, { full = false, m = SHOW } = {}) {
     const title = `🟣 *AAVE V3${full ? ' — FULL' : ''}*`;
     const networks = r.redes;
     const sections = [];
 
     if (networks.length === 1) {
-        sections.push(...sectionsAave(networks[0], { full, titulo: `${title} · ${networks[0].rede}\n\n` }));
+        sections.push(...sectionsAave(networks[0], { full, m, titulo: `${title} · ${networks[0].rede}\n\n` }));
     } else {
         const total = networks.reduce((s, x) => s + x.liquidoUsd, 0);
-        sections.push(`${title}\n\n💰 *TOTAL GLOBAL*\nNet: \`${fmtUsdWithSignal(total)}\``);
-        for (const x of networks) sections.push(sectionsAave(x, { full, titulo: `🌐 *${x.rede}*\n\n` }).join('\n\n'));
+        sections.push(`${title}\n\n💰 *TOTAL GLOBAL*\nNet: \`${m(fmtUsdWithSignal(total))}\``);
+        for (const x of networks) sections.push(sectionsAave(x, { full, m, titulo: `🌐 *${x.rede}*\n\n` }).join('\n\n'));
     }
 
     if (r.falhas.length) {
@@ -603,17 +613,17 @@ const DO_ENV = {
         nome: 'Morpho', env: 'MORPHO_WALLET_ADDRESS', setting: 'defi.morpho.wallet', ler: positionsMorpho,
         vazio: (r) => !r.posicoes.length,
         semPosicao: (end, wallet) => `🦋 *MORPHO*\n\nNenhuma posição aberta na carteira \`${end(wallet)}\` (chain ${getSetting('defi.morpho.chains').join(', ')}).`,
-        texto: (r, end) => textMorpho(r, end)
+        texto: (r, end, { m }) => textMorpho(r, end, null, m)
     },
     aave: {
         nome: 'Aave', env: 'AAVE_WALLET_ADDRESS', setting: 'defi.aave.wallet', ler: positionsAave,
         vazio: (r) => !r.redes.length && !r.falhas.length,
         semPosicao: (end, wallet) => `🟣 *AAVE V3*\n\nNenhuma posição aberta na carteira \`${end(wallet)}\` (chain ${getSetting('defi.aave.chains').join(', ')}).`,
-        texto: (r, end, full) => textAave(r, end, null, { full })
+        texto: (r, end, optionsAlt) => textAave(r, end, null, optionsAlt)
     }
 };
 
-async function envShow(msg, protocol, end, full) {
+async function envShow(msg, protocol, end, optionsAlt) {
     const d = DO_ENV[protocol];
     const wallet = envOuSetting(d.env, d.setting);
     if (!wallet) {
@@ -633,7 +643,7 @@ async function envShow(msg, protocol, end, full) {
         return;
     }
 
-    await msg.reply(d.vazio(r) ? d.semPosicao(end, wallet) : d.texto(r, end, full));
+    await msg.reply(d.vazio(r) ? d.semPosicao(end, wallet) : d.texto(r, end, optionsAlt));
 }
 
 /*
@@ -919,12 +929,15 @@ async function cmdDefi({ msg, opts: commandOpts, args, chatId }) {
         return;
     }
 
+    // -full (the whole Aave) and -mask (the wallet numbers with *)
+    const show = { full: Boolean(o.full), m: o.mask ? HIDE : SHOW };
+
     // /defi: the Position Details of all; /defi orca, prjx or morpho: only that one
     const chosen = positions.filter(x => !protocol || x.protocol === protocol);
 
     // Morpho and Aave with no registration: the .env wallet (or the setting's), queried on the spot
     if (DO_ENV[protocol] && !chosen.length) {
-        await envShow(msg, protocol, end, Boolean(o.full));
+        await envShow(msg, protocol, end, show);
         return;
     }
 
@@ -932,7 +945,7 @@ async function cmdDefi({ msg, opts: commandOpts, args, chatId }) {
         await msg.reply(protocol ? `🌊 Nada cadastrado ${protocol === 'prjx' ? 'do Project X' : 'da Orca'}.\n${EXAMPLES}` : empty);
         return;
     }
-    await showAlt(msg, chosen, end, { full: Boolean(o.full) });
+    await showAlt(msg, chosen, end, show);
 }
 
 module.exports = {
