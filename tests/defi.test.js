@@ -166,7 +166,7 @@ describe('/defi', () => {
     test('/defi orca, palavra desconhecida, -rm e as mensagens de lista vazia', async () => {
         await bot.replyAlt(REGISTRATION);
         assert.match((await bot.replyAlt('/defi orca'))[0], /Orca · SOL\/cbBTC/);
-        assert.match((await bot.replyAlt('/defi xyz'))[0], /^❌ "xyz" não é um protocolo: use orca ou prjx\.\n\n```Usage: \/defi \[orca\|prjx\]/);
+        assert.match((await bot.replyAlt('/defi xyz'))[0], /^❌ "xyz" não é um protocolo: use orca, prjx ou morpho\.\n\n```Usage: \/defi \[orca\|prjx\]/);
 
         assert.deepEqual(await bot.replyAlt('/defi -rm 1'), ['🗑️ Removido: Orca · ime1…VPcg']);
         assert.match((await bot.replyAlt('/defi'))[0], /🌊 Nenhuma posição cadastrada/);
@@ -598,5 +598,256 @@ describe('/defi: Project X (HyperEVM)', () => {
         assert.equal(notice.chatId, OWNER.jid);
         assert.match(notice.content, /^🚨 \*DeFi: Project X · carteira 0x12…5678 saiu da faixa\*\n\n🌊 \*Project X · WHYPE\/USD₮0\*/);
         assert.doesNotMatch(notice.content, /UBTC/);   // the BTC one stays in range: left out
+    });
+});
+
+/*
+ * Morpho: the simulated GraphQL API. The numbers of the cbBTC/USDC market (Base) are
+ * of a real position, captured from the API along with the healthFactor and the
+ * priceVariationToLiquidationPrice it computes: the calculations here (in
+ * BigInt) have to match hers.
+ */
+describe('/defi morpho', () => {
+    const morpho = bot.src('defi/morpho');
+    const { errorHttp } = bot;
+    const WALLET = '0x74459EA7df673CFd90afbe39F635AcE08Ccb97C4';
+    const OTHER = '0x1111111111111111111111111111111111111234';
+    const BASE = { id: 8453, network: 'Base' };
+
+    const asset = (symbol, decimals, usd, chain = BASE) => ({
+        address: `0x${symbol.length.toString(16).padStart(40, '0')}`, symbol, decimals, price: usd === null ? null : { usd }, chain
+    });
+    const CBBTC = asset('cbBTC', 8, 84908.54472240375);
+    const USDC = asset('USDC', 6, 0.9999863948051431);
+
+    // The real position: 193.24 cbBTC of collateral, 5.17 mi of USDC borrowed
+    const MARKET_BTC = {
+        healthFactor: 2.728444901801219,
+        market: {
+            marketId: '0x9103c3b4e834476c9a62ea009ba2c884ee42e94e6e314a26f04d312434191836',
+            lltv: '860000000000000000',
+            chain: BASE,
+            collateralAsset: CBBTC,
+            loanAsset: USDC,
+            state: { price: '849095615471500000000000000000000000000', utilization: 0.9004279643323737 }
+        },
+        state: {
+            collateral: 19324183428, collateralUsd: 16407882.928202711,
+            borrowAssets: 5171791555324, borrowAssetsUsd: 5171721.192092131,
+            supplyAssets: 0, supplyAssetsUsd: 0
+        }
+    };
+
+    const VAULT = {
+        vault: { name: 'Steakhouse USDC', symbol: 'steakUSDC', chain: BASE, asset: USDC },
+        state: { assets: '2500000000', assetsUsd: 2499.97 }
+    };
+
+    let byNetwork;
+    const replyApi = (reply) => network.responder('post', 'api.morpho.org/graphql', reply);
+    const user = (x = {}) => ({ address: WALLET, marketPositions: [], vaultPositions: [], vaultV2Positions: [], ...x });
+
+    beforeEach(() => {
+        morpho.cleanCacheMorpho();
+        delete process.env.MORPHO_WALLET_ADDRESS;
+        byNetwork = { 8453: user({ marketPositions: [MARKET_BTC] }) };
+        replyApi((url, cfg) => ({
+            data: Object.fromEntries(Object.entries(byNetwork)
+                .filter(([id]) => cfg.body.query.includes(`c${id}:`))
+                .map(([id, u]) => [`c${id}`, u]))
+        }));
+    });
+
+    test('as contas batem com as da API: HF, LTV e preço de liquidação (em BigInt)', () => {
+        const r = morpho.marketRisk({
+            colateral: 19324183428n, emprestado: 5171791555324n, lltv: 860000000000000000n,
+            preco: 849095615471500000000000000000000000000n
+        });
+        assert.ok(Math.abs(r.hf - MARKET_BTC.healthFactor) < 1e-6, `HF ${r.hf}`);
+        assert.equal(r.ltv, 0.315197);
+
+        // The API says how much the price needs to fall until liquidation (-63.35%)
+        const oracle = 84909.56154715;
+        const settlement = Number(r.precoLiquidacaoBruto) / 10 ** (36 - 8 + 6);
+        assert.ok(Math.abs(settlement - oracle * (1 - 0.633490857982935)) < 0.01, `liquidação ${settlement}`);
+
+        // Numbers larger than 2^53 (18 decimals): without losing precision along the way
+        const large = morpho.marketRisk({
+            colateral: 9497294999999976205989826n, emprestado: 1121922582611364335090401280n,
+            lltv: 770000000000000000n, preco: 50000000000000000000000000000000000000000n
+        });
+        assert.ok(Math.abs(large.hf - 325.9100611460455) < 1e-5, `HF ${large.hf}`);
+
+        // Without debt: ∞; debt with no oracle price: cannot compute
+        assert.equal(morpho.marketRisk({ colateral: 1n, emprestado: 0n, preco: 1n, lltv: 1n }).hf, Infinity);
+        assert.equal(morpho.marketRisk({ colateral: 1n, emprestado: 1n, preco: null, lltv: 1n }).hf, null);
+        assert.equal(morpho.inTokens(123456789012345678901234567890n, 18), 123456789012.34568);
+        assert.equal(morpho.inTokens(1n, 99), null, 'decimals inválidos');
+    });
+
+    test('uma posição: líquido, Health Rate, colateral, dívida e risco', async () => {
+        const [r] = await bot.replyAlt(`/defi morpho -wallet ${WALLET}`);
+        const SEP = '\n\n━━━━━━━━━━━━━━━━━━\n\n';
+        assert.equal(r.split(SEP).slice(0, -1).join(SEP), [
+            '🦋 *MORPHO* · cbBTC/USDC · Base\n\n💰 *Posição líquida*\n`$11,236,161.74`\n\n❤️ *Health Rate*\n`2.73`',
+            '📥 *SUPPLIED / COLLATERAL*\n\n₿ *cbBTC*\nQuantidade: `193.24183428 cbBTC`\nValor: `$16,407,882.93`',
+            '📤 *BORROWED*\n\n💵 *USDC*\nQuantidade: `5,171,791.56 USDC`\nValor: `$5,171,721.19`',
+            '📊 *RISCO*\n\nLTV atual: `31.52%`\nLLTV: `86.00%`\nPreço cbBTC (oráculo): `84,909.56 USDC`\n' +
+                'Preço de liquidação: `31,120.13 USDC`\nUtilização do mercado: `90.04%`'
+        ].join(SEP));
+        assert.match(r.split(SEP).at(-1), /^👛 Carteira: `0x74…97C4`\n🌐 Rede: `Base`\n🕐 Atualizado: `\d\d:\d\d:\d\d`$/);
+
+        // Read-only: one POST with the query, the wallet and the timeout
+        const [call] = network.chamadas;
+        assert.equal(call.url, 'https://api.morpho.org/graphql');
+        assert.equal(call.cfg.body.variables.carteira, WALLET);
+        assert.match(call.cfg.body.query, /c8453: userByAddress\(address: \$carteira, chainId: 8453\)/);
+        assert.equal(call.cfg.timeout, 15000);
+        assert.ok(bot.logs.some(l => l.includes('[MORPHO] Consultando carteira 0x7445...97C4')));
+        assert.ok(bot.logs.some(l => l.includes('[MORPHO] Total borrowed: $5,171,721.19')));
+    });
+
+    test('sem dívida: Health Rate ∞, sem LTV nem preço de liquidação', async () => {
+        byNetwork[8453].marketPositions = [{
+            ...MARKET_BTC,
+            healthFactor: null,
+            state: { ...MARKET_BTC.state, borrowAssets: 0, borrowAssetsUsd: 0 }
+        }];
+        const [r] = await bot.replyAlt('/defi morpho -w ' + WALLET);
+        assert.match(r, /💰 \*Posição líquida\*\n`\$16,407,882\.93`\n\n❤️ \*Health Rate\*\n`∞`/);
+        assert.doesNotMatch(r, /BORROWED|LTV atual|liquidação/);
+        assert.match(r, /LLTV: `86\.00%`/);
+    });
+
+    test('só fornecido num mercado (sem colateral nem dívida): sem Health Rate nem risco', async () => {
+        byNetwork[8453].marketPositions = [{
+            ...MARKET_BTC,
+            healthFactor: null,
+            state: { collateral: 0, collateralUsd: 0, borrowAssets: 0, borrowAssetsUsd: 0, supplyAssets: 1000000, supplyAssetsUsd: 0.99 }
+        }];
+        const [r] = await bot.replyAlt(`/defi morpho -w ${WALLET}`);
+        assert.match(r, /💰 \*Posição líquida\*\n`\$0\.99`\n\n━+\n\n📥 \*SUPPLIED \/ COLLATERAL\*\n\n💵 \*USDC\*\nQuantidade: `1\.00 USDC`/);
+        assert.doesNotMatch(r, /Health Rate|RISCO|BORROWED/);
+
+        // Debt with no collateral: without dividing by zero
+        assert.deepEqual(morpho.marketRisk({ colateral: 0n, emprestado: 5n, preco: 10n ** 36n, lltv: 10n ** 17n }),
+            { hf: null, ltv: null, precoLiquidacaoBruto: null });
+    });
+
+    test('várias posições (mercado e vault, duas redes): totais e o Health Rate de cada uma', async () => {
+        await bot.setSetting('defi.morpho.chains', '8453 1');
+        const ETH = { id: 1, network: 'Ethereum' };
+        byNetwork[8453].vaultV2Positions = [{ vault: VAULT.vault, assets: VAULT.state.assets, assetsUsd: VAULT.state.assetsUsd }];
+        byNetwork[1] = user({
+            marketPositions: [{
+                healthFactor: 1.4787878787878787,
+                market: {
+                    marketId: '0xeth', lltv: '915000000000000000', chain: ETH,
+                    collateralAsset: asset('wstETH', 18, 4000, ETH), loanAsset: asset('WETH', 18, 3300, ETH),
+                    state: { price: '1212121212121212121212121212121212121', utilization: 0.5 }
+                },
+                state: {
+                    collateral: '2000000000000000000', collateralUsd: 8000,
+                    borrowAssets: '1500000000000000000', borrowAssetsUsd: 4950,
+                    supplyAssets: 0, supplyAssetsUsd: 0
+                }
+            }]
+        });
+
+        const [r] = await bot.replyAlt(`/defi morpho -w ${WALLET}`);
+        // Fornecido: 16,407,882.93 + 2,499.97 + 8,000; emprestado: 5,171,721.19 + 4,950
+        assert.match(r, /💰 \*Total líquido\*\n`\$11,241,711\.71`\n\n📥 \*Total supplied\/collateral\*\n`\$16,418,382\.90`\n\n📤 \*Total borrowed\*\n`\$5,176,671\.19`/);
+        assert.match(r, /\*POSIÇÃO 1\* · cbBTC\/USDC · Base[\s\S]*Health Rate: `2\.73`/);
+        assert.match(r, /\*POSIÇÃO 2\* · Vault Steakhouse USDC · Base\n\n📥 \*SUPPLIED\*\n\n💵 \*USDC\* _\(vault Steakhouse USDC\)_\nQuantidade: `2,500\.00 USDC`/);
+        assert.match(r, /\*POSIÇÃO 3\* · wstETH\/WETH · Ethereum[\s\S]*Ξ \*wstETH\*\nQuantidade: `2\.00 wstETH`[\s\S]*Health Rate: `1\.48`/);
+        assert.doesNotMatch(r, /❤️/, 'com várias, o HF fica em cada posição');
+        assert.match(r, /🌐 Redes: `Base, Ethereum`/);
+    });
+
+    test('token sem preço: sem valor em dólar e fora dos totais', async () => {
+        const RSS = asset('RSS', 18, null);
+        const EUSD = asset('eUSD', 18, null);
+        byNetwork[8453].marketPositions = [{
+            healthFactor: 325.9100611460455,
+            market: {
+                marketId: '0xrss', lltv: '770000000000000000', chain: BASE, collateralAsset: RSS, loanAsset: EUSD,
+                state: { price: '50000000000000000000000000000000000000000', utilization: 0.88 }
+            },
+            state: {
+                collateral: '9497294999999976205989826', collateralUsd: null,
+                borrowAssets: '1121922582611364335090401280', borrowAssetsUsd: null,
+                supplyAssets: 0, supplyAssetsUsd: null
+            }
+        }];
+
+        const [r] = await bot.replyAlt(`/defi morpho -w ${WALLET}`);
+        assert.match(r, /^🦋 \*MORPHO\* · RSS\/eUSD · Base\n\n_Sem preço em USD \(fora dos totais\): RSS, eUSD_\n\n❤️ \*Health Rate\*\n`325\.91`/);
+        assert.doesNotMatch(r, /Valor:|Posição líquida/);
+        assert.match(r, /Quantidade: `9,497,294\.99999998 RSS`/);
+        assert.match(r, /Preço de liquidação: `153\.42 eUSD`/);
+    });
+
+    test('carteira: o -wallet, o MORPHO_WALLET_ADDRESS, o setting e as inválidas', async () => {
+        assert.deepEqual(await bot.replyAlt('/defi morpho'), [
+            '❌ Endereço da carteira Morpho não configurado.\n\n' +
+            'Configure MORPHO_WALLET_ADDRESS no arquivo .env (ou /set defi.morpho.wallet <0x...>), ou informe a carteira: /defi morpho -wallet <0x...>']);
+
+        await bot.setSetting('defi.morpho.wallet', OTHER);
+        await bot.replyAlt('/defi morpho');
+        assert.equal(network.chamadas.at(-1).cfg.body.variables.carteira, OTHER);
+
+        process.env.MORPHO_WALLET_ADDRESS = WALLET;   // the .env has priority
+        await bot.replyAlt('/defi morpho');
+        assert.equal(network.chamadas.at(-1).cfg.body.variables.carteira, WALLET);
+
+        assert.deepEqual(await bot.replyAlt('/defi morpho -w 0x123'), ['❌ "0x123" não é uma carteira EVM (0x e 40 caracteres hexadecimais).']);
+        assert.deepEqual(await bot.replyAlt('/defi morpho -w'), ['❌ Informe a carteira: /defi morpho -wallet <0x...>']);
+        assert.deepEqual(await bot.replyAlt(`/defi -w ${WALLET}`), ['❌ O -wallet é do morpho: /defi morpho -wallet <0x...>']);
+        assert.match((await bot.replyAlt(`/defi morpho -address ${WALLET}`))[0], /❌ O morpho só aceita o -wallet.*o -address é da Orca/);
+        await assert.rejects(bot.setSetting('defi.morpho.wallet', 'xyz'), /0x e 40 caracteres/);
+    });
+
+    test('nenhuma posição aberta (as zeradas não contam)', async () => {
+        byNetwork[8453] = user({ vaultPositions: [{ ...VAULT, state: { assets: 0, assetsUsd: 0 } }] });
+        assert.deepEqual(await bot.replyAlt(`/defi morpho -w ${WALLET}`),
+            ['🦋 *MORPHO*\n\nNenhuma posição aberta na carteira `0x74…97C4` (chain 8453).']);
+    });
+
+    test('erros: fora do ar, timeout, rate limit, rede não suportada e resposta inesperada', async () => {
+        const error = async (reply) => {
+            morpho.cleanCacheMorpho();
+            network.limpar();
+            replyApi(reply);
+            const [r] = await bot.replyAlt(`/defi morpho -w ${WALLET}`, { erroEsperado: true });
+            assert.match(r, /^❌ \*Erro ao consultar Morpho\*\n\n.*\n\nTente novamente em alguns instantes\.$/);
+            return r.split('\n')[2];
+        };
+
+        assert.equal(await error(errorHttp(503)), 'A API do Morpho está fora do ar.');
+        assert.equal(await error(errorHttp(429)), 'Muitas consultas seguidas: a API do Morpho pediu um tempo.');
+        assert.equal(await error(Object.assign(new Error('timeout of 15000ms exceeded'), { code: 'ECONNABORTED' })),
+            'A API do Morpho não respondeu em 15 segundos.');
+        assert.equal(await error(new Error('getaddrinfo ENOTFOUND api.morpho.org')), 'Não consegui falar com a API do Morpho.');
+        assert.equal(await error(errorHttp(400, 'HTTP 400', { data: { errors: [{ message: 'unsupported chainId "5"' }] } })),
+            'Rede não suportada pelo Morpho (5): confira o setting defi.morpho.chains.');
+        assert.equal(await error({ errors: [{ message: 'Internal error' }], data: null }), 'A API do Morpho recusou a consulta.');
+        assert.equal(await error({ data: null }), 'A API do Morpho mandou uma resposta inesperada.');
+        assert.equal(await error(''), 'A API do Morpho mandou uma resposta inesperada.');
+        assert.equal(await error({ data: { c8453: user({ marketPositions: [{ market: MARKET_BTC.market }] }) } }),
+            'A API do Morpho mandou uma posição incompleta.');
+        assert.equal(await error({ data: { c8453: user({ marketPositions: [{ ...MARKET_BTC, state: { ...MARKET_BTC.state, collateral: 1.5 } }] }) } }),
+            'A API do Morpho mandou números que não consegui ler.');
+
+        // The technical detail stays in the log, not on WhatsApp
+        assert.ok(bot.logs.some(l => l.includes('[MORPHO] Erro na API: HTTP 503')));
+    });
+
+    test('cache de 30 s: a mesma carteira não consulta a API de novo', async () => {
+        await bot.replyAlt(`/defi morpho -w ${WALLET}`);
+        await bot.replyAlt(`/defi morpho -w ${WALLET.toLowerCase()}`);
+        assert.equal(network.chamadas.length, 1);
+
+        await bot.replyAlt(`/defi morpho -w ${OTHER}`);
+        assert.equal(network.chamadas.length, 2, 'outra carteira consulta');
     });
 });
