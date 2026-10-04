@@ -181,6 +181,9 @@ const isOOwner = (numberAlt) => numberAlt === client.info?.wid?.user;
 // o all, "true (todos)"
 async function withName(numberAlt) {
     if (numberAlt === 'all') return 'true (todos)';
+    // The person in a single group: "5521999999999 (Maria) only in 👥 Amigos"
+    const soInGroup = numberAlt.match(/^(\d+):(.+@g\.us)$/);
+    if (soInGroup) return `${await withName(soInGroup[1])} só em ${await withName(soInGroup[2])}`;
     if (numberAlt.endsWith('@g.us')) {
         return `👥 ${await groupResolverName(numberAlt).catch(() => null) || numberAlt}`;
     }
@@ -389,7 +392,8 @@ async function peopleChangeList(msg, key, textAlt, append, optionsAlt = {}) {
 
 module.exports = {
     cmdSet,
-    textItems,
     isOOwner,
+    peopleItems,
+    textItems,
     peopleChangeList
 };

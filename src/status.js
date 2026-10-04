@@ -11,6 +11,7 @@ const { client } = require('./client');
 const { BOT_START_TIME, CACHE_DIR, DAY_MS, MEDIA_DIR } = require('./constants');
 const { dbAll, dbGet, dbReady, dbRun } = require('./db');
 const { getBotUptime } = require('./log');
+const { describeDestinations, destinationsForSave, destinationsSaved } = require('./destinations');
 const { getSetting } = require('./settings');
 const { botVersion } = require('./version');
 const { getDirSize, humanSize } = require('./util/files');
@@ -19,8 +20,9 @@ const { fmtWhen, instantInBrasilia, partsInBrasilia } = require('./util/when');
 
 /*
  * The daily send is a schedule item (`schedules` table, kind 'status',
- * repetir 'diario'), in your private chat: the schedule already handles the time, the
- * repetition and the delayed send when the bot comes back. It does not show in /cron.
+ * repetir 'diario'): the schedule already handles the time, the repetition and the send
+ * late when the bot comes back. It does not show in /cron. The -to destinations
+ * (people, groups, emails) stay in the recipients column; without it, your private chat.
  */
 const KIND = 'status';
 
@@ -30,9 +32,10 @@ const off = (keyAlt, oThat) => (getSetting(keyAlt) ? '' : ` _(${oThat}; ligue co
 const size = (p) => (fs.existsSync(p) ? (fs.statSync(p).isDirectory() ? getDirSize(p) : fs.statSync(p).size) : 0);
 
 /**
- * The report of the last 24 h.
+ * The report of the last 24 h. /bot puts its state at the top (botState)
+ * and the users list below (usuarios); the daily send goes without the list.
  */
-async function statusText(nowAlt = Date.now()) {
+async function statusText(nowAlt = Date.now(), { estadoDoBot: botState = '', usuarios: usersAlt = '' } = {}) {
     await dbReady;
     const since = nowAlt - DAY_MS;
     const account = async (sql, params) => (await dbGet(sql, params)).n;
@@ -64,8 +67,9 @@ async function statusText(nowAlt = Date.now()) {
     const db = size(path.join(CACHE_DIR, 'bot_database.db'));
 
     let textAlt = `📊 *Status do ZapBot ${botVersion()}* · últimas 24 h\n_${fmtWhen(nowAlt, nowAlt)}_\n\n` +
+        (botState ? `${botState}\n\n` : '') +
         `🤖 *No ar:* ${getBotUptime(BOT_START_TIME)} · conectado: ${connected}\n` +
-        `🗄️ *Cache:* ${humanSize(size(CACHE_DIR))} _(banco ${humanSize(db)} · mídias ${humanSize(size(MEDIA_DIR))})_ · ${fmtInA(messages)} mensagens\n` +
+        `🗄️ *Cache:* ${humanSize(size(CACHE_DIR))} _(banco ${humanSize(db)} · mídias ${humanSize(size(MEDIA_DIR))})_ · ${fmtInA(messages)} ${messages === 1 ? 'mensagem' : 'mensagens'}\n` +
         `👀 *Watch:* ${fmtInA(totalWatch)} ocorrência${totalWatch === 1 ? '' : 's'}${detailWatch ? ` _(${detailWatch})_` : ''}\n` +
         `🗑️ *Apagadas:* ${fmtInA(deletedAlt)}${off('show.alert.deleted', 'aviso desligado')}\n` +
         `✏️ *Editadas:* ${fmtInA(edited)}${off('show.alert.edited', 'aviso desligado')}\n` +
@@ -75,8 +79,8 @@ async function statusText(nowAlt = Date.now()) {
         (muted ? ` · ${plural(muted, 'silenciado', 'silenciados')}` : '') + '\n' +
         `💾 *Último backup:* ${lastBackup ? `${fmtWhen(lastBackup.criadoEm, nowAlt)} (${lastBackup.motivo})` : 'nenhum'}`;
 
-    // At the end, the daily send (the same as the previous /bot -status -l)
-    return `${textAlt}\n\n${await sendingDailyText(nowAlt)}`;
+    // Below, the users (only in /bot) and, at the end, the daily send
+    return `${textAlt}${usersAlt ? `\n\n${usersAlt}` : ''}\n\n${await sendingDailyText(nowAlt)}`;
 }
 
 /**
@@ -86,12 +90,21 @@ async function sendingDailyText(nowAlt = Date.now()) {
     const daily = await schedulingDaily();
 
     return daily
-        ? `⏰ *Status diário:* todo dia às *${itemHour(daily)}*, no seu privado.\n📅 Próximo: ${fmtWhen(daily.due_at, nowAlt)}\n` +
+        ? `⏰ *Status diário:* todo dia às *${itemHour(daily)}*${whereGoes(statusDestinations(daily))}\n` +
+            `📅 Próximo: ${fmtWhen(daily.due_at, nowAlt)}\n` +
             '💡 _Mude com /bot -status <hora> ou desligue com /bot -status off._'
         : '🔕 Status diário desligado.\n💡 _Ligue com /bot -status 06h (no horário que quiser)._';
 }
 
 const schedulingDaily = () => dbGet('SELECT * FROM schedules WHERE kind = ?', [KIND]);
+
+// Where the daily send goes: the -to ones; [] = your private chat
+const statusDestinations = (item) => destinationsSaved(item?.recipients, null);
+
+// " → 📧 a@b.com, 👥 Grupo" or ", in your private chat."
+const whereGoes = (destinations) => (destinations.length
+    ? ` → ${describeDestinations(destinations)}`
+    : ', no seu privado.');
 
 const two = (n) => String(n).padStart(2, '0');
 const itemHour = (s) => {
@@ -100,20 +113,25 @@ const itemHour = (s) => {
 };
 
 /**
- * Schedules the daily status at the time (Brasília), in your private chat. Replaces the previous one.
+ * Schedules the daily status at the time (Brasília). Replaces the previous one.
+ * @param {object[]} [destinos]  those from -to ([] = your private chat); without them, the previous ones stay
  * @returns {Promise<number>} the next send (ms)
  */
-async function scheduleStatusDaily({ h, m }, nowAlt = Date.now()) {
+async function scheduleStatusDaily({ h, m }, nowAlt = Date.now(), destinations) {
     await dbReady;
+    const recipients = destinations
+        ? destinationsForSave(destinations)
+        : (await schedulingDaily())?.recipients ?? null;
     const today = partsInBrasilia(nowAlt);
     let next = instantInBrasilia(today.ano, today.mes, today.dia, h, m);
     if (next <= nowAlt) next = instantInBrasilia(today.ano, today.mes, today.dia + 1, h, m);
 
     await dbRun('DELETE FROM schedules WHERE kind = ?', [KIND]);
     await dbRun(
-        `INSERT INTO schedules (kind, chat_id, chat_name, is_group, text, due_at, repeat, day_of_month, quoted_id, created_at)
-         VALUES (?, ?, 'seu privado', 0, '', ?, 'diario', NULL, NULL, ?)`,
-        [KIND, client.info.wid._serialized, next, nowAlt]
+        `INSERT INTO schedules (kind, chat_id, chat_name, is_group, text, due_at, repeat, day_of_month,
+            quoted_id, created_at, recipients)
+         VALUES (?, ?, 'seu privado', 0, '', ?, 'diario', NULL, NULL, ?, ?)`,
+        [KIND, client.info.wid._serialized, next, nowAlt, recipients]
     );
     return next;
 }
@@ -128,7 +146,9 @@ module.exports = {
     schedulingDaily,
     scheduleStatusDaily,
     turnOffStatusDaily,
+    statusDestinations,
     itemHour,
+    whereGoes,
     sendingDailyText,
     statusText
 };

@@ -1,14 +1,15 @@
 /*
  * Choice from a list: when a command finds more than one option (e.g.: several
  * contacts with "Jorge" in the name), it shows the numbered list and waits for you
- * reply, in the same chat, with just the no.
+ * reply, in the same chat, with just the no. And the confirmation (e.g.: /bot -reset):
+ * waits for a "sim" (or "não") from whoever gave the command.
  */
 
 const { printInfo } = require('./log');
 
 const CHOICE_MS = 2 * 60_000;
 
-// chatId -> { options, resolve, timer, author }: one pending choice per chat
+// chatId -> { options | confirmation, resolve, timer, author }: one pending per chat
 const pending = new Map();
 
 // Who sent the message: you ("owner") or the person's jid (a bot.admins admin)
@@ -48,12 +49,46 @@ function waitChoice(chatId, optionsAlt, { aoExpirar: onExpire, autor: author = '
 }
 
 /**
- * A message with just a no., from whoever gave the command, answers the chat's pending choice.
+ * Waits for a "sim" (true) or a "não" (false) from whoever gave the command, in this chat.
+ * @param {string} chatId
+ * @param {object} [o]
+ * @param {number} [o.ms]  o prazo
+ * @param {() => Promise<void>} [o.onExpire]  notifies the chat that the time is up
+ * @param {string} [o.autor]  who can reply (default: you)
+ * @returns {Promise<boolean|null>} null if the time ran out or if another pending started in the chat
+ */
+function waitConfirmation(chatId, { ms = 10_000, aoExpirar: onExpire, autor: author = 'dono' } = {}) {
+    close(chatId, null);
+
+    return new Promise((resolver) => {
+        const timer = setTimeout(() => {
+            close(chatId, null);
+            onExpire?.().catch(() => {});
+        }, ms);
+        timer.unref?.();
+
+        pending.set(chatId, { confirmacao: true, resolver, timer, autor: author });
+    });
+}
+
+/**
+ * The reply to the chat's pending, from whoever gave the command: only a no. (choice)
+ * or "sim"/"não" (confirmation). Any other message follows the normal path.
  * @returns {Promise<boolean>} true = it was the reply (it is not a message for anything else)
  */
 async function replyChoice(msg, chatId, textAlt) {
     const p = pending.get(chatId);
-    if (!p || authorAlt(msg) !== p.autor || !/^\d{1,2}$/.test(textAlt)) return false;
+    if (!p || authorAlt(msg) !== p.autor) return false;
+
+    if (p.confirmacao) {
+        const reply = /^sim$/i.test(textAlt) ? true : /^n[aã]o$/i.test(textAlt) ? false : null;
+        if (reply === null) return false;
+        printInfo(`Confirmação em ${chatId}: ${textAlt}`);
+        close(chatId, reply);
+        return true;
+    }
+
+    if (!/^\d{1,2}$/.test(textAlt)) return false;
 
     const n = Number(textAlt);
     if (n < 1 || n > p.opcoes.length) {
@@ -68,6 +103,7 @@ async function replyChoice(msg, chatId, textAlt) {
 
 module.exports = {
     CHOICE_MS,
+    waitConfirmation,
     waitChoice,
     authorAlt,
     replyChoice

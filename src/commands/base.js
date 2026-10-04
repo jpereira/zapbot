@@ -78,9 +78,10 @@ function formatCommandHelp(command) {
     const width = Math.max(0, ...[...options, ...positional].map(o => o.syntax.length));
     const line = (o) => textLines(o.desc, `  ${o.syntax.padEnd(width)}  `, '    ');
 
+    // "spaced": a blank line between the options (long helps, like the one for /bot)
     if (options.length) {
         lines.push('', 'Options:');
-        options.forEach(o => lines.push(...line(o)));
+        options.forEach((o, i) => lines.push(...(command.espacado && i ? [''] : []), ...line(o)));
     }
 
     if (positional.length) {

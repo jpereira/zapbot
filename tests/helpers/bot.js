@@ -35,8 +35,9 @@ const TABLES = ['messages', 'message_edits', 'stats', 'watch_hits', 'watch_desti
 /*
  * Clean state for each test: empty tables, settings at default, no
  * sent, with no network routes. bot.users comes true (the default is false: only the
- * owner) so the tests can use other people's commands; whoever tests the
- * the restriction changes again.
+ * owner) so the tests can use other people's commands, and the protection
+ * against flood comes off (the tests repeat commands in sequence); whoever
+ * tests the restriction or the flood changes again.
  */
 async function restart() {
     await prepare();
@@ -44,6 +45,7 @@ async function restart() {
     for (const t of TABLES) await dbRun(`DELETE FROM ${t}`);
     await loadSettings();
     await setSetting('bot.users', ['all']);
+    await setSetting('flood.maxCommandRepeated', 0);
 
     client.enviadas.length = 0;
     cleanMarks();
@@ -60,6 +62,7 @@ async function restart() {
     stateAlt.reiniciando = false;
     src('connection').stopReconnection();
     src('email').cleanAlertsSent();
+    src('flood').cleanFlood();
 
     createContact(OTHERAlt.jid, OTHERAlt.nome);
     createGroup(GROUP, 'Família', [OWNER.jid, OTHERAlt.jid]);

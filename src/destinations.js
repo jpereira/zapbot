@@ -421,6 +421,11 @@ const saveable = (d) => (d.email
     : { id: d.id, nome: d.nome, grupo: Boolean(d.grupo) });
 const recipientsDe = (destinations) => (destinations.length > 1 ? JSON.stringify(destinations.map(saveable)) : null);
 
+// The same, with any amount (the daily status: with none, null = your private chat)
+const destinationsForSave = (destinations) => (destinations.length
+    ? JSON.stringify(destinations.map(saveable))
+    : null);
+
 // The reverse: the JSON (or the single dest_* destination) → the list; [] = your private chat
 const destinationsSaved = (recipients, single) => (recipients ? JSON.parse(recipients) : single ? [single] : []);
 
@@ -454,6 +459,7 @@ module.exports = {
     describeDestination,
     describeDestinations,
     lineDestination,
+    destinationsForSave,
     destinationsSaved,
     emailsDoSmtpTo,
     sendOnDestination,
