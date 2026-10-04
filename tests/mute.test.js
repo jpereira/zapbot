@@ -248,6 +248,20 @@ describe('/mute (/mudo, /m)', () => {
         assert.match((await bot.responder('/unmute 9'))[0], /^❌ Nº 9 não existe/);
     });
 
+    test('limpeza: os avisos ignorados e a origem dos avisos com mais de 30 dias saem', async () => {
+        const { limparIgnoradasAntigas } = bot.src('limpeza');
+        const velho = Date.now() - 31 * 86400_000;
+        await bot.dbRun("INSERT INTO mute_hits (target_id, kind, at) VALUES ('x', 'apagada', ?), ('y', 'apagada', ?)",
+            [velho, Date.now()]);
+        await bot.dbRun(
+            "INSERT INTO alerts (message_id, chat_id, sender, created_at) VALUES ('A1', ?, NULL, ?), ('A2', ?, NULL, ?)",
+            [L200, velho, L200, Date.now()]);
+
+        await limparIgnoradasAntigas();
+        assert.deepEqual((await hits()).map(h => h.target_id), ['y']);
+        assert.deepEqual((await bot.dbAll('SELECT message_id FROM alerts')).map(a => a.message_id), ['A2']);
+    });
+
     test('só o dono', async () => {
         assert.deepEqual(await bot.responder('/mute -a L200', { de: OUTRO.jid }), []);
     });

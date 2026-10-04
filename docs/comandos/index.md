@@ -96,7 +96,8 @@ estiver no setting `bot.users`, que **vem `false`**: só você (e os admins
 extras) usa comandos. Com `/bot +v /Camila Gama/ /Grupo Familia/`, essas
 pessoas (em qualquer chat) e esses grupos (qualquer um, dentro do grupo) também
 usam; o `/bot +v` de uma pessoa digitado num grupo vale só nesse grupo; com
-`/set bot.users true`, todos. Veja [Usuários](bot.md#usuários).
+`/set bot.users true`, todos. O `/bot +cmd`/`-cmd` limita os comandos de cada
+usuário. Veja [Usuários](bot.md#usuários).
 Para saber o seu nível (ou, sendo dono ou admin, o de alguém), use o
 [`/whois`](whois.md). Quem não é admin tem uma
 [proteção contra flood](bot.md#proteção-contra-flood): o mesmo comando, no
@@ -113,7 +114,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -a`) para fazer o bot
 |---|---|:-:|---|
 | [`/backup`](backup.md) | `/bkp` | ✅ | Backup do banco: automático todo dia; lista, detalha, restaura e envia o arquivo |
 | [`/boletos`](boletos.md) | | ✅ | Sorteia 2 membros para "pagar um boleto" |
-| [`/bot`](bot.md) | `/b` | ✅ | Status do bot (relatório de 24 h e os usuários); liga/desliga os comandos (`-on`/`-off`) e diz quem usa: admins (`+o`/`-o`) e usuários (`+v`/`-v`, em qualquer chat ou só num grupo); `-reset` volta ao padrão; `-status` (`-s`): relatório das últimas 24 h, e `-s 06h` manda todo dia; `-info` (`-i`): versões e sistema |
+| [`/bot`](bot.md) | `/b` | ✅ | Status do bot (relatório de 24 h e os usuários); liga/desliga os comandos (`-on`/`-off`) e diz quem usa: admins (`+o`/`-o`) e usuários (`+v`/`-v`, em qualquer chat ou só num grupo, e os comandos de cada um com `+cmd`/`-cmd`); `-reset` volta ao padrão; `-status` (`-s`): relatório das últimas 24 h, e `-s 06h` manda todo dia; `-info` (`-i`): versões e sistema |
 | [`/cache`](cache.md) | `/c` | ✅ | Uso e limpeza do cache |
 | [`/cotacao`](cotacao.md) | `/cambio` | | Cotação de EUR e USDT (e USD, GBP) contra o real: atual, abertura, fechamento e variação; alertas de preço |
 | [`/cron`](cron.md) | `/agenda`, `/lembrete` | ✅ | Na hora marcada (`30m`, `às 18h`, `sexta 9h`...): envia uma mensagem (aqui ou com `-to`, em um ou vários chats) ou, como `/lembrete`, um ⏰ lembrete; pode repetir, editar e pausar, e rodar comandos no texto (`{/crypto}`) |

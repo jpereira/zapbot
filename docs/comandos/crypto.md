@@ -7,8 +7,8 @@ Preço atual e variação de 24 h das moedas ativadas (via API da Binance, par
 |---|---|---|
 | *(nenhuma)* | `[TOKEN...]` | Cotação das ativadas, ou só das moedas informadas (ativadas ou não), na ordem pedida. Uma que não é suportada: avisa e lista as suportadas |
 | `-list`, `-l` | | Lista as moedas suportadas; as ativadas vêm marcadas com `*` |
-| `-add`, `-a` | `<TOKEN>` | Ativa uma moeda suportada (só o dono do bot ou um admin do [`bot.admins`](bot.md#admins-extras)) |
-| `-del`, `-d` | `<TOKEN>` | Desativa uma moeda (só o dono do bot ou um admin do [`bot.admins`](bot.md#admins-extras)) |
+| `-add`, `-a` | `<TOKEN>` | Ativa uma moeda suportada (só o dono do bot ou um [admin](bot.md#admins-extras)) |
+| `-del`, `-d` | `<TOKEN>` | Desativa uma moeda (só o dono do bot ou um [admin](bot.md#admins-extras)) |
 | `-alerta` | `[regra]` | Sem regra, lista os alertas; com regra (ex.: `BTC < 90000`), cria um. A moeda também pode vir antes: `/crypto BTC -alerta < 90000`. Veja [Alertas de preço](cotacao.md#alertas-de-preço) |
 | `-msg` | `<texto>` | Junto com `-alerta`: o texto vai no início do aviso. Vai até o fim do comando. Veja [Mensagem no aviso](cotacao.md#mensagem-no-aviso) |
 | `-rm` | `<nº...\|all>` | Junto com `-alerta`: remove os alertas com esses nºs (`-rm 2`, `-rm 1 2 3` ou `-rm 1,2,3`), ou todos (`all`). Se algum nº não existe, nenhum sai |

@@ -29,7 +29,8 @@ Alguns pontos merecem atenção especial num relato:
   admin extra do setting `bot.admins`) executar um comando `onlyAdmin`
   (inclusive fazendo o bot "digitar" um comando), ou de um admin extra alterar
   o `bot.admins` ou o `bot.users`, que só o dono pode mudar. Também conta
-  alguém de fora do `bot.users` conseguir usar os comandos comuns.
+  alguém de fora do `bot.users` conseguir usar os comandos comuns, ou um
+  usuário usar um comando fora dos dele (`/bot +cmd`).
 - **`/get`**: o `yt-dlp` roda na rede do servidor; URLs para a rede interna
   são recusadas (anti-SSRF).
 - **Chaves de API** (OpenAI, GIPHY, Google Translate) e a senha do SMTP: nunca devem aparecer no
