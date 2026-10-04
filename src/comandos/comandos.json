@@ -193,7 +193,7 @@
                     "values": [
                         "[<hora>|off]"
                     ],
-                    "desc": "O status (o mesmo do /bot sem opção): o relatório das últimas 24 h (no ar, cache, /watch, apagadas, editadas, status apagados, /mudo e último backup), quem usa o bot e o envio diário. Com uma hora (Brasília: 06h, 6h30, 06:00 ou às 18h), envia todo dia nesse horário, no seu privado ou nos destinos do -to. Com -to e sem hora, envia agora. Com off, desliga o envio diário. Não combina com as outras opções. Ex: /bot -s, /bot -s 06h, /bot -s 06h -to voce@exemplo.com, /bot -s off"
+                    "desc": "O status (o mesmo do /bot sem opção): o relatório das últimas 24 h (no ar, cache, /watch, apagadas, editadas, status apagados, /mute e último backup), os usuários e o envio diário. Com uma hora (Brasília: 06h, 6h30, 06:00 ou às 18h), envia todo dia nesse horário, no seu privado ou nos destinos do -to. Com -to e sem hora, envia agora. Com off, desliga o envio diário. Não combina com as outras opções. Ex: /bot -s, /bot -s 06h, /bot -s 06h -to voce@exemplo.com, /bot -s off"
                 },
                 {
                     "opts": [
@@ -274,7 +274,7 @@
                     "values": [
                         "<MOEDA>"
                     ],
-                    "desc": "Habilita uma moeda suportada. Só o dono (ou um admin do bot.admins).",
+                    "desc": "Habilita uma moeda suportada. Só o dono (ou um admin).",
                     "cron": false
                 },
                 {
@@ -282,7 +282,7 @@
                         "alerta"
                     ],
                     "values": [],
-                    "desc": "Sem regra: lista os alertas. Com regra (ex.: USD > 5.30): avisa no seu privado (ou nos destinos do -to) quando o preço passar do valor. A moeda também pode vir antes: /cotacao USD -alerta > 5.30. Só o dono (ou um admin do bot.admins).",
+                    "desc": "Sem regra: lista os alertas. Com regra (ex.: USD > 5.30): avisa no seu privado (ou nos destinos do -to) quando o preço passar do valor. A moeda também pode vir antes: /cotacao USD -alerta > 5.30. Só o dono (ou um admin).",
                     "cron": false
                 },
                 {
@@ -293,7 +293,7 @@
                     "values": [
                         "<MOEDA>"
                     ],
-                    "desc": "Desabilita uma moeda. Só o dono (ou um admin do bot.admins).",
+                    "desc": "Desabilita uma moeda. Só o dono (ou um admin).",
                     "cron": false
                 },
                 {
@@ -458,7 +458,7 @@
                     "values": [
                         "<TOKEN>"
                     ],
-                    "desc": "Ativa uma moeda suportada. Só o dono (ou um admin do bot.admins).",
+                    "desc": "Ativa uma moeda suportada. Só o dono (ou um admin).",
                     "cron": false
                 },
                 {
@@ -466,7 +466,7 @@
                         "alerta"
                     ],
                     "values": [],
-                    "desc": "Sem regra: lista os alertas. Com regra (ex.: BTC < 90000): avisa no seu privado (ou nos destinos do -to) quando o preço passar do valor. A moeda também pode vir antes: /crypto BTC -alerta < 90000. Só o dono (ou um admin do bot.admins).",
+                    "desc": "Sem regra: lista os alertas. Com regra (ex.: BTC < 90000): avisa no seu privado (ou nos destinos do -to) quando o preço passar do valor. A moeda também pode vir antes: /crypto BTC -alerta < 90000. Só o dono (ou um admin).",
                     "cron": false
                 },
                 {
@@ -477,7 +477,7 @@
                     "values": [
                         "<TOKEN>"
                     ],
-                    "desc": "Desativa uma moeda. Só o dono (ou um admin do bot.admins).",
+                    "desc": "Desativa uma moeda. Só o dono (ou um admin).",
                     "cron": false
                 },
                 {
@@ -1112,7 +1112,7 @@
                     "argv": [
                         "<chave> <valor>"
                     ],
-                    "desc": "Altera. Listas: itens separados por vírgula ou espaço (watch.rules: uma regra por linha)."
+                    "desc": "Altera. Listas: itens separados por vírgula ou espaço (watch.rules: uma regra por linha; bot.users.cmds: separados por espaço, já que cada item tem vírgulas)."
                 }
             ],
             "onlyAdmin": true
@@ -1393,7 +1393,7 @@
         {
             "cmd": "/unmute",
             "usage": "/unmute [/contato ou grupo/|@menção|+número|nº]  ou  /unmute -all",
-            "help": "Desfaz o silêncio do /mute: os avisos de apagadas, editadas e status da pessoa, do grupo ou da comunidade voltam. Respondendo um aviso, desfaz o de onde ele veio. Sem nada, lista os silenciados.",
+            "help": "Desfaz o silêncio do /mute: os avisos de apagadas, editadas e status da pessoa, do grupo ou da comunidade voltam. Respondendo um aviso, desfaz o silêncio de onde ele veio. Sem nada, lista os silenciados.",
             "cmd_opts": [
                 {
                     "opts": [
@@ -1517,7 +1517,7 @@
                 "/who",
                 "/id"
             ],
-            "help": "Mostra quem é e o que pode no bot, neste chat: 🤖 dono, 👑 admin (+o), 🗣️ usuário (+v) ou 🚫 sem permissão. Sozinho, mostra você. Com pessoas (ou respondendo uma mensagem), mostra elas, mas só para o dono e os admins. Ex: /whois, /whois /Rafael Silva/",
+            "help": "Mostra quem é e o que pode no bot, neste chat: 🤖 dono, 👑 admin (+o), 🗣️ usuário (+v) ou 🚫 sem permissão; quem tem os comandos limitados (/bot +cmd), com a lista deles. Sozinho, mostra você. Com pessoas (ou respondendo uma mensagem), mostra elas, mas só para o dono e os admins. Ex: /whois, /whois /Rafael Silva/",
             "cmd_opts": [
                 {
                     "argv": [

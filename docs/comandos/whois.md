@@ -49,4 +49,5 @@ O nível é o mais alto que vale **no chat onde você digitou**:
   (`+5521•••••2222`), como no [`/bot`](bot.md#quem-aparece-na-lista).
 - Quem está limitado a alguns comandos ([`/bot +cmd`](bot.md#comandos-de-cada-usuário))
   tem a regra embaixo: `→ Apenas: /cotacao, /crypto` ou `→ Todos, menos: /meme`.
-- Para ver todos os admins e usuários de uma vez, use o [`/bot`](bot.md).
+- Para ver os admins e os usuários de uma vez: o [`/bot -users`](bot.md#lista-de-usuários)
+  (os deste chat) ou o `/bot -all-users` (todos).

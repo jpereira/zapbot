@@ -130,12 +130,12 @@ entre os casos.
 | Arquivo | O que cobre |
 |---|---|
 | `configuracao.test.js` | `comandos.json`, settings (e a migração dos renomeados), parser de opções, ajuda (uma forma do uso e um exemplo por linha) e a coerência entre config, código, README e `docs/` (inclusive a ordem alfabética, os links e a versão estável da instalação) |
-| `mensagens.test.js` | Gravação, roteamento, permissões (`onlyAdmin`, o `bot.users` com pessoas, grupos, `true`/`false` e a migração do `bot.adminMode`, bot desligado, admins extras do `bot.admins`, os atalhos `/bot +o`/`+v`, os comandos de cada usuário (`+cmd`/`-cmd`), o `/whois` e a proteção contra flood), o log dos comandos desconhecidos e a contagem do `/stats` (sem os avisos do sistema) |
-| `comandos.test.js` | `/help`, `/debug`, `/uptime`, `/version`, `/ping`, `/noffa`, `/bot` (e o `-info`, com as versões novas do yt-dlp e do whatsapp-web.js), `/set` (e o `-append`/`-rem`) |
+| `mensagens.test.js` | Gravação, roteamento, permissões (`onlyAdmin`, o `bot.users` com pessoas, grupos, `true`/`false` e a migração do `bot.adminMode`, bot desligado, admins extras do `bot.admins`, os atalhos `/bot +o`/`+v`, as listas do `-users`/`-all-users`, os comandos de cada usuário (`+cmd`/`-cmd`), o `-reset` com a confirmação, o `/whois` e a proteção contra flood), o log dos comandos desconhecidos e a contagem do `/stats` (sem os avisos do sistema) |
+| `comandos.test.js` | `/help` (só com os comandos de quem pediu), `/debug`, `/uptime`, `/version`, `/ping`, `/noffa`, `/bot` (o `-h` em blocos, o status sem opção, o `-on`/`-off`, o `-users`, e o `-info`, com as versões novas do yt-dlp e do whatsapp-web.js), `/set` (e o `-append`/`-rem`) |
 | `apagadas-editadas.test.js` | Eventos de apagar/editar (e os avisos `show.alert.*`) e o `/show` (apagadas e editadas, e a busca `-q`) |
 | `mute.test.js` | `/mute` e `/unmute`: avisos silenciados por pessoa, grupo ou comunidade (só o alvo é o `-a`), a busca do alvo (contato antes de grupo, menção, a lista para escolher pelo nº) e a resposta a um aviso (de onde ele veio) |
 | `stats.test.js`, `watch.test.js`, `monitor.test.js` | `/stats` (com o `/chat/`, o `-l` e o `-flush`), `/watch` (e um ou vários `-to`), `/monitor` e o aviso de presença |
-| `status.test.js` | `/bot -status`: o relatório (com o aviso `show.alert.*` desligado e os silenciados do `/mute`) e o envio diário |
+| `status.test.js` | `/bot -status`: o relatório (com o aviso `show.alert.*` desligado e os silenciados do `/mute`) e o envio diário (e o `-to`: pessoas, grupos e e-mails) |
 | `agenda.test.js` | Datas digitadas (`6h`, `+2h`, `às 18h`, `sexta`...) e o `/cron`, nos modos mensagem e lembrete, com vários `-to` num item só, `-edit`, `-pause`/`-resume` e os `{/comando}` no texto (e o `-test`) |
 | `backup.test.js` | `/backup` (criação, lista, restauração, envio no privado, por e-mail e com um ou vários `-to`) e o backup diário |
 | `cotacoes.test.js` | `/cotacao`, `/crypto` (e o filtro por moeda) e os alertas de preço (com um ou vários `-to`, o `-msg` e o `-rm` de vários) |
