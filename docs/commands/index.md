@@ -24,7 +24,7 @@ os alertas do [`/cotacao`](cotacao.md#avisar-em-outro-chat-ou-por-e-mail) e do
 [`/watch`](watch.md#avisar-em-outro-lugar) e o [`/backup -send`](backup.md#enviar-o-arquivo).
 Todos aceitam vários `-to`: o aviso (ou a mensagem, ou o arquivo) sai em cada
 destino.
-O alvo do [`/mudo`](mudo.md), as pessoas do [`/bot +o`/`+v`](bot.md#admins-extras) e do
+O alvo do [`/mute`](mute.md), as pessoas do [`/bot +o`/`+v`](bot.md#admins-extras) e do
 [`/whois`](whois.md) usam a mesma busca. Sem `-to`, os avisos (e o
 arquivo do `/backup`) vão para o seu privado, e o `/cron`, para o chat atual.
 
@@ -42,7 +42,7 @@ As mesmas formas, num comando só:
 /cron 8h -r diario -to /Jorge Pereira/ -to @Fulano Da Silva -to /Grupo L200/ -to +5521999999999 Bom dia!
 /cotacao -alerta USD > 5.30 -to email           → por e-mail (o QRCODE_EMAIL_SMTP_TO)
 /crypto -alerta BTC < 90000 -to /Grupo L200/ -to email  → no grupo e por e-mail
-/mudo @Fulano Da Silva                          → o alvo do /mudo, mencionando
+/mute @Fulano Da Silva                          → o alvo do /mute, mencionando
 /bot +o /Jorge Pereira/ +5511988887777         → o /bot +o (e o +v) aceita várias pessoas de uma vez
 ```
 
@@ -51,13 +51,13 @@ As mesmas formas, num comando só:
   pelo id que o WhatsApp manda junto. Serve para quem está no grupo mas não na
   sua agenda. Um `@número` digitado à mão, sem escolher na lista, é recusado:
   para um número, use o `+5521999999999`.
-- O `/cron` e o `/mudo` não aceitam e-mail: a mensagem do `/cron` sai no
-  WhatsApp, e o `/mudo` silencia uma pessoa ou um grupo. Os admins (`/bot +o`)
+- O `/cron` e o `/mute` não aceitam e-mail: a mensagem do `/cron` sai no
+  WhatsApp, e o `/mute` silencia uma pessoa ou um grupo. Os admins (`/bot +o`)
   e o `/whois` aceitam só pessoas (contato, menção ou número); os usuários
   (`/bot +v`), pessoas e grupos.
 - O nome casa quando tem **todas** as palavras, em qualquer ordem, sem
   diferenciar maiúsculas nem acentos. No `-to`, nomes com espaço vão entre
-  `/.../` ou aspas (sem eles, só a primeira palavra conta); no `/mudo`, o alvo
+  `/.../` ou aspas (sem eles, só a primeira palavra conta); no `/mute`, o alvo
   é o resto do texto, com ou sem `/.../`.
 - O nome **inteiro igual** ganha de um que só contém as palavras (e um
   contato ganha de um grupo).
@@ -65,7 +65,7 @@ As mesmas formas, num comando só:
   no mesmo chat, em até 2 minutos:
 
 ```
-/mudo /Jorge/
+/mute /Jorge/
 🔎 "Jorge" corresponde a 2 contatos:
 
 1. 👤 Jorge Pereira · +5521999999999
@@ -131,7 +131,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -a`) para fazer o bot
 | [`/listageral`](listageral.md) | `/list` | ✅ | Lista os membros do grupo |
 | [`/meme`](meme.md) | | | Template de meme aleatório (imgflip) |
 | [`/monitor`](monitor.md) 🚧 | | ✅ | Avisa quando números ficam online *(em desenvolvimento, desabilitado por padrão)* |
-| [`/mudo`](mudo.md) | `/m`, `/mute` | ✅ | Silencia os avisos de apagadas, editadas e status de uma pessoa ou grupo |
+| [`/mute`](mute.md) | `/m`, `/mudo` | ✅ | Silencia os avisos de apagadas, editadas e status de uma pessoa, um grupo ou uma comunidade; respondendo um aviso, de onde ele veio |
 | [`/news`](news.md) | | ✅ | Manchetes de feeds RSS: `-hack`, `-g1`, `-gazeta`, `-brasil` |
 | [`/noffa`](noffa.md) | `/🌈`, `/🏳️‍🌈` | | Enfeita o texto com arco-íris |
 | [`/ping`](ping.md) | `/p` | ✅ | Verifica se o bot está vivo |
@@ -144,6 +144,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -a`) para fazer o bot
 | [`/tldr`](tldr.md) | `/resumo` | ✅ | Resume a conversa do chat pelo ChatGPT (`2h`, `300`...) |
 | [`/todos`](todos.md) | `/todes` | ✅ | Menciona todos do grupo |
 | [`/traduzir`](traduzir.md) | `/tr`, `/translate` | | Traduz o texto ou a mensagem respondida (Google Translate); `-para en` muda o idioma |
+| [`/unmute`](unmute.md) | | ✅ | Desfaz o silêncio do `/mute`: pelo nome, pelo nº da lista, respondendo um aviso ou todos (`-all`) |
 | [`/uptime`](uptime.md) | `/u`, `/up` | ✅ | Tempo de execução e de conexão |
 | [`/version`](version.md) | `/ver` | ✅ | Versão do bot (mesmo banner do `/uptime`) |
 | [`/walissu`](walissu.md) | `/ualisu` | ✅ | Walissu CVE BOT: marca 2 membros com uma CVE aleatória |

@@ -56,7 +56,7 @@ async function statusText(nowAlt = Date.now(), { estadoDoBot: botState = '', usu
         return `${i >= 0 ? `#${i + 1} ` : ''}${r.rule}: ${fmtInA(r.n)}`;
     }).join(', ');
 
-    // /mudo: muted notices, by type
+    // /mute: muted notices, by type
     const ignored = await dbAll('SELECT kind, COUNT(*) AS n FROM mute_hits WHERE at >= ? GROUP BY kind ORDER BY kind', [since]);
     const totalIgnored = ignored.reduce((s, r) => s + r.n, 0);
     const LABELS = { apagada: 'apagadas', editada: 'editadas', status: 'status' };
@@ -74,7 +74,7 @@ async function statusText(nowAlt = Date.now(), { estadoDoBot: botState = '', usu
         `🗑️ *Apagadas:* ${fmtInA(deletedAlt)}${off('show.alert.deleted', 'aviso desligado')}\n` +
         `✏️ *Editadas:* ${fmtInA(edited)}${off('show.alert.edited', 'aviso desligado')}\n` +
         `📸 *Status apagados:* ${fmtInA(statusDeleted)}${off('show.alert.status', 'recuperação desligada')}\n` +
-        `🔇 *Ignoradas (/mudo):* ${fmtInA(totalIgnored)}` +
+        `🔇 *Ignoradas (/mute):* ${fmtInA(totalIgnored)}` +
         (totalIgnored ? ` _(${ignored.map(r => `${LABELS[r.kind] ?? r.kind} ${fmtInA(r.n)}`).join(', ')})_` : '') +
         (muted ? ` · ${plural(muted, 'silenciado', 'silenciados')}` : '') + '\n' +
         `💾 *Último backup:* ${lastBackup ? `${fmtWhen(lastBackup.criadoEm, nowAlt)} (${lastBackup.motivo})` : 'nenhum'}`;

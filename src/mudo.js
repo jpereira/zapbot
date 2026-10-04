@@ -1,8 +1,8 @@
 /*
- * /mudo: people and groups whose notices of deleted, edited and deleted-status messages are muted.
+ * /mute: people and groups whose notices of deleted, edited and deleted-status messages are muted.
  */
 
-const { dbAll, dbReady, dbRun } = require('./db');
+const { dbAll, dbGet, dbReady, dbRun } = require('./db');
 const { printInfo } = require('./log');
 
 /*
@@ -41,10 +41,10 @@ async function muted(type, { chatId, remetentes: senders = [] }) {
     return mutes.find(m => keys.has(idKey(m.target_id))) ?? null;
 }
 
-// Records a cut notice (for /bot -status and for the /mudo list)
+// Records a cut notice (for /bot -status and for the /mute list)
 async function registerIgnored(mute, type) {
     await dbRun('INSERT INTO mute_hits (target_id, kind, at) VALUES (?, ?, ?)', [mute.target_id, type, Date.now()]);
-    printInfo(`/mudo: aviso de ${type} de ${mute.target_name} ignorado`);
+    printInfo(`/mute: aviso de ${type} de ${mute.target_name} ignorado`);
 }
 
 /**
@@ -58,9 +58,35 @@ async function ignoreNotice(type, origin) {
     return true;
 }
 
+/**
+ * Records where a sent notice came from (/mute replying to it knows who to mute).
+ * @param {object} enviada  the Message returned by client.sendMessage
+ * @param {object} origem
+ * @param {string} origem.chatId     the chat of the notified message
+ * @param {string} [origem.remetente]  the phone (or id) of who sent it
+ */
+async function registerNotice(sent, { chatId, remetente: sender }) {
+    const id = sent?.id?.id;
+    if (!id || !chatId) return;
+    await dbRun(
+        'INSERT OR REPLACE INTO alerts (message_id, chat_id, sender, created_at) VALUES (?, ?, ?, ?)',
+        [id, chatId, sender ?? null, Date.now()]
+    ).catch(() => {});
+}
+
+// Where the notice with this id came from: { chat_id, sender }, or null
+async function noticeOrigin(messageId) {
+    if (!messageId) return null;
+    await dbReady;
+    const origin = await dbGet('SELECT chat_id, sender FROM alerts WHERE message_id = ?', [messageId]);
+    return origin ?? null;
+}
+
 module.exports = {
     TYPES,
     idKey,
     ignoreNotice,
+    noticeOrigin,
+    registerNotice,
     silenciado: muted
 };
