@@ -573,7 +573,7 @@
         },
         {
             "cmd": "/defi",
-            "usage": "/defi [orca|prjx|morpho|aave]  ou  /defi -l  ou  /defi -rm <nº...|all>  ou  /defi -alerta <nº|all> [-to <destino>]... [-taxas <valor>]  ou  /defi <protocolo> <opções>",
+            "usage": "/defi [orca|prjx|morpho|aave] [-mask]  ou  /defi -l  ou  /defi -rm <nº...|all>  ou  /defi -alerta <nº|all> [-to <destino>]... [-taxas <valor>]  ou  /defi <protocolo> <opções>",
             "help": "Posições da Orca (Solana), do Project X (HyperEVM), do Morpho e do Aave V3, lidas na hora: saldo, faixa e taxas a coletar das de liquidez; colateral, dívida e risco das de empréstimo. Sem nada, mostra todas; com o protocolo, só as dele. Cada protocolo tem a sua ajuda. Ex: /defi orca -help, /defi prjx -help, /defi morpho -help, /defi aave -help",
             "cmd_opts": [
                 {
@@ -622,6 +622,14 @@
                     ],
                     "values": [],
                     "desc": "Lista os cadastros, com 🔔 nos que têm alerta (e o limite das taxas). No seu privado, com os endereços inteiros; fora dele, abreviados."
+                },
+                {
+                    "opts": [
+                        "mask",
+                        "m"
+                    ],
+                    "values": [],
+                    "desc": "Esconde os números da carteira com * ($**,***.**): saldos, quantidades, valores, taxas a coletar e o rendimento. Preço, faixa, pool, Health Factor, LTV e APY continuam. Ex: /defi -mask, /defi aave -m"
                 },
                 {
                     "opts": [
@@ -726,22 +734,22 @@
             "protocolos": {
                 "orca": {
                     "nome": "Orca",
-                    "usage": "/defi orca  ou  /defi orca -address <endereço> [-pool <endereço>] [-nft <mint>] [-name <nome>] [-alerta [valor]]",
+                    "usage": "/defi orca [-mask]  ou  /defi orca -address <endereço> [-pool <endereço>] [-nft <mint>] [-name <nome>] [-alerta [valor]]",
                     "help": "Posições de liquidez da Orca (Whirlpools, na Solana): saldo, faixa, preço e taxas a coletar, lidos on-chain. Cada posição é cadastrada pelo endereço dela (-address). Ex: /defi orca, /defi orca -address <endereço> -alerta 2000"
                 },
                 "prjx": {
                     "nome": "Project X",
-                    "usage": "/defi prjx  ou  /defi prjx -wallet <0x...> [-name <nome>] [-alerta [valor]]",
+                    "usage": "/defi prjx [-mask]  ou  /defi prjx -wallet <0x...> [-name <nome>] [-alerta [valor]]",
                     "help": "Posições de liquidez do Project X (na HyperEVM): saldo, faixa, preço e taxas a coletar, lidos on-chain. Cadastre a carteira (-wallet): o bot lê todas as posições abertas dela. Ex: /defi prjx, /defi prjx -wallet <0x...> -alerta"
                 },
                 "morpho": {
                     "nome": "Morpho",
-                    "usage": "/defi morpho  ou  /defi morpho -wallet <0x...> [-name <nome>]",
+                    "usage": "/defi morpho [-mask]  ou  /defi morpho -wallet <0x...> [-name <nome>]",
                     "help": "Posição, empréstimos e risco no Morpho (na Base e nas redes do setting defi.morpho.chains): colateral, dívida, Health Rate, LTV, LLTV e preço de liquidação de cada mercado, e os vaults. Cadastre a carteira (-wallet); sem cadastro, vale a do MORPHO_WALLET_ADDRESS (ou do setting defi.morpho.wallet). Ex: /defi morpho, /defi morpho -wallet <0x...>"
                 },
                 "aave": {
                     "nome": "Aave",
-                    "usage": "/defi aave [-full]  ou  /defi aave -wallet <0x...> [-name <nome>] [-full]",
+                    "usage": "/defi aave [-full] [-mask]  ou  /defi aave -wallet <0x...> [-name <nome>] [-full]",
                     "help": "Posição e risco no Aave V3, lidos on-chain nos contratos oficiais (Ethereum e Base, setting defi.aave.chains): o fornecido e o emprestado, o Health Factor de cada rede e a posição líquida. Com -full, os detalhes: LTV, liquidation threshold, available borrows, APY, o que é colateral, eMode e isolation mode. Cadastre a carteira (-wallet); sem cadastro, vale a do AAVE_WALLET_ADDRESS (ou do setting defi.aave.wallet). Ex: /defi aave, /defi aave -full, /defi aave -wallet <0x...> -n Carteira X"
                 }
             }
