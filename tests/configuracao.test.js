@@ -400,11 +400,32 @@ describe('ajuda', () => {
     test('as formas do uso ("  ou  ") saem uma por linha, alinhadas', () => {
         const texto = formatCommandHelp(findCommand('/defi'));
         const linhas = texto.split('\n');
-        assert.equal(linhas[0], 'Usage: /defi [orca|prjx]');
+        assert.equal(linhas[0], 'Usage: /defi [orca|prjx|morpho]');
         assert.equal(linhas[1], '       /defi -l');
-        assert.equal(linhas[5], '       /defi prjx -address <0x...> [-alerta [valor]]');
-        assert.equal(linhas[6], '       /defi morpho [-wallet <0x...>]');
+        assert.equal(linhas[4], '       /defi <protocolo> <opções>');
         assert.doesNotMatch(texto, / {2}ou {2}/);
+    });
+
+    test('ajuda por protocolo: a geral agrupa as opções; a de um protocolo só traz as dele', async () => {
+        const geral = formatCommandHelp(findCommand('/defi'));
+        const grupos = geral.split('\n').filter(l => l.startsWith(' > '));
+        assert.deepEqual(grupos, [' > Orca', ' > Orca e Project X', ' > Project X e Morpho', ' > Todos']);
+        assert.match(geral, / > Orca\n {2}-address <endereço> +Cadastra a posição da Orca/);
+
+        const morpho = formatCommandHelp(findCommand('/defi'), { protocolo: 'morpho' });
+        assert.match(morpho, /^Usage: \/defi morpho\n {7}\/defi morpho -wallet <0x\.\.\.>\nPosição, empréstimos e risco no Morpho/);
+        const opcoes = morpho.match(/^ {2}-\S+/gm);
+        assert.deepEqual(opcoes, ['  -list,', '  -rm', '  -wallet,']);
+        assert.doesNotMatch(morpho, / > |Arguments:/);
+
+        const orca = formatCommandHelp(findCommand('/defi'), { protocolo: 'orca' });
+        assert.match(orca, /-address <endereço>/);
+        assert.doesNotMatch(orca, /^ {2}-wallet/m);
+
+        // Pelo -help do comando e pelo /help
+        assert.equal((await bot.responder('/defi prjx -help'))[0], '```' + formatCommandHelp(findCommand('/defi'), { protocolo: 'prjx' }) + '```');
+        assert.match((await bot.responder('/help defi orca'))[0], /^🤖 \*AJUDA\*\n\n```Usage: \/defi orca\n/);
+        assert.match((await bot.responder('/defi aave -help'))[0], /^```Usage: \/defi \[orca\|prjx\|morpho\]/, 'protocolo desconhecido: a geral');
     });
 
     test('ajuda para o celular: uma frase por linha e o "Ex:" na linha de baixo, um exemplo por linha', () => {
@@ -417,7 +438,7 @@ describe('ajuda', () => {
         // Nas opções: a 1ª frase ao lado; as outras e o Ex:, recuadas 4 espaços
         const linhas = formatCommandHelp(findCommand('/defi')).split('\n');
         const i = linhas.findIndex(l => l.startsWith('  [orca|prjx|morpho]'));
-        assert.match(linhas[i], /\(Morpho, consultado na hora\)\.$/);
+        assert.match(linhas[i], /ou morpho \(Morpho\)\.$/);
         assert.match(linhas[i + 1], /^ {4}Sozinho, mostra/);
         assert.equal(linhas[i + 2], '    Ex: /defi');
         assert.equal(linhas[i + 3], '        /defi orca');
@@ -462,5 +483,28 @@ describe('banco', () => {
 
         assert.deepEqual(await bot.dbAll('SELECT * FROM teste_antiga'), [{ id: 1, nome: 'antes', extra: 7 }]);
         await bot.dbRun('DROP TABLE teste_antiga');
+    });
+
+    test('defi_positions antiga (position): vira address (Orca) e wallet (carteiras), com o alerta', async () => {
+        const { inicializarBanco } = bot.src('inicializacao');
+        await bot.preparar();
+        await bot.dbRun('DROP TABLE defi_positions');
+        await bot.dbRun(`CREATE TABLE defi_positions (id INTEGER PRIMARY KEY AUTOINCREMENT, protocol TEXT NOT NULL,
+            position TEXT NOT NULL UNIQUE, nft TEXT, pool TEXT, created_at INTEGER NOT NULL,
+            alert INTEGER DEFAULT 0, alert_fees REAL, in_range INTEGER)`);
+        await bot.dbRun(`INSERT INTO defi_positions (protocol, position, nft, pool, created_at, alert, alert_fees, in_range)
+            VALUES ('orca', 'Hz15', 'C1ME', 'Ceaz', 1, 1, 2000, 1), ('prjx', '0x92', NULL, NULL, 2, 0, NULL, NULL)`);
+
+        await inicializarBanco();
+
+        assert.deepEqual(await bot.dbAll('SELECT id, protocol, address, wallet, nft, pool, alert, alert_fees, in_range FROM defi_positions ORDER BY id'), [
+            { id: 1, protocol: 'orca', address: 'Hz15', wallet: null, nft: 'C1ME', pool: 'Ceaz', alert: 1, alert_fees: 2000, in_range: 1 },
+            { id: 2, protocol: 'prjx', address: null, wallet: '0x92', nft: null, pool: null, alert: 0, alert_fees: null, in_range: null }
+        ]);
+        assert.ok(!(await bot.dbAll('PRAGMA table_info(defi_positions)')).some(c => c.name === 'position'));
+
+        // A mesma carteira em dois protocolos
+        await bot.dbRun("INSERT INTO defi_positions (protocol, wallet, created_at) VALUES ('morpho', '0x92', 3)");
+        await bot.dbRun('DELETE FROM defi_positions');
     });
 });

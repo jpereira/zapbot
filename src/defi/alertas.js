@@ -4,7 +4,7 @@
  */
 
 const { estado } = require('../estado');
-const { descrever, descreverDestinoDoAlerta, destinosDoAlerta, fmtUsd, lerCadastro } = require('../comandos/defi');
+const { descrever, descreverDestinoDoAlerta, destinosDoAlerta, enderecoDo, fmtUsd, lerCadastro } = require('../comandos/defi');
 const { dbAll, dbPronto, dbRun } = require('../db');
 const { enviarAosDestinos } = require('../destinos');
 const { printError, printInfo } = require('../log');
@@ -22,7 +22,7 @@ async function avisar(p, n, emoji, titulo, textos) {
     const texto = `${emoji} *${titulo}*\n\n${textos.join('\n\n')}\n\n💡 _Desligue com /defi -alerta -rm ${n}._`;
     await enviarAosDestinos(destinosDoAlerta(p), texto, { assunto: titulo })
         .then(() => printInfo(`/defi -alerta: ${titulo} → ${descreverDestinoDoAlerta(p)}`))
-        .catch(err => printError(`/defi -alerta: falha ao avisar (${p.position}):`, err.message));
+        .catch(err => printError(`/defi -alerta: falha ao avisar (${enderecoDo(p)}):`, err.message));
 }
 
 // Grava ANTES de avisar: se o envio falhar, não repete a cada verificação
@@ -71,7 +71,7 @@ async function verificarAlertasDefi({ forcar = false } = {}) {
             try {
                 lido = await lerCadastro(p);
             } catch (err) {
-                printError(`/defi -alerta: não consegui ler ${p.position}:`, err.message);
+                printError(`/defi -alerta: não consegui ler ${enderecoDo(p)}:`, err.message);
                 continue;
             }
 

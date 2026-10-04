@@ -251,7 +251,7 @@ const SETTINGS_SCHEMA = {
             if (!/^0x[0-9a-fA-F]{40}$/.test(v)) throw new Error(`carteira EVM é 0x e 40 caracteres hexadecimais: ${v}`);
             return v;
         },
-        desc: 'Carteira do /defi morpho (sem o -wallet), usada quando MORPHO_WALLET_ADDRESS não está no config/.env.'
+        desc: 'Carteira do /defi morpho quando não há carteira cadastrada, usada quando MORPHO_WALLET_ADDRESS não está no config/.env.'
     },
     'defi.solana.rpc': {
         default: 'https://api.mainnet-beta.solana.com',
