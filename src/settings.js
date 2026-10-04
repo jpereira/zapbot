@@ -216,10 +216,43 @@ const SETTINGS_SCHEMA = {
         type: 'boolean',
         desc: 'Debug mode (o mesmo do /debug on|off).'
     },
+    'defi.aave.chains': {
+        default: ['1', '8453'],
+        type: 'list',
+        desc: 'Redes (chain id) em que o /defi aave procura as posições: 1 (Ethereum), 8453 (Base).',
+        item: (v) => {
+            if (!['1', '8453'].includes(v)) throw new Error(`rede sem Aave V3 no bot: ${v} (use 1 = Ethereum, 8453 = Base)`);
+            return v;
+        }
+    },
+    'defi.aave.wallet': {
+        default: '',
+        type: 'string',
+        allowEmpty: true,
+        validar: (v) => {
+            if (!/^0x[0-9a-fA-F]{40}$/.test(v)) throw new Error(`carteira EVM é 0x e 40 caracteres hexadecimais: ${v}`);
+            return v;
+        },
+        desc: 'Carteira do /defi aave quando não há carteira cadastrada, usada quando AAVE_WALLET_ADDRESS não está no config/.env.'
+    },
     'defi.alerta.intervalMin': {
         default: 10,
         type: 'number', min: 1, max: 1440,
         desc: 'Intervalo (minutos) entre as verificações do /defi -alerta (cada uma lê as posições no RPC da Solana).'
+    },
+    'defi.base.rpc': {
+        default: 'https://mainnet.base.org',
+        type: 'string',
+        secret: true,
+        validar: validarUrlFeed,
+        desc: 'RPC da Base usado pelo /defi aave, quando BASE_RPC_URL não está no config/.env (o público limita as consultas).'
+    },
+    'defi.ethereum.rpc': {
+        default: 'https://ethereum-rpc.publicnode.com',
+        type: 'string',
+        secret: true,
+        validar: validarUrlFeed,
+        desc: 'RPC da Ethereum usado pelo /defi aave, quando ETHEREUM_RPC_URL não está no config/.env (o público limita as consultas).'
     },
     'defi.hyperevm.rpc': {
         default: 'https://rpc.hyperliquid.xyz/evm',

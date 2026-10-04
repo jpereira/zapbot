@@ -1,6 +1,6 @@
 # `/defi` · admin
 
-Acompanha posições em DeFi, de três protocolos:
+Acompanha posições em DeFi, de quatro protocolos:
 
 - [Orca](https://www.orca.so/) (Whirlpools, na Solana): você cadastra cada posição.
 - [Project X](https://www.prjx.com/portfolio) (na HyperEVM, da Hyperliquid): você
@@ -9,11 +9,14 @@ Acompanha posições em DeFi, de três protocolos:
 - [Morpho](https://morpho.org/) (empréstimos, na Base e em outras redes): você
   cadastra a carteira, e o bot lê o colateral, a dívida e o risco dela
   ([Morpho](#morpho)).
+- [Aave V3](https://aave.com/) (empréstimos, na Ethereum e na Base): você
+  cadastra a carteira, e o bot lê o fornecido, o emprestado e o Health Factor
+  nos contratos do Aave ([Aave V3](#aave-v3)).
 
-A Orca cadastra a **posição** (`-address`); o Project X e o Morpho, a
-**carteira** (`-wallet`). O `/defi` lê tudo na hora e mostra o equivalente ao
+A Orca cadastra a **posição** (`-address`); o Project X, o Morpho e o Aave, a
+**carteira** (`-wallet`), com um nome opcional (`-name`). O `/defi` lê tudo na hora e mostra o equivalente ao
 "Position Details" de cada posição; com `orca`, `prjx` ou `morpho`, só as
-daquele protocolo. No seu privado, os endereços e as carteiras aparecem
+daquele protocolo (`orca`, `prjx`, `morpho` ou `aave`). No seu privado, os endereços e as carteiras aparecem
 inteiros; fora dele, abreviados (`0x92…0444`). Com o `-alerta`,
 o bot avisa quando uma posição sai da faixa, quando volta e, com o `-taxas`,
 quando as taxas a coletar passam de um valor
@@ -55,19 +58,28 @@ Para o Morpho:
 /defi morpho -wallet <0x...> -n Carteira Empre   → com um nome
 ```
 
+Para o Aave:
+
+```
+/defi aave                     → as carteiras cadastradas (sem nenhuma: a do AAVE_WALLET_ADDRESS)
+/defi aave -full               → os detalhes (risco, APY, colateral, eMode, isolation mode)
+/defi aave -wallet <0x...> -n CarteiraX   → cadastra a carteira (e já mostra a posição)
+```
+
 | Opção | Valor | Descrição |
 |---|---|---|
-| *(protocolo)* | `orca`, `prjx` ou `morpho` | Sozinho, mostra o Position Details só dele; com `-address` (`orca`) ou `-wallet` (`prjx` e `morpho`), cadastra; com `-help`, mostra a ajuda só dele. Sem protocolo, o `/defi` mostra todos os cadastrados |
+| *(protocolo)* | `orca`, `prjx`, `morpho` ou `aave` | Sozinho, mostra o Position Details só dele; com `-address` (`orca`) ou `-wallet` (`prjx`, `morpho` e `aave`), cadastra; com `-help`, mostra a ajuda só dele. Sem protocolo, o `/defi` mostra todos os cadastrados |
 | `-list`, `-l` | | Lista os cadastros, com 🔔 nos que têm alerta (e o limite das taxas: `🔔 ≥ $2,000.00`). No seu privado, com os endereços inteiros; fora dele, abreviados (`Hz15…RaPZ`) |
 | `-rm` | `<nº...\|all>` | Remove o cadastro nº N, vários (`-rm 1 3` ou `-rm 1,3`) ou todos; se algum nº não existe, nenhum sai. Junto com `-alerta`: só desliga o alerta da nº N (ou de todas) |
-| `-alerta`, `-a` | `[nº\|all\|valor]` | Sem nº: lista os alertas. Com nº (ou `all`): avisa quando a posição sair da faixa e quando voltar. Só da Orca e do Project X (o Morpho não tem faixa). No cadastro (com `-address` ou `-wallet`), liga o alerta da posição nova, no seu privado (ou no `-to`); o valor é o limite das taxas, como o `-taxas` (`-alerta 2000`). Veja [Alerta de saída da faixa](#alerta-de-saída-da-faixa) |
+| `-alerta`, `-a` | `[nº\|all\|valor]` | Sem nº: lista os alertas. Com nº (ou `all`): avisa quando a posição sair da faixa e quando voltar. Só da Orca e do Project X (o Morpho e o Aave não têm faixa). No cadastro (com `-address` ou `-wallet`), liga o alerta da posição nova, no seu privado (ou no `-to`); o valor é o limite das taxas, como o `-taxas` (`-alerta 2000`). Veja [Alerta de saída da faixa](#alerta-de-saída-da-faixa) |
 | `-taxas` | `<valor\|off>` | Junto com `-alerta`: avisa também quando as taxas a coletar passarem do valor, em dólar (ex.: `-taxas 50`). Avisa uma vez e de novo depois de você coletar; `off` tira |
 | `-to` | `<destino>` | Junto com `-alerta`: para onde vai o aviso. Um contato (`/Jorge Pereira/`), uma menção (`@Fulano Da Silva`), um grupo (`/Grupo L200/`), um número (`+5521999999999`) ou e-mail (`email` é o `QRCODE_EMAIL_SMTP_TO`) ([Destinos](index.md#destinos-contato-grupo-número-ou-e-mail)). Repita para vários: o aviso sai em todos. Sem ele, o seu privado |
 | `-address` | `<endereço>` | Com `orca`: cadastra a posição da Orca pelo endereço dela |
 | `-pool` | `<endereço>` | Com `orca -address`: a pool. Opcional; se vier, o bot confere se bate |
 | `-nft` | `<mint>` | Com `orca -address`: o NFT da posição. Opcional; se vier, o bot confere se bate |
-| `-wallet`, `-w` | `<0x...>` | Com `prjx` ou `morpho`: cadastra a carteira (`0x` e 40 caracteres hexadecimais), e o bot lê todas as posições abertas dela |
+| `-wallet`, `-w` | `<0x...>` | Com `prjx`, `morpho` ou `aave`: cadastra a carteira (`0x` e 40 caracteres hexadecimais), e o bot lê todas as posições abertas dela |
 | `-name`, `-n` | `<nome>` | Com `-wallet`: um nome para a carteira (opcional, até 40 caracteres), mostrado junto do endereço (`Project X · Carteira Hare (0x92…0444)`). Com espaços, sem aspas. Numa carteira já cadastrada, troca o nome |
+| `-full`, `-f` | | Com `aave`: os detalhes da posição: LTV, liquidation threshold, available borrows, o APY de cada ativo, o que é colateral, eMode e isolation mode. Veja [Aave V3](#aave-v3) |
 
 ```
 /defi orca -address Hz15TavvC8p9S7EihCbWa694kWFJGXFzs7AVpvWKRaPZ -pool CeaZcxBNLpJWtxzt58qQmfMBtJY8pQLvursXTJYGQpbN -nft C1MEDy3xt3gxiDtFkHt7HBWxxUVSarKZgt22FUzsKoji
@@ -241,6 +253,83 @@ com os valores brutos do mercado (em BigInt, sem arredondar no caminho):
 
 Os valores em dólar são os da API do Morpho. Um token sem preço lá fica sem o
 valor em dólar e fora dos totais (a mensagem diz quais); nada é estimado.
+
+## Aave V3
+
+O `/defi aave` mostra a posição da carteira no [Aave V3](https://aave.com/):
+o que foi fornecido, o que foi emprestado, o Health Factor e a posição
+líquida, em cada rede do setting `defi.aave.chains` (padrão: `1 8453`, a
+Ethereum e a Base). Tudo é lido on-chain, nos contratos oficiais do Aave
+([documentação](https://aave.com/docs/aave-v3/smart-contracts)), pelo RPC de
+cada rede: `ETHEREUM_RPC_URL` e `BASE_RPC_URL` no `config/.env` ou, vazios, os
+settings `defi.ethereum.rpc` e `defi.base.rpc` (os padrões são públicos e
+limitam as consultas). Só leitura: o bot não pede nem usa chave privada.
+
+A carteira vem do cadastro (`/defi aave -wallet <0x...>`, que já mostra a
+posição) ou, sem nenhum, do `AAVE_WALLET_ADDRESS` (ou do setting
+`defi.aave.wallet`). A resposta de cada rede fica 30 segundos em memória.
+
+```
+🟣 AAVE V3 · Ethereum
+
+💰 Posição líquida
+$364,079.92
+
+❤️ Health Factor
+1.68
+
+━━━━━━━━━━━━━━━━━━
+
+📥 SUPPLIED
+
+Ξ WETH
+233.728594 WETH
+$629,619.06
+
+₿ cbBTC
+1.00006503 cbBTC
+$85,043.86
+
+━━━━━━━━━━━━━━━━━━
+
+📤 BORROWED
+
+💵 USDC
+350,593.69 USDC
+$350,583.00
+
+━━━━━━━━━━━━━━━━━━
+
+👛 Carteira: 0x12…abcd
+🌐 Rede: Ethereum
+🕐 Atualizado: 03:15:42
+```
+
+Com o `-full`, vêm também o risco (LTV atual e máximo, liquidation threshold,
+available borrows e o colateral considerado), o APY e o `Collateral: Yes/No`
+de cada ativo, o modo da dívida (`Variable` ou `Stable`), o eMode e o
+isolation mode. Com posições em mais de uma rede, vem primeiro o total
+líquido e depois cada rede, com o seu Health Factor: o de uma rede não vale
+para a outra. Uma rede que não responde aparece com o aviso, e as outras vêm
+normalmente.
+
+De onde vem cada número:
+
+- **Health Factor, colateral, dívida, available borrows, liquidation
+  threshold e LTV máximo**: do `Pool.getUserAccountData`, o valor do próprio
+  protocolo (o mesmo do app do Aave). Ele já considera o liquidation threshold
+  de cada ativo, o eMode, o isolation mode e o que foi fornecido sem ser
+  colateral. Sem dívida, o Health Factor é `∞`.
+- **Cada ativo**: o saldo vem do `PoolDataProvider` (o aToken e as dívidas
+  variável e estável), e o preço, do `AaveOracle` (o oráculo que o protocolo
+  usa). O valor em dólar é a quantidade × o preço.
+- **Posição líquida**: todo o fornecido (colateral ou não) − a dívida.
+- **LTV atual**: a dívida / o colateral.
+- **APY**: a taxa do `PoolDataProvider`, composta por segundo, como na
+  documentação do Aave.
+- **Preço de liquidação**: só no `-full` e só com um colateral, que não seja
+  também a dívida: o preço atual / o Health Factor. Com vários colaterais, ele
+  depende do que os outros fizerem, e o bot avisa em vez de calcular.
 
 ## Alerta de saída da faixa
 
