@@ -96,7 +96,8 @@ Por onde começar:
   e, com o `-alerta`, confere a cada 10 minutos (setting `defi.alerta.intervalMin`)
   e avisa (no seu privado ou nos destinos do `-to`) quando uma posição sai da
   faixa, quando volta e, com o `-taxas`, quando as taxas a coletar passam de um
-  valor.
+  valor. O `/defi morpho` mostra a posição, os empréstimos e o risco de uma
+  carteira no Morpho, pela API oficial.
 - **Enquetes**: os votos das enquetes da sua conta (evento `vote_update`) vão
   para as tabelas `polls` e `poll_votes`, e o
   [`/enquete -r`](comandos/enquete.md#resultado) mostra o placar. Ficam 90 dias

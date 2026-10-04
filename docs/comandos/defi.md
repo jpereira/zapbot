@@ -1,11 +1,13 @@
 # `/defi` · admin
 
-Acompanha posições de liquidez em DeFi, de dois protocolos:
+Acompanha posições em DeFi, de três protocolos:
 
 - [Orca](https://www.orca.so/) (Whirlpools, na Solana): você cadastra cada posição.
 - [Project X](https://www.prjx.com/portfolio) (na HyperEVM, da Hyperliquid): você
   cadastra a carteira, e o bot lê as posições abertas dela
   ([Project X](#project-x)).
+- [Morpho](https://morpho.org/) (empréstimos, na Base e em outras redes): sem
+  cadastro, o bot consulta a carteira na hora ([Morpho](#morpho)).
 
 O `/defi` lê tudo on-chain na hora e mostra o equivalente ao "Position Details"
 de cada posição; com `orca` ou `prjx`, só as daquele protocolo. Com o `-alerta`,
@@ -39,9 +41,16 @@ Para o Project X:
 /defi prjx -address <0x...> -alerta   → cadastra e já liga o alerta (no seu privado)
 ```
 
+Para o Morpho:
+
+```
+/defi morpho                   → a carteira do MORPHO_WALLET_ADDRESS (ou do defi.morpho.wallet)
+/defi morpho -w <0x...>        → outra carteira
+```
+
 | Opção | Valor | Descrição |
 |---|---|---|
-| *(protocolo)* | `orca` ou `prjx` | Sozinho, mostra o Position Details só dele; com `-address`, cadastra. Sem protocolo, o `/defi` mostra todos |
+| *(protocolo)* | `orca`, `prjx` ou `morpho` | Sozinho, mostra o Position Details só dele; com `-address` (`orca` e `prjx`), cadastra. Sem protocolo, o `/defi` mostra todos os cadastrados |
 | `-list`, `-l` | | Lista os cadastros, com 🔔 nos que têm alerta (e o limite das taxas: `🔔 ≥ $2,000.00`). No seu privado, com os endereços inteiros; fora dele, abreviados (`Hz15…RaPZ`) |
 | `-rm` | `<nº...\|all>` | Remove o cadastro nº N, vários (`-rm 1 3` ou `-rm 1,3`) ou todos; se algum nº não existe, nenhum sai. Junto com `-alerta`: só desliga o alerta da nº N (ou de todas) |
 | `-alerta`, `-a` | `[nº\|all\|valor]` | Sem nº: lista os alertas. Com nº (ou `all`): avisa quando a posição sair da faixa e quando voltar. No cadastro (com `-address`), liga o alerta da posição nova, no seu privado (ou no `-to`); o valor é o limite das taxas, como o `-taxas` (`-alerta 2000`). Veja [Alerta de saída da faixa](#alerta-de-saída-da-faixa) |
@@ -50,6 +59,7 @@ Para o Project X:
 | `-address` | `<endereço>` | Cadastra: com `orca`, o endereço da posição da Orca; com `prjx`, a carteira do Project X (`0x` e 40 caracteres hexadecimais) |
 | `-pool` | `<endereço>` | Com `orca -address`: a pool. Opcional; se vier, o bot confere se bate |
 | `-nft` | `<mint>` | Com `orca -address`: o NFT da posição. Opcional; se vier, o bot confere se bate |
+| `-wallet`, `-w` | `<0x...>` | Com `morpho`: a carteira consultada. Sem ele, a do `MORPHO_WALLET_ADDRESS` (no `config/.env`) ou do setting `defi.morpho.wallet`. Veja [Morpho](#morpho) |
 
 ```
 /defi orca -address Hz15TavvC8p9S7EihCbWa694kWFJGXFzs7AVpvWKRaPZ -pool CeaZcxBNLpJWtxzt58qQmfMBtJY8pQLvursXTJYGQpbN -nft C1MEDy3xt3gxiDtFkHt7HBWxxUVSarKZgt22FUzsKoji
@@ -141,6 +151,84 @@ posições, na carteira de quem a abriu. Por isso o cadastro é a **carteira**, 
   stablecoin, aparecem só as quantidades.
 - Cadastrar uma carteira sem posição aberta vale (o bot avisa): o `/defi prjx`
   mostra as posições quando houver.
+
+## Morpho
+
+O `/defi morpho` mostra as posições da carteira no [Morpho](https://morpho.org/):
+o colateral, a dívida, o que foi fornecido (num mercado ou num vault) e o risco
+de cada mercado. Os dados vêm da API oficial do Morpho (GraphQL em
+`https://api.morpho.org/graphql`, setting `defi.morpho.api`), numa consulta só
+por todas as redes do setting `defi.morpho.chains` (padrão: `8453`, a Base;
+para incluir a Ethereum, `/set defi.morpho.chains 8453 1`). A consulta é só de
+leitura: o bot não pede nem usa chave privada.
+
+A carteira vem do `-wallet` ou, sem ele, do `MORPHO_WALLET_ADDRESS` no
+`config/.env` (ou do setting `defi.morpho.wallet`, que vale quando a variável
+está vazia). A resposta fica 30 segundos em memória: repetir o comando nesse
+intervalo não consulta a API de novo.
+
+```
+🦋 MORPHO · cbBTC/USDC · Base
+
+💰 Posição líquida
+$11,236.16
+
+❤️ Health Rate
+2.73
+
+━━━━━━━━━━━━━━━━━━
+
+📥 SUPPLIED / COLLATERAL
+
+₿ cbBTC
+Quantidade: 0.19324183 cbBTC
+Valor: $16,407.88
+
+━━━━━━━━━━━━━━━━━━
+
+📤 BORROWED
+
+💵 USDC
+Quantidade: 5,171.79 USDC
+Valor: $5,171.72
+
+━━━━━━━━━━━━━━━━━━
+
+📊 RISCO
+
+LTV atual: 31.52%
+LLTV: 86.00%
+Preço cbBTC (oráculo): 84,909.56 USDC
+Preço de liquidação: 31,120.13 USDC
+Utilização do mercado: 90.04%
+
+━━━━━━━━━━━━━━━━━━
+
+👛 Carteira: 0x74…97C4
+🌐 Rede: Base
+🕐 Atualizado: 03:15:42
+```
+
+Com mais de uma posição (vários mercados, vaults ou redes), vêm primeiro o
+total líquido, o total fornecido (colateral + fornecido) e o total emprestado,
+e depois cada posição, com o seu próprio Health Rate: o de um mercado não vale
+para outro.
+
+As contas seguem a [documentação do Morpho](https://docs.morpho.org/learn/concepts/liquidation/),
+com os valores brutos do mercado (em BigInt, sem arredondar no caminho):
+
+- **Valor do colateral** (em token de empréstimo) = colateral × preço do
+  oráculo / 10³⁶.
+- **Health Rate** = valor do colateral × LLTV / emprestado. Abaixo de 1, a
+  posição pode ser liquidada; sem dívida, `∞`.
+- **LTV atual** = emprestado / valor do colateral. A liquidação acontece
+  quando ele passa do **LLTV** do mercado.
+- **Preço de liquidação**: o preço do oráculo em que o Health Rate chega a 1
+  (emprestado × 10³⁶ / (colateral × LLTV)), em token de empréstimo por token de
+  colateral, como o oráculo.
+
+Os valores em dólar são os da API do Morpho. Um token sem preço lá fica sem o
+valor em dólar e fora dos totais (a mensagem diz quais); nada é estimado.
 
 ## Alerta de saída da faixa
 
