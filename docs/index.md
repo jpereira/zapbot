@@ -62,7 +62,7 @@ Por onde começar:
   apagadas ficam guardadas por 30 dias (setting `cache.revokedRetentionDays`)
   e podem ser reexibidas com `/show`. Status (textos/fotos/vídeos) apagados
   também são recuperados, com o título `📸 STATUS APAGADO DETECTADO`
-  (desative com `/set show.alert.status off`).
+  (desative com `/set show.alert.status off`), e reexibidos com `/show -s`.
 - **Editadas**: quando alguém edita uma mensagem, o bot grava o texto de antes
   e o de depois (tabela `message_edits`) e te avisa **no seu privado** com o
   título `✏️ MENSAGEM EDITADA DETECTADA` (desative o aviso com
