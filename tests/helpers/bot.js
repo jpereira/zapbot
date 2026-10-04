@@ -30,7 +30,8 @@ let banco = null;
 const preparar = () => (banco ??= inicializarBanco().then(marcarBancoPronto));
 
 const TABELAS = ['messages', 'message_edits', 'stats', 'watch_hits', 'watch_destinations', 'price_alerts',
-    'presence_logs', 'monitored_numbers', 'settings', 'polls', 'poll_votes', 'schedules', 'defi_positions', 'mutes', 'mute_hits'];
+    'presence_logs', 'monitored_numbers', 'settings', 'polls', 'poll_votes', 'schedules', 'defi_positions', 'mutes', 'mute_hits',
+    'alerts'];
 
 /*
  * Estado limpo para cada teste: tabelas vazias, settings no padrão, nada

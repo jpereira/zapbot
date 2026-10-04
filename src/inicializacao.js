@@ -250,7 +250,7 @@ async function inicializarBanco() {
     });
 
     /*
-     * /mudo: pessoas e grupos com os avisos em silêncio (o que: deleted, edited,
+     * /mute: pessoas e grupos com os avisos em silêncio (o que: deleted, edited,
      * status) e cada aviso cortado (mute_hits, para o /bot -status; 30 dias).
      */
     await dbRun(`
@@ -274,6 +274,23 @@ async function inicializarBanco() {
         )
     `);
     await dbRun('CREATE INDEX IF NOT EXISTS idx_mute_hits_at ON mute_hits (at)');
+    // is_community: a comunidade (o grupo de avisos dela), silenciada pelo /mute
+    await adicionarColunas('mutes', { is_community: 'INTEGER DEFAULT 0' });
+
+    /*
+     * De onde veio cada aviso que o bot mandou (apagada, editada, status, e o
+     * que o /show reexibe): o /mute e o /unmute respondendo um aviso sabem quem
+     * silenciar. O chat de origem e o remetente (o telefone ou o id).
+     */
+    await dbRun(`
+        CREATE TABLE IF NOT EXISTS alerts (
+            message_id TEXT PRIMARY KEY,
+            chat_id TEXT NOT NULL,
+            sender TEXT,
+            created_at INTEGER NOT NULL
+        )
+    `);
+    await dbRun('CREATE INDEX IF NOT EXISTS idx_alerts_created ON alerts (created_at)');
 
     // Configurações gerais do bot (chave -> valor em JSON)
     await dbRun(`

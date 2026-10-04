@@ -56,7 +56,7 @@ async function textoDoStatus(agora = Date.now(), { estadoDoBot = '', usuarios = 
         return `${i >= 0 ? `#${i + 1} ` : ''}${r.rule}: ${fmtNum(r.n)}`;
     }).join(', ');
 
-    // /mudo: avisos cortados, por tipo
+    // /mute: avisos cortados, por tipo
     const ignoradas = await dbAll('SELECT kind, COUNT(*) AS n FROM mute_hits WHERE at >= ? GROUP BY kind ORDER BY kind', [desde]);
     const totalIgnoradas = ignoradas.reduce((s, r) => s + r.n, 0);
     const ROTULOS = { apagada: 'apagadas', editada: 'editadas', status: 'status' };
@@ -74,7 +74,7 @@ async function textoDoStatus(agora = Date.now(), { estadoDoBot = '', usuarios = 
         `🗑️ *Apagadas:* ${fmtNum(apagadas)}${desligado('show.alert.deleted', 'aviso desligado')}\n` +
         `✏️ *Editadas:* ${fmtNum(editadas)}${desligado('show.alert.edited', 'aviso desligado')}\n` +
         `📸 *Status apagados:* ${fmtNum(statusApagados)}${desligado('show.alert.status', 'recuperação desligada')}\n` +
-        `🔇 *Ignoradas (/mudo):* ${fmtNum(totalIgnoradas)}` +
+        `🔇 *Ignoradas (/mute):* ${fmtNum(totalIgnoradas)}` +
         (totalIgnoradas ? ` _(${ignoradas.map(r => `${ROTULOS[r.kind] ?? r.kind} ${fmtNum(r.n)}`).join(', ')})_` : '') +
         (silenciados ? ` · ${plural(silenciados, 'silenciado', 'silenciados')}` : '') + '\n' +
         `💾 *Último backup:* ${ultimoBackup ? `${fmtQuando(ultimoBackup.criadoEm, agora)} (${ultimoBackup.motivo})` : 'nenhum'}`;
