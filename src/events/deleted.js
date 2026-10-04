@@ -9,7 +9,7 @@ const { client } = require('../client');
 const { resolveLidToPhone } = require('../contacts');
 const { dbGet, dbReady, dbRun } = require('../db');
 const { printDebug, printError } = require('../log');
-const { ignoreNotice } = require('../mudo');
+const { ignoreNotice, registerNotice } = require('../mudo');
 const { getSetting } = require('../settings');
 const { countStats, myIdStats } = require('../stats');
 const { mediaIsPath } = require('../util/files');
@@ -93,6 +93,11 @@ async function resolverAuthorDeleted(row, { after, before, protocolKey } = {}) {
  * @param {string[]} [opcoes.extras]    extra lines after "Enviada em"
  */
 async function sendMessageDeleted(destination, row, info, { titulo: title = '❌ *MENSAGEM APAGADA DETECTADA*', extras = [] } = {}) {
+    // Each notice message records where it came from (/mute replying to it)
+    const sender = info.numeroRemetente || row.sender_number || row.sender_jid;
+    const origin = { chatId: row.chat_id, remetente: sender };
+    const send = async (...a) => registerNotice(await client.sendMessage(...a), origin);
+
     let alertText = `${title}\n\n`;
 
     if (row.is_group === 1) {
@@ -117,8 +122,9 @@ async function sendMessageDeleted(destination, row, info, { titulo: title = '❌
             '🗺️ *Tipo:* LOCALIZAÇÃO\n' +
             `🔗 *Link do mapa:* https://www.google.com/maps?q=${latitude},${longitude}`;
 
-        await client.sendMessage(destination, alertText);
-        await client.sendMessage(destination, new Location(latitude, longitude, row.body || 'Localização compartilhada'));
+        await send(destination, alertText);
+        const local = new Location(latitude, longitude, row.body || 'Localização compartilhada');
+        await send(destination, local);
         return;
     }
 
@@ -130,10 +136,10 @@ async function sendMessageDeleted(destination, row, info, { titulo: title = '❌
 
         // The body comes from whoever sent it: it only goes raw if it really is a vCard (never a text like "/cache -a")
         if (!row.body || /^BEGIN:VCARD/i.test(row.body.trim())) {
-            await client.sendMessage(destination, alertText);
-            if (row.body) await client.sendMessage(destination, row.body, { parseVCards: true });
+            await send(destination, alertText);
+            if (row.body) await send(destination, row.body, { parseVCards: true });
         } else {
-            await client.sendMessage(destination, `${alertText}\n💬 *Conteúdo:* "${row.body}"`);
+            await send(destination, `${alertText}\n💬 *Conteúdo:* "${row.body}"`);
         }
         return;
     }
@@ -147,8 +153,8 @@ async function sendMessageDeleted(destination, row, info, { titulo: title = '❌
         if (row.type === 'audio' || row.type === 'ptt' || mimetype.startsWith('audio/')) {
             alertText += '🎵 *Tipo:* ÁUDIO / NOTA DE VOZ';
 
-            await client.sendMessage(destination, alertText);
-            await client.sendMessage(destination, mediaAttachment, { sendAudioAsVoice: true });
+            await send(destination, alertText);
+            await send(destination, mediaAttachment, { sendAudioAsVoice: true });
             return;
         }
 
@@ -157,7 +163,7 @@ async function sendMessageDeleted(destination, row, info, { titulo: title = '❌
                 `🎬 *Tipo:* ${String(row.type).toUpperCase()}\n` +
                 `💬 *Legenda:* "${captionAlt}"`;
 
-            await client.sendMessage(destination, mediaAttachment, { caption: alertText });
+            await send(destination, mediaAttachment, { caption: alertText });
             return;
         }
 
@@ -165,7 +171,7 @@ async function sendMessageDeleted(destination, row, info, { titulo: title = '❌
             '📄 *Tipo:* DOCUMENTO\n' +
             `💬 *Legenda:* "${captionAlt}"`;
 
-        await client.sendMessage(destination, mediaAttachment, { caption: alertText, sendMediaAsDocument: true });
+        await send(destination, mediaAttachment, { caption: alertText, sendMediaAsDocument: true });
         return;
     }
 
@@ -177,7 +183,7 @@ async function sendMessageDeleted(destination, row, info, { titulo: title = '❌
     // Texto
     alertText += `💬 *Texto:* "${row.body || 'Mensagem sem conteúdo'}"`;
 
-    await client.sendMessage(destination, alertText, { linkPreview: true });
+    await send(destination, alertText, { linkPreview: true });
 }
 
 client.on('message_revoke_everyone', async (after, before) => {
@@ -234,7 +240,7 @@ client.on('message_revoke_everyone', async (after, before) => {
             campos: { deleted: 1 }
         });
 
-        // show.alert.deleted off or /mudo: no notice (the message stays stored for /show)
+        // show.alert.deleted off or /mute: no notice (the message stays stored for /show)
         const senders = [row.sender_jid, row.sender_number, info.numeroRemetente];
         if (!isStatus(row) && !getSetting('show.alert.deleted')) return;
         if (await ignoreNotice(isStatus(row) ? 'status' : 'apagada', { chatId: row.chat_id, remetentes: senders })) return;

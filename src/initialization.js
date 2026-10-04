@@ -250,7 +250,7 @@ async function initializeDb() {
     });
 
     /*
-     * /mudo: people and groups with muted notices (what: deleted, edited,
+     * /mute: people and groups with muted notices (what: deleted, edited,
      * status) and each cut notice (mute_hits, for /bot -status; 30 days).
      */
     await dbRun(`
@@ -274,6 +274,23 @@ async function initializeDb() {
         )
     `);
     await dbRun('CREATE INDEX IF NOT EXISTS idx_mute_hits_at ON mute_hits (at)');
+    // is_community: the community (its announcements group), muted by /mute
+    await addColumns('mutes', { is_community: 'INTEGER DEFAULT 0' });
+
+    /*
+     * Where each notice the bot sent came from (deleted, edited, status, and the
+     * that /show re-shows): /mute and /unmute replying to a notice know who
+     * mute. The origin chat and the sender (the phone or the id).
+     */
+    await dbRun(`
+        CREATE TABLE IF NOT EXISTS alerts (
+            message_id TEXT PRIMARY KEY,
+            chat_id TEXT NOT NULL,
+            sender TEXT,
+            created_at INTEGER NOT NULL
+        )
+    `);
+    await dbRun('CREATE INDEX IF NOT EXISTS idx_alerts_created ON alerts (created_at)');
 
     // General bot settings (key -> value in JSON)
     await dbRun(`

@@ -94,7 +94,7 @@ nav:
       - /listageral: commands/listageral.md
       - /meme: commands/meme.md
       - /monitor: commands/monitor.md
-      - /mudo: commands/mudo.md
+      - /mute: commands/mute.md
       - /news: commands/news.md
       - /noffa: commands/noffa.md
       - /ping: commands/ping.md
@@ -107,6 +107,7 @@ nav:
       - /tldr: commands/tldr.md
       - /todos: commands/todos.md
       - /traduzir: commands/traduzir.md
+      - /unmute: commands/unmute.md
       - /uptime: commands/uptime.md
       - /version: commands/version.md
       - /walissu: commands/walissu.md

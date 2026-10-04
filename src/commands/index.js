@@ -23,7 +23,7 @@ const { cmdKernel } = require('./kernel');
 const { cmdListGeneral } = require('./listageral');
 const { cmdMeme } = require('./meme');
 const { cmdMonitor } = require('./monitor');
-const { cmdMuted } = require('./mudo');
+const { cmdMute, cmdUnmute } = require('./mute');
 const { cmdNews } = require('./news');
 const { cmdNoffa } = require('./noffa');
 const { cmdPing } = require('./ping');
@@ -64,7 +64,7 @@ const HANDLERS = {
     '/listageral': cmdListGeneral,
     '/meme': cmdMeme,
     '/monitor': cmdMonitor,
-    '/mudo': cmdMuted,
+    '/mute': cmdMute,
     '/news': cmdNews,
     '/noffa': cmdNoffa,
     '/ping': cmdPing,
@@ -77,6 +77,7 @@ const HANDLERS = {
     '/tldr': cmdTldr,
     '/todos': cmdAll,
     '/traduzir': cmdTranslate,
+    '/unmute': cmdUnmute,
     '/uptime': cmdUptime,
     '/version': cmdUptime,
     '/walissu': cmdWalissu,

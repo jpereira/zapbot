@@ -2,7 +2,7 @@
  * Destination of a notice or target of a command: a contact, a group, a number
  * or (where it makes sense) emails. It is the -to of all commands: /cron, the
  * price alerts (/cotacao and /crypto -alerta), /defi -alerta, /watch and
- * /backup -send; and the /mudo target. All accept several -to.
+ * /backup -send; and the /mute target. All accept several -to.
  */
 
 const { client } = require('./client');
@@ -239,7 +239,7 @@ function readEmails(textAlt) {
 
 /**
  * Resolves the text to a chat (or to emails).
- * @param {string} valor  what came in -to (or in the /mudo target)
+ * @param {string} valor  what came in -to (or in the /mute target)
  * @param {object} [o]
  * @param {boolean} [o.acceptsEmail]  "email" and addresses count (alerts, /backup); otherwise, error
  * @param {string} [o.withoutEmail]      the error when it does not accept (the command's why)
@@ -431,7 +431,7 @@ const destinationsSaved = (recipients, single) => (recipients ? JSON.parse(recip
 
 /*
  * The person of a mention. The id is usually a LID (the internal id): the
- * its phone, if WhatsApp knows it (it is what /mudo and bot.admins compare
+ * its phone, if WhatsApp knows it (it is what /mute and bot.admins compare
  * with whoever sends the message); otherwise, the LID itself (it can be sent to).
  */
 async function personMentioned(digits, mentions) {
