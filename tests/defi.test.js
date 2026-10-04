@@ -166,7 +166,7 @@ describe('/defi', () => {
     test('/defi orca, palavra desconhecida, -rm e as mensagens de lista vazia', async () => {
         await bot.replyAlt(REGISTRATION);
         assert.match((await bot.replyAlt('/defi orca'))[0], /Orca · SOL\/cbBTC/);
-        assert.match((await bot.replyAlt('/defi xyz'))[0], /^❌ "xyz" não é um protocolo: use orca, prjx ou morpho\.\n\n```Usage: \/defi \[orca\|prjx\|morpho\]/);
+        assert.match((await bot.replyAlt('/defi xyz'))[0], /^❌ "xyz" não é um protocolo: use orca, prjx, morpho ou aave\.\n\n```Usage: \/defi \[orca\|prjx\|morpho\|aave\]/);
 
         assert.deepEqual(await bot.replyAlt('/defi -rm 1'), ['🗑️ Removido: Orca · ime1…VPcg']);
         assert.match((await bot.replyAlt('/defi'))[0], /🌊 Nenhuma posição cadastrada/);
@@ -177,7 +177,7 @@ describe('/defi', () => {
     test('cadastro: só -address basta; erros de protocolo, endereço, conta, NFT, pool e repetida', async () => {
         const errorAlt = async (line, expected) => assert.match((await bot.replyAlt(line))[0], expected, line);
 
-        await errorAlt(`/defi -address ${POSITION}`, /❌ Informe o protocolo antes do -address ou do -wallet: orca, prjx ou morpho/);
+        await errorAlt(`/defi -address ${POSITION}`, /❌ Informe o protocolo antes do -address ou do -wallet: orca, prjx, morpho ou aave/);
         await errorAlt('/defi orca -address', /❌ Informe o endereço da posição/);
         await errorAlt('/defi orca -address xyz', /❌ -address: "xyz" não é um endereço da Solana/);
         await errorAlt(`/defi orca -address ${POSITION} -nft ${POOL}`, /❌ O NFT .* não é o desta posição \(o dela é 9UkH/);
@@ -813,7 +813,7 @@ describe('/defi morpho', () => {
         const [r] = await bot.replyAlt('/defi morpho');
         assert.match(r, /^🦋 \*MORPHO\* · RSS\/eUSD · Base\n\n_Sem preço em USD \(fora dos totais\): RSS, eUSD_\n\n❤️ \*Health Rate\*\n`325\.91`/);
         assert.doesNotMatch(r, /Valor:|Posição líquida/);
-        assert.match(r, /Quantidade: `9,497,294\.99999998 RSS`/);
+        assert.match(r, /Quantidade: `9,497,295\.00 RSS`/);
         assert.match(r, /Preço de liquidação: `153\.42 eUSD`/);
     });
 
@@ -918,5 +918,253 @@ describe('/defi morpho', () => {
         assert.equal(network.chamadas.length, 1);
         await bot.replyAlt(`/defi morpho -w ${OTHER}`);
         assert.equal(network.chamadas.length, 2, 'outra carteira consulta');
+    });
+});
+
+/*
+ * Aave V3: the simulated blockchain. The RPC receives the Multicall3 aggregate3 from
+ * truth (encoded by the bot), each call goes to the fake contract, and the
+ * reply comes encoded like the contract's. The numbers are round so
+ * the math fitting in your head: WETH at $2,500, cbBTC at $100,000 and USDC at $1.
+ */
+describe('/defi aave', () => {
+    const aave = bot.src('defi/aave');
+    const { errorHttp } = bot;
+    const WALLET = '0x1234567890abcdef1234567890abcdef12345678';
+    const OTHER = '0x1111111111111111111111111111111111111234';
+    const SEL = aave.SEL;
+
+    const w = (n) => BigInt.asUintN(256, BigInt(n)).toString(16).padStart(64, '0');
+    const a = (e) => e.slice(2).toLowerCase().padStart(64, '0');
+    const without0X = (h) => h.replace(/^0x/, '');
+    const bytesAbi = (hex) => w(hex.length / 2) + hex.padEnd(Math.ceil(hex.length / 64) * 64, '0');
+    const textAbi = (t) => w(32) + bytesAbi(Buffer.from(t).toString('hex'));
+    const MAX = (1n << 256n) - 1n;
+    const E = (n, places) => BigInt(Math.round(n * 1e6)) * 10n ** BigInt(places) / 1000000n;
+
+    const end = (c) => `0x${c.repeat(40)}`;
+    const TOKENS = {
+        WETH: { endereco: end('e'), decimals: 18, preco: 2500 },
+        cbBTC: { endereco: end('b'), decimals: 8, preco: 100000 },
+        USDC: { endereco: end('c'), decimals: 6, preco: 1 }
+    };
+    const NETWORKS = {
+        1: { url: 'ethereum-rpc.publicnode.com', provider: '0x2f39d218133afab8f2b819b1066c7e434ad94e9e', pool: end('1'), oraculo: end('2'), dados: end('3') },
+        8453: { url: 'mainnet.base.org', provider: '0xe20fcbdbffc4dd138ce8b2e6fbb6cb49777ad64d', pool: end('4'), oraculo: end('5'), dados: end('6') }
+    };
+
+    let chainAlt;
+    const newChain = () => ({
+        // Ethereum: WETH and cbBTC as collateral, USDC borrowed; HF 1.62
+        1: {
+            emode: 0,
+            conta: { colateral: 600000, divida: 300000, disponivel: 162000, lt: 8100, ltv: 7700, hf: 1.62 },
+            saldos: {
+                WETH: { fornecido: 200, colateral: true },
+                cbBTC: { fornecido: 1, colateral: true },
+                USDC: { variavel: 300000 }
+            },
+            teto: {}
+        },
+        // Base: only supplied USDC, not as collateral, and no debt
+        8453: {
+            emode: 0,
+            conta: { colateral: 0, divida: 0, disponivel: 0, lt: 0, ltv: 0, hf: null },
+            saldos: { USDC: { fornecido: 1000, colateral: false } },
+            teto: {}
+        }
+    });
+
+    // Each call: (contract, calldata) → return in hex (without 0x), or null (failure)
+    function contract(id, to, data) {
+        const r = NETWORKS[id];
+        const c = chainAlt[id];
+        const sel = data.slice(0, 10);
+        const arg = (i) => data.slice(10 + i * 64, 10 + (i + 1) * 64);
+        const token = (addressArg) => Object.entries(TOKENS).find(([, t]) => a(t.endereco) === addressArg);
+
+        if (to === r.provider) return { [SEL.getPool]: a(r.pool), [SEL.getPriceOracle]: a(r.oraculo), [SEL.getPoolDataProvider]: a(r.dados) }[sel] ?? null;
+        if (to === r.pool && sel === SEL.getUserAccountData) {
+            const k = c.conta;
+            return w(E(k.colateral, 8)) + w(E(k.divida, 8)) + w(E(k.disponivel, 8)) + w(k.lt) + w(k.ltv) + w(k.hf === null ? MAX : E(k.hf, 18));
+        }
+        if (to === r.pool && sel === SEL.getUserEMode) return w(c.emode);
+        if (to === r.pool && sel === SEL.getEModeCategoryLabel) return textAbi('ETH correlated');
+        if (to === r.oraculo && sel === SEL.BASE_CURRENCY_UNIT) return w(10n ** 8n);
+        if (to === r.oraculo && sel === SEL.getAssetsPrices) {
+            const n = Number(BigInt(`0x${arg(1)}`));
+            const prices = Array.from({ length: n }, (_, i) => token(arg(2 + i))[1].preco);
+            return w(32) + w(n) + prices.map(p => w(E(p, 8))).join('');
+        }
+        if (to === r.dados && sel === SEL.getAllReservesTokens) {
+            const list = Object.entries(TOKENS);
+            const tuples = list.map(([s, t]) => w(64) + a(t.endereco) + textAbi(s).slice(64));
+            let offset = list.length * 32;
+            const offsets = tuples.map(t => { const o = offset; offset += t.length / 2; return w(o); });
+            return w(32) + w(list.length) + offsets.join('') + tuples.join('');
+        }
+        if (to === r.dados) {
+            const [symbolAlt, t] = token(arg(0));
+            const s = c.saldos[symbolAlt] ?? {};
+            if (sel === SEL.getUserReserveData) {
+                return w(E(s.fornecido ?? 0, t.decimals)) + w(E(s.estavel ?? 0, t.decimals)) + w(E(s.variavel ?? 0, t.decimals)) +
+                    w(0) + w(0) + w(s.estavel ? 6n * 10n ** 25n : 0) + w(0) + w(0) + w(s.colateral ? 1 : 0);
+            }
+            if (sel === SEL.getReserveConfigurationData) return w(t.decimals) + w(7500) + w(8000) + w(10500) + w(1000) + w(1) + w(1) + w(0) + w(1) + w(0);
+            // liquidityRate 3% and variableBorrowRate 5% (APR in ray)
+            if (sel === SEL.getReserveData) return w(0).repeat(5) + w(3n * 10n ** 25n) + w(5n * 10n ** 25n) + w(0).repeat(5);
+            if (sel === SEL.getDebtCeiling) return w(c.teto[symbolAlt] ?? 0);
+        }
+        return null;
+    }
+
+    // The RPC: only Multicall3's aggregate3 (the bot does not do a direct eth_call on the contracts)
+    function simulateRpc(id) {
+        network.responder('post', NETWORKS[id].url, (url, cfg) => {
+            const { to, data } = cfg.body.params[0];
+            assert.equal(to.toLowerCase(), '0xca11bde05977b3631167028862be2a173976ca11');
+            const h = without0X(data).slice(8);
+            const word = (pos) => BigInt(`0x${h.slice(pos, pos + 64)}`);
+            const start = Number(word(0)) * 2;
+            const n = Number(word(start));
+            const base = start + 64;
+            const calls = Array.from({ length: n }, (_, i) => {
+                const el = base + Number(word(base + i * 64)) * 2;
+                const target = `0x${h.slice(el + 24, el + 64)}`;
+                const dataAlt = el + Number(word(el + 128)) * 2;
+                return { to: target, data: `0x${h.slice(dataAlt + 64, dataAlt + 64 + Number(word(dataAlt)) * 2)}` };
+            });
+
+            const results = calls.map(c => contract(id, c.to, c.data));
+            const elements = results.map(r => w(r === null ? 0 : 1) + w(64) + bytesAbi(r ?? ''));
+            let offset = n * 32;
+            const offsets = elements.map(e => { const o = offset; offset += e.length / 2; return w(o); });
+            return { jsonrpc: '2.0', id: 1, result: `0x${w(32)}${w(n)}${offsets.join('')}${elements.join('')}` };
+        });
+    }
+
+    beforeEach(() => {
+        aave.cleanCacheAave();
+        process.env.AAVE_WALLET_ADDRESS = WALLET;   // without a registration, the .env one applies
+        chainAlt = newChain();
+        simulateRpc(1);
+        simulateRpc(8453);
+    });
+
+    test('contas: APY composto por segundo, Health Factor ∞ (uint256 máximo) e os ativos do mercado', () => {
+        assert.ok(Math.abs(aave.apy(5n * 10n ** 25n) - (Math.exp(0.05) - 1)) < 1e-6);
+        assert.equal(aave.healthFactor(MAX, 1n), Infinity);
+        assert.equal(aave.healthFactor(5n * 10n ** 17n, 0n), Infinity, 'sem dívida');
+        assert.equal(aave.healthFactor(1620000000000000000n, 1n), 1.62);
+        assert.deepEqual(aave.decodeReserves(contract(1, NETWORKS[1].dados, SEL.getAllReservesTokens)).map(t => t.simbolo), ['WETH', 'cbBTC', 'USDC']);
+    });
+
+    test('duas redes: o total global e cada rede com o seu Health Factor', async () => {
+        const [r] = await bot.replyAlt('/defi aave');
+        const SEP = '\n\n━━━━━━━━━━━━━━━━━━\n\n';
+        const [global, eth, base, footer] = r.split(SEP);
+
+        assert.equal(global, '🟣 *AAVE V3*\n\n💰 *TOTAL GLOBAL*\nNet: `$301,000.00`');
+        assert.equal(eth, '🌐 *Ethereum*\n\nNet: `$300,000.00`\nHealth Factor: `1.62`\n\n📥 *SUPPLIED*\n\n' +
+            'Ξ *WETH*\n`200.00 WETH`\n`$500,000.00`\n\n₿ *cbBTC*\n`1.00 cbBTC`\n`$100,000.00`\n\n' +
+            '📤 *BORROWED*\n\n💵 *USDC*\n`300,000.00 USDC`\n`$300,000.00`');
+        assert.equal(base, '🌐 *Base*\n\nNet: `$1,000.00`\nHealth Factor: `∞`\n\n📥 *SUPPLIED*\n\n💵 *USDC*\n`1,000.00 USDC`\n`$1,000.00`');
+        assert.match(footer, /^👛 Carteira: `0x12…5678`\n🌐 Redes: `Ethereum, Base`\n🕐 Atualizado: `\d\d:\d\d:\d\d`$/);
+        assert.ok(bot.logs.some(l => l.includes('[AAVE] Consultando wallet 0x1234...5678')));
+        assert.ok(bot.logs.some(l => l.includes('[AAVE] Ethereum: Health Factor 1.62')));
+    });
+
+    test('-full numa rede: risco, APY, colateral, modo da dívida, eMode e isolation mode', async () => {
+        await bot.setSetting('defi.aave.chains', '1');
+        const [r] = await bot.replyAlt('/defi aave -full');
+        assert.match(r, /^🟣 \*AAVE V3 — FULL\* · Ethereum\n\n💰 Net Position: `\$300,000\.00`\n📥 Supplied: `\$600,000\.00`\n📤 Borrowed: `\$300,000\.00`\n\n❤️ Health Factor: `1\.62`/);
+        assert.match(r, /📊 \*Risco\*\nLTV atual: `50\.00%`\nLTV máximo: `77\.00%`\nLiquidation Threshold: `81\.00%`\nAvailable Borrows: `\$162,000\.00`\nCollateral \(risco\): `\$600,000\.00`/);
+        assert.match(r, /⚠️ _Preço de liquidação individual não é determinístico com múltiplos collaterals\._/);
+        assert.match(r, /\*WETH\*\nAmount: `200\.00`\nValue: `\$500,000\.00`\nCollateral: `Yes`\nSupply APY: `3\.05%`/);
+        assert.match(r, /📤 \*DEBT\*\n\n\*USDC\*\nAmount: `300,000\.00`\nValue: `\$300,000\.00`\nBorrow APY: `5\.13%`\nRate Mode: `Variable`/);
+        assert.match(r, /⚙️ \*CONFIGURAÇÃO\*\n\neMode: `Disabled`\nIsolation Mode: `No`/);
+    });
+
+    test('um colateral só: preço de liquidação (preço / HF); eMode e isolation mode ativos; dívida estável', async () => {
+        await bot.setSetting('defi.aave.chains', '1');
+        Object.assign(chainAlt[1], {
+            emode: 1,
+            conta: { colateral: 100000, divida: 50000, disponivel: 20000, lt: 7500, ltv: 7000, hf: 1.5 },
+            saldos: { cbBTC: { fornecido: 1, colateral: true }, USDC: { variavel: 40000, estavel: 10000 } },
+            teto: { cbBTC: 1000000 }   // 2 casas: $10,000.00
+        });
+        const [r] = await bot.replyAlt('/defi aave -f');
+        assert.match(r, /Preço de liquidação \(cbBTC\): `\$66,666\.67`/);
+        assert.doesNotMatch(r, /não é determinístico/);
+        assert.match(r, /Rate Mode: `Variable`[\s\S]*Amount: `10,000\.00`[\s\S]*Borrow APY: `6\.18%`\nRate Mode: `Stable`/);
+        assert.match(r, /eMode: `Enabled \(ETH correlated\)`\nIsolation Mode: `Yes \(cbBTC, debt ceiling \$10,000\.00\)`/);
+    });
+
+    test('fornecido sem ser colateral: entra no total, sai do risco; sem dívida, HF ∞ e sem LTV atual', async () => {
+        await bot.setSetting('defi.aave.chains', '8453');
+        const [r] = await bot.replyAlt('/defi aave -full');
+        assert.match(r, /📥 Supplied: `\$1,000\.00`\n📤 Borrowed: `\$0\.00`\n\n❤️ Health Factor: `∞`/);
+        assert.match(r, /Collateral: `No`/);
+        assert.doesNotMatch(r, /LTV atual|Preço de liquidação|DEBT/);
+    });
+
+    test('poeira (menos de $0.01) não aparece; carteira sem nada: nenhuma posição aberta', async () => {
+        await bot.setSetting('defi.aave.chains', '8453');
+        chainAlt[8453].saldos.WETH = { fornecido: 0.000000000001, colateral: true };
+        assert.doesNotMatch((await bot.replyAlt('/defi aave'))[0], /WETH/);
+        await bot.setSetting('defi.aave.chains', '1 8453');
+
+        aave.cleanCacheAave();
+        chainAlt = { 1: { ...newChain()[1], saldos: {} }, 8453: { ...newChain()[8453], saldos: {} } };
+        assert.deepEqual(await bot.replyAlt('/defi aave'), ['🟣 *AAVE V3*\n\nNenhuma posição aberta na carteira `0x12…5678` (chain 1, 8453).']);
+    });
+
+    test('RPC: fora do ar, timeout, rate limit e contrato inexistente; uma rede que falha não derruba a outra', async () => {
+        const error = async (reply) => {
+            aave.cleanCacheAave();
+            network.limpar();
+            network.responder('post', NETWORKS[1].url, reply);
+            simulateRpc(8453);
+            return (await bot.replyAlt('/defi aave', { erroEsperado: true }))[0];
+        };
+
+        const partial = await error(new Error('connect ECONNREFUSED'));
+        assert.match(partial, /^🟣 \*AAVE V3\* · Base\n/);
+        assert.match(partial, /⚠️ \*Ethereum\*: Não consegui falar com o RPC da Ethereum\./);
+        assert.match(await error(Object.assign(new Error('timeout of 15000ms exceeded'), { code: 'ECONNABORTED' })),
+            /⚠️ \*Ethereum\*: O RPC da Ethereum não respondeu em 15 segundos\./);
+        assert.match(await error(errorHttp(429)), /⚠️ \*Ethereum\*: Muitas consultas seguidas: o RPC da Ethereum pediu um tempo\./);
+        assert.match(await error({ jsonrpc: '2.0', id: 1, result: '0x' }), /⚠️ \*Ethereum\*: Contrato não encontrado na rede\./);
+        assert.ok(bot.logs.some(l => l.includes('[AAVE] Timeout Ethereum')));
+
+        // Both out: the Aave error, with each network's reason
+        aave.cleanCacheAave();
+        network.limpar();
+        network.responder('post', /./, errorHttp(503));
+        assert.deepEqual(await bot.replyAlt('/defi aave', { erroEsperado: true }), ['❌ *Erro ao consultar Aave*\n\n' +
+            'Ethereum: O RPC da Ethereum está fora do ar.\nBase: O RPC da Base está fora do ar.\n\nTente novamente em alguns instantes.']);
+    });
+
+    test('-wallet cadastra (com nome) e já mostra; sem cadastro, o .env; o -alerta não vale', async () => {
+        delete process.env.AAVE_WALLET_ADDRESS;
+        assert.deepEqual(await bot.replyAlt('/defi aave'), ['❌ Endereço da carteira Aave não configurado.\n\n' +
+            'Configure AAVE_WALLET_ADDRESS no arquivo .env (ou /set defi.aave.wallet <0x...>), ou cadastre a carteira: /defi aave -wallet <0x...>']);
+
+        const r = await bot.replyAlt(`/defi aave -w ${WALLET} -n CarteiraX -full`);
+        assert.equal(r[0], '✅ *Carteira do Aave cadastrada:* CarteiraX (0x12…5678)\n📍 4 posições abertas.\n💡 _Veja com /defi aave_');
+        assert.match(r[1], /^🟣 \*AAVE V3 — FULL\*[\s\S]*👛 Carteira: CarteiraX · `0x12…5678`/);
+
+        assert.match((await bot.replyAlt('/defi'))[0], /^🟣 \*AAVE V3\*\n\n💰 \*TOTAL GLOBAL\*/);
+        assert.match((await bot.replyAlt('/defi -l'))[0], /1\. Aave · CarteiraX \(0x12…5678\)/);
+        assert.match((await bot.replyAlt('/defi -alerta 1'))[0], /a nº 1 é do Aave/);
+        assert.match((await bot.replyAlt(`/defi aave -w ${OTHER} -alerta`))[0], /o Aave não tem/);
+        await assert.rejects(bot.setSetting('defi.aave.chains', '137'), /rede sem Aave V3 no bot/);
+    });
+
+    test('cache de 30 s por carteira e rede', async () => {
+        await bot.replyAlt('/defi aave');
+        const calls = network.chamadas.length;
+        await bot.replyAlt('/defi aave -full');
+        assert.equal(network.chamadas.length, calls);
     });
 });
