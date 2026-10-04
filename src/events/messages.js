@@ -6,7 +6,7 @@ const path = require('path');
 const fs = require('fs-extra');
 
 const { client, botConsumeSending, wasSentByBot, messageToSelf } = require('../client');
-const { findCommand, getCommandSyntax } = require('../commands/base');
+const { findCommand, getCommandSyntax, helpProtocol } = require('../commands/base');
 const { HANDLERS } = require('../commands/index');
 const { removeDeviceSuffix, resolveLidToPhone, groupResolverName, privateResolverName } = require('../contacts');
 const { dbGet, dbReady, dbRun } = require('../db');
@@ -315,7 +315,7 @@ client.on('message_create', async (msg) => {
 
         // foo -help
         if (opts.opt.help) {
-            await msg.reply('```' + getCommandSyntax(command.cmd) + '```');
+            await msg.reply('```' + getCommandSyntax(command.cmd, helpProtocol(command, opts.argv)) + '```');
             return;
         }
 

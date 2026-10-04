@@ -2,7 +2,7 @@
  * Comando /help.
  */
 
-const { activeCommands, findCommand, formatCommandHelp } = require('./base');
+const { activeCommands, findCommand, formatCommandHelp, helpProtocol } = require('./base');
 
 /*
  * Each sees only what they can use: the owner and the admins (bot.admins), everything; the
@@ -14,9 +14,10 @@ async function cmdHelp({ msg, args, admin, podeUsar: canUse = () => true }) {
     const can = (command) => admin || (!command.onlyAdmin && canUse(command.cmd));
 
     // Reads straight from the text: the option parser discards a first token that starts with "/"
-    let requestedCommand = args.split(/\s+/)[0];
+    const [first, ...rest] = args.split(/\s+/);
+    let requestedCommand = first;
 
-    // /help /get  |  /help get
+    // /help /get  |  /help get  |  /help defi orca (only the help for that protocol)
     if (requestedCommand) {
         if (!requestedCommand.startsWith('/')) {
             requestedCommand = `/${requestedCommand}`;
@@ -37,7 +38,8 @@ async function cmdHelp({ msg, args, admin, podeUsar: canUse = () => true }) {
             return;
         }
 
-        await msg.reply('🤖 *AJUDA*\n\n```' + formatCommandHelp(command) + '\n```');
+        const protocol = helpProtocol(command, rest);
+        await msg.reply('🤖 *AJUDA*\n\n```' + formatCommandHelp(command, { protocolo: protocol }) + '\n```');
         return;
     }
 
