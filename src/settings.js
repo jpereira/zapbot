@@ -228,6 +228,31 @@ const SETTINGS_SCHEMA = {
         validar: validarUrlFeed,
         desc: 'RPC da HyperEVM usado pelo /defi no Project X (o público limita as consultas).'
     },
+    'defi.morpho.api': {
+        default: 'https://api.morpho.org/graphql',
+        type: 'string',
+        validar: validarUrlFeed,
+        desc: 'API GraphQL oficial do Morpho, usada pelo /defi morpho.'
+    },
+    'defi.morpho.chains': {
+        default: ['8453'],
+        type: 'list',
+        desc: 'Redes (chain id) em que o /defi morpho procura as posições: 8453 (Base), 1 (Ethereum)...',
+        item: (v) => {
+            if (!/^\d+$/.test(v)) throw new Error(`chain id é um número (8453 = Base, 1 = Ethereum): ${v}`);
+            return v;
+        }
+    },
+    'defi.morpho.wallet': {
+        default: '',
+        type: 'string',
+        allowEmpty: true,
+        validar: (v) => {
+            if (!/^0x[0-9a-fA-F]{40}$/.test(v)) throw new Error(`carteira EVM é 0x e 40 caracteres hexadecimais: ${v}`);
+            return v;
+        },
+        desc: 'Carteira do /defi morpho (sem o -wallet), usada quando MORPHO_WALLET_ADDRESS não está no config/.env.'
+    },
     'defi.solana.rpc': {
         default: 'https://api.mainnet-beta.solana.com',
         type: 'string',

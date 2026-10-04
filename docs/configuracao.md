@@ -51,7 +51,7 @@ outros funcionam sem configuração.
 | `/news` | Feeds RSS (g1, Gazeta do Povo, The Hacker News...) | — |
 | `/cotacao` | [Yahoo Finance](https://finance.yahoo.com/) (reserva: [AwesomeAPI](https://docs.awesomeapi.com.br/)) e [Binance](https://www.binance.com/) para o USDT | — |
 | `/crypto` | [Binance](https://www.binance.com/) | — |
-| `/defi` | RPC da Solana (setting `defi.solana.rpc`), a [API da Orca](https://www.orca.so/) e o RPC da HyperEVM (setting `defi.hyperevm.rpc`, para o Project X) | — |
+| `/defi` | RPC da Solana (setting `defi.solana.rpc`), a [API da Orca](https://www.orca.so/), o RPC da HyperEVM (setting `defi.hyperevm.rpc`, para o Project X) e a [API do Morpho](https://docs.morpho.org/) (setting `defi.morpho.api`) | — |
 | `/kernel` | [kernel.org](https://www.kernel.org/) | — |
 | `/meme` | [imgflip](https://imgflip.com/) | — |
 | `/pixelart` | [16colo.rs](https://16colo.rs/) | — |
@@ -66,6 +66,12 @@ vale o setting, que dá para trocar pelo WhatsApp com `/set` sem reiniciar.
 | `OPENAI_API_KEY` | `sk-proj-...` | Chave da OpenAI usada pelo `/gpt` e pelo `/tldr`. Se estiver vazia, o bot usa o setting `openai.api.key`; sem nenhuma das duas o `/gpt` e o `/tldr` ficam desativados. |
 | `OPENAI_MODEL` | `gpt-4o-mini` | Modelo do `/gpt` e do `/tldr`. Se estiver vazio, o bot usa o setting `openai.api.model` (padrão `gpt-4o-mini`), que dá para trocar pelo WhatsApp com `/gpt -m`. Preenchido, tem prioridade sobre o setting. |
 | `OPENAI_TIMEOUT_MS` | `60000` | Tempo máximo de espera pela resposta, em ms. Se estiver vazio, o bot usa o setting `openai.timeout.ms` (60000). |
+
+## Morpho (opcional)
+
+| Variável | Exemplo | Descrição |
+|---|---|---|
+| `MORPHO_WALLET_ADDRESS` | `0x1234...abcd` | Carteira (endereço público, `0x` e 40 caracteres hexadecimais) consultada pelo [`/defi morpho`](comandos/defi.md#morpho) sem o `-wallet`. Se estiver vazia, o bot usa o setting `defi.morpho.wallet`. Nunca coloque aqui chave privada nem seed: a consulta é só de leitura. |
 
 ## GIPHY (opcional)
 
