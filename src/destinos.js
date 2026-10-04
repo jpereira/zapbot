@@ -2,7 +2,7 @@
  * Destino de um aviso ou alvo de um comando: um contato, um grupo, um número
  * ou (onde faz sentido) e-mails. É o -to de todos os comandos: /cron, os
  * alertas de preço (/cotacao e /crypto -alerta), o /defi -alerta, o /watch e
- * o /backup -send; e o alvo do /mudo. Todos aceitam vários -to.
+ * o /backup -send; e o alvo do /mute. Todos aceitam vários -to.
  */
 
 const { client } = require('./cliente');
@@ -239,7 +239,7 @@ function lerEmails(texto) {
 
 /**
  * Resolve o texto para um chat (ou para e-mails).
- * @param {string} valor  o que veio no -to (ou no alvo do /mudo)
+ * @param {string} valor  o que veio no -to (ou no alvo do /mute)
  * @param {object} [o]
  * @param {boolean} [o.aceitaEmail]  "email" e endereços valem (alertas, /backup); senão, erro
  * @param {string} [o.semEmail]      o erro quando não aceita (o porquê do comando)
@@ -431,7 +431,7 @@ const destinosSalvos = (recipients, unico) => (recipients ? JSON.parse(recipient
 
 /*
  * A pessoa de uma menção. O id costuma ser um LID (o id interno): vale o
- * telefone dele, se o WhatsApp souber (é o que o /mudo e o bot.admins comparam
+ * telefone dele, se o WhatsApp souber (é o que o /mute e o bot.admins comparam
  * com quem manda a mensagem); senão, o próprio LID (dá para enviar a ele).
  */
 async function pessoaMencionada(digitos, mencoes) {

@@ -69,15 +69,17 @@ Por onde começar:
   `/set show.alert.edited off`; a edição continua guardada). As edições ficam 30 dias
   (setting `cache.editedRetentionDays`) e podem ser reexibidas com
   [`/show -e`](comandos/show.md). As suas próprias edições são ignoradas.
-- **Silenciar**: o [`/mudo`](comandos/mudo.md) corta os avisos de apagadas,
-  editadas e status de uma pessoa ou de um grupo (a mensagem continua guardada).
+- **Silenciar**: o [`/mute`](comandos/mute.md) corta os avisos de apagadas,
+  editadas e status de uma pessoa, de um grupo ou de uma comunidade (a mensagem
+  continua guardada); respondendo um aviso, silencia de onde ele veio. O
+  [`/unmute`](comandos/unmute.md) desfaz.
 - **Limpeza automática**: a cada 10 minutos o bot remove do banco/disco as
   mensagens comuns com mais de 68 h (janela máxima que o WhatsApp permite
   apagar), as apagadas e as editadas com mais de 30 dias, as ocorrências do
   `/watch` com mais de 30 dias (setting `watch.hitsRetentionDays`), os
   contadores do `/stats` com mais de 90 dias (setting `stats.retentionDays`),
   as enquetes com mais de 90 dias (setting `enquete.retentionDays`) e os
-  avisos ignorados pelo `/mudo` com mais de 30 dias.
+  avisos ignorados pelo `/mute` com mais de 30 dias.
 - **Estatísticas**: cada mensagem nova (e cada apagada/editada) soma 1 num
   contador por chat, dia, hora e remetente (tabela `stats`), usado pelo
   [`/stats`](comandos/stats.md). Só números, sem o texto; ficam 90 dias (setting
@@ -104,7 +106,7 @@ Por onde começar:
   bot envia o que venceu (os repetidos seguem para o próximo horário). Um
   `{/comando}` no texto roda na hora do envio e a resposta entra no lugar.
 - **Status diário**: com [`/bot -status 06h`](comandos/bot.md#status-do-bot), um relatório das
-  últimas 24 h (no ar, cache, watch, apagadas, editadas, `/mudo`) chega todo
+  últimas 24 h (no ar, cache, watch, apagadas, editadas, `/mute`) chega todo
   dia no seu privado.
 - **Backup**: todo dia, às 3h (setting `backup.hour`), o bot guarda uma cópia
   compactada do banco em `cache/backups`; o [`/backup`](comandos/backup.md)

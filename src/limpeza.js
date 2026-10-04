@@ -160,17 +160,20 @@ async function limparEnquetesAntigas() {
     }
 }
 
-// Avisos cortados pelo /mudo (mute_hits): 30 dias bastam para o /bot -status
+// Avisos cortados pelo /mute (mute_hits) e a origem dos avisos enviados (alerts): 30 dias bastam
 const MUTE_HITS_DIAS = 30;
 
 async function limparIgnoradasAntigas() {
     await dbPronto;
 
     try {
-        const res = await dbRun('DELETE FROM mute_hits WHERE at < ?', [Date.now() - MUTE_HITS_DIAS * DAY_MS]);
-        if (res.changes > 0) printInfo(`Limpeza: ${res.changes} registros antigos do /mudo removidos.`);
+        const limite = Date.now() - MUTE_HITS_DIAS * DAY_MS;
+        const res = await dbRun('DELETE FROM mute_hits WHERE at < ?', [limite]);
+        const avisos = await dbRun('DELETE FROM alerts WHERE created_at < ?', [limite]);
+        const total = res.changes + avisos.changes;
+        if (total > 0) printInfo(`Limpeza: ${total} registros antigos do /mute removidos.`);
     } catch (err) {
-        printError('Erro na limpeza do /mudo:', err.message);
+        printError('Erro na limpeza do /mute:', err.message);
     }
 }
 
