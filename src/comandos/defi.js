@@ -6,8 +6,9 @@ const { findCommand, getCommandSyntax } = require('./base');
 const { client } = require('../cliente');
 const { idsDoChatAtual } = require('../contatos');
 const { dbAll, dbGet, dbPronto, dbRun } = require('../db');
+const { posicoesAave } = require('../defi/aave');
 const { isEnderecoEvm } = require('../defi/hyperevm');
-const { ErroMorpho, posicoesMorpho } = require('../defi/morpho');
+const { posicoesMorpho } = require('../defi/morpho');
 const { detalhesDaPosicao, validarPosicao } = require('../defi/orca');
 const { posicoesDaCarteira } = require('../defi/prjx');
 const { isEnderecoSolana } = require('../defi/solana');
@@ -64,9 +65,9 @@ function barraDaFaixa(atual, inferior, superior) {
     return `▕${'─'.repeat(k)}●${'─'.repeat(N - k)}▏ ${Math.round(((atual - inferior) / (superior - inferior)) * 100)}% da faixa`;
 }
 
-const PROTOCOLOS = { morpho: 'Morpho', orca: 'Orca', prjx: 'Project X' };
+const PROTOCOLOS = { aave: 'Aave', morpho: 'Morpho', orca: 'Orca', prjx: 'Project X' };
 // Os que cadastram uma carteira (-wallet), e não uma posição (-address)
-const DE_CARTEIRA = ['morpho', 'prjx'];
+const DE_CARTEIRA = ['aave', 'morpho', 'prjx'];
 // Os que têm faixa (o -alerta)
 const COM_FAIXA = ['orca', 'prjx'];
 
@@ -115,7 +116,13 @@ function textoDaPosicaoPrjx(x, nome = null) {
  *   naFaixa: todas as posições na faixa (null: a carteira não tem nenhuma aberta)
  *   taxasUsd: as taxas a coletar em dólar (null: sem preço, num par sem stablecoin)
  */
-async function lerCadastro(p, end = curto) {
+async function lerCadastro(p, end = curto, { full = false } = {}) {
+    if (p.protocol === 'aave') {
+        const r = await posicoesAave(p.wallet);
+        const algo = r.redes.length || r.falhas.length;
+        return { naFaixa: null, textos: algo ? [textoAave(r, end, p.name, { full })] : [], foraDaFaixa: [], taxasUsd: null };
+    }
+
     if (p.protocol === 'morpho') {
         const r = await posicoesMorpho(p.wallet);
         return { naFaixa: null, textos: r.posicoes.length ? [textoMorpho(r, end, p.name)] : [], foraDaFaixa: [], taxasUsd: null };
@@ -212,10 +219,10 @@ function textoDaPosicao(d, end = curto) {
     return texto;
 }
 
-const EXEMPLOS = '💡 _/defi orca -address <endereço> -pool <endereço> -nft <mint>\n/defi prjx -wallet <0x...>\n/defi morpho -wallet <0x...>_';
+const EXEMPLOS = '💡 _/defi orca -address <endereço> -pool <endereço> -nft <mint>\n/defi prjx -wallet <0x...>\n/defi morpho -wallet <0x...>\n/defi aave -wallet <0x...>_';
 
 // A palavra do protocolo: /defi orca, /defi prjx -wallet ..., /defi morpho
-const PALAVRAS = { morpho: 'morpho', orca: 'orca', prjx: 'prjx' };
+const PALAVRAS = { aave: 'aave', morpho: 'morpho', orca: 'orca', prjx: 'prjx' };
 const protocoloDe = (palavra) => PALAVRAS[String(palavra ?? '').toLowerCase()] ?? null;
 
 async function limiteOuRepetida(msg, protocolo, endereco, end) {
@@ -237,14 +244,27 @@ async function limiteOuRepetida(msg, protocolo, endereco, end) {
  * posição aberta, cadastra e avisa.
  */
 const LER_CARTEIRA = {
-    prjx: async (carteira) => (await posicoesDaCarteira(carteira)).length,
-    morpho: async (carteira) => (await posicoesMorpho(carteira)).posicoes.length
+    prjx: async (carteira) => ({ abertas: (await posicoesDaCarteira(carteira)).length }),
+    morpho: async (carteira) => {
+        const r = await posicoesMorpho(carteira);
+        return { abertas: r.posicoes.length, texto: (end, nome) => textoMorpho(r, end, nome) };
+    },
+    aave: async (carteira) => {
+        const r = await posicoesAave(carteira);
+        const abertas = r.redes.reduce((s, x) => s + x.fornecidos.length + x.dividas.length, 0);
+        return { abertas, texto: (end, nome, full) => textoAave(r, end, nome, { full }) };
+    }
 };
 const DICA_DA_CARTEIRA = {
     prjx: '💡 _O RPC público da HyperEVM limita as consultas; um RPC próprio vai no setting defi.hyperevm.rpc._',
-    morpho: '💡 _Tente de novo em alguns instantes._'
+    morpho: '💡 _Tente de novo em alguns instantes._',
+    aave: '💡 _Tente de novo em alguns instantes; um RPC próprio vai no ETHEREUM_RPC_URL e no BASE_RPC_URL._'
 };
 
+/*
+ * O Morpho e o Aave já mostram a posição no cadastro (com -full, a do Aave
+ * completa); o Project X, que costuma ter várias, fica para o /defi prjx.
+ */
 async function cadastrarCarteira(msg, o, protocolo, end) {
     const carteira = String(o.wallet ?? '').trim().replace(/^<(.*)>$/, '$1');
     const protocoloNome = PROTOCOLOS[protocolo];
@@ -269,8 +289,9 @@ async function cadastrarCarteira(msg, o, protocolo, end) {
     if (await limiteOuRepetida(msg, protocolo, carteira, end)) return;
 
     let abertas;
+    let texto;
     try {
-        abertas = await LER_CARTEIRA[protocolo](carteira);
+        ({ abertas, texto } = await LER_CARTEIRA[protocolo](carteira));
     } catch (err) {
         printError(`/defi ${protocolo} ${carteira}:`, err.message);
         await msg.reply(`⚠️ Não consegui ler a carteira agora: ${err.motivo ?? `${err.message}.`}\n${DICA_DA_CARTEIRA[protocolo]}`);
@@ -282,6 +303,7 @@ async function cadastrarCarteira(msg, o, protocolo, end) {
     await msg.reply(`✅ *Carteira do ${protocoloNome} cadastrada:* ${apelido ? `${apelido} (${end(carteira)})` : end(carteira)}\n` +
         (abertas ? `📍 ${plural(abertas, 'posição aberta', 'posições abertas')}.` : `ℹ️ Nenhuma posição aberta agora: o /defi ${protocolo} mostra quando houver.`) +
         `\n💡 _Veja com /defi ${protocolo}_`);
+    if (abertas && texto) await msg.reply(texto(end, apelido, Boolean(o.full)));
     return carteira.toLowerCase();
 }
 
@@ -291,7 +313,7 @@ async function cadastrarCarteira(msg, o, protocolo, end) {
  */
 async function cadastrar(msg, { opt: o, given }, protocolo, end) {
     if (!protocolo) {
-        await msg.reply(`❌ Informe o protocolo antes do -address ou do -wallet: orca, prjx ou morpho.\n${EXEMPLOS}`);
+        await msg.reply(`❌ Informe o protocolo antes do -address ou do -wallet: orca, prjx, morpho ou aave.\n${EXEMPLOS}`);
         return null;
     }
     if (DE_CARTEIRA.includes(protocolo)) {
@@ -339,17 +361,17 @@ const DICA_RPC = {
     prjx: '💡 _O RPC público da HyperEVM limita as consultas; um RPC próprio vai no setting defi.hyperevm.rpc._'
 };
 
-async function mostrar(msg, posicoes, end) {
+async function mostrar(msg, posicoes, end, { full = false } = {}) {
     for (const p of posicoes) {
         try {
-            const { textos } = await lerCadastro(p, end);
+            const { textos } = await lerCadastro(p, end, { full });
             if (!textos.length) await msg.reply(`🌊 ${descrever(p, end)}: nenhuma posição aberta.`);
             for (const texto of textos) await msg.reply(texto);
         } catch (err) {
             printError(`/defi ${enderecoDo(p)}:`, err.response?.status ?? '', err.message);
-            // O Morpho já traz o motivo legível (e os detalhes ficaram no log)
-            await msg.reply(err instanceof ErroMorpho
-                ? `⚠️ Não consegui ler ${descrever(p, end)} agora: ${err.motivo}\n${DICA_DA_CARTEIRA.morpho}`
+            // O Morpho e o Aave já trazem o motivo legível (e os detalhes ficaram no log)
+            await msg.reply(err.motivo
+                ? `⚠️ Não consegui ler ${descrever(p, end)} agora: ${err.motivo}\n${DICA_DA_CARTEIRA[p.protocol] ?? ''}`
                 : `⚠️ Não consegui ler ${descrever(p, end)} agora: ${err.message}.\n${DICA_RPC[p.protocol] ?? ''}`);
         }
     }
@@ -370,12 +392,13 @@ const fmtHf = (hf) => (hf === Infinity ? '∞' : hf === null ? 'N/A'
     : hf.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
 
 /*
- * Quantidade de um token: stablecoin com 2 casas; o resto (cbBTC, WETH...) com
- * até 8, sem os zeros que sobram no fim.
+ * Quantidade de um token: stablecoin com 2 casas; BTC (cbBTC, WBTC...) com até
+ * 8; ETH e os outros com até 6. Sem os zeros que sobram no fim.
  */
 function fmtQtdToken(qtd, t) {
     if (ESTAVEL.test(t.simbolo)) return qtd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const max = Math.min(Number.isInteger(t.decimals) ? t.decimals : 8, 8);
+    const casas = /BTC/i.test(t.simbolo) ? 8 : 6;
+    const max = Math.min(Number.isInteger(t.decimals) ? t.decimals : casas, casas);
     return qtd.toLocaleString('en-US', { minimumFractionDigits: Math.min(2, max), maximumFractionDigits: max });
 }
 
@@ -465,35 +488,142 @@ function textoMorpho(r, end = curto, nome = null) {
 }
 
 /*
- * /defi morpho sem nada cadastrado: a carteira do MORPHO_WALLET_ADDRESS (ou do
- * setting defi.morpho.wallet), consultada na hora.
+ * Aave: o texto (os dados vêm de src/defi/aave.js). O curto traz o líquido, o
+ * Health Factor e os ativos; o -full, o risco, as taxas, o que é colateral e
+ * a configuração. Cada rede tem o seu Health Factor: nunca um só, misturado.
  */
-async function mostrarMorphoDoEnv(msg, end) {
-    const carteira = envOuSetting('MORPHO_WALLET_ADDRESS', 'defi.morpho.wallet');
+function itemAaveCurto(x) {
+    return [
+        `${iconeDoToken(x.simbolo)} *${x.simbolo}*`,
+        x.qtd !== null && `\`${fmtQtdToken(x.qtd, x)} ${x.simbolo}\``,
+        x.usd !== null && `\`${fmtUsd(x.usd)}\``
+    ].filter(Boolean).join('\n');
+}
+
+function itemAaveFull(x, divida) {
+    return [
+        `*${x.simbolo}*`,
+        x.qtd !== null && `Amount: \`${fmtQtdToken(x.qtd, x)}\``,
+        x.usd !== null && `Value: \`${fmtUsd(x.usd)}\``,
+        !divida && `Collateral: \`${x.colateral ? 'Yes' : 'No'}\``,
+        x.apy !== null && `${divida ? 'Borrow' : 'Supply'} APY: \`${fmtPct(x.apy)}\``,
+        divida && `Rate Mode: \`${x.modo}\``
+    ].filter(Boolean).join('\n');
+}
+
+// O resumo da rede: o curto (com destaque, numa rede só) ou o técnico (-full)
+function resumoAave(x, { full, destaque }) {
+    const semPreco = x.semPreco.length ? `\n_Sem preço (fora dos totais): ${x.semPreco.join(', ')}_` : '';
+    if (!full) {
+        return destaque
+            ? `💰 *Posição líquida*\n\`${fmtUsdComSinal(x.liquidoUsd)}\`\n\n❤️ *Health Factor*\n\`${fmtHf(x.hf)}\`${semPreco}`
+            : `Net: \`${fmtUsdComSinal(x.liquidoUsd)}\`\nHealth Factor: \`${fmtHf(x.hf)}\`${semPreco}`;
+    }
+
+    const risco = [
+        x.ltvAtual !== null && `LTV atual: \`${fmtPct(x.ltvAtual)}\``,
+        `LTV máximo: \`${fmtPct(x.ltvMaximo)}\``,
+        `Liquidation Threshold: \`${fmtPct(x.liquidationThreshold)}\``,
+        `Available Borrows: \`${fmtUsd(x.disponivelUsd)}\``,
+        `Collateral (risco): \`${fmtUsd(x.colateralUsd)}\``,
+        x.precoLiquidacao && `Preço de liquidação (${x.precoLiquidacao.simbolo}): \`${fmtUsd(x.precoLiquidacao.usd)}\``,
+        x.liquidacaoAmbigua && '⚠️ _Preço de liquidação individual não é determinístico com múltiplos collaterals._'
+    ].filter(Boolean).join('\n');
+
+    return `💰 Net Position: \`${fmtUsdComSinal(x.liquidoUsd)}\`\n` +
+        `📥 Supplied: \`${fmtUsd(x.fornecidoUsd)}\`\n` +
+        `📤 Borrowed: \`${fmtUsd(x.dividaUsd)}\`${semPreco}\n\n` +
+        `❤️ Health Factor: \`${fmtHf(x.hf)}\`\n\n📊 *Risco*\n${risco}`;
+}
+
+// As seções de uma rede: o resumo e os ativos (e, no -full, a configuração)
+function secoesAave(x, { full, titulo }) {
+    const { fornecidos, dividas } = x;
+    const lista = (itens, divida) => itens.map(i => (full ? itemAaveFull(i, divida) : itemAaveCurto(i))).join('\n\n');
+    const secoes = [
+        `${titulo}${resumoAave(x, { full, destaque: !titulo.startsWith('🌐') })}`,
+        fornecidos.length && `📥 *SUPPLIED*\n\n${lista(fornecidos, false)}`,
+        dividas.length && `📤 *${full ? 'DEBT' : 'BORROWED'}*\n\n${lista(dividas, true)}`
+    ];
+
+    if (full) {
+        const emode = x.emode ? `Enabled (${x.emode.nome || `categoria ${x.emode.id}`})` : 'Disabled';
+        const isolamento = x.isolamento
+            ? `Yes (${x.isolamento.simbolo}, debt ceiling ${fmtUsd(x.isolamento.tetoUsd)})`
+            : 'No';
+        secoes.push(`⚙️ *CONFIGURAÇÃO*\n\neMode: \`${emode}\`\nIsolation Mode: \`${isolamento}\``);
+    }
+    return secoes.filter(Boolean);
+}
+
+/**
+ * A mensagem do /defi aave: numa rede só, ela direto; em várias, o total
+ * global e cada rede com o seu Health Factor.
+ */
+function textoAave(r, end = curto, nome = null, { full = false } = {}) {
+    const titulo = `🟣 *AAVE V3${full ? ' — FULL' : ''}*`;
+    const redes = r.redes;
+    const secoes = [];
+
+    if (redes.length === 1) {
+        secoes.push(...secoesAave(redes[0], { full, titulo: `${titulo} · ${redes[0].rede}\n\n` }));
+    } else {
+        const total = redes.reduce((s, x) => s + x.liquidoUsd, 0);
+        secoes.push(`${titulo}\n\n💰 *TOTAL GLOBAL*\nNet: \`${fmtUsdComSinal(total)}\``);
+        for (const x of redes) secoes.push(secoesAave(x, { full, titulo: `🌐 *${x.rede}*\n\n` }).join('\n\n'));
+    }
+
+    if (r.falhas.length) {
+        secoes.push(r.falhas.map(f => `⚠️ *${f.rede}*: ${f.motivo}`).join('\n'));
+    }
+
+    secoes.push(`👛 Carteira: ${nome ? `${nome} · ` : ''}\`${end(r.carteira)}\`\n` +
+        `🌐 ${redes.length > 1 ? 'Redes' : 'Rede'}: \`${redes.map(x => x.rede).join(', ') || '-'}\`\n` +
+        `🕐 Atualizado: \`${new Date(r.quando).toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo' })}\``);
+
+    return secoes.join(`\n\n${SEPARADOR}\n\n`);
+}
+
+/*
+ * /defi morpho ou /defi aave sem nada cadastrado: a carteira do .env
+ * (MORPHO_WALLET_ADDRESS, AAVE_WALLET_ADDRESS) ou do setting, consultada na hora.
+ */
+const DO_ENV = {
+    morpho: {
+        nome: 'Morpho', env: 'MORPHO_WALLET_ADDRESS', setting: 'defi.morpho.wallet', ler: posicoesMorpho,
+        vazio: (r) => !r.posicoes.length,
+        semPosicao: (end, carteira) => `🦋 *MORPHO*\n\nNenhuma posição aberta na carteira \`${end(carteira)}\` (chain ${getSetting('defi.morpho.chains').join(', ')}).`,
+        texto: (r, end) => textoMorpho(r, end)
+    },
+    aave: {
+        nome: 'Aave', env: 'AAVE_WALLET_ADDRESS', setting: 'defi.aave.wallet', ler: posicoesAave,
+        vazio: (r) => !r.redes.length && !r.falhas.length,
+        semPosicao: (end, carteira) => `🟣 *AAVE V3*\n\nNenhuma posição aberta na carteira \`${end(carteira)}\` (chain ${getSetting('defi.aave.chains').join(', ')}).`,
+        texto: (r, end, full) => textoAave(r, end, null, { full })
+    }
+};
+
+async function mostrarDoEnv(msg, protocolo, end, full) {
+    const d = DO_ENV[protocolo];
+    const carteira = envOuSetting(d.env, d.setting);
     if (!carteira) {
-        await msg.reply('❌ Endereço da carteira Morpho não configurado.\n\n' +
-            'Configure MORPHO_WALLET_ADDRESS no arquivo .env (ou /set defi.morpho.wallet <0x...>), ' +
-            'ou cadastre a carteira: /defi morpho -wallet <0x...>');
+        await msg.reply(`❌ Endereço da carteira ${d.nome} não configurado.\n\n` +
+            `Configure ${d.env} no arquivo .env (ou /set ${d.setting} <0x...>), ` +
+            `ou cadastre a carteira: /defi ${protocolo} -wallet <0x...>`);
         return;
     }
 
     let r;
     try {
-        r = await posicoesMorpho(carteira);
+        r = await d.ler(carteira);
     } catch (err) {
-        if (!(err instanceof ErroMorpho)) printError('[MORPHO] Erro inesperado:', err.message);
-        await msg.reply(`❌ *Erro ao consultar Morpho*\n\n${err instanceof ErroMorpho ? err.motivo : 'Não foi possível obter os dados neste momento.'}\n\n` +
+        if (!err.motivo) printError(`[${d.nome.toUpperCase()}] Erro inesperado:`, err.message);
+        await msg.reply(`❌ *Erro ao consultar ${d.nome}*\n\n${err.motivo ?? 'Não foi possível obter os dados neste momento.'}\n\n` +
             'Tente novamente em alguns instantes.');
         return;
     }
 
-    if (!r.posicoes.length) {
-        const redes = getSetting('defi.morpho.chains').join(', ');
-        await msg.reply(`🦋 *MORPHO*\n\nNenhuma posição aberta na carteira \`${end(carteira)}\` (chain ${redes}).`);
-        return;
-    }
-
-    await msg.reply(textoMorpho(r, end));
+    await msg.reply(d.vazio(r) ? d.semPosicao(end, carteira) : d.texto(r, end, full));
 }
 
 /*
@@ -774,16 +904,16 @@ async function cmdDefi({ msg, opts: optsDoComando, args, chatId }) {
     }
 
     if (argv.length) {
-        await msg.reply(`❌ "${argv[0]}" não é um protocolo: use orca, prjx ou morpho.\n\n\`\`\`${getCommandSyntax('/defi')}\`\`\``);
+        await msg.reply(`❌ "${argv[0]}" não é um protocolo: use orca, prjx, morpho ou aave.\n\n\`\`\`${getCommandSyntax('/defi')}\`\`\``);
         return;
     }
 
     // /defi: o Position Details de todos; /defi orca, prjx ou morpho: só dele
     const escolhidas = posicoes.filter(x => !protocolo || x.protocol === protocolo);
 
-    // Morpho sem cadastro: a carteira do .env (ou do setting), consultada na hora
-    if (protocolo === 'morpho' && !escolhidas.length) {
-        await mostrarMorphoDoEnv(msg, end);
+    // Morpho e Aave sem cadastro: a carteira do .env (ou do setting), consultada na hora
+    if (DO_ENV[protocolo] && !escolhidas.length) {
+        await mostrarDoEnv(msg, protocolo, end, Boolean(o.full));
         return;
     }
 
@@ -791,7 +921,7 @@ async function cmdDefi({ msg, opts: optsDoComando, args, chatId }) {
         await msg.reply(protocolo ? `🌊 Nada cadastrado ${protocolo === 'prjx' ? 'do Project X' : 'da Orca'}.\n${EXEMPLOS}` : vazio);
         return;
     }
-    await mostrar(msg, escolhidas, end);
+    await mostrar(msg, escolhidas, end, { full: Boolean(o.full) });
 }
 
 module.exports = {
@@ -804,6 +934,7 @@ module.exports = {
     fmtUsd,
     lerCadastro,
     textoDaPosicao,
+    textoAave,
     textoDaPosicaoPrjx,
     textoMorpho
 };
