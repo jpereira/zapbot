@@ -631,12 +631,7 @@
                     "values": [
                         "<nome>"
                     ],
-                    "desc": "Com -wallet: um nome para a carteira (opcional, até 40 caracteres), mostrado junto do endereço. Com espaços, sem aspas. Numa carteira já cadastrada, troca o nome. Ex: /defi prjx -wallet <0x...> -n Carteira Hare",
-                    "protocolos": [
-                        "prjx",
-                        "morpho",
-                        "aave"
-                    ],
+                    "desc": "Com -address ou -wallet: um nome para a posição ou a carteira (opcional, até 40 caracteres), mostrado junto do endereço. Com espaços, com ou sem aspas. Numa já cadastrada, troca o nome. Ex: /defi orca -address <endereço> -n \"Posição TAL\", /defi prjx -wallet <0x...> -n Carteira Hare",
                     "cron": false
                 },
                 {
@@ -731,7 +726,7 @@
             "protocolos": {
                 "orca": {
                     "nome": "Orca",
-                    "usage": "/defi orca  ou  /defi orca -address <endereço> [-pool <endereço>] [-nft <mint>] [-alerta [valor]]",
+                    "usage": "/defi orca  ou  /defi orca -address <endereço> [-pool <endereço>] [-nft <mint>] [-name <nome>] [-alerta [valor]]",
                     "help": "Posições de liquidez da Orca (Whirlpools, na Solana): saldo, faixa, preço e taxas a coletar, lidos on-chain. Cada posição é cadastrada pelo endereço dela (-address). Ex: /defi orca, /defi orca -address <endereço> -alerta 2000"
                 },
                 "prjx": {

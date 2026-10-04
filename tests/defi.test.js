@@ -163,6 +163,16 @@ describe('/defi', () => {
         assert.match(r, new RegExp(`778\\.16\\d* SOL \\(\\$${Math.round(778.16 * usdSol).toLocaleString('en-US').slice(0, 4)}`));
     });
 
+    test('orca -name: entre aspas, na lista, no /defi e no -rm; de novo, troca', async () => {
+        assert.equal((await bot.responder(`${CADASTRO} -n "Posição TAL"`))[0],
+            '✅ *Posição da Orca cadastrada:* Posição TAL (Hz15…RaPZ)\n💡 _Veja com /defi orca_');
+        assert.match((await bot.responder('/defi -l'))[0], /1\. Orca · Posição TAL \(Hz15…RaPZ\) · pool CeaZ…QpbN _/);
+        assert.match((await bot.responder('/defi orca'))[0], /\n📍 Posição TAL \(Hz15…RaPZ\) · ✅/);
+        assert.equal((await bot.responder(`/defi orca -address ${POSICAO} -n Outro Nome`))[0],
+            '✏️ *Nome trocado:* Orca · Outro Nome (Hz15…RaPZ)');
+        assert.equal((await bot.responder('/defi -rm 1'))[0], '🗑️ Removido: Orca · Outro Nome (Hz15…RaPZ)');
+    });
+
     test('/defi orca, palavra desconhecida, -rm e as mensagens de lista vazia', async () => {
         await bot.responder(CADASTRO);
         assert.match((await bot.responder('/defi orca'))[0], /Orca · SOL\/cbBTC/);
@@ -540,7 +550,7 @@ describe('/defi: Project X (HyperEVM)', () => {
         assert.equal((await bot.responder(`/defi prjx -n Hare 2 -wallet ${CARTEIRA}`))[0],
             '✏️ *Nome trocado:* Project X · Hare 2 (0x92…0444)');
 
-        await erro('/defi prjx -n Sozinho', /❌ O -name vai junto com o -wallet: \/defi prjx -wallet <0x\.\.\.> -n <nome>/);
+        await erro('/defi prjx -n Sozinho', /❌ O -name vai junto com o cadastro: \/defi orca -address <endereço> -n <nome> ou \/defi prjx -wallet/);
         await erro(`/defi prjx -wallet ${VAZIA} -n ${'x'.repeat(41)}`, /❌ O nome tem até 40 caracteres/);
         assert.equal((await bot.responder('/defi -rm 1'))[0], '🗑️ Removido: Project X · Hare 2 (0x92…0444)');
     });

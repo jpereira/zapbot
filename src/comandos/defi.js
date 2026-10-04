@@ -76,15 +76,17 @@ const enderecoDo = (p) => p.address ?? p.wallet;
 
 /*
  * "Orca · Hz15…RaPZ", "Project X · carteira 0x92…0444" ou, com o -name,
- * "Project X · Carteira Hare (0x92…0444)". O end diz como o endereço aparece:
- * abreviado (o padrão) ou inteiro (no seu privado).
+ * "Orca · Posição TAL (Hz15…RaPZ)" e "Project X · Carteira Hare (0x92…0444)".
+ * O end diz como o endereço aparece: abreviado (o padrão) ou inteiro (no seu
+ * privado).
  */
 const carteiraComNome = (p, end) => (p.name ? `${p.name} (${end(p.wallet)})` : `carteira ${end(p.wallet)}`);
+const posicaoComNome = (p, end) => (p.name ? `${p.name} (${end(p.address)})` : end(p.address));
 const descrever = (p, end = curto) => (DE_CARTEIRA.includes(p.protocol)
     ? `${PROTOCOLOS[p.protocol]} · ${carteiraComNome(p, end)}`
-    : `${PROTOCOLOS[p.protocol] ?? p.protocol} · ${end(p.address)}`);
+    : `${PROTOCOLOS[p.protocol] ?? p.protocol} · ${posicaoComNome(p, end)}`);
 
-// O nome da carteira (-name): até 40 caracteres, numa linha
+// O nome da posição ou da carteira (-name): até 40 caracteres, numa linha
 const MAX_NOME = 40;
 
 /**
@@ -140,7 +142,7 @@ async function lerCadastro(p, end = curto, { full = false } = {}) {
     }
 
     const d = await detalhesDaPosicao(p.address, p.pool);
-    const texto = textoDaPosicao(d, end);
+    const texto = textoDaPosicao(d, end, p.name);
     const emUsd = (qtd, token) => (Number(qtd) / 10 ** token.decimals) * Number(token.priceUsdc ?? 0);
     return {
         naFaixa: d.calculo.naFaixa,
@@ -153,7 +155,7 @@ async function lerCadastro(p, end = curto, { full = false } = {}) {
 /**
  * Texto do "Position Details" de uma posição da Orca.
  */
-function textoDaPosicao(d, end = curto) {
+function textoDaPosicao(d, end = curto, nome = null) {
     const { calculo: c, tokenA, tokenB, infoPool } = d;
     const simA = tokenA.metadata?.symbol ?? infoPool.tokenA?.symbol ?? 'A';
     const simB = tokenB.metadata?.symbol ?? infoPool.tokenB?.symbol ?? 'B';
@@ -178,7 +180,7 @@ function textoDaPosicao(d, end = curto) {
         : `⚠️ *fora da faixa* (preço ${atual < inferior ? 'abaixo' : 'acima'}: a posição não rende taxas)`;
 
     let texto = `🌊 *Orca · ${simA}/${simB}* · taxa ${(d.pool.feeRate / 10000).toLocaleString('en-US', { maximumFractionDigits: 2 })}%\n` +
-        `📍 ${end(d.endereco)} · ${status}\n\n` +
+        `📍 ${nome ? `${nome} (${end(d.endereco)})` : end(d.endereco)} · ${status}\n\n` +
         `💰 *Saldo:* ${fmtUsd(qtdA * usdA + qtdB * usdB)}\n` +
         `   • ${fmtQtd(qtdA)} ${simA} (${fmtUsd(qtdA * usdA)})\n` +
         `   • ${fmtQtd(qtdB)} ${simB} (${fmtUsd(qtdB * usdB)})\n\n` +
@@ -341,6 +343,13 @@ async function cadastrar(msg, { opt: o, given }, protocolo, end) {
         return;
     }
 
+    // Já cadastrada, com -name: troca o nome
+    const existente = await dbGet('SELECT * FROM defi_positions WHERE protocol = ? AND address = ?', ['orca', endereco]);
+    if (existente && o.name) {
+        await dbRun('UPDATE defi_positions SET name = ? WHERE id = ?', [o.name, existente.id]);
+        await msg.reply(`✏️ *Nome trocado:* ${descrever({ ...existente, name: o.name }, end)}`);
+        return;
+    }
     if (await limiteOuRepetida(msg, 'orca', endereco, end)) return;
 
     const r = await validarPosicao({ endereco, nft, pool });
@@ -349,10 +358,11 @@ async function cadastrar(msg, { opt: o, given }, protocolo, end) {
         return;
     }
 
-    await dbRun('INSERT INTO defi_positions (protocol, address, nft, pool, created_at) VALUES (?, ?, ?, ?, ?)',
-        ['orca', endereco, r.posicao.mint, r.posicao.whirlpool, Date.now()]);
+    await dbRun('INSERT INTO defi_positions (protocol, address, name, nft, pool, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+        ['orca', endereco, o.name || null, r.posicao.mint, r.posicao.whirlpool, Date.now()]);
 
-    await msg.reply(`✅ *Posição da Orca cadastrada:* ${end(endereco)}\n💡 _Veja com /defi orca_`);
+    const cadastrada = posicaoComNome({ address: endereco, name: o.name || null }, end);
+    await msg.reply(`✅ *Posição da Orca cadastrada:* ${cadastrada}\n💡 _Veja com /defi orca_`);
     return endereco;
 }
 
@@ -829,7 +839,7 @@ const sinoDoAlerta = (p) => (p.alert ? ` 🔔${p.alert_fees ? ` ≥ ${fmtUsd(p.a
 // A lista: no seu privado, os endereços inteiros; fora dele, abreviados
 function textoDaLista(posicoes, end) {
     const linha = (p, i) => `${i + 1}. ${PROTOCOLOS[p.protocol] ?? p.protocol} · ` +
-        (DE_CARTEIRA.includes(p.protocol) ? carteiraComNome(p, end) : `${end(p.address)} · pool ${end(p.pool)}`) +
+        (DE_CARTEIRA.includes(p.protocol) ? carteiraComNome(p, end) : `${posicaoComNome(p, end)} · pool ${end(p.pool)}`) +
         ` _(desde ${formatarData(p.created_at).split(',')[0]})_${sinoDoAlerta(p)}`;
 
     return `🌊 *Posições DeFi* (${posicoes.length})\n\n${posicoes.map(linha).join('\n')}\n\n` +
@@ -862,14 +872,15 @@ async function cmdDefi({ msg, opts: optsDoComando, args, chatId }) {
     const protocolo = protocoloDe(palavra);
 
     /*
-     * -name: o nome da carteira, com espaços (-n Carteira Hare). O parser
-     * separa as palavras; as que sobram no argv são do nome.
+     * -name: o nome da posição ou da carteira, com espaços (-n Carteira Hare,
+     * ou entre aspas). O parser separa as palavras; as que sobram no argv são
+     * do nome.
      */
     if (opts.given.has('name')) {
         const nome = [o.name, ...argv].filter(Boolean).join(' ').trim();
         argv.length = 0;
-        const erro = !opts.given.has('wallet')
-            ? `❌ O -name vai junto com o -wallet: /defi ${protocolo && DE_CARTEIRA.includes(protocolo) ? protocolo : 'prjx'} -wallet <0x...> -n <nome>`
+        const erro = !opts.given.has('wallet') && !opts.given.has('address')
+            ? '❌ O -name vai junto com o cadastro: /defi orca -address <endereço> -n <nome> ou /defi prjx -wallet <0x...> -n <nome>'
             : !nome ? '❌ Informe o nome: -n <nome> (ex.: -n Carteira Hare).'
                 : nome.length > MAX_NOME ? `❌ O nome tem até ${MAX_NOME} caracteres.` : null;
         if (erro) {
