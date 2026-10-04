@@ -614,6 +614,21 @@
                 },
                 {
                     "opts": [
+                        "name",
+                        "n"
+                    ],
+                    "values": [
+                        "<nome>"
+                    ],
+                    "desc": "Com -wallet: um nome para a carteira (opcional, até 40 caracteres), mostrado junto do endereço. Com espaços, sem aspas. Numa carteira já cadastrada, troca o nome. Ex: /defi prjx -wallet <0x...> -n Carteira Hare",
+                    "protocolos": [
+                        "prjx",
+                        "morpho"
+                    ],
+                    "cron": false
+                },
+                {
+                    "opts": [
                         "nft"
                     ],
                     "values": [
@@ -708,12 +723,12 @@
                 },
                 "prjx": {
                     "nome": "Project X",
-                    "usage": "/defi prjx  ou  /defi prjx -wallet <0x...> [-alerta [valor]]",
+                    "usage": "/defi prjx  ou  /defi prjx -wallet <0x...> [-name <nome>] [-alerta [valor]]",
                     "help": "Posições de liquidez do Project X (na HyperEVM): saldo, faixa, preço e taxas a coletar, lidos on-chain. Cadastre a carteira (-wallet): o bot lê todas as posições abertas dela. Ex: /defi prjx, /defi prjx -wallet <0x...> -alerta"
                 },
                 "morpho": {
                     "nome": "Morpho",
-                    "usage": "/defi morpho  ou  /defi morpho -wallet <0x...>",
+                    "usage": "/defi morpho  ou  /defi morpho -wallet <0x...> [-name <nome>]",
                     "help": "Posição, empréstimos e risco no Morpho (na Base e nas redes do setting defi.morpho.chains): colateral, dívida, Health Rate, LTV, LLTV e preço de liquidação de cada mercado, e os vaults. Cadastre a carteira (-wallet); sem cadastro, vale a do MORPHO_WALLET_ADDRESS (ou do setting defi.morpho.wallet). Ex: /defi morpho, /defi morpho -wallet <0x...>"
                 }
             }
