@@ -9,8 +9,8 @@ máxima e mínima do dia e variação (🟢 alta, 🔴 queda). Suportadas: `USD`
 |---|---|---|
 | *(nenhuma)* | `[MOEDA...]` | Cotação das habilitadas, ou só das moedas informadas |
 | `-list`, `-l` | | Lista as suportadas; as habilitadas vêm com ✅ |
-| `-add`, `-a` | `<MOEDA>` | Habilita uma moeda suportada (só o dono do bot ou um admin do [`bot.admins`](bot.md#admins-extras)) |
-| `-del`, `-d` | `<MOEDA>` | Desabilita uma moeda (só o dono do bot ou um admin do [`bot.admins`](bot.md#admins-extras)) |
+| `-add`, `-a` | `<MOEDA>` | Habilita uma moeda suportada (só o dono do bot ou um [admin](bot.md#admins-extras)) |
+| `-del`, `-d` | `<MOEDA>` | Desabilita uma moeda (só o dono do bot ou um [admin](bot.md#admins-extras)) |
 | `-alerta` | `[regra]` | Sem regra, lista os alertas; com regra (ex.: `USD > 5.30`), cria um. A moeda também pode vir antes: `/cotacao USD -alerta > 5.30`. Veja [Alertas de preço](#alertas-de-preço) |
 | `-msg` | `<texto>` | Junto com `-alerta`: o texto vai no início do aviso. Vai até o fim do comando. Veja [Mensagem no aviso](#mensagem-no-aviso) |
 | `-rm` | `<nº...\|all>` | Junto com `-alerta`: remove os alertas com esses nºs (`-rm 2`, `-rm 1 2 3` ou `-rm 1,2,3`), ou todos (`all`). Se algum nº não existe, nenhum sai |

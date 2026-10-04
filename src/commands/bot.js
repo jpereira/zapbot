@@ -587,7 +587,8 @@ async function reset(msg, { chatId, forcar: force }) {
     await msg.reply(`♻️ *Padrão restaurado:* bot ligado, sem admins extras e sem usuários.\n\n${botState()}`);
 }
 
-const USAGE = '❌ Uso: /bot [-on|-off] [-users|-all-users]  ou  /bot +o|-o|+v|-v [pessoa...] [-all-users]  ou  /bot -reset [force]  ou  ' +
+const USAGE = '❌ Uso: /bot [-on|-off] [-users|-all-users]  ou  ' +
+    '/bot +o|-o|+v|-v [+cmd|-cmd <comandos>] [pessoa...] [-all-users]  ou  /bot -reset [force]  ou  ' +
     '/bot -status [<hora>|off] [-to <destino>]...  ou  /bot -info\n💡 _/bot -h para ajuda_';
 
 async function cmdBot({ msg, opts: commandOpts, args, chatId, isGroup }) {
