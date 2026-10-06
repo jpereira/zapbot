@@ -11,6 +11,7 @@ const { printError, printInfo } = require('../log');
 const { getSetting } = require('../settings');
 const { formatData } = require('../util/format');
 const { compileRuleWatch } = require('./rules');
+const { headerOrigin } = require('../util/origin');
 
 async function checkWatch({ msg, msgIdPure, body, chatId, chatName, isGroup, senderName, senderNumber, timestamp }) {
     // Your messages are left out: including /watch's own notices in your private chat
@@ -49,9 +50,7 @@ async function checkWatch({ msg, msgIdPure, body, chatId, chatName, isGroup, sen
     if (!freshAlt2.length) return;
 
     const details =
-        (isGroup ? `👥 *Grupo:* ${chatName}\n` : '') +
-        `👤 *Nome:* ${senderName}\n` +
-        `📱 *Número:* ${senderNumber ? `+${senderNumber}` : 'Número indisponível'}\n` +
+        headerOrigin({ chatId, chatName, isGroup, senderName, senderNumber }) +
         `📅 *Enviada em:* ${formatData(timestamp)}\n` +
         `💬 *Texto:* "${await resolverMentions(body, msg.mentionedIds)}"`;
 

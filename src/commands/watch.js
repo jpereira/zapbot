@@ -3,7 +3,7 @@
  */
 
 const { findCommand, getCommandSyntax } = require('./base');
-const { resolverMentions, groupResolverName } = require('../contacts');
+const { resolverMentions, channelResolverName, groupResolverName } = require('../contacts');
 const { dbAll, dbGet, dbReady, dbRun } = require('../db');
 const {
     destinationColumns, describeDestinations, lineDestination, destinationsSaved, extractDestinations, recipientsDe,
@@ -13,6 +13,7 @@ const { printInfo } = require('../log');
 const { GetOptFromCommand } = require('../options');
 const { getSetting, setSetting } = require('../settings');
 const { formatData, plural, summarizeText } = require('../util/format');
+const { isChannelAlt } = require('../util/origin');
 const { RULE_REGEX } = require('../watch/rules');
 
 /*
@@ -228,7 +229,10 @@ async function cmdWatch({ msg, opts: commandOpts, args: commandArgs }) {
         for (const [i, h] of rows.entries()) {
             // Current group name (the stored one may be the "Grupo <id>" fallback or out of date)
             const group = h.is_group ? (await groupResolverName(h.chat_id)) || h.chat_name : null;
-            const whereAlt = h.is_group ? `👥 ${group} · 👤 ${h.sender_name}` : `👤 ${h.sender_name}`;
+            const channel = isChannelAlt(h.chat_id)
+                ? (await channelResolverName(h.chat_id)) || h.chat_name : null;
+            const whereAlt = channel ? `📰 ${channel}`
+                : h.is_group ? `👥 ${group} · 👤 ${h.sender_name}` : `👤 ${h.sender_name}`;
             const n = rules.indexOf(h.rule) + 1;
             const which = rule === null ? ` · 🔎 ${n ? `#${n}` : '(removida)'}` : '';
 

@@ -6,7 +6,7 @@ const { MessageMedia, Location } = require('whatsapp-web.js');
 const fs = require('fs-extra');
 
 const { client } = require('../client');
-const { resolveLidToPhone } = require('../contacts');
+const { resolveLidToPhone, channelResolverName } = require('../contacts');
 const { dbGet, dbReady, dbRun } = require('../db');
 const { printDebug, printError } = require('../log');
 const { ignoreNotice, registerNotice } = require('../mudo');
@@ -14,6 +14,7 @@ const { getSetting } = require('../settings');
 const { countStats, myIdStats } = require('../stats');
 const { mediaIsPath } = require('../util/files');
 const { formatData } = require('../util/format');
+const { headerOrigin, isChannelAlt } = require('../util/origin');
 
 /*
  * Deleted message recovery
@@ -32,6 +33,11 @@ const isStatus = (row) => row.chat_id === 'status@broadcast';
  * without them (/show) uses what was stored in the database.
  */
 async function resolverAuthorDeleted(row, { after, before, protocolKey } = {}) {
+    if (isChannelAlt(row.chat_id)) {
+        const nameAlt = (await channelResolverName(row.chat_id)) || row.chat_name ||
+            `Canal ${row.chat_id.split('@')[0]}`;
+        return { nomeChat: nameAlt, nomeRemetente: nameAlt, numeroRemetente: null };
+    }
     let nameChat = row.chat_name || 'Conversa desconhecida';
     let nameSender = row.sender_name || 'Desconhecido';
     let numberSender = row.sender_number || null;
@@ -100,13 +106,10 @@ async function sendMessageDeleted(destination, row, info, { titulo: title = '❌
 
     let alertText = `${title}\n\n`;
 
-    if (row.is_group === 1) {
-        alertText += `👥 *Grupo:* ${info.nomeChat}\n`;
-    }
-
-    alertText +=
-        `👤 *Nome:* ${info.nomeRemetente}\n` +
-        `📱 *Número:* ${info.numeroRemetente ? `+${info.numeroRemetente}` : 'Número indisponível'}\n` +
+    alertText += headerOrigin({
+        chatId: row.chat_id, chatName: info.nomeChat, isGroup: row.is_group,
+        senderName: info.nomeRemetente, senderNumber: info.numeroRemetente
+    }) +
         `📅 *Enviada em:* ${formatData(row.timestamp)}\n`;
 
     for (const line of extras) {

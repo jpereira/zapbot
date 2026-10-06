@@ -10,6 +10,7 @@ const { ignoreNotice, registerNotice } = require('../mudo');
 const { getSetting } = require('../settings');
 const { countStats } = require('../stats');
 const { formatData } = require('../util/format');
+const { headerOrigin, channelId } = require('../util/origin');
 
 /*
  * Mensagens editadas
@@ -21,13 +22,10 @@ const { formatData } = require('../util/format');
 async function sendMessageEdited(destination, row, info, { titulo: title = '✏️ *MENSAGEM EDITADA DETECTADA*' } = {}) {
     let textAlt = `${title}\n\n`;
 
-    if (row.is_group === 1) {
-        textAlt += `👥 *Grupo:* ${info.nomeChat}\n`;
-    }
-
-    textAlt +=
-        `👤 *Nome:* ${info.nomeRemetente}\n` +
-        `📱 *Número:* ${info.numeroRemetente ? `+${info.numeroRemetente}` : 'Número indisponível'}\n` +
+    textAlt += headerOrigin({
+        chatId: row.chat_id, chatName: info.nomeChat, isGroup: row.is_group,
+        senderName: info.nomeRemetente, senderNumber: info.numeroRemetente
+    }) +
         `📅 *Enviada em:* ${formatData(row.timestamp)}\n` +
         `✏️ *Editada em:* ${formatData(row.edited_at)}\n` +
         `📝 *Antes:* "${row.old_body || '(vazio)'}"\n` +
@@ -56,7 +54,7 @@ client.on('message_edit', async (msg, newBody, prevBody) => {
         if (beforeAlt === afterAlt) return;
 
         const messageId = msg.id?.id;
-        const chatId = msg.id?.remote || msg.from;
+        const chatId = channelId(msg.from, msg.id?.remote, msg.to) || msg.id?.remote || msg.from;
 
         if (!messageId || !chatId) {
             printError('[Edit] Não foi possível identificar a mensagem editada.');
