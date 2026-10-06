@@ -140,7 +140,7 @@ Para enviar mesmo em 👤 Jorge Pereira, 👥 Grupo sobre L200, repita com -sim:
 ## Guardar fora do servidor
 
 Os backups ficam no mesmo volume do banco: se o volume for apagado (ex.:
-`make deploy.destroy`), eles vão junto. O [`/cache -a`](cache.md) e o
+`make DOCK_REMOTE=1 destroy`), eles vão junto. O [`/cache -a`](cache.md) e o
 `/cache -b` também apagam os backups. Para guardar uma cópia fora, use
 `/backup -s` (o arquivo chega no seu WhatsApp), mande por e-mail
 (`/backup -s -to seu@email.com`) ou copie a pasta:

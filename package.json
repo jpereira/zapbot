@@ -7,7 +7,7 @@
     "start:dev": "node app.js",
     "start:prod": "node app.js",
     "start": "[ \"$NODE_ENV\" = \"production\" ] && npm run start:prod || npm run start:dev",
-    "test": "node --test --test-timeout=30000 --disable-warning=ExperimentalWarning tests/*.test.js",
+    "test": "node --test --test-timeout=30000 --disable-warning=ExperimentalWarning $TEST_ARGS tests/*.test.js",
     "lint": "eslint .",
     "postinstall": "patch-package"
   },

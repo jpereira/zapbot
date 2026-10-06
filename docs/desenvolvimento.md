@@ -9,18 +9,48 @@ O serviço `zapbot-dev` monta o código-fonte em `/workspace` e usa
 make help    # lista todos os alvos
 make build   # build da imagem zapbot-dev
 make shell   # shell dentro do container de dev; rode "node app.js" lá dentro
-make clean   # remove a imagem zapbot-dev
+make clean   # remove o container e a imagem zapbot-dev
 make destroy # clean + apaga os volumes de dev (sessão do WhatsApp e cache!)
 make docs    # site da documentação local (veja Documentação)
 ```
 
-Os alvos `deploy.*` do `Makefile` fazem deploy num Docker remoto via SSH;
-ajuste `DOCKER_REMOTE_SERVER` para o seu host antes de usá-los. Eles usam
-`docker --context homelab` em cada comando, sem trocar o contexto global do
-Docker. O `make deploy.destroy` remove do servidor os containers (mesmo rodando),
-as imagens do zapbot (inclusive as de builds e nomes antigos) e os volumes: a
-sessão do WhatsApp e o cache se perdem, e o próximo `make deploy.up` pede o QR
-Code de novo.
+O destino das operações Docker e dos testes é selecionado por `DOCK_REMOTE`:
+`0` (padrão) usa o ambiente local de desenvolvimento (`zapbot-dev`);
+`1` usa o container de produção remoto (`zapbot`). O endereço e o contexto
+aceitam valores do ambiente ou da linha de comando:
+
+```bash
+make test                    # testes do checkout local
+make DOCK_REMOTE=1 test      # testes da imagem em execução no homelab
+make DOCK_REMOTE=1 up        # build + recria o bot remoto
+make DOCK_REMOTE=1 logs      # logs do bot remoto
+make DOCK_REMOTE=1 shell     # shell dentro do bot remoto
+make DOCK_REMOTE=1 DOCKER_REMOTE_SERVER=ssh://root@itacoatiara.local REMOTE_CONTEXT=homelab test
+
+export DOCK_REMOTE=1
+export DOCKER_REMOTE_SERVER=ssh://root@itacoatiara.local
+export REMOTE_CONTEXT=homelab
+make test                    # remoto, usando as variáveis exportadas
+make DOCK_REMOTE=0 test      # local, mesmo com DOCK_REMOTE=1 no ambiente
+```
+
+`DOCKER_REMOTE_SERVER` tem como padrão `ssh://root@itacoatiara.local`;
+`REMOTE_CONTEXT`, `homelab`; e `LOCAL_CONTEXT`, `default`. O nome do contexto
+não faz parte do endereço SSH. Definir apenas o endereço ou o contexto não
+ativa o modo remoto: use `DOCK_REMOTE=1`. Cada comando Docker passa o contexto
+explicitamente, sem trocar o contexto global. O alvo `context` cria o contexto
+remoto ou atualiza seu endereço quando ele difere de `DOCKER_REMOTE_SERVER`.
+
+No modo remoto, `test` e `test.coverage` usam o código da imagem implantada,
+sem enviar o checkout local, fazer build ou reiniciar o bot. Banco, rede e
+WhatsApp são simulados; a sessão e o cache do bot não são usados pelos testes.
+`TEST_ARGS` e `DEBUG_TESTES` também são enviados aos testes no container remoto.
+
+`deps`, `lint`, `check` e `docs*` trabalham sempre no checkout local.
+`check` valida lint, testes locais e documentação, independentemente do destino.
+`clean` remove o container e a imagem do ambiente selecionado, preservando os
+volumes. `destroy` remove também os volumes: a sessão e o cache se perdem, e
+um novo `up` em produção pede o QR Code. `prune` limpa mídia e mensagens.
 
 ## Estrutura do código
 
@@ -76,19 +106,22 @@ tests/                  testes automatizados (veja Testes)
 Os testes usam o test runner do próprio Node (`node:test`), sem dependência
 extra, e rodam em menos de um segundo. Fora do Docker precisam do **Node 22.13
 ou mais novo** (por causa do `node:sqlite`) e das dependências instaladas
-(`PUPPETEER_SKIP_DOWNLOAD=true npm install`); no container de dev (`make shell`)
-é só rodar `npm test`.
+(`make deps`); no container de dev (`make shell`) é só rodar `make test`.
 
 ```bash
-npm test                                   # toda a suíte
-npm run lint                               # ESLint (regras recomendadas, eslint.config.js)
-node --test tests/watch.test.js            # um arquivo
-DEBUG_TESTES=1 npm test                    # mostra o log do bot durante os testes
-node --test --experimental-test-coverage --test-coverage-include='src/**' tests/*.test.js
+make deps                                  # instala as dependências do package-lock.json
+make test                                  # toda a suíte
+make lint                                  # ESLint (eslint.config.js)
+make test TEST_ARGS=--test-name-pattern=mask  # filtra pelo nome dos testes
+DEBUG_TESTES=1 make test                    # mostra o log do bot durante os testes
+make test.coverage                          # cobertura de src/
+make docs.build                            # documentação em modo estrito
+make check                                 # lint + testes + documentação
+make DOCK_REMOTE=1 test                     # testes da imagem em execução no servidor
 ```
 
 No GitHub, o workflow **Testes** (`.github/workflows/ci.yml`) roda o
-`npm run lint`, o `npm test` e o `mkdocs build --strict` a cada push no `main` e
+`make lint`, o `make test` e o `make docs.build` a cada push no `main` e
 em cada pull request; o selo no topo do README e da página inicial mostra o
 resultado do último run.
 
@@ -175,7 +208,7 @@ A página recarrega sozinha ao salvar um arquivo em `docs/` ou o `mkdocs.yml`.
 Para conferir o que o workflow gera (falha em link ou âncora quebrados):
 
 ```bash
-.venv-docs/bin/mkdocs build --strict
+make docs.build
 ```
 
 Ao mudar um comando, mude a página dele em `docs/comandos/` e as tabelas
