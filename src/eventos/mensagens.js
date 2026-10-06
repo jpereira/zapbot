@@ -6,7 +6,8 @@ const path = require('path');
 const fs = require('fs-extra');
 
 const { client, consumirEnvioDoBot, foiEnviadaPeloBot, messageToSelf } = require('../cliente');
-const { findCommand, getCommandSyntax, protocoloDaAjuda } = require('../comandos/base');
+const { getCommandSyntax, protocoloDaAjuda } = require('../comandos/base');
+const { resolverAlias } = require('../aliases');
 const { HANDLERS } = require('../comandos/index');
 const { removeDeviceSuffix, resolveLidToPhone, resolverNomeDoGrupo, resolverNomeDoPrivado } = require('../contatos');
 const { dbGet, dbPronto, dbRun } = require('../db');
@@ -253,7 +254,8 @@ client.on('message_create', (msg) => comContextoDebug({
         const caller = body.startsWith('/') && !enviadaPeloBot ? body.split(/\s+/, 1)[0] : null;
 
         if (enviadaPeloBot) printInfo(`Mensagem do próprio bot começando com '/' ignorada como comando: ${body.slice(0, 60)}`);
-        const command = caller ? findCommand(caller) : null;
+        const resolvido = caller ? await resolverAlias(body) : null;
+        const command = resolvido?.command ?? null;
 
         /*
          * Watch: mensagens que não são comandos passam pelas regras do /watch
@@ -270,7 +272,7 @@ client.on('message_create', (msg) => comContextoDebug({
          */
         if (!caller) return;
 
-        const args = body.slice(caller.length).trim();
+        const args = resolvido?.args ?? body.slice(caller.length).trim();
 
         if (!command) {
             if (msg.fromMe || isDebugMode()) {
@@ -351,7 +353,14 @@ client.on('message_create', (msg) => comContextoDebug({
             ? `Executando comando '${body}' de '${senderName}' no grupo '${chatName}'`
             : `Executando comando '${body}' em '${chatName}'`);
 
-        const opts = GetOptFromCommand(args, command);
+        if (resolvido.alias) {
+            const chamada = [resolvido.destino, args].filter(Boolean).join(' ');
+            await msg.reply(`🔗 Alias ${resolvido.alias} -> ${chamada}`);
+        }
+
+        // As opções do comando salvo pertencem ao alvo, inclusive -h e -rm.
+        const paraParser = command.cmd === '/alias' && !/^-h(?:elp)?$/.test(args) ? '' : args;
+        const opts = GetOptFromCommand(paraParser, command);
         if (command.cmd === '/watch') {
             opts.opt.help = pediuAjudaWatch(args);
             opts.opt.mask = pediuMascaraWatch(args);
