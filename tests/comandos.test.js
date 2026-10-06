@@ -56,7 +56,7 @@ describe('/help (/h)', () => {
 
 describe('/debug (/d, /dbg)', () => {
     test('-on e -off gravam o setting; sem opção mostra o estado', async () => {
-        assert.deepEqual(await bot.responder('/debug -on'), ['🪲 Debug Ativado.']);
+        assert.deepEqual(await bot.responder('/debug -on'), ['🪲 Debug Ativado. [DEBUG0]']);
         assert.equal(bot.getSetting('debug.enabled'), true);
         assert.deepEqual(await bot.responder('/dbg -off'), ['🪲 Debug Desativado.']);
         assert.equal(bot.getSetting('debug.enabled'), false);

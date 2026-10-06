@@ -256,11 +256,11 @@ client.on('authenticated', () => {
         return;
     }
 
-    page.on('console', msg => console.log('[BROWSER]', msg.type(), msg.text()));
-    page.on('pageerror', err => console.error('[BROWSER PAGE ERROR]', err));
-    page.on('error', err => console.error('[BROWSER ERROR]', err));
+    page.on('console', msg => printDebug('[BROWSER]', msg.type(), msg.text()));
+    page.on('pageerror', err => printDebug('[BROWSER PAGE ERROR]', err));
+    page.on('error', err => printDebug('[BROWSER ERROR]', err));
     page.on('requestfailed', request => {
-        console.error('[BROWSER REQUEST FAILED]', request.url(), request.failure()?.errorText);
+        printDebug('[BROWSER REQUEST FAILED]', request.url(), request.failure()?.errorText);
     });
 
     setTimeout(async () => {
@@ -276,9 +276,9 @@ client.on('authenticated', () => {
                 webpackChunk: typeof window.webpackChunkwhatsapp_web_client
             }));
 
-            console.log('[WA DEBUG]', debug);
+            printDebug('[WA DEBUG]', debug);
         } catch (err) {
-            console.error('[WA DEBUG ERROR]', err);
+            printDebug('[WA DEBUG ERROR]', err);
         }
     }, 5000);
 });
