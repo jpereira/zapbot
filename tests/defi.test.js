@@ -169,7 +169,8 @@ describe('/defi', () => {
         const [r] = await bot.replyAlt('/defi orca -m');
 
         assert.match(r, /💰 \*Saldo:\* \$[*,]+\.\*\*\n {3}• [*,]+\.?\** SOL \(\$[*,]+\.\*\*\)/);
-        assert.match(r, /💸 \*Taxas a coletar:\* \$[*,]+\.\*\*/);
+        const rates = (textAlt) => textAlt.match(/💸 \*Taxas a coletar:\*[^]*?(?=📊|🎁|🏊|$)/)[0];
+        assert.equal(rates(r), rates(normal));
         assert.match(r, /📊 \*Rende ~\$[*,]+\.\*\*\/dia\* _\(estimativa: [\d.]+% da liquidez/);
         // What belongs to the market stays the same
         const equal = (re) => assert.equal(r.match(re)?.[0], normal.match(re)[0], String(re));
@@ -535,6 +536,17 @@ describe('/defi: Project X (HyperEVM)', () => {
         const [h0] = expected(chainAlt.posicoes[9], RAW_HYPE, 18, 6);
         assert.ok(Math.abs(dollars(hype) - h0 * 30) < 0.01);
         assert.match(hype, /• 0 USD₮0 \(\$0\.00\)\n\n📏/);   // below the range: all in WHYPE
+    });
+
+    test('prjx -mask: mantém as taxas a coletar e oculta os saldos', async () => {
+        await bot.replyAlt(`/defi prjx -wallet ${WALLET}`);
+        const normais = await bot.replyAlt('/defi prjx');
+        const mascaradas = await bot.replyAlt('/defi prjx -mask');
+        assert.equal(mascaradas.length, normais.length);
+        for (const [i, textAlt] of mascaradas.entries()) {
+            assert.equal(textAlt.split('💸')[1], normais[i].split('💸')[1]);
+            assert.match(textAlt, /💰 \*Saldo:\*[^]*?\*/);
+        }
     });
 
     test('/defi orca e /defi prjx filtram, -rm de vários e a lista: inteira só no seu privado', async () => {

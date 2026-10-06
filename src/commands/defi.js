@@ -87,8 +87,8 @@ const describe = (p, end = short) => (WALLET.includes(p.protocol)
     : `${PROTOCOLS[p.protocol] ?? p.protocol} · ${positionWithName(p, end)}`);
 
 /*
- * -mask: the wallet numbers (balances, amounts, values and fees to
- * collect) become * keeping the format ($**,***.**); the market's (price,
+ * -mask: wallet balances, amounts and values become * keeping the
+ * format ($**,***.**); fees to collect and the market numbers (price,
  * range, pool, HF, LTV, APY) remain. Good for sending a screenshot without showing the
  * pocket size.
  */
@@ -102,8 +102,10 @@ const MAX_NAME = 40;
  * "Position Details" text of a Project X position (from walletPositions).
  */
 function positionPrjxText(x, nameAlt = null, m = SHOW) {
-    const usd = (q, price) => (price === null ? '' : ` (${m(fmtUsd(q * price))})`);
-    const total = (a, b) => (x.usd1 === null ? '' : ` ${m(fmtUsd(a * x.usd0 + b * x.usd1))}`);
+    const usd = (q, price, show = m) =>
+        (price === null ? '' : ` (${show(fmtUsd(q * price))})`);
+    const total = (a, b, show = m) =>
+        (x.usd1 === null ? '' : ` ${show(fmtUsd(a * x.usd0 + b * x.usd1))}`);
     const qtd = (q) => m(fmtQtd(q));
     const status = x.naFaixa
         ? '✅ dentro da faixa'
@@ -117,9 +119,9 @@ function positionPrjxText(x, nameAlt = null, m = SHOW) {
         `📏 *Faixa:* ${fmtPrice(x.inferior)} – ${fmtPrice(x.superior)} ${x.simbolo1} por ${x.simbolo0}\n` +
         `🎯 *Preço atual:* ${fmtPrice(x.preco)} ${x.simbolo1} por ${x.simbolo0}\n` +
         `   ${rangeBar(x.preco, x.inferior, x.superior)}\n\n` +
-        `💸 *Taxas a coletar:*${total(x.taxa0, x.taxa1)}\n` +
-        `   • ${qtd(x.taxa0)} ${x.simbolo0}${usd(x.taxa0, x.usd0)}\n` +
-        `   • ${qtd(x.taxa1)} ${x.simbolo1}${usd(x.taxa1, x.usd1)}`;
+        `💸 *Taxas a coletar:*${total(x.taxa0, x.taxa1, SHOW)}\n` +
+        `   • ${fmtQtd(x.taxa0)} ${x.simbolo0}${usd(x.taxa0, x.usd0, SHOW)}\n` +
+        `   • ${fmtQtd(x.taxa1)} ${x.simbolo1}${usd(x.taxa1, x.usd1, SHOW)}`;
 }
 
 /**
@@ -198,9 +200,9 @@ function positionText(d, end = short, nameAlt = null, m = SHOW) {
         `🎯 *Preço atual:* ${fmtPrice(current)} ${simB} por ${simA}\n` +
         `   ${rangeBar(current, inferior, superior)}\n` +
         `   _(1 ${simB} = ${fmtPrice(1 / current)} ${simA})_\n\n` +
-        `💸 *Taxas a coletar:* ${m(fmtUsd(rateA * usdA + rateB * usdB))}\n` +
-        `   • ${m(fmtQtd(rateA))} ${simA} (${m(fmtUsd(rateA * usdA))})\n` +
-        `   • ${m(fmtQtd(rateB))} ${simB} (${m(fmtUsd(rateB * usdB))})\n`;
+        `💸 *Taxas a coletar:* ${fmtUsd(rateA * usdA + rateB * usdB)}\n` +
+        `   • ${fmtQtd(rateA)} ${simA} (${fmtUsd(rateA * usdA)})\n` +
+        `   • ${fmtQtd(rateB)} ${simB} (${fmtUsd(rateB * usdB)})\n`;
 
     // Rewards: only those with something to collect
     const rewards = c.recompensas
