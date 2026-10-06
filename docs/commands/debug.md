@@ -27,6 +27,10 @@ cada linha é avaliada independentemente. O contexto inclui `chatName` e `chatId
 No console com cores habilitadas, os trechos que casam com o filtro aparecem em vermelho e negrito,
 como no `grep --color`. As cópias enviadas ao WhatsApp contêm texto sem os códigos de cor.
 
+Os logs de inicialização, autenticação e o aviso por e-mail de bot iniciado aparecem sem filtro.
+O filtro salvo passa a valer quando o WhatsApp está pronto e o aviso inicial foi disparado;
+ele também vale quando o envio desse e-mail ainda está em andamento.
+
 ```
 /debug -off
 /debug -on

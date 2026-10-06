@@ -38,6 +38,7 @@ require('dotenv').config({
     quiet: true
 });
 
+require('./src/debugContext').bootStartLogs();
 require('./src/debugInstrumentation').installDebug();
 
 const colors = require('colors');

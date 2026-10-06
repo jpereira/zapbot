@@ -7,10 +7,13 @@ const assert = require('node:assert/strict');
 const { printDebug, printDebugLevel, printInfo, printError } = bot.src('log');
 const { flushCopiesDebug, cleanCopiesDebug } = bot.src('debugCopy');
 const { instrumentObject } = bot.src('debugInstrumentation');
-const { withContextDebug, contextDebug } = bot.src('debugContext');
+const {
+    withContextDebug, contextDebug, bootStartLogs, bootCompleteLogs
+} = bot.src('debugContext');
 
 beforeEach(bot.restart);
 afterEach(cleanCopiesDebug);
+afterEach(bootCompleteLogs);
 const textLogs = () => bot.logs.join('\n');
 const copies = () => bot.client.enviadas.filter(e =>
     typeof e.content === 'string' && e.content.startsWith('🪲 [ZapBot log]\n'));
@@ -23,6 +26,55 @@ async function configure(args) {
 }
 
 describe('/debug', () => {
+    test('filtro salvo preserva o boot e passa a valer depois do ready', async () => {
+        await configure('-on -filter /sapato/i');
+        bootStartLogs();
+        printInfo('Starting ZapBot');
+        for (const event of ['loading_screen', 'authenticated', 'ready']) {
+            for (const handler of bot.client.listeners(event)) await handler(100, 'WhatsApp');
+        }
+        assert.match(textLogs(), /Starting ZapBot/);
+        assert.match(textLogs(), /loading_screen/);
+        assert.match(textLogs(), /authentication success/);
+        assert.match(textLogs(), /inicializado!/);
+        bot.logs.length = 0;
+        printInfo('não casa');
+        printInfo('sapato depois do boot');
+        assert.equal(bot.logs.length, 1);
+        assert.match(textLogs(), /sapato depois do boot/);
+        assert.equal(bot.getSetting('debug.filter'), '/sapato/i');
+    });
+
+    test('aviso inicial atrasado permanece visível enquanto outros logs já são filtrados',
+        async (t) => {
+            await configure('-on -filter /sapato/');
+            bootStartLogs();
+            const { transporter } = bot.src('email');
+            const smtp = {
+                QRCODE_EMAIL_SMTP_HOST: 'smtp.teste', QRCODE_EMAIL_SMTP_USER: 'bot@teste',
+                QRCODE_EMAIL_SMTP_TO: 'dono@teste'
+            };
+            const previous = Object.fromEntries(Object.keys(smtp).map(k => [k, process.env[k]]));
+            Object.assign(process.env, smtp);
+            let release;
+            t.mock.method(transporter, 'sendMail', () => new Promise(r => { release = r; }));
+            try {
+                for (const handler of bot.client.listeners('ready')) await handler();
+                assert.equal(typeof release, 'function');
+                bot.logs.length = 0;
+                printInfo('não casa');
+                assert.equal(bot.logs.length, 0);
+                release({});
+                await new Promise(r => setImmediate(r));
+                assert.match(textLogs(), /Alerta por e-mail enviado:.*Bot iniciado|Reconectado/);
+            } finally {
+                for (const [k, valueAlt] of Object.entries(previous)) {
+                    if (valueAlt === undefined) delete process.env[k];
+                    else process.env[k] = valueAlt;
+                }
+            }
+        });
+
     test('filtro realça todos os matches no console e copia o texto sem ANSI', async (t) => {
         await configure('-on -filter /sapato/i -copy-to');
         const colors = require('colors');
