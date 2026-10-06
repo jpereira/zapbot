@@ -4,7 +4,7 @@
 
 const util = require('util');
 const colors = require('colors');
-const { contextoDebug } = require('./debugContexto');
+const { contextoDebug, podeFiltrarDebug } = require('./debugContexto');
 const { configurarDebug, dadosDebug, limparTextoDebug } = require('./debugDados');
 const { compilarFiltroDebug } = require('./debugOpcoes');
 
@@ -29,7 +29,8 @@ function emitirLog(linha, cor) {
     const detalhe = cfg.enabled && cfg.level >= 1 && contexto.chatId
         ? ` {chatId=${contexto.chatId} chatName=${contexto.chatName ?? ''}}` : '';
     linha = limparTextoDebug(linha) + limparTextoDebug(detalhe);
-    if (cfg.enabled && cfg.filter) {
+    const aplicarFiltro = cfg.enabled && cfg.filter && podeFiltrarDebug();
+    if (aplicarFiltro) {
         if (filtroTexto !== cfg.filter) {
             filtro = compilarFiltroDebug(cfg.filter);
             filtroTexto = cfg.filter;
@@ -37,7 +38,7 @@ function emitirLog(linha, cor) {
         filtro.lastIndex = 0;
         if (!filtro.test(linha)) return;
     }
-    console.log(cfg.enabled && cfg.filter ? realcarMatches(linha, filtro, cor) : cor(linha));
+    console.log(aplicarFiltro ? realcarMatches(linha, filtro, cor) : cor(linha));
     if (cfg.enabled && cfg.copyTo && !contexto.semRastro) {
         require('./debugCopia').copiarLog(linha);
     }

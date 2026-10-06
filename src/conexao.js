@@ -12,6 +12,7 @@ const { alertarPorEmail, transporter } = require('./email');
 const { printDebug, printError, printInfo, printSuccess } = require('./log');
 const { getSetting, isDebugMode } = require('./settings');
 const { versaoComCommit } = require('./versao');
+const { comContextoDebug, concluirLogsDeBoot } = require('./debugContexto');
 
 // Motivos em que reiniciar não resolve: exigem ação manual.
 const NAO_REINICIAR = new Set(['LOGOUT', 'CONFLICT', 'UNPAIRED', 'UNPAIRED_IDLE']);
@@ -320,7 +321,7 @@ client.on('change_state', state => {
 
 let jaFicouPronto = false;
 
-client.on('ready', async () => {
+client.on('ready', () => comContextoDebug({ semFiltro: true }, async () => {
     estado.pronto = true;
     estado.aguardandoQr = false;
     const motivoDaQueda = estado.ultimaQueda;
@@ -352,7 +353,9 @@ client.on('ready', async () => {
         [jaFicouPronto ? `Conectado de novo${motivoDaQueda ? ` (a queda foi: ${motivoDaQueda})` : ''}.` : 'Conectado ao WhatsApp.',
          foraPor, ...listaAvisos].filter(Boolean).join('\n'));
     jaFicouPronto = true;
-});
+    // O SMTP pode terminar depois: o contexto mantém esse aviso visível sem atrasar o filtro.
+    concluirLogsDeBoot();
+}));
 
 /*
  * Inicialização
