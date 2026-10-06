@@ -267,7 +267,7 @@ const SETTINGS_SCHEMA = {
     'defi.alerta.intervalMin': {
         default: 10,
         type: 'number', min: 1, max: 1440,
-        desc: 'Intervalo (minutos) entre as verificações do /defi -alerta (cada uma lê as posições no RPC da Solana).'
+        desc: 'Intervalo (minutos) entre as verificações do /defi -alerta (consulta Solana ou HyperEVM conforme o protocolo).'
     },
     'defi.base.rpc': {
         default: 'https://mainnet.base.org',
