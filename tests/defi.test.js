@@ -177,6 +177,11 @@ describe('/defi', () => {
         igual(/🎯 \*Preço atual:\*.*/);
         igual(/🏊 \*Pool:\*.*/);
         assert.match((await bot.responder('/defi -mask'))[0], /💰 \*Saldo:\* \$[*,]+\.\*\*/);
+        assert.match(r, /📍 \*\*\*\*…\*\*\*\* ·/);
+        const [privado] = await bot.responder('/defi orca -mask', { chat: DONO.jid });
+        assert.ok(!privado.includes(POSICAO));
+        assert.match(privado, /📍 \*\*\*\*…\*\*\*\* ·/);
+        assert.match((await bot.responder(`${CADASTRO} -mask`))[0], /ℹ️ \*\*\*\*…\*\*\*\* já está cadastrada/);
     });
 
     test('orca -name: entre aspas, na lista, no /defi e no -rm; de novo, troca', async () => {
@@ -547,6 +552,13 @@ describe('/defi: Project X (HyperEVM)', () => {
         const [noPrivado] = await bot.responder('/defi -l', { chat: DONO.jid });
         assert.ok(noPrivado.includes(`1. Orca · ${POSICAO} · pool ${POOL} _`));
         assert.ok(noPrivado.includes(`2. Project X · carteira ${CARTEIRA.toLowerCase()} _`));
+        for (const chat of [undefined, DONO.jid]) {
+            const [mascarada] = await bot.responder('/defi -l -mask', { chat });
+            assert.match(mascarada, /Orca · \*\*\*\*…\*\*\*\* · pool/);
+            assert.match(mascarada, /Project X · carteira \*\*\*\*…\*\*\*\*/);
+            assert.ok(!mascarada.includes(POSICAO));
+            assert.ok(!mascarada.includes(CARTEIRA.toLowerCase()));
+        }
 
         assert.match((await bot.responder('/defi -rm 1 3'))[0], /^❌ Nº 3 não existe\. Nada foi removido/);
         assert.equal((await bot.responder('/defi -rm 2,1'))[0], '🗑️ *Removidos* (2)\n• Orca · Hz15…RaPZ\n• Project X · carteira 0x92…0444');
@@ -936,6 +948,7 @@ describe('/defi morpho', () => {
 
     test('-mask: valores e quantidades com *; HF, LTV e preços continuam', async () => {
         const [r] = await bot.responder('/defi morpho -mask');
+        assert.match(r, /👛 Carteira: `\*\*\*\*…\*\*\*\*`/);
         assert.match(r, /💰 \*Posição líquida\*\n`\$\*\*,\*\*\*,\*\*\*\.\*\*`\n\n❤️ \*Health Rate\*\n`2\.73`/);
         assert.match(r, /Quantidade: `\*\*\*\.\*\*\*\*\*\*\*\* cbBTC`\nValor: `\$\*\*,\*\*\*,\*\*\*\.\*\*`/);
         assert.match(r, /LTV atual: `31\.52%`\nLLTV: `86\.00%`\nPreço cbBTC \(oráculo\): `84,909\.56 USDC`/);
@@ -1197,6 +1210,7 @@ describe('/defi aave', () => {
     test('-mask: os valores da carteira com *; HF, LTV e APY continuam', async () => {
         await bot.setSetting('defi.aave.chains', '1');
         const [r] = await bot.responder('/defi aave -full -m');
+        assert.match(r, /👛 Carteira: `\*\*\*\*…\*\*\*\*`/);
         assert.match(r, /💰 Net Position: `\$\*\*\*,\*\*\*\.\*\*`\n📥 Supplied: `\$\*\*\*,\*\*\*\.\*\*`/);
         assert.match(r, /❤️ Health Factor: `1\.62`[\s\S]*LTV atual: `50\.00%`[\s\S]*Available Borrows: `\$\*\*\*,\*\*\*\.\*\*`/);
         assert.match(r, /\*WETH\*\nAmount: `\*\*\*\.\*\*`\nValue: `\$\*\*\*,\*\*\*\.\*\*`\nCollateral: `Yes`\nSupply APY: `3\.05%`/);

@@ -847,9 +847,9 @@ async function remover(msg, o, argv, posicoes, end) {
 const sinoDoAlerta = (p) => (p.alert ? ` 🔔${p.alert_fees ? ` ≥ ${fmtUsd(p.alert_fees)}` : ''}` : '');
 
 // A lista: no seu privado, os endereços inteiros; fora dele, abreviados
-function textoDaLista(posicoes, end) {
+function textoDaLista(posicoes, end, endPool = end) {
     const linha = (p, i) => `${i + 1}. ${PROTOCOLOS[p.protocol] ?? p.protocol} · ` +
-        (DE_CARTEIRA.includes(p.protocol) ? carteiraComNome(p, end) : `${posicaoComNome(p, end)} · pool ${end(p.pool)}`) +
+        (DE_CARTEIRA.includes(p.protocol) ? carteiraComNome(p, end) : `${posicaoComNome(p, end)} · pool ${endPool(p.pool)}`) +
         ` _(desde ${formatarData(p.created_at).split(',')[0]})_${sinoDoAlerta(p)}`;
 
     return `🌊 *Posições DeFi* (${posicoes.length})\n\n${posicoes.map(linha).join('\n')}\n\n` +
@@ -861,7 +861,7 @@ async function cmdDefi({ msg, opts: optsDoComando, args, chatId }) {
 
     // No seu privado, os endereços e as carteiras vêm inteiros; fora dele, abreviados
     const noPrivado = (await idsDoChatAtual(chatId)).includes(client.info?.wid?._serialized);
-    const end = noPrivado ? (e) => e : curto;
+    const endNormal = noPrivado ? (e) => e : curto;
 
     /*
      * O -to aceita espaços (/Jorge Pereira/), que o parser de opções
@@ -870,6 +870,7 @@ async function cmdDefi({ msg, opts: optsDoComando, args, chatId }) {
     const { destinos: destinosTexto, informado: comDestino, resto } = extrairDestinos(args);
     const opts = comDestino ? GetOptFromCommand(resto, findCommand('/defi')) : optsDoComando;
     const o = opts.opt;
+    const end = o.mask ? () => '****…****' : endNormal;
 
     if (comDestino && !opts.given.has('alerta')) {
         await msg.reply('❌ O -to é do -alerta: /defi -alerta <nº|all> -to <destino>');
@@ -920,7 +921,7 @@ async function cmdDefi({ msg, opts: optsDoComando, args, chatId }) {
     const vazio = `🌊 Nenhuma posição cadastrada.\n${EXEMPLOS}`;
 
     if (o.list) {
-        await msg.reply(posicoes.length ? textoDaLista(posicoes, end) : vazio);
+        await msg.reply(posicoes.length ? textoDaLista(posicoes, end, endNormal) : vazio);
         return;
     }
 
