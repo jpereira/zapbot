@@ -211,6 +211,14 @@
                     ],
                     "values": [],
                     "desc": "Versões do bot e do que ele usa (Node.js, whatsapp-web.js, WhatsApp Web, SQLite, Chromium, yt-dlp, ffmpeg), com aviso de versão nova, e o sistema (host, CPU, memória e há quanto tempo estão no ar). Não combina com as outras opções."
+                },
+                {
+                    "opts": [
+                        "mask",
+                        "m"
+                    ],
+                    "values": [],
+                    "desc": "Ofusca telefones na saída desta execução, preservando os cinco primeiros e os dois últimos dígitos. Ex: +55219****44. Os dados salvos e os destinos permanecem íntegros."
                 }
             ],
             "onlyAdmin": true
@@ -1310,6 +1318,14 @@
                         "chat"
                     ],
                     "desc": "Outro chat: o nº da lista do -l, parte do nome, @menção ou /regex/ (sem diferenciar maiúsculas nem acentos). Sem -d, -e e -s, vêm apagadas, editadas e status juntos, por data. Ex: /show -3 /^Camila/"
+                },
+                {
+                    "opts": [
+                        "mask",
+                        "m"
+                    ],
+                    "values": [],
+                    "desc": "Ofusca telefones na saída desta execução, preservando os cinco primeiros e os dois últimos dígitos. Ex: +55219****44. Os dados salvos e os destinos permanecem íntegros."
                 }
             ],
             "onlyAdmin": true
@@ -1638,6 +1654,14 @@
                         "[texto|/regex/flags]"
                     ],
                     "desc": "Cria uma regra em qualquer lugar, ou só na origem do -in. Aceita espaços; preserve a regex entre barras. Ex: /watch /Jorge Pereira/i, /watch promoção"
+                },
+                {
+                    "opts": [
+                        "mask",
+                        "m"
+                    ],
+                    "values": [],
+                    "desc": "Ofusca telefones na saída desta execução, preservando os cinco primeiros e os dois últimos dígitos. Ex: +55219****44. Os dados salvos e os destinos permanecem íntegros."
                 }
             ],
             "onlyAdmin": true

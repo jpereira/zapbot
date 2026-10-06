@@ -13,6 +13,8 @@ const { printDebug, printError } = require('./log');
 const { isDebugMode } = require('./settings');
 const { withoutAccents } = require('./util/format');
 const { isChannelAlt } = require('./util/origin');
+const { contextDebug } = require('./debugContext');
+const { maskPhones } = require('./util/phone');
 
 /*
  * Formas aceitas:
@@ -396,7 +398,10 @@ async function resolverDestinations(msg, texts, o = {}) {
  */
 async function sendOnDestination(destination, textAlt, { assunto: subject = 'Aviso', opcoes: optionsAlt = {} } = {}) {
     if (destination?.email) {
-        await sendEmail({ para: destination.email.split(/\s*,\s*/), assunto: subject, texto: textAlt.replace(/[*_]/g, '') });
+        const withoutFormatting = textAlt.replace(/[*_]/g, '');
+        await sendEmail({ para: destination.email.split(/\s*,\s*/), assunto: subject,
+            texto: contextDebug().maskTelefones
+                ? maskPhones(withoutFormatting) : withoutFormatting });
         return;
     }
     await client.sendMessage(destination?.id || client.info.wid._serialized, textAlt, optionsAlt);

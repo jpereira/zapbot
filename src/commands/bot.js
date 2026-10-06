@@ -22,6 +22,8 @@ const {
     statusText
 } = require('../status');
 const { fmtWhen, readHour } = require('../util/when');
+const { maskPhones, removeOptionMask } = require('../util/phone');
+const { contextDebug } = require('../debugContext');
 
 /*
  * /bot: the bot and who uses it (settings 'bot.paused', 'bot.admins' and 'bot.users')
@@ -118,7 +120,8 @@ async function chatScope({ chatId, isGroup, todos: allAlt2 = false } = {}) {
 
 // 5521999982222 → 5521•••••2222 (the country code and area code stay, and the last 4)
 const mask = (n) => `${n.slice(0, 4)}${'•'.repeat(Math.max(1, n.length - 8))}${n.slice(-4)}`;
-const numberVisible = (n, members) => (members && !members.has(n) ? mask(n) : n);
+const numberVisible = (n, members) => contextDebug().maskTelefones ? maskPhones(n)
+    : members && !members.has(n) ? mask(n) : n;
 
 // A phone's or group's name: the group's, the contact's or, for you, your profile's
 async function itemName(item) {
@@ -592,6 +595,7 @@ const USAGE = '❌ Uso: /bot [-on|-off] [-users|-all-users]  ou  ' +
     '/bot -status [<hora>|off] [-to <destino>]...  ou  /bot -info\n💡 _/bot -h para ajuda_';
 
 async function cmdBot({ msg, opts: commandOpts, args, chatId, isGroup }) {
+    args = removeOptionMask(args);
     if (SHORTCUT.test(String(args ?? ''))) {
         await handleShortcut(msg, String(args).trim(), { chatId, isGroup });
         return;
