@@ -11,6 +11,18 @@ const { compileFilterDebug } = require('./debugOptions');
 let filterText;
 let filter;
 
+function highlightMatches(line, regex, cor) {
+    const global = new RegExp(regex.source, regex.flags.replace(/g/g, '') + 'g');
+    let outputAlt = '';
+    let start = 0;
+    for (const match of line.matchAll(global)) {
+        if (!match[0]) continue; // An empty regex paints nothing, nor holds the terminal in a loop.
+        outputAlt += cor(line.slice(start, match.index)) + colors.red.bold(match[0]);
+        start = match.index + match[0].length;
+    }
+    return outputAlt + cor(line.slice(start));
+}
+
 function emitLog(line, cor) {
     const cfg = configureDebug();
     const context = contextDebug();
@@ -25,7 +37,7 @@ function emitLog(line, cor) {
         filter.lastIndex = 0;
         if (!filter.test(line)) return;
     }
-    console.log(cor(line));
+    console.log(cfg.enabled && cfg.filter ? highlightMatches(line, filter, cor) : cor(line));
     if (cfg.enabled && cfg.copyTo && !context.semRastro) {
         require('./debugCopy').copyLog(line);
     }
