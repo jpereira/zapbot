@@ -49,9 +49,10 @@ client.on('message_create', (msg) => comContextoDebug({
         // msg.getChat() quebra para alguns chats/@lid; usamos os dados crus.
         const chatId = msg?.id?.remote || msg?.from || msg?.to || 'UNKNOWN';
         const isGroup = chatId.endsWith('@g.us') ? 1 : 0;
+        const isBroadcast = chatId.endsWith('@broadcast') || Boolean(msg.isStatus);
 
         // Grupo: nome buscado pelo chatId (o _data.chat pode trazer o nome errado)
-        const chatName =
+        let chatName = isBroadcast ? null :
             (isGroup ? await resolverNomeDoGrupo(chatId) : null) ||
             msg?._data?.chat?.name ||
             msg?._data?.chat?.formattedTitle ||
@@ -64,10 +65,14 @@ client.on('message_create', (msg) => comContextoDebug({
         /*
          * Remetente real:
          *   grupo   -> msg.author (participante)
+         *   status/transmissão -> msg.author; o chat @broadcast não é uma pessoa
          *   privado -> msg.from (ou msg.to se fui eu)
          */
-        let rawSenderId = isGroup
-            ? (msg?.author || msg?._data?.participant?._serialized || msg?._data?.participant || null)
+        const participante = msg?.author || msg?._data?.author || msg?._data?.participant;
+        const autorJid = typeof participante === 'string' ? participante
+            : participante?._serialized || participante?.$1 || null;
+        let rawSenderId = isGroup || isBroadcast
+            ? (autorJid || (isBroadcast && msg.fromMe ? client.info?.wid?._serialized : null))
             : (msg?.fromMe ? (msg?.to || msg?.from) : msg?.from);
 
         // 100000000000001:93@lid -> 100000000000001@lid (não converte @lid para @c.us)
@@ -99,10 +104,16 @@ client.on('message_create', (msg) => comContextoDebug({
         const senderName =
             contact?.name ||
             contact?.pushname ||
-            msg?._data?.notifyName ||
+            contact?.verifiedName ||
+            // Em broadcasts, notifyName/chat podem trazer o nome de outro contato.
+            (isBroadcast ? null : msg?._data?.notifyName) ||
             senderNumber ||
             originalSenderJid ||
             'Desconhecido';
+        if (isBroadcast) {
+            const tipo = chatId === 'status@broadcast' || msg.isStatus ? 'Status' : 'Transmissão';
+            chatName = tipo + (senderJid === 'UNKNOWN' ? '' : ` de ${senderName}`);
+        }
         Object.assign(contextoDebug(), { chatName, senderName });
         printDebugNivel(1, 'message_create remetente e chat', { chatName, senderName, senderJid });
 
@@ -110,7 +121,7 @@ client.on('message_create', (msg) => comContextoDebug({
             id: { _serialized: senderJid, user: senderJid.split('@')[0] },
             number: senderNumber || senderJid.split('@')[0],
             name: senderName,
-            pushname: msg?._data?.notifyName || senderName
+            pushname: (isBroadcast ? null : msg?._data?.notifyName) || senderName
         };
 
         if (isDebugMode()) {
