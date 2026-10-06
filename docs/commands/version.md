@@ -1,4 +1,4 @@
-# `/version` (`/ver`) · admin
+# `/version` (`/ver`)
 
 Exibe o mesmo banner do `/uptime`, com a versão do bot.
 

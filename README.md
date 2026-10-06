@@ -118,7 +118,7 @@ todos, com `/set bot.users true`); o `/whois` diz o seu nível
 | Comando | Aliases | Admin | Descrição |
 |---|---|:-:|---|
 | [`/backup`](https://jpereira.github.io/zapbot/commands/backup/) | `/bkp` | ✅ | Backup do banco: automático todo dia; lista, detalha, restaura e envia o arquivo |
-| [`/boletos`](https://jpereira.github.io/zapbot/commands/boletos/) | | ✅ | Sorteia 2 membros para "pagar um boleto" |
+| [`/boletos`](https://jpereira.github.io/zapbot/commands/boletos/) | | | Sorteia 2 membros para "pagar um boleto" |
 | [`/bot`](https://jpereira.github.io/zapbot/commands/bot/) | `/b` | ✅ | Status do bot (relatório de 24 h e os usuários); liga/desliga os comandos (`-on`/`-off`) e diz quem usa: admins (`+o`/`-o`) e usuários (`+v`/`-v`, em qualquer chat ou só num grupo, e os comandos de cada um com `+cmd`/`-cmd`); `-reset` volta ao padrão; `-status` (`-s`): relatório das últimas 24 h, e `-s 06h` manda todo dia; `-info` (`-i`): versões e sistema |
 | [`/cache`](https://jpereira.github.io/zapbot/commands/cache/) | `/c` | ✅ | Uso e limpeza do cache |
 | [`/cotacao`](https://jpereira.github.io/zapbot/commands/cotacao/) | `/cambio` | | Cotação de EUR e USDT (e USD, GBP) contra o real: atual, abertura, fechamento e variação; alertas de preço |
@@ -138,9 +138,9 @@ todos, com `/set bot.users true`); o `/whois` diz o seu nível
 | [`/meme`](https://jpereira.github.io/zapbot/commands/meme/) | | | Template de meme aleatório (imgflip) |
 | [`/monitor`](https://jpereira.github.io/zapbot/commands/monitor/) 🚧 | | ✅ | Avisa quando números ficam online *(em desenvolvimento, desabilitado por padrão)* |
 | [`/mute`](https://jpereira.github.io/zapbot/commands/mute/) | `/m`, `/mudo` | ✅ | Silencia os avisos de apagadas, editadas e status de uma pessoa, um grupo ou uma comunidade; respondendo um aviso, de onde ele veio |
-| [`/news`](https://jpereira.github.io/zapbot/commands/news/) | | ✅ | Manchetes de feeds RSS: `-hack`, `-g1`, `-gazeta`, `-brasil` |
+| [`/news`](https://jpereira.github.io/zapbot/commands/news/) | | | Manchetes de feeds RSS: `-hack`, `-g1`, `-gazeta`, `-brasil` |
 | [`/noffa`](https://jpereira.github.io/zapbot/commands/noffa/) | `/🌈`, `/🏳️‍🌈` | | Enfeita o texto com arco-íris |
-| [`/ping`](https://jpereira.github.io/zapbot/commands/ping/) | `/p` | ✅ | Verifica se o bot está vivo |
+| [`/ping`](https://jpereira.github.io/zapbot/commands/ping/) | `/p` | | Verifica se o bot está vivo |
 | [`/pixelart`](https://jpereira.github.io/zapbot/commands/pixelart/) | `/ansi`, `/px` | | Arte ANSI/ASCII aleatória (16colo.rs) |
 | [`/set`](https://jpereira.github.io/zapbot/commands/set/) | `/config` | ✅ | Lista e altera as configurações (settings); `-a`/`-rem` acrescentam e tiram itens das listas (ex.: o `bot.admins` e o `bot.users`) |
 | [`/show`](https://jpereira.github.io/zapbot/commands/show/) | `/s` | ✅ | Reexibe mensagens apagadas, editadas (`-e`) e status apagados (`-s`), deste chat ou de outro; `-q` busca pelo texto |
@@ -151,8 +151,8 @@ todos, com `/set bot.users true`); o `/whois` diz o seu nível
 | [`/todos`](https://jpereira.github.io/zapbot/commands/todos/) | `/todes` | ✅ | Menciona todos do grupo |
 | [`/traduzir`](https://jpereira.github.io/zapbot/commands/traduzir/) | `/tr`, `/translate` | | Traduz o texto ou a mensagem respondida (Google Translate); `-para en` muda o idioma |
 | [`/unmute`](https://jpereira.github.io/zapbot/commands/unmute/) | | ✅ | Desfaz o silêncio do `/mute`: pelo nome, pelo nº da lista, respondendo um aviso ou todos (`-all`) |
-| [`/uptime`](https://jpereira.github.io/zapbot/commands/uptime/) | `/u`, `/up` | ✅ | Tempo de execução e de conexão |
-| [`/version`](https://jpereira.github.io/zapbot/commands/version/) | `/ver` | ✅ | Versão do bot (mesmo banner do `/uptime`) |
+| [`/uptime`](https://jpereira.github.io/zapbot/commands/uptime/) | `/u`, `/up` | | Tempo de execução e de conexão |
+| [`/version`](https://jpereira.github.io/zapbot/commands/version/) | `/ver` | | Versão do bot (mesmo banner do `/uptime`) |
 | [`/walissu`](https://jpereira.github.io/zapbot/commands/walissu/) | `/ualisu` | ✅ | Walissu CVE BOT: marca 2 membros com uma CVE aleatória |
 | [`/watch`](https://jpereira.github.io/zapbot/commands/watch/) | `/w` | ✅ | Avisa no seu privado (ou, com um ou vários `-to`, em outros chats ou por e-mail) quando uma mensagem casa com um texto/regex |
 | [`/whois`](https://jpereira.github.io/zapbot/commands/whois/) | `/who`, `/id` | | Quem é e o que pode no bot, neste chat: 🤖 dono, 👑 admin, 🗣️ usuário ou 🚫 sem permissão; o dono e os admins veem os outros |
