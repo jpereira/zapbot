@@ -3,8 +3,42 @@
  */
 
 function tokenizeCommand(input) {
-    return [...input.matchAll(/"([^"]*)"|'([^']*)'|(\S+)/g)]
-        .map(m => m[1] ?? m[2] ?? m[3]);
+    const tokens = [];
+    let texto = input.trim();
+    while (texto) {
+        const delimitador = texto[0];
+        if (['/', '"', "'"].includes(delimitador)) {
+            let fim = 1;
+            let escapado = false;
+            let classe = false;
+            for (; fim < texto.length; fim++) {
+                const c = texto[fim];
+                if (escapado) { escapado = false; continue; }
+                if (c === '\\') { escapado = true; continue; }
+                if (delimitador === '/') {
+                    if (c === '[') classe = true;
+                    if (c === ']') classe = false;
+                }
+                if (c === delimitador && !classe) break;
+            }
+            let depois = fim + 1;
+            if (delimitador === '/') {
+                while (depois < texto.length && /[a-z]/i.test(texto[depois])) depois++;
+            }
+            if (fim < texto.length && (!texto[depois] || /\s/.test(texto[depois]))) {
+                const raw = texto.slice(0, depois);
+                const valor = delimitador === '/' ? raw : texto.slice(1, fim);
+                tokens.push({ valor, opcao: false });
+                texto = texto.slice(depois).trimStart();
+                continue;
+            }
+        }
+        // Caminhos e textos sem delimitador final continuam sendo argumentos comuns.
+        const valor = texto.match(/^\S+/)[0];
+        tokens.push({ valor, opcao: true });
+        texto = texto.slice(valor.length).trimStart();
+    }
+    return tokens;
 }
 
 function normalizeArg(arg) {
@@ -58,9 +92,9 @@ function GetOptFromCommand(input, config = {}) {
 
     // `input` são só os argumentos (sem o "/comando"): um 1º argumento começando com "/" é argumento
     for (let i = 0; i < tokens.length; i++) {
-        const token = tokens[i];
+        const { valor: token, opcao } = tokens[i];
 
-        if (!isOption(token)) {
+        if (!opcao || !isOption(token)) {
             argv.push(normalizeArg(token));
             continue;
         }
@@ -82,9 +116,10 @@ function GetOptFromCommand(input, config = {}) {
         }
 
         if (option.expectedValues.length === 1) {
-            const nextToken = tokens[i + 1];
+            const next = tokens[i + 1];
+            const nextToken = next?.valor;
 
-            if (nextToken === undefined || isOption(nextToken)) {
+            if (nextToken === undefined || (next.opcao && isOption(nextToken))) {
                 result.opt[canonicalName] = null;
                 continue;
             }
@@ -97,8 +132,9 @@ function GetOptFromCommand(input, config = {}) {
         // Opção com múltiplos valores
         const values = [];
         for (let x = 0; x < option.expectedValues.length; x++) {
-            const nextToken = tokens[i + 1];
-            if (nextToken === undefined || isOption(nextToken)) break;
+            const next = tokens[i + 1];
+            const nextToken = next?.valor;
+            if (nextToken === undefined || (next.opcao && isOption(nextToken))) break;
             values.push(normalizeArg(nextToken));
             i++;
         }

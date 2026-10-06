@@ -382,6 +382,42 @@ describe('parser de opções', () => {
         assert.deepEqual(GetOptFromCommand('/^show\\./ x', cmd('/set')).argv, ['/^show\\./', 'x']);
     });
 
+    test('barras preservam nomes, regex com espaços, escapes e flags sem virar opções', () => {
+        const args = '/Jorge Pereira/ /foo -h bar/i /[ /] caminho\\/arquivo/gi -3';
+        assert.deepEqual(GetOptFromCommand(args, cmd('/show')).argv, [
+            '/Jorge Pereira/', '/foo -h bar/i', '/[ /] caminho\\/arquivo/gi', '-3'
+        ]);
+        assert.equal(GetOptFromCommand(args, cmd('/show')).opt.help, false);
+        assert.deepEqual(GetOptFromCommand('/tmp/arquivo https://x.com/a/b', cmd('/get')).argv,
+            ['/tmp/arquivo', 'https://x.com/a/b']);
+    });
+
+    test('opções dentro de aspas são valores ou argumentos, inclusive vazios', () => {
+        const o = GetOptFromCommand('-msg "-h" \'-help\' ""', cmd('/crypto'));
+        assert.equal(o.opt.msg, '-h');
+        assert.equal(o.opt.help, false);
+        assert.deepEqual(o.argv, ['-help', '']);
+    });
+
+    test('valor com aspas escapadas fica inteiro', () => {
+        const o = GetOptFromCommand('-msg "ele disse \\"oi\\" hoje"', cmd('/crypto'));
+        assert.equal(o.opt.msg, 'ele disse \\"oi\\" hoje');
+        assert.deepEqual(o.argv, []);
+    });
+
+    test('opções com múltiplos valores preservam grupos e param na próxima opção', () => {
+        const config = { cmd_opts: [
+            { opts: ['intervalo', 'i'], values: ['inicio', 'fim'] },
+            { opts: ['ativo', 'a'], values: [] }
+        ] };
+        const o = GetOptFromCommand('-i "um dois" \'-3\' -a solto', config);
+        assert.deepEqual(o.opt.intervalo, ['um dois', '-3']);
+        assert.equal(o.opt.ativo, true);
+        assert.deepEqual(o.argv, ['solto']);
+        assert.deepEqual([...o.given], ['intervalo', 'ativo']);
+        assert.deepEqual(GetOptFromCommand('-i inicio -a', config).opt.intervalo, ['inicio']);
+    });
+
     test('-h e -help em qualquer comando', () => {
         assert.equal(GetOptFromCommand('-h', cmd('/ping')).opt.help, true);
         assert.equal(GetOptFromCommand('-help', cmd('/ping')).opt.help, true);
