@@ -75,7 +75,7 @@ function formatCommandHelp(command, { protocolo: protocol } = {}) {
 
     // Each usage form ("... or ...") on a line, aligned below the first
     const forms = interpolar(command.usage ?? command.cmd).split(/\s{2}ou\s{2}/);
-    const lines = forms.map((f, i) => `${i ? '       ' : 'Usage: '}${f}`);
+    const lines = forms.map((f, i) => `${i ? '     ' : 'Uso: '}${f}`);
 
     if (command.help) lines.push(...textLines(interpolar(command.help)));
 
@@ -97,7 +97,7 @@ function formatCommandHelp(command, { protocolo: protocol } = {}) {
         .filter(o => o?.argv?.length && !protocolAlt)
         .map(o => ({ syntax: o.argv.filter(Boolean).join(' '), desc: interpolar(o.desc) }));
 
-    // A single column so Options and Arguments line up
+    // A single column so options and arguments line up.
     const width = Math.max(0, ...[...options, ...positional].map(o => o.syntax.length));
     const line = (o) => textLines(o.desc, `  ${o.syntax.padEnd(width)}  `, '    ');
 
@@ -110,20 +110,22 @@ function formatCommandHelp(command, { protocolo: protocol } = {}) {
             if (!groups.has(g.chave)) groups.set(g.chave, { ...g, opcoes: [] });
             groups.get(g.chave).opcoes.push(o);
         }
-        lines.push('', 'Options:');
+        lines.push('', 'Opções:');
         [...groups.values()].sort((a, b) => a.ordem - b.ordem).forEach((g, i) => {
             lines.push(...(i ? [''] : []), ` > ${g.titulo}`);
             g.opcoes.forEach(o => lines.push(...line(o)));
         });
     } else if (options.length) {
-        lines.push('', 'Options:');
+        lines.push('', 'Opções:');
         options.forEach((o, i) => lines.push(...(command.espacado && i ? [''] : []), ...line(o)));
     }
 
     if (positional.length) {
-        lines.push('', 'Arguments:');
+        lines.push('', 'Argumentos:');
         positional.forEach(a => lines.push(...line(a)));
     }
+
+    lines.push('', 'Ajuda: -help, -h');
 
     if (command.aliases?.length) {
         lines.push('', `Aliases: ${command.aliases.join(', ')}`);

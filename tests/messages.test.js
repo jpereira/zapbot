@@ -111,7 +111,7 @@ describe('comandos', () => {
 
     test('-h mostra a sintaxe do comando', async () => {
         const [r] = await bot.replyAlt('/ping -h');
-        assert.match(r, /Usage: \/ping/);
+        assert.match(r, /Uso: \/ping/);
     });
 
     test('comando desativado por setting é desconhecido', async () => {
@@ -227,7 +227,7 @@ describe('permissões', () => {
         await bot.setSetting('bot.users', [OTHERAlt.user]);
         for (const nameAlt of common) {
             const [help] = await bot.replyAlt(`/${nameAlt} -h`, { de: OTHERAlt.jid });
-            assert.ok(help.includes(`Usage: /${nameAlt}`), nameAlt);
+            assert.ok(help.includes(`Uso: /${nameAlt}`), nameAlt);
         }
         assert.deepEqual(await bot.replyAlt('/p', { de: OTHERAlt.jid }), ['pong']);
         assert.match((await bot.replyAlt('/u', { de: OTHERAlt.jid }))[0], /Conectado:/);
@@ -595,8 +595,8 @@ describe('permissões', () => {
         assert.equal((await bot.replyAlt('/noffa oi', DELE)).length, 1);
         assert.deepEqual(await bot.replyAlt('/tempo', DELE), ['🚫 Limitado aos comandos: /noffa, /joke.']);
         const [help] = await bot.replyAlt('/help', DELE);
-        assert.match(help, /Usage: \/joke/);
-        assert.doesNotMatch(help, /Usage: \/tempo/);
+        assert.match(help, /Uso: \/joke/);
+        assert.doesNotMatch(help, /Uso: \/tempo/);
         assert.match((await bot.replyAlt('/help tempo', DELE))[0], /^⛔ O \/tempo não está liberado para você\./);
         assert.match((await bot.replyAlt('/whois', DELE))[0], /• 🗣️ \+v · 👤 Ciclano · \+5521922222222\n → Apenas: \/noffa, \/joke\n/);
 

@@ -4,6 +4,7 @@
 
 const { MessageMedia } = require('whatsapp-web.js');
 const sharp = require('sharp');
+const { getCommandSyntax } = require('./base');
 
 const { printError } = require('../log');
 const { stickerMeta } = require('../settings');
@@ -105,7 +106,7 @@ async function cmdSticker({ msg, quotedMsg, args }) {
     }
 
     if (!quotedMsg) {
-        await msg.reply("Syntax: Faça um 'reply' utilizando /sticker, ou /sticker -txt \"Bom dia!\" para uma figurinha de texto");
+        await msg.reply('```' + getCommandSyntax('/sticker') + '```');
         return;
     }
 
