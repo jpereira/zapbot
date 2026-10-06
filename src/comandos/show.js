@@ -24,7 +24,7 @@ const { ehCanal } = require('../util/origem');
  * formato dos alertas: as APAGADAS (-d), as EDITADAS (-e) e os STATUS
  * apagados (-s), que se somam. Sem nenhum dos três: com chat (ou na busca em
  * todos), tudo junto, por data; senão, só as apagadas deste chat.
- *   /show              → a última apagada deste chat
+ *   /show              → no privado, lista o cache; no grupo, a última apagada
  *   /show -3           → as 3 últimas
  *   /show -2 /^Camila/ → as 2 últimas (apagada, editada ou status) do chat que casa
  *   /show -e Trabalho  → a última editada do chat com "Trabalho" no nome
@@ -237,7 +237,6 @@ async function resolverAlvo(msg, texto) {
  */
 async function listarCache({ msg, chatId }) {
     const idsDoChat = await idsDoChatAtual(chatId);
-    const LIMITE = 10;
 
     let texto = '🗄️ *Mensagens no cache*\n\n';
 
@@ -277,15 +276,7 @@ async function listarCache({ msg, chatId }) {
 
     if (chats.length) {
         texto += '\n';
-        chats.slice(0, LIMITE).forEach((c, i) => { texto += linha(c, i); });
-
-        if (chats.length > LIMITE) {
-            texto += `_+${chats.length - LIMITE} chat(s)_\n`;
-
-            // O chat atual fora do top: aparece mesmo assim, com o nº
-            const i = chats.findIndex(c => idsDoChat.includes(c.chat_id));
-            if (i >= LIMITE) texto += linha(chats[i], i);
-        }
+        chats.forEach((c, i) => { texto += linha(c, i); });
 
         texto += `\n💡 _/show <nº, nome, @menção ou /regex/> reexibe as de um chat: apagadas, editadas e status juntos; -d, -e e -s filtram; -N para mais (máx. ${getSetting('show.max')})._` +
                  '\n💡 _-f remove do cache as deste chat (no seu privado: de todos)._';
@@ -465,7 +456,9 @@ async function cmdShow({ msg, opts, chatId, admin }) {
         return;
     }
 
-    if (opts.opt.list) {
+    const privadoSemParametros = /@(c\.us|lid)$/.test(chatId) &&
+        !opts.given.size && !opts.argv.length;
+    if (opts.opt.list || privadoSemParametros) {
         await listarCache({ msg, chatId });
         return;
     }
