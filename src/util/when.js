@@ -124,12 +124,12 @@ function readWhen(words, nowAlt = Date.now()) {
         if (mes < 1 || mes > 12 || day < 1 || day > 31) return null;
 
         const { hora: hour, usadas: used } = withHour(hourNext);
-        let year = data[3] ? Number(data[3].length === 2 ? `20${data[3]}` : data[3]) : today.ano;
+        const year = data[3] ? Number(data[3].length === 2 ? `20${data[3]}` : data[3]) : today.ano;
         let ms = instantInBrasilia(year, mes, day, hour.h, hour.m);
 
         // 31/02 viraria 03/03: data inexistente
         if (partsInBrasilia(ms).dia !== day) return null;
-        if (!data[3] && ms <= nowAlt) ms = instantInBrasilia(++year, mes, day, hour.h, hour.m);
+        if (!data[3] && ms <= nowAlt) ms = instantInBrasilia(year + 1, mes, day, hour.h, hour.m);
 
         return { ms, usadas: used };
     }

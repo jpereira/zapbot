@@ -176,7 +176,9 @@ async function runGet({ msg, opts, quotedMsg, senderName }) {
             fs.writeSync(logCmd, `# Executando: ${cmdYt}\n`);
             await runCommand(BIN_YT, cmdYtArgs, logCmd);
         } catch (inner) {
-            throw new Error(`Problemas para baixar com '${BIN_YT}'`, { cause: { inner, cmd: cmdYt } });
+            const errorAlt = new Error(`Problemas para baixar com '${BIN_YT}'`, { cause: inner });
+            errorAlt.cmd = cmdYt;
+            throw errorAlt;
         }
 
         // Above --max-filesize yt-dlp aborts with no error and no file
@@ -193,7 +195,9 @@ async function runGet({ msg, opts, quotedMsg, senderName }) {
             fs.writeSync(logCmd, `\n\n# Executando: ${cmdFfmpeg}\n`);
             await runCommand(BIN_FFMPEG, ffmpegArgs, logCmd);
         } catch (inner) {
-            throw new Error(`Problemas para decodificar com '${BIN_FFMPEG}'`, { cause: { inner, cmd: cmdFfmpeg } });
+            const errorAlt = new Error(`Problemas para decodificar com '${BIN_FFMPEG}'`, { cause: inner });
+            errorAlt.cmd = cmdFfmpeg;
+            throw errorAlt;
         }
 
         const maxSizeMB = getSetting('get.maxSizeMB');
@@ -226,7 +230,9 @@ async function runGet({ msg, opts, quotedMsg, senderName }) {
 
             await msg.reply(media, null, msgOpts);
         } catch (inner) {
-            throw new Error(`Problemas para enviar com 'MessageMedia.fromFilePath(${outputFile})'`, { cause: { inner } });
+            throw new Error(`Problemas para enviar com 'MessageMedia.fromFilePath(${outputFile})'`, {
+                cause: inner
+            });
         }
     } catch (e) {
         printError(e.message);

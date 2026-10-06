@@ -149,8 +149,10 @@ const helpProtocol = (command, words) => words
 function formatErrorCommand(e) {
     let textAlt = `⚠️💥 ${e.message}.`;
 
-    if (e?.cause?.cmd) textAlt += `\n🛠️ *Cmd*:    ${e.cause.cmd}`;
-    if (e?.cause?.inner) textAlt += `\n⛓️‍💥 *Inner*:  ${e.cause.inner.message || e.cause.inner}`;
+    const cmd = e?.cmd ?? e?.cause?.cmd;
+    if (cmd) textAlt += `\n🛠️ *Cmd*:    ${cmd}`;
+    const inner = e?.cause?.inner ?? e?.cause;
+    if (inner) textAlt += `\n⛓️‍💥 *Inner*:  ${inner.message || inner}`;
 
     return `${textAlt}\n`;
 }
