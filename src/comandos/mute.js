@@ -17,7 +17,7 @@ const { plural } = require('../util/formatar');
  *   -s (-status)   silencia os avisos de status apagados
  *   -a (-all)      tudo isso
  * As opções se combinam (-d -e); só o alvo, sem opção, é o -a. O alvo é buscado
- * como no -to: primeiro nos contatos, depois nos grupos (vários: você escolhe na
+ * como no -to, com prioridade para nomes exatos (vários: você escolhe na
  * lista), ou um número. Respondendo um aviso (apagada, editada, status), o alvo
  * é de onde ele veio: a pessoa (privado e status), o grupo ou a comunidade.
  * Silenciar de novo o mesmo alvo soma ao que já estava. Sem nada, lista;
@@ -106,11 +106,11 @@ async function grupo(chatId) {
 /**
  * Respondendo uma mensagem: de onde ela veio. Um aviso do bot (apagada,
  * editada, status, o /show): a pessoa (privado e status), o grupo ou a
- * comunidade. Um aviso antigo, sem a origem guardada: a pessoa do "📱 Número".
+ * comunidade. Sem a origem guardada, lê o grupo antes do número ou nome da pessoa.
  * A mensagem de alguém: essa pessoa.
  * @returns {Promise<object|{ erro: string }|null>} null: não respondeu nada
  */
-async function alvoDaResposta(quotedMsg) {
+async function alvoDaResposta(msg, quotedMsg) {
     if (!quotedMsg) return null;
 
     const origem = await origemDoAviso(quotedMsg.id?.id);
@@ -118,8 +118,21 @@ async function alvoDaResposta(quotedMsg) {
         return origem.chat_id.endsWith('@g.us') ? grupo(origem.chat_id) : pessoa(origem.sender || origem.chat_id);
     }
 
-    const numero = String(quotedMsg.body ?? '').match(/📱 \*?Número:\*? \+(\d{10,15})/)?.[1];
-    if (numero) return pessoa(numero);
+    if (quotedMsg.fromMe) {
+        // Só o cabeçalho: o texto citado pode ter seu próprio "Grupo:" lá embaixo.
+        const cabecalho = String(quotedMsg.body ?? '').split(
+            /\n(?:📅|✏️|📝|💬|❌|🗑️)/
+        )[0];
+        const nomeGrupo = cabecalho.match(/^👥\s+\*?Grupo:\*?\s*(.+)$/m)?.[1]?.trim();
+        if (nomeGrupo) {
+            const alvo = await resolverOuEscolher(msg, nomeGrupo, { tipo: 'grupo' });
+            return alvo ? grupo(alvo.id) : null;
+        }
+        const numero = cabecalho.match(/^📱\s+\*?Número:\*?\s*\+(\d{10,15})\s*$/m)?.[1];
+        if (numero) return pessoa(numero);
+        const nome = cabecalho.match(/^👤\s+\*?Nome:\*?\s*(.+)$/m)?.[1]?.trim();
+        if (nome) return resolverOuEscolher(msg, nome, { tipo: 'contato' });
+    }
 
     if (!quotedMsg.fromMe) {
         const autor = quotedMsg.author || quotedMsg.from;
@@ -141,7 +154,8 @@ async function lerAlvo(msg, texto, quotedMsg, comando) {
         });
     }
 
-    const alvo = await alvoDaResposta(quotedMsg);
+    const alvo = await alvoDaResposta(msg, quotedMsg);
+    if (quotedMsg && !alvo) return null;
     if (alvo?.erro) {
         await msg.reply(alvo.erro);
         return null;

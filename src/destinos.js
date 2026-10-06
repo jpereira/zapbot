@@ -246,6 +246,7 @@ function lerEmails(texto) {
  * @param {object} [o]
  * @param {boolean} [o.aceitaEmail]  "email" e endereços valem (alertas, /backup); senão, erro
  * @param {string} [o.semEmail]      o erro quando não aceita (o porquê do comando)
+ * @param {'grupo'|'contato'} [o.tipo]  restringe a busca ao tipo indicado pelo aviso
  * @param {Array<string|{_serialized: string}>} [o.mencoes]  msg.mentionedIds (as menções com @)
  * @returns {Promise<{ id: string, nome: string, grupo: boolean }
  *   | { email: string, nome: string, grupo: false }
@@ -254,7 +255,7 @@ function lerEmails(texto) {
  *   opcoes: mais de um serviu; quem chama oferece a escolha (resolverOuEscolher)
  */
 async function resolverDestino(valor, {
-    aceitaEmail = false, aceitaCanal = false,
+    aceitaEmail = false, aceitaCanal = false, tipo,
     semEmail = '❌ Aqui o destino não pode ser um e-mail.', mencoes = []
 } = {}) {
     const texto = String(valor ?? '').trim();
@@ -270,15 +271,15 @@ async function resolverDestino(valor, {
     }
 
     // Menção: "@<id>" no texto, com o mesmo id em msg.mentionedIds
-    const mencao = texto.match(/^@(\d+)$/);
+    const mencao = tipo === 'grupo' ? null : texto.match(/^@(\d+)$/);
     if (mencao) return pessoaMencionada(mencao[1], mencoes);
 
     // E-mail: "email" (o QRCODE_EMAIL_SMTP_TO) e/ou endereços
-    const porEmail = lerEmails(texto);
+    const porEmail = tipo === 'grupo' ? null : lerEmails(texto);
     if (porEmail) return aceitaEmail ? porEmail : { erro: semEmail };
 
     // Número: só dígitos, com + e separadores
-    const digitos = lerNumero(texto);
+    const digitos = tipo === 'grupo' ? null : lerNumero(texto);
     if (digitos !== null) {
         if (digitos.length < 10 || digitos.length > 15) {
             return { erro: `❌ Número inválido: ${texto}. Use DDI + DDD + número (ex.: +5521999999999).` };
@@ -301,8 +302,8 @@ async function resolverDestino(valor, {
         printError(`[DESTINO] busca por "${texto}" falhou:`, err.message);
         return { erro: `⚠️ Não consegui buscar "${texto}" nos contatos e grupos agora (${err.message}). Tente de novo ou use o número: +5521999999999` };
     }
-    const contatos = await semAsCopiasPeloLid(encontrados.contatos);
-    const grupos = encontrados.grupos;
+    const contatos = tipo === 'grupo' ? [] : await semAsCopiasPeloLid(encontrados.contatos);
+    const grupos = tipo === 'contato' ? [] : encontrados.grupos;
     const canais = aceitaCanal
         ? (await (client.getChannels ? client.getChannels() : client.getChats()))
             .filter(c => ehCanal(c.id?._serialized) &&
@@ -327,6 +328,7 @@ async function resolverDestino(valor, {
     if (candidatos.length === 1) return candidatos[0];
 
     if (!candidatos.length) {
+        if (tipo) return { erro: `❌ Nenhum ${tipo} com "${texto}" no nome.` };
         return { erro: `❌ Nenhum contato ou grupo${aceitaCanal ? ' ou canal' : ''} com "${texto}" no nome.\n💡 _Use o nome como está na sua agenda ou o número: ${EXEMPLO}_` };
     }
 
