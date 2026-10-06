@@ -6,7 +6,7 @@ const { MessageMedia, Location } = require('whatsapp-web.js');
 const fs = require('fs-extra');
 
 const { client } = require('../cliente');
-const { resolveLidToPhone } = require('../contatos');
+const { resolveLidToPhone, resolverNomeDoCanal } = require('../contatos');
 const { dbGet, dbPronto, dbRun } = require('../db');
 const { printDebug, printError } = require('../log');
 const { ignorarAviso, registrarAviso } = require('../mudo');
@@ -14,6 +14,7 @@ const { getSetting } = require('../settings');
 const { contarStats, meuIdStats } = require('../stats');
 const { isCaminhoDeMidia } = require('../util/arquivos');
 const { formatarData } = require('../util/formatar');
+const { cabecalhoOrigem, ehCanal } = require('../util/origem');
 
 /*
  * Recuperação de mensagens apagadas
@@ -32,6 +33,11 @@ const isStatus = (row) => row.chat_id === 'status@broadcast';
  * sem eles (/show) usa o que foi gravado no banco.
  */
 async function resolverAutorApagada(row, { after, before, protocolKey } = {}) {
+    if (ehCanal(row.chat_id)) {
+        const nome = (await resolverNomeDoCanal(row.chat_id)) || row.chat_name ||
+            `Canal ${row.chat_id.split('@')[0]}`;
+        return { nomeChat: nome, nomeRemetente: nome, numeroRemetente: null };
+    }
     let nomeChat = row.chat_name || 'Conversa desconhecida';
     let nomeRemetente = row.sender_name || 'Desconhecido';
     let numeroRemetente = row.sender_number || null;
@@ -100,13 +106,10 @@ async function enviarMensagemApagada(destino, row, info, { titulo = '❌ *MENSAG
 
     let alertaTexto = `${titulo}\n\n`;
 
-    if (row.is_group === 1) {
-        alertaTexto += `👥 *Grupo:* ${info.nomeChat}\n`;
-    }
-
-    alertaTexto +=
-        `👤 *Nome:* ${info.nomeRemetente}\n` +
-        `📱 *Número:* ${info.numeroRemetente ? `+${info.numeroRemetente}` : 'Número indisponível'}\n` +
+    alertaTexto += cabecalhoOrigem({
+        chatId: row.chat_id, chatName: info.nomeChat, isGroup: row.is_group,
+        senderName: info.nomeRemetente, senderNumber: info.numeroRemetente
+    }) +
         `📅 *Enviada em:* ${formatarData(row.timestamp)}\n`;
 
     for (const linha of extras) {

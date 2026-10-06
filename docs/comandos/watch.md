@@ -1,7 +1,7 @@
 # `/watch` (`/w`) · admin
 
-Vigia as mensagens que chegam em **qualquer chat** (privados, grupos, status e transmissões) e, quando
-alguma casa com uma regra, manda o alerta **no seu privado** (ou, com `-to`, em
+Vigia as mensagens que chegam em **qualquer chat** (privados, grupos, status, transmissões e canais).
+Quando alguma casa com uma regra, manda o alerta **no seu privado** (ou, com `-to`, em
 outro chat ou por e-mail; veja [Avisar em outro lugar](#avisar-em-outro-lugar)):
 
 ```
@@ -29,6 +29,12 @@ do contato (`@Fulano`) e o grupo com o nome atual.
 Em status e transmissões, o remetente é identificado pelo autor da mensagem. Um autor em `@lid`
 é convertido para telefone quando o WhatsApp fornece essa correspondência; sem ela, o número
 fica indisponível. Se o autor não vier informado, o nome aparece como `Desconhecido`.
+
+Publicações de canais (`@newsletter`) aparecem com `📰 Canal: <nome>` no aviso; o histórico usa
+📰 e o nome do canal.
+O nome vem do canal consultado pelo ID; se não estiver disponível, o aviso identifica o canal pelo
+ID. Canais não exibem nome nem telefone de contato. No histórico, o nome salvo é usado quando o
+canal não pode ser consultado.
 
 | Opção | Valor | Descrição |
 |---|---|---|

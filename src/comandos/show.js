@@ -17,6 +17,7 @@ const { printError, printInfo } = require('../log');
 const { getSetting } = require('../settings');
 const { humanSize, isCaminhoDeMidia } = require('../util/arquivos');
 const { esperar, formatarData, paraMs, plural, semAcentos } = require('../util/formatar');
+const { ehCanal } = require('../util/origem');
 
 /*
  * /show [-N] [-d] [-e] [-s] [chat]: reexibe o que está no cache, no mesmo
@@ -153,7 +154,7 @@ function chatsDoCache() {
 }
 
 const nomeDoChat = (c) => c.chat_name || c.chat_id.split('@')[0];
-const descreverChat = (c) => `${c.is_group ? '👥' : '👤'} ${nomeDoChat(c)}`;
+const descreverChat = (c) => `${ehCanal(c.chat_id) ? '📰' : c.is_group ? '👥' : '👤'} ${nomeDoChat(c)}`;
 // Como o semAcentos, mas sem mexer nas maiúsculas: \D e \d são coisas bem diferentes numa regex
 const tirarAcentos = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '');
 const paraAlvo = async (c) => ({ ids: await idsDoChatAtual(c.chat_id), nome: nomeDoChat(c) });
@@ -550,7 +551,7 @@ async function cmdShow({ msg, opts, chatId, admin }) {
     }
 
     if (todos) resumo += '\n💬 *Chats:* todos';
-    if (alvo) resumo += `\n💬 *Chat:* ${alvo.nome}`;
+    if (alvo) resumo += `\n${alvo.ids.every(ehCanal) ? '📰 *Canal:*' : '💬 *Chat:*'} ${alvo.nome}`;
 
     await msg.reply(resumo);
 
