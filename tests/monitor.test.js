@@ -72,7 +72,7 @@ describe('presença', () => {
 
         await online(`${NUMBER}:3@c.us`);
         assert.equal(bot.client.enviadas.length, 1);
-        assert.equal(bot.client.enviadas[0].chatId, process.env.PHONE_NUMBER);
+        assert.equal(bot.client.enviadas[0].chatId, `${process.env.PHONE_NUMBER}@c.us`);
         assert.equal(bot.client.enviadas[0].content, `🔔 *Beltrano* (${NUMBER}) acabou de ficar online.`);
 
         assert.match((await bot.replyAlt('/monitor -logs'))[0], /⏱️ \*Beltrano\* ficou online em:/);

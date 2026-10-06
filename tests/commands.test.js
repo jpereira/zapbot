@@ -243,7 +243,7 @@ describe('/set (/config)', () => {
             assert.match(private, /🔒 \*config\/\.env\* _\(somente leitura: mude no arquivo e recrie o container\)_\n\n```\n/);
             assert.match(private, /OPENAI_API_KEY\s+••••1234\n/);
             assert.match(private, /OPENAI_MODEL\s+gpt-4\.1\n/);
-            assert.match(private, /PHONE_NUMBER\s+5521900000000@c\.us\n/);
+            assert.match(private, /PHONE_NUMBER\s+5521900000000\n/);
             assert.match(private, /GIPHY_API_KEY\s+\(vazio\)\n/);
             assert.doesNotMatch(private, /sk-env/);
 

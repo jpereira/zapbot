@@ -8,13 +8,14 @@ const { normalizeWid } = require('../contacts');
 const { dbGet, dbRun } = require('../db');
 const { printDebug, printError, printSuccess } = require('../log');
 const { isDebugMode } = require('../settings');
+const { phoneBotJid } = require('../botPhone');
 
 client.on('presence_update', async (presence) => {
     // Without /monitor loaded, already registered numbers generate no notices
     if (!findCommand('/monitor')) return;
     if (!presence?.id) return;
 
-    const myid = process.env.PHONE_NUMBER;
+    const myid = phoneBotJid();
 
     try {
         const rawId = presence.id._serialized || presence.id;
