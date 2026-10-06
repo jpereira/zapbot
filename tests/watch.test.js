@@ -129,20 +129,20 @@ describe('detecção', () => {
 });
 
 describe('/watch', () => {
-    test('-a adiciona texto e regex; aspas e espaços são mantidos', async () => {
-        assert.match((await bot.responder('/watch -a promoção relâmpago'))[0], /✅ Regra \*#1\* adicionada _\(texto\)_: promoção relâmpago/);
-        assert.match((await bot.responder('/w -add "/pix|boleto/i"'))[0], /✅ Regra \*#2\* adicionada _\(regex\)_: \/pix\|boleto\/i/);
+    test('cria texto e regex diretamente; aspas e espaços são mantidos', async () => {
+        assert.match((await bot.responder('/watch promoção relâmpago'))[0], /✅ Regra \*#1\* adicionada _\(texto\)_: promoção relâmpago/);
+        assert.match((await bot.responder('/w "/pix|boleto/i"'))[0], /✅ Regra \*#2\* adicionada _\(regex\)_: \/pix\|boleto\/i/);
         assert.deepEqual(bot.getSetting('watch.rules'), ['promoção relâmpago', '/pix|boleto/i']);
     });
 
-    test('-a: sem regra, repetida, inválida e acima do watch.max', async () => {
-        assert.match((await bot.responder('/watch -a'))[0], /Usage: \/watch/);
-        await bot.responder('/watch -a pix');
-        assert.match((await bot.responder('/watch -a pix'))[0], /ℹ️ A regra #1 já existe: pix/);
-        assert.match((await bot.responder('/watch -a /[/'))[0], /❌ Regra inválida: regex inválida/);
+    test('recusa opção inválida, regra repetida, inválida e limite de regras', async () => {
+        assert.match((await bot.responder('/watch -add'))[0], /Usage: \/watch/);
+        await bot.responder('/watch pix');
+        assert.match((await bot.responder('/watch pix'))[0], /ℹ️ A regra #1 já existe: pix/);
+        assert.match((await bot.responder('/watch /[/'))[0], /❌/);
 
         await bot.setSetting('watch.max', 1);
-        assert.match((await bot.responder('/watch -a outra'))[0], /❌ Limite de 1 regras atingido/);
+        assert.match((await bot.responder('/watch outra'))[0], /❌ Limite de 1 regras atingido/);
     });
 
     test('-l lista as regras com as ocorrências, no chat onde foi digitado', async () => {
@@ -160,7 +160,7 @@ describe('/watch', () => {
         assert.match(aqui.texto, /WATCH/);
     });
 
-    test('-s (e sem opção): ocorrências de todas; -s N de uma regra', async () => {
+    test('listagem com ocorrências de todas; -s N de uma regra', async () => {
         await bot.setSetting('watch.rules', 'pix\nboleto');
         await alguemEscreve('pix 1');
         await alguemEscreve('boleto 1');
@@ -171,11 +171,11 @@ describe('/watch', () => {
         assert.match(todas, /· 🔎 #1\n.*\n    💬 "pix 1"/);
         assert.match(todas, /· 🔎 #2\n.*\n    💬 "boleto 1"/);
 
-        const uma = (await bot.executar('/watch -s -2', { chat: DONO.jid }))[0].texto;
+        const uma = (await bot.executar('/watch -s 2', { chat: DONO.jid }))[0].texto;
         assert.match(uma, /🔎 \*Regra #2:\* boleto\n📦 \*Total:\* 1/);
         assert.doesNotMatch(uma, /pix 1/);
 
-        assert.match((await bot.responder('/watch -s 9'))[0], /❌ Regra inválida\. Existem 2 regras/);
+        assert.match((await bot.responder('/watch -s 9'))[0], /❌ A regra #9 não existe\. Existem 2 regras/);
     });
 
     test('-s respeita o watch.showMax', async () => {
@@ -190,7 +190,7 @@ describe('/watch', () => {
     test('-rem (-r) remove a regra e as ocorrências dela', async () => {
         await bot.setSetting('watch.rules', 'pix\nboleto');
         await alguemEscreve('pix');
-        const [r] = await bot.responder('/watch -r -1');
+        const [r] = await bot.responder('/watch -r 1');
         assert.match(r, /🗑️ Regra \*#1\* removida: pix\n🗄️ Ocorrências apagadas: \*1\*\n💡 _As regras seguintes foram renumeradas/);
         assert.deepEqual(bot.getSetting('watch.rules'), ['boleto']);
 
@@ -203,13 +203,13 @@ describe('/watch', () => {
         await alguemEscreve('pix');
         await alguemEscreve('boleto');
 
-        assert.match((await bot.responder('/watch -f -2'))[0], /Flush das ocorrências da regra #2:\* boleto\n🗄️ Ocorrências apagadas: \*1\*/);
+        assert.match((await bot.responder('/watch -f 2'))[0], /Flush das ocorrências da regra #2:\* boleto\n🗄️ Ocorrências apagadas: \*1\*/);
         assert.match((await bot.responder('/watch -f'))[0], /Flush das ocorrências de todas as regras\*\n🗄️ Ocorrências apagadas: \*1\*/);
         assert.deepEqual(bot.getSetting('watch.rules'), ['pix', 'boleto']);
     });
 
     test('só o dono usa', async () => {
-        assert.deepEqual(await bot.responder('/watch -a x', { de: OUTRO.jid }), []);
+        assert.deepEqual(await bot.responder('/watch x', { de: OUTRO.jid }), []);
         assert.deepEqual(bot.getSetting('watch.rules'), []);
     });
 });
@@ -219,10 +219,10 @@ describe('/watch -to', () => {
 
     beforeEach(() => bot.criarGrupo(L200, 'Grupo sobre L200', [DONO.jid]));
 
-    test('-a com -to: a regra avisa no destino; as sem -to, no seu privado (um aviso por destino)', async () => {
-        assert.match((await bot.responder('/watch -a promoção -to /Grupo sobre L200/'))[0],
+    test('regra com -to avisa no destino; sem -to, no seu privado', async () => {
+        assert.match((await bot.responder('/watch promoção -to /Grupo sobre L200/'))[0],
             /^✅ Regra \*#1\* adicionada _\(texto\)_: promoção\n💡 _Avisos em 👥 Grupo sobre L200\._$/);
-        await bot.responder('/watch -a pix');
+        await bot.responder('/watch pix');
 
         const avisos = await alguemEscreve('promoção no pix');
         assert.deepEqual(avisos.map(a => a.chatId).sort(), [DONO.jid, L200].sort());
@@ -230,44 +230,44 @@ describe('/watch -to', () => {
         assert.match(avisos.find(a => a.chatId === DONO.jid).texto, /🔎 \*Regra #2:\* pix\n👥/);
 
         const [lista] = await bot.responder('/watch -l');
-        assert.match(lista, /#1  promoção  \(1\)  → 👥 Grupo sobre L200\n#2  pix  \(1\)\n/);
+        assert.match(lista, /#1  promoção  \(1\)  → 👥 Grupo sobre L200\n#2  pix  \(1\)/);
     });
 
-    test('-N -to troca os destinos; off volta ao privado; -rem apaga os destinos', async () => {
-        await bot.responder('/watch -a pix');
-        assert.deepEqual(await bot.responder('/watch -1 -to /Fulano/'), ['📣 Regra *#1* (pix): os avisos vão para *👤 Fulano*.']);
+    test('-s N -to troca destinos; off volta ao privado; -rem apaga os destinos', async () => {
+        await bot.responder('/watch pix');
+        assert.deepEqual(await bot.responder('/watch -s 1 -to /Fulano/'), ['📣 Regra *#1* (pix): os avisos vão para *👤 Fulano*.']);
         assert.equal((await alguemEscreve('pix'))[0].chatId, OUTRO.jid);
 
-        assert.deepEqual(await bot.responder('/watch -1 -to off'), ['📣 Regra *#1* (pix): os avisos vão para *seu privado*.']);
+        assert.deepEqual(await bot.responder('/watch -s 1 -to off'), ['📣 Regra *#1* (pix): os avisos vão para *seu privado*.']);
         assert.equal((await alguemEscreve('outro pix'))[0].chatId, DONO.jid);
 
-        await bot.responder('/watch -1 -to /Fulano/');
-        await bot.responder('/watch -r -1');
+        await bot.responder('/watch -s 1 -to /Fulano/');
+        await bot.responder('/watch -r 1');
         assert.deepEqual(await bot.dbAll('SELECT * FROM watch_destinations'), []);
     });
 
     test('vários -to: a regra avisa em todos, juntando as regras de cada destino', async () => {
-        assert.match((await bot.responder('/watch -a promoção -to /Grupo sobre L200/ -to /Fulano/ -to /Fulano/'))[0],
+        assert.match((await bot.responder('/watch promoção -to /Grupo sobre L200/ -to /Fulano/ -to /Fulano/'))[0],
             /💡 _Avisos em 👥 Grupo sobre L200, 👤 Fulano\._$/);
-        await bot.responder('/watch -a pix -to /Fulano/');
+        await bot.responder('/watch pix -to /Fulano/');
 
         const avisos = await alguemEscreve('promoção no pix');
         assert.deepEqual(avisos.map(a => a.chatId).sort(), [L200, OUTRO.jid].sort());
         assert.match(avisos.find(a => a.chatId === OUTRO.jid).texto, /🔎 \*Regra #1:\* promoção\n🔎 \*Regra #2:\* pix\n/);
-        assert.match((await bot.responder('/watch -l'))[0], /#1  promoção  \(1\)  → 👥 Grupo sobre L200, 👤 Fulano\n/);
+        assert.match((await bot.responder('/watch -l'))[0], /#1  promoção  \(1\)  → 👥 Grupo sobre L200, 👤 Fulano/);
 
         // -N com vários -to troca todos; off não se mistura com outros
-        assert.deepEqual(await bot.responder('/watch -2 -to /Fulano/ -to /Grupo sobre L200/'),
+        assert.deepEqual(await bot.responder('/watch -s 2 -to /Fulano/ -to /Grupo sobre L200/'),
             ['📣 Regra *#2* (pix): os avisos vão para *👤 Fulano, 👥 Grupo sobre L200*.']);
-        assert.match((await bot.responder('/watch -2 -to off -to /Fulano/'))[0], /❌ O -to off volta ao seu privado: use-o sozinho/);
-        assert.deepEqual(await bot.responder('/watch -2 -to off'), ['📣 Regra *#2* (pix): os avisos vão para *seu privado*.']);
+        assert.match((await bot.responder('/watch -s 2 -to off -to /Fulano/'))[0], /❌ O -to off volta ao seu privado: use-o sozinho/);
+        assert.deepEqual(await bot.responder('/watch -s 2 -to off'), ['📣 Regra *#2* (pix): os avisos vão para *seu privado*.']);
     });
 
     test('-to email: o aviso vai por e-mail', async () => {
         const env = { QRCODE_EMAIL_SMTP_HOST: 'smtp.exemplo.com', QRCODE_EMAIL_SMTP_USER: 'bot@exemplo.com', QRCODE_EMAIL_SMTP_TO: 'Eu <eu@exemplo.com>' };
         Object.assign(process.env, env);
         try {
-            await bot.responder('/watch -a "vaga" -to email');
+            await bot.responder('/watch "vaga" -to email');
             assert.deepEqual(await alguemEscreve('tem vaga aqui'), [], 'nada no WhatsApp');
             const [m] = bot.emails;
             assert.equal(m.to, 'eu@exemplo.com');
@@ -279,10 +279,106 @@ describe('/watch -to', () => {
     });
 
     test('erros: -to sem regra, regra que não existe, destino inválido (a regra não é criada)', async () => {
-        await bot.responder('/watch -a pix');
+        await bot.responder('/watch pix');
         assert.match((await bot.responder('/watch -to /Fulano/'))[0], /❌ Use o -to ao adicionar/);
-        assert.match((await bot.responder('/watch -9 -to /Fulano/'))[0], /A regra #9 não existe/);
-        assert.match((await bot.responder('/watch -a boleto -to xyz'))[0], /❌ Nenhum contato ou grupo com "xyz"/);
+        assert.match((await bot.responder('/watch -s 9 -to /Fulano/'))[0], /A regra #9 não existe/);
+        assert.match((await bot.responder('/watch boleto -to xyz'))[0], /❌ Nenhum contato ou grupo com "xyz"/);
         assert.deepEqual(bot.getSetting('watch.rules'), ['pix']);
+    });
+});
+
+describe('/watch com origem e listagem', () => {
+    test('sem argumentos lista regras; com hits acrescenta ocorrências recentes e dicas', async () => {
+        await bot.responder('/watch /pix/i');
+        const [sem] = await bot.responder('/watch');
+        assert.match(sem, /WATCH: REGRAS/);
+        assert.match(sem, /#1  \/pix\/i  \(0\)/);
+        assert.doesNotMatch(sem, /WATCH: OCORRÊNCIAS/);
+        await alguemEscreve('pix antigo', { timestamp: 1 });
+        await alguemEscreve('pix recente', { timestamp: 2 });
+        await bot.dbRun("UPDATE watch_hits SET timestamp = 1 WHERE body = 'pix antigo'");
+        const [r] = await bot.responder('/watch -1');
+        assert.match(r, /WATCH: REGRAS[\s\S]*WATCH: OCORRÊNCIAS/);
+        assert.match(r, /Total:\* 2 _\(exibindo as 1 mais recentes\)_/);
+        assert.match(r, /pix recente/);
+        assert.doesNotMatch(r, /pix antigo/);
+        assert.match(r, /\/watch -s N -to/);
+        assert.match((await bot.responder('/watch -0'))[0], /quantidade/);
+    });
+
+    test('-in contato filtra o remetente no grupo, no privado e em status', async () => {
+        const [r] = await bot.responder('/watch /pix/i -in /Fulano/');
+        assert.match(r, /Apenas em 👤 Fulano/);
+        assert.equal((await alguemEscreve('PIX aqui')).length, 1);
+        assert.equal((await alguemEscreve('PIX privado', { chat: OUTRO.jid })).length, 1);
+        assert.equal((await alguemEscreve('PIX status', { chat: 'status@broadcast' })).length, 1);
+        bot.criarContato('5521888888888@c.us', 'Outra pessoa');
+        assert.deepEqual(await alguemEscreve('PIX dele', { de: '5521888888888@c.us' }), []);
+        assert.match((await bot.responder('/watch'))[0], /apenas em 👤 Fulano/);
+        await bot.src('settings').carregarSettings();
+        assert.equal((await alguemEscreve('PIX depois de recarregar')).length, 1);
+    });
+
+    test('-in grupo aceita nomes com espaços e distingue chats', async () => {
+        bot.criarGrupo('120363000000003333@g.us', 'Outro grupo', [OUTRO.jid]);
+        await bot.responder('/watch /pix/i -in /Família/');
+        assert.equal((await alguemEscreve('pix aqui')).length, 1);
+        assert.deepEqual(await alguemEscreve('pix lá', { chat: '120363000000003333@g.us' }), []);
+        assert.deepEqual(await alguemEscreve('pix privado', { chat: OUTRO.jid }), []);
+        assert.match((await bot.responder('/watch -list'))[0], /apenas em 👥 Família/);
+    });
+
+    test('-in canal por nome ou ID restringe à publicação do canal', async () => {
+        const id = '120363000009999@newsletter';
+        bot.client.chats.set(id, { id: { _serialized: id }, name: 'Defesa Civil', isChannel: true });
+        await bot.responder('/watch /chuva/i -in /Defesa Civil/');
+        assert.match((await bot.responder('/watch -list'))[0], /apenas em 📰 Defesa Civil/);
+        assert.equal((await alguemEscreve('chuva no canal', { chat: id })).length, 1);
+        assert.deepEqual(await alguemEscreve('chuva no grupo'), []);
+        await bot.responder(`/watch /vento/i -in ${id}`);
+        assert.equal((await alguemEscreve('vento no canal', { chat: id })).length, 1);
+    });
+
+    test('origem ambígua permite escolher e falha de origem não cria regra', async () => {
+        bot.criarContato('5521999999901@c.us', 'Jorge Um');
+        bot.criarContato('5521999999902@c.us', 'Jorge Dois');
+        await bot.responderEscolhendo('/watch pix -in /Jorge/', 2);
+        assert.equal((await bot.dbGet('SELECT * FROM watch_sources')).source_id,
+            '5521999999902@c.us');
+        assert.match((await bot.responder('/watch boleto -in desconhecido'))[0], /Nenhum contato/);
+        assert.match((await bot.responder('/watch boleto -in email@exemplo.com'))[0], /não e-mail/);
+        assert.deepEqual(bot.getSetting('watch.rules'), ['pix']);
+    });
+
+    test('regex com espaços e opções no texto é preservada; -s N mostra texto completo', async () => {
+        await bot.responder('/watch /pix -to -h azul/i');
+        const corpo = 'PIX -to -h AZUL ' + 'abcdefghij'.repeat(50);
+        await alguemEscreve(corpo);
+        assert.match((await bot.responder('/watch'))[0], /…/);
+        const [completa] = await bot.responder('/watch -s 1');
+        assert.ok(completa.includes(corpo));
+        await bot.responder('/watch -s 1 -to /Fulano/');
+        assert.equal((await alguemEscreve('pix -to -h azul novo'))[0].chatId, OUTRO.jid);
+    });
+
+    test('-flush N mantém origem e destinos; -rem N elimina tudo da regra', async () => {
+        await bot.responder('/watch pix -in /Fulano/ -to /Família/');
+        await alguemEscreve('pix');
+        await bot.responder('/watch -flush 1');
+        assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM watch_hits')).n, 0);
+        assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM watch_sources')).n, 1);
+        assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM watch_destinations')).n, 1);
+        await bot.responder('/watch -rem 1');
+        assert.deepEqual(bot.getSetting('watch.rules'), []);
+        assert.deepEqual(await bot.dbAll('SELECT * FROM watch_sources'), []);
+        assert.deepEqual(await bot.dbAll('SELECT * FROM watch_destinations'), []);
+    });
+
+    test('ações inválidas e opções sem valor não alteram configurações', async () => {
+        for (const comando of ['pix -in', 'pix -to', 'pix -in /Fulano/ -in /Família/',
+            '-rem 0', '-show 0', '-list -flush', '-a pix', '-add pix', '-rem 1 -2']) {
+            assert.match((await bot.responder(`/watch ${comando}`))[0], /^❌/, comando);
+            assert.deepEqual(bot.getSetting('watch.rules'), []);
+        }
     });
 });

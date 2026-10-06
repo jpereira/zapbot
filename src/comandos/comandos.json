@@ -1565,11 +1565,11 @@
         },
         {
             "cmd": "/watch",
-            "usage": "/watch [OPTION] [-N | <PATTERN|/REGEX/>] [-to <destino>]...",
+            "usage": "/watch [texto|/regex/flags] [-in <origem>] [-to <destino>]...  ou  /watch [-N]  ou  /watch -s [N] [-to <destino|off>]...  ou  /watch -rem N  ou  /watch -flush [N]",
             "aliases": [
                 "/w"
             ],
-            "help": "Vigia as mensagens recebidas e avisa no seu privado (ou nos destinos do -to da regra) quando alguma casar com uma regra (setting watch.rules). Publicações de canais (@newsletter) são identificadas com 📰 Canal e o nome, sem nome ou telefone de contato.",
+            "help": "Vigia mensagens recebidas com regras de texto ou regex. Uma regra sem -in vale em qualquer lugar; -in restringe a um contato (remetente), grupo ou canal. Sem parâmetros, lista regras e últimos matches; -N escolhe a quantidade. Publicações de @newsletter são identificadas com 📰 e o nome do canal.",
             "cmd_opts": [
                 {
                     "opts": [
@@ -1577,41 +1577,46 @@
                         "l"
                     ],
                     "values": [],
-                    "desc": "Lista as regras (nº, regra e ocorrências)."
+                    "desc": "Lista as regras, as origens, os destinos e as quantidades de ocorrências."
                 },
                 {
                     "opts": [
                         "show",
                         "s"
                     ],
-                    "values": [],
-                    "desc": "Resumo das mensagens que casaram com a regra -N (sem -N: todas). Padrão sem opções."
+                    "values": [
+                        "[N]"
+                    ],
+                    "desc": "Mostra os textos completos dos matches da regra N; sem N, de todas as regras. Ex: /watch -s 3"
                 },
                 {
                     "opts": [
-                        "add",
-                        "a"
+                        "in"
                     ],
                     "values": [
-                        "<PATTERN|/REGEX/>"
+                        "<origem>"
                     ],
-                    "desc": "Adiciona regra: texto (sem diferenciar maiúsculas/acentos) ou /regex/flags."
+                    "desc": "Restringe uma regra nova a um contato, grupo ou canal, por nome, número, menção ou ID @newsletter. Contato: mensagens dele em qualquer chat. Ex: /watch /chuva/i -in /Defesa Civil/"
                 },
                 {
                     "opts": [
                         "rem",
                         "r"
                     ],
-                    "values": [],
-                    "desc": "Remove a regra -N e as ocorrências dela."
+                    "values": [
+                        "N"
+                    ],
+                    "desc": "Remove a regra N, suas ocorrências, origem e destinos. Ex: /watch -rem 3"
                 },
                 {
                     "opts": [
                         "flush",
                         "f"
                     ],
-                    "values": [],
-                    "desc": "Apaga as ocorrências da regra -N (sem -N: de todas). As regras são mantidas."
+                    "values": [
+                        "[N]"
+                    ],
+                    "desc": "Limpa as ocorrências da regra N; sem N, limpa todas. Mantém regras, origens e destinos. Ex: /watch -flush 3"
                 },
                 {
                     "opts": [
@@ -1620,13 +1625,19 @@
                     "values": [
                         "<destino|off>"
                     ],
-                    "desc": "Para onde vão os avisos de uma regra: com -add (a regra nova) ou com -N (troca os destinos). Contato, menção, grupo, número ou e-mail; off volta ao seu privado. Repita para avisar em vários. Ex: -to /Jorge Pereira/, -to @Fulano, -to /Grupo L200/ -to email, -to +5521999999999, -to off"
+                    "desc": "Destino dos avisos: contato, grupo, número, menção ou e-mail. Na criação da regra ou com -s N. Repita para vários; off volta ao seu privado. Ex: /watch /pix/i -to /Jorge/, /watch -s 3 -to email"
                 },
                 {
                     "argv": [
                         "-N"
                     ],
-                    "desc": "Nº da regra no /watch -l. Ex: /watch -r -2, /watch -f -2"
+                    "desc": "Quantidade de matches recentes na listagem, limitada por watch.showMax. Ex: /watch -10"
+                },
+                {
+                    "argv": [
+                        "[texto|/regex/flags]"
+                    ],
+                    "desc": "Cria uma regra em qualquer lugar, ou só na origem do -in. Aceita espaços; preserve a regex entre barras. Ex: /watch /Jorge Pereira/i, /watch promoção"
                 }
             ],
             "onlyAdmin": true

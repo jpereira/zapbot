@@ -12,6 +12,7 @@ const { aguardarEscolha, autorDe } = require('./escolhas');
 const { printDebug, printError } = require('./log');
 const { isDebugMode } = require('./settings');
 const { semAcentos } = require('./util/formatar');
+const { ehCanal } = require('./util/origem');
 
 /*
  * Formas aceitas:
@@ -250,8 +251,16 @@ function lerEmails(texto) {
  *   | { opcoes: Array<{ id, nome, grupo }>, busca: string, mais: number }>}
  *   opcoes: mais de um serviu; quem chama oferece a escolha (resolverOuEscolher)
  */
-async function resolverDestino(valor, { aceitaEmail = false, semEmail = '❌ Aqui o destino não pode ser um e-mail.', mencoes = [] } = {}) {
+async function resolverDestino(valor, {
+    aceitaEmail = false, aceitaCanal = false,
+    semEmail = '❌ Aqui o destino não pode ser um e-mail.', mencoes = []
+} = {}) {
     const texto = String(valor ?? '').trim();
+    if (aceitaCanal && ehCanal(texto)) {
+        const canal = await client.getChatById(texto).catch(() => null);
+        return canal ? { id: texto, nome: canal.name || texto, grupo: false, canal: true }
+            : { erro: `❌ Canal não encontrado: ${texto}` };
+    }
 
     if (!texto) {
         return { erro: `❌ Informe o destino do -to: um contato, um grupo ou um número (${EXEMPLO})` +
@@ -292,6 +301,11 @@ async function resolverDestino(valor, { aceitaEmail = false, semEmail = '❌ Aqu
     }
     const contatos = await semAsCopiasPeloLid(encontrados.contatos);
     const grupos = encontrados.grupos;
+    const canais = aceitaCanal
+        ? (await (client.getChannels ? client.getChannels() : client.getChats()))
+            .filter(c => ehCanal(c.id?._serialized) &&
+                palavras.every(p => normalizar(c.name ?? '').includes(p)))
+            .map(c => ({ id: c.id._serialized, nome: c.name, grupo: false, canal: true })) : [];
 
     if (isDebugMode()) {
         printDebug(`[DESTINO] "${texto}": contatos ${contatos.map(c => `${c.name}=${c.id._serialized}`).join(', ') || '-'}; ` +
@@ -303,12 +317,15 @@ async function resolverDestino(valor, { aceitaEmail = false, semEmail = '❌ Aqu
 
     if (exato && contatos.filter(c => normalizar(c.name) === busca).length === 1) return doContato(exato);
     if (!exato && grupoExato && grupos.filter(g => normalizar(g.name) === busca).length === 1) return doGrupo(grupoExato);
+    const canalExato = canais.filter(c => normalizar(c.nome) === busca);
+    if (!exato && !grupoExato && canalExato.length === 1) return canalExato[0];
 
-    const candidatos = contatos.length ? contatos.map(doContato) : grupos.map(doGrupo);
+    const candidatos = contatos.length ? contatos.map(doContato)
+        : grupos.length ? grupos.map(doGrupo) : canais;
     if (candidatos.length === 1) return candidatos[0];
 
     if (!candidatos.length) {
-        return { erro: `❌ Nenhum contato ou grupo com "${texto}" no nome.\n💡 _Use o nome como está na sua agenda ou o número: ${EXEMPLO}_` };
+        return { erro: `❌ Nenhum contato ou grupo${aceitaCanal ? ' ou canal' : ''} com "${texto}" no nome.\n💡 _Use o nome como está na sua agenda ou o número: ${EXEMPLO}_` };
     }
 
     return { opcoes: candidatos.slice(0, LIMITE), busca: texto, mais: Math.max(0, candidatos.length - LIMITE) };
@@ -332,7 +349,7 @@ async function resolverOuEscolher(msg, valor, o = {}) {
     }
     if (!r.opcoes) return r;
 
-    const tipo = r.opcoes[0].grupo ? 'grupos' : 'contatos';
+    const tipo = r.opcoes[0].canal ? 'canais' : r.opcoes[0].grupo ? 'grupos' : 'contatos';
     const linhas = r.opcoes.map((d, i) => `${i + 1}. ${descreverDestino(d)}${d.numero ? ` · +${d.numero}` : ''}`);
     const mais = r.mais ? `\n_+${r.mais} ${tipo}: use mais palavras do nome para ver os outros_` : '';
 
@@ -451,7 +468,7 @@ async function nomeDoContato(id, digitos) {
 }
 
 // "👥 Grupo sobre L200" / "👤 Fulano" / "📧 voce@exemplo.com"
-const descreverDestino = (d) => `${d.email ? '📧' : d.grupo ? '👥' : '👤'} ${d.email ?? d.nome}`;
+const descreverDestino = (d) => `${d.email ? '📧' : d.canal ? '📰' : d.grupo ? '👥' : '👤'} ${d.email ?? d.nome}`;
 const descreverDestinos = (destinos) => destinos.map(descreverDestino).join(', ');
 
 module.exports = {
