@@ -18,11 +18,11 @@ Podem ser enviados em **qualquer chat** (privado, grupo ou no chat consigo mesmo
 
 ## Destinos: contato, grupo, número ou e-mail
 
-"Para onde" é sempre o **`-to`**, em todos os comandos: o [`/cron`](cron.md),
+Os comandos com envio a destinos usam **`-to`**: o [`/cron`](cron.md),
 os alertas do [`/cotacao`](cotacao.md#avisar-em-outro-chat-ou-por-e-mail) e do
 [`/crypto`](crypto.md), o [`/defi -alerta`](defi.md#alerta-de-saída-da-faixa), o
 [`/watch`](watch.md#avisar-em-outro-lugar) e o [`/backup -send`](backup.md#enviar-o-arquivo).
-Todos aceitam vários `-to`: o aviso (ou a mensagem, ou o arquivo) sai em cada
+O `/bot -status` também aceita `-to`. Esses comandos aceitam vários `-to`: o aviso (ou a mensagem, ou o arquivo) sai em cada
 destino.
 O alvo do [`/mute`](mute.md), as pessoas do [`/bot +o`/`+v`](bot.md#admins-extras) e do
 [`/whois`](whois.md) usam a mesma busca. Sem `-to`, os avisos (e o
@@ -30,11 +30,14 @@ arquivo do `/backup`) vão para o seu privado, e o `/cron`, para o chat atual.
 
 | Forma | Exemplo | Encontra |
 |---|---|---|
-| Nome | `/Jorge Pereira/`, `"Jorge Pereira"` ou `Jorge` | **Primeiro** um contato da sua agenda, pelo nome salvo; **se nenhum** casar, um grupo de que você participa. O seu próprio nome (o salvo na agenda ou o do seu perfil) é o seu privado |
-| Grupo | `/Grupo L200/`, `"Grupo L200"` ou `L200` | O grupo (quando nenhum contato tem essas palavras no nome) |
+| Nome | `/Jorge Pereira/`, `"Jorge Pereira"` ou `Jorge` | Busca contatos e grupos; nomes exatos têm prioridade, e contatos ganham em caso de empate. O seu próprio nome (o salvo na agenda ou o do seu perfil) é o seu privado |
+| Grupo | `/Grupo L200/`, `"Grupo L200"` ou `L200` | O grupo, com prioridade para o nome exato |
 | Menção | `@Fulano` (escolhido na lista do `@` do WhatsApp) | A pessoa mencionada. Útil num grupo, para quem não está na sua agenda. Um `@número` digitado, sem ser menção, é recusado |
 | Número | `+5521999999999` | O privado do número: DDI + DDD + número (o `+` é opcional; o bot confere se ele está no WhatsApp) |
-| E-mail | `email`, `voce@exemplo.com` ou `"a@x.com, b@y.com"` | Nos alertas (`/cotacao`, `/crypto` e `/defi`) e no `/backup -send`: `email` é o `QRCODE_EMAIL_SMTP_TO`; sai pelo SMTP do bot, sem a formatação do WhatsApp ([E-mails](../emails.md)) |
+| E-mail | `email`, `voce@exemplo.com` ou `"a@x.com, b@y.com"` | Nos alertas (`/cotacao`, `/crypto` e `/defi`), no `/watch`, no `/bot -status` e no `/backup -send`: `email` é o `QRCODE_EMAIL_SMTP_TO`; sai pelo SMTP do bot, sem a formatação do WhatsApp ([E-mails](../emails.md)) |
+
+O `/debug` usa `-copy-to` para copiar logs a um chat, sem aceitar e-mail.
+O `/watch -in` seleciona a origem das mensagens: contato, grupo ou canal `@newsletter`.
 
 As mesmas formas, num comando só:
 

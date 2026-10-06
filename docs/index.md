@@ -48,11 +48,9 @@ Por onde começar:
   abre o WhatsApp Web num Chromium headless e pareia com o seu celular como um
   *aparelho conectado*. A sessão fica salva no volume `wwebjs_auth`, então o QR
   Code só precisa ser lido na primeira vez (ou quando a sessão for revogada).
-  A lib está fixada no commit [`58ddf15`](https://github.com/wwebjs/whatsapp-web.js/commit/58ddf1561cd783d6a548fa812eb70a05944604b4)
-  (ainda sem release): ele corrige o `id._serialized` → `id.$1` do WhatsApp Web
-  (jul/2026), que quebrava mensagem citada e download de mídia. O ajuste local
-  fica em `patches/` (aplicado pelo `patch-package`). Para instalar fora do
-  Docker: `PUPPETEER_SKIP_DOWNLOAD=true npm install`.
+  A versão da biblioteca é fixada no `package-lock.json` para instalações reproduzíveis.
+  Os ajustes locais ficam em `patches/` e são aplicados pelo `patch-package`.
+  Para instalar fora do Docker: `PUPPETEER_SKIP_DOWNLOAD=true npm install`.
 - **Número do bot = seu número**: o bot age como a conta que leu o QR Code. As
   mensagens que *você* envia (de qualquer aparelho) também passam pelo bot.
 - **Persistência**: toda mensagem recebida é gravada no SQLite (mídias vão para
@@ -62,7 +60,8 @@ Por onde começar:
   apagadas ficam guardadas por 30 dias (setting `cache.revokedRetentionDays`)
   e podem ser reexibidas com `/show`. Status (textos/fotos/vídeos) apagados
   também são recuperados, com o título `📸 STATUS APAGADO DETECTADO`
-  (desative com `/set show.alert.status off`), e reexibidos com `/show -s`.
+  e reexibidos com `/show -s`. Com `/set show.alert.status off`, novas exclusões
+  de status são ignoradas: não geram aviso nem entram na lista de apagados.
 - **Editadas**: quando alguém edita uma mensagem, o bot grava o texto de antes
   e o de depois (tabela `message_edits`) e te avisa **no seu privado** com o
   título `✏️ MENSAGEM EDITADA DETECTADA` (desative o aviso com
@@ -112,7 +111,8 @@ Por onde começar:
   dia no seu privado.
 - **Backup**: todo dia, às 3h (setting `backup.hour`), o bot guarda uma cópia
   compactada do banco em `cache/backups`; o [`/backup`](comandos/backup.md)
-  lista, restaura e envia os arquivos (no seu privado, por e-mail ou, com um
+  também envia o backup diário ao destino de `backup.to`, quando preenchido.
+  O comando lista, restaura e envia os arquivos (no seu privado, por e-mail ou, com um
   ou vários `-to`, noutros chats).
 - **Watch**: toda mensagem recebida que não é comando é testada contra as
   regras do [`/watch`](comandos/watch.md) (setting `watch.rules`); quando casa, a
