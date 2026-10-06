@@ -141,7 +141,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -a`) para fazer o bot
 | [`/show`](show.md) | `/s` | ✅ | Reexibe mensagens apagadas, editadas (`-e`) e status apagados (`-s`), deste chat ou de outro; `-q` busca pelo texto |
 | [`/stats`](stats.md) | | ✅ | Ranking deste chat ou de outro (`/Grupo/`): quem mais fala, apaga e edita, horários de pico; `-me` para as suas, `-l` lista os chats, `-flush` apaga |
 | [`/sticker`](sticker.md) | `/st` | | Transforma imagem/vídeo em figurinha; com `-txt`, uma figurinha animada de texto |
-| [`/tempo`](tempo.md) | `/t`, `/weather` | | Tempo agora e máx./mín. do dia (Open-Meteo); `/tempo 7d` mostra os próximos 7 dias; sem cidade usa `tempo.city` |
+| [`/tempo`](tempo.md) | `/t`, `/weather` | | Tempo agora e máx./mín. do dia (Open-Meteo); `/tempo 16d` mostra até 16 dias, contando hoje; sem cidade usa `tempo.city` |
 | [`/tldr`](tldr.md) | `/resumo` | ✅ | Resume a conversa do chat pelo ChatGPT (`2h`, `300`...) |
 | [`/todos`](todos.md) | `/todes` | ✅ | Menciona todos do grupo |
 | [`/traduzir`](traduzir.md) | `/tr`, `/translate` | | Traduz o texto ou a mensagem respondida (Google Translate); `-para en` muda o idioma |
