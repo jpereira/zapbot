@@ -70,7 +70,7 @@ function lerTags(ler, raiz) {
     // Tags soltas (vencem as do packed-refs com o mesmo nome)
     const pasta = path.join(raiz, '.git', 'refs', 'tags');
     const soltas = (dir, prefixo = '') => {
-        let entradas = [];
+        let entradas;
         try {
             entradas = fs.readdirSync(dir, { withFileTypes: true });
         } catch {

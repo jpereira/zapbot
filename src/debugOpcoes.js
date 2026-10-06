@@ -10,7 +10,7 @@ function compilarFiltroDebug(valor) {
     try {
         return new RegExp(m[1], m[2]);
     } catch (err) {
-        throw new Error(`regex inválida: ${err.message}`);
+        throw new Error(`regex inválida: ${err.message}`, { cause: err });
     }
 }
 
