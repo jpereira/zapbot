@@ -38,8 +38,15 @@ function errorGoogle(err, target) {
         return '⚠️ A Cloud Translation API não está ativada no projeto da chave. Ative em console.cloud.google.com › APIs e serviços › Biblioteca.';
     }
     if (reasonAlt === 'BILLING_DISABLED') return '💳 O projeto da chave está sem faturamento ativo: o Google exige, mesmo dentro da cota grátis.';
+    const limitAlt = ['dailyLimitExceeded', 'userRateLimitExceeded', 'rateLimitExceeded',
+        'quotaExceeded', 'QUOTA_EXCEEDED', 'RATE_LIMIT_EXCEEDED'].includes(reasonAlt);
+    const limitMessage = /^(Daily Limit Exceeded|User Rate Limit Exceeded)\b/i
+        .test(errorAlt?.message?.trim() ?? '');
+    if (err.response?.status === 429 ||
+        (err.response?.status === 403 && (limitAlt || limitMessage))) {
+        return '💸 Cota do Google Translate esgotada. Tente mais tarde.';
+    }
     if (err.response?.status === 403) return `⛔ O Google recusou a chave: ${errorAlt?.message ?? 'acesso negado'}`;
-    if (err.response?.status === 429) return '💸 Cota do Google Translate esgotada. Tente mais tarde.';
     if (/invalid value/i.test(errorAlt?.message ?? '')) return `❌ Idioma inválido: ${target}. Veja os aceitos com /traduzir -l`;
     return `❌ Erro no /traduzir: ${errorAlt?.message ?? err.message}`;
 }

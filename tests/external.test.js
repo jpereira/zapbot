@@ -473,6 +473,11 @@ describe('/traduzir (/tr, /translate)', () => {
             [errorGoogle(403, 'SERVICE_DISABLED'), /A Cloud Translation API não está ativada/],
             [errorGoogle(403, 'BILLING_DISABLED'), /💳 O projeto da chave está sem faturamento/],
             [errorGoogle(429, 'RATE_LIMIT_EXCEEDED'), /💸 Cota do Google Translate esgotada/],
+            [errorGoogle(403, 'dailyLimitExceeded'), /💸 Cota do Google Translate esgotada/],
+            [errorGoogle(403, 'userRateLimitExceeded'), /💸 Cota do Google Translate esgotada/],
+            [errorGoogle(403, '', 'Daily Limit Exceeded'), /💸 Cota do Google Translate esgotada/],
+            [errorGoogle(403, '', 'User Rate Limit Exceeded'), /💸 Cota do Google Translate esgotada/],
+            [errorGoogle(403, 'forbidden', 'IP bloqueado'), /⛔ O Google recusou a chave: IP bloqueado/],
             [errorGoogle(400, 'badRequest', 'Invalid Value'), /❌ Idioma inválido: pt\. Veja os aceitos/]
         ];
         for (const [errorAlt, expected] of cases) {
