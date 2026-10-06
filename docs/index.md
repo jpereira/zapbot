@@ -13,6 +13,10 @@ vigia mensagens por texto/regex e te avisa no privado, monitora quando contatos 
 desenvolvimento), traz notícias, tempo e CVEs, conversa com o ChatGPT e mais algumas brincadeiras,
 tudo por comandos digitados no próprio chat (`/help`, `/get`, `/show`, `/news`, `/gpt`...).
 
+Atalhos persistentes guardam comandos com argumentos e descrição opcional: cadastre com
+`/alias dimdim -desc "Exibe o preço do dólar" /cotacao USD`, execute `/dimdim` e consulte
+`/help alias`. O bot mostra o comando chamado antes do resultado.
+
 A ideia vem dos velhos tempos do IRC: o ZapBot é inspirado nas antigas
 [eggdrops](https://www.eggheads.org/), os bots que ficavam de plantão nos canais, respondendo a
 comandos, guardando o que rolava e cuidando da casa. Aqui o canal é o grupo do WhatsApp, e os
