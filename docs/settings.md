@@ -12,6 +12,7 @@ hora, sem reiniciar, e sobrevivem a reinícios. Para ver e alterar, use o
 | `backup.enabled` | on/off | `on` | [Backup automático](comandos/backup.md#backup-automático) do banco, uma vez por dia |
 | `backup.hour` | 0–23 | `3` | Hora (de Brasília) do backup automático |
 | `backup.keep` | 1–90 | `7` | Quantos backups automáticos (e de antes de restaurar) guardar; os manuais ficam até um `/backup -rm` |
+| `backup.to` | texto | `""` | [Destino do backup diário](comandos/backup.md#backup-automático), além da cópia local: contato, grupo, número ou e-mail, como no `-to`. Vazio: só local. Para vários, use `-to <destino> -to <destino>`. Envio automático, sem pedir `-sim` |
 | `bot.admins` | lista | *(vazia)* | Outras pessoas que também usam os comandos admin: número com DDI (`5521999999999`) ou, pelo `/set`, o nome do contato (`/Jorge Pereira/`) ou a menção. Só o dono altera; o `/bot +o`/`-o` é o atalho. Veja [Admins extras](comandos/bot.md#admins-extras) |
 | `bot.paused` | on/off | `off` | Bot desligado: todos os comandos ignorados, exceto o `/bot` (o mesmo do `/bot -on`/`-off`) |
 | `bot.users` | lista | `false` | Quem usa os comandos comuns (os não-admin), além de você e do `bot.admins`: `false` (ninguém), `true` (todos) ou pessoas e grupos (num grupo, todos ali usam, mas só dentro dele); uma pessoa só num grupo fica como `telefone:id-do-grupo`. Só o dono altera; o `/bot +v`/`-v` é o atalho. Veja [Usuários](comandos/bot.md#usuários) |

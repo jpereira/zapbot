@@ -40,6 +40,7 @@ opção, mostra o banco atual e os backups.
 📦 Backups: 7 (8.40 MB) em /app/cache/backups
 🕐 Último: qui 01/10 03:00 (automático, 1.10 MB)
 ⏭️ Próximo automático: sex 02/10 03:00 (todo dia às 3h, guarda 7)
+📤 Destino automático: só local
 ```
 
 ```
@@ -57,12 +58,37 @@ Todo dia, a partir das 3h de Brasília (setting `backup.hour`), o bot cria um
 backup. Se estiver fora do ar nesse horário, o backup sai assim que ele voltar,
 no mesmo dia. Desligue com `/set backup.enabled off`.
 
+A setting `backup.to` define para onde enviar o arquivo diário **além de salvar
+localmente**. O padrão é `""` (só local). Aceita os destinos do `-to`: `email`
+(o `QRCODE_EMAIL_SMTP_TO`), endereços de e-mail, nome de contato ou grupo e
+número com DDI. Para vários destinos, escreva um `-to` para cada um na setting.
+
+```bash
+/set backup.to email
+/set backup.to voce@exemplo.com
+/set backup.to /Grupo Familia/
+/set backup.to +5521999999999
+/set backup.to "-to email -to /Grupo Familia/"
+/set backup.to ""
+```
+
+Configurar `backup.to` autoriza o envio diário do banco inteiro ao destino,
+sem pedir `-sim` a cada dia. Para nomes com mais de um resultado, use o nome
+completo ou o número: o envio automático não abre uma lista de escolha.
+Para uma pessoa mencionada num comando, configure seu nome ou número na setting.
+E-mails usam o SMTP do bot e o mesmo limite de 20 MB do envio manual.
+Backups manuais e os de antes de restaurar não são enviados por essa setting.
+
 Ficam os 7 automáticos mais recentes (setting `backup.keep`); os mais antigos
 são apagados a cada backup novo. A mesma conta vale para os backups "antes de
 restaurar". Os **manuais** (`-now`) nunca são apagados sozinhos.
 
 Se o backup diário falhar (ex.: disco cheio), o erro vai para o log e para os
 [alertas por e-mail](../emails.md#alertas-por-e-mail) (`💾 Backup falhou`).
+Se o envio falhar, o arquivo local fica preservado e a falha vai para o log e
+para os alertas (`💾 Envio do backup falhou`). O envio é tentado uma vez no dia,
+quando o backup é criado; outra verificação no mesmo dia não repete o envio.
+Os demais destinos são tentados mesmo que um deles falhe.
 
 ## O que entra
 
