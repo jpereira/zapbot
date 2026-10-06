@@ -31,7 +31,7 @@ const OUTRO = { jid: '5521911111111@c.us', user: '5521911111111', nome: 'Fulano'
 let banco = null;
 const preparar = () => (banco ??= inicializarBanco().then(marcarBancoPronto));
 
-const TABELAS = ['messages', 'message_edits', 'stats', 'watch_hits', 'watch_destinations', 'price_alerts',
+const TABELAS = ['command_aliases', 'messages', 'message_edits', 'stats', 'watch_hits', 'watch_destinations', 'price_alerts',
     'presence_logs', 'monitored_numbers', 'settings', 'polls', 'poll_votes', 'schedules', 'defi_positions', 'mutes', 'mute_hits',
     'alerts', 'watch_sources'];
 
