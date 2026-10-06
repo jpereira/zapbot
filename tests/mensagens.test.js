@@ -214,26 +214,56 @@ describe('comando desconhecido', () => {
 });
 
 describe('permissões', () => {
+    test('comandos comuns: exigem liberação e oferecem ajuda aos usuários +v', async () => {
+        const comuns = [
+            'boletos', 'cotacao', 'crypto', 'cve', 'get', 'giphy', 'help', 'joke', 'kernel',
+            'meme', 'news', 'noffa', 'ping', 'pixelart', 'sticker', 'tempo', 'traduzir',
+            'uptime', 'version', 'whois'
+        ];
+        await bot.setSetting('bot.users', false);
+        for (const nome of comuns) {
+            assert.deepEqual(await bot.responder(`/${nome} -h`, { de: OUTRO.jid }), []);
+        }
+        await bot.setSetting('bot.users', [OUTRO.user]);
+        for (const nome of comuns) {
+            const [ajuda] = await bot.responder(`/${nome} -h`, { de: OUTRO.jid });
+            assert.ok(ajuda.includes(`Usage: /${nome}`), nome);
+        }
+        assert.deepEqual(await bot.responder('/p', { de: OUTRO.jid }), ['pong']);
+        assert.match((await bot.responder('/u', { de: OUTRO.jid }))[0], /Conectado:/);
+        assert.match((await bot.responder('/ver', { de: OUTRO.jid }))[0], /ZapBot/);
+    });
+
+    test('comandos comuns aceitam limites por usuário; comandos admin continuam restritos', async () => {
+        await bot.setSetting('bot.users', [OUTRO.user]);
+        await bot.setSetting('bot.users.cmds', [
+            `${OUTRO.user}=/boletos,/news,/ping,/uptime,/version`
+        ]);
+        assert.deepEqual(await bot.responder('/ping', { de: OUTRO.jid }), ['pong']);
+        assert.match((await bot.responder('/noffa oi', { de: OUTRO.jid }))[0], /Limitado aos comandos:/);
+        assert.deepEqual(await bot.responder('/debug', { de: OUTRO.jid }), []);
+    });
+
     test('onlyAdmin: ignorado para os outros, sem resposta no chat', async () => {
-        assert.deepEqual(await bot.responder('/ping', { de: OUTRO.jid }), []);
-        assert.deepEqual(await bot.responder('/ping'), ['pong']);
+        assert.deepEqual(await bot.responder('/debug', { de: OUTRO.jid }), []);
+        assert.deepEqual(await bot.responder('/debug'), ['🪲 Debug Desativado.']);
     });
 
     test('onlyAdmin com debug ligado avisa no seu privado', async () => {
         await bot.setSetting('debug.enabled', true);
-        const r = await bot.executar('/ping', { de: OUTRO.jid });
+        const r = await bot.executar('/debug', { de: OUTRO.jid });
         assert.equal(r.length, 1);
         assert.equal(r[0].chatId, process.env.PHONE_NUMBER);
-        assert.match(r[0].texto, /Fulano tentou executar \/ping dentro de Família, mas sem permissão/);
+        assert.match(r[0].texto, /Fulano tentou executar \/debug dentro de Família, mas sem permissão/);
     });
 
     test('bot.admins: o admin extra usa os comandos admin, também com o bot.users false e nas checagens do dono', async () => {
-        assert.deepEqual(await bot.responder('/ping', { de: OUTRO.jid }), []);
+        assert.deepEqual(await bot.responder('/debug', { de: OUTRO.jid }), []);
         assert.deepEqual(await bot.responder('/set -a bot.admins +5521911111111'), ['✅ *bot.admins* + 5521911111111 (Fulano)\n= 5521911111111 (Fulano)']);
 
-        assert.deepEqual(await bot.responder('/ping', { de: OUTRO.jid }), ['pong']);
+        assert.deepEqual(await bot.responder('/debug', { de: OUTRO.jid }), ['🪲 Debug Desativado.']);
         await bot.setSetting('bot.users', []);
-        assert.deepEqual(await bot.responder('/ping', { de: OUTRO.jid }), ['pong'], 'bot.users false');
+        assert.deepEqual(await bot.responder('/debug', { de: OUTRO.jid }), ['🪲 Debug Desativado.'], 'bot.users false');
         assert.match((await bot.responder('/bot'))[0], /\n🔒 \*Comandos:\* só o dono e os admins\n/);
         assert.deepEqual(await bot.responder('/bot -users'), ['*Usuários* (1) neste grupo\n• 👑 +o · 👤 Fulano · +5521911111111' + LEGENDA]);
         assert.deepEqual(await bot.responder('/cotacao -a gbp', { de: OUTRO.jid }), ['✅ 🇬🇧 GBP habilitada.']);
@@ -241,7 +271,7 @@ describe('permissões', () => {
         // Outra pessoa continua de fora
         const CICLANO = '5521922222222@c.us';
         bot.criarContato(CICLANO, 'Ciclano');
-        assert.deepEqual(await bot.responder('/ping', { de: CICLANO }), []);
+        assert.deepEqual(await bot.responder('/debug', { de: CICLANO }), []);
     });
 
     test('bot.admins pelo nome do contato: guarda o telefone, mostra o nome; vários: a lista', async () => {
@@ -314,7 +344,7 @@ describe('permissões', () => {
         assert.deepEqual(await bot.responder('/set bot.users /Fulano/'), ['✅ *bot.users* = 5521911111111 (Fulano)']);
         assert.equal((await bot.responder('/noffa oi', { de: OUTRO.jid, chat: OUTRO.jid })).length, 1, 'Fulano no privado');
         assert.deepEqual(await bot.responder('/noffa oi', { de: CICLANO }), [], 'Ciclano, de fora');
-        assert.deepEqual(await bot.responder('/ping', { de: OUTRO.jid }), [], 'comando admin continua só dos admins');
+        assert.deepEqual(await bot.responder('/debug', { de: OUTRO.jid }), [], 'comando admin continua só dos admins');
 
         // Grupo: qualquer um, mas só dentro dele
         assert.deepEqual(await bot.responder('/set -a bot.users /Trabalho/'),
