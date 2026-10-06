@@ -17,5 +17,3 @@
 * Lista de escolha (destinos): aceitar 0 ou "cancelar" para desistir sem esperar os 2 min.
 * Limite de uso por pessoa nos comandos publicos (ex.: /get, /gpt), contra abuso em grupo.
 * Adicionar função para fazer /join, /leave de grupos.
-* verificar forma de criar sticker e remover do cache ou achar opcao sem cache.
-* Adicionar o comando /alias <nome> <comando args ...> com opcoes -list,-rm
