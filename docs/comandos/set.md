@@ -72,7 +72,7 @@ senhas aparecem mascaradas (`••••1234`).
 APP_ENV                         prod
 GIPHY_API_KEY                   ••••a1b2
 OPENAI_MODEL                    (vazio)
-PHONE_NUMBER                    5521999999999@c.us
+PHONE_NUMBER                    5521999999999
 QRCODE_EMAIL_SMTP_PASS          ••••mnop
 ...
 ```

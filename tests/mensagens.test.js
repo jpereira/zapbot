@@ -253,7 +253,7 @@ describe('permissões', () => {
         await bot.setSetting('debug.enabled', true);
         const r = await bot.executar('/debug', { de: OUTRO.jid });
         assert.equal(r.length, 1);
-        assert.equal(r[0].chatId, process.env.PHONE_NUMBER);
+        assert.equal(r[0].chatId, `${process.env.PHONE_NUMBER}@c.us`);
         assert.match(r[0].texto, /Fulano tentou executar \/debug dentro de Família, mas sem permissão/);
     });
 
