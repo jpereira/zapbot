@@ -5,6 +5,50 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { spawnSync } = require('node:child_process');
 const path = require('node:path');
+const fs = require('node:fs');
+const os = require('node:os');
+const { applyPatches } = require('../scripts/apply-patches');
+
+test('o lock não instala braces nem a cadeia de patch-package do alerta #36', () => {
+    const lock = require('../package-lock.json');
+    for (const nameAlt of Object.keys(lock.packages)) {
+        assert.doesNotMatch(nameAlt, /(?:^|\/)node_modules\/(braces|patch-package)$/);
+    }
+});
+
+test('patches reais são aplicados sem repositório, repetíveis e recusam arquivos divergentes', t => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'zapbot-patches-'));
+    t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+    t.mock.method(console, 'log', () => {});
+    const project = path.join(__dirname, '..');
+    fs.cpSync(path.join(project, 'patches'), path.join(root, 'patches'), { recursive: true });
+    const files = [
+        'node_modules/tr46/index.js',
+        'node_modules/whatwg-url/lib/url-state-machine.js',
+        'node_modules/whatsapp-web.js/src/util/Injected/Utils.js'
+    ];
+    for (const fileAlt of files) {
+        const destination = path.join(root, fileAlt);
+        fs.mkdirSync(path.dirname(destination), { recursive: true });
+        fs.copyFileSync(path.join(project, fileAlt), destination);
+    }
+    for (const patch of fs.readdirSync(path.join(root, 'patches'))) {
+        const resultAlt = spawnSync('git', ['apply', '--reverse', path.join('patches', patch)], {
+            cwd: root, encoding: 'utf8'
+        });
+        assert.equal(resultAlt.status, 0, resultAlt.stderr);
+    }
+    applyPatches(root);
+    const content = files.map(a => fs.readFileSync(path.join(root, a), 'utf8'));
+    assert.match(content[0], /require\("punycode\/"\)/);
+    assert.match(content[1], /require\("punycode\/"\)/);
+    assert.match(content[2], /delete message\.__x_id/);
+    applyPatches(root);
+    assert.deepEqual(files.map(a => fs.readFileSync(path.join(root, a), 'utf8')), content);
+    fs.writeFileSync(path.join(root, files[0]), 'arquivo incompatível\n');
+    assert.throws(() => applyPatches(root), /Patch incompatível: tr46/);
+    assert.equal(fs.readFileSync(path.join(root, files[0]), 'utf8'), 'arquivo incompatível\n');
+});
 
 test('WhatsApp e URLs internacionais carregam sem o punycode nativo', () => {
     const codeAlt = `
