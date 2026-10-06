@@ -3,7 +3,7 @@
  */
 
 const { findCommand, getCommandSyntax } = require('./base');
-const { resolverMencoes, resolverNomeDoGrupo } = require('../contatos');
+const { resolverMencoes, resolverNomeDoCanal, resolverNomeDoGrupo } = require('../contatos');
 const { dbAll, dbGet, dbPronto, dbRun } = require('../db');
 const {
     colunasDoDestino, descreverDestinos, destinoDaLinha, destinosSalvos, extrairDestinos, recipientsDe,
@@ -13,6 +13,7 @@ const { printInfo } = require('../log');
 const { GetOptFromCommand } = require('../opcoes');
 const { getSetting, setSetting } = require('../settings');
 const { formatarData, plural, resumirTexto } = require('../util/formatar');
+const { ehCanal } = require('../util/origem');
 const { REGRA_REGEX } = require('../watch/regras');
 
 /*
@@ -228,7 +229,10 @@ async function cmdWatch({ msg, opts: optsDoComando, args: argsDoComando }) {
         for (const [i, h] of rows.entries()) {
             // Nome do grupo atual (o gravado pode ser o fallback "Grupo <id>" ou estar desatualizado)
             const grupo = h.is_group ? (await resolverNomeDoGrupo(h.chat_id)) || h.chat_name : null;
-            const onde = h.is_group ? `👥 ${grupo} · 👤 ${h.sender_name}` : `👤 ${h.sender_name}`;
+            const canal = ehCanal(h.chat_id)
+                ? (await resolverNomeDoCanal(h.chat_id)) || h.chat_name : null;
+            const onde = canal ? `📰 ${canal}`
+                : h.is_group ? `👥 ${grupo} · 👤 ${h.sender_name}` : `👤 ${h.sender_name}`;
             const n = regras.indexOf(h.rule) + 1;
             const qual = regra === null ? ` · 🔎 ${n ? `#${n}` : '(removida)'}` : '';
 

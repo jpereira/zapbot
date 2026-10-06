@@ -5,6 +5,7 @@
 const { client } = require('./cliente');
 const { printDebug, printError } = require('./log');
 const { isDebugMode } = require('./settings');
+const { ehCanal } = require('./util/origem');
 
 function normalizerPhoneNumber(phoneNumber) {
     return String(phoneNumber ?? '').replace(/\D/g, '');
@@ -114,7 +115,9 @@ async function resolverNomeDoGrupo(chatId) {
 const privateNameCache = new Map();
 
 async function resolverNomeDoPrivado(chatId) {
-    if (!chatId || chatId.endsWith('@g.us') || chatId === 'status@broadcast') return null;
+    if (!chatId || chatId.endsWith('@g.us') || chatId.endsWith('@broadcast') || ehCanal(chatId)) {
+        return null;
+    }
 
     const cache = privateNameCache.get(chatId);
     if (cache && Date.now() - cache.at < GROUP_NAME_TTL_MS) return cache.name;
@@ -130,6 +133,12 @@ async function resolverNomeDoPrivado(chatId) {
 
     if (name) privateNameCache.set(chatId, { name, at: Date.now() });
     return name;
+}
+
+async function resolverNomeDoCanal(chatId) {
+    if (!ehCanal(chatId)) return null;
+    const canal = await client.getChatById(chatId).catch(() => null);
+    return canal?.name || null;
 }
 
 async function nomeDoGrupoNoStore(chatId) {
@@ -216,6 +225,7 @@ module.exports = {
     removeDeviceSuffix,
     resolveLidToPhone,
     resolverMencoes,
+    resolverNomeDoCanal,
     resolverNomeDoGrupo,
     resolverNomeDoPrivado
 };

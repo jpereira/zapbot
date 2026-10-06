@@ -11,6 +11,7 @@ const { printError, printInfo } = require('../log');
 const { getSetting } = require('../settings');
 const { formatarData } = require('../util/formatar');
 const { compilarRegraWatch } = require('./regras');
+const { cabecalhoOrigem } = require('../util/origem');
 
 async function verificarWatch({ msg, msgIdPure, body, chatId, chatName, isGroup, senderName, senderNumber, timestamp }) {
     // As suas mensagens ficam de fora: inclusive os próprios avisos do /watch no seu privado
@@ -49,9 +50,7 @@ async function verificarWatch({ msg, msgIdPure, body, chatId, chatName, isGroup,
     if (!novas.length) return;
 
     const detalhes =
-        (isGroup ? `👥 *Grupo:* ${chatName}\n` : '') +
-        `👤 *Nome:* ${senderName}\n` +
-        `📱 *Número:* ${senderNumber ? `+${senderNumber}` : 'Número indisponível'}\n` +
+        cabecalhoOrigem({ chatId, chatName, isGroup, senderName, senderNumber }) +
         `📅 *Enviada em:* ${formatarData(timestamp)}\n` +
         `💬 *Texto:* "${await resolverMencoes(body, msg.mentionedIds)}"`;
 
