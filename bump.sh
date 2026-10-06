@@ -142,6 +142,16 @@ update_package() {
     ' "$1"
 }
 
+# The message goes to a file and respects the commit column limit.
+commitar() {
+    local mensagem
+    mensagem="$(mktemp "${TMPDIR:-/tmp}/zapbot-commit.XXXXXX")"
+    printf '%s\n' "$1" > "$mensagem"
+    awk 'length > 100 { print; erro = 1 } END { exit erro }' "$mensagem"
+    git commit -a -F "$mensagem"
+    rm -f "$mensagem"
+}
+
 if [ "$DRY_RUN" -eq 1 ]; then
     # Both steps over the same lines, as they would come out in the end
     if [ "$do_release" -eq 1 ]; then
@@ -165,7 +175,7 @@ if [ "$do_release" -eq 1 ]; then
         echo "ℹ️ Nada a trocar nos docs: a tag vai no commit atual."
     else
         git --no-pager diff --stat
-        git commit -qam "Release ${atual}"
+        commitar "Release ${atual}"
     fi
     git tag -a "release-${atual}" -m "Release ${atual}"
 else
@@ -176,7 +186,7 @@ echo "🚀 Bump to ${nova} (em desenvolvimento)"
 aplicar "$CODE_BUMP"
 update_package "$nova"
 git --no-pager diff --stat
-git commit -qam "Bump to ${nova}"
+commitar "Bump to ${nova}"
 
 # Writes the tags to .git/packed-refs with each one's commit: the Docker image does not
 # carries the git objects, and that is how /version shows "(git+<commit>/<tag>)"
