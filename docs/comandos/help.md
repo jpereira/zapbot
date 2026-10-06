@@ -15,6 +15,7 @@ Exibe o menu com os comandos, ou a ajuda de um só. Cada um vê só o que pode u
 /h /show
 /help defi orca    → só a ajuda da Orca no /defi (o mesmo que /defi orca -help)
 /help defi aave    → só a ajuda do Aave V3
+/alias -help       → ajuda de cadastro, listagem e remoção dos atalhos
 /watch -help       → ajuda do /watch, incluindo regras, origens e destinos
 /show -h           → ajuda do /show
 ```
