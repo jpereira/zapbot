@@ -4,6 +4,40 @@
 
 const util = require('util');
 const colors = require('colors');
+const { contextoDebug } = require('./debugContexto');
+const { configurarDebug, dadosDebug, limparTextoDebug } = require('./debugDados');
+const { compilarFiltroDebug } = require('./debugOpcoes');
+
+let filtroTexto;
+let filtro;
+
+function emitirLog(linha, cor) {
+    const cfg = configurarDebug();
+    const contexto = contextoDebug();
+    const detalhe = cfg.enabled && cfg.level >= 1 && contexto.chatId
+        ? ` {chatId=${contexto.chatId} chatName=${contexto.chatName ?? ''}}` : '';
+    linha = limparTextoDebug(linha) + limparTextoDebug(detalhe);
+    if (cfg.enabled && cfg.filter) {
+        if (filtroTexto !== cfg.filter) {
+            filtro = compilarFiltroDebug(cfg.filter);
+            filtroTexto = cfg.filter;
+        }
+        filtro.lastIndex = 0;
+        if (!filtro.test(linha)) return;
+    }
+    console.log(cor(linha));
+    if (cfg.enabled && cfg.copyTo && !contexto.semRastro) {
+        require('./debugCopia').copiarLog(linha);
+    }
+}
+
+function printDebugNivel(nivel, ...args) {
+    const cfg = configurarDebug();
+    if (!cfg.enabled || cfg.level < nivel || contextoDebug().semRastro) return;
+    const seguros = args.map(a => dadosDebug(a));
+    emitirLog(`[${getTimestamp()}] [DEBUG${nivel}] [${getCaller()}] ` +
+        util.format(...seguros), colors.white);
+}
 
 function getBotUptime(startedTime) {
     const totalSeconds = Math.floor((Date.now() - startedTime) / 1000);
@@ -32,45 +66,48 @@ function getTimestamp() {
 }
 
 function getCaller() {
-    // [0] Error, [1] getCaller, [2] printX, [3] quem chamou printX
-    return new Error().stack.split('\n')[3]?.trim()?.replace('at ', '');
+    return new Error().stack.split('\n').slice(1)
+        .find(l => !l.includes(__filename))?.trim()?.replace('at ', '');
 }
 
 /*
  * Todos os print* aceitam vários argumentos (como console.log).
- * Antes, printError('msg:', err.message) descartava o segundo argumento.
  */
 function printDebug(...args) {
-    console.log(colors.white(`[${getTimestamp()}] [DEBUG] [${getCaller()}] ${util.format(...args)}`));
+    printDebugNivel(0, ...args);
 }
 
 function printInfo(...args) {
-    console.log(colors.yellow(`[${getTimestamp()}] [!] ${util.format(...args)}`));
+    emitirLog(`[${getTimestamp()}] [!] ${util.format(...args.map(a => dadosDebug(a)))}`, colors.yellow);
 }
 
 function printSuccess(...args) {
-    console.log(colors.green(`[${getTimestamp()}] [+] ${util.format(...args)}`));
+    emitirLog(`[${getTimestamp()}] [+] ${util.format(...args.map(a => dadosDebug(a)))}`, colors.green);
 }
 
 function printError(...args) {
-    console.log(colors.red(`[${getTimestamp()}] [*] [${getCaller()}] ${util.format(...args)}`));
+    emitirLog(`[${getTimestamp()}] [*] [${getCaller()}] ` +
+        util.format(...args.map(a => dadosDebug(a))), colors.red);
 }
 
 // Quem executou um comando, e onde: [+] 'Fulano' executed '/help' in 'Família'
 function printCall(quem, call, chat) {
-    console.log(colors.blue(`[${getTimestamp()}] [+] '${quem}' executed '${call}'${chat ? ` in '${chat}'` : ''}`));
+    emitirLog(`[${getTimestamp()}] [+] '${quem}' executed '${call}'` +
+        `${chat ? ` in '${chat}'` : ''}`, colors.blue);
 }
 
 /*
  * Comando que não existe (ou está desativado): o do dono sempre aparece; o dos outros,
  * só no modo debug (senão, qualquer "/" digitado num grupo encheria o log).
  *   [!] ⚠️ 'Jorge' executed unknown command: '/tapioca'
- *   [DEBUG] ⚠️ 'Fulano' executed unknown command: '/tapioca'
+ *   [DEBUG0] ⚠️ 'Fulano' executed unknown command: '/tapioca'
  */
 function printComandoDesconhecido(quem, call, { doDono }) {
     const texto = `⚠️ '${quem}' executed unknown command: '${call}'`;
-    if (doDono) console.log(colors.yellow(`[${getTimestamp()}] [!] ${texto}`));
-    else console.log(colors.white(`[${getTimestamp()}] [DEBUG] ${texto}`));
+    if (doDono) emitirLog(`[${getTimestamp()}] [!] ${texto}`, colors.yellow);
+    else if (configurarDebug().enabled) {
+        emitirLog(`[${getTimestamp()}] [DEBUG0] ${texto}`, colors.white);
+    }
 }
 
 module.exports = {
@@ -78,6 +115,7 @@ module.exports = {
     printCall,
     printComandoDesconhecido,
     printDebug,
+    printDebugNivel,
     printError,
     printInfo,
     printSuccess

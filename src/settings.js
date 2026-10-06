@@ -3,6 +3,7 @@
  */
 
 const { OPENAI_MODELOS } = require('./openai');
+const { compilarFiltroDebug } = require('./debugOpcoes');
 const { botConfig } = require('./botConfig');
 const { APP_ENV } = require('./constantes');
 const { dbAll, dbGet, dbRun } = require('./db');
@@ -217,10 +218,32 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 1, max: 120, // 120: janela máxima aceita pelo NVD
         desc: 'Janela (dias) do /cve -highscore.'
     },
+    'debug.copyTo': {
+        default: '',
+        type: 'string', allowEmpty: true,
+        desc: 'Chat que recebe a cópia dos logs; configure pelo /debug -copy-to. Vazio: só console.',
+        validar: (v) => {
+            if (!/^[\d-]+@(c\.us|g\.us|lid)$/.test(v)) {
+                throw new Error('configure o destino pelo /debug -copy-to');
+            }
+            return v;
+        }
+    },
     'debug.enabled': {
         default: APP_ENV.toLowerCase() === 'dev',
         type: 'boolean',
-        desc: 'Debug mode (o mesmo do /debug on|off).'
+        desc: 'Modo debug (o mesmo do /debug -on|-off).'
+    },
+    'debug.filter': {
+        default: '',
+        type: 'string', allowEmpty: true,
+        desc: 'Filtro /regex/flags dos logs durante o debug. Vazio: sem filtro; /debug -off limpa.',
+        validar: (v) => { compilarFiltroDebug(v); return v; }
+    },
+    'debug.level': {
+        default: 0,
+        type: 'number', min: 0, max: 3,
+        desc: 'Nível cumulativo do debug: 0 básico, 1 funções e comandos, 2 integrações, 3 desenvolvimento.'
     },
     'defi.aave.chains': {
         default: ['1', '8453'],

@@ -65,6 +65,7 @@ src/
   versao.js             a versão com o commit e a tag (ou HEAD e o (devel)) que estão rodando, lidos do .git
   estado.js             estado da conexão, compartilhado entre os módulos
   log.js                print* coloridos (e a linha dos comandos desconhecidos)
+  debug*.js             contexto, instrumentação, regex, dados dos logs e cópia para chats
   db.js                 SQLite (dbGet/dbAll/dbRun) e o sinal dbPronto
   inicializacao.js      tabelas + carga dos settings
   settings.js           SETTINGS_SCHEMA, getSetting/setSetting e a migração dos renomeados
@@ -100,6 +101,13 @@ src/
   util/                 arquivos, formatação, datas digitadas (quando.js), processos externos, URLs
 tests/                  testes automatizados (veja Testes)
 ```
+
+A instrumentação do [`/debug`](comandos/debug.md) é instalada depois do `.env`, antes dos módulos
+do bot. Ela envolve as funções exportadas de `src/` durante o carregamento pelo CommonJS,
+preservando retornos síncronos, promises e o `this`. Os rastros de funções começam no nível `1`;
+Axios, SMTP, processos e métodos do WhatsApp ficam no `2`; consultas ao banco e resultados, no `3`.
+O contexto por execução usa `AsyncLocalStorage` para manter chat e profundidade das chamadas.
+O módulo de log aplica o filtro e a ocultação de credenciais antes do console e da fila de cópia.
 
 ## Testes
 

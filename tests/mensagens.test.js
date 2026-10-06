@@ -209,7 +209,7 @@ describe('comando desconhecido', () => {
         await bot.setSetting('debug.enabled', true);
         antes = bot.logs.length;
         await bot.responder('/tapioca', { de: OUTRO.jid });
-        assert.match(desconhecidos(antes)[0], /\[DEBUG\] ⚠️ 'Fulano' executed unknown command: '\/tapioca'$/);
+        assert.match(desconhecidos(antes)[0], /\[DEBUG0\] ⚠️ 'Fulano' executed unknown command: '\/tapioca'$/);
     });
 });
 
