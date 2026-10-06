@@ -172,8 +172,11 @@ todos, com `/set bot.users true`); o `/whois` diz o seu nível
 ## Desenvolvimento
 
 ```bash
-npm test          # 450+ testes, sem rede nem WhatsApp (Node 22.13+)
-npm run lint      # ESLint
+make deps         # dependências de desenvolvimento, sem baixar Chromium
+make test         # testes, sem rede nem WhatsApp (Node 22.13+)
+make DOCK_REMOTE=1 test # testes da imagem em execução no homelab
+make lint         # ESLint
+make check        # lint, testes e documentação em modo estrito
 ```
 
 O código fica em `src/` (o `app.js` só faz o bootstrap). Veja
