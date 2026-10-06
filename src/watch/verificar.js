@@ -13,17 +13,28 @@ const { formatarData } = require('../util/formatar');
 const { compilarRegraWatch } = require('./regras');
 const { cabecalhoOrigem } = require('../util/origem');
 
-async function verificarWatch({ msg, msgIdPure, body, chatId, chatName, isGroup, senderName, senderNumber, timestamp }) {
+async function verificarWatch({
+    msg, msgIdPure, body, chatId, chatName, isGroup, senderName, senderJid, senderNumber, timestamp
+}) {
     // As suas mensagens ficam de fora: inclusive os próprios avisos do /watch no seu privado
     if (msg.fromMe || !body) return;
     if (!findCommand('/watch')) return;
 
     const regras = getSetting('watch.rules');
     if (!regras.length) return;
+    const origens = new Map((await dbAll('SELECT * FROM watch_sources')).map(r => [r.rule, r]));
 
     const casadas = regras
         .map((regra, i) => ({ regra, n: i + 1 }))
         .filter(({ regra }) => {
+            const origem = origens.get(regra);
+            if (origem) {
+                const corresponde = origem.source_kind === 'contato'
+                    ? origem.source_id === senderJid ||
+                        origem.source_id === `${senderNumber}@c.us`
+                    : origem.source_id === chatId;
+                if (!corresponde) return false;
+            }
             try {
                 return compilarRegraWatch(regra)(body);
             } catch {
