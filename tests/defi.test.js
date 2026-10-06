@@ -761,7 +761,7 @@ describe('/defi morpho', () => {
         // Sem dívida: ∞; dívida sem preço do oráculo: sem como calcular
         assert.equal(morpho.riscoDoMercado({ colateral: 1n, emprestado: 0n, preco: 1n, lltv: 1n }).hf, Infinity);
         assert.equal(morpho.riscoDoMercado({ colateral: 1n, emprestado: 1n, preco: null, lltv: 1n }).hf, null);
-        assert.equal(morpho.emTokens(123456789012345678901234567890n, 18), 123456789012.34568);
+        assert.equal(morpho.emTokens(123456789012345678901234567890n, 18), 123456789012.34567);
         assert.equal(morpho.emTokens(1n, 99), null, 'decimals inválidos');
     });
 
@@ -820,7 +820,7 @@ describe('/defi morpho', () => {
         porRede[8453].vaultV2Positions = [{ vault: VAULT.vault, assets: VAULT.state.assets, assetsUsd: VAULT.state.assetsUsd }];
         porRede[1] = usuario({
             marketPositions: [{
-                healthFactor: 1.4787878787878787,
+                healthFactor: 1.4787878787878788,
                 market: {
                     marketId: '0xeth', lltv: '915000000000000000', chain: ETH,
                     collateralAsset: asset('wstETH', 18, 4000, ETH), loanAsset: asset('WETH', 18, 3300, ETH),

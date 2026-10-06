@@ -8,7 +8,7 @@ const fs = require('fs');
 const { test, describe, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { DONO, GRUPO, OUTRO, Location } = bot;
+const { DONO, OUTRO, Location } = bot;
 
 const PRIVADO_DONO = DONO.jid;
 const TRABALHO = '120363000000000002@g.us';
