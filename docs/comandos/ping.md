@@ -1,4 +1,4 @@
-# `/ping` (`/p`) · admin
+# `/ping` (`/p`)
 
 Verifica se o bot está respondendo.
 
