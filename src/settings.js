@@ -502,9 +502,9 @@ const SETTINGS_SCHEMA = {
         desc: 'Cidade padrão do /tempo (ex.: "Niteroi, Rio de Janeiro, Brazil").'
     },
     'tempo.maxDays': {
-        default: 7,
+        default: 16,
         type: 'number', min: 1, max: 16, // 16: limite da Open-Meteo
-        desc: 'Máximo de dias do /tempo N (ou Nd), ex.: /tempo 7d Niteroi.'
+        desc: 'Máximo de dias do /tempo N (ou Nd), de 1 a 16. Ex.: /tempo 16d Niteroi.'
     },
     'tldr.maxMsgs': {
         default: 500,
