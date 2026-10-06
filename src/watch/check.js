@@ -13,17 +13,28 @@ const { formatData } = require('../util/format');
 const { compileRuleWatch } = require('./rules');
 const { headerOrigin } = require('../util/origin');
 
-async function checkWatch({ msg, msgIdPure, body, chatId, chatName, isGroup, senderName, senderNumber, timestamp }) {
+async function checkWatch({
+    msg, msgIdPure, body, chatId, chatName, isGroup, senderName, senderJid, senderNumber, timestamp
+}) {
     // Your messages are left out: including /watch's own notices in your private chat
     if (msg.fromMe || !body) return;
     if (!findCommand('/watch')) return;
 
     const rules = getSetting('watch.rules');
     if (!rules.length) return;
+    const origins = new Map((await dbAll('SELECT * FROM watch_sources')).map(r => [r.rule, r]));
 
     const matched = rules
         .map((rule, i) => ({ regra: rule, n: i + 1 }))
         .filter(({ regra: rule }) => {
+            const origin = origins.get(rule);
+            if (origin) {
+                const matches = origin.source_kind === 'contato'
+                    ? origin.source_id === senderJid ||
+                        origin.source_id === `${senderNumber}@c.us`
+                    : origin.source_id === chatId;
+                if (!matches) return false;
+            }
             try {
                 return compileRuleWatch(rule)(body);
             } catch {

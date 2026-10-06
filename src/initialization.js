@@ -373,6 +373,12 @@ async function initializeDb() {
         recipients: 'TEXT'   // JSON with the destinations of several -to (the dest_*: the first)
     });
 
+    // Without an origin row, the rule applies in any chat and for any sender.
+    await dbRun(`CREATE TABLE IF NOT EXISTS watch_sources (
+        rule TEXT PRIMARY KEY, source_id TEXT NOT NULL, source_name TEXT NOT NULL,
+        source_kind TEXT NOT NULL
+    )`);
+
     await loadSettings();
 
     for (const dir of [MEDIA_DIR, TMP_DIR]) {

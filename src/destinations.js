@@ -12,6 +12,7 @@ const { waitChoice, authorAlt } = require('./choices');
 const { printDebug, printError } = require('./log');
 const { isDebugMode } = require('./settings');
 const { withoutAccents } = require('./util/format');
+const { isChannelAlt } = require('./util/origin');
 
 /*
  * Formas aceitas:
@@ -250,8 +251,16 @@ function readEmails(textAlt) {
  * | { options: Array<{ id, name, group }>, search: string, more: number }>}
  * options: more than one fit; the caller offers the choice (resolverOrChoose)
  */
-async function resolverDestination(valueAlt, { aceitaEmail: acceptsEmail = false, semEmail: withoutEmail = '❌ Aqui o destino não pode ser um e-mail.', mencoes: mentions = [] } = {}) {
+async function resolverDestination(valueAlt, {
+    aceitaEmail: acceptsEmail = false, aceitaCanal: acceptsChannel = false,
+    semEmail: withoutEmail = '❌ Aqui o destino não pode ser um e-mail.', mencoes: mentions = []
+} = {}) {
     const textAlt = String(valueAlt ?? '').trim();
+    if (acceptsChannel && isChannelAlt(textAlt)) {
+        const channel = await client.getChatById(textAlt).catch(() => null);
+        return channel ? { id: textAlt, nome: channel.name || textAlt, grupo: false, canal: true }
+            : { erro: `❌ Canal não encontrado: ${textAlt}` };
+    }
 
     if (!textAlt) {
         return { erro: `❌ Informe o destino do -to: um contato, um grupo ou um número (${EXAMPLE})` +
@@ -292,6 +301,11 @@ async function resolverDestination(valueAlt, { aceitaEmail: acceptsEmail = false
     }
     const contacts = await withoutAsCopiesByLid(foundAlt6.contatos);
     const groups = foundAlt6.grupos;
+    const channels = acceptsChannel
+        ? (await (client.getChannels ? client.getChannels() : client.getChats()))
+            .filter(c => isChannelAlt(c.id?._serialized) &&
+                words.every(p => normalize(c.name ?? '').includes(p)))
+            .map(c => ({ id: c.id._serialized, nome: c.name, grupo: false, canal: true })) : [];
 
     if (isDebugMode()) {
         printDebug(`[DESTINO] "${textAlt}": contatos ${contacts.map(c => `${c.name}=${c.id._serialized}`).join(', ') || '-'}; ` +
@@ -303,12 +317,15 @@ async function resolverDestination(valueAlt, { aceitaEmail: acceptsEmail = false
 
     if (exact && contacts.filter(c => normalize(c.name) === search).length === 1) return contact(exact);
     if (!exact && groupExact && groups.filter(g => normalize(g.name) === search).length === 1) return group(groupExact);
+    const channelExact = channels.filter(c => normalize(c.nome) === search);
+    if (!exact && !groupExact && channelExact.length === 1) return channelExact[0];
 
-    const candidates = contacts.length ? contacts.map(contact) : groups.map(group);
+    const candidates = contacts.length ? contacts.map(contact)
+        : groups.length ? groups.map(group) : channels;
     if (candidates.length === 1) return candidates[0];
 
     if (!candidates.length) {
-        return { erro: `❌ Nenhum contato ou grupo com "${textAlt}" no nome.\n💡 _Use o nome como está na sua agenda ou o número: ${EXAMPLE}_` };
+        return { erro: `❌ Nenhum contato ou grupo${acceptsChannel ? ' ou canal' : ''} com "${textAlt}" no nome.\n💡 _Use o nome como está na sua agenda ou o número: ${EXAMPLE}_` };
     }
 
     return { opcoes: candidates.slice(0, LIMIT), busca: textAlt, mais: Math.max(0, candidates.length - LIMIT) };
@@ -332,7 +349,7 @@ async function resolverOrChoose(msg, valueAlt, o = {}) {
     }
     if (!r.opcoes) return r;
 
-    const type = r.opcoes[0].grupo ? 'grupos' : 'contatos';
+    const type = r.opcoes[0].canal ? 'canais' : r.opcoes[0].grupo ? 'grupos' : 'contatos';
     const linesAlt = r.opcoes.map((d, i) => `${i + 1}. ${describeDestination(d)}${d.numero ? ` · +${d.numero}` : ''}`);
     const more = r.mais ? `\n_+${r.mais} ${type}: use mais palavras do nome para ver os outros_` : '';
 
@@ -451,7 +468,7 @@ async function contactName(id, digits) {
 }
 
 // "👥 Grupo sobre L200" / "👤 Fulano" / "📧 voce@exemplo.com"
-const describeDestination = (d) => `${d.email ? '📧' : d.grupo ? '👥' : '👤'} ${d.email ?? d.nome}`;
+const describeDestination = (d) => `${d.email ? '📧' : d.canal ? '📰' : d.grupo ? '👥' : '👤'} ${d.email ?? d.nome}`;
 const describeDestinations = (destinations) => destinations.map(describeDestination).join(', ');
 
 module.exports = {
