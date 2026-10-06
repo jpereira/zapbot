@@ -491,12 +491,37 @@ describe('/giphy (/gif)', () => {
         assert.equal(rede.chamadas.at(-2).cfg.params.tag, 'gatos');
     });
 
+    test('ID ou URL: busca o GIF escolhido e aceita o MP4 alternativo', async () => {
+        await bot.setSetting('giphy.api.key', 'giphy');
+        const id = 'h5WUvmDSB0njFcFeCE';
+        const endpoint = `https://api.giphy.com/v1/gifs/${id}`;
+        const mp4 = 'https://media.giphy.com/escolhido.mp4';
+        rede.responder('get', endpoint, {
+            data: { images: { downsized_medium: { mp4 } } }
+        });
+        rede.responder('get', mp4, Buffer.from('gif escolhido'));
+
+        for (const entrada of [id, `https://giphy.com/gifs/reaction-${id}?origem=chat`]) {
+            const antes = rede.chamadas.length;
+            const [r] = await bot.executar(`/gif ${entrada}`);
+            const consulta = rede.chamadas[antes];
+            assert.equal(consulta.url, endpoint);
+            assert.deepEqual(consulta.cfg.params, { api_key: 'giphy' });
+            assert.equal(rede.chamadas[antes + 1].url, mp4);
+            assert.ok(r.content instanceof MessageMedia);
+            assert.equal(r.content.mimetype, 'video/mp4');
+            assert.equal(r.content.data, Buffer.from('gif escolhido').toString('base64'));
+            assert.equal(r.options.sendVideoAsGif, true);
+        }
+    });
+
     test('nenhum GIF; GIPHY fora do ar', async () => {
         await bot.setSetting('giphy.api.key', 'giphy');
         rede.responder('get', 'api.giphy.com', { data: {} });
         assert.deepEqual(await bot.responder('/gif'), ['❌ Nenhum GIF encontrado.']);
         rede.responder('get', 'api.giphy.com', erroHttp(500));
-        assert.deepEqual(await bot.responder('/gif', { erroEsperado: true }), ['❌ Não consegui buscar um GIF agora.']);
+        assert.deepEqual(await bot.responder('/gif', { erroEsperado: true }),
+            ['❌ Não consegui buscar esse GIF.']);
     });
 });
 
