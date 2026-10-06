@@ -39,6 +39,7 @@ require('dotenv').config({
 });
 
 require('./src/debugContext').bootStartLogs();
+require('./src/botPhone').normalizePhoneBot();
 require('./src/debugInstrumentation').installDebug();
 
 const colors = require('colors');

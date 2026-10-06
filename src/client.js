@@ -9,6 +9,7 @@ const { printError, printSuccess } = require('./log');
 const { logIsCopy } = require('./debugCopy');
 const { contextDebug } = require('./debugContext');
 const { maskPhones } = require('./util/phone');
+const { phoneBotJid } = require('./botPhone');
 
 const client = new Client({
     authStrategy: new LocalAuth(),
@@ -39,7 +40,7 @@ printSuccess('Client created');
 
 // Message to your own number (PHONE_NUMBER): bot notices
 function messageToSelf(message) {
-    return client.sendMessage(process.env.PHONE_NUMBER, message)
+    return client.sendMessage(phoneBotJid(), message)
         .catch(err => printError('messageToSelf falhou:', err.message));
 }
 

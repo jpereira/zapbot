@@ -25,7 +25,7 @@ em `/usr/bin/ffmpeg` e `yt-dlp` em `/venv/bin/yt-dlp`; o jeito suportado de dese
 
 | Variável | Exemplo | Descrição |
 |---|---|---|
-| `PHONE_NUMBER` | `5521999999999@c.us` | **Obrigatório.** Número da conta que será pareada, no formato `DDI + DDD + número` seguido de `@c.us`, sem `+`, espaços ou traços. É para ele que o bot manda o aviso de inicialização, as notificações do `/monitor` e, com o debug ligado, os avisos de uso indevido de comandos. Também aparece (mascarado) no e-mail do QR. |
+| `PHONE_NUMBER` | `5521999999999` | **Obrigatório.** Número da conta que será pareada, no formato `DDI + DDD + número`, sem `+`, espaços ou traços. É para ele que o bot manda o aviso de inicialização, as notificações do `/monitor` e, com o debug ligado, os avisos de uso indevido de comandos. Também aparece (mascarado) no e-mail do QR. |
 
 ## Avançado
 
@@ -151,7 +151,7 @@ WhatsApp**: mande-o apenas para um e-mail que só você lê.
 COMPOSE_PROJECT_NAME="zapbot"
 COMPOSE_FILE=docker/docker-compose.yml
 
-PHONE_NUMBER=5521999999999@c.us
+PHONE_NUMBER=5521999999999
 
 QRCODE_EMAIL_ENABLE="true"
 QRCODE_EMAIL_SMTP_HOST="smtp.gmail.com"
