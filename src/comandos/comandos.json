@@ -579,7 +579,7 @@
                     "values": [
                         "[/regex/flags]"
                     ],
-                    "desc": "Exibe e copia somente linhas que casam com a regex. Aceita flags do JavaScript (i, g, m, s, u, y...). Sem regex, limpa o filtro. Ex: -filter /chatName.*Jorge/i, -filter"
+                    "desc": "Exibe e copia linhas que casam com a regex, com matches destacados no console. Os logs de inicialização aparecem sem filtro, inclusive o aviso por e-mail de bot iniciado. Aceita flags do JavaScript (i, g, m, s, u, y...). Sem regex, limpa o filtro. Ex: -filter /chatName.*Jorge/i, -filter"
                 },
                 {
                     "opts": [
