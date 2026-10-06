@@ -66,6 +66,7 @@ WORKDIR /app
 
 COPY package*.json ./
 COPY patches ./patches
+COPY scripts/aplicar-patches.js ./scripts/aplicar-patches.js
 
 RUN npm install
 
