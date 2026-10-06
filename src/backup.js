@@ -6,13 +6,16 @@ const path = require('path');
 const zlib = require('zlib');
 const { pipeline } = require('stream/promises');
 const fs = require('fs-extra');
+const { MessageMedia } = require('whatsapp-web.js');
 
+const { client } = require('./cliente');
 const { BACKUP_DIR, TMP_DIR } = require('./constantes');
 const { dbAll, dbGet, dbPronto, dbRun } = require('./db');
-const { alertarPorEmail } = require('./email');
+const { descreverDestino, extrairDestinos, resolverDestino } = require('./destinos');
+const { alertarPorEmail, enviarArquivoPorEmail } = require('./email');
 const { printError, printInfo } = require('./log');
 const { carregarSettings, getSetting } = require('./settings');
-const { instanteEmBrasilia, partesEmBrasilia } = require('./util/quando');
+const { fmtQuando, instanteEmBrasilia, partesEmBrasilia } = require('./util/quando');
 const { versaoComCommit } = require('./versao');
 
 /*
@@ -28,6 +31,8 @@ const { versaoComCommit } = require('./versao');
  */
 const PREFIXO = 'zapbot-';
 const EXT = '.db.gz';
+// Anexo acima disso costuma voltar do provedor antes de chegar ao destinatário.
+const MAX_ANEXO_BYTES = 20 * 1024 * 1024;
 
 const MOTIVOS = {
     automatico: 'automático',
@@ -36,6 +41,60 @@ const MOTIVOS = {
 };
 
 const dois = (n) => String(n).padStart(2, '0');
+
+async function enviarBackupPorEmail(b, emails) {
+    if (b.bytes > MAX_ANEXO_BYTES) {
+        throw new Error('O backup passa do limite de 20 MB para envio por e-mail.');
+    }
+    await enviarArquivoPorEmail({
+        para: emails,
+        assunto: `💾 Backup de ${fmtQuando(b.criadoEm)}`,
+        texto: `Backup do banco do ZapBot de ${fmtQuando(b.criadoEm)} (${b.motivo}, ZapBot ${b.versao}).\n` +
+            `Para restaurar: copie o arquivo para ${BACKUP_DIR} e use /backup -r ${b.nome} -sim.`,
+        arquivo: b.arquivo,
+        nomeArquivo: `${b.nome}.db.gz`
+    });
+}
+
+async function enviarBackupAoChat(b, id) {
+    await client.sendMessage(id, MessageMedia.fromFilePath(b.arquivo), {
+        sendMediaAsDocument: true,
+        caption: `💾 Backup de ${fmtQuando(b.criadoEm)} (${b.motivo})`
+    });
+}
+
+async function enviarBackupAutomatico(b, valor) {
+    const lista = /^-to(?:\s|$)/.test(valor) ? extrairDestinos(valor) : null;
+    if (lista?.resto) throw new Error('backup.to: use -to <destino> para cada destino.');
+    const textos = lista ? lista.destinos : [valor.replace(/^(["'/])(.*)\1$/, '$2')];
+    const destinos = [];
+    const falhas = [];
+
+    for (const texto of textos) {
+        try {
+            const d = await resolverDestino(texto, { aceitaEmail: true });
+            if (d.erro) throw new Error(d.erro);
+            // Sem alguém para escolher um número: nome ambíguo não ganha no cara ou coroa.
+            if (d.opcoes) throw new Error('mais de um contato ou grupo; use o nome completo ou número');
+            if (!destinos.some(x => d.email ? x.email === d.email : x.id === d.id)) destinos.push(d);
+        } catch (err) {
+            falhas.push(`${texto ?? '-to vazio'}: ${err.message}`);
+        }
+    }
+
+    const emails = [...new Set(destinos.filter(d => d.email)
+        .flatMap(d => d.email.split(/\s*,\s*/)))];
+    if (emails.length) {
+        await enviarBackupPorEmail(b, emails)
+            .catch(err => falhas.push(`e-mail: ${err.message}`));
+    }
+    for (const d of destinos.filter(d => d.id)) {
+        await enviarBackupAoChat(b, d.id)
+            .catch(err => falhas.push(`${descreverDestino(d)}: ${err.message}`));
+    }
+    if (falhas.length) throw new Error(falhas.join('; '));
+    printInfo(`Backup diário ${b.nome} enviado para ${valor}`);
+}
 
 // Tabelas do banco (sem as internas do SQLite)
 async function tabelas(esquema = 'main') {
@@ -215,7 +274,18 @@ async function verificarBackupDiario(agora = Date.now()) {
         const jaFeito = (await listarBackups()).some(b => b.motivo === MOTIVOS.automatico && mesmoDia(b.criadoEm));
         if (jaFeito) return null;
 
-        return await criarBackup(MOTIVOS.automatico, agora);
+        const b = await criarBackup(MOTIVOS.automatico, agora);
+        const destino = getSetting('backup.to').trim();
+        if (destino) {
+            try {
+                await enviarBackupAutomatico(b, destino);
+            } catch (err) {
+                printError('Envio do backup diário falhou:', err.message);
+                await alertarPorEmail('💾 Envio do backup falhou',
+                    `O backup ${b.nome} está salvo localmente, mas o envio falhou: ${err.message}`);
+            }
+        }
+        return b;
     } catch (err) {
         printError('Backup diário falhou:', err.message);
         alertarPorEmail('💾 Backup falhou', `O backup diário do banco falhou: ${err.message}`);
@@ -242,10 +312,13 @@ function iniciarBackup() {
 }
 
 module.exports = {
+    MAX_ANEXO_BYTES,
     MOTIVOS,
     apagarTodosBackups,
     contarEntradas,
     criarBackup,
+    enviarBackupAoChat,
+    enviarBackupPorEmail,
     iniciarBackup,
     listarBackups,
     proximoBackupDiario,

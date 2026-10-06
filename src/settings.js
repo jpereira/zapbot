@@ -109,6 +109,12 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 1, max: 90,
         desc: 'Quantos backups automáticos (e de antes de restaurar) guardar; os manuais ficam até um /backup -rm.'
     },
+    'backup.to': {
+        default: '',
+        type: 'string',
+        allowEmpty: true,
+        desc: 'Destino do backup diário, além da cópia local: contato, grupo, número ou e-mail, como no -to do /backup. Vazio: só local. Para vários, use -to <destino> -to <destino>. O envio é automático, sem pedir -sim.'
+    },
     'bot.admins': {
         default: [],
         type: 'list',

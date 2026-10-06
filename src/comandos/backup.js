@@ -4,16 +4,17 @@
 
 const fs = require('fs');
 const path = require('path');
-const { MessageMedia } = require('whatsapp-web.js');
 
-const { MOTIVOS, contarEntradas, criarBackup, listarBackups, proximoBackupDiario, removerBackup, restaurarBackup } = require('../backup');
+const {
+    MAX_ANEXO_BYTES, MOTIVOS, contarEntradas, criarBackup, enviarBackupAoChat,
+    enviarBackupPorEmail, listarBackups, proximoBackupDiario, removerBackup, restaurarBackup
+} = require('../backup');
 const { findCommand } = require('./base');
 const { client } = require('../cliente');
 const { BACKUP_DIR, CACHE_DIR } = require('../constantes');
 const {
     descreverDestinos, emailsDoSmtpTo, extrairDestinos, resolverDestinos
 } = require('../destinos');
-const { enviarArquivoPorEmail } = require('../email');
 const { printError } = require('../log');
 const { GetOptFromCommand } = require('../opcoes');
 const { getSetting } = require('../settings');
@@ -35,9 +36,6 @@ const { fmtQuando, partesEmBrasilia } = require('../util/quando');
  *                         antiga, com os e-mails direto no -s (/backup -s 2 email), vale
  * /backup -rm <nº|all>  → apaga
  */
-// Anexo grande demais é recusado pela maioria dos provedores (Gmail: 25 MB)
-const MAX_ANEXO_BYTES = 20 * 1024 * 1024;
-
 const AJUDA = '💡 _-now cria um agora · -l lista · -i <nº> detalha · -r <nº> restaura · -s [nº] [-to <destino>] envia o arquivo · -rm <nº|all> apaga_';
 
 const entradasEmLinha = (entradas) => Object.entries(entradas)
@@ -76,6 +74,8 @@ async function status(msg) {
         ? `⏭️ *Próximo automático:* ${fmtQuando(proximoBackupDiario(Date.now(), feitoHoje))} ` +
           `_(todo dia às ${getSetting('backup.hour')}h, guarda ${getSetting('backup.keep')})_\n`
         : '⏭️ Backup automático desligado _(setting backup.enabled)_\n';
+
+    texto += `📤 *Destino automático:* ${getSetting('backup.to') || 'só local'}\n`;
 
     await msg.reply(`${texto}\n${AJUDA}`, null, { linkPreview: false });
 }
@@ -218,14 +218,7 @@ async function cmdBackup({ msg, opts: optsDoComando, args }) {
             }
 
             try {
-                await enviarArquivoPorEmail({
-                    para: emails,
-                    assunto: `💾 Backup de ${fmtQuando(b.criadoEm)}`,
-                    texto: `Backup do banco do ZapBot de ${fmtQuando(b.criadoEm)} (${b.motivo}, ZapBot ${b.versao}).\n` +
-                        `Para restaurar: copie o arquivo para ${BACKUP_DIR} e use /backup -r ${b.nome} -sim.`,
-                    arquivo: b.arquivo,
-                    nomeArquivo: `${b.nome}.db.gz`
-                });
+                await enviarBackupPorEmail(b, emails);
                 await msg.reply(`📧 Backup de ${fmtQuando(b.criadoEm)} enviado para ${emails.join(', ')}.`);
             } catch (err) {
                 printError('/backup -send por e-mail:', err.message);
@@ -237,10 +230,7 @@ async function cmdBackup({ msg, opts: optsDoComando, args }) {
         const enviados = [];
         for (const d of chats) {
             try {
-                await client.sendMessage(d.id, MessageMedia.fromFilePath(b.arquivo), {
-                    sendMediaAsDocument: true,
-                    caption: `💾 Backup de ${fmtQuando(b.criadoEm)} (${b.motivo})`
-                });
+                await enviarBackupAoChat(b, d.id);
                 enviados.push(d);
             } catch (err) {
                 printError(`/backup -send para ${d.id}:`, err.message);
