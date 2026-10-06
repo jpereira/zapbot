@@ -4,6 +4,8 @@
 !docker/
 !patches/
 !patches/**
+!scripts/
+!scripts/apply-patches.js
 !package.json
 !package-lock.json
 !app.js
