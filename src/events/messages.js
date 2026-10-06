@@ -6,7 +6,8 @@ const path = require('path');
 const fs = require('fs-extra');
 
 const { client, botConsumeSending, wasSentByBot, messageToSelf } = require('../client');
-const { findCommand, getCommandSyntax, helpProtocol } = require('../commands/base');
+const { getCommandSyntax, helpProtocol } = require('../commands/base');
+const { resolverAlias } = require('../aliases');
 const { HANDLERS } = require('../commands/index');
 const { removeDeviceSuffix, resolveLidToPhone, groupResolverName, privateResolverName } = require('../contacts');
 const { dbGet, dbReady, dbRun } = require('../db');
@@ -253,7 +254,8 @@ client.on('message_create', (msg) => withContextDebug({
         const caller = body.startsWith('/') && !sentByBot ? body.split(/\s+/, 1)[0] : null;
 
         if (sentByBot) printInfo(`Mensagem do próprio bot começando com '/' ignorada como comando: ${body.slice(0, 60)}`);
-        const command = caller ? findCommand(caller) : null;
+        const resolved = caller ? await resolverAlias(body) : null;
+        const command = resolved?.command ?? null;
 
         /*
          * Watch: messages that are not commands go through the /watch rules
@@ -270,7 +272,7 @@ client.on('message_create', (msg) => withContextDebug({
          */
         if (!caller) return;
 
-        const args = body.slice(caller.length).trim();
+        const args = resolved?.args ?? body.slice(caller.length).trim();
 
         if (!command) {
             if (msg.fromMe || isDebugMode()) {
@@ -351,7 +353,14 @@ client.on('message_create', (msg) => withContextDebug({
             ? `Executando comando '${body}' de '${senderName}' no grupo '${chatName}'`
             : `Executando comando '${body}' em '${chatName}'`);
 
-        const opts = GetOptFromCommand(args, command);
+        if (resolved.alias) {
+            const call = [resolved.destino, args].filter(Boolean).join(' ');
+            await msg.reply(`🔗 Alias ${resolved.alias} -> ${call}`);
+        }
+
+        // The saved command's options belong to the target, including -h and -rm.
+        const paraParser = command.cmd === '/alias' && !/^-h(?:elp)?$/.test(args) ? '' : args;
+        const opts = GetOptFromCommand(paraParser, command);
         if (command.cmd === '/watch') {
             opts.opt.help = askedHelpWatch(args);
             opts.opt.mask = askedMaskWatch(args);

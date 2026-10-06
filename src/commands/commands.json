@@ -10,6 +10,43 @@
     },
     "commands": [
         {
+            "cmd": "/alias",
+            "usage": "/alias <nome> [-desc|-d \"Descrição\"] </comando argumentos>  ou  /alias [-list|-l]  ou  /alias [-rm|-rem] <nome|all>",
+            "aliases": [],
+            "help": "Salva atalhos para comandos com argumentos. Sem opção, lista os aliases cadastrados. Ao executar o atalho, o bot imprime o comando chamado, acrescenta os argumentos adicionais e respeita as permissões do comando original. O nome all é reservado.",
+            "cmd_opts": [
+                {
+                    "opts": [
+                        "desc",
+                        "d"
+                    ],
+                    "values": [
+                        "<texto>"
+                    ],
+                    "desc": "Descrição opcional entre aspas. Ex: /alias /eita -desc \"Dólar\" /cotacao USD"
+                },
+                {
+                    "opts": [
+                        "list",
+                        "l"
+                    ],
+                    "values": [],
+                    "desc": "Lista os atalhos cadastrados."
+                },
+                {
+                    "opts": [
+                        "rem",
+                        "rm"
+                    ],
+                    "values": [
+                        "<nome>"
+                    ],
+                    "desc": "Remove o alias, com ou sem a barra; all remove todos. Ex: /alias -rm all"
+                }
+            ],
+            "onlyAdmin": true
+        },
+        {
             "cmd": "/backup",
             "usage": "/backup [OPÇÃO]",
             "aliases": [

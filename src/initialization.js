@@ -88,6 +88,12 @@ async function migrateDefiForAddressAndWallet() {
  * Handlers that use the database do `await dbReady` before querying.
  */
 async function initializeDb() {
+    await dbRun(`CREATE TABLE IF NOT EXISTS command_aliases (
+        name TEXT PRIMARY KEY,
+        description TEXT NOT NULL DEFAULT '',
+        command TEXT NOT NULL
+    )`);
+
     // History of when the monitored contacts come online
     await dbRun(`
         CREATE TABLE IF NOT EXISTS presence_logs (
