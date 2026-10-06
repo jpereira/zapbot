@@ -111,7 +111,7 @@ describe('comandos', () => {
 
     test('-h mostra a sintaxe do comando', async () => {
         const [r] = await bot.responder('/ping -h');
-        assert.match(r, /Usage: \/ping/);
+        assert.match(r, /Uso: \/ping/);
     });
 
     test('comando desativado por setting é desconhecido', async () => {
@@ -227,7 +227,7 @@ describe('permissões', () => {
         await bot.setSetting('bot.users', [OUTRO.user]);
         for (const nome of comuns) {
             const [ajuda] = await bot.responder(`/${nome} -h`, { de: OUTRO.jid });
-            assert.ok(ajuda.includes(`Usage: /${nome}`), nome);
+            assert.ok(ajuda.includes(`Uso: /${nome}`), nome);
         }
         assert.deepEqual(await bot.responder('/p', { de: OUTRO.jid }), ['pong']);
         assert.match((await bot.responder('/u', { de: OUTRO.jid }))[0], /Conectado:/);
@@ -595,8 +595,8 @@ describe('permissões', () => {
         assert.equal((await bot.responder('/noffa oi', DELE)).length, 1);
         assert.deepEqual(await bot.responder('/tempo', DELE), ['🚫 Limitado aos comandos: /noffa, /joke.']);
         const [ajuda] = await bot.responder('/help', DELE);
-        assert.match(ajuda, /Usage: \/joke/);
-        assert.doesNotMatch(ajuda, /Usage: \/tempo/);
+        assert.match(ajuda, /Uso: \/joke/);
+        assert.doesNotMatch(ajuda, /Uso: \/tempo/);
         assert.match((await bot.responder('/help tempo', DELE))[0], /^⛔ O \/tempo não está liberado para você\./);
         assert.match((await bot.responder('/whois', DELE))[0], /• 🗣️ \+v · 👤 Ciclano · \+5521922222222\n → Apenas: \/noffa, \/joke\n/);
 

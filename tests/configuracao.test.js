@@ -389,20 +389,41 @@ describe('parser de opções', () => {
 });
 
 describe('ajuda', () => {
+    test('todos os comandos ativos e aliases aceitam -h e -help com a mesma ajuda', async () => {
+        for (const command of activeCommands()) {
+            const esperado = '```' + formatCommandHelp(command) + '```';
+            for (const nome of [command.cmd, ...(command.aliases ?? [])]) {
+                for (const flag of ['-h', '-help']) {
+                    assert.deepEqual(await bot.responder(`${nome} ${flag}`), [esperado],
+                        `${nome} ${flag}`);
+                }
+            }
+        }
+    });
+
+    test('ajuda mostra os títulos em português e as flags universais', () => {
+        const texto = formatCommandHelp(findCommand('/get'));
+        assert.match(texto, /^Uso:/);
+        assert.match(texto, /\nOpções:\n/);
+        assert.match(texto, /\nArgumentos:\n/);
+        assert.match(texto, /\nAjuda: -help, -h\n/);
+        assert.doesNotMatch(texto, /Usage:|Options:|Arguments:|\[OPTION\]/);
+    });
+
     test('formatCommandHelp traz uso, opções, argumentos e aliases', () => {
         const texto = formatCommandHelp(findCommand('/show'));
-        assert.match(texto, /^Usage: \/show \[-N\] \[OPTION\]/);
+        assert.match(texto, /^Uso: \/show \[-N\] \[OPÇÃO\]/);
         assert.match(texto, /-query, -q <texto>/);
-        assert.match(texto, /Arguments:\n  -N/);
+        assert.match(texto, /Argumentos:\n  -N/);
         assert.match(texto, /Aliases: \/s$/);
     });
 
     test('as formas do uso ("  ou  ") saem uma por linha, alinhadas', () => {
         const texto = formatCommandHelp(findCommand('/defi'));
         const linhas = texto.split('\n');
-        assert.equal(linhas[0], 'Usage: /defi [orca|prjx|morpho|aave] [-mask]');
-        assert.equal(linhas[1], '       /defi -l');
-        assert.equal(linhas[4], '       /defi <protocolo> <opções>');
+        assert.equal(linhas[0], 'Uso: /defi [orca|prjx|morpho|aave] [-mask]');
+        assert.equal(linhas[1], '     /defi -l');
+        assert.equal(linhas[4], '     /defi <protocolo> <opções>');
         assert.doesNotMatch(texto, / {2}ou {2}/);
     });
 
@@ -413,10 +434,10 @@ describe('ajuda', () => {
         assert.match(geral, / > Orca\n {2}-address <endereço> +Cadastra a posição da Orca/);
 
         const morpho = formatCommandHelp(findCommand('/defi'), { protocolo: 'morpho' });
-        assert.match(morpho, /^Usage: \/defi morpho \[-mask\]\n {7}\/defi morpho -wallet <0x\.\.\.> \[-name <nome>\]\nPosição, empréstimos e risco no Morpho/);
+        assert.match(morpho, /^Uso: \/defi morpho \[-mask\]\n {5}\/defi morpho -wallet <0x\.\.\.> \[-name <nome>\]\nPosição, empréstimos e risco no Morpho/);
         const opcoes = morpho.match(/^ {2}-\S+/gm);
         assert.deepEqual(opcoes, ['  -list,', '  -mask,', '  -name,', '  -rm', '  -wallet,']);
-        assert.doesNotMatch(morpho, / > |Arguments:/);
+        assert.doesNotMatch(morpho, / > |Argumentos:/);
 
         const orca = formatCommandHelp(findCommand('/defi'), { protocolo: 'orca' });
         assert.match(orca, /-address <endereço>/);
@@ -424,8 +445,8 @@ describe('ajuda', () => {
 
         // Pelo -help do comando e pelo /help
         assert.equal((await bot.responder('/defi prjx -help'))[0], '```' + formatCommandHelp(findCommand('/defi'), { protocolo: 'prjx' }) + '```');
-        assert.match((await bot.responder('/help defi orca'))[0], /^🤖 \*AJUDA\*\n\n```Usage: \/defi orca \[-mask\]\n/);
-        assert.match((await bot.responder('/defi xyz -help'))[0], /^```Usage: \/defi \[orca\|prjx\|morpho\|aave\]/, 'protocolo desconhecido: a geral');
+        assert.match((await bot.responder('/help defi orca'))[0], /^🤖 \*AJUDA\*\n\n```Uso: \/defi orca \[-mask\]\n/);
+        assert.match((await bot.responder('/defi xyz -help'))[0], /^```Uso: \/defi \[orca\|prjx\|morpho\|aave\]/, 'protocolo desconhecido: a geral');
     });
 
     test('ajuda para o celular: uma frase por linha e o "Ex:" na linha de baixo, um exemplo por linha', () => {

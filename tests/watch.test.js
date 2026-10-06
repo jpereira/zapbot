@@ -136,7 +136,7 @@ describe('/watch', () => {
     });
 
     test('recusa opção inválida, regra repetida, inválida e limite de regras', async () => {
-        assert.match((await bot.responder('/watch -add'))[0], /Usage: \/watch/);
+        assert.match((await bot.responder('/watch -add'))[0], /Uso: \/watch/);
         await bot.responder('/watch pix');
         assert.match((await bot.responder('/watch pix'))[0], /ℹ️ A regra #1 já existe: pix/);
         assert.match((await bot.responder('/watch /[/'))[0], /❌/);
@@ -195,7 +195,7 @@ describe('/watch', () => {
         assert.deepEqual(bot.getSetting('watch.rules'), ['boleto']);
 
         assert.match((await bot.responder('/watch -r 5'))[0], /❌ A regra #5 não existe/);
-        assert.match((await bot.responder('/watch -r'))[0], /Usage: \/watch/);
+        assert.match((await bot.responder('/watch -r'))[0], /Uso: \/watch/);
     });
 
     test('-f apaga as ocorrências (de todas ou de uma) e mantém as regras', async () => {

@@ -16,4 +16,11 @@ usar:
 /help get
 /h /show
 /help defi orca    → só a ajuda da Orca no /defi (o mesmo que /defi orca -help)
+/help defi aave    → só a ajuda do Aave V3
+/watch -help       → ajuda do /watch, incluindo regras, origens e destinos
+/show -h           → ajuda do /show
 ```
+
+Todos os comandos ativos e seus aliases aceitam `-h` e `-help`. A ajuda mostra o uso, as opções,
+os argumentos e os aliases. `[]` indica algo opcional; `<>`, um valor a preencher; `...`, algo
+que pode ser repetido. Uma linha iniciada por `Ex:` é um exemplo de comando.

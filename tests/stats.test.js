@@ -91,7 +91,7 @@ describe('/stats', () => {
 
     test('opção desconhecida ou -0 mostra a sintaxe; -c e -pv não existem mais', async () => {
         for (const linha of ['/stats -0', '/stats -x', '/stats -c família', '/stats -pv']) {
-            assert.match((await bot.responder(linha))[0], /Usage: \/stats/, linha);
+            assert.match((await bot.responder(linha))[0], /Uso: \/stats/, linha);
         }
     });
 

@@ -146,7 +146,7 @@ async function cmdCrypto(ctx) {
         await msg.reply(text);
     } catch (error) {
         printError('/crypto:', error.message);
-        await msg.reply('❌ Error fetching crypto prices.');
+        await msg.reply('❌ Não consegui consultar as cotações de criptomoedas. Tente de novo.');
     }
 }
 
