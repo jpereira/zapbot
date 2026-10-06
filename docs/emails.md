@@ -1,14 +1,15 @@
 # E-mails do bot (QR Code e alertas)
 
-O bot manda quatro tipos de e-mail, pelo mesmo SMTP (`QRCODE_EMAIL_SMTP_*`): o
-QR Code, quando `QRCODE_EMAIL_ENABLE="true"`, os
-[alertas](#alertas-por-e-mail) de crash, queda, reconexão etc., os backups
-pedidos com [`/backup -s -to <e-mail>`](comandos/backup.md#enviar-o-arquivo) e os
-alertas criados com `-to email` (ou um endereço): o
-[`/defi -alerta`](comandos/defi.md#alerta-de-saída-da-faixa) (assunto
-`[ZapBot] DeFi: a posição ... saiu da faixa`) e os alertas de preço do
-[`/cotacao`](comandos/cotacao.md#avisar-em-outro-chat-ou-por-e-mail) e do `/crypto`
-(assunto `[ZapBot] 🔔 Alerta de preço: ...`).
+O bot usa o mesmo SMTP (`QRCODE_EMAIL_SMTP_*`) para:
+
+- QR Code, quando `QRCODE_EMAIL_ENABLE="true"`;
+- [alertas operacionais](#alertas-por-e-mail), como crash, queda e reconexão;
+- backups enviados com [`/backup -s -to`](comandos/backup.md#enviar-o-arquivo)
+  ou pelo destino configurado em `backup.to` no backup diário;
+- alertas de preço do `/cotacao` e `/crypto`, e de posições e taxas do `/defi`;
+- ocorrências do `/watch` e relatórios do `/bot -status` com destino de e-mail.
+
+O destino `email` usa `QRCODE_EMAIL_SMTP_TO`; `-to voce@exemplo.com` escolhe outro endereço.
 
 ## E-mail do QR Code
 

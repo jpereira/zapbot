@@ -93,7 +93,7 @@ adicione ao serviço `zapbot` o label `autoheal=true`:
 | Não chegam os alertas por e-mail | Confira `QRCODE_EMAIL_SMTP_HOST`, `_USER` e `_TO` (sem eles nada é enviado) e o setting `email.alerts` (`/set email.alerts`). Falhas do SMTP aparecem no log como `Alerta por e-mail '...' falhou`. |
 | Um comando não responde | Veja nos logs se aparece `executed unknown command`: o nome está errado ou o comando está desativado (`commands.disabled`, ou `"disabled": true` no `comandos.json`). Dos outros, só aparece com o [`/debug`](comandos/debug.md) ligado. |
 | `docker ps` mostra `(unhealthy)` | O bot parou de gravar o heartbeat. Veja o motivo com `docker inspect --format '{{json .State.Health}}' zapbot` e os logs; reinicie com `docker compose restart zapbot`. Veja [Saúde do container](#saúde-do-container-heartbeat). |
-| `npm test`: `No such built-in module: node:sqlite` | Node antigo: os testes precisam do Node 22.13+. |
+| `make test`: `No such built-in module: node:sqlite` | Node antigo: os testes precisam do Node 22.13+. |
 | `Motivo 'LOGOUT' exige ação manual` | Sessão desconectada pelo celular. Reinicie o container para gerar novo QR. |
 | `Motivo 'CONFLICT' ...` | O WhatsApp Web foi aberto em outro lugar com a mesma sessão, ou há dois containers rodando. |
 | `browser is already running` | Lock antigo do Chromium; o entrypoint limpa no boot. Reinicie o container. |

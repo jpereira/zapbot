@@ -19,7 +19,7 @@ hora, sem reiniciar, e sobrevivem a reinícios. Para ver e alterar, use o
 | `bot.users.cmds` | lista | *(vazia)* | Os comandos de cada usuário (o `/bot +cmd`/`-cmd`): `item=/a,/b` (só esses) ou `item=!/a,/b` (todos os comuns, menos esses), com o item do `bot.users`. Sem linha: todos os comuns. Veja [Comandos de cada usuário](comandos/bot.md#comandos-de-cada-usuário) |
 | `cache.editedRetentionDays` | 1–365 | `30` | Dias que as mensagens editadas ficam guardadas para o `/show -e` |
 | `cache.revokedRetentionDays` | 1–365 | `30` | Dias que as mensagens apagadas ficam guardadas para o `/show` |
-| `commands.disabled` | lista | *(vazia)* | Comandos desativados em tempo de execução: o bot os ignora e eles somem do `/help`. O `/set` não pode ser desativado. Um comando que deixou de existir numa versão nova é ignorado (com aviso no log) e um renomeado vale pelo novo (`/agendar` → `/cron`) |
+| `commands.disabled` | lista | *(vazia)* | Comandos desativados em tempo de execução: o bot os ignora e eles somem do `/help`. O `/set` não pode ser desativado. Nomes desconhecidos são ignorados com aviso no log; aliases válidos são normalizados |
 | `cotacao.coins` | lista | `EUR, USDT` | Moedas habilitadas no `/cotacao` (`USD`, `EUR`, `GBP`, `USDT`); normalmente alterada pelo `/cotacao -a`/`-d` |
 | `crypto.coins` | lista | `BTC, ETH, SOL, HYPE` | Moedas do `/crypto` (só as suportadas); normalmente alterada pelo `/crypto -a`/`-d` |
 | `cve.max` | 1–20 | `10` | Quantidade de CVEs exibidas pelo `/cve` (o `/cve <max>` sobrepõe) |
@@ -30,7 +30,7 @@ hora, sem reiniciar, e sobrevivem a reinícios. Para ver e alterar, use o
 | `debug.level` | 0–3 | `0` | Nível cumulativo: básico, funções e comandos, integrações, desenvolvimento. Veja [`/debug`](comandos/debug.md) |
 | `defi.aave.chains` | lista | `1 8453` | Redes (chain id) em que o [`/defi aave`](comandos/defi.md#aave-v3) procura as posições: `1` (Ethereum), `8453` (Base) |
 | `defi.aave.wallet` | texto (pode ser vazio) | *(vazio)* | Carteira do [`/defi aave`](comandos/defi.md#aave-v3) quando não há carteira cadastrada, usada quando `AAVE_WALLET_ADDRESS` não está no `config/.env` |
-| `defi.alerta.intervalMin` | 1–1440 | `10` | Intervalo (minutos) entre as verificações do [`/defi -alerta`](comandos/defi.md#alerta-de-saída-da-faixa); cada uma lê as posições no RPC da Solana |
+| `defi.alerta.intervalMin` | 1–1440 | `10` | Intervalo (minutos) entre as verificações do [`/defi -alerta`](comandos/defi.md#alerta-de-saída-da-faixa); consulta as posições na Solana e na HyperEVM, conforme o protocolo |
 | `defi.base.rpc` | URL | `https://mainnet.base.org` | RPC da Base usado pelo [`/defi aave`](comandos/defi.md#aave-v3), quando `BASE_RPC_URL` não está no `config/.env`. O público limita as consultas. Exibido mascarado |
 | `defi.ethereum.rpc` | URL | `https://ethereum-rpc.publicnode.com` | RPC da Ethereum usado pelo [`/defi aave`](comandos/defi.md#aave-v3), quando `ETHEREUM_RPC_URL` não está no `config/.env`. O público limita as consultas. Exibido mascarado |
 | `defi.hyperevm.rpc` | URL | `https://rpc.hyperliquid.xyz/evm` | RPC da HyperEVM usado pelo [`/defi`](comandos/defi.md) no Project X. O público limita as consultas; um RPC próprio costuma ter a chave na URL. Exibido mascarado |
@@ -81,10 +81,3 @@ alfabética**, com padrão, tipo, descrição e limites (`allowEmpty` para texto
 que pode ficar vazio, `secret` para mascarar o valor no `/set` e nos logs), e
 lida com `getSetting('<chave>')`. Valores inválidos no banco são ignorados no
 boot (vale o padrão, com aviso nos logs).
-
-Para **renomear** uma chave sem perder o valor salvo, além de trocar o nome no
-`SETTINGS_SCHEMA`, ponha `'antigo': 'novo'` em `SETTINGS_RENOMEADOS`: no boot, o
-valor do nome antigo passa para o novo (se o novo ainda estiver no padrão) e o
-antigo sai do banco. Assim já foram `edit.alert` → `show.alert.edit` → `show.alert.edited`,
-`revoke.status` → `show.revoke.status` → `show.alert.status`, `stats.enabled` → `stats.enable`,
-`gif.giphy.api.key` → `giphy.api.key` e `resumo.maxMsgs` → `tldr.maxMsgs`.
