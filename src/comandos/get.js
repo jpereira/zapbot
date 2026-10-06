@@ -130,7 +130,7 @@ async function executarGet({ msg, opts, quotedMsg, senderName }) {
         }
 
         if (!urlInput) {
-            await msg.reply('Syntax: /get <opções> http://www.instagram.com/ajsh12j\n```' + getCommandSyntax('/get') + '```');
+            await msg.reply('```' + getCommandSyntax('/get') + '```');
             return;
         }
 

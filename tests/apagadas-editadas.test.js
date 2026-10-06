@@ -228,7 +228,7 @@ describe('/show (/s)', () => {
 
     test('argumento inválido mostra a sintaxe', async () => {
         for (const linha of ['/show -2 -3', '/show -0', '/show -xyz']) {
-            assert.match((await bot.responder(linha))[0], /Usage: \/show/, linha);
+            assert.match((await bot.responder(linha))[0], /Uso: \/show/, linha);
         }
     });
 

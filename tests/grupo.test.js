@@ -233,7 +233,7 @@ describe('/sticker (/st)', () => {
     const foto = { mimetype: 'image/jpeg', data: Buffer.from('jpg').toString('base64') };
 
     test('sem responder uma mensagem', async () => {
-        assert.deepEqual(await bot.responder('/sticker'), ["Syntax: Faça um 'reply' utilizando /sticker, ou /sticker -txt \"Bom dia!\" para uma figurinha de texto"]);
+        assert.match((await bot.responder('/sticker'))[0], /^```Uso: \/sticker/);
     });
 
     test('imagem: enquadrada em webp, com o nome e o autor do setting', async () => {

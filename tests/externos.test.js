@@ -172,7 +172,7 @@ describe('/news', () => {
         `<item><title><![CDATA[${titulo}]]></title><link>https://n.com/${encodeURIComponent(titulo)}</link><pubDate>${data}</pubDate></item>`).join('')}</channel></rss>`;
 
     test('sem categoria mostra a ajuda', async () => {
-        assert.match((await bot.responder('/news'))[0], /Usage: \/news/);
+        assert.match((await bot.responder('/news'))[0], /Uso: \/news/);
     });
 
     test('-g1: manchetes da mais nova para a mais antiga, com fonte e link', async () => {
@@ -283,7 +283,7 @@ describe('/gpt (/ai)', () => {
 
     test('sem pergunta mostra a sintaxe', async () => {
         await bot.setSetting('openai.api.key', 'sk-teste');
-        assert.match((await bot.responder('/gpt'))[0], /Usage: \/gpt/);
+        assert.match((await bot.responder('/gpt'))[0], /Uso: \/gpt/);
     });
 
     test('erros: chave inválida (sem vazar no log), limite, timeout e outros', async () => {
@@ -391,7 +391,7 @@ describe('/tldr (/resumo)', () => {
 
     test('poucas mensagens, período inválido, sem chave e erro da OpenAI', async () => {
         assert.match((await bot.responder('/tldr'))[0], /📝 Poucas mensagens para resumir \(0\) em Família/);
-        assert.match((await bot.responder('/tldr ontem'))[0], /Usage: \/tldr/);
+        assert.match((await bot.responder('/tldr ontem'))[0], /Uso: \/tldr/);
 
         await conversa([['a'], ['b'], ['c']]);
         rede.responder('post', 'api.openai.com', erroHttp(429));
@@ -462,7 +462,7 @@ describe('/traduzir (/tr, /translate)', () => {
 
     test('validações e erros do Google', async () => {
         await bot.setSetting('traduzir.api.key', 'k');
-        assert.match((await bot.responder('/traduzir'))[0], /Usage: \/traduzir/);
+        assert.match((await bot.responder('/traduzir'))[0], /Uso: \/traduzir/);
         assert.match((await bot.responder('/traduzir -para português oi'))[0], /❌ Idioma inválido: português/);
         assert.match((await bot.responder(`/traduzir ${'a'.repeat(5001)}`))[0], /❌ Texto grande demais: 5001 caracteres/);
 

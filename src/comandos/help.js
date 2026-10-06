@@ -13,7 +13,7 @@ async function cmdHelp({ msg, args, admin, podeUsar = () => true }) {
     // Os admin, só para o dono e os admins; os outros, só os da regra deles (o /bot +cmd)
     const pode = (command) => admin || (!command.onlyAdmin && podeUsar(command.cmd));
 
-    // Lê direto do texto: o parser de opções descarta um primeiro token que começa com "/"
+    // Lê o comando e o protocolo pedidos diretamente, preservando o nome com ou sem "/".
     const [primeira, ...resto] = args.split(/\s+/);
     let requestedCommand = primeira;
 

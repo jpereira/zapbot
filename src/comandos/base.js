@@ -75,7 +75,7 @@ function formatCommandHelp(command, { protocolo } = {}) {
 
     // Cada forma do uso ("... ou ...") numa linha, alinhada embaixo da primeira
     const formas = interpolar(command.usage ?? command.cmd).split(/\s{2}ou\s{2}/);
-    const lines = formas.map((f, i) => `${i ? '       ' : 'Usage: '}${f}`);
+    const lines = formas.map((f, i) => `${i ? '     ' : 'Uso: '}${f}`);
 
     if (command.help) lines.push(...linhasDoTexto(interpolar(command.help)));
 
@@ -97,7 +97,7 @@ function formatCommandHelp(command, { protocolo } = {}) {
         .filter(o => o?.argv?.length && !doProtocolo)
         .map(o => ({ syntax: o.argv.filter(Boolean).join(' '), desc: interpolar(o.desc) }));
 
-    // Uma única coluna para Options e Arguments ficarem alinhados
+    // Uma única coluna para opções e argumentos ficarem alinhados.
     const width = Math.max(0, ...[...options, ...positional].map(o => o.syntax.length));
     const linha = (o) => linhasDoTexto(o.desc, `  ${o.syntax.padEnd(width)}  `, '    ');
 
@@ -110,20 +110,22 @@ function formatCommandHelp(command, { protocolo } = {}) {
             if (!grupos.has(g.chave)) grupos.set(g.chave, { ...g, opcoes: [] });
             grupos.get(g.chave).opcoes.push(o);
         }
-        lines.push('', 'Options:');
+        lines.push('', 'Opções:');
         [...grupos.values()].sort((a, b) => a.ordem - b.ordem).forEach((g, i) => {
             lines.push(...(i ? [''] : []), ` > ${g.titulo}`);
             g.opcoes.forEach(o => lines.push(...linha(o)));
         });
     } else if (options.length) {
-        lines.push('', 'Options:');
+        lines.push('', 'Opções:');
         options.forEach((o, i) => lines.push(...(command.espacado && i ? [''] : []), ...linha(o)));
     }
 
     if (positional.length) {
-        lines.push('', 'Arguments:');
+        lines.push('', 'Argumentos:');
         positional.forEach(a => lines.push(...linha(a)));
     }
+
+    lines.push('', 'Ajuda: -help, -h');
 
     if (command.aliases?.length) {
         lines.push('', `Aliases: ${command.aliases.join(', ')}`);
