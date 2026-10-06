@@ -244,7 +244,8 @@ client.on('message_create', (msg) => withContextDebug({
             ]
         ).catch(err => printError('Erro ao salvar mensagem:', err.message));
 
-        const body = (msg.body || '').trim();
+        // The location body contains the base64 thumbnail, not text or a command.
+        const body = msgType === 'location' ? '' : (msg.body || '').trim();
 
         // Only the no., replying to a command's list (e.g.: several contacts with the name): does not go through /watch
         if (await replyChoice(msg, chatId, body)) return;
