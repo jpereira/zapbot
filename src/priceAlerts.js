@@ -119,8 +119,8 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
     const t = ALERT_TYPES[kind];
 
     /*
-     * -to accepts spaces (/Grupo L200/), which the option parser would split:
-     * goes out of the text first, and the rest is read again.
+     * Destinations and message are extracted before the price rule, preserving
+     * all the -to and the -msg free text.
      */
     const { destinos: destinationsText, informado: withDestination, resto: withoutDestination } =
         extractDestinations(args);
@@ -326,6 +326,7 @@ function priceStartAlerts() {
 }
 
 module.exports = {
+    extractMessage,
     priceStartAlerts,
     priceHandleAlert,
     priceCheckAlerts

@@ -53,20 +53,40 @@ function dataDebug(valueAlt, seen = new WeakSet(), depth = 0) {
     if (seen.has(valueAlt)) return '[circular]';
     if (depth >= 4) return '[objeto]';
     seen.add(valueAlt);
-    if (Array.isArray(valueAlt)) {
-        if (typeof valueAlt[0] === 'string' && SENSITIVE.test(valueAlt[0]) &&
-            !/\s/.test(valueAlt[0]) && valueAlt.length > 1) {
-            return [valueAlt[0], '[oculto]'];
+    try {
+        if (valueAlt instanceof Date) {
+            return Number.isNaN(valueAlt.getTime()) ? 'Invalid Date' : valueAlt.toISOString();
         }
-        return valueAlt.slice(0, 40).map(v => dataDebug(v, seen, depth + 1));
+        if (valueAlt instanceof RegExp) return new RegExp(valueAlt.source, valueAlt.flags);
+        if (valueAlt instanceof Set) {
+            return new Set([...valueAlt].slice(0, 40)
+                .map(v => dataDebug(v, seen, depth + 1)));
+        }
+        if (valueAlt instanceof Map) {
+            return new Map([...valueAlt].slice(0, 40).map(([keyAlt, v]) => [
+                dataDebug(keyAlt, seen, depth + 1),
+                typeof keyAlt === 'string' && SENSITIVE.test(keyAlt) ? '[oculto]'
+                    : dataDebug(v, seen, depth + 1)
+            ]));
+        }
+        if (Array.isArray(valueAlt)) {
+            if (typeof valueAlt[0] === 'string' && SENSITIVE.test(valueAlt[0]) &&
+                !/\s/.test(valueAlt[0]) && valueAlt.length > 1) {
+                return [valueAlt[0], '[oculto]'];
+            }
+            return valueAlt.slice(0, 40).map(v => dataDebug(v, seen, depth + 1));
+        }
+        const safe = {};
+        for (const keyAlt of Object.keys(valueAlt).slice(0, 40)) {
+            const d = Object.getOwnPropertyDescriptor(valueAlt, keyAlt);
+            safe[keyAlt] = SENSITIVE.test(keyAlt) ? '[oculto]'
+                : d?.get ? '[getter]' : dataDebug(d?.value, seen, depth + 1);
+        }
+        return safe;
+    } finally {
+        // A shared reference is not a cycle: only the ancestors are on this trail.
+        seen.delete(valueAlt);
     }
-    const safe = {};
-    for (const keyAlt of Object.keys(valueAlt).slice(0, 40)) {
-        const d = Object.getOwnPropertyDescriptor(valueAlt, keyAlt);
-        safe[keyAlt] = SENSITIVE.test(keyAlt) ? '[oculto]'
-            : d?.get ? '[getter]' : dataDebug(d?.value, seen, depth + 1);
-    }
-    return safe;
 }
 
 module.exports = { configureDebug, dataDebug, cleanTextDebug };

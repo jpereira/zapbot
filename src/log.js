@@ -49,7 +49,7 @@ function printDebugLevel(level, ...args) {
     if (!cfg.enabled || cfg.level < level || contextDebug().semRastro) return;
     const safe = args.map(a => dataDebug(a));
     emitLog(`[${getTimestamp()}] [DEBUG${level}] [${getCaller()}] ` +
-        util.format(...safe), colors.white);
+        util.formatWithOptions({ depth: 4, maxArrayLength: 40 }, ...safe), colors.white);
 }
 
 function getBotUptime(startedTime) {
