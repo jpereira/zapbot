@@ -20,6 +20,28 @@ Docker, `/app/cache` e `/app/cache/media`).
 /cache -a        → tudo, inclusive os backups
 ```
 
+Sem opções, mostra os arquivos e diretórios do primeiro nível em ordem alfabética.
+O tamanho de cada diretório inclui seu conteúdo; o total soma arquivos e diretórios.
+As contagens de mensagens, apagadas, edições e backups aparecem abaixo da árvore.
+
+Exemplo:
+
+```text
+🗂️ Exibindo conteúdo de /app/cache/*
+
+├── 📁 backups/       118.33 KB
+├── bot_database.db   704.00 KB
+├── 📁 media/         404.77 MB
+└── 📁 tmp/                 0 B
+───────────────────────────────
+Total:                405.57 MB
+
+🗄️ 1150 mensagens no cache.
+🗑️ 79 apagadas.
+✏️ 3 edições.
+📦 Backups: 3 (veja /backup).
+```
+
 O `-a` não deixa nenhum backup para trás: se quiser guardar uma cópia antes,
 use `/backup -s` (o arquivo chega no seu privado). As opções `-c`, `-m` e `-b`
 podem ser usadas juntas.

@@ -27,7 +27,8 @@ function humanSize(bytes) {
 }
 
 function listCacheLevelOnly(dir = CACHE_DIR) {
-    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    const entries = fs.readdirSync(dir, { withFileTypes: true })
+        .sort((a, b) => a.name.localeCompare(b.name));
 
     if (!entries.length) return 'Diretório vazio.\n';
 
@@ -53,7 +54,7 @@ function listCacheLevelOnly(dir = CACHE_DIR) {
         .join('\n');
 
     output += '\n';
-    output += `${''.padEnd(maxName, '─')} ${'─'.repeat(12)}\n`;
+    output += `${'─'.repeat(maxName + 12)}\n`;
     output += `${'Total:'.padEnd(maxName)}  ${humanSize(totalBytes).padStart(10)}`;
 
     return output;
