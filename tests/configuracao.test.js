@@ -363,6 +363,7 @@ describe('parser de opções', () => {
         assert.equal(o.opt.audio, true);
         assert.equal(o.opt.startSec, '10');
         assert.deepEqual(o.argv, ['https://x.com']);
+        assert.ok(!Object.hasOwn(o.opt, 'argv'));
         assert.ok(o.given.has('audio') && o.given.has('startSec'));
     });
 
