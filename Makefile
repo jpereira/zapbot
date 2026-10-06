@@ -125,6 +125,7 @@ volume: context ## Cria/inspeciona os volumes do ambiente selecionado
 clean: context ## Remove container e imagem do ambiente selecionado, preservando os volumes
 	-$(DOCKER) rm -f $(SERVICE)
 	-$(DOCKER) rmi -f $(SERVICE)
+	-$(DOCKER) builder prune -f -a
 
 destroy: clean ## Remove também os volumes do ambiente selecionado (sessão e cache!)
 	$(DOCKER) volume rm -f $(VOLUMES)
