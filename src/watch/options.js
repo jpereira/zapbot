@@ -92,4 +92,12 @@ function askedHelpWatch(args) {
     }
 }
 
-module.exports = { readOptionsWatch, askedHelpWatch };
+function askedMaskWatch(args) {
+    try {
+        return tokensWatch(args).some(t => t.opcao && ['-mask', '-m'].includes(t.valor));
+    } catch {
+        return false;
+    }
+}
+
+module.exports = { readOptionsWatch, askedHelpWatch, askedMaskWatch };

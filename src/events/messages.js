@@ -26,7 +26,7 @@ const { printDebugLevel } = require('../log');
 const { instrumentObject } = require('../debugInstrumentation');
 const { channelResolverName } = require('../contacts');
 const { isChannelAlt, channelId } = require('../util/origin');
-const { askedHelpWatch } = require('../watch/options');
+const { askedHelpWatch, askedMaskWatch } = require('../watch/options');
 
 // WhatsApp's own notices (joined the group, changed the name, encryption, call...): they have no author
 const SYSTEM_TYPES = new Set([
@@ -37,7 +37,8 @@ const SYSTEM_TYPES = new Set([
 client.on('message_create', (msg) => withContextDebug({
     chatId: channelId(msg?.from, msg?.id?.remote, msg?.to) || msg?.id?.remote || msg?.from || msg?.to,
     comando: (msg.body || '').trim().startsWith('/') ? msg.body : null,
-    profundidade: 0
+    profundidade: 0,
+    maskTelefones: false
 }, async () => {
     if (msg.fromMe && logIsCopy(msg.body)) return;
     instrumentObject(msg, 'WhatsApp.Message', 2,
@@ -350,7 +351,12 @@ client.on('message_create', (msg) => withContextDebug({
             : `Executando comando '${body}' em '${chatName}'`);
 
         const opts = GetOptFromCommand(args, command);
-        if (command.cmd === '/watch') opts.opt.help = askedHelpWatch(args);
+        if (command.cmd === '/watch') {
+            opts.opt.help = askedHelpWatch(args);
+            opts.opt.mask = askedMaskWatch(args);
+        }
+        contextDebug().maskTelefones = ['/show', '/watch', '/bot'].includes(command.cmd) &&
+            Boolean(opts.opt.mask);
 
         if (isDebugMode()) {
             printDebug('GetOptFromCommand():', command.cmd, opts);
