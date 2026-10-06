@@ -8,7 +8,7 @@ const fs = require('fs');
 const { test, describe, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { OWNER, GROUP, OTHERAlt, Location } = bot;
+const { OWNER, OTHERAlt, Location } = bot;
 
 const PRIVATE_OWNER = OWNER.jid;
 const WORK = '120363000000000002@g.us';
