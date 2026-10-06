@@ -107,7 +107,7 @@ describe('/cotacao (/cambio)', () => {
 
     test('-a/-d: moeda inválida, sem moeda e de outra pessoa', async () => {
         assert.match((await bot.replyAlt('/cotacao -a xyz'))[0], /❌ Moeda não suportada: XYZ/);
-        assert.match((await bot.replyAlt('/cotacao -a'))[0], /Usage: \/cotacao/);
+        assert.match((await bot.replyAlt('/cotacao -a'))[0], /Uso: \/cotacao/);
         assert.deepEqual(await bot.replyAlt('/cotacao -a gbp', { de: OTHERAlt.jid }), ['⛔ Apenas o dono do bot (ou um admin) pode alterar as moedas.']);
     });
 
@@ -159,7 +159,7 @@ describe('/crypto (/bitcoio, /creptomoeda)', () => {
         assert.deepEqual(await bot.replyAlt('/crypto -d hype'), ['🗑️ HYPE removida.']);
         assert.deepEqual(await bot.replyAlt('/crypto -d hype'), ['ℹ️ HYPE não está ativada.']);
         assert.match((await bot.replyAlt('/crypto -a xyz'))[0], /❌ Moeda não suportada: XYZ/);
-        assert.match((await bot.replyAlt('/crypto -a'))[0], /Usage: \/crypto/);
+        assert.match((await bot.replyAlt('/crypto -a'))[0], /Uso: \/crypto/);
         assert.deepEqual(await bot.replyAlt('/crypto -a sol', { de: OTHERAlt.jid }), ['⛔ Apenas o dono do bot (ou um admin) pode alterar as moedas.']);
     });
 
@@ -173,7 +173,8 @@ describe('/crypto (/bitcoio, /creptomoeda)', () => {
 
         await bot.setSetting('crypto.coins', 'BTC');
         network.responder('get', 'ticker/24hr', new Error('fora do ar'));
-        assert.deepEqual(await bot.replyAlt('/crypto', { erroEsperado: true }), ['❌ Error fetching crypto prices.']);
+        assert.deepEqual(await bot.replyAlt('/crypto', { erroEsperado: true }),
+            ['❌ Não consegui consultar as cotações de criptomoedas. Tente de novo.']);
     });
 });
 

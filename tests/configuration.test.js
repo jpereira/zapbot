@@ -389,20 +389,41 @@ describe('parser de opções', () => {
 });
 
 describe('ajuda', () => {
+    test('todos os comandos ativos e aliases aceitam -h e -help com a mesma ajuda', async () => {
+        for (const command of activeCommands()) {
+            const expected = '```' + formatCommandHelp(command) + '```';
+            for (const nameAlt of [command.cmd, ...(command.aliases ?? [])]) {
+                for (const flag of ['-h', '-help']) {
+                    assert.deepEqual(await bot.replyAlt(`${nameAlt} ${flag}`), [expected],
+                        `${nameAlt} ${flag}`);
+                }
+            }
+        }
+    });
+
+    test('ajuda mostra os títulos em português e as flags universais', () => {
+        const textAlt = formatCommandHelp(findCommand('/get'));
+        assert.match(textAlt, /^Uso:/);
+        assert.match(textAlt, /\nOpções:\n/);
+        assert.match(textAlt, /\nArgumentos:\n/);
+        assert.match(textAlt, /\nAjuda: -help, -h\n/);
+        assert.doesNotMatch(textAlt, /Usage:|Options:|Arguments:|\[OPTION\]/);
+    });
+
     test('formatCommandHelp traz uso, opções, argumentos e aliases', () => {
         const textAlt = formatCommandHelp(findCommand('/show'));
-        assert.match(textAlt, /^Usage: \/show \[-N\] \[OPTION\]/);
+        assert.match(textAlt, /^Uso: \/show \[-N\] \[OPÇÃO\]/);
         assert.match(textAlt, /-query, -q <texto>/);
-        assert.match(textAlt, /Arguments:\n  -N/);
+        assert.match(textAlt, /Argumentos:\n  -N/);
         assert.match(textAlt, /Aliases: \/s$/);
     });
 
     test('as formas do uso ("  ou  ") saem uma por linha, alinhadas', () => {
         const textAlt = formatCommandHelp(findCommand('/defi'));
         const linesAlt = textAlt.split('\n');
-        assert.equal(linesAlt[0], 'Usage: /defi [orca|prjx|morpho|aave] [-mask]');
-        assert.equal(linesAlt[1], '       /defi -l');
-        assert.equal(linesAlt[4], '       /defi <protocolo> <opções>');
+        assert.equal(linesAlt[0], 'Uso: /defi [orca|prjx|morpho|aave] [-mask]');
+        assert.equal(linesAlt[1], '     /defi -l');
+        assert.equal(linesAlt[4], '     /defi <protocolo> <opções>');
         assert.doesNotMatch(textAlt, / {2}ou {2}/);
     });
 
@@ -413,10 +434,10 @@ describe('ajuda', () => {
         assert.match(general, / > Orca\n {2}-address <endereço> +Cadastra a posição da Orca/);
 
         const morpho = formatCommandHelp(findCommand('/defi'), { protocolo: 'morpho' });
-        assert.match(morpho, /^Usage: \/defi morpho \[-mask\]\n {7}\/defi morpho -wallet <0x\.\.\.> \[-name <nome>\]\nPosição, empréstimos e risco no Morpho/);
+        assert.match(morpho, /^Uso: \/defi morpho \[-mask\]\n {5}\/defi morpho -wallet <0x\.\.\.> \[-name <nome>\]\nPosição, empréstimos e risco no Morpho/);
         const optionsAlt = morpho.match(/^ {2}-\S+/gm);
         assert.deepEqual(optionsAlt, ['  -list,', '  -mask,', '  -name,', '  -rm', '  -wallet,']);
-        assert.doesNotMatch(morpho, / > |Arguments:/);
+        assert.doesNotMatch(morpho, / > |Argumentos:/);
 
         const orca = formatCommandHelp(findCommand('/defi'), { protocolo: 'orca' });
         assert.match(orca, /-address <endereço>/);
@@ -424,8 +445,8 @@ describe('ajuda', () => {
 
         // By the command's -help and by /help
         assert.equal((await bot.replyAlt('/defi prjx -help'))[0], '```' + formatCommandHelp(findCommand('/defi'), { protocolo: 'prjx' }) + '```');
-        assert.match((await bot.replyAlt('/help defi orca'))[0], /^🤖 \*AJUDA\*\n\n```Usage: \/defi orca \[-mask\]\n/);
-        assert.match((await bot.replyAlt('/defi xyz -help'))[0], /^```Usage: \/defi \[orca\|prjx\|morpho\|aave\]/, 'protocolo desconhecido: a geral');
+        assert.match((await bot.replyAlt('/help defi orca'))[0], /^🤖 \*AJUDA\*\n\n```Uso: \/defi orca \[-mask\]\n/);
+        assert.match((await bot.replyAlt('/defi xyz -help'))[0], /^```Uso: \/defi \[orca\|prjx\|morpho\|aave\]/, 'protocolo desconhecido: a geral');
     });
 
     test('ajuda para o celular: uma frase por linha e o "Ex:" na linha de baixo, um exemplo por linha', () => {

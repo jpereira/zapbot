@@ -13,7 +13,7 @@ async function cmdHelp({ msg, args, admin, podeUsar: canUse = () => true }) {
     // The admin ones, only for the owner and the admins; the others, only those in their rule (/bot +cmd)
     const can = (command) => admin || (!command.onlyAdmin && canUse(command.cmd));
 
-    // Reads straight from the text: the option parser discards a first token that starts with "/"
+    // Reads the requested command and protocol directly, preserving the name with or without "/".
     const [first, ...rest] = args.split(/\s+/);
     let requestedCommand = first;
 
