@@ -68,7 +68,7 @@ src/
   debug*.js             contexto, instrumentação, regex, dados dos logs e cópia para chats
   db.js                 SQLite (dbGet/dbAll/dbRun) e o sinal dbPronto
   inicializacao.js      tabelas + carga dos settings
-  settings.js           SETTINGS_SCHEMA, getSetting/setSetting e a migração dos renomeados
+  settings.js           SETTINGS_SCHEMA, getSetting/setSetting e a validação dos valores persistidos
   botConfig.js          src/comandos/comandos.json carregado
   cliente.js            cliente do whatsapp-web.js e a marca dos envios do bot
   conexao.js            QR Code, eventos de conexão, reinício e watchdog
@@ -170,7 +170,7 @@ entre os casos.
 
 | Arquivo | O que cobre |
 |---|---|
-| `configuracao.test.js` | `comandos.json`, settings (e a migração dos renomeados), parser de opções, ajuda (uma forma do uso e um exemplo por linha) e a coerência entre config, código, README e `docs/` (inclusive a ordem alfabética, os links e a versão estável da instalação) |
+| `configuracao.test.js` | `comandos.json`, settings (e a validação dos valores persistidos), parser de opções, ajuda (uma forma do uso e um exemplo por linha) e a coerência entre config, código, README e `docs/` (inclusive a ordem alfabética, os links e a versão estável da instalação) |
 | `mensagens.test.js` | Gravação, roteamento, permissões (`onlyAdmin`, o `bot.users` com pessoas, grupos, `true`/`false` e a migração do `bot.adminMode`, bot desligado, admins extras do `bot.admins`, os atalhos `/bot +o`/`+v`, as listas do `-users`/`-all-users`, os comandos de cada usuário (`+cmd`/`-cmd`), o `-reset` com a confirmação, o `/whois` e a proteção contra flood), o log dos comandos desconhecidos e a contagem do `/stats` (sem os avisos do sistema) |
 | `comandos.test.js` | `/help` (só com os comandos de quem pediu), `/debug`, `/uptime`, `/version`, `/ping`, `/noffa`, `/bot` (o `-h` em blocos, o status sem opção, o `-on`/`-off`, o `-users`, e o `-info`, com as versões novas do yt-dlp e do whatsapp-web.js), `/set` (e o `-append`/`-rem`) |
 | `apagadas-editadas.test.js` | Eventos de apagar/editar (e os avisos `show.alert.*`) e o `/show` (apagadas, editadas e status, o chat pedido e a busca `-q`) |
@@ -278,7 +278,7 @@ bot) e a lista `commands`. Cada entrada de `commands` segue este formato:
 ```jsonc
 {
   "cmd": "/get",                     // nome principal
-  "usage": "/get [OPTION]... <url>", // linha "Usage:" no -help (outras formas: "  ou  ", uma por linha)
+  "usage": "/get [OPÇÃO]... <url>", // linha "Uso:" no -help (formas com "  ou  ": uma por linha)
   "aliases": ["/download"],          // nomes alternativos
   "help": "Baixa vídeo ou áudio...", // descrição curta
   "cmd_opts": [
@@ -289,7 +289,7 @@ bot) e a lista `commands`. Cada entrada de `commands` segue este formato:
     { "opts": ["add"], "values": ["<x>"], "desc": "...", "cron": false } // opcional; não roda num {/comando} do /cron
   ],
   "cron": true,                      // opcional; true = roda num {/comando} do texto do /cron
-  "onlyAdmin": false,                // true = só a conta do bot pode usar
+  "onlyAdmin": false,                // true = só o dono e os admins extras usam
   "disabled": false                  // opcional; true = o bot ignora o comando
 }
 ```
@@ -311,7 +311,7 @@ bot) e a lista `commands`. Cada entrada de `commands` segue este formato:
     exemplo começa com `/` ou `-`: a vírgula dentro de um (`/tempo Niteroi,
     Sergipe`) não o divide. Por isso o `Ex:` fica sempre no fim do texto.
 - `"sinais": ["+", "-"]` mostra o par numa linha só no `-h` (`+o, -o`), em vez
-  do `-o` em Options e do `+o` em Arguments, longe um do outro. O parser
+  do `-o` em Opções e do `+o` em Argumentos, longe um do outro. O parser
   continua lendo só o `-o`: o `+o` chega em `argv`, e o handler trata (como o
   `/bot +o`).
 - `"espacado": true` (no comando) separa as opções do `-h` com uma linha em

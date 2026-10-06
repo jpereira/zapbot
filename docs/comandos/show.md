@@ -18,7 +18,7 @@ Com o aviso no privado desligado (`/set show.alert.deleted off` ou
 
 | Opção | Valor | Descrição |
 |---|---|---|
-| `-N` | | Quantidade (padrão 1, máx. 20, setting `show.max`). Ex.: `-3` |
+| `-N` | | Quantidade (padrão 1, limite padrão 20, configurável até 100 em `show.max`). Ex.: `-3` |
 | `chat` | | Outro chat: o nº da lista do `-l`, parte do nome, `@menção` ou `/regex/`. Veja [O chat](#o-chat) |
 | `-deleted`, `-d` | | Mensagens apagadas (sem chat, o padrão) |
 | `-edited`, `-e` | | Mensagens editadas, com o texto de antes e o de depois. Cada edição é um item: uma mensagem editada duas vezes aparece duas vezes |
