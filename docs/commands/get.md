@@ -1,8 +1,8 @@
 # `/get` (`/download`)
 
-Baixa vídeos de Instagram, YouTube, X/Twitter, TikTok e outros sites
-suportados pelo [yt-dlp](https://github.com/yt-dlp/yt-dlp). A URL pode vir como
-argumento ou você pode dar reply numa mensagem que contenha o link.
+Baixa vídeos de Instagram, YouTube, X/Twitter, TikTok e outros sites suportados pelo
+[yt-dlp](https://github.com/yt-dlp/yt-dlp). A URL pode vir como argumento ou você pode dar reply
+numa mensagem que contenha o link.
 
 | Opção | Valor | Descrição |
 |---|---|---|
@@ -25,12 +25,11 @@ Limites (o `/get` não é admin: quem estiver no `bot.users` usa; com ele em `tr
 - yt-dlp e ffmpeg são interrompidos após 5 minutos cada.
 - No máximo 2 `/get` ao mesmo tempo. Os demais recebem um aviso para tentar de novo.
 
-URLs que apontam para a rede interna (`localhost`, `10.x`, `192.168.x`,
-`169.254.x`, IPv6 local etc.) são recusadas, para que o `/get` não sirva de
-ponte para a sua rede (SSRF). A checagem é feita no host informado; redirects
-feitos depois pelo yt-dlp não são verificados.
+URLs que apontam para a rede interna (`localhost`, `10.x`, `192.168.x`, `169.254.x`, IPv6 local
+etc.) são recusadas, para que o `/get` não sirva de ponte para a sua rede (SSRF). A checagem é feita
+no host informado; redirects feitos depois pelo yt-dlp não são verificados.
 
-```
+```text
 /get https://www.instagram.com/reel/XXXXXXXX/
 /get -a https://youtu.be/XXXXXXXXXXX
 /get -ss 10 -es 25 https://x.com/usuario/status/123456

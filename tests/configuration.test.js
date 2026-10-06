@@ -116,6 +116,34 @@ function checkSummary(md, title, whereAlt, { comLinks: withLinks }) {
 }
 
 describe('documentação', () => {
+    test('tabelas Markdown mantêm o número de colunas e escapam pipes nos valores', () => {
+        for (const fileAlt of ['README.md', ...pagesDocs().map(f => `docs/${f}`)]) {
+            const linesAlt = withoutCode(fs.readFileSync(path.join(bot.ROOT, fileAlt), 'utf8'))
+                .split('\n');
+            let columns = null;
+            for (const [i, line] of linesAlt.entries()) {
+                if (!line.startsWith('|')) {
+                    columns = null;
+                    continue;
+                }
+                const amount = line.split(/(?<!\\)\|/).length;
+                columns ??= amount;
+                assert.equal(amount, columns, `${fileAlt}:${i + 1}: tabela desalinhada`);
+            }
+        }
+    });
+
+    test('settings numéricos: padrões e intervalos documentados seguem o schema', () => {
+        const linesAlt = readDoc('settings.md').split('\n');
+        for (const [keyAlt, schema] of Object.entries(SETTINGS_SCHEMA)) {
+            if (schema.type !== 'number') continue;
+            const line = linesAlt.find(l => l.startsWith(`| \`${keyAlt}\` |`));
+            const columns = line.split('|').map(c => c.trim());
+            assert.equal(columns[2], `${schema.min}–${schema.max}`, `${keyAlt}: intervalo`);
+            assert.equal(columns[3], `\`${schema.default}\``, `${keyAlt}: padrão`);
+        }
+    });
+
     test('uma página por comando, com o título igual ao config (aliases e "· admin")', () => {
         for (const c of CONFIG.commands) {
             const fileAlt = `commands/${c.cmd.slice(1)}.md`;
@@ -502,8 +530,8 @@ describe('ajuda', () => {
         assert.equal(linesAlt[i + 3], '        /defi orca');
         assert.equal(linesAlt[i + 4], '        /defi aave');
 
-        // A single example also goes to the line below; "Niteroi, Sergipe" is one example, not two
-        assert.match(formatCommandHelp(findCommand('/tempo')), /\n {4}Ex: \/tempo Niteroi, Sergipe\n/);
+        // A single example also goes to the line below; "Paris, Texas" is one example, not two
+        assert.match(formatCommandHelp(findCommand('/tempo')), /\n {4}Ex: \/tempo Paris, Texas\n/);
     });
 
     test('${CACHE_DIR}, ${MEDIA_DIR} e ${TMP_DIR} viram os caminhos reais na ajuda', () => {
@@ -515,6 +543,24 @@ describe('ajuda', () => {
 
         const { interpolar } = bot.src('commands/base');
         assert.equal(interpolar('em ${TMP_DIR}, ${NAO_EXISTE}'), `em ${bot.src('constants').TMP_DIR}, \${NAO_EXISTE}`);
+    });
+
+    test('ajuda de todos os comandos e protocolos resolve variáveis e mantém o recuo', () => {
+        for (const command of activeCommands()) {
+            for (const protocol of [undefined, ...Object.keys(command.protocolos ?? {})]) {
+                const textAlt = formatCommandHelp(command, { protocolo: protocol });
+                const whereAlt = `${command.cmd} ${protocol ?? ''}`;
+                assert.doesNotMatch(textAlt, /\t|\$\{|[ \t]+$/m, whereAlt);
+                assert.match(textAlt, /\nAjuda: -help, -h(?:\n|$)/, whereAlt);
+                if (!protocol) continue;
+                for (const optionAlt of command.cmd_opts.filter(o => o.opts)) {
+                    const presente = !optionAlt.protocolos || optionAlt.protocolos.includes(protocol);
+                    const syntax = `  -${optionAlt.opts[0]}`;
+                    assert.equal(textAlt.split('\n').some(l => l.startsWith(`${syntax} `)
+                        || l.startsWith(`${syntax},`)), presente, `${whereAlt}: ${syntax}`);
+                }
+            }
+        }
     });
 
     test('getCommandSyntax de comando inexistente é null', () => {

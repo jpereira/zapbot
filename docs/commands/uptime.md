@@ -2,7 +2,7 @@
 
 Mostra a versão e há quanto tempo o bot está no ar e conectado ao WhatsApp.
 
-```
+```text
 /uptime
 🤖 ZapBot 1.0.11 (devel) (git+9029cfb/HEAD)
 ━━━━━━━━━━━━━━━━━━

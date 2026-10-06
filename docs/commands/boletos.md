@@ -1,9 +1,8 @@
 # `/boletos`
 
-Só em grupos: sorteia 2 membros diferentes (fora o bot) e os marca para "pagar
-um boleto".
+Só em grupos: sorteia 2 membros diferentes (fora o bot) e os marca para "pagar um boleto".
 
-```
+```text
 /boletos
 🥳 Parabéns @Fulano e @Beltrano 🎉
 Vocês foram sorteados para pagar um boleto! 💸✨

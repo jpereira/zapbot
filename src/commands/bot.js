@@ -43,7 +43,7 @@ const { contextDebug } = require('../debugContext');
  * the current chat: in a group, the group (which does not become admin); in someone's private chat, the person.
  * A person's +v typed in a group applies only in that group.
  *
- * And the report (src/status.js) and the versions (src/system.js), which do not match the others:
+ * The report (src/status.js) accepts -to and -mask; the versions (src/system.js), -mask:
  * /bot -status (-s)         → the report now (the same as /bot with no option)
  * /bot -s 06h [-to <dest>]  → every day at 06:00 (Brasília), in your private chat or in the -to
  * /bot -s -to <dest>        → the report now, to the -to (people, groups, emails)
@@ -601,7 +601,7 @@ async function cmdBot({ msg, opts: commandOpts, args, chatId, isGroup }) {
         return;
     }
 
-    // -to accepts spaces (/Grupo L200/), which the option parser would split: it goes out first
+    // Repeated and grouped destinations (/Grupo L200/) are resolved together.
     const { destinos: destinationsText, informado: withDestination, resto: rest } = extractDestinations(args);
     const opts = withDestination ? GetOptFromCommand(rest, findCommand('/bot')) : commandOpts;
     const { on, off } = opts.opt;
