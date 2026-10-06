@@ -629,7 +629,7 @@
                         "m"
                     ],
                     "values": [],
-                    "desc": "Esconde os números da carteira com * ($**,***.**): saldos, quantidades, valores, taxas a coletar e o rendimento. Preço, faixa, pool, Health Factor, LTV e APY continuam. Ex: /defi -mask, /defi aave -m"
+                    "desc": "Esconde os números da carteira com * ($**,***.**): saldos, quantidades, valores, taxas a coletar e o rendimento. Os endereços da posição (-address) e da carteira (-wallet) também ficam ocultos, inclusive no privado. Preço, faixa, pool, Health Factor, LTV e APY continuam. Ex: /defi -mask, /defi aave -m"
                 },
                 {
                     "opts": [
