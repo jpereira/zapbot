@@ -15,7 +15,7 @@
             "aliases": [
                 "/bkp"
             ],
-            "help": "Backup do banco em ${BACKUP_DIR}: um automático por dia, e você lista, detalha, restaura, envia ou apaga. Sem opção, mostra o banco atual e os backups.",
+            "help": "Backup do banco em ${BACKUP_DIR}: um automático por dia, e você lista, detalha, restaura, envia ou apaga. O backup diário também é enviado ao destino da setting backup.to (contato, grupo, número ou e-mail, como no -to), sem pedir -sim; vazia, só salva localmente. Sem opção, mostra o banco atual e os backups.",
             "cmd_opts": [
                 {
                     "opts": [
