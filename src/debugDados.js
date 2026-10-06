@@ -53,20 +53,40 @@ function dadosDebug(valor, vistos = new WeakSet(), profundidade = 0) {
     if (vistos.has(valor)) return '[circular]';
     if (profundidade >= 4) return '[objeto]';
     vistos.add(valor);
-    if (Array.isArray(valor)) {
-        if (typeof valor[0] === 'string' && SENSIVEL.test(valor[0]) &&
-            !/\s/.test(valor[0]) && valor.length > 1) {
-            return [valor[0], '[oculto]'];
+    try {
+        if (valor instanceof Date) {
+            return Number.isNaN(valor.getTime()) ? 'Invalid Date' : valor.toISOString();
         }
-        return valor.slice(0, 40).map(v => dadosDebug(v, vistos, profundidade + 1));
+        if (valor instanceof RegExp) return new RegExp(valor.source, valor.flags);
+        if (valor instanceof Set) {
+            return new Set([...valor].slice(0, 40)
+                .map(v => dadosDebug(v, vistos, profundidade + 1)));
+        }
+        if (valor instanceof Map) {
+            return new Map([...valor].slice(0, 40).map(([chave, v]) => [
+                dadosDebug(chave, vistos, profundidade + 1),
+                typeof chave === 'string' && SENSIVEL.test(chave) ? '[oculto]'
+                    : dadosDebug(v, vistos, profundidade + 1)
+            ]));
+        }
+        if (Array.isArray(valor)) {
+            if (typeof valor[0] === 'string' && SENSIVEL.test(valor[0]) &&
+                !/\s/.test(valor[0]) && valor.length > 1) {
+                return [valor[0], '[oculto]'];
+            }
+            return valor.slice(0, 40).map(v => dadosDebug(v, vistos, profundidade + 1));
+        }
+        const seguro = {};
+        for (const chave of Object.keys(valor).slice(0, 40)) {
+            const d = Object.getOwnPropertyDescriptor(valor, chave);
+            seguro[chave] = SENSIVEL.test(chave) ? '[oculto]'
+                : d?.get ? '[getter]' : dadosDebug(d?.value, vistos, profundidade + 1);
+        }
+        return seguro;
+    } finally {
+        // Referência compartilhada não é ciclo: só os ancestrais estão nesta trilha.
+        vistos.delete(valor);
     }
-    const seguro = {};
-    for (const chave of Object.keys(valor).slice(0, 40)) {
-        const d = Object.getOwnPropertyDescriptor(valor, chave);
-        seguro[chave] = SENSIVEL.test(chave) ? '[oculto]'
-            : d?.get ? '[getter]' : dadosDebug(d?.value, vistos, profundidade + 1);
-    }
-    return seguro;
 }
 
 module.exports = { configurarDebug, dadosDebug, limparTextoDebug };
