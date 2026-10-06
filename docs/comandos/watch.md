@@ -102,3 +102,6 @@ As mensagens da própria conta e os comandos reconhecidos ficam fora da detecç�
 não gera dois avisos para a mesma regra. As regras ficam em `watch.rules`, com máximo definido por
 `watch.max`; as ocorrências são retidas por `watch.hitsRetentionDays` ou até um `/watch -flush`. As
 respostas saem no chat onde o comando foi digitado.
+
+Miniaturas de localização ficam fora das regras de texto e regex. A localização e suas
+coordenadas continuam guardadas no cache; recebê-la não executa comandos.
