@@ -1,6 +1,6 @@
 # `/watch` (`/w`) · admin
 
-Vigia as mensagens que chegam em **qualquer chat** (privados e grupos) e, quando
+Vigia as mensagens que chegam em **qualquer chat** (privados, grupos, status e transmissões) e, quando
 alguma casa com uma regra, manda o alerta **no seu privado** (ou, com `-to`, em
 outro chat ou por e-mail; veja [Avisar em outro lugar](#avisar-em-outro-lugar)):
 
@@ -25,6 +25,10 @@ Tipos de regra:
 As regras são testadas contra o texto original da mensagem (menções como
 `@100000000000001`), mas no alerta e no `-show` as menções aparecem com o nome
 do contato (`@Fulano`) e o grupo com o nome atual.
+
+Em status e transmissões, o remetente é identificado pelo autor da mensagem. Um autor em `@lid`
+é convertido para telefone quando o WhatsApp fornece essa correspondência; sem ela, o número
+fica indisponível. Se o autor não vier informado, o nome aparece como `Desconhecido`.
 
 | Opção | Valor | Descrição |
 |---|---|---|

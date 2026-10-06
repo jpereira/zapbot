@@ -119,13 +119,15 @@ function createMessage({ texto: textAlt = '', chat = GROUP, de = OWNER.jid, id, 
     midia: mediaAlt = null, links, mencoes: mentions = [], timestamp, extras = {} } = {}) {
     const fromMe = de === OWNER.jid;
     const group = chat.endsWith('@g.us');
+    const broadcast = chat.endsWith('@broadcast');
     const idMsg = id ?? `MSG${++sequence}`;
 
     const msg = {
         id: { id: idMsg, remote: chat, fromMe, _serialized: `${fromMe}_${chat}_${idMsg}` },
-        from: group ? chat : (fromMe ? OWNER.jid : de),
+        from: group || broadcast ? chat : (fromMe ? OWNER.jid : de),
         to: group ? chat : (fromMe ? chat : OWNER.jid),
-        author: group ? de : undefined,
+        author: group || broadcast ? de : undefined,
+        isStatus: chat === 'status@broadcast',
         fromMe,
         body: textAlt,
         type: type,
