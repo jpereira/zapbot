@@ -7,6 +7,8 @@ const { Client, LocalAuth } = require('whatsapp-web.js');
 const { BIN_CHROMIUM } = require('./constantes');
 const { printError, printSuccess } = require('./log');
 const { ehCopiaDeLog } = require('./debugCopia');
+const { contextoDebug } = require('./debugContexto');
+const { mascararTelefones } = require('./util/telefone');
 
 const client = new Client({
     authStrategy: new LocalAuth(),
@@ -112,6 +114,12 @@ const sendMessageOriginal = client.sendMessage.bind(client);
 client.sendMessage = (chatId, content, options = {}) => {
     // A cópia é ignorada pelo message_create, então não deixa marca para a próxima mensagem.
     if (ehCopiaDeLog(content)) return sendMessageOriginal(chatId, content, options);
+    if (contextoDebug().maskTelefones) {
+        if (typeof content === 'string') content = mascararTelefones(content);
+        if (typeof options.caption === 'string') {
+            options = { ...options, caption: mascararTelefones(options.caption) };
+        }
+    }
     marcarEnviadaPeloBot(textoDoEnvio(content, options));
     marcarEnvioDoBot(chatId);
     return sendMessageOriginal(chatId, content, options);

@@ -22,6 +22,8 @@ const {
     textoDoStatus
 } = require('../status');
 const { fmtQuando, lerHora } = require('../util/quando');
+const { mascararTelefones, tirarOpcaoMascara } = require('../util/telefone');
+const { contextoDebug } = require('../debugContexto');
 
 /*
  * /bot: o bot e quem usa (settings 'bot.paused', 'bot.admins' e 'bot.users')
@@ -118,7 +120,8 @@ async function escopoDoChat({ chatId, isGroup, todos = false } = {}) {
 
 // 5521999982222 → 5521•••••2222 (o DDI e o DDD ficam, e os 4 últimos)
 const mascarar = (n) => `${n.slice(0, 4)}${'•'.repeat(Math.max(1, n.length - 8))}${n.slice(-4)}`;
-const numeroVisivel = (n, membros) => (membros && !membros.has(n) ? mascarar(n) : n);
+const numeroVisivel = (n, membros) => contextoDebug().maskTelefones ? mascararTelefones(n)
+    : membros && !membros.has(n) ? mascarar(n) : n;
 
 // O nome de um telefone ou grupo: o do grupo, o do contato ou, para você, o do seu perfil
 async function nomeDoItem(item) {
@@ -592,6 +595,7 @@ const USO = '❌ Uso: /bot [-on|-off] [-users|-all-users]  ou  ' +
     '/bot -status [<hora>|off] [-to <destino>]...  ou  /bot -info\n💡 _/bot -h para ajuda_';
 
 async function cmdBot({ msg, opts: optsDoComando, args, chatId, isGroup }) {
+    args = tirarOpcaoMascara(args);
     if (ATALHO.test(String(args ?? ''))) {
         await tratarAtalho(msg, String(args).trim(), { chatId, isGroup });
         return;

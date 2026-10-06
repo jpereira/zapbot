@@ -31,6 +31,11 @@ reinícios:
 | `-status`, `-s` | O status agora e o envio diário dele (`[<hora>\|off]`). Não combina com as outras opções. Veja [Status do bot](#status-do-bot) |
 | `-to` | `<destino>`: junto com `-status`, para onde vai o relatório (pessoa, grupo ou e-mail; repita para vários). Veja [Status do bot](#status-do-bot) |
 | `-info`, `-i` | Versões do bot e do que ele usa, e o sistema. Não combina com as outras opções. Veja [Informações do sistema](#informações-do-sistema) |
+| `-mask`, `-m` | Ofusca telefones na saída desta execução. Ex.: `+55219****44` |
+
+Use `/bot -users -mask` para exibir nomes com telefones ofuscados. A máscara mantém os cinco
+primeiros e os dois últimos dígitos, vale também para o relatório enviado com `-to` e não fica
+ativada para os envios diários. As permissões e os destinos usam os números completos.
 
 O `-on`/`-off` combina com o `-users` e o `-all-users` (`/bot -on -users` liga e
 mostra os usuários); `-on` com `-off` no mesmo comando é recusado. Os

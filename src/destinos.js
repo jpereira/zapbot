@@ -13,6 +13,8 @@ const { printDebug, printError } = require('./log');
 const { isDebugMode } = require('./settings');
 const { semAcentos } = require('./util/formatar');
 const { ehCanal } = require('./util/origem');
+const { contextoDebug } = require('./debugContexto');
+const { mascararTelefones } = require('./util/telefone');
 
 /*
  * Formas aceitas:
@@ -396,7 +398,10 @@ async function resolverDestinos(msg, textos, o = {}) {
  */
 async function enviarAoDestino(destino, texto, { assunto = 'Aviso', opcoes = {} } = {}) {
     if (destino?.email) {
-        await enviarEmail({ para: destino.email.split(/\s*,\s*/), assunto, texto: texto.replace(/[*_]/g, '') });
+        const semFormatacao = texto.replace(/[*_]/g, '');
+        await enviarEmail({ para: destino.email.split(/\s*,\s*/), assunto,
+            texto: contextoDebug().maskTelefones
+                ? mascararTelefones(semFormatacao) : semFormatacao });
         return;
     }
     await client.sendMessage(destino?.id || client.info.wid._serialized, texto, opcoes);

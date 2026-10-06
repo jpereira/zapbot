@@ -26,7 +26,7 @@ const { printDebugNivel } = require('../log');
 const { instrumentarObjeto } = require('../debugInstrumentacao');
 const { resolverNomeDoCanal } = require('../contatos');
 const { ehCanal, idDoCanal } = require('../util/origem');
-const { pediuAjudaWatch } = require('../watch/opcoes');
+const { pediuAjudaWatch, pediuMascaraWatch } = require('../watch/opcoes');
 
 // Avisos do próprio WhatsApp (entrou no grupo, mudou o nome, criptografia, chamada...): não têm autor
 const TIPOS_DO_SISTEMA = new Set([
@@ -37,7 +37,8 @@ const TIPOS_DO_SISTEMA = new Set([
 client.on('message_create', (msg) => comContextoDebug({
     chatId: idDoCanal(msg?.from, msg?.id?.remote, msg?.to) || msg?.id?.remote || msg?.from || msg?.to,
     comando: (msg.body || '').trim().startsWith('/') ? msg.body : null,
-    profundidade: 0
+    profundidade: 0,
+    maskTelefones: false
 }, async () => {
     if (msg.fromMe && ehCopiaDeLog(msg.body)) return;
     instrumentarObjeto(msg, 'WhatsApp.Message', 2,
@@ -350,7 +351,12 @@ client.on('message_create', (msg) => comContextoDebug({
             : `Executando comando '${body}' em '${chatName}'`);
 
         const opts = GetOptFromCommand(args, command);
-        if (command.cmd === '/watch') opts.opt.help = pediuAjudaWatch(args);
+        if (command.cmd === '/watch') {
+            opts.opt.help = pediuAjudaWatch(args);
+            opts.opt.mask = pediuMascaraWatch(args);
+        }
+        contextoDebug().maskTelefones = ['/show', '/watch', '/bot'].includes(command.cmd) &&
+            Boolean(opts.opt.mask);
 
         if (isDebugMode()) {
             printDebug('GetOptFromCommand():', command.cmd, opts);
