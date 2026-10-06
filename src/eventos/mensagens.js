@@ -20,6 +20,10 @@ const { contarStats, meuIdStats } = require('../stats');
 const { isCaminhoDeMidia, nomeSeguro, obterPastaMidia } = require('../util/arquivos');
 const { paraMs } = require('../util/formatar');
 const { verificarWatch } = require('../watch/verificar');
+const { ehCopiaDeLog } = require('../debugCopia');
+const { comContextoDebug, contextoDebug } = require('../debugContexto');
+const { printDebugNivel } = require('../log');
+const { instrumentarObjeto } = require('../debugInstrumentacao');
 
 // Avisos do próprio WhatsApp (entrou no grupo, mudou o nome, criptografia, chamada...): não têm autor
 const TIPOS_DO_SISTEMA = new Set([
@@ -27,7 +31,16 @@ const TIPOS_DO_SISTEMA = new Set([
     'notification', 'notification_template', 'protocol'
 ]);
 
-client.on('message_create', async (msg) => {
+client.on('message_create', (msg) => comContextoDebug({
+    chatId: msg?.id?.remote || msg?.from || msg?.to,
+    comando: (msg.body || '').trim().startsWith('/') ? msg.body : null,
+    profundidade: 0
+}, async () => {
+    if (msg.fromMe && ehCopiaDeLog(msg.body)) return;
+    instrumentarObjeto(msg, 'WhatsApp.Message', 2,
+        ['reply', 'downloadMedia', 'getChat', 'getContact', 'getQuotedMessage', 'getMentions']);
+    printDebugNivel(1, 'message_create início', { body: msg.body, type: msg.type });
+    printDebugNivel(3, 'message_create dados do WhatsApp', msg._data);
     try {
         const timestamp = Date.now();
         const msgIdPure = msg?.id?.id || `fallback_${timestamp}`;
@@ -90,6 +103,8 @@ client.on('message_create', async (msg) => {
             senderNumber ||
             originalSenderJid ||
             'Desconhecido';
+        Object.assign(contextoDebug(), { chatName, senderName });
+        printDebugNivel(1, 'message_create remetente e chat', { chatName, senderName, senderJid });
 
         const senderContact = contact || {
             id: { _serialized: senderJid, user: senderJid.split('@')[0] },
@@ -352,5 +367,7 @@ client.on('message_create', async (msg) => {
             fromMe: msg?.fromMe,
             type: msg?.type
         });
+    } finally {
+        printDebugNivel(1, 'message_create fim');
     }
-});
+}));

@@ -38,6 +38,8 @@ require('dotenv').config({
     quiet: true
 });
 
+require('./src/debugInstrumentacao').instalarDebug();
+
 const colors = require('colors');
 
 const { APP_ENV } = require('./src/constantes');

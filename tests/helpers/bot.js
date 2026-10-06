@@ -9,6 +9,8 @@ const path = require('path');
 
 const src = (modulo) => require(path.join(ambiente.RAIZ, 'src', modulo));
 
+src('debugInstrumentacao').instalarDebug();
+
 const { client, limparMarcas } = src('cliente');
 src('eventos/presenca');
 src('eventos/apagadas');
@@ -42,6 +44,9 @@ const TABELAS = ['messages', 'message_edits', 'stats', 'watch_hits', 'watch_dest
  */
 async function reiniciar() {
     await preparar();
+    await src('debugContexto').comContextoDebug({ semRastro: true }, () =>
+        setSetting('debug.enabled', false));
+    src('debugCopia').limparCopiasDebug();
 
     for (const t of TABELAS) await dbRun(`DELETE FROM ${t}`);
     await carregarSettings();
