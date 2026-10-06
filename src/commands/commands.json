@@ -1255,7 +1255,7 @@
             "aliases": [
                 "/s"
             ],
-            "help": "Reexibe as mensagens apagadas, editadas e os status apagados que estão no cache: deste chat ou de outro (pelo nº do -l, nome, @menção ou /regex/). Publicações de canais (@newsletter) são identificadas com 📰 Canal e o nome, sem nome ou telefone de contato.",
+            "help": "Sem parâmetros no privado, lista o cache de todos os chats, como /show -l. Em grupos, reexibe a última mensagem apagada do grupo. Reexibe as mensagens apagadas, editadas e os status apagados que estão no cache: deste chat ou de outro (pelo nº do -l, nome, @menção ou /regex/). Publicações de canais (@newsletter) são identificadas com 📰 Canal e o nome, sem nome ou telefone de contato.",
             "cmd_opts": [
                 {
                     "opts": [
@@ -1287,7 +1287,7 @@
                         "l"
                     ],
                     "values": [],
-                    "desc": "Lista o que tem no cache por chat, numerado para o /show <nº>, marcando o chat atual."
+                    "desc": "Lista todos os chats com conteúdo no cache, numerado para o /show <nº>, marcando o chat atual."
                 },
                 {
                     "opts": [

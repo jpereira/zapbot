@@ -200,6 +200,39 @@ describe('evento: mensagem editada', () => {
 });
 
 describe('/show (/s)', () => {
+    test('sem parâmetros no privado lista o cache, como -l, inclusive vazio e pelo alias',
+        async () => {
+            for (const chat of [PRIVATE_OWNER, OTHERAlt.jid]) {
+                assert.deepEqual(await bot.replyAlt('/show', { chat }),
+                    await bot.replyAlt('/show -l', { chat }));
+            }
+            await messageDeleted('do grupo');
+            await messageEdited('antes', 'depois', { chat: WORK });
+            for (const chat of [PRIVATE_OWNER, OTHERAlt.jid]) {
+                assert.deepEqual(await bot.replyAlt('/s   ', { chat }),
+                    await bot.replyAlt('/show -l', { chat }));
+            }
+            const [summary, messageAlt] = await bot.replyAlt('/show -d', { chat: OTHERAlt.jid });
+            assert.doesNotMatch(summary, /Mensagens no cache/);
+            assert.equal(messageAlt, undefined);
+        });
+
+    test('-l lista todos os chats e permite selecionar os que ficam depois do décimo', async () => {
+        for (let i = 1; i <= 12; i++) {
+            const chat = `120363000000000${String(i + 100).padStart(3, '0')}@g.us`;
+            bot.createGroup(chat, `Grupo ${i}`, [OWNER.jid, OTHERAlt.jid]);
+            await messageDeleted(`conteúdo ${i}`, { chat });
+        }
+        const [list] = await bot.replyAlt('/show -l', { chat: PRIVATE_OWNER });
+        assert.equal((list.match(/^\d+\. 👥 /gm) ?? []).length, 12);
+        assert.match(list, /12\. 👥 Grupo \d+ — 🗑️ 1/);
+        assert.doesNotMatch(list, /\+\d+ chat\(s\)/);
+        const nameAlt = list.match(/12\. 👥 (Grupo \d+) —/)[1];
+        const [summary, messageAlt] = await bot.replyAlt('/show 12', { chat: PRIVATE_OWNER });
+        assert.ok(summary.includes(nameAlt));
+        assert.match(messageAlt, /conteúdo \d+/);
+    });
+
     test('sem apagadas neste chat', async () => {
         assert.deepEqual(await bot.replyAlt('/show'), ['♻️ Nenhuma mensagem apagada registrada neste chat.']);
     });

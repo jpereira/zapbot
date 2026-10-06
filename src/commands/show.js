@@ -24,7 +24,7 @@ const { isChannelAlt } = require('../util/origin');
  * format of the alerts: the DELETED (-d), the EDITED (-e) and the STATUS
  * deleted (-s), which add up. Without any of the three: with a chat (or in the search in
  * all), all together, by date; otherwise, only this chat's deleted ones.
- * /show              → the last deleted one of this chat
+ * /show              → in private, lists the cache; in a group, the last deleted one
  * /show -3           → the last 3
  * /show -2 /^Camila/ → the last 2 (deleted, edited or status) of the chat that matches
  * /show -e Trabalho  → the last edited one of the chat with "Trabalho" in the name
@@ -237,7 +237,6 @@ async function resolverTarget(msg, textAlt) {
  */
 async function listCache({ msg, chatId }) {
     const idsDoChat = await chatCurrentIds(chatId);
-    const LIMIT = 10;
 
     let textAlt = '🗄️ *Mensagens no cache*\n\n';
 
@@ -277,15 +276,7 @@ async function listCache({ msg, chatId }) {
 
     if (chats.length) {
         textAlt += '\n';
-        chats.slice(0, LIMIT).forEach((c, i) => { textAlt += line(c, i); });
-
-        if (chats.length > LIMIT) {
-            textAlt += `_+${chats.length - LIMIT} chat(s)_\n`;
-
-            // The current chat outside the top: shows up anyway, with the no.
-            const i = chats.findIndex(c => idsDoChat.includes(c.chat_id));
-            if (i >= LIMIT) textAlt += line(chats[i], i);
-        }
+        chats.forEach((c, i) => { textAlt += line(c, i); });
 
         textAlt += `\n💡 _/show <nº, nome, @menção ou /regex/> reexibe as de um chat: apagadas, editadas e status juntos; -d, -e e -s filtram; -N para mais (máx. ${getSetting('show.max')})._` +
                  '\n💡 _-f remove do cache as deste chat (no seu privado: de todos)._';
@@ -465,7 +456,9 @@ async function cmdShow({ msg, opts, chatId, admin }) {
         return;
     }
 
-    if (opts.opt.list) {
+    const privateWithoutParams = /@(c\.us|lid)$/.test(chatId) &&
+        !opts.given.size && !opts.argv.length;
+    if (opts.opt.list || privateWithoutParams) {
         await listCache({ msg, chatId });
         return;
     }
