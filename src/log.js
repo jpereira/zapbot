@@ -11,6 +11,18 @@ const { compilarFiltroDebug } = require('./debugOpcoes');
 let filtroTexto;
 let filtro;
 
+function realcarMatches(linha, regex, cor) {
+    const global = new RegExp(regex.source, regex.flags.replace(/g/g, '') + 'g');
+    let saida = '';
+    let inicio = 0;
+    for (const match of linha.matchAll(global)) {
+        if (!match[0]) continue; // Regex vazia não pinta nada, nem segura o terminal num loop.
+        saida += cor(linha.slice(inicio, match.index)) + colors.red.bold(match[0]);
+        inicio = match.index + match[0].length;
+    }
+    return saida + cor(linha.slice(inicio));
+}
+
 function emitirLog(linha, cor) {
     const cfg = configurarDebug();
     const contexto = contextoDebug();
@@ -25,7 +37,7 @@ function emitirLog(linha, cor) {
         filtro.lastIndex = 0;
         if (!filtro.test(linha)) return;
     }
-    console.log(cor(linha));
+    console.log(cfg.enabled && cfg.filter ? realcarMatches(linha, filtro, cor) : cor(linha));
     if (cfg.enabled && cfg.copyTo && !contexto.semRastro) {
         require('./debugCopia').copiarLog(linha);
     }
