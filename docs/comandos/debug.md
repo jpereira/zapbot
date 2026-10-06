@@ -24,6 +24,8 @@ circulares são resumidos. O filtro também vale para logs de informação e err
 está ligado. Flags como `i`, `g`, `m`, `s`, `u` e `y` seguem a sintaxe de regex do JavaScript;
 cada linha é avaliada independentemente. O contexto inclui `chatName` e `chatId` a partir do nível
 `1`, permitindo filtrar pelo nome ou ID do chat.
+No console com cores habilitadas, os trechos que casam com o filtro aparecem em vermelho e negrito,
+como no `grep --color`. As cópias enviadas ao WhatsApp contêm texto sem os códigos de cor.
 
 ```
 /debug -off
