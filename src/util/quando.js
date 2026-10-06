@@ -124,12 +124,12 @@ function lerQuando(palavras, agora = Date.now()) {
         if (mes < 1 || mes > 12 || dia < 1 || dia > 31) return null;
 
         const { hora, usadas } = comHora(horaSeguinte);
-        let ano = data[3] ? Number(data[3].length === 2 ? `20${data[3]}` : data[3]) : hoje.ano;
+        const ano = data[3] ? Number(data[3].length === 2 ? `20${data[3]}` : data[3]) : hoje.ano;
         let ms = instanteEmBrasilia(ano, mes, dia, hora.h, hora.m);
 
         // 31/02 viraria 03/03: data inexistente
         if (partesEmBrasilia(ms).dia !== dia) return null;
-        if (!data[3] && ms <= agora) ms = instanteEmBrasilia(++ano, mes, dia, hora.h, hora.m);
+        if (!data[3] && ms <= agora) ms = instanteEmBrasilia(ano + 1, mes, dia, hora.h, hora.m);
 
         return { ms, usadas };
     }

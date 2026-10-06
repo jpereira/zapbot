@@ -149,8 +149,10 @@ const protocoloDaAjuda = (command, palavras) => palavras
 function formatarErroComando(e) {
     let texto = `⚠️💥 ${e.message}.`;
 
-    if (e?.cause?.cmd) texto += `\n🛠️ *Cmd*:    ${e.cause.cmd}`;
-    if (e?.cause?.inner) texto += `\n⛓️‍💥 *Inner*:  ${e.cause.inner.message || e.cause.inner}`;
+    const cmd = e?.cmd ?? e?.cause?.cmd;
+    if (cmd) texto += `\n🛠️ *Cmd*:    ${cmd}`;
+    const inner = e?.cause?.inner ?? e?.cause;
+    if (inner) texto += `\n⛓️‍💥 *Inner*:  ${inner.message || inner}`;
 
     return `${texto}\n`;
 }
