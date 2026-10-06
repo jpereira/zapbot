@@ -44,6 +44,26 @@ describe('gravação', () => {
         assert.deepEqual([loc.location_lat, loc.location_lng], [-22.9, -43.1]);
     });
 
+    test('localização com miniatura não vira comando nem ocorrência do watch', async () => {
+        await bot.setSetting('bot.users', true);
+        await bot.setSetting('watch.rules', ['/9j/']);
+        const textAlt = '/9j/4AAQSkZJRgABAQAAAQABAAD/2Q==';
+        for (const de of [OWNER.jid, OTHERAlt.jid]) {
+            const id = `LOC-${de}`;
+            const replies = await bot.deliver(bot.createMessage({
+                texto: textAlt, de, id, tipo: 'location',
+                extras: { location: { latitude: -22.91472544, longitude: -43.10812451 } }
+            }));
+            assert.deepEqual(replies, []);
+            const loc = await bot.dbGet('SELECT * FROM messages WHERE id = ?', [id]);
+            assert.equal(loc.type, 'location');
+            assert.equal(loc.body, textAlt);
+            assert.deepEqual([loc.location_lat, loc.location_lng], [-22.91472544, -43.10812451]);
+        }
+        assert.deepEqual(await bot.dbAll('SELECT * FROM watch_hits'), []);
+        assert.match((await bot.replyAlt('/ping'))[0], /pong/i);
+    });
+
     test('mídia que falha ao baixar é gravada sem mídia', async () => {
         const msg = bot.createMessage({ de: OTHERAlt.jid, id: 'RUIM', midia: {} });
         msg.downloadMedia = async () => { throw new Error('falhou'); };
