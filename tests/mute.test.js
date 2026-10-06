@@ -221,6 +221,85 @@ describe('/mute (/mudo, /m)', () => {
         assert.match((await bot.responder('/mute', { chat: DONO.jid, citada: minha }))[0], /^❌ Não sei de quem é essa mensagem/);
     });
 
+    test('aviso de edição sem registro: grupo estilizado antes do contato homônimo', async () => {
+        const nome = 'T͟r͟i͟t͟o͟n͟4❌4C͟l͟u͟b͟  🚀';
+        bot.criarGrupo(L200, nome, [DONO.jid, OUTRO.jid, CICLANO.jid]);
+        bot.criarContato(OUTRO.jid, nome);
+        const [aviso] = await editada('Melhor e mais fácil', 'Melhor é mais fácil', { chat: L200 });
+        await bot.dbRun('DELETE FROM alerts');
+        const citada = bot.criarMensagem({ texto: aviso.texto, chat: DONO.jid });
+
+        assert.match((await bot.responder('/mute', { chat: DONO.jid, citada }))[0], /👥/);
+        assert.deepEqual(await bot.dbAll('SELECT target_id, is_group FROM mutes'), [
+            { target_id: L200, is_group: 1 }
+        ]);
+        assert.match((await bot.responder('/mute -l'))[0], /1\. 👥/);
+        assert.deepEqual(await editada('a', 'b', { chat: L200, de: CICLANO.jid }), []);
+        assert.equal((await editada('a', 'b', { chat: GRUPO })).length, 1);
+        assert.match((await bot.responder('/unmute', { chat: DONO.jid, citada }))[0], /👥/);
+        assert.equal((await editada('c', 'd', { chat: L200 })).length, 1);
+    });
+
+    test('origem registrada identifica o grupo mesmo com cabeçalho desatualizado', async () => {
+        const [aviso] = await editada('a', 'b', { chat: L200 });
+        const texto = aviso.texto.replace('Grupo sobre L200', 'Nome não encontrado');
+        const citada = bot.criarMensagem({ texto, chat: DONO.jid, id: aviso.id.id });
+        assert.match((await bot.responder('/mute', { chat: DONO.jid, citada }))[0],
+            /👥 Grupo sobre L200/);
+        assert.deepEqual(await bot.dbAll('SELECT target_id FROM mutes'), [{ target_id: L200 }]);
+    });
+
+    test('nome ambíguo do grupo: a escolha oferece grupos, mesmo com contato homônimo', async () => {
+        bot.criarContato(OUTRO.jid, 'L200');
+        bot.criarGrupo(GRUPO, 'L200 amigos', [DONO.jid]);
+        const citada = bot.criarMensagem({ chat: DONO.jid, texto:
+            '✏️ MENSAGEM EDITADA DETECTADA\n\n👥 *Grupo:* L200\n' +
+            '👤 *Nome:* Fulano\n📱 *Número:* +5521911111111' });
+        const respostas = await bot.responderEscolhendo('/mute', 2, { chat: DONO.jid, citada });
+        assert.match(respostas[0], /corresponde a 2 grupos/);
+        assert.doesNotMatch(respostas[0], /👤/);
+        assert.deepEqual(await bot.dbAll('SELECT target_id, is_group FROM mutes'), [
+            { target_id: L200, is_group: 1 }
+        ]);
+    });
+
+    test('grupo no corpo da mensagem editada não altera o alvo do aviso privado', async () => {
+        const citada = bot.criarMensagem({ chat: DONO.jid, texto:
+            '✏️ MENSAGEM EDITADA DETECTADA\n\n👤 Nome: Fulano\n' +
+            '📱 Número: +5521911111111\n📅 Enviada em: 06/10/2026\n' +
+            '💬 Depois: "texto\n👥 Grupo: Grupo sobre L200"' });
+        await bot.responder('/mute', { chat: DONO.jid, citada });
+        assert.deepEqual(await bot.dbAll('SELECT target_id FROM mutes'), [{ target_id: OUTRO.jid }]);
+    });
+
+    test('grupo não encontrado no cabeçalho: não silencia o número do autor', async () => {
+        const citada = bot.criarMensagem({ chat: DONO.jid, texto:
+            '✏️ MENSAGEM EDITADA DETECTADA\n\n👥 Grupo: Grupo inexistente\n' +
+            '👤 Nome: Fulano\n📱 Número: +5521911111111' });
+        assert.match((await bot.responder('/mute', { chat: DONO.jid, citada }))[0],
+            /Nenhum grupo com "Grupo inexistente"/);
+        assert.deepEqual(await bot.dbAll('SELECT * FROM mutes'), []);
+    });
+
+    test('aviso sem número: busca o nome somente nos contatos', async () => {
+        bot.criarGrupo(L200, 'Ciclano', [DONO.jid]);
+        const citada = bot.criarMensagem({ chat: DONO.jid, texto:
+            '✏️ MENSAGEM EDITADA DETECTADA\n\n👤 Nome: Ciclano\n📱 Número: Número indisponível' });
+        assert.match((await bot.responder('/mute', { chat: DONO.jid, citada }))[0], /👤 Ciclano/);
+        assert.deepEqual(await bot.dbAll('SELECT target_id, is_group FROM mutes'), [
+            { target_id: CICLANO.jid, is_group: 0 }
+        ]);
+    });
+
+    test('mensagem comum com cabeçalho citado: silencia quem a mandou', async () => {
+        const citada = bot.criarMensagem({ chat: L200, de: OUTRO.jid, texto:
+            '👥 Grupo: Grupo sobre L200\n👤 Nome: Ciclano\n📱 Número: +5521922222222' });
+        await bot.responder('/mute', { chat: L200, citada });
+        assert.deepEqual(await bot.dbAll('SELECT target_id FROM mutes'), [
+            { target_id: OUTRO.jid }
+        ]);
+    });
+
     test('/unmute: pelo nome, pelo nº, respondendo um aviso, -all; quem não está silenciado', async () => {
         // Um aviso do Ciclano (no privado dele), antes de silenciar
         const [aviso] = await apagada('x', { chat: CICLANO.jid, de: CICLANO.jid });

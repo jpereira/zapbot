@@ -1084,7 +1084,7 @@
                     "argv": [
                         "[/contato ou grupo/|@menção|+número]"
                     ],
-                    "desc": "Primeiro um contato, depois um grupo, pelo nome ou parte dele (vários: você escolhe na lista), alguém mencionado com @ ou um número. Sem ele, respondendo um aviso, de onde o aviso veio. Ex: /mute /Grupo L200/, /mute /Jorge Pereira/, /m @Fulano, /mute -s +5521999999999"
+                    "desc": "Contato ou grupo pelo nome ou parte dele, com prioridade para nomes exatos (vários: você escolhe na lista), alguém mencionado com @ ou um número. Respondendo um aviso, silencia a origem: grupo primeiro; sem grupo, número ou nome da pessoa. Ex: /mute /Grupo L200/, /mute /Jorge Pereira/, /m @Fulano, /mute -s +5521999999999"
                 }
             ],
             "onlyAdmin": true
