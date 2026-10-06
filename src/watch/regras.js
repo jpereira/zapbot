@@ -32,7 +32,7 @@ function compilarRegraWatch(regra) {
         try {
             re = new RegExp(m[1], m[2].replace(/[gy]/g, ''));
         } catch (e) {
-            throw new Error(`regex inválida: ${e.message}`);
+            throw new Error(`regex inválida: ${e.message}`, { cause: e });
         }
         testar = (texto) => re.test(texto);
     } else {
