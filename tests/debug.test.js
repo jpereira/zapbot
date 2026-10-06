@@ -1,0 +1,313 @@
+/*
+ * Debug through the real command: levels, regex, destinations and copy without a domino effect.
+ */
+const bot = require('./helpers/bot');
+const { beforeEach, afterEach, describe, test } = require('node:test');
+const assert = require('node:assert/strict');
+const { printDebug, printDebugLevel, printInfo, printError } = bot.src('log');
+const { flushCopiesDebug, cleanCopiesDebug } = bot.src('debugCopy');
+const { instrumentObject } = bot.src('debugInstrumentation');
+const { withContextDebug, contextDebug } = bot.src('debugContext');
+
+beforeEach(bot.restart);
+afterEach(cleanCopiesDebug);
+const textLogs = () => bot.logs.join('\n');
+const copies = () => bot.client.enviadas.filter(e =>
+    typeof e.content === 'string' && e.content.startsWith('🪲 [ZapBot log]\n'));
+
+async function configure(args) {
+    const replies = await bot.replyAlt(`/debug ${args}`);
+    cleanCopiesDebug();
+    bot.logs.length = 0;
+    return replies;
+}
+
+describe('/debug', () => {
+    test('padrão e nível exigem ativação; aceita aliases quando ligado', async () => {
+        assert.equal(bot.getSetting('debug.level'), 0);
+        assert.match((await bot.replyAlt('/debug -level 2'))[0], /Ligue.*\/debug -on -level 2/);
+        assert.equal(bot.getSetting('debug.level'), 0);
+        assert.match((await configure('-on'))[0], /DEBUG0/);
+        assert.match((await configure('-lvl 2'))[0], /DEBUG2/);
+        assert.equal(bot.getSetting('debug.level'), 2);
+        assert.match((await bot.replyAlt('/debug'))[0], /DEBUG2/);
+    });
+
+    test('opções inválidas não ativam nem alteram configurações', async () => {
+        for (const args of ['-on -level', '-on -lvl -1', '-on -level 4',
+            '-on -level 1.5', '-on -level 2 -filter /[/i', '-on -f /abc/z',
+            '-on -off', '-off -lvl 3', '-on -on', '-foo', '-on argumento',
+            '-on -filter /sem fim', '-on -filter abc']) {
+            assert.match((await bot.replyAlt(`/debug ${args}`))[0], /^❌/, args);
+            assert.equal(bot.getSetting('debug.enabled'), false, args);
+            assert.equal(bot.getSetting('debug.level'), 0, args);
+        }
+    });
+
+    test('regex com espaços, escapes e flags; filtro vale para todos os logs', async () => {
+        await configure('-on -lvl 3 -f /Sapato azul/i');
+        printDebug('SAPATO AZUL');
+        printInfo('outro');
+        printError('sapato azul');
+        assert.equal(bot.logs.length, 2);
+        assert.ok(bot.logs.every(l => /sapato azul/i.test(l)));
+        await configure('-filter /a\\/b/gi');
+        printDebug('a/b');
+        printDebug('a/b');
+        printInfo('nada');
+        assert.equal(bot.logs.length, 2, 'lastIndex do g não vaza entre linhas');
+        await configure('-filter /^[^]*sapato/y');
+        printDebug('sapato');
+        printDebug('sapato');
+        assert.equal(bot.logs.length, 2, 'lastIndex do y também reinicia');
+        await configure('-filter -copy-to');
+        printInfo('sem filtro');
+        assert.equal(bot.logs.length, 1);
+        assert.equal(bot.getSetting('debug.filter'), '');
+        assert.equal(bot.getSetting('debug.copyTo'), bot.GROUP);
+    });
+
+    test('níveis cumulativos e rastro do parser, funções e APIs com parâmetros', async () => {
+        for (let level = 0; level <= 3; level++) {
+            await configure(`-on -lvl ${level}`);
+            for (let n = 0; n <= 3; n++) printDebugLevel(n, `marcador${n}`);
+            assert.equal(bot.logs.length, level + 1);
+            await bot.replyAlt('/ping');
+            if (level >= 1) {
+                assert.match(textLogs(), /DEBUG1.*message_create início/);
+                assert.match(textLogs(), /GetOptFromCommand início/);
+                assert.match(textLogs(), /cmdPing fim/);
+                assert.match(textLogs(), /chatName=Família/);
+            } else assert.doesNotMatch(textLogs(), /DEBUG[123]/);
+            bot.network.responder('get', 'kernel.org/releases.json', {
+                latest_stable: { version: '6.1' }, releases: []
+            });
+            await bot.replyAlt('/kernel');
+            if (level >= 2) {
+                assert.match(textLogs(), /DEBUG2.*axios.get início/);
+                assert.match(textLogs(), /kernel.org\/releases.json/);
+                assert.match(textLogs(), /timeout: 15000/);
+            } else assert.doesNotMatch(textLogs(), /DEBUG2/);
+            if (level === 3) {
+                assert.match(textLogs(), /DEBUG3.*dbRun início/);
+                assert.match(textLogs(), /DEBUG3.*resultado/);
+            } else assert.doesNotMatch(textLogs(), /DEBUG3/);
+        }
+    });
+
+    test('filtro pelo contexto do chat e isolamento entre execuções simultâneas', async () => {
+        await configure('-on -lvl 1 -filter /chatName.*Jorge/');
+        bot.createGroup('120363000000000099@g.us', 'Jorge', [bot.OWNER.jid]);
+        await Promise.all([
+            bot.replyAlt('/ping'),
+            bot.replyAlt('/ping', { chat: '120363000000000099@g.us' })
+        ]);
+        assert.ok(bot.logs.length > 0);
+        assert.ok(bot.logs.every(l => /chatName=Jorge/.test(l)));
+        assert.doesNotMatch(textLogs(), /chatName=Família/);
+        assert.equal(contextDebug().chatId, undefined);
+    });
+
+    test('cópia sem destino usa o chat; filtro seleciona também o que é enviado', async () => {
+        await configure('-on -lvl 2 -filter /sapato/ -copy-to');
+        bot.src('client').cleanMarks();
+        assert.equal(bot.getSetting('debug.copyTo'), bot.GROUP);
+        printDebug('sapato 1');
+        printInfo('ignorado');
+        printDebugLevel(2, 'sapato 2');
+        await flushCopiesDebug();
+        assert.equal(copies().length, 1);
+        assert.equal(copies()[0].chatId, bot.GROUP);
+        assert.match(copies()[0].content, /sapato 1[\s\S]*sapato 2/);
+        assert.doesNotMatch(copies()[0].content, /ignorado|sendMessage/);
+        const beforeAlt = bot.logs.length;
+        await bot.deliver(bot.createMessage({ texto: copies()[0].content }));
+        await flushCopiesDebug();
+        assert.equal(bot.logs.length, beforeAlt);
+        assert.equal(copies().length, 1, 'a própria cópia não gera cópias');
+        assert.equal(bot.src('client').botConsumeSending(bot.GROUP), false,
+            'a cópia não deixa marca que afete a contagem da próxima mensagem');
+        assert.equal(await bot.dbGet('SELECT 1 FROM messages WHERE body = ?',
+            [copies()[0].content]), undefined);
+    });
+
+    test('contato, grupo com espaços, número, menção e privado como destino', async () => {
+        bot.createContact('5521999999999@c.us', 'Jorge Pereira');
+        for (const [args, optionsAlt, destination] of [
+            ['-copy-to /Jorge Pereira/', {}, '5521999999999@c.us'],
+            ['-copy-to "Família"', {}, bot.GROUP],
+            ['-copy-to +5521999999999', {}, '5521999999999@c.us'],
+            ['-copy-to @5521999999999', { mencoes: ['5521999999999@c.us'] },
+                '5521999999999@c.us'],
+            ['-copy-to', { chat: bot.OTHERAlt.jid }, bot.OTHERAlt.jid]
+        ]) {
+            const [r] = await bot.replyAlt(`/debug -on ${args}`, optionsAlt);
+            assert.match(r, /Cópia:/);
+            assert.equal(bot.getSetting('debug.copyTo'), destination);
+        }
+    });
+
+    test('destino ambíguo permite escolher; email não altera o estado', async () => {
+        bot.createContact('5521999999991@c.us', 'Jorge A');
+        bot.createContact('5521999999992@c.us', 'Jorge B');
+        await bot.replyChoosing('/debug -on -copy-to Jorge', 2);
+        assert.equal(bot.getSetting('debug.copyTo'), '5521999999992@c.us');
+        const [r] = await bot.replyAlt('/debug -on -lvl 3 -copy-to jorge@exemplo.com');
+        assert.match(r, /não e-mail/);
+        assert.equal(bot.getSetting('debug.level'), 0);
+        assert.equal(bot.getSetting('debug.copyTo'), '5521999999992@c.us');
+    });
+
+    test('desligar limpa filtro, destino e fila; reativar mantém nível sem cópia', async () => {
+        await configure('-on -lvl 3 -filter /sapato/ -copy-to');
+        printDebug('sapato pendente');
+        assert.deepEqual(await bot.replyAlt('/debug -off'), ['🪲 Debug Desativado.']);
+        await flushCopiesDebug();
+        assert.equal(copies().length, 0);
+        assert.equal(bot.getSetting('debug.filter'), '');
+        assert.equal(bot.getSetting('debug.copyTo'), '');
+        assert.equal(bot.getSetting('debug.level'), 3);
+        await configure('-on -lvl 3 -filter /@newsletter/');
+        printDebug('@newsletter');
+        await flushCopiesDebug();
+        assert.equal(copies().length, 0);
+    });
+
+    test('falha de envio pausa cópia; configurar permite retomar', async (t) => {
+        await configure('-on -copy-to -filter /marcador|Cópia dos logs/');
+        const original = bot.client.sendMessage;
+        const mock = t.mock.method(bot.client, 'sendMessage', async () => {
+            throw new Error('sem conexão');
+        });
+        printDebug('marcador');
+        await flushCopiesDebug();
+        assert.equal(mock.mock.calls.length, 1);
+        printDebug('marcador de novo');
+        await flushCopiesDebug();
+        assert.equal(mock.mock.calls.length, 1);
+        assert.match(textLogs(), /Cópia dos logs pausada/);
+        mock.mock.restore();
+        assert.equal(bot.client.sendMessage, original);
+        await configure('-copy-to');
+        printDebug('marcador recuperado');
+        await flushCopiesDebug();
+        assert.match(copies().at(-1).content, /recuperado/);
+    });
+
+    test('fila limitada descarta os logs mais antigos e divide mensagens grandes', async () => {
+        await configure('-on -copy-to -filter /marcador/');
+        for (let i = 0; i < 510; i++) printDebug(`marcador ${i}`);
+        await flushCopiesDebug();
+        const textAlt = copies().map(e => e.content).join('\n');
+        assert.match(textAlt, /10 blocos descartados/);
+        assert.doesNotMatch(textAlt, /marcador 0\n/);
+        assert.match(textAlt, /marcador 509/);
+        assert.ok(copies().every(e => e.content.length < 3200));
+    });
+
+    test('logs do boot aguardam a conexão pronta sem pausar a cópia', async () => {
+        await configure('-on -copy-to -filter /marcador/');
+        bot.estado.pronto = false;
+        printDebug('marcador durante o boot');
+        await flushCopiesDebug();
+        assert.equal(copies().length, 0);
+        bot.estado.pronto = true;
+        await flushCopiesDebug();
+        assert.match(copies().at(-1).content, /durante o boot/);
+    });
+
+    test('troca de destino durante um envio mantém os logs novos na nova fila', async (t) => {
+        await configure('-on -copy-to -filter /marcador/');
+        let release;
+        const original = bot.client.sendMessage;
+        t.mock.method(bot.client, 'sendMessage', async (...args) => {
+            await new Promise(resolve => { release = resolve; });
+            return original.apply(bot.client, args);
+        });
+        printDebug('marcador antigo');
+        const pending = flushCopiesDebug();
+        cleanCopiesDebug();
+        await bot.setSetting('debug.copyTo', bot.OTHERAlt.jid);
+        printDebug('marcador novo');
+        release();
+        await pending;
+        t.mock.restoreAll();
+        await flushCopiesDebug();
+        assert.equal(copies().at(-1).chatId, bot.OTHERAlt.jid);
+        assert.match(copies().at(-1).content, /marcador novo/);
+        assert.doesNotMatch(copies().at(-1).content, /marcador antigo/);
+    });
+});
+
+describe('instrumentação', () => {
+    test('preserva this, retorno síncrono, promises e erros; rastreia uma vez', async () => {
+        await configure('-on -lvl 3');
+        const errorAlt = new Error('falhou');
+        const object = {
+            numero: 7,
+            somar(n) { return this.numero + n; },
+            async esperar() { return this.numero; },
+            falhar() { throw errorAlt; },
+            async rejeitar() { throw errorAlt; },
+            falharSemErro() { throw 0; },
+            async rejeitarSemErro() { throw undefined; }
+        };
+        instrumentObject(object, 'exemplo', 1);
+        instrumentObject(object, 'exemplo', 1);
+        assert.equal(object.somar(2), 9);
+        assert.equal(await object.esperar(), 7);
+        assert.throws(() => object.falhar(), e => e === errorAlt);
+        await assert.rejects(object.rejeitar(), e => e === errorAlt);
+        assert.throws(() => object.falharSemErro(), e => e === 0);
+        await assert.rejects(object.rejeitarSemErro(), e => e === undefined);
+        assert.equal(bot.logs.filter(l => /exemplo.falhar erro/.test(l)).length, 1);
+        assert.equal(bot.logs.filter(l => /exemplo.rejeitar erro/.test(l)).length, 1);
+    });
+
+    test('credenciais não vazam; objetos circulares, getters e buffers são resumidos', async () => {
+        await configure('-on -lvl 3 -copy-to -filter /marcador/');
+        process.env.DEBUG_TEST_TOKEN = 'segredo-do-ambiente';
+        try {
+            await bot.setSetting('openai.api.key', 'segredo-da-setting');
+            const dataAlt = { password: 'novo-segredo', valor: Buffer.alloc(100),
+                get pesado() { throw new Error('getter não pode executar'); } };
+            dataAlt.circular = dataAlt;
+            printDebugLevel(3, 'marcador', dataAlt, 'segredo-do-ambiente', 'segredo-da-setting',
+                'https://api.test/?token=segredo-query&pagina=2',
+                { headers: { Authorization: 'Bearer segredo-header' } });
+            printDebug('marcador /set giphy.api.key segredo-novo');
+            await flushCopiesDebug();
+            assert.doesNotMatch(textLogs(), /novo-segredo|segredo-(do|da|query|header|novo)/);
+            assert.match(textLogs(), /oculto/);
+            assert.match(textLogs(), /Buffer 100 bytes/);
+            assert.match(textLogs(), /circular/);
+            assert.match(textLogs(), /getter/);
+            assert.ok(copies().length > 0);
+            assert.doesNotMatch(copies().map(e => e.content).join('\n'), /segredo-/);
+            assert.equal(dataAlt.password, 'novo-segredo');
+        } finally {
+            delete process.env.DEBUG_TEST_TOKEN;
+        }
+    });
+
+    test('escopo sem rastro impede instrumentação e cópia durante o envio', async () => {
+        await configure('-on -lvl 3 -copy-to');
+        await withContextDebug({ semRastro: true }, async () => {
+            printDebug('não aparece');
+            await bot.client.getContacts();
+        });
+        await flushCopiesDebug();
+        assert.equal(bot.logs.length, 0);
+        assert.equal(copies().length, 0);
+    });
+
+    test('ocultar uma setting sensível preserva o contexto usado no filtro', async () => {
+        await configure('-on -lvl 1 -filter /chatName.*Jorge/');
+        withContextDebug({ chatId: bot.GROUP, chatName: 'Jorge' }, () => {
+            printDebug('/set openai.api.key segredo-temporario');
+        });
+        assert.equal(bot.logs.length, 1);
+        assert.match(textLogs(), /chatName=Jorge/);
+        assert.doesNotMatch(textLogs(), /segredo-temporario/);
+    });
+});

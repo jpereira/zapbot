@@ -4,6 +4,40 @@
 
 const util = require('util');
 const colors = require('colors');
+const { contextDebug } = require('./debugContext');
+const { configureDebug, dataDebug, cleanTextDebug } = require('./debugData');
+const { compileFilterDebug } = require('./debugOptions');
+
+let filterText;
+let filter;
+
+function emitLog(line, cor) {
+    const cfg = configureDebug();
+    const context = contextDebug();
+    const detail = cfg.enabled && cfg.level >= 1 && context.chatId
+        ? ` {chatId=${context.chatId} chatName=${context.chatName ?? ''}}` : '';
+    line = cleanTextDebug(line) + cleanTextDebug(detail);
+    if (cfg.enabled && cfg.filter) {
+        if (filterText !== cfg.filter) {
+            filter = compileFilterDebug(cfg.filter);
+            filterText = cfg.filter;
+        }
+        filter.lastIndex = 0;
+        if (!filter.test(line)) return;
+    }
+    console.log(cor(line));
+    if (cfg.enabled && cfg.copyTo && !context.semRastro) {
+        require('./debugCopy').copyLog(line);
+    }
+}
+
+function printDebugLevel(level, ...args) {
+    const cfg = configureDebug();
+    if (!cfg.enabled || cfg.level < level || contextDebug().semRastro) return;
+    const safe = args.map(a => dataDebug(a));
+    emitLog(`[${getTimestamp()}] [DEBUG${level}] [${getCaller()}] ` +
+        util.format(...safe), colors.white);
+}
 
 function getBotUptime(startedTime) {
     const totalSeconds = Math.floor((Date.now() - startedTime) / 1000);
@@ -32,45 +66,48 @@ function getTimestamp() {
 }
 
 function getCaller() {
-    // [0] Error, [1] getCaller, [2] printX, [3] whoever called printX
-    return new Error().stack.split('\n')[3]?.trim()?.replace('at ', '');
+    return new Error().stack.split('\n').slice(1)
+        .find(l => !l.includes(__filename))?.trim()?.replace('at ', '');
 }
 
 /*
  * All the print* accept several arguments (like console.log).
- * Before, printError('msg:', err.message) dropped the second argument.
  */
 function printDebug(...args) {
-    console.log(colors.white(`[${getTimestamp()}] [DEBUG] [${getCaller()}] ${util.format(...args)}`));
+    printDebugLevel(0, ...args);
 }
 
 function printInfo(...args) {
-    console.log(colors.yellow(`[${getTimestamp()}] [!] ${util.format(...args)}`));
+    emitLog(`[${getTimestamp()}] [!] ${util.format(...args.map(a => dataDebug(a)))}`, colors.yellow);
 }
 
 function printSuccess(...args) {
-    console.log(colors.green(`[${getTimestamp()}] [+] ${util.format(...args)}`));
+    emitLog(`[${getTimestamp()}] [+] ${util.format(...args.map(a => dataDebug(a)))}`, colors.green);
 }
 
 function printError(...args) {
-    console.log(colors.red(`[${getTimestamp()}] [*] [${getCaller()}] ${util.format(...args)}`));
+    emitLog(`[${getTimestamp()}] [*] [${getCaller()}] ` +
+        util.format(...args.map(a => dataDebug(a))), colors.red);
 }
 
 // Who ran a command, and where: [+] 'Fulano' executed '/help' in 'Família'
 function printCall(who, call, chat) {
-    console.log(colors.blue(`[${getTimestamp()}] [+] '${who}' executed '${call}'${chat ? ` in '${chat}'` : ''}`));
+    emitLog(`[${getTimestamp()}] [+] '${who}' executed '${call}'` +
+        `${chat ? ` in '${chat}'` : ''}`, colors.blue);
 }
 
 /*
  * A command that does not exist (or is disabled): the owner's always shows up; the others',
  * only in debug mode (otherwise any "/" typed in a group would flood the log).
  *   [!] ⚠️ 'Jorge' executed unknown command: '/tapioca'
- *   [DEBUG] ⚠️ 'Fulano' executed unknown command: '/tapioca'
+ *   [DEBUG0] ⚠️ 'Fulano' executed unknown command: '/tapioca'
  */
 function printCommandUnknown(who, call, { doDono: owner }) {
     const textAlt = `⚠️ '${who}' executed unknown command: '${call}'`;
-    if (owner) console.log(colors.yellow(`[${getTimestamp()}] [!] ${textAlt}`));
-    else console.log(colors.white(`[${getTimestamp()}] [DEBUG] ${textAlt}`));
+    if (owner) emitLog(`[${getTimestamp()}] [!] ${textAlt}`, colors.yellow);
+    else if (configureDebug().enabled) {
+        emitLog(`[${getTimestamp()}] [DEBUG0] ${textAlt}`, colors.white);
+    }
 }
 
 module.exports = {
@@ -78,6 +115,7 @@ module.exports = {
     printCall,
     printCommandUnknown,
     printDebug,
+    printDebugLevel,
     printError,
     printInfo,
     printSuccess

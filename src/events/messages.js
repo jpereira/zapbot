@@ -20,6 +20,10 @@ const { countStats, myIdStats } = require('../stats');
 const { mediaIsPath, nameSafe, getFolderMedia } = require('../util/files');
 const { paraMs } = require('../util/format');
 const { checkWatch } = require('../watch/check');
+const { logIsCopy } = require('../debugCopy');
+const { withContextDebug, contextDebug } = require('../debugContext');
+const { printDebugLevel } = require('../log');
+const { instrumentObject } = require('../debugInstrumentation');
 
 // WhatsApp's own notices (joined the group, changed the name, encryption, call...): they have no author
 const SYSTEM_TYPES = new Set([
@@ -27,7 +31,16 @@ const SYSTEM_TYPES = new Set([
     'notification', 'notification_template', 'protocol'
 ]);
 
-client.on('message_create', async (msg) => {
+client.on('message_create', (msg) => withContextDebug({
+    chatId: msg?.id?.remote || msg?.from || msg?.to,
+    comando: (msg.body || '').trim().startsWith('/') ? msg.body : null,
+    profundidade: 0
+}, async () => {
+    if (msg.fromMe && logIsCopy(msg.body)) return;
+    instrumentObject(msg, 'WhatsApp.Message', 2,
+        ['reply', 'downloadMedia', 'getChat', 'getContact', 'getQuotedMessage', 'getMentions']);
+    printDebugLevel(1, 'message_create início', { body: msg.body, type: msg.type });
+    printDebugLevel(3, 'message_create dados do WhatsApp', msg._data);
     try {
         const timestamp = Date.now();
         const msgIdPure = msg?.id?.id || `fallback_${timestamp}`;
@@ -90,6 +103,8 @@ client.on('message_create', async (msg) => {
             senderNumber ||
             originalSenderJid ||
             'Desconhecido';
+        Object.assign(contextDebug(), { chatName, senderName });
+        printDebugLevel(1, 'message_create remetente e chat', { chatName, senderName, senderJid });
 
         const senderContact = contact || {
             id: { _serialized: senderJid, user: senderJid.split('@')[0] },
@@ -352,5 +367,7 @@ client.on('message_create', async (msg) => {
             fromMe: msg?.fromMe,
             type: msg?.type
         });
+    } finally {
+        printDebugLevel(1, 'message_create fim');
     }
-});
+}));

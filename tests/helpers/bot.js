@@ -9,6 +9,8 @@ const path = require('path');
 
 const src = (modulo) => require(path.join(environment.ROOT, 'src', modulo));
 
+src('debugInstrumentation').installDebug();
+
 const { client, cleanMarks } = src('client');
 src('events/presence');
 src('events/deleted');
@@ -42,6 +44,9 @@ const TABLES = ['messages', 'message_edits', 'stats', 'watch_hits', 'watch_desti
  */
 async function restart() {
     await prepare();
+    await src('debugContext').withContextDebug({ semRastro: true }, () =>
+        setSetting('debug.enabled', false));
+    src('debugCopy').cleanCopiesDebug();
 
     for (const t of TABLES) await dbRun(`DELETE FROM ${t}`);
     await loadSettings();
