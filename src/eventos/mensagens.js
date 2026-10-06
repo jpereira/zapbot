@@ -239,6 +239,12 @@ client.on('message_create', async (msg) => {
                 const quem = msg.fromMe ? (client.info?.pushname || 'Você') : senderName;
                 printComandoDesconhecido(quem, body.length > 100 ? `${body.slice(0, 100)}…` : body, { doDono: msg.fromMe });
             }
+            const admin = Boolean(msg.fromMe ||
+                (senderNumber && getSetting('bot.admins').includes(senderNumber)));
+            const permissao = permissaoAqui({ numero: senderNumber, chatId, isGroup });
+            if (admin || permissao.liberado) {
+                await msg.reply(`⚠️ Comando '${body}' desconhecido, tente: /help`);
+            }
             return;
         }
 

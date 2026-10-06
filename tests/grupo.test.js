@@ -44,7 +44,7 @@ describe('/todos (/todes)', () => {
     });
 
     test('o antigo /everyone não responde mais', async () => {
-        assert.deepEqual(await bot.responder('/everyone'), []);
+        assert.deepEqual(await bot.responder('/everyone'), ["⚠️ Comando '/everyone' desconhecido, tente: /help"]);
     });
 });
 

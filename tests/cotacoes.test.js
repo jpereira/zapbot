@@ -164,7 +164,7 @@ describe('/crypto (/bitcoio, /creptomoeda)', () => {
     });
 
     test('/moedinha não é mais alias', async () => {
-        assert.deepEqual(await bot.responder('/moedinha'), []);
+        assert.deepEqual(await bot.responder('/moedinha'), ["⚠️ Comando '/moedinha' desconhecido, tente: /help"]);
     });
 
     test('nenhuma ativada; Binance fora do ar', async () => {
