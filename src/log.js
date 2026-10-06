@@ -4,7 +4,7 @@
 
 const util = require('util');
 const colors = require('colors');
-const { contextDebug } = require('./debugContext');
+const { contextDebug, canFilterDebug } = require('./debugContext');
 const { configureDebug, dataDebug, cleanTextDebug } = require('./debugData');
 const { compileFilterDebug } = require('./debugOptions');
 
@@ -29,7 +29,8 @@ function emitLog(line, cor) {
     const detail = cfg.enabled && cfg.level >= 1 && context.chatId
         ? ` {chatId=${context.chatId} chatName=${context.chatName ?? ''}}` : '';
     line = cleanTextDebug(line) + cleanTextDebug(detail);
-    if (cfg.enabled && cfg.filter) {
+    const applyFilter = cfg.enabled && cfg.filter && canFilterDebug();
+    if (applyFilter) {
         if (filterText !== cfg.filter) {
             filter = compileFilterDebug(cfg.filter);
             filterText = cfg.filter;
@@ -37,7 +38,7 @@ function emitLog(line, cor) {
         filter.lastIndex = 0;
         if (!filter.test(line)) return;
     }
-    console.log(cfg.enabled && cfg.filter ? highlightMatches(line, filter, cor) : cor(line));
+    console.log(applyFilter ? highlightMatches(line, filter, cor) : cor(line));
     if (cfg.enabled && cfg.copyTo && !context.semRastro) {
         require('./debugCopy').copyLog(line);
     }

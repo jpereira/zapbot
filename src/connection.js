@@ -12,6 +12,7 @@ const { alertPerEmail, transporter } = require('./email');
 const { printDebug, printError, printInfo, printSuccess } = require('./log');
 const { getSetting, isDebugMode } = require('./settings');
 const { versionWithCommit } = require('./version');
+const { withContextDebug, bootCompleteLogs } = require('./debugContext');
 
 // Reasons where restarting does not help: they need manual action.
 const NOT_RESTART = new Set(['LOGOUT', 'CONFLICT', 'UNPAIRED', 'UNPAIRED_IDLE']);
@@ -320,7 +321,7 @@ client.on('change_state', state => {
 
 let jaStayedReady = false;
 
-client.on('ready', async () => {
+client.on('ready', () => withContextDebug({ semFiltro: true }, async () => {
     stateAlt.pronto = true;
     stateAlt.aguardandoQr = false;
     const dropReason = stateAlt.ultimaQueda;
@@ -352,7 +353,9 @@ client.on('ready', async () => {
         [jaStayedReady ? `Conectado de novo${dropReason ? ` (a queda foi: ${dropReason})` : ''}.` : 'Conectado ao WhatsApp.',
          outsidePer, ...listNotices].filter(Boolean).join('\n'));
     jaStayedReady = true;
-});
+    // SMTP may finish later: the context keeps this notice visible without delaying the filter.
+    bootCompleteLogs();
+}));
 
 /*
  * Initialization
