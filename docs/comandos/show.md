@@ -6,6 +6,12 @@ Reexibe o que ainda está no cache: as mensagens apagadas (`-d`), as editadas
 `cache.editedRetentionDays`). Os envios são espaçados por `show.delayMs`
 (700 ms) para evitar flood.
 
+Mensagens de canais (`@newsletter`) são identificadas com `📰 Canal: <nome>`, nos avisos de
+mensagens apagadas e editadas e na reexibição pelo `/show`. O `/show -l` marca canais com 📰;
+eles podem ser selecionados pelo nome, regex ou número da lista, como os outros chats. Quando
+o canal não pode ser consultado, a reexibição usa o nome salvo. Não há nome ou telefone de contato
+nos itens de um canal. Status (`status@broadcast`) seguem o filtro `-s`.
+
 Com o aviso no privado desligado (`/set show.alert.deleted off` ou
 `/set show.alert.edited off`), as mensagens continuam sendo guardadas e o
 `/show` as reexibe normalmente.

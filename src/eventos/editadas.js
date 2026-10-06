@@ -10,6 +10,7 @@ const { ignorarAviso, registrarAviso } = require('../mudo');
 const { getSetting } = require('../settings');
 const { contarStats } = require('../stats');
 const { formatarData } = require('../util/formatar');
+const { cabecalhoOrigem, idDoCanal } = require('../util/origem');
 
 /*
  * Mensagens editadas
@@ -21,13 +22,10 @@ const { formatarData } = require('../util/formatar');
 async function enviarMensagemEditada(destino, row, info, { titulo = '✏️ *MENSAGEM EDITADA DETECTADA*' } = {}) {
     let texto = `${titulo}\n\n`;
 
-    if (row.is_group === 1) {
-        texto += `👥 *Grupo:* ${info.nomeChat}\n`;
-    }
-
-    texto +=
-        `👤 *Nome:* ${info.nomeRemetente}\n` +
-        `📱 *Número:* ${info.numeroRemetente ? `+${info.numeroRemetente}` : 'Número indisponível'}\n` +
+    texto += cabecalhoOrigem({
+        chatId: row.chat_id, chatName: info.nomeChat, isGroup: row.is_group,
+        senderName: info.nomeRemetente, senderNumber: info.numeroRemetente
+    }) +
         `📅 *Enviada em:* ${formatarData(row.timestamp)}\n` +
         `✏️ *Editada em:* ${formatarData(row.edited_at)}\n` +
         `📝 *Antes:* "${row.old_body || '(vazio)'}"\n` +
@@ -56,7 +54,7 @@ client.on('message_edit', async (msg, newBody, prevBody) => {
         if (antes === depois) return;
 
         const messageId = msg.id?.id;
-        const chatId = msg.id?.remote || msg.from;
+        const chatId = idDoCanal(msg.from, msg.id?.remote, msg.to) || msg.id?.remote || msg.from;
 
         if (!messageId || !chatId) {
             printError('[Edit] Não foi possível identificar a mensagem editada.');

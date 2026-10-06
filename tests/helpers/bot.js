@@ -120,11 +120,12 @@ function criarMensagem({ texto = '', chat = GRUPO, de = DONO.jid, id, tipo = 'ch
     const fromMe = de === DONO.jid;
     const grupo = chat.endsWith('@g.us');
     const broadcast = chat.endsWith('@broadcast');
+    const canal = chat.endsWith('@newsletter');
     const idMsg = id ?? `MSG${++sequencia}`;
 
     const msg = {
         id: { id: idMsg, remote: chat, fromMe, _serialized: `${fromMe}_${chat}_${idMsg}` },
-        from: grupo || broadcast ? chat : (fromMe ? DONO.jid : de),
+        from: grupo || broadcast || canal ? chat : (fromMe ? DONO.jid : de),
         to: grupo ? chat : (fromMe ? chat : DONO.jid),
         author: grupo || broadcast ? de : undefined,
         isStatus: chat === 'status@broadcast',
