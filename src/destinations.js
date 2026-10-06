@@ -246,6 +246,7 @@ function readEmails(textAlt) {
  * @param {object} [o]
  * @param {boolean} [o.acceptsEmail]  "email" and addresses count (alerts, /backup); otherwise, error
  * @param {string} [o.withoutEmail]      the error when it does not accept (the command's why)
+ * @param {'grupo'|'contato'} [o.tipo]  restricts the search to the type indicated by the notice
  * @param {Array<string|{_serialized: string}>} [o.mencoes]  msg.mentionedIds (the @ mentions)
  * @returns {Promise<{ id: string, nome: string, grupo: boolean }
  *   | { email: string, nome: string, grupo: false }
@@ -254,7 +255,7 @@ function readEmails(textAlt) {
  * options: more than one fit; the caller offers the choice (resolverOrChoose)
  */
 async function resolverDestination(valueAlt, {
-    aceitaEmail: acceptsEmail = false, aceitaCanal: acceptsChannel = false,
+    aceitaEmail: acceptsEmail = false, aceitaCanal: acceptsChannel = false, tipo: type,
     semEmail: withoutEmail = '❌ Aqui o destino não pode ser um e-mail.', mencoes: mentions = []
 } = {}) {
     const textAlt = String(valueAlt ?? '').trim();
@@ -270,15 +271,15 @@ async function resolverDestination(valueAlt, {
     }
 
     // Mention: "@<id>" in the text, with the same id in msg.mentionedIds
-    const mention = textAlt.match(/^@(\d+)$/);
+    const mention = type === 'grupo' ? null : textAlt.match(/^@(\d+)$/);
     if (mention) return personMentioned(mention[1], mentions);
 
     // Email: "email" (the QRCODE_EMAIL_SMTP_TO) and/or addresses
-    const byEmail = readEmails(textAlt);
+    const byEmail = type === 'grupo' ? null : readEmails(textAlt);
     if (byEmail) return acceptsEmail ? byEmail : { erro: withoutEmail };
 
     // Number: digits only, with + and separators
-    const digits = readNumber(textAlt);
+    const digits = type === 'grupo' ? null : readNumber(textAlt);
     if (digits !== null) {
         if (digits.length < 10 || digits.length > 15) {
             return { erro: `❌ Número inválido: ${textAlt}. Use DDI + DDD + número (ex.: +5521999999999).` };
@@ -301,8 +302,8 @@ async function resolverDestination(valueAlt, {
         printError(`[DESTINO] busca por "${textAlt}" falhou:`, err.message);
         return { erro: `⚠️ Não consegui buscar "${textAlt}" nos contatos e grupos agora (${err.message}). Tente de novo ou use o número: +5521999999999` };
     }
-    const contacts = await withoutAsCopiesByLid(foundAlt6.contatos);
-    const groups = foundAlt6.grupos;
+    const contacts = type === 'grupo' ? [] : await withoutAsCopiesByLid(foundAlt6.contatos);
+    const groups = type === 'contato' ? [] : foundAlt6.grupos;
     const channels = acceptsChannel
         ? (await (client.getChannels ? client.getChannels() : client.getChats()))
             .filter(c => isChannelAlt(c.id?._serialized) &&
@@ -327,6 +328,7 @@ async function resolverDestination(valueAlt, {
     if (candidates.length === 1) return candidates[0];
 
     if (!candidates.length) {
+        if (type) return { erro: `❌ Nenhum ${type} com "${textAlt}" no nome.` };
         return { erro: `❌ Nenhum contato ou grupo${acceptsChannel ? ' ou canal' : ''} com "${textAlt}" no nome.\n💡 _Use o nome como está na sua agenda ou o número: ${EXAMPLE}_` };
     }
 
