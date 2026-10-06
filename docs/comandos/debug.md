@@ -14,8 +14,8 @@ a reinícios. No primeiro boot, o debug começa ligado só com `APP_ENV=dev`, no
 
 | Nível | Label | Diagnóstico |
 |---|---|---|
-| `0` | `DEBUG0` | Mensagens básicas de diagnóstico; nível padrão |
-| `1` | `DEBUG1` | Comandos recebidos, parser, entrada e saída das funções exportadas, profundidade e duração das chamadas, contexto do chat |
+| `0` | `DEBUG0` | Mensagens básicas e argumentos dos comandos, incluindo opções e destinos; nível padrão |
+| `1` | `DEBUG1` | Comandos recebidos, chamadas do parser, entrada e saída das funções exportadas, profundidade e duração das chamadas, contexto do chat |
 | `2` | `DEBUG2` | Chamadas externas: Axios com URL e parâmetros, WhatsApp, SMTP e processos externos |
 | `3` | `DEBUG3` | Resultados das funções, consultas ao banco, dados das mensagens e execução no Chromium |
 
@@ -26,6 +26,12 @@ cada linha é avaliada independentemente. O contexto inclui `chatName` e `chatId
 `1`, permitindo filtrar pelo nome ou ID do chat.
 No console com cores habilitadas, os trechos que casam com o filtro aparecem em vermelho e negrito,
 como no `grep --color`. As cópias enviadas ao WhatsApp contêm texto sem os códigos de cor.
+
+O `DEBUG0` inclui o parser dos comandos: argumentos posicionais, opções informadas,
+valores entre aspas ou barras e todos os destinos `-to`. O `/watch`, o `/debug` e o `/cron`
+exibem os campos de seus parsers específicos, incluindo regex com flags e texto livre.
+Opções sem valor aparecem como `null`; opções booleanas usam `true` ou `false`.
+Referências compartilhadas mantêm seus valores; somente ciclos reais aparecem como `[circular]`.
 
 Os logs de inicialização, autenticação e o aviso por e-mail de bot iniciado aparecem sem filtro.
 O filtro salvo passa a valer quando o WhatsApp está pronto e o aviso inicial foi disparado;

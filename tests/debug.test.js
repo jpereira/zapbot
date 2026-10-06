@@ -26,6 +26,99 @@ async function configurar(args) {
 }
 
 describe('/debug', () => {
+    test('DEBUG0 mostra a regra, todos os destinos e a mensagem do alerta', async () => {
+        await configurar('-on -lvl 0');
+        bot.criarContato('5521922222222@c.us', 'Jorge Pereira');
+        bot.criarContato(bot.OUTRO.jid, 'Lourival Neto');
+        bot.rede.responder('get', 'api.binance.com/api/v3/ticker/price', [
+            { symbol: 'BTCUSDT', price: '80000' }
+        ]);
+        const mensagem = '⏰ Bitcoin to the moon! 🚀';
+        const comando = '/crypto -alerta BTC > 90000 ' +
+            `-to /Jorge Pereira/ -to /Lourival Neto/ -msg "${mensagem}"`;
+        const [resposta] = await bot.responder(comando);
+        assert.match(resposta, /Alerta criado/);
+        const parser = bot.logs.find(l => l.includes('Parser do comando: /crypto'));
+        assert.match(parser, /DEBUG0/);
+        assert.match(parser, /argv: \[ 'BTC', '>', '90000' \]/);
+        assert.equal((parser.match(/\bargv:/g) ?? []).length, 1);
+        assert.match(parser, /to: \[ 'Jorge Pereira', 'Lourival Neto' \]/);
+        assert.ok(parser.includes(mensagem));
+        assert.match(parser, /given: Set\(3\) \{ 'alerta', 'to', 'msg' \}/);
+        assert.doesNotMatch(parser, /circular|Pereira\/|Neto\/|DEBUG[123]/);
+        const alerta = await bot.dbGet('SELECT * FROM price_alerts');
+        assert.equal(alerta.symbol, 'BTC');
+        assert.equal(alerta.target, 90000);
+    });
+
+    test('DEBUG0 usa o parser do watch para regex, flags, origem, destinos e máscara', async () => {
+        await configurar('-on -lvl 0');
+        await bot.responder('/watch /sapato -h azul/gi -in /Família/ -to /Fulano/ -m');
+        const parser = bot.logs.find(l => l.includes('Parser do comando: /watch'));
+        assert.match(parser, /regra: '\/sapato -h azul\/gi'/);
+        assert.match(parser, /origem: 'Família'/);
+        assert.match(parser, /destinos: \[ 'Fulano' \]/);
+        assert.match(parser, /mask: true/);
+    });
+
+    test('DEBUG0 usa o parser do debug para aliases, regex com espaços e opção sem valor',
+        async () => {
+            await configurar('-on -lvl 0');
+            await bot.responder('/debug -lvl 0 -filter /azul claro/i -copy-to');
+            const parser = bot.logs.find(l => l.includes('Parser do comando: /debug'));
+            assert.match(parser, /level: '0'/);
+            assert.match(parser, /filter: '\/azul claro\/i'/);
+            assert.match(parser, /copyTo: null/);
+            assert.match(parser, /given: Set\(3\) \{ 'level', 'filter', 'copyTo' \}/);
+        });
+
+    test('DEBUG0 mostra aliases, booleanos, valores agrupados e argumentos numéricos', async () => {
+        await configurar('-on -lvl 0');
+        await bot.responder('/show -q "Jorge Pereira" -3 -m');
+        const parser = bot.logs.find(l => l.includes('Parser do comando: /show'));
+        assert.match(parser, /query: 'Jorge Pereira'/);
+        assert.match(parser, /mask: true/);
+        assert.match(parser, /argv: \[ '-3' \]/);
+        assert.match(parser, /given: Set\(2\) \{ 'query', 'mask' \}/);
+    });
+
+    test('DEBUG0 mostra a agenda com texto livre e destinos repetidos', async () => {
+        await configurar('-on -lvl 0');
+        await bot.responder('/cron 10m -r diario -to /Fulano/ -to /Família/ Bom dia, pessoal!');
+        const parser = bot.logs.find(l => l.includes('Parser do comando: /cron'));
+        assert.match(parser, /repetir: 'diario'/);
+        assert.match(parser, /texto: 'Bom dia, pessoal!'/);
+        assert.match(parser, /destinos: \[ 'Fulano', 'Família' \]/);
+    });
+
+    test('DEBUG0 preserva toda a mensagem livre do alerta e o destino depois dela', async () => {
+        await configurar('-on -lvl 0');
+        bot.rede.responder('get', 'api.binance.com/api/v3/ticker/price', [
+            { symbol: 'BTCUSDT', price: '80000' }
+        ]);
+        await bot.responder('/crypto BTC -alerta > 90000 -msg Bitcoin subiu! 🚀 -to "Fulano"');
+        const parser = bot.logs.find(l => l.includes('Parser do comando: /crypto'));
+        assert.match(parser, /argv: \[ 'BTC', '>', '90000' \]/);
+        assert.match(parser, /msg: 'Bitcoin subiu! 🚀'/);
+        assert.match(parser, /to: \[ 'Fulano' \]/);
+    });
+
+    test('referências compartilhadas, Set e Map aparecem sem esconder seus valores', async () => {
+        await configurar('-on -lvl 0');
+        const argv = ['BTC', '>', '90000'];
+        const dados = { opt: { argv }, argv, given: new Set(['alerta', 'to', 'msg']),
+            valores: new Map([['destino', 'Jorge Pereira'], ['token', 'segredo-mapa']]) };
+        dados.circular = dados;
+        printDebug('dados do parser', dados);
+        const log = textoLogs();
+        assert.equal((log.match(/argv: \[ 'BTC', '>', '90000' \]/g) ?? []).length, 2);
+        assert.match(log, /given: Set\(3\) \{ 'alerta', 'to', 'msg' \}/);
+        assert.match(log, /'destino' => 'Jorge Pereira'/);
+        assert.match(log, /'token' => '\[oculto\]'/);
+        assert.match(log, /circular: '\[circular\]'/);
+        assert.doesNotMatch(log, /segredo-mapa/);
+    });
+
     test('filtro salvo preserva o boot e passa a valer depois do ready', async () => {
         await configurar('-on -filter /sapato/i');
         iniciarLogsDeBoot();

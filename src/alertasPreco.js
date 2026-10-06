@@ -119,8 +119,8 @@ async function tratarAlertaDePreco(kind, { msg, args, admin }) {
     const t = ALERTA_TIPOS[kind];
 
     /*
-     * O -to aceita espaços (/Grupo L200/), que o parser de opções separaria:
-     * sai do texto antes, e o resto é lido de novo.
+     * Destinos e mensagem são extraídos antes da regra de preço, preservando
+     * todos os -to e o texto livre do -msg.
      */
     const { destinos: destinosTexto, informado: comDestino, resto: semDestino } =
         extrairDestinos(args);
@@ -326,6 +326,7 @@ function iniciarAlertasDePreco() {
 }
 
 module.exports = {
+    extrairMensagem,
     iniciarAlertasDePreco,
     tratarAlertaDePreco,
     verificarAlertasDePreco

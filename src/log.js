@@ -49,7 +49,7 @@ function printDebugNivel(nivel, ...args) {
     if (!cfg.enabled || cfg.level < nivel || contextoDebug().semRastro) return;
     const seguros = args.map(a => dadosDebug(a));
     emitirLog(`[${getTimestamp()}] [DEBUG${nivel}] [${getCaller()}] ` +
-        util.format(...seguros), colors.white);
+        util.formatWithOptions({ depth: 4, maxArrayLength: 40 }, ...seguros), colors.white);
 }
 
 function getBotUptime(startedTime) {

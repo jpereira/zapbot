@@ -27,6 +27,7 @@ const { instrumentarObjeto } = require('../debugInstrumentacao');
 const { resolverNomeDoCanal } = require('../contatos');
 const { ehCanal, idDoCanal } = require('../util/origem');
 const { pediuAjudaWatch, pediuMascaraWatch } = require('../watch/opcoes');
+const { dadosParserComando } = require('../debugParser');
 
 // Avisos do próprio WhatsApp (entrou no grupo, mudou o nome, criptografia, chamada...): não têm autor
 const TIPOS_DO_SISTEMA = new Set([
@@ -359,7 +360,7 @@ client.on('message_create', (msg) => comContextoDebug({
             Boolean(opts.opt.mask);
 
         if (isDebugMode()) {
-            printDebug('GetOptFromCommand():', command.cmd, opts);
+            printDebug('Parser do comando:', command.cmd, dadosParserComando(args, command, opts));
         }
 
         // foo -help
