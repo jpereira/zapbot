@@ -32,15 +32,13 @@ jobs:
 
       # Sem baixar o Chrome do Puppeteer: os testes simulam o WhatsApp
       - name: Instala as dependências
-        run: npm ci --no-audit --no-fund
-        env:
-          PUPPETEER_SKIP_DOWNLOAD: 'true'
+        run: make deps
 
       - name: ESLint
-        run: npm run lint
+        run: make lint
 
       - name: Testes
-        run: npm test
+        run: make test
 
   documentacao:
     name: Documentação
@@ -54,10 +52,5 @@ jobs:
           cache: pip
           cache-dependency-path: docs/requirements.txt
 
-      - name: Instala o MkDocs Material
-        run: pip install -r docs/requirements.txt
-
       - name: Gera o site (--strict)
-        run: mkdocs build --strict
-        env:
-          NO_MKDOCS_2_WARNING: '1'
+        run: make docs.build
