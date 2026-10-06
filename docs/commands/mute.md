@@ -46,6 +46,11 @@ reexibe), o `/mute` silencia de onde ele veio, sem precisar dizer quem:
 | Um grupo | 👥 O grupo |
 | Uma comunidade (o grupo de avisos dela) | 🏘️ A comunidade |
 
+O bot usa a origem registrada do aviso. Sem esse registro, lê o cabeçalho: `👥 Grupo:` tem
+prioridade e busca somente grupos, mesmo que exista um contato com o mesmo nome. Se o grupo não
+for encontrado, avisa e não silencia ninguém. Sem grupo, usa `📱 Número:` ou `👤 Nome:` para
+identificar a pessoa. Se houver mais de um resultado, pede que você escolha na lista.
+
 As opções valem do mesmo jeito: respondendo, `/mute -s` silencia só os status, `/mute -d` só as
 apagadas, `/mute -e` só as edições e `/mute` (ou `/mute -a`) tudo. Respondendo a mensagem de alguém
 (que não é um aviso), silencia quem a mandou.
