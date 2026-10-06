@@ -200,6 +200,39 @@ describe('evento: mensagem editada', () => {
 });
 
 describe('/show (/s)', () => {
+    test('sem parâmetros no privado lista o cache, como -l, inclusive vazio e pelo alias',
+        async () => {
+            for (const chat of [PRIVADO_DONO, OUTRO.jid]) {
+                assert.deepEqual(await bot.responder('/show', { chat }),
+                    await bot.responder('/show -l', { chat }));
+            }
+            await mensagemApagada('do grupo');
+            await mensagemEditada('antes', 'depois', { chat: TRABALHO });
+            for (const chat of [PRIVADO_DONO, OUTRO.jid]) {
+                assert.deepEqual(await bot.responder('/s   ', { chat }),
+                    await bot.responder('/show -l', { chat }));
+            }
+            const [resumo, mensagem] = await bot.responder('/show -d', { chat: OUTRO.jid });
+            assert.doesNotMatch(resumo, /Mensagens no cache/);
+            assert.equal(mensagem, undefined);
+        });
+
+    test('-l lista todos os chats e permite selecionar os que ficam depois do décimo', async () => {
+        for (let i = 1; i <= 12; i++) {
+            const chat = `120363000000000${String(i + 100).padStart(3, '0')}@g.us`;
+            bot.criarGrupo(chat, `Grupo ${i}`, [DONO.jid, OUTRO.jid]);
+            await mensagemApagada(`conteúdo ${i}`, { chat });
+        }
+        const [lista] = await bot.responder('/show -l', { chat: PRIVADO_DONO });
+        assert.equal((lista.match(/^\d+\. 👥 /gm) ?? []).length, 12);
+        assert.match(lista, /12\. 👥 Grupo \d+ — 🗑️ 1/);
+        assert.doesNotMatch(lista, /\+\d+ chat\(s\)/);
+        const nome = lista.match(/12\. 👥 (Grupo \d+) —/)[1];
+        const [resumo, mensagem] = await bot.responder('/show 12', { chat: PRIVADO_DONO });
+        assert.ok(resumo.includes(nome));
+        assert.match(mensagem, /conteúdo \d+/);
+    });
+
     test('sem apagadas neste chat', async () => {
         assert.deepEqual(await bot.responder('/show'), ['♻️ Nenhuma mensagem apagada registrada neste chat.']);
     });

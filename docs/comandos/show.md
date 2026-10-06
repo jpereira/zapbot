@@ -1,5 +1,8 @@
 # `/show` (`/s`) · admin
 
+Sem parâmetros no privado, lista o cache de todos os chats, como `/show -l`.
+Em grupos, reexibe a última mensagem apagada do grupo.
+
 Reexibe o que ainda está no cache: as mensagens apagadas (`-d`), as editadas
 (`-e`) e os status apagados (`-s`). As apagadas e os status ficam 30 dias
 (setting `cache.revokedRetentionDays`), as editadas também 30 dias (setting
@@ -23,7 +26,7 @@ Com o aviso no privado desligado (`/set show.alert.deleted off` ou
 | `-deleted`, `-d` | | Mensagens apagadas (sem chat, o padrão) |
 | `-edited`, `-e` | | Mensagens editadas, com o texto de antes e o de depois. Cada edição é um item: uma mensagem editada duas vezes aparece duas vezes |
 | `-status`, `-s` | | Status apagados: num privado, os da pessoa; no seu privado, sem chat, os de todos |
-| `-list`, `-l` | | Lista o que tem no cache por chat (em qualquer chat), numerado para o `/show <nº>`, marcando com `← este chat` o chat atual |
+| `-list`, `-l` | | Lista todos os chats com conteúdo no cache (em qualquer chat), numerado para o `/show <nº>`, marcando com `← este chat` o chat atual |
 | `-query`, `-q` | `<texto>` | Busca as que têm o texto, sem diferenciar maiúsculas nem acentos: neste chat, no chat pedido ou, no seu privado, em todos. Sem `-N`: as 5 mais recentes. Veja [Buscar](#buscar) |
 | `-flush`, `-f` | | Remove do cache as apagadas deste chat ou, com `-e`, `-s` ou chat, o que foi pedido (no seu privado, sem chat: de todos os chats) |
 | `-mask`, `-m` | | Ofusca telefones nos textos e nas legendas desta execução. Ex.: `+55219****44` |
@@ -32,11 +35,11 @@ Com `/show -mask`, os telefones exibidos mantêm os cinco primeiros e os dois ú
 A máscara vale para esta execução; os dados guardados no cache permanecem completos.
 
 O `-d`, o `-e` e o `-s` se somam (`/show -d -s` traz apagadas e status). Sem
-nenhum deles, sem chat vêm só as apagadas deste chat; com chat (ou na busca
+nenhum deles, com opções mas sem chat vêm só as apagadas deste chat; com chat (ou na busca
 no seu privado), vem tudo junto, por data.
 
 ```
-/show                       → a última mensagem apagada deste chat
+/show                       → no privado, lista o cache; no grupo, a última apagada
 /show -5                    → as 5 últimas
 /show -2 -e                 → as 2 últimas editadas
 /show /^Camila/             → a última (apagada, editada ou status) do chat que começa com "Camila"
