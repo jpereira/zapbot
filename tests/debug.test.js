@@ -23,6 +23,32 @@ async function configure(args) {
 }
 
 describe('/debug', () => {
+    test('filtro realça todos os matches no console e copia o texto sem ANSI', async (t) => {
+        await configure('-on -filter /sapato/i -copy-to');
+        const colors = require('colors');
+        const enabled = colors.enabled;
+        colors.enabled = true;
+        try {
+            const consoleLog = t.mock.method(console, 'log', () => {});
+            printDebug('Sapato azul e sapato vermelho');
+            const [line] = consoleLog.mock.calls.at(-1).arguments;
+            assert.equal(line.split('\u001b[31m').length - 1, 2);
+            assert.match(line, /Sapato/);
+            await flushCopiesDebug();
+            assert.equal(copies().at(-1).content.includes('\u001b['), false);
+            assert.match(copies().at(-1).content, /Sapato azul e sapato vermelho/);
+        } finally {
+            colors.enabled = enabled;
+        }
+    });
+
+    test('regex com matches vazios não bloqueia o log', async () => {
+        await configure('-on -filter /(?:)/gu');
+        printDebug('📰 texto');
+        assert.equal(bot.logs.length, 1);
+        assert.match(textLogs(), /📰 texto/);
+    });
+
     test('padrão e nível exigem ativação; aceita aliases quando ligado', async () => {
         assert.equal(bot.getSetting('debug.level'), 0);
         assert.match((await bot.replyAlt('/debug -level 2'))[0], /Ligue.*\/debug -on -level 2/);
