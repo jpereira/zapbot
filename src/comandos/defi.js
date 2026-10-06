@@ -87,8 +87,8 @@ const descrever = (p, end = curto) => (DE_CARTEIRA.includes(p.protocol)
     : `${PROTOCOLOS[p.protocol] ?? p.protocol} · ${posicaoComNome(p, end)}`);
 
 /*
- * -mask: os números da carteira (saldos, quantidades, valores e taxas a
- * coletar) viram * mantendo o formato ($**,***.**); os do mercado (preço,
+ * -mask: saldos, quantidades e valores da carteira viram * mantendo o
+ * formato ($**,***.**); taxas a coletar e os números do mercado (preço,
  * faixa, pool, HF, LTV, APY) continuam. Bom para mandar print sem mostrar o
  * tamanho do bolso.
  */
@@ -102,8 +102,10 @@ const MAX_NOME = 40;
  * Texto do "Position Details" de uma posição do Project X (de posicoesDaCarteira).
  */
 function textoDaPosicaoPrjx(x, nome = null, m = MOSTRAR) {
-    const usd = (q, preco) => (preco === null ? '' : ` (${m(fmtUsd(q * preco))})`);
-    const total = (a, b) => (x.usd1 === null ? '' : ` ${m(fmtUsd(a * x.usd0 + b * x.usd1))}`);
+    const usd = (q, preco, exibir = m) =>
+        (preco === null ? '' : ` (${exibir(fmtUsd(q * preco))})`);
+    const total = (a, b, exibir = m) =>
+        (x.usd1 === null ? '' : ` ${exibir(fmtUsd(a * x.usd0 + b * x.usd1))}`);
     const qtd = (q) => m(fmtQtd(q));
     const status = x.naFaixa
         ? '✅ dentro da faixa'
@@ -117,9 +119,9 @@ function textoDaPosicaoPrjx(x, nome = null, m = MOSTRAR) {
         `📏 *Faixa:* ${fmtPreco(x.inferior)} – ${fmtPreco(x.superior)} ${x.simbolo1} por ${x.simbolo0}\n` +
         `🎯 *Preço atual:* ${fmtPreco(x.preco)} ${x.simbolo1} por ${x.simbolo0}\n` +
         `   ${barraDaFaixa(x.preco, x.inferior, x.superior)}\n\n` +
-        `💸 *Taxas a coletar:*${total(x.taxa0, x.taxa1)}\n` +
-        `   • ${qtd(x.taxa0)} ${x.simbolo0}${usd(x.taxa0, x.usd0)}\n` +
-        `   • ${qtd(x.taxa1)} ${x.simbolo1}${usd(x.taxa1, x.usd1)}`;
+        `💸 *Taxas a coletar:*${total(x.taxa0, x.taxa1, MOSTRAR)}\n` +
+        `   • ${fmtQtd(x.taxa0)} ${x.simbolo0}${usd(x.taxa0, x.usd0, MOSTRAR)}\n` +
+        `   • ${fmtQtd(x.taxa1)} ${x.simbolo1}${usd(x.taxa1, x.usd1, MOSTRAR)}`;
 }
 
 /**
@@ -198,9 +200,9 @@ function textoDaPosicao(d, end = curto, nome = null, m = MOSTRAR) {
         `🎯 *Preço atual:* ${fmtPreco(atual)} ${simB} por ${simA}\n` +
         `   ${barraDaFaixa(atual, inferior, superior)}\n` +
         `   _(1 ${simB} = ${fmtPreco(1 / atual)} ${simA})_\n\n` +
-        `💸 *Taxas a coletar:* ${m(fmtUsd(taxaA * usdA + taxaB * usdB))}\n` +
-        `   • ${m(fmtQtd(taxaA))} ${simA} (${m(fmtUsd(taxaA * usdA))})\n` +
-        `   • ${m(fmtQtd(taxaB))} ${simB} (${m(fmtUsd(taxaB * usdB))})\n`;
+        `💸 *Taxas a coletar:* ${fmtUsd(taxaA * usdA + taxaB * usdB)}\n` +
+        `   • ${fmtQtd(taxaA)} ${simA} (${fmtUsd(taxaA * usdA)})\n` +
+        `   • ${fmtQtd(taxaB)} ${simB} (${fmtUsd(taxaB * usdB)})\n`;
 
     // Recompensas: só as que têm algo a coletar
     const recompensas = c.recompensas
