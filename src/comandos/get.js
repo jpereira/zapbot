@@ -27,13 +27,12 @@ function GetOptFromCommandForFfmpeg(opts, originalFile, outputFile) {
         args.push('-ss', String(startSec));
     }
 
-    if (isSticker) {
-        args.push('-t', '6');
-    } else if (startSec != null && endSec != null && Number(endSec) > Number(startSec)) {
-        args.push('-t', String(Number(endSec) - Number(startSec)));
-    }
-
     args.push('-i', originalFile);
+
+    const duracao = endSec == null ? null : Number(endSec) - Number(startSec ?? 0);
+    if (isSticker || duracao != null) {
+        args.push('-t', String(isSticker ? Math.min(duracao ?? 6, 6) : duracao));
+    }
 
     if (isAudio) {
         // Somente áudio
@@ -80,7 +79,7 @@ function GetOptFromCommandForFfmpeg(opts, originalFile, outputFile) {
 let getEmAndamento = 0;
 
 async function cmdGet({ msg, opts, quotedMsg, senderName }) {
-    // Liberado para qualquer um: sem limite, vários /get seguidos esgotam CPU e disco
+    // Usuários liberados também usam: dois downloads já dão trabalho suficiente à CPU.
     if (getEmAndamento >= GET_MAX_CONCURRENT) {
         await msg.reply(`⏳ Já existem ${GET_MAX_CONCURRENT} downloads em andamento. Tente de novo em instantes.`);
         return;
@@ -96,6 +95,24 @@ async function cmdGet({ msg, opts, quotedMsg, senderName }) {
 }
 
 async function executarGet({ msg, opts, quotedMsg, senderName }) {
+    for (const nome of ['startSec', 'endSec']) {
+        if (opts.given.has(nome) && !/^\d+(?:\.\d+)?$/.test(String(opts.opt[nome] ?? ''))) {
+            await msg.reply(`❌ -${nome} precisa de segundos não negativos, como 0, 10 ou 2.5.`);
+            return;
+        }
+        if (opts.given.has(nome) && !Number.isFinite(Number(opts.opt[nome]))) {
+            await msg.reply(`❌ Valor de -${nome} grande demais.`);
+            return;
+        }
+    }
+    if (opts.opt.endSec != null && Number(opts.opt.endSec) <= Number(opts.opt.startSec ?? 0)) {
+        await msg.reply('❌ O segundo final (-es) deve ser maior que o inicial (-ss, padrão 0).');
+        return;
+    }
+    if (opts.opt.audio && opts.opt.sticker) {
+        await msg.reply('❌ Escolha áudio (-a) ou figurinha (-st) para esta execução.');
+        return;
+    }
     // Aleatório: com Date.now() dois /get no mesmo milissegundo usariam os mesmos arquivos
     const id = crypto.randomUUID();
     let originalFile = null;
