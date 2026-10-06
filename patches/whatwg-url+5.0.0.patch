@@ -1,0 +1,9 @@
+diff --git a/node_modules/whatwg-url/lib/url-state-machine.js b/node_modules/whatwg-url/lib/url-state-machine.js
+index c25dbc2..e1681d2 100644
+--- a/node_modules/whatwg-url/lib/url-state-machine.js
++++ b/node_modules/whatwg-url/lib/url-state-machine.js
+@@ -1,3 +1,3 @@
+ "use strict";
+-const punycode = require("punycode");
++const punycode = require("punycode/");
+ const tr46 = require("tr46");
