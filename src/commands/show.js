@@ -17,6 +17,7 @@ const { printError, printInfo } = require('../log');
 const { getSetting } = require('../settings');
 const { humanSize, mediaIsPath } = require('../util/files');
 const { wait, formatData, paraMs, plural, withoutAccents } = require('../util/format');
+const { isChannelAlt } = require('../util/origin');
 
 /*
  * /show [-N] [-d] [-e] [-s] [chat]: re-shows what is in the cache, in the same
@@ -153,7 +154,7 @@ function chatsDoCache() {
 }
 
 const chatNameAlt = (c) => c.chat_name || c.chat_id.split('@')[0];
-const describeChat = (c) => `${c.is_group ? '👥' : '👤'} ${chatNameAlt(c)}`;
+const describeChat = (c) => `${isChannelAlt(c.chat_id) ? '📰' : c.is_group ? '👥' : '👤'} ${chatNameAlt(c)}`;
 // Like withoutAccents, but without touching case: \D and \d are very different things in a regex
 const removeAccents = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '');
 const paraTarget = async (c) => ({ ids: await chatCurrentIds(c.chat_id), nome: chatNameAlt(c) });
@@ -550,7 +551,7 @@ async function cmdShow({ msg, opts, chatId, admin }) {
     }
 
     if (allAlt2) summary += '\n💬 *Chats:* todos';
-    if (target) summary += `\n💬 *Chat:* ${target.nome}`;
+    if (target) summary += `\n${target.ids.every(isChannelAlt) ? '📰 *Canal:*' : '💬 *Chat:*'} ${target.nome}`;
 
     await msg.reply(summary);
 

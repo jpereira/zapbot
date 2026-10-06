@@ -24,6 +24,8 @@ const { logIsCopy } = require('../debugCopy');
 const { withContextDebug, contextDebug } = require('../debugContext');
 const { printDebugLevel } = require('../log');
 const { instrumentObject } = require('../debugInstrumentation');
+const { channelResolverName } = require('../contacts');
+const { isChannelAlt, channelId } = require('../util/origin');
 
 // WhatsApp's own notices (joined the group, changed the name, encryption, call...): they have no author
 const SYSTEM_TYPES = new Set([
@@ -32,7 +34,7 @@ const SYSTEM_TYPES = new Set([
 ]);
 
 client.on('message_create', (msg) => withContextDebug({
-    chatId: msg?.id?.remote || msg?.from || msg?.to,
+    chatId: channelId(msg?.from, msg?.id?.remote, msg?.to) || msg?.id?.remote || msg?.from || msg?.to,
     comando: (msg.body || '').trim().startsWith('/') ? msg.body : null,
     profundidade: 0
 }, async () => {
@@ -47,12 +49,16 @@ client.on('message_create', (msg) => withContextDebug({
         const msgType = msg?.type || 'unknown';
 
         // msg.getChat() breaks for some chats/@lid; we use the raw data.
-        const chatId = msg?.id?.remote || msg?.from || msg?.to || 'UNKNOWN';
+        const chatId = channelId(msg?.from, msg?.id?.remote, msg?.to) ||
+            msg?.id?.remote || msg?.from || msg?.to || 'UNKNOWN';
         const isGroup = chatId.endsWith('@g.us') ? 1 : 0;
-        const isBroadcast = chatId.endsWith('@broadcast') || Boolean(msg.isStatus);
+        const isChannel = isChannelAlt(chatId);
+        const isBroadcast = !isChannel && (chatId.endsWith('@broadcast') || Boolean(msg.isStatus));
 
         // Group: name looked up by chatId (_data.chat may carry the wrong name)
-        let chatName = isBroadcast ? null :
+        let chatName = isChannel
+            ? (await channelResolverName(chatId)) || `Canal ${chatId.split('@')[0]}`
+            : isBroadcast ? null :
             (isGroup ? await groupResolverName(chatId) : null) ||
             msg?._data?.chat?.name ||
             msg?._data?.chat?.formattedTitle ||
@@ -66,6 +72,7 @@ client.on('message_create', (msg) => withContextDebug({
          * Remetente real:
          *   grupo   -> msg.author (participante)
          * status/broadcast -> msg.author; the @broadcast chat is not a person
+         * channel -> the @newsletter itself, without attributing the post to a contact
          * private -> msg.from (or msg.to if it was me)
          */
         const participant = msg?.author || msg?._data?.author || msg?._data?.participant;
@@ -74,6 +81,7 @@ client.on('message_create', (msg) => withContextDebug({
         let rawSenderId = isGroup || isBroadcast
             ? (authorJid || (isBroadcast && msg.fromMe ? client.info?.wid?._serialized : null))
             : (msg?.fromMe ? (msg?.to || msg?.from) : msg?.from);
+        if (isChannel) rawSenderId = chatId;
 
         // 100000000000001:93@lid -> 100000000000001@lid (does not convert @lid to @c.us)
         rawSenderId = removeDeviceSuffix(rawSenderId);
@@ -89,7 +97,7 @@ client.on('message_create', (msg) => withContextDebug({
         // Contact, preferably by the real phone; otherwise by the LID
         let contact = null;
 
-        if (resolvedSenderJid && !resolvedSenderJid.endsWith('@g.us')) {
+        if (!isChannel && resolvedSenderJid && !resolvedSenderJid.endsWith('@g.us')) {
             contact = await client.getContactById(resolvedSenderJid).catch(() => null);
         }
 
@@ -101,7 +109,7 @@ client.on('message_create', (msg) => withContextDebug({
         const senderJid = resolvedSenderJid || originalSenderJid || 'UNKNOWN';
         const senderNumber = senderJid.endsWith('@c.us') ? senderJid.split('@')[0] : null;
 
-        const senderName =
+        const senderName = (isChannel ? chatName : null) ||
             contact?.name ||
             contact?.pushname ||
             contact?.verifiedName ||
@@ -119,9 +127,9 @@ client.on('message_create', (msg) => withContextDebug({
 
         const senderContact = contact || {
             id: { _serialized: senderJid, user: senderJid.split('@')[0] },
-            number: senderNumber || senderJid.split('@')[0],
+            number: isChannel ? null : senderNumber || senderJid.split('@')[0],
             name: senderName,
-            pushname: (isBroadcast ? null : msg?._data?.notifyName) || senderName
+            pushname: (isBroadcast || isChannel ? null : msg?._data?.notifyName) || senderName
         };
 
         if (isDebugMode()) {
