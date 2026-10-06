@@ -92,4 +92,12 @@ function pediuAjudaWatch(args) {
     }
 }
 
-module.exports = { lerOpcoesWatch, pediuAjudaWatch };
+function pediuMascaraWatch(args) {
+    try {
+        return tokensWatch(args).some(t => t.opcao && ['-mask', '-m'].includes(t.valor));
+    } catch {
+        return false;
+    }
+}
+
+module.exports = { lerOpcoesWatch, pediuAjudaWatch, pediuMascaraWatch };

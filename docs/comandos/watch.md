@@ -49,6 +49,11 @@ como `@100000000000001` aparecem com o nome do contato quando ele pode ser resol
 | `-rem`, `-r` | `N` | Remove a regra N, suas ocorrências, origem e destinos; as seguintes são renumeradas |
 | `-flush`, `-f` | `[N]` | Apaga as ocorrências da regra N; sem N, de todas. Mantém regras, origens e destinos |
 | `-to` | `<destino|off>` | Define onde os avisos serão enviados, ao criar a regra ou com `-s N`. Repita para vários destinos; `off` volta ao seu privado |
+| `-mask`, `-m` | | Ofusca telefones na saída desta execução. Ex.: `+55219****44` |
+
+Use `/watch -s 3 -mask` para ver os matches com telefones ofuscados, mantendo os cinco primeiros
+e os dois últimos dígitos. As regras, os destinos e as ocorrências ficam guardados completos.
+A máscara não fica ativada para os avisos automáticos.
 
 Os números positivos após `-s`, `-rem` e `-flush` identificam **regras**, conforme a listagem.
 O número com hífen `-N` é a quantidade de matches a exibir. A listagem normal resume os textos;

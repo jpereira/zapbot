@@ -26,6 +26,10 @@ Com o aviso no privado desligado (`/set show.alert.deleted off` ou
 | `-list`, `-l` | | Lista o que tem no cache por chat (em qualquer chat), numerado para o `/show <nº>`, marcando com `← este chat` o chat atual |
 | `-query`, `-q` | `<texto>` | Busca as que têm o texto, sem diferenciar maiúsculas nem acentos: neste chat, no chat pedido ou, no seu privado, em todos. Sem `-N`: as 5 mais recentes. Veja [Buscar](#buscar) |
 | `-flush`, `-f` | | Remove do cache as apagadas deste chat ou, com `-e`, `-s` ou chat, o que foi pedido (no seu privado, sem chat: de todos os chats) |
+| `-mask`, `-m` | | Ofusca telefones nos textos e nas legendas desta execução. Ex.: `+55219****44` |
+
+Com `/show -mask`, os telefones exibidos mantêm os cinco primeiros e os dois últimos dígitos.
+A máscara vale para esta execução; os dados guardados no cache permanecem completos.
 
 O `-d`, o `-e` e o `-s` se somam (`/show -d -s` traz apagadas e status). Sem
 nenhum deles, sem chat vêm só as apagadas deste chat; com chat (ou na busca
