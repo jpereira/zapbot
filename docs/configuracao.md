@@ -1,17 +1,15 @@
 # Configuração do `config/.env`
 
-O Compose lê o arquivo na sua máquina (`env_file: ../config/.env`) e passa as
-variáveis para o container ao criá-lo: o arquivo não vai para dentro da imagem.
-Nunca faça commit dele (já está no `.gitignore`). Para conferir os valores que
-o bot está usando, mande `/set` no seu privado (veja
+O Compose lê o arquivo na sua máquina (`env_file: ../config/.env`) e passa as variáveis para o
+container ao criá-lo: o arquivo não vai para dentro da imagem. Nunca faça commit dele (já está no
+`.gitignore`). Para conferir os valores que o bot está usando, mande `/set` no seu privado (veja
 [Variáveis do `config/.env`](comandos/set.md#variáveis-do-configenv)).
 
-Rodando fora do Docker (`node app.js`), o bot lê o mesmo arquivo que o Compose
-usaria: `config/.env` com `APP_ENV=prod` e `config/.env.dev` nos outros casos.
-Variáveis já definidas no ambiente têm prioridade sobre as do arquivo. Fora do
-Docker o bot ainda espera os programas nos caminhos da imagem (Debian):
-Chromium em `/usr/bin/chromium` (ou no `PUPPETEER_EXECUTABLE_PATH`), `ffmpeg`
-em `/usr/bin/ffmpeg` e `yt-dlp` em `/venv/bin/yt-dlp`; o jeito suportado de desenvolver é o
+Rodando fora do Docker (`node app.js`), o bot lê o mesmo arquivo que o Compose usaria: `config/.env`
+com `APP_ENV=prod` e `config/.env.dev` nos outros casos. Variáveis já definidas no ambiente têm
+prioridade sobre as do arquivo. Fora do Docker o bot ainda espera os programas nos caminhos da
+imagem (Debian): Chromium em `/usr/bin/chromium` (ou no `PUPPETEER_EXECUTABLE_PATH`), `ffmpeg` em
+`/usr/bin/ffmpeg` e `yt-dlp` em `/venv/bin/yt-dlp`; o jeito suportado de desenvolver é o
 [container de dev](desenvolvimento.md#ambiente-de-desenvolvimento-docker).
 
 ## Docker Compose
@@ -38,32 +36,32 @@ em `/usr/bin/ffmpeg` e `yt-dlp` em `/venv/bin/yt-dlp`; o jeito suportado de dese
 
 ## Serviços externos
 
-Comandos que consultam serviços na internet. Só três precisam de chave; os
-outros funcionam sem configuração.
+Comandos que consultam serviços na internet. Só três precisam de chave; os outros funcionam sem
+configuração.
 
 | Comando | Serviço | Chave |
 |---|---|---|
 | `/gpt`, `/tldr` | [OpenAI](https://platform.openai.com/) (pago por uso) | `OPENAI_API_KEY` ou setting `openai.api.key` |
-| `/giphy` | [GIPHY](https://developers.giphy.com/) (grátis, 100 chamadas/hora) | `GIPHY_API_KEY` ou setting `giphy.api.key` |
+| `/giphy` | [GIPHY](https://developers.giphy.com/) (chave beta: 100 chamadas/hora) | `GIPHY_API_KEY` ou setting `giphy.api.key` |
 | `/traduzir` | [Google Cloud Translation](https://cloud.google.com/translate) (cota mensal grátis, depois pago por caractere) | `GOOGLE_TRANSLATE_API_KEY` ou setting `traduzir.api.key` |
 | `/tempo` | [Open-Meteo](https://open-meteo.com/) | — |
 | `/cve`, `/walissu` | [NVD](https://nvd.nist.gov/) (~5 consultas a cada 30 s) | — |
 | `/news` | Feeds RSS (g1, Gazeta do Povo, The Hacker News...) | — |
 | `/cotacao` | [Yahoo Finance](https://finance.yahoo.com/) (reserva: [AwesomeAPI](https://docs.awesomeapi.com.br/)) e [Binance](https://www.binance.com/) para o USDT | — |
 | `/crypto` | [Binance](https://www.binance.com/) | — |
-| `/defi` | RPC da Solana (setting `defi.solana.rpc`), a [API da Orca](https://www.orca.so/), o RPC da HyperEVM (setting `defi.hyperevm.rpc`, para o Project X) a [API do Morpho](https://docs.morpho.org/) (setting `defi.morpho.api`) e os contratos do [Aave V3](https://aave.com/docs) pelos RPCs da Ethereum e da Base (`ETHEREUM_RPC_URL`, `BASE_RPC_URL`) | — |
+| `/defi` | RPC da Solana (setting `defi.solana.rpc`), a [API da Orca](https://www.orca.so/), o RPC da HyperEVM (setting `defi.hyperevm.rpc`, para o Project X), a [API do Morpho](https://docs.morpho.org/) (setting `defi.morpho.api`) e os contratos do [Aave V3](https://aave.com/docs) pelos RPCs da Ethereum e da Base (`ETHEREUM_RPC_URL`, `BASE_RPC_URL`) | — |
 | `/kernel` | [kernel.org](https://www.kernel.org/) | — |
 | `/meme` | [imgflip](https://imgflip.com/) | — |
 | `/pixelart` | [16colo.rs](https://16colo.rs/) | — |
 
-Para as chaves, a variável do `config/.env` tem prioridade; se estiver vazia,
-vale o setting, que dá para trocar pelo WhatsApp com `/set` sem reiniciar.
+Para as chaves, a variável do `config/.env` tem prioridade; se estiver vazia, vale o setting, que dá
+para trocar pelo WhatsApp com `/set` sem reiniciar.
 
 ## OpenAI (opcional)
 
 | Variável | Exemplo | Descrição |
 |---|---|---|
-| `OPENAI_API_KEY` | `sk-proj-...` | Chave da OpenAI usada pelo `/gpt` e pelo `/tldr`. Se estiver vazia, o bot usa o setting `openai.api.key`; sem nenhuma das duas o `/gpt` e o `/tldr` ficam desativados. |
+| `OPENAI_API_KEY` | `sk-proj-...` | Chave da OpenAI usada pelo `/gpt` e pelo `/tldr`. Se estiver vazia, o bot usa o setting `openai.api.key`; sem nenhuma das duas, perguntas e resumos são recusados. A consulta e a configuração do modelo pelo `/gpt -m` continuam disponíveis. |
 | `OPENAI_MODEL` | `gpt-4o-mini` | Modelo do `/gpt` e do `/tldr`. Se estiver vazio, o bot usa o setting `openai.api.model` (padrão `gpt-4o-mini`), que dá para trocar pelo WhatsApp com `/gpt -m`. Preenchido, tem prioridade sobre o setting. |
 | `OPENAI_TIMEOUT_MS` | `60000` | Tempo máximo de espera pela resposta, em ms. Se estiver vazio, o bot usa o setting `openai.timeout.ms` (60000). |
 
@@ -87,23 +85,21 @@ vale o setting, que dá para trocar pelo WhatsApp com `/set` sem reiniciar.
 |---|---|---|
 | `GIPHY_API_KEY` | | Chave do GIPHY usada pelo `/giphy` ([developers.giphy.com](https://developers.giphy.com/)). Se estiver vazia, o bot usa o setting `giphy.api.key` (`/set giphy.api.key <chave>`). |
 
-### Como gerar a chave do GIPHY (grátis)
+### Como gerar a chave do GIPHY
 
-1. Crie uma conta (ou entre) em [developers.giphy.com](https://developers.giphy.com/)
-   e abra o **Dashboard**.
-2. Clique em **Create an API Key** e escolha a opção **API** (a opção SDK é
-   para apps mobile).
-3. Dê um nome ao app (ex.: `zapbot`) e uma descrição curta, aceite os termos
-   e confirme.
+1. Crie uma conta (ou entre) em [developers.giphy.com](https://developers.giphy.com/) e abra o
+   **Dashboard**.
+2. Clique em **Create an API Key** e escolha a opção **API** (a opção SDK é para apps mobile).
+3. Dê um nome ao app (ex.: `zapbot`) e uma descrição curta, aceite os termos e confirme.
 4. A chave aparece no Dashboard. Copie e configure de um dos jeitos:
    - no `config/.env`: `GIPHY_API_KEY=suachave` (vale no próximo start), ou
-   - pelo WhatsApp, sem reiniciar: `/set giphy.api.key suachave` (o
-     `GIPHY_API_KEY` do `.env`, se existir, tem prioridade).
+   - pelo WhatsApp, sem reiniciar: `/set giphy.api.key suachave` (o `GIPHY_API_KEY` do `.env`, se
+     existir, tem prioridade).
 
-A chave nova é do tipo **beta**: gratuita, mas limitada a **100 chamadas por
-hora**, o que sobra para o `/giphy`. Acima disso a API responde `429` e o
-comando avisa que não conseguiu buscar o GIF. Para mais que isso é preciso
-pedir a chave de produção no próprio Dashboard.
+A chave **beta** permite **100 chamadas por hora**, conforme a
+[documentação do GIPHY](https://developers.giphy.com/docs/api/). Quando a consulta falha, o comando
+avisa que não conseguiu buscar o GIF. Para uma cota maior, solicite a aprovação do app no Dashboard
+e consulte as condições de produção do serviço.
 
 ## Google Translate (opcional)
 
@@ -119,31 +115,29 @@ pedir a chave de produção no próprio Dashboard.
 | `QRCODE_EMAIL_SMTP_HOST` | `smtp.mail.yahoo.com` | Servidor SMTP. |
 | `QRCODE_EMAIL_SMTP_PORT` | `465` | Porta SMTP. **Use uma porta SSL/TLS implícita (465)**: o bot conecta com `secure: true`, portas STARTTLS como 587 não funcionam. O certificado do servidor é validado: servidores com certificado autoassinado/inválido são recusados, porque um MITM capturaria a senha e o QR Code (que dá acesso à conta). |
 | `QRCODE_EMAIL_SMTP_USER` | `minhaconta@yahoo.com.br` | Usuário de login no SMTP. |
-| `QRCODE_EMAIL_SMTP_PASS` | `abcd efgh ijkl mnop` | Senha do SMTP. Em Gmail/Yahoo/Outlook use uma **senha de app** (exige 2FA ativo), não a senha normal da conta. |
+| `QRCODE_EMAIL_SMTP_PASS` | `abcd efgh ijkl mnop` | Senha do SMTP. Use a credencial SMTP exigida pelo provedor; em contas com senha de app, configure essa senha em vez da senha de login. |
 | `QRCODE_EMAIL_SMTP_FROM` | `ZapBot <minhaconta@yahoo.com.br>` | Remetente. O endereço deve ser o mesmo da conta SMTP, senão o provedor rejeita ou o e-mail cai no spam. |
-| `QRCODE_EMAIL_SMTP_TO` | `Fulano <fulano@gmail.com>` | Destinatário que vai receber o QR (e os [alertas por e-mail](emails.md#alertas-por-e-mail)). É também o `email` do `-to` (alertas e `/backup -send`). |
+| `QRCODE_EMAIL_SMTP_TO` | `Fulano <fulano@gmail.com>` | Destinatário que vai receber o QR (e os [alertas por e-mail](emails.md#alertas-por-e-mail)). É também o destino `email` do `-to`, usado em alertas, backups, `/watch` e `/bot -status`. |
 | `QRCODE_EMAIL_SMTP_ANTIPHISHING` | `MinhaFraseSecreta42` | Código anti-phishing exibido em todo e-mail do bot. Veja [Troque o código anti-phishing](emails.md#troque-o-código-anti-phishing). |
 
 ### Por que configurar o e-mail com cuidado
 
-Quando `QRCODE_EMAIL_ENABLE="true"`, **o e-mail é o único lugar onde o QR
-aparece**: ele não é desenhado no terminal. Se host, porta, usuário ou senha
-estiverem errados, o envio falha (o erro aparece nos logs como
-`Erro ao enviar QR por email`) e o bot fica esperando um pareamento que você
+Quando `QRCODE_EMAIL_ENABLE="true"`, **o e-mail é o único lugar onde o QR aparece**: ele não é
+desenhado no terminal. Se host, porta, usuário ou senha estiverem errados, o envio falha (o erro
+aparece nos logs como `Erro ao enviar QR por email`) e o bot fica esperando um pareamento que você
 nunca vai conseguir fazer.
 
 Antes de habilitar:
 
-1. Confira host/porta SSL do seu provedor (ex.: Gmail `smtp.gmail.com:465`,
-   Yahoo `smtp.mail.yahoo.com:465`).
+1. Confira host/porta SSL do seu provedor (ex.: Gmail `smtp.gmail.com:465`, Yahoo
+   `smtp.mail.yahoo.com:465`).
 2. Gere uma senha de app e use-a em `QRCODE_EMAIL_SMTP_PASS`.
 3. Suba o bot e verifique nos logs a linha
    `QR Code #1 received at (...) and sent to '...' (messageId=...)`.
-4. Se algo der errado, coloque `QRCODE_EMAIL_ENABLE="false"` e leia o QR pelos
-   logs.
+4. Se algo der errado, coloque `QRCODE_EMAIL_ENABLE="false"` e leia o QR pelos logs.
 
-Lembre também que **quem tiver acesso a esse QR pode sequestrar sua conta de
-WhatsApp**: mande-o apenas para um e-mail que só você lê.
+Lembre também que **quem tiver acesso a esse QR pode sequestrar sua conta de WhatsApp**: mande-o
+apenas para um e-mail que só você lê.
 
 ## Exemplo completo
 

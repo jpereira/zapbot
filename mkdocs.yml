@@ -1,6 +1,6 @@
 # Documentação do ZapBot: https://jpereira.github.io/zapbot/
 # Publicada só nas releases (tag release-*) pelo .github/workflows/docs.yml.
-# Para ver localmente: pip install -r docs/requirements.txt && mkdocs serve
+# Para ver localmente: make docs
 site_name: ZapBot
 site_url: https://jpereira.github.io/zapbot/
 site_description: Bot para WhatsApp que recupera mensagens apagadas e editadas, baixa vídeos, cria figurinhas e mais.

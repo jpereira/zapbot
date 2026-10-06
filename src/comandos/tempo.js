@@ -32,8 +32,9 @@ const geoCache = new Map();
 const GEO_CACHE_MAX = 100;
 
 /*
- * Resolve "cidade[, estado][, país]" para { name, admin1, country, latitude, longitude }
- * ou null. A Open-Meteo entende o texto inteiro e escolhe o resultado mais
+ * Resolve uma cidade, com estado ou país opcional após uma vírgula, para
+ * { name, admin1, country, latitude, longitude } ou null.
+ * A Open-Meteo entende o texto inteiro e escolhe o resultado mais
  * relevante (normalmente o mais populoso).
  */
 async function geocodificarCidade(cidade) {

@@ -1,14 +1,14 @@
 # `/unmute` · admin
 
-Desfaz o silêncio do [`/mute`](mute.md): os avisos de mensagens apagadas,
-editadas e de status apagados da pessoa, do grupo ou da comunidade voltam.
+Desfaz o silêncio do [`/mute`](mute.md): os avisos de mensagens apagadas, editadas e de status
+apagados da pessoa, do grupo ou da comunidade voltam.
 
 | Opção | Valor | Descrição |
 |---|---|---|
 | *(nenhuma)* | `[/contato ou grupo/\|@menção\|+número\|nº]` | Quem: buscado como no `/mute`, ou o nº da lista do `/mute`. Sem ninguém, respondendo um aviso, de onde ele veio. Sem nada, a lista |
 | `-all`, `-a` | | Desfaz todos os silenciados |
 
-```
+```text
 /unmute /Jorge Pereira/     → os avisos do contato voltam
 /unmute /Grupo L200/        → os do grupo
 /unmute 2                   → o nº 2 da lista do /mute

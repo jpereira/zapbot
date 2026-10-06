@@ -183,7 +183,7 @@
                     "values": [
                         "[force]"
                     ],
-                    "desc": "Volta ao padrão: bot ligado, sem admins extras e sem usuários (só você usa comandos). Pergunta antes: responda sim em 10 s. Com force, volta direto. O envio diário do -status fica. Não combina com as outras opções. Só o dono. Ex: /bot -r, /bot -r force"
+                    "desc": "Volta ao padrão: bot ligado, sem admins extras e sem usuários (só você usa comandos). Pergunta antes: responda sim em 10 s. Com force, volta direto. O envio diário do -status fica. Aceita -mask; as outras opções são recusadas. Só o dono. Ex: /bot -r, /bot -r force"
                 },
                 {
                     "opts": [
@@ -193,7 +193,7 @@
                     "values": [
                         "[<hora>|off]"
                     ],
-                    "desc": "O status (o mesmo do /bot sem opção): o relatório das últimas 24 h (no ar, cache, /watch, apagadas, editadas, status apagados, /mute e último backup), os usuários e o envio diário. Com uma hora (Brasília: 06h, 6h30, 06:00 ou às 18h), envia todo dia nesse horário, no seu privado ou nos destinos do -to. Com -to e sem hora, envia agora. Com off, desliga o envio diário. Não combina com as outras opções. Ex: /bot -s, /bot -s 06h, /bot -s 06h -to voce@exemplo.com, /bot -s off"
+                    "desc": "O status (o mesmo do /bot sem opção): o relatório das últimas 24 h (no ar, cache, /watch, apagadas, editadas, status apagados, /mute e último backup), os usuários e o envio diário. Com uma hora (Brasília: 06h, 6h30, 06:00 ou às 18h), envia todo dia nesse horário, no seu privado ou nos destinos do -to. Com -to e sem hora, envia agora. Com off, desliga o envio diário. Aceita -to e -mask; as outras opções são recusadas. Ex: /bot -s, /bot -s 06h, /bot -s 06h -to voce@exemplo.com, /bot -s off"
                 },
                 {
                     "opts": [
@@ -210,7 +210,7 @@
                         "i"
                     ],
                     "values": [],
-                    "desc": "Versões do bot e do que ele usa (Node.js, whatsapp-web.js, WhatsApp Web, SQLite, Chromium, yt-dlp, ffmpeg), com aviso de versão nova, e o sistema (host, CPU, memória e há quanto tempo estão no ar). Não combina com as outras opções."
+                    "desc": "Versões do bot e do que ele usa (Node.js, whatsapp-web.js, WhatsApp Web, SQLite, Chromium, yt-dlp, ffmpeg), com aviso de versão nova, e o sistema (host, CPU, memória e há quanto tempo estão no ar). Aceita -mask; as outras opções são recusadas."
                 },
                 {
                     "opts": [
@@ -1430,7 +1430,7 @@
                 "/t",
                 "/weather"
             ],
-            "help": "Tempo agora, máx./mín. e chance de chuva do dia (Open-Meteo); com N (ou Nd), a previsão dos próximos N dias. Sem cidade usa o setting tempo.city.",
+            "help": "Tempo agora, máx./mín. e chance de chuva do dia (Open-Meteo); com N (ou Nd), previsão de N dias contando hoje. Sem cidade usa o setting tempo.city.",
             "cmd_opts": [
                 {
                     "argv": [
@@ -1442,7 +1442,7 @@
                     "argv": [
                         "[cidade]"
                     ],
-                    "desc": "Cidade, opcionalmente com estado e país. Ex: /tempo Niteroi, Sergipe"
+                    "desc": "Cidade, opcionalmente com estado ou país após uma vírgula. Ex: /tempo Paris, Texas"
                 }
             ],
             "cron": true,
