@@ -198,7 +198,7 @@ describe('/defi', () => {
     test('/defi orca, palavra desconhecida, -rm e as mensagens de lista vazia', async () => {
         await bot.responder(CADASTRO);
         assert.match((await bot.responder('/defi orca'))[0], /Orca · SOL\/cbBTC/);
-        assert.match((await bot.responder('/defi xyz'))[0], /^❌ "xyz" não é um protocolo: use orca, prjx, morpho ou aave\.\n\n```Usage: \/defi \[orca\|prjx\|morpho\|aave\]/);
+        assert.match((await bot.responder('/defi xyz'))[0], /^❌ "xyz" não é um protocolo: use orca, prjx, morpho ou aave\.\n\n```Uso: \/defi \[orca\|prjx\|morpho\|aave\]/);
 
         assert.deepEqual(await bot.responder('/defi -rm 1'), ['🗑️ Removido: Orca · Hz15…RaPZ']);
         assert.match((await bot.responder('/defi'))[0], /🌊 Nenhuma posição cadastrada/);

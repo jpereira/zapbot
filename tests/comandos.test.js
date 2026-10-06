@@ -16,15 +16,15 @@ describe('/help (/h)', () => {
     test('sem argumento (o dono): todos os comandos ativos', async () => {
         const [r] = await bot.responder('/help');
         assert.match(r, /MENU DE AJUDA/);
-        assert.match(r, /Usage: \/show/);
-        assert.match(r, /Usage: \/cotacao/);
-        assert.doesNotMatch(r, /Usage: \/monitor/); // desativado no config
+        assert.match(r, /Uso: \/show/);
+        assert.match(r, /Uso: \/cotacao/);
+        assert.doesNotMatch(r, /Uso: \/monitor/); // desativado no config
     });
 
     test('um comando, com ou sem "/", por nome ou alias', async () => {
         for (const linha of ['/help show', '/help /show', '/h s']) {
             const [r] = await bot.responder(linha);
-            assert.match(r, /AJUDA[\s\S]*Usage: \/show/, linha);
+            assert.match(r, /AJUDA[\s\S]*Uso: \/show/, linha);
         }
     });
 
@@ -35,22 +35,22 @@ describe('/help (/h)', () => {
     test('quem não é admin vê só os comandos comuns; o admin extra vê tudo', async () => {
         const [r] = await bot.responder('/help', { de: OUTRO.jid });
         assert.match(r, /^🤖 \*MENU DE AJUDA\* _\(os comandos que você pode usar\)_/);
-        assert.match(r, /Usage: \/cotacao/);
-        assert.doesNotMatch(r, /Usage: \/(show|backup|bot|set)\b/);
+        assert.match(r, /Uso: \/cotacao/);
+        assert.doesNotMatch(r, /Uso: \/(show|backup|bot|set)\b/);
 
         assert.deepEqual(await bot.responder('/help show', { de: OUTRO.jid }),
             ['⛔ O /show é só do dono do bot (e dos admins).\n💡 _Veja os que você pode usar com /help_']);
-        assert.match((await bot.responder('/help cotacao', { de: OUTRO.jid }))[0], /Usage: \/cotacao/);
+        assert.match((await bot.responder('/help cotacao', { de: OUTRO.jid }))[0], /Uso: \/cotacao/);
 
         await bot.setSetting('bot.admins', [OUTRO.user]);
         const [admin] = await bot.responder('/help', { de: OUTRO.jid });
         assert.match(admin, /^🤖 \*MENU DE AJUDA\*\n/);
-        assert.match(admin, /Usage: \/show/);
+        assert.match(admin, /Uso: \/show/);
     });
 
     test('comando desativado por setting some do menu', async () => {
         await bot.setSetting('commands.disabled', 'noffa');
-        assert.doesNotMatch((await bot.responder('/help'))[0], /Usage: \/noffa/);
+        assert.doesNotMatch((await bot.responder('/help'))[0], /Uso: \/noffa/);
     });
 });
 
@@ -94,7 +94,7 @@ describe('/noffa', () => {
     });
 
     test('sem texto mostra a sintaxe', async () => {
-        assert.match((await bot.responder('/noffa'))[0], /^Syntax: \/noffa/);
+        assert.match((await bot.responder('/noffa'))[0], /^```Uso: \/noffa/);
     });
 
     test('texto começando com "/" ganha um 🌈 na frente (nunca vira comando)', async () => {
@@ -111,7 +111,7 @@ describe('/bot', () => {
             '-all-users, -au', '-reset, -r [force]', '-status, -s [<hora>|off]', '-to <destino>',
             '-info, -i', '-mask, -m']);
         assert.match(r, /\n  -on {2,}Liga o bot\.\n\n  -off /);
-        assert.doesNotMatch(r, /admin, -admin|Arguments:/);
+        assert.doesNotMatch(r, /admin, -admin|Argumentos:/);
     });
 
     test('sem opção: o status (o mesmo do -status), com o estado no topo e quem usa', async () => {

@@ -11,7 +11,7 @@
     "commands": [
         {
             "cmd": "/backup",
-            "usage": "/backup [OPTION]",
+            "usage": "/backup [OPÇÃO]",
             "aliases": [
                 "/bkp"
             ],
@@ -218,14 +218,14 @@
                         "m"
                     ],
                     "values": [],
-                    "desc": "Ofusca telefones na saída desta execução, preservando os cinco primeiros e os dois últimos dígitos. Ex: +55219****44. Os dados salvos e os destinos permanecem íntegros."
+                    "desc": "Ofusca telefones com 10 a 15 dígitos contínuos na saída desta execução, mantendo os cinco primeiros e os dois últimos (como +55219****44). Os dados salvos e os destinos usam os números completos. Ex: /bot -mask"
                 }
             ],
             "onlyAdmin": true
         },
         {
             "cmd": "/cache",
-            "usage": "/cache [OPTION]",
+            "usage": "/cache [OPÇÃO]",
             "cmd_opts": [
                 {
                     "opts": [
@@ -268,7 +268,7 @@
         },
         {
             "cmd": "/cotacao",
-            "usage": "/cotacao [OPTION] [MOEDA...]  ou  /cotacao [MOEDA] -alerta [regra] [-to <destino>]... [-msg <texto>]  ou  /cotacao -alerta -rm <nº...|all>",
+            "usage": "/cotacao [OPÇÃO] [MOEDA...]  ou  /cotacao [MOEDA] -alerta [regra] [-to <destino>]... [-msg <texto>]  ou  /cotacao -alerta -rm <nº...|all>",
             "aliases": [
                 "/cambio"
             ],
@@ -346,7 +346,7 @@
         },
         {
             "cmd": "/cron",
-            "usage": "/cron <quando> [OPTION] <texto>  ou  /cron -edit <nº> [quando] [texto]",
+            "usage": "/cron <quando> [OPÇÃO] <texto>  ou  /cron -edit <nº> [quando] [texto]",
             "aliases": [
                 "/agenda",
                 "/lembrete"
@@ -451,7 +451,7 @@
         },
         {
             "cmd": "/crypto",
-            "usage": "/crypto [OPTION] [MOEDA...]  ou  /crypto [MOEDA] -alerta [regra] [-to <destino>]... [-msg <texto>]  ou  /crypto -alerta -rm <nº...|all>",
+            "usage": "/crypto [OPÇÃO] [MOEDA...]  ou  /crypto [MOEDA] -alerta [regra] [-to <destino>]... [-msg <texto>]  ou  /crypto -alerta -rm <nº...|all>",
             "aliases": [
                 "/bitcoio",
                 "/creptomoeda"
@@ -531,7 +531,7 @@
         {
             "cmd": "/cve",
             "usage": "/cve [max] [-highscore [max]]",
-            "help": "Últimas CVEs publicadas no NVD (quantidade: setting cve.max).",
+            "help": "CVEs publicadas nos últimos dois dias no NVD, da mais recente para a mais antiga (quantidade: cve.max). Com -highscore, a janela é cve.maxDays. Ex: /cve 5, /cve -high 3",
             "cmd_opts": [
                 {
                     "opts": [
@@ -541,7 +541,7 @@
                     "values": [
                         "[max]"
                     ],
-                    "desc": "Só as max críticas (CVSS ≥ 9) mais recentes, de 1 a 20 (padrão: setting cve.max), dos últimos cve.maxDays dias."
+                    "desc": "Só as críticas com severidade CVSS v3 CRITICAL (nota ≥ 9), dos últimos cve.maxDays dias. Quantidade de 1 a 20, padrão cve.max. Métricas somente v4 ou v2 ficam fora do filtro. Ex: /cve -high 5"
                 },
                 {
                     "argv": [
@@ -555,7 +555,7 @@
         },
         {
             "cmd": "/debug",
-            "usage": "/debug [OPTION]",
+            "usage": "/debug [OPÇÃO]",
             "aliases": [
                 "/d",
                 "/dbg"
@@ -821,11 +821,11 @@
         },
         {
             "cmd": "/get",
-            "usage": "/get [OPTION]... <url>",
+            "usage": "/get [OPÇÃO]... <url>  ou  /get [OPÇÃO]... (respondendo uma mensagem com link)",
             "aliases": [
                 "/download"
             ],
-            "help": "Baixa vídeo ou áudio de redes sociais (Instagram, YouTube, X, TikTok e outros sites do yt-dlp). Também funciona respondendo uma mensagem com link.",
+            "help": "Baixa vídeo ou áudio de redes sociais (Instagram, YouTube, X, TikTok e outros sites do yt-dlp). Também funciona respondendo uma mensagem com link. Escolha áudio ou figurinha por execução; vídeo e áudio são enviados como documento.",
             "cmd_opts": [
                 {
                     "opts": [
@@ -882,17 +882,17 @@
         },
         {
             "cmd": "/giphy",
-            "usage": "/giphy [tag]",
+            "usage": "/giphy [tag|URL|ID]",
             "aliases": [
                 "/gif"
             ],
-            "help": "GIF aleatório do GIPHY (tag padrão: setting gif.tag).",
+            "help": "Envia um GIF do GIPHY como vídeo em loop: aleatório pela tag (padrão: gif.tag), ou o GIF escolhido por URL ou ID. Precisa de GIPHY_API_KEY no config/.env ou do setting giphy.api.key. Ex: /giphy gatos, /giphy https://giphy.com/gifs/h5WUvmDSB0njFcFeCE",
             "cron": true,
             "onlyAdmin": false
         },
         {
             "cmd": "/gpt",
-            "usage": "/gpt [OPTION] <pergunta>",
+            "usage": "/gpt [pergunta]  ou  /gpt -model [modelo]",
             "aliases": [
                 "/ai"
             ],
@@ -904,7 +904,7 @@
                         "m"
                     ],
                     "values": [
-                        "<modelo>"
+                        "[modelo]"
                     ],
                     "desc": "Troca o modelo (setting openai.api.model). Sem modelo, lista o atual e os aceitos."
                 },
@@ -935,7 +935,7 @@
                     "argv": [
                         "[protocolo]"
                     ],
-                    "desc": "No /defi, só a ajuda de um protocolo (orca, prjx ou morpho), como o /defi orca -help. Ex: /help defi orca"
+                    "desc": "No /defi, só a ajuda de um protocolo: orca, prjx, morpho ou aave. Equivale a /defi <protocolo> -help. Ex: /help defi aave"
                 }
             ],
             "onlyAdmin": false
@@ -976,7 +976,7 @@
         },
         {
             "cmd": "/monitor",
-            "usage": "/monitor [OPTION]",
+            "usage": "/monitor [OPÇÃO]",
             "help": "🚧 [EM DESENVOLVIMENTO] Números a serem monitorados. Máx. definido em monitor.max (/set).",
             "disabled": true,
             "cmd_opts": [
@@ -1024,7 +1024,7 @@
         },
         {
             "cmd": "/mute",
-            "usage": "/mute [OPTION]... [/contato ou grupo/|@menção|+número]",
+            "usage": "/mute [OPÇÃO]... [/contato ou grupo/|@menção|+número]",
             "aliases": [
                 "/m",
                 "/mudo"
@@ -1137,7 +1137,7 @@
         },
         {
             "cmd": "/noffa",
-            "usage": "/noffa <texto>",
+            "usage": "/noffa [texto]",
             "aliases": [
                 "/🌈",
                 "/🏳️‍🌈"
@@ -1156,7 +1156,7 @@
         },
         {
             "cmd": "/pixelart",
-            "usage": "/pixelart [OPTION] [pack]",
+            "usage": "/pixelart [OPÇÃO] [pack]",
             "aliases": [
                 "/ansi",
                 "/px"
@@ -1193,7 +1193,7 @@
         },
         {
             "cmd": "/set",
-            "usage": "/set [OPTION] [<chave> [<valor>]]",
+            "usage": "/set [OPÇÃO] [<chave> [<valor>]]",
             "aliases": [
                 "/config"
             ],
@@ -1251,7 +1251,7 @@
         },
         {
             "cmd": "/show",
-            "usage": "/show [-N] [OPTION] [chat]  ou  /show -q <texto> [-N] [chat]",
+            "usage": "/show [-N] [OPÇÃO] [chat]  ou  /show -q <texto> [-N] [chat]",
             "aliases": [
                 "/s"
             ],
@@ -1325,7 +1325,7 @@
                         "m"
                     ],
                     "values": [],
-                    "desc": "Ofusca telefones na saída desta execução, preservando os cinco primeiros e os dois últimos dígitos. Ex: +55219****44. Os dados salvos e os destinos permanecem íntegros."
+                    "desc": "Ofusca telefones com 10 a 15 dígitos contínuos na saída desta execução, mantendo os cinco primeiros e os dois últimos (como +55219****44). Os dados salvos e os destinos usam os números completos. Ex: /show -mask"
                 }
             ],
             "onlyAdmin": true
@@ -1450,7 +1450,7 @@
         },
         {
             "cmd": "/tldr",
-            "usage": "/tldr [OPTION] [período]",
+            "usage": "/tldr [OPÇÃO] [período]",
             "aliases": [
                 "/resumo"
             ],
@@ -1585,7 +1585,7 @@
             "aliases": [
                 "/w"
             ],
-            "help": "Vigia mensagens recebidas com regras de texto ou regex. Uma regra sem -in vale em qualquer lugar; -in restringe a um contato (remetente), grupo ou canal. Sem parâmetros, lista regras e últimos matches; -N escolhe a quantidade. Publicações de @newsletter são identificadas com 📰 e o nome do canal.",
+            "help": "Vigia mensagens recebidas com regras de texto ou regex. Uma regra sem -in vale em qualquer lugar; -in restringe a um contato (remetente), grupo ou canal. Sem parâmetros, lista regras e últimos matches; -N escolhe a quantidade. Publicações de @newsletter são identificadas com 📰 e o nome do canal. Os números após -s, -rem e -flush identificam regras; -N define a quantidade de matches.",
             "cmd_opts": [
                 {
                     "opts": [
@@ -1593,7 +1593,7 @@
                         "l"
                     ],
                     "values": [],
-                    "desc": "Lista as regras, as origens, os destinos e as quantidades de ocorrências."
+                    "desc": "Lista somente regras, origens, destinos e contagens, sem os textos dos matches. Ex: /watch -l"
                 },
                 {
                     "opts": [
@@ -1603,7 +1603,7 @@
                     "values": [
                         "[N]"
                     ],
-                    "desc": "Mostra os textos completos dos matches da regra N; sem N, de todas as regras. Ex: /watch -s 3"
+                    "desc": "Mostra os textos completos dos matches da regra N; sem N, de todas. N identifica a regra, e -N limita a quantidade de matches até watch.showMax. Ex: /watch -s 3 -10"
                 },
                 {
                     "opts": [
@@ -1647,7 +1647,7 @@
                     "argv": [
                         "-N"
                     ],
-                    "desc": "Quantidade de matches recentes na listagem, limitada por watch.showMax. Ex: /watch -10"
+                    "desc": "Quantidade de matches recentes na listagem ou com -s, limitada por watch.showMax (padrão 20). Ex: /watch -10, /watch -s 3 -10"
                 },
                 {
                     "argv": [
@@ -1661,7 +1661,7 @@
                         "m"
                     ],
                     "values": [],
-                    "desc": "Ofusca telefones na saída desta execução, preservando os cinco primeiros e os dois últimos dígitos. Ex: +55219****44. Os dados salvos e os destinos permanecem íntegros."
+                    "desc": "Ofusca telefones com 10 a 15 dígitos contínuos na saída desta execução, mantendo os cinco primeiros e os dois últimos (como +55219****44). Os dados salvos e os destinos usam os números completos. Ex: /watch -mask"
                 }
             ],
             "onlyAdmin": true

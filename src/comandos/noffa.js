@@ -2,14 +2,16 @@
  * Comando /noffa.
  */
 
+const { getCommandSyntax } = require('./base');
+
 async function cmdNoffa({ msg, args, quotedMsg }) {
     const rainbowHearts = ['🌈', '🏳️‍🌈', '🏳️‍⚧️', '🧡', '💛', '💚', '💙', '💜'];
 
-    // Antes usava só a primeira palavra (argv[1]) e gerava "undefined" sem argumento.
+    // Junta o texto digitado ao da mensagem respondida, sem perder palavras pelo caminho.
     const text = [args, quotedMsg?.body].filter(Boolean).join(' ').trim();
 
     if (!text) {
-        await msg.reply('Syntax: /noffa <texto> (ou responda uma mensagem)');
+        await msg.reply('```' + getCommandSyntax('/noffa') + '```');
         return;
     }
 

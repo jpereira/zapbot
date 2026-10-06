@@ -56,7 +56,7 @@ describe('/monitor', () => {
     test('-list e -logs vazios; sem opção mostra a sintaxe', async () => {
         assert.deepEqual(await bot.responder('/monitor -list'), ['Nenhum número está sendo monitorado.']);
         assert.match((await bot.responder('/monitor -logs'))[0], /Nenhum histórico encontrado/);
-        assert.match((await bot.responder('/monitor'))[0], /Usage: \/monitor/);
+        assert.match((await bot.responder('/monitor'))[0], /Uso: \/monitor/);
     });
 
     test('só o dono usa', async () => {
