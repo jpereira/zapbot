@@ -145,6 +145,7 @@ describe('/bot -status', () => {
 
     test('só o dono', async () => {
         assert.deepEqual(await bot.responder('/bot -status', { de: OUTRO.jid, chat: GRUPO }), []);
-        assert.deepEqual(await bot.responder('/status'), [], 'o /status virou /bot -status');
+        assert.deepEqual(await bot.responder('/status'),
+            ["⚠️ Comando '/status' desconhecido, tente: /help"], 'o /status virou /bot -status');
     });
 });

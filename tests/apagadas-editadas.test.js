@@ -414,8 +414,8 @@ describe('/show -e (editadas)', () => {
 
     test('/edit e /e não existem mais', async () => {
         await mensagemEditada('x', 'y');
-        assert.deepEqual(await bot.responder('/edit'), []);
-        assert.deepEqual(await bot.responder('/e'), []);
+        assert.deepEqual(await bot.responder('/edit'), ["⚠️ Comando '/edit' desconhecido, tente: /help"]);
+        assert.deepEqual(await bot.responder('/e'), ["⚠️ Comando '/e' desconhecido, tente: /help"]);
     });
 
     test('a última e as N últimas, com antes e depois', async () => {
