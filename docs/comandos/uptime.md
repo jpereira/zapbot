@@ -1,4 +1,4 @@
-# `/uptime` (`/u`, `/up`) · admin
+# `/uptime` (`/u`, `/up`)
 
 Mostra a versão e há quanto tempo o bot está no ar e conectado ao WhatsApp.
 
