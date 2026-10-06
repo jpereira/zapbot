@@ -36,6 +36,64 @@ describe('regras', () => {
 });
 
 describe('detecção', () => {
+    test('status resolve o autor LID e ignora nomes alheios nos metadados', async () => {
+        await bot.setSetting('watch.rules', '/Defesa.*Civil/');
+        const author = '67658770853938@lid';
+        const phoneAlt = '5521999999988@c.us';
+        bot.client.lids.set(author, phoneAlt);
+        bot.createContact(phoneAlt, 'Defesa Civil');
+        bot.createContact('status@broadcast', 'Fátima');
+        const msg = bot.createMessage({
+            texto: 'Centro de Monitoramento da Defesa Civil de Niterói informa',
+            chat: 'status@broadcast', de: OTHERAlt.jid,
+            extras: {
+                from: 'status@broadcast', author: '67658770853938:12@lid', isStatus: true,
+                _data: { notifyName: 'Fátima', chat: { name: 'Fátima' } }
+            }
+        });
+        const [notice] = await bot.deliver(msg);
+        assert.match(notice.texto, /👤 \*Nome:\* Defesa Civil/);
+        assert.match(notice.texto, /📱 \*Número:\* \+5521999999988/);
+        assert.doesNotMatch(notice.texto, /Fátima/);
+        const salvo = await bot.dbGet('SELECT * FROM messages WHERE id = ?', [msg.id.id]);
+        assert.equal(salvo.sender_jid, phoneAlt);
+        assert.equal(salvo.sender_name, 'Defesa Civil');
+        assert.equal(salvo.chat_name, 'Status de Defesa Civil');
+        const hit = await bot.dbGet('SELECT * FROM watch_hits WHERE message_id = ?', [msg.id.id]);
+        assert.equal(hit.sender_name, 'Defesa Civil');
+        assert.equal(hit.sender_number, '5521999999988');
+        assert.equal(hit.chat_name, 'Status de Defesa Civil');
+    });
+
+    test('broadcast sem telefone mantém LID do autor, sem inventar número', async () => {
+        await bot.setSetting('watch.rules', 'alerta');
+        bot.createContact('67658770853939@lid', 'Defesa Civil sem telefone');
+        const [notice] = await someoneWrite('alerta de chuva', {
+            chat: '123@broadcast',
+            extras: { from: '123@broadcast', author: undefined,
+                _data: { participant: { _serialized: '67658770853939@lid' }, notifyName: 'Fátima' } }
+        });
+        assert.match(notice.texto, /Nome:\* Defesa Civil sem telefone/);
+        assert.match(notice.texto, /Número:\* Número indisponível/);
+        assert.doesNotMatch(notice.texto, /Fátima/);
+        const hit = await bot.dbGet('SELECT * FROM watch_hits');
+        assert.equal(hit.chat_name, 'Transmissão de Defesa Civil sem telefone');
+    });
+
+    test('status sem autor usa origem desconhecida, sem atribuir notifyName a uma pessoa', async () => {
+        await bot.setSetting('watch.rules', 'alerta');
+        const [notice] = await someoneWrite('alerta de chuva', {
+            chat: 'status@broadcast',
+            extras: { from: 'status@broadcast', author: undefined,
+                _data: { notifyName: 'Fátima', chat: { name: 'Defesa Civil' } } }
+        });
+        assert.match(notice.texto, /Nome:\* Desconhecido/);
+        assert.match(notice.texto, /Número:\* Número indisponível/);
+        assert.doesNotMatch(notice.texto, /Fátima|Defesa Civil/);
+        const hit = await bot.dbGet('SELECT * FROM watch_hits');
+        assert.equal(hit.chat_name, 'Status');
+    });
+
     test('mensagem que casa: grava e avisa no seu privado', async () => {
         await bot.setSetting('watch.rules', 'promoção\n/pix/i');
         const notices = await someoneWrite('olha a PROMOCAO do pix');
