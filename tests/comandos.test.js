@@ -108,7 +108,8 @@ describe('/bot', () => {
         const [r] = await bot.responder('/bot -h');
         const linhas = r.split('\n').filter(l => /^  [+-]/.test(l)).map(l => l.trim().split(/\s{2,}/)[0]);
         assert.deepEqual(linhas, ['-on', '-off', '+o, -o [pessoa...]', '+v, -v [pessoa|grupo...]', '+cmd, -cmd <comandos>', '-users, -u',
-            '-all-users, -au', '-reset, -r [force]', '-status, -s [<hora>|off]', '-to <destino>', '-info, -i']);
+            '-all-users, -au', '-reset, -r [force]', '-status, -s [<hora>|off]', '-to <destino>',
+            '-info, -i', '-mask, -m']);
         assert.match(r, /\n  -on {2,}Liga o bot\.\n\n  -off /);
         assert.doesNotMatch(r, /admin, -admin|Arguments:/);
     });
