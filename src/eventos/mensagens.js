@@ -244,7 +244,8 @@ client.on('message_create', (msg) => comContextoDebug({
             ]
         ).catch(err => printError('Erro ao salvar mensagem:', err.message));
 
-        const body = (msg.body || '').trim();
+        // O body de localização contém a miniatura em base64, não texto nem comando.
+        const body = msgType === 'location' ? '' : (msg.body || '').trim();
 
         // Só o nº, respondendo a lista de um comando (ex.: vários contatos com o nome): não passa pelo /watch
         if (await responderEscolha(msg, chatId, body)) return;
