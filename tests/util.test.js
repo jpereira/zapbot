@@ -6,13 +6,17 @@ const bot = require('./helpers/bot');
 
 const { test, describe, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('fs');
+const path = require('path');
 
 const { OTHERAlt } = bot;
 const { paraMs, plural, summarizeText, fmtInA, formatData } = bot.src('util/format');
 const contacts = bot.src('contacts');
 const { getBotUptime } = bot.src('log');
 const { formatErrorCommand } = bot.src('commands/base');
-const { humanSize, nameSafe, mediaIsPath, getFolderMedia } = bot.src('util/files');
+const {
+    humanSize, nameSafe, mediaIsPath, getFolderMedia, listCacheLevelOnly
+} = bot.src('util/files');
 
 beforeEach(bot.restart);
 
@@ -49,6 +53,28 @@ describe('formatação', () => {
 });
 
 describe('arquivos do cache', () => {
+    test('árvore ordenada, tamanhos recursivos, total alinhado e separador contínuo', () => {
+        const dir = fs.mkdtempSync(path.join(bot.CACHE_DIR, 'arvore-'));
+        try {
+            fs.mkdirSync(path.join(dir, 'tmp'));
+            fs.mkdirSync(path.join(dir, 'media', 'dia'), { recursive: true });
+            fs.writeFileSync(path.join(dir, 'media', 'dia', 'foto'), Buffer.alloc(2048));
+            fs.writeFileSync(path.join(dir, 'bot_database.db'), Buffer.alloc(1024));
+            fs.mkdirSync(path.join(dir, 'backups'));
+            fs.writeFileSync(path.join(dir, 'backups', 'b.gz'), Buffer.alloc(512));
+            assert.equal(listCacheLevelOnly(dir), [
+                '├── 📁 backups/           512 B',
+                '├── bot_database.db     1.00 KB',
+                '├── 📁 media/           2.00 KB',
+                '└── 📁 tmp/                 0 B',
+                '───────────────────────────────',
+                'Total:                  3.50 KB'
+            ].join('\n'));
+        } finally {
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    });
+
     test('tamanhos legíveis', () => {
         assert.equal(humanSize(512), '512 B');
         assert.equal(humanSize(1536), '1.50 KB');
