@@ -67,7 +67,7 @@ hora, sem reiniciar, e sobrevivem a reinícios. Para ver e alterar, use o
 | `sticker.author` | texto | `https://github.com/jpereira/zapbot/` | Autor das figurinhas |
 | `sticker.name` | texto | `ZapBot` | Nome do pacote das figurinhas |
 | `tempo.city` | texto | `Niteroi, Rio de Janeiro, Brazil` | Cidade do `/tempo` quando nenhuma é informada |
-| `tempo.maxDays` | 1–16 | `7` | Máximo de dias do `/tempo N` (ou `Nd`); 16 é o limite da Open-Meteo |
+| `tempo.maxDays` | 1–16 | `16` | Máximo de dias do `/tempo N` (ou `Nd`), contando hoje; 16 é o limite da Open-Meteo |
 | `tldr.maxMsgs` | 10–2000 | `500` | Máximo de mensagens enviadas à OpenAI por [`/tldr`](comandos/tldr.md) |
 | `traduzir.api.key` | texto (pode ser vazio) | *(vazio)* | Chave do Google Cloud Translation, usada quando `GOOGLE_TRANSLATE_API_KEY` não está no `config/.env`. Exibida mascarada (`••••1234`); `/set -reset traduzir.api.key` apaga |
 | `traduzir.lang` | texto | `pt` | Idioma de destino padrão do [`/traduzir`](comandos/traduzir.md) (código: `pt`, `en`, `es`...) |
