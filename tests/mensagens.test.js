@@ -81,8 +81,9 @@ describe('comandos', () => {
         assert.match(r.options.quotedMessageId, /CMD1$/);
     });
 
-    test('comando desconhecido ou texto comum: nenhuma resposta', async () => {
-        assert.deepEqual(await bot.responder('/naoexiste'), []);
+    test('comando desconhecido sugere ajuda; texto comum não responde', async () => {
+        assert.deepEqual(await bot.responder('/naoexiste'),
+            ["⚠️ Comando '/naoexiste' desconhecido, tente: /help"]);
         assert.deepEqual(await bot.responder('ping'), []);
     });
 
@@ -113,9 +114,10 @@ describe('comandos', () => {
         assert.match(r, /Usage: \/ping/);
     });
 
-    test('comando desativado por setting é ignorado', async () => {
+    test('comando desativado por setting é desconhecido', async () => {
         await bot.setSetting('commands.disabled', 'ping');
-        assert.deepEqual(await bot.responder('/ping'), []);
+        assert.deepEqual(await bot.responder('/ping'),
+            ["⚠️ Comando '/ping' desconhecido, tente: /help"]);
     });
 
     test('a marca de "enviada pelo bot" expira em 1 minuto', async (t) => {
@@ -142,12 +144,60 @@ describe('comandos', () => {
 });
 
 describe('comando desconhecido', () => {
-    const desconhecidos = (desde) => bot.logs.slice(desde).filter(l => l.includes('executed unknown command'));
+    const desconhecidos = (desde) => bot.logs.slice(desde)
+        .filter(l => l.includes('executed unknown command'));
+
+    test('do dono em qualquer chat: responde citando a mensagem e sugerindo /help', async () => {
+        for (const chat of [DONO.jid, OUTRO.jid, GRUPO]) {
+            const antes = bot.logs.length;
+            const [r] = await bot.executar('/orca prjx', { chat, id: 'INVALIDO' });
+            assert.equal(r.texto, "⚠️ Comando '/orca prjx' desconhecido, tente: /help");
+            assert.equal(r.chatId, chat);
+            assert.match(r.options.quotedMessageId, /INVALIDO$/);
+            assert.equal(desconhecidos(antes).length, 1);
+        }
+    });
+
+    test('sem permissão: não responde, mesmo com debug ligado', async () => {
+        await bot.setSetting('bot.users', false);
+        await bot.setSetting('debug.enabled', true);
+        assert.deepEqual(await bot.responder('/orca prjx', { chat: OUTRO.jid, de: OUTRO.jid }), []);
+        assert.deepEqual(await bot.responder('/orca prjx', { de: OUTRO.jid }), []);
+        assert.deepEqual(await bot.responder('texto comum', { chat: DONO.jid }), []);
+    });
+
+    test('+o e +v: responde no grupo e no privado', async () => {
+        for (const chave of ['bot.admins', 'bot.users']) {
+            await bot.setSetting(chave, [OUTRO.user]);
+            for (const chat of [GRUPO, OUTRO.jid]) {
+                const [r] = await bot.executar('/orca prjx', {
+                    chat, de: OUTRO.jid, id: 'PERMITIDO'
+                });
+                assert.equal(r.texto, "⚠️ Comando '/orca prjx' desconhecido, tente: /help");
+                assert.equal(r.chatId, chat);
+                assert.match(r.options.quotedMessageId, /PERMITIDO$/);
+            }
+            await bot.setSetting(chave, []);
+        }
+    });
+
+    test('+v só no grupo: respeita o escopo; bot.users true libera todos', async () => {
+        await bot.setSetting('bot.users', [`${OUTRO.user}:${GRUPO}`]);
+        assert.equal((await bot.responder('/orca prjx', { de: OUTRO.jid })).length, 1);
+        assert.deepEqual(await bot.responder('/orca prjx', { chat: OUTRO.jid, de: OUTRO.jid }), []);
+        await bot.setSetting('bot.users', [GRUPO]);
+        assert.equal((await bot.responder('/orca prjx', { de: OUTRO.jid })).length, 1);
+        assert.deepEqual(await bot.responder('/orca prjx', { chat: OUTRO.jid, de: OUTRO.jid }), []);
+        await bot.setSetting('bot.users', true);
+        assert.equal((await bot.responder('/orca prjx', { chat: OUTRO.jid, de: OUTRO.jid })).length, 1);
+    });
 
     test('do dono: sempre no log, com o comando inteiro; dos outros: só no modo debug', async () => {
         let antes = bot.logs.length;
-        assert.deepEqual(await bot.responder('/tapioca de frango'), []);
-        assert.deepEqual(await bot.responder('/monitor'), [], 'desativado no config: também é desconhecido');
+        assert.deepEqual(await bot.responder('/tapioca de frango'),
+            ["⚠️ Comando '/tapioca de frango' desconhecido, tente: /help"]);
+        assert.deepEqual(await bot.responder('/monitor'),
+            ["⚠️ Comando '/monitor' desconhecido, tente: /help"], 'desativado no config: também é desconhecido');
         const doDono = desconhecidos(antes);
         assert.equal(doDono.length, 2);
         assert.match(doDono[0], /\[!\] ⚠️ 'Dono' executed unknown command: '\/tapioca de frango'$/);
