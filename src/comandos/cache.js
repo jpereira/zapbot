@@ -9,6 +9,7 @@ const { dbGet } = require('../db');
 const { limparArquivosAntigos, limparCacheAntigo, limparEditadasAntigas, limparEnquetesAntigas, limparIgnoradasAntigas, limparMidias, limparStatsAntigas, limparTudo, limparWatchAntigo } = require('../limpeza');
 const { printError } = require('../log');
 const { humanSize, listCacheLevelOnly } = require('../util/arquivos');
+const { plural } = require('../util/formatar');
 
 async function cmdCache({ msg, opts }) {
     try {
@@ -58,8 +59,10 @@ async function cmdCache({ msg, opts }) {
 
             textMsg = `🗂️ Exibindo conteúdo de ${CACHE_DIR}/*`;
             textMsg += '\n\n```' + listCacheLevelOnly(CACHE_DIR) + '```\n\n';
-            textMsg += `🗄️ Existem ${total} mensagens no cache (${apagadas} apagadas) e ${editadas} edições.\n`;
-            textMsg += `📦 Backups: ${(await listarBackups()).length} _(veja /backup)_`;
+            textMsg += `🗄️ ${plural(total, 'mensagem', 'mensagens')} no cache.\n`;
+            textMsg += `🗑️ ${plural(apagadas, 'apagada', 'apagadas')}.\n`;
+            textMsg += `✏️ ${plural(editadas, 'edição', 'edições')}.\n`;
+            textMsg += `📦 Backups: ${(await listarBackups()).length} (veja /backup).`;
         }
 
         await msg.reply(textMsg, null, { linkPreview: false });
