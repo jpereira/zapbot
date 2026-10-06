@@ -16,7 +16,7 @@
     "colors": "^1.4.0",
     "dotenv": "^18.0.4",
     "fs-extra": "^11.4.1",
-    "nodemailer": "^10.0.12",
+    "nodemailer": "^10.0.14",
     "punycode": "^2.3.1",
     "qrcode": "^1.5.4",
     "qrcode-terminal": "^0.12.0",
