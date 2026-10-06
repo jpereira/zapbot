@@ -1,7 +1,7 @@
 # `/crypto` (`/bitcoio`, `/creptomoeda`)
 
-Preço atual e variação de 24 h das moedas ativadas (via API da Binance, par
-`<TOKEN>USDT`), ou só das pedidas. Por padrão: BTC, ETH, SOL e HYPE.
+Preço atual e variação de 24 h das moedas ativadas (via API da Binance, par `<TOKEN>USDT`), ou só
+das pedidas. Por padrão: BTC, ETH, SOL e HYPE.
 
 | Opção | Valor | Descrição |
 |---|---|---|
@@ -14,13 +14,12 @@ Preço atual e variação de 24 h das moedas ativadas (via API da Binance, par
 | `-rm` | `<nº...\|all>` | Junto com `-alerta`: remove os alertas com esses nºs (`-rm 2`, `-rm 1 2 3` ou `-rm 1,2,3`), ou todos (`all`). Se algum nº não existe, nenhum sai |
 | `-to` | `<destino>` | Junto com `-alerta`: avisa num contato (`/Jorge Pereira/`), numa menção (`@Fulano Da Silva`), num grupo (`/Grupo L200/`), num número (`+5521999999999`) ou por e-mail (`email`) em vez do seu privado. Repita para vários: um alerta só, que avisa em todos. Veja [Avisar em outro chat ou por e-mail](cotacao.md#avisar-em-outro-chat-ou-por-e-mail) |
 
-Suportadas: BTC, ETH, SOL, HYPE, BNB, XRP, DOGE, ADA, TRX, AVAX, LINK, DOT, LTC,
-TON, SUI, PEPE, SHIB, XLM, NEAR e UNI (lista `CRYPTO_SUPPORTED` em `src/moedas.js`).
+Suportadas: BTC, ETH, SOL, HYPE, BNB, XRP, DOGE, ADA, TRX, AVAX, LINK, DOT, LTC, TON, SUI, PEPE,
+SHIB, XLM, NEAR e UNI (lista `CRYPTO_SUPPORTED` em `src/moedas.js`).
 
-As moedas ativadas ficam na tabela `settings`, chave `crypto.coins`, e
-sobrevivem a reinícios.
+As moedas ativadas ficam na tabela `settings`, chave `crypto.coins`, e sobrevivem a reinícios.
 
-```
+```text
 /crypto              → as ativadas (padrão: BTC, ETH, SOL e HYPE)
 /crypto BTC          → só o bitcoin
 /crypto btc eth      → bitcoin e ether (também "BTC,ETH")

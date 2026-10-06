@@ -1,8 +1,8 @@
 # `/cache` (`/c`) · admin
 
-Mostra o espaço ocupado em `cache/` (banco, mídias, temporários, backups) e
-limpa o cache. Na ajuda do comando (`/cache -h`) os caminhos aparecem completos (no
-Docker, `/app/cache` e `/app/cache/media`).
+Mostra o espaço ocupado em `cache/` (banco, mídias, temporários, backups) e limpa o cache. Na ajuda
+do comando (`/cache -h`) os caminhos aparecem completos (no Docker, `/app/cache` e
+`/app/cache/media`).
 
 | Opção | Descrição |
 |---|---|
@@ -11,7 +11,7 @@ Docker, `/app/cache` e `/app/cache/media`).
 | `-clean`, `-c` | Remove só o que passou da janela de retenção (68 h / `cache.revokedRetentionDays` para apagadas / `cache.editedRetentionDays` para editadas / `watch.hitsRetentionDays` para ocorrências do `/watch` / `stats.retentionDays` para os contadores do `/stats` / `enquete.retentionDays` para as enquetes) |
 | `-media`, `-m` | Apaga as mídias baixadas em `cache/media` (fotos, vídeos, áudios e documentos guardados para recuperar apagadas). As mensagens ficam: uma apagada recuperada depois avisa que o arquivo não está mais disponível |
 
-```
+```text
 /cache           → lista o conteúdo de cache/ e o total de mensagens
 /c -clean        → limpeza normal (retenção)
 /cache -m        → só as mídias
@@ -20,9 +20,9 @@ Docker, `/app/cache` e `/app/cache/media`).
 /cache -a        → tudo, inclusive os backups
 ```
 
-Sem opções, mostra os arquivos e diretórios do primeiro nível em ordem alfabética.
-O tamanho de cada diretório inclui seu conteúdo; o total soma arquivos e diretórios.
-As contagens de mensagens, apagadas, edições e backups aparecem abaixo da árvore.
+Sem opções, mostra os arquivos e diretórios do primeiro nível em ordem alfabética. O tamanho de cada
+diretório inclui seu conteúdo; o total soma arquivos e diretórios. As contagens de mensagens,
+apagadas, edições e backups aparecem abaixo da árvore.
 
 Exemplo:
 
@@ -42,6 +42,5 @@ Total:                405.57 MB
 📦 Backups: 3 (veja /backup).
 ```
 
-O `-a` não deixa nenhum backup para trás: se quiser guardar uma cópia antes,
-use `/backup -s` (o arquivo chega no seu privado). As opções `-c`, `-m` e `-b`
-podem ser usadas juntas.
+O `-a` não deixa nenhum backup para trás: se quiser guardar uma cópia antes, use `/backup -s` (o
+arquivo chega no seu privado). As opções `-c`, `-m` e `-b` podem ser usadas juntas.
