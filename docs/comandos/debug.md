@@ -1,8 +1,8 @@
 # `/debug` (`/d`, `/dbg`) · admin
 
-Controla os logs de diagnóstico no console, com níveis cumulativos, filtro por regex
-e cópia para um chat do WhatsApp. As configurações ficam salvas nos settings e sobrevivem
-a reinícios. No primeiro boot, o debug começa ligado só com `APP_ENV=dev`, no nível `0`.
+Controla os logs de diagnóstico no console, com níveis cumulativos, filtro por regex e cópia para um
+chat do WhatsApp. As configurações ficam salvas nos settings e sobrevivem a reinícios. No primeiro
+boot, o debug começa ligado só com `APP_ENV=dev`, no nível `0`.
 
 | Opção | Descrição |
 |---|---|
@@ -20,24 +20,24 @@ a reinícios. No primeiro boot, o debug começa ligado só com `APP_ENV=dev`, no
 | `3` | `DEBUG3` | Resultados das funções, consultas ao banco, dados das mensagens e execução no Chromium |
 
 Cada nível inclui os anteriores. Credenciais são ocultadas e objetos grandes, mídia e estruturas
-circulares são resumidos. O filtro também vale para logs de informação e erro enquanto o debug
-está ligado. Flags como `i`, `g`, `m`, `s`, `u` e `y` seguem a sintaxe de regex do JavaScript;
-cada linha é avaliada independentemente. O contexto inclui `chatName` e `chatId` a partir do nível
-`1`, permitindo filtrar pelo nome ou ID do chat.
-No console com cores habilitadas, os trechos que casam com o filtro aparecem em vermelho e negrito,
-como no `grep --color`. As cópias enviadas ao WhatsApp contêm texto sem os códigos de cor.
+circulares são resumidos. O filtro também vale para logs de informação e erro enquanto o debug está
+ligado. Flags como `i`, `g`, `m`, `s`, `u` e `y` seguem a sintaxe de regex do JavaScript; cada
+registro de log é avaliado independentemente. O contexto inclui `chatName` e `chatId` a partir do
+nível `1`, permitindo filtrar pelo nome ou ID do chat. No console com cores habilitadas, os trechos
+que casam com o filtro aparecem em vermelho e negrito, como no `grep --color`. As cópias enviadas ao
+WhatsApp contêm texto sem os códigos de cor.
 
-O `DEBUG0` inclui o parser dos comandos: argumentos posicionais, opções informadas,
-valores entre aspas ou barras e todos os destinos `-to`. O `/watch`, o `/debug` e o `/cron`
-exibem os campos de seus parsers específicos, incluindo regex com flags e texto livre.
-Opções sem valor aparecem como `null`; opções booleanas usam `true` ou `false`.
-Referências compartilhadas mantêm seus valores; somente ciclos reais aparecem como `[circular]`.
+O `DEBUG0` inclui o parser dos comandos: argumentos posicionais, opções informadas, valores entre
+aspas ou barras e todos os destinos `-to`. O `/watch`, o `/debug` e o `/cron` exibem os campos de
+seus parsers específicos, incluindo regex com flags e texto livre. Opções sem valor aparecem como
+`null`; opções booleanas usam `true` ou `false`. Referências compartilhadas mantêm seus valores;
+somente ciclos reais aparecem como `[circular]`.
 
-Os logs de inicialização, autenticação e o aviso por e-mail de bot iniciado aparecem sem filtro.
-O filtro salvo passa a valer quando o WhatsApp está pronto e o aviso inicial foi disparado;
-ele também vale quando o envio desse e-mail ainda está em andamento.
+Os logs de inicialização, autenticação e o aviso por e-mail de bot iniciado aparecem sem filtro. O
+filtro salvo passa a valer quando o WhatsApp está pronto e o aviso inicial foi disparado; ele também
+vale quando o envio desse e-mail ainda está em andamento.
 
-```
+```text
 /debug -off
 /debug -on
 /debug -level 2 -filter /chatName.*Jorge/
@@ -48,20 +48,20 @@ ele também vale quando o envio desse e-mail ainda está em andamento.
 /debug
 ```
 
-Sem opções, mostra o estado, o nível, o filtro e o destino ativos. Destinos com espaços podem
-ser escritos como `/Nome do Grupo/` ou entre aspas. Nomes ambíguos abrem uma lista para escolher,
-como no `-to` dos outros comandos.
+Sem opções, mostra o estado, o nível, o filtro e o destino ativos. Destinos com espaços podem ser
+escritos como `/Nome do Grupo/` ou entre aspas. Nomes ambíguos abrem uma lista para escolher, como
+no `-to` dos outros comandos.
 
-A cópia envia os logs em lotes, com o prefixo `🪲 [ZapBot log]`. O próprio envio da cópia não
-gera logs adicionais. A fila é limitada e descarta os blocos mais antigos quando fica cheia.
-Os logs aguardam na fila enquanto a conexão com o WhatsApp não está pronta.
-Se o envio falhar, a cópia pausa e registra o erro no console; configure novamente pelo `/debug`
-para retomar. O console continua funcionando.
+A cópia envia os logs em lotes, com o prefixo `🪲 [ZapBot log]`. O próprio envio da cópia não gera
+logs adicionais. A fila é limitada e descarta os blocos mais antigos quando fica cheia. Os logs
+aguardam na fila enquanto a conexão com o WhatsApp não está pronta. Se o envio falhar, a cópia pausa
+e registra o erro no console; configure novamente pelo `/debug` para retomar. O console continua
+funcionando.
 
-Um comando desconhecido ou desativado aparece no log: o do dono sempre; o dos outros somente
-com o debug ligado, sujeito ao filtro configurado:
+Um comando desconhecido ou desativado aparece no log: o do dono sempre; o dos outros somente com o
+debug ligado, sujeito ao filtro configurado:
 
-```
+```text
 [!] ⚠️ 'Jorge' executed unknown command: '/tapioca'
 [DEBUG0] ⚠️ 'Fulano' executed unknown command: '/tapioca'
 ```

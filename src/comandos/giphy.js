@@ -8,7 +8,7 @@ const axios = require('axios');
 const { printError } = require('../log');
 const { envOuSetting, getSetting } = require('../settings');
 
-// /giphy [tag]: GIF aleatório do GIPHY, enviado como MP4 em loop.
+// /giphy [tag|URL|ID]: GIF do GIPHY, enviado como MP4 em loop.
 // Chave: GIPHY_API_KEY no config/.env ou, na falta dela, o setting 'giphy.api.key'
 async function cmdGiphy({ msg, args }) {
     const apiKey = envOuSetting('GIPHY_API_KEY', 'giphy.api.key');
@@ -50,8 +50,7 @@ async function cmdGiphy({ msg, args }) {
             gifData = data.data;
 
         } else {
-            // Mantém seu comportamento atual:
-            // GIF aleatório baseado numa tag
+            // GIF aleatório baseado numa tag.
             const { data } = await axios.get(
                 'https://api.giphy.com/v1/gifs/random',
                 {

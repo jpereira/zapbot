@@ -1,8 +1,7 @@
 # Settings
 
-Configurações gerais do bot guardadas na tabela `settings` do SQLite. Mudam na
-hora, sem reiniciar, e sobrevivem a reinícios. Para ver e alterar, use o
-[`/set`](comandos/set.md).
+Configurações gerais do bot guardadas na tabela `settings` do SQLite. Mudam na hora, sem reiniciar,
+e sobrevivem a reinícios. Para ver e alterar, use o [`/set`](comandos/set.md).
 
 | Chave | Tipo | Padrão | Descrição |
 |---|---|---|---|
@@ -12,7 +11,7 @@ hora, sem reiniciar, e sobrevivem a reinícios. Para ver e alterar, use o
 | `backup.enabled` | on/off | `on` | [Backup automático](comandos/backup.md#backup-automático) do banco, uma vez por dia |
 | `backup.hour` | 0–23 | `3` | Hora (de Brasília) do backup automático |
 | `backup.keep` | 1–90 | `7` | Quantos backups automáticos (e de antes de restaurar) guardar; os manuais ficam até um `/backup -rm` |
-| `backup.to` | texto | `""` | [Destino do backup diário](comandos/backup.md#backup-automático), além da cópia local: contato, grupo, número ou e-mail, como no `-to`. Vazio: só local. Para vários, use `-to <destino> -to <destino>`. Envio automático, sem pedir `-sim` |
+| `backup.to` | texto (pode ser vazio) | `""` | [Destino do backup diário](comandos/backup.md#backup-automático), além da cópia local: contato, grupo, número ou e-mail, como no `-to`. Vazio: só local. Para vários, use `-to <destino> -to <destino>`. Envio automático, sem pedir `-sim` |
 | `bot.admins` | lista | *(vazia)* | Outras pessoas que também usam os comandos admin: número com DDI (`5521999999999`) ou, pelo `/set`, o nome do contato (`/Jorge Pereira/`) ou a menção. Só o dono altera; o `/bot +o`/`-o` é o atalho. Veja [Admins extras](comandos/bot.md#admins-extras) |
 | `bot.paused` | on/off | `off` | Bot desligado: todos os comandos ignorados, exceto o `/bot` (o mesmo do `/bot -on`/`-off`) |
 | `bot.users` | lista | `false` | Quem usa os comandos comuns (os não-admin), além de você e do `bot.admins`: `false` (ninguém), `true` (todos) ou pessoas e grupos (num grupo, todos ali usam, mas só dentro dele); uma pessoa só num grupo fica como `telefone:id-do-grupo`. Só o dono altera; o `/bot +v`/`-v` é o atalho. Veja [Usuários](comandos/bot.md#usuários) |
@@ -26,7 +25,7 @@ hora, sem reiniciar, e sobrevivem a reinícios. Para ver e alterar, use o
 | `cve.maxDays` | 1–120 | `7` | Janela, em dias, do `/cve -highscore` |
 | `debug.copyTo` | texto (pode ser vazio) | *(vazio)* | Chat que recebe a cópia dos logs; configure pelo [`/debug -copy-to`](comandos/debug.md). Vazio: só console |
 | `debug.enabled` | on/off | `on` se `APP_ENV=dev` | Modo debug (o mesmo do `/debug -on`/`-off`) |
-| `debug.filter` | texto (pode ser vazio) | *(vazio)* | Filtro `/regex/flags` dos logs durante o debug. Vazio: sem filtro; `/debug -off` limpa |
+| `debug.filter` | texto (pode ser vazio) | *(vazio)* | Filtro `/regex/flags` dos logs durante o debug. Vazio: sem filtro; `/debug -off` limpa. O filtro vale após a inicialização; matches são destacados no console com cores |
 | `debug.level` | 0–3 | `0` | Nível cumulativo: básico, funções e comandos, integrações, desenvolvimento. Veja [`/debug`](comandos/debug.md) |
 | `defi.aave.chains` | lista | `1 8453` | Redes (chain id) em que o [`/defi aave`](comandos/defi.md#aave-v3) procura as posições: `1` (Ethereum), `8453` (Base) |
 | `defi.aave.wallet` | texto (pode ser vazio) | *(vazio)* | Carteira do [`/defi aave`](comandos/defi.md#aave-v3) quando não há carteira cadastrada, usada quando `AAVE_WALLET_ADDRESS` não está no `config/.env` |
@@ -76,8 +75,7 @@ hora, sem reiniciar, e sobrevivem a reinícios. Para ver e alterar, use o
 | `watch.rules` | lista (uma por linha) | *(vazia)* | Regras do `/watch`: texto ou `/regex/flags`. Criadas por `/watch <regra>` e removidas por `/watch -rem N` |
 | `watch.showMax` | 1–100 | `20` | Máximo de ocorrências exibidas pelo `/watch`, inclusive com `-N` e `-show` |
 
-Uma chave nova é declarada em `SETTINGS_SCHEMA` (`src/settings.js`), **em ordem
-alfabética**, com padrão, tipo, descrição e limites (`allowEmpty` para texto
-que pode ficar vazio, `secret` para mascarar o valor no `/set` e nos logs), e
-lida com `getSetting('<chave>')`. Valores inválidos no banco são ignorados no
-boot (vale o padrão, com aviso nos logs).
+Uma chave nova é declarada em `SETTINGS_SCHEMA` (`src/settings.js`), **em ordem alfabética**, com
+padrão, tipo, descrição e limites (`allowEmpty` para texto que pode ficar vazio, `secret` para
+mascarar o valor no `/set` e nos logs), e lida com `getSetting('<chave>')`. Valores inválidos no
+banco são ignorados no boot (vale o padrão, com aviso nos logs).

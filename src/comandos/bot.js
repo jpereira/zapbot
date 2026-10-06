@@ -43,7 +43,7 @@ const { contextoDebug } = require('../debugContexto');
  * o chat atual: no grupo, o grupo (que não vira admin); no privado de alguém, a pessoa.
  * O +v de uma pessoa digitado num grupo vale só nesse grupo.
  *
- * E o relatório (src/status.js) e as versões (src/sistema.js), que não combinam com as outras:
+ * O relatório (src/status.js) aceita -to e -mask; as versões (src/sistema.js), -mask:
  *   /bot -status (-s)         → o relatório agora (o mesmo do /bot sem opção)
  *   /bot -s 06h [-to <dest>]  → todo dia às 06:00 (Brasília), no seu privado ou nos -to
  *   /bot -s -to <dest>        → o relatório agora, nos -to (pessoas, grupos, e-mails)
@@ -601,7 +601,7 @@ async function cmdBot({ msg, opts: optsDoComando, args, chatId, isGroup }) {
         return;
     }
 
-    // O -to aceita espaços (/Grupo L200/), que o parser de opções separaria: sai antes
+    // Os destinos repetidos e agrupados (/Grupo L200/) são resolvidos juntos.
     const { destinos: destinosTexto, informado: comDestino, resto } = extrairDestinos(args);
     const opts = comDestino ? GetOptFromCommand(resto, findCommand('/bot')) : optsDoComando;
     const { on, off } = opts.opt;

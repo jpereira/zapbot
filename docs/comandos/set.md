@@ -14,7 +14,7 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 | `-reset`, `-r` | `<chave>` | Volta ao valor padrão |
 | `<VARIÁVEL>` | | Uma variável do `config/.env` (ex.: `OPENAI_MODEL`): mostra o valor, só no seu privado |
 
-```
+```text
 /set
 /set show.max
 /set alerta          → só as chaves com "alerta" (alerta.intervalMin, alerta.max)
@@ -36,37 +36,33 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 ## Listas: `-append` e `-rem`
 
 Nas chaves que são listas (`bot.admins`, `bot.users`, `commands.disabled`, `crypto.coins`,
-`watch.rules`, os feeds do `news.*`...), o `<chave> <valor>` troca a lista
-inteira; o `-append` (`-a`) acrescenta itens e o `-rem` tira, sem mexer no
-resto. Os itens passam pela mesma validação do `<chave> <valor>`: um número de
-telefone vira só os dígitos, um comando vira o nome principal (`/set -rem
-commands.disabled /p` tira o `/ping`).
+`watch.rules`, os feeds do `news.*`...), o `<chave> <valor>` troca a lista inteira; o `-append`
+(`-a`) acrescenta itens e o `-rem` tira, sem mexer no resto. Os itens passam pela mesma validação do
+`<chave> <valor>`: um número de telefone vira só os dígitos, um comando vira o nome principal
+(`/set -rem commands.disabled /p` tira o `/ping` ).
 
-```
+```text
 /set -a crypto.coins hype
 ✅ crypto.coins + HYPE
 = BTC, ETH, SOL, HYPE
 ```
 
-Numa chave que não é lista (`show.max`, `debug.enabled`...), o `-append` e o
-`-rem` são recusados: troque o valor com `/set <chave> <valor>` ou volte ao
-padrão com `/set -reset <chave>` (`-r`).
+Numa chave que não é lista (`show.max`, `debug.enabled`...), o `-append` e o `-rem` são recusados:
+troque o valor com `/set <chave> <valor>` ou volte ao padrão com `/set -reset <chave>` (`-r`).
 
-O `bot.admins` e o `bot.users` só o dono altera (inclusive com `-append`,
-`-rem` e `-reset`): um admin extra não pode se dar (nem dar a outros) esse
-acesso. Neles, além do número, vale o nome do contato (`/Jorge Pereira/`) ou a
-menção: o bot guarda o telefone e mostra o nome ao lado
-([Admins extras](bot.md#admins-extras)). O `bot.users` aceita também grupos
-(guarda o id e mostra `👥 Nome`) e `true`/`false` ([Usuários](bot.md#usuários)).
+O `bot.admins` e o `bot.users` só o dono altera (inclusive com `-append`, `-rem` e `-reset`): um
+admin extra não pode se dar (nem dar a outros) esse acesso. Neles, além do número, vale o nome do
+contato (`/Jorge Pereira/`) ou a menção: o bot guarda o telefone e mostra o nome ao lado
+([Admins extras](bot.md#admins-extras)). O `bot.users` aceita também grupos (guarda o id e mostra
+`👥 Nome`) e `true`/ `false` ([Usuários](bot.md#usuários)).
 
 ## Variáveis do `config/.env`
 
 No seu privado (o chat com você mesmo), o `/set` mostra também as variáveis do
-[`config/.env`](../configuracao.md) que o bot lê, **somente para leitura**:
-elas mudam no arquivo, e valem quando o container é recriado. As chaves e as
-senhas aparecem mascaradas (`••••1234`).
+[`config/.env`](../configuracao.md) que o bot lê, **somente para leitura**: elas mudam no arquivo, e
+valem quando o container é recriado. As chaves e as senhas aparecem mascaradas (`••••1234`).
 
-```
+```text
 🔒 config/.env (somente leitura: mude no arquivo e recrie o container)
 
 APP_ENV                         prod
@@ -78,6 +74,6 @@ QRCODE_EMAIL_SMTP_PASS          ••••mnop
 ```
 
 Em outro chat (um grupo, por exemplo), no lugar delas vem só o aviso
-`🔒 As variáveis do config/.env (somente leitura) aparecem só no seu privado.`
-Tentar alterar uma (`/set OPENAI_MODEL gpt-4.1`) é recusado.
+`🔒 As variáveis do config/.env (somente leitura) aparecem só no seu privado.` Tentar alterar uma
+(`/set OPENAI_MODEL gpt-4.1`) é recusado.
 
