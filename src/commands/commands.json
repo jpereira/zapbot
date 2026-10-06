@@ -95,7 +95,7 @@
             "cmd": "/boletos",
             "usage": "/boletos",
             "help": "Sorteia 2 membros do grupo para pagar um boleto.",
-            "onlyAdmin": true
+            "onlyAdmin": false
         },
         {
             "cmd": "/bot",
@@ -1096,7 +1096,7 @@
                 }
             ],
             "cron": true,
-            "onlyAdmin": true
+            "onlyAdmin": false
         },
         {
             "cmd": "/noffa",
@@ -1115,7 +1115,7 @@
                 "/p"
             ],
             "help": "Verifica se o bot está respondendo (responde pong).",
-            "onlyAdmin": true
+            "onlyAdmin": false
         },
         {
             "cmd": "/pixelart",
@@ -1513,7 +1513,7 @@
             ],
             "help": "Exibe há quanto tempo o bot está rodando e conectado.",
             "cron": true,
-            "onlyAdmin": true
+            "onlyAdmin": false
         },
         {
             "cmd": "/version",
@@ -1523,7 +1523,7 @@
             ],
             "help": "Exibe a versão do bot (mesmo banner do /uptime).",
             "cron": true,
-            "onlyAdmin": true
+            "onlyAdmin": false
         },
         {
             "cmd": "/walissu",

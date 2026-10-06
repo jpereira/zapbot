@@ -113,7 +113,7 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -a`) para fazer o bot
 | Comando | Aliases | Admin | Descrição |
 |---|---|:-:|---|
 | [`/backup`](backup.md) | `/bkp` | ✅ | Backup do banco: automático todo dia; lista, detalha, restaura e envia o arquivo |
-| [`/boletos`](boletos.md) | | ✅ | Sorteia 2 membros para "pagar um boleto" |
+| [`/boletos`](boletos.md) | | | Sorteia 2 membros para "pagar um boleto" |
 | [`/bot`](bot.md) | `/b` | ✅ | Status do bot (relatório de 24 h e os usuários); liga/desliga os comandos (`-on`/`-off`) e diz quem usa: admins (`+o`/`-o`) e usuários (`+v`/`-v`, em qualquer chat ou só num grupo, e os comandos de cada um com `+cmd`/`-cmd`); `-reset` volta ao padrão; `-status` (`-s`): relatório das últimas 24 h, e `-s 06h` manda todo dia; `-info` (`-i`): versões e sistema |
 | [`/cache`](cache.md) | `/c` | ✅ | Uso e limpeza do cache |
 | [`/cotacao`](cotacao.md) | `/cambio` | | Cotação de EUR e USDT (e USD, GBP) contra o real: atual, abertura, fechamento e variação; alertas de preço |
@@ -133,9 +133,9 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -a`) para fazer o bot
 | [`/meme`](meme.md) | | | Template de meme aleatório (imgflip) |
 | [`/monitor`](monitor.md) 🚧 | | ✅ | Avisa quando números ficam online *(em desenvolvimento, desabilitado por padrão)* |
 | [`/mute`](mute.md) | `/m`, `/mudo` | ✅ | Silencia os avisos de apagadas, editadas e status de uma pessoa, um grupo ou uma comunidade; respondendo um aviso, de onde ele veio |
-| [`/news`](news.md) | | ✅ | Manchetes de feeds RSS: `-hack`, `-g1`, `-gazeta`, `-brasil` |
+| [`/news`](news.md) | | | Manchetes de feeds RSS: `-hack`, `-g1`, `-gazeta`, `-brasil` |
 | [`/noffa`](noffa.md) | `/🌈`, `/🏳️‍🌈` | | Enfeita o texto com arco-íris |
-| [`/ping`](ping.md) | `/p` | ✅ | Verifica se o bot está vivo |
+| [`/ping`](ping.md) | `/p` | | Verifica se o bot está vivo |
 | [`/pixelart`](pixelart.md) | `/ansi`, `/px` | | Arte ANSI/ASCII aleatória (16colo.rs) |
 | [`/set`](set.md) | `/config` | ✅ | Lista e altera as configurações (settings); `-a`/`-rem` acrescentam e tiram itens das listas (ex.: o `bot.admins` e o `bot.users`) |
 | [`/show`](show.md) | `/s` | ✅ | Reexibe mensagens apagadas, editadas (`-e`) e status apagados (`-s`), deste chat ou de outro; `-q` busca pelo texto |
@@ -146,8 +146,8 @@ usar um comando que ecoa texto (ex.: `/noffa /cache -a`) para fazer o bot
 | [`/todos`](todos.md) | `/todes` | ✅ | Menciona todos do grupo |
 | [`/traduzir`](traduzir.md) | `/tr`, `/translate` | | Traduz o texto ou a mensagem respondida (Google Translate); `-para en` muda o idioma |
 | [`/unmute`](unmute.md) | | ✅ | Desfaz o silêncio do `/mute`: pelo nome, pelo nº da lista, respondendo um aviso ou todos (`-all`) |
-| [`/uptime`](uptime.md) | `/u`, `/up` | ✅ | Tempo de execução e de conexão |
-| [`/version`](version.md) | `/ver` | ✅ | Versão do bot (mesmo banner do `/uptime`) |
+| [`/uptime`](uptime.md) | `/u`, `/up` | | Tempo de execução e de conexão |
+| [`/version`](version.md) | `/ver` | | Versão do bot (mesmo banner do `/uptime`) |
 | [`/walissu`](walissu.md) | `/ualisu` | ✅ | Walissu CVE BOT: marca 2 membros com uma CVE aleatória |
 | [`/watch`](watch.md) | `/w` | ✅ | Avisa no seu privado (ou, com um ou vários `-to`, em outros chats ou por e-mail) quando uma mensagem casa com um texto/regex |
 | [`/whois`](whois.md) | `/who`, `/id` | | Quem é e o que pode no bot, neste chat: 🤖 dono, 👑 admin, 🗣️ usuário ou 🚫 sem permissão; o dono e os admins veem os outros |
