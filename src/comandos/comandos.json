@@ -851,7 +851,7 @@
                     "values": [
                         "<segundo>"
                     ],
-                    "desc": "Começa a partir deste segundo."
+                    "desc": "Começa neste segundo do vídeo original (padrão 0). Aceita decimal com ponto. Ex: -ss 2.5"
                 },
                 {
                     "opts": [
@@ -861,7 +861,7 @@
                     "values": [
                         "<segundo>"
                     ],
-                    "desc": "Corta neste segundo."
+                    "desc": "Termina neste segundo do vídeo original; deve ser maior que o início. Vale sem -ss e para figurinhas, limitadas a seis segundos. Ex: -es 15"
                 },
                 {
                     "opts": [

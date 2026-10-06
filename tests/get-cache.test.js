@@ -93,6 +93,31 @@ describe('/get (/download)', () => {
         assert.ok(r[2].content instanceof MessageMedia);
     });
 
+    test('-es sozinho corta a partir do início e aceita frações de segundo', async () => {
+        await bot.executar(`/get -es 2.5 ${URL}`);
+        const ff = argsDo('ffmpeg');
+        assert.equal(ff[ff.indexOf('-t') + 1], '2.5');
+        assert.ok(ff.indexOf('-t') > ff.indexOf('-i'));
+    });
+
+    test('figurinha respeita o fim pedido e o limite de seis segundos', async () => {
+        await bot.executar(`/get -st -ss 3 -es 6 ${URL}`);
+        let ff = argsDo('ffmpeg');
+        assert.equal(ff[ff.indexOf('-t') + 1], '3');
+        processos.chamadas.length = 0;
+        await bot.executar(`/get -st -ss 3 -es 20 ${URL}`);
+        ff = argsDo('ffmpeg');
+        assert.equal(ff[ff.indexOf('-t') + 1], '6');
+    });
+
+    test('cortes inválidos e áudio junto com figurinha são recusados antes de baixar', async () => {
+        for (const opcoes of ['-ss', '-es', '-ss abc', '-ss -1', '-es 0', '-ss 10 -es 5',
+            '-ss 3 -es 3', '-ss Infinity', '-ss 1e309', '-a -st']) {
+            assert.match((await bot.responder(`/get ${URL} ${opcoes}`))[0], /^❌/);
+        }
+        assert.deepEqual(processos.chamadas, []);
+    });
+
     test('link da mensagem respondida', async () => {
         const citada = bot.criarMensagem({ texto: `veja ${URL}`, de: OUTRO.jid });
         await bot.executar('/get', { citada });
