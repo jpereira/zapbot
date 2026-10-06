@@ -48,7 +48,8 @@ Por onde começar:
   sessão fica salva no volume `wwebjs_auth`, então o QR Code só precisa ser lido na primeira vez (ou
   quando a sessão for revogada). A versão da biblioteca é fixada no `package-lock.json` para
   instalações reproduzíveis. Os ajustes locais ficam em `patches/` e são aplicados pelo
-  `patch-package`. Para instalar fora do Docker: `PUPPETEER_SKIP_DOWNLOAD=true npm install`.
+  `scripts/aplicar-patches.js` durante a instalação, usando `git apply`.
+  Para instalar fora do Docker: `PUPPETEER_SKIP_DOWNLOAD=true npm install`.
 - **Número do bot = seu número**: o bot age como a conta que leu o QR Code. As mensagens que *você*
   envia (de qualquer aparelho) também passam pelo bot.
 - **Persistência**: toda mensagem recebida é gravada no SQLite (mídias vão para `cache/media`).
