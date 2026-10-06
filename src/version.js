@@ -70,7 +70,7 @@ function readTags(read, root) {
     // Loose tags (they beat those from packed-refs with the same name)
     const folder = path.join(root, '.git', 'refs', 'tags');
     const loose = (dir, prefix = '') => {
-        let inputs = [];
+        let inputs;
         try {
             inputs = fs.readdirSync(dir, { withFileTypes: true });
         } catch {

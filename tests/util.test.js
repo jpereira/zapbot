@@ -49,6 +49,11 @@ describe('formatação', () => {
     test('erro dos comandos com o comando e a causa', () => {
         const errorAlt = new Error('Falhou', { cause: { cmd: 'yt-dlp x', inner: new Error('exit 1') } });
         assert.equal(formatErrorCommand(errorAlt), '⚠️💥 Falhou.\n🛠️ *Cmd*:    yt-dlp x\n⛓️‍💥 *Inner*:  exit 1\n');
+        const cause = new Error('exit 1');
+        const direct = new Error('Falhou', { cause: cause });
+        direct.cmd = 'yt-dlp x';
+        assert.equal(direct.cause, cause);
+        assert.equal(formatErrorCommand(direct), formatErrorCommand(errorAlt));
     });
 });
 
