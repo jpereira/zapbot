@@ -11,6 +11,7 @@ Exibe o menu com os comandos, ou a ajuda de um só. Cada um vê só o que pode u
 ```text
 /help
 /help get
+/help alias        → lista os atalhos cadastrados que você pode executar
 /h /show
 /help defi orca    → só a ajuda da Orca no /defi (o mesmo que /defi orca -help)
 /help defi aave    → só a ajuda do Aave V3

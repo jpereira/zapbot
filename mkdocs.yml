@@ -74,6 +74,7 @@ nav:
   - E-mails: emails.md
   - Comandos:
       - comandos/index.md
+      - /alias: comandos/alias.md
       - /backup: comandos/backup.md
       - /boletos: comandos/boletos.md
       - /bot: comandos/bot.md

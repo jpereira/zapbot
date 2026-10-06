@@ -88,6 +88,12 @@ async function migrarDefiParaAddressEWallet() {
  * Handlers que usam o banco fazem `await dbPronto` antes de consultar.
  */
 async function inicializarBanco() {
+    await dbRun(`CREATE TABLE IF NOT EXISTS command_aliases (
+        name TEXT PRIMARY KEY,
+        description TEXT NOT NULL DEFAULT '',
+        command TEXT NOT NULL
+    )`);
+
     // Histórico de quando os contatos monitorados ficam online
     await dbRun(`
         CREATE TABLE IF NOT EXISTS presence_logs (

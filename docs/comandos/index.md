@@ -15,7 +15,8 @@ Podem ser enviados em **qualquer chat** (privado, grupo ou no chat consigo mesmo
 - Todo comando aceita `-help` / `-h`: `/get -h` mostra a ajuda só dele.
 - `/help` lista os comandos que você pode usar (o dono e os admins veem todos); `/help get` ou
   `/help /get` mostram um específico.
-- Aliases funcionam igual ao comando original (`/download` = `/get`).
+- Aliases funcionam igual ao comando original (`/download` = `/get`). O [`/alias`](alias.md) salva
+  atalhos com argumentos; `/help alias` lista os atalhos disponíveis para você.
 
 ## Destinos: contato, grupo, número ou e-mail
 
@@ -106,6 +107,7 @@ mesmo que comecem com `/`. Sem isso, alguém poderia usar um comando que ecoa te
 
 | Comando | Aliases | Admin | Descrição |
 |---|---|:-:|---|
+| [`/alias`](alias.md) | | ✅ | Cadastra, lista e remove atalhos para comandos com argumentos |
 | [`/backup`](backup.md) | `/bkp` | ✅ | Backup diário local e envio por `backup.to`; lista, detalha, restaura e envia o banco |
 | [`/boletos`](boletos.md) | | | Sorteia 2 membros para "pagar um boleto" |
 | [`/bot`](bot.md) | `/b` | ✅ | Status do bot (relatório de 24 h e os usuários); liga/desliga os comandos (`-on`/`-off`) e diz quem usa: admins (`+o`/`-o`) e usuários (`+v`/`-v`, em qualquer chat ou só num grupo, e os comandos de cada um com `+cmd`/`-cmd`); `-reset` volta ao padrão; `-status` (`-s`): relatório das últimas 24 h, e `-s 06h` manda todo dia; `-info` (`-i`): versões e sistema |

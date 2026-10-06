@@ -2,6 +2,7 @@
  * Comando /help.
  */
 
+const { listarAliases } = require('../aliases');
 const { activeCommands, findCommand, formatCommandHelp, protocoloDaAjuda } = require('./base');
 
 /*
@@ -21,6 +22,10 @@ async function cmdHelp({ msg, args, admin, podeUsar = () => true }) {
     if (requestedCommand) {
         if (!requestedCommand.startsWith('/')) {
             requestedCommand = `/${requestedCommand}`;
+        }
+
+        if (requestedCommand === '/alias') {
+            return listarAliases(msg, c => pode(c) && (admin || Boolean(findCommand(c.cmd))));
         }
 
         const command = findCommand(requestedCommand);
