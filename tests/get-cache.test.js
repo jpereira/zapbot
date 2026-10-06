@@ -16,7 +16,7 @@ const limpeza = bot.src('limpeza');
 const MEDIA_DIR = path.join(CACHE_DIR, 'media');
 const TMP_DIR = path.join(CACHE_DIR, 'tmp');
 const { BACKUP_DIR } = bot.src('constantes');
-const { criarBackup, listarBackups } = bot.src('backup');
+const { criarBackup, listarBackups, removerBackup } = bot.src('backup');
 const URL = 'http://8.8.8.8/video'; // IP literal: sem consulta de DNS
 const DIA = 24 * 60 * 60 * 1000;
 
@@ -165,7 +165,23 @@ describe('/cache (/c)', () => {
         await bot.executar('oi', { de: OUTRO.jid });
         const [r] = await bot.responder('/cache');
         assert.match(r, new RegExp(`🗂️ Exibindo conteúdo de ${CACHE_DIR}`));
-        assert.match(r, /🗄️ Existem \d+ mensagens no cache \(0 apagadas\) e 0 edições\.\n📦 Backups: 0 _\(veja \/backup\)_$/);
+        assert.match(r, /🗄️ 2 mensagens no cache\.\n🗑️ 0 apagadas\.\n✏️ 0 edições\.\n📦 Backups: 0 \(veja \/backup\)\.$/);
+        assert.match(r, /\n─+\nTotal: +\d/);
+        assert.match(r, /└── 📁 tmp\/ +/);
+    });
+
+    test('contagens separadas com singular e backups', async () => {
+        const [vazio] = await bot.responder('/cache');
+        assert.match(vazio, /🗄️ 1 mensagem no cache\./);
+        await bot.dbRun("INSERT INTO messages (id, revoked) VALUES ('apagada', 1)");
+        await bot.dbRun("INSERT INTO message_edits (message_id) VALUES ('editada')");
+        const backup = await criarBackup('manual');
+        try {
+            const [r] = await bot.responder('/cache');
+            assert.match(r, /🗑️ 1 apagada\.\n✏️ 1 edição\.\n📦 Backups: 1 \(veja \/backup\)\.$/);
+        } finally {
+            await removerBackup(backup);
+        }
     });
 
     test('-c: limpa só o que passou das janelas de retenção', async () => {
