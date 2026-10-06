@@ -847,9 +847,9 @@ async function removeAlt2(msg, o, argv, positions, end) {
 const alertBell = (p) => (p.alert ? ` 🔔${p.alert_fees ? ` ≥ ${fmtUsd(p.alert_fees)}` : ''}` : '');
 
 // The list: in your private chat, the full addresses; outside it, abbreviated
-function listText(positions, end) {
+function listText(positions, end, endPool = end) {
     const line = (p, i) => `${i + 1}. ${PROTOCOLS[p.protocol] ?? p.protocol} · ` +
-        (WALLET.includes(p.protocol) ? walletWithName(p, end) : `${positionWithName(p, end)} · pool ${end(p.pool)}`) +
+        (WALLET.includes(p.protocol) ? walletWithName(p, end) : `${positionWithName(p, end)} · pool ${endPool(p.pool)}`) +
         ` _(desde ${formatData(p.created_at).split(',')[0]})_${alertBell(p)}`;
 
     return `🌊 *Posições DeFi* (${positions.length})\n\n${positions.map(line).join('\n')}\n\n` +
@@ -861,7 +861,7 @@ async function cmdDefi({ msg, opts: commandOpts, args, chatId }) {
 
     // In your private chat, addresses and wallets come in full; outside it, abbreviated
     const inPrivate = (await chatCurrentIds(chatId)).includes(client.info?.wid?._serialized);
-    const end = inPrivate ? (e) => e : short;
+    const endNormal = inPrivate ? (e) => e : short;
 
     /*
      * -to accepts spaces (/Jorge Pereira/), which the option parser
@@ -870,6 +870,7 @@ async function cmdDefi({ msg, opts: commandOpts, args, chatId }) {
     const { destinos: destinationsText, informado: withDestination, resto: rest } = extractDestinations(args);
     const opts = withDestination ? GetOptFromCommand(rest, findCommand('/defi')) : commandOpts;
     const o = opts.opt;
+    const end = o.mask ? () => '****…****' : endNormal;
 
     if (withDestination && !opts.given.has('alerta')) {
         await msg.reply('❌ O -to é do -alerta: /defi -alerta <nº|all> -to <destino>');
@@ -920,7 +921,7 @@ async function cmdDefi({ msg, opts: commandOpts, args, chatId }) {
     const empty = `🌊 Nenhuma posição cadastrada.\n${EXAMPLES}`;
 
     if (o.list) {
-        await msg.reply(positions.length ? listText(positions, end) : empty);
+        await msg.reply(positions.length ? listText(positions, end, endNormal) : empty);
         return;
     }
 
