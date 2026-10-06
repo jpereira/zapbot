@@ -373,6 +373,12 @@ async function inicializarBanco() {
         recipients: 'TEXT'   // JSON com os destinos de vários -to (as dest_*: o primeiro)
     });
 
+    // Sem linha de origem, a regra vale em qualquer chat e para qualquer remetente.
+    await dbRun(`CREATE TABLE IF NOT EXISTS watch_sources (
+        rule TEXT PRIMARY KEY, source_id TEXT NOT NULL, source_name TEXT NOT NULL,
+        source_kind TEXT NOT NULL
+    )`);
+
     await carregarSettings();
 
     for (const dir of [MEDIA_DIR, TMP_DIR]) {

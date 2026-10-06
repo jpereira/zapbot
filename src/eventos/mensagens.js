@@ -26,6 +26,7 @@ const { printDebugNivel } = require('../log');
 const { instrumentarObjeto } = require('../debugInstrumentacao');
 const { resolverNomeDoCanal } = require('../contatos');
 const { ehCanal, idDoCanal } = require('../util/origem');
+const { pediuAjudaWatch } = require('../watch/opcoes');
 
 // Avisos do próprio WhatsApp (entrou no grupo, mudou o nome, criptografia, chamada...): não têm autor
 const TIPOS_DO_SISTEMA = new Set([
@@ -257,7 +258,8 @@ client.on('message_create', (msg) => comContextoDebug({
          */
         if (!command) {
             await verificarWatch({
-                msg, msgIdPure, body, chatId, chatName, isGroup, senderName, senderNumber, timestamp
+                msg, msgIdPure, body, chatId, chatName, isGroup, senderName, senderJid,
+                senderNumber, timestamp
             }).catch(err => printError('/watch: erro ao verificar regras:', err.message));
         }
 
@@ -348,6 +350,7 @@ client.on('message_create', (msg) => comContextoDebug({
             : `Executando comando '${body}' em '${chatName}'`);
 
         const opts = GetOptFromCommand(args, command);
+        if (command.cmd === '/watch') opts.opt.help = pediuAjudaWatch(args);
 
         if (isDebugMode()) {
             printDebug('GetOptFromCommand():', command.cmd, opts);
