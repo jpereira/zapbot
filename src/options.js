@@ -3,8 +3,42 @@
  */
 
 function tokenizeCommand(input) {
-    return [...input.matchAll(/"([^"]*)"|'([^']*)'|(\S+)/g)]
-        .map(m => m[1] ?? m[2] ?? m[3]);
+    const tokens = [];
+    let textAlt = input.trim();
+    while (textAlt) {
+        const delimiter = textAlt[0];
+        if (['/', '"', "'"].includes(delimiter)) {
+            let end = 1;
+            let escaped = false;
+            let kind = false;
+            for (; end < textAlt.length; end++) {
+                const c = textAlt[end];
+                if (escaped) { escaped = false; continue; }
+                if (c === '\\') { escaped = true; continue; }
+                if (delimiter === '/') {
+                    if (c === '[') kind = true;
+                    if (c === ']') kind = false;
+                }
+                if (c === delimiter && !kind) break;
+            }
+            let afterAlt = end + 1;
+            if (delimiter === '/') {
+                while (afterAlt < textAlt.length && /[a-z]/i.test(textAlt[afterAlt])) afterAlt++;
+            }
+            if (end < textAlt.length && (!textAlt[afterAlt] || /\s/.test(textAlt[afterAlt]))) {
+                const raw = textAlt.slice(0, afterAlt);
+                const valueAlt = delimiter === '/' ? raw : textAlt.slice(1, end);
+                tokens.push({ valor: valueAlt, opcao: false });
+                textAlt = textAlt.slice(afterAlt).trimStart();
+                continue;
+            }
+        }
+        // Paths and texts without a closing delimiter remain ordinary arguments.
+        const valueAlt = textAlt.match(/^\S+/)[0];
+        tokens.push({ valor: valueAlt, opcao: true });
+        textAlt = textAlt.slice(valueAlt.length).trimStart();
+    }
+    return tokens;
 }
 
 function normalizeArg(arg) {
@@ -58,9 +92,9 @@ function GetOptFromCommand(input, config = {}) {
 
     // `input` is only the arguments (without the "/command"): a 1st argument starting with "/" is an argument
     for (let i = 0; i < tokens.length; i++) {
-        const token = tokens[i];
+        const { valor: token, opcao: optionAlt } = tokens[i];
 
-        if (!isOption(token)) {
+        if (!optionAlt || !isOption(token)) {
             argv.push(normalizeArg(token));
             continue;
         }
@@ -82,9 +116,10 @@ function GetOptFromCommand(input, config = {}) {
         }
 
         if (option.expectedValues.length === 1) {
-            const nextToken = tokens[i + 1];
+            const next = tokens[i + 1];
+            const nextToken = next?.valor;
 
-            if (nextToken === undefined || isOption(nextToken)) {
+            if (nextToken === undefined || (next.opcao && isOption(nextToken))) {
                 result.opt[canonicalName] = null;
                 continue;
             }
@@ -97,8 +132,9 @@ function GetOptFromCommand(input, config = {}) {
         // Option with multiple values
         const values = [];
         for (let x = 0; x < option.expectedValues.length; x++) {
-            const nextToken = tokens[i + 1];
-            if (nextToken === undefined || isOption(nextToken)) break;
+            const next = tokens[i + 1];
+            const nextToken = next?.valor;
+            if (nextToken === undefined || (next.opcao && isOption(nextToken))) break;
             values.push(normalizeArg(nextToken));
             i++;
         }
