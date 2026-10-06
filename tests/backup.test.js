@@ -240,7 +240,21 @@ describe('/backup (/bkp)', () => {
 describe('backup diário', () => {
     const day = (d, h) => instantInBrasilia(2026, 10, d, h, 0);
 
+    function smtp(t) {
+        const env = {
+            QRCODE_EMAIL_SMTP_HOST: 'smtp.exemplo.com',
+            QRCODE_EMAIL_SMTP_USER: 'bot@exemplo.com',
+            QRCODE_EMAIL_SMTP_TO: 'Eu <eu@exemplo.com>'
+        };
+        Object.assign(process.env, env);
+        t.after(() => {
+            nodemailer.falhar = false;
+            for (const key of Object.keys(env)) delete process.env[key];
+        });
+    }
+
     test('um por dia, depois do backup.hour', async () => {
+        assert.equal(bot.getSetting('backup.to'), '');
         assert.equal(await checkBackupDaily(day(1, 2)), null, 'antes das 3h');
 
         const b = await checkBackupDaily(day(1, 3));
@@ -250,6 +264,127 @@ describe('backup diário', () => {
 
         await bot.setSetting('backup.enabled', false);
         assert.equal(await checkBackupDaily(day(3, 9)), null);
+        assert.deepEqual(bot.client.enviadas, []);
+        assert.deepEqual(emails, []);
+    });
+
+    test('backup.to email: anexo do arquivo local, uma vez por dia', async (t) => {
+        smtp(t);
+        await bot.replyAlt('/set backup.to email');
+        bot.client.enviadas.length = 0;
+        const b = await checkBackupDaily(day(1, 3));
+        assert.ok(fs.existsSync(b.arquivo));
+        assert.equal(emails.length, 1);
+        assert.equal(emails[0].to, 'eu@exemplo.com');
+        assert.deepEqual(emails[0].attachments, [{
+            filename: `${b.nome}.db.gz`, path: b.arquivo
+        }]);
+        assert.equal(await checkBackupDaily(day(1, 5)), null);
+        assert.equal(emails.length, 1);
+        await bot.setSetting('backup.to', 'outro@exemplo.com');
+        await checkBackupDaily(day(2, 3));
+        assert.equal(emails[1].to, 'outro@exemplo.com');
+    });
+
+    test('backup.to aparece na ajuda e no status; anexo grande não é enviado por e-mail', async () => {
+        assert.match((await bot.replyAlt('/backup -h'))[0], /setting backup\.to/);
+        await bot.setSetting('backup.to', 'Fulano');
+        assert.match((await bot.replyAlt('/backup'))[0], /📤 \*Destino automático:\* Fulano/);
+        const { MAX_ATTACHMENT_BYTES, sendBackupPerEmail } = bot.src('backup');
+        await assert.rejects(sendBackupPerEmail({ bytes: MAX_ATTACHMENT_BYTES + 1 }, ['eu@x.com']),
+            /limite de 20 MB/);
+        assert.deepEqual(emails, []);
+    });
+
+    test('backup.to: contato, grupo e número recebem o documento sem -sim', async () => {
+        const destinations = [
+            ['/Fulano/', bot.OTHERAlt.jid],
+            ['/Família/', bot.GROUP],
+            ['+5521911111111', bot.OTHERAlt.jid]
+        ];
+        for (const [i, [valueAlt, id]] of destinations.entries()) {
+            await bot.replyAlt(`/set backup.to ${valueAlt}`);
+            bot.client.enviadas.length = 0;
+            const b = await checkBackupDaily(day(i + 1, 3));
+            const [sending] = bot.client.enviadas;
+            assert.equal(bot.client.enviadas.length, 1);
+            assert.equal(sending.chatId, id);
+            assert.ok(sending.content instanceof MessageMedia);
+            assert.equal(sending.content.data, fs.readFileSync(b.arquivo).toString('base64'));
+            assert.equal(sending.options.sendMediaAsDocument, true);
+            assert.match(sending.options.caption, /\(automático\)/);
+            assert.ok(fs.existsSync(b.arquivo));
+        }
+    });
+
+    test('vários destinos: deduplica chats e e-mails, mantendo a cópia local', async (t) => {
+        smtp(t);
+        const valueAlt = '-to email -to eu@exemplo.com -to /Família/ -to /Fulano/ -to Fulano';
+        await bot.replyAlt(`/set backup.to "${valueAlt}"`);
+        assert.equal(bot.getSetting('backup.to'), valueAlt);
+        bot.client.enviadas.length = 0;
+        const b = await checkBackupDaily(day(1, 3));
+        assert.equal(emails.length, 1);
+        assert.equal(emails[0].to, 'eu@exemplo.com');
+        assert.deepEqual(bot.client.enviadas.map(e => e.chatId), [bot.GROUP, bot.OTHERAlt.jid]);
+        assert.ok(fs.existsSync(b.arquivo));
+        assert.equal((await listBackups()).length, 1);
+        await bot.replyAlt('/set backup.to ""');
+        assert.equal(bot.getSetting('backup.to'), '');
+        const sendings = bot.client.enviadas.length;
+        await checkBackupDaily(day(2, 3));
+        assert.equal(emails.length, 1);
+        assert.equal(bot.client.enviadas.length, sendings);
+    });
+
+    test('destino ausente ou ambíguo: preserva o backup e não escolhe alguém sozinho', async () => {
+        bot.createContact('5521922222222@c.us', 'Fulano Dois');
+        for (const [i, valueAlt] of ['Ninguém Aqui', 'Ful', '-to'].entries()) {
+            await bot.setSetting('backup.to', valueAlt);
+            const beforeAlt = bot.logs.length;
+            const b = await checkBackupDaily(day(i + 1, 3));
+            assert.ok(fs.existsSync(b.arquivo));
+            assert.deepEqual(bot.client.enviadas, []);
+            assert.match(bot.errorsInLog(beforeAlt).join('\n'), /Envio do backup diário falhou/);
+            assert.equal(await checkBackupDaily(day(i + 1, 4)), null);
+        }
+    });
+
+    test('envio falha: mantém o arquivo e tenta os demais destinos', async (t) => {
+        const send = bot.client.sendMessage;
+        t.after(() => { bot.client.sendMessage = send; });
+        bot.client.sendMessage = (id, ...rest) => id === bot.GROUP
+            ? Promise.reject(new Error('fora do ar'))
+            : send.call(bot.client, id, ...rest);
+        await bot.setSetting('backup.to', '-to /Família/ -to Fulano');
+        const beforeAlt = bot.logs.length;
+        const b = await checkBackupDaily(day(1, 3));
+        assert.ok(fs.existsSync(b.arquivo));
+        assert.equal(bot.client.enviadas[0].chatId, bot.OTHERAlt.jid);
+        assert.match(bot.errorsInLog(beforeAlt).join('\n'), /Família: fora do ar/);
+        assert.equal(await checkBackupDaily(day(1, 4)), null);
+        assert.equal(bot.client.enviadas.length, 1);
+    });
+
+    test('SMTP falha: mantém o backup e registra o erro', async (t) => {
+        smtp(t);
+        nodemailer.falhar = true;
+        await bot.setSetting('backup.to', 'email');
+        const beforeAlt = bot.logs.length;
+        const b = await checkBackupDaily(day(1, 3));
+        assert.ok(fs.existsSync(b.arquivo));
+        assert.match(bot.errorsInLog(beforeAlt).join('\n'), /e-mail: SMTP fora do ar/);
+        assert.equal((await listBackups()).length, 1);
+    });
+
+    test('backup.to não envia backups manuais nem antes de restaurar; respeita enabled', async () => {
+        await bot.setSetting('backup.to', 'Fulano');
+        await createBackup('manual', day(1, 1));
+        await createBackup('antes de restaurar', day(1, 2));
+        await bot.setSetting('backup.enabled', false);
+        assert.equal(await checkBackupDaily(day(1, 3)), null);
+        assert.deepEqual(bot.client.enviadas, []);
+        assert.deepEqual(emails, []);
     });
 
     test('retenção: backup.keep vale para os automáticos; os manuais ficam', async () => {
