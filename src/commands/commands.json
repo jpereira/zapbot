@@ -1436,7 +1436,7 @@
                     "argv": [
                         "[N|Nd]"
                     ],
-                    "desc": "Previsão dos próximos N dias (1 a tempo.maxDays, padrão 7). Ex: /tempo 7d Niteroi"
+                    "desc": "Previsão de N dias, contando hoje (1 a tempo.maxDays, padrão 16 e máximo da API). Só como primeiro argumento; sem N, mostra só hoje. Ex: /tempo 16d Niteroi, /tempo 3"
                 },
                 {
                     "argv": [

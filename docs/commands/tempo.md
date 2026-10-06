@@ -7,7 +7,7 @@ próximos dias.
 
 | Argumento | Descrição |
 |---|---|
-| `[N]` ou `[Nd]` | Previsão dos próximos N dias, contando hoje (`7` ou `7d`). De 1 até o setting `tempo.maxDays` (padrão 7, máx. 16, o limite da Open-Meteo). Só vale como primeiro argumento |
+| `[N]` ou `[Nd]` | Previsão dos próximos N dias, contando hoje (`16` ou `16d`). De 1 até o setting `tempo.maxDays` (padrão 16, máximo da Open-Meteo). Só vale como primeiro argumento |
 | `[cidade]` | Cidade a consultar, opcionalmente com estado e país separados por vírgula. Sem ela usa o setting `tempo.city` |
 
 ```
@@ -18,6 +18,7 @@ próximos dias.
 /weather Lisboa                → o mesmo, pelo alias
 /t Lisboa                      → idem, pelo alias curto
 /tempo 7d Niteroi              → agora + previsão dos próximos 7 dias
+/tempo 16d Niteroi             → hoje e os próximos 15 dias
 /tempo 3                       → cidade padrão, próximos 3 dias
 /tempo -h                      → ajuda do comando
 ```
@@ -43,8 +44,10 @@ Com dias (`/tempo 3d Niteroi`), depois do tempo de agora:
 🌦️ sex 02/10: 22°/20° · ☔ 100% · Pancadas de chuva
 ```
 
-Acima do máximo o bot recusa e diz o limite; para permitir mais dias (até 16),
-use `/set tempo.maxDays 10`. Os dias seguem o fuso da cidade consultada.
+Acima do máximo o bot recusa e diz o limite. Para limitar as consultas, use
+`/set tempo.maxDays 7`; `/set -reset tempo.maxDays` define o limite de 16 dias.
+Um limite salvo continua valendo após reiniciar. Sem N, a resposta traz só o tempo de hoje.
+Os dias seguem o fuso da cidade consultada.
 
 ## Alterando a cidade padrão
 

@@ -93,11 +93,11 @@ describe('/tempo (/t, /weather)', () => {
     const forecastDays = (n) => ({
         ...forecast(24),
         daily: {
-            time: Array.from({ length: n }, (_, i) => `2026-10-0${i + 1}`),
+            time: Array.from({ length: n }, (_, i) => `2026-10-${String(i + 1).padStart(2, '0')}`),
             weather_code: Array.from({ length: n }, (_, i) => [0, 63, 95][i % 3]),
             temperature_2m_max: Array.from({ length: n }, (_, i) => 30 + i),
             temperature_2m_min: Array.from({ length: n }, (_, i) => 20 + i),
-            precipitation_probability_max: Array.from({ length: n }, (_, i) => i * 10)
+            precipitation_probability_max: Array.from({ length: n }, (_, i) => Math.min(i * 10, 100))
         }
     });
 
@@ -130,6 +130,7 @@ describe('/tempo (/t, /weather)', () => {
     });
 
     test('N fora de 1..tempo.maxDays é recusado; o máximo vem do setting (até 16)', async () => {
+        await bot.setSetting('tempo.maxDays', 7);
         assert.match((await bot.replyAlt('/tempo 8d Recife'))[0], /❌ Quantidade de dias inválida: 8\. Use de 1 a 7\./);
         assert.match((await bot.replyAlt('/tempo 0'))[0], /Quantidade de dias inválida: 0/);
         assert.deepEqual(network.chamadas, [], 'nem consulta a API');
@@ -139,6 +140,22 @@ describe('/tempo (/t, /weather)', () => {
         network.responder('get', 'api.open-meteo.com/v1/forecast', (url, cfg) => forecastDays(cfg.params.forecast_days));
         assert.match((await bot.replyAlt('/tempo 16'))[0], /Próximos 16 dias/);
         await assert.rejects(bot.setSetting('tempo.maxDays', 17), /entre 1 e 16/);
+    });
+
+    test('padrão permite 16d com datas válidas; 17 dias é recusado sem consultar a API', async () => {
+        assert.equal(bot.getSetting('tempo.maxDays'), 16);
+        network.responder('get', 'geocoding-api.open-meteo.com', { results: [local] });
+        network.responder('get', 'api.open-meteo.com/v1/forecast',
+            (url, cfg) => forecastDays(cfg.params.forecast_days));
+        const [r] = await bot.replyAlt('/tempo 16d Recife');
+        assert.equal(network.chamadas.at(-1).cfg.params.forecast_days, 16);
+        assert.match(r, /Próximos 16 dias/);
+        assert.match(r, /sex 16\/10/);
+        assert.doesNotMatch(r, /Invalid Date/);
+        assert.equal(r.split('\n').filter(l => l.includes(' · ☔ ')).length, 16);
+        network.chamadas.length = 0;
+        assert.match((await bot.replyAlt('/tempo 17d Recife'))[0], /Use de 1 a 16/);
+        assert.deepEqual(network.chamadas, []);
     });
 
     test('cidade não encontrada; serviço fora do ar', async () => {
