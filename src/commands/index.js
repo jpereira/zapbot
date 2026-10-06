@@ -17,6 +17,7 @@ const { cmdPoll } = require('./enquete');
 const { cmdGet } = require('./get');
 const { cmdGiphy } = require('./giphy');
 const { cmdGpt } = require('./gpt');
+const { cmdAlias } = require('./alias');
 const { cmdHelp } = require('./help');
 const { cmdJoke } = require('./joke');
 const { cmdKernel } = require('./kernel');
@@ -44,6 +45,7 @@ const { printError } = require('../log');
 
 // commands.json cmd -> handler
 const HANDLERS = {
+    '/alias': cmdAlias,
     '/backup': cmdBackup,
     '/boletos': cmdBills,
     '/bot': cmdBot,
