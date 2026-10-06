@@ -1,5 +1,5 @@
-* /defi: outros protocolos alem da Orca e do Project X (Liquidswap, Morpho) e PnL da posicao
-  (precisa do historico de depositos/saques).
+* /defi: Liquidswap (Orca, Project X, Morpho e Aave V3 ja estao) e PnL da posicao
+  (precisa do historico de depositos/saques); -alerta de Health Factor no Morpho e no Aave.
 * /view: salvar a foto/video de visualizacao unica quando chega, com o mesmo cache de
   midias e o mesmo -l do /show, com um -v ao lado do -d e do -e (terceira secao "Visualizacao unica").
 * /enquete: avisar no privado quando todos do grupo votarem.
@@ -8,7 +8,7 @@
 * /transcrever: respondendo um audio, transcreve pela OpenAI (Whisper) com a chave do
   /gpt; um setting liga a transcricao automatica em chats escolhidos.
 * /lembrete em linguagem natural pelo /gpt ("me lembra amanha as 9h de ligar pro banco").
-* /mudo -por <tempo> (ex.: -por 2h, -por 7d): silencio temporario, que expira sozinho.
+* /mute -por <tempo> (ex.: -por 2h, -por 7d): silencio temporario, que expira sozinho.
 * Alertas de preco: -sempre (repete em vez de sair ao disparar) e por variacao
   (ex.: BTC +-5% em 24h).
 * /backup: senha no arquivo (age/gpg) antes de enviar por e-mail ou para outro chat, e
@@ -16,3 +16,5 @@
 * /gpt e /tldr: aceitar imagem respondida (visao) e /ocr para tirar o texto de uma imagem.
 * Lista de escolha (destinos): aceitar 0 ou "cancelar" para desistir sem esperar os 2 min.
 * Limite de uso por pessoa nos comandos publicos (ex.: /get, /gpt), contra abuso em grupo.
+* Adicionar função para fazer /join, /leave de grupos.
+* verificar forma de criar sticker e remover do cache ou achar opcao sem cache.
