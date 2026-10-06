@@ -52,7 +52,7 @@ function isOption(token) {
 
 /*
  * Converts "-ss 10 -a https://..." into:
- *   { opt: { startSec: '10', audio: true, ..., argv: [...] }, argv: ['https://...'] }
+ *   { opt: { startSec: '10', audio: true, ... }, argv: ['https://...'] }
  *
  * Options with empty "values" are boolean; with values they expect a value.
  * "-help" / "-h" are added automatically to every command.
@@ -62,10 +62,9 @@ function isOption(token) {
 function GetOptFromCommand(input, config = {}) {
     const tokens = tokenizeCommand(input);
 
-    // Same array in result.argv and result.opt.argv
     const argv = [];
     const given = new Set();
-    const result = { opt: { argv }, argv, given };
+    const result = { opt: {}, argv, given };
 
     const commandOptions = [
         { opts: ['help', 'h'], values: [], desc: 'Exibe ajuda.' },

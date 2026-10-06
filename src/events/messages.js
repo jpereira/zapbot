@@ -27,6 +27,7 @@ const { instrumentObject } = require('../debugInstrumentation');
 const { channelResolverName } = require('../contacts');
 const { isChannelAlt, channelId } = require('../util/origin');
 const { askedHelpWatch, askedMaskWatch } = require('../watch/options');
+const { dataParserCommand } = require('../debugParser');
 
 // WhatsApp's own notices (joined the group, changed the name, encryption, call...): they have no author
 const SYSTEM_TYPES = new Set([
@@ -359,7 +360,7 @@ client.on('message_create', (msg) => withContextDebug({
             Boolean(opts.opt.mask);
 
         if (isDebugMode()) {
-            printDebug('GetOptFromCommand():', command.cmd, opts);
+            printDebug('Parser do comando:', command.cmd, dataParserCommand(args, command, opts));
         }
 
         // foo -help

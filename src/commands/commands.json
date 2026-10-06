@@ -589,7 +589,7 @@
                     "values": [
                         "<0|1|2|3>"
                     ],
-                    "desc": "Nível cumulativo: 0 (padrão) logs básicos; 1 comandos, parser e funções exportadas; 2 APIs e outras integrações com parâmetros; 3 resultados, SQL e diagnósticos de desenvolvimento. Precisa do debug ligado ou de -on no mesmo comando. Ex: -level 2, -on -lvl 3"
+                    "desc": "Nível cumulativo: 0 (padrão) logs básicos e argumentos dos comandos; 1 comandos recebidos, chamadas do parser e funções exportadas; 2 APIs e outras integrações com parâmetros; 3 resultados, SQL e diagnósticos de desenvolvimento. Precisa do debug ligado ou de -on no mesmo comando. Ex: -level 2, -on -lvl 3"
                 },
                 {
                     "opts": [
