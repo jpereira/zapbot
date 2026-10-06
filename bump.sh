@@ -102,12 +102,11 @@ fi
 
 re() { printf '%s' "${1//./\\.}"; }
 A="$(re "$atual")"
-E="$(re "$estavel")"
 hoje="$(date +%d/%m/%Y)"
 
 # Release: the stable one becomes the current one (with the date) and the examples lose the "(devel)"
 CODE_RELEASE="
-    1 while s#(^|[^/])release-${E}([^0-9.]|\$)#\${1}release-${atual}\${2}#;
+    s#(^|[^/])release-[0-9]+\\.[0-9]+([^0-9.]|\$)#\${1}release-${atual}\${2}#g;
     s|(release-${A}\`? \\(de )\\d{2}/\\d{2}/\\d{4}|\${1}${hoje}|g;
     s#(?<![-\\d./])${A} \\(devel\\) \\(git\\+([0-9a-f]+)/HEAD\\)#${atual} (git+\${1}/release-${atual})#g;
     s#(?<![-\\d./])${A} \\(devel\\)#${atual}#g;"
@@ -115,6 +114,7 @@ CODE_RELEASE="
 # Bump: the examples move to the new one, with the "(devel)"; the stable one (vX.Y.Z
 # without "/" before) is stored and comes back as it was
 CODE_BUMP="
+    s#(?<![-\\d./])${A} \\(devel\\)#${nova} (devel)#g;
     s#(^|[^/])release-${A}(?=[^0-9.]|\$)#\${1}\\x00ESTAVEL\\x00#g;
     s#(?<![-\\d./])${A} \\(git\\+([0-9a-f]+)/release-${A}\\)#${nova} (devel) (git+\${1}/HEAD)#g;
     s#(?<![-\\d./])${A}(?![0-9.])(?! \\(devel\\))#${nova} (devel)#g;
