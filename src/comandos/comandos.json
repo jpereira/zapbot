@@ -388,7 +388,7 @@
                 "/agenda",
                 "/lembrete"
             ],
-            "help": "Na hora marcada, envia o texto como se você digitasse (no chat atual ou no do -to) ou, como /lembrete (ou com -lembrete), um ⏰ Lembrete neste chat ou no seu privado (-pv). No texto, {/comando args} roda na hora do envio e a resposta entra no lugar (só comandos de consulta: /crypto, /cotacao, /tempo...). Ex: /cron 09h -r diario -to /Família/ Bom dia! {/crypto BTC}",
+            "help": "Na hora marcada, envia o texto como se você digitasse (no chat atual ou no do -to) ou, como /lembrete (ou com -lembrete), um ⏰ Lembrete neste chat ou no seu privado (-pv). No texto, {/comando args} roda na hora do envio e a resposta entra no lugar (só comandos de consulta: /crypto, /cotacao, /tempo...). O \\n digitado vira quebra de linha. Ex: /cron 09h -r diario -to /Família/ Bom dia! {/crypto BTC}, /cron 8h -r diario Orca {/defi orca}\\n Prjx {/defi prjx}",
             "cmd_opts": [
                 {
                     "opts": [
