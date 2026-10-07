@@ -1,6 +1,7 @@
 /*
- * Commands in the /cron text: "Bitcoin now: {/crypto BTC}". At the time of
- * send, each {/command args} runs and its reply goes in its place.
+ * Commands in the text (/cron, for now): "Bitcoin now: {/crypto BTC}".
+ * At build time, each {/command args} runs and its reply goes in its place.
+ * The `onde` (e.g.: '/cron') only appears in the error messages.
  */
 
 const { client } = require('./client');
@@ -11,9 +12,9 @@ const { GetOptFromCommand } = require('./options');
 /*
  * Only the commands with "cron": true in commands.json (the query ones), and without the
  * options with "cron": false (those that change something, like /crypto's -add). The
- * command runs as if you typed it in the destination chat, but the replies are
- * stored instead of sent: the text goes in place of the {...} and the media
- * (/meme, /giphy...) come out after the message.
+ * command runs as if typed in the destination chat (by you, if none comes
+ * who runs), but the replies are stored instead of sent: the text goes
+ * in place of the {...} and the media (/meme, /giphy...) go out after the message.
  */
 const MARK = /\{(\/[^{}\n]+)\}/g;
 
@@ -22,30 +23,30 @@ const commandsInText = (textAlt) => [...String(textAlt ?? '').matchAll(MARK)].ma
 const allowed = () => activeCommands().filter(c => c.cron).map(c => c.cmd);
 
 // "/crypto BTC" → { command, args, opts }, or { error }
-function readCommand(line) {
+function readCommand(line, whereAlt = '/cron') {
     const caller = line.split(/\s+/, 1)[0].toLowerCase();
     const command = findCommand(caller);
 
     if (!command) return { erro: `❌ {${line}}: o ${caller} não existe.` };
     if (!command.cron) {
-        return { erro: `❌ {${line}}: o ${command.cmd} não roda dentro do /cron.\n💡 _Rodam: ${allowed().join(', ')}._` };
+        return { erro: `❌ {${line}}: o ${command.cmd} não roda dentro do ${whereAlt}.\n💡 _Rodam: ${allowed().join(', ')}._` };
     }
 
     const args = line.slice(caller.length).trim();
     const opts = GetOptFromCommand(args, command);
     const prohibited = (command.cmd_opts ?? []).find(o => o.cron === false && o.opts?.some(nameAlt => opts.given.has(nameAlt)));
-    if (prohibited) return { erro: `❌ {${line}}: o -${prohibited.opts[0]} do ${command.cmd} não roda dentro do /cron.` };
+    if (prohibited) return { erro: `❌ {${line}}: o -${prohibited.opts[0]} do ${command.cmd} não roda dentro do ${whereAlt}.` };
 
     return { command, args, opts };
 }
 
 /**
- * Checks the text's {/command}s when creating or editing the item.
+ * Checks the text's {/command}s when creating or editing (the /cron item).
  * @returns {string|null} the error (of the first invalid one) or null
  */
-function commandsError(textAlt) {
+function commandsError(textAlt, whereAlt = '/cron') {
     for (const { linha: line } of commandsInText(textAlt)) {
-        const { erro: errorAlt } = readCommand(line);
+        const { erro: errorAlt } = readCommand(line, whereAlt);
         if (errorAlt) return errorAlt;
     }
     return null;
@@ -79,10 +80,13 @@ function messageSynthetic(chatId, line, replies) {
     };
 }
 
-// Runs a {/command}: the reply text and the media
-async function runCommand(chatId, line, { chatName, isGroup }) {
-    const { erro: errorAlt, command, args, opts } = readCommand(line);
-    if (errorAlt) return { texto: `⚠️ ${line.split(/\s+/, 1)[0]} não roda no /cron`, midias: [] };
+/*
+ * Runs a {/command}: the reply text and the media. Without `quem`, it runs as
+ * you (admin); with it, with the admin and the permissions of whoever runs.
+ */
+async function runCommand(chatId, line, { chatName, isGroup, onde: whereAlt = '/cron', quem: who = null }) {
+    const { erro: errorAlt, command, args, opts } = readCommand(line, whereAlt);
+    if (errorAlt) return { texto: `⚠️ ${line.split(/\s+/, 1)[0]} não roda no ${whereAlt}`, midias: [] };
 
     // The handler lives in commands/index, which loads /cron (and this file): only here, at the time
     const { HANDLERS } = require('./commands/index');
@@ -92,10 +96,11 @@ async function runCommand(chatId, line, { chatName, isGroup }) {
     try {
         await HANDLERS[command.cmd]({
             msg, opts, args, quotedMsg: null, senderContact: null, senderName: client.info?.pushname || 'Você',
-            isGroup, chatId, chatName, admin: true
+            isGroup, chatId, chatName, admin: true,
+            ...who
         });
     } catch (err) {
-        printError(`/cron: ${line} falhou:`, err.message);
+        printError(`${whereAlt}: ${line} falhou:`, err.message);
         return { texto: `⚠️ ${command.cmd} falhou`, midias: [] };
     }
 
@@ -127,12 +132,16 @@ function fit(textAlt, mark, reply) {
 /**
  * The text with each {/command} replaced by its reply, the replies' media
  * and the commands executed (for the log). Without {/command}, the text as it is.
+ * @param {object} s  the chat: chat_id, chat_name and is_group (the /cron columns)
+ * @param {object} [o]
+ * @param {string} [o.onde]  who asked, for the error messages ('/cron')
+ * @param {object} [o.quem]  admin, canUse, senderName... of whoever runs (without it: you)
  */
-async function assembleText(textAlt, s) {
+async function assembleText(textAlt, s, { onde: whereAlt, quem: who } = {}) {
     const commands = commandsInText(textAlt);
     if (!commands.length) return { texto: textAlt, midias: [], comandos: [] };
 
-    const ctx = { chatName: s.chat_name, isGroup: Boolean(s.is_group) };
+    const ctx = { chatName: s.chat_name, isGroup: Boolean(s.is_group), onde: whereAlt, quem: who };
     const mediaAltAlt = [];
     let final = textAlt;
 
@@ -159,6 +168,7 @@ module.exports = {
     commandsInText,
     sendMedia,
     commandsError,
+    readCommand,
     assembleText,
     allowed
 };

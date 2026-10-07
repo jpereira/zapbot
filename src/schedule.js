@@ -2,7 +2,7 @@
  * Schedule: the reminders (/lembrete) and the scheduled messages (/cron), with the periodic check.
  */
 
-const { sendMedia, commandsError, assembleText } = require('./scheduleCommands');
+const { sendMedia, commandsError, assembleText } = require('./textCommands');
 const { estado: stateAlt } = require('./state');
 const { client } = require('./client');
 const { dbAll, dbGet, dbReady, dbRun } = require('./db');
@@ -26,7 +26,7 @@ const { REPETITIONS, fmtWhen, readWhen, partsInBrasilia, nextRepetition } = requ
  * several -to (a single item, with all the destinations). In the list, -edit <no.> changes the time, the text
  * or an item's repetition, and -pause/-resume <no....|all> hold and release it.
  * A {/command} in the text runs at send time and the reply goes in its place
- * (see scheduleCommands.js); -test <no.> shows now how the message would come out.
+ * (see textCommands.js); -test <no.> shows now how the message would come out.
  * It comes out of your account: owner only.
  */
 const TYPES = {
