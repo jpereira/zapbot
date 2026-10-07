@@ -11,9 +11,9 @@
     "commands": [
         {
             "cmd": "/alias",
-            "usage": "/alias <nome> [-desc|-d \"Descrição\"] </comando argumentos>  ou  /alias [-list|-l]  ou  /alias [-rm|-rem] <nome|all>",
+            "usage": "/alias <nome> [-desc|-d \"Descrição\"] </comando argumentos>  ou  /alias <nome> [-desc|-d \"Descrição\"] <texto com {/comando}>  ou  /alias [-list|-l]  ou  /alias [-rm|-rem] <nome|all>",
             "aliases": [],
-            "help": "Salva atalhos para comandos com argumentos. Sem opção, lista os aliases cadastrados. Ao executar o atalho, o bot imprime o comando chamado, acrescenta os argumentos adicionais e respeita as permissões do comando original. O nome aceita letras, números, _ e -, com ou sem barra no cadastro. Cadastrar o mesmo nome substitui o comando e a descrição. O destino deve ser um comando ativo do bot, inclusive seus aliases fixos; não pode ser /alias nem outro atalho cadastrado. Nomes de comandos e all são reservados. Use /help alias para listar os atalhos disponíveis para você.",
+            "help": "Salva atalhos para comandos com argumentos ou para um texto com vários {/comando}, como no /cron: cada um roda e a resposta entra no lugar, numa mensagem só. No texto, \\n vira quebra de linha. Sem opção, lista os aliases cadastrados. Ao executar o atalho, o bot imprime o comando chamado, acrescenta os argumentos adicionais e respeita as permissões dos comandos de destino. O nome aceita letras, números, _ e -, com ou sem barra no cadastro. Cadastrar o mesmo nome substitui o comando e a descrição. O destino deve ser um comando ativo do bot, inclusive seus aliases fixos; não pode ser /alias nem outro atalho cadastrado. Nomes de comandos e all são reservados. Use /help alias para listar os atalhos disponíveis para você. Ex: /alias /dolar /crypto USD, /alias orca Verificando Orca {/defi orca}\\n Verificando Prjx {/defi prjx}",
             "cmd_opts": [
                 {
                     "opts": [

@@ -7,7 +7,7 @@ const fs = require('fs-extra');
 
 const { client, consumirEnvioDoBot, foiEnviadaPeloBot, messageToSelf } = require('../cliente');
 const { getCommandSyntax, protocoloDaAjuda } = require('../comandos/base');
-const { resolverAlias } = require('../aliases');
+const { executarAliasDeTexto, resolverAlias } = require('../aliases');
 const { HANDLERS } = require('../comandos/index');
 const { removeDeviceSuffix, resolveLidToPhone, resolverNomeDoGrupo, resolverNomeDoPrivado } = require('../contatos');
 const { dbGet, dbPronto, dbRun } = require('../db');
@@ -343,16 +343,28 @@ client.on('message_create', (msg) => comContextoDebug({
             }
         }
 
-        // Os comandos da regra (o /bot +cmd|-cmd); o /help e o /whois sempre passam
-        if (!admin && !SEMPRE_LIBERADOS.includes(command.cmd) && !permissao.pode(command.cmd)) {
-            printDebug(`Comando '${command.cmd}' de ${senderName} ignorado: fora dos comandos dele`);
-            await msg.reply(avisoDeLimite(permissao.regras, command.cmd));
+        // Os comandos da regra (o /bot +cmd|-cmd); o /help e o /whois sempre passam. Num alias de texto, cada {/comando}
+        const negado = !admin && (command.alvos ?? [command.cmd])
+            .find(cmd => !SEMPRE_LIBERADOS.includes(cmd) && !permissao.pode(cmd));
+        if (negado) {
+            printDebug(`Comando '${negado}' de ${senderName} ignorado: fora dos comandos dele`);
+            await msg.reply(avisoDeLimite(permissao.regras, negado));
             return;
         }
 
         printDebug(isGroup
             ? `Executando comando '${body}' de '${senderName}' no grupo '${chatName}'`
             : `Executando comando '${body}' em '${chatName}'`);
+
+        // Alias de texto: os {/comando} rodam aqui, com as permissões de quem chamou (os argumentos ficam de fora)
+        if (resolvido.texto) {
+            printCall(msg.fromMe ? (client.info?.pushname || 'Você') : senderName, body, chatName);
+            await executarAliasDeTexto(msg, resolvido, {
+                chatId, chatName, isGroup,
+                quem: { admin, podeUsar: admin ? () => true : permissao.pode, senderContact, senderName, senderNumber }
+            });
+            return;
+        }
 
         if (resolvido.alias) {
             const chamada = [resolvido.destino, args].filter(Boolean).join(' ');

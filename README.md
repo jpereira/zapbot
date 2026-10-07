@@ -134,7 +134,7 @@ de um. Os marcados como **Admin** só respondem à sua conta (e aos admins extra
 
 | Comando | Aliases | Admin | Descrição |
 |---|---|:-:|---|
-| [`/alias`](https://jpereira.github.io/zapbot/comandos/alias/) | | ✅ | Cadastra, lista e remove atalhos para comandos com argumentos |
+| [`/alias`](https://jpereira.github.io/zapbot/comandos/alias/) | | ✅ | Cadastra, lista e remove atalhos para comandos com argumentos ou textos com vários `{/comando}` |
 | [`/backup`](https://jpereira.github.io/zapbot/comandos/backup/) | `/bkp` | ✅ | Backup diário local e envio por `backup.to`; lista, detalha, restaura e envia o banco |
 | [`/boletos`](https://jpereira.github.io/zapbot/comandos/boletos/) | | | Sorteia 2 membros para "pagar um boleto" |
 | [`/bot`](https://jpereira.github.io/zapbot/comandos/bot/) | `/b` | ✅ | Status do bot (relatório de 24 h e os usuários); liga/desliga os comandos (`-on`/`-off`) e diz quem usa: admins (`+o`/`-o`) e usuários (`+v`/`-v`, em qualquer chat ou só num grupo, e os comandos de cada um com `+cmd`/`-cmd`); `-reset` volta ao padrão; `-status` (`-s`): relatório das últimas 24 h, e `-s 06h` manda todo dia; `-info` (`-i`): versões e sistema |
