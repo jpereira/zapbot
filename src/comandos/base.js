@@ -140,10 +140,15 @@ function getCommandSyntax(cmd, protocolo) {
     return command ? formatCommandHelp(command, { protocolo }) : null;
 }
 
-// O protocolo pedido junto com o -help (/defi orca -help), se o comando tiver protocolos
-const protocoloDaAjuda = (command, palavras) => palavras
-    .map(p => String(p ?? '').toLowerCase())
-    .find(p => command?.protocolos?.[p]);
+// O protocolo pedido junto com o -help (/defi orca -help ou, pelo alias, /defi liqswp -help)
+const protocoloDaAjuda = (command, palavras) => {
+    const protocolos = command?.protocolos ?? {};
+    for (const p of palavras.map(x => String(x ?? '').toLowerCase())) {
+        const chave = protocolos[p] ? p : Object.keys(protocolos).find(k => protocolos[k].aliases?.includes(p));
+        if (chave) return chave;
+    }
+    return undefined;
+};
 
 // Resposta padrão de erro dos comandos /get e /cache
 function formatarErroComando(e) {

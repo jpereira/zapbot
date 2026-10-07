@@ -647,8 +647,8 @@
         },
         {
             "cmd": "/defi",
-            "usage": "/defi [orca|prjx|morpho|aave] [-mask]  ou  /defi -l  ou  /defi -rm <nº...|all>  ou  /defi -alerta <nº|all> [-to <destino>]... [-taxas <valor>]  ou  /defi <protocolo> <opções>",
-            "help": "Posições da Orca (Solana), do Project X (HyperEVM), do Morpho e do Aave V3, lidas na hora: saldo, faixa e taxas a coletar das de liquidez; colateral, dívida e risco das de empréstimo. Sem nada, mostra todas; com o protocolo, só as dele. Cada protocolo tem a sua ajuda. Ex: /defi orca -help, /defi prjx -help, /defi morpho -help, /defi aave -help",
+            "usage": "/defi [orca|prjx|liquidswap|morpho|aave] [-mask]  ou  /defi -l  ou  /defi -rm <nº...|all>  ou  /defi -alerta <nº|all> [-to <destino>]... [-taxas <valor>]  ou  /defi <protocolo> <opções>",
+            "help": "Posições da Orca (Solana), do Project X (HyperEVM), da Liquidswap (Aptos), do Morpho e do Aave V3, lidas na hora: saldo, faixa e taxas a coletar das de liquidez; colateral, dívida e risco das de empréstimo. Sem nada, mostra todas; com o protocolo, só as dele. Cada protocolo tem a sua ajuda. Ex: /defi orca -help, /defi prjx -help, /defi liquidswap -help, /defi morpho -help, /defi aave -help",
             "cmd_opts": [
                 {
                     "opts": [
@@ -788,9 +788,10 @@
                     "values": [
                         "<0x...>"
                     ],
-                    "desc": "Cadastra a carteira (0x e 40 caracteres hexadecimais): o bot lê todas as posições abertas dela. Ex: /defi prjx -wallet <0x...>, /defi morpho -w <0x...>",
+                    "desc": "Cadastra a carteira (EVM: 0x e 40 caracteres hexadecimais; Aptos, na Liquidswap: 0x e até 64): o bot lê todas as posições abertas dela. Ex: /defi prjx -wallet <0x...>, /defi liquidswap -wallet <0x...>, /defi morpho -w <0x...>",
                     "protocolos": [
                         "prjx",
+                        "liquidswap",
                         "morpho",
                         "aave"
                     ],
@@ -798,9 +799,9 @@
                 },
                 {
                     "argv": [
-                        "[orca|prjx|morpho|aave]"
+                        "[orca|prjx|liquidswap|morpho|aave]"
                     ],
-                    "desc": "O protocolo: orca (Orca, na Solana), prjx (Project X, na HyperEVM), morpho (Morpho) ou aave (Aave V3). Sozinho, mostra só as posições dele. Ex: /defi, /defi orca, /defi aave"
+                    "desc": "O protocolo: orca (Orca, na Solana), prjx (Project X, na HyperEVM), liquidswap ou liqswp (Liquidswap, na Aptos), morpho (Morpho) ou aave (Aave V3). Sozinho, mostra só as posições dele. Ex: /defi, /defi orca, /defi liqswp, /defi aave"
                 }
             ],
             "cron": true,
@@ -815,6 +816,14 @@
                     "nome": "Project X",
                     "usage": "/defi prjx [-mask]  ou  /defi prjx -wallet <0x...> [-name <nome>] [-alerta [valor]]",
                     "help": "Posições de liquidez do Project X (na HyperEVM): saldo, faixa, preço e taxas a coletar, lidos on-chain. Cadastre a carteira (-wallet): o bot lê todas as posições abertas dela. Ex: /defi prjx, /defi prjx -wallet <0x...> -alerta"
+                },
+                "liquidswap": {
+                    "nome": "Liquidswap",
+                    "aliases": [
+                        "liqswp"
+                    ],
+                    "usage": "/defi liquidswap|liqswp [-mask]  ou  /defi liquidswap -wallet <0x...> [-name <nome>]",
+                    "help": "Posições de liquidez da Liquidswap (a DEX da Pontem, na Aptos, versões v0 e v0.5): a fatia da pool, o saldo de cada token e o preço, lidos on-chain. Cadastre a carteira (-wallet): o bot lê todas as posições dela. As taxas dos swaps entram na pool e já estão no saldo, então não há faixa, taxas a coletar nem -alerta. Ex: /defi liquidswap, /defi liqswp -wallet <0x...> -n Carteira Aptos"
                 },
                 "morpho": {
                     "nome": "Morpho",
@@ -972,7 +981,7 @@
                     "argv": [
                         "[protocolo]"
                     ],
-                    "desc": "No /defi, só a ajuda de um protocolo: orca, prjx, morpho ou aave. Equivale a /defi <protocolo> -help. Ex: /help defi aave"
+                    "desc": "No /defi, só a ajuda de um protocolo: orca, prjx, liquidswap, morpho ou aave. Equivale a /defi <protocolo> -help. Ex: /help defi aave"
                 }
             ],
             "onlyAdmin": false
