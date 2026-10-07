@@ -8,7 +8,7 @@ numa mensagem que contenha o link.
 |---|---|---|
 | `-sticker`, `-st` | | Envia como figurinha animada (até 6 s), enquadrada no meio do vídeo como no `/sticker` |
 | `-audio`, `-a` | | Extrai só o áudio (`.mp3`) |
-| `-startSec`, `-ss` | `<segundo>` | Começa neste segundo do vídeo original (padrão 0). Aceita decimal com ponto, como `2.5` |
+| `-startSec`, `-ss` | `<segundo>` | Começa neste segundo do vídeo original (padrão 0). Aceita decimal com ponto, como `1.5` |
 | `-endSec`, `-es` | `<segundo>` | Termina neste segundo do vídeo original; deve ser maior que o início. Vale também sem `-ss` e para figurinhas |
 | `-verbose`, `-v` | | Mostra os parâmetros usados no yt-dlp/ffmpeg |
 | `<url>` | | Link do vídeo |
