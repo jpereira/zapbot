@@ -152,3 +152,72 @@ test('descrição aceita aspas curvas e misturadas sem alterar o comando salvo',
     await bot.replyAlt('/alias euros -d “Preço em euros” /cotacao EUR -h');
     assert.equal((await aliases()).find(a => a.name === '/euros').command, '/cotacao EUR -h');
 });
+
+test('/alias /nome /crypto USD: nome com barra e destino com argumento', async t => {
+    await bot.replyAlt('/alias /nome /crypto USD');
+    assert.deepEqual(await aliases(), [{ name: '/nome', description: '', command: '/crypto USD' }]);
+    t.mock.method(HANDLERS, '/crypto', async ({ msg, args }) => msg.reply(`crypto ${args}`));
+    assert.deepEqual(await bot.replyAlt('/nome'), ['🔗 Alias /nome -> /crypto USD', 'crypto USD']);
+});
+
+test('alias de texto: \\n vira quebra de linha e vários {/comando} saem numa mensagem só', async t => {
+    const [salvo] = await bot.replyAlt(
+        '/alias nome2 -d "Orca e Prjx" Verificando Orca {/defi orca}\\n Verificando Prjx {/defi prjx}');
+    assert.match(salvo, /Alias salvo: \/nome2/);
+    assert.deepEqual(await aliases(), [{
+        name: '/nome2', description: 'Orca e Prjx',
+        command: 'Verificando Orca {/defi orca}\nVerificando Prjx {/defi prjx}'
+    }]);
+
+    const defi = t.mock.method(HANDLERS, '/defi', async ({ msg, args }) => msg.reply(`${args} ok`));
+    assert.deepEqual(await bot.replyAlt('/nome2'), [
+        '🔗 Alias /nome2 -> /defi orca, /defi prjx',
+        'Verificando Orca orca ok\nVerificando Prjx prjx ok'
+    ]);
+    assert.equal(defi.mock.callCount(), 2);
+
+    // A multi-line reply becomes a paragraph, as in /cron
+    t.mock.method(HANDLERS, '/crypto', async ({ msg }) => msg.reply('₿ BTC\n💰 $1'));
+    await bot.replyAlt('/alias btc Bitcoin: {/crypto BTC} fim');
+    assert.equal((await bot.replyAlt('/btc'))[1], 'Bitcoin:\n\n₿ BTC\n💰 $1\n\nfim');
+
+    const [list] = await bot.replyAlt('/alias -l');
+    assert.match(list, /\/nome2 → Verificando Orca \{\/defi orca\}\nVerificando Prjx \{\/defi prjx\}/);
+});
+
+test('alias de texto: recusa texto sem {/comando}, comandos inexistentes e os que não rodam no texto', async () => {
+    for (const line of ['/alias foo só texto', '/alias foo Oi {/naoexiste}', '/alias foo {/alias -l}',
+        '/alias foo {/ping}', '/alias foo {/crypto -add DOGE}']) {
+        assert.match((await bot.replyAlt(line))[0], /^❌/, line);
+    }
+    assert.match((await bot.replyAlt('/alias foo {/ping}'))[0], /o \/ping não roda dentro do \/alias/);
+    assert.deepEqual(await aliases(), []);
+});
+
+test('alias de texto: cada {/comando} respeita as permissões de quem chama', async t => {
+    await bot.replyAlt('/alias misto Dólar {/cotacao USD} DeFi {/defi}');
+    await bot.replyAlt('/alias dolarbtc Dólar {/cotacao USD} BTC {/crypto BTC}');
+    const defi = t.mock.method(HANDLERS, '/defi', async ({ msg }) => msg.reply('defi'));
+    const quote = t.mock.method(HANDLERS, '/cotacao', async ({ msg, admin }) => msg.reply(`admin=${admin}`));
+    t.mock.method(HANDLERS, '/crypto', async ({ msg }) => msg.reply('btc'));
+    const de = bot.OTHERAlt.jid;
+
+    // /defi is owner-only: the whole alias is silently ignored
+    assert.deepEqual(await bot.replyAlt('/misto', { de }), []);
+    assert.equal(defi.mock.callCount(), 0);
+
+    // The commands run as whoever called, not as the owner
+    assert.deepEqual(await bot.replyAlt('/dolarbtc', { de }),
+        ['🔗 Alias /dolarbtc -> /cotacao USD, /crypto BTC', 'Dólar admin=false BTC btc']);
+
+    // A command outside the person's rule blocks the alias
+    await bot.setSetting('bot.users', []);
+    await bot.replyAlt('/bot +v /Fulano/');
+    await bot.replyAlt('/bot -cmd /crypto /Fulano/');
+    assert.match((await bot.replyAlt('/dolarbtc', { de }))[0], /O \/crypto não está liberado/);
+    assert.equal(quote.mock.callCount(), 1);
+
+    const [list] = await bot.replyAlt('/help alias', { de });
+    assert.doesNotMatch(list, /\/misto|\/dolarbtc/);
+    assert.match((await bot.replyAlt('/help alias'))[0], /\/misto[\s\S]*\/dolarbtc|\/dolarbtc[\s\S]*\/misto/);
+});

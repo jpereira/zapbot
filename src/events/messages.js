@@ -7,7 +7,7 @@ const fs = require('fs-extra');
 
 const { client, botConsumeSending, wasSentByBot, messageToSelf } = require('../client');
 const { getCommandSyntax, helpProtocol } = require('../commands/base');
-const { resolverAlias } = require('../aliases');
+const { textRunAlias, resolverAlias } = require('../aliases');
 const { HANDLERS } = require('../commands/index');
 const { removeDeviceSuffix, resolveLidToPhone, groupResolverName, privateResolverName } = require('../contacts');
 const { dbGet, dbReady, dbRun } = require('../db');
@@ -343,16 +343,28 @@ client.on('message_create', (msg) => withContextDebug({
             }
         }
 
-        // The rule's commands (/bot +cmd|-cmd); /help and /whois always pass
-        if (!admin && !ALWAYS_RELEASED.includes(command.cmd) && !permission.pode(command.cmd)) {
-            printDebug(`Comando '${command.cmd}' de ${senderName} ignorado: fora dos comandos dele`);
-            await msg.reply(limitNotice(permission.regras, command.cmd));
+        // The rule's commands (/bot +cmd|-cmd); /help and /whois always pass. In a text alias, each {/command}
+        const denied = !admin && (command.alvos ?? [command.cmd])
+            .find(cmd => !ALWAYS_RELEASED.includes(cmd) && !permission.pode(cmd));
+        if (denied) {
+            printDebug(`Comando '${denied}' de ${senderName} ignorado: fora dos comandos dele`);
+            await msg.reply(limitNotice(permission.regras, denied));
             return;
         }
 
         printDebug(isGroup
             ? `Executando comando '${body}' de '${senderName}' no grupo '${chatName}'`
             : `Executando comando '${body}' em '${chatName}'`);
+
+        // Text alias: the {/command}s run here, with the permissions of whoever called (the arguments stay out)
+        if (resolved.texto) {
+            printCall(msg.fromMe ? (client.info?.pushname || 'Você') : senderName, body, chatName);
+            await textRunAlias(msg, resolved, {
+                chatId, chatName, isGroup,
+                quem: { admin, podeUsar: admin ? () => true : permission.pode, senderContact, senderName, senderNumber }
+            });
+            return;
+        }
 
         if (resolved.alias) {
             const call = [resolved.destino, args].filter(Boolean).join(' ');

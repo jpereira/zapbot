@@ -20,6 +20,13 @@ const MARK = /\{(\/[^{}\n]+)\}/g;
 
 const commandsInText = (textAlt) => [...String(textAlt ?? '').matchAll(MARK)].map(m => ({ marca: m[0], linha: m[1].trim() }));
 
+/*
+ * The typed "\n" becomes a line break, without the surrounding spaces: in the
+ * WhatsApp it is easier to type "Orca {/defi orca}\n Prjx {/defi prjx}" than
+ * breaking the line in the middle of the command.
+ */
+const breakLines = (textAlt) => String(textAlt ?? '').replace(/[ \t]*\\n[ \t]*/g, '\n');
+
 const allowed = () => activeCommands().filter(c => c.cron).map(c => c.cmd);
 
 // "/crypto BTC" → { command, args, opts }, or { error }
@@ -170,5 +177,6 @@ module.exports = {
     commandsError,
     readCommand,
     assembleText,
-    allowed
+    allowed,
+    breakLines
 };
