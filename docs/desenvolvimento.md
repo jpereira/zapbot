@@ -92,7 +92,7 @@ src/
   flood.js              proteção contra flood (o mesmo comando além do limite: um aviso e silêncio)
   permissoes.js         quem usa os comandos comuns, e quais (bot.users e o +cmd|-cmd de cada um)
   mudo.js               /mute: quem está silenciado, os avisos cortados e a origem de cada aviso
-  defi/                 Solana, HyperEVM e EVM (RPC, Multicall3), a Orca, o Project X, o Morpho e o Aave V3 (/defi) e o -alerta de saída da faixa
+  defi/                 Solana, HyperEVM, Aptos e EVM (RPC, indexador, Multicall3), a Orca, o Project X, a Liquidswap, o Morpho e o Aave V3 (/defi) e o -alerta de saída da faixa
   watch/                regras e verificação do /watch
   eventos/              message_create, apagadas, editadas, presença
   comandos/             comandos.json (definição), um arquivo por comando,
@@ -172,7 +172,7 @@ entre os casos.
 | `configuracao.test.js` | `comandos.json`, settings (e a validação dos valores persistidos), parser de opções, ajuda (uma forma do uso e um exemplo por linha) e a coerência entre config, código, README e `docs/` (inclusive a ordem alfabética, os links e a versão estável da instalação) |
 | `cotacoes.test.js` | `/cotacao`, `/crypto` (e o filtro por moeda) e os alertas de preço (com um ou vários `-to`, o `-msg` e o `-rm` de vários) |
 | `debug.test.js` | Níveis, parser dos comandos, filtro com destaque, logs de inicialização, cópia para chats e ocultação de credenciais |
-| `defi.test.js` | Solana (base58, PDA), contas da Orca (conferidas com o SDK oficial), o Project X (HyperEVM simulada), o Morpho (API simulada, com as contas conferidas com as da API), o Aave V3 (blockchain simulada, com o Multicall3 de verdade) e o `/defi`: o filtro por protocolo, o `-rm` de vários, os endereços (inteiros só no privado), a lista (com o 🔔 e o limite) e o `-alerta` (saída e volta da faixa, o `-taxas`, o `-alerta` no cadastro e vários `-to`) |
+| `defi.test.js` | Solana (base58, PDA), contas da Orca (conferidas com o SDK oficial), o Project X (HyperEVM simulada), a Liquidswap (Aptos simulada: indexador e fullnode, com o preço das pools estáveis e a chave da API), o Morpho (API simulada, com as contas conferidas com as da API), o Aave V3 (blockchain simulada, com o Multicall3 de verdade) e o `/defi`: o filtro por protocolo, o `-rm` de vários, os endereços (inteiros só no privado), a lista (com o 🔔 e o limite) e o `-alerta` (saída e volta da faixa, o `-taxas`, o `-alerta` no cadastro e vários `-to`) |
 | `dependencias.test.js` | Carregamento das dependências sem aviso do módulo `punycode` |
 | `externos.test.js` | `/cve`, `/tempo`, `/news`, `/gpt`, `/tldr`, `/traduzir`, `/giphy`, `/meme`, `/joke`, `/kernel`, `/pixelart` |
 | `get-cache.test.js` | `/get` (e o anti-SSRF), `/cache` e a limpeza periódica |

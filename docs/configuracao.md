@@ -49,7 +49,7 @@ configuração.
 | `/news` | Feeds RSS (g1, Gazeta do Povo, The Hacker News...) | — |
 | `/cotacao` | [Yahoo Finance](https://finance.yahoo.com/) (reserva: [AwesomeAPI](https://docs.awesomeapi.com.br/)) e [Binance](https://www.binance.com/) para o USDT | — |
 | `/crypto` | [Binance](https://www.binance.com/) | — |
-| `/defi` | RPC da Solana (setting `defi.solana.rpc`), a [API da Orca](https://www.orca.so/), o RPC da HyperEVM (setting `defi.hyperevm.rpc`, para o Project X), a [API do Morpho](https://docs.morpho.org/) (setting `defi.morpho.api`) e os contratos do [Aave V3](https://aave.com/docs) pelos RPCs da Ethereum e da Base (`ETHEREUM_RPC_URL`, `BASE_RPC_URL`) | — |
+| `/defi` | RPC da Solana (setting `defi.solana.rpc`), a [API da Orca](https://www.orca.so/), o RPC da HyperEVM (setting `defi.hyperevm.rpc`, para o Project X), a API da Aptos (settings `defi.aptos.rpc` e `defi.aptos.indexer`, para a Liquidswap), a [API do Morpho](https://docs.morpho.org/) (setting `defi.morpho.api`) e os contratos do [Aave V3](https://aave.com/docs) pelos RPCs da Ethereum e da Base (`ETHEREUM_RPC_URL`, `BASE_RPC_URL`) | — |
 | `/kernel` | [kernel.org](https://www.kernel.org/) | — |
 | `/meme` | [imgflip](https://imgflip.com/) | — |
 | `/pixelart` | [16colo.rs](https://16colo.rs/) | — |
@@ -72,6 +72,12 @@ para trocar pelo WhatsApp com `/set` sem reiniciar.
 | `AAVE_WALLET_ADDRESS` | `0x1234...abcd` | Carteira (endereço público, `0x` e 40 caracteres hexadecimais) consultada pelo [`/defi aave`](comandos/defi.md#aave-v3) quando não há carteira cadastrada (`/defi aave -wallet`). Se estiver vazia, o bot usa o setting `defi.aave.wallet`. Nunca coloque aqui chave privada nem seed: a consulta é só de leitura. |
 | `ETHEREUM_RPC_URL` | `https://eth-mainnet.g.alchemy.com/v2/<chave>` | RPC da Ethereum do `/defi aave`. Se estiver vazio, vale o setting `defi.ethereum.rpc` (o público, que limita as consultas). |
 | `BASE_RPC_URL` | `https://base-mainnet.g.alchemy.com/v2/<chave>` | RPC da Base do `/defi aave`. Se estiver vazio, vale o setting `defi.base.rpc` (o público, que limita as consultas). |
+
+## Aptos (opcional)
+
+| Variável | Exemplo | Descrição |
+|---|---|---|
+| `APTOS_API_KEY` | `aptoslabs_...` | Chave da API da Aptos ([Geomi](https://geomi.dev/docs/start)) usada pelo [`/defi liquidswap`](comandos/defi.md#api-da-aptos). Opcional: sem ela, vale o limite anônimo por IP. Se estiver vazia, o bot usa o setting `defi.aptos.apikey`. |
 
 ## Morpho (opcional)
 

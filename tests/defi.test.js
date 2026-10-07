@@ -198,7 +198,7 @@ describe('/defi', () => {
     test('/defi orca, palavra desconhecida, -rm e as mensagens de lista vazia', async () => {
         await bot.responder(CADASTRO);
         assert.match((await bot.responder('/defi orca'))[0], /Orca · SOL\/cbBTC/);
-        assert.match((await bot.responder('/defi xyz'))[0], /^❌ "xyz" não é um protocolo: use orca, prjx, morpho ou aave\.\n\n```Uso: \/defi \[orca\|prjx\|morpho\|aave\]/);
+        assert.match((await bot.responder('/defi xyz'))[0], /^❌ "xyz" não é um protocolo: use orca, prjx, liquidswap \(liqswp\), morpho ou aave\.\n\n```Uso: \/defi \[orca\|prjx\|liquidswap\|morpho\|aave\]/);
 
         assert.deepEqual(await bot.responder('/defi -rm 1'), ['🗑️ Removido: Orca · Hz15…RaPZ']);
         assert.match((await bot.responder('/defi'))[0], /🌊 Nenhuma posição cadastrada/);
@@ -209,7 +209,7 @@ describe('/defi', () => {
     test('cadastro: só -address basta; erros de protocolo, endereço, conta, NFT, pool e repetida', async () => {
         const erro = async (linha, esperado) => assert.match((await bot.responder(linha))[0], esperado, linha);
 
-        await erro(`/defi -address ${POSICAO}`, /❌ Informe o protocolo antes do -address ou do -wallet: orca, prjx, morpho ou aave/);
+        await erro(`/defi -address ${POSICAO}`, /❌ Informe o protocolo antes do -address ou do -wallet: orca, prjx, liquidswap, morpho ou aave/);
         await erro('/defi orca -address', /❌ Informe o endereço da posição/);
         await erro('/defi orca -address xyz', /❌ -address: "xyz" não é um endereço da Solana/);
         await erro(`/defi orca -address ${POSICAO} -nft ${POOL}`, /❌ O NFT .* não é o desta posição \(o dela é C1ME/);
@@ -678,6 +678,203 @@ describe('/defi: Project X (HyperEVM)', () => {
         assert.equal(aviso.chatId, DONO.jid);
         assert.match(aviso.content, /^🚨 \*DeFi: Project X · carteira 0x92…0444 saiu da faixa\*\n\n🌊 \*Project X · WHYPE\/USD₮0\*/);
         assert.doesNotMatch(aviso.content, /UBTC/);   // a de BTC continua na faixa: fica de fora
+    });
+});
+
+/*
+ * A Liquidswap na Aptos simulada: o indexador devolve os saldos da carteira (os
+ * LPs das duas versões, um de outro pacote e um coin comum) e o fullnode, as
+ * pools, o supply dos LPs e o símbolo e as casas dos tokens. As contas do
+ * saldo e do preço são conferidas à mão, com números redondos.
+ */
+describe('/defi: Liquidswap (Aptos)', () => {
+    const liquidswap = bot.src('defi/liquidswap');
+    const aptos = bot.src('defi/aptos');
+    const { erroHttp } = bot;
+
+    const CARTEIRA = '0x8f3c4d2a1b9e7f6a5c4b3a29180f7e6d5c4b3a2918f7e6d5c4b3a2918f7e6d5c';
+    const CURTA = '0x8F3C';   // a forma curta da Aptos: vira 0x000…8f3c
+    const V0 = { pacote: '0x190d44266241744264b964a37b8f09863167a12d3e70cda39376cfb4e3561e12', contas: '0x5a97986a9d031c4567e15b797be516910cfcb4156312482efc6a19c0a30c948' };
+    const V05 = { pacote: '0x163df34fccbf003ce219d3f1d9e70d140b60622cb9dd47599c25fb2f797ba6e', contas: '0x61d2c22a6cb7831bee0f48363b0eec92369357aece0d1142062f7d5d85c7bef8' };
+    const APT = '0x1::aptos_coin::AptosCoin';
+    const USDC = '0xf22bede237a07e121b56d91a491eb7bcdfd1f5907926a9e58338f964a01b17fa::asset::USDC';
+    const USDT = '0xf22bede237a07e121b56d91a491eb7bcdfd1f5907926a9e58338f964a01b17fa::asset::USDT';
+    const MOJO = '0x881ac202b1f1e6ad4efcff7a1d0579411533f2502417a19211cfc49751ddb5f4::coin::MOJO';
+    const TOKENS = { [APT]: ['APT', 8], [USDC]: ['USDC', 6], [USDT]: ['USDT', 6], [MOJO]: ['MOJO', 8] };
+
+    const lp = (v, x, y, curva) => `${v.contas}::lp_coin::LP<${x}, ${y}, ${v.pacote}::curves::${curva}>`;
+    /*
+     * USDC/APT (v0): 1% de 40,000 USDC + 50,000 APT; 1 USDC = 1.25 APT (APT a $0.80).
+     * USDC/USDT (v0.5, estável): 25% de 1,000 USDC + 3,000 USDT.
+     * APT/MOJO (v0): sem stablecoin, só as quantidades.
+     */
+    const POOLS = [
+        { tipo: lp(V0, USDC, APT, 'Uncorrelated'), v: V0, x: USDC, y: APT, curva: 'Uncorrelated', rx: 40000e6, ry: 50000e8, fee: 30, supply: 1e9, saldo: 1e7 },
+        { tipo: lp(V05, USDC, USDT, 'Stable'), v: V05, x: USDC, y: USDT, curva: 'Stable', rx: 1000e6, ry: 3000e6, fee: 4, supply: 4e9, saldo: 1e9 },
+        { tipo: lp(V0, APT, MOJO, 'Uncorrelated'), v: V0, x: APT, y: MOJO, curva: 'Uncorrelated', rx: 100e8, ry: 1000e8, fee: 30, supply: 1e6, saldo: 1e5 }
+    ];
+    const norm = aptos.normalizarTipo;
+    let saldos;
+
+    function simularAptos() {
+        rede.responder('post', 'aptoslabs.com/v1/graphql', (url, cfg) => ({
+            data: { current_fungible_asset_balances: cfg.body.variables.dono === CARTEIRA ? saldos : [] }
+        }));
+        rede.responder('post', 'aptoslabs.com/v1/view', (url, cfg) => {
+            const { function: funcao, type_arguments: [tipo] } = cfg.body;
+            const pool = POOLS.find(p => norm(p.tipo) === tipo);
+            const token = Object.entries(TOKENS).find(([t]) => norm(t) === tipo)?.[1];
+            if (funcao === '0x1::coin::supply' && pool) return [{ vec: [String(pool.supply)] }];
+            if (funcao === '0x1::coin::symbol' && token) return [token[0]];
+            if (funcao === '0x1::coin::decimals' && token) return [token[1]];
+            throw new Error(`view não simulada: ${funcao}<${tipo}>`);
+        });
+        rede.responder('get', 'aptoslabs.com/v1/accounts/', (url) => {
+            const [, conta, tipo] = url.match(/accounts\/(0x[0-9a-f]+)\/resource\/(.+)$/);
+            const pool = POOLS.find(p => aptos.normalizarEndereco(p.v.contas) === conta &&
+                norm(`${p.v.pacote}::liquidity_pool::LiquidityPool<${p.x}, ${p.y}, ${p.v.pacote}::curves::${p.curva}>`) === decodeURIComponent(tipo));
+            if (!pool) return erroHttp(404, 'HTTP 404', { data: { message: 'Resource not found' } });
+            return { type: decodeURIComponent(tipo), data: { coin_x_reserve: { value: String(pool.rx) }, coin_y_reserve: { value: String(pool.ry) }, fee: String(pool.fee) } };
+        });
+    }
+
+    beforeEach(() => {
+        // Como o indexador devolve: os LPs (endereços na forma curta), um coin comum e um LP de outro pacote
+        saldos = [
+            ...POOLS.map(p => ({ asset_type_v1: p.tipo, amount: p.saldo })),
+            { asset_type_v1: APT, amount: 5e8 },
+            { asset_type_v1: `0xabc::lp_coin::LP<${APT}, ${USDC}, 0xabc::curves::Uncorrelated>`, amount: 1 },
+            { asset_type_v1: null, amount: 7 }
+        ];
+        simularAptos();
+    });
+
+    test('preço da pool: a razão das reservas na não correlacionada; a curva x³y + xy³ na estável', () => {
+        assert.equal(liquidswap.precoDaPool(40000, 50000, false), 1.25);
+        assert.equal(liquidswap.precoDaPool(1000, 1000, true), 1);
+        assert.ok(Math.abs(liquidswap.precoDaPool(1000, 3000, true) - 36 / 28) < 1e-12);
+        assert.equal(liquidswap.precoDaPool(0, 10, false), 0);
+    });
+
+    test('tipo do LP: só os das duas versões, com os endereços na forma curta ou inteira', () => {
+        const lido = liquidswap.lerTipoDoLp(POOLS[0].tipo);
+        assert.equal(lido.versao.nome, 'v0');
+        assert.equal(lido.x, norm(USDC));
+        assert.equal(lido.y, '0x0000000000000000000000000000000000000000000000000000000000000001::aptos_coin::AptosCoin');
+        assert.equal(lido.estavel, false);
+        assert.equal(liquidswap.lerTipoDoLp(POOLS[1].tipo).versao.nome, 'v0.5');
+        assert.equal(liquidswap.lerTipoDoLp(POOLS[1].tipo).estavel, true);
+        assert.equal(liquidswap.lerTipoDoLp(APT), null);
+        assert.equal(liquidswap.lerTipoDoLp(`0xabc::lp_coin::LP<${APT}, ${USDC}, 0xabc::curves::Uncorrelated>`), null);
+        assert.deepEqual(aptos.argumentosDoTipo('a::m::S<A, b::c::D<E, F>, G>'), ['A', 'b::c::D<E, F>', 'G']);
+    });
+
+    test('-wallet: cadastra a carteira da Aptos (a forma curta vira a inteira); erros e repetida', async () => {
+        const erro = async (linha, esperadoRe) => assert.match((await bot.responder(linha))[0], esperadoRe, linha);
+
+        await erro('/defi liquidswap -wallet', /❌ Informe a carteira: -wallet <0x\.\.\.>\n💡 _\/defi liquidswap -wallet 0x8f3c/);
+        await erro('/defi liquidswap -wallet xyz', /❌ -wallet: "xyz" não é uma carteira da Aptos \(0x e até 64 caracteres hexadecimais\)/);
+        await erro(`/defi liquidswap -wallet 0x${'1'.repeat(65)}`, /não é uma carteira da Aptos/);
+        await erro(`/defi liquidswap -address ${CARTEIRA}`, /❌ Na Liquidswap, a carteira vai no -wallet: \/defi liquidswap -wallet <0x\.\.\.>/);
+        await erro(`/defi liqswp -wallet ${CARTEIRA} -alerta`, /❌ O alerta do \/defi é de faixa, só da Orca e do Project X: a Liquidswap não tem/);
+
+        assert.equal((await bot.responder(`/defi liqswp -wallet ${CARTEIRA}`))[0],
+            '✅ *Carteira da Liquidswap cadastrada:* 0x8f…6d5c\n📍 3 posições abertas.\n💡 _Veja com /defi liquidswap_');
+        await erro(`/defi liquidswap -wallet ${CARTEIRA.toUpperCase().replace('0X', '0x')}`, /ℹ️ 0x8f…6d5c já está cadastrada na Liquidswap/);
+        assert.deepEqual(await bot.dbGet('SELECT protocol, address, wallet FROM defi_positions'),
+            { protocol: 'liquidswap', address: null, wallet: CARTEIRA });
+
+        // A forma curta é guardada por inteiro (e conta como a mesma carteira)
+        await bot.responder(`/defi liquidswap -wallet ${CURTA} -n Curta`);
+        assert.equal((await bot.dbGet("SELECT wallet FROM defi_positions WHERE name = 'Curta'")).wallet, `0x${'8f3c'.padStart(64, '0')}`);
+        await erro(`/defi liquidswap -wallet 0x000${CURTA.slice(2)}`, /já está cadastrada/);
+
+        const [lista] = await bot.responder('/defi -l');
+        assert.match(lista, /1\. Liquidswap · carteira 0x8f…6d5c _\(desde [\d/]+\)_\n2\. Liquidswap · Curta \(0x00…8f3c\) _/);
+    });
+
+    test('/defi liquidswap (e liqswp): uma resposta por pool, da maior para a menor em dólar; o resto fica de fora', async () => {
+        await bot.responder(`/defi liquidswap -wallet ${CARTEIRA}`);
+        const respostas = await bot.responder('/defi liquidswap');
+        assert.deepEqual(await bot.responder('/defi liqswp'), respostas);
+        const [estavel, usdcApt, semDolar, ...resto] = respostas;
+        assert.deepEqual(resto, []);
+
+        assert.equal(usdcApt, [
+            '🌊 *Liquidswap · USDC/APT* · taxa 0.3% · v0 não correlacionada',
+            '📍 1% da pool',
+            '',
+            '💰 *Saldo:* $800.00',
+            '   • 400 USDC ($400.00)',
+            '   • 500 APT ($400.00)',
+            '',
+            '🎯 *Preço atual:* 1.25 APT por USDC',
+            '   _(1 APT = 0.8 USDC)_',
+            '',
+            '🏊 *Pool:* TVL $80K · 40,000 USDC + 50,000 APT',
+            '💸 _As taxas dos swaps entram na pool: já estão no saldo._'
+        ].join('\n'));
+
+        // Estável: o preço vem da curva (36/28), não da razão das reservas (3)
+        assert.match(estavel, /^🌊 \*Liquidswap · USDC\/USDT\* · taxa 0\.04% · v0\.5 estável\n📍 25% da pool\n\n💰 \*Saldo:\* \$1,071\.43\n {3}• 250 USDC \(\$321\.43\)\n {3}• 750 USDT \(\$750\.00\)/);
+        assert.match(estavel, /🎯 \*Preço atual:\* 1\.28571 USDT por USDC/);
+
+        // Sem stablecoin: só as quantidades
+        assert.match(semDolar, /^🌊 \*Liquidswap · APT\/MOJO\*[^\n]*\n📍 10% da pool\n\n💰 \*Saldo:\*\n {3}• 10 APT\n {3}• 100 MOJO\n/);
+        assert.match(semDolar, /🏊 \*Pool:\* 100 APT \+ 1,000 MOJO/);
+
+        // O indexador recebe a carteira por inteiro
+        const consulta = rede.chamadas.find(c => c.url.includes('graphql'));
+        assert.equal(consulta.cfg.body.variables.dono, CARTEIRA);
+    });
+
+    test('-mask e -name: os números da carteira escondidos; o nome junto da fatia', async () => {
+        await bot.responder(`/defi liquidswap -wallet ${CARTEIRA} -n Carteira Aptos`);
+        const [, usdcApt] = await bot.responder('/defi liquidswap -mask');
+        assert.match(usdcApt, /📍 👛 Carteira Aptos · \*% da pool\n\n💰 \*Saldo:\* \$\*\*\*\.\*\*\n {3}• \*\*\* USDC \(\$\*\*\*\.\*\*\)/);
+        assert.match(usdcApt, /🎯 \*Preço atual:\* 1\.25 APT por USDC/);   // o mercado continua
+        assert.match(usdcApt, /🏊 \*Pool:\* TVL \$80K/);
+    });
+
+    test('carteira sem LP: cadastra e avisa; /defi diz que não há nenhuma', async () => {
+        saldos = [{ asset_type_v1: APT, amount: 5e8 }];
+        assert.match((await bot.responder(`/defi liquidswap -wallet ${CARTEIRA}`))[0], /ℹ️ Nenhuma posição aberta agora: o \/defi liquidswap mostra/);
+        assert.deepEqual(await bot.responder('/defi'), ['🌊 Liquidswap · carteira 0x8f…6d5c: nenhuma posição aberta.']);
+        assert.match((await bot.responder('/defi -rm 1'))[0], /🗑️ Removido: Liquidswap · carteira 0x8f…6d5c/);
+        assert.match((await bot.responder('/defi liqswp'))[0], /🌊 Nada cadastrado da Liquidswap/);
+    });
+
+    test('limite da API da Aptos: não cadastra; no /defi, avisa e sugere a chave', async () => {
+        const limite = erroHttp(429, 'HTTP 429', { data: { errors: [{ message: 'Per anonymous IP rate limit exceeded' }] } });
+        rede.responder('post', 'aptoslabs.com/v1/graphql', limite);
+        assert.match((await bot.responder(`/defi liquidswap -wallet ${CARTEIRA}`, { erroEsperado: true }))[0],
+            /^⚠️ Não consegui ler a carteira agora: Indexador da Aptos: limite de consultas atingido\.\n💡 _.*APTOS_API_KEY/);
+        assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM defi_positions')).n, 0);
+
+        simularAptos();
+        await bot.responder(`/defi liquidswap -wallet ${CARTEIRA}`);
+        rede.responder('post', 'aptoslabs.com/v1/view', limite);
+        assert.match((await bot.responder('/defi', { erroEsperado: true }))[0],
+            /^⚠️ Não consegui ler Liquidswap · carteira 0x8f…6d5c agora: RPC da Aptos: limite de consultas atingido\.\n💡 _A API pública da Aptos/);
+    });
+
+    test('a chave da API (APTOS_API_KEY ou defi.aptos.apikey) vai no Authorization', async () => {
+        await bot.responder(`/defi liquidswap -wallet ${CARTEIRA}`);
+        assert.ok(rede.chamadas.every(c => !c.cfg.headers?.Authorization), 'sem chave, sem o cabeçalho');
+
+        await bot.setSetting('defi.aptos.apikey', 'chave-do-setting');
+        rede.chamadas.length = 0;
+        await bot.responder('/defi liquidswap');
+        assert.ok(rede.chamadas.length && rede.chamadas.every(c => c.cfg.headers?.Authorization === 'Bearer chave-do-setting'));
+
+        process.env.APTOS_API_KEY = 'chave-do-env';
+        try {
+            rede.chamadas.length = 0;
+            await bot.responder('/defi liquidswap');
+            assert.ok(rede.chamadas.every(c => c.cfg.headers?.Authorization === 'Bearer chave-do-env'));
+        } finally {
+            delete process.env.APTOS_API_KEY;
+        }
     });
 });
 

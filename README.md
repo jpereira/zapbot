@@ -31,7 +31,7 @@ comandos começam com `/`.
 - Agenda mensagens: [`/cron`](docs/comandos/cron.md)
 - Mostra cotações e alertas de preço: [`/cotacao`](docs/comandos/cotacao.md),
   [`/crypto`](docs/comandos/crypto.md)
-- Acompanha posições DeFi (Orca, Project X, Morpho, Aave V3): [`/defi`](docs/comandos/defi.md)
+- Acompanha posições DeFi (Orca, Project X, Liquidswap, Morpho, Aave V3): [`/defi`](docs/comandos/defi.md)
 - Integra o ChatGPT: [`/gpt`](docs/comandos/gpt.md), [`/tldr`](docs/comandos/tldr.md)
 - Consulta CVEs, notícias e o tempo: [`/cve`](docs/comandos/cve.md), [`/news`](docs/comandos/news.md),
   [`/tempo`](docs/comandos/tempo.md)
@@ -146,7 +146,7 @@ de um. Os marcados como **Admin** só respondem à sua conta (e aos admins extra
 | [`/crypto`](https://jpereira.github.io/zapbot/comandos/crypto/) | `/bitcoio`, `/creptomoeda` | | Cotação das criptos ativadas (padrão: BTC, ETH, SOL e HYPE) ou só das pedidas (`BTC ETH`); alertas de preço |
 | [`/cve`](https://jpereira.github.io/zapbot/comandos/cve/) | | | Últimas CVEs publicadas (NVD); `-highscore` só as críticas |
 | [`/debug`](https://jpereira.github.io/zapbot/comandos/debug/) | `/d`, `/dbg` | ✅ | Logs de debug com níveis, filtro e cópia para chats |
-| [`/defi`](https://jpereira.github.io/zapbot/comandos/defi/) | | ✅ | Posições de liquidez da Orca e do Project X: saldo, faixa, preço e taxas a coletar, lidos on-chain; `-alerta` avisa quando sai e volta para a faixa e quando as taxas passam de um valor. `morpho` e `aave`: posição, empréstimos e risco no Morpho e no Aave V3 |
+| [`/defi`](https://jpereira.github.io/zapbot/comandos/defi/) | | ✅ | Posições de liquidez da Orca e do Project X: saldo, faixa, preço e taxas a coletar, lidos on-chain; `-alerta` avisa quando sai e volta para a faixa e quando as taxas passam de um valor. `liquidswap`: posições de LP na Aptos. `morpho` e `aave`: posição, empréstimos e risco no Morpho e no Aave V3 |
 | [`/enquete`](https://jpereira.github.io/zapbot/comandos/enquete/) | `/enq`, `/quiz` | ✅ | Cria uma enquete nativa do WhatsApp no chat; `-r` mostra o resultado |
 | [`/get`](https://jpereira.github.io/zapbot/comandos/get/) | `/download` | | Baixa vídeo/áudio de redes sociais |
 | [`/giphy`](https://jpereira.github.io/zapbot/comandos/giphy/) | `/gif` | | GIF do GIPHY por tag, URL ou ID, enviado em loop |
