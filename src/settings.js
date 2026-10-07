@@ -269,6 +269,26 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 1, max: 1440,
         desc: 'Intervalo (minutos) entre as verificações do /defi -alerta (consulta Solana ou HyperEVM conforme o protocolo).'
     },
+    'defi.aptos.apikey': {
+        default: '',
+        type: 'string',
+        allowEmpty: true,
+        secret: true,
+        desc: 'Chave da API da Aptos (geomi.dev) para o /defi liquidswap, usada quando APTOS_API_KEY não está no config/.env. Opcional: sem ela, vale o limite anônimo por IP.'
+    },
+    'defi.aptos.indexer': {
+        default: 'https://api.mainnet.aptoslabs.com/v1/graphql',
+        type: 'string',
+        validar: validarUrlFeed,
+        desc: 'Indexador GraphQL da Aptos usado pelo /defi na Liquidswap (acha as posições guardadas como fungible asset).'
+    },
+    'defi.aptos.rpc': {
+        default: 'https://api.mainnet.aptoslabs.com/v1',
+        type: 'string',
+        secret: true,
+        validar: validarUrlFeed,
+        desc: 'API REST do fullnode da Aptos usada pelo /defi na Liquidswap (a pública limita as consultas).'
+    },
     'defi.base.rpc': {
         default: 'https://mainnet.base.org',
         type: 'string',

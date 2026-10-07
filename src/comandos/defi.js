@@ -7,7 +7,9 @@ const { client } = require('../cliente');
 const { idsDoChatAtual } = require('../contatos');
 const { dbAll, dbGet, dbPronto, dbRun } = require('../db');
 const { posicoesAave } = require('../defi/aave');
+const { isEnderecoAptos, normalizarEndereco } = require('../defi/aptos');
 const { isEnderecoEvm } = require('../defi/hyperevm');
+const { posicoesLiquidswap } = require('../defi/liquidswap');
 const { posicoesMorpho } = require('../defi/morpho');
 const { detalhesDaPosicao, validarPosicao } = require('../defi/orca');
 const { posicoesDaCarteira } = require('../defi/prjx');
@@ -19,15 +21,15 @@ const { envOuSetting, getSetting } = require('../settings');
 const { formatarData, plural } = require('../util/formatar');
 
 /*
- * /defi: posições cadastradas da Orca (Solana), do Project X (HyperEVM) e do
- * Morpho (empréstimos, na Base e nas redes do defi.morpho.chains).
+ * /defi: posições cadastradas da Orca (Solana), do Project X (HyperEVM), da
+ * Liquidswap (Aptos) e do Morpho (empréstimos, na Base e nas redes do defi.morpho.chains).
  *   /defi                      → o "Position Details" de todas
- *   /defi orca|prjx|morpho     → só das daquele protocolo (morpho sem cadastro:
+ *   /defi orca|prjx|liquidswap|morpho  → só das daquele protocolo (morpho sem cadastro:
  *                                a carteira do MORPHO_WALLET_ADDRESS ou do defi.morpho.wallet)
  *   /defi -l                   → lista os cadastros
  *   /defi -rm <nº...|all>      → remove
  *   /defi orca -address <endereço> [-pool <endereço>] [-nft <mint>]  → cadastra uma posição
- *   /defi prjx|morpho -wallet <0x...>  → cadastra a carteira (o bot lê as posições dela)
+ *   /defi prjx|liquidswap|morpho -wallet <0x...>  → cadastra a carteira (o bot lê as posições dela)
  *   /defi <protocolo> -help    → a ajuda só daquele protocolo
  * O -nft e o -pool são opcionais: se vierem, o bot confere se batem com a posição.
  * No seu privado, os endereços vêm inteiros; fora dele, abreviados (0x92…0444).
@@ -65,9 +67,11 @@ function barraDaFaixa(atual, inferior, superior) {
     return `▕${'─'.repeat(k)}●${'─'.repeat(N - k)}▏ ${Math.round(((atual - inferior) / (superior - inferior)) * 100)}% da faixa`;
 }
 
-const PROTOCOLOS = { aave: 'Aave', morpho: 'Morpho', orca: 'Orca', prjx: 'Project X' };
+const PROTOCOLOS = { aave: 'Aave', liquidswap: 'Liquidswap', morpho: 'Morpho', orca: 'Orca', prjx: 'Project X' };
+// "da Orca", "do Project X": nas mensagens
+const DO_PROTOCOLO = { aave: 'do Aave', liquidswap: 'da Liquidswap', morpho: 'do Morpho', orca: 'da Orca', prjx: 'do Project X' };
 // Os que cadastram uma carteira (-wallet), e não uma posição (-address)
-const DE_CARTEIRA = ['aave', 'morpho', 'prjx'];
+const DE_CARTEIRA = ['aave', 'liquidswap', 'morpho', 'prjx'];
 // Os que têm faixa (o -alerta)
 const COM_FAIXA = ['orca', 'prjx'];
 
@@ -125,6 +129,28 @@ function textoDaPosicaoPrjx(x, nome = null, m = MOSTRAR) {
 }
 
 /**
+ * Texto de uma posição da Liquidswap (de posicoesLiquidswap). Num AMM, as taxas
+ * entram na pool: não há faixa nem taxas a coletar.
+ */
+function textoDaPosicaoLiquidswap(x, nome = null, m = MOSTRAR) {
+    const usd = (q, preco) => (preco === null ? '' : ` (${m(fmtUsd(q * preco))})`);
+    const total = x.usdY === null ? '' : ` ${m(fmtUsd(x.qtdX * x.usdX + x.qtdY * x.usdY))}`;
+    const tvl = x.usdY === null ? '' : `TVL ${fmtCompacto(x.reservaX * x.usdX + x.reservaY * x.usdY)} · `;
+    const fatia = (x.fatia * 100).toLocaleString('en-US', { maximumSignificantDigits: 3 });
+
+    return `🌊 *Liquidswap · ${x.simboloX}/${x.simboloY}* · taxa ${x.taxa.toLocaleString('en-US', { maximumFractionDigits: 2 })}%` +
+        ` · ${x.versao} ${x.estavel ? 'estável' : 'não correlacionada'}\n` +
+        `📍 ${nome ? `👛 ${nome} · ` : ''}${m(fatia)}% da pool\n\n` +
+        `💰 *Saldo:*${total}\n` +
+        `   • ${m(fmtQtd(x.qtdX))} ${x.simboloX}${usd(x.qtdX, x.usdX)}\n` +
+        `   • ${m(fmtQtd(x.qtdY))} ${x.simboloY}${usd(x.qtdY, x.usdY)}\n\n` +
+        `🎯 *Preço atual:* ${fmtPreco(x.preco)} ${x.simboloY} por ${x.simboloX}\n` +
+        (x.preco ? `   _(1 ${x.simboloY} = ${fmtPreco(1 / x.preco)} ${x.simboloX})_\n\n` : '\n') +
+        `🏊 *Pool:* ${tvl}${fmtQtd(x.reservaX)} ${x.simboloX} + ${fmtQtd(x.reservaY)} ${x.simboloY}\n` +
+        '💸 _As taxas dos swaps entram na pool: já estão no saldo._';
+}
+
+/**
  * Lê um cadastro, de qualquer protocolo.
  * @returns {Promise<{ naFaixa: boolean|null, textos: string[], foraDaFaixa: string[], taxasUsd: number|null }>}
  *   naFaixa: todas as posições na faixa (null: a carteira não tem nenhuma aberta)
@@ -140,6 +166,11 @@ async function lerCadastro(p, end = curto, { full = false, m = MOSTRAR } = {}) {
     if (p.protocol === 'morpho') {
         const r = await posicoesMorpho(p.wallet);
         return { naFaixa: null, textos: r.posicoes.length ? [textoMorpho(r, end, p.name, m)] : [], foraDaFaixa: [], taxasUsd: null };
+    }
+
+    if (p.protocol === 'liquidswap') {
+        const posicoes = await posicoesLiquidswap(p.wallet);
+        return { naFaixa: null, textos: posicoes.map(x => textoDaPosicaoLiquidswap(x, p.name, m)), foraDaFaixa: [], taxasUsd: null };
     }
 
     if (p.protocol === 'prjx') {
@@ -233,16 +264,16 @@ function textoDaPosicao(d, end = curto, nome = null, m = MOSTRAR) {
     return texto;
 }
 
-const EXEMPLOS = '💡 _/defi orca -address <endereço> -pool <endereço> -nft <mint>\n/defi prjx -wallet <0x...>\n/defi morpho -wallet <0x...>\n/defi aave -wallet <0x...>_';
+const EXEMPLOS = '💡 _/defi orca -address <endereço> -pool <endereço> -nft <mint>\n/defi prjx -wallet <0x...>\n/defi liquidswap -wallet <0x...>\n/defi morpho -wallet <0x...>\n/defi aave -wallet <0x...>_';
 
-// A palavra do protocolo: /defi orca, /defi prjx -wallet ..., /defi morpho
-const PALAVRAS = { aave: 'aave', morpho: 'morpho', orca: 'orca', prjx: 'prjx' };
+// A palavra do protocolo: /defi orca, /defi prjx -wallet ..., /defi morpho, /defi liqswp (= liquidswap)
+const PALAVRAS = { aave: 'aave', liqswp: 'liquidswap', liquidswap: 'liquidswap', morpho: 'morpho', orca: 'orca', prjx: 'prjx' };
 const protocoloDe = (palavra) => PALAVRAS[String(palavra ?? '').toLowerCase()] ?? null;
 
 async function limiteOuRepetida(msg, protocolo, endereco, end) {
     const coluna = DE_CARTEIRA.includes(protocolo) ? 'wallet' : 'address';
     if (await dbGet(`SELECT 1 AS ok FROM defi_positions WHERE protocol = ? AND lower(${coluna}) = lower(?)`, [protocolo, endereco])) {
-        await msg.reply(`ℹ️ ${end(endereco)} já está cadastrada no ${PROTOCOLOS[protocolo]}. Veja com /defi ${protocolo}`);
+        await msg.reply(`ℹ️ ${end(endereco)} já está cadastrada ${DO_PROTOCOLO[protocolo].replace(/^d/, 'n')}. Veja com /defi ${protocolo}`);
         return true;
     }
     if ((await dbGet('SELECT COUNT(*) AS n FROM defi_positions')).n >= MAX_POSICOES) {
@@ -259,6 +290,7 @@ async function limiteOuRepetida(msg, protocolo, endereco, end) {
  */
 const LER_CARTEIRA = {
     prjx: async (carteira) => ({ abertas: (await posicoesDaCarteira(carteira)).length }),
+    liquidswap: async (carteira) => ({ abertas: (await posicoesLiquidswap(carteira)).length }),
     morpho: async (carteira) => {
         const r = await posicoesMorpho(carteira);
         return { abertas: r.posicoes.length, texto: (end, nome, { m }) => textoMorpho(r, end, nome, m) };
@@ -269,70 +301,96 @@ const LER_CARTEIRA = {
         return { abertas, texto: (end, nome, opcoes) => textoAave(r, end, nome, opcoes) };
     }
 };
+const DICA_APTOS = '💡 _A API pública da Aptos limita as consultas por IP; uma chave da Geomi vai no APTOS_API_KEY (ou no setting defi.aptos.apikey)._';
 const DICA_DA_CARTEIRA = {
     prjx: '💡 _O RPC público da HyperEVM limita as consultas; um RPC próprio vai no setting defi.hyperevm.rpc._',
+    liquidswap: DICA_APTOS,
     morpho: '💡 _Tente de novo em alguns instantes._',
     aave: '💡 _Tente de novo em alguns instantes; um RPC próprio vai no ETHEREUM_RPC_URL e no BASE_RPC_URL._'
 };
 
 /*
+ * A carteira de cada rede: a da Aptos (Liquidswap) tem até 64 hexadecimais e é
+ * guardada por inteiro (0x1 = 0x000…001); as EVM, 40.
+ */
+const CARTEIRAS = {
+    aptos: {
+        valida: isEnderecoAptos,
+        normalizar: normalizarEndereco,
+        erro: (c) => `❌ -wallet: "${c}" não é uma carteira da Aptos (0x e até 64 caracteres hexadecimais).`,
+        exemplo: '0x8f3c4d2a1b9e7f6a5c4b3a29180f7e6d5c4b3a2918f7e6d5c4b3a2918f7e6d5c'
+    },
+    evm: {
+        valida: isEnderecoEvm,
+        normalizar: (c) => c.toLowerCase(),
+        erro: (c) => `❌ -wallet: "${c}" não é uma carteira EVM (0x e 40 caracteres hexadecimais).`,
+        exemplo: '0x926024824BAEAf3ee0b7A2EEFA5A216743230444'
+    }
+};
+const carteiraDo = (protocolo) => CARTEIRAS[protocolo === 'liquidswap' ? 'aptos' : 'evm'];
+
+/*
  * O Morpho e o Aave já mostram a posição no cadastro (com -full, a do Aave
- * completa); o Project X, que costuma ter várias, fica para o /defi prjx.
+ * completa); o Project X e a Liquidswap, que costumam ter várias, ficam para o
+ * /defi prjx e o /defi liquidswap.
  */
 async function cadastrarCarteira(msg, o, protocolo, end) {
-    const carteira = String(o.wallet ?? '').trim().replace(/^<(.*)>$/, '$1');
-    const protocoloNome = PROTOCOLOS[protocolo];
+    const digitada = String(o.wallet ?? '').trim().replace(/^<(.*)>$/, '$1');
+    const tipo = carteiraDo(protocolo);
     const apelido = o.name || null;
 
-    if (!carteira) {
-        await msg.reply(`❌ Informe a carteira: -wallet <0x...>\n💡 _/defi ${protocolo} -wallet 0x926024824BAEAf3ee0b7A2EEFA5A216743230444_`);
+    if (!digitada) {
+        await msg.reply(`❌ Informe a carteira: -wallet <0x...>\n💡 _/defi ${protocolo} -wallet ${tipo.exemplo}_`);
         return;
     }
-    if (!isEnderecoEvm(carteira)) {
-        await msg.reply(`❌ -wallet: "${carteira}" não é uma carteira EVM (0x e 40 caracteres hexadecimais).`);
+    if (!tipo.valida(digitada)) {
+        await msg.reply(tipo.erro(digitada));
         return;
     }
+    // No banco, normalizada; nas mensagens e na leitura, a EVM como foi digitada (com o checksum)
+    const carteira = tipo.normalizar(digitada);
+    const exibida = tipo === CARTEIRAS.evm ? digitada : carteira;
 
     // Já cadastrada, com -name: troca o nome
-    const existente = await dbGet('SELECT * FROM defi_positions WHERE protocol = ? AND wallet = ?', [protocolo, carteira.toLowerCase()]);
+    const existente = await dbGet('SELECT * FROM defi_positions WHERE protocol = ? AND wallet = ?', [protocolo, carteira]);
     if (existente && apelido) {
         await dbRun('UPDATE defi_positions SET name = ? WHERE id = ?', [apelido, existente.id]);
         await msg.reply(`✏️ *Nome trocado:* ${descrever({ ...existente, name: apelido }, end)}`);
         return;
     }
-    if (await limiteOuRepetida(msg, protocolo, carteira, end)) return;
+    if (await limiteOuRepetida(msg, protocolo, exibida, end)) return;
 
     let abertas;
     let texto;
     try {
-        ({ abertas, texto } = await LER_CARTEIRA[protocolo](carteira));
+        ({ abertas, texto } = await LER_CARTEIRA[protocolo](exibida));
     } catch (err) {
-        printError(`/defi ${protocolo} ${carteira}:`, err.message);
+        printError(`/defi ${protocolo} ${exibida}:`, err.message);
         await msg.reply(`⚠️ Não consegui ler a carteira agora: ${err.motivo ?? `${err.message}.`}\n${DICA_DA_CARTEIRA[protocolo]}`);
         return;
     }
 
     await dbRun('INSERT INTO defi_positions (protocol, wallet, name, created_at) VALUES (?, ?, ?, ?)',
-        [protocolo, carteira.toLowerCase(), apelido, Date.now()]);
-    await msg.reply(`✅ *Carteira do ${protocoloNome} cadastrada:* ${apelido ? `${apelido} (${end(carteira)})` : end(carteira)}\n` +
+        [protocolo, carteira, apelido, Date.now()]);
+    await msg.reply(`✅ *Carteira ${DO_PROTOCOLO[protocolo]} cadastrada:* ${apelido ? `${apelido} (${end(exibida)})` : end(exibida)}\n` +
         (abertas ? `📍 ${plural(abertas, 'posição aberta', 'posições abertas')}.` : `ℹ️ Nenhuma posição aberta agora: o /defi ${protocolo} mostra quando houver.`) +
         `\n💡 _Veja com /defi ${protocolo}_`);
     if (abertas && texto) await msg.reply(texto(end, apelido, { full: Boolean(o.full), m: o.mask ? ESCONDER : MOSTRAR }));
-    return carteira.toLowerCase();
+    return carteira;
 }
 
 /*
  * O endereço cadastrado, ou null (o erro já foi respondido). A Orca cadastra
- * a posição (-address); o Project X e o Morpho, a carteira (-wallet).
+ * a posição (-address); o Project X, a Liquidswap, o Morpho e o Aave, a carteira (-wallet).
  */
 async function cadastrar(msg, { opt: o, given }, protocolo, end) {
     if (!protocolo) {
-        await msg.reply(`❌ Informe o protocolo antes do -address ou do -wallet: orca, prjx, morpho ou aave.\n${EXEMPLOS}`);
+        await msg.reply(`❌ Informe o protocolo antes do -address ou do -wallet: orca, prjx, liquidswap, morpho ou aave.\n${EXEMPLOS}`);
         return null;
     }
     if (DE_CARTEIRA.includes(protocolo)) {
         if (given.has('address')) {
-            await msg.reply(`❌ No ${PROTOCOLOS[protocolo]}, a carteira vai no -wallet: /defi ${protocolo} -wallet <0x...>`);
+            await msg.reply(`❌ ${DO_PROTOCOLO[protocolo].replace(/^d/, 'N')}, a carteira vai no -wallet: /defi ${protocolo} -wallet <0x...>`);
             return null;
         }
         return cadastrarCarteira(msg, o, protocolo, end);
@@ -379,6 +437,7 @@ async function cadastrar(msg, { opt: o, given }, protocolo, end) {
 }
 
 const DICA_RPC = {
+    liquidswap: DICA_APTOS,
     orca: '💡 _O RPC público da Solana limita as consultas; um RPC próprio vai no setting defi.solana.rpc._',
     prjx: '💡 _O RPC público da HyperEVM limita as consultas; um RPC próprio vai no setting defi.hyperevm.rpc._'
 };
@@ -733,7 +792,7 @@ async function tratarAlerta(msg, opts, posicoes, { comDestino, destinosTexto }, 
     }
     const semFaixa = escolhidas.find(p => !COM_FAIXA.includes(p.protocol));
     if (semFaixa) {
-        await msg.reply(`❌ O alerta do /defi é de faixa, só da Orca e do Project X: a nº ${posicoes.indexOf(semFaixa) + 1} é do ${PROTOCOLOS[semFaixa.protocol]}.`);
+        await msg.reply(`❌ O alerta do /defi é de faixa, só da Orca e do Project X: a nº ${posicoes.indexOf(semFaixa) + 1} é ${DO_PROTOCOLO[semFaixa.protocol]}.`);
         return;
     }
 
@@ -796,7 +855,7 @@ async function cadastrarComAlerta(msg, opts, protocolo, destino, end) {
     const o = opts.opt;
     let limite = null;
     if (opts.given.has('alerta') && protocolo && !COM_FAIXA.includes(protocolo)) {
-        await msg.reply(`❌ O alerta do /defi é de faixa, só da Orca e do Project X: o ${PROTOCOLOS[protocolo]} não tem.`);
+        await msg.reply(`❌ O alerta do /defi é de faixa, só da Orca e do Project X: ${DO_PROTOCOLO[protocolo].slice(1)} não tem.`);
         return;
     }
     if (opts.given.has('alerta')) {
@@ -928,14 +987,14 @@ async function cmdDefi({ msg, opts: optsDoComando, args, chatId }) {
     }
 
     if (argv.length) {
-        await msg.reply(`❌ "${argv[0]}" não é um protocolo: use orca, prjx, morpho ou aave.\n\n\`\`\`${getCommandSyntax('/defi')}\`\`\``);
+        await msg.reply(`❌ "${argv[0]}" não é um protocolo: use orca, prjx, liquidswap (liqswp), morpho ou aave.\n\n\`\`\`${getCommandSyntax('/defi')}\`\`\``);
         return;
     }
 
     // -full (o Aave completo) e -mask (os números da carteira com *)
     const exibir = { full: Boolean(o.full), m: o.mask ? ESCONDER : MOSTRAR };
 
-    // /defi: o Position Details de todos; /defi orca, prjx ou morpho: só dele
+    // /defi: o Position Details de todos; /defi orca, prjx, liquidswap ou morpho: só dele
     const escolhidas = posicoes.filter(x => !protocolo || x.protocol === protocolo);
 
     // Morpho e Aave sem cadastro: a carteira do .env (ou do setting), consultada na hora
@@ -945,7 +1004,7 @@ async function cmdDefi({ msg, opts: optsDoComando, args, chatId }) {
     }
 
     if (!escolhidas.length) {
-        await msg.reply(protocolo ? `🌊 Nada cadastrado ${protocolo === 'prjx' ? 'do Project X' : 'da Orca'}.\n${EXEMPLOS}` : vazio);
+        await msg.reply(protocolo ? `🌊 Nada cadastrado ${DO_PROTOCOLO[protocolo]}.\n${EXEMPLOS}` : vazio);
         return;
     }
     await mostrar(msg, escolhidas, end, exibir);
@@ -962,6 +1021,7 @@ module.exports = {
     lerCadastro,
     textoDaPosicao,
     textoAave,
+    textoDaPosicaoLiquidswap,
     textoDaPosicaoPrjx,
     textoMorpho
 };

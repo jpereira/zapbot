@@ -1,19 +1,21 @@
 # `/defi` · admin
 
-Acompanha posições em DeFi, de quatro protocolos:
+Acompanha posições em DeFi, de cinco protocolos:
 
 - [Orca](https://www.orca.so/) (Whirlpools, na Solana): você cadastra cada posição.
 - [Project X](https://www.prjx.com/portfolio) (na HyperEVM, da Hyperliquid): você cadastra a
   carteira, e o bot lê as posições abertas dela ([Project X](#project-x)).
+- [Liquidswap](https://liquidswap.com/) (a DEX da Pontem, na Aptos): você cadastra a carteira, e o
+  bot lê as posições de liquidez dela ([Liquidswap](#liquidswap)).
 - [Morpho](https://morpho.org/) (empréstimos, na Base e em outras redes): você cadastra a carteira,
   e o bot lê o colateral, a dívida e o risco dela ([Morpho](#morpho)).
 - [Aave V3](https://aave.com/) (empréstimos, na Ethereum e na Base): você cadastra a carteira, e o
   bot lê o fornecido, o emprestado e o Health Factor nos contratos do Aave ([Aave V3](#aave-v3)).
 
-A Orca cadastra a **posição** (`-address`); o Project X, o Morpho e o Aave, a **carteira**
-(`-wallet`). Todos aceitam um nome opcional (`-name`). O `/defi` lê tudo na hora e mostra o
-equivalente ao "Position Details" de cada posição; com `orca`, `prjx`, `morpho` ou `aave`, só as
-daquele protocolo. No seu privado, os endereços e as carteiras aparecem inteiros; fora dele,
+A Orca cadastra a **posição** (`-address`); o Project X, a Liquidswap, o Morpho e o Aave, a
+**carteira** (`-wallet`). Todos aceitam um nome opcional (`-name`). O `/defi` lê tudo na hora e
+mostra o equivalente ao "Position Details" de cada posição; com `orca`, `prjx`, `liquidswap` (ou
+`liqswp`), `morpho` ou `aave`, só as daquele protocolo. No seu privado, os endereços e as carteiras aparecem inteiros; fora dele,
 abreviados (`0x92…0444`). Com o `-alerta`, o bot avisa quando uma posição sai da faixa, quando volta
 e, com o `-taxas`, quando as taxas a coletar passam de um valor
 ([Alerta de saída da faixa](#alerta-de-saída-da-faixa)).
@@ -48,6 +50,14 @@ Para o Project X:
 /defi prjx -wallet <0x...> -alerta    → cadastra e já liga o alerta (no seu privado)
 ```
 
+Para a Liquidswap (`liquidswap` ou `liqswp`):
+
+```text
+/defi liquidswap               → só as da Liquidswap (o mesmo que /defi liqswp)
+/defi liquidswap -wallet <0x...>   → cadastra a carteira da Aptos
+/defi liqswp -wallet <0x...> -n Carteira Aptos   → com um nome
+```
+
 Para o Morpho:
 
 ```text
@@ -66,16 +76,16 @@ Para o Aave:
 
 | Opção | Valor | Descrição |
 |---|---|---|
-| *(protocolo)* | `orca`, `prjx`, `morpho` ou `aave` | Sozinho, mostra o Position Details só dele; com `-address` (`orca`) ou `-wallet` (`prjx`, `morpho` e `aave`), cadastra; com `-help`, mostra a ajuda só dele. Sem protocolo, o `/defi` mostra todos os cadastrados |
+| *(protocolo)* | `orca`, `prjx`, `liquidswap` (ou `liqswp`), `morpho` ou `aave` | Sozinho, mostra o Position Details só dele; com `-address` (`orca`) ou `-wallet` (`prjx`, `liquidswap`, `morpho` e `aave`), cadastra; com `-help`, mostra a ajuda só dele. Sem protocolo, o `/defi` mostra todos os cadastrados |
 | `-list`, `-l` | | Lista os cadastros, com 🔔 nos que têm alerta (e o limite das taxas: `🔔 ≥ $2,000.00`). No seu privado, com os endereços inteiros; fora dele, abreviados (`Hz15…RaPZ`) |
 | `-rm` | `<nº...\|all>` | Remove o cadastro nº N, vários (`-rm 1 3` ou `-rm 1,3`) ou todos; se algum nº não existe, nenhum sai. Junto com `-alerta`: só desliga o alerta da nº N (ou de todas) |
-| `-alerta`, `-a` | `[nº\|all\|valor]` | Sem nº: lista os alertas. Com nº (ou `all`): avisa quando a posição sair da faixa e quando voltar. Só da Orca e do Project X (o Morpho e o Aave não têm faixa). No cadastro (com `-address` ou `-wallet`), liga o alerta da posição nova, no seu privado (ou no `-to`); o valor é o limite das taxas, como o `-taxas` (`-alerta 2000`). Veja [Alerta de saída da faixa](#alerta-de-saída-da-faixa) |
+| `-alerta`, `-a` | `[nº\|all\|valor]` | Sem nº: lista os alertas. Com nº (ou `all`): avisa quando a posição sair da faixa e quando voltar. Só da Orca e do Project X (a Liquidswap, o Morpho e o Aave não têm faixa). No cadastro (com `-address` ou `-wallet`), liga o alerta da posição nova, no seu privado (ou no `-to`); o valor é o limite das taxas, como o `-taxas` (`-alerta 2000`). Veja [Alerta de saída da faixa](#alerta-de-saída-da-faixa) |
 | `-taxas` | `<valor\|off>` | Junto com `-alerta`: avisa também quando as taxas a coletar passarem do valor, em dólar (ex.: `-taxas 50`). Avisa uma vez e de novo depois de você coletar; `off` tira |
 | `-to` | `<destino>` | Junto com `-alerta`: para onde vai o aviso. Um contato (`/Jorge Pereira/`), uma menção (`@Fulano Da Silva`), um grupo (`/Grupo L200/`), um número (`+5521999999999`) ou e-mail (`email` é o `QRCODE_EMAIL_SMTP_TO`) ([Destinos](index.md#destinos-contato-grupo-número-ou-e-mail)). Repita para vários: o aviso sai em todos. Sem ele, o seu privado |
 | `-address` | `<endereço>` | Com `orca`: cadastra a posição da Orca pelo endereço dela |
 | `-pool` | `<endereço>` | Com `orca -address`: a pool. Opcional; se vier, o bot confere se bate |
 | `-nft` | `<mint>` | Com `orca -address`: o NFT da posição. Opcional; se vier, o bot confere se bate |
-| `-wallet`, `-w` | `<0x...>` | Com `prjx`, `morpho` ou `aave`: cadastra a carteira (`0x` e 40 caracteres hexadecimais), e o bot lê todas as posições abertas dela |
+| `-wallet`, `-w` | `<0x...>` | Com `prjx`, `morpho` ou `aave`: cadastra a carteira (`0x` e 40 caracteres hexadecimais); com `liquidswap`, a carteira da Aptos (`0x` e até 64). O bot lê todas as posições abertas dela |
 | `-mask`, `-m` | | Esconde os números da carteira com `*`, mantendo o formato (`$**,***.**`): saldos, quantidades, valores e o rendimento. As taxas a coletar ficam visíveis. Os endereços da posição (-address) e da carteira (-wallet) também ficam ocultos, inclusive no privado. Preço, faixa, pool, Health Factor, LTV e APY continuam. Vale com qualquer protocolo (`/defi -m`, `/defi aave -mask`) |
 | `-name`, `-n` | `<nome>` | Com `-address` ou `-wallet`: um nome para a posição ou a carteira (opcional, até 40 caracteres), mostrado junto do endereço (`Orca · Posição TAL (Hz15…RaPZ)`, `Project X · Carteira Hare (0x92…0444)`). Com espaços, com ou sem aspas. Numa já cadastrada, troca o nome |
 | `-full`, `-f` | | Com `aave`: os detalhes da posição: LTV, liquidation threshold, available borrows, o APY de cada ativo, o que é colateral, eMode e isolation mode. Veja [Aave V3](#aave-v3) |
@@ -83,6 +93,7 @@ Para o Aave:
 ```text
 /defi orca -address Hz15TavvC8p9S7EihCbWa694kWFJGXFzs7AVpvWKRaPZ -pool CeaZcxBNLpJWtxzt58qQmfMBtJY8pQLvursXTJYGQpbN -nft C1MEDy3xt3gxiDtFkHt7HBWxxUVSarKZgt22FUzsKoji
 /defi prjx -wallet 0x926024824BAEAf3ee0b7A2EEFA5A216743230444
+/defi liquidswap -wallet 0x8f3c4d2a1b9e7f6a5c4b3a29180f7e6d5c4b3a2918f7e6d5c4b3a2918f7e6d5c
 /defi morpho -wallet 0x74459EA7df673CFd90afbe39F635AcE08Ccb97C4
 /defi -alerta 1        → avisa no seu privado quando a nº 1 sair da faixa (e voltar)
 /defi -a 1 -taxas 50   → e quando as taxas a coletar da nº 1 passarem de $50
@@ -104,7 +115,7 @@ limite das taxas:
 No seu privado, os endereços saem inteiros.
 
 Para receber o Position Details todo dia, num chat ou junto com outros comandos, use o
-[`/cron`](cron.md#comandos-no-texto) (aceita os quatro protocolos, `-l`, `-mask` e `aave -full`; as
+[`/cron`](cron.md#comandos-no-texto) (aceita os cinco protocolos, `-l`, `-mask` e `aave -full`; as
 opções de cadastro e de alerta são recusadas):
 
 ```text
@@ -170,6 +181,48 @@ para a mais velha:
   aparecem só as quantidades.
 - Cadastrar uma carteira sem posição aberta vale (o bot avisa): o `/defi prjx` mostra as posições
   quando houver.
+
+## Liquidswap
+
+A [Liquidswap](https://liquidswap.com/) é a DEX da Pontem na Aptos. As pools são de AMM clássico:
+`x·y = k` nas não correlacionadas e `x³y + xy³ = k` nas estáveis, nas versões v0 e v0.5. A posição
+é a moeda de LP da pool, na carteira de quem colocou a liquidez. Por isso o cadastro é a
+**carteira** da Aptos, e o `/defi liquidswap` (ou `/defi liqswp`) mostra cada pool em que ela tem
+LP, da maior para a menor em dólar:
+
+```text
+/defi liquidswap -wallet 0x8f3c4d2a1b9e7f6a5c4b3a29180f7e6d5c4b3a2918f7e6d5c4b3a2918f7e6d5c
+✅ Carteira da Liquidswap cadastrada: 0x8f…6d5c
+📍 2 posições abertas.
+
+/defi liqswp
+🌊 Liquidswap · USDC/APT · taxa 0.3% · v0 não correlacionada
+📍 0.5% da pool
+
+💰 Saldo: $439.83
+   • 219.9144 USDC ($219.91)
+   • 294.4688 APT ($219.91)
+
+🎯 Preço atual: 1.33902 APT por USDC
+   (1 APT = 0.746817 USDC)
+
+🏊 Pool: TVL $87.97K · 43,982.87 USDC + 58,893.75 APT
+💸 As taxas dos swaps entram na pool: já estão no saldo.
+```
+
+- **Fatia da pool**: o seu LP dividido pelo total emitido. O saldo de cada token é essa fatia das
+  reservas da pool.
+- **Preço**: nas pools não correlacionadas, a razão entre as reservas; nas estáveis, o preço da
+  curva `x³y + xy³` no ponto atual.
+- **Dólar**: vem do lado estável do par (USDC, USDT...). Num par sem stablecoin, aparecem só as
+  quantidades.
+- **Sem faixa e sem taxas a coletar**: num AMM clássico, a liquidez cobre todos os preços e as
+  taxas dos swaps entram nas reservas. Elas já estão no saldo, e por isso a Liquidswap não tem
+  `-alerta`.
+- O endereço da carteira aceita a forma curta da Aptos (`0x1` é o `0x000…001`) e é guardado por
+  inteiro. O bot mostra até 20 pools por carteira.
+- Cadastrar uma carteira sem LP vale (o bot avisa): o `/defi liquidswap` mostra as posições quando
+  houver.
 
 ## Morpho
 
@@ -434,7 +487,7 @@ Alchemy... têm planos grátis):
 
 O valor é exibido mascarado no `/set`, já que a URL costuma levar a chave. As posições cadastradas
 (e o alerta de cada uma) ficam na tabela `defi_positions` (até 20, somando posições da Orca e
-carteiras do Project X, Morpho e Aave).
+carteiras do Project X, da Liquidswap, do Morpho e do Aave).
 
 ## RPC da HyperEVM
 
@@ -445,4 +498,23 @@ tente de novo em instantes ou use um RPC próprio:
 
 ```text
 /set defi.hyperevm.rpc https://<seu-rpc-da-hyperevm>
+```
+
+## API da Aptos
+
+A Liquidswap é lida em duas partes da API pública da Aptos Labs:
+
+- o **indexador** (setting `defi.aptos.indexer`), que acha os LPs da carteira, tanto os guardados
+  como coin quanto os já migrados para fungible asset;
+- a **API REST do fullnode** (setting `defi.aptos.rpc`), que lê as reservas das pools, o total de
+  LP emitido e o símbolo e as casas decimais dos tokens.
+
+Sem chave, as duas valem pelo limite anônimo por IP, que basta para o uso do bot. Se o
+`/defi liquidswap` responder que atingiu o limite de consultas, tente de novo em alguns minutos ou
+crie uma chave grátis na [Geomi](https://geomi.dev/docs/start) e coloque no `config/.env` (ou no
+setting):
+
+```text
+APTOS_API_KEY=<sua-chave>
+/set defi.aptos.apikey <sua-chave>
 ```
