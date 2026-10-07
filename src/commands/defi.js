@@ -7,7 +7,9 @@ const { client } = require('../client');
 const { chatCurrentIds } = require('../contacts');
 const { dbAll, dbGet, dbReady, dbRun } = require('../db');
 const { positionsAave } = require('../defi/aave');
+const { isAddressAptos, normalizeAddress } = require('../defi/aptos');
 const { isAddressEvm } = require('../defi/hyperevm');
+const { positionsLiquidswap } = require('../defi/liquidswap');
 const { positionsMorpho } = require('../defi/morpho');
 const { positionDetails, validatePosition } = require('../defi/orca');
 const { walletPositions } = require('../defi/prjx');
@@ -19,15 +21,15 @@ const { envOuSetting, getSetting } = require('../settings');
 const { formatData, plural } = require('../util/format');
 
 /*
- * /defi: registered positions from Orca (Solana), Project X (HyperEVM) and
- * Morpho (loans, on Base and the defi.morpho.chains networks).
+ * /defi: registered positions from Orca (Solana), Project X (HyperEVM), the
+ * Liquidswap (Aptos) and Morpho (loans, on Base and the defi.morpho.chains networks).
  * /defi                      → the "Position Details" of all of them
- * /defi orca|prjx|morpho     → only those of that protocol (morpho with no registration:
+ * /defi orca|prjx|liquidswap|morpho  → only those of that protocol (morpho with no registration:
  * the MORPHO_WALLET_ADDRESS wallet or defi.morpho.wallet)
  * /defi -l                   → lists the registrations
  *   /defi -rm <nº...|all>      → remove
  * /defi orca -address <address> [-pool <address>] [-nft <mint>]  → registers a position
- * /defi prjx|morpho -wallet <0x...>  → registers the wallet (the bot reads its positions)
+ * /defi prjx|liquidswap|morpho -wallet <0x...>  → registers the wallet (the bot reads its positions)
  * /defi <protocol> -help    → the help for that protocol only
  * -nft and -pool are optional: if they come, the bot checks that they match the position.
  * In your private chat, addresses come in full; outside it, abbreviated (0x12…5678).
@@ -65,9 +67,11 @@ function rangeBar(current, inferior, superior) {
     return `▕${'─'.repeat(k)}●${'─'.repeat(N - k)}▏ ${Math.round(((current - inferior) / (superior - inferior)) * 100)}% da faixa`;
 }
 
-const PROTOCOLS = { aave: 'Aave', morpho: 'Morpho', orca: 'Orca', prjx: 'Project X' };
+const PROTOCOLS = { aave: 'Aave', liquidswap: 'Liquidswap', morpho: 'Morpho', orca: 'Orca', prjx: 'Project X' };
+// "da Orca", "do Project X": in the messages
+const PROTOCOL = { aave: 'do Aave', liquidswap: 'da Liquidswap', morpho: 'do Morpho', orca: 'da Orca', prjx: 'do Project X' };
 // Those that register a wallet (-wallet), and not a position (-address)
-const WALLET = ['aave', 'morpho', 'prjx'];
+const WALLET = ['aave', 'liquidswap', 'morpho', 'prjx'];
 // Those that have a range (the -alerta)
 const WITH_RANGE = ['orca', 'prjx'];
 
@@ -125,6 +129,28 @@ function positionPrjxText(x, nameAlt = null, m = SHOW) {
 }
 
 /**
+ * Text of a Liquidswap position (from positionsLiquidswap). In an AMM, the fees
+ * enter the pool: there is no range nor fees to collect.
+ */
+function positionLiquidswapText(x, nameAlt = null, m = SHOW) {
+    const usd = (q, price) => (price === null ? '' : ` (${m(fmtUsd(q * price))})`);
+    const total = x.usdY === null ? '' : ` ${m(fmtUsd(x.qtdX * x.usdX + x.qtdY * x.usdY))}`;
+    const tvl = x.usdY === null ? '' : `TVL ${fmtCompact(x.reservaX * x.usdX + x.reservaY * x.usdY)} · `;
+    const slice = (x.fatia * 100).toLocaleString('en-US', { maximumSignificantDigits: 3 });
+
+    return `🌊 *Liquidswap · ${x.simboloX}/${x.simboloY}* · taxa ${x.taxa.toLocaleString('en-US', { maximumFractionDigits: 2 })}%` +
+        ` · ${x.versao} ${x.estavel ? 'estável' : 'não correlacionada'}\n` +
+        `📍 ${nameAlt ? `👛 ${nameAlt} · ` : ''}${m(slice)}% da pool\n\n` +
+        `💰 *Saldo:*${total}\n` +
+        `   • ${m(fmtQtd(x.qtdX))} ${x.simboloX}${usd(x.qtdX, x.usdX)}\n` +
+        `   • ${m(fmtQtd(x.qtdY))} ${x.simboloY}${usd(x.qtdY, x.usdY)}\n\n` +
+        `🎯 *Preço atual:* ${fmtPrice(x.preco)} ${x.simboloY} por ${x.simboloX}\n` +
+        (x.preco ? `   _(1 ${x.simboloY} = ${fmtPrice(1 / x.preco)} ${x.simboloX})_\n\n` : '\n') +
+        `🏊 *Pool:* ${tvl}${fmtQtd(x.reservaX)} ${x.simboloX} + ${fmtQtd(x.reservaY)} ${x.simboloY}\n` +
+        '💸 _As taxas dos swaps entram na pool: já estão no saldo._';
+}
+
+/**
  * Reads a registration, from any protocol.
  * @returns {Promise<{ naFaixa: boolean|null, textos: string[], foraDaFaixa: string[], taxasUsd: number|null }>}
  * inRange: all the positions in range (null: the wallet has none open)
@@ -140,6 +166,11 @@ async function readRegistration(p, end = short, { full = false, m = SHOW } = {})
     if (p.protocol === 'morpho') {
         const r = await positionsMorpho(p.wallet);
         return { naFaixa: null, textos: r.posicoes.length ? [textMorpho(r, end, p.name, m)] : [], foraDaFaixa: [], taxasUsd: null };
+    }
+
+    if (p.protocol === 'liquidswap') {
+        const positions = await positionsLiquidswap(p.wallet);
+        return { naFaixa: null, textos: positions.map(x => positionLiquidswapText(x, p.name, m)), foraDaFaixa: [], taxasUsd: null };
     }
 
     if (p.protocol === 'prjx') {
@@ -233,16 +264,16 @@ function positionText(d, end = short, nameAlt = null, m = SHOW) {
     return textAlt;
 }
 
-const EXAMPLES = '💡 _/defi orca -address <endereço> -pool <endereço> -nft <mint>\n/defi prjx -wallet <0x...>\n/defi morpho -wallet <0x...>\n/defi aave -wallet <0x...>_';
+const EXAMPLES = '💡 _/defi orca -address <endereço> -pool <endereço> -nft <mint>\n/defi prjx -wallet <0x...>\n/defi liquidswap -wallet <0x...>\n/defi morpho -wallet <0x...>\n/defi aave -wallet <0x...>_';
 
-// The protocol word: /defi orca, /defi prjx -wallet ..., /defi morpho
-const WORDS = { aave: 'aave', morpho: 'morpho', orca: 'orca', prjx: 'prjx' };
+// The protocol word: /defi orca, /defi prjx -wallet ..., /defi morpho, /defi liqswp (= liquidswap)
+const WORDS = { aave: 'aave', liqswp: 'liquidswap', liquidswap: 'liquidswap', morpho: 'morpho', orca: 'orca', prjx: 'prjx' };
 const protocolAlt2 = (word) => WORDS[String(word ?? '').toLowerCase()] ?? null;
 
 async function limitOrRepeated(msg, protocol, address, end) {
     const column = WALLET.includes(protocol) ? 'wallet' : 'address';
     if (await dbGet(`SELECT 1 AS ok FROM defi_positions WHERE protocol = ? AND lower(${column}) = lower(?)`, [protocol, address])) {
-        await msg.reply(`ℹ️ ${end(address)} já está cadastrada no ${PROTOCOLS[protocol]}. Veja com /defi ${protocol}`);
+        await msg.reply(`ℹ️ ${end(address)} já está cadastrada ${PROTOCOL[protocol].replace(/^d/, 'n')}. Veja com /defi ${protocol}`);
         return true;
     }
     if ((await dbGet('SELECT COUNT(*) AS n FROM defi_positions')).n >= MAX_POSITIONS) {
@@ -259,6 +290,7 @@ async function limitOrRepeated(msg, protocol, address, end) {
  */
 const READ_WALLET = {
     prjx: async (wallet) => ({ abertas: (await walletPositions(wallet)).length }),
+    liquidswap: async (wallet) => ({ abertas: (await positionsLiquidswap(wallet)).length }),
     morpho: async (wallet) => {
         const r = await positionsMorpho(wallet);
         return { abertas: r.posicoes.length, texto: (end, nameAlt, { m }) => textMorpho(r, end, nameAlt, m) };
@@ -269,70 +301,96 @@ const READ_WALLET = {
         return { abertas: openAlt, texto: (end, nameAlt, optionsAlt) => textAave(r, end, nameAlt, optionsAlt) };
     }
 };
+const TIP_APTOS = '💡 _A API pública da Aptos limita as consultas por IP; uma chave da Geomi vai no APTOS_API_KEY (ou no setting defi.aptos.apikey)._';
 const WALLET_TIP = {
     prjx: '💡 _O RPC público da HyperEVM limita as consultas; um RPC próprio vai no setting defi.hyperevm.rpc._',
+    liquidswap: TIP_APTOS,
     morpho: '💡 _Tente de novo em alguns instantes._',
     aave: '💡 _Tente de novo em alguns instantes; um RPC próprio vai no ETHEREUM_RPC_URL e no BASE_RPC_URL._'
 };
 
 /*
+ * Each network's wallet: Aptos' (Liquidswap) has up to 64 hex digits and is
+ * stored in full (0x1 = 0x000…001); the EVM ones, 40.
+ */
+const WALLETS = {
+    aptos: {
+        valida: isAddressAptos,
+        normalizar: normalizeAddress,
+        erro: (c) => `❌ -wallet: "${c}" não é uma carteira da Aptos (0x e até 64 caracteres hexadecimais).`,
+        exemplo: '0x8f3c4d2a1b9e7f6a5c4b3a29180f7e6d5c4b3a2918f7e6d5c4b3a2918f7e6d5c'
+    },
+    evm: {
+        valida: isAddressEvm,
+        normalizar: (c) => c.toLowerCase(),
+        erro: (c) => `❌ -wallet: "${c}" não é uma carteira EVM (0x e 40 caracteres hexadecimais).`,
+        exemplo: '0x12b2C3d4E5f60718293A4b5C6d7E8f9012345678'
+    }
+};
+const walletAlt = (protocol) => WALLETS[protocol === 'liquidswap' ? 'aptos' : 'evm'];
+
+/*
  * Morpho and Aave already show the position in the registration (with -full, Aave's
- * full one); Project X, which tends to have several, is left for /defi prjx.
+ * full one); Project X and Liquidswap, which tend to have several, are left for the
+ * /defi prjx e o /defi liquidswap.
  */
 async function registerWallet(msg, o, protocol, end) {
-    const wallet = String(o.wallet ?? '').trim().replace(/^<(.*)>$/, '$1');
-    const protocolName = PROTOCOLS[protocol];
+    const typed = String(o.wallet ?? '').trim().replace(/^<(.*)>$/, '$1');
+    const type = walletAlt(protocol);
     const nickname = o.name || null;
 
-    if (!wallet) {
-        await msg.reply(`❌ Informe a carteira: -wallet <0x...>\n💡 _/defi ${protocol} -wallet 0x12b2C3d4E5f60718293A4b5C6d7E8f9012345678_`);
+    if (!typed) {
+        await msg.reply(`❌ Informe a carteira: -wallet <0x...>\n💡 _/defi ${protocol} -wallet ${type.exemplo}_`);
         return;
     }
-    if (!isAddressEvm(wallet)) {
-        await msg.reply(`❌ -wallet: "${wallet}" não é uma carteira EVM (0x e 40 caracteres hexadecimais).`);
+    if (!type.valida(typed)) {
+        await msg.reply(type.erro(typed));
         return;
     }
+    // In the database, normalized; in the messages and on reading, the EVM as typed (with the checksum)
+    const wallet = type.normalizar(typed);
+    const shown = type === WALLETS.evm ? typed : wallet;
 
     // Already registered, with -name: changes the name
-    const existing = await dbGet('SELECT * FROM defi_positions WHERE protocol = ? AND wallet = ?', [protocol, wallet.toLowerCase()]);
+    const existing = await dbGet('SELECT * FROM defi_positions WHERE protocol = ? AND wallet = ?', [protocol, wallet]);
     if (existing && nickname) {
         await dbRun('UPDATE defi_positions SET name = ? WHERE id = ?', [nickname, existing.id]);
         await msg.reply(`✏️ *Nome trocado:* ${describe({ ...existing, name: nickname }, end)}`);
         return;
     }
-    if (await limitOrRepeated(msg, protocol, wallet, end)) return;
+    if (await limitOrRepeated(msg, protocol, shown, end)) return;
 
     let openAlt;
     let textAlt;
     try {
-        ({ abertas: openAlt, texto: textAlt } = await READ_WALLET[protocol](wallet));
+        ({ abertas: openAlt, texto: textAlt } = await READ_WALLET[protocol](shown));
     } catch (err) {
-        printError(`/defi ${protocol} ${wallet}:`, err.message);
+        printError(`/defi ${protocol} ${shown}:`, err.message);
         await msg.reply(`⚠️ Não consegui ler a carteira agora: ${err.motivo ?? `${err.message}.`}\n${WALLET_TIP[protocol]}`);
         return;
     }
 
     await dbRun('INSERT INTO defi_positions (protocol, wallet, name, created_at) VALUES (?, ?, ?, ?)',
-        [protocol, wallet.toLowerCase(), nickname, Date.now()]);
-    await msg.reply(`✅ *Carteira do ${protocolName} cadastrada:* ${nickname ? `${nickname} (${end(wallet)})` : end(wallet)}\n` +
+        [protocol, wallet, nickname, Date.now()]);
+    await msg.reply(`✅ *Carteira ${PROTOCOL[protocol]} cadastrada:* ${nickname ? `${nickname} (${end(shown)})` : end(shown)}\n` +
         (openAlt ? `📍 ${plural(openAlt, 'posição aberta', 'posições abertas')}.` : `ℹ️ Nenhuma posição aberta agora: o /defi ${protocol} mostra quando houver.`) +
         `\n💡 _Veja com /defi ${protocol}_`);
     if (openAlt && textAlt) await msg.reply(textAlt(end, nickname, { full: Boolean(o.full), m: o.mask ? HIDE : SHOW }));
-    return wallet.toLowerCase();
+    return wallet;
 }
 
 /*
  * The registered address, or null (the error was already replied). Orca registers
- * the position (-address); Project X and Morpho, the wallet (-wallet).
+ * the position (-address); Project X, Liquidswap, Morpho and Aave, the wallet (-wallet).
  */
 async function register(msg, { opt: o, given }, protocol, end) {
     if (!protocol) {
-        await msg.reply(`❌ Informe o protocolo antes do -address ou do -wallet: orca, prjx, morpho ou aave.\n${EXAMPLES}`);
+        await msg.reply(`❌ Informe o protocolo antes do -address ou do -wallet: orca, prjx, liquidswap, morpho ou aave.\n${EXAMPLES}`);
         return null;
     }
     if (WALLET.includes(protocol)) {
         if (given.has('address')) {
-            await msg.reply(`❌ No ${PROTOCOLS[protocol]}, a carteira vai no -wallet: /defi ${protocol} -wallet <0x...>`);
+            await msg.reply(`❌ ${PROTOCOL[protocol].replace(/^d/, 'N')}, a carteira vai no -wallet: /defi ${protocol} -wallet <0x...>`);
             return null;
         }
         return registerWallet(msg, o, protocol, end);
@@ -379,6 +437,7 @@ async function register(msg, { opt: o, given }, protocol, end) {
 }
 
 const TIP_RPC = {
+    liquidswap: TIP_APTOS,
     orca: '💡 _O RPC público da Solana limita as consultas; um RPC próprio vai no setting defi.solana.rpc._',
     prjx: '💡 _O RPC público da HyperEVM limita as consultas; um RPC próprio vai no setting defi.hyperevm.rpc._'
 };
@@ -733,7 +792,7 @@ async function handleAlert(msg, opts, positions, { comDestino: withDestination, 
     }
     const withoutRange = chosen.find(p => !WITH_RANGE.includes(p.protocol));
     if (withoutRange) {
-        await msg.reply(`❌ O alerta do /defi é de faixa, só da Orca e do Project X: a nº ${positions.indexOf(withoutRange) + 1} é do ${PROTOCOLS[withoutRange.protocol]}.`);
+        await msg.reply(`❌ O alerta do /defi é de faixa, só da Orca e do Project X: a nº ${positions.indexOf(withoutRange) + 1} é ${PROTOCOL[withoutRange.protocol]}.`);
         return;
     }
 
@@ -796,7 +855,7 @@ async function registerWithAlert(msg, opts, protocol, destination, end) {
     const o = opts.opt;
     let limitAlt = null;
     if (opts.given.has('alerta') && protocol && !WITH_RANGE.includes(protocol)) {
-        await msg.reply(`❌ O alerta do /defi é de faixa, só da Orca e do Project X: o ${PROTOCOLS[protocol]} não tem.`);
+        await msg.reply(`❌ O alerta do /defi é de faixa, só da Orca e do Project X: ${PROTOCOL[protocol].slice(1)} não tem.`);
         return;
     }
     if (opts.given.has('alerta')) {
@@ -928,14 +987,14 @@ async function cmdDefi({ msg, opts: commandOpts, args, chatId }) {
     }
 
     if (argv.length) {
-        await msg.reply(`❌ "${argv[0]}" não é um protocolo: use orca, prjx, morpho ou aave.\n\n\`\`\`${getCommandSyntax('/defi')}\`\`\``);
+        await msg.reply(`❌ "${argv[0]}" não é um protocolo: use orca, prjx, liquidswap (liqswp), morpho ou aave.\n\n\`\`\`${getCommandSyntax('/defi')}\`\`\``);
         return;
     }
 
     // -full (the whole Aave) and -mask (the wallet numbers with *)
     const show = { full: Boolean(o.full), m: o.mask ? HIDE : SHOW };
 
-    // /defi: the Position Details of all; /defi orca, prjx or morpho: only that one
+    // /defi: the Position Details of all; /defi orca, prjx, liquidswap or morpho: only that one
     const chosen = positions.filter(x => !protocol || x.protocol === protocol);
 
     // Morpho and Aave with no registration: the .env wallet (or the setting's), queried on the spot
@@ -945,7 +1004,7 @@ async function cmdDefi({ msg, opts: commandOpts, args, chatId }) {
     }
 
     if (!chosen.length) {
-        await msg.reply(protocol ? `🌊 Nada cadastrado ${protocol === 'prjx' ? 'do Project X' : 'da Orca'}.\n${EXAMPLES}` : empty);
+        await msg.reply(protocol ? `🌊 Nada cadastrado ${PROTOCOL[protocol]}.\n${EXAMPLES}` : empty);
         return;
     }
     await showAlt(msg, chosen, end, show);
@@ -962,6 +1021,7 @@ module.exports = {
     readRegistration,
     positionText,
     textAave,
+    positionLiquidswapText,
     positionPrjxText,
     textMorpho
 };
