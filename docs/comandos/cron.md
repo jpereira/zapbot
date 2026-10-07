@@ -121,17 +121,6 @@ os comandos rodando para cada chat):
 /lembrete -pv 23:00 -r diario Fechamento do dia: {/crypto} {/defi}
 ```
 
-Para quebrar a linha sem sair do campo de texto, digite `\n`: ele vira uma quebra de linha, e os
-espaços em volta dele são removidos. Vale em qualquer texto do `/cron`, com ou sem comandos, ao
-criar e no `-edit`:
-
-```text
-/cron 8h -r diario Verificando Orca {/defi orca}\n Verificando Prjx {/defi prjx}
-/cron 07:30 -r diario -to /Família/ Bom dia! ☀️\n{/tempo Recife}\nCâmbio: {/cotacao USD}
-/lembrete sexta 18h Fechar a semana:\n- relatório\n- backup\n- planilha
-/cron -edit 2 Linha 1\nLinha 2
-```
-
 Cada resposta de várias linhas vira um parágrafo, e o texto em volta fica entre elas. O primeiro
 exemplo chega assim, todo dia às 06:00, nos dois chats:
 
@@ -177,6 +166,20 @@ Preço do Dólar!
 - Se o comando falhar na hora do envio, a mensagem sai assim mesmo, com `⚠️ /crypto falhou` no
   lugar.
 - Fora das chaves, nada roda: um texto que comece com `/` continua sendo só texto.
+
+Para quebrar a linha sem sair do campo de texto, digite `\n`: ele vira uma quebra de linha, e os
+espaços em volta dele são removidos. Vale em qualquer texto do `/cron`, com ou sem comandos, ao
+criar e no `-edit`:
+
+```text
+/cron 8h -r diario Verificando Orca {/defi orca}\n Verificando Prjx {/defi prjx}
+/cron 07:30 -r diario -to /Família/ Bom dia! ☀️\n{/tempo Recife}\nCâmbio: {/cotacao USD}
+/lembrete sexta 18h Fechar a semana:\n- relatório\n- backup\n- planilha
+/cron -edit 2 Linha 1\nLinha 2
+```
+
+Para rodar o mesmo texto na hora que quiser, sem agendar, salve-o como um
+[alias de texto](alias.md#texto-com-comandos): `/alias carteira {/defi orca}\n{/defi prjx}`.
 
 O `-test <nº>` monta o item agora e mostra aqui como ele sairia, sem enviar ao destino nem mudar o
 horário:

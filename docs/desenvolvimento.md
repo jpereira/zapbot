@@ -80,9 +80,9 @@ src/
   status.js             relatório do /bot -status e o envio diário (pela agenda)
   sistema.js            /bot -info: versões (Node.js, whatsapp-web.js, Chromium, yt-dlp, ffmpeg...), as novas e o sistema
   moedas.js, cotacoes.js, alertasPreco.js   /crypto, /cotacao e alertas de preço
-  aliases.js            resolução e listagem dos atalhos persistidos no banco
+  aliases.js            resolução, listagem e execução (as de texto) dos atalhos persistidos no banco
   agenda.js             /cron (e /lembrete): leitura, lista e envio na hora
-  comandosNoTexto.js    os {/comando} no texto (o /cron): conferidos ao criar e rodados no envio
+  comandosNoTexto.js    os {/comando} e o \n no texto (o /cron e o /alias): conferidos ao criar e rodados no envio
   stickerTexto.js       /sticker -txt: os quadros em PNG (sharp) e o WebP animado (ffmpeg)
   openai.js             modelos aceitos pelo /gpt
   openaiChat.js         chamada ao chat da OpenAI (/gpt e /tldr)
@@ -161,8 +161,8 @@ entre os casos.
 
 | Arquivo | O que cobre |
 |---|---|
-| `agenda.test.js` | Datas digitadas (`6h`, `+2h`, `às 18h`, `sexta`...) e o `/cron`, nos modos mensagem e lembrete, com vários `-to` num item só, `-edit`, `-pause`/`-resume` e os `{/comando}` no texto (e o `-test`) |
-| `alias.test.js` | Cadastro persistente, descrições com aspas retas e curvas, listagem, remoção individual e total, nomes reservados, argumentos adicionais e permissões do destino |
+| `agenda.test.js` | Datas digitadas (`6h`, `+2h`, `às 18h`, `sexta`...) e o `/cron`, nos modos mensagem e lembrete, com vários `-to` num item só, `-edit`, `-pause`/`-resume` e os `{/comando}` e o `\n` no texto (e o `-test`) |
+| `alias.test.js` | Cadastro persistente, descrições com aspas retas e curvas, listagem, remoção individual e total, nomes reservados, argumentos adicionais, permissões do destino e os aliases de texto (`{/comando}`, `\n` e as permissões de cada comando) |
 | `apagadas-editadas.test.js` | Eventos de apagar/editar (e os avisos `show.alert.*`) e o `/show` (apagadas, editadas e status, o chat pedido e a busca `-q`) |
 | `backup.test.js` | `/backup` (criação, lista, restauração, envio no privado, por e-mail e com um ou vários `-to`) e o backup diário |
 | `bump.test.js` | Release e bump em repositórios temporários, versões dos exemplos, tags existentes e prévia sem alterações |

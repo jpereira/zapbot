@@ -1,5 +1,5 @@
 /*
- * Comandos no texto (o /cron, por enquanto): "O Bitcoin agora: {/crypto BTC}".
+ * Comandos no texto (o /cron e o /alias): "O Bitcoin agora: {/crypto BTC}".
  * Na hora de montar, cada {/comando args} roda e a resposta dele entra no lugar.
  * O `onde` (ex.: '/cron') só aparece nas mensagens de erro.
  */

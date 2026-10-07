@@ -23,7 +23,7 @@
                     "values": [
                         "<texto>"
                     ],
-                    "desc": "Descrição opcional entre aspas retas ou curvas, inclusive misturadas, antes do comando de destino. Ex: /alias /eita -desc \"Dólar\" /cotacao USD"
+                    "desc": "Descrição opcional entre aspas retas ou curvas, inclusive misturadas, antes do comando ou do texto. Ex: /alias /eita -desc \"Dólar\" /cotacao USD"
                 },
                 {
                     "opts": [
