@@ -33,7 +33,7 @@ comandos começam com `/`.
 - Agenda mensagens: [`/cron`](commands/cron.md)
 - Mostra cotações e alertas de preço: [`/cotacao`](commands/cotacao.md),
   [`/crypto`](commands/crypto.md)
-- Acompanha posições DeFi (Orca, Project X, Morpho, Aave V3): [`/defi`](commands/defi.md)
+- Acompanha posições DeFi (Orca, Project X, Liquidswap, Morpho, Aave V3): [`/defi`](commands/defi.md)
 - Integra o ChatGPT: [`/gpt`](commands/gpt.md), [`/tldr`](commands/tldr.md)
 - Consulta CVEs, notícias e o tempo: [`/cve`](commands/cve.md), [`/news`](commands/news.md),
   [`/tempo`](commands/tempo.md)
@@ -106,8 +106,8 @@ Por onde começar:
   preços e avisa **no seu privado** (ou, com um ou vários `-to`, em contatos, grupos, números ou por
   e-mail) quando a regra é cumprida; com o `-msg`, um texto seu vai no início do aviso. Veja
   [Alertas de preço](commands/cotacao.md#alertas-de-preço).
-- **DeFi**: o [`/defi`](commands/defi.md) lê on-chain as posições de liquidez da Orca e do Project X
-  (pela carteira) cadastradas (tabela `defi_positions`) e, com o `-alerta`, confere a cada 10
+- **DeFi**: o [`/defi`](commands/defi.md) lê on-chain as posições de liquidez da Orca, do Project X e da
+  Liquidswap (pela carteira) cadastradas (tabela `defi_positions`) e, com o `-alerta`, confere a cada 10
   minutos (setting `defi.alerta.intervalMin`) e avisa (no seu privado ou nos destinos do `-to`)
   quando uma posição sai da faixa, quando volta e, com o `-taxas`, quando as taxas a coletar passam
   de um valor. O `/defi morpho` e o `/defi aave` mostram a posição, os empréstimos e o risco de uma

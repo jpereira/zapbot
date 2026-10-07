@@ -140,10 +140,15 @@ function getCommandSyntax(cmd, protocol) {
     return command ? formatCommandHelp(command, { protocolo: protocol }) : null;
 }
 
-// The protocol requested together with -help (/defi orca -help), if the command has protocols
-const helpProtocol = (command, words) => words
-    .map(p => String(p ?? '').toLowerCase())
-    .find(p => command?.protocolos?.[p]);
+// The protocol requested together with -help (/defi orca -help or, through the alias, /defi liqswp -help)
+const helpProtocol = (command, words) => {
+    const protocols = command?.protocolos ?? {};
+    for (const p of words.map(x => String(x ?? '').toLowerCase())) {
+        const keyAlt = protocols[p] ? p : Object.keys(protocols).find(k => protocols[k].aliases?.includes(p));
+        if (keyAlt) return keyAlt;
+    }
+    return undefined;
+};
 
 // Default error reply of the /get and /cache commands
 function formatErrorCommand(e) {

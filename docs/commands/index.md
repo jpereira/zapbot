@@ -118,7 +118,7 @@ mesmo que comecem com `/`. Sem isso, alguém poderia usar um comando que ecoa te
 | [`/crypto`](crypto.md) | `/bitcoio`, `/creptomoeda` | | Cotação das criptos ativadas (padrão: BTC, ETH, SOL e HYPE) ou só das pedidas (`BTC ETH`); alertas de preço |
 | [`/cve`](cve.md) | | | Últimas CVEs publicadas (NVD); `-highscore` só as críticas |
 | [`/debug`](debug.md) | `/d`, `/dbg` | ✅ | Logs de debug com níveis, filtro e cópia para chats |
-| [`/defi`](defi.md) | | ✅ | Posições de liquidez da Orca e do Project X: saldo, faixa, preço e taxas a coletar, lidos on-chain; `-alerta` avisa quando sai e volta para a faixa e quando as taxas passam de um valor. `morpho` e `aave`: posição, empréstimos e risco no Morpho e no Aave V3 |
+| [`/defi`](defi.md) | | ✅ | Posições de liquidez da Orca e do Project X: saldo, faixa, preço e taxas a coletar, lidos on-chain; `-alerta` avisa quando sai e volta para a faixa e quando as taxas passam de um valor. `liquidswap`: posições de LP na Aptos. `morpho` e `aave`: posição, empréstimos e risco no Morpho e no Aave V3 |
 | [`/enquete`](enquete.md) | `/enq`, `/quiz` | ✅ | Cria uma enquete nativa do WhatsApp no chat; `-r` mostra o resultado |
 | [`/get`](get.md) | `/download` | | Baixa vídeo/áudio de redes sociais |
 | [`/giphy`](giphy.md) | `/gif` | | GIF do GIPHY por tag, URL ou ID, enviado em loop |
