@@ -2,7 +2,7 @@
  * Schedule: the reminders (/lembrete) and the scheduled messages (/cron), with the periodic check.
  */
 
-const { sendMedia, commandsError, assembleText } = require('./textCommands');
+const { sendMedia, commandsError, assembleText, breakLines } = require('./textCommands');
 const { estado: stateAlt } = require('./state');
 const { client } = require('./client');
 const { dbAll, dbGet, dbReady, dbRun } = require('./db');
@@ -54,7 +54,8 @@ const DELAY_TOLERATED_MS = 5 * 60_000;
 
 /**
  * Reads "<when> [options] <text>": the options and the "when" come at the start, in
- * any order; the text is the rest, as typed (with the line breaks).
+ * any order; the text is the rest, as typed (with the line breaks,
+ * and the typed \n becomes one).
  * @returns {{ opt: {list?, lembrete?, rm?, repetir?, pv?, edit?, pause?, resume?, test?}, quando: {ms}|null,
  *            texto: string, destinos: Array<string|null>, comDestino: boolean }}
  */
@@ -83,7 +84,7 @@ function readScheduling(args) {
         else break;
     }
 
-    const textAlt = i < words.length ? rest.slice(words[i].index).trim() : '';
+    const textAlt = i < words.length ? breakLines(rest.slice(words[i].index)).trim() : '';
     return { opt, quando: when, texto: textAlt, destinos: destinations, comDestino: withDestination };
 }
 

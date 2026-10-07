@@ -102,6 +102,9 @@ describe('datas (util/when.js)', () => {
         assert.deepEqual(readScheduling('-resume 2 4').opt, { resume: '2 4' });
         assert.deepEqual(readScheduling('-lem 2h x').opt, { lembrete: true });
         assert.equal(readScheduling('2h -pv 18h').texto, '18h');   // a single "when"
+        // The typed \n becomes a line break, without the surrounding spaces
+        assert.equal(readScheduling('8h Orca {/defi orca}\\n Prjx {/defi prjx}').texto, 'Orca {/defi orca}\nPrjx {/defi prjx}');
+        assert.equal(readScheduling('8h linha 1 \\n\\nlinha 3').texto, 'linha 1\n\nlinha 3');
     });
 });
 
@@ -493,6 +496,17 @@ describe('/cron: comandos no texto ({/comando})', () => {
         await bot.setSetting('commands.disabled', ['/joke']);
         const [line] = await expire();
         assert.equal(line.content, 'Piada: ⚠️ /joke não roda no /cron fim');
+    });
+
+    test('\\n digitado vira quebra de linha, ao criar e no -edit', async () => {
+        await bot.replyAlt('/cron +1h -to L200 Versão {/version}\\n Uptime {/uptime}');
+        assert.equal((await items())[0].text, 'Versão {/version}\nUptime {/uptime}');
+        const [sentAlt] = await expire();
+        assert.match(sentAlt.content, /^Versão\n\n🤖 \*ZapBot[\s\S]*\S\n\nUptime\n\n🤖 \*ZapBot/);
+
+        await bot.replyAlt('/cron +1h -to L200 x');
+        await bot.replyAlt('/cron -edit 1 linha 1\\nlinha 2');
+        assert.equal((await items())[0].text, 'linha 1\nlinha 2');
     });
 
     test('vários no mesmo texto, também no lembrete', async () => {
