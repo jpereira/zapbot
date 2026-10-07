@@ -1,5 +1,5 @@
 /*
- * Commands in the text (/cron, for now): "Bitcoin now: {/crypto BTC}".
+ * Commands in the text (/cron and /alias): "Bitcoin now: {/crypto BTC}".
  * At build time, each {/command args} runs and its reply goes in its place.
  * The `onde` (e.g.: '/cron') only appears in the error messages.
  */
