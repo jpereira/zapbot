@@ -4,7 +4,7 @@ Exibe o mesmo banner do `/uptime`, com a versão do bot.
 
 ```text
 /ver
-🤖 ZapBot 2.5 (devel) (git+9029cfb/HEAD)
+🤖 ZapBot 2.5 (git+9029cfb/release-2.5)
 ━━━━━━━━━━━━━━━━━━
 ⚡ Online: 2 dias, 3 horas
 🔐 Conectado: 2 dias, 2 horas, 58 minutos
