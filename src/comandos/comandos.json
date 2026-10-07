@@ -897,7 +897,7 @@
                     "values": [
                         "<segundo>"
                     ],
-                    "desc": "Começa neste segundo do vídeo original (padrão 0). Aceita decimal com ponto. Ex: -ss 2.5"
+                    "desc": "Começa neste segundo do vídeo original (padrão 0). Aceita decimal com ponto. Ex: -ss 1.5"
                 },
                 {
                     "opts": [
