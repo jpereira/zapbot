@@ -2,7 +2,7 @@
  * Agenda: os lembretes (/lembrete) e as mensagens agendadas (/cron), com a verificação periódica.
  */
 
-const { enviarMidias, erroDosComandos, montarTexto } = require('./comandosNoTexto');
+const { enviarMidias, erroDosComandos, montarTexto, quebrarLinhas } = require('./comandosNoTexto');
 const { estado } = require('./estado');
 const { client } = require('./cliente');
 const { dbAll, dbGet, dbPronto, dbRun } = require('./db');
@@ -54,7 +54,8 @@ const ATRASO_TOLERADO_MS = 5 * 60_000;
 
 /**
  * Lê "<quando> [opções] <texto>": as opções e o "quando" vêm no começo, em
- * qualquer ordem; o texto é o resto, como foi digitado (com as quebras de linha).
+ * qualquer ordem; o texto é o resto, como foi digitado (com as quebras de linha,
+ * e o \n digitado vira uma).
  * @returns {{ opt: {list?, lembrete?, rm?, repetir?, pv?, edit?, pause?, resume?, test?}, quando: {ms}|null,
  *            texto: string, destinos: Array<string|null>, comDestino: boolean }}
  */
@@ -83,7 +84,7 @@ function lerAgendamento(args) {
         else break;
     }
 
-    const texto = i < palavras.length ? resto.slice(palavras[i].index).trim() : '';
+    const texto = i < palavras.length ? quebrarLinhas(resto.slice(palavras[i].index)).trim() : '';
     return { opt, quando, texto, destinos, comDestino };
 }
 

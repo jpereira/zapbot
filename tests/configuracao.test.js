@@ -519,7 +519,9 @@ describe('ajuda', () => {
         const cron = formatCommandHelp(findCommand('/cron')).split('\n');
         assert.match(cron[2], /^Na hora marcada, .* \(-pv\)\.$/);
         assert.match(cron[3], /^No texto, \{\/comando args\} roda/);
-        assert.equal(cron[4], 'Ex: /cron 09h -r diario -to /Família/ Bom dia! {/crypto BTC}');
+        assert.equal(cron[4], 'O \\n digitado vira quebra de linha.');
+        assert.equal(cron[5], 'Ex: /cron 09h -r diario -to /Família/ Bom dia! {/crypto BTC}');
+        assert.equal(cron[6], '    /cron 8h -r diario Orca {/defi orca}\\n Prjx {/defi prjx}');
 
         // Nas opções: a 1ª frase ao lado; as outras e o Ex:, recuadas 4 espaços
         const linhas = formatCommandHelp(findCommand('/defi')).split('\n');
