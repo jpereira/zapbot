@@ -82,7 +82,7 @@ src/
   moedas.js, cotacoes.js, alertasPreco.js   /crypto, /cotacao e alertas de preço
   aliases.js            resolução e listagem dos atalhos persistidos no banco
   agenda.js             /cron (e /lembrete): leitura, lista e envio na hora
-  agendaComandos.js     os {/comando} no texto do /cron: conferidos ao criar e rodados no envio
+  comandosNoTexto.js    os {/comando} no texto (o /cron): conferidos ao criar e rodados no envio
   stickerTexto.js       /sticker -txt: os quadros em PNG (sharp) e o WebP animado (ffmpeg)
   openai.js             modelos aceitos pelo /gpt
   openaiChat.js         chamada ao chat da OpenAI (/gpt e /tldr)

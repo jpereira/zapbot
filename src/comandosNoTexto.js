@@ -1,6 +1,7 @@
 /*
- * Comandos no texto do /cron: "O Bitcoin agora: {/crypto BTC}". Na hora do
- * envio, cada {/comando args} roda e a resposta dele entra no lugar.
+ * Comandos no texto (o /cron, por enquanto): "O Bitcoin agora: {/crypto BTC}".
+ * Na hora de montar, cada {/comando args} roda e a resposta dele entra no lugar.
+ * O `onde` (ex.: '/cron') só aparece nas mensagens de erro.
  */
 
 const { client } = require('./cliente');
@@ -11,9 +12,9 @@ const { GetOptFromCommand } = require('./opcoes');
 /*
  * Só os comandos com "cron": true no comandos.json (os de consulta), e sem as
  * opções com "cron": false (as que mudam algo, como o -add do /crypto). O
- * comando roda como se você digitasse no chat de destino, mas as respostas são
- * guardadas em vez de enviadas: o texto vai no lugar do {...} e as mídias
- * (/meme, /giphy...) saem depois da mensagem.
+ * comando roda como se fosse digitado no chat de destino (por você, se não vier
+ * quem executa), mas as respostas são guardadas em vez de enviadas: o texto vai
+ * no lugar do {...} e as mídias (/meme, /giphy...) saem depois da mensagem.
  */
 const MARCA = /\{(\/[^{}\n]+)\}/g;
 
@@ -22,30 +23,30 @@ const comandosNoTexto = (texto) => [...String(texto ?? '').matchAll(MARCA)].map(
 const permitidos = () => activeCommands().filter(c => c.cron).map(c => c.cmd);
 
 // "/crypto BTC" → { command, args, opts }, ou { erro }
-function lerComando(linha) {
+function lerComando(linha, onde = '/cron') {
     const caller = linha.split(/\s+/, 1)[0].toLowerCase();
     const command = findCommand(caller);
 
     if (!command) return { erro: `❌ {${linha}}: o ${caller} não existe.` };
     if (!command.cron) {
-        return { erro: `❌ {${linha}}: o ${command.cmd} não roda dentro do /cron.\n💡 _Rodam: ${permitidos().join(', ')}._` };
+        return { erro: `❌ {${linha}}: o ${command.cmd} não roda dentro do ${onde}.\n💡 _Rodam: ${permitidos().join(', ')}._` };
     }
 
     const args = linha.slice(caller.length).trim();
     const opts = GetOptFromCommand(args, command);
     const proibida = (command.cmd_opts ?? []).find(o => o.cron === false && o.opts?.some(nome => opts.given.has(nome)));
-    if (proibida) return { erro: `❌ {${linha}}: o -${proibida.opts[0]} do ${command.cmd} não roda dentro do /cron.` };
+    if (proibida) return { erro: `❌ {${linha}}: o -${proibida.opts[0]} do ${command.cmd} não roda dentro do ${onde}.` };
 
     return { command, args, opts };
 }
 
 /**
- * Confere os {/comando} do texto ao criar ou editar o item.
+ * Confere os {/comando} do texto ao criar ou editar (o item do /cron).
  * @returns {string|null} o erro (do primeiro inválido) ou null
  */
-function erroDosComandos(texto) {
+function erroDosComandos(texto, onde = '/cron') {
     for (const { linha } of comandosNoTexto(texto)) {
-        const { erro } = lerComando(linha);
+        const { erro } = lerComando(linha, onde);
         if (erro) return erro;
     }
     return null;
@@ -79,10 +80,13 @@ function mensagemSintetica(chatId, linha, respostas) {
     };
 }
 
-// Roda um {/comando}: o texto das respostas e as mídias
-async function rodarComando(chatId, linha, { chatName, isGroup }) {
-    const { erro, command, args, opts } = lerComando(linha);
-    if (erro) return { texto: `⚠️ ${linha.split(/\s+/, 1)[0]} não roda no /cron`, midias: [] };
+/*
+ * Roda um {/comando}: o texto das respostas e as mídias. Sem `quem`, roda como
+ * você (admin); com ele, com o admin e as permissões de quem executa.
+ */
+async function rodarComando(chatId, linha, { chatName, isGroup, onde = '/cron', quem = null }) {
+    const { erro, command, args, opts } = lerComando(linha, onde);
+    if (erro) return { texto: `⚠️ ${linha.split(/\s+/, 1)[0]} não roda no ${onde}`, midias: [] };
 
     // O handler fica no comandos/index, que carrega o /cron (e este arquivo): só aqui, na hora
     const { HANDLERS } = require('./comandos/index');
@@ -92,10 +96,11 @@ async function rodarComando(chatId, linha, { chatName, isGroup }) {
     try {
         await HANDLERS[command.cmd]({
             msg, opts, args, quotedMsg: null, senderContact: null, senderName: client.info?.pushname || 'Você',
-            isGroup, chatId, chatName, admin: true
+            isGroup, chatId, chatName, admin: true,
+            ...quem
         });
     } catch (err) {
-        printError(`/cron: ${linha} falhou:`, err.message);
+        printError(`${onde}: ${linha} falhou:`, err.message);
         return { texto: `⚠️ ${command.cmd} falhou`, midias: [] };
     }
 
@@ -127,12 +132,16 @@ function encaixar(texto, marca, resposta) {
 /**
  * O texto com cada {/comando} trocado pela resposta dele, as mídias das respostas
  * e os comandos executados (para o log). Sem {/comando}, o texto como está.
+ * @param {object} s  o chat: chat_id, chat_name e is_group (as colunas do /cron)
+ * @param {object} [o]
+ * @param {string} [o.onde]  quem pediu, para as mensagens de erro ('/cron')
+ * @param {object} [o.quem]  admin, podeUsar, senderName... de quem executa (sem ele: você)
  */
-async function montarTexto(texto, s) {
+async function montarTexto(texto, s, { onde, quem } = {}) {
     const comandos = comandosNoTexto(texto);
     if (!comandos.length) return { texto, midias: [], comandos: [] };
 
-    const ctx = { chatName: s.chat_name, isGroup: Boolean(s.is_group) };
+    const ctx = { chatName: s.chat_name, isGroup: Boolean(s.is_group), onde, quem };
     const midias = [];
     let final = texto;
 
@@ -159,6 +168,7 @@ module.exports = {
     comandosNoTexto,
     enviarMidias,
     erroDosComandos,
+    lerComando,
     montarTexto,
     permitidos
 };

@@ -2,7 +2,7 @@
  * Agenda: os lembretes (/lembrete) e as mensagens agendadas (/cron), com a verificação periódica.
  */
 
-const { enviarMidias, erroDosComandos, montarTexto } = require('./agendaComandos');
+const { enviarMidias, erroDosComandos, montarTexto } = require('./comandosNoTexto');
 const { estado } = require('./estado');
 const { client } = require('./cliente');
 const { dbAll, dbGet, dbPronto, dbRun } = require('./db');
@@ -26,7 +26,7 @@ const { REPETICOES, fmtQuando, lerQuando, partesEmBrasilia, proximaRepeticao } =
  * vários -to (um item só, com todos os destinos). Na lista, -edit <nº> troca a hora, o texto
  * ou a repetição de um item, e -pause/-resume <nº...|all> o seguram e soltam.
  * Um {/comando} no texto roda na hora do envio e a resposta entra no lugar
- * (veja agendaComandos.js); -test <nº> mostra agora como a mensagem sairia.
+ * (veja comandosNoTexto.js); -test <nº> mostra agora como a mensagem sairia.
  * Sai da sua conta: só o dono usa.
  */
 const TIPOS = {
