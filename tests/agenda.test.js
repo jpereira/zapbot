@@ -102,6 +102,9 @@ describe('datas (util/quando.js)', () => {
         assert.deepEqual(lerAgendamento('-resume 2 4').opt, { resume: '2 4' });
         assert.deepEqual(lerAgendamento('-lem 2h x').opt, { lembrete: true });
         assert.equal(lerAgendamento('2h -pv 18h').texto, '18h');   // um "quando" só
+        // O \n digitado vira quebra de linha, sem os espaços em volta
+        assert.equal(lerAgendamento('8h Orca {/defi orca}\\n Prjx {/defi prjx}').texto, 'Orca {/defi orca}\nPrjx {/defi prjx}');
+        assert.equal(lerAgendamento('8h linha 1 \\n\\nlinha 3').texto, 'linha 1\n\nlinha 3');
     });
 });
 
@@ -493,6 +496,17 @@ describe('/cron: comandos no texto ({/comando})', () => {
         await bot.setSetting('commands.disabled', ['/joke']);
         const [linha] = await vencer();
         assert.equal(linha.content, 'Piada: ⚠️ /joke não roda no /cron fim');
+    });
+
+    test('\\n digitado vira quebra de linha, ao criar e no -edit', async () => {
+        await bot.responder('/cron +1h -to L200 Versão {/version}\\n Uptime {/uptime}');
+        assert.equal((await itens())[0].text, 'Versão {/version}\nUptime {/uptime}');
+        const [enviado] = await vencer();
+        assert.match(enviado.content, /^Versão\n\n🤖 \*ZapBot[\s\S]*\S\n\nUptime\n\n🤖 \*ZapBot/);
+
+        await bot.responder('/cron +1h -to L200 x');
+        await bot.responder('/cron -edit 1 linha 1\\nlinha 2');
+        assert.equal((await itens())[0].text, 'linha 1\nlinha 2');
     });
 
     test('vários no mesmo texto, também no lembrete', async () => {
