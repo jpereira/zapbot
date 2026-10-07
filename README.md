@@ -20,6 +20,23 @@ A ideia vem dos velhos tempos do IRC: o ZapBot é inspirado nas antigas
 comandos, guardando o que rolava e cuidando da casa. Aqui o canal é o grupo do WhatsApp, e os
 comandos começam com `/`.
 
+**Principais funções:**
+
+- Recupera mensagens e status apagados ou editados: [`/show`](docs/commands/show.md)
+- Baixa vídeos com yt-dlp e ffmpeg: [`/get`](docs/commands/get.md)
+- Cria figurinhas: [`/sticker`](docs/commands/sticker.md)
+- Vigia mensagens por texto ou regex: [`/watch`](docs/commands/watch.md)
+- Agenda mensagens: [`/cron`](docs/commands/cron.md)
+- Mostra cotações e alertas de preço: [`/cotacao`](docs/commands/cotacao.md),
+  [`/crypto`](docs/commands/crypto.md)
+- Acompanha posições DeFi (Orca, Project X, Morpho, Aave V3): [`/defi`](docs/commands/defi.md)
+- Integra o ChatGPT: [`/gpt`](docs/commands/gpt.md), [`/tldr`](docs/commands/tldr.md)
+- Consulta CVEs, notícias e o tempo: [`/cve`](docs/commands/cve.md), [`/news`](docs/commands/news.md),
+  [`/tempo`](docs/commands/tempo.md)
+- Faz backup do banco: [`/backup`](docs/commands/backup.md)
+- Controla permissões por usuário e grupo, com proteção contra flood:
+  [`/bot`](docs/commands/bot.md)
+
 📖 **Documentação completa: [jpereira.github.io/zapbot](https://jpereira.github.io/zapbot/)** (da
 última release; a do `main` fica em [`docs/`](docs/index.md)).
 

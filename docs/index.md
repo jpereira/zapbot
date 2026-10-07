@@ -22,6 +22,23 @@ A ideia vem dos velhos tempos do IRC: o ZapBot é inspirado nas antigas
 comandos, guardando o que rolava e cuidando da casa. Aqui o canal é o grupo do WhatsApp, e os
 comandos começam com `/`.
 
+**Principais funções:**
+
+- Recupera mensagens e status apagados ou editados: [`/show`](commands/show.md)
+- Baixa vídeos com yt-dlp e ffmpeg: [`/get`](commands/get.md)
+- Cria figurinhas: [`/sticker`](commands/sticker.md)
+- Vigia mensagens por texto ou regex: [`/watch`](commands/watch.md)
+- Agenda mensagens: [`/cron`](commands/cron.md)
+- Mostra cotações e alertas de preço: [`/cotacao`](commands/cotacao.md),
+  [`/crypto`](commands/crypto.md)
+- Acompanha posições DeFi (Orca, Project X, Morpho, Aave V3): [`/defi`](commands/defi.md)
+- Integra o ChatGPT: [`/gpt`](commands/gpt.md), [`/tldr`](commands/tldr.md)
+- Consulta CVEs, notícias e o tempo: [`/cve`](commands/cve.md), [`/news`](commands/news.md),
+  [`/tempo`](commands/tempo.md)
+- Faz backup do banco: [`/backup`](commands/backup.md)
+- Controla permissões por usuário e grupo, com proteção contra flood:
+  [`/bot`](commands/bot.md)
+
 Por onde começar:
 
 - [Instalação](installation.md): requisitos, instalação pela última release e atualização.
