@@ -20,6 +20,13 @@ const MARCA = /\{(\/[^{}\n]+)\}/g;
 
 const comandosNoTexto = (texto) => [...String(texto ?? '').matchAll(MARCA)].map(m => ({ marca: m[0], linha: m[1].trim() }));
 
+/*
+ * O "\n" digitado vira uma quebra de linha, sem os espaços em volta: no
+ * WhatsApp é mais fácil digitar "Orca {/defi orca}\n Prjx {/defi prjx}" do que
+ * quebrar a linha no meio do comando.
+ */
+const quebrarLinhas = (texto) => String(texto ?? '').replace(/[ \t]*\\n[ \t]*/g, '\n');
+
 const permitidos = () => activeCommands().filter(c => c.cron).map(c => c.cmd);
 
 // "/crypto BTC" → { command, args, opts }, ou { erro }
@@ -170,5 +177,6 @@ module.exports = {
     erroDosComandos,
     lerComando,
     montarTexto,
-    permitidos
+    permitidos,
+    quebrarLinhas
 };

@@ -3,7 +3,8 @@
  */
 const { botConfig } = require('../botConfig');
 const { dbPronto, dbRun } = require('../db');
-const { listarAliases } = require('../aliases');
+const { ehAliasDeTexto, listarAliases } = require('../aliases');
+const { comandosNoTexto, erroDosComandos, quebrarLinhas } = require('../comandosNoTexto');
 const { findCommand } = require('./base');
 
 const nomeDoAlias = nome => '/' + nome.replace(/^\//, '');
@@ -26,7 +27,7 @@ async function cmdAlias({ msg, args }) {
     }
     const cadastro = texto.match(/^(\S+)\s+([\s\S]+)$/);
     if (!cadastro || !NOME.test(cadastro[1])) {
-        return msg.reply('❌ Use: /alias <nome> [-desc "Descrição"] </comando argumentos>');
+        return msg.reply('❌ Use: /alias <nome> [-desc "Descrição"] </comando argumentos | texto com {/comando}>');
     }
     const nome = nomeDoAlias(cadastro[1]);
     if (nome === '/all') return msg.reply('❌ O nome all é reservado para remover todos os aliases.');
@@ -43,10 +44,21 @@ async function cmdAlias({ msg, args }) {
         descricao = d[1].slice(1, -1).replace(/\\(["'\\])/g, '$1');
         comando = d[2].trim();
     }
-    const destino = comando.split(/\s+/, 1)[0];
-    const alvo = findCommand(destino);
-    if (!alvo || alvo.cmd === '/alias') {
-        return msg.reply('❌ O destino deve ser um comando ativo do bot; não pode ser outro alias cadastrado nem /alias.');
+    if (ehAliasDeTexto(comando)) {
+        // Texto com {/comando}, como no /cron: o \n digitado vira quebra de linha
+        comando = quebrarLinhas(comando);
+        if (!comandosNoTexto(comando).length) {
+            return msg.reply('❌ O destino deve ser um /comando ou um texto com pelo menos um {/comando}.\n' +
+                '💡 _/alias orca Orca: {/defi orca}\\n Prjx: {/defi prjx}_');
+        }
+        const erro = erroDosComandos(comando, '/alias');
+        if (erro) return msg.reply(erro);
+    } else {
+        const destino = comando.split(/\s+/, 1)[0];
+        const alvo = findCommand(destino);
+        if (!alvo || alvo.cmd === '/alias') {
+            return msg.reply('❌ O destino deve ser um comando ativo do bot; não pode ser outro alias cadastrado nem /alias.');
+        }
     }
     await dbRun(`INSERT INTO command_aliases (name, description, command) VALUES (?, ?, ?)
         ON CONFLICT(name) DO UPDATE SET description = excluded.description,

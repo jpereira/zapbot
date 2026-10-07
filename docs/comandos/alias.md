@@ -1,10 +1,12 @@
 # `/alias` · admin
 
-Salva atalhos para comandos com argumentos no banco do bot. O dono e os admins cadastram e
-removem aliases. Quem executa um atalho precisa ter permissão para o comando de destino.
+Salva atalhos no banco do bot: para um comando com argumentos ou para um texto com vários
+`{/comando}`, como no [`/cron`](cron.md#comandos-no-texto). O dono e os admins cadastram e removem
+aliases. Quem executa um atalho precisa ter permissão para os comandos de destino.
 
 ```text
 /alias <nome> [-desc|-d "Descrição"] </comando argumentos>
+/alias <nome> [-desc|-d "Descrição"] <texto com {/comando}>
 /alias
 /alias [-list|-l]
 /alias [-rm|-rem] <nome|all>
@@ -18,6 +20,7 @@ removem aliases. Quem executa um atalho precisa ter permissão para o comando de
 
 ```text
 /alias /eita -desc "Meu teste para dólar" /cotacao USD
+/alias /nome /crypto USD
 /alias /eita2 /cotacao EUR
 /alias eita3 /cotacao USDT
 /alias dimdim -desc “Exibe Dinheiro" /cotacao
@@ -65,3 +68,47 @@ O bot responde com o aviso abaixo e depois com o resultado de `/cotacao USD`:
 ```text
 🔗 Alias /dimdim -> /cotacao USD
 ```
+
+## Texto com comandos
+
+Quando o que vem depois do nome (e da descrição) não começa com `/`, o alias guarda um texto. Cada
+`{/comando args}` dele roda na hora em que o alias é chamado, e a resposta entra no lugar, como nos
+[comandos no texto do `/cron`](cron.md#comandos-no-texto). Sai uma mensagem só, com todas as
+respostas. Um `\n` digitado vira uma quebra de linha, e os espaços em volta dele são removidos.
+
+```text
+/alias nome2 Verificando Orca {/defi orca}\n Verificando Prjx {/defi prjx}
+/alias bomdia -d "Resumo da manhã" Bom dia! ☀️ {/tempo Recife}\nCâmbio: {/cotacao USD EUR}\nCripto: {/crypto BTC ETH}
+/alias carteira {/defi orca}\n{/defi prjx}\n{/defi morpho}\n{/defi aave}
+/alias risco CVEs críticas: {/cve -highscore}
+```
+
+O `/nome2` roda o `/defi orca` e o `/defi prjx` e responde:
+
+```text
+🔗 Alias /nome2 -> /defi orca, /defi prjx
+```
+
+```text
+Verificando Orca
+
+🌊 Orca · SOL/cbBTC · taxa 0.16%
+   ...
+
+Verificando Prjx
+
+🌊 Project X · UBTC/USD₮0 · taxa 0.05%
+   ...
+```
+
+- Os comandos rodam no chat em que o alias foi chamado, com as permissões de quem chamou. Se a
+  pessoa não puder usar algum deles, o alias inteiro não roda: um comando só do dono, como o
+  `/defi`, faz o alias ser ignorado em silêncio, e um comando fora da regra dela (`/bot -cmd`) mostra
+  o aviso do limite. O `/help alias` só lista os aliases em que ela pode usar todos os comandos.
+- Rodam os mesmos comandos de consulta do `/cron` (`/cotacao`, `/crypto`, `/cve`, `/defi`,
+  `/tempo`...), sem as opções que mudam algo, como o `-add` do `/crypto`. Eles são conferidos no
+  cadastro: um que não existe ou que não roda no texto dá erro na hora.
+- Uma resposta de várias linhas vira um parágrafo, com uma linha em branco antes e depois; uma de
+  uma linha só fica na frase. Mídias (`/meme`, `/giphy`) saem depois do texto.
+- Argumentos digitados ao chamar um alias de texto são ignorados.
+- O texto precisa de pelo menos um `{/comando}`; sem nenhum, o cadastro é recusado.

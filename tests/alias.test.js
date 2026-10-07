@@ -152,3 +152,72 @@ test('descrição aceita aspas curvas e misturadas sem alterar o comando salvo',
     await bot.responder('/alias euros -d “Preço em euros” /cotacao EUR -h');
     assert.equal((await aliases()).find(a => a.name === '/euros').command, '/cotacao EUR -h');
 });
+
+test('/alias /nome /crypto USD: nome com barra e destino com argumento', async t => {
+    await bot.responder('/alias /nome /crypto USD');
+    assert.deepEqual(await aliases(), [{ name: '/nome', description: '', command: '/crypto USD' }]);
+    t.mock.method(HANDLERS, '/crypto', async ({ msg, args }) => msg.reply(`crypto ${args}`));
+    assert.deepEqual(await bot.responder('/nome'), ['🔗 Alias /nome -> /crypto USD', 'crypto USD']);
+});
+
+test('alias de texto: \\n vira quebra de linha e vários {/comando} saem numa mensagem só', async t => {
+    const [salvo] = await bot.responder(
+        '/alias nome2 -d "Orca e Prjx" Verificando Orca {/defi orca}\\n Verificando Prjx {/defi prjx}');
+    assert.match(salvo, /Alias salvo: \/nome2/);
+    assert.deepEqual(await aliases(), [{
+        name: '/nome2', description: 'Orca e Prjx',
+        command: 'Verificando Orca {/defi orca}\nVerificando Prjx {/defi prjx}'
+    }]);
+
+    const defi = t.mock.method(HANDLERS, '/defi', async ({ msg, args }) => msg.reply(`${args} ok`));
+    assert.deepEqual(await bot.responder('/nome2'), [
+        '🔗 Alias /nome2 -> /defi orca, /defi prjx',
+        'Verificando Orca orca ok\nVerificando Prjx prjx ok'
+    ]);
+    assert.equal(defi.mock.callCount(), 2);
+
+    // Resposta de várias linhas vira um parágrafo, como no /cron
+    t.mock.method(HANDLERS, '/crypto', async ({ msg }) => msg.reply('₿ BTC\n💰 $1'));
+    await bot.responder('/alias btc Bitcoin: {/crypto BTC} fim');
+    assert.equal((await bot.responder('/btc'))[1], 'Bitcoin:\n\n₿ BTC\n💰 $1\n\nfim');
+
+    const [lista] = await bot.responder('/alias -l');
+    assert.match(lista, /\/nome2 → Verificando Orca \{\/defi orca\}\nVerificando Prjx \{\/defi prjx\}/);
+});
+
+test('alias de texto: recusa texto sem {/comando}, comandos inexistentes e os que não rodam no texto', async () => {
+    for (const linha of ['/alias foo só texto', '/alias foo Oi {/naoexiste}', '/alias foo {/alias -l}',
+        '/alias foo {/ping}', '/alias foo {/crypto -add DOGE}']) {
+        assert.match((await bot.responder(linha))[0], /^❌/, linha);
+    }
+    assert.match((await bot.responder('/alias foo {/ping}'))[0], /o \/ping não roda dentro do \/alias/);
+    assert.deepEqual(await aliases(), []);
+});
+
+test('alias de texto: cada {/comando} respeita as permissões de quem chama', async t => {
+    await bot.responder('/alias misto Dólar {/cotacao USD} DeFi {/defi}');
+    await bot.responder('/alias dolarbtc Dólar {/cotacao USD} BTC {/crypto BTC}');
+    const defi = t.mock.method(HANDLERS, '/defi', async ({ msg }) => msg.reply('defi'));
+    const cotacao = t.mock.method(HANDLERS, '/cotacao', async ({ msg, admin }) => msg.reply(`admin=${admin}`));
+    t.mock.method(HANDLERS, '/crypto', async ({ msg }) => msg.reply('btc'));
+    const de = bot.OUTRO.jid;
+
+    // /defi é só do dono: o alias inteiro é ignorado em silêncio
+    assert.deepEqual(await bot.responder('/misto', { de }), []);
+    assert.equal(defi.mock.callCount(), 0);
+
+    // Os comandos rodam como quem chamou, não como o dono
+    assert.deepEqual(await bot.responder('/dolarbtc', { de }),
+        ['🔗 Alias /dolarbtc -> /cotacao USD, /crypto BTC', 'Dólar admin=false BTC btc']);
+
+    // Um comando fora da regra da pessoa barra o alias
+    await bot.setSetting('bot.users', []);
+    await bot.responder('/bot +v /Fulano/');
+    await bot.responder('/bot -cmd /crypto /Fulano/');
+    assert.match((await bot.responder('/dolarbtc', { de }))[0], /O \/crypto não está liberado/);
+    assert.equal(cotacao.mock.callCount(), 1);
+
+    const [lista] = await bot.responder('/help alias', { de });
+    assert.doesNotMatch(lista, /\/misto|\/dolarbtc/);
+    assert.match((await bot.responder('/help alias'))[0], /\/misto[\s\S]*\/dolarbtc|\/dolarbtc[\s\S]*\/misto/);
+});
