@@ -1,5 +1,4 @@
-* /defi: Liquidswap (Orca, Project X, Morpho e Aave V3 ja estao) e PnL da posicao
-  (precisa do historico de depositos/saques); -alerta de Health Factor no Morpho e no Aave.
+* /defi: -alerta de Health Factor no Morpho e no Aave.
 * /view: salvar a foto/video de visualizacao unica quando chega, com o mesmo cache de
   midias e o mesmo -l do /show, com um -v ao lado do -d e do -e (terceira secao "Visualizacao unica").
 * /enquete: avisar no privado quando todos do grupo votarem.
