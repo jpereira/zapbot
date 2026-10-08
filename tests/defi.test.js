@@ -595,6 +595,44 @@ describe('/defi: Project X (HyperEVM)', () => {
         assert.equal((await bot.responder('/defi -rm 1'))[0], '🗑️ Removido: Project X · Hare 2 (0x92…0444)');
     });
 
+    test('-taxas: o resumo das taxas a coletar numa mensagem, com o total; -taxas -alerta mostra o alerta', async () => {
+        const [vazio] = await bot.responder('/defi -taxas');
+        assert.match(vazio, /🌊 \*Orca\* · ➖ _não cadastrado_\n\n🌊 \*Project X\* · ➖ _não cadastrado_\n\n🌊 \*Liquidswap\* · ➖ _não cadastrado_/);
+        assert.match(vazio, /💰 \*Total a coletar: \$0\.00\*$/);
+
+        await bot.responder(CADASTRO);
+        await bot.responder(`/defi prjx -wallet ${CARTEIRA}`);
+        const respostas = await bot.responder('/defi -taxas');
+        assert.equal(respostas.length, 1, 'uma mensagem só');
+        const [r] = respostas;
+        assert.match(r, /^💸 \*Resumo das taxas a coletar\* · \d\d\/\d\d\/\d{4} às \d\d:\d\d\n\n🌊 \*Orca · SOL\/cbBTC\* · 📍 Hz15…RaPZ\n/);
+        assert.match(r, /📏 \*Faixa:\* 0\.00140324 – 0\.0014605 cbBTC por SOL\n🎯 \*Preço atual:\* 0\.00140382 cbBTC por SOL\n {3}▕●──────────▏ 1% da faixa\n/);
+        assert.match(r, /💸 \*Taxas a coletar:\* \$[\d,.]+\n {3}• 6\.2494 SOL \(\$[\d,.]+\)\n {3}• 0\.008212 cbBTC/);
+        assert.match(r, /🌊 \*Project X · UBTC\/USD₮0\* · 📍 #7\n[^]*💸 \*Taxas a coletar:\* \$98\.50\n/);
+        assert.match(r, /🌊 \*Project X · WHYPE\/USD₮0\* · 📍 #9\n[^]*▏ ⚠️ \*fora da faixa\*\n/);
+        assert.match(r, /🌊 \*Liquidswap\* · ➖ _não cadastrado_/);
+        assert.doesNotMatch(r, /🔔|🔕/, 'sem -alerta, sem o alerta');
+
+        // O total é a soma, com o de cada protocolo
+        const orcaUsd = Number(r.match(/Orca · SOL[^]*?Taxas a coletar:\* \$([\d,.]+)/)[1].replace(/,/g, ''));
+        const total = Number(r.match(/Total a coletar: \$([\d,.]+)/)[1].replace(/,/g, ''));
+        assert.ok(Math.abs(total - (orcaUsd + 98.5)) < 0.011);
+        assert.match(r, /\n {3}• Orca: \$[\d,.]+\n {3}• Project X: \$98\.50$/);
+
+        assert.match((await bot.responder('/defi prjx -taxas'))[0], /\n\n🌊 \*Project X · WHYPE[^]*Total a coletar: \$98\.50\*$/);
+        assert.doesNotMatch((await bot.responder('/defi prjx -taxas'))[0], /Orca|Liquidswap/);
+        assert.match((await bot.responder('/defi morpho -taxas'))[0], /❌ No Morpho não há taxas a coletar/);
+        assert.match((await bot.responder('/defi -taxas 50'))[0], /❌ O -taxas com valor é do alerta/);
+
+        // -taxas -alerta: o 🔔 (no Project X, o limite vale para a carteira toda) e o 🔕 de quem não tem
+        await bot.responder('/defi -alerta 2 -taxas 200');
+        const [a] = await bot.responder('/defi -taxas -alerta');
+        assert.match(a, /\n🔕 _Sem alerta \(ligue com \/defi -alerta 1\)_\n/);
+        assert.match(a, /👛 \*Project X · carteira 0x92…0444\*: \$98\.50\n🔔 \*Alerta:\* faixa e taxas ≥ \$200\.00 → seu privado\n {3}_faltam \$101\.50 \(49% do limite\)_/);
+        await bot.responder('/defi -alerta 2 -taxas 90');
+        assert.match((await bot.responder('/defi -taxas -a'))[0], /✅ _passou do limite: hora de coletar_/);
+    });
+
     test('no seu privado, o /defi mostra os endereços inteiros', async () => {
         await bot.responder(CADASTRO);
         await bot.responder(`/defi prjx -wallet ${VAZIA}`);

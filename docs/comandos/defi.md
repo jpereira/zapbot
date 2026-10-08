@@ -29,6 +29,8 @@ Para todos os protocolos:
 /defi -l                       → a lista dos cadastros
 /defi -rm 2                    → remove o nº 2
 /defi -rm 1 3                  → remove o 1 e o 3 (ou -rm 1,3; -rm all remove todos)
+/defi -taxas                   → o resumo das taxas a coletar, com o total
+/defi -taxas -alerta           → o mesmo, com o alerta de cada cadastro
 /defi -alerta <nº|all> [-to <destino>]... [-taxas <valor>]
 ```
 
@@ -80,7 +82,7 @@ Para o Aave:
 | `-list`, `-l` | | Lista os cadastros, com 🔔 nos que têm alerta (e o limite das taxas: `🔔 ≥ $2,000.00`). No seu privado, com os endereços inteiros; fora dele, abreviados (`Hz15…RaPZ`) |
 | `-rm` | `<nº...\|all>` | Remove o cadastro nº N, vários (`-rm 1 3` ou `-rm 1,3`) ou todos; se algum nº não existe, nenhum sai. Junto com `-alerta`: só desliga o alerta da nº N (ou de todas) |
 | `-alerta`, `-a` | `[nº\|all\|valor]` | Sem nº: lista os alertas. Com nº (ou `all`): avisa quando a posição sair da faixa e quando voltar. Só da Orca e do Project X (a Liquidswap, o Morpho e o Aave não têm faixa). No cadastro (com `-address` ou `-wallet`), liga o alerta da posição nova, no seu privado (ou no `-to`); o valor é o limite das taxas, como o `-taxas` (`-alerta 2000`). Veja [Alerta de saída da faixa](#alerta-de-saída-da-faixa) |
-| `-taxas` | `<valor\|off>` | Junto com `-alerta`: avisa também quando as taxas a coletar passarem do valor, em dólar (ex.: `-taxas 50`). Avisa uma vez e de novo depois de você coletar; `off` tira |
+| `-taxas` | `[valor\|off]` | Sozinho: o resumo das taxas a coletar (veja [Resumo das taxas](#resumo-das-taxas)). Junto com `-alerta <nº\|all>`: avisa também quando as taxas a coletar passarem do valor, em dólar (ex.: `-taxas 50`). Avisa uma vez e de novo depois de você coletar; `off` tira |
 | `-to` | `<destino>` | Junto com `-alerta`: para onde vai o aviso. Um contato (`/Jorge Pereira/`), uma menção (`@Fulano Da Silva`), um grupo (`/Grupo L200/`), um número (`+5521999999999`) ou e-mail (`email` é o `QRCODE_EMAIL_SMTP_TO`) ([Destinos](index.md#destinos-contato-grupo-número-ou-e-mail)). Repita para vários: o aviso sai em todos. Sem ele, o seu privado |
 | `-address` | `<endereço>` | Com `orca`: cadastra a posição da Orca pelo endereço dela |
 | `-pool` | `<endereço>` | Com `orca -address`: a pool. Opcional; se vier, o bot confere se bate |
@@ -370,6 +372,60 @@ De onde vem cada número:
 - **Preço de liquidação**: só no `-full` e só com um colateral, que não seja também a dívida: o
   preço atual / o Health Factor. Com vários colaterais, ele depende do que os outros fizerem, e o
   bot avisa em vez de calcular.
+
+## Resumo das taxas
+
+O `-taxas` sozinho junta, numa mensagem só, as taxas a coletar de todas as posições de liquidez: a
+faixa, o preço e as taxas de cada posição da Orca e do Project X, e o total em dólar no fim (com o
+de cada protocolo). A Liquidswap entra, mas num AMM as taxas já estão no saldo: não há o que
+coletar. O protocolo que não está cadastrado aparece como `➖ não cadastrado`. Com o protocolo, só
+ele (`/defi prjx -taxas`); o Morpho e o Aave não têm taxas a coletar.
+
+Com `-alerta` (sem valor), mostra também o alerta de cada cadastro: para onde avisa, o limite das
+taxas e quanto falta para chegar nele. No Project X, o limite vale para a carteira toda (a soma das
+posições), como na verificação do alerta.
+
+```text
+/defi -taxas                   → o resumo de todos
+/defi prjx -taxas              → só do Project X
+/defi -taxas -alerta           → com o alerta de cada cadastro
+/cron 8h -r diario {/defi -taxas}   → o resumo todo dia às 8h
+```
+
+```text
+💸 Resumo das taxas a coletar · 07/10/2026 às 20:55
+
+🌊 Orca · SOL/cbBTC · 📍 Hz15…RaPZ
+📏 Faixa: 0.00140324 – 0.0014605 cbBTC por SOL
+🎯 Preço atual: 0.00140382 cbBTC por SOL
+   ▕●──────────▏ 1% da faixa
+   (1 cbBTC = 712.344 SOL)
+💸 Taxas a coletar: $1,426.35
+   • 6.2494 SOL ($738.04)
+   • 0.008212 cbBTC ($688.31)
+🔕 Sem alerta (ligue com /defi -alerta 1)
+
+🌊 Project X · UBTC/USD₮0 · 📍 #7
+📏 Faixa: 81,213.4 – 91,567.3 USD₮0 por UBTC
+🎯 Preço atual: 86,000 USD₮0 por UBTC
+   ▕─────●─────▏ 46% da faixa
+   (1 USD₮0 = 0.0000116279 UBTC)
+💸 Taxas a coletar: $98.50
+   • 0.001 UBTC ($86.00)
+   • 12.5 USD₮0 ($12.50)
+🔔 Alerta: faixa e taxas ≥ $200.00 → seu privado
+   faltam $101.50 (49% do limite)
+
+🌊 Liquidswap · ➖ não cadastrado
+
+━━━━━━━━━━━━━━━━━━
+💰 Total a coletar: $1,524.85
+   • Orca: $1,426.35
+   • Project X: $98.50
+```
+
+Uma posição sem preço em dólar (num par sem stablecoin) ou que não deu para ler fica fora do total,
+com um aviso no fim.
 
 ## Alerta de saída da faixa
 
