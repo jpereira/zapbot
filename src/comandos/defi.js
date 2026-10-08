@@ -31,6 +31,7 @@ const { formatarData, plural } = require('../util/formatar');
  *   /defi orca -address <endereço> [-pool <endereço>] [-nft <mint>]  → cadastra uma posição
  *   /defi prjx|liquidswap|morpho -wallet <0x...>  → cadastra a carteira (o bot lê as posições dela)
  *   /defi <protocolo> -help    → a ajuda só daquele protocolo
+ *   /defi [protocolo] -taxas [-alerta]  → o resumo das taxas a coletar (com o alerta de cada um)
  * O -nft e o -pool são opcionais: se vierem, o bot confere se batem com a posição.
  * No seu privado, os endereços vêm inteiros; fora dele, abreviados (0x92…0444).
  *
@@ -195,28 +196,38 @@ async function lerCadastro(p, end = curto, { full = false, m = MOSTRAR } = {}) {
     };
 }
 
+/*
+ * Os números de uma posição da Orca: unidades mínimas → tokens e o preço
+ * bruto → B por A (o Position Details e o resumo do -taxas).
+ */
+function numerosDaOrca(d) {
+    const { calculo: c, tokenA, tokenB, infoPool } = d;
+    const emA = (v) => Number(v) / 10 ** tokenA.decimals;
+    const emB = (v) => Number(v) / 10 ** tokenB.decimals;
+    const ajuste = 10 ** (tokenA.decimals - tokenB.decimals);
+    const [atual, inferior, superior] = [c.precoAtual, c.precoInferior, c.precoSuperior].map(p => p * ajuste);
+
+    return {
+        simA: tokenA.metadata?.symbol ?? infoPool.tokenA?.symbol ?? 'A',
+        simB: tokenB.metadata?.symbol ?? infoPool.tokenB?.symbol ?? 'B',
+        usdA: Number(tokenA.priceUsdc ?? 0),
+        usdB: Number(tokenB.priceUsdc ?? 0),
+        atual,
+        inferior,
+        superior,
+        qtdA: emA(c.qtdA),
+        qtdB: emB(c.qtdB),
+        taxaA: emA(c.taxaA),
+        taxaB: emB(c.taxaB)
+    };
+}
+
 /**
  * Texto do "Position Details" de uma posição da Orca.
  */
 function textoDaPosicao(d, end = curto, nome = null, m = MOSTRAR) {
-    const { calculo: c, tokenA, tokenB, infoPool } = d;
-    const simA = tokenA.metadata?.symbol ?? infoPool.tokenA?.symbol ?? 'A';
-    const simB = tokenB.metadata?.symbol ?? infoPool.tokenB?.symbol ?? 'B';
-    const decA = tokenA.decimals;
-    const decB = tokenB.decimals;
-    const usdA = Number(tokenA.priceUsdc ?? 0);
-    const usdB = Number(tokenB.priceUsdc ?? 0);
-
-    // Unidades mínimas → tokens; preço bruto → B por A
-    const emA = (v) => Number(v) / 10 ** decA;
-    const emB = (v) => Number(v) / 10 ** decB;
-    const ajuste = 10 ** (decA - decB);
-    const [atual, inferior, superior] = [c.precoAtual, c.precoInferior, c.precoSuperior].map(p => p * ajuste);
-
-    const qtdA = emA(c.qtdA);
-    const qtdB = emB(c.qtdB);
-    const taxaA = emA(c.taxaA);
-    const taxaB = emB(c.taxaB);
+    const { calculo: c, infoPool } = d;
+    const { simA, simB, usdA, usdB, atual, inferior, superior, qtdA, qtdB, taxaA, taxaB } = numerosDaOrca(d);
 
     const status = c.naFaixa
         ? '✅ dentro da faixa'
@@ -880,6 +891,129 @@ async function cadastrarComAlerta(msg, opts, protocolo, destino, end) {
     }, posicoes, destino, end);
 }
 
+/*
+ * -taxas (sem -alerta): o resumo das taxas a coletar, numa mensagem só. Vai
+ * por protocolo de liquidez (Orca, Project X e Liquidswap), com a faixa, o
+ * preço e as taxas de cada posição, e o total no fim. O que não está
+ * cadastrado aparece como tal; a Liquidswap (AMM) não tem taxas a coletar.
+ */
+const COM_TAXAS = ['orca', 'prjx', 'liquidswap'];
+
+// A posição no formato do resumo: token 0/1, faixa em 1 por 0 e as taxas (usd null: sem preço)
+function taxasDaOrca(d, onde) {
+    const x = numerosDaOrca(d);
+    return {
+        titulo: `Orca · ${x.simA}/${x.simB}`, onde, naFaixa: d.calculo.naFaixa,
+        sim0: x.simA, sim1: x.simB, preco: x.atual, inferior: x.inferior, superior: x.superior,
+        taxa0: x.taxaA, taxa1: x.taxaB, usd0: x.usdA, usd1: x.usdB
+    };
+}
+
+const taxasDoPrjx = (x, nome) => ({
+    titulo: `Project X · ${x.simbolo0}/${x.simbolo1}`, onde: `#${x.id}${nome ? ` · 👛 ${nome}` : ''}`, naFaixa: x.naFaixa,
+    sim0: x.simbolo0, sim1: x.simbolo1, preco: x.preco, inferior: x.inferior, superior: x.superior,
+    taxa0: x.taxa0, taxa1: x.taxa1, usd0: x.usd0, usd1: x.usd1
+});
+
+// As posições de um cadastro: { faixas } (Orca e Project X) ou { amm } (a Liquidswap: quantas pools)
+async function lerTaxas(p, end) {
+    if (p.protocol === 'liquidswap') return { amm: (await posicoesLiquidswap(p.wallet)).length };
+    if (p.protocol === 'prjx') return { faixas: (await posicoesDaCarteira(p.wallet)).map(x => taxasDoPrjx(x, p.name)) };
+    return { faixas: [taxasDaOrca(await detalhesDaPosicao(p.address, p.pool), posicaoComNome(p, end))] };
+}
+
+// O valor das taxas em dólar (null: sem preço)
+const taxasEmUsd = (x) => (x.usd0 === null || x.usd1 === null ? null : x.taxa0 * x.usd0 + x.taxa1 * x.usd1);
+
+function textoDasTaxas(x) {
+    const usd = (q, preco) => (preco === null ? '' : ` (${fmtUsd(q * preco)})`);
+    const total = taxasEmUsd(x);
+    const fora = x.naFaixa ? '' : ' ⚠️ *fora da faixa*';
+
+    return `🌊 *${x.titulo}* · 📍 ${x.onde}\n` +
+        `📏 *Faixa:* ${fmtPreco(x.inferior)} – ${fmtPreco(x.superior)} ${x.sim1} por ${x.sim0}\n` +
+        `🎯 *Preço atual:* ${fmtPreco(x.preco)} ${x.sim1} por ${x.sim0}\n` +
+        `   ${barraDaFaixa(x.preco, x.inferior, x.superior)}${fora}\n` +
+        (x.preco ? `   _(1 ${x.sim1} = ${fmtPreco(1 / x.preco)} ${x.sim0})_\n` : '') +
+        `💸 *Taxas a coletar:*${total === null ? ' _(sem preço em US$)_' : ` ${fmtUsd(total)}`}\n` +
+        `   • ${fmtQtd(x.taxa0)} ${x.sim0}${usd(x.taxa0, x.usd0)}\n` +
+        `   • ${fmtQtd(x.taxa1)} ${x.sim1}${usd(x.taxa1, x.usd1)}`;
+}
+
+/*
+ * Com -alerta: o alerta do cadastro, depois das posições dele. No Project X, o
+ * limite das taxas vale para a carteira toda (a soma das posições), como na
+ * verificação de src/defi/alertas.js.
+ */
+function textoDoAlertaNasTaxas(p, n, somaUsd) {
+    if (!p.alert) return `🔕 _Sem alerta (ligue com /defi -alerta ${n})_`;
+    const faixa = `🔔 *Alerta:* faixa${p.alert_fees ? ` e taxas ≥ ${fmtUsd(p.alert_fees)}` : ''} → ${descreverDestinoDoAlerta(p)}`;
+    if (!p.alert_fees || somaUsd === null) return faixa;
+    return `${faixa}\n   ${somaUsd >= p.alert_fees
+        ? '✅ _passou do limite: hora de coletar_'
+        : `_faltam ${fmtUsd(p.alert_fees - somaUsd)} (${Math.floor((somaUsd / p.alert_fees) * 100)}% do limite)_`}`;
+}
+
+async function resumirTaxas(msg, posicoes, protocolo, end, { comAlerta = false } = {}) {
+    const blocos = [];
+    const porProtocolo = [];
+    const foraDoTotal = [];
+
+    for (const proto of protocolo ? [protocolo] : COM_TAXAS) {
+        const cadastros = posicoes.filter(p => p.protocol === proto);
+        if (!cadastros.length) {
+            blocos.push(`🌊 *${PROTOCOLOS[proto]}* · ➖ _não cadastrado_`);
+            continue;
+        }
+
+        let soma = 0;
+        let comValor = false;
+        for (const p of cadastros) {
+            try {
+                const { faixas, amm } = await lerTaxas(p, end);
+                if (amm !== undefined) {
+                    blocos.push(`🌊 *Liquidswap* · 📍 ${carteiraComNome(p, end)}\n💧 _${amm ? plural(amm, 'pool', 'pools') + ': a' : 'Nenhuma posição aberta. A'}` +
+                        's taxas dos swaps entram na pool (já estão no saldo): não há o que coletar._');
+                    continue;
+                }
+                if (!faixas.length) blocos.push(`🌊 *${descrever(p, end)}* · nenhuma posição aberta`);
+                let doCadastro = 0;
+                let semPreco = false;
+                for (const x of faixas) {
+                    blocos.push(textoDasTaxas(x));
+                    const v = taxasEmUsd(x);
+                    if (v === null) {
+                        foraDoTotal.push(`${x.titulo} (sem preço)`);
+                        semPreco = true;
+                    } else {
+                        doCadastro += v;
+                        comValor = true;
+                    }
+                }
+                soma += doCadastro;
+                if (comAlerta) {
+                    const alerta = textoDoAlertaNasTaxas(p, posicoes.indexOf(p) + 1, semPreco ? null : doCadastro);
+                    if (faixas.length > 1) blocos.push(`👛 *${descrever(p, end)}*: ${fmtUsd(doCadastro)}\n${alerta}`);
+                    else blocos[blocos.length - 1] += `\n${alerta}`;
+                }
+            } catch (err) {
+                printError(`/defi -taxas ${enderecoDo(p)}:`, err.response?.status ?? '', err.message);
+                blocos.push(`🌊 *${descrever(p, end)}* · ⚠️ não consegui ler agora: ${err.motivo ?? `${err.message}.`}`);
+                foraDoTotal.push(`${descrever(p, end)} (não lida)`);
+            }
+        }
+        if (comValor) porProtocolo.push([PROTOCOLOS[proto], soma]);
+    }
+
+    const total = porProtocolo.reduce((s, [, v]) => s + v, 0);
+    const quando = formatarData(Date.now()).replace(/,? (\d\d:\d\d):\d\d$/, ' às $1');
+    const detalhe = porProtocolo.length > 1 ? `\n${porProtocolo.map(([nome, v]) => `   • ${nome}: ${fmtUsd(v)}`).join('\n')}` : '';
+    const fora = foraDoTotal.length ? `\n⚠️ _Fora do total: ${foraDoTotal.join(', ')}._` : '';
+
+    await msg.reply(`💸 *Resumo das taxas a coletar* · ${quando}\n\n${blocos.join('\n\n')}\n\n${SEPARADOR}\n` +
+        `💰 *Total a coletar: ${fmtUsd(total)}*${detalhe}${fora}`);
+}
+
 // -rm 2, -rm 1 3 5, -rm 1,3 (os números da lista de antes) ou all; algum que não existe: nenhum sai
 async function remover(msg, o, argv, posicoes, end) {
     const partes = [o.rm, ...argv].join(' ').toLowerCase().split(/[\s,]+/).filter(Boolean);
@@ -969,13 +1103,29 @@ async function cmdDefi({ msg, opts: optsDoComando, args, chatId }) {
 
     const posicoes = await dbAll('SELECT * FROM defi_positions ORDER BY id');
 
-    if (opts.given.has('alerta')) {
+    // -taxas -alerta (os dois sem valor): o resumo das taxas com o alerta de cada cadastro
+    const resumoComAlerta = opts.given.has('taxas') && opts.given.has('alerta') && !o.taxas && !o.alerta &&
+        !opts.given.has('rm') && !comDestino;
+
+    if (opts.given.has('alerta') && !resumoComAlerta) {
         await tratarAlerta(msg, opts, posicoes, { comDestino, destinosTexto }, end);
         return;
     }
 
     if (opts.given.has('rm')) {
         await remover(msg, o, argv, posicoes, end);
+        return;
+    }
+
+    // -taxas sem -alerta: o resumo das taxas a coletar
+    if (opts.given.has('taxas')) {
+        const erro = o.taxas
+            ? '❌ O -taxas com valor é do alerta: /defi -alerta <nº|all> -taxas <valor>. Sozinho, /defi -taxas mostra o resumo das taxas a coletar.'
+            : protocolo && !COM_TAXAS.includes(protocolo)
+                ? `❌ ${DO_PROTOCOLO[protocolo].replace(/^d/, 'N')} não há taxas a coletar: o -taxas é da Orca, do Project X e da Liquidswap.`
+                : argv.length ? `❌ "${argv[0]}" não é um protocolo: use orca, prjx ou liquidswap (liqswp).` : null;
+        if (erro) await msg.reply(erro);
+        else await resumirTaxas(msg, posicoes, protocolo, end, { comAlerta: resumoComAlerta });
         return;
     }
 

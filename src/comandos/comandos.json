@@ -647,7 +647,7 @@
         },
         {
             "cmd": "/defi",
-            "usage": "/defi [orca|prjx|liquidswap|morpho|aave] [-mask]  ou  /defi -l  ou  /defi -rm <nº...|all>  ou  /defi -alerta <nº|all> [-to <destino>]... [-taxas <valor>]  ou  /defi <protocolo> <opções>",
+            "usage": "/defi [orca|prjx|liquidswap|morpho|aave] [-mask]  ou  /defi -l  ou  /defi -rm <nº...|all>  ou  /defi [protocolo] -taxas [-alerta]  ou  /defi -alerta <nº|all> [-to <destino>]... [-taxas <valor>]  ou  /defi <protocolo> <opções>",
             "help": "Posições da Orca (Solana), do Project X (HyperEVM), da Liquidswap (Aptos), do Morpho e do Aave V3, lidas na hora: saldo, faixa e taxas a coletar das de liquidez; colateral, dívida e risco das de empréstimo. Sem nada, mostra todas; com o protocolo, só as dele. Cada protocolo tem a sua ajuda. Ex: /defi orca -help, /defi prjx -help, /defi liquidswap -help, /defi morpho -help, /defi aave -help",
             "cmd_opts": [
                 {
@@ -757,10 +757,9 @@
                         "taxas"
                     ],
                     "values": [
-                        "<valor|off>"
+                        "[valor|off]"
                     ],
-                    "desc": "Junto com -alerta: avisa também quando as taxas a coletar passarem do valor, em dólar (ex.: -taxas 50). Avisa uma vez e de novo depois de você coletar. off tira.",
-                    "cron": false,
+                    "desc": "Sozinho: o resumo das taxas a coletar, numa mensagem, com a faixa e o preço de cada posição da Orca e do Project X e o total em dólar (a Liquidswap entra, mas não tem o que coletar; o que não está cadastrado aparece como tal). Com -alerta (sem valor), mostra também o alerta de cada cadastro e quanto falta para o limite das taxas. Junto com -alerta <nº|all>: avisa também quando as taxas a coletar passarem do valor, em dólar (ex.: -taxas 50); avisa uma vez e de novo depois de você coletar; off tira. Ex: /defi -taxas, /defi prjx -taxas, /defi -taxas -alerta",
                     "protocolos": [
                         "orca",
                         "prjx"
