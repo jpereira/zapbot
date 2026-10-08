@@ -488,7 +488,8 @@ describe('ajuda', () => {
         const linesAlt = textAlt.split('\n');
         assert.equal(linesAlt[0], 'Uso: /defi [orca|prjx|liquidswap|morpho|aave] [-mask]');
         assert.equal(linesAlt[1], '     /defi -l');
-        assert.equal(linesAlt[4], '     /defi <protocolo> <opções>');
+        assert.equal(linesAlt[3], '     /defi [protocolo] -taxas [-alerta]');
+        assert.equal(linesAlt[5], '     /defi <protocolo> <opções>');
         assert.doesNotMatch(textAlt, / {2}ou {2}/);
     });
 
