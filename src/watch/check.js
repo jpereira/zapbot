@@ -8,6 +8,7 @@ const { resolverMentions } = require('../contacts');
 const { dbAll, dbRun } = require('../db');
 const { lineDestination, destinationsSaved, sendOnDestination } = require('../destinations');
 const { printError, printInfo } = require('../log');
+const { ignoreNotice } = require('../mudo');
 const { getSetting } = require('../settings');
 const { formatData } = require('../util/format');
 const { compileRuleWatch } = require('./rules');
@@ -83,6 +84,12 @@ async function checkWatch({
     }
 
     printInfo(`/watch: regra(s) ${freshAlt2.map(c => `#${c.n}`).join(',')} casaram em '${chatName}' (${senderName})`);
+
+    // /mute: the notice in your private chat is muted (the occurrence stays saved and the -to receive it)
+    if (byDestination.has('privado') &&
+        await ignoreNotice('watch', { chatId, remetentes: [senderJid, senderNumber] })) {
+        byDestination.delete('privado');
+    }
 
     for (const { destino: destination, regras: rules } of byDestination.values()) {
         const textAlt = '👀 *WATCH: MENSAGEM DETECTADA*\n\n' +

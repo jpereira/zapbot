@@ -12,6 +12,9 @@ const { printInfo } = require('./log');
  * In a group, it applies to everyone there; on a person, to whatever they send in
  * any chat (and for its status).
  *
+ * /watch also stays quiet in your private chat for whoever is muted in
+ * any of the types (the rules' -to keep receiving).
+ *
  * Each cut notice goes to `mute_hits` (/bot -status counts the ignored ones).
  */
 const TYPES = {
@@ -25,7 +28,8 @@ const idKey = (id) => (String(id ?? '').endsWith('@c.us') ? String(id).split('@'
 
 /**
  * Is the notice of this type, from this chat/sender, muted?
- * @param {'apagada'|'editada'|'status'} tipo
+ * 'watch' applies to any muted entry, of whatever type.
+ * @param {'apagada'|'editada'|'status'|'watch'} tipo
  * @param {object} o
  * @param {string} o.chatId
  * @param {Array<string|null>} o.remetentes  jids and/or numbers of the senders
@@ -33,8 +37,10 @@ const idKey = (id) => (String(id ?? '').endsWith('@c.us') ? String(id).split('@'
  */
 async function muted(type, { chatId, remetentes: senders = [] }) {
     await dbReady;
-    const column = TYPES[type].coluna;
-    const mutes = await dbAll(`SELECT * FROM mutes WHERE ${column} = 1`);
+    const whereAlt = type === 'watch'
+        ? Object.values(TYPES).map(t => `${t.coluna} = 1`).join(' OR ')
+        : `${TYPES[type].coluna} = 1`;
+    const mutes = await dbAll(`SELECT * FROM mutes WHERE ${whereAlt}`);
     if (!mutes.length) return null;
 
     const keys = new Set([chatId, ...senders].filter(Boolean).map(r => idKey(r.includes('@') ? r : `${r}@c.us`)));
