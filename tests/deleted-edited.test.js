@@ -326,6 +326,32 @@ describe('/show (/s)', () => {
         assert.equal((await bot.replyAlt('/show -e -l'))[0], r);
     });
 
+    test('-l <chat>: só os que casam (nº, nome, @menção ou /regex/), com o nº da lista completa',
+        async () => {
+            await messageDeleted('a');
+            await messageDeleted('b');
+            await messageDeleted('d', { chat: WORK });
+            await messageEdited('x', 'y', { chat: WORK });
+            await messageDeleted('meu status', { chat: 'status@broadcast' });
+
+            const [byName] = await bot.replyAlt('/show -l trab');
+            assert.match(byName, /Mensagens no cache de:\* trab/);
+            assert.match(byName, /🗑️ \*Apagadas:\* 1 [^\n]*\n✏️ \*Editadas:\* 1 [^\n]*\n📸 \*Status:\* 0\n/);
+            assert.match(byName, /2\. 👥 Trabalho — 🗑️ 1 · ✏️ 1 /);
+            assert.doesNotMatch(byName, /Família|Fulano/);
+
+            assert.equal((await bot.replyAlt('/show -l 2'))[0].replace('2', 'trab'), byName);
+            assert.match((await bot.replyAlt('/show -l /^(fam|trab)/'))[0],
+                /1\. 👥 Família[^\n]*\n2\. 👥 Trabalho/);
+
+            const [byMention] = await bot.replyAlt(`/show -l @${OTHERAlt.user}`, { mencoes: [OTHERAlt.jid] });
+            assert.match(byMention, /📸 \*Status:\* 1 /);
+            assert.match(byMention, /3\. 👤 Fulano — 📸 1 /);
+            assert.doesNotMatch(byMention, /Família|Trabalho/);
+
+            assert.match((await bot.replyAlt('/show -l nada'))[0], /❌ Nenhum chat no cache casa com "nada"/);
+        });
+
     test('chat pelo nº da lista, pelo nome ou por /regex/ (em qualquer chat)', async () => {
         await messageDeleted('do trabalho', { chat: WORK });
         await messageDeleted('da família');
