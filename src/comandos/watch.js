@@ -13,7 +13,7 @@ const { printInfo } = require('../log');
 const { getSetting, setSetting } = require('../settings');
 const { formatarData, plural, resumirTexto, semAcentos } = require('../util/formatar');
 const { ehCanal } = require('../util/origem');
-const { REGRA_REGEX, compilarRegraWatch } = require('../watch/regras');
+const { REGRA_REGEX, compilarBusca, compilarRegraWatch } = require('../watch/regras');
 const { lerOpcoesWatch } = require('../watch/opcoes');
 
 /*
@@ -91,7 +91,7 @@ async function numeroDaRegra(msg, ref, regras) {
 const DICAS = '\n\n💡 *Dicas*\n' +
     '/watch -f N limpa as ocorrências da regra N.\n' +
     '/watch -s <N ou regra> mostra as mensagens completas.\n' +
-    '/watch -s <N ou regra> -q <texto> só as que têm o texto.\n' +
+    '/watch -s <N ou regra> -q <texto|/regex/> só as que casam.\n' +
     '/watch -s N -to <destino|off> troca os destinos.';
 
 async function listarRegras(regras) {
@@ -114,8 +114,8 @@ async function listarRegras(regras) {
 
 /*
  * As ocorrências da regra (null: de todas), das mais recentes. Com busca, só as
- * que têm o texto, sem diferenciar maiúsculas nem acentos (filtrada aqui: o
- * SQLite não ignora acentos).
+ * que casam: texto, sem diferenciar maiúsculas nem acentos, ou /regex/flags
+ * (filtrada aqui: o SQLite não ignora acentos nem tem regex).
  */
 async function listarOcorrencias(regra, regras, limite, completa = false, busca = null) {
     const filtro = regra === null ? '' : 'WHERE rule = ?';
@@ -128,9 +128,9 @@ async function listarOcorrencias(regra, regras, limite, completa = false, busca 
         rows = await dbAll(
             `SELECT * FROM watch_hits ${filtro} ORDER BY timestamp DESC, id DESC LIMIT ?`, [...params, max]);
     } else {
-        const alvo = semAcentos(busca);
+        const casa = compilarBusca(busca);
         const todas = await dbAll(`SELECT * FROM watch_hits ${filtro} ORDER BY timestamp DESC, id DESC`, params);
-        const casam = todas.filter(h => semAcentos(h.body).includes(alvo));
+        const casam = todas.filter(h => casa(h.body));
         total = casam.length;
         rows = casam.slice(0, max);
     }
@@ -206,6 +206,12 @@ async function cmdWatch({ msg, args }) {
             `💡 _Avisos ${lido.destinos.length ? `em ${ondeAvisa(lido.destinos)}`
                 : 'no seu privado'}._`);
         return;
+    }
+    if (o.busca !== null) {
+        try { compilarBusca(o.busca); } catch (err) {
+            await msg.reply(`❌ Busca inválida: ${err.message}`);
+            return;
+        }
     }
     if (o.ref !== null) {
         o.n = await numeroDaRegra(msg, o.ref, regras);

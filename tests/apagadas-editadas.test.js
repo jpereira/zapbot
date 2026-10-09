@@ -298,6 +298,24 @@ describe('/show (/s)', () => {
         assert.match((await bot.responder('/show -q'))[0], /❌ Informe o que buscar/);
     });
 
+    test('-q com /regex/flags: no texto como veio; regex inválida avisa', async () => {
+        await mensagemApagada('manda o PIX');
+        await mensagemApagada('segue o boleto');
+        await mensagemApagada('pixel art');
+        await mensagemEditada('reunião às 10h', 'reunião às 11h');
+
+        const r = await bot.responder('/show -5 -q /\\bpix\\b|boleto/i');
+        assert.equal(r[0], '♻️ *2 mensagens apagadas* com "/\\bpix\\b|boleto/i"');
+        assert.match(r[1], /"manda o PIX"/);
+        assert.match(r[2], /"segue o boleto"/);
+
+        // Sem a flag i, diferencia maiúsculas; nas editadas, o antes ou o depois
+        assert.deepEqual(await bot.responder('/show -q /Pix/'), ['♻️ Nenhuma mensagem apagada com "/Pix/" neste chat.']);
+        assert.equal((await bot.responder('/show -e -q "/às 1[01]h/"'))[0], '✏️ *1 mensagem editada* com "/às 1[01]h/"');
+
+        assert.match((await bot.responder('/show -q /[/'))[0], /^❌ Busca inválida: regex inválida/);
+    });
+
     test('-q com chat: só nele', async () => {
         await mensagemApagada('pix aqui');
         await mensagemApagada('pix no trabalho', { chat: TRABALHO });

@@ -64,7 +64,8 @@ function lerOpcoesWatch(args) {
             }
             if (nome === 'query') {
                 if (o.busca !== null) throw new Error('informe apenas uma busca -q');
-                o.busca = valor.valor.trim();
+                // Com barras, vem inteira: /carro/i
+                o.busca = valor.regra.trim();
             } else if (nome === 'to') o.destinos.push(valor.valor);
             else {
                 if (o.origem !== null) throw new Error('informe apenas uma origem -in');

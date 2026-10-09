@@ -18,6 +18,7 @@ const { getSetting } = require('../settings');
 const { humanSize, isCaminhoDeMidia } = require('../util/arquivos');
 const { esperar, formatarData, paraMs, plural, semAcentos } = require('../util/formatar');
 const { ehCanal } = require('../util/origem');
+const { compilarBusca } = require('../watch/regras');
 
 /*
  * /show [-N] [-d] [-e] [-s] [chat]: reexibe o que está no cache, no mesmo
@@ -31,7 +32,8 @@ const { ehCanal } = require('../util/origem');
  *   /show 2            → a última do chat nº 2 do último -l
  *   /show -list        → os chats com algo no cache
  *   /show -flush       → remove as apagadas deste chat (no seu privado: de todos os chats)
- *   /show -q pix       → as que têm "pix" (sem diferenciar maiúsculas/acentos);
+ *   /show -q pix       → as que têm "pix" (sem diferenciar maiúsculas/acentos;
+ *                        ou /regex/flags: -q /pix|boleto/i);
  *                        neste chat, no chat pedido ou, no seu privado, em todos.
  *                        Sem -N: as 5 mais recentes
  * O chat: o nº da lista do -l, parte do nome, @menção ou /regex/. Num privado,
@@ -495,8 +497,17 @@ async function cmdShow({ msg, opts, chatId, admin }) {
     if (busca !== null && (!busca || opts.opt.flush || opts.opt.list)) {
         await msg.reply(busca
             ? '❌ O -q não combina com o -f nem com o -l.'
-            : `❌ Informe o que buscar: ${cmd} -q <texto> (com espaços, entre aspas: -q "bom dia").`);
+            : `❌ Informe o que buscar: ${cmd} -q <texto|/regex/flags> (com espaços, entre aspas: -q "bom dia").`);
         return;
+    }
+    let casa = null;
+    if (busca !== null) {
+        try {
+            casa = compilarBusca(busca);
+        } catch (err) {
+            await msg.reply(`❌ Busca inválida: ${err.message}`);
+            return;
+        }
     }
 
     const privadoSemParametros = /@(c\.us|lid)$/.test(chatId) &&
@@ -552,10 +563,7 @@ async function cmdShow({ msg, opts, chatId, admin }) {
             busca ? params : [...params, n]
         );
 
-        const alvoDaBusca = semAcentos(busca);
-        rows.push(...(busca
-            ? doTipo.filter(r => t.textos(r).some(texto => semAcentos(texto).includes(alvoDaBusca)))
-            : doTipo));
+        rows.push(...(casa ? doTipo.filter(r => t.textos(r).some(casa)) : doTipo));
     }
 
     rows.sort((a, b) => paraMs(b._quando) - paraMs(a._quando));
