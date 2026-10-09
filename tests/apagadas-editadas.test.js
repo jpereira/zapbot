@@ -326,6 +326,32 @@ describe('/show (/s)', () => {
         assert.equal((await bot.responder('/show -e -l'))[0], r);
     });
 
+    test('-l <chat>: só os que casam (nº, nome, @menção ou /regex/), com o nº da lista completa',
+        async () => {
+            await mensagemApagada('a');
+            await mensagemApagada('b');
+            await mensagemApagada('d', { chat: TRABALHO });
+            await mensagemEditada('x', 'y', { chat: TRABALHO });
+            await mensagemApagada('meu status', { chat: 'status@broadcast' });
+
+            const [porNome] = await bot.responder('/show -l trab');
+            assert.match(porNome, /Mensagens no cache de:\* trab/);
+            assert.match(porNome, /🗑️ \*Apagadas:\* 1 [^\n]*\n✏️ \*Editadas:\* 1 [^\n]*\n📸 \*Status:\* 0\n/);
+            assert.match(porNome, /2\. 👥 Trabalho — 🗑️ 1 · ✏️ 1 /);
+            assert.doesNotMatch(porNome, /Família|Fulano/);
+
+            assert.equal((await bot.responder('/show -l 2'))[0].replace('2', 'trab'), porNome);
+            assert.match((await bot.responder('/show -l /^(fam|trab)/'))[0],
+                /1\. 👥 Família[^\n]*\n2\. 👥 Trabalho/);
+
+            const [porMencao] = await bot.responder(`/show -l @${OUTRO.user}`, { mencoes: [OUTRO.jid] });
+            assert.match(porMencao, /📸 \*Status:\* 1 /);
+            assert.match(porMencao, /3\. 👤 Fulano — 📸 1 /);
+            assert.doesNotMatch(porMencao, /Família|Trabalho/);
+
+            assert.match((await bot.responder('/show -l nada'))[0], /❌ Nenhum chat no cache casa com "nada"/);
+        });
+
     test('chat pelo nº da lista, pelo nome ou por /regex/ (em qualquer chat)', async () => {
         await mensagemApagada('do trabalho', { chat: TRABALHO });
         await mensagemApagada('da família');
