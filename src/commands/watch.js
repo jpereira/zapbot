@@ -11,14 +11,15 @@ const {
 } = require('../destinations');
 const { printInfo } = require('../log');
 const { getSetting, setSetting } = require('../settings');
-const { formatData, plural, summarizeText } = require('../util/format');
+const { formatData, plural, summarizeText, withoutAccents } = require('../util/format');
 const { isChannelAlt } = require('../util/origin');
 const { RULE_REGEX, compileRuleWatch } = require('../watch/rules');
 const { readOptionsWatch } = require('../watch/options');
 
 /*
  * Direct rules; -in restricts the origin and -to picks where the notice will be sent.
- * -N is the number of matches. -s/-r/-f take the rule number without a hyphen.
+ * -N is the number of matches. -s/-r/-f take the rule number without a hyphen
+ * or the rule itself (/watch -s /Jorge/).
  */
 // The notice destinations of a watch_destinations row
 const lineDestinations = (r) => destinationsSaved(r.recipients, lineDestination(r));
@@ -65,9 +66,32 @@ async function toReadDestinations(msg, texts) {
 }
 
 
+/**
+ * The rule no. by its text: equal; equal ignoring case and
+ * accents; or contained in a single rule.
+ * @returns {Promise<number|null>} null: already replied the error
+ */
+async function ruleNumber(msg, ref, rules) {
+    const exact = rules.indexOf(ref);
+    if (exact >= 0) return exact + 1;
+    const equal = rules.findIndex(r => withoutAccents(r) === withoutAccents(ref));
+    if (equal >= 0) return equal + 1;
+
+    const contains = rules.map((r, i) => ({ r, n: i + 1 })).filter(({ r }) => withoutAccents(r).includes(withoutAccents(ref)));
+    if (contains.length === 1) return contains[0].n;
+
+    await msg.reply(contains.length
+        ? `🔎 "${ref}" corresponde a ${contains.length} regras:\n\n` +
+            contains.map(({ r, n }) => `#${n}  ${r}`).join('\n') +
+            '\n\n💡 _Repita com o nº da regra (ex.: /watch -s N) ou com ela inteira._'
+        : `❌ Nenhuma regra casa com "${ref}": veja /watch -l`);
+    return null;
+}
+
 const TIPS = '\n\n💡 *Dicas*\n' +
     '/watch -f N limpa as ocorrências da regra N.\n' +
-    '/watch -s N mostra as mensagens completas.\n' +
+    '/watch -s <N ou regra> mostra as mensagens completas.\n' +
+    '/watch -s <N ou regra> -q <texto> só as que têm o texto.\n' +
     '/watch -s N -to <destino|off> troca os destinos.';
 
 async function listRules(rules) {
@@ -88,19 +112,36 @@ async function listRules(rules) {
             '💡 _Adicione com /watch <texto|/regex/flags>_');
 }
 
-async function listOccurrences(rule, rules, limitAlt, complete = false) {
+/*
+ * The rule's occurrences (null: of all), most recent first. With a search, only the
+ * that have the text, case and accent insensitive (filtered here: the
+ * SQLite does not ignore accents).
+ */
+async function listOccurrences(rule, rules, limitAlt, complete = false, search = null) {
     const filter = rule === null ? '' : 'WHERE rule = ?';
     const params = rule === null ? [] : [rule];
-    const { total } = await dbGet(`SELECT COUNT(*) AS total FROM watch_hits ${filter}`, params);
-    const rows = await dbAll(
-        `SELECT * FROM watch_hits ${filter} ORDER BY timestamp DESC, id DESC LIMIT ?`,
-        [...params, Math.min(limitAlt ?? getSetting('watch.showMax'), getSetting('watch.showMax'))]
-    );
+    const max = Math.min(limitAlt ?? getSetting('watch.showMax'), getSetting('watch.showMax'));
+    let total;
+    let rows;
+    if (search === null) {
+        ({ total } = await dbGet(`SELECT COUNT(*) AS total FROM watch_hits ${filter}`, params));
+        rows = await dbAll(
+            `SELECT * FROM watch_hits ${filter} ORDER BY timestamp DESC, id DESC LIMIT ?`, [...params, max]);
+    } else {
+        const target = withoutAccents(search);
+        const allAlt = await dbAll(`SELECT * FROM watch_hits ${filter} ORDER BY timestamp DESC, id DESC`, params);
+        const match = allAlt.filter(h => withoutAccents(h.body).includes(target));
+        total = match.length;
+        rows = match.slice(0, max);
+    }
     let textAlt = '👀 *WATCH: OCORRÊNCIAS*\n' + (rule === null ? '🔎 *Regras:* todas\n'
         : `🔎 *Regra #${rules.indexOf(rule) + 1}:* ${rule}\n`);
+    if (search !== null) textAlt += `🔍 *Busca:* "${search}"\n`;
     textAlt += `📦 *Total:* ${total}${total > rows.length
         ? ` _(exibindo as ${rows.length} mais recentes)_` : ''}\n`;
-    if (!rows.length) textAlt += '\n_Nenhuma mensagem casou ainda._';
+    if (!rows.length) {
+        textAlt += search === null ? '\n_Nenhuma mensagem casou ainda._' : `\n_Nenhuma mensagem com "${search}"._`;
+    }
     for (const [i, h] of rows.entries()) {
         const group = h.is_group ? (await groupResolverName(h.chat_id)) || h.chat_name : null;
         const channel = isChannelAlt(h.chat_id)
@@ -166,6 +207,10 @@ async function cmdWatch({ msg, args }) {
                 : 'no seu privado'}._`);
         return;
     }
+    if (o.ref !== null) {
+        o.n = await ruleNumber(msg, o.ref, rules);
+        if (o.n === null) return;
+    }
     const n = o.n ?? (o.destinos.length ? o.limite : null);
     const rule = n === null ? null : rules[n - 1];
     if (n !== null && !rule) {
@@ -204,13 +249,13 @@ async function cmdWatch({ msg, args }) {
         return;
     }
     if (o.acao === 'show') {
-        await msg.reply((await listOccurrences(rule, rules, o.limite, true)).texto + TIPS);
+        await msg.reply((await listOccurrences(rule, rules, o.limite, true, o.busca)).texto + TIPS);
         return;
     }
     let textAlt = await listRules(rules);
     if (o.acao !== 'list') {
-        const occurrences = await listOccurrences(null, rules, o.limite);
-        if (occurrences.total) textAlt += '\n\n' + occurrences.texto;
+        const occurrences = await listOccurrences(null, rules, o.limite, false, o.busca);
+        if (occurrences.total || o.busca !== null) textAlt += '\n\n' + occurrences.texto;
     }
     await msg.reply(textAlt + TIPS);
 }
