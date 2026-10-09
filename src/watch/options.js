@@ -39,9 +39,9 @@ function tokensWatch(args) {
 
 function readOptionsWatch(args) {
     const tokens = tokensWatch(args);
-    const o = { regra: '', destinos: [], limite: null, n: null, acao: null, origem: null };
+    const o = { regra: '', destinos: [], limite: null, n: null, ref: null, acao: null, origem: null, busca: null };
     const aliases = { list: 'list', l: 'list', show: 'show', s: 'show', rem: 'rem', r: 'rem',
-        flush: 'flush', f: 'flush', mask: 'mask', m: 'mask', in: 'in', to: 'to' };
+        flush: 'flush', f: 'flush', mask: 'mask', m: 'mask', in: 'in', to: 'to', query: 'query', q: 'query' };
     const rule = [];
     for (let i = 0; i < tokens.length; i++) {
         const t = tokens[i];
@@ -55,10 +55,17 @@ function readOptionsWatch(args) {
         const nameAlt = aliases[t.valor.slice(1)];
         if (!nameAlt) throw new Error(`opção desconhecida: ${t.valor}`);
         if (nameAlt === 'mask') { o.mask = true; continue; }
-        if (nameAlt === 'to' || nameAlt === 'in') {
+        if (nameAlt === 'to' || nameAlt === 'in' || nameAlt === 'query') {
             const valueAlt = tokens[++i];
-            if (!valueAlt || valueAlt.regra.startsWith('-')) throw new Error(`informe o valor de -${nameAlt}`);
-            if (nameAlt === 'to') o.destinos.push(valueAlt.valor);
+            if (!valueAlt || valueAlt.regra.startsWith('-') || !valueAlt.valor.trim()) {
+                throw new Error(nameAlt === 'query'
+                    ? 'informe o que buscar: -q <texto> (com espaços, entre aspas: -q "bom dia")'
+                    : `informe o valor de -${nameAlt}`);
+            }
+            if (nameAlt === 'query') {
+                if (o.busca !== null) throw new Error('informe apenas uma busca -q');
+                o.busca = valueAlt.valor.trim();
+            } else if (nameAlt === 'to') o.destinos.push(valueAlt.valor);
             else {
                 if (o.origem !== null) throw new Error('informe apenas uma origem -in');
                 o.origem = valueAlt.valor;
@@ -72,8 +79,16 @@ function readOptionsWatch(args) {
         }
     }
     o.regra = rule.join(' ').trim();
+    // -s/-r/-f also accept the rule itself in place of the no.: /watch -s /Jorge/
+    if (['show', 'rem', 'flush'].includes(o.acao) && o.n === null && o.regra) {
+        o.ref = o.regra;
+        o.regra = '';
+    }
     if (o.acao && o.regra) throw new Error('não combine regra nova com ações de consulta ou remoção');
     if (o.origem !== null && !o.regra) throw new Error('o -in acompanha uma regra nova');
+    if (o.busca !== null && (o.regra || o.destinos.length || ['rem', 'flush', 'list'].includes(o.acao))) {
+        throw new Error('o -q só filtra as ocorrências: use com /watch -s [N|regra] ou /watch [-N]');
+    }
     if (o.limite !== null && (!o.limite || o.limite > 100)) {
         throw new Error('a quantidade -N deve estar entre 1 e 100');
     }

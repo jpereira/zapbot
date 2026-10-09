@@ -381,6 +381,50 @@ describe('/watch com origem e listagem', () => {
         assert.equal((await someoneWrite('pix -to -h azul novo'))[0].chatId, OTHERAlt.jid);
     });
 
+    test('-s, -f e -r aceitam a regra no lugar do nº: inteira, sem maiúsculas ou só um trecho', async () => {
+        await bot.setSetting('watch.rules', ['/TCPRO.*La.*Sportiva/i', '/Renato.*r38tao/', '/Jorge/']);
+        await someoneWrite('oi Jorge');
+
+        const [byNumber] = await bot.replyAlt('/watch -s 3');
+        assert.match(byNumber, /🔎 \*Regra #3:\* \/Jorge\//);
+        for (const ref of ['/Jorge/', '/jorge/', 'Jorge', '"jorge"']) {
+            assert.equal((await bot.replyAlt(`/watch -s ${ref}`))[0], byNumber, ref);
+        }
+        assert.match((await bot.replyAlt('/watch -s /Jorge/ -to /Família/'))[0], /Regra \*#3\* \(\/Jorge\/\)/);
+
+        const [ambiguous] = await bot.replyAlt('/watch -s r');
+        assert.match(ambiguous, /^🔎 "r" corresponde a 3 regras/);
+        assert.match((await bot.replyAlt('/watch -s nada'))[0], /❌ Nenhuma regra casa com "nada"/);
+
+        assert.match((await bot.replyAlt('/watch -f /Jorge/'))[0], /regra #3:\* \/Jorge\/\n🗄️ Ocorrências apagadas: \*1\*/);
+        assert.match((await bot.replyAlt('/watch -r Sportiva'))[0], /Regra \*#1\* removida/);
+        assert.deepEqual(bot.getSetting('watch.rules'), ['/Renato.*r38tao/', '/Jorge/']);
+    });
+
+    test('-q filtra as ocorrências pelo texto (sem maiúsculas nem acentos), no -s e na listagem', async () => {
+        await bot.setSetting('watch.rules', ['/Jorge/', 'pix']);
+        await someoneWrite('Jorge vendeu o CARRO');
+        await someoneWrite('Jorge comprou uma moto');
+        await someoneWrite('Jorge e o carrão novo');
+        await someoneWrite('pix do carro');
+
+        const [r] = await bot.replyAlt('/watch -s /Jorge/ -query "carro"');
+        assert.match(r, /🔎 \*Regra #1:\* \/Jorge\/\n🔍 \*Busca:\* "carro"\n📦 \*Total:\* 1\n/);
+        assert.match(r, /"Jorge vendeu o CARRO"/);
+        assert.doesNotMatch(r, /moto|carrão|pix do carro/);
+
+        assert.match((await bot.replyAlt('/watch -s 1 -q carrao'))[0], /"Jorge e o carrão novo"/);
+        assert.match((await bot.replyAlt('/watch -s -q carro -1'))[0],
+            /📦 \*Total:\* 2 _\(exibindo as 1 mais recentes\)_\n\n1\. [^\n]*\n[^\n]*\n {4}💬 "pix do carro"/);
+        assert.match((await bot.replyAlt('/watch -q moto'))[0], /👀 \*WATCH: REGRAS\*[\s\S]*Busca:\* "moto"\n📦 \*Total:\* 1/);
+        assert.match((await bot.replyAlt('/watch -s 1 -q avião'))[0], /_Nenhuma mensagem com "avião"\._/);
+
+        for (const commandAlt of ['-s 1 -q', '-l -q x', '-f 1 -q x', '-r 1 -q x', 'pix -q x', '-s 1 -q a -q b']) {
+            assert.match((await bot.replyAlt(`/watch ${commandAlt}`))[0], /^❌/, commandAlt);
+        }
+        assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM watch_hits')).n, 4);
+    });
+
     test('-flush N mantém origem e destinos; -rem N elimina tudo da regra', async () => {
         await bot.replyAlt('/watch pix -in /Fulano/ -to /Família/');
         await someoneWrite('pix');
