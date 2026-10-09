@@ -1626,11 +1626,11 @@
         },
         {
             "cmd": "/watch",
-            "usage": "/watch [texto|/regex/flags] [-in <origem>] [-to <destino>]...  ou  /watch [-N]  ou  /watch -s [N] [-to <destino|off>]...  ou  /watch -rem N  ou  /watch -flush [N]",
+            "usage": "/watch [texto|/regex/flags] [-in <origem>] [-to <destino>]...  ou  /watch [-N]  ou  /watch -s [N|regra] [-q <texto>] [-to <destino|off>]...  ou  /watch -rem <N|regra>  ou  /watch -flush [N|regra]",
             "aliases": [
                 "/w"
             ],
-            "help": "Vigia mensagens recebidas com regras de texto ou regex. Miniaturas de localização não são texto e ficam fora das regras. Uma regra sem -in vale em qualquer lugar; -in restringe a um contato (remetente), grupo ou canal. Sem parâmetros, lista regras e últimos matches; -N escolhe a quantidade. Publicações de @newsletter são identificadas com 📰 e o nome do canal. Os números após -s, -rem e -flush identificam regras; -N define a quantidade de matches.",
+            "help": "Vigia mensagens recebidas com regras de texto ou regex. Miniaturas de localização não são texto e ficam fora das regras. Uma regra sem -in vale em qualquer lugar; -in restringe a um contato (remetente), grupo ou canal. Sem parâmetros, lista regras e últimos matches; -N escolhe a quantidade. Publicações de @newsletter são identificadas com 📰 e o nome do canal. Os números após -s, -rem e -flush identificam regras (ou a própria regra, inteira ou um trecho: /watch -s /Jorge/); -N define a quantidade de matches.",
             "cmd_opts": [
                 {
                     "opts": [
@@ -1646,9 +1646,19 @@
                         "s"
                     ],
                     "values": [
-                        "[N]"
+                        "[N|regra]"
                     ],
-                    "desc": "Mostra os textos completos dos matches da regra N; sem N, de todas. N identifica a regra, e -N limita a quantidade de matches até watch.showMax. Ex: /watch -s 3 -10"
+                    "desc": "Mostra os textos completos dos matches da regra N; sem N, de todas. N identifica a regra, e -N limita a quantidade de matches até watch.showMax. Ex: /watch -s 3 -10 ou /watch -s /Jorge/"
+                },
+                {
+                    "opts": [
+                        "query",
+                        "q"
+                    ],
+                    "values": [
+                        "<texto>"
+                    ],
+                    "desc": "Só os matches que têm o texto, sem diferenciar maiúsculas nem acentos; com espaços, entre aspas. Com -s ou na listagem. Ex: /watch -s /Jorge/ -q \"carro\""
                 },
                 {
                     "opts": [
@@ -1665,7 +1675,7 @@
                         "r"
                     ],
                     "values": [
-                        "N"
+                        "<N|regra>"
                     ],
                     "desc": "Remove a regra N, suas ocorrências, origem e destinos. Ex: /watch -rem 3"
                 },
@@ -1675,7 +1685,7 @@
                         "f"
                     ],
                     "values": [
-                        "[N]"
+                        "[N|regra]"
                     ],
                     "desc": "Limpa as ocorrências da regra N; sem N, limpa todas. Mantém regras, origens e destinos. Ex: /watch -flush 3"
                 },
