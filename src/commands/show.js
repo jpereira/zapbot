@@ -31,6 +31,7 @@ const { compileSearch } = require('../watch/rules');
  * /show -e Trabalho  → the last edited one of the chat with "Trabalho" in the name
  * /show 2            → the last one of chat no. 2 of the last -l
  * /show -list        → the chats with something in the cache
+ * /show -l trab      → only the chats that match (no., name, @mention or /regex/)
  * /show -flush       → removes the deleted ones of this chat (in your private chat: of all chats)
  * /show -q pix       → the ones that have "pix" (case and accent insensitive;
  * or /regex/flags: -q /pix|boleto/i);
@@ -182,7 +183,7 @@ async function chatsThatMatch(msg, textAlt, chats) {
         const list = chatsLastList.length ? chatsLastList : chats.map(c => c.chat_id);
         const chat = chats.find(c => c.chat_id === list[Number(textAlt) - 1]);
         if (!chat) {
-            await msg.reply(`❌ Chat nº ${textAlt} não existe (ou não tem mais nada no cache). Rode /show -l para ver a lista atual.`);
+            await msg.reply(`❌ Chat nº ${textAlt} não existe (ou não tem mais nada no cache).\n💡 _Veja a lista atual com /show -l_`);
             return null;
         }
         return { casam: [chat], exato: chat };
@@ -270,7 +271,8 @@ async function listCache({ msg, chatId, filtro: filter }) {
             ...(await Promise.all(r.casam.map(c => chatCurrentIds(c.chat_id)))).flat()
         ])];
         chats = allOsChats.filter(c => ids.includes(c.chat_id));
-        de = r.mencao?.nome ?? filter;
+        // A single chat: its name (the "2" of -l 2 says nothing); several: what was typed
+        de = r.mencao?.nome ?? (r.casam.length === 1 ? chatNameAlt(r.casam[0]) : filter);
         if (!chats.length) {
             await msg.reply(`🗄️ Nada no cache de ${de}.`);
             return;
@@ -492,12 +494,12 @@ async function cmdShow({ msg, opts, chatId, admin }) {
     const requests = Object.keys(TYPES).filter(type => opts.opt[TYPES[type].opt]);
     const cmd = ['/show', ...requests.map(type => TYPES[type].flag)].join(' ');
 
-    // -q <text>: searches the requested types; does not combine with -f and -l
+    // -q <text|/regex/flags>: searches the requested types; does not combine with -f and -l
     const search = opts.given.has('query') ? String(opts.opt.query ?? '').trim() : null;
     if (search !== null && (!search || opts.opt.flush || opts.opt.list)) {
         await msg.reply(search
             ? '❌ O -q não combina com o -f nem com o -l.'
-            : `❌ Informe o que buscar: ${cmd} -q <texto|/regex/flags> (com espaços, entre aspas: -q "bom dia").`);
+            : `❌ Informe o que buscar: ${cmd} -q <texto|/regex/flags>\n💡 _Com espaços, entre aspas: -q "bom dia"_`);
         return;
     }
     let home = null;
@@ -579,7 +581,9 @@ async function cmdShow({ msg, opts, chatId, admin }) {
             : target || allAlt2
                 ? `${u.icone} ${u.nenhuma} ${whereAlt}.`
                 : inMyPrivate
-                    ? `${u.icone} ${u.nenhuma} neste chat.\n💡 _Para ver as de outro chat: /show -l e depois ${cmd} -N <chat>. Para buscar em todos: ${cmd} -q <texto>._`
+                    ? `${u.icone} ${u.nenhuma} neste chat.\n` +
+                      `💡 _Para ver as de outro chat: /show -l e depois ${cmd} -N <chat>_\n` +
+                      `💡 _Para buscar em todos: ${cmd} -q <texto|/regex/>_`
                     : `${u.icone} ${u.nenhuma} ${u.registrada} neste chat.`);
         return;
     }
