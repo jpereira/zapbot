@@ -328,8 +328,10 @@ describe('/show (/s)', () => {
 
     test('-l <chat>: só os que casam (nº, nome, @menção ou /regex/), com o nº da lista completa',
         async () => {
+            // Família (3) antes de Trabalho (2): sem empate, a ordem não depende do relógio
             await mensagemApagada('a');
             await mensagemApagada('b');
+            await mensagemApagada('c');
             await mensagemApagada('d', { chat: TRABALHO });
             await mensagemEditada('x', 'y', { chat: TRABALHO });
             await mensagemApagada('meu status', { chat: 'status@broadcast' });
