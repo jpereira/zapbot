@@ -419,6 +419,12 @@ describe('/watch com origem e listagem', () => {
         assert.match((await bot.replyAlt('/watch -q moto'))[0], /👀 \*WATCH: REGRAS\*[\s\S]*Busca:\* "moto"\n📦 \*Total:\* 1/);
         assert.match((await bot.replyAlt('/watch -s 1 -q avião'))[0], /_Nenhuma mensagem com "avião"\._/);
 
+        // /regex/flags: on the text as it came (without the i flag, case-sensitive)
+        const [byRegex] = await bot.replyAlt('/watch -s /Jorge/ -q /carr(o|ão)\\b/i');
+        assert.match(byRegex, /🔍 \*Busca:\* "\/carr\(o\|ão\)\\b\/i"\n📦 \*Total:\* 2\n/);
+        assert.match((await bot.replyAlt('/watch -s 1 -q /CARRO/'))[0], /📦 \*Total:\* 1\n[\s\S]*"Jorge vendeu o CARRO"/);
+        assert.match((await bot.replyAlt('/watch -s 1 -q /a(/'))[0], /^❌ Busca inválida: regex inválida/);
+
         for (const commandAlt of ['-s 1 -q', '-l -q x', '-f 1 -q x', '-r 1 -q x', 'pix -q x', '-s 1 -q a -q b']) {
             assert.match((await bot.replyAlt(`/watch ${commandAlt}`))[0], /^❌/, commandAlt);
         }

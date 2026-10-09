@@ -13,7 +13,7 @@ const { printInfo } = require('../log');
 const { getSetting, setSetting } = require('../settings');
 const { formatData, plural, summarizeText, withoutAccents } = require('../util/format');
 const { isChannelAlt } = require('../util/origin');
-const { RULE_REGEX, compileRuleWatch } = require('../watch/rules');
+const { RULE_REGEX, compileSearch, compileRuleWatch } = require('../watch/rules');
 const { readOptionsWatch } = require('../watch/options');
 
 /*
@@ -91,7 +91,7 @@ async function ruleNumber(msg, ref, rules) {
 const TIPS = '\n\n💡 *Dicas*\n' +
     '/watch -f N limpa as ocorrências da regra N.\n' +
     '/watch -s <N ou regra> mostra as mensagens completas.\n' +
-    '/watch -s <N ou regra> -q <texto> só as que têm o texto.\n' +
+    '/watch -s <N ou regra> -q <texto|/regex/> só as que casam.\n' +
     '/watch -s N -to <destino|off> troca os destinos.';
 
 async function listRules(rules) {
@@ -114,8 +114,8 @@ async function listRules(rules) {
 
 /*
  * The rule's occurrences (null: of all), most recent first. With a search, only the
- * that have the text, case and accent insensitive (filtered here: the
- * SQLite does not ignore accents).
+ * that match: text, case and accent insensitive, or /regex/flags
+ * (filtered here: SQLite neither ignores accents nor has regex).
  */
 async function listOccurrences(rule, rules, limitAlt, complete = false, search = null) {
     const filter = rule === null ? '' : 'WHERE rule = ?';
@@ -128,9 +128,9 @@ async function listOccurrences(rule, rules, limitAlt, complete = false, search =
         rows = await dbAll(
             `SELECT * FROM watch_hits ${filter} ORDER BY timestamp DESC, id DESC LIMIT ?`, [...params, max]);
     } else {
-        const target = withoutAccents(search);
+        const home = compileSearch(search);
         const allAlt = await dbAll(`SELECT * FROM watch_hits ${filter} ORDER BY timestamp DESC, id DESC`, params);
-        const match = allAlt.filter(h => withoutAccents(h.body).includes(target));
+        const match = allAlt.filter(h => home(h.body));
         total = match.length;
         rows = match.slice(0, max);
     }
@@ -206,6 +206,12 @@ async function cmdWatch({ msg, args }) {
             `💡 _Avisos ${lido.destinos.length ? `em ${whereWarn(lido.destinos)}`
                 : 'no seu privado'}._`);
         return;
+    }
+    if (o.busca !== null) {
+        try { compileSearch(o.busca); } catch (err) {
+            await msg.reply(`❌ Busca inválida: ${err.message}`);
+            return;
+        }
     }
     if (o.ref !== null) {
         o.n = await ruleNumber(msg, o.ref, rules);

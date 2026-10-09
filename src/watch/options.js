@@ -64,7 +64,8 @@ function readOptionsWatch(args) {
             }
             if (nameAlt === 'query') {
                 if (o.busca !== null) throw new Error('informe apenas uma busca -q');
-                o.busca = valueAlt.valor.trim();
+                // With slashes, it comes whole: /carro/i
+                o.busca = valueAlt.regra.trim();
             } else if (nameAlt === 'to') o.destinos.push(valueAlt.valor);
             else {
                 if (o.origem !== null) throw new Error('informe apenas uma origem -in');

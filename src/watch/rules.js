@@ -17,15 +17,13 @@ const RULE_MAX_LEN = 200;
 // rule -> test function (compiled once, not on every message)
 const rulesCompiled = new Map();
 
-function compileRuleWatch(rule) {
-    if (rulesCompiled.has(rule)) return rulesCompiled.get(rule);
-
-    if (!rule || rule.length > RULE_MAX_LEN) {
-        throw new Error(`a regra precisa ter de 1 a ${RULE_MAX_LEN} caracteres`);
-    }
-
-    let test;
-    const m = rule.match(RULE_REGEX);
+/**
+ * Text ("contains", case and accent insensitive) or /regex/flags →
+ * test function. It is also the -q of /show and /watch.
+ * @throws {Error} invalid regex
+ */
+function compileSearch(search) {
+    const m = search.match(RULE_REGEX);
 
     if (m) {
         let re;
@@ -34,17 +32,27 @@ function compileRuleWatch(rule) {
         } catch (e) {
             throw new Error(`regex inválida: ${e.message}`, { cause: e });
         }
-        test = (textAlt) => re.test(textAlt);
-    } else {
-        const target = withoutAccents(rule);
-        test = (textAlt) => withoutAccents(textAlt).includes(target);
+        return (textAlt) => re.test(String(textAlt ?? ''));
     }
 
+    const target = withoutAccents(search);
+    return (textAlt) => withoutAccents(textAlt).includes(target);
+}
+
+function compileRuleWatch(rule) {
+    if (rulesCompiled.has(rule)) return rulesCompiled.get(rule);
+
+    if (!rule || rule.length > RULE_MAX_LEN) {
+        throw new Error(`a regra precisa ter de 1 a ${RULE_MAX_LEN} caracteres`);
+    }
+
+    const test = compileSearch(rule);
     rulesCompiled.set(rule, test);
     return test;
 }
 
 module.exports = {
     RULE_REGEX,
+    compileSearch,
     compileRuleWatch
 };

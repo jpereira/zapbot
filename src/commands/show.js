@@ -18,6 +18,7 @@ const { getSetting } = require('../settings');
 const { humanSize, mediaIsPath } = require('../util/files');
 const { wait, formatData, paraMs, plural, withoutAccents } = require('../util/format');
 const { isChannelAlt } = require('../util/origin');
+const { compileSearch } = require('../watch/rules');
 
 /*
  * /show [-N] [-d] [-e] [-s] [chat]: re-shows what is in the cache, in the same
@@ -31,7 +32,8 @@ const { isChannelAlt } = require('../util/origin');
  * /show 2            → the last one of chat no. 2 of the last -l
  * /show -list        → the chats with something in the cache
  * /show -flush       → removes the deleted ones of this chat (in your private chat: of all chats)
- * /show -q pix       → the ones that have "pix" (case and accent insensitive);
+ * /show -q pix       → the ones that have "pix" (case and accent insensitive;
+ * or /regex/flags: -q /pix|boleto/i);
  * in this chat, in the requested chat or, in your private chat, in all.
  * Without -N: the 5 most recent
  * The chat: the no. from the -l list, part of the name, @mention or /regex/. In a private chat,
@@ -495,8 +497,17 @@ async function cmdShow({ msg, opts, chatId, admin }) {
     if (search !== null && (!search || opts.opt.flush || opts.opt.list)) {
         await msg.reply(search
             ? '❌ O -q não combina com o -f nem com o -l.'
-            : `❌ Informe o que buscar: ${cmd} -q <texto> (com espaços, entre aspas: -q "bom dia").`);
+            : `❌ Informe o que buscar: ${cmd} -q <texto|/regex/flags> (com espaços, entre aspas: -q "bom dia").`);
         return;
+    }
+    let home = null;
+    if (search !== null) {
+        try {
+            home = compileSearch(search);
+        } catch (err) {
+            await msg.reply(`❌ Busca inválida: ${err.message}`);
+            return;
+        }
     }
 
     const privateWithoutParams = /@(c\.us|lid)$/.test(chatId) &&
@@ -552,10 +563,7 @@ async function cmdShow({ msg, opts, chatId, admin }) {
             search ? params : [...params, n]
         );
 
-        const searchTarget = withoutAccents(search);
-        rows.push(...(search
-            ? typeAlt.filter(r => t.textos(r).some(textAlt => withoutAccents(textAlt).includes(searchTarget)))
-            : typeAlt));
+        rows.push(...(home ? typeAlt.filter(r => t.textos(r).some(home)) : typeAlt));
     }
 
     rows.sort((a, b) => paraMs(b._quando) - paraMs(a._quando));
