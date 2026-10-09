@@ -19,7 +19,8 @@ const { lerOpcoesWatch } = require('../watch/opcoes');
 /*
  * Regras diretas; -in restringe a origem e -to escolhe onde o aviso será enviado.
  * -N é a quantidade de matches. -s/-r/-f recebem o número da regra sem hífen
- * ou a própria regra (/watch -s /Jorge/).
+ * ou a própria regra (/watch -s /Jorge/). -q filtra os matches por texto ou
+ * /regex/flags (/watch -s 3 -q carro).
  */
 // Os destinos dos avisos de uma linha de watch_destinations
 const destinosDaLinha = (r) => destinosSalvos(r.recipients, destinoDaLinha(r));
@@ -84,15 +85,15 @@ async function numeroDaRegra(msg, ref, regras) {
         ? `🔎 "${ref}" corresponde a ${contem.length} regras:\n\n` +
             contem.map(({ r, n }) => `#${n}  ${r}`).join('\n') +
             '\n\n💡 _Repita com o nº da regra (ex.: /watch -s N) ou com ela inteira._'
-        : `❌ Nenhuma regra casa com "${ref}": veja /watch -l`);
+        : `❌ Nenhuma regra casa com "${ref}".\n💡 _Veja as regras com /watch -l_`);
     return null;
 }
 
-const DICAS = '\n\n💡 *Dicas*\n' +
-    '/watch -f N limpa as ocorrências da regra N.\n' +
-    '/watch -s <N ou regra> mostra as mensagens completas.\n' +
-    '/watch -s <N ou regra> -q <texto|/regex/> só as que casam.\n' +
-    '/watch -s N -to <destino|off> troca os destinos.';
+const DICAS = '\n\n💡 *Dicas* _(N: o nº ou a própria regra)_\n' +
+    '/watch -s N mostra as mensagens completas.\n' +
+    '/watch -s N -q <texto|/regex/> só as que casam.\n' +
+    '/watch -s N -to <destino|off> troca os destinos.\n' +
+    '/watch -f N limpa as ocorrências.';
 
 async function listarRegras(regras) {
     const contagem = new Map((await dbAll('SELECT rule, COUNT(*) AS total FROM watch_hits GROUP BY rule'))
@@ -220,12 +221,14 @@ async function cmdWatch({ msg, args }) {
     const n = o.n ?? (o.destinos.length ? o.limite : null);
     const regra = n === null ? null : regras[n - 1];
     if (n !== null && !regra) {
-        await msg.reply(`❌ A regra #${n} não existe. Existem ${plural(regras.length, 'regra', 'regras')}: veja /watch -l`);
+        await msg.reply(`❌ A regra #${n} não existe.\n💡 _Existem ${plural(regras.length, 'regra', 'regras')}: veja /watch -l_`);
         return;
     }
     if (o.destinos.length) {
         if (!regra || (o.acao && o.acao !== 'show')) {
-            await msg.reply('❌ Use o -to ao adicionar (/watch <regra> -to <destino>) ou com /watch -s N -to <destino|off>.');
+            await msg.reply('❌ Use o -to ao adicionar uma regra ou com o -s:\n' +
+                '/watch <regra> -to <destino>\n' +
+                '/watch -s <N ou regra> -to <destino|off>');
             return;
         }
         const lido = await lerDestinosDoTo(msg, o.destinos);

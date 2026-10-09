@@ -90,7 +90,8 @@ Por onde começar:
   [`/show -e`](comandos/show.md). As suas próprias edições são ignoradas.
 - **Silenciar**: o [`/mute`](comandos/mute.md) corta os avisos de apagadas, editadas e status de uma
   pessoa, de um grupo ou de uma comunidade (a mensagem continua guardada); respondendo um aviso,
-  silencia de onde ele veio. O [`/unmute`](comandos/unmute.md) desfaz.
+  silencia de onde ele veio. Quem está silenciado também não gera aviso do `/watch` no seu privado.
+  O [`/unmute`](comandos/unmute.md) desfaz.
 - **Limpeza automática**: a cada 10 minutos o bot remove do banco/disco as mensagens comuns com mais
   de 68 h (janela máxima que o WhatsApp permite apagar), as apagadas e as editadas com mais de 30
   dias, as ocorrências do `/watch` com mais de 30 dias (setting `watch.hitsRetentionDays`), os
@@ -128,7 +129,8 @@ Por onde começar:
 - **Watch**: mensagens recebidas de outras contas, fora dos comandos reconhecidos, são testadas
   contra as regras do [`/watch`](comandos/watch.md) (setting `watch.rules`); quando casa, a
   ocorrência é gravada na tabela `watch_hits` e você é avisado **no seu privado** (ou nos destinos
-  do `-to` da regra: outros chats ou e-mails).
+  do `-to` da regra: outros chats ou e-mails). Quem está silenciado no `/mute` não gera o aviso no
+  privado; a ocorrência é gravada do mesmo jeito.
 - **Configurações (`settings`)**: configurações gerais que podem mudar em tempo de execução (debug,
   moedas do `/crypto`, limites...) ficam na tabela genérica `settings` do SQLite (`key` → `value` em
   JSON) e são alteradas pelo [`/set`](comandos/set.md). No boot os valores padrão são gravados, se

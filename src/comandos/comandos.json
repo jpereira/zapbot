@@ -1074,7 +1074,7 @@
                 "/m",
                 "/mudo"
             ],
-            "help": "Silencia os avisos de apagadas, editadas e/ou status apagados de uma pessoa, de um grupo ou de uma comunidade; só o alvo, sem opção, silencia tudo (o -a). Respondendo um aviso, silencia de onde ele veio: a pessoa (privado e status), o grupo ou a comunidade. As mensagens continuam guardadas para o /show. O /watch também não avisa no seu privado de quem está silenciado (os -to continuam recebendo). Sem nada, lista os silenciados.",
+            "help": "Silencia os avisos de apagadas, editadas e/ou status apagados de uma pessoa, de um grupo ou de uma comunidade. Só o alvo, sem opção, silencia tudo (o -a). Respondendo um aviso, silencia de onde ele veio: a pessoa (privado e status), o grupo ou a comunidade. As mensagens continuam guardadas para o /show. O /watch também não avisa no seu privado de quem está silenciado, em qualquer tipo (os -to continuam recebendo). Sem nada, lista os silenciados.",
             "cmd_opts": [
                 {
                     "opts": [
@@ -1296,7 +1296,7 @@
         },
         {
             "cmd": "/show",
-            "usage": "/show [-N] [OPÇÃO] [chat]  ou  /show -q <texto|/regex/flags> [-N] [chat]",
+            "usage": "/show [-N] [OPÇÃO] [chat]  ou  /show -l [chat]  ou  /show -q <texto|/regex/flags> [-N] [chat]",
             "aliases": [
                 "/s"
             ],
@@ -1332,7 +1332,7 @@
                         "l"
                     ],
                     "values": [],
-                    "desc": "Lista todos os chats com conteúdo no cache, numerado para o /show <nº>, marcando o chat atual. Com chat (nº, nome, @menção ou /regex/), só os que casam."
+                    "desc": "Lista os chats com conteúdo no cache, numerados para o /show <nº>, marcando o chat atual. Com chat (nº, nome, @menção ou /regex/), só os que casam, e as contas só deles. Ex: /show -l, /show -l /^Camila/"
                 },
                 {
                     "opts": [
@@ -1350,7 +1350,7 @@
                     "values": [
                         "<texto|/regex/flags>"
                     ],
-                    "desc": "Busca as que têm o texto, sem diferenciar maiúsculas nem acentos, ou que casam com a /regex/flags: neste chat, no chat pedido ou, no seu privado, em todos. Sem -N: as 5 mais recentes. Com espaços, entre aspas: -q \"bom dia\""
+                    "desc": "Busca as que têm o texto (sem diferenciar maiúsculas nem acentos) ou que casam com a /regex/flags. Neste chat, no chat pedido ou, no seu privado, em todos. Sem -N: as 5 mais recentes. Com espaços, entre aspas. Ex: /show -q pix, /show -e -q \"bom dia\", /show -5 -q /pix|boleto/i"
                 },
                 {
                     "argv": [
@@ -1626,11 +1626,11 @@
         },
         {
             "cmd": "/watch",
-            "usage": "/watch [texto|/regex/flags] [-in <origem>] [-to <destino>]...  ou  /watch [-N]  ou  /watch -s [N|regra] [-q <texto|/regex/>] [-to <destino|off>]...  ou  /watch -rem <N|regra>  ou  /watch -flush [N|regra]",
+            "usage": "/watch [texto|/regex/flags] [-in <origem>] [-to <destino>]...  ou  /watch [-N] [-q <texto|/regex/flags>]  ou  /watch -s [N|regra] [-q <texto|/regex/flags>] [-to <destino|off>]...  ou  /watch -rem <N|regra>  ou  /watch -flush [N|regra]",
             "aliases": [
                 "/w"
             ],
-            "help": "Vigia mensagens recebidas com regras de texto ou regex. Miniaturas de localização não são texto e ficam fora das regras. Uma regra sem -in vale em qualquer lugar; -in restringe a um contato (remetente), grupo ou canal. Sem parâmetros, lista regras e últimos matches; -N escolhe a quantidade. Publicações de @newsletter são identificadas com 📰 e o nome do canal. Os números após -s, -rem e -flush identificam regras (ou a própria regra, inteira ou um trecho: /watch -s /Jorge/); -N define a quantidade de matches.",
+            "help": "Vigia mensagens recebidas com regras de texto ou regex. Miniaturas de localização não são texto e ficam fora das regras. Uma regra sem -in vale em qualquer lugar; -in restringe a um contato (remetente), grupo ou canal. Sem parâmetros, lista regras e últimos matches; -N escolhe a quantidade. Publicações de @newsletter são identificadas com 📰 e o nome do canal. Quem está silenciado no /mute não gera aviso no seu privado (os -to continuam recebendo). Os números após -s, -rem e -flush identificam regras; no lugar deles, vale a própria regra, inteira ou um trecho. A quantidade de matches vem no -N.",
             "cmd_opts": [
                 {
                     "opts": [
@@ -1648,7 +1648,7 @@
                     "values": [
                         "[N|regra]"
                     ],
-                    "desc": "Mostra os textos completos dos matches da regra N; sem N, de todas. N identifica a regra, e -N limita a quantidade de matches até watch.showMax. Ex: /watch -s 3 -10 ou /watch -s /Jorge/"
+                    "desc": "Mostra os textos completos dos matches da regra N (ou da regra pelo texto); sem N, de todas. O -N limita a quantidade de matches até watch.showMax. Ex: /watch -s 3 -10, /watch -s /Jorge/"
                 },
                 {
                     "opts": [
@@ -1658,7 +1658,7 @@
                     "values": [
                         "<texto|/regex/flags>"
                     ],
-                    "desc": "Só os matches que têm o texto, sem diferenciar maiúsculas nem acentos, ou que casam com a /regex/flags; com espaços, entre aspas. Com -s ou na listagem. Ex: /watch -s /Jorge/ -q \"carro\", /watch -s 3 -q /carr(o|ão)/i"
+                    "desc": "Só os matches que têm o texto (sem diferenciar maiúsculas nem acentos) ou que casam com a /regex/flags. Com -s ou na listagem. Com espaços, entre aspas. Ex: /watch -s /Jorge/ -q \"carro\", /watch -s 3 -q /carr(o|ão)/i"
                 },
                 {
                     "opts": [
@@ -1677,7 +1677,7 @@
                     "values": [
                         "<N|regra>"
                     ],
-                    "desc": "Remove a regra N, suas ocorrências, origem e destinos. Ex: /watch -rem 3"
+                    "desc": "Remove a regra N (ou a regra pelo texto), suas ocorrências, origem e destinos. Ex: /watch -rem 3, /watch -rem /Jorge/"
                 },
                 {
                     "opts": [
@@ -1687,7 +1687,7 @@
                     "values": [
                         "[N|regra]"
                     ],
-                    "desc": "Limpa as ocorrências da regra N; sem N, limpa todas. Mantém regras, origens e destinos. Ex: /watch -flush 3"
+                    "desc": "Limpa as ocorrências da regra N (ou da regra pelo texto); sem N, limpa todas. Mantém regras, origens e destinos. Ex: /watch -flush 3, /watch -flush /Jorge/"
                 },
                 {
                     "opts": [

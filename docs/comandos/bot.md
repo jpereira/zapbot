@@ -350,7 +350,7 @@ qui 01/10 06:00
 🗑️ Apagadas: 12
 ✏️ Editadas: 4
 📸 Status apagados: 2
-🔇 Ignoradas (/mute): 7 (apagadas 5, editadas 2) · 3 silenciados
+🔇 Ignoradas (/mute): 8 (apagadas 5, editadas 2, watch 1) · 3 silenciados
 💾 Último backup: qui 01/10 03:00 (automático)
 
 Usuários (2)
@@ -380,8 +380,9 @@ O que entra:
   o que o [`/mute`](mute.md) silenciou. Com o aviso desligado (`show.alert.deleted`,
   `show.alert.edited` ou `show.alert.status` em `off`), a linha diz como ligar de novo:
   `✏️ Editadas: 4 (aviso desligado; ligue com /set show.alert.edited on)`.
-- **Ignoradas (/mute)**: os avisos que o `/mute` cortou nas últimas 24 h, por tipo, e quantos estão
-  silenciados agora. Com alguém silenciado, o 0 só quer dizer que nenhum aviso dele chegou nas 24 h.
+- **Ignoradas (/mute)**: os avisos que o `/mute` cortou nas últimas 24 h, por tipo (apagadas,
+  editadas, status e `watch`, os do [`/watch`](watch.md)), e quantos estão silenciados agora. Com
+  alguém silenciado, o 0 só quer dizer que nenhum aviso dele chegou nas 24 h.
 - **Último backup**: o mais recente do [`/backup`](backup.md).
 - **Usuários**: a lista deste chat ([Quem aparece na lista](#quem-aparece-na-lista)). O relatório
   enviado pelo `-to` ou pelo envio diário vai sem ela.
