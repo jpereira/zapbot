@@ -5,6 +5,10 @@ mensagens, edita mensagens ou apaga status. **Só o aviso some**: a mensagem con
 [`/show`](show.md) (ou o `/show -e`) a mostra. Só o alvo, sem opção, silencia tudo (o mesmo que o
 `-a`). Para desfazer, o [`/unmute`](unmute.md).
 
+Quem está silenciado, em qualquer um dos tipos, também não gera aviso do [`/watch`](watch.md) no
+seu privado: a ocorrência fica guardada no histórico do `/watch`, e as regras com `-to` continuam
+avisando nos seus destinos.
+
 ```text
 /mute [OPÇÃO]... [/contato ou grupo/|@menção|+número]
 ```

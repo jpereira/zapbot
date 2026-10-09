@@ -59,7 +59,7 @@ async function textoDoStatus(agora = Date.now(), { estadoDoBot = '', usuarios = 
     // /mute: avisos cortados, por tipo
     const ignoradas = await dbAll('SELECT kind, COUNT(*) AS n FROM mute_hits WHERE at >= ? GROUP BY kind ORDER BY kind', [desde]);
     const totalIgnoradas = ignoradas.reduce((s, r) => s + r.n, 0);
-    const ROTULOS = { apagada: 'apagadas', editada: 'editadas', status: 'status' };
+    const ROTULOS = { apagada: 'apagadas', editada: 'editadas', status: 'status', watch: 'watch' };
     const silenciados = await conta('SELECT COUNT(*) AS n FROM mutes', []);
 
     const [ultimoBackup] = await listarBackups();

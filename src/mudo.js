@@ -12,6 +12,9 @@ const { printInfo } = require('./log');
  * Num grupo, vale para todos dali; numa pessoa, para o que ela mandar em
  * qualquer chat (e para os status dela).
  *
+ * O /watch também fica quieto no seu privado para quem estiver silenciado em
+ * qualquer um dos tipos (os -to das regras continuam recebendo).
+ *
  * Cada aviso cortado vai para `mute_hits` (o /bot -status conta as ignoradas).
  */
 const TIPOS = {
@@ -25,7 +28,8 @@ const chaveDoId = (id) => (String(id ?? '').endsWith('@c.us') ? String(id).split
 
 /**
  * O aviso deste tipo, vindo deste chat/remetente, está silenciado?
- * @param {'apagada'|'editada'|'status'} tipo
+ * O 'watch' vale para qualquer silenciado, seja do tipo que for.
+ * @param {'apagada'|'editada'|'status'|'watch'} tipo
  * @param {object} o
  * @param {string} o.chatId
  * @param {Array<string|null>} o.remetentes  jids e/ou números de quem mandou
@@ -33,8 +37,10 @@ const chaveDoId = (id) => (String(id ?? '').endsWith('@c.us') ? String(id).split
  */
 async function silenciado(tipo, { chatId, remetentes = [] }) {
     await dbPronto;
-    const coluna = TIPOS[tipo].coluna;
-    const mutes = await dbAll(`SELECT * FROM mutes WHERE ${coluna} = 1`);
+    const onde = tipo === 'watch'
+        ? Object.values(TIPOS).map(t => `${t.coluna} = 1`).join(' OR ')
+        : `${TIPOS[tipo].coluna} = 1`;
+    const mutes = await dbAll(`SELECT * FROM mutes WHERE ${onde}`);
     if (!mutes.length) return null;
 
     const chaves = new Set([chatId, ...remetentes].filter(Boolean).map(r => chaveDoId(r.includes('@') ? r : `${r}@c.us`)));

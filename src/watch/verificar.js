@@ -8,6 +8,7 @@ const { resolverMencoes } = require('../contatos');
 const { dbAll, dbRun } = require('../db');
 const { destinoDaLinha, destinosSalvos, enviarAoDestino } = require('../destinos');
 const { printError, printInfo } = require('../log');
+const { ignorarAviso } = require('../mudo');
 const { getSetting } = require('../settings');
 const { formatarData } = require('../util/formatar');
 const { compilarRegraWatch } = require('./regras');
@@ -83,6 +84,12 @@ async function verificarWatch({
     }
 
     printInfo(`/watch: regra(s) ${novas.map(c => `#${c.n}`).join(',')} casaram em '${chatName}' (${senderName})`);
+
+    // /mute: o aviso no seu privado fica em silêncio (a ocorrência fica guardada e os -to recebem)
+    if (porDestino.has('privado') &&
+        await ignorarAviso('watch', { chatId, remetentes: [senderJid, senderNumber] })) {
+        porDestino.delete('privado');
+    }
 
     for (const { destino, regras } of porDestino.values()) {
         const texto = '👀 *WATCH: MENSAGEM DETECTADA*\n\n' +
