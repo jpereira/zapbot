@@ -160,25 +160,20 @@ const tirarAcentos = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g,
 const paraAlvo = async (c) => ({ ids: await idsDoChatAtual(c.chat_id), nome: nomeDoChat(c) });
 
 /**
- * O chat pedido: @menção, o nº da lista do último -l, /regex/ ou o nome (todas
- * as palavras; o nome exato ganha), sem diferenciar maiúsculas nem acentos.
- * Vários: lista e espera o nº, como no /stats.
- * @returns {Promise<{ ids: string[], nome: string } | null>} null: já respondeu
+ * Os chats do cache que casam com o texto: @menção, o nº da lista do último
+ * -l, /regex/ ou o nome (todas as palavras), sem diferenciar maiúsculas nem
+ * acentos. Responde o erro quando nenhum casa.
+ * @returns {Promise<{ casam: object[], exato?: object, mencao?: object } | null>} null: já respondeu
  */
-async function resolverAlvo(msg, texto) {
+async function chatsQueCasam(msg, texto, chats) {
     if (/^@\d+$/.test(texto)) {
         const r = await resolverDestino(texto, { mencoes: msg.mentionedIds ?? [] });
         if (r.erro) {
             await msg.reply(r.erro);
             return null;
         }
-        return { ids: await idsDoChatAtual(r.id), nome: r.nome };
-    }
-
-    const chats = await chatsDoCache();
-    if (!chats.length) {
-        await msg.reply('🗄️ Nada no cache: nenhuma mensagem apagada, editada ou status apagado.');
-        return null;
+        const ids = await idsDoChatAtual(r.id);
+        return { casam: chats.filter(c => ids.includes(c.chat_id)), mencao: { ids, nome: r.nome } };
     }
 
     if (/^\d+$/.test(texto)) {
@@ -188,7 +183,7 @@ async function resolverAlvo(msg, texto) {
             await msg.reply(`❌ Chat nº ${texto} não existe (ou não tem mais nada no cache). Rode /show -l para ver a lista atual.`);
             return null;
         }
-        return paraAlvo(chat);
+        return { casam: [chat], exato: chat };
     }
 
     let casam;
@@ -211,12 +206,32 @@ async function resolverAlvo(msg, texto) {
         exato = casam.find(c => semAcentos(nomeDoChat(c)) === palavras.join(' '));
     }
 
-    if (exato || casam.length === 1) return paraAlvo(exato ?? casam[0]);
-
     if (!casam.length) {
         await msg.reply(`❌ Nenhum chat no cache casa com "${texto}".\n💡 _Veja os que têm algo com /show -l_`);
         return null;
     }
+    return { casam, exato };
+}
+
+/**
+ * O chat pedido (veja o chatsQueCasam; o nome exato ganha).
+ * Vários: lista e espera o nº, como no /stats.
+ * @returns {Promise<{ ids: string[], nome: string } | null>} null: já respondeu
+ */
+async function resolverAlvo(msg, texto) {
+    // A menção vale mesmo sem nada no cache: a resposta diz que não há nada dela
+    const chats = await chatsDoCache();
+    if (!chats.length && !/^@\d+$/.test(texto)) {
+        await msg.reply('🗄️ Nada no cache: nenhuma mensagem apagada, editada ou status apagado.');
+        return null;
+    }
+
+    const r = await chatsQueCasam(msg, texto, chats);
+    if (!r) return null;
+    if (r.mencao) return r.mencao;
+
+    const { casam, exato } = r;
+    if (exato || casam.length === 1) return paraAlvo(exato ?? casam[0]);
 
     const opcoes = casam.slice(0, 10);
     await msg.reply(`🔎 "${texto}" corresponde a ${casam.length} chats:\n\n` +
@@ -231,22 +246,46 @@ async function resolverAlvo(msg, texto) {
 }
 
 /*
- * /show -list (os tipos não mudam a lista)
+ * /show -list [chat] (os tipos não mudam a lista)
  * O que tem no cache, por tipo, e os chats numerados (o nº do /show <nº>),
- * com o chat atual marcado.
+ * com o chat atual marcado. Com chat (nº, nome, @menção ou /regex/): só os
+ * que casam, com o nº da lista completa, e as contas só deles.
  */
-async function listarCache({ msg, chatId }) {
+async function listarCache({ msg, chatId, filtro }) {
     const idsDoChat = await idsDoChatAtual(chatId);
+    const todosOsChats = await chatsDoCache();
 
-    let texto = '🗄️ *Mensagens no cache*\n\n';
+    let chats = todosOsChats;
+    let ids = null;
+    let de = null;
+    if (filtro) {
+        const r = await chatsQueCasam(msg, filtro, todosOsChats);
+        if (!r) return;
+
+        // Com os outros ids da mesma pessoa (@lid e @c.us)
+        ids = [...new Set([
+            ...(r.mencao?.ids ?? []),
+            ...(await Promise.all(r.casam.map(c => idsDoChatAtual(c.chat_id)))).flat()
+        ])];
+        chats = todosOsChats.filter(c => ids.includes(c.chat_id));
+        de = r.mencao?.nome ?? filtro;
+        if (!chats.length) {
+            await msg.reply(`🗄️ Nada no cache de ${de}.`);
+            return;
+        }
+    }
+
+    let texto = de ? `🗄️ *Mensagens no cache de:* ${de}\n\n` : '🗄️ *Mensagens no cache*\n\n';
 
     for (const t of Object.values(TIPOS)) {
+        const { where, params } = ondeDo(t, ids);
         const resumo = await dbGet(
             `SELECT COUNT(*) AS total,
                     ${t.comMidia ? 'COALESCE(SUM(has_media), 0)' : '0'} AS com_midia,
                     MIN(${t.quando}) AS mais_antiga
                FROM ${t.tabela}
-              WHERE ${t.filtro}`
+              WHERE ${where}`,
+            params
         );
 
         const detalhes = [];
@@ -262,24 +301,28 @@ async function listarCache({ msg, chatId }) {
         texto += detalhes.length ? ` _(${detalhes.join(' · ')})_\n` : '\n';
     }
 
-    const chats = await chatsDoCache();
-    ultimaListaDeChats = chats.map(c => c.chat_id);
+    // A numeração é sempre a da lista completa: o /show <nº> vale com ou sem filtro
+    ultimaListaDeChats = todosOsChats.map(c => c.chat_id);
 
-    const linha = (c, i) => {
+    const linha = (c) => {
         const contas = Object.entries(TIPOS)
             .filter(([tipo]) => c[tipo] > 0)
             .map(([tipo, t]) => `${t.iconeLista} ${c[tipo]}`)
             .join(' · ');
         const atual = idsDoChat.includes(c.chat_id) ? ' ← _este chat_' : '';
-        return `${i + 1}. ${descreverChat(c)} — ${contas} _(última ${formatarData(c.ultima)})_${atual}\n`;
+        const n = ultimaListaDeChats.indexOf(c.chat_id) + 1;
+        return `${n}. ${descreverChat(c)} — ${contas} _(última ${formatarData(c.ultima)})_${atual}\n`;
     };
 
     if (chats.length) {
         texto += '\n';
-        chats.forEach((c, i) => { texto += linha(c, i); });
+        chats.forEach((c) => { texto += linha(c); });
 
-        texto += `\n💡 _/show <nº, nome, @menção ou /regex/> reexibe as de um chat: apagadas, editadas e status juntos; -d, -e e -s filtram; -N para mais (máx. ${getSetting('show.max')})._` +
-                 '\n💡 _-f remove do cache as deste chat (no seu privado: de todos)._';
+        texto += '\n💡 _/show <nº, nome, @menção ou /regex/> reexibe as de um chat: apagadas, editadas e status juntos._' +
+                 '\n   _-d, -e e -s filtram_' +
+                 `\n   _-N para mais (máx. ${getSetting('show.max')})_` +
+                 '\n   _-l <chat> lista só os que casam_' +
+                 '\n   _-f remove do cache as deste chat (no seu privado: de todos)_';
     }
 
     await msg.reply(texto);
@@ -459,7 +502,7 @@ async function cmdShow({ msg, opts, chatId, admin }) {
     const privadoSemParametros = /@(c\.us|lid)$/.test(chatId) &&
         !opts.given.size && !opts.argv.length;
     if (opts.opt.list || privadoSemParametros) {
-        await listarCache({ msg, chatId });
+        await listarCache({ msg, chatId, filtro: palavras.join(' ') || null });
         return;
     }
 

@@ -26,7 +26,7 @@ lista de apagados.
 | `-deleted`, `-d` | | Mensagens apagadas (sem chat, o padrão) |
 | `-edited`, `-e` | | Mensagens editadas, com o texto de antes e o de depois. Cada edição é um item: uma mensagem editada duas vezes aparece duas vezes |
 | `-status`, `-s` | | Status apagados: num privado, os da pessoa; no seu privado, sem chat, os de todos |
-| `-list`, `-l` | | Lista todos os chats com conteúdo no cache (em qualquer chat), numerado para o `/show <nº>`, marcando com `← este chat` o chat atual |
+| `-list`, `-l` | `[chat]` | Lista todos os chats com conteúdo no cache (em qualquer chat), numerado para o `/show <nº>`, marcando com `← este chat` o chat atual. Com chat (nº, nome, `@menção` ou `/regex/`), só os que casam |
 | `-query`, `-q` | `<texto>` | Busca as que têm o texto, sem diferenciar maiúsculas nem acentos: neste chat, no chat pedido ou, no seu privado, em todos. Sem `-N`: as 5 mais recentes. Veja [Buscar](#buscar) |
 | `-flush`, `-f` | | Remove do cache as apagadas deste chat ou, com `-e`, `-s` ou chat, o que foi pedido (no seu privado, sem chat: de todos os chats) |
 | `-mask`, `-m` | | Ofusca telefones nos textos e nas legendas desta execução. Ex.: `+55219****44` |
@@ -49,6 +49,7 @@ junto, por data.
 /show -s Marcio             → o último status apagado do Marcio
 /show 2                     → do chat nº 2 do /show -l
 /show -l                    → o que tem no cache, por chat
+/show -l /^Camila/          → o mesmo, só dos chats que começam com "Camila"
 /show -f                    → apaga do cache as apagadas deste chat
 /show -e -f                 → apaga do cache as editadas deste chat
 /show -f Trabalho           → apaga do cache tudo do chat Trabalho
@@ -97,8 +98,25 @@ O `-l` mostra quanto tem de cada tipo e os chats, numerados para o `/show <nº>`
 2. 👤 Beltrano — 🗑️ 1 · 📸 1 (última 30/09/2026, 09:40:05)
 3. 👥 Trabalho — ✏️ 1 (última 30/09/2026, 11:15:42)
 
-💡 /show <nº, nome, @menção ou /regex/> reexibe as de um chat: apagadas, editadas e status juntos; -d, -e e -s filtram; -N para mais (máx. 20).
-💡 -f remove do cache as deste chat (no seu privado: de todos).
+💡 /show <nº, nome, @menção ou /regex/> reexibe as de um chat: apagadas, editadas e status juntos.
+   -d, -e e -s filtram
+   -N para mais (máx. 20)
+   -l <chat> lista só os que casam
+   -f remove do cache as deste chat (no seu privado: de todos)
+```
+
+Com chat (`/show -l <nº, nome, @menção ou /regex/>`), o `-l` mostra só os chats que casam (todos,
+sem perguntar qual), mantendo o nº da lista completa, e as contas por tipo passam a ser só deles:
+
+```text
+/show -l trab
+🗄️ Mensagens no cache de: trab
+
+🗑️ Apagadas: 1 (a mais antiga expira em 30 dias)
+✏️ Editadas: 1 (a mais antiga expira em 30 dias)
+📸 Status: 0
+
+3. 👥 Trabalho — 🗑️ 1 · ✏️ 1 (última 30/09/2026, 11:15:42)
 ```
 
 Com chat e sem `-d`, `-e` ou `-s`, o resumo conta cada tipo:
