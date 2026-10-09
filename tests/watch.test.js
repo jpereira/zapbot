@@ -121,6 +121,21 @@ describe('detecção', () => {
         assert.deepEqual(await alguemEscreve('outro pix'), []);
     });
 
+    test('/mute (de qualquer tipo): sem aviso no privado, mas a ocorrência fica guardada', async () => {
+        await bot.setSetting('watch.rules', 'pix');
+        await bot.responder(`/mute -e +${OUTRO.user}`);
+        assert.deepEqual(await alguemEscreve('manda o pix'), []);
+        assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM watch_hits')).n, 1);
+        assert.equal((await bot.dbGet("SELECT COUNT(*) AS n FROM mute_hits WHERE kind = 'watch'")).n, 1);
+
+        await bot.responder('/unmute -all');
+        await bot.responder('/mute -s /Família/');
+        assert.deepEqual(await alguemEscreve('outro pix'), []);
+
+        await bot.responder('/unmute -all');
+        assert.equal((await alguemEscreve('mais um pix')).length, 1);
+    });
+
     test('menções cruas viram nomes no aviso', async () => {
         await bot.setSetting('watch.rules', 'oi');
         const [aviso] = await alguemEscreve(`oi @${OUTRO.user}`, { mencoes: [OUTRO.jid] });
@@ -231,6 +246,11 @@ describe('/watch -to', () => {
 
         const [lista] = await bot.responder('/watch -l');
         assert.match(lista, /#1  promoção  \(1\)  → 👥 Grupo sobre L200\n#2  pix  \(1\)/);
+
+        // /mute corta só o aviso no seu privado: o -to continua recebendo
+        await bot.responder(`/mute +${OUTRO.user}`);
+        const silenciado = await alguemEscreve('outra promoção no pix');
+        assert.deepEqual(silenciado.map(a => a.chatId), [L200]);
     });
 
     test('-s N -to troca destinos; off volta ao privado; -rem apaga os destinos', async () => {

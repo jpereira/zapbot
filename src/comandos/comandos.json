@@ -1074,7 +1074,7 @@
                 "/m",
                 "/mudo"
             ],
-            "help": "Silencia os avisos de apagadas, editadas e/ou status apagados de uma pessoa, de um grupo ou de uma comunidade; só o alvo, sem opção, silencia tudo (o -a). Respondendo um aviso, silencia de onde ele veio: a pessoa (privado e status), o grupo ou a comunidade. As mensagens continuam guardadas para o /show. Sem nada, lista os silenciados.",
+            "help": "Silencia os avisos de apagadas, editadas e/ou status apagados de uma pessoa, de um grupo ou de uma comunidade; só o alvo, sem opção, silencia tudo (o -a). Respondendo um aviso, silencia de onde ele veio: a pessoa (privado e status), o grupo ou a comunidade. As mensagens continuam guardadas para o /show. O /watch também não avisa no seu privado de quem está silenciado (os -to continuam recebendo). Sem nada, lista os silenciados.",
             "cmd_opts": [
                 {
                     "opts": [
