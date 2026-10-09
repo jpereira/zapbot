@@ -5,27 +5,21 @@ aos destinos de cada regra. Sem parâmetros, lista as regras e, quando há match
 ocorrências mais recentes. `/watch -10` mostra os últimos dez matches de todas as regras, limitado
 pelo setting `watch.showMax`.
 
-Pessoas e grupos silenciados no [`/mute`](mute.md), em qualquer tipo, não geram aviso no seu
-privado. A ocorrência continua sendo gravada (aparece no `/watch -N`), e as regras com `-to`
-continuam avisando nos seus destinos.
-
 ```text
-/watch /Defesa.*Civil/i
-/watch /Jorge/i -in /Mr.Robots do IPSEP/
-/watch /pix/i -in /Jorge Pereira/
-/watch /chuva/i -in /Defesa Civil/
-/watch promoção -to /Grupo Ofertas/
-/watch
-/watch -10
-/watch -s 3
-/watch -s /Jorge/
-/watch -s /Jorge/ -q "carro"
-/watch -s 3 -q /carr(o|ão)/i
-/watch -s 3 -to /Jorge Pereira/
-/watch -rem 3
-/watch -flush 3
+/watch /Defesa.*Civil/i                → cria uma regra (regex)
+/watch /pix/i -in /Jorge Pereira/      → só nas mensagens do Jorge
+/watch /chuva/i -in /Defesa Civil/     → só nas publicações do canal
+/watch promoção -to /Grupo Ofertas/    → avisa no grupo, não no privado
+/watch                                 → as regras e os últimos matches
+/watch -10                             → os 10 últimos matches
+/watch -s 3                            → os matches da regra #3, completos
+/watch -s /Jorge/                      → o mesmo, pela regra
+/watch -s /Jorge/ -q "carro"           → só os que têm "carro"
+/watch -s 3 -q /carr(o|ão)/i           → só os que casam com a regex
+/watch -s 3 -to /Jorge Pereira/        → troca os destinos da regra #3
+/watch -rem 3                          → remove a regra #3
+/watch -flush /Jorge/                  → limpa as ocorrências da /Jorge/
 ```
-
 Uma regra sem `-in` vale em qualquer lugar. Com `-in`, você escolhe a origem:
 
 - **Contato:** testa mensagens desse remetente, em privados, grupos e status. Aceita o nome, uma
@@ -52,16 +46,18 @@ As regras são testadas contra o texto original da mensagem. Nos avisos e no his
 | `-N` | | Quantidade de matches recentes, de todas as regras. Ex.: `/watch -10` |
 | `-list`, `-l` | | Lista somente as regras, origens, destinos e contagens |
 | `-show`, `-s` | `[N\|regra]` | Mostra os textos completos dos matches da regra N (ou da regra pelo texto); sem N, de todas. `-N` controla a quantidade |
-| `-query`, `-q` | `<texto\|/regex/flags>` | Só os matches que têm o texto, sem diferenciar maiúsculas nem acentos, ou que casam com a regex. Com `-s` ou na listagem. Veja [Buscar](#buscar) |
+| `-query`, `-q` | `<texto\|/regex/flags>` | Só os matches que têm o texto (sem diferenciar maiúsculas nem acentos) ou que casam com a regex. Com `-s` ou na listagem. Veja [Buscar](#buscar) |
 | `-in` | `<origem>` | Restringe uma regra nova a contato, grupo ou canal |
-| `-rem`, `-r` | `N\|regra` | Remove a regra N, suas ocorrências, origem e destinos; as seguintes são renumeradas |
-| `-flush`, `-f` | `[N\|regra]` | Apaga as ocorrências da regra N; sem N, de todas. Mantém regras, origens e destinos |
+| `-rem`, `-r` | `N\|regra` | Remove a regra N (ou a regra pelo texto), suas ocorrências, origem e destinos; as seguintes são renumeradas |
+| `-flush`, `-f` | `[N\|regra]` | Apaga as ocorrências da regra N (ou da regra pelo texto); sem N, de todas. Mantém regras, origens e destinos |
 | `-to` | `<destino\|off>` | Define onde os avisos serão enviados, ao criar a regra ou com `-s N`. Repita para vários destinos; `off` volta ao seu privado |
 | `-mask`, `-m` | | Ofusca telefones na saída desta execução. Ex.: `+55219****44` |
 
 Use `/watch -s 3 -mask` para ver os matches com telefones ofuscados, mantendo os cinco primeiros e
 os dois últimos dígitos. As regras, os destinos e as ocorrências ficam guardados completos. A
 máscara não fica ativada para os avisos automáticos.
+
+## Listar e consultar
 
 Os números positivos após `-s`, `-rem` e `-flush` identificam **regras**, conforme a listagem. O
 número com hífen `-N` é a quantidade de matches a exibir. A listagem normal resume os textos; `-s`
@@ -71,6 +67,8 @@ No lugar do número, `-s`, `-rem` e `-flush` aceitam a própria regra, como apar
 `/watch -s /Jorge/` é o mesmo que `/watch -s 3` quando a regra #3 é `/Jorge/`. Vale a regra
 inteira, sem diferenciar maiúsculas nem acentos, ou um trecho que esteja em uma só regra
 (`/watch -s Sportiva`). Se o trecho estiver em mais de uma, o bot lista as regras que casam.
+
+Uma listagem, com as dicas no fim, uma por linha:
 
 ```text
 👀 WATCH: REGRAS (2/20)
@@ -85,22 +83,20 @@ inteira, sem diferenciar maiúsculas nem acentos, ou um trecho que esteja em uma
 1. 📅 06/10/2026, 01:09:35 · 🔎 #1
     📰 Defesa Civil
     💬 "A Defesa Civil informa: alerta de chuva"
+
+💡 Dicas (N: o nº ou a própria regra)
+/watch -s N mostra as mensagens completas.
+/watch -s N -q <texto|/regex/> só as que casam.
+/watch -s N -to <destino|off> troca os destinos.
+/watch -f N limpa as ocorrências.
 ```
-
-Em status e transmissões (`@broadcast`), o remetente é identificado pelo autor da mensagem. Um
-`@lid` é convertido para telefone quando o WhatsApp fornece a correspondência. Sem ela, o número
-fica indisponível; sem autor, o nome aparece como `Desconhecido`.
-
-Publicações de canais (`@newsletter`) aparecem com `📰 Canal: <nome>` nos avisos; o histórico usa 📰 e
-o nome do canal. Canais não exibem nome nem telefone de contato. Quando o canal não pode ser
-consultado, o histórico usa o nome salvo.
 
 ## Buscar
 
-O `-q <texto>` filtra os matches pelo corpo da mensagem, sem diferenciar maiúsculas nem acentos. Com
-espaços, vai entre aspas (`-q "bom dia"`). Funciona com o `-s` (de uma regra ou, sem N, de todas) e
-na listagem (`/watch -q carro`); o total conta só os que têm o texto, e o `-N` limita quantos são
-exibidos. Não combina com `-l`, `-rem`, `-flush` nem com uma regra nova.
+O `-q <texto>` filtra os matches pelo corpo da mensagem, sem diferenciar maiúsculas nem acentos.
+Com espaços, vai entre aspas (`-q "bom dia"`). Funciona com o `-s` (de uma regra ou, sem N, de
+todas) e na listagem (`/watch -q carro`). O total conta só os que casam, e o `-N` limita quantos
+são exibidos. Não combina com `-l`, `-rem`, `-flush` nem com uma regra nova.
 
 Com barras, é uma regex com flags, como nas regras (`-q /carr(o|ão)/i`): testa o texto como veio,
 então, sem a flag `i`, diferencia maiúsculas, e os acentos contam.
@@ -111,6 +107,10 @@ então, sem a flag `i`, diferencia maiúsculas, e os acentos contam.
 🔎 Regra #3: /Jorge/
 🔍 Busca: "carro"
 📦 Total: 1
+
+1. 📅 09/10/2026, 10:12:40
+    👥 Família · 👤 Fulano
+    💬 "Jorge vendeu o carro"
 ```
 
 ## Avisar em outro lugar
@@ -129,6 +129,15 @@ número, menção ou e-mail, como nos outros comandos
 E-mail exige SMTP configurado; `email` usa `QRCODE_EMAIL_SMTP_TO`. Uma ocorrência gera um aviso por
 destino, reunindo as regras que casaram para aquele destino.
 
+## Silenciados no `/mute`
+
+Pessoas e grupos silenciados no [`/mute`](mute.md), em qualquer tipo, não geram aviso no seu
+privado. A ocorrência continua sendo gravada (aparece no `/watch -N`), e as regras com `-to`
+continuam avisando nos seus destinos. Cada aviso cortado conta nas ignoradas do `/mute` e do
+`/bot -status`, como `watch`.
+
+## Detalhes
+
 As mensagens da própria conta e os comandos reconhecidos ficam fora da detecção. A mesma mensagem
 não gera dois avisos para a mesma regra. As regras ficam em `watch.rules`, com máximo definido por
 `watch.max`; as ocorrências são retidas por `watch.hitsRetentionDays` ou até um `/watch -flush`. As
@@ -136,3 +145,11 @@ respostas saem no chat onde o comando foi digitado.
 
 Miniaturas de localização ficam fora das regras de texto e regex. A localização e suas
 coordenadas continuam guardadas no cache; recebê-la não executa comandos.
+
+Em status e transmissões (`@broadcast`), o remetente é identificado pelo autor da mensagem. Um
+`@lid` é convertido para telefone quando o WhatsApp fornece a correspondência. Sem ela, o número
+fica indisponível; sem autor, o nome aparece como `Desconhecido`.
+
+Publicações de canais (`@newsletter`) aparecem com `📰 Canal: <nome>` nos avisos; o histórico usa 📰 e
+o nome do canal. Canais não exibem nome nem telefone de contato. Quando o canal não pode ser
+consultado, o histórico usa o nome salvo.

@@ -121,21 +121,6 @@ describe('detecção', () => {
         assert.deepEqual(await alguemEscreve('outro pix'), []);
     });
 
-    test('/mute (de qualquer tipo): sem aviso no privado, mas a ocorrência fica guardada', async () => {
-        await bot.setSetting('watch.rules', 'pix');
-        await bot.responder(`/mute -e +${OUTRO.user}`);
-        assert.deepEqual(await alguemEscreve('manda o pix'), []);
-        assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM watch_hits')).n, 1);
-        assert.equal((await bot.dbGet("SELECT COUNT(*) AS n FROM mute_hits WHERE kind = 'watch'")).n, 1);
-
-        await bot.responder('/unmute -all');
-        await bot.responder('/mute -s /Família/');
-        assert.deepEqual(await alguemEscreve('outro pix'), []);
-
-        await bot.responder('/unmute -all');
-        assert.equal((await alguemEscreve('mais um pix')).length, 1);
-    });
-
     test('menções cruas viram nomes no aviso', async () => {
         await bot.setSetting('watch.rules', 'oi');
         const [aviso] = await alguemEscreve(`oi @${OUTRO.user}`, { mencoes: [OUTRO.jid] });
@@ -190,7 +175,7 @@ describe('/watch', () => {
         assert.match(uma, /🔎 \*Regra #2:\* boleto\n📦 \*Total:\* 1/);
         assert.doesNotMatch(uma, /pix 1/);
 
-        assert.match((await bot.responder('/watch -s 9'))[0], /❌ A regra #9 não existe\. Existem 2 regras/);
+        assert.match((await bot.responder('/watch -s 9'))[0], /❌ A regra #9 não existe\.\n💡 _Existem 2 regras: veja \/watch -l_/);
     });
 
     test('-s respeita o watch.showMax', async () => {
@@ -246,11 +231,6 @@ describe('/watch -to', () => {
 
         const [lista] = await bot.responder('/watch -l');
         assert.match(lista, /#1  promoção  \(1\)  → 👥 Grupo sobre L200\n#2  pix  \(1\)/);
-
-        // /mute corta só o aviso no seu privado: o -to continua recebendo
-        await bot.responder(`/mute +${OUTRO.user}`);
-        const silenciado = await alguemEscreve('outra promoção no pix');
-        assert.deepEqual(silenciado.map(a => a.chatId), [L200]);
     });
 
     test('-s N -to troca destinos; off volta ao privado; -rem apaga os destinos', async () => {
@@ -300,7 +280,8 @@ describe('/watch -to', () => {
 
     test('erros: -to sem regra, regra que não existe, destino inválido (a regra não é criada)', async () => {
         await bot.responder('/watch pix');
-        assert.match((await bot.responder('/watch -to /Fulano/'))[0], /❌ Use o -to ao adicionar/);
+        assert.deepEqual(await bot.responder('/watch -to /Fulano/'), ['❌ Use o -to ao adicionar uma regra ou com o -s:\n' +
+            '/watch <regra> -to <destino>\n/watch -s <N ou regra> -to <destino|off>']);
         assert.match((await bot.responder('/watch -s 9 -to /Fulano/'))[0], /A regra #9 não existe/);
         assert.match((await bot.responder('/watch boleto -to xyz'))[0], /❌ Nenhum contato ou grupo com "xyz"/);
         assert.deepEqual(bot.getSetting('watch.rules'), ['pix']);
@@ -322,7 +303,8 @@ describe('/watch com origem e listagem', () => {
         assert.match(r, /Total:\* 2 _\(exibindo as 1 mais recentes\)_/);
         assert.match(r, /pix recente/);
         assert.doesNotMatch(r, /pix antigo/);
-        assert.match(r, /\/watch -s N -to/);
+        assert.match(r, /\n\n💡 \*Dicas\* _\(N: o nº ou a própria regra\)_\n\/watch -s N mostra as mensagens completas\.\n/);
+        assert.match(r, /\n\/watch -s N -q <texto\|\/regex\/> só as que casam\.\n\/watch -s N -to <destino\|off> troca os destinos\.\n\/watch -f N limpa as ocorrências\.$/);
         assert.match((await bot.responder('/watch -0'))[0], /quantidade/);
     });
 
@@ -381,6 +363,61 @@ describe('/watch com origem e listagem', () => {
         assert.equal((await alguemEscreve('pix -to -h azul novo'))[0].chatId, OUTRO.jid);
     });
 
+    test('-flush N mantém origem e destinos; -rem N elimina tudo da regra', async () => {
+        await bot.responder('/watch pix -in /Fulano/ -to /Família/');
+        await alguemEscreve('pix');
+        await bot.responder('/watch -flush 1');
+        assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM watch_hits')).n, 0);
+        assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM watch_sources')).n, 1);
+        assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM watch_destinations')).n, 1);
+        await bot.responder('/watch -rem 1');
+        assert.deepEqual(bot.getSetting('watch.rules'), []);
+        assert.deepEqual(await bot.dbAll('SELECT * FROM watch_sources'), []);
+        assert.deepEqual(await bot.dbAll('SELECT * FROM watch_destinations'), []);
+    });
+
+    test('ações inválidas e opções sem valor não alteram configurações', async () => {
+        for (const comando of ['pix -in', 'pix -to', 'pix -in /Fulano/ -in /Família/',
+            '-rem 0', '-show 0', '-list -flush', '-a pix', '-add pix', '-rem 1 -2']) {
+            assert.match((await bot.responder(`/watch ${comando}`))[0], /^❌/, comando);
+            assert.deepEqual(bot.getSetting('watch.rules'), []);
+        }
+    });
+});
+
+describe('/watch e o /mute', () => {
+    test('/mute (de qualquer tipo): sem aviso no privado, mas a ocorrência fica guardada', async () => {
+        await bot.setSetting('watch.rules', 'pix');
+        await bot.responder(`/mute -e +${OUTRO.user}`);
+        assert.deepEqual(await alguemEscreve('manda o pix'), []);
+        assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM watch_hits')).n, 1);
+        assert.equal((await bot.dbGet("SELECT COUNT(*) AS n FROM mute_hits WHERE kind = 'watch'")).n, 1);
+
+        await bot.responder('/unmute -all');
+        await bot.responder('/mute -s /Família/');
+        assert.deepEqual(await alguemEscreve('outro pix'), []);
+
+        await bot.responder('/unmute -all');
+        assert.equal((await alguemEscreve('mais um pix')).length, 1);
+
+        // O /bot -status conta as ignoradas do /watch
+        assert.match((await bot.responder('/bot -status'))[0], /🔇 \*Ignoradas \(\/mute\):\* 2 _\(watch 2\)_\n/);
+    });
+
+    test('/mute corta só o aviso no seu privado: o -to continua recebendo', async () => {
+        const L200 = '120363000000000200@g.us';
+        bot.criarGrupo(L200, 'Grupo sobre L200', [DONO.jid]);
+        await bot.responder('/watch promoção -to /Grupo sobre L200/');
+        await bot.responder('/watch pix');
+        await bot.responder(`/mute +${OUTRO.user}`);
+
+        const avisos = await alguemEscreve('promoção no pix');
+        assert.deepEqual(avisos.map(a => a.chatId), [L200]);
+        assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM watch_hits')).n, 2);
+    });
+});
+
+describe('/watch: a regra no lugar do nº', () => {
     test('-s, -f e -r aceitam a regra no lugar do nº: inteira, sem maiúsculas ou só um trecho', async () => {
         await bot.setSetting('watch.rules', ['/TCPRO.*La.*Sportiva/i', '/Renato.*r38tao/', '/Jorge/']);
         await alguemEscreve('oi Jorge');
@@ -394,13 +431,16 @@ describe('/watch com origem e listagem', () => {
 
         const [ambigua] = await bot.responder('/watch -s r');
         assert.match(ambigua, /^🔎 "r" corresponde a 3 regras/);
-        assert.match((await bot.responder('/watch -s nada'))[0], /❌ Nenhuma regra casa com "nada"/);
+        assert.deepEqual(await bot.responder('/watch -s nada'),
+            ['❌ Nenhuma regra casa com "nada".\n💡 _Veja as regras com /watch -l_']);
 
         assert.match((await bot.responder('/watch -f /Jorge/'))[0], /regra #3:\* \/Jorge\/\n🗄️ Ocorrências apagadas: \*1\*/);
         assert.match((await bot.responder('/watch -r Sportiva'))[0], /Regra \*#1\* removida/);
         assert.deepEqual(bot.getSetting('watch.rules'), ['/Renato.*r38tao/', '/Jorge/']);
     });
+});
 
+describe('/watch -q (busca)', () => {
     test('-q filtra as ocorrências pelo texto (sem maiúsculas nem acentos), no -s e na listagem', async () => {
         await bot.setSetting('watch.rules', ['/Jorge/', 'pix']);
         await alguemEscreve('Jorge vendeu o CARRO');
@@ -429,26 +469,5 @@ describe('/watch com origem e listagem', () => {
             assert.match((await bot.responder(`/watch ${comando}`))[0], /^❌/, comando);
         }
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM watch_hits')).n, 4);
-    });
-
-    test('-flush N mantém origem e destinos; -rem N elimina tudo da regra', async () => {
-        await bot.responder('/watch pix -in /Fulano/ -to /Família/');
-        await alguemEscreve('pix');
-        await bot.responder('/watch -flush 1');
-        assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM watch_hits')).n, 0);
-        assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM watch_sources')).n, 1);
-        assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM watch_destinations')).n, 1);
-        await bot.responder('/watch -rem 1');
-        assert.deepEqual(bot.getSetting('watch.rules'), []);
-        assert.deepEqual(await bot.dbAll('SELECT * FROM watch_sources'), []);
-        assert.deepEqual(await bot.dbAll('SELECT * FROM watch_destinations'), []);
-    });
-
-    test('ações inválidas e opções sem valor não alteram configurações', async () => {
-        for (const comando of ['pix -in', 'pix -to', 'pix -in /Fulano/ -in /Família/',
-            '-rem 0', '-show 0', '-list -flush', '-a pix', '-add pix', '-rem 1 -2']) {
-            assert.match((await bot.responder(`/watch ${comando}`))[0], /^❌/, comando);
-            assert.deepEqual(bot.getSetting('watch.rules'), []);
-        }
     });
 });

@@ -59,7 +59,7 @@ function lerOpcoesWatch(args) {
             const valor = tokens[++i];
             if (!valor || valor.regra.startsWith('-') || !valor.valor.trim()) {
                 throw new Error(nome === 'query'
-                    ? 'informe o que buscar: -q <texto> (com espaços, entre aspas: -q "bom dia")'
+                    ? 'informe o que buscar: -q <texto|/regex/flags> (com espaços, entre aspas: -q "bom dia")'
                     : `informe o valor de -${nome}`);
             }
             if (nome === 'query') {

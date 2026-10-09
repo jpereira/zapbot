@@ -26,8 +26,8 @@ lista de apagados.
 | `-deleted`, `-d` | | Mensagens apagadas (sem chat, o padrão) |
 | `-edited`, `-e` | | Mensagens editadas, com o texto de antes e o de depois. Cada edição é um item: uma mensagem editada duas vezes aparece duas vezes |
 | `-status`, `-s` | | Status apagados: num privado, os da pessoa; no seu privado, sem chat, os de todos |
-| `-list`, `-l` | `[chat]` | Lista todos os chats com conteúdo no cache (em qualquer chat), numerado para o `/show <nº>`, marcando com `← este chat` o chat atual. Com chat (nº, nome, `@menção` ou `/regex/`), só os que casam |
-| `-query`, `-q` | `<texto\|/regex/flags>` | Busca as que têm o texto, sem diferenciar maiúsculas nem acentos, ou que casam com a regex: neste chat, no chat pedido ou, no seu privado, em todos. Sem `-N`: as 5 mais recentes. Veja [Buscar](#buscar) |
+| `-list`, `-l` | `[chat]` | Lista todos os chats com conteúdo no cache (em qualquer chat), numerado para o `/show <nº>`, marcando com `← este chat` o chat atual. Com chat (nº, nome, `@menção` ou `/regex/`), só os que casam. Veja [Listar](#listar) |
+| `-query`, `-q` | `<texto\|/regex/flags>` | Busca as que têm o texto (sem diferenciar maiúsculas nem acentos) ou que casam com a regex: neste chat, no chat pedido ou, no seu privado, em todos. Sem `-N`: as 5 mais recentes. Veja [Buscar](#buscar) |
 | `-flush`, `-f` | | Remove do cache as apagadas deste chat ou, com `-e`, `-s` ou chat, o que foi pedido (no seu privado, sem chat: de todos os chats) |
 | `-mask`, `-m` | | Ofusca telefones nos textos e nas legendas desta execução. Ex.: `+55219****44` |
 
@@ -58,6 +58,15 @@ junto, por data.
 /show -5 -q /pix|boleto/i   → até 5 apagadas que casam com a regex
 ```
 
+No seu privado, quando não há nada deste chat, o bot sugere os próximos passos, um por linha:
+
+```text
+/show -e
+✏️ Nenhuma mensagem editada neste chat.
+💡 Para ver as de outro chat: /show -l e depois /show -e -N <chat>
+💡 Para buscar em todos: /show -e -q <texto|/regex/>
+```
+
 ## O chat
 
 O chat vem depois das opções (o `-N` pode vir antes ou depois dele) e é buscado entre os que têm
@@ -85,11 +94,23 @@ sem a flag `i`, diferencia maiúsculas, e os acentos contam. As flags `g` e `y` 
 ```text
 /show -q pix
 ♻️ 2 mensagens apagadas com "pix" (as 2 mais recentes de 4; use -N para mais)
+
+/show -5 -q /\bpix\b|boleto/i
+♻️ 2 mensagens apagadas com "/\bpix\b|boleto/i"
 ```
 
-O `-q` não combina com o `-l` nem com o `-f`.
+O `-q` não combina com o `-l` nem com o `-f`. Sem o texto, ou com uma regex inválida, o bot avisa:
 
-O `-l` mostra quanto tem de cada tipo e os chats, numerados para o `/show <nº>`:
+```text
+/show -q
+❌ Informe o que buscar: /show -q <texto|/regex/flags>
+💡 Com espaços, entre aspas: -q "bom dia"
+```
+
+## Listar
+
+O `-l` mostra quanto tem de cada tipo e os chats, numerados para o `/show <nº>`. As dicas do fim vêm
+uma por linha:
 
 ```text
 🗄️ Mensagens no cache
@@ -110,18 +131,25 @@ O `-l` mostra quanto tem de cada tipo e os chats, numerados para o `/show <nº>`
 ```
 
 Com chat (`/show -l <nº, nome, @menção ou /regex/>`), o `-l` mostra só os chats que casam (todos,
-sem perguntar qual), mantendo o nº da lista completa, e as contas por tipo passam a ser só deles:
+sem perguntar qual), mantendo o nº da lista completa, e as contas por tipo passam a ser só deles.
+O título traz o nome do chat quando casa um só; com vários, o que foi digitado. Na `@menção`, entram
+o privado e os status da pessoa:
 
 ```text
 /show -l trab
-🗄️ Mensagens no cache de: trab
+🗄️ Mensagens no cache de: Trabalho
 
-🗑️ Apagadas: 1 (a mais antiga expira em 30 dias)
+🗑️ Apagadas: 0
 ✏️ Editadas: 1 (a mais antiga expira em 30 dias)
 📸 Status: 0
 
-3. 👥 Trabalho — 🗑️ 1 · ✏️ 1 (última 30/09/2026, 11:15:42)
+3. 👥 Trabalho — ✏️ 1 (última 30/09/2026, 11:15:42)
+
+💡 /show <nº, nome, @menção ou /regex/> reexibe as de um chat: apagadas, editadas e status juntos.
+   …
 ```
+
+## Exemplos de saída
 
 Com chat e sem `-d`, `-e` ou `-s`, o resumo conta cada tipo:
 
