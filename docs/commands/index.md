@@ -129,13 +129,13 @@ mesmo que comecem com `/`. Sem isso, alguém poderia usar um comando que ecoa te
 | [`/listageral`](listageral.md) | `/list` | ✅ | Lista os membros do grupo |
 | [`/meme`](meme.md) | | | Template de meme aleatório (imgflip) |
 | [`/monitor`](monitor.md) 🚧 | | ✅ | Avisa quando números ficam online *(em desenvolvimento, desabilitado por padrão)* |
-| [`/mute`](mute.md) | `/m`, `/mudo` | ✅ | Silencia os avisos de apagadas, editadas e status de uma pessoa, um grupo ou uma comunidade; respondendo um aviso, de onde ele veio |
+| [`/mute`](mute.md) | `/m`, `/mudo` | ✅ | Silencia os avisos de apagadas, editadas e status (e os do `/watch`) de uma pessoa, um grupo ou uma comunidade; respondendo um aviso, de onde ele veio |
 | [`/news`](news.md) | | | Manchetes de feeds RSS: `-hack`, `-g1`, `-gazeta`, `-brasil` |
 | [`/noffa`](noffa.md) | `/🌈`, `/🏳️‍🌈` | | Enfeita o texto com arco-íris |
 | [`/ping`](ping.md) | `/p` | | Verifica se o bot está vivo |
 | [`/pixelart`](pixelart.md) | `/ansi`, `/px` | | Arte ANSI/ASCII aleatória (16colo.rs) |
 | [`/set`](set.md) | `/config` | ✅ | Lista e altera as configurações (settings); `-a`/`-rem` acrescentam e tiram itens das listas (ex.: o `bot.admins` e o `bot.users`) |
-| [`/show`](show.md) | `/s` | ✅ | No privado, lista o cache; reexibe apagadas, edições (`-e`) e status (`-s`); `-q` busca e `-mask` ofusca telefones |
+| [`/show`](show.md) | `/s` | ✅ | No privado, lista o cache; reexibe apagadas, edições (`-e`) e status (`-s`); `-q` busca (texto ou regex) e `-mask` ofusca telefones |
 | [`/stats`](stats.md) | | ✅ | Ranking deste chat ou de outro (`/Grupo/`): quem mais fala, apaga e edita, horários de pico; `-me` para as suas, `-l` lista os chats, `-flush` apaga |
 | [`/sticker`](sticker.md) | `/st` | | Transforma imagem/vídeo em figurinha; com `-txt`, uma figurinha animada de texto |
 | [`/tempo`](tempo.md) | `/t`, `/weather` | | Tempo agora e máx./mín. do dia (Open-Meteo); `/tempo 16d` mostra até 16 dias, contando hoje; sem cidade usa `tempo.city` |
@@ -146,5 +146,5 @@ mesmo que comecem com `/`. Sem isso, alguém poderia usar um comando que ecoa te
 | [`/uptime`](uptime.md) | `/u`, `/up` | | Tempo de execução e de conexão |
 | [`/version`](version.md) | `/ver` | | Versão do bot (mesmo banner do `/uptime`) |
 | [`/walissu`](walissu.md) | `/ualisu` | ✅ | Walissu CVE BOT: marca 2 membros com uma CVE aleatória |
-| [`/watch`](watch.md) | `/w` | ✅ | Regras de texto/regex, com origem opcional em `-in`; lista ocorrências e avisa nos destinos de `-to`; `-mask` ofusca telefones |
+| [`/watch`](watch.md) | `/w` | ✅ | Regras de texto/regex, com origem opcional em `-in`; lista ocorrências, busca nelas com `-q` e avisa nos destinos de `-to`; `-mask` ofusca telefones |
 | [`/whois`](whois.md) | `/who`, `/id` | | Quem é e o que pode no bot, neste chat: 🤖 dono, 👑 admin, 🗣️ usuário ou 🚫 sem permissão; o dono e os admins veem os outros |

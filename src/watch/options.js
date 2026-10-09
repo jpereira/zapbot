@@ -59,7 +59,7 @@ function readOptionsWatch(args) {
             const valueAlt = tokens[++i];
             if (!valueAlt || valueAlt.regra.startsWith('-') || !valueAlt.valor.trim()) {
                 throw new Error(nameAlt === 'query'
-                    ? 'informe o que buscar: -q <texto> (com espaços, entre aspas: -q "bom dia")'
+                    ? 'informe o que buscar: -q <texto|/regex/flags> (com espaços, entre aspas: -q "bom dia")'
                     : `informe o valor de -${nameAlt}`);
             }
             if (nameAlt === 'query') {

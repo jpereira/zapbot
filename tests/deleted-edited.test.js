@@ -200,39 +200,6 @@ describe('evento: mensagem editada', () => {
 });
 
 describe('/show (/s)', () => {
-    test('sem parâmetros no privado lista o cache, como -l, inclusive vazio e pelo alias',
-        async () => {
-            for (const chat of [PRIVATE_OWNER, OTHERAlt.jid]) {
-                assert.deepEqual(await bot.replyAlt('/show', { chat }),
-                    await bot.replyAlt('/show -l', { chat }));
-            }
-            await messageDeleted('do grupo');
-            await messageEdited('antes', 'depois', { chat: WORK });
-            for (const chat of [PRIVATE_OWNER, OTHERAlt.jid]) {
-                assert.deepEqual(await bot.replyAlt('/s   ', { chat }),
-                    await bot.replyAlt('/show -l', { chat }));
-            }
-            const [summary, messageAlt] = await bot.replyAlt('/show -d', { chat: OTHERAlt.jid });
-            assert.doesNotMatch(summary, /Mensagens no cache/);
-            assert.equal(messageAlt, undefined);
-        });
-
-    test('-l lista todos os chats e permite selecionar os que ficam depois do décimo', async () => {
-        for (let i = 1; i <= 12; i++) {
-            const chat = `120363000000000${String(i + 100).padStart(3, '0')}@g.us`;
-            bot.createGroup(chat, `Grupo ${i}`, [OWNER.jid, OTHERAlt.jid]);
-            await messageDeleted(`conteúdo ${i}`, { chat });
-        }
-        const [list] = await bot.replyAlt('/show -l', { chat: PRIVATE_OWNER });
-        assert.equal((list.match(/^\d+\. 👥 /gm) ?? []).length, 12);
-        assert.match(list, /12\. 👥 Grupo \d+ — 🗑️ 1/);
-        assert.doesNotMatch(list, /\+\d+ chat\(s\)/);
-        const nameAlt = list.match(/12\. 👥 (Grupo \d+) —/)[1];
-        const [summary, messageAlt] = await bot.replyAlt('/show 12', { chat: PRIVATE_OWNER });
-        assert.ok(summary.includes(nameAlt));
-        assert.match(messageAlt, /conteúdo \d+/);
-    });
-
     test('sem apagadas neste chat', async () => {
         assert.deepEqual(await bot.replyAlt('/show'), ['♻️ Nenhuma mensagem apagada registrada neste chat.']);
     });
@@ -264,114 +231,9 @@ describe('/show (/s)', () => {
             assert.match((await bot.replyAlt(line))[0], /Uso: \/show/, line);
         }
     });
+});
 
-    test('-q: busca pelo texto (sem acentos); no seu privado, em todos os chats; sem -N, as 5 mais recentes', async () => {
-        await messageDeleted('manda o PIX');
-        await messageDeleted('nada a ver');
-        await messageDeleted('pix no trabalho', { chat: WORK });
-
-        const r = await bot.replyAlt('/show -q pix');
-        assert.equal(r[0], '♻️ *1 mensagem apagada* com "pix"');
-        assert.match(r[1], /"manda o PIX"/);
-
-        // In your private chat: in all chats and all types
-        const allAlt2 = await bot.replyAlt('/show -q pix', { chat: PRIVATE_OWNER });
-        assert.equal(allAlt2[0], '🗄️ *2 mensagens* (🗑️ 2) com "pix"\n💬 *Chats:* todos');
-
-        for (let i = 0; i < 6; i++) await messageDeleted(`pix ${i}`);
-        assert.equal((await bot.replyAlt('/show -q pix'))[0], '♻️ *5 mensagens apagadas* com "pix" _(as 5 mais recentes de 7; use -N para mais)_');
-        assert.equal((await bot.replyAlt('/show -q pix -2')).length, 3);
-
-        assert.deepEqual(await bot.replyAlt('/show -q boleto'), ['♻️ Nenhuma mensagem apagada com "boleto" neste chat.']);
-        assert.deepEqual(await bot.replyAlt('/show -q boleto', { chat: PRIVATE_OWNER }), ['🗄️ Nada no cache com "boleto" em nenhum chat.']);
-    });
-
-    test('-e -q: busca no texto de antes e no de depois; -q não combina com -f e -l', async () => {
-        await messageEdited('reunião às 10h', 'reuniao às 11h');
-        await messageEdited('oi', 'olá');
-
-        const r = await bot.replyAlt('/show -e -q REUNIAO');
-        assert.equal(r[0], '✏️ *1 mensagem editada* com "REUNIAO"');
-        assert.equal((await bot.replyAlt('/show -e -q olá'))[0], '✏️ *1 mensagem editada* com "olá"');
-
-        assert.match((await bot.replyAlt('/show -q x -f'))[0], /❌ O -q não combina com o -f nem com o -l/);
-        assert.match((await bot.replyAlt('/show -q'))[0], /❌ Informe o que buscar/);
-    });
-
-    test('-q com /regex/flags: no texto como veio; regex inválida avisa', async () => {
-        await messageDeleted('manda o PIX');
-        await messageDeleted('segue o boleto');
-        await messageDeleted('pixel art');
-        await messageEdited('reunião às 10h', 'reunião às 11h');
-
-        const r = await bot.replyAlt('/show -5 -q /\\bpix\\b|boleto/i');
-        assert.equal(r[0], '♻️ *2 mensagens apagadas* com "/\\bpix\\b|boleto/i"');
-        assert.match(r[1], /"manda o PIX"/);
-        assert.match(r[2], /"segue o boleto"/);
-
-        // Without the i flag, case-sensitive; in the edited ones, the before or the after
-        assert.deepEqual(await bot.replyAlt('/show -q /Pix/'), ['♻️ Nenhuma mensagem apagada com "/Pix/" neste chat.']);
-        assert.equal((await bot.replyAlt('/show -e -q "/às 1[01]h/"'))[0], '✏️ *1 mensagem editada* com "/às 1[01]h/"');
-
-        assert.match((await bot.replyAlt('/show -q /[/'))[0], /^❌ Busca inválida: regex inválida/);
-    });
-
-    test('-q com chat: só nele', async () => {
-        await messageDeleted('pix aqui');
-        await messageDeleted('pix no trabalho', { chat: WORK });
-
-        const r = await bot.replyAlt('/show -q pix Trabalho');
-        assert.equal(r[0], '🗄️ *1 mensagem* (🗑️ 1) com "pix"\n💬 *Chat:* Trabalho');
-        assert.match(r[1], /"pix no trabalho"/);
-    });
-
-    test('-l: o que tem no cache por tipo e os chats numerados, marcando o atual', async () => {
-        await messageDeleted('a');
-        await messageDeleted('b');
-        await messageDeleted('c');
-        await messageDeleted('d', { chat: WORK });
-        await messageEdited('x', 'y', { chat: WORK });
-        await messageDeleted('meu status', { chat: 'status@broadcast' });
-
-        const [r] = await bot.replyAlt('/show -l');
-        assert.match(r, /🗑️ \*Apagadas:\* 4 [^\n]*\n✏️ \*Editadas:\* 1 [^\n]*\n📸 \*Status:\* 1 /);
-        assert.match(r, /1\. 👥 Família — 🗑️ 3 .*← _este chat_/);
-        assert.match(r, /2\. 👥 Trabalho — 🗑️ 1 · ✏️ 1 /);
-        assert.match(r, /3\. 👤 Fulano — 📸 1 /);
-        assert.match(r, /💡 _\/show <nº, nome, @menção ou \/regex\/>/);
-
-        // The types do not change the list
-        assert.equal((await bot.replyAlt('/show -e -l'))[0], r);
-    });
-
-    test('-l <chat>: só os que casam (nº, nome, @menção ou /regex/), com o nº da lista completa',
-        async () => {
-            // Família (3) before Trabalho (2): with no tie, the order does not depend on the clock
-            await messageDeleted('a');
-            await messageDeleted('b');
-            await messageDeleted('c');
-            await messageDeleted('d', { chat: WORK });
-            await messageEdited('x', 'y', { chat: WORK });
-            await messageDeleted('meu status', { chat: 'status@broadcast' });
-
-            const [byName] = await bot.replyAlt('/show -l trab');
-            assert.match(byName, /Mensagens no cache de:\* trab/);
-            assert.match(byName, /🗑️ \*Apagadas:\* 1 [^\n]*\n✏️ \*Editadas:\* 1 [^\n]*\n📸 \*Status:\* 0\n/);
-            assert.match(byName, /2\. 👥 Trabalho — 🗑️ 1 · ✏️ 1 /);
-            assert.doesNotMatch(byName, /Família|Fulano/);
-
-            assert.equal((await bot.replyAlt('/show -l 2'))[0].replace('2', 'trab'), byName);
-            assert.match((await bot.replyAlt('/show -l /^(fam|trab)/'))[0],
-                /1\. 👥 Família[^\n]*\n2\. 👥 Trabalho/);
-
-            const [byMention] = await bot.replyAlt(`/show -l @${OTHERAlt.user}`, { mencoes: [OTHERAlt.jid] });
-            assert.match(byMention, /📸 \*Status:\* 1 /);
-            assert.match(byMention, /3\. 👤 Fulano — 📸 1 /);
-            assert.doesNotMatch(byMention, /Família|Trabalho/);
-
-            assert.match((await bot.replyAlt('/show -l nada'))[0], /❌ Nenhum chat no cache casa com "nada"/);
-        });
-
+describe('/show <chat>', () => {
     test('chat pelo nº da lista, pelo nome ou por /regex/ (em qualquer chat)', async () => {
         await messageDeleted('do trabalho', { chat: WORK });
         await messageDeleted('da família');
@@ -435,7 +297,8 @@ describe('/show (/s)', () => {
 
         await messageDeleted('a');
         await messageDeleted('b', { chat: WORK });
-        assert.match((await bot.replyAlt('/show 9'))[0], /❌ Chat nº 9 não existe/);
+        assert.deepEqual(await bot.replyAlt('/show 9'),
+            ['❌ Chat nº 9 não existe (ou não tem mais nada no cache).\n💡 _Veja a lista atual com /show -l_']);
         assert.match((await bot.replyAlt('/show xyz'))[0], /❌ Nenhum chat no cache casa com "xyz"/);
         assert.match((await bot.replyAlt('/show /(/'))[0], /❌ Regex inválida: \/\(\//);
 
@@ -445,7 +308,156 @@ describe('/show (/s)', () => {
         assert.match(r[0], /🔎 "a" corresponde a 2 chats:\n\n1\. 👥 Trabalho\n2\. 👥 Família/);
         assert.match(r.at(-1), /"b"/);
     });
+});
 
+describe('/show -l (lista)', () => {
+    test('sem parâmetros no privado lista o cache, como -l, inclusive vazio e pelo alias',
+        async () => {
+            for (const chat of [PRIVATE_OWNER, OTHERAlt.jid]) {
+                assert.deepEqual(await bot.replyAlt('/show', { chat }),
+                    await bot.replyAlt('/show -l', { chat }));
+            }
+            await messageDeleted('do grupo');
+            await messageEdited('antes', 'depois', { chat: WORK });
+            for (const chat of [PRIVATE_OWNER, OTHERAlt.jid]) {
+                assert.deepEqual(await bot.replyAlt('/s   ', { chat }),
+                    await bot.replyAlt('/show -l', { chat }));
+            }
+            const [summary, messageAlt] = await bot.replyAlt('/show -d', { chat: OTHERAlt.jid });
+            assert.doesNotMatch(summary, /Mensagens no cache/);
+            assert.equal(messageAlt, undefined);
+        });
+
+    test('-l: o que tem no cache por tipo e os chats numerados, marcando o atual', async () => {
+        await messageDeleted('a');
+        await messageDeleted('b');
+        await messageDeleted('c');
+        await messageDeleted('d', { chat: WORK });
+        await messageEdited('x', 'y', { chat: WORK });
+        await messageDeleted('meu status', { chat: 'status@broadcast' });
+
+        const [r] = await bot.replyAlt('/show -l');
+        assert.match(r, /🗑️ \*Apagadas:\* 4 [^\n]*\n✏️ \*Editadas:\* 1 [^\n]*\n📸 \*Status:\* 1 /);
+        assert.match(r, /1\. 👥 Família — 🗑️ 3 .*← _este chat_/);
+        assert.match(r, /2\. 👥 Trabalho — 🗑️ 1 · ✏️ 1 /);
+        assert.match(r, /3\. 👤 Fulano — 📸 1 /);
+        assert.match(r, /💡 _\/show <nº, nome, @menção ou \/regex\/>/);
+
+        // The types do not change the list
+        assert.equal((await bot.replyAlt('/show -e -l'))[0], r);
+    });
+
+    test('-l <chat>: só os que casam (nº, nome, @menção ou /regex/), com o nº da lista completa',
+        async () => {
+            // Família (3) before Trabalho (2): with no tie, the order does not depend on the clock
+            await messageDeleted('a');
+            await messageDeleted('b');
+            await messageDeleted('c');
+            await messageDeleted('d', { chat: WORK });
+            await messageEdited('x', 'y', { chat: WORK });
+            await messageDeleted('meu status', { chat: 'status@broadcast' });
+
+            const [byName] = await bot.replyAlt('/show -l trab');
+            assert.match(byName, /Mensagens no cache de:\* Trabalho\n/);
+            assert.match(byName, /🗑️ \*Apagadas:\* 1 [^\n]*\n✏️ \*Editadas:\* 1 [^\n]*\n📸 \*Status:\* 0\n/);
+            assert.match(byName, /2\. 👥 Trabalho — 🗑️ 1 · ✏️ 1 /);
+            assert.doesNotMatch(byName, /Família|Fulano/);
+
+            assert.equal((await bot.replyAlt('/show -l 2'))[0], byName);
+            assert.match((await bot.replyAlt('/show -l /^(fam|trab)/'))[0],
+                /1\. 👥 Família[^\n]*\n2\. 👥 Trabalho/);
+
+            const [byMention] = await bot.replyAlt(`/show -l @${OTHERAlt.user}`, { mencoes: [OTHERAlt.jid] });
+            assert.match(byMention, /📸 \*Status:\* 1 /);
+            assert.match(byMention, /3\. 👤 Fulano — 📸 1 /);
+            assert.doesNotMatch(byMention, /Família|Trabalho/);
+
+            assert.match((await bot.replyAlt('/show -l nada'))[0], /❌ Nenhum chat no cache casa com "nada"/);
+            assert.deepEqual(await bot.replyAlt('/show -l Família', { chat: OTHERAlt.jid }),
+                await bot.replyAlt('/show -l 1', { chat: OTHERAlt.jid }));
+        });
+
+    test('-l lista todos os chats e permite selecionar os que ficam depois do décimo', async () => {
+        for (let i = 1; i <= 12; i++) {
+            const chat = `120363000000000${String(i + 100).padStart(3, '0')}@g.us`;
+            bot.createGroup(chat, `Grupo ${i}`, [OWNER.jid, OTHERAlt.jid]);
+            await messageDeleted(`conteúdo ${i}`, { chat });
+        }
+        const [list] = await bot.replyAlt('/show -l', { chat: PRIVATE_OWNER });
+        assert.equal((list.match(/^\d+\. 👥 /gm) ?? []).length, 12);
+        assert.match(list, /12\. 👥 Grupo \d+ — 🗑️ 1/);
+        assert.doesNotMatch(list, /\+\d+ chat\(s\)/);
+        const nameAlt = list.match(/12\. 👥 (Grupo \d+) —/)[1];
+        const [summary, messageAlt] = await bot.replyAlt('/show 12', { chat: PRIVATE_OWNER });
+        assert.ok(summary.includes(nameAlt));
+        assert.match(messageAlt, /conteúdo \d+/);
+    });
+});
+
+describe('/show -q (busca)', () => {
+    test('-q: busca pelo texto (sem acentos); no seu privado, em todos os chats; sem -N, as 5 mais recentes', async () => {
+        await messageDeleted('manda o PIX');
+        await messageDeleted('nada a ver');
+        await messageDeleted('pix no trabalho', { chat: WORK });
+
+        const r = await bot.replyAlt('/show -q pix');
+        assert.equal(r[0], '♻️ *1 mensagem apagada* com "pix"');
+        assert.match(r[1], /"manda o PIX"/);
+
+        // In your private chat: in all chats and all types
+        const allAlt2 = await bot.replyAlt('/show -q pix', { chat: PRIVATE_OWNER });
+        assert.equal(allAlt2[0], '🗄️ *2 mensagens* (🗑️ 2) com "pix"\n💬 *Chats:* todos');
+
+        for (let i = 0; i < 6; i++) await messageDeleted(`pix ${i}`);
+        assert.equal((await bot.replyAlt('/show -q pix'))[0], '♻️ *5 mensagens apagadas* com "pix" _(as 5 mais recentes de 7; use -N para mais)_');
+        assert.equal((await bot.replyAlt('/show -q pix -2')).length, 3);
+
+        assert.deepEqual(await bot.replyAlt('/show -q boleto'), ['♻️ Nenhuma mensagem apagada com "boleto" neste chat.']);
+        assert.deepEqual(await bot.replyAlt('/show -q boleto', { chat: PRIVATE_OWNER }), ['🗄️ Nada no cache com "boleto" em nenhum chat.']);
+    });
+
+    test('-e -q: busca no texto de antes e no de depois; -q não combina com -f e -l', async () => {
+        await messageEdited('reunião às 10h', 'reuniao às 11h');
+        await messageEdited('oi', 'olá');
+
+        const r = await bot.replyAlt('/show -e -q REUNIAO');
+        assert.equal(r[0], '✏️ *1 mensagem editada* com "REUNIAO"');
+        assert.equal((await bot.replyAlt('/show -e -q olá'))[0], '✏️ *1 mensagem editada* com "olá"');
+
+        assert.match((await bot.replyAlt('/show -q x -f'))[0], /❌ O -q não combina com o -f nem com o -l/);
+        assert.deepEqual(await bot.replyAlt('/show -q'),
+            ['❌ Informe o que buscar: /show -q <texto|/regex/flags>\n💡 _Com espaços, entre aspas: -q "bom dia"_']);
+    });
+
+    test('-q com /regex/flags: no texto como veio; regex inválida avisa', async () => {
+        await messageDeleted('manda o PIX');
+        await messageDeleted('segue o boleto');
+        await messageDeleted('pixel art');
+        await messageEdited('reunião às 10h', 'reunião às 11h');
+
+        const r = await bot.replyAlt('/show -5 -q /\\bpix\\b|boleto/i');
+        assert.equal(r[0], '♻️ *2 mensagens apagadas* com "/\\bpix\\b|boleto/i"');
+        assert.match(r[1], /"manda o PIX"/);
+        assert.match(r[2], /"segue o boleto"/);
+
+        // Without the i flag, case-sensitive; in the edited ones, the before or the after
+        assert.deepEqual(await bot.replyAlt('/show -q /Pix/'), ['♻️ Nenhuma mensagem apagada com "/Pix/" neste chat.']);
+        assert.equal((await bot.replyAlt('/show -e -q "/às 1[01]h/"'))[0], '✏️ *1 mensagem editada* com "/às 1[01]h/"');
+
+        assert.match((await bot.replyAlt('/show -q /[/'))[0], /^❌ Busca inválida: regex inválida/);
+    });
+
+    test('-q com chat: só nele', async () => {
+        await messageDeleted('pix aqui');
+        await messageDeleted('pix no trabalho', { chat: WORK });
+
+        const r = await bot.replyAlt('/show -q pix Trabalho');
+        assert.equal(r[0], '🗄️ *1 mensagem* (🗑️ 1) com "pix"\n💬 *Chat:* Trabalho');
+        assert.match(r[1], /"pix no trabalho"/);
+    });
+});
+
+describe('/show -f (flush)', () => {
     test('-f: só o dono; remove só as apagadas deste chat (e as mídias)', async () => {
         const { msg } = await messageDeleted('foto', { midia: { mimetype: 'image/png', data: 'AA==' } });
         await messageDeleted('b', { chat: WORK });
@@ -512,12 +524,16 @@ describe('/show -e (editadas)', () => {
 
     test('chat sem editadas', async () => {
         await messageDeleted('a');
+        // The no. comes from the last -l (which may be from another test): the current list, here
+        await bot.replyAlt('/show -l');
         assert.deepEqual(await bot.replyAlt('/show -e 1'), ['✏️ Nenhuma mensagem editada em Família.']);
     });
 
     test('dica no seu privado aponta para o -e', async () => {
         const [r] = await bot.replyAlt('/show -e', { chat: PRIVATE_OWNER });
-        assert.match(r, /\/show -l e depois \/show -e -N <chat>/);
+        assert.equal(r, '✏️ Nenhuma mensagem editada neste chat.\n' +
+            '💡 _Para ver as de outro chat: /show -l e depois /show -e -N <chat>_\n' +
+            '💡 _Para buscar em todos: /show -e -q <texto|/regex/>_');
     });
 
     test('-f remove as editadas deste chat; não mexe nas apagadas', async () => {

@@ -7,7 +7,7 @@ mensagens, edita mensagens ou apaga status. **Só o aviso some**: a mensagem con
 
 Quem está silenciado, em qualquer um dos tipos, também não gera aviso do [`/watch`](watch.md) no
 seu privado: a ocorrência fica guardada no histórico do `/watch`, e as regras com `-to` continuam
-avisando nos seus destinos.
+avisando nos seus destinos. Esses avisos cortados também contam nas ignoradas, como `watch`.
 
 ```text
 /mute [OPÇÃO]... [/contato ou grupo/|@menção|+número]
