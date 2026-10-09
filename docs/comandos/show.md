@@ -27,7 +27,7 @@ lista de apagados.
 | `-edited`, `-e` | | Mensagens editadas, com o texto de antes e o de depois. Cada edição é um item: uma mensagem editada duas vezes aparece duas vezes |
 | `-status`, `-s` | | Status apagados: num privado, os da pessoa; no seu privado, sem chat, os de todos |
 | `-list`, `-l` | `[chat]` | Lista todos os chats com conteúdo no cache (em qualquer chat), numerado para o `/show <nº>`, marcando com `← este chat` o chat atual. Com chat (nº, nome, `@menção` ou `/regex/`), só os que casam |
-| `-query`, `-q` | `<texto>` | Busca as que têm o texto, sem diferenciar maiúsculas nem acentos: neste chat, no chat pedido ou, no seu privado, em todos. Sem `-N`: as 5 mais recentes. Veja [Buscar](#buscar) |
+| `-query`, `-q` | `<texto\|/regex/flags>` | Busca as que têm o texto, sem diferenciar maiúsculas nem acentos, ou que casam com a regex: neste chat, no chat pedido ou, no seu privado, em todos. Sem `-N`: as 5 mais recentes. Veja [Buscar](#buscar) |
 | `-flush`, `-f` | | Remove do cache as apagadas deste chat ou, com `-e`, `-s` ou chat, o que foi pedido (no seu privado, sem chat: de todos os chats) |
 | `-mask`, `-m` | | Ofusca telefones nos textos e nas legendas desta execução. Ex.: `+55219****44` |
 
@@ -55,6 +55,7 @@ junto, por data.
 /show -f Trabalho           → apaga do cache tudo do chat Trabalho
 /show -q pix                → as apagadas com "pix" (no seu privado: tudo, de todos os chats)
 /show -e -q "bom dia" -10   → até 10 editadas com "bom dia"
+/show -5 -q /pix|boleto/i   → até 5 apagadas que casam com a regex
 ```
 
 ## O chat
@@ -77,6 +78,9 @@ O `-q <texto>` filtra pelo trecho, sem diferenciar maiúsculas nem acentos (nas 
 de antes ou pelo de depois). Com espaços, vai entre aspas (`-q "bom dia"`). O escopo é o de sempre:
 este chat, o chat pedido ou, **no seu privado, todos os chats** (e, sem `-d`, `-e` ou `-s`, todos os
 tipos). Sem `-N`, vêm as 5 mais recentes que casam; o resumo diz quantas foram encontradas no total.
+
+Com barras, é uma regex do JavaScript, com flags (`-q /pix|boleto/i`). Ela testa o texto como veio:
+sem a flag `i`, diferencia maiúsculas, e os acentos contam. As flags `g` e `y` são ignoradas.
 
 ```text
 /show -q pix

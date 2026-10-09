@@ -478,7 +478,7 @@ describe('ajuda', () => {
     test('formatCommandHelp traz uso, opções, argumentos e aliases', () => {
         const texto = formatCommandHelp(findCommand('/show'));
         assert.match(texto, /^Uso: \/show \[-N\] \[OPÇÃO\]/);
-        assert.match(texto, /-query, -q <texto>/);
+        assert.match(texto, /-query, -q <texto\|\/regex\/flags>/);
         assert.match(texto, /Argumentos:\n  -N/);
         assert.match(texto, /Aliases: \/s$/);
     });

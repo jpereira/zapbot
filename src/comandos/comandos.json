@@ -1296,7 +1296,7 @@
         },
         {
             "cmd": "/show",
-            "usage": "/show [-N] [OPÇÃO] [chat]  ou  /show -q <texto> [-N] [chat]",
+            "usage": "/show [-N] [OPÇÃO] [chat]  ou  /show -q <texto|/regex/flags> [-N] [chat]",
             "aliases": [
                 "/s"
             ],
@@ -1348,9 +1348,9 @@
                         "q"
                     ],
                     "values": [
-                        "<texto>"
+                        "<texto|/regex/flags>"
                     ],
-                    "desc": "Busca as que têm o texto, sem diferenciar maiúsculas nem acentos: neste chat, no chat pedido ou, no seu privado, em todos. Sem -N: as 5 mais recentes. Com espaços, entre aspas: -q \"bom dia\""
+                    "desc": "Busca as que têm o texto, sem diferenciar maiúsculas nem acentos, ou que casam com a /regex/flags: neste chat, no chat pedido ou, no seu privado, em todos. Sem -N: as 5 mais recentes. Com espaços, entre aspas: -q \"bom dia\""
                 },
                 {
                     "argv": [
@@ -1626,7 +1626,7 @@
         },
         {
             "cmd": "/watch",
-            "usage": "/watch [texto|/regex/flags] [-in <origem>] [-to <destino>]...  ou  /watch [-N]  ou  /watch -s [N|regra] [-q <texto>] [-to <destino|off>]...  ou  /watch -rem <N|regra>  ou  /watch -flush [N|regra]",
+            "usage": "/watch [texto|/regex/flags] [-in <origem>] [-to <destino>]...  ou  /watch [-N]  ou  /watch -s [N|regra] [-q <texto|/regex/>] [-to <destino|off>]...  ou  /watch -rem <N|regra>  ou  /watch -flush [N|regra]",
             "aliases": [
                 "/w"
             ],
@@ -1656,9 +1656,9 @@
                         "q"
                     ],
                     "values": [
-                        "<texto>"
+                        "<texto|/regex/flags>"
                     ],
-                    "desc": "Só os matches que têm o texto, sem diferenciar maiúsculas nem acentos; com espaços, entre aspas. Com -s ou na listagem. Ex: /watch -s /Jorge/ -q \"carro\""
+                    "desc": "Só os matches que têm o texto, sem diferenciar maiúsculas nem acentos, ou que casam com a /regex/flags; com espaços, entre aspas. Com -s ou na listagem. Ex: /watch -s /Jorge/ -q \"carro\", /watch -s 3 -q /carr(o|ão)/i"
                 },
                 {
                     "opts": [
