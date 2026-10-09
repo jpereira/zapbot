@@ -17,15 +17,13 @@ const REGRA_MAX_LEN = 200;
 // regra -> função de teste (compilada uma vez, não a cada mensagem)
 const regrasCompiladas = new Map();
 
-function compilarRegraWatch(regra) {
-    if (regrasCompiladas.has(regra)) return regrasCompiladas.get(regra);
-
-    if (!regra || regra.length > REGRA_MAX_LEN) {
-        throw new Error(`a regra precisa ter de 1 a ${REGRA_MAX_LEN} caracteres`);
-    }
-
-    let testar;
-    const m = regra.match(REGRA_REGEX);
+/**
+ * Texto ("contém", sem diferenciar maiúsculas nem acentos) ou /regex/flags →
+ * função de teste. Também é o -q do /show e do /watch.
+ * @throws {Error} regex inválida
+ */
+function compilarBusca(busca) {
+    const m = busca.match(REGRA_REGEX);
 
     if (m) {
         let re;
@@ -34,17 +32,27 @@ function compilarRegraWatch(regra) {
         } catch (e) {
             throw new Error(`regex inválida: ${e.message}`, { cause: e });
         }
-        testar = (texto) => re.test(texto);
-    } else {
-        const alvo = semAcentos(regra);
-        testar = (texto) => semAcentos(texto).includes(alvo);
+        return (texto) => re.test(String(texto ?? ''));
     }
 
+    const alvo = semAcentos(busca);
+    return (texto) => semAcentos(texto).includes(alvo);
+}
+
+function compilarRegraWatch(regra) {
+    if (regrasCompiladas.has(regra)) return regrasCompiladas.get(regra);
+
+    if (!regra || regra.length > REGRA_MAX_LEN) {
+        throw new Error(`a regra precisa ter de 1 a ${REGRA_MAX_LEN} caracteres`);
+    }
+
+    const testar = compilarBusca(regra);
     regrasCompiladas.set(regra, testar);
     return testar;
 }
 
 module.exports = {
     REGRA_REGEX,
+    compilarBusca,
     compilarRegraWatch
 };
