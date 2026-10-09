@@ -20,6 +20,7 @@ continuam avisando nos seus destinos.
 /watch -s 3
 /watch -s /Jorge/
 /watch -s /Jorge/ -q "carro"
+/watch -s 3 -q /carr(o|ão)/i
 /watch -s 3 -to /Jorge Pereira/
 /watch -rem 3
 /watch -flush 3
@@ -51,7 +52,7 @@ As regras são testadas contra o texto original da mensagem. Nos avisos e no his
 | `-N` | | Quantidade de matches recentes, de todas as regras. Ex.: `/watch -10` |
 | `-list`, `-l` | | Lista somente as regras, origens, destinos e contagens |
 | `-show`, `-s` | `[N\|regra]` | Mostra os textos completos dos matches da regra N (ou da regra pelo texto); sem N, de todas. `-N` controla a quantidade |
-| `-query`, `-q` | `<texto>` | Só os matches que têm o texto, sem diferenciar maiúsculas nem acentos. Com `-s` ou na listagem. Veja [Buscar](#buscar) |
+| `-query`, `-q` | `<texto\|/regex/flags>` | Só os matches que têm o texto, sem diferenciar maiúsculas nem acentos, ou que casam com a regex. Com `-s` ou na listagem. Veja [Buscar](#buscar) |
 | `-in` | `<origem>` | Restringe uma regra nova a contato, grupo ou canal |
 | `-rem`, `-r` | `N\|regra` | Remove a regra N, suas ocorrências, origem e destinos; as seguintes são renumeradas |
 | `-flush`, `-f` | `[N\|regra]` | Apaga as ocorrências da regra N; sem N, de todas. Mantém regras, origens e destinos |
@@ -100,6 +101,9 @@ O `-q <texto>` filtra os matches pelo corpo da mensagem, sem diferenciar maiúsc
 espaços, vai entre aspas (`-q "bom dia"`). Funciona com o `-s` (de uma regra ou, sem N, de todas) e
 na listagem (`/watch -q carro`); o total conta só os que têm o texto, e o `-N` limita quantos são
 exibidos. Não combina com `-l`, `-rem`, `-flush` nem com uma regra nova.
+
+Com barras, é uma regex com flags, como nas regras (`-q /carr(o|ão)/i`): testa o texto como veio,
+então, sem a flag `i`, diferencia maiúsculas, e os acentos contam.
 
 ```text
 /watch -s /Jorge/ -q "carro"
