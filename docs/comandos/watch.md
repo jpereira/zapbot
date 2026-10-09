@@ -5,6 +5,10 @@ aos destinos de cada regra. Sem parâmetros, lista as regras e, quando há match
 ocorrências mais recentes. `/watch -10` mostra os últimos dez matches de todas as regras, limitado
 pelo setting `watch.showMax`.
 
+Pessoas e grupos silenciados no [`/mute`](mute.md), em qualquer tipo, não geram aviso no seu
+privado. A ocorrência continua sendo gravada (aparece no `/watch -N`), e as regras com `-to`
+continuam avisando nos seus destinos.
+
 ```text
 /watch /Defesa.*Civil/i
 /watch /Jorge/i -in /Mr.Robots do IPSEP/
