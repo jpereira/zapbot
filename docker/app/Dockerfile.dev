@@ -48,8 +48,11 @@ RUN python3 -m venv /venv
 # yt-dlp via pip, needed by "/download"
 RUN /venv/bin/pip install --no-cache-dir yt-dlp
 
-# main
+# main: at /, so /workspace (the volume) and /app find /node_modules.
+# postinstall applies the patches: they and the script come before npm install
 COPY package*.json ./
+COPY patches ./patches
+COPY scripts/apply-patches.js ./scripts/apply-patches.js
 RUN npm install
 RUN npm install puppeteer-core --save
 
