@@ -8,6 +8,7 @@ const path = require('path');
 const fs = require('fs-extra');
 
 const { formatarErroComando, getCommandSyntax } = require('./base');
+const { concluirAviso } = require('../cliente');
 const { BIN_FFMPEG, BIN_YT, GET_MAX_CONCURRENT, TMP_DIR } = require('../constantes');
 const { printDebug, printError, printInfo } = require('../log');
 const { getSetting, isDebugMode, stickerMeta } = require('../settings');
@@ -119,6 +120,7 @@ async function executarGet({ msg, opts, quotedMsg, senderName }) {
     let outputFile = null;
     let logCmdFile = null;
     let logCmd = null;
+    let aviso = null; // o "Processando…": editado com o resultado (sucesso ou erro)
 
     try {
         let urlInput;
@@ -149,7 +151,7 @@ async function executarGet({ msg, opts, quotedMsg, senderName }) {
             throw new Error(`A URL '${urlInput}' aponta para um endereço não permitido. Ignorando`);
         }
 
-        await msg.reply(`💡 Processando ${isSticker ? 'seu sticker' : 'sua mídia'}, aguarde.`, null, { linkPreview: false });
+        aviso = await msg.reply(`💡 Processando ${isSticker ? 'seu sticker' : 'sua mídia'}, aguarde.`, null, { linkPreview: false });
 
         fs.mkdirSync(TMP_DIR, { recursive: true });
 
@@ -234,9 +236,12 @@ async function executarGet({ msg, opts, quotedMsg, senderName }) {
                 cause: inner
             });
         }
+
+        // O WhatsApp só edita texto: a mídia vai à parte e o aviso vira a confirmação
+        await concluirAviso(msg, aviso, `✅ ${isSticker ? 'Sticker criado' : 'Mídia baixada'} com sucesso!`, { linkPreview: false });
     } catch (e) {
         printError(e.message);
-        await msg.reply(formatarErroComando(e), null, { linkPreview: false });
+        await concluirAviso(msg, aviso, formatarErroComando(e), { linkPreview: false });
     } finally {
         if (logCmd !== null) {
             try { fs.closeSync(logCmd); } catch { /* já fechado */ }

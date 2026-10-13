@@ -62,6 +62,7 @@ class ClienteFalso extends EventEmitter {
         this.lids = new Map();         // "123@lid" -> "5521...@c.us"
         this.inicializado = 0;
         this.destruido = 0;
+        this.recusarEdicao = false;    // edit() devolve null, como quando o WhatsApp não deixa editar
     }
 
     async initialize() { this.inicializado++; }
@@ -73,6 +74,22 @@ class ClienteFalso extends EventEmitter {
         // Como o Message do whatsapp-web.js: o id da mensagem enviada (fora dos deepEqual dos testes)
         const id = `BOT${this.enviadas.length + 1}`;
         Object.defineProperty(enviada, 'id', { value: { id, remote: chatId, fromMe: true, _serialized: `true_${chatId}_${id}` } });
+        // Editar troca o texto no lugar (como aparece no chat) e, como o WhatsApp Web,
+        // dispara o 'message_edit' com a mensagem sua
+        Object.defineProperty(enviada, 'edit', {
+            value: async (texto) => {
+                if (this.recusarEdicao) return null;
+                const antigo = enviada.content;
+                Object.assign(enviada, { content: texto, editada: true });
+                const editada = {
+                    id: enviada.id, fromMe: true, from: DONO.jid, to: chatId, type: 'chat', body: texto,
+                    timestamp: Math.floor(Date.now() / 1000),
+                    latestEditSenderTimestampMs: Date.now(), latestEditMsgKey: { id: `EDIT_${id}` }
+                };
+                for (const h of this.listeners('message_edit')) await h(editada, texto, antigo);
+                return enviada;
+            }
+        });
         this.enviadas.push(enviada);
         return enviada;
     }
