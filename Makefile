@@ -5,6 +5,21 @@
 # o contexto global do Docker nunca é alterado: se algo falhar no meio, você
 # não fica "preso" apontando para o servidor remoto.
 #
+# Os comandos das receitas ficam ocultos; para depurar, mostre todos com
+# "make Q= <alvo>" (ou "make V=1 <alvo>"), inclusive nos $(MAKE) recursivos.
+#
+
+V ?= 0
+ifeq ($(V),1)
+Q :=
+else
+Q ?= @
+endif
+
+# Quieto, o make também não anuncia a entrada nos $(MAKE) recursivos
+ifeq ($(Q),@)
+MAKEFLAGS += --no-print-directory
+endif
 
 COMPOSE_FILE := docker/docker-compose.yml
 NPM ?= npm
@@ -54,7 +69,7 @@ DOCS_PATH := $(shell sed -nE 's|^site_url: *https?://[^/]+||p' mkdocs.yml)
 
 help: ## Mostra esta ajuda
 	@echo "Destino: $(if $(filter 1,$(DOCK_REMOTE)),remoto,local) · $(DOCKER_CONTEXT) · $(SERVICE)"
-	@grep -hE '^[a-zA-Z_.-]+:.*## ' $(MAKEFILE_LIST) | \
+	$(Q)grep -hE '^[a-zA-Z_.-]+:.*## ' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*## "}; {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
 
 #
@@ -63,27 +78,27 @@ help: ## Mostra esta ajuda
 all: build
 
 deps: ## Instala dependências do lock, incluindo as de dev, sem baixar Chromium
-	PUPPETEER_SKIP_DOWNLOAD=true $(NPM) ci --include=dev --no-audit --no-fund
+	$(Q)PUPPETEER_SKIP_DOWNLOAD=true $(NPM) ci --include=dev --no-audit --no-fund
 
 test: $(if $(filter 1,$(DOCK_REMOTE)),context) ## Testes locais ou no container remoto
-	$(RUN_TEST)
+	$(Q)$(RUN_TEST)
 
 test.coverage: ## Testes no destino selecionado com cobertura de src/
-	$(MAKE) test \
+	$(Q)$(MAKE) test \
 		TEST_ARGS="$(TEST_ARGS) --experimental-test-coverage --test-coverage-include=src/**"
 
 lint: ## Confere o checkout local com ESLint
-	$(NPM) run lint
+	$(Q)$(NPM) run lint
 
 check: ## Lint + testes + documentação do checkout local; para na primeira falha
-	$(MAKE) DOCK_REMOTE=0 lint
-	$(MAKE) DOCK_REMOTE=0 test
-	$(MAKE) DOCK_REMOTE=0 docs.build
+	$(Q)$(MAKE) DOCK_REMOTE=0 lint
+	$(Q)$(MAKE) DOCK_REMOTE=0 test
+	$(Q)$(MAKE) DOCK_REMOTE=0 docs.build
 
 # O contexto global fica quieto no canto dele; cada comando leva o seu.
 context: ## Prepara o contexto Docker selecionado
 ifeq ($(DOCK_REMOTE),1)
-	@set -e; if docker context inspect $(REMOTE_CONTEXT) >/dev/null 2>&1; then \
+	$(Q)set -e; if docker context inspect $(REMOTE_CONTEXT) >/dev/null 2>&1; then \
 		host=$$(docker context inspect --format '{{.Endpoints.docker.Host}}' $(REMOTE_CONTEXT)); \
 		if [ "$$host" != "$(DOCKER_REMOTE_SERVER)" ]; then \
 			docker context update $(REMOTE_CONTEXT) --docker "host=$(DOCKER_REMOTE_SERVER)"; \
@@ -92,65 +107,65 @@ ifeq ($(DOCK_REMOTE),1)
 		docker context create $(REMOTE_CONTEXT) --docker "host=$(DOCKER_REMOTE_SERVER)"; \
 	fi
 else
-	@$(DOCKER) context inspect $(LOCAL_CONTEXT) >/dev/null
+	$(Q)$(DOCKER) context inspect $(LOCAL_CONTEXT) >/dev/null
 endif
 
 build: context ## Build da imagem de dev local ou de produção remota
-	$(COMPOSE) build $(OPTS) $(SERVICE)
+	$(Q)$(COMPOSE) build $(OPTS) $(SERVICE)
 
 up: context ## Build + (re)cria o serviço no destino selecionado
-	$(MAKE) build
-	$(COMPOSE) up -d --force-recreate $(SERVICE)
+	$(Q)$(MAKE) build
+	$(Q)$(COMPOSE) up -d --force-recreate $(SERVICE)
 
 logs: context ## Segue os logs do serviço selecionado
-	$(DOCKER) logs -f $(SERVICE)
+	$(Q)$(DOCKER) logs -f $(SERVICE)
 
 ps: context ## Lista containers do destino selecionado
-	$(DOCKER) ps
+	$(Q)$(DOCKER) ps
 
 shell: context ## Shell de dev local ou dentro do bot remoto
 ifeq ($(DOCK_REMOTE),1)
-	$(DOCKER) exec -it $(SERVICE) /bin/bash -l
+	$(Q)$(DOCKER) exec -it $(SERVICE) /bin/bash -l
 else
-	$(COMPOSE) run --rm --entrypoint "bash -l" $(SERVICE)
+	$(Q)$(COMPOSE) run --rm --entrypoint "bash -l" $(SERVICE)
 endif
 
 images: context ## Lista imagens do destino selecionado
-	$(DOCKER) images -a
+	$(Q)$(DOCKER) images -a
 
 volume: context ## Cria/inspeciona os volumes do ambiente selecionado
-	@set -e; for v in $(VOLUMES); do $(DOCKER) volume create $$v >/dev/null; done
-	$(DOCKER) volume inspect $(VOLUMES)
+	$(Q)set -e; for v in $(VOLUMES); do $(DOCKER) volume create $$v >/dev/null; done
+	$(Q)$(DOCKER) volume inspect $(VOLUMES)
 
 clean: context ## Remove container e imagem do ambiente selecionado, preservando os volumes
-	-$(DOCKER) rm -f $(SERVICE)
-	-$(DOCKER) rmi -f $(SERVICE)
-	-$(DOCKER) builder prune -f -a
+	-$(Q)$(DOCKER) rm -f $(SERVICE)
+	-$(Q)$(DOCKER) rmi -f $(SERVICE)
+	-$(Q)$(DOCKER) builder prune -f -a
 
 destroy: clean ## Remove também os volumes do ambiente selecionado (sessão e cache!)
-	$(DOCKER) volume rm -f $(VOLUMES)
+	$(Q)$(DOCKER) volume rm -f $(VOLUMES)
 
 # O virtualenv é recriado do zero quando o docs/requirements.txt muda
 $(DOCS_VENV)/.instalado: docs/requirements.txt
-	rm -rf $(DOCS_VENV)
-	$(DOCS_PYTHON) -m venv $(DOCS_VENV)
-	$(DOCS_VENV)/bin/pip install -q -r docs/requirements.txt
-	@touch $@
+	$(Q)rm -rf $(DOCS_VENV)
+	$(Q)$(DOCS_PYTHON) -m venv $(DOCS_VENV)
+	$(Q)$(DOCS_VENV)/bin/pip install -q -r docs/requirements.txt
+	$(Q)touch $@
 
 docs: $(DOCS_VENV)/.instalado ## Site da documentação (o HEAD) local, recarregando ao salvar
 	@echo "📖 Documentação em http://$(DOCS_HOST):$(DOCS_PORT)$(DOCS_PATH)  (Ctrl+C para parar)"
-	@NO_MKDOCS_2_WARNING=1 $(DOCS_VENV)/bin/mkdocs serve -q -a $(DOCS_HOST):$(DOCS_PORT)
+	$(Q)NO_MKDOCS_2_WARNING=1 $(DOCS_VENV)/bin/mkdocs serve -q -a $(DOCS_HOST):$(DOCS_PORT)
 
 docs.deps: $(DOCS_VENV)/.instalado ## Prepara as dependências da documentação
 
 docs.build: $(DOCS_VENV)/.instalado ## Gera o site e valida links e âncoras (modo estrito)
-	NO_MKDOCS_2_WARNING=1 $(DOCS_VENV)/bin/mkdocs build --strict
+	$(Q)NO_MKDOCS_2_WARNING=1 $(DOCS_VENV)/bin/mkdocs build --strict
 
 prune: $(if $(filter 1,$(DOCK_REMOTE)),context) ## Apaga mídia e mensagens do cache selecionado
 ifeq ($(DOCK_REMOTE),1)
-	$(DOCKER) exec -w /app $(SERVICE) rm -rf cache/tmp cache/media
-	$(DOCKER) exec -w /app $(SERVICE) sqlite3 cache/bot_database.db "DELETE FROM messages"
+	$(Q)$(DOCKER) exec -w /app $(SERVICE) rm -rf cache/tmp cache/media
+	$(Q)$(DOCKER) exec -w /app $(SERVICE) sqlite3 cache/bot_database.db "DELETE FROM messages"
 else
-	rm -rf cache/media/
-	sqlite3 cache/bot_database.db "DELETE FROM messages"
+	$(Q)rm -rf cache/media/
+	$(Q)sqlite3 cache/bot_database.db "DELETE FROM messages"
 endif
