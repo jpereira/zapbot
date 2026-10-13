@@ -87,6 +87,7 @@ const { startBot, startWatchdog } = require('./src/connection');
 require('./src/events/presence');
 require('./src/events/deleted');
 require('./src/events/edited');
+require('./src/events/reactions');
 require('./src/events/messages');
 require('./src/polls');
 

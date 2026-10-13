@@ -15,12 +15,15 @@ const { loadSettings } = require('./settings');
  */
 async function addColumns(table, columns) {
     const existingAlt = new Set((await dbAll(`PRAGMA table_info(${table})`)).map(c => c.name));
+    const created = [];
 
     for (const [column, type] of Object.entries(columns)) {
         if (existingAlt.has(column)) continue;
         await dbRun(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`);
         printInfo(`Coluna ${table}.${column} criada`);
+        created.push(column);
     }
+    return created;
 }
 
 /*
@@ -176,6 +179,45 @@ async function initializeDb() {
     await dbRun('CREATE INDEX IF NOT EXISTS idx_message_edits_chat ON message_edits (chat_id, edited_at)');
 
     /*
+     * Reactions (for /show -r). WhatsApp only notifies the NEW reaction (empty =
+     * removed): reactions stores each person's current one in each message,
+     * to know which was removed or changed. Each removed or changed one
+     * becomes a reaction_changes row (old_reaction → new_reaction, empty =
+     * removed), with the text of the reacted message (body) from when it happened.
+     */
+    await dbRun(`
+        CREATE TABLE IF NOT EXISTS reactions (
+            message_id TEXT NOT NULL,
+            sender_jid TEXT NOT NULL,
+            chat_id TEXT,
+            reaction TEXT NOT NULL,
+            reacted_at INTEGER NOT NULL,
+            PRIMARY KEY (message_id, sender_jid)
+        )
+    `);
+    await dbRun('CREATE INDEX IF NOT EXISTS idx_reactions_reacted ON reactions (reacted_at)');
+    await dbRun(`
+        CREATE TABLE IF NOT EXISTS reaction_changes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            message_id TEXT NOT NULL,
+            chat_id TEXT,
+            chat_name TEXT,
+            is_group INTEGER DEFAULT 0,
+            sender_name TEXT,
+            sender_number TEXT,
+            sender_jid TEXT,
+            old_reaction TEXT,
+            new_reaction TEXT,
+            body TEXT,
+            msg_from_me INTEGER DEFAULT 0,
+            reacted_at INTEGER,
+            changed_at INTEGER,
+            UNIQUE (message_id, sender_jid, changed_at)
+        )
+    `);
+    await dbRun('CREATE INDEX IF NOT EXISTS idx_reaction_changes_chat ON reaction_changes (chat_id, changed_at)');
+
+    /*
      * /stats statistics: counters per chat, day, hour and sender.
      * Regular messages leave the database in 68 h; the counters stay
      * 'stats.retentionDays' dias.
@@ -296,7 +338,7 @@ async function initializeDb() {
 
     /*
      * /mute: people and groups with muted notices (what: deleted, edited,
-     * status) and each cut notice (mute_hits, for /bot -status; 30 days).
+     * status, reaction) and each cut notice (mute_hits, for /bot -status; 30 days).
      */
     await dbRun(`
         CREATE TABLE IF NOT EXISTS mutes (
@@ -307,6 +349,7 @@ async function initializeDb() {
             deleted INTEGER DEFAULT 0,
             edited INTEGER DEFAULT 0,
             status INTEGER DEFAULT 0,
+            reaction INTEGER DEFAULT 0,
             created_at INTEGER NOT NULL
         )
     `);
@@ -321,6 +364,10 @@ async function initializeDb() {
     await dbRun('CREATE INDEX IF NOT EXISTS idx_mute_hits_at ON mute_hits (at)');
     // is_community: the community (its announcements group), muted by /mute
     await addColumns('mutes', { is_community: 'INTEGER DEFAULT 0' });
+    // reaction: /mute -r. Whoever already had everything muted (-a) stays with everything
+    if ((await addColumns('mutes', { reaction: 'INTEGER DEFAULT 0' })).length) {
+        await dbRun('UPDATE mutes SET reaction = 1 WHERE deleted = 1 AND edited = 1 AND status = 1');
+    }
 
     /*
      * Where each notice the bot sent came from (deleted, edited, status, and the

@@ -1,5 +1,5 @@
 /*
- * /mute: people and groups whose notices of deleted, edited and deleted-status messages are muted.
+ * /mute: people and groups whose notices of deleted, edited, deleted-status and reactions are muted.
  */
 
 const { dbAll, dbGet, dbReady, dbRun } = require('./db');
@@ -7,7 +7,8 @@ const { printInfo } = require('./log');
 
 /*
  * Each muted entry (`mutes` table) is a person or a group, with what stays
- * silenced: deleted, edited and/or deleted-status ones. Only the NOTICE in your
+ * silenced: deleted, edited, deleted-status and/or removed reactions
+ * or changed. Only the NOTICE in your
  * private is cut: the message stays stored, and /show shows it.
  * In a group, it applies to everyone there; on a person, to whatever they send in
  * any chat (and for its status).
@@ -20,7 +21,8 @@ const { printInfo } = require('./log');
 const TYPES = {
     apagada: { coluna: 'deleted', rotulo: 'apagadas' },
     editada: { coluna: 'edited', rotulo: 'editadas' },
-    status: { coluna: 'status', rotulo: 'status' }
+    status: { coluna: 'status', rotulo: 'status' },
+    reacao: { coluna: 'reaction', rotulo: 'reações' }
 };
 
 // The number of a person jid (5521...@c.us → 5521...); @lid and groups stay whole
@@ -29,7 +31,7 @@ const idKey = (id) => (String(id ?? '').endsWith('@c.us') ? String(id).split('@'
 /**
  * Is the notice of this type, from this chat/sender, muted?
  * 'watch' applies to any muted entry, of whatever type.
- * @param {'apagada'|'editada'|'status'|'watch'} tipo
+ * @param {'apagada'|'editada'|'status'|'reacao'|'watch'} tipo
  * @param {object} o
  * @param {string} o.chatId
  * @param {Array<string|null>} o.remetentes  jids and/or numbers of the senders

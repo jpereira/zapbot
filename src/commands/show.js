@@ -1,5 +1,5 @@
 /*
- * Comando /show: mensagens apagadas, editadas e status apagados.
+ * /show command: deleted messages, edited ones, deleted status and removed or changed reactions.
  */
 
 const fs = require('fs-extra');
@@ -13,6 +13,7 @@ const { resolverDestination } = require('../destinations');
 const { waitChoice, authorAlt } = require('../choices');
 const { sendMessageDeleted, isStatus, resolverAuthorDeleted } = require('../events/deleted');
 const { sendMessageEdited } = require('../events/edited');
+const { sendReactionUndone } = require('../events/reactions');
 const { printError, printInfo } = require('../log');
 const { getSetting } = require('../settings');
 const { humanSize, mediaIsPath } = require('../util/files');
@@ -21,10 +22,11 @@ const { isChannelAlt } = require('../util/origin');
 const { compileSearch } = require('../watch/rules');
 
 /*
- * /show [-N] [-d] [-e] [-s] [chat]: re-shows what is in the cache, in the same
- * format of the alerts: the DELETED (-d), the EDITED (-e) and the STATUS
- * deleted (-s), which add up. Without any of the three: with a chat (or in the search in
- * all), all together, by date; otherwise, only this chat's deleted ones.
+ * /show [-N] [-d] [-e] [-s] [-r] [chat]: re-shows what is in the cache, in the
+ * same format as the alerts: the DELETED (-d), the EDITED (-e), the STATUS
+ * deleted (-s) and the removed or changed REACTIONS (-r), which add up. Without
+ * none of the four: with a chat (or in the search across all), all together, by date;
+ * otherwise, only this chat's deleted ones.
  * /show              → in private, lists the cache; in a group, the last deleted one
  * /show -3           → the last 3
  * /show -2 /^Camila/ → the last 2 (deleted, edited or status) of the chat that matches
@@ -45,7 +47,7 @@ const { compileSearch } = require('../watch/rules');
 const SEARCH_DEFAULT = 5;
 const STATUS = 'status@broadcast';
 
-// What changes among the deleted (-d), the edited (-e) and the status (-s)
+// What changes among the deleted (-d), the edited (-e), the status (-s) and the reactions (-r)
 const TYPES = {
     apagadas: {
         opt: 'deleted',
@@ -112,6 +114,28 @@ const TYPES = {
         unidade: ['status', 'status'],
         nenhuma: 'Nenhum status apagado',
         registrada: 'registrado'
+    },
+    reacoes: {
+        opt: 'reaction',
+        flag: '-r',
+        tabela: 'reaction_changes',
+        filtro: '1 = 1',
+        doChat: 'chat_id',
+        nome: 'chat_name',
+        grupo: 'is_group',
+        quando: 'changed_at',
+        ordem: 'changed_at DESC, id DESC',
+        retencao: 'cache.reactionRetentionDays',
+        comMidia: false,
+        textos: (r) => [r.old_reaction, r.new_reaction, r.body],
+        icone: '😶',
+        iconeLista: '😶',
+        rotulo: 'Reações',
+        um: 'reação removida ou trocada',
+        varios: 'reações removidas ou trocadas',
+        unidade: ['reação', 'reações'],
+        nenhuma: 'Nenhuma reação removida ou trocada',
+        registrada: 'registrada'
     }
 };
 
@@ -144,9 +168,7 @@ function chatsDoCache() {
         `SELECT chat_id,
                 MAX(chat_name) AS chat_name,
                 MAX(is_group) AS is_group,
-                SUM(tipo = 'apagadas') AS apagadas,
-                SUM(tipo = 'editadas') AS editadas,
-                SUM(tipo = 'status') AS status,
+                ${Object.keys(TYPES).map(type => `SUM(tipo = '${type}') AS ${type},`).join('\n                ')}
                 COUNT(*) AS total,
                 MAX(quando) AS ultima
            FROM (${partsAlt.join(' UNION ALL ')})
@@ -225,7 +247,7 @@ async function resolverTarget(msg, textAlt) {
     // The mention counts even with nothing in the cache: the reply says there is nothing of theirs
     const chats = await chatsDoCache();
     if (!chats.length && !/^@\d+$/.test(textAlt)) {
-        await msg.reply('🗄️ Nada no cache: nenhuma mensagem apagada, editada ou status apagado.');
+        await msg.reply('🗄️ Nada no cache: nenhuma mensagem apagada, editada, status apagado ou reação removida.');
         return null;
     }
 
@@ -322,8 +344,8 @@ async function listCache({ msg, chatId, filtro: filter }) {
         textAlt += '\n';
         chats.forEach((c) => { textAlt += line(c); });
 
-        textAlt += '\n💡 _/show <nº, nome, @menção ou /regex/> reexibe as de um chat: apagadas, editadas e status juntos._' +
-                 '\n   _-d, -e e -s filtram_' +
+        textAlt += '\n💡 _/show <nº, nome, @menção ou /regex/> reexibe as de um chat: apagadas, editadas, status e reações juntos._' +
+                 '\n   _-d, -e, -s e -r filtram_' +
                  `\n   _-N para mais (máx. ${getSetting('show.max')})_` +
                  '\n   _-l <chat> lista só os que casam_' +
                  '\n   _-f remove do cache as deste chat (no seu privado: de todos)_';
@@ -457,7 +479,8 @@ const RESEND_CACHE = {
             nomeRemetente: row.sender_name || 'Desconhecido',
             numeroRemetente: row.sender_number || null
         }, { titulo: `✏️ *MENSAGEM EDITADA* (${i + 1}/${total})` });
-    }
+    },
+    reacoes: (destination, row, i, total) => sendReactionUndone(destination, row, { contagem: `${i + 1}/${total}` })
 };
 
 // "♻️ *2 mensagens apagadas*" (one type) or "🗄️ *3 mensagens* (🗑️ 2 · 📸 1)" (several)
@@ -533,7 +556,7 @@ async function cmdShow({ msg, opts, chatId, admin }) {
     // In your private chat, without a chat: the search and the status cover all chats
     const allAlt2 = inMyPrivate && !opts.opt.flush && (search !== null || requests.includes('status'));
 
-    // Without -d/-e/-s: with a chat (or in all), everything together; otherwise, only the deleted ones
+    // Without -d/-e/-s/-r: with a chat (or in all), everything together; otherwise, only the deleted ones
     const types = requests.length ? requests : target || allAlt2 ? Object.keys(TYPES) : ['apagadas'];
 
     if (opts.opt.flush) {

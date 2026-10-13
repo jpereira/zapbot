@@ -1,8 +1,8 @@
 # `/mute` (`/m`, `/mudo`) · admin
 
 Silencia os avisos que chegam no seu privado quando uma pessoa, um grupo ou uma comunidade apaga
-mensagens, edita mensagens ou apaga status. **Só o aviso some**: a mensagem continua guardada, e o
-[`/show`](show.md) (ou o `/show -e`) a mostra. Só o alvo, sem opção, silencia tudo (o mesmo que o
+mensagens, edita mensagens, apaga status ou remove (ou troca) uma reação. **Só o aviso some**: a
+mensagem continua guardada, e o [`/show`](show.md) (ou o `/show -e`, o `/show -r`) a mostra. Só o alvo, sem opção, silencia tudo (o mesmo que o
 `-a`). Para desfazer, o [`/unmute`](unmute.md).
 
 Quem está silenciado, em qualquer um dos tipos, também não gera aviso do [`/watch`](watch.md) no
@@ -18,7 +18,8 @@ avisando nos seus destinos. Esses avisos cortados também contam nas ignoradas, 
 | `-deleted`, `-d` | | Silencia os avisos de mensagens apagadas |
 | `-edited`, `-e` | | Silencia os avisos de edições |
 | `-status`, `-s` | | Silencia os avisos de status apagados |
-| `-all`, `-a` | | Tudo isso. É o padrão: `/mute /Grupo L200/` é o mesmo que `/mute -a /Grupo L200/` |
+| `-reaction`, `-r` | | Silencia os avisos de reações removidas ou trocadas |
+| `-all`, `-a` | | Tudo isso (apagadas, editadas, status e reações). É o padrão: `/mute /Grupo L200/` é o mesmo que `/mute -a /Grupo L200/` |
 | `-list`, `-l` | | Lista os silenciados (o mesmo que `/mute` sem nada), com quantos avisos foram ignorados |
 | `-rm` | `<nº\|all>` | Desfaz o silêncio do nº N da lista (ou de todos): o mesmo do [`/unmute`](unmute.md) |
 
@@ -34,6 +35,7 @@ fizer em qualquer chat, inclusive os status dela.
 /mute /Jorge Pereira/       → nada do contato avisa
 /mute -d -e +5521999999999  → apagadas e editadas desse número
 /mute -s Fulano             → só os status apagados do contato
+/mute -r /Grupo L200/       → só as reações removidas ou trocadas no grupo
 /m @Fulano Da Silva         → num grupo, mencionando a pessoa
 /m /Jorge/                  → vários Jorge: lista, e você responde com o nº
 /mute                       → a lista
@@ -41,8 +43,8 @@ fizer em qualquer chat, inclusive os status dela.
 
 ## Respondendo um aviso
 
-Respondendo um aviso (de mensagem apagada, editada ou de status apagado, ou o que o `/show`
-reexibe), o `/mute` silencia de onde ele veio, sem precisar dizer quem:
+Respondendo um aviso (de mensagem apagada, editada, de status apagado, de reação removida ou
+trocada, ou o que o `/show` reexibe), o `/mute` silencia de onde ele veio, sem precisar dizer quem:
 
 | O aviso veio de | O `/mute` silencia |
 |---|---|
@@ -56,7 +58,7 @@ for encontrado, avisa e não silencia ninguém. Sem grupo, usa `📱 Número:` o
 identificar a pessoa. Se houver mais de um resultado, pede que você escolha na lista.
 
 As opções valem do mesmo jeito: respondendo, `/mute -s` silencia só os status, `/mute -d` só as
-apagadas, `/mute -e` só as edições e `/mute` (ou `/mute -a`) tudo. Respondendo a mensagem de alguém
+apagadas, `/mute -e` só as edições, `/mute -r` só as reações e `/mute` (ou `/mute -a`) tudo. Respondendo a mensagem de alguém
 (que não é um aviso), silencia quem a mandou.
 
 ```text
@@ -67,7 +69,7 @@ apagadas, `/mute -e` só as edições e `/mute` (ou `/mute -a`) tudo. Respondend
 ...
 
 /mute                       (respondendo o aviso)
-🔇 Silenciado: 👥 Grupo sobre L200 — apagadas, editadas, status
+🔇 Silenciado: 👥 Grupo sobre L200 — apagadas, editadas, status, reações
 ```
 
 ## A lista
@@ -76,8 +78,8 @@ apagadas, `/mute -e` só as edições e `/mute` (ou `/mute -a`) tudo. Respondend
 /mute
 🔇 Silenciados (3)
 
-1. 👥 Grupo sobre L200 — apagadas, editadas, status (12 avisos ignorados)
-2. 🏘️ Condomínio — apagadas, editadas, status
+1. 👥 Grupo sobre L200 — apagadas, editadas, status, reações (12 avisos ignorados)
+2. 🏘️ Condomínio — apagadas, editadas, status, reações
 3. 👤 Fulano — status
 
 💡 Desfaça com /unmute <nº|nome> (ou /unmute -all, todos).
@@ -89,5 +91,8 @@ Detalhes:
 - Os silenciados ficam na tabela `mutes`; cada aviso cortado, em `mute_hits` (30 dias), de onde saem
   os números de ignorados da lista e do [`/bot -status`](bot.md#status-do-bot). A origem de cada
   aviso enviado fica em `alerts` (30 dias): é dela que o `/mute` respondendo sabe quem silenciar.
+- Quem já estava com tudo em silêncio antes de existir o `-r` continua com tudo: as reações entram
+  junto.
 - Para desligar os avisos de todo mundo: `/set show.alert.deleted off` (apagadas),
-  `/set show.alert.edited off` (edições) e `/set show.alert.status off` (status).
+  `/set show.alert.edited off` (edições), `/set show.alert.status off` (status) e
+  `/set show.alert.reaction off` (reações).

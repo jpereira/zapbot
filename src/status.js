@@ -45,6 +45,7 @@ async function statusText(nowAlt = Date.now(), { estadoDoBot: botState = '', usu
     const statusDeleted = await account(
         "SELECT COUNT(*) AS n FROM messages WHERE revoked = 1 AND revoked_at >= ? AND chat_id = 'status@broadcast'", [since]);
     const edited = await account('SELECT COUNT(*) AS n FROM message_edits WHERE edited_at >= ?', [since]);
+    const reactions = await account('SELECT COUNT(*) AS n FROM reaction_changes WHERE changed_at >= ?', [since]);
     const messages = await account('SELECT COUNT(*) AS n FROM messages', []);
 
     // /watch: occurrences per rule (the no. is the one from the /watch -l list)
@@ -59,7 +60,7 @@ async function statusText(nowAlt = Date.now(), { estadoDoBot: botState = '', usu
     // /mute: muted notices, by type
     const ignored = await dbAll('SELECT kind, COUNT(*) AS n FROM mute_hits WHERE at >= ? GROUP BY kind ORDER BY kind', [since]);
     const totalIgnored = ignored.reduce((s, r) => s + r.n, 0);
-    const LABELS = { apagada: 'apagadas', editada: 'editadas', status: 'status', watch: 'watch' };
+    const LABELS = { apagada: 'apagadas', editada: 'editadas', status: 'status', reacao: 'reações', watch: 'watch' };
     const muted = await account('SELECT COUNT(*) AS n FROM mutes', []);
 
     const [lastBackup] = await listBackups();
@@ -74,6 +75,7 @@ async function statusText(nowAlt = Date.now(), { estadoDoBot: botState = '', usu
         `🗑️ *Apagadas:* ${fmtInA(deletedAlt)}${off('show.alert.deleted', 'aviso desligado')}\n` +
         `✏️ *Editadas:* ${fmtInA(edited)}${off('show.alert.edited', 'aviso desligado')}\n` +
         `📸 *Status apagados:* ${fmtInA(statusDeleted)}${off('show.alert.status', 'recuperação desligada')}\n` +
+        `😶 *Reações removidas ou trocadas:* ${fmtInA(reactions)}${off('show.alert.reaction', 'aviso desligado')}\n` +
         `🔇 *Ignoradas (/mute):* ${fmtInA(totalIgnored)}` +
         (totalIgnored ? ` _(${ignored.map(r => `${LABELS[r.kind] ?? r.kind} ${fmtInA(r.n)}`).join(', ')})_` : '') +
         (muted ? ` · ${plural(muted, 'silenciado', 'silenciados')}` : '') + '\n' +

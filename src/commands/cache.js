@@ -6,7 +6,7 @@ const { deleteAllBackups, listBackups } = require('../backup');
 const { formatErrorCommand } = require('./base');
 const { BACKUP_DIR, CACHE_DIR, MEDIA_DIR } = require('../constants');
 const { dbGet } = require('../db');
-const { cleanFilesOld, cleanCacheOld, cleanEditedOld, cleanPollsOld, cleanIgnoredOld, cleanMedia, cleanStatsOld, cleanAll, cleanWatchOld } = require('../cleanup');
+const { cleanFilesOld, cleanCacheOld, cleanEditedOld, cleanPollsOld, cleanIgnoredOld, cleanMedia, cleanReactionsOld, cleanStatsOld, cleanAll, cleanWatchOld } = require('../cleanup');
 const { printError } = require('../log');
 const { humanSize, listCacheLevelOnly } = require('../util/files');
 const { plural } = require('../util/format');
@@ -16,13 +16,14 @@ async function cmdCache({ msg, opts }) {
         let textMsg;
 
         if (opts.opt.all) {
-            // Everything: messages, deleted, edited, media, temporaries and backups
+            // Everything: messages, deleted, edited, reactions, media, temporaries and backups
             const r = await cleanAll();
 
             textMsg =
                 `🧹 *Limpeza geral concluída* _(${CACHE_DIR})_\n\n` +
                 `🗄️ Mensagens removidas: *${r.total}* _(${r.apagadas} apagada${r.apagadas === 1 ? '' : 's'})_\n` +
                 `✏️ Edições removidas: *${r.editadas}*\n` +
+                `😶 Reações removidas: *${r.reacoes}*\n` +
                 `📦 Backups removidos: *${r.backups}*\n` +
                 `💾 Espaço liberado: *${humanSize(r.liberado)}*`;
         } else if (opts.opt.clean || opts.opt.media || opts.opt.backup) {
@@ -34,6 +35,7 @@ async function cmdCache({ msg, opts }) {
                 await cleanFilesOld();
                 await cleanWatchOld();
                 await cleanEditedOld();
+                await cleanReactionsOld();
                 await cleanStatsOld();
                 await cleanPollsOld();
                 await cleanIgnoredOld();
@@ -56,12 +58,14 @@ async function cmdCache({ msg, opts }) {
                 'SELECT COUNT(*) AS total, COALESCE(SUM(revoked), 0) AS apagadas FROM messages'
             );
             const { editadas: edited } = await dbGet('SELECT COUNT(*) AS editadas FROM message_edits');
+            const { reacoes: reactions } = await dbGet('SELECT COUNT(*) AS reacoes FROM reaction_changes');
 
             textMsg = `🗂️ Exibindo conteúdo de ${CACHE_DIR}/*`;
             textMsg += '\n\n```' + listCacheLevelOnly(CACHE_DIR) + '```\n\n';
             textMsg += `🗄️ ${plural(total, 'mensagem', 'mensagens')} no cache.\n`;
             textMsg += `🗑️ ${plural(deletedAlt, 'apagada', 'apagadas')}.\n`;
             textMsg += `✏️ ${plural(edited, 'edição', 'edições')}.\n`;
+            textMsg += `😶 ${plural(reactions, 'reação removida ou trocada', 'reações removidas ou trocadas')}.\n`;
             textMsg += `📦 Backups: ${(await listBackups()).length} (veja /backup).`;
         }
 

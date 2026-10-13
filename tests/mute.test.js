@@ -39,7 +39,7 @@ describe('/mute (/mudo, /m)', () => {
         assert.deepEqual([...readMuted('-d -e /Grupo L200/').colunas], ['deleted', 'edited']);
         assert.equal(readMuted('-d -e /Grupo L200/').alvo, 'Grupo L200');
         assert.equal(readMuted('-a "Grupo L200"').alvo, 'Grupo L200');
-        assert.deepEqual([...readMuted('-all x').colunas], ['deleted', 'edited', 'status']);
+        assert.deepEqual([...readMuted('-all x').colunas], ['deleted', 'edited', 'status', 'reaction']);
         assert.equal(readMuted('-rm 2').rm, '2');
         assert.match(readMuted('-x y').erro, /Opção desconhecida: -x/);
     });
@@ -99,8 +99,8 @@ describe('/mute (/mudo, /m)', () => {
     });
 
     test('só o alvo, sem opção, é o -a: silencia tudo', async () => {
-        assert.match((await bot.replyAlt('/mute /Grupo sobre L200/'))[0], /^🔇 \*Silenciado:\* 👥 Grupo sobre L200 — apagadas, editadas, status\n/);
-        assert.match((await bot.replyAlt('/mute +5521911111111'))[0], /^🔇 \*Silenciado:\* 👤 Fulano — apagadas, editadas, status\n/);
+        assert.match((await bot.replyAlt('/mute /Grupo sobre L200/'))[0], /^🔇 \*Silenciado:\* 👥 Grupo sobre L200 — apagadas, editadas, status, reações\n/);
+        assert.match((await bot.replyAlt('/mute +5521911111111'))[0], /^🔇 \*Silenciado:\* 👤 Fulano — apagadas, editadas, status, reações\n/);
     });
 
     test('erros: sem alvo, alvo inválido, você mesmo', async () => {
@@ -131,7 +131,7 @@ describe('/mute (/mudo, /m)', () => {
             '🔎 "jorge" corresponde a 2 contatos:\n\n1. 👤 Jorge Pereira · +5521933333333\n2. 👤 Jorge Silva · +5511944444444\n\n' +
                 '💡 _Responda só com o nº (em até 2 minutos), ou repita o comando com mais palavras do nome._',
             '❌ Escolha um nº de 1 a 2.',
-            '🔇 *Silenciado:* 👤 Jorge Silva — apagadas, editadas, status\n' +
+            '🔇 *Silenciado:* 👤 Jorge Silva — apagadas, editadas, status, reações\n' +
                 '💡 _Só o aviso some: as mensagens continuam guardadas para o /show. Veja a lista com /mute; desfaça com /unmute._'
         ]);
         assert.deepEqual((await bot.dbAll('SELECT target_id FROM mutes')).map(m => m.target_id), ['5511944444444@c.us']);

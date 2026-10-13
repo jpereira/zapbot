@@ -50,9 +50,9 @@ async function cleanCacheOld(maxDeleteWin = MAX_DELETE_WINDOW, retentionDeleted 
 }
 
 /*
- * General cleanup (/cache -all): ALL messages (including the deleted ones and the
- * edited stored for /show), all the media, all the temporaries and
- * all the /backup backups.
+ * General cleanup (/cache -all): ALL messages (including the deleted ones, the
+ * edited and the reactions stored for /show), all the media, all the
+ * temporaries and all the /backup backups.
  * At the end, VACUUM gives the space back to the disk: DELETE alone does not shrink the .db.
  * Does not touch monitored_numbers, presence_logs, watch_hits, stats, polls, price_alerts
  * nor settings (configuration and history).
@@ -66,15 +66,18 @@ async function cleanAll() {
     );
 
     const { editadas: edited } = await dbGet('SELECT COUNT(*) AS editadas FROM message_edits');
+    const { reacoes: reactions } = await dbGet('SELECT COUNT(*) AS reacoes FROM reaction_changes');
 
     await dbRun('DELETE FROM messages');
     await dbRun('DELETE FROM message_edits');
+    await dbRun('DELETE FROM reaction_changes');
+    await dbRun('DELETE FROM reactions');
     cleanContentDirectory(MEDIA_DIR);
     cleanContentDirectory(TMP_DIR);
     const { backups } = await deleteAllBackups();
     await dbRun('VACUUM');
 
-    return { total, apagadas: deletedAlt, editadas: edited, backups, liberado: Math.max(0, bytesBefore - getDirSize(CACHE_DIR)) };
+    return { total, apagadas: deletedAlt, editadas: edited, reacoes: reactions, backups, liberado: Math.max(0, bytesBefore - getDirSize(CACHE_DIR)) };
 }
 
 /*
@@ -124,6 +127,26 @@ async function cleanEditedOld() {
         }
     } catch (err) {
         printError('Erro na limpeza das editadas:', err.message);
+    }
+}
+
+/*
+ * Removed or changed reactions older than 'cache.reactionRetentionDays',
+ * and the current reactions at the same time (they only serve to know which was removed)
+ */
+async function cleanReactionsOld() {
+    await dbReady;
+
+    try {
+        const limitAlt = Date.now() - getSetting('cache.reactionRetentionDays') * DAY_MS;
+        const res = await dbRun('DELETE FROM reaction_changes WHERE changed_at < ?', [limitAlt]);
+        await dbRun('DELETE FROM reactions WHERE reacted_at < ?', [limitAlt]);
+
+        if (res.changes > 0) {
+            printInfo(`Limpeza: ${res.changes} reações antigas removidas.`);
+        }
+    } catch (err) {
+        printError('Erro na limpeza das reações:', err.message);
     }
 }
 
@@ -229,6 +252,7 @@ function runCleanup() {
     cleanFilesOld();
     cleanWatchOld();
     cleanEditedOld();
+    cleanReactionsOld();
     cleanStatsOld();
     cleanPollsOld();
     cleanIgnoredOld();
@@ -248,6 +272,7 @@ module.exports = {
     cleanPollsOld,
     cleanIgnoredOld,
     cleanMedia,
+    cleanReactionsOld,
     cleanStatsOld,
     cleanAll,
     cleanWatchOld
