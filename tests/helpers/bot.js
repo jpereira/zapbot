@@ -15,6 +15,7 @@ const { client, cleanMarks } = src('client');
 src('events/presence');
 src('events/deleted');
 src('events/edited');
+src('events/reactions');
 src('events/messages');
 src('polls');
 
@@ -33,7 +34,7 @@ const prepare = () => (db ??= initializeDb().then(markDbReady));
 
 const TABLES = ['command_aliases', 'messages', 'message_edits', 'stats', 'watch_hits', 'watch_destinations', 'price_alerts',
     'presence_logs', 'monitored_numbers', 'settings', 'polls', 'poll_votes', 'schedules', 'defi_positions', 'mutes', 'mute_hits',
-    'alerts', 'watch_sources'];
+    'alerts', 'watch_sources', 'reactions', 'reaction_changes'];
 
 /*
  * Clean state for each test: empty tables, settings at default, no
@@ -274,6 +275,26 @@ async function voteAlt(pollAlt, voter, optionsAlt, { quando: when = Date.now() }
     for (const h of client.listeners('vote_update')) await h(vote);
 }
 
+/**
+ * whatsapp-web.js 'message_reaction' event: `de` reacted with `emoji` (empty =
+ * removed the reaction) to the `original` message (a createMessage or a bot send).
+ * @returns what the bot sent
+ */
+async function react(original, de, emoji, { quando: when = Date.now(), porMim: byMim = de === OWNER.jid } = {}) {
+    const keyAlt = original.id;
+    const reaction = {
+        id: { fromMe: byMim, remote: keyAlt.remote, id: `REACAO_${keyAlt.id}_${de}` },
+        msgId: { fromMe: keyAlt.fromMe, remote: keyAlt.remote, id: keyAlt.id, _serialized: keyAlt._serialized },
+        senderId: de,
+        reaction: emoji,
+        timestamp: when / 1000
+    };
+
+    const beforeAlt = client.enviadas.length;
+    for (const h of client.listeners('message_reaction')) await h(reaction);
+    return client.enviadas.slice(beforeAlt).map(withText);
+}
+
 /*
  * With the simulated clock, advances time little by little until the promise ends:
  * does not depend on how many async steps exist before each setTimeout.
@@ -309,6 +330,7 @@ module.exports = {
     executar: run,
     getSetting,
     prepare,
+    react,
     restart,
     replyAlt,
     replyChoosing,
