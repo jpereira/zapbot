@@ -30,6 +30,7 @@ const { cmdNews } = require('./news');
 const { cmdNoffa } = require('./noffa');
 const { cmdPing } = require('./ping');
 const { cmdPixelArt } = require('./pixelart');
+const { cmdSearch } = require('./search');
 const { cmdSet } = require('./set');
 const { cmdShow } = require('./show');
 const { cmdStats } = require('./stats');
@@ -73,6 +74,7 @@ const HANDLERS = {
     '/noffa': cmdNoffa,
     '/ping': cmdPing,
     '/pixelart': cmdPixelArt,
+    '/search': cmdSearch,
     '/set': cmdSet,
     '/show': cmdShow,
     '/stats': cmdStats,

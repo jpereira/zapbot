@@ -56,6 +56,8 @@ async function restart() {
 
     client.enviadas.length = 0;
     client.recusarEdicao = false;
+    client.buscas.length = 0;
+    client.resultadosDaBusca = [];
     cleanMarks();
     client.contatos.clear();
     client.chats.clear();
