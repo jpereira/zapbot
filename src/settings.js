@@ -365,12 +365,12 @@ const SETTINGS_SCHEMA = {
     'get.maxDownloadMB': {
         default: 200,
         type: 'number', min: 10, max: 2000,
-        desc: 'Tamanho máximo (MB) baixado pelo yt-dlp no /get, antes da conversão.'
+        desc: 'Tamanho máximo (MB) baixado pelo yt-dlp no /get e no /sticker, antes da conversão.'
     },
     'get.maxSizeMB': {
         default: 20,
         type: 'number', min: 1, max: 100,
-        desc: 'Tamanho máximo (MB) do arquivo enviado pelo /get.'
+        desc: 'Tamanho máximo (MB) do arquivo convertido pelo ffmpeg no /get e no /sticker.'
     },
     'gif.tag': {
         default: 'fail',
