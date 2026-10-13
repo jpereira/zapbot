@@ -5,7 +5,7 @@
  * /backup -send; and the /mute target. All accept several -to.
  */
 
-const { client } = require('./client');
+const { client, completeNotice } = require('./client');
 const { resolveLidToPhone } = require('./contacts');
 const { sendEmail, smtpForSend } = require('./email');
 const { waitChoice, authorAlt } = require('./choices');
@@ -357,13 +357,13 @@ async function resolverOrChoose(msg, valueAlt, o = {}) {
     const linesAlt = r.opcoes.map((d, i) => `${i + 1}. ${describeDestination(d)}${d.numero ? ` · +${d.numero}` : ''}`);
     const more = r.mais ? `\n_+${r.mais} ${type}: use mais palavras do nome para ver os outros_` : '';
 
-    await msg.reply(`🔎 "${r.busca}" corresponde a ${r.opcoes.length + r.mais} ${type}:\n\n${linesAlt.join('\n')}${more}\n\n` +
+    const question = await msg.reply(`🔎 "${r.busca}" corresponde a ${r.opcoes.length + r.mais} ${type}:\n\n${linesAlt.join('\n')}${more}\n\n` +
         '💡 _Responda só com o nº (em até 2 minutos), ou repita o comando com mais palavras do nome._');
 
     const chatId = msg.id?.remote ?? msg.from;
     return waitChoice(chatId, r.opcoes, {
         autor: authorAlt(msg),
-        aoExpirar: () => msg.reply(`⌛ Nenhum nº escolhido para "${r.busca}" em 2 minutos: nada foi feito.`)
+        aoExpirar: () => completeNotice(msg, question, `⌛ Nenhum nº escolhido para "${r.busca}" em 2 minutos: nada foi feito.`)
     });
 }
 
