@@ -517,11 +517,14 @@ describe('permissões', () => {
         assert.equal(bot.client.enviadas.at(-1).content, '👍 Nada mudou.');
         assert.deepEqual(readAll(), [true, ['5521911111111'], [GROUP]]);
 
-        // Without a reply within 10 s: nothing changes
+        // Without a reply within 10 s: nothing changes, and the question becomes the notice (no other message)
         t.mock.timers.enable({ apis: ['setTimeout'] });
+        const expireBefore = bot.client.enviadas.length;
         const expires = bot.executar('/bot -r');
         await bot.waitWithClock(t, expires);
+        assert.equal(bot.client.enviadas.length, expireBefore + 1);
         assert.equal(bot.client.enviadas.at(-1).content, '⌛ Nada mudou: sem *sim* em 10 s.');
+        assert.equal(bot.client.enviadas.at(-1).editada, true);
         assert.deepEqual(readAll(), [true, ['5521911111111'], [GROUP]]);
         t.mock.timers.reset();
 

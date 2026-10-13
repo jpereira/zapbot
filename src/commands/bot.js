@@ -4,7 +4,7 @@
 
 const { findCommand, getCommandSyntax } = require('./base');
 const { isOOwner, peopleItems } = require('./set');
-const { client } = require('../client');
+const { client, completeNotice } = require('../client');
 const { chatCurrentIds, resolveLidToPhone, groupResolverName } = require('../contacts');
 const {
     describeDestination, describeDestinations, sendToDestinations, extractDestinations, resolverDestinations
@@ -574,12 +574,12 @@ async function reset(msg, { chatId, forcar: force }) {
 
     if (!force) {
         const seconds = CONFIRM_RESET_MS / 1000;
-        await msg.reply('⚠️ *Voltar ao padrão?* O bot fica ligado, sem admins extras e sem usuários.\n' +
+        const question = await msg.reply('⚠️ *Voltar ao padrão?* O bot fica ligado, sem admins extras e sem usuários.\n' +
             `💡 _Responda *sim* em ${seconds} s para confirmar (ou /bot -r force, sem perguntar)._`);
         const confirmed = await waitConfirmation(chatId, {
             ms: CONFIRM_RESET_MS,
             autor: authorAlt(msg),
-            aoExpirar: () => msg.reply(`⌛ Nada mudou: sem *sim* em ${seconds} s.`)
+            aoExpirar: () => completeNotice(msg, question, `⌛ Nada mudou: sem *sim* em ${seconds} s.`)
         });
         if (confirmed === false) await msg.reply('👍 Nada mudou.');
         if (!confirmed) return;

@@ -4,7 +4,7 @@
 
 const fs = require('fs-extra');
 
-const { client } = require('../client');
+const { client, completeNotice } = require('../client');
 const { getCommandSyntax } = require('./base');
 const { DAY_MS } = require('../constants');
 const { chatCurrentIds } = require('../contacts');
@@ -237,13 +237,13 @@ async function resolverTarget(msg, textAlt) {
     if (exact || match.length === 1) return paraTarget(exact ?? match[0]);
 
     const optionsAlt = match.slice(0, 10);
-    await msg.reply(`🔎 "${textAlt}" corresponde a ${match.length} chats:\n\n` +
+    const question = await msg.reply(`🔎 "${textAlt}" corresponde a ${match.length} chats:\n\n` +
         optionsAlt.map((c, i) => `${i + 1}. ${describeChat(c)}`).join('\n') +
         '\n\n💡 _Responda só com o nº (em até 2 minutos), ou repita o comando com mais do nome._');
 
     const chosen = await waitChoice(msg.id?.remote ?? msg.from, optionsAlt, {
         autor: authorAlt(msg),
-        aoExpirar: () => msg.reply(`⌛ Nenhum nº escolhido para "${textAlt}" em 2 minutos: nada foi feito.`)
+        aoExpirar: () => completeNotice(msg, question, `⌛ Nenhum nº escolhido para "${textAlt}" em 2 minutos: nada foi feito.`)
     });
     return chosen ? paraTarget(chosen) : null;
 }

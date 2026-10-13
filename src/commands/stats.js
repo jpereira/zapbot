@@ -3,6 +3,7 @@
  */
 
 const { getCommandSyntax } = require('./base');
+const { completeNotice } = require('../client');
 const { DAY_MS } = require('../constants');
 const { chatCurrentIds } = require('../contacts');
 const { dbAll, dbGet, dbReady, dbRun } = require('../db');
@@ -203,12 +204,12 @@ async function findChat(msg, target) {
         return null;
     }
 
-    await msg.reply(`🔎 "${target}" corresponde a ${match.length} chats:\n\n` +
+    const question = await msg.reply(`🔎 "${target}" corresponde a ${match.length} chats:\n\n` +
         match.slice(0, 10).map((c, i) => `${i + 1}. ${describeChat(c)}`).join('\n') +
         '\n\n💡 _Responda só com o nº (em até 2 minutos), ou repita o comando com mais palavras do nome._');
     return waitChoice(msg.id?.remote ?? msg.from, match.slice(0, 10), {
         autor: authorAlt(msg),
-        aoExpirar: () => msg.reply(`⌛ Nenhum nº escolhido para "${target}" em 2 minutos: nada foi feito.`)
+        aoExpirar: () => completeNotice(msg, question, `⌛ Nenhum nº escolhido para "${target}" em 2 minutos: nada foi feito.`)
     });
 }
 
