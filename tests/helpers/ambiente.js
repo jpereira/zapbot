@@ -63,6 +63,8 @@ class ClienteFalso extends EventEmitter {
         this.inicializado = 0;
         this.destruido = 0;
         this.recusarEdicao = false;    // edit() devolve null, como quando o WhatsApp não deixa editar
+        this.buscas = [];              // { query, options } de cada searchMessages
+        this.resultadosDaBusca = [];   // o que o searchMessages devolve (ou um Error, que ele lança)
     }
 
     async initialize() { this.inicializado++; }
@@ -114,6 +116,12 @@ class ClienteFalso extends EventEmitter {
 
     async getBlockedContacts() {
         return [...this.contatos.values()].filter(c => c.isBlocked);
+    }
+
+    async searchMessages(query, options = {}) {
+        this.buscas.push({ query, options });
+        if (this.resultadosDaBusca instanceof Error) throw this.resultadosDaBusca;
+        return this.resultadosDaBusca;
     }
 
     // Como no whatsapp-web.js: o id do número no WhatsApp, ou null se ele não tem conta
