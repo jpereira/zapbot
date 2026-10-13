@@ -25,8 +25,12 @@ function lerTexto(args) {
     const fg = tirar('fg');
     const m = resto.match(/(^|\s)-txt(?:\s+([\s\S]*))?$/i);
 
+    // Antes do -txt (depois dele é o texto): opções e URL do vídeo não combinam com ele
+    const antes = m ? resto.slice(0, m.index) : '';
+
     return {
         comTexto: Boolean(m),
+        comVideo: /(^|\s)(-(ss|es|startSec|endSec|v|verbose)(\s|$)|https?:\/\/)/i.test(antes),
         texto: (m?.[2] ?? '').trim().replace(/^(["'])(.*)\1$/s, '$2').trim(),
         bg: bg ?? '#FFFFFF',
         fg: fg ?? '#000000',
@@ -65,6 +69,10 @@ async function cmdSticker(ctx) {
     const t = lerTexto(args);
     if (t.semTxt) {
         await msg.reply('❌ O -bg e o -fg são do -txt: /sticker -txt "Bom dia!" -bg "#FFFFFF" -fg "#000000"');
+        return;
+    }
+    if (t.comVideo) {
+        await msg.reply('❌ O -txt não combina com -ss, -es, -v nem com uma URL: ele faz a figurinha só do texto.');
         return;
     }
     if (t.comTexto) {
