@@ -292,7 +292,8 @@ até o intervalo acabar:
 
 O `/bot -reset` (`-r`) desfaz tudo o que o `/bot` mudou: liga o bot, tira os admins extras, os
 usuários e os limites de comandos deles, e volta só você usando comandos. Pede confirmação: responda
-**sim** em até 10 segundos, no mesmo chat, para confirmar (**não**, ou nada, deixa tudo como está).
+**sim** em até 10 segundos, no mesmo chat, para confirmar (**não**, ou nada, deixa tudo como está;
+sem resposta, a pergunta vira `⌛ Nada mudou: sem sim em 10 s.`).
 Com `force`, volta direto, sem perguntar. O envio diário do [`-status`](#status-do-bot) fica como
 está. Só o dono usa; aceita `-mask`, mas não combina com as outras opções.
 
