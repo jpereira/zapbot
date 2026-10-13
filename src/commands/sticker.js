@@ -3,10 +3,9 @@
  */
 
 const { MessageMedia } = require('whatsapp-web.js');
-const { getCommandSyntax } = require('./base');
+const { downloadMedia } = require('./get');
 
 const { printError } = require('../log');
-const { fitSticker, thumbnailDoLink } = require('../media');
 const { stickerMeta } = require('../settings');
 const { MAX_CHARACTERS, readCor, textSticker } = require('../stickerText');
 
@@ -57,7 +56,12 @@ async function stickerWithText(msg, { texto: textAlt, bg: bgTyped, fg: fgTyped }
     }
 }
 
-async function cmdSticker({ msg, quotedMsg, args }) {
+/*
+ * /sticker is /get -sticker: the URL, the replied link or the replied media
+ * (with -ss, -es and -v). Only -txt is its own.
+ */
+async function cmdSticker(ctx) {
+    const { msg, args, opts } = ctx;
     const t = readText(args);
     if (t.semTxt) {
         await msg.reply('❌ O -bg e o -fg são do -txt: /sticker -txt "Bom dia!" -bg "#FFFFFF" -fg "#000000"');
@@ -68,33 +72,7 @@ async function cmdSticker({ msg, quotedMsg, args }) {
         return;
     }
 
-    if (!quotedMsg) {
-        await msg.reply('```' + getCommandSyntax('/sticker') + '```');
-        return;
-    }
-
-    // 1. Real WhatsApp media
-    if (quotedMsg.hasMedia) {
-        const media = await fitSticker(await quotedMsg.downloadMedia());
-        await msg.reply(media, null, { sendMediaAsSticker: true, ...stickerMeta() });
-        return;
-    }
-
-    // 2. Link with thumbnail / preview
-    if (!quotedMsg.links?.length) {
-        await msg.reply('A mensagem respondida não tem mídia nem link.');
-        return;
-    }
-
-    const link = quotedMsg.links[0].link;
-    const media = await thumbnailDoLink(quotedMsg);
-
-    if (!media) {
-        await msg.reply(`Não encontrei thumbnail baixável para:\n${link}`);
-        return;
-    }
-
-    await msg.reply(await fitSticker(media), null, { sendMediaAsSticker: true, ...stickerMeta() });
+    await downloadMedia({ ...ctx, opts: { ...opts, opt: { ...opts.opt, sticker: true } } }, { cmd: '/sticker' });
 }
 
 module.exports = {

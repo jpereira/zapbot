@@ -165,7 +165,7 @@ de um. Os marcados como **Admin** só respondem à sua conta (e aos admins extra
 | [`/set`](https://jpereira.github.io/zapbot/commands/set/) | `/config` | ✅ | Lista e altera as configurações (settings); `-a`/`-rem` acrescentam e tiram itens das listas (ex.: o `bot.admins` e o `bot.users`) |
 | [`/show`](https://jpereira.github.io/zapbot/commands/show/) | `/s` | ✅ | No privado, lista o cache; reexibe apagadas, edições (`-e`) e status (`-s`); `-q` busca (texto ou regex) e `-mask` ofusca telefones |
 | [`/stats`](https://jpereira.github.io/zapbot/commands/stats/) | | ✅ | Ranking deste chat ou de outro (`/Grupo/`): quem mais fala, apaga e edita, horários de pico; `-me` para as suas, `-l` lista os chats, `-flush` apaga |
-| [`/sticker`](https://jpereira.github.io/zapbot/commands/sticker/) | `/st` | | Transforma imagem/vídeo em figurinha; com `-txt`, uma figurinha animada de texto |
+| [`/sticker`](https://jpereira.github.io/zapbot/commands/sticker/) | `/st` | | Figurinha de imagem, vídeo ou link (o `/get -st`); com `-txt`, uma figurinha animada de texto |
 | [`/tempo`](https://jpereira.github.io/zapbot/commands/tempo/) | `/t`, `/weather` | | Tempo agora e máx./mín. do dia (Open-Meteo); `/tempo 16d` mostra até 16 dias, contando hoje; sem cidade usa `tempo.city` |
 | [`/tldr`](https://jpereira.github.io/zapbot/commands/tldr/) | `/resumo` | ✅ | Resume a conversa do chat pelo ChatGPT (`2h`, `300`...) |
 | [`/todos`](https://jpereira.github.io/zapbot/commands/todos/) | `/todes` | ✅ | Menciona todos do grupo |

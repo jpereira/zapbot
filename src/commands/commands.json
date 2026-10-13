@@ -866,11 +866,11 @@
         },
         {
             "cmd": "/get",
-            "usage": "/get [OPÇÃO]... <url>  ou  /get [OPÇÃO]... (respondendo uma mensagem com link)",
+            "usage": "/get [OPÇÃO]... <url>  ou  /get [OPÇÃO]... (respondendo um link ou uma mídia)",
             "aliases": [
                 "/download"
             ],
-            "help": "Baixa vídeo ou áudio de redes sociais (Instagram, YouTube, X, TikTok e outros sites do yt-dlp). Também funciona respondendo uma mensagem com link. Escolha áudio ou figurinha por execução; vídeo e áudio são enviados como documento.",
+            "help": "Baixa vídeo ou áudio de redes sociais (Instagram, YouTube, X, TikTok e outros sites do yt-dlp), pela URL ou respondendo uma mensagem com link. Respondendo um vídeo, uma imagem ou um áudio do WhatsApp, usa a própria mídia: sem opção, devolve o arquivo original. Escolha áudio ou figurinha por execução; vídeo e áudio são enviados como documento.",
             "cmd_opts": [
                 {
                     "opts": [
@@ -878,7 +878,7 @@
                         "st"
                     ],
                     "values": [],
-                    "desc": "Envia como figurinha animada (até 6 s, recorte quadrado no meio do vídeo)."
+                    "desc": "Envia como figurinha animada (até 6 s, recorte quadrado no meio do vídeo). É o mesmo que o /sticker."
                 },
                 {
                     "opts": [
@@ -920,7 +920,7 @@
                     "argv": [
                         "<url>"
                     ],
-                    "desc": "Link do vídeo. Ex: https://youtu.be/..."
+                    "desc": "Link do vídeo; vale mais que a mensagem respondida. Ex: https://youtu.be/..."
                 }
             ],
             "onlyAdmin": false
@@ -1432,11 +1432,11 @@
         },
         {
             "cmd": "/sticker",
-            "usage": "/sticker (respondendo uma imagem, vídeo ou link)  ou  /sticker -txt <texto> [-bg <cor>] [-fg <cor>]",
+            "usage": "/sticker [OPÇÃO]... [url]  (ou respondendo uma imagem, vídeo ou link)  ou  /sticker -txt <texto> [-bg <cor>] [-fg <cor>]",
             "aliases": [
                 "/st"
             ],
-            "help": "Cria uma figurinha a partir da imagem, do vídeo ou da prévia do link respondido (imagens com recorte quadrado no meio). Com -txt, uma figurinha animada com o texto, piscando entre as cores do -fg e do -bg.",
+            "help": "Cria uma figurinha: é o /get -sticker. Da URL ou do link respondido, baixa o vídeo; sem vídeo, usa a prévia do link. De um vídeo, até 6 s com recorte quadrado no meio, no trecho do -ss e do -es. De uma imagem, o recorte quadrado no meio. Com -txt, uma figurinha animada com o texto, piscando entre as cores do -fg e do -bg.",
             "cmd_opts": [
                 {
                     "opts": [
@@ -1464,6 +1464,40 @@
                         "<texto>"
                     ],
                     "desc": "Figurinha animada com o texto (até 200 caracteres), que pisca trocando as cores do -fg e do -bg a cada meio segundo. Ex: /sticker -txt \"Bom dia!\", /sticker -txt Partiu? -bg \"#C0392B\" -fg \"#FFFFFF\""
+                },
+                {
+                    "opts": [
+                        "startSec",
+                        "ss"
+                    ],
+                    "values": [
+                        "<segundo>"
+                    ],
+                    "desc": "Vídeo: começa neste segundo (padrão 0) e pega os 6 s seguintes. Aceita decimal com ponto. Ex: -ss 1.5"
+                },
+                {
+                    "opts": [
+                        "endSec",
+                        "es"
+                    ],
+                    "values": [
+                        "<segundo>"
+                    ],
+                    "desc": "Vídeo: termina neste segundo, maior que o início; a figurinha tem no máximo 6 s. Ex: /sticker -ss 10 -es 13"
+                },
+                {
+                    "opts": [
+                        "verbose",
+                        "v"
+                    ],
+                    "values": [],
+                    "desc": "Mostra os comandos usados no yt-dlp e no ffmpeg."
+                },
+                {
+                    "argv": [
+                        "[url]"
+                    ],
+                    "desc": "Link do vídeo; vale mais que a mensagem respondida. Ex: https://youtu.be/..."
                 }
             ],
             "onlyAdmin": false
