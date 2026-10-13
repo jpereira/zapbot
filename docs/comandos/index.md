@@ -78,6 +78,9 @@ As mesmas formas, num comando só:
 🔇 Silenciado: 👤 Jorge Pereira — apagadas, editadas, status
 ```
 
+Sem resposta em 2 minutos, nada é feito, e a própria lista vira o aviso (sem outra mensagem):
+`⌛ Nenhum nº escolhido para "Jorge" em 2 minutos: nada foi feito.`
+
 ## Permissões (`onlyAdmin`)
 
 Comandos marcados como **admin** só executam quando enviados **pela própria conta do bot** (você, de
@@ -120,7 +123,7 @@ mesmo que comecem com `/`. Sem isso, alguém poderia usar um comando que ecoa te
 | [`/debug`](debug.md) | `/d`, `/dbg` | ✅ | Logs de debug com níveis, filtro e cópia para chats |
 | [`/defi`](defi.md) | | ✅ | Posições de liquidez da Orca e do Project X: saldo, faixa, preço e taxas a coletar, lidos on-chain; `-alerta` avisa quando sai e volta para a faixa e quando as taxas passam de um valor. `liquidswap`: posições de LP na Aptos. `morpho` e `aave`: posição, empréstimos e risco no Morpho e no Aave V3 |
 | [`/enquete`](enquete.md) | `/enq`, `/quiz` | ✅ | Cria uma enquete nativa do WhatsApp no chat; `-r` mostra o resultado |
-| [`/get`](get.md) | `/download` | | Baixa vídeo/áudio de redes sociais |
+| [`/get`](get.md) | `/download` | | Baixa vídeo/áudio de redes sociais ou da mídia respondida |
 | [`/giphy`](giphy.md) | `/gif` | | GIF do GIPHY por tag, URL ou ID, enviado em loop |
 | [`/gpt`](gpt.md) | `/ai` | ✅ | Pergunta ao ChatGPT (OpenAI) |
 | [`/help`](help.md) | `/h` | | Menu de ajuda, só com os comandos que quem pediu pode usar |

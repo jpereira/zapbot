@@ -79,7 +79,8 @@ algo no cache, sem diferenciar maiúsculas nem acentos:
   digitado sem escolher na lista vale como nome.
 
 Num privado, os status são os da pessoa. Se mais de um chat casar, o bot lista e espera você
-responder só com o nº (em até 2 minutos). Funciona em qualquer chat.
+responder só com o nº (em até 2 minutos; sem resposta, a lista vira o aviso `⌛ Nenhum nº
+escolhido…`). Funciona em qualquer chat.
 
 ## Buscar
 

@@ -76,7 +76,7 @@ src/
   inicializacao.js      tabelas + carga dos settings
   settings.js           SETTINGS_SCHEMA, getSetting/setSetting e a validação dos valores persistidos
   botConfig.js          src/comandos/comandos.json carregado
-  cliente.js            cliente do whatsapp-web.js e a marca dos envios do bot
+  cliente.js            cliente do whatsapp-web.js, a marca dos envios do bot e o concluirAviso (o "Processando…" ou a pergunta viram a conclusão)
   conexao.js            QR Code, eventos de conexão, reinício e watchdog
   backup.js             backup do banco (/backup): criação, diário, retenção e restauração
   email.js              SMTP e alertas por e-mail
@@ -166,7 +166,9 @@ As mensagens passam pelo `message_create` de verdade (gravação, `/stats`, `/wa
 parser de opções), e o teste falha se o bot registrar um erro inesperado no log. O
 `tests/helpers/bot.js` tem os atalhos: `bot.responder('/show -2')` devolve o que o bot respondeu,
 `bot.apagar(msg)` e `bot.editar(msg, 'novo')` disparam os eventos, `bot.reiniciar()` limpa tudo
-entre os casos.
+entre os casos. As mensagens que o bot envia têm o `edit()` do whatsapp-web.js: troca o texto no
+lugar (com `editada: true`) e dispara o `message_edit`; com `bot.client.recusarEdicao = true`, ele
+devolve `null`, como quando o WhatsApp não deixa editar.
 
 | Arquivo | O que cobre |
 |---|---|
