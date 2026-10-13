@@ -216,10 +216,8 @@ describe('comando desconhecido', () => {
         let antes = bot.logs.length;
         assert.deepEqual(await bot.responder('/tapioca de frango'),
             ["⚠️ Comando '/tapioca de frango' desconhecido, tente: /help"]);
-        assert.deepEqual(await bot.responder('/monitor'),
-            ["⚠️ Comando '/monitor' desconhecido, tente: /help"], 'desativado no config: também é desconhecido');
         const doDono = desconhecidos(antes);
-        assert.equal(doDono.length, 2);
+        assert.equal(doDono.length, 1);
         assert.match(doDono[0], /\[!\] ⚠️ 'Dono' executed unknown command: '\/tapioca de frango'$/);
 
         antes = bot.logs.length;

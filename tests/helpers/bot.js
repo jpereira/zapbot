@@ -12,7 +12,6 @@ const src = (modulo) => require(path.join(ambiente.RAIZ, 'src', modulo));
 src('debugInstrumentacao').instalarDebug();
 
 const { client, limparMarcas } = src('cliente');
-src('eventos/presenca');
 src('eventos/apagadas');
 src('eventos/editadas');
 src('eventos/reacoes');
@@ -33,7 +32,7 @@ let banco = null;
 const preparar = () => (banco ??= inicializarBanco().then(marcarBancoPronto));
 
 const TABELAS = ['command_aliases', 'messages', 'message_edits', 'stats', 'watch_hits', 'watch_destinations', 'price_alerts',
-    'presence_logs', 'monitored_numbers', 'settings', 'polls', 'poll_votes', 'schedules', 'defi_positions', 'mutes', 'mute_hits',
+    'settings', 'polls', 'poll_votes', 'schedules', 'defi_positions', 'mutes', 'mute_hits',
     'alerts', 'watch_sources', 'reactions', 'reaction_changes'];
 
 /*

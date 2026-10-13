@@ -49,7 +49,6 @@ e sobrevivem a reinícios. Para ver e alterar, use o [`/set`](comandos/set.md).
 | `get.maxSizeMB` | 1–100 | `20` | Tamanho máximo do arquivo convertido pelo ffmpeg no `/get` e no `/sticker` |
 | `gif.tag` | texto | `fail` | Tag padrão do `/giphy` |
 | `giphy.api.key` | texto (pode ser vazio) | *(vazio)* | Chave do GIPHY, usada quando `GIPHY_API_KEY` não está no `config/.env`. Exibida mascarada (`••••1234`); `/set -reset giphy.api.key` apaga |
-| `monitor.max` | 1–1000 | `20` | Máximo de números monitorados |
 | `news.brasil` | lista | 15 blogs do [feedspot](https://rss.feedspot.com/brazil_rss_feeds/) | Feeds RSS do `/news -brasil` |
 | `news.g1` | lista | `https://g1.globo.com/dynamo/rss2.xml` | Feeds RSS do `/news -g1` |
 | `news.gazeta` | lista | `https://www.gazetadopovo.com.br/feed/rss/brasil.xml` | Feeds RSS do `/news -gazeta` |

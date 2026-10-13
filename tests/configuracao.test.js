@@ -61,9 +61,11 @@ describe('comandos.json', () => {
         }
     });
 
-    test('comando "disabled" não é carregado (/monitor)', () => {
-        assert.equal(CONFIG.commands.find(c => c.cmd === '/monitor').disabled, true);
-        assert.equal(findCommand('/monitor'), undefined);
+    test('comando "disabled" não é carregado', () => {
+        const { semDesativados } = bot.src('botConfig');
+        const { ativos, desativados } = semDesativados([{ cmd: '/a' }, { cmd: '/b', disabled: true }, { cmd: '/c', disabled: false }]);
+        assert.deepEqual([ativos.map(c => c.cmd), desativados], [['/a', '/c'], ['/b']]);
+        assert.ok(CONFIG.commands.filter(c => c.disabled).every(c => !findCommand(c.cmd)), 'nenhum desativado do config carrega');
     });
 });
 
@@ -102,7 +104,7 @@ function conferirResumo(md, titulo, onde, { comLinks }) {
     const linhas = tabelaDeComandos(md, titulo);
     const nomes = linhas.map(l => l.cmd);
 
-    // Inclui os desativados ("disabled": true): o /monitor é documentado como em desenvolvimento
+    // Inclui os desativados ("disabled": true): eles também têm página
     assert.deepEqual(nomes, ordenado(nomes), `${onde}: Resumo fora de ordem`);
     assert.deepEqual(ordenado(nomes), ordenado(CONFIG.commands.map(c => c.cmd)), `${onde}: Resumo diferente do config`);
 

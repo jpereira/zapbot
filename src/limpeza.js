@@ -54,7 +54,7 @@ async function limparCacheAntigo(maxDeleteWin = MAX_DELETE_WINDOW, retencaoApaga
  * editadas e as reações guardadas para o /show), todas as mídias, todos os
  * temporários e todos os backups do /backup.
  * No fim, VACUUM devolve o espaço ao disco: DELETE sozinho não encolhe o .db.
- * Não mexe em monitored_numbers, presence_logs, watch_hits, stats, polls, price_alerts
+ * Não mexe em watch_hits, stats, polls, price_alerts
  * nem settings (configuração e histórico).
  */
 async function limparTudo() {

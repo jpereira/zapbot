@@ -23,7 +23,7 @@ imagem (Debian): Chromium em `/usr/bin/chromium` (ou no `PUPPETEER_EXECUTABLE_PA
 
 | Variável | Exemplo | Descrição |
 |---|---|---|
-| `PHONE_NUMBER` | `5521999999999` | **Obrigatório.** Número da conta que será pareada, no formato `DDI + DDD + número`, sem `+`, espaços ou traços. É para ele que o bot manda o aviso de inicialização, as notificações do `/monitor` e, com o debug ligado, os avisos de uso indevido de comandos. Também aparece (mascarado) no e-mail do QR. |
+| `PHONE_NUMBER` | `5521999999999` | **Obrigatório.** Número da conta que será pareada, no formato `DDI + DDD + número`, sem `+`, espaços ou traços. É para ele que o bot manda o aviso de inicialização e, com o debug ligado, os avisos de uso indevido de comandos. Também aparece (mascarado) no e-mail do QR. |
 
 ## Avançado
 

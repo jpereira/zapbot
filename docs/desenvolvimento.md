@@ -103,7 +103,7 @@ src/
   mudo.js               /mute: quem está silenciado, os avisos cortados e a origem de cada aviso
   defi/                 Solana, HyperEVM, Aptos e EVM (RPC, indexador, Multicall3), a Orca, o Project X, a Liquidswap, o Morpho e o Aave V3 (/defi) e o -alerta de saída da faixa
   watch/                regras e verificação do /watch
-  eventos/              message_create, apagadas, editadas, reações, presença
+  eventos/              message_create, apagadas, editadas, reações
   comandos/             comandos.json (definição), um arquivo por comando,
                         index.js (HANDLERS) e base.js (ajuda e utilitários)
   util/                 arquivos, formatação, datas digitadas (quando.js), processos externos, URLs
@@ -195,7 +195,7 @@ devolve `null`, como quando o WhatsApp não deixa editar.
 | `mute.test.js` | `/mute` e `/unmute`: avisos silenciados por pessoa, grupo ou comunidade (só o alvo é o `-a`), a busca do alvo (nomes exatos, contato, grupo, menção e lista para escolher pelo nº) e a resposta a um aviso (de onde ele veio) |
 | `reacoes.test.js` | Reações removidas ou trocadas: o evento `message_reaction` (e o que não gera aviso), o aviso `show.alert.reaction`, o `/show -r`, o `/mute -r`, o `/bot -status` e a limpeza |
 | `search.test.js` | `/search` (`/buscar`): neste chat, em todos no seu privado, o `-N` e o limite, mídias e textos longos |
-| `stats.test.js`, `watch.test.js`, `monitor.test.js` | `/stats` (com o `/chat/`, o `-l` e o `-flush`), `/watch` (e um ou vários `-to`), `/monitor` e o aviso de presença |
+| `stats.test.js`, `watch.test.js` | `/stats` (com o `/chat/`, o `-l` e o `-flush`) e `/watch` (e um ou vários `-to`) |
 | `status.test.js` | `/bot -status`: o relatório (com o aviso `show.alert.*` desligado e os silenciados do `/mute`) e o envio diário (e o `-to`: pessoas, grupos e e-mails) |
 | `telefone-bot.test.js` | Número da conta configurada, formato esperado, avisos e destinos internos |
 | `util.test.js` | Formatação, contatos/`@lid`, menções, arquivos do cache e a versão com o commit e o `(devel)` (`versao.js`) |
