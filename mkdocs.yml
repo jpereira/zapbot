@@ -76,6 +76,7 @@ nav:
       - commands/index.md
       - /alias: commands/alias.md
       - /backup: commands/backup.md
+      - /block: commands/block.md
       - /boletos: commands/boletos.md
       - /bot: commands/bot.md
       - /cache: commands/cache.md
@@ -108,6 +109,7 @@ nav:
       - /tldr: commands/tldr.md
       - /todos: commands/todos.md
       - /traduzir: commands/traduzir.md
+      - /unblock: commands/unblock.md
       - /unmute: commands/unmute.md
       - /uptime: commands/uptime.md
       - /version: commands/version.md

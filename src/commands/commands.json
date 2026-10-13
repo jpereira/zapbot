@@ -129,6 +129,39 @@
             "onlyAdmin": true
         },
         {
+            "cmd": "/block",
+            "usage": "/block [/contato/|@menção|+número]...  ou  /block -l",
+            "aliases": [
+                "/bloquear"
+            ],
+            "help": "Bloqueia uma ou várias pessoas na sua conta do WhatsApp, como o Bloquear do celular. Respondendo uma mensagem, bloqueia quem a escreveu. Sem nada, lista os bloqueados (inclusive os que você bloqueou no celular), numerados para o /unblock <nº>. Grupos não se bloqueiam.",
+            "cmd_opts": [
+                {
+                    "opts": [
+                        "list",
+                        "l"
+                    ],
+                    "values": [],
+                    "desc": "Lista os bloqueados (o mesmo que /block sem nada)."
+                },
+                {
+                    "argv": [
+                        "[/contato/|@menção|+número]..."
+                    ],
+                    "desc": "As pessoas, separadas por espaço: contato da agenda pelo nome ou parte dele (nome com espaço entre /.../ ou aspas; vários que servem: você escolhe na lista), alguém mencionado com @ ou um número. Palavras soltas, sem número, menção, barras nem aspas, são um nome só. Ex: /block /Fulano/, /block +5521999999999, /block +5521999999999 +5521988888888 @Fulano"
+                },
+                {
+                    "opts": [
+                        "mask",
+                        "m"
+                    ],
+                    "values": [],
+                    "desc": "Ofusca telefones com 10 a 15 dígitos contínuos na saída desta execução, mantendo os cinco primeiros e os dois últimos (como +55219****44). Ex: /block -mask"
+                }
+            ],
+            "onlyAdmin": true
+        },
+        {
             "cmd": "/boletos",
             "usage": "/boletos",
             "help": "Sorteia 2 membros do grupo para pagar um boleto.",
@@ -1621,6 +1654,28 @@
                 }
             ],
             "onlyAdmin": false
+        },
+        {
+            "cmd": "/unblock",
+            "usage": "/unblock [/contato/|@menção|+número|nº]  ou  /unblock -all",
+            "help": "Desbloqueia uma pessoa bloqueada (pelo /block ou no celular), ou todas com -all. Respondendo uma mensagem, desbloqueia quem a escreveu. Sem nada, lista os bloqueados.",
+            "cmd_opts": [
+                {
+                    "opts": [
+                        "all",
+                        "a"
+                    ],
+                    "values": [],
+                    "desc": "Desbloqueia todos os bloqueados (inclusive os que você bloqueou no celular). Ex: /unblock -all"
+                },
+                {
+                    "argv": [
+                        "[/contato/|@menção|+número|nº]"
+                    ],
+                    "desc": "A pessoa, como no /block, ou o nº da lista do /block. Ex: /unblock /Fulano/, /unblock 2"
+                }
+            ],
+            "onlyAdmin": true
         },
         {
             "cmd": "/unmute",

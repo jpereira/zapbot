@@ -378,7 +378,8 @@ client.on('message_create', (msg) => withContextDebug({
             opts.opt.help = askedHelpWatch(args);
             opts.opt.mask = askedMaskWatch(args);
         }
-        contextDebug().maskTelefones = ['/show', '/watch', '/bot'].includes(command.cmd) &&
+        // The phone -mask (the /defi one is different: it hides the wallets, and does not go through here)
+        contextDebug().maskTelefones = ['/block', '/bot', '/show', '/watch'].includes(command.cmd) &&
             Boolean(opts.opt.mask);
 
         if (isDebugMode()) {
