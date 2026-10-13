@@ -17,7 +17,9 @@ pelo ffmpeg. Se a mídia tiver um link na legenda, vale a mídia.
 | `-verbose`, `-v` | | Mostra os parâmetros usados no yt-dlp/ffmpeg |
 | `<url>` | | Link do vídeo; vale mais que a mensagem respondida |
 
-O arquivo final é limitado a 20 MB (setting `get.maxSizeMB`).
+O arquivo convertido é limitado a 20 MB (setting `get.maxSizeMB`). O arquivo original de uma mídia
+respondida vai como veio do WhatsApp; sem nome (uma foto da câmera, por exemplo), ganha um como
+`zapbot.jpeg`.
 
 Escolha áudio ou figurinha por execução. Figurinhas têm no máximo seis segundos: sem `-es`, pegam os
 seis segundos a partir do `-ss` (ou do início), e um trecho menor definido por `-ss` e `-es` mantém a
@@ -35,6 +37,7 @@ Limites (o `/get` não é admin: quem estiver no `bot.users` usa; com ele em `tr
 - Download de no máximo 200 MB antes da conversão (setting `get.maxDownloadMB`).
 - Link de playlist baixa só o vídeo do link (`--no-playlist`).
 - yt-dlp e ffmpeg são interrompidos após 5 minutos cada.
+- Opção desconhecida é recusada (`❌ Opção desconhecida: -x`), em vez de virar a URL.
 - No máximo 2 `/get` (ou `/sticker`) com yt-dlp ou ffmpeg ao mesmo tempo. Os demais recebem um aviso
   para tentar de novo.
 

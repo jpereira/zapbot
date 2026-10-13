@@ -33,7 +33,8 @@ segundos a partir do `-ss` (ou do início). Enquanto baixa e converte, o bot mos
 | `-verbose`, `-v` | | Mostra os parâmetros usados no yt-dlp/ffmpeg |
 | `[url]` | | Link do vídeo; vale mais que a mensagem respondida |
 
-Os limites e a proteção contra URLs da rede interna são os do [`/get`](get.md).
+Os limites e a proteção contra URLs da rede interna são os do [`/get`](get.md). A miniatura da
+prévia, quando vem de outro endereço, passa pela mesma proteção.
 
 ## Figurinha de texto
 
@@ -49,6 +50,8 @@ fica do maior tamanho que cabe.
 
 - O texto vai com ou sem aspas (até 200 caracteres); as cores, em `#RRGGBB` ou `#RGB`, com ou sem o
   `#`. A mesma cor no `-bg` e no `-fg` dá erro: o texto não apareceria.
+- Tudo depois do `-txt` é texto. Antes dele, `-ss`, `-es`, `-v` ou uma URL dão erro: são do vídeo, e
+  o `-txt` faz a figurinha só do texto (e ignora a mensagem respondida).
 - Como é feita: o bot desenha os dois quadros em PNG (512x512) e o `ffmpeg` junta num WebP animado,
   que o WhatsApp aceita como figurinha sem conversão. Nome e autor vêm dos mesmos settings
   `sticker.name` e `sticker.author`.

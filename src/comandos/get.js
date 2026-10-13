@@ -34,7 +34,7 @@ async function cmdGet(ctx) {
  * @param {string} o.cmd  o comando digitado (para a sintaxe)
  */
 async function baixarMidia({ msg, opts, quotedMsg, senderName }, { cmd }) {
-    if (!(await opcoesValidas(msg, opts))) return;
+    if (!(await opcoesValidas(msg, opts, cmd))) return;
 
     const origem = origemDaMidia(opts, quotedMsg);
     if (!origem) {
@@ -68,7 +68,13 @@ async function baixarMidia({ msg, opts, quotedMsg, senderName }, { cmd }) {
     }
 }
 
-async function opcoesValidas(msg, opts) {
+async function opcoesValidas(msg, opts, cmd) {
+    // O parser deixa a opção que não conhece no argv: sem isto, ela viraria a URL
+    const desconhecida = opts.argv.find(a => /^-\S/.test(a));
+    if (desconhecida) {
+        await msg.reply(`❌ Opção desconhecida: ${desconhecida}\n💡 _Veja as opções com ${cmd} -h_`);
+        return false;
+    }
     for (const nome of ['startSec', 'endSec']) {
         if (opts.given.has(nome) && !/^\d+(?:\.\d+)?$/.test(String(opts.opt[nome] ?? ''))) {
             await msg.reply(`❌ -${nome} precisa de segundos não negativos, como 0, 10 ou 2.5.`);
@@ -109,7 +115,7 @@ async function baixarCitada(msg, citada) {
         return null;
     });
     if (!media?.data) {
-        await msg.reply('❌ Não consegui baixar a mídia respondida (ela ainda está no celular?).');
+        await msg.reply('❌ Não consegui baixar a mídia respondida: ela pode não estar mais disponível no WhatsApp.');
         return null;
     }
     return media;
@@ -145,16 +151,17 @@ async function enviarSemConverter(msg, media, opts) {
         return true;
     }
 
-    // Sem conversão pedida: o arquivo original, como documento
+    // Sem conversão pedida: o arquivo original, como documento (sem nome, o WhatsApp mostra "Sem título")
     if (tipo === 'imagem' || (!audio && !sticker && !corte)) {
-        await msg.reply(media, null, { ...MSG_DOCUMENTO, linkPreview: false });
+        const arquivo = media.filename ? media : new MessageMedia(media.mimetype, media.data, `zapbot.${extensaoDe(media)}`);
+        await msg.reply(arquivo, null, { ...MSG_DOCUMENTO, linkPreview: false });
         return true;
     }
 
     return false;
 }
 
-// A extensão do arquivo temporário da mídia respondida (o ffmpeg olha o conteúdo)
+// A extensão da mídia respondida, pelo mimetype (o ffmpeg olha o conteúdo, não o nome)
 const extensaoDe = (media) => String(media.mimetype).split(/[/;]/)[1]?.replace(/[^a-z0-9]/gi, '') || 'bin';
 
 async function converterEEnviar({ msg, opts, senderName, url, media, previa }) {

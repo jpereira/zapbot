@@ -1463,7 +1463,7 @@
                     "values": [
                         "<texto>"
                     ],
-                    "desc": "Figurinha animada com o texto (até 200 caracteres), que pisca trocando as cores do -fg e do -bg a cada meio segundo. Ex: /sticker -txt \"Bom dia!\", /sticker -txt Partiu? -bg \"#C0392B\" -fg \"#FFFFFF\""
+                    "desc": "Figurinha animada com o texto (até 200 caracteres), que pisca trocando as cores do -fg e do -bg a cada meio segundo. Não combina com -ss, -es, -v nem URL. Ex: /sticker -txt \"Bom dia!\", /sticker -txt Partiu? -bg \"#C0392B\" -fg \"#FFFFFF\""
                 },
                 {
                     "opts": [

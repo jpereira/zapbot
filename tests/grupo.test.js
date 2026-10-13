@@ -286,9 +286,15 @@ describe('/sticker (/st)', () => {
         assert.equal(interno.content.mimetype, 'image/webp');
         assert.equal(interno.options.sendMediaAsSticker, true);
 
-        MessageMedia.urls.set('https://img.x.com/t.jpg', new MessageMedia('image/jpeg', 'AA==', 't.jpg'));
-        const externo = bot.criarMensagem({ texto: 'http://8.8.8.8/post', de: OUTRO.jid, extras: { _data: { thumbnailUrl: 'https://img.x.com/t.jpg' } } });
+        MessageMedia.urls.set('http://8.8.4.4/t.jpg', new MessageMedia('image/jpeg', 'AA==', 't.jpg'));
+        const externo = bot.criarMensagem({ texto: 'http://8.8.8.8/post', de: OUTRO.jid, extras: { _data: { thumbnailUrl: 'http://8.8.4.4/t.jpg' } } });
         assert.equal((await bot.executar('/sticker', { citada: externo }))[1].content.mimetype, 'image/webp');
+
+        // A prévia externa passa pelo anti-SSRF: na rede interna, não é baixada (e fica o erro do yt-dlp)
+        const interna = bot.criarMensagem({ texto: 'http://8.8.8.8/post', de: OUTRO.jid, extras: { _data: { thumbnailUrl: 'http://192.168.0.1/t.jpg' } } });
+        const semPrevia = await bot.executar('/sticker', { citada: interna, erroEsperado: true });
+        assert.equal(semPrevia.length, 1);
+        assert.match(semPrevia[0].texto, /Problemas para baixar com/);
 
         // Link que não pode ser baixado (endereço privado): a prévia também serve, sem aviso
         const privado = bot.criarMensagem({ texto: 'http://127.0.0.1/post', de: OUTRO.jid, extras: { _data: { thumbnail: 'AA==' } } });
@@ -345,6 +351,11 @@ describe('/sticker (/st)', () => {
         await erro('/sticker -txt oi -fg #12', '❌ -fg: "#12" não é uma cor. Use #RRGGBB (ex.: #000000).');
         await erro('/sticker -txt oi -bg #000 -fg #000000', '❌ O -bg e o -fg são a mesma cor: o texto não apareceria.');
         await erro('/sticker -bg #fff', '❌ O -bg e o -fg são do -txt: /sticker -txt "Bom dia!" -bg "#FFFFFF" -fg "#000000"');
+        for (const linha of ['/sticker -ss 3 -txt oi', '/sticker -v -txt oi', '/sticker http://8.8.8.8/v -txt oi']) {
+            await erro(linha, '❌ O -txt não combina com -ss, -es, -v nem com uma URL: ele faz a figurinha só do texto.');
+        }
+        // Depois do -txt é tudo texto
+        assert.equal((await bot.executar('/sticker -txt corre -ss 3'))[0].content.mimetype, 'image/webp');
 
         bot.processos.falhar = 'ffmpeg';
         await erro('/sticker -txt oi', '❌ Não consegui gerar a figurinha: /usr/bin/ffmpeg exited with code 1');
