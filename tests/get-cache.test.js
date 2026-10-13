@@ -192,7 +192,7 @@ describe('/get (/download)', () => {
         bot.client.recusarEdicao = true;
         processos.falhar = 'yt-dlp';
         const r = await bot.executar(`/get -st ${URL}`, { erroEsperado: true });
-        assert.equal(r[0].texto, '💡 Processando seu sticker, aguarde.');
+        assert.equal(r[0].texto, '⏳ Processando seu sticker, aguarde.');
         assert.match(r[1].texto, /Problemas para baixar com/);
     });
 

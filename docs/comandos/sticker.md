@@ -13,7 +13,7 @@ vídeo/GIF ou numa imagem, e devolve a figurinha. Nome e autor da figurinha vêm
 
 O vídeo vira um quadrado 512x512 enquadrado no meio, com no máximo seis segundos: sem `-es`, os seis
 segundos a partir do `-ss` (ou do início). Enquanto baixa e converte, o bot mostra
-"💡 Processando seu sticker, aguarde.", que vira "✅ Sticker criado com sucesso!" (ou o erro).
+"⏳ Processando seu sticker, aguarde.", que vira "✅ Sticker criado com sucesso!" (ou o erro).
 
 ```text
 (reply numa foto)                /sticker
