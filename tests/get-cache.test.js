@@ -125,6 +125,17 @@ describe('/get (/download)', () => {
         assert.equal(argsDo('yt-dlp').at(-1), URL);
     });
 
+    test('a URL digitada vale mais que a mensagem respondida', async () => {
+        const quoted = bot.createMessage({ texto: 'http://1.1.1.1/outro', de: OTHERAlt.jid });
+        await bot.executar(`/get ${URL}`, { citada: quoted });
+        assert.equal(argsDo('yt-dlp').at(-1), URL);
+    });
+
+    test('mensagem respondida sem mídia nem link', async () => {
+        assert.deepEqual(await bot.replyAlt('/get', { citada: bot.createMessage({ texto: 'só texto', de: OTHERAlt.jid }) }),
+            ['❌ A mensagem respondida não tem mídia nem link.']);
+    });
+
     test('sem URL mostra a sintaxe; URL inválida ou privada é recusada', async () => {
         assert.match((await bot.replyAlt('/get'))[0], /^```Uso: \/get/);
         assert.match((await bot.replyAlt('/get ftp://x.com', { erroEsperado: true }))[0], /A URL 'ftp:\/\/x\.com' é inválida/);
@@ -185,6 +196,85 @@ describe('/get (/download)', () => {
         assert.equal(texts.filter(t => /⏳ Já existem 2 downloads em andamento/.test(t)).length, 1);
         assert.equal(texts.filter(t => /✅ Mídia baixada com sucesso!/.test(t)).length, 2);
         assert.deepEqual(binaries(), ['yt-dlp', 'yt-dlp', 'ffmpeg', 'ffmpeg']);
+    });
+});
+
+describe('/get respondendo uma mídia do WhatsApp', () => {
+    const video = { mimetype: 'video/mp4', data: Buffer.from('mp4').toString('base64'), filename: 'v.mp4' };
+    const photo = { mimetype: 'image/jpeg', data: Buffer.from('jpg').toString('base64') };
+    const audio = { mimetype: 'audio/ogg; codecs=opus', data: Buffer.from('ogg').toString('base64') };
+    const replying = (mediaAlt) => ({ citada: bot.createMessage({ de: OTHERAlt.jid, midia: mediaAlt }) });
+
+    test('sem opção: o arquivo original como documento, sem yt-dlp nem ffmpeg', async () => {
+        for (const mediaAlt of [video, photo]) {
+            const r = await bot.executar('/get', replying(mediaAlt));
+            assert.equal(r.length, 1);
+            assert.equal(r[0].content, mediaAlt);
+            assert.equal(r[0].options.sendMediaAsDocument, true);
+        }
+        assert.deepEqual(processes.chamadas, []);
+    });
+
+    test('-a: o áudio do vídeo em mp3, só com o ffmpeg', async () => {
+        const r = await bot.executar('/get -a', replying(video));
+        assert.deepEqual(binaries(), ['ffmpeg']);
+        const ff = argsDo('ffmpeg');
+        assert.match(ff[ff.indexOf('-i') + 1], /_original\.mp4$/);
+        assert.match(ff.at(-1), /_output\.mp3$/);
+        assert.equal(r[0].texto, '✅ Mídia baixada com sucesso!');
+        assert.equal(r[1].options.sendMediaAsDocument, true);
+        assert.deepEqual(filesTemporary(), []);
+    });
+
+    test('-st com -ss: figurinha de 6 s a partir do segundo pedido', async () => {
+        const r = await bot.executar('/get -st -ss 2', replying(video));
+        const ff = argsDo('ffmpeg');
+        assert.equal(ff[ff.indexOf('-ss') + 1], '2');
+        assert.equal(ff[ff.indexOf('-t') + 1], '6');
+        assert.match(ff[ff.indexOf('-vf') + 1], /crop=512:512/);
+        assert.equal(r[0].texto, '✅ Sticker criado com sucesso!');
+        assert.equal(r[1].options.sendMediaAsSticker, true);
+    });
+
+    test('-ss e -es sem formato: o trecho do vídeo como documento', async () => {
+        const r = await bot.executar('/get -ss 1 -es 3', replying(video));
+        const ff = argsDo('ffmpeg');
+        assert.equal(ff[ff.indexOf('-t') + 1], '2');
+        assert.equal(r[1].options.sendMediaAsDocument, true);
+    });
+
+    test('-v: sem o yt-dlp, que não rodou', async () => {
+        const r = await bot.executar('/get -v -a', replying(video));
+        assert.match(r[1].texto, /🔗 \*ffmpeg\*/);
+        assert.doesNotMatch(r[1].texto, /yt-dlp/);
+    });
+
+    test('imagem: -st enquadra no sharp; -ss, -es e -a são recusados', async () => {
+        const [st] = await bot.executar('/get -st', replying(photo));
+        assert.equal(Buffer.from(st.content.data, 'base64').toString(), 'webp-enquadrado');
+        assert.equal(st.options.sendMediaAsSticker, true);
+
+        assert.deepEqual(await bot.replyAlt('/get -st -ss 1', replying(photo)), ['❌ O -ss e o -es só valem para vídeo.']);
+        assert.deepEqual(await bot.replyAlt('/get -a', replying(photo)), ['❌ A imagem respondida não tem áudio.']);
+        assert.deepEqual(processes.chamadas, []);
+    });
+
+    test('áudio: com corte sai em mp3; figurinha é recusada', async () => {
+        await bot.executar('/get -ss 2', replying(audio));
+        const ff = argsDo('ffmpeg');
+        assert.match(ff[ff.indexOf('-i') + 1], /_original\.ogg$/);
+        assert.match(ff.at(-1), /_output\.mp3$/);
+
+        assert.deepEqual(await bot.replyAlt('/get -st', replying(audio)), ['❌ Não dá para fazer figurinha de um áudio.']);
+    });
+
+    test('outro tipo de arquivo ou mídia que não baixa', async () => {
+        const pdf = { mimetype: 'application/pdf', data: 'AA==' };
+        assert.deepEqual(await bot.replyAlt('/get', replying(pdf)), ['❌ A mídia respondida não é imagem, vídeo nem áudio.']);
+
+        const quoted = bot.createMessage({ de: OTHERAlt.jid, extras: { hasMedia: true, async downloadMedia() { throw new Error('sumiu'); } } });
+        assert.deepEqual(await bot.replyAlt('/get -st', { citada: quoted, erroEsperado: true }),
+            ['❌ Não consegui baixar a mídia respondida (ela ainda está no celular?).']);
     });
 });
 
