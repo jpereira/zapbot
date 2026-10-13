@@ -1,4 +1,4 @@
-# 🤖 ZapBot v2.6
+# 🤖 ZapBot v2.7 (devel)
 
 [![Testes](https://github.com/jpereira/zapbot/actions/workflows/ci.yml/badge.svg)](https://github.com/jpereira/zapbot/actions/workflows/ci.yml)
 
