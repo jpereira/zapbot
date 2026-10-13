@@ -7,8 +7,8 @@
 
 Bot para WhatsApp escrito em Node.js que roda em cima de uma sessão real do WhatsApp Web. Ele
 recupera mensagens (e status) apagadas e editadas, baixa vídeos de redes sociais, cria figurinhas,
-vigia mensagens por texto/regex e te avisa no privado, monitora quando contatos ficam online (em
-desenvolvimento), traz notícias, tempo e CVEs, conversa com o ChatGPT e mais algumas brincadeiras,
+vigia mensagens por texto/regex e te avisa no privado, traz notícias, tempo e CVEs, conversa com o
+ChatGPT e mais algumas brincadeiras,
 tudo por comandos digitados no próprio chat (`/help`, `/get`, `/show`, `/news`, `/gpt`...).
 
 Atalhos persistentes guardam comandos com argumentos e descrição opcional: cadastre com
@@ -157,7 +157,6 @@ de um. Os marcados como **Admin** só respondem à sua conta (e aos admins extra
 | [`/kernel`](https://jpereira.github.io/zapbot/comandos/kernel/) | | | Versões atuais do kernel Linux (kernel.org) |
 | [`/listageral`](https://jpereira.github.io/zapbot/comandos/listageral/) | `/list` | ✅ | Lista os membros do grupo |
 | [`/meme`](https://jpereira.github.io/zapbot/comandos/meme/) | | | Template de meme aleatório (imgflip) |
-| [`/monitor`](https://jpereira.github.io/zapbot/comandos/monitor/) 🚧 | | ✅ | Avisa quando números ficam online *(em desenvolvimento, desabilitado por padrão)* |
 | [`/mute`](https://jpereira.github.io/zapbot/comandos/mute/) | `/m`, `/mudo` | ✅ | Silencia os avisos de apagadas, editadas, status e reações (e os do `/watch`) de uma pessoa, um grupo ou uma comunidade; respondendo um aviso, de onde ele veio |
 | [`/news`](https://jpereira.github.io/zapbot/comandos/news/) | | | Manchetes de feeds RSS: `-hack`, `-g1`, `-gazeta`, `-brasil` |
 | [`/noffa`](https://jpereira.github.io/zapbot/comandos/noffa/) | `/🌈`, `/🏳️‍🌈` | | Enfeita o texto com arco-íris |

@@ -1053,54 +1053,6 @@
             "onlyAdmin": false
         },
         {
-            "cmd": "/monitor",
-            "usage": "/monitor [OPÇÃO]",
-            "help": "🚧 [EM DESENVOLVIMENTO] Números a serem monitorados. Máx. definido em monitor.max (/set).",
-            "disabled": true,
-            "cmd_opts": [
-                {
-                    "opts": [
-                        "list"
-                    ],
-                    "values": [],
-                    "desc": "Lista os números monitorados."
-                },
-                {
-                    "opts": [
-                        "logs"
-                    ],
-                    "values": [],
-                    "desc": "Lista o histórico de quando ficaram online."
-                },
-                {
-                    "opts": [
-                        "add"
-                    ],
-                    "values": [
-                        "<número>"
-                    ],
-                    "desc": "Adiciona um número para monitorar."
-                },
-                {
-                    "opts": [
-                        "rem"
-                    ],
-                    "values": [
-                        "<número>"
-                    ],
-                    "desc": "Remove um número."
-                },
-                {
-                    "opts": [
-                        "clean"
-                    ],
-                    "values": [],
-                    "desc": "Remove todos os números."
-                }
-            ],
-            "onlyAdmin": true
-        },
-        {
             "cmd": "/mute",
             "usage": "/mute [OPÇÃO]... [/contato ou grupo/|@menção|+número]",
             "aliases": [

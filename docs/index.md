@@ -9,8 +9,8 @@
 
 Bot para WhatsApp escrito em Node.js que roda em cima de uma sessão real do WhatsApp Web. Ele
 recupera mensagens (e status) apagadas e editadas, baixa vídeos de redes sociais, cria figurinhas,
-vigia mensagens por texto/regex e te avisa no privado, monitora quando contatos ficam online (em
-desenvolvimento), traz notícias, tempo e CVEs, conversa com o ChatGPT e mais algumas brincadeiras,
+vigia mensagens por texto/regex e te avisa no privado, traz notícias, tempo e CVEs, conversa com o
+ChatGPT e mais algumas brincadeiras,
 tudo por comandos digitados no próprio chat (`/help`, `/get`, `/show`, `/news`, `/gpt`...).
 
 Atalhos persistentes guardam comandos com argumentos e descrição opcional: cadastre com

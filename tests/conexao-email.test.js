@@ -315,11 +315,6 @@ describe('eventos de conexão', () => {
             delete bot.client.pupPage;
         }
     });
-
-    test('presence_update não faz nada com o /monitor desativado', async () => {
-        await emitir('presence_update', { id: { _serialized: '5521911111111@c.us' }, isOnline: true });
-        assert.deepEqual(bot.client.enviadas, []);
-    });
 });
 
 describe('encerramento', () => {

@@ -118,8 +118,8 @@ Detalhes:
 - Com o bot desligado o `/set` também é ignorado: para ligar use sempre o `/bot -on`.
 - Se o bot reiniciar desligado, ou só com você usando comandos, a mensagem de inicialização no seu
   privado avisa.
-- Só os **comandos** são afetados: a recuperação de mensagens apagadas e editadas, o `/watch`, os
-  alertas de preço e as notificações do `/monitor` continuam funcionando.
+- Só os **comandos** são afetados: a recuperação de mensagens apagadas e editadas, o `/watch` e os
+  alertas de preço continuam funcionando.
 - Comandos ignorados aparecem no log: `Comando '/ping' ignorado: bot desligado` (sempre) e
   `Comando '/ping' de Fulano ignorado: fora do bot.users` (só com o [debug](debug.md) ligado).
 - "Você" é a conta pareada ao bot, de qualquer aparelho. Para desligar só alguns comandos, para

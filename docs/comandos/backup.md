@@ -91,8 +91,8 @@ falhe.
 ## O que entra
 
 O banco inteiro: mensagens guardadas (inclusive as apagadas e as editadas), settings, regras e
-ocorrências do `/watch`, alertas de preço, lembretes e mensagens agendadas, enquetes, estatísticas e
-os números do `/monitor`. A cópia é feita com o `VACUUM INTO` do SQLite (consistente, sem parar o
+ocorrências do `/watch`, alertas de preço, lembretes e mensagens agendadas, enquetes e estatísticas.
+A cópia é feita com o `VACUUM INTO` do SQLite (consistente, sem parar o
 bot) e compactada com gzip.
 
 **As mídias (`cache/media`) não entram**: depois de uma restauração, uma apagada com mídia que não

@@ -97,25 +97,6 @@ async function inicializarBanco() {
         command TEXT NOT NULL
     )`);
 
-    // Histórico de quando os contatos monitorados ficam online
-    await dbRun(`
-        CREATE TABLE IF NOT EXISTS presence_logs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            phone_number TEXT,
-            display_name TEXT,
-            status TEXT,
-            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    `);
-
-    // Números monitorados via /monitor
-    await dbRun(`
-        CREATE TABLE IF NOT EXISTS monitored_numbers (
-            phone_number TEXT PRIMARY KEY,
-            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    `);
-
     // Mensagens recebidas (para recuperar as apagadas)
     await dbRun(`
         CREATE TABLE IF NOT EXISTS messages (
