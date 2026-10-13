@@ -90,3 +90,6 @@ Uma chave nova é declarada em `SETTINGS_SCHEMA` (`src/settings.js`), **em ordem
 padrão, tipo, descrição e limites (`allowEmpty` para texto que pode ficar vazio, `secret` para
 mascarar o valor no `/set` e nos logs), e lida com `getSetting('<chave>')`. Valores inválidos no
 banco são ignorados no boot (vale o padrão, com aviso nos logs).
+
+Um setting de texto aceita de 1 a 100 caracteres; os `secret` (chaves de API, como `openai.api.key`)
+aceitam até 500, porque as `sk-proj-` da OpenAI passam de 160.

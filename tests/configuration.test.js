@@ -304,6 +304,12 @@ describe('settings', () => {
         assert.equal(await setSetting('openai.api.key', ''), '');
     });
 
+    test('string secreta (chave de API): até 500 caracteres', async () => {
+        const keyAlt = `sk-proj-${'x'.repeat(156)}`; // OpenAI's have ~164
+        assert.equal(await setSetting('openai.api.key', keyAlt), keyAlt);
+        await assert.rejects(setSetting('openai.api.key', 'x'.repeat(501)), /1 a 500/);
+    });
+
     test('list: separa por vírgula/espaço, normaliza e tira repetidos', async () => {
         assert.deepEqual(await setSetting('crypto.coins', 'btc, ethusdt ETH'), ['BTC', 'ETH']);
         await assert.rejects(setSetting('crypto.coins', 'XYZ'), /não suportada: XYZ/);
