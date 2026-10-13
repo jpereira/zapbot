@@ -11,7 +11,7 @@ const { formatarErroComando, getCommandSyntax } = require('./base');
 const { concluirAviso } = require('../cliente');
 const { BIN_FFMPEG, BIN_YT, GET_MAX_CONCURRENT, TMP_DIR } = require('../constantes');
 const { printDebug, printError, printInfo } = require('../log');
-const { argsDoFfmpeg, enquadrarSticker } = require('../midia');
+const { argsDoFfmpeg, enquadrarSticker, thumbnailDoLink } = require('../midia');
 const { getSetting, isDebugMode, stickerMeta } = require('../settings');
 const { runCommand } = require('../util/processos');
 const { extractFirstUrl, isUrlPublica, isValidHttpUrl } = require('../util/url');
@@ -60,7 +60,9 @@ async function baixarMidia({ msg, opts, quotedMsg, senderName }, { cmd }) {
     getEmAndamento++;
 
     try {
-        await converterEEnviar({ msg, opts, senderName, url: origem.url, media });
+        // Figurinha de um link sem vídeo (matéria, post de foto): a prévia do link
+        const previa = opts.opt.sticker ? origem.doLink : null;
+        await converterEEnviar({ msg, opts, senderName, url: origem.url, media, previa });
     } finally {
         getEmAndamento--;
     }
@@ -155,7 +157,7 @@ async function enviarSemConverter(msg, media, opts) {
 // A extensão do arquivo temporário da mídia respondida (o ffmpeg olha o conteúdo)
 const extensaoDe = (media) => String(media.mimetype).split(/[/;]/)[1]?.replace(/[^a-z0-9]/gi, '') || 'bin';
 
-async function converterEEnviar({ msg, opts, senderName, url, media }) {
+async function converterEEnviar({ msg, opts, senderName, url, media, previa }) {
     // Aleatório: com Date.now() dois /get no mesmo milissegundo usariam os mesmos arquivos
     const id = crypto.randomUUID();
     let originalFile = null;
@@ -172,12 +174,12 @@ async function converterEEnviar({ msg, opts, senderName, url, media }) {
         }
 
         if (url && !isValidHttpUrl(url)) {
-            throw new Error(`A URL '${url}' é inválida. Ignorando`);
+            throw erroAoBaixar(`A URL '${url}' é inválida. Ignorando`);
         }
 
         if (url && !(await isUrlPublica(url))) {
             printInfo(`/get: URL recusada (host privado ou não resolvido) de '${senderName}': ${url}`);
-            throw new Error(`A URL '${url}' aponta para um endereço não permitido. Ignorando`);
+            throw erroAoBaixar(`A URL '${url}' aponta para um endereço não permitido. Ignorando`);
         }
 
         aviso = await msg.reply(`💡 Processando ${isSticker ? 'seu sticker' : 'sua mídia'}, aguarde.`, null, { linkPreview: false });
@@ -211,14 +213,14 @@ async function converterEEnviar({ msg, opts, senderName, url, media }) {
                 fs.writeSync(logCmd, `# Executando: ${cmdYt}\n`);
                 await runCommand(BIN_YT, cmdYtArgs, logCmd);
             } catch (inner) {
-                const erro = new Error(`Problemas para baixar com '${BIN_YT}'`, { cause: inner });
+                const erro = erroAoBaixar(`Problemas para baixar com '${BIN_YT}'`, { cause: inner });
                 erro.cmd = cmdYt;
                 throw erro;
             }
 
             // Acima do --max-filesize o yt-dlp aborta sem erro e sem gerar o arquivo
             if (!fs.existsSync(originalFile)) {
-                throw new Error(`Nada foi baixado (acima de ${getSetting('get.maxDownloadMB')} MB? veja o setting get.maxDownloadMB)`);
+                throw erroAoBaixar(`Nada foi baixado (acima de ${getSetting('get.maxDownloadMB')} MB? veja o setting get.maxDownloadMB)`);
             }
         }
 
@@ -269,6 +271,7 @@ async function converterEEnviar({ msg, opts, senderName, url, media }) {
         // O WhatsApp só edita texto: a mídia vai à parte e o aviso vira a confirmação
         await concluirAviso(msg, aviso, `✅ ${isSticker ? 'Sticker criado' : 'Mídia baixada'} com sucesso!`, { linkPreview: false });
     } catch (e) {
+        if (e.aoBaixar && previa && (await stickerDaPrevia(msg, previa, aviso, e))) return;
         printError(e.message);
         await concluirAviso(msg, aviso, formatarErroComando(e), { linkPreview: false });
     } finally {
@@ -280,6 +283,31 @@ async function converterEEnviar({ msg, opts, senderName, url, media }) {
             if (!tmp) continue;
             try { fs.unlinkSync(tmp); } catch { /* arquivo pode não existir */ }
         }
+    }
+}
+
+// Falha antes de ter o vídeo: a figurinha de um link ainda pode sair da prévia
+function erroAoBaixar(mensagem, opcoes) {
+    return Object.assign(new Error(mensagem, opcoes), { aoBaixar: true });
+}
+
+/*
+ * O vídeo do link não veio: a figurinha sai da prévia que o WhatsApp mostra
+ * para o link (como o /sticker fazia antes de baixar o vídeo).
+ * @returns {Promise<boolean>} true = a figurinha foi enviada
+ */
+async function stickerDaPrevia(msg, citada, aviso, motivo) {
+    try {
+        const thumb = await thumbnailDoLink(citada);
+        if (!thumb) return false;
+
+        printInfo(`/sticker: sem o vídeo do link (${motivo.message}); usando a prévia`);
+        await msg.reply(await enquadrarSticker(thumb), null, { ...MSG_STICKER, ...stickerMeta() });
+        if (aviso) await concluirAviso(msg, aviso, '✅ Sticker criado com sucesso!', { linkPreview: false });
+        return true;
+    } catch (err) {
+        printError('/sticker: falha ao usar a prévia do link:', err.message);
+        return false;
     }
 }
 
