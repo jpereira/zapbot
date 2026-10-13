@@ -76,10 +76,15 @@ async function restart() {
     createGroup(GROUP, 'Família', [OWNER.jid, OTHERAlt.jid]);
 }
 
-// A contact saved in your address book (isMyContact), with its name
+// A contact saved in your address book (isMyContact), with its name; block()/unblock() change isBlocked
 function createContact(jid, nameAlt) {
     const [user] = jid.split('@');
-    const contactAlt = { id: { _serialized: jid, user }, number: user, name: nameAlt, pushname: nameAlt, isMyContact: true, isGroup: false };
+    const contactAlt = {
+        id: { _serialized: jid, user }, number: user, name: nameAlt, pushname: nameAlt, isMyContact: true, isGroup: false,
+        isBlocked: false,
+        async block() { this.isBlocked = true; return true; },
+        async unblock() { this.isBlocked = false; return true; }
+    };
     client.contatos.set(jid, contactAlt);
     return contactAlt;
 }

@@ -112,14 +112,21 @@ class ClientFake extends EventEmitter {
         return [...this.contatos.values()];
     }
 
+    async getBlockedContacts() {
+        return [...this.contatos.values()].filter(c => c.isBlocked);
+    }
+
     // As in whatsapp-web.js: the number's id on WhatsApp, or null if it has no account
     async getNumberId(numberAlt) {
         const jid = `${numberAlt}@c.us`;
         return this.contatos.has(jid) ? { user: numberAlt, server: 'c.us', _serialized: jid } : null;
     }
 
-    async getContactLidAndPhone(lids) {
-        return lids.map(lid => ({ lid, pn: this.lids.get(lid) ?? null }));
+    // As in whatsapp-web.js: the @lid/phone pair of each id (a @lid or a phone)
+    async getContactLidAndPhone(ids) {
+        return ids.map(id => (id.endsWith('@lid')
+            ? { lid: id, pn: this.lids.get(id) ?? null }
+            : { lid: [...this.lids].find(([, pn]) => pn === id)?.[0] ?? null, pn: id }));
     }
 }
 
