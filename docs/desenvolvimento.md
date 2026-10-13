@@ -91,6 +91,7 @@ src/
   aliases.js            resolução, listagem e execução (as de texto) dos atalhos persistidos no banco
   agenda.js             /cron (e /lembrete): leitura, lista e envio na hora
   comandosNoTexto.js    os {/comando} e o \n no texto (o /cron e o /alias): conferidos ao criar e rodados no envio
+  midia.js              /get e /sticker: os argumentos do ffmpeg, o recorte da figurinha (sharp) e a prévia do link
   stickerTexto.js       /sticker -txt: os quadros em PNG (sharp) e o WebP animado (ffmpeg)
   openai.js             modelos aceitos pelo /gpt
   openaiChat.js         chamada ao chat da OpenAI (/gpt e /tldr)
@@ -183,7 +184,7 @@ entre os casos.
 | `defi.test.js` | Solana (base58, PDA), contas da Orca (conferidas com o SDK oficial), o Project X (HyperEVM simulada), a Liquidswap (Aptos simulada: indexador e fullnode, com o preço das pools estáveis e a chave da API), o Morpho (API simulada, com as contas conferidas com as da API), o Aave V3 (blockchain simulada, com o Multicall3 de verdade) e o `/defi`: o filtro por protocolo, o `-rm` de vários, os endereços (inteiros só no privado), a lista (com o 🔔 e o limite), o resumo do `-taxas` (com o total e o `-alerta`) e o `-alerta` (saída e volta da faixa, o `-taxas`, o `-alerta` no cadastro e vários `-to`) |
 | `dependencias.test.js` | Carregamento das dependências sem aviso do módulo `punycode` |
 | `externos.test.js` | `/cve`, `/tempo`, `/news`, `/gpt`, `/tldr`, `/traduzir`, `/giphy`, `/meme`, `/joke`, `/kernel`, `/pixelart` |
-| `get-cache.test.js` | `/get` (e o anti-SSRF), `/cache` e a limpeza periódica |
+| `get-cache.test.js` | `/get` (a URL, o link e a mídia respondida, e o anti-SSRF), `/cache` e a limpeza periódica |
 | `grupo.test.js` | `/todos`, `/boletos`, `/listageral`, `/walissu`, `/enquete` (e o `-r`), `/sticker` (e o `-txt`) |
 | `heartbeat.test.js` | Heartbeat e o `docker/app/healthcheck.js` (executado de verdade) |
 | `mascara-telefones.test.js` | Ofuscação de telefones no `/show`, `/watch` e `/bot` |

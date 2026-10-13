@@ -3,10 +3,9 @@
  */
 
 const { MessageMedia } = require('whatsapp-web.js');
-const { getCommandSyntax } = require('./base');
+const { baixarMidia } = require('./get');
 
 const { printError } = require('../log');
-const { enquadrarSticker, thumbnailDoLink } = require('../midia');
 const { stickerMeta } = require('../settings');
 const { MAX_CARACTERES, lerCor, stickerDeTexto } = require('../stickerTexto');
 
@@ -57,7 +56,12 @@ async function stickerComTexto(msg, { texto, bg: bgDigitado, fg: fgDigitado }) {
     }
 }
 
-async function cmdSticker({ msg, quotedMsg, args }) {
+/*
+ * /sticker é o /get -sticker: a URL, o link respondido ou a mídia respondida
+ * (com -ss, -es e -v). Só o -txt é dele.
+ */
+async function cmdSticker(ctx) {
+    const { msg, args, opts } = ctx;
     const t = lerTexto(args);
     if (t.semTxt) {
         await msg.reply('❌ O -bg e o -fg são do -txt: /sticker -txt "Bom dia!" -bg "#FFFFFF" -fg "#000000"');
@@ -68,33 +72,7 @@ async function cmdSticker({ msg, quotedMsg, args }) {
         return;
     }
 
-    if (!quotedMsg) {
-        await msg.reply('```' + getCommandSyntax('/sticker') + '```');
-        return;
-    }
-
-    // 1. Mídia real do WhatsApp
-    if (quotedMsg.hasMedia) {
-        const media = await enquadrarSticker(await quotedMsg.downloadMedia());
-        await msg.reply(media, null, { sendMediaAsSticker: true, ...stickerMeta() });
-        return;
-    }
-
-    // 2. Link com thumbnail / preview
-    if (!quotedMsg.links?.length) {
-        await msg.reply('A mensagem respondida não tem mídia nem link.');
-        return;
-    }
-
-    const link = quotedMsg.links[0].link;
-    const media = await thumbnailDoLink(quotedMsg);
-
-    if (!media) {
-        await msg.reply(`Não encontrei thumbnail baixável para:\n${link}`);
-        return;
-    }
-
-    await msg.reply(await enquadrarSticker(media), null, { sendMediaAsSticker: true, ...stickerMeta() });
+    await baixarMidia({ ...ctx, opts: { ...opts, opt: { ...opts.opt, sticker: true } } }, { cmd: '/sticker' });
 }
 
 module.exports = {
