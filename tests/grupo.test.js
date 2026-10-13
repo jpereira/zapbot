@@ -262,7 +262,24 @@ describe('/sticker (/st)', () => {
         assert.match(ffmpeg.bin, /ffmpeg$/);
         assert.equal(ffmpeg.args[ffmpeg.args.indexOf('-ss') + 1], '4');
         assert.equal(ffmpeg.args[ffmpeg.args.indexOf('-t') + 1], '3');
-        assert.match(ffmpeg.args[ffmpeg.args.indexOf('-vf') + 1], /crop=512:512/);
+        assert.match(ffmpeg.args[ffmpeg.args.indexOf('-vf') + 1], /^fps=15,.*crop=512:512/);
+
+        // Já sai em webp: o whatsapp-web.js não converte de novo (sem limite de tamanho)
+        assert.equal(ffmpeg.args[ffmpeg.args.indexOf('-c:v') + 1], 'libwebp');
+        assert.match(ffmpeg.args.at(-1), /_output\.webp$/);
+        assert.equal(sticker.content.mimetype, 'image/webp');
+    });
+
+    test('vídeo: reduz qualidade e fps até a figurinha caber em 500 KB', async () => {
+        const video = bot.criarMensagem({ de: OUTRO.jid, midia: { mimetype: 'video/mp4', data: 'AA==' } });
+        bot.processos.tamanhoSaida = 500 * 1024 + 1;
+        const r = await bot.executar('/st', { citada: video, erroEsperado: true });
+
+        const ffmpegs = bot.processos.chamadas.map(c => c.args);
+        assert.deepEqual(ffmpegs.map(a => a[a.indexOf('-q:v') + 1]), ['75', '50', '30', '20']);
+        assert.match(ffmpegs.at(-1)[ffmpegs.at(-1).indexOf('-vf') + 1], /^fps=8,/);
+        assert.equal(r.length, 1, 'só o aviso, editado com o erro');
+        assert.match(r[0].texto, /Figurinha grande demais para o WhatsApp \(máx\. 500 KB\)/);
     });
 
     test('URL ou link respondido: baixa o vídeo, como o /get -st', async () => {
