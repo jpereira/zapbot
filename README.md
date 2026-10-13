@@ -24,7 +24,7 @@ comandos começam com `/`.
 
 **Principais funções:**
 
-- Recupera mensagens e status apagados ou editados: [`/show`](docs/comandos/show.md)
+- Recupera mensagens e status apagados ou editados, e reações removidas: [`/show`](docs/comandos/show.md)
 - Baixa vídeos com yt-dlp e ffmpeg: [`/get`](docs/comandos/get.md)
 - Cria figurinhas: [`/sticker`](docs/comandos/sticker.md)
 - Vigia mensagens por texto ou regex: [`/watch`](docs/comandos/watch.md)
@@ -157,13 +157,13 @@ de um. Os marcados como **Admin** só respondem à sua conta (e aos admins extra
 | [`/listageral`](https://jpereira.github.io/zapbot/comandos/listageral/) | `/list` | ✅ | Lista os membros do grupo |
 | [`/meme`](https://jpereira.github.io/zapbot/comandos/meme/) | | | Template de meme aleatório (imgflip) |
 | [`/monitor`](https://jpereira.github.io/zapbot/comandos/monitor/) 🚧 | | ✅ | Avisa quando números ficam online *(em desenvolvimento, desabilitado por padrão)* |
-| [`/mute`](https://jpereira.github.io/zapbot/comandos/mute/) | `/m`, `/mudo` | ✅ | Silencia os avisos de apagadas, editadas e status (e os do `/watch`) de uma pessoa, um grupo ou uma comunidade; respondendo um aviso, de onde ele veio |
+| [`/mute`](https://jpereira.github.io/zapbot/comandos/mute/) | `/m`, `/mudo` | ✅ | Silencia os avisos de apagadas, editadas, status e reações (e os do `/watch`) de uma pessoa, um grupo ou uma comunidade; respondendo um aviso, de onde ele veio |
 | [`/news`](https://jpereira.github.io/zapbot/comandos/news/) | | | Manchetes de feeds RSS: `-hack`, `-g1`, `-gazeta`, `-brasil` |
 | [`/noffa`](https://jpereira.github.io/zapbot/comandos/noffa/) | `/🌈`, `/🏳️‍🌈` | | Enfeita o texto com arco-íris |
 | [`/ping`](https://jpereira.github.io/zapbot/comandos/ping/) | `/p` | | Verifica se o bot está vivo |
 | [`/pixelart`](https://jpereira.github.io/zapbot/comandos/pixelart/) | `/ansi`, `/px` | | Arte ANSI/ASCII aleatória (16colo.rs) |
 | [`/set`](https://jpereira.github.io/zapbot/comandos/set/) | `/config` | ✅ | Lista e altera as configurações (settings); `-a`/`-rem` acrescentam e tiram itens das listas (ex.: o `bot.admins` e o `bot.users`) |
-| [`/show`](https://jpereira.github.io/zapbot/comandos/show/) | `/s` | ✅ | No privado, lista o cache; reexibe apagadas, edições (`-e`) e status (`-s`); `-q` busca (texto ou regex) e `-mask` ofusca telefones |
+| [`/show`](https://jpereira.github.io/zapbot/comandos/show/) | `/s` | ✅ | No privado, lista o cache; reexibe apagadas, edições (`-e`), status (`-s`) e reações removidas ou trocadas (`-r`); `-q` busca (texto ou regex) e `-mask` ofusca telefones |
 | [`/stats`](https://jpereira.github.io/zapbot/comandos/stats/) | | ✅ | Ranking deste chat ou de outro (`/Grupo/`): quem mais fala, apaga e edita, horários de pico; `-me` para as suas, `-l` lista os chats, `-flush` apaga |
 | [`/sticker`](https://jpereira.github.io/zapbot/comandos/sticker/) | `/st` | | Figurinha de imagem, vídeo ou link (o `/get -st`); com `-txt`, uma figurinha animada de texto |
 | [`/tempo`](https://jpereira.github.io/zapbot/comandos/tempo/) | `/t`, `/weather` | | Tempo agora e máx./mín. do dia (Open-Meteo); `/tempo 16d` mostra até 16 dias, contando hoje; sem cidade usa `tempo.city` |

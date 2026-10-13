@@ -1074,7 +1074,7 @@
                 "/m",
                 "/mudo"
             ],
-            "help": "Silencia os avisos de apagadas, editadas e/ou status apagados de uma pessoa, de um grupo ou de uma comunidade. Só o alvo, sem opção, silencia tudo (o -a). Respondendo um aviso, silencia de onde ele veio: a pessoa (privado e status), o grupo ou a comunidade. As mensagens continuam guardadas para o /show. O /watch também não avisa no seu privado de quem está silenciado, em qualquer tipo (os -to continuam recebendo). Sem nada, lista os silenciados.",
+            "help": "Silencia os avisos de apagadas, editadas, status apagados e/ou reações removidas ou trocadas de uma pessoa, de um grupo ou de uma comunidade. Só o alvo, sem opção, silencia tudo (o -a). Respondendo um aviso, silencia de onde ele veio: a pessoa (privado e status), o grupo ou a comunidade. As mensagens continuam guardadas para o /show. O /watch também não avisa no seu privado de quem está silenciado, em qualquer tipo (os -to continuam recebendo). Sem nada, lista os silenciados.",
             "cmd_opts": [
                 {
                     "opts": [
@@ -1082,7 +1082,7 @@
                         "a"
                     ],
                     "values": [],
-                    "desc": "Silencia tudo: apagadas, editadas e status. É o padrão: só o alvo, sem opção, faz o mesmo."
+                    "desc": "Silencia tudo: apagadas, editadas, status e reações. É o padrão: só o alvo, sem opção, faz o mesmo."
                 },
                 {
                     "opts": [
@@ -1110,6 +1110,14 @@
                 },
                 {
                     "opts": [
+                        "reaction",
+                        "r"
+                    ],
+                    "values": [],
+                    "desc": "Silencia os avisos de reações removidas ou trocadas."
+                },
+                {
+                    "opts": [
                         "rm"
                     ],
                     "values": [
@@ -1129,7 +1137,7 @@
                     "argv": [
                         "[/contato ou grupo/|@menção|+número]"
                     ],
-                    "desc": "Contato ou grupo pelo nome ou parte dele, com prioridade para nomes exatos (vários: você escolhe na lista), alguém mencionado com @ ou um número. Respondendo um aviso, silencia a origem: grupo primeiro; sem grupo, número ou nome da pessoa. Ex: /mute /Grupo L200/, /mute /Jorge Pereira/, /m @Fulano, /mute -s +5521999999999"
+                    "desc": "Contato ou grupo pelo nome ou parte dele, com prioridade para nomes exatos (vários: você escolhe na lista), alguém mencionado com @ ou um número. Respondendo um aviso, silencia a origem: grupo primeiro; sem grupo, número ou nome da pessoa. Ex: /mute /Grupo L200/, /mute /Jorge Pereira/, /m @Fulano, /mute -s +5521999999999, /mute -r /Grupo L200/"
                 }
             ],
             "onlyAdmin": true
@@ -1300,7 +1308,7 @@
             "aliases": [
                 "/s"
             ],
-            "help": "Sem parâmetros no privado, lista o cache de todos os chats, como /show -l. Em grupos, reexibe a última mensagem apagada do grupo. Reexibe as mensagens apagadas, editadas e os status apagados que estão no cache: deste chat ou de outro (pelo nº do -l, nome, @menção ou /regex/). Publicações de canais (@newsletter) são identificadas com 📰 Canal e o nome, sem nome ou telefone de contato.",
+            "help": "Sem parâmetros no privado, lista o cache de todos os chats, como /show -l. Em grupos, reexibe a última mensagem apagada do grupo. Reexibe as mensagens apagadas, editadas, os status apagados e as reações removidas ou trocadas que estão no cache: deste chat ou de outro (pelo nº do -l, nome, @menção ou /regex/). Publicações de canais (@newsletter) são identificadas com 📰 Canal e o nome, sem nome ou telefone de contato.",
             "cmd_opts": [
                 {
                     "opts": [
@@ -1328,6 +1336,14 @@
                 },
                 {
                     "opts": [
+                        "reaction",
+                        "r"
+                    ],
+                    "values": [],
+                    "desc": "Reações removidas ou trocadas, com a reação de antes (e a nova, se trocou) e o texto da mensagem reagida."
+                },
+                {
+                    "opts": [
                         "list",
                         "l"
                     ],
@@ -1340,7 +1356,7 @@
                         "f"
                     ],
                     "values": [],
-                    "desc": "Remove do cache as apagadas deste chat ou, com -e/-s/chat, o que foi pedido (no seu privado, sem chat: de todos)."
+                    "desc": "Remove do cache as apagadas deste chat ou, com -e/-s/-r/chat, o que foi pedido (no seu privado, sem chat: de todos)."
                 },
                 {
                     "opts": [
@@ -1362,7 +1378,7 @@
                     "argv": [
                         "chat"
                     ],
-                    "desc": "Outro chat: o nº da lista do -l, parte do nome, @menção ou /regex/ (sem diferenciar maiúsculas nem acentos). Sem -d, -e e -s, vêm apagadas, editadas e status juntos, por data. Ex: /show -3 /^Camila/"
+                    "desc": "Outro chat: o nº da lista do -l, parte do nome, @menção ou /regex/ (sem diferenciar maiúsculas nem acentos). Sem -d, -e, -s e -r, vêm apagadas, editadas, status e reações juntos, por data. Ex: /show -3 /^Camila/"
                 },
                 {
                     "opts": [
@@ -1609,7 +1625,7 @@
         {
             "cmd": "/unmute",
             "usage": "/unmute [/contato ou grupo/|@menção|+número|nº]  ou  /unmute -all",
-            "help": "Desfaz o silêncio do /mute: os avisos de apagadas, editadas e status da pessoa, do grupo ou da comunidade voltam. Respondendo um aviso, desfaz o silêncio de onde ele veio. Sem nada, lista os silenciados.",
+            "help": "Desfaz o silêncio do /mute: os avisos de apagadas, editadas, status e reações da pessoa, do grupo ou da comunidade voltam. Respondendo um aviso, desfaz o silêncio de onde ele veio. Sem nada, lista os silenciados.",
             "cmd_opts": [
                 {
                     "opts": [

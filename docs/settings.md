@@ -17,6 +17,7 @@ e sobrevivem a reinícios. Para ver e alterar, use o [`/set`](comandos/set.md).
 | `bot.users` | lista | `false` | Quem usa os comandos comuns (os não-admin), além de você e do `bot.admins`: `false` (ninguém), `true` (todos) ou pessoas e grupos (num grupo, todos ali usam, mas só dentro dele); uma pessoa só num grupo fica como `telefone:id-do-grupo`. Só o dono altera; o `/bot +v`/`-v` é o atalho. Veja [Usuários](comandos/bot.md#usuários) |
 | `bot.users.cmds` | lista | *(vazia)* | Os comandos de cada usuário (o `/bot +cmd`/`-cmd`): `item=/a,/b` (só esses) ou `item=!/a,/b` (todos os comuns, menos esses), com o item do `bot.users`. Sem linha: todos os comuns. Veja [Comandos de cada usuário](comandos/bot.md#comandos-de-cada-usuário) |
 | `cache.editedRetentionDays` | 1–365 | `30` | Dias que as mensagens editadas ficam guardadas para o `/show -e` |
+| `cache.reactionRetentionDays` | 1–365 | `30` | Dias que as reações removidas ou trocadas ficam guardadas para o `/show -r` |
 | `cache.revokedRetentionDays` | 1–365 | `30` | Dias que as mensagens apagadas ficam guardadas para o `/show` |
 | `commands.disabled` | lista | *(vazia)* | Comandos desativados em tempo de execução: o bot os ignora e eles somem do `/help`. O `/set` não pode ser desativado. Nomes desconhecidos são ignorados com aviso no log; aliases válidos são normalizados |
 | `cotacao.coins` | lista | `EUR, USDT` | Moedas habilitadas no `/cotacao` (`USD`, `EUR`, `GBP`, `USDT`); normalmente alterada pelo `/cotacao -a`/`-d` |
@@ -61,6 +62,7 @@ e sobrevivem a reinícios. Para ver e alterar, use o [`/set`](comandos/set.md).
 | `pixelart.packs` | lista | `chuck-norris-lvl` | Packs do 16colo.rs sorteados pelo [`/pixelart`](comandos/pixelart.md) sem argumentos |
 | `show.alert.deleted` | on/off | `on` | Avisa no seu privado quando alguém apaga uma mensagem; `off` só guarda para o `/show` |
 | `show.alert.edited` | on/off | `on` | Avisa no seu privado quando alguém edita uma mensagem; `off` só guarda para o `/show -e` |
+| `show.alert.reaction` | on/off | `on` | Avisa no seu privado quando alguém remove ou troca uma reação; `off` só guarda para o `/show -r` |
 | `show.alert.status` | on/off | `on` | Recupera status apagados; `off` ignora (nem alerta, nem `/show`) |
 | `show.delayMs` | 0–10000 | `700` | Intervalo entre os envios do `/show` |
 | `show.max` | 1–100 | `20` | Máximo de mensagens por `/show -N` |

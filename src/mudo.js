@@ -1,5 +1,5 @@
 /*
- * /mute: pessoas e grupos cujos avisos de apagadas, editadas e status apagados ficam em silêncio.
+ * /mute: pessoas e grupos cujos avisos de apagadas, editadas, status apagados e reações ficam em silêncio.
  */
 
 const { dbAll, dbGet, dbPronto, dbRun } = require('./db');
@@ -7,7 +7,8 @@ const { printInfo } = require('./log');
 
 /*
  * Cada silenciado (tabela `mutes`) é uma pessoa ou um grupo, com o que fica
- * em silêncio: apagadas, editadas e/ou status apagados. Só o AVISO no seu
+ * em silêncio: apagadas, editadas, status apagados e/ou reações removidas
+ * ou trocadas. Só o AVISO no seu
  * privado é cortado: a mensagem continua guardada, e o /show a mostra.
  * Num grupo, vale para todos dali; numa pessoa, para o que ela mandar em
  * qualquer chat (e para os status dela).
@@ -20,7 +21,8 @@ const { printInfo } = require('./log');
 const TIPOS = {
     apagada: { coluna: 'deleted', rotulo: 'apagadas' },
     editada: { coluna: 'edited', rotulo: 'editadas' },
-    status: { coluna: 'status', rotulo: 'status' }
+    status: { coluna: 'status', rotulo: 'status' },
+    reacao: { coluna: 'reaction', rotulo: 'reações' }
 };
 
 // O número de um jid de pessoa (5521...@c.us → 5521...); @lid e grupos ficam inteiros
@@ -29,7 +31,7 @@ const chaveDoId = (id) => (String(id ?? '').endsWith('@c.us') ? String(id).split
 /**
  * O aviso deste tipo, vindo deste chat/remetente, está silenciado?
  * O 'watch' vale para qualquer silenciado, seja do tipo que for.
- * @param {'apagada'|'editada'|'status'|'watch'} tipo
+ * @param {'apagada'|'editada'|'status'|'reacao'|'watch'} tipo
  * @param {object} o
  * @param {string} o.chatId
  * @param {Array<string|null>} o.remetentes  jids e/ou números de quem mandou

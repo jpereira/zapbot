@@ -15,10 +15,11 @@ const { plural } = require('../util/formatar');
  *   -d (-deleted)  silencia os avisos de mensagens apagadas
  *   -e (-edited)   silencia os avisos de edições
  *   -s (-status)   silencia os avisos de status apagados
+ *   -r (-reaction) silencia os avisos de reações removidas ou trocadas
  *   -a (-all)      tudo isso
  * As opções se combinam (-d -e); só o alvo, sem opção, é o -a. O alvo é buscado
  * como no -to, com prioridade para nomes exatos (vários: você escolhe na
- * lista), ou um número. Respondendo um aviso (apagada, editada, status), o alvo
+ * lista), ou um número. Respondendo um aviso (apagada, editada, status, reação), o alvo
  * é de onde ele veio: a pessoa (privado e status), o grupo ou a comunidade.
  * Silenciar de novo o mesmo alvo soma ao que já estava. Sem nada, lista;
  * -rm <nº|all> desfaz (o mesmo do /unmute).
@@ -30,9 +31,10 @@ const OPCOES = {
     d: 'deleted', deleted: 'deleted',
     e: 'edited', edited: 'edited',
     s: 'status', status: 'status',
+    r: 'reaction', reaction: 'reaction',
     a: 'all', all: 'all'
 };
-const COLUNAS = ['deleted', 'edited', 'status'];
+const COLUNAS = ['deleted', 'edited', 'status', 'reaction'];
 const ROTULO = Object.fromEntries(Object.values(TIPOS).map(t => [t.coluna, t.rotulo]));
 const EXEMPLOS = '/Jorge Pereira/, /Grupo L200/ ou +5521999999999';
 
@@ -121,7 +123,7 @@ async function alvoDaResposta(msg, quotedMsg) {
     if (quotedMsg.fromMe) {
         // Só o cabeçalho: o texto citado pode ter seu próprio "Grupo:" lá embaixo.
         const cabecalho = String(quotedMsg.body ?? '').split(
-            /\n(?:📅|✏️|📝|💬|❌|🗑️)/
+            /\n(?:📅|✏️|📝|💬|❌|🗑️|😶)/
         )[0];
         const nomeGrupo = cabecalho.match(/^👥\s+\*?Grupo:\*?\s*(.+)$/m)?.[1]?.trim();
         if (nomeGrupo) {
@@ -139,7 +141,7 @@ async function alvoDaResposta(msg, quotedMsg) {
         const telefone = autor?.endsWith('@lid') ? await resolveLidToPhone(autor) : autor;
         if (telefone) return pessoa(telefone.split('@')[0]);
     }
-    return { erro: `❌ Não sei de quem é essa mensagem: responda um aviso (apagada, editada, status) ou informe quem: ${EXEMPLOS}.` };
+    return { erro: `❌ Não sei de quem é essa mensagem: responda um aviso (apagada, editada, status, reação) ou informe quem: ${EXEMPLOS}.` };
 }
 
 /**
@@ -244,13 +246,14 @@ async function cmdMute({ msg, args, quotedMsg }) {
 
     await dbRun(
         `INSERT INTO mutes
-            (target_id, target_name, is_group, is_community, deleted, edited, status, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            (target_id, target_name, is_group, is_community, deleted, edited, status, reaction, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT(target_id) DO UPDATE SET
             target_name = excluded.target_name, is_community = excluded.is_community,
-            deleted = excluded.deleted, edited = excluded.edited, status = excluded.status`,
+            deleted = excluded.deleted, edited = excluded.edited, status = excluded.status,
+            reaction = excluded.reaction`,
         [destino.id, destino.nome, destino.grupo ? 1 : 0, destino.comunidade ? 1 : 0,
-            flags.deleted, flags.edited, flags.status, Date.now()]
+            flags.deleted, flags.edited, flags.status, flags.reaction, Date.now()]
     );
 
     await msg.reply(`🔇 *${antes ? 'Atualizado' : 'Silenciado'}:* ${descreverAlvo(destino)} — ${descrever(flags)}\n` +

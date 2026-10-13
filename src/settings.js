@@ -169,6 +169,11 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 1, max: 365,
         desc: 'Dias que as mensagens editadas ficam guardadas para o /show -e.'
     },
+    'cache.reactionRetentionDays': {
+        default: 30,
+        type: 'number', min: 1, max: 365,
+        desc: 'Dias que as reações removidas ou trocadas ficam guardadas para o /show -r.'
+    },
     'cache.revokedRetentionDays': {
         default: 30,
         type: 'number', min: 1, max: 365,
@@ -480,6 +485,11 @@ const SETTINGS_SCHEMA = {
         default: true,
         type: 'boolean',
         desc: 'Avisa no seu privado quando alguém edita uma mensagem; off só guarda para o /show -e.'
+    },
+    'show.alert.reaction': {
+        default: true,
+        type: 'boolean',
+        desc: 'Avisa no seu privado quando alguém remove ou troca uma reação; off só guarda para o /show -r.'
     },
     'show.alert.status': {
         default: true,

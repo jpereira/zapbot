@@ -26,7 +26,7 @@ comandos começam com `/`.
 
 **Principais funções:**
 
-- Recupera mensagens e status apagados ou editados: [`/show`](comandos/show.md)
+- Recupera mensagens e status apagados ou editados, e reações removidas: [`/show`](comandos/show.md)
 - Baixa vídeos com yt-dlp e ffmpeg: [`/get`](comandos/get.md)
 - Cria figurinhas: [`/sticker`](comandos/sticker.md)
 - Vigia mensagens por texto ou regex: [`/watch`](comandos/watch.md)
@@ -88,13 +88,18 @@ Por onde começar:
   (desative o aviso com `/set show.alert.edited off`; a edição continua guardada). As edições ficam
   30 dias (setting `cache.editedRetentionDays`) e podem ser reexibidas com
   [`/show -e`](comandos/show.md). As suas próprias edições são ignoradas.
-- **Silenciar**: o [`/mute`](comandos/mute.md) corta os avisos de apagadas, editadas e status de uma
+- **Reações**: quando alguém remove uma reação (ou troca por outra), o bot te avisa **no seu
+  privado** com o título `😶 REAÇÃO REMOVIDA DETECTADA` (ou `🔄 REAÇÃO TROCADA DETECTADA`), com a
+  reação de antes e o texto da mensagem reagida (desative o aviso com
+  `/set show.alert.reaction off`; a reação continua guardada). Elas ficam 30 dias (setting
+  `cache.reactionRetentionDays`) e podem ser reexibidas com [`/show -r`](comandos/show.md#reações).
+- **Silenciar**: o [`/mute`](comandos/mute.md) corta os avisos de apagadas, editadas, status e reações de uma
   pessoa, de um grupo ou de uma comunidade (a mensagem continua guardada); respondendo um aviso,
   silencia de onde ele veio. Quem está silenciado também não gera aviso do `/watch` no seu privado.
   O [`/unmute`](comandos/unmute.md) desfaz.
 - **Limpeza automática**: a cada 10 minutos o bot remove do banco/disco as mensagens comuns com mais
-  de 68 h (janela máxima que o WhatsApp permite apagar), as apagadas e as editadas com mais de 30
-  dias, as ocorrências do `/watch` com mais de 30 dias (setting `watch.hitsRetentionDays`), os
+  de 68 h (janela máxima que o WhatsApp permite apagar), as apagadas, as editadas e as reações com
+  mais de 30 dias, as ocorrências do `/watch` com mais de 30 dias (setting `watch.hitsRetentionDays`), os
   contadores do `/stats` com mais de 90 dias (setting `stats.retentionDays`), as enquetes com mais
   de 90 dias (setting `enquete.retentionDays`) e os avisos ignorados pelo `/mute` com mais de 30
   dias.
