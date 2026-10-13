@@ -73,7 +73,7 @@ function argsDoFfmpeg(opts, originalFile, outputFile) {
 /*
  * Sticker from an image: 512x512 square crop framed in the MIDDLE
  * of the image (without this WhatsApp Web converts without centering). WebP is already
- * sticker and goes as it is; videos keep the whatsapp-web.js conversion.
+ * sticker and goes as it is; videos go through ffmpeg (argsDoFfmpeg).
  */
 const STICKER_SIZE = 512;
 const STICKER_MAX_BYTES = 100 * 1024;          // WhatsApp limit: static sticker
