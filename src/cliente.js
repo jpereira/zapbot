@@ -126,6 +126,25 @@ client.sendMessage = (chatId, content, options = {}) => {
     return sendMessageOriginal(chatId, content, options);
 };
 
+/**
+ * Troca o texto de um aviso do bot (o "Processando…", a pergunta de uma escolha)
+ * pela conclusão, sem mandar outra mensagem. Sem aviso, ou se o WhatsApp não
+ * deixar editar, responde a `msg` à parte. A edição do bot é sua (fromMe): o
+ * 'message_edit' não a guarda como editada.
+ * @returns {Promise<object|null>} a mensagem com a conclusão
+ */
+async function concluirAviso(msg, aviso, texto, options = {}) {
+    if (contextoDebug().maskTelefones) texto = mascararTelefones(texto);
+    if (aviso) {
+        try {
+            if (await aviso.edit(texto, options)) return aviso;
+        } catch (e) {
+            printError(`Não consegui editar o aviso: ${e.message}`);
+        }
+    }
+    return msg.reply(texto, null, options);
+}
+
 // Marcas que nunca viraram 'message_create' (envio falhou) expiram aqui
 function limparMarcasExpiradas() {
     const agora = Date.now();
@@ -150,6 +169,7 @@ function iniciarLimpezaDasMarcas() {
 
 module.exports = {
     client,
+    concluirAviso,
     consumirEnvioDoBot,
     foiEnviadaPeloBot,
     iniciarLimpezaDasMarcas,
