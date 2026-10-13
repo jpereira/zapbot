@@ -293,7 +293,7 @@ describe('/show <chat>', () => {
 
     test('chat inexistente, sem correspondência, regex inválida ou ambíguo', async () => {
         assert.deepEqual(await bot.responder('/show xyz'),
-            ['🗄️ Nada no cache: nenhuma mensagem apagada, editada ou status apagado.']);
+            ['🗄️ Nada no cache: nenhuma mensagem apagada, editada, status apagado ou reação removida.']);
 
         await mensagemApagada('a');
         await mensagemApagada('b', { chat: TRABALHO });

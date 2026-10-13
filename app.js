@@ -87,6 +87,7 @@ const { iniciarBot, iniciarWatchdog } = require('./src/conexao');
 require('./src/eventos/presenca');
 require('./src/eventos/apagadas');
 require('./src/eventos/editadas');
+require('./src/eventos/reacoes');
 require('./src/eventos/mensagens');
 require('./src/enquetes');
 

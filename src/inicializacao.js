@@ -15,12 +15,15 @@ const { carregarSettings } = require('./settings');
  */
 async function adicionarColunas(tabela, colunas) {
     const existentes = new Set((await dbAll(`PRAGMA table_info(${tabela})`)).map(c => c.name));
+    const criadas = [];
 
     for (const [coluna, tipo] of Object.entries(colunas)) {
         if (existentes.has(coluna)) continue;
         await dbRun(`ALTER TABLE ${tabela} ADD COLUMN ${coluna} ${tipo}`);
         printInfo(`Coluna ${tabela}.${coluna} criada`);
+        criadas.push(coluna);
     }
+    return criadas;
 }
 
 /*
@@ -176,6 +179,45 @@ async function inicializarBanco() {
     await dbRun('CREATE INDEX IF NOT EXISTS idx_message_edits_chat ON message_edits (chat_id, edited_at)');
 
     /*
+     * Reações (para o /show -r). O WhatsApp só avisa a reação NOVA (vazia =
+     * removida): a reactions guarda a atual de cada pessoa em cada mensagem,
+     * para saber qual foi removida ou trocada. Cada uma removida ou trocada
+     * vira uma linha da reaction_changes (old_reaction → new_reaction, vazia =
+     * removida), com o texto da mensagem reagida (body) de quando aconteceu.
+     */
+    await dbRun(`
+        CREATE TABLE IF NOT EXISTS reactions (
+            message_id TEXT NOT NULL,
+            sender_jid TEXT NOT NULL,
+            chat_id TEXT,
+            reaction TEXT NOT NULL,
+            reacted_at INTEGER NOT NULL,
+            PRIMARY KEY (message_id, sender_jid)
+        )
+    `);
+    await dbRun('CREATE INDEX IF NOT EXISTS idx_reactions_reacted ON reactions (reacted_at)');
+    await dbRun(`
+        CREATE TABLE IF NOT EXISTS reaction_changes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            message_id TEXT NOT NULL,
+            chat_id TEXT,
+            chat_name TEXT,
+            is_group INTEGER DEFAULT 0,
+            sender_name TEXT,
+            sender_number TEXT,
+            sender_jid TEXT,
+            old_reaction TEXT,
+            new_reaction TEXT,
+            body TEXT,
+            msg_from_me INTEGER DEFAULT 0,
+            reacted_at INTEGER,
+            changed_at INTEGER,
+            UNIQUE (message_id, sender_jid, changed_at)
+        )
+    `);
+    await dbRun('CREATE INDEX IF NOT EXISTS idx_reaction_changes_chat ON reaction_changes (chat_id, changed_at)');
+
+    /*
      * Estatísticas do /stats: contadores por chat, dia, hora e remetente.
      * As mensagens comuns saem do banco em 68 h; os contadores ficam
      * 'stats.retentionDays' dias.
@@ -296,7 +338,7 @@ async function inicializarBanco() {
 
     /*
      * /mute: pessoas e grupos com os avisos em silêncio (o que: deleted, edited,
-     * status) e cada aviso cortado (mute_hits, para o /bot -status; 30 dias).
+     * status, reaction) e cada aviso cortado (mute_hits, para o /bot -status; 30 dias).
      */
     await dbRun(`
         CREATE TABLE IF NOT EXISTS mutes (
@@ -307,6 +349,7 @@ async function inicializarBanco() {
             deleted INTEGER DEFAULT 0,
             edited INTEGER DEFAULT 0,
             status INTEGER DEFAULT 0,
+            reaction INTEGER DEFAULT 0,
             created_at INTEGER NOT NULL
         )
     `);
@@ -321,6 +364,10 @@ async function inicializarBanco() {
     await dbRun('CREATE INDEX IF NOT EXISTS idx_mute_hits_at ON mute_hits (at)');
     // is_community: a comunidade (o grupo de avisos dela), silenciada pelo /mute
     await adicionarColunas('mutes', { is_community: 'INTEGER DEFAULT 0' });
+    // reaction: o /mute -r. Quem já estava com tudo em silêncio (o -a) continua com tudo
+    if ((await adicionarColunas('mutes', { reaction: 'INTEGER DEFAULT 0' })).length) {
+        await dbRun('UPDATE mutes SET reaction = 1 WHERE deleted = 1 AND edited = 1 AND status = 1');
+    }
 
     /*
      * De onde veio cada aviso que o bot mandou (apagada, editada, status, e o

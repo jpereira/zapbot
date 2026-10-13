@@ -45,6 +45,7 @@ async function textoDoStatus(agora = Date.now(), { estadoDoBot = '', usuarios = 
     const statusApagados = await conta(
         "SELECT COUNT(*) AS n FROM messages WHERE revoked = 1 AND revoked_at >= ? AND chat_id = 'status@broadcast'", [desde]);
     const editadas = await conta('SELECT COUNT(*) AS n FROM message_edits WHERE edited_at >= ?', [desde]);
+    const reacoes = await conta('SELECT COUNT(*) AS n FROM reaction_changes WHERE changed_at >= ?', [desde]);
     const mensagens = await conta('SELECT COUNT(*) AS n FROM messages', []);
 
     // /watch: ocorrências por regra (o nº é o da lista do /watch -l)
@@ -59,7 +60,7 @@ async function textoDoStatus(agora = Date.now(), { estadoDoBot = '', usuarios = 
     // /mute: avisos cortados, por tipo
     const ignoradas = await dbAll('SELECT kind, COUNT(*) AS n FROM mute_hits WHERE at >= ? GROUP BY kind ORDER BY kind', [desde]);
     const totalIgnoradas = ignoradas.reduce((s, r) => s + r.n, 0);
-    const ROTULOS = { apagada: 'apagadas', editada: 'editadas', status: 'status', watch: 'watch' };
+    const ROTULOS = { apagada: 'apagadas', editada: 'editadas', status: 'status', reacao: 'reações', watch: 'watch' };
     const silenciados = await conta('SELECT COUNT(*) AS n FROM mutes', []);
 
     const [ultimoBackup] = await listarBackups();
@@ -74,6 +75,7 @@ async function textoDoStatus(agora = Date.now(), { estadoDoBot = '', usuarios = 
         `🗑️ *Apagadas:* ${fmtNum(apagadas)}${desligado('show.alert.deleted', 'aviso desligado')}\n` +
         `✏️ *Editadas:* ${fmtNum(editadas)}${desligado('show.alert.edited', 'aviso desligado')}\n` +
         `📸 *Status apagados:* ${fmtNum(statusApagados)}${desligado('show.alert.status', 'recuperação desligada')}\n` +
+        `😶 *Reações removidas ou trocadas:* ${fmtNum(reacoes)}${desligado('show.alert.reaction', 'aviso desligado')}\n` +
         `🔇 *Ignoradas (/mute):* ${fmtNum(totalIgnoradas)}` +
         (totalIgnoradas ? ` _(${ignoradas.map(r => `${ROTULOS[r.kind] ?? r.kind} ${fmtNum(r.n)}`).join(', ')})_` : '') +
         (silenciados ? ` · ${plural(silenciados, 'silenciado', 'silenciados')}` : '') + '\n' +

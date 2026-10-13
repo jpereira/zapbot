@@ -103,7 +103,7 @@ src/
   mudo.js               /mute: quem está silenciado, os avisos cortados e a origem de cada aviso
   defi/                 Solana, HyperEVM, Aptos e EVM (RPC, indexador, Multicall3), a Orca, o Project X, a Liquidswap, o Morpho e o Aave V3 (/defi) e o -alerta de saída da faixa
   watch/                regras e verificação do /watch
-  eventos/              message_create, apagadas, editadas, presença
+  eventos/              message_create, apagadas, editadas, reações, presença
   comandos/             comandos.json (definição), um arquivo por comando,
                         index.js (HANDLERS) e base.js (ajuda e utilitários)
   util/                 arquivos, formatação, datas digitadas (quando.js), processos externos, URLs
@@ -192,6 +192,7 @@ devolve `null`, como quando o WhatsApp não deixa editar.
 | `mascara-telefones.test.js` | Ofuscação de telefones no `/show`, `/watch` e `/bot` |
 | `mensagens.test.js` | Gravação de localizações sem interpretar a miniatura como texto ou comando, roteamento, permissões (`onlyAdmin`, o `bot.users` com pessoas, grupos, `true`/`false` e as permissões persistidas, bot desligado, admins extras do `bot.admins`, os atalhos `/bot +o`/`+v`, as listas do `-users`/`-all-users`, os comandos de cada usuário (`+cmd`/`-cmd`), o `-reset` com a confirmação, o `/whois` e a proteção contra flood), o log dos comandos desconhecidos e a contagem do `/stats` (sem os avisos do sistema) |
 | `mute.test.js` | `/mute` e `/unmute`: avisos silenciados por pessoa, grupo ou comunidade (só o alvo é o `-a`), a busca do alvo (nomes exatos, contato, grupo, menção e lista para escolher pelo nº) e a resposta a um aviso (de onde ele veio) |
+| `reacoes.test.js` | Reações removidas ou trocadas: o evento `message_reaction` (e o que não gera aviso), o aviso `show.alert.reaction`, o `/show -r`, o `/mute -r`, o `/bot -status` e a limpeza |
 | `stats.test.js`, `watch.test.js`, `monitor.test.js` | `/stats` (com o `/chat/`, o `-l` e o `-flush`), `/watch` (e um ou vários `-to`), `/monitor` e o aviso de presença |
 | `status.test.js` | `/bot -status`: o relatório (com o aviso `show.alert.*` desligado e os silenciados do `/mute`) e o envio diário (e o `-to`: pessoas, grupos e e-mails) |
 | `telefone-bot.test.js` | Número da conta configurada, formato esperado, avisos e destinos internos |

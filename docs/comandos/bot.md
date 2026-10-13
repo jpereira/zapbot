@@ -351,6 +351,7 @@ qui 01/10 06:00
 🗑️ Apagadas: 12
 ✏️ Editadas: 4
 📸 Status apagados: 2
+😶 Reações removidas ou trocadas: 1
 🔇 Ignoradas (/mute): 8 (apagadas 5, editadas 2, watch 1) · 3 silenciados
 💾 Último backup: qui 01/10 03:00 (automático)
 
@@ -377,12 +378,13 @@ O que entra:
   guardadas.
 - **Watch**: ocorrências das regras do [`/watch`](watch.md), com o nº de cada regra (as 5 que mais
   casaram).
-- **Apagadas**, **editadas** e **status apagados**: o que foi recuperado nas últimas 24 h, inclusive
-  o que o [`/mute`](mute.md) silenciou. Com o aviso desligado (`show.alert.deleted`,
-  `show.alert.edited` ou `show.alert.status` em `off`), a linha diz como ligar de novo:
+- **Apagadas**, **editadas**, **status apagados** e **reações removidas ou trocadas**: o que foi
+  recuperado nas últimas 24 h, inclusive o que o [`/mute`](mute.md) silenciou. Com o aviso
+  desligado (`show.alert.deleted`, `show.alert.edited`, `show.alert.status` ou `show.alert.reaction`
+  em `off`), a linha diz como ligar de novo:
   `✏️ Editadas: 4 (aviso desligado; ligue com /set show.alert.edited on)`.
 - **Ignoradas (/mute)**: os avisos que o `/mute` cortou nas últimas 24 h, por tipo (apagadas,
-  editadas, status e `watch`, os do [`/watch`](watch.md)), e quantos estão silenciados agora. Com
+  editadas, status, reações e `watch`, os do [`/watch`](watch.md)), e quantos estão silenciados agora. Com
   alguém silenciado, o 0 só quer dizer que nenhum aviso dele chegou nas 24 h.
 - **Último backup**: o mais recente do [`/backup`](backup.md).
 - **Usuários**: a lista deste chat ([Quem aparece na lista](#quem-aparece-na-lista)). O relatório

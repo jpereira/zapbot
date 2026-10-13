@@ -292,7 +292,7 @@ describe('/cache (/c)', () => {
         await bot.executar('oi', { de: OUTRO.jid });
         const [r] = await bot.responder('/cache');
         assert.match(r, new RegExp(`🗂️ Exibindo conteúdo de ${CACHE_DIR}`));
-        assert.match(r, /🗄️ 2 mensagens no cache\.\n🗑️ 0 apagadas\.\n✏️ 0 edições\.\n📦 Backups: 0 \(veja \/backup\)\.$/);
+        assert.match(r, /🗄️ 2 mensagens no cache\.\n🗑️ 0 apagadas\.\n✏️ 0 edições\.\n😶 0 reações removidas ou trocadas\.\n📦 Backups: 0 \(veja \/backup\)\.$/);
         assert.match(r, /\n─+\nTotal: +\d/);
         assert.match(r, /└── 📁 tmp\/ +/);
     });
@@ -305,7 +305,7 @@ describe('/cache (/c)', () => {
         const backup = await criarBackup('manual');
         try {
             const [r] = await bot.responder('/cache');
-            assert.match(r, /🗑️ 1 apagada\.\n✏️ 1 edição\.\n📦 Backups: 1 \(veja \/backup\)\.$/);
+            assert.match(r, /🗑️ 1 apagada\.\n✏️ 1 edição\.\n😶 0 reações removidas ou trocadas\.\n📦 Backups: 1 \(veja \/backup\)\.$/);
         } finally {
             await removerBackup(backup);
         }
@@ -329,7 +329,7 @@ describe('/cache (/c)', () => {
         await criarBackup();
 
         const [r] = await bot.responder('/cache -all');
-        assert.match(r, new RegExp(`🧹 \\*Limpeza geral concluída\\* _\\(${CACHE_DIR}\\)_\\n\\n🗄️ Mensagens removidas: \\*\\d+\\* _\\(0 apagadas\\)_\\n✏️ Edições removidas: \\*1\\*\\n📦 Backups removidos: \\*1\\*`));
+        assert.match(r, new RegExp(`🧹 \\*Limpeza geral concluída\\* _\\(${CACHE_DIR}\\)_\\n\\n🗄️ Mensagens removidas: \\*\\d+\\* _\\(0 apagadas\\)_\\n✏️ Edições removidas: \\*1\\*\\n😶 Reações removidas: \\*0\\*\\n📦 Backups removidos: \\*1\\*`));
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM messages')).n, 0);
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM message_edits')).n, 0);
         assert.deepEqual(fs.readdirSync(MEDIA_DIR), []);

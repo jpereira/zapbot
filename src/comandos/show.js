@@ -1,5 +1,5 @@
 /*
- * Comando /show: mensagens apagadas, editadas e status apagados.
+ * Comando /show: mensagens apagadas, editadas, status apagados e reações removidas ou trocadas.
  */
 
 const fs = require('fs-extra');
@@ -13,6 +13,7 @@ const { resolverDestino } = require('../destinos');
 const { aguardarEscolha, autorDe } = require('../escolhas');
 const { enviarMensagemApagada, isStatus, resolverAutorApagada } = require('../eventos/apagadas');
 const { enviarMensagemEditada } = require('../eventos/editadas');
+const { enviarReacaoDesfeita } = require('../eventos/reacoes');
 const { printError, printInfo } = require('../log');
 const { getSetting } = require('../settings');
 const { humanSize, isCaminhoDeMidia } = require('../util/arquivos');
@@ -21,10 +22,11 @@ const { ehCanal } = require('../util/origem');
 const { compilarBusca } = require('../watch/regras');
 
 /*
- * /show [-N] [-d] [-e] [-s] [chat]: reexibe o que está no cache, no mesmo
- * formato dos alertas: as APAGADAS (-d), as EDITADAS (-e) e os STATUS
- * apagados (-s), que se somam. Sem nenhum dos três: com chat (ou na busca em
- * todos), tudo junto, por data; senão, só as apagadas deste chat.
+ * /show [-N] [-d] [-e] [-s] [-r] [chat]: reexibe o que está no cache, no
+ * mesmo formato dos alertas: as APAGADAS (-d), as EDITADAS (-e), os STATUS
+ * apagados (-s) e as REAÇÕES removidas ou trocadas (-r), que se somam. Sem
+ * nenhum dos quatro: com chat (ou na busca em todos), tudo junto, por data;
+ * senão, só as apagadas deste chat.
  *   /show              → no privado, lista o cache; no grupo, a última apagada
  *   /show -3           → as 3 últimas
  *   /show -2 /^Camila/ → as 2 últimas (apagada, editada ou status) do chat que casa
@@ -45,7 +47,7 @@ const { compilarBusca } = require('../watch/regras');
 const BUSCA_PADRAO = 5;
 const STATUS = 'status@broadcast';
 
-// O que muda entre as apagadas (-d), as editadas (-e) e os status (-s)
+// O que muda entre as apagadas (-d), as editadas (-e), os status (-s) e as reações (-r)
 const TIPOS = {
     apagadas: {
         opt: 'deleted',
@@ -112,6 +114,28 @@ const TIPOS = {
         unidade: ['status', 'status'],
         nenhuma: 'Nenhum status apagado',
         registrada: 'registrado'
+    },
+    reacoes: {
+        opt: 'reaction',
+        flag: '-r',
+        tabela: 'reaction_changes',
+        filtro: '1 = 1',
+        doChat: 'chat_id',
+        nome: 'chat_name',
+        grupo: 'is_group',
+        quando: 'changed_at',
+        ordem: 'changed_at DESC, id DESC',
+        retencao: 'cache.reactionRetentionDays',
+        comMidia: false,
+        textos: (r) => [r.old_reaction, r.new_reaction, r.body],
+        icone: '😶',
+        iconeLista: '😶',
+        rotulo: 'Reações',
+        um: 'reação removida ou trocada',
+        varios: 'reações removidas ou trocadas',
+        unidade: ['reação', 'reações'],
+        nenhuma: 'Nenhuma reação removida ou trocada',
+        registrada: 'registrada'
     }
 };
 
@@ -144,9 +168,7 @@ function chatsDoCache() {
         `SELECT chat_id,
                 MAX(chat_name) AS chat_name,
                 MAX(is_group) AS is_group,
-                SUM(tipo = 'apagadas') AS apagadas,
-                SUM(tipo = 'editadas') AS editadas,
-                SUM(tipo = 'status') AS status,
+                ${Object.keys(TIPOS).map(tipo => `SUM(tipo = '${tipo}') AS ${tipo},`).join('\n                ')}
                 COUNT(*) AS total,
                 MAX(quando) AS ultima
            FROM (${partes.join(' UNION ALL ')})
@@ -225,7 +247,7 @@ async function resolverAlvo(msg, texto) {
     // A menção vale mesmo sem nada no cache: a resposta diz que não há nada dela
     const chats = await chatsDoCache();
     if (!chats.length && !/^@\d+$/.test(texto)) {
-        await msg.reply('🗄️ Nada no cache: nenhuma mensagem apagada, editada ou status apagado.');
+        await msg.reply('🗄️ Nada no cache: nenhuma mensagem apagada, editada, status apagado ou reação removida.');
         return null;
     }
 
@@ -322,8 +344,8 @@ async function listarCache({ msg, chatId, filtro }) {
         texto += '\n';
         chats.forEach((c) => { texto += linha(c); });
 
-        texto += '\n💡 _/show <nº, nome, @menção ou /regex/> reexibe as de um chat: apagadas, editadas e status juntos._' +
-                 '\n   _-d, -e e -s filtram_' +
+        texto += '\n💡 _/show <nº, nome, @menção ou /regex/> reexibe as de um chat: apagadas, editadas, status e reações juntos._' +
+                 '\n   _-d, -e, -s e -r filtram_' +
                  `\n   _-N para mais (máx. ${getSetting('show.max')})_` +
                  '\n   _-l <chat> lista só os que casam_' +
                  '\n   _-f remove do cache as deste chat (no seu privado: de todos)_';
@@ -457,7 +479,8 @@ const REENVIO_CACHE = {
             nomeRemetente: row.sender_name || 'Desconhecido',
             numeroRemetente: row.sender_number || null
         }, { titulo: `✏️ *MENSAGEM EDITADA* (${i + 1}/${total})` });
-    }
+    },
+    reacoes: (destino, row, i, total) => enviarReacaoDesfeita(destino, row, { contagem: `${i + 1}/${total}` })
 };
 
 // "♻️ *2 mensagens apagadas*" (um tipo) ou "🗄️ *3 mensagens* (🗑️ 2 · 📸 1)" (vários)
@@ -533,7 +556,7 @@ async function cmdShow({ msg, opts, chatId, admin }) {
     // No seu privado, sem chat: a busca e os status valem para todos os chats
     const todos = noMeuPrivado && !opts.opt.flush && (busca !== null || pedidos.includes('status'));
 
-    // Sem -d/-e/-s: com chat (ou em todos), tudo junto; senão, só as apagadas
+    // Sem -d/-e/-s/-r: com chat (ou em todos), tudo junto; senão, só as apagadas
     const tipos = pedidos.length ? pedidos : alvo || todos ? Object.keys(TIPOS) : ['apagadas'];
 
     if (opts.opt.flush) {

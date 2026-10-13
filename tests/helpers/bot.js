@@ -15,6 +15,7 @@ const { client, limparMarcas } = src('cliente');
 src('eventos/presenca');
 src('eventos/apagadas');
 src('eventos/editadas');
+src('eventos/reacoes');
 src('eventos/mensagens');
 src('enquetes');
 
@@ -33,7 +34,7 @@ const preparar = () => (banco ??= inicializarBanco().then(marcarBancoPronto));
 
 const TABELAS = ['command_aliases', 'messages', 'message_edits', 'stats', 'watch_hits', 'watch_destinations', 'price_alerts',
     'presence_logs', 'monitored_numbers', 'settings', 'polls', 'poll_votes', 'schedules', 'defi_positions', 'mutes', 'mute_hits',
-    'alerts', 'watch_sources'];
+    'alerts', 'watch_sources', 'reactions', 'reaction_changes'];
 
 /*
  * Estado limpo para cada teste: tabelas vazias, settings no padrão, nada
@@ -274,6 +275,26 @@ async function votar(enquete, voter, opcoes, { quando = Date.now() } = {}) {
     for (const h of client.listeners('vote_update')) await h(vote);
 }
 
+/**
+ * Evento 'message_reaction' do whatsapp-web.js: `de` reagiu com `emoji` (vazio =
+ * tirou a reação) à mensagem `original` (uma criarMensagem ou um envio do bot).
+ * @returns o que o bot enviou
+ */
+async function reagir(original, de, emoji, { quando = Date.now(), porMim = de === DONO.jid } = {}) {
+    const chave = original.id;
+    const reacao = {
+        id: { fromMe: porMim, remote: chave.remote, id: `REACAO_${chave.id}_${de}` },
+        msgId: { fromMe: chave.fromMe, remote: chave.remote, id: chave.id, _serialized: chave._serialized },
+        senderId: de,
+        reaction: emoji,
+        timestamp: quando / 1000
+    };
+
+    const antes = client.enviadas.length;
+    for (const h of client.listeners('message_reaction')) await h(reacao);
+    return client.enviadas.slice(antes).map(comTexto);
+}
+
 /*
  * Com o relógio simulado, avança o tempo aos poucos até a promessa terminar:
  * não depende de quantos passos assíncronos existem antes de cada setTimeout.
@@ -309,6 +330,7 @@ module.exports = {
     executar,
     getSetting,
     preparar,
+    reagir,
     reiniciar,
     responder,
     responderEscolhendo,
