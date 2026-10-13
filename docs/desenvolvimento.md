@@ -14,6 +14,14 @@ make destroy # clean + apaga os volumes de dev (sessão do WhatsApp e cache!)
 make docs    # site da documentação local (veja Documentação)
 ```
 
+Os alvos não mostram os comandos que executam. Para depurar, `Q=` (ou `V=1`) mostra todos, inclusive
+os das chamadas internas de outros alvos:
+
+```bash
+make Q= DOCK_REMOTE=1 up     # mostra cada comando docker executado
+make V=1 check               # o mesmo, com V=1
+```
+
 O destino das operações Docker e dos testes é selecionado por `DOCK_REMOTE`: `0` (padrão) usa o
 ambiente local de desenvolvimento (`zapbot-dev`); `1` usa o container de produção remoto (`zapbot`).
 O endereço e o contexto aceitam valores do ambiente ou da linha de comando:
