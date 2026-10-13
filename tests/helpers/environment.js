@@ -131,7 +131,7 @@ class MessageMedia {
     // The type comes from the extension, as in whatsapp-web.js (which uses mime-types)
     static fromFilePath(fileAlt) {
         const TYPES = { jpeg: 'image/jpeg', jpg: 'image/jpeg', png: 'image/png', mp4: 'video/mp4',
-            mp3: 'audio/mpeg', ogg: 'audio/ogg', pdf: 'application/pdf' };
+            mp3: 'audio/mpeg', webp: 'image/webp', ogg: 'audio/ogg', pdf: 'application/pdf' };
         const type = TYPES[path.extname(fileAlt).slice(1)] ?? 'application/octet-stream';
         return new MessageMedia(type, fs.readFileSync(fileAlt).toString('base64'), path.basename(fileAlt));
     }
