@@ -9,7 +9,21 @@ const sharp = require('sharp');
 const { printError, printInfo } = require('./log');
 const { isUrlPublica } = require('./util/url');
 
-function argsDoFfmpeg(opts, originalFile, outputFile) {
+/*
+ * As tentativas da figurinha animada, da melhor para a menor: o /get tenta em
+ * ordem até o webp caber no limite do WhatsApp (STICKER_ANIMADO_MAX_BYTES).
+ */
+const TENTATIVAS_STICKER = [
+    { qualidade: 75, fps: 15 },
+    { qualidade: 50, fps: 12 },
+    { qualidade: 30, fps: 10 },
+    { qualidade: 20, fps: 8 }
+];
+
+/**
+ * @param {object} [sticker]  a tentativa da figurinha (TENTATIVAS_STICKER), com -st
+ */
+function argsDoFfmpeg(opts, originalFile, outputFile, sticker = TENTATIVAS_STICKER[0]) {
     const isSticker = opts.opt.sticker;  // -sticker  | -st
     const isAudio   = opts.opt.audio;    // -audio    | -a
     const startSec  = opts.opt.startSec; // -startSec | -ss
@@ -39,18 +53,18 @@ function argsDoFfmpeg(opts, originalFile, outputFile) {
         );
     } else if (isSticker) {
         // Sticker animado 512x512 enquadrado no meio do vídeo (como o /sticker):
-        // escala até cobrir o quadrado e o crop (centralizado por padrão) corta as sobras
+        // escala até cobrir o quadrado e o crop (centralizado por padrão) corta as sobras.
+        // Já sai em webp: um mp4 o whatsapp-web.js converteria de novo, sem limite de
+        // tamanho, e o WhatsApp recusa a figurinha acima de 500 KB
         args.push(
             '-vf',
-            'fps=15,scale=512:512:force_original_aspect_ratio=increase,crop=512:512,setsar=1',
+            `fps=${sticker.fps},scale=512:512:force_original_aspect_ratio=increase,crop=512:512,setsar=1`,
             '-an',
-            '-c:v', 'libx264',
-            '-b:v', '500k',
-            '-maxrate', '500k',
-            '-bufsize', '1000k',
-            '-pix_fmt', 'yuv420p',
-            '-profile:v', 'baseline',
-            '-movflags', '+faststart',
+            '-c:v', 'libwebp',
+            '-lossless', '0',
+            '-q:v', String(sticker.qualidade),
+            '-compression_level', '6',
+            '-loop', '0',
             outputFile
         );
     } else {
@@ -155,6 +169,8 @@ async function thumbnailDoLink(quotedMsg) {
 }
 
 module.exports = {
+    STICKER_ANIMADO_MAX_BYTES,
+    TENTATIVAS_STICKER,
     argsDoFfmpeg,
     enquadrarSticker,
     thumbnailDoLink

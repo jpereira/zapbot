@@ -11,7 +11,7 @@ const { formatarErroComando, getCommandSyntax } = require('./base');
 const { concluirAviso } = require('../cliente');
 const { BIN_FFMPEG, BIN_YT, GET_MAX_CONCURRENT, TMP_DIR } = require('../constantes');
 const { printDebug, printError, printInfo } = require('../log');
-const { argsDoFfmpeg, enquadrarSticker, thumbnailDoLink } = require('../midia');
+const { STICKER_ANIMADO_MAX_BYTES, TENTATIVAS_STICKER, argsDoFfmpeg, enquadrarSticker, thumbnailDoLink } = require('../midia');
 const { getSetting, isDebugMode, stickerMeta } = require('../settings');
 const { runCommand } = require('../util/processos');
 const { extractFirstUrl, isUrlPublica, isValidHttpUrl } = require('../util/url');
@@ -194,7 +194,7 @@ async function converterEEnviar({ msg, opts, senderName, url, media, previa }) {
         fs.mkdirSync(TMP_DIR, { recursive: true });
 
         originalFile = path.join(TMP_DIR, `${id}_original.${media ? extensaoDe(media) : 'mp4'}`);
-        outputFile = path.join(TMP_DIR, `${id}_output.${isAudio ? 'mp3' : 'mp4'}`);
+        outputFile = path.join(TMP_DIR, `${id}_output.${isAudio ? 'mp3' : isSticker ? 'webp' : 'mp4'}`);
         logCmdFile = path.join(TMP_DIR, `${id}_cmd.log`);
         logCmd = fs.openSync(logCmdFile, 'a');
 
@@ -231,18 +231,29 @@ async function converterEEnviar({ msg, opts, senderName, url, media, previa }) {
             }
         }
 
-        // Converter
-        const ffmpegArgs = argsDoFfmpeg(opts, originalFile, outputFile);
-        const cmdFfmpeg = [BIN_FFMPEG, ...ffmpegArgs].join(' ');
+        // Converter. A figurinha reduz qualidade e fps até caber no limite do WhatsApp
+        const tentativas = isSticker ? TENTATIVAS_STICKER : [undefined];
+        let cmdFfmpeg = null;
 
-        try {
-            printInfo(`> Executando: ${cmdFfmpeg}`);
-            fs.writeSync(logCmd, `\n\n# Executando: ${cmdFfmpeg}\n`);
-            await runCommand(BIN_FFMPEG, ffmpegArgs, logCmd);
-        } catch (inner) {
-            const erro = new Error(`Problemas para decodificar com '${BIN_FFMPEG}'`, { cause: inner });
-            erro.cmd = cmdFfmpeg;
-            throw erro;
+        for (const tentativa of tentativas) {
+            const ffmpegArgs = argsDoFfmpeg(opts, originalFile, outputFile, tentativa);
+            cmdFfmpeg = [BIN_FFMPEG, ...ffmpegArgs].join(' ');
+
+            try {
+                printInfo(`> Executando: ${cmdFfmpeg}`);
+                fs.writeSync(logCmd, `\n\n# Executando: ${cmdFfmpeg}\n`);
+                await runCommand(BIN_FFMPEG, ffmpegArgs, logCmd);
+            } catch (inner) {
+                const erro = new Error(`Problemas para decodificar com '${BIN_FFMPEG}'`, { cause: inner });
+                erro.cmd = cmdFfmpeg;
+                throw erro;
+            }
+
+            if (!isSticker || fs.statSync(outputFile).size <= STICKER_ANIMADO_MAX_BYTES) break;
+            if (tentativa === tentativas.at(-1)) {
+                throw new Error(`Figurinha grande demais para o WhatsApp (máx. ${STICKER_ANIMADO_MAX_BYTES / 1024} KB): `
+                    + 'tente um trecho menor com -ss e -es');
+            }
         }
 
         const maxSizeMB = getSetting('get.maxSizeMB');
