@@ -4,7 +4,7 @@
 
 const fs = require('fs-extra');
 
-const { client } = require('../cliente');
+const { client, concluirAviso } = require('../cliente');
 const { getCommandSyntax } = require('./base');
 const { DAY_MS } = require('../constantes');
 const { idsDoChatAtual } = require('../contatos');
@@ -237,13 +237,13 @@ async function resolverAlvo(msg, texto) {
     if (exato || casam.length === 1) return paraAlvo(exato ?? casam[0]);
 
     const opcoes = casam.slice(0, 10);
-    await msg.reply(`🔎 "${texto}" corresponde a ${casam.length} chats:\n\n` +
+    const pergunta = await msg.reply(`🔎 "${texto}" corresponde a ${casam.length} chats:\n\n` +
         opcoes.map((c, i) => `${i + 1}. ${descreverChat(c)}`).join('\n') +
         '\n\n💡 _Responda só com o nº (em até 2 minutos), ou repita o comando com mais do nome._');
 
     const escolhido = await aguardarEscolha(msg.id?.remote ?? msg.from, opcoes, {
         autor: autorDe(msg),
-        aoExpirar: () => msg.reply(`⌛ Nenhum nº escolhido para "${texto}" em 2 minutos: nada foi feito.`)
+        aoExpirar: () => concluirAviso(msg, pergunta, `⌛ Nenhum nº escolhido para "${texto}" em 2 minutos: nada foi feito.`)
     });
     return escolhido ? paraAlvo(escolhido) : null;
 }

@@ -517,11 +517,14 @@ describe('permissões', () => {
         assert.equal(bot.client.enviadas.at(-1).content, '👍 Nada mudou.');
         assert.deepEqual(lerTudo(), [true, ['5521911111111'], [GRUPO]]);
 
-        // Sem resposta em 10 s: nada muda
+        // Sem resposta em 10 s: nada muda, e a pergunta vira o aviso (sem outra mensagem)
         t.mock.timers.enable({ apis: ['setTimeout'] });
+        const antesDeExpirar = bot.client.enviadas.length;
         const expira = bot.executar('/bot -r');
         await bot.esperarComRelogio(t, expira);
+        assert.equal(bot.client.enviadas.length, antesDeExpirar + 1);
         assert.equal(bot.client.enviadas.at(-1).content, '⌛ Nada mudou: sem *sim* em 10 s.');
+        assert.equal(bot.client.enviadas.at(-1).editada, true);
         assert.deepEqual(lerTudo(), [true, ['5521911111111'], [GRUPO]]);
         t.mock.timers.reset();
 
