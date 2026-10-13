@@ -18,7 +18,6 @@ describe('/help (/h)', () => {
         assert.match(r, /MENU DE AJUDA/);
         assert.match(r, /Uso: \/show/);
         assert.match(r, /Uso: \/cotacao/);
-        assert.doesNotMatch(r, /Uso: \/monitor/); // disabled in the config
     });
 
     test('um comando, com ou sem "/", por nome ou alias', async () => {

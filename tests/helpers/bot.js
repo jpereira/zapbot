@@ -12,7 +12,6 @@ const src = (modulo) => require(path.join(environment.ROOT, 'src', modulo));
 src('debugInstrumentation').installDebug();
 
 const { client, cleanMarks } = src('client');
-src('events/presence');
 src('events/deleted');
 src('events/edited');
 src('events/reactions');
@@ -33,7 +32,7 @@ let db = null;
 const prepare = () => (db ??= initializeDb().then(markDbReady));
 
 const TABLES = ['command_aliases', 'messages', 'message_edits', 'stats', 'watch_hits', 'watch_destinations', 'price_alerts',
-    'presence_logs', 'monitored_numbers', 'settings', 'polls', 'poll_votes', 'schedules', 'defi_positions', 'mutes', 'mute_hits',
+    'settings', 'polls', 'poll_votes', 'schedules', 'defi_positions', 'mutes', 'mute_hits',
     'alerts', 'watch_sources', 'reactions', 'reaction_changes'];
 
 /*

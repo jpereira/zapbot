@@ -7,8 +7,15 @@ const { printInfo, printSuccess } = require('./log');
 const botConfig = require('./commands/commands.json');
 
 // "disabled": true takes the command out of the bot: it does not answer, it does not show in /help
-const disabledCommands = botConfig.commands.filter(c => c.disabled).map(c => c.cmd);
-botConfig.commands = botConfig.commands.filter(c => !c.disabled);
+function withoutDisabled(commands) {
+    return {
+        ativos: commands.filter(c => !c.disabled),
+        desativados: commands.filter(c => c.disabled).map(c => c.cmd)
+    };
+}
+
+const { ativos: assets, desativados: disabledCommands } = withoutDisabled(botConfig.commands);
+botConfig.commands = assets;
 
 const commands = botConfig.commands.map(c => c.cmd);
 printSuccess(`Loaded ${commands.length} callers (${commands.join(',')})`);
@@ -18,5 +25,6 @@ if (disabledCommands.length) {
 }
 
 module.exports = {
-    botConfig
+    botConfig,
+    withoutDisabled
 };
