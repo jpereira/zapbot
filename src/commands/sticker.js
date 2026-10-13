@@ -3,49 +3,12 @@
  */
 
 const { MessageMedia } = require('whatsapp-web.js');
-const sharp = require('sharp');
 const { getCommandSyntax } = require('./base');
 
 const { printError } = require('../log');
+const { fitSticker, thumbnailDoLink } = require('../media');
 const { stickerMeta } = require('../settings');
 const { MAX_CHARACTERS, readCor, textSticker } = require('../stickerText');
-
-/*
- * Sticker from an image: 512x512 square crop framed in the MIDDLE
- * of the image (without this WhatsApp Web converts without centering). WebP is already
- * sticker and goes as it is; videos keep the whatsapp-web.js conversion.
- */
-const STICKER_SIZE = 512;
-const STICKER_MAX_BYTES = 100 * 1024;          // WhatsApp limit: static sticker
-const STICKER_ANIMATED_MAX_BYTES = 500 * 1024;  // WhatsApp limit: animated sticker
-
-async function fitSticker(media) {
-    if (!media?.mimetype?.startsWith('image/') || media.mimetype === 'image/webp') return media;
-
-    try {
-        const animated = media.mimetype === 'image/gif';
-        const maxBytes = animated ? STICKER_ANIMATED_MAX_BYTES : STICKER_MAX_BYTES;
-        const inputAlt = Buffer.from(media.data, 'base64');
-        let outputAlt;
-
-        // Lowers the quality until it fits WhatsApp's limit
-        for (const quality of [80, 60, 40, 20]) {
-            outputAlt = await sharp(inputAlt, { animated: animated })
-                .rotate() // respects the EXIF orientation of phone photos
-                .resize(STICKER_SIZE, STICKER_SIZE, { fit: 'cover', position: 'centre' })
-                .webp({ quality })
-                .toBuffer();
-
-            if (outputAlt.length <= maxBytes) break;
-        }
-
-        return new MessageMedia('image/webp', outputAlt.toString('base64'), 'sticker.webp');
-    } catch (err) {
-        // Without the crop the sticker still goes out, just not centered
-        printError('/sticker: falha ao enquadrar a imagem, enviando sem recorte:', err.message);
-        return media;
-    }
-}
 
 /*
  * /sticker -txt <text> [-bg <color>] [-fg <color>]: -bg and -fg take a value
@@ -124,43 +87,7 @@ async function cmdSticker({ msg, quotedMsg, args }) {
     }
 
     const link = quotedMsg.links[0].link;
-    let media = null;
-
-    // First tries WhatsApp's own internal thumbnail
-    const thumbnail =
-        quotedMsg._data?.thumbnail ||
-        quotedMsg._data?.jpegThumbnail ||
-        quotedMsg._data?.body?.jpegThumbnail ||
-        null;
-
-    if (thumbnail) {
-        let base64;
-
-        if (Buffer.isBuffer(thumbnail)) {
-            base64 = thumbnail.toString('base64');
-        } else if (Array.isArray(thumbnail)) {
-            base64 = Buffer.from(thumbnail).toString('base64');
-        } else if (typeof thumbnail === 'string') {
-            base64 = thumbnail.replace(/^data:image\/[^;]+;base64,/, '');
-        }
-
-        if (base64) {
-            media = new MessageMedia('image/jpeg', base64, 'thumbnail.jpg');
-        }
-    }
-
-    // Then tries the external thumbnail
-    if (!media) {
-        const thumbnailUrl = quotedMsg._data?.thumbnailUrl || quotedMsg._data?.thumbnailDirectPath || null;
-
-        if (thumbnailUrl?.startsWith('http')) {
-            try {
-                media = await MessageMedia.fromUrl(thumbnailUrl, { unsafeMime: true });
-            } catch (err) {
-                printError('Erro baixando thumbnail:', err.message);
-            }
-        }
-    }
+    const media = await thumbnailDoLink(quotedMsg);
 
     if (!media) {
         await msg.reply(`Não encontrei thumbnail baixável para:\n${link}`);

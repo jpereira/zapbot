@@ -11,71 +11,10 @@ const { formatErrorCommand, getCommandSyntax } = require('./base');
 const { completeNotice } = require('../client');
 const { BIN_FFMPEG, BIN_YT, GET_MAX_CONCURRENT, TMP_DIR } = require('../constants');
 const { printDebug, printError, printInfo } = require('../log');
+const { argsDoFfmpeg } = require('../media');
 const { getSetting, isDebugMode, stickerMeta } = require('../settings');
 const { runCommand } = require('../util/processes');
 const { extractFirstUrl, isUrlPublic, isValidHttpUrl } = require('../util/url');
-
-function GetOptFromCommandForFfmpeg(opts, originalFile, outputFile) {
-    const isSticker = opts.opt.sticker;  // -sticker  | -st
-    const isAudio   = opts.opt.audio;    // -audio    | -a
-    const startSec  = opts.opt.startSec; // -startSec | -ss
-    const endSec    = opts.opt.endSec;   // -endSec   | -es
-    // The input is a local file downloaded from the internet: ffmpeg must not open
-    // rede nem outros protocolos a partir dele (playlists/concat maliciosos)
-    const args      = ['-y', '-protocol_whitelist', 'file'];
-
-    if (startSec != null) {
-        args.push('-ss', String(startSec));
-    }
-
-    args.push('-i', originalFile);
-
-    const duration = endSec == null ? null : Number(endSec) - Number(startSec ?? 0);
-    if (isSticker || duration != null) {
-        args.push('-t', String(isSticker ? Math.min(duration ?? 6, 6) : duration));
-    }
-
-    if (isAudio) {
-        // Audio only
-        args.push(
-            '-vn',
-            '-c:a', 'libmp3lame',
-            '-b:a', '192k',
-            outputFile
-        );
-    } else if (isSticker) {
-        // 512x512 animated sticker framed in the middle of the video (like /sticker):
-        // scales until it covers the square and the crop (centered by default) cuts off the excess
-        args.push(
-            '-vf',
-            'fps=15,scale=512:512:force_original_aspect_ratio=increase,crop=512:512,setsar=1',
-            '-an',
-            '-c:v', 'libx264',
-            '-b:v', '500k',
-            '-maxrate', '500k',
-            '-bufsize', '1000k',
-            '-pix_fmt', 'yuv420p',
-            '-profile:v', 'baseline',
-            '-movflags', '+faststart',
-            outputFile
-        );
-    } else {
-        // Normal video
-        args.push(
-            '-c:v', 'libx264',
-            '-b:v', '800k',
-            '-maxrate', '800k',
-            '-bufsize', '1600k',
-            '-pix_fmt', 'yuv420p',
-            '-profile:v', 'baseline',
-            '-movflags', '+faststart',
-            '-c:a', 'aac',
-            outputFile
-        );
-    }
-
-    return args;
-}
 
 let getInProgress = 0;
 
@@ -189,7 +128,7 @@ async function runGet({ msg, opts, quotedMsg, senderName }) {
         }
 
         // Converter
-        const ffmpegArgs = GetOptFromCommandForFfmpeg(opts, originalFile, outputFile);
+        const ffmpegArgs = argsDoFfmpeg(opts, originalFile, outputFile);
         const cmdFfmpeg = [BIN_FFMPEG, ...ffmpegArgs].join(' ');
 
         try {
