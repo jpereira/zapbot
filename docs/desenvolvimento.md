@@ -176,6 +176,7 @@ devolve `null`, como quando o WhatsApp não deixa editar.
 | `alias.test.js` | Cadastro persistente, descrições com aspas retas e curvas, listagem, remoção individual e total, nomes reservados, argumentos adicionais, permissões do destino e os aliases de texto (`{/comando}`, `\n` e as permissões de cada comando) |
 | `apagadas-editadas.test.js` | Eventos de apagar/editar (e os avisos `show.alert.*`) e o `/show` (apagadas, editadas e status, o chat pedido e a busca `-q`) |
 | `backup.test.js` | `/backup` (criação, lista, restauração, envio no privado, por e-mail e com um ou vários `-to`) e o backup diário |
+| `block.test.js` | `/block` (`/bloquear`) e `/unblock`: pelo nome, pelo número, respondendo, a lista (com os `@lid` convertidos para o telefone) e o nº dela, e o `/unblock -all` |
 | `bump.test.js` | Release e bump em repositórios temporários, versões dos exemplos, tags existentes e prévia sem alterações |
 | `canais.test.js` | Identificação de canais `@newsletter` nos avisos e no `/show` |
 | `comandos.test.js` | `/help` (só com os comandos de quem pediu), `/debug`, `/uptime`, `/version`, `/ping`, `/noffa`, `/bot` (o `-h` em blocos, o status sem opção, o `-on`/`-off`, o `-users`, e o `-info`, com as versões novas do yt-dlp e do whatsapp-web.js), `/set` (e o `-append`/`-rem`) |

@@ -138,6 +138,7 @@ de um. Os marcados como **Admin** só respondem à sua conta (e aos admins extra
 |---|---|:-:|---|
 | [`/alias`](https://jpereira.github.io/zapbot/comandos/alias/) | | ✅ | Cadastra, lista e remove atalhos para comandos com argumentos ou textos com vários `{/comando}` |
 | [`/backup`](https://jpereira.github.io/zapbot/comandos/backup/) | `/bkp` | ✅ | Backup diário local e envio por `backup.to`; lista, detalha, restaura e envia o banco |
+| [`/block`](https://jpereira.github.io/zapbot/comandos/block/) | `/bloquear` | ✅ | Bloqueia uma ou várias pessoas na sua conta do WhatsApp (respondendo uma mensagem, quem a escreveu); sem nada, lista os bloqueados; `-mask` ofusca telefones |
 | [`/boletos`](https://jpereira.github.io/zapbot/comandos/boletos/) | | | Sorteia 2 membros para "pagar um boleto" |
 | [`/bot`](https://jpereira.github.io/zapbot/comandos/bot/) | `/b` | ✅ | Status do bot (relatório de 24 h e os usuários); liga/desliga os comandos (`-on`/`-off`) e diz quem usa: admins (`+o`/`-o`) e usuários (`+v`/`-v`, em qualquer chat ou só num grupo, e os comandos de cada um com `+cmd`/`-cmd`); `-reset` volta ao padrão; `-status` (`-s`): relatório das últimas 24 h, e `-s 06h` manda todo dia; `-info` (`-i`): versões e sistema |
 | [`/cache`](https://jpereira.github.io/zapbot/comandos/cache/) | `/c` | ✅ | Árvore do cache com tamanhos, contagens de mensagens e limpeza |
@@ -170,6 +171,7 @@ de um. Os marcados como **Admin** só respondem à sua conta (e aos admins extra
 | [`/tldr`](https://jpereira.github.io/zapbot/comandos/tldr/) | `/resumo` | ✅ | Resume a conversa do chat pelo ChatGPT (`2h`, `300`...) |
 | [`/todos`](https://jpereira.github.io/zapbot/comandos/todos/) | `/todes` | ✅ | Menciona todos do grupo |
 | [`/traduzir`](https://jpereira.github.io/zapbot/comandos/traduzir/) | `/tr`, `/translate` | | Traduz o texto ou a mensagem respondida (Google Translate); `-para en` muda o idioma |
+| [`/unblock`](https://jpereira.github.io/zapbot/comandos/unblock/) | | ✅ | Desbloqueia uma pessoa: pelo nome, pelo número, pelo nº da lista do `/block` ou respondendo uma mensagem |
 | [`/unmute`](https://jpereira.github.io/zapbot/comandos/unmute/) | | ✅ | Desfaz o silêncio do `/mute`: pelo nome, pelo nº da lista, respondendo um aviso ou todos (`-all`) |
 | [`/uptime`](https://jpereira.github.io/zapbot/comandos/uptime/) | `/u`, `/up` | | Tempo de execução e de conexão |
 | [`/version`](https://jpereira.github.io/zapbot/comandos/version/) | `/ver` | | Versão do bot (mesmo banner do `/uptime`) |

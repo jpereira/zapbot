@@ -4,6 +4,7 @@
 
 const { botConfig } = require('../botConfig');
 const { cmdBackup } = require('./backup');
+const { cmdBlock, cmdUnblock } = require('./block');
 const { cmdBoletos } = require('./boletos');
 const { cmdBot } = require('./bot');
 const { cmdCache } = require('./cache');
@@ -47,6 +48,7 @@ const { printError } = require('../log');
 const HANDLERS = {
     '/alias': cmdAlias,
     '/backup': cmdBackup,
+    '/block': cmdBlock,
     '/boletos': cmdBoletos,
     '/bot': cmdBot,
     '/cache': cmdCache,
@@ -79,6 +81,7 @@ const HANDLERS = {
     '/tldr': cmdTldr,
     '/todos': cmdTodos,
     '/traduzir': cmdTraduzir,
+    '/unblock': cmdUnblock,
     '/unmute': cmdUnmute,
     '/uptime': cmdUptime,
     '/version': cmdUptime,

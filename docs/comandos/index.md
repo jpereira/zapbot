@@ -113,6 +113,7 @@ mesmo que comecem com `/`. Sem isso, alguém poderia usar um comando que ecoa te
 |---|---|:-:|---|
 | [`/alias`](alias.md) | | ✅ | Cadastra, lista e remove atalhos para comandos com argumentos ou textos com vários `{/comando}` |
 | [`/backup`](backup.md) | `/bkp` | ✅ | Backup diário local e envio por `backup.to`; lista, detalha, restaura e envia o banco |
+| [`/block`](block.md) | `/bloquear` | ✅ | Bloqueia uma ou várias pessoas na sua conta do WhatsApp (respondendo uma mensagem, quem a escreveu); sem nada, lista os bloqueados; `-mask` ofusca telefones |
 | [`/boletos`](boletos.md) | | | Sorteia 2 membros para "pagar um boleto" |
 | [`/bot`](bot.md) | `/b` | ✅ | Status do bot (relatório de 24 h e os usuários); liga/desliga os comandos (`-on`/`-off`) e diz quem usa: admins (`+o`/`-o`) e usuários (`+v`/`-v`, em qualquer chat ou só num grupo, e os comandos de cada um com `+cmd`/`-cmd`); `-reset` volta ao padrão; `-status` (`-s`): relatório das últimas 24 h, e `-s 06h` manda todo dia; `-info` (`-i`): versões e sistema |
 | [`/cache`](cache.md) | `/c` | ✅ | Árvore do cache com tamanhos, contagens de mensagens e limpeza |
@@ -145,6 +146,7 @@ mesmo que comecem com `/`. Sem isso, alguém poderia usar um comando que ecoa te
 | [`/tldr`](tldr.md) | `/resumo` | ✅ | Resume a conversa do chat pelo ChatGPT (`2h`, `300`...) |
 | [`/todos`](todos.md) | `/todes` | ✅ | Menciona todos do grupo |
 | [`/traduzir`](traduzir.md) | `/tr`, `/translate` | | Traduz o texto ou a mensagem respondida (Google Translate); `-para en` muda o idioma |
+| [`/unblock`](unblock.md) | | ✅ | Desbloqueia uma pessoa: pelo nome, pelo número, pelo nº da lista do `/block` ou respondendo uma mensagem |
 | [`/unmute`](unmute.md) | | ✅ | Desfaz o silêncio do `/mute`: pelo nome, pelo nº da lista, respondendo um aviso ou todos (`-all`) |
 | [`/uptime`](uptime.md) | `/u`, `/up` | | Tempo de execução e de conexão |
 | [`/version`](version.md) | `/ver` | | Versão do bot (mesmo banner do `/uptime`) |

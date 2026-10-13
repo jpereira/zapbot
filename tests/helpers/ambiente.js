@@ -112,14 +112,21 @@ class ClienteFalso extends EventEmitter {
         return [...this.contatos.values()];
     }
 
+    async getBlockedContacts() {
+        return [...this.contatos.values()].filter(c => c.isBlocked);
+    }
+
     // Como no whatsapp-web.js: o id do número no WhatsApp, ou null se ele não tem conta
     async getNumberId(numero) {
         const jid = `${numero}@c.us`;
         return this.contatos.has(jid) ? { user: numero, server: 'c.us', _serialized: jid } : null;
     }
 
-    async getContactLidAndPhone(lids) {
-        return lids.map(lid => ({ lid, pn: this.lids.get(lid) ?? null }));
+    // Como no whatsapp-web.js: o par @lid/telefone de cada id (um @lid ou um telefone)
+    async getContactLidAndPhone(ids) {
+        return ids.map(id => (id.endsWith('@lid')
+            ? { lid: id, pn: this.lids.get(id) ?? null }
+            : { lid: [...this.lids].find(([, pn]) => pn === id)?.[0] ?? null, pn: id }));
     }
 }
 
