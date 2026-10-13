@@ -101,6 +101,7 @@ nav:
       - /noffa: comandos/noffa.md
       - /ping: comandos/ping.md
       - /pixelart: comandos/pixelart.md
+      - /search: comandos/search.md
       - /set: comandos/set.md
       - /show: comandos/show.md
       - /stats: comandos/stats.md

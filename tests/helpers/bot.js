@@ -56,6 +56,8 @@ async function reiniciar() {
 
     client.enviadas.length = 0;
     client.recusarEdicao = false;
+    client.buscas.length = 0;
+    client.resultadosDaBusca = [];
     limparMarcas();
     client.contatos.clear();
     client.chats.clear();
