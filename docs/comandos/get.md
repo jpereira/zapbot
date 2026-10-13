@@ -41,7 +41,7 @@ Limites (o `/get` não é admin: quem estiver no `bot.users` usa; com ele em `tr
 - No máximo 2 `/get` (ou `/sticker`) com yt-dlp ou ffmpeg ao mesmo tempo. Os demais recebem um aviso
   para tentar de novo.
 
-Enquanto baixa e converte, o bot mostra "💡 Processando…". No fim, essa mesma mensagem vira
+Enquanto baixa e converte, o bot mostra "⏳ Processando…". No fim, essa mesma mensagem vira
 "✅ Mídia baixada com sucesso!" (ou "✅ Sticker criado com sucesso!"), ou o erro, sem uma mensagem a
 mais.
 
