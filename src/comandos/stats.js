@@ -3,6 +3,7 @@
  */
 
 const { getCommandSyntax } = require('./base');
+const { concluirAviso } = require('../cliente');
 const { DAY_MS } = require('../constantes');
 const { idsDoChatAtual } = require('../contatos');
 const { dbAll, dbGet, dbPronto, dbRun } = require('../db');
@@ -203,12 +204,12 @@ async function acharChat(msg, alvo) {
         return null;
     }
 
-    await msg.reply(`🔎 "${alvo}" corresponde a ${casam.length} chats:\n\n` +
+    const pergunta = await msg.reply(`🔎 "${alvo}" corresponde a ${casam.length} chats:\n\n` +
         casam.slice(0, 10).map((c, i) => `${i + 1}. ${descreverChat(c)}`).join('\n') +
         '\n\n💡 _Responda só com o nº (em até 2 minutos), ou repita o comando com mais palavras do nome._');
     return aguardarEscolha(msg.id?.remote ?? msg.from, casam.slice(0, 10), {
         autor: autorDe(msg),
-        aoExpirar: () => msg.reply(`⌛ Nenhum nº escolhido para "${alvo}" em 2 minutos: nada foi feito.`)
+        aoExpirar: () => concluirAviso(msg, pergunta, `⌛ Nenhum nº escolhido para "${alvo}" em 2 minutos: nada foi feito.`)
     });
 }
 
