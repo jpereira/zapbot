@@ -639,7 +639,9 @@ function validarSetting(key, value) {
         case 'string': {
             const s = String(value ?? '').trim();
             if (!s && schema.allowEmpty) return s;
-            if (!s || s.length > 100) throw new Error('precisa ter de 1 a 100 caracteres');
+            // Chaves de API passam de 100 (as sk-proj- da OpenAI têm ~164)
+            const max = schema.secret ? 500 : 100;
+            if (!s || s.length > max) throw new Error(`precisa ter de 1 a ${max} caracteres`);
             if (schema.opcoes && !schema.opcoes.includes(s)) throw new Error(`não suportado: ${s} (aceitos: ${schema.opcoes.join(', ')})`);
             return schema.validar ? schema.validar(s) : s;
         }
