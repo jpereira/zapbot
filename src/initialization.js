@@ -97,25 +97,6 @@ async function initializeDb() {
         command TEXT NOT NULL
     )`);
 
-    // History of when the monitored contacts come online
-    await dbRun(`
-        CREATE TABLE IF NOT EXISTS presence_logs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            phone_number TEXT,
-            display_name TEXT,
-            status TEXT,
-            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    `);
-
-    // Numbers monitored via /monitor
-    await dbRun(`
-        CREATE TABLE IF NOT EXISTS monitored_numbers (
-            phone_number TEXT PRIMARY KEY,
-            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    `);
-
     // Received messages (to recover the deleted ones)
     await dbRun(`
         CREATE TABLE IF NOT EXISTS messages (

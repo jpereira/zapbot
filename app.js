@@ -2,13 +2,13 @@
  * ZapBot - WhatsApp bot based on whatsapp-web.js
  *
  * Recovers deleted messages, downloads videos (/get), creates stickers,
- * watches messages by text/regex (/watch), monitors contacts and more. The commands are defined in
+ * watches messages by text/regex (/watch) and more. The commands are defined in
  * src/commands/commands.json and implemented in src/commands/ (see src/commands/index.js).
  *
  * This file only does the bootstrap, in the order below; the code lives in src/:
  * constantes, log, db, settings  → base (database, settings, log)
  * client, conexao               → WhatsApp client, QR Code, reconnection
- * events/                       → messages, deleted, edited, presence
+ * events/                       → messages, deleted, edited, reactions
  * commands/                      → one file per command
  * limpeza, alertasPreco, defi/alertas, agenda, backup, email → periodic tasks and alerts
  *
@@ -84,7 +84,6 @@ printInfo(`🤖 Starting ZapBot ${versionWithCommit()}...`);
 const { marksStartCleanup } = require('./src/client');
 const { startBot, startWatchdog } = require('./src/connection');
 
-require('./src/events/presence');
 require('./src/events/deleted');
 require('./src/events/edited');
 require('./src/events/reactions');

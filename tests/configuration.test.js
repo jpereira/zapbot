@@ -61,9 +61,11 @@ describe('commands.json', () => {
         }
     });
 
-    test('comando "disabled" não é carregado (/monitor)', () => {
-        assert.equal(CONFIG.commands.find(c => c.cmd === '/monitor').disabled, true);
-        assert.equal(findCommand('/monitor'), undefined);
+    test('comando "disabled" não é carregado', () => {
+        const { withoutDisabled } = bot.src('botConfig');
+        const { ativos: assets, desativados: disabled } = withoutDisabled([{ cmd: '/a' }, { cmd: '/b', disabled: true }, { cmd: '/c', disabled: false }]);
+        assert.deepEqual([assets.map(c => c.cmd), disabled], [['/a', '/c'], ['/b']]);
+        assert.ok(CONFIG.commands.filter(c => c.disabled).every(c => !findCommand(c.cmd)), 'nenhum desativado do config carrega');
     });
 });
 
@@ -102,7 +104,7 @@ function checkSummary(md, title, whereAlt, { comLinks: withLinks }) {
     const linesAlt = commandsTable(md, title);
     const names = linesAlt.map(l => l.cmd);
 
-    // Includes the disabled ones ("disabled": true): /monitor is documented as under development
+    // Includes the disabled ones ("disabled": true): they have a page too
     assert.deepEqual(names, sorted(names), `${whereAlt}: Resumo fora de ordem`);
     assert.deepEqual(sorted(names), sorted(CONFIG.commands.map(c => c.cmd)), `${whereAlt}: Resumo diferente do config`);
 

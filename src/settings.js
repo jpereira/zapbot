@@ -389,11 +389,6 @@ const SETTINGS_SCHEMA = {
         secret: true,
         desc: 'Chave do GIPHY (/giphy), usada quando GIPHY_API_KEY não está no config/.env.'
     },
-    'monitor.max': {
-        default: 20,
-        type: 'number', min: 1, max: 1000,
-        desc: 'Máximo de números monitorados pelo /monitor.'
-    },
     'news.brasil': {
         // The feeds listed at https://rss.feedspot.com/brazil_rss_feeds/ (the page is HTML, not RSS)
         default: [

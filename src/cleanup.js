@@ -54,7 +54,7 @@ async function cleanCacheOld(maxDeleteWin = MAX_DELETE_WINDOW, retentionDeleted 
  * edited and the reactions stored for /show), all the media, all the
  * temporaries and all the /backup backups.
  * At the end, VACUUM gives the space back to the disk: DELETE alone does not shrink the .db.
- * Does not touch monitored_numbers, presence_logs, watch_hits, stats, polls, price_alerts
+ * Does not touch watch_hits, stats, polls, price_alerts
  * nor settings (configuration and history).
  */
 async function cleanAll() {

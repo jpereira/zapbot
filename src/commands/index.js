@@ -24,7 +24,6 @@ const { cmdJoke } = require('./joke');
 const { cmdKernel } = require('./kernel');
 const { cmdListGeneral } = require('./listageral');
 const { cmdMeme } = require('./meme');
-const { cmdMonitor } = require('./monitor');
 const { cmdMute, cmdUnmute } = require('./mute');
 const { cmdNews } = require('./news');
 const { cmdNoffa } = require('./noffa');
@@ -68,7 +67,6 @@ const HANDLERS = {
     '/kernel': cmdKernel,
     '/listageral': cmdListGeneral,
     '/meme': cmdMeme,
-    '/monitor': cmdMonitor,
     '/mute': cmdMute,
     '/news': cmdNews,
     '/noffa': cmdNoffa,
