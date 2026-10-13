@@ -248,28 +248,66 @@ describe('/sticker (/st)', () => {
             [true, 'Meu Pacote', 'https://github.com/jpereira/zapbot/']);
     });
 
-    test('webp e vídeo vão como estão', async () => {
-        for (const midia of [{ mimetype: 'image/webp', data: 'AA==' }, { mimetype: 'video/mp4', data: 'AA==' }]) {
-            const [r] = await bot.executar('/sticker', { citada: bot.criarMensagem({ de: OUTRO.jid, midia }) });
-            assert.equal(r.content, midia);
-        }
+    test('webp vai como está; vídeo vira figurinha animada pelo ffmpeg, com -ss e -es', async () => {
+        const webp = { mimetype: 'image/webp', data: 'AA==' };
+        const [r] = await bot.executar('/sticker', { citada: bot.criarMensagem({ de: OUTRO.jid, midia: webp }) });
+        assert.equal(r.content, webp);
+
+        const video = bot.criarMensagem({ de: OUTRO.jid, midia: { mimetype: 'video/mp4', data: 'AA==' } });
+        const [aviso, sticker] = await bot.executar('/st -ss 4 -es 7', { citada: video });
+        assert.equal(aviso.texto, '✅ Sticker criado com sucesso!');
+        assert.equal(sticker.options.sendMediaAsSticker, true);
+
+        const [ffmpeg] = bot.processos.chamadas;
+        assert.match(ffmpeg.bin, /ffmpeg$/);
+        assert.equal(ffmpeg.args[ffmpeg.args.indexOf('-ss') + 1], '4');
+        assert.equal(ffmpeg.args[ffmpeg.args.indexOf('-t') + 1], '3');
+        assert.match(ffmpeg.args[ffmpeg.args.indexOf('-vf') + 1], /crop=512:512/);
     });
 
-    test('link: usa o thumbnail da prévia (interno ou externo)', async () => {
-        const comThumb = bot.criarMensagem({ texto: 'https://x.com/post', de: OUTRO.jid, extras: { _data: { thumbnail: Buffer.from('thumb').toString('base64') } } });
-        const [interno] = await bot.executar('/sticker', { citada: comThumb });
+    test('URL ou link respondido: baixa o vídeo, como o /get -st', async () => {
+        await bot.executar('/sticker -ss 10 http://8.8.8.8/video');
+        assert.deepEqual(bot.processos.chamadas.map(c => c.bin.split('/').pop()), ['yt-dlp', 'ffmpeg']);
+        const ff = bot.processos.chamadas[1].args;
+        assert.equal(ff[ff.indexOf('-ss') + 1], '10');
+        assert.equal(ff[ff.indexOf('-t') + 1], '6', 'sem -es: os 6 s seguintes');
+
+        bot.processos.chamadas.length = 0;
+        const [, sticker] = await bot.executar('/sticker', { citada: bot.criarMensagem({ texto: 'olha http://8.8.8.8/v', de: OUTRO.jid }) });
+        assert.equal(bot.processos.chamadas[0].args.at(-1), 'http://8.8.8.8/v');
+        assert.equal(sticker.options.sendMediaAsSticker, true);
+    });
+
+    test('link sem vídeo: usa a prévia do link (interna ou externa) e edita o aviso', async () => {
+        bot.processos.falhar = 'yt-dlp';
+        const comThumb = bot.criarMensagem({ texto: 'http://8.8.8.8/post', de: OUTRO.jid, extras: { _data: { thumbnail: Buffer.from('thumb').toString('base64') } } });
+        const [aviso, interno] = await bot.executar('/sticker', { citada: comThumb });
+        assert.equal(aviso.texto, '✅ Sticker criado com sucesso!');
         assert.equal(interno.content.mimetype, 'image/webp');
+        assert.equal(interno.options.sendMediaAsSticker, true);
 
         MessageMedia.urls.set('https://img.x.com/t.jpg', new MessageMedia('image/jpeg', 'AA==', 't.jpg'));
-        const externo = bot.criarMensagem({ texto: 'https://x.com/post', de: OUTRO.jid, extras: { _data: { thumbnailUrl: 'https://img.x.com/t.jpg' } } });
-        assert.equal((await bot.executar('/sticker', { citada: externo }))[0].content.mimetype, 'image/webp');
+        const externo = bot.criarMensagem({ texto: 'http://8.8.8.8/post', de: OUTRO.jid, extras: { _data: { thumbnailUrl: 'https://img.x.com/t.jpg' } } });
+        assert.equal((await bot.executar('/sticker', { citada: externo }))[1].content.mimetype, 'image/webp');
+
+        // Link que não pode ser baixado (endereço privado): a prévia também serve, sem aviso
+        const privado = bot.criarMensagem({ texto: 'http://127.0.0.1/post', de: OUTRO.jid, extras: { _data: { thumbnail: 'AA==' } } });
+        const r = await bot.executar('/sticker', { citada: privado });
+        assert.equal(r.length, 1);
+        assert.equal(r[0].options.sendMediaAsSticker, true);
     });
 
-    test('mensagem sem mídia nem link; link sem thumbnail', async () => {
+    test('mensagem sem mídia nem link; link sem vídeo nem prévia; áudio', async () => {
         assert.deepEqual(await bot.responder('/sticker', { citada: bot.criarMensagem({ texto: 'só texto', de: OUTRO.jid }) }),
-            ['A mensagem respondida não tem mídia nem link.']);
-        assert.deepEqual(await bot.responder('/sticker', { citada: bot.criarMensagem({ texto: 'https://x.com/a', de: OUTRO.jid }) }),
-            ['Não encontrei thumbnail baixável para:\nhttps://x.com/a']);
+            ['❌ A mensagem respondida não tem mídia nem link.']);
+
+        bot.processos.falhar = 'yt-dlp';
+        const r = await bot.executar('/sticker', { citada: bot.criarMensagem({ texto: 'http://8.8.8.8/a', de: OUTRO.jid }), erroEsperado: true });
+        assert.equal(r.length, 1);
+        assert.match(r[0].texto, /Problemas para baixar com/);
+
+        const audio = bot.criarMensagem({ de: OUTRO.jid, midia: { mimetype: 'audio/ogg', data: 'AA==' } });
+        assert.deepEqual(await bot.responder('/sticker', { citada: audio }), ['❌ Não dá para fazer figurinha de um áudio.']);
     });
 
     test('-txt: os dois quadros em PNG (letra fg no fundo bg, e o contrário), juntados pelo ffmpeg num WEBP animado', async () => {

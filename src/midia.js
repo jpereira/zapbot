@@ -73,7 +73,7 @@ function argsDoFfmpeg(opts, originalFile, outputFile) {
 /*
  * Figurinha a partir de imagem: recorte quadrado 512x512 enquadrado no MEIO
  * da imagem (sem isto o WhatsApp Web converte sem centralizar). WebP já é
- * figurinha e vai como está; vídeos seguem com a conversão do whatsapp-web.js.
+ * figurinha e vai como está; vídeos passam pelo ffmpeg (argsDoFfmpeg).
  */
 const STICKER_SIZE = 512;
 const STICKER_MAX_BYTES = 100 * 1024;          // limite do WhatsApp: figurinha estática
