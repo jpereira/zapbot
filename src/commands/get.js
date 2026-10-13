@@ -8,6 +8,7 @@ const path = require('path');
 const fs = require('fs-extra');
 
 const { formatErrorCommand, getCommandSyntax } = require('./base');
+const { completeNotice } = require('../client');
 const { BIN_FFMPEG, BIN_YT, GET_MAX_CONCURRENT, TMP_DIR } = require('../constants');
 const { printDebug, printError, printInfo } = require('../log');
 const { getSetting, isDebugMode, stickerMeta } = require('../settings');
@@ -119,6 +120,7 @@ async function runGet({ msg, opts, quotedMsg, senderName }) {
     let outputFile = null;
     let logCmdFile = null;
     let logCmd = null;
+    let notice = null; // the "Processando…": edited with the result (success or error)
 
     try {
         let urlInput;
@@ -149,7 +151,7 @@ async function runGet({ msg, opts, quotedMsg, senderName }) {
             throw new Error(`A URL '${urlInput}' aponta para um endereço não permitido. Ignorando`);
         }
 
-        await msg.reply(`💡 Processando ${isSticker ? 'seu sticker' : 'sua mídia'}, aguarde.`, null, { linkPreview: false });
+        notice = await msg.reply(`💡 Processando ${isSticker ? 'seu sticker' : 'sua mídia'}, aguarde.`, null, { linkPreview: false });
 
         fs.mkdirSync(TMP_DIR, { recursive: true });
 
@@ -234,9 +236,12 @@ async function runGet({ msg, opts, quotedMsg, senderName }) {
                 cause: inner
             });
         }
+
+        // WhatsApp only edits text: the media goes separately and the notice becomes the confirmation
+        await completeNotice(msg, notice, `✅ ${isSticker ? 'Sticker criado' : 'Mídia baixada'} com sucesso!`, { linkPreview: false });
     } catch (e) {
         printError(e.message);
-        await msg.reply(formatErrorCommand(e), null, { linkPreview: false });
+        await completeNotice(msg, notice, formatErrorCommand(e), { linkPreview: false });
     } finally {
         if (logCmd !== null) {
             try { fs.closeSync(logCmd); } catch { /* already closed */ }

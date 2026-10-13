@@ -62,6 +62,7 @@ class ClientFake extends EventEmitter {
         this.lids = new Map();         // "123@lid" -> "5521...@c.us"
         this.inicializado = 0;
         this.destruido = 0;
+        this.recusarEdicao = false;    // edit() returns null, as when WhatsApp does not let it edit
     }
 
     async initialize() { this.inicializado++; }
@@ -73,6 +74,22 @@ class ClientFake extends EventEmitter {
         // Like whatsapp-web.js' Message: the id of the sent message (outside the tests' deepEqual)
         const id = `BOT${this.enviadas.length + 1}`;
         Object.defineProperty(sent, 'id', { value: { id, remote: chatId, fromMe: true, _serialized: `true_${chatId}_${id}` } });
+        // Editing swaps the text in place (as it appears in the chat) and, like WhatsApp Web,
+        // fires 'message_edit' with your message
+        Object.defineProperty(sent, 'edit', {
+            value: async (textAlt) => {
+                if (this.recusarEdicao) return null;
+                const oldAlt2 = sent.content;
+                Object.assign(sent, { content: textAlt, editada: true });
+                const edited = {
+                    id: sent.id, fromMe: true, from: OWNER.jid, to: chatId, type: 'chat', body: textAlt,
+                    timestamp: Math.floor(Date.now() / 1000),
+                    latestEditSenderTimestampMs: Date.now(), latestEditMsgKey: { id: `EDIT_${id}` }
+                };
+                for (const h of this.listeners('message_edit')) await h(edited, textAlt, oldAlt2);
+                return sent;
+            }
+        });
         this.enviadas.push(sent);
         return sent;
     }

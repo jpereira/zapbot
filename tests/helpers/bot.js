@@ -54,6 +54,7 @@ async function restart() {
     await setSetting('flood.maxCommandRepeated', 0);
 
     client.enviadas.length = 0;
+    client.recusarEdicao = false;
     cleanMarks();
     client.contatos.clear();
     client.chats.clear();
