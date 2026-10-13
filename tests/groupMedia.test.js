@@ -286,9 +286,15 @@ describe('/sticker (/st)', () => {
         assert.equal(internal.content.mimetype, 'image/webp');
         assert.equal(internal.options.sendMediaAsSticker, true);
 
-        MessageMedia.urls.set('https://img.x.com/t.jpg', new MessageMedia('image/jpeg', 'AA==', 't.jpg'));
-        const external = bot.createMessage({ texto: 'http://8.8.8.8/post', de: OTHERAlt.jid, extras: { _data: { thumbnailUrl: 'https://img.x.com/t.jpg' } } });
+        MessageMedia.urls.set('http://8.8.4.4/t.jpg', new MessageMedia('image/jpeg', 'AA==', 't.jpg'));
+        const external = bot.createMessage({ texto: 'http://8.8.8.8/post', de: OTHERAlt.jid, extras: { _data: { thumbnailUrl: 'http://8.8.4.4/t.jpg' } } });
         assert.equal((await bot.executar('/sticker', { citada: external }))[1].content.mimetype, 'image/webp');
+
+        // The external preview goes through the anti-SSRF: on the internal network, it is not downloaded (and the yt-dlp error stays)
+        const interna = bot.createMessage({ texto: 'http://8.8.8.8/post', de: OTHERAlt.jid, extras: { _data: { thumbnailUrl: 'http://192.168.0.1/t.jpg' } } });
+        const withoutPreview = await bot.executar('/sticker', { citada: interna, erroEsperado: true });
+        assert.equal(withoutPreview.length, 1);
+        assert.match(withoutPreview[0].texto, /Problemas para baixar com/);
 
         // A link that cannot be downloaded (private address): the preview also works, without a warning
         const private = bot.createMessage({ texto: 'http://127.0.0.1/post', de: OTHERAlt.jid, extras: { _data: { thumbnail: 'AA==' } } });
@@ -345,6 +351,11 @@ describe('/sticker (/st)', () => {
         await errorAlt('/sticker -txt oi -fg #12', '❌ -fg: "#12" não é uma cor. Use #RRGGBB (ex.: #000000).');
         await errorAlt('/sticker -txt oi -bg #000 -fg #000000', '❌ O -bg e o -fg são a mesma cor: o texto não apareceria.');
         await errorAlt('/sticker -bg #fff', '❌ O -bg e o -fg são do -txt: /sticker -txt "Bom dia!" -bg "#FFFFFF" -fg "#000000"');
+        for (const line of ['/sticker -ss 3 -txt oi', '/sticker -v -txt oi', '/sticker http://8.8.8.8/v -txt oi']) {
+            await errorAlt(line, '❌ O -txt não combina com -ss, -es, -v nem com uma URL: ele faz a figurinha só do texto.');
+        }
+        // After -txt it is all text
+        assert.equal((await bot.executar('/sticker -txt corre -ss 3'))[0].content.mimetype, 'image/webp');
 
         bot.processes.falhar = 'ffmpeg';
         await errorAlt('/sticker -txt oi', '❌ Não consegui gerar a figurinha: /usr/bin/ffmpeg exited with code 1');

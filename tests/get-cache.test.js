@@ -125,6 +125,13 @@ describe('/get (/download)', () => {
         assert.equal(argsDo('yt-dlp').at(-1), URL);
     });
 
+    test('opção desconhecida é recusada (sem isto, viraria a URL)', async () => {
+        assert.deepEqual(await bot.replyAlt(`/get -x ${URL}`), ['❌ Opção desconhecida: -x\n💡 _Veja as opções com /get -h_']);
+        assert.deepEqual(await bot.replyAlt('/sticker -a', { citada: bot.createMessage({ texto: URL, de: OTHERAlt.jid }) }),
+            ['❌ Opção desconhecida: -a\n💡 _Veja as opções com /sticker -h_']);
+        assert.deepEqual(processes.chamadas, []);
+    });
+
     test('a URL digitada vale mais que a mensagem respondida', async () => {
         const quoted = bot.createMessage({ texto: 'http://1.1.1.1/outro', de: OTHERAlt.jid });
         await bot.executar(`/get ${URL}`, { citada: quoted });
@@ -206,12 +213,14 @@ describe('/get respondendo uma mídia do WhatsApp', () => {
     const replying = (mediaAlt) => ({ citada: bot.createMessage({ de: OTHERAlt.jid, midia: mediaAlt }) });
 
     test('sem opção: o arquivo original como documento, sem yt-dlp nem ffmpeg', async () => {
-        for (const mediaAlt of [video, photo]) {
-            const r = await bot.executar('/get', replying(mediaAlt));
-            assert.equal(r.length, 1);
-            assert.equal(r[0].content, mediaAlt);
-            assert.equal(r[0].options.sendMediaAsDocument, true);
-        }
+        const r = await bot.executar('/get', replying(video));
+        assert.equal(r.length, 1);
+        assert.equal(r[0].content, video, 'com nome, vai como veio');
+        assert.equal(r[0].options.sendMediaAsDocument, true);
+
+        // Without a name (camera photo), it gets one from the extension: WhatsApp would show "Sem título"
+        const [f] = await bot.executar('/get', replying(photo));
+        assert.deepEqual([f.content.mimetype, f.content.data, f.content.filename], [photo.mimetype, photo.data, 'zapbot.jpeg']);
         assert.deepEqual(processes.chamadas, []);
     });
 
@@ -274,7 +283,7 @@ describe('/get respondendo uma mídia do WhatsApp', () => {
 
         const quoted = bot.createMessage({ de: OTHERAlt.jid, extras: { hasMedia: true, async downloadMedia() { throw new Error('sumiu'); } } });
         assert.deepEqual(await bot.replyAlt('/get -st', { citada: quoted, erroEsperado: true }),
-            ['❌ Não consegui baixar a mídia respondida (ela ainda está no celular?).']);
+            ['❌ Não consegui baixar a mídia respondida: ela pode não estar mais disponível no WhatsApp.']);
     });
 });
 
