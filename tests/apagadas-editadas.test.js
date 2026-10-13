@@ -308,6 +308,20 @@ describe('/show <chat>', () => {
         assert.match(r[0], /🔎 "a" corresponde a 2 chats:\n\n1\. 👥 Trabalho\n2\. 👥 Família/);
         assert.match(r.at(-1), /"b"/);
     });
+
+    test('a escolha expira em 2 minutos: a lista vira o aviso, sem mensagem nova', async (t) => {
+        await mensagemApagada('a');
+        await mensagemApagada('b', { chat: TRABALHO });
+        t.mock.timers.enable({ apis: ['setTimeout'] });
+        const comando = bot.executar('/show a');
+        for (let i = 0; i < 50; i++) await new Promise(setImmediate);
+        t.mock.timers.tick(bot.src('escolhas').ESCOLHA_MS);
+
+        const r = await comando;
+        assert.equal(r.length, 1);
+        assert.equal(r[0].texto, '⌛ Nenhum nº escolhido para "a" em 2 minutos: nada foi feito.');
+        assert.equal(r[0].editada, true);
+    });
 });
 
 describe('/show -l (lista)', () => {

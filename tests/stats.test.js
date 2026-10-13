@@ -113,6 +113,20 @@ describe('/stats', () => {
         assert.match(r.at(-1), /Estatísticas de Trabalho antigo\*[\s\S]*Mensagens:\* 1 /);
     });
 
+    test('a escolha expira em 2 minutos: a lista vira o aviso, sem mensagem nova', async (t) => {
+        await contar('a', 'A', 2, { chatId: TRABALHO, chatName: 'Trabalho' });
+        await contar('a', 'A', 1, { chatId: '120363000000000003@g.us', chatName: 'Trabalho antigo' });
+        t.mock.timers.enable({ apis: ['setTimeout'] });
+        const comando = bot.executar('/stats /trab/');
+        for (let i = 0; i < 50; i++) await new Promise(setImmediate);
+        t.mock.timers.tick(bot.src('escolhas').ESCOLHA_MS);
+
+        const r = await comando;
+        assert.equal(r.length, 1);
+        assert.equal(r[0].texto, '⌛ Nenhum nº escolhido para "trab" em 2 minutos: nada foi feito.');
+        assert.equal(r[0].editada, true);
+    });
+
     test('-l: os chats com estatísticas, do que mais fala para o que menos', async () => {
         assert.deepEqual(await stats('/stats -l'), ['📊 Nenhuma estatística guardada ainda.']);
         await contar('a', 'A', 2, { chatId: TRABALHO, chatName: 'Trabalho' });

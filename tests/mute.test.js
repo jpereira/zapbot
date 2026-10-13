@@ -154,7 +154,7 @@ describe('/mute (/mudo, /m)', () => {
         assert.deepEqual((await bot.dbAll('SELECT target_id FROM mutes')).map(m => m.target_id), ['5511944444444@c.us']);
     });
 
-    test('a escolha expira em 2 minutos sem fazer nada', async (t) => {
+    test('a escolha expira em 2 minutos sem fazer nada; a lista vira o aviso', async (t) => {
         t.mock.timers.enable({ apis: ['setTimeout'] });
         bot.criarContato('5521933333333@c.us', 'Jorge Pereira');
         bot.criarContato('5511944444444@c.us', 'Jorge Silva');
@@ -163,8 +163,10 @@ describe('/mute (/mudo, /m)', () => {
         for (let i = 0; i < 50; i++) await new Promise(setImmediate);
         t.mock.timers.tick(bot.src('escolhas').ESCOLHA_MS);
 
-        const r = (await comando).map(e => e.texto);
-        assert.equal(r.at(-1), '⌛ Nenhum nº escolhido para "jorge" em 2 minutos: nada foi feito.');
+        const r = await comando;
+        assert.equal(r.length, 1, 'sem mensagem nova');
+        assert.equal(r[0].texto, '⌛ Nenhum nº escolhido para "jorge" em 2 minutos: nada foi feito.');
+        assert.equal(r[0].editada, true);
         assert.deepEqual(await bot.dbAll('SELECT * FROM mutes'), []);
         assert.deepEqual(await bot.responder('1'), []);
     });
