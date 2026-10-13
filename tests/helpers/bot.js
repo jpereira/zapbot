@@ -76,10 +76,15 @@ async function reiniciar() {
     criarGrupo(GRUPO, 'Família', [DONO.jid, OUTRO.jid]);
 }
 
-// Um contato salvo na sua agenda (isMyContact), com o nome dela
+// Um contato salvo na sua agenda (isMyContact), com o nome dela; block()/unblock() mudam o isBlocked
 function criarContato(jid, nome) {
     const [user] = jid.split('@');
-    const contato = { id: { _serialized: jid, user }, number: user, name: nome, pushname: nome, isMyContact: true, isGroup: false };
+    const contato = {
+        id: { _serialized: jid, user }, number: user, name: nome, pushname: nome, isMyContact: true, isGroup: false,
+        isBlocked: false,
+        async block() { this.isBlocked = true; return true; },
+        async unblock() { this.isBlocked = false; return true; }
+    };
     client.contatos.set(jid, contato);
     return contato;
 }
