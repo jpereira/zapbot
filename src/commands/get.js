@@ -189,7 +189,7 @@ async function converterAndSend({ msg, opts, senderName, url, media, previa: pre
             throw errorOnDownload(`A URL '${url}' aponta para um endereço não permitido. Ignorando`);
         }
 
-        notice = await msg.reply(`💡 Processando ${isSticker ? 'seu sticker' : 'sua mídia'}, aguarde.`, null, { linkPreview: false });
+        notice = await msg.reply(`⏳ Processando ${isSticker ? 'seu sticker' : 'sua mídia'}, aguarde.`, null, { linkPreview: false });
 
         fs.mkdirSync(TMP_DIR, { recursive: true });
 
