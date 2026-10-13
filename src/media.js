@@ -6,7 +6,8 @@
 const { MessageMedia } = require('whatsapp-web.js');
 const sharp = require('sharp');
 
-const { printError } = require('./log');
+const { printError, printInfo } = require('./log');
+const { isUrlPublic } = require('./util/url');
 
 function argsDoFfmpeg(opts, originalFile, outputFile) {
     const isSticker = opts.opt.sticker;  // -sticker  | -st
@@ -138,7 +139,10 @@ async function thumbnailDoLink(quotedMsg) {
     if (!media) {
         const thumbnailUrl = quotedMsg._data?.thumbnailUrl || quotedMsg._data?.thumbnailDirectPath || null;
 
-        if (thumbnailUrl?.startsWith('http')) {
+        // The URL comes from someone else's message: the /get anti-SSRF applies here too
+        if (thumbnailUrl?.startsWith('http') && !(await isUrlPublic(thumbnailUrl))) {
+            printInfo(`Prévia do link recusada (endereço não permitido): ${thumbnailUrl}`);
+        } else if (thumbnailUrl?.startsWith('http')) {
             try {
                 media = await MessageMedia.fromUrl(thumbnailUrl, { unsafeMime: true });
             } catch (err) {
