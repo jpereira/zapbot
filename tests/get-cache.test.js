@@ -50,10 +50,10 @@ describe('URLs (anti-SSRF do /get)', () => {
 describe('/get (/download)', () => {
     test('vídeo: baixa com yt-dlp, converte com ffmpeg e manda como documento', async () => {
         const r = await bot.executar(`/get ${URL}`, { de: OTHERAlt.jid });
-        assert.equal(r[0].texto, '💡 Processando sua mídia, aguarde.');
         assert.ok(r[1].content instanceof MessageMedia);
         assert.equal(r[1].options.sendMediaAsDocument, true);
         assert.equal(r[1].options.caption, '📥 Aqui está a mídia para download.');
+        assert.equal(r[0].texto, '✅ Mídia baixada com sucesso!', 'o aviso vira a confirmação');
 
         assert.deepEqual(binaries(), ['yt-dlp', 'ffmpeg']);
         const yt = argsDo('yt-dlp');
@@ -73,8 +73,9 @@ describe('/get (/download)', () => {
 
     test('-st: figurinha animada de até 6 s', async () => {
         const r = await bot.executar(`/get -st ${URL}`);
-        assert.equal(r[0].texto, '💡 Processando seu sticker, aguarde.');
         assert.equal(r[1].options.sendMediaAsSticker, true);
+        assert.equal(r[0].texto, '✅ Sticker criado com sucesso!', 'o aviso vira a confirmação');
+        assert.equal(r.length, 2);
         const ff = argsDo('ffmpeg');
         assert.equal(ff[ff.indexOf('-t') + 1], '6');
         assert.match(ff[ff.indexOf('-vf') + 1], /crop=512:512/);
@@ -131,23 +132,50 @@ describe('/get (/download)', () => {
         assert.deepEqual(processes.chamadas, []);
     });
 
-    test('falhas do yt-dlp, do ffmpeg, download vazio e arquivo grande demais', async () => {
+    test('falhas do yt-dlp, do ffmpeg, download vazio e arquivo grande demais editam o aviso', async () => {
+        // The error replaces the "Processando…": nothing besides it is sent
+        const errorInNotice = async (line) => {
+            const r = await bot.executar(line, { erroEsperado: true });
+            assert.equal(r.length, 1);
+            assert.equal(r[0].editada, true);
+            return r[0].texto;
+        };
+
         processes.falhar = 'yt-dlp';
-        assert.match((await bot.replyAlt(`/get ${URL}`, { erroEsperado: true }))[1], /Problemas para baixar com '\/venv\/bin\/yt-dlp'[\s\S]*🛠️ \*Cmd\*/);
+        assert.match(await errorInNotice(`/get -st ${URL}`), /Problemas para baixar com '\/venv\/bin\/yt-dlp'[\s\S]*🛠️ \*Cmd\*/);
 
         processes.falhar = 'ffmpeg';
-        assert.match((await bot.replyAlt(`/get ${URL}`, { erroEsperado: true }))[1], /Problemas para decodificar com '\/usr\/bin\/ffmpeg'/);
+        assert.match(await errorInNotice(`/get ${URL}`), /Problemas para decodificar com '\/usr\/bin\/ffmpeg'/);
 
         processes.falhar = null;
         processes.naoBaixar = true;
-        assert.match((await bot.replyAlt(`/get ${URL}`, { erroEsperado: true }))[1], /Nada foi baixado \(acima de 200 MB\?/);
+        assert.match(await errorInNotice(`/get ${URL}`), /Nada foi baixado \(acima de 200 MB\?/);
 
         processes.naoBaixar = false;
         await bot.setSetting('get.maxSizeMB', 1);
         processes.tamanhoSaida = 2 * 1024 * 1024;
-        assert.match((await bot.replyAlt(`/get ${URL}`, { erroEsperado: true }))[1], /Arquivo muito grande para WhatsApp Web \(máx\. 1 MB\)/);
+        assert.match(await errorInNotice(`/get ${URL}`), /Arquivo muito grande para WhatsApp Web \(máx\. 1 MB\)/);
 
         assert.deepEqual(filesTemporary(), [], 'os temporários foram apagados mesmo com erro');
+    });
+
+    test('a edição do aviso não vira "mensagem editada" no cache nem avisa no privado', async () => {
+        await bot.setSetting('show.alert.edited', true);
+        const r = await bot.executar(`/get -st ${URL}`);
+        assert.equal(r.length, 2, 'só o aviso e a figurinha');
+        assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM message_edits')).n, 0);
+
+        processes.falhar = 'yt-dlp';
+        await bot.executar(`/get -st ${URL}`, { erroEsperado: true });
+        assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM message_edits')).n, 0);
+    });
+
+    test('se o WhatsApp não deixa editar o aviso, o erro vai em outra mensagem', async () => {
+        bot.client.recusarEdicao = true;
+        processes.falhar = 'yt-dlp';
+        const r = await bot.executar(`/get -st ${URL}`, { erroEsperado: true });
+        assert.equal(r[0].texto, '💡 Processando seu sticker, aguarde.');
+        assert.match(r[1].texto, /Problemas para baixar com/);
     });
 
     test('no máximo 2 downloads ao mesmo tempo', async () => {
@@ -155,7 +183,7 @@ describe('/get (/download)', () => {
         await Promise.all([1, 2, 3].map(() => bot.executar(`/get ${URL}`)));
         const texts = bot.client.enviadas.map(e => bot.text(e.content, e.options));
         assert.equal(texts.filter(t => /⏳ Já existem 2 downloads em andamento/.test(t)).length, 1);
-        assert.equal(texts.filter(t => /Processando sua mídia/.test(t)).length, 2);
+        assert.equal(texts.filter(t => /✅ Mídia baixada com sucesso!/.test(t)).length, 2);
         assert.deepEqual(binaries(), ['yt-dlp', 'yt-dlp', 'ffmpeg', 'ffmpeg']);
     });
 });

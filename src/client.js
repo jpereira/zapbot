@@ -126,6 +126,25 @@ client.sendMessage = (chatId, content, options = {}) => {
     return sendMessageOriginal(chatId, content, options);
 };
 
+/**
+ * Swaps the text of a bot notice ("Processando…", a choice question)
+ * by the conclusion, without sending another message. Without a notice, or if WhatsApp does not
+ * let it edit, replies to `msg` separately. The bot's edit is yours (fromMe): the
+ * 'message_edit' does not save it as edited.
+ * @returns {Promise<object|null>} the message with the conclusion
+ */
+async function completeNotice(msg, notice, textAlt, options = {}) {
+    if (contextDebug().maskTelefones) textAlt = maskPhones(textAlt);
+    if (notice) {
+        try {
+            if (await notice.edit(textAlt, options)) return notice;
+        } catch (e) {
+            printError(`Não consegui editar o aviso: ${e.message}`);
+        }
+    }
+    return msg.reply(textAlt, null, options);
+}
+
 // Marks that never became 'message_create' (send failed) expire here
 function cleanMarksExpired() {
     const nowAlt = Date.now();
@@ -150,6 +169,7 @@ function marksStartCleanup() {
 
 module.exports = {
     client,
+    completeNotice,
     botConsumeSending,
     wasSentByBot,
     marksStartCleanup,
