@@ -1,4 +1,4 @@
-# `/show` (`/s`) · admin
+# `/show` · admin
 
 Sem parâmetros no privado, lista o cache de todos os chats, como `/show -l`. Em grupos, reexibe a
 última mensagem apagada do grupo.

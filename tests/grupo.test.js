@@ -125,7 +125,7 @@ describe('/enquete (/enq, /quiz)', () => {
     });
 
     test('uma por linha; -m no começo permite várias', async () => {
-        const p = await enquete('/enq -m Quais dias?\nSeg\nTer\nQua');
+        const p = await enquete('/enquete -m Quais dias?\nSeg\nTer\nQua');
         assert.equal(p.pollName, 'Quais dias?');
         assert.equal(p.pollOptions.length, 3);
         assert.equal(p.options.allowMultipleAnswers, true);
@@ -172,7 +172,7 @@ describe('/enquete -r (resultado)', () => {
         await bot.votar(enviada, CICLANO_JID, ['Hambúrguer']);
         await bot.votar(enviada, DONO.jid, ['Pizza']);
 
-        const [r] = await bot.responder('/enq -r');
+        const [r] = await bot.responder('/enquete -r');
         assert.match(r, /_3 votos de 3 pessoas · criada em/);
         assert.match(r, /🏆 \*Pizza\* — 2 \(67%\) █{7}\n   _Fulano, Dono_/);
         assert.match(r, /▫️ \*Hambúrguer\* — 1 \(33%\) ███\n   _Ciclano_/);
@@ -239,7 +239,7 @@ describe('/sticker (/st)', () => {
     test('imagem: enquadrada em webp, com o nome e o autor do setting', async () => {
         await bot.setSetting('sticker.name', 'Meu Pacote');
         const citada = bot.criarMensagem({ de: OUTRO.jid, midia: foto });
-        const [r] = await bot.executar('/st', { citada });
+        const [r] = await bot.executar('/sticker', { citada });
 
         assert.ok(r.content instanceof MessageMedia);
         assert.equal(r.content.mimetype, 'image/webp');
@@ -254,7 +254,7 @@ describe('/sticker (/st)', () => {
         assert.equal(r.content, webp);
 
         const video = bot.criarMensagem({ de: OUTRO.jid, midia: { mimetype: 'video/mp4', data: 'AA==' } });
-        const [aviso, sticker] = await bot.executar('/st -ss 4 -es 7', { citada: video });
+        const [aviso, sticker] = await bot.executar('/sticker -ss 4 -es 7', { citada: video });
         assert.equal(aviso.texto, '✅ Sticker criado com sucesso!');
         assert.equal(sticker.options.sendMediaAsSticker, true);
 
@@ -273,7 +273,7 @@ describe('/sticker (/st)', () => {
     test('vídeo: reduz qualidade e fps até a figurinha caber em 500 KB', async () => {
         const video = bot.criarMensagem({ de: OUTRO.jid, midia: { mimetype: 'video/mp4', data: 'AA==' } });
         bot.processos.tamanhoSaida = 500 * 1024 + 1;
-        const r = await bot.executar('/st', { citada: video, erroEsperado: true });
+        const r = await bot.executar('/sticker', { citada: video, erroEsperado: true });
 
         const ffmpegs = bot.processos.chamadas.map(c => c.args);
         assert.deepEqual(ffmpegs.map(a => a[a.indexOf('-q:v') + 1]), ['75', '50', '30', '20']);
@@ -370,7 +370,7 @@ describe('/sticker (/st)', () => {
         assert.match(ffmpeg.args[ffmpeg.args.indexOf('-i') + 1], /quadro_%d\.png$/);
 
         // Sem aspas e sem cores: o padrão (letra preta, fundo branco)
-        assert.equal((await bot.executar('/st -txt Partiu praia?'))[0].content.mimetype, 'image/webp');
+        assert.equal((await bot.executar('/sticker -txt Partiu praia?'))[0].content.mimetype, 'image/webp');
     });
 
     test('-txt: erros de texto, cor e ffmpeg', async () => {

@@ -1,4 +1,4 @@
-# `/traduzir` (`/tr`, `/translate`)
+# `/traduzir` (`/translate`)
 
 Traduz um texto pelo [Google Cloud Translation](https://cloud.google.com/translate). Respondendo
 (reply) uma mensagem, traduz o texto dela. O idioma de origem é detectado sozinho; o de destino é o
@@ -12,7 +12,7 @@ português, ou o do `-para`.
 
 ```text
 /traduzir Where is the nearest pharmacy?
-/tr -para en Onde fica a farmácia mais próxima?
+/traduzir -para en Onde fica a farmácia mais próxima?
 /translate -p es               (respondendo uma mensagem)
 /traduzir -l                   → os idiomas e os códigos
 /set traduzir.lang en          → muda o idioma padrão

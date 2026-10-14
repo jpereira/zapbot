@@ -39,7 +39,7 @@ Nas chaves que são listas (`bot.admins`, `bot.users`, `commands.disabled`, `cry
 `watch.rules`, os feeds do `news.*`...), o `<chave> <valor>` troca a lista inteira; o `-append`
 (`-a`) acrescenta itens e o `-rem` tira, sem mexer no resto. Os itens passam pela mesma validação do
 `<chave> <valor>`: um número de telefone vira só os dígitos, um comando vira o nome principal
-(`/set -rem commands.disabled /p` tira o `/ping` ).
+(`/set -rem commands.disabled /mudo` tira o `/mute`).
 
 ```text
 /set -a crypto.coins hype

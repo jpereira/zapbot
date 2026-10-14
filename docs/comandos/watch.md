@@ -1,4 +1,4 @@
-# `/watch` (`/w`) · admin
+# `/watch` · admin
 
 Vigia mensagens recebidas que casam com regras de texto ou regex e envia avisos ao seu privado ou
 aos destinos de cada regra. Sem parâmetros, lista as regras e, quando há matches, acrescenta as

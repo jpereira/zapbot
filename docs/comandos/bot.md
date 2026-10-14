@@ -1,4 +1,4 @@
-# `/bot` (`/b`) · admin
+# `/bot` · admin
 
 Liga e desliga o bot, diz quem pode usá-lo e mostra o status dele (o relatório das últimas 24 h, os
 usuários e o envio diário) e as versões do que ele usa
