@@ -157,6 +157,7 @@ de um. Os marcados como **Admin** só respondem à sua conta (e aos admins extra
 | [`/kernel`](https://jpereira.github.io/zapbot/commands/kernel/) | | | Versões atuais do kernel Linux (kernel.org) |
 | [`/listageral`](https://jpereira.github.io/zapbot/commands/listageral/) | `/list` | ✅ | Lista os membros do grupo |
 | [`/meme`](https://jpereira.github.io/zapbot/commands/meme/) | | | Template de meme aleatório (imgflip) |
+| [`/monitor`](https://jpereira.github.io/zapbot/commands/monitor/) | | ✅ | 👀 Até 5 contatos, intervalo configurável e histórico dos horários de visto por último observados |
 | [`/mute`](https://jpereira.github.io/zapbot/commands/mute/) | `/mudo` | ✅ | Silencia os avisos de apagadas, editadas, status e reações (e os do `/watch`) de uma pessoa, um grupo ou uma comunidade; respondendo um aviso, de onde ele veio |
 | [`/news`](https://jpereira.github.io/zapbot/commands/news/) | | | Manchetes de feeds RSS: `-hack`, `-g1`, `-gazeta`, `-brasil` |
 | [`/noffa`](https://jpereira.github.io/zapbot/commands/noffa/) | `/🌈`, `/🏳️‍🌈` | | Enfeita o texto com arco-íris |

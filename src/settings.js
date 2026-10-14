@@ -7,6 +7,7 @@ const { compileFilterDebug } = require('./debugOptions');
 const { botConfig } = require('./botConfig');
 const { APP_ENV } = require('./constants');
 const { dbAll, dbGet, dbRun } = require('./db');
+const { limitHistoryMonitor } = require('./monitorHistory');
 const { printError, printInfo, printSuccess } = require('./log');
 const { QUOTE_SUPPORTED, CRYPTO_SUPPORTED } = require('./currencies');
 const { isValidHttpUrl } = require('./util/url');
@@ -389,6 +390,26 @@ const SETTINGS_SCHEMA = {
         secret: true,
         desc: 'Chave do GIPHY (/giphy), usada quando GIPHY_API_KEY não está no config/.env.'
     },
+    'monitor.enabled': {
+        default: true,
+        type: 'boolean',
+        desc: 'Consultas periódicas do /monitor. Desligar pausa sem apagar contatos ou histórico.'
+    },
+    'monitor.max': {
+        default: 5,
+        type: 'number', min: 1, max: 5,
+        desc: 'Máximo de contatos do /monitor (limite absoluto: 5). Mais contatos aumentam o volume de consultas e o risco de bloqueio pelo WhatsApp. Não há quantidade garantidamente segura.'
+    },
+    'monitor.maxRecords': {
+        default: 30,
+        type: 'number', min: 1, max: 1000,
+        desc: 'Máximo de horários no banco por contato e nas listas do /monitor. Reduzir apaga os horários mais antigos que excederem o limite.'
+    },
+    'monitor.pool': {
+        default: 300,
+        type: 'number', min: 120, max: 86400,
+        desc: 'Intervalo mínimo entre verificações de cada contato, em segundos (/monitor). Padrão: 300 s (5 min); mínimo: 120 s (2 min). Intervalos curtos aumentam as consultas e podem contribuir para bloqueio pelo WhatsApp. Nenhum intervalo garante segurança.'
+    },
     'news.brasil': {
         // The feeds listed at https://rss.feedspot.com/brazil_rss_feeds/ (the page is HTML, not RSS)
         default: [
@@ -720,6 +741,8 @@ async function loadSettings() {
         }
     }
 
+    await limitHistoryMonitor(getSetting('monitor.maxRecords'));
+
     printSuccess(`Loaded ${settings.size} settings (${[...settings.keys()].join(',')})`);
     printSuccess(`Loaded ${getSetting('crypto.coins').length} crypto coins (${getSetting('crypto.coins').join(',')})`);
     printInfo(`debug.enabled=${getSetting('debug.enabled')} commands.disabled=${getSetting('commands.disabled').join(',') || '-'}`);
@@ -749,6 +772,10 @@ function envOuSetting(env, key) {
 
 async function setSetting(key, value) {
     value = validateSetting(key, value);
+    if (key === 'monitor.max') {
+        const { n } = await dbGet('SELECT COUNT(*) AS n FROM monitor_contacts');
+        if (value < n) throw new Error(`há ${n} contatos cadastrados: remova contatos pelo /monitor -del antes de reduzir o limite`);
+    }
 
     await dbRun(
         `INSERT INTO settings (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)
@@ -756,6 +783,7 @@ async function setSetting(key, value) {
         [key, JSON.stringify(value)]
     );
     settings.set(key, value);
+    if (key === 'monitor.maxRecords') await limitHistoryMonitor(value);
 
     return value;
 }

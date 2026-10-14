@@ -267,6 +267,11 @@ async function changeList(msg, optionsAlt) {
 
 async function cmdSet({ msg, opts, args, chatId }) {
     await dbReady;
+    const monitor = String(args ?? '').match(/^(monitor\.(?:pool|max|maxRecords|enabled))\s*=\s*(.*)$/s);
+    if (monitor) {
+        args = `${monitor[1]} ${monitor[2]}`;
+        opts = { ...opts, argv: [monitor[1], monitor[2]] };
+    }
 
     // The option key (-reset, -append, -rem) or the 1st word
     const keyTarget = opts.opt.reset ?? opts.opt.append ?? opts.opt.rem ?? opts.argv[0];
@@ -377,7 +382,9 @@ async function cmdSet({ msg, opts, args, chatId }) {
     try {
         const valueAlt = await setSetting(key, raw);
         printInfo(`Setting '${key}' alterado para ${schema.secret ? formatValueSetting(valueAlt, ', ', true) : JSON.stringify(valueAlt)}`);
-        await msg.reply(`✅ *${key}* = ${formatValueSetting(await showItems(key, valueAlt), schema.separator ? ' | ' : ', ', schema.secret)}`);
+        const notice = ['monitor.pool', 'monitor.max'].includes(key)
+            ? '\n⚠️ Intervalos curtos e mais contatos aumentam as consultas e podem contribuir para bloqueio pelo WhatsApp. Nenhum valor garante segurança.' : '';
+        await msg.reply(`✅ *${key}* = ${formatValueSetting(await showItems(key, valueAlt), schema.separator ? ' | ' : ', ', schema.secret)}${notice}`);
     } catch (e) {
         await msg.reply(`❌ Valor inválido para *${key}*: ${e.message}`);
     }
