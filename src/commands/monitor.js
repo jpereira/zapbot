@@ -86,22 +86,22 @@ async function cmdMonitor({ msg, args }) {
         if (r.existente) {
             await msg.reply(`👀 ${r.existente.contact_name} já está cadastrado: #${r.existente.id}.`);
         } else if (r.limite) {
-            await msg.reply(`❌ Limite de ${getSetting('monitor.max')} contatos atingido. Remova um com /monitor -del <id>.`);
+            await msg.reply(`❌ Limite de ${getSetting('monitor.max')} contatos atingido. Remova um com /monitor -rem <id>.`);
         } else {
             await msg.reply(`👀 #${r.contato.id} · ${r.contato.contact_name} cadastrado.\n` +
                 `⏱️ Verificação a cada ${intervalMonitor()}, um contato por vez.\n` +
-                `💡 /monitor -list mostra o histórico; /monitor -del ${r.contato.id} remove.\n${RISK}`);
+                `💡 /monitor -list mostra o histórico; /monitor -rem ${r.contato.id} remove.\n${RISK}`);
             if (!getSetting('monitor.enabled')) {
                 await msg.reply('⏸️ Monitor pausado. Retome com /set monitor.enabled true.');
             }
         }
         return;
     }
-    const removeAlt2 = textAlt.match(/^-(?:del|d)(?:\s+([\s\S]+))?$/);
+    const removeAlt2 = textAlt.match(/^-(?:rem|r)(?:\s+([\s\S]+))?$/);
     if (removeAlt2) {
         const valueAlt = withoutDelimiters(removeAlt2[1]);
         if (!valueAlt) {
-            await msg.reply('❌ Informe o id da lista ou um contato: /monitor -del 1 ou /monitor -d /Jorge Pereira/');
+            await msg.reply('❌ Informe o id da lista ou um contato: /monitor -rem 1 ou /monitor -r /Jorge Pereira/');
             return;
         }
         let id;
@@ -125,7 +125,7 @@ async function cmdMonitor({ msg, args }) {
             : `❌ Contato #${id} não cadastrado. Veja /monitor`);
         return;
     }
-    await msg.reply('❌ Use /monitor, /monitor -add <contato>, /monitor -del <id ou contato> ou /monitor -list.');
+    await msg.reply('❌ Use /monitor, /monitor -add <contato>, /monitor -rem <id ou contato> ou /monitor -list.');
 }
 
 module.exports = { cmdMonitor, intervalMonitor, RISK };
