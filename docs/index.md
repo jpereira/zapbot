@@ -27,6 +27,8 @@ comandos começam com `/`.
 **Principais funções:**
 
 - Recupera mensagens e status apagados ou editados, e reações removidas: [`/show`](comandos/show.md)
+- 👀 Monitora até 5 contatos, com intervalo configurável e histórico limitado dos horários
+  de visto por último observados: [`/monitor`](comandos/monitor.md)
 - Baixa vídeos com yt-dlp e ffmpeg: [`/get`](comandos/get.md)
 - Cria figurinhas: [`/sticker`](comandos/sticker.md)
 - Vigia mensagens por texto ou regex: [`/watch`](comandos/watch.md)
@@ -103,6 +105,13 @@ Por onde começar:
   contadores do `/stats` com mais de 90 dias (setting `stats.retentionDays`), as enquetes com mais
   de 90 dias (setting `enquete.retentionDays`) e os avisos ignorados pelo `/mute` com mais de 30
   dias.
+- **Monitor de contatos**: o [`/monitor`](comandos/monitor.md) consulta até cinco pessoas,
+  uma por vez, a cada cinco minutos por padrão (`monitor.pool`). Guarda até 30 horários distintos
+  por pessoa (`monitor.maxRecords`) nas tabelas `monitor_contacts` e `monitor_history`.
+  `/monitor` e `/monitor -l` mostram o histórico observado; `/monitor -rem all` limpa os cadastros
+  e históricos locais. `/set monitor.enabled false` pausa as consultas sem apagar dados.
+  Horários podem vir do cache e não são confirmados; não há garantia de registrar todos os acessos
+  nem de evitar bloqueio da conta pelo WhatsApp.
 - **Estatísticas**: cada mensagem nova (e cada apagada/editada) soma 1 num contador por chat, dia,
   hora e remetente (tabela `stats`), usado pelo [`/stats`](comandos/stats.md). Só números, sem o
   texto; ficam 90 dias (setting `stats.retentionDays`). As respostas do bot, o seu privado e os

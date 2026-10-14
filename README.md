@@ -25,6 +25,8 @@ comandos começam com `/`.
 **Principais funções:**
 
 - Recupera mensagens e status apagados ou editados, e reações removidas: [`/show`](docs/comandos/show.md)
+- 👀 Monitora até 5 contatos, com intervalo configurável e histórico limitado dos horários
+  de visto por último observados: [`/monitor`](docs/comandos/monitor.md)
 - Baixa vídeos com yt-dlp e ffmpeg: [`/get`](docs/comandos/get.md)
 - Cria figurinhas: [`/sticker`](docs/comandos/sticker.md)
 - Vigia mensagens por texto ou regex: [`/watch`](docs/comandos/watch.md)
