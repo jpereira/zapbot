@@ -226,15 +226,15 @@ describe('documentação', () => {
     test('instalação e README: a versão estável é uma release com data, até a do package.json (a seguinte só no bump.sh)', () => {
         const { version } = require('../package.json');
         const numeros = (v) => v.split('.').map(Number);
-        const [x, y] = numeros(version);
+        const [x, y, z] = numeros(version);
 
-        const m = lerDoc('instalacao.md').match(/`release-(\d+\.\d+)` \(de \d{2}\/\d{2}\/\d{4}\)/);
+        const m = lerDoc('instalacao.md').match(/`v(\d+\.\d+\.\d+)` \(de \d{2}\/\d{2}\/\d{4}\)/);
         assert.ok(m, 'instalacao.md: sem "vX.Y.Z (de DD/MM/AAAA)"');
-        const [ex, ey] = numeros(m[1]);
-        assert.ok(ex < x || (ex === x && ey <= y), `a estável (${m[1]}) passa da versão do package.json (${version})`);
+        const [ex, ey, ez] = numeros(m[1]);
+        assert.ok(ex < x || (ex === x && (ey < y || (ey === y && ez <= z))), `a estável (${m[1]}) passa da versão do package.json (${version})`);
 
-        assert.match(README, new RegExp(`hoje a \`release-${m[1].replace('.', '\\.')}\``));
-        assert.match(README, new RegExp(`git checkout release-${m[1].replace('.', '\\.')}\n`));
+        assert.match(README, new RegExp(`hoje a \`v${m[1].replaceAll('.', '\\.')}\``));
+        assert.match(README, new RegExp(`git checkout v${m[1].replaceAll('.', '\\.')}\n`));
     });
 
     test('nenhum título repetido na mesma página (a âncora ficaria ambígua), no docs/ e no README', () => {

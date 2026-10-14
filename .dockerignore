@@ -11,7 +11,7 @@
 !app.js
 
 # Só o que diz o commit e a tag (src/versao.js): o /version e o /bot -info mostram
-# "2.0.0 (git+60315ed/v2.0.0)". O reflog do HEAD confirma a tag anotada depois de um git fetch --tags
+# "2.0.0 (git+0c6164f/v2.0.0)". O reflog do HEAD confirma a tag anotada depois de um git fetch --tags
 !.git/HEAD
 !.git/packed-refs
 !.git/refs/heads/**
