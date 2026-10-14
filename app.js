@@ -96,6 +96,7 @@ const { startBackup } = require('./src/backup');
 const { startAlertsDefi } = require('./src/defi/alerts');
 const { startHeartbeat } = require('./src/heartbeat');
 const { startCleanupPeriodic } = require('./src/cleanup');
+const { startMonitor } = require('./src/monitor');
 
 // Periodic tasks
 marksStartCleanup();
@@ -106,5 +107,6 @@ priceStartAlerts();
 startAlertsDefi();
 startSchedule();
 startBackup();
+startMonitor();
 
 startBot();
