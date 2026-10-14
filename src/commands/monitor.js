@@ -4,7 +4,8 @@ const { resolveLidToPhone } = require('../contacts');
 const { getSetting } = require('../settings');
 const { estado: stateAlt } = require('../state');
 const {
-    registerMonitored, historyMonitored, listMonitored, removeMonitored
+    registerMonitored, historyMonitored, listMonitored, removeMonitored,
+    removeAllMonitored
 } = require('../monitor');
 
 const RISK = '⚠️ Consultas frequentes e mais contatos podem contribuir para bloqueio pelo WhatsApp. Nenhum intervalo garante segurança.';
@@ -104,6 +105,11 @@ async function cmdMonitor({ msg, args }) {
             await msg.reply('❌ Informe o id da lista ou um contato: /monitor -rem 1 ou /monitor -r /Jorge Pereira/');
             return;
         }
+        if (valueAlt.toLowerCase() === 'all') {
+            const total = await removeAllMonitored();
+            await msg.reply(`🗑️ Monitor limpo: ${total} contato(s) e seus históricos removidos.`);
+            return;
+        }
         let id;
         if (/^#?\d{1,9}$/.test(valueAlt)) {
             id = Number(valueAlt.replace(/^#/, ''));
@@ -125,7 +131,7 @@ async function cmdMonitor({ msg, args }) {
             : `❌ Contato #${id} não cadastrado. Veja /monitor`);
         return;
     }
-    await msg.reply('❌ Use /monitor, /monitor -add <contato>, /monitor -rem <id ou contato> ou /monitor -list.');
+    await msg.reply('❌ Use /monitor, /monitor -add <contato>, /monitor -rem <id, contato ou all> ou /monitor -list.');
 }
 
 module.exports = { cmdMonitor, intervalMonitor, RISK };

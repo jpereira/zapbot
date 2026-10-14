@@ -46,6 +46,12 @@ async function removeMonitored(id) {
     return contactAlt;
 }
 
+async function removeAllMonitored() {
+    await dbReady;
+    const resultAlt = await dbRun('DELETE FROM monitor_contacts');
+    return resultAlt.changes;
+}
+
 async function historyMonitored(id) {
     await dbReady;
     return dbAll(`SELECT * FROM monitor_history WHERE contact_id = ?
@@ -130,5 +136,5 @@ function stopMonitor() {
 
 module.exports = {
     registerMonitored, presenceData, historyMonitored, startMonitor,
-    listMonitored, stopMonitor, removeMonitored, checkMonitor
+    listMonitored, stopMonitor, removeMonitored, removeAllMonitored, checkMonitor
 };
