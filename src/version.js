@@ -1,6 +1,6 @@
 /*
  * The bot version with the commit that is running and where it came from:
- * "2.0.0 (git+60315ed/v2.0.0)" numa tag, "2.0.1 (devel) (git+60315ed/HEAD)" fora dela.
+ * "2.0.0 (git+0c6164f/v2.0.0)" numa tag, "2.0.1 (devel) (git+7a89b92/HEAD)" fora dela.
  */
 
 const fs = require('fs');
@@ -12,7 +12,7 @@ const { ROOT_DIR } = require('./constants');
 
 /*
  * The commit and the ref come, in this order:
- * 1. from ZAPBOT_COMMIT ("60315ed" or "60315ed/v2.0.0"; without the ref, HEAD),
+ * 1. from ZAPBOT_COMMIT ("0c6164f" or "0c6164f/v2.0.0"; without the ref, HEAD),
  * for whoever builds the image another way (e.g.: CI);
  * 2. from the project's .git, read without git: the HEAD (on a tag checkout, it is already
  * the hash) or its branch, in .git/refs/heads/ or in .git/packed-refs.
@@ -170,7 +170,7 @@ const inDevelopment = (origin = ORIGIN) => Boolean(origin) && !/^v\d+\.\d+\.\d+$
 // "2.0.1", or "2.0.1 (devel)" outside a release
 const botVersion = (origin = ORIGIN) => `${packageJson.version}${inDevelopment(origin) ? ' (devel)' : ''}`;
 
-// "2.0.0 (git+60315ed/v2.0.0)", "2.0.1 (devel) (git+60315ed/HEAD)", or just "2.0" without the commit
+// "2.0.0 (git+0c6164f/v2.0.0)", "2.0.1 (devel) (git+7a89b92/HEAD)", or just "2.0.0" without the commit
 const versionWithCommit = (origin = ORIGIN) =>
     (origin ? `${botVersion(origin)} (git+${origin.commit}/${origin.ref})` : packageJson.version);
 
