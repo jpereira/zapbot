@@ -81,23 +81,50 @@ describe('/get (/download)', () => {
         assert.match(ff[ff.indexOf('-vf') + 1], /crop=512:512/);
     });
 
-    test('-ss e -es cortam o trecho', async () => {
-        await bot.executar(`/get -ss 10 -es 25 ${URL}`);
+    // O trecho que o yt-dlp baixa (--download-sections) e os cortes do ffmpeg
+    const trecho = () => {
+        const yt = argsDo('yt-dlp');
         const ff = argsDo('ffmpeg');
-        assert.equal(ff[ff.indexOf('-ss') + 1], '10');
-        assert.equal(ff[ff.indexOf('-t') + 1], '15');
+        return {
+            secao: yt.includes('--download-sections') ? yt[yt.indexOf('--download-sections') + 1] : null,
+            keyframes: yt.includes('--force-keyframes-at-cuts'),
+            ss: ff.includes('-ss') ? ff[ff.indexOf('-ss') + 1] : null,
+            t: ff.includes('-t') ? ff[ff.indexOf('-t') + 1] : null
+        };
+    };
+
+    test('-ss e -es: o yt-dlp baixa só o trecho, e o ffmpeg não corta de novo o início', async () => {
+        await bot.executar(`/get -ss 10 -es 25 ${URL}`);
+        assert.deepEqual(trecho(), { secao: '*10-25', keyframes: true, ss: null, t: '15' });
     });
 
     test('-ss e -es aceitam min:seg e h:min:seg', async () => {
         await bot.executar(`/get -ss 09:33 -es 09:45 ${URL}`);
-        let ff = argsDo('ffmpeg');
-        assert.equal(ff[ff.indexOf('-ss') + 1], '573');
-        assert.equal(ff[ff.indexOf('-t') + 1], '12');
+        assert.deepEqual(trecho(), { secao: '*573-585', keyframes: true, ss: null, t: '12' });
         processos.chamadas.length = 0;
         await bot.executar(`/get -ss 1:00:00.5 -es 1:00:02 ${URL}`);
-        ff = argsDo('ffmpeg');
-        assert.equal(ff[ff.indexOf('-ss') + 1], '3600.5');
-        assert.equal(ff[ff.indexOf('-t') + 1], '1.5');
+        assert.deepEqual(trecho(), { secao: '*3600.5-3602', keyframes: true, ss: null, t: '1.5' });
+    });
+
+    test('só -ss: o trecho vai até o final; sem corte, baixa o vídeo inteiro', async () => {
+        await bot.executar(`/get -a -ss 30 ${URL}`);
+        assert.deepEqual(trecho(), { secao: '*30-inf', keyframes: true, ss: null, t: null });
+        processos.chamadas.length = 0;
+        await bot.executar(`/get -a ${URL}`);
+        assert.deepEqual(trecho(), { secao: null, keyframes: false, ss: null, t: null });
+    });
+
+    test('o site não deixa baixar o trecho: baixa o vídeo inteiro e o ffmpeg corta', async () => {
+        processos.falharTrecho = true;
+        const r = await bot.executar(`/get -ss 10 -es 25 ${URL}`);
+        assert.equal(r[0].texto, '✅ Mídia baixada com sucesso!');
+        assert.deepEqual(binarios(), ['yt-dlp', 'yt-dlp', 'ffmpeg']);
+        const [comTrecho, inteiro] = processos.chamadas.map(c => c.args);
+        assert.ok(comTrecho.includes('--download-sections') && !inteiro.includes('--download-sections'));
+        const ff = argsDo('ffmpeg');
+        assert.equal(ff[ff.indexOf('-ss') + 1], '10');
+        assert.equal(ff[ff.indexOf('-t') + 1], '15');
+        assert.deepEqual(arquivosTemporarios(), []);
     });
 
     test('-v manda os comandos executados antes da mídia', async () => {
@@ -108,19 +135,20 @@ describe('/get (/download)', () => {
 
     test('-es sozinho corta a partir do início e aceita frações de segundo', async () => {
         await bot.executar(`/get -es 2.5 ${URL}`);
+        assert.deepEqual(trecho(), { secao: '*0-2.5', keyframes: true, ss: null, t: '2.5' });
         const ff = argsDo('ffmpeg');
-        assert.equal(ff[ff.indexOf('-t') + 1], '2.5');
         assert.ok(ff.indexOf('-t') > ff.indexOf('-i'));
     });
 
     test('figurinha respeita o fim pedido e o limite de seis segundos', async () => {
         await bot.executar(`/get -st -ss 3 -es 6 ${URL}`);
-        let ff = argsDo('ffmpeg');
-        assert.equal(ff[ff.indexOf('-t') + 1], '3');
+        assert.deepEqual(trecho(), { secao: '*3-6', keyframes: true, ss: null, t: '3' });
         processos.chamadas.length = 0;
         await bot.executar(`/get -st -ss 3 -es 20 ${URL}`);
-        ff = argsDo('ffmpeg');
-        assert.equal(ff[ff.indexOf('-t') + 1], '6');
+        assert.deepEqual(trecho(), { secao: '*3-9', keyframes: true, ss: null, t: '6' }, 'baixa só os 6 s');
+        processos.chamadas.length = 0;
+        await bot.executar(`/get -st ${URL}`);
+        assert.deepEqual(trecho(), { secao: '*0-6', keyframes: true, ss: null, t: '6' });
     });
 
     test('cortes inválidos e áudio junto com figurinha são recusados antes de baixar', async () => {

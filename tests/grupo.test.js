@@ -285,14 +285,20 @@ describe('/sticker (/st)', () => {
     test('URL ou link respondido: baixa o vídeo, como o /get -st', async () => {
         await bot.executar('/sticker -ss 10 http://8.8.8.8/video');
         assert.deepEqual(bot.processos.chamadas.map(c => c.bin.split('/').pop()), ['yt-dlp', 'ffmpeg']);
+        // O yt-dlp baixa só o trecho: o ffmpeg só limita a duração
+        const secao = () => {
+            const yt = bot.processos.chamadas[0].args;
+            return yt[yt.indexOf('--download-sections') + 1];
+        };
         const ff = bot.processos.chamadas[1].args;
-        assert.equal(ff[ff.indexOf('-ss') + 1], '10');
-        assert.equal(ff[ff.indexOf('-t') + 1], '6', 'sem -es: os 6 s seguintes');
+        assert.equal(secao(), '*10-16', 'sem -es: os 6 s seguintes');
+        assert.ok(!ff.includes('-ss'));
+        assert.equal(ff[ff.indexOf('-t') + 1], '6');
 
         bot.processos.chamadas.length = 0;
         await bot.executar('/sticker -ss 01:10 -es 01:13 http://8.8.8.8/video');
         const ffMin = bot.processos.chamadas[1].args;
-        assert.equal(ffMin[ffMin.indexOf('-ss') + 1], '70', 'min:seg vira segundos');
+        assert.equal(secao(), '*70-73', 'min:seg vira segundos');
         assert.equal(ffMin[ffMin.indexOf('-t') + 1], '3');
 
         bot.processos.chamadas.length = 0;
