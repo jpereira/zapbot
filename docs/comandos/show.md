@@ -45,15 +45,15 @@ junto, por data.
 /show                       → no privado, lista o cache; no grupo, a última apagada
 /show -5                    → as 5 últimas
 /show -2 -e                 → as 2 últimas editadas
-/show /^Camila/             → a última (apagada, editada, status ou reação) do chat que começa com "Camila"
-/show -2 Camila Gama        → as 2 últimas do chat com "Camila Gama" no nome
+/show /^Maria/             → a última (apagada, editada, status ou reação) do chat que começa com "Maria"
+/show -2 Maria Lucia        → as 2 últimas do chat com "Maria Lucia" no nome
 /show -5 -deleted /Carlos$/ → as 5 últimas apagadas do chat que termina com "Carlos"
 /show -3 -edited @Jorge     → as 3 últimas editadas do privado com o Jorge
 /show -s Marcio             → o último status apagado do Marcio
 /show -3 -r Família         → as 3 últimas reações removidas ou trocadas no grupo Família
 /show 2                     → do chat nº 2 do /show -l
 /show -l                    → o que tem no cache, por chat
-/show -l /^Camila/          → o mesmo, só dos chats que começam com "Camila"
+/show -l /^Maria/          → o mesmo, só dos chats que começam com "Maria"
 /show -f                    → apaga do cache as apagadas deste chat
 /show -e -f                 → apaga do cache as editadas deste chat
 /show -f Trabalho           → apaga do cache tudo do chat Trabalho
@@ -77,9 +77,9 @@ O chat vem depois das opções (o `-N` pode vir antes ou depois dele) e é busca
 algo no cache, sem diferenciar maiúsculas nem acentos:
 
 - **`2`**: o nº da lista do último `/show -l`. Sem hífen: o `-2` é a quantidade.
-- **`Camila Gama`** ou **`"Camila Gama"`**: o nome tem todas as palavras; o nome exato ganha.
-- **`/^Camila/`**: uma regex no nome (aqui, os que começam com "Camila").
-- **`@Camila`**: a menção (escolhida na lista do `@` do WhatsApp) é o privado com a pessoa; `@`
+- **`Maria Lucia`** ou **`"Maria Lucia"`**: o nome tem todas as palavras; o nome exato ganha.
+- **`/^Maria/`**: uma regex no nome (aqui, os que começam com "Maria").
+- **`@Maria`**: a menção (escolhida na lista do `@` do WhatsApp) é o privado com a pessoa; `@`
   digitado sem escolher na lista vale como nome.
 
 Num privado, os status são os da pessoa. Se mais de um chat casar, o bot lista e espera você

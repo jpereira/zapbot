@@ -3,8 +3,9 @@ const { resolverOuEscolher } = require('../destinos');
 const { resolveLidToPhone } = require('../contatos');
 const { getSetting } = require('../settings');
 const { estado } = require('../estado');
+const { semAcentos } = require('../util/formatar');
 const {
-    cadastrarMonitorado, historicoMonitorado, listarMonitorados, removerMonitorado,
+    ativarAlertaMonitor, cadastrarMonitorado, historicoMonitorado, listarMonitorados, removerMonitorado,
     removerTodosMonitorados
 } = require('../monitor');
 
@@ -22,19 +23,58 @@ async function resolverPessoa(msg, texto) {
     return contato;
 }
 
+async function buscarMonitorado(msg, valor) {
+    const contatos = await listarMonitorados();
+    if (/^#?\d{1,9}$/.test(valor)) {
+        const id = Number(valor.replace(/^#/, ''));
+        const contato = contatos.find(c => c.id === id);
+        if (!contato) await msg.reply(`❌ Contato #${id} não cadastrado. Veja /monitor`);
+        return contato;
+    }
+    const pessoa = await resolverPessoa(msg, valor);
+    if (!pessoa) return null;
+    for (const c of contatos) {
+        const phone = c.contact_id.endsWith('@lid')
+            ? await resolveLidToPhone(c.contact_id) ?? c.contact_id : c.contact_id;
+        if (phone === pessoa.id) return c;
+    }
+    await msg.reply(`❌ ${pessoa.nome} não está cadastrado no monitor. Veja /monitor -l`);
+    return null;
+}
+
+function filtrarMonitorados(contatos, msg, valor) {
+    if (/^#?\d{1,9}$/.test(valor)) {
+        return contatos.filter(c => c.id === Number(valor.replace(/^#/, '')));
+    }
+    if (valor.startsWith('@')) {
+        return contatos.filter(c => (msg.mentionedIds ?? []).includes(c.contact_id));
+    }
+    if (/^\+?[\d\s().-]+$/.test(valor)) {
+        const numero = valor.replace(/\D/g, '');
+        return contatos.filter(c => c.contact_id.split('@')[0].split(':')[0] === numero);
+    }
+    const palavras = semAcentos(valor).split(/\s+/).filter(Boolean);
+    return contatos.filter(c => palavras.every(p => semAcentos(c.contact_name).includes(p)));
+}
+
 function intervaloMonitor() {
     const s = getSetting('monitor.pool');
     return s % 60 === 0 ? `${s / 60} min (${s} s)` : `${s} s`;
 }
 
-async function responderLista(msg) {
-    const contatos = await listarMonitorados();
+async function responderLista(msg, valor = null) {
+    const todos = await listarMonitorados();
+    const contatos = valor ? filtrarMonitorados(todos, msg, valor) : todos;
+    if (valor && !contatos.length) {
+        await msg.reply(`❌ Nenhum contato monitorado encontrado para "${valor}". Veja /monitor -l`);
+        return;
+    }
     const situacao = !getSetting('monitor.enabled') || getSetting('bot.paused') ? 'pausado'
         : !estado.pronto || estado.reiniciando ? 'aguardando conexão' : 'ativo';
     const linhas = [
         `👀 *MONITOR* · ${situacao}`,
         `⏱️ Verificação de cada contato a cada ${intervaloMonitor()}, no mínimo.`,
-        `👥 Contatos: ${contatos.length}/${getSetting('monitor.max')} · horários de São Paulo`, ''
+        `👥 Contatos: ${todos.length}/${getSetting('monitor.max')} · horários de São Paulo`, ''
     ];
     if (!contatos.length) linhas.push('👀 Nenhum contato cadastrado.',
         '💡 /monitor -add /Nome do Contato/');
@@ -43,6 +83,7 @@ async function responderLista(msg) {
             `   ${c.last_status ?? '⏳ aguardando primeira verificação'}`,
             `   🔎 Verificado: ${quando(c.last_checked_at)}`,
             `   🕒 Último horário observado: ${c.last_seen ? quando(c.last_seen * 1000) : 'nenhum'}`);
+        linhas.push(`   🚨 Alerta online: ${c.alert_enabled ? 'ativado' : 'desativado'}`);
         if (c.last_error) linhas.push(`   ⚠️ ${c.last_error}`);
         {
             const registros = await historicoMonitorado(c.id);
@@ -70,13 +111,30 @@ async function responderLista(msg) {
 
 async function cmdMonitor({ msg, args }) {
     const texto = String(args ?? '').trim();
-    if (!texto || /^-(?:list|l)$/.test(texto)) {
-        await responderLista(msg);
+    const listar = texto.match(/^-(?:list|l)(?:\s+([\s\S]+))?$/);
+    if (!texto || listar) {
+        const valor = semDelimitadores(listar?.[1]);
+        await responderLista(msg, valor || null);
+        return;
+    }
+    const alerta = texto.match(/^-alerta(?:\s+([\s\S]+))?$/);
+    if (alerta) {
+        const valor = semDelimitadores(alerta[1]);
+        if (!valor) {
+            await msg.reply('❌ Informe um contato cadastrado: /monitor -alerta /Maria/');
+            return;
+        }
+        const contato = await buscarMonitorado(msg, valor);
+        if (!contato) return;
+        await ativarAlertaMonitor(contato.id);
+        await msg.reply(`🚨 Alerta online ativado para "${contato.contact_name}" no privado do dono do bot.`);
         return;
     }
     const adicionar = texto.match(/^-(?:add|a)(?:\s+([\s\S]+))?$/);
     if (adicionar) {
-        const valor = semDelimitadores(adicionar[1]);
+        const comAlerta = /\s+-alerta$/.test(adicionar[1] ?? '');
+        const valor = semDelimitadores(comAlerta
+            ? adicionar[1].replace(/\s+-alerta$/, '') : adicionar[1]);
         if (!valor) {
             await msg.reply('❌ Informe um contato: /monitor -add /Jorge Pereira/');
             return;
@@ -84,6 +142,8 @@ async function cmdMonitor({ msg, args }) {
         const contato = await resolverPessoa(msg, valor);
         if (!contato) return;
         const r = await cadastrarMonitorado(contato);
+        const cadastrado = r.contato ?? r.existente;
+        if (comAlerta && cadastrado) await ativarAlertaMonitor(cadastrado.id);
         if (r.existente) {
             await msg.reply(`👀 ${r.existente.contact_name} já está cadastrado: #${r.existente.id}.`);
         } else if (r.limite) {
@@ -95,6 +155,9 @@ async function cmdMonitor({ msg, args }) {
             if (!getSetting('monitor.enabled')) {
                 await msg.reply('⏸️ Monitor pausado. Retome com /set monitor.enabled true.');
             }
+        }
+        if (comAlerta && cadastrado) {
+            await msg.reply(`🚨 Alerta online ativado para "${cadastrado.contact_name}" no privado do dono do bot.`);
         }
         return;
     }
@@ -110,28 +173,15 @@ async function cmdMonitor({ msg, args }) {
             await msg.reply(`🗑️ Monitor limpo: ${total} contato(s) e seus históricos removidos.`);
             return;
         }
-        let id;
-        if (/^#?\d{1,9}$/.test(valor)) {
-            id = Number(valor.replace(/^#/, ''));
-        } else {
-            const pessoa = await resolverPessoa(msg, valor);
-            if (!pessoa) return;
-            for (const c of await listarMonitorados()) {
-                const phone = c.contact_id.endsWith('@lid')
-                    ? await resolveLidToPhone(c.contact_id) ?? c.contact_id : c.contact_id;
-                if (phone === pessoa.id) { id = c.id; break; }
-            }
-            if (id === undefined) {
-                await msg.reply(`❌ ${pessoa.nome} não está cadastrado no monitor. Veja /monitor -l`);
-                return;
-            }
-        }
+        const contato = await buscarMonitorado(msg, valor);
+        if (!contato) return;
+        const id = contato.id;
         const c = await removerMonitorado(id);
         await msg.reply(c ? `🗑️ #${c.id} · ${c.contact_name}: cadastro e histórico removidos.`
             : `❌ Contato #${id} não cadastrado. Veja /monitor`);
         return;
     }
-    await msg.reply('❌ Use /monitor, /monitor -add <contato>, /monitor -rem <id, contato ou all> ou /monitor -list.');
+    await msg.reply('❌ Use /monitor, /monitor -add <contato> [-alerta], /monitor -alerta <contato>, /monitor -rem <id, contato ou all> ou /monitor -list [contato].');
 }
 
 module.exports = { cmdMonitor, intervaloMonitor, RISCO };

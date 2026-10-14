@@ -2,6 +2,8 @@
 
 Backup do banco (`cache/bot_database.db`): um automático por dia, e pelo WhatsApp você cria, lista,
 compara, restaura, recebe o arquivo ou apaga. Sem opção, mostra o banco atual e os backups.
+O backup inclui os cadastros, históricos e configurações do [`/monitor`](monitor.md).
+Remover contatos ou reduzir o histórico local não altera os backups já existentes.
 
 | Opção | Valor | Descrição |
 |---|---|---|

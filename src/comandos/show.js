@@ -30,7 +30,7 @@ const { compilarBusca } = require('../watch/regras');
  * senão, só as apagadas deste chat.
  *   /show              → no privado, lista o cache; no grupo, a última apagada
  *   /show -3           → as 3 últimas
- *   /show -2 /^Camila/ → as 2 últimas (apagada, editada ou status) do chat que casa
+ *   /show -2 /^Maria/ → as 2 últimas (apagada, editada ou status) do chat que casa
  *   /show -e Trabalho  → a última editada do chat com "Trabalho" no nome
  *   /show 2            → a última do chat nº 2 do último -l
  *   /show -list        → os chats com algo no cache
@@ -230,7 +230,7 @@ async function chatsQueCasam(msg, texto, chats) {
         }
         casam = chats.filter(c => re.test(tirarAcentos(nomeDoChat(c))));
     } else {
-        // "@Camila Gama" digitado, sem escolher na lista do @: vale o nome
+        // "@Maria Lucia" digitado, sem escolher na lista do @: vale o nome
         const palavras = semAcentos(texto.replace(/^@/, '')).split(/\s+/).filter(Boolean);
         casam = chats.filter(c => palavras.every(p => semAcentos(nomeDoChat(c)).includes(p)));
         exato = casam.find(c => semAcentos(nomeDoChat(c)) === palavras.join(' '));

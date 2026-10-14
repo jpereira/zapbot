@@ -26,7 +26,7 @@ comandos começam com `/`.
 
 - Recupera mensagens e status apagados ou editados, e reações removidas: [`/show`](docs/comandos/show.md)
 - 👀 Monitora até 5 contatos, com intervalo configurável e histórico limitado dos horários
-  de visto por último observados: [`/monitor`](docs/comandos/monitor.md)
+  de visto por último observados e alertas online: [`/monitor`](docs/comandos/monitor.md)
 - Baixa vídeos com yt-dlp e ffmpeg: [`/get`](docs/comandos/get.md)
 - Cria figurinhas: [`/sticker`](docs/comandos/sticker.md)
 - Vigia mensagens por texto ou regex: [`/watch`](docs/comandos/watch.md)
@@ -159,7 +159,7 @@ de um. Os marcados como **Admin** só respondem à sua conta (e aos admins extra
 | [`/kernel`](https://jpereira.github.io/zapbot/comandos/kernel/) | | | Versões atuais do kernel Linux (kernel.org) |
 | [`/listageral`](https://jpereira.github.io/zapbot/comandos/listageral/) | `/list` | ✅ | Lista os membros do grupo |
 | [`/meme`](https://jpereira.github.io/zapbot/comandos/meme/) | | | Template de meme aleatório (imgflip) |
-| [`/monitor`](https://jpereira.github.io/zapbot/comandos/monitor/) | | ✅ | 👀 Até 5 contatos, intervalo configurável e histórico dos horários de visto por último observados |
+| [`/monitor`](https://jpereira.github.io/zapbot/comandos/monitor/) | | ✅ | 👀 Até 5 contatos, histórico limitado, filtro por contato e alertas de entrada online |
 | [`/mute`](https://jpereira.github.io/zapbot/comandos/mute/) | `/mudo` | ✅ | Silencia os avisos de apagadas, editadas, status e reações (e os do `/watch`) de uma pessoa, um grupo ou uma comunidade; respondendo um aviso, de onde ele veio |
 | [`/news`](https://jpereira.github.io/zapbot/comandos/news/) | | | Manchetes de feeds RSS: `-hack`, `-g1`, `-gazeta`, `-brasil` |
 | [`/noffa`](https://jpereira.github.io/zapbot/comandos/noffa/) | `/🌈`, `/🏳️‍🌈` | | Enfeita o texto com arco-íris |
