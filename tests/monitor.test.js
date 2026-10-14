@@ -375,3 +375,21 @@ test('carregar settings remove histórico excedente por contato', async () => {
     const rows = await bot.dbAll('SELECT * FROM monitor_history WHERE contact_id = ?', [c.id]);
     assert.deepEqual(rows.map(r => r.last_seen), [300]);
 });
+
+
+test('-rem all e -r all apagam todos os cadastros e históricos, mantendo settings', async () => {
+    for (const comando of ['/monitor -rem all', '/monitor -r all']) {
+        const a = await cadastro();
+        const b = await cadastro('5521999999999@c.us', 'Outro');
+        for (const c of [a, b]) {
+            await bot.dbRun(`INSERT INTO monitor_history (contact_id, last_seen, observed_at)
+                VALUES (?, ?, ?)`, [c.id, 100, Date.now()]);
+        }
+        const [reply] = await bot.responder(comando);
+        assert.match(reply, /Monitor limpo: 2 contato/);
+        assert.equal((await monitor.listarMonitorados()).length, 0);
+        assert.equal((await bot.dbAll('SELECT * FROM monitor_history')).length, 0);
+        assert.equal(bot.src('settings').getSetting('monitor.maxRecords'), 30);
+        assert.match((await bot.responder(comando))[0], /Monitor limpo: 0 contato/);
+    }
+});

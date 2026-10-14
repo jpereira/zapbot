@@ -1049,7 +1049,7 @@
         },
         {
             "cmd": "/monitor",
-            "usage": "/monitor [-add <contato> | -rem <id ou contato> | -list]",
+            "usage": "/monitor [-add <contato> | -rem <id, contato ou all> | -list]",
             "help": "👀 Monitora até monitor.max contatos, um por vez, a cada monitor.pool segundos (padrão: 300 s). Guarda até monitor.maxRecords horários distintos por contato (padrão: 30), sem garantir todos os acessos nem atualização do cache. Mais contatos e intervalos curtos podem contribuir para bloqueio pelo WhatsApp; nenhum intervalo garante segurança. /set monitor.enabled false pausa sem apagar. Ex: /monitor -a /Jorge Chip L200/, /monitor -r 1, /monitor -l.",
             "cmd_opts": [
                 {
@@ -1068,9 +1068,9 @@
                         "r"
                     ],
                     "values": [
-                        "<id ou contato>"
+                        "<id, contato ou all>"
                     ],
-                    "desc": "Remove pelo id exibido em /monitor ou /monitor -list, ou pelo mesmo parser do cadastro: nome da agenda, /nome com espaços/, menção real ou telefone. Apaga o histórico local do cadastro; os outros ids não são renumerados. Ex: -r 1, -rem /Jorge Chip L200/, -r @Fulano, -r +5521999999999"
+                    "desc": "Remove pelo id exibido em /monitor ou /monitor -list, ou pelo mesmo parser do cadastro: nome da agenda, /nome com espaços/, menção real ou telefone. Use -rem all ou -r all para apagar todos os cadastros e históricos locais. Apaga o histórico local do cadastro; os outros ids não são renumerados. Ex: -rem all, -r 1, -rem /Jorge Chip L200/, -r @Fulano, -r +5521999999999"
                 },
                 {
                     "opts": [
