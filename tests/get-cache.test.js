@@ -88,6 +88,18 @@ describe('/get (/download)', () => {
         assert.equal(ff[ff.indexOf('-t') + 1], '15');
     });
 
+    test('-ss e -es aceitam min:seg e h:min:seg', async () => {
+        await bot.executar(`/get -ss 09:33 -es 09:45 ${URL}`);
+        let ff = argsDo('ffmpeg');
+        assert.equal(ff[ff.indexOf('-ss') + 1], '573');
+        assert.equal(ff[ff.indexOf('-t') + 1], '12');
+        processos.chamadas.length = 0;
+        await bot.executar(`/get -ss 1:00:00.5 -es 1:00:02 ${URL}`);
+        ff = argsDo('ffmpeg');
+        assert.equal(ff[ff.indexOf('-ss') + 1], '3600.5');
+        assert.equal(ff[ff.indexOf('-t') + 1], '1.5');
+    });
+
     test('-v manda os comandos executados antes da mídia', async () => {
         const r = await bot.executar(`/get -v ${URL}`);
         assert.match(r[1].texto, /🛠️ \*Verbose Mode\*[\s\S]*yt-dlp[\s\S]*ffmpeg/);
@@ -113,7 +125,8 @@ describe('/get (/download)', () => {
 
     test('cortes inválidos e áudio junto com figurinha são recusados antes de baixar', async () => {
         for (const opcoes of ['-ss', '-es', '-ss abc', '-ss -1', '-es 0', '-ss 10 -es 5',
-            '-ss 3 -es 3', '-ss Infinity', '-ss 1e309', '-a -st']) {
+            '-ss 3 -es 3', '-ss Infinity', '-ss 1e309', '-ss 1:60', '-ss 1:60:00', '-ss :30',
+            '-ss 1:', '-ss 1:2:3:4', '-ss 09:45 -es 09:33', '-a -st']) {
             assert.match((await bot.responder(`/get ${URL} ${opcoes}`))[0], /^❌/);
         }
         assert.deepEqual(processos.chamadas, []);
