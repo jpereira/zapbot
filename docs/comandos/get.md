@@ -50,8 +50,11 @@ Enquanto baixa e converte, o bot mostra "⏳ Processando…". No fim, essa mesma
 mais.
 
 URLs que apontam para a rede interna (`localhost`, `10.x`, `192.168.x`, `169.254.x`, IPv6 local
-etc.) são recusadas, para que o `/get` não sirva de ponte para a sua rede (SSRF). A checagem é feita
-no host informado; redirects feitos depois pelo yt-dlp não são verificados.
+etc.) são recusadas, para que o `/get` não sirva de ponte para a sua rede (SSRF). A checagem
+recusa também respostas de DNS mistas (um endereço público e um interno), que indicam rebinding.
+Como o yt-dlp resolve o DNS de novo e segue redirects por conta própria, a defesa de raiz é um
+firewall de egresso no container (`docker/app/egress-firewall.sh`, ligado por
+`ZAPBOT_EGRESS_FIREWALL=1`), que bloqueia todo acesso à rede interna a partir do bot.
 
 ```text
 /get https://www.instagram.com/reel/XXXXXXXX/

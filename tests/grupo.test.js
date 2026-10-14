@@ -315,7 +315,8 @@ describe('/sticker (/st)', () => {
         assert.equal(interno.content.mimetype, 'image/webp');
         assert.equal(interno.options.sendMediaAsSticker, true);
 
-        MessageMedia.urls.set('http://8.8.4.4/t.jpg', new MessageMedia('image/jpeg', 'AA==', 't.jpg'));
+        // A prévia externa é buscada com pin de IP (httpGetSeguro), não MessageMedia.fromUrl
+        bot.rede.responder('get', '8.8.4.4', bot.rede.http({ data: Buffer.from('jpg'), headers: { 'content-type': 'image/jpeg' } }));
         const externo = bot.criarMensagem({ texto: 'http://8.8.8.8/post', de: OUTRO.jid, extras: { _data: { thumbnailUrl: 'http://8.8.4.4/t.jpg' } } });
         assert.equal((await bot.executar('/sticker', { citada: externo }))[1].content.mimetype, 'image/webp');
 

@@ -4,6 +4,9 @@
 
 const dns = require('dns').promises;
 const net = require('net');
+const http = require('http');
+const https = require('https');
+const axios = require('axios');
 
 function extractFirstUrl(text) {
     const m = String(text ?? '').match(/https?:\/\/[^\s"'<>]+/);
@@ -47,18 +50,77 @@ function isEnderecoBloqueado(address) {
     return REDES_BLOQUEADAS.check(address, net.isIPv6(address) ? 'ipv6' : 'ipv4');
 }
 
+// Os IPs públicos do host, ou [] se não resolver/for bloqueado (sem exceção para o chamador)
+async function enderecosPublicos(host) {
+    const alvo = host.replace(/^\[|\]$/g, '');
+    const enderecos = net.isIP(alvo)
+        ? [{ address: alvo }]
+        : await dns.lookup(alvo, { all: true }).catch(() => []);
+
+    return enderecos.filter(e => !isEnderecoBloqueado(e.address)).map(e => e.address);
+}
+
 async function isUrlPublica(str) {
-    const host = new URL(str).hostname.replace(/^\[|\]$/g, '');
+    const host = new URL(str).hostname;
+    const publicos = await enderecosPublicos(host);
+    // Uma resposta DNS mista (um IP público, um privado) é recusada: o host
+    // pode fazer rebinding entre a checagem e a conexão real.
+    const total = net.isIP(host.replace(/^\[|\]$/g, ''))
+        ? 1
+        : (await dns.lookup(host.replace(/^\[|\]$/g, ''), { all: true }).catch(() => [])).length;
+    return publicos.length > 0 && publicos.length === total;
+}
 
-    const enderecos = net.isIP(host)
-        ? [{ address: host }]
-        : await dns.lookup(host, { all: true }).catch(() => []);
+/*
+ * GET que fecha a janela de TOCTOU do isUrlPublica: a conexão é fixada (pin) no
+ * IP já verificado — o host não consegue trocar para um endereço interno entre
+ * a checagem e o connect (DNS rebinding) — e cada redirect é revalidado no
+ * mesmo esquema antes de ser seguido. Vale só para os fetches feitos pelo
+ * próprio Node; processos externos (yt-dlp) precisam de isolamento de rede.
+ */
+async function httpGetSeguro(urlInicial, { maxRedirects = 3, ...opcoes } = {}) {
+    let url = urlInicial;
 
-    return enderecos.length > 0 && !enderecos.some(e => isEnderecoBloqueado(e.address));
+    for (let salto = 0; salto <= maxRedirects; salto++) {
+        const parsed = new URL(url);
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+            throw new Error(`protocolo não permitido: ${parsed.protocol}`);
+        }
+
+        const publicos = await enderecosPublicos(parsed.hostname);
+        if (!publicos.length) throw new Error(`endereço não permitido: ${parsed.hostname}`);
+
+        const ip = publicos[0];
+        const familia = net.isIPv6(ip) ? 6 : 4;
+        // lookup fixo: o socket conecta no IP verificado, não numa nova resolução
+        const lookup = (_host, _opts, cb) => cb(null, ip, familia);
+        const agent = parsed.protocol === 'https:'
+            ? new https.Agent({ lookup })
+            : new http.Agent({ lookup });
+
+        const resp = await axios.get(url, {
+            ...opcoes,
+            maxRedirects: 0,
+            httpAgent: agent,
+            httpsAgent: agent,
+            validateStatus: (s) => s >= 200 && s < 400
+        });
+
+        if (resp.status >= 300 && resp.status < 400 && resp.headers.location) {
+            url = new URL(resp.headers.location, url).toString();
+            continue;
+        }
+        return resp;
+    }
+
+    throw new Error('redirects demais');
 }
 
 module.exports = {
+    enderecosPublicos,
     extractFirstUrl,
+    httpGetSeguro,
+    isEnderecoBloqueado,
     isUrlPublica,
     isValidHttpUrl
 };
