@@ -8,7 +8,7 @@ histórico ficam no SQLite e sobrevivem a reinícios; o backup do banco também 
 |---|---|
 | *(nenhuma)* | Contatos cadastrados, ids, intervalo, estado observado, última verificação e últimos `monitor.maxRecords` horários por contato |
 | `-add`, `-a` | Cadastra uma pessoa pelo nome da agenda, `/nome com espaços/`, menção ou número com DDI e DDD |
-| `-del`, `-d` | Remove pelo id da lista ou por nome, `/nome com espaços/`, menção real ou telefone; apaga o histórico local do cadastro |
+| `-rem`, `-r` | Remove pelo id da lista ou por nome, `/nome com espaços/`, menção real ou telefone; apaga o histórico local do cadastro |
 | `-list`, `-l` | Todos os contatos e os últimos `monitor.maxRecords` horários distintos por contato; relatório extenso vai em `.txt` |
 
 ```text
@@ -20,21 +20,21 @@ histórico ficam no SQLite e sobrevivem a reinícios; o backup do banco também 
 /monitor -add +5521999999999
 /monitor -list
 /monitor -l
-/monitor -del 1
-/monitor -d #1
-/monitor -d 2
-/monitor -del Jorge Chip L200
-/monitor -d /Jorge Chip L200/
-/monitor -d "Jorge Chip L200"
-/monitor -del @Fulano
-/monitor -d +5521999999999
+/monitor -rem 1
+/monitor -r #1
+/monitor -r 2
+/monitor -rem Jorge Chip L200
+/monitor -r /Jorge Chip L200/
+/monitor -r "Jorge Chip L200"
+/monitor -rem @Fulano
+/monitor -r +5521999999999
 ```
 
 Os nomes usam a mesma busca dos [destinos](index.md#destinos-contato-grupo-número-ou-e-mail).
 Se vários contatos corresponderem, o bot oferece uma lista para escolher. A menção precisa ser
 selecionada na lista do WhatsApp. Grupos e e-mails não são aceitos. Uma pessoa já cadastrada não
 ocupa outra vaga; o LID vira telefone quando o WhatsApp fornece essa correspondência.
-O `-del` usa o mesmo resolvedor de contatos do `-add`, incluindo escolhas por nome ambíguo.
+O `-rem` usa o mesmo resolvedor de contatos do `-add`, incluindo escolhas por nome ambíguo.
 Os ids mostrados em `/monitor` e `/monitor -l` são estáveis: remover o contato `#1` não renumera
 o `#2`. O prefixo `#` é opcional no id. Só dígitos com até nove posições são id da lista;
 números com dez ou mais dígitos

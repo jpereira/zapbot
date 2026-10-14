@@ -774,7 +774,7 @@ async function setSetting(key, value) {
     value = validarSetting(key, value);
     if (key === 'monitor.max') {
         const { n } = await dbGet('SELECT COUNT(*) AS n FROM monitor_contacts');
-        if (value < n) throw new Error(`há ${n} contatos cadastrados: remova contatos pelo /monitor -del antes de reduzir o limite`);
+        if (value < n) throw new Error(`há ${n} contatos cadastrados: remova contatos pelo /monitor -rem antes de reduzir o limite`);
     }
 
     await dbRun(
