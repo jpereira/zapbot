@@ -7,7 +7,8 @@ const { MessageMedia } = require('whatsapp-web.js');
 const sharp = require('sharp');
 
 const { printError, printInfo } = require('./log');
-const { isUrlPublic } = require('./util/url');
+const { httpGetSafe } = require('./util/url');
+const { THUMBNAIL_MAX_BYTES, THUMBNAIL_TIMEOUT_MS } = require('./constants');
 
 /*
  * The animated sticker attempts, from best to smallest: /get tries in
@@ -153,14 +154,20 @@ async function thumbnailDoLink(quotedMsg) {
     if (!media) {
         const thumbnailUrl = quotedMsg._data?.thumbnailUrl || quotedMsg._data?.thumbnailDirectPath || null;
 
-        // The URL comes from someone else's message: the /get anti-SSRF applies here too
-        if (thumbnailUrl?.startsWith('http') && !(await isUrlPublic(thumbnailUrl))) {
-            printInfo(`Prévia do link recusada (endereço não permitido): ${thumbnailUrl}`);
-        } else if (thumbnailUrl?.startsWith('http')) {
+        // The URL comes from someone else's message: fetch with an IP pin and revalidation
+        // of each redirect, closing the rebinding/redirect that isUrlPublic alone
+        // (used in MessageMedia.fromUrl) does not cover.
+        if (thumbnailUrl?.startsWith('http')) {
             try {
-                media = await MessageMedia.fromUrl(thumbnailUrl, { unsafeMime: true });
+                const { data, headers } = await httpGetSafe(thumbnailUrl, {
+                    responseType: 'arraybuffer',
+                    timeout: THUMBNAIL_TIMEOUT_MS,
+                    maxContentLength: THUMBNAIL_MAX_BYTES
+                });
+                const mime = String(headers['content-type'] || 'image/jpeg').split(';')[0];
+                media = new MessageMedia(mime, Buffer.from(data).toString('base64'), 'thumbnail.jpg');
             } catch (err) {
-                printError('Erro baixando thumbnail:', err.message);
+                printInfo(`Prévia do link recusada ou indisponível: ${err.message}`);
             }
         }
     }
