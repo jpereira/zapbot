@@ -18,6 +18,9 @@ Podem ser enviados em **qualquer chat** (privado, grupo ou no chat consigo mesmo
 - Aliases funcionam igual ao comando original (`/download` = `/get`). O [`/alias`](alias.md) salva
   atalhos com argumentos ou textos com vários `{/comando}`; `/help alias` lista os atalhos
   disponíveis para você.
+- Basta digitar o começo do comando: `/wat` ou `/watc` viram `/watch`. Se o começo servir para mais
+  de um (`/wa`), o bot responde com os possíveis comandos (`/walissu, /watch`). O nome exato e os
+  atalhos do `/alias` têm prioridade.
 
 ## Destinos: contato, grupo, número ou e-mail
 

@@ -7,7 +7,7 @@
  *            {/comando} roda e a resposta entra no lugar; sai uma mensagem só
  */
 const { dbAll, dbGet, dbPronto } = require('./db');
-const { findCommand } = require('./comandos/base');
+const { commandsByPrefix, findCommand } = require('./comandos/base');
 const { botConfig } = require('./botConfig');
 const { comandosNoTexto, montarTexto } = require('./comandosNoTexto');
 
@@ -25,7 +25,7 @@ async function resolverAlias(texto) {
     if (command) return { command, args };
     await dbPronto;
     const alias = await dbGet('SELECT * FROM command_aliases WHERE name = ?', [nome]);
-    if (!alias) return null;
+    if (!alias) return porPrefixo(nome, args);
 
     /*
      * Alias de texto: um comando de mentira com o nome do alias, para o fluxo
@@ -44,6 +44,16 @@ async function resolverAlias(texto) {
     const alvo = findCommand(destino);
     return alvo ? { command: alvo, alias: nome, destino,
         args: [alias.command.slice(destino.length).trim(), args].filter(Boolean).join(' ') } : null;
+}
+
+/*
+ * Nem comando nem alias: o começo de um comando (/wa, /watc → /watch). Um só
+ * candidato roda; mais de um volta como "possiveis" para o bot listar.
+ */
+function porPrefixo(nome, args) {
+    const candidatos = commandsByPrefix(nome.toLowerCase());
+    if (candidatos.length === 1) return { command: candidatos[0], args, prefixo: nome };
+    return candidatos.length ? { possiveis: candidatos } : null;
 }
 
 /*
