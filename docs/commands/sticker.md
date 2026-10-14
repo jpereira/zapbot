@@ -20,6 +20,7 @@ segundos a partir do `-ss` (ou do início). Enquanto baixa e converte, o bot mos
 (reply num link)                 /st
 (reply num vídeo)                /sticker -ss 12            → de 0:12 a 0:18
 (reply num link)                 /sticker -ss 10 -es 13     → de 0:10 a 0:13
+(reply num vídeo)                /sticker -ss 01:10 -es 01:13 → de 1:10 a 1:13
 /sticker https://www.instagram.com/p/XXXXXXXX/
 ```
 
@@ -28,8 +29,8 @@ segundos a partir do `-ss` (ou do início). Enquanto baixa e converte, o bot mos
 | `-txt` | `<texto>` | Figurinha animada com o texto, sem precisar responder nada. Veja [Figurinha de texto](#figurinha-de-texto) |
 | `-bg` | `<cor>` | Com `-txt`: a cor de fundo, em `#RRGGBB` (padrão `#FFFFFF`, branco) |
 | `-fg` | `<cor>` | Com `-txt`: a cor da letra, em `#RRGGBB` (padrão `#000000`, preto) |
-| `-startSec`, `-ss` | `<segundo>` | Vídeo: começa neste segundo (padrão 0) e pega os 6 s seguintes. Aceita decimal com ponto, como `1.5` |
-| `-endSec`, `-es` | `<segundo>` | Vídeo: termina neste segundo, maior que o início; no máximo 6 s depois do `-ss` |
+| `-startSec`, `-ss` | `<tempo>` | Vídeo: começa neste ponto (padrão 0) e pega os 6 s seguintes. Em segundos (`12`, `1.5`) ou em `min:seg` (`01:12`) |
+| `-endSec`, `-es` | `<tempo>` | Vídeo: termina neste ponto, no mesmo formato do `-ss` e maior que o início; no máximo 6 s depois do `-ss` |
 | `-verbose`, `-v` | | Mostra os parâmetros usados no yt-dlp/ffmpeg |
 | `[url]` | | Link do vídeo; vale mais que a mensagem respondida |
 
