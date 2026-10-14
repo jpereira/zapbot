@@ -29,6 +29,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     findutils \
     procps \
     chromium \
+    iptables \
     libnss3 \
     libfreetype6 \
     libharfbuzz0b \
