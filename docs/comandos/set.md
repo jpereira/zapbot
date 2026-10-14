@@ -20,6 +20,8 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 /set alerta          → só as chaves com "alerta" (alerta.intervalMin, alerta.max)
 /set /^news\./       → as que casam com a regex
 /set show.max 10
+/set monitor.pool=300
+/set monitor.maxRecords=30
 /config show.max 10  → o mesmo, pelo alias
 /set debug.enabled off
 /set sticker.name "Meu Bot"
@@ -32,6 +34,24 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 /set -a bot.admins /Jorge Pereira/  → um admin extra, pelo nome do contato (veja o /bot)
 /set bot.users /Grupo Familia/      → libera os comandos comuns no grupo (veja o /bot)
 ```
+
+## Monitor de contatos
+
+Os quatro settings do [`/monitor`](monitor.md) aceitam `<chave> <valor>` ou `chave=valor`:
+`monitor.enabled`, `monitor.pool`, `monitor.max` e `monitor.maxRecords`.
+
+```text
+/set monitor.pool 300
+/set monitor.pool=300
+/set monitor.max=5
+/set monitor.maxRecords=30
+/set monitor.enabled=false
+```
+
+`monitor.pool` é o intervalo mínimo em segundos por contato, e `monitor.max` limita os cadastros.
+`monitor.maxRecords` limita o histórico no banco e nas listas por pessoa; reduzir esse valor
+remove imediatamente os horários mais antigos excedentes. `monitor.enabled=false` pausa sem
+apagar cadastros ou histórico. As mudanças valem sem reiniciar.
 
 ## Listas: `-append` e `-rem`
 

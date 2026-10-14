@@ -98,7 +98,7 @@ qualquer aparelho) ou por um **admin extra**: as pessoas que você puser no sett
 
 Os comandos que não são admin (`/get`, `/tempo`, `/sticker`...) são de quem estiver no setting
 `bot.users`, que **vem `false`**: só você (e os admins extras) usa comandos. Com
-`/bot +v /Camila Gama/ /Grupo Familia/`, essas pessoas (em qualquer chat) e esses grupos (qualquer
+`/bot +v /Maria Lucia/ /Grupo Familia/`, essas pessoas (em qualquer chat) e esses grupos (qualquer
 um, dentro do grupo) também usam; o `/bot +v` de uma pessoa digitado num grupo vale só nesse grupo;
 com `/set bot.users true`, todos. O `/bot +cmd`/ `-cmd` limita os comandos de cada usuário. Veja
 [Usuários](bot.md#usuários). Para saber o seu nível (ou, sendo dono ou admin, o de alguém), use o
@@ -135,7 +135,7 @@ mesmo que comecem com `/`. Sem isso, alguém poderia usar um comando que ecoa te
 | [`/kernel`](kernel.md) | | | Versões atuais do kernel Linux (kernel.org) |
 | [`/listageral`](listageral.md) | `/list` | ✅ | Lista os membros do grupo |
 | [`/meme`](meme.md) | | | Template de meme aleatório (imgflip) |
-| [`/monitor`](monitor.md) | | ✅ | 👀 Até 5 contatos, intervalo configurável e histórico dos horários de visto por último observados |
+| [`/monitor`](monitor.md) | | ✅ | 👀 Até 5 contatos, histórico limitado, filtro por contato e alertas de entrada online |
 | [`/mute`](mute.md) | `/mudo` | ✅ | Silencia os avisos de apagadas, editadas, status e reações (e os do `/watch`) de uma pessoa, um grupo ou uma comunidade; respondendo um aviso, de onde ele veio |
 | [`/news`](news.md) | | | Manchetes de feeds RSS: `-hack`, `-g1`, `-gazeta`, `-brasil` |
 | [`/noffa`](noffa.md) | `/🌈`, `/🏳️‍🌈` | | Enfeita o texto com arco-íris |

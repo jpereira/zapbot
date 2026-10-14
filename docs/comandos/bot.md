@@ -53,7 +53,7 @@ dizer.
 Usuários (4)
 • 👑 +o · 👤 Jorge Pereira · +5521999999999
 • 👑 +o 🗣️ +v · 👤 Ana Souza · +5511988887777
-• 🗣️ +v · 👤 Camila Gama · +5521999982222
+• 🗣️ +v · 👤 Maria Lucia · +5521999982222
 • 🗣️ +v · 👤 Maria Lucia · +5521999986666 · só em 👥 Amigos Faculdade
 
 Permissões
@@ -107,7 +107,7 @@ Quando usar cada opção:
 |---|---|
 | Alguém está abusando dos comandos num grupo | `/bot -v`, digitado no grupo (ou `/bot -v /Grupo/`) |
 | Liberar o bot para a família, só no grupo dela | `/bot +v`, digitado no grupo (ou `/bot +v /Grupo Familia/` de qualquer chat) |
-| Liberar para uma pessoa, em qualquer chat | `/bot +v /Camila Gama/` |
+| Liberar para uma pessoa, em qualquer chat | `/bot +v /Maria Lucia/` |
 | Liberar só alguns comandos para alguém | `/bot +v +cmd /cotacao,/crypto /Sofia Izabel/` |
 | Dar a alguém os comandos admin | `/bot +o /Jorge Pereira/` |
 | Parar o bot por completo por um tempo, sem derrubar o container | `/bot -off` |
@@ -168,19 +168,19 @@ comandos admin continuam só seus e dos admins.
 
 | Quem | Onde usa |
 |---|---|
-| Uma pessoa, posta no seu privado ou no dela (`/bot +v /Camila Gama/`) | Em qualquer chat |
+| Uma pessoa, posta no seu privado ou no dela (`/bot +v /Maria Lucia/`) | Em qualquer chat |
 | Uma pessoa, posta num grupo (`/bot +v /Maria Lucia/`, digitado no grupo) | Só nesse grupo. No privado, o bot responde onde ela pode |
 | Um grupo (`/bot +v`, digitado no grupo, ou `/bot +v /Amigos Faculdade/`) | Qualquer um, dentro do grupo (no privado de cada um, não) |
 | Ninguém, o padrão (`/set bot.users false`) | Só você e os admins usam comandos |
 | Todos (`/set bot.users true`) | Qualquer pessoa, em qualquer chat (o `/bot` avisa) |
 
 ```text
-/bot +v /Camila Gama/                      → no seu privado: a Camila, em qualquer chat
+/bot +v /Maria Lucia/                      → no seu privado: a Maria, em qualquer chat
 /bot +v /Maria Lucia/                      → no grupo Amigos Faculdade: a Maria, só nele
 /bot +v                                    → digitado num grupo: o grupo; no privado de alguém: a pessoa
 /bot +v /Amigos Faculdade/ @Fulano +5521999999999  → vários de uma vez
 /bot -v /Maria Lucia/                      → no grupo: tira a permissão de lá
-/bot -v /Camila Gama/                      → no seu privado: tira todas as da Camila
+/bot -v /Maria Lucia/                      → no seu privado: tira todas as da Maria
 /bot -v                                    → tira o chat atual
 ```
 
@@ -356,7 +356,7 @@ qui 01/10 06:00
 💾 Último backup: qui 01/10 03:00 (automático)
 
 Usuários (2)
-• 🗣️ +v · 👤 Camila Gama · +5521999982222
+• 🗣️ +v · 👤 Maria Lucia · +5521999982222
 • 🗣️ +v · 👥 Grupo Familia
 
 Permissões

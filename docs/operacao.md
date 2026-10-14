@@ -13,6 +13,7 @@ Execute os comandos Docker na raiz do projeto:
 | Limpar mensagens/mídias | Pelo WhatsApp: `/cache -a` (tudo, inclusive os backups), `/cache -m` (só as mídias) ou `/cache -b` (só os backups). Veja [`/cache`](comandos/cache.md) |
 | Estado do bot (no ar, cache, apagadas...) | Pelo WhatsApp: `/bot -status` (ou `/bot -status 06h` para receber todo dia). Veja [`/bot -status`](comandos/bot.md#status-do-bot) |
 | Versões (Node.js, Chromium, yt-dlp, ffmpeg...) e sistema | Pelo WhatsApp: `/bot -info`. Veja [Informações do sistema](comandos/bot.md#informações-do-sistema) |
+| Monitor de contatos | Pelo WhatsApp: `/monitor -l` (lista e histórico), `/set monitor.enabled false` (pausa), `/monitor -rem all` (apaga cadastros e históricos locais). Veja [`/monitor`](comandos/monitor.md) |
 | Backup do banco | Pelo WhatsApp: `/backup -now` (cria), `/backup -s` (envia o arquivo). Veja [`/backup`](comandos/backup.md) |
 | **Forçar novo QR** (apaga a sessão) | `docker compose -f docker/docker-compose.yml down && docker volume rm zapbot_wwebjs_auth && docker compose -f docker/docker-compose.yml up -d zapbot` |
 

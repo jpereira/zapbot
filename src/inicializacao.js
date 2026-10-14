@@ -102,6 +102,10 @@ async function inicializarBanco() {
         last_seen INTEGER,
         last_error TEXT
     )`);
+    await adicionarColunas('monitor_contacts', {
+        alert_enabled: 'INTEGER NOT NULL DEFAULT 0',
+        online_state: 'INTEGER'
+    });
     await dbRun(`CREATE TABLE IF NOT EXISTS monitor_history (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         contact_id INTEGER NOT NULL,

@@ -140,7 +140,7 @@ async function soEmTexto(soEm, escopo) {
 }
 
 /*
- * Um item como o resto do bot mostra um destino: "👤 Camila Gama · +5521988887777",
+ * Um item como o resto do bot mostra um destino: "👤 Maria Lucia · +5521988887777",
  * "👤 +5521977777777" (sem nome) ou "👥 Grupo Familia"; a pessoa só num grupo,
  * com o grupo no fim.
  */

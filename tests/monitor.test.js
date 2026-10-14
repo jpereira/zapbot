@@ -168,18 +168,20 @@ test('cadastros e histórico sobrevivem à recarga de settings', async () => {
     assert.equal((await monitor.historicoMonitorado(c.id)).length, 1);
 });
 
-test('remoção apaga histórico e mantém o id dos outros contatos', async () => {
+test('remoção apaga histórico e mantém o id dos outros contatos', async t => {
+    t.mock.timers.enable({ apis: ['setTimeout'] });
     const a = await cadastro();
     const b = await cadastro('5521999991101@c.us', 'Outro');
     bot.client.pupPage = { evaluate: async () => horario() };
-    await monitor.verificarMonitor();
+    await bot.esperarComRelogio(t, monitor.verificarMonitor());
     assert.match((await bot.responder(`/monitor -rem ${a.id}`))[0], /histórico removidos/);
     assert.equal((await monitor.historicoMonitorado(a.id)).length, 0);
     assert.equal((await monitor.listarMonitorados())[0].id, b.id);
     assert.match((await bot.responder(`/monitor -r ${a.id}`))[0], /não cadastrado/);
 });
 
-test('falhas respeitam intervalo e não impedem a próxima pessoa', async () => {
+test('falhas respeitam intervalo e não impedem a próxima pessoa', async t => {
+    t.mock.timers.enable({ apis: ['setTimeout'] });
     const a = await cadastro();
     const b = await cadastro('5521999991101@c.us', 'Outro');
     let calls = 0;
@@ -188,8 +190,8 @@ test('falhas respeitam intervalo e não impedem a próxima pessoa', async () => 
         if (id === a.contact_id) throw new Error('Página indisponível');
         return horario();
     } };
-    await monitor.verificarMonitor();
-    await monitor.verificarMonitor();
+    await bot.esperarComRelogio(t, monitor.verificarMonitor());
+    await bot.esperarComRelogio(t, monitor.verificarMonitor());
     assert.equal(calls, 2);
     const rows = await monitor.listarMonitorados();
     assert.equal(rows[0].last_error, 'Página indisponível');
@@ -334,7 +336,8 @@ test('agendador inicia uma vez e sua parada cancela o timer', async t => {
 });
 
 
-test('maxRecords limita o banco por contato e as duas listas aos horários mais recentes', async () => {
+test('maxRecords limita o banco por contato e as duas listas aos horários mais recentes', async ctx => {
+    ctx.mock.timers.enable({ apis: ['setTimeout'] });
     const settings = bot.src('settings');
     assert.equal(settings.getSetting('monitor.maxRecords'), 30);
     assert.match((await bot.responder('/set monitor.maxRecords=2'))[0], /maxRecords.*2/);
@@ -344,7 +347,7 @@ test('maxRecords limita o banco por contato e as duas listas aos horários mais 
     bot.client.pupPage = { evaluate: async () => horario(t) };
     for (let i = 0; i < 4; i++) {
         await liberarIntervalo();
-        await monitor.verificarMonitor();
+        await bot.esperarComRelogio(ctx, monitor.verificarMonitor());
         t++;
     }
     for (const c of [a, b]) {
@@ -392,4 +395,176 @@ test('-rem all e -r all apagam todos os cadastros e históricos, mantendo settin
         assert.equal(bot.src('settings').getSetting('monitor.maxRecords'), 30);
         assert.match((await bot.responder(comando))[0], /Monitor limpo: 0 contato/);
     }
+});
+
+
+test('embaralha sem repetir e espera de 1 a 15 segundos entre consultas', async t => {
+    t.mock.timers.enable({ apis: ['setTimeout', 'Date'], now: Date.now() });
+    const crypto = require('node:crypto');
+    const pausas = [1, 15];
+    t.mock.method(crypto, 'randomInt', (min, max) => max ? pausas.shift() : 0);
+    const contatos = [await cadastro(), await cadastro('5521999999999@c.us', 'Segundo'),
+        await cadastro('5521888888888@c.us', 'Terceiro')];
+    const calls = [];
+    bot.client.pupPage = { evaluate: async (fn, id) => {
+        calls.push({ id, at: Date.now() });
+        return horario();
+    } };
+    await bot.esperarComRelogio(t, monitor.verificarMonitor());
+    assert.deepEqual(calls.map(c => c.id),
+        [contatos[1].contact_id, contatos[2].contact_id, contatos[0].contact_id]);
+    assert.equal(calls[1].at - calls[0].at, 1000);
+    assert.equal(calls[2].at - calls[1].at, 15000);
+    await monitor.verificarMonitor();
+    assert.equal(calls.length, 3);
+});
+
+for (const acao of ['pausar', 'remover', 'parar']) {
+    test(`durante a espera, ${acao} impede a próxima consulta`, async t => {
+        t.mock.timers.enable({ apis: ['setTimeout'] });
+        t.mock.method(require('node:crypto'), 'randomInt', (min, max) => max ? 15 : min - 1);
+        await cadastro();
+        await cadastro('5521999999999@c.us', 'Segundo');
+        let calls = 0;
+        bot.client.pupPage = { evaluate: async () => { calls++; return horario(); } };
+        const tarefa = monitor.verificarMonitor();
+        for (let i = 0; i < 30; i++) await new Promise(setImmediate);
+        assert.equal(calls, 1);
+        await monitor.verificarMonitor();
+        assert.equal(calls, 1);
+        if (acao === 'pausar') await bot.src('settings').setSetting('monitor.enabled', false);
+        if (acao === 'remover') await monitor.removerTodosMonitorados();
+        if (acao === 'parar') monitor.pararMonitor();
+        await bot.esperarComRelogio(t, tarefa);
+        assert.equal(calls, 1);
+    });
+}
+
+
+test('lista filtrada compara nome, delimitadores, telefone, id e menção dos cadastros', async () => {
+    const c = await cadastro();
+    await cadastro('5521999999999@c.us', 'Outro');
+    for (const comando of ['/monitor -l Fulano', '/monitor -list /Fulano/',
+        `/monitor -l ${bot.OUTRO.user}`, `/monitor -l #${c.id}`]) {
+        const [r] = await bot.responder(comando);
+        assert.match(r, /Fulano/);
+        assert.doesNotMatch(r, /📹.*Outro/);
+    }
+    const [r] = await bot.responder(`/monitor -l @${bot.OUTRO.user}`, {
+        mencoes: [bot.OUTRO.jid]
+    });
+    assert.match(r, /Fulano/);
+});
+
+test('ativa alerta ao cadastrar e para pessoa cadastrada sem duplicar o cadastro', async () => {
+    await bot.responder('/monitor -add /Fulano/ -alerta');
+    let [c] = await monitor.listarMonitorados();
+    assert.equal(c.alert_enabled, 1);
+    assert.match((await bot.responder('/monitor -l /Fulano/'))[0], /Alerta online: ativado/);
+    await bot.dbRun('UPDATE monitor_contacts SET alert_enabled = 0 WHERE id = ?', [c.id]);
+    assert.match((await bot.responder('/monitor -alerta /Fulano/'))[0], /Alerta online ativado/);
+    [c] = await monitor.listarMonitorados();
+    assert.equal(c.alert_enabled, 1);
+    await bot.src('settings').carregarSettings();
+    assert.equal((await monitor.listarMonitorados()).length, 1);
+    assert.equal((await monitor.listarMonitorados())[0].alert_enabled, 1);
+    await bot.responder('/monitor -add /Fulano/ -alerta');
+    assert.equal((await monitor.listarMonitorados()).length, 1);
+    assert.match((await bot.responder('/monitor -alerta'))[0], /Informe um contato/);
+});
+
+test('alerta online vai ao dono uma vez por entrada observada, sem rearmar com dados ausentes',
+    async () => {
+        const c = await cadastro();
+        await monitor.ativarAlertaMonitor(c.id);
+        let dados = horario(null, { isOnline: true });
+        bot.client.pupPage = { evaluate: async () => dados };
+        const consultar = async () => {
+            await liberarIntervalo();
+            await monitor.verificarMonitor();
+        };
+        await consultar();
+        await consultar();
+        dados = horario(null, { hasData: false });
+        await consultar();
+        dados = horario(null, { isOnline: true });
+        await consultar();
+        let avisos = bot.client.enviadas.filter(e => e.content.startsWith('🚨'));
+        assert.equal(avisos.length, 1);
+        assert.equal(avisos[0].chatId, bot.DONO.jid);
+        assert.match(avisos[0].content, /O contato "Fulano" ficou online em/);
+        assert.match(avisos[0].content, /💡 Para mais, digite \/monitor -l/);
+        assert.equal((await monitor.historicoMonitorado(c.id)).length, 0);
+        dados = horario();
+        await consultar();
+        dados = horario(null, { isOnline: true });
+        await consultar();
+        avisos = bot.client.enviadas.filter(e => e.content.startsWith('🚨'));
+        assert.equal(avisos.length, 2);
+    });
+
+test('sem alerta ativado não envia avisos e remoção durante consulta impede alerta pendente',
+    async () => {
+        const c = await cadastro();
+        bot.client.pupPage = { evaluate: async () => horario(null, { isOnline: true }) };
+        await monitor.verificarMonitor();
+        assert.equal(bot.client.enviadas.length, 0);
+        await monitor.ativarAlertaMonitor(c.id);
+        await bot.dbRun('UPDATE monitor_contacts SET online_state = 0, last_attempt_at = 0');
+        bot.client.pupPage = { evaluate: async () => {
+            await monitor.removerMonitorado(c.id);
+            return horario(null, { isOnline: true });
+        } };
+        await monitor.verificarMonitor();
+        assert.equal(bot.client.enviadas.length, 0);
+    });
+
+
+test('migração de banco existente preserva contatos e inicia alertas desativados', async () => {
+    const c = await cadastro();
+    await bot.dbRun('ALTER TABLE monitor_contacts DROP COLUMN alert_enabled');
+    await bot.dbRun('ALTER TABLE monitor_contacts DROP COLUMN online_state');
+    await bot.src('inicializacao').inicializarBanco();
+    const [salvo] = await monitor.listarMonitorados();
+    assert.equal(salvo.id, c.id);
+    assert.equal(salvo.alert_enabled, 0);
+    assert.equal(salvo.online_state, null);
+});
+
+
+test('pausar durante consulta impede envio do alerta pendente', async () => {
+    const c = await cadastro();
+    await monitor.ativarAlertaMonitor(c.id);
+    bot.client.pupPage = { evaluate: async () => {
+        await bot.src('settings').setSetting('monitor.enabled', false);
+        return horario(null, { isOnline: true });
+    } };
+    await monitor.verificarMonitor();
+    assert.equal(bot.client.enviadas.length, 0);
+});
+
+
+test('prefixo /monit filtra apenas nomes monitorados sem consultar a agenda', async t => {
+    await cadastro(bot.OUTRO.jid, 'Maria Lucia');
+    await cadastro('5521999999999@c.us', 'Jorge Chip L200');
+    bot.criarContato('5521888888888@c.us', 'Maria da Agenda');
+    for (const metodo of ['getContacts', 'getContactLidAndPhone']) {
+        t.mock.method(bot.client, metodo, () => { throw new Error('Não consultar agenda'); });
+    }
+    for (const filtro of ['/Maria/', 'mÁria', 'Lucia', 'Maria Lucia']) {
+        const [r] = await bot.responder(`/monit -l ${filtro}`);
+        assert.match(r, /📹.*Maria Lucia/);
+        assert.doesNotMatch(r, /Jorge Chip L200|Maria da Agenda|Escolha/);
+    }
+    const [r] = await bot.responder('/monit -l /da Agenda/');
+    assert.match(r, /Nenhum contato monitorado encontrado/);
+    assert.equal((await monitor.listarMonitorados()).length, 2);
+});
+
+test('filtro mostra todos os cadastros correspondentes, sem buscar na agenda', async () => {
+    await cadastro(bot.OUTRO.jid, 'Maria Lucia');
+    await cadastro('5521999999999@c.us', 'Maria Santos');
+    const [r] = await bot.responder('/monitor -l /Maria/');
+    assert.match(r, /📹.*Maria Lucia/);
+    assert.match(r, /📹.*Maria Santos/);
 });

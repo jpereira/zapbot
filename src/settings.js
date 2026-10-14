@@ -137,7 +137,7 @@ const SETTINGS_SCHEMA = {
     'bot.users': {
         default: [],
         type: 'list',
-        desc: 'Quem usa os comandos comuns (os não-admin), além do dono e do bot.admins: false (ninguém, o padrão), true (todos) ou pessoas e grupos (num grupo, todos ali usam, mas só dentro dele); uma pessoa só num grupo fica como telefone:grupo. Só o dono altera; pelo /set vale o nome (/set bot.users /Camila Gama/ /Grupo Familia/), e o /bot +v|-v é o atalho.',
+        desc: 'Quem usa os comandos comuns (os não-admin), além do dono e do bot.admins: false (ninguém, o padrão), true (todos) ou pessoas e grupos (num grupo, todos ali usam, mas só dentro dele); uma pessoa só num grupo fica como telefone:grupo. Só o dono altera; pelo /set vale o nome (/set bot.users /Maria Lucia/ /Grupo Familia/), e o /bot +v|-v é o atalho.',
         item: itemDeUsuario,
         lista: (itens) => {
             if (itens.includes('all') && itens.length > 1) {
