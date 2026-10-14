@@ -144,10 +144,10 @@ describe('versão com o commit (versao.js)', () => {
     test('(devel) fora de uma release; numa tag v*, sem rótulo; sem o commit, só a versão', () => {
         const { emDesenvolvimento, versaoComCommit, versaoDoBot } = bot.src('versao');
         const { version } = require('../package.json');
-        const release = { commit: 'abc1234', ref: `release-${version}` };
+        const release = { commit: 'abc1234', ref: `v${version}` };
         const main = { commit: 'def5678', ref: 'HEAD' };
 
-        assert.equal(versaoComCommit(release), `${version} (git+abc1234/release-${version})`);
+        assert.equal(versaoComCommit(release), `${version} (git+abc1234/v${version})`);
         assert.equal(versaoComCommit(main), `${version} (devel) (git+def5678/HEAD)`);
         assert.equal(versaoComCommit({ commit: 'def5678', ref: 'v9-teste' }), `${version} (devel) (git+def5678/v9-teste)`);
         assert.deepEqual([versaoDoBot(release), versaoDoBot(main)], [version, `${version} (devel)`]);

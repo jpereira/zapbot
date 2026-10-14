@@ -239,41 +239,45 @@ Ao mudar um comando, mude a página dele em `docs/comandos/` e as tabelas Resumo
 Uma execução do `./bump.sh` **fecha** a versão atual (a do `package.json`) e **abre** a próxima:
 
 ```text
-... commits da X.Y ── Release X.Y (tag vX.Y.Z) ── Bump para X.Z ── commits da X.Z ...
+... commits da X.Y.Z ── Release X.Y.Z (tag vX.Y.Z) ── Bump para X.Y.W ── commits da X.Y.W ...
 ```
 
-1. **Release X.Y** (pula se a tag `vX.Y.Z` já existe): a versão estável do README e da
-   instalação (o `vX.Y.Z` sem `/` antes: `hoje a v…`, `git checkout v…`) passa
-   para a atual, com a data de hoje ao lado em `vX.Y.Z (de DD/MM/AAAA)`. Os exemplos de saída
-   perdem o rótulo `(devel)`: `X.Y.Z (devel) (git+<commit>/HEAD)` vira
-   `X.Y.Z (git+<commit>/vX.Y.Z)`. Commit `Release X.Y`, com a tag anotada `vX.Y.Z` nele.
-2. **Bump para X.Z** (X.Y+1, ou a versão informada: `./bump.sh 3.0`): o `package.json` e o
-   `package-lock.json` passam para a nova, e os exemplos voltam a ser da versão em desenvolvimento,
-   com o rótulo: `X.Y.Z (git+…/vX.Y.Z)` vira `X.Z (devel) (git+…/HEAD)` e `ZapBot X.Y` vira
-   `ZapBot X.Z (devel)`. A versão estável continua a release que acabou de sair. Commit
-   `Bump para X.Z`, sem tag.
+1. **Release X.Y.Z** (pula se a tag `vX.Y.Z` já existe): a versão estável do README e da
+   instalação (o `vX.Y.Z` logo depois de uma crase, de `checkout ` ou de `versão: `, como em
+   `git checkout vX.Y.Z`) passa para a atual, com a data de hoje ao lado em
+   `vX.Y.Z (de DD/MM/AAAA)`. Os exemplos de saída perdem o rótulo `(devel)`:
+   `X.Y.Z (devel) (git+<commit>/HEAD)` vira `X.Y.Z (git+<commit>/vX.Y.Z)`. Commit
+   `Release X.Y.Z`, com a tag anotada `vX.Y.Z` nele.
+2. **Bump para X.Y.W** (por padrão o patch, X.Y.Z+1; `--minor` abre X.Y+1.0, `--major` abre
+   X+1.0.0, ou a versão informada: `./bump.sh 3.0.0`): o `package.json` e o `package-lock.json`
+   passam para a nova, e os exemplos voltam a ser da versão em desenvolvimento, com o rótulo:
+   `X.Y.Z (git+…/vX.Y.Z)` vira `X.Y.W (devel) (git+…/HEAD)` e `ZapBot X.Y.Z` vira
+   `ZapBot X.Y.W (devel)`. A versão estável continua a release que acabou de sair. Commit
+   `Bump para X.Y.W`, sem tag.
 3. Grava as refs no `.git/packed-refs` (`git pack-refs --all`), para a imagem Docker saber o commit
    da tag (o [`/version`](comandos/version.md) mostra `(git+<commit>/<tag>)`).
 
-O bot mostra o mesmo rótulo sozinho: fora de uma tag `v*`, a versão vem como `X.Y.Z (devel)` no
+O bot mostra o mesmo rótulo sozinho: fora de uma tag `vX.Y.Z`, a versão vem como `X.Y.Z (devel)` no
 `/version`, no `/bot -info`, no boot e nos e-mails.
 
 Precisa do working tree limpo e não faz push. A troca fica **só** no README e no `docs/`, e pula as
-linhas que citam o próprio `bump.sh` (os exemplos abaixo). As que explicam o formato usam `X.Y`, que
-o `bump.sh` não troca. No código e nos testes, o mesmo número pode ser outra coisa, como a versão da
-API do NVD ou do JSON-RPC da Solana: os testes conferem as duas.
+linhas que citam o próprio `bump.sh` (os exemplos abaixo). As que explicam o formato usam `X.Y.Z`,
+que o `bump.sh` não troca. No código e nos testes, o mesmo número pode ser outra coisa, como a
+versão de uma dependência: os testes conferem as duas.
 
 ```bash
-./bump.sh -n        # dry-run: mostra o que seria alterado nos dois passos
-./bump.sh           # Release X.Y (com a tag) + Bump para X.Y+1
-./bump.sh 3.0       # Release X.Y (com a tag) + Bump para 3.0.0
+./bump.sh -n          # dry-run: mostra o que seria alterado nos dois passos
+./bump.sh             # Release X.Y.Z (com a tag) + Bump para X.Y.Z+1
+./bump.sh --minor     # Release X.Y.Z (com a tag) + Bump para X.Y+1.0
+./bump.sh --major     # Release X.Y.Z (com a tag) + Bump para X+1.0.0
+./bump.sh 3.0.0       # Release X.Y.Z (com a tag) + Bump para 3.0.0
 git push && git push origin vX.Y.Z   # o push da tag publica o site
 ```
 
 O push da tag dispara o workflow da [documentação](#documentação), que publica o site da release em
 alguns minutos (acompanhe em **Actions › Documentação**). As notas ficam na release do GitHub
 (`gh release create vX.Y.Z`), com o que mudou desde a anterior
-(`git log vX.Y.W..vX.Y.Z`).
+(`git log <tag anterior>..vX.Y.Z`).
 
 ## Adicionando ou alterando comandos
 

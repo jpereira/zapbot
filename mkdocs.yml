@@ -1,5 +1,5 @@
 # Documentação do ZapBot: https://jpereira.github.io/zapbot/
-# Publicada só nas releases (tag v*) pelo .github/workflows/docs.yml.
+# Publicada só nas releases (tag vX.Y.Z) pelo .github/workflows/docs.yml.
 # Para ver localmente: make docs
 site_name: ZapBot
 site_url: https://jpereira.github.io/zapbot/

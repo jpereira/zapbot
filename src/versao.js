@@ -1,6 +1,6 @@
 /*
  * Versão do bot com o commit que está rodando e de onde ele veio:
- * "2.0.0 (git+60315ed/v2.0.0)" numa tag, "2.0.1 (devel) (git+60315ed/HEAD)" fora dela.
+ * "2.0.0 (git+0c6164f/v2.0.0)" numa tag, "2.0.1 (devel) (git+7a89b92/HEAD)" fora dela.
  */
 
 const fs = require('fs');
@@ -12,7 +12,7 @@ const { ROOT_DIR } = require('./constantes');
 
 /*
  * O commit e a ref vêm, nesta ordem:
- *   1. de ZAPBOT_COMMIT ("60315ed" ou "60315ed/v2.0.0"; sem a ref, HEAD),
+ *   1. de ZAPBOT_COMMIT ("0c6164f" ou "0c6164f/v2.0.0"; sem a ref, HEAD),
  *      para quem monta a imagem de outro jeito (ex.: CI);
  *   2. do .git do projeto, lido sem o git: o HEAD (no checkout de uma tag, já é
  *      o hash) ou o branch dele, em .git/refs/heads/ ou no .git/packed-refs.
@@ -170,7 +170,7 @@ const emDesenvolvimento = (origem = ORIGEM) => Boolean(origem) && !/^v\d+\.\d+\.
 // "2.0.1", ou "2.0.1 (devel)" fora de uma release
 const versaoDoBot = (origem = ORIGEM) => `${packageJson.version}${emDesenvolvimento(origem) ? ' (devel)' : ''}`;
 
-// "2.0.0 (git+60315ed/v2.0.0)", "2.0.1 (devel) (git+60315ed/HEAD)", ou só "2.0" sem o commit
+// "2.0.0 (git+0c6164f/v2.0.0)", "2.0.1 (devel) (git+7a89b92/HEAD)", ou só "2.0.0" sem o commit
 const versaoComCommit = (origem = ORIGEM) =>
     (origem ? `${versaoDoBot(origem)} (git+${origem.commit}/${origem.ref})` : packageJson.version);
 
