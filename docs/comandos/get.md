@@ -25,6 +25,10 @@ Escolha áudio ou figurinha por execução. Figurinhas têm no máximo seis segu
 seis segundos a partir do `-ss` (ou do início), e um trecho menor definido por `-ss` e `-es` mantém a
 duração pedida. O vídeo e o áudio são enviados como documento.
 
+De um link, com `-ss`, `-es` ou `-st`, o yt-dlp baixa só o trecho pedido (`--download-sections`,
+cortado no tempo exato com `--force-keyframes-at-cuts`), sem o vídeo inteiro. Se o site não deixar
+baixar o trecho, o `/get` baixa o vídeo inteiro e o ffmpeg corta.
+
 Na mídia respondida:
 
 - Imagem: `-st` faz a figurinha enquadrada no meio, como o `/sticker`; `-ss`, `-es` e `-a` são

@@ -282,6 +282,7 @@ const processos = {
     chamadas: [],
     falhar: null,        // 'yt-dlp' | 'ffmpeg'
     naoBaixar: false,    // yt-dlp termina sem criar o arquivo (acima do --max-filesize)
+    falharTrecho: false, // yt-dlp falha só com --download-sections (site que não deixa)
     tamanhoSaida: 1024
 };
 
@@ -293,7 +294,7 @@ function spawnFalso(bin, args) {
     setImmediate(() => {
         const nome = path.basename(bin);
 
-        if (processos.falhar === nome) {
+        if (processos.falhar === nome || (processos.falharTrecho && args.includes('--download-sections'))) {
             filho.emit('close', 1, null);
             return;
         }
