@@ -46,6 +46,12 @@ async function removerMonitorado(id) {
     return contato;
 }
 
+async function removerTodosMonitorados() {
+    await dbPronto;
+    const resultado = await dbRun('DELETE FROM monitor_contacts');
+    return resultado.changes;
+}
+
 async function historicoMonitorado(id) {
     await dbPronto;
     return dbAll(`SELECT * FROM monitor_history WHERE contact_id = ?
@@ -130,5 +136,5 @@ function pararMonitor() {
 
 module.exports = {
     cadastrarMonitorado, dadosDaPresenca, historicoMonitorado, iniciarMonitor,
-    listarMonitorados, pararMonitor, removerMonitorado, verificarMonitor
+    listarMonitorados, pararMonitor, removerMonitorado, removerTodosMonitorados, verificarMonitor
 };
