@@ -38,9 +38,8 @@ executar, use a barra: `/eita`. Cadastrar novamente o mesmo nome substitui seu c
 descrição. Sem `-desc`, a descrição fica vazia. A descrição aceita aspas retas ou curvas,
 inclusive misturadas, como `-desc “Exibe Dinheiro"`.
 
-No alias de comando, o destino deve ser um comando ativo do bot, inclusive seus aliases fixos,
-como `/st`. Não pode ser `/alias` nem outro atalho cadastrado. Nomes de comandos do bot são reservados, mesmo quando
-estão desativados. O nome `all` também é reservado e não pode ser cadastrado. Argumentos, aspas
+No alias de comando, o destino deve ser um comando ativo do bot, inclusive seus aliases fixos. Não pode ser `/alias` nem outro atalho
+cadastrado. Nomes de comandos do bot são reservados, mesmo quando estão desativados. O nome `all` também é reservado e não pode ser cadastrado. Argumentos, aspas
 e opções do destino são preservados.
 
 Argumentos digitados ao executar são acrescentados ao final do comando salvo:

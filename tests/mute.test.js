@@ -126,7 +126,7 @@ describe('/mute (/mudo, /m)', () => {
         bot.criarContato('5521933333333@c.us', 'Jorge Pereira');
         bot.criarContato('5511944444444@c.us', 'Jorge Silva');
 
-        const r = await bot.responderEscolhendo('/m -a /jorge/', [9, 2]);
+        const r = await bot.responderEscolhendo('/mute -a /jorge/', [9, 2]);
         assert.deepEqual(r, [
             '🔎 "jorge" corresponde a 2 contatos:\n\n1. 👤 Jorge Pereira · +5521933333333\n2. 👤 Jorge Silva · +5511944444444\n\n' +
                 '💡 _Responda só com o nº (em até 2 minutos), ou repita o comando com mais palavras do nome._',
@@ -173,13 +173,13 @@ describe('/mute (/mudo, /m)', () => {
 
     test('alvo por menção (@ no WhatsApp): o LID vira o telefone', async () => {
         bot.client.lids.set('100000000000002@lid', CICLANO.jid);
-        assert.match((await bot.responder('/m -a @100000000000002', { mencoes: ['100000000000002@lid'] }))[0], /^🔇 \*Silenciado:\* 👤 Ciclano — /);
+        assert.match((await bot.responder('/mute -a @100000000000002', { mencoes: ['100000000000002@lid'] }))[0], /^🔇 \*Silenciado:\* 👤 Ciclano — /);
         assert.deepEqual((await bot.dbAll('SELECT target_id FROM mutes')).map(m => m.target_id), [CICLANO.jid]);
     });
 
-    test('/mudo e /m são o /mute', async () => {
+    test('/mudo é o /mute', async () => {
         assert.match((await bot.responder('/mudo -d /Grupo L200/'))[0], /^🔇 \*Silenciado:\* 👥 Grupo sobre L200 — apagadas/);
-        assert.match((await bot.responder('/m'))[0], /^🔇 \*Silenciados\* \(1\)/);
+        assert.match((await bot.responder('/mute'))[0], /^🔇 \*Silenciados\* \(1\)/);
     });
 
     test('respondendo um aviso: de onde ele veio (a pessoa no privado e no status, o grupo, a comunidade)', async () => {

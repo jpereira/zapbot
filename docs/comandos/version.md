@@ -1,9 +1,9 @@
-# `/version` (`/ver`)
+# `/version`
 
 Exibe o mesmo banner do `/uptime`, com a versão do bot.
 
 ```text
-/ver
+/version
 🤖 ZapBot 2.0.9 (devel) (git+7a89b92/HEAD)
 ━━━━━━━━━━━━━━━━━━
 ⚡ Online: 2 dias, 3 horas

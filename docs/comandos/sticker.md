@@ -1,4 +1,4 @@
-# `/sticker` (`/st`)
+# `/sticker`
 
 O `/sticker` é o [`/get -sticker`](get.md): aceita uma URL, ou o reply numa mensagem com link, num
 vídeo/GIF ou numa imagem, e devolve a figurinha. Nome e autor da figurinha vêm dos settings
@@ -17,7 +17,7 @@ segundos a partir do `-ss` (ou do início). Enquanto baixa e converte, o bot mos
 
 ```text
 (reply numa foto)                /sticker
-(reply num link)                 /st
+(reply num link)                 /sticker
 (reply num vídeo)                /sticker -ss 12            → de 0:12 a 0:18
 (reply num link)                 /sticker -ss 10 -es 13     → de 0:10 a 0:13
 (reply num vídeo)                /sticker -ss 01:10 -es 01:13 → de 1:10 a 1:13
@@ -46,7 +46,7 @@ fica do maior tamanho que cabe.
 ```text
 /sticker -txt "Bom dia!"                                → letra preta no fundo branco
 /sticker -txt "Partiu praia?" -bg "#2980B9" -fg "#FFFFFF"
-/st -txt Feliz aniversário, vó! -bg #C0392B -fg #fff
+/sticker -txt Feliz aniversário, vó! -bg #C0392B -fg #fff
 ```
 
 - O texto vai com ou sem aspas (até 200 caracteres); as cores, em `#RRGGBB` ou `#RGB`, com ou sem o

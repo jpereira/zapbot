@@ -1,4 +1,4 @@
-# `/enquete` (`/enq`, `/quiz`) · admin
+# `/enquete` (`/quiz`) · admin
 
 Cria uma enquete nativa do WhatsApp no chat atual. A pergunta e as opções (2 a 12) são separadas por
 `|` ou uma por linha (a 1ª linha é a pergunta). Por padrão cada pessoa marca uma opção; com `-m` no
@@ -12,7 +12,7 @@ começo, pode marcar várias.
 ```text
 /enquete Pizza ou hambúrguer? | Pizza | Hambúrguer
 /enquete -r                  → o resultado da última enquete do chat
-/enq -m Quais dias você pode? | Seg | Ter | Qua | Qui | Sex
+/enquete -m Quais dias você pode? | Seg | Ter | Qua | Qui | Sex
 /quiz Onde vamos?
 Praia
 Montanha
