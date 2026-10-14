@@ -35,7 +35,9 @@ Tipos de regra:
 
 - **Texto:** casa se a mensagem contém o texto, sem diferenciar maiúsculas nem acentos.
 - **`/regex/flags`:** expressão regular JavaScript, com espaços e escapes preservados. As flags `g`
-  e `y` são ignoradas na detecção, para cada mensagem ser avaliada independentemente.
+  e `y` são ignoradas na detecção, para cada mensagem ser avaliada independentemente. Regex com risco
+  de travar o bot (quantificador sobre um grupo que já se repete, como `(x+)+`) é recusada: como ela
+  é testada contra toda mensagem recebida, um backtracking exponencial congelaria o bot inteiro.
 
 As regras são testadas contra o texto original da mensagem. Nos avisos e no histórico, menções como
 `@100000000000001` aparecem com o nome do contato quando ele pode ser resolvido.
