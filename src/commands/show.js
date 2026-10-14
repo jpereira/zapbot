@@ -30,7 +30,7 @@ const { compileSearch } = require('../watch/rules');
  * otherwise, only this chat's deleted ones.
  * /show              → in private, lists the cache; in a group, the last deleted one
  * /show -3           → the last 3
- * /show -2 /^Camila/ → the last 2 (deleted, edited or status) of the chat that matches
+ * /show -2 /^Maria/ → the last 2 (deleted, edited or status) of the chat that matches
  * /show -e Trabalho  → the last edited one of the chat with "Trabalho" in the name
  * /show 2            → the last one of chat no. 2 of the last -l
  * /show -list        → the chats with something in the cache
@@ -230,7 +230,7 @@ async function chatsThatMatch(msg, textAlt, chats) {
         }
         match = chats.filter(c => re.test(removeAccents(chatNameAlt(c))));
     } else {
-        // "@Camila Gama" typed, without picking from the @ list: the name counts
+        // "@Maria Lucia" typed, without picking from the @ list: the name counts
         const words = withoutAccents(textAlt.replace(/^@/, '')).split(/\s+/).filter(Boolean);
         match = chats.filter(c => words.every(p => withoutAccents(chatNameAlt(c)).includes(p)));
         exact = match.find(c => withoutAccents(chatNameAlt(c)) === words.join(' '));

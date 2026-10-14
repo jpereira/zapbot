@@ -140,7 +140,7 @@ async function soInText(soIn, scope) {
 }
 
 /*
- * An item as the rest of the bot shows a destination: "👤 Camila Gama · +5521988887777",
+ * An item as the rest of the bot shows a destination: "👤 Maria Lucia · +5521988887777",
  * "👤 +5521977777777" (no name) or "👥 Grupo Familia"; the person in a single group,
  * with the group at the end.
  */

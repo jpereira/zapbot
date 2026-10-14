@@ -2,6 +2,8 @@
  * /monitor: persisted contacts and distinct presence times observed.
  * Does not try to rebuild online intervals or fill in missing times.
  */
+const crypto = require('node:crypto');
+const { messageToSelf } = require('./client');
 const { dbAll, dbGet, dbReady, dbRun } = require('./db');
 const { estado: stateAlt } = require('./state');
 const { getSetting } = require('./settings');
@@ -11,6 +13,26 @@ const { printError } = require('./log');
 
 let checking = false;
 let timer = null;
+let wait = null;
+let generation = 0;
+
+function shuffle(contacts) {
+    for (let i = contacts.length - 1; i > 0; i--) {
+        const j = crypto.randomInt(i + 1);
+        [contacts[i], contacts[j]] = [contacts[j], contacts[i]];
+    }
+    return contacts;
+}
+
+function waitBetweenContacts() {
+    return new Promise(resolve => {
+        const timeout = setTimeout(() => {
+            wait = null;
+            resolve();
+        }, crypto.randomInt(1, 16) * 1000);
+        wait = { timeout, resolve };
+    });
+}
 
 const active = () => stateAlt.pronto && !stateAlt.reiniciando &&
     !getSetting('bot.paused') && getSetting('monitor.enabled') &&
@@ -46,6 +68,11 @@ async function removeMonitored(id) {
     return contactAlt;
 }
 
+async function enableAlertMonitor(id) {
+    await dbReady;
+    return dbRun('UPDATE monitor_contacts SET alert_enabled = 1 WHERE id = ?', [id]);
+}
+
 async function removeAllMonitored() {
     await dbReady;
     const resultAlt = await dbRun('DELETE FROM monitor_contacts');
@@ -77,10 +104,18 @@ function presenceData(dataAlt) {
 async function checkMonitor() {
     if (checking || !active()) return;
     checking = true;
+    const current = generation;
     try {
-        const contacts = await listMonitored();
-        for (const contactAlt of contacts) {
-            if (!active()) break;
+        const contacts = shuffle((await listMonitored()).filter(c =>
+            Date.now() - c.last_attempt_at >= getSetting('monitor.pool') * 1000));
+        let queried = false;
+        for (const candidateAlt of contacts) {
+            if (!active() || current !== generation) break;
+            if (queried) await waitBetweenContacts();
+            if (!active() || current !== generation) break;
+            const contactAlt = await dbGet('SELECT * FROM monitor_contacts WHERE id = ?',
+                [candidateAlt.id]);
+            if (!contactAlt) continue;
             const nowAlt = Date.now();
             if (nowAlt - contactAlt.last_attempt_at < getSetting('monitor.pool') * 1000) continue;
             const r = await dbRun(`UPDATE monitor_contacts SET last_attempt_at = ?
@@ -95,6 +130,7 @@ async function checkMonitor() {
                     [contactAlt.last_attempt_at, contactAlt.id, nowAlt]);
                     break;
                 }
+                queried = true;
                 const { lastSeen, status } = presenceData(dataAlt);
                 const at = Date.now();
                 if (lastSeen) {
@@ -105,12 +141,29 @@ async function checkMonitor() {
                         contactAlt.id]);
                     await limitHistoryMonitor(getSetting('monitor.maxRecords'), contactAlt.id);
                 }
+                const p = dataAlt.presenceData ?? {};
+                const online = p.hasData === true && p.chatstate?.deny !== true
+                    ? (p.isOnline === true ? 1 : p.isOnline === false ? 0 : null) : null;
+                const salvo = await dbGet('SELECT * FROM monitor_contacts WHERE id = ?',
+                    [contactAlt.id]);
+                const resultAlt = await dbRun(`UPDATE monitor_contacts
+                    SET online_state = COALESCE(?, online_state) WHERE id = ?`,
+                [online, contactAlt.id]);
+                if (active() && current === generation && resultAlt.changes &&
+                    salvo?.alert_enabled && online === 1 &&
+                    salvo.online_state !== 1) {
+                    const when = new Date(at).toLocaleString('pt-BR',
+                        { timeZone: 'America/Sao_Paulo' });
+                    await messageToSelf(`🚨 O contato "${salvo.contact_name}" ficou online em "${when}".\n` +
+                        '💡 Para mais, digite /monitor -l');
+                }
                 await dbRun(`UPDATE monitor_contacts SET last_checked_at = ?, last_status = ?,
                     last_seen = CASE WHEN ? IS NULL THEN last_seen
                         ELSE MAX(COALESCE(last_seen, 0), ?) END,
                     last_error = NULL WHERE id = ?`,
                 [at, status, lastSeen, lastSeen, contactAlt.id]);
             } catch (err) {
+                queried = true;
                 await dbRun(`UPDATE monitor_contacts SET last_checked_at = ?, last_status = ?,
                     last_error = ? WHERE id = ?`,
                 [Date.now(), '⚠️ consulta falhou', String(err.message ?? err).slice(0, 300),
@@ -130,11 +183,17 @@ function startMonitor() {
 }
 
 function stopMonitor() {
+    generation++;
+    if (wait) {
+        clearTimeout(wait.timeout);
+        wait.resolve();
+        wait = null;
+    }
     clearInterval(timer);
     timer = null;
 }
 
 module.exports = {
-    registerMonitored, presenceData, historyMonitored, startMonitor,
+    enableAlertMonitor, registerMonitored, presenceData, historyMonitored, startMonitor,
     listMonitored, stopMonitor, removeMonitored, removeAllMonitored, checkMonitor
 };
