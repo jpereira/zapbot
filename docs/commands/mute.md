@@ -1,4 +1,4 @@
-# `/mute` (`/m`, `/mudo`) · admin
+# `/mute` (`/mudo`) · admin
 
 Silencia os avisos que chegam no seu privado quando uma pessoa, um grupo ou uma comunidade apaga
 mensagens, edita mensagens, apaga status ou remove (ou troca) uma reação. **Só o aviso some**: a
@@ -36,8 +36,8 @@ fizer em qualquer chat, inclusive os status dela.
 /mute -d -e +5521999999999  → apagadas e editadas desse número
 /mute -s Fulano             → só os status apagados do contato
 /mute -r /Grupo L200/       → só as reações removidas ou trocadas no grupo
-/m @Fulano Da Silva         → num grupo, mencionando a pessoa
-/m /Jorge/                  → vários Jorge: lista, e você responde com o nº
+/mute @Fulano Da Silva         → num grupo, mencionando a pessoa
+/mute /Jorge/                  → vários Jorge: lista, e você responde com o nº
 /mute                       → a lista
 ```
 

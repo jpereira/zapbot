@@ -170,9 +170,7 @@
         {
             "cmd": "/bot",
             "usage": "/bot [-on|-off] [-users|-all-users]  ou  /bot +o|-o|+v|-v [+cmd|-cmd <comandos>] [pessoa...] [-all-users]  ou  /bot -reset [force]  ou  /bot -status [<hora>|off] [-to <destino>]...  ou  /bot -info",
-            "aliases": [
-                "/b"
-            ],
+            "aliases": [],
             "help": "Liga/desliga o bot e diz quem usa os comandos: você e os admins usam tudo; os usuários, os comandos comuns. Sem opção, mostra o status (o mesmo do -status). O -info mostra as versões do que ele usa.",
             "espacado": true,
             "cmd_opts": [
@@ -330,9 +328,7 @@
                     "desc": "Apaga as mídias baixadas em ${MEDIA_DIR} (as mensagens ficam, sem o arquivo)."
                 }
             ],
-            "aliases": [
-                "/c"
-            ],
+            "aliases": [],
             "help": "Exibe o espaço ocupado em ${CACHE_DIR} e limpa o cache.",
             "onlyAdmin": true
         },
@@ -873,7 +869,6 @@
             "cmd": "/enquete",
             "usage": "/enquete [-m] <pergunta> | <opção 1> | <opção 2> [| ...]  ou  /enquete -r",
             "aliases": [
-                "/enq",
                 "/quiz"
             ],
             "help": "Cria uma enquete no chat (separe pergunta e opções, de 2 a 12, com | ou uma por linha) ou mostra o resultado com -r.",
@@ -1056,7 +1051,6 @@
             "cmd": "/mute",
             "usage": "/mute [OPÇÃO]... [/contato ou grupo/|@menção|+número]",
             "aliases": [
-                "/m",
                 "/mudo"
             ],
             "help": "Silencia os avisos de apagadas, editadas, status apagados e/ou reações removidas ou trocadas de uma pessoa, de um grupo ou de uma comunidade. Só o alvo, sem opção, silencia tudo (o -a). Respondendo um aviso, silencia de onde ele veio: a pessoa (privado e status), o grupo ou a comunidade. As mensagens continuam guardadas para o /show. O /watch também não avisa no seu privado de quem está silenciado, em qualquer tipo (os -to continuam recebendo). Sem nada, lista os silenciados.",
@@ -1186,9 +1180,7 @@
         {
             "cmd": "/ping",
             "usage": "/ping",
-            "aliases": [
-                "/p"
-            ],
+            "aliases": [],
             "help": "Verifica se o bot está respondendo (responde pong).",
             "onlyAdmin": false
         },
@@ -1321,9 +1313,7 @@
         {
             "cmd": "/show",
             "usage": "/show [-N] [OPÇÃO] [chat]  ou  /show -l [chat]  ou  /show -q <texto|/regex/flags> [-N] [chat]",
-            "aliases": [
-                "/s"
-            ],
+            "aliases": [],
             "help": "Sem parâmetros no privado, lista o cache de todos os chats, como /show -l. Em grupos, reexibe a última mensagem apagada do grupo. Reexibe as mensagens apagadas, editadas, os status apagados e as reações removidas ou trocadas que estão no cache: deste chat ou de outro (pelo nº do -l, nome, @menção ou /regex/). Publicações de canais (@newsletter) são identificadas com 📰 Canal e o nome, sem nome ou telefone de contato.",
             "cmd_opts": [
                 {
@@ -1465,9 +1455,7 @@
         {
             "cmd": "/sticker",
             "usage": "/sticker [OPÇÃO]... [url]  (ou respondendo uma imagem, vídeo ou link)  ou  /sticker -txt <texto> [-bg <cor>] [-fg <cor>]",
-            "aliases": [
-                "/st"
-            ],
+            "aliases": [],
             "help": "Cria uma figurinha: é o /get -sticker. Da URL ou do link respondido, baixa o vídeo; sem vídeo, usa a prévia do link. De um vídeo, até 6 s com recorte quadrado no meio, no trecho do -ss e do -es. De uma imagem, o recorte quadrado no meio. Com -txt, uma figurinha animada com o texto, piscando entre as cores do -fg e do -bg.",
             "cmd_opts": [
                 {
@@ -1538,7 +1526,6 @@
             "cmd": "/tempo",
             "usage": "/tempo [N|Nd] [cidade]",
             "aliases": [
-                "/t",
                 "/weather"
             ],
             "help": "Tempo agora, máx./mín. e chance de chuva do dia (Open-Meteo); com N (ou Nd), previsão de N dias contando hoje. Sem cidade usa o setting tempo.city.",
@@ -1606,7 +1593,6 @@
             "cmd": "/traduzir",
             "usage": "/traduzir [-para <idioma>] [texto]",
             "aliases": [
-                "/tr",
                 "/translate"
             ],
             "help": "Traduz o texto (ou a mensagem respondida) pelo Google Translate. O idioma de origem é detectado.",
@@ -1685,10 +1671,7 @@
         {
             "cmd": "/uptime",
             "usage": "/uptime",
-            "aliases": [
-                "/u",
-                "/up"
-            ],
+            "aliases": [],
             "help": "Exibe há quanto tempo o bot está rodando e conectado.",
             "cron": true,
             "onlyAdmin": false
@@ -1696,9 +1679,7 @@
         {
             "cmd": "/version",
             "usage": "/version",
-            "aliases": [
-                "/ver"
-            ],
+            "aliases": [],
             "help": "Exibe a versão do bot (mesmo banner do /uptime).",
             "cron": true,
             "onlyAdmin": false
@@ -1715,9 +1696,7 @@
         {
             "cmd": "/watch",
             "usage": "/watch [texto|/regex/flags] [-in <origem>] [-to <destino>]...  ou  /watch [-N] [-q <texto|/regex/flags>]  ou  /watch -s [N|regra] [-q <texto|/regex/flags>] [-to <destino|off>]...  ou  /watch -rem <N|regra>  ou  /watch -flush [N|regra]",
-            "aliases": [
-                "/w"
-            ],
+            "aliases": [],
             "help": "Vigia mensagens recebidas com regras de texto ou regex. Miniaturas de localização não são texto e ficam fora das regras. Uma regra sem -in vale em qualquer lugar; -in restringe a um contato (remetente), grupo ou canal. Sem parâmetros, lista regras e últimos matches; -N escolhe a quantidade. Publicações de @newsletter são identificadas com 📰 e o nome do canal. Quem está silenciado no /mute não gera aviso no seu privado (os -to continuam recebendo). Os números após -s, -rem e -flush identificam regras; no lugar deles, vale a própria regra, inteira ou um trecho. A quantidade de matches vem no -N.",
             "cmd_opts": [
                 {

@@ -357,8 +357,8 @@ describe('/cache (/c)', () => {
         await bot.dbRun("INSERT INTO messages (id, timestamp, revoked) VALUES ('velha', ?, 0), ('nova', ?, 0)", [oldAlt2, Date.now()]);
         await bot.dbRun("INSERT INTO messages (id, timestamp, revoked, revoked_at) VALUES ('apagada', ?, 1, ?)", [oldAlt2, oldAlt2]);
 
-        assert.deepEqual(await bot.replyAlt('/c -c'), ['🧹 Cache limpo (itens fora da janela de retenção).']);
-        // (the own message "/c -c" is also in the database: we only check the test's)
+        assert.deepEqual(await bot.replyAlt('/cache -c'), ['🧹 Cache limpo (itens fora da janela de retenção).']);
+        // (the own message "/cache -c" is also in the database: we only check the test's)
         const ids = (await bot.dbAll("SELECT id FROM messages WHERE id IN ('velha', 'nova', 'apagada') ORDER BY id")).map(r => r.id);
         assert.deepEqual(ids, ['apagada', 'nova'], 'a apagada fica 30 dias; a comum sai em 68 h');
     });
@@ -388,7 +388,7 @@ describe('/cache (/c)', () => {
         assert.deepEqual(await listBackups(), []);
         assert.ok((await bot.dbGet('SELECT COUNT(*) AS n FROM messages')).n > 0, 'as mensagens ficam');
 
-        assert.match((await bot.replyAlt('/c -c -m -b'))[0], /^🧹 Cache limpo .*\n🖼️ Mídias apagadas .*\n📦 Backups apagados .*: \*0\*/);
+        assert.match((await bot.replyAlt('/cache -c -m -b'))[0], /^🧹 Cache limpo .*\n🖼️ Mídias apagadas .*\n📦 Backups apagados .*: \*0\*/);
     });
 
     test('-m: apaga as mídias baixadas; as mensagens ficam, sem o arquivo', async () => {

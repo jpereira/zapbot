@@ -510,7 +510,7 @@ describe('/cron: comandos no texto ({/comando})', () => {
     });
 
     test('vários no mesmo texto, também no lembrete', async () => {
-        await bot.replyAlt('/lembrete +1h versão {/version} e de novo {/ver}');
+        await bot.replyAlt('/lembrete +1h versão {/version} e de novo {/uptime}');
         const [sentAlt] = await expire();
         assert.match(sentAlt.content, /^⏰ \*Lembrete\*\n\nversão\n\n🤖 \*ZapBot[\s\S]*\S\n\ne de novo\n\n🤖 \*ZapBot/);
         assert.doesNotMatch(sentAlt.content, /\{\//);

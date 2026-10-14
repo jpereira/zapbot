@@ -84,7 +84,7 @@ describe('/tempo (/t, /weather)', () => {
         assert.equal(network.chamadas[0].cfg.params.name, 'Recife');
 
         network.responder('get', 'api.open-meteo.com/v1/forecast', { ...forecast(2), daily: { temperature_2m_max: [null], temperature_2m_min: [null], precipitation_probability_max: [null] } });
-        const [cold] = await bot.replyAlt('/t Curitiba');
+        const [cold] = await bot.replyAlt('/tempo Curitiba');
         assert.match(cold, /🥶 Tá congelando!/);
         assert.match(cold, /📈 \*Máx:\* -  📉 \*Mín:\* -/);
     });
@@ -426,7 +426,7 @@ describe('/traduzir (/tr, /translate)', () => {
         await bot.setSetting('traduzir.api.key', 'do-setting');
         network.responder('post', 'translation.googleapis.com', translation('Good morning', 'pt'));
 
-        await bot.replyAlt('/tr -para en bom dia');
+        await bot.replyAlt('/traduzir -para en bom dia');
         assert.deepEqual(network.chamadas.at(-1).cfg.body, { q: 'bom dia', target: 'en', format: 'text' });
 
         const quoted = bot.createMessage({ texto: 'buenos días', de: bot.OTHERAlt.jid });
@@ -489,7 +489,7 @@ describe('/traduzir (/tr, /translate)', () => {
     test('qualquer pessoa usa (com o bot.users true)', async () => {
         await bot.setSetting('traduzir.api.key', 'k');
         network.responder('post', 'translation.googleapis.com', translation('olá'));
-        assert.match((await bot.replyAlt('/tr hello', { de: bot.OTHERAlt.jid }))[0], /olá/);
+        assert.match((await bot.replyAlt('/traduzir hello', { de: bot.OTHERAlt.jid }))[0], /olá/);
     });
 });
 

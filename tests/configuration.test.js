@@ -312,7 +312,7 @@ describe('settings', () => {
     });
 
     test('commands.disabled: aceita nome ou alias, recusa o /set', async () => {
-        assert.deepEqual(await setSetting('commands.disabled', 'noffa /p'), ['/noffa', '/ping']);
+        assert.deepEqual(await setSetting('commands.disabled', 'noffa /mudo'), ['/noffa', '/mute']);
         // A value saved under the old name (/ualisu, today an alias) becomes the current name
         assert.deepEqual(await setSetting('commands.disabled', ['/ualisu']), ['/walissu']);
         await assert.rejects(setSetting('commands.disabled', 'set'), /não pode ser desativado/);
@@ -482,7 +482,8 @@ describe('ajuda', () => {
         assert.match(textAlt, /^Uso: \/show \[-N\] \[OPÇÃO\]/);
         assert.match(textAlt, /-query, -q <texto\|\/regex\/flags>/);
         assert.match(textAlt, /Argumentos:\n  -N/);
-        assert.match(textAlt, /Aliases: \/s$/);
+        assert.doesNotMatch(textAlt, /Aliases:/);
+        assert.match(formatCommandHelp(findCommand('/mute')), /Aliases: \/mudo$/);
     });
 
     test('as formas do uso ("  ou  ") saem uma por linha, alinhadas', () => {
