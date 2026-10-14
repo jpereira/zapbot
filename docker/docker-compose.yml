@@ -50,6 +50,14 @@ services:
     environment:
       - APP_ENV=prod
       - NODE_ENV=production
+      # Firewall de egresso (entrypoint + docker/app/egress-firewall.sh): bloqueia
+      # o acesso à rede interna e fecha o SSRF do yt-dlp (/get). Precisa do
+      # cap_add NET_ADMIN abaixo. Troque para 0 para desligar.
+      - ZAPBOT_EGRESS_FIREWALL=1
+
+    # NET_ADMIN: só para o firewall de egresso aplicar as regras de iptables.
+    cap_add:
+      - NET_ADMIN
 
     volumes:
       - app_cache:/app/cache
