@@ -16,6 +16,12 @@ function findCommand(name) {
     return activeCommands().find(c => c.cmd === name || c.aliases?.includes(name));
 }
 
+// Comandos ativos cujo nome ou alias começa com o digitado (ex.: /watc → /watch), sem repetir
+function commandsByPrefix(name) {
+    if (!/^\/./.test(name)) return [];
+    return activeCommands().filter(c => [c.cmd, ...(c.aliases ?? [])].some(n => n.startsWith(name)));
+}
+
 /*
  * Variáveis que os textos do comandos.json podem citar (ex.: "Exibe o espaço
  * ocupado em ${CACHE_DIR}"): o JSON não tem template strings, então a ajuda
@@ -164,6 +170,7 @@ function formatarErroComando(e) {
 
 module.exports = {
     activeCommands,
+    commandsByPrefix,
     findCommand,
     formatCommandHelp,
     formatarErroComando,
