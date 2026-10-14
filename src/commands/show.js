@@ -19,6 +19,7 @@ const { getSetting } = require('../settings');
 const { humanSize, mediaIsPath } = require('../util/files');
 const { wait, formatData, paraMs, plural, withoutAccents } = require('../util/format');
 const { isChannelAlt } = require('../util/origin');
+const { regexDangerous } = require('../util/safeRegex');
 const { compileSearch } = require('../watch/rules');
 
 /*
@@ -216,6 +217,10 @@ async function chatsThatMatch(msg, textAlt, chats) {
     const regex = textAlt.match(/^\/(.+)\/$/);
 
     if (regex) {
+        if (regexDangerous(regex[1])) {
+            await msg.reply(`❌ Regex com risco de travar o bot: ${textAlt}. Simplifique (evite (x+)+).`);
+            return null;
+        }
         let re;
         try {
             re = new RegExp(removeAccents(regex[1]), 'i');

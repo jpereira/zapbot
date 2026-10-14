@@ -33,6 +33,25 @@ describe('regras', () => {
         assert.throws(() => compileRuleWatch(''), /1 a 200/);
         assert.throws(() => compileRuleWatch('x'.repeat(201)), /1 a 200/);
     });
+
+    test('regex com backtracking catastrófico (ReDoS) é recusada e não trava o bot', () => {
+        // Before, one of these run against a message froze the bot's single thread
+        for (const r of ['/(x+)+y/', '/(a*)*/', '/([a-z]+)*/', '/(\\d+){2,}/', '/(ab+)+/']) {
+            assert.throws(() => compileRuleWatch(r), /risco de travar o bot/, r);
+        }
+        // Legitimate ones (including the docs examples) still hold
+        assert.equal(compileRuleWatch('/carr(o|ão)/i')('meu carro'), true);
+        assert.equal(compileRuleWatch('/https?:\\/\\/\\S+/')('veja http://x.com'), true);
+        assert.equal(compileRuleWatch('/\\d{4}-\\d{2}/')('2026-10'), true);
+    });
+
+    test('mesmo escapando da verificação, o texto testado é truncado e retorna rápido', () => {
+        // (a|ab)+ is not caught by the heuristic; the text cut prevents the freeze
+        const rule = compileRuleWatch('/(a|ab)+$/');
+        const t0 = Date.now();
+        rule('a'.repeat(100_000) + 'b'); // without the truncation, it would take minutes
+        assert.ok(Date.now() - t0 < 2000, 'deve retornar em bem menos de 2 s');
+    });
 });
 
 describe('detecção', () => {

@@ -10,6 +10,7 @@
  * When it matches, the occurrence goes to watch_hits and you are notified in private.
  */
 const { withoutAccents } = require('../util/format');
+const { MAX_TEXT_TESTED, regexDangerous } = require('../util/safeRegex');
 
 const RULE_REGEX = /^\/(.+)\/([a-z]*)$/s;
 const RULE_MAX_LEN = 200;
@@ -26,13 +27,19 @@ function compileSearch(search) {
     const m = search.match(RULE_REGEX);
 
     if (m) {
+        if (regexDangerous(m[1])) {
+            // Backtracking exponencial travaria o bot inteiro (ver util/regexSeguro)
+            throw new Error('regex com risco de travar o bot (quantificador sobre grupo que já se repete, como (x+)+): simplifique');
+        }
         let re;
         try {
             re = new RegExp(m[1], m[2].replace(/[gy]/g, ''));
         } catch (e) {
             throw new Error(`regex inválida: ${e.message}`, { cause: e });
         }
-        return (textAlt) => re.test(String(textAlt ?? ''));
+        // The tested text (the body of any received message) is truncated: defense
+        // in depth against the cases the static check does not catch
+        return (textAlt) => re.test(String(textAlt ?? '').slice(0, MAX_TEXT_TESTED));
     }
 
     const target = withoutAccents(search);
