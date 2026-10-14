@@ -30,6 +30,10 @@ const BIN_YT = '/venv/bin/yt-dlp';
 const GET_TIMEOUT_MS = 5 * 60 * 1000;
 const GET_MAX_CONCURRENT = 2;
 
+// Prévia de link (thumbnail externo): timeout e teto de tamanho do download
+const THUMBNAIL_TIMEOUT_MS = 15 * 1000;
+const THUMBNAIL_MAX_BYTES = 10 * 1024 * 1024;
+
 /*
  * Ambiente
  */
@@ -49,5 +53,7 @@ module.exports = {
     MAX_DELETE_WINDOW,
     MEDIA_DIR,
     ROOT_DIR,
+    THUMBNAIL_MAX_BYTES,
+    THUMBNAIL_TIMEOUT_MS,
     TMP_DIR
 };
