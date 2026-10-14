@@ -1,0 +1,58 @@
+# Publica a imagem do bot no GitHub Packages (ghcr.io/jpereira/zapbot).
+# Roda ao empurrar uma tag vX.Y.Z ou manualmente informando uma tag existente
+# (o workflow vem da branch, o código vem da tag).
+name: Container image
+
+on:
+  push:
+    tags: ["v[0-9]*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag (vX.Y.Z)
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: container-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+
+      - name: Build and verify the release image
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          version="${RELEASE_TAG#v}"
+          test "$version" = "$(node -p "require('./package.json').version")"
+          image="ghcr.io/${GITHUB_REPOSITORY,,}"
+          docker build -f docker/app/Dockerfile \
+            --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
+            --label "org.opencontainers.image.version=$version" \
+            --label "org.opencontainers.image.revision=$(git rev-parse HEAD)" \
+            --label "org.opencontainers.image.licenses=$(node -p "require('./package.json').license || ''")" \
+            --tag "$image:$version" --tag "$image:latest" .
+          docker run --rm --entrypoint node "$image:$version" --version
+
+      - name: Publish version and latest tags
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          image="ghcr.io/${GITHUB_REPOSITORY,,}"
+          printf '%s' "$REGISTRY_TOKEN" | docker login ghcr.io \
+            --username "$GITHUB_ACTOR" --password-stdin
+          trap 'docker logout ghcr.io' EXIT
+          docker push "$image:${RELEASE_TAG#v}"
+          docker push "$image:latest"
