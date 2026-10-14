@@ -90,9 +90,9 @@ describe('gravação', () => {
 });
 
 describe('comandos', () => {
-    test('comando por nome e por alias', async () => {
+    test('comando por nome e pelo começo do nome', async () => {
         assert.deepEqual(await bot.replyAlt('/ping'), ['pong']);
-        assert.deepEqual(await bot.replyAlt('/p'), ['pong']);
+        assert.deepEqual(await bot.replyAlt('/pin'), ['pong']);
     });
 
     test('resposta do bot é um reply da mensagem do comando', async () => {
@@ -268,9 +268,9 @@ describe('permissões', () => {
             const [help] = await bot.replyAlt(`/${nameAlt} -h`, { de: OTHERAlt.jid });
             assert.ok(help.includes(`Uso: /${nameAlt}`), nameAlt);
         }
-        assert.deepEqual(await bot.replyAlt('/p', { de: OTHERAlt.jid }), ['pong']);
-        assert.match((await bot.replyAlt('/u', { de: OTHERAlt.jid }))[0], /Conectado:/);
-        assert.match((await bot.replyAlt('/ver', { de: OTHERAlt.jid }))[0], /ZapBot/);
+        assert.deepEqual(await bot.replyAlt('/ping', { de: OTHERAlt.jid }), ['pong']);
+        assert.match((await bot.replyAlt('/uptime', { de: OTHERAlt.jid }))[0], /Conectado:/);
+        assert.match((await bot.replyAlt('/version', { de: OTHERAlt.jid }))[0], /ZapBot/);
     });
 
     test('comandos comuns aceitam limites por usuário; comandos admin continuam restritos', async () => {
@@ -565,7 +565,7 @@ describe('permissões', () => {
         await bot.setSetting('bot.users', ['5521911111111', GROUP, '5521977777777']);
 
         // In the Família group (the owner and Fulano): only Fulano and the group itself
-        for (const line of ['/bot -users', '/b -u']) {
+        for (const line of ['/bot -users', '/bot -u']) {
             assert.deepEqual(await bot.replyAlt(line), ['*Usuários* (2) neste grupo\n' +
                 '• 👑 +o 🗣️ +v · 👤 Fulano · +5521911111111\n• 🗣️ +v · 👥 Família' + CAPTION + TIP('deste grupo', 2)], line);
         }

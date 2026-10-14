@@ -52,7 +52,7 @@ test('opções do alvo são preservadas e aliases fixos são destinos válidos',
     await bot.replyAlt('/alias ajuda /cotacao -h');
     assert.equal((await aliases())[0].command, '/cotacao -h');
     assert.match((await bot.replyAlt('/ajuda'))[1], /Uso: \/cotacao/);
-    await bot.replyAlt('/alias foto /st');
+    await bot.replyAlt('/alias foto /sticker');
     assert.match((await bot.replyAlt('/foto'))[1], /Uso: \/sticker/);
     await bot.replyAlt('/alias apagar /mute -rm 2');
     assert.equal((await aliases()).find(a => a.name === '/apagar').command, '/mute -rm 2');
@@ -84,7 +84,7 @@ test('cadastro substitui o atalho e remoção aceita com ou sem barra', async ()
 
 test('recusa nomes reservados, cadastro inválido, destinos inexistentes e ciclos', async () => {
     await bot.setSetting('commands.disabled', ['/ping']);
-    for (const line of ['/alias ping /cotacao USD', '/alias st /cotacao USD',
+    for (const line of ['/alias ping /cotacao USD', '/alias mudo /cotacao USD',
         '/alias all /cotacao USD', '/alias /all /cotacao USD', '/alias foo/bar /ping', '/alias foo', '/alias foo -d semaspas /cotacao USD',
         '/alias foo /naoexiste', '/alias foo /alias', '/alias foo /foo', '/alias foo /ping']) {
         assert.match((await bot.replyAlt(line))[0], /^❌/, line);

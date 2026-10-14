@@ -21,7 +21,7 @@ describe('/help (/h)', () => {
     });
 
     test('um comando, com ou sem "/", por nome ou alias', async () => {
-        for (const line of ['/help show', '/help /show', '/h s']) {
+        for (const line of ['/help show', '/help /show', '/h show']) {
             const [r] = await bot.replyAlt(line);
             assert.match(r, /AJUDA[\s\S]*Uso: \/show/, line);
         }
@@ -63,12 +63,12 @@ describe('/debug (/d, /dbg)', () => {
     });
 });
 
-describe('/uptime (/u, /up) e /version (/ver)', () => {
+describe('/uptime e /version', () => {
     // With the commit that is running (in the tests, the one from the project's .git)
     const banner = new RegExp(`🤖 \\*ZapBot ${packageJson.version.replace('.', '\\.')}(?: \\(devel\\))? \\(git\\+[0-9a-f]{7}/[\\w.-]+\\)\\*[\\s\\S]*⚡ Online:[\\s\\S]*🔐 Conectado:`);
 
     test('o mesmo banner com a versão em todos os nomes', async () => {
-        for (const line of ['/uptime', '/u', '/up', '/version', '/ver']) {
+        for (const line of ['/uptime', '/version']) {
             const [r] = await bot.replyAlt(line);
             assert.match(r, banner, line);
         }
@@ -186,7 +186,7 @@ describe('/bot', () => {
         assert.equal(bot.getSetting('bot.paused'), false);
         assert.match(r, /^▶️ \*Bot:\* ativo\n[\s\S]*\n\n\*Usuários\* \(2\)\n/);
         assert.doesNotMatch(r, /fora daqui/);
-        assert.match((await bot.replyAlt('/b -on -u'))[0], /\n\n\*Usuários\* \(1\) neste grupo\n/);
+        assert.match((await bot.replyAlt('/bot -on -u'))[0], /\n\n\*Usuários\* \(1\) neste grupo\n/);
     });
 
     test('combinações inválidas mostram o uso', async () => {
@@ -280,7 +280,7 @@ describe('/set (/config)', () => {
     });
 
     test('-append (-a) e -rem: acrescentam e tiram itens de uma lista; em outra chave, recusa e sugere o -reset', async () => {
-        assert.deepEqual(await bot.replyAlt('/set -a commands.disabled noffa /p'), ['✅ *commands.disabled* + /noffa, /ping\n= /noffa, /ping']);
+        assert.deepEqual(await bot.replyAlt('/set -a commands.disabled noffa /ping'), ['✅ *commands.disabled* + /noffa, /ping\n= /noffa, /ping']);
         assert.deepEqual(await bot.replyAlt('/set -append commands.disabled walissu'), ['✅ *commands.disabled* + /walissu\n= /noffa, /ping, /walissu']);
         assert.deepEqual(await bot.replyAlt('/set -a commands.disabled noffa'), ['ℹ️ *commands.disabled* já tem /noffa.']);
         assert.deepEqual(await bot.replyAlt('/set -rem commands.disabled /ping'), ['✅ *commands.disabled* − /ping\n= /noffa, /walissu']);

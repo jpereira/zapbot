@@ -150,7 +150,7 @@ describe('detecção', () => {
 describe('/watch', () => {
     test('cria texto e regex diretamente; aspas e espaços são mantidos', async () => {
         assert.match((await bot.replyAlt('/watch promoção relâmpago'))[0], /✅ Regra \*#1\* adicionada _\(texto\)_: promoção relâmpago/);
-        assert.match((await bot.replyAlt('/w "/pix|boleto/i"'))[0], /✅ Regra \*#2\* adicionada _\(regex\)_: \/pix\|boleto\/i/);
+        assert.match((await bot.replyAlt('/watch "/pix|boleto/i"'))[0], /✅ Regra \*#2\* adicionada _\(regex\)_: \/pix\|boleto\/i/);
         assert.deepEqual(bot.getSetting('watch.rules'), ['promoção relâmpago', '/pix|boleto/i']);
     });
 

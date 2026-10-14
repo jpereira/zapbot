@@ -1,4 +1,4 @@
-# `/cache` (`/c`) · admin
+# `/cache` · admin
 
 Mostra o espaço ocupado em `cache/` (banco, mídias, temporários, backups) e limpa o cache. Na ajuda
 do comando (`/cache -h`) os caminhos aparecem completos (no Docker, `/app/cache` e
@@ -13,7 +13,7 @@ do comando (`/cache -h`) os caminhos aparecem completos (no Docker, `/app/cache`
 
 ```text
 /cache           → lista o conteúdo de cache/ e o total de mensagens
-/c -clean        → limpeza normal (retenção)
+/cache -clean        → limpeza normal (retenção)
 /cache -m        → só as mídias
 /cache -c -m     → limpeza normal e as mídias
 /cache -b        → só os backups

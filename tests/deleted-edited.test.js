@@ -211,12 +211,12 @@ describe('/show (/s)', () => {
         assert.equal(summary, '♻️ *1 mensagem apagada*');
         assert.match(single, /❌ \*MENSAGEM APAGADA\* \(1\/1\)[\s\S]*"três"/);
 
-        const r = await bot.replyAlt('/s -2');
+        const r = await bot.replyAlt('/show -2');
         assert.equal(r[0], '♻️ *2 mensagens apagadas*');
         assert.match(r[1], /"dois"/);
         assert.match(r[2], /"três"/);
 
-        assert.equal((await bot.replyAlt('/s -5'))[0], '♻️ *3 mensagens apagadas* (pedidas 5, encontradas 3)');
+        assert.equal((await bot.replyAlt('/show -5'))[0], '♻️ *3 mensagens apagadas* (pedidas 5, encontradas 3)');
     });
 
     test('acima do show.max é limitado', async () => {
@@ -325,7 +325,7 @@ describe('/show <chat>', () => {
 });
 
 describe('/show -l (lista)', () => {
-    test('sem parâmetros no privado lista o cache, como -l, inclusive vazio e pelo alias',
+    test('sem parâmetros no privado lista o cache, como -l, inclusive vazio',
         async () => {
             for (const chat of [PRIVATE_OWNER, OTHERAlt.jid]) {
                 assert.deepEqual(await bot.replyAlt('/show', { chat }),
@@ -334,7 +334,7 @@ describe('/show -l (lista)', () => {
             await messageDeleted('do grupo');
             await messageEdited('antes', 'depois', { chat: WORK });
             for (const chat of [PRIVATE_OWNER, OTHERAlt.jid]) {
-                assert.deepEqual(await bot.replyAlt('/s   ', { chat }),
+                assert.deepEqual(await bot.replyAlt('/show   ', { chat }),
                     await bot.replyAlt('/show -l', { chat }));
             }
             const [summary, messageAlt] = await bot.replyAlt('/show -d', { chat: OTHERAlt.jid });
@@ -532,7 +532,7 @@ describe('/show -e (editadas)', () => {
         assert.equal(summary, '✏️ *1 mensagem editada*');
         assert.match(item, /✏️ \*MENSAGEM EDITADA\* \(1\/1\)[\s\S]*Antes:\* "b1"\n💬 \*Depois:\* "b2"/);
 
-        const r = await bot.replyAlt('/s -2 -e');
+        const r = await bot.replyAlt('/show -2 -e');
         assert.equal(r[0], '✏️ *2 mensagens editadas*');
         assert.match(r[1], /"a2"/);
     });
