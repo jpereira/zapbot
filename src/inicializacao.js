@@ -91,6 +91,30 @@ async function migrarDefiParaAddressEWallet() {
  * Handlers que usam o banco fazem `await dbPronto` antes de consultar.
  */
 async function inicializarBanco() {
+    await dbRun(`CREATE TABLE IF NOT EXISTS monitor_contacts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        contact_id TEXT NOT NULL UNIQUE,
+        contact_name TEXT NOT NULL,
+        created_at INTEGER NOT NULL,
+        last_attempt_at INTEGER NOT NULL DEFAULT 0,
+        last_checked_at INTEGER,
+        last_status TEXT,
+        last_seen INTEGER,
+        last_error TEXT
+    )`);
+    await dbRun(`CREATE TABLE IF NOT EXISTS monitor_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        contact_id INTEGER NOT NULL,
+        last_seen INTEGER NOT NULL,
+        observed_at INTEGER NOT NULL,
+        source TEXT,
+        kind TEXT,
+        UNIQUE(contact_id, last_seen)
+    )`);
+    await dbRun(`CREATE TRIGGER IF NOT EXISTS monitor_remove_history
+        AFTER DELETE ON monitor_contacts BEGIN
+            DELETE FROM monitor_history WHERE contact_id = OLD.id;
+        END`);
     await dbRun(`CREATE TABLE IF NOT EXISTS command_aliases (
         name TEXT PRIMARY KEY,
         description TEXT NOT NULL DEFAULT '',

@@ -95,6 +95,7 @@ nav:
       - /kernel: comandos/kernel.md
       - /listageral: comandos/listageral.md
       - /meme: comandos/meme.md
+      - /monitor: comandos/monitor.md
       - /mute: comandos/mute.md
       - /news: comandos/news.md
       - /noffa: comandos/noffa.md
