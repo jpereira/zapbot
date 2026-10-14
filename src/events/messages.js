@@ -283,9 +283,15 @@ client.on('message_create', (msg) => withContextDebug({
             const admin = Boolean(msg.fromMe ||
                 (senderNumber && getSetting('bot.admins').includes(senderNumber)));
             const permission = permissionHere({ numero: senderNumber, chatId, isGroup });
-            if (admin || permission.liberado) {
-                await msg.reply(`⚠️ Comando '${body}' desconhecido, tente: /help`);
-            }
+            if (!admin && !permission.liberado) return;
+
+            // The start of more than one command (e.g.: /un): lists the ones the person can use
+            const possible = (resolved?.possiveis ?? [])
+                .filter(c => admin || (!c.onlyAdmin && (ALWAYS_RELEASED.includes(c.cmd) || permission.pode(c.cmd))))
+                .map(c => c.cmd);
+            await msg.reply(possible.length
+                ? `🤔 Comando '${caller}' ambíguo. Possíveis comandos: ${possible.join(', ')}`
+                : `⚠️ Comando '${body}' desconhecido, tente: /help`);
             return;
         }
 
@@ -352,6 +358,7 @@ client.on('message_create', (msg) => withContextDebug({
             return;
         }
 
+        if (resolved.prefixo) printDebug(`Comando '${resolved.prefixo}' completado para '${command.cmd}'`);
         printDebug(isGroup
             ? `Executando comando '${body}' de '${senderName}' no grupo '${chatName}'`
             : `Executando comando '${body}' em '${chatName}'`);

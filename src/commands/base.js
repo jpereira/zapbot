@@ -16,6 +16,12 @@ function findCommand(name) {
     return activeCommands().find(c => c.cmd === name || c.aliases?.includes(name));
 }
 
+// Active commands whose name or alias starts with what was typed (e.g.: /watc → /watch), without repeating
+function commandsByPrefix(name) {
+    if (!/^\/./.test(name)) return [];
+    return activeCommands().filter(c => [c.cmd, ...(c.aliases ?? [])].some(n => n.startsWith(name)));
+}
+
 /*
  * Variables the commands.json texts may cite (e.g.: "Shows the space
  * used in ${CACHE_DIR}"): the JSON has no template strings, so the help
@@ -164,6 +170,7 @@ function formatErrorCommand(e) {
 
 module.exports = {
     activeCommands,
+    commandsByPrefix,
     findCommand,
     formatCommandHelp,
     formatErrorCommand,

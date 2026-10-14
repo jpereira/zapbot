@@ -7,7 +7,7 @@
  * {/command} runs and the reply goes in its place; a single message goes out
  */
 const { dbAll, dbGet, dbReady } = require('./db');
-const { findCommand } = require('./commands/base');
+const { commandsByPrefix, findCommand } = require('./commands/base');
 const { botConfig } = require('./botConfig');
 const { commandsInText, assembleText } = require('./textCommands');
 
@@ -25,7 +25,7 @@ async function resolverAlias(textAlt) {
     if (command) return { command, args };
     await dbReady;
     const alias = await dbGet('SELECT * FROM command_aliases WHERE name = ?', [nameAlt]);
-    if (!alias) return null;
+    if (!alias) return byPrefix(nameAlt, args);
 
     /*
      * Text alias: a fake command with the alias name, for the flow
@@ -44,6 +44,16 @@ async function resolverAlias(textAlt) {
     const target = findCommand(destination);
     return target ? { command: target, alias: nameAlt, destino: destination,
         args: [alias.command.slice(destination.length).trim(), args].filter(Boolean).join(' ') } : null;
+}
+
+/*
+ * Neither a command nor an alias: the start of a command (/wa, /watc → /watch). Only one
+ * candidate runs; more than one comes back as "possiveis" for the bot to list.
+ */
+function byPrefix(nameAlt, args) {
+    const candidates = commandsByPrefix(nameAlt.toLowerCase());
+    if (candidates.length === 1) return { command: candidates[0], args, prefixo: nameAlt };
+    return candidates.length ? { possiveis: candidates } : null;
 }
 
 /*
