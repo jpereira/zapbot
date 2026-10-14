@@ -13,6 +13,7 @@ const { BIN_FFMPEG, BIN_YT, GET_MAX_CONCURRENT, TMP_DIR } = require('../constant
 const { printDebug, printError, printInfo } = require('../log');
 const { STICKER_ANIMATED_MAX_BYTES, ATTEMPTS_STICKER, argsDoFfmpeg, fitSticker, thumbnailDoLink } = require('../media');
 const { getSetting, isDebugMode, stickerMeta } = require('../settings');
+const { humanSize } = require('../util/files');
 const { runCommand } = require('../util/processes');
 const { extractFirstUrl, isUrlPublic, isValidHttpUrl } = require('../util/url');
 
@@ -220,34 +221,30 @@ async function converterAndSend({ msg, opts, senderName, url, media, previa: pre
         printInfo(`> Todo o output dos comandos salvo em ${logCmdFile}`);
 
         let cmdYt = null;
+        let optsFfmpeg = opts; // with the snippet downloaded, ffmpeg's cut starts at 0
+        const snippet = downloadSnippet(opts);
         if (media) {
             fs.writeFileSync(originalFile, Buffer.from(media.data, 'base64'));
         } else {
-            // Download video
-            // --no-playlist: a playlist link would download everything; --max-filesize: does not fill the disk
-            const cmdYtArgs = [
-                '-f', 'mp4', '--merge-output-format', 'mp4',
-                '--no-playlist',
-                '--max-filesize', `${getSetting('get.maxDownloadMB')}M`,
-                '-o', originalFile,
-                '--', url
-            ];
-            cmdYt = [BIN_YT, ...cmdYtArgs].join(' ');
-
-            try {
-                printInfo(`> Executando: ${cmdYt}`);
-                fs.writeSync(logCmd, `# Executando: ${cmdYt}\n`);
-                await runCommand(BIN_YT, cmdYtArgs, logCmd);
-            } catch (inner) {
-                const errorAlt = errorOnDownload(`Problemas para baixar com '${BIN_YT}'`, { cause: inner });
-                errorAlt.cmd = cmdYt;
-                throw errorAlt;
+            // With a cut, tries to download only the snippet; if the site does not allow it, downloads everything and ffmpeg cuts
+            if (snippet) {
+                try {
+                    cmdYt = await downloadWithYtDlp(url, originalFile, logCmd, snippet);
+                    optsFfmpeg = snippetOpts(opts, snippet);
+                } catch (inner) {
+                    printInfo(`> O trecho falhou (${inner.message}): baixando o vídeo inteiro`);
+                    fs.rmSync(originalFile, { force: true });
+                }
+            }
+            if (optsFfmpeg === opts) {
+                cmdYt = await downloadWithYtDlp(url, originalFile, logCmd);
             }
 
             // Above --max-filesize yt-dlp aborts with no error and no file
             if (!fs.existsSync(originalFile)) {
                 throw errorOnDownload(`Nada foi baixado (acima de ${getSetting('get.maxDownloadMB')} MB? veja o setting get.maxDownloadMB)`);
             }
+            printInfo(`> Baixado ${optsFfmpeg === opts ? 'o vídeo inteiro' : 'o trecho'}: ${humanSize(fs.statSync(originalFile).size)}`);
         }
 
         // Convert. The sticker lowers quality and fps until it fits WhatsApp's limit
@@ -255,7 +252,7 @@ async function converterAndSend({ msg, opts, senderName, url, media, previa: pre
         let cmdFfmpeg = null;
 
         for (const attemptAlt of attempts) {
-            const ffmpegArgs = argsDoFfmpeg(opts, originalFile, outputFile, attemptAlt);
+            const ffmpegArgs = argsDoFfmpeg(optsFfmpeg, originalFile, outputFile, attemptAlt);
             cmdFfmpeg = [BIN_FFMPEG, ...ffmpegArgs].join(' ');
 
             try {
@@ -321,6 +318,55 @@ async function converterAndSend({ msg, opts, senderName, url, media, previa: pre
             try { fs.unlinkSync(tmp); } catch { /* file may not exist */ }
         }
     }
+}
+
+/*
+ * The snippet requested with -ss/-es, in seconds, for yt-dlp's --download-sections
+ * yt-dlp (end null: until the end). The sticker takes at most the 6 s
+ * following. Without a cut: null.
+ */
+function downloadSnippet(opts) {
+    const { startSec, endSec, sticker } = opts.opt;
+    if (startSec == null && endSec == null && !sticker) return null;
+    const start = Number(startSec ?? 0);
+    // The sticker is at most 6 s: downloading more than that is a waste
+    const end = sticker ? Math.min(Number(endSec ?? Infinity), start + 6) : endSec != null ? Number(endSec) : null;
+    return { inicio: start, fim: end === null ? null : Math.round(end * 1000) / 1000 };
+}
+
+// The snippet file already starts at -ss: ffmpeg only limits the duration
+function snippetOpts(opts, { inicio: start, fim: end }) {
+    const endSec = end === null ? null : String(Math.round((end - start) * 1000) / 1000);
+    return { ...opts, opt: { ...opts.opt, startSec: null, endSec } };
+}
+
+/**
+ * Downloads the URL with yt-dlp; with `trecho`, only that (cut at the exact time).
+ * @returns {Promise<string>} o comando executado
+ */
+async function downloadWithYtDlp(url, originalFile, logCmd, snippet = null) {
+    // --no-playlist: a playlist link would download everything; --max-filesize: does not fill the disk
+    // --force-keyframes-at-cuts: without it the snippet starts at the previous keyframe, before the -ss
+    const cmdYtArgs = [
+        '-f', 'mp4', '--merge-output-format', 'mp4',
+        '--no-playlist',
+        '--max-filesize', `${getSetting('get.maxDownloadMB')}M`,
+        ...(snippet ? ['--download-sections', `*${snippet.inicio}-${snippet.fim ?? 'inf'}`, '--force-keyframes-at-cuts'] : []),
+        '-o', originalFile,
+        '--', url
+    ];
+    const cmdYt = [BIN_YT, ...cmdYtArgs].join(' ');
+
+    try {
+        printInfo(`> Executando: ${cmdYt}`);
+        fs.writeSync(logCmd, `# Executando: ${cmdYt}\n`);
+        await runCommand(BIN_YT, cmdYtArgs, logCmd);
+    } catch (inner) {
+        const errorAlt = errorOnDownload(`Problemas para baixar com '${BIN_YT}'`, { cause: inner });
+        errorAlt.cmd = cmdYt;
+        throw errorAlt;
+    }
+    return cmdYt;
 }
 
 // Fails before having the video: a link's sticker can still come from the preview
