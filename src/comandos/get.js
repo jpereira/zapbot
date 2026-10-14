@@ -68,6 +68,21 @@ async function baixarMidia({ msg, opts, quotedMsg, senderName }, { cmd }) {
     }
 }
 
+/*
+ * Tempo do -ss/-es em segundos: "22", "2.5", "09:33" (min:seg) ou "1:02:03"
+ * (h:min:seg). Minutos e segundos depois do ":" vão até 59. Inválido: null.
+ */
+function lerTempo(valor) {
+    const m = String(valor ?? '').match(/^(?:(?:(\d+):)?(\d+):)?(\d+(?:\.\d+)?)$/);
+    if (!m) return null;
+    const [, h, min, seg] = m;
+    if (min !== undefined && Number(seg) >= 60) return null;
+    if (h !== undefined && Number(min) >= 60) return null;
+    const total = Number(h ?? 0) * 3600 + Number(min ?? 0) * 60 + Number(seg);
+    // Sem o ruído do ponto flutuante: "1:00.1" é 60.1, não 60.099999...
+    return Number.isFinite(total) ? Math.round(total * 1000) / 1000 : total;
+}
+
 async function opcoesValidas(msg, opts, cmd) {
     // O parser deixa a opção que não conhece no argv: sem isto, ela viraria a URL
     const desconhecida = opts.argv.find(a => /^-\S/.test(a));
@@ -76,14 +91,18 @@ async function opcoesValidas(msg, opts, cmd) {
         return false;
     }
     for (const nome of ['startSec', 'endSec']) {
-        if (opts.given.has(nome) && !/^\d+(?:\.\d+)?$/.test(String(opts.opt[nome] ?? ''))) {
-            await msg.reply(`❌ -${nome} precisa de segundos não negativos, como 0, 10 ou 2.5.`);
+        if (!opts.given.has(nome)) continue;
+        const segundos = lerTempo(opts.opt[nome]);
+        if (segundos === null) {
+            await msg.reply(`❌ -${nome} precisa de um tempo em segundos (0, 10, 2.5) ou em minutos (09:33, 1:02:03).`);
             return false;
         }
-        if (opts.given.has(nome) && !Number.isFinite(Number(opts.opt[nome]))) {
+        if (!Number.isFinite(segundos)) {
             await msg.reply(`❌ Valor de -${nome} grande demais.`);
             return false;
         }
+        // O ffmpeg recebe sempre segundos
+        opts.opt[nome] = String(segundos);
     }
     if (opts.opt.endSec != null && Number(opts.opt.endSec) <= Number(opts.opt.startSec ?? 0)) {
         await msg.reply('❌ O segundo final (-es) deve ser maior que o inicial (-ss, padrão 0).');

@@ -290,6 +290,12 @@ describe('/sticker (/st)', () => {
         assert.equal(ff[ff.indexOf('-t') + 1], '6', 'sem -es: os 6 s seguintes');
 
         bot.processos.chamadas.length = 0;
+        await bot.executar('/sticker -ss 01:10 -es 01:13 http://8.8.8.8/video');
+        const ffMin = bot.processos.chamadas[1].args;
+        assert.equal(ffMin[ffMin.indexOf('-ss') + 1], '70', 'min:seg vira segundos');
+        assert.equal(ffMin[ffMin.indexOf('-t') + 1], '3');
+
+        bot.processos.chamadas.length = 0;
         const [, sticker] = await bot.executar('/sticker', { citada: bot.criarMensagem({ texto: 'olha http://8.8.8.8/v', de: OUTRO.jid }) });
         assert.equal(bot.processos.chamadas[0].args.at(-1), 'http://8.8.8.8/v');
         assert.equal(sticker.options.sendMediaAsSticker, true);
