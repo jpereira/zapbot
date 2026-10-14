@@ -33,6 +33,25 @@ describe('regras', () => {
         assert.throws(() => compilarRegraWatch(''), /1 a 200/);
         assert.throws(() => compilarRegraWatch('x'.repeat(201)), /1 a 200/);
     });
+
+    test('regex com backtracking catastrófico (ReDoS) é recusada e não trava o bot', () => {
+        // Antes, uma destas rodada contra uma mensagem congelava a única thread do bot
+        for (const r of ['/(x+)+y/', '/(a*)*/', '/([a-z]+)*/', '/(\\d+){2,}/', '/(ab+)+/']) {
+            assert.throws(() => compilarRegraWatch(r), /risco de travar o bot/, r);
+        }
+        // Legítimas (inclusive os exemplos dos docs) continuam valendo
+        assert.equal(compilarRegraWatch('/carr(o|ão)/i')('meu carro'), true);
+        assert.equal(compilarRegraWatch('/https?:\\/\\/\\S+/')('veja http://x.com'), true);
+        assert.equal(compilarRegraWatch('/\\d{4}-\\d{2}/')('2026-10'), true);
+    });
+
+    test('mesmo escapando da verificação, o texto testado é truncado e retorna rápido', () => {
+        // (a|ab)+ não é pego pela heurística; o corte do texto impede o freeze
+        const regra = compilarRegraWatch('/(a|ab)+$/');
+        const t0 = Date.now();
+        regra('a'.repeat(100_000) + 'b'); // sem o truncamento, levaria minutos
+        assert.ok(Date.now() - t0 < 2000, 'deve retornar em bem menos de 2 s');
+    });
 });
 
 describe('detecção', () => {

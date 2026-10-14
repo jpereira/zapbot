@@ -10,6 +10,7 @@
  * Quando casa, a ocorrência vai para watch_hits e você é avisado no privado.
  */
 const { semAcentos } = require('../util/formatar');
+const { MAX_TEXTO_TESTADO, regexPerigosa } = require('../util/regexSeguro');
 
 const REGRA_REGEX = /^\/(.+)\/([a-z]*)$/s;
 const REGRA_MAX_LEN = 200;
@@ -26,13 +27,19 @@ function compilarBusca(busca) {
     const m = busca.match(REGRA_REGEX);
 
     if (m) {
+        if (regexPerigosa(m[1])) {
+            // Backtracking exponencial travaria o bot inteiro (ver util/regexSeguro)
+            throw new Error('regex com risco de travar o bot (quantificador sobre grupo que já se repete, como (x+)+): simplifique');
+        }
         let re;
         try {
             re = new RegExp(m[1], m[2].replace(/[gy]/g, ''));
         } catch (e) {
             throw new Error(`regex inválida: ${e.message}`, { cause: e });
         }
-        return (texto) => re.test(String(texto ?? ''));
+        // O texto testado (corpo de qualquer mensagem recebida) é truncado: defesa
+        // em profundidade contra os casos que a verificação estática não pega
+        return (texto) => re.test(String(texto ?? '').slice(0, MAX_TEXTO_TESTADO));
     }
 
     const alvo = semAcentos(busca);

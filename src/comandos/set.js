@@ -8,6 +8,7 @@ const { dbPronto } = require('../db');
 const { resolverOuEscolher } = require('../destinos');
 const { printInfo } = require('../log');
 const { SETTINGS_SCHEMA, getSetting, setSetting, validarSetting } = require('../settings');
+const { regexPerigosa } = require('../util/regexSeguro');
 
 /*
  * /set
@@ -86,6 +87,7 @@ function filtrarChaves(filtro) {
     let testar;
 
     if (regex) {
+        if (regexPerigosa(regex[1])) return null; // ReDoS: ver util/regexSeguro
         try {
             const re = new RegExp(regex[1], regex[2].replace(/[gy]/g, '') || 'i');
             testar = (k) => re.test(k);
