@@ -19,6 +19,7 @@ const { getSetting } = require('../settings');
 const { humanSize, isCaminhoDeMidia } = require('../util/arquivos');
 const { esperar, formatarData, paraMs, plural, semAcentos } = require('../util/formatar');
 const { ehCanal } = require('../util/origem');
+const { regexPerigosa } = require('../util/regexSeguro');
 const { compilarBusca } = require('../watch/regras');
 
 /*
@@ -216,6 +217,10 @@ async function chatsQueCasam(msg, texto, chats) {
     const regex = texto.match(/^\/(.+)\/$/);
 
     if (regex) {
+        if (regexPerigosa(regex[1])) {
+            await msg.reply(`❌ Regex com risco de travar o bot: ${texto}. Simplifique (evite (x+)+).`);
+            return null;
+        }
         let re;
         try {
             re = new RegExp(tirarAcentos(regex[1]), 'i');
