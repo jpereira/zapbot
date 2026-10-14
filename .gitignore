@@ -142,3 +142,8 @@ cache/
 # Documentação (mkdocs build / virtualenv local)
 site/
 .venv-docs/
+
+# Skills de agente (Strix etc.): tooling local, nada disso é versionado
+.agents/
+.claude/
+skills-lock.json
