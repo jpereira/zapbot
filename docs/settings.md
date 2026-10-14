@@ -49,6 +49,10 @@ e sobrevivem a reinícios. Para ver e alterar, use o [`/set`](comandos/set.md).
 | `get.maxSizeMB` | 1–100 | `20` | Tamanho máximo do arquivo convertido pelo ffmpeg no `/get` e no `/sticker` |
 | `gif.tag` | texto | `fail` | Tag padrão do `/giphy` |
 | `giphy.api.key` | texto (pode ser vazio) | *(vazio)* | Chave do GIPHY, usada quando `GIPHY_API_KEY` não está no `config/.env`. Exibida mascarada (`••••1234`); `/set -reset giphy.api.key` apaga |
+| `monitor.enabled` | on/off | `on` | Consultas periódicas do [`/monitor`](comandos/monitor.md); `off` pausa sem apagar contatos ou histórico |
+| `monitor.max` | 1–5 | `5` | Máximo de contatos monitorados. Mais contatos aumentam as consultas e o risco de bloqueio; limite absoluto de 5. Remova contatos antes de reduzir abaixo do total cadastrado |
+| `monitor.maxRecords` | 1–1000 | `30` | Máximo de horários guardados por contato e exibidos em `/monitor` e `/monitor -l`. Reduzir remove imediatamente os horários mais antigos excedentes |
+| `monitor.pool` | 120–86400 | `300` | Intervalo mínimo em segundos por contato: padrão 5 min, mínimo 2 min. Intervalos curtos podem contribuir para bloqueio pelo WhatsApp; nenhum intervalo é garantidamente seguro |
 | `news.brasil` | lista | 15 blogs do [feedspot](https://rss.feedspot.com/brazil_rss_feeds/) | Feeds RSS do `/news -brasil` |
 | `news.g1` | lista | `https://g1.globo.com/dynamo/rss2.xml` | Feeds RSS do `/news -g1` |
 | `news.gazeta` | lista | `https://www.gazetadopovo.com.br/feed/rss/brasil.xml` | Feeds RSS do `/news -gazeta` |

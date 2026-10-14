@@ -1048,6 +1048,43 @@
             "onlyAdmin": false
         },
         {
+            "cmd": "/monitor",
+            "usage": "/monitor [-add <contato> | -del <id ou contato> | -list]",
+            "help": "👀 Monitora até monitor.max contatos, um por vez, a cada monitor.pool segundos (padrão: 300 s). Guarda até monitor.maxRecords horários distintos por contato (padrão: 30), sem garantir todos os acessos nem atualização do cache. Mais contatos e intervalos curtos podem contribuir para bloqueio pelo WhatsApp; nenhum intervalo garante segurança. /set monitor.enabled false pausa sem apagar. Ex: /monitor -a /Jorge Chip L200/, /monitor -d 1, /monitor -l.",
+            "cmd_opts": [
+                {
+                    "opts": [
+                        "add",
+                        "a"
+                    ],
+                    "values": [
+                        "<contato>"
+                    ],
+                    "desc": "Cadastra uma pessoa pelo nome da agenda, /nome com espaços/, menção real ou número com DDI e DDD. Nomes ambíguos oferecem escolha; grupos e e-mails não são aceitos. Ex: -a /Jorge Chip L200/, -a @Fulano, -a +5521999999999"
+                },
+                {
+                    "opts": [
+                        "del",
+                        "d"
+                    ],
+                    "values": [
+                        "<id ou contato>"
+                    ],
+                    "desc": "Remove pelo id exibido em /monitor ou /monitor -list, ou pelo mesmo parser do cadastro: nome da agenda, /nome com espaços/, menção real ou telefone. Apaga o histórico local do cadastro; os outros ids não são renumerados. Ex: -d 1, -del /Jorge Chip L200/, -d @Fulano, -d +5521999999999"
+                },
+                {
+                    "opts": [
+                        "list",
+                        "l"
+                    ],
+                    "values": [],
+                    "desc": "Lista todos os cadastrados, intervalo, última verificação e últimos monitor.maxRecords horários distintos por contato. Histórico extenso vai como arquivo de texto. Sem opção, exibe a mesma lista."
+                }
+            ],
+            "cron": false,
+            "onlyAdmin": true
+        },
+        {
             "cmd": "/mute",
             "usage": "/mute [OPÇÃO]... [/contato ou grupo/|@menção|+número]",
             "aliases": [

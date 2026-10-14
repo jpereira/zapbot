@@ -96,6 +96,7 @@ const { iniciarBackup } = require('./src/backup');
 const { iniciarAlertasDefi } = require('./src/defi/alertas');
 const { iniciarHeartbeat } = require('./src/heartbeat');
 const { iniciarLimpezaPeriodica } = require('./src/limpeza');
+const { iniciarMonitor } = require('./src/monitor');
 
 // Tarefas periódicas
 iniciarLimpezaDasMarcas();
@@ -106,5 +107,6 @@ iniciarAlertasDePreco();
 iniciarAlertasDefi();
 iniciarAgenda();
 iniciarBackup();
+iniciarMonitor();
 
 iniciarBot();
