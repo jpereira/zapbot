@@ -19,6 +19,10 @@ mkdir -vp $PWD/cache
 chown -R node:node $PWD/.wwebjs_auth || true
 chown -R node:node $PWD/cache || true
 
+# Egress firewall (runs as root, before gosu): blocks access to the network
+# internal. No-op if ZAPBOT_EGRESS_FIREWALL != 1. Closes yt-dlp's SSRF (/get).
+. /app/docker/app/egress-firewall.sh || true
+
 # busyloop
 echo "Starting as node:"
 echo "CMD: $@"

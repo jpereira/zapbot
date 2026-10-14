@@ -50,6 +50,14 @@ services:
     environment:
       - APP_ENV=prod
       - NODE_ENV=production
+      # Egress firewall (entrypoint + docker/app/egress-firewall.sh): blocks
+      # the access to the internal network and closes yt-dlp's SSRF (/get). Needs the
+      # cap_add NET_ADMIN below. Change to 0 to turn off.
+      - ZAPBOT_EGRESS_FIREWALL=1
+
+    # NET_ADMIN: only so the egress firewall can apply the iptables rules.
+    cap_add:
+      - NET_ADMIN
 
     volumes:
       - app_cache:/app/cache
