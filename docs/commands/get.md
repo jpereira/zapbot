@@ -12,8 +12,8 @@ pelo ffmpeg. Se a mídia tiver um link na legenda, vale a mídia.
 |---|---|---|
 | `-sticker`, `-st` | | Envia como figurinha animada (até 6 s), enquadrada no meio do vídeo. É o mesmo que o [`/sticker`](sticker.md) |
 | `-audio`, `-a` | | Extrai só o áudio (`.mp3`) |
-| `-startSec`, `-ss` | `<segundo>` | Começa neste segundo do vídeo original (padrão 0). Aceita decimal com ponto, como `1.5` |
-| `-endSec`, `-es` | `<segundo>` | Termina neste segundo do vídeo original; deve ser maior que o início. Vale também sem `-ss` e para figurinhas |
+| `-startSec`, `-ss` | `<tempo>` | Começa neste ponto do vídeo original (padrão 0), em segundos (`22`, `1.5`) ou em `min:seg` (`09:33`, ou `h:min:seg`) |
+| `-endSec`, `-es` | `<tempo>` | Termina neste ponto do vídeo original, no mesmo formato do `-ss`; deve ser maior que o início. Vale também sem `-ss` e para figurinhas |
 | `-verbose`, `-v` | | Mostra os parâmetros usados no yt-dlp/ffmpeg |
 | `<url>` | | Link do vídeo; vale mais que a mensagem respondida |
 
@@ -54,6 +54,7 @@ no host informado; redirects feitos depois pelo yt-dlp não são verificados.
 /get -a https://youtu.be/XXXXXXXXXXX
 /get -ss 10 -es 25 https://x.com/usuario/status/123456
 /get -es 15 https://youtu.be/XXXXXXXXXXX
+/get -ss 09:33 -es 09:45 https://youtu.be/XXXXXXXXXXX
 /download -st -ss 3 -es 6 https://youtu.be/XXXXXXXXXXX
 (reply numa mensagem com link)  /get -a
 (reply num vídeo do WhatsApp)   /get -a              → só o áudio, em .mp3
