@@ -22,13 +22,14 @@ for (const tagExisting of [false, true]) {
         const git = (...args) => run('git', args);
         fs.copyFileSync(path.join(__dirname, '..', 'bump.sh'), path.join(root, 'bump.sh'));
         fs.mkdirSync(path.join(root, 'docs'));
-        fs.writeFileSync(path.join(root, 'package.json'), '{"version":"2.2"}\n');
+        fs.writeFileSync(path.join(root, 'package.json'), '{"version":"2.2.0"}\n');
         fs.writeFileSync(path.join(root, 'package-lock.json'),
-            '{"version":"2.2","packages":{"":{"version":"2.2"}}}\n');
+            '{"version":"2.2.0","packages":{"":{"version":"2.2.0"}}}\n');
         const example = 'ZapBot 2.2.0 (devel) (git+abc1234/HEAD)\n';
         const history = 'https://github.com/jpereira/zapbot/releases/tag/v2.1.0\n';
+        const node = '• Node.js: v24.9.0\n';
         fs.writeFileSync(path.join(root, 'README.md'),
-            'hoje a `v2.1.0`\ngit checkout v2.1.0\n' + example + history);
+            'hoje a `v2.1.0`\ngit checkout v2.1.0\n' + example + history + node);
         fs.writeFileSync(path.join(root, 'docs', 'installation.md'),
             '`v2.1.0` (de 02/10/2026)\n' + example);
         git('init', '-q');
@@ -47,21 +48,31 @@ for (const tagExisting of [false, true]) {
         assert.equal(git('status', '--porcelain'), '');
         run('bash', ['bump.sh']);
         const read = nameAlt => fs.readFileSync(path.join(root, nameAlt), 'utf8');
-        assert.equal(JSON.parse(read('package.json')).version, '2.3');
-        assert.equal(JSON.parse(read('package-lock.json')).packages[''].version, '2.3');
-        assert.match(read('README.md'), /ZapBot 2\.3 \(devel\) \(git\+abc1234\/HEAD\)/);
+        assert.equal(JSON.parse(read('package.json')).version, '2.2.1');
+        assert.equal(JSON.parse(read('package-lock.json')).packages[''].version, '2.2.1');
+        assert.match(read('README.md'), /ZapBot 2\.2\.1 \(devel\) \(git\+abc1234\/HEAD\)/);
         assert.ok(read('README.md').includes(history));
+        assert.ok(read('README.md').includes(node));
         if (tagExisting) {
             assert.equal(git('rev-parse', 'v2.2.0').trim(), original);
             run('bash', ['bump.sh']);
-            const published = git('show', 'v2.3.0:README.md');
-            assert.match(published, /hoje a `v2\.3\.0`/);
-            assert.match(published, /ZapBot 2\.3 \(git\+abc1234\/v2\.3\.0\)/);
+            const published = git('show', 'v2.2.1:README.md');
+            assert.match(published, /hoje a `v2\.2\.1`/);
+            assert.match(published, /git checkout v2\.2\.1\n/);
+            assert.match(published, /ZapBot 2\.2\.1 \(git\+abc1234\/v2\.2\.1\)/);
+            assert.ok(published.includes(node));
             assert.doesNotMatch(published, /\(devel\)/);
-            assert.match(read('README.md'), /ZapBot 2\.4 \(devel\)/);
+            assert.match(read('README.md'), /ZapBot 2\.2\.2 \(devel\)/);
+            run('bash', ['bump.sh', '--minor']);
+            assert.equal(JSON.parse(read('package.json')).version, '2.3.0');
+            assert.match(git('show', 'v2.2.2:docs/installation.md'), /`v2\.2\.2` \(de \d{2}\/\d{2}\/\d{4}\)/);
+            run('bash', ['bump.sh', '--major']);
+            assert.equal(JSON.parse(read('package.json')).version, '3.0.0');
+            assert.match(read('README.md'), /hoje a `v2\.3\.0`/);
         } else {
             const published = git('show', 'v2.2.0:README.md');
-            assert.match(published, /ZapBot 2\.2 \(git\+abc1234\/v2\.2\.0\)/);
+            assert.match(published, /hoje a `v2\.2\.0`/);
+            assert.match(published, /ZapBot 2\.2\.0 \(git\+abc1234\/v2\.2\.0\)/);
             assert.doesNotMatch(published, /\(devel\)/);
         }
         assert.equal(git('status', '--porcelain'), '');
