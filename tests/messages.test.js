@@ -107,6 +107,27 @@ describe('comandos', () => {
         assert.deepEqual(await bot.replyAlt('ping'), []);
     });
 
+    test('o começo de um comando executa o único que casa', async () => {
+        assert.deepEqual(await bot.replyAlt('/pin'), ['pong']);
+        assert.deepEqual(await bot.replyAlt('/PIN'), ['pong']);
+    });
+
+    test('o começo de mais de um comando lista os possíveis', async () => {
+        assert.deepEqual(await bot.replyAlt('/un'),
+            ["🤔 Comando '/un' ambíguo. Possíveis comandos: /unblock, /unmute"]);
+        assert.deepEqual(await bot.replyAlt('/wa'),
+            ["🤔 Comando '/wa' ambíguo. Possíveis comandos: /walissu, /watch"]);
+        assert.match((await bot.replyAlt('/watc -h'))[0], /Uso: \/watch/);
+        assert.deepEqual(await bot.replyAlt('/'),
+            ["⚠️ Comando '/' desconhecido, tente: /help"]);
+    });
+
+    test('o começo de um comando desativado não casa', async () => {
+        await bot.setSetting('commands.disabled', 'ping');
+        assert.deepEqual(await bot.replyAlt('/pin'),
+            ["⚠️ Comando '/pin' desconhecido, tente: /help"]);
+    });
+
     test('o log diz quem executou o comando e onde (no privado de outra pessoa, é você)', async () => {
         const ran = () => bot.logs.filter(l => / executed '/.test(l)).at(-1);
 

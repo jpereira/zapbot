@@ -520,7 +520,8 @@ describe('/show -e (editadas)', () => {
     test('/edit e /e não existem mais', async () => {
         await messageEdited('x', 'y');
         assert.deepEqual(await bot.replyAlt('/edit'), ["⚠️ Comando '/edit' desconhecido, tente: /help"]);
-        assert.deepEqual(await bot.replyAlt('/e'), ["⚠️ Comando '/e' desconhecido, tente: /help"]);
+        // /e is now the start of /enquete, the only one that starts like that
+        assert.deepEqual(await bot.replyAlt('/e'), await bot.replyAlt('/enquete'));
     });
 
     test('a última e as N últimas, com antes e depois', async () => {
