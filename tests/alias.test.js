@@ -9,16 +9,16 @@ const { resolverAlias } = bot.src('aliases');
 
 beforeEach(async () => { await bot.reiniciar(); });
 
-const aliases = () => bot.dbAll('SELECT * FROM command_aliases ORDER BY name');
+const aliases = () => bot.dbAll('SELECT name, description, command, quiet FROM command_aliases ORDER BY name');
 
 test('/alias cadastra com barra, sem barra, descrição longa e persiste no banco', async () => {
     await bot.responder('/alias /eita -desc "Meu teste para dolar" /cotacao USD');
     await bot.responder('/alias /eita2 /cotacao EUR');
     await bot.responder('/alias eita3 /cotacao USDT');
     assert.deepEqual(await aliases(), [
-        { name: '/eita', description: 'Meu teste para dolar', command: '/cotacao USD' },
-        { name: '/eita2', description: '', command: '/cotacao EUR' },
-        { name: '/eita3', description: '', command: '/cotacao USDT' }
+        { name: '/eita', description: 'Meu teste para dolar', command: '/cotacao USD', quiet: 0 },
+        { name: '/eita2', description: '', command: '/cotacao EUR', quiet: 0 },
+        { name: '/eita3', description: '', command: '/cotacao USDT', quiet: 0 }
     ]);
     await bot.src('inicializacao').inicializarBanco();
     assert.equal((await aliases()).length, 3);
@@ -72,7 +72,7 @@ test('cadastro substitui o atalho e remoção aceita com ou sem barra', async ()
     await bot.responder('/alias eita -d "Dólar" /cotacao USD');
     await bot.responder('/alias eita /cotacao EUR');
     assert.deepEqual(await aliases(), [
-        { name: '/eita', description: '', command: '/cotacao EUR' }
+        { name: '/eita', description: '', command: '/cotacao EUR', quiet: 0 }
     ]);
     assert.match((await bot.responder('/alias -rm /eita'))[0], /removido/);
     assert.equal((await aliases()).length, 0);
@@ -146,7 +146,7 @@ test('descrição aceita aspas curvas e misturadas sem alterar o comando salvo',
         '‘Exibe Dinheiro’', "‘Exibe Dinheiro'", "'Exibe Dinheiro’"]) {
         await bot.responder(`/alias dimdim -desc ${descricao} /cotacao`);
         assert.deepEqual(await aliases(), [
-            { name: '/dimdim', description: 'Exibe Dinheiro', command: '/cotacao' }
+            { name: '/dimdim', description: 'Exibe Dinheiro', command: '/cotacao', quiet: 0 }
         ]);
     }
     await bot.responder('/alias euros -d “Preço em euros” /cotacao EUR -h');
@@ -155,7 +155,7 @@ test('descrição aceita aspas curvas e misturadas sem alterar o comando salvo',
 
 test('/alias /nome /crypto USD: nome com barra e destino com argumento', async t => {
     await bot.responder('/alias /nome /crypto USD');
-    assert.deepEqual(await aliases(), [{ name: '/nome', description: '', command: '/crypto USD' }]);
+    assert.deepEqual(await aliases(), [{ name: '/nome', description: '', command: '/crypto USD', quiet: 0 }]);
     t.mock.method(HANDLERS, '/crypto', async ({ msg, args }) => msg.reply(`crypto ${args}`));
     assert.deepEqual(await bot.responder('/nome'), ['🔗 Alias /nome -> /crypto USD', 'crypto USD']);
 });
@@ -166,7 +166,7 @@ test('alias de texto: \\n vira quebra de linha e vários {/comando} saem numa me
     assert.match(salvo, /Alias salvo: \/nome2/);
     assert.deepEqual(await aliases(), [{
         name: '/nome2', description: 'Orca e Prjx',
-        command: 'Verificando Orca {/defi orca}\nVerificando Prjx {/defi prjx}'
+        command: 'Verificando Orca {/defi orca}\nVerificando Prjx {/defi prjx}', quiet: 0
     }]);
 
     const defi = t.mock.method(HANDLERS, '/defi', async ({ msg, args }) => msg.reply(`${args} ok`));
@@ -235,4 +235,21 @@ test('/texto respeita as permissões dos {/comando} de quem chama', async t => {
     const defi = t.mock.method(HANDLERS, '/defi', async ({ msg }) => msg.reply('defi'));
     assert.deepEqual(await bot.responder('/texto Oi {/defi}', { de: bot.OUTRO.jid }), []);
     assert.equal(defi.mock.callCount(), 0);
+});
+
+test('/alias -q omite o cabeçalho e aceita /texto como destino', async () => {
+    const [salvo] = await bot.responder('/alias -q /haha /texto Hahaha vc e burro!');
+    assert.match(salvo, /Alias salvo: \/haha/);
+    assert.deepEqual(await aliases(), [
+        { name: '/haha', description: '', command: '/texto Hahaha vc e burro!', quiet: 1 }
+    ]);
+    assert.deepEqual(await bot.responder('/haha'), ['Hahaha vc e burro!']);
+
+    await bot.responder('/alias /haha2 -quiet -d "Riso" /texto Kkk');
+    assert.deepEqual((await aliases())[1], { name: '/haha2', description: 'Riso', command: '/texto Kkk', quiet: 1 });
+    assert.deepEqual(await bot.responder('/haha2'), ['Kkk']);
+
+    // Sem -q o cabeçalho continua
+    await bot.responder('/alias fala /texto Oi');
+    assert.deepEqual(await bot.responder('/fala'), ['🔗 Alias /fala -> /texto Oi', 'Oi']);
 });

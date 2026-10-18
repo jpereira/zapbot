@@ -124,6 +124,7 @@ async function inicializarBanco() {
         description TEXT NOT NULL DEFAULT '',
         command TEXT NOT NULL
     )`);
+    await adicionarColunas('command_aliases', { quiet: 'INTEGER NOT NULL DEFAULT 0' });
 
     // Mensagens recebidas (para recuperar as apagadas)
     await dbRun(`
