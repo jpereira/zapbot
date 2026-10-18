@@ -36,14 +36,15 @@ async function resolverAlias(texto) {
         const alvos = comandosDoAlias(alias.command).map(findCommand).filter(Boolean);
         return {
             command: { cmd: nome, onlyAdmin: alvos.some(c => c.onlyAdmin), alvos: alvos.map(c => c.cmd) },
-            alias: nome, texto: alias.command, args
+            alias: nome, texto: alias.command, args, quiet: Boolean(alias.quiet)
         };
     }
 
     const [destino] = alias.command.split(/\s+/);
     const alvo = findCommand(destino);
-    return alvo ? { command: comAlvos(alvo, args), alias: nome, destino,
-        args: [alias.command.slice(destino.length).trim(), args].filter(Boolean).join(' ') } : null;
+    if (!alvo) return null;
+    const argsFinais = [alias.command.slice(destino.length).trim(), args].filter(Boolean).join(' ');
+    return { command: comAlvos(alvo, argsFinais), alias: nome, destino, args: argsFinais, quiet: Boolean(alias.quiet) };
 }
 
 /*
@@ -62,7 +63,7 @@ function porPrefixo(nome, args) {
  */
 async function executarAliasDeTexto(msg, resolvido, { chatId, chatName, isGroup, quem }) {
     const comandos = comandosNoTexto(resolvido.texto).map(c => c.linha);
-    await msg.reply(`🔗 Alias ${resolvido.alias} -> ${comandos.join(', ')}`);
+    if (!resolvido.quiet) await msg.reply(`🔗 Alias ${resolvido.alias} -> ${comandos.join(', ')}`);
 
     const { texto, midias } = await montarTexto(resolvido.texto,
         { chat_id: chatId, chat_name: chatName, is_group: isGroup }, { onde: '/alias', quem });
