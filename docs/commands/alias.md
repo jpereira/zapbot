@@ -5,8 +5,8 @@ Salva atalhos no banco do bot: para um comando com argumentos ou para um texto c
 aliases. Quem executa um atalho precisa ter permissão para os comandos de destino.
 
 ```text
-/alias <nome> [-desc|-d "Descrição"] </comando argumentos>
-/alias <nome> [-desc|-d "Descrição"] <texto com {/comando}>
+/alias <nome> [-quiet|-q] [-desc|-d "Descrição"] </comando argumentos>
+/alias <nome> [-quiet|-q] [-desc|-d "Descrição"] <texto com {/comando}>
 /alias
 /alias [-list|-l]
 /alias [-rm|-rem] <nome|all>
@@ -14,6 +14,7 @@ aliases. Quem executa um atalho precisa ter permissão para os comandos de desti
 
 | Opção | Valor | Descrição |
 |---|---|---|
+| `-quiet`, `-q` | | Ao executar, omite o cabeçalho `🔗 Alias ...`; vale antes ou depois do nome |
 | `-desc`, `-d` | `<texto>` | Descrição opcional entre aspas, antes do comando ou do texto |
 | `-list`, `-l` | | Lista os aliases; o mesmo que `/alias` sem argumentos |
 | `-rem`, `-rm` | `<nome ou all>` | Remove o alias, com ou sem `/`; `all` remove todos |
@@ -66,6 +67,13 @@ O bot responde com o aviso abaixo e depois com o resultado de `/cotacao USD`:
 
 ```text
 🔗 Alias /dimdim -> /cotacao USD
+```
+
+Com `-quiet` (ou `-q`), o cabeçalho não é impresso e só o resultado aparece:
+
+```text
+/alias -q /haha /me Hahahahahahhahahaha vc e burro!
+/haha  → Hahahahahahhahahaha vc e burro!
 ```
 
 ## Texto com comandos

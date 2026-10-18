@@ -36,14 +36,15 @@ async function resolverAlias(textAlt) {
         const targets = aliasCommands(alias.command).map(findCommand).filter(Boolean);
         return {
             command: { cmd: nameAlt, onlyAdmin: targets.some(c => c.onlyAdmin), alvos: targets.map(c => c.cmd) },
-            alias: nameAlt, texto: alias.command, args
+            alias: nameAlt, texto: alias.command, args, quiet: Boolean(alias.quiet)
         };
     }
 
     const [destination] = alias.command.split(/\s+/);
     const target = findCommand(destination);
-    return target ? { command: withTargets(target, args), alias: nameAlt, destino: destination,
-        args: [alias.command.slice(destination.length).trim(), args].filter(Boolean).join(' ') } : null;
+    if (!target) return null;
+    const argsFinal = [alias.command.slice(destination.length).trim(), args].filter(Boolean).join(' ');
+    return { command: withTargets(target, argsFinal), alias: nameAlt, destino: destination, args: argsFinal, quiet: Boolean(alias.quiet) };
 }
 
 /*
@@ -62,7 +63,7 @@ function byPrefix(nameAlt, args) {
  */
 async function textRunAlias(msg, resolved, { chatId, chatName, isGroup, quem: who }) {
     const commands = commandsInText(resolved.texto).map(c => c.linha);
-    await msg.reply(`🔗 Alias ${resolved.alias} -> ${commands.join(', ')}`);
+    if (!resolved.quiet) await msg.reply(`🔗 Alias ${resolved.alias} -> ${commands.join(', ')}`);
 
     const { texto: textAlt, midias: mediaAltAlt } = await assembleText(resolved.texto,
         { chat_id: chatId, chat_name: chatName, is_group: isGroup }, { onde: '/alias', quem: who });
