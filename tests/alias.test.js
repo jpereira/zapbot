@@ -221,3 +221,18 @@ test('alias de texto: cada {/comando} respeita as permissões de quem chama', as
     assert.doesNotMatch(lista, /\/misto|\/dolarbtc/);
     assert.match((await bot.responder('/help alias'))[0], /\/misto[\s\S]*\/dolarbtc|\/dolarbtc[\s\S]*\/misto/);
 });
+
+test('/texto envia a mensagem, roda {/comando} e aceita \\n', async t => {
+    assert.deepEqual(await bot.responder('/texto Minha mensagem'), ['Minha mensagem']);
+    assert.deepEqual(await bot.responder('/texto Linha 1\\nLinha 2'), ['Linha 1\nLinha 2']);
+    t.mock.method(HANDLERS, '/crypto', async ({ msg }) => msg.reply('₿ BTC\n💰 $1'));
+    assert.deepEqual(await bot.responder('/texto O preço está em {/crypto}'), ['O preço está em\n\n₿ BTC\n💰 $1']);
+    assert.match((await bot.responder('/texto'))[0], /^❌ Use: \/texto/);
+    assert.match((await bot.responder('/texto {/ping}'))[0], /não roda dentro do \/texto/);
+});
+
+test('/texto respeita as permissões dos {/comando} de quem chama', async t => {
+    const defi = t.mock.method(HANDLERS, '/defi', async ({ msg }) => msg.reply('defi'));
+    assert.deepEqual(await bot.responder('/texto Oi {/defi}', { de: bot.OUTRO.jid }), []);
+    assert.equal(defi.mock.callCount(), 0);
+});

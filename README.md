@@ -171,6 +171,7 @@ de um. Os marcados como **Admin** só respondem à sua conta (e aos admins extra
 | [`/stats`](https://jpereira.github.io/zapbot/comandos/stats/) | | ✅ | Ranking deste chat ou de outro (`/Grupo/`): quem mais fala, apaga e edita, horários de pico; `-me` para as suas, `-l` lista os chats, `-flush` apaga |
 | [`/sticker`](https://jpereira.github.io/zapbot/comandos/sticker/) |  | | Figurinha de imagem, vídeo ou link (o `/get -st`); com `-txt`, uma figurinha animada de texto |
 | [`/tempo`](https://jpereira.github.io/zapbot/comandos/tempo/) | `/weather` | | Tempo agora e máx./mín. do dia (Open-Meteo); `/tempo 16d` mostra até 16 dias, contando hoje; sem cidade usa `tempo.city` |
+| [`/texto`](https://jpereira.github.io/zapbot/comandos/texto/) | | | Envia a mensagem digitada; `{/comando}` roda e a resposta entra no lugar, `\n` quebra a linha |
 | [`/tldr`](https://jpereira.github.io/zapbot/comandos/tldr/) | `/resumo` | ✅ | Resume a conversa do chat pelo ChatGPT (`2h`, `300`...) |
 | [`/todos`](https://jpereira.github.io/zapbot/comandos/todos/) | `/todes` | ✅ | Menciona todos do grupo |
 | [`/traduzir`](https://jpereira.github.io/zapbot/comandos/traduzir/) | `/translate` | | Traduz o texto ou a mensagem respondida (Google Translate); `-para en` muda o idioma |

@@ -27,6 +27,17 @@ const comandosNoTexto = (texto) => [...String(texto ?? '').matchAll(MARCA)].map(
  */
 const quebrarLinhas = (texto) => String(texto ?? '').replace(/[ \t]*\\n[ \t]*/g, '\n');
 
+/*
+ * O /texto é um comando comum, mas roda os {/comando} do que foi digitado: as permissões
+ * (e o "só admin") são as dele e as de cada um (alvos), conferidas antes de executar.
+ */
+function comAlvos(command, texto) {
+    if (command?.cmd !== '/texto') return command;
+    const alvos = comandosNoTexto(texto).map(c => findCommand(c.linha.split(/\s+/, 1)[0].toLowerCase())).filter(Boolean);
+    return { ...command, onlyAdmin: command.onlyAdmin || alvos.some(c => c.onlyAdmin),
+        alvos: [command.cmd, ...alvos.map(c => c.cmd)] };
+}
+
 const permitidos = () => activeCommands().filter(c => c.cron).map(c => c.cmd);
 
 // "/crypto BTC" → { command, args, opts }, ou { erro }
@@ -172,6 +183,7 @@ async function enviarMidias(chatId, midias) {
 }
 
 module.exports = {
+    comAlvos,
     comandosNoTexto,
     enviarMidias,
     erroDosComandos,

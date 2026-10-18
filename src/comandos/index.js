@@ -36,6 +36,7 @@ const { cmdShow } = require('./show');
 const { cmdStats } = require('./stats');
 const { cmdSticker } = require('./sticker');
 const { cmdTempo } = require('./tempo');
+const { cmdTexto } = require('./texto');
 const { cmdTldr } = require('./tldr');
 const { cmdTodos } = require('./todos');
 const { cmdTraduzir } = require('./traduzir');
@@ -80,6 +81,7 @@ const HANDLERS = {
     '/stats': cmdStats,
     '/sticker': cmdSticker,
     '/tempo': cmdTempo,
+    '/texto': cmdTexto,
     '/tldr': cmdTldr,
     '/todos': cmdTodos,
     '/traduzir': cmdTraduzir,

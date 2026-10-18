@@ -1593,6 +1593,13 @@
             "onlyAdmin": false
         },
         {
+            "cmd": "/texto",
+            "usage": "/texto <mensagem>",
+            "aliases": [],
+            "help": "Envia a mensagem digitada. {/comando args} roda na hora e a resposta entra no lugar (só comandos de consulta, como no /cron). O \\n digitado vira quebra de linha. Ex: /texto O Bitcoin está em {/crypto BTC}, /texto Linha 1\\nLinha 2",
+            "onlyAdmin": false
+        },
+        {
             "cmd": "/tldr",
             "usage": "/tldr [OPÇÃO] [período]",
             "aliases": [

@@ -107,6 +107,7 @@ nav:
       - /stats: comandos/stats.md
       - /sticker: comandos/sticker.md
       - /tempo: comandos/tempo.md
+      - /texto: comandos/texto.md
       - /tldr: comandos/tldr.md
       - /todos: comandos/todos.md
       - /traduzir: comandos/traduzir.md
