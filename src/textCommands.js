@@ -27,6 +27,17 @@ const commandsInText = (textAlt) => [...String(textAlt ?? '').matchAll(MARK)].ma
  */
 const breakLines = (textAlt) => String(textAlt ?? '').replace(/[ \t]*\\n[ \t]*/g, '\n');
 
+/*
+ * /me is a regular command, but it runs the {/command}s of what was typed: the permissions
+ * (and the "admin only") are its own and each one's (targets), checked before running.
+ */
+function withTargets(command, textAlt) {
+    if (command?.cmd !== '/me') return command;
+    const targets = commandsInText(textAlt).map(c => findCommand(c.linha.split(/\s+/, 1)[0].toLowerCase())).filter(Boolean);
+    return { ...command, onlyAdmin: command.onlyAdmin || targets.some(c => c.onlyAdmin),
+        alvos: [command.cmd, ...targets.map(c => c.cmd)] };
+}
+
 const allowed = () => activeCommands().filter(c => c.cron).map(c => c.cmd);
 
 // "/crypto BTC" → { command, args, opts }, or { error }
@@ -172,6 +183,7 @@ async function sendMedia(chatId, mediaAltAlt) {
 }
 
 module.exports = {
+    withTargets,
     commandsInText,
     sendMedia,
     commandsError,
