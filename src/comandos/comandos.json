@@ -1041,6 +1041,25 @@
             "onlyAdmin": true
         },
         {
+            "cmd": "/me",
+            "usage": "/me [-repeat|-r <n>] <mensagem>",
+            "aliases": [],
+            "help": "Envia a mensagem digitada. {/comando args} roda na hora e a resposta entra no lugar (só comandos de consulta, como no /cron). O \\n digitado vira quebra de linha. Ex: /me O Bitcoin está em {/crypto BTC}, /me Linha 1\\nLinha 2, /me -r 3 Haha!",
+            "cmd_opts": [
+                {
+                    "opts": [
+                        "repeat",
+                        "r"
+                    ],
+                    "values": [
+                        "<n>"
+                    ],
+                    "desc": "Repete o texto n vezes (de 1 a 30), emendado, numa mensagem só; os {/comando} rodam uma vez só. Ex: /me -r 3 Haha! envia Haha!Haha!Haha!"
+                }
+            ],
+            "onlyAdmin": false
+        },
+        {
             "cmd": "/meme",
             "usage": "/meme [busca]",
             "help": "Template de meme aleatório do imgflip, opcionalmente filtrado pelo nome.",
