@@ -9,7 +9,7 @@
 const { dbAll, dbGet, dbPronto } = require('./db');
 const { commandsByPrefix, findCommand } = require('./comandos/base');
 const { botConfig } = require('./botConfig');
-const { comandosNoTexto, montarTexto } = require('./comandosNoTexto');
+const { comAlvos, comandosNoTexto, montarTexto } = require('./comandosNoTexto');
 
 const ehAliasDeTexto = (salvo) => !salvo.startsWith('/');
 
@@ -22,7 +22,7 @@ async function resolverAlias(texto) {
     const [nome] = texto.trim().split(/\s+/);
     const args = texto.trim().slice(nome.length).trim();
     const command = findCommand(nome);
-    if (command) return { command, args };
+    if (command) return { command: comAlvos(command, args), args };
     await dbPronto;
     const alias = await dbGet('SELECT * FROM command_aliases WHERE name = ?', [nome]);
     if (!alias) return porPrefixo(nome, args);
@@ -42,7 +42,7 @@ async function resolverAlias(texto) {
 
     const [destino] = alias.command.split(/\s+/);
     const alvo = findCommand(destino);
-    return alvo ? { command: alvo, alias: nome, destino,
+    return alvo ? { command: comAlvos(alvo, args), alias: nome, destino,
         args: [alias.command.slice(destino.length).trim(), args].filter(Boolean).join(' ') } : null;
 }
 

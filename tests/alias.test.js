@@ -221,3 +221,26 @@ test('alias de texto: cada {/comando} respeita as permissões de quem chama', as
     assert.doesNotMatch(lista, /\/misto|\/dolarbtc/);
     assert.match((await bot.responder('/help alias'))[0], /\/misto[\s\S]*\/dolarbtc|\/dolarbtc[\s\S]*\/misto/);
 });
+
+test('/me envia a mensagem, roda {/comando} e aceita \\n', async t => {
+    assert.deepEqual(await bot.responder('/me Minha mensagem'), ['Minha mensagem']);
+    assert.deepEqual(await bot.responder('/me Linha 1\\nLinha 2'), ['Linha 1\nLinha 2']);
+    t.mock.method(HANDLERS, '/crypto', async ({ msg }) => msg.reply('₿ BTC\n💰 $1'));
+    assert.deepEqual(await bot.responder('/me O preço está em {/crypto}'), ['O preço está em\n\n₿ BTC\n💰 $1']);
+    assert.match((await bot.responder('/me'))[0], /^❌ Use: \/me/);
+    assert.match((await bot.responder('/me {/ping}'))[0], /não roda dentro do \/me/);
+});
+
+test('/me -repeat|-r repete a mensagem n vezes', async () => {
+    assert.deepEqual(await bot.responder('/me -r 3 Haha!'), ['Haha!Haha!Haha!']);
+    assert.deepEqual(await bot.responder('/me -repeat 2 Haha!\\n'), ['Haha!\nHaha!\n']);
+    for (const ruim of ['0', '31', 'x'])
+        assert.match((await bot.responder(`/me -r ${ruim} Haha!`))[0], /^❌ -repeat precisa/);
+    assert.match((await bot.responder('/me -r 3'))[0], /^❌ Use: \/me/);
+});
+
+test('/me respeita as permissões dos {/comando} de quem chama', async t => {
+    const defi = t.mock.method(HANDLERS, '/defi', async ({ msg }) => msg.reply('defi'));
+    assert.deepEqual(await bot.responder('/me Oi {/defi}', { de: bot.OUTRO.jid }), []);
+    assert.equal(defi.mock.callCount(), 0);
+});
