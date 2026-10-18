@@ -134,6 +134,7 @@ mesmo que comecem com `/`. Sem isso, alguém poderia usar um comando que ecoa te
 | [`/joke`](joke.md) | `/piada`, `/humor` | | Piada aleatória em português |
 | [`/kernel`](kernel.md) | | | Versões atuais do kernel Linux (kernel.org) |
 | [`/listageral`](listageral.md) | `/list` | ✅ | Lista os membros do grupo |
+| [`/me`](me.md) | | | Envia a mensagem digitada; `{/comando}` roda e a resposta entra no lugar, `\n` quebra a linha |
 | [`/meme`](meme.md) | | | Template de meme aleatório (imgflip) |
 | [`/monitor`](monitor.md) | | ✅ | 👀 Até 5 contatos, histórico limitado, filtro por contato e alertas de entrada online |
 | [`/mute`](mute.md) | `/mudo` | ✅ | Silencia os avisos de apagadas, editadas, status e reações (e os do `/watch`) de uma pessoa, um grupo ou uma comunidade; respondendo um aviso, de onde ele veio |
