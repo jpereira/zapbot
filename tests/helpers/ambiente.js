@@ -124,6 +124,12 @@ class ClienteFalso extends EventEmitter {
         return this.resultadosDaBusca;
     }
 
+    // O id serializado → a mensagem (de resultadosDaBusca), ou null
+    async getMessageById(id) {
+        if (this.resultadosDaBusca instanceof Error) throw this.resultadosDaBusca;
+        return this.resultadosDaBusca.find(m => m.id?._serialized === id) ?? null;
+    }
+
     // Como no whatsapp-web.js: o id do número no WhatsApp, ou null se ele não tem conta
     async getNumberId(numero) {
         const jid = `${numero}@c.us`;

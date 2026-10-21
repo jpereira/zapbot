@@ -6,12 +6,14 @@ vale para as mensagens que o WhatsApp Web tem, inclusive as que nunca passaram p
 
 ```text
 /search [-N] <texto>
+/search -read <id>
 ```
 
 | Opção | Valor | Descrição |
 |---|---|---|
 | `-N` | | Quantidade de mensagens (padrão 10, máx. 50). Ex.: `-30` |
 | *(nenhuma)* | `<texto>` | O que buscar, como na busca do WhatsApp (sem diferenciar maiúsculas) |
+| `-read`, `-r` | `<id>` | Exibe inteira a mensagem de um id da lista da busca. Mesmo escopo da busca |
 | `-mask`, `-m` | | Ofusca telefones na saída desta execução. Ex.: `+55219****44` |
 
 O escopo é **este chat**; no **seu privado**, todos os chats, e cada resultado diz de qual chat é.
@@ -37,7 +39,15 @@ o tipo e a legenda). Textos longos são cortados em 200 caracteres.
    🆔 true_120363000000000000@g.us_3EB0C3D4
 ```
 
-- Cada resultado traz o `🆔` (id da mensagem).
+```text
+/search -read false_5521988887777@c.us_3EB0A1B2
+📅 13/10/2026, 11:02:10 · 💬 Família · 👤 Fulano
+
+manda o pix que eu pago, o texto todo, sem corte
+```
+
+- Cada resultado traz o `🆔` para o `-read`. Com `-mask`, o id também é ofuscado (não serve para o `-read`).
+- O `-read` vale só para este chat; no seu privado, para qualquer chat. Numa mídia, mostra o tipo e a legenda.
 - A própria mensagem do `/search` não entra nos resultados.
 - Quando vêm tantos resultados quanto o `-N`, o bot avisa que pode haver mais.
 - O que o WhatsApp Web ainda não carregou do celular não aparece: é a mesma limitação da busca do

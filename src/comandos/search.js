@@ -13,6 +13,9 @@ const { formatarData, paraMs, plural } = require('../util/formatar');
  * A busca do próprio WhatsApp Web (client.searchMessages): as mensagens que o
  * WhatsApp Web tem, inclusive as que nunca passaram pelo cache do bot. Neste
  * chat; no seu privado, em todos os chats. Sem -N, as 10 mais recentes.
+ *
+ * /search -read|-r <id>
+ * Exibe inteira a mensagem de um id da lista da busca (mesmo escopo da busca).
  */
 const PADRAO = 10;
 const MAXIMO = 50;
@@ -42,7 +45,40 @@ function trechoDe(m) {
     return m.hasMedia ? `📎 _[${m.type}]_${curto ? ` "${curto}"` : ''}` : `"${curto}"`;
 }
 
+// -read <id>: a mensagem inteira, sem cortar o texto
+async function lerMensagem({ msg, id, chatId, todos }) {
+    let achada;
+    try {
+        achada = await client.getMessageById(id);
+    } catch (err) {
+        printError(`/search -read "${id}":`, err.message);
+        await msg.reply(`⚠️ Não consegui ler a mensagem: ${err.message}`);
+        return;
+    }
+
+    // Fora do seu privado, só as mensagens deste chat
+    if (!achada || (!todos && (achada.id?.remote ?? achada.from) !== chatId)) {
+        await msg.reply(`🔎 Mensagem "${id}" não encontrada ${todos ? 'em nenhum chat' : 'neste chat'}.`);
+        return;
+    }
+
+    const quem = achada.fromMe ? 'Você' : await nomeDe(achada.author || achada.from, new Map());
+    const chat = todos ? ` · 💬 ${await nomeDoChat(achada.id?.remote ?? achada.from, new Map())}` : '';
+    const texto = String(achada.body ?? '').trim();
+    const midia = achada.hasMedia ? `📎 _[${achada.type}]_${texto ? '\n' : ''}` : '';
+
+    await msg.reply(`📅 ${formatarData(achada.timestamp)}${chat} · 👤 ${quem}\n\n${midia}${texto}`,
+        null, { linkPreview: false });
+}
+
 async function cmdSearch({ msg, opts, chatId }) {
+    const idLido = opts.opt.read;
+    if (idLido) {
+        const todos = (await idsDoChatAtual(chatId)).includes(client.info.wid._serialized);
+        await lerMensagem({ msg, id: String(idLido).trim(), chatId, todos });
+        return;
+    }
+
     // "-20" não é uma opção declarada: vem no argv, junto com o texto
     let n = null;
     const palavras = [];
@@ -98,7 +134,8 @@ async function cmdSearch({ msg, opts, chatId }) {
 
     await msg.reply(`🔎 *${plural(achadas.length, 'mensagem', 'mensagens')} com* "${texto}"` +
         `${todos ? ' _(todos os chats)_' : ''}${aviso}\n\n${linhas.join('\n\n')}` +
-        (achadas.length >= n ? '\n\n💡 _Pode haver mais: use -N para ver mais (ex.: /search -30 <texto>)._' : ''),
+        (achadas.length >= n ? '\n\n💡 _Pode haver mais: use -N para ver mais (ex.: /search -30 <texto>)._' : '') +
+        '\n\n📖 _Para ler uma inteira: /search -read <id>._',
     null, { linkPreview: false });
 }
 
