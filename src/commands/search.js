@@ -13,6 +13,9 @@ const { formatData, paraMs, plural } = require('../util/format');
  * WhatsApp Web's own search (client.searchMessages): the messages that the
  * WhatsApp Web has, including those that never went through the bot cache. In this
  * chat; in your private chat, in all chats. Without -N, the 10 most recent.
+ *
+ * /search -read|-r <id>
+ * Shows in full the message of a search-list id (same scope as the search).
  */
 const DEFAULT = 10;
 const MAX = 50;
@@ -42,7 +45,40 @@ function snippet(m) {
     return m.hasMedia ? `📎 _[${m.type}]_${short ? ` "${short}"` : ''}` : `"${short}"`;
 }
 
+// -read <id>: the whole message, without cutting the text
+async function readMessage({ msg, id, chatId, todos: allAlt2 }) {
+    let foundAlt;
+    try {
+        foundAlt = await client.getMessageById(id);
+    } catch (err) {
+        printError(`/search -read "${id}":`, err.message);
+        await msg.reply(`⚠️ Não consegui ler a mensagem: ${err.message}`);
+        return;
+    }
+
+    // Outside your private chat, only this chat's messages
+    if (!foundAlt || (!allAlt2 && (foundAlt.id?.remote ?? foundAlt.from) !== chatId)) {
+        await msg.reply(`🔎 Mensagem "${id}" não encontrada ${allAlt2 ? 'em nenhum chat' : 'neste chat'}.`);
+        return;
+    }
+
+    const who = foundAlt.fromMe ? 'Você' : await nameAltAlt(foundAlt.author || foundAlt.from, new Map());
+    const chat = allAlt2 ? ` · 💬 ${await chatNameAlt(foundAlt.id?.remote ?? foundAlt.from, new Map())}` : '';
+    const textAlt = String(foundAlt.body ?? '').trim();
+    const mediaAlt = foundAlt.hasMedia ? `📎 _[${foundAlt.type}]_${textAlt ? '\n' : ''}` : '';
+
+    await msg.reply(`📅 ${formatData(foundAlt.timestamp)}${chat} · 👤 ${who}\n\n${mediaAlt}${textAlt}`,
+        null, { linkPreview: false });
+}
+
 async function cmdSearch({ msg, opts, chatId }) {
+    const idLido = opts.opt.read;
+    if (idLido) {
+        const allAlt2 = (await chatCurrentIds(chatId)).includes(client.info.wid._serialized);
+        await readMessage({ msg, id: String(idLido).trim(), chatId, todos: allAlt2 });
+        return;
+    }
+
     // "-20" is not a declared option: it comes in argv, together with the text
     let n = null;
     const words = [];
@@ -98,7 +134,8 @@ async function cmdSearch({ msg, opts, chatId }) {
 
     await msg.reply(`🔎 *${plural(foundAlt3.length, 'mensagem', 'mensagens')} com* "${textAlt}"` +
         `${allAlt2 ? ' _(todos os chats)_' : ''}${notice}\n\n${linesAlt.join('\n\n')}` +
-        (foundAlt3.length >= n ? '\n\n💡 _Pode haver mais: use -N para ver mais (ex.: /search -30 <texto>)._' : ''),
+        (foundAlt3.length >= n ? '\n\n💡 _Pode haver mais: use -N para ver mais (ex.: /search -30 <texto>)._' : '') +
+        '\n\n📖 _Para ler uma inteira: /search -read <id>._',
     null, { linkPreview: false });
 }
 

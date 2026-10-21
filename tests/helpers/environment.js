@@ -124,6 +124,12 @@ class ClientFake extends EventEmitter {
         return this.resultadosDaBusca;
     }
 
+    // The serialized id → the message (from searchResults), or null
+    async getMessageById(id) {
+        if (this.resultadosDaBusca instanceof Error) throw this.resultadosDaBusca;
+        return this.resultadosDaBusca.find(m => m.id?._serialized === id) ?? null;
+    }
+
     // As in whatsapp-web.js: the number's id on WhatsApp, or null if it has no account
     async getNumberId(numberAlt) {
         const jid = `${numberAlt}@c.us`;

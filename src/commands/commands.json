@@ -1296,11 +1296,11 @@
         },
         {
             "cmd": "/search",
-            "usage": "/search [-N] <texto>",
+            "usage": "/search [-N] <texto> | -read <id>",
             "aliases": [
                 "/buscar"
             ],
-            "help": "Busca mensagens no histórico do WhatsApp Web, inclusive as que nunca passaram pelo cache do bot (o /show -q busca só no cache). Neste chat; no seu privado, em todos os chats. Mostra data, quem mandou (e o chat, na busca em todos) e o texto e o id.",
+            "help": "Busca mensagens no histórico do WhatsApp Web, inclusive as que nunca passaram pelo cache do bot (o /show -q busca só no cache). Neste chat; no seu privado, em todos os chats. Mostra data, quem mandou (e o chat, na busca em todos), o texto e o id; com -read, exibe a mensagem inteira.",
             "cmd_opts": [
                 {
                     "argv": [
@@ -1313,6 +1313,16 @@
                         "<texto>"
                     ],
                     "desc": "O que buscar, como na busca do WhatsApp (sem diferenciar maiúsculas). Ex: /search pix, /search bom dia"
+                },
+                {
+                    "opts": [
+                        "read",
+                        "r"
+                    ],
+                    "values": [
+                        "<id>"
+                    ],
+                    "desc": "Exibe inteira a mensagem de um id da lista da busca (mesmo escopo: este chat, ou todos no seu privado). Ex: /search -read false_5521988887777@c.us_3EB0A1B2"
                 },
                 {
                     "opts": [
