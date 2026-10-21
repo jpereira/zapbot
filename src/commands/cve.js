@@ -10,11 +10,12 @@ const { SETTINGS_SCHEMA, getSetting } = require('../settings');
 const { summarizeText } = require('../util/format');
 
 /*
- * /cve [<id>] [-highscore|-high [max]]: CVEs published on the NVD (nvd.nist.gov).
+ * /cve [<id>|<text>] [-highscore|-high [max]]: CVEs published on the NVD (nvd.nist.gov).
  * /cve                → the most recent 'cve.max' from the last CVE_DAYS_RECENT days
  * /cve -high [N]      → the N most recent critical ones (CVSS v3 CRITICAL, ≥ 9) from the
  * last 'cve.maxDays' days (without N, 'cve.max')
  * /cve <id>           → the requested CVE (CVE-2026-1234 or just 2026-1234)
+ * /cve <text>        → the most recent 'cve.max' that mention the text (keywordSearch)
  *
  * The cve.circl.lu API that zapzap used changed format and almost never brings the
  * CVSS score. Without a key the NVD accepts ~5 queries every 30s.
@@ -46,6 +47,18 @@ function noteCvss(cve) {
  * to the oldest. The NVD sorts from oldest to newest and has no
  * reverse ordering: one query counts the total and the other fetches only the end.
  */
+async function searchFinal(filter, max) {
+    const query = async (params) =>
+        (await axios.get(NVD_URL, { params: { ...filter, ...params }, timeout: 30000 })).data;
+
+    const { totalResults } = await query({ resultsPerPage: 1 });
+    if (!totalResults) return { total: 0, cves: [] };
+
+    const { vulnerabilities } = await query({ resultsPerPage: max, startIndex: Math.max(0, totalResults - max) });
+
+    return { total: totalResults, cves: vulnerabilities.map(v => v.cve).reverse() };
+}
+
 async function searchCvesRecent({ dias: daysAlt, max, critical = false }) {
     const end = new Date();
     const filter = {
@@ -55,15 +68,25 @@ async function searchCvesRecent({ dias: daysAlt, max, critical = false }) {
         ...(critical && { cvssV3Severity: 'CRITICAL' })
     };
 
-    const query = async (params) =>
-        (await axios.get(NVD_URL, { params: { ...filter, ...params }, timeout: 30000 })).data;
+    return (await searchFinal(filter, max)).cves;
+}
 
-    const { totalResults } = await query({ resultsPerPage: 1 });
-    if (!totalResults) return [];
+// The `max` most recent CVEs that mention the text (at any time), and how many there are in total
+const searchPerText = (textAlt, max) => searchFinal({ keywordSearch: textAlt, noRejected: '' }, max);
 
-    const { vulnerabilities } = await query({ resultsPerPage: max, startIndex: Math.max(0, totalResults - max) });
+const EMOJI_SEVERITY = { CRITICAL: '🔴', HIGH: '🟠', MEDIUM: '🟡', LOW: '🟢' };
 
-    return vulnerabilities.map(v => v.cve).reverse();
+// A search result line: severity + id, publication date and the description
+function formatResult(cve) {
+    const severity = noteCvss(cve)?.severity?.toUpperCase();
+    const description = cve.descriptions?.find(d => d.lang === 'en')?.value ?? '';
+    const data = new Date(cve.published).toLocaleDateString('en-US', {
+        month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC'
+    });
+
+    return `${EMOJI_SEVERITY[severity] ?? '⚪'} *${cve.id}*\n` +
+           `🗓️ ${data}\n` +
+           `🔎 ${summarizeText(description, 220)}`;
 }
 
 // "CVE-2026-1234", "cve-2026-1234" or "2026-1234" → "CVE-2026-1234" (null if it is not an id)
@@ -93,16 +116,27 @@ function formatCve(cve) {
 }
 
 async function cmdCve({ msg, opts }) {
-    if (opts.argv[0]) {
-        const id = normalizeId(opts.argv[0]);
-        if (!id) {
-            await msg.reply(`❌ CVE inválida: ${opts.argv[0]}.\n💡 _/cve CVE-2026-1234 ou /cve 2026-1234_`);
-            return;
-        }
-
+    const textAlt = opts.argv.filter(Boolean).join(' ').trim();
+    if (textAlt) {
         try {
-            const cve = await searchCve(id);
-            await msg.reply(cve ? formatCve(cve) : `🛡️ ${id} não encontrada no NVD.`, null, { linkPreview: false });
+            const id = normalizeId(textAlt);
+            if (id) {
+                const cve = await searchCve(id);
+                await msg.reply(cve ? formatCve(cve) : `🛡️ ${id} não encontrada no NVD.`, null, { linkPreview: false });
+                return;
+            }
+
+            const max = getSetting('cve.max');
+            const { total, cves } = await searchPerText(textAlt, max);
+            if (!cves.length) {
+                await msg.reply(`🛡️ Nenhuma CVE com "${textAlt}".`);
+                return;
+            }
+
+            const more = total > cves.length
+                ? `\n\n💡 _Há mais ${total - cves.length} (use um texto mais específico ou o id)._` : '';
+            await msg.reply(`🔎 *${cves.length} de ${total} CVEs com* "${textAlt}"\n\n` +
+                `${cves.map(formatResult).join('\n\n')}${more}`, null, { linkPreview: false });
         } catch (err) {
             printError('/cve:', err.response?.status ?? '', err.message);
             await msg.reply('❌ Não consegui consultar o NVD agora (limite de consultas? tente em 30s).');
@@ -145,5 +179,6 @@ async function cmdCve({ msg, opts }) {
 module.exports = {
     searchCvesRecent,
     cmdCve,
-    formatCve
+    formatCve,
+    formatResult
 };
