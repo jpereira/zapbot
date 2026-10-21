@@ -29,18 +29,39 @@ describe('/cve', () => {
 
     test('as mais recentes primeiro, com nota e link', async () => {
         simulateNvd([cve('CVE-1', 5.0), cve('CVE-2', null), cve('CVE-3', 9.8, 'CRITICAL')]);
-        const [r] = await bot.replyAlt('/cve 2');
+        await bot.setSetting('cve.max', 2);
+        const [r] = await bot.replyAlt('/cve');
         assert.match(r, /🛡️ \*Últimas 2 CVEs publicadas\* _\(últimos 2 dias\)_/);
         assert.match(r, /\*CVE-3\* — 9\.8 CRITICAL[\s\S]*https:\/\/nvd\.nist\.gov\/vuln\/detail\/CVE-3[\s\S]*\*CVE-2\*\n/);
         assert.doesNotMatch(r, /CVE-1/);
     });
 
-    test('sem N usa o cve.max; N fora do limite é recusado', async () => {
+    test('sem N usa o cve.max; -high N fora do limite é recusado', async () => {
         simulateNvd(Array.from({ length: 15 }, (_, i) => cve(`CVE-${i}`, 7)));
         await bot.setSetting('cve.max', 3);
         assert.match((await bot.replyAlt('/cve'))[0], /Últimas 3 CVEs/);
-        assert.match((await bot.replyAlt('/cve 21'))[0], /❌ Quantidade inválida: 21\. Use de 1 a 20/);
-        assert.match((await bot.replyAlt('/cve abc'))[0], /❌ Quantidade inválida: abc/);
+        assert.match((await bot.replyAlt('/cve -high 21'))[0], /❌ Quantidade inválida: 21\. Use de 1 a 20/);
+        assert.match((await bot.replyAlt('/cve -high abc'))[0], /❌ Quantidade inválida: abc/);
+    });
+
+    test('<id>: com ou sem o prefixo CVE-, não encontrada, inválida', async () => {
+        const done = cve('CVE-2026-109618', 9.8, 'CRITICAL');
+        network.responder('get', /services\.nvd\.nist\.gov\/rest\/json\/cves\/2\.0$/, (url, cfg) =>
+            ({ vulnerabilities: cfg.params.cveId === 'CVE-2026-109618' ? [done] : [] }));
+
+        for (const inputAlt of ['CVE-2026-109618', '2026-109618', 'cve-2026-109618']) {
+            const [r] = await bot.replyAlt(`/cve ${inputAlt}`);
+            assert.match(r, /^🛡️ \*CVE-2026-109618\* — 9\.8 CRITICAL\n.*\nhttps:\/\/nvd\.nist\.gov\/vuln\/detail\/CVE-2026-109618$/);
+            assert.equal(network.chamadas.at(-1).cfg.params.cveId, 'CVE-2026-109618');
+        }
+
+        assert.equal((await bot.replyAlt('/cve 2026-1111'))[0], '🛡️ CVE-2026-1111 não encontrada no NVD.');
+
+        assert.match((await bot.replyAlt('/cve abc'))[0], /❌ CVE inválida: abc/);
+        assert.match((await bot.replyAlt('/cve 5'))[0], /❌ CVE inválida: 5/);
+
+        network.responder('get', /services\.nvd\.nist\.gov\/rest\/json\/cves\/2\.0$/, errorHttp(404));
+        assert.equal((await bot.replyAlt('/cve 2026-2222'))[0], '🛡️ CVE-2026-2222 não encontrada no NVD.');
     });
 
     test('-highscore / -high: só críticas, na janela do cve.maxDays', async () => {

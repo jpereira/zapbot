@@ -117,7 +117,7 @@ os comandos rodando para cada chat):
 ```text
 /cron 06:00 -r diario -to /Krishina Da Silva/ -to /Grupo da Faculdade/ ⏰ Status da DeFi! {/defi} Preço do BTC! {/crypto BTC} Preço do Dólar! {/cotacao USD}
 /cron 07:30 -r diario -to /Família/ Bom dia! ☀️ {/tempo Recife} Cripto: {/crypto BTC ETH} Câmbio: {/cotacao USD EUR}
-/cron seg 08:00 -r semanal -to /Trabalho/ -to @Fulano Da Silva Resumo da semana: {/news -hack 5} CVEs: {/cve 3}
+/cron seg 08:00 -r semanal -to /Trabalho/ -to @Fulano Da Silva Resumo da semana: {/news -hack 5} CVEs: {/cve -high 3}
 /lembrete -pv 23:00 -r diario Fechamento do dia: {/crypto} {/defi}
 ```
 

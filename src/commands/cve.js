@@ -10,11 +10,11 @@ const { SETTINGS_SCHEMA, getSetting } = require('../settings');
 const { summarizeText } = require('../util/format');
 
 /*
- * /cve [max] [-highscore|-high [max]]: CVEs published on the NVD (nvd.nist.gov).
- * /cve [N]         → the N most recent ones from the last CVE_DAYS_RECENT days
- * /cve -high [N]   → the N most recent critical ones (CVSS v3 CRITICAL, ≥ 9) from the
- * last 'cve.maxDays' days
- * Without N uses the 'cve.max' setting.
+ * /cve [<id>] [-highscore|-high [max]]: CVEs published on the NVD (nvd.nist.gov).
+ * /cve                → the most recent 'cve.max' from the last CVE_DAYS_RECENT days
+ * /cve -high [N]      → the N most recent critical ones (CVSS v3 CRITICAL, ≥ 9) from the
+ * last 'cve.maxDays' days (without N, 'cve.max')
+ * /cve <id>           → the requested CVE (CVE-2026-1234 or just 2026-1234)
  *
  * The cve.circl.lu API that zapzap used changed format and almost never brings the
  * CVSS score. Without a key the NVD accepts ~5 queries every 30s.
@@ -66,6 +66,23 @@ async function searchCvesRecent({ dias: daysAlt, max, critical = false }) {
     return vulnerabilities.map(v => v.cve).reverse();
 }
 
+// "CVE-2026-1234", "cve-2026-1234" or "2026-1234" → "CVE-2026-1234" (null if it is not an id)
+function normalizeId(textAlt) {
+    const m = String(textAlt).trim().match(/^(?:cve-)?(\d{4}-\d{4,})$/i);
+    return m ? `CVE-${m[1]}` : null;
+}
+
+// The CVE by id, or null if the NVD does not know it
+async function searchCve(id) {
+    try {
+        const { data } = await axios.get(NVD_URL, { params: { cveId: id }, timeout: 30000 });
+        return data.vulnerabilities?.[0]?.cve ?? null;
+    } catch (err) {
+        if (err.response?.status === 404) return null;
+        throw err;
+    }
+}
+
 function formatCve(cve) {
     const note = noteCvss(cve);
     const description = cve.descriptions?.find(d => d.lang === 'en')?.value ?? '';
@@ -76,16 +93,33 @@ function formatCve(cve) {
 }
 
 async function cmdCve({ msg, opts }) {
+    if (opts.argv[0]) {
+        const id = normalizeId(opts.argv[0]);
+        if (!id) {
+            await msg.reply(`❌ CVE inválida: ${opts.argv[0]}.\n💡 _/cve CVE-2026-1234 ou /cve 2026-1234_`);
+            return;
+        }
+
+        try {
+            const cve = await searchCve(id);
+            await msg.reply(cve ? formatCve(cve) : `🛡️ ${id} não encontrada no NVD.`, null, { linkPreview: false });
+        } catch (err) {
+            printError('/cve:', err.response?.status ?? '', err.message);
+            await msg.reply('❌ Não consegui consultar o NVD agora (limite de consultas? tente em 30s).');
+        }
+        return;
+    }
+
     const critical = opts.given.has('highscore');
     const daysAlt = critical ? getSetting('cve.maxDays') : CVE_DAYS_RECENT;
 
-    // the given <max> (/cve 5 or /cve -high 5) overrides the cve.max setting
+    // the given <max> (/cve -high 5) overrides the cve.max setting
     const { max: limitAlt } = SETTINGS_SCHEMA['cve.max'];
-    const valueAlt = opts.opt.highscore ?? opts.argv[0] ?? getSetting('cve.max');
+    const valueAlt = opts.opt.highscore ?? getSetting('cve.max');
     const max = Number(valueAlt);
 
     if (!Number.isInteger(max) || max < 1 || max > limitAlt) {
-        await msg.reply(`❌ Quantidade inválida: ${valueAlt}. Use de 1 a ${limitAlt}.\n💡 _/cve 5 ou /cve -high 5_`);
+        await msg.reply(`❌ Quantidade inválida: ${valueAlt}. Use de 1 a ${limitAlt}.\n💡 _/cve -high 5_`);
         return;
     }
 
