@@ -6,12 +6,12 @@ descrição e o link para a página no NVD.
 
 | Opção | Valor | Descrição |
 |---|---|---|
-| `max` | | Quantidade de CVEs, de 1 a 20. Sem o valor usa o setting `cve.max` (10) |
+| `<id>` | | Consulta essa CVE no NVD, com ou sem o prefixo `CVE-`. Ex.: `CVE-2026-1234`, `2026-1234` |
 | `-highscore`, `-high` | `[max]` | Só as `max` críticas (CVSS v3 `CRITICAL`, nota ≥ 9) mais recentes, de 1 a 20, dos últimos `cve.maxDays` dias (7). Sem o valor usa o setting `cve.max` (10) |
 
 ```text
 /cve                 → as 10 mais recentes dos últimos 2 dias
-/cve 5               → só as 5 mais recentes dos últimos 2 dias
+/cve CVE-2026-1234   → o resumo dessa CVE (também vale /cve 2026-1234)
 /cve -high           → as 10 críticas mais recentes dos últimos 7 dias
 /cve -high 2         → só as 2 críticas mais recentes dos últimos 7 dias
 /set cve.max 5       → passa a exibir 5 por vez
@@ -30,9 +30,11 @@ https://nvd.nist.gov/vuln/detail/CVE-AAAA-NNNN
 
 Detalhes:
 
-- A quantidade exibida vem do setting `cve.max` (padrão 10, máx. 20). O `max` do comando (`/cve 5`
-  ou `/cve -high 5`) sobrepõe o `cve.max` só naquela chamada; valores fora de 1–20 (ou que não são
+- A quantidade exibida vem do setting `cve.max` (padrão 10, máx. 20). O `max` do `-highscore`
+  (`/cve -high 5`) sobrepõe o `cve.max` só naquela chamada; valores fora de 1–20 (ou que não são
   números) são recusados com uma mensagem de ajuda.
+- Com `<id>` (formato `AAAA-NNNN`, 4 ou mais dígitos no fim), o bot consulta o NVD por essa CVE e,
+  se ela não existe, avisa que não encontrou; se o id não tem esse formato, recusa.
 - A janela do `-highscore` vem do setting `cve.maxDays` (padrão 7). O NVD não aceita janelas maiores
   que 120 dias, por isso o setting vai de 1 a 120.
 - A nota exibida segue a ordem CVSS v3.1 → v4.0 → v3.0 → v2, preferindo a métrica principal (do

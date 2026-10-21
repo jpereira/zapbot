@@ -604,8 +604,8 @@
         },
         {
             "cmd": "/cve",
-            "usage": "/cve [max] [-highscore [max]]",
-            "help": "CVEs publicadas nos últimos dois dias no NVD, da mais recente para a mais antiga (quantidade: cve.max). Com -highscore, a janela é cve.maxDays. Ex: /cve 5, /cve -high 3",
+            "usage": "/cve [<id>] [-highscore [max]]",
+            "help": "CVEs publicadas nos últimos dois dias no NVD, da mais recente para a mais antiga (quantidade: cve.max). Com -highscore, a janela é cve.maxDays. Com um id, consulta essa CVE. Ex: /cve CVE-2026-1234, /cve 2026-1234, /cve -high 3",
             "cmd_opts": [
                 {
                     "opts": [
@@ -619,9 +619,9 @@
                 },
                 {
                     "argv": [
-                        "max"
+                        "<id>"
                     ],
-                    "desc": "Quantidade de CVEs, de 1 a 20 (padrão: setting cve.max). Ex: /cve 5"
+                    "desc": "Consulta uma CVE no NVD e exibe o resumo. Aceita com ou sem o prefixo CVE-. Ex: /cve CVE-2026-1234, /cve 2026-1234"
                 }
             ],
             "cron": true,
