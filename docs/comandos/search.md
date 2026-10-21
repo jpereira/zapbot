@@ -30,11 +30,14 @@ o tipo e a legenda). Textos longos são cortados em 200 caracteres.
 
 1. 📅 13/10/2026, 11:02:10 · 💬 Família · 👤 Fulano
    "manda o pix que eu pago"
+   🆔 false_5521988887777@c.us_3EB0A1B2
 
 2. 📅 12/10/2026, 18:40:05 · 💬 Trabalho · 👤 Você
    📎 [image] "comprovante do pix"
+   🆔 true_120363000000000000@g.us_3EB0C3D4
 ```
 
+- Cada resultado traz o `🆔` (id da mensagem).
 - A própria mensagem do `/search` não entra nos resultados.
 - Quando vêm tantos resultados quanto o `-N`, o bot avisa que pode haver mais.
 - O que o WhatsApp Web ainda não carregou do celular não aparece: é a mesma limitação da busca do

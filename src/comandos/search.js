@@ -92,7 +92,8 @@ async function cmdSearch({ msg, opts, chatId }) {
     const linhas = await Promise.all(achadas.map(async (m, i) => {
         const quem = m.fromMe ? 'Você' : await nomeDe(m.author || m.from, nomes);
         const chat = todos ? ` · 💬 ${await nomeDoChat(m.id?.remote ?? m.from, chats)}` : '';
-        return `${i + 1}. 📅 ${formatarData(m.timestamp)}${chat} · 👤 ${quem}\n   ${trechoDe(m)}`;
+        return `${i + 1}. 📅 ${formatarData(m.timestamp)}${chat} · 👤 ${quem}\n   ${trechoDe(m)}` +
+            `\n   🆔 ${m.id?._serialized}`;
     }));
 
     await msg.reply(`🔎 *${plural(achadas.length, 'mensagem', 'mensagens')} com* "${texto}"` +
