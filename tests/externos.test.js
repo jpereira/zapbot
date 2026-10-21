@@ -44,7 +44,7 @@ describe('/cve', () => {
         assert.match((await bot.responder('/cve -high abc'))[0], /❌ Quantidade inválida: abc/);
     });
 
-    test('<id>: com ou sem o prefixo CVE-, não encontrada, inválida', async () => {
+    test('<id>: com ou sem o prefixo CVE-, não encontrada', async () => {
         const feita = cve('CVE-2026-109618', 9.8, 'CRITICAL');
         rede.responder('get', /services\.nvd\.nist\.gov\/rest\/json\/cves\/2\.0$/, (url, cfg) =>
             ({ vulnerabilities: cfg.params.cveId === 'CVE-2026-109618' ? [feita] : [] }));
@@ -57,9 +57,6 @@ describe('/cve', () => {
 
         assert.equal((await bot.responder('/cve 2026-1111'))[0], '🛡️ CVE-2026-1111 não encontrada no NVD.');
 
-        assert.match((await bot.responder('/cve abc'))[0], /❌ CVE inválida: abc/);
-        assert.match((await bot.responder('/cve 5'))[0], /❌ CVE inválida: 5/);
-
         rede.responder('get', /services\.nvd\.nist\.gov\/rest\/json\/cves\/2\.0$/, erroHttp(404));
         assert.equal((await bot.responder('/cve 2026-2222'))[0], '🛡️ CVE-2026-2222 não encontrada no NVD.');
     });
@@ -71,6 +68,23 @@ describe('/cve', () => {
         const params = rede.chamadas.at(-1).cfg.params;
         assert.equal(params.cvssV3Severity, 'CRITICAL');
         assert.equal(params.resultsPerPage, 1);
+    });
+
+    test('<texto>: busca nas descrições, as mais recentes primeiro, avisa se há mais', async () => {
+        const feita = (id, dia, score, sev) => ({ ...cve(id, score, sev).cve, published: `2026-10-${dia}T10:00:00.000` });
+        const lista = [feita('CVE-A', 19, 5, 'MEDIUM'), feita('CVE-B', 20, null), feita('CVE-C', 21, 9.8, 'CRITICAL')];
+        rede.responder('get', /services\.nvd\.nist\.gov\/rest\/json\/cves\/2\.0$/, (url, cfg) => cfg.params.startIndex === undefined
+            ? { totalResults: lista.length }
+            : { vulnerabilities: lista.slice(cfg.params.startIndex, cfg.params.startIndex + cfg.params.resultsPerPage).map(cve => ({ cve })) });
+        await bot.setSetting('cve.max', 2);
+
+        const [r] = await bot.responder('/cve PHP uses longjmp()');
+        assert.equal(rede.chamadas.at(-1).cfg.params.keywordSearch, 'PHP uses longjmp()');
+        assert.match(r, /^🔎 \*2 de 3 CVEs com\* "PHP uses longjmp\(\)"\n\n🔴 \*CVE-C\*\n🗓️ Oct 21, 2026\n🔎 .*\n\n⚪ \*CVE-B\*\n🗓️ Oct 20, 2026\n/);
+        assert.match(r, /\n\n💡 _Há mais 1 /);
+
+        rede.responder('get', /services\.nvd\.nist\.gov\/rest\/json\/cves\/2\.0$/, () => ({ totalResults: 0 }));
+        assert.equal((await bot.responder('/cve nada por aqui'))[0], '🛡️ Nenhuma CVE com "nada por aqui".');
     });
 
     test('nenhuma publicada; NVD fora do ar', async () => {
