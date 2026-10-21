@@ -25,8 +25,8 @@ describe('/search (/buscar)', () => {
 
         assert.deepEqual(bot.client.buscas, [{ query: 'pix', options: { page: 1, limit: 10, chatId: GROUP } }]);
         assert.equal(r, '🔎 *2 mensagens com* "pix"\n\n' +
-            '1. 📅 13/10/2026, 09:00:00 · 👤 Você\n   "pix feito"\n\n' +
-            '2. 📅 12/10/2026, 09:00:00 · 👤 Fulano\n   "manda o pix"');
+            `1. 📅 13/10/2026, 09:00:00 · 👤 Você\n   "pix feito"\n   🆔 ${bot.client.resultadosDaBusca[1].id._serialized}\n\n` +
+            `2. 📅 12/10/2026, 09:00:00 · 👤 Fulano\n   "manda o pix"\n   🆔 ${bot.client.resultadosDaBusca[0].id._serialized}`);
 
         assert.equal((await bot.replyAlt('/buscar pix'))[0], r, 'o /buscar é o mesmo');
         assert.equal(bot.client.buscas[1].query, 'pix');
@@ -45,8 +45,8 @@ describe('/search (/buscar)', () => {
         assert.match(limited, /^🔎 \*1 mensagem com\* "boleto vence" _\(todos os chats\)_\n_\(limitado a 50 por vez\)_\n\n/);
 
         bot.client.resultadosDaBusca = [foundAlt('me liga no +5521988887777')];
-        assert.match((await bot.replyAlt('/search -m liga'))[0], /"me liga no \+55219\*\*\*\*77"$/, 'o -mask (-m) ofusca os telefones');
-        assert.match((await bot.replyAlt('/search liga'))[0], /"me liga no \+5521988887777"$/);
+        assert.match((await bot.replyAlt('/search -m liga'))[0], /"me liga no \+55219\*\*\*\*77"\n/, 'o -mask (-m) ofusca os telefones');
+        assert.match((await bot.replyAlt('/search liga'))[0], /"me liga no \+5521988887777"\n/);
     });
 
     test('mídia, texto longo, a própria mensagem do /search e nada encontrado', async () => {
@@ -56,10 +56,10 @@ describe('/search (/buscar)', () => {
             { ...commandAlt }
         ];
         const r = await bot.deliver(commandAlt);
-        assert.match(r[0].texto, /^🔎 \*1 mensagem com\* "foto"\n\n1\. .*\n {3}📎 _\[image\]_ "foto da praia"$/);
+        assert.match(r[0].texto, /^🔎 \*1 mensagem com\* "foto"\n\n1\. .*\n {3}📎 _\[image\]_ "foto da praia"\n {3}🆔 .*$/);
 
         bot.client.resultadosDaBusca = [foundAlt('x'.repeat(250))];
-        assert.match((await bot.replyAlt('/search x'))[0], /"x{200}…"$/);
+        assert.match((await bot.replyAlt('/search x'))[0], /"x{200}…"\n {3}🆔 /);
 
         bot.client.resultadosDaBusca = [];
         assert.equal((await bot.replyAlt('/search nada'))[0], '🔎 Nada com "nada" neste chat.');

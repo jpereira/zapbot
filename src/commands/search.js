@@ -92,7 +92,8 @@ async function cmdSearch({ msg, opts, chatId }) {
     const linesAlt = await Promise.all(foundAlt3.map(async (m, i) => {
         const who = m.fromMe ? 'Você' : await nameAltAlt(m.author || m.from, names);
         const chat = allAlt2 ? ` · 💬 ${await chatNameAlt(m.id?.remote ?? m.from, chats)}` : '';
-        return `${i + 1}. 📅 ${formatData(m.timestamp)}${chat} · 👤 ${who}\n   ${snippet(m)}`;
+        return `${i + 1}. 📅 ${formatData(m.timestamp)}${chat} · 👤 ${who}\n   ${snippet(m)}` +
+            `\n   🆔 ${m.id?._serialized}`;
     }));
 
     await msg.reply(`🔎 *${plural(foundAlt3.length, 'mensagem', 'mensagens')} com* "${textAlt}"` +
