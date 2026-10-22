@@ -9,12 +9,12 @@ const fs = require('fs-extra');
 
 const { formatErrorCommand, getCommandSyntax } = require('./base');
 const { completeNotice } = require('../client');
-const { BIN_FFMPEG, BIN_YT, GET_MAX_CONCURRENT, TMP_DIR } = require('../constants');
+const { BIN_FFMPEG, BIN_FFPROBE, BIN_YT, GET_MAX_CONCURRENT, TMP_DIR } = require('../constants');
 const { printDebug, printError, printInfo } = require('../log');
 const { STICKER_ANIMATED_MAX_BYTES, ATTEMPTS_STICKER, argsDoFfmpeg, fitSticker, thumbnailDoLink } = require('../media');
 const { getSetting, isDebugMode, stickerMeta } = require('../settings');
 const { humanSize } = require('../util/files');
-const { runCommand } = require('../util/processes');
+const { captureOutput, runCommand } = require('../util/processes');
 const { extractFirstUrl, isUrlPublic, isValidHttpUrl } = require('../util/url');
 
 let getInProgress = 0;
@@ -71,17 +71,56 @@ async function downloadMedia({ msg, opts, quotedMsg, senderName }, { cmd }) {
 
 /*
  * -ss/-es time in seconds: "22", "2.5", "09:33" (min:sec) or "1:02:03"
- * (h:min:sec). Minutes and seconds after the ":" go up to 59. Invalid: null.
+ * (h:min:sec). Minutes and seconds after the ":" go up to 59. With "-" in front
+ * ("-10", "-01:44") counted from the end of the video and the result is negative. Invalid
+ * (or "-0", which says nothing): null.
  */
 function readTime(valueAlt) {
-    const m = String(valueAlt ?? '').match(/^(?:(?:(\d+):)?(\d+):)?(\d+(?:\.\d+)?)$/);
+    const m = String(valueAlt ?? '').match(/^(-)?(?:(?:(\d+):)?(\d+):)?(\d+(?:\.\d+)?)$/);
     if (!m) return null;
-    const [, h, min, seg] = m;
+    const [, signalAlt, h, min, seg] = m;
     if (min !== undefined && Number(seg) >= 60) return null;
     if (h !== undefined && Number(min) >= 60) return null;
     const total = Number(h ?? 0) * 3600 + Number(min ?? 0) * 60 + Number(seg);
+    if (signalAlt && total === 0) return null;
     // Without the floating-point noise: "1:00.1" is 60.1, not 60.099999...
-    return Number.isFinite(total) ? Math.round(total * 1000) / 1000 : total;
+    const rounded = Number.isFinite(total) ? Math.round(total * 1000) / 1000 : total;
+    return signalAlt ? -rounded : rounded;
+}
+
+// Some time counted from the end: the exact point can only be known with the video duration
+const hasTimeNegative = (opts) => ['startSec', 'endSec'].some(nameAlt => Number(opts.opt[nameAlt]) < 0);
+
+/*
+ * Swaps negative times (counted from the end) for video points, given the
+ * duration: -ss -10 is duration-10 (at least 0) and -es -10 is duration-10.
+ */
+function resolverTimes(opts, duration) {
+    const opt = { ...opts.opt };
+    const round = (n) => String(Math.round(n * 1000) / 1000);
+    if (Number(opt.startSec) < 0) opt.startSec = round(Math.max(0, duration + Number(opt.startSec)));
+    if (Number(opt.endSec) < 0) opt.endSec = round(duration + Number(opt.endSec));
+    if (opt.endSec != null && Number(opt.endSec) <= Number(opt.startSec ?? 0)) {
+        throw new Error(`O trecho pedido ficou vazio: o vídeo tem ${duration} s e o final (-es) caiu em ${opt.endSec} s, `
+            + `não depois do início (-ss, ${opt.startSec ?? 0} s).`);
+    }
+    return { ...opts, opt };
+}
+
+const errorDuration = () => new Error('Não consegui descobrir a duração do vídeo, necessária para o tempo contado do final (-ss -10)');
+
+async function fileDuration(fileAlt) {
+    const duration = await captureOutput(BIN_FFPROBE, [
+        '-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', fileAlt
+    ]).then(Number, () => NaN);
+    if (!(duration > 0)) throw errorDuration();
+    return duration;
+}
+
+// The link duration without downloading anything; null if the site does not report it (then it downloads everything and measures the file)
+async function linkDuration(url) {
+    const duration = await captureOutput(BIN_YT, ['--no-playlist', '--print', 'duration', '--', url]).then(Number, () => NaN);
+    return duration > 0 ? duration : null;
 }
 
 async function optionsValid(msg, opts, cmd) {
@@ -95,7 +134,8 @@ async function optionsValid(msg, opts, cmd) {
         if (!opts.given.has(nameAlt)) continue;
         const seconds = readTime(opts.opt[nameAlt]);
         if (seconds === null) {
-            await msg.reply(`❌ -${nameAlt} precisa de um tempo em segundos (0, 10, 2.5) ou em minutos (09:33, 1:02:03).`);
+            await msg.reply(`❌ -${nameAlt} precisa de um tempo em segundos (0, 10, 2.5) ou em minutos (09:33, 1:02:03); `
+                + 'com "-" na frente conta do final (-10, -01:44).');
             return false;
         }
         if (!Number.isFinite(seconds)) {
@@ -105,7 +145,9 @@ async function optionsValid(msg, opts, cmd) {
         // ffmpeg always receives seconds
         opts.opt[nameAlt] = String(seconds);
     }
-    if (opts.opt.endSec != null && Number(opts.opt.endSec) <= Number(opts.opt.startSec ?? 0)) {
+    // Mixing start and end (-ss 10 -es -5) can only be checked with the video duration
+    const [start, end] = [Number(opts.opt.startSec ?? 0), opts.opt.endSec == null ? null : Number(opts.opt.endSec)];
+    if (end !== null && (start < 0) === (end < 0) && end <= start) {
         await msg.reply('❌ O segundo final (-es) deve ser maior que o inicial (-ss, padrão 0).');
         return false;
     }
@@ -222,10 +264,15 @@ async function converterAndSend({ msg, opts, senderName, url, media, previa: pre
 
         let cmdYt = null;
         let optsFfmpeg = opts; // with the snippet downloaded, ffmpeg's cut starts at 0
-        const snippet = downloadSnippet(opts);
         if (media) {
             fs.writeFileSync(originalFile, Buffer.from(media.data, 'base64'));
+            if (hasTimeNegative(opts)) opts = optsFfmpeg = resolverTimes(opts, await fileDuration(originalFile));
         } else {
+            if (hasTimeNegative(opts)) {
+                const duration = await linkDuration(url);
+                if (duration) opts = optsFfmpeg = resolverTimes(opts, duration);
+            }
+            const snippet = downloadSnippet(opts);
             // With a cut, tries to download only the snippet; if the site does not allow it, downloads everything and ffmpeg cuts
             if (snippet) {
                 try {
@@ -245,6 +292,9 @@ async function converterAndSend({ msg, opts, senderName, url, media, previa: pre
                 throw errorOnDownload(`Nada foi baixado (acima de ${getSetting('get.maxDownloadMB')} MB? veja o setting get.maxDownloadMB)`);
             }
             printInfo(`> Baixado ${optsFfmpeg === opts ? 'o vídeo inteiro' : 'o trecho'}: ${humanSize(fs.statSync(originalFile).size)}`);
+
+            // The site did not report the duration: measures the whole file that came
+            if (hasTimeNegative(opts)) opts = optsFfmpeg = resolverTimes(opts, await fileDuration(originalFile));
         }
 
         // Convert. The sticker lowers quality and fps until it fits WhatsApp's limit
@@ -327,6 +377,8 @@ async function converterAndSend({ msg, opts, senderName, url, media, previa: pre
  */
 function downloadSnippet(opts) {
     const { startSec, endSec, sticker } = opts.opt;
+    // Time counted from the end without the duration: downloads the whole video
+    if (hasTimeNegative(opts)) return null;
     if (startSec == null && endSec == null && !sticker) return null;
     const start = Number(startSec ?? 0);
     // The sticker is at most 6 s: downloading more than that is a waste
