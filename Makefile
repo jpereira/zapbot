@@ -30,7 +30,7 @@ NPM_TEST = $(NPM) test
 # DOCK_REMOTE=1 selects the homelab; setting only the address does not change the target.
 DOCK_REMOTE ?= 0
 LOCAL_CONTEXT ?= default
-DOCKER_REMOTE_SERVER ?= ssh://root@itacoatiara.local
+DOCKER_REMOTE_SERVER ?= ssh://root@homelab.local
 REMOTE_CONTEXT ?= homelab
 DEV_SERVICE := zapbot-dev
 PROD_SERVICE := zapbot
@@ -62,20 +62,35 @@ DOCS_PORT ?= 8000
 # "mkdocs serve" uses the site_url path (https://jpereira.github.io/zapbot/ → /zapbot/)
 DOCS_PATH := $(shell sed -nE 's|^site_url: *https?://[^/]+||p' mkdocs.yml)
 
-.DEFAULT_GOAL := build
+.DEFAULT_GOAL := help
 
-.PHONY: help all context build up logs ps shell images volume clean destroy prune \
+.PHONY: help all context build up logs ps shell images volume clean recreate destroy prune \
     deps test test.coverage lint check docs docs.deps docs.build
 
 help: ## Shows this help
 	@echo "Destino: $(if $(filter 1,$(DOCK_REMOTE)),remoto,local) · $(DOCKER_CONTEXT) · $(SERVICE)"
 	$(Q)grep -hE '^[a-zA-Z_.-]+:.*## ' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*## "}; {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
+	@echo ""
+	@echo ""
+	@echo "Variáveis (use: make VAR=valor <alvo>):"
+	@printf "  \033[33m%-22s\033[0m %s\n" \
+		"DOCK_REMOTE" "0 = local (padrão), 1 = servidor remoto · atual: $(DOCK_REMOTE)" \
+		"DOCKER_REMOTE_SERVER" "endereço SSH do servidor remoto · atual: $(DOCKER_REMOTE_SERVER)" \
+		"REMOTE_CONTEXT" "nome do contexto Docker remoto · atual: $(REMOTE_CONTEXT)" \
+		"LOCAL_CONTEXT" "nome do contexto Docker local · atual: $(LOCAL_CONTEXT)" \
+		"OPTS" "flags extras do docker compose build (ex.: OPTS=--no-cache)" \
+		"TEST_ARGS" "flags extras do node:test (ex.: TEST_ARGS=--test-name-pattern=mask)" \
+		"NPM" "comando do npm · atual: $(NPM)" \
+		"V / Q" "V=1 (ou Q=) mostra cada comando executado · atual: V=$(V)" \
+		"DOCS_HOST" "endereço do make docs · atual: $(DOCS_HOST)" \
+		"DOCS_PORT" "porta do make docs · atual: $(DOCS_PORT)" \
+		"DOCS_PYTHON" "Python do virtualenv da documentação · atual: $(DOCS_PYTHON)"
 
 #
 # Development
 #
-all: build
+all: build ## Alias for build
 
 deps: ## Installs the lock's dependencies, including the dev ones, without downloading Chromium
 	$(Q)PUPPETEER_SKIP_DOWNLOAD=true $(NPM) ci --include=dev --no-audit --no-fund
@@ -141,6 +156,11 @@ clean: context ## Removes the selected environment's container and image, preser
 	-$(Q)$(DOCKER) rm -f $(SERVICE)
 	-$(Q)$(DOCKER) rmi -f $(SERVICE)
 	-$(Q)$(DOCKER) builder prune -f -a
+
+# clean removes container and image (and the builder cache); up then builds without cache and recreates the
+# service. The volumes (WhatsApp session and cache) are not even touched: only destroy removes them.
+recreate: clean ## Recreates image (no cache) and container from scratch on the selected target, preserving the volumes
+	$(Q)$(MAKE) up OPTS="--no-cache --pull"
 
 destroy: clean ## Also removes the selected environment's volumes (session and cache!)
 	$(Q)$(DOCKER) volume rm -f $(VOLUMES)
