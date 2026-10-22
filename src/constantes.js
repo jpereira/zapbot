@@ -24,6 +24,7 @@ const BACKUP_DIR = path.join(CACHE_DIR, 'backups'); // backups do banco (/backup
 // O da imagem (Debian); fora dela, PUPPETEER_EXECUTABLE_PATH aponta outro
 const BIN_CHROMIUM = process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium';
 const BIN_FFMPEG = '/usr/bin/ffmpeg';
+const BIN_FFPROBE = '/usr/bin/ffprobe';
 const BIN_YT = '/venv/bin/yt-dlp';
 
 // /get: cada yt-dlp/ffmpeg é morto após este tempo; no máximo N downloads ao mesmo tempo
@@ -44,6 +45,7 @@ module.exports = {
     BACKUP_DIR,
     BIN_CHROMIUM,
     BIN_FFMPEG,
+    BIN_FFPROBE,
     BIN_YT,
     BOT_START_TIME,
     CACHE_DIR,

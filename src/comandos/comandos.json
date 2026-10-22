@@ -932,7 +932,7 @@
                     "values": [
                         "<tempo>"
                     ],
-                    "desc": "Começa neste ponto do vídeo original (padrão 0), em segundos ou em min:seg. Aceita decimal com ponto. Ex: -ss 1.5, -ss 09:33"
+                    "desc": "Começa neste ponto do vídeo original (padrão 0), em segundos ou em min:seg. Aceita decimal com ponto. Com - na frente, conta do final (-ss -10 são os últimos 10 s). Ex: -ss 1.5, -ss 09:33, -ss -10, -ss -01:44"
                 },
                 {
                     "opts": [
@@ -942,7 +942,7 @@
                     "values": [
                         "<tempo>"
                     ],
-                    "desc": "Termina neste ponto do vídeo original (segundos ou min:seg); deve ser maior que o início. Vale sem -ss e para figurinhas, limitadas a seis segundos. Ex: -es 15, -es 09:45"
+                    "desc": "Termina neste ponto do vídeo original (segundos ou min:seg); deve ser maior que o início. Com - na frente, conta do final (-es -5 termina 5 s antes do fim). Vale sem -ss e para figurinhas, limitadas a seis segundos. Ex: -es 15, -es 09:45, -es -5"
                 },
                 {
                     "opts": [
@@ -1576,7 +1576,7 @@
                     "values": [
                         "<tempo>"
                     ],
-                    "desc": "Vídeo: começa neste ponto (padrão 0), em segundos ou em min:seg, e pega os 6 s seguintes. Aceita decimal com ponto. Ex: -ss 1.5, -ss 01:12"
+                    "desc": "Vídeo: começa neste ponto (padrão 0), em segundos ou em min:seg, e pega os 6 s seguintes. Aceita decimal com ponto. Com - na frente, conta do final (-ss -10 começa 10 s antes do fim). Ex: -ss 1.5, -ss 01:12, -ss -10"
                 },
                 {
                     "opts": [
@@ -1586,7 +1586,7 @@
                     "values": [
                         "<tempo>"
                     ],
-                    "desc": "Vídeo: termina neste ponto (segundos ou min:seg), maior que o início; a figurinha tem no máximo 6 s. Ex: /sticker -ss 10 -es 13, /sticker -ss 01:10 -es 01:13"
+                    "desc": "Vídeo: termina neste ponto (segundos ou min:seg), maior que o início; a figurinha tem no máximo 6 s. Com - na frente, conta do final. Ex: /sticker -ss 10 -es 13, /sticker -ss 01:10 -es 01:13, /sticker -es -2"
                 },
                 {
                     "opts": [

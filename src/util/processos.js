@@ -27,6 +27,28 @@ function runCommand(bin, args, logFd, timeoutMs = GET_TIMEOUT_MS) {
     });
 }
 
+// A saída (stdout) de um comando curto, como a duração de um vídeo
+function capturarSaida(bin, args, timeoutMs = 30000) {
+    return new Promise((resolve, reject) => {
+        const child = spawn(bin, args, { stdio: ['ignore', 'pipe', 'ignore'] });
+        let saida = '';
+
+        const timer = setTimeout(() => child.kill('SIGKILL'), timeoutMs);
+
+        child.stdout.on('data', (dados) => { saida += dados; });
+        child.on('error', (err) => {
+            clearTimeout(timer);
+            reject(err);
+        });
+        child.on('close', (code) => {
+            clearTimeout(timer);
+            if (code === 0) return resolve(saida.trim());
+            reject(new Error(`${bin} exited with code ${code}`));
+        });
+    });
+}
+
 module.exports = {
+    capturarSaida,
     runCommand
 };

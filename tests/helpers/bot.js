@@ -64,7 +64,7 @@ async function reiniciar() {
     rede.limpar();
     emails.length = 0;
     logs.length = 0;
-    Object.assign(processos, { chamadas: [], falhar: null, falharTrecho: false, naoBaixar: false, tamanhoSaida: 1024 });
+    Object.assign(processos, { chamadas: [], falhar: null, falharTrecho: false, duracao: 100, siteSemDuracao: false, naoBaixar: false, tamanhoSaida: 1024 });
     estado.pronto = true;
     // A reconexão de um teste não vaza para o próximo
     Object.assign(estado, { tentativas: 0, foraDesde: null, aguardandoQr: false });
