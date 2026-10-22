@@ -12,8 +12,8 @@ pelo ffmpeg. Se a mídia tiver um link na legenda, vale a mídia.
 |---|---|---|
 | `-sticker`, `-st` | | Envia como figurinha animada (até 6 s), enquadrada no meio do vídeo. É o mesmo que o [`/sticker`](sticker.md) |
 | `-audio`, `-a` | | Extrai só o áudio (`.mp3`) |
-| `-startSec`, `-ss` | `<tempo>` | Começa neste ponto do vídeo original (padrão 0), em segundos (`22`, `1.5`) ou em `min:seg` (`09:33`, ou `h:min:seg`) |
-| `-endSec`, `-es` | `<tempo>` | Termina neste ponto do vídeo original, no mesmo formato do `-ss`; deve ser maior que o início. Vale também sem `-ss` e para figurinhas |
+| `-startSec`, `-ss` | `<tempo>` | Começa neste ponto do vídeo original (padrão 0), em segundos (`22`, `1.5`) ou em `min:seg` (`09:33`, ou `h:min:seg`). Com `-` na frente, conta do **final** do vídeo (`-10`, `-01:44`) |
+| `-endSec`, `-es` | `<tempo>` | Termina neste ponto do vídeo original, no mesmo formato do `-ss` (`-es -5` termina 5 s antes do fim); deve ser maior que o início. Vale também sem `-ss` e para figurinhas |
 | `-verbose`, `-v` | | Mostra os parâmetros usados no yt-dlp/ffmpeg |
 | `<url>` | | Link do vídeo; vale mais que a mensagem respondida |
 
@@ -28,6 +28,20 @@ duração pedida. O vídeo e o áudio são enviados como documento.
 De um link, com `-ss`, `-es` ou `-st`, o yt-dlp baixa só o trecho pedido (`--download-sections`,
 cortado no tempo exato com `--force-keyframes-at-cuts`), sem o vídeo inteiro. Se o site não deixar
 baixar o trecho, o `/get` baixa o vídeo inteiro e o ffmpeg corta.
+
+#### Tempo contado do final
+
+`-ss` e `-es` aceitam o tempo com `-` na frente, que conta a partir do final do vídeo:
+
+- `-ss -10` começa 10 s antes do fim, ou seja, os **últimos 10 segundos**; `-ss -01:44` começa 1:44
+  antes do fim. Se o vídeo for menor que isso, começa do 0.
+- `-es -5` termina 5 s antes do fim.
+- Dá para misturar (`-ss 150 -es -10`). Se o final cair antes do início, o bot recusa.
+- `-0` não vale, e `-ss -10 -es -20` é recusado como qualquer outro final antes do início.
+
+Para saber o ponto exato o bot precisa da duração: de um link, pergunta ao yt-dlp (`--print
+duration`) e baixa só o trecho; se o site não informar, baixa o vídeo inteiro e mede o arquivo com o
+`ffprobe` (que vem com o ffmpeg). Numa mídia respondida, mede o arquivo com o `ffprobe`.
 
 Na mídia respondida:
 
@@ -62,6 +76,8 @@ firewall de egresso no container (`docker/app/egress-firewall.sh`, ligado por
 /get -ss 10 -es 25 https://x.com/usuario/status/123456
 /get -es 15 https://youtu.be/XXXXXXXXXXX
 /get -ss 09:33 -es 09:45 https://youtu.be/XXXXXXXXXXX
+/get -ss -10 https://youtu.be/XXXXXXXXXXX            → os últimos 10 segundos
+/get -ss -01:44 -es -00:30 https://youtu.be/XXXXXXXXXXX → de 1:44 a 0:30 antes do fim
 /download -st -ss 3 -es 6 https://youtu.be/XXXXXXXXXXX
 (reply numa mensagem com link)  /get -a
 (reply num vídeo do WhatsApp)   /get -a              → só o áudio, em .mp3

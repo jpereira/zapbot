@@ -9,12 +9,12 @@ const fs = require('fs-extra');
 
 const { formatarErroComando, getCommandSyntax } = require('./base');
 const { concluirAviso } = require('../cliente');
-const { BIN_FFMPEG, BIN_YT, GET_MAX_CONCURRENT, TMP_DIR } = require('../constantes');
+const { BIN_FFMPEG, BIN_FFPROBE, BIN_YT, GET_MAX_CONCURRENT, TMP_DIR } = require('../constantes');
 const { printDebug, printError, printInfo } = require('../log');
 const { STICKER_ANIMADO_MAX_BYTES, TENTATIVAS_STICKER, argsDoFfmpeg, enquadrarSticker, thumbnailDoLink } = require('../midia');
 const { getSetting, isDebugMode, stickerMeta } = require('../settings');
 const { humanSize } = require('../util/arquivos');
-const { runCommand } = require('../util/processos');
+const { capturarSaida, runCommand } = require('../util/processos');
 const { extractFirstUrl, isUrlPublica, isValidHttpUrl } = require('../util/url');
 
 let getEmAndamento = 0;
@@ -71,17 +71,56 @@ async function baixarMidia({ msg, opts, quotedMsg, senderName }, { cmd }) {
 
 /*
  * Tempo do -ss/-es em segundos: "22", "2.5", "09:33" (min:seg) ou "1:02:03"
- * (h:min:seg). Minutos e segundos depois do ":" vão até 59. Inválido: null.
+ * (h:min:seg). Minutos e segundos depois do ":" vão até 59. Com "-" na frente
+ * ("-10", "-01:44") conta do final do vídeo e o resultado é negativo. Inválido
+ * (ou "-0", que não diz nada): null.
  */
 function lerTempo(valor) {
-    const m = String(valor ?? '').match(/^(?:(?:(\d+):)?(\d+):)?(\d+(?:\.\d+)?)$/);
+    const m = String(valor ?? '').match(/^(-)?(?:(?:(\d+):)?(\d+):)?(\d+(?:\.\d+)?)$/);
     if (!m) return null;
-    const [, h, min, seg] = m;
+    const [, sinal, h, min, seg] = m;
     if (min !== undefined && Number(seg) >= 60) return null;
     if (h !== undefined && Number(min) >= 60) return null;
     const total = Number(h ?? 0) * 3600 + Number(min ?? 0) * 60 + Number(seg);
+    if (sinal && total === 0) return null;
     // Sem o ruído do ponto flutuante: "1:00.1" é 60.1, não 60.099999...
-    return Number.isFinite(total) ? Math.round(total * 1000) / 1000 : total;
+    const arredondado = Number.isFinite(total) ? Math.round(total * 1000) / 1000 : total;
+    return sinal ? -arredondado : arredondado;
+}
+
+// Algum tempo contado do final: só dá para saber o ponto exato com a duração do vídeo
+const temTempoNegativo = (opts) => ['startSec', 'endSec'].some(nome => Number(opts.opt[nome]) < 0);
+
+/*
+ * Troca os tempos negativos (contados do final) pelos pontos do vídeo, dada a
+ * duração: -ss -10 é duracao-10 (no mínimo 0) e -es -10 é duracao-10.
+ */
+function resolverTempos(opts, duracao) {
+    const opt = { ...opts.opt };
+    const arredondar = (n) => String(Math.round(n * 1000) / 1000);
+    if (Number(opt.startSec) < 0) opt.startSec = arredondar(Math.max(0, duracao + Number(opt.startSec)));
+    if (Number(opt.endSec) < 0) opt.endSec = arredondar(duracao + Number(opt.endSec));
+    if (opt.endSec != null && Number(opt.endSec) <= Number(opt.startSec ?? 0)) {
+        throw new Error(`O trecho pedido ficou vazio: o vídeo tem ${duracao} s e o final (-es) caiu em ${opt.endSec} s, `
+            + `não depois do início (-ss, ${opt.startSec ?? 0} s).`);
+    }
+    return { ...opts, opt };
+}
+
+const erroDuracao = () => new Error('Não consegui descobrir a duração do vídeo, necessária para o tempo contado do final (-ss -10)');
+
+async function duracaoDoArquivo(arquivo) {
+    const duracao = await capturarSaida(BIN_FFPROBE, [
+        '-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', arquivo
+    ]).then(Number, () => NaN);
+    if (!(duracao > 0)) throw erroDuracao();
+    return duracao;
+}
+
+// A duração do link sem baixar nada; null se o site não informa (aí baixa tudo e mede o arquivo)
+async function duracaoDoLink(url) {
+    const duracao = await capturarSaida(BIN_YT, ['--no-playlist', '--print', 'duration', '--', url]).then(Number, () => NaN);
+    return duracao > 0 ? duracao : null;
 }
 
 async function opcoesValidas(msg, opts, cmd) {
@@ -95,7 +134,8 @@ async function opcoesValidas(msg, opts, cmd) {
         if (!opts.given.has(nome)) continue;
         const segundos = lerTempo(opts.opt[nome]);
         if (segundos === null) {
-            await msg.reply(`❌ -${nome} precisa de um tempo em segundos (0, 10, 2.5) ou em minutos (09:33, 1:02:03).`);
+            await msg.reply(`❌ -${nome} precisa de um tempo em segundos (0, 10, 2.5) ou em minutos (09:33, 1:02:03); `
+                + 'com "-" na frente conta do final (-10, -01:44).');
             return false;
         }
         if (!Number.isFinite(segundos)) {
@@ -105,7 +145,9 @@ async function opcoesValidas(msg, opts, cmd) {
         // O ffmpeg recebe sempre segundos
         opts.opt[nome] = String(segundos);
     }
-    if (opts.opt.endSec != null && Number(opts.opt.endSec) <= Number(opts.opt.startSec ?? 0)) {
+    // Misturar início e final (-ss 10 -es -5) só dá para conferir com a duração do vídeo
+    const [inicio, fim] = [Number(opts.opt.startSec ?? 0), opts.opt.endSec == null ? null : Number(opts.opt.endSec)];
+    if (fim !== null && (inicio < 0) === (fim < 0) && fim <= inicio) {
         await msg.reply('❌ O segundo final (-es) deve ser maior que o inicial (-ss, padrão 0).');
         return false;
     }
@@ -222,10 +264,15 @@ async function converterEEnviar({ msg, opts, senderName, url, media, previa }) {
 
         let cmdYt = null;
         let optsFfmpeg = opts; // com o trecho baixado, o corte do ffmpeg começa no 0
-        const trecho = trechoDoDownload(opts);
         if (media) {
             fs.writeFileSync(originalFile, Buffer.from(media.data, 'base64'));
+            if (temTempoNegativo(opts)) opts = optsFfmpeg = resolverTempos(opts, await duracaoDoArquivo(originalFile));
         } else {
+            if (temTempoNegativo(opts)) {
+                const duracao = await duracaoDoLink(url);
+                if (duracao) opts = optsFfmpeg = resolverTempos(opts, duracao);
+            }
+            const trecho = trechoDoDownload(opts);
             // Com corte, tenta baixar só o trecho; se o site não deixar, baixa tudo e o ffmpeg corta
             if (trecho) {
                 try {
@@ -245,6 +292,9 @@ async function converterEEnviar({ msg, opts, senderName, url, media, previa }) {
                 throw erroAoBaixar(`Nada foi baixado (acima de ${getSetting('get.maxDownloadMB')} MB? veja o setting get.maxDownloadMB)`);
             }
             printInfo(`> Baixado ${optsFfmpeg === opts ? 'o vídeo inteiro' : 'o trecho'}: ${humanSize(fs.statSync(originalFile).size)}`);
+
+            // O site não informou a duração: mede o arquivo inteiro que veio
+            if (temTempoNegativo(opts)) opts = optsFfmpeg = resolverTempos(opts, await duracaoDoArquivo(originalFile));
         }
 
         // Converter. A figurinha reduz qualidade e fps até caber no limite do WhatsApp
@@ -327,6 +377,8 @@ async function converterEEnviar({ msg, opts, senderName, url, media, previa }) {
  */
 function trechoDoDownload(opts) {
     const { startSec, endSec, sticker } = opts.opt;
+    // Tempo contado do final sem a duração: baixa o vídeo inteiro
+    if (temTempoNegativo(opts)) return null;
     if (startSec == null && endSec == null && !sticker) return null;
     const inicio = Number(startSec ?? 0);
     // A figurinha tem no máximo 6 s: baixar além disso é desperdício

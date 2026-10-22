@@ -83,7 +83,7 @@ describe('/get (/download)', () => {
 
     // O trecho que o yt-dlp baixa (--download-sections) e os cortes do ffmpeg
     const trecho = () => {
-        const yt = argsDo('yt-dlp');
+        const yt = processos.chamadas.find(c => path.basename(c.bin) === 'yt-dlp' && c.args.includes('-o')).args;
         const ff = argsDo('ffmpeg');
         return {
             secao: yt.includes('--download-sections') ? yt[yt.indexOf('--download-sections') + 1] : null,
@@ -112,6 +112,58 @@ describe('/get (/download)', () => {
         processos.chamadas.length = 0;
         await bot.executar(`/get -a ${URL}`);
         assert.deepEqual(trecho(), { secao: null, keyframes: false, ss: null, t: null });
+    });
+
+    test('-ss e -es negativos contam do final: a duração vem do yt-dlp e o trecho é baixado', async () => {
+        processos.duracao = 200;
+        await bot.executar(`/get -ss -10 ${URL}`);
+        assert.deepEqual(binarios(), ['yt-dlp', 'yt-dlp', 'ffmpeg']);
+        assert.deepEqual(processos.chamadas[0].args, ['--no-playlist', '--print', 'duration', '--', URL]);
+        assert.equal(trecho().secao, '*190-inf');
+
+        processos.chamadas.length = 0;
+        await bot.executar(`/get -ss -01:44 -es -00:30 ${URL}`);
+        assert.deepEqual(trecho(), { secao: '*96-170', keyframes: true, ss: null, t: '74' });
+
+        processos.chamadas.length = 0;
+        await bot.executar(`/get -ss 150 -es -10 ${URL}`);
+        assert.deepEqual(trecho(), { secao: '*150-190', keyframes: true, ss: null, t: '40' });
+
+        // Maior que o vídeo: começa do 0
+        processos.chamadas.length = 0;
+        await bot.executar(`/get -ss -999 -es 5 ${URL}`);
+        assert.equal(trecho().secao, '*0-5');
+    });
+
+    test('/sticker -ss -10: os 6 s a partir de 10 s antes do fim; -ss é o valor, não outra opção', async () => {
+        processos.duracao = 200;
+        await bot.executar(`/sticker -ss -10 ${URL}`);
+        assert.deepEqual(trecho(), { secao: '*190-196', keyframes: true, ss: null, t: '6' });
+        processos.chamadas.length = 0;
+        await bot.executar(`/sticker -es -194 -ss -200 ${URL}`);
+        assert.equal(trecho().secao, '*0-6');
+    });
+
+    test('negativo sem a duração do site: baixa o vídeo inteiro, mede com o ffprobe e o ffmpeg corta', async () => {
+        processos.siteSemDuracao = true;
+        const r = await bot.executar(`/get -a -ss -10 ${URL}`);
+        assert.equal(r[0].texto, '✅ Mídia baixada com sucesso!');
+        assert.deepEqual(binarios(), ['yt-dlp', 'yt-dlp', 'ffprobe', 'ffmpeg']);
+        assert.equal(processos.chamadas[2].args.at(-1), argsDo('ffmpeg')[argsDo('ffmpeg').indexOf('-i') + 1]);
+        processos.chamadas.length = 0;
+        processos.siteSemDuracao = false;
+        // O ffprobe só roda se o yt-dlp não informou
+        await bot.executar(`/get -a -ss -10 ${URL}`);
+        assert.deepEqual(binarios(), ['yt-dlp', 'yt-dlp', 'ffmpeg']);
+    });
+
+    test('negativo: início e final que não formam um trecho, e valores inválidos', async () => {
+        processos.duracao = 100;
+        const erro = async (linha) => (await bot.executar(linha, { erroEsperado: true }))[0].texto;
+        assert.match(await erro(`/get -ss -10 -es -20 ${URL}`), /❌ O segundo final \(-es\)/);
+        assert.match(await erro(`/get -ss 95 -es -10 ${URL}`), /O trecho pedido ficou vazio: o vídeo tem 100 s/);
+        assert.match(await erro(`/get -ss -0 ${URL}`), /❌ -startSec precisa de um tempo[\s\S]*conta do final/);
+        assert.match(await erro(`/get -ss -1:75 ${URL}`), /precisa de um tempo/);
     });
 
     test('o site não deixa baixar o trecho: baixa o vídeo inteiro e o ffmpeg corta', async () => {
@@ -152,7 +204,7 @@ describe('/get (/download)', () => {
     });
 
     test('cortes inválidos e áudio junto com figurinha são recusados antes de baixar', async () => {
-        for (const opcoes of ['-ss', '-es', '-ss abc', '-ss -1', '-es 0', '-ss 10 -es 5',
+        for (const opcoes of ['-ss', '-es', '-ss abc', '-ss -0', '-ss -abc', '-es -1:60', '-es 0', '-ss 10 -es 5',
             '-ss 3 -es 3', '-ss Infinity', '-ss 1e309', '-ss 1:60', '-ss 1:60:00', '-ss :30',
             '-ss 1:', '-ss 1:2:3:4', '-ss 09:45 -es 09:33', '-a -st']) {
             assert.match((await bot.responder(`/get ${URL} ${opcoes}`))[0], /^❌/);
@@ -284,6 +336,26 @@ describe('/get respondendo uma mídia do WhatsApp', () => {
         assert.match(ff[ff.indexOf('-vf') + 1], /crop=512:512/);
         assert.equal(r[0].texto, '✅ Sticker criado com sucesso!');
         assert.equal(r[1].options.sendMediaAsSticker, true);
+    });
+
+    test('-ss e -es negativos na mídia respondida: o ffprobe mede o arquivo', async () => {
+        processos.duracao = 60;
+        await bot.executar('/get -ss -10', respondendo(video));
+        assert.deepEqual(binarios(), ['ffprobe', 'ffmpeg']);
+        const ff = argsDo('ffmpeg');
+        assert.equal(ff[ff.indexOf('-ss') + 1], '50');
+        assert.equal(ff.includes('-t'), false);
+
+        processos.chamadas.length = 0;
+        await bot.executar('/get -st -ss -01:00 -es -50', respondendo(video));
+        const st = argsDo('ffmpeg');
+        assert.equal(st[st.indexOf('-ss') + 1], '0');
+        assert.equal(st[st.indexOf('-t') + 1], '6');
+
+        processos.chamadas.length = 0;
+        processos.duracao = null;
+        const [r] = await bot.executar('/get -ss -10', { ...respondendo(video), erroEsperado: true });
+        assert.match(r.texto, /Não consegui descobrir a duração do vídeo/);
     });
 
     test('-ss e -es sem formato: o trecho do vídeo como documento', async () => {

@@ -289,12 +289,15 @@ const processos = {
     falhar: null,        // 'yt-dlp' | 'ffmpeg'
     naoBaixar: false,    // yt-dlp termina sem criar o arquivo (acima do --max-filesize)
     falharTrecho: false, // yt-dlp falha só com --download-sections (site que não deixa)
+    duracao: 100,        // o que o ffprobe (e o yt-dlp --print duration) informam; null: nenhum sabe
+    siteSemDuracao: false, // o yt-dlp --print duration diz NA (o ffprobe ainda mede o arquivo)
     tamanhoSaida: 1024
 };
 
 function spawnFalso(bin, args) {
     const filho = new EventEmitter();
     filho.kill = () => {};
+    filho.stdout = new EventEmitter();
     processos.chamadas.push({ bin, args });
 
     setImmediate(() => {
@@ -302,6 +305,13 @@ function spawnFalso(bin, args) {
 
         if (processos.falhar === nome || (processos.falharTrecho && args.includes('--download-sections'))) {
             filho.emit('close', 1, null);
+            return;
+        }
+
+        if (nome === 'ffprobe' || args.includes('--print')) {
+            const sem = processos.duracao === null || (processos.siteSemDuracao && nome === 'yt-dlp');
+            filho.stdout.emit('data', `${sem ? 'NA' : processos.duracao}\n`);
+            filho.emit('close', 0, null);
             return;
         }
 

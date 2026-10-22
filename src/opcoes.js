@@ -50,6 +50,9 @@ function isOption(token) {
     return token.startsWith('-') && token.length > 1;
 }
 
+// "-10" e "-01:44" (tempo contado do fim, -ss/-es) são valores, não opções
+const ehTempoNegativo = (token) => /^-\d[\d:.]*$/.test(token);
+
 /*
  * Converte "-ss 10 -a https://..." em:
  *   { opt: { startSec: '10', audio: true, ... }, argv: ['https://...'] }
@@ -118,7 +121,7 @@ function GetOptFromCommand(input, config = {}) {
             const next = tokens[i + 1];
             const nextToken = next?.valor;
 
-            if (nextToken === undefined || (next.opcao && isOption(nextToken))) {
+            if (nextToken === undefined || (next.opcao && isOption(nextToken) && !ehTempoNegativo(nextToken))) {
                 result.opt[canonicalName] = null;
                 continue;
             }
