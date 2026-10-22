@@ -10,6 +10,7 @@ make help    # lista todos os alvos
 make build   # build da imagem zapbot-dev
 make shell   # shell dentro do container de dev; rode "node app.js" lá dentro
 make clean   # remove o container e a imagem zapbot-dev
+make recreate # clean + build sem cache + sobe uma instância nova (volumes intactos)
 make destroy # clean + apaga os volumes de dev (sessão do WhatsApp e cache!)
 make docs    # site da documentação local (veja Documentação)
 ```
@@ -30,18 +31,19 @@ O endereço e o contexto aceitam valores do ambiente ou da linha de comando:
 make test                    # testes do checkout local
 make DOCK_REMOTE=1 test      # testes da imagem em execução no homelab
 make DOCK_REMOTE=1 up        # build + recria o bot remoto
+make DOCK_REMOTE=1 recreate  # o mesmo, mas com a imagem refeita do zero (sem cache)
 make DOCK_REMOTE=1 logs      # logs do bot remoto
 make DOCK_REMOTE=1 shell     # shell dentro do bot remoto
-make DOCK_REMOTE=1 DOCKER_REMOTE_SERVER=ssh://root@itacoatiara.local REMOTE_CONTEXT=homelab test
+make DOCK_REMOTE=1 DOCKER_REMOTE_SERVER=ssh://root@homelab.local REMOTE_CONTEXT=homelab test
 
 export DOCK_REMOTE=1
-export DOCKER_REMOTE_SERVER=ssh://root@itacoatiara.local
+export DOCKER_REMOTE_SERVER=ssh://root@homelab.local
 export REMOTE_CONTEXT=homelab
 make test                    # remoto, usando as variáveis exportadas
 make DOCK_REMOTE=0 test      # local, mesmo com DOCK_REMOTE=1 no ambiente
 ```
 
-`DOCKER_REMOTE_SERVER` tem como padrão `ssh://root@itacoatiara.local`; `REMOTE_CONTEXT`, `homelab`;
+`DOCKER_REMOTE_SERVER` tem como padrão `ssh://root@homelab.local`; `REMOTE_CONTEXT`, `homelab`;
 e `LOCAL_CONTEXT`, `default`. O nome do contexto não faz parte do endereço SSH. Definir apenas o
 endereço ou o contexto não ativa o modo remoto: use `DOCK_REMOTE=1`. Cada comando Docker passa o
 contexto explicitamente, sem trocar o contexto global. O alvo `context` cria o contexto remoto ou
