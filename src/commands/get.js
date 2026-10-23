@@ -230,6 +230,26 @@ async function sendWithoutConverter(msg, media, opts) {
     return false;
 }
 
+/*
+ * Downloads cache (setting get.cache.tmp): the original file of a link stays in
+ * cache/tmp/<sha1 of the link and the snippet>_original.mp4. The snippet (-ss/-es) goes into the key
+ * because yt-dlp downloads only it. A request with a snippet also reuses the whole video
+ * already downloaded (ffmpeg cuts).
+ */
+function cacheFile(url, snippet) {
+    const keyAlt = `${url}|${snippet ? `${snippet.inicio}-${snippet.fim ?? 'inf'}` : 'inteiro'}`;
+    return path.join(TMP_DIR, `${crypto.createHash('sha1').update(keyAlt).digest('hex')}_original.mp4`);
+}
+
+// What is already in the cache for the link and the requested snippet: { file, snippet } (snippet null: the whole video)
+function searchInCache(url, snippet) {
+    for (const candidateAlt of snippet ? [snippet, null] : [null]) {
+        const fileAlt = cacheFile(url, candidateAlt);
+        if (fs.existsSync(fileAlt)) return { arquivo: fileAlt, trecho: candidateAlt };
+    }
+    return null;
+}
+
 // The extension of the replied media, by mimetype (ffmpeg looks at the content, not the name)
 const extension = (media) => String(media.mimetype).split(/[/;]/)[1]?.replace(/[^a-z0-9]/gi, '') || 'bin';
 
@@ -237,6 +257,7 @@ async function converterAndSend({ msg, opts, senderName, url, media, previa: pre
     // Random: with Date.now() two /get in the same millisecond would use the same files
     const id = crypto.randomUUID();
     let originalFile = null;
+    let inCache = false; // the original is in the downloads cache: it is not deleted
     let outputFile = null;
     let logCmdFile = null;
     let logCmd = null;
@@ -280,25 +301,43 @@ async function converterAndSend({ msg, opts, senderName, url, media, previa: pre
                 if (duration) opts = optsFfmpeg = resolverTimes(opts, duration);
             }
             const snippet = downloadSnippet(opts);
-            // With a cut, tries to download only the snippet; if the site does not allow it, downloads everything and ffmpeg cuts
-            if (snippet) {
-                try {
-                    cmdYt = await downloadWithYtDlp(url, originalFile, logCmd, snippet);
-                    optsFfmpeg = snippetOpts(opts, snippet);
-                } catch (inner) {
-                    printInfo(`> O trecho falhou (${inner.message}): baixando o vídeo inteiro`);
-                    fs.rmSync(originalFile, { force: true });
+            const useCache = getSetting('get.cache.tmp');
+            const inCacheAlt = useCache ? searchInCache(url, snippet) : null;
+
+            if (inCacheAlt) {
+                originalFile = inCacheAlt.arquivo;
+                inCache = true;
+                if (inCacheAlt.trecho) optsFfmpeg = snippetOpts(opts, inCacheAlt.trecho);
+                printInfo(`> Do cache (get.cache.tmp), sem baixar: ${path.basename(originalFile)}`);
+            } else {
+                // With a cut, tries to download only the snippet; if the site does not allow it, downloads everything and ffmpeg cuts
+                if (snippet) {
+                    try {
+                        cmdYt = await downloadWithYtDlp(url, originalFile, logCmd, snippet);
+                        optsFfmpeg = snippetOpts(opts, snippet);
+                    } catch (inner) {
+                        printInfo(`> O trecho falhou (${inner.message}): baixando o vídeo inteiro`);
+                        fs.rmSync(originalFile, { force: true });
+                    }
+                }
+                if (optsFfmpeg === opts) {
+                    cmdYt = await downloadWithYtDlp(url, originalFile, logCmd);
+                }
+
+                // Above --max-filesize yt-dlp aborts with no error and no file
+                if (!fs.existsSync(originalFile)) {
+                    throw errorOnDownload(`Nada foi baixado (acima de ${getSetting('get.maxDownloadMB')} MB? veja o setting get.maxDownloadMB)`);
+                }
+                printInfo(`> Baixado ${optsFfmpeg === opts ? 'o vídeo inteiro' : 'o trecho'}: ${humanSize(fs.statSync(originalFile).size)}`);
+
+                // Renames only at the end: whoever asks for the same link in the middle of the download does not get a half file
+                if (useCache) {
+                    const saved = cacheFile(url, optsFfmpeg === opts ? null : snippet);
+                    fs.renameSync(originalFile, saved);
+                    originalFile = saved;
+                    inCache = true;
                 }
             }
-            if (optsFfmpeg === opts) {
-                cmdYt = await downloadWithYtDlp(url, originalFile, logCmd);
-            }
-
-            // Above --max-filesize yt-dlp aborts with no error and no file
-            if (!fs.existsSync(originalFile)) {
-                throw errorOnDownload(`Nada foi baixado (acima de ${getSetting('get.maxDownloadMB')} MB? veja o setting get.maxDownloadMB)`);
-            }
-            printInfo(`> Baixado ${optsFfmpeg === opts ? 'o vídeo inteiro' : 'o trecho'}: ${humanSize(fs.statSync(originalFile).size)}`);
 
             // The site did not report the duration: measures the whole file that came
             if (hasTimeNegative(opts)) opts = optsFfmpeg = resolverTimes(opts, await fileDuration(originalFile));
@@ -370,7 +409,7 @@ async function converterAndSend({ msg, opts, senderName, url, media, previa: pre
             try { fs.closeSync(logCmd); } catch { /* already closed */ }
         }
 
-        for (const tmp of [originalFile, outputFile, logCmdFile]) {
+        for (const tmp of [inCache ? null : originalFile, outputFile, logCmdFile]) {
             if (!tmp) continue;
             try { fs.unlinkSync(tmp); } catch { /* file may not exist */ }
         }
