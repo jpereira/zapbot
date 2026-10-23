@@ -60,7 +60,10 @@ nem pelo `/sticker`. Um `-a` ou um `-st` do mesmo link só roda o ffmpeg.
   mesmo vídeo baixa de novo. O vídeo inteiro em cache serve a qualquer trecho (o ffmpeg corta).
 - Só o original baixado é guardado. O arquivo convertido e o log saem a cada execução, e a mídia
   respondida no WhatsApp não passa pelo yt-dlp, então não entra no cache.
-- Desligado (`/set get.cache.tmp off`), o original é apagado a cada execução, como antes.
+- Os arquivos em cache duram `get.cache.maxDays` dias (padrão 2) e a limpeza periódica, que roda a
+  cada 10 minutos, apaga os que passaram disso. O `/cache -clean` faz a mesma limpeza na hora.
+- Desligado (`/set get.cache.tmp off`), o original é apagado a cada execução, como antes, e o que
+  sobrou em cache vale como temporário comum (apagado depois de 2 horas).
 - O `/cache -all` apaga o cache dos downloads junto com os outros temporários.
 
 #### Conteúdo sensível do X

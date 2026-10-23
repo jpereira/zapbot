@@ -8,7 +8,7 @@ do comando (`/cache -h`) os caminhos aparecem completos (no Docker, `/app/cache`
 |---|---|
 | `-all`, `-a` | Apaga **tudo** em `cache/`: as mensagens (inclusive as guardadas para o `/show`), os temporários, as mídias baixadas em `cache/media` e os backups do [`/backup`](backup.md) em `cache/backups`, e compacta o banco. Ocorrências do `/watch`, contadores do `/stats`, enquetes, alertas de preço e settings são mantidos |
 | `-backup`, `-b` | Apaga os backups do [`/backup`](backup.md) em `cache/backups` (o banco fica como está) |
-| `-clean`, `-c` | Remove só o que passou da janela de retenção (68 h / `cache.revokedRetentionDays` para apagadas / `cache.editedRetentionDays` para editadas / `cache.reactionRetentionDays` para reações / `watch.hitsRetentionDays` para ocorrências do `/watch` / `stats.retentionDays` para os contadores do `/stats` / `enquete.retentionDays` para as enquetes) |
+| `-clean`, `-c` | Remove só o que passou da janela de retenção (68 h / `cache.revokedRetentionDays` para apagadas / `cache.editedRetentionDays` para editadas / `cache.reactionRetentionDays` para reações / `watch.hitsRetentionDays` para ocorrências do `/watch` / `stats.retentionDays` para os contadores do `/stats` / `enquete.retentionDays` para as enquetes; em `cache/tmp`, os temporários com mais de 2 h e os [downloads em cache](get.md#cache-dos-downloads) do `/get` com mais de `get.cache.maxDays` dias) |
 | `-media`, `-m` | Apaga as mídias baixadas em `cache/media` (fotos, vídeos, áudios e documentos guardados para recuperar apagadas). As mensagens ficam: uma apagada recuperada depois avisa que o arquivo não está mais disponível |
 
 ```text
