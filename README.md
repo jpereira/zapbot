@@ -207,7 +207,7 @@ make check        # lint, testes e documentação em modo estrito
 
 O código fica em `src/` (o `app.js` só faz o bootstrap). Veja
 [Desenvolvimento](https://jpereira.github.io/zapbot/desenvolvimento/) para a estrutura, os testes, a
-documentação e o `bump.sh` das releases.
+documentação e o `scripts/bump.sh` das releases.
 
 ---
 
