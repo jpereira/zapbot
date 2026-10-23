@@ -9,7 +9,7 @@ const fs = require('fs-extra');
 
 const { formatarErroComando, getCommandSyntax } = require('./base');
 const { concluirAviso } = require('../cliente');
-const { BIN_FFMPEG, BIN_FFPROBE, BIN_YT, GET_MAX_CONCURRENT, TMP_DIR } = require('../constantes');
+const { BIN_FFMPEG, BIN_FFPROBE, BIN_YT, CACHE_DIR, GET_MAX_CONCURRENT, TMP_DIR } = require('../constantes');
 const { printDebug, printError, printInfo } = require('../log');
 const { STICKER_ANIMADO_MAX_BYTES, TENTATIVAS_STICKER, argsDoFfmpeg, enquadrarSticker, thumbnailDoLink } = require('../midia');
 const { getSetting, isDebugMode, stickerMeta } = require('../settings');
@@ -107,6 +107,13 @@ function resolverTempos(opts, duracao) {
     return { ...opts, opt };
 }
 
+const ARQUIVO_COOKIES = path.join(CACHE_DIR, 'cookies.txt');
+
+// cache/cookies.txt (make cookies), se existir: conteúdo que exige login, como o NSFW do X
+function argsDeCookies() {
+    return fs.existsSync(ARQUIVO_COOKIES) ? ['--cookies', ARQUIVO_COOKIES] : [];
+}
+
 const erroDuracao = () => new Error('Não consegui descobrir a duração do vídeo, necessária para o tempo contado do final (-ss -10)');
 
 async function duracaoDoArquivo(arquivo) {
@@ -119,7 +126,7 @@ async function duracaoDoArquivo(arquivo) {
 
 // A duração do link sem baixar nada; null se o site não informa (aí baixa tudo e mede o arquivo)
 async function duracaoDoLink(url) {
-    const duracao = await capturarSaida(BIN_YT, ['--no-playlist', '--print', 'duration', '--', url]).then(Number, () => NaN);
+    const duracao = await capturarSaida(BIN_YT, [...argsDeCookies(), '--no-playlist', '--print', 'duration', '--', url]).then(Number, () => NaN);
     return duracao > 0 ? duracao : null;
 }
 
@@ -401,6 +408,7 @@ async function baixarComYtDlp(url, originalFile, logCmd, trecho = null) {
     // --force-keyframes-at-cuts: sem ele o trecho começa no keyframe anterior, antes do -ss
     const cmdYtArgs = [
         '-f', 'mp4', '--merge-output-format', 'mp4',
+        ...argsDeCookies(),
         '--no-playlist',
         '--max-filesize', `${getSetting('get.maxDownloadMB')}M`,
         ...(trecho ? ['--download-sections', `*${trecho.inicio}-${trecho.fim ?? 'inf'}`, '--force-keyframes-at-cuts'] : []),
