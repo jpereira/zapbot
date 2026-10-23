@@ -216,9 +216,17 @@ async function cleanWatchOld() {
     }
 }
 
+// <sha1>_original.mp4: the /get cached download (setting get.cache.tmp); temporary ones have the uuid
+const DOWNLOAD_IN_CACHE = /^[0-9a-f]{40}_original\./;
+
+/*
+ * Deletes from cache/tmp whatever is past its age: 2 h for temporaries and, for downloads
+ * in cache, get.cache.maxDays days (with the cache off they count as temporaries).
+ */
 async function cleanFilesOld(dir = TMP_DIR, maxAgeHours = 2) {
     const now = Date.now();
     const maxAgeMs = maxAgeHours * 60 * 60 * 1000;
+    const maxCacheMs = getSetting('get.cache.tmp') ? getSetting('get.cache.maxDays') * DAY_MS : maxAgeMs;
 
     try {
         for (const file of await fs.readdir(dir)) {
@@ -228,7 +236,7 @@ async function cleanFilesOld(dir = TMP_DIR, maxAgeHours = 2) {
                 const stat = await fs.stat(fullPath);
                 if (!stat.isFile()) continue;
 
-                if (now - stat.mtimeMs > maxAgeMs) {
+                if (now - stat.mtimeMs > (DOWNLOAD_IN_CACHE.test(file) ? maxCacheMs : maxAgeMs)) {
                     await fs.unlink(fullPath);
                     printInfo(`[cleanup] Deleted: ${fullPath}`);
                 }

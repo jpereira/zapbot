@@ -654,4 +654,30 @@ describe('limpeza periódica', () => {
         assert.deepEqual(fs.readdirSync(TMP_DIR), ['novo.mp4']);
         fs.unlinkSync(freshAlt);
     });
+
+    test('downloads em cache duram get.cache.maxDays dias (2 por padrão); com o cache desligado, 2 h', async () => {
+        const hours = (h) => new Date(Date.now() - h * 60 * 60 * 1000);
+        const fileAlt = (nameAlt, ageHours) => {
+            const pathAlt = path.join(TMP_DIR, nameAlt);
+            fs.writeFileSync(pathAlt, 'x');
+            fs.utimesSync(pathAlt, hours(ageHours), hours(ageHours));
+        };
+        const [a, b, c] = ['a', 'b', 'c'].map(l => `${l.repeat(40)}_original.mp4`);
+
+        fileAlt(a, 47); // within 2 days
+        fileAlt(b, 49); // went over 2 days
+        fileAlt('temporario_original.mp4', 3); // is not from the cache (uuid): 2 h
+        await cleanup.cleanFilesOld();
+        assert.deepEqual(fs.readdirSync(TMP_DIR), [a]);
+
+        await bot.setSetting('get.cache.maxDays', 3);
+        fileAlt(b, 71);
+        fileAlt(c, 73);
+        await cleanup.cleanFilesOld();
+        assert.deepEqual(fs.readdirSync(TMP_DIR).sort(), [a, b]);
+
+        await bot.setSetting('get.cache.tmp', false);
+        await cleanup.cleanFilesOld();
+        assert.deepEqual(fs.readdirSync(TMP_DIR), [], 'desligado, valem como temporários: 2 h');
+    });
 });
