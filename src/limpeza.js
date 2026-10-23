@@ -216,9 +216,17 @@ async function limparWatchAntigo() {
     }
 }
 
+// <sha1>_original.mp4: o download em cache do /get (setting get.cache.tmp); os temporários têm o uuid
+const DOWNLOAD_EM_CACHE = /^[0-9a-f]{40}_original\./;
+
+/*
+ * Apaga de cache/tmp o que passou da idade: 2 h para os temporários e, para os downloads
+ * em cache, get.cache.maxDays dias (com o cache desligado eles valem como temporários).
+ */
 async function limparArquivosAntigos(dir = TMP_DIR, maxAgeHours = 2) {
     const now = Date.now();
     const maxAgeMs = maxAgeHours * 60 * 60 * 1000;
+    const maxCacheMs = getSetting('get.cache.tmp') ? getSetting('get.cache.maxDays') * DAY_MS : maxAgeMs;
 
     try {
         for (const file of await fs.readdir(dir)) {
@@ -228,7 +236,7 @@ async function limparArquivosAntigos(dir = TMP_DIR, maxAgeHours = 2) {
                 const stat = await fs.stat(fullPath);
                 if (!stat.isFile()) continue;
 
-                if (now - stat.mtimeMs > maxAgeMs) {
+                if (now - stat.mtimeMs > (DOWNLOAD_EM_CACHE.test(file) ? maxCacheMs : maxAgeMs)) {
                     await fs.unlink(fullPath);
                     printInfo(`[cleanup] Deleted: ${fullPath}`);
                 }

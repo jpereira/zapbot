@@ -368,6 +368,11 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 0, max: 100,
         desc: 'Proteção contra flood: quantas vezes quem não é admin pode repetir o mesmo comando em flood.intervalCommand segundos; passou, o bot avisa uma vez e ignora a pessoa até o intervalo acabar. 0 desliga.'
     },
+    'get.cache.maxDays': {
+        default: 2,
+        type: 'number', min: 1, max: 365,
+        desc: 'Dias que os downloads em cache (get.cache.tmp) ficam em cache/tmp antes de serem apagados.'
+    },
     'get.cache.tmp': {
         default: true,
         type: 'boolean',
