@@ -23,6 +23,8 @@ endif
 
 COMPOSE_FILE := docker/docker-compose.yml
 NPM ?= npm
+# Cookie file (./scripts/get-cookie.sh) that "make cookies" copies into the container
+FILE ?= cookies.txt
 # Extra node:test flags, for example: TEST_ARGS=--test-name-pattern=mask
 TEST_ARGS ?=
 NPM_TEST = $(NPM) test
@@ -38,12 +40,14 @@ PROD_SERVICE := zapbot
 ifeq ($(DOCK_REMOTE),1)
 DOCKER_CONTEXT := $(REMOTE_CONTEXT)
 SERVICE := $(PROD_SERVICE)
+COOKIES_DEST := /app/cache/cookies.txt
 VOLUMES := zapbot_app_cache zapbot_wwebjs_auth
 RUN_TEST = $(DOCKER) exec -w /app $(SERVICE) env \
     TEST_ARGS="$(TEST_ARGS)" DEBUG_TESTES="$(DEBUG_TESTES)" $(NPM_TEST)
 else ifeq ($(DOCK_REMOTE),0)
 DOCKER_CONTEXT := $(LOCAL_CONTEXT)
 SERVICE := $(DEV_SERVICE)
+COOKIES_DEST := /workspace/cache/cookies.txt
 VOLUMES := zapbot_app_cache_dev zapbot_wwebjs_auth_dev
 RUN_TEST = TEST_ARGS="$(TEST_ARGS)" $(NPM_TEST)
 else
@@ -64,7 +68,7 @@ DOCS_PATH := $(shell sed -nE 's|^site_url: *https?://[^/]+||p' mkdocs.yml)
 
 .DEFAULT_GOAL := help
 
-.PHONY: help all context build up logs ps shell images volume clean recreate destroy prune \
+.PHONY: help all context build up logs ps shell images volume cookies clean recreate destroy prune \
     deps test test.coverage lint check docs docs.deps docs.build
 
 help: ## Shows this help
@@ -79,6 +83,7 @@ help: ## Shows this help
 		"DOCKER_REMOTE_SERVER" "endereço SSH do servidor remoto · atual: $(DOCKER_REMOTE_SERVER)" \
 		"REMOTE_CONTEXT" "nome do contexto Docker remoto · atual: $(REMOTE_CONTEXT)" \
 		"LOCAL_CONTEXT" "nome do contexto Docker local · atual: $(LOCAL_CONTEXT)" \
+		"FILE" "arquivo de cookies do make cookies · atual: $(FILE)" \
 		"OPTS" "flags extras do docker compose build (ex.: OPTS=--no-cache)" \
 		"TEST_ARGS" "flags extras do node:test (ex.: TEST_ARGS=--test-name-pattern=mask)" \
 		"NPM" "comando do npm · atual: $(NPM)" \
@@ -151,6 +156,12 @@ images: context ## Lists the selected target's images
 volume: context ## Creates/inspects the selected environment's volumes
 	$(Q)set -e; for v in $(VOLUMES); do $(DOCKER) volume create $$v >/dev/null; done
 	$(Q)$(DOCKER) volume inspect $(VOLUMES)
+
+cookies: context ## Copies FILE (cookies.txt, from ./scripts/get-cookie.sh) into the container cache; /get starts using it
+	$(Q)test -f "$(FILE)" || { echo "Arquivo não encontrado: $(FILE) (gere com ./scripts/get-cookie.sh x.com twitter.com)"; exit 1; }
+	$(Q)$(DOCKER) cp "$(FILE)" $(SERVICE):$(COOKIES_DEST)
+	$(Q)$(DOCKER) exec $(SERVICE) chmod 600 $(COOKIES_DEST)
+	@echo "🍪 $(FILE) -> $(SERVICE):$(COOKIES_DEST)"
 
 clean: context ## Removes the selected environment's container and image, preserving the volumes
 	-$(Q)$(DOCKER) rm -f $(SERVICE)
