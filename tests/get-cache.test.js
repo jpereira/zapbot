@@ -144,6 +144,28 @@ describe('/get (/download)', () => {
         assert.equal(snippet().secao, '*0-6');
     });
 
+    test('cache/cookies.txt: o yt-dlp recebe --cookies só se o arquivo existe', async () => {
+        const cookies = path.join(CACHE_DIR, 'cookies.txt');
+        fs.rmSync(cookies, { force: true });
+        await bot.executar(`/get ${URL}`);
+        assert.equal(argsDo('yt-dlp').includes('--cookies'), false, 'sem arquivo: sem cookies');
+
+        fs.writeFileSync(cookies, '# Netscape HTTP Cookie File\n');
+        try {
+            processes.chamadas.length = 0;
+            await bot.executar(`/get ${URL}`);
+            const yt = argsDo('yt-dlp');
+            assert.equal(yt[yt.indexOf('--cookies') + 1], cookies);
+
+            // Also in the duration query (negative -ss)
+            processes.chamadas.length = 0;
+            await bot.executar(`/get -ss -10 ${URL}`);
+            assert.ok(processes.chamadas[0].args.includes('--cookies'));
+        } finally {
+            fs.rmSync(cookies, { force: true });
+        }
+    });
+
     test('negativo sem a duração do site: baixa o vídeo inteiro, mede com o ffprobe e o ffmpeg corta', async () => {
         processes.siteSemDuracao = true;
         const r = await bot.executar(`/get -a -ss -10 ${URL}`);

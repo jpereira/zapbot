@@ -9,7 +9,7 @@ const fs = require('fs-extra');
 
 const { formatErrorCommand, getCommandSyntax } = require('./base');
 const { completeNotice } = require('../client');
-const { BIN_FFMPEG, BIN_FFPROBE, BIN_YT, GET_MAX_CONCURRENT, TMP_DIR } = require('../constants');
+const { BIN_FFMPEG, BIN_FFPROBE, BIN_YT, CACHE_DIR, GET_MAX_CONCURRENT, TMP_DIR } = require('../constants');
 const { printDebug, printError, printInfo } = require('../log');
 const { STICKER_ANIMATED_MAX_BYTES, ATTEMPTS_STICKER, argsDoFfmpeg, fitSticker, thumbnailDoLink } = require('../media');
 const { getSetting, isDebugMode, stickerMeta } = require('../settings');
@@ -107,6 +107,13 @@ function resolverTimes(opts, duration) {
     return { ...opts, opt };
 }
 
+const FILE_COOKIES = path.join(CACHE_DIR, 'cookies.txt');
+
+// cache/cookies.txt (make cookies), if it exists: content that requires login, like X's NSFW
+function argsDeCookies() {
+    return fs.existsSync(FILE_COOKIES) ? ['--cookies', FILE_COOKIES] : [];
+}
+
 const errorDuration = () => new Error('Não consegui descobrir a duração do vídeo, necessária para o tempo contado do final (-ss -10)');
 
 async function fileDuration(fileAlt) {
@@ -119,7 +126,7 @@ async function fileDuration(fileAlt) {
 
 // The link duration without downloading anything; null if the site does not report it (then it downloads everything and measures the file)
 async function linkDuration(url) {
-    const duration = await captureOutput(BIN_YT, ['--no-playlist', '--print', 'duration', '--', url]).then(Number, () => NaN);
+    const duration = await captureOutput(BIN_YT, [...argsDeCookies(), '--no-playlist', '--print', 'duration', '--', url]).then(Number, () => NaN);
     return duration > 0 ? duration : null;
 }
 
@@ -401,6 +408,7 @@ async function downloadWithYtDlp(url, originalFile, logCmd, snippet = null) {
     // --force-keyframes-at-cuts: without it the snippet starts at the previous keyframe, before the -ss
     const cmdYtArgs = [
         '-f', 'mp4', '--merge-output-format', 'mp4',
+        ...argsDeCookies(),
         '--no-playlist',
         '--max-filesize', `${getSetting('get.maxDownloadMB')}M`,
         ...(snippet ? ['--download-sections', `*${snippet.inicio}-${snippet.fim ?? 'inf'}`, '--force-keyframes-at-cuts'] : []),
