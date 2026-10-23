@@ -48,6 +48,9 @@ describe('URLs (anti-SSRF do /get)', () => {
 });
 
 describe('/get (/download)', () => {
+    // The downloads cache (get.cache.tmp) has its tests, further below
+    beforeEach(() => bot.setSetting('get.cache.tmp', false));
+
     test('vídeo: baixa com yt-dlp, converte com ffmpeg e manda como documento', async () => {
         const r = await bot.executar(`/get ${URL}`, { de: OTHERAlt.jid });
         assert.ok(r[1].content instanceof MessageMedia);
@@ -322,6 +325,8 @@ describe('/get (/download)', () => {
 });
 
 describe('/get respondendo uma mídia do WhatsApp', () => {
+    beforeEach(() => bot.setSetting('get.cache.tmp', false));
+
     const video = { mimetype: 'video/mp4', data: Buffer.from('mp4').toString('base64'), filename: 'v.mp4' };
     const photo = { mimetype: 'image/jpeg', data: Buffer.from('jpg').toString('base64') };
     const audio = { mimetype: 'audio/ogg; codecs=opus', data: Buffer.from('ogg').toString('base64') };
@@ -419,6 +424,79 @@ describe('/get respondendo uma mídia do WhatsApp', () => {
         const quoted = bot.createMessage({ de: OTHERAlt.jid, extras: { hasMedia: true, async downloadMedia() { throw new Error('sumiu'); } } });
         assert.deepEqual(await bot.replyAlt('/get -st', { citada: quoted, erroEsperado: true }),
             ['❌ Não consegui baixar a mídia respondida: ela pode não estar mais disponível no WhatsApp.']);
+    });
+});
+
+describe('cache dos downloads (get.cache.tmp)', () => {
+    const savedAlt = () => filesTemporary().filter(f => f.endsWith('_original.mp4'));
+
+    test('ligado (padrão): o mesmo link não baixa de novo e o original fica em cache/tmp', async () => {
+        const r = await bot.executar(`/get ${URL}`);
+        assert.equal(r[0].texto, '✅ Mídia baixada com sucesso!');
+        assert.deepEqual(binaries(), ['yt-dlp', 'ffmpeg']);
+        assert.match(savedAlt()[0] ?? '', /^[0-9a-f]{40}_original\.mp4$/);
+        assert.equal(filesTemporary().length, 1, 'só o original: a saída e o log são apagados');
+
+        processes.chamadas.length = 0;
+        const monday = await bot.executar(`/get -a ${URL}`);
+        assert.equal(monday[0].texto, '✅ Mídia baixada com sucesso!');
+        assert.deepEqual(binaries(), ['ffmpeg'], 'sem yt-dlp: veio do cache');
+        assert.equal(savedAlt().length, 1);
+        assert.equal(monday[1].options.sendMediaAsDocument, true);
+    });
+
+    test('o /sticker usa o mesmo cache do /get; outro link baixa', async () => {
+        await bot.executar(`/get ${URL}`);
+        processes.chamadas.length = 0;
+        await bot.executar(`/sticker ${URL}`);
+        assert.deepEqual(binaries(), ['ffmpeg']);
+
+        processes.chamadas.length = 0;
+        await bot.executar(`/get ${URL}?outro`);
+        assert.deepEqual(binaries(), ['yt-dlp', 'ffmpeg']);
+        assert.equal(savedAlt().length, 2);
+    });
+
+    test('o trecho é parte da chave; o vídeo inteiro em cache serve a qualquer trecho', async () => {
+        await bot.executar(`/get -ss 10 -es 25 ${URL}`);
+        assert.equal(savedAlt().length, 1);
+
+        processes.chamadas.length = 0;
+        await bot.executar(`/get -ss 10 -es 25 ${URL}`);
+        assert.deepEqual(binaries(), ['ffmpeg'], 'o mesmo trecho vem do cache');
+        const ff = argsDo('ffmpeg');
+        assert.equal(ff.includes('-ss'), false, 'o trecho já começa no 0');
+        assert.equal(ff[ff.indexOf('-t') + 1], '15');
+
+        processes.chamadas.length = 0;
+        await bot.executar(`/get -ss 30 -es 40 ${URL}`);
+        assert.deepEqual(binaries(), ['yt-dlp', 'ffmpeg'], 'outro trecho baixa');
+        assert.equal(savedAlt().length, 2);
+
+        // The whole downloaded video serves any snippet (ffmpeg cuts)
+        await bot.executar(`/get ${URL}?inteiro`);
+        processes.chamadas.length = 0;
+        await bot.executar(`/get -ss 5 -es 8 ${URL}?inteiro`);
+        assert.deepEqual(binaries(), ['ffmpeg'], 'sem yt-dlp');
+        const cut = argsDo('ffmpeg');
+        assert.equal(cut[cut.indexOf('-ss') + 1], '5');
+    });
+
+    test('desligado: o original é apagado a cada execução e nada é aproveitado', async () => {
+        await bot.setSetting('get.cache.tmp', false);
+        await bot.executar(`/get ${URL}`);
+        assert.deepEqual(filesTemporary(), []);
+
+        processes.chamadas.length = 0;
+        await bot.executar(`/get ${URL}`);
+        assert.deepEqual(binaries(), ['yt-dlp', 'ffmpeg']);
+        assert.deepEqual(filesTemporary(), []);
+    });
+
+    test('a mídia respondida não vai para o cache', async () => {
+        const video = new MessageMedia('video/mp4', Buffer.from('video').toString('base64'), 'v.mp4');
+        await bot.executar('/get -a', { citada: bot.createMessage({ de: OTHERAlt.jid, midia: video }) });
+        assert.deepEqual(filesTemporary(), []);
     });
 });
 

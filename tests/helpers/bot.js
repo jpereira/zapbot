@@ -5,6 +5,7 @@
  */
 const environment = require('./environment');
 
+const fs = require('fs');
 const path = require('path');
 
 const src = (modulo) => require(path.join(environment.ROOT, 'src', modulo));
@@ -52,6 +53,10 @@ async function restart() {
     await loadSettings();
     await setSetting('bot.users', ['all']);
     await setSetting('flood.maxCommandRepeated', 0);
+
+    // The /get downloads cache does not leak from one test to the next
+    const tmp = src('constants').TMP_DIR;
+    for (const fileAlt of fs.existsSync(tmp) ? fs.readdirSync(tmp) : []) fs.rmSync(path.join(tmp, fileAlt), { recursive: true, force: true });
 
     client.enviadas.length = 0;
     client.recusarEdicao = false;
