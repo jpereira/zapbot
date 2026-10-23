@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 #
-# bump.sh - Fecha a versão atual (release) e abre a próxima, numa execução só
+# scripts/bump.sh - Fecha a versão atual (release) e abre a próxima, numa execução só
 #
 #   ... commits da 2.2.0 ── Release 2.2.0 (tag v2.2.0) ── Bump para 2.2.1 ── ...
 #
 # A versão atual é a do package.json (ex.: 2.2.0, em desenvolvimento desde o
-# último bump). O ./bump.sh faz, em ordem:
+# último bump). O ./scripts/bump.sh faz, em ordem:
 #
 #   1. Release 2.2.0 (pula se a tag v2.2.0 já existe)
 #      - A versão estável do README e do docs/ (o vX.Y.Z logo depois de uma
@@ -18,7 +18,7 @@
 #      - Commit "Release 2.2.0" com a tag anotada v2.2.0 nele (sem nada a
 #        trocar, a tag vai no commit atual).
 #   2. Bump para 2.2.1 (ou 2.3.0 com --minor, 3.0.0 com --major, ou a versão
-#      informada, ex.: ./bump.sh 3.1.0)
+#      informada, ex.: ./scripts/bump.sh 3.1.0)
 #      - package.json/package-lock.json na versão nova.
 #      - Os exemplos voltam a ser da versão em desenvolvimento, já com o rótulo:
 #        "2.2.0 (git+abc1234/v2.2.0)" vira "2.2.1 (devel) (git+abc1234/HEAD)", e
@@ -32,7 +32,7 @@
 # dependência). As linhas que citam o próprio bump.sh ficam como estão, e as que
 # explicam o formato usam X.Y.Z, que ninguém troca.
 #
-# Uso: ./bump.sh [-n|--dry-run] [--minor|--major|X.Y.Z]
+# Uso: ./scripts/bump.sh [-n|--dry-run] [--minor|--major|X.Y.Z]
 #   -n, --dry-run   só mostra o que seria alterado (não altera nada)
 #   --minor         abre X.(Y+1).0 depois da release
 #   --major         abre (X+1).0.0 depois da release
@@ -44,7 +44,7 @@
 
 set -euo pipefail
 
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."
 
 uso() {
     echo "Uso: $0 [-n|--dry-run] [--minor|--major|X.Y.Z]" >&2
