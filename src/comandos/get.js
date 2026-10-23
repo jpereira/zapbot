@@ -230,6 +230,26 @@ async function enviarSemConverter(msg, media, opts) {
     return false;
 }
 
+/*
+ * Cache dos downloads (setting get.cache.tmp): o arquivo original de um link fica em
+ * cache/tmp/<sha1 do link e do trecho>_original.mp4. O trecho (-ss/-es) entra na chave
+ * porque o yt-dlp baixa só ele. Um pedido com trecho também aproveita o vídeo inteiro
+ * já baixado (o ffmpeg corta).
+ */
+function arquivoDoCache(url, trecho) {
+    const chave = `${url}|${trecho ? `${trecho.inicio}-${trecho.fim ?? 'inf'}` : 'inteiro'}`;
+    return path.join(TMP_DIR, `${crypto.createHash('sha1').update(chave).digest('hex')}_original.mp4`);
+}
+
+// O que já está no cache para o link e o trecho pedido: { arquivo, trecho } (trecho null: o vídeo inteiro)
+function procurarNoCache(url, trecho) {
+    for (const candidato of trecho ? [trecho, null] : [null]) {
+        const arquivo = arquivoDoCache(url, candidato);
+        if (fs.existsSync(arquivo)) return { arquivo, trecho: candidato };
+    }
+    return null;
+}
+
 // A extensão da mídia respondida, pelo mimetype (o ffmpeg olha o conteúdo, não o nome)
 const extensaoDe = (media) => String(media.mimetype).split(/[/;]/)[1]?.replace(/[^a-z0-9]/gi, '') || 'bin';
 
@@ -237,6 +257,7 @@ async function converterEEnviar({ msg, opts, senderName, url, media, previa }) {
     // Aleatório: com Date.now() dois /get no mesmo milissegundo usariam os mesmos arquivos
     const id = crypto.randomUUID();
     let originalFile = null;
+    let emCache = false; // o original está no cache dos downloads: não se apaga
     let outputFile = null;
     let logCmdFile = null;
     let logCmd = null;
@@ -280,25 +301,43 @@ async function converterEEnviar({ msg, opts, senderName, url, media, previa }) {
                 if (duracao) opts = optsFfmpeg = resolverTempos(opts, duracao);
             }
             const trecho = trechoDoDownload(opts);
-            // Com corte, tenta baixar só o trecho; se o site não deixar, baixa tudo e o ffmpeg corta
-            if (trecho) {
-                try {
-                    cmdYt = await baixarComYtDlp(url, originalFile, logCmd, trecho);
-                    optsFfmpeg = optsDoTrecho(opts, trecho);
-                } catch (inner) {
-                    printInfo(`> O trecho falhou (${inner.message}): baixando o vídeo inteiro`);
-                    fs.rmSync(originalFile, { force: true });
+            const usarCache = getSetting('get.cache.tmp');
+            const noCache = usarCache ? procurarNoCache(url, trecho) : null;
+
+            if (noCache) {
+                originalFile = noCache.arquivo;
+                emCache = true;
+                if (noCache.trecho) optsFfmpeg = optsDoTrecho(opts, noCache.trecho);
+                printInfo(`> Do cache (get.cache.tmp), sem baixar: ${path.basename(originalFile)}`);
+            } else {
+                // Com corte, tenta baixar só o trecho; se o site não deixar, baixa tudo e o ffmpeg corta
+                if (trecho) {
+                    try {
+                        cmdYt = await baixarComYtDlp(url, originalFile, logCmd, trecho);
+                        optsFfmpeg = optsDoTrecho(opts, trecho);
+                    } catch (inner) {
+                        printInfo(`> O trecho falhou (${inner.message}): baixando o vídeo inteiro`);
+                        fs.rmSync(originalFile, { force: true });
+                    }
+                }
+                if (optsFfmpeg === opts) {
+                    cmdYt = await baixarComYtDlp(url, originalFile, logCmd);
+                }
+
+                // Acima do --max-filesize o yt-dlp aborta sem erro e sem gerar o arquivo
+                if (!fs.existsSync(originalFile)) {
+                    throw erroAoBaixar(`Nada foi baixado (acima de ${getSetting('get.maxDownloadMB')} MB? veja o setting get.maxDownloadMB)`);
+                }
+                printInfo(`> Baixado ${optsFfmpeg === opts ? 'o vídeo inteiro' : 'o trecho'}: ${humanSize(fs.statSync(originalFile).size)}`);
+
+                // Renomeia só no fim: quem pedir o mesmo link no meio do download não pega um arquivo pela metade
+                if (usarCache) {
+                    const guardado = arquivoDoCache(url, optsFfmpeg === opts ? null : trecho);
+                    fs.renameSync(originalFile, guardado);
+                    originalFile = guardado;
+                    emCache = true;
                 }
             }
-            if (optsFfmpeg === opts) {
-                cmdYt = await baixarComYtDlp(url, originalFile, logCmd);
-            }
-
-            // Acima do --max-filesize o yt-dlp aborta sem erro e sem gerar o arquivo
-            if (!fs.existsSync(originalFile)) {
-                throw erroAoBaixar(`Nada foi baixado (acima de ${getSetting('get.maxDownloadMB')} MB? veja o setting get.maxDownloadMB)`);
-            }
-            printInfo(`> Baixado ${optsFfmpeg === opts ? 'o vídeo inteiro' : 'o trecho'}: ${humanSize(fs.statSync(originalFile).size)}`);
 
             // O site não informou a duração: mede o arquivo inteiro que veio
             if (temTempoNegativo(opts)) opts = optsFfmpeg = resolverTempos(opts, await duracaoDoArquivo(originalFile));
@@ -370,7 +409,7 @@ async function converterEEnviar({ msg, opts, senderName, url, media, previa }) {
             try { fs.closeSync(logCmd); } catch { /* já fechado */ }
         }
 
-        for (const tmp of [originalFile, outputFile, logCmdFile]) {
+        for (const tmp of [emCache ? null : originalFile, outputFile, logCmdFile]) {
             if (!tmp) continue;
             try { fs.unlinkSync(tmp); } catch { /* arquivo pode não existir */ }
         }

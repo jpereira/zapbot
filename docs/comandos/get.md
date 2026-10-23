@@ -50,6 +50,19 @@ Na mídia respondida:
 - Áudio: com `-ss` ou `-es`, o trecho sai em `.mp3`; figurinha é recusada.
 - Outros arquivos (PDF, documentos) são recusados.
 
+#### Cache dos downloads
+
+Com o setting `get.cache.tmp` ligado (padrão), o que o yt-dlp baixa fica em `cache/tmp` (no Docker,
+`/app/cache/tmp`) como `<sha1>_original.mp4`, e o mesmo link não é baixado de novo, nem pelo `/get`
+nem pelo `/sticker`. Um `-a` ou um `-st` do mesmo link só roda o ffmpeg.
+
+- A chave é o link mais o trecho: com `-ss` e `-es` o yt-dlp baixa só ele, então outro trecho do
+  mesmo vídeo baixa de novo. O vídeo inteiro em cache serve a qualquer trecho (o ffmpeg corta).
+- Só o original baixado é guardado. O arquivo convertido e o log saem a cada execução, e a mídia
+  respondida no WhatsApp não passa pelo yt-dlp, então não entra no cache.
+- Desligado (`/set get.cache.tmp off`), o original é apagado a cada execução, como antes.
+- O `/cache -all` apaga o cache dos downloads junto com os outros temporários.
+
 #### Conteúdo sensível do X
 
 O X só entrega vídeos marcados como sensíveis (NSFW) para quem está logado, e o yt-dlp sem login
