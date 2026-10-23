@@ -240,7 +240,7 @@ Ao mudar um comando, mude a página dele em `docs/comandos/` e as tabelas Resumo
 
 ## Nova versão
 
-Uma execução do `./bump.sh` **fecha** a versão atual (a do `package.json`) e **abre** a próxima:
+Uma execução do `./scripts/bump.sh` **fecha** a versão atual (a do `package.json`) e **abre** a próxima:
 
 ```text
 ... commits da X.Y.Z ── Release X.Y.Z (tag vX.Y.Z) ── Bump para X.Y.W ── commits da X.Y.W ...
@@ -253,7 +253,7 @@ Uma execução do `./bump.sh` **fecha** a versão atual (a do `package.json`) e 
    `X.Y.Z (devel) (git+<commit>/HEAD)` vira `X.Y.Z (git+<commit>/vX.Y.Z)`. Commit
    `Release X.Y.Z`, com a tag anotada `vX.Y.Z` nele.
 2. **Bump para X.Y.W** (por padrão o patch, X.Y.Z+1; `--minor` abre X.Y+1.0, `--major` abre
-   X+1.0.0, ou a versão informada: `./bump.sh 3.0.0`): o `package.json` e o `package-lock.json`
+   X+1.0.0, ou a versão informada: `./scripts/bump.sh 3.0.0`): o `package.json` e o `package-lock.json`
    passam para a nova, e os exemplos voltam a ser da versão em desenvolvimento, com o rótulo:
    `X.Y.Z (git+…/vX.Y.Z)` vira `X.Y.W (devel) (git+…/HEAD)` e `ZapBot X.Y.Z` vira
    `ZapBot X.Y.W (devel)`. A versão estável continua a release que acabou de sair. Commit
@@ -270,11 +270,11 @@ que o `bump.sh` não troca. No código e nos testes, o mesmo número pode ser ou
 versão de uma dependência: os testes conferem as duas.
 
 ```bash
-./bump.sh -n          # dry-run: mostra o que seria alterado nos dois passos
-./bump.sh             # Release X.Y.Z (com a tag) + Bump para X.Y.Z+1
-./bump.sh --minor     # Release X.Y.Z (com a tag) + Bump para X.Y+1.0
-./bump.sh --major     # Release X.Y.Z (com a tag) + Bump para X+1.0.0
-./bump.sh 3.0.0       # Release X.Y.Z (com a tag) + Bump para 3.0.0
+./scripts/bump.sh -n          # dry-run: mostra o que seria alterado nos dois passos
+./scripts/bump.sh             # Release X.Y.Z (com a tag) + Bump para X.Y.Z+1
+./scripts/bump.sh --minor     # Release X.Y.Z (com a tag) + Bump para X.Y+1.0
+./scripts/bump.sh --major     # Release X.Y.Z (com a tag) + Bump para X+1.0.0
+./scripts/bump.sh 3.0.0       # Release X.Y.Z (com a tag) + Bump para 3.0.0
 git push && git push origin vX.Y.Z   # o push da tag publica o site
 ```
 
