@@ -147,3 +147,8 @@ site/
 .agents/
 .claude/
 skills-lock.json
+
+# Cookies exported by get-cookie.sh (they give access to the account)
+cookies.txt
+x-cookies.txt
+cookies-*.txt
