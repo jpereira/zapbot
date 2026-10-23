@@ -50,6 +50,29 @@ Na mídia respondida:
 - Áudio: com `-ss` ou `-es`, o trecho sai em `.mp3`; figurinha é recusada.
 - Outros arquivos (PDF, documentos) são recusados.
 
+#### Conteúdo sensível do X
+
+O X só entrega vídeos marcados como sensíveis (NSFW) para quem está logado, e o yt-dlp sem login
+falha nesses links. A saída é dar a ele os cookies de uma conta logada (de preferência uma só para
+isso):
+
+```bash
+./scripts/get-cookie.sh x.com twitter.com    # lê os cookies do Chrome e grava ./cookies.txt (chmod 600)
+make DOCK_REMOTE=1 cookies           # copia para o container: /app/cache/cookies.txt
+rm cookies.txt
+```
+
+- O `get-cookie.sh` usa o `yt-dlp --cookies-from-browser` (`-b firefox` troca o navegador; `-o`
+  muda o arquivo de saída) e guarda só os domínios pedidos. Ele avisa se faltar `auth_token`/`ct0`,
+  ou seja, se a conta não estiver logada no navegador.
+- O `make cookies` usa `docker cp` e dá `chmod 600`. O arquivo cai no volume do cache, então
+  sobrevive a `make recreate`; sem `DOCK_REMOTE=1`, vai para o container de dev. `FILE=outro.txt`
+  escolhe outro arquivo.
+- Se `cache/cookies.txt` existe, o bot passa `--cookies` ao yt-dlp em todo download, de qualquer
+  site. Sem o arquivo, baixa sem cookies. Para desligar, apague o arquivo do container.
+- O arquivo dá acesso à conta: não vai para o git (`cookies.txt` está no `.gitignore`) nem pelo
+  WhatsApp. Quando o X deslogar a sessão, o `/get` volta a falhar nesses links: gere e copie de novo.
+
 Limites (o `/get` não é admin: quem estiver no `bot.users` usa; com ele em `true`, qualquer um):
 
 - Download de no máximo 200 MB antes da conversão (setting `get.maxDownloadMB`).
