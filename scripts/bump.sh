@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 #
-# bump.sh - Closes the current version (release) and opens the next, in one run
+# scripts/bump.sh - Closes the current version (release) and opens the next, in one run
 #
 # ... 2.2.0 commits ── Release 2.2.0 (tag v2.2.0) ── Bump to 2.2.1 ── ...
 #
 # The current version is package.json's (e.g.: 2.2.0, in development since the
-# last bump). ./bump.sh does, in order:
+# last bump). ./scripts/bump.sh does, in order:
 #
 # 1. Release 2.2.0 (skipped if the v2.2.0 tag already exists)
 # - The stable version in the README and docs/ (the vX.Y.Z right after a
@@ -18,7 +18,7 @@
 # - Commit "Release 2.2.0" with the annotated tag v2.2.0 on it (with nothing to
 # swap, the tag goes on the current commit).
 # 2. Bump to 2.2.1 (or 2.3.0 with --minor, 3.0.0 with --major, or the version
-#      informada, ex.: ./bump.sh 3.1.0)
+#      informada, ex.: ./scripts/bump.sh 3.1.0)
 # - package.json/package-lock.json at the new version.
 # - The examples go back to being of the in-development version, already with the label:
 #        "2.2.0 (git+abc1234/v2.2.0)" vira "2.2.1 (devel) (git+abc1234/HEAD)", e
@@ -32,7 +32,7 @@
 # dependency). The lines that cite bump.sh itself stay as they are, and those that
 # explain the format use X.Y.Z, which nobody swaps.
 #
-# Uso: ./bump.sh [-n|--dry-run] [--minor|--major|X.Y.Z]
+# Uso: ./scripts/bump.sh [-n|--dry-run] [--minor|--major|X.Y.Z]
 # -n, --dry-run   only shows what would change (changes nothing)
 # --minor         opens X.(Y+1).0 after the release
 # --major         opens (X+1).0.0 after the release
@@ -44,7 +44,7 @@
 
 set -euo pipefail
 
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."
 
 uso() {
     echo "Uso: $0 [-n|--dry-run] [--minor|--major|X.Y.Z]" >&2

@@ -20,7 +20,8 @@ for (const tagExisting of [false, true]) {
             cwd: root, env, encoding: 'utf8', timeout: 15000
         });
         const git = (...args) => run('git', args);
-        fs.copyFileSync(path.join(__dirname, '..', 'bump.sh'), path.join(root, 'bump.sh'));
+        fs.mkdirSync(path.join(root, 'scripts'));
+        fs.copyFileSync(path.join(__dirname, '..', 'scripts', 'bump.sh'), path.join(root, 'scripts', 'bump.sh'));
         fs.mkdirSync(path.join(root, 'docs'));
         fs.writeFileSync(path.join(root, 'package.json'), '{"version":"2.2.0"}\n');
         fs.writeFileSync(path.join(root, 'package-lock.json'),
@@ -43,10 +44,10 @@ for (const tagExisting of [false, true]) {
         git('tag', 'v2.1.0');
         if (tagExisting) git('tag', 'v2.2.0');
         const original = git('rev-parse', 'HEAD').trim();
-        run('bash', ['bump.sh', '--dry-run']);
+        run('bash', ['scripts/bump.sh', '--dry-run']);
         assert.equal(git('rev-parse', 'HEAD').trim(), original);
         assert.equal(git('status', '--porcelain'), '');
-        run('bash', ['bump.sh']);
+        run('bash', ['scripts/bump.sh']);
         const read = nameAlt => fs.readFileSync(path.join(root, nameAlt), 'utf8');
         assert.equal(JSON.parse(read('package.json')).version, '2.2.1');
         assert.equal(JSON.parse(read('package-lock.json')).packages[''].version, '2.2.1');
@@ -55,7 +56,7 @@ for (const tagExisting of [false, true]) {
         assert.ok(read('README.md').includes(node));
         if (tagExisting) {
             assert.equal(git('rev-parse', 'v2.2.0').trim(), original);
-            run('bash', ['bump.sh']);
+            run('bash', ['scripts/bump.sh']);
             const published = git('show', 'v2.2.1:README.md');
             assert.match(published, /hoje a `v2\.2\.1`/);
             assert.match(published, /git checkout v2\.2\.1\n/);
@@ -63,10 +64,10 @@ for (const tagExisting of [false, true]) {
             assert.ok(published.includes(node));
             assert.doesNotMatch(published, /\(devel\)/);
             assert.match(read('README.md'), /ZapBot 2\.2\.2 \(devel\)/);
-            run('bash', ['bump.sh', '--minor']);
+            run('bash', ['scripts/bump.sh', '--minor']);
             assert.equal(JSON.parse(read('package.json')).version, '2.3.0');
             assert.match(git('show', 'v2.2.2:docs/installation.md'), /`v2\.2\.2` \(de \d{2}\/\d{2}\/\d{4}\)/);
-            run('bash', ['bump.sh', '--major']);
+            run('bash', ['scripts/bump.sh', '--major']);
             assert.equal(JSON.parse(read('package.json')).version, '3.0.0');
             assert.match(read('README.md'), /hoje a `v2\.3\.0`/);
         } else {
