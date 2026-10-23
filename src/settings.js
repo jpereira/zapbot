@@ -368,6 +368,11 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 0, max: 100,
         desc: 'Proteção contra flood: quantas vezes quem não é admin pode repetir o mesmo comando em flood.intervalCommand segundos; passou, o bot avisa uma vez e ignora a pessoa até o intervalo acabar. 0 desliga.'
     },
+    'get.cache.tmp': {
+        default: true,
+        type: 'boolean',
+        desc: 'Guarda em cache/tmp o que o yt-dlp baixa no /get e no /sticker (o mesmo link, e o mesmo trecho, não baixa de novo). Desligado, o arquivo baixado é apagado a cada execução.'
+    },
     'get.maxDownloadMB': {
         default: 200,
         type: 'number', min: 10, max: 2000,

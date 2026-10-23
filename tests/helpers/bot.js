@@ -5,6 +5,7 @@
  */
 const ambiente = require('./ambiente');
 
+const fs = require('fs');
 const path = require('path');
 
 const src = (modulo) => require(path.join(ambiente.RAIZ, 'src', modulo));
@@ -52,6 +53,10 @@ async function reiniciar() {
     await carregarSettings();
     await setSetting('bot.users', ['all']);
     await setSetting('flood.maxCommandRepeated', 0);
+
+    // O cache dos downloads do /get não vaza de um teste para o outro
+    const tmp = src('constantes').TMP_DIR;
+    for (const arquivo of fs.existsSync(tmp) ? fs.readdirSync(tmp) : []) fs.rmSync(path.join(tmp, arquivo), { recursive: true, force: true });
 
     client.enviadas.length = 0;
     client.recusarEdicao = false;
