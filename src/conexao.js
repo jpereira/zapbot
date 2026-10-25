@@ -235,6 +235,12 @@ client.on('qr', async (qr) => {
         );
     } catch (err) {
         printError('Erro ao enviar QR por email:', err);
+
+        // Sem o e-mail o QR não chegaria a lugar nenhum: mostra no terminal (padrão on)
+        if (String(process.env.QRCODE_EMAIL_FALLBACK_TERMINAL ?? 'true').trim().toLowerCase() !== 'false') {
+            printInfo(`QR Code received at (${currentdatetimeday}), e-mail falhou, scan it please`);
+            qrcodeTerminal.generate(qr, { small: true });
+        }
     } finally {
         qrEmailSending = false;
     }
