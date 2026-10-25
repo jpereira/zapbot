@@ -92,6 +92,7 @@ require('./src/enquetes');
 
 const { iniciarAgenda } = require('./src/agenda');
 const { iniciarAlertasDePreco } = require('./src/alertasPreco');
+const { iniciarNotas } = require('./src/notas');
 const { iniciarBackup } = require('./src/backup');
 const { iniciarAlertasDefi } = require('./src/defi/alertas');
 const { iniciarHeartbeat } = require('./src/heartbeat');
@@ -104,6 +105,7 @@ iniciarWatchdog();
 iniciarHeartbeat();
 iniciarLimpezaPeriodica();
 iniciarAlertasDePreco();
+iniciarNotas();
 iniciarAlertasDefi();
 iniciarAgenda();
 iniciarBackup();

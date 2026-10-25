@@ -92,6 +92,7 @@ src/
   moedas.js, cotacoes.js, alertasPreco.js   /crypto, /cotacao e alertas de preço
   aliases.js            resolução, listagem e execução (as de texto) dos atalhos persistidos no banco
   agenda.js             /cron (e /lembrete): leitura, lista e envio na hora
+  notas.js              /notes: anotações e o -alerta (aviso numa data/hora, uma vez)
   comandosNoTexto.js    os {/comando} e o \n no texto (o /cron e o /alias): conferidos ao criar e rodados no envio
   midia.js              /get e /sticker: os argumentos do ffmpeg, o recorte da figurinha (sharp) e a prévia do link
   stickerTexto.js       /sticker -txt: os quadros em PNG (sharp) e o WebP animado (ffmpeg)
@@ -195,6 +196,7 @@ devolve `null`, como quando o WhatsApp não deixa editar.
 | `mascara-telefones.test.js` | Ofuscação de telefones no `/show`, `/watch` e `/bot` |
 | `mensagens.test.js` | Gravação de localizações sem interpretar a miniatura como texto ou comando, roteamento, permissões (`onlyAdmin`, o `bot.users` com pessoas, grupos, `true`/`false` e as permissões persistidas, bot desligado, admins extras do `bot.admins`, os atalhos `/bot +o`/`+v`, as listas do `-users`/`-all-users`, os comandos de cada usuário (`+cmd`/`-cmd`), o `-reset` com a confirmação, o `/whois` e a proteção contra flood), o log dos comandos desconhecidos e a contagem do `/stats` (sem os avisos do sistema) |
 | `monitor.test.js` | Cadastro, filtro e remoção com o resolvedor compartilhado, alertas online persistentes, migração do banco, `-rem all`, consultas sequenciais, pausas, histórico por contato, limite de entradas, persistência e listagem em texto ou documento |
+| `notes.test.js` | O `/notes`: `-add`, `-list` e `-rem` (vários IDs, `all`, ID inexistente), o `-alerta` (no `-add` e por ID, quando inválido, `-to`, disparo único e `-alerta -rm`) |
 | `mute.test.js` | `/mute` e `/unmute`: avisos silenciados por pessoa, grupo ou comunidade (só o alvo é o `-a`), a busca do alvo (nomes exatos, contato, grupo, menção e lista para escolher pelo nº) e a resposta a um aviso (de onde ele veio) |
 | `presenca.test.js` | Leitura de presença por LID, assinatura compartilhada, cache e ausência de horários válidos sem fabricar dados |
 | `reacoes.test.js` | Reações removidas ou trocadas: o evento `message_reaction` (e o que não gera aviso), o aviso `show.alert.reaction`, o `/show -r`, o `/mute -r`, o `/bot -status` e a limpeza |
