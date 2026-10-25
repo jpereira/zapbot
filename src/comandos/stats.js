@@ -224,7 +224,7 @@ async function listarChats(msg) {
     await msg.reply(`📊 *Chats com estatísticas* (${chats.length})\n` +
         `_Até ${plural(getSetting('stats.retentionDays'), 'dia', 'dias')} guardados_\n\n` +
         chats.map((c, i) => `${i + 1}. ${descreverChat(c)} — ${fmtNum(c.msgs)} msgs _(última em ${data(c.ultimo)})_`).join('\n') +
-        '\n\n💡 _/stats /nome/ mostra um; /stats -f /nome/ apaga as dele._');
+        '\n\n💡 _/stats /nome/ mostra um_\n💡 _/stats -f /nome/ apaga as dele_');
 }
 
 async function cmdStats({ msg, args, chatId }) {
@@ -301,7 +301,9 @@ async function cmdStats({ msg, args, chatId }) {
         return;
     }
 
-    texto += `\n💡 _/stats -N para outro período (máx. ${maxDias} dias)${r.me ? '' : '; /stats -me para as suas'}; /stats -l para os outros chats._`;
+    texto += `\n💡 _/stats -N para outro período (máx. ${maxDias} dias)_` +
+        (r.me ? '' : '\n💡 _/stats -me para as suas_') +
+        '\n💡 _/stats -l para os outros chats_';
     await msg.reply(texto);
 }
 

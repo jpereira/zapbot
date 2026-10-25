@@ -111,7 +111,7 @@ async function cmdBackup({ msg, opts: optsDoComando, args }) {
             return;
         }
         await msg.reply(`💾 *Backups* (${lista.length})\n\n${lista.map(linhaDoBackup).join('\n')}\n\n` +
-            '💡 _/backup -i <nº> mostra as entradas; /backup -r <nº> restaura._');
+            '💡 _/backup -i <nº> mostra as entradas_\n💡 _/backup -r <nº> restaura_');
         return;
     }
 

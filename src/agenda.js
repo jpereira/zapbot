@@ -310,7 +310,8 @@ async function tratarAgenda({ msg, args, chatId, chatName, isGroup, quotedMsg })
         }
 
         await msg.reply(`📅 *Agenda* (${itens.length})\n\n${itens.map(linhaDaLista).join('\n')}\n\n` +
-            '💡 _📅 mensagem · ⏰ lembrete. -edit <nº> muda, -pause/-resume <nº...> segura e solta, -rm <nº...|all> remove._');
+            '💡 _📅 mensagem · ⏰ lembrete_\n💡 _-edit <nº> muda_\n💡 _-pause/-resume <nº...> segura e solta_\n' +
+            '💡 _-rm <nº...|all> remove_');
         return;
     }
 

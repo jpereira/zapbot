@@ -40,7 +40,8 @@ Até 90 dias guardados
 2. 👥 Trabalho — 456 msgs (última em 01/10)
 3. 👤 Fulano — 78 msgs (última em 28/09)
 
-💡 /stats /nome/ mostra um; /stats -f /nome/ apaga as dele.
+💡 /stats /nome/ mostra um
+💡 /stats -f /nome/ apaga as dele
 ```
 
 ```text
