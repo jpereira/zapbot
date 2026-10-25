@@ -1251,6 +1251,74 @@
             "onlyAdmin": false
         },
         {
+            "cmd": "/notes",
+            "usage": "/notes [-list|-l]  ou  /notes <texto>  ou  /notes -add|-a <texto> [-alerta <quando> [-to <destino>]...]  ou  /notes -rem|-r <id...|all>  ou  /notes -alerta [<id> <quando> [-to <destino>]...]  ou  /notes -alerta -rm <id...|all>",
+            "aliases": [],
+            "help": "Anotações salvas no banco. Sem opção, lista as anotações com o ID; com um texto que não começa com \"-\", anota (o mesmo que -add). O -alerta lembra de uma anotação numa data/hora (uma vez; a anotação continua): no seu privado ou nos destinos do -to. Ex: /notes -a comprar leite, /notes -a ligar pro João -alerta amanhã 9h, /notes -alerta 3 +2h -to /Família/, /notes -r 2",
+            "cmd_opts": [
+                {
+                    "opts": [
+                        "add",
+                        "a"
+                    ],
+                    "values": [
+                        "<texto>"
+                    ],
+                    "desc": "Adiciona uma anotação (o texto vai até o -alerta, se houver). Ex: /notes -a comprar leite",
+                    "cron": false
+                },
+                {
+                    "opts": [
+                        "list",
+                        "l"
+                    ],
+                    "values": [],
+                    "desc": "Lista as anotações, cada uma com o ID."
+                },
+                {
+                    "opts": [
+                        "rem",
+                        "r"
+                    ],
+                    "values": [
+                        "<id...|all>"
+                    ],
+                    "desc": "Remove as anotações com esses IDs (-r 1 2 3 ou -r 1,2,3), ou todas (all). Se algum ID não existe, nenhuma sai.",
+                    "cron": false
+                },
+                {
+                    "opts": [
+                        "alerta"
+                    ],
+                    "values": [
+                        "<quando>"
+                    ],
+                    "desc": "Avisa da anotação numa data/hora. Com -add: /notes -a texto -alerta amanhã 9h. Com ID: /notes -alerta 3 +2h. Sozinho, lista as anotações com alerta; com -rm <id...|all>, tira o alerta. O quando aceita +2h, 30m, 18h, amanhã 9h, sexta 18:30, 25/12 10h.",
+                    "cron": false
+                },
+                {
+                    "opts": [
+                        "rm"
+                    ],
+                    "values": [
+                        "<id...|all>"
+                    ],
+                    "desc": "Junto com -alerta: tira o alerta das anotações com esses IDs (-rm 1 2 3 ou -rm 1,2,3) ou de todas (all), mantendo as anotações. Se algum ID não existe, nenhum é mexido.",
+                    "cron": false
+                },
+                {
+                    "opts": [
+                        "to"
+                    ],
+                    "values": [
+                        "<destino>"
+                    ],
+                    "desc": "Junto com -alerta: avisa num contato, num grupo, num número ou por e-mail em vez do seu privado. Repita para vários: um alerta só, que avisa em todos. Ex: -to /Jorge Pereira/, -to @Fulano, -to /Grupo L200/ -to /Família/, -to +5521999999999, -to email"
+                }
+            ],
+            "onlyAdmin": true
+        },
+        {
             "cmd": "/ping",
             "usage": "/ping",
             "aliases": [],

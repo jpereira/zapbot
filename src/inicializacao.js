@@ -281,6 +281,24 @@ async function inicializarBanco() {
     });
 
     /*
+     * Anotações do /notes. alert_at: quando o -alerta avisa (null = sem alerta; dispara uma vez e zera);
+     * dest_* e recipients: para onde (vazio = o seu privado), como nos alertas de preço.
+     */
+    await dbRun(`
+        CREATE TABLE IF NOT EXISTS notes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            text TEXT NOT NULL,
+            created_at INTEGER NOT NULL,
+            alert_at INTEGER,
+            dest_id TEXT,
+            dest_name TEXT,
+            dest_is_group INTEGER DEFAULT 0,
+            dest_email TEXT,
+            recipients TEXT
+        )
+    `);
+
+    /*
      * Enquetes da sua conta (as do /enquete e as que chegam com os votos) e os
      * votos, um por pessoa: o 'vote_update' traz a escolha atual de quem votou.
      */

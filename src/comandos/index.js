@@ -27,6 +27,7 @@ const { cmdMeme } = require('./meme');
 const { cmdMonitor } = require('./monitor');
 const { cmdMute, cmdUnmute } = require('./mute');
 const { cmdNews } = require('./news');
+const { cmdNote } = require('../notas');
 const { cmdNoffa } = require('./noffa');
 const { cmdPing } = require('./ping');
 const { cmdPixelArt } = require('./pixelart');
@@ -74,6 +75,7 @@ const HANDLERS = {
     '/mute': cmdMute,
     '/news': cmdNews,
     '/noffa': cmdNoffa,
+    '/notes': cmdNote,
     '/ping': cmdPing,
     '/pixelart': cmdPixelArt,
     '/search': cmdSearch,
