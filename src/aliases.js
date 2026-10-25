@@ -78,7 +78,7 @@ function porPrefixo(nome, args) {
  */
 async function executarAliasDeTexto(msg, resolvido, { chatId, chatName, isGroup, quem }) {
     const comandos = comandosNoTexto(resolvido.texto).map(c => c.linha);
-    if (!resolvido.quiet) await msg.reply(`🔗 Alias ${resolvido.alias} -> ${comandos.join(', ')}`);
+    if (!resolvido.quiet) await msg.reply(`🔗 Alias ${resolvido.alias} -> ${comandos.join(', ')}`, undefined, { linkPreview: false });
 
     const { texto, midias } = await montarTexto(resolvido.texto,
         { chat_id: chatId, chat_name: chatName, is_group: isGroup }, { onde: '/alias', quem });
@@ -96,7 +96,7 @@ async function listarAliases(msg, pode = () => true) {
     });
     await msg.reply(aliases.length ? `🔗 *ALIASES* (${aliases.length})\n\n` + aliases.map(a =>
         `${a.name} → ${a.command}${a.description ? `\n📝 ${a.description}` : ''}`
-    ).join('\n\n') : '🔗 Nenhum alias disponível.');
+    ).join('\n\n') : '🔗 Nenhum alias disponível.', undefined, { linkPreview: false });
 }
 
 module.exports = { ehAliasDeTexto, executarAliasDeTexto, listarAliases, resolverAlias };
