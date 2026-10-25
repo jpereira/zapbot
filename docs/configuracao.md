@@ -118,6 +118,7 @@ e consulte as condições de produção do serviço.
 | Variável | Exemplo | Descrição |
 |---|---|---|
 | `QRCODE_EMAIL_ENABLE` | `"true"` / `"false"` | Liga o envio do QR Code por e-mail. Com `false`, ele aparece só no terminal. Os [alertas por e-mail](emails.md#alertas-por-e-mail) não dependem dele. |
+| `QRCODE_EMAIL_FALLBACK_TERMINAL` | `"true"` / `"false"` | Se o envio do QR por e-mail falhar, mostra o QR no terminal. Padrão: `"true"`. |
 | `QRCODE_EMAIL_SMTP_HOST` | `smtp.mail.yahoo.com` | Servidor SMTP. |
 | `QRCODE_EMAIL_SMTP_PORT` | `465` | Porta SMTP. **Use uma porta SSL/TLS implícita (465)**: o bot conecta com `secure: true`, portas STARTTLS como 587 não funcionam. O certificado do servidor é validado: servidores com certificado autoassinado/inválido são recusados, porque um MITM capturaria a senha e o QR Code (que dá acesso à conta). |
 | `QRCODE_EMAIL_SMTP_USER` | `minhaconta@yahoo.com.br` | Usuário de login no SMTP. |
