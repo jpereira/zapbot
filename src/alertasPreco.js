@@ -193,7 +193,8 @@ async function tratarAlertaDePreco(kind, { msg, args, admin }) {
         const linhas = alertas.map((a, i) => `${i + 1}. ${descreverAlerta(kind, a)} _(criado ${formatarData(a.created_at)})_` +
             linhaDaMensagem(a));
         await msg.reply(`🔔 *ALERTAS DE PREÇO* _(${t.cmd})_\n\n${linhas.join('\n')}\n\n` +
-            `💡 _Verificados a cada ${plural(getSetting('alerta.intervalMin'), 'minuto', 'minutos')}. Remova com ${t.cmd} -alerta -rm <nº...|all>._`);
+            `💡 _Verificados a cada ${plural(getSetting('alerta.intervalMin'), 'minuto', 'minutos')}_\n` +
+            `💡 _Remova com ${t.cmd} -alerta -rm <nº...|all>_`);
         return;
     }
 
