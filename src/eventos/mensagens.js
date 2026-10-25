@@ -375,7 +375,7 @@ client.on('message_create', (msg) => comContextoDebug({
 
         if (resolvido.alias) {
             const chamada = [resolvido.destino, args].filter(Boolean).join(' ');
-            if (!resolvido.quiet) await msg.reply(`🔗 Alias ${resolvido.alias} -> ${chamada}`);
+            if (!resolvido.quiet) await msg.reply(`🔗 Alias ${resolvido.alias} -> ${chamada}`, undefined, { linkPreview: false });
         }
 
         // As opções do comando salvo pertencem ao alvo, inclusive -h e -rm.
