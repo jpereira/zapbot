@@ -100,6 +100,7 @@ nav:
       - /mute: commands/mute.md
       - /news: commands/news.md
       - /noffa: commands/noffa.md
+      - /notes: commands/notes.md
       - /ping: commands/ping.md
       - /pixelart: commands/pixelart.md
       - /search: commands/search.md

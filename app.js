@@ -92,6 +92,7 @@ require('./src/polls');
 
 const { startSchedule } = require('./src/schedule');
 const { priceStartAlerts } = require('./src/priceAlerts');
+const { startNotes } = require('./src/notes');
 const { startBackup } = require('./src/backup');
 const { startAlertsDefi } = require('./src/defi/alerts');
 const { startHeartbeat } = require('./src/heartbeat');
@@ -104,6 +105,7 @@ startWatchdog();
 startHeartbeat();
 startCleanupPeriodic();
 priceStartAlerts();
+startNotes();
 startAlertsDefi();
 startSchedule();
 startBackup();

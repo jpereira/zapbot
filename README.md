@@ -164,6 +164,7 @@ de um. Os marcados como **Admin** só respondem à sua conta (e aos admins extra
 | [`/mute`](https://jpereira.github.io/zapbot/commands/mute/) | `/mudo` | ✅ | Silencia os avisos de apagadas, editadas, status e reações (e os do `/watch`) de uma pessoa, um grupo ou uma comunidade; respondendo um aviso, de onde ele veio |
 | [`/news`](https://jpereira.github.io/zapbot/commands/news/) | | | Manchetes de feeds RSS: `-hack`, `-g1`, `-gazeta`, `-brasil` |
 | [`/noffa`](https://jpereira.github.io/zapbot/commands/noffa/) | `/🌈`, `/🏳️‍🌈` | | Enfeita o texto com arco-íris |
+| [`/notes`](https://jpereira.github.io/zapbot/commands/notes/) | | ✅ | Anotações com ID (`-a`, `-l`, `-r`) e `-alerta` que avisa numa data/hora, como nos outros alertas |
 | [`/ping`](https://jpereira.github.io/zapbot/commands/ping/) |  | | Verifica se o bot está vivo |
 | [`/pixelart`](https://jpereira.github.io/zapbot/commands/pixelart/) | `/ansi`, `/px` | | Arte ANSI/ASCII aleatória (16colo.rs) |
 | [`/search`](https://jpereira.github.io/zapbot/commands/search/) | `/buscar` | ✅ | Busca no histórico do WhatsApp Web, não só no cache: neste chat ou, no seu privado, em todos (`-N` para mais); `-mask` ofusca telefones |
