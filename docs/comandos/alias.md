@@ -50,6 +50,16 @@ Argumentos digitados ao executar são acrescentados ao final do comando salvo:
 /dolar -h                    → ajuda do /cotacao
 ```
 
+### Parâmetros `$1`, `$N`
+
+No alias de comando, `$1`, `$2`... pegam os argumentos digitados ao executar, na ordem. Os usados
+saem da lista; os que sobram continuam indo para o fim do comando. Um `$N` sem argumento fica vazio.
+
+```text
+/alias /rec /sticker -ss $1 -es $2
+/rec 10 20 http://minhaurl/foo   → /sticker -ss 10 -es 20 http://minhaurl/foo
+```
+
 As permissões, o controle de repetição e a desativação de comandos são os do comando de destino.
 O `/help alias` lista os atalhos que você pode executar, com a descrição e o comando salvo.
 O `/alias -h` ou `/alias -help` mostra a ajuda de cadastro. O `/alias` sem argumentos ou com

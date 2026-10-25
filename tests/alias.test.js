@@ -48,6 +48,15 @@ test('execução preserva opções, aspas, destinos repetidos e argumentos adici
     assert.equal((await resolverAlias('/lua')).args, comando.slice('/crypto '.length));
 });
 
+test('parâmetros $1, $N: pegam os argumentos digitados e as sobras vão para o fim', async t => {
+    await bot.responder('/alias /rec /sticker -ss $1 -es $2');
+    const executar = t.mock.method(HANDLERS, '/sticker', async ({ msg, args }) => msg.reply(`args: ${args}`));
+    assert.deepEqual(await bot.responder('/rec 10 20 http://minhaurl/foo'),
+        ['🔗 Alias /rec -> /sticker -ss 10 -es 20 http://minhaurl/foo', 'args: -ss 10 -es 20 http://minhaurl/foo']);
+    assert.equal(executar.mock.callCount(), 1);
+    assert.equal((await resolverAlias('/rec 5')).args, '-ss 5 -es', 'sem o $2, fica vazio');
+});
+
 test('opções do alvo são preservadas e aliases fixos são destinos válidos', async () => {
     await bot.responder('/alias ajuda /cotacao -h');
     assert.equal((await aliases())[0].command, '/cotacao -h');
