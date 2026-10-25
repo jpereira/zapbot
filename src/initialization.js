@@ -281,6 +281,24 @@ async function initializeDb() {
     });
 
     /*
+     * /notes notes. alert_at: when the -alerta notifies (null = no alert; fires once and clears);
+     * dest_* and recipients: where to (empty = your private chat), as in the price alerts.
+     */
+    await dbRun(`
+        CREATE TABLE IF NOT EXISTS notes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            text TEXT NOT NULL,
+            created_at INTEGER NOT NULL,
+            alert_at INTEGER,
+            dest_id TEXT,
+            dest_name TEXT,
+            dest_is_group INTEGER DEFAULT 0,
+            dest_email TEXT,
+            recipients TEXT
+        )
+    `);
+
+    /*
      * Your account's polls (those from /enquete and those that arrive with votes) and the
      * votes, one per person: 'vote_update' brings the current choice of whoever voted.
      */
