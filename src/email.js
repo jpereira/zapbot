@@ -24,6 +24,31 @@ const transporter = nodemailer.createTransport({
 });
 
 /*
+ * Falha de login (EAUTH): para de tentar por um tempo. Cada tentativa errada conta para o
+ * "Too many bad auth attempts" do Gmail, então insistir (QR novo, alertas, reconexões)
+ * só prolonga o bloqueio.
+ */
+const EAUTH_PAUSA_MS = 30 * 60 * 1000;
+let eauthAte = 0; // até quando o SMTP fica em pausa
+const sendMailOriginal = transporter.sendMail.bind(transporter);
+
+transporter.sendMail = async (...args) => {
+    if (Date.now() < eauthAte) {
+        const minutos = Math.ceil((eauthAte - Date.now()) / 60000);
+        const err = new Error(`SMTP em pausa por falha de autenticação anterior (mais ${minutos} min)`);
+        err.code = 'EAUTH_PAUSA';
+        throw err;
+    }
+
+    try {
+        return await sendMailOriginal(...args);
+    } catch (err) {
+        if (err.code === 'EAUTH') eauthAte = Date.now() + EAUTH_PAUSA_MS;
+        throw err;
+    }
+};
+
+/*
  * Alertas por e-mail (setting 'email.alerts', padrão on)
  * Crash, desconexão, reconexão, falha de autenticação, sessão perdida,
  * encerramento... vão por e-mail pelo mesmo SMTP do QR Code (QRCODE_EMAIL_SMTP_*),
