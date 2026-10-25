@@ -193,7 +193,8 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
         const linesAlt = alerts.map((a, i) => `${i + 1}. ${describeAlert(kind, a)} _(criado ${formatData(a.created_at)})_` +
             messageLine(a));
         await msg.reply(`🔔 *ALERTAS DE PREÇO* _(${t.cmd})_\n\n${linesAlt.join('\n')}\n\n` +
-            `💡 _Verificados a cada ${plural(getSetting('alerta.intervalMin'), 'minuto', 'minutos')}. Remova com ${t.cmd} -alerta -rm <nº...|all>._`);
+            `💡 _Verificados a cada ${plural(getSetting('alerta.intervalMin'), 'minuto', 'minutos')}_\n` +
+            `💡 _Remova com ${t.cmd} -alerta -rm <nº...|all>_`);
         return;
     }
 

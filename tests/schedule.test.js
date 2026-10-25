@@ -176,7 +176,7 @@ describe('/lembrete', () => {
         await bot.replyAlt('/lembrete -pv +1h primeiro');
 
         const [list] = await bot.replyAlt('/lembrete');
-        assert.match(list, /^📅 \*Agenda\* \(2\)\n\n1\. ⏰ \*[^*]+\* — primeiro\n   → seu privado\n2\. ⏰ \*[^*]+\* — segundo\n   → 👥 Família\n\n💡 _📅 mensagem · ⏰ lembrete\. -edit <nº> muda, -pause\/-resume <nº\.\.\.> segura e solta, -rm <nº\.\.\.\|all> remove\._$/);
+        assert.match(list, /^📅 \*Agenda\* \(2\)\n\n1\. ⏰ \*[^*]+\* — primeiro\n   → seu privado\n2\. ⏰ \*[^*]+\* — segundo\n   → 👥 Família\n\n💡 _📅 mensagem · ⏰ lembrete_\n💡 _-edit <nº> muda_\n💡 _-pause\/-resume <nº\.\.\.> segura e solta_\n💡 _-rm <nº\.\.\.\|all> remove_$/);
         assert.equal((await bot.replyAlt('/lembrete -l'))[0], list);
 
         assert.match((await bot.replyAlt('/lembrete -rm 1'))[0], /🗑️ Removido: \*[^*]+\* — primeiro/);
