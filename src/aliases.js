@@ -18,6 +18,20 @@ const comandosDoAlias = (salvo) => (ehAliasDeTexto(salvo)
     ? comandosNoTexto(salvo).map(c => c.linha)
     : [salvo]).map(linha => linha.split(/\s+/, 1)[0].toLowerCase());
 
+/*
+ * Parâmetros do alias de comando: $1, $2... pegam os argumentos digitados, na ordem.
+ * Os usados saem da lista e os que sobram vão para o fim; um $N sem argumento fica vazio.
+ */
+function aplicarParametros(salvo, args) {
+    const digitados = args.split(/\s+/).filter(Boolean);
+    const usados = new Set();
+    const comando = salvo.replace(/\$([1-9]\d*)/g, (_, n) => {
+        usados.add(Number(n) - 1);
+        return digitados[n - 1] ?? '';
+    }).trim();
+    return { comando, sobras: digitados.filter((_, i) => !usados.has(i)).join(' ') };
+}
+
 async function resolverAlias(texto) {
     const [nome] = texto.trim().split(/\s+/);
     const args = texto.trim().slice(nome.length).trim();
@@ -40,10 +54,11 @@ async function resolverAlias(texto) {
         };
     }
 
-    const [destino] = alias.command.split(/\s+/);
+    const { comando, sobras } = aplicarParametros(alias.command, args);
+    const [destino] = comando.split(/\s+/);
     const alvo = findCommand(destino);
     if (!alvo) return null;
-    const argsFinais = [alias.command.slice(destino.length).trim(), args].filter(Boolean).join(' ');
+    const argsFinais = [comando.slice(destino.length).trim(), sobras].filter(Boolean).join(' ');
     return { command: comAlvos(alvo, argsFinais), alias: nome, destino, args: argsFinais, quiet: Boolean(alias.quiet) };
 }
 
