@@ -375,7 +375,7 @@ client.on('message_create', (msg) => withContextDebug({
 
         if (resolved.alias) {
             const call = [resolved.destino, args].filter(Boolean).join(' ');
-            if (!resolved.quiet) await msg.reply(`🔗 Alias ${resolved.alias} -> ${call}`);
+            if (!resolved.quiet) await msg.reply(`🔗 Alias ${resolved.alias} -> ${call}`, undefined, { linkPreview: false });
         }
 
         // The saved command's options belong to the target, including -h and -rm.

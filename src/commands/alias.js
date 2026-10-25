@@ -71,7 +71,7 @@ async function cmdAlias({ msg, args }) {
         ON CONFLICT(name) DO UPDATE SET description = excluded.description,
         command = excluded.command, quiet = excluded.quiet`, [nameAlt, description, commandAlt, quiet ? 1 : 0]);
     const detail = (description ? `\n📝 ${description}` : '') + (quiet ? '\n🔇 quiet' : '');
-    await msg.reply(`🔗 Alias salvo: ${nameAlt} → ${commandAlt}${detail}`);
+    await msg.reply(`🔗 Alias salvo: ${nameAlt} → ${commandAlt}${detail}`, undefined, { linkPreview: false });
 }
 
 module.exports = { cmdAlias };

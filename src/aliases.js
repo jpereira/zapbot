@@ -78,7 +78,7 @@ function byPrefix(nameAlt, args) {
  */
 async function textRunAlias(msg, resolved, { chatId, chatName, isGroup, quem: who }) {
     const commands = commandsInText(resolved.texto).map(c => c.linha);
-    if (!resolved.quiet) await msg.reply(`🔗 Alias ${resolved.alias} -> ${commands.join(', ')}`);
+    if (!resolved.quiet) await msg.reply(`🔗 Alias ${resolved.alias} -> ${commands.join(', ')}`, undefined, { linkPreview: false });
 
     const { texto: textAlt, midias: mediaAltAlt } = await assembleText(resolved.texto,
         { chat_id: chatId, chat_name: chatName, is_group: isGroup }, { onde: '/alias', quem: who });
@@ -96,7 +96,7 @@ async function listAliases(msg, can = () => true) {
     });
     await msg.reply(aliases.length ? `🔗 *ALIASES* (${aliases.length})\n\n` + aliases.map(a =>
         `${a.name} → ${a.command}${a.description ? `\n📝 ${a.description}` : ''}`
-    ).join('\n\n') : '🔗 Nenhum alias disponível.');
+    ).join('\n\n') : '🔗 Nenhum alias disponível.', undefined, { linkPreview: false });
 }
 
 module.exports = { textIsAlias, textRunAlias, listAliases, resolverAlias };
