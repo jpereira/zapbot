@@ -129,10 +129,11 @@ e consulte as condições de produção do serviço.
 
 ### Por que configurar o e-mail com cuidado
 
-Quando `QRCODE_EMAIL_ENABLE="true"`, **o e-mail é o único lugar onde o QR aparece**: ele não é
-desenhado no terminal. Se host, porta, usuário ou senha estiverem errados, o envio falha (o erro
-aparece nos logs como `Erro ao enviar QR por email`) e o bot fica esperando um pareamento que você
-nunca vai conseguir fazer.
+Quando `QRCODE_EMAIL_ENABLE="true"`, **o e-mail é o lugar onde o QR aparece**: ele não é desenhado
+no terminal, a não ser que o envio falhe. Se host, porta, usuário ou senha estiverem errados, o
+envio falha (o erro aparece nos logs como `Erro ao enviar QR por email`) e, com
+`QRCODE_EMAIL_FALLBACK_TERMINAL="true"` (o padrão), o QR sai nos logs para você parear do mesmo
+jeito. Com `"false"`, o bot fica esperando um pareamento que você nunca vai conseguir fazer.
 
 Antes de habilitar:
 

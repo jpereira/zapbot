@@ -1,8 +1,9 @@
 # `/bot` · admin
 
 Liga e desliga o bot, diz quem pode usá-lo e mostra o status dele (o relatório das últimas 24 h, os
-usuários e o envio diário) e as versões do que ele usa
-([Informações do sistema](#informações-do-sistema)). Tudo sobrevive a reinícios:
+usuários e o envio diário), as versões do que ele usa
+([Informações do sistema](#informações-do-sistema)) e um teste geral com ✅/❌
+([Teste do bot](#teste-do-bot)). Tudo sobrevive a reinícios:
 
 - **Ligado/desligado** (padrão ligado): desligado, o bot ignora **todos** os comandos, inclusive os
   seus, exceto o próprio `/bot`. Os admins e os usuários continuam nas listas.

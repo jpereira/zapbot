@@ -2,11 +2,13 @@
 
 O bot usa o mesmo SMTP (`QRCODE_EMAIL_SMTP_*`) para:
 
-- QR Code, quando `QRCODE_EMAIL_ENABLE="true"`;
+- QR Code, quando `QRCODE_EMAIL_ENABLE="true"` (se o envio falhar, o QR aparece no terminal;
+  veja `QRCODE_EMAIL_FALLBACK_TERMINAL`);
 - [alertas operacionais](#alertas-por-e-mail), como crash, queda e reconexão;
 - backups enviados com [`/backup -s -to`](comandos/backup.md#enviar-o-arquivo) ou pelo destino
   configurado em `backup.to` no backup diário;
-- alertas de preço do `/cotacao` e `/crypto`, e de posições e taxas do `/defi`;
+- alertas de preço do `/cotacao` e `/crypto`, de posições e taxas do `/defi` e das anotações do
+  [`/notes -alerta`](comandos/notes.md#alertas);
 - ocorrências do `/watch` e relatórios do `/bot -status` com destino de e-mail.
 
 O destino `email` usa `QRCODE_EMAIL_SMTP_TO`; `-to voce@exemplo.com` escolhe outro endereço.
@@ -70,3 +72,17 @@ Cada e-mail traz o horário, o número mascarado, a versão com o commit que est
 (`X.Y.Z (git+4465374/vX.Y.Z)`, veja o [`/version`](comandos/version.md)), o host, há quanto tempo
 o processo está no ar e o código anti-phishing. O mesmo evento não se repete antes de 5 minutos
 (exceto crash e encerramento), para não lotar a caixa num loop de reconexão.
+
+## Pausa depois de falha de login
+
+Se o provedor recusar o login (`EAUTH`, por exemplo o Gmail com
+`535 5.7.0 Too many bad auth attempts`), o bot para de usar o SMTP por **30 minutos**:
+qualquer envio nesse período falha na hora, com `SMTP em pausa por falha de autenticação anterior`, sem abrir
+conexão. Cada tentativa errada conta para o bloqueio do provedor, e insistir (um QR novo, um alerta,
+uma reconexão) só o prolonga. Passado o tempo, o bot tenta de novo; se a senha ainda estiver
+errada, a pausa recomeça.
+
+Para sair disso: confira a senha de app em `QRCODE_EMAIL_SMTP_PASS`, espere o bloqueio passar e
+rode o [`/bot -test`](comandos/bot.md#teste-do-bot), que só faz o login (sem enviar nada) e também
+respeita a pausa. Enquanto isso, o QR continua saindo nos logs, se o
+`QRCODE_EMAIL_FALLBACK_TERMINAL` estiver ligado.
