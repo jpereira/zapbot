@@ -121,6 +121,7 @@ e consulte as condições de produção do serviço.
 | `QRCODE_EMAIL_FALLBACK_TERMINAL` | `"true"` / `"false"` | Se o envio do QR por e-mail falhar, mostra o QR no terminal. Padrão: `"true"`. |
 | `QRCODE_EMAIL_SMTP_HOST` | `smtp.mail.yahoo.com` | Servidor SMTP. |
 | `QRCODE_EMAIL_SMTP_PORT` | `465` | Porta SMTP. **Use uma porta SSL/TLS implícita (465)**: o bot conecta com `secure: true`, portas STARTTLS como 587 não funcionam. O certificado do servidor é validado: servidores com certificado autoassinado/inválido são recusados, porque um MITM capturaria a senha e o QR Code (que dá acesso à conta). |
+| `QRCODE_EMAIL_IMAP_HOST` | `imap.mail.yahoo.com` | Servidor IMAP (porta 993, SSL). Opcional: sem ele o `/bot -flush-email` fica desativado. Usa o login do SMTP (`_USER` e `_PASS`). Veja [Limpar o e-mail](comandos/bot.md#limpar-o-e-mail). |
 | `QRCODE_EMAIL_SMTP_USER` | `minhaconta@yahoo.com.br` | Usuário de login no SMTP. |
 | `QRCODE_EMAIL_SMTP_PASS` | `abcd efgh ijkl mnop` | Senha do SMTP. Use a credencial SMTP exigida pelo provedor; em contas com senha de app, configure essa senha em vez da senha de login. |
 | `QRCODE_EMAIL_SMTP_FROM` | `ZapBot <minhaconta@yahoo.com.br>` | Remetente. O endereço deve ser o mesmo da conta SMTP, senão o provedor rejeita ou o e-mail cai no spam. |
