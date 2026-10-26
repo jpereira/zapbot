@@ -654,8 +654,8 @@ async function cmdBot({ msg, opts: commandOpts, args, chatId, isGroup }) {
         }
         if (alone === 'info') await msg.reply(await infoText());
         else if (alone === 'test') {
-            await msg.reply('🧪 Testando... (a velocidade da internet leva alguns segundos)');
-            await msg.reply(await testText());
+            const notice = await msg.reply('🧪 Testando... (a velocidade da internet leva alguns segundos)');
+            await completeNotice(msg, notice, await testText());
         } else if (alone === 'flush-email') await cleanEmail(msg, { apagar: force });
         else await reset(msg, { chatId, forcar: force });
         return;

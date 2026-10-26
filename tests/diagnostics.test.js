@@ -29,7 +29,9 @@ test('/bot -test: cache, disco, banco, internet e velocidade ✅; SMTP não conf
     const replies = await bot.replyAlt('/bot -test');
     const textAlt = replies.at(-1);
 
-    assert.match(replies[0], /Testando/);
+    // the "Testando..." is edited with the result, without sending another message
+    assert.equal(replies.length, 1);
+    assert.doesNotMatch(textAlt, /Testando/);
     assert.match(textAlt, /^🧪 \*TESTE DO BOT\*/);
     for (const nameAlt of ['Cache', 'Disco', 'Banco SQLite', 'DNS', 'Internet', 'Velocidade']) {
         assert.match(line(textAlt, nameAlt), /^✅/, nameAlt);
@@ -54,9 +56,9 @@ test('/bot -test não combina com as outras opções', async () => {
     assert.match((await bot.replyAlt('/bot -test -on'))[0], /O -test não combina/);
 });
 
-test('/bot -flush-email: sem SMTP configurado avisa; não combina com as outras opções', async () => {
-    delete process.env.QRCODE_EMAIL_SMTP_HOST;
-    assert.match((await bot.replyAlt('/bot -flush-email'))[0], /❌ Não consegui.*QRCODE_EMAIL_SMTP_HOST/);
+test('/bot -flush-email: sem IMAP configurado avisa; não combina com as outras opções', async () => {
+    delete process.env.QRCODE_EMAIL_IMAP_HOST;
+    assert.match((await bot.replyAlt('/bot -flush-email'))[0], /❌ Não consegui.*QRCODE_EMAIL_IMAP_HOST/);
     assert.match((await bot.replyAlt('/bot -flush-email -test'))[0], /não combina/);
     assert.match((await bot.replyAlt('/bot -flush-email talvez'))[0], /O -flush-email não combina/);
 });

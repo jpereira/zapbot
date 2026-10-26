@@ -304,7 +304,7 @@
                     "values": [
                         "[true]"
                     ],
-                    "desc": "Conecta no IMAP do e-mail (o mesmo servidor e login do SMTP) e mostra quantas mensagens há em Sent e Trash. Com true, apaga todas as de Sent e Trash e conclui mostrando quantas foram limpas (⏳ enquanto limpa). Só o dono apaga. Sozinho: as outras opções são recusadas. Ex: /bot -flush-email, /bot -flush-email true",
+                    "desc": "Conecta no IMAP do e-mail (QRCODE_EMAIL_IMAP_HOST, com o login do SMTP) e mostra quantas mensagens há em Sent e Trash. Com true, apaga todas as de Sent e Trash e conclui mostrando quantas foram limpas (⏳ enquanto limpa). Só o dono apaga. Sozinho: as outras opções são recusadas. Ex: /bot -flush-email, /bot -flush-email true",
                     "cron": false
                 },
                 {

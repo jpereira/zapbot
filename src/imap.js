@@ -1,19 +1,15 @@
 /*
  * Email inbox (/bot -flush-email): counts and deletes the Sent and Trash messages.
  * Minimal IMAP client over TLS (POP3 only sees the Inbox, without Sent or Trash).
- * Uses the SMTP configs: the login is the same and the server is the SMTP one swapping smtp for imap
- * (smtp.gmail.com -> imap.gmail.com), on port 993.
+ * Only works with QRCODE_EMAIL_IMAP_HOST (port 993); the login is the same as SMTP's.
  */
 
 const tls = require('tls');
 
 const TIMEOUT_MS = 20 * 1000;
 
-const boxConfigured = () => ['QRCODE_EMAIL_SMTP_HOST', 'QRCODE_EMAIL_SMTP_USER', 'QRCODE_EMAIL_SMTP_PASS']
+const boxConfigured = () => ['QRCODE_EMAIL_IMAP_HOST', 'QRCODE_EMAIL_SMTP_USER', 'QRCODE_EMAIL_SMTP_PASS']
     .every(v => process.env[v]?.trim());
-
-// smtp.mail.yahoo.com -> imap.mail.yahoo.com
-const servidorImap = () => process.env.QRCODE_EMAIL_SMTP_HOST.trim().replace(/^smtp(?=[.-])/i, 'imap');
 
 const quotes = (s) => `"${String(s).replace(/(["\\])/g, '\\$1')}"`;
 
@@ -101,10 +97,10 @@ async function empty(cmd, folder) {
  */
 async function boxes({ apagar: removeAlt = false } = {}) {
     if (!boxConfigured()) {
-        throw new Error('QRCODE_EMAIL_SMTP_HOST, _USER e _PASS não configurados no config/.env');
+        throw new Error('QRCODE_EMAIL_IMAP_HOST, QRCODE_EMAIL_SMTP_USER e _PASS não configurados no config/.env');
     }
 
-    const { cmd, fechar: close } = await open(servidorImap(), 993);
+    const { cmd, fechar: close } = await open(process.env.QRCODE_EMAIL_IMAP_HOST.trim(), 993);
     try {
         await cmd(`LOGIN ${quotes(process.env.QRCODE_EMAIL_SMTP_USER)} ${quotes(process.env.QRCODE_EMAIL_SMTP_PASS)}`);
         const folders = findFolders(await cmd('LIST "" "*"'));
