@@ -16,6 +16,7 @@ const { describeRule, recordRule, regraDe } = require('../permissions');
 const {
     SETTINGS_SCHEMA, userCommand, getSetting, setSetting, validateSetting
 } = require('../settings');
+const { testText } = require('../diagnostics');
 const { infoText } = require('../system');
 const {
     schedulingDaily, scheduleStatusDaily, turnOffStatusDaily, statusDestinations, whereGoes,
@@ -592,7 +593,7 @@ async function reset(msg, { chatId, forcar: force }) {
 
 const USAGE = '❌ Uso: /bot [-on|-off] [-users|-all-users]  ou  ' +
     '/bot +o|-o|+v|-v [+cmd|-cmd <comandos>] [pessoa...] [-all-users]  ou  /bot -reset [force]  ou  ' +
-    '/bot -status [<hora>|off] [-to <destino>]...  ou  /bot -info\n💡 _/bot -h para ajuda_';
+    '/bot -status [<hora>|off] [-to <destino>]...  ou  /bot -info  ou  /bot -test\n💡 _/bot -h para ajuda_';
 
 async function cmdBot({ msg, opts: commandOpts, args, chatId, isGroup }) {
     args = removeOptionMask(args);
@@ -614,20 +615,24 @@ async function cmdBot({ msg, opts: commandOpts, args, chatId, isGroup }) {
         return;
     }
 
-    // -info and -reset: alone (-reset accepts force, which does not ask)
-    for (const alone of ['info', 'reset']) {
+    // -info, -test and -reset: alone (-reset accepts force, which does not ask)
+    const ALONE = ['info', 'test', 'reset'];
+    for (const alone of ALONE) {
         if (!opts.given.has(alone)) continue;
-        const other = alone === 'info' ? 'reset' : 'info';
+        const other = ALONE.filter(o => o !== alone);
         // The value of -reset: nothing or force
         const valueAlt = alone === 'reset' ? opts.opt.reset : null;
         const force = /^force$/i.test(valueAlt ?? '');
-        const combined = on || off || listAlt || opts.given.has('status') || opts.given.has(other);
+        const combined = on || off || listAlt || opts.given.has('status') || other.some(o => opts.given.has(o));
         if (combined || opts.argv.length || (valueAlt && !force)) {
             await msg.reply(`❌ O -${alone} não combina com as outras opções.\n💡 _/bot -${alone}_`);
             return;
         }
         if (alone === 'info') await msg.reply(await infoText());
-        else await reset(msg, { chatId, forcar: force });
+        else if (alone === 'test') {
+            await msg.reply('🧪 Testando... (a velocidade da internet leva alguns segundos)');
+            await msg.reply(await testText());
+        } else await reset(msg, { chatId, forcar: force });
         return;
     }
 

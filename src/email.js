@@ -32,21 +32,42 @@ const EAUTH_PAUSE_MS = 30 * 60 * 1000;
 let eauthUntil = 0; // until when SMTP stays paused
 const sendMailOriginal = transporter.sendMail.bind(transporter);
 
+// Paused by a previous EAUTH? Throws the error without opening an SMTP connection
+function requireSmtpWithoutPause() {
+    if (Date.now() >= eauthUntil) return;
+
+    const minutes = Math.ceil((eauthUntil - Date.now()) / 60000);
+    const err = new Error(`SMTP em pausa por falha de autenticação anterior (mais ${minutes} min)`);
+    err.code = 'EAUTH_PAUSA';
+    throw err;
+}
+
+const pauseSeEauth = (err) => {
+    if (err.code === 'EAUTH') eauthUntil = Date.now() + EAUTH_PAUSE_MS;
+};
+
 transporter.sendMail = async (...args) => {
-    if (Date.now() < eauthUntil) {
-        const minutes = Math.ceil((eauthUntil - Date.now()) / 60000);
-        const err = new Error(`SMTP em pausa por falha de autenticação anterior (mais ${minutes} min)`);
-        err.code = 'EAUTH_PAUSA';
-        throw err;
-    }
+    requireSmtpWithoutPause();
 
     try {
         return await sendMailOriginal(...args);
     } catch (err) {
-        if (err.code === 'EAUTH') eauthUntil = Date.now() + EAUTH_PAUSE_MS;
+        pauseSeEauth(err);
         throw err;
     }
 };
+
+// Connects and authenticates on SMTP without sending anything (/bot -test). Respects the EAUTH pause
+async function checkSmtp() {
+    requireSmtpWithoutPause();
+
+    try {
+        await transporter.verify();
+    } catch (err) {
+        pauseSeEauth(err);
+        throw err;
+    }
+}
 
 /*
  * Email alerts (setting 'email.alerts', default on)
@@ -165,5 +186,6 @@ module.exports = {
     sendEmail,
     cleanAlertsSent,
     smtpForSend,
-    transporter
+    transporter,
+    checkSmtp
 };

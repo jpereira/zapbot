@@ -165,5 +165,7 @@ module.exports = {
     compareVersions,
     cleanNews,
     versionNote,
-    infoText
+    output,
+    infoText,
+    chromiumVersion
 };
