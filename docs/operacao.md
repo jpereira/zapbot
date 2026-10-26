@@ -13,6 +13,7 @@ Execute os comandos Docker na raiz do projeto:
 | Limpar mensagens/mídias | Pelo WhatsApp: `/cache -a` (tudo, inclusive os backups), `/cache -m` (só as mídias) ou `/cache -b` (só os backups). Veja [`/cache`](comandos/cache.md) |
 | Estado do bot (no ar, cache, apagadas...) | Pelo WhatsApp: `/bot -status` (ou `/bot -status 06h` para receber todo dia). Veja [`/bot -status`](comandos/bot.md#status-do-bot) |
 | Versões (Node.js, Chromium, yt-dlp, ffmpeg...) e sistema | Pelo WhatsApp: `/bot -info`. Veja [Informações do sistema](comandos/bot.md#informações-do-sistema) |
+| Testar tudo (cache, disco, banco, WhatsApp, internet, velocidade, SMTP, programas) | Pelo WhatsApp: `/bot -test`, com ✅ ou ❌ em cada item. Veja [Teste do bot](comandos/bot.md#teste-do-bot) |
 | Monitor de contatos | Pelo WhatsApp: `/monitor -l` (lista e histórico), `/set monitor.enabled false` (pausa), `/monitor -rem all` (apaga cadastros e históricos locais). Veja [`/monitor`](comandos/monitor.md) |
 | Backup do banco | Pelo WhatsApp: `/backup -now` (cria), `/backup -s` (envia o arquivo). Veja [`/backup`](comandos/backup.md) |
 | **Forçar novo QR** (apaga a sessão) | `docker compose -f docker/docker-compose.yml down && docker volume rm zapbot_wwebjs_auth && docker compose -f docker/docker-compose.yml up -d zapbot` |
@@ -81,8 +82,9 @@ adicione ao serviço `zapbot` o label `autoheal=true`:
 | Sintoma | Causa provável / solução |
 |---|---|
 | `env file .../config/.env.dev not found` | Crie o arquivo: `touch config/.env.dev`. |
-| QR não aparece nos logs | `QRCODE_EMAIL_ENABLE` está `"true"`. Veja o e-mail ou mude para `"false"`. |
-| `Erro ao enviar QR por email` | Host/porta/usuário/senha SMTP errados. Use porta 465 e senha de app. |
+| QR não aparece nos logs | `QRCODE_EMAIL_ENABLE` está `"true"`: o QR vai por e-mail e só cai nos logs se o envio falhar (`QRCODE_EMAIL_FALLBACK_TERMINAL`, padrão `"true"`). Veja o e-mail ou mude para `"false"`. |
+| `Erro ao enviar QR por email` | Host/porta/usuário/senha SMTP errados. Use porta 465 e senha de app. Com `QRCODE_EMAIL_FALLBACK_TERMINAL="true"` (padrão), o QR sai nos logs do mesmo jeito. |
+| `Too many bad auth attempts` (`535 5.7.0`, `EAUTH`) ou `SMTP em pausa` | O provedor bloqueou o login por tentativas erradas (senha de app errada ou revogada). O bot para de tentar por 30 minutos para não piorar. Confira a senha, espere o bloqueio passar e teste com `/bot -test`. Veja [Pausa depois de falha de login](emails.md#pausa-depois-de-falha-de-login). |
 | `Erro ao enviar QR por email: ... self-signed certificate` / `unable to verify` | O certificado do SMTP não é válido. Use o host oficial do provedor (o nome precisa bater com o certificado). |
 | E-mail do QR chega no spam | `QRCODE_EMAIL_SMTP_FROM` diferente da conta SMTP. |
 | Não chegam os alertas por e-mail | Confira `QRCODE_EMAIL_SMTP_HOST`, `_USER` e `_TO` (sem eles nada é enviado) e o setting `email.alerts` (`/set email.alerts`). Falhas do SMTP aparecem no log como `Alerta por e-mail '...' falhou`. |
