@@ -14,6 +14,7 @@ const { BIN_FFMPEG, BIN_YT, CACHE_DIR } = require('./constants');
 const { dbGet, dbReady } = require('./db');
 const { smtpForSend, checkSmtp } = require('./email');
 const { estado: stateAlt } = require('./state');
+const { boxConfigured, check: checkImap } = require('./imap');
 const { output, chromiumVersion } = require('./system');
 const { humanSize } = require('./util/files');
 
@@ -87,6 +88,14 @@ async function testSmtp() {
     return { ok: true, detalhe: `login ok (${ms(start)})` };
 }
 
+async function testImap() {
+    if (!boxConfigured()) return { ok: null, detalhe: 'não configurado (QRCODE_EMAIL_IMAP_HOST)' };
+
+    const start = performance.now();
+    await checkImap();
+    return { ok: true, detalhe: `login ok (${ms(start)})` };
+}
+
 const testProgram = (nameAlt, bin, args, extract = (l) => l) => async () => {
     const line = await output(bin, args);
     return line ? { ok: true, detalhe: extract(line) } : { ok: false, detalhe: `não rodou (${nameAlt})` };
@@ -125,6 +134,7 @@ const TESTES = [
     ['DNS', testDns],
     ['Internet', testInternet],
     ['E-mail (SMTP)', testSmtp],
+    ['E-mail (IMAP)', testImap],
     ['Chromium', testChromium],
     ['yt-dlp', testProgram('yt-dlp', BIN_YT, ['--version'])],
     ['ffmpeg', testProgram('ffmpeg', BIN_FFMPEG, ['-version'], (l) => l.match(/version\s+(\S+)/)?.[1] ?? l)]

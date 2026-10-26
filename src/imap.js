@@ -91,6 +91,19 @@ async function empty(cmd, folder) {
     await cmd('CLOSE');
 }
 
+/** Only connects and logs in (the IMAP item of /bot -test), touching nothing. */
+async function check() {
+    if (!boxConfigured()) throw new Error('não configurado');
+
+    const { cmd, fechar: close } = await open(process.env.QRCODE_EMAIL_IMAP_HOST.trim(), 993);
+    try {
+        await cmd(`LOGIN ${quotes(process.env.QRCODE_EMAIL_SMTP_USER)} ${quotes(process.env.QRCODE_EMAIL_SMTP_PASS)}`);
+        await cmd('LOGOUT').catch(() => {});
+    } finally {
+        close();
+    }
+}
+
 /**
  * Connects, counts the Sent and Trash messages and, with `apagar`, empties both (Sent first).
  * @returns {Promise<{sent: number, trash: number}>} how many messages there were in each
@@ -124,5 +137,6 @@ async function boxes({ apagar: removeAlt = false } = {}) {
 module.exports = {
     findFolders,
     boxConfigured,
-    boxes
+    boxes,
+    check
 };
