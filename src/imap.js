@@ -91,6 +91,19 @@ async function esvaziar(cmd, pasta) {
     await cmd('CLOSE');
 }
 
+/** Só conecta e faz o login (o item IMAP do /bot -test), sem mexer em nada. */
+async function verificar() {
+    if (!caixaConfigurada()) throw new Error('não configurado');
+
+    const { cmd, fechar } = await abrir(process.env.QRCODE_EMAIL_IMAP_HOST.trim(), 993);
+    try {
+        await cmd(`LOGIN ${aspas(process.env.QRCODE_EMAIL_SMTP_USER)} ${aspas(process.env.QRCODE_EMAIL_SMTP_PASS)}`);
+        await cmd('LOGOUT').catch(() => {});
+    } finally {
+        fechar();
+    }
+}
+
 /**
  * Conecta, conta as mensagens de Sent e Trash e, com `apagar`, esvazia as duas (Sent primeiro).
  * @returns {Promise<{sent: number, trash: number}>} quantas mensagens havia em cada uma
@@ -124,5 +137,6 @@ async function caixas({ apagar = false } = {}) {
 module.exports = {
     acharPastas,
     caixaConfigurada,
-    caixas
+    caixas,
+    verificar
 };

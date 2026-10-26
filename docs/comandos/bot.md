@@ -30,7 +30,7 @@ usuários e o envio diário), as versões do que ele usa
 | `-status`, `-s` | O status agora e o envio diário dele (`[<hora>\|off]`). Aceita `-to` e `-mask`; as outras opções são recusadas. Veja [Status do bot](#status-do-bot) |
 | `-to` | `<destino>`: junto com `-status`, para onde vai o relatório (pessoa, grupo ou e-mail; repita para vários). Veja [Status do bot](#status-do-bot) |
 | `-info`, `-i` | Versões do bot e do que ele usa, e o sistema. Aceita `-mask`; as outras opções são recusadas. Veja [Informações do sistema](#informações-do-sistema) |
-| `-test`, `-t` | Testa tudo (cache, disco, banco, WhatsApp, internet, velocidade, SMTP e programas), com ✅ ou ❌ em cada item. As outras opções são recusadas. Veja [Teste do bot](#teste-do-bot) |
+| `-test`, `-t` | Testa tudo (cache, disco, banco, WhatsApp, internet, velocidade, SMTP, IMAP e programas), com ✅ ou ❌ em cada item. As outras opções são recusadas. Veja [Teste do bot](#teste-do-bot) |
 | `-flush-email` | `[true]`: conecta no IMAP do e-mail (precisa de `QRCODE_EMAIL_IMAP_HOST`) e mostra quantas mensagens há em Sent e Trash; com `true`, apaga todas. Só o dono apaga. As outras opções são recusadas. Veja [Limpar o e-mail](#limpar-o-e-mail) |
 | `-mask`, `-m` | Ofusca telefones na saída desta execução. Ex.: `+55219****44` |
 
@@ -414,6 +414,7 @@ hora, o que está ruim: disco cheio, internet lenta, senha do SMTP errada, Whats
 ✅ DNS — web.whatsapp.com → 157.240.0.60 (14 ms)
 ✅ Internet — HTTP 200 (96 ms)
 ❌ E-mail (SMTP) — Invalid login: 535 5.7.0 (#AUTH005) Too many bad auth attempts.
+➖ E-mail (IMAP) — não configurado (QRCODE_EMAIL_IMAP_HOST)
 ✅ Chromium — Chromium 131.0.6778.204
 ✅ yt-dlp — 2026.10.01
 ✅ ffmpeg — 7.1.1
@@ -431,6 +432,7 @@ hora, o que está ruim: disco cheio, internet lenta, senha do SMTP errada, Whats
 - **E-mail (SMTP)**: só faz o login, sem enviar nada; ➖ se o SMTP não está configurado. Se o login
   falhou há pouco (`EAUTH`), o teste não tenta de novo durante a pausa de 30 minutos, para não
   prolongar o bloqueio do provedor.
+- **E-mail (IMAP)**: conecta e faz o login, sem mexer em nada; ➖ se não há `QRCODE_EMAIL_IMAP_HOST`.
 - **Chromium**, **yt-dlp** e **ffmpeg**: rodam o `--version`; ❌ se o programa não responde.
 - Um teste que trava (20 s) ou lança erro vira ❌ com o motivo, sem derrubar os outros.
 
