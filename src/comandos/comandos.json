@@ -177,7 +177,7 @@
         },
         {
             "cmd": "/bot",
-            "usage": "/bot [-on|-off] [-users|-all-users]  ou  /bot +o|-o|+v|-v [+cmd|-cmd <comandos>] [pessoa...] [-all-users]  ou  /bot -reset [force]  ou  /bot -status [<hora>|off] [-to <destino>]...  ou  /bot -info",
+            "usage": "/bot [-on|-off] [-users|-all-users]  ou  /bot +o|-o|+v|-v [+cmd|-cmd <comandos>] [pessoa...] [-all-users]  ou  /bot -reset [force]  ou  /bot -status [<hora>|off] [-to <destino>]...  ou  /bot -info  ou  /bot -test",
             "aliases": [],
             "help": "Liga/desliga o bot e diz quem usa os comandos: você e os admins usam tudo; os usuários, os comandos comuns. Sem opção, mostra o status (o mesmo do -status). O -info mostra as versões do que ele usa.",
             "espacado": true,
@@ -287,6 +287,15 @@
                     ],
                     "values": [],
                     "desc": "Versões do bot e do que ele usa (Node.js, whatsapp-web.js, WhatsApp Web, SQLite, Chromium, yt-dlp, ffmpeg), com aviso de versão nova, e o sistema (host, CPU, memória e há quanto tempo estão no ar). Aceita -mask; as outras opções são recusadas."
+                },
+                {
+                    "opts": [
+                        "test",
+                        "t"
+                    ],
+                    "values": [],
+                    "desc": "Testa tudo: escrita/leitura no cache, espaço em disco, banco SQLite, conexão com o WhatsApp, DNS e internet, velocidade (baixa 8 MB e sobe 1 MB no speed.cloudflare.com), login no SMTP e os programas externos (Chromium, yt-dlp, ffmpeg). Cada item sai com ✅ ou ❌ (➖ = não configurado). Sozinho: as outras opções são recusadas.",
+                    "cron": false
                 },
                 {
                     "opts": [

@@ -29,6 +29,7 @@ usuários e o envio diário) e as versões do que ele usa
 | `-status`, `-s` | O status agora e o envio diário dele (`[<hora>\|off]`). Aceita `-to` e `-mask`; as outras opções são recusadas. Veja [Status do bot](#status-do-bot) |
 | `-to` | `<destino>`: junto com `-status`, para onde vai o relatório (pessoa, grupo ou e-mail; repita para vários). Veja [Status do bot](#status-do-bot) |
 | `-info`, `-i` | Versões do bot e do que ele usa, e o sistema. Aceita `-mask`; as outras opções são recusadas. Veja [Informações do sistema](#informações-do-sistema) |
+| `-test`, `-t` | Testa tudo (cache, disco, banco, WhatsApp, internet, velocidade, SMTP e programas), com ✅ ou ❌ em cada item. As outras opções são recusadas. Veja [Teste do bot](#teste-do-bot) |
 | `-mask`, `-m` | Ofusca telefones na saída desta execução. Ex.: `+55219****44` |
 
 Use `/bot -users -mask` para exibir nomes com telefones ofuscados. A máscara mantém os cinco
@@ -394,6 +395,42 @@ O que entra:
 
 O envio diário fica na agenda do bot (tabela `schedules`), mas não aparece no [`/cron`](cron.md) nem
 conta no limite dele. Se o bot estiver fora do ar no horário, o relatório sai quando ele voltar.
+
+## Teste do bot
+
+`/bot -test` (ou `-t`) roda uma bateria de testes e mostra ✅ ou ❌ em cada item. Serve para saber, na
+hora, o que está ruim: disco cheio, internet lenta, senha do SMTP errada, WhatsApp desconectado...
+
+```text
+/bot -test
+🧪 *TESTE DO BOT*
+
+✅ Cache — escrita e leitura de 256 KB (3 ms)
+✅ Disco — 48.2 GB livres (62%)
+✅ Banco SQLite — íntegro (2 ms)
+✅ WhatsApp — CONNECTED (180 ms)
+✅ DNS — web.whatsapp.com → 157.240.0.60 (14 ms)
+✅ Internet — HTTP 200 (96 ms)
+❌ E-mail (SMTP) — Invalid login: 535 5.7.0 (#AUTH005) Too many bad auth attempts.
+✅ Chromium — Chromium 131.0.6778.204
+✅ yt-dlp — 2026.10.01
+✅ ffmpeg — 7.1.1
+✅ Velocidade — ↓ 92.4 Mbps · ↑ 21.8 Mbps
+
+❌ 1 de 11 com falha
+```
+
+- **Cache**: grava, lê e apaga um arquivo de 256 KB no diretório do cache. **Disco**: ❌ com menos de
+  500 MB livres.
+- **WhatsApp**: o estado da conexão (`CONNECTED`). **DNS** e **Internet**: resolvem e abrem o
+  `web.whatsapp.com`.
+- **Velocidade**: baixa 8 MB e sobe 1 MB no `speed.cloudflare.com`; ❌ se der erro ou ficar abaixo de
+  1 Mbps. Roda por último, sozinho, e a primeira resposta (`🧪 Testando...`) avisa que demora.
+- **E-mail (SMTP)**: só faz o login, sem enviar nada; ➖ se o SMTP não está configurado. Se o login
+  falhou há pouco (`EAUTH`), o teste não tenta de novo durante a pausa de 30 minutos, para não
+  prolongar o bloqueio do provedor.
+- **Chromium**, **yt-dlp** e **ffmpeg**: rodam o `--version`; ❌ se o programa não responde.
+- Um teste que trava (20 s) ou lança erro vira ❌ com o motivo, sem derrubar os outros.
 
 ## Informações do sistema
 
