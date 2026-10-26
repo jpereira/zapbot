@@ -1,19 +1,15 @@
 /*
  * Caixa de e-mail (o /bot -flush-email): conta e apaga as mensagens de Sent e Trash.
  * Cliente IMAP mínimo sobre TLS (POP3 só enxerga a Caixa de Entrada, sem Sent nem Trash).
- * Usa as configs do SMTP: o login é o mesmo e o servidor é o do SMTP trocando smtp por imap
- * (smtp.gmail.com -> imap.gmail.com), na porta 993.
+ * Só funciona com QRCODE_EMAIL_IMAP_HOST (porta 993); o login é o mesmo do SMTP.
  */
 
 const tls = require('tls');
 
 const TIMEOUT_MS = 20 * 1000;
 
-const caixaConfigurada = () => ['QRCODE_EMAIL_SMTP_HOST', 'QRCODE_EMAIL_SMTP_USER', 'QRCODE_EMAIL_SMTP_PASS']
+const caixaConfigurada = () => ['QRCODE_EMAIL_IMAP_HOST', 'QRCODE_EMAIL_SMTP_USER', 'QRCODE_EMAIL_SMTP_PASS']
     .every(v => process.env[v]?.trim());
-
-// smtp.mail.yahoo.com -> imap.mail.yahoo.com
-const servidorImap = () => process.env.QRCODE_EMAIL_SMTP_HOST.trim().replace(/^smtp(?=[.-])/i, 'imap');
 
 const aspas = (s) => `"${String(s).replace(/(["\\])/g, '\\$1')}"`;
 
@@ -101,10 +97,10 @@ async function esvaziar(cmd, pasta) {
  */
 async function caixas({ apagar = false } = {}) {
     if (!caixaConfigurada()) {
-        throw new Error('QRCODE_EMAIL_SMTP_HOST, _USER e _PASS não configurados no config/.env');
+        throw new Error('QRCODE_EMAIL_IMAP_HOST, QRCODE_EMAIL_SMTP_USER e _PASS não configurados no config/.env');
     }
 
-    const { cmd, fechar } = await abrir(servidorImap(), 993);
+    const { cmd, fechar } = await abrir(process.env.QRCODE_EMAIL_IMAP_HOST.trim(), 993);
     try {
         await cmd(`LOGIN ${aspas(process.env.QRCODE_EMAIL_SMTP_USER)} ${aspas(process.env.QRCODE_EMAIL_SMTP_PASS)}`);
         const pastas = acharPastas(await cmd('LIST "" "*"'));
