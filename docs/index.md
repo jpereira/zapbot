@@ -33,6 +33,7 @@ comandos começam com `/`.
 - Cria figurinhas: [`/sticker`](commands/sticker.md)
 - Vigia mensagens por texto ou regex: [`/watch`](commands/watch.md)
 - Agenda mensagens: [`/cron`](commands/cron.md)
+- Guarda anotações, com aviso numa data/hora: [`/notes`](commands/notes.md)
 - Mostra cotações e alertas de preço: [`/cotacao`](commands/cotacao.md),
   [`/crypto`](commands/crypto.md)
 - Acompanha posições DeFi (Orca, Project X, Liquidswap, Morpho, Aave V3): [`/defi`](commands/defi.md)
@@ -124,6 +125,9 @@ Por onde começar:
   preços e avisa **no seu privado** (ou, com um ou vários `-to`, em contatos, grupos, números ou por
   e-mail) quando a regra é cumprida; com o `-msg`, um texto seu vai no início do aviso. Veja
   [Alertas de preço](commands/cotacao.md#alertas-de-preço).
+- **Anotações**: o [`/notes`](commands/notes.md) guarda textos na tabela `notes`, cada um com um
+  ID. O `-alerta` avisa de uma anotação numa data/hora (uma vez; a anotação continua), no seu
+  privado ou nos destinos do `-to`, com uma verificação por minuto.
 - **DeFi**: o [`/defi`](commands/defi.md) lê on-chain as posições de liquidez da Orca, do Project X e da
   Liquidswap (pela carteira) cadastradas (tabela `defi_positions`) e, com o `-alerta`, confere a cada 10
   minutos (setting `defi.alerta.intervalMin`) e avisa (no seu privado ou nos destinos do `-to`)
@@ -163,8 +167,9 @@ Por onde começar:
   [admins extras](commands/bot.md#admins-extras) (`+o`/`-o`) e os
   [usuários](commands/bot.md#usuários) (`+v`/`-v`: pessoas e grupos, com os comandos de cada um
   limitados pelo `+cmd`/ `-cmd`, se quiser); o `-reset` volta ao padrão, o `-status 06h` manda o
-  relatório todo dia (no seu privado, noutros chats ou por e-mail) e o `-info` mostra as versões do
-  que o bot usa. Quem não é admin tem uma
+  relatório todo dia (no seu privado, noutros chats ou por e-mail), o `-info` mostra as versões do
+  que o bot usa e o `-test` confere cache, disco, banco,
+  WhatsApp, internet, SMTP e programas. Quem não é admin tem uma
   [proteção contra flood](commands/bot.md#proteção-contra-flood). O [`/whois`](commands/whois.md)
   diz o nível de cada um no chat.
 - **Reconexão**: em caso de queda o cliente é reiniciado sozinho, exceto quando o motivo exige ação
