@@ -53,3 +53,21 @@ test('/bot -test não combina com as outras opções', async () => {
     assert.match((await bot.responder('/bot -info -test'))[0], /não combina/);
     assert.match((await bot.responder('/bot -test -on'))[0], /O -test não combina/);
 });
+
+test('/bot -flush-email: sem SMTP configurado avisa; não combina com as outras opções', async () => {
+    delete process.env.QRCODE_EMAIL_SMTP_HOST;
+    assert.match((await bot.responder('/bot -flush-email'))[0], /❌ Não consegui.*QRCODE_EMAIL_SMTP_HOST/);
+    assert.match((await bot.responder('/bot -flush-email -test'))[0], /não combina/);
+    assert.match((await bot.responder('/bot -flush-email talvez'))[0], /O -flush-email não combina/);
+});
+
+test('imap: acha Sent e Trash pelo atributo ou pelo nome', () => {
+    const { acharPastas } = require('../src/imap');
+    assert.deepEqual(acharPastas([
+        '* LIST (\\HasNoChildren) "/" "INBOX"',
+        '* LIST (\\HasNoChildren \\Sent) "/" "Enviadas"',
+        '* LIST (\\HasNoChildren \\Trash) "/" "[Gmail]/Lixo"'
+    ]), { sent: 'Enviadas', trash: '[Gmail]/Lixo' });
+    assert.deepEqual(acharPastas(['* LIST () "." Sent', '* LIST () "." "Deleted Items"']),
+        { sent: 'Sent', trash: 'Deleted Items' });
+});
