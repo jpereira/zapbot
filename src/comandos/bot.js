@@ -16,6 +16,7 @@ const { descreverRegra, gravarRegra, regraDe } = require('../permissoes');
 const {
     SETTINGS_SCHEMA, comandoDeUsuario, getSetting, setSetting, validarSetting
 } = require('../settings');
+const { textoDoTeste } = require('../diagnostico');
 const { textoDoInfo } = require('../sistema');
 const {
     agendamentoDiario, agendarStatusDiario, desligarStatusDiario, destinosDoStatus, ondeVai,
@@ -592,7 +593,7 @@ async function resetar(msg, { chatId, forcar }) {
 
 const USO = '❌ Uso: /bot [-on|-off] [-users|-all-users]  ou  ' +
     '/bot +o|-o|+v|-v [+cmd|-cmd <comandos>] [pessoa...] [-all-users]  ou  /bot -reset [force]  ou  ' +
-    '/bot -status [<hora>|off] [-to <destino>]...  ou  /bot -info\n💡 _/bot -h para ajuda_';
+    '/bot -status [<hora>|off] [-to <destino>]...  ou  /bot -info  ou  /bot -test\n💡 _/bot -h para ajuda_';
 
 async function cmdBot({ msg, opts: optsDoComando, args, chatId, isGroup }) {
     args = tirarOpcaoMascara(args);
@@ -614,20 +615,24 @@ async function cmdBot({ msg, opts: optsDoComando, args, chatId, isGroup }) {
         return;
     }
 
-    // -info e -reset: sozinhos (o -reset aceita o force, que não pergunta)
-    for (const sozinha of ['info', 'reset']) {
+    // -info, -test e -reset: sozinhos (o -reset aceita o force, que não pergunta)
+    const SOZINHAS = ['info', 'test', 'reset'];
+    for (const sozinha of SOZINHAS) {
         if (!opts.given.has(sozinha)) continue;
-        const outra = sozinha === 'info' ? 'reset' : 'info';
+        const outras = SOZINHAS.filter(o => o !== sozinha);
         // O valor do -reset: nada ou force
         const valor = sozinha === 'reset' ? opts.opt.reset : null;
         const forcar = /^force$/i.test(valor ?? '');
-        const combinada = on || off || listar || opts.given.has('status') || opts.given.has(outra);
+        const combinada = on || off || listar || opts.given.has('status') || outras.some(o => opts.given.has(o));
         if (combinada || opts.argv.length || (valor && !forcar)) {
             await msg.reply(`❌ O -${sozinha} não combina com as outras opções.\n💡 _/bot -${sozinha}_`);
             return;
         }
         if (sozinha === 'info') await msg.reply(await textoDoInfo());
-        else await resetar(msg, { chatId, forcar });
+        else if (sozinha === 'test') {
+            await msg.reply('🧪 Testando... (a velocidade da internet leva alguns segundos)');
+            await msg.reply(await textoDoTeste());
+        } else await resetar(msg, { chatId, forcar });
         return;
     }
 

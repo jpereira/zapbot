@@ -165,5 +165,7 @@ module.exports = {
     compararVersoes,
     limparNovidades,
     notaDeVersao,
-    textoDoInfo
+    saidaDe,
+    textoDoInfo,
+    versaoDoChromium
 };
