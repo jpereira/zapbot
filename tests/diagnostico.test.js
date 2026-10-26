@@ -38,6 +38,7 @@ test('/bot -test: cache, disco, banco, internet e velocidade ✅; SMTP não conf
     }
     assert.match(linha(texto, 'Velocidade'), /↓ .* Mbps · ↑ .* Mbps/);
     assert.match(linha(texto, 'E-mail (SMTP)'), /^➖.*não configurado/);
+    assert.match(linha(texto, 'E-mail (IMAP)'), /^➖.*QRCODE_EMAIL_IMAP_HOST/);
     assert.match(texto, /\n(❌ \d+ de \d+ com falha|✅ \d+ de \d+ ok)$/);
 });
 

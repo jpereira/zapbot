@@ -169,7 +169,7 @@ Por onde começar:
   limitados pelo `+cmd`/ `-cmd`, se quiser); o `-reset` volta ao padrão, o `-status 06h` manda o
   relatório todo dia (no seu privado, noutros chats ou por e-mail), o `-info` mostra as versões do
   que o bot usa e o `-test` confere cache, disco, banco,
-  WhatsApp, internet, SMTP e programas. Quem não é admin tem uma
+  WhatsApp, internet, SMTP, IMAP e programas. Quem não é admin tem uma
   [proteção contra flood](comandos/bot.md#proteção-contra-flood). O [`/whois`](comandos/whois.md)
   diz o nível de cada um no chat.
 - **Reconexão**: em caso de queda o cliente é reiniciado sozinho, exceto quando o motivo exige ação
