@@ -11,6 +11,7 @@ const {
 } = require('../destinos');
 const { aguardarConfirmacao, autorDe } = require('../escolhas');
 const { GetOptFromCommand } = require('../opcoes');
+const { caixas } = require('../imap');
 const { printInfo } = require('../log');
 const { descreverRegra, gravarRegra, regraDe } = require('../permissoes');
 const {
@@ -591,9 +592,31 @@ async function resetar(msg, { chatId, forcar }) {
     await msg.reply(`♻️ *Padrão restaurado:* bot ligado, sem admins extras e sem usuários.\n\n${estadoDoBot()}`);
 }
 
+// -flush-email: conta as mensagens de Sent e Trash; com "true", apaga tudo (só o dono)
+async function limparEmail(msg, { apagar }) {
+    if (apagar && !msg.fromMe) {
+        await msg.reply('⛔ Só o dono do bot limpa a caixa de e-mail.');
+        return;
+    }
+
+    const aviso = apagar ? await msg.reply('⏳ Limpando a caixa de e-mail...') : null;
+    try {
+        const { sent, trash } = await caixas({ apagar });
+        printInfo(`/bot -flush-email${apagar ? ' true' : ''}: Sent ${sent}, Trash ${trash}`);
+        const texto = apagar
+            ? `🧹 *E-mail limpo:* ${sent} em Sent e ${trash} em Trash (${sent + trash} no total)`
+            : `📧 *Caixa de e-mail:* ${sent} em Sent e ${trash} em Trash\n` +
+                '💡 _/bot -flush-email true para apagar tudo_';
+        await (apagar ? concluirAviso(msg, aviso, texto) : msg.reply(texto));
+    } catch (err) {
+        const texto = `❌ Não consegui acessar a caixa de e-mail: ${err.message}`;
+        await (apagar ? concluirAviso(msg, aviso, texto) : msg.reply(texto));
+    }
+}
+
 const USO = '❌ Uso: /bot [-on|-off] [-users|-all-users]  ou  ' +
     '/bot +o|-o|+v|-v [+cmd|-cmd <comandos>] [pessoa...] [-all-users]  ou  /bot -reset [force]  ou  ' +
-    '/bot -status [<hora>|off] [-to <destino>]...  ou  /bot -info  ou  /bot -test\n💡 _/bot -h para ajuda_';
+    '/bot -status [<hora>|off] [-to <destino>]...  ou  /bot -info  ou  /bot -test  ou  /bot -flush-email [true]\n💡 _/bot -h para ajuda_';
 
 async function cmdBot({ msg, opts: optsDoComando, args, chatId, isGroup }) {
     args = tirarOpcaoMascara(args);
@@ -615,14 +638,15 @@ async function cmdBot({ msg, opts: optsDoComando, args, chatId, isGroup }) {
         return;
     }
 
-    // -info, -test e -reset: sozinhos (o -reset aceita o force, que não pergunta)
-    const SOZINHAS = ['info', 'test', 'reset'];
+    // -info, -test, -reset e -flush-email: sozinhas (o -reset aceita o force, que não pergunta;
+    // o -flush-email, o true)
+    const SOZINHAS = ['info', 'test', 'reset', 'flush-email'];
     for (const sozinha of SOZINHAS) {
         if (!opts.given.has(sozinha)) continue;
         const outras = SOZINHAS.filter(o => o !== sozinha);
-        // O valor do -reset: nada ou force
-        const valor = sozinha === 'reset' ? opts.opt.reset : null;
-        const forcar = /^force$/i.test(valor ?? '');
+        // O valor do -reset: nada ou force; o do -flush-email: nada ou true
+        const valor = sozinha === 'reset' || sozinha === 'flush-email' ? opts.opt[sozinha] : null;
+        const forcar = new RegExp(`^${sozinha === 'reset' ? 'force' : 'true'}$`, 'i').test(valor ?? '');
         const combinada = on || off || listar || opts.given.has('status') || outras.some(o => opts.given.has(o));
         if (combinada || opts.argv.length || (valor && !forcar)) {
             await msg.reply(`❌ O -${sozinha} não combina com as outras opções.\n💡 _/bot -${sozinha}_`);
@@ -632,7 +656,8 @@ async function cmdBot({ msg, opts: optsDoComando, args, chatId, isGroup }) {
         else if (sozinha === 'test') {
             await msg.reply('🧪 Testando... (a velocidade da internet leva alguns segundos)');
             await msg.reply(await textoDoTeste());
-        } else await resetar(msg, { chatId, forcar });
+        } else if (sozinha === 'flush-email') await limparEmail(msg, { apagar: forcar });
+        else await resetar(msg, { chatId, forcar });
         return;
     }
 

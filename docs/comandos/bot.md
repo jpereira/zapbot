@@ -31,6 +31,7 @@ usuários e o envio diário), as versões do que ele usa
 | `-to` | `<destino>`: junto com `-status`, para onde vai o relatório (pessoa, grupo ou e-mail; repita para vários). Veja [Status do bot](#status-do-bot) |
 | `-info`, `-i` | Versões do bot e do que ele usa, e o sistema. Aceita `-mask`; as outras opções são recusadas. Veja [Informações do sistema](#informações-do-sistema) |
 | `-test`, `-t` | Testa tudo (cache, disco, banco, WhatsApp, internet, velocidade, SMTP e programas), com ✅ ou ❌ em cada item. As outras opções são recusadas. Veja [Teste do bot](#teste-do-bot) |
+| `-flush-email` | `[true]`: conecta no servidor do e-mail e mostra quantas mensagens há em Sent e Trash; com `true`, apaga todas. Só o dono apaga. As outras opções são recusadas. Veja [Limpar o e-mail](#limpar-o-e-mail) |
 | `-mask`, `-m` | Ofusca telefones na saída desta execução. Ex.: `+55219****44` |
 
 Use `/bot -users -mask` para exibir nomes com telefones ofuscados. A máscara mantém os cinco
@@ -432,6 +433,29 @@ hora, o que está ruim: disco cheio, internet lenta, senha do SMTP errada, Whats
   prolongar o bloqueio do provedor.
 - **Chromium**, **yt-dlp** e **ffmpeg**: rodam o `--version`; ❌ se o programa não responde.
 - Um teste que trava (20 s) ou lança erro vira ❌ com o motivo, sem derrubar os outros.
+
+## Limpar o e-mail
+
+O bot manda e-mails (QR Code, alertas, `/cron`...) e eles ficam em Sent. O `-flush-email` mostra
+quanto isso ocupa e limpa.
+
+```text
+/bot -flush-email
+📧 *Caixa de e-mail:* 128 em Sent e 14 em Trash
+💡 /bot -flush-email true para apagar tudo
+
+/bot -flush-email true
+⏳ Limpando a caixa de e-mail...        (editada ao concluir)
+🧹 *E-mail limpo:* 128 em Sent e 14 em Trash (142 no total)
+```
+
+- Sem `true`, só conta; com `true`, apaga tudo de Sent e depois de Trash (de forma definitiva). Só o
+  dono apaga.
+- Não tem config nova: usa o login do SMTP (`QRCODE_EMAIL_SMTP_HOST`, `_USER` e `_PASS`). A conexão é
+  IMAP com SSL (porta 993) no mesmo servidor, trocando `smtp` por `imap` (`smtp.mail.yahoo.com` vira
+  `imap.mail.yahoo.com`). É IMAP porque o POP3 só vê a caixa de entrada, sem Sent nem Trash.
+- As pastas são achadas pelo atributo `\Sent`/`\Trash` do servidor ou, sem ele, pelo nome comum
+  (`Sent`, `Sent Items`, `[Gmail]/Trash`, `Lixeira`...).
 
 ## Informações do sistema
 
