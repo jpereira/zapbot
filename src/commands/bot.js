@@ -11,6 +11,7 @@ const {
 } = require('../destinations');
 const { waitConfirmation, authorAlt } = require('../choices');
 const { GetOptFromCommand } = require('../options');
+const { boxes } = require('../imap');
 const { printInfo } = require('../log');
 const { describeRule, recordRule, regraDe } = require('../permissions');
 const {
@@ -591,9 +592,31 @@ async function reset(msg, { chatId, forcar: force }) {
     await msg.reply(`♻️ *Padrão restaurado:* bot ligado, sem admins extras e sem usuários.\n\n${botState()}`);
 }
 
+// -flush-email: counts the Sent and Trash messages; with "true", deletes everything (owner only)
+async function cleanEmail(msg, { apagar: removeAlt }) {
+    if (removeAlt && !msg.fromMe) {
+        await msg.reply('⛔ Só o dono do bot limpa a caixa de e-mail.');
+        return;
+    }
+
+    const notice = removeAlt ? await msg.reply('⏳ Limpando a caixa de e-mail...') : null;
+    try {
+        const { sent, trash } = await boxes({ apagar: removeAlt });
+        printInfo(`/bot -flush-email${removeAlt ? ' true' : ''}: Sent ${sent}, Trash ${trash}`);
+        const textAlt = removeAlt
+            ? `🧹 *E-mail limpo:* ${sent} em Sent e ${trash} em Trash (${sent + trash} no total)`
+            : `📧 *Caixa de e-mail:* ${sent} em Sent e ${trash} em Trash\n` +
+                '💡 _/bot -flush-email true para apagar tudo_';
+        await (removeAlt ? completeNotice(msg, notice, textAlt) : msg.reply(textAlt));
+    } catch (err) {
+        const textAlt = `❌ Não consegui acessar a caixa de e-mail: ${err.message}`;
+        await (removeAlt ? completeNotice(msg, notice, textAlt) : msg.reply(textAlt));
+    }
+}
+
 const USAGE = '❌ Uso: /bot [-on|-off] [-users|-all-users]  ou  ' +
     '/bot +o|-o|+v|-v [+cmd|-cmd <comandos>] [pessoa...] [-all-users]  ou  /bot -reset [force]  ou  ' +
-    '/bot -status [<hora>|off] [-to <destino>]...  ou  /bot -info  ou  /bot -test\n💡 _/bot -h para ajuda_';
+    '/bot -status [<hora>|off] [-to <destino>]...  ou  /bot -info  ou  /bot -test  ou  /bot -flush-email [true]\n💡 _/bot -h para ajuda_';
 
 async function cmdBot({ msg, opts: commandOpts, args, chatId, isGroup }) {
     args = removeOptionMask(args);
@@ -615,14 +638,15 @@ async function cmdBot({ msg, opts: commandOpts, args, chatId, isGroup }) {
         return;
     }
 
-    // -info, -test and -reset: alone (-reset accepts force, which does not ask)
-    const ALONE = ['info', 'test', 'reset'];
+    // -info, -test, -reset and -flush-email: alone (-reset accepts force, which does not ask;
+    // o -flush-email, o true)
+    const ALONE = ['info', 'test', 'reset', 'flush-email'];
     for (const alone of ALONE) {
         if (!opts.given.has(alone)) continue;
         const other = ALONE.filter(o => o !== alone);
-        // The value of -reset: nothing or force
-        const valueAlt = alone === 'reset' ? opts.opt.reset : null;
-        const force = /^force$/i.test(valueAlt ?? '');
+        // The value of -reset: nothing or force; of -flush-email: nothing or true
+        const valueAlt = alone === 'reset' || alone === 'flush-email' ? opts.opt[alone] : null;
+        const force = new RegExp(`^${alone === 'reset' ? 'force' : 'true'}$`, 'i').test(valueAlt ?? '');
         const combined = on || off || listAlt || opts.given.has('status') || other.some(o => opts.given.has(o));
         if (combined || opts.argv.length || (valueAlt && !force)) {
             await msg.reply(`❌ O -${alone} não combina com as outras opções.\n💡 _/bot -${alone}_`);
@@ -632,7 +656,8 @@ async function cmdBot({ msg, opts: commandOpts, args, chatId, isGroup }) {
         else if (alone === 'test') {
             await msg.reply('🧪 Testando... (a velocidade da internet leva alguns segundos)');
             await msg.reply(await testText());
-        } else await reset(msg, { chatId, forcar: force });
+        } else if (alone === 'flush-email') await cleanEmail(msg, { apagar: force });
+        else await reset(msg, { chatId, forcar: force });
         return;
     }
 
