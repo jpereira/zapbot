@@ -20,6 +20,7 @@ const CACHE_DIR = process.env.ZAPBOT_CACHE_DIR || path.join(ROOT_DIR, 'cache');
 const MEDIA_DIR = path.join(CACHE_DIR, 'media'); // mídias salvas para recuperar mensagens apagadas
 const TMP_DIR = path.join(CACHE_DIR, 'tmp');     // arquivos temporários do /get
 const BACKUP_DIR = path.join(CACHE_DIR, 'backups'); // backups do banco (/backup)
+const NOTES_DIR = path.join(CACHE_DIR, 'notes');   // imagens das anotações (/notes)
 
 // O da imagem (Debian); fora dela, PUPPETEER_EXECUTABLE_PATH aponta outro
 const BIN_CHROMIUM = process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium';
@@ -43,6 +44,7 @@ const APP_ENV = process.env.APP_ENV || 'dev';
 module.exports = {
     APP_ENV,
     BACKUP_DIR,
+    NOTES_DIR,
     BIN_CHROMIUM,
     BIN_FFMPEG,
     BIN_FFPROBE,

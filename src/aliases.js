@@ -29,6 +29,8 @@ function aplicarParametros(salvo, args) {
         usados.add(Number(n) - 1);
         return digitados[n - 1] ?? '';
     }).trim();
+    // Sem $N, o que sobra é o texto digitado como veio (as quebras de linha ficam, p. ex. no /notes)
+    if (!usados.size) return { comando, sobras: args };
     return { comando, sobras: digitados.filter((_, i) => !usados.has(i)).join(' ') };
 }
 
