@@ -107,3 +107,29 @@ test('texto sem opção na frente anota (igual ao -add); opção desconhecida d�
     assert.match((await bot.replyAlt('/notes -banana'))[0], /Use: \/notes/);
     assert.equal((await notes()).length, 2);
 });
+
+test('#tag: agrupa na lista, filtra e remove por tag', async () => {
+    await bot.replyAlt('/notes #casa Lembrar de comprar pão');
+    await bot.replyAlt('/notes -a #Duvidas Olhar sobre ETFs');
+    await bot.replyAlt('/notes #casa trocar lâmpada');
+    await bot.replyAlt('/notes sem tag nenhuma');
+    assert.deepEqual((await bot.dbAll('SELECT tag, text FROM notes ORDER BY id')).map(n => n.tag),
+        ['casa', 'duvidas', 'casa', null]);
+
+    const [list] = await bot.replyAlt('/notes');
+    assert.ok(list.indexOf('*#casa* (2)') < list.indexOf('*#duvidas* (1)'));
+    assert.ok(list.indexOf('*#duvidas* (1)') < list.indexOf('*sem tag* (1)'));
+
+    const [soHome] = await bot.replyAlt('/notes #casa');
+    assert.match(soHome, /comprar pão/);
+    assert.match(soHome, /lâmpada/);
+    assert.doesNotMatch(soHome, /ETFs/);
+    assert.equal((await bot.replyAlt('/notes -l #casa'))[0], soHome);
+    assert.match((await bot.replyAlt('/notes #nada'))[0], /Nenhuma anotação em #nada/);
+
+    assert.match((await bot.replyAlt('/notes -rem #nada'))[0], /#nada não existe/);
+    assert.match((await bot.replyAlt('/notes -rem #casa'))[0], /2 anotações removidas/);
+    assert.deepEqual((await notes()).map(n => n.id), [2, 4]);
+    await bot.replyAlt('/notes -rem all');
+    assert.deepEqual(await notes(), []);
+});

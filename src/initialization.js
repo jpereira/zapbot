@@ -297,6 +297,7 @@ async function initializeDb() {
             recipients TEXT
         )
     `);
+    await addColumns('notes', { tag: 'TEXT' });  // #hashtag of the note, lowercase and without the "#"
 
     /*
      * Your account's polls (those from /enquete and those that arrive with votes) and the
