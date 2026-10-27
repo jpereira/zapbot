@@ -244,7 +244,8 @@ client.on('message_revoke_everyone', async (after, before) => {
         });
 
         // show.alert.deleted off ou /mute: sem aviso (a mensagem fica guardada para o /show)
-        const remetentes = [row.sender_jid, row.sender_number, info.numeroRemetente];
+        // Apagada por você: no privado o remetente gravado é o outro, então inclui o seu id (/mute em si mesmo)
+        const remetentes = [row.sender_jid, row.sender_number, info.numeroRemetente, deMim ? client.info.wid._serialized : null];
         if (!isStatus(row) && !getSetting('show.alert.deleted')) return;
         if (await ignorarAviso(isStatus(row) ? 'status' : 'apagada', { chatId: row.chat_id, remetentes })) return;
 
