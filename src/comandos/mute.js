@@ -232,11 +232,6 @@ async function cmdMute({ msg, args, quotedMsg }) {
         return;
     }
 
-    if (destino.id === client.info.wid._serialized) {
-        await msg.reply('❌ As suas mensagens já não geram avisos.');
-        return;
-    }
-
     // Só o alvo (/mute /Grupo L200/, ou respondendo): silencia tudo, como o -a
     if (!r.colunas.size) COLUNAS.forEach(c => r.colunas.add(c));
 
