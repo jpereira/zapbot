@@ -244,7 +244,8 @@ client.on('message_revoke_everyone', async (after, before) => {
         });
 
         // show.alert.deleted off or /mute: no notice (the message stays stored for /show)
-        const senders = [row.sender_jid, row.sender_number, info.numeroRemetente];
+        // Deleted by you: in private the stored sender is the other one, so it includes your id (/mute on yourself)
+        const senders = [row.sender_jid, row.sender_number, info.numeroRemetente, deMim ? client.info.wid._serialized : null];
         if (!isStatus(row) && !getSetting('show.alert.deleted')) return;
         if (await ignoreNotice(isStatus(row) ? 'status' : 'apagada', { chatId: row.chat_id, remetentes: senders })) return;
 

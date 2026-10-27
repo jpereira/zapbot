@@ -103,13 +103,10 @@ describe('/mute (/mudo, /m)', () => {
         assert.match((await bot.replyAlt('/mute +5521911111111'))[0], /^🔇 \*Silenciado:\* 👤 Fulano — apagadas, editadas, status, reações\n/);
     });
 
-    test('erros: sem alvo, alvo inválido, você mesmo', async () => {
+    test('erros: sem alvo, alvo inválido', async () => {
         assert.match((await bot.replyAlt('/mute -d'))[0], /❌ Informe quem/);
         assert.match((await bot.replyAlt('/mute -d xyz'))[0], /❌ Nenhum contato ou grupo com "xyz" no nome/);
         assert.match((await bot.replyAlt('/mute -d email'))[0], /❌ O \/mute silencia uma pessoa ou um grupo/);
-        bot.createContact(OWNER.jid, OWNER.nome);
-        assert.deepEqual(await bot.replyAlt('/mute -d +5521900000000'), ['❌ As suas mensagens já não geram avisos.']);
-        assert.deepEqual(await bot.dbAll('SELECT * FROM mutes'), []);
     });
 
     test('alvo pelo nome: o contato antes do grupo; o nome inteiro igual ganha', async () => {
