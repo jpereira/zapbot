@@ -297,6 +297,7 @@ async function inicializarBanco() {
             recipients TEXT
         )
     `);
+    await adicionarColunas('notes', { tag: 'TEXT' });  // #hashtag da anotação, minúscula e sem o "#"
 
     /*
      * Enquetes da sua conta (as do /enquete e as que chegam com os votos) e os
