@@ -4,7 +4,7 @@
 
 const fs = require('fs-extra');
 
-const { MEDIA_DIR, TMP_DIR } = require('./constantes');
+const { MEDIA_DIR, NOTES_DIR, TMP_DIR } = require('./constantes');
 const { dbAll, dbRun } = require('./db');
 const { printInfo } = require('./log');
 const { carregarSettings } = require('./settings');
@@ -297,7 +297,11 @@ async function inicializarBanco() {
             recipients TEXT
         )
     `);
-    await adicionarColunas('notes', { tag: 'TEXT' });  // #hashtag da anotação, minúscula e sem o "#"
+    await adicionarColunas('notes', {
+        tag: 'TEXT',        // #hashtag da anotação, minúscula e sem o "#"
+        media_path: 'TEXT', // imagem da anotação, em NOTES_DIR (fora do MEDIA_DIR, que o /cache -media limpa)
+        media_mime: 'TEXT'
+    });
 
     /*
      * Enquetes da sua conta (as do /enquete e as que chegam com os votos) e os
@@ -463,7 +467,7 @@ async function inicializarBanco() {
 
     await carregarSettings();
 
-    for (const dir of [MEDIA_DIR, TMP_DIR]) {
+    for (const dir of [MEDIA_DIR, NOTES_DIR, TMP_DIR]) {
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, { recursive: true });
             printInfo(`Creating ${dir}`);
