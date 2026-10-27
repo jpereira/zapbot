@@ -11,14 +11,14 @@ Não é preciso ter Node, Chromium, ffmpeg ou yt-dlp instalados: tudo vai dentro
 
 ## Instalação (Docker)
 
-A versão estável atual é a `v2.0.9` (de 14/10/2026); os passos abaixo instalam essa versão. As
+A versão estável atual é a `v2.0.10` (de 27/10/2026); os passos abaixo instalam essa versão. As
 notas de cada uma ficam em [Releases](https://github.com/jpereira/zapbot/releases).
 
 ```bash
 # 1. Clonar o projeto e ir para a última versão estável
 git clone https://github.com/jpereira/zapbot.git
 cd zapbot
-git checkout v2.0.9
+git checkout v2.0.10
 
 # 2. Criar o arquivo de configuração a partir do exemplo e editá-lo
 cp config/.env.example config/.env
@@ -56,13 +56,13 @@ e receber a mesma mensagem no seu WhatsApp. Mande `/ping` para qualquer chat: o 
 
 ### Atualizar para uma nova versão
 
-A **versão estável** é a última release, hoje a `v2.0.9` (cada uma tem as notas em
+A **versão estável** é a última release, hoje a `v2.0.10` (cada uma tem as notas em
 [Releases](https://github.com/jpereira/zapbot/releases)). Para ir para ela:
 
 ```bash
 git fetch --tags
-git checkout v2.0.9
-git describe --tags        # confere a versão: v2.0.9
+git checkout v2.0.10
+git describe --tags        # confere a versão: v2.0.10
 docker compose -f docker/docker-compose.yml build zapbot
 docker compose -f docker/docker-compose.yml up -d --force-recreate zapbot
 ```
