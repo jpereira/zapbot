@@ -46,7 +46,7 @@ initialize falhou: net::ERR_NAME_NOT_RESOLVED at https://web.whatsapp.com/
 ♻️ Nova tentativa de conectar em 15s (falhas seguidas: 1).
 ♻️ Reiniciando cliente. Motivo: nova tentativa nº 2 (heartbeat: OPENING)
 ...
-🤖 ZapBot 2.0.10 inicializado!
+🤖 ZapBot 2.0.11 (devel) inicializado!
 ```
 
 - Um e-mail só, na primeira falha (`❌ Falha ao reiniciar`); com a internet fora, ele também falha, e
