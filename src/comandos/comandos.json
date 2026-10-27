@@ -1271,9 +1271,9 @@
         },
         {
             "cmd": "/notes",
-            "usage": "/notes [-list|-l]  ou  /notes <texto>  ou  /notes -add|-a <texto> [-alerta <quando> [-to <destino>]...]  ou  /notes -rem|-r <id...|all>  ou  /notes -alerta [<id> <quando> [-to <destino>]...]  ou  /notes -alerta -rm <id...|all>",
+            "usage": "/notes [-list|-l] [#tag...]  ou  /notes [#tag] <texto>  ou  /notes -add|-a [#tag] <texto> [-alerta <quando> [-to <destino>]...]  ou  /notes -rem|-r <id...|#tag...|all>  ou  /notes -alerta [<id> <quando> [-to <destino>]...]  ou  /notes -alerta -rm <id...|all>",
             "aliases": [],
-            "help": "Anotações salvas no banco. Sem opção, lista as anotações com o ID; com um texto que não começa com \"-\", anota (o mesmo que -add). O -alerta lembra de uma anotação numa data/hora (uma vez; a anotação continua): no seu privado ou nos destinos do -to. Ex: /notes -a comprar leite, /notes -a ligar pro João -alerta amanhã 9h, /notes -alerta 3 +2h -to /Família/, /notes -r 2",
+            "help": "Anotações salvas no banco. Sem opção, lista as anotações com o ID, agrupadas por #tag (/notes #casa filtra); com um texto que não começa com \"-\", anota (o mesmo que -add). O -alerta lembra de uma anotação numa data/hora (uma vez; a anotação continua): no seu privado ou nos destinos do -to. Ex: /notes -a #casa comprar leite, /notes #casa, /notes -r #casa, /notes -a ligar pro João -alerta amanhã 9h, /notes -alerta 3 +2h -to /Família/, /notes -r 2",
             "cmd_opts": [
                 {
                     "opts": [
@@ -1281,9 +1281,9 @@
                         "a"
                     ],
                     "values": [
-                        "<texto>"
+                        "[#tag] <texto>"
                     ],
-                    "desc": "Adiciona uma anotação (o texto vai até o -alerta, se houver). Ex: /notes -a comprar leite",
+                    "desc": "Adiciona uma anotação, com #tag opcional no começo (o texto vai até o -alerta, se houver). Ex: /notes -a #casa comprar leite",
                     "cron": false
                 },
                 {
@@ -1291,8 +1291,10 @@
                         "list",
                         "l"
                     ],
-                    "values": [],
-                    "desc": "Lista as anotações, cada uma com o ID."
+                    "values": [
+                        "[#tag...]"
+                    ],
+                    "desc": "Lista as anotações, cada uma com o ID, agrupadas por #tag. Com tags, só as delas."
                 },
                 {
                     "opts": [
@@ -1300,9 +1302,9 @@
                         "r"
                     ],
                     "values": [
-                        "<id...|all>"
+                        "<id...|#tag...|all>"
                     ],
-                    "desc": "Remove as anotações com esses IDs (-r 1 2 3 ou -r 1,2,3), ou todas (all). Se algum ID não existe, nenhuma sai.",
+                    "desc": "Remove as anotações com esses IDs (-r 1 2 3 ou -r 1,2,3), de uma tag (-r #casa) ou todas (all). Se algum ID ou tag não existe, nenhuma sai.",
                     "cron": false
                 },
                 {

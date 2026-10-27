@@ -4,20 +4,21 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 `-alerta` avisa dela numa data/hora. Só o dono (e os admins) usa.
 
 ```text
-/notes [-list|-l]
-/notes <texto>
-/notes -add|-a <texto> [-alerta <quando> [-to <destino>]...]
-/notes -rem|-r <id...|all>
+/notes [-list|-l] [#tag...]
+/notes #tag
+/notes [#tag] <texto>
+/notes -add|-a [#tag] <texto> [-alerta <quando> [-to <destino>]...]
+/notes -rem|-r <id...|#tag...|all>
 /notes -alerta [<id> <quando> [-to <destino>]...]
 /notes -alerta -rm <id...|all>
 ```
 
 | Opção | Valor | Descrição |
 |---|---|---|
-| `-list`, `-l` | | Lista as anotações com o ID (é o que o `/notes` sem opção faz) |
+| `-list`, `-l` | `[#tag...]` | Lista as anotações com o ID, agrupadas por `#tag` (é o que o `/notes` sem opção faz). Com uma ou mais tags, só as delas |
 | `<texto>` | | Sem opção na frente, o texto vira uma anotação nova, igual ao `-add`: `/notes não esquecer de remover a opção tal` |
-| `-add`, `-a` | `<texto>` | Adiciona uma anotação. O texto vai até o `-alerta`, se houver, e aceita várias linhas |
-| `-rem`, `-r` | `<id...\|all>` | Remove as anotações com esses IDs (`-r 2`, `-r 1 2 3` ou `-r 1,2,3`), ou todas (`all`). Se algum ID não existe, nenhuma sai |
+| `-add`, `-a` | `[#tag] <texto>` | Adiciona uma anotação; a `#tag` só vale no começo do texto. O texto vai até o `-alerta`, se houver, e aceita várias linhas |
+| `-rem`, `-r` | `<id...\|#tag...\|all>` | Remove as anotações com esses IDs (`-r 2`, `-r 1 2 3` ou `-r 1,2,3`), de uma tag (`-r #casa`) ou todas (`all`). Se algum ID ou tag não existe, nenhuma sai |
 | `-alerta` | `<quando>` | Avisa da anotação numa data/hora. Veja [Alertas](#alertas) |
 | `-rm` | `<id...\|all>` | Junto com `-alerta`: tira o alerta dessas anotações (ou de todas), mantendo as anotações |
 | `-to` | `<destino>` | Junto com `-alerta`: avisa num contato, grupo, número ou e-mail em vez do seu privado. Repita para vários |
@@ -30,6 +31,20 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 /notes -r 2
 /notes -r all
 ```
+
+## Tags
+
+```text
+/notes #casa Lembrar de comprar pão
+/notes -a #duvidas Olhar sobre como funciona as ETFs
+/notes                → lista tudo, agrupado por #tag (as sem tag por último)
+/notes #casa          → só as da #casa (o mesmo que /notes -l #casa)
+/notes -rem #casa     → remove todas as da #casa
+/notes -rem all       → remove tudo
+```
+
+- Cada anotação tem no máximo uma tag, a do começo do texto. Maiúsculas e minúsculas valem igual.
+- `/notes #casa` sozinho filtra; com texto depois, anota.
 
 ## Alertas
 

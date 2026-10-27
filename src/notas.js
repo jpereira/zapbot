@@ -14,15 +14,16 @@ const { fmtQuando, lerQuando } = require('./util/quando');
 
 /*
  * /notes
- *   /notes | -list | -l                 → lista as anotações, com o ID
- *   /notes <texto>                      → anota (o mesmo que -add, quando não começa com "-")
- *   -add | -a <texto>                   → anota
+ *   /notes | -list | -l [#tag...]       → lista as anotações, com o ID, agrupadas por #tag
+ *   /notes #tag                         → só as dessa tag (o mesmo que -l #tag)
+ *   /notes [#tag] <texto>               → anota (o mesmo que -add, quando não começa com "-")
+ *   -add | -a [#tag] <texto>            → anota
  *   -add <texto> -alerta <quando> [-to <destino>]...
  *                                       → anota e avisa na data/hora (o -to funciona como nos outros -alerta)
- *   -rem | -r <id...|all>               → remove (-r 1 2 3, -r 1,2,3 ou all)
+ *   -rem | -r <id...|#tag...|all>       → remove (-r 1 2 3, -r 1,2,3, -r #casa ou all)
  *   -alerta                             → lista só as anotações com alerta
  *   -alerta <id> <quando> [-to ...]     → põe (ou troca) o alerta de uma anotação
- *   -alerta -rm <id...|all>             → tira o alerta, mantendo a anotação
+ *   -alerta -rm <id...|#tag...|all>     → tira o alerta, mantendo a anotação
  * O alerta dispara UMA vez, na hora; a anotação continua. Só o dono (onlyAdmin).
  */
 const MAX_DIAS = 365;
@@ -33,6 +34,22 @@ const ondeDoAviso = (destinos) => (destinos.length ? descreverDestinos(destinos)
 const recuar = (texto) => texto.replace(/\n/g, '\n   ');
 
 const listarNotas = () => dbAll('SELECT * FROM notes ORDER BY id');
+
+const SEM_TAG = 'sem tag';
+const SEM_PREVIA = { linkPreview: false };  // listas não mostram thumbnail de link
+const lerTag = (t) => t.replace(/^#/, '').toLowerCase();
+
+// "#casa Lembrar do pão" → { tag: 'casa', texto: 'Lembrar do pão' } (a tag só vale no começo)
+function separarTag(texto) {
+    const m = texto.match(/^#([^\s#]+)(?:\s+([\s\S]*))?$/);
+    return m ? { tag: lerTag(m[1]), texto: (m[2] ?? '').trim() } : { tag: null, texto };
+}
+
+// "#casa #duvidas" → ['casa', 'duvidas']; null se sobrar algo que não é tag
+function soTags(texto) {
+    const partes = texto.split(/[\s,]+/).filter(Boolean);
+    return partes.length && partes.every(p => /^#[^\s#]+$/.test(p)) ? [...new Set(partes.map(lerTag))] : null;
+}
 
 function linhaDaNota(n) {
     const alerta = n.alert_at
@@ -46,9 +63,15 @@ function lerIds(texto, notas) {
     const partes = texto.toLowerCase().split(/[\s,]+/).filter(Boolean);
     if (partes.includes('all')) return { todos: true, ids: notas.map(n => n.id) };
 
-    const ids = [...new Set(partes)].sort((a, b) => a - b);
-    const faltando = ids.filter(i => !/^\d+$/.test(i) || !notas.some(n => n.id === Number(i)));
-    return { ids: ids.map(Number), faltando };
+    const tags = partes.filter(p => p.startsWith('#')).map(lerTag);
+    const outras = [...new Set(partes.filter(p => !p.startsWith('#')))].sort((a, b) => a - b);
+    const faltando = [
+        ...tags.filter(t => !notas.some(n => n.tag === t)).map(t => `#${t}`),
+        ...outras.filter(i => !/^\d+$/.test(i) || !notas.some(n => n.id === Number(i)))
+    ];
+    const ids = new Set([...outras.filter(i => /^\d+$/.test(i)).map(Number),
+        ...notas.filter(n => tags.includes(n.tag)).map(n => n.id)]);
+    return { ids: [...ids].sort((a, b) => a - b), faltando };
 }
 
 async function removerNotas(msg, textoIds, soAlerta) {
@@ -57,9 +80,10 @@ async function removerNotas(msg, textoIds, soAlerta) {
     const cmd = soAlerta ? '/notes -alerta -rm' : '/notes -rem';
 
     if (!todos && (!ids.length || faltando.length)) {
+        const rotulo = faltando?.every(f => !f.startsWith('#')) ? 'ID' : '';
         await msg.reply(faltando?.length > 1
-            ? `❌ IDs ${faltando.join(', ')} não existem. Nada foi mexido; veja a lista com /notes -l`
-            : `❌ ID ${faltando?.[0] ?? '?'} não existe. Veja a lista com /notes -l\n💡 _Uso: ${cmd} <id...|all>_`);
+            ? `❌ ${rotulo}${rotulo ? 's ' : ''}${faltando.join(', ')} não existem. Nada foi mexido; veja a lista com /notes -l`
+            : `❌ ${rotulo ? 'ID ' : ''}${faltando?.[0] ?? '?'} não existe. Veja a lista com /notes -l\n💡 _Uso: ${cmd} <id...|#tag...|all>_`);
         return;
     }
 
@@ -96,10 +120,10 @@ async function destinosDoComando(msg, destinosTexto, comDestino) {
 async function adicionar(msg, resto) {
     const { destinos: destinosTexto, informado: comDestino, resto: semDestino } = extrairDestinos(resto);
     const m = semDestino.match(ALERTA);
-    const texto = (m ? semDestino.slice(0, m.index) : semDestino).trim();
+    const { tag, texto } = separarTag((m ? semDestino.slice(0, m.index) : semDestino).trim());
 
     if (!texto) {
-        await msg.reply('❌ Use: /notes -add <texto> [-alerta <quando> [-to <destino>]...]');
+        await msg.reply('❌ Use: /notes -add [#tag] <texto> [-alerta <quando> [-to <destino>]...]');
         return;
     }
 
@@ -124,12 +148,12 @@ async function adicionar(msg, resto) {
 
     const c = colunasDoDestino(destinos[0]);
     const r = await dbRun(
-        `INSERT INTO notes (text, created_at, alert_at, dest_id, dest_name, dest_is_group, dest_email, recipients)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [texto, Date.now(), alerta, c.dest_id, c.dest_name, c.dest_is_group, c.dest_email, recipientsDe(destinos)]
+        `INSERT INTO notes (text, tag, created_at, alert_at, dest_id, dest_name, dest_is_group, dest_email, recipients)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [texto, tag, Date.now(), alerta, c.dest_id, c.dest_name, c.dest_is_group, c.dest_email, recipientsDe(destinos)]
     );
 
-    await msg.reply(`📝 *Anotação #${r.lastID}*\n${recuar(texto)}` +
+    await msg.reply(`📝 *Anotação #${r.lastID}*${tag ? ` · #${tag}` : ''}\n${recuar(texto)}` +
         (alerta ? `\n⏰ ${fmtQuando(alerta)} → ${ondeDoAviso(destinos)}` : ''));
 }
 
@@ -151,7 +175,8 @@ async function alertar(msg, resto) {
         await msg.reply(comAlerta.length
             ? `🔔 *ALERTAS DAS ANOTAÇÕES*\n\n${comAlerta.map(linhaDaNota).join('\n\n')}\n\n` +
               '💡 _Tire com /notes -alerta -rm <id...|all>_'
-            : '🔔 Nenhuma anotação com alerta.\n💡 _Crie com /notes -alerta <id> <quando>_');
+            : '🔔 Nenhuma anotação com alerta.\n💡 _Crie com /notes -alerta <id> <quando>_',
+        undefined, SEM_PREVIA);
         return;
     }
 
@@ -187,12 +212,37 @@ async function alertar(msg, resto) {
         `⏰ ${fmtQuando(quando.ms)} → ${ondeDoAviso(destinos)}`);
 }
 
-async function listar(msg) {
-    const notas = await listarNotas();
+// Agrupa pela tag (ordem alfabética), com as sem tag por último
+function agruparPorTag(notas) {
+    const grupos = new Map();
+    for (const n of notas) grupos.set(n.tag ?? '', [...(grupos.get(n.tag ?? '') ?? []), n]);
+
+    const chaves = [...grupos.keys()].sort((a, b) => (a === '') - (b === '') || a.localeCompare(b));
+    const soSemTag = chaves.length === 1 && chaves[0] === '';
+    return chaves.map(k => {
+        const itens = grupos.get(k).map(linhaDaNota).join('\n\n');
+        return soSemTag ? itens : `*${k ? `#${k}` : SEM_TAG}* (${grupos.get(k).length})\n\n${itens}`;
+    }).join('\n\n──────────\n\n');
+}
+
+async function listar(msg, filtro = '') {
+    const tags = filtro ? soTags(filtro) : [];
+    if (!tags) {
+        await msg.reply('❌ Use: /notes -l [#tag...]');
+        return;
+    }
+
+    const todas = await listarNotas();
+    const notas = tags.length ? todas.filter(n => tags.includes(n.tag)) : todas;
+    const rotulo = tags.length ? ` ${tags.map(t => `#${t}`).join(' ')}` : '';
+
     await msg.reply(notas.length
-        ? `📝 *ANOTAÇÕES* (${notas.length})\n\n${notas.map(linhaDaNota).join('\n\n')}\n\n` +
-          '💡 _/notes -a <texto> anota; /notes -r <id...|all> remove; -alerta <quando> avisa._'
-        : '📝 Nenhuma anotação.\n💡 _Anote com /notes -a <texto>_');
+        ? `📝 *ANOTAÇÕES${rotulo}* (${notas.length})\n\n${agruparPorTag(notas)}\n\n` +
+          '💡 _/notes -a [#tag] <texto> anota; /notes -r <id...|#tag...|all> remove; -alerta <quando> avisa._'
+        : tags.length
+            ? `📝 Nenhuma anotação em${rotulo}.`
+            : '📝 Nenhuma anotação.\n💡 _Anote com /notes -a [#tag] <texto>_',
+    undefined, SEM_PREVIA);
 }
 
 async function cmdNote({ msg, args }) {
@@ -202,14 +252,16 @@ async function cmdNote({ msg, args }) {
     const resto = texto.slice(opcao.length).trim();
     const nome = opcao.toLowerCase();
 
-    if (!texto || nome === '-list' || nome === '-l') return listar(msg);
+    if (!texto) return listar(msg);
+    if (nome === '-list' || nome === '-l') return listar(msg, resto);
+    if (soTags(texto)) return listar(msg, texto);
     if (nome === '-add' || nome === '-a') return adicionar(msg, resto);
     if (nome === '-rem' || nome === '-rm' || nome === '-r') return removerNotas(msg, palavras.join(' '), false);
     if (nome === '-alerta') return alertar(msg, resto);
 
     // Opção que não existe: erro. Sem "-" na frente, o texto todo é uma anotação nova (o mesmo que -add)
     if (nome.startsWith('-')) {
-        return msg.reply('❌ Use: /notes [-list] | -add <texto> [-alerta <quando>] | -rem <id...|all> | -alerta ...');
+        return msg.reply('❌ Use: /notes [-list] [#tag] | -add [#tag] <texto> [-alerta <quando>] | -rem <id...|#tag...|all> | -alerta ...');
     }
 
     return adicionar(msg, texto);
