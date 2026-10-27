@@ -1271,9 +1271,9 @@
         },
         {
             "cmd": "/notes",
-            "usage": "/notes [-list|-l] [#tag...]  ou  /notes [#tag] <texto>  ou  /notes -add|-a [#tag] <texto> [-alerta <quando> [-to <destino>]...]  ou  /notes -rem|-r <id...|#tag...|all>  ou  /notes -alerta [<id> <quando> [-to <destino>]...]  ou  /notes -alerta -rm <id...|all>",
+            "usage": "/notes [-list|-l] [#tag...] [-to <destino>]...  ou  /notes -search|-s [#tag...] <texto|/regex/flags> [-to <destino>]...  ou  /notes -tags|-t [-to <destino>]...  ou  /notes -update|-u <id> [#tag] <novo texto>  ou  /notes -export|-e [#tag...] [-to <destino>]...  ou  /notes [#tag] <texto>  ou  /notes -add|-a [#tag] <texto> [-alerta <quando> [-to <destino>]...]  ou  /notes -rem|-r <id...|#tag...|all>  ou  /notes -alerta [<id|#tag...> [<quando> [-to <destino>]...]]  ou  /notes -alerta -rm <id...|#tag...|all>",
             "aliases": [],
-            "help": "Anotações salvas no banco. Sem opção, lista as anotações com o ID, agrupadas por #tag (/notes #casa filtra); com um texto que não começa com \"-\", anota (o mesmo que -add). O -alerta lembra de uma anotação numa data/hora (uma vez; a anotação continua): no seu privado ou nos destinos do -to. Ex: /notes -a #casa comprar leite, /notes #casa, /notes -r #casa, /notes -a ligar pro João -alerta amanhã 9h, /notes -alerta 3 +2h -to /Família/, /notes -r 2",
+            "help": "Anotações salvas no banco. Respondendo uma mensagem, anota o texto dela com ↩️ (/notes, /notes #lembrete). Com uma imagem (na legenda ou respondendo uma foto), guarda a imagem no disco junto da anotação. Sem opção, lista as anotações com o ID, agrupadas por #tag (/notes #casa filtra); com um texto que não começa com \"-\", anota (o mesmo que -add). O -alerta lembra de uma anotação numa data/hora (uma vez; a anotação continua): no seu privado ou nos destinos do -to. Ex: /notes -a #casa comprar leite, /notes #casa, /notes -s /pão|leite/i, /notes -t, /notes -update 3 novo texto, /notes -e #casa, /notes -r #casa, /notes -a ligar pro João -alerta amanhã 9h, /notes -alerta 3 +2h -to /Família/, /notes -alerta #casa 18h -to /Família/, /notes -r 2",
             "cmd_opts": [
                 {
                     "opts": [
@@ -1298,6 +1298,47 @@
                 },
                 {
                     "opts": [
+                        "search",
+                        "s"
+                    ],
+                    "values": [
+                        "[#tag...] <texto|/regex/flags>"
+                    ],
+                    "desc": "Só as anotações que casam: texto (sem diferenciar maiúsculas/acentos) ou /regex/flags, como o -q do /show. Casa também o nome da tag. Ex: /notes -s /pão|leite/i, /notes -s #casa leite",
+                    "cron": false
+                },
+                {
+                    "opts": [
+                        "tags",
+                        "t"
+                    ],
+                    "values": [],
+                    "desc": "Mostra todas as tags com a quantidade de anotações de cada uma."
+                },
+                {
+                    "opts": [
+                        "update",
+                        "u"
+                    ],
+                    "values": [
+                        "<id> [#tag] <novo texto>"
+                    ],
+                    "desc": "Troca o texto da anotação (e a tag, se vier uma). Ex: /notes -update 3 comprar pão e leite",
+                    "cron": false
+                },
+                {
+                    "opts": [
+                        "export",
+                        "e"
+                    ],
+                    "values": [
+                        "[#tag...]"
+                    ],
+                    "desc": "Manda as anotações num PDF (ZapBot_notes_YYYYMMDD_HHMM.pdf), ou só as das tags (ZapBot_notes_tag-casa_YYYYMMDD_HHMM.pdf).",
+                    "cron": false
+                },
+                {
+                    "opts": [
                         "rem",
                         "r"
                     ],
@@ -1314,7 +1355,7 @@
                     "values": [
                         "<quando>"
                     ],
-                    "desc": "Avisa da anotação numa data/hora. Com -add: /notes -a texto -alerta amanhã 9h. Com ID: /notes -alerta 3 +2h. Sozinho, lista as anotações com alerta; com -rm <id...|all>, tira o alerta. O quando aceita +2h, 30m, 18h, amanhã 9h, sexta 18:30, 25/12 10h.",
+                    "desc": "Avisa da anotação numa data/hora. Com -add: /notes -a texto -alerta amanhã 9h. Com ID: /notes -alerta 3 +2h. Com #tag: avisa de todas as anotações da tag (/notes -alerta #casa 18h -to /Família/). Sozinho, lista as anotações com alerta (com #tag, só as da tag); com -rm <id...|#tag...|all>, tira o alerta. O quando aceita +2h, 30m, 18h, amanhã 9h, sexta 18:30, 25/12 10h.",
                     "cron": false
                 },
                 {
@@ -1324,7 +1365,7 @@
                     "values": [
                         "<id...|all>"
                     ],
-                    "desc": "Junto com -alerta: tira o alerta das anotações com esses IDs (-rm 1 2 3 ou -rm 1,2,3) ou de todas (all), mantendo as anotações. Se algum ID não existe, nenhum é mexido.",
+                    "desc": "Junto com -alerta: tira o alerta das anotações com esses IDs (-rm 1 2 3 ou -rm 1,2,3), de uma tag (-rm #casa) ou de todas (all), mantendo as anotações. Se algum ID não existe, nenhum é mexido.",
                     "cron": false
                 },
                 {
@@ -1334,7 +1375,7 @@
                     "values": [
                         "<destino>"
                     ],
-                    "desc": "Junto com -alerta: avisa num contato, num grupo, num número ou por e-mail em vez do seu privado. Repita para vários: um alerta só, que avisa em todos. Ex: -to /Jorge Pereira/, -to @Fulano, -to /Grupo L200/ -to /Família/, -to +5521999999999, -to email"
+                    "desc": "Com a lista (-l, #tag) ou o -export: manda a lista ou o PDF no destino em vez de responder aqui (Ex: /notes -e #casa -to /Família/). Com -alerta: avisa num contato, num grupo, num número ou por e-mail em vez do seu privado. Repita para vários: um alerta só, que avisa em todos. Ex: -to /Jorge Pereira/, -to @Fulano, -to /Grupo L200/ -to /Família/, -to +5521999999999, -to email"
                 }
             ],
             "onlyAdmin": true

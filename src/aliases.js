@@ -29,6 +29,8 @@ function applyParams(salvo, args) {
         used.add(Number(n) - 1);
         return typed[n - 1] ?? '';
     }).trim();
+    // Without $N, what is left is the typed text as it came (line breaks stay, e.g. in /notes)
+    if (!used.size) return { comando: commandAlt, sobras: args };
     return { comando: commandAlt, sobras: typed.filter((_, i) => !used.has(i)).join(' ') };
 }
 
