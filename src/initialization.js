@@ -4,7 +4,7 @@
 
 const fs = require('fs-extra');
 
-const { MEDIA_DIR, TMP_DIR } = require('./constants');
+const { MEDIA_DIR, NOTES_DIR, TMP_DIR } = require('./constants');
 const { dbAll, dbRun } = require('./db');
 const { printInfo } = require('./log');
 const { loadSettings } = require('./settings');
@@ -297,7 +297,11 @@ async function initializeDb() {
             recipients TEXT
         )
     `);
-    await addColumns('notes', { tag: 'TEXT' });  // #hashtag of the note, lowercase and without the "#"
+    await addColumns('notes', {
+        tag: 'TEXT',        // #hashtag of the note, lowercase and without the "#"
+        media_path: 'TEXT', // note image, in NOTES_DIR (outside MEDIA_DIR, which /cache -media cleans)
+        media_mime: 'TEXT'
+    });
 
     /*
      * Your account's polls (those from /enquete and those that arrive with votes) and the
@@ -463,7 +467,7 @@ async function initializeDb() {
 
     await loadSettings();
 
-    for (const dir of [MEDIA_DIR, TMP_DIR]) {
+    for (const dir of [MEDIA_DIR, NOTES_DIR, TMP_DIR]) {
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, { recursive: true });
             printInfo(`Creating ${dir}`);
