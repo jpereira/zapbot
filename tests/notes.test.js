@@ -370,6 +370,46 @@ test('-tags: as tags com a quantidade de anotações (sem tag por último)', asy
     assert.match(bot.client.enviadas.slice(beforeAlt).find(e => e.chatId === L200).content, /#casa: 2/);
 });
 
+test('-move: renomeia a tag (juntando se a nova já existe)', async () => {
+    await bot.replyAlt('/notes #casa um');
+    await bot.replyAlt('/notes #casa dois');
+    await bot.replyAlt('/notes #lar três');
+    assert.match((await bot.replyAlt('/notes -move #casa #CASA'))[0], /igual/);
+    assert.match((await bot.replyAlt('/notes -m #nada #x'))[0], /#nada não existe/);
+    assert.match((await bot.replyAlt('/notes -m casa'))[0], /Use: \/notes -move/);
+    assert.match((await bot.replyAlt('/notes -m #casa #lar'))[0], /#casa → #lar · 2 anotações/);
+    assert.match((await bot.replyAlt('/notes -t'))[0], /#lar: 3/);
+    await bot.replyAlt('/notes -rem all');
+});
+
+test('tag parcial: #idei acha #ideias (exata ganha; remover pede a inteira)', async () => {
+    await bot.replyAlt('/notes #ideias app novo');
+    await bot.replyAlt('/notes #ideia curta');
+    await bot.replyAlt('/notes #casa pão');
+    assert.match((await bot.replyAlt('/notes #idei'))[0], /curta[\s\S]*app novo/);
+    assert.doesNotMatch((await bot.replyAlt('/notes #idei'))[0], /pão/);
+    assert.doesNotMatch((await bot.replyAlt('/notes #ideia'))[0], /app novo/);
+    assert.match((await bot.replyAlt('/notes -s #cas pão'))[0], /pão/);
+    assert.match((await bot.replyAlt('/notes -rem #idei'))[0], /#idei não existe/);
+    await bot.replyAlt('/notes -rem all');
+});
+
+test('-desc: grava, mostra, aparece na lista e no -tags, vai no -move e apaga com -rm', async () => {
+    await bot.replyAlt('/notes #casa pão');
+    assert.match((await bot.replyAlt('/notes -d #casa'))[0], /não tem descrição/);
+    assert.match((await bot.replyAlt('/notes -d #casa Coisas da casa'))[0], /descrição salva/);
+    assert.match((await bot.replyAlt('/notes -d #casa Coisas de casa'))[0], /trocada/);
+    assert.match((await bot.replyAlt('/notes -d #cas'))[0], /Coisas de casa/);
+    assert.match((await bot.replyAlt('/notes #casa'))[0], /_Coisas de casa_/);
+    assert.match((await bot.replyAlt('/notes -t'))[0], /#casa: 1 · _Coisas de casa_/);
+    await bot.replyAlt('/notes -m #casa #lar');
+    assert.match((await bot.replyAlt('/notes -d #lar'))[0], /Coisas de casa/);
+    assert.match((await bot.replyAlt('/notes -d #lar -rm'))[0], /apagada/);
+    assert.match((await bot.replyAlt('/notes -d #lar -rm'))[0], /não tem descrição/);
+    assert.match((await bot.replyAlt('/notes -d'))[0], /Use: \/notes -desc/);
+    await bot.replyAlt('/notes -rem all');
+});
+
 test('-update: troca o texto (e a tag, se vier) e mantém o alerta', async () => {
     await bot.replyAlt('/notes #casa comprar pão -alerta +2h');
     await bot.replyAlt('/notes #duvidas ETFs');

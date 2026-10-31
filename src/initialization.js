@@ -297,6 +297,12 @@ async function initializeDb() {
             recipients TEXT
         )
     `);
+    await dbRun(`
+        CREATE TABLE IF NOT EXISTS note_tags (
+            tag TEXT PRIMARY KEY,   -- minúscula e sem o "#"
+            description TEXT NOT NULL
+        )
+    `);
     await addColumns('notes', {
         tag: 'TEXT',        // #hashtag of the note, lowercase and without the "#"
         media_path: 'TEXT', // note image, in NOTES_DIR (outside MEDIA_DIR, which /cache -media cleans)
