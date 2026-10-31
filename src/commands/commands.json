@@ -137,6 +137,32 @@
             "onlyAdmin": true
         },
         {
+            "cmd": "/batch",
+            "usage": "/batch [-stop] [-dry] <comandos, um após o outro>",
+            "aliases": [],
+            "help": "Executa vários comandos seguidos, de uma mensagem só (ou da mensagem respondida), e responde um resumo. Uma linha que começa com um comando (ou alias) abre um bloco; o que vem depois, linhas em branco inclusas, é do mesmo bloco. Com -stop, para no primeiro erro. Com -dry, só mostra como separou os blocos, sem executar. Ex: /batch -dry (e, nas linhas de baixo, /ideia ver isso, http://x.com, /ideia ler aquilo)",
+            "cmd_opts": [
+                {
+                    "opts": [
+                        "stop"
+                    ],
+                    "values": [],
+                    "desc": "Para no primeiro bloco que falhar (o padrão é continuar).",
+                    "cron": false
+                },
+                {
+                    "opts": [
+                        "dry"
+                    ],
+                    "values": [],
+                    "desc": "Só mostra como os blocos foram separados, sem executar.",
+                    "cron": false
+                }
+            ],
+            "cron": false,
+            "onlyAdmin": true
+        },
+        {
             "cmd": "/block",
             "usage": "/block [/contato/|@menção|+número]...  ou  /block -l",
             "aliases": [

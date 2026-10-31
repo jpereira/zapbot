@@ -34,6 +34,13 @@ function applyParams(salvo, args) {
     return { comando: commandAlt, sobras: typed.filter((_, i) => !used.has(i)).join(' ') };
 }
 
+// Is the name a command or a saved alias (exact, no completing from the start)?
+async function isCommandOrAlias(nameAlt) {
+    if (findCommand(nameAlt)) return true;
+    await dbReady;
+    return Boolean(await dbGet('SELECT 1 FROM command_aliases WHERE name = ?', [nameAlt]));
+}
+
 async function resolverAlias(textAlt) {
     const [nameAlt] = textAlt.trim().split(/\s+/);
     const args = textAlt.trim().slice(nameAlt.length).trim();
@@ -101,4 +108,4 @@ async function listAliases(msg, can = () => true) {
     ).join('\n\n') : '🔗 Nenhum alias disponível.', undefined, { linkPreview: false });
 }
 
-module.exports = { textIsAlias, textRunAlias, listAliases, resolverAlias };
+module.exports = { textIsAlias, isCommandOrAlias, textRunAlias, listAliases, resolverAlias };
