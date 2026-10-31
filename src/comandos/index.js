@@ -4,6 +4,7 @@
 
 const { botConfig } = require('../botConfig');
 const { cmdBackup } = require('./backup');
+const { cmdBatch } = require('./batch');
 const { cmdBlock, cmdUnblock } = require('./block');
 const { cmdBoletos } = require('./boletos');
 const { cmdBot } = require('./bot');
@@ -51,6 +52,7 @@ const { printError } = require('../log');
 const HANDLERS = {
     '/alias': cmdAlias,
     '/backup': cmdBackup,
+    '/batch': cmdBatch,
     '/block': cmdBlock,
     '/boletos': cmdBoletos,
     '/bot': cmdBot,

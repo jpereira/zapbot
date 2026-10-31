@@ -34,6 +34,13 @@ function aplicarParametros(salvo, args) {
     return { comando, sobras: digitados.filter((_, i) => !usados.has(i)).join(' ') };
 }
 
+// O nome é um comando ou um alias salvo (exato, sem completar pelo começo)?
+async function ehComandoOuAlias(nome) {
+    if (findCommand(nome)) return true;
+    await dbPronto;
+    return Boolean(await dbGet('SELECT 1 FROM command_aliases WHERE name = ?', [nome]));
+}
+
 async function resolverAlias(texto) {
     const [nome] = texto.trim().split(/\s+/);
     const args = texto.trim().slice(nome.length).trim();
@@ -101,4 +108,4 @@ async function listarAliases(msg, pode = () => true) {
     ).join('\n\n') : '🔗 Nenhum alias disponível.', undefined, { linkPreview: false });
 }
 
-module.exports = { ehAliasDeTexto, executarAliasDeTexto, listarAliases, resolverAlias };
+module.exports = { ehAliasDeTexto, ehComandoOuAlias, executarAliasDeTexto, listarAliases, resolverAlias };
