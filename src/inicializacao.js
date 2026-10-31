@@ -297,6 +297,12 @@ async function inicializarBanco() {
             recipients TEXT
         )
     `);
+    await dbRun(`
+        CREATE TABLE IF NOT EXISTS note_tags (
+            tag TEXT PRIMARY KEY,   -- minúscula e sem o "#"
+            description TEXT NOT NULL
+        )
+    `);
     await adicionarColunas('notes', {
         tag: 'TEXT',        // #hashtag da anotação, minúscula e sem o "#"
         media_path: 'TEXT', // imagem da anotação, em NOTES_DIR (fora do MEDIA_DIR, que o /cache -media limpa)

@@ -31,6 +31,8 @@ const packageJson = require('../package.json');
  *                                         o mesmo -q do /show e do /watch); casa também a #tag
  *   -update | -u <id> [#tag] <texto>    → troca o texto (e a tag, se vier uma) da anotação
  *   -tags | -t                          → as tags e quantas anotações cada uma tem
+ *   -move | -m #tag #nova               → renomeia a tag (se #nova já existe, junta as duas)
+ *   -desc | -d #tag [<texto>]           → descrição da tag (sem texto, mostra; -d #tag -rm, apaga)
  *   -export | -e [#tag...]              → manda as anotações (ou só as das tags) num PDF
  *   -list | #tag | -export ... -to <destino>...
  *                                       → a lista (ou o PDF) vai nos destinos, como nos outros comandos
@@ -66,6 +68,18 @@ const lerTag = (t) => t.replace(/^#/, '').toLowerCase();
 function separarTag(texto) {
     const m = texto.match(/^#([^\s#]+)(?:\s+([\s\S]*))?$/);
     return m ? { tag: lerTag(m[1]), texto: (m[2] ?? '').trim() } : { tag: null, texto };
+}
+
+// Tag parcial vale: #idei acha #ideias (a exata ganha; senão começa com; senão contém).
+// Só para ler (lista, busca, PDF): remover e alertar pedem a tag inteira
+function resolverTags(tags, notas) {
+    const existentes = [...new Set(notas.map(n => n.tag).filter(Boolean))];
+    const achar = (t) => {
+        if (existentes.includes(t)) return [t];
+        const comeca = existentes.filter(e => e.startsWith(t));
+        return comeca.length ? comeca : existentes.filter(e => e.includes(t));
+    };
+    return [...new Set(tags.flatMap(t => { const r = achar(t); return r.length ? r : [t]; }))];
 }
 
 // "#casa #duvidas" → ['casa', 'duvidas']; null se sobrar algo que não é tag
@@ -283,8 +297,10 @@ async function alertar(msg, resto) {
             await msg.reply('❌ O -to só vale ao criar o alerta: /notes -alerta <id|#tag> amanhã 9h -to /Grupo L200/');
             return;
         }
-        const comAlerta = (await listarNotas()).filter(n => n.alert_at && (!tags.length || tags.includes(n.tag)));
-        const rotulo = tags.length ? ` ${tags.map(t => `#${t}`).join(' ')}` : '';
+        const todasNotas = await listarNotas();
+        const tagsAchadas = resolverTags(tags, todasNotas);
+        const comAlerta = todasNotas.filter(n => n.alert_at && (!tags.length || tagsAchadas.includes(n.tag)));
+        const rotulo = tags.length ? ` ${tagsAchadas.map(t => `#${t}`).join(' ')}` : '';
         await msg.reply(comAlerta.length
             ? `🔔 *ALERTAS DAS ANOTAÇÕES${rotulo}*\n\n${comAlerta.map(linhaDaNota).join('\n\n')}\n\n` +
               '💡 _Tire com /notes -alerta -rm <id...|#tag...|all>_'
@@ -344,7 +360,10 @@ async function alertar(msg, resto) {
 }
 
 // Agrupa pela tag (ordem alfabética), com as sem tag por último
-function agruparPorTag(notas) {
+const descricoesDasTags = async () => new Map((await dbAll('SELECT tag, description FROM note_tags'))
+    .map(r => [r.tag, r.description]));
+
+function agruparPorTag(notas, descricoes = new Map()) {
     const grupos = new Map();
     for (const n of notas) grupos.set(n.tag ?? '', [...(grupos.get(n.tag ?? '') ?? []), n]);
 
@@ -352,7 +371,9 @@ function agruparPorTag(notas) {
     const soSemTag = chaves.length === 1 && chaves[0] === '';
     return chaves.map(k => {
         const itens = grupos.get(k).map(linhaDaNota).join('\n\n');
-        return soSemTag ? itens : `*${k ? `#${k}` : SEM_TAG}* (${grupos.get(k).length})\n\n${itens}`;
+        const desc = descricoes.get(k);
+        return soSemTag ? itens
+            : `*${k ? `#${k}` : SEM_TAG}* (${grupos.get(k).length})${desc ? `\n_${desc}_` : ''}\n\n${itens}`;
     }).join('\n\n──────────\n\n');
 }
 
@@ -415,6 +436,7 @@ async function listar(msg, filtro = '', comBusca = false) {
 
     // A busca olha o texto e também a #tag (/notes -s casa acha as da #casa)
     const todas = await listarNotas();
+    tags = resolverTags(tags, todas);
     const notas = todas.filter(n => (!tags.length || tags.includes(n.tag)) &&
         (!testar || testar(n.text) || (n.tag && testar(`#${n.tag}`))));
     const rotulo = tags.length ? ` ${tags.map(t => `#${t}`).join(' ')}` : '';
@@ -427,8 +449,70 @@ async function listar(msg, filtro = '', comBusca = false) {
         return;
     }
 
-    await entregarTexto(msg, destinos, `📝 *ANOTAÇÕES${rotulo}${achado}* (${notas.length})\n\n${agruparPorTag(notas)}`,
+    await entregarTexto(msg, destinos, `📝 *ANOTAÇÕES${rotulo}${achado}* (${notas.length})\n\n${agruparPorTag(notas, await descricoesDasTags())}`,
         `📝 Anotações${rotulo}${achado}`, DICAS);
+}
+
+// -move: renomeia a tag em todas as anotações (se a nova já existe, elas se juntam)
+async function moverTag(msg, texto) {
+    const m = texto.trim().match(/^#([^\s#]+)\s+#([^\s#]+)$/);
+    if (!m) {
+        await msg.reply('❌ Use: /notes -move #tag #novatag');
+        return;
+    }
+
+    const [de, para] = [lerTag(m[1]), lerTag(m[2])];
+    if (de === para) {
+        await msg.reply('❌ A tag nova é igual à atual.');
+        return;
+    }
+
+    const r = await dbRun('UPDATE notes SET tag = ? WHERE tag = ?', [para, de]);
+    if (!r.changes) {
+        await msg.reply(`❌ #${de} não existe. Veja as tags com /notes -tags`);
+        return;
+    }
+    // A descrição vai junto (se a nova já tinha uma, fica a dela)
+    await dbRun('INSERT OR IGNORE INTO note_tags (tag, description) SELECT ?, description FROM note_tags WHERE tag = ?', [para, de]);
+    await dbRun('DELETE FROM note_tags WHERE tag = ?', [de]);
+
+    await msg.reply(`🏷️ #${de} → #${para} · ${plural(r.changes, 'anotação', 'anotações')}`);
+}
+
+// -desc: descrição da tag. "-d #tag texto" grava, "-d #tag" mostra, "-d #tag -rm" apaga
+async function descreverTag(msg, texto) {
+    const m = texto.trim().match(/^#([^\s#]+)(?:\s+([\s\S]+))?$/);
+    if (!m) {
+        await msg.reply('❌ Use: /notes -desc #tag [<descrição>] (ou /notes -desc #tag -rm para apagar)');
+        return;
+    }
+
+    const notas = await listarNotas();
+    const pedida = lerTag(m[1]);
+    const achadas = resolverTags([pedida], notas);
+    const tag = achadas.length === 1 ? achadas[0] : pedida; // parcial só vale se for uma tag só
+    const desc = (m[2] ?? '').trim();
+    const atual = (await dbGet('SELECT description FROM note_tags WHERE tag = ?', [tag]))?.description;
+
+    if (!desc) {
+        await msg.reply(atual ? `🏷️ *#${tag}*\n${atual}` : `🏷️ #${tag} não tem descrição.\n💡 _Crie com /notes -desc #${tag} <texto>_`,
+            undefined, SEM_PREVIA);
+        return;
+    }
+
+    if (/^-rm$/i.test(desc)) {
+        if (!atual) {
+            await msg.reply(`❌ #${tag} não tem descrição.`);
+            return;
+        }
+        await dbRun('DELETE FROM note_tags WHERE tag = ?', [tag]);
+        await msg.reply(`🗑️ Descrição da #${tag} apagada.`);
+        return;
+    }
+
+    await dbRun('INSERT INTO note_tags (tag, description) VALUES (?, ?) ON CONFLICT(tag) DO UPDATE SET description = excluded.description',
+        [tag, desc]);
+    await msg.reply(`🏷️ *#${tag}* · ${atual ? 'descrição trocada' : 'descrição salva'}`, undefined, SEM_PREVIA);
 }
 
 // -tags: cada tag com a quantidade de anotações (as sem tag por último)
@@ -451,7 +535,8 @@ async function listarTags(msg, filtro = '') {
     const contagem = new Map();
     for (const n of notas) contagem.set(n.tag ?? '', (contagem.get(n.tag ?? '') ?? 0) + 1);
     const chaves = [...contagem.keys()].sort((a, b) => (a === '') - (b === '') || a.localeCompare(b));
-    const linhas = chaves.map(k => `${k ? `#${k}` : SEM_TAG}: ${contagem.get(k)}`);
+    const descricoes = await descricoesDasTags();
+    const linhas = chaves.map(k => `${k ? `#${k}` : SEM_TAG}: ${contagem.get(k)}${descricoes.has(k) ? ` · _${descricoes.get(k)}_` : ''}`);
 
     await entregarTexto(msg, destinos,
         `🏷️ *TAGS* (${chaves.filter(Boolean).length})\n\n${linhas.join('\n')}\n\n📝 ${plural(notas.length, 'anotação', 'anotações')}`,
@@ -469,7 +554,7 @@ function carimboDeArquivo(ms) {
 
 async function exportar(msg, filtro = '') {
     const { destinos: destinosTexto, informado: comDestino, resto } = extrairDestinos(filtro);
-    const tags = resto.trim() ? soTags(resto) : [];
+    let tags = resto.trim() ? soTags(resto) : [];
     if (!tags) {
         await msg.reply('❌ Use: /notes -export [#tag...] [-to <destino>]...');
         return;
@@ -479,6 +564,7 @@ async function exportar(msg, filtro = '') {
     if (destinos === null) return;
 
     const todas = await listarNotas();
+    tags = resolverTags(tags, todas);
     const notas = tags.length ? todas.filter(n => tags.includes(n.tag)) : todas;
     if (!notas.length) {
         await msg.reply(tags.length ? `📝 Nenhuma anotação em ${tags.map(t => `#${t}`).join(' ')}.` : '📝 Nenhuma anotação.');
@@ -564,6 +650,8 @@ async function cmdNote({ msg, args, quotedMsg }) {
     if (nome === '-update' || nome === '-u') return atualizar(msg, resto, quotedMsg);
     if (nome === '-search' || nome === '-s') return listar(msg, resto, true);
     if (nome === '-tags' || nome === '-t') return listarTags(msg, resto);
+    if (nome === '-desc' || nome === '-d') return descreverTag(msg, resto);
+    if (nome === '-move' || nome === '-m') return moverTag(msg, resto);
     if (nome === '-export' || nome === '-e') return exportar(msg, resto);
     if (comDestino && !semDestino.trim()) return listar(msg, texto);
     // Respondendo uma mensagem, "/notes #tag" anota o texto dela nessa tag em vez de filtrar
@@ -577,7 +665,7 @@ async function cmdNote({ msg, args, quotedMsg }) {
 
     // Opção que não existe: erro. Sem "-" na frente, o texto todo é uma anotação nova (o mesmo que -add)
     if (nome.startsWith('-')) {
-        return msg.reply('❌ Use: /notes [-list] [#tag] [-to ...] | -search <texto|/regex/> | -tags | -update <id> <texto> | -export [#tag] [-to ...] | -add [#tag] <texto> [-alerta <quando>] | -rem <id...|#tag...|all> | -alerta ...');
+        return msg.reply('❌ Use: /notes [-list] [#tag] [-to ...] | -search <texto|/regex/> | -tags | -move #tag #nova | -desc #tag <texto> | -update <id> <texto> | -export [#tag] [-to ...] | -add [#tag] <texto> [-alerta <quando>] | -rem <id...|#tag...|all> | -alerta ...');
     }
 
     return adicionar(msg, texto);

@@ -9,6 +9,8 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 /notes -search|-s [#tag...] <texto|/regex/flags> [-to <destino>]...
 /notes -tags|-t [-to <destino>]...
 /notes -update|-u <id> [#tag] <novo texto>
+/notes -move|-m #tag #novatag
+/notes -desc|-d #tag [<descrição>|-rm]
 /notes -export|-e [#tag...] [-to <destino>]...
 /notes [#tag] <texto>
 /notes -add|-a [#tag] <texto> [-alerta <quando> [-to <destino>]...]
@@ -23,6 +25,8 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 | `-search`, `-s` | `[#tag...] <texto\|/regex/flags>` | Só as anotações que casam, agrupadas como na lista. Veja [Buscar](#buscar) |
 | `-tags`, `-t` | | Todas as tags com a quantidade de anotações de cada uma (as sem tag por último) |
 | `-update`, `-u` | `<id> [#tag] <novo texto>` | Troca o texto da anotação (e a tag, se vier uma; o alerta e a imagem ficam). Em resposta a uma mensagem, sem texto, usa o dela |
+| `-move`, `-m` | `#tag #novatag` | Renomeia a tag em todas as anotações. Se a nova já existe, as duas se juntam |
+| `-desc`, `-d` | `#tag [<descrição>\|-rm]` | Descrição da tag, que aparece na lista e no `-tags`. Sem texto, mostra a atual; com `-rm`, apaga. O `-move` leva a descrição junto |
 | `-export`, `-e` | `[#tag...]` | Manda as anotações num PDF (cabeçalho, rodapé com versão, host, data e hora, e paginação). Com tags, só as delas. Veja [Exportar](#exportar) |
 | `<texto>` | | Sem opção na frente, o texto vira uma anotação nova, igual ao `-add`: `/notes não esquecer de remover a opção tal` |
 | `-add`, `-a` | `[#tag] <texto>` | Adiciona uma anotação; a `#tag` só vale no começo do texto. O texto vai até o `-alerta`, se houver, e aceita várias linhas |
@@ -40,6 +44,8 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 /notes -r all
 /notes -update 3 comprar pão e leite             → troca o texto da nº 3
 /notes -u #3 #casa comprar pão\ne leite          → troca o texto e passa para a #casa
+/notes -move #casa #lar                           → renomeia a #casa para #lar
+/notes -desc #casa Coisas da casa                 → descrição da #casa
 /notes -tags                                      → #casa: 3, #duvidas: 1, sem tag: 2
 ```
 
@@ -62,6 +68,9 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
   com `/notes [#tag] [texto]`. O texto é opcional (numa resposta com legenda, vale a legenda, com o
   ↩️). A imagem fica em `cache/notes/` (fora do `cache/media/`, então o `/cache -media` não apaga) e
   a lista mostra `🖼️ imagem`. `-rem` apaga o arquivo junto. Só imagens (JPEG, PNG, WebP, GIF).
+- Nas listas, na busca e no `-export`, a tag pode vir pela metade: `/notes #idei` acha a `#ideias`
+  (a exata ganha; senão vale quem começa com o que você digitou, depois quem contém). Para
+  remover (`-rem`) e alertar, a tag vai inteira.
 - Cada anotação tem no máximo uma tag, a do começo do texto. Maiúsculas e minúsculas valem igual.
 - `/notes #casa` sozinho filtra; com texto depois, anota.
 
