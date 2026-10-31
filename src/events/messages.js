@@ -379,7 +379,7 @@ client.on('message_create', (msg) => withContextDebug({
         }
 
         // The saved command's options belong to the target, including -h and -rm.
-        const paraParser = command.cmd === '/alias' && !/^-h(?:elp)?$/.test(args) ? '' : args;
+        const paraParser = ['/alias', '/batch'].includes(command.cmd) && !/^-h(?:elp)?$/.test(args) ? '' : args;
         const opts = GetOptFromCommand(paraParser, command);
         if (command.cmd === '/watch') {
             opts.opt.help = askedHelpWatch(args);
