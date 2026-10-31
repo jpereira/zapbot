@@ -31,6 +31,8 @@ const packageJson = require('../package.json');
  * the same -q as /show and /watch); also matches the #tag
  * -update | -u <id> [#tag] <text>    → replaces the text (and the tag, if one comes) of the note
  * -tags | -t                          → the tags and how many notes each one has
+ * -move | -m #tag #new               → renames the tag (if #new already exists, merges the two)
+ * -desc | -d #tag [<text>]           → tag description (without text, shows it; -d #tag -rm, deletes it)
  * -export | -e [#tag...]              → sends the notes (or only those of the tags) in a PDF
  *   -list | #tag | -export ... -to <destino>...
  * → the list (or the PDF) goes to the destinations, as in the other commands
@@ -66,6 +68,18 @@ const readTag = (t) => t.replace(/^#/, '').toLowerCase();
 function separateTag(textAlt) {
     const m = textAlt.match(/^#([^\s#]+)(?:\s+([\s\S]*))?$/);
     return m ? { tag: readTag(m[1]), texto: (m[2] ?? '').trim() } : { tag: null, texto: textAlt };
+}
+
+// A partial tag works: #idei finds #ideias (the exact one wins; otherwise starts with; otherwise contains).
+// Only to read (list, search, PDF): removing and alerting ask for the whole tag
+function resolverTags(tags, notes) {
+    const existingAlt = [...new Set(notes.map(n => n.tag).filter(Boolean))];
+    const find = (t) => {
+        if (existingAlt.includes(t)) return [t];
+        const starts = existingAlt.filter(e => e.startsWith(t));
+        return starts.length ? starts : existingAlt.filter(e => e.includes(t));
+    };
+    return [...new Set(tags.flatMap(t => { const r = find(t); return r.length ? r : [t]; }))];
 }
 
 // "#casa #duvidas" → ['casa', 'duvidas']; null if anything that is not a tag is left over
@@ -283,8 +297,10 @@ async function alertAlt(msg, rest) {
             await msg.reply('❌ O -to só vale ao criar o alerta: /notes -alerta <id|#tag> amanhã 9h -to /Grupo L200/');
             return;
         }
-        const withAlert = (await listNotes()).filter(n => n.alert_at && (!tags.length || tags.includes(n.tag)));
-        const label = tags.length ? ` ${tags.map(t => `#${t}`).join(' ')}` : '';
+        const allNotes = await listNotes();
+        const tagsFound = resolverTags(tags, allNotes);
+        const withAlert = allNotes.filter(n => n.alert_at && (!tags.length || tagsFound.includes(n.tag)));
+        const label = tags.length ? ` ${tagsFound.map(t => `#${t}`).join(' ')}` : '';
         await msg.reply(withAlert.length
             ? `🔔 *ALERTAS DAS ANOTAÇÕES${label}*\n\n${withAlert.map(noteLine).join('\n\n')}\n\n` +
               '💡 _Tire com /notes -alerta -rm <id...|#tag...|all>_'
@@ -344,7 +360,10 @@ async function alertAlt(msg, rest) {
 }
 
 // Groups by tag (alphabetical order), with the untagged last
-function groupPerTag(notes) {
+const tagsDescriptions = async () => new Map((await dbAll('SELECT tag, description FROM note_tags'))
+    .map(r => [r.tag, r.description]));
+
+function groupPerTag(notes, descriptions = new Map()) {
     const groups = new Map();
     for (const n of notes) groups.set(n.tag ?? '', [...(groups.get(n.tag ?? '') ?? []), n]);
 
@@ -352,7 +371,9 @@ function groupPerTag(notes) {
     const soWithoutTag = keys.length === 1 && keys[0] === '';
     return keys.map(k => {
         const items = groups.get(k).map(noteLine).join('\n\n');
-        return soWithoutTag ? items : `*${k ? `#${k}` : WITHOUT_TAG}* (${groups.get(k).length})\n\n${items}`;
+        const desc = descriptions.get(k);
+        return soWithoutTag ? items
+            : `*${k ? `#${k}` : WITHOUT_TAG}* (${groups.get(k).length})${desc ? `\n_${desc}_` : ''}\n\n${items}`;
     }).join('\n\n──────────\n\n');
 }
 
@@ -415,6 +436,7 @@ async function listAlt(msg, filter = '', withSearch = false) {
 
     // The search looks at the text and also the #tag (/notes -s casa finds those of #casa)
     const allAlt = await listNotes();
+    tags = resolverTags(tags, allAlt);
     const notes = allAlt.filter(n => (!tags.length || tags.includes(n.tag)) &&
         (!test || test(n.text) || (n.tag && test(`#${n.tag}`))));
     const label = tags.length ? ` ${tags.map(t => `#${t}`).join(' ')}` : '';
@@ -427,8 +449,70 @@ async function listAlt(msg, filter = '', withSearch = false) {
         return;
     }
 
-    await deliverText(msg, destinations, `📝 *ANOTAÇÕES${label}${foundAlt2}* (${notes.length})\n\n${groupPerTag(notes)}`,
+    await deliverText(msg, destinations, `📝 *ANOTAÇÕES${label}${foundAlt2}* (${notes.length})\n\n${groupPerTag(notes, await tagsDescriptions())}`,
         `📝 Anotações${label}${foundAlt2}`, TIPS);
+}
+
+// -move: renames the tag in all notes (if the new one already exists, they merge)
+async function moverTag(msg, textAlt) {
+    const m = textAlt.trim().match(/^#([^\s#]+)\s+#([^\s#]+)$/);
+    if (!m) {
+        await msg.reply('❌ Use: /notes -move #tag #novatag');
+        return;
+    }
+
+    const [de, para] = [readTag(m[1]), readTag(m[2])];
+    if (de === para) {
+        await msg.reply('❌ A tag nova é igual à atual.');
+        return;
+    }
+
+    const r = await dbRun('UPDATE notes SET tag = ? WHERE tag = ?', [para, de]);
+    if (!r.changes) {
+        await msg.reply(`❌ #${de} não existe. Veja as tags com /notes -tags`);
+        return;
+    }
+    // The description goes along (if the new one already had one, its own stays)
+    await dbRun('INSERT OR IGNORE INTO note_tags (tag, description) SELECT ?, description FROM note_tags WHERE tag = ?', [para, de]);
+    await dbRun('DELETE FROM note_tags WHERE tag = ?', [de]);
+
+    await msg.reply(`🏷️ #${de} → #${para} · ${plural(r.changes, 'anotação', 'anotações')}`);
+}
+
+// -desc: tag description. "-d #tag text" saves, "-d #tag" shows, "-d #tag -rm" deletes
+async function describeTag(msg, textAlt) {
+    const m = textAlt.trim().match(/^#([^\s#]+)(?:\s+([\s\S]+))?$/);
+    if (!m) {
+        await msg.reply('❌ Use: /notes -desc #tag [<descrição>] (ou /notes -desc #tag -rm para apagar)');
+        return;
+    }
+
+    const notes = await listNotes();
+    const requested = readTag(m[1]);
+    const foundAlt3 = resolverTags([requested], notes);
+    const tag = foundAlt3.length === 1 ? foundAlt3[0] : requested; // partial only counts if it is a single tag
+    const desc = (m[2] ?? '').trim();
+    const current = (await dbGet('SELECT description FROM note_tags WHERE tag = ?', [tag]))?.description;
+
+    if (!desc) {
+        await msg.reply(current ? `🏷️ *#${tag}*\n${current}` : `🏷️ #${tag} não tem descrição.\n💡 _Crie com /notes -desc #${tag} <texto>_`,
+            undefined, WITHOUT_PREVIEW);
+        return;
+    }
+
+    if (/^-rm$/i.test(desc)) {
+        if (!current) {
+            await msg.reply(`❌ #${tag} não tem descrição.`);
+            return;
+        }
+        await dbRun('DELETE FROM note_tags WHERE tag = ?', [tag]);
+        await msg.reply(`🗑️ Descrição da #${tag} apagada.`);
+        return;
+    }
+
+    await dbRun('INSERT INTO note_tags (tag, description) VALUES (?, ?) ON CONFLICT(tag) DO UPDATE SET description = excluded.description',
+        [tag, desc]);
+    await msg.reply(`🏷️ *#${tag}* · ${current ? 'descrição trocada' : 'descrição salva'}`, undefined, WITHOUT_PREVIEW);
 }
 
 // -tags: each tag with its number of notes (the untagged last)
@@ -451,7 +535,8 @@ async function listTags(msg, filter = '') {
     const count = new Map();
     for (const n of notes) count.set(n.tag ?? '', (count.get(n.tag ?? '') ?? 0) + 1);
     const keys = [...count.keys()].sort((a, b) => (a === '') - (b === '') || a.localeCompare(b));
-    const linesAlt = keys.map(k => `${k ? `#${k}` : WITHOUT_TAG}: ${count.get(k)}`);
+    const descriptions = await tagsDescriptions();
+    const linesAlt = keys.map(k => `${k ? `#${k}` : WITHOUT_TAG}: ${count.get(k)}${descriptions.has(k) ? ` · _${descriptions.get(k)}_` : ''}`);
 
     await deliverText(msg, destinations,
         `🏷️ *TAGS* (${keys.filter(Boolean).length})\n\n${linesAlt.join('\n')}\n\n📝 ${plural(notes.length, 'anotação', 'anotações')}`,
@@ -469,7 +554,7 @@ function fileStamp(ms) {
 
 async function exportar(msg, filter = '') {
     const { destinos: destinationsText, informado: withDestination, resto: rest } = extractDestinations(filter);
-    const tags = rest.trim() ? soTags(rest) : [];
+    let tags = rest.trim() ? soTags(rest) : [];
     if (!tags) {
         await msg.reply('❌ Use: /notes -export [#tag...] [-to <destino>]...');
         return;
@@ -479,6 +564,7 @@ async function exportar(msg, filter = '') {
     if (destinations === null) return;
 
     const allAlt = await listNotes();
+    tags = resolverTags(tags, allAlt);
     const notes = tags.length ? allAlt.filter(n => tags.includes(n.tag)) : allAlt;
     if (!notes.length) {
         await msg.reply(tags.length ? `📝 Nenhuma anotação em ${tags.map(t => `#${t}`).join(' ')}.` : '📝 Nenhuma anotação.');
@@ -564,6 +650,8 @@ async function cmdNote({ msg, args, quotedMsg }) {
     if (nameAlt === '-update' || nameAlt === '-u') return update(msg, rest, quotedMsg);
     if (nameAlt === '-search' || nameAlt === '-s') return listAlt(msg, rest, true);
     if (nameAlt === '-tags' || nameAlt === '-t') return listTags(msg, rest);
+    if (nameAlt === '-desc' || nameAlt === '-d') return describeTag(msg, rest);
+    if (nameAlt === '-move' || nameAlt === '-m') return moverTag(msg, rest);
     if (nameAlt === '-export' || nameAlt === '-e') return exportar(msg, rest);
     if (withDestination && !withoutDestination.trim()) return listAlt(msg, textAlt);
     // Replying to a message, "/notes #tag" saves its text under that tag instead of filtering
@@ -577,7 +665,7 @@ async function cmdNote({ msg, args, quotedMsg }) {
 
     // An option that does not exist: error. Without a "-" in front, the whole text is a new note (the same as -add)
     if (nameAlt.startsWith('-')) {
-        return msg.reply('❌ Use: /notes [-list] [#tag] [-to ...] | -search <texto|/regex/> | -tags | -update <id> <texto> | -export [#tag] [-to ...] | -add [#tag] <texto> [-alerta <quando>] | -rem <id...|#tag...|all> | -alerta ...');
+        return msg.reply('❌ Use: /notes [-list] [#tag] [-to ...] | -search <texto|/regex/> | -tags | -move #tag #nova | -desc #tag <texto> | -update <id> <texto> | -export [#tag] [-to ...] | -add [#tag] <texto> [-alerta <quando>] | -rem <id...|#tag...|all> | -alerta ...');
     }
 
     return addAlt(msg, textAlt);

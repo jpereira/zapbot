@@ -1271,9 +1271,9 @@
         },
         {
             "cmd": "/notes",
-            "usage": "/notes [-list|-l] [#tag...] [-to <destino>]...  ou  /notes -search|-s [#tag...] <texto|/regex/flags> [-to <destino>]...  ou  /notes -tags|-t [-to <destino>]...  ou  /notes -update|-u <id> [#tag] <novo texto>  ou  /notes -export|-e [#tag...] [-to <destino>]...  ou  /notes [#tag] <texto>  ou  /notes -add|-a [#tag] <texto> [-alerta <quando> [-to <destino>]...]  ou  /notes -rem|-r <id...|#tag...|all>  ou  /notes -alerta [<id|#tag...> [<quando> [-to <destino>]...]]  ou  /notes -alerta -rm <id...|#tag...|all>",
+            "usage": "/notes [-list|-l] [#tag...] [-to <destino>]...  ou  /notes -search|-s [#tag...] <texto|/regex/flags> [-to <destino>]...  ou  /notes -tags|-t [-to <destino>]...  ou  /notes -update|-u <id> [#tag] <novo texto>  ou  /notes -move|-m #tag #novatag  ou  /notes -desc|-d #tag [<descrição>|-rm]  ou  /notes -export|-e [#tag...] [-to <destino>]...  ou  /notes [#tag] <texto>  ou  /notes -add|-a [#tag] <texto> [-alerta <quando> [-to <destino>]...]  ou  /notes -rem|-r <id...|#tag...|all>  ou  /notes -alerta [<id|#tag...> [<quando> [-to <destino>]...]]  ou  /notes -alerta -rm <id...|#tag...|all>",
             "aliases": [],
-            "help": "Anotações salvas no banco. Respondendo uma mensagem, anota o texto dela com ↩️ (/notes, /notes #lembrete). Com uma imagem (na legenda ou respondendo uma foto), guarda a imagem no disco junto da anotação. Sem opção, lista as anotações com o ID, agrupadas por #tag (/notes #casa filtra); com um texto que não começa com \"-\", anota (o mesmo que -add). O -alerta lembra de uma anotação numa data/hora (uma vez; a anotação continua): no seu privado ou nos destinos do -to. Ex: /notes -a #casa comprar leite, /notes #casa, /notes -s /pão|leite/i, /notes -t, /notes -update 3 novo texto, /notes -e #casa, /notes -r #casa, /notes -a ligar pro João -alerta amanhã 9h, /notes -alerta 3 +2h -to /Família/, /notes -alerta #casa 18h -to /Família/, /notes -r 2",
+            "help": "Anotações salvas no banco. Respondendo uma mensagem, anota o texto dela com ↩️ (/notes, /notes #lembrete). Com uma imagem (na legenda ou respondendo uma foto), guarda a imagem no disco junto da anotação. Sem opção, lista as anotações com o ID, agrupadas por #tag (/notes #casa filtra); com um texto que não começa com \"-\", anota (o mesmo que -add). O -alerta lembra de uma anotação numa data/hora (uma vez; a anotação continua): no seu privado ou nos destinos do -to. Ex: /notes -a #casa comprar leite, /notes #casa, /notes -s /pão|leite/i, /notes -t, /notes #idei (acha a #ideias), /notes -m #casa #lar, /notes -d #casa Coisas da casa, /notes -update 3 novo texto, /notes -e #casa, /notes -r #casa, /notes -a ligar pro João -alerta amanhã 9h, /notes -alerta 3 +2h -to /Família/, /notes -alerta #casa 18h -to /Família/, /notes -r 2",
             "cmd_opts": [
                 {
                     "opts": [
@@ -1324,6 +1324,28 @@
                         "<id> [#tag] <novo texto>"
                     ],
                     "desc": "Troca o texto da anotação (e a tag, se vier uma). Ex: /notes -update 3 comprar pão e leite",
+                    "cron": false
+                },
+                {
+                    "opts": [
+                        "move",
+                        "m"
+                    ],
+                    "values": [
+                        "#tag #novatag"
+                    ],
+                    "desc": "Renomeia a tag em todas as anotações (se a nova já existe, as duas se juntam). Ex: /notes -move #casa #lar",
+                    "cron": false
+                },
+                {
+                    "opts": [
+                        "desc",
+                        "d"
+                    ],
+                    "values": [
+                        "#tag [<descrição>|-rm]"
+                    ],
+                    "desc": "Descrição da tag, mostrada na lista e no -tags. Sem texto, mostra a atual; com -rm, apaga. Ex: /notes -desc #casa Coisas da casa",
                     "cron": false
                 },
                 {
