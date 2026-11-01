@@ -657,6 +657,15 @@ async function exportar(msg, filtro = '') {
         tipo: 'texto',
         texto: `${plural(notas.length, 'anotação', 'anotações')}${rotulo ? ` em${rotulo}` : ''}`
     }];
+
+    // A descrição das tags do PDF (as que têm) vem logo no começo do documento
+    const descricoes = await descricoesDasTags();
+    const comDescricao = chaves.filter(k => k && descricoes.has(k));
+    if (comDescricao.length) {
+        blocos.push({ tipo: 'espaco', altura: 6 });
+        for (const k of comDescricao) blocos.push({ tipo: 'texto', texto: `#${k}: ${descricoes.get(k)}` });
+    }
+
     for (const k of chaves) {
         const itens = grupos.get(k);
         if (!(chaves.length === 1 && k === '')) {

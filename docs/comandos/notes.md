@@ -130,6 +130,8 @@ O `-to` funciona como nos outros comandos (veja
 
 - Sai como documento no próprio chat (com `-to`, nos destinos; por e-mail, em anexo). A data e a
   hora do nome são de Brasília.
+- A descrição das tags (`-desc`) vem no começo do documento, logo depois do total, uma linha por
+  tag que tem: `#casa: Coisas da casa`. Só entram as tags que estão no PDF.
 - As imagens entram no PDF, em cima do texto da anotação (que serve de legenda), reduzidas para caber
   (JPEG, fundo branco no lugar de transparência). Uma imagem que não abre fica de fora, com um aviso
   na linha da anotação.

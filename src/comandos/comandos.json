@@ -1425,7 +1425,7 @@
                     "values": [
                         "[#tag...]"
                     ],
-                    "desc": "Manda as anotações num PDF, com as imagens e o texto como legenda (ZapBot_notes_YYYYMMDD_HHMM.pdf), ou só as das tags (ZapBot_notes_tag-casa_YYYYMMDD_HHMM.pdf). A tag pode vir pela metade. Com -to, o PDF vai no destino. Ex: /notes -e, /notes -e #casa, /notes -e #casa -to /Família/",
+                    "desc": "Manda as anotações num PDF, com as imagens e o texto como legenda (ZapBot_notes_YYYYMMDD_HHMM.pdf), ou só as das tags (ZapBot_notes_tag-casa_YYYYMMDD_HHMM.pdf). A tag pode vir pela metade, e a descrição dela (-desc) vem no começo do documento. Com -to, o PDF vai no destino. Ex: /notes -e, /notes -e #casa, /notes -e #casa -to /Família/",
                     "cron": false
                 },
                 {
