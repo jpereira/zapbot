@@ -17,6 +17,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 // ZAPBOT_CACHE_DIR troca o diretório do banco e das mídias (os testes usam uma pasta temporária)
 const CACHE_DIR = process.env.ZAPBOT_CACHE_DIR || path.join(ROOT_DIR, 'cache');
+const DB_PATH = path.join(CACHE_DIR, 'zapbot.db'); // o banco SQLite (era bot_database.db até a 2.0.11)
 const MEDIA_DIR = path.join(CACHE_DIR, 'media'); // mídias salvas para recuperar mensagens apagadas
 const TMP_DIR = path.join(CACHE_DIR, 'tmp');     // arquivos temporários do /get
 const BACKUP_DIR = path.join(CACHE_DIR, 'backups'); // backups do banco (/backup)
@@ -37,6 +38,7 @@ const THUMBNAIL_TIMEOUT_MS = 15 * 1000;
 const THUMBNAIL_MAX_BYTES = 10 * 1024 * 1024;
 
 module.exports = {
+    DB_PATH,
     BACKUP_DIR,
     NOTES_DIR,
     BIN_CHROMIUM,

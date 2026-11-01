@@ -53,7 +53,7 @@ comandos começam com `/`.
  │                                                                    │
  │   app.js ──► whatsapp-web.js ──► Puppeteer ──► Chromium            │──► WhatsApp Web
  │     │                                          (headless)          │
- │     ├──► SQLite  (cache/bot_database.db)  mensagens, settings      │
+ │     ├──► SQLite  (cache/zapbot.db)  mensagens, settings            │
  │     ├──► cache/media   mídias p/ recuperar mensagens apagadas      │
  │     ├──► yt-dlp + ffmpeg   comando /get                            │
  │     ├──► APIs HTTP (axios)  /gpt /tempo /cve /news /giphy...       │

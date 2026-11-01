@@ -3,12 +3,11 @@
  */
 
 const fs = require('fs');
-const path = require('path');
 
 const { estado } = require('./estado');
 const { listarBackups } = require('./backup');
 const { client } = require('./cliente');
-const { BOT_START_TIME, CACHE_DIR, DAY_MS, MEDIA_DIR } = require('./constantes');
+const { BOT_START_TIME, CACHE_DIR, DAY_MS, DB_PATH, MEDIA_DIR } = require('./constantes');
 const { dbAll, dbGet, dbPronto, dbRun } = require('./db');
 const { getBotUptime } = require('./log');
 const { descreverDestinos, destinosParaSalvar, destinosSalvos } = require('./destinos');
@@ -65,7 +64,7 @@ async function textoDoStatus(agora = Date.now(), { estadoDoBot = '', usuarios = 
 
     const [ultimoBackup] = await listarBackups();
     const conectado = estado.autenticadoEm ? getBotUptime(estado.autenticadoEm) : 'não conectado';
-    const banco = tamanho(path.join(CACHE_DIR, 'bot_database.db'));
+    const banco = tamanho(DB_PATH);
 
     let texto = `📊 *Status do ZapBot ${versaoDoBot()}* · últimas 24 h\n_${fmtQuando(agora, agora)}_\n\n` +
         (estadoDoBot ? `${estadoDoBot}\n\n` : '') +

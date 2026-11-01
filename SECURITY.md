@@ -33,6 +33,6 @@ Alguns pontos merecem atenção especial num relato:
   (anti-SSRF).
 - **Chaves de API** (OpenAI, GIPHY, Google Translate) e a senha do SMTP: nunca devem aparecer no
   chat nem nos logs.
-- **Mensagens guardadas**: o banco (`cache/bot_database.db`), as mídias em `cache/media` e os
+- **Mensagens guardadas**: o banco (`cache/zapbot.db`), as mídias em `cache/media` e os
   backups em `cache/backups` têm conversas de terceiros. O `/backup -send` para outro chat pede
   confirmação (`-sim`) por isso.

@@ -64,16 +64,16 @@ describe('arquivos do cache', () => {
             fs.mkdirSync(path.join(dir, 'tmp'));
             fs.mkdirSync(path.join(dir, 'media', 'dia'), { recursive: true });
             fs.writeFileSync(path.join(dir, 'media', 'dia', 'foto'), Buffer.alloc(2048));
-            fs.writeFileSync(path.join(dir, 'bot_database.db'), Buffer.alloc(1024));
+            fs.writeFileSync(path.join(dir, 'zapbot.db'), Buffer.alloc(1024));
             fs.mkdirSync(path.join(dir, 'backups'));
             fs.writeFileSync(path.join(dir, 'backups', 'b.gz'), Buffer.alloc(512));
             assert.equal(listCacheLevelOnly(dir), [
-                '├── 📁 backups/           512 B',
-                '├── bot_database.db     1.00 KB',
-                '├── 📁 media/           2.00 KB',
-                '└── 📁 tmp/                 0 B',
-                '───────────────────────────────',
-                'Total:                  3.50 KB'
+                '├── 📁 backups/       512 B',
+                '├── 📁 media/       2.00 KB',
+                '├── 📁 tmp/             0 B',
+                '└── zapbot.db       1.00 KB',
+                '───────────────────────────',
+                'Total:              3.50 KB'
             ].join('\n'));
         } finally {
             fs.rmSync(dir, { recursive: true, force: true });

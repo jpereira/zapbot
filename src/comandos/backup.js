@@ -3,7 +3,6 @@
  */
 
 const fs = require('fs');
-const path = require('path');
 
 const {
     MAX_ANEXO_BYTES, MOTIVOS, contarEntradas, criarBackup, enviarBackupAoChat,
@@ -11,7 +10,7 @@ const {
 } = require('../backup');
 const { findCommand } = require('./base');
 const { client } = require('../cliente');
-const { BACKUP_DIR, CACHE_DIR } = require('../constantes');
+const { BACKUP_DIR, DB_PATH } = require('../constantes');
 const {
     descreverDestinos, emailsDoSmtpTo, extrairDestinos, resolverDestinos
 } = require('../destinos');
@@ -53,7 +52,7 @@ function acharBackup(lista, valor) {
 async function status(msg) {
     const lista = await listarBackups();
     const entradas = await contarEntradas();
-    const banco = path.join(CACHE_DIR, 'bot_database.db');
+    const banco = DB_PATH;
     const bytesBanco = fs.existsSync(banco) ? fs.statSync(banco).size : null;
     const total = lista.reduce((s, b) => s + b.bytes, 0);
     const [ultimo] = lista;

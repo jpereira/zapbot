@@ -408,3 +408,33 @@ describe('backup diário', () => {
         }
     });
 });
+
+describe('banco renomeado (bot_database.db → zapbot.db)', () => {
+    const { migrarNomeDoBanco } = bot.src('db');
+    const comPasta = (fn) => {
+        const dir = fs.mkdtempSync(path.join(bot.CACHE_DIR, 'renome-'));
+        try { return fn(dir); } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+    };
+
+    test('o banco antigo e os arquivos -wal/-shm/-journal passam a ter o nome novo', () => comPasta(dir => {
+        for (const sufixo of ['', '-wal', '-shm', '-journal']) fs.writeFileSync(path.join(dir, `bot_database.db${sufixo}`), `x${sufixo}`);
+
+        assert.equal(migrarNomeDoBanco(dir, 'zapbot.db'), true);
+        assert.deepEqual(fs.readdirSync(dir).sort(), ['zapbot.db', 'zapbot.db-journal', 'zapbot.db-shm', 'zapbot.db-wal']);
+        assert.equal(fs.readFileSync(path.join(dir, 'zapbot.db-wal'), 'utf8'), 'x-wal');
+    }));
+
+    test('se o zapbot.db já existe, ou não há banco antigo, nada é mexido', () => comPasta(dir => {
+        assert.equal(migrarNomeDoBanco(dir, 'zapbot.db'), false);
+
+        fs.writeFileSync(path.join(dir, 'bot_database.db'), 'antigo');
+        fs.writeFileSync(path.join(dir, 'zapbot.db'), 'novo');
+        assert.equal(migrarNomeDoBanco(dir, 'zapbot.db'), false);
+        assert.equal(fs.readFileSync(path.join(dir, 'zapbot.db'), 'utf8'), 'novo');
+        assert.equal(fs.readFileSync(path.join(dir, 'bot_database.db'), 'utf8'), 'antigo');
+    }));
+
+    test('o banco em uso é o zapbot.db', () => {
+        assert.equal(path.basename(bot.src('constantes').DB_PATH), 'zapbot.db');
+    });
+});
