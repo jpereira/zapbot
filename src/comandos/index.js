@@ -33,6 +33,7 @@ const { cmdNote } = require('../notas');
 const { cmdNoffa } = require('./noffa');
 const { cmdPing } = require('./ping');
 const { cmdPixelArt } = require('./pixelart');
+const { cmdProfile } = require('./profile');
 const { cmdSearch } = require('./search');
 const { cmdSet } = require('./set');
 const { cmdShow } = require('./show');
@@ -82,6 +83,7 @@ const HANDLERS = {
     '/notes': cmdNote,
     '/ping': cmdPing,
     '/pixelart': cmdPixelArt,
+    '/profile': cmdProfile,
     '/search': cmdSearch,
     '/set': cmdSet,
     '/show': cmdShow,

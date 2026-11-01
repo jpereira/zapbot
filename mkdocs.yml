@@ -105,6 +105,7 @@ nav:
       - /notes: comandos/notes.md
       - /ping: comandos/ping.md
       - /pixelart: comandos/pixelart.md
+      - /profile: comandos/profile.md
       - /search: comandos/search.md
       - /set: comandos/set.md
       - /show: comandos/show.md

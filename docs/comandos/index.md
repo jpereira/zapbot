@@ -145,6 +145,7 @@ mesmo que comecem com `/`. Sem isso, alguém poderia usar um comando que ecoa te
 | [`/notes`](notes.md) | | ✅ | Anotações com ID e `#tag` (`-a`, `-l`, `-s`, `-r`): ver com imagem (`-v`), renomear tag (`-m`), descrever tag (`-d`), exportar em PDF com imagens (`-e`) e `-alerta` que avisa numa data/hora |
 | [`/ping`](ping.md) |  | | Verifica se o bot está vivo |
 | [`/pixelart`](pixelart.md) | `/ansi`, `/px` | | Arte ANSI/ASCII aleatória (16colo.rs) |
+| [`/profile`](profile.md) | `/perfil` | ✅ | A foto de perfil de um contato, com o nome da sua agenda e o telefone |
 | [`/search`](search.md) | `/buscar` | ✅ | Busca no histórico do WhatsApp Web, não só no cache: neste chat ou, no seu privado, em todos (`-N` para mais); `-mask` ofusca telefones |
 | [`/set`](set.md) | `/config` | ✅ | Lista e altera as configurações (settings); `-a`/`-rm` acrescentam e tiram itens das listas (ex.: o `bot.admins` e o `bot.users`) |
 | [`/show`](show.md) |  | ✅ | No privado, lista o cache; reexibe apagadas, edições (`-e`), status (`-s`) e reações removidas ou trocadas (`-r`); `-q` busca (texto ou regex) e `-mask` ofusca telefones |

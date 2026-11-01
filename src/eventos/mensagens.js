@@ -393,7 +393,7 @@ client.on('message_create', (msg) => comContextoDebug({
             opts.opt.mask = pediuMascaraWatch(args);
         }
         // O -mask dos telefones (o do /defi é outro: esconde as carteiras, e não passa por aqui)
-        contextoDebug().maskTelefones = ['/block', '/bot', '/search', '/show', '/watch'].includes(command.cmd) &&
+        contextoDebug().maskTelefones = ['/block', '/bot', '/profile', '/search', '/show', '/watch'].includes(command.cmd) &&
             Boolean(opts.opt.mask);
 
         if (isDebugMode()) {
