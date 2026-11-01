@@ -131,14 +131,12 @@ async function privateResolverName(chatId) {
     if (cache && Date.now() - cache.at < GROUP_NAME_TTL_MS) return cache.name;
 
     const phoneAlt = chatId.endsWith('@lid') ? await resolveLidToPhone(chatId) : null;
-    let name = null;
-
     // First the address book name in any of the ids (phone and @lid); the profile one only if missing
     const contacts = [];
     for (const id of [phoneAlt, chatId].filter(Boolean)) {
         contacts.push(await client.getContactById(id).catch(() => null));
     }
-    name = contacts.map(scheduleName).find(Boolean) || contacts.map(contactName).find(Boolean) || null;
+    const name = contacts.map(scheduleName).find(Boolean) || contacts.map(contactName).find(Boolean) || null;
 
     if (name) privateNameCache.set(chatId, { name, at: Date.now() });
     return name;

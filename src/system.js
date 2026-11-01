@@ -12,7 +12,7 @@ const packageJson = require('../package.json');
 
 const { estado: stateAlt } = require('./state');
 const { client } = require('./client');
-const { APP_ENV, BIN_CHROMIUM, BIN_FFMPEG, BIN_YT, BOT_START_TIME } = require('./constants');
+const { BIN_CHROMIUM, BIN_FFMPEG, BIN_YT, BOT_START_TIME } = require('./constants');
 const { dbGet, dbReady } = require('./db');
 const { getBotUptime } = require('./log');
 const { humanSize } = require('./util/files');
@@ -144,7 +144,7 @@ async function infoText() {
 
     return `ℹ️ *ZapBot ${botVersion()}* · informações do sistema\n\n` +
         '🤖 *Bot*\n' +
-        `• ZapBot: ${versionWithCommit()} (APP_ENV=${APP_ENV})\n` +
+        `• ZapBot: ${versionWithCommit()}\n` +
         `• Node.js: ${process.version} (V8 ${process.versions.v8})\n` +
         `• whatsapp-web.js: ${wwebjsVersion()}${wwebjsNote(freshAlt2)}\n` +
         `• WhatsApp Web: ${whatsappWeb ?? (stateAlt.pronto ? NOT_FOUND : '_não conectado_')}\n` +

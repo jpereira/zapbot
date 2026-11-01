@@ -30,7 +30,6 @@ for (const v of ENV_CLEAN) delete process.env[v];
 
 process.env.ZAPBOT_CACHE_DIR = CACHE_DIR;
 process.env.ZAPBOT_HEARTBEAT_FILE = path.join(CACHE_DIR, 'heartbeat.json');
-process.env.APP_ENV = 'test'; // debug.enabled starts off
 process.env.PHONE_NUMBER = '5521900000000';
 
 const OWNER = { user: '5521900000000', jid: '5521900000000@c.us', nome: 'Dono' };

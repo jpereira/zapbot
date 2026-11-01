@@ -30,11 +30,10 @@
  * Environment variables, before any other module (several read process.env
  * on load). In Docker they already arrive through Compose's env_file and the file does not even
  * is in the image; outside it (node app.js), they come from the same file as Compose
- * would use: config/.env with APP_ENV=prod, otherwise config/.env.dev. dotenv never
- * overrides a variable that already exists.
+ * uses: config/.env. dotenv never overrides a variable that already exists.
  */
 require('dotenv').config({
-    path: require('path').join(__dirname, 'config', process.env.APP_ENV === 'prod' ? '.env' : '.env.dev'),
+    path: require('path').join(__dirname, 'config', '.env'),
     quiet: true
 });
 
@@ -44,12 +43,11 @@ require('./src/debugInstrumentation').installDebug();
 
 const colors = require('colors');
 
-const { APP_ENV } = require('./src/constants');
 const { printInfo } = require('./src/log');
 const { versionWithCommit } = require('./src/version');
 
-// Debug mode comes from the 'debug.enabled' setting (default: on if APP_ENV=dev, case-insensitive)
-printInfo(`Running in APP_ENV=${APP_ENV} QRCODE_EMAIL_ENABLE=${process.env.QRCODE_EMAIL_ENABLE}`);
+// Debug mode comes from the 'debug.enabled' setting (default: off)
+printInfo(`QRCODE_EMAIL_ENABLE=${process.env.QRCODE_EMAIL_ENABLE}`);
 
 const { installClosing } = require('./src/process');
 

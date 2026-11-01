@@ -3,8 +3,6 @@ FROM node:24-trixie-slim
 
 # timezone
 ENV TZ=America/Sao_Paulo
-ENV NODE_ENV=production
-ENV APP_ENV=prod
 
 # We use Debian's chromium; puppeteer does not need to download Chrome
 # (including in the 'prepare' of whatsapp-web.js installed through git)
@@ -69,7 +67,7 @@ COPY package*.json ./
 COPY patches ./patches
 COPY scripts/apply-patches.js ./scripts/apply-patches.js
 
-RUN npm install
+RUN npm install --omit=dev
 
 COPY --chown=node:node . .
 
