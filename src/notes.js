@@ -5,6 +5,7 @@
 const os = require('os');
 const path = require('path');
 const fs = require('fs-extra');
+const sharp = require('sharp');
 const { MessageMedia } = require('whatsapp-web.js');
 const { client } = require('./client');
 const { NOTES_DIR } = require('./constants');
@@ -33,7 +34,8 @@ const packageJson = require('../package.json');
  * -tags | -t                          → the tags and how many notes each one has
  * -move | -m #tag #new               → renames the tag (if #new already exists, merges the two)
  * -desc | -d #tag [<text>]           → tag description (without text, shows it; -d #tag -rm, deletes it)
- * -export | -e [#tag...]              → sends the notes (or only those of the tags) in a PDF
+ * -view | -v <id...|#tag...> [-to ...] → shows the note with the image (text, if it has none)
+ * -export | -e [#tag...]              → sends the notes (or only those of the tags) in a PDF, with the images
  *   -list | #tag | -export ... -to <destino>...
  * → the list (or the PDF) goes to the destinations, as in the other commands
  * /notes [#tag] <text>               → notes (the same as -add, when it does not start with "-")
@@ -385,6 +387,7 @@ async function sendingDestinations(msg, destinationsText, withDestination) {
 
 const TIPS = '\n\n💡 *Dicas*\n' +
     '/notes -a [#tag] <texto> anota\n' +
+    '/notes -v <id...|#tag...> mostra com a imagem\n' +
     '/notes -r <id...|#tag...|all> remove\n' +
     '-alerta <quando> avisa.';
 
@@ -515,6 +518,66 @@ async function describeTag(msg, textAlt) {
     await msg.reply(`🏷️ *#${tag}* · ${current ? 'descrição trocada' : 'descrição salva'}`, undefined, WITHOUT_PREVIEW);
 }
 
+// -view: sends each note (the image with the text as the caption; without an image, just the text)
+async function seeNotes(msg, filter) {
+    const { destinos: destinationsText, informado: withDestination, resto: rest } = extractDestinations(filter);
+    if (!rest.trim()) {
+        await msg.reply('❌ Use: /notes -view <id...|#tag...> [-to <destino>]...');
+        return;
+    }
+
+    const allAlt = await listNotes();
+    const partsAlt = rest.toLowerCase().split(/[\s,]+/).filter(Boolean);
+    const requestedAlt = partsAlt.filter(p => p.startsWith('#')).map(readTag);
+    const tags = resolverTags(requestedAlt, allAlt);
+    const ids = partsAlt.filter(p => !p.startsWith('#'));
+    const missing = [...ids.filter(i => !/^\d+$/.test(i) || !allAlt.some(n => n.id === Number(i))),
+        ...requestedAlt.filter(t => !resolverTags([t], allAlt).some(x => allAlt.some(n => n.tag === x))).map(t => `#${t}`)];
+    if (missing.length) {
+        await msg.reply(`❌ ${missing.join(', ')} não ${missing.length > 1 ? 'existem' : 'existe'}. Veja a lista com /notes -l`);
+        return;
+    }
+
+    const targets = allAlt.filter(n => ids.map(Number).includes(n.id) || tags.includes(n.tag));
+    const destinations = await sendingDestinations(msg, destinationsText, withDestination);
+    if (destinations === null) return;
+
+    const header = (n) => [`📝 *#${n.id}*`, n.tag && `#${n.tag}`, `_${formatData(n.created_at)}_`].filter(Boolean).join(' · ');
+    const failures = [];
+
+    for (const n of targets) {
+        const textAlt = [header(n), n.text].filter(Boolean).join('\n');
+        let media = null;
+        if (n.media_path) {
+            media = await Promise.resolve().then(() => MessageMedia.fromFilePath(n.media_path)).catch(() => null);
+            if (!media) failures.push(`#${n.id}: arquivo da imagem não encontrado`);
+        }
+
+        if (!destinations) {
+            if (media) await msg.reply(media, undefined, { caption: textAlt });
+            else await msg.reply(textAlt, undefined, WITHOUT_PREVIEW);
+            continue;
+        }
+
+        for (const d of destinations.filter(x => x.id)) {
+            await (media ? client.sendMessage(d.id, media, { caption: textAlt }) : client.sendMessage(d.id, textAlt, WITHOUT_PREVIEW))
+                .catch(err => failures.push(`${describeDestinations([d])}: ${err.message}`));
+        }
+        const emails = [...new Set(destinations.filter(d => d.email).flatMap(d => d.email.split(/\s*,\s*/)))];
+        if (emails.length) {
+            await sendEmail({
+                para: emails, assunto: `📝 Anotação #${n.id}`, texto: textAlt.replace(/[*_]/g, ''),
+                anexos: media ? [{ filename: path.basename(n.media_path), path: n.media_path, contentType: n.media_mime }] : []
+            }).catch(err => failures.push(`e-mail: ${err.message}`));
+        }
+    }
+
+    if (destinations && targets.length && !failures.length) {
+        await msg.reply(`📝 ${plural(targets.length, 'anotação enviada', 'anotações enviadas')} em ${describeDestinations(destinations)}.`);
+    }
+    if (failures.length) await msg.reply(`❌ ${failures.join('; ')}`);
+}
+
 // -tags: each tag with its number of notes (the untagged last)
 async function listTags(msg, filter = '') {
     const { destinos: destinationsText, informado: withDestination, resto: rest } = extractDestinations(filter);
@@ -552,6 +615,19 @@ function fileStamp(ms) {
     return `${p.year}${p.month}${p.day}_${p.hour}${p.minute}`;
 }
 
+// The note image as an RGB JPEG on a white background, at the size the PDF uses
+async function imageForPdf(fileAlt) {
+    try {
+        const { data, info } = await sharp(fileAlt).rotate().resize({ width: 900, withoutEnlargement: true })
+            .flatten({ background: '#ffffff' }).toColourspace('srgb').jpeg({ quality: 80 })
+            .toBuffer({ resolveWithObject: true });
+        return { jpeg: data, largura: info.width, altura: info.height };
+    } catch (err) {
+        printError('/notes: imagem fora do PDF:', err.message);
+        return null;
+    }
+}
+
 async function exportar(msg, filter = '') {
     const { destinos: destinationsText, informado: withDestination, resto: rest } = extractDestinations(filter);
     let tags = rest.trim() ? soTags(rest) : [];
@@ -587,7 +663,10 @@ async function exportar(msg, filter = '') {
             blocks.push({ tipo: 'titulo', texto: `${k ? `#${k}` : WITHOUT_TAG} (${items.length})` });
         }
         for (const n of items) {
-            const alert = (n.media_path ? ' · com imagem' : '') + (n.alert_at ? ` · alerta ${fmtWhen(n.alert_at)}` : '');
+            // The image comes on top and the note text is the caption
+            const image = n.media_path ? await imageForPdf(n.media_path) : null;
+            if (image) blocks.push({ tipo: 'imagem', ...image });
+            const alert = (n.media_path && !image ? ' · imagem não incluída' : '') + (n.alert_at ? ` · alerta ${fmtWhen(n.alert_at)}` : '');
             blocks.push({ tipo: 'texto', texto: `#${n.id}  ${n.text.replace(MARK_REPLY, '[resp.]')}`, recuo: 0 });
             blocks.push({ tipo: 'meta', texto: `Anotada em ${formatData(n.created_at)}${alert}` });
             blocks.push({ tipo: 'espaco', altura: 8 });
@@ -650,6 +729,7 @@ async function cmdNote({ msg, args, quotedMsg }) {
     if (nameAlt === '-update' || nameAlt === '-u') return update(msg, rest, quotedMsg);
     if (nameAlt === '-search' || nameAlt === '-s') return listAlt(msg, rest, true);
     if (nameAlt === '-tags' || nameAlt === '-t') return listTags(msg, rest);
+    if (nameAlt === '-view' || nameAlt === '-v') return seeNotes(msg, rest);
     if (nameAlt === '-desc' || nameAlt === '-d') return describeTag(msg, rest);
     if (nameAlt === '-move' || nameAlt === '-m') return moverTag(msg, rest);
     if (nameAlt === '-export' || nameAlt === '-e') return exportar(msg, rest);
@@ -665,7 +745,7 @@ async function cmdNote({ msg, args, quotedMsg }) {
 
     // An option that does not exist: error. Without a "-" in front, the whole text is a new note (the same as -add)
     if (nameAlt.startsWith('-')) {
-        return msg.reply('❌ Use: /notes [-list] [#tag] [-to ...] | -search <texto|/regex/> | -tags | -move #tag #nova | -desc #tag <texto> | -update <id> <texto> | -export [#tag] [-to ...] | -add [#tag] <texto> [-alerta <quando>] | -rem <id...|#tag...|all> | -alerta ...');
+        return msg.reply('❌ Use: /notes [-list] [#tag] [-to ...] | -search <texto|/regex/> | -tags | -view <id...|#tag...> | -move #tag #nova | -desc #tag <texto> | -update <id> <texto> | -export [#tag] [-to ...] | -add [#tag] <texto> [-alerta <quando>] | -rem <id...|#tag...|all> | -alerta ...');
     }
 
     return addAlt(msg, textAlt);
