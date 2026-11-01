@@ -3,7 +3,7 @@
  */
 
 const { client, completeNotice } = require('../client');
-const { resolveLidToPhone } = require('../contacts');
+const { scheduleName, contactName, resolveLidToPhone } = require('../contacts');
 const { resolverOrChoose } = require('../destinations');
 const { printError, printInfo } = require('../log');
 const { textItems } = require('./set');
@@ -35,7 +35,7 @@ const withoutDelimiters = (textAlt) => textAlt.trim()
 // A contact's name; the number of a @lid is the lid itself (not the phone), so it does not work
 const nameAltAlt = (c) => {
     const id = String(c.id?._serialized ?? '');
-    return c.name || c.pushname || (c.number && !id.endsWith('@lid') ? `+${c.number}` : id.split('@')[0]);
+    return contactName(c) || (c.number && !id.endsWith('@lid') ? `+${c.number}` : id.split('@')[0]);
 };
 
 /*
@@ -49,7 +49,7 @@ async function blocked(c) {
     const jid = id.endsWith('@lid') ? await resolveLidToPhone(id) : id;
     const phoneAlt = jid?.endsWith('@c.us') ? jid.split('@')[0] : null;
     const phoneAlt2 = jid && jid !== id ? await client.getContactById(jid).catch(() => null) : null;
-    const nameAlt = phoneAlt2?.name || c.name || phoneAlt2?.pushname || c.pushname || null;
+    const nameAlt = scheduleName(phoneAlt2) || scheduleName(c) || contactName(phoneAlt2) || contactName(c);
     return { id, telefone: phoneAlt, nome: nameAlt };
 }
 

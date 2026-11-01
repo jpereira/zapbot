@@ -6,7 +6,7 @@ const { MessageMedia, Location } = require('whatsapp-web.js');
 const fs = require('fs-extra');
 
 const { client } = require('../client');
-const { resolveLidToPhone, channelResolverName } = require('../contacts');
+const { contactName, resolveLidToPhone, channelResolverName } = require('../contacts');
 const { dbGet, dbReady, dbRun } = require('../db');
 const { printDebug, printError } = require('../log');
 const { ignoreNotice, registerNotice } = require('../mudo');
@@ -57,7 +57,8 @@ async function resolverAuthorDeleted(row, { after, before, protocolKey } = {}) {
         try {
             const contactAlt = await before.getContact();
 
-            nameSender = contactAlt.pushname || contactAlt.name || contactAlt.shortName || nameSender;
+            // The name from your address book comes first; the pushname (what the person chose) only if there is none
+            nameSender = contactName(contactAlt) || nameSender;
 
             const contactId = contactAlt.id?._serialized || '';
 
@@ -81,7 +82,7 @@ async function resolverAuthorDeleted(row, { after, before, protocolKey } = {}) {
             numberSender = phoneId.replace('@c.us', '').replace(/\D/g, '');
 
             const contactAlt = await client.getContactById(phoneId).catch(() => null);
-            nameSender = contactAlt?.pushname || contactAlt?.name || contactAlt?.shortName || nameSender;
+            nameSender = contactName(contactAlt) || nameSender;
         }
     }
 

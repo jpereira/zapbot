@@ -49,6 +49,15 @@ describe('evento: mensagem apagada', () => {
         assert.ok(row.revoked_at > 0);
     });
 
+    test('o Nome do aviso é o da sua agenda, não o pushname que a pessoa escolheu', async () => {
+        const contactAlt = bot.createContact(OTHERAlt.jid, 'Fulano da Agenda');
+        contactAlt.pushname = 'fulaninho_99';
+
+        const { alerta: alert } = await messageDeleted('segredo');
+        assert.match(alert[0].texto, /👤 \*Nome:\* Fulano da Agenda/);
+        assert.doesNotMatch(alert[0].texto, /fulaninho_99/);
+    });
+
     test('mensagem que não está no banco: só registra no log', async () => {
         const ghost = bot.createMessage({ texto: 'x', de: OTHERAlt.jid, id: 'NUNCA_VISTA' });
         const logBefore = bot.logs.length;

@@ -20,6 +20,22 @@ const TIP_USERS = (whereAlt, outside) => `\n\n💡 _Só quem é ${whereAlt}; mai
 beforeEach(bot.restart);
 
 describe('gravação', () => {
+
+    test('sender_name e chat_name guardam o nome da sua agenda, não o pushname da pessoa', async () => {
+        const jid = '5521977770000@c.us'; // another number: the private chat name stays cached for 10 min
+        const contactAlt = bot.createContact(jid, 'Beltrano da Agenda');
+        contactAlt.pushname = 'beltrano_99';
+        const msg = bot.createMessage({
+            texto: 'oi', chat: jid, de: jid,
+            extras: { _data: { notifyName: 'beltrano_99', chat: { name: 'beltrano_99' } } }
+        });
+        await bot.deliver(msg);
+
+        const row = await bot.dbGet('SELECT sender_name, chat_name FROM messages WHERE id = ?', [msg.id.id]);
+        assert.equal(row.sender_name, 'Beltrano da Agenda');
+        assert.equal(row.chat_name, 'Beltrano da Agenda');
+    });
+
     test('grava a mensagem com remetente, chat e nome do grupo', async () => {
         await bot.deliver(bot.createMessage({ texto: 'oi grupo', de: OTHERAlt.jid, id: 'M1' }));
         const row = await bot.dbGet("SELECT * FROM messages WHERE id = 'M1'");

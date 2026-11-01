@@ -7,6 +7,14 @@ const { printDebug, printError } = require('./log');
 const { isDebugMode } = require('./settings');
 const { isChannelAlt } = require('./util/origin');
 
+/*
+ * A contact's name, always the SAME criterion: the one saved in YOUR address book (name; shortName is the
+ * nickname) comes before the pushname (the name the person chose in their profile), which only
+ * comes in when it is not in the address book. verifiedName is the business accounts'.
+ */
+const scheduleName = (c) => c?.name || c?.shortName || null;
+const contactName = (c) => scheduleName(c) || c?.pushname || c?.verifiedName || null;
+
 function normalizerPhoneNumber(phoneNumber) {
     return String(phoneNumber ?? '').replace(/\D/g, '');
 }
@@ -125,11 +133,12 @@ async function privateResolverName(chatId) {
     const phoneAlt = chatId.endsWith('@lid') ? await resolveLidToPhone(chatId) : null;
     let name = null;
 
+    // First the address book name in any of the ids (phone and @lid); the profile one only if missing
+    const contacts = [];
     for (const id of [phoneAlt, chatId].filter(Boolean)) {
-        const contactAlt = await client.getContactById(id).catch(() => null);
-        name = contactAlt?.name || contactAlt?.pushname || contactAlt?.verifiedName || null;
-        if (name) break;
+        contacts.push(await client.getContactById(id).catch(() => null));
     }
+    name = contacts.map(scheduleName).find(Boolean) || contacts.map(contactName).find(Boolean) || null;
 
     if (name) privateNameCache.set(chatId, { name, at: Date.now() });
     return name;
@@ -179,11 +188,11 @@ async function mentionName(user, mentionedIds = []) {
         // For a @lid, the contact by real phone usually has the name saved in the address book
         const phoneJid = jid.endsWith('@lid') ? await resolveLidToPhone(jid) : null;
 
+        const contacts = [];
         for (const id of [phoneJid, jid].filter(Boolean)) {
-            const contact = await client.getContactById(id).catch(() => null);
-            nameAlt = contact?.name || contact?.pushname || contact?.verifiedName || null;
-            if (nameAlt) break;
+            contacts.push(await client.getContactById(id).catch(() => null));
         }
+        nameAlt = contacts.map(scheduleName).find(Boolean) || contacts.map(contactName).find(Boolean) || null;
 
         if (!nameAlt && phoneJid) nameAlt = `+${phoneJid.split('@')[0]}`;
         if (nameAlt) break;
@@ -220,6 +229,8 @@ async function chatCurrentIds(chatId) {
 module.exports = {
     chatCurrentIds,
     isPhoneNumber,
+    scheduleName,
+    contactName,
     normalizeWid,
     normalizerPhoneNumber,
     removeDeviceSuffix,
