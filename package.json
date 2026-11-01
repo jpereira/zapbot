@@ -14,6 +14,7 @@
     "colors": "^1.4.0",
     "dotenv": "^18.0.9",
     "fs-extra": "^11.4.1",
+    "google-translate-api-x": "^10.7.3",
     "nodemailer": "^10.3.1",
     "punycode": "^2.3.1",
     "qrcode": "^1.5.4",

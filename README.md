@@ -178,7 +178,7 @@ de um. Os marcados como **Admin** só respondem à sua conta (e aos admins extra
 | [`/tempo`](https://jpereira.github.io/zapbot/commands/tempo/) | `/weather` | | Tempo agora e máx./mín. do dia (Open-Meteo); `/tempo 16d` mostra até 16 dias, contando hoje; sem cidade usa `tempo.city` |
 | [`/tldr`](https://jpereira.github.io/zapbot/commands/tldr/) | `/resumo` | ✅ | Resume a conversa do chat pelo ChatGPT (`2h`, `300`...) |
 | [`/todos`](https://jpereira.github.io/zapbot/commands/todos/) | `/todes` | ✅ | Menciona todos do grupo |
-| [`/traduzir`](https://jpereira.github.io/zapbot/commands/traduzir/) | `/translate` | | Traduz o texto ou a mensagem respondida (Google Translate); `-para en` muda o idioma |
+| [`/traduzir`](https://jpereira.github.io/zapbot/commands/traduzir/) | `/translate` | | Traduz o texto ou a mensagem respondida pelo Google Translate, sem chave; `-para en` muda o idioma |
 | [`/unblock`](https://jpereira.github.io/zapbot/commands/unblock/) | | ✅ | Desbloqueia uma pessoa: pelo nome, pelo número, pelo nº da lista do `/block` ou respondendo uma mensagem |
 | [`/unmute`](https://jpereira.github.io/zapbot/commands/unmute/) | | ✅ | Desfaz o silêncio do `/mute`: pelo nome, pelo nº da lista, respondendo um aviso ou todos (`-all`) |
 | [`/uptime`](https://jpereira.github.io/zapbot/commands/uptime/) |  | | Tempo de execução e de conexão |
