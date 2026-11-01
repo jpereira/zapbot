@@ -347,8 +347,19 @@ const sharpFalso = (entrada) => {
         webp: () => cadeia,
         composite: () => cadeia,
         png: () => { formato = 'png'; return cadeia; },
+        // /notes -export: o arquivo que começa com "nao e imagem" falha; o resto vira um "jpeg" de 40x20
+        flatten: () => cadeia,
+        toColourspace: () => cadeia,
+        jpeg: () => { formato = 'jpeg'; return cadeia; },
         metadata: async () => dim,
-        toBuffer: async () => Buffer.from(formato === 'png' ? `png:${dim.width}x${dim.height}` : 'webp-enquadrado')
+        toBuffer: async (opcoes) => {
+            if (formato !== 'jpeg') return Buffer.from(formato === 'png' ? `png:${dim.width}x${dim.height}` : 'webp-enquadrado');
+            if (typeof entrada === 'string' && require('fs').readFileSync(entrada, 'latin1').startsWith('nao e imagem')) {
+                throw new Error('Input file contains unsupported image format');
+            }
+            const data = Buffer.from('\xff\xd8jpeg-falso\xff\xd9', 'latin1');
+            return opcoes?.resolveWithObject ? { data, info: { width: 40, height: 20 } } : data;
+        }
     };
     return cadeia;
 };

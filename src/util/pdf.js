@@ -1,6 +1,7 @@
 /*
  * PDF simples, sem dependências: A4, Helvetica (fonte base do PDF), texto com quebra de linha,
- * paginação e cabeçalho/rodapé em todas as páginas. Só Latin-1: emojis e o que não couber saem.
+ * paginação e cabeçalho/rodapé em todas as páginas e imagens JPEG (RGB). Só Latin-1: emojis e o que
+ * não couber saem.
  */
 
 const LARGURA = 595;
@@ -8,6 +9,8 @@ const ALTURA = 842;
 const MARGEM = 50;
 const TOPO_CORPO = ALTURA - 80;
 const BASE_CORPO = 70;
+const IMAGEM_MAX_L = 300;  // a imagem cabe numa caixa de 300 x 260 pontos
+const IMAGEM_MAX_A = 260;
 
 // Larguras da Helvetica (1/1000 em) dos caracteres ASCII 32..126
 const LARGURAS = [
@@ -75,7 +78,8 @@ const escapar = (t) => t.replace(/[\\()]/g, '\\$&');
  * @param {string}   o.titulo     cabeçalho, à esquerda
  * @param {string}   o.direita    cabeçalho, à direita (data/hora)
  * @param {string}   o.rodape     rodapé, à esquerda ("Página X de Y" vai à direita)
- * @param {object[]} o.blocos     { texto, tipo: 'titulo' | 'texto' | 'meta' | 'espaco' }
+ * @param {object[]} o.blocos     { texto, tipo: 'titulo' | 'texto' | 'meta' | 'espaco' } ou
+ *                          { tipo: 'imagem', jpeg: Buffer, largura, altura } (JPEG RGB, em pixels)
  * @returns {Buffer}
  */
 function gerarPdf({ titulo, direita = '', rodape = '', blocos }) {
@@ -90,6 +94,18 @@ function gerarPdf({ titulo, direita = '', rodape = '', blocos }) {
     for (const b of blocos) {
         if (b.tipo === 'espaco') {
             y -= b.altura ?? 8;
+            continue;
+        }
+        if (b.tipo === 'imagem') {
+            const escala = Math.min(1, IMAGEM_MAX_L / b.largura, IMAGEM_MAX_A / b.altura);
+            const [w, h] = [b.largura * escala, b.altura * escala];
+            if (y - h < BASE_CORPO && y !== TOPO_CORPO) {
+                paginas.push([]);
+                y = TOPO_CORPO;
+            }
+            y -= h;
+            paginas.at(-1).push({ imagem: b, x: MARGEM, y, w, h });
+            y -= 6;
             continue;
         }
         const e = ESTILOS[b.tipo ?? 'texto'];
@@ -125,6 +141,14 @@ function gerarPdf({ titulo, direita = '', rodape = '', blocos }) {
     novo('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
     novo('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');
 
+    // Cada imagem vira um objeto só, mesmo que a página a cite
+    for (const it of paginas.flat().filter(x => x.imagem)) {
+        const b = it.imagem;
+        b.objeto ??= novo(`<< /Type /XObject /Subtype /Image /Width ${b.largura} /Height ${b.altura} ` +
+            `/ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${b.jpeg.length} >>\n` +
+            `stream\n${b.jpeg.toString('latin1')}\nendstream`);
+    }
+
     const texto = (fonte, tam, cor, x, y, t) =>
         `BT /${fonte} ${tam} Tf ${cor} rg ${x.toFixed(2)} ${y.toFixed(2)} Td (${escapar(t)}) Tj ET\n`;
     const linhaHorizontal = (y) => `0.7 0.7 0.7 RG 0.5 w ${MARGEM} ${y} m ${LARGURA - MARGEM} ${y} l S\n`;
@@ -134,7 +158,11 @@ function gerarPdf({ titulo, direita = '', rodape = '', blocos }) {
         let c = texto('F2', 11, '0.1 0.3 0.5', MARGEM, ALTURA - 45, cab);
         c += texto('F1', 9, '0.4 0.4 0.4', LARGURA - MARGEM - larguraDe(dir, 9), ALTURA - 45, dir);
         c += linhaHorizontal(ALTURA - 55);
-        for (const it of itens) c += texto(it.fonte, it.tamanho, it.cor, it.x, it.y, it.texto);
+        for (const it of itens) {
+            c += it.imagem
+                ? `q ${it.w.toFixed(2)} 0 0 ${it.h.toFixed(2)} ${it.x} ${it.y.toFixed(2)} cm /Im${it.imagem.objeto} Do Q\n`
+                : texto(it.fonte, it.tamanho, it.cor, it.x, it.y, it.texto);
+        }
         c += linhaHorizontal(52);
         const pag = `Página ${i + 1} de ${total}`;
         c += texto('F1', 8, '0.4 0.4 0.4', MARGEM, 38, rod);
@@ -142,8 +170,10 @@ function gerarPdf({ titulo, direita = '', rodape = '', blocos }) {
 
         const bytes = Buffer.from(c, 'latin1');
         const conteudo = novo(`<< /Length ${bytes.length} >>\nstream\n${bytes.toString('latin1')}endstream`);
+        const usadas = [...new Set(itens.filter(x => x.imagem).map(x => x.imagem.objeto))];
+        const imagens = usadas.length ? ` /XObject << ${usadas.map(o => `/Im${o} ${o} 0 R`).join(' ')} >>` : '';
         const pagina = novo(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${LARGURA} ${ALTURA}] ` +
-            `/Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ${conteudo} 0 R >>`);
+            `/Resources << /Font << /F1 3 0 R /F2 4 0 R >>${imagens} >> /Contents ${conteudo} 0 R >>`);
         filhas.push(`${pagina} 0 R`);
     });
     objetos[1] = `<< /Type /Pages /Kids [${filhas.join(' ')}] /Count ${total} >>`;

@@ -1297,9 +1297,9 @@
         },
         {
             "cmd": "/notes",
-            "usage": "/notes [-list|-l] [#tag...] [-to <destino>]...  ou  /notes -search|-s [#tag...] <texto|/regex/flags> [-to <destino>]...  ou  /notes -tags|-t [-to <destino>]...  ou  /notes -update|-u <id> [#tag] <novo texto>  ou  /notes -move|-m #tag #novatag  ou  /notes -desc|-d #tag [<descrição>|-rm]  ou  /notes -export|-e [#tag...] [-to <destino>]...  ou  /notes [#tag] <texto>  ou  /notes -add|-a [#tag] <texto> [-alerta <quando> [-to <destino>]...]  ou  /notes -rem|-r <id...|#tag...|all>  ou  /notes -alerta [<id|#tag...> [<quando> [-to <destino>]...]]  ou  /notes -alerta -rm <id...|#tag...|all>",
+            "usage": "/notes [-list|-l] [#tag...] [-to <destino>]...  ou  /notes -search|-s [#tag...] <texto|/regex/flags> [-to <destino>]...  ou  /notes -tags|-t [-to <destino>]...  ou  /notes -update|-u <id> [#tag] <novo texto>  ou  /notes -view|-v <id...|#tag...> [-to <destino>]...  ou  /notes -move|-m #tag #novatag  ou  /notes -desc|-d #tag [<descrição>|-rm]  ou  /notes -export|-e [#tag...] [-to <destino>]...  ou  /notes [#tag] <texto>  ou  /notes -add|-a [#tag] <texto> [-alerta <quando> [-to <destino>]...]  ou  /notes -rem|-r <id...|#tag...|all>  ou  /notes -alerta [<id|#tag...> [<quando> [-to <destino>]...]]  ou  /notes -alerta -rm <id...|#tag...|all>",
             "aliases": [],
-            "help": "Anotações salvas no banco. Respondendo uma mensagem, anota o texto dela com ↩️ (/notes, /notes #lembrete). Com uma imagem (na legenda ou respondendo uma foto), guarda a imagem no disco junto da anotação. Sem opção, lista as anotações com o ID, agrupadas por #tag (/notes #casa filtra); com um texto que não começa com \"-\", anota (o mesmo que -add). O -alerta lembra de uma anotação numa data/hora (uma vez; a anotação continua): no seu privado ou nos destinos do -to. Ex: /notes -a #casa comprar leite, /notes #casa, /notes -s /pão|leite/i, /notes -t, /notes #idei (acha a #ideias), /notes -m #casa #lar, /notes -d #casa Coisas da casa, /notes -update 3 novo texto, /notes -e #casa, /notes -r #casa, /notes -a ligar pro João -alerta amanhã 9h, /notes -alerta 3 +2h -to /Família/, /notes -alerta #casa 18h -to /Família/, /notes -r 2",
+            "help": "Anotações salvas no banco. Respondendo uma mensagem, anota o texto dela com ↩️ (/notes, /notes #lembrete). Com uma imagem (na legenda ou respondendo uma foto), guarda a imagem no disco junto da anotação. Sem opção, lista as anotações com o ID, agrupadas por #tag (/notes #casa filtra); com um texto que não começa com \"-\", anota (o mesmo que -add). O -alerta lembra de uma anotação numa data/hora (uma vez; a anotação continua): no seu privado ou nos destinos do -to. Ex: /notes -a #casa comprar leite, /notes #casa, /notes -s /pão|leite/i, /notes -t, /notes -v 76, /notes #idei (acha a #ideias), /notes -m #casa #lar, /notes -d #casa Coisas da casa, /notes -update 3 novo texto, /notes -e #casa, /notes -r #casa, /notes -a ligar pro João -alerta amanhã 9h, /notes -alerta 3 +2h -to /Família/, /notes -alerta #casa 18h -to /Família/, /notes -r 2",
             "cmd_opts": [
                 {
                     "opts": [
@@ -1354,6 +1354,17 @@
                 },
                 {
                     "opts": [
+                        "view",
+                        "v"
+                    ],
+                    "values": [
+                        "<id...|#tag...>"
+                    ],
+                    "desc": "Mostra a anotação com a imagem (o texto vai na legenda; sem imagem, só o texto). Com -to, manda no destino. Ex: /notes -v 76",
+                    "cron": false
+                },
+                {
+                    "opts": [
                         "move",
                         "m"
                     ],
@@ -1382,7 +1393,7 @@
                     "values": [
                         "[#tag...]"
                     ],
-                    "desc": "Manda as anotações num PDF (ZapBot_notes_YYYYMMDD_HHMM.pdf), ou só as das tags (ZapBot_notes_tag-casa_YYYYMMDD_HHMM.pdf).",
+                    "desc": "Manda as anotações num PDF, com as imagens e o texto como legenda (ZapBot_notes_YYYYMMDD_HHMM.pdf), ou só as das tags (ZapBot_notes_tag-casa_YYYYMMDD_HHMM.pdf).",
                     "cron": false
                 },
                 {

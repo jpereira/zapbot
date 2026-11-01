@@ -9,6 +9,7 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 /notes -search|-s [#tag...] <texto|/regex/flags> [-to <destino>]...
 /notes -tags|-t [-to <destino>]...
 /notes -update|-u <id> [#tag] <novo texto>
+/notes -view|-v <id...|#tag...> [-to <destino>]...
 /notes -move|-m #tag #novatag
 /notes -desc|-d #tag [<descrição>|-rm]
 /notes -export|-e [#tag...] [-to <destino>]...
@@ -25,9 +26,10 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 | `-search`, `-s` | `[#tag...] <texto\|/regex/flags>` | Só as anotações que casam, agrupadas como na lista. Veja [Buscar](#buscar) |
 | `-tags`, `-t` | | Todas as tags com a quantidade de anotações de cada uma (as sem tag por último) |
 | `-update`, `-u` | `<id> [#tag] <novo texto>` | Troca o texto da anotação (e a tag, se vier uma; o alerta e a imagem ficam). Em resposta a uma mensagem, sem texto, usa o dela |
+| `-view`, `-v` | `<id...\|#tag...>` | Mostra a anotação com a imagem (texto na legenda; sem imagem, só o texto). A tag pode vir pela metade. Com `-to`, manda nos destinos (ou por e-mail, com a imagem anexada) |
 | `-move`, `-m` | `#tag #novatag` | Renomeia a tag em todas as anotações. Se a nova já existe, as duas se juntam |
 | `-desc`, `-d` | `#tag [<descrição>\|-rm]` | Descrição da tag, que aparece na lista e no `-tags`. Sem texto, mostra a atual; com `-rm`, apaga. O `-move` leva a descrição junto |
-| `-export`, `-e` | `[#tag...]` | Manda as anotações num PDF (cabeçalho, rodapé com versão, host, data e hora, e paginação). Com tags, só as delas. Veja [Exportar](#exportar) |
+| `-export`, `-e` | `[#tag...]` | Manda as anotações num PDF, com as imagens e o texto como legenda (cabeçalho, rodapé com versão, host, data e hora, e paginação). Com tags, só as delas. Veja [Exportar](#exportar) |
 | `<texto>` | | Sem opção na frente, o texto vira uma anotação nova, igual ao `-add`: `/notes não esquecer de remover a opção tal` |
 | `-add`, `-a` | `[#tag] <texto>` | Adiciona uma anotação; a `#tag` só vale no começo do texto. O texto vai até o `-alerta`, se houver, e aceita várias linhas |
 | `-rem`, `-r` | `<id...\|#tag...\|all>` | Remove as anotações com esses IDs (`-r 2`, `-r 1 2 3` ou `-r 1,2,3`), de uma tag (`-r #casa`) ou todas (`all`). Se algum ID ou tag não existe, nenhuma sai |
@@ -67,7 +69,7 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 - **Imagens:** mande uma foto com a legenda `/notes #minhatag Imagem de teste` ou responda uma foto
   com `/notes [#tag] [texto]`. O texto é opcional (numa resposta com legenda, vale a legenda, com o
   ↩️). A imagem fica em `cache/notes/` (fora do `cache/media/`, então o `/cache -media` não apaga) e
-  a lista mostra `🖼️ imagem`. `-rem` apaga o arquivo junto. Só imagens (JPEG, PNG, WebP, GIF).
+  a lista mostra `🖼️ imagem`; para ver a imagem, `/notes -v <id>`. `-rem` apaga o arquivo junto. Só imagens (JPEG, PNG, WebP, GIF).
 - Nas listas, na busca e no `-export`, a tag pode vir pela metade: `/notes #idei` acha a `#ideias`
   (a exata ganha; senão vale quem começa com o que você digitou, depois quem contém). Para
   remover (`-rem`) e alertar, a tag vai inteira.
@@ -104,6 +106,9 @@ O `-to` funciona como nos outros comandos (veja
 `-rem`.
 
 - Sai como documento no próprio chat (com `-to`, nos destinos; por e-mail, em anexo). A data e a hora do nome são de Brasília.
+- As imagens entram no PDF, em cima do texto da anotação (que serve de legenda), reduzidas para caber
+  (JPEG, fundo branco no lugar de transparência). Uma imagem que não abre fica de fora, com um aviso
+  na linha da anotação.
 - A fonte do PDF é Latin-1: acentos saem normais, mas emojis e símbolos fora dela são omitidos.
 
 ## Alertas

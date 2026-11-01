@@ -314,6 +314,46 @@ test('imagem: na própria mensagem ou em resposta, vai para o disco; -rem apaga 
     assert.equal((await notas()).length, 0);
 });
 
+test('-export: as imagens entram no PDF (JPEG), com a anotação como legenda; imagem inválida não derruba', async () => {
+    const png = Buffer.from('89504e470d0a1a0a0000000d49484452', 'hex');
+    await bot.responder('/notes #eleicao Narrativas polares', { midia: { mimetype: 'image/png', data: png.toString('base64') } });
+    await bot.responder('/notes #eleicao quebrada', { midia: { mimetype: 'image/png', data: Buffer.from('nao e imagem').toString('base64') } });
+
+    await bot.responder('/notes -export', { erroEsperado: true });
+    const pdf = Buffer.from(bot.client.enviadas.at(-1).content.data, 'base64').toString('latin1');
+    assert.equal(pdf.match(/\/Subtype \/Image/g).length, 1);
+    assert.match(pdf, /\/Filter \/DCTDecode/);
+    assert.match(pdf, /\/Im5 5 0 R/);
+    assert.match(pdf, /Narrativas polares/);
+    assert.match(pdf, /imagem n.o inclu.da/);
+    assert.match(pdf, /%%EOF\n$/);
+    await bot.responder('/notes -rem all');
+});
+
+test('-view: manda a imagem com o texto na legenda (e só o texto, sem imagem)', async () => {
+    const png = Buffer.from('89504e470d0a1a0a0000000d49484452', 'hex');
+    const midia = { mimetype: 'image/png', data: png.toString('base64') };
+    await bot.responder('/notes #eleicao Narrativas', { midia });
+    await bot.responder('/notes #eleicao sem imagem');
+
+    const antes = bot.client.enviadas.length;
+    await bot.responder('/notes -v 1');
+    const foto = bot.client.enviadas.slice(antes).at(-1);
+    assert.match(foto.options.caption, /#1\* · #eleicao · .*\nNarrativas/);
+    assert.ok(foto.content?.data || foto.content?.mimetype);
+
+    assert.match((await bot.responder('/notes -v 2'))[0], /#2\* · #eleicao[\s\S]*sem imagem/);
+    assert.match((await bot.responder('/notes -v #eleic'))[0], /Narrativas|sem imagem/);
+    assert.match((await bot.responder('/notes -v 9'))[0], /9 não existe/);
+    assert.match((await bot.responder('/notes -v'))[0], /Use: \/notes -view/);
+
+    const n = bot.client.enviadas.length;
+    await bot.responder('/notes -v 1 -to /Grupo sobre L200/');
+    const nova = bot.client.enviadas.slice(n).find(e => e.chatId === L200);
+    assert.match(nova.options.caption, /Narrativas/);
+    await bot.responder('/notes -rem all');
+});
+
 test('a confirmação mostra só os 35 primeiros caracteres do texto, numa linha', async () => {
     const [r] = await bot.responder('/notes #casa Lista dos principais casos de corrupção\ndo Brasil e do mundo');
     assert.equal(r, '📝 *#1* · #casa · Lista dos principais casos de corru…');

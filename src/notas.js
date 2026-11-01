@@ -5,6 +5,7 @@
 const os = require('os');
 const path = require('path');
 const fs = require('fs-extra');
+const sharp = require('sharp');
 const { MessageMedia } = require('whatsapp-web.js');
 const { client } = require('./cliente');
 const { NOTES_DIR } = require('./constantes');
@@ -33,7 +34,8 @@ const packageJson = require('../package.json');
  *   -tags | -t                          → as tags e quantas anotações cada uma tem
  *   -move | -m #tag #nova               → renomeia a tag (se #nova já existe, junta as duas)
  *   -desc | -d #tag [<texto>]           → descrição da tag (sem texto, mostra; -d #tag -rm, apaga)
- *   -export | -e [#tag...]              → manda as anotações (ou só as das tags) num PDF
+ *   -view | -v <id...|#tag...> [-to ...] → mostra a anotação com a imagem (texto, se não tiver)
+ *   -export | -e [#tag...]              → manda as anotações (ou só as das tags) num PDF, com as imagens
  *   -list | #tag | -export ... -to <destino>...
  *                                       → a lista (ou o PDF) vai nos destinos, como nos outros comandos
  *   /notes [#tag] <texto>               → anota (o mesmo que -add, quando não começa com "-")
@@ -385,6 +387,7 @@ async function destinosDoEnvio(msg, destinosTexto, comDestino) {
 
 const DICAS = '\n\n💡 *Dicas*\n' +
     '/notes -a [#tag] <texto> anota\n' +
+    '/notes -v <id...|#tag...> mostra com a imagem\n' +
     '/notes -r <id...|#tag...|all> remove\n' +
     '-alerta <quando> avisa.';
 
@@ -515,6 +518,66 @@ async function descreverTag(msg, texto) {
     await msg.reply(`🏷️ *#${tag}* · ${atual ? 'descrição trocada' : 'descrição salva'}`, undefined, SEM_PREVIA);
 }
 
+// -view: manda cada anotação (a imagem com o texto na legenda; sem imagem, só o texto)
+async function verNotas(msg, filtro) {
+    const { destinos: destinosTexto, informado: comDestino, resto } = extrairDestinos(filtro);
+    if (!resto.trim()) {
+        await msg.reply('❌ Use: /notes -view <id...|#tag...> [-to <destino>]...');
+        return;
+    }
+
+    const todas = await listarNotas();
+    const partes = resto.toLowerCase().split(/[\s,]+/).filter(Boolean);
+    const pedidas = partes.filter(p => p.startsWith('#')).map(lerTag);
+    const tags = resolverTags(pedidas, todas);
+    const ids = partes.filter(p => !p.startsWith('#'));
+    const faltando = [...ids.filter(i => !/^\d+$/.test(i) || !todas.some(n => n.id === Number(i))),
+        ...pedidas.filter(t => !resolverTags([t], todas).some(x => todas.some(n => n.tag === x))).map(t => `#${t}`)];
+    if (faltando.length) {
+        await msg.reply(`❌ ${faltando.join(', ')} não ${faltando.length > 1 ? 'existem' : 'existe'}. Veja a lista com /notes -l`);
+        return;
+    }
+
+    const alvos = todas.filter(n => ids.map(Number).includes(n.id) || tags.includes(n.tag));
+    const destinos = await destinosDoEnvio(msg, destinosTexto, comDestino);
+    if (destinos === null) return;
+
+    const cabecalho = (n) => [`📝 *#${n.id}*`, n.tag && `#${n.tag}`, `_${formatarData(n.created_at)}_`].filter(Boolean).join(' · ');
+    const falhas = [];
+
+    for (const n of alvos) {
+        const texto = [cabecalho(n), n.text].filter(Boolean).join('\n');
+        let media = null;
+        if (n.media_path) {
+            media = await Promise.resolve().then(() => MessageMedia.fromFilePath(n.media_path)).catch(() => null);
+            if (!media) falhas.push(`#${n.id}: arquivo da imagem não encontrado`);
+        }
+
+        if (!destinos) {
+            if (media) await msg.reply(media, undefined, { caption: texto });
+            else await msg.reply(texto, undefined, SEM_PREVIA);
+            continue;
+        }
+
+        for (const d of destinos.filter(x => x.id)) {
+            await (media ? client.sendMessage(d.id, media, { caption: texto }) : client.sendMessage(d.id, texto, SEM_PREVIA))
+                .catch(err => falhas.push(`${descreverDestinos([d])}: ${err.message}`));
+        }
+        const emails = [...new Set(destinos.filter(d => d.email).flatMap(d => d.email.split(/\s*,\s*/)))];
+        if (emails.length) {
+            await enviarEmail({
+                para: emails, assunto: `📝 Anotação #${n.id}`, texto: texto.replace(/[*_]/g, ''),
+                anexos: media ? [{ filename: path.basename(n.media_path), path: n.media_path, contentType: n.media_mime }] : []
+            }).catch(err => falhas.push(`e-mail: ${err.message}`));
+        }
+    }
+
+    if (destinos && alvos.length && !falhas.length) {
+        await msg.reply(`📝 ${plural(alvos.length, 'anotação enviada', 'anotações enviadas')} em ${descreverDestinos(destinos)}.`);
+    }
+    if (falhas.length) await msg.reply(`❌ ${falhas.join('; ')}`);
+}
+
 // -tags: cada tag com a quantidade de anotações (as sem tag por último)
 async function listarTags(msg, filtro = '') {
     const { destinos: destinosTexto, informado: comDestino, resto } = extrairDestinos(filtro);
@@ -552,6 +615,19 @@ function carimboDeArquivo(ms) {
     return `${p.year}${p.month}${p.day}_${p.hour}${p.minute}`;
 }
 
+// A imagem da anotação como JPEG RGB sobre fundo branco, no tamanho que o PDF aproveita
+async function imagemParaPdf(arquivo) {
+    try {
+        const { data, info } = await sharp(arquivo).rotate().resize({ width: 900, withoutEnlargement: true })
+            .flatten({ background: '#ffffff' }).toColourspace('srgb').jpeg({ quality: 80 })
+            .toBuffer({ resolveWithObject: true });
+        return { jpeg: data, largura: info.width, altura: info.height };
+    } catch (err) {
+        printError('/notes: imagem fora do PDF:', err.message);
+        return null;
+    }
+}
+
 async function exportar(msg, filtro = '') {
     const { destinos: destinosTexto, informado: comDestino, resto } = extrairDestinos(filtro);
     let tags = resto.trim() ? soTags(resto) : [];
@@ -587,7 +663,10 @@ async function exportar(msg, filtro = '') {
             blocos.push({ tipo: 'titulo', texto: `${k ? `#${k}` : SEM_TAG} (${itens.length})` });
         }
         for (const n of itens) {
-            const alerta = (n.media_path ? ' · com imagem' : '') + (n.alert_at ? ` · alerta ${fmtQuando(n.alert_at)}` : '');
+            // A imagem vem em cima e o texto da anotação é a legenda
+            const imagem = n.media_path ? await imagemParaPdf(n.media_path) : null;
+            if (imagem) blocos.push({ tipo: 'imagem', ...imagem });
+            const alerta = (n.media_path && !imagem ? ' · imagem não incluída' : '') + (n.alert_at ? ` · alerta ${fmtQuando(n.alert_at)}` : '');
             blocos.push({ tipo: 'texto', texto: `#${n.id}  ${n.text.replace(MARCA_RESPOSTA, '[resp.]')}`, recuo: 0 });
             blocos.push({ tipo: 'meta', texto: `Anotada em ${formatarData(n.created_at)}${alerta}` });
             blocos.push({ tipo: 'espaco', altura: 8 });
@@ -650,6 +729,7 @@ async function cmdNote({ msg, args, quotedMsg }) {
     if (nome === '-update' || nome === '-u') return atualizar(msg, resto, quotedMsg);
     if (nome === '-search' || nome === '-s') return listar(msg, resto, true);
     if (nome === '-tags' || nome === '-t') return listarTags(msg, resto);
+    if (nome === '-view' || nome === '-v') return verNotas(msg, resto);
     if (nome === '-desc' || nome === '-d') return descreverTag(msg, resto);
     if (nome === '-move' || nome === '-m') return moverTag(msg, resto);
     if (nome === '-export' || nome === '-e') return exportar(msg, resto);
@@ -665,7 +745,7 @@ async function cmdNote({ msg, args, quotedMsg }) {
 
     // Opção que não existe: erro. Sem "-" na frente, o texto todo é uma anotação nova (o mesmo que -add)
     if (nome.startsWith('-')) {
-        return msg.reply('❌ Use: /notes [-list] [#tag] [-to ...] | -search <texto|/regex/> | -tags | -move #tag #nova | -desc #tag <texto> | -update <id> <texto> | -export [#tag] [-to ...] | -add [#tag] <texto> [-alerta <quando>] | -rem <id...|#tag...|all> | -alerta ...');
+        return msg.reply('❌ Use: /notes [-list] [#tag] [-to ...] | -search <texto|/regex/> | -tags | -view <id...|#tag...> | -move #tag #nova | -desc #tag <texto> | -update <id> <texto> | -export [#tag] [-to ...] | -add [#tag] <texto> [-alerta <quando>] | -rem <id...|#tag...|all> | -alerta ...');
     }
 
     return adicionar(msg, texto);
