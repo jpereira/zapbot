@@ -347,8 +347,19 @@ const sharpFake = (inputAlt) => {
         webp: () => chainAlt,
         composite: () => chainAlt,
         png: () => { format = 'png'; return chainAlt; },
+        // /notes -export: the file that starts with "nao e imagem" fails; the rest becomes a 40x20 "jpeg"
+        flatten: () => chainAlt,
+        toColourspace: () => chainAlt,
+        jpeg: () => { format = 'jpeg'; return chainAlt; },
         metadata: async () => dim,
-        toBuffer: async () => Buffer.from(format === 'png' ? `png:${dim.width}x${dim.height}` : 'webp-enquadrado')
+        toBuffer: async (optionsAlt) => {
+            if (format !== 'jpeg') return Buffer.from(format === 'png' ? `png:${dim.width}x${dim.height}` : 'webp-enquadrado');
+            if (typeof inputAlt === 'string' && require('fs').readFileSync(inputAlt, 'latin1').startsWith('nao e imagem')) {
+                throw new Error('Input file contains unsupported image format');
+            }
+            const data = Buffer.from('\xff\xd8jpeg-falso\xff\xd9', 'latin1');
+            return optionsAlt?.resolveWithObject ? { data, info: { width: 40, height: 20 } } : data;
+        }
     };
     return chainAlt;
 };

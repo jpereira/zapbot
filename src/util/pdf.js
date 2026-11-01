@@ -1,6 +1,7 @@
 /*
  * Simple PDF, no dependencies: A4, Helvetica (the PDF base font), text with line wrapping,
- * pagination and header/footer on all pages. Latin-1 only: emojis and whatever does not fit leave.
+ * pagination and header/footer on all pages and JPEG (RGB) images. Latin-1 only: emojis and whatever
+ * does not fit, they leave.
  */
 
 const WIDTH = 595;
@@ -8,6 +9,8 @@ const HEIGHT = 842;
 const MARGIN = 50;
 const TOP_BODY = HEIGHT - 80;
 const BASE_BODY = 70;
+const IMAGE_MAX_L = 300;  // the image fits in a 300 x 260 point box
+const IMAGE_MAX_A = 260;
 
 // Helvetica widths (1/1000 em) of the ASCII characters 32..126
 const WIDTHS = [
@@ -75,7 +78,8 @@ const escape = (t) => t.replace(/[\\()]/g, '\\$&');
  * @param {string}   o.titulo     header, on the left
  * @param {string}   o.direita    header, on the right (date/time)
  * @param {string}   o.rodape     footer, on the left ("Página X de Y" goes on the right)
- * @param {object[]} o.blocos     { texto, tipo: 'titulo' | 'texto' | 'meta' | 'espaco' }
+ * @param {object[]} o.blocos     { texto, tipo: 'titulo' | 'texto' | 'meta' | 'espaco' } or
+ * { type: 'image', jpeg: Buffer, width, height } (RGB JPEG, in pixels)
  * @returns {Buffer}
  */
 function generatePdf({ titulo: title, direita: right = '', rodape: footer = '', blocos: blocks }) {
@@ -90,6 +94,18 @@ function generatePdf({ titulo: title, direita: right = '', rodape: footer = '', 
     for (const b of blocks) {
         if (b.tipo === 'espaco') {
             y -= b.altura ?? 8;
+            continue;
+        }
+        if (b.tipo === 'imagem') {
+            const scale = Math.min(1, IMAGE_MAX_L / b.largura, IMAGE_MAX_A / b.altura);
+            const [w, h] = [b.largura * scale, b.altura * scale];
+            if (y - h < BASE_BODY && y !== TOP_BODY) {
+                pages.push([]);
+                y = TOP_BODY;
+            }
+            y -= h;
+            pages.at(-1).push({ imagem: b, x: MARGIN, y, w, h });
+            y -= 6;
             continue;
         }
         const e = STYLES[b.tipo ?? 'texto'];
@@ -125,6 +141,14 @@ function generatePdf({ titulo: title, direita: right = '', rodape: footer = '', 
     freshAlt('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
     freshAlt('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');
 
+    // Each image becomes a single object, even if the page cites it
+    for (const it of pages.flat().filter(x => x.imagem)) {
+        const b = it.imagem;
+        b.objeto ??= freshAlt(`<< /Type /XObject /Subtype /Image /Width ${b.largura} /Height ${b.altura} ` +
+            `/ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${b.jpeg.length} >>\n` +
+            `stream\n${b.jpeg.toString('latin1')}\nendstream`);
+    }
+
     const textAlt = (sourceAlt, tam, cor, x, y, t) =>
         `BT /${sourceAlt} ${tam} Tf ${cor} rg ${x.toFixed(2)} ${y.toFixed(2)} Td (${escape(t)}) Tj ET\n`;
     const lineHorizontal = (y) => `0.7 0.7 0.7 RG 0.5 w ${MARGIN} ${y} m ${WIDTH - MARGIN} ${y} l S\n`;
@@ -134,7 +158,11 @@ function generatePdf({ titulo: title, direita: right = '', rodape: footer = '', 
         let c = textAlt('F2', 11, '0.1 0.3 0.5', MARGIN, HEIGHT - 45, cab);
         c += textAlt('F1', 9, '0.4 0.4 0.4', WIDTH - MARGIN - width(dir, 9), HEIGHT - 45, dir);
         c += lineHorizontal(HEIGHT - 55);
-        for (const it of items) c += textAlt(it.fonte, it.tamanho, it.cor, it.x, it.y, it.texto);
+        for (const it of items) {
+            c += it.imagem
+                ? `q ${it.w.toFixed(2)} 0 0 ${it.h.toFixed(2)} ${it.x} ${it.y.toFixed(2)} cm /Im${it.imagem.objeto} Do Q\n`
+                : textAlt(it.fonte, it.tamanho, it.cor, it.x, it.y, it.texto);
+        }
         c += lineHorizontal(52);
         const pag = `Página ${i + 1} de ${total}`;
         c += textAlt('F1', 8, '0.4 0.4 0.4', MARGIN, 38, rod);
@@ -142,8 +170,10 @@ function generatePdf({ titulo: title, direita: right = '', rodape: footer = '', 
 
         const bytes = Buffer.from(c, 'latin1');
         const content = freshAlt(`<< /Length ${bytes.length} >>\nstream\n${bytes.toString('latin1')}endstream`);
+        const used = [...new Set(items.filter(x => x.imagem).map(x => x.imagem.objeto))];
+        const images = used.length ? ` /XObject << ${used.map(o => `/Im${o} ${o} 0 R`).join(' ')} >>` : '';
         const page = freshAlt(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${WIDTH} ${HEIGHT}] ` +
-            `/Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ${content} 0 R >>`);
+            `/Resources << /Font << /F1 3 0 R /F2 4 0 R >>${images} >> /Contents ${content} 0 R >>`);
         children.push(`${page} 0 R`);
     });
     objects[1] = `<< /Type /Pages /Kids [${children.join(' ')}] /Count ${total} >>`;
