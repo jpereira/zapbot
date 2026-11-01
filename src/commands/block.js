@@ -363,5 +363,8 @@ async function cmdUnblock({ msg, opts, quotedMsg }) {
 
 module.exports = {
     cmdBlock,
-    cmdUnblock
+    cmdUnblock,
+    readPerson,
+    textPeople,
+    withoutDelimiters
 };
