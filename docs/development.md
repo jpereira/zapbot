@@ -180,6 +180,7 @@ devolve `null`, como quando o WhatsApp não deixa editar.
 | `agenda.test.js` | Datas digitadas (`6h`, `+2h`, `às 18h`, `sexta`...) e o `/cron`, nos modos mensagem e lembrete, com vários `-to` num item só, `-edit`, `-pause`/`-resume` e os `{/comando}` e o `\n` no texto (e o `-test`) |
 | `alias.test.js` | Cadastro persistente, descrições com aspas retas e curvas, listagem, remoção individual e total, nomes reservados, argumentos adicionais, permissões do destino e os aliases de texto (`{/comando}`, `\n` e as permissões de cada comando) |
 | `apagadas-editadas.test.js` | Eventos de apagar/editar (o Nome do aviso vem da agenda) (e os avisos `show.alert.*`) e o `/show` (apagadas, editadas e status, o chat pedido e a busca `-q`) |
+| `ascii.test.js` | O `/ascii`: as 5 linhas dentro do bloco de código, a quebra pela largura (`-w`), o `-c`, o texto da mensagem respondida, acentos e erros |
 | `backup.test.js` | `/backup` (criação, lista, restauração, envio no privado, por e-mail e com um ou vários `-to`) e o backup diário |
 | `batch.test.js` | O `/batch`: a separação em blocos (linhas em branco, URLs e `/` que não é comando), o resumo, o `-dry`, o `-stop`, a recusa de `/batch` dentro de `/batch` e o uso só pelo dono |
 | `block.test.js` | `/block` (`/bloquear`) e `/unblock`: pelo nome, pelo número, respondendo, a lista (com os `@lid` convertidos para o telefone) e o nº dela, e o `/unblock -all` |
