@@ -206,7 +206,7 @@ describe('/watch', () => {
         assert.match(r, /📦 \*Total:\* 2 _\(exibindo as 1 mais recentes\)_/);
     });
 
-    test('-rem (-r) remove a regra e as ocorrências dela', async () => {
+    test('-rm (-r) remove a regra e as ocorrências dela', async () => {
         await bot.setSetting('watch.rules', 'pix\nboleto');
         await alguemEscreve('pix');
         const [r] = await bot.responder('/watch -r 1');
@@ -252,7 +252,7 @@ describe('/watch -to', () => {
         assert.match(lista, /#1  promoção  \(1\)  → 👥 Grupo sobre L200\n#2  pix  \(1\)/);
     });
 
-    test('-s N -to troca destinos; off volta ao privado; -rem apaga os destinos', async () => {
+    test('-s N -to troca destinos; off volta ao privado; -rm apaga os destinos', async () => {
         await bot.responder('/watch pix');
         assert.deepEqual(await bot.responder('/watch -s 1 -to /Fulano/'), ['📣 Regra *#1* (pix): os avisos vão para *👤 Fulano*.']);
         assert.equal((await alguemEscreve('pix'))[0].chatId, OUTRO.jid);
@@ -382,14 +382,14 @@ describe('/watch com origem e listagem', () => {
         assert.equal((await alguemEscreve('pix -to -h azul novo'))[0].chatId, OUTRO.jid);
     });
 
-    test('-flush N mantém origem e destinos; -rem N elimina tudo da regra', async () => {
+    test('-flush N mantém origem e destinos; -rm N elimina tudo da regra', async () => {
         await bot.responder('/watch pix -in /Fulano/ -to /Família/');
         await alguemEscreve('pix');
         await bot.responder('/watch -flush 1');
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM watch_hits')).n, 0);
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM watch_sources')).n, 1);
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM watch_destinations')).n, 1);
-        await bot.responder('/watch -rem 1');
+        await bot.responder('/watch -rm 1');
         assert.deepEqual(bot.getSetting('watch.rules'), []);
         assert.deepEqual(await bot.dbAll('SELECT * FROM watch_sources'), []);
         assert.deepEqual(await bot.dbAll('SELECT * FROM watch_destinations'), []);
@@ -397,7 +397,7 @@ describe('/watch com origem e listagem', () => {
 
     test('ações inválidas e opções sem valor não alteram configurações', async () => {
         for (const comando of ['pix -in', 'pix -to', 'pix -in /Fulano/ -in /Família/',
-            '-rem 0', '-show 0', '-list -flush', '-a pix', '-add pix', '-rem 1 -2']) {
+            '-rm 0', '-show 0', '-list -flush', '-a pix', '-add pix', '-rm 1 -2']) {
             assert.match((await bot.responder(`/watch ${comando}`))[0], /^❌/, comando);
             assert.deepEqual(bot.getSetting('watch.rules'), []);
         }

@@ -11,7 +11,7 @@
     "commands": [
         {
             "cmd": "/alias",
-            "usage": "/alias <nome> [-quiet|-q] [-desc|-d \"Descrição\"] </comando argumentos>  ou  /alias <nome> [-quiet|-q] [-desc|-d \"Descrição\"] <texto com {/comando}>  ou  /alias [-list|-l]  ou  /alias [-rm|-rem] <nome|all>",
+            "usage": "/alias <nome> [-quiet|-q] [-desc|-d \"Descrição\"] </comando argumentos>  ou  /alias <nome> [-quiet|-q] [-desc|-d \"Descrição\"] <texto com {/comando}>  ou  /alias [-list|-l]  ou  /alias [-rm] <nome|all>",
             "aliases": [],
             "help": "Salva atalhos para comandos com argumentos ou para um texto com vários {/comando}, como no /cron: cada um roda e a resposta entra no lugar, numa mensagem só. No texto, \\n vira quebra de linha. Sem opção, lista os aliases cadastrados. No atalho de comando, $1, $2... pegam os argumentos digitados (ex: /alias /rec /sticker -ss $1 -es $2; /rec 10 20 url). Ao executar o atalho, o bot imprime o comando chamado, acrescenta os argumentos adicionais e respeita as permissões dos comandos de destino. O nome aceita letras, números, _ e -, com ou sem barra no cadastro. Cadastrar o mesmo nome substitui o comando e a descrição. O destino deve ser um comando ativo do bot, inclusive seus aliases fixos; não pode ser /alias nem outro atalho cadastrado. Nomes de comandos e all são reservados. Use /help alias para listar os atalhos disponíveis para você. Ex: /alias /dolar /crypto USD, /alias orca Verificando Orca {/defi orca}\\n Verificando Prjx {/defi prjx}",
             "cmd_opts": [
@@ -43,13 +43,12 @@
                 },
                 {
                     "opts": [
-                        "rem",
                         "rm"
                     ],
                     "values": [
                         "<nome|all>"
                     ],
-                    "desc": "Remove o alias, com ou sem a barra; all remove todos. Ex: /alias -rm /eita, /alias -rem eita, /alias -rm all"
+                    "desc": "Remove o alias, com ou sem a barra; all remove todos. Ex: /alias -rm /eita, /alias -rm all"
                 }
             ],
             "onlyAdmin": true
@@ -1121,7 +1120,7 @@
         },
         {
             "cmd": "/monitor",
-            "usage": "/monitor [-add <contato> [-alerta] | -alerta <contato> | -rem <id, contato ou all> | -list [contato]]",
+            "usage": "/monitor [-add <contato> [-alerta] | -alerta <contato> | -rm <id, contato ou all> | -list [contato]]",
             "help": "👀 Monitora até monitor.max contatos, um por vez, em ordem aleatória e com espera de 1 a 15 s entre consultas. O intervalo mínimo por contato é monitor.pool segundos (padrão: 300 s). Guarda até monitor.maxRecords horários distintos por contato (padrão: 30), sem garantir todos os acessos nem atualização do cache. Mais contatos e intervalos curtos podem contribuir para bloqueio pelo WhatsApp; nenhum intervalo garante segurança. /set monitor.enabled false pausa sem apagar. Ex: /monitor -a /Jorge Chip L200/, /monitor -r 1, /monitor -l.",
             "cmd_opts": [
                 {
@@ -1143,13 +1142,13 @@
                 },
                 {
                     "opts": [
-                        "rem",
+                        "rm",
                         "r"
                     ],
                     "values": [
                         "<id, contato ou all>"
                     ],
-                    "desc": "Remove pelo id exibido em /monitor ou /monitor -list, ou pelo mesmo parser do cadastro: nome da agenda, /nome com espaços/, menção real ou telefone. Use -rem all ou -r all para apagar todos os cadastros e históricos locais. Apaga o histórico local do cadastro; os outros ids não são renumerados. Ex: -rem all, -r 1, -rem /Jorge Chip L200/, -r @Fulano, -r +5521999999999"
+                    "desc": "Remove pelo id exibido em /monitor ou /monitor -list, ou pelo mesmo parser do cadastro: nome da agenda, /nome com espaços/, menção real ou telefone. Use -rm all ou -r all para apagar todos os cadastros e históricos locais. Apaga o histórico local do cadastro; os outros ids não são renumerados. Ex: -rm all, -r 1, -rm /Jorge Chip L200/, -r @Fulano, -r +5521999999999"
                 },
                 {
                     "opts": [
@@ -1297,7 +1296,7 @@
         },
         {
             "cmd": "/notes",
-            "usage": "/notes [-list|-l] [#tag...] [-to <destino>]...  ou  /notes -search|-s [#tag...] <texto|/regex/flags> [-to <destino>]...  ou  /notes -tags|-t [-to <destino>]...  ou  /notes -update|-u <id> [#tag] <novo texto>  ou  /notes -view|-v <id...|#tag...> [-to <destino>]...  ou  /notes -move|-m #tag #novatag  ou  /notes -desc|-d #tag [<descrição>|-rm]  ou  /notes -export|-e [#tag...] [-to <destino>]...  ou  /notes [#tag] <texto>  ou  /notes -add|-a [#tag] <texto> [-alerta <quando> [-to <destino>]...]  ou  /notes -rem|-r <id...|#tag...|all>  ou  /notes -alerta [<id|#tag...> [<quando> [-to <destino>]...]]  ou  /notes -alerta -rm <id...|#tag...|all>",
+            "usage": "/notes [-list|-l] [#tag...] [-to <destino>]...  ou  /notes -search|-s [#tag...] <texto|/regex/flags> [-to <destino>]...  ou  /notes -tags|-t [-to <destino>]...  ou  /notes -update|-u <id> [#tag] <novo texto>  ou  /notes -view|-v <id...|#tag...> [-to <destino>]...  ou  /notes -move|-m #tag #novatag  ou  /notes -desc|-d #tag [<descrição>|-rm]  ou  /notes -export|-e [#tag...] [-to <destino>]...  ou  /notes [#tag] <texto>  ou  /notes -add|-a [#tag] <texto> [-alerta <quando> [-to <destino>]...]  ou  /notes -rm|-r <id...|#tag...|all>  ou  /notes -alerta [<id|#tag...> [<quando> [-to <destino>]...]]  ou  /notes -alerta -rm <id...|#tag...|all>",
             "aliases": [],
             "help": "Anotações salvas no banco. Respondendo uma mensagem, anota o texto dela com ↩️ (/notes, /notes #lembrete). Com uma imagem (na legenda ou respondendo uma foto), guarda a imagem no disco junto da anotação. Sem opção, lista as anotações com o ID, agrupadas por #tag (/notes #casa filtra); com um texto que não começa com \"-\", anota (o mesmo que -add). O -alerta lembra de uma anotação numa data/hora (uma vez; a anotação continua): no seu privado ou nos destinos do -to. Ex: /notes -a #casa comprar leite, /notes #casa, /notes -s /pão|leite/i, /notes -t, /notes -v 76, /notes #idei (acha a #ideias), /notes -m #casa #lar, /notes -d #casa Coisas da casa, /notes -update 3 novo texto, /notes -e #casa, /notes -r #casa, /notes -a ligar pro João -alerta amanhã 9h, /notes -alerta 3 +2h -to /Família/, /notes -alerta #casa 18h -to /Família/, /notes -r 2",
             "cmd_opts": [
@@ -1398,13 +1397,13 @@
                 },
                 {
                     "opts": [
-                        "rem",
+                        "rm",
                         "r"
                     ],
                     "values": [
                         "<id...|#tag...|all>"
                     ],
-                    "desc": "Remove as anotações com esses IDs (-r 1 2 3 ou -r 1,2,3), de uma tag (-r #casa) ou todas (all). Se algum ID ou tag não existe, nenhuma sai. A tag vai inteira. Ex: /notes -r 2, /notes -r 1 2 3, /notes -r #casa, /notes -r all",
+                    "desc": "Remove as anotações com esses IDs (-rm 1 2 3 ou -rm 1,2,3), de uma tag (-rm #casa) ou todas (all). Se algum ID ou tag não existe, nenhuma sai. A tag vai inteira. Junto com -alerta, tira só o alerta, mantendo as anotações. Ex: /notes -rm 2, /notes -rm 1 2 3, /notes -rm #casa, /notes -rm all, /notes -alerta -rm 3",
                     "cron": false
                 },
                 {
@@ -1415,16 +1414,6 @@
                         "<quando>"
                     ],
                     "desc": "Avisa da anotação numa data/hora. Com -add: /notes -a texto -alerta amanhã 9h. Com ID: /notes -alerta 3 +2h. Com #tag: avisa de todas as anotações da tag (/notes -alerta #casa 18h -to /Família/). Sozinho, lista as anotações com alerta (com #tag, só as da tag); com -rm <id...|#tag...|all>, tira o alerta. O quando aceita +2h, 30m, 18h, amanhã 9h, sexta 18:30, 25/12 10h.",
-                    "cron": false
-                },
-                {
-                    "opts": [
-                        "rm"
-                    ],
-                    "values": [
-                        "<id...|#tag...|all>"
-                    ],
-                    "desc": "Junto com -alerta: tira o alerta das anotações com esses IDs (-rm 1 2 3 ou -rm 1,2,3), de uma tag (-rm #casa) ou de todas (all), mantendo as anotações. Se algum ID não existe, nenhum é mexido.",
                     "cron": false
                 },
                 {
@@ -1530,7 +1519,7 @@
             "aliases": [
                 "/config"
             ],
-            "help": "Lista, exibe e altera as configurações do bot (settings); nas listas, -append (-a) e -rem acrescentam e tiram itens. No seu privado, mostra também o config/.env (somente leitura).",
+            "help": "Lista, exibe e altera as configurações do bot (settings); nas listas, -append (-a) e -rm acrescentam e tiram itens. No seu privado, mostra também o config/.env (somente leitura).",
             "cmd_opts": [
                 {
                     "opts": [
@@ -1544,12 +1533,12 @@
                 },
                 {
                     "opts": [
-                        "rem"
+                        "rm"
                     ],
                     "values": [
                         "<chave>"
                     ],
-                    "desc": "Numa lista, tira os itens que vierem depois da chave. Ex: /set -rem commands.disabled noffa"
+                    "desc": "Numa lista, tira os itens que vierem depois da chave. Ex: /set -rm commands.disabled noffa"
                 },
                 {
                     "opts": [
@@ -1967,9 +1956,9 @@
         },
         {
             "cmd": "/watch",
-            "usage": "/watch [texto|/regex/flags] [-in <origem>] [-to <destino>]...  ou  /watch [-N] [-q <texto|/regex/flags>]  ou  /watch -s [N|regra] [-q <texto|/regex/flags>] [-to <destino|off>]...  ou  /watch -rem <N|regra>  ou  /watch -flush [N|regra]",
+            "usage": "/watch [texto|/regex/flags] [-in <origem>] [-to <destino>]...  ou  /watch [-N] [-q <texto|/regex/flags>]  ou  /watch -s [N|regra] [-q <texto|/regex/flags>] [-to <destino|off>]...  ou  /watch -rm <N|regra>  ou  /watch -flush [N|regra]",
             "aliases": [],
-            "help": "Vigia mensagens recebidas com regras de texto ou regex. Miniaturas de localização não são texto e ficam fora das regras. Uma regra sem -in vale em qualquer lugar; -in restringe a um contato (remetente), grupo ou canal. Sem parâmetros, lista regras e últimos matches; -N escolhe a quantidade. Publicações de @newsletter são identificadas com 📰 e o nome do canal. Quem está silenciado no /mute não gera aviso no seu privado (os -to continuam recebendo). Os números após -s, -rem e -flush identificam regras; no lugar deles, vale a própria regra, inteira ou um trecho. A quantidade de matches vem no -N.",
+            "help": "Vigia mensagens recebidas com regras de texto ou regex. Miniaturas de localização não são texto e ficam fora das regras. Uma regra sem -in vale em qualquer lugar; -in restringe a um contato (remetente), grupo ou canal. Sem parâmetros, lista regras e últimos matches; -N escolhe a quantidade. Publicações de @newsletter são identificadas com 📰 e o nome do canal. Quem está silenciado no /mute não gera aviso no seu privado (os -to continuam recebendo). Os números após -s, -rm e -flush identificam regras; no lugar deles, vale a própria regra, inteira ou um trecho. A quantidade de matches vem no -N.",
             "cmd_opts": [
                 {
                     "opts": [
@@ -2010,13 +1999,13 @@
                 },
                 {
                     "opts": [
-                        "rem",
+                        "rm",
                         "r"
                     ],
                     "values": [
                         "<N|regra>"
                     ],
-                    "desc": "Remove a regra N (ou a regra pelo texto), suas ocorrências, origem e destinos. Ex: /watch -rem 3, /watch -rem /Jorge/"
+                    "desc": "Remove a regra N (ou a regra pelo texto), suas ocorrências, origem e destinos. Ex: /watch -rm 3, /watch -rm /Jorge/"
                 },
                 {
                     "opts": [

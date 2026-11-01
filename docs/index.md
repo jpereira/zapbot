@@ -113,7 +113,7 @@ Por onde começar:
   por pessoa (`monitor.maxRecords`) nas tabelas `monitor_contacts` e `monitor_history`.
   `/monitor` e `/monitor -l` mostram o histórico observado; `/monitor -l /Maria/` filtra uma pessoa.
   `/monitor -add /Maria/ -alerta` ou `/monitor -alerta /Maria/` ativa avisos online no privado
-  do dono do bot, uma vez por transição observada. `/monitor -rem all` limpa os cadastros
+  do dono do bot, uma vez por transição observada. `/monitor -rm all` limpa os cadastros
   e históricos locais. `/set monitor.enabled false` pausa as consultas sem apagar dados.
   Horários podem vir do cache e não são confirmados; não há garantia de registrar todos os acessos
   nem de evitar bloqueio da conta pelo WhatsApp.

@@ -17,7 +17,7 @@ const { regexPerigosa } = require('../util/regexSeguro');
  *   /set <trecho|/regex/> → lista as chaves que casam (ex.: /set alerta)
  *   /set <chave> <valor>  → altera (lista: itens separados por vírgula ou espaço)
  *   /set -append <chave> <valor> → numa lista, acrescenta itens (-a)
- *   /set -rem <chave> <valor>    → numa lista, tira itens
+ *   /set -rm <chave> <valor>    → numa lista, tira itens
  *   /set -reset <chave>   → volta ao padrão
  * O bot.admins (quem mais usa os comandos admin) e o bot.users (quem usa os
  * comandos comuns) só o dono altera. Neles, além do número, vale o nome do
@@ -211,7 +211,7 @@ async function mudarLista(msg, opcoes) {
     const { key, bruto, acrescentar, veja = `/set ${key}`, resposta = null } = opcoes;
     const mostrar = opcoes.mostrar ?? ((itens) => mostrarItens(key, itens));
     const schema = SETTINGS_SCHEMA[key];
-    const opcao = acrescentar ? '-append' : '-rem';
+    const opcao = acrescentar ? '-append' : '-rm';
 
     if (!schema) {
         await msg.reply(`❌ Setting desconhecido: ${key ?? ''}\n💡 _Veja todos com /set_`);
@@ -272,16 +272,16 @@ async function cmdSet({ msg, opts, args, chatId }) {
         opts = { ...opts, argv: [monitor[1], monitor[2]] };
     }
 
-    // A chave da opção (-reset, -append, -rem) ou a 1ª palavra
-    const chaveAlvo = opts.opt.reset ?? opts.opt.append ?? opts.opt.rem ?? opts.argv[0];
-    if (SO_O_DONO.includes(chaveAlvo) && !msg.fromMe && (opts.opt.reset || opts.opt.append || opts.opt.rem || opts.argv.length > 1)) {
+    // A chave da opção (-reset, -append, -rm) ou a 1ª palavra
+    const chaveAlvo = opts.opt.reset ?? opts.opt.append ?? opts.opt.rm ?? opts.argv[0];
+    if (SO_O_DONO.includes(chaveAlvo) && !msg.fromMe && (opts.opt.reset || opts.opt.append || opts.opt.rm || opts.argv.length > 1)) {
         await msg.reply(`⛔ Só o dono do bot altera o *${chaveAlvo}*.`);
         return;
     }
 
-    if (opts.given.has('append') || opts.given.has('rem')) {
+    if (opts.given.has('append') || opts.given.has('rm')) {
         const acrescentar = opts.given.has('append');
-        const key = acrescentar ? opts.opt.append : opts.opt.rem;
+        const key = acrescentar ? opts.opt.append : opts.opt.rm;
         let bruto = key ? valorCru(args, key) : '';
 
         // Lista de pessoas: os nomes viram telefones antes da validação
@@ -390,7 +390,7 @@ async function cmdSet({ msg, opts, args, chatId }) {
 }
 
 /**
- * O -append/-rem de uma lista de pessoas (bot.admins, bot.users) a partir do
+ * O -append/-rm de uma lista de pessoas (bot.admins, bot.users) a partir do
  * texto com os nomes, as menções e os números: o atalho do /bot +o|-o|+v|-v.
  * Com itensProntos, o texto já são os itens (o telefone ou o id do grupo do
  * chat atual): não passa pela busca.

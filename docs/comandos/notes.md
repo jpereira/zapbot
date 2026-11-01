@@ -15,7 +15,7 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 /notes -export|-e [#tag...] [-to <destino>]...
 /notes [#tag] <texto>
 /notes -add|-a [#tag] <texto> [-alerta <quando> [-to <destino>]...]
-/notes -rem|-r <id...|#tag...|all>
+/notes -rm|-r <id...|#tag...|all>
 /notes -alerta [<id|#tag...> [<quando> [-to <destino>]...]]
 /notes -alerta -rm <id...|#tag...|all>
 ```
@@ -32,9 +32,8 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 | `-export`, `-e` | `[#tag...]` | Manda as anotações num PDF, com as imagens e o texto como legenda (cabeçalho, rodapé com versão, host, data e hora, e paginação). Com tags, só as delas. Veja [Exportar](#exportar) |
 | `<texto>` | | Sem opção na frente, o texto vira uma anotação nova, igual ao `-add`: `/notes não esquecer de remover a opção tal` |
 | `-add`, `-a` | `[#tag] <texto>` | Adiciona uma anotação; a `#tag` só vale no começo do texto. O texto vai até o `-alerta`, se houver, e aceita várias linhas |
-| `-rem`, `-r` | `<id...\|#tag...\|all>` | Remove as anotações com esses IDs (`-r 2`, `-r 1 2 3` ou `-r 1,2,3`), de uma tag (`-r #casa`) ou todas (`all`). Se algum ID ou tag não existe, nenhuma sai |
+| `-rm`, `-r` | `<id...\|#tag...\|all>` | Remove as anotações com esses IDs (`-r 2`, `-r 1 2 3` ou `-r 1,2,3`), de uma tag (`-r #casa`) ou todas (`all`). Se algum ID ou tag não existe, nenhuma sai. Junto com `-alerta`, tira só o alerta, mantendo as anotações |
 | `-alerta` | `<quando>` | Avisa da anotação (ou de todas as de uma `#tag`) numa data/hora. Veja [Alertas](#alertas) |
-| `-rm` | `<id...\|#tag...\|all>` | Junto com `-alerta`: tira o alerta dessas anotações, de uma tag ou de todas, mantendo as anotações |
 | `-to` | `<destino>` | Com `-alerta`: avisa num contato, grupo, número ou e-mail em vez do seu privado. Com a lista (`-l`, `#tag`) ou o `-export`: manda a lista ou o PDF lá, em vez de responder no chat. Repita para vários |
 
 ```text
@@ -59,8 +58,8 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 /notes -a #duvidas Olhar sobre como funciona as ETFs
 /notes                → lista tudo, agrupado por #tag (as sem tag por último)
 /notes #casa          → só as da #casa (o mesmo que /notes -l #casa)
-/notes -rem #casa     → remove todas as da #casa
-/notes -rem all       → remove tudo
+/notes -rm #casa     → remove todas as da #casa
+/notes -rm all       → remove tudo
 ```
 
 - Respondendo uma mensagem, `/notes` (ou `/notes #lembrete`, `/notes -a`) anota o texto dela, com o
@@ -70,11 +69,11 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 - **Imagens:** mande uma foto com a legenda `/notes #minhatag Imagem de teste` ou responda uma foto
   com `/notes [#tag] [texto]`. O texto é opcional (numa resposta com legenda, vale a legenda, com o
   ↩️). A imagem fica em `cache/notes/` (fora do `cache/media/`, então o `/cache -media` não apaga)
-  e a lista mostra `🖼️ imagem`; para ver a imagem, use o [`-view`](#ver-e-organizar). O `-rem`
+  e a lista mostra `🖼️ imagem`; para ver a imagem, use o [`-view`](#ver-e-organizar). O `-rm`
   apaga o arquivo junto. Só imagens (JPEG, PNG, WebP, GIF).
 - A tag pode vir pela metade na lista, na busca, no `-view`, no `-desc` e no `-export`:
   `/notes #idei` acha a `#ideias`. A exata ganha; senão valem as que começam com o que você
-  digitou, depois as que contêm. Onde mexe nos dados (`-rem`, `-move` e o `-alerta` com `<quando>`),
+  digitou, depois as que contêm. Onde mexe nos dados (`-rm`, `-move` e o `-alerta` com `<quando>`),
   a tag vai inteira.
 - Cada anotação tem no máximo uma tag, a do começo do texto. Maiúsculas e minúsculas valem igual.
 - `/notes #casa` sozinho filtra; com texto depois, anota.
@@ -127,7 +126,7 @@ acentos, ou `/regex/flags`.
 
 O `-to` funciona como nos outros comandos (veja
 [Avisar em outro chat ou por e-mail](cotacao.md#avisar-em-outro-chat-ou-por-e-mail)). Não vale no
-`-rem`.
+`-rm`.
 
 - Sai como documento no próprio chat (com `-to`, nos destinos; por e-mail, em anexo). A data e a
   hora do nome são de Brasília.

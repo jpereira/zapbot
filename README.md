@@ -170,7 +170,7 @@ de um. Os marcados como **Admin** só respondem à sua conta (e aos admins extra
 | [`/ping`](https://jpereira.github.io/zapbot/comandos/ping/) |  | | Verifica se o bot está vivo |
 | [`/pixelart`](https://jpereira.github.io/zapbot/comandos/pixelart/) | `/ansi`, `/px` | | Arte ANSI/ASCII aleatória (16colo.rs) |
 | [`/search`](https://jpereira.github.io/zapbot/comandos/search/) | `/buscar` | ✅ | Busca no histórico do WhatsApp Web, não só no cache: neste chat ou, no seu privado, em todos (`-N` para mais); `-mask` ofusca telefones |
-| [`/set`](https://jpereira.github.io/zapbot/comandos/set/) | `/config` | ✅ | Lista e altera as configurações (settings); `-a`/`-rem` acrescentam e tiram itens das listas (ex.: o `bot.admins` e o `bot.users`) |
+| [`/set`](https://jpereira.github.io/zapbot/comandos/set/) | `/config` | ✅ | Lista e altera as configurações (settings); `-a`/`-rm` acrescentam e tiram itens das listas (ex.: o `bot.admins` e o `bot.users`) |
 | [`/show`](https://jpereira.github.io/zapbot/comandos/show/) |  | ✅ | No privado, lista o cache; reexibe apagadas, edições (`-e`), status (`-s`) e reações removidas ou trocadas (`-r`); `-q` busca (texto ou regex) e `-mask` ofusca telefones |
 | [`/stats`](https://jpereira.github.io/zapbot/comandos/stats/) | | ✅ | Ranking deste chat ou de outro (`/Grupo/`): quem mais fala, apaga e edita, horários de pico; `-me` para as suas, `-l` lista os chats, `-flush` apaga |
 | [`/sticker`](https://jpereira.github.io/zapbot/comandos/sticker/) |  | | Figurinha de imagem, vídeo ou link (o `/get -st`); com `-txt`, uma figurinha animada de texto |

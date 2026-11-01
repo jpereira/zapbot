@@ -147,11 +147,11 @@ async function cmdMonitor({ msg, args }) {
         if (r.existente) {
             await msg.reply(`👀 ${r.existente.contact_name} já está cadastrado: #${r.existente.id}.`);
         } else if (r.limite) {
-            await msg.reply(`❌ Limite de ${getSetting('monitor.max')} contatos atingido. Remova um com /monitor -rem <id>.`);
+            await msg.reply(`❌ Limite de ${getSetting('monitor.max')} contatos atingido. Remova um com /monitor -rm <id>.`);
         } else {
             await msg.reply(`👀 #${r.contato.id} · ${r.contato.contact_name} cadastrado.\n` +
                 `⏱️ Verificação a cada ${intervaloMonitor()}, um contato por vez.\n` +
-                `💡 /monitor -list mostra o histórico; /monitor -rem ${r.contato.id} remove.\n${RISCO}`);
+                `💡 /monitor -list mostra o histórico; /monitor -rm ${r.contato.id} remove.\n${RISCO}`);
             if (!getSetting('monitor.enabled')) {
                 await msg.reply('⏸️ Monitor pausado. Retome com /set monitor.enabled true.');
             }
@@ -161,11 +161,11 @@ async function cmdMonitor({ msg, args }) {
         }
         return;
     }
-    const remover = texto.match(/^-(?:rem|r)(?:\s+([\s\S]+))?$/);
+    const remover = texto.match(/^-(?:rm|r)(?:\s+([\s\S]+))?$/);
     if (remover) {
         const valor = semDelimitadores(remover[1]);
         if (!valor) {
-            await msg.reply('❌ Informe o id da lista ou um contato: /monitor -rem 1 ou /monitor -r /Jorge Pereira/');
+            await msg.reply('❌ Informe o id da lista ou um contato: /monitor -rm 1 ou /monitor -r /Jorge Pereira/');
             return;
         }
         if (valor.toLowerCase() === 'all') {
@@ -181,7 +181,7 @@ async function cmdMonitor({ msg, args }) {
             : `❌ Contato #${id} não cadastrado. Veja /monitor`);
         return;
     }
-    await msg.reply('❌ Use /monitor, /monitor -add <contato> [-alerta], /monitor -alerta <contato>, /monitor -rem <id, contato ou all> ou /monitor -list [contato].');
+    await msg.reply('❌ Use /monitor, /monitor -add <contato> [-alerta], /monitor -alerta <contato>, /monitor -rm <id, contato ou all> ou /monitor -list [contato].');
 }
 
 module.exports = { cmdMonitor, intervaloMonitor, RISCO };

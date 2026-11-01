@@ -83,7 +83,7 @@ e sobrevivem a reinícios. Para ver e alterar, use o [`/set`](comandos/set.md).
 | `traduzir.lang` | texto | `pt` | Idioma de destino padrão do [`/traduzir`](comandos/traduzir.md) (código: `pt`, `en`, `es`...) |
 | `watch.hitsRetentionDays` | 1–365 | `30` | Dias que as ocorrências do `/watch` ficam guardadas |
 | `watch.max` | 1–100 | `20` | Máximo de regras do `/watch` |
-| `watch.rules` | lista (uma por linha) | *(vazia)* | Regras do `/watch`: texto ou `/regex/flags`. Criadas por `/watch <regra>` e removidas por `/watch -rem N` |
+| `watch.rules` | lista (uma por linha) | *(vazia)* | Regras do `/watch`: texto ou `/regex/flags`. Criadas por `/watch <regra>` e removidas por `/watch -rm N` |
 | `watch.showMax` | 1–100 | `20` | Máximo de ocorrências exibidas pelo `/watch`, inclusive com `-N` e `-show` |
 
 Uma chave nova é declarada em `SETTINGS_SCHEMA` (`src/settings.js`), **em ordem alfabética**, com

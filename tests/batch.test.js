@@ -51,12 +51,12 @@ test('-dry só mostra a separação; sem comando, erro; /batch dentro de /batch,
 });
 
 test('falha segue adiante; com -stop, para no primeiro erro', async () => {
-    const [a] = await bot.responder('/batch\n/notes -rem 99\n/notes ok');
+    const [a] = await bot.responder('/batch\n/notes -rm 99\n/notes ok');
     assert.match(a, /1\/2 ok/);
     assert.match(a, /❌ 1/);
     assert.equal((await notas()).length, 1);
 
-    const [b] = await bot.responder('/batch -stop\n/notes -rem 99\n/notes não roda');
+    const [b] = await bot.responder('/batch -stop\n/notes -rm 99\n/notes não roda');
     assert.match(b, /Parou no bloco 1; 1 não rodaram/);
     assert.equal((await notas()).length, 1);
 });

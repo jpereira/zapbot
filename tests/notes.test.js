@@ -1,5 +1,5 @@
 /*
- * /notes: anotações (-add, -list, -rem) e o -alerta (data/hora, -to, disparo único).
+ * /notes: anotações (-add, -list, -rm) e o -alerta (data/hora, -to, disparo único).
  */
 const bot = require('./helpers/bot');
 
@@ -26,7 +26,7 @@ async function vencer(id) {
     return bot.client.enviadas.slice(antes);
 }
 
-test('-add, -list e -rem (vários IDs, all e ID inexistente sem remover nada)', async () => {
+test('-add, -list e -rm (vários IDs, all e ID inexistente sem remover nada)', async () => {
     assert.match((await bot.responder('/notes'))[0], /Nenhuma anotação/);
     assert.match((await bot.responder('/notes -add comprar leite'))[0], /^📝 \*#1\* · comprar leite$/);
     await bot.responder('/notes -a ligar pro João\nsegunda linha');
@@ -41,7 +41,7 @@ test('-add, -list e -rem (vários IDs, all e ID inexistente sem remover nada)', 
 
     assert.match((await bot.responder('/notes -r 2 9'))[0], /ID 9 não existe/);
     assert.equal((await notas()).length, 3);
-    assert.match((await bot.responder('/notes -rem 2'))[0], /1 anotação removida/);
+    assert.match((await bot.responder('/notes -rm 2'))[0], /1 anotação removida/);
     assert.deepEqual((await notas()).map(n => n.id), [1, 3]);
     assert.match((await bot.responder('/notes -r all'))[0], /2 anotações removidas/);
     assert.equal((await notas()).length, 0);
@@ -126,10 +126,10 @@ test('#tag: agrupa na lista, filtra e remove por tag', async () => {
     assert.equal((await bot.responder('/notes -l #casa'))[0], soCasa);
     assert.match((await bot.responder('/notes #nada'))[0], /Nenhuma anotação em #nada/);
 
-    assert.match((await bot.responder('/notes -rem #nada'))[0], /#nada não existe/);
-    assert.match((await bot.responder('/notes -rem #casa'))[0], /2 anotações removidas/);
+    assert.match((await bot.responder('/notes -rm #nada'))[0], /#nada não existe/);
+    assert.match((await bot.responder('/notes -rm #casa'))[0], /2 anotações removidas/);
     assert.deepEqual((await notas()).map(n => n.id), [2, 4]);
-    await bot.responder('/notes -rem all');
+    await bot.responder('/notes -rm all');
     assert.deepEqual(await notas(), []);
 });
 
@@ -201,7 +201,7 @@ test('em resposta a uma mensagem: anota o texto dela com ↩️, com ou sem #tag
     assert.equal((await notas()).length, 5);
 });
 
-test('-to nas listas e no -export: manda nos destinos; no -rem é recusado', async () => {
+test('-to nas listas e no -export: manda nos destinos; no -rm é recusado', async () => {
     await bot.responder('/notes #casa comprar pão');
     await bot.responder('/notes #duvidas ETFs');
     const enviadas = async (linha) => {
@@ -228,7 +228,7 @@ test('-to nas listas e no -export: manda nos destinos; no -rem é recusado', asy
     assert.equal(pdf.novas[0].options.sendMediaAsDocument, true);
     assert.match(pdf.respostas.at(-1), /PDF das anotações enviado em/);
 
-    assert.match((await bot.responder('/notes -rem #casa -to /Grupo sobre L200/'))[0], /-to não vale ao remover/);
+    assert.match((await bot.responder('/notes -rm #casa -to /Grupo sobre L200/'))[0], /-to não vale ao remover/);
     assert.equal((await notas()).length, 2);
     assert.match((await bot.responder('/notes -l abc -to /Grupo sobre L200/'))[0], /Use: \/notes -l/);
 });
@@ -273,7 +273,7 @@ test('alias de /notes mantém as quebras de linha do texto', async () => {
     ]);
 });
 
-test('imagem: na própria mensagem ou em resposta, vai para o disco; -rem apaga o arquivo', async () => {
+test('imagem: na própria mensagem ou em resposta, vai para o disco; -rm apaga o arquivo', async () => {
     const fs = require('fs');
     const png = Buffer.from('89504e470d0a1a0a0000000d49484452', 'hex');
     const midia = { mimetype: 'image/png', data: png.toString('base64') };
@@ -302,10 +302,10 @@ test('imagem: na própria mensagem ou em resposta, vai para o disco; -rem apaga 
     assert.match(lista, /\*#1\* Imagem de teste\n   🖼️ _imagem_/);
     assert.match(lista, /\*#3\* 🖼️ _imagem_/);
 
-    await bot.responder('/notes -rem 1');
+    await bot.responder('/notes -rm 1');
     assert.equal(fs.existsSync(linhas[0].media_path), false);
     assert.equal(fs.existsSync(linhas[1].media_path), true);
-    await bot.responder('/notes -rem all');
+    await bot.responder('/notes -rm all');
     assert.equal(linhas.some(n => fs.existsSync(n.media_path)), false);
 
     // Só imagens
@@ -327,7 +327,7 @@ test('-export: as imagens entram no PDF (JPEG), com a anotação como legenda; i
     assert.match(pdf, /Narrativas polares/);
     assert.match(pdf, /imagem n.o inclu.da/);
     assert.match(pdf, /%%EOF\n$/);
-    await bot.responder('/notes -rem all');
+    await bot.responder('/notes -rm all');
 });
 
 test('-view: manda a imagem com o texto na legenda (e só o texto, sem imagem)', async () => {
@@ -351,7 +351,7 @@ test('-view: manda a imagem com o texto na legenda (e só o texto, sem imagem)',
     await bot.responder('/notes -v 1 -to /Grupo sobre L200/');
     const nova = bot.client.enviadas.slice(n).find(e => e.chatId === L200);
     assert.match(nova.options.caption, /Narrativas/);
-    await bot.responder('/notes -rem all');
+    await bot.responder('/notes -rm all');
 });
 
 test('a confirmação mostra só os 35 primeiros caracteres do texto, numa linha', async () => {
@@ -419,7 +419,7 @@ test('-move: renomeia a tag (juntando se a nova já existe)', async () => {
     assert.match((await bot.responder('/notes -m casa'))[0], /Use: \/notes -move/);
     assert.match((await bot.responder('/notes -m #casa #lar'))[0], /#casa → #lar · 2 anotações/);
     assert.match((await bot.responder('/notes -t'))[0], /#lar: 3/);
-    await bot.responder('/notes -rem all');
+    await bot.responder('/notes -rm all');
 });
 
 test('tag parcial: #idei acha #ideias (exata ganha; remover pede a inteira)', async () => {
@@ -430,8 +430,8 @@ test('tag parcial: #idei acha #ideias (exata ganha; remover pede a inteira)', as
     assert.doesNotMatch((await bot.responder('/notes #idei'))[0], /pão/);
     assert.doesNotMatch((await bot.responder('/notes #ideia'))[0], /app novo/);
     assert.match((await bot.responder('/notes -s #cas pão'))[0], /pão/);
-    assert.match((await bot.responder('/notes -rem #idei'))[0], /#idei não existe/);
-    await bot.responder('/notes -rem all');
+    assert.match((await bot.responder('/notes -rm #idei'))[0], /#idei não existe/);
+    await bot.responder('/notes -rm all');
 });
 
 test('-desc: grava, mostra, aparece na lista e no -tags, vai no -move e apaga com -rm', async () => {
@@ -447,7 +447,7 @@ test('-desc: grava, mostra, aparece na lista e no -tags, vai no -move e apaga co
     assert.match((await bot.responder('/notes -d #lar -rm'))[0], /apagada/);
     assert.match((await bot.responder('/notes -d #lar -rm'))[0], /não tem descrição/);
     assert.match((await bot.responder('/notes -d'))[0], /Use: \/notes -desc/);
-    await bot.responder('/notes -rem all');
+    await bot.responder('/notes -rm all');
 });
 
 test('tag parcial também no -export, no -alerta (lista) e no -view; ambígua junta as tags', async () => {
@@ -470,7 +470,7 @@ test('tag parcial também no -export, no -alerta (lista) e no -view; ambígua ju
     assert.match(ver, /um|dois/);
     assert.match((await bot.responder('/notes -v #nada'))[0], /#nada não existe/);
     assert.match((await bot.responder('/notes -v 1 #nada 9'))[0], /não existem/);
-    await bot.responder('/notes -rem all');
+    await bot.responder('/notes -rm all');
 });
 
 test('-desc: tag parcial só vale se for uma; -move leva a descrição e não sobrescreve a da tag nova', async () => {
@@ -486,7 +486,7 @@ test('-desc: tag parcial só vale se for uma; -move leva a descrição e não so
     assert.match((await bot.responder('/notes -d #ideias'))[0], /Coisas grandes/);
     assert.match((await bot.responder('/notes -t'))[0], /#ideias: 2 · _Coisas grandes_/);
     assert.match((await bot.responder('/notes -d #ideia'))[0], /Coisas grandes/); // parcial agora acha a #ideias
-    await bot.responder('/notes -rem all');
+    await bot.responder('/notes -rm all');
 });
 
 test('-update: troca o texto (e a tag, se vier) e mantém o alerta', async () => {

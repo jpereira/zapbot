@@ -27,7 +27,7 @@ test('/monitor sem cadastro e /help explicam uso e risco', async () => {
     assert.match(r, /bloqueio/);
     const [help] = await bot.responder('/help monitor');
     assert.match(help, /-add.*-a/);
-    assert.match(help, /-rem.*-r/);
+    assert.match(help, /-rm.*-r/);
     assert.match(help, /-list.*-l/);
     assert.doesNotMatch((await bot.responder('/help'))[0], /Uso: \/test/);
 });
@@ -174,7 +174,7 @@ test('remoção apaga histórico e mantém o id dos outros contatos', async t =>
     const b = await cadastro('5521999991101@c.us', 'Outro');
     bot.client.pupPage = { evaluate: async () => horario() };
     await bot.esperarComRelogio(t, monitor.verificarMonitor());
-    assert.match((await bot.responder(`/monitor -rem ${a.id}`))[0], /histórico removidos/);
+    assert.match((await bot.responder(`/monitor -rm ${a.id}`))[0], /histórico removidos/);
     assert.equal((await monitor.historicoMonitorado(a.id)).length, 0);
     assert.equal((await monitor.listarMonitorados())[0].id, b.id);
     assert.match((await bot.responder(`/monitor -r ${a.id}`))[0], /não cadastrado/);
@@ -249,8 +249,8 @@ test('histórico extenso é enviado completo como documento de texto', async () 
 });
 
 test('recusa sintaxe inválida, grupo, e-mail e menção digitada', async () => {
-    for (const linha of ['/monitor -add', '/monitor -rem', '/monitor -rem 0',
-        '/monitor -rem -1', '/monitor -list extra', '/monitor -x',
+    for (const linha of ['/monitor -add', '/monitor -rm', '/monitor -rm 0',
+        '/monitor -rm -1', '/monitor -list extra', '/monitor -x',
         '/monitor -a /Família/', '/monitor -a fulano@exemplo.com',
         `/monitor -a @${bot.OUTRO.user}`]) {
         assert.match((await bot.responder(linha))[0], /^❌/, linha);
@@ -277,9 +277,9 @@ test('histórico ignora horários inválidos e preserva o último horário conhe
 });
 
 test('remoção por contato usa o mesmo resolvedor do cadastro', async () => {
-    for (const linha of ['/monitor -rem Fulano', '/monitor -r /Fulano/',
-        '/monitor -rem "Fulano"', `/monitor -r @${bot.OUTRO.user}`,
-        `/monitor -rem +${bot.OUTRO.user}`, `/monitor -r ${bot.OUTRO.user}`]) {
+    for (const linha of ['/monitor -rm Fulano', '/monitor -r /Fulano/',
+        '/monitor -rm "Fulano"', `/monitor -r @${bot.OUTRO.user}`,
+        `/monitor -rm +${bot.OUTRO.user}`, `/monitor -r ${bot.OUTRO.user}`]) {
         await cadastro();
         const [r] = await bot.responder(linha, { mencoes: [bot.OUTRO.jid] });
         assert.match(r, /cadastro e histórico removidos/, linha);
@@ -297,7 +297,7 @@ test('remoção por nome com espaços e ambiguidade oferece a escolha padrão', 
     await bot.responderEscolhendo('/monitor -r Jorge', 2);
     assert.equal((await monitor.listarMonitorados()).length, 1);
     const restante = (await monitor.listarMonitorados())[0];
-    const [r] = await bot.responder(`/monitor -rem /${restante.contact_name}/`);
+    const [r] = await bot.responder(`/monitor -rm /${restante.contact_name}/`);
     assert.match(r, /removidos/);
     assert.equal((await monitor.listarMonitorados()).length, 0);
 });
@@ -306,7 +306,7 @@ test('remoção reconhece LID/telefone e informa pessoa não cadastrada', async 
     const lid = '100000000123452@lid';
     bot.client.lids.set(lid, bot.OUTRO.jid);
     await cadastro(lid);
-    assert.match((await bot.responder('/monitor -rem /Fulano/'))[0], /removidos/);
+    assert.match((await bot.responder('/monitor -rm /Fulano/'))[0], /removidos/);
     assert.equal((await monitor.listarMonitorados()).length, 0);
     assert.match((await bot.responder('/monitor -r /Fulano/'))[0], /não está cadastrado/);
 });
@@ -380,8 +380,8 @@ test('carregar settings remove histórico excedente por contato', async () => {
 });
 
 
-test('-rem all e -r all apagam todos os cadastros e históricos, mantendo settings', async () => {
-    for (const comando of ['/monitor -rem all', '/monitor -r all']) {
+test('-rm all e -r all apagam todos os cadastros e históricos, mantendo settings', async () => {
+    for (const comando of ['/monitor -rm all', '/monitor -r all']) {
         const a = await cadastro();
         const b = await cadastro('5521999999999@c.us', 'Outro');
         for (const c of [a, b]) {
