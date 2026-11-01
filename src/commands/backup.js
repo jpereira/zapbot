@@ -3,7 +3,6 @@
  */
 
 const fs = require('fs');
-const path = require('path');
 
 const {
     MAX_ATTACHMENT_BYTES, REASONS, countInputs, createBackup, sendBackupOnChat,
@@ -11,7 +10,7 @@ const {
 } = require('../backup');
 const { findCommand } = require('./base');
 const { client } = require('../client');
-const { BACKUP_DIR, CACHE_DIR } = require('../constants');
+const { BACKUP_DIR, DB_PATH } = require('../constants');
 const {
     describeDestinations, emailsDoSmtpTo, extractDestinations, resolverDestinations
 } = require('../destinations');
@@ -53,7 +52,7 @@ function findBackup(list, valueAlt) {
 async function status(msg) {
     const list = await listBackups();
     const inputs = await countInputs();
-    const db = path.join(CACHE_DIR, 'bot_database.db');
+    const db = DB_PATH;
     const bytesDb = fs.existsSync(db) ? fs.statSync(db).size : null;
     const total = list.reduce((s, b) => s + b.bytes, 0);
     const [last] = list;

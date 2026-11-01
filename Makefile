@@ -185,5 +185,5 @@ docs.build: $(DOCS_VENV)/.instalado ## Builds the site and validates links and a
 
 prune: context ## Deletes media and messages from the bot cache on the selected target
 	$(Q)$(DOCKER) exec -w /app $(SERVICE) rm -rf cache/tmp cache/media
-	$(Q)$(DOCKER) exec -w /app $(SERVICE) sqlite3 cache/bot_database.db "DELETE FROM messages"
+	$(Q)$(DOCKER) exec -w /app $(SERVICE) sqlite3 cache/zapbot.db "DELETE FROM messages"
 
