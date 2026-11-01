@@ -34,12 +34,12 @@ async function separateBlocks(textAlt) {
     return { blocos: blocks.map(b => b.replace(/\s+$/, '')), sobra: leftOver };
 }
 
-// Reads -stop / -dry only from the 1st line, before the commands (the rest belongs to the blocks)
+// Reads -stop / -dry (-d) only from the 1st line, before the commands (the rest belongs to the blocks)
 function readOptions(args) {
     const optionsAlt = { stop: false, dry: false };
     let rest = args.trim();
-    for (let m; (m = rest.match(/^-(stop|dry)(?=\s|$)\s*/i));) {
-        optionsAlt[m[1].toLowerCase()] = true;
+    for (let m; (m = rest.match(/^-(stop|dry|d)(?=\s|$)\s*/i));) {
+        optionsAlt[m[1].toLowerCase() === 'stop' ? 'stop' : 'dry'] = true;
         rest = rest.slice(m[0].length);
     }
     return { opcoes: optionsAlt, texto: rest };
@@ -95,7 +95,7 @@ async function cmdBatch(context) {
     const textAlt = typed || (quotedMsg?.body ?? '').trim();
 
     if (!textAlt) {
-        await msg.reply('❌ Use: /batch [-stop] [-dry] e, nas linhas de baixo, os comandos (ou responda uma mensagem com eles)');
+        await msg.reply('❌ Use: /batch [-stop] [-dry|-d] e, nas linhas de baixo, os comandos (ou responda uma mensagem com eles)');
         return;
     }
 

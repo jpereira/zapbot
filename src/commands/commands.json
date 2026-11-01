@@ -169,9 +169,9 @@
         },
         {
             "cmd": "/batch",
-            "usage": "/batch [-stop] [-dry] (os comandos vêm nas linhas de baixo)",
+            "usage": "/batch [-stop] [-dry|-d] (os comandos vêm nas linhas de baixo)",
             "aliases": [],
-            "help": "Executa vários comandos seguidos, de uma mensagem só (ou da mensagem respondida), e responde um resumo. Uma linha que começa com um comando (ou alias) abre um bloco; o que vem depois, linhas em branco inclusas, é do mesmo bloco. Com -stop, para no primeiro erro. Com -dry, só mostra como separou os blocos, sem executar. Um bloco é um comando e tudo até o próximo (um /ideia com a URL embaixo, por exemplo). Só o dono usa. Ex: /batch, /batch -dry, /batch -stop",
+            "help": "Executa vários comandos seguidos, de uma mensagem só (ou da mensagem respondida), e responde um resumo. Uma linha que começa com um comando (ou alias) abre um bloco; o que vem depois, linhas em branco inclusas, é do mesmo bloco. Com -stop, para no primeiro erro. Com -dry (-d), só mostra como separou os blocos, sem executar. Um bloco é um comando e tudo até o próximo (um /ideia com a URL embaixo, por exemplo). Só o dono usa. Ex: /batch, /batch -dry, /batch -d, /batch -stop",
             "cmd_opts": [
                 {
                     "opts": [
@@ -183,7 +183,8 @@
                 },
                 {
                     "opts": [
-                        "dry"
+                        "dry",
+                        "d"
                     ],
                     "values": [],
                     "desc": "Só mostra como os blocos foram separados, sem executar.",
