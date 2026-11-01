@@ -5,7 +5,7 @@
 const { findCommand, getCommandSyntax } = require('./base');
 const { isOOwner, peopleItems } = require('./set');
 const { client, completeNotice } = require('../client');
-const { chatCurrentIds, resolveLidToPhone, groupResolverName } = require('../contacts');
+const { chatCurrentIds, contactName, resolveLidToPhone, groupResolverName } = require('../contacts');
 const {
     describeDestination, describeDestinations, sendToDestinations, extractDestinations, resolverDestinations
 } = require('../destinations');
@@ -131,7 +131,7 @@ async function itemName(item) {
 
     // You are rarely in your own address book: your profile name counts
     const contactAlt = await client.getContactById(`${item}@c.us`).catch(() => null);
-    return contactAlt?.name || contactAlt?.pushname || (isOOwner(item) ? client.info.pushname : null);
+    return contactName(contactAlt) || (isOOwner(item) ? client.info.pushname : null);
 }
 
 // " · only in this group" or " · only in 👥 Amigos Faculdade" (the person is in a single group)

@@ -4,7 +4,7 @@
 
 const { client } = require('../client');
 const { getCommandSyntax } = require('./base');
-const { chatCurrentIds } = require('../contacts');
+const { chatCurrentIds, contactName } = require('../contacts');
 const { printError } = require('../log');
 const { formatData, paraMs, plural } = require('../util/format');
 
@@ -25,7 +25,7 @@ const SNIPPET = 200;
 async function nameAltAlt(id, cache) {
     if (!cache.has(id)) {
         cache.set(id, client.getContactById(id)
-            .then(c => c.name || c.pushname || id.split('@')[0])
+            .then(c => contactName(c) || id.split('@')[0])
             .catch(() => id.split('@')[0]));
     }
     return cache.get(id);

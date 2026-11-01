@@ -9,7 +9,9 @@ const { client, botConsumeSending, wasSentByBot, messageToSelf } = require('../c
 const { getCommandSyntax, helpProtocol } = require('../commands/base');
 const { textRunAlias, resolverAlias } = require('../aliases');
 const { HANDLERS } = require('../commands/index');
-const { removeDeviceSuffix, resolveLidToPhone, groupResolverName, privateResolverName } = require('../contacts');
+const {
+    scheduleName, contactName, removeDeviceSuffix, resolveLidToPhone, groupResolverName, privateResolverName
+} = require('../contacts');
 const { dbGet, dbReady, dbRun } = require('../db');
 const { replyChoice } = require('../choices');
 const { checkFlood } = require('../flood');
@@ -64,10 +66,10 @@ client.on('message_create', (msg) => withContextDebug({
             ? (await channelResolverName(chatId)) || `Canal ${chatId.split('@')[0]}`
             : isBroadcast ? null :
             (isGroup ? await groupResolverName(chatId) : null) ||
+            // Private: the other participant's contact (the chatId), by the name in your address book
+            (isGroup ? null : await privateResolverName(chatId)) ||
             msg?._data?.chat?.name ||
             msg?._data?.chat?.formattedTitle ||
-            // Private: the other participant's contact (the chatId)
-            (isGroup ? null : await privateResolverName(chatId)) ||
             // notifyName is the name of who SENT: it only serves as the chat name when it was the other
             (isGroup || msg?.fromMe ? null : msg?._data?.notifyName) ||
             (isGroup ? `Grupo ${chatId.split('@')[0]}` : chatId.split('@')[0]);
@@ -113,10 +115,15 @@ client.on('message_create', (msg) => withContextDebug({
         const senderJid = resolvedSenderJid || originalSenderJid || 'UNKNOWN';
         const senderNumber = senderJid.endsWith('@c.us') ? senderJid.split('@')[0] : null;
 
+        // Contact found by only one of the ids (phone or @lid) with no name in the address book: the other may have
+        let scheduleContact = contact;
+        if (!isChannel && !scheduleName(contact) && originalSenderJid?.endsWith('@lid') && originalSenderJid !== resolvedSenderJid) {
+            const doLid = await client.getContactById(originalSenderJid).catch(() => null);
+            if (scheduleName(doLid)) scheduleContact = doLid;
+        }
+
         const senderName = (isChannel ? chatName : null) ||
-            contact?.name ||
-            contact?.pushname ||
-            contact?.verifiedName ||
+            contactName(scheduleContact) ||
             // In broadcasts, notifyName/chat may carry another contact's name.
             (isBroadcast ? null : msg?._data?.notifyName) ||
             senderNumber ||

@@ -3,7 +3,7 @@
  */
 
 const { client } = require('../client');
-const { chatCurrentIds, resolveLidToPhone, groupResolverName } = require('../contacts');
+const { chatCurrentIds, contactName, resolveLidToPhone, groupResolverName } = require('../contacts');
 const { dbReady } = require('../db');
 const { resolverOrChoose } = require('../destinations');
 const { printInfo } = require('../log');
@@ -196,7 +196,7 @@ async function withName(numberAlt) {
 
     // You are rarely in your own address book: your profile name counts
     const contactAlt = await client.getContactById(`${numberAlt}@c.us`).catch(() => null);
-    const nameAlt = contactAlt?.name || contactAlt?.pushname ||
+    const nameAlt = contactName(contactAlt) ||
         (isOOwner(numberAlt) ? client.info.pushname : null);
     return nameAlt ? `${numberAlt} (${nameAlt})` : numberAlt;
 }

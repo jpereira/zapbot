@@ -3,7 +3,7 @@
  */
 
 const { client } = require('../client');
-const { resolveLidToPhone } = require('../contacts');
+const { contactName, resolveLidToPhone } = require('../contacts');
 const { dbGet, dbReady, dbRun } = require('../db');
 const { printError, printInfo } = require('../log');
 const { ignoreNotice, registerNotice } = require('../mudo');
@@ -66,7 +66,7 @@ async function registerReactionUndone({ chave: keyAlt, sender, antes: beforeAlt,
     const phoneAlt = sender.endsWith('@lid') ? await resolveLidToPhone(sender) : sender;
     const numberAlt = phoneAlt?.endsWith('@c.us') ? phoneAlt.split('@')[0] : null;
     const contactAlt = await client.getContactById(phoneAlt || sender).catch(() => null);
-    const nameSender = contactAlt?.name || contactAlt?.pushname || (numberAlt ? `+${numberAlt}` : 'Desconhecido');
+    const nameSender = contactName(contactAlt) || (numberAlt ? `+${numberAlt}` : 'Desconhecido');
 
     const isGroup = keyAlt.chatId.endsWith('@g.us');
     const original = await dbGet('SELECT body, chat_name FROM messages WHERE id = ?', [keyAlt.id]);

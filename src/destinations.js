@@ -6,7 +6,7 @@
  */
 
 const { client, completeNotice } = require('./client');
-const { resolveLidToPhone } = require('./contacts');
+const { contactName: nameScheduleFirst, resolveLidToPhone } = require('./contacts');
 const { sendEmail, smtpForSend } = require('./email');
 const { waitChoice, authorAlt } = require('./choices');
 const { printDebug, printError } = require('./log');
@@ -471,7 +471,7 @@ async function personMentioned(digits, mentions) {
 
 async function contactName(id, digits) {
     const contactAlt = await client.getContactById(id).catch(() => null);
-    return contactAlt?.name || contactAlt?.pushname || `+${digits}`;
+    return nameScheduleFirst(contactAlt) || `+${digits}`;
 }
 
 // "👥 Grupo sobre L200" / "👤 Fulano" / "📧 voce@exemplo.com"
