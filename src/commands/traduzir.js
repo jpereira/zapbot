@@ -2,85 +2,60 @@
  * Comando /traduzir.
  */
 
-const axios = require('axios');
+const { translate, languages } = require('google-translate-api-x');
 
 const { getCommandSyntax } = require('./base');
 const { printError } = require('../log');
-const { envOuSetting, getSetting } = require('../settings');
+const { getSetting } = require('../settings');
 
 /*
- * /traduzir: Google Cloud Translation (API v2, "Basic"), with the key from
- * GOOGLE_TRANSLATE_API_KEY (config/.env) or the 'traduzir.api.key' setting.
+ * /traduzir: Google Translate from the translate.google.com site, with no key and no cost, through the package
+ * google-translate-api-x (unofficial access: Google may limit by IP or change the format).
  * /traduzir hello world        → to the default language (setting 'traduzir.lang', pt)
  * /traduzir -para en bom dia   → to English
  * (replying to a message) /traduzir [-para es]
  *   /traduzir -l                 → idiomas aceitos
- * The source language is detected by Google. The key goes in the header
- * X-Goog-Api-Key (never in the URL, which could go to a log).
+ * The source language is detected by Google.
  */
-const API = 'https://translation.googleapis.com/language/translate/v2';
 const MAX_CHARS = 5000;
 const TIMEOUT_MS = 15000;
-const LANGUAGE = /^[a-z]{2,3}(-[a-z]{2,4})?$/i;
 
-const WITHOUT_KEY = '⚠️ Chave do Google Translate não encontrada: o /traduzir está desativado.\n' +
-    '💡 _Defina GOOGLE_TRANSLATE_API_KEY no config/.env ou use /set traduzir.api.key <chave>. ' +
-    'Passo a passo: https://jpereira.github.io/zapbot/commands/traduzir/_';
+// Each language code in lowercase ("zh-cn") → as the package writes it ("zh-CN")
+const CODES = new Map(Object.keys(languages).filter(c => c !== 'auto').map(c => [c.toLowerCase(), c]));
 
-// Google error → message for the chat (never contains the key)
-function errorGoogle(err, target) {
-    const errorAlt = err.response?.data?.error;
-    const reasonAlt = errorAlt?.details?.find(d => d.reason)?.reason ?? errorAlt?.errors?.[0]?.reason ?? '';
+// The package's fetch has no time limit: without this a Google that does not respond would hold the command
+const withTimeLimit = (url, init) => fetch(url, { ...init, signal: AbortSignal.timeout(TIMEOUT_MS) });
 
-    if (err.code === 'ECONNABORTED') return '⏱️ O Google Translate não respondeu. Tente de novo.';
-    if (reasonAlt === 'API_KEY_INVALID') return '🔑 Chave do Google Translate inválida. Confira o GOOGLE_TRANSLATE_API_KEY ou o traduzir.api.key.';
-    if (reasonAlt === 'SERVICE_DISABLED' || reasonAlt === 'accessNotConfigured') {
-        return '⚠️ A Cloud Translation API não está ativada no projeto da chave. Ative em console.cloud.google.com › APIs e serviços › Biblioteca.';
+// Package error → message for the chat
+function errorTranslation(err) {
+    const status = err.cause?.response?.status;
+
+    if (err.name === 'TimeoutError' || err.name === 'AbortError') return '⏱️ O Google Translate não respondeu. Tente de novo.';
+    if (status === 429 || /too many requests/i.test(err.message)) {
+        return '💸 O Google Translate limitou os pedidos deste servidor (acesso gratuito, sem chave). Tente mais tarde.';
     }
-    if (reasonAlt === 'BILLING_DISABLED') return '💳 O projeto da chave está sem faturamento ativo: o Google exige, mesmo dentro da cota grátis.';
-    const limitAlt = ['dailyLimitExceeded', 'userRateLimitExceeded', 'rateLimitExceeded',
-        'quotaExceeded', 'QUOTA_EXCEEDED', 'RATE_LIMIT_EXCEEDED'].includes(reasonAlt);
-    const limitMessage = /^(Daily Limit Exceeded|User Rate Limit Exceeded)\b/i
-        .test(errorAlt?.message?.trim() ?? '');
-    if (err.response?.status === 429 ||
-        (err.response?.status === 403 && (limitAlt || limitMessage))) {
-        return '💸 Cota do Google Translate esgotada. Tente mais tarde.';
-    }
-    if (err.response?.status === 403) return `⛔ O Google recusou a chave: ${errorAlt?.message ?? 'acesso negado'}`;
-    if (/invalid value/i.test(errorAlt?.message ?? '')) return `❌ Idioma inválido: ${target}. Veja os aceitos com /traduzir -l`;
-    return `❌ Erro no /traduzir: ${errorAlt?.message ?? err.message}`;
+    if (status === 403) return '⛔ O Google recusou o pedido deste servidor. Tente mais tarde.';
+    return `❌ Erro no /traduzir: ${err.message}`;
 }
 
-async function listLanguages(msg, keyAlt) {
-    const { data } = await axios.get(`${API}/languages`, {
-        params: { target: 'pt' },
-        headers: { 'X-Goog-Api-Key': keyAlt },
-        timeout: TIMEOUT_MS
-    });
-
-    const languagesAlt = data.data.languages.map(l => `${l.language} ${l.name}`);
+async function listLanguages(msg) {
+    const languagesAlt = [...CODES.values()].map(c => `${c} ${languages[c]}`);
     await msg.reply(`🌐 *Idiomas do /traduzir* (${languagesAlt.length})\n\n\`\`\`${languagesAlt.join('\n')}\`\`\`\n\n` +
         `💡 _Use o código: /traduzir -para en bom dia. Padrão: ${getSetting('traduzir.lang')} (setting traduzir.lang)._`);
 }
 
 async function cmdTranslate({ msg, args, opts, quotedMsg }) {
-    const keyAlt = envOuSetting('GOOGLE_TRANSLATE_API_KEY', 'traduzir.api.key');
-
-    if (!keyAlt) {
-        await msg.reply(WITHOUT_KEY, null, { linkPreview: false });
-        return;
-    }
-
-    const target = String(opts.opt.para ?? getSetting('traduzir.lang')).trim();
+    const request = String(opts.opt.para ?? getSetting('traduzir.lang')).trim();
+    const target = CODES.get(request.toLowerCase());
 
     try {
         if (opts.opt.list) {
-            await listLanguages(msg, keyAlt);
+            await listLanguages(msg);
             return;
         }
 
-        if (!LANGUAGE.test(target)) {
-            await msg.reply(`❌ Idioma inválido: ${target}. Use o código (en, es, pt, zh-CN...). Veja os aceitos com /traduzir -l`);
+        if (!target) {
+            await msg.reply(`❌ Idioma inválido: ${request}. Use o código (en, es, pt, zh-CN...). Veja os aceitos com /traduzir -l`);
             return;
         }
 
@@ -98,13 +73,9 @@ async function cmdTranslate({ msg, args, opts, quotedMsg }) {
             return;
         }
 
-        const { data } = await axios.post(API, { q: textAlt, target: target, format: 'text' }, {
-            headers: { 'X-Goog-Api-Key': keyAlt },
-            timeout: TIMEOUT_MS
-        });
-
-        const { translatedText, detectedSourceLanguage: origin } = data.data.translations[0];
-        let reply = `🌐 *Tradução* _(${origin ?? '?'} → ${target})_\n\n${translatedText}`;
+        const resultAlt = await translate(textAlt, { to: target, requestFunction: withTimeLimit });
+        const origin = resultAlt.from?.language?.iso;
+        let reply = `🌐 *Tradução* _(${origin ?? '?'} → ${target})_\n\n${resultAlt.text}`;
 
         if (origin && origin.toLowerCase() === target.toLowerCase().split('-')[0]) {
             reply += `\n\n💡 _O texto já estava em ${target}. Para outro idioma: /traduzir -para en_`;
@@ -112,8 +83,8 @@ async function cmdTranslate({ msg, args, opts, quotedMsg }) {
 
         await msg.reply(reply);
     } catch (err) {
-        printError('/traduzir:', err.response?.status ?? '', err.response?.data?.error?.message ?? err.message);
-        await msg.reply(errorGoogle(err, target));
+        printError('/traduzir:', err.cause?.response?.status ?? '', err.message);
+        await msg.reply(errorTranslation(err));
     }
 }
 

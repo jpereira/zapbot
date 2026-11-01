@@ -22,7 +22,7 @@ const CACHE_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'zapbot-teste-'));
 process.on('exit', () => fs.rmSync(CACHE_DIR, { recursive: true, force: true }));
 
 const ENV_CLEAN = [
-    'OPENAI_API_KEY', 'OPENAI_TIMEOUT_MS', 'OPENAI_MODEL', 'GIPHY_API_KEY', 'GOOGLE_TRANSLATE_API_KEY',
+    'OPENAI_API_KEY', 'OPENAI_TIMEOUT_MS', 'OPENAI_MODEL', 'GIPHY_API_KEY',
     'QRCODE_EMAIL_ENABLE', 'QRCODE_EMAIL_FALLBACK_TERMINAL', 'QRCODE_EMAIL_SMTP_HOST', 'QRCODE_EMAIL_SMTP_PORT', 'QRCODE_EMAIL_SMTP_USER',
     'QRCODE_EMAIL_SMTP_PASS', 'QRCODE_EMAIL_SMTP_FROM', 'QRCODE_EMAIL_SMTP_TO', 'QRCODE_EMAIL_SMTP_ANTIPHISHING'
 ];
@@ -266,6 +266,17 @@ function errorHttp(status, messageAlt = `HTTP ${status}`, extra = {}) {
 }
 
 /*
+ * google-translate-api-x: the /traduzir package, without network. The call goes through the simulated network
+ * (rede.responder('post', 'google-translate-api-x', { text, from: { language: { iso } } })) e o
+ * text and the options (to...) stay in rede.chamadas.at(-1).cfg.body.
+ */
+const googleTranslateFake = {
+    translate: async (textAlt, optionsAlt = {}) => (await network.despachar('post', 'google-translate-api-x',
+        { body: { texto: textAlt, ...optionsAlt } })).data,
+    languages: { auto: 'Automatic', en: 'English', es: 'Spanish', fr: 'French', pt: 'Portuguese', 'zh-CN': 'Chinese (Simplified)' }
+};
+
+/*
  * SMTP
  */
 const emails = [];
@@ -368,6 +379,7 @@ const SIMULATED = {
     'whatsapp-web.js': { Client: ClientFake, LocalAuth: class {}, MessageMedia, Location, Poll },
     sqlite3: { verbose: () => ({ Database: DbFake }) },
     axios: axiosFake,
+    'google-translate-api-x': googleTranslateFake,
     nodemailer: nodemailerFake,
     sharp: sharpFake,
     'qrcode-terminal': { generate: () => {} },
