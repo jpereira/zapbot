@@ -339,7 +339,7 @@ describe('permissões', () => {
         assert.deepEqual(bot.getSetting('bot.admins'), ['5521933333333', '5521911111111']);
         assert.match((await bot.replyAlt('/set bot.admins'))[0], /\*Valor:\* \n1\. 5521933333333 \(Jorge Pereira\)\n2\. 5521911111111 \(Fulano\)\n/);
 
-        assert.deepEqual(await bot.replyAlt('/set -rem bot.admins /Jorge Pereira/'), ['✅ *bot.admins* − 5521933333333 (Jorge Pereira)\n= 5521911111111 (Fulano)']);
+        assert.deepEqual(await bot.replyAlt('/set -rm bot.admins /Jorge Pereira/'), ['✅ *bot.admins* − 5521933333333 (Jorge Pereira)\n= 5521911111111 (Fulano)']);
 
         // Several with the name: the list; and "<key> <value>" also accepts names
         const r = await bot.replyChoosing('/set bot.admins jorge', 2);
@@ -372,7 +372,7 @@ describe('permissões', () => {
 
     test('bot.admins: só o dono altera (nem o próprio admin extra)', async () => {
         await bot.setSetting('bot.admins', ['5521911111111']);
-        for (const line of ['/set -a bot.admins 5521922222222', '/set -rem bot.admins 5521911111111', '/set -r bot.admins', '/set bot.admins 5521922222222']) {
+        for (const line of ['/set -a bot.admins 5521922222222', '/set -rm bot.admins 5521911111111', '/set -r bot.admins', '/set bot.admins 5521922222222']) {
             assert.deepEqual(await bot.replyAlt(line, { de: OTHERAlt.jid }), ['⛔ Só o dono do bot altera o *bot.admins*.'], line);
         }
         assert.deepEqual(bot.getSetting('bot.admins'), ['5521911111111']);

@@ -17,7 +17,7 @@ pelo setting `watch.showMax`.
 /watch -s /Jorge/ -q "carro"           → só os que têm "carro"
 /watch -s 3 -q /carr(o|ão)/i           → só os que casam com a regex
 /watch -s 3 -to /Jorge Pereira/        → troca os destinos da regra #3
-/watch -rem 3                          → remove a regra #3
+/watch -rm 3                          → remove a regra #3
 /watch -flush /Jorge/                  → limpa as ocorrências da /Jorge/
 ```
 Uma regra sem `-in` vale em qualquer lugar. Com `-in`, você escolhe a origem:
@@ -50,7 +50,7 @@ As regras são testadas contra o texto original da mensagem. Nos avisos e no his
 | `-show`, `-s` | `[N\|regra]` | Mostra os textos completos dos matches da regra N (ou da regra pelo texto); sem N, de todas. `-N` controla a quantidade |
 | `-query`, `-q` | `<texto\|/regex/flags>` | Só os matches que têm o texto (sem diferenciar maiúsculas nem acentos) ou que casam com a regex. Com `-s` ou na listagem. Veja [Buscar](#buscar) |
 | `-in` | `<origem>` | Restringe uma regra nova a contato, grupo ou canal |
-| `-rem`, `-r` | `N\|regra` | Remove a regra N (ou a regra pelo texto), suas ocorrências, origem e destinos; as seguintes são renumeradas |
+| `-rm`, `-r` | `N\|regra` | Remove a regra N (ou a regra pelo texto), suas ocorrências, origem e destinos; as seguintes são renumeradas |
 | `-flush`, `-f` | `[N\|regra]` | Apaga as ocorrências da regra N (ou da regra pelo texto); sem N, de todas. Mantém regras, origens e destinos |
 | `-to` | `<destino\|off>` | Define onde os avisos serão enviados, ao criar a regra ou com `-s N`. Repita para vários destinos; `off` volta ao seu privado |
 | `-mask`, `-m` | | Ofusca telefones na saída desta execução. Ex.: `+55219****44` |
@@ -61,11 +61,11 @@ máscara não fica ativada para os avisos automáticos.
 
 ## Listar e consultar
 
-Os números positivos após `-s`, `-rem` e `-flush` identificam **regras**, conforme a listagem. O
+Os números positivos após `-s`, `-rm` e `-flush` identificam **regras**, conforme a listagem. O
 número com hífen `-N` é a quantidade de matches a exibir. A listagem normal resume os textos; `-s`
 mostra os textos completos. A ordem é da ocorrência mais recente para a mais antiga.
 
-No lugar do número, `-s`, `-rem` e `-flush` aceitam a própria regra, como aparece no `/watch -l`:
+No lugar do número, `-s`, `-rm` e `-flush` aceitam a própria regra, como aparece no `/watch -l`:
 `/watch -s /Jorge/` é o mesmo que `/watch -s 3` quando a regra #3 é `/Jorge/`. Vale a regra
 inteira, sem diferenciar maiúsculas nem acentos, ou um trecho que esteja em uma só regra
 (`/watch -s Sportiva`). Se o trecho estiver em mais de uma, o bot lista as regras que casam.
@@ -98,7 +98,7 @@ Uma listagem, com as dicas no fim, uma por linha:
 O `-q <texto>` filtra os matches pelo corpo da mensagem, sem diferenciar maiúsculas nem acentos.
 Com espaços, vai entre aspas (`-q "bom dia"`). Funciona com o `-s` (de uma regra ou, sem N, de
 todas) e na listagem (`/watch -q carro`). O total conta só os que casam, e o `-N` limita quantos
-são exibidos. Não combina com `-l`, `-rem`, `-flush` nem com uma regra nova.
+são exibidos. Não combina com `-l`, `-rm`, `-flush` nem com uma regra nova.
 
 Com barras, é uma regex com flags, como nas regras (`-q /carr(o|ão)/i`): testa o texto como veio,
 então, sem a flag `i`, diferencia maiúsculas, e os acentos contam.

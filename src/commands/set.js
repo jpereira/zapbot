@@ -17,7 +17,7 @@ const { regexDangerous } = require('../util/safeRegex');
  * /set <snippet|/regex/> → lists the keys that match (e.g.: /set alerta)
  * /set <key> <value>  → changes (list: items separated by comma or space)
  *   /set -append <chave> <valor> → numa lista, acrescenta itens (-a)
- *   /set -rem <chave> <valor>    → numa lista, tira itens
+ *   /set -rm <chave> <valor>    → numa lista, tira itens
  * /set -reset <key>   → back to default
  * bot.admins (who else uses the admin commands) and bot.users (who uses the
  * common commands) is changed only by the owner. In them, besides the number, the name of the
@@ -211,7 +211,7 @@ async function changeList(msg, optionsAlt) {
     const { key, bruto: raw, acrescentar: append, veja: see = `/set ${key}`, resposta: reply = null } = optionsAlt;
     const showAlt = optionsAlt.mostrar ?? ((items) => showItems(key, items));
     const schema = SETTINGS_SCHEMA[key];
-    const optionAlt = append ? '-append' : '-rem';
+    const optionAlt = append ? '-append' : '-rm';
 
     if (!schema) {
         await msg.reply(`❌ Setting desconhecido: ${key ?? ''}\n💡 _Veja todos com /set_`);
@@ -272,16 +272,16 @@ async function cmdSet({ msg, opts, args, chatId }) {
         opts = { ...opts, argv: [monitor[1], monitor[2]] };
     }
 
-    // The option key (-reset, -append, -rem) or the 1st word
-    const keyTarget = opts.opt.reset ?? opts.opt.append ?? opts.opt.rem ?? opts.argv[0];
-    if (SO_O_OWNER.includes(keyTarget) && !msg.fromMe && (opts.opt.reset || opts.opt.append || opts.opt.rem || opts.argv.length > 1)) {
+    // The option key (-reset, -append, -rm) or the 1st word
+    const keyTarget = opts.opt.reset ?? opts.opt.append ?? opts.opt.rm ?? opts.argv[0];
+    if (SO_O_OWNER.includes(keyTarget) && !msg.fromMe && (opts.opt.reset || opts.opt.append || opts.opt.rm || opts.argv.length > 1)) {
         await msg.reply(`⛔ Só o dono do bot altera o *${keyTarget}*.`);
         return;
     }
 
-    if (opts.given.has('append') || opts.given.has('rem')) {
+    if (opts.given.has('append') || opts.given.has('rm')) {
         const append = opts.given.has('append');
-        const key = append ? opts.opt.append : opts.opt.rem;
+        const key = append ? opts.opt.append : opts.opt.rm;
         let raw = key ? valueRaw(args, key) : '';
 
         // People list: the names become phones before validation
@@ -390,7 +390,7 @@ async function cmdSet({ msg, opts, args, chatId }) {
 }
 
 /**
- * The -append/-rem of a people list (bot.admins, bot.users) from the
+ * The -append/-rm of a people list (bot.admins, bot.users) from the
  * text with the names, mentions and numbers: the /bot +o|-o|+v|-v shortcut.
  * With itemsReady, the text is already the items (the phone or the group id of the
  * current chat): does not go through the search.
