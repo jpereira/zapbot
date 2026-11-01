@@ -571,13 +571,6 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 10, max: 2000,
         desc: 'Máximo de mensagens enviadas à OpenAI por /tldr (/resumo).'
     },
-    'traduzir.api.key': {
-        default: '',
-        type: 'string',
-        allowEmpty: true,
-        secret: true,
-        desc: 'Chave do Google Cloud Translation (/traduzir), usada quando GOOGLE_TRANSLATE_API_KEY não está no config/.env.'
-    },
     'traduzir.lang': {
         default: 'pt',
         type: 'string',

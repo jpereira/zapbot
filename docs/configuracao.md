@@ -42,7 +42,7 @@ configuração.
 |---|---|---|
 | `/gpt`, `/tldr` | [OpenAI](https://platform.openai.com/) (pago por uso) | `OPENAI_API_KEY` ou setting `openai.api.key` |
 | `/giphy` | [GIPHY](https://developers.giphy.com/) (chave beta: 100 chamadas/hora) | `GIPHY_API_KEY` ou setting `giphy.api.key` |
-| `/traduzir` | [Google Cloud Translation](https://cloud.google.com/translate) (cota mensal grátis, depois pago por caractere) | `GOOGLE_TRANSLATE_API_KEY` ou setting `traduzir.api.key` |
+| `/traduzir` | [Google Translate](https://translate.google.com/) (acesso gratuito, não oficial, sem chave; pode ser limitado por IP) | — |
 | `/tempo` | [Open-Meteo](https://open-meteo.com/) | — |
 | `/cve`, `/walissu` | [NVD](https://nvd.nist.gov/) (~5 consultas a cada 30 s) | — |
 | `/news` | Feeds RSS (g1, Gazeta do Povo, The Hacker News...) | — |
@@ -110,7 +110,6 @@ e consulte as condições de produção do serviço.
 
 | Variável | Exemplo | Descrição |
 |---|---|---|
-| `GOOGLE_TRANSLATE_API_KEY` | `AIza...` | Chave da Cloud Translation API usada pelo `/traduzir`. Se estiver vazia, o bot usa o setting `traduzir.api.key`; sem nenhuma das duas o `/traduzir` fica desativado. Veja [Configurando a chave do Google](comandos/traduzir.md#configurando-a-chave-do-google). |
 
 ## E-mail (QR Code e alertas)
 

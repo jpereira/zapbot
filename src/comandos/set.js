@@ -34,7 +34,6 @@ const VARIAVEIS_DO_ENV = [
     { nome: 'BASE_RPC_URL', secret: true },
     { nome: 'ETHEREUM_RPC_URL', secret: true },
     { nome: 'GIPHY_API_KEY', secret: true },
-    { nome: 'GOOGLE_TRANSLATE_API_KEY', secret: true },
     { nome: 'MORPHO_WALLET_ADDRESS' },
     { nome: 'OPENAI_API_KEY', secret: true },
     { nome: 'OPENAI_MODEL' },

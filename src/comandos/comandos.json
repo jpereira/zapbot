@@ -1888,7 +1888,7 @@
             "aliases": [
                 "/translate"
             ],
-            "help": "Traduz o texto (ou a mensagem respondida) pelo Google Translate. O idioma de origem é detectado.",
+            "help": "Traduz o texto (ou a mensagem respondida) pelo Google Translate, sem chave e sem custo. O idioma de origem é detectado. Ex: /traduzir Where is the pharmacy?, /traduzir -para en bom dia, /translate -p es",
             "cmd_opts": [
                 {
                     "opts": [
@@ -1896,7 +1896,7 @@
                         "l"
                     ],
                     "values": [],
-                    "desc": "Lista os idiomas aceitos, com o código."
+                    "desc": "Lista os idiomas aceitos, com o código. Ex: /traduzir -l"
                 },
                 {
                     "opts": [
@@ -1906,7 +1906,7 @@
                     "values": [
                         "<idioma>"
                     ],
-                    "desc": "Idioma de destino: en, es, fr, zh-CN... Padrão: setting traduzir.lang (pt)."
+                    "desc": "Idioma de destino, pelo código: en, es, fr, zh-CN... Padrão: setting traduzir.lang (pt). Ex: /traduzir -para en bom dia"
                 },
                 {
                     "argv": [
