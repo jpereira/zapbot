@@ -330,6 +330,29 @@ test('-export: as imagens entram no PDF (JPEG), com a anotação como legenda; i
     await bot.replyAlt('/notes -rm all');
 });
 
+test('-export: a descrição das tags vem no começo do PDF, só as das tags exportadas', async () => {
+    await bot.replyAlt('/notes #casa pão');
+    await bot.replyAlt('/notes #duvidas ETFs');
+    await bot.replyAlt('/notes sem tag');
+    await bot.replyAlt('/notes -d #casa Coisas da casa');
+
+    const pdfDe = async (commandAlt) => {
+        await bot.replyAlt(commandAlt);
+        return Buffer.from(bot.client.enviadas.at(-1).content.data, 'base64').toString('latin1');
+    };
+
+    const home = await pdfDe('/notes -export #casa');
+    assert.match(home, /#casa: Coisas da casa/);
+    assert.ok(home.indexOf('#casa: Coisas da casa') < home.indexOf('#1  p'), 'antes das anotações');
+    assert.ok(home.indexOf('1 anota') < home.indexOf('#casa: Coisas da casa'), 'depois do total');
+
+    assert.match(await pdfDe('/notes -export'), /#casa: Coisas da casa/);
+    assert.doesNotMatch(await pdfDe('/notes -export #duvidas'), /Coisas da casa/);
+    await bot.replyAlt('/notes -d #casa -rm');
+    assert.doesNotMatch(await pdfDe('/notes -export #casa'), /Coisas da casa/);
+    await bot.replyAlt('/notes -rm all');
+});
+
 test('-view: manda a imagem com o texto na legenda (e só o texto, sem imagem)', async () => {
     const png = Buffer.from('89504e470d0a1a0a0000000d49484452', 'hex');
     const mediaAlt = { mimetype: 'image/png', data: png.toString('base64') };

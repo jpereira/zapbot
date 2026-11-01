@@ -657,6 +657,15 @@ async function exportar(msg, filter = '') {
         tipo: 'texto',
         texto: `${plural(notes.length, 'anotação', 'anotações')}${label ? ` em${label}` : ''}`
     }];
+
+    // The description of the PDF tags (those that have one) comes right at the start of the document
+    const descriptions = await tagsDescriptions();
+    const withDescription = keys.filter(k => k && descriptions.has(k));
+    if (withDescription.length) {
+        blocks.push({ tipo: 'espaco', altura: 6 });
+        for (const k of withDescription) blocks.push({ tipo: 'texto', texto: `#${k}: ${descriptions.get(k)}` });
+    }
+
     for (const k of keys) {
         const items = groups.get(k);
         if (!(keys.length === 1 && k === '')) {
