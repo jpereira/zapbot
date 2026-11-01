@@ -6,7 +6,7 @@ const { MessageMedia, Location } = require('whatsapp-web.js');
 const fs = require('fs-extra');
 
 const { client } = require('../cliente');
-const { resolveLidToPhone, resolverNomeDoCanal } = require('../contatos');
+const { nomeDoContato, resolveLidToPhone, resolverNomeDoCanal } = require('../contatos');
 const { dbGet, dbPronto, dbRun } = require('../db');
 const { printDebug, printError } = require('../log');
 const { ignorarAviso, registrarAviso } = require('../mudo');
@@ -57,7 +57,8 @@ async function resolverAutorApagada(row, { after, before, protocolKey } = {}) {
         try {
             const contato = await before.getContact();
 
-            nomeRemetente = contato.pushname || contato.name || contato.shortName || nomeRemetente;
+            // O nome da sua agenda vem primeiro; o pushname (o que a pessoa escolheu) só se não houver
+            nomeRemetente = nomeDoContato(contato) || nomeRemetente;
 
             const contatoId = contato.id?._serialized || '';
 
@@ -81,7 +82,7 @@ async function resolverAutorApagada(row, { after, before, protocolKey } = {}) {
             numeroRemetente = phoneId.replace('@c.us', '').replace(/\D/g, '');
 
             const contato = await client.getContactById(phoneId).catch(() => null);
-            nomeRemetente = contato?.pushname || contato?.name || contato?.shortName || nomeRemetente;
+            nomeRemetente = nomeDoContato(contato) || nomeRemetente;
         }
     }
 

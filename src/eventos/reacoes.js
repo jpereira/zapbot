@@ -3,7 +3,7 @@
  */
 
 const { client } = require('../cliente');
-const { resolveLidToPhone } = require('../contatos');
+const { nomeDoContato, resolveLidToPhone } = require('../contatos');
 const { dbGet, dbPronto, dbRun } = require('../db');
 const { printError, printInfo } = require('../log');
 const { ignorarAviso, registrarAviso } = require('../mudo');
@@ -66,7 +66,7 @@ async function registrarReacaoDesfeita({ chave, sender, antes, nova, quando }) {
     const telefone = sender.endsWith('@lid') ? await resolveLidToPhone(sender) : sender;
     const numero = telefone?.endsWith('@c.us') ? telefone.split('@')[0] : null;
     const contato = await client.getContactById(telefone || sender).catch(() => null);
-    const nomeRemetente = contato?.name || contato?.pushname || (numero ? `+${numero}` : 'Desconhecido');
+    const nomeRemetente = nomeDoContato(contato) || (numero ? `+${numero}` : 'Desconhecido');
 
     const isGroup = chave.chatId.endsWith('@g.us');
     const original = await dbGet('SELECT body, chat_name FROM messages WHERE id = ?', [chave.id]);

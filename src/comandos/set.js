@@ -3,7 +3,7 @@
  */
 
 const { client } = require('../cliente');
-const { idsDoChatAtual, resolveLidToPhone, resolverNomeDoGrupo } = require('../contatos');
+const { idsDoChatAtual, nomeDoContato, resolveLidToPhone, resolverNomeDoGrupo } = require('../contatos');
 const { dbPronto } = require('../db');
 const { resolverOuEscolher } = require('../destinos');
 const { printInfo } = require('../log');
@@ -196,7 +196,7 @@ async function comNome(numero) {
 
     // Você raramente está na própria agenda: vale o nome do seu perfil
     const contato = await client.getContactById(`${numero}@c.us`).catch(() => null);
-    const nome = contato?.name || contato?.pushname ||
+    const nome = nomeDoContato(contato) ||
         (ehODono(numero) ? client.info.pushname : null);
     return nome ? `${numero} (${nome})` : numero;
 }

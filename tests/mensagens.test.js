@@ -20,6 +20,22 @@ const DICA_USUARIOS = (onde, fora) => `\n\n💡 _Só quem é ${onde}; mais ${for
 beforeEach(bot.reiniciar);
 
 describe('gravação', () => {
+
+    test('sender_name e chat_name guardam o nome da sua agenda, não o pushname da pessoa', async () => {
+        const jid = '5521977770000@c.us'; // outro número: o nome do chat privado fica em cache por 10 min
+        const contato = bot.criarContato(jid, 'Beltrano da Agenda');
+        contato.pushname = 'beltrano_99';
+        const msg = bot.criarMensagem({
+            texto: 'oi', chat: jid, de: jid,
+            extras: { _data: { notifyName: 'beltrano_99', chat: { name: 'beltrano_99' } } }
+        });
+        await bot.entregar(msg);
+
+        const row = await bot.dbGet('SELECT sender_name, chat_name FROM messages WHERE id = ?', [msg.id.id]);
+        assert.equal(row.sender_name, 'Beltrano da Agenda');
+        assert.equal(row.chat_name, 'Beltrano da Agenda');
+    });
+
     test('grava a mensagem com remetente, chat e nome do grupo', async () => {
         await bot.entregar(bot.criarMensagem({ texto: 'oi grupo', de: OUTRO.jid, id: 'M1' }));
         const row = await bot.dbGet("SELECT * FROM messages WHERE id = 'M1'");

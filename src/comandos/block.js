@@ -3,7 +3,7 @@
  */
 
 const { client, concluirAviso } = require('../cliente');
-const { resolveLidToPhone } = require('../contatos');
+const { nomeDaAgenda, nomeDoContato, resolveLidToPhone } = require('../contatos');
 const { resolverOuEscolher } = require('../destinos');
 const { printError, printInfo } = require('../log');
 const { itensDoTexto } = require('./set');
@@ -35,7 +35,7 @@ const semDelimitadores = (texto) => texto.trim()
 // O nome de um contato; o number de um @lid é o próprio lid (não o telefone), então não serve
 const nomeDe = (c) => {
     const id = String(c.id?._serialized ?? '');
-    return c.name || c.pushname || (c.number && !id.endsWith('@lid') ? `+${c.number}` : id.split('@')[0]);
+    return nomeDoContato(c) || (c.number && !id.endsWith('@lid') ? `+${c.number}` : id.split('@')[0]);
 };
 
 /*
@@ -49,7 +49,7 @@ async function bloqueado(c) {
     const jid = id.endsWith('@lid') ? await resolveLidToPhone(id) : id;
     const telefone = jid?.endsWith('@c.us') ? jid.split('@')[0] : null;
     const doTelefone = jid && jid !== id ? await client.getContactById(jid).catch(() => null) : null;
-    const nome = doTelefone?.name || c.name || doTelefone?.pushname || c.pushname || null;
+    const nome = nomeDaAgenda(doTelefone) || nomeDaAgenda(c) || nomeDoContato(doTelefone) || nomeDoContato(c);
     return { id, telefone, nome };
 }
 

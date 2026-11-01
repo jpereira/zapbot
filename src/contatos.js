@@ -7,6 +7,14 @@ const { printDebug, printError } = require('./log');
 const { isDebugMode } = require('./settings');
 const { ehCanal } = require('./util/origem');
 
+/*
+ * O nome de um contato, sempre o MESMO critério: o salvo na SUA agenda (name; shortName é o
+ * apelido dele) vem antes do pushname (o nome que a pessoa escolheu no perfil dela), que só
+ * entra quando ela não está na agenda. verifiedName é o de contas comerciais.
+ */
+const nomeDaAgenda = (c) => c?.name || c?.shortName || null;
+const nomeDoContato = (c) => nomeDaAgenda(c) || c?.pushname || c?.verifiedName || null;
+
 function normalizerPhoneNumber(phoneNumber) {
     return String(phoneNumber ?? '').replace(/\D/g, '');
 }
@@ -125,11 +133,12 @@ async function resolverNomeDoPrivado(chatId) {
     const telefone = chatId.endsWith('@lid') ? await resolveLidToPhone(chatId) : null;
     let name = null;
 
+    // Primeiro o nome da agenda em qualquer um dos ids (telefone e @lid); o do perfil só se faltar
+    const contatos = [];
     for (const id of [telefone, chatId].filter(Boolean)) {
-        const contato = await client.getContactById(id).catch(() => null);
-        name = contato?.name || contato?.pushname || contato?.verifiedName || null;
-        if (name) break;
+        contatos.push(await client.getContactById(id).catch(() => null));
     }
+    name = contatos.map(nomeDaAgenda).find(Boolean) || contatos.map(nomeDoContato).find(Boolean) || null;
 
     if (name) privateNameCache.set(chatId, { name, at: Date.now() });
     return name;
@@ -179,11 +188,11 @@ async function nomeDaMencao(user, mentionedIds = []) {
         // Para um @lid, o contato pelo telefone real costuma ter o nome salvo na agenda
         const phoneJid = jid.endsWith('@lid') ? await resolveLidToPhone(jid) : null;
 
+        const contatos = [];
         for (const id of [phoneJid, jid].filter(Boolean)) {
-            const contact = await client.getContactById(id).catch(() => null);
-            nome = contact?.name || contact?.pushname || contact?.verifiedName || null;
-            if (nome) break;
+            contatos.push(await client.getContactById(id).catch(() => null));
         }
+        nome = contatos.map(nomeDaAgenda).find(Boolean) || contatos.map(nomeDoContato).find(Boolean) || null;
 
         if (!nome && phoneJid) nome = `+${phoneJid.split('@')[0]}`;
         if (nome) break;
@@ -220,6 +229,8 @@ async function idsDoChatAtual(chatId) {
 module.exports = {
     idsDoChatAtual,
     isPhoneNumber,
+    nomeDaAgenda,
+    nomeDoContato,
     normalizeWid,
     normalizerPhoneNumber,
     removeDeviceSuffix,

@@ -49,6 +49,15 @@ describe('evento: mensagem apagada', () => {
         assert.ok(row.revoked_at > 0);
     });
 
+    test('o Nome do aviso é o da sua agenda, não o pushname que a pessoa escolheu', async () => {
+        const contato = bot.criarContato(OUTRO.jid, 'Fulano da Agenda');
+        contato.pushname = 'fulaninho_99';
+
+        const { alerta } = await mensagemApagada('segredo');
+        assert.match(alerta[0].texto, /👤 \*Nome:\* Fulano da Agenda/);
+        assert.doesNotMatch(alerta[0].texto, /fulaninho_99/);
+    });
+
     test('mensagem que não está no banco: só registra no log', async () => {
         const fantasma = bot.criarMensagem({ texto: 'x', de: OUTRO.jid, id: 'NUNCA_VISTA' });
         const logAntes = bot.logs.length;

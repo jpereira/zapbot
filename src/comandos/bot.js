@@ -5,7 +5,7 @@
 const { findCommand, getCommandSyntax } = require('./base');
 const { ehODono, itensDasPessoas } = require('./set');
 const { client, concluirAviso } = require('../cliente');
-const { idsDoChatAtual, resolveLidToPhone, resolverNomeDoGrupo } = require('../contatos');
+const { idsDoChatAtual, nomeDoContato, resolveLidToPhone, resolverNomeDoGrupo } = require('../contatos');
 const {
     descreverDestino, descreverDestinos, enviarAosDestinos, extrairDestinos, resolverDestinos
 } = require('../destinos');
@@ -131,7 +131,7 @@ async function nomeDoItem(item) {
 
     // Você raramente está na própria agenda: vale o nome do seu perfil
     const contato = await client.getContactById(`${item}@c.us`).catch(() => null);
-    return contato?.name || contato?.pushname || (ehODono(item) ? client.info.pushname : null);
+    return nomeDoContato(contato) || (ehODono(item) ? client.info.pushname : null);
 }
 
 // " · só neste grupo" ou " · só em 👥 Amigos Faculdade" (a pessoa só num grupo)

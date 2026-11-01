@@ -3,7 +3,7 @@
  */
 
 const { client } = require('../cliente');
-const { removeDeviceSuffix, resolveLidToPhone } = require('../contatos');
+const { nomeDoContato, removeDeviceSuffix, resolveLidToPhone } = require('../contatos');
 
 // /listageral: membros do grupo (número, nome, admins)
 async function cmdListaGeral({ msg }) {
@@ -20,7 +20,7 @@ async function cmdListaGeral({ msg }) {
         const jid = removeDeviceSuffix(p.id._serialized);
         const phoneJid = jid.endsWith('@lid') ? await resolveLidToPhone(jid) : jid;
         const contato = await client.getContactById(phoneJid || jid).catch(() => null);
-        const nome = contato?.name || contato?.pushname || 'Desconhecido';
+        const nome = nomeDoContato(contato) || 'Desconhecido';
         const numero = phoneJid?.endsWith('@c.us') ? `+${phoneJid.split('@')[0]}` : '(número oculto)';
         const admin = p.isSuperAdmin ? ' 👑' : p.isAdmin ? ' ⭐' : '';
 

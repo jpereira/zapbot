@@ -4,7 +4,7 @@
 
 const { client } = require('../cliente');
 const { getCommandSyntax } = require('./base');
-const { resolveLidToPhone, resolverNomeDoGrupo } = require('../contatos');
+const { nomeDoContato, resolveLidToPhone, resolverNomeDoGrupo } = require('../contatos');
 const { dbAll, dbGet, dbPronto, dbRun } = require('../db');
 const { descreverDestino, resolverOuEscolher } = require('../destinos');
 const { TIPOS, chaveDoId, origemDoAviso } = require('../mudo');
@@ -92,7 +92,7 @@ const semDelimitadores = (texto) => texto.trim()
 async function pessoa(remetente) {
     const id = /^\d+$/.test(remetente) ? `${remetente}@c.us` : remetente;
     const contato = await client.getContactById(id).catch(() => null);
-    const nome = contato?.name || contato?.pushname || `+${id.split('@')[0]}`;
+    const nome = nomeDoContato(contato) || `+${id.split('@')[0]}`;
     return { id, nome, grupo: false };
 }
 

@@ -3,7 +3,7 @@
  */
 
 const { client } = require('./cliente');
-const { resolveLidToPhone } = require('./contatos');
+const { nomeDoContato, resolveLidToPhone } = require('./contatos');
 const { dbAll, dbGet, dbPronto, dbRun } = require('./db');
 const { printError, printInfo } = require('./log');
 const { formatarData, plural } = require('./util/formatar');
@@ -31,7 +31,7 @@ async function nomeDoEleitor(voter) {
 
     const jid = voter.endsWith('@lid') ? (await resolveLidToPhone(voter)) || voter : voter;
     const contato = await client.getContactById(jid).catch(() => null);
-    return contato?.name || contato?.pushname || jid.split('@')[0];
+    return nomeDoContato(contato) || jid.split('@')[0];
 }
 
 client.on('vote_update', async (vote) => {

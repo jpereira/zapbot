@@ -4,7 +4,7 @@
 
 const { client } = require('../cliente');
 const { getCommandSyntax } = require('./base');
-const { idsDoChatAtual } = require('../contatos');
+const { idsDoChatAtual, nomeDoContato } = require('../contatos');
 const { printError } = require('../log');
 const { formatarData, paraMs, plural } = require('../util/formatar');
 
@@ -25,7 +25,7 @@ const TRECHO = 200;
 async function nomeDe(id, cache) {
     if (!cache.has(id)) {
         cache.set(id, client.getContactById(id)
-            .then(c => c.name || c.pushname || id.split('@')[0])
+            .then(c => nomeDoContato(c) || id.split('@')[0])
             .catch(() => id.split('@')[0]));
     }
     return cache.get(id);

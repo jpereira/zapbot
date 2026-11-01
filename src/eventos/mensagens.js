@@ -9,7 +9,9 @@ const { client, consumirEnvioDoBot, foiEnviadaPeloBot, messageToSelf } = require
 const { getCommandSyntax, protocoloDaAjuda } = require('../comandos/base');
 const { executarAliasDeTexto, resolverAlias } = require('../aliases');
 const { HANDLERS } = require('../comandos/index');
-const { removeDeviceSuffix, resolveLidToPhone, resolverNomeDoGrupo, resolverNomeDoPrivado } = require('../contatos');
+const {
+    nomeDaAgenda, nomeDoContato, removeDeviceSuffix, resolveLidToPhone, resolverNomeDoGrupo, resolverNomeDoPrivado
+} = require('../contatos');
 const { dbGet, dbPronto, dbRun } = require('../db');
 const { responderEscolha } = require('../escolhas');
 const { verificarFlood } = require('../flood');
@@ -64,10 +66,10 @@ client.on('message_create', (msg) => comContextoDebug({
             ? (await resolverNomeDoCanal(chatId)) || `Canal ${chatId.split('@')[0]}`
             : isBroadcast ? null :
             (isGroup ? await resolverNomeDoGrupo(chatId) : null) ||
+            // Privado: o contato do outro participante (o chatId), pelo nome da sua agenda
+            (isGroup ? null : await resolverNomeDoPrivado(chatId)) ||
             msg?._data?.chat?.name ||
             msg?._data?.chat?.formattedTitle ||
-            // Privado: o contato do outro participante (o chatId)
-            (isGroup ? null : await resolverNomeDoPrivado(chatId)) ||
             // notifyName é o nome de quem ENVIOU: só serve de nome do chat quando foi o outro
             (isGroup || msg?.fromMe ? null : msg?._data?.notifyName) ||
             (isGroup ? `Grupo ${chatId.split('@')[0]}` : chatId.split('@')[0]);
@@ -113,10 +115,15 @@ client.on('message_create', (msg) => comContextoDebug({
         const senderJid = resolvedSenderJid || originalSenderJid || 'UNKNOWN';
         const senderNumber = senderJid.endsWith('@c.us') ? senderJid.split('@')[0] : null;
 
+        // Contato achado só por um dos ids (telefone ou @lid) sem nome na agenda: o outro pode ter
+        let contatoDaAgenda = contact;
+        if (!isChannel && !nomeDaAgenda(contact) && originalSenderJid?.endsWith('@lid') && originalSenderJid !== resolvedSenderJid) {
+            const doLid = await client.getContactById(originalSenderJid).catch(() => null);
+            if (nomeDaAgenda(doLid)) contatoDaAgenda = doLid;
+        }
+
         const senderName = (isChannel ? chatName : null) ||
-            contact?.name ||
-            contact?.pushname ||
-            contact?.verifiedName ||
+            nomeDoContato(contatoDaAgenda) ||
             // Em broadcasts, notifyName/chat podem trazer o nome de outro contato.
             (isBroadcast ? null : msg?._data?.notifyName) ||
             senderNumber ||

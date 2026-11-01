@@ -6,7 +6,7 @@
  */
 
 const { client, concluirAviso } = require('./cliente');
-const { resolveLidToPhone } = require('./contatos');
+const { nomeDoContato: nomeAgendaPrimeiro, resolveLidToPhone } = require('./contatos');
 const { enviarEmail, smtpParaEnviar } = require('./email');
 const { aguardarEscolha, autorDe } = require('./escolhas');
 const { printDebug, printError } = require('./log');
@@ -471,7 +471,7 @@ async function pessoaMencionada(digitos, mencoes) {
 
 async function nomeDoContato(id, digitos) {
     const contato = await client.getContactById(id).catch(() => null);
-    return contato?.name || contato?.pushname || `+${digitos}`;
+    return nomeAgendaPrimeiro(contato) || `+${digitos}`;
 }
 
 // "👥 Grupo sobre L200" / "👤 Fulano" / "📧 voce@exemplo.com"
