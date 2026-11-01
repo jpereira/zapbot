@@ -6,11 +6,30 @@ const path = require('path');
 const fs = require('fs-extra');
 const sqlite3 = require('sqlite3').verbose();
 
-const { CACHE_DIR } = require('./constants');
+const { CACHE_DIR, DB_PATH } = require('./constants');
 const { printError, printInfo } = require('./log');
 
-const dbPath = path.join(CACHE_DIR, 'bot_database.db');
+/*
+ * The database was called bot_database.db until 2.0.11: on the first boot after the switch, it (and the
+ * -wal, -shm and -journal SQLite files) is now called zapbot.db. If zapbot.db already exists, nothing is
+ * mexido.
+ * @returns {boolean} true: renomeou
+ */
+function dbMigrateName(dir = CACHE_DIR, freshAlt = path.basename(DB_PATH)) {
+    const oldAlt2 = path.join(dir, 'bot_database.db');
+    const current = path.join(dir, freshAlt);
+    if (!fs.existsSync(oldAlt2) || fs.existsSync(current)) return false;
+
+    for (const suffix of ['', '-wal', '-shm', '-journal']) {
+        if (fs.existsSync(oldAlt2 + suffix)) fs.renameSync(oldAlt2 + suffix, current + suffix);
+    }
+    printInfo(`Banco renomeado: bot_database.db → ${freshAlt}`);
+    return true;
+}
+
+const dbPath = DB_PATH;
 fs.mkdirSync(CACHE_DIR, { recursive: true });
+dbMigrateName();
 
 const db = new sqlite3.Database(dbPath, (err) => {
     if (err) return printError('Erro ao conectar ao SQLite:', err.message);
@@ -44,5 +63,6 @@ module.exports = {
     dbGet,
     dbReady,
     dbRun,
-    markDbReady
+    markDbReady,
+    dbMigrateName
 };

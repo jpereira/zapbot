@@ -29,12 +29,12 @@ Exemplo:
 ```text
 🗂️ Exibindo conteúdo de /app/cache/*
 
-├── 📁 backups/       118.33 KB
-├── bot_database.db   704.00 KB
-├── 📁 media/         404.77 MB
-└── 📁 tmp/                 0 B
-───────────────────────────────
-Total:                405.57 MB
+├── 📁 backups/   118.33 KB
+├── 📁 media/     404.77 MB
+├── 📁 tmp/             0 B
+└── zapbot.db     704.00 KB
+───────────────────────────
+Total:            405.57 MB
 
 🗄️ 1150 mensagens no cache.
 🗑️ 79 apagadas.
