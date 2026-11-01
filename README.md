@@ -140,6 +140,7 @@ de um. Os marcados como **Admin** só respondem à sua conta (e aos admins extra
 | Comando | Aliases | Admin | Descrição |
 |---|---|:-:|---|
 | [`/alias`](https://jpereira.github.io/zapbot/comandos/alias/) | | ✅ | Cadastra, lista e remove atalhos para comandos com argumentos ou textos com vários `{/comando}` |
+| [`/ascii`](https://jpereira.github.io/zapbot/comandos/ascii/) | | | O texto em letras grandes de ASCII, num bloco que cabe na tela do celular |
 | [`/backup`](https://jpereira.github.io/zapbot/comandos/backup/) | `/bkp` | ✅ | Backup diário local e envio por `backup.to`; lista, detalha, restaura e envia o banco |
 | [`/batch`](https://jpereira.github.io/zapbot/comandos/batch/) | | ✅ | Executa vários comandos de uma mensagem só, em sequência (cada linha que começa com um comando abre um bloco), e responde um resumo; `-stop` e `-dry` |
 | [`/block`](https://jpereira.github.io/zapbot/comandos/block/) | `/bloquear` | ✅ | Bloqueia uma ou várias pessoas na sua conta do WhatsApp (respondendo uma mensagem, quem a escreveu); sem nada, lista os bloqueados; `-mask` ofusca telefones |

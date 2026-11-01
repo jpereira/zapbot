@@ -75,6 +75,7 @@ nav:
   - Comandos:
       - comandos/index.md
       - /alias: comandos/alias.md
+      - /ascii: comandos/ascii.md
       - /backup: comandos/backup.md
       - /batch: comandos/batch.md
       - /block: comandos/block.md
