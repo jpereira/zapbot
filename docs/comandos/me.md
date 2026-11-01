@@ -9,7 +9,7 @@ Envia a mensagem digitada. Cada `{/comando args}` roda na hora e a resposta entr
 
 | Opção | Valor | Descrição |
 |---|---|---|
-| `-repeat`, `-r` | `<n>` | Repete o texto `n` vezes (de 1 a 30), emendado, numa mensagem só: `/me -r 3 Haha!` envia `Haha!Haha!Haha!`. Os `{/comando}` rodam uma vez só |
+| `-repeat`, `-r` | `<n>` | Repete o texto `n` vezes (de 1 a `me.maxRepeat`, padrão 500), emendado, numa mensagem só: `/me -r 3 Haha!` envia `Haha!Haha!Haha!`. Os `{/comando}` rodam uma vez só |
 
 ```text
 /me Minha mensagem

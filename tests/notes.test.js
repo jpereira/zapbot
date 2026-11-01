@@ -450,6 +450,45 @@ test('-desc: grava, mostra, aparece na lista e no -tags, vai no -move e apaga co
     await bot.responder('/notes -rem all');
 });
 
+test('tag parcial também no -export, no -alerta (lista) e no -view; ambígua junta as tags', async () => {
+    await bot.responder('/notes #ideias um -alerta +2h');
+    await bot.responder('/notes #ideia dois');
+    await bot.responder('/notes #casa três');
+
+    await bot.responder('/notes -export #idei');
+    const pdf = Buffer.from(bot.client.enviadas.at(-1).content.data, 'base64').toString('latin1');
+    assert.match(pdf, /#\d+ {2}um/);
+    assert.match(pdf, /#\d+ {2}dois/);
+    assert.doesNotMatch(pdf, /tr.s/);
+
+    const [alertas] = await bot.responder('/notes -alerta #idei');
+    assert.match(alertas, /#ideias/);
+    assert.match(alertas, /um/);
+    assert.doesNotMatch(alertas, /dois/);
+
+    const [ver] = await bot.responder('/notes -v #idei');
+    assert.match(ver, /um|dois/);
+    assert.match((await bot.responder('/notes -v #nada'))[0], /#nada não existe/);
+    assert.match((await bot.responder('/notes -v 1 #nada 9'))[0], /não existem/);
+    await bot.responder('/notes -rem all');
+});
+
+test('-desc: tag parcial só vale se for uma; -move leva a descrição e não sobrescreve a da tag nova', async () => {
+    await bot.responder('/notes #ideias um');
+    await bot.responder('/notes #ideia dois');
+    await bot.responder('/notes -d #ideias Coisas grandes');
+    await bot.responder('/notes -d #ideia Coisas curtas');
+    // "#idea" não casa com nada; "#ideia" é exata; "#idei" casa com duas e vira uma tag nova
+    assert.match((await bot.responder('/notes -d #ideia'))[0], /Coisas curtas/);
+    assert.match((await bot.responder('/notes -d #idei'))[0], /#idei não tem descrição/);
+
+    await bot.responder('/notes -m #ideia #ideias'); // a #ideias já tem descrição: fica a dela
+    assert.match((await bot.responder('/notes -d #ideias'))[0], /Coisas grandes/);
+    assert.match((await bot.responder('/notes -t'))[0], /#ideias: 2 · _Coisas grandes_/);
+    assert.match((await bot.responder('/notes -d #ideia'))[0], /Coisas grandes/); // parcial agora acha a #ideias
+    await bot.responder('/notes -rem all');
+});
+
 test('-update: troca o texto (e a tag, se vier) e mantém o alerta', async () => {
     await bot.responder('/notes #casa comprar pão -alerta +2h');
     await bot.responder('/notes #duvidas ETFs');

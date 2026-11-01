@@ -48,6 +48,7 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 /notes -u #3 #casa comprar pão\ne leite          → troca o texto e passa para a #casa
 /notes -move #casa #lar                           → renomeia a #casa para #lar
 /notes -desc #casa Coisas da casa                 → descrição da #casa
+/notes -view 76                                   → a nº 76 com a imagem, se tiver
 /notes -tags                                      → #casa: 3, #duvidas: 1, sem tag: 2
 ```
 
@@ -68,13 +69,36 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 - No texto da anotação, `\n` vira quebra de linha (`/notes #casa pão\nleite`); `\\n` fica como está.
 - **Imagens:** mande uma foto com a legenda `/notes #minhatag Imagem de teste` ou responda uma foto
   com `/notes [#tag] [texto]`. O texto é opcional (numa resposta com legenda, vale a legenda, com o
-  ↩️). A imagem fica em `cache/notes/` (fora do `cache/media/`, então o `/cache -media` não apaga) e
-  a lista mostra `🖼️ imagem`; para ver a imagem, `/notes -v <id>`. `-rem` apaga o arquivo junto. Só imagens (JPEG, PNG, WebP, GIF).
-- Nas listas, na busca e no `-export`, a tag pode vir pela metade: `/notes #idei` acha a `#ideias`
-  (a exata ganha; senão vale quem começa com o que você digitou, depois quem contém). Para
-  remover (`-rem`) e alertar, a tag vai inteira.
+  ↩️). A imagem fica em `cache/notes/` (fora do `cache/media/`, então o `/cache -media` não apaga)
+  e a lista mostra `🖼️ imagem`; para ver a imagem, use o [`-view`](#ver-e-organizar). O `-rem`
+  apaga o arquivo junto. Só imagens (JPEG, PNG, WebP, GIF).
+- A tag pode vir pela metade na lista, na busca, no `-view`, no `-desc` e no `-export`:
+  `/notes #idei` acha a `#ideias`. A exata ganha; senão valem as que começam com o que você
+  digitou, depois as que contêm. Onde mexe nos dados (`-rem`, `-move` e o `-alerta` com `<quando>`),
+  a tag vai inteira.
 - Cada anotação tem no máximo uma tag, a do começo do texto. Maiúsculas e minúsculas valem igual.
 - `/notes #casa` sozinho filtra; com texto depois, anota.
+
+## Ver e organizar
+
+```text
+/notes -v 76                  → a nº 76: a imagem com o texto na legenda (sem imagem, só o texto)
+/notes -v 3 5                 → várias de uma vez, uma mensagem para cada
+/notes -v #idei               → todas da #ideias
+/notes -v 76 -to /Família/    → manda no grupo (por e-mail, a imagem vai anexada)
+/notes -move #casa #lar       → renomeia a tag em todas as anotações
+/notes -desc #lar Coisas da casa   → descrição da tag
+/notes -d #lar                → mostra a descrição
+/notes -d #lar -rm            → apaga a descrição
+```
+
+- O cabeçalho do `-view` traz o ID, a tag e a data. Um ID ou tag que não existe cancela tudo, sem
+  enviar nada.
+- O `-move` para a tag nova que já existe junta as anotações das duas. A descrição vai junto; se a
+  nova já tinha uma, fica a dela. Tag de origem que não existe, ou igual à nova, é recusada.
+- A descrição aparece embaixo do nome da tag na lista (em itálico) e ao lado dela no `-tags`:
+  `#casa: 3 · Coisas da casa`. Dá para descrever uma tag que ainda não tem anotações; ela só
+  aparece na lista quando tiver.
 
 ## Buscar
 
@@ -105,7 +129,8 @@ O `-to` funciona como nos outros comandos (veja
 [Avisar em outro chat ou por e-mail](cotacao.md#avisar-em-outro-chat-ou-por-e-mail)). Não vale no
 `-rem`.
 
-- Sai como documento no próprio chat (com `-to`, nos destinos; por e-mail, em anexo). A data e a hora do nome são de Brasília.
+- Sai como documento no próprio chat (com `-to`, nos destinos; por e-mail, em anexo). A data e a
+  hora do nome são de Brasília.
 - As imagens entram no PDF, em cima do texto da anotação (que serve de legenda), reduzidas para caber
   (JPEG, fundo branco no lugar de transparência). Uma imagem que não abre fica de fora, com um aviso
   na linha da anotação.

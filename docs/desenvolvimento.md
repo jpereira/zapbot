@@ -92,7 +92,7 @@ src/
   moedas.js, cotacoes.js, alertasPreco.js   /crypto, /cotacao e alertas de preço
   aliases.js            resolução, listagem e execução (as de texto) dos atalhos persistidos no banco
   agenda.js             /cron (e /lembrete): leitura, lista e envio na hora
-  notas.js              /notes: anotações e o -alerta (aviso numa data/hora, uma vez)
+  notas.js              /notes: anotações, #tags (e a descrição), imagens, o PDF do -export e o -alerta (aviso numa data/hora, uma vez)
   diagnostico.js        /bot -test: a bateria de testes (cache, disco, banco, WhatsApp, internet, velocidade, SMTP...)
   imap.js               /bot -flush-email: cliente IMAP mínimo (conta e esvazia Sent e Trash)
   comandosNoTexto.js    os {/comando} e o \n no texto (o /cron e o /alias): conferidos ao criar e rodados no envio
@@ -111,7 +111,7 @@ src/
   eventos/              message_create, apagadas, editadas, reações
   comandos/             comandos.json (definição), um arquivo por comando,
                         index.js (HANDLERS) e base.js (ajuda e utilitários)
-  util/                 arquivos, formatação, datas digitadas (quando.js), processos externos, URLs
+  util/                 arquivos, formatação, datas digitadas (quando.js), PDF (pdf.js), processos externos, URLs
 tests/                  testes automatizados (veja Testes)
 ```
 
@@ -179,8 +179,9 @@ devolve `null`, como quando o WhatsApp não deixa editar.
 |---|---|
 | `agenda.test.js` | Datas digitadas (`6h`, `+2h`, `às 18h`, `sexta`...) e o `/cron`, nos modos mensagem e lembrete, com vários `-to` num item só, `-edit`, `-pause`/`-resume` e os `{/comando}` e o `\n` no texto (e o `-test`) |
 | `alias.test.js` | Cadastro persistente, descrições com aspas retas e curvas, listagem, remoção individual e total, nomes reservados, argumentos adicionais, permissões do destino e os aliases de texto (`{/comando}`, `\n` e as permissões de cada comando) |
-| `apagadas-editadas.test.js` | Eventos de apagar/editar (e os avisos `show.alert.*`) e o `/show` (apagadas, editadas e status, o chat pedido e a busca `-q`) |
+| `apagadas-editadas.test.js` | Eventos de apagar/editar (o Nome do aviso vem da agenda) (e os avisos `show.alert.*`) e o `/show` (apagadas, editadas e status, o chat pedido e a busca `-q`) |
 | `backup.test.js` | `/backup` (criação, lista, restauração, envio no privado, por e-mail e com um ou vários `-to`) e o backup diário |
+| `batch.test.js` | O `/batch`: a separação em blocos (linhas em branco, URLs e `/` que não é comando), o resumo, o `-dry`, o `-stop`, a recusa de `/batch` dentro de `/batch` e o uso só pelo dono |
 | `block.test.js` | `/block` (`/bloquear`) e `/unblock`: pelo nome, pelo número, respondendo, a lista (com os `@lid` convertidos para o telefone) e o nº dela, e o `/unblock -all` |
 | `bump.test.js` | Release e bump em repositórios temporários, versões dos exemplos, tags existentes e prévia sem alterações |
 | `canais.test.js` | Identificação de canais `@newsletter` nos avisos e no `/show` |
@@ -197,9 +198,9 @@ devolve `null`, como quando o WhatsApp não deixa editar.
 | `grupo.test.js` | `/todos`, `/boletos`, `/listageral`, `/walissu`, `/enquete` (e o `-r`), `/sticker` (e o `-txt`) |
 | `heartbeat.test.js` | Heartbeat e o `docker/app/healthcheck.js` (executado de verdade) |
 | `mascara-telefones.test.js` | Ofuscação de telefones no `/show`, `/watch` e `/bot` |
-| `mensagens.test.js` | Gravação de localizações sem interpretar a miniatura como texto ou comando, roteamento, permissões (`onlyAdmin`, o `bot.users` com pessoas, grupos, `true`/`false` e as permissões persistidas, bot desligado, admins extras do `bot.admins`, os atalhos `/bot +o`/`+v`, as listas do `-users`/`-all-users`, os comandos de cada usuário (`+cmd`/`-cmd`), o `-reset` com a confirmação, o `/whois` e a proteção contra flood), o log dos comandos desconhecidos e a contagem do `/stats` (sem os avisos do sistema) |
+| `mensagens.test.js` | Gravação (com o nome da sua agenda, não o pushname) e de localizações sem interpretar a miniatura como texto ou comando, roteamento, permissões (`onlyAdmin`, o `bot.users` com pessoas, grupos, `true`/`false` e as permissões persistidas, bot desligado, admins extras do `bot.admins`, os atalhos `/bot +o`/`+v`, as listas do `-users`/`-all-users`, os comandos de cada usuário (`+cmd`/`-cmd`), o `-reset` com a confirmação, o `/whois` e a proteção contra flood), o log dos comandos desconhecidos e a contagem do `/stats` (sem os avisos do sistema) |
 | `monitor.test.js` | Cadastro, filtro e remoção com o resolvedor compartilhado, alertas online persistentes, migração do banco, `-rem all`, consultas sequenciais, pausas, histórico por contato, limite de entradas, persistência e listagem em texto ou documento |
-| `notes.test.js` | O `/notes`: `-add`, `-list` e `-rem` (vários IDs, `all`, ID inexistente), o `-alerta` (no `-add` e por ID, quando inválido, `-to`, disparo único e `-alerta -rm`) |
+| `notes.test.js` | O `/notes`: `-add`, `-list` e `-rem` (vários IDs, `all`, ID inexistente), as `#tags` (a parcial: `#idei` acha `#ideias`), `-tags`, `-desc`, `-move`, `-view` (com imagem), `-export` (PDF, com as imagens), `-search`, imagens e o `-alerta` (no `-add` e por ID ou tag, quando inválido, `-to`, disparo único e `-alerta -rm`) |
 | `mute.test.js` | `/mute` e `/unmute`: avisos silenciados por pessoa, grupo ou comunidade (só o alvo é o `-a`), a busca do alvo (nomes exatos, contato, grupo, menção e lista para escolher pelo nº) e a resposta a um aviso (de onde ele veio) |
 | `presenca.test.js` | Leitura de presença por LID, assinatura compartilhada, cache e ausência de horários válidos sem fabricar dados |
 | `reacoes.test.js` | Reações removidas ou trocadas: o evento `message_reaction` (e o que não gera aviso), o aviso `show.alert.reaction`, o `/show -r`, o `/mute -r`, o `/bot -status` e a limpeza |

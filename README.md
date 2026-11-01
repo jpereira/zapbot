@@ -31,7 +31,8 @@ comandos começam com `/`.
 - Cria figurinhas: [`/sticker`](docs/comandos/sticker.md)
 - Vigia mensagens por texto ou regex: [`/watch`](docs/comandos/watch.md)
 - Agenda mensagens: [`/cron`](docs/comandos/cron.md)
-- Guarda anotações, com aviso numa data/hora: [`/notes`](docs/comandos/notes.md)
+- Guarda anotações, com `#tag`, imagens e aviso numa data/hora: [`/notes`](docs/comandos/notes.md)
+- Executa vários comandos de uma mensagem só: [`/batch`](docs/comandos/batch.md)
 - Mostra cotações e alertas de preço: [`/cotacao`](docs/comandos/cotacao.md),
   [`/crypto`](docs/comandos/crypto.md)
 - Acompanha posições DeFi (Orca, Project X, Liquidswap, Morpho, Aave V3): [`/defi`](docs/comandos/defi.md)
@@ -140,7 +141,7 @@ de um. Os marcados como **Admin** só respondem à sua conta (e aos admins extra
 |---|---|:-:|---|
 | [`/alias`](https://jpereira.github.io/zapbot/comandos/alias/) | | ✅ | Cadastra, lista e remove atalhos para comandos com argumentos ou textos com vários `{/comando}` |
 | [`/backup`](https://jpereira.github.io/zapbot/comandos/backup/) | `/bkp` | ✅ | Backup diário local e envio por `backup.to`; lista, detalha, restaura e envia o banco |
-| [`/batch`](https://jpereira.github.io/zapbot/comandos/batch/) | | ✅ | Executa vários comandos de uma mensagem só, em sequência, e responde um resumo |
+| [`/batch`](https://jpereira.github.io/zapbot/comandos/batch/) | | ✅ | Executa vários comandos de uma mensagem só, em sequência (cada linha que começa com um comando abre um bloco), e responde um resumo; `-stop` e `-dry` |
 | [`/block`](https://jpereira.github.io/zapbot/comandos/block/) | `/bloquear` | ✅ | Bloqueia uma ou várias pessoas na sua conta do WhatsApp (respondendo uma mensagem, quem a escreveu); sem nada, lista os bloqueados; `-mask` ofusca telefones |
 | [`/boletos`](https://jpereira.github.io/zapbot/comandos/boletos/) | | | Sorteia 2 membros para "pagar um boleto" |
 | [`/bot`](https://jpereira.github.io/zapbot/comandos/bot/) |  | ✅ | Status do bot (relatório de 24 h e os usuários); liga/desliga os comandos (`-on`/`-off`) e diz quem usa: admins (`+o`/`-o`) e usuários (`+v`/`-v`, em qualquer chat ou só num grupo, e os comandos de cada um com `+cmd`/`-cmd`); `-reset` volta ao padrão; `-status` (`-s`): relatório das últimas 24 h, e `-s 06h` manda todo dia; `-info` (`-i`): versões e sistema; `-test` (`-t`): testa cache, disco, banco, WhatsApp, internet, SMTP, IMAP e programas; `-flush-email [true]`: conta e limpa as mensagens de Sent e Trash |
@@ -165,7 +166,7 @@ de um. Os marcados como **Admin** só respondem à sua conta (e aos admins extra
 | [`/mute`](https://jpereira.github.io/zapbot/comandos/mute/) | `/mudo` | ✅ | Silencia os avisos de apagadas, editadas, status e reações (e os do `/watch`) de uma pessoa, um grupo ou uma comunidade; respondendo um aviso, de onde ele veio |
 | [`/news`](https://jpereira.github.io/zapbot/comandos/news/) | | | Manchetes de feeds RSS: `-hack`, `-g1`, `-gazeta`, `-brasil` |
 | [`/noffa`](https://jpereira.github.io/zapbot/comandos/noffa/) | `/🌈`, `/🏳️‍🌈` | | Enfeita o texto com arco-íris |
-| [`/notes`](https://jpereira.github.io/zapbot/comandos/notes/) | | ✅ | Anotações com ID (`-a`, `-l`, `-r`) e `-alerta` que avisa numa data/hora, como nos outros alertas |
+| [`/notes`](https://jpereira.github.io/zapbot/comandos/notes/) | | ✅ | Anotações com ID e `#tag` (`-a`, `-l`, `-s`, `-r`): ver com imagem (`-v`), renomear tag (`-m`), descrever tag (`-d`), exportar em PDF com imagens (`-e`) e `-alerta` que avisa numa data/hora |
 | [`/ping`](https://jpereira.github.io/zapbot/comandos/ping/) |  | | Verifica se o bot está vivo |
 | [`/pixelart`](https://jpereira.github.io/zapbot/comandos/pixelart/) | `/ansi`, `/px` | | Arte ANSI/ASCII aleatória (16colo.rs) |
 | [`/search`](https://jpereira.github.io/zapbot/comandos/search/) | `/buscar` | ✅ | Busca no histórico do WhatsApp Web, não só no cache: neste chat ou, no seu privado, em todos (`-N` para mais); `-mask` ofusca telefones |

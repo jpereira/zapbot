@@ -51,6 +51,7 @@ e sobrevivem a reinícios. Para ver e alterar, use o [`/set`](comandos/set.md).
 | `get.maxSizeMB` | 1–100 | `20` | Tamanho máximo do arquivo convertido pelo ffmpeg no `/get` e no `/sticker` |
 | `gif.tag` | texto | `fail` | Tag padrão do `/giphy` |
 | `giphy.api.key` | texto (pode ser vazio) | *(vazio)* | Chave do GIPHY, usada quando `GIPHY_API_KEY` não está no `config/.env`. Exibida mascarada (`••••1234`); `/set -reset giphy.api.key` apaga |
+| `me.maxRepeat` | 1–1000 | `500` | Máximo de repetições do [`/me -repeat`](comandos/me.md) (`-r <n>`) |
 | `monitor.enabled` | on/off | `on` | Consultas periódicas do [`/monitor`](comandos/monitor.md); `off` pausa sem apagar contatos ou histórico |
 | `monitor.max` | 1–5 | `5` | Máximo de contatos monitorados. Mais contatos aumentam as consultas e o risco de bloqueio; limite absoluto de 5. Remova contatos antes de reduzir abaixo do total cadastrado |
 | `monitor.maxRecords` | 1–1000 | `30` | Máximo de horários guardados por contato e exibidos em `/monitor` e `/monitor -l`. Reduzir remove imediatamente os horários mais antigos excedentes |

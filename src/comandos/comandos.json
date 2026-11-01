@@ -138,9 +138,9 @@
         },
         {
             "cmd": "/batch",
-            "usage": "/batch [-stop] [-dry] <comandos, um após o outro>",
+            "usage": "/batch [-stop] [-dry] (os comandos vêm nas linhas de baixo)",
             "aliases": [],
-            "help": "Executa vários comandos seguidos, de uma mensagem só (ou da mensagem respondida), e responde um resumo. Uma linha que começa com um comando (ou alias) abre um bloco; o que vem depois, linhas em branco inclusas, é do mesmo bloco. Com -stop, para no primeiro erro. Com -dry, só mostra como separou os blocos, sem executar. Ex: /batch -dry (e, nas linhas de baixo, /ideia ver isso, http://x.com, /ideia ler aquilo)",
+            "help": "Executa vários comandos seguidos, de uma mensagem só (ou da mensagem respondida), e responde um resumo. Uma linha que começa com um comando (ou alias) abre um bloco; o que vem depois, linhas em branco inclusas, é do mesmo bloco. Com -stop, para no primeiro erro. Com -dry, só mostra como separou os blocos, sem executar. Um bloco é um comando e tudo até o próximo (um /ideia com a URL embaixo, por exemplo). Só o dono usa. Ex: /batch, /batch -dry, /batch -stop",
             "cmd_opts": [
                 {
                     "opts": [
@@ -1107,7 +1107,7 @@
                     "values": [
                         "<n>"
                     ],
-                    "desc": "Repete o texto n vezes (de 1 a 30), emendado, numa mensagem só; os {/comando} rodam uma vez só. Ex: /me -r 3 Haha! envia Haha!Haha!Haha!"
+                    "desc": "Repete o texto n vezes (de 1 a me.maxRepeat, padrão 500), emendado, numa mensagem só; os {/comando} rodam uma vez só. Ex: /me -r 3 Haha! envia Haha!Haha!Haha!"
                 }
             ],
             "onlyAdmin": false
@@ -1320,7 +1320,7 @@
                     "values": [
                         "[#tag...]"
                     ],
-                    "desc": "Lista as anotações, cada uma com o ID, agrupadas por #tag. Com tags, só as delas."
+                    "desc": "Lista as anotações, cada uma com o ID, agrupadas por #tag. Com tags, só as delas (a tag pode vir pela metade: #idei acha a #ideias). Ex: /notes -l #casa, /notes -l #idei"
                 },
                 {
                     "opts": [
@@ -1360,7 +1360,7 @@
                     "values": [
                         "<id...|#tag...>"
                     ],
-                    "desc": "Mostra a anotação com a imagem (o texto vai na legenda; sem imagem, só o texto). Com -to, manda no destino. Ex: /notes -v 76",
+                    "desc": "Mostra a anotação com a imagem (o texto vai na legenda; sem imagem, só o texto). Aceita vários IDs ou tags (a tag pode vir pela metade). Com -to, manda no destino; por e-mail, a imagem vai anexada. Ex: /notes -v 76, /notes -v 3 5, /notes -v #idei, /notes -v 76 -to /Família/",
                     "cron": false
                 },
                 {
@@ -1371,7 +1371,7 @@
                     "values": [
                         "#tag #novatag"
                     ],
-                    "desc": "Renomeia a tag em todas as anotações (se a nova já existe, as duas se juntam). Ex: /notes -move #casa #lar",
+                    "desc": "Renomeia a tag em todas as anotações (se a nova já existe, as duas se juntam). A tag vai inteira, e a descrição dela vai junto. Ex: /notes -move #casa #lar",
                     "cron": false
                 },
                 {
@@ -1382,7 +1382,7 @@
                     "values": [
                         "#tag [<descrição>|-rm]"
                     ],
-                    "desc": "Descrição da tag, mostrada na lista e no -tags. Sem texto, mostra a atual; com -rm, apaga. Ex: /notes -desc #casa Coisas da casa",
+                    "desc": "Descrição da tag, mostrada na lista e no -tags. Sem texto, mostra a atual; com -rm, apaga. A tag pode vir pela metade. Ex: /notes -desc #casa Coisas da casa, /notes -d #casa, /notes -d #casa -rm",
                     "cron": false
                 },
                 {
@@ -1393,7 +1393,7 @@
                     "values": [
                         "[#tag...]"
                     ],
-                    "desc": "Manda as anotações num PDF, com as imagens e o texto como legenda (ZapBot_notes_YYYYMMDD_HHMM.pdf), ou só as das tags (ZapBot_notes_tag-casa_YYYYMMDD_HHMM.pdf).",
+                    "desc": "Manda as anotações num PDF, com as imagens e o texto como legenda (ZapBot_notes_YYYYMMDD_HHMM.pdf), ou só as das tags (ZapBot_notes_tag-casa_YYYYMMDD_HHMM.pdf). A tag pode vir pela metade. Com -to, o PDF vai no destino. Ex: /notes -e, /notes -e #casa, /notes -e #casa -to /Família/",
                     "cron": false
                 },
                 {
@@ -1404,7 +1404,7 @@
                     "values": [
                         "<id...|#tag...|all>"
                     ],
-                    "desc": "Remove as anotações com esses IDs (-r 1 2 3 ou -r 1,2,3), de uma tag (-r #casa) ou todas (all). Se algum ID ou tag não existe, nenhuma sai.",
+                    "desc": "Remove as anotações com esses IDs (-r 1 2 3 ou -r 1,2,3), de uma tag (-r #casa) ou todas (all). Se algum ID ou tag não existe, nenhuma sai. A tag vai inteira. Ex: /notes -r 2, /notes -r 1 2 3, /notes -r #casa, /notes -r all",
                     "cron": false
                 },
                 {
@@ -1422,7 +1422,7 @@
                         "rm"
                     ],
                     "values": [
-                        "<id...|all>"
+                        "<id...|#tag...|all>"
                     ],
                     "desc": "Junto com -alerta: tira o alerta das anotações com esses IDs (-rm 1 2 3 ou -rm 1,2,3), de uma tag (-rm #casa) ou de todas (all), mantendo as anotações. Se algum ID não existe, nenhum é mexido.",
                     "cron": false
@@ -1434,7 +1434,7 @@
                     "values": [
                         "<destino>"
                     ],
-                    "desc": "Com a lista (-l, #tag) ou o -export: manda a lista ou o PDF no destino em vez de responder aqui (Ex: /notes -e #casa -to /Família/). Com -alerta: avisa num contato, num grupo, num número ou por e-mail em vez do seu privado. Repita para vários: um alerta só, que avisa em todos. Ex: -to /Jorge Pereira/, -to @Fulano, -to /Grupo L200/ -to /Família/, -to +5521999999999, -to email"
+                    "desc": "Com a lista (-l, #tag), o -view ou o -export: manda no destino em vez de responder aqui. Com -alerta: avisa num contato, num grupo, num número ou por e-mail em vez do seu privado. Repita para vários: um alerta só, que avisa em todos. Ex: /notes -e #casa -to /Família/, -to /Jorge Pereira/, -to @Fulano, -to /Grupo L200/ -to /Família/, -to +5521999999999, -to email"
                 }
             ],
             "onlyAdmin": true

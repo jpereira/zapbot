@@ -33,7 +33,8 @@ comandos começam com `/`.
 - Cria figurinhas: [`/sticker`](comandos/sticker.md)
 - Vigia mensagens por texto ou regex: [`/watch`](comandos/watch.md)
 - Agenda mensagens: [`/cron`](comandos/cron.md)
-- Guarda anotações, com aviso numa data/hora: [`/notes`](comandos/notes.md)
+- Guarda anotações, com `#tag`, imagens e aviso numa data/hora: [`/notes`](comandos/notes.md)
+- Executa vários comandos de uma mensagem só: [`/batch`](comandos/batch.md)
 - Mostra cotações e alertas de preço: [`/cotacao`](comandos/cotacao.md),
   [`/crypto`](comandos/crypto.md)
 - Acompanha posições DeFi (Orca, Project X, Liquidswap, Morpho, Aave V3): [`/defi`](comandos/defi.md)
@@ -125,9 +126,10 @@ Por onde começar:
   preços e avisa **no seu privado** (ou, com um ou vários `-to`, em contatos, grupos, números ou por
   e-mail) quando a regra é cumprida; com o `-msg`, um texto seu vai no início do aviso. Veja
   [Alertas de preço](comandos/cotacao.md#alertas-de-preço).
-- **Anotações**: o [`/notes`](comandos/notes.md) guarda textos na tabela `notes`, cada um com um
-  ID. O `-alerta` avisa de uma anotação numa data/hora (uma vez; a anotação continua), no seu
-  privado ou nos destinos do `-to`, com uma verificação por minuto.
+- **Anotações**: o [`/notes`](comandos/notes.md) guarda textos (e imagens, em `cache/notes/`) na
+  tabela `notes`, cada um com um ID e, se quiser, uma `#tag` (a descrição das tags fica em
+  `note_tags`). O `-alerta` avisa de uma anotação numa data/hora (uma vez; a anotação continua), no
+  seu privado ou nos destinos do `-to`, com uma verificação por minuto.
 - **DeFi**: o [`/defi`](comandos/defi.md) lê on-chain as posições de liquidez da Orca, do Project X e da
   Liquidswap (pela carteira) cadastradas (tabela `defi_positions`) e, com o `-alerta`, confere a cada 10
   minutos (setting `defi.alerta.intervalMin`) e avisa (no seu privado ou nos destinos do `-to`)

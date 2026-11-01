@@ -399,6 +399,11 @@ const SETTINGS_SCHEMA = {
         secret: true,
         desc: 'Chave do GIPHY (/giphy), usada quando GIPHY_API_KEY não está no config/.env.'
     },
+    'me.maxRepeat': {
+        default: 500,
+        type: 'number', min: 1, max: 1000,
+        desc: 'Máximo de repetições do /me -repeat|-r <n>.'
+    },
     'monitor.enabled': {
         default: true,
         type: 'boolean',
