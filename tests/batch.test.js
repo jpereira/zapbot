@@ -61,6 +61,28 @@ test('falha segue adiante; com -stop, para no primeiro erro', async () => {
     assert.equal((await notes()).length, 1);
 });
 
+test('alias de texto, comando de consulta e a mensagem respondida', async t => {
+    const { HANDLERS } = bot.src('commands/index');
+    t.mock.method(HANDLERS, '/crypto', async ({ msg }) => msg.reply('₿ BTC $1'));
+    await bot.replyAlt('/alias btc Bitcoin: {/crypto BTC} fim');
+    const [r] = await bot.replyAlt('/batch\n/btc\n/notes um\n/ping');
+    assert.match(r, /BATCH\* · 3\/3 ok/);
+    assert.match(r, /✅ 1 · \/btc\n   ↳ Bitcoin: ₿ BTC \$1 fim/);
+    assert.equal((await notes()).length, 1);
+
+    // without text, /batch runs the replied message's text
+    const quoted = bot.createMessage({ de: bot.OWNER.jid, texto: '/notes primeira\n/notes segunda' });
+    const [resp] = await bot.replyAlt('/batch', { citada: quoted });
+    assert.match(resp, /2\/2 ok/);
+    assert.deepEqual((await notes()).map(n => n.text), ['um', 'primeira', 'segunda']);
+});
+
+test('mais de 50 blocos: nada é executado', async () => {
+    const [r] = await bot.replyAlt('/batch\n' + Array.from({ length: 51 }, (_, i) => `/notes n${i}`).join('\n'));
+    assert.match(r, /São 51 blocos; o máximo é 50\. Nada foi executado/);
+    assert.equal((await notes()).length, 0);
+});
+
 test('só o dono usa', async () => {
     assert.deepEqual(await bot.replyAlt('/batch\n/notes x', { de: bot.OTHERAlt.jid }), []);
     assert.equal((await notes()).length, 0);

@@ -97,6 +97,17 @@ describe('arquivos do cache', () => {
 });
 
 describe('contatos', () => {
+    test('nomeDoContato: o nome da agenda vem antes do pushname; o shortName e o verifiedName entram depois', () => {
+        const { scheduleName, contactName } = contacts;
+        assert.equal(contactName({ name: 'Maria Agenda', pushname: 'mari_99' }), 'Maria Agenda');
+        assert.equal(contactName({ shortName: 'Mari', pushname: 'mari_99' }), 'Mari');
+        assert.equal(contactName({ pushname: 'mari_99', verifiedName: 'Loja' }), 'mari_99');
+        assert.equal(contactName({ verifiedName: 'Loja' }), 'Loja');
+        assert.equal(scheduleName({ pushname: 'mari_99' }), null);
+        assert.equal(contactName(null), null);
+        assert.equal(contactName({}), null);
+    });
+
     test('números e JIDs', () => {
         assert.equal(contacts.normalizerPhoneNumber('+55 (21) 99999-0000'), '5521999990000');
         assert.equal(contacts.isPhoneNumber('+55 21 99999-0000'), true);

@@ -5,9 +5,8 @@
  * in a single message (the {/command}s run only once).
  */
 const { client } = require('../client');
+const { getSetting } = require('../settings');
 const { sendMedia, commandsError, assembleText, breakLines } = require('../textCommands');
-
-const MAX_REPETITIONS = 30;
 
 async function cmdMe({ msg, args, chatId, chatName, isGroup, admin, podeUsar: canUse, senderContact, senderName, senderNumber }) {
     let times = 1;
@@ -15,8 +14,9 @@ async function cmdMe({ msg, args, chatId, chatName, isGroup, admin, podeUsar: ca
         times = /^\d+$/.test(n) ? Number(n) : 0;
         return '';
     });
-    if (times < 1 || times > MAX_REPETITIONS) {
-        return msg.reply(`❌ -repeat precisa de um número de 1 a ${MAX_REPETITIONS}`);
+    const max = getSetting('me.maxRepeat');
+    if (times < 1 || times > max) {
+        return msg.reply(`❌ -repeat precisa de um número de 1 a ${max}`);
     }
 
     const textAlt = breakLines(rest);

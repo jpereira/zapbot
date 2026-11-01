@@ -166,6 +166,10 @@ Com chat e sem `-d`, `-e`, `-s` ou `-r`, o resumo conta cada tipo:
 💬 Chat: Beltrano
 ```
 
+O **Nome** é o do contato na sua agenda; só quem não está nela aparece com o nome do próprio
+perfil (o que a pessoa escolheu). O bot grava o nome na hora em que a mensagem chega, então as já
+guardadas ficam como estavam.
+
 Uma editada reexibida com `-e`:
 
 ```text

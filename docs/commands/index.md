@@ -116,7 +116,7 @@ mesmo que comecem com `/`. Sem isso, alguém poderia usar um comando que ecoa te
 |---|---|:-:|---|
 | [`/alias`](alias.md) | | ✅ | Cadastra, lista e remove atalhos para comandos com argumentos ou textos com vários `{/comando}` |
 | [`/backup`](backup.md) | `/bkp` | ✅ | Backup diário local e envio por `backup.to`; lista, detalha, restaura e envia o banco |
-| [`/batch`](batch.md) |  | ✅ | Executa vários comandos de uma mensagem só, em sequência, e responde um resumo |
+| [`/batch`](batch.md) |  | ✅ | Executa vários comandos de uma mensagem só, em sequência (cada linha que começa com um comando abre um bloco), e responde um resumo; `-stop` e `-dry` |
 | [`/block`](block.md) | `/bloquear` | ✅ | Bloqueia uma ou várias pessoas na sua conta do WhatsApp (respondendo uma mensagem, quem a escreveu); sem nada, lista os bloqueados; `-mask` ofusca telefones |
 | [`/boletos`](boletos.md) | | | Sorteia 2 membros para "pagar um boleto" |
 | [`/bot`](bot.md) |  | ✅ | Status do bot (relatório de 24 h e os usuários); liga/desliga os comandos (`-on`/`-off`) e diz quem usa: admins (`+o`/`-o`) e usuários (`+v`/`-v`, em qualquer chat ou só num grupo, e os comandos de cada um com `+cmd`/`-cmd`); `-reset` volta ao padrão; `-status` (`-s`): relatório das últimas 24 h, e `-s 06h` manda todo dia; `-info` (`-i`): versões e sistema; `-test` (`-t`): testa cache, disco, banco, WhatsApp, internet, SMTP e programas |
@@ -141,7 +141,7 @@ mesmo que comecem com `/`. Sem isso, alguém poderia usar um comando que ecoa te
 | [`/mute`](mute.md) | `/mudo` | ✅ | Silencia os avisos de apagadas, editadas, status e reações (e os do `/watch`) de uma pessoa, um grupo ou uma comunidade; respondendo um aviso, de onde ele veio |
 | [`/news`](news.md) | | | Manchetes de feeds RSS: `-hack`, `-g1`, `-gazeta`, `-brasil` |
 | [`/noffa`](noffa.md) | `/🌈`, `/🏳️‍🌈` | | Enfeita o texto com arco-íris |
-| [`/notes`](notes.md) | | ✅ | Anotações com ID (`-a`, `-l`, `-r`) e `-alerta` que avisa numa data/hora, como nos outros alertas |
+| [`/notes`](notes.md) | | ✅ | Anotações com ID e `#tag` (`-a`, `-l`, `-s`, `-r`): ver com imagem (`-v`), renomear tag (`-m`), descrever tag (`-d`), exportar em PDF com imagens (`-e`) e `-alerta` que avisa numa data/hora |
 | [`/ping`](ping.md) |  | | Verifica se o bot está vivo |
 | [`/pixelart`](pixelart.md) | `/ansi`, `/px` | | Arte ANSI/ASCII aleatória (16colo.rs) |
 | [`/search`](search.md) | `/buscar` | ✅ | Busca no histórico do WhatsApp Web, não só no cache: neste chat ou, no seu privado, em todos (`-N` para mais); `-mask` ofusca telefones |

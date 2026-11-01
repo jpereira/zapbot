@@ -243,8 +243,12 @@ test('/me envia a mensagem, roda {/comando} e aceita \\n', async t => {
 test('/me -repeat|-r repete a mensagem n vezes', async () => {
     assert.deepEqual(await bot.replyAlt('/me -r 3 Haha!'), ['Haha!Haha!Haha!']);
     assert.deepEqual(await bot.replyAlt('/me -repeat 2 Haha!\\n'), ['Haha!\nHaha!\n']);
-    for (const bad of ['0', '31', 'x'])
-        assert.match((await bot.replyAlt(`/me -r ${bad} Haha!`))[0], /^❌ -repeat precisa/);
+    for (const bad of ['0', '501', 'x'])
+        assert.match((await bot.replyAlt(`/me -r ${bad} Haha!`))[0], /^❌ -repeat precisa de um número de 1 a 500/);
+    assert.equal((await bot.replyAlt('/me -r 500 a'))[0], 'a'.repeat(500));
+    await bot.setSetting('me.maxRepeat', 5);
+    assert.match((await bot.replyAlt('/me -r 6 a'))[0], /1 a 5/);
+    assert.equal((await bot.replyAlt('/me -r 5 a'))[0], 'aaaaa');
     assert.match((await bot.replyAlt('/me -r 3'))[0], /^❌ Use: \/me/);
 });
 
