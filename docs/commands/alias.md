@@ -60,6 +60,10 @@ saem da lista; os que sobram continuam indo para o fim do comando. Um `$N` sem a
 /rec 10 20 http://minhaurl/foo   → /sticker -ss 10 -es 20 http://minhaurl/foo
 ```
 
+Com `$N`, o que sobra dos argumentos vai para o fim do comando separado por um espaço, então as
+quebras de linha do texto viram espaço. Sem `$N`, o texto vai como foi digitado, quebras de linha
+inclusas. Para executar vários atalhos de uma vez, veja o [`/batch`](batch.md).
+
 As permissões, o controle de repetição e a desativação de comandos são os do comando de destino.
 O `/help alias` lista os atalhos que você pode executar, com a descrição e o comando salvo.
 O `/alias -h` ou `/alias -help` mostra a ajuda de cadastro. O `/alias` sem argumentos ou com
