@@ -5,14 +5,14 @@ mandar de uma vez o que você mandaria em vários blocos (ex.: várias anotaçõ
 [alias](alias.md)). Também funciona respondendo uma mensagem com os comandos.
 
 ```text
-/batch [-stop] [-dry]
+/batch [-stop] [-dry|-d]
 <comandos, nas linhas de baixo>
 ```
 
 | Opção | Valor | Descrição |
 |---|---|---|
 | `-stop` | | Para no primeiro bloco que falhar (o padrão é seguir com os outros) |
-| `-dry` | | Só mostra como os blocos foram separados, sem executar |
+| `-dry`, `-d` | | Só mostra como os blocos foram separados, sem executar |
 
 ## Como separa os blocos
 
@@ -44,7 +44,7 @@ A resposta é um resumo só:
    ↳ 📝 #78 · #ideias · Quando puder ler o link sobre isso. http://g1.com/labala
 ```
 
-Com `-dry`, nada roda; ele só mostra como separou:
+Com `-dry` (ou `-d`), nada roda; ele só mostra como separou:
 
 ```text
 /batch -dry

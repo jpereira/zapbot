@@ -34,12 +34,12 @@ async function separarBlocos(texto) {
     return { blocos: blocos.map(b => b.replace(/\s+$/, '')), sobra };
 }
 
-// Lê -stop / -dry só da 1ª linha, antes dos comandos (o resto é dos blocos)
+// Lê -stop / -dry (-d) só da 1ª linha, antes dos comandos (o resto é dos blocos)
 function lerOpcoes(args) {
     const opcoes = { stop: false, dry: false };
     let resto = args.trim();
-    for (let m; (m = resto.match(/^-(stop|dry)(?=\s|$)\s*/i));) {
-        opcoes[m[1].toLowerCase()] = true;
+    for (let m; (m = resto.match(/^-(stop|dry|d)(?=\s|$)\s*/i));) {
+        opcoes[m[1].toLowerCase() === 'stop' ? 'stop' : 'dry'] = true;
         resto = resto.slice(m[0].length);
     }
     return { opcoes, texto: resto };
@@ -95,7 +95,7 @@ async function cmdBatch(contexto) {
     const texto = digitado || (quotedMsg?.body ?? '').trim();
 
     if (!texto) {
-        await msg.reply('❌ Use: /batch [-stop] [-dry] e, nas linhas de baixo, os comandos (ou responda uma mensagem com eles)');
+        await msg.reply('❌ Use: /batch [-stop] [-dry|-d] e, nas linhas de baixo, os comandos (ou responda uma mensagem com eles)');
         return;
     }
 

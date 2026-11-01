@@ -40,6 +40,7 @@ test('linha com "/" que não é comando continua sendo texto do bloco', async ()
 test('-dry só mostra a separação; sem comando, erro; /batch dentro de /batch, recusado', async () => {
     const [d] = await bot.responder('/batch -dry\ntexto solto\n/notes um\nmais\n/notes dois');
     assert.match(d, /só a separação/);
+    assert.equal((await bot.responder('/batch -d\ntexto solto\n/notes um\nmais\n/notes dois'))[0], d);
     assert.match(d, /1\. \/notes um .*\+1 linhas/);
     assert.match(d, /2\. \/notes dois/);
     assert.match(d, /antes do primeiro comando/);
