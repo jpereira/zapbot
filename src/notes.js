@@ -45,7 +45,7 @@ const packageJson = require('../package.json');
  *   -add | -a [#tag] <texto>            → anota
  * -add <text> -alerta <when> [-to <destination>]...
  * → saves the note and notifies at the date/time (-to works as in the other -alerta)
- * -rem | -r <id...|#tag...|all>       → removes (-r 1 2 3, -r 1,2,3, -r #casa or all)
+ * -rm | -r <id...|#tag...|all>       → removes (-r 1 2 3, -r 1,2,3, -r #casa or all)
  * -alerta                             → lists only the notes with an alert
  * -alerta <id|#tag...> <when> [-to ...]
  * → sets (or swaps) the alert of a note (or of all those in the tag)
@@ -98,7 +98,7 @@ function noteLine(n) {
     return `*#${n.id}* ${indent(body)}${alert}\n   _(${formatData(n.created_at)})_`;
 }
 
-// The ids of -rem / -alerta -rm: 1 2 3, 1,2,3 or all. Does any not exist? None is touched
+// The ids of -rm / -alerta -rm: 1 2 3, 1,2,3 or all. Does any not exist? None is touched
 function readIds(textAlt, notes) {
     const partsAlt = textAlt.toLowerCase().split(/[\s,]+/).filter(Boolean);
     if (partsAlt.includes('all')) return { todos: true, ids: notes.map(n => n.id) };
@@ -117,7 +117,7 @@ function readIds(textAlt, notes) {
 async function removeNotes(msg, textIds, soAlert) {
     const notes = await listNotes();
     const { ids, faltando: missing, todos: allAlt2 } = readIds(textIds, notes);
-    const cmd = soAlert ? '/notes -alerta -rm' : '/notes -rem';
+    const cmd = soAlert ? '/notes -alerta -rm' : '/notes -rm';
 
     if (!allAlt2 && (!ids.length || missing.length)) {
         const label = missing?.every(f => !f.startsWith('#')) ? 'ID' : '';
@@ -284,7 +284,7 @@ async function alertAlt(msg, rest) {
     const { destinos: destinationsText, informado: withDestination, resto: withoutDestination } = extractDestinations(rest);
     const textAlt = withoutDestination.trim();
 
-    if (/^-(rm|rem|r)(\s|$)/.test(textAlt)) {
+    if (/^-(rm|r)(\s|$)/.test(textAlt)) {
         await removeNotes(msg, textAlt.replace(/^-\S+/, ''), true);
         return;
     }
@@ -737,15 +737,15 @@ async function cmdNote({ msg, args, quotedMsg }) {
     // Replying to a message, "/notes #tag" saves its text under that tag instead of filtering
     if (textTags) return (quotedMsg || msg.hasMedia) && textTags.length === 1 ? addAlt(msg, textAlt, quotedMsg) : listAlt(msg, textAlt);
     if (nameAlt === '-add' || nameAlt === '-a') return addAlt(msg, rest, quotedMsg);
-    if (withDestination && (nameAlt === '-rem' || nameAlt === '-rm' || nameAlt === '-r')) {
+    if (withDestination && (nameAlt === '-rm' || nameAlt === '-rm' || nameAlt === '-r')) {
         return msg.reply('❌ O -to não vale ao remover. Ele serve para -list, #tag e -export (e, no -add, para o -alerta).');
     }
-    if (nameAlt === '-rem' || nameAlt === '-rm' || nameAlt === '-r') return removeNotes(msg, words.join(' '), false);
+    if (nameAlt === '-rm' || nameAlt === '-rm' || nameAlt === '-r') return removeNotes(msg, words.join(' '), false);
     if (nameAlt === '-alerta') return alertAlt(msg, rest);
 
     // An option that does not exist: error. Without a "-" in front, the whole text is a new note (the same as -add)
     if (nameAlt.startsWith('-')) {
-        return msg.reply('❌ Use: /notes [-list] [#tag] [-to ...] | -search <texto|/regex/> | -tags | -view <id...|#tag...> | -move #tag #nova | -desc #tag <texto> | -update <id> <texto> | -export [#tag] [-to ...] | -add [#tag] <texto> [-alerta <quando>] | -rem <id...|#tag...|all> | -alerta ...');
+        return msg.reply('❌ Use: /notes [-list] [#tag] [-to ...] | -search <texto|/regex/> | -tags | -view <id...|#tag...> | -move #tag #nova | -desc #tag <texto> | -update <id> <texto> | -export [#tag] [-to ...] | -add [#tag] <texto> [-alerta <quando>] | -rm <id...|#tag...|all> | -alerta ...');
     }
 
     return addAlt(msg, textAlt);

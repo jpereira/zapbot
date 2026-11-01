@@ -40,7 +40,7 @@ function tokensWatch(args) {
 function readOptionsWatch(args) {
     const tokens = tokensWatch(args);
     const o = { regra: '', destinos: [], limite: null, n: null, ref: null, acao: null, origem: null, busca: null };
-    const aliases = { list: 'list', l: 'list', show: 'show', s: 'show', rem: 'rem', r: 'rem',
+    const aliases = { list: 'list', l: 'list', show: 'show', s: 'show', rm: 'rm', r: 'rm',
         flush: 'flush', f: 'flush', mask: 'mask', m: 'mask', in: 'in', to: 'to', query: 'query', q: 'query' };
     const rule = [];
     for (let i = 0; i < tokens.length; i++) {
@@ -73,7 +73,7 @@ function readOptionsWatch(args) {
             }
             continue;
         }
-        if (o.acao) throw new Error('use apenas uma ação: -list, -show, -rem ou -flush');
+        if (o.acao) throw new Error('use apenas uma ação: -list, -show, -rm ou -flush');
         o.acao = nameAlt;
         if (nameAlt !== 'list' && /^-?\d+$/.test(tokens[i + 1]?.valor ?? '')) {
             o.n = Number(tokens[++i].valor.replace(/^-/, ''));
@@ -81,20 +81,20 @@ function readOptionsWatch(args) {
     }
     o.regra = rule.join(' ').trim();
     // -s/-r/-f also accept the rule itself in place of the no.: /watch -s /Jorge/
-    if (['show', 'rem', 'flush'].includes(o.acao) && o.n === null && o.regra) {
+    if (['show', 'rm', 'flush'].includes(o.acao) && o.n === null && o.regra) {
         o.ref = o.regra;
         o.regra = '';
     }
     if (o.acao && o.regra) throw new Error('não combine regra nova com ações de consulta ou remoção');
     if (o.origem !== null && !o.regra) throw new Error('o -in acompanha uma regra nova');
-    if (o.busca !== null && (o.regra || o.destinos.length || ['rem', 'flush', 'list'].includes(o.acao))) {
+    if (o.busca !== null && (o.regra || o.destinos.length || ['rm', 'flush', 'list'].includes(o.acao))) {
         throw new Error('o -q só filtra as ocorrências: use com /watch -s [N|regra] ou /watch [-N]');
     }
     if (o.limite !== null && (!o.limite || o.limite > 100)) {
         throw new Error('a quantidade -N deve estar entre 1 e 100');
     }
     if (o.n !== null && !o.n) throw new Error('o número da regra deve ser maior que zero');
-    if (['rem', 'flush', 'list'].includes(o.acao) && o.limite !== null) {
+    if (['rm', 'flush', 'list'].includes(o.acao) && o.limite !== null) {
         throw new Error('use -N para a quantidade de matches na listagem ou no -show');
     }
     return o;

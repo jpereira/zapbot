@@ -180,7 +180,7 @@ async function cmdWatch({ msg, args }) {
             return;
         }
         if (rules.length >= getSetting('watch.max')) {
-            await msg.reply(`❌ Limite de ${getSetting('watch.max')} regras atingido (setting watch.max).\n💡 _Remova uma com /watch -rem N_`);
+            await msg.reply(`❌ Limite de ${getSetting('watch.max')} regras atingido (setting watch.max).\n💡 _Remova uma com /watch -rm N_`);
             return;
         }
         let origin;
@@ -237,7 +237,7 @@ async function cmdWatch({ msg, args }) {
         await msg.reply(`📣 Regra *#${n}* (${rule}): os avisos vão para *${whereWarn(lido.destinos)}*.`);
         return;
     }
-    if (o.acao === 'rem') {
+    if (o.acao === 'rm') {
         if (!rule) { await help(); return; }
         await setSetting('watch.rules', rules.filter((_, i) => i !== n - 1));
         const res = await dbRun('DELETE FROM watch_hits WHERE rule = ?', [rule]);

@@ -10,7 +10,7 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 | `<trecho>` ou `/regex/` | | Não sendo uma chave: lista as chaves que contêm o trecho (sem diferenciar maiúsculas) ou casam com a regex. Ex.: `/set alerta`, `/set /^show\./` |
 | `<chave> <valor>` | | Altera. Listas: itens separados por vírgula ou espaço (`watch.rules`: uma regra por linha); `""` esvazia |
 | `-append`, `-a` | `<chave> <valor>` | Numa lista, acrescenta os itens (os que já estão ficam). Ex.: `/set -a bot.admins +5521999999999` (no `bot.admins` e no `bot.users` vale também `/Jorge Pereira/` e `@Fulano Da Silva`; no `bot.users`, grupos) |
-| `-rem` | `<chave> <valor>` | Numa lista, tira os itens. Ex.: `/set -rem commands.disabled noffa` |
+| `-rm` | `<chave> <valor>` | Numa lista, tira os itens. Ex.: `/set -rm commands.disabled noffa` |
 | `-reset`, `-r` | `<chave>` | Volta ao valor padrão |
 | `<VARIÁVEL>` | | Uma variável do `config/.env` (ex.: `OPENAI_MODEL`): mostra o valor, só no seu privado |
 
@@ -30,7 +30,7 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 /set -r crypto.coins
 /set watch.rules ""
 /set -a commands.disabled walissu   → desativa mais um, sem reescrever a lista
-/set -rem commands.disabled noffa   → reativa só esse
+/set -rm commands.disabled noffa   → reativa só esse
 /set -a bot.admins /Jorge Pereira/  → um admin extra, pelo nome do contato (veja o /bot)
 /set bot.users /Grupo Familia/      → libera os comandos comuns no grupo (veja o /bot)
 ```
@@ -53,13 +53,13 @@ Os quatro settings do [`/monitor`](monitor.md) aceitam `<chave> <valor>` ou `cha
 remove imediatamente os horários mais antigos excedentes. `monitor.enabled=false` pausa sem
 apagar cadastros ou histórico. As mudanças valem sem reiniciar.
 
-## Listas: `-append` e `-rem`
+## Listas: `-append` e `-rm`
 
 Nas chaves que são listas (`bot.admins`, `bot.users`, `commands.disabled`, `crypto.coins`,
 `watch.rules`, os feeds do `news.*`...), o `<chave> <valor>` troca a lista inteira; o `-append`
-(`-a`) acrescenta itens e o `-rem` tira, sem mexer no resto. Os itens passam pela mesma validação do
+(`-a`) acrescenta itens e o `-rm` tira, sem mexer no resto. Os itens passam pela mesma validação do
 `<chave> <valor>`: um número de telefone vira só os dígitos, um comando vira o nome principal
-(`/set -rem commands.disabled /mudo` tira o `/mute`).
+(`/set -rm commands.disabled /mudo` tira o `/mute`).
 
 ```text
 /set -a crypto.coins hype
@@ -67,10 +67,10 @@ Nas chaves que são listas (`bot.admins`, `bot.users`, `commands.disabled`, `cry
 = BTC, ETH, SOL, HYPE
 ```
 
-Numa chave que não é lista (`show.max`, `debug.enabled`...), o `-append` e o `-rem` são recusados:
+Numa chave que não é lista (`show.max`, `debug.enabled`...), o `-append` e o `-rm` são recusados:
 troque o valor com `/set <chave> <valor>` ou volte ao padrão com `/set -reset <chave>` (`-r`).
 
-O `bot.admins` e o `bot.users` só o dono altera (inclusive com `-append`, `-rem` e `-reset`): um
+O `bot.admins` e o `bot.users` só o dono altera (inclusive com `-append`, `-rm` e `-reset`): um
 admin extra não pode se dar (nem dar a outros) esse acesso. Neles, além do número, vale o nome do
 contato (`/Jorge Pereira/`) ou a menção: o bot guarda o telefone e mostra o nome ao lado
 ([Admins extras](bot.md#admins-extras)). O `bot.users` aceita também grupos (guarda o id e mostra

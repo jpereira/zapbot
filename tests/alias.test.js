@@ -86,7 +86,7 @@ test('cadastro substitui o atalho e remoção aceita com ou sem barra', async ()
     assert.match((await bot.replyAlt('/alias -rm /eita'))[0], /removido/);
     assert.equal((await aliases()).length, 0);
     await bot.replyAlt('/alias eita /ping');
-    assert.match((await bot.replyAlt('/alias -rem eita'))[0], /removido/);
+    assert.match((await bot.replyAlt('/alias -rm eita'))[0], /removido/);
     assert.match((await bot.replyAlt('/alias -rm eita'))[0], /não encontrado/);
     assert.match((await bot.replyAlt('/alias'))[0], /Nenhum alias/);
 });
@@ -137,16 +137,14 @@ test('desativar o destino impede a execução e nomes reservados continuam prote
 });
 
 
-test('remoção de todos os aliases aceita -rm e -rem e mantém os comandos do bot', async () => {
-    for (const optionAlt of ['-rm', '-rem']) {
-        await bot.replyAlt('/alias eita /cotacao USD');
-        await bot.replyAlt('/alias eita2 /cotacao EUR');
-        assert.match((await bot.replyAlt(`/alias ${optionAlt} all`))[0], /Todos os aliases removidos \(2\)/);
-        assert.deepEqual(await aliases(), []);
-        assert.match((await bot.replyAlt('/help alias'))[0], /Nenhum alias/);
-        assert.ok(await resolverAlias('/cotacao USD'));
-        assert.match((await bot.replyAlt(`/alias ${optionAlt} all`))[0], /removidos \(0\)/);
-    }
+test('remoção de todos os aliases (-rm all) mantém os comandos do bot', async () => {
+    await bot.replyAlt('/alias eita /cotacao USD');
+    await bot.replyAlt('/alias eita2 /cotacao EUR');
+    assert.match((await bot.replyAlt('/alias -rm all'))[0], /Todos os aliases removidos \(2\)/);
+    assert.deepEqual(await aliases(), []);
+    assert.match((await bot.replyAlt('/help alias'))[0], /Nenhum alias/);
+    assert.ok(await resolverAlias('/cotacao USD'));
+    assert.match((await bot.replyAlt('/alias -rm all'))[0], /removidos \(0\)/);
 });
 
 

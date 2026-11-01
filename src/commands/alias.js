@@ -14,7 +14,7 @@ async function cmdAlias({ msg, args }) {
     await dbReady;
     const textAlt = args.trim();
     if (!textAlt || /^-(list|l)$/.test(textAlt)) return listAliases(msg);
-    const removeAlt2 = textAlt.match(/^-(?:rem|rm)\s+(\S+)$/);
+    const removeAlt2 = textAlt.match(/^-(?:rm)\s+(\S+)$/);
     if (removeAlt2) {
         if (removeAlt2[1] === 'all') {
             const r = await dbRun('DELETE FROM command_aliases');
