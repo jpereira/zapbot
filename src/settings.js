@@ -5,7 +5,6 @@
 const { OPENAI_MODELOS } = require('./openai');
 const { compilarFiltroDebug } = require('./debugOpcoes');
 const { botConfig } = require('./botConfig');
-const { APP_ENV } = require('./constantes');
 const { dbAll, dbGet, dbRun } = require('./db');
 const { limitarHistoricoMonitor } = require('./monitorHistorico');
 const { printError, printInfo, printSuccess } = require('./log');
@@ -236,7 +235,7 @@ const SETTINGS_SCHEMA = {
         }
     },
     'debug.enabled': {
-        default: APP_ENV.toLowerCase() === 'dev',
+        default: false,
         type: 'boolean',
         desc: 'Modo debug (o mesmo do /debug -on|-off).'
     },

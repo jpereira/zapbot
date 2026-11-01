@@ -168,7 +168,7 @@ describe('/bot', () => {
             const [r] = await bot.responder(linha);
             assert.match(r, new RegExp(`^ℹ️ \\*ZapBot ${packageJson.version.replace('.', '\\.')}(?: \\(devel\\))?\\* · informações do sistema\n\n🤖 \\*Bot\\*\n`), linha);
             assert.match(r, new RegExp(`• Node\\.js: ${process.version.replace(/\./g, '\\.')} \\(V8 `));
-            assert.match(r, new RegExp(`• ZapBot: ${packageJson.version.replace('.', '\\.')}(?: \\(devel\\))? \\(git\\+[0-9a-f]{7}/[\\w.-]+\\) \\(APP_ENV=test\\)\n`));
+            assert.match(r, new RegExp(`• ZapBot: ${packageJson.version.replace('.', '\\.')}(?: \\(devel\\))? \\(git\\+[0-9a-f]{7}/[\\w.-]+\\)\n`));
             assert.match(r, /• whatsapp-web\.js: [\d.]+ \(commit [0-9a-f]{7}\)\n/);
             assert.match(r, /• WhatsApp Web: _não encontrado_\n/);   // o cliente simulado não tem getWWebVersion
             assert.match(r, /• SQLite: \d+\.\d+\.\d+\n/);

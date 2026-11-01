@@ -471,7 +471,7 @@ problema. Ele também avisa quando há versão nova do `yt-dlp` e do `whatsapp-w
 ℹ️ ZapBot 2.0.11 (devel) · informações do sistema
 
 🤖 Bot
-• ZapBot: 2.0.11 (devel) (git+7a89b92/HEAD) (APP_ENV=prod)
+• ZapBot: 2.0.11 (devel) (git+7a89b92/HEAD)
 • Node.js: v24.9.0 (V8 13.6.233.10-node.27)
 • whatsapp-web.js: 1.34.7 (commit 58ddf15) · ✅ a mais recente · ⬆️ 1 commit novo no main
 • WhatsApp Web: 2.3000.1027123456

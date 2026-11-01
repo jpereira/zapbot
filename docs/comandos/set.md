@@ -85,7 +85,6 @@ valem quando o container é recriado. As chaves e as senhas aparecem mascaradas 
 ```text
 🔒 config/.env (somente leitura: mude no arquivo e recrie o container)
 
-APP_ENV                         prod
 GIPHY_API_KEY                   ••••a1b2
 OPENAI_MODEL                    (vazio)
 PHONE_NUMBER                    5521999999999

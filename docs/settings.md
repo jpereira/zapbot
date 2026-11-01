@@ -25,7 +25,7 @@ e sobrevivem a reinícios. Para ver e alterar, use o [`/set`](comandos/set.md).
 | `cve.max` | 1–20 | `10` | Quantidade de CVEs exibidas pelo `/cve` (o `/cve <max>` sobrepõe) |
 | `cve.maxDays` | 1–120 | `7` | Janela, em dias, do `/cve -highscore` |
 | `debug.copyTo` | texto (pode ser vazio) | *(vazio)* | Chat que recebe a cópia dos logs; configure pelo [`/debug -copy-to`](comandos/debug.md). Vazio: só console |
-| `debug.enabled` | on/off | `on` se `APP_ENV=dev` | Modo debug (o mesmo do `/debug -on`/`-off`) |
+| `debug.enabled` | on/off | `off` | Modo debug (o mesmo do `/debug -on`/`-off`) |
 | `debug.filter` | texto (pode ser vazio) | *(vazio)* | Filtro `/regex/flags` dos logs durante o debug. Vazio: sem filtro; `/debug -off` limpa. O filtro vale após a inicialização; matches são destacados no console com cores |
 | `debug.level` | 0–3 | `0` | Nível cumulativo: básico, funções e comandos, integrações, desenvolvimento. Veja [`/debug`](comandos/debug.md) |
 | `defi.aave.chains` | lista | `1 8453` | Redes (chain id) em que o [`/defi aave`](comandos/defi.md#aave-v3) procura as posições: `1` (Ethereum), `8453` (Base) |

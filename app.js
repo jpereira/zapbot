@@ -30,11 +30,10 @@
  * Variáveis de ambiente, antes de qualquer outro módulo (vários leem process.env
  * ao carregar). No Docker elas já chegam pelo env_file do Compose e o arquivo nem
  * está na imagem; fora dele (node app.js), vêm do mesmo arquivo que o Compose
- * usaria: config/.env com APP_ENV=prod, senão config/.env.dev. O dotenv nunca
- * sobrescreve uma variável que já existe.
+ * usa: config/.env. O dotenv nunca sobrescreve uma variável que já existe.
  */
 require('dotenv').config({
-    path: require('path').join(__dirname, 'config', process.env.APP_ENV === 'prod' ? '.env' : '.env.dev'),
+    path: require('path').join(__dirname, 'config', '.env'),
     quiet: true
 });
 
@@ -44,12 +43,11 @@ require('./src/debugInstrumentacao').instalarDebug();
 
 const colors = require('colors');
 
-const { APP_ENV } = require('./src/constantes');
 const { printInfo } = require('./src/log');
 const { versaoComCommit } = require('./src/versao');
 
-// O debug mode vem do setting 'debug.enabled' (padrão: ligado se APP_ENV=dev, sem diferenciar maiúsculas)
-printInfo(`Running in APP_ENV=${APP_ENV} QRCODE_EMAIL_ENABLE=${process.env.QRCODE_EMAIL_ENABLE}`);
+// O debug mode vem do setting 'debug.enabled' (padrão: desligado)
+printInfo(`QRCODE_EMAIL_ENABLE=${process.env.QRCODE_EMAIL_ENABLE}`);
 
 const { instalarEncerramento } = require('./src/processo');
 

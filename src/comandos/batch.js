@@ -119,7 +119,6 @@ async function cmdBatch(contexto) {
 
     const linhas = [];
     let falhas = 0;
-    let parou = false;
 
     for (const [i, bloco] of blocos.entries()) {
         let r;
@@ -136,8 +135,7 @@ async function cmdBatch(contexto) {
         linhas.push(`${r.ok ? '✅' : '❌'} ${i + 1} · ${topo(bloco)}${detalhe}`);
 
         if (!r.ok && opcoes.stop) {
-            parou = i + 1 < blocos.length;
-            if (parou) linhas.push(`⏹️ Parou no bloco ${i + 1}; ${blocos.length - i - 1} não rodaram.`);
+            if (i + 1 < blocos.length) linhas.push(`⏹️ Parou no bloco ${i + 1}; ${blocos.length - i - 1} não rodaram.`);
             break;
         }
     }

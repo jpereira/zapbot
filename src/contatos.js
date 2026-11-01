@@ -131,14 +131,12 @@ async function resolverNomeDoPrivado(chatId) {
     if (cache && Date.now() - cache.at < GROUP_NAME_TTL_MS) return cache.name;
 
     const telefone = chatId.endsWith('@lid') ? await resolveLidToPhone(chatId) : null;
-    let name = null;
-
     // Primeiro o nome da agenda em qualquer um dos ids (telefone e @lid); o do perfil só se faltar
     const contatos = [];
     for (const id of [telefone, chatId].filter(Boolean)) {
         contatos.push(await client.getContactById(id).catch(() => null));
     }
-    name = contatos.map(nomeDaAgenda).find(Boolean) || contatos.map(nomeDoContato).find(Boolean) || null;
+    const name = contatos.map(nomeDaAgenda).find(Boolean) || contatos.map(nomeDoContato).find(Boolean) || null;
 
     if (name) privateNameCache.set(chatId, { name, at: Date.now() });
     return name;

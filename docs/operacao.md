@@ -81,7 +81,7 @@ adicione ao serviço `zapbot` o label `autoheal=true`:
 
 | Sintoma | Causa provável / solução |
 |---|---|
-| `env file .../config/.env.dev not found` | Crie o arquivo: `touch config/.env.dev`. |
+| `env file .../config/.env not found` | Crie o arquivo a partir do exemplo: `cp config/.env.example config/.env`. |
 | QR não aparece nos logs | `QRCODE_EMAIL_ENABLE` está `"true"`: o QR vai por e-mail e só cai nos logs se o envio falhar (`QRCODE_EMAIL_FALLBACK_TERMINAL`, padrão `"true"`). Veja o e-mail ou mude para `"false"`. |
 | `Erro ao enviar QR por email` | Host/porta/usuário/senha SMTP errados. Use porta 465 e senha de app. Com `QRCODE_EMAIL_FALLBACK_TERMINAL="true"` (padrão), o QR sai nos logs do mesmo jeito. |
 | `Too many bad auth attempts` (`535 5.7.0`, `EAUTH`) ou `SMTP em pausa` | O provedor bloqueou o login por tentativas erradas (senha de app errada ou revogada). O bot para de tentar por 30 minutos para não piorar. Confira a senha, espere o bloqueio passar e teste com `/bot -test`. Veja [Pausa depois de falha de login](emails.md#pausa-depois-de-falha-de-login). |

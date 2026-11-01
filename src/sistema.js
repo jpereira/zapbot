@@ -12,7 +12,7 @@ const packageJson = require('../package.json');
 
 const { estado } = require('./estado');
 const { client } = require('./cliente');
-const { APP_ENV, BIN_CHROMIUM, BIN_FFMPEG, BIN_YT, BOT_START_TIME } = require('./constantes');
+const { BIN_CHROMIUM, BIN_FFMPEG, BIN_YT, BOT_START_TIME } = require('./constantes');
 const { dbGet, dbPronto } = require('./db');
 const { getBotUptime } = require('./log');
 const { humanSize } = require('./util/arquivos');
@@ -144,7 +144,7 @@ async function textoDoInfo() {
 
     return `ℹ️ *ZapBot ${versaoDoBot()}* · informações do sistema\n\n` +
         '🤖 *Bot*\n' +
-        `• ZapBot: ${versaoComCommit()} (APP_ENV=${APP_ENV})\n` +
+        `• ZapBot: ${versaoComCommit()}\n` +
         `• Node.js: ${process.version} (V8 ${process.versions.v8})\n` +
         `• whatsapp-web.js: ${versaoDoWwebjs()}${notaDoWwebjs(novas)}\n` +
         `• WhatsApp Web: ${whatsappWeb ?? (estado.pronto ? NAO_ENCONTRADO : '_não conectado_')}\n` +

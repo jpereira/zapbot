@@ -1,17 +1,18 @@
 # Desenvolvimento
 
-## Ambiente de desenvolvimento (Docker)
+## Docker (Makefile)
 
-O serviço `zapbot-dev` monta o código-fonte em `/workspace` e usa `config/.env.dev`. O `Makefile`
-tem atalhos:
+Existe um só serviço, o `zapbot` do `docker/docker-compose.yml`, que usa o `config/.env`. O
+`Makefile` tem atalhos para ele:
 
 ```bash
 make help    # lista todos os alvos
-make build   # build da imagem zapbot-dev
-make shell   # shell dentro do container de dev; rode "node app.js" lá dentro
-make clean   # remove o container e a imagem zapbot-dev
+make build   # build da imagem zapbot
+make up      # build + (re)cria o container
+make shell   # shell dentro do container
+make clean   # remove o container e a imagem zapbot
 make recreate # clean + build sem cache + sobe uma instância nova (volumes intactos)
-make destroy # clean + apaga os volumes de dev (sessão do WhatsApp e cache!)
+make destroy # clean + apaga os volumes (sessão do WhatsApp e cache!)
 make docs    # site da documentação local (veja Documentação)
 ```
 
@@ -24,8 +25,7 @@ make V=1 check               # o mesmo, com V=1
 ```
 
 O destino das operações Docker e dos testes é selecionado por `DOCK_REMOTE`: `0` (padrão) usa o
-ambiente local de desenvolvimento (`zapbot-dev`); `1` usa o container de produção remoto (`zapbot`).
-O endereço e o contexto aceitam valores do ambiente ou da linha de comando:
+Docker desta máquina; `1` usa o do servidor remoto. O serviço é sempre o `zapbot`. O endereço e o contexto aceitam valores do ambiente ou da linha de comando:
 
 ```bash
 make test                    # testes do checkout local
@@ -57,8 +57,8 @@ container remoto.
 `deps`, `lint`, `check` e `docs*` trabalham sempre no checkout local. `check` valida lint, testes
 locais e documentação, independentemente do destino. `clean` remove o container e a imagem do
 ambiente selecionado, preservando os volumes, e apaga o cache de build do contexto Docker
-selecionado. `destroy` remove também os volumes: a sessão e o cache se perdem, e um novo `up` em
-produção pede o QR Code. `prune` limpa mídia e mensagens.
+selecionado. `destroy` remove também os volumes: a sessão e o cache se perdem, e um novo `up` pede
+o QR Code. `prune` limpa mídia e mensagens.
 
 ## Estrutura do código
 
@@ -68,7 +68,7 @@ eventos e inicia as tarefas periódicas). O código fica em `src/`:
 ```text
 app.js                  bootstrap, na ordem de inicialização
 src/
-  constantes.js         diretórios, janelas de tempo, APP_ENV
+  constantes.js         diretórios, janelas de tempo, binários externos
   telefoneBot.js        número configurado e identificação do bot no WhatsApp
   versao.js             a versão com o commit e a tag (ou HEAD e o (devel)) que estão rodando, lidos do .git
   estado.js             estado da conexão, compartilhado entre os módulos
@@ -126,7 +126,7 @@ aplica o filtro e a ocultação de credenciais antes do console e da fila de có
 
 Os testes usam o test runner do próprio Node (`node:test`), sem dependência extra. Fora do Docker
 precisam do **Node 22.13 ou mais novo** (por causa do `node:sqlite`) e das dependências instaladas
-(`make deps`); no container de dev (`make shell`) é só rodar `make test`.
+(`make deps`); no container (`make shell`) é só rodar `make test`.
 
 ```bash
 make deps                                  # instala as dependências do package-lock.json

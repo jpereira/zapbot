@@ -5,12 +5,11 @@ container ao criá-lo: o arquivo não vai para dentro da imagem. Nunca faça com
 `.gitignore`). Para conferir os valores que o bot está usando, mande `/set` no seu privado (veja
 [Variáveis do `config/.env`](comandos/set.md#variáveis-do-configenv)).
 
-Rodando fora do Docker (`node app.js`), o bot lê o mesmo arquivo que o Compose usaria: `config/.env`
-com `APP_ENV=prod` e `config/.env.dev` nos outros casos. Variáveis já definidas no ambiente têm
-prioridade sobre as do arquivo. Fora do Docker o bot ainda espera os programas nos caminhos da
+Rodando fora do Docker (`node app.js`), o bot lê o mesmo arquivo que o Compose usa: `config/.env`.
+Variáveis já definidas no ambiente têm prioridade sobre as do arquivo. Fora do Docker o bot ainda espera os programas nos caminhos da
 imagem (Debian): Chromium em `/usr/bin/chromium` (ou no `PUPPETEER_EXECUTABLE_PATH`), `ffmpeg` em
-`/usr/bin/ffmpeg` e `yt-dlp` em `/venv/bin/yt-dlp`; o jeito suportado de desenvolver é o
-[container de dev](desenvolvimento.md#ambiente-de-desenvolvimento-docker).
+`/usr/bin/ffmpeg` e `yt-dlp` em `/venv/bin/yt-dlp`; o jeito suportado de rodar é o
+[container Docker](desenvolvimento.md#docker-makefile).
 
 ## Docker Compose
 

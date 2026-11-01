@@ -2,7 +2,7 @@
 
 Controla os logs de diagnóstico no console, com níveis cumulativos, filtro por regex e cópia para um
 chat do WhatsApp. As configurações ficam salvas nos settings e sobrevivem a reinícios. No primeiro
-boot, o debug começa ligado só com `APP_ENV=dev`, no nível `0`.
+boot, o debug começa desligado, no nível `0`.
 
 | Opção | Descrição |
 |---|---|

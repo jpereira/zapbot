@@ -78,7 +78,6 @@ cd zapbot
 git checkout v2.0.10
 
 cp config/.env.example config/.env   # preencha o PHONE_NUMBER e o e-mail (veja abaixo)
-touch config/.env.dev
 
 docker compose -f docker/docker-compose.yml build zapbot
 docker compose -f docker/docker-compose.yml up -d zapbot

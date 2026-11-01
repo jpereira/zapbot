@@ -31,7 +31,6 @@ const { regexPerigosa } = require('../util/regexSeguro');
  */
 const VARIAVEIS_DO_ENV = [
     { nome: 'AAVE_WALLET_ADDRESS' },
-    { nome: 'APP_ENV' },
     { nome: 'BASE_RPC_URL', secret: true },
     { nome: 'ETHEREUM_RPC_URL', secret: true },
     { nome: 'GIPHY_API_KEY', secret: true },

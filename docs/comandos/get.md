@@ -82,7 +82,7 @@ rm cookies.txt
   muda o arquivo de saída) e guarda só os domínios pedidos. Ele avisa se faltar `auth_token`/`ct0`,
   ou seja, se a conta não estiver logada no navegador.
 - O `make cookies` usa `docker cp` e dá `chmod 600`. O arquivo cai no volume do cache, então
-  sobrevive a `make recreate`; sem `DOCK_REMOTE=1`, vai para o container de dev. `FILE=outro.txt`
+  sobrevive a `make recreate`; sem `DOCK_REMOTE=1`, vai para o container do Docker local. `FILE=outro.txt`
   escolhe outro arquivo.
 - Se `cache/cookies.txt` existe, o bot passa `--cookies` ao yt-dlp em todo download, de qualquer
   site. Sem o arquivo, baixa sem cookies. Para desligar, apague o arquivo do container.

@@ -1,5 +1,5 @@
 #
-# zapbot - atalhos de desenvolvimento, testes e deploy. Rode "make help".
+# zapbot - atalhos de build, testes e deploy. Rode "make help".
 #
 # Cada comando passa o contexto explicitamente (docker --context ...), então
 # o contexto global do Docker nunca é alterado: se algo falhar no meio, você
@@ -34,21 +34,16 @@ DOCK_REMOTE ?= 0
 LOCAL_CONTEXT ?= default
 DOCKER_REMOTE_SERVER ?= ssh://root@homelab.local
 REMOTE_CONTEXT ?= homelab
-DEV_SERVICE := zapbot-dev
-PROD_SERVICE := zapbot
+SERVICE := zapbot
+COOKIES_DEST := /app/cache/cookies.txt
+VOLUMES := zapbot_app_cache zapbot_wwebjs_auth
 
 ifeq ($(DOCK_REMOTE),1)
 DOCKER_CONTEXT := $(REMOTE_CONTEXT)
-SERVICE := $(PROD_SERVICE)
-COOKIES_DEST := /app/cache/cookies.txt
-VOLUMES := zapbot_app_cache zapbot_wwebjs_auth
 RUN_TEST = $(DOCKER) exec -w /app $(SERVICE) env \
     TEST_ARGS="$(TEST_ARGS)" DEBUG_TESTES="$(DEBUG_TESTES)" $(NPM_TEST)
 else ifeq ($(DOCK_REMOTE),0)
 DOCKER_CONTEXT := $(LOCAL_CONTEXT)
-SERVICE := $(DEV_SERVICE)
-COOKIES_DEST := /workspace/cache/cookies.txt
-VOLUMES := zapbot_app_cache_dev zapbot_wwebjs_auth_dev
 RUN_TEST = TEST_ARGS="$(TEST_ARGS)" $(NPM_TEST)
 else
 $(error DOCK_REMOTE deve ser 0 (local) ou 1 (remoto))
@@ -93,11 +88,11 @@ help: ## Mostra esta ajuda
 		"DOCS_PYTHON" "Python do virtualenv da documentação · atual: $(DOCS_PYTHON)"
 
 #
-# Development
+# Código
 #
 all: build ## Alias de build
 
-deps: ## Instala dependências do lock, incluindo as de dev, sem baixar Chromium
+deps: ## Instala as dependências do lock, incluindo as de desenvolvimento do npm (ESLint), sem baixar Chromium
 	$(Q)PUPPETEER_SKIP_DOWNLOAD=true $(NPM) ci --include=dev --no-audit --no-fund
 
 test: $(if $(filter 1,$(DOCK_REMOTE)),context) ## Testes locais ou no container remoto
@@ -130,7 +125,7 @@ else
 	$(Q)$(DOCKER) context inspect $(LOCAL_CONTEXT) >/dev/null
 endif
 
-build: context ## Build da imagem de dev local ou de produção remota
+build: context ## Build da imagem no destino selecionado
 	$(Q)$(COMPOSE) build $(OPTS) $(SERVICE)
 
 up: context ## Build + (re)cria o serviço no destino selecionado
@@ -143,12 +138,8 @@ logs: context ## Segue os logs do serviço selecionado
 ps: context ## Lista containers do destino selecionado
 	$(Q)$(DOCKER) ps
 
-shell: context ## Shell de dev local ou dentro do bot remoto
-ifeq ($(DOCK_REMOTE),1)
+shell: context ## Shell dentro do bot no destino selecionado
 	$(Q)$(DOCKER) exec -it $(SERVICE) /bin/bash -l
-else
-	$(Q)$(COMPOSE) run --rm --entrypoint "bash -l" $(SERVICE)
-endif
 
 images: context ## Lista imagens do destino selecionado
 	$(Q)$(DOCKER) images -a
@@ -192,11 +183,7 @@ docs.deps: $(DOCS_VENV)/.instalado ## Prepara as dependências da documentação
 docs.build: $(DOCS_VENV)/.instalado ## Gera o site e valida links e âncoras (modo estrito)
 	$(Q)NO_MKDOCS_2_WARNING=1 $(DOCS_VENV)/bin/mkdocs build --strict
 
-prune: $(if $(filter 1,$(DOCK_REMOTE)),context) ## Apaga mídia e mensagens do cache selecionado
-ifeq ($(DOCK_REMOTE),1)
+prune: context ## Apaga mídia e mensagens do cache do bot no destino selecionado
 	$(Q)$(DOCKER) exec -w /app $(SERVICE) rm -rf cache/tmp cache/media
 	$(Q)$(DOCKER) exec -w /app $(SERVICE) sqlite3 cache/bot_database.db "DELETE FROM messages"
-else
-	$(Q)rm -rf cache/media/
-	$(Q)sqlite3 cache/bot_database.db "DELETE FROM messages"
-endif
+

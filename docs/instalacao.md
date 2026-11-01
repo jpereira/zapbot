@@ -24,17 +24,13 @@ git checkout v2.0.10
 cp config/.env.example config/.env
 vim config/.env            # PHONE_NUMBER e, recomendado, o e-mail do QR Code (veja abaixo)
 
-# 3. O docker-compose.yml também referencia config/.env.dev (serviço de dev).
-#    Mesmo usando só produção, o arquivo precisa existir:
-touch config/.env.dev
-
-# 4. Build da imagem
+# 3. Build da imagem
 docker compose -f docker/docker-compose.yml build zapbot
 
-# 5. Subir o container em background
+# 4. Subir o container em background
 docker compose -f docker/docker-compose.yml up -d zapbot
 
-# 6. Acompanhar os logs (e ler o QR Code, se estiver no modo terminal)
+# 5. Acompanhar os logs (e ler o QR Code, se estiver no modo terminal)
 docker logs -f zapbot
 ```
 
