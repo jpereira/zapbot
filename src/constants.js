@@ -1,5 +1,5 @@
 /*
- * General constants: directories, time windows, external binaries and the environment (APP_ENV).
+ * General constants: directories, time windows, external binaries.
  */
 
 const path = require('path');
@@ -36,13 +36,7 @@ const GET_MAX_CONCURRENT = 2;
 const THUMBNAIL_TIMEOUT_MS = 15 * 1000;
 const THUMBNAIL_MAX_BYTES = 10 * 1024 * 1024;
 
-/*
- * Ambiente
- */
-const APP_ENV = process.env.APP_ENV || 'dev';
-
 module.exports = {
-    APP_ENV,
     BACKUP_DIR,
     NOTES_DIR,
     BIN_CHROMIUM,

@@ -119,7 +119,6 @@ async function cmdBatch(context) {
 
     const linesAlt = [];
     let failures = 0;
-    let stopped = false;
 
     for (const [i, block] of blocks.entries()) {
         let r;
@@ -136,8 +135,7 @@ async function cmdBatch(context) {
         linesAlt.push(`${r.ok ? '✅' : '❌'} ${i + 1} · ${top(block)}${detail}`);
 
         if (!r.ok && optionsAlt.stop) {
-            stopped = i + 1 < blocks.length;
-            if (stopped) linesAlt.push(`⏹️ Parou no bloco ${i + 1}; ${blocks.length - i - 1} não rodaram.`);
+            if (i + 1 < blocks.length) linesAlt.push(`⏹️ Parou no bloco ${i + 1}; ${blocks.length - i - 1} não rodaram.`);
             break;
         }
     }
