@@ -241,7 +241,7 @@ async function report(chat) {
 // ordem
 const SHORTCUT = /(^|\s)[+-](o|v|cmd)(?=\s|$)/;
 const OPERATION = /(^|\s)([+-])([ov])(?=\s|$)/;
-const OPTION_CMD = /(^|\s)([+-])cmd(?:\s+((?:[^\s+-]\S*,\s*)*[^\s+-]\S*))?(?=\s|$)/;
+const OPTION_CMD = /(^|\s)([+-])cmd(?:\s+((?:[^\s+,-][^\s,]*,\s*)*[^\s+,-][^\s,]*))?(?=\s|$)/;
 const SHORTCUT_LIST = { o: 'bot.admins', v: 'bot.users' };
 
 /*
