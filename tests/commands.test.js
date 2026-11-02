@@ -8,6 +8,7 @@ const { test, describe, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 
 const packageJson = require('../package.json');
+const COMMANDS = require('../src/commands/commands.json');
 const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const { OTHERAlt } = bot;
 
@@ -17,8 +18,18 @@ describe('/help (/h)', () => {
     test('sem argumento (o dono): todos os comandos ativos', async () => {
         const [r] = await bot.replyAlt('/help');
         assert.match(r, /MENU DE AJUDA/);
-        assert.match(r, /Uso: \/show/);
-        assert.match(r, /Uso: \/cotacao/);
+        assert.match(r, /```\n \/alias - .*\n \/ascii - /);
+        assert.match(r, /\n \/show - Mostra mensagens do cache do bot\n/);
+        assert.match(r, /\n \/cotacao - /);
+        assert.doesNotMatch(r, /Uso:/);
+        assert.ok(r.endsWith('\n```\n\n💡 Utilize */help /comando* ou */comando -h* para mais informações.'));
+    });
+
+    test('a lista traz uma linha por comando, "/cmd - o que faz", sem quebra no meio', async () => {
+        const [r] = await bot.replyAlt('/help');
+        const linesAlt = r.split('\n').filter(l => l.startsWith(' /'));
+        assert.equal(linesAlt.length, COMMANDS.commands.length);
+        for (const l of linesAlt) assert.match(l, /^ \/[a-z]+ - \S.*[^.\s]$/, l);
     });
 
     test('um comando, com ou sem "/", por nome ou alias', async () => {
@@ -35,8 +46,8 @@ describe('/help (/h)', () => {
     test('quem não é admin vê só os comandos comuns; o admin extra vê tudo', async () => {
         const [r] = await bot.replyAlt('/help', { de: OTHERAlt.jid });
         assert.match(r, /^🤖 \*MENU DE AJUDA\* _\(os comandos que você pode usar\)_/);
-        assert.match(r, /Uso: \/cotacao/);
-        assert.doesNotMatch(r, /Uso: \/(show|backup|bot|set)\b/);
+        assert.match(r, /\n \/cotacao - /);
+        assert.doesNotMatch(r, /\n \/(show|backup|bot|set) - /);
 
         assert.deepEqual(await bot.replyAlt('/help show', { de: OTHERAlt.jid }),
             ['⛔ O /show é só do dono do bot (e dos admins).\n💡 _Veja os que você pode usar com /help_']);
@@ -45,12 +56,12 @@ describe('/help (/h)', () => {
         await bot.setSetting('bot.admins', [OTHERAlt.user]);
         const [admin] = await bot.replyAlt('/help', { de: OTHERAlt.jid });
         assert.match(admin, /^🤖 \*MENU DE AJUDA\*\n/);
-        assert.match(admin, /Uso: \/show/);
+        assert.match(admin, /\n \/show - /);
     });
 
     test('comando desativado por setting some do menu', async () => {
         await bot.setSetting('commands.disabled', 'noffa');
-        assert.doesNotMatch((await bot.replyAlt('/help'))[0], /Uso: \/noffa/);
+        assert.doesNotMatch((await bot.replyAlt('/help'))[0], /\n \/noffa - /);
     });
 });
 

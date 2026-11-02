@@ -13,6 +13,7 @@
             "cmd": "/alias",
             "usage": "/alias <nome> [-quiet|-q] [-desc|-d \"Descrição\"] </comando argumentos>  ou  /alias <nome> [-quiet|-q] [-desc|-d \"Descrição\"] <texto com {/comando}>  ou  /alias [-list|-l]  ou  /alias [-rm] <nome|all>",
             "aliases": [],
+            "summary": "Salva atalhos para comandos com argumentos",
             "help": "Salva atalhos para comandos com argumentos ou para um texto com vários {/comando}, como no /cron: cada um roda e a resposta entra no lugar, numa mensagem só. No texto, \\n vira quebra de linha. Sem opção, lista os aliases cadastrados. No atalho de comando, $1, $2... pegam os argumentos digitados (ex: /alias /rec /sticker -ss $1 -es $2; /rec 10 20 url). Ao executar o atalho, o bot imprime o comando chamado, acrescenta os argumentos adicionais e respeita as permissões dos comandos de destino. O nome aceita letras, números, _ e -, com ou sem barra no cadastro. Cadastrar o mesmo nome substitui o comando e a descrição. O destino deve ser um comando ativo do bot, inclusive seus aliases fixos; não pode ser /alias nem outro atalho cadastrado. Nomes de comandos e all são reservados. Use /help alias para listar os atalhos disponíveis para você. Ex: /alias /dolar /crypto USD, /alias orca Verificando Orca {/defi orca}\\n Verificando Prjx {/defi prjx}",
             "cmd_opts": [
                 {
@@ -57,6 +58,7 @@
             "cmd": "/ascii",
             "usage": "/ascii [-width|-w <colunas>] [-char|-c <caractere>] <texto>",
             "aliases": [],
+            "summary": "O texto em letras grandes de ASCII",
             "help": "O texto em letras grandes de ASCII, num bloco monoespaçado que cabe na tela do celular (quebra em várias linhas de letras). Aceita letras (sem acento), números e ! ? . , : - + _ /, até 40 caracteres. Sem texto, usa o da mensagem respondida. Ex: /ascii Jorge!, /ascii -w 20 Feliz aniversario, /ascii -c @ Oi",
             "cmd_opts": [
                 {
@@ -91,6 +93,7 @@
             "aliases": [
                 "/bkp"
             ],
+            "summary": "Backup do banco: lista, detalha, restaura, envia ou apaga",
             "help": "Backup do banco em ${BACKUP_DIR}: um automático por dia, e você lista, detalha, restaura, envia ou apaga. O backup diário também é enviado ao destino da setting backup.to (contato, grupo, número ou e-mail, como no -to), sem pedir -sim; vazia, só salva localmente. Sem opção, mostra o banco atual e os backups.",
             "cmd_opts": [
                 {
@@ -171,6 +174,7 @@
             "cmd": "/batch",
             "usage": "/batch [-stop] [-dry|-d] (os comandos vêm nas linhas de baixo)",
             "aliases": [],
+            "summary": "Executa vários comandos seguidos, de uma mensagem só",
             "help": "Executa vários comandos seguidos, de uma mensagem só (ou da mensagem respondida), e responde um resumo. Uma linha que começa com um comando (ou alias) abre um bloco; o que vem depois, linhas em branco inclusas, é do mesmo bloco. Com -stop, para no primeiro erro. Com -dry (-d), só mostra como separou os blocos, sem executar. Um bloco é um comando e tudo até o próximo (um /ideia com a URL embaixo, por exemplo). Só o dono usa. Ex: /batch, /batch -dry, /batch -d, /batch -stop",
             "cmd_opts": [
                 {
@@ -200,6 +204,7 @@
             "aliases": [
                 "/bloquear"
             ],
+            "summary": "Bloqueia pessoas na sua conta do WhatsApp",
             "help": "Bloqueia uma ou várias pessoas na sua conta do WhatsApp, como o Bloquear do celular. Respondendo uma mensagem, bloqueia quem a escreveu. Sem nada, lista os bloqueados (inclusive os que você bloqueou no celular), numerados para o /unblock <nº>. Grupos não se bloqueiam.",
             "cmd_opts": [
                 {
@@ -230,6 +235,7 @@
         {
             "cmd": "/boletos",
             "usage": "/boletos",
+            "summary": "Sorteia 2 membros do grupo para pagar um boleto",
             "help": "Sorteia 2 membros do grupo para pagar um boleto.",
             "onlyAdmin": false
         },
@@ -237,6 +243,7 @@
             "cmd": "/bot",
             "usage": "/bot [-on|-off] [-users|-all-users]  ou  /bot +o|-o|+v|-v [+cmd|-cmd <comandos>] [pessoa...] [-all-users]  ou  /bot -reset [force]  ou  /bot -status [<hora>|off] [-to <destino>]...  ou  /bot -info  ou  /bot -test  ou  /bot -flush-email [true]  ou  /bot -passwd <senha|off>  ou  /bot -login <senha>",
             "aliases": [],
+            "summary": "Liga/desliga o bot e diz quem usa os comandos",
             "help": "Liga/desliga o bot e diz quem usa os comandos: você e os admins usam tudo; os usuários, os comandos comuns. Sem opção, mostra o status (o mesmo do -status). O -info mostra as versões do que ele usa.",
             "espacado": true,
             "cmd_opts": [
@@ -399,6 +406,9 @@
         {
             "cmd": "/cache",
             "usage": "/cache [OPÇÃO]",
+            "aliases": [],
+            "summary": "Exibe o espaço ocupado pelo cache e limpa",
+            "help": "Exibe o espaço ocupado em ${CACHE_DIR} e limpa o cache.",
             "cmd_opts": [
                 {
                     "opts": [
@@ -433,8 +443,6 @@
                     "desc": "Apaga as mídias baixadas em ${MEDIA_DIR} (as mensagens ficam, sem o arquivo)."
                 }
             ],
-            "aliases": [],
-            "help": "Exibe o espaço ocupado em ${CACHE_DIR} e limpa o cache.",
             "onlyAdmin": true
         },
         {
@@ -443,6 +451,7 @@
             "aliases": [
                 "/cambio"
             ],
+            "summary": "Cotação das moedas contra o real",
             "help": "Cotação contra o real das moedas habilitadas (padrão: EUR e USDT): atual, abertura, fechamento anterior, máx./mín. e variação.",
             "cmd_opts": [
                 {
@@ -522,6 +531,7 @@
                 "/agenda",
                 "/lembrete"
             ],
+            "summary": "Agenda um texto ou comando para uma hora marcada",
             "help": "Na hora marcada, envia o texto como se você digitasse (no chat atual ou no do -to) ou, como /lembrete (ou com -lembrete), um ⏰ Lembrete neste chat ou no seu privado (-pv). No texto, {/comando args} roda na hora do envio e a resposta entra no lugar (só comandos de consulta: /crypto, /cotacao, /tempo...). O \\n digitado vira quebra de linha. Ex: /cron 09h -r diario -to /Família/ Bom dia! {/crypto BTC}, /cron 8h -r diario Orca {/defi orca}\\n Prjx {/defi prjx}",
             "cmd_opts": [
                 {
@@ -627,6 +637,7 @@
                 "/bitcoio",
                 "/creptomoeda"
             ],
+            "summary": "Preço e variação de 24 h das criptomoedas",
             "help": "Preço atual e variação de 24 h das criptomoedas ativadas (Binance) ou só das pedidas (ex.: /crypto BTC ETH).",
             "cmd_opts": [
                 {
@@ -702,6 +713,7 @@
         {
             "cmd": "/cve",
             "usage": "/cve [<id>|<texto>] [-highscore [max]]",
+            "summary": "CVEs recentes do NVD",
             "help": "CVEs publicadas nos últimos dois dias no NVD, da mais recente para a mais antiga (quantidade: cve.max). Com -highscore, a janela é cve.maxDays. Com um id, consulta essa CVE; com um texto, busca as mais recentes que o citam. Ex: /cve CVE-2026-1234, /cve 2026-1234, /cve kernel 2.4.5, /cve -high 3",
             "cmd_opts": [
                 {
@@ -731,6 +743,7 @@
                 "/d",
                 "/dbg"
             ],
+            "summary": "Logs de depuração com níveis e filtro",
             "help": "Logs de depuração com níveis cumulativos DEBUG0 a DEBUG3, filtro /regex/flags e cópia para um chat do WhatsApp. As configurações ficam salvas nos settings debug.*. Ex: /debug -on, /debug -on -level 2 -filter /sapato/ -copy-to /Jorge Pereira/",
             "cmd_opts": [
                 {
@@ -782,6 +795,7 @@
         {
             "cmd": "/defi",
             "usage": "/defi [orca|prjx|liquidswap|morpho|aave] [-mask]  ou  /defi -l  ou  /defi -rm <nº...|all>  ou  /defi [protocolo] -taxas [-alerta]  ou  /defi -alerta <nº|all> [-to <destino>]... [-taxas <valor>]  ou  /defi <protocolo> <opções>",
+            "summary": "Posições DeFi (Orca, Project X, Liquidswap, Morpho e Aave)",
             "help": "Posições da Orca (Solana), do Project X (HyperEVM), da Liquidswap (Aptos), do Morpho e do Aave V3, lidas na hora: saldo, faixa e taxas a coletar das de liquidez; colateral, dívida e risco das de empréstimo. Sem nada, mostra todas; com o protocolo, só as dele. Cada protocolo tem a sua ajuda. Ex: /defi orca -help, /defi prjx -help, /defi liquidswap -help, /defi morpho -help, /defi aave -help",
             "cmd_opts": [
                 {
@@ -976,6 +990,7 @@
             "aliases": [
                 "/quiz"
             ],
+            "summary": "Cria uma enquete no chat ou mostra o resultado",
             "help": "Cria uma enquete no chat (separe pergunta e opções, de 2 a 12, com | ou uma por linha) ou mostra o resultado com -r.",
             "cmd_opts": [
                 {
@@ -1003,6 +1018,7 @@
             "aliases": [
                 "/download"
             ],
+            "summary": "Baixa vídeo ou áudio de redes sociais",
             "help": "Baixa vídeo ou áudio de redes sociais (Instagram, YouTube, X, TikTok e outros sites do yt-dlp), pela URL ou respondendo uma mensagem com link. Respondendo um vídeo, uma imagem ou um áudio do WhatsApp, usa a própria mídia: sem opção, devolve o arquivo original. Escolha áudio ou figurinha por execução; vídeo e áudio são enviados como documento.",
             "cmd_opts": [
                 {
@@ -1064,6 +1080,7 @@
             "aliases": [
                 "/gif"
             ],
+            "summary": "Envia um GIF do GIPHY",
             "help": "Envia um GIF do GIPHY como vídeo em loop: aleatório pela tag (padrão: gif.tag), ou o GIF escolhido por URL ou ID. Precisa de GIPHY_API_KEY no config/.env ou do setting giphy.api.key. Ex: /giphy gatos, /giphy https://giphy.com/gifs/h5WUvmDSB0njFcFeCE",
             "cron": true,
             "onlyAdmin": false
@@ -1074,6 +1091,7 @@
             "aliases": [
                 "/ai"
             ],
+            "summary": "Pergunta ao ChatGPT",
             "help": "Pergunta ao ChatGPT (OpenAI). Respondendo uma mensagem, o texto dela entra na pergunta. Precisa de OPENAI_API_KEY no config/.env ou do setting openai.api.key.",
             "cmd_opts": [
                 {
@@ -1101,6 +1119,7 @@
             "aliases": [
                 "/h"
             ],
+            "summary": "Lista os comandos ou detalha um deles",
             "help": "Exibe o menu de ajuda, só com os comandos que você pode usar (o dono e os admins veem todos); com um comando, só a ajuda dele. Ex: /help show",
             "cmd_opts": [
                 {
@@ -1125,6 +1144,7 @@
                 "/piada",
                 "/humor"
             ],
+            "summary": "Piada aleatória",
             "help": "Piada aleatória em português (nenhuma se repete até todas saírem).",
             "cron": true,
             "onlyAdmin": false
@@ -1132,6 +1152,7 @@
         {
             "cmd": "/kernel",
             "usage": "/kernel",
+            "summary": "Versões atuais do kernel Linux",
             "help": "Versões atuais do kernel Linux (kernel.org).",
             "cron": true,
             "onlyAdmin": false
@@ -1142,6 +1163,7 @@
             "aliases": [
                 "/list"
             ],
+            "summary": "Lista os membros do grupo",
             "help": "Lista os membros do grupo (número, nome, admins).",
             "onlyAdmin": true
         },
@@ -1149,6 +1171,7 @@
             "cmd": "/me",
             "usage": "/me [-repeat|-r <n>] <mensagem>",
             "aliases": [],
+            "summary": "Envia a mensagem digitada",
             "help": "Envia a mensagem digitada. {/comando args} roda na hora e a resposta entra no lugar (só comandos de consulta, como no /cron). O \\n digitado vira quebra de linha. Ex: /me O Bitcoin está em {/crypto BTC}, /me Linha 1\\nLinha 2, /me -r 3 Haha!",
             "cmd_opts": [
                 {
@@ -1167,6 +1190,7 @@
         {
             "cmd": "/meme",
             "usage": "/meme [busca]",
+            "summary": "Template de meme aleatório do imgflip",
             "help": "Template de meme aleatório do imgflip, opcionalmente filtrado pelo nome.",
             "cron": true,
             "onlyAdmin": false
@@ -1174,6 +1198,7 @@
         {
             "cmd": "/monitor",
             "usage": "/monitor [-add <contato> [-alerta] | -alerta <contato> | -rm <id, contato ou all> | -list [contato]]",
+            "summary": "Monitora contatos, um por vez",
             "help": "👀 Monitora até monitor.max contatos, um por vez, em ordem aleatória e com espera de 1 a 15 s entre consultas. O intervalo mínimo por contato é monitor.pool segundos (padrão: 300 s). Guarda até monitor.maxRecords horários distintos por contato (padrão: 30), sem garantir todos os acessos nem atualização do cache. Mais contatos e intervalos curtos podem contribuir para bloqueio pelo WhatsApp; nenhum intervalo garante segurança. /set monitor.enabled false pausa sem apagar. Ex: /monitor -a /Jorge Chip L200/, /monitor -r 1, /monitor -l.",
             "cmd_opts": [
                 {
@@ -1223,6 +1248,7 @@
             "aliases": [
                 "/mudo"
             ],
+            "summary": "Silencia os avisos de apagadas, editadas e reações de uma pessoa",
             "help": "Silencia os avisos de apagadas, editadas, status apagados e/ou reações removidas ou trocadas de uma pessoa, de um grupo ou de uma comunidade. Só o alvo, sem opção, silencia tudo (o -a). Respondendo um aviso, silencia de onde ele veio: a pessoa (privado e status), o grupo ou a comunidade. As mensagens continuam guardadas para o /show. O /watch também não avisa no seu privado de quem está silenciado, em qualquer tipo (os -to continuam recebendo). Sem nada, lista os silenciados.",
             "cmd_opts": [
                 {
@@ -1294,6 +1320,7 @@
         {
             "cmd": "/news",
             "usage": "/news <-hack|-g1|-gazeta|-brasil> [quantidade]",
+            "summary": "Manchetes mais recentes dos feeds RSS",
             "help": "Manchetes mais recentes dos feeds RSS, com fonte, data e link. Categorias combinam: /news -g1 -gazeta. Feeds de cada uma no setting news.<categoria>.",
             "cmd_opts": [
                 {
@@ -1344,6 +1371,7 @@
                 "/🌈",
                 "/🏳️‍🌈"
             ],
+            "summary": "Floreia o texto com emojis de arco-íris",
             "help": "Dá uma floreada no texto com emojis de arco-íris. Aceita texto ou resposta a uma mensagem.",
             "onlyAdmin": false
         },
@@ -1351,6 +1379,7 @@
             "cmd": "/notes",
             "usage": "/notes [-list|-l] [#tag...] [-to <destino>]...  ou  /notes -search|-s [#tag...] <texto|/regex/flags> [-to <destino>]...  ou  /notes -tags|-t [-to <destino>]...  ou  /notes -update|-u <id> [#tag] <novo texto>  ou  /notes -view|-v <id...|#tag...> [-to <destino>]...  ou  /notes -move|-m #tag #novatag  ou  /notes -desc|-d #tag [<descrição>|-rm]  ou  /notes -export|-e [#tag...] [-to <destino>]...  ou  /notes [#tag] <texto>  ou  /notes -add|-a [#tag] <texto> [-alerta <quando> [-to <destino>]...]  ou  /notes -rm|-r <id...|#tag...|all>  ou  /notes -alerta [<id|#tag...> [<quando> [-to <destino>]...]]  ou  /notes -alerta -rm <id...|#tag...|all>",
             "aliases": [],
+            "summary": "Anotações salvas no banco",
             "help": "Anotações salvas no banco. Respondendo uma mensagem, anota o texto dela com ↩️ (/notes, /notes #lembrete). Com uma imagem (na legenda ou respondendo uma foto), guarda a imagem no disco junto da anotação. Sem opção, lista as anotações com o ID, agrupadas por #tag (/notes #casa filtra); com um texto que não começa com \"-\", anota (o mesmo que -add). O -alerta lembra de uma anotação numa data/hora (uma vez; a anotação continua): no seu privado ou nos destinos do -to. Ex: /notes -a #casa comprar leite, /notes #casa, /notes -s /pão|leite/i, /notes -t, /notes -v 76, /notes #idei (acha a #ideias), /notes -m #casa #lar, /notes -d #casa Coisas da casa, /notes -update 3 novo texto, /notes -e #casa, /notes -r #casa, /notes -a ligar pro João -alerta amanhã 9h, /notes -alerta 3 +2h -to /Família/, /notes -alerta #casa 18h -to /Família/, /notes -r 2",
             "cmd_opts": [
                 {
@@ -1485,6 +1514,7 @@
             "cmd": "/ping",
             "usage": "/ping",
             "aliases": [],
+            "summary": "Verifica se o bot está respondendo",
             "help": "Verifica se o bot está respondendo (responde pong).",
             "onlyAdmin": false
         },
@@ -1495,6 +1525,7 @@
                 "/ansi",
                 "/px"
             ],
+            "summary": "Arte ANSI/ASCII aleatória do 16colo.rs",
             "help": "Arte ANSI/ASCII aleatória do 16colo.rs, com título e artista. Packs padrão no setting pixelart.packs.",
             "cmd_opts": [
                 {
@@ -1531,6 +1562,7 @@
             "aliases": [
                 "/perfil"
             ],
+            "summary": "A foto de perfil de um contato",
             "help": "A foto de perfil de um contato, com a legenda Contato: nome na sua agenda <telefone>. Sem ninguém, mostra o da pessoa do privado (no seu próprio privado, o seu) ou, no grupo, a foto do grupo; respondendo uma mensagem, o de quem a escreveu. Sem foto, ou com a foto escondida pela privacidade do contato, sai só o texto. Ex: /profile, /profile /Jorge Pereira/, /profile @Fulano, /profile +5521999999999",
             "cmd_opts": [
                 {
@@ -1556,6 +1588,7 @@
             "aliases": [
                 "/buscar"
             ],
+            "summary": "Busca mensagens no histórico do WhatsApp Web",
             "help": "Busca mensagens no histórico do WhatsApp Web, inclusive as que nunca passaram pelo cache do bot (o /show -q busca só no cache). Neste chat; no seu privado, em todos os chats. Mostra data, quem mandou (e o chat, na busca em todos), o texto e o id; com -read, exibe a mensagem inteira.",
             "cmd_opts": [
                 {
@@ -1597,6 +1630,7 @@
             "aliases": [
                 "/config"
             ],
+            "summary": "Lista, exibe e altera as configurações do bot",
             "help": "Lista, exibe e altera as configurações do bot (settings); nas listas, -append (-a) e -rm acrescentam e tiram itens. No seu privado, mostra também o config/.env (somente leitura).",
             "cmd_opts": [
                 {
@@ -1653,6 +1687,7 @@
             "cmd": "/show",
             "usage": "/show [-N] [OPÇÃO] [chat]  ou  /show -l [chat]  ou  /show -q <texto|/regex/flags> [-N] [chat]",
             "aliases": [],
+            "summary": "Mostra mensagens do cache do bot",
             "help": "Sem parâmetros no privado, lista o cache de todos os chats, como /show -l. Em grupos, reexibe a última mensagem apagada do grupo. Reexibe as mensagens apagadas, editadas, os status apagados e as reações removidas ou trocadas que estão no cache: deste chat ou de outro (pelo nº do -l, nome, @menção ou /regex/). Publicações de canais (@newsletter) são identificadas com 📰 Canal e o nome, sem nome ou telefone de contato.",
             "cmd_opts": [
                 {
@@ -1739,6 +1774,7 @@
         {
             "cmd": "/stats",
             "usage": "/stats [-N] [/chat/] [-me]  ou  /stats -l  ou  /stats -flush </chat/>  ou  /stats -flush-all",
+            "summary": "Ranking do chat: quem mais fala, apaga e edita",
             "help": "Ranking do chat atual ou de outro (/Grupo/): quem mais fala, apaga e edita, horários e dia de pico. Com -me, as suas estatísticas. O -l lista os chats com estatísticas; o -flush apaga as de um chat e o -flush-all, todas.",
             "cmd_opts": [
                 {
@@ -1795,6 +1831,7 @@
             "cmd": "/sticker",
             "usage": "/sticker [OPÇÃO]... [url]  (ou respondendo uma imagem, vídeo ou link)  ou  /sticker -txt <texto> [-bg <cor>] [-fg <cor>]",
             "aliases": [],
+            "summary": "Cria uma figurinha",
             "help": "Cria uma figurinha: é o /get -sticker. Da URL ou do link respondido, baixa o vídeo; sem vídeo, usa a prévia do link. De um vídeo, até 6 s com recorte quadrado no meio, no trecho do -ss e do -es. De uma imagem, o recorte quadrado no meio. Com -txt, uma figurinha animada com o texto, piscando entre as cores do -fg e do -bg.",
             "cmd_opts": [
                 {
@@ -1867,6 +1904,7 @@
             "aliases": [
                 "/weather"
             ],
+            "summary": "Tempo agora, máxima e mínima",
             "help": "Tempo agora, máx./mín. e chance de chuva do dia (Open-Meteo); com N (ou Nd), previsão de N dias contando hoje. Sem cidade usa o setting tempo.city.",
             "cmd_opts": [
                 {
@@ -1891,6 +1929,7 @@
             "aliases": [
                 "/resumo"
             ],
+            "summary": "Resume a conversa do chat pelo ChatGPT",
             "help": "Resume a conversa do chat pelo ChatGPT: assuntos, decisões e pendências.",
             "cmd_opts": [
                 {
@@ -1925,6 +1964,7 @@
             "aliases": [
                 "/todes"
             ],
+            "summary": "Responde marcando todos do grupo",
             "help": "Responde marcando todos do grupo (exceto você).",
             "onlyAdmin": true
         },
@@ -1934,6 +1974,7 @@
             "aliases": [
                 "/translate"
             ],
+            "summary": "Traduz o texto pelo Google Translate",
             "help": "Traduz o texto (ou a mensagem respondida) pelo Google Translate, sem chave e sem custo. O idioma de origem é detectado. Ex: /traduzir Where is the pharmacy?, /traduzir -para en bom dia, /translate -p es",
             "cmd_opts": [
                 {
@@ -1966,6 +2007,7 @@
         {
             "cmd": "/unblock",
             "usage": "/unblock [/contato/|@menção|+número|nº]  ou  /unblock -all",
+            "summary": "Desbloqueia pessoas bloqueadas",
             "help": "Desbloqueia uma pessoa bloqueada (pelo /block ou no celular), ou todas com -all. Respondendo uma mensagem, desbloqueia quem a escreveu. Sem nada, lista os bloqueados.",
             "cmd_opts": [
                 {
@@ -1988,6 +2030,7 @@
         {
             "cmd": "/unmute",
             "usage": "/unmute [/contato ou grupo/|@menção|+número|nº]  ou  /unmute -all",
+            "summary": "Desfaz o silêncio do /mute",
             "help": "Desfaz o silêncio do /mute: os avisos de apagadas, editadas, status e reações da pessoa, do grupo ou da comunidade voltam. Respondendo um aviso, desfaz o silêncio de onde ele veio. Sem nada, lista os silenciados.",
             "cmd_opts": [
                 {
@@ -2011,6 +2054,7 @@
             "cmd": "/uptime",
             "usage": "/uptime",
             "aliases": [],
+            "summary": "Há quanto tempo o bot está rodando",
             "help": "Exibe há quanto tempo o bot está rodando e conectado.",
             "cron": true,
             "onlyAdmin": false
@@ -2019,6 +2063,7 @@
             "cmd": "/version",
             "usage": "/version",
             "aliases": [],
+            "summary": "Exibe a versão do bot",
             "help": "Exibe a versão do bot (mesmo banner do /uptime).",
             "cron": true,
             "onlyAdmin": false
@@ -2029,6 +2074,7 @@
             "aliases": [
                 "/ualisu"
             ],
+            "summary": "Marca 2 membros do grupo com uma CVE aleatória",
             "help": "Walissu CVE BOT: marca 2 membros do grupo com uma CVE aleatória.",
             "onlyAdmin": true
         },
@@ -2036,6 +2082,7 @@
             "cmd": "/watch",
             "usage": "/watch [texto|/regex/flags] [-in <origem>] [-to <destino>]...  ou  /watch [-N] [-q <texto|/regex/flags>]  ou  /watch -s [N|regra] [-q <texto|/regex/flags>] [-to <destino|off>]...  ou  /watch -rm <N|regra>  ou  /watch -flush [N|regra]",
             "aliases": [],
+            "summary": "Vigia mensagens recebidas com regras de texto ou regex",
             "help": "Vigia mensagens recebidas com regras de texto ou regex. Miniaturas de localização não são texto e ficam fora das regras. Uma regra sem -in vale em qualquer lugar; -in restringe a um contato (remetente), grupo ou canal. Sem parâmetros, lista regras e últimos matches; -N escolhe a quantidade. Publicações de @newsletter são identificadas com 📰 e o nome do canal. Quem está silenciado no /mute não gera aviso no seu privado (os -to continuam recebendo). Os números após -s, -rm e -flush identificam regras; no lugar deles, vale a própria regra, inteira ou um trecho. A quantidade de matches vem no -N.",
             "cmd_opts": [
                 {
@@ -2134,6 +2181,7 @@
                 "/who",
                 "/id"
             ],
+            "summary": "Mostra quem é e o que pode no bot, neste chat",
             "help": "Mostra quem é e o que pode no bot, neste chat: 🤖 dono, 👑 admin (+o), 🗣️ usuário (+v) ou 🚫 sem permissão; quem tem os comandos limitados (/bot +cmd), com a lista deles. Sozinho, mostra você. Com pessoas (ou respondendo uma mensagem), mostra elas, mas só para o dono e os admins. Ex: /whois, /whois /Rafael Silva/",
             "cmd_opts": [
                 {
