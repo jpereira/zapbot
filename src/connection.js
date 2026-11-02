@@ -76,6 +76,18 @@ function watchReady() {
     vigiaDoReady.unref?.();
 }
 
+/*
+ * whatsapp-web.js' destroy() only closes a connected browser. A Chromium that
+ * lost the connection (the watchdog case) but stays alive holds the userDataDir, and
+ * every following initialize fails with "The browser is already running for...".
+ */
+function killBrowserOrphan() {
+    const proc = client.pupBrowser?.process?.();
+    if (!proc || proc.exitCode !== null || proc.signalCode !== null) return;
+    printInfo(`Matando o Chromium órfão (PID ${proc.pid}).`);
+    proc.kill('SIGKILL');
+}
+
 async function restartClient(reasonAlt) {
     if (stateAlt.reiniciando) {
         printInfo(`Restart ignorado (já em andamento). Motivo: ${reasonAlt}`);
@@ -91,6 +103,7 @@ async function restartClient(reasonAlt) {
     } catch (e) {
         printError('destroy falhou:', e.message);
     }
+    killBrowserOrphan();
 
     await new Promise(r => setTimeout(r, 5000));
 
@@ -381,6 +394,7 @@ async function startBot() {
         } catch {
             printInfo('Nenhum navegador ativo para destruir.');
         }
+        killBrowserOrphan();
 
         if (error.message.includes('Execution context was destroyed') || error.message.includes('browser is already running')) {
             printInfo('Reiniciando o processo de inicialização em 5 segundos...');
