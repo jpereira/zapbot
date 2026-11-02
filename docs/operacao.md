@@ -34,6 +34,12 @@ processo vivo (Node preso, Chromium sem resposta, sessão num estado ruim), exis
 3. Conectado mas sem `CONNECTED` 3 vezes seguidas, o próprio bot reinicia o cliente do WhatsApp e
    avisa por e-mail (`🩺 WhatsApp sem resposta`).
 
+No reinício (e numa falha do `initialize`), o bot fecha o cliente e, se o Chromium perdeu a conexão
+mas continua vivo (ele prende o diretório da sessão e todo `initialize` seguinte falharia com
+`browser is already running`), mata o processo com `SIGKILL` (`Matando o Chromium órfão (PID ...)`
+no log). O container sobe com `init: true` (tini como PID 1), que recolhe os processos do Chromium
+que ficam zumbis.
+
 ### Queda da internet
 
 Sem internet, o reinício falha (`initialize falhou: net::ERR_NAME_NOT_RESOLVED`). O bot não para:
@@ -93,7 +99,7 @@ adicione ao serviço `zapbot` o label `autoheal=true`:
 | `make test`: `No such built-in module: node:sqlite` | Node antigo: os testes precisam do Node 22.13+. |
 | `Motivo 'LOGOUT' exige ação manual` | Sessão desconectada pelo celular. Reinicie o container para gerar novo QR. |
 | `Motivo 'CONFLICT' ...` | O WhatsApp Web foi aberto em outro lugar com a mesma sessão, ou há dois containers rodando. |
-| `browser is already running` | Lock antigo do Chromium; o entrypoint limpa no boot. Reinicie o container. |
+| `browser is already running` | Lock antigo do Chromium; o entrypoint limpa no boot e, num reinício, o bot mata o Chromium órfão sozinho (`Matando o Chromium órfão`). Persistindo, reinicie o container. |
 | Nenhum comando responde a outra pessoa | O `bot.users` vem `false`: só você usa comandos até `/bot +v <pessoa\|grupo>` (alguns, veja [Usuários](comandos/bot.md#usuários)) ou `/set bot.users true` (todos). Os comandos admin continuam só seus, a não ser para quem estiver no `bot.admins` (`/bot +o <pessoa>`, veja [Admins extras](comandos/bot.md#admins-extras)). Veja [Permissões](comandos/index.md#permissões-onlyadmin). |
 | `/get` falha em algum site | O site mudou; refaça o build (`--no-cache`) para pegar o yt-dlp mais recente. A versão em uso aparece no `/bot -info`. |
 

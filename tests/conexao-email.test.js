@@ -182,6 +182,24 @@ describe('eventos de conexão', () => {
         assert.equal(bot.client.inicializado, inicializacoes + 1);
     });
 
+    test('watchdog: Chromium desconectado mas vivo é morto antes do initialize (senão "browser is already running")', async (t) => {
+        t.mock.timers.enable({ apis: ['setInterval', 'setTimeout'] });
+        const sinais = [];
+        const processo = { pid: 13753, exitCode: null, signalCode: null, kill: s => sinais.push(s) };
+        bot.client.pupBrowser = { isConnected: () => false, process: () => processo };
+        t.after(() => { delete bot.client.pupBrowser; });
+        const inicializacoes = bot.client.inicializado;
+
+        iniciarWatchdog();
+        t.mock.timers.tick(30000);
+        await bot.esperarComRelogio(t, (async () => {
+            while (bot.client.inicializado === inicializacoes) await new Promise(setImmediate);
+        })());
+
+        assert.deepEqual(sinais, ['SIGKILL']);
+        assert.ok(bot.logs.some(l => l.includes('Matando o Chromium órfão (PID 13753)')));
+    });
+
     test('watchdog não mexe num cliente que ainda não ficou pronto', async (t) => {
         t.mock.timers.enable({ apis: ['setInterval'] });
         bot.estado.pronto = false;

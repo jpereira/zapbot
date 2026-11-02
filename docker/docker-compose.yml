@@ -29,6 +29,8 @@ services:
 
     working_dir: /app
     restart: unless-stopped
+    # tini como PID 1: recolhe os processos do Chromium que ficam zumbis
+    init: true
 
 volumes:
   app_cache:
