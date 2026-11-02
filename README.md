@@ -1,4 +1,4 @@
-# 🤖 ZapBot v2.0.11 (devel)
+# 🤖 ZapBot v2.0.11
 
 <p align="center">
   <img src="docs/assets/logo.png" alt="Logo do ZapBot: um robô anjo, com auréola e asas, piscando e
@@ -76,12 +76,12 @@ a comandos digitados em qualquer chat. Detalhes em
 ## Instalação
 
 Precisa só de Docker com o Compose v2, Git e um celular com WhatsApp. A versão estável é a última
-release, hoje a `v2.0.10`:
+release, hoje a `v2.0.11`:
 
 ```bash
 git clone https://github.com/jpereira/zapbot.git
 cd zapbot
-git checkout v2.0.10
+git checkout v2.0.11
 
 cp config/.env.example config/.env   # preencha o PHONE_NUMBER e o e-mail (veja abaixo)
 
