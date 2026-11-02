@@ -290,7 +290,7 @@ async function alertar(msg, resto) {
     }
 
     // "#tag [#tag...] [<quando>]" mira as anotações dessas tags; "<id> <quando>", uma só
-    const porTag = texto.match(/^(#[^\s#]+(?:[\s,]+#[^\s#]+)*)(?:\s+([\s\S]+))?$/);
+    const porTag = texto.match(/^(#[^\s#,]+(?:[\s,]+#[^\s#,]+)*)(?:\s+([\s\S]+))?$/);
     const tags = porTag ? [...new Set(porTag[1].split(/[\s,]+/).map(lerTag))] : [];
     const quandoTexto = porTag ? (porTag[2] ?? '').trim() : '';
 

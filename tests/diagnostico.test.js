@@ -13,7 +13,7 @@ beforeEach(async () => { await bot.reiniciar(); });
 function simularRede(t, { falhaNaVelocidade = false } = {}) {
     t.mock.method(dns, 'lookup', async () => ({ address: '157.240.0.1', family: 4 }));
     t.mock.method(axios, 'get', async (url) => {
-        if (url.includes('speed.cloudflare.com')) {
+        if (new URL(url).hostname === 'speed.cloudflare.com') {
             if (falhaNaVelocidade) throw new Error('timeout');
             return { data: Buffer.alloc(0) };
         }

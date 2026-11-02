@@ -13,7 +13,7 @@ function mascararTelefones(texto) {
 }
 
 function tirarOpcaoMascara(args) {
-    return args.replace(/"[^"]*"|'[^']*'|\/(?:\\.|[^/])*\/|(^|\s)-(?:mask|m)(?=\s|$)/g,
+    return args.replace(/"[^"]*"|'[^']*'|\/(?:\\.|[^/\\])*\/|(^|\s)-(?:mask|m)(?=\s|$)/g,
         (trecho, separador) => separador === undefined ? trecho : separador).trim();
 }
 

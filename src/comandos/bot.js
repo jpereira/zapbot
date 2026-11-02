@@ -241,7 +241,7 @@ async function relatorio(chat) {
 // ordem
 const ATALHO = /(^|\s)[+-](o|v|cmd)(?=\s|$)/;
 const OPERACAO = /(^|\s)([+-])([ov])(?=\s|$)/;
-const OPCAO_CMD = /(^|\s)([+-])cmd(?:\s+((?:[^\s+-]\S*,\s*)*[^\s+-]\S*))?(?=\s|$)/;
+const OPCAO_CMD = /(^|\s)([+-])cmd(?:\s+((?:[^\s+,-][^\s,]*,\s*)*[^\s+,-][^\s,]*))?(?=\s|$)/;
 const LISTA_DO_ATALHO = { o: 'bot.admins', v: 'bot.users' };
 
 /*

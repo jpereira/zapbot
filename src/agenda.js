@@ -76,7 +76,7 @@ function lerAgendamento(args) {
         else if (['rm', 'pause', 'resume'].includes(nome)) {
             // Um ou vários números (-rm 2, -rm 1 3 5, -rm 1,3,5) ou all
             const nums = [];
-            while (/^(\d+,?)+$|^all$/i.test(palavras[i + 1]?.[0] ?? '')) nums.push(palavras[++i][0]);
+            while (/^\d+(?:,\d+)*,?$|^all$/i.test(palavras[i + 1]?.[0] ?? '')) nums.push(palavras[++i][0]);
             opt[nome] = nums.join(' ');
         } else if (['edit', 'test'].includes(nome)) opt[nome] = palavras[++i]?.[0] ?? '';
         else if (nome === 'repetir' || nome === 'r') opt.repetir = palavras[++i]?.[0] ?? '';
