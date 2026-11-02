@@ -235,7 +235,7 @@
         },
         {
             "cmd": "/bot",
-            "usage": "/bot [-on|-off] [-users|-all-users]  ou  /bot +o|-o|+v|-v [+cmd|-cmd <comandos>] [pessoa...] [-all-users]  ou  /bot -reset [force]  ou  /bot -status [<hora>|off] [-to <destino>]...  ou  /bot -info  ou  /bot -test  ou  /bot -flush-email [true]",
+            "usage": "/bot [-on|-off] [-users|-all-users]  ou  /bot +o|-o|+v|-v [+cmd|-cmd <comandos>] [pessoa...] [-all-users]  ou  /bot -reset [force]  ou  /bot -status [<hora>|off] [-to <destino>]...  ou  /bot -info  ou  /bot -test  ou  /bot -flush-email [true]  ou  /bot -passwd <senha|off>  ou  /bot -login <senha>",
             "aliases": [],
             "help": "Liga/desliga o bot e diz quem usa os comandos: você e os admins usam tudo; os usuários, os comandos comuns. Sem opção, mostra o status (o mesmo do -status). O -info mostra as versões do que ele usa.",
             "espacado": true,
@@ -353,6 +353,26 @@
                     ],
                     "values": [],
                     "desc": "Testa tudo: escrita/leitura no cache, espaço em disco, banco SQLite, conexão com o WhatsApp, DNS e internet, velocidade (baixa 8 MB e sobe 1 MB no speed.cloudflare.com), login no SMTP e os programas externos (Chromium, yt-dlp, ffmpeg). Cada item sai com ✅ ou ❌ (➖ = não configurado). Sozinho: as outras opções são recusadas.",
+                    "cron": false
+                },
+                {
+                    "opts": [
+                        "passwd"
+                    ],
+                    "values": [
+                        "<senha|off>"
+                    ],
+                    "desc": "Só o dono: define a senha do /bot -login (mín. 8 caracteres; só o hash scrypt fica no banco, setting bot.login). Com off, desliga o login. Ex: /bot -passwd minhasenha",
+                    "cron": false
+                },
+                {
+                    "opts": [
+                        "login"
+                    ],
+                    "values": [
+                        "<senha>"
+                    ],
+                    "desc": "Para quem é de fora, só no privado: com a senha certa, vira admin (entra no bot.admins) e o dono é avisado por WhatsApp e e-mail. Erra 5 vezes, fica 15 min bloqueado. A senha é apagada do banco de mensagens. Ex: /bot -login minhasenha",
                     "cron": false
                 },
                 {
