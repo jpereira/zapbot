@@ -48,12 +48,11 @@ async function cmdHelp({ msg, args, admin, podeUsar: canUse = () => true }) {
         return;
     }
 
-    // /help alone: all the commands the requester can use
+    // /help alone: one command per line, only with what it does
     const helpText =
-        '🤖 *MENU DE AJUDA*' + (admin ? '' : ' _(os comandos que você pode usar)_') + '\n\n```' +
-        activeCommands().filter(can).map(formatCommandHelp)
-            .join('\n\n' + '─'.repeat(50) + '\n\n') +
-        '\n```';
+        '🤖 *MENU DE AJUDA*' + (admin ? '' : ' _(os comandos que você pode usar)_') + '\n\n```\n' +
+        activeCommands().filter(can).map(c => ` ${c.cmd} - ${c.summary ?? c.help}`).join('\n') +
+        '\n```\n\n💡 Utilize */help /comando* ou */comando -h* para mais informações.';
 
     await msg.reply(helpText);
 }
