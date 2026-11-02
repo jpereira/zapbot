@@ -76,7 +76,7 @@ function readScheduling(args) {
         else if (['rm', 'pause', 'resume'].includes(nameAlt)) {
             // One or several numbers (-rm 2, -rm 1 3 5, -rm 1,3,5) or all
             const nums = [];
-            while (/^(\d+,?)+$|^all$/i.test(words[i + 1]?.[0] ?? '')) nums.push(words[++i][0]);
+            while (/^\d+(?:,\d+)*,?$|^all$/i.test(words[i + 1]?.[0] ?? '')) nums.push(words[++i][0]);
             opt[nameAlt] = nums.join(' ');
         } else if (['edit', 'test'].includes(nameAlt)) opt[nameAlt] = words[++i]?.[0] ?? '';
         else if (nameAlt === 'repetir' || nameAlt === 'r') opt.repetir = words[++i]?.[0] ?? '';

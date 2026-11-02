@@ -13,7 +13,7 @@ function maskPhones(textAlt) {
 }
 
 function removeOptionMask(args) {
-    return args.replace(/"[^"]*"|'[^']*'|\/(?:\\.|[^/])*\/|(^|\s)-(?:mask|m)(?=\s|$)/g,
+    return args.replace(/"[^"]*"|'[^']*'|\/(?:\\.|[^/\\])*\/|(^|\s)-(?:mask|m)(?=\s|$)/g,
         (snippet, separator) => separator === undefined ? snippet : separator).trim();
 }
 

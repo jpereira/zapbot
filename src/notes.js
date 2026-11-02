@@ -290,7 +290,7 @@ async function alertAlt(msg, rest) {
     }
 
     // "#tag [#tag...] [<when>]" targets the notes of those tags; "<id> <when>", just one
-    const byTag = textAlt.match(/^(#[^\s#]+(?:[\s,]+#[^\s#]+)*)(?:\s+([\s\S]+))?$/);
+    const byTag = textAlt.match(/^(#[^\s#,]+(?:[\s,]+#[^\s#,]+)*)(?:\s+([\s\S]+))?$/);
     const tags = byTag ? [...new Set(byTag[1].split(/[\s,]+/).map(readTag))] : [];
     const whenText = byTag ? (byTag[2] ?? '').trim() : '';
 
