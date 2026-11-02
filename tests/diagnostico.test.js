@@ -74,3 +74,27 @@ test('imap: acha Sent e Trash pelo atributo ou pelo nome', () => {
     assert.deepEqual(acharPastas(['* LIST () "." Sent', '* LIST () "." "Deleted Items"']),
         { sent: 'Sent', trash: 'Deleted Items' });
 });
+
+test('/bot -passwd e -login: de fora vira admin com a senha, só o hash fica e o dono é avisado', async () => {
+    const OUTRO = { jid: '5521911111111@c.us', user: '5521911111111' };
+    const privado = { chat: OUTRO.jid, de: OUTRO.jid };
+
+    assert.match((await bot.responder('/bot -login segredo123', privado))[0], /Login desativado/);
+    assert.match((await bot.responder('/bot -passwd curta'))[0], /pelo menos 8/);
+    assert.match((await bot.responder('/bot -passwd segredo123'))[0], /Senha gravada/);
+    assert.match(bot.getSetting('bot.login'), /^scrypt\$[0-9a-f]+\$[0-9a-f]+$/);
+    assert.ok(!bot.getSetting('bot.login').includes('segredo123'));
+
+    assert.match((await bot.responder('/bot -login errada123', privado))[0], /Senha incorreta/);
+    assert.deepEqual(bot.getSetting('bot.admins'), []);
+    assert.match((await bot.responder('/bot -login segredo123', { chat: '120363@g.us', de: OUTRO.jid }))[0], /só no privado/);
+
+    const respostas = await bot.responder('/bot -login segredo123', privado);
+    assert.ok(respostas.some(r => /agora é admin/.test(r)));
+    assert.ok(respostas.some(r => /Novo admin por senha/.test(r)), 'o dono é avisado no WhatsApp');
+    assert.deepEqual(bot.getSetting('bot.admins'), [OUTRO.user]);
+    assert.match((await bot.responder('/bot -login segredo123', privado))[0], /já é admin/);
+
+    assert.match((await bot.responder('/bot -passwd off'))[0], /Login desligado/);
+    assert.equal(bot.getSetting('bot.login'), '');
+});

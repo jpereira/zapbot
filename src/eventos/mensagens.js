@@ -15,6 +15,7 @@ const {
 const { dbGet, dbPronto, dbRun } = require('../db');
 const { responderEscolha } = require('../escolhas');
 const { verificarFlood } = require('../flood');
+const { esconderNoBanco, senhaDoLogin, tentarLogin } = require('../login');
 const { SEMPRE_LIBERADOS, avisoDeLimite, permissaoAqui } = require('../permissoes');
 const { printCall, printComandoDesconhecido, printDebug, printError, printInfo } = require('../log');
 const { GetOptFromCommand } = require('../opcoes');
@@ -305,6 +306,15 @@ client.on('message_create', (msg) => comContextoDebug({
         // Bot desligado: tudo ignorado (inclusive os seus comandos) até o /bot -on
         if (getSetting('bot.paused') && command.cmd !== '/bot') {
             printInfo(`Comando '${command.cmd}' ignorado: bot desligado (/bot -on para ativar)`);
+            return;
+        }
+
+        // /bot -login <senha>: vale para quem é de fora (antes do bot.users) e a senha não vai para o banco
+        const senhaLogin = command.cmd === '/bot' ? senhaDoLogin(args) : null;
+        if (senhaLogin !== null) {
+            await esconderNoBanco(msgIdPure);
+            if (msg.fromMe) await msg.reply('👑 Você é o dono, já manda em tudo.');
+            else await msg.reply(await tentarLogin({ numero: senderNumber, nome: senderName, senha: senhaLogin, isGroup }));
             return;
         }
 

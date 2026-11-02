@@ -17,6 +17,7 @@ const { descreverRegra, gravarRegra, regraDe } = require('../permissoes');
 const {
     SETTINGS_SCHEMA, comandoDeUsuario, getSetting, setSetting, validarSetting
 } = require('../settings');
+const { definirSenha } = require('../login');
 const { textoDoTeste } = require('../diagnostico');
 const { textoDoInfo } = require('../sistema');
 const {
@@ -35,6 +36,8 @@ const { contextoDebug } = require('../debugContexto');
  *   /bot -users    → os usuários deste chat (num grupo, os de lá; no seu privado, todos)
  *   /bot -all-users → todos os usuários, em qualquer chat (num grupo, com os telefones de fora
  *                     escondidos)
+ *   /bot -passwd <senha|off> → (dono) define a senha do login (só o hash fica no banco)
+ *   /bot -login <senha>      → quem é de fora, no privado, vira admin; o dono é avisado (WhatsApp e e-mail)
  *   /bot -reset    → volta ao padrão: ligado, sem admins extras e sem usuários (só o dono)
  * A recuperação de apagadas, o /watch e os alertas continuam funcionando com ele desligado.
  *
@@ -616,7 +619,7 @@ async function limparEmail(msg, { apagar }) {
 
 const USO = '❌ Uso: /bot [-on|-off] [-users|-all-users]  ou  ' +
     '/bot +o|-o|+v|-v [+cmd|-cmd <comandos>] [pessoa...] [-all-users]  ou  /bot -reset [force]  ou  ' +
-    '/bot -status [<hora>|off] [-to <destino>]...  ou  /bot -info  ou  /bot -test  ou  /bot -flush-email [true]\n💡 _/bot -h para ajuda_';
+    '/bot -status [<hora>|off] [-to <destino>]...  ou  /bot -info  ou  /bot -test  ou  /bot -flush-email [true]  ou  /bot -passwd <senha|off>  ou  /bot -login <senha>\n💡 _/bot -h para ajuda_';
 
 async function cmdBot({ msg, opts: optsDoComando, args, chatId, isGroup }) {
     args = tirarOpcaoMascara(args);
@@ -640,6 +643,17 @@ async function cmdBot({ msg, opts: optsDoComando, args, chatId, isGroup }) {
 
     // -info, -test, -reset e -flush-email: sozinhas (o -reset aceita o force, que não pergunta;
     // o -flush-email, o true)
+    // -passwd <senha|off>: a senha do /bot -login (só o dono)
+    if (opts.given.has('passwd')) {
+        if (!msg.fromMe) {
+            await msg.reply('⛔ Só o dono do bot define a senha do login.');
+            return;
+        }
+        const senha = [opts.opt.passwd, ...opts.argv].filter(Boolean).join(' ').trim();
+        await msg.reply(senha ? await definirSenha(senha) : '❌ Uso: /bot -passwd <senha|off>');
+        return;
+    }
+
     const SOZINHAS = ['info', 'test', 'reset', 'flush-email'];
     for (const sozinha of SOZINHAS) {
         if (!opts.given.has(sozinha)) continue;

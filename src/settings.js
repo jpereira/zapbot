@@ -122,6 +122,13 @@ const SETTINGS_SCHEMA = {
         desc: 'Outras pessoas (número com DDI, ex.: 5521999999999) que também usam os comandos admin. Só o dono altera; pelo /set vale o nome do contato (/set -a bot.admins /Jorge Pereira/), e o /bot +o|-o é o atalho.',
         item: telefoneDoItem
     },
+    'bot.login': {
+        default: '',
+        type: 'string',
+        allowEmpty: true,
+        secret: true,
+        desc: 'Hash (scrypt) da senha do /bot -login, que faz quem é de fora virar admin. Vazio: login desligado. Defina pelo /bot -passwd <senha>, não pelo /set.'
+    },
     'bot.paused': {
         default: false,
         type: 'boolean',
