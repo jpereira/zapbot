@@ -15,6 +15,7 @@ const {
 const { dbGet, dbReady, dbRun } = require('../db');
 const { replyChoice } = require('../choices');
 const { checkFlood } = require('../flood');
+const { hideInDb, loginPassword, tryLogin } = require('../login');
 const { ALWAYS_RELEASED, limitNotice, permissionHere } = require('../permissions');
 const { printCall, printCommandUnknown, printDebug, printError, printInfo } = require('../log');
 const { GetOptFromCommand } = require('../options');
@@ -305,6 +306,15 @@ client.on('message_create', (msg) => withContextDebug({
         // Bot off: everything ignored (including your commands) until /bot -on
         if (getSetting('bot.paused') && command.cmd !== '/bot') {
             printInfo(`Comando '${command.cmd}' ignorado: bot desligado (/bot -on para ativar)`);
+            return;
+        }
+
+        // /bot -login <password>: applies to outsiders (before bot.users) and the password does not go to the database
+        const passwordLogin = command.cmd === '/bot' ? loginPassword(args) : null;
+        if (passwordLogin !== null) {
+            await hideInDb(msgIdPure);
+            if (msg.fromMe) await msg.reply('👑 Você é o dono, já manda em tudo.');
+            else await msg.reply(await tryLogin({ numero: senderNumber, nome: senderName, senha: passwordLogin, isGroup }));
             return;
         }
 
