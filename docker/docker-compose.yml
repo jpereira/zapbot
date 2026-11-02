@@ -29,6 +29,8 @@ services:
 
     working_dir: /app
     restart: unless-stopped
+    # tini as PID 1: reaps the Chromium processes that become zombies
+    init: true
 
 volumes:
   app_cache:
