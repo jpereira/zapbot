@@ -1,5 +1,10 @@
 # 🤖 ZapBot v2.0.11 (devel)
 
+<p align="center">
+  <img src="docs/assets/logo.png" alt="Logo do ZapBot: um robô anjo, com auréola e asas, piscando e
+  fazendo joinha num balão de conversa verde, e uma cara de demônio espiando do lado" width="320">
+</p>
+
 [![Testes](https://github.com/jpereira/zapbot/actions/workflows/ci.yml/badge.svg)](https://github.com/jpereira/zapbot/actions/workflows/ci.yml)
 
 > 🇧🇷 **Projeto em português (pt_BR).** Documentação, comandos e mensagens do bot

@@ -1,6 +1,6 @@
 <p align="center">
-  <img src="assets/logo.svg" alt="Logo do ZapBot: um robô anjo, com auréola e asas, piscando num
-  balão de conversa verde, e uma cara de demônio espiando do lado" width="180">
+  <img src="assets/logo.png" alt="Logo do ZapBot: um robô anjo, com auréola e asas, piscando e
+  fazendo joinha num balão de conversa verde, e uma cara de demônio espiando do lado" width="320">
 </p>
 
 # ZapBot
