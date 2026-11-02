@@ -29,7 +29,7 @@ test('/monitor sem cadastro e /help explicam uso e risco', async () => {
     assert.match(help, /-add.*-a/);
     assert.match(help, /-rm.*-r/);
     assert.match(help, /-list.*-l/);
-    assert.doesNotMatch((await bot.responder('/help'))[0], /Uso: \/test/);
+    assert.doesNotMatch((await bot.responder('/help'))[0], /\n \/test - /);
 });
 
 test('/monitor é só do dono e admins', async () => {

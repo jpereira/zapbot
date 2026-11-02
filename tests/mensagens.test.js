@@ -653,8 +653,8 @@ describe('permissões', () => {
         assert.equal((await bot.responder('/noffa oi', DELE)).length, 1);
         assert.deepEqual(await bot.responder('/tempo', DELE), ['🚫 Limitado aos comandos: /noffa, /joke.']);
         const [ajuda] = await bot.responder('/help', DELE);
-        assert.match(ajuda, /Uso: \/joke/);
-        assert.doesNotMatch(ajuda, /Uso: \/tempo/);
+        assert.match(ajuda, /\n \/joke - /);
+        assert.doesNotMatch(ajuda, /\n \/tempo - /);
         assert.match((await bot.responder('/help tempo', DELE))[0], /^⛔ O \/tempo não está liberado para você\./);
         assert.match((await bot.responder('/whois', DELE))[0], /• 🗣️ \+v · 👤 Ciclano · \+5521922222222\n → Apenas: \/noffa, \/joke\n/);
 

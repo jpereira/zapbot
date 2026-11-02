@@ -8,8 +8,24 @@ Exibe o menu com os comandos, ou a ajuda de um só. Cada um vê só o que pode u
   título, e o `/help` de um comando admin responde `⛔ O /show é só do dono do bot (e dos admins).`
   Quem está limitado a alguns comandos ([`/bot +cmd`](bot.md#comandos-de-cada-usuário)) vê só esses.
 
-```text
+O `/help` sozinho lista um comando por linha, só com o que ele faz (o `summary` do
+`comandos.json`), num bloco monoespaçado (para manter o alinhamento no celular), e termina com a dica de como ver o resto:
+
+````text
 /help
+
+```
+ /alias - Salva atalhos para comandos com argumentos
+ /ascii - O texto em letras grandes de ASCII
+ ...
+```
+
+💡 Utilize */help /comando* ou */comando -h* para mais informações.
+````
+
+Para a ajuda completa de um comando:
+
+```text
 /help get
 /help alias        → lista os atalhos cadastrados que você pode executar
 /h /show

@@ -45,6 +45,8 @@ describe('comandos.json', () => {
     test('toda opção tem desc; valores são listas', () => {
         for (const c of CONFIG.commands) {
             assert.ok(c.help, `${c.cmd} sem help`);
+            assert.ok(c.summary, `${c.cmd} sem summary`);
+            assert.ok(c.summary.length <= 70 && !c.summary.endsWith('.'), `${c.cmd}: summary curto e sem ponto final`);
             assert.equal(typeof c.onlyAdmin, 'boolean', `${c.cmd} sem onlyAdmin`);
             for (const o of c.cmd_opts ?? []) {
                 assert.ok(o.desc, `${c.cmd}: opção sem desc`);

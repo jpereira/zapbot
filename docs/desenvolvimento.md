@@ -302,7 +302,8 @@ chave `_about` (metadados do projeto, ignorada pelo bot) e a lista `commands`. C
   "cmd": "/get",                     // nome principal
   "usage": "/get [OPÇÃO]... <url>", // linha "Uso:" no -help (formas com "  ou  ": uma por linha)
   "aliases": ["/download"],          // nomes alternativos
-  "help": "Baixa vídeo ou áudio...", // descrição curta
+  "summary": "Baixa vídeo ou áudio", // o que faz, numa linha (a lista do /help)
+  "help": "Baixa vídeo ou áudio...", // descrição completa (o -help)
   "cmd_opts": [
     { "opts": ["audio", "a"], "values": [], "desc": "..." },          // flag
     { "opts": ["startSec", "ss"], "values": ["<segundo>"], "desc": "..." }, // opção com valor
