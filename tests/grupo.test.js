@@ -64,7 +64,7 @@ describe('/boletos e /walissu', () => {
         bot.criarGrupo(GRUPO, 'Família', [DONO.jid, OUTRO.jid]);
         assert.deepEqual(await bot.responder('/boletos'), ['Membros insuficientes no grupo.']);
         assert.deepEqual(await bot.responder('/walissu'), ['Membros insuficientes no grupo.']);
-        assert.deepEqual(await bot.responder('/boletos', { chat: OUTRO.jid }), [somenteGrupo]);
+        assert.deepEqual(await bot.responder('/boletos', { chat: OUTRO.jid }), ['⚠️ O comando /boletos só pode ser chamado dentro de grupos!']);
         assert.deepEqual(await bot.responder('/walissu', { chat: OUTRO.jid }), [somenteGrupo]);
     });
 

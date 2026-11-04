@@ -31,7 +31,7 @@ async function cmdBoletos({ msg }) {
     const chat = await msg.getChat().catch(() => null);
 
     if (!chat?.isGroup) {
-        await msg.reply('Apenas utilizado dentro de grupos.');
+        await msg.reply('⚠️ O comando /boletos só pode ser chamado dentro de grupos!');
         return;
     }
 
