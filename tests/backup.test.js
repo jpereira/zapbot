@@ -44,15 +44,15 @@ describe('/backup (/bkp)', () => {
 
     test('sem opção: banco atual, último backup e o próximo automático', async () => {
         let [r] = await bot.responder('/bkp');
-        assert.match(r, /💾 \*Backup\*\n\n🗄️ \*Banco atual:\* .*\n   _.*messages \d+.*_\n📦 \*Backups:\* 0 em .*backups\n🕐 \*Último:\* nenhum\n⏭️ \*Próximo automático:\* .* _\(todo dia às 3h, guarda 7\)_/);
+        assert.match(r, /💾 \*Backup\*\n\n• 🗄️ \*Banco atual:\* .*\n   ◦ .*\n(   ◦ .*\n)*• 📦 \*Backups:\* 0 em .*backups\n• 🕐 \*Último:\* nenhum\n• ⏭️ \*Próximo automático:\* .* _\(todo dia às 3h, guarda 7\)_/);
 
         await criarBackup();
         [r] = await bot.responder('/backup');
         assert.match(r, /📦 \*Backups:\* 1 \(/);
-        assert.match(r, /🕐 \*Último:\* [a-zá]{3} \d\d\/\d\d \d\d:\d\d \(manual, /);
+        assert.match(r, /• 🕐 \*Último:\* [a-zá]{3} \d\d\/\d\d \d\d:\d\d \(manual, /);
 
         await bot.setSetting('backup.enabled', false);
-        assert.match((await bot.responder('/backup'))[0], /⏭️ Backup automático desligado/);
+        assert.match((await bot.responder('/backup'))[0], /• ⏭️ \*Backup automático:\* desligado/);
     });
 
     test('-l numera do mais novo para o mais antigo; -i compara com o banco atual', async () => {
@@ -289,7 +289,7 @@ describe('backup diário', () => {
     test('backup.to aparece na ajuda e no status; anexo grande não é enviado por e-mail', async () => {
         assert.match((await bot.responder('/backup -h'))[0], /setting backup\.to/);
         await bot.setSetting('backup.to', 'Fulano');
-        assert.match((await bot.responder('/backup'))[0], /📤 \*Destino automático:\* Fulano/);
+        assert.match((await bot.responder('/backup'))[0], /• 📤 \*Destino automático:\* Fulano/);
         const { MAX_ANEXO_BYTES, enviarBackupPorEmail } = bot.src('backup');
         await assert.rejects(enviarBackupPorEmail({ bytes: MAX_ANEXO_BYTES + 1 }, ['eu@x.com']),
             /limite de 20 MB/);
