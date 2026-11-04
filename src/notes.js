@@ -94,7 +94,7 @@ function noteLine(n, plan = false) {
     const alert = n.alert_at
         ? `\n   ⏰ ${fmtWhen(n.alert_at)} → ${noticeWhere(noteDestinations(n))}`
         : '';
-    const body = [n.text, n.media_path && (plan ? '🖼️ imagem' : '🖼️ _imagem_')].filter(Boolean).join('\n');
+    const body = [n.text, n.media_path && mediaLabel(n, plan)].filter(Boolean).join('\n');
     // plain: inside the ``` block the *bold* and _italic_ appear as they are
     return plan ? `#${n.id} ${indent(body)}${alert}\n   🕐 ${formatData(n.created_at)}`
         : `*#${n.id}* ${indent(body)}${alert}\n   🕐 _${formatData(n.created_at)}_`;
@@ -171,19 +171,37 @@ function textStart(textAlt) {
 }
 const EXTENSIONS = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif' };
 
-// The message's own image or, in reply, the replied message's
-const imageOrigin = (msg, quotedMsg) => [msg, quotedMsg].find(m => m?.hasMedia);
+// Any media of the message itself or, in reply, the replied message's
+const mediaOrigin = (msg, quotedMsg) => [msg, quotedMsg].find(m => m?.hasMedia);
 
-// Downloads and stores the image in NOTES_DIR: { path, mime }, or { error } to reply with
-async function saveImage(origin) {
+const isImage = (mime) => String(mime ?? '').startsWith('image/');
+
+// The stored file is "<time>_<draw>_<name>": the original name comes back on send
+const nameOriginal = (fileAlt) => path.basename(fileAlt).replace(/^\d+_[a-z0-9]+_/, '');
+
+// 🖼️ image, 🎬 video, 🎵 audio or 📎 file name (document and the rest)
+function mediaLabel(n, plan = false) {
+    const mime = String(n.media_mime ?? '');
+    const italic = (t) => (plan ? t : `_${t}_`);
+    if (isImage(mime)) return `🖼️ ${italic('imagem')}`;
+    if (mime.startsWith('video/')) return `🎬 ${italic('vídeo')}`;
+    if (mime.startsWith('audio/')) return `🎵 ${italic('áudio')}`;
+    return `📎 ${italic(nameOriginal(n.media_path))}`;
+}
+
+// Downloads and stores the media in NOTES_DIR: { path, mime }, or { error } to reply with
+async function saveMedia(origin) {
     const media = await origin.downloadMedia().catch(() => null);
     if (!media?.data) return { erro: '❌ Não consegui baixar a mídia.' };
-    if (!String(media.mimetype).startsWith('image/')) return { erro: '❌ O /notes guarda só imagens.' };
 
-    const ext = EXTENSIONS[media.mimetype] ?? media.mimetype.split('/')[1].replace(/[^a-z0-9]/gi, '') ?? 'img';
-    const fileAlt = path.join(NOTES_DIR, `${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`);
+    const mime = String(media.mimetype ?? 'application/octet-stream').split(';')[0].trim().toLowerCase();
+    // The document name, if it came (without a path and without odd characters); otherwise, "arquivo.<ext>"
+    const ext = EXTENSIONS[mime] ?? ((mime.split('/')[1] ?? '').replace(/[^a-z0-9]/g, '') || 'bin');
+    const nameAlt = path.basename(String(media.filename ?? '')).replace(/[^\p{L}\p{N}._ -]/gu, '_').trim();
+    const fileAlt = path.join(NOTES_DIR,
+        `${Date.now()}_${Math.random().toString(36).slice(2, 8)}_${nameAlt || `arquivo.${ext}`}`);
     await fs.outputFile(fileAlt, Buffer.from(media.data, 'base64'));
-    return { path: fileAlt, mime: media.mimetype };
+    return { path: fileAlt, mime };
 }
 
 // a typed "\n" becomes a line break ("\\n" stays as text)
@@ -197,8 +215,8 @@ async function addAlt(msg, textTyped, quotedMsg) {
     const { tag } = separated;
     let { texto: textAlt } = separated;
 
-    // Without text, but replying to a message: saves its text (if any; the image counts alone)
-    const origin = imageOrigin(msg, quotedMsg);
+    // Without text, but replying to a message: saves its text (if any; the media counts alone)
+    const origin = mediaOrigin(msg, quotedMsg);
     if (!textAlt && quotedMsg) {
         const quoted = String(quotedMsg.body ?? '').trim();
         if (!quoted && !origin) {
@@ -234,7 +252,7 @@ async function addAlt(msg, textTyped, quotedMsg) {
 
     let image = null;
     if (origin) {
-        image = await saveImage(origin);
+        image = await saveMedia(origin);
         if (image.erro) {
             await msg.reply(image.erro);
             return;
@@ -251,7 +269,7 @@ async function addAlt(msg, textTyped, quotedMsg) {
     );
 
     // Only the notice that it saved (no., #tag, the start of the text): you already sent the body
-    const summary = [`📝 *#${r.lastID}*`, tag && `#${tag}`, image && '🖼️', textAlt && textStart(textAlt)]
+    const summary = [`📝 *#${r.lastID}*`, tag && `#${tag}`, image && mediaLabel({ media_mime: image.mime, media_path: image.path }, true).split(' ')[0], textAlt && textStart(textAlt)]
         .filter(Boolean).join(' · ');
     await msg.reply(summary + (alert ? `\n⏰ ${fmtWhen(alert)} → ${noticeWhere(destinations)}` : ''),
         undefined, WITHOUT_PREVIEW);
@@ -562,25 +580,34 @@ async function seeNotes(msg, filter) {
         const textAlt = [header(n), n.text].filter(Boolean).join('\n');
         let media = null;
         if (n.media_path) {
-            media = await Promise.resolve().then(() => MessageMedia.fromFilePath(n.media_path)).catch(() => null);
-            if (!media) failures.push(`#${n.id}: arquivo da imagem não encontrado`);
+            media = await Promise.resolve().then(() => {
+                const m = MessageMedia.fromFilePath(n.media_path);
+                m.filename = nameOriginal(n.media_path);
+                return m;
+            }).catch(() => null);
+            if (!media) failures.push(`#${n.id}: arquivo da mídia não encontrado`);
         }
 
+        // Audio has no caption: the text goes in another message
+        const withoutCaption = media && String(n.media_mime).startsWith('audio/');
+
         if (!destinations) {
-            if (media) await msg.reply(media, undefined, { caption: textAlt });
-            else await msg.reply(textAlt, undefined, WITHOUT_PREVIEW);
+            if (media) await msg.reply(media, undefined, withoutCaption ? {} : { caption: textAlt });
+            if (!media || withoutCaption) await msg.reply(textAlt, undefined, WITHOUT_PREVIEW);
             continue;
         }
 
         for (const d of destinations.filter(x => x.id)) {
-            await (media ? client.sendMessage(d.id, media, { caption: textAlt }) : client.sendMessage(d.id, textAlt, WITHOUT_PREVIEW))
-                .catch(err => failures.push(`${describeDestinations([d])}: ${err.message}`));
+            await (async () => {
+                if (media) await client.sendMessage(d.id, media, withoutCaption ? {} : { caption: textAlt });
+                if (!media || withoutCaption) await client.sendMessage(d.id, textAlt, WITHOUT_PREVIEW);
+            })().catch(err => failures.push(`${describeDestinations([d])}: ${err.message}`));
         }
         const emails = [...new Set(destinations.filter(d => d.email).flatMap(d => d.email.split(/\s*,\s*/)))];
         if (emails.length) {
             await sendEmail({
                 para: emails, assunto: `📝 Anotação #${n.id}`, texto: textAlt.replace(/[*_]/g, ''),
-                anexos: media ? [{ filename: path.basename(n.media_path), path: n.media_path, contentType: n.media_mime }] : []
+                anexos: media ? [{ filename: nameOriginal(n.media_path), path: n.media_path, contentType: n.media_mime }] : []
             }).catch(err => failures.push(`e-mail: ${err.message}`));
         }
     }
@@ -686,9 +713,10 @@ async function exportar(msg, filter = '') {
         }
         for (const n of items) {
             // The image comes on top and the note text is the caption
-            const image = n.media_path ? await imageForPdf(n.media_path) : null;
+            const image = n.media_path && isImage(n.media_mime) ? await imageForPdf(n.media_path) : null;
             if (image) blocks.push({ tipo: 'imagem', ...image });
-            const alert = (n.media_path && !image ? ' · imagem não incluída' : '') + (n.alert_at ? ` · alerta ${fmtWhen(n.alert_at)}` : '');
+            const alert = (n.media_path && !image
+                ? (isImage(n.media_mime) ? ' · imagem não incluída' : ` · arquivo não incluído (${nameOriginal(n.media_path)})`) : '') + (n.alert_at ? ` · alerta ${fmtWhen(n.alert_at)}` : '');
             blocks.push({ tipo: 'texto', texto: `#${n.id}  ${n.text.replace(MARK_REPLY, '[resp.]')}`, recuo: 0 });
             blocks.push({ tipo: 'meta', texto: `Anotada em ${formatData(n.created_at)}${alert}` });
             blocks.push({ tipo: 'espaco', altura: 8 });
