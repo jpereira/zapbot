@@ -211,7 +211,7 @@ async function edit(msg, items, { opt, quando: when, texto: textAlt }) {
         }
     }
 
-    const errorCommand = textAlt ? commandsError(textAlt) : null;
+    const errorCommand = textAlt ? await commandsError(textAlt) : null;
     if (errorCommand) {
         await msg.reply(errorCommand);
         return;
@@ -329,7 +329,7 @@ async function handleSchedule({ msg, args, chatId, chatName, isGroup, quotedMsg 
     }
 
     // {/command} in the text: it exists and can run in /cron (the error shows now, not at send time)
-    const errorCommand = commandsError(textAlt);
+    const errorCommand = await commandsError(textAlt);
     if (errorCommand) {
         await msg.reply(errorCommand);
         return;

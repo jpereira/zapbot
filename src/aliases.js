@@ -9,14 +9,10 @@
 const { dbAll, dbGet, dbReady } = require('./db');
 const { commandsByPrefix, findCommand } = require('./commands/base');
 const { botConfig } = require('./botConfig');
-const { withTargets, commandsInText, assembleText } = require('./textCommands');
+const { findCommandAlt, withTargets, commandsInText, assembleText } = require('./textCommands');
 
 const textIsAlias = (salvo) => !salvo.startsWith('/');
 
-// The commands the alias calls: the target or the text's {/command}s
-const aliasCommands = (salvo) => (textIsAlias(salvo)
-    ? commandsInText(salvo).map(c => c.linha)
-    : [salvo]).map(line => line.split(/\s+/, 1)[0].toLowerCase());
 
 /*
  * Command alias parameters: $1, $2... take the typed arguments, in order.
@@ -25,9 +21,11 @@ const aliasCommands = (salvo) => (textIsAlias(salvo)
 function applyParams(salvo, args) {
     const typed = args.split(/\s+/).filter(Boolean);
     const used = new Set();
-    const commandAlt = salvo.replace(/\$([1-9]\d*)/g, (_, n) => {
-        used.add(Number(n) - 1);
-        return typed[n - 1] ?? '';
+    // $N or ${N:-default value} (the default applies when argument N was not typed)
+    const commandAlt = salvo.replace(/\$(?:([1-9]\d*)|\{([1-9]\d*)(?::-([^}]*))?\})/g, (_, n1, n2, defaults) => {
+        const n = Number(n1 ?? n2);
+        used.add(n - 1);
+        return typed[n - 1] ?? defaults ?? '';
     }).trim();
     // Without $N, what is left is the typed text as it came (line breaks stay, e.g. in /notes)
     if (!used.size) return { comando: commandAlt, sobras: args };
@@ -45,7 +43,7 @@ async function resolverAlias(textAlt) {
     const [nameAlt] = textAlt.trim().split(/\s+/);
     const args = textAlt.trim().slice(nameAlt.length).trim();
     const command = findCommand(nameAlt);
-    if (command) return { command: withTargets(command, args), args };
+    if (command) return { command: await withTargets(command, args), args };
     await dbReady;
     const alias = await dbGet('SELECT * FROM command_aliases WHERE name = ?', [nameAlt]);
     if (!alias) return byPrefix(nameAlt, args);
@@ -56,7 +54,8 @@ async function resolverAlias(textAlt) {
      * (targets), and those that no longer exist are left out (they come out as ⚠️).
      */
     if (textIsAlias(alias.command)) {
-        const targets = aliasCommands(alias.command).map(findCommand).filter(Boolean);
+        const foundAlt4 = await Promise.all(commandsInText(alias.command).map(c => findCommandAlt(c.linha)));
+        const targets = foundAlt4.map(a => a?.command).filter(Boolean);
         return {
             command: { cmd: nameAlt, onlyAdmin: targets.some(c => c.onlyAdmin), alvos: targets.map(c => c.cmd) },
             alias: nameAlt, texto: alias.command, args, quiet: Boolean(alias.quiet)
@@ -68,7 +67,7 @@ async function resolverAlias(textAlt) {
     const target = findCommand(destination);
     if (!target) return null;
     const argsFinal = [commandAlt.slice(destination.length).trim(), leftovers].filter(Boolean).join(' ');
-    return { command: withTargets(target, argsFinal), alias: nameAlt, destino: destination, args: argsFinal, quiet: Boolean(alias.quiet) };
+    return { command: await withTargets(target, argsFinal), alias: nameAlt, destino: destination, args: argsFinal, quiet: Boolean(alias.quiet) };
 }
 
 /*
@@ -98,14 +97,22 @@ async function textRunAlias(msg, resolved, { chatId, chatName, isGroup, quem: wh
 
 async function listAliases(msg, can = () => true) {
     await dbReady;
-    const aliases = (await dbAll('SELECT * FROM command_aliases ORDER BY name')).filter(a => {
-        const targets = aliasCommands(a.command)
-            .map(nameAlt => botConfig.commands.find(c => c.cmd === nameAlt || c.aliases?.includes(nameAlt)));
-        return targets.length && targets.every(target => target && can(target));
-    });
+    const allAlt2 = await dbAll('SELECT * FROM command_aliases ORDER BY name');
+    const aliases = [];
+    for (const a of allAlt2) {
+        // The destination or the text's {/command}s (which may be other aliases)
+        const linesAlt = textIsAlias(a.command) ? commandsInText(a.command).map(c => c.linha) : [a.command];
+        // The disabled ones too (the alias stays listed); an alias inside the text counts by its target
+        const targets = await Promise.all(linesAlt.map(async line => {
+            const nameAlt = line.split(/\s+/, 1)[0].toLowerCase();
+            return botConfig.commands.find(c => c.cmd === nameAlt || c.aliases?.includes(nameAlt))
+                ?? (await findCommandAlt(line))?.command;
+        }));
+        if (targets.length && targets.every(target => target && can(target))) aliases.push(a);
+    }
     await msg.reply(aliases.length ? `🔗 *ALIASES* (${aliases.length})\n\n` + aliases.map(a =>
         `${a.name} → ${a.command}${a.description ? `\n📝 ${a.description}` : ''}`
     ).join('\n\n') : '🔗 Nenhum alias disponível.', undefined, { linkPreview: false });
 }
 
-module.exports = { textIsAlias, isCommandOrAlias, textRunAlias, listAliases, resolverAlias };
+module.exports = { applyParams, textIsAlias, isCommandOrAlias, textRunAlias, listAliases, resolverAlias };
