@@ -9,7 +9,7 @@ aliases. Quem executa um atalho precisa ter permissão para os comandos de desti
 /alias <nome> [-quiet|-q] [-desc|-d "Descrição"] <texto com {/comando}>
 /alias
 /alias [-list|-l]
-/alias [-rm] <nome|all>
+/alias -rm <nome...|all>
 ```
 
 | Opção | Valor | Descrição |
@@ -17,7 +17,7 @@ aliases. Quem executa um atalho precisa ter permissão para os comandos de desti
 | `-quiet`, `-q` | | Ao executar, omite o cabeçalho `🔗 Alias ...`; vale antes ou depois do nome |
 | `-desc`, `-d` | `<texto>` | Descrição opcional entre aspas, antes do comando ou do texto |
 | `-list`, `-l` | | Lista os aliases; o mesmo que `/alias` sem argumentos |
-| `-rm` | `<nome ou all>` | Remove o alias, com ou sem `/`; `all` remove todos |
+| `-rm` | `<nome...\|all>` | Remove um ou mais aliases (separados por espaço ou vírgula), com ou sem `/`; `all` remove todos |
 
 ```text
 /alias /eita -desc "Meu teste para dólar" /cotacao USD
@@ -31,6 +31,7 @@ aliases. Quem executa um atalho precisa ter permissão para os comandos de desti
 /help alias
 /alias -rm /eita
 /alias -rm eita2
+/alias -rm eita eita2 /dolar
 /alias -rm all
 ```
 

@@ -309,3 +309,18 @@ test('o começo do nome de um alias salvo também completa (único roda, vários
     assert.deepEqual(varios.possiveis.map(c => c.cmd), ['/zzdois', '/zzuno']);
     await bot.responder('/alias -rm all');
 });
+
+test('-rm aceita vários nomes (espaço ou vírgula) e diz os que não existiam', async () => {
+    await bot.responder('/alias -rm all');
+    for (const n of ['um', 'dois', 'tres']) await bot.responder(`/alias ${n} /cotacao USD`);
+
+    const [r] = await bot.responder('/alias -rm um /dois, nao');
+    assert.match(r, /Aliases removidos \(2\): \/um, \/dois/);
+    assert.match(r, /Não encontrado: \/nao/);
+    assert.deepEqual((await aliases()).map(a => a.name), ['/tres']);
+
+    assert.match((await bot.responder('/alias -rm tres'))[0], /Alias \/tres removido/);
+    assert.match((await bot.responder('/alias -rm x y'))[0], /^❌ Não encontrados: \/x, \/y$/);
+    await bot.responder('/alias um /cotacao USD');
+    assert.match((await bot.responder('/alias -rm um all'))[0], /Todos os aliases removidos \(1\)/);
+});
