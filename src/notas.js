@@ -57,7 +57,7 @@ const ALERTA = /(^|\s)-alerta(?=\s|$)([\s\S]*)$/;
 
 const destinosDaNota = (n) => destinosSalvos(n.recipients, destinoDaLinha(n));
 const ondeDoAviso = (destinos) => (destinos.length ? descreverDestinos(destinos) : 'seu privado');
-const recuar = (texto) => texto.replace(/\n/g, '\n   ');
+const recuar = (texto) => texto.replace(/\n(?=[^\n])/g, '\n   ');
 
 const listarNotas = () => dbAll('SELECT * FROM notes ORDER BY id');
 
@@ -89,18 +89,58 @@ function soTags(texto) {
     return partes.length && partes.every(p => /^#[^\s#]+$/.test(p)) ? [...new Set(partes.map(lerTag))] : null;
 }
 
-// 04/11 10:30
-const dataCurta = (valor) => formatarData(valor).replace(/^(\d+\/\d+)\/\d+,? (\d+:\d+):\d+$/, '$1 $2');
+/*
+ * O texto da anotação em partes: o título (a primeira linha), o resto e os links. Todo link
+ * http(s) sai de onde estava (e o "Leia mais em:" que ficou pendurado) e vai para o fim.
+ */
+function partesDoTexto(texto) {
+    const links = [];
+    const linhas = String(texto ?? '').split('\n').map(linha => {
+        if (!/https?:\/\//i.test(linha)) return linha.trimEnd();
+        const sem = linha.replace(/\(?(https?:\/\/\S+)/gi, (_, achado) => {
+            let url = achado;
+            // Pontuação colada no fim não é do link (o ")" é, se abriu um "(" na própria URL)
+            while (/[.,;:!?)”"'’]$/.test(url) && !(url.endsWith(')') && url.includes('('))) url = url.slice(0, -1);
+            links.push(url);
+            return '';
+        });
+        return sem.replace(/\s*(?:[-–—.…]+\s*)*(?:veja mais|leia mais|leia a mat[eé]ria completa)[^\n]*$/i, '')
+            .replace(/[\s:]+$/, '').replace(/ {2,}/g, ' ');
+    });
+    const corpo = linhas.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+    const [titulo = '', ...resto] = corpo.split('\n');
+    return {
+        // Um *negrito* que já veio no texto não dobra
+        titulo: titulo.trim().replace(/^\*(.+)\*$/, '$1'),
+        corpo: resto.join('\n').trim(),
+        links: [...new Set(links)]
+    };
+}
 
-function linhaDaNota(n, plano = false, curto = false) {
+/*
+ * A primeira linha vira o título em negrito (o único), o resto vem como estava e os links
+ * ficam no fim, sob "🌐 Links". plano: sem o *negrito* (bloco ``` e e-mail).
+ */
+function formatarTexto(texto, plano = false) {
+    const { titulo, corpo, links } = partesDoTexto(texto);
+    return [titulo && (plano ? titulo : `*${titulo}*`), corpo, links.length && `🌐 Links\n${links.map(l => `• ${l}`).join('\n')}`]
+        .filter(Boolean).join('\n\n');
+}
+
+// 10:30 04/11/2026 (hora, depois dia/mês/ano, sem os segundos)
+const dataCurta = (valor) => formatarData(valor).replace(/^(\d+\/\d+\/\d+),? (\d+:\d+):\d+$/, '$2 $1');
+
+function linhaDaNota(n, plano = false, posicao = 0) {
     const alerta = n.alert_at
         ? `\n   ⏰ ${fmtQuando(n.alert_at)} → ${ondeDoAviso(destinosDaNota(n))}`
         : '';
-    const corpo = [n.text, n.media_path && rotuloDaMidia(n, plano)].filter(Boolean).join('\n');
+    const corpo = [formatarTexto(n.text, plano), n.media_path && rotuloDaMidia(n, plano)].filter(Boolean).join('\n');
     // plano: dentro do bloco ``` o *negrito* e o _italico_ aparecem como estão
-    return plano ? `#${n.id} ${recuar(corpo)}${alerta}\n   🕐 ${formatarData(n.created_at)}`
-        : curto ? `*#${n.id}* ${recuar(corpo)}${alerta}\n_${dataCurta(n.created_at)}_`
-            : `*#${n.id}* ${recuar(corpo)}${alerta}\n   🕐 _${formatarData(n.created_at)}_`;
+    // Com posição (lista): "1. ..." no começo e o id no rodapé, "🕐 data, #id"
+    const ini = posicao ? `${posicao}.` : `#${n.id}`;
+    const fim = posicao ? `${dataCurta(n.created_at)}, #${n.id}` : dataCurta(n.created_at);
+    return plano ? `${ini} ${recuar(corpo)}${alerta}\n   🕐 ${fim}`
+        : `${ini} ${corpo}${alerta.replace(/\n {3}/, '\n')}\n🕐 _${fim}_`;
 }
 
 // Os ids do -rm / -alerta -rm: 1 2 3, 1,2,3 ou all. Algum não existe? Nenhum é mexido
@@ -405,7 +445,7 @@ function agruparPorTag(notas, descricoes = new Map(), plano = true, tituloJaTemT
     const chaves = [...grupos.keys()].sort((a, b) => (a === '') - (b === '') || a.localeCompare(b));
     const soSemTag = chaves.length === 1 && chaves[0] === '';
     return chaves.map(k => {
-        const itens = grupos.get(k).map(n => linhaDaNota(n, plano, tituloJaTemTag)).join('\n\n');
+        const itens = grupos.get(k).map((n, i) => linhaDaNota(n, plano, i + 1)).join('\n\n');
         const desc = descricoes.get(k);
         // Lista de uma #tag só: o título da lista já mostra a tag e o total, fica só a descrição
         if (tituloJaTemTag && chaves.length === 1) return `🏷️ ${k} (${grupos.get(k).length})${desc ? `\n👉 ${desc}` : ''}\n\n${itens}`;
@@ -590,14 +630,18 @@ async function verNotas(msg, filtro) {
     if (destinos === null) return;
 
     const cabecalho = (n) => [`📝 *#${n.id}*`, n.tag && `#${n.tag}`, `_${formatarData(n.created_at)}_`].filter(Boolean).join(' · ');
+    const semMarcas = (t) => t.replace(/[*_]/g, '');
     const falhas = [];
 
     for (const n of alvos) {
-        const texto = [cabecalho(n), n.text].filter(Boolean).join('\n');
+        const texto = [cabecalho(n), n.text && formatarTexto(n.text)].filter(Boolean).join('\n');
         let media = null;
+        let comBorda = null;
         if (n.media_path) {
+            comBorda = await imagemComBorda(n.media_path, n.media_mime);
             media = await Promise.resolve().then(() => {
-                const m = MessageMedia.fromFilePath(n.media_path);
+                const m = comBorda ? new MessageMedia(n.media_mime, comBorda.toString('base64'))
+                    : MessageMedia.fromFilePath(n.media_path);
                 m.filename = nomeOriginal(n.media_path);
                 return m;
             }).catch(() => null);
@@ -622,8 +666,10 @@ async function verNotas(msg, filtro) {
         const emails = [...new Set(destinos.filter(d => d.email).flatMap(d => d.email.split(/\s*,\s*/)))];
         if (emails.length) {
             await enviarEmail({
-                para: emails, assunto: `📝 Anotação #${n.id}`, texto: texto.replace(/[*_]/g, ''),
-                anexos: media ? [{ filename: nomeOriginal(n.media_path), path: n.media_path, contentType: n.media_mime }] : []
+                para: emails, assunto: `📝 Anotação #${n.id}`,
+                texto: [semMarcas(cabecalho(n)), n.text && formatarTexto(n.text, true)].filter(Boolean).join('\n'),
+                anexos: media ? [{ filename: nomeOriginal(n.media_path), contentType: n.media_mime,
+                    ...(comBorda ? { content: comBorda } : { path: n.media_path }) }] : []
             }).catch(err => falhas.push(`e-mail: ${err.message}`));
         }
     }
@@ -662,11 +708,29 @@ function carimboDeArquivo(ms) {
     return `${p.year}${p.month}${p.day}_${p.hour}${p.minute}`;
 }
 
+/*
+ * A imagem com uma borda preta fina, para se ver que é uma imagem (jpeg, png e webp; no formato
+ * de origem). Devolve null se não dá (gif, erro): vale o arquivo como está.
+ */
+async function imagemComBorda(arquivo, mime) {
+    if (!/^image\/(jpeg|png|webp)$/.test(String(mime))) return null;
+    try {
+        const { data, info } = await sharp(arquivo).rotate().toBuffer({ resolveWithObject: true });
+        const borda = Math.max(2, Math.round(Math.max(info.width, info.height) / 300));
+        return await sharp(data).extend({ top: borda, bottom: borda, left: borda, right: borda, background: '#000000' })
+            .toBuffer();
+    } catch (err) {
+        printError('/notes: borda da imagem:', err.message);
+        return null;
+    }
+}
+
 // A imagem da anotação como JPEG RGB sobre fundo branco, no tamanho que o PDF aproveita
 async function imagemParaPdf(arquivo) {
     try {
         const { data, info } = await sharp(arquivo).rotate().resize({ width: 900, withoutEnlargement: true })
-            .flatten({ background: '#ffffff' }).toColourspace('srgb').jpeg({ quality: 80 })
+            .flatten({ background: '#ffffff' }).extend({ top: 2, bottom: 2, left: 2, right: 2, background: '#000000' })
+            .toColourspace('srgb').jpeg({ quality: 80 })
             .toBuffer({ resolveWithObject: true });
         return { jpeg: data, largura: info.width, altura: info.height };
     } catch (err) {
@@ -724,7 +788,14 @@ async function exportar(msg, filtro = '') {
             if (imagem) blocos.push({ tipo: 'imagem', ...imagem });
             const alerta = (n.media_path && !imagem
                 ? (ehImagem(n.media_mime) ? ' · imagem não incluída' : ` · arquivo não incluído (${nomeOriginal(n.media_path)})`) : '') + (n.alert_at ? ` · alerta ${fmtQuando(n.alert_at)}` : '');
-            blocos.push({ tipo: 'texto', texto: `#${n.id}  ${n.text.replace(MARCA_RESPOSTA, '[resp.]')}`, recuo: 0 });
+            const { titulo, corpo, links } = partesDoTexto(n.text.replace(MARCA_RESPOSTA, '[resp.]'));
+            blocos.push({ tipo: titulo ? 'negrito' : 'texto', texto: `#${n.id}  ${titulo}`, recuo: 0 });
+            if (corpo) blocos.push({ tipo: 'texto', texto: `\n${corpo}` });
+            if (links.length) {
+                blocos.push({ tipo: 'espaco', altura: 6 });
+                blocos.push({ tipo: 'negrito', texto: 'Links' });
+                blocos.push({ tipo: 'texto', texto: links.map(l => `• ${l}`).join('\n') });
+            }
             blocos.push({ tipo: 'meta', texto: `Anotada em ${formatarData(n.created_at)}${alerta}` });
             blocos.push({ tipo: 'espaco', altura: 8 });
         }

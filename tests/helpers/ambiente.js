@@ -363,6 +363,7 @@ const sharpFalso = (entrada) => {
         extract: ({ width, height }) => { dim = { width, height }; return cadeia; },
         webp: () => cadeia,
         composite: () => cadeia,
+        extend: () => cadeia,
         png: () => { formato = 'png'; return cadeia; },
         // /notes -export: o arquivo que começa com "nao e imagem" falha; o resto vira um "jpeg" de 40x20
         flatten: () => cadeia,
@@ -370,7 +371,10 @@ const sharpFalso = (entrada) => {
         jpeg: () => { formato = 'jpeg'; return cadeia; },
         metadata: async () => dim,
         toBuffer: async (opcoes) => {
-            if (formato !== 'jpeg') return Buffer.from(formato === 'png' ? `png:${dim.width}x${dim.height}` : 'webp-enquadrado');
+            if (formato !== 'jpeg') {
+                const data = Buffer.from(formato === 'png' ? `png:${dim.width}x${dim.height}` : 'webp-enquadrado');
+                return opcoes?.resolveWithObject ? { data, info: dim } : data;
+            }
             if (typeof entrada === 'string' && require('fs').readFileSync(entrada, 'latin1').startsWith('nao e imagem')) {
                 throw new Error('Input file contains unsupported image format');
             }

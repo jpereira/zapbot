@@ -78,7 +78,7 @@ const escapar = (t) => t.replace(/[\\()]/g, '\\$&');
  * @param {string}   o.titulo     cabeçalho, à esquerda
  * @param {string}   o.direita    cabeçalho, à direita (data/hora)
  * @param {string}   o.rodape     rodapé, à esquerda ("Página X de Y" vai à direita)
- * @param {object[]} o.blocos     { texto, tipo: 'titulo' | 'texto' | 'meta' | 'espaco' } ou
+ * @param {object[]} o.blocos     { texto, tipo: 'titulo' | 'texto' | 'negrito' | 'meta' | 'espaco' } ou
  *                          { tipo: 'imagem', jpeg: Buffer, largura, altura } (JPEG RGB, em pixels)
  * @returns {Buffer}
  */
@@ -86,6 +86,7 @@ function gerarPdf({ titulo, direita = '', rodape = '', blocos }) {
     const ESTILOS = {
         titulo: { fonte: 'F2', tamanho: 13, entre: 18, antes: 14, cor: '0.1 0.3 0.5' },
         texto: { fonte: 'F1', tamanho: 10.5, entre: 14, antes: 0, cor: '0 0 0' },
+        negrito: { fonte: 'F2', tamanho: 10.5, entre: 14, antes: 0, cor: '0 0 0' },
         meta: { fonte: 'F1', tamanho: 8.5, entre: 11, antes: 0, cor: '0.45 0.45 0.45' }
     };
     const paginas = [[]];

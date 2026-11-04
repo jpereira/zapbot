@@ -37,8 +37,8 @@ test('-add, -list e -rm (vários IDs, all e ID inexistente sem remover nada)', a
     assert.deepEqual((await notas()).map(n => n.text), ['comprar leite', 'ligar pro João\nsegunda linha', 'pagar boleto']);
 
     const [lista] = await bot.responder('/notes -l');
-    assert.match(lista, /#1 comprar leite/);
-    assert.match(lista, /#3 pagar boleto/);
+    assert.match(lista, /1\. comprar leite/);
+    assert.match(lista, /3\. pagar boleto/);
     assert.equal((await bot.responder('/notes -l'))[0], lista);
     assert.equal((await bot.responder('/notes -list'))[0], lista);
 
@@ -106,7 +106,7 @@ test('a sintaxe é /notes #tag <texto>: sem tag ou sem texto dá erro; opção d
     assert.match((await bot.responder('/notes #t não esquecer de remover a opção tal'))[0], /^📝 \*#1\* · #t · não esquecer de remover a opção tal$/);
     assert.match((await bot.responder('/notes #t comprar pão -alerta +1h'))[0], /^📝 \*#2\* · #t · comprar pão\n⏰/);
     assert.deepEqual((await notas()).map(n => n.text), ['não esquecer de remover a opção tal', 'comprar pão']);
-    assert.match((await bot.responder('/notes -l'))[0], /#1 não esquecer/);
+    assert.match((await bot.responder('/notes -l'))[0], /1\. não esquecer/);
 
     // Sem tag
     assert.match((await bot.responder('/notes meu texto'))[0], /Use: \/notes #tag <texto>[\s\S]*Falta a #tag/);
@@ -319,8 +319,8 @@ test('imagem: na própria mensagem ou em resposta, vai para o disco; -rm apaga o
     }
 
     const lista = (await bot.responder('/notes -l')).join('\n');
-    assert.match(lista, /#1 Imagem de teste\n   🖼️ imagem/);
-    assert.match(lista, /#3 🖼️ imagem/);
+    assert.match(lista, /1\. Imagem de teste\n   🖼️ imagem/);
+    assert.match(lista, /1\. 🖼️ imagem/);
 
     await bot.responder('/notes -rm 1');
     assert.equal(fs.existsSync(linhas[0].media_path), false);
@@ -416,7 +416,7 @@ test('-view: manda a imagem com o texto na legenda (e só o texto, sem imagem)',
     const antes = bot.client.enviadas.length;
     await bot.responder('/notes -v 1');
     const foto = bot.client.enviadas.slice(antes).at(-1);
-    assert.match(foto.options.caption, /#1\* · #eleicao · .*\nNarrativas/);
+    assert.match(foto.options.caption, /#1\* · #eleicao · .*\n\*Narrativas\*/);
     assert.ok(foto.content?.data || foto.content?.mimetype);
 
     assert.match((await bot.responder('/notes -v 2'))[0], /#2\* · #eleicao[\s\S]*sem imagem/);
@@ -636,4 +636,25 @@ test('/notes sem parâmetros mostra as tags; /notes #tag lista as dela', async (
     // Sem a #, não é tag: anotar sem tag dá erro
     assert.match((await bot.responder('/notes minhatag'))[0], /Falta a #tag/);
     assert.equal((await notas()).length, 2);
+});
+
+test('título em negrito (só ele), corpo e "🌐 Links" no fim, com o link tirado de onde estava', async () => {
+    await bot.responder('/notes #pt Mais um caso de roubalheira.\nNesse dia o pt fez isso\n\nhttp://link1.com/\nhttp://link2.com');
+    await bot.responder('/notes #pt Explicação sobre o dólar https://exemplo.com/a?b=1');
+    await bot.responder('/notes #pt Painel: Leia mais em: (https://exemplo.com/x_y)');
+    await bot.responder('/notes #pt sem link');
+
+    const [lista] = await bot.responder('/notes #pt');
+    assert.match(lista, /\n1\. \*Mais um caso de roubalheira\.\*\n\nNesse dia o pt fez isso\n\n🌐 Links\n• http:\/\/link1\.com\/\n• http:\/\/link2\.com\n🕐 _[\d:]+ [\d\/]+, #1_/);
+    assert.match(lista, /\n2\. \*Explicação sobre o dólar\*\n\n🌐 Links\n• https:\/\/exemplo\.com\/a\?b=1\n/);
+    assert.match(lista, /\n3\. \*Painel\*\n\n🌐 Links\n• https:\/\/exemplo\.com\/x_y\n/);
+    assert.match(lista, /\n4\. \*sem link\*\n/);
+
+    const [plano] = await bot.responder('/notes -l');
+    assert.match(plano, /\n1\. Mais um caso de roubalheira\.\n/);
+    assert.doesNotMatch(plano, /\*Mais/);
+
+    const [view] = await bot.responder('/notes -v 1');
+    assert.match(view, /\n\*Mais um caso de roubalheira\.\*\n\nNesse dia o pt fez isso\n\n🌐 Links\n• http:\/\/link1\.com\/\n• http:\/\/link2\.com$/);
+    await bot.responder('/notes -rm all');
 });
