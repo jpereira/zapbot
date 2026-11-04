@@ -47,7 +47,11 @@ async function resolverAlias(texto) {
     await dbPronto;
     const alias = await dbGet('SELECT * FROM command_aliases WHERE name = ?', [nome]);
     if (!alias) return porPrefixo(nome, args);
+    return resolverSalvo(alias, nome, args);
+}
 
+// Um alias salvo (a linha do banco) já achado: texto ou comando com os $N aplicados
+async function resolverSalvo(alias, nome, args) {
     /*
      * Alias de texto: um comando de mentira com o nome do alias, para o fluxo
      * normal (bot desligado, flood); as permissões são as de cada {/comando}
@@ -71,13 +75,28 @@ async function resolverAlias(texto) {
 }
 
 /*
- * Nem comando nem alias: o começo de um comando (/wa, /watc → /watch). Um só
- * candidato roda; mais de um volta como "possiveis" para o bot listar.
+ * Nem comando nem alias: o começo de um comando ou de um alias salvo (/wa, /watc
+ * → /watch). Um só candidato roda; mais de um volta como "possiveis" para o bot listar.
  */
-function porPrefixo(nome, args) {
-    const candidatos = commandsByPrefix(nome.toLowerCase());
-    if (candidatos.length === 1) return { command: candidatos[0], args, prefixo: nome };
-    return candidatos.length ? { possiveis: candidatos } : null;
+async function porPrefixo(nome, args) {
+    const inicio = nome.toLowerCase();
+    const comandos = commandsByPrefix(inicio);
+    const nomes = new Set(comandos.flatMap(c => [c.cmd, ...(c.aliases ?? [])]));
+    const salvos = (await dbAll('SELECT * FROM command_aliases WHERE substr(name, 1, ?) = ? ORDER BY name',
+        [inicio.length, inicio])).filter(a => !nomes.has(a.name));
+
+    if (comandos.length + salvos.length === 1) {
+        if (comandos.length) return { command: comandos[0], args, prefixo: nome };
+        const r = await resolverSalvo(salvos[0], salvos[0].name, args);
+        return r && { ...r, prefixo: nome };
+    }
+    // Cada alias entra com as permissões do destino (alvos), para o bot filtrar a lista
+    const deAlias = (await Promise.all(salvos.map(async a => {
+        const c = (await resolverSalvo(a, a.name, ''))?.command;
+        return c && { ...c, cmd: a.name, alvos: c.alvos ?? [c.cmd] };
+    }))).filter(Boolean);
+    const possiveis = [...comandos, ...deAlias];
+    return possiveis.length ? { possiveis } : null;
 }
 
 /*
