@@ -11,7 +11,7 @@
     "commands": [
         {
             "cmd": "/alias",
-            "usage": "/alias <nome> [-quiet|-q] [-desc|-d \"Descrição\"] </comando argumentos>  ou  /alias <nome> [-quiet|-q] [-desc|-d \"Descrição\"] <texto com {/comando}>  ou  /alias [-list|-l]  ou  /alias [-rm] <nome|all>",
+            "usage": "/alias <nome> [-quiet|-q] [-desc|-d \"Descrição\"] </comando argumentos>  ou  /alias <nome> [-quiet|-q] [-desc|-d \"Descrição\"] <texto com {/comando}>  ou  /alias [-list|-l]  ou  /alias -rm <nome...|all>",
             "aliases": [],
             "summary": "Salva atalhos para comandos com argumentos",
             "help": "Salva atalhos para comandos com argumentos ou para um texto com vários {/comando}, como no /cron: cada um roda e a resposta entra no lugar, numa mensagem só. No texto, \\n vira quebra de linha. Sem opção, lista os aliases cadastrados. No atalho de comando, $1, $2... pegam os argumentos digitados (ex: /alias /rec /sticker -ss $1 -es $2; /rec 10 20 url); a sintaxe com chaves e :- define um valor padrão (veja a documentação do /alias).  Ao executar o atalho, o bot imprime o comando chamado, acrescenta os argumentos adicionais e respeita as permissões dos comandos de destino. O nome aceita letras, números, _, - e ., com ou sem barra no cadastro. Cadastrar o mesmo nome substitui o comando e a descrição. O destino deve ser um comando ativo do bot, inclusive seus aliases fixos; não pode ser /alias nem outro atalho cadastrado. Nomes de comandos e all são reservados. Use /help alias para listar os atalhos disponíveis para você. Ex: /alias /dolar /crypto USD, /alias orca Verificando Orca {/defi orca}\\n Verificando Prjx {/defi prjx}",
@@ -47,9 +47,9 @@
                         "rm"
                     ],
                     "values": [
-                        "<nome|all>"
+                        "<nome...|all>"
                     ],
-                    "desc": "Remove o alias, com ou sem a barra; all remove todos. Ex: /alias -rm /eita, /alias -rm all"
+                    "desc": "Remove um ou mais aliases (separados por espaço ou vírgula), com ou sem a barra; all remove todos. Ex: /alias -rm /eita, /alias -rm eita eita2 /dolar, /alias -rm all"
                 }
             ],
             "onlyAdmin": true
