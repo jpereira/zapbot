@@ -296,3 +296,16 @@ test('nome do alias aceita ponto e os parâmetros aceitam valor padrão ${N:-val
     await bot.replyAlt('/meu.comando EUR');
     assert.deepEqual(cot.mock.calls.map(c => c.arguments[0].args), ['USD', 'EUR']);
 });
+
+test('o começo do nome de um alias salvo também completa (único roda, vários lista)', async () => {
+    await bot.replyAlt('/alias -rm all');
+    await bot.replyAlt('/alias zzuno /cotacao USD');
+    const single = await resolverAlias('/zzu');
+    assert.equal(single.alias, '/zzuno');
+    assert.equal(single.prefixo, '/zzu');
+
+    await bot.replyAlt('/alias zzdois /cotacao EUR');
+    const several = await resolverAlias('/zz');
+    assert.deepEqual(several.possiveis.map(c => c.cmd), ['/zzdois', '/zzuno']);
+    await bot.replyAlt('/alias -rm all');
+});

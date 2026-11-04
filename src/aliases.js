@@ -47,7 +47,11 @@ async function resolverAlias(textAlt) {
     await dbReady;
     const alias = await dbGet('SELECT * FROM command_aliases WHERE name = ?', [nameAlt]);
     if (!alias) return byPrefix(nameAlt, args);
+    return resolverSalvo(alias, nameAlt, args);
+}
 
+// A saved alias (the database row) already found: text or command with the $Ns applied
+async function resolverSalvo(alias, nameAlt, args) {
     /*
      * Text alias: a fake command with the alias name, for the flow
      * normal (bot off, flood); the permissions are those of each {/command}
@@ -71,13 +75,28 @@ async function resolverAlias(textAlt) {
 }
 
 /*
- * Neither a command nor an alias: the start of a command (/wa, /watc → /watch). Only one
- * candidate runs; more than one comes back as "possiveis" for the bot to list.
+ * Neither a command nor an alias: the start of a command or a saved alias (/wa, /watc
+ * → /watch). A single candidate runs; more than one comes back as "possiveis" for the bot to list.
  */
-function byPrefix(nameAlt, args) {
-    const candidates = commandsByPrefix(nameAlt.toLowerCase());
-    if (candidates.length === 1) return { command: candidates[0], args, prefixo: nameAlt };
-    return candidates.length ? { possiveis: candidates } : null;
+async function byPrefix(nameAlt, args) {
+    const start = nameAlt.toLowerCase();
+    const commands = commandsByPrefix(start);
+    const names = new Set(commands.flatMap(c => [c.cmd, ...(c.aliases ?? [])]));
+    const saved = (await dbAll('SELECT * FROM command_aliases WHERE substr(name, 1, ?) = ? ORDER BY name',
+        [start.length, start])).filter(a => !names.has(a.name));
+
+    if (commands.length + saved.length === 1) {
+        if (commands.length) return { command: commands[0], args, prefixo: nameAlt };
+        const r = await resolverSalvo(saved[0], saved[0].name, args);
+        return r && { ...r, prefixo: nameAlt };
+    }
+    // Each alias enters with the target's permissions (targets), so the bot filters the list
+    const deAlias = (await Promise.all(saved.map(async a => {
+        const c = (await resolverSalvo(a, a.name, ''))?.command;
+        return c && { ...c, cmd: a.name, alvos: c.alvos ?? [c.cmd] };
+    }))).filter(Boolean);
+    const possible = [...commands, ...deAlias];
+    return possible.length ? { possiveis: possible } : null;
 }
 
 /*
