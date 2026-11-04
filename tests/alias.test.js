@@ -24,7 +24,7 @@ test('/alias cadastra com barra, sem barra, descrição longa e persiste no banc
     assert.equal((await aliases()).length, 3);
     const [list] = await bot.replyAlt('/alias');
     assert.match(list, /Meu teste para dolar/);
-    assert.match(list, /\/eita3 → \/cotacao USDT/);
+    assert.match(list, /\*\/eita3\*\n→ \/cotacao USDT/);
     assert.equal((await bot.replyAlt('/alias -list'))[0], list);
     assert.equal((await bot.replyAlt('/alias -l'))[0], list);
     assert.equal((await bot.replyAlt('/help alias'))[0], list);
@@ -130,8 +130,8 @@ test('desativar o destino impede a execução e nomes reservados continuam prote
     const run = t.mock.method(HANDLERS, '/cotacao', async () => {});
     assert.match((await bot.replyAlt('/eita'))[0], /desconhecido/);
     assert.equal(run.mock.callCount(), 0);
-    assert.match((await bot.replyAlt('/help alias'))[0], /\/eita → \/cotacao USD/);
-    assert.match((await bot.replyAlt('/alias -l'))[0], /\/eita → \/cotacao USD/);
+    assert.match((await bot.replyAlt('/help alias'))[0], /\*\/eita\*\n→ \/cotacao USD/);
+    assert.match((await bot.replyAlt('/alias -l'))[0], /\*\/eita\*\n→ \/cotacao USD/);
     await bot.setSetting('bot.users', true);
     assert.match((await bot.replyAlt('/help alias', { de: bot.OTHERAlt.jid }))[0], /Nenhum alias/);
 });
@@ -189,7 +189,7 @@ test('alias de texto: \\n vira quebra de linha e vários {/comando} saem numa me
     assert.equal((await bot.replyAlt('/btc'))[1], 'Bitcoin:\n\n₿ BTC\n💰 $1\n\nfim');
 
     const [list] = await bot.replyAlt('/alias -l');
-    assert.match(list, /\/nome2 → Verificando Orca \{\/defi orca\}\nVerificando Prjx \{\/defi prjx\}/);
+    assert.match(list, /\*\/nome2\*\n📝 Orca e Prjx\n→ Verificando Orca \{\/defi orca\}\n   Verificando Prjx \{\/defi prjx\}/);
 });
 
 test('alias de texto: recusa texto sem {/comando}, comandos inexistentes e os que não rodam no texto', async () => {
