@@ -129,9 +129,24 @@ async function listarAliases(msg, pode = () => true) {
         }));
         if (alvos.length && alvos.every(alvo => alvo && pode(alvo))) aliases.push(a);
     }
-    await msg.reply(aliases.length ? `🔗 *ALIASES* (${aliases.length})\n\n` + aliases.map(a =>
-        `${a.name} → ${a.command}${a.description ? `\n📝 ${a.description}` : ''}`
-    ).join('\n\n') : '🔗 Nenhum alias disponível.', undefined, { linkPreview: false });
+    await msg.reply(aliases.length ? `🔗 *ALIASES* (${aliases.length})\n\n` + aliases.map(blocoDoAlias).join('\n\n') + DICAS_ALIAS
+        : '🔗 Nenhum alias disponível.\n\n💡 _Crie com /alias <nome> </comando argumentos>_', undefined, { linkPreview: false });
+}
+
+const DICAS_ALIAS = '\n\n💡 *Dicas*\n' +
+    '/alias <nome> </comando args> cria\n' +
+    '/alias -rm <nome...> remove\n' +
+    '🔇 = sem o cabeçalho ao executar';
+
+// O nome em negrito (🔇 se for quiet), a descrição e o destino; o texto com {/comando} segue em várias linhas
+function blocoDoAlias(a) {
+    const [primeira, ...resto] = String(a.command).split('\n');
+    return [
+        `*${a.name}*${a.quiet ? ' 🔇' : ''}`,
+        a.description && `📝 ${a.description}`,
+        `→ ${primeira}`,
+        ...resto.map(l => `   ${l}`)
+    ].filter(Boolean).join('\n');
 }
 
 module.exports = { aplicarParametros, ehAliasDeTexto, ehComandoOuAlias, executarAliasDeTexto, listarAliases, resolverAlias };
