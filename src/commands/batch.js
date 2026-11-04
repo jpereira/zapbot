@@ -8,7 +8,7 @@
  */
 const { isCommandOrAlias, textRunAlias, resolverAlias } = require('../aliases');
 const { GetOptFromCommand } = require('../options');
-const { printError } = require('../log');
+const { printError, printInfo } = require('../log');
 const { summarizeText } = require('../util/format');
 
 const MAX_BLOCKS = 50;
@@ -34,12 +34,13 @@ async function separateBlocks(textAlt) {
     return { blocos: blocks.map(b => b.replace(/\s+$/, '')), sobra: leftOver };
 }
 
-// Reads -stop / -dry (-d) only from the 1st line, before the commands (the rest belongs to the blocks)
+// Reads -stop (-s) / -dry (-d) / -quiet (-q) only from the 1st line, before the commands (the rest belongs to the blocks)
 function readOptions(args) {
-    const optionsAlt = { stop: false, dry: false };
+    const optionsAlt = { stop: false, dry: false, quiet: false };
     let rest = args.trim();
-    for (let m; (m = rest.match(/^-(stop|dry|d)(?=\s|$)\s*/i));) {
-        optionsAlt[m[1].toLowerCase() === 'stop' ? 'stop' : 'dry'] = true;
+    for (let m; (m = rest.match(/^-(stop|s|dry|d|quiet|q)(?=\s|$)\s*/i));) {
+        const nameAlt = m[1].toLowerCase();
+        optionsAlt[nameAlt === 'stop' || nameAlt === 's' ? 'stop' : nameAlt === 'quiet' || nameAlt === 'q' ? 'quiet' : 'dry'] = true;
         rest = rest.slice(m[0].length);
     }
     return { opcoes: optionsAlt, texto: rest };
@@ -130,6 +131,7 @@ async function cmdBatch(context) {
         }
 
         if (!r.ok) failures++;
+        if (!r.ok && optionsAlt.quiet) printInfo(`/batch -quiet: bloco ${i + 1} falhou (${top(block)}):`, r.respostas.join(' | '));
         const reply = r.respostas.join('\n').trim();
         const detail = reply ? `\n   ↳ ${summarizeText(reply.replace(/\n+/g, ' · '), MAX_REPLY)}` : '';
         linesAlt.push(`${r.ok ? '✅' : '❌'} ${i + 1} · ${top(block)}${detail}`);
@@ -139,6 +141,9 @@ async function cmdBatch(context) {
             break;
         }
     }
+
+    // -quiet: without the summary (what the commands send outside the summary, like media, goes out the same)
+    if (optionsAlt.quiet) return;
 
     const ok = blocks.length - failures;
     await msg.reply(`📦 *BATCH* · ${ok}/${blocks.length} ok\n\n${linesAlt.join('\n')}${notice}`, undefined, WITHOUT_PREVIEW);

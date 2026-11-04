@@ -60,6 +60,20 @@ test('falha segue adiante; com -stop, para no primeiro erro', async () => {
     const [b] = await bot.replyAlt('/batch -stop\n/notes -rm 99\n/notes não roda');
     assert.match(b, /Parou no bloco 1; 1 não rodaram/);
     assert.equal((await notes()).length, 1);
+
+    const [c] = await bot.replyAlt('/batch -s\n/notes -rm 99\n/notes não roda');
+    assert.match(c, /Parou no bloco 1; 1 não rodaram/);
+    assert.equal((await notes()).length, 1);
+});
+
+test('-quiet (-q): executa tudo e não responde o resumo; o -dry continua mostrando', async () => {
+    assert.deepEqual(await bot.replyAlt('/batch -quiet\n/notes um\n/notes -rm 99\n/notes dois'), []);
+    assert.deepEqual((await notes()).map(n => n.text), ['um', 'dois']);
+
+    assert.deepEqual(await bot.replyAlt('/batch -q -stop\n/notes três'), []);
+    assert.equal((await notes()).length, 3);
+
+    assert.match((await bot.replyAlt('/batch -q -dry\n/notes quatro'))[0], /só a separação/);
 });
 
 test('alias de texto, comando de consulta e a mensagem respondida', async t => {
