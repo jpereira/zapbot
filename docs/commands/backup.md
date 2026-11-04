@@ -36,12 +36,15 @@ Remover contatos ou reduzir o histórico local não altera os backups já existe
 ```text
 💾 Backup
 
-🗄️ Banco atual: 4.20 MB
-   message_edits 12 · messages 1.234 · polls 3 · price_alerts 2 · settings 47 · stats 980 · ...
-📦 Backups: 7 (8.40 MB) em /app/cache/backups
-🕐 Último: qui 01/10 03:00 (automático, 1.10 MB)
-⏭️ Próximo automático: sex 02/10 03:00 (todo dia às 3h, guarda 7)
-📤 Destino automático: só local
+• 🗄️ Banco atual: 4.20 MB
+   ◦ message_edits: 12
+   ◦ messages: 1.234
+   ◦ polls: 3
+   ◦ ...
+• 📦 Backups: 7 (8.40 MB) em /app/cache/backups
+• 🕐 Último: qui 01/10 03:00 (automático, 1.10 MB)
+• ⏭️ Próximo automático: sex 02/10 03:00 (todo dia às 3h, guarda 7)
+• 📤 Destino automático: só local
 ```
 
 ```text

@@ -35,7 +35,13 @@ const { fmtWhen, partsInBrasilia } = require('../util/when');
  * old, with the emails straight in -s (/backup -s 2 email), counts
  * /backup -rm <nº|all>  → apaga
  */
-const HELP = '💡 _-now cria um agora · -l lista · -i <nº> detalha · -r <nº> restaura · -s [nº] [-to <destino>] envia o arquivo · -rm <nº|all> apaga_';
+const HELP = '💡 *Dicas*\n' +
+    '/backup -now cria um agora\n' +
+    '/backup -l lista\n' +
+    '/backup -i <nº> detalha\n' +
+    '/backup -r <nº> restaura\n' +
+    '/backup -s [nº] [-to <destino>] envia o arquivo\n' +
+    '/backup -rm <nº|all> apaga';
 
 const inputsInLine = (inputs) => Object.entries(inputs)
     .map(([t, n]) => `${t} ${fmtInA(n)}`).join(' · ');
@@ -63,18 +69,19 @@ async function status(msg) {
         return b.motivo === REASONS.automatico && p.ano === today.ano && p.mes === today.mes && p.dia === today.dia;
     });
 
-    let textAlt = '💾 *Backup*\n\n' +
+    // One item per bullet; the database entries, a sub-bullet per table
+    const items = [
         `🗄️ *Banco atual:* ${bytesDb === null ? '—' : humanSize(bytesDb)}\n` +
-        `   _${inputsInLine(inputs)}_\n` +
-        `📦 *Backups:* ${list.length}${list.length ? ` (${humanSize(total)})` : ''} em ${BACKUP_DIR}\n` +
-        `🕐 *Último:* ${last ? `${fmtWhen(last.criadoEm)} (${last.motivo}, ${humanSize(last.bytes)})` : 'nenhum'}\n`;
-
-    textAlt += getSetting('backup.enabled')
-        ? `⏭️ *Próximo automático:* ${fmtWhen(nextBackupDaily(Date.now(), doneToday))} ` +
-          `_(todo dia às ${getSetting('backup.hour')}h, guarda ${getSetting('backup.keep')})_\n`
-        : '⏭️ Backup automático desligado _(setting backup.enabled)_\n';
-
-    textAlt += `📤 *Destino automático:* ${getSetting('backup.to') || 'só local'}\n`;
+            Object.entries(inputs).map(([t, n]) => `   ◦ ${t}: ${fmtInA(n)}`).join('\n'),
+        `📦 *Backups:* ${list.length}${list.length ? ` (${humanSize(total)})` : ''} em ${BACKUP_DIR}`,
+        `🕐 *Último:* ${last ? `${fmtWhen(last.criadoEm)} (${last.motivo}, ${humanSize(last.bytes)})` : 'nenhum'}`,
+        getSetting('backup.enabled')
+            ? `⏭️ *Próximo automático:* ${fmtWhen(nextBackupDaily(Date.now(), doneToday))} ` +
+              `_(todo dia às ${getSetting('backup.hour')}h, guarda ${getSetting('backup.keep')})_`
+            : '⏭️ *Backup automático:* desligado _(setting backup.enabled)_',
+        `📤 *Destino automático:* ${getSetting('backup.to') || 'só local'}`
+    ];
+    const textAlt = `💾 *Backup*\n\n${items.map(i => `• ${i}`).join('\n')}\n`;
 
     await msg.reply(`${textAlt}\n${HELP}`, null, { linkPreview: false });
 }
