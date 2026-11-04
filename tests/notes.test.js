@@ -511,7 +511,7 @@ test('-desc: grava, mostra, aparece na lista e no /notes sozinho, vai no -move e
     assert.match((await bot.responder('/notes -d #casa Coisas da casa'))[0], /descrição salva/);
     assert.match((await bot.responder('/notes -d #casa Coisas de casa'))[0], /trocada/);
     assert.match((await bot.responder('/notes -d #cas'))[0], /Coisas de casa/);
-    assert.match((await bot.responder('/notes -l #casa'))[0], /\nCoisas de casa\n/);
+    assert.match((await bot.responder('/notes -l #casa'))[0], /\n👉 Coisas de casa\n/);
     assert.match((await bot.responder('/notes'))[0], /#casa: 1 · Coisas de casa/);
     await bot.responder('/notes -m #casa #lar');
     assert.match((await bot.responder('/notes -d #lar'))[0], /Coisas de casa/);
@@ -631,7 +631,7 @@ test('/notes sem parâmetros mostra as tags; /notes #tag lista as dela', async (
 
     for (const cmd of ['/notes #minhatag', '/notes #MinhaTag', '/notes -l #minhatag']) {
         const [lista] = await bot.responder(cmd);
-        assert.match(lista, /^```\n📝 ANOTAÇÕES #minhatag \(1\)/, cmd);
+        assert.match(lista, /^📝 \*ANOTAÇÕES\*\n\n🏷️ minhatag \(1\)/, cmd);
     }
     // Sem a #, não é tag: anotar sem tag dá erro
     assert.match((await bot.responder('/notes minhatag'))[0], /Falta a #tag/);

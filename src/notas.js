@@ -89,14 +89,18 @@ function soTags(texto) {
     return partes.length && partes.every(p => /^#[^\s#]+$/.test(p)) ? [...new Set(partes.map(lerTag))] : null;
 }
 
-function linhaDaNota(n, plano = false) {
+// 04/11 10:30
+const dataCurta = (valor) => formatarData(valor).replace(/^(\d+\/\d+)\/\d+,? (\d+:\d+):\d+$/, '$1 $2');
+
+function linhaDaNota(n, plano = false, curto = false) {
     const alerta = n.alert_at
         ? `\n   ⏰ ${fmtQuando(n.alert_at)} → ${ondeDoAviso(destinosDaNota(n))}`
         : '';
     const corpo = [n.text, n.media_path && rotuloDaMidia(n, plano)].filter(Boolean).join('\n');
     // plano: dentro do bloco ``` o *negrito* e o _italico_ aparecem como estão
     return plano ? `#${n.id} ${recuar(corpo)}${alerta}\n   🕐 ${formatarData(n.created_at)}`
-        : `*#${n.id}* ${recuar(corpo)}${alerta}\n   🕐 _${formatarData(n.created_at)}_`;
+        : curto ? `*#${n.id}* ${recuar(corpo)}${alerta}\n_${dataCurta(n.created_at)}_`
+            : `*#${n.id}* ${recuar(corpo)}${alerta}\n   🕐 _${formatarData(n.created_at)}_`;
 }
 
 // Os ids do -rm / -alerta -rm: 1 2 3, 1,2,3 ou all. Algum não existe? Nenhum é mexido
@@ -394,15 +398,17 @@ const descricoesDasTags = async () => new Map((await dbAll('SELECT tag, descript
     .map(r => [r.tag, r.description]));
 
 // Um texto por tag (cada uma vai numa mensagem)
-function agruparPorTag(notas, descricoes = new Map(), plano = true) {
+function agruparPorTag(notas, descricoes = new Map(), plano = true, tituloJaTemTag = false) {
     const grupos = new Map();
     for (const n of notas) grupos.set(n.tag ?? '', [...(grupos.get(n.tag ?? '') ?? []), n]);
 
     const chaves = [...grupos.keys()].sort((a, b) => (a === '') - (b === '') || a.localeCompare(b));
     const soSemTag = chaves.length === 1 && chaves[0] === '';
     return chaves.map(k => {
-        const itens = grupos.get(k).map(n => linhaDaNota(n, plano)).join('\n\n');
+        const itens = grupos.get(k).map(n => linhaDaNota(n, plano, tituloJaTemTag)).join('\n\n');
         const desc = descricoes.get(k);
+        // Lista de uma #tag só: o título da lista já mostra a tag e o total, fica só a descrição
+        if (tituloJaTemTag && chaves.length === 1) return `🏷️ ${k} (${grupos.get(k).length})${desc ? `\n👉 ${desc}` : ''}\n\n${itens}`;
         return soSemTag ? itens
             : `🏷️ ${k ? `#${k}` : SEM_TAG} (${grupos.get(k).length})${desc ? `\n${desc}` : ''}\n\n${itens}`;
     });
@@ -422,9 +428,9 @@ const DICAS = '\n\n💡 *Dicas*\n' +
 
 // Responde no chat ou, com -to, manda nos destinos (e responde que mandou).
 // `texto` pode ser uma lista: cada item vai numa mensagem, e a dica só depois do último
-async function entregarTexto(msg, destinos, texto, assunto, dica = '') {
-    // Cada listagem vai num bloco ``` (monoespaçado); a dica fica fora
-    const partes = [].concat(texto).map(t => '```\n' + t + '\n```');
+async function entregarTexto(msg, destinos, texto, assunto, dica = '', semBloco = false) {
+    // Cada listagem vai num bloco ``` (monoespaçado), salvo a limpa; a dica fica fora
+    const partes = [].concat(texto).map(t => (semBloco ? t : '```\n' + t + '\n```'));
     if (!destinos) {
         for (const [i, parte] of partes.entries()) {
             await msg.reply(i === partes.length - 1 ? `${parte}${dica}` : parte, undefined, SEM_PREVIA);
@@ -490,9 +496,11 @@ async function listar(msg, filtro = '', comBusca = false) {
     }
 
     // Uma mensagem por tag; o título (com o total) vai no começo da primeira
-    const partes = agruparPorTag(notas, await descricoesDasTags());
-    partes[0] = `📝 ANOTAÇÕES${rotulo}${achado} (${notas.length})\n\n${partes[0]}`;
-    await entregarTexto(msg, destinos, partes, `📝 Anotações${rotulo}${achado}`, DICAS);
+    const partes = agruparPorTag(notas, await descricoesDasTags(), tags.length !== 1, tags.length === 1);
+    const limpa = tags.length === 1;
+    partes[0] = limpa ? `📝 *ANOTAÇÕES*${achado}\n\n${partes[0]}`
+        : `📝 ANOTAÇÕES${rotulo}${achado} (${notas.length})\n\n${partes[0]}`;
+    await entregarTexto(msg, destinos, partes, `📝 Anotações${rotulo}${achado}`, DICAS, limpa);
 }
 
 // -move: renomeia a tag em todas as anotações (se a nova já existe, elas se juntam)
