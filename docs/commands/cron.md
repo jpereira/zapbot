@@ -161,6 +161,8 @@ Preço do Dólar!
   o `-alerta` do `/crypto` e do `/cotacao`; o `-address`, o `-wallet`, o `-pool`, o `-nft`, o
   `-name`, o `-rm`, o `-alerta`, o `-taxas` e o `-to` do `/defi` (rodam os quatro protocolos, o
   `-l`, o `-mask` e o `aave -full`); e o `-flush` e o `-flush-all` do `/stats`.
+- O `/bot` é a exceção: só o dono cria um item com `{/bot -flush-email true}` (nele, só o `-info` e o
+  `-flush-email` rodam; as outras opções são recusadas). Um admin que não é o dono leva erro ao criar.
 - O comando é conferido ao criar (e no `-edit`): um que não existe ou que não roda no `/cron` dá
   erro na hora, não no envio.
 - Se o comando falhar na hora do envio, a mensagem sai assim mesmo, com `⚠️ /crypto falhou` no
