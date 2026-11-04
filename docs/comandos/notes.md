@@ -5,16 +5,14 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 
 ```text
 /notes [-list|-l] [#tag...] [-to <destino>]...
-/notes #tag [-to <destino>]...
 /notes -search|-s [#tag...] <texto|/regex/flags> [-to <destino>]...
-/notes -tags|-t [-to <destino>]...
 /notes -update|-u <id> [#tag] <novo texto>
 /notes -view|-v <id...|#tag...> [-to <destino>]...
 /notes -move|-m #tag #novatag
 /notes -desc|-d #tag [<descrição>|-rm]
 /notes -export|-e [#tag...] [-to <destino>]...
-/notes [#tag] <texto>
-/notes -add|-a [#tag] <texto> [-alerta <quando> [-to <destino>]...]
+/notes #tag <texto>
+/notes -add|-a #tag <texto> [-alerta <quando> [-to <destino>]...]
 /notes -rm|-r <id...|#tag...|all>
 /notes -alerta [<id|#tag...> [<quando> [-to <destino>]...]]
 /notes -alerta -rm <id...|#tag...|all>
@@ -24,14 +22,13 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 |---|---|---|
 | `-list`, `-l` | `[#tag...]` | Lista as anotações com o ID, agrupadas por `#tag` (o `/notes` sozinho mostra as tags; `/notes #casa` lista as dela). Com uma ou mais tags, só as delas |
 | `-search`, `-s` | `[#tag...] <texto\|/regex/flags>` | Só as anotações que casam, agrupadas como na lista. Veja [Buscar](#buscar) |
-| `-tags`, `-t` | | Todas as tags com a quantidade de anotações de cada uma (as sem tag por último) |
 | `-update`, `-u` | `<id> [#tag] <novo texto>` | Troca o texto da anotação (e a tag, se vier uma; o alerta e a imagem ficam). Em resposta a uma mensagem, sem texto, usa o dela |
 | `-view`, `-v` | `<id...\|#tag...>` | Mostra a anotação com a mídia (texto na legenda; sem mídia, só o texto). A tag pode vir pela metade. Com `-to`, manda nos destinos (ou por e-mail, com a imagem anexada) |
 | `-move`, `-m` | `#tag #novatag` | Renomeia a tag em todas as anotações. Se a nova já existe, as duas se juntam |
-| `-desc`, `-d` | `#tag [<descrição>\|-rm]` | Descrição da tag, que aparece na lista e no `-tags`. Sem texto, mostra a atual; com `-rm`, apaga. O `-move` leva a descrição junto |
+| `-desc`, `-d` | `#tag [<descrição>\|-rm]` | Descrição da tag, que aparece na lista e no `/notes` sozinho. Sem texto, mostra a atual; com `-rm`, apaga. O `-move` leva a descrição junto |
 | `-export`, `-e` | `[#tag...]` | Manda as anotações num PDF, com as imagens e o texto como legenda (cabeçalho, rodapé com versão, host, data e hora, e paginação). Com tags, só as delas. Veja [Exportar](#exportar) |
-| `<texto>` | | Sem opção na frente, o texto vira uma anotação nova, igual ao `-add`: `/notes não esquecer de remover a opção tal` |
-| `-add`, `-a` | `[#tag] <texto>` | Adiciona uma anotação; a `#tag` só vale no começo do texto. O texto vai até o `-alerta`, se houver, e aceita várias linhas |
+| `#tag <texto>` | | Sem opção na frente, vira uma anotação nova, igual ao `-add`: `/notes #casa não esquecer de remover a opção tal`. A `#tag` é obrigatória: `/notes meu texto` dá erro. Só `/notes #casa`, sem texto, lista as da tag |
+| `-add`, `-a` | `#tag <texto>` | Adiciona uma anotação; a `#tag` é obrigatória e vem no começo do texto. O texto vai até o `-alerta`, se houver, e aceita várias linhas |
 | `-rm`, `-r` | `<id...\|#tag...\|all>` | Remove as anotações com esses IDs (`-r 2`, `-r 1 2 3` ou `-r 1,2,3`), de uma tag (`-r #casa`) ou todas (`all`). Se algum ID ou tag não existe, nenhuma sai. Junto com `-alerta`, tira só o alerta, mantendo as anotações |
 | `-alerta` | `<quando>` | Avisa da anotação (ou de todas as de uma `#tag`) numa data/hora. Veja [Alertas](#alertas) |
 | `-to` | `<destino>` | Com `-alerta`: avisa num contato, grupo, número ou e-mail em vez do seu privado. Com a lista (`-l`, `#tag`) ou o `-export`: manda a lista ou o PDF lá, em vez de responder no chat. Repita para vários |
@@ -48,7 +45,7 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 /notes -move #casa #lar                           → renomeia a #casa para #lar
 /notes -desc #casa Coisas da casa                 → descrição da #casa
 /notes -view 76                                   → a nº 76 com a imagem, se tiver
-/notes -tags                                      → #casa: 3, #duvidas: 1, sem tag: 2
+/notes                                            → #casa: 3, #duvidas: 1, sem tag: 2
 ```
 
 ## Tags
@@ -56,29 +53,31 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 ```text
 /notes #casa Lembrar de comprar pão
 /notes -a #duvidas Olhar sobre como funciona as ETFs
-/notes                → lista tudo, agrupado por #tag (as sem tag por último)
+/notes                → as tags, com a quantidade de anotações
+/notes -l             → lista tudo, uma mensagem por #tag (as sem tag, de antes, por último)
 /notes #casa          → só as da #casa (o mesmo que /notes -l #casa)
 /notes -rm #casa     → remove todas as da #casa
 /notes -rm all       → remove tudo
 ```
 
-- Respondendo uma mensagem, `/notes` (ou `/notes #lembrete`, `/notes -a`) anota o texto dela, com o
+- Respondendo uma mensagem, `/notes #lembrete` (ou `/notes -a #lembrete`) anota o texto dela, com o
   ↩️ na frente. Texto digitado junto vale no lugar do da mensagem (sem o ↩️). Dá para juntar com
   `-alerta`: `/notes -a #lembrete -alerta amanhã 9h`. No PDF, o ↩️ vira `[resp.]`.
 - No texto da anotação, `\n` vira quebra de linha (`/notes #casa pão\nleite`); `\\n` fica como está.
 - **Mídias:** mande uma imagem, documento, áudio ou vídeo com a legenda `/notes #minhatag Texto` ou
-  responda uma mídia com `/notes [#tag] [texto]`. O texto é opcional (numa resposta com legenda,
+  responda uma mídia com `/notes #tag [texto]`. O texto é opcional (numa resposta com legenda,
   vale a legenda, com o ↩️). O arquivo fica em `cache/notes/` (fora do `cache/media/`, então o
   `/cache -media` não apaga), com o nome original no caso de documentos, e a lista mostra
   `🖼️ imagem`, `🎬 vídeo`, `🎵 áudio` ou `📎 nome-do-arquivo`. Para receber o arquivo de volta, use o
   [`-view`](#ver-e-organizar) (o áudio não tem legenda: o texto vai em outra mensagem). O `-rm`
-  apaga o arquivo junto.
+  apaga o arquivo junto, e o [`/backup`](backup.md) leva as mídias num arquivo à parte.
 - A tag pode vir pela metade na lista, na busca, no `-view`, no `-desc` e no `-export`:
   `/notes #idei` acha a `#ideias`. A exata ganha; senão valem as que começam com o que você
   digitou, depois as que contêm. Onde mexe nos dados (`-rm`, `-move` e o `-alerta` com `<quando>`),
   a tag vai inteira.
 - Cada anotação tem no máximo uma tag, a do começo do texto. Maiúsculas e minúsculas valem igual.
-- `/notes #casa` sozinho filtra; com texto depois, anota.
+- Para anotar a tag é obrigatória: `/notes meu texto` (sem tag) dá erro. `/notes #casa` sozinho lista
+  as da tag; numa resposta ou com mídia, anota o que veio nela.
 
 ## Ver e organizar
 
@@ -97,7 +96,7 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
   enviar nada.
 - O `-move` para a tag nova que já existe junta as anotações das duas. A descrição vai junto; se a
   nova já tinha uma, fica a dela. Tag de origem que não existe, ou igual à nova, é recusada.
-- A descrição aparece embaixo do nome da tag na lista (em itálico) e ao lado dela no `-tags`:
+- A descrição aparece embaixo do nome da tag na lista (em itálico) e ao lado dela no `/notes` sozinho:
   `#casa: 3 · Coisas da casa`. Dá para descrever uma tag que ainda não tem anotações; ela só
   aparece na lista quando tiver.
 

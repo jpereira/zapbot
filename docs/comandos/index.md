@@ -142,7 +142,7 @@ mesmo que comecem com `/`. Sem isso, alguém poderia usar um comando que ecoa te
 | [`/mute`](mute.md) | `/mudo` | ✅ | Silencia os avisos de apagadas, editadas, status e reações (e os do `/watch`) de uma pessoa, um grupo ou uma comunidade; respondendo um aviso, de onde ele veio |
 | [`/news`](news.md) | | | Manchetes de feeds RSS: `-hack`, `-g1`, `-gazeta`, `-brasil` |
 | [`/noffa`](noffa.md) | `/🌈`, `/🏳️‍🌈` | | Enfeita o texto com arco-íris |
-| [`/notes`](notes.md) | | ✅ | Anotações com ID e `#tag` (`-a`, `-l`, `-s`, `-r`): ver com imagem (`-v`), renomear tag (`-m`), descrever tag (`-d`), exportar em PDF com imagens (`-e`) e `-alerta` que avisa numa data/hora |
+| [`/notes`](notes.md) | | ✅ | Anotações com ID e `#tag` (`-a`, `-l`, `-s`, `-r`): ver com a mídia (`-v`), renomear tag (`-m`), descrever tag (`-d`), exportar em PDF (`-e`) e `-alerta` que avisa numa data/hora |
 | [`/ping`](ping.md) |  | | Verifica se o bot está vivo |
 | [`/pixelart`](pixelart.md) | `/ansi`, `/px` | | Arte ANSI/ASCII aleatória (16colo.rs) |
 | [`/profile`](profile.md) | `/perfil` | ✅ | A foto de perfil de um contato, com o nome da sua agenda e o telefone |

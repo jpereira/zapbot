@@ -31,18 +31,17 @@ const packageJson = require('../package.json');
  *                                       → só as que casam (texto sem diferenciar maiúsculas/acentos;
  *                                         o mesmo -q do /show e do /watch); casa também a #tag
  *   -update | -u <id> [#tag] <texto>    → troca o texto (e a tag, se vier uma) da anotação
- *   -tags | -t                          → as tags e quantas anotações cada uma tem
  *   -move | -m #tag #nova               → renomeia a tag (se #nova já existe, junta as duas)
  *   -desc | -d #tag [<texto>]           → descrição da tag (sem texto, mostra; -d #tag -rm, apaga)
  *   -view | -v <id...|#tag...> [-to ...] → mostra a anotação com a imagem (texto, se não tiver)
  *   -export | -e [#tag...]              → manda as anotações (ou só as das tags) num PDF, com as imagens
  *   -list | #tag | -export ... -to <destino>...
  *                                       → a lista (ou o PDF) vai nos destinos, como nos outros comandos
- *   /notes [#tag] <texto>               → anota (o mesmo que -add, quando não começa com "-")
- *   (com uma imagem, ou em resposta a uma) /notes [#tag] [<texto>] → guarda a imagem em NOTES_DIR
- *   (em resposta a uma mensagem) /notes [#tag] | -add [#tag] [-alerta ...]
+ *   /notes #tag <texto>                 → anota (o mesmo que -add, quando não começa com "-"); a #tag é obrigatória
+ *   (com uma imagem, ou em resposta a uma) /notes #tag [<texto>] → guarda a mídia em NOTES_DIR
+ *   (em resposta a uma mensagem) /notes #tag | -add #tag [-alerta ...]
  *                                       → anota o texto da mensagem respondida, com o ↩️ na frente
- *   -add | -a [#tag] <texto>            → anota
+ *   -add | -a #tag <texto>            → anota
  *   -add <texto> -alerta <quando> [-to <destino>]...
  *                                       → anota e avisa na data/hora (o -to funciona como nos outros -alerta)
  *   -rm | -r <id...|#tag...|all>       → remove (-r 1 2 3, -r 1,2,3, -r #casa ou all)
@@ -204,6 +203,9 @@ async function guardarMidia(origem) {
     return { path: arquivo, mime };
 }
 
+const ERRO_SINTAXE = '❌ Use: /notes #tag <texto> [-alerta <quando> [-to <destino>]...]';
+const ERRO_SEM_TEXTO = '❌ Falta o texto: /notes #tag <texto>';
+
 // "\n" digitado vira quebra de linha ("\\n" fica como texto)
 const comQuebras = (t) => t.replace(/(?<!\\)\\n/g, '\n').replace(/\\\\n/g, '\\n');
 
@@ -214,6 +216,12 @@ async function adicionar(msg, textoDigitado, quotedMsg) {
     const separado = separarTag((m ? semDestino.slice(0, m.index) : semDestino).trim());
     const { tag } = separado;
     let { texto } = separado;
+
+    // A sintaxe é sempre /notes #tag <texto>: sem tag não anota
+    if (!tag) {
+        await msg.reply(`${ERRO_SINTAXE}\n💡 _Falta a #tag. Veja as tags com /notes_`, undefined, SEM_PREVIA);
+        return;
+    }
 
     // Sem texto, mas em resposta a uma mensagem: anota o texto dela (se tiver; a mídia vale sozinha)
     const origem = origemDaMidia(msg, quotedMsg);
@@ -227,7 +235,7 @@ async function adicionar(msg, textoDigitado, quotedMsg) {
     }
 
     if (!texto && !origem) {
-        await msg.reply('❌ Use: /notes -add [#tag] <texto> [-alerta <quando> [-to <destino>]...]');
+        await msg.reply(ERRO_SEM_TEXTO, undefined, SEM_PREVIA);
         return;
     }
 
@@ -342,7 +350,7 @@ async function alertar(msg, resto) {
         const todas = await listarNotas();
         const semNotas = tags.filter(t => !todas.some(n => n.tag === t));
         if (semNotas.length) {
-            await msg.reply(`❌ Nenhuma anotação em ${semNotas.map(t => `#${t}`).join(' ')}. Veja as tags com /notes -tags`);
+            await msg.reply(`❌ Nenhuma anotação em ${semNotas.map(t => `#${t}`).join(' ')}. Veja as tags com /notes`);
             return;
         }
         alvos = todas.filter(n => tags.includes(n.tag));
@@ -407,7 +415,7 @@ async function destinosDoEnvio(msg, destinosTexto, comDestino) {
 }
 
 const DICAS = '\n\n💡 *Dicas*\n' +
-    '/notes -a [#tag] <texto> anota\n' +
+    '/notes #tag <texto> anota\n' +
     '/notes -v <id...|#tag...> mostra com a imagem\n' +
     '/notes -r <id...|#tag...|all> remove\n' +
     '-alerta <quando> avisa.';
@@ -477,7 +485,7 @@ async function listar(msg, filtro = '', comBusca = false) {
     if (!notas.length) {
         await msg.reply(tags.length || busca
             ? `📝 Nenhuma anotação${rotulo ? ` em${rotulo}` : ''}${busca ? ` com 🔎 ${resumirTexto(busca, 40)}` : ''}.`
-            : '📝 Nenhuma anotação.\n💡 _Anote com /notes -a [#tag] <texto>_', undefined, SEM_PREVIA);
+            : '📝 Nenhuma anotação.\n💡 _Anote com /notes #tag <texto>_', undefined, SEM_PREVIA);
         return;
     }
 
@@ -503,7 +511,7 @@ async function moverTag(msg, texto) {
 
     const r = await dbRun('UPDATE notes SET tag = ? WHERE tag = ?', [para, de]);
     if (!r.changes) {
-        await msg.reply(`❌ #${de} não existe. Veja as tags com /notes -tags`);
+        await msg.reply(`❌ #${de} não existe. Veja as tags com /notes`);
         return;
     }
     // A descrição vai junto (se a nova já tinha uma, fica a dela)
@@ -618,20 +626,11 @@ async function verNotas(msg, filtro) {
     if (falhas.length) await msg.reply(`❌ ${falhas.join('; ')}`);
 }
 
-// -tags: cada tag com a quantidade de anotações (as sem tag por último)
-async function listarTags(msg, filtro = '') {
-    const { destinos: destinosTexto, informado: comDestino, resto } = extrairDestinos(filtro);
-    if (resto.trim()) {
-        await msg.reply('❌ Use: /notes -tags [-to <destino>]...');
-        return;
-    }
-
-    const destinos = await destinosDoEnvio(msg, destinosTexto, comDestino);
-    if (destinos === null) return;
-
+// /notes sozinho: cada tag com a quantidade de anotações (as sem tag por último)
+async function listarTags(msg) {
     const notas = await listarNotas();
     if (!notas.length) {
-        await msg.reply('📝 Nenhuma anotação.\n💡 _Anote com /notes -a [#tag] <texto>_');
+        await msg.reply('📝 Nenhuma anotação.\n💡 _Anote com /notes #tag <texto>_');
         return;
     }
 
@@ -641,7 +640,7 @@ async function listarTags(msg, filtro = '') {
     const descricoes = await descricoesDasTags();
     const linhas = chaves.map(k => `${k ? `#${k}` : SEM_TAG}: ${contagem.get(k)}${descricoes.has(k) ? ` · ${descricoes.get(k)}` : ''}`);
 
-    await entregarTexto(msg, destinos,
+    await entregarTexto(msg, undefined,
         `🏷️ TAGS (${chaves.filter(Boolean).length})\n\n${linhas.join('\n')}\n\n📝 ${plural(notas.length, 'anotação', 'anotações')}`,
         '🏷️ Tags das anotações', '\n\n💡 _/notes #tag lista as anotações de uma tag_');
 }
@@ -774,17 +773,17 @@ async function cmdNote({ msg, args, quotedMsg }) {
     const { informado: comDestino, resto: semDestino } = extrairDestinos(texto);
     const tagsDoTexto = soTags(semDestino);
 
+    // Sem nada: as tags (numa resposta ou com mídia, é uma anotação sem tag: erro)
     if (!texto) return quotedMsg || msg.hasMedia ? adicionar(msg, '', quotedMsg) : listarTags(msg);
     if (nome === '-list' || nome === '-l') return listar(msg, resto);
     if (nome === '-update' || nome === '-u') return atualizar(msg, resto, quotedMsg);
     if (nome === '-search' || nome === '-s') return listar(msg, resto, true);
-    if (nome === '-tags' || nome === '-t') return listarTags(msg, resto);
     if (nome === '-view' || nome === '-v') return verNotas(msg, resto);
     if (nome === '-desc' || nome === '-d') return descreverTag(msg, resto);
     if (nome === '-move' || nome === '-m') return moverTag(msg, resto);
     if (nome === '-export' || nome === '-e') return exportar(msg, resto);
     if (comDestino && !semDestino.trim()) return listar(msg, texto);
-    // Respondendo uma mensagem, "/notes #tag" anota o texto dela nessa tag em vez de filtrar
+    // Só #tag, sem texto: lista as dela. Numa resposta ou com mídia, anota o que veio nessa tag
     if (tagsDoTexto) return (quotedMsg || msg.hasMedia) && tagsDoTexto.length === 1 ? adicionar(msg, texto, quotedMsg) : listar(msg, texto);
     if (nome === '-add' || nome === '-a') return adicionar(msg, resto, quotedMsg);
     if (comDestino && (nome === '-rm' || nome === '-rm' || nome === '-r')) {
@@ -795,7 +794,7 @@ async function cmdNote({ msg, args, quotedMsg }) {
 
     // Opção que não existe: erro. Sem "-" na frente, o texto todo é uma anotação nova (o mesmo que -add)
     if (nome.startsWith('-')) {
-        return msg.reply('❌ Use: /notes [-list] [#tag] [-to ...] | -search <texto|/regex/> | -tags | -view <id...|#tag...> | -move #tag #nova | -desc #tag <texto> | -update <id> <texto> | -export [#tag] [-to ...] | -add [#tag] <texto> [-alerta <quando>] | -rm <id...|#tag...|all> | -alerta ...');
+        return msg.reply('❌ Use: /notes [-list] [#tag] [-to ...] | -search <texto|/regex/> | -view <id...|#tag...> | -move #tag #nova | -desc #tag <texto> | -update <id> <texto> | -export [#tag] [-to ...] | #tag <texto> [-alerta <quando>] | -rm <id...|#tag...|all> | -alerta ...');
     }
 
     return adicionar(msg, texto);

@@ -33,72 +33,72 @@ test('executa os blocos em sequência (linhas em branco e URLs ficam no bloco) e
 });
 
 test('linha com "/" que não é comando continua sendo texto do bloco', async () => {
-    await bot.responder('/batch\n/notes veja /etc/hosts\n/etc/passwd');
+    await bot.responder('/batch\n/notes #t veja /etc/hosts\n/etc/passwd');
     assert.match((await notas())[0].text, /veja \/etc\/hosts\n\/etc\/passwd/);
 });
 
 test('-dry só mostra a separação; sem comando, erro; /batch dentro de /batch, recusado', async () => {
-    const [d] = await bot.responder('/batch -dry\ntexto solto\n/notes um\nmais\n/notes dois');
+    const [d] = await bot.responder('/batch -dry\ntexto solto\n/notes #t um\nmais\n/notes #t dois');
     assert.match(d, /só a separação/);
-    assert.equal((await bot.responder('/batch -d\ntexto solto\n/notes um\nmais\n/notes dois'))[0], d);
-    assert.match(d, /1\. \/notes um .*\+1 linhas/);
-    assert.match(d, /2\. \/notes dois/);
+    assert.equal((await bot.responder('/batch -d\ntexto solto\n/notes #t um\nmais\n/notes #t dois'))[0], d);
+    assert.match(d, /1\. \/notes #t um .*\+1 linhas/);
+    assert.match(d, /2\. \/notes #t dois/);
     assert.match(d, /antes do primeiro comando/);
     assert.equal((await notas()).length, 0);
 
     assert.match((await bot.responder('/batch'))[0], /Use: \/batch/);
     assert.match((await bot.responder('/batch só texto'))[0], /Nenhum comando/);
-    assert.match((await bot.responder('/batch\n/batch\n/notes x'))[0], /dentro de \/batch/);
+    assert.match((await bot.responder('/batch\n/batch\n/notes #t x'))[0], /dentro de \/batch/);
 });
 
 test('falha segue adiante; com -stop, para no primeiro erro', async () => {
-    const [a] = await bot.responder('/batch\n/notes -rm 99\n/notes ok');
+    const [a] = await bot.responder('/batch\n/notes -rm 99\n/notes #t ok');
     assert.match(a, /1\/2 ok/);
     assert.match(a, /❌ 1/);
     assert.equal((await notas()).length, 1);
 
-    const [b] = await bot.responder('/batch -stop\n/notes -rm 99\n/notes não roda');
+    const [b] = await bot.responder('/batch -stop\n/notes -rm 99\n/notes #t não roda');
     assert.match(b, /Parou no bloco 1; 1 não rodaram/);
     assert.equal((await notas()).length, 1);
 
-    const [c] = await bot.responder('/batch -s\n/notes -rm 99\n/notes não roda');
+    const [c] = await bot.responder('/batch -s\n/notes -rm 99\n/notes #t não roda');
     assert.match(c, /Parou no bloco 1; 1 não rodaram/);
     assert.equal((await notas()).length, 1);
 });
 
 test('-quiet (-q): executa tudo e não responde o resumo; o -dry continua mostrando', async () => {
-    assert.deepEqual(await bot.responder('/batch -quiet\n/notes um\n/notes -rm 99\n/notes dois'), []);
+    assert.deepEqual(await bot.responder('/batch -quiet\n/notes #t um\n/notes -rm 99\n/notes #t dois'), []);
     assert.deepEqual((await notas()).map(n => n.text), ['um', 'dois']);
 
-    assert.deepEqual(await bot.responder('/batch -q -stop\n/notes três'), []);
+    assert.deepEqual(await bot.responder('/batch -q -stop\n/notes #t três'), []);
     assert.equal((await notas()).length, 3);
 
-    assert.match((await bot.responder('/batch -q -dry\n/notes quatro'))[0], /só a separação/);
+    assert.match((await bot.responder('/batch -q -dry\n/notes #t quatro'))[0], /só a separação/);
 });
 
 test('alias de texto, comando de consulta e a mensagem respondida', async t => {
     const { HANDLERS } = bot.src('comandos/index');
     t.mock.method(HANDLERS, '/crypto', async ({ msg }) => msg.reply('₿ BTC $1'));
     await bot.responder('/alias btc Bitcoin: {/crypto BTC} fim');
-    const [r] = await bot.responder('/batch\n/btc\n/notes um\n/ping');
+    const [r] = await bot.responder('/batch\n/btc\n/notes #t um\n/ping');
     assert.match(r, /BATCH\* · 3\/3 ok/);
     assert.match(r, /✅ 1 · \/btc\n   ↳ Bitcoin: ₿ BTC \$1 fim/);
     assert.equal((await notas()).length, 1);
 
     // sem texto, o /batch executa o texto da mensagem respondida
-    const citada = bot.criarMensagem({ de: bot.DONO.jid, texto: '/notes primeira\n/notes segunda' });
+    const citada = bot.criarMensagem({ de: bot.DONO.jid, texto: '/notes #t primeira\n/notes #t segunda' });
     const [resp] = await bot.responder('/batch', { citada });
     assert.match(resp, /2\/2 ok/);
     assert.deepEqual((await notas()).map(n => n.text), ['um', 'primeira', 'segunda']);
 });
 
 test('mais de 50 blocos: nada é executado', async () => {
-    const [r] = await bot.responder('/batch\n' + Array.from({ length: 51 }, (_, i) => `/notes n${i}`).join('\n'));
+    const [r] = await bot.responder('/batch\n' + Array.from({ length: 51 }, (_, i) => `/notes #t n${i}`).join('\n'));
     assert.match(r, /São 51 blocos; o máximo é 50\. Nada foi executado/);
     assert.equal((await notas()).length, 0);
 });
 
 test('só o dono usa', async () => {
-    assert.deepEqual(await bot.responder('/batch\n/notes x', { de: bot.OUTRO.jid }), []);
+    assert.deepEqual(await bot.responder('/batch\n/notes #t x', { de: bot.OUTRO.jid }), []);
     assert.equal((await notas()).length, 0);
 });
