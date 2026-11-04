@@ -53,11 +53,16 @@ Argumentos digitados ao executar são acrescentados ao final do comando salvo:
 ### Parâmetros `$1`, `$N`
 
 No alias de comando, `$1`, `$2`... pegam os argumentos digitados ao executar, na ordem. Os usados
-saem da lista; os que sobram continuam indo para o fim do comando. Um `$N` sem argumento fica vazio.
+saem da lista; os que sobram continuam indo para o fim do comando. Um `$N` sem argumento fica vazio,
+a não ser que tenha um valor padrão: `${N:-valor}`.
 
 ```text
 /alias /rec /sticker -ss $1 -es $2
 /rec 10 20 http://minhaurl/foo   → /sticker -ss 10 -es 20 http://minhaurl/foo
+
+/alias /dolar /cotacao ${1:-USD}
+/dolar                           → /cotacao USD
+/dolar EUR                       → /cotacao EUR
 ```
 
 Com `$N`, o que sobra dos argumentos vai para o fim do comando separado por um espaço, então as

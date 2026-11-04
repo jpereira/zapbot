@@ -8,7 +8,7 @@ const { comandosNoTexto, erroDosComandos, quebrarLinhas } = require('../comandos
 const { findCommand } = require('./base');
 
 const nomeDoAlias = nome => '/' + nome.replace(/^\//, '');
-const NOME = /^\/?[\p{L}\p{N}_-]+$/u;
+const NOME = /^\/?[\p{L}\p{N}_.-]+$/u;
 
 async function cmdAlias({ msg, args }) {
     await dbPronto;
@@ -54,7 +54,7 @@ async function cmdAlias({ msg, args }) {
             return msg.reply('❌ O destino deve ser um /comando ou um texto com pelo menos um {/comando}.\n' +
                 '💡 _/alias orca Orca: {/defi orca}\\n Prjx: {/defi prjx}_');
         }
-        const erro = erroDosComandos(comando, '/alias');
+        const erro = await erroDosComandos(comando, '/alias');
         if (erro) return msg.reply(erro);
     } else {
         const destino = comando.split(/\s+/, 1)[0];
@@ -63,7 +63,7 @@ async function cmdAlias({ msg, args }) {
             return msg.reply('❌ O destino deve ser um comando ativo do bot; não pode ser outro alias cadastrado nem /alias.');
         }
         if (alvo.cmd === '/me') {
-            const erro = erroDosComandos(comando.slice(destino.length), '/alias');
+            const erro = await erroDosComandos(comando.slice(destino.length), '/alias');
             if (erro) return msg.reply(erro);
         }
     }

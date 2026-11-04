@@ -33,9 +33,9 @@ test('-add, -list e -rm (vários IDs, all e ID inexistente sem remover nada)', a
     await bot.responder('/notes -a pagar boleto');
     assert.deepEqual((await notas()).map(n => n.text), ['comprar leite', 'ligar pro João\nsegunda linha', 'pagar boleto']);
 
-    const [lista] = await bot.responder('/notes');
-    assert.match(lista, /\*#1\* comprar leite/);
-    assert.match(lista, /\*#3\* pagar boleto/);
+    const [lista] = await bot.responder('/notes -l');
+    assert.match(lista, /#1 comprar leite/);
+    assert.match(lista, /#3 pagar boleto/);
     assert.equal((await bot.responder('/notes -l'))[0], lista);
     assert.equal((await bot.responder('/notes -list'))[0], lista);
 
@@ -102,7 +102,7 @@ test('texto sem opção na frente anota (igual ao -add); opção desconhecida d�
     assert.match((await bot.responder('/notes não esquecer de remover a opção tal'))[0], /^📝 \*#1\* · não esquecer de remover a opção tal$/);
     assert.match((await bot.responder('/notes comprar pão -alerta +1h'))[0], /^📝 \*#2\* · comprar pão\n⏰/);
     assert.deepEqual((await notas()).map(n => n.text), ['não esquecer de remover a opção tal', 'comprar pão']);
-    assert.match((await bot.responder('/notes'))[0], /\*#1\* não esquecer/);
+    assert.match((await bot.responder('/notes -l'))[0], /#1 não esquecer/);
     assert.match((await bot.responder('/notes -banana'))[0], /Use: \/notes/);
     assert.equal((await notas()).length, 2);
 });
@@ -115,9 +115,15 @@ test('#tag: agrupa na lista, filtra e remove por tag', async () => {
     assert.deepEqual((await bot.dbAll('SELECT tag, text FROM notes ORDER BY id')).map(n => n.tag),
         ['casa', 'duvidas', 'casa', null]);
 
-    const [lista] = await bot.responder('/notes');
-    assert.ok(lista.indexOf('*#casa* (2)') < lista.indexOf('*#duvidas* (1)'));
-    assert.ok(lista.indexOf('*#duvidas* (1)') < lista.indexOf('*sem tag* (1)'));
+    // Uma mensagem por tag, cada uma no seu bloco ```
+    const mensagens = await bot.responder('/notes -l');
+    assert.equal(mensagens.length, 3);
+    assert.match(mensagens[0], /^```\n📝 ANOTAÇÕES \(4\)\n\n🏷️ #casa \(2\)[\s\S]*```$/);
+    assert.match(mensagens[1], /^```\n🏷️ #duvidas \(1\)[\s\S]*```$/);
+    assert.match(mensagens[2], /^```\n🏷️ sem tag \(1\)[\s\S]*```\n\n💡 \*Dicas\*/);
+    const lista = mensagens.join('\n');
+    assert.ok(lista.indexOf('#casa (2)') < lista.indexOf('#duvidas (1)'));
+    assert.ok(lista.indexOf('#duvidas (1)') < lista.indexOf('sem tag (1)'));
 
     const [soCasa] = await bot.responder('/notes #casa');
     assert.match(soCasa, /comprar pão/);
@@ -173,7 +179,7 @@ test('respostas com link na anotação saem sem thumbnail (linkPreview: false)',
         const enviada = await ultima(linha);
         assert.equal(enviada.options.linkPreview, false, linha);
     }
-    assert.match((await ultima('/notes')).content, /youtube\.com/);
+    assert.match((await ultima('/notes -l')).content, /youtube\.com/);
 
     const avisos = await vencer(1);
     assert.equal(avisos.at(-1).options.linkPreview, false);
@@ -212,9 +218,9 @@ test('-to nas listas e no -export: manda nos destinos; no -rm é recusado', asyn
 
     for (const linha of ['/notes -l -to /Grupo sobre L200/', '/notes -to /Grupo sobre L200/']) {
         const { respostas, novas } = await enviadas(linha);
-        assert.equal(novas.length, 1, linha);
+        assert.equal(novas.length, 2, linha); // uma mensagem por tag
         assert.match(novas[0].content, /#casa/);
-        assert.match(novas[0].content, /#duvidas/);
+        assert.match(novas[1].content, /#duvidas/);
         assert.equal(novas[0].options.linkPreview, false);
         assert.match(respostas.at(-1), /Anotações enviadas em/);
     }
@@ -298,9 +304,9 @@ test('imagem: na própria mensagem ou em resposta, vai para o disco; -rm apaga o
         assert.deepEqual(fs.readFileSync(n.media_path), png);
     }
 
-    const [lista] = await bot.responder('/notes');
-    assert.match(lista, /\*#1\* Imagem de teste\n   🖼️ _imagem_/);
-    assert.match(lista, /\*#3\* 🖼️ _imagem_/);
+    const lista = (await bot.responder('/notes -l')).join('\n');
+    assert.match(lista, /#1 Imagem de teste\n   🖼️ imagem/);
+    assert.match(lista, /#3 🖼️ imagem/);
 
     await bot.responder('/notes -rm 1');
     assert.equal(fs.existsSync(linhas[0].media_path), false);
@@ -391,11 +397,11 @@ test('-search: texto (sem acento/maiúscula), /regex/flags, #tag, -to e erros', 
     assert.equal((await bot.responder('/notes -search'))[0], '❌ Use: /notes -search [#tag...] <texto|/regex/flags> [-to <destino>]...');
 
     const [texto] = await bot.responder('/notes -s PAO');
-    assert.match(texto, /🔎 PAO\* \(1\)/);
+    assert.match(texto, /🔎 PAO \(1\)/);
     assert.match(texto, /Comprar pão/);
     assert.doesNotMatch(texto, /ETFs|João/);
 
-    const [regex] = await bot.responder('/notes -search /etf|joão/i');
+    const regex = (await bot.responder('/notes -search /etf|joão/i')).join('\n');
     assert.match(regex, /\(2\)/);
     assert.match(regex, /ETFs/);
     assert.match(regex, /João/);
@@ -424,7 +430,7 @@ test('-tags: as tags com a quantidade de anotações (sem tag por último)', asy
     await bot.responder('/notes sem tag');
 
     const [r] = await bot.responder('/notes -t');
-    assert.equal(r.split('\n\n💡')[0], '🏷️ *TAGS* (2)\n\n#casa: 2\n#duvidas: 1\nsem tag: 1\n\n📝 4 anotações');
+    assert.equal(r.split('\n\n💡')[0], '```\n🏷️ TAGS (2)\n\n#casa: 2\n#duvidas: 1\nsem tag: 1\n\n📝 4 anotações\n```');
     assert.equal((await bot.responder('/notes -tags'))[0], r);
     assert.match((await bot.responder('/notes -tags abc'))[0], /Use: \/notes -tags/);
 
@@ -449,7 +455,7 @@ test('tag parcial: #idei acha #ideias (exata ganha; remover pede a inteira)', as
     await bot.responder('/notes #ideias app novo');
     await bot.responder('/notes #ideia curta');
     await bot.responder('/notes #casa pão');
-    assert.match((await bot.responder('/notes #idei'))[0], /curta[\s\S]*app novo/);
+    assert.match((await bot.responder('/notes #idei')).join('\n'), /curta[\s\S]*app novo/);
     assert.doesNotMatch((await bot.responder('/notes #idei'))[0], /pão/);
     assert.doesNotMatch((await bot.responder('/notes #ideia'))[0], /app novo/);
     assert.match((await bot.responder('/notes -s #cas pão'))[0], /pão/);
@@ -463,8 +469,8 @@ test('-desc: grava, mostra, aparece na lista e no -tags, vai no -move e apaga co
     assert.match((await bot.responder('/notes -d #casa Coisas da casa'))[0], /descrição salva/);
     assert.match((await bot.responder('/notes -d #casa Coisas de casa'))[0], /trocada/);
     assert.match((await bot.responder('/notes -d #cas'))[0], /Coisas de casa/);
-    assert.match((await bot.responder('/notes #casa'))[0], /_Coisas de casa_/);
-    assert.match((await bot.responder('/notes -t'))[0], /#casa: 1 · _Coisas de casa_/);
+    assert.match((await bot.responder('/notes #casa'))[0], /\nCoisas de casa\n/);
+    assert.match((await bot.responder('/notes -t'))[0], /#casa: 1 · Coisas de casa/);
     await bot.responder('/notes -m #casa #lar');
     assert.match((await bot.responder('/notes -d #lar'))[0], /Coisas de casa/);
     assert.match((await bot.responder('/notes -d #lar -rm'))[0], /apagada/);
@@ -507,7 +513,7 @@ test('-desc: tag parcial só vale se for uma; -move leva a descrição e não so
 
     await bot.responder('/notes -m #ideia #ideias'); // a #ideias já tem descrição: fica a dela
     assert.match((await bot.responder('/notes -d #ideias'))[0], /Coisas grandes/);
-    assert.match((await bot.responder('/notes -t'))[0], /#ideias: 2 · _Coisas grandes_/);
+    assert.match((await bot.responder('/notes -t'))[0], /#ideias: 2 · Coisas grandes/);
     assert.match((await bot.responder('/notes -d #ideia'))[0], /Coisas grandes/); // parcial agora acha a #ideias
     await bot.responder('/notes -rm all');
 });
@@ -571,4 +577,21 @@ test('-alerta com #tag: põe o alerta em todas as anotações da tag (com -to), 
     await bot.responder('/notes -alerta #outra +1h');
     assert.match((await bot.responder('/notes -alerta -rm #outra'))[0], /1 alerta removido/);
     assert.match((await bot.responder('/notes -alerta 4 +3h'))[0], /Alerta criado\* na anotação #4/);
+});
+
+test('/notes sem parâmetros mostra as tags', async () => {
+    await bot.responder('/notes -a #minhatag comprar pão');
+    await bot.responder('/notes -a anotação solta');
+
+    const [tags] = await bot.responder('/notes');
+    assert.match(tags, /^```\n🏷️ TAGS \(1\)\n\n#minhatag: 1\nsem tag: 1/);
+    assert.match(tags, /💡 _\/notes #tag lista/);
+
+    for (const cmd of ['/notes #minhatag', '/notes #MinhaTag']) {
+        const [lista] = await bot.responder(cmd);
+        assert.match(lista, /^```\n📝 ANOTAÇÕES #minhatag \(1\)/, cmd);
+    }
+    // Sem o #, é uma anotação nova (mesmo que a palavra seja uma tag)
+    assert.match((await bot.responder('/notes minhatag'))[0], /^📝 \*#3\* · minhatag$/);
+    assert.match((await bot.responder('/notes comprar leite'))[0], /^📝 \*#4\* · comprar leite$/);
 });

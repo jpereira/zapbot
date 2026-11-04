@@ -90,12 +90,14 @@ function soTags(texto) {
     return partes.length && partes.every(p => /^#[^\s#]+$/.test(p)) ? [...new Set(partes.map(lerTag))] : null;
 }
 
-function linhaDaNota(n) {
+function linhaDaNota(n, plano = false) {
     const alerta = n.alert_at
         ? `\n   ⏰ ${fmtQuando(n.alert_at)} → ${ondeDoAviso(destinosDaNota(n))}`
         : '';
-    const corpo = [n.text, n.media_path && '🖼️ _imagem_'].filter(Boolean).join('\n');
-    return `*#${n.id}* ${recuar(corpo)}${alerta}\n   _(${formatarData(n.created_at)})_`;
+    const corpo = [n.text, n.media_path && (plano ? '🖼️ imagem' : '🖼️ _imagem_')].filter(Boolean).join('\n');
+    // plano: dentro do bloco ``` o *negrito* e o _itálico_ aparecem como estão
+    return plano ? `#${n.id} ${recuar(corpo)}${alerta}\n   🕐 ${formatarData(n.created_at)}`
+        : `*#${n.id}* ${recuar(corpo)}${alerta}\n   🕐 _${formatarData(n.created_at)}_`;
 }
 
 // Os ids do -rm / -alerta -rm: 1 2 3, 1,2,3 ou all. Algum não existe? Nenhum é mexido
@@ -365,18 +367,19 @@ async function alertar(msg, resto) {
 const descricoesDasTags = async () => new Map((await dbAll('SELECT tag, description FROM note_tags'))
     .map(r => [r.tag, r.description]));
 
-function agruparPorTag(notas, descricoes = new Map()) {
+// Um texto por tag (cada uma vai numa mensagem)
+function agruparPorTag(notas, descricoes = new Map(), plano = true) {
     const grupos = new Map();
     for (const n of notas) grupos.set(n.tag ?? '', [...(grupos.get(n.tag ?? '') ?? []), n]);
 
     const chaves = [...grupos.keys()].sort((a, b) => (a === '') - (b === '') || a.localeCompare(b));
     const soSemTag = chaves.length === 1 && chaves[0] === '';
     return chaves.map(k => {
-        const itens = grupos.get(k).map(linhaDaNota).join('\n\n');
+        const itens = grupos.get(k).map(n => linhaDaNota(n, plano)).join('\n\n');
         const desc = descricoes.get(k);
         return soSemTag ? itens
-            : `*${k ? `#${k}` : SEM_TAG}* (${grupos.get(k).length})${desc ? `\n_${desc}_` : ''}\n\n${itens}`;
-    }).join('\n\n──────────\n\n');
+            : `🏷️ ${k ? `#${k}` : SEM_TAG} (${grupos.get(k).length})${desc ? `\n${desc}` : ''}\n\n${itens}`;
+    });
 }
 
 // Os destinos do -to de uma lista/exportação: undefined sem -to, null se não resolveu (já respondeu)
@@ -391,15 +394,23 @@ const DICAS = '\n\n💡 *Dicas*\n' +
     '/notes -r <id...|#tag...|all> remove\n' +
     '-alerta <quando> avisa.';
 
-// Responde no chat ou, com -to, manda nos destinos (e responde que mandou)
+// Responde no chat ou, com -to, manda nos destinos (e responde que mandou).
+// `texto` pode ser uma lista: cada item vai numa mensagem, e a dica só depois do último
 async function entregarTexto(msg, destinos, texto, assunto, dica = '') {
+    // Cada listagem vai num bloco ``` (monoespaçado); a dica fica fora
+    const partes = [].concat(texto).map(t => '```\n' + t + '\n```');
     if (!destinos) {
-        await msg.reply(`${texto}${dica}`, undefined, SEM_PREVIA);
+        for (const [i, parte] of partes.entries()) {
+            await msg.reply(i === partes.length - 1 ? `${parte}${dica}` : parte, undefined, SEM_PREVIA);
+        }
         return;
     }
-    await enviarAosDestinos(destinos, texto, { assunto, opcoes: SEM_PREVIA })
-        .then(() => msg.reply(`📝 Anotações enviadas em ${descreverDestinos(destinos)}.`))
-        .catch(err => msg.reply(`❌ Não consegui enviar as anotações: ${err.message}`));
+    try {
+        for (const parte of partes) await enviarAosDestinos(destinos, parte, { assunto, opcoes: SEM_PREVIA });
+        await msg.reply(`📝 Anotações enviadas em ${descreverDestinos(destinos)}.`);
+    } catch (err) {
+        await msg.reply(`❌ Não consegui enviar as anotações: ${err.message}`);
+    }
 }
 
 // "[#tag...] <texto|/regex/flags>" do -search → { tags, busca }
@@ -452,8 +463,10 @@ async function listar(msg, filtro = '', comBusca = false) {
         return;
     }
 
-    await entregarTexto(msg, destinos, `📝 *ANOTAÇÕES${rotulo}${achado}* (${notas.length})\n\n${agruparPorTag(notas, await descricoesDasTags())}`,
-        `📝 Anotações${rotulo}${achado}`, DICAS);
+    // Uma mensagem por tag; o título (com o total) vai no começo da primeira
+    const partes = agruparPorTag(notas, await descricoesDasTags());
+    partes[0] = `📝 ANOTAÇÕES${rotulo}${achado} (${notas.length})\n\n${partes[0]}`;
+    await entregarTexto(msg, destinos, partes, `📝 Anotações${rotulo}${achado}`, DICAS);
 }
 
 // -move: renomeia a tag em todas as anotações (se a nova já existe, elas se juntam)
@@ -599,11 +612,11 @@ async function listarTags(msg, filtro = '') {
     for (const n of notas) contagem.set(n.tag ?? '', (contagem.get(n.tag ?? '') ?? 0) + 1);
     const chaves = [...contagem.keys()].sort((a, b) => (a === '') - (b === '') || a.localeCompare(b));
     const descricoes = await descricoesDasTags();
-    const linhas = chaves.map(k => `${k ? `#${k}` : SEM_TAG}: ${contagem.get(k)}${descricoes.has(k) ? ` · _${descricoes.get(k)}_` : ''}`);
+    const linhas = chaves.map(k => `${k ? `#${k}` : SEM_TAG}: ${contagem.get(k)}${descricoes.has(k) ? ` · ${descricoes.get(k)}` : ''}`);
 
     await entregarTexto(msg, destinos,
-        `🏷️ *TAGS* (${chaves.filter(Boolean).length})\n\n${linhas.join('\n')}\n\n📝 ${plural(notas.length, 'anotação', 'anotações')}`,
-        '🏷️ Tags das anotações', '\n\n💡 _/notes #tag mostra as de uma tag_');
+        `🏷️ TAGS (${chaves.filter(Boolean).length})\n\n${linhas.join('\n')}\n\n📝 ${plural(notas.length, 'anotação', 'anotações')}`,
+        '🏷️ Tags das anotações', '\n\n💡 _/notes #tag lista as anotações de uma tag_');
 }
 
 // 20261027_1530, na hora de Brasília (a mesma do formatarData)
@@ -733,7 +746,7 @@ async function cmdNote({ msg, args, quotedMsg }) {
     const { informado: comDestino, resto: semDestino } = extrairDestinos(texto);
     const tagsDoTexto = soTags(semDestino);
 
-    if (!texto) return quotedMsg || msg.hasMedia ? adicionar(msg, '', quotedMsg) : listar(msg);
+    if (!texto) return quotedMsg || msg.hasMedia ? adicionar(msg, '', quotedMsg) : listarTags(msg);
     if (nome === '-list' || nome === '-l') return listar(msg, resto);
     if (nome === '-update' || nome === '-u') return atualizar(msg, resto, quotedMsg);
     if (nome === '-search' || nome === '-s') return listar(msg, resto, true);

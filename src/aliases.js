@@ -9,14 +9,10 @@
 const { dbAll, dbGet, dbPronto } = require('./db');
 const { commandsByPrefix, findCommand } = require('./comandos/base');
 const { botConfig } = require('./botConfig');
-const { comAlvos, comandosNoTexto, montarTexto } = require('./comandosNoTexto');
+const { acharComando, comAlvos, comandosNoTexto, montarTexto } = require('./comandosNoTexto');
 
 const ehAliasDeTexto = (salvo) => !salvo.startsWith('/');
 
-// Os comandos que o alias chama: o destino ou os {/comando} do texto
-const comandosDoAlias = (salvo) => (ehAliasDeTexto(salvo)
-    ? comandosNoTexto(salvo).map(c => c.linha)
-    : [salvo]).map(linha => linha.split(/\s+/, 1)[0].toLowerCase());
 
 /*
  * Parâmetros do alias de comando: $1, $2... pegam os argumentos digitados, na ordem.
@@ -25,9 +21,11 @@ const comandosDoAlias = (salvo) => (ehAliasDeTexto(salvo)
 function aplicarParametros(salvo, args) {
     const digitados = args.split(/\s+/).filter(Boolean);
     const usados = new Set();
-    const comando = salvo.replace(/\$([1-9]\d*)/g, (_, n) => {
-        usados.add(Number(n) - 1);
-        return digitados[n - 1] ?? '';
+    // $N ou ${N:-valor padrão} (o padrão vale quando o argumento N não foi digitado)
+    const comando = salvo.replace(/\$(?:([1-9]\d*)|\{([1-9]\d*)(?::-([^}]*))?\})/g, (_, n1, n2, padrao) => {
+        const n = Number(n1 ?? n2);
+        usados.add(n - 1);
+        return digitados[n - 1] ?? padrao ?? '';
     }).trim();
     // Sem $N, o que sobra é o texto digitado como veio (as quebras de linha ficam, p. ex. no /notes)
     if (!usados.size) return { comando, sobras: args };
@@ -45,7 +43,7 @@ async function resolverAlias(texto) {
     const [nome] = texto.trim().split(/\s+/);
     const args = texto.trim().slice(nome.length).trim();
     const command = findCommand(nome);
-    if (command) return { command: comAlvos(command, args), args };
+    if (command) return { command: await comAlvos(command, args), args };
     await dbPronto;
     const alias = await dbGet('SELECT * FROM command_aliases WHERE name = ?', [nome]);
     if (!alias) return porPrefixo(nome, args);
@@ -56,7 +54,8 @@ async function resolverAlias(texto) {
      * (alvos), e os que deixaram de existir ficam de fora (saem como ⚠️).
      */
     if (ehAliasDeTexto(alias.command)) {
-        const alvos = comandosDoAlias(alias.command).map(findCommand).filter(Boolean);
+        const achados = await Promise.all(comandosNoTexto(alias.command).map(c => acharComando(c.linha)));
+        const alvos = achados.map(a => a?.command).filter(Boolean);
         return {
             command: { cmd: nome, onlyAdmin: alvos.some(c => c.onlyAdmin), alvos: alvos.map(c => c.cmd) },
             alias: nome, texto: alias.command, args, quiet: Boolean(alias.quiet)
@@ -68,7 +67,7 @@ async function resolverAlias(texto) {
     const alvo = findCommand(destino);
     if (!alvo) return null;
     const argsFinais = [comando.slice(destino.length).trim(), sobras].filter(Boolean).join(' ');
-    return { command: comAlvos(alvo, argsFinais), alias: nome, destino, args: argsFinais, quiet: Boolean(alias.quiet) };
+    return { command: await comAlvos(alvo, argsFinais), alias: nome, destino, args: argsFinais, quiet: Boolean(alias.quiet) };
 }
 
 /*
@@ -98,14 +97,22 @@ async function executarAliasDeTexto(msg, resolvido, { chatId, chatName, isGroup,
 
 async function listarAliases(msg, pode = () => true) {
     await dbPronto;
-    const aliases = (await dbAll('SELECT * FROM command_aliases ORDER BY name')).filter(a => {
-        const alvos = comandosDoAlias(a.command)
-            .map(nome => botConfig.commands.find(c => c.cmd === nome || c.aliases?.includes(nome)));
-        return alvos.length && alvos.every(alvo => alvo && pode(alvo));
-    });
+    const todos = await dbAll('SELECT * FROM command_aliases ORDER BY name');
+    const aliases = [];
+    for (const a of todos) {
+        // O destino ou os {/comando} do texto (que podem ser outros aliases)
+        const linhas = ehAliasDeTexto(a.command) ? comandosNoTexto(a.command).map(c => c.linha) : [a.command];
+        // Também os desativados (o alias continua listado); um alias dentro do texto vale pelo destino dele
+        const alvos = await Promise.all(linhas.map(async linha => {
+            const nome = linha.split(/\s+/, 1)[0].toLowerCase();
+            return botConfig.commands.find(c => c.cmd === nome || c.aliases?.includes(nome))
+                ?? (await acharComando(linha))?.command;
+        }));
+        if (alvos.length && alvos.every(alvo => alvo && pode(alvo))) aliases.push(a);
+    }
     await msg.reply(aliases.length ? `🔗 *ALIASES* (${aliases.length})\n\n` + aliases.map(a =>
         `${a.name} → ${a.command}${a.description ? `\n📝 ${a.description}` : ''}`
     ).join('\n\n') : '🔗 Nenhum alias disponível.', undefined, { linkPreview: false });
 }
 
-module.exports = { ehAliasDeTexto, ehComandoOuAlias, executarAliasDeTexto, listarAliases, resolverAlias };
+module.exports = { aplicarParametros, ehAliasDeTexto, ehComandoOuAlias, executarAliasDeTexto, listarAliases, resolverAlias };

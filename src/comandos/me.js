@@ -22,7 +22,7 @@ async function cmdMe({ msg, args, chatId, chatName, isGroup, admin, podeUsar, se
     const texto = quebrarLinhas(resto);
     if (!texto) return msg.reply('❌ Use: /me [-repeat|-r <n>] <mensagem com {/comando}>');
 
-    const erro = erroDosComandos(texto, '/me');
+    const erro = await erroDosComandos(texto, '/me');
     if (erro) return msg.reply(erro);
 
     const { texto: final, midias } = await montarTexto(texto,

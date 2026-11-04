@@ -8,6 +8,7 @@ const { client } = require('./cliente');
 const { activeCommands, findCommand } = require('./comandos/base');
 const { printError } = require('./log');
 const { GetOptFromCommand } = require('./opcoes');
+const { dbGet, dbPronto } = require('./db');
 
 /*
  * Só os comandos com "cron": true no comandos.json (os de consulta), e sem as
@@ -28,12 +29,39 @@ const comandosNoTexto = (texto) => [...String(texto ?? '').matchAll(MARCA)].map(
 const quebrarLinhas = (texto) => String(texto ?? '').replace(/[ \t]*\\n[ \t]*/g, '\n');
 
 /*
+ * Acha o comando de uma linha "/nome args": o comando em si ou um alias de
+ * comando salvo (com os $1, $2... aplicados). Alias de texto não entra aqui
+ * (um {/alias} dentro do próprio texto poderia chamar a si mesmo).
+ * @returns {Promise<{command, args, alias?}|{textoAlias: string}|null>}
+ */
+async function acharComando(linha) {
+    const caller = linha.split(/\s+/, 1)[0].toLowerCase();
+    const resto = linha.slice(caller.length).trim();
+    const direto = findCommand(caller);
+    if (direto) return { command: direto, args: resto };
+
+    await dbPronto;
+    const alias = await dbGet('SELECT command FROM command_aliases WHERE name = ?', [caller]);
+    if (!alias) return null;
+    if (!alias.command.startsWith('/')) return { textoAlias: caller };
+
+    const { aplicarParametros } = require('./aliases'); // aqui dentro: o aliases importa este arquivo
+    const { comando, sobras } = aplicarParametros(alias.command, resto);
+    const destino = comando.split(/\s+/, 1)[0];
+    const alvo = findCommand(destino);
+    if (!alvo) return null;
+    const args = [comando.slice(destino.length).trim(), sobras].filter(Boolean).join(' ');
+    return { command: alvo, args, alias: caller };
+}
+
+/*
  * O /me é um comando comum, mas roda os {/comando} do que foi digitado: as permissões
  * (e o "só admin") são as dele e as de cada um (alvos), conferidas antes de executar.
  */
-function comAlvos(command, texto) {
+async function comAlvos(command, texto) {
     if (command?.cmd !== '/me') return command;
-    const alvos = comandosNoTexto(texto).map(c => findCommand(c.linha.split(/\s+/, 1)[0].toLowerCase())).filter(Boolean);
+    const achados = await Promise.all(comandosNoTexto(texto).map(c => acharComando(c.linha)));
+    const alvos = achados.map(a => a?.command).filter(Boolean);
     return { ...command, onlyAdmin: command.onlyAdmin || alvos.some(c => c.onlyAdmin),
         alvos: [command.cmd, ...alvos.map(c => c.cmd)] };
 }
@@ -41,16 +69,18 @@ function comAlvos(command, texto) {
 const permitidos = () => activeCommands().filter(c => c.cron).map(c => c.cmd);
 
 // "/crypto BTC" → { command, args, opts }, ou { erro }
-function lerComando(linha, onde = '/cron') {
+async function lerComando(linha, onde = '/cron') {
     const caller = linha.split(/\s+/, 1)[0].toLowerCase();
-    const command = findCommand(caller);
+    const achado = await acharComando(linha);
 
-    if (!command) return { erro: `❌ {${linha}}: o ${caller} não existe.` };
+    if (!achado) return { erro: `❌ {${linha}}: o ${caller} não existe.` };
+    if (achado.textoAlias) return { erro: `❌ {${linha}}: o alias ${caller} é um texto e não roda dentro do ${onde}.` };
+
+    const { command, args } = achado;
     if (!command.cron) {
         return { erro: `❌ {${linha}}: o ${command.cmd} não roda dentro do ${onde}.\n💡 _Rodam: ${permitidos().join(', ')}._` };
     }
 
-    const args = linha.slice(caller.length).trim();
     const opts = GetOptFromCommand(args, command);
     const proibida = (command.cmd_opts ?? []).find(o => o.cron === false && o.opts?.some(nome => opts.given.has(nome)));
     if (proibida) return { erro: `❌ {${linha}}: o -${proibida.opts[0]} do ${command.cmd} não roda dentro do ${onde}.` };
@@ -60,11 +90,11 @@ function lerComando(linha, onde = '/cron') {
 
 /**
  * Confere os {/comando} do texto ao criar ou editar (o item do /cron).
- * @returns {string|null} o erro (do primeiro inválido) ou null
+ * @returns {Promise<string|null>} o erro (do primeiro inválido) ou null
  */
-function erroDosComandos(texto, onde = '/cron') {
+async function erroDosComandos(texto, onde = '/cron') {
     for (const { linha } of comandosNoTexto(texto)) {
-        const { erro } = lerComando(linha, onde);
+        const { erro } = await lerComando(linha, onde);
         if (erro) return erro;
     }
     return null;
@@ -103,7 +133,7 @@ function mensagemSintetica(chatId, linha, respostas) {
  * você (admin); com ele, com o admin e as permissões de quem executa.
  */
 async function rodarComando(chatId, linha, { chatName, isGroup, onde = '/cron', quem = null }) {
-    const { erro, command, args, opts } = lerComando(linha, onde);
+    const { erro, command, args, opts } = await lerComando(linha, onde);
     if (erro) return { texto: `⚠️ ${linha.split(/\s+/, 1)[0]} não roda no ${onde}`, midias: [] };
 
     // O handler fica no comandos/index, que carrega o /cron (e este arquivo): só aqui, na hora
@@ -183,6 +213,7 @@ async function enviarMidias(chatId, midias) {
 }
 
 module.exports = {
+    acharComando,
     comAlvos,
     comandosNoTexto,
     enviarMidias,
