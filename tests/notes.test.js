@@ -384,7 +384,7 @@ test('-export: as imagens entram no PDF (JPEG), com a anotação como legenda; i
     await bot.responder('/notes -rm all');
 });
 
-test('-export: a descrição das tags vem no começo do PDF, só as das tags exportadas', async () => {
+test('-export: a descrição da tag vem embaixo do cabeçalho dela no PDF, só das tags exportadas', async () => {
     await bot.responder('/notes #casa pão');
     await bot.responder('/notes #duvidas ETFs');
     await bot.responder('/notes sem tag');
@@ -396,11 +396,11 @@ test('-export: a descrição das tags vem no começo do PDF, só as das tags exp
     };
 
     const casa = await pdfDe('/notes -export #casa');
-    assert.match(casa, /#casa: Coisas da casa/);
-    assert.ok(casa.indexOf('#casa: Coisas da casa') < casa.indexOf('#1  p'), 'antes das anotações');
-    assert.ok(casa.indexOf('1 anota') < casa.indexOf('#casa: Coisas da casa'), 'depois do total');
+    assert.match(casa, /\(Coisas da casa\)/);
+    assert.ok(casa.indexOf('(Coisas da casa)') > casa.indexOf('(#casa \\(1\\)'), 'embaixo do cabeçalho da tag');
+    assert.ok(casa.indexOf('(Coisas da casa)') < casa.indexOf('1.  p'), 'antes das anotações');
 
-    assert.match(await pdfDe('/notes -export'), /#casa: Coisas da casa/);
+    assert.match(await pdfDe('/notes -export'), /\(Coisas da casa\)/);
     assert.doesNotMatch(await pdfDe('/notes -export #duvidas'), /Coisas da casa/);
     await bot.responder('/notes -d #casa -rm');
     assert.doesNotMatch(await pdfDe('/notes -export #casa'), /Coisas da casa/);
@@ -478,7 +478,7 @@ test('/notes sozinho: as tags com a quantidade de anotações (sem tag por últi
     await semTag('sem tag');
 
     const [r] = await bot.responder('/notes');
-    assert.equal(r.split('\n\n💡')[0], '```\n🏷️ TAGS (2)\n\n#casa: 2\n#duvidas: 1\nsem tag: 1\n\n📝 4 anotações\n```');
+    assert.equal(r.split('\n\n💡')[0], '```\n📝 Anotações (4)\n\n🏷️ TAGS (2)\n\n#casa: 2\n#duvidas: 1\nsem tag: 1\n```');
 });
 
 test('-move: renomeia a tag (juntando se a nova já existe)', async () => {
@@ -528,8 +528,8 @@ test('tag parcial também no -export, no -alerta (lista) e no -view; ambígua ju
 
     await bot.responder('/notes -export #idei');
     const pdf = Buffer.from(bot.client.enviadas.at(-1).content.data, 'base64').toString('latin1');
-    assert.match(pdf, /#\d+ {2}um/);
-    assert.match(pdf, /#\d+ {2}dois/);
+    assert.match(pdf, /\d+\. {2}um/);
+    assert.match(pdf, /\d+\. {2}dois/);
     assert.doesNotMatch(pdf, /tr.s/);
 
     const [alertas] = await bot.responder('/notes -alerta #idei');
@@ -626,7 +626,7 @@ test('/notes sem parâmetros mostra as tags; /notes #tag lista as dela', async (
     await semTag('anotação solta');
 
     const [tags] = await bot.responder('/notes');
-    assert.match(tags, /^```\n🏷️ TAGS \(1\)\n\n#minhatag: 1\nsem tag: 1/);
+    assert.match(tags, /^```\n📝 Anotações \(2\)\n\n🏷️ TAGS \(1\)\n\n#minhatag: 1\nsem tag: 1/);
     assert.match(tags, /💡 _\/notes #tag lista/);
 
     for (const cmd of ['/notes #minhatag', '/notes #MinhaTag', '/notes -l #minhatag']) {
@@ -638,16 +638,16 @@ test('/notes sem parâmetros mostra as tags; /notes #tag lista as dela', async (
     assert.equal((await notas()).length, 2);
 });
 
-test('título em negrito (só ele), corpo e "🌐 Links" no fim, com o link tirado de onde estava', async () => {
+test('título em negrito (só ele), corpo e "🔗 Links" no fim, com o link tirado de onde estava', async () => {
     await bot.responder('/notes #pt Mais um caso de roubalheira.\nNesse dia o pt fez isso\n\nhttp://link1.com/\nhttp://link2.com');
     await bot.responder('/notes #pt Explicação sobre o dólar https://exemplo.com/a?b=1');
     await bot.responder('/notes #pt Painel: Leia mais em: (https://exemplo.com/x_y)');
     await bot.responder('/notes #pt sem link');
 
     const [lista] = await bot.responder('/notes #pt');
-    assert.match(lista, /\n1\. \*Mais um caso de roubalheira\.\*\n\nNesse dia o pt fez isso\n\n🌐 Links\n• http:\/\/link1\.com\/\n• http:\/\/link2\.com\n🕐 _[\d:]+ [\d\/]+, #1_/);
-    assert.match(lista, /\n2\. \*Explicação sobre o dólar\*\n\n🌐 Links\n• https:\/\/exemplo\.com\/a\?b=1\n/);
-    assert.match(lista, /\n3\. \*Painel\*\n\n🌐 Links\n• https:\/\/exemplo\.com\/x_y\n/);
+    assert.match(lista, /\n1\. \*Mais um caso de roubalheira\.\*\n\nNesse dia o pt fez isso\n\n🔗 Links\n• http:\/\/link1\.com\/\n• http:\/\/link2\.com\n🕐 _[\d:]+ [\d\/]+, #1_/);
+    assert.match(lista, /\n2\. \*Explicação sobre o dólar\*\n\n🔗 Links\n• https:\/\/exemplo\.com\/a\?b=1\n/);
+    assert.match(lista, /\n3\. \*Painel\*\n\n🔗 Links\n• https:\/\/exemplo\.com\/x_y\n/);
     assert.match(lista, /\n4\. \*sem link\*\n/);
 
     const [plano] = await bot.responder('/notes -l');
@@ -655,6 +655,22 @@ test('título em negrito (só ele), corpo e "🌐 Links" no fim, com o link tira
     assert.doesNotMatch(plano, /\*Mais/);
 
     const [view] = await bot.responder('/notes -v 1');
-    assert.match(view, /\n\*Mais um caso de roubalheira\.\*\n\nNesse dia o pt fez isso\n\n🌐 Links\n• http:\/\/link1\.com\/\n• http:\/\/link2\.com$/);
+    assert.match(view, /\n\*Mais um caso de roubalheira\.\*\n\nNesse dia o pt fez isso\n\n🔗 Links\n• http:\/\/link1\.com\/\n• http:\/\/link2\.com$/);
+    await bot.responder('/notes -rm all');
+});
+
+test('-c: uma linha por nota, por dia, com 🖼️ ⏰ 🔗; o cabeçalho da tag traz o resumo', async () => {
+    await bot.responder('/notes #pt Explicação sobre o dólar https://e.com/a');
+    await bot.responder('/notes #pt https://g1.globo.com/x/y.ghtml');
+    await bot.responder('/notes #pt Sem link');
+
+    const [normal] = await bot.responder('/notes #pt');
+    assert.match(normal, /\n🏷️ pt \(3\) · 🔗 2\n/);
+
+    for (const cmd of ['/notes #pt -c', '/notes -c #pt', '/notes -l #pt -c', '/notes -compact #pt']) {
+        const [lista] = await bot.responder(cmd);
+        assert.match(lista, /^📝 \*ANOTAÇÕES\*\n\n🏷️ pt \(3\) · 🔗 2\n\n📆 \d\d\/\d\d\/\d{4}\n#1 Explicação sobre o dólar 🔗 · \d\d:\d\d\n#2 g1\.globo\.com\/x\/y\.ghtml 🔗 · \d\d:\d\d\n#3 Sem link · \d\d:\d\d\n/, cmd);
+        assert.match(lista, /💡 _-v <nº> abre a nota inteira_/);
+    }
     await bot.responder('/notes -rm all');
 });

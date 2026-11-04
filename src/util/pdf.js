@@ -35,6 +35,36 @@ function limpar(texto) {
         .replace(/ +\n/g, '\n');
 }
 
+
+/*
+ * Ícones desenhados à mão (a Helvetica não tem emoji): cada um é uma função (x, y, t) → comandos
+ * do PDF, num quadrado de lado t com o canto de baixo à esquerda em (x, y).
+ */
+const circulo = (cx, cy, r) => {
+    const k = 0.5523 * r;
+    const f = (n) => n.toFixed(2);
+    return `${f(cx + r)} ${f(cy)} m ${f(cx + r)} ${f(cy + k)} ${f(cx + k)} ${f(cy + r)} ${f(cx)} ${f(cy + r)} c ` +
+        `${f(cx - k)} ${f(cy + r)} ${f(cx - r)} ${f(cy + k)} ${f(cx - r)} ${f(cy)} c ` +
+        `${f(cx - r)} ${f(cy - k)} ${f(cx - k)} ${f(cy - r)} ${f(cx)} ${f(cy - r)} c ` +
+        `${f(cx + k)} ${f(cy - r)} ${f(cx + r)} ${f(cy - k)} ${f(cx + r)} ${f(cy)} c h `;
+};
+
+const ICONES = {
+    // 🔗 duas argolas entrelaçadas
+    link: (x, y, t) => `q 0.15 0.4 0.8 RG ${(t * 0.14).toFixed(2)} w ${circulo(x + t * 0.34, y + t * 0.5, t * 0.22)}S ` +
+        `${circulo(x + t * 0.66, y + t * 0.5, t * 0.22)}S Q\n`,
+    // 🏷️ etiqueta amarela com furo
+    tag: (x, y, t) => `q 0.96 0.65 0.12 rg ${x + t * 0.05} ${y + t * 0.15} m ${x + t * 0.6} ${y + t * 0.15} l ` +
+        `${x + t} ${y + t * 0.5} l ${x + t * 0.6} ${y + t * 0.85} l ${x + t * 0.05} ${y + t * 0.85} l h f ` +
+        `1 g ${circulo(x + t * 0.25, y + t * 0.5, t * 0.08)}f Q\n`,
+    // 🕐 relógio
+    relogio: (x, y, t) => `q 0.35 0.35 0.35 RG 1 g ${(t * 0.09).toFixed(2)} w ${circulo(x + t / 2, y + t / 2, t * 0.42)}B ` +
+        `${x + t / 2} ${y + t / 2} m ${x + t / 2} ${y + t * 0.78} l S ${x + t / 2} ${y + t / 2} m ${x + t * 0.72} ${y + t / 2} l S Q\n`,
+    // 📝 folha com linhas
+    nota: (x, y, t) => `q 0.45 0.45 0.45 RG 1 g ${(t * 0.07).toFixed(2)} w ${x + t * 0.15} ${y + t * 0.05} ${t * 0.7} ${t * 0.9} re B ` +
+        `0.2 0.45 0.75 RG ${[0.3, 0.5, 0.7].map(h => `${x + t * 0.28} ${y + t * h} m ${x + t * 0.72} ${y + t * h} l S `).join('')}Q\n`
+};
+
 function larguraDe(texto, tamanho, negrito = false) {
     let w = 0;
     for (const c of texto) {
@@ -78,7 +108,7 @@ const escapar = (t) => t.replace(/[\\()]/g, '\\$&');
  * @param {string}   o.titulo     cabeçalho, à esquerda
  * @param {string}   o.direita    cabeçalho, à direita (data/hora)
  * @param {string}   o.rodape     rodapé, à esquerda ("Página X de Y" vai à direita)
- * @param {object[]} o.blocos     { texto, tipo: 'titulo' | 'texto' | 'negrito' | 'meta' | 'espaco' } ou
+ * @param {object[]} o.blocos     { texto, tipo: 'titulo' | 'texto' | 'negrito' | 'meta' | 'espaco', icone?: 'link' | 'tag' | 'relogio' | 'nota' } ou
  *                          { tipo: 'imagem', jpeg: Buffer, largura, altura } (JPEG RGB, em pixels)
  * @returns {Buffer}
  */
@@ -92,7 +122,9 @@ function gerarPdf({ titulo, direita = '', rodape = '', blocos }) {
     const paginas = [[]];
     let y = TOPO_CORPO;
 
-    for (const b of blocos) {
+    const alturaDaImagem = (b) => b.altura * Math.min(1, IMAGEM_MAX_L / b.largura, IMAGEM_MAX_A / b.altura);
+
+    for (const [indice, b] of blocos.entries()) {
         if (b.tipo === 'espaco') {
             y -= b.altura ?? 8;
             continue;
@@ -112,21 +144,25 @@ function gerarPdf({ titulo, direita = '', rodape = '', blocos }) {
         const e = ESTILOS[b.tipo ?? 'texto'];
         const recuo = b.recuo ?? 0;
         const linhas = limpar(b.texto).split('\n')
-            .flatMap(p => quebrar(p, e.tamanho, LARGURA - 2 * MARGEM - recuo, e.fonte === 'F2'));
+            .flatMap(p => quebrar(p, e.tamanho, LARGURA - 2 * MARGEM - recuo - (b.icone && ICONES[b.icone] ? e.tamanho + 3 : 0), e.fonte === 'F2'));
 
+        const desloca = b.icone && ICONES[b.icone] ? e.tamanho + 3 : 0;
         y -= e.antes;
-        // Título nunca fica sozinho no fim da página
-        if (y - e.entre * (b.tipo === 'titulo' ? 3 : 1) < BASE_CORPO && y !== TOPO_CORPO) {
+        // Título nunca fica sozinho no fim da página (nem o texto que vem antes de uma imagem)
+        const daImagem = blocos[indice + 1]?.tipo === 'imagem' ? alturaDaImagem(blocos[indice + 1]) + 6 : 0;
+        if (y - e.entre * (b.tipo === 'titulo' ? 3 : 1) - daImagem < BASE_CORPO && y !== TOPO_CORPO) {
             paginas.push([]);
             y = TOPO_CORPO;
         }
-        for (const linha of linhas) {
+        for (const [i, linha] of linhas.entries()) {
             if (y - e.entre < BASE_CORPO) {
                 paginas.push([]);
                 y = TOPO_CORPO;
             }
             y -= e.entre;
-            if (linha) paginas.at(-1).push({ ...e, x: MARGEM + recuo, y, texto: linha });
+            // O ícone só na primeira linha do bloco; o texto sempre alinhado depois dele
+            if (i === 0 && desloca) paginas.at(-1).push({ icone: b.icone, tamanho: e.tamanho, x: MARGEM + recuo, y: y - 1.5 });
+            if (linha) paginas.at(-1).push({ ...e, x: MARGEM + recuo + desloca, y, texto: linha });
         }
     }
 
@@ -160,9 +196,9 @@ function gerarPdf({ titulo, direita = '', rodape = '', blocos }) {
         c += texto('F1', 9, '0.4 0.4 0.4', LARGURA - MARGEM - larguraDe(dir, 9), ALTURA - 45, dir);
         c += linhaHorizontal(ALTURA - 55);
         for (const it of itens) {
-            c += it.imagem
-                ? `q ${it.w.toFixed(2)} 0 0 ${it.h.toFixed(2)} ${it.x} ${it.y.toFixed(2)} cm /Im${it.imagem.objeto} Do Q\n`
-                : texto(it.fonte, it.tamanho, it.cor, it.x, it.y, it.texto);
+            if (it.icone) c += ICONES[it.icone](it.x, it.y, it.tamanho);
+            else if (it.imagem) c += `q ${it.w.toFixed(2)} 0 0 ${it.h.toFixed(2)} ${it.x} ${it.y.toFixed(2)} cm /Im${it.imagem.objeto} Do Q\n`;
+            else c += texto(it.fonte, it.tamanho, it.cor, it.x, it.y, it.texto);
         }
         c += linhaHorizontal(52);
         const pag = `Página ${i + 1} de ${total}`;
