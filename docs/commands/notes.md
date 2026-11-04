@@ -26,7 +26,7 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 | `-search`, `-s` | `[#tag...] <texto\|/regex/flags>` | Só as anotações que casam, agrupadas como na lista. Veja [Buscar](#buscar) |
 | `-tags`, `-t` | | Todas as tags com a quantidade de anotações de cada uma (as sem tag por último) |
 | `-update`, `-u` | `<id> [#tag] <novo texto>` | Troca o texto da anotação (e a tag, se vier uma; o alerta e a imagem ficam). Em resposta a uma mensagem, sem texto, usa o dela |
-| `-view`, `-v` | `<id...\|#tag...>` | Mostra a anotação com a imagem (texto na legenda; sem imagem, só o texto). A tag pode vir pela metade. Com `-to`, manda nos destinos (ou por e-mail, com a imagem anexada) |
+| `-view`, `-v` | `<id...\|#tag...>` | Mostra a anotação com a mídia (texto na legenda; sem mídia, só o texto). A tag pode vir pela metade. Com `-to`, manda nos destinos (ou por e-mail, com a imagem anexada) |
 | `-move`, `-m` | `#tag #novatag` | Renomeia a tag em todas as anotações. Se a nova já existe, as duas se juntam |
 | `-desc`, `-d` | `#tag [<descrição>\|-rm]` | Descrição da tag, que aparece na lista e no `-tags`. Sem texto, mostra a atual; com `-rm`, apaga. O `-move` leva a descrição junto |
 | `-export`, `-e` | `[#tag...]` | Manda as anotações num PDF, com as imagens e o texto como legenda (cabeçalho, rodapé com versão, host, data e hora, e paginação). Com tags, só as delas. Veja [Exportar](#exportar) |
@@ -66,11 +66,13 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
   ↩️ na frente. Texto digitado junto vale no lugar do da mensagem (sem o ↩️). Dá para juntar com
   `-alerta`: `/notes -a #lembrete -alerta amanhã 9h`. No PDF, o ↩️ vira `[resp.]`.
 - No texto da anotação, `\n` vira quebra de linha (`/notes #casa pão\nleite`); `\\n` fica como está.
-- **Imagens:** mande uma foto com a legenda `/notes #minhatag Imagem de teste` ou responda uma foto
-  com `/notes [#tag] [texto]`. O texto é opcional (numa resposta com legenda, vale a legenda, com o
-  ↩️). A imagem fica em `cache/notes/` (fora do `cache/media/`, então o `/cache -media` não apaga)
-  e a lista mostra `🖼️ imagem`; para ver a imagem, use o [`-view`](#ver-e-organizar). O `-rm`
-  apaga o arquivo junto. Só imagens (JPEG, PNG, WebP, GIF).
+- **Mídias:** mande uma imagem, documento, áudio ou vídeo com a legenda `/notes #minhatag Texto` ou
+  responda uma mídia com `/notes [#tag] [texto]`. O texto é opcional (numa resposta com legenda,
+  vale a legenda, com o ↩️). O arquivo fica em `cache/notes/` (fora do `cache/media/`, então o
+  `/cache -media` não apaga), com o nome original no caso de documentos, e a lista mostra
+  `🖼️ imagem`, `🎬 vídeo`, `🎵 áudio` ou `📎 nome-do-arquivo`. Para receber o arquivo de volta, use o
+  [`-view`](#ver-e-organizar) (o áudio não tem legenda: o texto vai em outra mensagem). O `-rm`
+  apaga o arquivo junto.
 - A tag pode vir pela metade na lista, na busca, no `-view`, no `-desc` e no `-export`:
   `/notes #idei` acha a `#ideias`. A exata ganha; senão valem as que começam com o que você
   digitou, depois as que contêm. Onde mexe nos dados (`-rm`, `-move` e o `-alerta` com `<quando>`),
@@ -81,10 +83,10 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 ## Ver e organizar
 
 ```text
-/notes -v 76                  → a nº 76: a imagem com o texto na legenda (sem imagem, só o texto)
+/notes -v 76                  → a nº 76: a mídia com o texto na legenda (sem mídia, só o texto)
 /notes -v 3 5                 → várias de uma vez, uma mensagem para cada
 /notes -v #idei               → todas da #ideias
-/notes -v 76 -to /Família/    → manda no grupo (por e-mail, a imagem vai anexada)
+/notes -v 76 -to /Família/    → manda no grupo (por e-mail, o arquivo vai anexado)
 /notes -move #casa #lar       → renomeia a tag em todas as anotações
 /notes -desc #lar Coisas da casa   → descrição da tag
 /notes -d #lar                → mostra a descrição
@@ -134,7 +136,7 @@ O `-to` funciona como nos outros comandos (veja
   tag que tem: `#casa: Coisas da casa`. Só entram as tags que estão no PDF.
 - As imagens entram no PDF, em cima do texto da anotação (que serve de legenda), reduzidas para caber
   (JPEG, fundo branco no lugar de transparência). Uma imagem que não abre fica de fora, com um aviso
-  na linha da anotação.
+  na linha da anotação. Documentos, áudios e vídeos não entram no PDF; a linha da anotação avisa.
 - A fonte do PDF é Latin-1: acentos saem normais, mas emojis e símbolos fora dela são omitidos.
 
 ## Alertas

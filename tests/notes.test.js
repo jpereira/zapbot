@@ -3,6 +3,7 @@
  */
 const bot = require('./helpers/bot');
 
+const fs = require('fs');
 const { test, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 
@@ -314,10 +315,44 @@ test('imagem: na própria mensagem ou em resposta, vai para o disco; -rm apaga o
     await bot.replyAlt('/notes -rm all');
     assert.equal(linesAlt.some(n => fs.existsSync(n.media_path)), false);
 
-    // Images only
-    const video = { mimetype: 'video/mp4', data: 'AAAA' };
-    assert.match((await bot.replyAlt('/notes #v filme', { midia: video }))[0], /guarda só imagens/);
-    assert.equal((await notes()).length, 0);
+});
+
+test('qualquer mídia: documento, vídeo e áudio vão para o disco com o nome original e saem no -view', async () => {
+    const mediaAltAlt = [
+        ['relatório final.pdf', { mimetype: 'application/pdf', filename: 'relatório final.pdf', data: 'JVBERg==' }, /📎 relatório final\.pdf/],
+        ['filme', { mimetype: 'video/mp4', data: 'AAAA' }, /🎬 vídeo/],
+        ['voz', { mimetype: 'audio/ogg; codecs=opus', data: 'T2dnUw==' }, /🎵 áudio/]
+    ];
+    for (const [textAlt, mediaAlt] of mediaAltAlt) {
+        assert.match((await bot.replyAlt(`/notes #m ${textAlt}`, { midia: mediaAlt }))[0], /^📝 \*#\d+\* · #m · (📎|🎬|🎵)/);
+    }
+
+    const linesAlt = await bot.dbAll('SELECT text, tag, media_path, media_mime FROM notes ORDER BY id');
+    assert.equal(linesAlt.length, 3);
+    assert.deepEqual(linesAlt.map(n => fs.existsSync(n.media_path)), [true, true, true], JSON.stringify(linesAlt.map(n => n.media_path)));
+    assert.deepEqual(linesAlt.map(n => n.media_mime), ['application/pdf', 'video/mp4', 'audio/ogg']);
+    assert.match(linesAlt[0].media_path, /_relatório final\.pdf$/);
+    assert.match(linesAlt[2].media_path, /\.ogg$/);
+
+    const list = (await bot.replyAlt('/notes -l')).join('\n');
+    for (const [, , label] of mediaAltAlt) assert.match(list, label);
+
+    // -view sends the media with the original name; the audio (without a caption) carries the text separately
+    const sentAfter = async (line) => {
+        const beforeAlt = bot.client.enviadas.length;
+        const texts = await bot.replyAlt(line);
+        return { textos: texts, enviadas: bot.client.enviadas.slice(beforeAlt) };
+    };
+    const doc = (await sentAfter('/notes -v 1')).enviadas.at(-1);
+    assert.equal(doc.content.filename, 'relatório final.pdf');
+    assert.match(doc.options.caption, /#1\* · #m/);
+
+    const audio = await sentAfter('/notes -v 3');
+    assert.equal(audio.enviadas.at(-1).options.caption, undefined);
+    assert.match(audio.textos.at(-1), /#3\* · #m/);
+
+    await bot.replyAlt('/notes -rm all');
+    assert.equal(linesAlt.some(n => fs.existsSync(n.media_path)), false);
 });
 
 test('-export: as imagens entram no PDF (JPEG), com a anotação como legenda; imagem inválida não derruba', async () => {
