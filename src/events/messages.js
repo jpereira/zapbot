@@ -295,7 +295,8 @@ client.on('message_create', (msg) => withContextDebug({
 
             // The start of more than one command (e.g.: /un): lists the ones the person can use
             const possible = (resolved?.possiveis ?? [])
-                .filter(c => admin || (!c.onlyAdmin && (ALWAYS_RELEASED.includes(c.cmd) || permission.pode(c.cmd))))
+                .filter(c => admin || (!c.onlyAdmin && (c.alvos ?? [c.cmd])
+                    .every(cmd => ALWAYS_RELEASED.includes(cmd) || permission.pode(cmd))))
                 .map(c => c.cmd);
             await msg.reply(possible.length
                 ? `🤔 Comando '${caller}' ambíguo. Possíveis comandos: ${possible.join(', ')}`
