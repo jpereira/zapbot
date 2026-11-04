@@ -21,11 +21,28 @@ const ATTEMPTS_STICKER = [
     { qualidade: 20, fps: 8 }
 ];
 
+/*
+ * Where the sticker's square crop goes (-pos): at the top, middle (default) or bottom. In
+ * image wider than tall, top = left and bottom = right. `fator` is the fraction of the leftover
+ * that is left out before the crop (0, 0.5 or 1); `sharp`, the resize position.
+ */
+const POSITIONS = {
+    topo: { fator: 0, sharp: 'left top' },
+    meio: { fator: 0.5, sharp: 'centre' },
+    baixo: { fator: 1, sharp: 'right bottom' }
+};
+const SYNONYMS = { topo: 'topo', cima: 'topo', top: 'topo', meio: 'meio', centro: 'meio', middle: 'meio',
+    center: 'meio', baixo: 'baixo', bottom: 'baixo' };
+
+/** "topo" | "cima" | "top" → 'topo' (same for middle and bottom); no value → 'meio'; invalid → null */
+const readPosition = (valueAlt) => (valueAlt == null ? 'meio' : SYNONYMS[String(valueAlt).trim().toLowerCase()] ?? null);
+
 /**
  * @param {object} [sticker]  the sticker attempt (ATTEMPTS_STICKER), with -st
  */
 function argsDoFfmpeg(opts, originalFile, outputFile, sticker = ATTEMPTS_STICKER[0]) {
     const isSticker = opts.opt.sticker;  // -sticker  | -st
+    const { fator: factor } = POSITIONS[readPosition(opts.opt.pos) ?? 'meio']; // -pos
     const isAudio   = opts.opt.audio;    // -audio    | -a
     const startSec  = opts.opt.startSec; // -startSec | -ss
     const endSec    = opts.opt.endSec;   // -endSec   | -es
@@ -53,13 +70,14 @@ function argsDoFfmpeg(opts, originalFile, outputFile, sticker = ATTEMPTS_STICKER
             outputFile
         );
     } else if (isSticker) {
-        // 512x512 animated sticker framed in the middle of the video (like /sticker):
-        // scales until it covers the square and the crop (centered by default) cuts off the excess.
+        // 512x512 animated sticker framed on the video (like /sticker):
+        // scales until it covers the square and the crop cuts off the excess, in the middle or at the top/bottom (-pos).
         // Already comes out as webp: whatsapp-web.js would convert an mp4 again, with no limit of
         // size, and WhatsApp refuses a sticker over 500 KB
         args.push(
             '-vf',
-            `fps=${sticker.fps},scale=512:512:force_original_aspect_ratio=increase,crop=512:512,setsar=1`,
+            `fps=${sticker.fps},scale=512:512:force_original_aspect_ratio=increase,` +
+                `crop=512:512:(in_w-512)*${factor}:(in_h-512)*${factor},setsar=1`,
             '-an',
             '-c:v', 'libwebp',
             '-lossless', '0',
@@ -88,14 +106,14 @@ function argsDoFfmpeg(opts, originalFile, outputFile, sticker = ATTEMPTS_STICKER
 
 /*
  * Sticker from an image: 512x512 square crop framed in the MIDDLE
- * of the image (without this WhatsApp Web converts without centering). WebP is already
+ * of the image, or at the top/bottom with -pos (without this WhatsApp Web converts without centering). WebP is already
  * sticker and goes as it is; videos go through ffmpeg (argsDoFfmpeg).
  */
 const STICKER_SIZE = 512;
 const STICKER_MAX_BYTES = 100 * 1024;          // WhatsApp limit: static sticker
 const STICKER_ANIMATED_MAX_BYTES = 500 * 1024;  // WhatsApp limit: animated sticker
 
-async function fitSticker(media) {
+async function fitSticker(media, pos = 'meio') {
     if (!media?.mimetype?.startsWith('image/') || media.mimetype === 'image/webp') return media;
 
     try {
@@ -108,7 +126,7 @@ async function fitSticker(media) {
         for (const quality of [80, 60, 40, 20]) {
             outputAlt = await sharp(inputAlt, { animated: animated })
                 .rotate() // respects the EXIF orientation of phone photos
-                .resize(STICKER_SIZE, STICKER_SIZE, { fit: 'cover', position: 'centre' })
+                .resize(STICKER_SIZE, STICKER_SIZE, { fit: 'cover', position: POSITIONS[readPosition(pos) ?? 'meio'].sharp })
                 .webp({ quality })
                 .toBuffer();
 
@@ -180,5 +198,6 @@ module.exports = {
     ATTEMPTS_STICKER,
     argsDoFfmpeg,
     fitSticker,
+    readPosition,
     thumbnailDoLink
 };

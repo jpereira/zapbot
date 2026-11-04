@@ -11,7 +11,7 @@ const { formatErrorCommand, getCommandSyntax } = require('./base');
 const { completeNotice } = require('../client');
 const { BIN_FFMPEG, BIN_FFPROBE, BIN_YT, CACHE_DIR, GET_MAX_CONCURRENT, TMP_DIR } = require('../constants');
 const { printDebug, printError, printInfo } = require('../log');
-const { STICKER_ANIMATED_MAX_BYTES, ATTEMPTS_STICKER, argsDoFfmpeg, fitSticker, thumbnailDoLink } = require('../media');
+const { STICKER_ANIMATED_MAX_BYTES, ATTEMPTS_STICKER, argsDoFfmpeg, fitSticker, readPosition, thumbnailDoLink } = require('../media');
 const { getSetting, isDebugMode, stickerMeta } = require('../settings');
 const { humanSize } = require('../util/files');
 const { captureOutput, runCommand } = require('../util/processes');
@@ -158,6 +158,18 @@ async function optionsValid(msg, opts, cmd) {
         await msg.reply('❌ O segundo final (-es) deve ser maior que o inicial (-ss, padrão 0).');
         return false;
     }
+    if (opts.given.has('pos')) {
+        const pos = readPosition(opts.opt.pos);
+        if (!pos) {
+            await msg.reply(`❌ -pos: "${opts.opt.pos ?? ''}" não vale. Use topo, meio ou baixo.`);
+            return false;
+        }
+        if (!opts.opt.sticker) {
+            await msg.reply('❌ O -pos é da figurinha: use com -st (ou /sticker).');
+            return false;
+        }
+        opts.opt.pos = pos;
+    }
     if (opts.opt.audio && opts.opt.sticker) {
         await msg.reply('❌ Escolha áudio (-a) ou figurinha (-st) para esta execução.');
         return false;
@@ -216,7 +228,7 @@ async function sendWithoutConverter(msg, media, opts) {
     }
 
     if (type === 'imagem' && sticker) {
-        await msg.reply(await fitSticker(media), null, { ...MSG_STICKER, ...stickerMeta() });
+        await msg.reply(await fitSticker(media, opts.opt.pos), null, { ...MSG_STICKER, ...stickerMeta() });
         return true;
     }
 
@@ -401,7 +413,7 @@ async function converterAndSend({ msg, opts, senderName, url, media, previa: pre
         // WhatsApp only edits text: the media goes separately and the notice becomes the confirmation
         await completeNotice(msg, notice, `✅ ${isSticker ? 'Sticker criado' : 'Mídia baixada'} com sucesso!`, { linkPreview: false });
     } catch (e) {
-        if (e.aoBaixar && preview && (await previewSticker(msg, preview, notice, e))) return;
+        if (e.aoBaixar && preview && (await previewSticker(msg, preview, notice, e, opts.opt.pos))) return;
         printError(e.message);
         await completeNotice(msg, notice, formatErrorCommand(e), { linkPreview: false });
     } finally {
@@ -478,13 +490,13 @@ function errorOnDownload(messageAlt, optionsAlt) {
  * to the link (as /sticker did before downloading the video).
  * @returns {Promise<boolean>} true = a figurinha foi enviada
  */
-async function previewSticker(msg, quoted, notice, reasonAlt) {
+async function previewSticker(msg, quoted, notice, reasonAlt, pos) {
     try {
         const thumb = await thumbnailDoLink(quoted);
         if (!thumb) return false;
 
         printInfo(`/sticker: sem o vídeo do link (${reasonAlt.message}); usando a prévia`);
-        await msg.reply(await fitSticker(thumb), null, { ...MSG_STICKER, ...stickerMeta() });
+        await msg.reply(await fitSticker(thumb, pos), null, { ...MSG_STICKER, ...stickerMeta() });
         if (notice) await completeNotice(msg, notice, '✅ Sticker criado com sucesso!', { linkPreview: false });
         return true;
     } catch (err) {
