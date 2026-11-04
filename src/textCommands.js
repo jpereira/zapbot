@@ -69,7 +69,7 @@ async function withTargets(command, textAlt) {
 const allowed = () => activeCommands().filter(c => c.cron).map(c => c.cmd);
 
 // "/crypto BTC" → { command, args, opts }, or { error }
-async function readCommand(line, whereAlt = '/cron') {
+async function readCommand(line, whereAlt = '/cron', owner = false) {
     const caller = line.split(/\s+/, 1)[0].toLowerCase();
     const foundAlt2 = await findCommandAlt(line);
 
@@ -77,12 +77,13 @@ async function readCommand(line, whereAlt = '/cron') {
     if (foundAlt2.textoAlias) return { erro: `❌ {${line}}: o alias ${caller} é um texto e não roda dentro do ${whereAlt}.` };
 
     const { command, args } = foundAlt2;
-    if (!command.cron) {
+    if (!command.cron || (command.cron === 'dono' && !owner)) {
         return { erro: `❌ {${line}}: o ${command.cmd} não roda dentro do ${whereAlt}.\n💡 _Rodam: ${allowed().join(', ')}._` };
     }
 
     const opts = GetOptFromCommand(args, command);
-    const prohibited = (command.cmd_opts ?? []).find(o => o.cron === false && o.opts?.some(nameAlt => opts.given.has(nameAlt)));
+    const prohibited = (command.cmd_opts ?? []).find(o => (o.cron === false || (o.cron === 'dono' && !owner)) &&
+        o.opts?.some(nameAlt => opts.given.has(nameAlt)));
     if (prohibited) return { erro: `❌ {${line}}: o -${prohibited.opts[0]} do ${command.cmd} não roda dentro do ${whereAlt}.` };
 
     return { command, args, opts };
@@ -92,9 +93,9 @@ async function readCommand(line, whereAlt = '/cron') {
  * Checks the text's {/command}s when creating or editing (the /cron item).
  * @returns {Promise<string|null>} the error (of the first invalid one) or null
  */
-async function commandsError(textAlt, whereAlt = '/cron') {
+async function commandsError(textAlt, whereAlt = '/cron', owner = false) {
     for (const { linha: line } of commandsInText(textAlt)) {
-        const { erro: errorAlt } = await readCommand(line, whereAlt);
+        const { erro: errorAlt } = await readCommand(line, whereAlt, owner);
         if (errorAlt) return errorAlt;
     }
     return null;
@@ -133,7 +134,7 @@ function messageSynthetic(chatId, line, replies) {
  * you (admin); with it, with the admin and the permissions of whoever runs.
  */
 async function runCommand(chatId, line, { chatName, isGroup, onde: whereAlt = '/cron', quem: who = null }) {
-    const { erro: errorAlt, command, args, opts } = await readCommand(line, whereAlt);
+    const { erro: errorAlt, command, args, opts } = await readCommand(line, whereAlt, !who); // without `quem`: runs as the owner
     if (errorAlt) return { texto: `⚠️ ${line.split(/\s+/, 1)[0]} não roda no ${whereAlt}`, midias: [] };
 
     // The handler lives in commands/index, which loads /cron (and this file): only here, at the time
