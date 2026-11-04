@@ -511,7 +511,7 @@ test('-desc: grava, mostra, aparece na lista e no /notes sozinho, vai no -move e
     assert.match((await bot.replyAlt('/notes -d #casa Coisas da casa'))[0], /descrição salva/);
     assert.match((await bot.replyAlt('/notes -d #casa Coisas de casa'))[0], /trocada/);
     assert.match((await bot.replyAlt('/notes -d #cas'))[0], /Coisas de casa/);
-    assert.match((await bot.replyAlt('/notes -l #casa'))[0], /\nCoisas de casa\n/);
+    assert.match((await bot.replyAlt('/notes -l #casa'))[0], /\n👉 Coisas de casa\n/);
     assert.match((await bot.replyAlt('/notes'))[0], /#casa: 1 · Coisas de casa/);
     await bot.replyAlt('/notes -m #casa #lar');
     assert.match((await bot.replyAlt('/notes -d #lar'))[0], /Coisas de casa/);
@@ -631,7 +631,7 @@ test('/notes sem parâmetros mostra as tags; /notes #tag lista as dela', async (
 
     for (const cmd of ['/notes #minhatag', '/notes #MinhaTag', '/notes -l #minhatag']) {
         const [list] = await bot.replyAlt(cmd);
-        assert.match(list, /^```\n📝 ANOTAÇÕES #minhatag \(1\)/, cmd);
+        assert.match(list, /^📝 \*ANOTAÇÕES\*\n\n🏷️ minhatag \(1\)/, cmd);
     }
     // Without the #, it is not a tag: saving a note with no tag is an error
     assert.match((await bot.replyAlt('/notes minhatag'))[0], /Falta a #tag/);

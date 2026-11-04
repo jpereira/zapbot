@@ -89,14 +89,18 @@ function soTags(textAlt) {
     return partsAlt.length && partsAlt.every(p => /^#[^\s#]+$/.test(p)) ? [...new Set(partsAlt.map(readTag))] : null;
 }
 
-function noteLine(n, plan = false) {
+// 04/11 10:30
+const dateShort = (valueAlt) => formatData(valueAlt).replace(/^(\d+\/\d+)\/\d+,? (\d+:\d+):\d+$/, '$1 $2');
+
+function noteLine(n, plan = false, short = false) {
     const alert = n.alert_at
         ? `\n   ⏰ ${fmtWhen(n.alert_at)} → ${noticeWhere(noteDestinations(n))}`
         : '';
     const body = [n.text, n.media_path && mediaLabel(n, plan)].filter(Boolean).join('\n');
     // plain: inside the ``` block the *bold* and _italic_ appear as they are
     return plan ? `#${n.id} ${indent(body)}${alert}\n   🕐 ${formatData(n.created_at)}`
-        : `*#${n.id}* ${indent(body)}${alert}\n   🕐 _${formatData(n.created_at)}_`;
+        : short ? `*#${n.id}* ${indent(body)}${alert}\n_${dateShort(n.created_at)}_`
+            : `*#${n.id}* ${indent(body)}${alert}\n   🕐 _${formatData(n.created_at)}_`;
 }
 
 // The ids of -rm / -alerta -rm: 1 2 3, 1,2,3 or all. Does any not exist? None is touched
@@ -394,15 +398,17 @@ const tagsDescriptions = async () => new Map((await dbAll('SELECT tag, descripti
     .map(r => [r.tag, r.description]));
 
 // One text per tag (each goes in a message)
-function groupPerTag(notes, descriptions = new Map(), plan = true) {
+function groupPerTag(notes, descriptions = new Map(), plan = true, titleJaHasTag = false) {
     const groups = new Map();
     for (const n of notes) groups.set(n.tag ?? '', [...(groups.get(n.tag ?? '') ?? []), n]);
 
     const keys = [...groups.keys()].sort((a, b) => (a === '') - (b === '') || a.localeCompare(b));
     const soWithoutTag = keys.length === 1 && keys[0] === '';
     return keys.map(k => {
-        const items = groups.get(k).map(n => noteLine(n, plan)).join('\n\n');
+        const items = groups.get(k).map(n => noteLine(n, plan, titleJaHasTag)).join('\n\n');
         const desc = descriptions.get(k);
+        // List of a single #tag: the list title already shows the tag and the total, only the description is left
+        if (titleJaHasTag && keys.length === 1) return `🏷️ ${k} (${groups.get(k).length})${desc ? `\n👉 ${desc}` : ''}\n\n${items}`;
         return soWithoutTag ? items
             : `🏷️ ${k ? `#${k}` : WITHOUT_TAG} (${groups.get(k).length})${desc ? `\n${desc}` : ''}\n\n${items}`;
     });
@@ -422,9 +428,9 @@ const TIPS = '\n\n💡 *Dicas*\n' +
 
 // Replies in the chat or, with -to, sends to the destinations (and replies that it sent).
 // `texto` may be a list: each item goes in a message, and the tip only after the last
-async function deliverText(msg, destinations, textAlt, subject, tip = '') {
-    // Each listing goes in a ``` block (monospaced); the tip stays outside
-    const partsAlt = [].concat(textAlt).map(t => '```\n' + t + '\n```');
+async function deliverText(msg, destinations, textAlt, subject, tip = '', withoutBlock = false) {
+    // Each listing goes in a ``` block (monospaced), except the clean one; the tip stays outside
+    const partsAlt = [].concat(textAlt).map(t => (withoutBlock ? t : '```\n' + t + '\n```'));
     if (!destinations) {
         for (const [i, part] of partsAlt.entries()) {
             await msg.reply(i === partsAlt.length - 1 ? `${part}${tip}` : part, undefined, WITHOUT_PREVIEW);
@@ -490,9 +496,11 @@ async function listAlt(msg, filter = '', withSearch = false) {
     }
 
     // One message per tag; the title (with the total) goes at the start of the first
-    const partsAlt = groupPerTag(notes, await tagsDescriptions());
-    partsAlt[0] = `📝 ANOTAÇÕES${label}${foundAlt2} (${notes.length})\n\n${partsAlt[0]}`;
-    await deliverText(msg, destinations, partsAlt, `📝 Anotações${label}${foundAlt2}`, TIPS);
+    const partsAlt = groupPerTag(notes, await tagsDescriptions(), tags.length !== 1, tags.length === 1);
+    const clean = tags.length === 1;
+    partsAlt[0] = clean ? `📝 *ANOTAÇÕES*${foundAlt2}\n\n${partsAlt[0]}`
+        : `📝 ANOTAÇÕES${label}${foundAlt2} (${notes.length})\n\n${partsAlt[0]}`;
+    await deliverText(msg, destinations, partsAlt, `📝 Anotações${label}${foundAlt2}`, TIPS, clean);
 }
 
 // -move: renames the tag in all notes (if the new one already exists, they merge)
