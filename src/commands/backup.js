@@ -46,7 +46,8 @@ const HELP = '💡 *Dicas*\n' +
 const inputsInLine = (inputs) => Object.entries(inputs)
     .map(([t, n]) => `${t} ${fmtInA(n)}`).join(' · ');
 
-const backupLine = (b, i) => `${i + 1}. *${fmtWhen(b.criadoEm)}* · ${humanSize(b.bytes)} · ${b.motivo}`;
+const backupLine = (b, i) => `${i + 1}. *${fmtWhen(b.criadoEm)}* · ${humanSize(b.bytes)}` +
+    `${b.bytesNotas ? ` + 🖼️ ${humanSize(b.bytesNotas)}` : ''} · ${b.motivo}`;
 
 // "2" (list number) or the file name (with or without .db.gz)
 function findBackup(list, valueAlt) {
@@ -60,7 +61,7 @@ async function status(msg) {
     const inputs = await countInputs();
     const db = DB_PATH;
     const bytesDb = fs.existsSync(db) ? fs.statSync(db).size : null;
-    const total = list.reduce((s, b) => s + b.bytes, 0);
+    const total = list.reduce((s, b) => s + b.bytes + (b.bytesNotas ?? 0), 0);
     const [last] = list;
 
     const today = partsInBrasilia(Date.now());
@@ -106,7 +107,8 @@ async function cmdBackup({ msg, opts: commandOpts, args }) {
     // -now
     if (o.now) {
         const b = await createBackup(REASONS.manual);
-        await msg.reply(`💾 *Backup criado*\n📄 ${b.nome}\n📦 ${humanSize(b.bytes)}\n_${inputsInLine(b.entradas)}_`);
+        await msg.reply(`💾 *Backup criado*\n📄 ${b.nome}\n📦 ${humanSize(b.bytes)}` +
+            `${b.bytesNotas ? `\n🖼️ ${humanSize(b.bytesNotas)} de imagens do /notes` : ''}\n_${inputsInLine(b.entradas)}_`);
         return;
     }
 
@@ -134,7 +136,8 @@ async function cmdBackup({ msg, opts: commandOpts, args }) {
         const linesAlt = names.map(t => `${t}: ${fmtInA(b.entradas?.[t] ?? 0)} → ${fmtInA(current[t] ?? 0)}`);
 
         await msg.reply(`💾 *Backup ${list.indexOf(b) + 1}*\n` +
-            `📄 ${b.nome}\n🕐 ${fmtWhen(b.criadoEm)} · ${b.motivo} · ZapBot ${b.versao}\n📦 ${humanSize(b.bytes)}\n\n` +
+            `📄 ${b.nome}\n🕐 ${fmtWhen(b.criadoEm)} · ${b.motivo} · ZapBot ${b.versao}\n📦 ${humanSize(b.bytes)}\n` +
+            `${b.bytesNotas ? `🖼️ ${humanSize(b.bytesNotas)} de imagens do /notes${b.imagens ? ` (${b.imagens})` : ''}\n` : ''}\n` +
             `*Entradas* _(backup → atual)_\n\`\`\`${linesAlt.join('\n')}\`\`\``);
         return;
     }
@@ -152,7 +155,8 @@ async function cmdBackup({ msg, opts: commandOpts, args }) {
                 `📄 ${b.nome} (${b.motivo}, ZapBot ${b.versao})\n\n` +
                 'O banco inteiro volta a esse momento: mensagens guardadas, apagadas, editadas, settings, ' +
                 'regras do /watch, alertas, lembretes, estatísticas... O que entrou depois se perde, mas ' +
-                'antes o bot faz um backup do estado atual.\n\n' +
+                'antes o bot faz um backup do estado atual.' +
+                `${b.arquivoNotas ? '\nAs imagens do /notes deste backup voltam junto.' : '\nEste backup não tem imagens do /notes.'}\n\n` +
                 `Para confirmar: /backup -r ${b.nome} -sim`);
             return;
         }
