@@ -34,7 +34,7 @@ aliases. Quem executa um atalho precisa ter permissão para os comandos de desti
 /alias -rm all
 ```
 
-O nome aceita letras, números, `_` e `-`, com ou sem a barra no cadastro e na remoção. Para
+O nome aceita letras, números, `_`, `-` e `.` (`/alias meu.comando /me Olá`), com ou sem a barra no cadastro e na remoção. Para
 executar, use a barra: `/eita`. Cadastrar novamente o mesmo nome substitui seu comando e sua
 descrição. Sem `-desc`, a descrição fica vazia. A descrição aceita aspas retas ou curvas,
 inclusive misturadas, como `-desc “Exibe Dinheiro"`.
@@ -138,3 +138,4 @@ Verificando Prjx
   uma linha só fica na frase. Mídias (`/meme`, `/giphy`) saem depois do texto.
 - Argumentos digitados ao chamar um alias de texto são ignorados.
 - O texto precisa de pelo menos um `{/comando}`; sem nenhum, o cadastro é recusado.
+- O `{/comando}` pode ser outro alias de comando (com `$N`), mas não um alias de texto.

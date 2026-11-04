@@ -1396,10 +1396,10 @@
         },
         {
             "cmd": "/notes",
-            "usage": "/notes [-list|-l] [#tag...] [-to <destino>]...  ou  /notes -search|-s [#tag...] <texto|/regex/flags> [-to <destino>]...  ou  /notes -tags|-t [-to <destino>]...  ou  /notes -update|-u <id> [#tag] <novo texto>  ou  /notes -view|-v <id...|#tag...> [-to <destino>]...  ou  /notes -move|-m #tag #novatag  ou  /notes -desc|-d #tag [<descrição>|-rm]  ou  /notes -export|-e [#tag...] [-to <destino>]...  ou  /notes [#tag] <texto>  ou  /notes -add|-a [#tag] <texto> [-alerta <quando> [-to <destino>]...]  ou  /notes -rm|-r <id...|#tag...|all>  ou  /notes -alerta [<id|#tag...> [<quando> [-to <destino>]...]]  ou  /notes -alerta -rm <id...|#tag...|all>",
+            "usage": "/notes [-list|-l] [#tag...] [-to <destino>]...  ou  /notes -search|-s [#tag...] <texto|/regex/flags> [-to <destino>]...  ou  /notes -update|-u <id> [#tag] <novo texto>  ou  /notes -view|-v <id...|#tag...> [-to <destino>]...  ou  /notes -move|-m #tag #novatag  ou  /notes -desc|-d #tag [<descrição>|-rm]  ou  /notes -export|-e [#tag...] [-to <destino>]...  ou  /notes #tag <texto>  ou  /notes -add|-a #tag <texto> [-alerta <quando> [-to <destino>]...]  ou  /notes -rm|-r <id...|#tag...|all>  ou  /notes -alerta [<id|#tag...> [<quando> [-to <destino>]...]]  ou  /notes -alerta -rm <id...|#tag...|all>",
             "aliases": [],
             "summary": "Anotações salvas no banco",
-            "help": "Anotações salvas no banco. Respondendo uma mensagem, anota o texto dela com ↩️ (/notes, /notes #lembrete). Com uma mídia (imagem, documento, áudio, vídeo...) na própria mensagem ou respondendo uma, guarda o arquivo no disco junto da anotação. Sem nada, mostra as tags com a quantidade e a descrição de cada uma (/notes #casa lista as anotações da tag; -l lista todas, com o ID, agrupadas por #tag); com um texto que não começa com \"-\", anota (o mesmo que -add). O -alerta lembra de uma anotação numa data/hora (uma vez; a anotação continua): no seu privado ou nos destinos do -to. Ex: /notes -a #casa comprar leite, /notes #casa, /notes -s /pão|leite/i, /notes -t, /notes -v 76, /notes #idei (acha a #ideias), /notes -m #casa #lar, /notes -d #casa Coisas da casa, /notes -update 3 novo texto, /notes -e #casa, /notes -r #casa, /notes -a ligar pro João -alerta amanhã 9h, /notes -alerta 3 +2h -to /Família/, /notes -alerta #casa 18h -to /Família/, /notes -r 2",
+            "help": "Anotações salvas no banco. Para anotar, a sintaxe é /notes #tag <texto>: sem a #tag dá erro, e só /notes #tag lista as anotações da tag. Respondendo uma mensagem, o texto dela vira a anotação, com ↩️ (/notes #lembrete); uma mídia (imagem, documento, áudio, vídeo...) na própria mensagem ou na respondida é guardada no disco junto da anotação. Sem nada, mostra as tags com a quantidade e a descrição de cada uma; -l lista todas as anotações, com o ID, agrupadas por #tag (uma mensagem por tag). O -alerta lembra de uma anotação numa data/hora (uma vez; a anotação continua): no seu privado ou nos destinos do -to. Ex: /notes #casa comprar leite, /notes #casa, /notes -s /pão|leite/i, /notes -v 76, /notes #idei (acha a #ideias), /notes -m #casa #lar, /notes -d #casa Coisas da casa, /notes -update 3 novo texto, /notes -e #casa, /notes -r #casa, /notes #lembrete ligar pro João -alerta amanhã 9h, /notes -alerta 3 +2h -to /Família/, /notes -alerta #casa 18h -to /Família/, /notes -r 2",
             "cmd_opts": [
                 {
                     "opts": [
@@ -1407,9 +1407,9 @@
                         "a"
                     ],
                     "values": [
-                        "[#tag] <texto>"
+                        "#tag <texto>"
                     ],
-                    "desc": "Adiciona uma anotação, com #tag opcional no começo (o texto vai até o -alerta, se houver). Ex: /notes -a #casa comprar leite",
+                    "desc": "Adiciona uma anotação: a #tag é obrigatória e vem no começo (o texto vai até o -alerta, se houver). Ex: /notes -a #casa comprar leite",
                     "cron": false
                 },
                 {
@@ -1432,14 +1432,6 @@
                     ],
                     "desc": "Só as anotações que casam: texto (sem diferenciar maiúsculas/acentos) ou /regex/flags, como o -q do /show. Casa também o nome da tag. Ex: /notes -s /pão|leite/i, /notes -s #casa leite",
                     "cron": false
-                },
-                {
-                    "opts": [
-                        "tags",
-                        "t"
-                    ],
-                    "values": [],
-                    "desc": "Mostra todas as tags com a quantidade de anotações de cada uma."
                 },
                 {
                     "opts": [
@@ -1482,7 +1474,7 @@
                     "values": [
                         "#tag [<descrição>|-rm]"
                     ],
-                    "desc": "Descrição da tag, mostrada na lista e no -tags. Sem texto, mostra a atual; com -rm, apaga. A tag pode vir pela metade. Ex: /notes -desc #casa Coisas da casa, /notes -d #casa, /notes -d #casa -rm",
+                    "desc": "Descrição da tag, mostrada na lista e no /notes sozinho. Sem texto, mostra a atual; com -rm, apaga. A tag pode vir pela metade. Ex: /notes -desc #casa Coisas da casa, /notes -d #casa, /notes -d #casa -rm",
                     "cron": false
                 },
                 {

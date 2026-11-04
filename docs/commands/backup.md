@@ -45,6 +45,14 @@ Remover contatos ou reduzir o histórico local não altera os backups já existe
 • 🕐 Último: qui 01/10 03:00 (automático, 1.10 MB)
 • ⏭️ Próximo automático: sex 02/10 03:00 (todo dia às 3h, guarda 7)
 • 📤 Destino automático: só local
+
+💡 Dicas
+/backup -now cria um agora
+/backup -l lista
+/backup -i <nº> detalha
+/backup -r <nº> restaura
+/backup -s [nº] [-to <destino>] envia o arquivo
+/backup -rm <nº|all> apaga
 ```
 
 ```text
