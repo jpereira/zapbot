@@ -10,7 +10,7 @@ const { test, describe, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 
 const { OWNER, MessageMedia, emails, nodemailer } = bot;
-const { BACKUP_DIR } = bot.src('constants');
+const { BACKUP_DIR, NOTES_DIR } = bot.src('constants');
 const { createBackup, listBackups, checkBackupDaily } = bot.src('backup');
 const { instantInBrasilia } = bot.src('util/when');
 
@@ -40,6 +40,34 @@ describe('/backup (/bkp)', () => {
         // The version with the commit and tag that created the backup: "2.0.0 (git+0c6164f/v2.0.0)"
         assert.match(meta.versao, new RegExp(`^${require('../package.json').version.replaceAll('.', '\\.')}(?: \\(devel\\))? \\(git\\+[0-9a-f]{7}/[\\w.-]+\\)$`));
         assert.equal(meta.entradas.messages, 2);
+    });
+
+    test('as imagens do /notes vão num .notes.tar.gz e voltam no -r; sem imagem, não há tar', async () => {
+        const [withoutImage] = [await createBackup()];
+        assert.equal(withoutImage.arquivoNotas, undefined);
+
+        fs.mkdirSync(NOTES_DIR, { recursive: true });
+        const photo = path.join(NOTES_DIR, 'teste_backup.jpg');
+        fs.writeFileSync(photo, 'conteudo da imagem');
+
+        try {
+            const [r] = await bot.replyAlt('/backup -now');
+            assert.match(r, /🖼️ [\d,.]+ \w+ de imagens do \/notes/);
+            const [b] = await listBackups();
+            assert.ok(fs.existsSync(b.arquivoNotas));
+            assert.equal(b.imagens, 1);
+            assert.match((await bot.replyAlt('/backup -l'))[0], new RegExp(`1\\. .* \\+ 🖼️ [\\d,.]+ \\w+ · manual`));
+
+            fs.rmSync(photo);
+            assert.match((await bot.replyAlt(`/backup -r ${b.nome}`))[0], /imagens do \/notes deste backup voltam/);
+            await bot.replyAlt(`/backup -r ${b.nome} -sim`);
+            assert.equal(fs.readFileSync(photo, 'utf8'), 'conteudo da imagem');
+
+            await bot.replyAlt(`/backup -rm ${b.nome}`);
+            assert.ok(!fs.existsSync(b.arquivoNotas), '-rm leva o tar junto');
+        } finally {
+            fs.rmSync(photo, { force: true });
+        }
     });
 
     test('sem opção: banco atual, último backup e o próximo automático', async () => {
