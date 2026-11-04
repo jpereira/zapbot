@@ -57,7 +57,7 @@ const ALERT = /(^|\s)-alerta(?=\s|$)([\s\S]*)$/;
 
 const noteDestinations = (n) => destinationsSaved(n.recipients, lineDestination(n));
 const noticeWhere = (destinations) => (destinations.length ? describeDestinations(destinations) : 'seu privado');
-const indent = (textAlt) => textAlt.replace(/\n/g, '\n   ');
+const indent = (textAlt) => textAlt.replace(/\n(?=[^\n])/g, '\n   ');
 
 const listNotes = () => dbAll('SELECT * FROM notes ORDER BY id');
 
@@ -89,18 +89,58 @@ function soTags(textAlt) {
     return partsAlt.length && partsAlt.every(p => /^#[^\s#]+$/.test(p)) ? [...new Set(partsAlt.map(readTag))] : null;
 }
 
-// 04/11 10:30
-const dateShort = (valueAlt) => formatData(valueAlt).replace(/^(\d+\/\d+)\/\d+,? (\d+:\d+):\d+$/, '$1 $2');
+/*
+ * The note text in parts: the title (the first line), the rest and the links. Every link
+ * http(s) leaves where it was (and the dangling "Leia mais em:") and goes to the end.
+ */
+function textParts(textAlt) {
+    const links = [];
+    const linesAlt = String(textAlt ?? '').split('\n').map(line => {
+        if (!/https?:\/\//i.test(line)) return line.trimEnd();
+        const without = line.replace(/\(?(https?:\/\/\S+)/gi, (_, foundAlt2) => {
+            let url = foundAlt2;
+            // Punctuation stuck to the end is not part of the link (the ")" is, if a "(" opened in the URL itself)
+            while (/[.,;:!?)”"'’]$/.test(url) && !(url.endsWith(')') && url.includes('('))) url = url.slice(0, -1);
+            links.push(url);
+            return '';
+        });
+        return without.replace(/\s*(?:[-–—.…]+\s*)*(?:veja mais|leia mais|leia a mat[eé]ria completa)[^\n]*$/i, '')
+            .replace(/[\s:]+$/, '').replace(/ {2,}/g, ' ');
+    });
+    const body = linesAlt.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+    const [title = '', ...rest] = body.split('\n');
+    return {
+        // A *bold* that already came in the text does not double
+        titulo: title.trim().replace(/^\*(.+)\*$/, '$1'),
+        corpo: rest.join('\n').trim(),
+        links: [...new Set(links)]
+    };
+}
 
-function noteLine(n, plan = false, short = false) {
+/*
+ * The first line becomes the bold title (the only one), the rest comes as it was and the links
+ * stay at the end, under "🌐 Links". plain: without the *bold* (``` block and email).
+ */
+function formatText(textAlt, plan = false) {
+    const { titulo: title, corpo: body, links } = textParts(textAlt);
+    return [title && (plan ? title : `*${title}*`), body, links.length && `🌐 Links\n${links.map(l => `• ${l}`).join('\n')}`]
+        .filter(Boolean).join('\n\n');
+}
+
+// 10:30 04/11/2026 (time, then day/month/year, without the seconds)
+const dateShort = (valueAlt) => formatData(valueAlt).replace(/^(\d+\/\d+\/\d+),? (\d+:\d+):\d+$/, '$2 $1');
+
+function noteLine(n, plan = false, position = 0) {
     const alert = n.alert_at
         ? `\n   ⏰ ${fmtWhen(n.alert_at)} → ${noticeWhere(noteDestinations(n))}`
         : '';
-    const body = [n.text, n.media_path && mediaLabel(n, plan)].filter(Boolean).join('\n');
+    const body = [formatText(n.text, plan), n.media_path && mediaLabel(n, plan)].filter(Boolean).join('\n');
     // plain: inside the ``` block the *bold* and _italic_ appear as they are
-    return plan ? `#${n.id} ${indent(body)}${alert}\n   🕐 ${formatData(n.created_at)}`
-        : short ? `*#${n.id}* ${indent(body)}${alert}\n_${dateShort(n.created_at)}_`
-            : `*#${n.id}* ${indent(body)}${alert}\n   🕐 _${formatData(n.created_at)}_`;
+    // With position (list): "1. ..." at the start and the id in the footer, "🕐 date, #id"
+    const ini = position ? `${position}.` : `#${n.id}`;
+    const end = position ? `${dateShort(n.created_at)}, #${n.id}` : dateShort(n.created_at);
+    return plan ? `${ini} ${indent(body)}${alert}\n   🕐 ${end}`
+        : `${ini} ${body}${alert.replace(/\n {3}/, '\n')}\n🕐 _${end}_`;
 }
 
 // The ids of -rm / -alerta -rm: 1 2 3, 1,2,3 or all. Does any not exist? None is touched
@@ -405,7 +445,7 @@ function groupPerTag(notes, descriptions = new Map(), plan = true, titleJaHasTag
     const keys = [...groups.keys()].sort((a, b) => (a === '') - (b === '') || a.localeCompare(b));
     const soWithoutTag = keys.length === 1 && keys[0] === '';
     return keys.map(k => {
-        const items = groups.get(k).map(n => noteLine(n, plan, titleJaHasTag)).join('\n\n');
+        const items = groups.get(k).map((n, i) => noteLine(n, plan, i + 1)).join('\n\n');
         const desc = descriptions.get(k);
         // List of a single #tag: the list title already shows the tag and the total, only the description is left
         if (titleJaHasTag && keys.length === 1) return `🏷️ ${k} (${groups.get(k).length})${desc ? `\n👉 ${desc}` : ''}\n\n${items}`;
@@ -590,14 +630,18 @@ async function seeNotes(msg, filter) {
     if (destinations === null) return;
 
     const header = (n) => [`📝 *#${n.id}*`, n.tag && `#${n.tag}`, `_${formatData(n.created_at)}_`].filter(Boolean).join(' · ');
+    const withoutMarks = (t) => t.replace(/[*_]/g, '');
     const failures = [];
 
     for (const n of targets) {
-        const textAlt = [header(n), n.text].filter(Boolean).join('\n');
+        const textAlt = [header(n), n.text && formatText(n.text)].filter(Boolean).join('\n');
         let media = null;
+        let withBorder = null;
         if (n.media_path) {
+            withBorder = await imageWithBorder(n.media_path, n.media_mime);
             media = await Promise.resolve().then(() => {
-                const m = MessageMedia.fromFilePath(n.media_path);
+                const m = withBorder ? new MessageMedia(n.media_mime, withBorder.toString('base64'))
+                    : MessageMedia.fromFilePath(n.media_path);
                 m.filename = nameOriginal(n.media_path);
                 return m;
             }).catch(() => null);
@@ -622,8 +666,10 @@ async function seeNotes(msg, filter) {
         const emails = [...new Set(destinations.filter(d => d.email).flatMap(d => d.email.split(/\s*,\s*/)))];
         if (emails.length) {
             await sendEmail({
-                para: emails, assunto: `📝 Anotação #${n.id}`, texto: textAlt.replace(/[*_]/g, ''),
-                anexos: media ? [{ filename: nameOriginal(n.media_path), path: n.media_path, contentType: n.media_mime }] : []
+                para: emails, assunto: `📝 Anotação #${n.id}`,
+                texto: [withoutMarks(header(n)), n.text && formatText(n.text, true)].filter(Boolean).join('\n'),
+                anexos: media ? [{ filename: nameOriginal(n.media_path), contentType: n.media_mime,
+                    ...(withBorder ? { content: withBorder } : { path: n.media_path }) }] : []
             }).catch(err => failures.push(`e-mail: ${err.message}`));
         }
     }
@@ -662,11 +708,29 @@ function fileStamp(ms) {
     return `${p.year}${p.month}${p.day}_${p.hour}${p.minute}`;
 }
 
+/*
+ * The image with a thin black border, so you can tell it is an image (jpeg, png and webp; in the
+ * of the source). Returns null if not possible (gif, error): the file as it is counts.
+ */
+async function imageWithBorder(fileAlt, mime) {
+    if (!/^image\/(jpeg|png|webp)$/.test(String(mime))) return null;
+    try {
+        const { data, info } = await sharp(fileAlt).rotate().toBuffer({ resolveWithObject: true });
+        const border = Math.max(2, Math.round(Math.max(info.width, info.height) / 300));
+        return await sharp(data).extend({ top: border, bottom: border, left: border, right: border, background: '#000000' })
+            .toBuffer();
+    } catch (err) {
+        printError('/notes: borda da imagem:', err.message);
+        return null;
+    }
+}
+
 // The note image as an RGB JPEG on a white background, at the size the PDF uses
 async function imageForPdf(fileAlt) {
     try {
         const { data, info } = await sharp(fileAlt).rotate().resize({ width: 900, withoutEnlargement: true })
-            .flatten({ background: '#ffffff' }).toColourspace('srgb').jpeg({ quality: 80 })
+            .flatten({ background: '#ffffff' }).extend({ top: 2, bottom: 2, left: 2, right: 2, background: '#000000' })
+            .toColourspace('srgb').jpeg({ quality: 80 })
             .toBuffer({ resolveWithObject: true });
         return { jpeg: data, largura: info.width, altura: info.height };
     } catch (err) {
@@ -724,7 +788,14 @@ async function exportar(msg, filter = '') {
             if (image) blocks.push({ tipo: 'imagem', ...image });
             const alert = (n.media_path && !image
                 ? (isImage(n.media_mime) ? ' · imagem não incluída' : ` · arquivo não incluído (${nameOriginal(n.media_path)})`) : '') + (n.alert_at ? ` · alerta ${fmtWhen(n.alert_at)}` : '');
-            blocks.push({ tipo: 'texto', texto: `#${n.id}  ${n.text.replace(MARK_REPLY, '[resp.]')}`, recuo: 0 });
+            const { titulo: title, corpo: body, links } = textParts(n.text.replace(MARK_REPLY, '[resp.]'));
+            blocks.push({ tipo: title ? 'negrito' : 'texto', texto: `#${n.id}  ${title}`, recuo: 0 });
+            if (body) blocks.push({ tipo: 'texto', texto: `\n${body}` });
+            if (links.length) {
+                blocks.push({ tipo: 'espaco', altura: 6 });
+                blocks.push({ tipo: 'negrito', texto: 'Links' });
+                blocks.push({ tipo: 'texto', texto: links.map(l => `• ${l}`).join('\n') });
+            }
             blocks.push({ tipo: 'meta', texto: `Anotada em ${formatData(n.created_at)}${alert}` });
             blocks.push({ tipo: 'espaco', altura: 8 });
         }
