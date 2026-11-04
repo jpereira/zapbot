@@ -8,7 +8,7 @@
  */
 const { ehComandoOuAlias, executarAliasDeTexto, resolverAlias } = require('../aliases');
 const { GetOptFromCommand } = require('../opcoes');
-const { printError } = require('../log');
+const { printError, printInfo } = require('../log');
 const { resumirTexto } = require('../util/formatar');
 
 const MAX_BLOCOS = 50;
@@ -34,12 +34,13 @@ async function separarBlocos(texto) {
     return { blocos: blocos.map(b => b.replace(/\s+$/, '')), sobra };
 }
 
-// Lê -stop / -dry (-d) só da 1ª linha, antes dos comandos (o resto é dos blocos)
+// Lê -stop (-s) / -dry (-d) / -quiet (-q) só da 1ª linha, antes dos comandos (o resto é dos blocos)
 function lerOpcoes(args) {
-    const opcoes = { stop: false, dry: false };
+    const opcoes = { stop: false, dry: false, quiet: false };
     let resto = args.trim();
-    for (let m; (m = resto.match(/^-(stop|dry|d)(?=\s|$)\s*/i));) {
-        opcoes[m[1].toLowerCase() === 'stop' ? 'stop' : 'dry'] = true;
+    for (let m; (m = resto.match(/^-(stop|s|dry|d|quiet|q)(?=\s|$)\s*/i));) {
+        const nome = m[1].toLowerCase();
+        opcoes[nome === 'stop' || nome === 's' ? 'stop' : nome === 'quiet' || nome === 'q' ? 'quiet' : 'dry'] = true;
         resto = resto.slice(m[0].length);
     }
     return { opcoes, texto: resto };
@@ -130,6 +131,7 @@ async function cmdBatch(contexto) {
         }
 
         if (!r.ok) falhas++;
+        if (!r.ok && opcoes.quiet) printInfo(`/batch -quiet: bloco ${i + 1} falhou (${topo(bloco)}):`, r.respostas.join(' | '));
         const resposta = r.respostas.join('\n').trim();
         const detalhe = resposta ? `\n   ↳ ${resumirTexto(resposta.replace(/\n+/g, ' · '), MAX_RESPOSTA)}` : '';
         linhas.push(`${r.ok ? '✅' : '❌'} ${i + 1} · ${topo(bloco)}${detalhe}`);
@@ -139,6 +141,9 @@ async function cmdBatch(contexto) {
             break;
         }
     }
+
+    // -quiet: sem o resumo (o que os comandos mandam fora do resumo, como mídias, sai igual)
+    if (opcoes.quiet) return;
 
     const ok = blocos.length - falhas;
     await msg.reply(`📦 *BATCH* · ${ok}/${blocos.length} ok\n\n${linhas.join('\n')}${aviso}`, undefined, SEM_PREVIA);

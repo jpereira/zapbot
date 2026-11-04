@@ -5,14 +5,15 @@ mandar de uma vez o que você mandaria em vários blocos (ex.: várias anotaçõ
 [alias](alias.md)). Também funciona respondendo uma mensagem com os comandos.
 
 ```text
-/batch [-stop] [-dry|-d]
+/batch [-stop|-s] [-dry|-d] [-quiet|-q]
 <comandos, nas linhas de baixo>
 ```
 
 | Opção | Valor | Descrição |
 |---|---|---|
-| `-stop` | | Para no primeiro bloco que falhar (o padrão é seguir com os outros) |
+| `-stop`, `-s` | | Para no primeiro bloco que falhar (o padrão é seguir com os outros) |
 | `-dry`, `-d` | | Só mostra como os blocos foram separados, sem executar |
+| `-quiet`, `-q` | | Não responde o resumo da execução (os erros ficam só no log). Não vale com `-dry` |
 
 ## Como separa os blocos
 
