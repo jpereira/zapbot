@@ -21,6 +21,7 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 | Opção | Valor | Descrição |
 |---|---|---|
 | `-list`, `-l` | `[#tag...]` | Lista as anotações com o ID, agrupadas por `#tag` (o `/notes` sozinho mostra as tags; `/notes #casa` lista as dela). Com uma ou mais tags, só as delas |
+| `-compact`, `-c` | `[#tag...]` | Lista com uma linha por nota (título, os ícones 🖼️ mídia, ⏰ alerta e 🔗 link, e a hora), agrupadas por dia. Também vale no fim: `/notes #pt -c`, `/notes -l -c` |
 | `-search`, `-s` | `[#tag...] <texto\|/regex/flags>` | Só as anotações que casam, agrupadas como na lista. Veja [Buscar](#buscar) |
 | `-update`, `-u` | `<id> [#tag] <novo texto>` | Troca o texto da anotação (e a tag, se vier uma; o alerta e a imagem ficam). Em resposta a uma mensagem, sem texto, usa o dela |
 | `-view`, `-v` | `<id...\|#tag...>` | Mostra a anotação com a mídia (texto na legenda; sem mídia, só o texto). A tag pode vir pela metade. Com `-to`, manda nos destinos (ou por e-mail, com a imagem anexada) |
@@ -64,9 +65,10 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
   ↩️ na frente. Texto digitado junto vale no lugar do da mensagem (sem o ↩️). Dá para juntar com
   `-alerta`: `/notes -a #lembrete -alerta amanhã 9h`. No PDF, o ↩️ vira `[resp.]`.
 - No texto da anotação, `\n` vira quebra de linha (`/notes #casa pão\nleite`); `\\n` fica como está.
-- Com mais de uma linha, a primeira sai em negrito, o resto vem depois e as linhas que são só um
-  link `http(s)://` vão para o fim, sob `🌐 Links` (na lista, no `-view`, no e-mail e no PDF, onde
-  fica só `Links`, sem o emoji). Link no meio de uma frase fica onde está. Uma linha só não muda.
+- A primeira linha é o título (o único em negrito), o resto vem como foi digitado e todo link
+  `http(s)://` sai de onde estava e vai para o fim, em bullets sob `🔗 Links` (na lista, no `-view`,
+  no e-mail e no PDF, onde fica só `Links`, sem o emoji). Isso é feito ao exibir: o texto guardado
+  não muda.
 - A imagem sai com uma borda preta fina no `-view` (chat e e-mail) e no PDF; o gif vai como está.
 - **Mídias:** mande uma imagem, documento, áudio ou vídeo com a legenda `/notes #minhatag Texto` ou
   responda uma mídia com `/notes #tag [texto]`. O texto é opcional (numa resposta com legenda,

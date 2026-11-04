@@ -1408,7 +1408,7 @@
         },
         {
             "cmd": "/notes",
-            "usage": "/notes [-list|-l] [#tag...] [-to <destino>]...  ou  /notes -search|-s [#tag...] <texto|/regex/flags> [-to <destino>]...  ou  /notes -update|-u <id> [#tag] <novo texto>  ou  /notes -view|-v <id...|#tag...> [-to <destino>]...  ou  /notes -move|-m #tag #novatag  ou  /notes -desc|-d #tag [<descrição>|-rm]  ou  /notes -export|-e [#tag...] [-to <destino>]...  ou  /notes #tag <texto>  ou  /notes -add|-a #tag <texto> [-alerta <quando> [-to <destino>]...]  ou  /notes -rm|-r <id...|#tag...|all>  ou  /notes -alerta [<id|#tag...> [<quando> [-to <destino>]...]]  ou  /notes -alerta -rm <id...|#tag...|all>",
+            "usage": "/notes [-list|-l] [#tag...] [-to <destino>]...  ou  /notes -compact|-c [#tag...]  ou  /notes -search|-s [#tag...] <texto|/regex/flags> [-to <destino>]...  ou  /notes -update|-u <id> [#tag] <novo texto>  ou  /notes -view|-v <id...|#tag...> [-to <destino>]...  ou  /notes -move|-m #tag #novatag  ou  /notes -desc|-d #tag [<descrição>|-rm]  ou  /notes -export|-e [#tag...] [-to <destino>]...  ou  /notes #tag <texto>  ou  /notes -add|-a #tag <texto> [-alerta <quando> [-to <destino>]...]  ou  /notes -rm|-r <id...|#tag...|all>  ou  /notes -alerta [<id|#tag...> [<quando> [-to <destino>]...]]  ou  /notes -alerta -rm <id...|#tag...|all>",
             "aliases": [],
             "summary": "Anotações salvas no banco",
             "help": "Anotações salvas no banco. Para anotar, a sintaxe é /notes #tag <texto>: sem a #tag dá erro, e só /notes #tag lista as anotações da tag. Respondendo uma mensagem, o texto dela vira a anotação, com ↩️ (/notes #lembrete); uma mídia (imagem, documento, áudio, vídeo...) na própria mensagem ou na respondida é guardada no disco junto da anotação. Sem nada, mostra as tags com a quantidade e a descrição de cada uma; -l lista todas as anotações, com o ID, agrupadas por #tag (uma mensagem por tag). O -alerta lembra de uma anotação numa data/hora (uma vez; a anotação continua): no seu privado ou nos destinos do -to. Ex: /notes #casa comprar leite, /notes #casa, /notes -s /pão|leite/i, /notes -v 76, /notes #idei (acha a #ideias), /notes -m #casa #lar, /notes -d #casa Coisas da casa, /notes -update 3 novo texto, /notes -e #casa, /notes -r #casa, /notes #lembrete ligar pro João -alerta amanhã 9h, /notes -alerta 3 +2h -to /Família/, /notes -alerta #casa 18h -to /Família/, /notes -r 2",
@@ -1433,6 +1433,16 @@
                         "[#tag...]"
                     ],
                     "desc": "Lista as anotações, cada uma com o ID, agrupadas por #tag. Com tags, só as delas (a tag pode vir pela metade: #idei acha a #ideias). Ex: /notes -l #casa, /notes -l #idei"
+                },
+                {
+                    "opts": [
+                        "compact",
+                        "c"
+                    ],
+                    "values": [
+                        "[#tag...]"
+                    ],
+                    "desc": "Lista com uma linha por nota (título, ícones 🖼️ mídia, ⏰ alerta e 🔗 link, e a hora), agrupadas por dia. Também vale como /notes #tag -c ou -l -c. Ex: /notes -c, /notes #pt -c"
                 },
                 {
                     "opts": [
