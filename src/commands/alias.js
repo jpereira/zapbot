@@ -14,16 +14,26 @@ async function cmdAlias({ msg, args }) {
     await dbReady;
     const textAlt = args.trim();
     if (!textAlt || /^-(list|l)$/.test(textAlt)) return listAliases(msg);
-    const removeAlt2 = textAlt.match(/^-(?:rm)\s+(\S+)$/);
+    const removeAlt2 = textAlt.match(/^-rm\s+(\S[\s\S]*)$/);
     if (removeAlt2) {
-        if (removeAlt2[1] === 'all') {
+        const names = [...new Set(removeAlt2[1].split(/[\s,]+/).filter(Boolean).map(aliasName))];
+        if (names.includes('/all')) {
             const r = await dbRun('DELETE FROM command_aliases');
             return msg.reply(`🗑️ Todos os aliases removidos (${r.changes}).`);
         }
-        const nameAlt = aliasName(removeAlt2[1]);
-        const r = await dbRun('DELETE FROM command_aliases WHERE name = ?', [nameAlt]);
-        return msg.reply(r.changes
-            ? `🗑️ Alias ${nameAlt} removido.` : `❌ Alias ${nameAlt} não encontrado.`);
+        const removed = [];
+        const missing = [];
+        for (const nameAlt of names) {
+            const r = await dbRun('DELETE FROM command_aliases WHERE name = ?', [nameAlt]);
+            (r.changes ? removed : missing).push(nameAlt);
+        }
+        if (names.length === 1) {
+            return msg.reply(removed.length ? `🗑️ Alias ${names[0]} removido.` : `❌ Alias ${names[0]} não encontrado.`);
+        }
+        return msg.reply([
+            removed.length && `🗑️ Aliases removidos (${removed.length}): ${removed.join(', ')}`,
+            missing.length && `❌ Não encontrado${missing.length > 1 ? 's' : ''}: ${missing.join(', ')}`
+        ].filter(Boolean).join('\n'));
     }
     // -q|-quiet: without the "🔗 Alias ..." header when running; works before the name, after it or after the description
     let quiet = false;
