@@ -119,11 +119,11 @@ function textParts(textAlt) {
 
 /*
  * The first line becomes the bold title (the only one), the rest comes as it was and the links
- * stay at the end, under "🌐 Links". plain: without the *bold* (``` block and email).
+ * stay at the end, under "🔗 Links". plain: without the *bold* (``` block and email).
  */
 function formatText(textAlt, plan = false) {
     const { titulo: title, corpo: body, links } = textParts(textAlt);
-    return [title && (plan ? title : `*${title}*`), body, links.length && `🌐 Links\n${links.map(l => `• ${l}`).join('\n')}`]
+    return [title && (plan ? title : `*${title}*`), body, links.length && `🔗 Links\n${links.map(l => `• ${l}`).join('\n')}`]
         .filter(Boolean).join('\n\n');
 }
 
@@ -437,20 +437,49 @@ async function alertAlt(msg, rest) {
 const tagsDescriptions = async () => new Map((await dbAll('SELECT tag, description FROM note_tags'))
     .map(r => [r.tag, r.description]));
 
-// One text per tag (each goes in a message)
-function groupPerTag(notes, descriptions = new Map(), plan = true, titleJaHasTag = false) {
+// How many have 🖼️ media, ⏰ alert and 🔗 link: "· 🖼️ 2 · ⏰ 1 · 🔗 98" (only what has)
+function notesSummary(notes) {
+    const account = [['🖼️', n => n.media_path], ['⏰', n => n.alert_at], ['🔗', n => textParts(n.text).links.length]]
+        .map(([iconAlt, has]) => [iconAlt, notes.filter(has).length]).filter(([, qtd]) => qtd);
+    return account.map(([iconAlt, qtd]) => ` · ${iconAlt} ${qtd}`).join('');
+}
+
+// One line per note, per day: "#5 Title 🔗 · 19:15" (the media, the alert and the links become icons)
+function linesCompact(notes) {
+    const outputAlt = [];
+    let dayCurrent = '';
+    for (const n of notes) {
+        const [hour, data] = dateShort(n.created_at).split(' ');
+        if (data !== dayCurrent) {
+            dayCurrent = data;
+            outputAlt.push(`${outputAlt.length ? '\n' : ''}📆 ${data}`);
+        }
+        const { titulo: title, links } = textParts(n.text);
+        const base = title || links[0]?.replace(/^https?:\/\/(www\.)?/, '') || (n.media_path ? mediaLabel(n, true).replace(/^\S+ /, '') : '');
+        const marks = [n.media_path && '🖼️', n.alert_at && '⏰', links.length && '🔗'].filter(Boolean).join(' ');
+        outputAlt.push(`#${n.id} ${summarizeText(base, 60)}${marks && ` ${marks}`} · ${hour}`);
+    }
+    return outputAlt.join('\n');
+}
+
+/*
+ * One text per tag (each goes in a message). plain: inside the ``` block; clean: without the block,
+ * with the summary (🖼️ ⏰ 🔗) in the tag header; compact: one line per note, grouped by day.
+ */
+function groupPerTag(notes, descriptions = new Map(), { plano: plan = true, limpo: cleanAlt = false, compacto: compact = false } = {}) {
     const groups = new Map();
     for (const n of notes) groups.set(n.tag ?? '', [...(groups.get(n.tag ?? '') ?? []), n]);
 
     const keys = [...groups.keys()].sort((a, b) => (a === '') - (b === '') || a.localeCompare(b));
     const soWithoutTag = keys.length === 1 && keys[0] === '';
     return keys.map(k => {
-        const items = groups.get(k).map((n, i) => noteLine(n, plan, i + 1)).join('\n\n');
+        const group = groups.get(k);
+        const items = compact ? linesCompact(group) : group.map((n, i) => noteLine(n, plan, i + 1)).join('\n\n');
         const desc = descriptions.get(k);
-        // List of a single #tag: the list title already shows the tag and the total, only the description is left
-        if (titleJaHasTag && keys.length === 1) return `🏷️ ${k} (${groups.get(k).length})${desc ? `\n👉 ${desc}` : ''}\n\n${items}`;
-        return soWithoutTag ? items
-            : `🏷️ ${k ? `#${k}` : WITHOUT_TAG} (${groups.get(k).length})${desc ? `\n${desc}` : ''}\n\n${items}`;
+        if (soWithoutTag && !cleanAlt) return items;
+        const summary = cleanAlt || compact ? notesSummary(group) : '';
+        return `🏷️ ${k ? (cleanAlt || compact ? k : `#${k}`) : WITHOUT_TAG} (${group.length})${summary}` +
+            `${desc ? `\n${cleanAlt || compact ? '👉 ' : ''}${desc}` : ''}\n\n${items}`;
     });
 }
 
@@ -465,6 +494,9 @@ const TIPS = '\n\n💡 *Dicas*\n' +
     '/notes -v <id...|#tag...> mostra com a imagem\n' +
     '/notes -r <id...|#tag...|all> remove\n' +
     '-alerta <quando> avisa.';
+
+const TIPS_COMPACT = '\n\n💡 _🖼️ mídia · ⏰ alerta · 🔗 link_\n💡 _-v <nº> abre a nota inteira_\n' +
+    '💡 _sem o -c, a lista completa_';
 
 // Replies in the chat or, with -to, sends to the destinations (and replies that it sent).
 // `texto` may be a list: each item goes in a message, and the tip only after the last
@@ -494,8 +526,17 @@ function readSearch(textAlt) {
     };
 }
 
-async function listAlt(msg, filter = '', withSearch = false) {
-    const { destinos: destinationsText, informado: withDestination, resto: rest } = extractDestinations(filter);
+// "#pt -c" → { texto: '#pt', compacto: true }
+function removeCompact(textAlt) {
+    const m = String(textAlt).match(/^([\s\S]*?)\s*-(?:c|compact)\s*$/i);
+    return m ? { texto: m[1], compacto: true } : { texto: textAlt, compacto: false };
+}
+
+async function listAlt(msg, filter = '', withSearch = false, compact = false) {
+    const { destinos: destinationsText, informado: withDestination, resto: restWithC } = extractDestinations(filter);
+    // -c|-compact at the end: one line per note
+    const { texto: rest, compacto: askedCompact } = removeCompact(restWithC);
+    compact ||= askedCompact;
     let tags = rest.trim() ? soTags(rest) : [];
     let search = '';
     let test = null;
@@ -536,11 +577,12 @@ async function listAlt(msg, filter = '', withSearch = false) {
     }
 
     // One message per tag; the title (with the total) goes at the start of the first
-    const partsAlt = groupPerTag(notes, await tagsDescriptions(), tags.length !== 1, tags.length === 1);
-    const clean = tags.length === 1;
-    partsAlt[0] = clean ? `📝 *ANOTAÇÕES*${foundAlt2}\n\n${partsAlt[0]}`
+    const clean = tags.length === 1 || compact;
+    const partsAlt = groupPerTag(notes, await tagsDescriptions(),
+        { plano: !clean, limpo: tags.length === 1, compacto: compact });
+    partsAlt[0] = clean ? `📝 *ANOTAÇÕES*${foundAlt2}${tags.length === 1 ? '' : ` (${notes.length})`}\n\n${partsAlt[0]}`
         : `📝 ANOTAÇÕES${label}${foundAlt2} (${notes.length})\n\n${partsAlt[0]}`;
-    await deliverText(msg, destinations, partsAlt, `📝 Anotações${label}${foundAlt2}`, TIPS, clean);
+    await deliverText(msg, destinations, partsAlt, `📝 Anotações${label}${foundAlt2}`, compact ? TIPS_COMPACT : TIPS, clean);
 }
 
 // -move: renames the tag in all notes (if the new one already exists, they merge)
@@ -695,7 +737,7 @@ async function listTags(msg) {
     const linesAlt = keys.map(k => `${k ? `#${k}` : WITHOUT_TAG}: ${count.get(k)}${descriptions.has(k) ? ` · ${descriptions.get(k)}` : ''}`);
 
     await deliverText(msg, undefined,
-        `🏷️ TAGS (${keys.filter(Boolean).length})\n\n${linesAlt.join('\n')}\n\n📝 ${plural(notes.length, 'anotação', 'anotações')}`,
+        `📝 Anotações (${notes.length})\n\n🏷️ TAGS (${keys.filter(Boolean).length})\n\n${linesAlt.join('\n')}`,
         '🏷️ Tags das anotações', '\n\n💡 _/notes #tag lista as anotações de uma tag_');
 }
 
@@ -765,38 +807,45 @@ async function exportar(msg, filter = '') {
     const keys = [...groups.keys()].sort((a, b) => (a === '') - (b === '') || a.localeCompare(b));
 
     const blocks = [{
-        tipo: 'texto',
+        tipo: 'texto', icone: 'nota',
         texto: `${plural(notes.length, 'anotação', 'anotações')}${label ? ` em${label}` : ''}`
     }];
 
-    // The description of the PDF tags (those that have one) comes right at the start of the document
     const descriptions = await tagsDescriptions();
-    const withDescription = keys.filter(k => k && descriptions.has(k));
-    if (withDescription.length) {
-        blocks.push({ tipo: 'espaco', altura: 6 });
-        for (const k of withDescription) blocks.push({ tipo: 'texto', texto: `#${k}: ${descriptions.get(k)}` });
-    }
 
     for (const k of keys) {
         const items = groups.get(k);
         if (!(keys.length === 1 && k === '')) {
-            blocks.push({ tipo: 'titulo', texto: `${k ? `#${k}` : WITHOUT_TAG} (${items.length})` });
+            // "#tag (n)" with the summary as text (the PDF has no emoji) and the tag description below
+            const summary = [[items.filter(n => n.media_path).length, 'com mídia'], [items.filter(n => n.alert_at).length, 'com alerta'],
+                [items.filter(n => textParts(n.text).links.length).length, 'com link']]
+                .filter(([qtd]) => qtd).map(([qtd, labelItem]) => `${qtd} ${labelItem}`).join(', ');
+            blocks.push({ tipo: 'titulo', icone: 'tag', texto: `${k ? `#${k}` : WITHOUT_TAG} (${items.length})${summary ? ` · ${summary}` : ''}` });
+            if (descriptions.get(k)) blocks.push({ tipo: 'texto', texto: descriptions.get(k) });
+            blocks.push({ tipo: 'espaco', altura: 6 });
         }
-        for (const n of items) {
-            // The image comes on top and the note text is the caption
+        for (const [pos, n] of items.entries()) {
             const image = n.media_path && isImage(n.media_mime) ? await imageForPdf(n.media_path) : null;
-            if (image) blocks.push({ tipo: 'imagem', ...image });
             const alert = (n.media_path && !image
                 ? (isImage(n.media_mime) ? ' · imagem não incluída' : ` · arquivo não incluído (${nameOriginal(n.media_path)})`) : '') + (n.alert_at ? ` · alerta ${fmtWhen(n.alert_at)}` : '');
             const { titulo: title, corpo: body, links } = textParts(n.text.replace(MARK_REPLY, '[resp.]'));
-            blocks.push({ tipo: title ? 'negrito' : 'texto', texto: `#${n.id}  ${title}`, recuo: 0 });
-            if (body) blocks.push({ tipo: 'texto', texto: `\n${body}` });
+            blocks.push({ tipo: title ? 'negrito' : 'texto', texto: `${pos + 1}.  ${title}`, recuo: 0 });
+            // The title comes first and the image after it, with a line break before
+            if (image) {
+                blocks.push({ tipo: 'espaco', altura: 6 });
+                blocks.push({ tipo: 'imagem', ...image });
+            }
+            if (body) {
+                blocks.push({ tipo: 'espaco', altura: 6 });
+                blocks.push({ tipo: 'texto', texto: body });
+            }
             if (links.length) {
                 blocks.push({ tipo: 'espaco', altura: 6 });
-                blocks.push({ tipo: 'negrito', texto: 'Links' });
+                blocks.push({ tipo: 'negrito', icone: 'link', texto: 'Links' });
                 blocks.push({ tipo: 'texto', texto: links.map(l => `• ${l}`).join('\n') });
             }
-            blocks.push({ tipo: 'meta', texto: `Anotada em ${formatData(n.created_at)}${alert}` });
+            blocks.push({ tipo: 'espaco', altura: 3 });
+            blocks.push({ tipo: 'meta', icone: 'relogio', texto: `${dateShort(n.created_at)}, #${n.id}${alert}` });
             blocks.push({ tipo: 'espaco', altura: 8 });
         }
     }
@@ -850,11 +899,12 @@ async function cmdNote({ msg, args, quotedMsg }) {
 
     // The -to of the lists/PDF: "/notes -to X", "/notes #casa -to X", "-l ... -to X", "-e ... -to X"
     const { informado: withDestination, resto: withoutDestination } = extractDestinations(textAlt);
-    const textTags = soTags(withoutDestination);
+    const textTags = soTags(removeCompact(withoutDestination).texto);
 
     // With nothing: the tags (in a reply or with media, it is a note with no tag: error)
     if (!textAlt) return quotedMsg || msg.hasMedia ? addAlt(msg, '', quotedMsg) : listTags(msg);
     if (nameAlt === '-list' || nameAlt === '-l') return listAlt(msg, rest);
+    if (nameAlt === '-compact' || nameAlt === '-c') return listAlt(msg, rest, false, true);
     if (nameAlt === '-update' || nameAlt === '-u') return update(msg, rest, quotedMsg);
     if (nameAlt === '-search' || nameAlt === '-s') return listAlt(msg, rest, true);
     if (nameAlt === '-view' || nameAlt === '-v') return seeNotes(msg, rest);
@@ -862,6 +912,7 @@ async function cmdNote({ msg, args, quotedMsg }) {
     if (nameAlt === '-move' || nameAlt === '-m') return moverTag(msg, rest);
     if (nameAlt === '-export' || nameAlt === '-e') return exportar(msg, rest);
     if (withDestination && !withoutDestination.trim()) return listAlt(msg, textAlt);
+    if (textTags && removeCompact(withoutDestination).compacto) return listAlt(msg, textAlt);
     // Just #tag, without text: lists its own. In a reply or with media, saves what came under that tag
     if (textTags) return (quotedMsg || msg.hasMedia) && textTags.length === 1 ? addAlt(msg, textAlt, quotedMsg) : listAlt(msg, textAlt);
     if (nameAlt === '-add' || nameAlt === '-a') return addAlt(msg, rest, quotedMsg);

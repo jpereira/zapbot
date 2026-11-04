@@ -35,6 +35,36 @@ function clean(textAlt) {
         .replace(/ +\n/g, '\n');
 }
 
+
+/*
+ * Hand-drawn icons (Helvetica has no emoji): each one is a function (x, y, t) → commands
+ * of the PDF, in a square of side t with the bottom-left corner at (x, y).
+ */
+const circle = (cx, cy, r) => {
+    const k = 0.5523 * r;
+    const f = (n) => n.toFixed(2);
+    return `${f(cx + r)} ${f(cy)} m ${f(cx + r)} ${f(cy + k)} ${f(cx + k)} ${f(cy + r)} ${f(cx)} ${f(cy + r)} c ` +
+        `${f(cx - k)} ${f(cy + r)} ${f(cx - r)} ${f(cy + k)} ${f(cx - r)} ${f(cy)} c ` +
+        `${f(cx - r)} ${f(cy - k)} ${f(cx - k)} ${f(cy - r)} ${f(cx)} ${f(cy - r)} c ` +
+        `${f(cx + k)} ${f(cy - r)} ${f(cx + r)} ${f(cy - k)} ${f(cx + r)} ${f(cy)} c h `;
+};
+
+const ICONS = {
+    // 🔗 two interlocked rings
+    link: (x, y, t) => `q 0.15 0.4 0.8 RG ${(t * 0.14).toFixed(2)} w ${circle(x + t * 0.34, y + t * 0.5, t * 0.22)}S ` +
+        `${circle(x + t * 0.66, y + t * 0.5, t * 0.22)}S Q\n`,
+    // 🏷️ yellow tag with a hole
+    tag: (x, y, t) => `q 0.96 0.65 0.12 rg ${x + t * 0.05} ${y + t * 0.15} m ${x + t * 0.6} ${y + t * 0.15} l ` +
+        `${x + t} ${y + t * 0.5} l ${x + t * 0.6} ${y + t * 0.85} l ${x + t * 0.05} ${y + t * 0.85} l h f ` +
+        `1 g ${circle(x + t * 0.25, y + t * 0.5, t * 0.08)}f Q\n`,
+    // 🕐 clock
+    relogio: (x, y, t) => `q 0.35 0.35 0.35 RG 1 g ${(t * 0.09).toFixed(2)} w ${circle(x + t / 2, y + t / 2, t * 0.42)}B ` +
+        `${x + t / 2} ${y + t / 2} m ${x + t / 2} ${y + t * 0.78} l S ${x + t / 2} ${y + t / 2} m ${x + t * 0.72} ${y + t / 2} l S Q\n`,
+    // 📝 sheet with lines
+    nota: (x, y, t) => `q 0.45 0.45 0.45 RG 1 g ${(t * 0.07).toFixed(2)} w ${x + t * 0.15} ${y + t * 0.05} ${t * 0.7} ${t * 0.9} re B ` +
+        `0.2 0.45 0.75 RG ${[0.3, 0.5, 0.7].map(h => `${x + t * 0.28} ${y + t * h} m ${x + t * 0.72} ${y + t * h} l S `).join('')}Q\n`
+};
+
 function width(textAlt, size, negrito = false) {
     let w = 0;
     for (const c of textAlt) {
@@ -78,7 +108,7 @@ const escape = (t) => t.replace(/[\\()]/g, '\\$&');
  * @param {string}   o.titulo     header, on the left
  * @param {string}   o.direita    header, on the right (date/time)
  * @param {string}   o.rodape     footer, on the left ("Página X de Y" goes on the right)
- * @param {object[]} o.blocos     { texto, tipo: 'titulo' | 'texto' | 'negrito' | 'meta' | 'espaco' } or
+ * @param {object[]} o.blocos     { texto, tipo: 'titulo' | 'texto' | 'negrito' | 'meta' | 'espaco', icone?: 'link' | 'tag' | 'relogio' | 'nota' } or
  * { type: 'image', jpeg: Buffer, width, height } (RGB JPEG, in pixels)
  * @returns {Buffer}
  */
@@ -92,7 +122,9 @@ function generatePdf({ titulo: title, direita: right = '', rodape: footer = '', 
     const pages = [[]];
     let y = TOP_BODY;
 
-    for (const b of blocks) {
+    const imageHeight = (b) => b.altura * Math.min(1, IMAGE_MAX_L / b.largura, IMAGE_MAX_A / b.altura);
+
+    for (const [indexAlt, b] of blocks.entries()) {
         if (b.tipo === 'espaco') {
             y -= b.altura ?? 8;
             continue;
@@ -112,21 +144,25 @@ function generatePdf({ titulo: title, direita: right = '', rodape: footer = '', 
         const e = STYLES[b.tipo ?? 'texto'];
         const indent = b.recuo ?? 0;
         const linesAlt = clean(b.texto).split('\n')
-            .flatMap(p => lineBreak(p, e.tamanho, WIDTH - 2 * MARGIN - indent, e.fonte === 'F2'));
+            .flatMap(p => lineBreak(p, e.tamanho, WIDTH - 2 * MARGIN - indent - (b.icone && ICONS[b.icone] ? e.tamanho + 3 : 0), e.fonte === 'F2'));
 
+        const shift = b.icone && ICONS[b.icone] ? e.tamanho + 3 : 0;
         y -= e.antes;
-        // A title is never left alone at the end of the page
-        if (y - e.entre * (b.tipo === 'titulo' ? 3 : 1) < BASE_BODY && y !== TOP_BODY) {
+        // A title is never left alone at the end of the page (nor the text before an image)
+        const image = blocks[indexAlt + 1]?.tipo === 'imagem' ? imageHeight(blocks[indexAlt + 1]) + 6 : 0;
+        if (y - e.entre * (b.tipo === 'titulo' ? 3 : 1) - image < BASE_BODY && y !== TOP_BODY) {
             pages.push([]);
             y = TOP_BODY;
         }
-        for (const line of linesAlt) {
+        for (const [i, line] of linesAlt.entries()) {
             if (y - e.entre < BASE_BODY) {
                 pages.push([]);
                 y = TOP_BODY;
             }
             y -= e.entre;
-            if (line) pages.at(-1).push({ ...e, x: MARGIN + indent, y, texto: line });
+            // The icon only on the first line of the block; the text always aligned after it
+            if (i === 0 && shift) pages.at(-1).push({ icone: b.icone, tamanho: e.tamanho, x: MARGIN + indent, y: y - 1.5 });
+            if (line) pages.at(-1).push({ ...e, x: MARGIN + indent + shift, y, texto: line });
         }
     }
 
@@ -160,9 +196,9 @@ function generatePdf({ titulo: title, direita: right = '', rodape: footer = '', 
         c += textAlt('F1', 9, '0.4 0.4 0.4', WIDTH - MARGIN - width(dir, 9), HEIGHT - 45, dir);
         c += lineHorizontal(HEIGHT - 55);
         for (const it of items) {
-            c += it.imagem
-                ? `q ${it.w.toFixed(2)} 0 0 ${it.h.toFixed(2)} ${it.x} ${it.y.toFixed(2)} cm /Im${it.imagem.objeto} Do Q\n`
-                : textAlt(it.fonte, it.tamanho, it.cor, it.x, it.y, it.texto);
+            if (it.icone) c += ICONS[it.icone](it.x, it.y, it.tamanho);
+            else if (it.imagem) c += `q ${it.w.toFixed(2)} 0 0 ${it.h.toFixed(2)} ${it.x} ${it.y.toFixed(2)} cm /Im${it.imagem.objeto} Do Q\n`;
+            else c += textAlt(it.fonte, it.tamanho, it.cor, it.x, it.y, it.texto);
         }
         c += lineHorizontal(52);
         const pag = `Página ${i + 1} de ${total}`;
