@@ -31,18 +31,17 @@ const packageJson = require('../package.json');
  * → only those that match (text case and accent insensitive;
  * the same -q as /show and /watch); also matches the #tag
  * -update | -u <id> [#tag] <text>    → replaces the text (and the tag, if one comes) of the note
- * -tags | -t                          → the tags and how many notes each one has
  * -move | -m #tag #new               → renames the tag (if #new already exists, merges the two)
  * -desc | -d #tag [<text>]           → tag description (without text, shows it; -d #tag -rm, deletes it)
  * -view | -v <id...|#tag...> [-to ...] → shows the note with the image (text, if it has none)
  * -export | -e [#tag...]              → sends the notes (or only those of the tags) in a PDF, with the images
  *   -list | #tag | -export ... -to <destino>...
  * → the list (or the PDF) goes to the destinations, as in the other commands
- * /notes [#tag] <text>               → notes (the same as -add, when it does not start with "-")
- * (with an image, or in reply to one) /notes [#tag] [<text>] → saves the image in NOTES_DIR
- * (in reply to a message) /notes [#tag] | -add [#tag] [-alerta ...]
+ * /notes #tag <text>                 → notes (the same as -add, when it does not start with "-"); the #tag is required
+ * (with an image, or in reply to one) /notes #tag [<text>] → saves the media in NOTES_DIR
+ * (in reply to a message) /notes #tag | -add #tag [-alerta ...]
  * → saves the replied message's text, with the ↩️ in front
- *   -add | -a [#tag] <texto>            → anota
+ *   -add | -a #tag <texto>            → anota
  * -add <text> -alerta <when> [-to <destination>]...
  * → saves the note and notifies at the date/time (-to works as in the other -alerta)
  * -rm | -r <id...|#tag...|all>       → removes (-r 1 2 3, -r 1,2,3, -r #casa or all)
@@ -204,6 +203,9 @@ async function saveMedia(origin) {
     return { path: fileAlt, mime };
 }
 
+const ERROR_SYNTAX = '❌ Use: /notes #tag <texto> [-alerta <quando> [-to <destino>]...]';
+const ERROR_WITHOUT_TEXT = '❌ Falta o texto: /notes #tag <texto>';
+
 // a typed "\n" becomes a line break ("\\n" stays as text)
 const withBreaks = (t) => t.replace(/(?<!\\)\\n/g, '\n').replace(/\\\\n/g, '\\n');
 
@@ -214,6 +216,12 @@ async function addAlt(msg, textTyped, quotedMsg) {
     const separated = separateTag((m ? withoutDestination.slice(0, m.index) : withoutDestination).trim());
     const { tag } = separated;
     let { texto: textAlt } = separated;
+
+    // The syntax is always /notes #tag <text>: without a tag it does not save
+    if (!tag) {
+        await msg.reply(`${ERROR_SYNTAX}\n💡 _Falta a #tag. Veja as tags com /notes_`, undefined, WITHOUT_PREVIEW);
+        return;
+    }
 
     // Without text, but replying to a message: saves its text (if any; the media counts alone)
     const origin = mediaOrigin(msg, quotedMsg);
@@ -227,7 +235,7 @@ async function addAlt(msg, textTyped, quotedMsg) {
     }
 
     if (!textAlt && !origin) {
-        await msg.reply('❌ Use: /notes -add [#tag] <texto> [-alerta <quando> [-to <destino>]...]');
+        await msg.reply(ERROR_WITHOUT_TEXT, undefined, WITHOUT_PREVIEW);
         return;
     }
 
@@ -342,7 +350,7 @@ async function alertAlt(msg, rest) {
         const allAlt = await listNotes();
         const withoutNotes = tags.filter(t => !allAlt.some(n => n.tag === t));
         if (withoutNotes.length) {
-            await msg.reply(`❌ Nenhuma anotação em ${withoutNotes.map(t => `#${t}`).join(' ')}. Veja as tags com /notes -tags`);
+            await msg.reply(`❌ Nenhuma anotação em ${withoutNotes.map(t => `#${t}`).join(' ')}. Veja as tags com /notes`);
             return;
         }
         targets = allAlt.filter(n => tags.includes(n.tag));
@@ -407,7 +415,7 @@ async function sendingDestinations(msg, destinationsText, withDestination) {
 }
 
 const TIPS = '\n\n💡 *Dicas*\n' +
-    '/notes -a [#tag] <texto> anota\n' +
+    '/notes #tag <texto> anota\n' +
     '/notes -v <id...|#tag...> mostra com a imagem\n' +
     '/notes -r <id...|#tag...|all> remove\n' +
     '-alerta <quando> avisa.';
@@ -477,7 +485,7 @@ async function listAlt(msg, filter = '', withSearch = false) {
     if (!notes.length) {
         await msg.reply(tags.length || search
             ? `📝 Nenhuma anotação${label ? ` em${label}` : ''}${search ? ` com 🔎 ${summarizeText(search, 40)}` : ''}.`
-            : '📝 Nenhuma anotação.\n💡 _Anote com /notes -a [#tag] <texto>_', undefined, WITHOUT_PREVIEW);
+            : '📝 Nenhuma anotação.\n💡 _Anote com /notes #tag <texto>_', undefined, WITHOUT_PREVIEW);
         return;
     }
 
@@ -503,7 +511,7 @@ async function moverTag(msg, textAlt) {
 
     const r = await dbRun('UPDATE notes SET tag = ? WHERE tag = ?', [para, de]);
     if (!r.changes) {
-        await msg.reply(`❌ #${de} não existe. Veja as tags com /notes -tags`);
+        await msg.reply(`❌ #${de} não existe. Veja as tags com /notes`);
         return;
     }
     // The description goes along (if the new one already had one, its own stays)
@@ -618,20 +626,11 @@ async function seeNotes(msg, filter) {
     if (failures.length) await msg.reply(`❌ ${failures.join('; ')}`);
 }
 
-// -tags: each tag with its number of notes (the untagged last)
-async function listTags(msg, filter = '') {
-    const { destinos: destinationsText, informado: withDestination, resto: rest } = extractDestinations(filter);
-    if (rest.trim()) {
-        await msg.reply('❌ Use: /notes -tags [-to <destino>]...');
-        return;
-    }
-
-    const destinations = await sendingDestinations(msg, destinationsText, withDestination);
-    if (destinations === null) return;
-
+// /notes alone: each tag with its number of notes (the untagged last)
+async function listTags(msg) {
     const notes = await listNotes();
     if (!notes.length) {
-        await msg.reply('📝 Nenhuma anotação.\n💡 _Anote com /notes -a [#tag] <texto>_');
+        await msg.reply('📝 Nenhuma anotação.\n💡 _Anote com /notes #tag <texto>_');
         return;
     }
 
@@ -641,7 +640,7 @@ async function listTags(msg, filter = '') {
     const descriptions = await tagsDescriptions();
     const linesAlt = keys.map(k => `${k ? `#${k}` : WITHOUT_TAG}: ${count.get(k)}${descriptions.has(k) ? ` · ${descriptions.get(k)}` : ''}`);
 
-    await deliverText(msg, destinations,
+    await deliverText(msg, undefined,
         `🏷️ TAGS (${keys.filter(Boolean).length})\n\n${linesAlt.join('\n')}\n\n📝 ${plural(notes.length, 'anotação', 'anotações')}`,
         '🏷️ Tags das anotações', '\n\n💡 _/notes #tag lista as anotações de uma tag_');
 }
@@ -774,17 +773,17 @@ async function cmdNote({ msg, args, quotedMsg }) {
     const { informado: withDestination, resto: withoutDestination } = extractDestinations(textAlt);
     const textTags = soTags(withoutDestination);
 
+    // With nothing: the tags (in a reply or with media, it is a note with no tag: error)
     if (!textAlt) return quotedMsg || msg.hasMedia ? addAlt(msg, '', quotedMsg) : listTags(msg);
     if (nameAlt === '-list' || nameAlt === '-l') return listAlt(msg, rest);
     if (nameAlt === '-update' || nameAlt === '-u') return update(msg, rest, quotedMsg);
     if (nameAlt === '-search' || nameAlt === '-s') return listAlt(msg, rest, true);
-    if (nameAlt === '-tags' || nameAlt === '-t') return listTags(msg, rest);
     if (nameAlt === '-view' || nameAlt === '-v') return seeNotes(msg, rest);
     if (nameAlt === '-desc' || nameAlt === '-d') return describeTag(msg, rest);
     if (nameAlt === '-move' || nameAlt === '-m') return moverTag(msg, rest);
     if (nameAlt === '-export' || nameAlt === '-e') return exportar(msg, rest);
     if (withDestination && !withoutDestination.trim()) return listAlt(msg, textAlt);
-    // Replying to a message, "/notes #tag" saves its text under that tag instead of filtering
+    // Just #tag, without text: lists its own. In a reply or with media, saves what came under that tag
     if (textTags) return (quotedMsg || msg.hasMedia) && textTags.length === 1 ? addAlt(msg, textAlt, quotedMsg) : listAlt(msg, textAlt);
     if (nameAlt === '-add' || nameAlt === '-a') return addAlt(msg, rest, quotedMsg);
     if (withDestination && (nameAlt === '-rm' || nameAlt === '-rm' || nameAlt === '-r')) {
@@ -795,7 +794,7 @@ async function cmdNote({ msg, args, quotedMsg }) {
 
     // An option that does not exist: error. Without a "-" in front, the whole text is a new note (the same as -add)
     if (nameAlt.startsWith('-')) {
-        return msg.reply('❌ Use: /notes [-list] [#tag] [-to ...] | -search <texto|/regex/> | -tags | -view <id...|#tag...> | -move #tag #nova | -desc #tag <texto> | -update <id> <texto> | -export [#tag] [-to ...] | -add [#tag] <texto> [-alerta <quando>] | -rm <id...|#tag...|all> | -alerta ...');
+        return msg.reply('❌ Use: /notes [-list] [#tag] [-to ...] | -search <texto|/regex/> | -view <id...|#tag...> | -move #tag #nova | -desc #tag <texto> | -update <id> <texto> | -export [#tag] [-to ...] | #tag <texto> [-alerta <quando>] | -rm <id...|#tag...|all> | -alerta ...');
     }
 
     return addAlt(msg, textAlt);

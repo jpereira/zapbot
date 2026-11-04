@@ -36,7 +36,7 @@ comandos começam com `/`.
 - Cria figurinhas: [`/sticker`](docs/commands/sticker.md)
 - Vigia mensagens por texto ou regex: [`/watch`](docs/commands/watch.md)
 - Agenda mensagens: [`/cron`](docs/commands/cron.md)
-- Guarda anotações, com `#tag`, imagens e aviso numa data/hora: [`/notes`](docs/commands/notes.md)
+- Guarda anotações, com `#tag`, mídias (imagem, documento, áudio, vídeo) e aviso numa data/hora: [`/notes`](docs/commands/notes.md)
 - Executa vários comandos de uma mensagem só: [`/batch`](docs/commands/batch.md)
 - Mostra cotações e alertas de preço: [`/cotacao`](docs/commands/cotacao.md),
   [`/crypto`](docs/commands/crypto.md)
@@ -172,7 +172,7 @@ de um. Os marcados como **Admin** só respondem à sua conta (e aos admins extra
 | [`/mute`](https://jpereira.github.io/zapbot/commands/mute/) | `/mudo` | ✅ | Silencia os avisos de apagadas, editadas, status e reações (e os do `/watch`) de uma pessoa, um grupo ou uma comunidade; respondendo um aviso, de onde ele veio |
 | [`/news`](https://jpereira.github.io/zapbot/commands/news/) | | | Manchetes de feeds RSS: `-hack`, `-g1`, `-gazeta`, `-brasil` |
 | [`/noffa`](https://jpereira.github.io/zapbot/commands/noffa/) | `/🌈`, `/🏳️‍🌈` | | Enfeita o texto com arco-íris |
-| [`/notes`](https://jpereira.github.io/zapbot/commands/notes/) | | ✅ | Anotações com ID e `#tag` (`-a`, `-l`, `-s`, `-r`): ver com imagem (`-v`), renomear tag (`-m`), descrever tag (`-d`), exportar em PDF com imagens (`-e`) e `-alerta` que avisa numa data/hora |
+| [`/notes`](https://jpereira.github.io/zapbot/commands/notes/) | | ✅ | Anotações com ID e `#tag` (`-a`, `-l`, `-s`, `-r`): ver com a mídia (`-v`), renomear tag (`-m`), descrever tag (`-d`), exportar em PDF (`-e`) e `-alerta` que avisa numa data/hora |
 | [`/ping`](https://jpereira.github.io/zapbot/commands/ping/) |  | | Verifica se o bot está vivo |
 | [`/pixelart`](https://jpereira.github.io/zapbot/commands/pixelart/) | `/ansi`, `/px` | | Arte ANSI/ASCII aleatória (16colo.rs) |
 | [`/profile`](https://jpereira.github.io/zapbot/commands/profile/) | `/perfil` | ✅ | A foto de perfil de um contato, com o nome da sua agenda e o telefone |

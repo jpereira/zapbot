@@ -167,6 +167,10 @@ Preço do Dólar!
   lugar.
 - Fora das chaves, nada roda: um texto que comece com `/` continua sendo só texto.
 
+Um [alias de comando](alias.md) também vale dentro do `{...}` (`{/dolar}`, `{/rec 10 20 url}`), com
+os `$1`, `$2` e os valores padrão `${1:-USD}` aplicados como no `/alias`. Alias de **texto** não: ele
+é recusado, para um alias não chamar a si mesmo.
+
 Para quebrar a linha sem sair do campo de texto, digite `\n`: ele vira uma quebra de linha, e os
 espaços em volta dele são removidos. Vale em qualquer texto do `/cron`, com ou sem comandos, ao
 criar e no `-edit`:
