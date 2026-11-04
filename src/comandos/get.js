@@ -11,7 +11,7 @@ const { formatarErroComando, getCommandSyntax } = require('./base');
 const { concluirAviso } = require('../cliente');
 const { BIN_FFMPEG, BIN_FFPROBE, BIN_YT, CACHE_DIR, GET_MAX_CONCURRENT, TMP_DIR } = require('../constantes');
 const { printDebug, printError, printInfo } = require('../log');
-const { STICKER_ANIMADO_MAX_BYTES, TENTATIVAS_STICKER, argsDoFfmpeg, enquadrarSticker, thumbnailDoLink } = require('../midia');
+const { STICKER_ANIMADO_MAX_BYTES, TENTATIVAS_STICKER, argsDoFfmpeg, enquadrarSticker, lerPosicao, thumbnailDoLink } = require('../midia');
 const { getSetting, isDebugMode, stickerMeta } = require('../settings');
 const { humanSize } = require('../util/arquivos');
 const { capturarSaida, runCommand } = require('../util/processos');
@@ -158,6 +158,18 @@ async function opcoesValidas(msg, opts, cmd) {
         await msg.reply('❌ O segundo final (-es) deve ser maior que o inicial (-ss, padrão 0).');
         return false;
     }
+    if (opts.given.has('pos')) {
+        const pos = lerPosicao(opts.opt.pos);
+        if (!pos) {
+            await msg.reply(`❌ -pos: "${opts.opt.pos ?? ''}" não vale. Use topo, meio ou baixo.`);
+            return false;
+        }
+        if (!opts.opt.sticker) {
+            await msg.reply('❌ O -pos é da figurinha: use com -st (ou /sticker).');
+            return false;
+        }
+        opts.opt.pos = pos;
+    }
     if (opts.opt.audio && opts.opt.sticker) {
         await msg.reply('❌ Escolha áudio (-a) ou figurinha (-st) para esta execução.');
         return false;
@@ -216,7 +228,7 @@ async function enviarSemConverter(msg, media, opts) {
     }
 
     if (tipo === 'imagem' && sticker) {
-        await msg.reply(await enquadrarSticker(media), null, { ...MSG_STICKER, ...stickerMeta() });
+        await msg.reply(await enquadrarSticker(media, opts.opt.pos), null, { ...MSG_STICKER, ...stickerMeta() });
         return true;
     }
 
@@ -401,7 +413,7 @@ async function converterEEnviar({ msg, opts, senderName, url, media, previa }) {
         // O WhatsApp só edita texto: a mídia vai à parte e o aviso vira a confirmação
         await concluirAviso(msg, aviso, `✅ ${isSticker ? 'Sticker criado' : 'Mídia baixada'} com sucesso!`, { linkPreview: false });
     } catch (e) {
-        if (e.aoBaixar && previa && (await stickerDaPrevia(msg, previa, aviso, e))) return;
+        if (e.aoBaixar && previa && (await stickerDaPrevia(msg, previa, aviso, e, opts.opt.pos))) return;
         printError(e.message);
         await concluirAviso(msg, aviso, formatarErroComando(e), { linkPreview: false });
     } finally {
@@ -478,13 +490,13 @@ function erroAoBaixar(mensagem, opcoes) {
  * para o link (como o /sticker fazia antes de baixar o vídeo).
  * @returns {Promise<boolean>} true = a figurinha foi enviada
  */
-async function stickerDaPrevia(msg, citada, aviso, motivo) {
+async function stickerDaPrevia(msg, citada, aviso, motivo, pos) {
     try {
         const thumb = await thumbnailDoLink(citada);
         if (!thumb) return false;
 
         printInfo(`/sticker: sem o vídeo do link (${motivo.message}); usando a prévia`);
-        await msg.reply(await enquadrarSticker(thumb), null, { ...MSG_STICKER, ...stickerMeta() });
+        await msg.reply(await enquadrarSticker(thumb, pos), null, { ...MSG_STICKER, ...stickerMeta() });
         if (aviso) await concluirAviso(msg, aviso, '✅ Sticker criado com sucesso!', { linkPreview: false });
         return true;
     } catch (err) {

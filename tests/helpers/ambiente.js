@@ -355,7 +355,11 @@ const sharpFalso = (entrada) => {
     let formato = 'webp';
     const cadeia = {
         rotate: () => cadeia,
-        resize: (width, height) => { if (height) dim = { width, height }; return cadeia; },
+        resize: (width, height, opcoes) => {
+            sharpFalso.resizes.push(opcoes);
+            if (height) dim = { width, height };
+            return cadeia;
+        },
         extract: ({ width, height }) => { dim = { width, height }; return cadeia; },
         webp: () => cadeia,
         composite: () => cadeia,
@@ -377,6 +381,7 @@ const sharpFalso = (entrada) => {
     return cadeia;
 };
 sharpFalso.entradas = [];
+sharpFalso.resizes = [];   // as opções de cada resize (fit, position)
 
 const SIMULADOS = {
     'whatsapp-web.js': { Client: ClienteFalso, LocalAuth: class {}, MessageMedia, Location, Poll },

@@ -75,6 +75,10 @@ async function cmdSticker(ctx) {
         await msg.reply('❌ O -txt não combina com -ss, -es, -v nem com uma URL: ele faz a figurinha só do texto.');
         return;
     }
+    if (t.comTexto && opts.given.has('pos')) {
+        await msg.reply('❌ O -pos é do recorte de imagem e vídeo: não vale com -txt.');
+        return;
+    }
     if (t.comTexto) {
         await stickerComTexto(msg, t);
         return;

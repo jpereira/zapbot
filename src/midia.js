@@ -21,11 +21,28 @@ const TENTATIVAS_STICKER = [
     { qualidade: 20, fps: 8 }
 ];
 
+/*
+ * Onde o recorte quadrado da figurinha fica (-pos): no topo, no meio (padrão) ou embaixo. Em
+ * imagem mais larga que alta, topo = esquerda e baixo = direita. `fator` é a fração da sobra
+ * que fica de fora antes do recorte (0, 0.5 ou 1); `sharp`, a posição do resize.
+ */
+const POSICOES = {
+    topo: { fator: 0, sharp: 'left top' },
+    meio: { fator: 0.5, sharp: 'centre' },
+    baixo: { fator: 1, sharp: 'right bottom' }
+};
+const SINONIMOS = { topo: 'topo', cima: 'topo', top: 'topo', meio: 'meio', centro: 'meio', middle: 'meio',
+    center: 'meio', baixo: 'baixo', bottom: 'baixo' };
+
+/** "topo" | "cima" | "top" → 'topo' (idem meio e baixo); sem valor → 'meio'; inválido → null */
+const lerPosicao = (valor) => (valor == null ? 'meio' : SINONIMOS[String(valor).trim().toLowerCase()] ?? null);
+
 /**
  * @param {object} [sticker]  a tentativa da figurinha (TENTATIVAS_STICKER), com -st
  */
 function argsDoFfmpeg(opts, originalFile, outputFile, sticker = TENTATIVAS_STICKER[0]) {
     const isSticker = opts.opt.sticker;  // -sticker  | -st
+    const { fator } = POSICOES[lerPosicao(opts.opt.pos) ?? 'meio']; // -pos
     const isAudio   = opts.opt.audio;    // -audio    | -a
     const startSec  = opts.opt.startSec; // -startSec | -ss
     const endSec    = opts.opt.endSec;   // -endSec   | -es
@@ -53,13 +70,14 @@ function argsDoFfmpeg(opts, originalFile, outputFile, sticker = TENTATIVAS_STICK
             outputFile
         );
     } else if (isSticker) {
-        // Sticker animado 512x512 enquadrado no meio do vídeo (como o /sticker):
-        // escala até cobrir o quadrado e o crop (centralizado por padrão) corta as sobras.
+        // Sticker animado 512x512 enquadrado no vídeo (como o /sticker):
+        // escala até cobrir o quadrado e o crop corta as sobras, no meio ou no topo/embaixo (-pos).
         // Já sai em webp: um mp4 o whatsapp-web.js converteria de novo, sem limite de
         // tamanho, e o WhatsApp recusa a figurinha acima de 500 KB
         args.push(
             '-vf',
-            `fps=${sticker.fps},scale=512:512:force_original_aspect_ratio=increase,crop=512:512,setsar=1`,
+            `fps=${sticker.fps},scale=512:512:force_original_aspect_ratio=increase,` +
+                `crop=512:512:(in_w-512)*${fator}:(in_h-512)*${fator},setsar=1`,
             '-an',
             '-c:v', 'libwebp',
             '-lossless', '0',
@@ -88,14 +106,14 @@ function argsDoFfmpeg(opts, originalFile, outputFile, sticker = TENTATIVAS_STICK
 
 /*
  * Figurinha a partir de imagem: recorte quadrado 512x512 enquadrado no MEIO
- * da imagem (sem isto o WhatsApp Web converte sem centralizar). WebP já é
+ * da imagem, ou no topo/embaixo com o -pos (sem isto o WhatsApp Web converte sem centralizar). WebP já é
  * figurinha e vai como está; vídeos passam pelo ffmpeg (argsDoFfmpeg).
  */
 const STICKER_SIZE = 512;
 const STICKER_MAX_BYTES = 100 * 1024;          // limite do WhatsApp: figurinha estática
 const STICKER_ANIMADO_MAX_BYTES = 500 * 1024;  // limite do WhatsApp: figurinha animada
 
-async function enquadrarSticker(media) {
+async function enquadrarSticker(media, pos = 'meio') {
     if (!media?.mimetype?.startsWith('image/') || media.mimetype === 'image/webp') return media;
 
     try {
@@ -108,7 +126,7 @@ async function enquadrarSticker(media) {
         for (const quality of [80, 60, 40, 20]) {
             saida = await sharp(entrada, { animated: animado })
                 .rotate() // respeita a orientação EXIF de fotos de celular
-                .resize(STICKER_SIZE, STICKER_SIZE, { fit: 'cover', position: 'centre' })
+                .resize(STICKER_SIZE, STICKER_SIZE, { fit: 'cover', position: POSICOES[lerPosicao(pos) ?? 'meio'].sharp })
                 .webp({ quality })
                 .toBuffer();
 
@@ -180,5 +198,6 @@ module.exports = {
     TENTATIVAS_STICKER,
     argsDoFfmpeg,
     enquadrarSticker,
+    lerPosicao,
     thumbnailDoLink
 };
