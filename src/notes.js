@@ -90,12 +90,14 @@ function soTags(textAlt) {
     return partsAlt.length && partsAlt.every(p => /^#[^\s#]+$/.test(p)) ? [...new Set(partsAlt.map(readTag))] : null;
 }
 
-function noteLine(n) {
+function noteLine(n, plan = false) {
     const alert = n.alert_at
         ? `\n   ⏰ ${fmtWhen(n.alert_at)} → ${noticeWhere(noteDestinations(n))}`
         : '';
-    const body = [n.text, n.media_path && '🖼️ _imagem_'].filter(Boolean).join('\n');
-    return `*#${n.id}* ${indent(body)}${alert}\n   _(${formatData(n.created_at)})_`;
+    const body = [n.text, n.media_path && (plan ? '🖼️ imagem' : '🖼️ _imagem_')].filter(Boolean).join('\n');
+    // plain: inside the ``` block the *bold* and _italic_ appear as they are
+    return plan ? `#${n.id} ${indent(body)}${alert}\n   🕐 ${formatData(n.created_at)}`
+        : `*#${n.id}* ${indent(body)}${alert}\n   🕐 _${formatData(n.created_at)}_`;
 }
 
 // The ids of -rm / -alerta -rm: 1 2 3, 1,2,3 or all. Does any not exist? None is touched
@@ -365,18 +367,19 @@ async function alertAlt(msg, rest) {
 const tagsDescriptions = async () => new Map((await dbAll('SELECT tag, description FROM note_tags'))
     .map(r => [r.tag, r.description]));
 
-function groupPerTag(notes, descriptions = new Map()) {
+// One text per tag (each goes in a message)
+function groupPerTag(notes, descriptions = new Map(), plan = true) {
     const groups = new Map();
     for (const n of notes) groups.set(n.tag ?? '', [...(groups.get(n.tag ?? '') ?? []), n]);
 
     const keys = [...groups.keys()].sort((a, b) => (a === '') - (b === '') || a.localeCompare(b));
     const soWithoutTag = keys.length === 1 && keys[0] === '';
     return keys.map(k => {
-        const items = groups.get(k).map(noteLine).join('\n\n');
+        const items = groups.get(k).map(n => noteLine(n, plan)).join('\n\n');
         const desc = descriptions.get(k);
         return soWithoutTag ? items
-            : `*${k ? `#${k}` : WITHOUT_TAG}* (${groups.get(k).length})${desc ? `\n_${desc}_` : ''}\n\n${items}`;
-    }).join('\n\n──────────\n\n');
+            : `🏷️ ${k ? `#${k}` : WITHOUT_TAG} (${groups.get(k).length})${desc ? `\n${desc}` : ''}\n\n${items}`;
+    });
 }
 
 // The -to destinations of a list/export: undefined without -to, null if it did not resolve (already replied)
@@ -391,15 +394,23 @@ const TIPS = '\n\n💡 *Dicas*\n' +
     '/notes -r <id...|#tag...|all> remove\n' +
     '-alerta <quando> avisa.';
 
-// Replies in the chat or, with -to, sends to the destinations (and replies that it sent)
+// Replies in the chat or, with -to, sends to the destinations (and replies that it sent).
+// `texto` may be a list: each item goes in a message, and the tip only after the last
 async function deliverText(msg, destinations, textAlt, subject, tip = '') {
+    // Each listing goes in a ``` block (monospaced); the tip stays outside
+    const partsAlt = [].concat(textAlt).map(t => '```\n' + t + '\n```');
     if (!destinations) {
-        await msg.reply(`${textAlt}${tip}`, undefined, WITHOUT_PREVIEW);
+        for (const [i, part] of partsAlt.entries()) {
+            await msg.reply(i === partsAlt.length - 1 ? `${part}${tip}` : part, undefined, WITHOUT_PREVIEW);
+        }
         return;
     }
-    await sendToDestinations(destinations, textAlt, { assunto: subject, opcoes: WITHOUT_PREVIEW })
-        .then(() => msg.reply(`📝 Anotações enviadas em ${describeDestinations(destinations)}.`))
-        .catch(err => msg.reply(`❌ Não consegui enviar as anotações: ${err.message}`));
+    try {
+        for (const part of partsAlt) await sendToDestinations(destinations, part, { assunto: subject, opcoes: WITHOUT_PREVIEW });
+        await msg.reply(`📝 Anotações enviadas em ${describeDestinations(destinations)}.`);
+    } catch (err) {
+        await msg.reply(`❌ Não consegui enviar as anotações: ${err.message}`);
+    }
 }
 
 // "[#tag...] <text|/regex/flags>" of -search → { tags, search }
@@ -452,8 +463,10 @@ async function listAlt(msg, filter = '', withSearch = false) {
         return;
     }
 
-    await deliverText(msg, destinations, `📝 *ANOTAÇÕES${label}${foundAlt2}* (${notes.length})\n\n${groupPerTag(notes, await tagsDescriptions())}`,
-        `📝 Anotações${label}${foundAlt2}`, TIPS);
+    // One message per tag; the title (with the total) goes at the start of the first
+    const partsAlt = groupPerTag(notes, await tagsDescriptions());
+    partsAlt[0] = `📝 ANOTAÇÕES${label}${foundAlt2} (${notes.length})\n\n${partsAlt[0]}`;
+    await deliverText(msg, destinations, partsAlt, `📝 Anotações${label}${foundAlt2}`, TIPS);
 }
 
 // -move: renames the tag in all notes (if the new one already exists, they merge)
@@ -599,11 +612,11 @@ async function listTags(msg, filter = '') {
     for (const n of notes) count.set(n.tag ?? '', (count.get(n.tag ?? '') ?? 0) + 1);
     const keys = [...count.keys()].sort((a, b) => (a === '') - (b === '') || a.localeCompare(b));
     const descriptions = await tagsDescriptions();
-    const linesAlt = keys.map(k => `${k ? `#${k}` : WITHOUT_TAG}: ${count.get(k)}${descriptions.has(k) ? ` · _${descriptions.get(k)}_` : ''}`);
+    const linesAlt = keys.map(k => `${k ? `#${k}` : WITHOUT_TAG}: ${count.get(k)}${descriptions.has(k) ? ` · ${descriptions.get(k)}` : ''}`);
 
     await deliverText(msg, destinations,
-        `🏷️ *TAGS* (${keys.filter(Boolean).length})\n\n${linesAlt.join('\n')}\n\n📝 ${plural(notes.length, 'anotação', 'anotações')}`,
-        '🏷️ Tags das anotações', '\n\n💡 _/notes #tag mostra as de uma tag_');
+        `🏷️ TAGS (${keys.filter(Boolean).length})\n\n${linesAlt.join('\n')}\n\n📝 ${plural(notes.length, 'anotação', 'anotações')}`,
+        '🏷️ Tags das anotações', '\n\n💡 _/notes #tag lista as anotações de uma tag_');
 }
 
 // 20261027_1530, in Brasília time (the same as formatData)
@@ -733,7 +746,7 @@ async function cmdNote({ msg, args, quotedMsg }) {
     const { informado: withDestination, resto: withoutDestination } = extractDestinations(textAlt);
     const textTags = soTags(withoutDestination);
 
-    if (!textAlt) return quotedMsg || msg.hasMedia ? addAlt(msg, '', quotedMsg) : listAlt(msg);
+    if (!textAlt) return quotedMsg || msg.hasMedia ? addAlt(msg, '', quotedMsg) : listTags(msg);
     if (nameAlt === '-list' || nameAlt === '-l') return listAlt(msg, rest);
     if (nameAlt === '-update' || nameAlt === '-u') return update(msg, rest, quotedMsg);
     if (nameAlt === '-search' || nameAlt === '-s') return listAlt(msg, rest, true);

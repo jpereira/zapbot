@@ -272,3 +272,27 @@ test('/alias -q omite o cabeçalho e aceita /me como destino', async () => {
     await bot.replyAlt('/alias fala /me Oi');
     assert.deepEqual(await bot.replyAlt('/fala'), ['🔗 Alias /fala -> /me Oi', 'Oi']);
 });
+
+test('{/alias} dentro de um texto roda o alias de comando; alias de texto é recusado', async t => {
+    const defi = t.mock.method(HANDLERS, '/defi', async ({ msg, args }) => msg.reply(`${args} ok`));
+    await bot.replyAlt('/alias orca /defi orca');
+    await bot.replyAlt('/alias prjx /defi $1');
+    await bot.replyAlt('/alias outro Outro: {/defi x}');
+    await bot.replyAlt('/alias painel Orca: {/orca} e Prjx: {/prjx abc}');
+
+    assert.deepEqual(await bot.replyAlt('/painel'), [
+        '🔗 Alias /painel -> /orca, /prjx abc', 'Orca: orca ok e Prjx: abc ok'
+    ]);
+    assert.equal(defi.mock.callCount(), 2);
+
+    const [errorAlt] = await bot.replyAlt('/alias ruim Texto {/outro}');
+    assert.match(errorAlt, /alias \/outro é um texto/);
+});
+
+test('nome do alias aceita ponto e os parâmetros aceitam valor padrão ${N:-valor}', async t => {
+    const cot = t.mock.method(HANDLERS, '/cotacao', async () => {});
+    assert.match((await bot.replyAlt('/alias -q meu.comando /cotacao ${1:-USD} $2'))[0], /Alias salvo: \/meu\.comando/);
+    await bot.replyAlt('/meu.comando');
+    await bot.replyAlt('/meu.comando EUR');
+    assert.deepEqual(cot.mock.calls.map(c => c.arguments[0].args), ['USD', 'EUR']);
+});

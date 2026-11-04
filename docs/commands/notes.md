@@ -22,7 +22,7 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 
 | Opção | Valor | Descrição |
 |---|---|---|
-| `-list`, `-l` | `[#tag...]` | Lista as anotações com o ID, agrupadas por `#tag` (é o que o `/notes` sem opção faz). Com uma ou mais tags, só as delas |
+| `-list`, `-l` | `[#tag...]` | Lista as anotações com o ID, agrupadas por `#tag` (o `/notes` sozinho mostra as tags; `/notes #casa` lista as dela). Com uma ou mais tags, só as delas |
 | `-search`, `-s` | `[#tag...] <texto\|/regex/flags>` | Só as anotações que casam, agrupadas como na lista. Veja [Buscar](#buscar) |
 | `-tags`, `-t` | | Todas as tags com a quantidade de anotações de cada uma (as sem tag por último) |
 | `-update`, `-u` | `<id> [#tag] <novo texto>` | Troca o texto da anotação (e a tag, se vier uma; o alerta e a imagem ficam). Em resposta a uma mensagem, sem texto, usa o dela |

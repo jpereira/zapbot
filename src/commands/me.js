@@ -22,7 +22,7 @@ async function cmdMe({ msg, args, chatId, chatName, isGroup, admin, podeUsar: ca
     const textAlt = breakLines(rest);
     if (!textAlt) return msg.reply('❌ Use: /me [-repeat|-r <n>] <mensagem com {/comando}>');
 
-    const errorAlt = commandsError(textAlt, '/me');
+    const errorAlt = await commandsError(textAlt, '/me');
     if (errorAlt) return msg.reply(errorAlt);
 
     const { texto: final, midias: mediaAltAlt } = await assembleText(textAlt,

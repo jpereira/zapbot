@@ -8,6 +8,7 @@ const { client } = require('./client');
 const { activeCommands, findCommand } = require('./commands/base');
 const { printError } = require('./log');
 const { GetOptFromCommand } = require('./options');
+const { dbGet, dbReady } = require('./db');
 
 /*
  * Only the commands with "cron": true in commands.json (the query ones), and without the
@@ -28,12 +29,39 @@ const commandsInText = (textAlt) => [...String(textAlt ?? '').matchAll(MARK)].ma
 const breakLines = (textAlt) => String(textAlt ?? '').replace(/[ \t]*\\n[ \t]*/g, '\n');
 
 /*
+ * Finds the command in a "/name args" line: the command itself or an alias of
+ * saved command (with the $1, $2... applied). A text alias does not come in here
+ * (an {/alias} inside the text itself could call itself).
+ * @returns {Promise<{command, args, alias?}|{textoAlias: string}|null>}
+ */
+async function findCommandAlt(line) {
+    const caller = line.split(/\s+/, 1)[0].toLowerCase();
+    const rest = line.slice(caller.length).trim();
+    const direct = findCommand(caller);
+    if (direct) return { command: direct, args: rest };
+
+    await dbReady;
+    const alias = await dbGet('SELECT command FROM command_aliases WHERE name = ?', [caller]);
+    if (!alias) return null;
+    if (!alias.command.startsWith('/')) return { textoAlias: caller };
+
+    const { applyParams } = require('./aliases'); // in here: aliases imports this file
+    const { comando: commandAlt, sobras: leftovers } = applyParams(alias.command, rest);
+    const destination = commandAlt.split(/\s+/, 1)[0];
+    const target = findCommand(destination);
+    if (!target) return null;
+    const args = [commandAlt.slice(destination.length).trim(), leftovers].filter(Boolean).join(' ');
+    return { command: target, args, alias: caller };
+}
+
+/*
  * /me is a regular command, but it runs the {/command}s of what was typed: the permissions
  * (and the "admin only") are its own and each one's (targets), checked before running.
  */
-function withTargets(command, textAlt) {
+async function withTargets(command, textAlt) {
     if (command?.cmd !== '/me') return command;
-    const targets = commandsInText(textAlt).map(c => findCommand(c.linha.split(/\s+/, 1)[0].toLowerCase())).filter(Boolean);
+    const foundAlt4 = await Promise.all(commandsInText(textAlt).map(c => findCommandAlt(c.linha)));
+    const targets = foundAlt4.map(a => a?.command).filter(Boolean);
     return { ...command, onlyAdmin: command.onlyAdmin || targets.some(c => c.onlyAdmin),
         alvos: [command.cmd, ...targets.map(c => c.cmd)] };
 }
@@ -41,16 +69,18 @@ function withTargets(command, textAlt) {
 const allowed = () => activeCommands().filter(c => c.cron).map(c => c.cmd);
 
 // "/crypto BTC" → { command, args, opts }, or { error }
-function readCommand(line, whereAlt = '/cron') {
+async function readCommand(line, whereAlt = '/cron') {
     const caller = line.split(/\s+/, 1)[0].toLowerCase();
-    const command = findCommand(caller);
+    const foundAlt2 = await findCommandAlt(line);
 
-    if (!command) return { erro: `❌ {${line}}: o ${caller} não existe.` };
+    if (!foundAlt2) return { erro: `❌ {${line}}: o ${caller} não existe.` };
+    if (foundAlt2.textoAlias) return { erro: `❌ {${line}}: o alias ${caller} é um texto e não roda dentro do ${whereAlt}.` };
+
+    const { command, args } = foundAlt2;
     if (!command.cron) {
         return { erro: `❌ {${line}}: o ${command.cmd} não roda dentro do ${whereAlt}.\n💡 _Rodam: ${allowed().join(', ')}._` };
     }
 
-    const args = line.slice(caller.length).trim();
     const opts = GetOptFromCommand(args, command);
     const prohibited = (command.cmd_opts ?? []).find(o => o.cron === false && o.opts?.some(nameAlt => opts.given.has(nameAlt)));
     if (prohibited) return { erro: `❌ {${line}}: o -${prohibited.opts[0]} do ${command.cmd} não roda dentro do ${whereAlt}.` };
@@ -60,11 +90,11 @@ function readCommand(line, whereAlt = '/cron') {
 
 /**
  * Checks the text's {/command}s when creating or editing (the /cron item).
- * @returns {string|null} the error (of the first invalid one) or null
+ * @returns {Promise<string|null>} the error (of the first invalid one) or null
  */
-function commandsError(textAlt, whereAlt = '/cron') {
+async function commandsError(textAlt, whereAlt = '/cron') {
     for (const { linha: line } of commandsInText(textAlt)) {
-        const { erro: errorAlt } = readCommand(line, whereAlt);
+        const { erro: errorAlt } = await readCommand(line, whereAlt);
         if (errorAlt) return errorAlt;
     }
     return null;
@@ -103,7 +133,7 @@ function messageSynthetic(chatId, line, replies) {
  * you (admin); with it, with the admin and the permissions of whoever runs.
  */
 async function runCommand(chatId, line, { chatName, isGroup, onde: whereAlt = '/cron', quem: who = null }) {
-    const { erro: errorAlt, command, args, opts } = readCommand(line, whereAlt);
+    const { erro: errorAlt, command, args, opts } = await readCommand(line, whereAlt);
     if (errorAlt) return { texto: `⚠️ ${line.split(/\s+/, 1)[0]} não roda no ${whereAlt}`, midias: [] };
 
     // The handler lives in commands/index, which loads /cron (and this file): only here, at the time
@@ -183,6 +213,7 @@ async function sendMedia(chatId, mediaAltAlt) {
 }
 
 module.exports = {
+    findCommandAlt,
     withTargets,
     commandsInText,
     sendMedia,
