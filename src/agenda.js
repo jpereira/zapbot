@@ -211,7 +211,7 @@ async function editar(msg, itens, { opt, quando, texto }) {
         }
     }
 
-    const erroComando = texto ? await erroDosComandos(texto) : null;
+    const erroComando = texto ? await erroDosComandos(texto, '/cron', msg.fromMe) : null;
     if (erroComando) {
         await msg.reply(erroComando);
         return;
@@ -329,7 +329,7 @@ async function tratarAgenda({ msg, args, chatId, chatName, isGroup, quotedMsg })
     }
 
     // {/comando} no texto: existe e pode rodar no /cron (o erro aparece agora, não na hora do envio)
-    const erroComando = await erroDosComandos(texto);
+    const erroComando = await erroDosComandos(texto, '/cron', msg.fromMe);
     if (erroComando) {
         await msg.reply(erroComando);
         return;

@@ -498,6 +498,13 @@ describe('/cron: comandos no texto ({/comando})', () => {
         assert.equal(linha.content, 'Piada: ⚠️ /joke não roda no /cron fim');
     });
 
+    test('{/bot -flush-email true} só o dono agenda; as outras opções do /bot são recusadas', async () => {
+        assert.match((await bot.responder('/cron +1h -to L200 Hora de limpar {/bot -flush-email true}'))[0],
+            /^📅 \*Mensagem agendada\*/);
+        assert.match((await bot.responder('/cron +1h -to L200 x {/bot -off}', { erroEsperado: true }))[0],
+            /o -off do \/bot não roda dentro do \/cron/);
+    });
+
     test('\\n digitado vira quebra de linha, ao criar e no -edit', async () => {
         await bot.responder('/cron +1h -to L200 Versão {/version}\\n Uptime {/uptime}');
         assert.equal((await itens())[0].text, 'Versão {/version}\nUptime {/uptime}');

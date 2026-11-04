@@ -320,7 +320,8 @@ chave `_about` (metadados do projeto, ignorada pelo bot) e a lista `commands`. C
 - `"cron": true` deixa o comando rodar dentro do texto do
   [`/cron`](comandos/cron.md#comandos-no-texto) (`{/crypto}`), na hora do envio. Só para comandos de
   consulta, que respondem com `msg.reply` (o texto entra no lugar e as mídias saem depois). Uma
-  opção que muda algo (`-add`, `-alerta`...) leva `"cron": false` e é recusada ao criar o item.
+  opção que muda algo (`-add`, `-alerta`...) leva `"cron": false` e é recusada ao criar o item. `"cron": "dono"` (no comando ou na opção) só vale
+  se quem cria o item for o dono (o `/bot -flush-email`).
 - Alterar `help`, `usage`, `aliases`, descrições, `onlyAdmin` ou `disabled` não exige código: basta
   refazer o build e recriar o container.
 - O `-h` é lido no celular, então o formatador quebra as linhas:

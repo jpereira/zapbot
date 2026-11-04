@@ -69,7 +69,7 @@ async function comAlvos(command, texto) {
 const permitidos = () => activeCommands().filter(c => c.cron).map(c => c.cmd);
 
 // "/crypto BTC" → { command, args, opts }, ou { erro }
-async function lerComando(linha, onde = '/cron') {
+async function lerComando(linha, onde = '/cron', dono = false) {
     const caller = linha.split(/\s+/, 1)[0].toLowerCase();
     const achado = await acharComando(linha);
 
@@ -77,12 +77,13 @@ async function lerComando(linha, onde = '/cron') {
     if (achado.textoAlias) return { erro: `❌ {${linha}}: o alias ${caller} é um texto e não roda dentro do ${onde}.` };
 
     const { command, args } = achado;
-    if (!command.cron) {
+    if (!command.cron || (command.cron === 'dono' && !dono)) {
         return { erro: `❌ {${linha}}: o ${command.cmd} não roda dentro do ${onde}.\n💡 _Rodam: ${permitidos().join(', ')}._` };
     }
 
     const opts = GetOptFromCommand(args, command);
-    const proibida = (command.cmd_opts ?? []).find(o => o.cron === false && o.opts?.some(nome => opts.given.has(nome)));
+    const proibida = (command.cmd_opts ?? []).find(o => (o.cron === false || (o.cron === 'dono' && !dono)) &&
+        o.opts?.some(nome => opts.given.has(nome)));
     if (proibida) return { erro: `❌ {${linha}}: o -${proibida.opts[0]} do ${command.cmd} não roda dentro do ${onde}.` };
 
     return { command, args, opts };
@@ -92,9 +93,9 @@ async function lerComando(linha, onde = '/cron') {
  * Confere os {/comando} do texto ao criar ou editar (o item do /cron).
  * @returns {Promise<string|null>} o erro (do primeiro inválido) ou null
  */
-async function erroDosComandos(texto, onde = '/cron') {
+async function erroDosComandos(texto, onde = '/cron', dono = false) {
     for (const { linha } of comandosNoTexto(texto)) {
-        const { erro } = await lerComando(linha, onde);
+        const { erro } = await lerComando(linha, onde, dono);
         if (erro) return erro;
     }
     return null;
@@ -133,7 +134,7 @@ function mensagemSintetica(chatId, linha, respostas) {
  * você (admin); com ele, com o admin e as permissões de quem executa.
  */
 async function rodarComando(chatId, linha, { chatName, isGroup, onde = '/cron', quem = null }) {
-    const { erro, command, args, opts } = await lerComando(linha, onde);
+    const { erro, command, args, opts } = await lerComando(linha, onde, !quem); // sem `quem`: roda como o dono
     if (erro) return { texto: `⚠️ ${linha.split(/\s+/, 1)[0]} não roda no ${onde}`, midias: [] };
 
     // O handler fica no comandos/index, que carrega o /cron (e este arquivo): só aqui, na hora
