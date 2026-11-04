@@ -64,6 +64,10 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
   ↩️ na frente. Texto digitado junto vale no lugar do da mensagem (sem o ↩️). Dá para juntar com
   `-alerta`: `/notes -a #lembrete -alerta amanhã 9h`. No PDF, o ↩️ vira `[resp.]`.
 - No texto da anotação, `\n` vira quebra de linha (`/notes #casa pão\nleite`); `\\n` fica como está.
+- Com mais de uma linha, a primeira sai em negrito, o resto vem depois e as linhas que são só um
+  link `http(s)://` vão para o fim, sob `🌐 Links` (na lista, no `-view`, no e-mail e no PDF, onde
+  fica só `Links`, sem o emoji). Link no meio de uma frase fica onde está. Uma linha só não muda.
+- A imagem sai com uma borda preta fina no `-view` (chat e e-mail) e no PDF; o gif vai como está.
 - **Mídias:** mande uma imagem, documento, áudio ou vídeo com a legenda `/notes #minhatag Texto` ou
   responda uma mídia com `/notes #tag [texto]`. O texto é opcional (numa resposta com legenda,
   vale a legenda, com o ↩️). O arquivo fica em `cache/notes/` (fora do `cache/media/`, então o

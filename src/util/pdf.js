@@ -78,7 +78,7 @@ const escape = (t) => t.replace(/[\\()]/g, '\\$&');
  * @param {string}   o.titulo     header, on the left
  * @param {string}   o.direita    header, on the right (date/time)
  * @param {string}   o.rodape     footer, on the left ("Página X de Y" goes on the right)
- * @param {object[]} o.blocos     { texto, tipo: 'titulo' | 'texto' | 'meta' | 'espaco' } or
+ * @param {object[]} o.blocos     { texto, tipo: 'titulo' | 'texto' | 'negrito' | 'meta' | 'espaco' } or
  * { type: 'image', jpeg: Buffer, width, height } (RGB JPEG, in pixels)
  * @returns {Buffer}
  */
@@ -86,6 +86,7 @@ function generatePdf({ titulo: title, direita: right = '', rodape: footer = '', 
     const STYLES = {
         titulo: { fonte: 'F2', tamanho: 13, entre: 18, antes: 14, cor: '0.1 0.3 0.5' },
         texto: { fonte: 'F1', tamanho: 10.5, entre: 14, antes: 0, cor: '0 0 0' },
+        negrito: { fonte: 'F2', tamanho: 10.5, entre: 14, antes: 0, cor: '0 0 0' },
         meta: { fonte: 'F1', tamanho: 8.5, entre: 11, antes: 0, cor: '0.45 0.45 0.45' }
     };
     const pages = [[]];

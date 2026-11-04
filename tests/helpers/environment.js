@@ -363,6 +363,7 @@ const sharpFake = (inputAlt) => {
         extract: ({ width, height }) => { dim = { width, height }; return chainAlt; },
         webp: () => chainAlt,
         composite: () => chainAlt,
+        extend: () => chainAlt,
         png: () => { format = 'png'; return chainAlt; },
         // /notes -export: the file that starts with "nao e imagem" fails; the rest becomes a 40x20 "jpeg"
         flatten: () => chainAlt,
@@ -370,7 +371,10 @@ const sharpFake = (inputAlt) => {
         jpeg: () => { format = 'jpeg'; return chainAlt; },
         metadata: async () => dim,
         toBuffer: async (optionsAlt) => {
-            if (format !== 'jpeg') return Buffer.from(format === 'png' ? `png:${dim.width}x${dim.height}` : 'webp-enquadrado');
+            if (format !== 'jpeg') {
+                const data = Buffer.from(format === 'png' ? `png:${dim.width}x${dim.height}` : 'webp-enquadrado');
+                return optionsAlt?.resolveWithObject ? { data, info: dim } : data;
+            }
             if (typeof inputAlt === 'string' && require('fs').readFileSync(inputAlt, 'latin1').startsWith('nao e imagem')) {
                 throw new Error('Input file contains unsupported image format');
             }
