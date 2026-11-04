@@ -11,6 +11,7 @@ pelo ffmpeg. Se a mídia tiver um link na legenda, vale a mídia.
 | Opção | Valor | Descrição |
 |---|---|---|
 | `-sticker`, `-st` | | Envia como figurinha animada (até 6 s), enquadrada no meio do vídeo. É o mesmo que o [`/sticker`](sticker.md) |
+| `-pos` | `<topo\|meio\|baixo>` | Com `-st`: onde fica o recorte quadrado (padrão `meio`). Em mídia mais larga que alta, `topo` é a esquerda e `baixo` a direita |
 | `-audio`, `-a` | | Extrai só o áudio (`.mp3`) |
 | `-startSec`, `-ss` | `<tempo>` | Começa neste ponto do vídeo original (padrão 0), em segundos (`22`, `1.5`) ou em `min:seg` (`09:33`, ou `h:min:seg`). Com `-` na frente, conta do **final** do vídeo (`-10`, `-01:44`) |
 | `-endSec`, `-es` | `<tempo>` | Termina neste ponto do vídeo original, no mesmo formato do `-ss` (`-es -5` termina 5 s antes do fim); deve ser maior que o início. Vale também sem `-ss` e para figurinhas |

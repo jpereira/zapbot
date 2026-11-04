@@ -1031,6 +1031,15 @@
                 },
                 {
                     "opts": [
+                        "pos"
+                    ],
+                    "values": [
+                        "<topo|meio|baixo>"
+                    ],
+                    "desc": "Com -st: onde fica o recorte quadrado, topo, meio (padrão) ou baixo. Em mídia mais larga que alta, topo é a esquerda e baixo a direita. Ex: /get -st -pos topo <url>"
+                },
+                {
+                    "opts": [
                         "audio",
                         "a"
                     ],
@@ -1832,7 +1841,7 @@
             "usage": "/sticker [OPÇÃO]... [url]  (ou respondendo uma imagem, vídeo ou link)  ou  /sticker -txt <texto> [-bg <cor>] [-fg <cor>]",
             "aliases": [],
             "summary": "Cria uma figurinha",
-            "help": "Cria uma figurinha: é o /get -sticker. Da URL ou do link respondido, baixa o vídeo; sem vídeo, usa a prévia do link. De um vídeo, até 6 s com recorte quadrado no meio, no trecho do -ss e do -es. De uma imagem, o recorte quadrado no meio. Com -txt, uma figurinha animada com o texto, piscando entre as cores do -fg e do -bg.",
+            "help": "Cria uma figurinha: é o /get -sticker. Da URL ou do link respondido, baixa o vídeo; sem vídeo, usa a prévia do link. De um vídeo, até 6 s com recorte quadrado no meio, no trecho do -ss e do -es. De uma imagem, o recorte quadrado no meio. O -pos muda o recorte para o topo ou para baixo. Com -txt, uma figurinha animada com o texto, piscando entre as cores do -fg e do -bg.",
             "cmd_opts": [
                 {
                     "opts": [
@@ -1851,6 +1860,15 @@
                         "<cor>"
                     ],
                     "desc": "Com -txt: a cor da letra, em #RRGGBB (padrão #000000, preto)."
+                },
+                {
+                    "opts": [
+                        "pos"
+                    ],
+                    "values": [
+                        "<topo|meio|baixo>"
+                    ],
+                    "desc": "Onde fica o recorte quadrado da imagem ou do vídeo: topo, meio (padrão) ou baixo. Em mídia mais larga que alta, topo é a esquerda e baixo a direita. Ex: /sticker -pos topo, /sticker -ss 10 -pos baixo"
                 },
                 {
                     "opts": [

@@ -355,7 +355,11 @@ const sharpFake = (inputAlt) => {
     let format = 'webp';
     const chainAlt = {
         rotate: () => chainAlt,
-        resize: (width, height) => { if (height) dim = { width, height }; return chainAlt; },
+        resize: (width, height, optionsAlt) => {
+            sharpFake.resizes.push(optionsAlt);
+            if (height) dim = { width, height };
+            return chainAlt;
+        },
         extract: ({ width, height }) => { dim = { width, height }; return chainAlt; },
         webp: () => chainAlt,
         composite: () => chainAlt,
@@ -377,6 +381,7 @@ const sharpFake = (inputAlt) => {
     return chainAlt;
 };
 sharpFake.entradas = [];
+sharpFake.resizes = [];   // the options of each resize (fit, position)
 
 const SIMULATED = {
     'whatsapp-web.js': { Client: ClientFake, LocalAuth: class {}, MessageMedia, Location, Poll },
