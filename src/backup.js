@@ -2,14 +2,16 @@
  * Backup do banco: cópia compactada em cache/backups, o backup diário automático e a restauração.
  */
 
+const { execFile } = require('child_process');
 const path = require('path');
 const zlib = require('zlib');
 const { pipeline } = require('stream/promises');
+const { promisify } = require('util');
 const fs = require('fs-extra');
 const { MessageMedia } = require('whatsapp-web.js');
 
 const { client } = require('./cliente');
-const { BACKUP_DIR, TMP_DIR } = require('./constantes');
+const { BACKUP_DIR, NOTES_DIR, TMP_DIR } = require('./constantes');
 const { dbAll, dbGet, dbPronto, dbRun } = require('./db');
 const { descreverDestino, extrairDestinos, resolverDestino } = require('./destinos');
 const { alertarPorEmail, enviarArquivoPorEmail } = require('./email');
@@ -23,7 +25,9 @@ const { versaoComCommit } = require('./versao');
  *   zapbot-AAAAMMDD-HHMMSS.db.gz  → o banco inteiro (VACUUM INTO: cópia consistente
  *                                   sem parar o bot), compactado
  *   zapbot-AAAAMMDD-HHMMSS.json   → data, motivo, versão do bot e as entradas de cada tabela
- * As mídias (cache/media) não entram: só o banco.
+ *   zapbot-AAAAMMDD-HHMMSS.notes.tar.gz → as imagens do /notes (NOTES_DIR); só existe se houver
+ *                                   alguma imagem (o tar do sistema)
+ * As mídias (cache/media) não entram.
  *
  * Motivos: 'automático' (o diário, setting 'backup.hour'), 'manual' (/backup -now)
  * e 'antes de restaurar'. Os automáticos e os de antes de restaurar além dos
@@ -31,6 +35,8 @@ const { versaoComCommit } = require('./versao');
  */
 const PREFIXO = 'zapbot-';
 const EXT = '.db.gz';
+const EXT_NOTAS = '.notes.tar.gz';
+const tar = promisify(execFile);
 // Anexo acima disso costuma voltar do provedor antes de chegar ao destinatário.
 const MAX_ANEXO_BYTES = 20 * 1024 * 1024;
 
@@ -111,6 +117,13 @@ async function contarEntradas(esquema = 'main') {
     return contagem;
 }
 
+// Quantas imagens há em NOTES_DIR (sem entrar em subpastas)
+async function imagensDasNotas() {
+    if (!fs.existsSync(NOTES_DIR)) return [];
+    const itens = await fs.readdir(NOTES_DIR, { withFileTypes: true });
+    return itens.filter(i => i.isFile()).map(i => i.name);
+}
+
 // Nome livre para um backup criado agora (horário de Brasília no nome)
 function nomeNovo(agora) {
     const p = partesEmBrasilia(agora);
@@ -134,6 +147,7 @@ async function listarBackups() {
 
         const nome = f.slice(0, -EXT.length);
         const arquivo = path.join(BACKUP_DIR, f);
+        const arquivoNotas = path.join(BACKUP_DIR, nome + EXT_NOTAS);
         const stat = await fs.stat(arquivo);
         const meta = await fs.readJson(path.join(BACKUP_DIR, `${nome}.json`)).catch(() => ({}));
 
@@ -144,7 +158,10 @@ async function listarBackups() {
             criadoEm: meta.criadoEm ?? stat.mtimeMs,
             motivo: meta.motivo ?? '?',
             versao: meta.versao ?? '?',
-            entradas: meta.entradas ?? null
+            entradas: meta.entradas ?? null,
+            ...(fs.existsSync(arquivoNotas)
+                ? { arquivoNotas, bytesNotas: (await fs.stat(arquivoNotas)).size, imagens: meta.imagens ?? null }
+                : {})
         });
     }
 
@@ -170,8 +187,13 @@ async function criarBackup(motivo = MOTIVOS.manual, agora = Date.now()) {
         const bytesBanco = (await fs.stat(copia)).size;
 
         await pipeline(fs.createReadStream(copia), zlib.createGzip(), fs.createWriteStream(arquivo));
+        const imagens = await imagensDasNotas();
+        if (imagens.length) {
+            await tar('tar', ['-czf', path.join(BACKUP_DIR, nome + EXT_NOTAS), '-C', NOTES_DIR, '.']);
+        }
         await fs.writeJson(path.join(BACKUP_DIR, `${nome}.json`),
-            { criadoEm: agora, motivo, versao: versaoComCommit(), bytesBanco, entradas }, { spaces: 2 });
+            { criadoEm: agora, motivo, versao: versaoComCommit(), bytesBanco, entradas, imagens: imagens.length },
+            { spaces: 2 });
 
         printInfo(`Backup ${nome} criado (${motivo})`);
     } finally {
@@ -195,6 +217,7 @@ async function aplicarRetencao() {
 
 async function removerBackup(b) {
     await fs.remove(b.arquivo);
+    await fs.remove(path.join(BACKUP_DIR, b.nome + EXT_NOTAS));
     await fs.remove(path.join(BACKUP_DIR, `${b.nome}.json`));
 }
 
@@ -202,7 +225,7 @@ async function removerBackup(b) {
 async function apagarTodosBackups() {
     const lista = await listarBackups();
     for (const b of lista) await removerBackup(b);
-    return { backups: lista.length, bytes: lista.reduce((s, b) => s + b.bytes, 0) };
+    return { backups: lista.length, bytes: lista.reduce((s, b) => s + b.bytes + (b.bytesNotas ?? 0), 0) };
 }
 
 /**
@@ -243,6 +266,12 @@ async function restaurarBackup(b) {
     } finally {
         await dbRun('DETACH DATABASE bk').catch(() => {});
         await fs.remove(copia);
+    }
+
+    // As imagens do backup voltam para NOTES_DIR (as que já estão lá e não vieram ficam)
+    if (b.arquivoNotas) {
+        await fs.ensureDir(NOTES_DIR);
+        await tar('tar', ['-xzf', b.arquivoNotas, '-C', NOTES_DIR]);
     }
 
     await carregarSettings();

@@ -100,13 +100,18 @@ ocorrências do `/watch`, alertas de preço, lembretes e mensagens agendadas, en
 A cópia é feita com o `VACUUM INTO` do SQLite (consistente, sem parar o
 bot) e compactada com gzip.
 
-**As mídias (`cache/media`) não entram**: depois de uma restauração, uma apagada com mídia que não
+As imagens do `/notes` (`cache/notes`) entram num arquivo à parte, só quando existe alguma, e voltam
+junto no `-r`. O `-send` e o backup automático enviam só o banco (as imagens podem passar do limite
+de anexo).
+
+**As outras mídias (`cache/media`) não entram**: depois de uma restauração, uma apagada com mídia que não
 está mais no disco avisa que o arquivo não está disponível. A sessão do WhatsApp (volume
 `wwebjs_auth`) também não.
 
-Cada backup são dois arquivos em `cache/backups/`, no volume `app_cache`:
+Cada backup são dois ou três arquivos em `cache/backups/`, no volume `app_cache`:
 
 - `zapbot-AAAAMMDD-HHMMSS.db.gz`: o banco compactado;
+- `zapbot-AAAAMMDD-HHMMSS.notes.tar.gz`: as imagens do `/notes` (só se houver alguma);
 - `zapbot-AAAAMMDD-HHMMSS.json`: data, motivo, versão do bot e as entradas de cada tabela.
 
 ## Restaurar
