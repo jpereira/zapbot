@@ -75,17 +75,21 @@ function glifosDoTexto(texto) {
  */
 function gerarAscii(texto, { largura = LARGURA_PADRAO, traco = '#' } = {}) {
     const grupos = [[]];
-    let usado = 0;
 
-    for (const c of glifosDoTexto(texto)) {
-        const w = GLIFOS[c][0].length;
-        if (usado && usado + 1 + w > largura) {
-            grupos.push([]);
-            usado = 0;
+    // "\n" (digitado) e quebra de linha de verdade começam uma nova linha de letras
+    for (const parte of String(texto).split(/\\n|\r?\n/)) {
+        grupos.push([]);
+        let usado = 0;
+        for (const c of glifosDoTexto(parte)) {
+            const w = GLIFOS[c][0].length;
+            if (usado && usado + 1 + w > largura) {
+                grupos.push([]);
+                usado = 0;
+            }
+            if (c === ' ' && !grupos.at(-1).length) continue; // espaço no começo da linha não conta
+            usado += (grupos.at(-1).length ? 1 : 0) + w;
+            grupos.at(-1).push(c);
         }
-        if (c === ' ' && !grupos.at(-1).length) continue; // espaço no começo da linha não conta
-        usado += (grupos.at(-1).length ? 1 : 0) + w;
-        grupos.at(-1).push(c);
     }
 
     return grupos.filter(g => g.length).map(g => Array.from({ length: 5 }, (_, linha) =>
@@ -96,7 +100,7 @@ function gerarAscii(texto, { largura = LARGURA_PADRAO, traco = '#' } = {}) {
 async function cmdAscii({ msg, opts, quotedMsg }) {
     const digitado = opts.argv.join(' ').trim();
     const texto = digitado || String(quotedMsg?.body ?? '').trim();
-    const uso = '❌ Use: /ascii [-width|-w <colunas>] [-char|-c <caractere>] <texto>';
+    const uso = '❌ Use: /ascii [-width|-w <colunas>] [-char|-c <caractere>] <texto (\\n quebra a linha)>';
 
     if (!texto) return msg.reply(uso);
     if (texto.length > MAX_TEXTO) return msg.reply(`❌ O texto tem no máximo ${MAX_TEXTO} caracteres.`);
