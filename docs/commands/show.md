@@ -41,6 +41,8 @@ O `-d`, o `-e`, o `-s` e o `-r` se somam (`/show -d -s` traz apagadas e status).
 opções mas sem chat vêm só as apagadas deste chat; com chat (ou na busca no seu privado), vem tudo
 junto, por data.
 
+![Demonstração do /show](../assets/demo/02-show.gif)
+
 ```text
 /show                       → no privado, lista o cache; no grupo, a última apagada
 /show -5                    → as 5 últimas

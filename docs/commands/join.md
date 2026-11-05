@@ -3,6 +3,8 @@
 Entra em um grupo do WhatsApp pelo link de convite. Com `-info`, mostra o grupo (nome, participantes
 e descrição) sem entrar. Para sair, use o [`/leave`](leave.md).
 
+![Demonstração do /join](../assets/demo/04-join-leave.gif)
+
 ```text
 /join <link do convite>  ou  /join -info <link>  ou  /join -l
 ```

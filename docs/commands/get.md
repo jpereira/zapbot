@@ -73,6 +73,8 @@ O X só entrega vídeos marcados como sensíveis (NSFW) para quem está logado, 
 falha nesses links. A saída é dar a ele os cookies de uma conta logada (de preferência uma só para
 isso):
 
+![Demonstração do /get](../assets/demo/06-get.gif)
+
 ```bash
 ./scripts/get-cookie.sh x.com twitter.com    # lê os cookies do Chrome e grava ./cookies.txt (chmod 600)
 make DOCK_REMOTE=1 cookies           # copia para o container: /app/cache/cookies.txt
