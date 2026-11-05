@@ -11,6 +11,7 @@ const { printError, printInfo } = require('../log');
 const { ignoreNotice } = require('../mudo');
 const { getSetting } = require('../settings');
 const { formatData } = require('../util/format');
+const { maskPhones } = require('../util/phone');
 const { compileRuleWatch } = require('./rules');
 const { headerOrigin } = require('../util/origin');
 
@@ -91,12 +92,17 @@ async function checkWatch({
         byDestination.delete('privado');
     }
 
+    // 🔒 (-mask N): if any rule of the notice has the padlock, the whole notice goes out with obfuscated phones
+    const locked = new Set((await dbAll('SELECT rule FROM watch_masks')).map(r => r.rule));
+
     for (const { destino: destination, regras: rules } of byDestination.values()) {
-        const textAlt = '👀 *WATCH: MENSAGEM DETECTADA*\n\n' +
-            rules.map(c => `🔎 *Regra #${c.n}:* ${c.regra}\n`).join('') + details;
+        const obfuscate = rules.some(c => locked.has(c.regra));
+        const mask = (t) => obfuscate ? maskPhones(t) : t;
+        const textAlt = mask('👀 *WATCH: MENSAGEM DETECTADA*\n\n' +
+            rules.map(c => `🔎 *Regra #${c.n}:* ${c.regra}\n`).join('') + details);
 
         await sendOnDestination(destination, textAlt, {
-            assunto: `👀 Watch: ${rules.map(c => `#${c.n} ${c.regra}`).join(', ')}`,
+            assunto: mask(`👀 Watch: ${rules.map(c => `#${c.n} ${c.regra}`).join(', ')}`),
             opcoes: { linkPreview: false }
         }).catch(err => printError('/watch: falha ao avisar:', err.message));
     }

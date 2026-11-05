@@ -13,6 +13,7 @@ const { printInfo } = require('../log');
 const { getSetting, setSetting } = require('../settings');
 const { formatData, plural, summarizeText, withoutAccents } = require('../util/format');
 const { isChannelAlt } = require('../util/origin');
+const { maskPhones } = require('../util/phone');
 const { RULE_REGEX, compileSearch, compileRuleWatch } = require('../watch/rules');
 const { readOptionsWatch } = require('../watch/options');
 
@@ -45,6 +46,11 @@ async function recordDestinations(rule, destinations) {
             dest_is_group = excluded.dest_is_group, dest_email = excluded.dest_email, recipients = excluded.recipients`,
         [rule, c.dest_id, c.dest_name, c.dest_is_group, c.dest_email, recipientsDe(destinations)]
     );
+}
+
+// Rules with the 🔒 (-mask N): notices and occurrences come out with obfuscated phones
+async function rulesLocked() {
+    return new Set((await dbAll('SELECT rule FROM watch_masks')).map(r => r.rule));
 }
 
 const whereWarn = (destinations) => (destinations.length ? describeDestinations(destinations) : 'seu privado');
@@ -93,19 +99,21 @@ const TIPS = '\n\n💡 *Dicas* _(N: o nº ou a própria regra)_\n' +
     '/watch -s N mostra as mensagens completas.\n' +
     '/watch -s N -q <texto|/regex/> só as que casam.\n' +
     '/watch -s N -to <destino|off> troca os destinos.\n' +
-    '/watch -f N limpa as ocorrências.';
+    '/watch -f N limpa as ocorrências.\n' +
+    '/watch -mask N liga o 🔒 (telefones ofuscados nos avisos); -umask N desliga.';
 
 async function listRules(rules) {
     const count = new Map((await dbAll('SELECT rule, COUNT(*) AS total FROM watch_hits GROUP BY rule'))
         .map(r => [r.rule, r.total]));
     const destinations = await rulesDestinations();
     const origins = new Map((await dbAll('SELECT * FROM watch_sources')).map(r => [r.rule, r]));
+    const locked = await rulesLocked();
     const width = String(rules.length).length + 1;
     const list = rules.map((r, i) => {
         const origin = origins.get(r);
         const only = origin ? ` apenas em ${origin.source_kind === 'canal' ? '📰'
             : origin.source_kind === 'grupo' ? '👥' : '👤'} ${origin.source_name}` : '';
-        return `${`#${i + 1}`.padEnd(width)}  ${r}  (${count.get(r) ?? 0})${only}` +
+        return `${`#${i + 1}`.padEnd(width)}  ${r}  (${count.get(r) ?? 0})${locked.has(r) ? ' 🔒' : ''}${only}` +
             (destinations.get(r)?.length ? `  → ${describeDestinations(destinations.get(r))}` : '');
     });
     return `👀 *WATCH: REGRAS* (${rules.length}/${getSetting('watch.max')})\n\n` +
@@ -135,6 +143,7 @@ async function listOccurrences(rule, rules, limitAlt, complete = false, search =
         total = match.length;
         rows = match.slice(0, max);
     }
+    const locked = await rulesLocked();
     let textAlt = '👀 *WATCH: OCORRÊNCIAS*\n' + (rule === null ? '🔎 *Regras:* todas\n'
         : `🔎 *Regra #${rules.indexOf(rule) + 1}:* ${rule}\n`);
     if (search !== null) textAlt += `🔍 *Busca:* "${search}"\n`;
@@ -151,7 +160,8 @@ async function listOccurrences(rule, rules, limitAlt, complete = false, search =
             : h.is_group ? `👥 ${group} · 👤 ${h.sender_name}` : `👤 ${h.sender_name}`;
         const n = rules.indexOf(h.rule) + 1;
         const which = rule === null ? ` · 🔎 ${n ? `#${n}` : '(removida)'}` : '';
-        const body = await resolverMentions(h.body);
+        const resolved = await resolverMentions(h.body);
+        const body = locked.has(h.rule) ? maskPhones(resolved) : resolved;
         textAlt += `\n${i + 1}. 📅 ${formatData(h.timestamp)}${which}\n` +
             `    ${whereAlt}\n    💬 "${complete ? body : summarizeText(body)}"\n`;
     }
@@ -169,6 +179,20 @@ async function cmdWatch({ msg, args }) {
     }
     const rules = getSetting('watch.rules');
     const help = () => msg.reply('```' + getCommandSyntax('/watch') + '```');
+    if (o.trava) {
+        const { n, ligar: turnOn } = o.trava;
+        const target = rules[n - 1];
+        if (!target) {
+            await msg.reply(`❌ A regra #${n} não existe.\n💡 _Existem ${plural(rules.length, 'regra', 'regras')}: veja /watch -l_`);
+            return;
+        }
+        if (turnOn) await dbRun('INSERT OR IGNORE INTO watch_masks (rule) VALUES (?)', [target]);
+        else await dbRun('DELETE FROM watch_masks WHERE rule = ?', [target]);
+        await msg.reply(turnOn
+            ? `🔒 Regra *#${n}* (${target}): telefones ofuscados nos avisos e nas ocorrências.`
+            : `🔓 Regra *#${n}* (${target}): telefones à mostra de novo.`);
+        return;
+    }
     if (o.regra) {
         if (o.limite !== null) { await help(); return; }
         try { compileRuleWatch(o.regra); } catch (err) {
@@ -194,6 +218,9 @@ async function cmdWatch({ msg, args }) {
         await setSetting('watch.rules', [...rules, o.regra]);
         // A recreated rule does not inherit an old origin left by /set.
         await dbRun('DELETE FROM watch_sources WHERE rule = ?', [o.regra]);
+        await dbRun('DELETE FROM watch_masks WHERE rule = ?', [o.regra]);
+        // /watch /rule/ -mask: is born with the 🔒
+        if (o.mask) await dbRun('INSERT INTO watch_masks (rule) VALUES (?)', [o.regra]);
         if (origin) {
             await dbRun('INSERT INTO watch_sources VALUES (?, ?, ?, ?)',
                 [o.regra, origin.id, origin.nome, origin.canal ? 'canal' : origin.grupo
@@ -204,6 +231,7 @@ async function cmdWatch({ msg, args }) {
         printInfo(`/watch: regra #${rules.length + 1} adicionada: ${o.regra}`);
         await msg.reply(`✅ Regra *#${rules.length + 1}* adicionada _(${type})_: ${o.regra}\n` +
             (origin ? `📍 Apenas em ${describeDestinations([origin])}.\n` : '') +
+            (o.mask ? '🔒 Telefones ofuscados nos avisos (desligue com /watch -umask N).\n' : '') +
             `💡 _Avisos ${lido.destinos.length ? `em ${whereWarn(lido.destinos)}`
                 : 'no seu privado'}._`);
         return;
@@ -243,6 +271,7 @@ async function cmdWatch({ msg, args }) {
         const res = await dbRun('DELETE FROM watch_hits WHERE rule = ?', [rule]);
         await recordDestinations(rule, []);
         await dbRun('DELETE FROM watch_sources WHERE rule = ?', [rule]);
+        await dbRun('DELETE FROM watch_masks WHERE rule = ?', [rule]);
         await msg.reply(`🗑️ Regra *#${n}* removida: ${rule}\n` +
             `🗄️ Ocorrências apagadas: *${res.changes}*` +
             (n < rules.length ? '\n💡 _As regras seguintes foram renumeradas: veja /watch -l_' : ''));

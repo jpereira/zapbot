@@ -471,6 +471,10 @@ async function initializeDb() {
         source_kind TEXT NOT NULL
     )`);
 
+    // /watch rules with the 🔒 (-mask N): the notices and occurrences come out with obfuscated phones.
+    // Without a row, the rule shows everything as it came.
+    await dbRun('CREATE TABLE IF NOT EXISTS watch_masks (rule TEXT PRIMARY KEY)');
+
     await loadSettings();
 
     for (const dir of [MEDIA_DIR, NOTES_DIR, TMP_DIR]) {

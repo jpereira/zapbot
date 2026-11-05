@@ -3,6 +3,8 @@
 Sai de um ou mais grupos do WhatsApp. Sem nada, lista os grupos em que você está, numerados. Para voltar, é
 preciso um novo convite ([`/join`](join.md)).
 
+![Demonstração do /leave](../assets/demo/04-join-leave.gif)
+
 ```text
 /leave <grupo|nº>...  ou  /leave -l
 ```

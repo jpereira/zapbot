@@ -68,8 +68,8 @@ describe('-mask / -m', () => {
         assert.equal(r.content.data, Buffer.from('png').toString('base64'));
     });
 
-    test('/watch mascara listagem e textos completos, sem afetar avisos automáticos', async () => {
-        await bot.replyAlt(`/watch /${PHONE}/ -mask`);
+    test('/watch -mask mascara listagem e textos completos, sem afetar avisos de regra sem 🔒', async () => {
+        await bot.replyAlt(`/watch /${PHONE}/`);
         assert.equal(bot.getSetting('watch.rules')[0], `/${PHONE}/`);
         const msg = await messageAlt(`Contato +${PHONE}`);
         textMasked((await bot.replyAlt('/watch -mask'))[0]);
