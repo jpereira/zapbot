@@ -645,7 +645,7 @@ test('título em negrito (só ele), corpo e "🔗 Links" no fim, com o link tira
     await bot.responder('/notes #pt sem link');
 
     const [lista] = await bot.responder('/notes #pt');
-    assert.match(lista, /\n1\. \*Mais um caso de roubalheira\.\*\n\nNesse dia o pt fez isso\n\n🔗 Links\n• http:\/\/link1\.com\/\n• http:\/\/link2\.com\n🕐 _[\d:]+ [\d\/]+, #1_/);
+    assert.match(lista, /\n1\. \*Mais um caso de roubalheira\.\*\n\nNesse dia o pt fez isso\n\n🔗 Links\n• http:\/\/link1\.com\/\n• http:\/\/link2\.com\n🕐 _[\d:]+ [\d/]+, #1_/);
     assert.match(lista, /\n2\. \*Explicação sobre o dólar\*\n\n🔗 Links\n• https:\/\/exemplo\.com\/a\?b=1\n/);
     assert.match(lista, /\n3\. \*Painel\*\n\n🔗 Links\n• https:\/\/exemplo\.com\/x_y\n/);
     assert.match(lista, /\n4\. \*sem link\*\n/);
