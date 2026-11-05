@@ -102,3 +102,15 @@ test('só o dono usa', async () => {
     assert.deepEqual(await bot.replyAlt('/batch\n/notes #t x', { de: bot.OTHERAlt.jid }), []);
     assert.equal((await notes()).length, 0);
 });
+
+test('respostas com bloco de código (/ascii) saem inteiras, também com -q', async () => {
+    const r = await bot.replyAlt('/batch\n/ascii F\n/ascii A');
+    assert.equal(r.length, 3);
+    assert.match(r[0], /2\/2 ok/);
+    assert.equal(r[1], '```\n###\n#\n##\n#\n#\n```');
+    assert.match(r[2], /^```\n/);
+
+    const q = await bot.replyAlt('/batch -q\n/ascii F\n/ascii A');
+    assert.equal(q.length, 2);
+    assert.equal(q[0], '```\n###\n#\n##\n#\n#\n```');
+});
