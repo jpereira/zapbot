@@ -189,7 +189,7 @@ describe('documentação', () => {
 
     test('menu do mkdocs.yml: todas as páginas, comandos em ordem alfabética', () => {
         const yml = fs.readFileSync(path.join(bot.ROOT, 'mkdocs.yml'), 'utf8');
-        const inMenu = [...yml.slice(yml.indexOf('\nnav:')).matchAll(/([\w/]+\.md)\s*$/gm)].map(m => m[1]);
+        const inMenu = [...yml.slice(yml.indexOf('\nnav:')).matchAll(/([\w/-]+\.md)\s*$/gm)].map(m => m[1]);
 
         assert.deepEqual(sorted(inMenu), sorted(pagesDocs()), 'página fora do menu (ou menu com página inexistente)');
         const commands = inMenu.filter(p => p.startsWith('commands/') && p !== 'commands/index.md');
