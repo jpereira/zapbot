@@ -24,6 +24,20 @@ A ideia vem dos velhos tempos do IRC: o ZapBot é inspirado nas antigas
 comandos, guardando o que rolava e cuidando da casa. Aqui o canal é o grupo do WhatsApp, e os
 comandos começam com `/`.
 
+## Demonstração
+
+<p align="center">
+  <a href="assets/demo/01-aquecimento.gif" target="_blank" rel="noopener"><img src="assets/demo/01-aquecimento.gif" alt="/ping, /version e /help respondendo" title="01-aquecimento.gif" width="220"></a>
+  <a href="assets/demo/02-show.gif" target="_blank" rel="noopener"><img src="assets/demo/02-show.gif" alt="/show reexibindo mensagens apagadas" title="02-show.gif" width="220"></a>
+  <a href="assets/demo/03-monitor.gif" target="_blank" rel="noopener"><img src="assets/demo/03-monitor.gif" alt="/monitor avisando quando um contato fica online" title="03-monitor.gif" width="220"></a>
+  <a href="assets/demo/05-sticker.gif" target="_blank" rel="noopener"><img src="assets/demo/05-sticker.gif" alt="/sticker -txt criando figurinhas de texto" title="05-sticker.gif" width="220"></a>
+  <a href="assets/demo/07-crypto.gif" target="_blank" rel="noopener"><img src="assets/demo/07-crypto.gif" alt="/crypto mostrando a cotação das criptomoedas" title="07-crypto.gif" width="220"></a>
+  <a href="assets/demo/10-watch.gif" target="_blank" rel="noopener"><img src="assets/demo/10-watch.gif" alt="/watch avisando quando uma mensagem casa com uma regra" title="10-watch.gif" width="220"></a>
+</p>
+
+`/ping`, `/show`, `/monitor`, `/sticker -txt`, `/crypto` e `/watch`. Todas as cenas em
+[Demonstração](demonstracao.md).
+
 **Principais funções:**
 
 - Recupera mensagens e status apagados ou editados, e reações removidas: [`/show`](comandos/show.md)

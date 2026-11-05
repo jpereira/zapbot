@@ -1,4 +1,4 @@
-# 🤖 ZapBot v2.0.12 (devel)
+# 🤖 ZapBot v2.0.12
 
 <p align="center">
   <img src="docs/assets/logo.png" alt="Logo do ZapBot: um robô anjo, com auréola e asas, piscando e
@@ -27,6 +27,20 @@ A ideia vem dos velhos tempos do IRC: o ZapBot é inspirado nas antigas
 comandos, guardando o que rolava e cuidando da casa. Aqui o canal é o grupo do WhatsApp, e os
 comandos começam com `/`.
 
+## Demonstração
+
+<p align="center">
+  <a href="docs/assets/demo/01-aquecimento.gif" target="_blank" rel="noopener"><img src="docs/assets/demo/01-aquecimento.gif" alt="/ping, /version e /help respondendo" title="01-aquecimento.gif" width="220"></a>
+  <a href="docs/assets/demo/02-show.gif" target="_blank" rel="noopener"><img src="docs/assets/demo/02-show.gif" alt="/show reexibindo mensagens apagadas" title="02-show.gif" width="220"></a>
+  <a href="docs/assets/demo/03-monitor.gif" target="_blank" rel="noopener"><img src="docs/assets/demo/03-monitor.gif" alt="/monitor avisando quando um contato fica online" title="03-monitor.gif" width="220"></a>
+  <a href="docs/assets/demo/05-sticker.gif" target="_blank" rel="noopener"><img src="docs/assets/demo/05-sticker.gif" alt="/sticker -txt criando figurinhas de texto" title="05-sticker.gif" width="220"></a>
+  <a href="docs/assets/demo/07-crypto.gif" target="_blank" rel="noopener"><img src="docs/assets/demo/07-crypto.gif" alt="/crypto mostrando a cotação das criptomoedas" title="07-crypto.gif" width="220"></a>
+  <a href="docs/assets/demo/10-watch.gif" target="_blank" rel="noopener"><img src="docs/assets/demo/10-watch.gif" alt="/watch avisando quando uma mensagem casa com uma regra" title="10-watch.gif" width="220"></a>
+</p>
+
+`/ping`, `/show`, `/monitor`, `/sticker -txt`, `/crypto` e `/watch`. Todas as cenas em
+[Demonstração](docs/demonstracao.md).
+
 **Principais funções:**
 
 - Recupera mensagens e status apagados ou editados, e reações removidas: [`/show`](docs/comandos/show.md)
@@ -50,16 +64,6 @@ comandos começam com `/`.
 
 📖 **Documentação completa: [jpereira.github.io/zapbot](https://jpereira.github.io/zapbot/)** (da
 última release; a do `main` fica em [`docs/`](docs/index.md)).
-
-## Demonstração
-
-<p align="center">
-  <a href="docs/assets/demo/05-sticker.gif"><img src="docs/assets/demo/05-sticker.gif" alt="/sticker -txt criando figurinhas de texto" width="260"></a>
-  <a href="docs/assets/demo/10-watch.gif"><img src="docs/assets/demo/10-watch.gif" alt="/watch avisando quando uma mensagem casa com uma regra" width="260"></a>
-  <a href="docs/assets/demo/02-show.gif"><img src="docs/assets/demo/02-show.gif" alt="/show reexibindo mensagens apagadas" width="260"></a>
-</p>
-
-`/sticker -txt`, `/watch` e `/show`. Todas as cenas em [Demonstração](docs/demonstracao.md).
 
 ## Como funciona
 
@@ -86,12 +90,12 @@ a comandos digitados em qualquer chat. Detalhes em
 ## Instalação
 
 Precisa só de Docker com o Compose v2, Git e um celular com WhatsApp. A versão estável é a última
-release, hoje a `v2.0.11`:
+release, hoje a `v2.0.12`:
 
 ```bash
 git clone https://github.com/jpereira/zapbot.git
 cd zapbot
-git checkout v2.0.11
+git checkout v2.0.12
 
 cp config/.env.example config/.env   # preencha o PHONE_NUMBER e o e-mail (veja abaixo)
 

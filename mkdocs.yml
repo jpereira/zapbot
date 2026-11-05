@@ -47,6 +47,9 @@ theme:
     - search.highlight
     - search.suggest
 
+extra_javascript:
+  - javascripts/gifs-nova-aba.js
+
 markdown_extensions:
   - admonition
   - attr_list
