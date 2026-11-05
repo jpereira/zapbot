@@ -1,4 +1,4 @@
-# 🤖 ZapBot v2.0.12
+# 🤖 ZapBot v2.0.13 (devel)
 
 <p align="center">
   <img src="docs/assets/logo.png" alt="Logo do ZapBot: um robô anjo, com auréola e asas, piscando e
