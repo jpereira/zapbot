@@ -63,6 +63,8 @@ class ClientFake extends EventEmitter {
         this.inicializado = 0;
         this.destruido = 0;
         this.recusarEdicao = false;    // edit() returns null, as when WhatsApp does not let it edit
+        this.convites = new Map();     // invite code -> { id, subject, size, desc, refuse }
+        this.entradas = [];            // codes accepted by acceptInvite
         this.buscas = [];              // { query, options } of each searchMessages
         this.resultadosDaBusca = [];   // what searchMessages returns (or an Error, which it throws)
     }
@@ -94,6 +96,19 @@ class ClientFake extends EventEmitter {
         });
         this.enviadas.push(sent);
         return sent;
+    }
+
+    // Group invites: code -> { id, subject, size, desc }; acceptInvite notes what joined
+    async getInviteInfo(codeAlt) {
+        if (!this.convites.has(codeAlt)) throw new Error('Invite code not found');
+        return this.convites.get(codeAlt);
+    }
+
+    async acceptInvite(codeAlt) {
+        const info = await this.getInviteInfo(codeAlt);
+        if (info.recusar) throw new Error(info.recusar);
+        this.entradas.push(codeAlt);
+        return info.id;
     }
 
     async getProfilePicUrl(id) { return this.fotos.get(id); }
