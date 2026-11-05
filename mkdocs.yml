@@ -47,6 +47,9 @@ theme:
     - search.highlight
     - search.suggest
 
+extra_javascript:
+  - javascripts/new-tab-gifs.js
+
 markdown_extensions:
   - admonition
   - attr_list
