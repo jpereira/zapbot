@@ -197,6 +197,7 @@ devolve `null`, como quando o WhatsApp não deixa editar.
 | `externos.test.js` | `/cve`, `/tempo`, `/news`, `/gpt`, `/tldr`, `/traduzir`, `/giphy`, `/meme`, `/joke`, `/kernel`, `/pixelart` |
 | `get-cache.test.js` | `/get` (a URL, o link e a mídia respondida, e o anti-SSRF), `/cache` e a limpeza periódica |
 | `grupo.test.js` | `/todos`, `/boletos`, `/listageral`, `/walissu`, `/enquete` (e o `-r`), `/sticker` (e o `-txt`) |
+| `grupos.test.js` | `/join` (link, código, `-info`, convite inválido e recusa) e `/leave` (pelo nome, pelo nº, a lista) |
 | `heartbeat.test.js` | Heartbeat e o `docker/app/healthcheck.js` (executado de verdade) |
 | `mascara-telefones.test.js` | Ofuscação de telefones no `/show`, `/watch` e `/bot` |
 | `mensagens.test.js` | Gravação (com o nome da sua agenda, não o pushname) e de localizações sem interpretar a miniatura como texto ou comando, roteamento, permissões (`onlyAdmin`, o `bot.users` com pessoas, grupos, `true`/`false` e as permissões persistidas, bot desligado, admins extras do `bot.admins`, os atalhos `/bot +o`/`+v`, as listas do `-users`/`-all-users`, os comandos de cada usuário (`+cmd`/`-cmd`), o `-reset` com a confirmação, o `/whois` e a proteção contra flood), o log dos comandos desconhecidos e a contagem do `/stats` (sem os avisos do sistema) |

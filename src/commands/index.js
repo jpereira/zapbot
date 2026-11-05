@@ -41,6 +41,7 @@ const { cmdStats } = require('./stats');
 const { cmdSticker } = require('./sticker');
 const { cmdTime } = require('./tempo');
 const { cmdMe } = require('./me');
+const { cmdJoin, cmdLeave } = require('./groups');
 const { cmdTldr } = require('./tldr');
 const { cmdAll } = require('./todos');
 const { cmdTranslate } = require('./traduzir');
@@ -71,8 +72,10 @@ const HANDLERS = {
     '/giphy': cmdGiphy,
     '/gpt': cmdGpt,
     '/help': cmdHelp,
+    '/join': cmdJoin,
     '/joke': cmdJoke,
     '/kernel': cmdKernel,
+    '/leave': cmdLeave,
     '/listageral': cmdListGeneral,
     '/me': cmdMe,
     '/meme': cmdMeme,
