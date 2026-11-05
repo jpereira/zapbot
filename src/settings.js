@@ -95,6 +95,15 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 1, max: 100,
         desc: 'Máximo de alertas de preço (somando /cotacao e /crypto).'
     },
+    'ascii.defaultChar': {
+        default: '#',
+        type: 'string',
+        desc: 'Caractere do traço das letras do /ascii quando -char não é informado.',
+        validar: (v) => {
+            if ([...v].length !== 1) throw new Error('precisa ser um único caractere');
+            return v;
+        }
+    },
     'backup.enabled': {
         default: true,
         type: 'boolean',
