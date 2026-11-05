@@ -75,17 +75,21 @@ function textGlyphs(textAlt) {
  */
 function generateAscii(textAlt, { largura: widthAlt = WIDTH_DEFAULT, traco = '#' } = {}) {
     const groups = [[]];
-    let used = 0;
 
-    for (const c of textGlyphs(textAlt)) {
-        const w = GLYPHS[c][0].length;
-        if (used && used + 1 + w > widthAlt) {
-            groups.push([]);
-            used = 0;
+    // "\n" (typed) and a real line break start a new line of letters
+    for (const part of String(textAlt).split(/\\n|\r?\n/)) {
+        groups.push([]);
+        let used = 0;
+        for (const c of textGlyphs(part)) {
+            const w = GLYPHS[c][0].length;
+            if (used && used + 1 + w > widthAlt) {
+                groups.push([]);
+                used = 0;
+            }
+            if (c === ' ' && !groups.at(-1).length) continue; // a space at the start of the line does not count
+            used += (groups.at(-1).length ? 1 : 0) + w;
+            groups.at(-1).push(c);
         }
-        if (c === ' ' && !groups.at(-1).length) continue; // a space at the start of the line does not count
-        used += (groups.at(-1).length ? 1 : 0) + w;
-        groups.at(-1).push(c);
     }
 
     return groups.filter(g => g.length).map(g => Array.from({ length: 5 }, (_, line) =>
@@ -96,7 +100,7 @@ function generateAscii(textAlt, { largura: widthAlt = WIDTH_DEFAULT, traco = '#'
 async function cmdAscii({ msg, opts, quotedMsg }) {
     const typed = opts.argv.join(' ').trim();
     const textAlt = typed || String(quotedMsg?.body ?? '').trim();
-    const usage = '❌ Use: /ascii [-width|-w <colunas>] [-char|-c <caractere>] <texto>';
+    const usage = '❌ Use: /ascii [-width|-w <colunas>] [-char|-c <caractere>] <texto (\\n quebra a linha)>';
 
     if (!textAlt) return msg.reply(usage);
     if (textAlt.length > MAX_TEXT) return msg.reply(`❌ O texto tem no máximo ${MAX_TEXT} caracteres.`);

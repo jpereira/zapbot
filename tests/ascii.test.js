@@ -77,3 +77,9 @@ test('qualquer pessoa com permissão usa (não é admin)', async () => {
     await bot.setSetting('bot.users', true);
     assert.match((await bot.replyAlt('/ascii Oi', { de: bot.OTHERAlt.jid }))[0], /^```/);
 });
+
+test('\\n (digitado) e quebra de linha começam uma nova linha de letras', () => {
+    const expected = generateAscii('A') + '\n\n' + generateAscii('B');
+    assert.equal(generateAscii('A\\nB'), expected);
+    assert.equal(generateAscii('A\nB'), expected);
+});
