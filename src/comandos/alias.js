@@ -2,7 +2,7 @@
  * /alias: separa as opções de cadastro das opções do comando que será salvo.
  */
 const { botConfig } = require('../botConfig');
-const { dbPronto, dbRun } = require('../db');
+const { dbGet, dbPronto, dbRun } = require('../db');
 const { ehAliasDeTexto, listarAliases } = require('../aliases');
 const { comandosNoTexto, erroDosComandos, quebrarLinhas } = require('../comandosNoTexto');
 const { findCommand } = require('./base');
@@ -14,6 +14,25 @@ async function cmdAlias({ msg, args }) {
     await dbPronto;
     const texto = args.trim();
     if (!texto || /^-(list|l)$/.test(texto)) return listarAliases(msg);
+    const mover = texto.match(/^-(?:move|m)\s+(\S+)\s+(\S+)$/);
+    if (/^-(?:move|m)(?:\s|$)/.test(texto) && !mover) return msg.reply('❌ Use: /alias -move <nome atual> <novo nome>');
+    if (mover) {
+        const [antigo, novo] = [nomeDoAlias(mover[1]), nomeDoAlias(mover[2])];
+        if (!NOME.test(mover[2])) return msg.reply(`❌ Nome inválido: ${novo}`);
+        if (novo === '/all') return msg.reply('❌ O nome all é reservado para remover todos os aliases.');
+        if (botConfig.commands.some(c => c.cmd === novo || c.aliases?.includes(novo))) {
+            return msg.reply(`❌ ${novo} já é um comando do bot.`);
+        }
+        if (!(await dbGet('SELECT 1 FROM command_aliases WHERE name = ?', [antigo]))) {
+            return msg.reply(`❌ Alias ${antigo} não encontrado.`);
+        }
+        if (antigo === novo) return msg.reply(`❌ O alias já se chama ${novo}.`);
+        if (await dbGet('SELECT 1 FROM command_aliases WHERE name = ?', [novo])) {
+            return msg.reply(`❌ Já existe um alias ${novo}.`);
+        }
+        await dbRun('UPDATE command_aliases SET name = ? WHERE name = ?', [novo, antigo]);
+        return msg.reply(`🔗 Alias renomeado: ${antigo} → ${novo}`);
+    }
     const remover = texto.match(/^-rm\s+(\S[\s\S]*)$/);
     if (remover) {
         const nomes = [...new Set(remover[1].split(/[\s,]+/).filter(Boolean).map(nomeDoAlias))];
@@ -49,12 +68,19 @@ async function cmdAlias({ msg, args }) {
     }
     let comando = tirarQuiet(cadastro[2].trim());
     let descricao = '';
+    const ASPAS = /(["“”](?:\\.|[^"“”\\])*["“”]|['‘’](?:\\.|[^'‘’\\])*['‘’])/.source;
+    const tiraAspas = q => q.slice(1, -1).replace(/\\(["'\\])/g, '$1');
+    // Só a descrição, sem comando: atualiza a de um alias que já existe
+    const soDescricao = comando.match(new RegExp(`^-(?:desc|d)\\s+${ASPAS}$`));
+    if (soDescricao) {
+        const r = await dbRun('UPDATE command_aliases SET description = ? WHERE name = ?', [tiraAspas(soDescricao[1]), nome]);
+        if (!r.changes) return msg.reply(`❌ Alias ${nome} não encontrado; informe também o comando para criá-lo.`);
+        return msg.reply(`🔗 Descrição de ${nome} atualizada: ${tiraAspas(soDescricao[1])}`, undefined, { linkPreview: false });
+    }
     if (/^-(desc|d)(?:\s|$)/.test(comando)) {
-        const d = comando.match(
-            /^-(?:desc|d)\s+(["“”](?:\\.|[^"“”\\])*["“”]|['‘’](?:\\.|[^'‘’\\])*['‘’])\s+([\s\S]+)$/
-        );
+        const d = comando.match(new RegExp(`^-(?:desc|d)\\s+${ASPAS}\\s+([\\s\\S]+)$`));
         if (!d) return msg.reply('❌ Informe a descrição entre aspas e depois o comando.');
-        descricao = d[1].slice(1, -1).replace(/\\(["'\\])/g, '$1');
+        descricao = tiraAspas(d[1]);
         comando = tirarQuiet(d[2].trim());
     }
     if (ehAliasDeTexto(comando)) {

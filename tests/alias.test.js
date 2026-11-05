@@ -324,3 +324,33 @@ test('-rm aceita vários nomes (espaço ou vírgula) e diz os que não existiam'
     await bot.responder('/alias um /cotacao USD');
     assert.match((await bot.responder('/alias -rm um all'))[0], /Todos os aliases removidos \(1\)/);
 });
+
+test('-move renomeia o alias e recusa nome existente, de comando ou alias inexistente', async () => {
+    await bot.responder('/alias -rm all');
+    await bot.responder('/alias velho -q -desc "Dólar" /cotacao USD');
+    await bot.responder('/alias outro /cotacao EUR');
+
+    assert.match((await bot.responder('/alias -m velho /novo'))[0], /renomeado: \/velho → \/novo/);
+    const [a] = (await aliases()).filter(a => a.name === '/novo');
+    assert.equal(a.command, '/cotacao USD');
+    assert.equal(a.description, 'Dólar');
+    assert.equal(a.quiet, 1);
+    assert.equal((await aliases()).some(a => a.name === '/velho'), false);
+
+    assert.match((await bot.responder('/alias -move novo outro'))[0], /Já existe um alias \/outro/);
+    assert.match((await bot.responder('/alias -move nao x'))[0], /não encontrado/);
+    assert.match((await bot.responder('/alias -move novo /help'))[0], /já é um comando/);
+    assert.match((await bot.responder('/alias -move novo'))[0], /Use: \/alias -move/);
+    await bot.responder('/alias -rm all');
+});
+
+test('-desc sem comando atualiza só a descrição de um alias existente', async () => {
+    await bot.responder('/alias -rm all');
+    await bot.responder('/alias end.inga /cotacao USD');
+    assert.match((await bot.responder('/alias /end.inga -d “Endereço do Ingá"'))[0], /Descrição de \/end.inga atualizada/);
+    const a = (await aliases()).find(a => a.name === '/end.inga');
+    assert.equal(a.description, 'Endereço do Ingá');
+    assert.equal(a.command, '/cotacao USD');
+    assert.match((await bot.responder('/alias nada -d "x"'))[0], /não encontrado/);
+    await bot.responder('/alias -rm all');
+});
