@@ -525,6 +525,31 @@ describe('/watch -q (busca)', () => {
             assert.doesNotMatch(r, /973395377/);
         });
 
+        test('o 🔒 vale nos destinos -to e no e-mail; um aviso com regra livre e outra com 🔒 sai ofuscado', async () => {
+            await bot.responder('/watch tel -to /Fulano/ -mask');
+            const [noGrupo] = await alguemEscreve(TEL + ' tel');
+            assert.equal(noGrupo.chatId, OUTRO.jid);
+            assert.doesNotMatch(noGrupo.texto, /973395377/);
+
+            await bot.responder('/watch livre -to /Fulano/');
+            const [junto] = await alguemEscreve(TEL + ' tel livre');
+            assert.match(junto.texto, /🔎 \*Regra #1:\* tel\n🔎 \*Regra #2:\* livre\n/);
+            assert.doesNotMatch(junto.texto, /973395377/);
+
+            const env = { QRCODE_EMAIL_SMTP_HOST: 'smtp.exemplo.com', QRCODE_EMAIL_SMTP_USER: 'bot@exemplo.com',
+                QRCODE_EMAIL_SMTP_TO: 'Eu <eu@exemplo.com>' };
+            Object.assign(process.env, env);
+            try {
+                await bot.responder('/watch +5521973395377 -to email -mask');
+                await alguemEscreve('ligue para +5521973395377');
+                const [m] = bot.emails;
+                assert.doesNotMatch(m.subject + m.text, /973395377/);
+                assert.match(m.subject, /\+55219\*\*\*\*77/);
+            } finally {
+                for (const v of Object.keys(env)) delete process.env[v];
+            }
+        });
+
         test('regra criada com -mask já nasce com o 🔒, antes ou depois da regra', async () => {
             assert.match((await bot.responder('/watch -mask /(tcpro|tc pro)/i'))[0], /🔒 Telefones ofuscados/);
             await bot.responder('/watch pix -m');
