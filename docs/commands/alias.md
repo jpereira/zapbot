@@ -9,14 +9,16 @@ aliases. Quem executa um atalho precisa ter permissão para os comandos de desti
 /alias <nome> [-quiet|-q] [-desc|-d "Descrição"] <texto com {/comando}>
 /alias
 /alias [-list|-l]
+/alias -move|-m <nome atual> <novo nome>
 /alias -rm <nome...|all>
 ```
 
 | Opção | Valor | Descrição |
 |---|---|---|
 | `-quiet`, `-q` | | Ao executar, omite o cabeçalho `🔗 Alias ...`; vale antes ou depois do nome |
-| `-desc`, `-d` | `<texto>` | Descrição opcional entre aspas, antes do comando ou do texto |
+| `-desc`, `-d` | `<texto>` | Descrição opcional entre aspas, antes do comando ou do texto; sem comando, atualiza só a descrição de um alias existente |
 | `-list`, `-l` | | Lista os aliases; o mesmo que `/alias` sem argumentos |
+| `-move`, `-m` | `<nome atual> <novo nome>` | Renomeia um alias, mantendo comando, descrição e quiet; o novo nome não pode existir |
 | `-rm` | `<nome...\|all>` | Remove um ou mais aliases (separados por espaço ou vírgula), com ou sem `/`; `all` remove todos |
 
 ```text
@@ -29,6 +31,8 @@ aliases. Quem executa um atalho precisa ter permissão para os comandos de desti
 /eita
 /eita2
 /help alias
+/alias -move /eita /eita3
+/alias /eita -d "Novo texto"
 /alias -rm /eita
 /alias -rm eita2
 /alias -rm eita eita2 /dolar
