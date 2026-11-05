@@ -41,7 +41,7 @@ function lerOpcoesWatch(args) {
     const tokens = tokensWatch(args);
     const o = { regra: '', destinos: [], limite: null, n: null, ref: null, acao: null, origem: null, busca: null };
     const aliases = { list: 'list', l: 'list', show: 'show', s: 'show', rm: 'rm', r: 'rm',
-        flush: 'flush', f: 'flush', mask: 'mask', m: 'mask', in: 'in', to: 'to', query: 'query', q: 'query' };
+        flush: 'flush', f: 'flush', mask: 'mask', m: 'mask', umask: 'umask', u: 'umask', in: 'in', to: 'to', query: 'query', q: 'query' };
     const regra = [];
     for (let i = 0; i < tokens.length; i++) {
         const t = tokens[i];
@@ -54,7 +54,17 @@ function lerOpcoesWatch(args) {
         }
         const nome = aliases[t.valor.slice(1)];
         if (!nome) throw new Error(`opção desconhecida: ${t.valor}`);
-        if (nome === 'mask') { o.mask = true; continue; }
+        // -mask N / -umask N: o 🔒 persistente da regra N. Sem o nº, o -mask só ofusca esta saída
+        const proximo = tokens[i + 1];
+        const nDaRegra = proximo?.opcao && /^\d+$/.test(proximo.valor) ? Number(proximo.valor) : null;
+        if (nome === 'mask' && nDaRegra === null) { o.mask = true; continue; }
+        if (nome === 'mask' || nome === 'umask') {
+            if (nDaRegra === null) throw new Error('informe o nº da regra: -umask N');
+            if (o.trava) throw new Error('use apenas um -mask N ou -umask N');
+            o.trava = { n: nDaRegra, ligar: nome === 'mask' };
+            i++;
+            continue;
+        }
         if (nome === 'to' || nome === 'in' || nome === 'query') {
             const valor = tokens[++i];
             if (!valor || valor.regra.startsWith('-') || !valor.valor.trim()) {
@@ -80,6 +90,12 @@ function lerOpcoesWatch(args) {
         }
     }
     o.regra = regra.join(' ').trim();
+    if (o.trava) {
+        if (!o.trava.n) throw new Error('o número da regra deve ser maior que zero');
+        if (o.regra || o.acao || o.destinos.length || o.origem !== null || o.busca !== null || o.limite !== null) {
+            throw new Error('use -mask N e -umask N sozinhos');
+        }
+    }
     // -s/-r/-f também aceitam a própria regra no lugar do nº: /watch -s /Jorge/
     if (['show', 'rm', 'flush'].includes(o.acao) && o.n === null && o.regra) {
         o.ref = o.regra;
@@ -110,7 +126,10 @@ function pediuAjudaWatch(args) {
 
 function pediuMascaraWatch(args) {
     try {
-        return tokensWatch(args).some(t => t.opcao && ['-mask', '-m'].includes(t.valor));
+        const tokens = tokensWatch(args);
+        // O -mask N (com o nº da regra) é o 🔒 persistente, não o ofuscar desta saída
+        return tokens.some((t, i) => t.opcao && ['-mask', '-m'].includes(t.valor) &&
+            !(tokens[i + 1]?.opcao && /^\d+$/.test(tokens[i + 1].valor)));
     } catch {
         return false;
     }

@@ -19,6 +19,8 @@ SHIB, XLM, NEAR e UNI (lista `CRYPTO_SUPPORTED` em `src/moedas.js`).
 
 As moedas ativadas ficam na tabela `settings`, chave `crypto.coins`, e sobrevivem a reinícios.
 
+![Demonstração do /crypto](../assets/demo/07-crypto.gif)
+
 ```text
 /crypto              → as ativadas (padrão: BTC, ETH, SOL e HYPE)
 /crypto BTC          → só o bitcoin

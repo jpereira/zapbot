@@ -24,6 +24,8 @@ Faz algo na hora marcada. Tem dois modos, na mesma agenda:
 | `-rm` | `<nº...\|all>` | Remove o item nº N da lista, vários de uma vez (`-rm 1 3 5` ou `-rm 1,3,5`) ou todos. Se algum nº não existe, nenhum sai |
 | `-test` | `<nº>` | Monta o item nº N agora, rodando os `{/comando}` do texto, e mostra aqui como ele sairia. Veja [Comandos no texto](#comandos-no-texto) |
 
+![Demonstração do /cron](../assets/demo/09-cron.gif)
+
 ```text
 /cron 25/12 00:00 Feliz Natal, família! 🎄
 /cron sexta 18h -to /Grupo L200/ Bom fim de semana!

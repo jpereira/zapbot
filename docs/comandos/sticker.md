@@ -15,6 +15,8 @@ O vídeo vira um quadrado 512x512 enquadrado no meio, com no máximo seis segund
 segundos a partir do `-ss` (ou do início). Enquanto baixa e converte, o bot mostra
 "⏳ Processando seu sticker, aguarde.", que vira "✅ Sticker criado com sucesso!" (ou o erro).
 
+![Demonstração do /sticker](../assets/demo/05-sticker.gif)
+
 ```text
 (reply numa foto)                /sticker
 (reply num link)                 /sticker

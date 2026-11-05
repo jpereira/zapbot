@@ -471,6 +471,10 @@ async function inicializarBanco() {
         source_kind TEXT NOT NULL
     )`);
 
+    // Regras do /watch com o 🔒 (-mask N): os avisos e as ocorrências saem com telefones ofuscados.
+    // Sem linha, a regra mostra tudo como veio.
+    await dbRun('CREATE TABLE IF NOT EXISTS watch_masks (rule TEXT PRIMARY KEY)');
+
     await carregarSettings();
 
     for (const dir of [MEDIA_DIR, NOTES_DIR, TMP_DIR]) {

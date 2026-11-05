@@ -51,6 +51,16 @@ comandos começam com `/`.
 📖 **Documentação completa: [jpereira.github.io/zapbot](https://jpereira.github.io/zapbot/)** (da
 última release; a do `main` fica em [`docs/`](docs/index.md)).
 
+## Demonstração
+
+<p align="center">
+  <a href="docs/assets/demo/05-sticker.gif"><img src="docs/assets/demo/05-sticker.gif" alt="/sticker -txt criando figurinhas de texto" width="260"></a>
+  <a href="docs/assets/demo/10-watch.gif"><img src="docs/assets/demo/10-watch.gif" alt="/watch avisando quando uma mensagem casa com uma regra" width="260"></a>
+  <a href="docs/assets/demo/02-show.gif"><img src="docs/assets/demo/02-show.gif" alt="/show reexibindo mensagens apagadas" width="260"></a>
+</p>
+
+`/sticker -txt`, `/watch` e `/show`. Todas as cenas em [Demonstração](docs/demonstracao.md).
+
 ## Como funciona
 
 ```text
@@ -192,7 +202,7 @@ de um. Os marcados como **Admin** só respondem à sua conta (e aos admins extra
 | [`/uptime`](https://jpereira.github.io/zapbot/comandos/uptime/) |  | | Tempo de execução e de conexão |
 | [`/version`](https://jpereira.github.io/zapbot/comandos/version/) |  | | Versão do bot (mesmo banner do `/uptime`) |
 | [`/walissu`](https://jpereira.github.io/zapbot/comandos/walissu/) | `/ualisu` | ✅ | Walissu CVE BOT: marca 2 membros com uma CVE aleatória |
-| [`/watch`](https://jpereira.github.io/zapbot/comandos/watch/) |  | ✅ | Regras de texto/regex, com origem opcional em `-in`; lista ocorrências, busca nelas com `-q` e avisa nos destinos de `-to`; `-mask` ofusca telefones |
+| [`/watch`](https://jpereira.github.io/zapbot/comandos/watch/) |  | ✅ | Regras de texto/regex, com origem opcional em `-in`; lista ocorrências, busca nelas com `-q` e avisa nos destinos de `-to`; `-mask` ofusca telefones e `-mask N` põe o 🔒 na regra N |
 | [`/whois`](https://jpereira.github.io/zapbot/comandos/whois/) | `/who`, `/id` | | Quem é e o que pode no bot, neste chat: 🤖 dono, 👑 admin, 🗣️ usuário ou 🚫 sem permissão; o dono e os admins veem os outros |
 
 ## Documentação
@@ -203,6 +213,7 @@ de um. Os marcados como **Admin** só respondem à sua conta (e aos admins extra
 | [Configuração](https://jpereira.github.io/zapbot/configuracao/) | `config/.env`, serviços externos e chaves de API |
 | [E-mails](https://jpereira.github.io/zapbot/emails/) | QR Code por e-mail, código anti-phishing e alertas por e-mail |
 | [Comandos](https://jpereira.github.io/zapbot/comandos/) | Uma página por comando, com opções e exemplos |
+| [Demonstração](docs/demonstracao.md) | O bot em ação, em GIFs |
 | [Settings](https://jpereira.github.io/zapbot/settings/) | Configurações alteráveis pelo `/set` |
 | [Operação](https://jpereira.github.io/zapbot/operacao/) | Dia a dia, saúde do container (heartbeat) e solução de problemas |
 | [Desenvolvimento](https://jpereira.github.io/zapbot/desenvolvimento/) | Estrutura do código, testes, documentação e nova versão |

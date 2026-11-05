@@ -11,6 +11,7 @@ const { printError, printInfo } = require('../log');
 const { ignorarAviso } = require('../mudo');
 const { getSetting } = require('../settings');
 const { formatarData } = require('../util/formatar');
+const { mascararTelefones } = require('../util/telefone');
 const { compilarRegraWatch } = require('./regras');
 const { cabecalhoOrigem } = require('../util/origem');
 
@@ -91,12 +92,17 @@ async function verificarWatch({
         porDestino.delete('privado');
     }
 
+    // 🔒 (-mask N): se alguma regra do aviso tem o cadeado, o aviso inteiro sai com telefones ofuscados
+    const travadas = new Set((await dbAll('SELECT rule FROM watch_masks')).map(r => r.rule));
+
     for (const { destino, regras } of porDestino.values()) {
-        const texto = '👀 *WATCH: MENSAGEM DETECTADA*\n\n' +
-            regras.map(c => `🔎 *Regra #${c.n}:* ${c.regra}\n`).join('') + detalhes;
+        const ofusca = regras.some(c => travadas.has(c.regra));
+        const mascara = (t) => ofusca ? mascararTelefones(t) : t;
+        const texto = mascara('👀 *WATCH: MENSAGEM DETECTADA*\n\n' +
+            regras.map(c => `🔎 *Regra #${c.n}:* ${c.regra}\n`).join('') + detalhes);
 
         await enviarAoDestino(destino, texto, {
-            assunto: `👀 Watch: ${regras.map(c => `#${c.n} ${c.regra}`).join(', ')}`,
+            assunto: mascara(`👀 Watch: ${regras.map(c => `#${c.n} ${c.regra}`).join(', ')}`),
             opcoes: { linkPreview: false }
         }).catch(err => printError('/watch: falha ao avisar:', err.message));
     }

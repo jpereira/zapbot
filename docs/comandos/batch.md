@@ -4,6 +4,8 @@ Executa vários comandos de uma mensagem só, um depois do outro, e responde um 
 mandar de uma vez o que você mandaria em vários blocos (ex.: várias anotações pelo seu
 [alias](alias.md)). Também funciona respondendo uma mensagem com os comandos.
 
+![Demonstração do /batch](../assets/demo/12-batch-alias.gif)
+
 ```text
 /batch [-stop|-s] [-dry|-d] [-quiet|-q]
 <comandos, nas linhas de baixo>

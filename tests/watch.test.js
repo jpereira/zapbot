@@ -323,7 +323,7 @@ describe('/watch com origem e listagem', () => {
         assert.match(r, /pix recente/);
         assert.doesNotMatch(r, /pix antigo/);
         assert.match(r, /\n\n💡 \*Dicas\* _\(N: o nº ou a própria regra\)_\n\/watch -s N mostra as mensagens completas\.\n/);
-        assert.match(r, /\n\/watch -s N -q <texto\|\/regex\/> só as que casam\.\n\/watch -s N -to <destino\|off> troca os destinos\.\n\/watch -f N limpa as ocorrências\.$/);
+        assert.match(r, /\n\/watch -s N -q <texto\|\/regex\/> só as que casam\.\n\/watch -s N -to <destino\|off> troca os destinos\.\n\/watch -f N limpa as ocorrências\.\n\/watch -mask N liga o 🔒 .*; -umask N desliga\.$/);
         assert.match((await bot.responder('/watch -0'))[0], /quantidade/);
     });
 
@@ -488,5 +488,73 @@ describe('/watch -q (busca)', () => {
             assert.match((await bot.responder(`/watch ${comando}`))[0], /^❌/, comando);
         }
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM watch_hits')).n, 4);
+    });
+
+    describe('🔒 -mask N / -umask N', () => {
+        const TEL = 'telefone: +5521973395377';
+
+        test('liga e desliga o 🔒 da regra; a lista mostra o cadeado', async () => {
+            await bot.setSetting('watch.rules', 'liga\npix');
+            assert.match((await bot.responder('/watch -mask 2'))[0], /^🔒 Regra \*#2\* \(pix\)/);
+            assert.match((await bot.responder('/watch -l'))[0], /#1  liga  \(0\)\n#2  pix  \(0\) 🔒/);
+            assert.match((await bot.responder('/watch -umask 2'))[0], /^🔓 Regra \*#2\*/);
+            assert.doesNotMatch((await bot.responder('/watch -l'))[0], /\(0\) 🔒/);
+            assert.match((await bot.responder('/watch -m 1'))[0], /^🔒 Regra \*#1\*/);
+        });
+
+        test('o aviso sai ofuscado só nas regras com 🔒; o histórico guarda o número inteiro', async () => {
+            await bot.setSetting('watch.rules', 'liga\npix');
+            await bot.responder('/watch -mask 1');
+
+            const [travado] = await alguemEscreve(TEL + ' liga');
+            assert.match(travado.texto, /\+55219\*\*\*\*77/);
+            assert.doesNotMatch(travado.texto, /973395377/);
+            assert.match((await bot.dbGet('SELECT body FROM watch_hits')).body, /\+5521973395377/);
+
+            const [livre] = await alguemEscreve(TEL + ' pix');
+            assert.match(livre.texto, /\+5521973395377/);
+        });
+
+        test('-s mostra as ocorrências da regra com 🔒 ofuscadas', async () => {
+            await bot.setSetting('watch.rules', 'liga');
+            await alguemEscreve(TEL + ' liga');
+            assert.match((await bot.responder('/watch -s 1'))[0], /\+5521973395377/);
+            await bot.responder('/watch -mask 1');
+            const [r] = await bot.responder('/watch -s 1');
+            assert.match(r, /\+55219\*\*\*\*77/);
+            assert.doesNotMatch(r, /973395377/);
+        });
+
+        test('regra criada com -mask já nasce com o 🔒, antes ou depois da regra', async () => {
+            assert.match((await bot.responder('/watch -mask /(tcpro|tc pro)/i'))[0], /🔒 Telefones ofuscados/);
+            await bot.responder('/watch pix -m');
+            await bot.responder('/watch boleto');
+            assert.deepEqual((await bot.dbAll('SELECT rule FROM watch_masks ORDER BY rule')).map(r => r.rule),
+                ['/(tcpro|tc pro)/i', 'pix']);
+
+            const [aviso] = await alguemEscreve('TCPRO ' + TEL);
+            assert.match(aviso.texto, /\+55219\*\*\*\*77/);
+            assert.doesNotMatch(aviso.texto, /973395377/);
+        });
+
+        test('-rm apaga o 🔒; regra nova com o mesmo texto não herda', async () => {
+            await bot.responder('/watch pix');
+            await bot.responder('/watch -mask 1');
+            await bot.responder('/watch -rm 1');
+            assert.deepEqual(await bot.dbAll('SELECT * FROM watch_masks'), []);
+        });
+
+        test('-mask sem nº continua ofuscando só a saída; erros não gravam nada', async () => {
+            await bot.setSetting('watch.rules', 'liga');
+            await alguemEscreve(TEL + ' liga');
+            const [r] = await bot.responder('/watch -s 1 -mask');
+            assert.match(r, /\+55219\*\*\*\*77/);
+            assert.deepEqual(await bot.dbAll('SELECT * FROM watch_masks'), []);
+
+            for (const comando of ['-mask 9', '-umask 9', '-umask', '-mask 0', '-mask 1 -umask 1', '-mask 1 -s 1']) {
+                assert.match((await bot.responder(`/watch ${comando}`))[0], /^❌/, comando);
+            }
+            assert.deepEqual(await bot.dbAll('SELECT * FROM watch_masks'), []);
+        });
     });
 });

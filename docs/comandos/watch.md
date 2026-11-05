@@ -5,6 +5,8 @@ aos destinos de cada regra. Sem parâmetros, lista as regras e, quando há match
 ocorrências mais recentes. `/watch -10` mostra os últimos dez matches de todas as regras, limitado
 pelo setting `watch.showMax`.
 
+![Demonstração do /watch](../assets/demo/10-watch.gif)
+
 ```text
 /watch /Defesa.*Civil/i                → cria uma regra (regex)
 /watch /pix/i -in /Jorge Pereira/      → só nas mensagens do Jorge
@@ -19,6 +21,8 @@ pelo setting `watch.showMax`.
 /watch -s 3 -to /Jorge Pereira/        → troca os destinos da regra #3
 /watch -rm 3                          → remove a regra #3
 /watch -flush /Jorge/                  → limpa as ocorrências da /Jorge/
+/watch -mask 3                         → 🔒 liga o mask na regra #3 (avisos com telefone ofuscado)
+/watch -umask 3                        → desliga o 🔒 da regra #3
 ```
 Uma regra sem `-in` vale em qualquer lugar. Com `-in`, você escolhe a origem:
 
@@ -53,11 +57,34 @@ As regras são testadas contra o texto original da mensagem. Nos avisos e no his
 | `-rm`, `-r` | `N\|regra` | Remove a regra N (ou a regra pelo texto), suas ocorrências, origem e destinos; as seguintes são renumeradas |
 | `-flush`, `-f` | `[N\|regra]` | Apaga as ocorrências da regra N (ou da regra pelo texto); sem N, de todas. Mantém regras, origens e destinos |
 | `-to` | `<destino\|off>` | Define onde os avisos serão enviados, ao criar a regra ou com `-s N`. Repita para vários destinos; `off` volta ao seu privado |
-| `-mask`, `-m` | | Ofusca telefones na saída desta execução. Ex.: `+55219****44` |
+| `-mask`, `-m` | `[N]` | Sem N, ofusca telefones só na saída desta execução. Com N, liga o 🔒 da regra N (veja [Mask nos avisos](#mask-nos-avisos)). Ex.: `+55219****44` |
+| `-umask`, `-u` | `N` | Desliga o 🔒 da regra N |
 
 Use `/watch -s 3 -mask` para ver os matches com telefones ofuscados, mantendo os cinco primeiros e
-os dois últimos dígitos. As regras, os destinos e as ocorrências ficam guardados completos. A
-máscara não fica ativada para os avisos automáticos.
+os dois últimos dígitos. As regras, os destinos e as ocorrências ficam guardados completos. Sem o
+número da regra, a máscara vale só para aquela execução.
+
+## Mask nos avisos
+
+Com `/watch -mask 3` a regra #3 ganha um 🔒 na listagem, e a partir daí os avisos dela saem com os
+telefones ofuscados (o mesmo formato do `-mask`, `+55219****44`), seja no seu privado, nos `-to` ou
+por e-mail. O `-s` e a listagem de ocorrências dessa regra também saem ofuscados. `/watch -umask 3`
+tira o 🔒.
+
+```text
+👀 WATCH: REGRAS (3/20)
+
+#1  /TCPRO.*La.*Sportiva/i  (1)
+#2  /Renato.*r38tao/  (1)
+#3  /(tcpro|tc pro)/i  (5) 🔒
+```
+
+- Ao criar a regra, o `-mask` já liga o 🔒: `/watch /(tcpro|tc pro)/i -mask`.
+- É por regra: as que você já tem continuam como estão (sem 🔒) até você ligar.
+- Vale para o aviso inteiro: o número do remetente, o texto da mensagem e a regra. Se um mesmo
+  aviso juntar uma regra com 🔒 e outra sem, ele sai ofuscado.
+- O mask é só na apresentação: as ocorrências ficam guardadas completas no banco.
+- O 🔒 é guardado com o texto da regra. Remover a regra pelo `-rm` tira o 🔒 também.
 
 ## Listar e consultar
 

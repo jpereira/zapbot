@@ -149,3 +149,6 @@ skills-lock.json
 cookies.txt
 x-cookies.txt
 cookies-*.txt
+
+# Gravações da demonstração (os GIFs ficam no git)
+*.mov

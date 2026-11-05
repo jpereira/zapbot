@@ -2189,10 +2189,10 @@
         },
         {
             "cmd": "/watch",
-            "usage": "/watch [texto|/regex/flags] [-in <origem>] [-to <destino>]...  ou  /watch [-N] [-q <texto|/regex/flags>]  ou  /watch -s [N|regra] [-q <texto|/regex/flags>] [-to <destino|off>]...  ou  /watch -rm <N|regra>  ou  /watch -flush [N|regra]",
+            "usage": "/watch [texto|/regex/flags] [-in <origem>] [-to <destino>]...  ou  /watch [-N] [-q <texto|/regex/flags>]  ou  /watch -s [N|regra] [-q <texto|/regex/flags>] [-to <destino|off>]...  ou  /watch -rm <N|regra>  ou  /watch -flush [N|regra]  ou  /watch -mask N  ou  /watch -umask N",
             "aliases": [],
             "summary": "Vigia mensagens recebidas com regras de texto ou regex",
-            "help": "Vigia mensagens recebidas com regras de texto ou regex. Miniaturas de localização não são texto e ficam fora das regras. Uma regra sem -in vale em qualquer lugar; -in restringe a um contato (remetente), grupo ou canal. Sem parâmetros, lista regras e últimos matches; -N escolhe a quantidade. Publicações de @newsletter são identificadas com 📰 e o nome do canal. Quem está silenciado no /mute não gera aviso no seu privado (os -to continuam recebendo). Os números após -s, -rm e -flush identificam regras; no lugar deles, vale a própria regra, inteira ou um trecho. A quantidade de matches vem no -N.",
+            "help": "Vigia mensagens recebidas com regras de texto ou regex. Miniaturas de localização não são texto e ficam fora das regras. Uma regra sem -in vale em qualquer lugar; -in restringe a um contato (remetente), grupo ou canal. Sem parâmetros, lista regras e últimos matches; -N escolhe a quantidade. Publicações de @newsletter são identificadas com 📰 e o nome do canal. Quem está silenciado no /mute não gera aviso no seu privado (os -to continuam recebendo). Os números após -s, -rm e -flush identificam regras; no lugar deles, vale a própria regra, inteira ou um trecho. A quantidade de matches vem no -N. Com -mask N (🔒), os avisos e as ocorrências da regra N saem com telefones ofuscados; -umask N desliga.",
             "cmd_opts": [
                 {
                     "opts": [
@@ -2277,8 +2277,20 @@
                         "mask",
                         "m"
                     ],
-                    "values": [],
-                    "desc": "Ofusca telefones com 10 a 15 dígitos contínuos na saída desta execução, mantendo os cinco primeiros e os dois últimos (como +55219****44). Os dados salvos e os destinos usam os números completos. Ex: /watch -mask"
+                    "values": [
+                        "[N]"
+                    ],
+                    "desc": "Sem N, ofusca telefones com 10 a 15 dígitos contínuos na saída desta execução, mantendo os cinco primeiros e os dois últimos (como +55219****44). Com N, liga o 🔒 da regra N: os avisos (privado, -to e e-mail) e as ocorrências dela passam a sair ofuscados, até o -umask. Os dados salvos usam os números completos. Ex: /watch -mask, /watch -mask 3"
+                },
+                {
+                    "opts": [
+                        "umask",
+                        "u"
+                    ],
+                    "values": [
+                        "N"
+                    ],
+                    "desc": "Desliga o 🔒 da regra N (volta a mostrar os telefones). Ex: /watch -umask 3"
                 }
             ],
             "onlyAdmin": true

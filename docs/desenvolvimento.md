@@ -247,6 +247,11 @@ Ao mudar um comando, mude a página dele em `docs/comandos/` e as tabelas Resumo
 [site](comandos/index.md#resumo) e a do README); um comando novo também entra no `nav` do
 `mkdocs.yml`, em ordem alfabética.
 
+### Gravar a demonstração
+
+Os GIFs da página [Demonstração](demonstracao.md) são gravados com um roteiro de cenas, com
+`screencapture` e `scripts/gif.sh`: veja [Gravar a demonstração](gravar-demonstracao.md).
+
 ## Nova versão
 
 Uma execução do `./scripts/bump.sh` **fecha** a versão atual (a do `package.json`) e **abre** a próxima:

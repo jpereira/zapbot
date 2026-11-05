@@ -124,6 +124,9 @@ nav:
       - /walissu: comandos/walissu.md
       - /watch: comandos/watch.md
       - /whois: comandos/whois.md
+  - Demonstração: demonstracao.md
   - Settings: settings.md
   - Operação: operacao.md
-  - Desenvolvimento: desenvolvimento.md
+  - Desenvolvimento:
+      - desenvolvimento.md
+      - Gravar a demonstração: gravar-demonstracao.md
