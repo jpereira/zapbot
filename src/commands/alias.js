@@ -2,7 +2,7 @@
  * /alias: separates the registration options from the options of the command that will be saved.
  */
 const { botConfig } = require('../botConfig');
-const { dbReady, dbRun } = require('../db');
+const { dbGet, dbReady, dbRun } = require('../db');
 const { textIsAlias, listAliases } = require('../aliases');
 const { commandsInText, commandsError, breakLines } = require('../textCommands');
 const { findCommand } = require('./base');
@@ -14,6 +14,25 @@ async function cmdAlias({ msg, args }) {
     await dbReady;
     const textAlt = args.trim();
     if (!textAlt || /^-(list|l)$/.test(textAlt)) return listAliases(msg);
+    const mover = textAlt.match(/^-(?:move|m)\s+(\S+)\s+(\S+)$/);
+    if (/^-(?:move|m)(?:\s|$)/.test(textAlt) && !mover) return msg.reply('❌ Use: /alias -move <nome atual> <novo nome>');
+    if (mover) {
+        const [oldAlt2, freshAlt] = [aliasName(mover[1]), aliasName(mover[2])];
+        if (!NAME.test(mover[2])) return msg.reply(`❌ Nome inválido: ${freshAlt}`);
+        if (freshAlt === '/all') return msg.reply('❌ O nome all é reservado para remover todos os aliases.');
+        if (botConfig.commands.some(c => c.cmd === freshAlt || c.aliases?.includes(freshAlt))) {
+            return msg.reply(`❌ ${freshAlt} já é um comando do bot.`);
+        }
+        if (!(await dbGet('SELECT 1 FROM command_aliases WHERE name = ?', [oldAlt2]))) {
+            return msg.reply(`❌ Alias ${oldAlt2} não encontrado.`);
+        }
+        if (oldAlt2 === freshAlt) return msg.reply(`❌ O alias já se chama ${freshAlt}.`);
+        if (await dbGet('SELECT 1 FROM command_aliases WHERE name = ?', [freshAlt])) {
+            return msg.reply(`❌ Já existe um alias ${freshAlt}.`);
+        }
+        await dbRun('UPDATE command_aliases SET name = ? WHERE name = ?', [freshAlt, oldAlt2]);
+        return msg.reply(`🔗 Alias renomeado: ${oldAlt2} → ${freshAlt}`);
+    }
     const removeAlt2 = textAlt.match(/^-rm\s+(\S[\s\S]*)$/);
     if (removeAlt2) {
         const names = [...new Set(removeAlt2[1].split(/[\s,]+/).filter(Boolean).map(aliasName))];
@@ -49,12 +68,19 @@ async function cmdAlias({ msg, args }) {
     }
     let commandAlt = removeQuiet(registration[2].trim());
     let description = '';
+    const QUOTES = /(["“”](?:\\.|[^"“”\\])*["“”]|['‘’](?:\\.|[^'‘’\\])*['‘’])/.source;
+    const removeQuotes = q => q.slice(1, -1).replace(/\\(["'\\])/g, '$1');
+    // Only the description, with no command: updates that of an alias that already exists
+    const soDescription = commandAlt.match(new RegExp(`^-(?:desc|d)\\s+${QUOTES}$`));
+    if (soDescription) {
+        const r = await dbRun('UPDATE command_aliases SET description = ? WHERE name = ?', [removeQuotes(soDescription[1]), nameAlt]);
+        if (!r.changes) return msg.reply(`❌ Alias ${nameAlt} não encontrado; informe também o comando para criá-lo.`);
+        return msg.reply(`🔗 Descrição de ${nameAlt} atualizada: ${removeQuotes(soDescription[1])}`, undefined, { linkPreview: false });
+    }
     if (/^-(desc|d)(?:\s|$)/.test(commandAlt)) {
-        const d = commandAlt.match(
-            /^-(?:desc|d)\s+(["“”](?:\\.|[^"“”\\])*["“”]|['‘’](?:\\.|[^'‘’\\])*['‘’])\s+([\s\S]+)$/
-        );
+        const d = commandAlt.match(new RegExp(`^-(?:desc|d)\\s+${QUOTES}\\s+([\\s\\S]+)$`));
         if (!d) return msg.reply('❌ Informe a descrição entre aspas e depois o comando.');
-        description = d[1].slice(1, -1).replace(/\\(["'\\])/g, '$1');
+        description = removeQuotes(d[1]);
         commandAlt = removeQuiet(d[2].trim());
     }
     if (textIsAlias(commandAlt)) {
