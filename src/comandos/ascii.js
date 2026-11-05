@@ -3,6 +3,8 @@
  * WhatsApp). As letras têm 3 colunas de largura e 5 linhas de altura, e o texto quebra em
  * várias linhas de letras para caber na tela do celular (30 colunas por padrão).
  */
+const { getSetting } = require('../settings');
+
 const MAX_TEXTO = 40;
 const LARGURA_PADRAO = 30;
 const LARGURA_MIN = 10;
@@ -107,7 +109,7 @@ async function cmdAscii({ msg, opts, quotedMsg }) {
         }
     }
 
-    let traco = '#';
+    let traco = getSetting('ascii.defaultChar');
     if (opts.given.has('char')) {
         const c = opts.opt.char ?? '';
         if ([...c].length !== 1) return msg.reply('❌ -char precisa de um único caractere, ex: -char @');

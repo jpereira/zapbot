@@ -8,6 +8,7 @@ e sobrevivem a reinícios. Para ver e alterar, use o [`/set`](comandos/set.md).
 | `agenda.max` | 1–500 | `50` | Máximo de itens do [`/cron`](comandos/cron.md), somando lembretes e mensagens |
 | `alerta.intervalMin` | 1–60 | `5` | Intervalo, em minutos, entre as verificações dos [alertas de preço](comandos/cotacao.md#alertas-de-preço) |
 | `alerta.max` | 1–100 | `20` | Máximo de alertas de preço (somando `/cotacao` e `/crypto`) |
+| `ascii.defaultChar` | 1 caractere | `#` | Caractere do traço das letras do [`/ascii`](comandos/ascii.md) quando `-char` não é informado |
 | `backup.enabled` | on/off | `on` | [Backup automático](comandos/backup.md#backup-automático) do banco, uma vez por dia |
 | `backup.hour` | 0–23 | `3` | Hora (de Brasília) do backup automático |
 | `backup.keep` | 1–90 | `7` | Quantos backups automáticos (e de antes de restaurar) guardar; os manuais ficam até um `/backup -rm` |
