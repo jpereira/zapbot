@@ -163,8 +163,10 @@ de um. Os marcados como **Admin** só respondem à sua conta (e aos admins extra
 | [`/giphy`](https://jpereira.github.io/zapbot/comandos/giphy/) | `/gif` | | GIF do GIPHY por tag, URL ou ID, enviado em loop |
 | [`/gpt`](https://jpereira.github.io/zapbot/comandos/gpt/) | `/ai` | ✅ | Pergunta ao ChatGPT (OpenAI) |
 | [`/help`](https://jpereira.github.io/zapbot/comandos/help/) | `/h` | | Menu de ajuda, só com os comandos que quem pediu pode usar |
+| [`/join`](https://jpereira.github.io/zapbot/comandos/join/) | | ✅ | Entra em um grupo pelo link de convite (`-info` mostra o grupo sem entrar); `-l` lista os seus grupos |
 | [`/joke`](https://jpereira.github.io/zapbot/comandos/joke/) | `/piada`, `/humor` | | Piada aleatória em português |
 | [`/kernel`](https://jpereira.github.io/zapbot/comandos/kernel/) | | | Versões atuais do kernel Linux (kernel.org) |
+| [`/leave`](https://jpereira.github.io/zapbot/comandos/leave/) | | ✅ | Sai de um ou mais grupos, pelo nome ou pelo nº da lista; `-l` lista os seus grupos |
 | [`/listageral`](https://jpereira.github.io/zapbot/comandos/listageral/) | `/list` | ✅ | Lista os membros do grupo |
 | [`/me`](https://jpereira.github.io/zapbot/comandos/me/) | | | Envia a mensagem digitada; `{/comando}` roda e a resposta entra no lugar, `\n` quebra a linha |
 | [`/meme`](https://jpereira.github.io/zapbot/comandos/meme/) | | | Template de meme aleatório (imgflip) |

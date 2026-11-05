@@ -1180,6 +1180,38 @@
             "onlyAdmin": false
         },
         {
+            "cmd": "/join",
+            "usage": "/join <link do convite>  ou  /join -info|-i <link>  ou  /join -l",
+            "aliases": [],
+            "summary": "Entra em um grupo pelo link de convite",
+            "help": "Entra em um grupo do WhatsApp pelo link de convite (chat.whatsapp.com/<código>, com ou sem https://, ou só o código). Com -info, mostra o nome, os participantes e a descrição do grupo sem entrar. Com -list, lista os grupos em que você está (o mesmo que /leave -l). Para sair, use /leave. Ex: /join https://chat.whatsapp.com/AbCdEfGhIjKlMnOpQrStUv, /join -info chat.whatsapp.com/AbCdEfGhIjKlMnOpQrStUv, /join -l",
+            "cmd_opts": [
+                {
+                    "argv": [
+                        "<link do convite>"
+                    ],
+                    "desc": "O link do grupo (https://chat.whatsapp.com/<código>) ou só o código. Ex: /join https://chat.whatsapp.com/AbCdEfGhIjKlMnOpQrStUv"
+                },
+                {
+                    "opts": [
+                        "info",
+                        "i"
+                    ],
+                    "values": [],
+                    "desc": "Mostra o grupo do convite (nome, participantes e descrição) sem entrar. Ex: /join -info chat.whatsapp.com/AbCdEfGhIjKlMnOpQrStUv"
+                },
+                {
+                    "opts": [
+                        "list",
+                        "l"
+                    ],
+                    "values": [],
+                    "desc": "Lista os grupos em que você está, numerados para o /leave <nº>."
+                }
+            ],
+            "onlyAdmin": true
+        },
+        {
             "cmd": "/joke",
             "usage": "/joke",
             "aliases": [
@@ -1198,6 +1230,30 @@
             "help": "Versões atuais do kernel Linux (kernel.org).",
             "cron": true,
             "onlyAdmin": false
+        },
+        {
+            "cmd": "/leave",
+            "usage": "/leave <grupo|nº>...  ou  /leave -l",
+            "aliases": [],
+            "summary": "Sai de um grupo",
+            "help": "Sai de um ou mais grupos do WhatsApp, separados por espaço ou vírgula. Cada grupo é buscado como no -to (pelo nome ou parte dele; vários que servem: você escolhe na lista) ou pelo nº da lista do /leave -l. Sem nada, lista os grupos em que você está. Para voltar, precisa de um novo convite (/join). Ex: /leave /Grupo L200/, /leave 3, /leave 3 1 /Família/ 5, /leave -l",
+            "cmd_opts": [
+                {
+                    "argv": [
+                        "<grupo|nº>..."
+                    ],
+                    "desc": "Os grupos, separados por espaço ou vírgula: pelo nome (nome com espaço entre /.../ ou aspas) ou pelo nº da última lista do -l. Palavras soltas, sem nº, barras nem aspas, são um nome só. Ex: /leave /Grupo L200/, /leave 3 1 /Família/ 5"
+                },
+                {
+                    "opts": [
+                        "list",
+                        "l"
+                    ],
+                    "values": [],
+                    "desc": "Lista os grupos em que você está, numerados (o mesmo que /leave sem nada)."
+                }
+            ],
+            "onlyAdmin": true
         },
         {
             "cmd": "/listageral",

@@ -63,6 +63,8 @@ class ClienteFalso extends EventEmitter {
         this.inicializado = 0;
         this.destruido = 0;
         this.recusarEdicao = false;    // edit() devolve null, como quando o WhatsApp não deixa editar
+        this.convites = new Map();     // código do convite -> { id, subject, size, desc, recusar }
+        this.entradas = [];            // códigos aceitos pelo acceptInvite
         this.buscas = [];              // { query, options } de cada searchMessages
         this.resultadosDaBusca = [];   // o que o searchMessages devolve (ou um Error, que ele lança)
     }
@@ -94,6 +96,19 @@ class ClienteFalso extends EventEmitter {
         });
         this.enviadas.push(enviada);
         return enviada;
+    }
+
+    // Convites de grupo: código -> { id, subject, size, desc }; acceptInvite anota o que entrou
+    async getInviteInfo(codigo) {
+        if (!this.convites.has(codigo)) throw new Error('Invite code not found');
+        return this.convites.get(codigo);
+    }
+
+    async acceptInvite(codigo) {
+        const info = await this.getInviteInfo(codigo);
+        if (info.recusar) throw new Error(info.recusar);
+        this.entradas.push(codigo);
+        return info.id;
     }
 
     async getProfilePicUrl(id) { return this.fotos.get(id); }

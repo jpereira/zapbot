@@ -93,8 +93,10 @@ nav:
       - /giphy: comandos/giphy.md
       - /gpt: comandos/gpt.md
       - /help: comandos/help.md
+      - /join: comandos/join.md
       - /joke: comandos/joke.md
       - /kernel: comandos/kernel.md
+      - /leave: comandos/leave.md
       - /listageral: comandos/listageral.md
       - /me: comandos/me.md
       - /meme: comandos/meme.md

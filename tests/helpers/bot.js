@@ -111,7 +111,8 @@ function criarGrupo(id, nome, membros = []) {
             return { id: { _serialized: jid, user: jid.split('@')[0] }, isAdmin, isSuperAdmin };
         }),
         digitando: 0,
-        async sendStateTyping() { this.digitando++; }
+        async sendStateTyping() { this.digitando++; },
+        async leave() { client.chats.delete(id); }
     };
     client.chats.set(id, chat);
     return chat;
