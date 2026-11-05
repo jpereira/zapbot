@@ -119,6 +119,7 @@ async function cmdBatch(contexto) {
     }
 
     const linhas = [];
+    const conteudos = []; // respostas com bloco de código (ex.: /ascii) saem inteiras, fora do resumo
     let falhas = 0;
 
     for (const [i, bloco] of blocos.entries()) {
@@ -132,7 +133,8 @@ async function cmdBatch(contexto) {
 
         if (!r.ok) falhas++;
         if (!r.ok && opcoes.quiet) printInfo(`/batch -quiet: bloco ${i + 1} falhou (${topo(bloco)}):`, r.respostas.join(' | '));
-        const resposta = r.respostas.join('\n').trim();
+        const resposta = r.respostas.filter(t => !t.includes('```')).join('\n').trim();
+        conteudos.push(...r.respostas.filter(t => t.includes('```')));
         const detalhe = resposta ? `\n   ↳ ${resumirTexto(resposta.replace(/\n+/g, ' · '), MAX_RESPOSTA)}` : '';
         linhas.push(`${r.ok ? '✅' : '❌'} ${i + 1} · ${topo(bloco)}${detalhe}`);
 
@@ -143,10 +145,11 @@ async function cmdBatch(contexto) {
     }
 
     // -quiet: sem o resumo (o que os comandos mandam fora do resumo, como mídias, sai igual)
-    if (opcoes.quiet) return;
-
-    const ok = blocos.length - falhas;
-    await msg.reply(`📦 *BATCH* · ${ok}/${blocos.length} ok\n\n${linhas.join('\n')}${aviso}`, undefined, SEM_PREVIA);
+    if (!opcoes.quiet) {
+        const ok = blocos.length - falhas;
+        await msg.reply(`📦 *BATCH* · ${ok}/${blocos.length} ok\n\n${linhas.join('\n')}${aviso}`, undefined, SEM_PREVIA);
+    }
+    for (const c of conteudos) await msg.reply(c);
 }
 
 module.exports = { cmdBatch, separarBlocos };
