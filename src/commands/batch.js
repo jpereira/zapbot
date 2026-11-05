@@ -119,6 +119,7 @@ async function cmdBatch(context) {
     }
 
     const linesAlt = [];
+    const contents = []; // replies with a code block (e.g.: /ascii) come out whole, outside the summary
     let failures = 0;
 
     for (const [i, block] of blocks.entries()) {
@@ -132,7 +133,8 @@ async function cmdBatch(context) {
 
         if (!r.ok) failures++;
         if (!r.ok && optionsAlt.quiet) printInfo(`/batch -quiet: bloco ${i + 1} falhou (${top(block)}):`, r.respostas.join(' | '));
-        const reply = r.respostas.join('\n').trim();
+        const reply = r.respostas.filter(t => !t.includes('```')).join('\n').trim();
+        contents.push(...r.respostas.filter(t => t.includes('```')));
         const detail = reply ? `\n   ↳ ${summarizeText(reply.replace(/\n+/g, ' · '), MAX_REPLY)}` : '';
         linesAlt.push(`${r.ok ? '✅' : '❌'} ${i + 1} · ${top(block)}${detail}`);
 
@@ -143,10 +145,11 @@ async function cmdBatch(context) {
     }
 
     // -quiet: without the summary (what the commands send outside the summary, like media, goes out the same)
-    if (optionsAlt.quiet) return;
-
-    const ok = blocks.length - failures;
-    await msg.reply(`📦 *BATCH* · ${ok}/${blocks.length} ok\n\n${linesAlt.join('\n')}${notice}`, undefined, WITHOUT_PREVIEW);
+    if (!optionsAlt.quiet) {
+        const ok = blocks.length - failures;
+        await msg.reply(`📦 *BATCH* · ${ok}/${blocks.length} ok\n\n${linesAlt.join('\n')}${notice}`, undefined, WITHOUT_PREVIEW);
+    }
+    for (const c of contents) await msg.reply(c);
 }
 
 module.exports = { cmdBatch, separateBlocks };
