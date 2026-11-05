@@ -55,6 +55,15 @@ test('-width, -char e o texto da mensagem respondida', async () => {
     assert.equal((await bot.replyAlt('/ascii', { citada: quoted }))[0], (await bot.replyAlt('/ascii Oi'))[0]);
 });
 
+test('ascii.defaultChar muda o traço padrão; -char tem prioridade', async () => {
+    await bot.setSetting('ascii.defaultChar', '*');
+    const [defaults] = await bot.replyAlt('/ascii Oi');
+    assert.match(defaults, /\*\*\* \*\*\*/);
+    assert.doesNotMatch(defaults, /#/);
+    assert.match((await bot.replyAlt('/ascii -c @ Oi'))[0], /@@@ @@@/);
+    await bot.setSetting('ascii.defaultChar', '#');
+});
+
 test('erros: sem texto, texto grande, largura e caractere inválidos, nada desenhável', async () => {
     assert.match((await bot.replyAlt('/ascii'))[0], /^❌ Use: \/ascii/);
     assert.match((await bot.replyAlt(`/ascii ${'a'.repeat(41)}`))[0], /no máximo 40 caracteres/);

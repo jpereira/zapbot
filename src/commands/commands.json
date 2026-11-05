@@ -80,7 +80,7 @@
                     "values": [
                         "<caractere>"
                     ],
-                    "desc": "O caractere do traço das letras (padrão #). Ex: /ascii -c @ Oi",
+                    "desc": "O caractere do traço das letras (padrão: setting ascii.defaultChar, #). Ex: /ascii -c @ Oi",
                     "cron": false
                 }
             ],

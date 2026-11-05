@@ -12,7 +12,7 @@ tela do celular: 30 colunas por padrão.
 |---|---|---|
 | *(nenhuma)* | `<texto>` | Até 40 caracteres: letras (sem acento), números e `! ? . , : - + _ /`. Maiúsculas e minúsculas saem iguais; o que não tem desenho é ignorado. Sem texto, usa o da mensagem respondida |
 | `-width`, `-w` | `<colunas>` | Colunas por linha de letras, de 10 a 60 (padrão 30) |
-| `-char`, `-c` | `<caractere>` | O caractere do traço das letras (padrão `#`) |
+| `-char`, `-c` | `<caractere>` | O caractere do traço das letras (padrão: setting `ascii.defaultChar`, `#`) |
 
 ```text
 /ascii Jorge!

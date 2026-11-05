@@ -3,6 +3,8 @@
  * WhatsApp). The letters are 3 columns wide and 5 lines tall, and the text wraps in
  * several lines of letters to fit the phone screen (30 columns by default).
  */
+const { getSetting } = require('../settings');
+
 const MAX_TEXT = 40;
 const WIDTH_DEFAULT = 30;
 const WIDTH_MIN = 10;
@@ -107,7 +109,7 @@ async function cmdAscii({ msg, opts, quotedMsg }) {
         }
     }
 
-    let traco = '#';
+    let traco = getSetting('ascii.defaultChar');
     if (opts.given.has('char')) {
         const c = opts.opt.char ?? '';
         if ([...c].length !== 1) return msg.reply('❌ -char precisa de um único caractere, ex: -char @');
