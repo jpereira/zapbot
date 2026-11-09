@@ -1,4 +1,4 @@
-# `/mute` (`/mudo`) · admin
+# `/mute` (`/mudo`) · owner
 
 Silencia os avisos que chegam no seu privado quando uma pessoa, um grupo ou uma comunidade apaga
 mensagens, edita mensagens, apaga status ou remove (ou troca) uma reação. **Só o aviso some**: a

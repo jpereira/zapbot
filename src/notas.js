@@ -50,7 +50,7 @@ const packageJson = require('../package.json');
  *                                       → põe (ou troca) o alerta de uma anotação (ou de todas as da tag)
  *   -alerta #tag...                     → lista só os alertas dessas tags
  *   -alerta -rm <id...|#tag...|all>     → tira o alerta, mantendo a anotação
- * O alerta dispara UMA vez, na hora; a anotação continua. Só o dono (onlyAdmin).
+ * O alerta dispara UMA vez, na hora; a anotação continua. Só o dono (role owner).
  */
 const MAX_DIAS = 365;
 const ALERTA = /(^|\s)-alerta(?=\s|$)([\s\S]*)$/;

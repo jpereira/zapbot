@@ -1,5 +1,9 @@
 # `/show` · admin
 
+Role `admin`: só você e os admins extras. O dono libera a uma pessoa ou grupo com
+`/bot +v +cmd /show` ([Delegando](index.md#delegando-um-comando-admin)).
+Quem recebe vê só o chat atual: `-l`, o `chat` e `-flush` são do dono e dos admins extras.
+
 Sem parâmetros no privado, lista o cache de todos os chats, como `/show -l`. Em grupos, reexibe a
 última mensagem apagada do grupo.
 

@@ -486,7 +486,7 @@ describe('/show -f (flush)', () => {
         await mensagemApagada('b', { chat: TRABALHO });
         const { media_path } = await bot.dbGet('SELECT media_path FROM messages WHERE id = ?', [msg.id.id]);
 
-        assert.deepEqual(await bot.responder('/show -f', { de: OUTRO.jid }), []); // onlyAdmin
+        assert.deepEqual(await bot.responder('/show -f', { de: OUTRO.jid }), []); // role admin
 
         const [r] = await bot.responder('/show -f');
         assert.equal(r, '🧹 *Flush do cache deste chat*\n\n🗑️ Apagadas: *1 mensagem*\n📎 Mídias apagadas do disco: *1* _(1 B)_\n' +

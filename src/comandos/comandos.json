@@ -63,7 +63,7 @@
                     "desc": "Remove um ou mais aliases (separados por espaço ou vírgula), com ou sem a barra; all remove todos. Ex: /alias -rm /eita, /alias -rm eita eita2 /dolar, /alias -rm all"
                 }
             ],
-            "onlyAdmin": true
+            "role": "owner"
         },
         {
             "cmd": "/ascii",
@@ -96,7 +96,7 @@
                 }
             ],
             "cron": true,
-            "onlyAdmin": false
+            "role": "user"
         },
         {
             "cmd": "/backup",
@@ -179,7 +179,7 @@
                     "desc": "Junto com -send: por e-mail, como anexo (email = o QRCODE_EMAIL_SMTP_TO), ou noutro chat: um contato, uma menção, um grupo ou um número (pede -sim). Repita para vários. Ex: -to email, -to voce@exemplo.com, -to /Jorge Pereira/, -to @Fulano (menção), -to /Grupo L200/, -to +5521999999999"
                 }
             ],
-            "onlyAdmin": true
+            "role": "owner"
         },
         {
             "cmd": "/batch",
@@ -217,7 +217,7 @@
                 }
             ],
             "cron": false,
-            "onlyAdmin": true
+            "role": "owner"
         },
         {
             "cmd": "/block",
@@ -251,14 +251,14 @@
                     "desc": "Ofusca telefones com 10 a 15 dígitos contínuos na saída desta execução, mantendo os cinco primeiros e os dois últimos (como +55219****44). Ex: /block -mask"
                 }
             ],
-            "onlyAdmin": true
+            "role": "owner"
         },
         {
             "cmd": "/boletos",
             "usage": "/boletos",
             "summary": "Sorteia 2 membros do grupo para pagar um boleto",
             "help": "Sorteia 2 membros do grupo para pagar um boleto.",
-            "onlyAdmin": false
+            "role": "user"
         },
         {
             "cmd": "/bot",
@@ -434,7 +434,7 @@
                     "cron": false
                 }
             ],
-            "onlyAdmin": true
+            "role": "owner"
         },
         {
             "cmd": "/cache",
@@ -476,7 +476,7 @@
                     "desc": "Apaga as mídias baixadas em ${MEDIA_DIR} (as mensagens ficam, sem o arquivo)."
                 }
             ],
-            "onlyAdmin": true
+            "role": "owner"
         },
         {
             "cmd": "/cotacao",
@@ -555,7 +555,7 @@
                 }
             ],
             "cron": true,
-            "onlyAdmin": false
+            "role": "user"
         },
         {
             "cmd": "/cron",
@@ -661,7 +661,7 @@
                     "desc": "6h, 07h, 18:30 ou às 18h (horário: hoje ou amanhã), +2h, em 2h, 30m ou 1h30m (daqui a tanto tempo), amanhã [9h], sexta [18h], 25/12 [10:00] ou 25/12/2027 [10h]. Sem hora: 9h."
                 }
             ],
-            "onlyAdmin": true
+            "role": "owner"
         },
         {
             "cmd": "/crypto",
@@ -741,7 +741,7 @@
                 }
             ],
             "cron": true,
-            "onlyAdmin": false
+            "role": "user"
         },
         {
             "cmd": "/cve",
@@ -767,7 +767,7 @@
                 }
             ],
             "cron": true,
-            "onlyAdmin": false
+            "role": "user"
         },
         {
             "cmd": "/debug",
@@ -823,7 +823,7 @@
                     "desc": "Liga o debug no nível configurado. Pode combinar com nível, filtro e cópia."
                 }
             ],
-            "onlyAdmin": true
+            "role": "owner"
         },
         {
             "cmd": "/defi",
@@ -985,7 +985,7 @@
                 }
             ],
             "cron": true,
-            "onlyAdmin": true,
+            "role": "owner",
             "protocolos": {
                 "orca": {
                     "nome": "Orca",
@@ -1043,7 +1043,7 @@
                     "desc": "Resultado da enquete mais recente do chat (ou da enquete respondida): votos por opção e quem votou."
                 }
             ],
-            "onlyAdmin": true
+            "role": "admin"
         },
         {
             "cmd": "/get",
@@ -1114,7 +1114,7 @@
                     "desc": "Link do vídeo; vale mais que a mensagem respondida. Ex: https://youtu.be/..."
                 }
             ],
-            "onlyAdmin": false
+            "role": "user"
         },
         {
             "cmd": "/giphy",
@@ -1125,7 +1125,7 @@
             "summary": "Envia um GIF do GIPHY",
             "help": "Envia um GIF do GIPHY como vídeo em loop: aleatório pela tag (padrão: gif.tag), ou o GIF escolhido por URL ou ID. Precisa de GIPHY_API_KEY no config/.env ou do setting giphy.api.key. Ex: /giphy gatos, /giphy https://giphy.com/gifs/h5WUvmDSB0njFcFeCE",
             "cron": true,
-            "onlyAdmin": false
+            "role": "user"
         },
         {
             "cmd": "/gpt",
@@ -1153,17 +1153,25 @@
                     "desc": "O que perguntar. Ex: /gpt explique SSRF em 3 linhas"
                 }
             ],
-            "onlyAdmin": true
+            "role": "admin"
         },
         {
             "cmd": "/help",
-            "usage": "/help [comando] [protocolo]",
+            "usage": "/help [-role|-r] [comando] [protocolo]",
             "aliases": [
                 "/h"
             ],
             "summary": "Lista os comandos ou detalha um deles",
             "help": "Exibe o menu de ajuda, só com os comandos que você pode usar (o dono e os admins veem todos); com um comando, só a ajuda dele. Ex: /help show",
             "cmd_opts": [
+                {
+                    "opts": [
+                        "role",
+                        "r"
+                    ],
+                    "values": [],
+                    "desc": "Lista os comandos separados por role (owner, admin e user), só os que você pode usar. Ex: /help -r"
+                },
                 {
                     "argv": [
                         "[comando]"
@@ -1177,7 +1185,7 @@
                     "desc": "No /defi, só a ajuda de um protocolo: orca, prjx, liquidswap, morpho ou aave. Equivale a /defi <protocolo> -help. Ex: /help defi aave"
                 }
             ],
-            "onlyAdmin": false
+            "role": "user"
         },
         {
             "cmd": "/join",
@@ -1209,7 +1217,7 @@
                     "desc": "Lista os grupos em que você está, numerados para o /leave <nº>."
                 }
             ],
-            "onlyAdmin": true
+            "role": "owner"
         },
         {
             "cmd": "/joke",
@@ -1221,7 +1229,7 @@
             "summary": "Piada aleatória",
             "help": "Piada aleatória em português (nenhuma se repete até todas saírem).",
             "cron": true,
-            "onlyAdmin": false
+            "role": "user"
         },
         {
             "cmd": "/kernel",
@@ -1229,7 +1237,7 @@
             "summary": "Versões atuais do kernel Linux",
             "help": "Versões atuais do kernel Linux (kernel.org).",
             "cron": true,
-            "onlyAdmin": false
+            "role": "user"
         },
         {
             "cmd": "/leave",
@@ -1253,7 +1261,7 @@
                     "desc": "Lista os grupos em que você está, numerados (o mesmo que /leave sem nada)."
                 }
             ],
-            "onlyAdmin": true
+            "role": "owner"
         },
         {
             "cmd": "/listageral",
@@ -1263,7 +1271,7 @@
             ],
             "summary": "Lista os membros do grupo",
             "help": "Lista os membros do grupo (número, nome, admins).",
-            "onlyAdmin": true
+            "role": "admin"
         },
         {
             "cmd": "/me",
@@ -1283,7 +1291,7 @@
                     "desc": "Repete o texto n vezes (de 1 a me.maxRepeat, padrão 500), emendado, numa mensagem só; os {/comando} rodam uma vez só. Ex: /me -r 3 Haha! envia Haha!Haha!Haha!"
                 }
             ],
-            "onlyAdmin": false
+            "role": "user"
         },
         {
             "cmd": "/meme",
@@ -1291,7 +1299,7 @@
             "summary": "Template de meme aleatório do imgflip",
             "help": "Template de meme aleatório do imgflip, opcionalmente filtrado pelo nome.",
             "cron": true,
-            "onlyAdmin": false
+            "role": "user"
         },
         {
             "cmd": "/monitor",
@@ -1338,7 +1346,7 @@
                 }
             ],
             "cron": false,
-            "onlyAdmin": true
+            "role": "owner"
         },
         {
             "cmd": "/mute",
@@ -1413,7 +1421,7 @@
                     "desc": "Contato ou grupo pelo nome ou parte dele, com prioridade para nomes exatos (vários: você escolhe na lista), alguém mencionado com @ ou um número. Respondendo um aviso, silencia a origem: grupo primeiro; sem grupo, número ou nome da pessoa. Ex: /mute /Grupo L200/, /mute /Jorge Pereira/, /m @Fulano, /mute -s +5521999999999, /mute -r /Grupo L200/"
                 }
             ],
-            "onlyAdmin": true
+            "role": "owner"
         },
         {
             "cmd": "/news",
@@ -1460,7 +1468,7 @@
                 }
             ],
             "cron": true,
-            "onlyAdmin": false
+            "role": "user"
         },
         {
             "cmd": "/noffa",
@@ -1471,7 +1479,7 @@
             ],
             "summary": "Floreia o texto com emojis de arco-íris",
             "help": "Dá uma floreada no texto com emojis de arco-íris. Aceita texto ou resposta a uma mensagem.",
-            "onlyAdmin": false
+            "role": "user"
         },
         {
             "cmd": "/notes",
@@ -1608,7 +1616,7 @@
                     "desc": "Com a lista (-l, #tag), o -view ou o -export: manda no destino em vez de responder aqui. Com -alerta: avisa num contato, num grupo, num número ou por e-mail em vez do seu privado. Repita para vários: um alerta só, que avisa em todos. Ex: /notes -e #casa -to /Família/, -to /Jorge Pereira/, -to @Fulano, -to /Grupo L200/ -to /Família/, -to +5521999999999, -to email"
                 }
             ],
-            "onlyAdmin": true
+            "role": "owner"
         },
         {
             "cmd": "/ping",
@@ -1616,7 +1624,7 @@
             "aliases": [],
             "summary": "Verifica se o bot está respondendo",
             "help": "Verifica se o bot está respondendo (responde pong).",
-            "onlyAdmin": false
+            "role": "user"
         },
         {
             "cmd": "/pixelart",
@@ -1654,7 +1662,7 @@
                 }
             ],
             "cron": true,
-            "onlyAdmin": false
+            "role": "user"
         },
         {
             "cmd": "/profile",
@@ -1680,7 +1688,7 @@
                     "desc": "Ofusca telefones com 10 a 15 dígitos contínuos na saída desta execução, mantendo os cinco primeiros e os dois últimos (como +55219****44). Ex: /profile -mask /Fulano/"
                 }
             ],
-            "onlyAdmin": true
+            "role": "admin"
         },
         {
             "cmd": "/search",
@@ -1722,7 +1730,7 @@
                     "desc": "Ofusca telefones com 10 a 15 dígitos contínuos na saída desta execução, mantendo os cinco primeiros e os dois últimos (como +55219****44). Ex: /search -mask pix"
                 }
             ],
-            "onlyAdmin": true
+            "role": "owner"
         },
         {
             "cmd": "/set",
@@ -1781,7 +1789,7 @@
                     "desc": "Altera. Listas: itens separados por vírgula ou espaço (watch.rules: uma regra por linha; bot.users.cmds: separados por espaço, já que cada item tem vírgulas)."
                 }
             ],
-            "onlyAdmin": true
+            "role": "owner"
         },
         {
             "cmd": "/show",
@@ -1869,7 +1877,7 @@
                     "desc": "Ofusca telefones com 10 a 15 dígitos contínuos na saída desta execução, mantendo os cinco primeiros e os dois últimos (como +55219****44). Os dados salvos e os destinos usam os números completos. Ex: /show -mask"
                 }
             ],
-            "onlyAdmin": true
+            "role": "admin"
         },
         {
             "cmd": "/stats",
@@ -1925,7 +1933,7 @@
                 }
             ],
             "cron": true,
-            "onlyAdmin": true
+            "role": "admin"
         },
         {
             "cmd": "/sticker",
@@ -2005,7 +2013,7 @@
                     "desc": "Link do vídeo; vale mais que a mensagem respondida. Ex: https://youtu.be/..."
                 }
             ],
-            "onlyAdmin": false
+            "role": "user"
         },
         {
             "cmd": "/tempo",
@@ -2030,7 +2038,7 @@
                 }
             ],
             "cron": true,
-            "onlyAdmin": false
+            "role": "user"
         },
         {
             "cmd": "/tldr",
@@ -2065,7 +2073,7 @@
                     "desc": "2h ou 30m: as mensagens desse tempo para cá; 300: as últimas 300 (máx. tldr.maxMsgs). Padrão: as últimas 100."
                 }
             ],
-            "onlyAdmin": true
+            "role": "admin"
         },
         {
             "cmd": "/todos",
@@ -2075,7 +2083,7 @@
             ],
             "summary": "Responde marcando todos do grupo",
             "help": "Responde marcando todos do grupo (exceto você).",
-            "onlyAdmin": true
+            "role": "admin"
         },
         {
             "cmd": "/traduzir",
@@ -2111,7 +2119,7 @@
                     "desc": "Texto a traduzir (até 5000 caracteres). Sem ele, a mensagem respondida."
                 }
             ],
-            "onlyAdmin": false
+            "role": "user"
         },
         {
             "cmd": "/unblock",
@@ -2134,7 +2142,7 @@
                     "desc": "A pessoa, como no /block, ou o nº da lista do /block. Ex: /unblock /Fulano/, /unblock 2"
                 }
             ],
-            "onlyAdmin": true
+            "role": "owner"
         },
         {
             "cmd": "/unmute",
@@ -2157,7 +2165,7 @@
                     "desc": "Quem: buscado como no /mute, ou o nº da lista do /mute. Sem ele, respondendo um aviso, de onde o aviso veio. Ex: /unmute /Jorge Pereira/, /unmute 2, /unmute -all"
                 }
             ],
-            "onlyAdmin": true
+            "role": "owner"
         },
         {
             "cmd": "/uptime",
@@ -2166,7 +2174,7 @@
             "summary": "Há quanto tempo o bot está rodando",
             "help": "Exibe há quanto tempo o bot está rodando e conectado.",
             "cron": true,
-            "onlyAdmin": false
+            "role": "user"
         },
         {
             "cmd": "/version",
@@ -2175,7 +2183,7 @@
             "summary": "Exibe a versão do bot",
             "help": "Exibe a versão do bot (mesmo banner do /uptime).",
             "cron": true,
-            "onlyAdmin": false
+            "role": "user"
         },
         {
             "cmd": "/walissu",
@@ -2185,7 +2193,7 @@
             ],
             "summary": "Marca 2 membros do grupo com uma CVE aleatória",
             "help": "Walissu CVE BOT: marca 2 membros do grupo com uma CVE aleatória.",
-            "onlyAdmin": true
+            "role": "user"
         },
         {
             "cmd": "/watch",
@@ -2293,7 +2301,7 @@
                     "desc": "Desliga o 🔒 da regra N (volta a mostrar os telefones). Ex: /watch -umask 3"
                 }
             ],
-            "onlyAdmin": true
+            "role": "owner"
         },
         {
             "cmd": "/whois",
@@ -2312,7 +2320,7 @@
                     "desc": "Só o dono e os admins: /nome/, @menção ou +número (vários de uma vez). Respondendo uma mensagem, sem pessoa: quem a escreveu. Ex: /whois @Fulano, /whois +5521999999999"
                 }
             ],
-            "onlyAdmin": false
+            "role": "user"
         }
     ]
 }

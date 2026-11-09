@@ -17,7 +17,7 @@ Quem é? (1)
 
 Permissões
 👑 +o: admin, usa tudo
-🗣️ +v: usuário, usa os comandos comuns
+🗣️ +v: usuário, usa os comandos comuns (e os admin que o dono liberou)
 
 Digite /help para saber quais comandos estão disponíveis.
 ```
@@ -35,7 +35,7 @@ O nível é o mais alto que vale **no chat onde você digitou**:
 |---|---|
 | 🤖 dono | É a conta do bot: usa tudo |
 | 👑 +o | É admin (`/bot +o`): usa tudo |
-| 🗣️ +v | É usuário (`/bot +v`): usa os comandos comuns em qualquer chat |
+| 🗣️ +v | É usuário (`/bot +v`): usa os comandos comuns em qualquer chat, e os de role `admin` que o dono liberar (`+cmd`) |
 | 🗣️ todos | Todos estão liberados (`/set bot.users true`) |
 | 🗣️ +v pelo grupo | O grupo onde você digitou está liberado: todos ali usam os comuns, só dentro dele |
 | 🗣️ +v neste grupo | A pessoa é usuária só neste grupo (o `/bot +v` digitado nele) |

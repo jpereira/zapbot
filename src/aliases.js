@@ -8,7 +8,7 @@
  */
 const { dbAll, dbGet, dbPronto } = require('./db');
 const { commandsByPrefix, findCommand } = require('./comandos/base');
-const { botConfig } = require('./botConfig');
+const { roleMaisRestrito, botConfig } = require('./botConfig');
 const { acharComando, comAlvos, comandosNoTexto, montarTexto } = require('./comandosNoTexto');
 
 const ehAliasDeTexto = (salvo) => !salvo.startsWith('/');
@@ -61,7 +61,7 @@ async function resolverSalvo(alias, nome, args) {
         const achados = await Promise.all(comandosNoTexto(alias.command).map(c => acharComando(c.linha)));
         const alvos = achados.map(a => a?.command).filter(Boolean);
         return {
-            command: { cmd: nome, onlyAdmin: alvos.some(c => c.onlyAdmin), alvos: alvos.map(c => c.cmd) },
+            command: { cmd: nome, role: roleMaisRestrito(alvos.map(c => c.role)), alvos: alvos.map(c => c.cmd) },
             alias: nome, texto: alias.command, args, quiet: Boolean(alias.quiet)
         };
     }

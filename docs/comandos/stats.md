@@ -1,5 +1,10 @@
 # `/stats` · admin
 
+Role `admin`: só você e os admins extras. O dono libera a uma pessoa ou grupo com
+`/bot +v +cmd /stats` ([Delegando](index.md#delegando-um-comando-admin)).
+Quem recebe vê só o chat atual e não apaga nada: `-l`, o `/chat/`, `-me`, `-flush` e `-flush-all`
+são do dono e dos admins extras.
+
 Ranking do chat nos últimos N dias (padrão 7): total de mensagens, quem mais fala, quem mais apaga e
 edita, mensagens por faixa de horário, horário e dia de pico. Com `-me`, as **suas** mensagens
 somadas em todos os chats: em quais você mais fala, quantas apagou, seus horários e seu dia de pico.

@@ -3,12 +3,19 @@
  * as pessoas só num grupo) e o bot.users.cmds (a regra de cada um, do /bot
  * +cmd|-cmd). Sem regra, todos os comuns; com regra, só os da lista ("Apenas")
  * ou todos menos os da lista ("Todos, menos"). O /help e o /whois sempre passam.
+ *
+ * O role dos comandos (o "role" do comandos.json): user (comum), admin (só o dono
+ * e o bot.admins, mas delegável: precisa estar citado num "Apenas", o /bot +cmd) e
+ * owner (nunca delegável). Um "Todos, menos" ou o bot.users = true não liberam admin.
  */
 
+const { botConfig } = require('./botConfig');
 const { getSetting, setSetting } = require('./settings');
 
 const CHAVE = 'bot.users.cmds';
 const SEMPRE_LIBERADOS = ['/help', '/whois'];
+
+const roleDe = (cmd) => botConfig.commands.find(c => c.cmd === cmd)?.role ?? 'user';
 
 // "5521...=/a,/b" → { apenas: true, comandos: ['/a', '/b'] }; "...=!/a" → { apenas: false }
 function lerLinha(linha) {
@@ -55,7 +62,9 @@ function permissaoAqui({ numero, chatId, isGroup }) {
         ? users.filter(u => u.startsWith(`${numero}:`)).map(u => u.slice(u.indexOf(':') + 1))
         : [];
 
-    if (users.includes('all')) return { liberado: true, soNosGrupos, regras: [], pode: () => true };
+    if (users.includes('all')) {
+        return { liberado: true, soNosGrupos, regras: [], pode: (cmd) => roleDe(cmd) === 'user' };
+    }
 
     const entradas = [numero, isGroup && `${numero}:${chatId}`, isGroup && chatId]
         .filter(e => e && users.includes(e));
@@ -67,7 +76,13 @@ function permissaoAqui({ numero, chatId, isGroup }) {
         liberado: true,
         soNosGrupos,
         regras: limitam,
-        pode: (cmd) => !limitam.length || limitam.some(r => permite(r, cmd))
+        pode: (cmd) => {
+            const role = roleDe(cmd);
+            if (role === 'owner') return false;
+            // admin: só se alguma regra o cita (o +cmd); um regra ausente ou "Todos, menos" não basta
+            if (role === 'admin') return todas.some(r => r?.apenas && r.comandos.includes(cmd));
+            return !limitam.length || limitam.some(r => permite(r, cmd));
+        }
     };
 }
 
@@ -82,6 +97,7 @@ function avisoDeLimite(regrasQueLimitam, cmd) {
 
 module.exports = {
     SEMPRE_LIBERADOS,
+    roleDe,
     avisoDeLimite,
     descreverRegra,
     gravarRegra,

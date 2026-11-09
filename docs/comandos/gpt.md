@@ -1,5 +1,10 @@
 # `/gpt` (`/ai`) · admin
 
+Role `admin`: só você e os admins extras. O dono libera a uma pessoa ou grupo com
+`/bot +v +cmd /gpt` ([Delegando](index.md#delegando-um-comando-admin)).
+Quem recebe só pergunta: trocar o modelo (`-model <modelo>`) é do dono e dos admins extras (listar o
+atual, `-model` sozinho, qualquer um).
+
 Pergunta ao ChatGPT pela API da OpenAI e responde no chat. Respondendo uma mensagem, o texto dela
 entra antes da pergunta. Enquanto espera a resposta, o bot aparece como "digitando...". Sem
 pergunta, mostra a ajuda.

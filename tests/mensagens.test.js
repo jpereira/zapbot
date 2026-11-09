@@ -299,12 +299,41 @@ describe('permissões', () => {
         assert.deepEqual(await bot.responder('/debug', { de: OUTRO.jid }), []);
     });
 
-    test('onlyAdmin: ignorado para os outros, sem resposta no chat', async () => {
+    test('role admin: o dono delega com o +cmd; Todos, menos e bot.users true não liberam; owner nunca', async () => {
+        await bot.setSetting('bot.users', [OUTRO.user]);
+        assert.deepEqual(await bot.responder('/show -h', { de: OUTRO.jid }), []);
+
+        await bot.setSetting('bot.users.cmds', [`${OUTRO.user}=!/ping`]);
+        assert.deepEqual(await bot.responder('/show -h', { de: OUTRO.jid }), []);
+
+        await bot.setSetting('bot.users.cmds', [`${OUTRO.user}=/ping,/show`]);
+        assert.ok((await bot.responder('/show -h', { de: OUTRO.jid }))[0].includes('Uso: /show'));
+        assert.deepEqual(await bot.responder('/debug', { de: OUTRO.jid }), []);
+
+        await bot.setSetting('bot.users.cmds', []);
+        await bot.setSetting('bot.users', ['all']);
+        assert.deepEqual(await bot.responder('/show -h', { de: OUTRO.jid }), []);
+
+        // quem usa os comuns (sem regra ou "Todos, menos") não ganha um admin com o +cmd: só numa lista "Apenas"
+        await bot.setSetting('bot.users', [OUTRO.user]);
+        await bot.setSetting('bot.users.cmds', []);
+        assert.match((await bot.responder('/bot +cmd /gpt /Fulano/', { chat: DONO.jid }))[0], /só entra numa lista "Apenas"/);
+        await bot.setSetting('bot.users.cmds', [`${OUTRO.user}=!/ping`]);
+        assert.match((await bot.responder('/bot +cmd /gpt /Fulano/', { chat: DONO.jid }))[0], /só entra numa lista "Apenas"/);
+        assert.deepEqual(bot.getSetting('bot.users.cmds'), [`${OUTRO.user}=!/ping`]);
+        await bot.responder('/bot +v +cmd /cotacao,/gpt /Fulano/', { chat: DONO.jid });
+        assert.deepEqual(bot.getSetting('bot.users.cmds'), [`${OUTRO.user}=/cotacao,/gpt`]);
+
+        // o +cmd recusa o owner
+        assert.match((await bot.responder('/bot +cmd /set +v /Fulano/', { chat: DONO.jid }))[0], /não dá para liberar/);
+    });
+
+    test('role admin/owner: ignorado para os outros, sem resposta no chat', async () => {
         assert.deepEqual(await bot.responder('/debug', { de: OUTRO.jid }), []);
         assert.deepEqual(await bot.responder('/debug'), ['🪲 Debug Desativado.']);
     });
 
-    test('onlyAdmin com debug ligado avisa no seu privado', async () => {
+    test('role admin/owner com debug ligado avisa no seu privado', async () => {
         await bot.setSetting('debug.enabled', true);
         const r = await bot.executar('/debug', { de: OUTRO.jid });
         assert.equal(r.length, 1);
@@ -379,7 +408,7 @@ describe('permissões', () => {
         assert.match((await bot.responder('/set bot.admins', { de: OUTRO.jid }))[0], /⚙️ \*bot\.admins\*/, 'ver pode');
     });
 
-    test('comando liberado (onlyAdmin false) funciona para os outros', async () => {
+    test('comando liberado (role user) funciona para os outros', async () => {
         const [r] = await bot.responder('/noffa oi gente', { de: OUTRO.jid });
         assert.match(r, /oi .* gente/);
     });

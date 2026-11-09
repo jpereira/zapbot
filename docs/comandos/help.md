@@ -3,10 +3,12 @@
 Exibe o menu com os comandos, ou a ajuda de um só. Cada um vê só o que pode usar:
 
 - **Você** (o dono) e os [admins extras](bot.md#admins-extras): todos os comandos.
-- **Os outros** (os [usuários](bot.md#usuários)): só os comandos comuns, os sem ✅ na
+- **Os outros** (os [usuários](bot.md#usuários)): só os comandos de role `user`, os `user` da
   [tabela de comandos](index.md#resumo). O menu vem com `(os comandos que você pode usar)` no
-  título, e o `/help` de um comando admin responde `⛔ O /show é só do dono do bot (e dos admins).`
-  Quem está limitado a alguns comandos ([`/bot +cmd`](bot.md#comandos-de-cada-usuário)) vê só esses.
+  título, e o `/help` de um comando `admin` ou `owner` responde
+  `⛔ O /show é só do dono do bot (e dos admins).`
+  Quem está limitado a alguns comandos ([`/bot +cmd`](bot.md#comandos-de-cada-usuário)) vê só esses,
+  e um `admin` que o dono liberou (`/bot +v +cmd /gpt`) aparece para quem o recebeu.
 
 O `/help` sozinho lista um comando por linha, só com o que ele faz (o `summary` do
 `comandos.json`), num bloco monoespaçado (para manter o alinhamento no celular), e termina com a dica de como ver o resto:
@@ -21,6 +23,31 @@ O `/help` sozinho lista um comando por linha, só com o que ele faz (o `summary`
 ```
 
 💡 Utilize */help /comando* ou */comando -h* para mais informações.
+````
+
+| Opção | Valor | Descrição |
+|---|---|---|
+| `-role`, `-r` | | Lista os comandos separados por role, só os que você pode usar |
+
+Com `-role` (ou `-r`), o menu sai separado por role (`owner`, `admin` e `user`, nessa ordem),
+só com os que você pode usar (um role sem nenhum comando visível não aparece):
+
+````text
+/help -r
+
+```
+Role: owner
+ /alias - Salva atalhos para comandos com argumentos
+ ...
+
+Role: admin
+ /enquete - Cria uma enquete no chat ou mostra o resultado
+ ...
+
+Role: user
+ /ascii - O texto em letras grandes de ASCII
+ ...
+```
 ````
 
 Para a ajuda completa de um comando:

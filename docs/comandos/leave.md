@@ -1,4 +1,4 @@
-# `/leave` · admin
+# `/leave` · owner
 
 Sai de um ou mais grupos do WhatsApp. Sem nada, lista os grupos em que você está, numerados. Para voltar, é
 preciso um novo convite ([`/join`](join.md)).

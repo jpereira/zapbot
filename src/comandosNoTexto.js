@@ -4,6 +4,7 @@
  * O `onde` (ex.: '/cron') só aparece nas mensagens de erro.
  */
 
+const { roleMaisRestrito } = require('./botConfig');
 const { client } = require('./cliente');
 const { activeCommands, findCommand } = require('./comandos/base');
 const { printError } = require('./log');
@@ -56,13 +57,13 @@ async function acharComando(linha) {
 
 /*
  * O /me é um comando comum, mas roda os {/comando} do que foi digitado: as permissões
- * (e o "só admin") são as dele e as de cada um (alvos), conferidas antes de executar.
+ * (e o role) são as dele e as de cada um (alvos), conferidas antes de executar.
  */
 async function comAlvos(command, texto) {
     if (command?.cmd !== '/me') return command;
     const achados = await Promise.all(comandosNoTexto(texto).map(c => acharComando(c.linha)));
     const alvos = achados.map(a => a?.command).filter(Boolean);
-    return { ...command, onlyAdmin: command.onlyAdmin || alvos.some(c => c.onlyAdmin),
+    return { ...command, role: roleMaisRestrito([command.role, ...alvos.map(c => c.role)]),
         alvos: [command.cmd, ...alvos.map(c => c.cmd)] };
 }
 

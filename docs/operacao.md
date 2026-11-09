@@ -100,7 +100,8 @@ adicione ao serviço `zapbot` o label `autoheal=true`:
 | `Motivo 'LOGOUT' exige ação manual` | Sessão desconectada pelo celular. Reinicie o container para gerar novo QR. |
 | `Motivo 'CONFLICT' ...` | O WhatsApp Web foi aberto em outro lugar com a mesma sessão, ou há dois containers rodando. |
 | `browser is already running` | Lock antigo do Chromium; o entrypoint limpa no boot e, num reinício, o bot mata o Chromium órfão sozinho (`Matando o Chromium órfão`). Persistindo, reinicie o container. |
-| Nenhum comando responde a outra pessoa | O `bot.users` vem `false`: só você usa comandos até `/bot +v <pessoa\|grupo>` (alguns, veja [Usuários](comandos/bot.md#usuários)) ou `/set bot.users true` (todos). Os comandos admin continuam só seus, a não ser para quem estiver no `bot.admins` (`/bot +o <pessoa>`, veja [Admins extras](comandos/bot.md#admins-extras)). Veja [Permissões](comandos/index.md#permissões-onlyadmin). |
+| Nenhum comando responde a outra pessoa | O `bot.users` vem `false`: só você usa comandos até `/bot +v <pessoa\|grupo>` (alguns, veja [Usuários](comandos/bot.md#usuários)) ou `/set bot.users true` (todos). Os comandos `owner` e `admin` continuam só seus, a não ser para quem estiver no `bot.admins` (`/bot +o <pessoa>`, veja [Admins extras](comandos/bot.md#admins-extras)). Veja [Permissões](comandos/index.md#permissões-role). |
+| Liberei o `/gpt` (ou outro `admin`) e a pessoa ou o grupo não consegue usar | O `admin` só entra numa lista "Apenas": `/bot +v +cmd /gpt` (no grupo) ou `/bot +v +cmd /gpt /Grupo/`. Quem já usa todos os comuns não ganha um `admin` com o `+cmd`; liste os comandos dele (`+cmd /cotacao,/gpt`). Um `owner` (`/set`, `/bot`...) não se delega. Veja [Delegando](comandos/index.md#delegando-um-comando-admin). |
 | `/get` falha em algum site | O site mudou; refaça o build (`--no-cache`) para pegar o yt-dlp mais recente. A versão em uso aparece no `/bot -info`. |
 
 ---

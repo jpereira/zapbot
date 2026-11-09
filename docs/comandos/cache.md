@@ -1,4 +1,4 @@
-# `/cache` · admin
+# `/cache` · owner
 
 Mostra o espaço ocupado em `cache/` (banco, mídias, temporários, backups) e limpa o cache. Na ajuda
 do comando (`/cache -h`) os caminhos aparecem completos (no Docker, `/app/cache` e

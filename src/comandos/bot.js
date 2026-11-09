@@ -13,7 +13,7 @@ const { aguardarConfirmacao, autorDe } = require('../escolhas');
 const { GetOptFromCommand } = require('../opcoes');
 const { caixas } = require('../imap');
 const { printInfo } = require('../log');
-const { descreverRegra, gravarRegra, regraDe } = require('../permissoes');
+const { descreverRegra, gravarRegra, regraDe, roleDe } = require('../permissoes');
 const {
     SETTINGS_SCHEMA, comandoDeUsuario, getSetting, setSetting, validarSetting
 } = require('../settings');
@@ -392,7 +392,7 @@ async function mudarLista(msg, key, itens, acrescentar, chat) {
 /*
  * +cmd|-cmd: a regra de cada usuário. Junto com o +v, define a regra:
  * +v +cmd /a,/b = só esses; +v -cmd /a = todos, menos esse. Sozinhos:
- *   +cmd: quem não é usuário entra só com esses; "Apenas" ganha esses; "Todos,
+ *   +cmd: (um comando admin só entra em "Apenas") quem não é usuário entra só com esses; "Apenas" ganha esses; "Todos,
  *         menos" libera esses de novo; quem usa todos fica como está; all apaga a regra;
  *   -cmd: "Apenas" perde esses (o último, não: aí é o -v); quem usa todos fica
  *         "Todos, menos" esses; "Todos, menos" ganha esses.
@@ -408,6 +408,7 @@ async function mudarComandos(msg, itens, { sinal, comandos, comV }, chat) {
 
     const escopo = await escopoDoChat(chat);
     const tudo = comandos.includes('all');
+    const admins = comandos.filter(c => roleDe(c) === 'admin');
     const alterados = [];
     const novosUsuarios = [];
     const avisos = [];
@@ -427,7 +428,11 @@ async function mudarComandos(msg, itens, { sinal, comandos, comV }, chat) {
             nova = tudo ? null : { apenas: sinal === '+', comandos };
         } else if (sinal === '+') {
             if (!ehUsuario || tudo) nova = tudo ? null : { apenas: true, comandos };
-            else if (!regra) {
+            else if (!regra?.apenas && admins.length) {
+                avisos.push(`❌ ${quem} usa os comandos comuns, e o ${admins.join(', ')} (admin) só entra numa lista "Apenas": ` +
+                    `liste os comandos dele, ex.: /bot +v +cmd /cotacao,${admins[0]}.`);
+                continue;
+            } else if (!regra) {
                 avisos.push(`ℹ️ ${quem} já usa todos os comandos comuns.`);
                 continue;
             } else if (regra.apenas) nova = { apenas: true, comandos: uniao };

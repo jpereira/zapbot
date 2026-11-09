@@ -24,7 +24,16 @@ if (disabledCommands.length) {
     printInfo(`Disabled ${disabledCommands.length} callers (${disabledCommands.join(',')})`);
 }
 
+/*
+ * O "role" de cada comando: user (comum), admin (só o dono e o bot.admins, mas delegável pelo
+ * /bot +cmd) ou owner (nunca delegável). Um atalho com vários comandos fica com o mais restrito.
+ */
+const ROLES = ['user', 'admin', 'owner'];
+const roleMaisRestrito = (roles) => roles.reduce((a, b) => (ROLES.indexOf(b) > ROLES.indexOf(a) ? b : a), 'user');
+
 module.exports = {
+    ROLES,
+    roleMaisRestrito,
     botConfig,
     semDesativados
 };

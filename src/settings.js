@@ -44,12 +44,12 @@ function itemDeUsuario(v) {
     return telefoneDoItem(v);
 }
 
-// "/creptomoeda" ou "crypto" → "/crypto"; comando que não existe ou admin: erro
+// "/creptomoeda" ou "crypto" → "/crypto"; comando que não existe ou de nível owner: erro
 function comandoDeUsuario(v) {
     const nome = v.startsWith('/') ? v.toLowerCase() : `/${v.toLowerCase()}`;
     const command = botConfig.commands.find(c => c.cmd === nome || c.aliases?.includes(nome));
     if (!command) throw new Error(`comando desconhecido: ${nome}`);
-    if (command.onlyAdmin) throw new Error(`o ${command.cmd} é só do dono e dos admins`);
+    if (command.role === 'owner') throw new Error(`o ${command.cmd} é só do dono e dos admins, não dá para liberar`);
     return command.cmd;
 }
 
@@ -170,7 +170,7 @@ const SETTINGS_SCHEMA = {
         default: [],
         type: 'list',
         separator: /\s+/,
-        desc: 'Os comandos de cada usuário (o /bot +cmd|-cmd): item=/a,/b (só esses) ou item=!/a,/b (todos os comuns, menos esses), com o item do bot.users. Sem linha: todos os comuns.',
+        desc: 'Os comandos de cada usuário (o /bot +cmd|-cmd): item=/a,/b (só esses) ou item=!/a,/b (todos os comuns, menos esses), com o item do bot.users. Um comando admin (/gpt...) só vale na lista "só esses". Sem linha: todos os comuns.',
         item: (v) => {
             const m = v.match(/^(.+)=(!?)(.+)$/);
             if (!m) throw new Error(`use item=/cmd,/cmd (ou item=!/cmd para todos menos esse): ${v}`);

@@ -182,7 +182,8 @@ Por onde começar:
   liga/desliga todos os comandos (`-on`/`-off`) e diz quem usa: você, os
   [admins extras](comandos/bot.md#admins-extras) (`+o`/`-o`) e os
   [usuários](comandos/bot.md#usuários) (`+v`/`-v`: pessoas e grupos, com os comandos de cada um
-  limitados pelo `+cmd`/ `-cmd`, se quiser); o `-reset` volta ao padrão, o `-status 06h` manda o
+  limitados pelo `+cmd`/ `-cmd`, e com comandos `admin` delegados, se quiser); o `-reset` volta ao
+  padrão, o `-status 06h` manda o
   relatório todo dia (no seu privado, noutros chats ou por e-mail), o `-info` mostra as versões do
   que o bot usa e o `-test` confere cache, disco, banco,
   WhatsApp, internet, SMTP, IMAP e programas. Quem não é admin tem uma

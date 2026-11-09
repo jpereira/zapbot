@@ -1,4 +1,4 @@
-# `/cron` (`/agenda`, `/lembrete`) · admin
+# `/cron` (`/agenda`, `/lembrete`) · owner
 
 Faz algo na hora marcada. Tem dois modos, na mesma agenda:
 
