@@ -164,13 +164,13 @@ async function cmdTldr({ msg, opts, chatId, chatName, admin }) {
             texto: `Conversa "${nameAlt}" (${linesAlt.length} mensagens):\n\n${linesAlt.join('\n')}`
         });
 
-        const textAlt = `📝 *Resumo de ${nameAlt}*\n` +
+        const textAlt = `🤖 *Resumo de ${nameAlt}*\n` +
             `_${plural(linesAlt.length, 'mensagem', 'mensagens')} · ${hour(first)} a ${hour(last)}_` +
             (notices.length ? `\n_(${notices.join('; ')})_` : '') +
             `\n\n${summary}`;
 
         if (opts.opt.pv) {
-            await msg.reply('📝 Resumo enviado no seu privado.');
+            await msg.reply('🤖 Resumo enviado no seu privado.');
             await client.sendMessage(client.info.wid._serialized, textAlt);
         } else {
             await msg.reply(textAlt);
