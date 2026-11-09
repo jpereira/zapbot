@@ -249,7 +249,7 @@ describe('/gpt (/ai)', () => {
         rede.responder('post', 'api.openai.com', { choices: [{ message: { content: ' Resposta! ' } }] });
 
         const citada = bot.criarMensagem({ texto: 'texto citado', de: bot.OUTRO.jid });
-        assert.deepEqual(await bot.responder('/ai resuma', { citada }), ['Resposta!']);
+        assert.deepEqual(await bot.responder('/ai resuma', { citada }), ['🤖 Resposta!']);
 
         const { cfg } = rede.chamadas.at(-1);
         assert.equal(cfg.headers.Authorization, 'Bearer sk-teste');
@@ -258,7 +258,7 @@ describe('/gpt (/ai)', () => {
         assert.equal(bot.client.chats.get(bot.GRUPO).digitando, 1);
     });
 
-    test('.env vence o setting; resposta começando com "/" ganha um 🤖', async () => {
+    test('.env vence o setting; a resposta sempre começa com 🤖 (inclusive a que começaria com "/")', async () => {
         process.env.OPENAI_API_KEY = 'sk-env';
         try {
             rede.responder('post', 'api.openai.com', { choices: [{ message: { content: '/cache -a' } }] });
@@ -372,7 +372,7 @@ describe('/tldr (/resumo)', () => {
         await bot.entregar(bot.criarMensagem({ de: bot.OUTRO.jid, tipo: 'image', midia: { mimetype: 'image/png', data: 'AA==' } }));
 
         const [r] = await bot.responder('/tldr');
-        assert.match(r, /^📝 \*Resumo de Família\*\n_3 mensagens · \d\d\/\d\d, \d\d:\d\d a \d\d\/\d\d, \d\d:\d\d_\n\n• Combinaram o almoço de domingo\.$/);
+        assert.match(r, /^🤖 \*Resumo de Família\*\n_3 mensagens · \d\d\/\d\d, \d\d:\d\d a \d\d\/\d\d, \d\d:\d\d_\n\n• Combinaram o almoço de domingo\.$/);
 
         const { cfg } = rede.chamadas.at(-1);
         assert.equal(cfg.headers.Authorization, 'Bearer sk-teste');
@@ -417,9 +417,9 @@ describe('/tldr (/resumo)', () => {
         assert.match(rede.chamadas.at(-1).cfg.body.messages[1].content, /Fulano: oi\n.*Dono: tudo bem\?\n.*Fulano: tudo$/);
 
         const r = await bot.executar('/tldr -c "rio trabalho" -pv');
-        assert.equal(r[0].texto, '📝 Resumo enviado no seu privado.');
+        assert.equal(r[0].texto, '🤖 Resumo enviado no seu privado.');
         assert.equal(r[1].chatId, bot.DONO.jid);
-        assert.match(r[1].texto, /📝 \*Resumo de Trabalho Rio\*/);
+        assert.match(r[1].texto, /🤖 \*Resumo de Trabalho Rio\*/);
 
         assert.match((await bot.responder('/tldr -c xyz'))[0], /❌ Nenhum chat com mensagens guardadas tem "xyz" no nome/);
     });

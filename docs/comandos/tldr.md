@@ -23,7 +23,7 @@ em tópicos. Usa a mesma chave e o mesmo modelo do [`/gpt`](gpt.md) (veja
 ```
 
 ```text
-📝 Resumo de Família
+🤖 Resumo de Família
 42 mensagens · 30/09, 18:02 a 30/09, 20:47
 
 • Tia propôs o almoço de domingo na casa da Vó; todos confirmaram, menos o Primo.

@@ -64,4 +64,5 @@ Detalhes:
 - Erros comuns têm resposta própria: chave inválida (`🔑`), limite ou créditos esgotados (`💸`) e
   demora maior que o timeout (`⏱️`). Os outros mostram a mensagem da API.
 - A chave nunca vai para o chat nem para o log.
-- Se a resposta começar com `/`, o bot põe um `🤖` na frente, para ela não ser lida como comando.
+- Toda resposta de sucesso começa com `🤖`. Isso também evita que uma resposta que comece com `/`
+  seja lida como comando.
