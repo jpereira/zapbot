@@ -1,4 +1,4 @@
-# `/set` (`/config`) · owner
+# `/set` (`/config`) · admin
 
 Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 [Settings](../settings.md)). A mudança vale na hora e sobrevive a reinícios.

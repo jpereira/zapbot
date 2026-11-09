@@ -1,7 +1,7 @@
 # `/stats` · admin
 
 Role `admin`: só você e os admins extras. O dono libera a uma pessoa ou grupo com
-`/bot +v +cmd /stats` ([Delegando](index.md#delegando-um-comando-admin)).
+`/bot +u +cmd /stats` ([Delegando](index.md#delegando-um-comando-admin)).
 Quem recebe vê só o chat atual e não apaga nada: `-l`, o `/chat/`, `-me`, `-flush` e `-flush-all`
 são do dono e dos admins extras.
 

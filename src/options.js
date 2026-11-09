@@ -61,13 +61,21 @@ const isTimeNegative = (token) => /^-\d[\d:.]*$/.test(token);
  * "-help" / "-h" are added automatically to every command.
  * `given` stores the canonical name of the options provided: tells apart "-x" without
  * value (null, but present) of "-x" absent (null).
+ *
+ * Two optional features, turned on in commands.js:
+ * numero: true (in a cmd_opts entry) reads "-10" as `numero` (the 1st; a 2nd is an error), instead
+ * before sending it to argv;
+ * strict: true (in the command) stores the unknown option in `desconhecidas`, instead of sending it
+ * to argv (the handler never sees it).
  */
 function GetOptFromCommand(input, config = {}) {
     const tokens = tokenizeCommand(input);
 
     const argv = [];
     const given = new Set();
-    const result = { opt: {}, argv, given };
+    const unknown = [];
+    const result = { opt: {}, argv, given, numero: null, desconhecidas: unknown };
+    const readNumber = (config.cmd_opts ?? []).some(o => o.numero);
 
     const commandOptions = [
         { opts: ['help', 'h'], values: [], desc: 'Exibe ajuda.' },
@@ -101,11 +109,18 @@ function GetOptFromCommand(input, config = {}) {
             continue;
         }
 
+        if (readNumber && /^-\d+$/.test(token)) {
+            if (result.numero === null) result.numero = Number(token.slice(1));
+            else unknown.push(token);
+            continue;
+        }
+
         const option = optionMap.get(token.slice(1));
 
-        // An unknown option goes to argv
+        // An unknown option goes to argv (or, in a strict command, to `desconhecidas`)
         if (!option) {
-            argv.push(normalizeArg(token));
+            if (config.estrito) unknown.push(token);
+            else argv.push(normalizeArg(token));
             continue;
         }
 

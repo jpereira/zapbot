@@ -8,7 +8,7 @@ const { client } = require('../client');
 const { getSetting } = require('../settings');
 const { sendMedia, commandsError, assembleText, breakLines } = require('../textCommands');
 
-async function cmdMe({ msg, args, chatId, chatName, isGroup, admin, podeUsar: canUse, senderContact, senderName, senderNumber }) {
+async function cmdMe({ msg, args, chatId, chatName, isGroup, nivel: level, admin, podeUsar: canUse, senderContact, senderName, senderNumber }) {
     let times = 1;
     const rest = args.trim().replace(/^-(?:repeat|r)\s+(\S+)(?:\s+|$)/i, (_, n) => {
         times = /^\d+$/.test(n) ? Number(n) : 0;
@@ -27,7 +27,7 @@ async function cmdMe({ msg, args, chatId, chatName, isGroup, admin, podeUsar: ca
 
     const { texto: final, midias: mediaAltAlt } = await assembleText(textAlt,
         { chat_id: chatId, chat_name: chatName, is_group: isGroup },
-        { onde: '/me', quem: { admin, podeUsar: canUse, senderContact, senderName, senderNumber } });
+        { onde: '/me', quem: { nivel: level, admin, podeUsar: canUse, senderContact, senderName, senderNumber } });
 
     // assembleText only trims with {/command}: it normalizes and returns the trailing space/line break, so "Haha!\n" repeats as "Haha!\nHaha!\n"
     const buf = (final.trimEnd() + textAlt.match(/\s*$/)[0]).repeat(times);

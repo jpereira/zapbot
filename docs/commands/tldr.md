@@ -1,7 +1,7 @@
 # `/tldr` (`/resumo`) · admin
 
 Role `admin`: só você e os admins extras. O dono libera a uma pessoa ou grupo com
-`/bot +v +cmd /tldr` ([Delegando](index.md#delegando-um-comando-admin)).
+`/bot +u +cmd /tldr` ([Delegando](index.md#delegando-um-comando-admin)).
 Quem recebe resume só o chat atual, aqui mesmo: `-chat` e `-pv` são do dono e dos admins extras.
 
 Resume a conversa de um chat pelo ChatGPT: assuntos principais, decisões, combinados e pendências,
@@ -40,5 +40,5 @@ Detalhes:
 - Ficam de fora os comandos, as mensagens apagadas e as mídias sem legenda. As suas mensagens
   aparecem com o nome do seu perfil; as respostas do bot (que saem pela sua conta) entram como suas.
 - Cada mensagem vai até 500 caracteres, e o total até 60 mil: acima disso saem as mais antigas.
-- É restrito ao dono e aos admins extras (`+o`): cada resumo gasta créditos da OpenAI, e o texto das
+- É restrito ao dono e aos admins extras (`+a`): cada resumo gasta créditos da OpenAI, e o texto das
   conversas vai para a OpenAI.

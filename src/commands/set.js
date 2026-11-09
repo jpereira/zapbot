@@ -162,7 +162,7 @@ async function peopleItems(msg, key, textAlt) {
         if (person.grupo) {
             await msg.reply(`❌ ${person.nome} é um grupo: o *${key}* é de pessoas (um contato ou um número).` +
                 (key === 'bot.admins'
-                    ? `\n💡 _Um grupo não pode ser admin (todos ali mandariam no bot). Para liberar os comandos comuns dentro dele: /bot +v /${person.nome}/_`
+                    ? `\n💡 _Um grupo não pode ser admin (todos ali mandariam no bot). Para liberar os comandos comuns dentro dele: /bot +u /${person.nome}/_`
                     : ''));
             return null;
         }
@@ -390,7 +390,7 @@ async function cmdSet({ msg, opts, args, chatId }) {
 
 /**
  * The -append/-rm of a people list (bot.admins, bot.users) from the
- * text with the names, mentions and numbers: the /bot +o|-o|+v|-v shortcut.
+ * text with the names, mentions and numbers: the /bot +a|-a|+u|-u shortcut.
  * With itemsReady, the text is already the items (the phone or the group id of the
  * current chat): does not go through the search.
  */

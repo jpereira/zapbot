@@ -1,5 +1,5 @@
 /*
- * Command -> handler map. Each 'cmd' of commands.json needs a handler here.
+ * Command -> handler map. Each 'cmd' of commands.js needs a handler here.
  */
 
 const { botConfig } = require('../botConfig');
@@ -51,7 +51,7 @@ const { cmdWatch } = require('./watch');
 const { cmdWhois } = require('./whois');
 const { printError } = require('../log');
 
-// commands.json cmd -> handler
+// commands.js cmd -> handler
 const HANDLERS = {
     '/alias': cmdAlias,
     '/ascii': cmdAscii,
@@ -105,9 +105,9 @@ const HANDLERS = {
     '/whois': cmdWhois
 };
 
-// Warns at boot if commands.json has a command without a handler (or vice versa)
+// Warns at boot if commands.js has a command without a handler (or vice versa)
 for (const c of botConfig.commands) {
-    if (!HANDLERS[c.cmd]) printError(`Comando '${c.cmd}' está no commands.json mas não tem handler.`);
+    if (!HANDLERS[c.cmd]) printError(`Comando '${c.cmd}' está no commands.js mas não tem handler.`);
 }
 
 module.exports = {

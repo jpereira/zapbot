@@ -26,11 +26,11 @@ async function levelAlt(numberAlt, { chatId, isGroup }) {
     const soInGroups = users.filter(u => u.startsWith(`${numberAlt}:`))
         .map(u => u.slice(u.indexOf(':') + 1));
     if (isOOwner(numberAlt)) return `${ROLES.dono} dono`;
-    if (getSetting('bot.admins').includes(numberAlt)) return `${ROLES.admin} +o`;
-    if (users.includes(numberAlt)) return `${ROLES.usuario} +v`;
+    if (getSetting('bot.admins').includes(numberAlt)) return `${ROLES.admin} +a`;
+    if (users.includes(numberAlt)) return `${ROLES.usuario} +u`;
     if (users.includes('all')) return `${ROLES.usuario} todos`;
-    if (isGroup && users.includes(chatId)) return `${ROLES.usuario} +v pelo grupo`;
-    if (isGroup && soInGroups.includes(chatId)) return `${ROLES.usuario} +v neste grupo`;
+    if (isGroup && users.includes(chatId)) return `${ROLES.usuario} +u pelo grupo`;
+    if (isGroup && soInGroups.includes(chatId)) return `${ROLES.usuario} +u neste grupo`;
 
     // Only in other groups: says where
     if (soInGroups.length) {

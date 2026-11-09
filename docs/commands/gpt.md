@@ -1,7 +1,7 @@
 # `/gpt` (`/ai`) · admin
 
 Role `admin`: só você e os admins extras. O dono libera a uma pessoa ou grupo com
-`/bot +v +cmd /gpt` ([Delegando](index.md#delegando-um-comando-admin)).
+`/bot +u +cmd /gpt` ([Delegando](index.md#delegando-um-comando-admin)).
 Quem recebe só pergunta: trocar o modelo (`-model <modelo>`) é do dono e dos admins extras (listar o
 atual, `-model` sozinho, qualquer um).
 
@@ -60,7 +60,7 @@ valor inválido no `.env` é ignorado (com aviso no log) e vale o setting. Para 
 
 Detalhes:
 
-- É restrito ao dono e aos admins extras (`+o`).
+- É restrito ao dono e aos admins extras (`+a`); o dono pode liberar a um usuário (`+u +cmd /gpt`).
 - Erros comuns têm resposta própria: chave inválida (`🔑`), limite ou créditos esgotados (`💸`) e
   demora maior que o timeout (`⏱️`). Os outros mostram a mensagem da API.
 - A chave nunca vai para o chat nem para o log.

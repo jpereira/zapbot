@@ -1,10 +1,27 @@
 /*
- * Command definition (src/commands/commands.json), without those marked "disabled": true.
+ * Command definition (src/commands/commands.js), without those marked "disabled": true.
  */
 
 const { printInfo, printSuccess } = require('./log');
 
-const botConfig = require('./commands/commands.json');
+const { roleValid } = require('./roles');
+
+const botConfig = require('./commands/commands');
+
+// Typo in commands.js: better to crash at boot than silently ignore a command
+function validate(commands) {
+    const seen = new Set();
+    for (const c of commands) {
+        if (!/^\/[a-z]+$/.test(c.cmd)) throw new Error(`commands.js: cmd inválido: ${c.cmd}`);
+        if (!roleValid(c.role)) throw new Error(`commands.js: ${c.cmd} sem role válido (${c.role})`);
+        for (const nameAlt of [c.cmd, ...(c.aliases ?? [])]) {
+            if (seen.has(nameAlt)) throw new Error(`commands.js: nome repetido: ${nameAlt}`);
+            seen.add(nameAlt);
+        }
+    }
+}
+
+validate(botConfig.commands);
 
 // "disabled": true takes the command out of the bot: it does not answer, it does not show in /help
 function withoutDisabled(commands) {
@@ -24,16 +41,7 @@ if (disabledCommands.length) {
     printInfo(`Disabled ${disabledCommands.length} callers (${disabledCommands.join(',')})`);
 }
 
-/*
- * Each command's "role": user (common), admin (only the owner and bot.admins, but delegable by the
- * /bot +cmd) or owner (never delegable). A shortcut with several commands gets the most restricted one.
- */
-const ROLES = ['user', 'admin', 'owner'];
-const roleMoreRestricted = (roles) => roles.reduce((a, b) => (ROLES.indexOf(b) > ROLES.indexOf(a) ? b : a), 'user');
-
 module.exports = {
-    ROLES,
-    roleMoreRestricted,
     botConfig,
     withoutDisabled
 };

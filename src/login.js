@@ -88,7 +88,7 @@ async function tryLogin({ numero: numberAlt, nome: nameAlt, senha: password, isG
     if (admins.includes(numberAlt)) return '👑 Você já é admin.';
     await setSetting('bot.admins', [...admins, numberAlt]);
     await notifyOwner('🔑 Novo admin por senha', `${nameAlt} (+${numberAlt}) virou admin com o /bot -login.\n` +
-        `Para revogar: /bot -o +${numberAlt}`);
+        `Para revogar: /bot -a +${numberAlt}`);
     return '👑 *Pronto:* você agora é admin do bot.';
 }
 

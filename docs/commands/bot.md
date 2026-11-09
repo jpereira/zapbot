@@ -1,4 +1,4 @@
-# `/bot` · owner
+# `/bot` · admin
 
 Liga e desliga o bot, diz quem pode usá-lo e mostra o status dele (o relatório das últimas 24 h, os
 usuários e o envio diário), as versões do que ele usa
@@ -9,8 +9,8 @@ usuários e o envio diário), as versões do que ele usa
   seus, exceto o próprio `/bot`. Os admins e os usuários continuam nas listas.
 - **Quem usa os comandos**:
     - **Você** (o dono) usa tudo.
-    - Os **admins** ([`+o`](#admins-extras)) também usam tudo.
-    - Os **usuários** ([`+v`](#usuários)) usam os comandos de role `user` (veja a coluna Role da
+    - Os **admins** ([`+a`](#admins-extras)) também usam tudo.
+    - Os **usuários** ([`+u`](#usuários)) usam os comandos de role `user` (veja a coluna Role da
       [tabela de comandos](index.md#resumo): `/get`, `/tempo`...): em qualquer chat, só num grupo (o
       grupo inteiro) ou só uma pessoa num grupo. Um comando `admin` (`/gpt`, `/show`...) só com a
       [delegação](index.md#delegando-um-comando-admin) do `+cmd`.
@@ -21,50 +21,49 @@ usuários e o envio diário), as versões do que ele usa
 |---|---|
 | *(nenhuma)* | O status: o mesmo do `-status`. Veja [Status do bot](#status-do-bot) |
 | `-on` | Liga o bot |
-| `-off` | Desliga o bot (os admins e os usuários ficam) |
-| `+o`, `-o` | `[pessoa...]`: põe (`+o`) e tira (`-o`) admins. Sem ninguém, a pessoa do privado onde você digitou. Veja [Admins extras](#admins-extras) |
-| `+v`, `-v` | `[pessoa\|grupo...]`: põe (`+v`) e tira (`-v`) usuários. Digitado num grupo, o `+v` de uma pessoa vale só nesse grupo. Sem ninguém, o chat atual: o grupo ou a pessoa do privado. Veja [Usuários](#usuários) |
-| `+cmd`, `-cmd` | `<comandos>`: os comandos de um usuário. Com o `+v`, define (`+cmd`: só esses; `-cmd`: todos, menos esses); sozinho, `+cmd` libera e `-cmd` tira. Veja [Comandos de cada usuário](#comandos-de-cada-usuário) |
-| `-users`, `-u` | Os usuários deste chat. Veja [Lista de usuários](#lista-de-usuários) |
-| `-all-users`, `-au` | Todos os usuários, em qualquer chat (num grupo, o telefone de quem é de fora sai escondido). Veja [Lista de usuários](#lista-de-usuários) |
+| `-off` | Desliga todos os comandos do bot, exceto o `/bot` (os admins e os usuários ficam nas listas) |
+| `+a`, `-a` | `[pessoa...]`: adiciona (`+a`) e tira (`-a`) admins. Sem ninguém, a pessoa do privado onde você digitou. Veja [Admins extras](#admins-extras) |
+| `+u`, `-u` | `[pessoa\|grupo...]`: adiciona (`+u`) e tira (`-u`) usuários. Digitado num grupo, o `+u` de uma pessoa vale só nesse grupo. Sem ninguém, o chat atual: o grupo ou a pessoa do privado. Veja [Usuários](#usuários) |
+| `+cmd`, `-cmd` | `<comandos>`: os comandos de um usuário. Com o `+u`, define (`+cmd`: só esses; `-cmd`: todos, menos esses); sozinho, `+cmd` libera e `-cmd` tira. Veja [Comandos de cada usuário](#comandos-de-cada-usuário) |
+| `-list-users`, `-lu` | `[all]`: os usuários deste chat; com `all`, todos, em qualquer chat (num grupo, o telefone de quem é de fora sai escondido). Aceita `-mask`. Veja [Lista de usuários](#lista-de-usuários) |
 | `-reset`, `-r` | `[force]`: volta ao padrão (bot ligado, sem admins extras e sem usuários). Pergunta antes; com `force`, volta direto. Aceita `-mask`; as outras opções são recusadas. Veja [Voltar ao padrão](#voltar-ao-padrão) |
 | `-status`, `-s` | O status agora e o envio diário dele (`[<hora>\|off]`). Aceita `-to` e `-mask`; as outras opções são recusadas. Veja [Status do bot](#status-do-bot) |
 | `-to` | `<destino>`: junto com `-status`, para onde vai o relatório (pessoa, grupo ou e-mail; repita para vários). Veja [Status do bot](#status-do-bot) |
 | `-info`, `-i` | Versões do bot e do que ele usa, e o sistema. Aceita `-mask`; as outras opções são recusadas. Veja [Informações do sistema](#informações-do-sistema) |
 | `-test`, `-t` | Testa tudo (cache, disco, banco, WhatsApp, internet, velocidade, SMTP, IMAP e programas), com ✅ ou ❌ em cada item. As outras opções são recusadas. Veja [Teste do bot](#teste-do-bot) |
 | `-passwd` | `<senha\|off>`: só o dono. Define a senha do `-login` (mín. 8 caracteres; só o hash scrypt fica no banco, no setting `bot.login`). Com `off`, desliga o login |
-| `-login` | `<senha>`: para quem é de fora, só no privado. Com a senha certa, a pessoa entra no `bot.admins` e o dono é avisado por WhatsApp e e-mail. Erra 5 vezes, fica 15 min bloqueada. A senha é apagada do banco de mensagens. Para revogar: `/bot -o +número` |
-| `-flush-email` | `[true]`: conecta no IMAP do e-mail (precisa de `QRCODE_EMAIL_IMAP_HOST`) e mostra quantas mensagens há em Sent e Trash; com `true`, apaga todas. Só o dono apaga. As outras opções são recusadas. Veja [Limpar o e-mail](#limpar-o-e-mail) |
+| `-login` | `<senha>`: para quem é de fora, só no privado. Com a senha certa, a pessoa entra no `bot.admins` e o dono é avisado por WhatsApp e e-mail. Erra 5 vezes, fica 15 min bloqueada. A senha é apagada do banco de mensagens. Para revogar: `/bot -a +número` |
+| `-flush-email`, `-fe` | `[true]`: conecta no IMAP do e-mail (precisa de `QRCODE_EMAIL_IMAP_HOST`) e mostra quantas mensagens há em Sent e Trash; com `true`, apaga todas. Só o dono apaga. As outras opções são recusadas. Veja [Limpar o e-mail](#limpar-o-e-mail) |
 | `-mask`, `-m` | Ofusca telefones na saída desta execução. Ex.: `+55219****44` |
 
-Use `/bot -users -mask` para exibir nomes com telefones ofuscados. A máscara mantém os cinco
+Use `/bot -list-users -mask` para exibir nomes com telefones ofuscados. A máscara mantém os cinco
 primeiros e os dois últimos dígitos, vale também para o relatório enviado com `-to` e não fica
 ativada para os envios diários. As permissões e os destinos usam os números completos.
 
-O `-on`/ `-off` combina com o `-users` e o `-all-users` (`/bot -on -users` liga e mostra os
-usuários); `-on` com `-off` no mesmo comando é recusado. Os `+o`/ `-o`/ `+v`/ `-v` vão um de cada
-vez; junto deles, o `+cmd`/ `-cmd` (só com usuários) e o `-all-users` (a resposta com todos).
+O `-on`/ `-off` combina com o `-list-users [all]` (`/bot -on -list-users` liga e mostra os
+usuários); `-on` com `-off` no mesmo comando é recusado. Os `+a`/ `-a`/ `+u`/ `-u` vão um de cada
+vez; junto deles, o `+cmd`/ `-cmd` (só com usuários) e o `-list-users all` (a resposta com todos).
 
 ## Lista de usuários
 
-A lista sai no status (o `/bot` sem opção), no `-users`, no `-all-users` e na resposta do `+o`/
-`-o`/ `+v`/ `-v`. Ela junta os admins e os usuários, como o resto do bot mostra um destino:
+A lista sai no status (o `/bot` sem opção), no `-list-users [all]` e na resposta do `+a`/
+`-a`/ `+u`/ `-u`. Ela junta os admins e os usuários, como o resto do bot mostra um destino:
 `👤 Nome · +número` (ou só `👤 +número`, sem o contato na agenda) e `👥 Grupo`; quem só usa num grupo,
 com `só em 👥 Grupo` (ou `só neste grupo`). Quem é admin e usuário aparece uma vez, com as duas
 marcas; você, se estiver nela, com `🤖 dono`. Embaixo, as **Permissões** dizem o que cada marca quer
 dizer.
 
 ```text
-/bot -users               (no seu privado)
+/bot -list-users               (no seu privado)
 Usuários (4)
-• 👑 +o · 👤 Jorge Pereira · +5521999999999
-• 👑 +o 🗣️ +v · 👤 Ana Souza · +5511988887777
-• 🗣️ +v · 👤 Maria Lucia · +5521999982222
-• 🗣️ +v · 👤 Maria Lucia · +5521999986666 · só em 👥 Amigos Faculdade
+• 👑 +a · 👤 Jorge Pereira · +5521999999999
+• 👑 +a 🗣️ +u · 👤 Ana Souza · +5511988887777
+• 🗣️ +u · 👤 Maria Lucia · +5521999982222
+• 🗣️ +u · 👤 Maria Lucia · +5521999986666 · só em 👥 Amigos Faculdade
 
 Permissões
-👑 +o: admin, usa tudo
-🗣️ +v: usuário, usa os comandos comuns
+👑 +a: admin, usa tudo
+🗣️ +u: usuário, usa os comandos comuns
 ```
 
 ### Quem aparece na lista
@@ -76,27 +75,27 @@ A lista é a do chat onde você digitou:
 | No seu privado | Todos |
 | Num grupo | Quem participa dele, o próprio grupo e quem só usa nele |
 | No privado de alguém | Só essa pessoa |
-| Em qualquer lugar, com `-all-users` (`-au`) | Todos |
+| Em qualquer lugar, com `-list-users all` (`-lu all`) | Todos |
 
 Quando alguém fica de fora, a lista diz quantos e como ver todos, com o cuidado de não expor no
 grupo quem não é de lá:
 
 ```text
-/bot -users               (no grupo Amigos Faculdade)
+/bot -list-users               (no grupo Amigos Faculdade)
 Usuários (2) neste grupo
-• 🗣️ +v · 👤 Jorge Chip L200 · +5521999983333
-• 🗣️ +v · 👤 Sofia Izabel · +5521•••••7777 · só neste grupo
+• 🗣️ +u · 👤 Jorge Chip L200 · +5521999983333
+• 🗣️ +u · 👤 Sofia Izabel · +5521•••••7777 · só neste grupo
 
 Permissões
-👑 +o: admin, usa tudo
-🗣️ +v: usuário, usa os comandos comuns
+👑 +a: admin, usa tudo
+🗣️ +u: usuário, usa os comandos comuns
 
 💡 Só quem é deste grupo; mais 1 fora daqui.
-⚠️ Para listar todos: /bot -all-users ou /bot -au. Cuidado: mostra também quem não é deste grupo.
+⚠️ Para listar todos: /bot -list-users all ou /bot -lu all. Cuidado: mostra também quem não é deste grupo.
 ```
 
 Num grupo, o telefone de quem não participa dele sai escondido (o DDI, o DDD e os 4 últimos), também
-com o `-all-users`. No seu privado (ou no da pessoa), sai inteiro.
+com o `-list-users all`. No seu privado (ou no da pessoa), sai inteiro.
 
 Com todos liberados (`/set bot.users true`), a lista mostra só os admins, e o `/bot` avisa que
 qualquer pessoa está usando os comandos:
@@ -104,19 +103,19 @@ qualquer pessoa está usando os comandos:
 ```text
 ▶️ Bot: ativo
 🔓 Comandos: todos usam os comuns
-⚠️ Atenção: qualquer pessoa pode executar os comandos comuns do bot, em qualquer chat. Para restringir: /set bot.users false (e depois /bot +v para liberar alguns).
+⚠️ Atenção: qualquer pessoa pode executar os comandos comuns do bot, em qualquer chat. Para restringir: /set bot.users false (e depois /bot +u para liberar alguns).
 ```
 
 Quando usar cada opção:
 
 | Situação | Comando |
 |---|---|
-| Alguém está abusando dos comandos num grupo | `/bot -v`, digitado no grupo (ou `/bot -v /Grupo/`) |
-| Liberar o bot para a família, só no grupo dela | `/bot +v`, digitado no grupo (ou `/bot +v /Grupo Familia/` de qualquer chat) |
-| Liberar para uma pessoa, em qualquer chat | `/bot +v /Maria Lucia/` |
-| Liberar só alguns comandos para alguém | `/bot +v +cmd /cotacao,/crypto /Sofia Izabel/` |
-| Liberar só o `/gpt` para o grupo Familia | `/bot +v +cmd /gpt`, digitado no grupo (ou `/bot +v +cmd /gpt /Familia/`) |
-| Dar a alguém os comandos admin e owner | `/bot +o /Jorge Pereira/` |
+| Alguém está abusando dos comandos num grupo | `/bot -u`, digitado no grupo (ou `/bot -u /Grupo/`) |
+| Liberar o bot para a família, só no grupo dela | `/bot +u`, digitado no grupo (ou `/bot +u /Grupo Familia/` de qualquer chat) |
+| Liberar para uma pessoa, em qualquer chat | `/bot +u /Maria Lucia/` |
+| Liberar só alguns comandos para alguém | `/bot +u +cmd /cotacao,/crypto /Sofia Izabel/` |
+| Liberar só o `/gpt` para o grupo Familia | `/bot +u +cmd /gpt`, digitado no grupo (ou `/bot +u +cmd /gpt /Familia/`) |
+| Dar a alguém os comandos admin e owner | `/bot +a /Jorge Pereira/` |
 | Parar o bot por completo por um tempo, sem derrubar o container | `/bot -off` |
 | Desfazer tudo: só você de novo, sem admins nem usuários | `/bot -reset` |
 
@@ -139,25 +138,25 @@ Outras pessoas podem usar os comandos **admin** e **owner** (os com esse role na
 admins:
 
 ```text
-/bot +o /Jorge Pereira/               → acrescenta, pelo nome do contato
-/bot +o +5521999999999                → ou pelo número
-/bot +o @Fulano Da Silva              → ou, num grupo, mencionando a pessoa
-/bot +o                               → no privado de alguém: essa pessoa
-/bot -o /Jorge Pereira/               → tira
-/bot -users                           → a lista: 👑 +o · 👤 Jorge Pereira · +5521999999999
+/bot +a /Jorge Pereira/               → acrescenta, pelo nome do contato
+/bot +a +5521999999999                → ou pelo número
+/bot +a @Fulano Da Silva              → ou, num grupo, mencionando a pessoa
+/bot +a                               → no privado de alguém: essa pessoa
+/bot -a /Jorge Pereira/               → tira
+/bot -list-users                           → a lista: 👑 +a · 👤 Jorge Pereira · +5521999999999
 ```
 
 O nome é buscado como no `-to` ([Destinos](index.md#destinos-contato-grupo-número-ou-e-mail)):
 contato da sua agenda, e se mais de um servir, a lista para responder com o nº. Nomes com espaço vão
 entre `/.../` ou aspas; vários de uma vez, separados por espaço
-(`/bot +o /Jorge Pereira/ "Ana Souza" +5511988887777`). Fica guardado o **telefone** (é ele que o
+(`/bot +a /Jorge Pereira/ "Ana Souza" +5511988887777`). Fica guardado o **telefone** (é ele que o
 bot compara com quem manda o comando), e a lista mostra o nome ao lado. E-mail é recusado, e um
 contato de quem o WhatsApp só informa o id interno (LID), sem o telefone, também: use o número.
 
 - **Grupo não pode ser admin**: todo mundo ali mandaria no bot (`/set`, `/backup -send` com o banco
-  inteiro...). O `/bot +o /Grupo/` (ou o `/bot +o` digitado num grupo) é recusado e sugere o
-  `/bot +v`, que libera só os comandos comuns.
-- Só **você** (o dono, a conta pareada) põe e tira admins: um admin extra não consegue se dar (nem
+  inteiro...). O `/bot +a /Grupo/` (ou o `/bot +a` digitado num grupo) é recusado e sugere o
+  `/bot +u`, que libera só os comandos comuns.
+- Só **você** (o dono, a conta pareada) adiciona e tira admins: um admin extra não consegue se dar (nem
   dar a outros) esse acesso.
 - O número é comparado com o telefone de quem mandou a mensagem. Se o WhatsApp só informar o LID (o
   id interno) da pessoa e o bot não conseguir o telefone, ela não é reconhecida como admin.
@@ -176,20 +175,20 @@ também, a menos que você os [delegue](index.md#delegando-um-comando-admin) com
 
 | Quem | Onde usa |
 |---|---|
-| Uma pessoa, posta no seu privado ou no dela (`/bot +v /Maria Lucia/`) | Em qualquer chat |
-| Uma pessoa, posta num grupo (`/bot +v /Maria Lucia/`, digitado no grupo) | Só nesse grupo. No privado, o bot responde onde ela pode |
-| Um grupo (`/bot +v`, digitado no grupo, ou `/bot +v /Amigos Faculdade/`) | Qualquer um, dentro do grupo (no privado de cada um, não) |
+| Uma pessoa, posta no seu privado ou no dela (`/bot +u /Maria Lucia/`) | Em qualquer chat |
+| Uma pessoa, posta num grupo (`/bot +u /Maria Lucia/`, digitado no grupo) | Só nesse grupo. No privado, o bot responde onde ela pode |
+| Um grupo (`/bot +u`, digitado no grupo, ou `/bot +u /Amigos Faculdade/`) | Qualquer um, dentro do grupo (no privado de cada um, não) |
 | Ninguém, o padrão (`/set bot.users false`) | Só você e os admins usam comandos |
 | Todos (`/set bot.users true`) | Qualquer pessoa, em qualquer chat (o `/bot` avisa) |
 
 ```text
-/bot +v /Maria Lucia/                      → no seu privado: a Maria, em qualquer chat
-/bot +v /Maria Lucia/                      → no grupo Amigos Faculdade: a Maria, só nele
-/bot +v                                    → digitado num grupo: o grupo; no privado de alguém: a pessoa
-/bot +v /Amigos Faculdade/ @Fulano +5521999999999  → vários de uma vez
-/bot -v /Maria Lucia/                      → no grupo: tira a permissão de lá
-/bot -v /Maria Lucia/                      → no seu privado: tira todas as da Maria
-/bot -v                                    → tira o chat atual
+/bot +u /Maria Lucia/                      → no seu privado: a Maria, em qualquer chat
+/bot +u /Maria Lucia/                      → no grupo Amigos Faculdade: a Maria, só nele
+/bot +u                                    → digitado num grupo: o grupo; no privado de alguém: a pessoa
+/bot +u /Amigos Faculdade/ @Fulano +5521999999999  → vários de uma vez
+/bot -u /Maria Lucia/                      → no grupo: tira a permissão de lá
+/bot -u /Maria Lucia/                      → no seu privado: tira todas as da Maria
+/bot -u                                    → tira o chat atual
 ```
 
 Quem só tem permissão em grupos e manda um comando no privado recebe:
@@ -198,44 +197,44 @@ Quem só tem permissão em grupos e manda um comando no privado recebe:
 🚫 Sem permissão para comandos no privado. Permitido apenas em: 👥 Amigos Faculdade.
 ```
 
-A resposta do `+o`/ `-o`/ `+v`/ `-v` é a [lista de usuários](#lista-de-usuários) do chat, com ✅ em
+A resposta do `+a`/ `-a`/ `+u`/ `-u` é a [lista de usuários](#lista-de-usuários) do chat, com ✅ em
 quem acabou de entrar; quem saiu vem numa linha 🗑️ em cima. Sem ninguém na lista, vem a linha de
 quem usa os comandos (`🔒 Comandos: só o dono`):
 
 ```text
-/bot +v /Sofia Izabel/    (no grupo Amigos Faculdade)
+/bot +u /Sofia Izabel/    (no grupo Amigos Faculdade)
 Usuários (2) neste grupo
-• 🗣️ +v · 👤 Jorge Chip L200 · +5521999983333
-• 🗣️ +v · 👤 Sofia Izabel · +5521•••••7777 · só neste grupo ✅
+• 🗣️ +u · 👤 Jorge Chip L200 · +5521999983333
+• 🗣️ +u · 👤 Sofia Izabel · +5521•••••7777 · só neste grupo ✅
 
 Permissões
-👑 +o: admin, usa tudo
-🗣️ +v: usuário, usa os comandos comuns
+👑 +a: admin, usa tudo
+🗣️ +u: usuário, usa os comandos comuns
 
 💡 Só quem é deste grupo; mais 1 fora daqui.
-Listar usuários: /bot -users ou /bot -u
+Listar usuários: /bot -list-users
 ```
 
 ```text
-/bot -v /Sofia Izabel/    (no grupo Amigos Faculdade)
+/bot -u /Sofia Izabel/    (no grupo Amigos Faculdade)
 🗑️ 👤 Sofia Izabel · +5521•••••7777 · só neste grupo
 
 Usuários (1) neste grupo
-• 🗣️ +v · 👤 Jorge Chip L200 · +5521999983333
+• 🗣️ +u · 👤 Jorge Chip L200 · +5521999983333
 ...
 ```
 
 - As pessoas são buscadas como os admins (nome, menção ou número), e os grupos, pelo nome, como no
   `-to`. Fica guardado o telefone da pessoa e o id do grupo; a lista mostra os nomes.
-- No grupo, o `-v` tira a permissão daquele grupo (ou, se a pessoa só tiver a de qualquer chat,
+- No grupo, o `-u` tira a permissão daquele grupo (ou, se a pessoa só tiver a de qualquer chat,
   essa); no seu privado, tira todas as da pessoa.
-- Quem já usa em qualquer chat não ganha nada com o `+v` num grupo: o bot responde que ela já é
+- Quem já usa em qualquer chat não ganha nada com o `+u` num grupo: o bot responde que ela já é
   usuária.
-- Com todos liberados (`/set bot.users true`), o `/bot +v /Fulano/` é recusado: para liberar só
+- Com todos liberados (`/set bot.users true`), o `/bot +u /Fulano/` é recusado: para liberar só
   alguns, `/set bot.users false` antes.
-- O `/bot +v` sem ninguém no **seu** privado é recusado (você já usa tudo); num privado de quem o
+- O `/bot +u` sem ninguém no **seu** privado é recusado (você já usa tudo); num privado de quem o
   WhatsApp só informa o id interno (LID), sem o telefone, também: use o número.
-- Só **você** põe e tira usuários, como os admins.
+- Só **você** adiciona e tira usuários, como os admins.
 
 ### Comandos de cada usuário
 
@@ -244,48 +243,48 @@ comando de role `admin` (o `/gpt`, o `/show`...). O `/help` e o `/whois` sempre 
 mostra só os dele).
 
 ```text
-/bot +cmd /cotacao,/crypto,/meme +v /Sofia Izabel/  → a Sofia entra só com esses
-/bot +v +cmd /cotacao                               → digitado num grupo: o grupo inteiro, só /cotacao
-/bot +v -cmd /meme /Fulano/                         → o Fulano usa todos, menos /meme
+/bot +cmd /cotacao,/crypto,/meme +u /Sofia Izabel/  → a Sofia entra só com esses
+/bot +u +cmd /cotacao                               → digitado num grupo: o grupo inteiro, só /cotacao
+/bot +u -cmd /meme /Fulano/                         → o Fulano usa todos, menos /meme
 /bot +cmd /tempo /Sofia Izabel/                     → acrescenta /tempo aos dela
 /bot -cmd /cotacao /Fulano Pereira/                 → tira /cotacao dos dele
 /bot -cmd /meme /Grupo Familia/ /Fulano da Silva/   → vários de uma vez
 /bot -cmd /meme                                     → do chat atual (o grupo, ou a pessoa do privado)
 /bot +cmd all /Sofia Izabel/                        → a Sofia volta a usar todos os comuns
-/bot +v +cmd /gpt                                   → digitado num grupo: todos ali usam só o /gpt
+/bot +u +cmd /gpt                                   → digitado num grupo: todos ali usam só o /gpt
 ```
 
-- O `+cmd` em quem ainda não é usuário já põe a pessoa (ou o grupo), só com esses comandos. Em quem
+- O `+cmd` em quem ainda não é usuário já adiciona a pessoa (ou o grupo), só com esses comandos. Em quem
   usa todos, não muda nada; em quem tem "Todos, menos", libera esses de novo.
 - O `-cmd` em quem usa todos deixa "Todos, menos" esses. Tirar o último comando de uma lista é
-  recusado: para tirar a pessoa, `/bot -v`; para liberar todos, `/bot +cmd all`.
+  recusado: para tirar a pessoa, `/bot -u`; para liberar todos, `/bot +cmd all`.
 - Os comandos vão pelo nome ou pelo alias (`/creptomoeda` vira `/crypto`), separados por vírgula.
   Um comando `owner` (`/set`, `/bot`...) não entra: o bot recusa. Um `admin` (`/gpt`, `/show`...)
   entra só numa lista "Apenas": o `-cmd` ("Todos, menos") e o `bot.users = true` não o liberam, e
   quem já usa todos os comuns não o ganha com o `+cmd` (o bot recusa e pede a lista "Apenas").
-  Para acrescentar um `admin` a quem usa os comuns, liste os comandos dele: `+v +cmd /cotacao,/gpt`.
+  Para acrescentar um `admin` a quem usa os comuns, liste os comandos dele: `+u +cmd /cotacao,/gpt`.
 - O nome de um atalho do [`/alias`](alias.md) não entra no `+cmd`: o atalho herda a permissão do
   comando de destino (quem pode o `/gpt` usa os atalhos para ele).
-- Num grupo, a pessoa é a de lá (como no `+v`); se ela for usuária em qualquer chat, é essa
+- Num grupo, a pessoa é a de lá (como no `+u`); se ela for usuária em qualquer chat, é essa
   permissão que muda.
 - Na lista, embaixo da pessoa, `→ Apenas: /cotacao, /crypto, /meme` ou `→ Todos, menos: /meme`:
 
 ```text
 Usuários (2)
-• 🗣️ +v · 👤 Jorge Chip L200 · +5521999983333
-• 🗣️ +v · 👤 Sofia Izabel · +5521999987777 ✅
+• 🗣️ +u · 👤 Jorge Chip L200 · +5521999983333
+• 🗣️ +u · 👤 Sofia Izabel · +5521999987777 ✅
  → Apenas: /cotacao, /crypto, /meme
 
 Permissões
-👑 +o: admin, usa tudo
-🗣️ +v: usuário, usa os comandos comuns
+👑 +a: admin, usa tudo
+🗣️ +u: usuário, usa os comandos comuns
 ```
 
 - Fora da lista, o bot responde `🚫 Limitado aos comandos: /cotacao, /crypto, /meme.` (ou
   `🚫 O /meme não está liberado para você.`).
 - Se mais de uma permissão vale ali (a pessoa e o grupo, por exemplo), vale a mais ampla: uma sem
   limite libera todos os comuns.
-- O `-v` e o `-reset` tiram os limites junto.
+- O `-u` e o `-reset` tiram os limites junto.
 
 ### Proteção contra flood
 
@@ -371,12 +370,12 @@ qui 01/10 06:00
 💾 Último backup: qui 01/10 03:00 (automático)
 
 Usuários (2)
-• 🗣️ +v · 👤 Maria Lucia · +5521999982222
-• 🗣️ +v · 👥 Grupo Familia
+• 🗣️ +u · 👤 Maria Lucia · +5521999982222
+• 🗣️ +u · 👥 Grupo Familia
 
 Permissões
-👑 +o: admin, usa tudo
-🗣️ +v: usuário, usa os comandos comuns
+👑 +a: admin, usa tudo
+🗣️ +u: usuário, usa os comandos comuns
 
 ⏰ Status diário: todo dia às 06:00 → 📧 voce@exemplo.com, 👥 Grupo Familia
 📅 Próximo: sex 02/10 06:00
