@@ -15,6 +15,9 @@ const { getSetting, setSetting } = require('./settings');
 const CHAVE = 'bot.users.cmds';
 const SEMPRE_LIBERADOS = ['/help', '/whois'];
 
+// Delegado (role admin) opera só no chat atual: ver outros chats é do dono e dos admins
+const SO_DONO_OUTROS_CHATS = '⛔ Apenas o dono do bot (ou um admin) pode ver outros chats.';
+
 const roleDe = (cmd) => botConfig.commands.find(c => c.cmd === cmd)?.role ?? 'user';
 
 // "5521...=/a,/b" → { apenas: true, comandos: ['/a', '/b'] }; "...=!/a" → { apenas: false }
@@ -97,6 +100,7 @@ function avisoDeLimite(regrasQueLimitam, cmd) {
 
 module.exports = {
     SEMPRE_LIBERADOS,
+    SO_DONO_OUTROS_CHATS,
     roleDe,
     avisoDeLimite,
     descreverRegra,

@@ -8,6 +8,7 @@ const { DAY_MS } = require('../constantes');
 const { idsDoChatAtual } = require('../contatos');
 const { dbAll, dbGet, dbPronto, dbRun } = require('../db');
 const { aguardarEscolha, autorDe } = require('../escolhas');
+const { SO_DONO_OUTROS_CHATS } = require('../permissoes');
 const { getSetting } = require('../settings');
 const { diaEHora, meuIdStats } = require('../stats');
 const { fmtNum, plural, semAcentos } = require('../util/formatar');
@@ -227,12 +228,24 @@ async function listarChats(msg) {
         '\n\n💡 _/stats /nome/ mostra um_\n💡 _/stats -f /nome/ apaga as dele_');
 }
 
-async function cmdStats({ msg, args, chatId }) {
+async function cmdStats({ msg, args, chatId, admin }) {
     await dbPronto;
 
     const r = lerStats(args);
     if (r.erro) {
         await msg.reply(`${r.erro}\n\n\`\`\`${getCommandSyntax('/stats')}\`\`\``);
+        return;
+    }
+
+    // Destrutivo: só o dono do bot (e os admins), mesmo que o /stats seja liberado
+    if ((r.flush || r.flushAll) && !admin) {
+        await msg.reply('⛔ Apenas o dono do bot (ou um admin) pode apagar as estatísticas.');
+        return;
+    }
+
+    // Quem recebeu o /stats vê só o chat atual: sem -l, sem /chat/ e sem o -me (todos os chats)
+    if (!admin && (r.list || r.me || r.alvo)) {
+        await msg.reply(SO_DONO_OUTROS_CHATS);
         return;
     }
 

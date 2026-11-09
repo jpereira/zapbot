@@ -328,6 +328,45 @@ describe('permissões', () => {
         assert.match((await bot.responder('/bot +cmd /set +v /Fulano/', { chat: DONO.jid }))[0], /não dá para liberar/);
     });
 
+    test('role admin delegado não ajusta nada: /gpt -m e /stats -flush continuam do dono e dos admins', async () => {
+        await bot.setSetting('bot.users', [OUTRO.user]);
+        await bot.setSetting('bot.users.cmds', [`${OUTRO.user}=/gpt,/stats`]);
+        const modelo = bot.getSetting('openai.api.model');
+
+        assert.deepEqual(await bot.responder('/gpt -m gpt-6-sol', { de: OUTRO.jid }),
+            ['⛔ Apenas o dono do bot (ou um admin) pode trocar o modelo.']);
+        assert.equal(bot.getSetting('openai.api.model'), modelo);
+        assert.match((await bot.responder('/gpt -m', { de: OUTRO.jid }))[0], /Modelo do \/gpt:/);
+        assert.deepEqual(await bot.responder('/stats -flush-all', { de: OUTRO.jid }),
+            ['⛔ Apenas o dono do bot (ou um admin) pode apagar as estatísticas.']);
+        assert.deepEqual(await bot.responder('/stats -f /Grupo/', { de: OUTRO.jid }),
+            ['⛔ Apenas o dono do bot (ou um admin) pode apagar as estatísticas.']);
+
+        // o dono e os admins extras trocam
+        assert.deepEqual(await bot.responder('/gpt -m gpt-6-sol'), ['✅ Modelo do /gpt: *gpt-6-sol*']);
+        await bot.setSetting('bot.admins', [OUTRO.user]);
+        assert.deepEqual(await bot.responder('/gpt -m gpt-6-astra', { de: OUTRO.jid }), ['✅ Modelo do /gpt: *gpt-6-astra*']);
+    });
+
+    test('role admin delegado vê só o chat atual: /show, /stats, /tldr e /profile recusam outros chats', async () => {
+        await bot.setSetting('bot.users', [OUTRO.user]);
+        await bot.setSetting('bot.users.cmds', [`${OUTRO.user}=/show,/stats,/tldr,/profile`]);
+        const negado = ['⛔ Apenas o dono do bot (ou um admin) pode ver outros chats.'];
+
+        for (const cmd of ['/show -l', '/show Familia', '/stats -l', '/stats /Trabalho/', '/stats -me',
+            '/tldr -c Trabalho', '/tldr -pv', '/profile +5521999999999']) {
+            assert.deepEqual(await bot.responder(cmd, { de: OUTRO.jid }), negado, cmd);
+        }
+        for (const cmd of ['/stats', '/show', '/stats -5']) {
+            const r = await bot.responder(cmd, { de: OUTRO.jid });
+            assert.ok(!r.includes(negado[0]), cmd);
+        }
+
+        // o dono não é barrado
+        assert.ok(!(await bot.responder('/stats -l')).includes(negado[0]));
+        assert.ok(!(await bot.responder('/show -l')).includes(negado[0]));
+    });
+
     test('role admin/owner: ignorado para os outros, sem resposta no chat', async () => {
         assert.deepEqual(await bot.responder('/debug', { de: OUTRO.jid }), []);
         assert.deepEqual(await bot.responder('/debug'), ['🪲 Debug Desativado.']);

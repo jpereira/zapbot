@@ -15,6 +15,7 @@ const { enviarMensagemApagada, isStatus, resolverAutorApagada } = require('../ev
 const { enviarMensagemEditada } = require('../eventos/editadas');
 const { enviarReacaoDesfeita } = require('../eventos/reacoes');
 const { printError, printInfo } = require('../log');
+const { SO_DONO_OUTROS_CHATS } = require('../permissoes');
 const { getSetting } = require('../settings');
 const { humanSize, isCaminhoDeMidia } = require('../util/arquivos');
 const { esperar, formatarData, paraMs, plural, semAcentos } = require('../util/formatar');
@@ -542,7 +543,12 @@ async function cmdShow({ msg, opts, chatId, admin }) {
 
     const privadoSemParametros = /@(c\.us|lid)$/.test(chatId) &&
         !opts.given.size && !opts.argv.length;
-    if (opts.opt.list || privadoSemParametros) {
+    // Quem recebeu o /show (não é dono nem admin) vê só o chat atual: sem -l, sem chat, sem a lista do privado
+    if (!admin && (opts.opt.list || palavras.length)) {
+        await msg.reply(SO_DONO_OUTROS_CHATS);
+        return;
+    }
+    if (opts.opt.list || (privadoSemParametros && admin)) {
         await listarCache({ msg, chatId, filtro: palavras.join(' ') || null });
         return;
     }

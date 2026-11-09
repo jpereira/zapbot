@@ -34,8 +34,13 @@ async function trocarModelo(msg, modelo) {
         (doEnv ? `\n⚠️ _O OPENAI_MODEL do .env (${doEnv}) tem prioridade enquanto estiver definido._` : ''));
 }
 
-async function cmdGpt({ msg, args, opts, quotedMsg }) {
+async function cmdGpt({ msg, args, opts, quotedMsg, admin }) {
     if (opts?.given.has('model')) {
+        // Troca um setting global: só o dono do bot (e os admins), mesmo que o /gpt seja liberado
+        if (opts.opt.model && !admin) {
+            await msg.reply('⛔ Apenas o dono do bot (ou um admin) pode trocar o modelo.');
+            return;
+        }
         await trocarModelo(msg, opts.opt.model);
         return;
     }
