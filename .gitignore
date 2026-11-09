@@ -152,3 +152,6 @@ cookies-*.txt
 
 # Gravações da demonstração (os GIFs ficam no git)
 *.mov
+
+# Arquivos de swap do vim
+*.swp
