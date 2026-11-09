@@ -8,7 +8,7 @@
  */
 const { dbAll, dbGet, dbReady } = require('./db');
 const { commandsByPrefix, findCommand } = require('./commands/base');
-const { botConfig } = require('./botConfig');
+const { roleMoreRestricted, botConfig } = require('./botConfig');
 const { findCommandAlt, withTargets, commandsInText, assembleText } = require('./textCommands');
 
 const textIsAlias = (salvo) => !salvo.startsWith('/');
@@ -61,7 +61,7 @@ async function resolverSalvo(alias, nameAlt, args) {
         const foundAlt4 = await Promise.all(commandsInText(alias.command).map(c => findCommandAlt(c.linha)));
         const targets = foundAlt4.map(a => a?.command).filter(Boolean);
         return {
-            command: { cmd: nameAlt, onlyAdmin: targets.some(c => c.onlyAdmin), alvos: targets.map(c => c.cmd) },
+            command: { cmd: nameAlt, role: roleMoreRestricted(targets.map(c => c.role)), alvos: targets.map(c => c.cmd) },
             alias: nameAlt, texto: alias.command, args, quiet: Boolean(alias.quiet)
         };
     }

@@ -1,4 +1,4 @@
-# `/defi` · admin
+# `/defi` · owner
 
 Acompanha posições em DeFi, de cinco protocolos:
 

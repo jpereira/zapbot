@@ -124,6 +124,23 @@ test('permissões do destino valem no alias e na listagem de /help alias', async
     assert.equal(quote.mock.callCount(), 1);
 });
 
+test('alias herda a permissão do destino: o +cmd do /gpt (role admin) vale para o alias, e o alias não é aceito no +cmd', async t => {
+    await bot.replyAlt('/alias -q felipe /gpt');
+    const gpt = t.mock.method(HANDLERS, '/gpt', async ({ msg }) => msg.reply('gpt'));
+    const de = bot.OTHERAlt.jid;
+    await bot.setSetting('bot.users', [bot.OTHERAlt.user]);
+    assert.deepEqual(await bot.replyAlt('/felipe oi', { de }), []);
+
+    await bot.setSetting('bot.users.cmds', [`${bot.OTHERAlt.user}=/gpt`]);
+    assert.deepEqual(await bot.replyAlt('/felipe oi', { de }), ['gpt']);
+    assert.equal(gpt.mock.callCount(), 1);
+
+    await bot.setSetting('bot.users.cmds', [`${bot.OTHERAlt.user}=!/gpt`]);
+    assert.deepEqual(await bot.replyAlt('/felipe oi', { de }), []);
+
+    assert.match((await bot.replyAlt('/bot +cmd /felipe +v /Fulano/'))[0], /desconhecido/);
+});
+
 test('desativar o destino impede a execução e nomes reservados continuam protegidos', async t => {
     await bot.replyAlt('/alias eita /cotacao USD');
     await bot.setSetting('commands.disabled', ['/cotacao']);

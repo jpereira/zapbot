@@ -24,7 +24,16 @@ if (disabledCommands.length) {
     printInfo(`Disabled ${disabledCommands.length} callers (${disabledCommands.join(',')})`);
 }
 
+/*
+ * Each command's "role": user (common), admin (only the owner and bot.admins, but delegable by the
+ * /bot +cmd) or owner (never delegable). A shortcut with several commands gets the most restricted one.
+ */
+const ROLES = ['user', 'admin', 'owner'];
+const roleMoreRestricted = (roles) => roles.reduce((a, b) => (ROLES.indexOf(b) > ROLES.indexOf(a) ? b : a), 'user');
+
 module.exports = {
+    ROLES,
+    roleMoreRestricted,
     botConfig,
     withoutDisabled
 };

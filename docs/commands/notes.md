@@ -1,4 +1,4 @@
-# `/notes` · admin
+# `/notes` · owner
 
 Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Cada uma tem um ID, e o
 `-alerta` avisa dela numa data/hora. Só o dono (e os admins) usa.

@@ -295,8 +295,8 @@ client.on('message_create', (msg) => withContextDebug({
 
             // The start of more than one command (e.g.: /un): lists the ones the person can use
             const possible = (resolved?.possiveis ?? [])
-                .filter(c => admin || (!c.onlyAdmin && (c.alvos ?? [c.cmd])
-                    .every(cmd => ALWAYS_RELEASED.includes(cmd) || permission.pode(cmd))))
+                .filter(c => admin || (c.alvos ?? [c.cmd])
+                    .every(cmd => ALWAYS_RELEASED.includes(cmd) || permission.pode(cmd)))
                 .map(c => c.cmd);
             await msg.reply(possible.length
                 ? `🤔 Comando '${caller}' ambíguo. Possíveis comandos: ${possible.join(', ')}`
@@ -346,7 +346,7 @@ client.on('message_create', (msg) => withContextDebug({
          * in your private chat. Avoids that, with several zapbots in the same group, the command
          * of one person be executed by everyone.
          */
-        if (!admin && command.onlyAdmin) {
+        if (!admin && command.role !== 'user' && !(command.alvos ?? [command.cmd]).every(cmd => permission.pode(cmd))) {
             if (isDebugMode()) {
                 messageToSelf(`⚠️ ${senderName} tentou executar ${command.cmd} dentro de ${chatName}, mas sem permissão`);
             }

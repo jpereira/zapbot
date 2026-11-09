@@ -50,7 +50,7 @@ const packageJson = require('../package.json');
  * → sets (or swaps) the alert of a note (or of all those in the tag)
  * -alerta #tag...                     → lists only the alerts of those tags
  * -alerta -rm <id...|#tag...|all>     → removes the alert, keeping the note
- * The alert fires ONCE, right away; the note stays. Owner only (onlyAdmin).
+ * The alert fires ONCE, right away; the note stays. Owner only (role owner).
  */
 const MAX_DAYS = 365;
 const ALERT = /(^|\s)-alerta(?=\s|$)([\s\S]*)$/;

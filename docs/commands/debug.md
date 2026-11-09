@@ -1,4 +1,4 @@
-# `/debug` (`/d`, `/dbg`) · admin
+# `/debug` (`/d`, `/dbg`) · owner
 
 Controla os logs de diagnóstico no console, com níveis cumulativos, filtro por regex e cópia para um
 chat do WhatsApp. As configurações ficam salvas nos settings e sobrevivem a reinícios. No primeiro

@@ -25,8 +25,9 @@ Alguns pontos merecem atenção especial num relato:
   O QR pode ir por e-mail (veja o código anti-phishing em
   [E-mails](https://jpereira.github.io/zapbot/emails/)).
 - **Comandos de admin**: qualquer forma de alguém que não é o dono (nem um admin extra do setting
-  `bot.admins`) executar um comando `onlyAdmin` (inclusive fazendo o bot "digitar" um comando), ou
-  de um admin extra alterar o `bot.admins` ou o `bot.users`, que só o dono pode mudar. Também conta
+  `bot.admins`) executar um comando de role `owner`, ou de role `admin` sem o dono ter liberado
+  (`/bot +cmd`), inclusive fazendo o bot "digitar" um comando ou por um atalho do `/alias`. Ou de
+  um admin extra alterar o `bot.admins` ou o `bot.users`, que só o dono pode mudar. Também conta
   alguém de fora do `bot.users` conseguir usar os comandos comuns, ou um usuário usar um comando
   fora dos dele (`/bot +cmd`).
 - **`/get`**: o `yt-dlp` roda na rede do servidor; URLs para a rede interna são recusadas

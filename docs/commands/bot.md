@@ -1,4 +1,4 @@
-# `/bot` · admin
+# `/bot` · owner
 
 Liga e desliga o bot, diz quem pode usá-lo e mostra o status dele (o relatório das últimas 24 h, os
 usuários e o envio diário), as versões do que ele usa
@@ -10,9 +10,10 @@ usuários e o envio diário), as versões do que ele usa
 - **Quem usa os comandos**:
     - **Você** (o dono) usa tudo.
     - Os **admins** ([`+o`](#admins-extras)) também usam tudo.
-    - Os **usuários** ([`+v`](#usuários)) usam os comandos comuns (os sem ✅ na
+    - Os **usuários** ([`+v`](#usuários)) usam os comandos de role `user` (veja a coluna Role da
       [tabela de comandos](index.md#resumo): `/get`, `/tempo`...): em qualquer chat, só num grupo (o
-      grupo inteiro) ou só uma pessoa num grupo.
+      grupo inteiro) ou só uma pessoa num grupo. Um comando `admin` (`/gpt`, `/show`...) só com a
+      [delegação](index.md#delegando-um-comando-admin) do `+cmd`.
     - Os outros são ignorados em silêncio. Por padrão não há usuários: só você (e os admins) usa
       comandos.
 
@@ -114,7 +115,8 @@ Quando usar cada opção:
 | Liberar o bot para a família, só no grupo dela | `/bot +v`, digitado no grupo (ou `/bot +v /Grupo Familia/` de qualquer chat) |
 | Liberar para uma pessoa, em qualquer chat | `/bot +v /Maria Lucia/` |
 | Liberar só alguns comandos para alguém | `/bot +v +cmd /cotacao,/crypto /Sofia Izabel/` |
-| Dar a alguém os comandos admin | `/bot +o /Jorge Pereira/` |
+| Liberar só o `/gpt` para o grupo Familia | `/bot +v +cmd /gpt`, digitado no grupo (ou `/bot +v +cmd /gpt /Familia/`) |
+| Dar a alguém os comandos admin e owner | `/bot +o /Jorge Pereira/` |
 | Parar o bot por completo por um tempo, sem derrubar o container | `/bot -off` |
 | Desfazer tudo: só você de novo, sem admins nem usuários | `/bot -reset` |
 
@@ -132,7 +134,7 @@ Detalhes:
 
 ## Admins extras
 
-Outras pessoas podem usar os comandos **admin** (os marcados com ✅ na
+Outras pessoas podem usar os comandos **admin** e **owner** (os com esse role na
 [tabela de comandos](index.md#resumo)), e também os comuns, em qualquer chat, se você as puser como
 admins:
 
@@ -168,8 +170,9 @@ contato de quem o WhatsApp só informa o id interno (LID), sem o telefone, tamb�
 
 ## Usuários
 
-Os usuários usam os comandos **comuns** (os sem ✅ na [tabela de comandos](index.md#resumo)); os
-comandos admin continuam só seus e dos admins.
+Os usuários usam os comandos de role **`user`** (veja a coluna Role da
+[tabela de comandos](index.md#resumo)). Os `owner` continuam só seus e dos admins, e os `admin`
+também, a menos que você os [delegue](index.md#delegando-um-comando-admin) com o `+cmd`.
 
 | Quem | Onde usa |
 |---|---|
@@ -236,8 +239,9 @@ Usuários (1) neste grupo
 
 ### Comandos de cada usuário
 
-Um usuário (uma pessoa ou um grupo) pode ficar limitado a alguns comandos comuns. O `/help` e o
-`/whois` sempre passam (o `/help` mostra só os dele).
+Um usuário (uma pessoa ou um grupo) pode ficar limitado a alguns comandos comuns, ou receber um
+comando de role `admin` (o `/gpt`, o `/show`...). O `/help` e o `/whois` sempre passam (o `/help`
+mostra só os dele).
 
 ```text
 /bot +cmd /cotacao,/crypto,/meme +v /Sofia Izabel/  → a Sofia entra só com esses
@@ -248,6 +252,7 @@ Um usuário (uma pessoa ou um grupo) pode ficar limitado a alguns comandos comun
 /bot -cmd /meme /Grupo Familia/ /Fulano da Silva/   → vários de uma vez
 /bot -cmd /meme                                     → do chat atual (o grupo, ou a pessoa do privado)
 /bot +cmd all /Sofia Izabel/                        → a Sofia volta a usar todos os comuns
+/bot +v +cmd /gpt                                   → digitado num grupo: todos ali usam só o /gpt
 ```
 
 - O `+cmd` em quem ainda não é usuário já põe a pessoa (ou o grupo), só com esses comandos. Em quem
@@ -255,7 +260,12 @@ Um usuário (uma pessoa ou um grupo) pode ficar limitado a alguns comandos comun
 - O `-cmd` em quem usa todos deixa "Todos, menos" esses. Tirar o último comando de uma lista é
   recusado: para tirar a pessoa, `/bot -v`; para liberar todos, `/bot +cmd all`.
 - Os comandos vão pelo nome ou pelo alias (`/creptomoeda` vira `/crypto`), separados por vírgula.
-  Comandos admin não entram (o usuário não os usa de qualquer jeito).
+  Um comando `owner` (`/set`, `/bot`...) não entra: o bot recusa. Um `admin` (`/gpt`, `/show`...)
+  entra só numa lista "Apenas": o `-cmd` ("Todos, menos") e o `bot.users = true` não o liberam, e
+  quem já usa todos os comuns não o ganha com o `+cmd` (o bot recusa e pede a lista "Apenas").
+  Para acrescentar um `admin` a quem usa os comuns, liste os comandos dele: `+v +cmd /cotacao,/gpt`.
+- O nome de um atalho do [`/alias`](alias.md) não entra no `+cmd`: o atalho herda a permissão do
+  comando de destino (quem pode o `/gpt` usa os atalhos para ele).
 - Num grupo, a pessoa é a de lá (como no `+v`); se ela for usuária em qualquer chat, é essa
   permissão que muda.
 - Na lista, embaixo da pessoa, `→ Apenas: /cotacao, /crypto, /meme` ou `→ Todos, menos: /meme`:
