@@ -56,7 +56,7 @@ module.exports = {
         {
             opts: ['reset', 'r'],
             values: ['[force]'],
-            desc: 'Volta ao padrão: bot ligado, sem admins extras e sem usuários (só você usa comandos). Pergunta antes: responda sim em 10 s. Com force, volta direto. O envio diário do -status fica. Aceita -mask; as outras opções são recusadas. Só o dono.',
+            desc: 'Tira todos os usuários (e os limites deles), de qualquer chat e grupo: ficam só você e os admins extras. Os admins, o liga/desliga e o envio diário do -status não mudam. Com force, volta tudo ao padrão: também tira os admins extras e liga o bot. Os dois perguntam antes: responda sim em 10 s. Aceita -mask; as outras opções são recusadas. Só o dono.',
             ex: ['/bot -r', '/bot -r force'],
             cron: false
         },
