@@ -258,6 +258,149 @@ describe('/gpt (/ai)', () => {
         assert.equal(bot.client.chats.get(bot.GROUP).digitando, 1);
     });
 
+    test('respondendo uma foto: ela vai junto da pergunta (legenda + pergunta + imagem em base64)', async () => {
+        await bot.setSetting('openai.api.key', 'sk-teste');
+        network.responder('post', 'api.openai.com', { choices: [{ message: { content: 'É um labrador.' } }] });
+
+        const photo = bot.createMessage({ texto: 'meu cachorro', de: bot.OTHERAlt.jid, tipo: 'image',
+            midia: { mimetype: 'image/jpeg', data: 'QUJD' } });
+        assert.deepEqual(await bot.replyAlt('/gpt qual a raça desse cachorro?', { citada: photo }), ['🤖 É um labrador.']);
+
+        const { body } = network.chamadas.at(-1).cfg;
+        assert.deepEqual(body.messages[1].content, [
+            { type: 'text', text: 'meu cachorro\n\nqual a raça desse cachorro?' },
+            { type: 'image_url', image_url: { url: 'data:image/jpeg;base64,QUJD' } }
+        ]);
+
+        // Without a question: describes; text alone continues a string
+        const withoutCaption = bot.createMessage({ de: bot.OTHERAlt.jid, tipo: 'image', midia: { mimetype: 'image/png', data: 'QUJD' } });
+        await bot.replyAlt('/gpt', { citada: withoutCaption });
+        assert.equal(network.chamadas.at(-1).cfg.body.messages[1].content[0].text, 'Descreva esta imagem.');
+
+        const textAlt = bot.createMessage({ texto: 'um texto', de: bot.OTHERAlt.jid });
+        await bot.replyAlt('/gpt resuma', { citada: textAlt });
+        assert.equal(network.chamadas.at(-1).cfg.body.messages[1].content, 'um texto\n\nresuma');
+    });
+
+    test('foto que não dá: não baixa, formato que a OpenAI não lê, grande demais; vídeo não é foto', async () => {
+        await bot.setSetting('openai.api.key', 'sk-teste');
+        network.responder('post', 'api.openai.com', { choices: [{ message: { content: 'ok' } }] });
+        const calls = () => network.chamadas.length;
+        const beforeAlt = calls();
+
+        const expiredAlt = bot.createMessage({ de: bot.OTHERAlt.jid, tipo: 'image', extras: { hasMedia: true, downloadMedia: async () => null } });
+        assert.match((await bot.replyAlt('/gpt o que é?', { citada: expiredAlt }))[0], /❌ Não consegui baixar a imagem/);
+
+        const heic = bot.createMessage({ de: bot.OTHERAlt.jid, tipo: 'image', midia: { mimetype: 'image/heic', data: 'QUJD' } });
+        assert.match((await bot.replyAlt('/gpt o que é?', { citada: heic }))[0], /❌ A OpenAI não lê imagem image\/heic: só jpeg, png, webp, gif\./);
+
+        const huge = bot.createMessage({ de: bot.OTHERAlt.jid, tipo: 'image', midia: { mimetype: 'image/jpeg', data: 'A'.repeat(21 * 1024 * 1024) } });
+        assert.match((await bot.replyAlt('/gpt o que é?', { citada: huge }))[0], /❌ A imagem tem mais de 15 MB/);
+        assert.equal(calls(), beforeAlt, 'nada foi para a OpenAI');
+
+        // Video: only the text (the caption) follows, without downloading anything
+        const video = bot.createMessage({ texto: 'legenda do vídeo', de: bot.OTHERAlt.jid, tipo: 'video', midia: { mimetype: 'video/mp4', data: 'QUJD' } });
+        await bot.replyAlt('/gpt resuma', { citada: video });
+        assert.equal(network.chamadas.at(-1).cfg.body.messages[1].content, 'legenda do vídeo\n\nresuma');
+    });
+
+    test('respondendo um áudio: transcreve (v1/audio/transcriptions); com outra pergunta, o chat em cima da transcrição', async () => {
+        await bot.setSetting('openai.api.key', 'sk-teste');
+        network.responder('post', 'api.openai.com/v1/audio/transcriptions', { text: ' olá, tudo bem? ' });
+        network.responder('post', 'api.openai.com/v1/chat/completions', { choices: [{ message: { content: 'Um cumprimento.' } }] });
+
+        const voice = bot.createMessage({ de: bot.OTHERAlt.jid, tipo: 'ptt', midia: { mimetype: 'audio/ogg; codecs=opus', data: 'QUJD' } });
+        assert.deepEqual(await bot.replyAlt('/gpt agora transcreva isso', { citada: voice }), ['🤖 *Transcrição:*\nolá, tudo bem?']);
+
+        const { cfg } = network.chamadas.at(-1);
+        assert.equal(network.chamadas.at(-1).url, 'https://api.openai.com/v1/audio/transcriptions');
+        assert.equal(cfg.headers.Authorization, 'Bearer sk-teste');
+        assert.equal(cfg.body.get('model'), 'whisper-1');
+        assert.equal(cfg.body.get('file').name, 'audio.ogg');
+        assert.equal(network.chamadas.filter(c => c.url.endsWith('/chat/completions')).length, 0, 'só transcrever não chama o chat');
+
+        // Without a question it also only transcribes; the model comes from the setting
+        await bot.setSetting('openai.transcribe.model', 'gpt-4o-mini-transcribe');
+        assert.deepEqual(await bot.replyAlt('/gpt', { citada: voice }), ['🤖 *Transcrição:*\nolá, tudo bem?']);
+        assert.equal(network.chamadas.at(-1).cfg.body.get('model'), 'gpt-4o-mini-transcribe');
+
+        // Another question: the transcription goes along to the chat
+        assert.deepEqual(await bot.replyAlt('/gpt resuma esse áudio', { citada: voice }), ['🤖 Um cumprimento.']);
+        assert.equal(network.chamadas.at(-1).cfg.body.messages[1].content,
+            'resuma esse áudio\n\nTranscrição do áudio:\nolá, tudo bem?');
+    });
+
+    test('áudio que não dá: não baixa, formato que a OpenAI não lê, grande demais, sem fala e erro da OpenAI', async () => {
+        await bot.setSetting('openai.api.key', 'sk-teste');
+        const beforeAlt = network.chamadas.length;
+
+        const expiredAlt2 = bot.createMessage({ de: bot.OTHERAlt.jid, tipo: 'audio', extras: { hasMedia: true, downloadMedia: async () => null } });
+        assert.match((await bot.replyAlt('/gpt', { citada: expiredAlt2 }))[0], /❌ Não consegui baixar o áudio/);
+
+        const aac = bot.createMessage({ de: bot.OTHERAlt.jid, tipo: 'audio', midia: { mimetype: 'audio/aac', data: 'QUJD' } });
+        assert.match((await bot.replyAlt('/gpt', { citada: aac }))[0], /❌ A OpenAI não transcreve áudio audio\/aac: só ogg, mp3, m4a, wav, webm, flac\./);
+
+        const huge = bot.createMessage({ de: bot.OTHERAlt.jid, tipo: 'audio', midia: { mimetype: 'audio/mpeg', data: 'A'.repeat(35 * 1024 * 1024) } });
+        assert.match((await bot.replyAlt('/gpt', { citada: huge }))[0], /❌ O áudio tem mais de 25 MB/);
+        assert.equal(network.chamadas.length, beforeAlt, 'nada foi para a OpenAI');
+
+        const muted = bot.createMessage({ de: bot.OTHERAlt.jid, tipo: 'ptt', midia: { mimetype: 'audio/ogg; codecs=opus', data: 'QUJD' } });
+        network.responder('post', 'api.openai.com/v1/audio/transcriptions', { text: '' });
+        assert.deepEqual(await bot.replyAlt('/gpt', { citada: muted }), ['🤖 Não ouvi fala nenhuma nesse áudio.']);
+
+        network.responder('post', 'api.openai.com/v1/audio/transcriptions', errorHttp(401));
+        assert.match((await bot.replyAlt('/gpt', { citada: muted, erroEsperado: true }))[0], /🔑 API key da OpenAI inválida/);
+    });
+
+    test('-voz: o texto digitado (ou o da mensagem respondida) vira uma nota de voz de robô (v1/audio/speech)', async () => {
+        assert.match((await bot.replyAlt('/gpt -voz oi'))[0], /⚠️ API key da OpenAI não encontrada/);
+
+        await bot.setSetting('openai.api.key', 'sk-teste');
+        network.responder('post', 'api.openai.com/v1/audio/speech', Buffer.from('OGGDATA'));
+
+        const [r] = await bot.executar('/gpt -voz exterminar todos os humanos');
+        assert.ok(r.content instanceof MessageMedia);
+        assert.equal(r.content.mimetype, 'audio/ogg; codecs=opus');
+        assert.equal(r.content.data, Buffer.from('OGGDATA').toString('base64'));
+        assert.equal(r.options.sendAudioAsVoice, true);
+
+        const { url, cfg } = network.chamadas.at(-1);
+        assert.equal(url, 'https://api.openai.com/v1/audio/speech');
+        assert.equal(cfg.headers.Authorization, 'Bearer sk-teste');
+        assert.equal(cfg.responseType, 'arraybuffer');
+        assert.deepEqual(cfg.body, {
+            model: 'gpt-4o-mini-tts', voice: 'onyx', input: 'exterminar todos os humanos', response_format: 'opus',
+            instructions: 'Fale como um robô: voz metálica, monótona e pausada, sem emoção.'
+        });
+
+        // Without typed text, speaks the replied message's; -voz can come in the middle
+        const quoted = bot.createMessage({ texto: 'bom dia, humano', de: bot.OTHERAlt.jid });
+        await bot.executar('/gpt -voz', { citada: quoted });
+        assert.equal(network.chamadas.at(-1).cfg.body.input, 'bom dia, humano');
+        await bot.executar('/gpt fale -v isso aqui');
+        assert.equal(network.chamadas.at(-1).cfg.body.input, 'fale isso aqui');
+
+        // The model, voice and style come from the settings; tts-1 does not take the style
+        await bot.setSetting('openai.tts.voice', 'nova');
+        await bot.setSetting('openai.tts.model', 'tts-1');
+        await bot.executar('/gpt -voz oi');
+        assert.deepEqual(network.chamadas.at(-1).cfg.body, { model: 'tts-1', voice: 'nova', input: 'oi', response_format: 'opus' });
+    });
+
+    test('-voz: sem texto, grande demais e erro da OpenAI (o corpo do erro vem em bytes)', async () => {
+        await bot.setSetting('openai.api.key', 'sk-teste');
+        const beforeAlt = network.chamadas.length;
+
+        assert.deepEqual(await bot.replyAlt('/gpt -voz'), ['❌ Use: /gpt -voz <texto> (ou responda uma mensagem de texto)']);
+        assert.match((await bot.replyAlt(`/gpt -voz ${'a'.repeat(4097)}`))[0], /❌ O texto tem 4097 caracteres: a voz aceita até 4096\./);
+        assert.equal(network.chamadas.length, beforeAlt, 'nada foi para a OpenAI');
+
+        network.responder('post', 'api.openai.com/v1/audio/speech', Object.assign(new Error('Request failed with status code 400'), {
+            response: { status: 400, data: Buffer.from(JSON.stringify({ error: { message: 'voz inválida' } })) }
+        }));
+        assert.deepEqual(await bot.replyAlt('/gpt -voz oi', { erroEsperado: true }), ['❌ Erro no /gpt: voz inválida']);
+    });
+
     test('.env vence o setting; a resposta sempre começa com 🤖 (inclusive a que começaria com "/")', async () => {
         process.env.OPENAI_API_KEY = 'sk-env';
         try {
@@ -287,6 +430,86 @@ describe('/gpt (/ai)', () => {
         } finally {
             delete process.env.OPENAI_MODEL;
         }
+    });
+
+    test('-usage: o consumo (Usage API, chave de admin) por dia e por modelo, e os limites de agora (cabeçalhos)', async () => {
+        assert.match((await bot.replyAlt('/gpt -usage'))[0], /⚠️ API key da OpenAI não encontrada/);
+
+        await bot.setSetting('openai.api.key', 'sk-teste');
+        await bot.setSetting('openai.admin.key', 'sk-admin-teste');
+        const day = Math.floor(Date.parse('2026-11-07T00:00:00Z') / 1000);
+        network.responder('get', 'api.openai.com/v1/organization/usage/completions', {
+            object: 'page',
+            has_more: false,
+            data: [
+                { object: 'bucket', start_time: day, end_time: day + 86400, results: [
+                    { model: 'gpt-4o-mini', input_tokens: 1000, output_tokens: 200, input_cached_tokens: 400, num_model_requests: 5 },
+                    { model: 'gpt-6-sol', input_tokens: 50, output_tokens: 10, input_cached_tokens: 0, num_model_requests: 1 }
+                ] },
+                { object: 'bucket', start_time: day + 86400, end_time: day + 172800, results: [
+                    { model: 'gpt-4o-mini', input_tokens: 2000, output_tokens: 300, input_cached_tokens: 0, num_model_requests: 7 }
+                ] }
+            ]
+        });
+        network.responder('post', 'api.openai.com/v1/chat/completions', network.http({
+            data: { choices: [{ message: { content: '' } }] },
+            headers: {
+                'x-ratelimit-limit-tokens': '200000', 'x-ratelimit-remaining-tokens': '199984', 'x-ratelimit-reset-tokens': '6ms',
+                'x-ratelimit-limit-requests': '5000', 'x-ratelimit-remaining-requests': '4999', 'x-ratelimit-reset-requests': '12ms'
+            }
+        }));
+
+        const [r] = await bot.replyAlt('/gpt -usage 3');
+        assert.equal(r, [
+            '📊 *Consumo da OpenAI* — últimos 3 dias',
+            '🔢 3.560 tokens · entrada 3.050 (cache 400) · saída 510',
+            '🔁 13 requisições',
+            '',
+            '📅 *Por dia* _(UTC)_',
+            '• 07/11 · 1.260 tokens · 6 req',
+            '• 08/11 · 2.300 tokens · 7 req',
+            '',
+            '🧠 *Por modelo*',
+            '• gpt-4o-mini · 3.500 tokens · 12 req',
+            '• gpt-6-sol · 60 tokens · 1 req',
+            '',
+            '⏱️ *Limites agora* — gpt-4o-mini',
+            '• tokens: 199.984 de 200.000 · reseta em 6ms',
+            '• requisições: 4.999 de 5.000 · reseta em 12ms'
+        ].join('\n'));
+        assert.doesNotMatch(r, /sk-/);
+
+        const consumption = network.chamadas.find(c => c.url.includes('/organization/usage/completions'));
+        assert.equal(consumption.cfg.headers.Authorization, 'Bearer sk-admin-teste');
+        assert.equal(consumption.cfg.params.bucket_width, '1d');
+        assert.equal(consumption.cfg.params.limit, 3);
+        assert.deepEqual(consumption.cfg.params.group_by, ['model']);
+        const limits = network.chamadas.find(c => c.url.endsWith('/chat/completions'));
+        assert.equal(limits.cfg.headers.Authorization, 'Bearer sk-teste');
+        assert.equal(limits.cfg.body.max_completion_tokens, 16);
+    });
+
+    test('-usage: sem a chave de admin só os limites (com a dica); dias inválidos; chave de admin recusada', async () => {
+        await bot.setSetting('openai.api.key', 'sk-teste');
+        network.responder('post', 'api.openai.com/v1/chat/completions', network.http({
+            data: { choices: [] }, headers: { 'x-ratelimit-limit-tokens': '1000', 'x-ratelimit-remaining-tokens': '10' }
+        }));
+
+        const [withoutAdmin] = await bot.replyAlt('/gpt -usage');
+        assert.match(withoutAdmin, /^💡 _Para ver o consumo, defina a chave de admin/);
+        assert.match(withoutAdmin, /• tokens: 10 de 1\.000$/);
+        assert.doesNotMatch(withoutAdmin, /requisições/);
+
+        assert.deepEqual(await bot.replyAlt('/gpt -u 99'), ['❌ Use: /gpt -usage [dias] (de 1 a 31; padrão 7)']);
+        assert.deepEqual(await bot.replyAlt('/gpt -usage 0'), ['❌ Use: /gpt -usage [dias] (de 1 a 31; padrão 7)']);
+        assert.deepEqual(await bot.replyAlt('/gpt -usage 99'), ['❌ Use: /gpt -usage [dias] (de 1 a 31; padrão 7)']);
+        assert.deepEqual(await bot.replyAlt('/gpt -usage abc'), ['❌ Use: /gpt -usage [dias] (de 1 a 31; padrão 7)']);
+
+        await bot.setSetting('openai.admin.key', 'sk-admin-teste');
+        network.responder('get', 'api.openai.com/v1/organization/usage/completions', errorHttp(403));
+        const [rejected] = await bot.replyAlt('/gpt -usage', { erroEsperado: true });
+        assert.match(rejected, /^🔑 A chave de admin foi recusada\. A Usage API pede uma Admin key/);
+        assert.match(rejected, /⏱️ \*Limites agora\*/);
     });
 
     test('-m sem modelo: o atual e a lista dos aceitos', async () => {

@@ -11,6 +11,16 @@ const OPENAI_MODELS = [
     'gpt-4.1', 'gpt-4.1-mini', 'gpt-4o', 'gpt-4o-mini'
 ];
 
+// Audio transcription models (v1/audio/transcriptions endpoint), of /gpt replying to an audio
+const AUDIO_OPENAI_MODELS = ['whisper-1', 'gpt-4o-mini-transcribe', 'gpt-4o-transcribe'];
+
+// Voice (v1/audio/speech endpoint): the /gpt -voz models and voices. Only gpt-4o-mini-tts accepts the style (instructions)
+const VOICE_OPENAI_MODELS = ['gpt-4o-mini-tts', 'tts-1', 'tts-1-hd'];
+const OPENAI_VOICES = ['alloy', 'ash', 'ballad', 'coral', 'echo', 'fable', 'nova', 'onyx', 'sage', 'shimmer', 'verse'];
+
 module.exports = {
-    OPENAI_MODELS
+    OPENAI_MODELS,
+    AUDIO_OPENAI_MODELS,
+    VOICE_OPENAI_MODELS,
+    OPENAI_VOICES
 };

@@ -338,6 +338,8 @@ describe('permissões', () => {
         assert.equal(bot.getSetting('openai.api.model'), modelAlt);
         assert.deepEqual(await bot.replyAlt('/gpt -m', { de: OTHERAlt.jid }),
             ['⛔ Apenas o dono do bot (ou um admin) pode usar o -model do /gpt.']);
+        assert.deepEqual(await bot.replyAlt('/gpt -usage', { de: OTHERAlt.jid }),
+            ['⛔ Apenas o dono do bot (ou um admin) pode usar o -usage do /gpt.']);
         assert.deepEqual(await bot.replyAlt('/stats -flush-all', { de: OTHERAlt.jid }),
             ['⛔ Apenas o dono do bot (ou um admin) pode usar o -flush-all do /stats.']);
         assert.deepEqual(await bot.replyAlt('/stats -f /Grupo/', { de: OTHERAlt.jid }),
