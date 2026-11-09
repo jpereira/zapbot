@@ -26,11 +26,11 @@ async function nivelDe(numero, { chatId, isGroup }) {
     const soNosGrupos = users.filter(u => u.startsWith(`${numero}:`))
         .map(u => u.slice(u.indexOf(':') + 1));
     if (ehODono(numero)) return `${PAPEIS.dono} dono`;
-    if (getSetting('bot.admins').includes(numero)) return `${PAPEIS.admin} +o`;
-    if (users.includes(numero)) return `${PAPEIS.usuario} +v`;
+    if (getSetting('bot.admins').includes(numero)) return `${PAPEIS.admin} +a`;
+    if (users.includes(numero)) return `${PAPEIS.usuario} +u`;
     if (users.includes('all')) return `${PAPEIS.usuario} todos`;
-    if (isGroup && users.includes(chatId)) return `${PAPEIS.usuario} +v pelo grupo`;
-    if (isGroup && soNosGrupos.includes(chatId)) return `${PAPEIS.usuario} +v neste grupo`;
+    if (isGroup && users.includes(chatId)) return `${PAPEIS.usuario} +u pelo grupo`;
+    if (isGroup && soNosGrupos.includes(chatId)) return `${PAPEIS.usuario} +u neste grupo`;
 
     // Só noutros grupos: diz onde
     if (soNosGrupos.length) {

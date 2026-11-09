@@ -108,7 +108,7 @@ describe('/cotacao (/cambio)', () => {
     test('-a/-d: moeda inválida, sem moeda e de outra pessoa', async () => {
         assert.match((await bot.responder('/cotacao -a xyz'))[0], /❌ Moeda não suportada: XYZ/);
         assert.match((await bot.responder('/cotacao -a'))[0], /Uso: \/cotacao/);
-        assert.deepEqual(await bot.responder('/cotacao -a gbp', { de: OUTRO.jid }), ['⛔ Apenas o dono do bot (ou um admin) pode alterar as moedas.']);
+        assert.deepEqual(await bot.responder('/cotacao -a gbp', { de: OUTRO.jid }), ['⛔ Apenas o dono do bot (ou um admin) pode usar o -add do /cotacao.']);
     });
 
     test('nenhuma habilitada', async () => {
@@ -160,7 +160,7 @@ describe('/crypto (/bitcoio, /creptomoeda)', () => {
         assert.deepEqual(await bot.responder('/crypto -d hype'), ['ℹ️ HYPE não está ativada.']);
         assert.match((await bot.responder('/crypto -a xyz'))[0], /❌ Moeda não suportada: XYZ/);
         assert.match((await bot.responder('/crypto -a'))[0], /Uso: \/crypto/);
-        assert.deepEqual(await bot.responder('/crypto -a sol', { de: OUTRO.jid }), ['⛔ Apenas o dono do bot (ou um admin) pode alterar as moedas.']);
+        assert.deepEqual(await bot.responder('/crypto -a sol', { de: OUTRO.jid }), ['⛔ Apenas o dono do bot (ou um admin) pode usar o -add do /crypto.']);
     });
 
     test('/moedinha não é mais alias', async () => {

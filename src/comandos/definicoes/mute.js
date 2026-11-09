@@ -1,0 +1,50 @@
+/*
+ * /mute: Silencia os avisos de apagadas, editadas e reações de uma pessoa
+ */
+
+const { ADMIN } = require('../../roles').ROLES;
+
+module.exports = {
+    cmd: '/mute',
+    usage: '/mute [OPÇÃO]... [/contato ou grupo/|@menção|+número]',
+    aliases: ['/mudo'],
+    summary: 'Silencia os avisos de apagadas, editadas e reações de uma pessoa',
+    help: 'Silencia os avisos de apagadas, editadas, status apagados e/ou reações removidas ou trocadas de uma pessoa, de um grupo ou de uma comunidade. Só o alvo, sem opção, silencia tudo (o -a). Respondendo um aviso, silencia de onde ele veio: a pessoa (privado e status), o grupo ou a comunidade. As mensagens continuam guardadas para o /show. O /watch também não avisa no seu privado de quem está silenciado, em qualquer tipo (os -to continuam recebendo). Sem nada, lista os silenciados.',
+    cmd_opts: [
+        {
+            opts: ['all', 'a'],
+            values: [],
+            desc: 'Silencia tudo: apagadas, editadas, status e reações. É o padrão: só o alvo, sem opção, faz o mesmo.'
+        },
+        { opts: ['deleted', 'd'], values: [], desc: 'Silencia os avisos de mensagens apagadas.' },
+        { opts: ['edited', 'e'], values: [], desc: 'Silencia os avisos de edições.' },
+        {
+            opts: ['list', 'l'],
+            values: [],
+            desc: 'Lista os silenciados (também sem argumentos), com quantos avisos foram ignorados.'
+        },
+        {
+            opts: ['reaction', 'r'],
+            values: [],
+            desc: 'Silencia os avisos de reações removidas ou trocadas.'
+        },
+        {
+            opts: ['rm'],
+            values: ['<nº|all>'],
+            desc: 'Desfaz o silêncio do nº N da lista (ou de todos): o mesmo do /unmute.'
+        },
+        { opts: ['status', 's'], values: [], desc: 'Silencia os avisos de status apagados.' },
+        {
+            argv: ['[/contato ou grupo/|@menção|+número]'],
+            desc: 'Contato ou grupo pelo nome ou parte dele, com prioridade para nomes exatos (vários: você escolhe na lista), alguém mencionado com @ ou um número. Respondendo um aviso, silencia a origem: grupo primeiro; sem grupo, número ou nome da pessoa.',
+            ex: [
+                '/mute /Grupo L200/',
+                '/mute /Jorge Pereira/',
+                '/m @Fulano',
+                '/mute -s +5521999999999',
+                '/mute -r /Grupo L200/'
+            ]
+        }
+    ],
+    role: ADMIN // silencia os avisos do dono
+};

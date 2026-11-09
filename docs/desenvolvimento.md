@@ -77,7 +77,9 @@ src/
   db.js                 SQLite (dbGet/dbAll/dbRun) e o sinal dbPronto
   inicializacao.js      tabelas + carga dos settings
   settings.js           SETTINGS_SCHEMA, getSetting/setSetting e a validação dos valores persistidos
-  botConfig.js          src/comandos/comandos.json carregado
+  botConfig.js          os comandos (src/comandos/comandos.js) carregados e conferidos no boot
+  roles.js              os roles dos comandos (USER, ADMIN, OWNER) e o mais restrito de vários
+  executar.js           o que todo comando faz antes do handler: ler as opções, o que cada um pode (role e outrosChats) e o contexto
   cliente.js            cliente do whatsapp-web.js, a marca dos envios do bot e o concluirAviso (o "Processando…" ou a pergunta viram a conclusão)
   conexao.js            QR Code, eventos de conexão, reinício e watchdog
   backup.js             backup do banco (/backup): criação, diário, retenção e restauração
@@ -109,8 +111,9 @@ src/
   defi/                 Solana, HyperEVM, Aptos e EVM (RPC, indexador, Multicall3), a Orca, o Project X, a Liquidswap, o Morpho e o Aave V3 (/defi) e o -alerta de saída da faixa
   watch/                regras e verificação do /watch
   eventos/              message_create, apagadas, editadas, reações
-  comandos/             comandos.json (definição), um arquivo por comando,
+  comandos/             comandos.js (carrega definicoes/), um arquivo por comando,
                         index.js (HANDLERS) e base.js (ajuda e utilitários)
+  comandos/definicoes/  a definição de cada comando (cmd, opções, role...), um arquivo por comando
   util/                 arquivos, formatação, datas digitadas (quando.js), PDF (pdf.js), processos externos, URLs
 tests/                  testes automatizados (veja Testes)
 ```
@@ -186,9 +189,9 @@ devolve `null`, como quando o WhatsApp não deixa editar.
 | `block.test.js` | `/block` (`/bloquear`) e `/unblock`: pelo nome, pelo número, respondendo, a lista (com os `@lid` convertidos para o telefone) e o nº dela, e o `/unblock -all` |
 | `bump.test.js` | Release e bump em repositórios temporários, versões dos exemplos, tags existentes e prévia sem alterações |
 | `canais.test.js` | Identificação de canais `@newsletter` nos avisos e no `/show` |
-| `comandos.test.js` | `/help` (só com os comandos de quem pediu), `/debug`, `/uptime`, `/version`, `/ping`, `/noffa`, `/bot` (o `-h` em blocos, o status sem opção, o `-on`/`-off`, o `-users`, e o `-info`, com as versões novas do yt-dlp e do whatsapp-web.js), `/set` (e o `-append`/`-rm`) |
+| `comandos.test.js` | `/help` (só com os comandos de quem pediu), `/debug`, `/uptime`, `/version`, `/ping`, `/noffa`, `/bot` (o `-h` em blocos, o status sem opção, o `-on`/`-off`, o `-list-users`, e o `-info`, com as versões novas do yt-dlp e do whatsapp-web.js), `/set` (e o `-append`/`-rm`) |
 | `conexao-email.test.js` | Eventos de conexão, reinício (e as novas tentativas sem internet, no boot e no reinício, e o vigia do `ready`), watchdog, alertas por e-mail, crash e `docker stop` |
-| `configuracao.test.js` | `comandos.json`, settings (e a validação dos valores persistidos), parser de opções, ajuda (uma forma do uso e um exemplo por linha) e a coerência entre config, código, README e `docs/` (inclusive a ordem alfabética, os links e a versão estável da instalação) |
+| `configuracao.test.js` | `comandos.js`, settings (e a validação dos valores persistidos), parser de opções, ajuda (uma forma do uso e um exemplo por linha) e a coerência entre config, código, README e `docs/` (inclusive a ordem alfabética, os links e a versão estável da instalação) |
 | `cotacoes.test.js` | `/cotacao`, `/crypto` (e o filtro por moeda) e os alertas de preço (com um ou vários `-to`, o `-msg` e o `-rm` de vários) |
 | `debug.test.js` | Níveis, parser dos comandos, filtro com destaque, logs de inicialização, cópia para chats e ocultação de credenciais |
 | `defi.test.js` | Solana (base58, PDA), contas da Orca (conferidas com o SDK oficial), o Project X (HyperEVM simulada), a Liquidswap (Aptos simulada: indexador e fullnode, com o preço das pools estáveis e a chave da API), o Morpho (API simulada, com as contas conferidas com as da API), o Aave V3 (blockchain simulada, com o Multicall3 de verdade) e o `/defi`: o filtro por protocolo, o `-rm` de vários, os endereços (inteiros só no privado), a lista (com o 🔔 e o limite), o resumo do `-taxas` (com o total e o `-alerta`) e o `-alerta` (saída e volta da faixa, o `-taxas`, o `-alerta` no cadastro e vários `-to`) |
@@ -200,7 +203,7 @@ devolve `null`, como quando o WhatsApp não deixa editar.
 | `grupos.test.js` | `/join` (link, código, `-info`, convite inválido e recusa) e `/leave` (pelo nome, pelo nº, a lista) |
 | `heartbeat.test.js` | Heartbeat e o `docker/app/healthcheck.js` (executado de verdade) |
 | `mascara-telefones.test.js` | Ofuscação de telefones no `/show`, `/watch` e `/bot` |
-| `mensagens.test.js` | Gravação (com o nome da sua agenda, não o pushname) e de localizações sem interpretar a miniatura como texto ou comando, roteamento, permissões (`role`, o `bot.users` com pessoas, grupos, `true`/`false` e as permissões persistidas, bot desligado, admins extras do `bot.admins`, os atalhos `/bot +o`/`+v`, as listas do `-users`/`-all-users`, os comandos de cada usuário (`+cmd`/`-cmd`), o `-reset` com a confirmação, o `/whois` e a proteção contra flood), o log dos comandos desconhecidos e a contagem do `/stats` (sem os avisos do sistema) |
+| `mensagens.test.js` | Gravação (com o nome da sua agenda, não o pushname) e de localizações sem interpretar a miniatura como texto ou comando, roteamento, permissões (`role`, o `bot.users` com pessoas, grupos, `true`/`false` e as permissões persistidas, bot desligado, admins extras do `bot.admins`, os atalhos `/bot +a`/`+u`, as listas do `-list-users`/`-list-users all`, os comandos de cada usuário (`+cmd`/`-cmd`), o `-reset` com a confirmação, o `/whois` e a proteção contra flood), o log dos comandos desconhecidos e a contagem do `/stats` (sem os avisos do sistema) |
 | `monitor.test.js` | Cadastro, filtro e remoção com o resolvedor compartilhado, alertas online persistentes, migração do banco, `-rm all`, consultas sequenciais, pausas, histórico por contato, limite de entradas, persistência e listagem em texto ou documento |
 | `notes.test.js` | O `/notes`: `-add`, `-list` e `-rm` (vários IDs, `all`, ID inexistente), as `#tags` (a parcial: `#idei` acha `#ideias`), `-tags`, `-desc`, `-move`, `-view` (com imagem), `-export` (PDF, com as imagens), `-search`, imagens e o `-alerta` (no `-add` e por ID ou tag, quando inválido, `-to`, disparo único e `-alerta -rm`) |
 | `mute.test.js` | `/mute` e `/unmute`: avisos silenciados por pessoa, grupo ou comunidade (só o alvo é o `-a`), a busca do alvo (nomes exatos, contato, grupo, menção e lista para escolher pelo nº) e a resposta a um aviso (de onde ele veio) |
@@ -299,39 +302,68 @@ alguns minutos (acompanhe em **Actions › Documentação**). As notas ficam na 
 
 ## Adicionando ou alterando comandos
 
-Os comandos são definidos em `src/comandos/comandos.json`, ao lado dos handlers. O arquivo tem uma
-chave `_about` (metadados do projeto, ignorada pelo bot) e a lista `commands`. Cada entrada de
-`commands` segue este formato:
+Os comandos são definidos em `src/comandos/definicoes/`, um arquivo por comando (o nome é o do
+comando, sem a barra: `gpt.js` para o `/gpt`). Cada arquivo exporta a entrada do comando; um módulo
+comum, com `require`, constantes e comentários. O `comandos.js` só carrega a pasta (os arquivos
+que começam com `_`, como o `_opcoes.js`, são de apoio). No boot, o `botConfig.js` confere cada
+entrada (nome, role e nomes repetidos) e falha na hora se algo estiver errado. O handler fica no
+`HANDLERS` do `src/comandos/index.js`: a definição não importa o handler, para o `settings.js` e o
+resto poderem ler os comandos sem carregar o bot inteiro (senão os `require` dariam a volta).
+Cada entrada segue este formato:
 
-```jsonc
+```js
 {
-  "cmd": "/get",                     // nome principal
-  "usage": "/get [OPÇÃO]... <url>", // linha "Uso:" no -help (formas com "  ou  ": uma por linha)
-  "aliases": ["/download"],          // nomes alternativos
-  "summary": "Baixa vídeo ou áudio", // o que faz, numa linha (a lista do /help)
-  "help": "Baixa vídeo ou áudio...", // descrição completa (o -help)
-  "cmd_opts": [
-    { "opts": ["audio", "a"], "values": [], "desc": "..." },          // flag
-    { "opts": ["startSec", "ss"], "values": ["<segundo>"], "desc": "..." }, // opção com valor
-    { "argv": ["<url>"], "desc": "..." },                             // argumento posicional (só doc)
-    { "opts": ["o"], "sinais": ["+", "-"], "values": ["[x]"], "desc": "..." }, // par +o/-o numa linha (só doc)
-    { "opts": ["add"], "values": ["<x>"], "desc": "...", "cron": false } // opcional; não roda num {/comando} do /cron
-  ],
-  "cron": true,                      // opcional; true = roda num {/comando} do texto do /cron
-  "role": "user",                    // user = comum; admin = o dono delega (+cmd); owner = nunca
-  "disabled": false                  // opcional; true = o bot ignora o comando
+    cmd: '/get',                       // nome principal
+    usage: '/get [OPÇÃO]... <url>',    // linha "Uso:" no -help (formas com "  ou  ": uma por linha)
+    aliases: ['/download'],            // nomes alternativos
+    summary: 'Baixa vídeo ou áudio',   // o que faz, numa linha (a lista do /help)
+    help: 'Baixa vídeo ou áudio...',   // descrição completa (o -help)
+    ex: ['/get <url>', '/get -a <url>'], // exemplos (opcional), um por linha depois do texto
+    cmd_opts: [
+        { opts: ['audio', 'a'], values: [], desc: '...' },                // flag
+        { opts: ['startSec', 'ss'], values: ['<segundo>'], desc: '...' }, // opção com valor
+        { argv: ['<url>'], desc: '...' },                                 // argumento posicional (só doc)
+        { opts: ['a'], sinais: ['+', '-'], values: ['[x]'], desc: '...' }, // par +a/-a numa linha (só doc)
+        { opts: ['add'], values: ['<x>'], desc: '...', cron: false },      // opcional; não roda num {/comando} do /cron
+        { opts: ['flush'], desc: '...', role: OWNER },                     // opcional; só o dono, mesmo delegado
+        { opts: ['chat'], values: ['<x>'], desc: '...', outrosChats: true } // opcional; só o chat atual para quem recebeu
+    ],
+    estrito: true,                     // opcional; opção desconhecida é erro (em vez de ir para o argv)
+    mask: true,                        // opcional; aceita o -mask (telefones ofuscados na saída)
+    digitando: false,                  // opcional; sem o "digitando..." (para os que respondem na hora)
+    argumentosLivres: true,            // opcional; o resto é texto livre, sem ler opções (/alias, /batch)
+    cron: true,                        // opcional; true = roda num {/comando} do texto do /cron
+    role: USER,                        // o nível mínimo: USER, ADMIN (admins e o dono) ou OWNER (só o dono)
+    delegavel: true,                   // opcional; num ADMIN, o dono pode liberar a um usuário (/bot +cmd)
+    disabled: false                    // opcional; true = o bot ignora o comando
 }
 ```
 
-- `"cron": true` deixa o comando rodar dentro do texto do
+- `cron: true` deixa o comando rodar dentro do texto do
   [`/cron`](comandos/cron.md#comandos-no-texto) (`{/crypto}`), na hora do envio. Só para comandos de
   consulta, que respondem com `msg.reply` (o texto entra no lugar e as mídias saem depois). Uma
-  opção que muda algo (`-add`, `-alerta`...) leva `"cron": false` e é recusada ao criar o item. `"cron": "dono"` (no comando ou na opção) só vale
+  opção que muda algo (`-add`, `-alerta`...) leva `cron: false` e é recusada ao criar o item. `cron: 'dono'` (no comando ou na opção) só vale
   se quem cria o item for o dono (o `/bot -flush-email`).
-- `"role"` define quem usa: `user` (os do `bot.users`), `admin` (só o dono e os admins extras; o
-  dono delega com o `/bot +cmd`) ou `owner` (nunca delegável). Um atalho do `/alias` ou o `/me`
-  com vários `{/comando}` fica com o role mais restrito. Veja
+- `role` é o nível mínimo de quem usa, e as pessoas têm o mesmo nome (`src/roles.js`): `OWNER` (o
+  dono, a conta pareada ao bot), `ADMIN` (os do `bot.admins`, `/bot +a`) e `USER` (os do
+  `bot.users`, `/bot +u`). Um comando `ADMIN` com `delegavel: true` o dono ainda pode liberar a um
+  usuário com o `/bot +cmd`; sem a marca, só admins e o dono usam. Um atalho do `/alias` ou o `/me`
+  com vários `{/comando}` fica com o role mais alto dos alvos. Veja
   [Permissões](comandos/index.md#permissões-role).
+- Duas marcas no `cmd_opts` dizem o que um usuário que recebeu o comando não faz, conferidas em
+  `src/executar.js` antes do handler (e também dentro de um `{/comando}`): `role: ADMIN` (a opção
+  exige este nível, ou `OWNER`: trocar o modelo do `/gpt`, apagar dados...) e
+  `outrosChats: true` (a opção, ou o argumento `{ argv }`, olha outros chats). A resposta é a mesma
+  em todos: `⛔ Apenas o dono do bot (ou um admin) pode ...`. A tabela da doc sai dessas marcas:
+  `node scripts/gerar-docs.js` (o teste confere se está atualizada).
+- Todo comando digitado mostra o "digitando..." enquanto roda (`comDigitando`, no
+  `src/executar.js`): vários baixam, consultam ou perguntam ao ChatGPT, e sem isso o chat parece
+  parado. O aviso é reenviado a cada 3 s até o comando acabar, porque uma resposta do meio (o
+  "⏳ Limpando..." do `/bot -fe true`) o apaga. `digitando: false` desliga nos que respondem na hora
+  (`/ping`, `/help`...).
+- `{ argv: ['-N'], numero: true }` faz o parser ler o `-10` como `opts.numero` (o 1º; um segundo é
+  desconhecido), em vez de mandá-lo para o `argv`. Com `estrito: true`, uma opção desconhecida
+  não chega ao handler: o `executar.js` responde `❌ Opção desconhecida: -x` com a sintaxe.
 - Alterar `help`, `usage`, `aliases`, descrições, `role` ou `disabled` não exige código: basta
   refazer o build e recriar o container.
 - O `-h` é lido no celular, então o formatador quebra as linhas:
@@ -339,25 +371,27 @@ chave `_about` (metadados do projeto, ignorada pelo bot) e a lista `commands`. C
   - o `help` e cada `desc` saem com uma frase por linha (fim de frase é `. ` seguido de maiúscula:
     `Máx. 20` e `(ex.: -taxas 50)` não quebram); numa opção, a 1ª frase fica ao lado dela, e as
     outras, recuadas;
-  - o `Ex:` vai sempre para a linha de baixo, à esquerda, e os exemplos separados por vírgula
-    (`Ex: /defi, /defi orca`) saem um por linha. Cada exemplo começa com `/` ou `-`: a vírgula
-    dentro de um (`/tempo Paris, Texas`) não o divide. Por isso o `Ex:` fica sempre no fim do texto.
-- `"sinais": ["+", "-"]` mostra o par numa linha só no `-h` (`+o, -o`), em vez do `-o` em Opções e
-  do `+o` em Argumentos, longe um do outro. O parser continua lendo só o `-o`: o `+o` chega em
-  `argv`, e o handler trata (como o `/bot +o`).
-- `"espacado": true` (no comando) separa as opções do `-h` com uma linha em branco: para ajudas
+  - o `ex` (uma lista, no comando, na opção ou no protocolo) vai sempre para a linha de baixo, à
+    esquerda: `Ex: /defi` e, abaixo, os outros, um por linha.
+- `sinais: ['+', '-']` mostra o par numa linha só no `-h` (`+a, -a`), em vez do `-a` em Opções e
+  do `+a` em Argumentos, longe um do outro. O parser continua lendo só o `-a`: o `+a` chega em
+  `argv`, e o handler trata (como o `/bot +a`).
+- `espacado: true` (no comando) separa as opções do `-h` com uma linha em branco: para ajudas
   longas, como a do `/bot`.
-- `"protocolos"` (no comando) dá uma ajuda para cada protocolo, como no `/defi`:
-  `{ "orca": { "nome": "Orca", "usage": "...", "help": "..." } }`, e cada opção diz de quais é
-  (`"protocolos": ["orca"]`; sem a lista, vale para todos). O `/defi orca -help` (ou
+- `protocolos` (no comando) dá uma ajuda para cada protocolo, como no `/defi`:
+  `{ orca: { nome: 'Orca', usage: '...', help: '...' } }`, e cada opção diz de quais é
+  (`protocolos: ['orca']`; sem a lista, vale para todos). O `/defi orca -help` (ou
   `/help defi orca`) mostra o `usage` e o `help` do protocolo e só as opções que valem nele; o
   `/defi -help` mostra todas, agrupadas (` > Orca`, ` > Project X e Morpho`, ` > Todos`).
-- Os textos (`usage`, `help` e `desc`) podem citar `${CACHE_DIR}`, `${MEDIA_DIR}` e `${TMP_DIR}`: a
-  ajuda troca pelo caminho real (ex.: o `/cache -h`).
-- Com `"disabled": true` o comando não é carregado: o bot não responde a ele nem aos aliases, e ele
+- Os textos (`usage`, `help` e `desc`) aceitam template string com as constantes de
+  `src/constantes.js` (`` `... em ${CACHE_DIR}` ``): a ajuda mostra o caminho real (ex.: o `/cache -h`).
+- Uma opção igual em mais de um comando vira uma constante em `definicoes/_opcoes.js`
+  (`OPCAO_ALERTA_TO`, do `/cotacao` e do `/crypto`), para a descrição ficar num lugar só.
+- Com `disabled: true` o comando não é carregado: o bot não responde a ele nem aos aliases, e ele
   some do `/help`. No boot aparece nos logs `Disabled N callers (...)`. Para desativar sem rebuild,
   use o setting `commands.disabled` (`/set commands.disabled noffa`).
-- Um comando **novo** precisa de um arquivo em `src/comandos/` e de uma entrada no objeto `HANDLERS`
-  de `src/comandos/index.js`. No boot, o bot avisa nos logs se existir comando no JSON sem handler.
+- Um comando **novo** precisa de uma definição em `src/comandos/definicoes/`, do handler em
+  `src/comandos/` e de uma entrada no objeto `HANDLERS` de `src/comandos/index.js`. No boot, o bot
+  avisa nos logs se existir uma definição sem handler.
   Comandos, handlers, a tabela [Resumo](comandos/index.md#resumo) e as páginas de `docs/comandos/`
   ficam em **ordem alfabética** (o menu do `mkdocs.yml` também).

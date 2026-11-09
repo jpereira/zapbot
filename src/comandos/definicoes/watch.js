@@ -1,0 +1,81 @@
+/*
+ * /watch: Vigia mensagens recebidas com regras de texto ou regex
+ */
+
+const { ADMIN } = require('../../roles').ROLES;
+
+module.exports = {
+    cmd: '/watch',
+    usage: '/watch [texto|/regex/flags] [-in <origem>] [-to <destino>]...  ou  /watch [-N] [-q <texto|/regex/flags>]  ou  /watch -s [N|regra] [-q <texto|/regex/flags>] [-to <destino|off>]...  ou  /watch -rm <N|regra>  ou  /watch -flush [N|regra]  ou  /watch -mask N  ou  /watch -umask N',
+    aliases: [],
+    summary: 'Vigia mensagens recebidas com regras de texto ou regex',
+    help: 'Vigia mensagens recebidas com regras de texto ou regex. Miniaturas de localização não são texto e ficam fora das regras. Uma regra sem -in vale em qualquer lugar; -in restringe a um contato (remetente), grupo ou canal. Sem parâmetros, lista regras e últimos matches; -N escolhe a quantidade. Publicações de @newsletter são identificadas com 📰 e o nome do canal. Quem está silenciado no /mute não gera aviso no seu privado (os -to continuam recebendo). Os números após -s, -rm e -flush identificam regras; no lugar deles, vale a própria regra, inteira ou um trecho. A quantidade de matches vem no -N. Com -mask N (🔒), os avisos e as ocorrências da regra N saem com telefones ofuscados; -umask N desliga.',
+    cmd_opts: [
+        {
+            opts: ['list', 'l'],
+            values: [],
+            desc: 'Lista somente regras, origens, destinos e contagens, sem os textos dos matches.',
+            ex: ['/watch -l']
+        },
+        {
+            opts: ['show', 's'],
+            values: ['[N|regra]'],
+            desc: 'Mostra os textos completos dos matches da regra N (ou da regra pelo texto); sem N, de todas. O -N limita a quantidade de matches até watch.showMax.',
+            ex: ['/watch -s 3 -10', '/watch -s /Jorge/']
+        },
+        {
+            opts: ['query', 'q'],
+            values: ['<texto|/regex/flags>'],
+            desc: 'Só os matches que têm o texto (sem diferenciar maiúsculas nem acentos) ou que casam com a /regex/flags. Com -s ou na listagem. Com espaços, entre aspas.',
+            ex: ['/watch -s /Jorge/ -q "carro"', '/watch -s 3 -q /carr(o|ão)/i']
+        },
+        {
+            opts: ['in'],
+            values: ['<origem>'],
+            desc: 'Restringe uma regra nova a um contato, grupo ou canal, por nome, número, menção ou ID @newsletter. Contato: mensagens dele em qualquer chat.',
+            ex: ['/watch /chuva/i -in /Defesa Civil/']
+        },
+        {
+            opts: ['rm', 'r'],
+            values: ['<N|regra>'],
+            desc: 'Remove a regra N (ou a regra pelo texto), suas ocorrências, origem e destinos.',
+            ex: ['/watch -rm 3', '/watch -rm /Jorge/']
+        },
+        {
+            opts: ['flush', 'f'],
+            values: ['[N|regra]'],
+            desc: 'Limpa as ocorrências da regra N (ou da regra pelo texto); sem N, limpa todas. Mantém regras, origens e destinos.',
+            ex: ['/watch -flush 3', '/watch -flush /Jorge/']
+        },
+        {
+            opts: ['to'],
+            values: ['<destino|off>'],
+            desc: 'Destino dos avisos: contato, grupo, número, menção ou e-mail. Na criação da regra ou com -s N. Repita para vários; off volta ao seu privado.',
+            ex: ['/watch /pix/i -to /Jorge/', '/watch -s 3 -to email']
+        },
+        {
+            argv: ['-N'],
+            desc: 'Quantidade de matches recentes na listagem ou com -s, limitada por watch.showMax (padrão 20).',
+            ex: ['/watch -10', '/watch -s 3 -10']
+        },
+        {
+            argv: ['[texto|/regex/flags]'],
+            desc: 'Cria uma regra em qualquer lugar, ou só na origem do -in. Aceita espaços; preserve a regex entre barras.',
+            ex: ['/watch /Jorge Pereira/i', '/watch promoção']
+        },
+        {
+            opts: ['mask', 'm'],
+            values: ['[N]'],
+            desc: 'Sem N, ofusca telefones com 10 a 15 dígitos contínuos na saída desta execução, mantendo os cinco primeiros e os dois últimos (como +55219****44). Com N, liga o 🔒 da regra N: os avisos (privado, -to e e-mail) e as ocorrências dela passam a sair ofuscados, até o -umask. Os dados salvos usam os números completos.',
+            ex: ['/watch -mask', '/watch -mask 3']
+        },
+        {
+            opts: ['umask', 'u'],
+            values: ['N'],
+            desc: 'Desliga o 🔒 da regra N (volta a mostrar os telefones).',
+            ex: ['/watch -umask 3']
+        }
+    ],
+    mask: true,
+    role: ADMIN // vigia as mensagens recebidas
+};

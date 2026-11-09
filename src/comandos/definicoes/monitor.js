@@ -1,0 +1,44 @@
+/*
+ * /monitor: Monitora contatos, um por vez
+ */
+
+const { ADMIN } = require('../../roles').ROLES;
+
+module.exports = {
+    cmd: '/monitor',
+    usage: '/monitor [-add <contato> [-alerta] | -alerta <contato> | -rm <id, contato ou all> | -list [contato]]',
+    summary: 'Monitora contatos, um por vez',
+    help: '👀 Monitora até monitor.max contatos, um por vez, em ordem aleatória e com espera de 1 a 15 s entre consultas. O intervalo mínimo por contato é monitor.pool segundos (padrão: 300 s). Guarda até monitor.maxRecords horários distintos por contato (padrão: 30), sem garantir todos os acessos nem atualização do cache. Mais contatos e intervalos curtos podem contribuir para bloqueio pelo WhatsApp; nenhum intervalo garante segurança. /set monitor.enabled false pausa sem apagar.',
+    ex: ['/monitor -a /Jorge Chip L200/', '/monitor -r 1', '/monitor -l.'],
+    cmd_opts: [
+        {
+            opts: ['add', 'a'],
+            values: ['<contato>'],
+            desc: 'Cadastra uma pessoa pelo nome da agenda, /nome com espaços/, menção real ou número com DDI e DDD. Nomes ambíguos oferecem escolha; grupos e e-mails não são aceitos.',
+            ex: ['-a /Jorge Chip L200/', '-a @Fulano', '-a +5521999999999']
+        },
+        {
+            opts: ['alerta'],
+            values: [],
+            desc: 'Com -add, ativa o aviso de entrada online no privado do dono do bot. Sozinho, informe um contato já cadastrado (ou id da lista).',
+            ex: [
+                '-add /Maria/ -alerta',
+                '-alerta /Maria/. Avisa uma vez por transição observada; não garante todos os acessos.'
+            ]
+        },
+        {
+            opts: ['rm', 'r'],
+            values: ['<id, contato ou all>'],
+            desc: 'Remove pelo id exibido em /monitor ou /monitor -list, ou pelo mesmo parser do cadastro: nome da agenda, /nome com espaços/, menção real ou telefone. Use -rm all ou -r all para apagar todos os cadastros e históricos locais. Apaga o histórico local do cadastro; os outros ids não são renumerados.',
+            ex: ['-rm all', '-r 1', '-rm /Jorge Chip L200/', '-r @Fulano', '-r +5521999999999']
+        },
+        {
+            opts: ['list', 'l'],
+            values: ['[contato]'],
+            desc: 'Filtra somente a lista monitorada, sem buscar na agenda. Nome ou /nome/ busca trechos sem diferenciar maiúsculas ou acentos; mostra todos os cadastros correspondentes. Aceita também menção, telefone ou id. Sem filtro, lista todos. Mostra intervalo, alerta online, última verificação e até monitor.maxRecords horários por contato. Histórico extenso vai como arquivo de texto.',
+            ex: ['-l Maria', '-l /Maria/', '-l +5521999999999']
+        }
+    ],
+    role: ADMIN, // vigia contatos
+    cron: false
+};

@@ -88,7 +88,7 @@ async function tentarLogin({ numero, nome, senha, isGroup }) {
     if (admins.includes(numero)) return '👑 Você já é admin.';
     await setSetting('bot.admins', [...admins, numero]);
     await avisarDono('🔑 Novo admin por senha', `${nome} (+${numero}) virou admin com o /bot -login.\n` +
-        `Para revogar: /bot -o +${numero}`);
+        `Para revogar: /bot -a +${numero}`);
     return '👑 *Pronto:* você agora é admin do bot.';
 }
 

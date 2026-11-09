@@ -8,10 +8,10 @@ Exibe o menu com os comandos, ou a ajuda de um só. Cada um vê só o que pode u
   título, e o `/help` de um comando `admin` ou `owner` responde
   `⛔ O /show é só do dono do bot (e dos admins).`
   Quem está limitado a alguns comandos ([`/bot +cmd`](bot.md#comandos-de-cada-usuário)) vê só esses,
-  e um `admin` que o dono liberou (`/bot +v +cmd /gpt`) aparece para quem o recebeu.
+  e um `admin` que o dono liberou (`/bot +u +cmd /gpt`) aparece para quem o recebeu.
 
-O `/help` sozinho lista um comando por linha, só com o que ele faz (o `summary` do
-`comandos.json`), num bloco monoespaçado (para manter o alinhamento no celular), e termina com a dica de como ver o resto:
+O `/help` sozinho lista um comando por linha, só com o que ele faz (o `summary` da
+definição do comando), num bloco monoespaçado (para manter o alinhamento no celular), e termina com a dica de como ver o resto:
 
 ````text
 /help
@@ -30,18 +30,15 @@ O `/help` sozinho lista um comando por linha, só com o que ele faz (o `summary`
 | `-role`, `-r` | | Lista os comandos separados por role, só os que você pode usar |
 
 Com `-role` (ou `-r`), o menu sai separado por role (`owner`, `admin` e `user`, nessa ordem),
-só com os que você pode usar (um role sem nenhum comando visível não aparece):
+só com os que você pode usar (um role sem nenhum comando visível não aparece; hoje nenhum
+comando é `owner`):
 
 ````text
 /help -r
 
 ```
-Role: owner
- /alias - Salva atalhos para comandos com argumentos
- ...
-
 Role: admin
- /enquete - Cria uma enquete no chat ou mostra o resultado
+ /alias - Salva atalhos para comandos com argumentos
  ...
 
 Role: user

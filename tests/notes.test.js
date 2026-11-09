@@ -588,7 +588,7 @@ test('-update: troca o texto (e a tag, se vier) e mantém o alerta', async () =>
     assert.match(bot.client.enviadas.at(-1).content.filename, /^ZapBot_notes_tag-estudo_/);
 });
 
-test('-alerta com #tag: põe o alerta em todas as anotações da tag (com -to), lista e tira por tag', async () => {
+test('-alerta com #tag: coloca o alerta em todas as anotações da tag (com -to), lista e tira por tag', async () => {
     await bot.responder('/notes #minhatag um');
     await bot.responder('/notes #minhatag dois');
     await bot.responder('/notes #outra três');

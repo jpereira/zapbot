@@ -7,7 +7,7 @@
  * caminho de uma mensagem normal (alias, $1, opções) e a resposta é um resumo só.
  */
 const { ehComandoOuAlias, executarAliasDeTexto, resolverAlias } = require('../aliases');
-const { GetOptFromCommand } = require('../opcoes');
+const { lerOpcoes: lerOpcoesDoComando } = require('../executar');
 const { printError, printInfo } = require('../log');
 const { resumirTexto } = require('../util/formatar');
 
@@ -74,15 +74,14 @@ async function executarBloco(linha, contexto) {
         await executarAliasDeTexto(msg, { ...resolvido, quiet: true }, {
             chatId: contexto.chatId, chatName: contexto.chatName, isGroup: contexto.isGroup,
             quem: {
-                admin: true, podeUsar: () => true, senderContact: contexto.senderContact,
+                nivel: contexto.nivel, admin: true, podeUsar: () => true, senderContact: contexto.senderContact,
                 senderName: contexto.senderName, senderNumber: contexto.senderNumber
             }
         });
     } else {
         const handler = HANDLERS[command.cmd];
         if (!handler) return { ok: false, respostas: [`${command.cmd} ainda não foi implementado`] };
-        const paraParser = command.cmd === '/alias' ? '' : args;
-        await handler({ ...contexto, msg, args, opts: GetOptFromCommand(paraParser, command), quotedMsg: null });
+        await handler({ ...contexto, msg, args, opts: lerOpcoesDoComando(command, args), quotedMsg: null });
     }
 
     return { ok: !respostas.some(r => r.startsWith('❌') || r.startsWith('⚠️')), respostas };

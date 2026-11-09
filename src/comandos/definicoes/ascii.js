@@ -1,0 +1,33 @@
+/*
+ * /ascii: O texto em letras grandes de ASCII
+ */
+
+const { USER } = require('../../roles').ROLES;
+
+module.exports = {
+    cmd: '/ascii',
+    usage: '/ascii [-width|-w <colunas>] [-char|-c <caractere>] <texto>',
+    aliases: [],
+    summary: 'O texto em letras grandes de ASCII',
+    help: 'O texto em letras grandes de ASCII, num bloco monoespaçado que cabe na tela do celular (quebra em várias linhas de letras). Aceita letras (sem acento), números e ! ? . , : - + _ /, até 40 caracteres. Sem texto, usa o da mensagem respondida.',
+    ex: ['/ascii Jorge!', '/ascii -w 20 Feliz aniversario', '/ascii -c @ Oi'],
+    cmd_opts: [
+        {
+            opts: ['width', 'w'],
+            values: ['<colunas>'],
+            desc: 'Colunas por linha de letras, de 10 a 60 (padrão 30, o que cabe na tela do celular).',
+            ex: ['/ascii -w 20 Feliz aniversario'],
+            cron: false
+        },
+        {
+            opts: ['char', 'c'],
+            values: ['<caractere>'],
+            desc: 'O caractere do traço das letras (padrão: setting ascii.defaultChar, #).',
+            ex: ['/ascii -c @ Oi'],
+            cron: false
+        }
+    ],
+    digitando: false, // responde na hora: sem o "digitando..."
+    role: USER,
+    cron: true
+};

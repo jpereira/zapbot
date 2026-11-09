@@ -4,15 +4,15 @@
  * O `onde` (ex.: '/cron') só aparece nas mensagens de erro.
  */
 
-const { roleMaisRestrito } = require('./botConfig');
+const { ROLES, roleMaisRestrito } = require('./roles');
 const { client } = require('./cliente');
 const { activeCommands, findCommand } = require('./comandos/base');
 const { printError } = require('./log');
-const { GetOptFromCommand } = require('./opcoes');
+const { erroDeOpcoes, lerOpcoes, montarContexto, negacao } = require('./executar');
 const { dbGet, dbPronto } = require('./db');
 
 /*
- * Só os comandos com "cron": true no comandos.json (os de consulta), e sem as
+ * Só os comandos com "cron": true no comandos.js (os de consulta), e sem as
  * opções com "cron": false (as que mudam algo, como o -add do /crypto). O
  * comando roda como se fosse digitado no chat de destino (por você, se não vier
  * quem executa), mas as respostas são guardadas em vez de enviadas: o texto vai
@@ -82,7 +82,7 @@ async function lerComando(linha, onde = '/cron', dono = false) {
         return { erro: `❌ {${linha}}: o ${command.cmd} não roda dentro do ${onde}.\n💡 _Rodam: ${permitidos().join(', ')}._` };
     }
 
-    const opts = GetOptFromCommand(args, command);
+    const opts = lerOpcoes(command, args);
     const proibida = (command.cmd_opts ?? []).find(o => (o.cron === false || (o.cron === 'dono' && !dono)) &&
         o.opts?.some(nome => opts.given.has(nome)));
     if (proibida) return { erro: `❌ {${linha}}: o -${proibida.opts[0]} do ${command.cmd} não roda dentro do ${onde}.` };
@@ -143,12 +143,14 @@ async function rodarComando(chatId, linha, { chatName, isGroup, onde = '/cron', 
     const respostas = [];
     const msg = mensagemSintetica(chatId, linha, respostas);
 
+    const dono = { nivel: ROLES.OWNER, admin: true, senderName: client.info?.pushname || 'Você' };
+    const recusa = erroDeOpcoes(command, opts) ?? negacao(command, opts, quem?.nivel ?? dono.nivel);
+    if (recusa) return { texto: recusa, midias: [] };
+
     try {
-        await HANDLERS[command.cmd]({
-            msg, opts, args, quotedMsg: null, senderContact: null, senderName: client.info?.pushname || 'Você',
-            isGroup, chatId, chatName, admin: true,
-            ...quem
-        });
+        await HANDLERS[command.cmd](montarContexto({
+            msg, args, opts, chat: { chatId, chatName, isGroup }, quem: { ...dono, ...quem }
+        }));
     } catch (err) {
         printError(`${onde}: ${linha} falhou:`, err.message);
         return { texto: `⚠️ ${command.cmd} falhou`, midias: [] };
@@ -161,7 +163,7 @@ async function rodarComando(chatId, linha, { chatName, isGroup, onde = '/cron', 
 }
 
 /*
- * Põe a resposta no lugar da marca. Uma de várias linhas (o /crypto, o /tempo...)
+ * Coloca a resposta no lugar da marca. Uma de várias linhas (o /crypto, o /tempo...)
  * vira um parágrafo: uma linha em branco antes e depois dela, para não colar no
  * texto em volta. Uma de uma linha só fica no meio da frase, como veio.
  */

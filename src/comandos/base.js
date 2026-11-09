@@ -3,10 +3,9 @@
  */
 
 const { botConfig } = require('../botConfig');
-const { BACKUP_DIR, CACHE_DIR, MEDIA_DIR, TMP_DIR } = require('../constantes');
 const { getSetting } = require('../settings');
 
-// Comandos ativos: os do comandos.json menos os do setting 'commands.disabled' (via /set)
+// Comandos ativos: os do comandos.js menos os do setting 'commands.disabled' (via /set)
 function activeCommands() {
     const desativados = getSetting('commands.disabled');
     return botConfig.commands.filter(c => !desativados.includes(c.cmd));
@@ -23,31 +22,20 @@ function commandsByPrefix(name) {
 }
 
 /*
- * Variáveis que os textos do comandos.json podem citar (ex.: "Exibe o espaço
- * ocupado em ${CACHE_DIR}"): o JSON não tem template strings, então a ajuda
- * troca cada ${NOME} conhecido pelo valor. Um ${NOME} desconhecido fica como está.
- */
-const VARIAVEIS_DA_AJUDA = { BACKUP_DIR, CACHE_DIR, MEDIA_DIR, TMP_DIR };
-
-const interpolar = (texto) => String(texto ?? '')
-    .replace(/\$\{(\w+)\}/g, (original, nome) => VARIAVEIS_DA_AJUDA[nome] ?? original);
-
-/*
- * A ajuda é lida no celular: cada frase numa linha, e o "Ex:" sempre na linha de
- * baixo, à esquerda, com um exemplo por linha ("Ex: /a 1, /a 2"). Fim de frase é
+ * A ajuda é lida no celular: cada frase numa linha, e o "Ex:" (o `ex` do comandos.js) sempre na
+ * linha de baixo, à esquerda, com um exemplo por linha ("Ex: /a 1, /a 2"). Fim de frase é
  * ". " seguido de maiúscula (ou "{"): "Máx. 20" e "(ex.: -taxas 50)" não quebram.
  */
 const FIM_DE_FRASE = /(?<=[.!?])\s+(?=[A-ZÀ-ÖØ-Þ{])/u;
 
 /**
  * @param {string} texto
+ * @param {string[]} exemplos  o `ex` do comandos.js: um por linha, depois das frases
  * @param {string} inicio  o que vem antes da 1ª frase ("" ou a coluna da opção)
  * @param {string} recuo   o começo das linhas seguintes
  */
-function linhasDoTexto(texto, inicio = '', recuo = '') {
-    const m = String(texto ?? '').match(/^(.*?)\s*Ex\.?:\s*(.+)$/s);
-    const frases = (m ? m[1] : String(texto ?? '')).split(FIM_DE_FRASE).filter(Boolean);
-    const exemplos = m ? m[2].split(/,\s+(?=[/-])/) : [];
+function linhasDoTexto(texto, exemplos = [], inicio = '', recuo = '') {
+    const frases = String(texto ?? '').split(FIM_DE_FRASE).filter(Boolean);
 
     return [
         `${inicio}${frases[0] ?? ''}`,
@@ -70,20 +58,20 @@ function grupoDaOpcao(command, o) {
 }
 
 /**
- * @param {object} command  a entrada do comandos.json
+ * @param {object} command  a entrada do comandos.js
  * @param {object} [o]
  * @param {string} [o.protocolo]  só a ajuda deste protocolo (as chaves de command.protocolos)
  */
 function formatCommandHelp(command, { protocolo } = {}) {
     const doProtocolo = protocolo ? command.protocolos?.[protocolo] : null;
-    if (doProtocolo) command = { ...command, usage: doProtocolo.usage, help: doProtocolo.help };
+    if (doProtocolo) command = { ...command, usage: doProtocolo.usage, help: doProtocolo.help, ex: doProtocolo.ex };
     const valeAqui = (o) => !doProtocolo || !o.protocolos?.length || o.protocolos.includes(protocolo);
 
     // Cada forma do uso ("... ou ...") numa linha, alinhada embaixo da primeira
-    const formas = interpolar(command.usage ?? command.cmd).split(/\s{2}ou\s{2}/);
+    const formas = String(command.usage ?? command.cmd).split(/\s{2}ou\s{2}/);
     const lines = formas.map((f, i) => `${i ? '     ' : 'Uso: '}${f}`);
 
-    if (command.help) lines.push(...linhasDoTexto(interpolar(command.help)));
+    if (command.help) lines.push(...linhasDoTexto(command.help, command.ex));
 
     const cmdOpts = (command.cmd_opts ?? []).filter(valeAqui);
     const notEmpty = v => v != null && v !== '';
@@ -95,17 +83,17 @@ function formatCommandHelp(command, { protocolo } = {}) {
             const opts = o.opts.filter(Boolean)
                 .flatMap(opt => (o.sinais ?? ['-']).map(sinal => `${sinal}${opt}`)).join(', ');
             const values = (o.values ?? []).filter(notEmpty).join(' ');
-            return { syntax: values ? `${opts} ${values}` : opts, desc: interpolar(o.desc), o };
+            return { syntax: values ? `${opts} ${values}` : opts, desc: o.desc, ex: o.ex, o };
         });
 
     // A ajuda de um protocolo não precisa do argumento do protocolo
     const positional = cmdOpts
         .filter(o => o?.argv?.length && !doProtocolo)
-        .map(o => ({ syntax: o.argv.filter(Boolean).join(' '), desc: interpolar(o.desc) }));
+        .map(o => ({ syntax: o.argv.filter(Boolean).join(' '), desc: o.desc, ex: o.ex }));
 
     // Uma única coluna para opções e argumentos ficarem alinhados.
     const width = Math.max(0, ...[...options, ...positional].map(o => o.syntax.length));
-    const linha = (o) => linhasDoTexto(o.desc, `  ${o.syntax.padEnd(width)}  `, '    ');
+    const linha = (o) => linhasDoTexto(o.desc, o.ex, `  ${o.syntax.padEnd(width)}  `, '    ');
 
     // "espacado": uma linha em branco entre as opções (ajudas longas, como a do /bot)
     if (options.length && command.protocolos && !doProtocolo) {
@@ -175,6 +163,5 @@ module.exports = {
     formatCommandHelp,
     formatarErroComando,
     getCommandSyntax,
-    interpolar,
     protocoloDaAjuda
 };

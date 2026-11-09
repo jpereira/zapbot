@@ -8,7 +8,7 @@ const { test, describe, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 
 const packageJson = require('../package.json');
-const COMANDOS = require('../src/comandos/comandos.json');
+const COMANDOS = require('../src/comandos/comandos');
 const escaparRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const { OUTRO } = bot;
 
@@ -61,7 +61,8 @@ describe('/help (/h)', () => {
 
     test('-role|-r: lista por role (owner, admin, user), só o que a pessoa pode usar', async () => {
         const [r] = await bot.responder('/help -r');
-        assert.match(r, /```\nRole: owner\n \/alias - [^]*\n\nRole: admin\n \/enquete - [^]*\n\nRole: user\n \/ascii - /);
+        assert.match(r, /```\nRole: admin\n \/alias - [^]*\n\nRole: user\n \/ascii - /);
+        assert.doesNotMatch(r, /Role: owner/);
         assert.ok(r.indexOf(' /show - ') < r.indexOf('Role: user'));
         assert.deepEqual(await bot.responder('/help -role'), [r]);
 
@@ -82,6 +83,53 @@ describe('/help (/h)', () => {
     test('comando desativado por setting some do menu', async () => {
         await bot.setSetting('commands.disabled', 'noffa');
         assert.doesNotMatch((await bot.responder('/help'))[0], /\n \/noffa - /);
+    });
+});
+
+describe('"digitando..." ao executar um comando', () => {
+    const digitando = () => bot.client.chats.get(bot.GRUPO).digitando;
+
+    test('todo comando mostra, menos os que declaram digitando: false (responde na hora)', async () => {
+        await bot.responder('/ping');
+        await bot.responder('/help');
+        assert.equal(digitando(), 0);
+
+        await bot.responder('/me oi');
+        assert.equal(digitando(), 1);
+        await bot.responder('/me oi');
+        assert.equal(digitando(), 2);
+    });
+
+    test('segue aceso enquanto o comando roda (a resposta do meio apaga o aviso) e apaga ao terminar', async () => {
+        const { comDigitando } = bot.src('executar');
+        const enviados = [];
+        let apagou = 0;
+        const chat = { sendStateTyping: async () => { enviados.push(Date.now()); }, clearState: async () => { apagou++; } };
+        const msg = { getChat: async () => chat };
+
+        const resultado = await comDigitando(msg, {}, async () => {
+            await new Promise(r => setTimeout(r, 75));
+            return 'ok';
+        }, { cada: 20 });
+        assert.equal(resultado, 'ok');
+        assert.ok(enviados.length >= 3, `reenviou ${enviados.length}x`);
+        await new Promise(setImmediate);
+        assert.equal(apagou, 1);
+
+        // Terminou: não reenvia mais
+        const total = enviados.length;
+        await new Promise(r => setTimeout(r, 60));
+        assert.equal(enviados.length, total);
+
+        // O erro do comando passa, e o aviso também apaga
+        await assert.rejects(comDigitando(msg, {}, async () => { throw new Error('falhou'); }, { cada: 20 }), /falhou/);
+        await new Promise(setImmediate);
+        assert.equal(apagou, 2);
+
+        // digitando: false não mexe no chat
+        const antes = enviados.length;
+        await comDigitando(msg, { digitando: false }, async () => {}, { cada: 20 });
+        assert.equal(enviados.length, antes);
     });
 });
 
@@ -135,12 +183,12 @@ describe('/noffa', () => {
 });
 
 describe('/bot', () => {
-    test('-h: os pares +o/-o, +v/-v e +cmd/-cmd juntos, uma opção por bloco (separadas por uma linha em branco)', async () => {
+    test('-h: os pares +a/-a, +u/-u e +cmd/-cmd juntos, uma opção por bloco (separadas por uma linha em branco)', async () => {
         const [r] = await bot.responder('/bot -h');
         const linhas = r.split('\n').filter(l => /^  [+-]/.test(l)).map(l => l.trim().split(/\s{2,}/)[0]);
-        assert.deepEqual(linhas, ['-on', '-off', '+o, -o [pessoa...]', '+v, -v [pessoa|grupo...]', '+cmd, -cmd <comandos>', '-users, -u',
-            '-all-users, -au', '-reset, -r [force]', '-status, -s [<hora>|off]', '-to <destino>',
-            '-info, -i', '-test, -t', '-passwd <senha|off>', '-login <senha>', '-flush-email [true]', '-mask, -m']);
+        assert.deepEqual(linhas, ['-on', '-off', '+a, -a [pessoa...]', '+u, -u [pessoa|grupo...]', '+cmd, -cmd <comandos>',
+            '-list-users, -lu [all]', '-reset, -r [force]', '-status, -s [<hora>|off]', '-to <destino>',
+            '-info, -i', '-test, -t', '-passwd <senha|off>', '-login <senha>', '-flush-email, -fe [true]', '-mask, -m']);
         assert.match(r, /\n  -on {2,}Liga o bot\.\n\n  -off /);
         assert.doesNotMatch(r, /admin, -admin|Argumentos:/);
     });
@@ -211,14 +259,14 @@ describe('/bot', () => {
         assert.equal(bot.getSetting('bot.paused'), false);
     });
 
-    test('-users e -all-users combinam com -on/-off: -on -all-users liga e mostra todos', async () => {
+    test('-list-users e -list-users all combinam com -on/-off: -on -list-users all liga e mostra todos', async () => {
         await bot.setSetting('bot.paused', true);
         await bot.setSetting('bot.users', ['5521911111111', '5521977777777']);
-        const [r] = await bot.responder('/bot -on -all-users');
+        const [r] = await bot.responder('/bot -on -list-users all');
         assert.equal(bot.getSetting('bot.paused'), false);
         assert.match(r, /^▶️ \*Bot:\* ativo\n[\s\S]*\n\n\*Usuários\* \(2\)\n/);
         assert.doesNotMatch(r, /fora daqui/);
-        assert.match((await bot.responder('/bot -on -u'))[0], /\n\n\*Usuários\* \(1\) neste grupo\n/);
+        assert.match((await bot.responder('/bot -on -list-users'))[0], /\n\n\*Usuários\* \(1\) neste grupo\n/);
     });
 
     test('combinações inválidas mostram o uso', async () => {

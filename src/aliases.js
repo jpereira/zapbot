@@ -8,7 +8,8 @@
  */
 const { dbAll, dbGet, dbPronto } = require('./db');
 const { commandsByPrefix, findCommand } = require('./comandos/base');
-const { roleMaisRestrito, botConfig } = require('./botConfig');
+const { botConfig } = require('./botConfig');
+const { roleMaisRestrito } = require('./roles');
 const { acharComando, comAlvos, comandosNoTexto, montarTexto } = require('./comandosNoTexto');
 
 const ehAliasDeTexto = (salvo) => !salvo.startsWith('/');

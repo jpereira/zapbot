@@ -162,7 +162,7 @@ async function itensDasPessoas(msg, key, texto) {
         if (pessoa.grupo) {
             await msg.reply(`❌ ${pessoa.nome} é um grupo: o *${key}* é de pessoas (um contato ou um número).` +
                 (key === 'bot.admins'
-                    ? `\n💡 _Um grupo não pode ser admin (todos ali mandariam no bot). Para liberar os comandos comuns dentro dele: /bot +v /${pessoa.nome}/_`
+                    ? `\n💡 _Um grupo não pode ser admin (todos ali mandariam no bot). Para liberar os comandos comuns dentro dele: /bot +u /${pessoa.nome}/_`
                     : ''));
             return null;
         }
@@ -390,7 +390,7 @@ async function cmdSet({ msg, opts, args, chatId }) {
 
 /**
  * O -append/-rm de uma lista de pessoas (bot.admins, bot.users) a partir do
- * texto com os nomes, as menções e os números: o atalho do /bot +o|-o|+v|-v.
+ * texto com os nomes, as menções e os números: o atalho do /bot +a|-a|+u|-u.
  * Com itensProntos, o texto já são os itens (o telefone ou o id do grupo do
  * chat atual): não passa pela busca.
  */

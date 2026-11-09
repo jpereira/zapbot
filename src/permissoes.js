@@ -4,21 +4,25 @@
  * +cmd|-cmd). Sem regra, todos os comuns; com regra, só os da lista ("Apenas")
  * ou todos menos os da lista ("Todos, menos"). O /help e o /whois sempre passam.
  *
- * O role dos comandos (o "role" do comandos.json): user (comum), admin (só o dono
- * e o bot.admins, mas delegável: precisa estar citado num "Apenas", o /bot +cmd) e
- * owner (nunca delegável). Um "Todos, menos" ou o bot.users = true não liberam admin.
+ * Os usuários (+u) usam os comandos `role: USER`. Um `role: ADMIN` com `delegavel: true` só chega
+ * a um usuário citado num "Apenas" (o /bot +cmd): um "Todos, menos" ou o bot.users = true não o
+ * liberam. O resto (admin sem delegavel, owner) é só de quem tem o nível (src/roles.js).
  */
 
 const { botConfig } = require('./botConfig');
+const { ROLES } = require('./roles');
 const { getSetting, setSetting } = require('./settings');
 
 const CHAVE = 'bot.users.cmds';
 const SEMPRE_LIBERADOS = ['/help', '/whois'];
 
-// Delegado (role admin) opera só no chat atual: ver outros chats é do dono e dos admins
-const SO_DONO_OUTROS_CHATS = '⛔ Apenas o dono do bot (ou um admin) pode ver outros chats.';
+const comandoDe = (cmd) => botConfig.commands.find(c => c.cmd === cmd);
 
-const roleDe = (cmd) => botConfig.commands.find(c => c.cmd === cmd)?.role ?? 'user';
+// Um usuário pode receber o comando por um +cmd: admin e delegável
+const delegavel = (cmd) => {
+    const c = comandoDe(cmd);
+    return c?.role === ROLES.ADMIN && Boolean(c.delegavel);
+};
 
 // "5521...=/a,/b" → { apenas: true, comandos: ['/a', '/b'] }; "...=!/a" → { apenas: false }
 function lerLinha(linha) {
@@ -66,7 +70,7 @@ function permissaoAqui({ numero, chatId, isGroup }) {
         : [];
 
     if (users.includes('all')) {
-        return { liberado: true, soNosGrupos, regras: [], pode: (cmd) => roleDe(cmd) === 'user' };
+        return { liberado: true, soNosGrupos, regras: [], pode: (cmd) => (comandoDe(cmd)?.role ?? ROLES.USER) === ROLES.USER };
     }
 
     const entradas = [numero, isGroup && `${numero}:${chatId}`, isGroup && chatId]
@@ -80,13 +84,23 @@ function permissaoAqui({ numero, chatId, isGroup }) {
         soNosGrupos,
         regras: limitam,
         pode: (cmd) => {
-            const role = roleDe(cmd);
-            if (role === 'owner') return false;
-            // admin: só se alguma regra o cita (o +cmd); um regra ausente ou "Todos, menos" não basta
-            if (role === 'admin') return todas.some(r => r?.apenas && r.comandos.includes(cmd));
+            const role = comandoDe(cmd)?.role ?? ROLES.USER;
+            if (role === ROLES.OWNER || (role === ROLES.ADMIN && !delegavel(cmd))) return false;
+            // delegável: só se alguma regra o cita (o +cmd); sem regra ou "Todos, menos" não basta
+            if (role === ROLES.ADMIN) return todas.some(r => r?.apenas && r.comandos.includes(cmd));
             return !limitam.length || limitam.some(r => permite(r, cmd));
         }
     };
+}
+
+/**
+ * O nível de quem digitou: owner (a conta do bot), admin (o bot.admins), user (o bot.users, aqui) ou
+ * null (ninguém: o bot ignora).
+ */
+function nivelDe({ fromMe, numero, permissao }) {
+    if (fromMe) return ROLES.OWNER;
+    if (numero && getSetting('bot.admins').includes(numero)) return ROLES.ADMIN;
+    return permissao.liberado ? ROLES.USER : null;
 }
 
 // O aviso de quem usou um comando fora da regra
@@ -100,8 +114,8 @@ function avisoDeLimite(regrasQueLimitam, cmd) {
 
 module.exports = {
     SEMPRE_LIBERADOS,
-    SO_DONO_OUTROS_CHATS,
-    roleDe,
+    delegavel,
+    nivelDe,
     avisoDeLimite,
     descreverRegra,
     gravarRegra,

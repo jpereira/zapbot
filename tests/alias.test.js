@@ -138,7 +138,7 @@ test('alias herda a permissão do destino: o +cmd do /gpt (role admin) vale para
     await bot.setSetting('bot.users.cmds', [`${bot.OUTRO.user}=!/gpt`]);
     assert.deepEqual(await bot.responder('/felipe oi', { de }), []);
 
-    assert.match((await bot.responder('/bot +cmd /felipe +v /Fulano/'))[0], /desconhecido/);
+    assert.match((await bot.responder('/bot +cmd /felipe +u /Fulano/'))[0], /desconhecido/);
 });
 
 test('desativar o destino impede a execução e nomes reservados continuam protegidos', async t => {
@@ -236,7 +236,7 @@ test('alias de texto: cada {/comando} respeita as permissões de quem chama', as
 
     // Um comando fora da regra da pessoa barra o alias
     await bot.setSetting('bot.users', []);
-    await bot.responder('/bot +v /Fulano/');
+    await bot.responder('/bot +u /Fulano/');
     await bot.responder('/bot -cmd /crypto /Fulano/');
     assert.match((await bot.responder('/dolarbtc', { de }))[0], /O \/crypto não está liberado/);
     assert.equal(cotacao.mock.callCount(), 1);

@@ -5,6 +5,7 @@
 const { OPENAI_MODELOS } = require('./openai');
 const { compilarFiltroDebug } = require('./debugOpcoes');
 const { botConfig } = require('./botConfig');
+const { ROLES } = require('./roles');
 const { dbAll, dbGet, dbRun } = require('./db');
 const { limitarHistoricoMonitor } = require('./monitorHistorico');
 const { printError, printInfo, printSuccess } = require('./log');
@@ -44,12 +45,14 @@ function itemDeUsuario(v) {
     return telefoneDoItem(v);
 }
 
-// "/creptomoeda" ou "crypto" → "/crypto"; comando que não existe ou de nível owner: erro
+// "/creptomoeda" ou "crypto" → "/crypto"; comando que não existe ou que o dono não delega: erro
 function comandoDeUsuario(v) {
     const nome = v.startsWith('/') ? v.toLowerCase() : `/${v.toLowerCase()}`;
     const command = botConfig.commands.find(c => c.cmd === nome || c.aliases?.includes(nome));
     if (!command) throw new Error(`comando desconhecido: ${nome}`);
-    if (command.role === 'owner') throw new Error(`o ${command.cmd} é só do dono e dos admins, não dá para liberar`);
+    if (command.role !== ROLES.USER && !command.delegavel) {
+        throw new Error(`o ${command.cmd} é só ${command.role === ROLES.OWNER ? 'do dono' : 'do dono e dos admins'}, não dá para liberar`);
+    }
     return command.cmd;
 }
 
@@ -128,7 +131,7 @@ const SETTINGS_SCHEMA = {
     'bot.admins': {
         default: [],
         type: 'list',
-        desc: 'Outras pessoas (número com DDI, ex.: 5521999999999) que também usam os comandos admin. Só o dono altera; pelo /set vale o nome do contato (/set -a bot.admins /Jorge Pereira/), e o /bot +o|-o é o atalho.',
+        desc: 'Outras pessoas (número com DDI, ex.: 5521999999999) que também usam os comandos admin. Só o dono altera; pelo /set vale o nome do contato (/set -a bot.admins /Jorge Pereira/), e o /bot +a|-a é o atalho.',
         item: telefoneDoItem
     },
     'bot.login': {
@@ -147,12 +150,12 @@ const SETTINGS_SCHEMA = {
      * Quem usa os comandos comuns (os não-admin), além do dono e do bot.admins:
      * [] (false, o padrão) ninguém; ['all'] (true) todos; ou pessoas (o
      * telefone), grupos (o id @g.us: qualquer um, mas só dentro do grupo) e
-     * pessoas só num grupo ("telefone:id@g.us", o /bot +v digitado no grupo).
+     * pessoas só num grupo ("telefone:id@g.us", o /bot +u digitado no grupo).
      */
     'bot.users': {
         default: [],
         type: 'list',
-        desc: 'Quem usa os comandos comuns (os não-admin), além do dono e do bot.admins: false (ninguém, o padrão), true (todos) ou pessoas e grupos (num grupo, todos ali usam, mas só dentro dele); uma pessoa só num grupo fica como telefone:grupo. Só o dono altera; pelo /set vale o nome (/set bot.users /Maria Lucia/ /Grupo Familia/), e o /bot +v|-v é o atalho.',
+        desc: 'Quem usa os comandos comuns (os não-admin), além do dono e do bot.admins: false (ninguém, o padrão), true (todos) ou pessoas e grupos (num grupo, todos ali usam, mas só dentro dele); uma pessoa só num grupo fica como telefone:grupo. Só o dono altera; pelo /set vale o nome (/set bot.users /Maria Lucia/ /Grupo Familia/), e o /bot +u|-u é o atalho.',
         item: itemDeUsuario,
         lista: (itens) => {
             if (itens.includes('all') && itens.length > 1) {

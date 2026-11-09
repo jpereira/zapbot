@@ -1,0 +1,29 @@
+/*
+ * /cache: Exibe o espaço ocupado pelo cache e limpa
+ */
+
+const { BACKUP_DIR, CACHE_DIR, MEDIA_DIR } = require('../../constantes');
+const { ADMIN } = require('../../roles').ROLES;
+
+module.exports = {
+    cmd: '/cache',
+    usage: '/cache [OPÇÃO]',
+    aliases: [],
+    summary: 'Exibe o espaço ocupado pelo cache e limpa',
+    help: `Exibe o espaço ocupado em ${CACHE_DIR} e limpa o cache.`,
+    cmd_opts: [
+        {
+            opts: ['all', 'a'],
+            values: [],
+            desc: `Apaga TUDO em ${CACHE_DIR}: as mensagens (inclusive as guardadas para o /show), os temporários, as mídias baixadas em ${MEDIA_DIR} e os backups em ${BACKUP_DIR}.`
+        },
+        { opts: ['backup', 'b'], values: [], desc: `Apaga os backups do /backup em ${BACKUP_DIR}.` },
+        { opts: ['clean', 'c'], values: [], desc: 'Limpa só o que passou das janelas de retenção.' },
+        {
+            opts: ['media', 'm'],
+            values: [],
+            desc: `Apaga as mídias baixadas em ${MEDIA_DIR} (as mensagens ficam, sem o arquivo).`
+        }
+    ],
+    role: ADMIN // apaga dados
+};

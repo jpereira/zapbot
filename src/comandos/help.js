@@ -3,20 +3,22 @@
  */
 
 const { listarAliases } = require('../aliases');
+const { ROLES, atende } = require('../roles');
 const { activeCommands, findCommand, formatCommandHelp, protocoloDaAjuda } = require('./base');
 
 // A ordem do /help -full: do mais restrito ao comum
-const ROLES_NA_AJUDA = ['owner', 'admin', 'user'];
+const ROLES_NA_AJUDA = [ROLES.OWNER, ROLES.ADMIN, ROLES.USER];
 
 /*
- * Cada um vê só o que pode usar: o dono e os admins (bot.admins), tudo; os
- * outros (os do bot.users), só os comandos comuns, sem os de role admin/owner
- * (a menos que o dono tenha liberado um admin com o /bot +cmd). Mostrar
- * o /backup para quem não pode usar é como mostrar o cardápio da cozinha.
+ * Cada um vê só o que o nível dele alcança (src/roles.js): o dono, tudo; um admin (bot.admins), o que
+ * não é role owner; os usuários (bot.users), só os role user, mais os admin que o dono liberou com o
+ * /bot +cmd. Mostrar o /backup para quem não pode usar é como mostrar o cardápio da cozinha.
  */
-async function cmdHelp({ msg, args: digitado, opts, admin, podeUsar = (cmd) => findCommand(cmd)?.role === 'user' }) {
-    // Os admin, só para o dono e os admins; os outros, só os da regra deles (o /bot +cmd)
-    const pode = (command) => admin || podeUsar(command.cmd);
+async function cmdHelp({ msg, args: digitado, opts, nivel, admin,
+    podeUsar = (cmd) => findCommand(cmd)?.role === ROLES.USER }) {
+    const quem = nivel ?? (admin ? ROLES.ADMIN : ROLES.USER);
+    // Admins e o dono: pelo nível; os usuários: pela regra deles (o /bot +cmd)
+    const pode = (command) => (atende(quem, ROLES.ADMIN) ? atende(quem, command.role) : podeUsar(command.cmd));
 
     // Sem as opções (-role), o que sobra é o comando e o protocolo
     const args = opts ? opts.argv.join(' ') : digitado;
@@ -43,8 +45,8 @@ async function cmdHelp({ msg, args: digitado, opts, admin, podeUsar = (cmd) => f
         }
 
         if (!pode(command)) {
-            await msg.reply((command.role !== 'user'
-                ? `⛔ O ${command.cmd} é só do dono do bot (e dos admins).`
+            await msg.reply((command.role !== ROLES.USER
+                ? `⛔ O ${command.cmd} é só do dono do bot${command.role === ROLES.OWNER ? '' : ' (e dos admins)'}.`
                 : `⛔ O ${command.cmd} não está liberado para você.`) +
                 '\n💡 _Veja os que você pode usar com /help_');
             return;

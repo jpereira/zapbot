@@ -31,7 +31,7 @@ const desligado = (chave, oQue) => (getSetting(chave) ? '' : ` _(${oQue}; ligue 
 const tamanho = (p) => (fs.existsSync(p) ? (fs.statSync(p).isDirectory() ? getDirSize(p) : fs.statSync(p).size) : 0);
 
 /**
- * O relatório das últimas 24 h. O /bot põe o estado dele no topo (estadoDoBot)
+ * O relatório das últimas 24 h. O /bot coloca o estado dele no topo (estadoDoBot)
  * e a lista de usuários embaixo (usuarios); o envio diário vai sem a lista.
  */
 async function textoDoStatus(agora = Date.now(), { estadoDoBot = '', usuarios = '' } = {}) {

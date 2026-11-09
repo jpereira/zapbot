@@ -1,0 +1,61 @@
+/*
+ * /backup: Backup do banco: lista, detalha, restaura, envia ou apaga
+ */
+
+const { BACKUP_DIR } = require('../../constantes');
+const { ADMIN } = require('../../roles').ROLES;
+
+module.exports = {
+    cmd: '/backup',
+    usage: '/backup [OPÇÃO]',
+    aliases: ['/bkp'],
+    summary: 'Backup do banco: lista, detalha, restaura, envia ou apaga',
+    help: `Backup do banco em ${BACKUP_DIR}: um automático por dia, e você lista, detalha, restaura, envia ou apaga. O backup diário também é enviado ao destino da setting backup.to (contato, grupo, número ou e-mail, como no -to), sem pedir -sim; vazia, só salva localmente. Sem opção, mostra o banco atual e os backups.`,
+    cmd_opts: [
+        {
+            opts: ['info', 'i'],
+            values: ['<nº>'],
+            desc: 'Detalhes do backup nº N: data, motivo, versão e as entradas de cada tabela, comparadas com o banco atual.'
+        },
+        {
+            opts: ['list', 'l'],
+            values: [],
+            desc: 'Lista os backups, do mais novo para o mais antigo.'
+        },
+        {
+            opts: ['now', 'n'],
+            values: [],
+            desc: 'Cria um backup agora (manual: fica até ser apagado).'
+        },
+        {
+            opts: ['restore', 'r'],
+            values: ['<nº|nome>'],
+            desc: 'Restaura o backup (pede confirmação com -sim). Antes, faz um backup do estado atual.'
+        },
+        { opts: ['rm'], values: ['<nº|all>'], desc: 'Apaga o backup nº N (ou todos).' },
+        {
+            opts: ['send', 's'],
+            values: ['[nº]'],
+            desc: 'Envia o arquivo do backup (sem nº: o mais recente) no seu privado ou nos destinos do -to.'
+        },
+        {
+            opts: ['sim'],
+            values: [],
+            desc: 'Confirma: junto com -restore, a restauração; junto com -send -to outro chat, o envio (o banco tem as mensagens de todos os chats).'
+        },
+        {
+            opts: ['to'],
+            values: ['<destino>'],
+            desc: 'Junto com -send: por e-mail, como anexo (email = o QRCODE_EMAIL_SMTP_TO), ou noutro chat: um contato, uma menção, um grupo ou um número (pede -sim). Repita para vários.',
+            ex: [
+                '-to email',
+                '-to voce@exemplo.com',
+                '-to /Jorge Pereira/',
+                '-to @Fulano (menção)',
+                '-to /Grupo L200/',
+                '-to +5521999999999'
+            ]
+        }
+    ],
+    role: ADMIN // mexe no banco inteiro
+};

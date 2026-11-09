@@ -1,4 +1,4 @@
-# `/monitor` · owner
+# `/monitor` · admin
 
 👀 Monitora até cinco contatos, consultando uma pessoa por vez e guardando os horários distintos
 de **visto por último observados**. Disponível para o dono do bot e os admins. O cadastro e o

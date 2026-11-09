@@ -35,12 +35,6 @@ async function cmdCrypto(ctx) {
 
     // given: "-a" sem moeda também conta (senão cairia na cotação)
     if (opts.given.has('add') || opts.given.has('del')) {
-        // Mexe na configuração global: só o dono do bot (e os admins do bot.admins)
-        if (!ctx.admin) {
-            await msg.reply('⛔ Apenas o dono do bot (ou um admin) pode alterar as moedas.');
-            return;
-        }
-
         const adicionar = opts.given.has('add');
         const sym = token(adicionar ? opts.opt.add : opts.opt.del);
 

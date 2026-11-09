@@ -1,7 +1,7 @@
 # `/profile` (`/perfil`) · admin
 
 Role `admin`: só você e os admins extras. O dono libera a uma pessoa ou grupo com
-`/bot +v +cmd /profile` ([Delegando](index.md#delegando-um-comando-admin)).
+`/bot +u +cmd /profile` ([Delegando](index.md#delegando-um-comando-admin)).
 Quem recebe vê só o chat atual: informar um contato, menção ou número é do dono e dos admins extras.
 
 Mostra a foto de perfil de um contato, com o nome que ele tem na **sua agenda** e o telefone. Sem

@@ -8,7 +8,7 @@ const { client } = require('../cliente');
 const { getSetting } = require('../settings');
 const { enviarMidias, erroDosComandos, montarTexto, quebrarLinhas } = require('../comandosNoTexto');
 
-async function cmdMe({ msg, args, chatId, chatName, isGroup, admin, podeUsar, senderContact, senderName, senderNumber }) {
+async function cmdMe({ msg, args, chatId, chatName, isGroup, nivel, admin, podeUsar, senderContact, senderName, senderNumber }) {
     let vezes = 1;
     const resto = args.trim().replace(/^-(?:repeat|r)\s+(\S+)(?:\s+|$)/i, (_, n) => {
         vezes = /^\d+$/.test(n) ? Number(n) : 0;
@@ -27,7 +27,7 @@ async function cmdMe({ msg, args, chatId, chatName, isGroup, admin, podeUsar, se
 
     const { texto: final, midias } = await montarTexto(texto,
         { chat_id: chatId, chat_name: chatName, is_group: isGroup },
-        { onde: '/me', quem: { admin, podeUsar, senderContact, senderName, senderNumber } });
+        { onde: '/me', quem: { nivel, admin, podeUsar, senderContact, senderName, senderNumber } });
 
     // O montarTexto só dá trim com {/comando}: normaliza e devolve o espaço/quebra do fim, para "Haha!\n" repetir como "Haha!\nHaha!\n"
     const buf = (final.trimEnd() + texto.match(/\s*$/)[0]).repeat(vezes);

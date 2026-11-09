@@ -173,15 +173,15 @@ Por onde começar:
   JSON) e são alteradas pelo [`/set`](comandos/set.md). No boot os valores padrão são gravados, se
   ainda não existirem, e tudo é carregado em memória. Veja [Settings](settings.md).
 - **Comandos**: definidos em
-  [`src/comandos/comandos.json`](https://github.com/jpereira/zapbot/blob/main/src/comandos/comandos.json)
+  [`src/comandos/definicoes/`](https://github.com/jpereira/zapbot/tree/main/src/comandos/definicoes)
   (nome, aliases, opções, ajuda, permissão) e implementados em `src/comandos/` (um arquivo por
   comando; veja [Estrutura do código](desenvolvimento.md#estrutura-do-código)). Os que consultam a
   internet (`/gpt`, `/tempo`, `/cve`, `/news`...) usam os serviços da tabela
   [Serviços externos](configuracao.md#serviços-externos).
 - **Controle**: o [`/bot`](comandos/bot.md) mostra o status (o relatório de 24 h e os usuários),
   liga/desliga todos os comandos (`-on`/`-off`) e diz quem usa: você, os
-  [admins extras](comandos/bot.md#admins-extras) (`+o`/`-o`) e os
-  [usuários](comandos/bot.md#usuários) (`+v`/`-v`: pessoas e grupos, com os comandos de cada um
+  [admins extras](comandos/bot.md#admins-extras) (`+a`/`-a`) e os
+  [usuários](comandos/bot.md#usuários) (`+u`/`-u`: pessoas e grupos, com os comandos de cada um
   limitados pelo `+cmd`/ `-cmd`, e com comandos `admin` delegados, se quiser); o `-reset` volta ao
   padrão, o `-status 06h` manda o
   relatório todo dia (no seu privado, noutros chats ou por e-mail), o `-info` mostra as versões do

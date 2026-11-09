@@ -16,9 +16,9 @@ const { dbGet, dbPronto, dbRun } = require('../db');
 const { responderEscolha } = require('../escolhas');
 const { verificarFlood } = require('../flood');
 const { esconderNoBanco, senhaDoLogin, tentarLogin } = require('../login');
-const { SEMPRE_LIBERADOS, avisoDeLimite, permissaoAqui } = require('../permissoes');
+const { SEMPRE_LIBERADOS, avisoDeLimite, nivelDe, permissaoAqui } = require('../permissoes');
+const { ROLES, atende } = require('../roles');
 const { printCall, printComandoDesconhecido, printDebug, printError, printInfo } = require('../log');
-const { GetOptFromCommand } = require('../opcoes');
 const { getSetting, isDebugMode } = require('../settings');
 const { contarStats, meuIdStats } = require('../stats');
 const { isCaminhoDeMidia, nomeSeguro, obterPastaMidia } = require('../util/arquivos');
@@ -30,7 +30,7 @@ const { printDebugNivel } = require('../log');
 const { instrumentarObjeto } = require('../debugInstrumentacao');
 const { resolverNomeDoCanal } = require('../contatos');
 const { ehCanal, idDoCanal } = require('../util/origem');
-const { pediuAjudaWatch, pediuMascaraWatch } = require('../watch/opcoes');
+const { comDigitando, erroDeOpcoes, lerOpcoes, montarContexto, negacao, pediuMascara } = require('../executar');
 const { dadosParserComando } = require('../debugParser');
 
 // Avisos do próprio WhatsApp (entrou no grupo, mudou o nome, criptografia, chamada...): não têm autor
@@ -288,14 +288,13 @@ client.on('message_create', (msg) => comContextoDebug({
                 const quem = msg.fromMe ? (client.info?.pushname || 'Você') : senderName;
                 printComandoDesconhecido(quem, body.length > 100 ? `${body.slice(0, 100)}…` : body, { doDono: msg.fromMe });
             }
-            const admin = Boolean(msg.fromMe ||
-                (senderNumber && getSetting('bot.admins').includes(senderNumber)));
             const permissao = permissaoAqui({ numero: senderNumber, chatId, isGroup });
-            if (!admin && !permissao.liberado) return;
+            const nivel = nivelDe({ fromMe: msg.fromMe, numero: senderNumber, permissao });
+            if (!nivel) return;
 
             // O começo de mais de um comando (ex.: /un): lista os que a pessoa pode usar
             const possiveis = (resolvido?.possiveis ?? [])
-                .filter(c => admin || (c.alvos ?? [c.cmd])
+                .filter(c => atende(nivel, c.role) || (c.alvos ?? [c.cmd])
                     .every(cmd => SEMPRE_LIBERADOS.includes(cmd) || permissao.pode(cmd)))
                 .map(c => c.cmd);
             await msg.reply(possiveis.length
@@ -319,9 +318,6 @@ client.on('message_create', (msg) => comContextoDebug({
             return;
         }
 
-        // Você (a conta do bot) ou um admin extra (setting bot.admins, pelo telefone de quem mandou)
-        const admin = Boolean(msg.fromMe || (senderNumber && getSetting('bot.admins').includes(senderNumber)));
-
         /*
          * Os outros usam os comandos comuns se o bot.users deixar: true (todos),
          * a pessoa (pelo telefone), o grupo onde o comando foi digitado ou a
@@ -331,7 +327,11 @@ client.on('message_create', (msg) => comContextoDebug({
          * grupos e tenta no privado fica sabendo onde pode.
          */
         const permissao = permissaoAqui({ numero: senderNumber, chatId, isGroup });
-        if (!admin && !permissao.liberado) {
+
+        // O nível de quem digitou: owner (você, a conta do bot), admin (bot.admins, pelo telefone), user ou nenhum
+        const nivel = nivelDe({ fromMe: msg.fromMe, numero: senderNumber, permissao });
+        const admin = atende(nivel, ROLES.ADMIN); // o dono ou um admin
+        if (!nivel) {
             printDebug(`Comando '${command.cmd}' de ${senderName} ignorado: fora do bot.users`);
             if (!isGroup && permissao.soNosGrupos.length) {
                 const grupos = await Promise.all(permissao.soNosGrupos.map(async (id) =>
@@ -342,11 +342,11 @@ client.on('message_create', (msg) => comContextoDebug({
         }
 
         /*
-         * Comando restrito ao dono do bot: ignora em silêncio no chat e só avisa
-         * no seu privado. Evita que, com vários zapbots no mesmo grupo, o comando
+         * Comando acima do nível de quem digitou (e que o dono não delegou): ignora em silêncio no
+         * chat e só avisa no seu privado. Evita que, com vários zapbots no mesmo grupo, o comando
          * de uma pessoa seja executado por todos.
          */
-        if (!admin && command.role !== 'user' && !(command.alvos ?? [command.cmd]).every(cmd => permissao.pode(cmd))) {
+        if (!atende(nivel, command.role) && !(command.alvos ?? [command.cmd]).every(cmd => permissao.pode(cmd))) {
             if (isDebugMode()) {
                 messageToSelf(`⚠️ ${senderName} tentou executar ${command.cmd} dentro de ${chatName}, mas sem permissão`);
             }
@@ -384,10 +384,10 @@ client.on('message_create', (msg) => comContextoDebug({
         // Alias de texto: os {/comando} rodam aqui, com as permissões de quem chamou (os argumentos ficam de fora)
         if (resolvido.texto) {
             printCall(msg.fromMe ? (client.info?.pushname || 'Você') : senderName, body, chatName);
-            await executarAliasDeTexto(msg, resolvido, {
+            await comDigitando(msg, command, () => executarAliasDeTexto(msg, resolvido, {
                 chatId, chatName, isGroup,
-                quem: { admin, podeUsar: admin ? () => true : permissao.pode, senderContact, senderName, senderNumber }
-            });
+                quem: { nivel, admin, podeUsar: admin ? () => true : permissao.pode, senderContact, senderName, senderNumber }
+            }));
             return;
         }
 
@@ -397,15 +397,8 @@ client.on('message_create', (msg) => comContextoDebug({
         }
 
         // As opções do comando salvo pertencem ao alvo, inclusive -h e -rm.
-        const paraParser = ['/alias', '/batch'].includes(command.cmd) && !/^-h(?:elp)?$/.test(args) ? '' : args;
-        const opts = GetOptFromCommand(paraParser, command);
-        if (command.cmd === '/watch') {
-            opts.opt.help = pediuAjudaWatch(args);
-            opts.opt.mask = pediuMascaraWatch(args);
-        }
-        // O -mask dos telefones (o do /defi é outro: esconde as carteiras, e não passa por aqui)
-        contextoDebug().maskTelefones = ['/block', '/bot', '/profile', '/search', '/show', '/watch'].includes(command.cmd) &&
-            Boolean(opts.opt.mask);
+        const opts = lerOpcoes(command, args);
+        contextoDebug().maskTelefones = pediuMascara(command, opts);
 
         if (isDebugMode()) {
             printDebug('Parser do comando:', command.cmd, dadosParserComando(args, command, opts));
@@ -414,6 +407,13 @@ client.on('message_create', (msg) => comContextoDebug({
         // foo -help
         if (opts.opt.help) {
             await msg.reply('```' + getCommandSyntax(command.cmd, protocoloDaAjuda(command, opts.argv)) + '```');
+            return;
+        }
+
+        // Opção desconhecida (nos comandos estritos) e opção que a pessoa não pode usar (role, outrosChats)
+        const recusa = erroDeOpcoes(command, opts) ?? negacao(command, opts, nivel);
+        if (recusa) {
+            await msg.reply(recusa);
             return;
         }
 
@@ -429,11 +429,11 @@ client.on('message_create', (msg) => comContextoDebug({
 
         const quotedMsg = msg.hasQuotedMsg ? await msg.getQuotedMessage().catch(() => null) : null;
 
-        await handler({
-            msg, opts, args, quotedMsg, senderContact, senderName, senderNumber, isGroup, chatId, chatName,
-            admin,
-            podeUsar: admin ? () => true : permissao.pode
-        });
+        await comDigitando(msg, command, () => handler(montarContexto({
+            msg, args, opts, quotedMsg,
+            chat: { chatId, chatName, isGroup },
+            quem: { nivel, admin, podeUsar: admin ? () => true : permissao.pode, senderContact, senderName, senderNumber }
+        })));
     } catch (error) {
         printError('[message_create] Erro geral controlado:', {
             error: error?.message || String(error),

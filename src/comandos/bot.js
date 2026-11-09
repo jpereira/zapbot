@@ -13,7 +13,7 @@ const { aguardarConfirmacao, autorDe } = require('../escolhas');
 const { GetOptFromCommand } = require('../opcoes');
 const { caixas } = require('../imap');
 const { printInfo } = require('../log');
-const { descreverRegra, gravarRegra, regraDe, roleDe } = require('../permissoes');
+const { delegavel, descreverRegra, gravarRegra, regraDe } = require('../permissoes');
 const {
     SETTINGS_SCHEMA, comandoDeUsuario, getSetting, setSetting, validarSetting
 } = require('../settings');
@@ -33,8 +33,8 @@ const { contextoDebug } = require('../debugContexto');
  *   /bot           → o status (o mesmo do -status): o estado, o relatório de 24 h e quem usa
  *   /bot -on|-off  → liga e desliga: desligado, TODOS os comandos são ignorados, exceto o /bot
  *                    (as listas de admins e usuários ficam como estão)
- *   /bot -users    → os usuários deste chat (num grupo, os de lá; no seu privado, todos)
- *   /bot -all-users → todos os usuários, em qualquer chat (num grupo, com os telefones de fora
+ *   /bot -list-users → os usuários deste chat (num grupo, os de lá; no seu privado, todos)
+ *   /bot -list-users all → todos os usuários, em qualquer chat (num grupo, com os telefones de fora
  *                     escondidos)
  *   /bot -passwd <senha|off> → (dono) define a senha do login (só o hash fica no banco)
  *   /bot -login <senha>      → quem é de fora, no privado, vira admin; o dono é avisado (WhatsApp e e-mail)
@@ -42,11 +42,11 @@ const { contextoDebug } = require('../debugContexto');
  * A recuperação de apagadas, o /watch e os alertas continuam funcionando com ele desligado.
  *
  * Os atalhos do IRC (o: operador, manda; v: voz, só fala), só do dono, um de cada vez:
- *   /bot +o|-o <pessoa...>        → põe e tira admins (bot.admins)
- *   /bot +v|-v <pessoa|grupo...>  → põe e tira usuários (bot.users)
+ *   /bot +a|-a <pessoa...>        → adiciona e tira admins (bot.admins)
+ *   /bot +u|-u <pessoa|grupo...>  → adiciona e tira usuários (bot.users)
  * A pessoa é /Nome/, "Nome", @menção ou +número, como no -to. Sem ninguém, vale
  * o chat atual: no grupo, o grupo (que não vira admin); no privado de alguém, a pessoa.
- * O +v de uma pessoa digitado num grupo vale só nesse grupo.
+ * O +u de uma pessoa digitado num grupo vale só nesse grupo.
  *
  * O relatório (src/status.js) aceita -to e -mask; as versões (src/sistema.js), -mask:
  *   /bot -status (-s)         → o relatório agora (o mesmo do /bot sem opção)
@@ -62,7 +62,7 @@ function quemUsa() {
     if (users.includes('all')) {
         return '🔓 *Comandos:* todos usam os comuns\n' +
             '⚠️ _Atenção: qualquer pessoa pode executar os comandos comuns do bot, em qualquer chat. ' +
-            'Para restringir: /set bot.users false (e depois /bot +v para liberar alguns)._';
+            'Para restringir: /set bot.users false (e depois /bot +u para liberar alguns)._';
     }
     if (!users.length) return `🔒 *Comandos:* só o dono${admins}`;
     return '👥 *Comandos:* o dono e quem está na lista abaixo';
@@ -85,7 +85,7 @@ async function membrosDoGrupo(chatId) {
 
 /*
  * Um item das listas: a pessoa (o telefone), o grupo (o id @g.us) ou a pessoa
- * só num grupo ("telefone:grupo", o /bot +v digitado no grupo).
+ * só num grupo ("telefone:grupo", o /bot +u digitado no grupo).
  */
 function lerItem(item) {
     const [numero, soEm = null] = item.split(':');
@@ -94,11 +94,11 @@ function lerItem(item) {
 
 /*
  * Quem a lista mostra, pelo chat onde o comando foi digitado:
- *   - no seu privado (ou com -all-users): todos;
+ *   - no seu privado (ou com -list-users all): todos;
  *   - num grupo: quem participa dele, o próprio grupo e quem só tem permissão nele;
  *   - no privado de alguém: só essa pessoa.
  * membros: num grupo, os telefones de quem está nele; o de quem não está sai
- * escondido (com o -all-users, aparece todo mundo, mas sem entregar o número
+ * escondido (com o -list-users all, aparece todo mundo, mas sem entregar o número
  * de ninguém ao grupo). Fora de grupo, null: nada é escondido.
  */
 async function escopoDoChat({ chatId, isGroup, todos = false } = {}) {
@@ -165,20 +165,20 @@ async function descreverItem(item, escopo) {
  */
 function marcasDe(item, admins, users) {
     const { numero, soEm } = lerItem(item);
-    if (soEm) return [`${PAPEIS.usuario} +v`];
+    if (soEm) return [`${PAPEIS.usuario} +u`];
     return [
         ehODono(numero) && `${PAPEIS.dono} dono`,
-        admins.includes(item) && `${PAPEIS.admin} +o`,
-        users.includes(item) && `${PAPEIS.usuario} +v`
+        admins.includes(item) && `${PAPEIS.admin} +a`,
+        users.includes(item) && `${PAPEIS.usuario} +u`
     ].filter(Boolean);
 }
 
 /*
- * Admins (+o) e usuários (+v) numa lista só: quem está nas duas aparece uma
+ * Admins (+a) e usuários (+u) numa lista só: quem está nas duas aparece uma
  * vez, com as duas marcas. Primeiro os admins, na ordem de cada setting.
- * novos: os que acabaram de entrar (com ✅). dica: 'todos' (o -all-users, com
- * o cuidado de não expor quem é de fora) ou 'usuarios' (o -users, na resposta
- * do +o/+v).
+ * novos: os que acabaram de entrar (com ✅). dica: 'todos' (o -list-users all, com
+ * o cuidado de não expor quem é de fora) ou 'usuarios' (o -list-users, na resposta
+ * do +a/+u).
  */
 async function listaDeUsuarios(escopo, { novos = [], dica = 'todos' } = {}) {
     const admins = getSetting('bot.admins');
@@ -191,8 +191,8 @@ async function listaDeUsuarios(escopo, { novos = [], dica = 'todos' } = {}) {
     const itens = mostra ? todos.filter(mostra) : todos;
     const fora = todos.length - itens.length;
     const comoVer = dica === 'todos'
-        ? `⚠️ _Para listar todos: /bot -all-users ou /bot -au. Cuidado: mostra também quem não é ${onde}._`
-        : '_Listar usuários: /bot -users ou /bot -u_';
+        ? `⚠️ _Para listar todos: /bot -list-users all ou /bot -lu all. Cuidado: mostra também quem não é ${onde}._`
+        : '_Listar usuários: /bot -list-users_';
     const rodape = fora ? `\n\n💡 _Só quem é ${onde}; mais ${fora} fora daqui._\n${comoVer}` : '';
     const titulo = `*Usuários* (${itens.length})${mostra ? ` ${aqui}` : ''}`;
     if (!itens.length) return `${titulo}\n_Ninguém ${onde}._${rodape}`;
@@ -213,8 +213,8 @@ async function listaDeUsuarios(escopo, { novos = [], dica = 'todos' } = {}) {
 function permissoes({ dono = false, semPermissao = false } = {}) {
     return '*Permissões*\n' +
         (dono ? `${PAPEIS.dono} dono: você, que já usa tudo\n` : '') +
-        `${PAPEIS.admin} +o: admin, usa tudo\n` +
-        `${PAPEIS.usuario} +v: usuário, usa os comandos comuns` +
+        `${PAPEIS.admin} +a: admin, usa tudo\n` +
+        `${PAPEIS.usuario} +u: usuário, usa os comandos comuns` +
         (semPermissao ? `\n${PAPEIS.nenhum} sem permissão: o bot ignora os comandos dela` : '');
 }
 
@@ -225,7 +225,7 @@ const estadoDoBot = () => (getSetting('bot.paused')
 
 const MAIS_INFORMACOES = 'ℹ️ _Mais informações em /bot -h_';
 
-// A lista do -users e do -all-users (sem ninguém nela, a linha de quem usa os comandos)
+// A lista do -list-users [all] (sem ninguém nela, a linha de quem usa os comandos)
 async function textoDosUsuarios(chat) {
     return await listaDeUsuarios(await escopoDoChat(chat)) || quemUsa();
 }
@@ -237,16 +237,16 @@ async function relatorio(chat) {
     return `${texto}\n\n${MAIS_INFORMACOES}`;
 }
 
-// +o/-o (bot.admins), +v/-v (bot.users) e +cmd/-cmd (os comandos de cada usuário), em qualquer
+// +a/-a (bot.admins), +u/-u (bot.users) e +cmd/-cmd (os comandos de cada usuário), em qualquer
 // ordem
-const ATALHO = /(^|\s)[+-](o|v|cmd)(?=\s|$)/;
-const OPERACAO = /(^|\s)([+-])([ov])(?=\s|$)/;
+const ATALHO = /(^|\s)[+-](a|u|cmd)(?=\s|$)/;
+const OPERACAO = /(^|\s)([+-])([au])(?=\s|$)/;
 const OPCAO_CMD = /(^|\s)([+-])cmd(?:\s+((?:[^\s+,-][^\s,]*,\s*)*[^\s+,-][^\s,]*))?(?=\s|$)/;
-const LISTA_DO_ATALHO = { o: 'bot.admins', v: 'bot.users' };
+const LISTA_DO_ATALHO = { a: 'bot.admins', u: 'bot.users' };
 
 /*
- * O texto do atalho: a operação (+o/-o/+v/-v), o +cmd/-cmd e os comandos dele,
- * o -all-users (a resposta com todos; o -users é o normal) e o resto (quem).
+ * O texto do atalho: a operação (+a/-a/+u/-u), o +cmd/-cmd e os comandos dele,
+ * o -list-users all (a resposta com todos; sem o all é o normal) e o resto (quem).
  */
 function lerAtalho(texto) {
     let resto = ` ${texto} `;
@@ -255,8 +255,8 @@ function lerAtalho(texto) {
         if (m) resto = resto.slice(0, m.index) + m[1] + resto.slice(m.index + m[0].length);
         return m;
     };
-    const todos = Boolean(tirar(/(^|\s)-(?:au|all-users)(?=\s|$)/));
-    tirar(/(^|\s)-(?:u|users)(?=\s|$)/);
+    const todos = Boolean(tirar(/(^|\s)-(?:list-users|lu)\s+all(?=\s|$)/));
+    tirar(/(^|\s)-(?:list-users|lu)(?=\s|$)/);
     const cmd = tirar(OPCAO_CMD);
     const op = tirar(OPERACAO);
     return {
@@ -285,20 +285,20 @@ async function itensDoChat(msg, key, { chatId, isGroup }) {
     if (isGroup) {
         if (key === 'bot.users') return [chatId];
         await msg.reply('❌ Um grupo não pode ser admin (todos ali mandariam no bot).\n' +
-            '💡 _Para liberar os comandos comuns neste grupo: /bot +v_');
+            '💡 _Para liberar os comandos comuns neste grupo: /bot +u_');
         return null;
     }
 
     const ids = await idsDoChatAtual(chatId);
     if (ids.includes(client.info.wid._serialized)) {
         await msg.reply('❌ Este é o seu privado: você (o dono) já usa tudo.\n' +
-            '💡 _Use num grupo ou no privado de alguém, ou informe quem: /bot +v /Nome/_');
+            '💡 _Use num grupo ou no privado de alguém, ou informe quem: /bot +u /Nome/_');
         return null;
     }
 
     const telefone = ids.find(i => i.endsWith('@c.us'));
     if (!telefone) {
-        await msg.reply('❌ Não sei o telefone desta pessoa (o WhatsApp só informou o id interno): use o número, ex.: /bot +v +5521999999999.');
+        await msg.reply('❌ Não sei o telefone desta pessoa (o WhatsApp só informou o id interno): use o número, ex.: /bot +u +5521999999999.');
         return null;
     }
     return [telefone.split('@')[0]];
@@ -306,7 +306,7 @@ async function itensDoChat(msg, key, { chatId, isGroup }) {
 
 /*
  * Os itens do texto (nomes, menções, números, grupos), já validados. Num
- * grupo, o +v de uma pessoa vale só nesse grupo ("telefone:grupo").
+ * grupo, o +u de uma pessoa vale só nesse grupo ("telefone:grupo").
  * @returns {Promise<string[]|null>} null: já respondeu o erro
  */
 async function itensDoTexto(msg, key, texto, { chatId, isGroup }) {
@@ -330,7 +330,7 @@ async function itensDoTexto(msg, key, texto, { chatId, isGroup }) {
 }
 
 /*
- * O que sai com o -v: num grupo, a permissão dele (ou, sem ela, a geral); no
+ * O que sai com o -u: num grupo, a permissão dele (ou, sem ela, a geral); no
  * privado, todas as da pessoa (a geral e as de cada grupo).
  */
 function aRemover(item, atual, { isGroup }) {
@@ -341,7 +341,7 @@ function aRemover(item, atual, { isGroup }) {
 }
 
 /*
- * +o|-o|+v|-v: muda a lista e responde com a lista deste chat (os que entraram,
+ * +a|-a|+u|-u: muda a lista e responde com a lista deste chat (os que entraram,
  * com ✅; os que saíram, numa linha 🗑️ em cima). Os que entraram e não aparecem
  * na lista daqui ganham uma linha ✅ em cima.
  */
@@ -372,7 +372,7 @@ async function mudarLista(msg, key, itens, acrescentar, chat) {
     } else {
         removidos = [...new Set(itens.flatMap(i => aRemover(i, atual, chat)))];
         if (!removidos.length) {
-            await msg.reply(`❌ Não é ${quem.um}: ${(await curtos(itens)).join(', ')}.\n💡 _Veja com /bot -users_`);
+            await msg.reply(`❌ Não é ${quem.um}: ${(await curtos(itens)).join(', ')}.\n💡 _Veja com /bot -list-users_`);
             return;
         }
         await setSetting(key, atual.filter(i => !removidos.includes(i)));
@@ -390,11 +390,11 @@ async function mudarLista(msg, key, itens, acrescentar, chat) {
 }
 
 /*
- * +cmd|-cmd: a regra de cada usuário. Junto com o +v, define a regra:
- * +v +cmd /a,/b = só esses; +v -cmd /a = todos, menos esse. Sozinhos:
+ * +cmd|-cmd: a regra de cada usuário. Junto com o +u, define a regra:
+ * +u +cmd /a,/b = só esses; +u -cmd /a = todos, menos esse. Sozinhos:
  *   +cmd: (um comando admin só entra em "Apenas") quem não é usuário entra só com esses; "Apenas" ganha esses; "Todos,
  *         menos" libera esses de novo; quem usa todos fica como está; all apaga a regra;
- *   -cmd: "Apenas" perde esses (o último, não: aí é o -v); quem usa todos fica
+ *   -cmd: "Apenas" perde esses (o último, não: aí é o -u); quem usa todos fica
  *         "Todos, menos" esses; "Todos, menos" ganha esses.
  * Num grupo, a pessoa é a de lá ("telefone:grupo") ou, sem ela, a de qualquer chat.
  */
@@ -408,7 +408,7 @@ async function mudarComandos(msg, itens, { sinal, comandos, comV }, chat) {
 
     const escopo = await escopoDoChat(chat);
     const tudo = comandos.includes('all');
-    const admins = comandos.filter(c => roleDe(c) === 'admin');
+    const admins = comandos.filter(delegavel);
     const alterados = [];
     const novosUsuarios = [];
     const avisos = [];
@@ -430,7 +430,7 @@ async function mudarComandos(msg, itens, { sinal, comandos, comV }, chat) {
             if (!ehUsuario || tudo) nova = tudo ? null : { apenas: true, comandos };
             else if (!regra?.apenas && admins.length) {
                 avisos.push(`❌ ${quem} usa os comandos comuns, e o ${admins.join(', ')} (admin) só entra numa lista "Apenas": ` +
-                    `liste os comandos dele, ex.: /bot +v +cmd /cotacao,${admins[0]}.`);
+                    `liste os comandos dele, ex.: /bot +u +cmd /cotacao,${admins[0]}.`);
                 continue;
             } else if (!regra) {
                 avisos.push(`ℹ️ ${quem} já usa todos os comandos comuns.`);
@@ -443,7 +443,7 @@ async function mudarComandos(msg, itens, { sinal, comandos, comV }, chat) {
                 continue;
             }
             if (tudo || (regra?.apenas && !sobra.length)) {
-                avisos.push(`❌ Não sobraria comando para ${quem}: para tirar a pessoa, /bot -v; para liberar todos, /bot +cmd all.`);
+                avisos.push(`❌ Não sobraria comando para ${quem}: para tirar a pessoa, /bot -u; para liberar todos, /bot +cmd all.`);
                 continue;
             }
             if (!regra) nova = { apenas: false, comandos };
@@ -481,18 +481,18 @@ async function mudarComandos(msg, itens, { sinal, comandos, comV }, chat) {
 
 async function tratarAtalho(msg, texto, chatAtual) {
     const { op, cmd, todos, quem } = lerAtalho(texto);
-    const key = LISTA_DO_ATALHO[op?.letra ?? 'v'];
+    const key = LISTA_DO_ATALHO[op?.letra ?? 'u'];
     const chat = { ...chatAtual, todos };
 
     // Só o dono: um admin extra não promove ninguém (nem a si mesmo)
     if (!msg.fromMe) {
-        await msg.reply(`⛔ Só o dono do bot põe e tira ${QUEM[key].varios}.`);
+        await msg.reply(`⛔ Só o dono do bot adiciona e tira ${QUEM[key].varios}.`);
         return;
     }
 
-    // O +cmd|-cmd é dos usuários: com o +o/-o ou o -v, não
-    if (cmd && op && (op.letra === 'o' || op.sinal === '-')) {
-        await msg.reply('❌ O +cmd|-cmd vale só para usuários: /bot +v +cmd /cotacao /Fulano/ ou /bot -cmd /meme /Fulano/.');
+    // O +cmd|-cmd é dos usuários: com o +a/-a ou o -u, não
+    if (cmd && op && (op.letra === 'a' || op.sinal === '-')) {
+        await msg.reply('❌ O +cmd|-cmd vale só para usuários: /bot +u +cmd /cotacao /Fulano/ ou /bot -cmd /meme /Fulano/.');
         return;
     }
 
@@ -505,7 +505,7 @@ async function tratarAtalho(msg, texto, chatAtual) {
             return;
         }
         if (cmd.sinal === '-' && comandos.includes('all')) {
-            await msg.reply('❌ Para tirar todos os comandos, tire a pessoa: /bot -v.');
+            await msg.reply('❌ Para tirar todos os comandos, tire a pessoa: /bot -u.');
             return;
         }
     }
@@ -622,8 +622,8 @@ async function limparEmail(msg, { apagar }) {
     }
 }
 
-const USO = '❌ Uso: /bot [-on|-off] [-users|-all-users]  ou  ' +
-    '/bot +o|-o|+v|-v [+cmd|-cmd <comandos>] [pessoa...] [-all-users]  ou  /bot -reset [force]  ou  ' +
+const USO = '❌ Uso: /bot [-on|-off] [-list-users [all]]  ou  ' +
+    '/bot +a|-a|+u|-u [+cmd|-cmd <comandos>] [pessoa...] [-list-users all]  ou  /bot -reset [force]  ou  ' +
     '/bot -status [<hora>|off] [-to <destino>]...  ou  /bot -info  ou  /bot -test  ou  /bot -flush-email [true]  ou  /bot -passwd <senha|off>  ou  /bot -login <senha>\n💡 _/bot -h para ajuda_';
 
 async function cmdBot({ msg, opts: optsDoComando, args, chatId, isGroup }) {
@@ -637,8 +637,13 @@ async function cmdBot({ msg, opts: optsDoComando, args, chatId, isGroup }) {
     const { destinos: destinosTexto, informado: comDestino, resto } = extrairDestinos(args);
     const opts = comDestino ? GetOptFromCommand(resto, findCommand('/bot')) : optsDoComando;
     const { on, off } = opts.opt;
-    const todos = opts.given.has('all-users');
-    const listar = todos || opts.given.has('users');
+    // -list-users [all]: sem o all, os deste chat; com ele, todos
+    const listar = opts.given.has('list-users');
+    const todos = listar && /^all$/i.test(opts.opt['list-users'] ?? '');
+    if (listar && opts.opt['list-users'] && !todos) {
+        await msg.reply('❌ Use: /bot -list-users [all]');
+        return;
+    }
     const chat = { chatId, isGroup, todos };
 
     if (comDestino && !opts.given.has('status')) {
@@ -696,7 +701,7 @@ async function cmdBot({ msg, opts: optsDoComando, args, chatId, isGroup }) {
         return;
     }
 
-    // -on|-off: só liga e desliga (as listas ficam); -users|-all-users: os usuários
+    // -on|-off: só liga e desliga (as listas ficam); -list-users [all]: os usuários
     if (on || off) await setSetting('bot.paused', off);
     if (on || off || listar) {
         const partes = [(on || off) && estadoDoBot(), listar && await textoDosUsuarios(chat)]

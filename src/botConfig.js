@@ -1,10 +1,27 @@
 /*
- * Definição dos comandos (src/comandos/comandos.json), sem os marcados com "disabled": true.
+ * Definição dos comandos (src/comandos/comandos.js), sem os marcados com "disabled": true.
  */
 
 const { printInfo, printSuccess } = require('./log');
 
-const botConfig = require('./comandos/comandos.json');
+const { roleValido } = require('./roles');
+
+const botConfig = require('./comandos/comandos');
+
+// Erro de digitação no comandos.js: melhor cair no boot do que ignorar um comando em silêncio
+function validar(commands) {
+    const vistos = new Set();
+    for (const c of commands) {
+        if (!/^\/[a-z]+$/.test(c.cmd)) throw new Error(`comandos.js: cmd inválido: ${c.cmd}`);
+        if (!roleValido(c.role)) throw new Error(`comandos.js: ${c.cmd} sem role válido (${c.role})`);
+        for (const nome of [c.cmd, ...(c.aliases ?? [])]) {
+            if (vistos.has(nome)) throw new Error(`comandos.js: nome repetido: ${nome}`);
+            vistos.add(nome);
+        }
+    }
+}
+
+validar(botConfig.commands);
 
 // "disabled": true tira o comando do bot: não responde, não aparece no /help
 function semDesativados(commands) {
@@ -24,16 +41,7 @@ if (disabledCommands.length) {
     printInfo(`Disabled ${disabledCommands.length} callers (${disabledCommands.join(',')})`);
 }
 
-/*
- * O "role" de cada comando: user (comum), admin (só o dono e o bot.admins, mas delegável pelo
- * /bot +cmd) ou owner (nunca delegável). Um atalho com vários comandos fica com o mais restrito.
- */
-const ROLES = ['user', 'admin', 'owner'];
-const roleMaisRestrito = (roles) => roles.reduce((a, b) => (ROLES.indexOf(b) > ROLES.indexOf(a) ? b : a), 'user');
-
 module.exports = {
-    ROLES,
-    roleMaisRestrito,
     botConfig,
     semDesativados
 };

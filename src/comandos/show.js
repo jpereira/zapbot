@@ -15,7 +15,6 @@ const { enviarMensagemApagada, isStatus, resolverAutorApagada } = require('../ev
 const { enviarMensagemEditada } = require('../eventos/editadas');
 const { enviarReacaoDesfeita } = require('../eventos/reacoes');
 const { printError, printInfo } = require('../log');
-const { SO_DONO_OUTROS_CHATS } = require('../permissoes');
 const { getSetting } = require('../settings');
 const { humanSize, isCaminhoDeMidia } = require('../util/arquivos');
 const { esperar, formatarData, paraMs, plural, semAcentos } = require('../util/formatar');
@@ -365,14 +364,9 @@ async function listarCache({ msg, chatId, filtro }) {
  *   - com chat (/show -f Trabalho) → só as dele;
  *   - num chat qualquer            → só as DESTE chat;
  *   - no seu próprio privado       → as de TODOS os chats.
- * Destrutivo: só o dono do bot (ou um admin do bot.admins), mesmo que o /show seja liberado.
+ * Destrutivo: o -flush é do dono e dos admins (role no comandos.js), mesmo que o /show seja liberado.
  */
-async function limparDoCache({ msg, tipos, alvo, ids, geral, admin, cmd }) {
-    if (!admin) {
-        await msg.reply('⛔ Só o dono do bot (ou um admin) pode usar o /show -flush.');
-        return;
-    }
-
+async function limparDoCache({ msg, tipos, alvo, ids, geral, cmd }) {
     const removidas = [];
     const porChat = new Map();
     let arquivos = 0;
@@ -509,16 +503,10 @@ async function cmdShow({ msg, opts, chatId, admin }) {
 
     const sintaxe = () => msg.reply('```' + getCommandSyntax('/show') + '```');
 
-    // "-3" não é uma opção declarada: vem no argv, junto com o chat
-    let n = null;
-    const palavras = [];
-
-    for (const a of opts.argv.filter(Boolean)) {
-        const m = a.match(/^-(\d+)$/);
-        if (m && n === null && Number(m[1]) >= 1) n = Number(m[1]);
-        else if (a.startsWith('-')) return sintaxe();
-        else palavras.push(a);
-    }
+    // O "-3" é o opts.numero (o parser lê); o resto do argv é o chat
+    let n = opts.numero;
+    if (n === 0) return sintaxe();
+    const palavras = opts.argv.filter(Boolean);
 
     const pedidos = Object.keys(TIPOS).filter(tipo => opts.opt[TIPOS[tipo].opt]);
     const cmd = ['/show', ...pedidos.map(tipo => TIPOS[tipo].flag)].join(' ');
@@ -543,11 +531,7 @@ async function cmdShow({ msg, opts, chatId, admin }) {
 
     const privadoSemParametros = /@(c\.us|lid)$/.test(chatId) &&
         !opts.given.size && !opts.argv.length;
-    // Quem recebeu o /show (não é dono nem admin) vê só o chat atual: sem -l, sem chat, sem a lista do privado
-    if (!admin && (opts.opt.list || palavras.length)) {
-        await msg.reply(SO_DONO_OUTROS_CHATS);
-        return;
-    }
+    // Quem recebeu o /show vê só o chat atual: sem a lista do privado (o -l e o chat já passaram pelo executar.js)
     if (opts.opt.list || (privadoSemParametros && admin)) {
         await listarCache({ msg, chatId, filtro: palavras.join(' ') || null });
         return;
@@ -571,7 +555,7 @@ async function cmdShow({ msg, opts, chatId, admin }) {
     const tipos = pedidos.length ? pedidos : alvo || todos ? Object.keys(TIPOS) : ['apagadas'];
 
     if (opts.opt.flush) {
-        await limparDoCache({ msg, tipos, alvo, ids, geral: noMeuPrivado, admin, cmd });
+        await limparDoCache({ msg, tipos, alvo, ids, geral: noMeuPrivado, cmd });
         return;
     }
     const u = tipos.length === 1 ? TIPOS[tipos[0]] : JUNTOS;

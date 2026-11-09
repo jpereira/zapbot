@@ -1,0 +1,39 @@
+/*
+ * /search: Busca mensagens no histórico do WhatsApp Web
+ */
+
+const { ADMIN } = require('../../roles').ROLES;
+
+module.exports = {
+    cmd: '/search',
+    usage: '/search [-N] <texto> | -read <id>',
+    aliases: ['/buscar'],
+    summary: 'Busca mensagens no histórico do WhatsApp Web',
+    help: 'Busca mensagens no histórico do WhatsApp Web, inclusive as que nunca passaram pelo cache do bot (o /show -q busca só no cache). Neste chat; no seu privado, em todos os chats. Mostra data, quem mandou (e o chat, na busca em todos), o texto e o id; com -read, exibe a mensagem inteira.',
+    cmd_opts: [
+        {
+            argv: ['-N'],
+            desc: 'Quantidade de mensagens (padrão 10, máx. 50).',
+            ex: ['/search -30 boleto']
+        },
+        {
+            argv: ['<texto>'],
+            desc: 'O que buscar, como na busca do WhatsApp (sem diferenciar maiúsculas).',
+            ex: ['/search pix', '/search bom dia']
+        },
+        {
+            opts: ['read', 'r'],
+            values: ['<id>'],
+            desc: 'Exibe inteira a mensagem de um id da lista da busca (mesmo escopo: este chat, ou todos no seu privado).',
+            ex: ['/search -read false_5521988887777@c.us_3EB0A1B2']
+        },
+        {
+            opts: ['mask', 'm'],
+            values: [],
+            desc: 'Ofusca telefones com 10 a 15 dígitos contínuos na saída desta execução, mantendo os cinco primeiros e os dois últimos (como +55219****44).',
+            ex: ['/search -mask pix']
+        }
+    ],
+    mask: true,
+    role: ADMIN // lê o histórico de todos os chats
+};

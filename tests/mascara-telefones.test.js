@@ -86,7 +86,7 @@ describe('-mask / -m', () => {
         assert.equal(bot.getSetting('watch.rules')[0], `/${FONE} -mask palavra/i`);
         bot.criarContato(JID, 'Nome -m Sobrenome');
         await bot.setSetting('bot.users', false);
-        const [usuario] = await bot.responder('/bot +v /Nome -m Sobrenome/ -mask');
+        const [usuario] = await bot.responder('/bot +u /Nome -m Sobrenome/ -mask');
         textoMascarado(usuario);
         assert.ok(usuario.includes('Nome -m Sobrenome'));
         assert.ok(bot.getSetting('bot.users').includes(`${FONE}:${bot.GRUPO}`));
@@ -94,18 +94,18 @@ describe('-mask / -m', () => {
 
     test('/bot lista usuários e confirma atalhos com máscara; settings ficam íntegros', async () => {
         await bot.setSetting('bot.users', false);
-        textoMascarado((await bot.responder('/bot -m +v /Nome Sobrenome/'))[0]);
-        textoMascarado((await bot.responder('/bot -users -mask'))[0]);
+        textoMascarado((await bot.responder('/bot -m +u /Nome Sobrenome/'))[0]);
+        textoMascarado((await bot.responder('/bot -list-users -mask'))[0]);
         textoMascarado((await bot.responder('/bot -mask'))[0]);
         assert.ok(bot.getSetting('bot.users').includes(`${FONE}:${bot.GRUPO}`));
-        assert.ok((await bot.responder('/bot -users'))[0].includes(FONE));
+        assert.ok((await bot.responder('/bot -list-users'))[0].includes(FONE));
     });
 
     test('execuções concorrentes mantêm a máscara isolada por mensagem', async () => {
         await bot.setSetting('bot.users', [bot.OUTRO.user]);
         await Promise.all([
-            bot.executar('/bot -users -mask', { chat: bot.DONO.jid }),
-            bot.executar('/bot -users', { chat: bot.GRUPO })
+            bot.executar('/bot -list-users -mask', { chat: bot.DONO.jid }),
+            bot.executar('/bot -list-users', { chat: bot.GRUPO })
         ]);
         const privado = bot.client.enviadas.find(e => e.chatId === bot.DONO.jid).content;
         const grupo = bot.client.enviadas.find(e => e.chatId === bot.GRUPO).content;

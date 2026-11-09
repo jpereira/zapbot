@@ -1,7 +1,7 @@
 # Comandos
 
 Os comandos são definidos em
-[`src/comandos/comandos.json`](https://github.com/jpereira/zapbot/blob/main/src/comandos/comandos.json).
+[`src/comandos/definicoes/`](https://github.com/jpereira/zapbot/tree/main/src/comandos/definicoes).
 Podem ser enviados em **qualquer chat** (privado, grupo ou no chat consigo mesmo).
 
 ## Sintaxe geral
@@ -30,7 +30,7 @@ Os comandos com envio a destinos usam **`-to`**: o [`/cron`](cron.md), os alerta
 [`/defi -alerta`](defi.md#alerta-de-saída-da-faixa), o [`/watch`](watch.md#avisar-em-outro-lugar) e
 o [`/backup -send`](backup.md#enviar-o-arquivo). O `/bot -status` também aceita `-to`. Esses
 comandos aceitam vários `-to`: o aviso (ou a mensagem, ou o arquivo) sai em cada destino. O alvo do
-[`/mute`](mute.md), as pessoas do [`/bot +o`/`+v`](bot.md#admins-extras) e do [`/whois`](whois.md)
+[`/mute`](mute.md), as pessoas do [`/bot +a`/`+u`](bot.md#admins-extras) e do [`/whois`](whois.md)
 usam a mesma busca. Sem `-to`, os avisos (e o arquivo do `/backup`) vão para o seu privado, e o
 `/cron`, para o chat atual.
 
@@ -52,7 +52,7 @@ As mesmas formas, num comando só:
 /cotacao -alerta USD > 5.30 -to email           → por e-mail (o QRCODE_EMAIL_SMTP_TO)
 /crypto -alerta BTC < 90000 -to /Grupo L200/ -to email  → no grupo e por e-mail
 /mute @Fulano Da Silva                          → o alvo do /mute, mencionando
-/bot +o /Jorge Pereira/ +5511988887777         → o /bot +o (e o +v) aceita várias pessoas de uma vez
+/bot +a /Jorge Pereira/ +5511988887777         → o /bot +a (e o +u) aceita várias pessoas de uma vez
 ```
 
 - **Menção:** num grupo, digite `@` e escolha a pessoa na lista do WhatsApp. No texto da mensagem
@@ -60,8 +60,8 @@ As mesmas formas, num comando só:
   Serve para quem está no grupo mas não na sua agenda. Um `@número` digitado à mão, sem escolher na
   lista, é recusado: para um número, use o `+5521999999999`.
 - O `/cron` e o `/mute` não aceitam e-mail: a mensagem do `/cron` sai no WhatsApp, e o `/mute`
-  silencia uma pessoa ou um grupo. Os admins (`/bot +o`) e o `/whois` aceitam só pessoas (contato,
-  menção ou número); os usuários (`/bot +v`), pessoas e grupos.
+  silencia uma pessoa ou um grupo. Os admins (`/bot +a`) e o `/whois` aceitam só pessoas (contato,
+  menção ou número); os usuários (`/bot +u`), pessoas e grupos.
 - O nome casa quando tem **todas** as palavras, em qualquer ordem, sem diferenciar maiúsculas nem
   acentos. No `-to`, nomes com espaço vão entre `/.../` ou aspas (sem eles, só a primeira palavra
   conta); no `/mute`, o alvo é o resto do texto, com ou sem `/.../`.
@@ -87,67 +87,83 @@ Sem resposta em 2 minutos, nada é feito, e a própria lista vira o aviso (sem o
 
 ## Permissões (`role`)
 
-Cada comando tem um **role** (a coluna Role da tabela e o `role` do `comandos.json`):
+Quem digita e cada comando têm o mesmo nível: **owner > admin > user**. Um comando só roda para
+quem tem o nível dele ou um acima.
+
+| Nível | Quem é | Como entra |
+|---|---|---|
+| `owner` | Você: a conta pareada ao bot, de qualquer aparelho | Já é |
+| `admin` | Os admins extras (setting `bot.admins`) | `/bot +a /Jorge Pereira/`, `@Fulano Da Silva` ou `+5521999999999` (veja [Admins extras](bot.md#admins-extras)) |
+| `user` | As pessoas e os grupos do setting `bot.users` | `/bot +u /Maria Lucia/ /Grupo Familia/` (veja [Usuários](bot.md#usuários)) |
+
+O `role` de um comando (a coluna Role da tabela, e o `role` da definição) é o nível mínimo para
+usá-lo:
 
 | Role | Quem usa |
 |---|---|
-| `user` | Você, os admins extras e quem estiver no `bot.users` (os comandos comuns: `/get`, `/tempo`, `/sticker`...) |
-| `admin` | Você e os admins extras. O dono pode **delegar** a uma pessoa ou a um grupo, citando o comando num `+cmd` ("Apenas"): `/bot +v +cmd /gpt` |
-| `owner` | Você e os admins extras. Nunca delegável (`/set`, `/bot`, `/alias`...) |
+| `user` | Qualquer um dos três: os comandos comuns (`/get`, `/tempo`, `/sticker`...) |
+| `admin` | Os admins e o dono (`/set`, `/alias`, `/backup`...) |
+| `admin` · delegável | Os admins e o dono, e o dono pode **delegar** a um usuário (ou a um grupo), citando o comando num `+cmd` ("Apenas"): `/bot +u +cmd /gpt` |
+| `owner` | Só o dono (hoje nenhum comando; as opções do `/bot` que mexem em quem tem acesso são do dono) |
 
-Os `admin` e os `owner` só executam quando enviados **pela própria conta do bot** (você, de qualquer
-aparelho) ou por um **admin extra**: as pessoas que você puser no setting `bot.admins`
-(`/bot +o /Jorge Pereira/`, `@Fulano Da Silva` ou `+5521999999999`; veja
-[Admins extras](bot.md#admins-extras)). Se outra pessoa tentar, nada acontece no chat; com o
-[debug](debug.md) ligado, você recebe um aviso no `PHONE_NUMBER`:
+Só o dono mexe em quem tem acesso: `+a`/`-a`, `+u`/`-u`, `+cmd`/`-cmd`, `-reset`, `-passwd` e
+`-flush-email`. Um admin extra não promove ninguém, nem a si mesmo. Se alguém tentar um comando
+acima do nível dele, nada acontece no chat; com o [debug](debug.md) ligado, você recebe um aviso no
+`PHONE_NUMBER`:
 
 ```text
 ⚠️ Fulano tentou executar /show dentro de Família, mas sem permissão
 ```
 
 Os comandos `user` são de quem estiver no setting `bot.users`, que **vem `false`**: só você (e os
-admins extras) usa comandos. Com `/bot +v /Maria Lucia/ /Grupo Familia/`, essas pessoas (em qualquer
-chat) e esses grupos (qualquer um, dentro do grupo) também usam; o `/bot +v` de uma pessoa digitado
+admins extras) usa comandos. Com `/bot +u /Maria Lucia/ /Grupo Familia/`, essas pessoas (em qualquer
+chat) e esses grupos (qualquer um, dentro do grupo) também usam; o `/bot +u` de uma pessoa digitado
 num grupo vale só nesse grupo; com `/set bot.users true`, todos. O `/bot +cmd`/ `-cmd` limita os
 comandos de cada usuário. Veja [Usuários](bot.md#usuários). Para saber o seu nível (ou, sendo dono
 ou admin, o de alguém), use o [`/whois`](whois.md). Quem não é admin tem uma
 [proteção contra flood](bot.md#proteção-contra-flood): o mesmo comando, no máximo 3 vezes em 2
 segundos.
 
-### Delegando um comando `admin`
+### Delegando um comando admin
 
-O `admin` entra na regra do usuário só se for citado num `+cmd` ("Apenas"). O `-cmd` ("Todos,
-menos") e o `bot.users = true` **não** liberam um `admin`, e o `/bot +cmd` recusa um `owner`.
+Um comando `admin` **delegável** (a tabela Resumo marca) entra na regra do usuário só se for citado
+num `+cmd` ("Apenas"). O `-cmd` ("Todos, menos") e o `bot.users = true` **não** o liberam, e o
+`/bot +cmd` recusa um comando que o dono não delega (`/set`, `/bot`...).
 
 ```text
-/bot +v +cmd /gpt                 → digitado no grupo Familia: todos ali usam só o /gpt
-/bot +v +cmd /gpt /Familia/       → o mesmo, de qualquer chat
+/bot +u +cmd /gpt                 → digitado no grupo Familia: todos ali usam só o /gpt
+/bot +u +cmd /gpt /Familia/       → o mesmo, de qualquer chat
 /bot +cmd /show /Sofia Izabel/    → a Sofia (que já tem "Apenas") ganha o /show
-/bot +v +cmd /cotacao,/gpt /Sofia Izabel/   → a Sofia usa os comuns citados e o /gpt
+/bot +u +cmd /cotacao,/gpt /Sofia Izabel/   → a Sofia usa os comuns citados e o /gpt
 ```
 
-Mesmo delegado, um `admin` não **ajusta** nada: as opções que trocam um setting ou apagam dados
-(`/gpt -model <modelo>`, `/stats -flush`, `/show -flush`...) respondem
-`⛔ Apenas o dono do bot (ou um admin) pode ...` a quem recebeu a delegação. Só o dono e os admins
-extras ajustam.
+Mesmo delegado, o comando não **ajusta** nada para um usuário: as opções que trocam um setting ou
+apagam dados (`/gpt -model <modelo>`, `/stats -flush`, `/show -flush`...) respondem
+`⛔ Apenas o dono do bot (ou um admin) pode ...`. Só o dono e os admins ajustam.
 
-Quem recebe um `admin` também vê **só o chat atual**: o que olha outros chats ou o seu privado
+Quem recebe o comando também vê **só o chat atual**: o que olha outros chats ou o seu privado
 responde `⛔ Apenas o dono do bot (ou um admin) pode ver outros chats.`
 
-| Comando | Fica de fora para quem recebeu |
-|---|---|
-| `/show` | `-l` (lista dos chats), o `chat` e a lista do privado sem parâmetros |
-| `/stats` | `-l`, o `/chat/` e o `-me` (todos os chats) |
-| `/tldr` | `-chat` (outro chat) e `-pv` (o seu privado) |
-| `/profile` | contato, menção ou número: só o do chat atual (ou de quem escreveu a mensagem respondida) |
+<!-- gerado:limites -->
+| Comando | Só o chat atual (fica de fora) | Só o dono e os admins |
+|---|---|---|
+| `/cotacao` |  | `-add`, `-del` |
+| `/crypto` |  | `-add`, `-del` |
+| `/gpt` |  | `-model` |
+| `/profile` | `[/contato/\|@menção\|+número]...` |  |
+| `/show` | `-list`, `chat` | `-flush` |
+| `/stats` | `-list`, `-me`, `</chat/>` | `-flush`, `-flush-all` |
+| `/tldr` | `-chat`, `-pv` |  |
+<!-- /gerado:limites -->
 
 Quem já usa todos os comuns (sem regra, ou "Todos, menos") não ganha um `admin` com o `+cmd`: o bot
 recusa e pede a lista "Apenas" com os comandos dele. Os atalhos do [`/alias`](alias.md) seguem o
 destino: quem pode o `/gpt` usa os atalhos para ele, e o nome de um atalho não entra no `+cmd`.
 
+<!-- gerado:roles -->
 ### Comandos por role
 
-**user (comuns, do `bot.users`)** (23):
+**user** (de quem está no `bot.users`) (23):
 
 [`/ascii`](ascii.md), [`/boletos`](boletos.md), [`/cotacao`](cotacao.md), [`/crypto`](crypto.md),
 [`/cve`](cve.md), [`/get`](get.md), [`/giphy`](giphy.md), [`/help`](help.md), [`/joke`](joke.md),
@@ -156,19 +172,20 @@ destino: quem pode o `/gpt` usa os atalhos para ele, e o nome de um atalho não 
 [`/tempo`](tempo.md), [`/traduzir`](traduzir.md), [`/uptime`](uptime.md), [`/version`](version.md),
 [`/walissu`](walissu.md), [`/whois`](whois.md)
 
-**admin (delegáveis com `+cmd`)** (8):
+**admin, delegáveis** (admins e o dono; o dono libera a um usuário com `+cmd`) (8):
 
 [`/enquete`](enquete.md), [`/gpt`](gpt.md), [`/listageral`](listageral.md),
 [`/profile`](profile.md), [`/show`](show.md), [`/stats`](stats.md), [`/tldr`](tldr.md),
 [`/todos`](todos.md)
 
-**owner (nunca delegáveis)** (19):
+**admin** (admins e o dono; nunca delegáveis) (19):
 
 [`/alias`](alias.md), [`/backup`](backup.md), [`/batch`](batch.md), [`/block`](block.md),
 [`/bot`](bot.md), [`/cache`](cache.md), [`/cron`](cron.md), [`/debug`](debug.md),
 [`/defi`](defi.md), [`/join`](join.md), [`/leave`](leave.md), [`/monitor`](monitor.md),
 [`/mute`](mute.md), [`/notes`](notes.md), [`/search`](search.md), [`/set`](set.md),
 [`/unblock`](unblock.md), [`/unmute`](unmute.md), [`/watch`](watch.md)
+<!-- /gerado:roles -->
 
 As **respostas do próprio bot** também saem pela sua conta, mas nunca são tratadas como comando,
 mesmo que comecem com `/`. Sem isso, alguém poderia usar um comando que ecoa texto (ex.:
@@ -178,53 +195,53 @@ mesmo que comecem com `/`. Sem isso, alguém poderia usar um comando que ecoa te
 
 | Comando | Aliases | Role | Descrição |
 |---|---|:-:|---|
-| [`/alias`](alias.md) | | `owner` | Cadastra, lista e remove atalhos para comandos com argumentos ou textos com vários `{/comando}` |
+| [`/alias`](alias.md) | | `admin` | Cadastra, lista e remove atalhos para comandos com argumentos ou textos com vários `{/comando}` |
 | [`/ascii`](ascii.md) | | `user` | O texto em letras grandes de ASCII, num bloco que cabe na tela do celular |
-| [`/backup`](backup.md) | `/bkp` | `owner` | Backup diário local e envio por `backup.to`; lista, detalha, restaura e envia o banco |
-| [`/batch`](batch.md) |  | `owner` | Executa vários comandos de uma mensagem só, em sequência (cada linha que começa com um comando abre um bloco), e responde um resumo; `-stop` e `-dry` |
-| [`/block`](block.md) | `/bloquear` | `owner` | Bloqueia uma ou várias pessoas na sua conta do WhatsApp (respondendo uma mensagem, quem a escreveu); sem nada, lista os bloqueados; `-mask` ofusca telefones |
+| [`/backup`](backup.md) | `/bkp` | `admin` | Backup diário local e envio por `backup.to`; lista, detalha, restaura e envia o banco |
+| [`/batch`](batch.md) |  | `admin` | Executa vários comandos de uma mensagem só, em sequência (cada linha que começa com um comando abre um bloco), e responde um resumo; `-stop` e `-dry` |
+| [`/block`](block.md) | `/bloquear` | `admin` | Bloqueia uma ou várias pessoas na sua conta do WhatsApp (respondendo uma mensagem, quem a escreveu); sem nada, lista os bloqueados; `-mask` ofusca telefones |
 | [`/boletos`](boletos.md) | | `user` | Sorteia 2 membros para "pagar um boleto" |
-| [`/bot`](bot.md) |  | `owner` | Status do bot (relatório de 24 h e os usuários); liga/desliga os comandos (`-on`/`-off`) e diz quem usa: admins (`+o`/`-o`) e usuários (`+v`/`-v`, em qualquer chat ou só num grupo, e os comandos de cada um com `+cmd`/`-cmd`); `-reset` volta ao padrão; `-status` (`-s`): relatório das últimas 24 h, e `-s 06h` manda todo dia; `-info` (`-i`): versões e sistema; `-test` (`-t`): testa cache, disco, banco, WhatsApp, internet, SMTP e programas |
-| [`/cache`](cache.md) |  | `owner` | Árvore do cache com tamanhos, contagens de mensagens e limpeza |
+| [`/bot`](bot.md) |  | `admin` | Status do bot (relatório de 24 h e os usuários); liga/desliga os comandos (`-on`/`-off`) e diz quem usa: admins (`+a`/`-a`) e usuários (`+u`/`-u`, em qualquer chat ou só num grupo, e os comandos de cada um com `+cmd`/`-cmd`); `-reset` volta ao padrão; `-status` (`-s`): relatório das últimas 24 h, e `-s 06h` manda todo dia; `-info` (`-i`): versões e sistema; `-test` (`-t`): testa cache, disco, banco, WhatsApp, internet, SMTP e programas |
+| [`/cache`](cache.md) |  | `admin` | Árvore do cache com tamanhos, contagens de mensagens e limpeza |
 | [`/cotacao`](cotacao.md) | `/cambio` | `user` | Cotação de EUR e USDT (e USD, GBP) contra o real: atual, abertura, fechamento e variação; alertas de preço |
-| [`/cron`](cron.md) | `/agenda`, `/lembrete` | `owner` | Na hora marcada (`30m`, `às 18h`, `sexta 9h`...): envia uma mensagem (aqui ou com `-to`, em um ou vários chats) ou, como `/lembrete`, um ⏰ lembrete; pode repetir, editar e pausar, e rodar comandos no texto (`{/crypto}`) |
+| [`/cron`](cron.md) | `/agenda`, `/lembrete` | `admin` | Na hora marcada (`30m`, `às 18h`, `sexta 9h`...): envia uma mensagem (aqui ou com `-to`, em um ou vários chats) ou, como `/lembrete`, um ⏰ lembrete; pode repetir, editar e pausar, e rodar comandos no texto (`{/crypto}`) |
 | [`/crypto`](crypto.md) | `/bitcoio`, `/creptomoeda` | `user` | Cotação das criptos ativadas (padrão: BTC, ETH, SOL e HYPE) ou só das pedidas (`BTC ETH`); alertas de preço |
 | [`/cve`](cve.md) | | `user` | Últimas CVEs publicadas (NVD); `-highscore` só as críticas |
-| [`/debug`](debug.md) | `/d`, `/dbg` | `owner` | Logs de debug com níveis, filtro e cópia para chats |
-| [`/defi`](defi.md) | | `owner` | Posições de liquidez da Orca e do Project X: saldo, faixa, preço e taxas a coletar, lidos on-chain; `-alerta` avisa quando sai e volta para a faixa e quando as taxas passam de um valor. `liquidswap`: posições de LP na Aptos. `morpho` e `aave`: posição, empréstimos e risco no Morpho e no Aave V3 |
-| [`/enquete`](enquete.md) | `/quiz` | `admin` | Cria uma enquete nativa do WhatsApp no chat; `-r` mostra o resultado |
+| [`/debug`](debug.md) | `/d`, `/dbg` | `admin` | Logs de debug com níveis, filtro e cópia para chats |
+| [`/defi`](defi.md) | | `admin` | Posições de liquidez da Orca e do Project X: saldo, faixa, preço e taxas a coletar, lidos on-chain; `-alerta` avisa quando sai e volta para a faixa e quando as taxas passam de um valor. `liquidswap`: posições de LP na Aptos. `morpho` e `aave`: posição, empréstimos e risco no Morpho e no Aave V3 |
+| [`/enquete`](enquete.md) | `/quiz` | `admin` · delegável | Cria uma enquete nativa do WhatsApp no chat; `-r` mostra o resultado |
 | [`/get`](get.md) | `/download` | `user` | Baixa vídeo/áudio de redes sociais ou da mídia respondida |
 | [`/giphy`](giphy.md) | `/gif` | `user` | GIF do GIPHY por tag, URL ou ID, enviado em loop |
-| [`/gpt`](gpt.md) | `/ai` | `admin` | Pergunta ao ChatGPT (OpenAI) |
+| [`/gpt`](gpt.md) | `/ai` | `admin` · delegável | Pergunta ao ChatGPT (OpenAI) |
 | [`/help`](help.md) | `/h` | `user` | Menu de ajuda, só com os comandos que quem pediu pode usar |
-| [`/join`](join.md) | | `owner` | Entra em um grupo pelo link de convite (`-info` mostra o grupo sem entrar); `-l` lista os seus grupos |
+| [`/join`](join.md) | | `admin` | Entra em um grupo pelo link de convite (`-info` mostra o grupo sem entrar); `-l` lista os seus grupos |
 | [`/joke`](joke.md) | `/piada`, `/humor` | `user` | Piada aleatória em português |
 | [`/kernel`](kernel.md) | | `user` | Versões atuais do kernel Linux (kernel.org) |
-| [`/leave`](leave.md) | | `owner` | Sai de um ou mais grupos, pelo nome ou pelo nº da lista; `-l` lista os seus grupos |
-| [`/listageral`](listageral.md) | `/list` | `admin` | Lista os membros do grupo |
+| [`/leave`](leave.md) | | `admin` | Sai de um ou mais grupos, pelo nome ou pelo nº da lista; `-l` lista os seus grupos |
+| [`/listageral`](listageral.md) | `/list` | `admin` · delegável | Lista os membros do grupo |
 | [`/me`](me.md) | | `user` | Envia a mensagem digitada; `{/comando}` roda e a resposta entra no lugar, `\n` quebra a linha |
 | [`/meme`](meme.md) | | `user` | Template de meme aleatório (imgflip) |
-| [`/monitor`](monitor.md) | | `owner` | 👀 Até 5 contatos, histórico limitado, filtro por contato e alertas de entrada online |
-| [`/mute`](mute.md) | `/mudo` | `owner` | Silencia os avisos de apagadas, editadas, status e reações (e os do `/watch`) de uma pessoa, um grupo ou uma comunidade; respondendo um aviso, de onde ele veio |
+| [`/monitor`](monitor.md) | | `admin` | 👀 Até 5 contatos, histórico limitado, filtro por contato e alertas de entrada online |
+| [`/mute`](mute.md) | `/mudo` | `admin` | Silencia os avisos de apagadas, editadas, status e reações (e os do `/watch`) de uma pessoa, um grupo ou uma comunidade; respondendo um aviso, de onde ele veio |
 | [`/news`](news.md) | | `user` | Manchetes de feeds RSS: `-hack`, `-g1`, `-gazeta`, `-brasil` |
 | [`/noffa`](noffa.md) | `/🌈`, `/🏳️‍🌈` | `user` | Enfeita o texto com arco-íris |
-| [`/notes`](notes.md) | | `owner` | Anotações com ID e `#tag` (`-a`, `-l`, `-s`, `-r`): ver com a mídia (`-v`), renomear tag (`-m`), descrever tag (`-d`), exportar em PDF (`-e`) e `-alerta` que avisa numa data/hora |
+| [`/notes`](notes.md) | | `admin` | Anotações com ID e `#tag` (`-a`, `-l`, `-s`, `-r`): ver com a mídia (`-u`), renomear tag (`-m`), descrever tag (`-d`), exportar em PDF (`-e`) e `-alerta` que avisa numa data/hora |
 | [`/ping`](ping.md) |  | `user` | Verifica se o bot está vivo |
 | [`/pixelart`](pixelart.md) | `/ansi`, `/px` | `user` | Arte ANSI/ASCII aleatória (16colo.rs) |
-| [`/profile`](profile.md) | `/perfil` | `admin` | A foto de perfil de um contato, com o nome da sua agenda e o telefone |
-| [`/search`](search.md) | `/buscar` | `owner` | Busca no histórico do WhatsApp Web, não só no cache: neste chat ou, no seu privado, em todos (`-N` para mais); `-mask` ofusca telefones |
-| [`/set`](set.md) | `/config` | `owner` | Lista e altera as configurações (settings); `-a`/`-rm` acrescentam e tiram itens das listas (ex.: o `bot.admins` e o `bot.users`) |
-| [`/show`](show.md) |  | `admin` | No privado, lista o cache; reexibe apagadas, edições (`-e`), status (`-s`) e reações removidas ou trocadas (`-r`); `-q` busca (texto ou regex) e `-mask` ofusca telefones |
-| [`/stats`](stats.md) | | `admin` | Ranking deste chat ou de outro (`/Grupo/`): quem mais fala, apaga e edita, horários de pico; `-me` para as suas, `-l` lista os chats, `-flush` apaga |
+| [`/profile`](profile.md) | `/perfil` | `admin` · delegável | A foto de perfil de um contato, com o nome da sua agenda e o telefone |
+| [`/search`](search.md) | `/buscar` | `admin` | Busca no histórico do WhatsApp Web, não só no cache: neste chat ou, no seu privado, em todos (`-N` para mais); `-mask` ofusca telefones |
+| [`/set`](set.md) | `/config` | `admin` | Lista e altera as configurações (settings); `-a`/`-rm` acrescentam e tiram itens das listas (ex.: o `bot.admins` e o `bot.users`) |
+| [`/show`](show.md) |  | `admin` · delegável | No privado, lista o cache; reexibe apagadas, edições (`-e`), status (`-s`) e reações removidas ou trocadas (`-r`); `-q` busca (texto ou regex) e `-mask` ofusca telefones |
+| [`/stats`](stats.md) | | `admin` · delegável | Ranking deste chat ou de outro (`/Grupo/`): quem mais fala, apaga e edita, horários de pico; `-me` para as suas, `-l` lista os chats, `-flush` apaga |
 | [`/sticker`](sticker.md) |  | `user` | Figurinha de imagem, vídeo ou link (o `/get -st`); com `-txt`, uma figurinha animada de texto |
 | [`/tempo`](tempo.md) | `/weather` | `user` | Tempo agora e máx./mín. do dia (Open-Meteo); `/tempo 16d` mostra até 16 dias, contando hoje; sem cidade usa `tempo.city` |
-| [`/tldr`](tldr.md) | `/resumo` | `admin` | Resume a conversa do chat pelo ChatGPT (`2h`, `300`...) |
-| [`/todos`](todos.md) | `/todes` | `admin` | Menciona todos do grupo |
+| [`/tldr`](tldr.md) | `/resumo` | `admin` · delegável | Resume a conversa do chat pelo ChatGPT (`2h`, `300`...) |
+| [`/todos`](todos.md) | `/todes` | `admin` · delegável | Menciona todos do grupo |
 | [`/traduzir`](traduzir.md) | `/translate` | `user` | Traduz o texto ou a mensagem respondida pelo Google Translate, sem chave; `-para en` muda o idioma |
-| [`/unblock`](unblock.md) | | `owner` | Desbloqueia uma pessoa: pelo nome, pelo número, pelo nº da lista do `/block` ou respondendo uma mensagem |
-| [`/unmute`](unmute.md) | | `owner` | Desfaz o silêncio do `/mute`: pelo nome, pelo nº da lista, respondendo um aviso ou todos (`-all`) |
+| [`/unblock`](unblock.md) | | `admin` | Desbloqueia uma pessoa: pelo nome, pelo número, pelo nº da lista do `/block` ou respondendo uma mensagem |
+| [`/unmute`](unmute.md) | | `admin` | Desfaz o silêncio do `/mute`: pelo nome, pelo nº da lista, respondendo um aviso ou todos (`-all`) |
 | [`/uptime`](uptime.md) |  | `user` | Tempo de execução e de conexão |
 | [`/version`](version.md) |  | `user` | Versão do bot (mesmo banner do `/uptime`) |
 | [`/walissu`](walissu.md) | `/ualisu` | `user` | Walissu CVE BOT: marca 2 membros com uma CVE aleatória |
-| [`/watch`](watch.md) |  | `owner` | Regras de texto/regex, com origem opcional em `-in`; lista ocorrências, busca nelas com `-q` e avisa nos destinos de `-to`; `-mask` ofusca telefones e `-mask N` liga o 🔒 na regra N |
+| [`/watch`](watch.md) |  | `admin` | Regras de texto/regex, com origem opcional em `-in`; lista ocorrências, busca nelas com `-q` e avisa nos destinos de `-to`; `-mask` ofusca telefones e `-mask N` liga o 🔒 na regra N |
 | [`/whois`](whois.md) | `/who`, `/id` | `user` | Quem é e o que pode no bot, neste chat: 🤖 dono, 👑 admin, 🗣️ usuário ou 🚫 sem permissão; o dono e os admins veem os outros |

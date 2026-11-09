@@ -9,7 +9,6 @@ const { lerPessoa, pessoasDoTexto, semDelimitadores } = require('./block');
 const { client } = require('../cliente');
 const { nomeDaAgenda, nomeDoContato, resolveLidToPhone, resolverNomeDoGrupo } = require('../contatos');
 const { printError } = require('../log');
-const { SO_DONO_OUTROS_CHATS } = require('../permissoes');
 
 /*
  * /profile (/perfil): a foto de perfil de um contato, com o nome da sua agenda e o telefone.
@@ -84,14 +83,8 @@ async function mostrarGrupo(msg, chatId) {
     await msg.reply(`${grupo}\n🚫 Sem foto do grupo.`);
 }
 
-async function cmdProfile({ msg, opts, quotedMsg, chatId, isGroup, admin }) {
+async function cmdProfile({ msg, opts, quotedMsg, chatId, isGroup }) {
     const texto = opts.argv.join(' ').trim();
-
-    // Quem recebeu o /profile vê só o do chat atual (a pessoa do privado, o grupo ou quem escreveu a respondida)
-    if (!admin && texto) {
-        await msg.reply(SO_DONO_OUTROS_CHATS);
-        return;
-    }
 
     // Sem ninguém: a mensagem respondida (quem a escreveu), o grupo ou a pessoa do privado (você, no seu)
     if (!texto) {

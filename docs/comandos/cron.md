@@ -1,4 +1,4 @@
-# `/cron` (`/agenda`, `/lembrete`) · owner
+# `/cron` (`/agenda`, `/lembrete`) · admin
 
 Faz algo na hora marcada. Tem dois modos, na mesma agenda:
 
@@ -158,8 +158,8 @@ Preço do Dólar!
   posição) tem as respostas separadas por uma linha em branco. Mídias (`/meme`, `/giphy`,
   `/pixelart`) saem logo depois da mensagem.
 - Só os comandos de consulta rodam aí: `/cotacao`, `/crypto`, `/cve`, `/defi`, `/giphy`, `/joke`,
-  `/kernel`, `/meme`, `/news`, `/pixelart`, `/stats`, `/tempo`, `/uptime` e `/version` (no
-  `comandos.json`, os com `"cron": true`). As opções que mudam algo também não: o `-add`, o `-del` e
+  `/kernel`, `/meme`, `/news`, `/pixelart`, `/stats`, `/tempo`, `/uptime` e `/version` (nas
+  definições, os com `cron: true`). As opções que mudam algo também não: o `-add`, o `-del` e
   o `-alerta` do `/crypto` e do `/cotacao`; o `-address`, o `-wallet`, o `-pool`, o `-nft`, o
   `-name`, o `-rm`, o `-alerta`, o `-taxas` e o `-to` do `/defi` (rodam os quatro protocolos, o
   `-l`, o `-mask` e o `aave -full`); e o `-flush` e o `-flush-all` do `/stats`.

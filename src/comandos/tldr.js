@@ -8,7 +8,6 @@ const { MAX_DELETE_WINDOW } = require('../constantes');
 const { idsDoChatAtual } = require('../contatos');
 const { dbAll, dbPronto } = require('../db');
 const { SEM_CHAVE, chaveOpenAi, erroOpenAi, perguntarAoChat } = require('../openaiChat');
-const { SO_DONO_OUTROS_CHATS } = require('../permissoes');
 const { getSetting } = require('../settings');
 const { plural, semAcentos } = require('../util/formatar');
 
@@ -69,13 +68,7 @@ const hora = (ms) => new Date(ms).toLocaleString('pt-BR', {
     timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
 });
 
-async function cmdTldr({ msg, opts, chatId, chatName, admin }) {
-    // Quem recebeu o /tldr resume só o chat atual, aqui mesmo: sem -chat e sem -pv (o privado é do dono)
-    if (!admin && (opts.opt.chat || opts.opt.pv)) {
-        await msg.reply(SO_DONO_OUTROS_CHATS);
-        return;
-    }
-
+async function cmdTldr({ msg, opts, chatId, chatName }) {
     if (!chaveOpenAi()) {
         await msg.reply(SEM_CHAVE('/tldr'));
         return;
@@ -156,8 +149,6 @@ async function cmdTldr({ msg, opts, chatId, chatName, admin }) {
     const ultima = rows[rows.length - 1].timestamp;
 
     try {
-        msg.getChat().then(chat => chat.sendStateTyping()).catch(() => {});
-
         const resumo = await perguntarAoChat({
             cmd: '/tldr',
             sistema: RESUMO_INSTRUCOES,

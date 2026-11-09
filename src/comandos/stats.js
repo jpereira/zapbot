@@ -8,7 +8,6 @@ const { DAY_MS } = require('../constantes');
 const { idsDoChatAtual } = require('../contatos');
 const { dbAll, dbGet, dbPronto, dbRun } = require('../db');
 const { aguardarEscolha, autorDe } = require('../escolhas');
-const { SO_DONO_OUTROS_CHATS } = require('../permissoes');
 const { getSetting } = require('../settings');
 const { diaEHora, meuIdStats } = require('../stats');
 const { fmtNum, plural, semAcentos } = require('../util/formatar');
@@ -151,34 +150,22 @@ async function textoStatsMeu(filtro, params, dias, umChat) {
     return texto + await textoHorariosStats(filtro, params);
 }
 
+// O alvo vem entre barras ou aspas (com espaços) ou como o resto das palavras; o -flush leva o chat de valor
+const semBarras = (t) => String(t).replace(/^\/(.*)\/$/s, '$1').trim();
+
 /**
- * "-10 /Grupo Familia/ -me" → { dias, alvo, me, list, flush, flushAll }, ou { erro }.
- * O alvo vem entre barras ou aspas (com espaços) ou como o resto das palavras.
+ * "-10 /Grupo Familia/ -me" (já lido pelo parser) → { dias, alvo, me, list, flush, flushAll }.
  */
-function lerStats(args) {
-    const r = { dias: null, alvo: '', me: false, list: false, flush: false, flushAll: false };
-    let resto = String(args ?? '');
-
-    const delimitado = resto.match(/(^|\s)(\/[^/]+\/|"[^"]+"|'[^']+')(?=\s|$)/);
-    if (delimitado) {
-        r.alvo = delimitado[2].slice(1, -1).trim();
-        resto = resto.replace(delimitado[2], ' ');
-    }
-
-    const palavras = [];
-    for (const t of resto.split(/\s+/).filter(Boolean)) {
-        const nome = t.startsWith('-') ? t.slice(1).toLowerCase() : null;
-        if (nome === null) palavras.push(t);
-        else if (/^\d+$/.test(nome)) r.dias = Number(nome);
-        else if (nome === 'l' || nome === 'list') r.list = true;
-        else if (nome === 'me') r.me = true;
-        else if (nome === 'f' || nome === 'flush') r.flush = true;
-        else if (nome === 'flush-all') r.flushAll = true;
-        else return { erro: `❌ Opção desconhecida: ${t}` };
-    }
-
-    if (!r.alvo) r.alvo = palavras.join(' ');
-    return r;
+function lerStats(opts) {
+    const palavras = [typeof opts.opt.flush === 'string' ? opts.opt.flush : '', ...opts.argv].filter(Boolean);
+    return {
+        dias: opts.numero,
+        alvo: semBarras(palavras.join(' ')),
+        me: opts.opt.me,
+        list: opts.opt.list,
+        flush: opts.given.has('flush'),
+        flushAll: opts.opt['flush-all']
+    };
 }
 
 // Os chats com estatísticas, do que mais fala para o que menos
@@ -228,26 +215,10 @@ async function listarChats(msg) {
         '\n\n💡 _/stats /nome/ mostra um_\n💡 _/stats -f /nome/ apaga as dele_');
 }
 
-async function cmdStats({ msg, args, chatId, admin }) {
+async function cmdStats({ msg, opts, chatId }) {
     await dbPronto;
 
-    const r = lerStats(args);
-    if (r.erro) {
-        await msg.reply(`${r.erro}\n\n\`\`\`${getCommandSyntax('/stats')}\`\`\``);
-        return;
-    }
-
-    // Destrutivo: só o dono do bot (e os admins), mesmo que o /stats seja liberado
-    if ((r.flush || r.flushAll) && !admin) {
-        await msg.reply('⛔ Apenas o dono do bot (ou um admin) pode apagar as estatísticas.');
-        return;
-    }
-
-    // Quem recebeu o /stats vê só o chat atual: sem -l, sem /chat/ e sem o -me (todos os chats)
-    if (!admin && (r.list || r.me || r.alvo)) {
-        await msg.reply(SO_DONO_OUTROS_CHATS);
-        return;
-    }
+    const r = lerStats(opts);
 
     if (r.list) {
         await listarChats(msg);

@@ -47,7 +47,7 @@ const packageJson = require('../package.json');
  *   -rm | -r <id...|#tag...|all>       → remove (-r 1 2 3, -r 1,2,3, -r #casa ou all)
  *   -alerta                             → lista só as anotações com alerta
  *   -alerta <id|#tag...> <quando> [-to ...]
- *                                       → põe (ou troca) o alerta de uma anotação (ou de todas as da tag)
+ *                                       → coloca (ou troca) o alerta de uma anotação (ou de todas as da tag)
  *   -alerta #tag...                     → lista só os alertas dessas tags
  *   -alerta -rm <id...|#tag...|all>     → tira o alerta, mantendo a anotação
  * O alerta dispara UMA vez, na hora; a anotação continua. Só o dono (role owner).

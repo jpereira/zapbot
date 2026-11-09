@@ -1,0 +1,21 @@
+/*
+ * /unmute: Desfaz o silêncio do /mute
+ */
+
+const { ADMIN } = require('../../roles').ROLES;
+
+module.exports = {
+    cmd: '/unmute',
+    usage: '/unmute [/contato ou grupo/|@menção|+número|nº]  ou  /unmute -all',
+    summary: 'Desfaz o silêncio do /mute',
+    help: 'Desfaz o silêncio do /mute: os avisos de apagadas, editadas, status e reações da pessoa, do grupo ou da comunidade voltam. Respondendo um aviso, desfaz o silêncio de onde ele veio. Sem nada, lista os silenciados.',
+    cmd_opts: [
+        { opts: ['all', 'a'], values: [], desc: 'Desfaz todos os silenciados.' },
+        {
+            argv: ['[/contato ou grupo/|@menção|+número|nº]'],
+            desc: 'Quem: buscado como no /mute, ou o nº da lista do /mute. Sem ele, respondendo um aviso, de onde o aviso veio.',
+            ex: ['/unmute /Jorge Pereira/', '/unmute 2', '/unmute -all']
+        }
+    ],
+    role: ADMIN // silencia os avisos do dono
+};

@@ -1,4 +1,4 @@
-# `/block` (`/bloquear`) · owner
+# `/block` (`/bloquear`) · admin
 
 Bloqueia uma ou várias pessoas na sua conta do WhatsApp, como o **Bloquear** do celular: elas deixam
 de conseguir te mandar mensagens e ligar. Respondendo uma mensagem, bloqueia quem a escreveu. Sem nada, lista os

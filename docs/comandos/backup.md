@@ -1,4 +1,4 @@
-# `/backup` (`/bkp`) · owner
+# `/backup` (`/bkp`) · admin
 
 Backup do banco (`cache/zapbot.db`): um automático por dia, e pelo WhatsApp você cria, lista,
 compara, restaura, recebe o arquivo ou apaga. Sem opção, mostra o banco atual e os backups.

@@ -61,13 +61,21 @@ const ehTempoNegativo = (token) => /^-\d[\d:.]*$/.test(token);
  * "-help" / "-h" são adicionados automaticamente a todo comando.
  * `given` guarda o nome canônico das opções informadas: distingue "-x" sem
  * valor (null, mas presente) de "-x" ausente (null).
+ *
+ * Dois recursos opcionais, ligados no comandos.js:
+ *   numero: true (numa entrada de cmd_opts) lê o "-10" como `numero` (o 1º; um 2º é erro), em vez
+ *     de mandá-lo para o argv;
+ *   estrito: true (no comando) guarda a opção desconhecida em `desconhecidas`, em vez de mandá-la
+ *     para o argv (o handler nunca a vê).
  */
 function GetOptFromCommand(input, config = {}) {
     const tokens = tokenizeCommand(input);
 
     const argv = [];
     const given = new Set();
-    const result = { opt: {}, argv, given };
+    const desconhecidas = [];
+    const result = { opt: {}, argv, given, numero: null, desconhecidas };
+    const lerNumero = (config.cmd_opts ?? []).some(o => o.numero);
 
     const commandOptions = [
         { opts: ['help', 'h'], values: [], desc: 'Exibe ajuda.' },
@@ -101,11 +109,18 @@ function GetOptFromCommand(input, config = {}) {
             continue;
         }
 
+        if (lerNumero && /^-\d+$/.test(token)) {
+            if (result.numero === null) result.numero = Number(token.slice(1));
+            else desconhecidas.push(token);
+            continue;
+        }
+
         const option = optionMap.get(token.slice(1));
 
-        // Opção desconhecida vai para argv
+        // Opção desconhecida vai para argv (ou, no comando estrito, para `desconhecidas`)
         if (!option) {
-            argv.push(normalizeArg(token));
+            if (config.estrito) desconhecidas.push(token);
+            else argv.push(normalizeArg(token));
             continue;
         }
 
