@@ -299,12 +299,41 @@ describe('permissões', () => {
         assert.deepEqual(await bot.replyAlt('/debug', { de: OTHERAlt.jid }), []);
     });
 
-    test('onlyAdmin: ignorado para os outros, sem resposta no chat', async () => {
+    test('role admin: o dono delega com o +cmd; Todos, menos e bot.users true não liberam; owner nunca', async () => {
+        await bot.setSetting('bot.users', [OTHERAlt.user]);
+        assert.deepEqual(await bot.replyAlt('/show -h', { de: OTHERAlt.jid }), []);
+
+        await bot.setSetting('bot.users.cmds', [`${OTHERAlt.user}=!/ping`]);
+        assert.deepEqual(await bot.replyAlt('/show -h', { de: OTHERAlt.jid }), []);
+
+        await bot.setSetting('bot.users.cmds', [`${OTHERAlt.user}=/ping,/show`]);
+        assert.ok((await bot.replyAlt('/show -h', { de: OTHERAlt.jid }))[0].includes('Uso: /show'));
+        assert.deepEqual(await bot.replyAlt('/debug', { de: OTHERAlt.jid }), []);
+
+        await bot.setSetting('bot.users.cmds', []);
+        await bot.setSetting('bot.users', ['all']);
+        assert.deepEqual(await bot.replyAlt('/show -h', { de: OTHERAlt.jid }), []);
+
+        // whoever uses the common ones (without a rule or "All, except") does not gain an admin with +cmd: only in an "Only" list
+        await bot.setSetting('bot.users', [OTHERAlt.user]);
+        await bot.setSetting('bot.users.cmds', []);
+        assert.match((await bot.replyAlt('/bot +cmd /gpt /Fulano/', { chat: OWNER.jid }))[0], /só entra numa lista "Apenas"/);
+        await bot.setSetting('bot.users.cmds', [`${OTHERAlt.user}=!/ping`]);
+        assert.match((await bot.replyAlt('/bot +cmd /gpt /Fulano/', { chat: OWNER.jid }))[0], /só entra numa lista "Apenas"/);
+        assert.deepEqual(bot.getSetting('bot.users.cmds'), [`${OTHERAlt.user}=!/ping`]);
+        await bot.replyAlt('/bot +v +cmd /cotacao,/gpt /Fulano/', { chat: OWNER.jid });
+        assert.deepEqual(bot.getSetting('bot.users.cmds'), [`${OTHERAlt.user}=/cotacao,/gpt`]);
+
+        // o +cmd recusa o owner
+        assert.match((await bot.replyAlt('/bot +cmd /set +v /Fulano/', { chat: OWNER.jid }))[0], /não dá para liberar/);
+    });
+
+    test('role admin/owner: ignorado para os outros, sem resposta no chat', async () => {
         assert.deepEqual(await bot.replyAlt('/debug', { de: OTHERAlt.jid }), []);
         assert.deepEqual(await bot.replyAlt('/debug'), ['🪲 Debug Desativado.']);
     });
 
-    test('onlyAdmin com debug ligado avisa no seu privado', async () => {
+    test('role admin/owner com debug ligado avisa no seu privado', async () => {
         await bot.setSetting('debug.enabled', true);
         const r = await bot.executar('/debug', { de: OTHERAlt.jid });
         assert.equal(r.length, 1);
@@ -379,7 +408,7 @@ describe('permissões', () => {
         assert.match((await bot.replyAlt('/set bot.admins', { de: OTHERAlt.jid }))[0], /⚙️ \*bot\.admins\*/, 'ver pode');
     });
 
-    test('comando liberado (onlyAdmin false) funciona para os outros', async () => {
+    test('comando liberado (role user) funciona para os outros', async () => {
         const [r] = await bot.replyAlt('/noffa oi gente', { de: OTHERAlt.jid });
         assert.match(r, /oi .* gente/);
     });

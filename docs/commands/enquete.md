@@ -1,5 +1,8 @@
 # `/enquete` (`/quiz`) · admin
 
+Role `admin`: só você e os admins extras. O dono libera a uma pessoa ou grupo com
+`/bot +v +cmd /enquete` ([Delegando](index.md#delegando-um-comando-admin)).
+
 Cria uma enquete nativa do WhatsApp no chat atual. A pergunta e as opções (2 a 12) são separadas por
 `|` ou uma por linha (a 1ª linha é a pergunta). Por padrão cada pessoa marca uma opção; com `-m` no
 começo, pode marcar várias.

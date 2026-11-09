@@ -1,4 +1,4 @@
-# `/unmute` · admin
+# `/unmute` · owner
 
 Desfaz o silêncio do [`/mute`](mute.md): os avisos de mensagens apagadas, editadas, de status
 apagados e de reações removidas ou trocadas da pessoa, do grupo ou da comunidade voltam.

@@ -1,4 +1,4 @@
-# `/alias` · admin
+# `/alias` · owner
 
 Salva atalhos no banco do bot: para um comando com argumentos ou para um texto com vários
 `{/comando}`, como no [`/cron`](cron.md#comandos-no-texto). O dono e os admins cadastram e removem
@@ -75,6 +75,9 @@ quebras de linha do texto viram espaço. Sem `$N`, o texto vai como foi digitado
 inclusas. Para executar vários atalhos de uma vez, veja o [`/batch`](batch.md).
 
 As permissões, o controle de repetição e a desativação de comandos são os do comando de destino.
+Quem pode usar o `/gpt` (ex.: `/bot +v +cmd /gpt`) usa também todo atalho para ele, sem liberar o
+atalho à parte; o `/bot +cmd` não aceita o nome de um atalho, só de comandos. Num atalho de texto,
+a pessoa precisa poder todos os `{/comando}`.
 O `/help alias` lista os atalhos que você pode executar, com a descrição e o comando salvo.
 O `/alias -h` ou `/alias -help` mostra a ajuda de cadastro. O `/alias` sem argumentos ou com
 `-list`/`-l` lista todos os atalhos cadastrados, inclusive os de comandos desativados.

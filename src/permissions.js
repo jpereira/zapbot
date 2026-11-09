@@ -3,12 +3,19 @@
  * the people only in a group) and bot.users.cmds (each one's rule, from /bot
  * +cmd|-cmd). Without a rule, all the common ones; with a rule, only those on the list ("Only")
  * or all except those on the list ("All, except"). /help and /whois always pass.
+ *
+ * The commands' role (the "role" in commands.json): user (common), admin (only the owner
+ * and bot.admins, but delegable: it must be cited in an "Only", /bot +cmd) and
+ * owner (never delegable). An "All, except" or bot.users = true do not allow admin.
  */
 
+const { botConfig } = require('./botConfig');
 const { getSetting, setSetting } = require('./settings');
 
 const KEY = 'bot.users.cmds';
 const ALWAYS_RELEASED = ['/help', '/whois'];
+
+const roleDe = (cmd) => botConfig.commands.find(c => c.cmd === cmd)?.role ?? 'user';
 
 // "5521...=/a,/b" → { apenas: true, comandos: ['/a', '/b'] }; "...=!/a" → { apenas: false }
 function readLine(line) {
@@ -55,7 +62,9 @@ function permissionHere({ numero: numberAlt, chatId, isGroup }) {
         ? users.filter(u => u.startsWith(`${numberAlt}:`)).map(u => u.slice(u.indexOf(':') + 1))
         : [];
 
-    if (users.includes('all')) return { liberado: true, soNosGrupos: soInGroups, regras: [], pode: () => true };
+    if (users.includes('all')) {
+        return { liberado: true, soNosGrupos: soInGroups, regras: [], pode: (cmd) => roleDe(cmd) === 'user' };
+    }
 
     const inputs = [numberAlt, isGroup && `${numberAlt}:${chatId}`, isGroup && chatId]
         .filter(e => e && users.includes(e));
@@ -67,7 +76,13 @@ function permissionHere({ numero: numberAlt, chatId, isGroup }) {
         liberado: true,
         soNosGrupos: soInGroups,
         regras: limit,
-        pode: (cmd) => !limit.length || limit.some(r => allows(r, cmd))
+        pode: (cmd) => {
+            const role = roleDe(cmd);
+            if (role === 'owner') return false;
+            // admin: only if some rule cites it (+cmd); a missing rule or an "All, except" is not enough
+            if (role === 'admin') return allAlt.some(r => r?.apenas && r.comandos.includes(cmd));
+            return !limit.length || limit.some(r => allows(r, cmd));
+        }
     };
 }
 
@@ -82,6 +97,7 @@ function limitNotice(rulesThatLimit, cmd) {
 
 module.exports = {
     ALWAYS_RELEASED,
+    roleDe,
     limitNotice,
     describeRule,
     recordRule,

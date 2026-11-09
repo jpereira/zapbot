@@ -1,4 +1,4 @@
-# `/search` (`/buscar`) · admin
+# `/search` (`/buscar`) · owner
 
 Busca mensagens no histórico do WhatsApp Web, com a mesma busca do campo de pesquisa do WhatsApp:
 vale para as mensagens que o WhatsApp Web tem, inclusive as que nunca passaram pelo cache do bot. O

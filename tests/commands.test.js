@@ -59,6 +59,26 @@ describe('/help (/h)', () => {
         assert.match(admin, /\n \/show - /);
     });
 
+    test('-role|-r: lista por role (owner, admin, user), só o que a pessoa pode usar', async () => {
+        const [r] = await bot.replyAlt('/help -r');
+        assert.match(r, /```\nRole: owner\n \/alias - [^]*\n\nRole: admin\n \/enquete - [^]*\n\nRole: user\n \/ascii - /);
+        assert.ok(r.indexOf(' /show - ') < r.indexOf('Role: user'));
+        assert.deepEqual(await bot.replyAlt('/help -role'), [r]);
+
+        const [other] = await bot.replyAlt('/help -r', { de: OTHERAlt.jid });
+        assert.match(other, /```\nRole: user\n \/ascii - /);
+        assert.doesNotMatch(other, /Role: (owner|admin)/);
+
+        await bot.setSetting('bot.users.cmds', [`${OTHERAlt.user}=/ping,/show`]);
+        await bot.setSetting('bot.users', [OTHERAlt.user]);
+        const [deleg] = await bot.replyAlt('/help -r', { de: OTHERAlt.jid });
+        assert.match(deleg, /Role: admin\n \/show - [^]*\n\nRole: user\n \/help - [^]*\n \/ping - /);
+        assert.doesNotMatch(deleg, /Role: owner/);
+
+        // with the command, -r does not get in the way
+        assert.match((await bot.replyAlt('/help -r get'))[0], /Uso: \/get/);
+    });
+
     test('comando desativado por setting some do menu', async () => {
         await bot.setSetting('commands.disabled', 'noffa');
         assert.doesNotMatch((await bot.replyAlt('/help'))[0], /\n \/noffa - /);

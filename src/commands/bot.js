@@ -13,7 +13,7 @@ const { waitConfirmation, authorAlt } = require('../choices');
 const { GetOptFromCommand } = require('../options');
 const { boxes } = require('../imap');
 const { printInfo } = require('../log');
-const { describeRule, recordRule, regraDe } = require('../permissions');
+const { describeRule, recordRule, regraDe, roleDe } = require('../permissions');
 const {
     SETTINGS_SCHEMA, userCommand, getSetting, setSetting, validateSetting
 } = require('../settings');
@@ -392,7 +392,7 @@ async function changeList(msg, key, items, append, chat) {
 /*
  * +cmd|-cmd: each user's rule. Together with +v, defines the rule:
  * +v +cmd /a,/b = only those; +v -cmd /a = all, except that one. Alone:
- * +cmd: whoever is not a user enters only with these; "Only" gains these; "All,
+ * +cmd: (an admin command only enters "Only") whoever is not a user enters only with these; "Only" gains these; "All,
  * except" lets those in again; whoever uses all stays as is; all deletes the rule;
  * -cmd: "Only" loses these (the last one, no: that is -v); whoever uses all stays
  *         "Todos, menos" esses; "Todos, menos" ganha esses.
@@ -408,6 +408,7 @@ async function changeCommands(msg, items, { sinal: signalAlt, comandos: commands
 
     const scope = await chatScope(chat);
     const all = commands.includes('all');
+    const admins = commands.filter(c => roleDe(c) === 'admin');
     const changed = [];
     const newUsers = [];
     const notices = [];
@@ -427,7 +428,11 @@ async function changeCommands(msg, items, { sinal: signalAlt, comandos: commands
             fresh = all ? null : { apenas: signalAlt === '+', comandos: commands };
         } else if (signalAlt === '+') {
             if (!isUser || all) fresh = all ? null : { apenas: true, comandos: commands };
-            else if (!rule) {
+            else if (!rule?.apenas && admins.length) {
+                notices.push(`❌ ${who} usa os comandos comuns, e o ${admins.join(', ')} (admin) só entra numa lista "Apenas": ` +
+                    `liste os comandos dele, ex.: /bot +v +cmd /cotacao,${admins[0]}.`);
+                continue;
+            } else if (!rule) {
                 notices.push(`ℹ️ ${who} já usa todos os comandos comuns.`);
                 continue;
             } else if (rule.apenas) fresh = { apenas: true, comandos: union };

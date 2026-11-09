@@ -47,7 +47,7 @@ describe('commands.json', () => {
             assert.ok(c.help, `${c.cmd} sem help`);
             assert.ok(c.summary, `${c.cmd} sem summary`);
             assert.ok(c.summary.length <= 70 && !c.summary.endsWith('.'), `${c.cmd}: summary curto e sem ponto final`);
-            assert.equal(typeof c.onlyAdmin, 'boolean', `${c.cmd} sem onlyAdmin`);
+            assert.ok(['owner', 'admin', 'user'].includes(c.role), `${c.cmd}: role inválido`);
             for (const o of c.cmd_opts ?? []) {
                 assert.ok(o.desc, `${c.cmd}: opção sem desc`);
                 if (o.opts) assert.ok(Array.isArray(o.values), `${c.cmd} -${o.opts[0]}: values não é lista`);
@@ -114,7 +114,7 @@ function checkSummary(md, title, whereAlt, { comLinks: withLinks }) {
         const { linha: line, colunas: columns } = linesAlt.find(l => l.cmd === c.cmd);
         const aliases = [...columns[2].matchAll(/`([^`]+)`/g)].map(m => m[1]);
         assert.deepEqual(aliases, c.aliases ?? [], `${whereAlt}: aliases de ${c.cmd} no Resumo`);
-        assert.equal(columns[3].includes('✅'), c.onlyAdmin, `${whereAlt}: coluna Admin de ${c.cmd}`);
+        assert.equal(columns[3].trim(), `\`${c.role}\``, `${whereAlt}: coluna Role de ${c.cmd}`);
         if (withLinks) assert.ok(line.includes(`](${c.cmd.slice(1)}.md)`), `${whereAlt}: ${c.cmd} sem link para a página`);
     }
 }
@@ -148,7 +148,19 @@ describe('documentação', () => {
         }
     });
 
-    test('uma página por comando, com o título igual ao config (aliases e "· admin")', () => {
+    test('Permissões: "Comandos por role" lista cada comando no role do config', () => {
+        const md = readDoc('commands/index.md');
+        const section = md.slice(md.indexOf('### Comandos por role'), md.indexOf('## Resumo'));
+        for (const role of ['user', 'admin', 'owner']) {
+            const ini = section.indexOf(`**${role} (`);
+            assert.ok(ini >= 0, `sem o role ${role}`);
+            const block = section.slice(ini).split('\n\n')[1];
+            const names = [...block.matchAll(/`(\/[a-z]+)`/g)].map(m => m[1]);
+            assert.deepEqual(names, CONFIG.commands.filter(c => c.role === role).map(c => c.cmd), role);
+        }
+    });
+
+    test('uma página por comando, com o título igual ao config (aliases e "· owner"/"· admin")', () => {
         for (const c of CONFIG.commands) {
             const fileAlt = `commands/${c.cmd.slice(1)}.md`;
             assert.ok(fs.existsSync(path.join(DOCS, fileAlt)), `sem a página docs/${fileAlt}`);
@@ -157,7 +169,8 @@ describe('documentação', () => {
             assert.ok(title.startsWith(`# \`${c.cmd}\``), `docs/${fileAlt}: o título não começa com ${c.cmd}`);
             const aliases = [...title.matchAll(/`(\/[^`]+)`/g)].map(m => m[1]).slice(1);
             assert.deepEqual(aliases, c.aliases ?? [], `docs/${fileAlt}: aliases no título`);
-            assert.equal(title.includes('· admin'), c.onlyAdmin, `docs/${fileAlt}: "· admin" no título`);
+            assert.equal(title.endsWith(' · owner'), c.role === 'owner', `docs/${fileAlt}: "· owner" no título`);
+            assert.equal(title.endsWith(' · admin'), c.role === 'admin', `docs/${fileAlt}: "· admin" no título`);
         }
 
         const extras = pagesDocs(path.join(DOCS, 'commands')).map(f => `/${path.basename(f, '.md')}`)

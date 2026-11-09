@@ -4,6 +4,7 @@
  * The `onde` (e.g.: '/cron') only appears in the error messages.
  */
 
+const { roleMoreRestricted } = require('./botConfig');
 const { client } = require('./client');
 const { activeCommands, findCommand } = require('./commands/base');
 const { printError } = require('./log');
@@ -56,13 +57,13 @@ async function findCommandAlt(line) {
 
 /*
  * /me is a regular command, but it runs the {/command}s of what was typed: the permissions
- * (and the "admin only") are its own and each one's (targets), checked before running.
+ * (and the role) are its own and each one's (targets), checked before running.
  */
 async function withTargets(command, textAlt) {
     if (command?.cmd !== '/me') return command;
     const foundAlt4 = await Promise.all(commandsInText(textAlt).map(c => findCommandAlt(c.linha)));
     const targets = foundAlt4.map(a => a?.command).filter(Boolean);
-    return { ...command, onlyAdmin: command.onlyAdmin || targets.some(c => c.onlyAdmin),
+    return { ...command, role: roleMoreRestricted([command.role, ...targets.map(c => c.role)]),
         alvos: [command.cmd, ...targets.map(c => c.cmd)] };
 }
 
