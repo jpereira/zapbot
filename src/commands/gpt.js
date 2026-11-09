@@ -62,12 +62,10 @@ async function cmdGpt({ msg, args, opts, quotedMsg, admin }) {
         // "digitando..." enquanto a OpenAI responde (pode levar alguns segundos)
         msg.getChat().then(chat => chat.sendStateTyping()).catch(() => {});
 
-        let reply = await askOnChat({ cmd: '/gpt', sistema: GPT_INSTRUCTIONS, texto: question });
+        const reply = await askOnChat({ cmd: '/gpt', sistema: GPT_INSTRUCTIONS, texto: question });
 
-        // The reply never starts with "/": it must not be read as a command (see markSentByBot)
-        if (reply.startsWith('/')) reply = `🤖 ${reply}`;
-
-        await msg.reply(reply);
+        // The 🤖 in front also guarantees the reply never starts with "/" (see markSentByBot)
+        await msg.reply(`🤖 ${reply}`);
     } catch (err) {
         await msg.reply(errorOpenAi(err, '/gpt'));
     }
