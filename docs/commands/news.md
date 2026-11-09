@@ -2,7 +2,7 @@
 
 Junta as manchetes mais recentes dos feeds RSS de uma categoria, com fonte, data e link. Sem
 categoria, mostra a ajuda com todas as opções. É um comando comum, disponível aos usuários liberados
-pelo `/bot +v` ou pelo setting `bot.users`.
+pelo `/bot +u` ou pelo setting `bot.users`.
 
 | Opção | Valor | Descrição |
 |---|---|---|

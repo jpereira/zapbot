@@ -9,7 +9,6 @@ const { readPerson, textPeople, withoutDelimiters } = require('./block');
 const { client } = require('../client');
 const { scheduleName, contactName, resolveLidToPhone, groupResolverName } = require('../contacts');
 const { printError } = require('../log');
-const { SO_OWNER_OTHER_CHATS } = require('../permissions');
 
 /*
  * /profile (/perfil): a contact's profile photo, with the name from your address book and the phone.
@@ -84,14 +83,8 @@ async function showGroup(msg, chatId) {
     await msg.reply(`${group}\n🚫 Sem foto do grupo.`);
 }
 
-async function cmdProfile({ msg, opts, quotedMsg, chatId, isGroup, admin }) {
+async function cmdProfile({ msg, opts, quotedMsg, chatId, isGroup }) {
     const textAlt = opts.argv.join(' ').trim();
-
-    // Whoever received /profile sees only the current chat's (the private chat person, the group or whoever wrote the replied one)
-    if (!admin && textAlt) {
-        await msg.reply(SO_OWNER_OTHER_CHATS);
-        return;
-    }
 
     // Nobody: the replied message (whoever wrote it), the group or the private chat person (you, in yours)
     if (!textAlt) {

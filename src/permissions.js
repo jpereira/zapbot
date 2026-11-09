@@ -4,21 +4,25 @@
  * +cmd|-cmd). Without a rule, all the common ones; with a rule, only those on the list ("Only")
  * or all except those on the list ("All, except"). /help and /whois always pass.
  *
- * The commands' role (the "role" in commands.json): user (common), admin (only the owner
- * and bot.admins, but delegable: it must be cited in an "Only", /bot +cmd) and
- * owner (never delegable). An "All, except" or bot.users = true do not allow admin.
+ * Users (+u) use the `role: USER` commands. A `role: ADMIN` with `delegavel: true` only reaches
+ * to a user cited in an "Only" (/bot +cmd): an "All, except" or bot.users = true does not
+ * allow. The rest (admin without delegavel, owner) belongs only to whoever has the level (src/roles.js).
  */
 
 const { botConfig } = require('./botConfig');
+const { ROLES } = require('./roles');
 const { getSetting, setSetting } = require('./settings');
 
 const KEY = 'bot.users.cmds';
 const ALWAYS_RELEASED = ['/help', '/whois'];
 
-// Delegated (admin role) operates only in the current chat: seeing other chats belongs to the owner and the admins
-const SO_OWNER_OTHER_CHATS = '⛔ Apenas o dono do bot (ou um admin) pode ver outros chats.';
+const command = (cmd) => botConfig.commands.find(c => c.cmd === cmd);
 
-const roleDe = (cmd) => botConfig.commands.find(c => c.cmd === cmd)?.role ?? 'user';
+// A user can receive the command through a +cmd: admin and delegable
+const delegavel = (cmd) => {
+    const c = command(cmd);
+    return c?.role === ROLES.ADMIN && Boolean(c.delegavel);
+};
 
 // "5521...=/a,/b" → { apenas: true, comandos: ['/a', '/b'] }; "...=!/a" → { apenas: false }
 function readLine(line) {
@@ -66,7 +70,7 @@ function permissionHere({ numero: numberAlt, chatId, isGroup }) {
         : [];
 
     if (users.includes('all')) {
-        return { liberado: true, soNosGrupos: soInGroups, regras: [], pode: (cmd) => roleDe(cmd) === 'user' };
+        return { liberado: true, soNosGrupos: soInGroups, regras: [], pode: (cmd) => (command(cmd)?.role ?? ROLES.USER) === ROLES.USER };
     }
 
     const inputs = [numberAlt, isGroup && `${numberAlt}:${chatId}`, isGroup && chatId]
@@ -80,13 +84,23 @@ function permissionHere({ numero: numberAlt, chatId, isGroup }) {
         soNosGrupos: soInGroups,
         regras: limit,
         pode: (cmd) => {
-            const role = roleDe(cmd);
-            if (role === 'owner') return false;
-            // admin: only if some rule cites it (+cmd); a missing rule or an "All, except" is not enough
-            if (role === 'admin') return allAlt.some(r => r?.apenas && r.comandos.includes(cmd));
+            const role = command(cmd)?.role ?? ROLES.USER;
+            if (role === ROLES.OWNER || (role === ROLES.ADMIN && !delegavel(cmd))) return false;
+            // delegable: only if some rule cites it (+cmd); without a rule or an "All, except" is not enough
+            if (role === ROLES.ADMIN) return allAlt.some(r => r?.apenas && r.comandos.includes(cmd));
             return !limit.length || limit.some(r => allows(r, cmd));
         }
     };
+}
+
+/**
+ * The typist's level: owner (the bot account), admin (bot.admins), user (bot.users, here) or
+ * null (nobody: the bot ignores).
+ */
+function levelAlt({ fromMe, numero: numberAlt, permissao: permission }) {
+    if (fromMe) return ROLES.OWNER;
+    if (numberAlt && getSetting('bot.admins').includes(numberAlt)) return ROLES.ADMIN;
+    return permission.liberado ? ROLES.USER : null;
 }
 
 // The notice for whoever used a command outside the rule
@@ -100,8 +114,8 @@ function limitNotice(rulesThatLimit, cmd) {
 
 module.exports = {
     ALWAYS_RELEASED,
-    SO_OWNER_OTHER_CHATS,
-    roleDe,
+    delegavel,
+    levelAlt,
     limitNotice,
     describeRule,
     recordRule,

@@ -7,7 +7,7 @@
  * path of a normal message (alias, $1, options) and the reply is a single summary.
  */
 const { isCommandOrAlias, textRunAlias, resolverAlias } = require('../aliases');
-const { GetOptFromCommand } = require('../options');
+const { readOptions: commandReadOptions } = require('../execute');
 const { printError, printInfo } = require('../log');
 const { summarizeText } = require('../util/format');
 
@@ -74,15 +74,14 @@ async function runBlock(line, context) {
         await textRunAlias(msg, { ...resolved, quiet: true }, {
             chatId: context.chatId, chatName: context.chatName, isGroup: context.isGroup,
             quem: {
-                admin: true, podeUsar: () => true, senderContact: context.senderContact,
+                nivel: context.nivel, admin: true, podeUsar: () => true, senderContact: context.senderContact,
                 senderName: context.senderName, senderNumber: context.senderNumber
             }
         });
     } else {
         const handler = HANDLERS[command.cmd];
         if (!handler) return { ok: false, respostas: [`${command.cmd} ainda não foi implementado`] };
-        const paraParser = command.cmd === '/alias' ? '' : args;
-        await handler({ ...context, msg, args, opts: GetOptFromCommand(paraParser, command), quotedMsg: null });
+        await handler({ ...context, msg, args, opts: commandReadOptions(command, args), quotedMsg: null });
     }
 
     return { ok: !replies.some(r => r.startsWith('❌') || r.startsWith('⚠️')), respostas: replies };

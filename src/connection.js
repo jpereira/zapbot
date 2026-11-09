@@ -361,7 +361,7 @@ client.on('ready', () => withContextDebug({ semFiltro: true }, async () => {
     const listNotices = [
         getSetting('bot.paused') && 'Bot desligado: use /bot -on para ativar os comandos.',
         !getSetting('bot.users').length &&
-            'Só você (e os admins) usa comandos: /bot +v <pessoa|grupo> libera para alguns.'
+            'Só você (e os admins) usa comandos: /bot +u <pessoa|grupo> libera para alguns.'
     ].filter(Boolean);
     const notices = listNotices.map(a => ` ${a}`).join('');
 

@@ -1,5 +1,5 @@
 /*
- * Configuration: commands.json, settings, option parser, help and the
+ * Configuration: commands.js, settings, option parser, help and the
  * consistency between config, code and README (alphabetical order included).
  */
 const bot = require('./helpers/bot');
@@ -14,14 +14,14 @@ const { GetOptFromCommand } = bot.src('options');
 const { findCommand, formatCommandHelp, getCommandSyntax, activeCommands } = bot.src('commands/base');
 const { HANDLERS } = bot.src('commands/index');
 
-const CONFIG = JSON.parse(fs.readFileSync(path.join(bot.ROOT, 'src/commands/commands.json'), 'utf8'));
+const CONFIG = bot.src('commands/commands');
 const README = fs.readFileSync(path.join(bot.ROOT, 'README.md'), 'utf8');
 
 const sorted = (list) => [...list].sort((a, b) => a.localeCompare(b));
 
 beforeEach(bot.restart);
 
-describe('commands.json', () => {
+describe('commands.js', () => {
     test('comandos em ordem alfabética', () => {
         const cmds = CONFIG.commands.map(c => c.cmd);
         assert.deepEqual(cmds, sorted(cmds));
@@ -40,6 +40,27 @@ describe('commands.json', () => {
         const names = CONFIG.commands.flatMap(c => [c.cmd, ...(c.aliases ?? [])]);
         assert.equal(new Set(names).size, names.length, 'nome ou alias repetido');
         for (const n of names) assert.match(n, /^\//);
+    });
+
+    test('o role de cada comando é válido e os nomes e aliases não se repetem (o botConfig valida no boot)', () => {
+        const { ORDER } = bot.src('roles');
+        assert.deepEqual([...ORDER], ['user', 'admin', 'owner']);
+        for (const c of CONFIG.commands) assert.ok(ORDER.includes(c.role), `${c.cmd}: role ${c.role}`);
+    });
+
+    test('níveis: owner > admin > user, e a opção com role só vale para quem o alcança', () => {
+        const { ROLES, answer, roleMoreRestricted } = bot.src('roles');
+        const { denial } = bot.src('execute');
+        assert.ok(answer(ROLES.OWNER, ROLES.ADMIN) && answer(ROLES.ADMIN, ROLES.USER) && answer(ROLES.USER, ROLES.USER));
+        assert.ok(!answer(ROLES.USER, ROLES.ADMIN) && !answer(ROLES.ADMIN, ROLES.OWNER) && !answer(null, ROLES.USER));
+        assert.equal(roleMoreRestricted([ROLES.USER, ROLES.OWNER, ROLES.ADMIN]), ROLES.OWNER);
+
+        const commandAlt = { cmd: '/x', cmd_opts: [{ opts: ['dono'], role: ROLES.OWNER }, { opts: ['adm'], role: ROLES.ADMIN }] };
+        const dado = (...names) => ({ given: new Set(names), argv: [] });
+        assert.equal(denial(commandAlt, dado('dono'), ROLES.OWNER), null);
+        assert.match(denial(commandAlt, dado('dono'), ROLES.ADMIN), /Apenas o dono do bot pode usar o -dono do \/x/);
+        assert.equal(denial(commandAlt, dado('adm'), ROLES.ADMIN), null);
+        assert.match(denial(commandAlt, dado('adm'), ROLES.USER), /Apenas o dono do bot \(ou um admin\)/);
     });
 
     test('toda opção tem desc; valores são listas', () => {
@@ -78,6 +99,10 @@ const DOCS = path.join(bot.ROOT, 'docs');
 const readDoc = (rel) => fs.readFileSync(path.join(DOCS, rel), 'utf8');
 
 // All the .md files in docs/ (paths relative to docs/)
+// The links to the site may be in the command definitions
+const definitionFiles = () => fs.readdirSync(path.join(bot.ROOT, 'src/commands/definitions'))
+    .map(f => `src/commands/definitions/${f}`);
+
 const pagesDocs = (dir = DOCS) => fs.readdirSync(dir, { withFileTypes: true }).flatMap(e => e.isDirectory()
     ? pagesDocs(path.join(dir, e.name))
     : e.name.endsWith('.md') ? [path.relative(DOCS, path.join(dir, e.name))] : []);
@@ -114,7 +139,7 @@ function checkSummary(md, title, whereAlt, { comLinks: withLinks }) {
         const { linha: line, colunas: columns } = linesAlt.find(l => l.cmd === c.cmd);
         const aliases = [...columns[2].matchAll(/`([^`]+)`/g)].map(m => m[1]);
         assert.deepEqual(aliases, c.aliases ?? [], `${whereAlt}: aliases de ${c.cmd} no Resumo`);
-        assert.equal(columns[3].trim(), `\`${c.role}\``, `${whereAlt}: coluna Role de ${c.cmd}`);
+        assert.equal(columns[3].trim(), `\`${c.role}\`${c.delegavel ? ' · delegável' : ''}`, `${whereAlt}: coluna Role de ${c.cmd}`);
         if (withLinks) assert.ok(line.includes(`](${c.cmd.slice(1)}.md)`), `${whereAlt}: ${c.cmd} sem link para a página`);
     }
 }
@@ -148,16 +173,10 @@ describe('documentação', () => {
         }
     });
 
-    test('Permissões: "Comandos por role" lista cada comando no role do config', () => {
-        const md = readDoc('commands/index.md');
-        const section = md.slice(md.indexOf('### Comandos por role'), md.indexOf('## Resumo'));
-        for (const role of ['user', 'admin', 'owner']) {
-            const ini = section.indexOf(`**${role} (`);
-            assert.ok(ini >= 0, `sem o role ${role}`);
-            const block = section.slice(ini).split('\n\n')[1];
-            const names = [...block.matchAll(/`(\/[a-z]+)`/g)].map(m => m[1]);
-            assert.deepEqual(names, CONFIG.commands.filter(c => c.role === role).map(c => c.cmd), role);
-        }
+    test('os trechos gerados do commands/index.md (roles e limites) estão atualizados: node scripts/generate-docs.js', () => {
+        const { generate } = require(path.join(bot.ROOT, 'scripts/generate-docs.js'));
+        const current = readDoc('commands/index.md');
+        assert.equal(generate(current), current, 'rode node scripts/generate-docs.js');
     });
 
     test('uma página por comando, com o título igual ao config (aliases e "· owner"/"· admin")', () => {
@@ -178,7 +197,7 @@ describe('documentação', () => {
         assert.deepEqual(extras, [], 'página de comando que não está no config');
     });
 
-    test('a tabela de opções de cada página tem as mesmas opções do commands.json', () => {
+    test('a tabela de opções de cada página tem as mesmas opções do commands.js', () => {
         for (const c of CONFIG.commands) {
             const fileAlt = `commands/${c.cmd.slice(1)}.md`;
             const doConfig = new Set((c.cmd_opts ?? []).flatMap(o => o.opts ?? []));
@@ -264,7 +283,7 @@ describe('documentação', () => {
 
     test('links para o site (jpereira.github.io/zapbot) apontam para páginas e âncoras do docs/', () => {
         const SITE = /https:\/\/jpereira\.github\.io\/zapbot\/([^)\s"'`]*)/g;
-        const files = ['README.md', 'SECURITY.md', 'src/commands/commands.json', ...pagesDocs().map(f => `docs/${f}`)];
+        const files = ['README.md', 'SECURITY.md', ...definitionFiles(), ...pagesDocs().map(f => `docs/${f}`)];
         let total = 0;
 
         for (const fileAlt of files) {
@@ -424,8 +443,14 @@ describe('parser de opções', () => {
         assert.ok(o.given.has('query'));
     });
 
-    test('opção desconhecida e número negativo vão para argv', () => {
-        assert.deepEqual(GetOptFromCommand('-3 -xyz', cmd('/show')).argv, ['-3', '-xyz']);
+    test('opção desconhecida vai para argv; no comando estrito, e o 2º número, para desconhecidas', () => {
+        assert.deepEqual(GetOptFromCommand('-3 -xyz', cmd('/noffa')).argv, ['-3', '-xyz']);
+        const o = GetOptFromCommand('-3 -xyz -4 chat', cmd('/show'));
+        assert.equal(o.numero, 3);
+        assert.deepEqual(o.desconhecidas, ['-xyz', '-4']);
+        assert.deepEqual(o.argv, ['chat']);
+        assert.equal(GetOptFromCommand('chat', cmd('/show')).numero, null);
+        assert.equal(GetOptFromCommand('-3', cmd('/noffa')).numero, null);
     });
 
     test('aspas agrupam', () => {
@@ -437,8 +462,9 @@ describe('parser de opções', () => {
     test('barras preservam nomes, regex com espaços, escapes e flags sem virar opções', () => {
         const args = '/Jorge Pereira/ /foo -h bar/i /[ /] caminho\\/arquivo/gi -3';
         assert.deepEqual(GetOptFromCommand(args, cmd('/show')).argv, [
-            '/Jorge Pereira/', '/foo -h bar/i', '/[ /] caminho\\/arquivo/gi', '-3'
+            '/Jorge Pereira/', '/foo -h bar/i', '/[ /] caminho\\/arquivo/gi'
         ]);
+        assert.equal(GetOptFromCommand(args, cmd('/show')).numero, 3);
         assert.equal(GetOptFromCommand(args, cmd('/show')).opt.help, false);
         assert.deepEqual(GetOptFromCommand('/tmp/arquivo https://x.com/a/b', cmd('/get')).argv,
             ['/tmp/arquivo', 'https://x.com/a/b']);
@@ -568,15 +594,12 @@ describe('ajuda', () => {
         assert.match(formatCommandHelp(findCommand('/tempo')), /\n {4}Ex: \/tempo Paris, Texas\n/);
     });
 
-    test('${CACHE_DIR}, ${MEDIA_DIR} e ${TMP_DIR} viram os caminhos reais na ajuda', () => {
+    test('a ajuda traz os caminhos reais de cache, mídias e backups', () => {
         const { CACHE_DIR, MEDIA_DIR } = bot.src('constants');
         const help = getCommandSyntax('/cache');
         assert.ok(help.includes(`Exibe o espaço ocupado em ${CACHE_DIR} e limpa o cache.`), help);
         assert.ok(help.includes(`mídias baixadas em ${MEDIA_DIR}`));
         assert.doesNotMatch(help, /\$\{/);
-
-        const { interpolar } = bot.src('commands/base');
-        assert.equal(interpolar('em ${TMP_DIR}, ${NAO_EXISTE}'), `em ${bot.src('constants').TMP_DIR}, \${NAO_EXISTE}`);
     });
 
     test('ajuda de todos os comandos e protocolos resolve variáveis e mantém o recuo', () => {

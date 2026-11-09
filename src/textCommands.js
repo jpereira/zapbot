@@ -4,15 +4,15 @@
  * The `onde` (e.g.: '/cron') only appears in the error messages.
  */
 
-const { roleMoreRestricted } = require('./botConfig');
+const { ROLES, roleMoreRestricted } = require('./roles');
 const { client } = require('./client');
 const { activeCommands, findCommand } = require('./commands/base');
 const { printError } = require('./log');
-const { GetOptFromCommand } = require('./options');
+const { optionsError, readOptions, assembleContext, denial } = require('./execute');
 const { dbGet, dbReady } = require('./db');
 
 /*
- * Only the commands with "cron": true in commands.json (the query ones), and without the
+ * Only the commands with "cron": true in commands.js (the query ones), and without the
  * options with "cron": false (those that change something, like /crypto's -add). The
  * command runs as if typed in the destination chat (by you, if none comes
  * who runs), but the replies are stored instead of sent: the text goes
@@ -82,7 +82,7 @@ async function readCommand(line, whereAlt = '/cron', owner = false) {
         return { erro: `❌ {${line}}: o ${command.cmd} não roda dentro do ${whereAlt}.\n💡 _Rodam: ${allowed().join(', ')}._` };
     }
 
-    const opts = GetOptFromCommand(args, command);
+    const opts = readOptions(command, args);
     const prohibited = (command.cmd_opts ?? []).find(o => (o.cron === false || (o.cron === 'dono' && !owner)) &&
         o.opts?.some(nameAlt => opts.given.has(nameAlt)));
     if (prohibited) return { erro: `❌ {${line}}: o -${prohibited.opts[0]} do ${command.cmd} não roda dentro do ${whereAlt}.` };
@@ -143,12 +143,14 @@ async function runCommand(chatId, line, { chatName, isGroup, onde: whereAlt = '/
     const replies = [];
     const msg = messageSynthetic(chatId, line, replies);
 
+    const owner = { nivel: ROLES.OWNER, admin: true, senderName: client.info?.pushname || 'Você' };
+    const reject = optionsError(command, opts) ?? denial(command, opts, who?.nivel ?? owner.nivel);
+    if (reject) return { texto: reject, midias: [] };
+
     try {
-        await HANDLERS[command.cmd]({
-            msg, opts, args, quotedMsg: null, senderContact: null, senderName: client.info?.pushname || 'Você',
-            isGroup, chatId, chatName, admin: true,
-            ...who
-        });
+        await HANDLERS[command.cmd](assembleContext({
+            msg, args, opts, chat: { chatId, chatName, isGroup }, quem: { ...owner, ...who }
+        }));
     } catch (err) {
         printError(`${whereAlt}: ${line} falhou:`, err.message);
         return { texto: `⚠️ ${command.cmd} falhou`, midias: [] };

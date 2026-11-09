@@ -78,7 +78,7 @@ describe('/debug', () => {
         const parser = bot.logs.find(l => l.includes('Parser do comando: /show'));
         assert.match(parser, /query: 'Jorge Pereira'/);
         assert.match(parser, /mask: true/);
-        assert.match(parser, /argv: \[ '-3' \]/);
+        assert.match(parser, /numero: 3/);
         assert.match(parser, /given: Set\(2\) \{ 'query', 'mask' \}/);
     });
 

@@ -34,13 +34,8 @@ async function swapModel(msg, modelAlt) {
         (doEnv ? `\n⚠️ _O OPENAI_MODEL do .env (${doEnv}) tem prioridade enquanto estiver definido._` : ''));
 }
 
-async function cmdGpt({ msg, args, opts, quotedMsg, admin }) {
+async function cmdGpt({ msg, args, opts, quotedMsg }) {
     if (opts?.given.has('model')) {
-        // Changes a global setting: bot owner only (and the admins), even if /gpt is opened up
-        if (opts.opt.model && !admin) {
-            await msg.reply('⛔ Apenas o dono do bot (ou um admin) pode trocar o modelo.');
-            return;
-        }
         await swapModel(msg, opts.opt.model);
         return;
     }
@@ -59,9 +54,6 @@ async function cmdGpt({ msg, args, opts, quotedMsg, admin }) {
     }
 
     try {
-        // "digitando..." enquanto a OpenAI responde (pode levar alguns segundos)
-        msg.getChat().then(chat => chat.sendStateTyping()).catch(() => {});
-
         const reply = await askOnChat({ cmd: '/gpt', sistema: GPT_INSTRUCTIONS, texto: question });
 
         // The 🤖 in front also guarantees the reply never starts with "/" (see markSentByBot)

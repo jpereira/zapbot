@@ -16,9 +16,9 @@ const { dbGet, dbReady, dbRun } = require('../db');
 const { replyChoice } = require('../choices');
 const { checkFlood } = require('../flood');
 const { hideInDb, loginPassword, tryLogin } = require('../login');
-const { ALWAYS_RELEASED, limitNotice, permissionHere } = require('../permissions');
+const { ALWAYS_RELEASED, limitNotice, levelAlt, permissionHere } = require('../permissions');
+const { ROLES, answer } = require('../roles');
 const { printCall, printCommandUnknown, printDebug, printError, printInfo } = require('../log');
-const { GetOptFromCommand } = require('../options');
 const { getSetting, isDebugMode } = require('../settings');
 const { countStats, myIdStats } = require('../stats');
 const { mediaIsPath, nameSafe, getFolderMedia } = require('../util/files');
@@ -30,7 +30,7 @@ const { printDebugLevel } = require('../log');
 const { instrumentObject } = require('../debugInstrumentation');
 const { channelResolverName } = require('../contacts');
 const { isChannelAlt, channelId } = require('../util/origin');
-const { askedHelpWatch, askedMaskWatch } = require('../watch/options');
+const { withTyping, optionsError, readOptions, assembleContext, denial, askedMask } = require('../execute');
 const { dataParserCommand } = require('../debugParser');
 
 // WhatsApp's own notices (joined the group, changed the name, encryption, call...): they have no author
@@ -288,14 +288,13 @@ client.on('message_create', (msg) => withContextDebug({
                 const who = msg.fromMe ? (client.info?.pushname || 'Você') : senderName;
                 printCommandUnknown(who, body.length > 100 ? `${body.slice(0, 100)}…` : body, { doDono: msg.fromMe });
             }
-            const admin = Boolean(msg.fromMe ||
-                (senderNumber && getSetting('bot.admins').includes(senderNumber)));
             const permission = permissionHere({ numero: senderNumber, chatId, isGroup });
-            if (!admin && !permission.liberado) return;
+            const level = levelAlt({ fromMe: msg.fromMe, numero: senderNumber, permissao: permission });
+            if (!level) return;
 
             // The start of more than one command (e.g.: /un): lists the ones the person can use
             const possible = (resolved?.possiveis ?? [])
-                .filter(c => admin || (c.alvos ?? [c.cmd])
+                .filter(c => answer(level, c.role) || (c.alvos ?? [c.cmd])
                     .every(cmd => ALWAYS_RELEASED.includes(cmd) || permission.pode(cmd)))
                 .map(c => c.cmd);
             await msg.reply(possible.length
@@ -319,9 +318,6 @@ client.on('message_create', (msg) => withContextDebug({
             return;
         }
 
-        // You (the bot account) or an extra admin (setting bot.admins, by the sender's phone)
-        const admin = Boolean(msg.fromMe || (senderNumber && getSetting('bot.admins').includes(senderNumber)));
-
         /*
          * The others use the common commands if bot.users allows: true (everyone),
          * the person (by phone), the group where the command was typed or the
@@ -331,7 +327,11 @@ client.on('message_create', (msg) => withContextDebug({
          * groups and tries in private learns where they can.
          */
         const permission = permissionHere({ numero: senderNumber, chatId, isGroup });
-        if (!admin && !permission.liberado) {
+
+        // The typist's level: owner (you, the bot account), admin (bot.admins, by phone), user or none
+        const level = levelAlt({ fromMe: msg.fromMe, numero: senderNumber, permissao: permission });
+        const admin = answer(level, ROLES.ADMIN); // the owner or an admin
+        if (!level) {
             printDebug(`Comando '${command.cmd}' de ${senderName} ignorado: fora do bot.users`);
             if (!isGroup && permission.soNosGrupos.length) {
                 const groups = await Promise.all(permission.soNosGrupos.map(async (id) =>
@@ -342,11 +342,11 @@ client.on('message_create', (msg) => withContextDebug({
         }
 
         /*
-         * Command restricted to the bot owner: silently ignored in the chat and only warns
-         * in your private chat. Avoids that, with several zapbots in the same group, the command
+         * Command above the typist's level (and that the owner did not delegate): silently ignored in the
+         * chat and only warns in your private chat. Avoids that, with several zapbots in the same group, one person's command
          * of one person be executed by everyone.
          */
-        if (!admin && command.role !== 'user' && !(command.alvos ?? [command.cmd]).every(cmd => permission.pode(cmd))) {
+        if (!answer(level, command.role) && !(command.alvos ?? [command.cmd]).every(cmd => permission.pode(cmd))) {
             if (isDebugMode()) {
                 messageToSelf(`⚠️ ${senderName} tentou executar ${command.cmd} dentro de ${chatName}, mas sem permissão`);
             }
@@ -384,10 +384,10 @@ client.on('message_create', (msg) => withContextDebug({
         // Text alias: the {/command}s run here, with the permissions of whoever called (the arguments stay out)
         if (resolved.texto) {
             printCall(msg.fromMe ? (client.info?.pushname || 'Você') : senderName, body, chatName);
-            await textRunAlias(msg, resolved, {
+            await withTyping(msg, command, () => textRunAlias(msg, resolved, {
                 chatId, chatName, isGroup,
-                quem: { admin, podeUsar: admin ? () => true : permission.pode, senderContact, senderName, senderNumber }
-            });
+                quem: { nivel: level, admin, podeUsar: admin ? () => true : permission.pode, senderContact, senderName, senderNumber }
+            }));
             return;
         }
 
@@ -397,15 +397,8 @@ client.on('message_create', (msg) => withContextDebug({
         }
 
         // The saved command's options belong to the target, including -h and -rm.
-        const paraParser = ['/alias', '/batch'].includes(command.cmd) && !/^-h(?:elp)?$/.test(args) ? '' : args;
-        const opts = GetOptFromCommand(paraParser, command);
-        if (command.cmd === '/watch') {
-            opts.opt.help = askedHelpWatch(args);
-            opts.opt.mask = askedMaskWatch(args);
-        }
-        // The phone -mask (the /defi one is different: it hides the wallets, and does not go through here)
-        contextDebug().maskTelefones = ['/block', '/bot', '/profile', '/search', '/show', '/watch'].includes(command.cmd) &&
-            Boolean(opts.opt.mask);
+        const opts = readOptions(command, args);
+        contextDebug().maskTelefones = askedMask(command, opts);
 
         if (isDebugMode()) {
             printDebug('Parser do comando:', command.cmd, dataParserCommand(args, command, opts));
@@ -414,6 +407,13 @@ client.on('message_create', (msg) => withContextDebug({
         // foo -help
         if (opts.opt.help) {
             await msg.reply('```' + getCommandSyntax(command.cmd, helpProtocol(command, opts.argv)) + '```');
+            return;
+        }
+
+        // Unknown option (in strict commands) and an option the person cannot use (role, otherChats)
+        const reject = optionsError(command, opts) ?? denial(command, opts, level);
+        if (reject) {
+            await msg.reply(reject);
             return;
         }
 
@@ -429,11 +429,11 @@ client.on('message_create', (msg) => withContextDebug({
 
         const quotedMsg = msg.hasQuotedMsg ? await msg.getQuotedMessage().catch(() => null) : null;
 
-        await handler({
-            msg, opts, args, quotedMsg, senderContact, senderName, senderNumber, isGroup, chatId, chatName,
-            admin,
-            podeUsar: admin ? () => true : permission.pode
-        });
+        await withTyping(msg, command, () => handler(assembleContext({
+            msg, args, opts, quotedMsg,
+            chat: { chatId, chatName, isGroup },
+            quem: { nivel: level, admin, podeUsar: admin ? () => true : permission.pode, senderContact, senderName, senderNumber }
+        })));
     } catch (error) {
         printError('[message_create] Erro geral controlado:', {
             error: error?.message || String(error),

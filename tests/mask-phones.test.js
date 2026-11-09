@@ -86,7 +86,7 @@ describe('-mask / -m', () => {
         assert.equal(bot.getSetting('watch.rules')[0], `/${PHONE} -mask palavra/i`);
         bot.createContact(JID, 'Nome -m Sobrenome');
         await bot.setSetting('bot.users', false);
-        const [user] = await bot.replyAlt('/bot +v /Nome -m Sobrenome/ -mask');
+        const [user] = await bot.replyAlt('/bot +u /Nome -m Sobrenome/ -mask');
         textMasked(user);
         assert.ok(user.includes('Nome -m Sobrenome'));
         assert.ok(bot.getSetting('bot.users').includes(`${PHONE}:${bot.GROUP}`));
@@ -94,18 +94,18 @@ describe('-mask / -m', () => {
 
     test('/bot lista usuários e confirma atalhos com máscara; settings ficam íntegros', async () => {
         await bot.setSetting('bot.users', false);
-        textMasked((await bot.replyAlt('/bot -m +v /Nome Sobrenome/'))[0]);
-        textMasked((await bot.replyAlt('/bot -users -mask'))[0]);
+        textMasked((await bot.replyAlt('/bot -m +u /Nome Sobrenome/'))[0]);
+        textMasked((await bot.replyAlt('/bot -list-users -mask'))[0]);
         textMasked((await bot.replyAlt('/bot -mask'))[0]);
         assert.ok(bot.getSetting('bot.users').includes(`${PHONE}:${bot.GROUP}`));
-        assert.ok((await bot.replyAlt('/bot -users'))[0].includes(PHONE));
+        assert.ok((await bot.replyAlt('/bot -list-users'))[0].includes(PHONE));
     });
 
     test('execuções concorrentes mantêm a máscara isolada por mensagem', async () => {
         await bot.setSetting('bot.users', [bot.OTHERAlt.user]);
         await Promise.all([
-            bot.executar('/bot -users -mask', { chat: bot.OWNER.jid }),
-            bot.executar('/bot -users', { chat: bot.GROUP })
+            bot.executar('/bot -list-users -mask', { chat: bot.OWNER.jid }),
+            bot.executar('/bot -list-users', { chat: bot.GROUP })
         ]);
         const private = bot.client.enviadas.find(e => e.chatId === bot.OWNER.jid).content;
         const group = bot.client.enviadas.find(e => e.chatId === bot.GROUP).content;

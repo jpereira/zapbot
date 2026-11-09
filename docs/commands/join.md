@@ -1,4 +1,4 @@
-# `/join` · owner
+# `/join` · admin
 
 Entra em um grupo do WhatsApp pelo link de convite. Com `-info`, mostra o grupo (nome, participantes
 e descrição) sem entrar. Para sair, use o [`/leave`](leave.md).
