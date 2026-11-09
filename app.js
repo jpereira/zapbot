@@ -68,12 +68,23 @@ inicializarBanco().then(marcarBancoPronto).catch((e) => {
 /*
  * main()
  */
-const banner = `
-*          ____ ____ _____
-|_        /_  // __ \`/ __ \\
-(O) [@@]   / // /_/ / /_/ /
-|#|/|__|\\ /___\\__,_/ .___/
-'-' d  b          /_/
+const banner = String.raw`
+          .--.                /\_/\
+       .-(____)-.            ( >.< )
+          [o_o]              / >:D \
+       .--|___|--.           \_____/
+      /___|   |___\
+          |___|
+          /   \
+         _|   |_
+
+  ______          ____        __
+ /__  /  ____ _ / __ )____  / /_
+   / /  / __ \`// __  / __ \/ __/
+  / /__/ /_/ // /_/ / /_/ / /_
+ /____/\__,_//_____/\____/\__/
+
+  Um bot do bem. Quase sempre.
 `;
 console.log(colors.rainbow(banner));
 printInfo(`🤖 Starting ZapBot ${versaoComCommit()}...`);
