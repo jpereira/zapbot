@@ -34,8 +34,13 @@ async function swapModel(msg, modelAlt) {
         (doEnv ? `\n⚠️ _O OPENAI_MODEL do .env (${doEnv}) tem prioridade enquanto estiver definido._` : ''));
 }
 
-async function cmdGpt({ msg, args, opts, quotedMsg }) {
+async function cmdGpt({ msg, args, opts, quotedMsg, admin }) {
     if (opts?.given.has('model')) {
+        // Changes a global setting: bot owner only (and the admins), even if /gpt is opened up
+        if (opts.opt.model && !admin) {
+            await msg.reply('⛔ Apenas o dono do bot (ou um admin) pode trocar o modelo.');
+            return;
+        }
         await swapModel(msg, opts.opt.model);
         return;
     }

@@ -8,6 +8,7 @@ const { MAX_DELETE_WINDOW } = require('../constants');
 const { chatCurrentIds } = require('../contacts');
 const { dbAll, dbReady } = require('../db');
 const { WITHOUT_KEY, keyOpenAi, errorOpenAi, askOnChat } = require('../openaiChat');
+const { SO_OWNER_OTHER_CHATS } = require('../permissions');
 const { getSetting } = require('../settings');
 const { plural, withoutAccents } = require('../util/format');
 
@@ -68,7 +69,13 @@ const hour = (ms) => new Date(ms).toLocaleString('pt-BR', {
     timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
 });
 
-async function cmdTldr({ msg, opts, chatId, chatName }) {
+async function cmdTldr({ msg, opts, chatId, chatName, admin }) {
+    // Whoever received /tldr summarizes only the current chat, right here: no -chat and no -pv (the private chat is the owner's)
+    if (!admin && (opts.opt.chat || opts.opt.pv)) {
+        await msg.reply(SO_OWNER_OTHER_CHATS);
+        return;
+    }
+
     if (!keyOpenAi()) {
         await msg.reply(WITHOUT_KEY('/tldr'));
         return;

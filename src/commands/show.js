@@ -15,6 +15,7 @@ const { sendMessageDeleted, isStatus, resolverAuthorDeleted } = require('../even
 const { sendMessageEdited } = require('../events/edited');
 const { sendReactionUndone } = require('../events/reactions');
 const { printError, printInfo } = require('../log');
+const { SO_OWNER_OTHER_CHATS } = require('../permissions');
 const { getSetting } = require('../settings');
 const { humanSize, mediaIsPath } = require('../util/files');
 const { wait, formatData, paraMs, plural, withoutAccents } = require('../util/format');
@@ -542,7 +543,12 @@ async function cmdShow({ msg, opts, chatId, admin }) {
 
     const privateWithoutParams = /@(c\.us|lid)$/.test(chatId) &&
         !opts.given.size && !opts.argv.length;
-    if (opts.opt.list || privateWithoutParams) {
+    // Whoever received /show (neither owner nor admin) sees only the current chat: no -l, no chat, no private-chat list
+    if (!admin && (opts.opt.list || words.length)) {
+        await msg.reply(SO_OWNER_OTHER_CHATS);
+        return;
+    }
+    if (opts.opt.list || (privateWithoutParams && admin)) {
         await listCache({ msg, chatId, filtro: words.join(' ') || null });
         return;
     }
