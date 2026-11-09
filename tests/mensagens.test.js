@@ -609,42 +609,60 @@ describe('permissões', () => {
         assert.match((await bot.responder('/bot +u', { chat: '999999999999999@lid' }))[0], /❌ Não sei o telefone desta pessoa/);
     });
 
-    test('/bot -reset (-r): pergunta e espera o sim por 10 s; com force, volta direto; só o dono', async (t) => {
+    test('/bot -reset (-r): tira os usuários e os limites; com force, volta tudo ao padrão; os dois pedem o sim; só o dono', async (t) => {
+        const LEVE = '🧹 *Usuários removidos* (2): ficam só você e os admins extras.';
         const PADRAO = '♻️ *Padrão restaurado:* bot ligado, sem admins extras e sem usuários.\n\n▶️ *Bot:* ativo\n🔒 *Comandos:* só o dono';
-        const PERGUNTA = '⚠️ *Voltar ao padrão?* O bot fica ligado, sem admins extras e sem usuários.\n' +
-            '💡 _Responda *sim* em 10 s para confirmar (ou /bot -r force, sem perguntar)._';
+        const PERGUNTA_LEVE = '⚠️ *Tirar todos os usuários?* Ficam só você e os admins extras usando comandos.\n' +
+            '💡 _Responda *sim* em 10 s para confirmar (ou /bot -r force, para voltar tudo ao padrão)._';
+        const PERGUNTA_FORCE = '⚠️ *Voltar tudo ao padrão?* Tira os usuários *e os admins extras* e liga o bot: só você usa comandos.\n' +
+            '💡 _Responda *sim* em 10 s para confirmar._';
         const mexer = async () => {
             await bot.setSetting('bot.admins', ['5521911111111']);
-            await bot.setSetting('bot.users', [GRUPO]);
+            await bot.setSetting('bot.users', [GRUPO, '5521922222222']);
+            await bot.setSetting('bot.users.cmds', ['5521922222222=/noffa']);
             await bot.setSetting('bot.paused', true);
         };
-        const lerTudo = () => [bot.getSetting('bot.paused'), bot.getSetting('bot.admins'), bot.getSetting('bot.users')];
+        // [paused, admins, users, regras]
+        const lerTudo = () => [bot.getSetting('bot.paused'), bot.getSetting('bot.admins'), bot.getSetting('bot.users'),
+            bot.getSetting('bot.users.cmds')];
+        const INTACTO = [true, ['5521911111111'], [GRUPO, '5521922222222'], ['5521922222222=/noffa']];
         // Espera (com limite) a pergunta sair, depois de `desde` mensagens enviadas
-        const saiu = (desde) => bot.client.enviadas.slice(desde).some(e => e.content === PERGUNTA);
-        const esperarPergunta = async (desde) => {
-            for (let i = 0; i < 1000 && !saiu(desde); i++) await new Promise(setImmediate);
-            assert.ok(saiu(desde), 'a pergunta saiu');
+        const saiu = (desde, pergunta) => bot.client.enviadas.slice(desde).some(e => e.content === pergunta);
+        const esperarPergunta = async (desde, pergunta) => {
+            for (let i = 0; i < 1000 && !saiu(desde, pergunta); i++) await new Promise(setImmediate);
+            assert.ok(saiu(desde, pergunta), 'a pergunta saiu');
         };
 
-        // O -r pergunta; o "sim" (de quem deu o comando, no mesmo chat) confirma
+        // -r: pergunta; antes do sim nada muda; o sim tira os usuários e os limites, e deixa os admins e o liga/desliga
         await mexer();
-        const reset = bot.executar('/bot -r');
-        await esperarPergunta(bot.client.enviadas.length);
-        assert.deepEqual(lerTudo(), [true, ['5521911111111'], [GRUPO]], 'antes do sim, nada muda');
+        const leve = bot.executar('/bot -r');
+        await esperarPergunta(0, PERGUNTA_LEVE);
+        assert.deepEqual(lerTudo(), INTACTO, 'antes do sim, nada muda');
         await bot.executar('sim');
-        await reset;
+        await leve;
+        assert.ok(bot.client.enviadas.at(-1).content.startsWith(LEVE));
+        assert.deepEqual(lerTudo(), [true, ['5521911111111'], [], []]);
+
+        // -r force: pergunta também (com o aviso mais forte); o sim volta tudo ao padrão
+        await mexer();
+        const desdeForce = bot.client.enviadas.length;
+        const completo = bot.executar('/bot -r force');
+        await esperarPergunta(desdeForce, PERGUNTA_FORCE);
+        assert.deepEqual(lerTudo(), INTACTO, 'o force também espera o sim');
+        await bot.executar('sim');
+        await completo;
         assert.equal(bot.client.enviadas.at(-1).content, PADRAO);
-        assert.deepEqual(lerTudo(), [false, [], []]);
+        assert.deepEqual(lerTudo(), [false, [], [], []]);
 
         // "não" cancela
         await mexer();
         const desde = bot.client.enviadas.length;
-        const cancela = bot.executar('/bot -reset');
-        await esperarPergunta(desde);
+        const cancela = bot.executar('/bot -reset force');
+        await esperarPergunta(desde, PERGUNTA_FORCE);
         await bot.executar('não');
         await cancela;
         assert.equal(bot.client.enviadas.at(-1).content, '👍 Nada mudou.');
-        assert.deepEqual(lerTudo(), [true, ['5521911111111'], [GRUPO]]);
+        assert.deepEqual(lerTudo(), INTACTO);
 
         // Sem resposta em 10 s: nada muda, e a pergunta vira o aviso (sem outra mensagem)
         t.mock.timers.enable({ apis: ['setTimeout'] });
@@ -654,16 +672,12 @@ describe('permissões', () => {
         assert.equal(bot.client.enviadas.length, antesDeExpirar + 1);
         assert.equal(bot.client.enviadas.at(-1).content, '⌛ Nada mudou: sem *sim* em 10 s.');
         assert.equal(bot.client.enviadas.at(-1).editada, true);
-        assert.deepEqual(lerTudo(), [true, ['5521911111111'], [GRUPO]]);
+        assert.deepEqual(lerTudo(), INTACTO);
         t.mock.timers.reset();
 
-        // force: direto, sem perguntar
-        assert.deepEqual(await bot.responder('/bot -r force'), [PADRAO]);
-        assert.deepEqual(lerTudo(), [false, [], []]);
-
-        // Um admin extra não volta ao padrão (nem com force)
-        await bot.setSetting('bot.admins', ['5521911111111']);
-        assert.deepEqual(await bot.responder('/bot -r', { de: OUTRO.jid }), ['⛔ Só o dono do bot volta o /bot ao padrão.']);
+        // Um admin extra não faz nenhum dos dois; e não combina com as outras opções
+        await bot.setSetting('bot.admins', [OUTRO.user]);
+        assert.deepEqual(await bot.responder('/bot -r', { de: OUTRO.jid }), ['⛔ Só o dono do bot tira todos os usuários.']);
         assert.deepEqual(await bot.responder('/bot -r force', { de: OUTRO.jid }), ['⛔ Só o dono do bot volta o /bot ao padrão.']);
         assert.match((await bot.responder('/bot -r -on'))[0], /❌ O -reset não combina com as outras opções/);
         assert.match((await bot.responder('/bot -r xyz'))[0], /❌ O -reset não combina com as outras opções/);
@@ -800,8 +814,13 @@ describe('permissões', () => {
         const [semRegra] = await bot.responder('/sticker', { de: OUTRO.jid });
         assert.ok(semRegra && !semRegra.startsWith('🚫'), `o /sticker respondeu: ${semRegra}`);
 
-        // -reset tira as regras junto
-        await bot.responder('/bot -r force');
+        // -reset tira as regras junto (depois do sim)
+        const reset = bot.executar('/bot -r');
+        for (let i = 0; i < 1000 && !bot.client.enviadas.at(-1)?.content.startsWith('⚠️ *Tirar todos'); i++) {
+            await new Promise(setImmediate);
+        }
+        await bot.executar('sim');
+        await reset;
         assert.deepEqual(bot.getSetting('bot.users.cmds'), []);
     });
 

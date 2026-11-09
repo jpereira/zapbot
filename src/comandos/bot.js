@@ -38,7 +38,8 @@ const { contextoDebug } = require('../debugContexto');
  *                     escondidos)
  *   /bot -passwd <senha|off> → (dono) define a senha do login (só o hash fica no banco)
  *   /bot -login <senha>      → quem é de fora, no privado, vira admin; o dono é avisado (WhatsApp e e-mail)
- *   /bot -reset    → volta ao padrão: ligado, sem admins extras e sem usuários (só o dono)
+ *   /bot -reset    → tira todos os usuários e os limites deles (os admins e o liga/desliga ficam)
+ *   /bot -reset force → volta tudo ao padrão: também tira os admins extras e liga o bot
  * A recuperação de apagadas, o /watch e os alertas continuam funcionando com ele desligado.
  *
  * Os atalhos do IRC (o: operador, manda; v: voz, só fala), só do dono, um de cada vez:
@@ -569,35 +570,48 @@ async function tratarStatus(msg, valores, { destinosTexto, comDestino, chat }) {
     await msg.reply(`⏰ *Status diário:* todo dia às *${dois(hora.h)}:${dois(hora.m)}*${onde}\n📅 Próximo: ${fmtQuando(proximo)}`);
 }
 
-// O que o -reset volta ao padrão (o envio diário do -status fica)
-const DO_RESET = ['bot.paused', 'bot.admins', 'bot.users', 'bot.users.cmds'];
+// O que cada -reset volta ao padrão (o envio diário do -status fica sempre)
+const DO_RESET = ['bot.users', 'bot.users.cmds'];
+const DO_RESET_COMPLETO = [...DO_RESET, 'bot.admins', 'bot.paused'];
 
 // Quanto tempo o -reset espera o "sim"
 const CONFIRMAR_RESET_MS = 10_000;
 
-// -reset: pergunta antes (responda "sim" em 10 s); com force, volta direto
-async function resetar(msg, { chatId, forcar }) {
+/*
+ * -reset: tira todos os usuários e os limites deles; os admins extras e o liga/desliga ficam.
+ * -reset force: volta tudo ao padrão (também tira os admins extras e liga o bot).
+ * Os dois perguntam antes (responda "sim" em 10 s).
+ */
+async function resetar(msg, { chatId, completo }) {
     if (!msg.fromMe) {
-        await msg.reply('⛔ Só o dono do bot volta o /bot ao padrão.');
+        await msg.reply(completo ? '⛔ Só o dono do bot volta o /bot ao padrão.' : '⛔ Só o dono do bot tira todos os usuários.');
         return;
     }
 
-    if (!forcar) {
-        const segundos = CONFIRMAR_RESET_MS / 1000;
-        const pergunta = await msg.reply('⚠️ *Voltar ao padrão?* O bot fica ligado, sem admins extras e sem usuários.\n' +
-            `💡 _Responda *sim* em ${segundos} s para confirmar (ou /bot -r force, sem perguntar)._`);
-        const confirmou = await aguardarConfirmacao(chatId, {
-            ms: CONFIRMAR_RESET_MS,
-            autor: autorDe(msg),
-            aoExpirar: () => concluirAviso(msg, pergunta, `⌛ Nada mudou: sem *sim* em ${segundos} s.`)
-        });
-        if (confirmou === false) await msg.reply('👍 Nada mudou.');
-        if (!confirmou) return;
-    }
+    const segundos = CONFIRMAR_RESET_MS / 1000;
+    const pergunta = await msg.reply(completo
+        ? '⚠️ *Voltar tudo ao padrão?* Tira os usuários *e os admins extras* e liga o bot: só você usa comandos.\n' +
+            `💡 _Responda *sim* em ${segundos} s para confirmar._`
+        : '⚠️ *Tirar todos os usuários?* Ficam só você e os admins extras usando comandos.\n' +
+            `💡 _Responda *sim* em ${segundos} s para confirmar (ou /bot -r force, para voltar tudo ao padrão)._`);
+    const confirmou = await aguardarConfirmacao(chatId, {
+        ms: CONFIRMAR_RESET_MS,
+        autor: autorDe(msg),
+        aoExpirar: () => concluirAviso(msg, pergunta, `⌛ Nada mudou: sem *sim* em ${segundos} s.`)
+    });
+    if (confirmou === false) await msg.reply('👍 Nada mudou.');
+    if (!confirmou) return;
 
-    for (const key of DO_RESET) await setSetting(key, SETTINGS_SCHEMA[key].default);
-    printInfo('/bot -reset: admins, usuários e bot.paused de volta ao padrão');
-    await msg.reply(`♻️ *Padrão restaurado:* bot ligado, sem admins extras e sem usuários.\n\n${estadoDoBot()}`);
+    const usuarios = getSetting('bot.users').length;
+    for (const key of completo ? DO_RESET_COMPLETO : DO_RESET) await setSetting(key, SETTINGS_SCHEMA[key].default);
+
+    if (completo) {
+        printInfo('/bot -reset force: usuários, admins e bot.paused de volta ao padrão');
+        await msg.reply(`♻️ *Padrão restaurado:* bot ligado, sem admins extras e sem usuários.\n\n${estadoDoBot()}`);
+        return;
+    }
+    printInfo(`/bot -reset: ${usuarios} usuário(s) e os limites deles removidos`);
+    await msg.reply(`🧹 *Usuários removidos* (${usuarios}): ficam só você e os admins extras.\n\n${estadoDoBot()}`);
 }
 
 // -flush-email: conta as mensagens de Sent e Trash; com "true", apaga tudo (só o dono)
@@ -681,7 +695,7 @@ async function cmdBot({ msg, opts: optsDoComando, args, chatId, isGroup }) {
             const aviso = await msg.reply('🧪 Testando... (a velocidade da internet leva alguns segundos)');
             await concluirAviso(msg, aviso, await textoDoTeste());
         } else if (sozinha === 'flush-email') await limparEmail(msg, { apagar: forcar });
-        else await resetar(msg, { chatId, forcar });
+        else await resetar(msg, { chatId, completo: forcar });
         return;
     }
 

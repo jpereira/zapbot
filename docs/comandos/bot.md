@@ -26,7 +26,7 @@ usuários e o envio diário), as versões do que ele usa
 | `+u`, `-u` | `[pessoa\|grupo...]`: adiciona (`+u`) e tira (`-u`) usuários. Digitado num grupo, o `+u` de uma pessoa vale só nesse grupo. Sem ninguém, o chat atual: o grupo ou a pessoa do privado. Veja [Usuários](#usuários) |
 | `+cmd`, `-cmd` | `<comandos>`: os comandos de um usuário. Com o `+u`, define (`+cmd`: só esses; `-cmd`: todos, menos esses); sozinho, `+cmd` libera e `-cmd` tira. Veja [Comandos de cada usuário](#comandos-de-cada-usuário) |
 | `-list-users`, `-lu` | `[all]`: os usuários deste chat; com `all`, todos, em qualquer chat (num grupo, o telefone de quem é de fora sai escondido). Aceita `-mask`. Veja [Lista de usuários](#lista-de-usuários) |
-| `-reset`, `-r` | `[force]`: volta ao padrão (bot ligado, sem admins extras e sem usuários). Pergunta antes; com `force`, volta direto. Aceita `-mask`; as outras opções são recusadas. Veja [Voltar ao padrão](#voltar-ao-padrão) |
+| `-reset`, `-r` | `[force]`: tira todos os usuários e os limites deles (os admins extras e o liga/desliga ficam). Com `force`, volta tudo ao padrão: também tira os admins extras e liga o bot. Os dois perguntam antes. Aceita `-mask`; as outras opções são recusadas. Só o dono. Veja [Voltar ao padrão](#voltar-ao-padrão) |
 | `-status`, `-s` | O status agora e o envio diário dele (`[<hora>\|off]`). Aceita `-to` e `-mask`; as outras opções são recusadas. Veja [Status do bot](#status-do-bot) |
 | `-to` | `<destino>`: junto com `-status`, para onde vai o relatório (pessoa, grupo ou e-mail; repita para vários). Veja [Status do bot](#status-do-bot) |
 | `-info`, `-i` | Versões do bot e do que ele usa, e o sistema. Aceita `-mask`; as outras opções são recusadas. Veja [Informações do sistema](#informações-do-sistema) |
@@ -117,7 +117,8 @@ Quando usar cada opção:
 | Liberar só o `/gpt` para o grupo Familia | `/bot +u +cmd /gpt`, digitado no grupo (ou `/bot +u +cmd /gpt /Familia/`) |
 | Dar a alguém os comandos admin e owner | `/bot +a /Jorge Pereira/` |
 | Parar o bot por completo por um tempo, sem derrubar o container | `/bot -off` |
-| Desfazer tudo: só você de novo, sem admins nem usuários | `/bot -reset` |
+| Tirar todos os usuários, de uma vez (os admins ficam) | `/bot -reset` |
+| Desfazer tudo: só você de novo, sem admins nem usuários | `/bot -reset force` |
 
 Detalhes:
 
@@ -284,7 +285,7 @@ Permissões
   `🚫 O /meme não está liberado para você.`).
 - Se mais de uma permissão vale ali (a pessoa e o grupo, por exemplo), vale a mais ampla: uma sem
   limite libera todos os comuns.
-- O `-u` e o `-reset` tiram os limites junto.
+- O `-u` e o `-reset` (com ou sem `force`) tiram os limites junto.
 
 ### Proteção contra flood
 
@@ -304,27 +305,38 @@ até o intervalo acabar:
 
 ## Voltar ao padrão
 
-O `/bot -reset` (`-r`) desfaz tudo o que o `/bot` mudou: liga o bot, tira os admins extras, os
-usuários e os limites de comandos deles, e volta só você usando comandos. Pede confirmação: responda
-**sim** em até 10 segundos, no mesmo chat, para confirmar (**não**, ou nada, deixa tudo como está;
-sem resposta, a pergunta vira `⌛ Nada mudou: sem sim em 10 s.`).
-Com `force`, volta direto, sem perguntar. O envio diário do [`-status`](#status-do-bot) fica como
-está. Só o dono usa; aceita `-mask`, mas não combina com as outras opções.
+Dois níveis, os dois só do dono e os dois pedem confirmação: responda **sim** em até 10 segundos, no
+mesmo chat (**não**, ou nada, deixa tudo como está; sem resposta, a pergunta vira
+`⌛ Nada mudou: sem sim em 10 s.`).
+
+| | `/bot -reset` (`-r`) | `/bot -reset force` |
+|---|---|---|
+| Usuários (`bot.users`) e os limites deles (`+cmd`/ `-cmd`) | Tira todos | Tira todos |
+| Admins extras (`bot.admins`) | Ficam | Tira |
+| Liga/desliga (`bot.paused`) | Fica como está | Volta ao padrão (ligado) |
+| Envio diário do [`-status`](#status-do-bot) | Fica | Fica |
+
+Aceitam `-mask`, mas não combinam com as outras opções.
 
 ```text
 /bot -reset
-⚠️ Voltar ao padrão? O bot fica ligado, sem admins extras e sem usuários.
-💡 Responda sim em 10 s para confirmar (ou /bot -r force, sem perguntar).
+⚠️ Tirar todos os usuários? Ficam só você e os admins extras usando comandos.
+💡 Responda sim em 10 s para confirmar (ou /bot -r force, para voltar tudo ao padrão).
+
+sim
+🧹 Usuários removidos (4): ficam só você e os admins extras.
+```
+
+```text
+/bot -reset force
+⚠️ Voltar tudo ao padrão? Tira os usuários e os admins extras e liga o bot: só você usa comandos.
+💡 Responda sim em 10 s para confirmar.
 
 sim
 ♻️ Padrão restaurado: bot ligado, sem admins extras e sem usuários.
 
 ▶️ Bot: ativo
 🔒 Comandos: só o dono
-```
-
-```text
-/bot -r force             → volta direto, sem perguntar
 ```
 
 ## Status do bot
