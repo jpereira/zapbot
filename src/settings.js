@@ -2,7 +2,7 @@
  * Settings: configurações gerais na tabela `settings`, alteráveis em tempo de execução pelo /set.
  */
 
-const { OPENAI_MODELOS } = require('./openai');
+const { OPENAI_MODELOS, OPENAI_MODELOS_DE_AUDIO, OPENAI_MODELOS_DE_VOZ, OPENAI_VOZES } = require('./openai');
 const { compilarFiltroDebug } = require('./debugOpcoes');
 const { botConfig } = require('./botConfig');
 const { ROLES } = require('./roles');
@@ -493,6 +493,13 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 1, max: 10,
         desc: 'Manchetes exibidas pelo /news (o /news <quantidade> sobrepõe).'
     },
+    'openai.admin.key': {
+        default: '',
+        type: 'string',
+        allowEmpty: true,
+        secret: true,
+        desc: 'Chave de admin da OpenAI (sk-admin-...), do /gpt -usage; usada quando OPENAI_ADMIN_KEY não está no config/.env.'
+    },
     'openai.api.key': {
         default: '',
         type: 'string',
@@ -510,6 +517,29 @@ const SETTINGS_SCHEMA = {
         default: 60000,
         type: 'number', min: 5000, max: 300000,
         desc: 'Timeout (ms) do /gpt, usado quando OPENAI_TIMEOUT_MS não está no config/.env.'
+    },
+    'openai.transcribe.model': {
+        default: 'whisper-1',
+        type: 'string',
+        opcoes: OPENAI_MODELOS_DE_AUDIO,
+        desc: 'Modelo que transcreve o áudio respondido com o /gpt (whisper-1, gpt-4o-mini-transcribe ou gpt-4o-transcribe).'
+    },
+    'openai.tts.instructions': {
+        default: 'Fale como um robô: voz metálica, monótona e pausada, sem emoção.',
+        type: 'string',
+        desc: 'O estilo da voz do /gpt -voz (só o gpt-4o-mini-tts usa). O padrão é a voz de robô.'
+    },
+    'openai.tts.model': {
+        default: 'gpt-4o-mini-tts',
+        type: 'string',
+        opcoes: OPENAI_MODELOS_DE_VOZ,
+        desc: 'Modelo que gera a voz do /gpt -voz (gpt-4o-mini-tts, tts-1 ou tts-1-hd). Só o gpt-4o-mini-tts segue o estilo do openai.tts.instructions.'
+    },
+    'openai.tts.voice': {
+        default: 'onyx',
+        type: 'string',
+        opcoes: OPENAI_VOZES,
+        desc: 'A voz do /gpt -voz: alloy, ash, ballad, coral, echo, fable, nova, onyx, sage, shimmer ou verse.'
     },
     'pixelart.maxParts': {
         default: 3,

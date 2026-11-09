@@ -63,9 +63,14 @@ e sobrevivem a reinícios. Para ver e alterar, use o [`/set`](comandos/set.md).
 | `news.gazeta` | lista | `https://www.gazetadopovo.com.br/feed/rss/brasil.xml` | Feeds RSS do `/news -gazeta` |
 | `news.hack` | lista | The Hacker News, BleepingComputer, Krebs on Security | Feeds RSS do `/news -hack` |
 | `news.max` | 1–10 | `5` | Manchetes exibidas pelo `/news` (o `/news <quantidade>` sobrepõe) |
+| `openai.admin.key` | texto (pode ser vazio) | *(vazio)* | Chave de admin da OpenAI (`sk-admin-...`) do `/gpt -usage`, usada quando `OPENAI_ADMIN_KEY` não está no `config/.env`. Exibida mascarada; `/set -reset openai.admin.key` apaga |
 | `openai.api.key` | texto (pode ser vazio) | *(vazio)* | Chave da OpenAI, usada quando `OPENAI_API_KEY` não está no `config/.env`. Exibida mascarada (`••••1234`); `/set -reset openai.api.key` apaga |
 | `openai.api.model` | texto (da lista) | `gpt-4o-mini` | Modelo do `/gpt`, usado quando `OPENAI_MODEL` não está no `config/.env`. Aceitos: os listados por `/gpt -m` |
 | `openai.timeout.ms` | 5000–300000 | `60000` | Timeout do `/gpt`, usado quando `OPENAI_TIMEOUT_MS` não está no `config/.env` |
+| `openai.transcribe.model` | texto (da lista) | `whisper-1` | Modelo que transcreve o áudio respondido com o `/gpt`. Aceitos: `whisper-1`, `gpt-4o-mini-transcribe` e `gpt-4o-transcribe` |
+| `openai.tts.instructions` | texto | `Fale como um robô: voz metálica, monótona e pausada, sem emoção.` | Estilo da voz do `/gpt -voz` (só o `gpt-4o-mini-tts` usa) |
+| `openai.tts.model` | texto (da lista) | `gpt-4o-mini-tts` | Modelo que gera a voz do `/gpt -voz`: `gpt-4o-mini-tts`, `tts-1` ou `tts-1-hd` |
+| `openai.tts.voice` | texto (da lista) | `onyx` | Voz do `/gpt -voz`: `alloy`, `ash`, `ballad`, `coral`, `echo`, `fable`, `nova`, `onyx`, `sage`, `shimmer` ou `verse` |
 | `pixelart.maxParts` | 1–10 | `3` | Máximo de partes do [`/pixelart`](comandos/pixelart.md) quando a arte é mais alta que 4096 px |
 | `pixelart.packs` | lista | `chuck-norris-lvl` | Packs do 16colo.rs sorteados pelo [`/pixelart`](comandos/pixelart.md) sem argumentos |
 | `show.alert.deleted` | on/off | `on` | Avisa no seu privado quando alguém apaga uma mensagem; `off` só guarda para o `/show` |
