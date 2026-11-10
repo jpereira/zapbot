@@ -24,7 +24,10 @@ const { fmtInA } = require('../util/format');
 /*
  * /gpt: asks ChatGPT (the call and the errors live in openaiChat.js).
  */
-const GPT_INSTRUCTIONS = 'Você é um assistente no WhatsApp. Responda de forma direta, em português, salvo se pedirem outro idioma.';
+const GPT_INSTRUCTIONS = 'Você é um assistente no WhatsApp. Responda de forma direta, em português, salvo se pedirem outro idioma. ' +
+    'Formate para o WhatsApp, que não é Markdown: *negrito* com um asterisco só, _itálico_, ~tachado~, ' +
+    'listas com "- " ou "1. ", código entre crases (``` para blocos). Não use títulos com #, tabelas, ' +
+    'linhas "---" nem **dois asteriscos**.';
 
 /*
  * /gpt -m: the models per use and the swap for each one. Without a model, lists (with -gif, -audio or -voz, only
