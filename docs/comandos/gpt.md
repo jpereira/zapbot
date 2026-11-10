@@ -8,7 +8,8 @@ dono e dos admins.
 Pergunta ao ChatGPT pela API da OpenAI e responde no chat. Respondendo uma mensagem, o texto dela
 entra antes da pergunta; respondendo uma **foto**, ela vai junto e o ChatGPT a vê (veja
 [Com foto](#com-foto)); respondendo um **áudio**, ele é transcrito (veja [Com áudio](#com-áudio)); com `-voz`, o texto vira
-uma nota de voz de robô (veja [Voz](#voz--voz)). Enquanto espera a resposta, o bot aparece como "digitando...". Sem
+uma nota de voz de robô (veja [Voz](#voz--voz)); com `-img` e `-gif`, ele cria uma imagem e um GIF (veja
+[Imagem e GIF](#imagem-e-gif--img--gif)). Enquanto espera a resposta, o bot aparece como "digitando...". Sem
 pergunta, mostra a ajuda.
 
 ```text
@@ -19,8 +20,11 @@ pergunta, mostra a ajuda.
 /gpt agora transcreva isso         (respondendo um áudio)
 /gpt resuma esse áudio             (respondendo um áudio)
 /gpt -voz exterminar todos os humanos   → responde uma nota de voz de robô
-/gpt -m              → modelo atual e os aceitos
-/gpt -m gpt-6-luna   → troca o modelo
+/gpt -img um robô nadando em aquarela   → cria uma imagem (só dono e admins)
+/gpt gere um gif animado dele nadando   → respondendo uma foto: um GIF (só dono e admins)
+/gpt -m              → os modelos por uso (perguntas, imagens, áudio, voz), com o atual
+/gpt -m gpt-6-luna   → troca o modelo das perguntas
+/gpt -m gpt-image-2.6-flare -gif   → troca o modelo das imagens e do GIF
 /gpt -usage          → consumo dos últimos 7 dias e os limites de agora (só dono e admins)
 /gpt -u 30           → (atalho) o consumo dos últimos 30 dias
 /gpt -h              → ajuda do comando
@@ -28,7 +32,10 @@ pergunta, mostra a ajuda.
 
 | Opção | Valor | Descrição |
 |---|---|---|
-| `-model`, `-m` | `[modelo]` | Só dono e admins. Sem modelo, mostra o atual e a lista dos aceitos; com modelo, troca (setting `openai.api.model`) |
+| `-model`, `-m` | `[modelo]` | Só dono e admins. Lista os modelos por uso, os que a sua chave vê, e troca o de cada um (veja [Escolhendo o modelo](#escolhendo-o-modelo)) |
+| `-audio` | | Só dono e admins. Junto do `-m`: o modelo da transcrição de áudio |
+| `-img` | | Só dono e admins. Cria uma imagem com o pedido (respondendo uma foto, a edita). Veja [Imagem e GIF](#imagem-e-gif--img--gif) |
+| `-gif` | | Só dono e admins. Cria um GIF (respondendo uma foto, a anima). Veja [Imagem e GIF](#imagem-e-gif--img--gif) |
 | `-voz`, `-v` | `[texto]` | Responde uma nota de voz de robô com o texto (ou com o da mensagem respondida). Veja [Voz](#voz--voz) |
 | `-usage`, `-u` | `[dias]` | Só dono e admins. O consumo dos últimos dias (padrão 7, até 31) e os limites de agora. Veja [Consumo e limites](#consumo-e-limites--usage) |
 
@@ -66,13 +73,55 @@ oi, tudo bem? te ligo mais tarde, só queria confirmar o horário da reunião.
   "agora transcreva isso"), responde a transcrição como ela saiu.
 - **Com outra pergunta** ("resuma", "traduza para o inglês", "quais são os combinados?"), o bot manda a
   pergunta e a transcrição para o chat e responde em cima dela.
-- O modelo de transcrição é o setting `openai.transcribe.model` (`whisper-1`; também
-  `gpt-4o-mini-transcribe` e `gpt-4o-transcribe`): `/set openai.transcribe.model gpt-4o-mini-transcribe`.
+- O modelo de transcrição é o setting `openai.transcribe.model` (padrão `gpt-transcribe`; o `whisper-1` sai do ar
+  em fev/2027): `/set openai.transcribe.model <modelo>`.
 - Valem ogg (a nota de voz do WhatsApp), mp3, m4a, wav, webm e flac, até 25 MB. Outro formato (como
   aac puro), áudio expirado ou grande demais respondem com um aviso, e nada é enviado à OpenAI. Áudio sem
   fala responde `Não ouvi fala nenhuma nesse áudio`.
 - A transcrição é cobrada por minuto de áudio, e o áudio passa pelo servidor da OpenAI; ele não fica
   salvo no banco do bot.
+
+## Imagem e GIF (`-img`, `-gif`)
+
+Os dois **gastam a sua conta da OpenAI**, então são só do dono e dos admins, mesmo que o `/gpt` tenha sido
+liberado a um usuário. Os dois usam a API de imagens (`v1/images`) e o modelo do setting
+`openai.image.model` (padrão `gpt-image-2.6-flare`).
+
+**`/gpt -img <pedido>`** cria uma imagem e responde com ela. Respondendo uma foto, a OpenAI **edita** essa
+foto (`v1/images/edits`) conforme o pedido.
+
+```text
+/gpt -img um robô nadando em aquarela
+(respondendo uma foto)  /gpt -img coloque um chapéu nele
+```
+
+**`/gpt -gif [pedido]`** cria um **GIF animado**: é o `output_format: gif` dos modelos `gpt-image-2.6-*`, com
+`frame_count` quadros de `frame_duration_ms` cada. Respondendo uma foto, ela é a base e o GIF a anima.
+Sem o `-gif`, "gere um gif animado..." respondendo uma foto também vale; o bot reconhece um verbo de criar
+(gere, crie, faça, anime) junto de gif, animação, animado ou vídeo.
+
+```text
+(respondendo uma foto)  /gpt gere um gif animado de como se estivesse nadando
+(o GIF, em loop)
+/gpt -gif um gato de óculos escuros      → sem foto, só pelo texto
+```
+
+- O GIF sai com **9 quadros de 200 ms** (1,8 s); os settings `openai.gif.frames` (2 a 16) e
+  `openai.gif.frameMs` (20 a 2000) mudam. Mais quadros custam mais.
+- A OpenAI devolve um `.gif`; o bot o converte em MP4 sem áudio com o ffmpeg e o manda como GIF
+  (`sendVideoAsGif`), que é como o WhatsApp toca um GIF em loop, igual ao [`/giphy`](giphy.md).
+- O GIF **pede acesso à prévia** do modelo. Sem ele, o bot responde `🔒 A sua conta/modelo não faz GIF
+  animado` com a mensagem da OpenAI.
+- **Modelo que a conta não tem**: os modelos de imagem, voz e transcrição (`openai.image.model`,
+  `openai.tts.model`, `openai.transcribe.model`) são settings de texto livre, porque os nomes mudam (o
+  `gpt-image-1` saiu do ar em 23/10/2026, por exemplo). Se a OpenAI responder que o modelo não existe, o bot
+  lista os que a sua chave vê (parecidos com o recurso) e mostra o `/set` para trocar:
+
+  ```text
+  ❌ O modelo gpt-image-1 não existe na sua conta da OpenAI (imagem).
+  💡 A sua chave vê: gpt-image-2.5-flare, gpt-image-2.6-flare
+  💡 Troque com /set openai.image.model <modelo>
+  ```
 
 ## Voz (`-voz`)
 
@@ -86,7 +135,7 @@ voz** (Ogg/Opus, como as do WhatsApp). O estilo padrão é a voz de robô.
 
 - **Sem texto digitado**, fala o da mensagem respondida; com texto digitado, fala o digitado. O `-voz` pode
   vir em qualquer lugar do texto. Até 4096 caracteres.
-- Três settings escolhem como soa: `openai.tts.model` (`gpt-4o-mini-tts`, `tts-1` ou `tts-1-hd`),
+- Três settings escolhem como soa: `openai.tts.model` (`gpt-4o-mini-tts`; o id que a sua conta tem),
   `openai.tts.voice` (`onyx`, o padrão, ou `alloy`, `ash`, `ballad`, `coral`, `echo`, `fable`, `nova`,
   `sage`, `shimmer`, `verse`) e `openai.tts.instructions` (o estilo: o padrão pede voz de robô; ex.:
   `/set openai.tts.instructions Fale como um locutor de rádio animado`). Só o `gpt-4o-mini-tts` segue o estilo:
@@ -142,13 +191,53 @@ ainda resta na janela atual e quando reseta, de tokens e de requisições do mod
 
 ## Escolhendo o modelo
 
-O modelo vem do `OPENAI_MODEL` no `config/.env` ou, se ele estiver vazio, do setting
+O `/gpt -m` lista os modelos **por uso**, os que a sua chave enxerga (`GET /v1/models`), com o atual
+marcado por ✅. Só o dono e os admins usam. O `-m <modelo>` troca o do uso pedido pela opção que vem junto:
+
+| Uso | Troca com | Setting |
+|---|---|---|
+| Padrão (perguntas) | `/gpt -m <modelo>` | `openai.api.model` |
+| Imagens e GIF | `/gpt -m <modelo> -gif` (ou `-img`) | `openai.image.model` |
+| Transcrição de áudio | `/gpt -m <modelo> -audio` | `openai.transcribe.model` |
+| Voz | `/gpt -m <modelo> -voz` | `openai.tts.model` |
+
+```text
+/gpt -m
+🤖 Modelos do /gpt
+
+Padrão (perguntas) — /gpt -m <modelo>
+✅ gpt-4o-mini
+▫️ gpt-4.1
+
+-img, -gif (imagens e GIF) — /gpt -m <modelo> -gif
+✅ gpt-image-2.6-flare
+▫️ gpt-image-2.5-flare
+
+-audio (transcrição de áudio) — /gpt -m <modelo> -audio
+✅ gpt-transcribe
+
+-voz (voz) — /gpt -m <modelo> -voz
+✅ gpt-4o-mini-tts
+
+A lista é a da sua chave (GET /v1/models).
+
+/gpt -m -gif                        → lista só as imagens
+/gpt -m gpt-image-2.5-flare -gif    → ✅ Modelo de imagens e GIF do /gpt: gpt-image-2.5-flare
+```
+
+- Com uma opção e **sem modelo** (`/gpt -m -gif`), lista só aquele uso.
+- O modelo que a chave **não vê** não é gravado: o bot mostra os que ela vê (`❌ A sua chave não vê o modelo
+  gpt-image-1 (imagens e GIF)`). Um atual que a chave não vê aparece com `⚠️ a sua chave não vê`.
+- Sem chave, ou se a OpenAI não responder, a lista cai nos padrões do código (e o aviso diz isso).
+- Os modelos das perguntas seguem a lista fixa abaixo (`gpt-5-pro`, por exemplo, não vale); os de imagem,
+  áudio e voz são livres, porque os nomes mudam.
+
+O modelo das perguntas vem do `OPENAI_MODEL` no `config/.env` ou, se ele estiver vazio, do setting
 `openai.api.model` (padrão `gpt-4o-mini`). O `/gpt -m <modelo>` e o `/set openai.api.model <modelo>`
 trocam o setting na hora; com o `OPENAI_MODEL` preenchido, ele continua tendo prioridade (o bot
 avisa).
 
-O bot usa o endpoint `v1/chat/completions`. A lista de IDs aceitos fica em `src/openai.js`;
-`/gpt -m` mostra essa lista e o modelo selecionado.
+O bot usa o endpoint `v1/chat/completions`. A lista de IDs aceitos fica em `src/openai.js`.
 
 | Família | IDs aceitos |
 |---|---|

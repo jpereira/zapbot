@@ -66,10 +66,13 @@ e sobrevivem a reinícios. Para ver e alterar, use o [`/set`](comandos/set.md).
 | `openai.admin.key` | texto (pode ser vazio) | *(vazio)* | Chave de admin da OpenAI (`sk-admin-...`) do `/gpt -usage`, usada quando `OPENAI_ADMIN_KEY` não está no `config/.env`. Exibida mascarada; `/set -reset openai.admin.key` apaga |
 | `openai.api.key` | texto (pode ser vazio) | *(vazio)* | Chave da OpenAI, usada quando `OPENAI_API_KEY` não está no `config/.env`. Exibida mascarada (`••••1234`); `/set -reset openai.api.key` apaga |
 | `openai.api.model` | texto (da lista) | `gpt-4o-mini` | Modelo do `/gpt`, usado quando `OPENAI_MODEL` não está no `config/.env`. Aceitos: os listados por `/gpt -m` |
+| `openai.gif.frameMs` | 20–2000 | `200` | Quanto dura cada quadro do GIF do `/gpt -gif`, em ms (o total é quadros x ms) |
+| `openai.gif.frames` | 2–16 | `9` | Quantos quadros tem o GIF do `/gpt -gif` (quanto mais quadros, mais caro) |
+| `openai.image.model` | texto | `gpt-image-2.6-flare` | Modelo que gera e edita a imagem do `/gpt -img` e o GIF do `/gpt -gif` (só os `gpt-image-2.6-*` fazem GIF): o id que a sua conta tem; se não existir, o bot lista os que a chave vê |
 | `openai.timeout.ms` | 5000–300000 | `60000` | Timeout do `/gpt`, usado quando `OPENAI_TIMEOUT_MS` não está no `config/.env` |
-| `openai.transcribe.model` | texto (da lista) | `whisper-1` | Modelo que transcreve o áudio respondido com o `/gpt`. Aceitos: `whisper-1`, `gpt-4o-mini-transcribe` e `gpt-4o-transcribe` |
+| `openai.transcribe.model` | texto | `gpt-transcribe` | Modelo que transcreve o áudio respondido com o `/gpt`: o id que a sua conta tem (o `whisper-1` sai do ar em fev/2027) |
 | `openai.tts.instructions` | texto | `Fale como um robô: voz metálica, monótona e pausada, sem emoção.` | Estilo da voz do `/gpt -voz` (só o `gpt-4o-mini-tts` usa) |
-| `openai.tts.model` | texto (da lista) | `gpt-4o-mini-tts` | Modelo que gera a voz do `/gpt -voz`: `gpt-4o-mini-tts`, `tts-1` ou `tts-1-hd` |
+| `openai.tts.model` | texto | `gpt-4o-mini-tts` | Modelo que gera a voz do `/gpt -voz`: o id que a sua conta tem (só os `gpt-4o-*` seguem o estilo) |
 | `openai.tts.voice` | texto (da lista) | `onyx` | Voz do `/gpt -voz`: `alloy`, `ash`, `ballad`, `coral`, `echo`, `fable`, `nova`, `onyx`, `sage`, `shimmer` ou `verse` |
 | `pixelart.maxParts` | 1–10 | `3` | Máximo de partes do [`/pixelart`](comandos/pixelart.md) quando a arte é mais alta que 4096 px |
 | `pixelart.packs` | lista | `chuck-norris-lvl` | Packs do 16colo.rs sorteados pelo [`/pixelart`](comandos/pixelart.md) sem argumentos |

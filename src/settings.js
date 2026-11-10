@@ -2,7 +2,7 @@
  * Settings: configurações gerais na tabela `settings`, alteráveis em tempo de execução pelo /set.
  */
 
-const { OPENAI_MODELOS, OPENAI_MODELOS_DE_AUDIO, OPENAI_MODELOS_DE_VOZ, OPENAI_VOZES } = require('./openai');
+const { OPENAI_MODELOS, OPENAI_VOZES } = require('./openai');
 const { compilarFiltroDebug } = require('./debugOpcoes');
 const { botConfig } = require('./botConfig');
 const { ROLES } = require('./roles');
@@ -513,16 +513,30 @@ const SETTINGS_SCHEMA = {
         opcoes: OPENAI_MODELOS,
         desc: 'Modelo do /gpt, usado quando OPENAI_MODEL não está no config/.env (o /gpt -m lista os aceitos).'
     },
+    'openai.gif.frameMs': {
+        default: 200,
+        type: 'number', min: 20, max: 2000,
+        desc: 'Quanto dura cada quadro do GIF do /gpt -gif, em ms (20 a 2000; o total é quadros x ms).'
+    },
+    'openai.gif.frames': {
+        default: 9,
+        type: 'number', min: 2, max: 16,
+        desc: 'Quantos quadros tem o GIF do /gpt -gif (2 a 16; quanto mais quadros, mais caro).'
+    },
+    'openai.image.model': {
+        default: 'gpt-image-2.6-flare',
+        type: 'string',
+        desc: 'Modelo que gera e edita a imagem do /gpt -img e o GIF do /gpt -gif (só os gpt-image-2.6-* fazem GIF): o id que a sua conta tem (se não existir, o bot lista os que a chave vê).'
+    },
     'openai.timeout.ms': {
         default: 60000,
         type: 'number', min: 5000, max: 300000,
         desc: 'Timeout (ms) do /gpt, usado quando OPENAI_TIMEOUT_MS não está no config/.env.'
     },
     'openai.transcribe.model': {
-        default: 'whisper-1',
+        default: 'gpt-transcribe',
         type: 'string',
-        opcoes: OPENAI_MODELOS_DE_AUDIO,
-        desc: 'Modelo que transcreve o áudio respondido com o /gpt (whisper-1, gpt-4o-mini-transcribe ou gpt-4o-transcribe).'
+        desc: 'Modelo que transcreve o áudio respondido com o /gpt: o id que a sua conta da OpenAI tem (o whisper-1 sai do ar em fev/2027).'
     },
     'openai.tts.instructions': {
         default: 'Fale como um robô: voz metálica, monótona e pausada, sem emoção.',
@@ -532,8 +546,7 @@ const SETTINGS_SCHEMA = {
     'openai.tts.model': {
         default: 'gpt-4o-mini-tts',
         type: 'string',
-        opcoes: OPENAI_MODELOS_DE_VOZ,
-        desc: 'Modelo que gera a voz do /gpt -voz (gpt-4o-mini-tts, tts-1 ou tts-1-hd). Só o gpt-4o-mini-tts segue o estilo do openai.tts.instructions.'
+        desc: 'Modelo que gera a voz do /gpt -voz: o id que a sua conta da OpenAI tem. Só os gpt-4o-* seguem o estilo do openai.tts.instructions.'
     },
     'openai.tts.voice': {
         default: 'onyx',

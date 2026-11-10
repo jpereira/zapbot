@@ -2,7 +2,7 @@
  * Comando /tldr (alias /resumo).
  */
 
-const { client } = require('../cliente');
+const { client, concluirAviso } = require('../cliente');
 const { getCommandSyntax } = require('./base');
 const { MAX_DELETE_WINDOW } = require('../constantes');
 const { idsDoChatAtual } = require('../contatos');
@@ -148,6 +148,7 @@ async function cmdTldr({ msg, opts, chatId, chatName }) {
     const primeira = rows[rows.length - linhas.length].timestamp;
     const ultima = rows[rows.length - 1].timestamp;
 
+    const aviso = await msg.reply('⏳ Processando o /tldr, aguarde.', null, { linkPreview: false });
     try {
         const resumo = await perguntarAoChat({
             cmd: '/tldr',
@@ -161,13 +162,13 @@ async function cmdTldr({ msg, opts, chatId, chatName }) {
             `\n\n${resumo}`;
 
         if (opts.opt.pv) {
-            await msg.reply('🤖 Resumo enviado no seu privado.');
+            await concluirAviso(msg, aviso, '🤖 Resumo enviado no seu privado.');
             await client.sendMessage(client.info.wid._serialized, texto);
         } else {
-            await msg.reply(texto);
+            await concluirAviso(msg, aviso, texto);
         }
     } catch (err) {
-        await msg.reply(erroOpenAi(err, '/tldr'));
+        await concluirAviso(msg, aviso, erroOpenAi(err, '/tldr'));
     }
 }
 

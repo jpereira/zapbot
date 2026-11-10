@@ -16,6 +16,9 @@ const { envOuSetting, getSetting } = require('./settings');
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
 const OPENAI_TRANSCRICAO_URL = 'https://api.openai.com/v1/audio/transcriptions';
 const OPENAI_VOZ_URL = 'https://api.openai.com/v1/audio/speech';
+const OPENAI_BASE = 'https://api.openai.com/v1';
+const OPENAI_IMAGEM_URL = `${OPENAI_BASE}/images/generations`;
+const OPENAI_IMAGEM_EDICAO_URL = `${OPENAI_BASE}/images/edits`;
 const OPENAI_USAGE_URL = 'https://api.openai.com/v1/organization/usage/completions';
 
 const chaveOpenAi = () => envOuSetting('OPENAI_API_KEY', 'openai.api.key');
@@ -67,6 +70,7 @@ async function perguntarAoChat({ cmd, sistema, texto, imagem = null }) {
             timeout: envOuSetting('OPENAI_TIMEOUT_MS', 'openai.timeout.ms')
         });
 
+        // O ChatGPT escreve em Markdown; o WhatsApp tem outra formatação (veja util/whatsapp.js)
         return data.choices?.[0]?.message?.content?.trim() || '(resposta vazia)';
     } catch (err) {
         // No 401 a mensagem da OpenAI traz um pedaço da chave: não vai para o log
@@ -138,6 +142,64 @@ async function sintetizarVoz({ cmd, texto }) {
                 err.response.data = JSON.parse(err.response.data.toString('utf8'));
             } catch { /* corpo que não é JSON: fica a mensagem do axios */ }
         }
+        logarErro(cmd, err);
+        throw err;
+    }
+}
+
+/**
+ * Gera uma imagem (v1/images/generations) ou, com `imagem`, edita a que veio (v1/images/edits). Com
+ * `gif`, o resultado é um GIF animado (output_format gif, só nos modelos gpt-image-2.6-*).
+ * @param {object} o
+ * @param {string} o.cmd     comando que chamou (para o log)
+ * @param {string} o.prompt  o que gerar ou mudar
+ * @param {Buffer} [o.imagem]  a imagem a editar, em PNG
+ * @param {{ frames: number, frameMs: number }} [o.gif]  pede o GIF, com os quadros e a duração de cada um
+ * @returns {Promise<string>}  a imagem (PNG) ou o GIF, em base64
+ */
+async function gerarImagem({ cmd, prompt, imagem = null, gif = null }) {
+    const modelo = getSetting('openai.image.model');
+    const extras = gif ? { output_format: 'gif', frame_count: gif.frames, frame_duration_ms: gif.frameMs } : {};
+    const config = {
+        headers: { Authorization: `Bearer ${chaveOpenAi()}` },
+        timeout: envOuSetting('OPENAI_TIMEOUT_MS', 'openai.timeout.ms')
+    };
+
+    try {
+        let resposta;
+        if (imagem) {
+            const form = new FormData();
+            form.append('model', modelo);
+            form.append('prompt', prompt);
+            for (const [campo, valor] of Object.entries(extras)) form.append(campo, String(valor));
+            form.append('image', new Blob([imagem], { type: 'image/png' }), 'imagem.png');
+            resposta = await axios.post(OPENAI_IMAGEM_EDICAO_URL, form, { ...config, maxBodyLength: Infinity });
+        } else {
+            resposta = await axios.post(OPENAI_IMAGEM_URL, { model: modelo, prompt, n: 1, ...extras }, config);
+        }
+
+        const b64 = resposta.data?.data?.[0]?.b64_json;
+        if (!b64) throw new Error('a OpenAI não devolveu a imagem');
+        return b64;
+    } catch (err) {
+        logarErro(cmd, err);
+        throw err;
+    }
+}
+
+/**
+ * Os modelos que a chave enxerga (GET /v1/models), em ordem alfabética: para dizer qual usar quando o
+ * configurado não existe na conta.
+ * @returns {Promise<string[]>}
+ */
+async function listarModelos({ cmd }) {
+    try {
+        const { data } = await axios.get(`${OPENAI_BASE}/models`, {
+            headers: { Authorization: `Bearer ${chaveOpenAi()}` },
+            timeout: envOuSetting('OPENAI_TIMEOUT_MS', 'openai.timeout.ms')
+        });
+        return (data?.data ?? []).map(m => m.id).filter(Boolean).sort();
+    } catch (err) {
         logarErro(cmd, err);
         throw err;
     }
@@ -223,6 +285,8 @@ module.exports = {
     consultarConsumo,
     consultarLimites,
     erroOpenAi,
+    gerarImagem,
+    listarModelos,
     perguntarAoChat,
     sintetizarVoz,
     transcreverAudio,
