@@ -554,6 +554,20 @@ describe('/gpt (/ai)', () => {
         assert.equal(rede.chamadas.length, antes, 'nada foi para a OpenAI');
     });
 
+    test('a resposta em Markdown chega na formatação do WhatsApp (títulos, negrito duplo, tabela)', async () => {
+        await bot.setSetting('openai.api.key', 'sk-teste');
+        rede.responder('post', 'api.openai.com/v1/chat/completions', { choices: [{ message: { content:
+            '# 🧺 O que é um conjunto?\n\nUm **conjunto** é uma coleção.\n\n| Símbolo | Significado |\n|---|---|\n| **∈** | Pertence |\n\n---\n\n* **União ∪:** tudo junto' } }] });
+
+        assert.deepEqual(await bot.responder('/gpt o que é um conjunto?'), [
+            '🤖 *🧺 O que é um conjunto?*\n\nUm *conjunto* é uma coleção.\n\n```\nSímbolo  Significado\n-------  -----------\n∈        Pertence\n```\n\n- *União ∪:* tudo junto'
+        ]);
+
+        // E o modelo é instruído a escrever para o WhatsApp
+        const sistema = rede.chamadas.at(-1).cfg.body.messages[0].content;
+        assert.match(sistema, /Formate para o WhatsApp.*\*negrito\* com um asterisco só.*Não use títulos com #, tabelas/s);
+    });
+
     test('.env vence o setting; a resposta sempre começa com 🤖 (inclusive a que começaria com "/")', async () => {
         process.env.OPENAI_API_KEY = 'sk-env';
         try {

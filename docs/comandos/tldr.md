@@ -6,7 +6,8 @@ Quem recebe resume só o chat atual, aqui mesmo: `-chat` e `-pv` são do dono e 
 
 Resume a conversa de um chat pelo ChatGPT: assuntos principais, decisões, combinados e pendências,
 em tópicos. Usa a mesma chave e o mesmo modelo do [`/gpt`](gpt.md) (veja
-[Configurando a chave](gpt.md#configurando-a-chave)).
+[Configurando a chave](gpt.md#configurando-a-chave)). O texto do ChatGPT passa pela mesma conversão do
+Markdown para a formatação do WhatsApp do `/gpt` (veja [Formatação no WhatsApp](gpt.md#formatação-no-whatsapp)).
 
 | Opção | Valor | Descrição |
 |---|---|---|

@@ -57,6 +57,40 @@ describe('formatação', () => {
     });
 });
 
+describe('Markdown do ChatGPT para o WhatsApp', () => {
+    const { paraWhatsapp } = bot.src('util/whatsapp');
+
+    test('títulos, negrito duplo, tachado, listas, links e linhas viram a formatação do WhatsApp', () => {
+        assert.equal(paraWhatsapp('# 🧺 O que é um conjunto?\n\nUm **conjunto** é uma ~~lista~~ coleção.\n\n---\n\n## 1. Está dentro?'),
+            '*🧺 O que é um conjunto?*\n\nUm *conjunto* é uma ~lista~ coleção.\n\n*1. Está dentro?*');
+        assert.equal(paraWhatsapp('* um\n+ dois\n  * aninhado\n- três\n1. primeiro'), '- um\n- dois\n  - aninhado\n- três\n1. primeiro');
+        assert.equal(paraWhatsapp('***forte***, __negrito__ e [o site](https://exemplo.com), [https://a.com](https://a.com)'),
+            '*_forte_*, *negrito* e o site (https://exemplo.com), https://a.com');
+        assert.equal(paraWhatsapp('![foto](https://x.com/a.png)'), 'https://x.com/a.png');
+        // Já no formato do WhatsApp: não mexe
+        assert.equal(paraWhatsapp('*negrito* _itálico_ ~tachado~ `código`\n- item\n> citação'), '*negrito* _itálico_ ~tachado~ `código`\n- item\n> citação');
+    });
+
+    test('tabela vira um bloco de código alinhado, sem a marcação dentro das células', () => {
+        const tabela = '| Símbolo | Significado | Exemplo |\n|---|:-:|---|\n| **∈** | Pertence | 🍎 ∈ A |\n| **∉** | Não pertence | ⚽ ∉ A |';
+        assert.equal(paraWhatsapp(`Veja:\n\n${tabela}\n\nFim`), [
+            'Veja:', '', '```',
+            'Símbolo  Significado   Exemplo',
+            '-------  ------------  -------',
+            '∈        Pertence      🍎 ∈ A',
+            '∉        Não pertence  ⚽ ∉ A',
+            '```', '', 'Fim'
+        ].join('\n'));
+    });
+
+    test('o bloco de código fica como está (sem o nome da linguagem) e as linhas em branco demais caem', () => {
+        assert.equal(paraWhatsapp('Veja:\n\n```text\n **x** # y\n| a | b |\n```\n\n\n\n\nFim'), 'Veja:\n\n```\n **x** # y\n| a | b |\n```\n\nFim');
+        assert.equal(paraWhatsapp('a  \nb'), 'a\nb');
+        assert.equal(paraWhatsapp(''), '');
+        assert.equal(paraWhatsapp(undefined), '');
+    });
+});
+
 describe('arquivos do cache', () => {
     test('árvore ordenada, tamanhos recursivos, total alinhado e separador contínuo', () => {
         const dir = fs.mkdtempSync(path.join(bot.CACHE_DIR, 'arvore-'));

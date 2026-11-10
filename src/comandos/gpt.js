@@ -24,7 +24,10 @@ const { fmtNum } = require('../util/formatar');
 /*
  * /gpt: pergunta ao ChatGPT (a chamada e os erros ficam no openaiChat.js).
  */
-const GPT_INSTRUCOES = 'Você é um assistente no WhatsApp. Responda de forma direta, em português, salvo se pedirem outro idioma.';
+const GPT_INSTRUCOES = 'Você é um assistente no WhatsApp. Responda de forma direta, em português, salvo se pedirem outro idioma. ' +
+    'Formate para o WhatsApp, que não é Markdown: *negrito* com um asterisco só, _itálico_, ~tachado~, ' +
+    'listas com "- " ou "1. ", código entre crases (``` para blocos). Não use títulos com #, tabelas, ' +
+    'linhas "---" nem **dois asteriscos**.';
 
 /*
  * /gpt -m: os modelos por uso e a troca de cada um. Sem modelo, lista (com o -gif, o -audio ou o -voz, só

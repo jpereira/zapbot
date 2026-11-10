@@ -39,6 +39,40 @@ pergunta, mostra a ajuda.
 | `-voz`, `-v` | `[texto]` | Responde uma nota de voz de robô com o texto (ou com o da mensagem respondida). Veja [Voz](#voz--voz) |
 | `-usage`, `-u` | `[dias]` | Só dono e admins. O consumo dos últimos dias (padrão 7, até 31) e os limites de agora. Veja [Consumo e limites](#consumo-e-limites--usage) |
 
+## Formatação no WhatsApp
+
+O ChatGPT escreve em Markdown, que o WhatsApp não entende (os `#` e os `**` apareceriam soltos, e uma
+tabela viraria um monte de barras). Por isso a resposta passa por duas etapas, no `/gpt` e no `/tldr`:
+
+1. **O pedido ao modelo**: as instruções dizem para escrever no formato do WhatsApp (`*negrito*` com um
+   asterisco, `_itálico_`, `~tachado~`, listas com `- `, código entre crases) e sem títulos, tabelas e `---`.
+2. **A conversão** do que escapar (`src/util/whatsapp.js`):
+
+| O modelo escreveu | Chega no WhatsApp |
+|---|---|
+| `# Título`, `## Título` | `*Título*` |
+| `**negrito**`, `__negrito__` | `*negrito*` |
+| `***forte***` | `*_forte_*` |
+| `~~tachado~~` | `~tachado~` |
+| `* item`, `+ item` | `- item` |
+| `[texto](https://x.com)` | `texto (https://x.com)` |
+| `![foto](https://x.com/a.png)` | `https://x.com/a.png` |
+| `---` sozinho na linha | (some) |
+| tabela com `\|` | um bloco de código com as colunas alinhadas |
+| ` ```text ` | ` ``` ` (sem o nome da linguagem) |
+
+O que está dentro de um bloco de código não é mexido, e o que já está no formato do WhatsApp fica como
+está. Uma tabela vira um bloco monoespaçado porque é o único jeito de manter as colunas:
+
+````text
+```
+Símbolo  Significado
+-------  -----------
+∈        Pertence
+∉        Não pertence
+```
+````
+
 ## Com foto
 
 Respondendo uma foto (ou figurinha) com o `/gpt`, o bot baixa a imagem e a manda junto da pergunta
