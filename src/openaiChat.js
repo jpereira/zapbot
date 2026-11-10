@@ -16,6 +16,9 @@ const { envOuSetting, getSetting } = require('./settings');
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
 const OPENAI_TRANSCRIPTION_URL = 'https://api.openai.com/v1/audio/transcriptions';
 const OPENAI_VOICE_URL = 'https://api.openai.com/v1/audio/speech';
+const OPENAI_BASE = 'https://api.openai.com/v1';
+const OPENAI_IMAGE_URL = `${OPENAI_BASE}/images/generations`;
+const OPENAI_IMAGE_EDIT_URL = `${OPENAI_BASE}/images/edits`;
 const OPENAI_USAGE_URL = 'https://api.openai.com/v1/organization/usage/completions';
 
 const keyOpenAi = () => envOuSetting('OPENAI_API_KEY', 'openai.api.key');
@@ -67,6 +70,7 @@ async function askOnChat({ cmd, sistema: system, texto: textAlt, imagem: image =
             timeout: envOuSetting('OPENAI_TIMEOUT_MS', 'openai.timeout.ms')
         });
 
+        // ChatGPT writes in Markdown; WhatsApp has another formatting (see util/whatsapp.js)
         return data.choices?.[0]?.message?.content?.trim() || '(resposta vazia)';
     } catch (err) {
         // On a 401 OpenAI's message carries a piece of the key: it does not go to the log
@@ -138,6 +142,64 @@ async function synthesizeVoice({ cmd, texto: textAlt }) {
                 err.response.data = JSON.parse(err.response.data.toString('utf8'));
             } catch { /* body that is not JSON: the axios message stays */ }
         }
+        logError(cmd, err);
+        throw err;
+    }
+}
+
+/**
+ * Generates an image (v1/images/generations) or, with `imagem`, edits the one that came (v1/images/edits). With
+ * `gif`, the result is an animated GIF (output_format gif, only on the gpt-image-2.6-* models).
+ * @param {object} o
+ * @param {string} o.cmd     command that called (for the log)
+ * @param {string} o.prompt  what to generate or change
+ * @param {Buffer} [o.imagem]  the image to edit, as PNG
+ * @param {{ frames: number, frameMs: number }} [o.gif]  asks for the GIF, with the frames and the duration of each
+ * @returns {Promise<string>}  the image (PNG) or the GIF, in base64
+ */
+async function generateImage({ cmd, prompt, imagem: image = null, gif = null }) {
+    const modelAlt = getSetting('openai.image.model');
+    const extras = gif ? { output_format: 'gif', frame_count: gif.frames, frame_duration_ms: gif.frameMs } : {};
+    const config = {
+        headers: { Authorization: `Bearer ${keyOpenAi()}` },
+        timeout: envOuSetting('OPENAI_TIMEOUT_MS', 'openai.timeout.ms')
+    };
+
+    try {
+        let reply;
+        if (image) {
+            const form = new FormData();
+            form.append('model', modelAlt);
+            form.append('prompt', prompt);
+            for (const [campo, valueAlt] of Object.entries(extras)) form.append(campo, String(valueAlt));
+            form.append('image', new Blob([image], { type: 'image/png' }), 'imagem.png');
+            reply = await axios.post(OPENAI_IMAGE_EDIT_URL, form, { ...config, maxBodyLength: Infinity });
+        } else {
+            reply = await axios.post(OPENAI_IMAGE_URL, { model: modelAlt, prompt, n: 1, ...extras }, config);
+        }
+
+        const b64 = reply.data?.data?.[0]?.b64_json;
+        if (!b64) throw new Error('a OpenAI não devolveu a imagem');
+        return b64;
+    } catch (err) {
+        logError(cmd, err);
+        throw err;
+    }
+}
+
+/**
+ * The models the key sees (GET /v1/models), in alphabetical order: to say which one to use when the
+ * configured does not exist on the account.
+ * @returns {Promise<string[]>}
+ */
+async function listModels({ cmd }) {
+    try {
+        const { data } = await axios.get(`${OPENAI_BASE}/models`, {
+            headers: { Authorization: `Bearer ${keyOpenAi()}` },
+            timeout: envOuSetting('OPENAI_TIMEOUT_MS', 'openai.timeout.ms')
+        });
+        return (data?.data ?? []).map(m => m.id).filter(Boolean).sort();
+    } catch (err) {
         logError(cmd, err);
         throw err;
     }
@@ -223,6 +285,8 @@ module.exports = {
     queryConsumption,
     queryLimits,
     errorOpenAi,
+    generateImage,
+    listModels,
     askOnChat,
     synthesizeVoice,
     transcribeAudio,

@@ -6,16 +6,41 @@ const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/gpt',
-    usage: '/gpt [pergunta]  ou  /gpt -model [modelo]  ou  /gpt -usage|-u [dias]  ou  /gpt -voz [texto]',
+    usage: '/gpt [pergunta]  ou  /gpt -model [modelo] [-img|-gif|-audio|-voz]  ou  /gpt -usage|-u [dias]  ou  /gpt -voz [texto]  ou  /gpt -img <pedido>  ou  /gpt -gif [pedido]',
     aliases: ['/ai'],
     summary: 'Pergunta ao ChatGPT',
-    help: 'Pergunta ao ChatGPT (OpenAI). Respondendo uma mensagem, o texto dela entra na pergunta; respondendo uma foto, ela vai junto (o ChatGPT vê a imagem); respondendo um áudio, ele é transcrito; com -voz, o texto vira uma nota de voz de robô. Precisa de OPENAI_API_KEY no config/.env ou do setting openai.api.key.',
+    help: 'Pergunta ao ChatGPT (OpenAI). Respondendo uma mensagem, o texto dela entra na pergunta; respondendo uma foto, ela vai junto (o ChatGPT vê a imagem); respondendo um áudio, ele é transcrito; com -voz, o texto vira uma nota de voz de robô; com -img e -gif, cria uma imagem e um GIF. Precisa de OPENAI_API_KEY no config/.env ou do setting openai.api.key.',
     cmd_opts: [
         {
             opts: ['model', 'm'],
             values: ['[modelo]'],
-            desc: 'Troca o modelo (setting openai.api.model). Sem modelo, lista o atual e os aceitos.',
+            desc: 'Lista os modelos por uso, os que a sua chave vê, e troca o de cada um: sem opção, o das perguntas (setting openai.api.model); com -img ou -gif, o das imagens e do GIF; com -audio, o da transcrição; com -voz, o da voz. Sem modelo, só lista (com -gif, -audio ou -voz, só aquele uso).',
+            ex: ['/gpt -m', '/gpt -m gpt-4.1', '/gpt -m gpt-image-2.6-flare -gif', '/gpt -m gpt-transcribe -audio', '/gpt -m gpt-4o-mini-tts -voz'],
             role: ADMIN
+        },
+        {
+            opts: ['img'],
+            values: [],
+            desc: 'Cria uma imagem com o pedido (v1/images, modelo openai.image.model) e responde com ela. Respondendo uma foto, a edita. Só o dono e os admins: gasta a sua conta da OpenAI.',
+            ex: ['/gpt -img um robô nadando em aquarela', '/gpt -img coloque um chapéu nele (respondendo uma foto)'],
+            role: ADMIN,
+            cron: false
+        },
+        {
+            opts: ['gif'],
+            values: [],
+            desc: 'Cria um GIF animado (API de imagens, output_format gif, só nos modelos gpt-image-2.6-*) e responde com ele. Respondendo uma foto, a anima; "gere um gif animado de..." respondendo uma foto também vale, sem o -gif. Os quadros e o tempo de cada um são os settings openai.gif.frames e openai.gif.frameMs. Só o dono e os admins: gasta a sua conta da OpenAI.',
+            ex: ['/gpt -gif um gato de óculos escuros', '/gpt gere um gif animado dele nadando (respondendo uma foto)'],
+            role: ADMIN,
+            cron: false
+        },
+        {
+            opts: ['audio'],
+            values: [],
+            desc: 'Só junto do -m: escolhe o modelo da transcrição de áudio (setting openai.transcribe.model). O áudio respondido é transcrito sem esta opção.',
+            ex: ['/gpt -m gpt-transcribe -audio'],
+            role: ADMIN,
+            cron: false
         },
         {
             opts: ['voz', 'v'],
