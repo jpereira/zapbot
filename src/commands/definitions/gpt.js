@@ -9,7 +9,7 @@ module.exports = {
     usage: '/gpt [pergunta]  ou  /gpt -model [modelo] [-img|-gif|-audio|-voz]  ou  /gpt -usage|-u [dias]  ou  /gpt -voz [texto]  ou  /gpt -img <pedido>  ou  /gpt -gif [pedido]',
     aliases: ['/ai'],
     summary: 'Pergunta ao ChatGPT',
-    help: 'Pergunta ao ChatGPT (OpenAI). Respondendo uma mensagem, o texto dela entra na pergunta; respondendo uma foto, ela vai junto (o ChatGPT vê a imagem); respondendo um áudio, ele é transcrito; com -voz, o texto vira uma nota de voz de robô; com -img e -gif, cria uma imagem e um GIF. Precisa de OPENAI_API_KEY no config/.env ou do setting openai.api.key.',
+    help: 'Pergunta ao ChatGPT (OpenAI). Respondendo uma mensagem, o texto dela entra na pergunta; respondendo uma foto, ela vai junto (o ChatGPT vê a imagem); respondendo um áudio, ele é transcrito; respondendo um documento (texto ou PDF), o conteúdo vai junto; com -voz, o texto vira uma nota de voz de robô; com -img e -gif, cria uma imagem e um GIF. Precisa de OPENAI_API_KEY no config/.env ou do setting openai.api.key.',
     cmd_opts: [
         {
             opts: ['model', 'm'],

@@ -160,6 +160,8 @@ async function initializeDb() {
     `);
     // from_me: sent by your account (in private, sender_* is the other participant)
     await addColumns('messages', { from_me: 'INTEGER DEFAULT 0' });
+    // transcription: the audio transcription, stored by /tldr so as not to transcribe again
+    await addColumns('messages', { transcription: 'TEXT' });
 
     // /show query: a chat's deleted messages, from most recent to oldest
     await dbRun('CREATE INDEX IF NOT EXISTS idx_messages_chat_revoked ON messages (chat_id, revoked, revoked_at)');
