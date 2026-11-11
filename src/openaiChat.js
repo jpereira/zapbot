@@ -116,9 +116,10 @@ const VOICE_MAX_CHARACTERS = 4096;
  * @param {object} o
  * @param {string} o.cmd    command that called (for the log)
  * @param {string} o.texto  up to VOICE_MAX_CHARACTERS
+ * @param {string} [o.estilo]  how to speak (overrides the openai.tts.instructions setting)
  * @returns {Promise<Buffer>}
  */
-async function synthesizeVoice({ cmd, texto: textAlt }) {
+async function synthesizeVoice({ cmd, texto: textAlt, estilo: style = null }) {
     const modelAlt = getSetting('openai.tts.model');
 
     try {
@@ -128,7 +129,7 @@ async function synthesizeVoice({ cmd, texto: textAlt }) {
             input: textAlt,
             response_format: 'opus',
             // Only gpt-4o-mini-tts follows the style; tts-1 and tts-1-hd refuse the field
-            ...(modelAlt.startsWith('gpt-4o') ? { instructions: getSetting('openai.tts.instructions') } : {})
+            ...(modelAlt.startsWith('gpt-4o') ? { instructions: style || getSetting('openai.tts.instructions') } : {})
         }, {
             headers: { Authorization: `Bearer ${keyOpenAi()}` },
             timeout: envOuSetting('OPENAI_TIMEOUT_MS', 'openai.timeout.ms'),
