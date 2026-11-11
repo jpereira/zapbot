@@ -20,7 +20,6 @@ const OPENAI_VOICE_URL = 'https://api.openai.com/v1/audio/speech';
 const OPENAI_BASE = 'https://api.openai.com/v1';
 const OPENAI_IMAGE_URL = `${OPENAI_BASE}/images/generations`;
 const OPENAI_IMAGE_EDIT_URL = `${OPENAI_BASE}/images/edits`;
-const OPENAI_USAGE_URL = 'https://api.openai.com/v1/organization/usage/completions';
 
 const keyOpenAi = () => envOuSetting('OPENAI_API_KEY', 'openai.api.key');
 
@@ -212,6 +211,32 @@ function logError(cmd, err) {
     printError(`${cmd}:`, status ?? '', status === 401 ? 'API key inválida' : err.response?.data?.error?.message || err.message);
 }
 
+/*
+ * Reads the pages of a /v1/organization endpoint (usage and costs: both need the admin key) and joins
+ * the buckets. On error, logs (without the key) and throws the axios error.
+ */
+async function buckets({ cmd, caminho: pathAlt, params }) {
+    const allAlt2 = [];
+    let page = null;
+
+    try {
+        for (let n = 0; n < 6; n++) {
+            const { data } = await axios.get(`${OPENAI_BASE}/organization/${pathAlt}`, {
+                headers: { Authorization: `Bearer ${keyAdminOpenAi()}` },
+                timeout: envOuSetting('OPENAI_TIMEOUT_MS', 'openai.timeout.ms'),
+                params: { ...params, ...(page ? { page: page } : {}) }
+            });
+            allAlt2.push(...(data?.data ?? []));
+            if (!data?.has_more || !data.next_page) break;
+            page = data.next_page;
+        }
+        return allAlt2;
+    } catch (err) {
+        logError(cmd, err);
+        throw err;
+    }
+}
+
 /**
  * The usage of the last days (GET /v1/organization/usage/completions), per day and per model. Needs
  * an admin key (sk-admin-...); the normal key does not work.
@@ -221,32 +246,37 @@ function logError(cmd, err) {
  * @returns {Promise<{ buckets: object[] }>}  the OpenAI buckets, from all pages
  */
 async function queryConsumption({ cmd, dias: daysAlt }) {
-    const buckets = [];
     const end = Math.floor(Date.now() / 1000);
-    let page = null;
+    return {
+        buckets: await buckets({
+            cmd,
+            caminho: 'usage/completions',
+            params: { start_time: end - daysAlt * 86400, bucket_width: '1d', limit: daysAlt, group_by: ['model'] }
+        })
+    };
+}
 
-    try {
-        for (let n = 0; n < 5; n++) {
-            const { data } = await axios.get(OPENAI_USAGE_URL, {
-                headers: { Authorization: `Bearer ${keyAdminOpenAi()}` },
-                timeout: envOuSetting('OPENAI_TIMEOUT_MS', 'openai.timeout.ms'),
-                params: {
-                    start_time: end - daysAlt * 86400,
-                    bucket_width: '1d',
-                    limit: daysAlt,
-                    group_by: ['model'],
-                    ...(page ? { page: page } : {})
-                }
-            });
-            buckets.push(...(data?.data ?? []));
-            if (!data?.has_more || !data.next_page) break;
-            page = data.next_page;
-        }
-        return { buckets };
-    } catch (err) {
-        logError(cmd, err);
-        throw err;
-    }
+/**
+ * The cost in dollars (GET /v1/organization/costs), per day and per item (e.g.: "gpt-4o-mini, input").
+ * @param {number} o.desde  start, in seconds (UTC)
+ * @returns {Promise<object[]>}  the OpenAI buckets
+ */
+const queryCosts = ({ cmd, desde: since }) => buckets({
+    cmd, caminho: 'costs', params: { start_time: since, bucket_width: '1d', limit: 180, group_by: ['line_item'] }
+});
+
+// The uses beyond the chat, with what each one measures
+const USAGE_SERVICES = ['images', 'audio_speeches', 'audio_transcriptions', 'embeddings'];
+
+/**
+ * The usage of images, voice, transcription and embeddings over the last days (whatever fails comes null: it is an extra).
+ * @returns {Promise<Record<string, object[] | null>>}
+ */
+async function queryServices({ cmd, dias: daysAlt }) {
+    const end = Math.floor(Date.now() / 1000);
+    const params = { start_time: end - daysAlt * 86400, bucket_width: '1d', limit: daysAlt };
+    const read = await Promise.allSettled(USAGE_SERVICES.map(nameAlt => buckets({ cmd, caminho: `usage/${nameAlt}`, params })));
+    return Object.fromEntries(USAGE_SERVICES.map((nameAlt, i) => [nameAlt, read[i].status === 'fulfilled' ? read[i].value : null]));
 }
 
 /**
@@ -284,6 +314,8 @@ module.exports = {
     keyAdminOpenAi,
     keyOpenAi,
     queryConsumption,
+    queryCosts,
+    queryServices,
     queryLimits,
     errorOpenAi,
     generateImage,

@@ -618,6 +618,24 @@ describe('/gpt (/ai)', () => {
                 ] }
             ]
         });
+        const item = (line_item, value) => ({ line_item, amount: { value, currency: 'usd' } });
+        const sincePurchase = Date.parse('2026-11-01T00:00:00Z') / 1000;
+        network.responder('get', 'api.openai.com/v1/organization/costs', (url, cfg) => ({
+            has_more: false,
+            data: cfg.params.start_time === sincePurchase
+                ? [{ start_time: sincePurchase, results: [item('gpt-4o-mini, input', 1.51)] }]
+                : [
+                    { start_time: day, results: [item('gpt-4o-mini, input', 0.0004), item('gpt-4o-mini, output', 0.0003), item('gpt-6-sol, input', 0)] },
+                    { start_time: day + 86400, results: [item('gpt-4o-mini, input', 0.0012), item('gpt-image-2.6-flare, image', 0.04)] }
+                ]
+        }));
+        const empty = { has_more: false, data: [{ start_time: day, results: [] }] };
+        network.responder('get', 'api.openai.com/v1/organization/usage/images', { has_more: false, data: [{ start_time: day, results: [{ images: 3, num_model_requests: 2 }] }] });
+        network.responder('get', 'api.openai.com/v1/organization/usage/audio_speeches', { has_more: false, data: [{ start_time: day, results: [{ characters: 1200, num_model_requests: 1 }] }] });
+        network.responder('get', 'api.openai.com/v1/organization/usage/audio_transcriptions', { has_more: false, data: [{ start_time: day, results: [{ seconds: 42, num_model_requests: 1 }] }] });
+        network.responder('get', 'api.openai.com/v1/organization/usage/embeddings', empty);
+        await bot.setSetting('openai.credit.total', '10');
+        await bot.setSetting('openai.credit.since', '2026-11-01');
         network.responder('post', 'api.openai.com/v1/chat/completions', network.http({
             data: { choices: [{ message: { content: '' } }] },
             headers: {
@@ -628,17 +646,28 @@ describe('/gpt (/ai)', () => {
 
         const [r] = await bot.replyAlt('/gpt -usage 3');
         assert.equal(r, [
+            '💰 *Créditos:* $1,51/$10,00 · restam *$8,49* _(gasto desde 01/11/2026)_',
+            '',
             '📊 *Consumo da OpenAI* — últimos 3 dias',
+            '💵 Gasto: *$0,04*',
             '🔢 3.560 tokens · entrada 3.050 (cache 400) · saída 510',
             '🔁 13 requisições',
             '',
             '📅 *Por dia* _(UTC)_',
-            '• 07/11 · 1.260 tokens · 6 req',
-            '• 08/11 · 2.300 tokens · 7 req',
+            '• 07/11 · 1.260 tokens · 6 req · $0,0007',
+            '• 08/11 · 2.300 tokens · 7 req · $0,04',
             '',
             '🧠 *Por modelo*',
-            '• gpt-4o-mini · 3.500 tokens · 12 req',
-            '• gpt-6-sol · 60 tokens · 1 req',
+            '• gpt-4o-mini · 3.500 tokens · 12 req · $0,0019',
+            '• gpt-6-sol · 60 tokens · 1 req · $0,00',
+            '',
+            '🧾 *Outros custos*',
+            '• gpt-image-2.6-flare · $0,04',
+            '',
+            '🧰 *Outros usos*',
+            '• 🖼️ Imagens · 3 imagens · 2 req',
+            '• 🔊 Voz · 1.200 caracteres · 1 req',
+            '• 🎙️ Transcrição · 42 s de áudio · 1 req',
             '',
             '⏱️ *Limites agora* — gpt-4o-mini',
             '• tokens: 199.984 de 200.000 · reseta em 6ms',
@@ -675,7 +704,7 @@ describe('/gpt (/ai)', () => {
         await bot.setSetting('openai.admin.key', 'sk-admin-teste');
         network.responder('get', 'api.openai.com/v1/organization/usage/completions', errorHttp(403));
         const [rejected] = await bot.replyAlt('/gpt -usage', { erroEsperado: true });
-        assert.match(rejected, /^🔑 A chave de admin foi recusada\. A Usage API pede uma Admin key/);
+        assert.match(rejected, /^🔑 A chave de admin foi recusada\.\n💡 _A Usage API pede uma Admin key/);
         assert.match(rejected, /⏱️ \*Limites agora\*/);
     });
 
