@@ -14,7 +14,7 @@ const { getCommandSyntax } = require('./base');
 const { BIN_FFMPEG, TMP_DIR } = require('../constantes');
 const { OPENAI_MODELOS } = require('../openai');
 const {
-    SEM_CHAVE, chaveAdminOpenAi, chaveOpenAi, consultarConsumo, consultarLimites, erroOpenAi, gerarImagem,
+    SEM_CHAVE, chaveAdminOpenAi, chaveOpenAi, consultarConsumo, consultarCustos, consultarLimites, consultarServicos, erroOpenAi, gerarImagem,
     listarModelos, perguntarAoChat, sintetizarVoz, transcreverAudio, VOZ_MAX_CARACTERES
 } = require('../openaiChat');
 const { envOuSetting, getSetting, setSetting } = require('../settings');
@@ -430,8 +430,34 @@ const soma = () => ({ entrada: 0, saida: 0, cache: 0, requisicoes: 0 });
 const tokens = (t) => t.entrada + t.saida;
 const resumo = (t) => `${fmtNum(tokens(t))} tokens · ${fmtNum(t.requisicoes)} req`;
 
-// Os buckets da Usage API → o texto do chat: o total, por dia e por modelo
-function textoDoConsumo(buckets, dias) {
+// Dólares em pt-BR: centavos, ou 4 casas quando é menos de 1 centavo ($0,0012)
+const usd = (v) => `$${v.toLocaleString('pt-BR', v === 0 || v >= 0.01
+    ? { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+    : { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`;
+
+const somaCustos = (buckets) => buckets.reduce((t, b) => t + (b.results ?? []).reduce((s, r) => s + Number(r.amount?.value ?? 0), 0), 0);
+const dataCurta = (inicio) => new Date(inicio * 1000).toISOString().slice(5, 10).split('-').reverse().join('/');
+
+// O uso de imagens, voz, transcrição e embeddings (o que não veio ou está zerado não aparece)
+function linhasDosServicos(servicos) {
+    const somar = (buckets, campo) => (buckets ?? []).reduce((t, b) => t + (b.results ?? []).reduce((s, r) => s + (r[campo] ?? 0), 0), 0);
+    const defs = [
+        ['images', '🖼️ Imagens', 'images', 'imagens'],
+        ['audio_speeches', '🔊 Voz', 'characters', 'caracteres'],
+        ['audio_transcriptions', '🎙️ Transcrição', 'seconds', 's de áudio'],
+        ['embeddings', '🧬 Embeddings', 'input_tokens', 'tokens']
+    ];
+    return defs.flatMap(([nome, rotulo, campo, unidade]) => {
+        const req = somar(servicos?.[nome], 'num_model_requests');
+        return req ? [`• ${rotulo} · ${fmtNum(somar(servicos[nome], campo))} ${unidade} · ${fmtNum(req)} req`] : [];
+    });
+}
+
+/*
+ * Os buckets da Usage API (+ os custos e os outros usos) → o texto do chat: o dinheiro, o total, por dia,
+ * por modelo, por serviço. Os custos e os serviços são extras: sem eles, só os tokens.
+ */
+function textoDoConsumo(buckets, dias, { custos = null, servicos = null } = {}) {
     const total = soma();
     const porDia = new Map();
     const porModelo = new Map();
@@ -452,25 +478,61 @@ function textoDoConsumo(buckets, dias) {
         }
     }
 
-    const dia = (inicio) => new Date(inicio * 1000).toISOString().slice(5, 10).split('-').reverse().join('/');
-    const linhas = [
-        `📊 *Consumo da OpenAI* — ${dias === 1 ? 'hoje' : `últimos ${dias} dias`}`,
+    // Os custos do período (o item é "modelo, input"; o prefixo é o modelo) por dia e por modelo
+    const doPeriodo = custos ?? [];
+    const custoDia = new Map();
+    const custoItem = new Map();
+    for (const b of doPeriodo) {
+        for (const r of b.results ?? []) {
+            const v = Number(r.amount?.value ?? 0);
+            custoDia.set(b.start_time, (custoDia.get(b.start_time) ?? 0) + v);
+            const item = String(r.line_item ?? '(outros)').split(', ')[0];
+            custoItem.set(item, (custoItem.get(item) ?? 0) + v);
+        }
+    }
+    const comCusto = custos !== null;
+    const custo = (v) => (comCusto ? ` · ${usd(v ?? 0)}` : '');
+
+    const linhas = [`📊 *Consumo da OpenAI* — ${dias === 1 ? 'hoje' : `últimos ${dias} dias`}`];
+    if (comCusto) linhas.push(`💵 Gasto: *${usd(somaCustos(doPeriodo))}*`);
+    linhas.push(
         `🔢 ${fmtNum(tokens(total))} tokens · entrada ${fmtNum(total.entrada)} (cache ${fmtNum(total.cache)}) · saída ${fmtNum(total.saida)}`,
         `🔁 ${fmtNum(total.requisicoes)} requisições`
-    ];
+    );
 
     if (porDia.size) {
         linhas.push('', '📅 *Por dia* _(UTC)_');
-        for (const [inicio, t] of [...porDia].sort((a, b) => a[0] - b[0])) linhas.push(`• ${dia(inicio)} · ${resumo(t)}`);
+        for (const [dia, t] of [...porDia].sort((a, b) => a[0] - b[0])) {
+            linhas.push(`• ${dataCurta(dia)} · ${resumo(t)}${custo(custoDia.get(dia))}`);
+        }
     }
     if (porModelo.size) {
         linhas.push('', '🧠 *Por modelo*');
         for (const [modelo, t] of [...porModelo].sort((a, b) => tokens(b[1]) - tokens(a[1])).slice(0, 8)) {
-            linhas.push(`• ${modelo} · ${resumo(t)}`);
+            linhas.push(`• ${modelo} · ${resumo(t)}${custo(custoItem.get(modelo))}`);
         }
     }
-    if (!porDia.size && !porModelo.size) linhas.push('', 'ℹ️ Nenhum uso nesse período.');
+
+    // O que gastou e não é chat (imagem, voz, transcrição...): os itens de custo sem modelo de chat
+    const outros = [...custoItem].filter(([item, v]) => !porModelo.has(item) && v > 0).sort((a, b) => b[1] - a[1]).slice(0, 8);
+    const extras = linhasDosServicos(servicos);
+    if (outros.length) {
+        linhas.push('', '🧾 *Outros custos*', ...outros.map(([item, v]) => `• ${item} · ${usd(v)}`));
+    }
+    if (extras.length) linhas.push('', '🧰 *Outros usos*', ...extras);
+
+    if (!porDia.size && !porModelo.size && !extras.length) linhas.push('', 'ℹ️ Nenhum uso nesse período.');
     return linhas.join('\n');
+}
+
+/*
+ * O saldo em dólares: $usado/$total. A API não informa o saldo, então o total é o openai.credit.total
+ * (o que foi comprado) e o usado é o gasto desde o openai.credit.since (sem ele, os últimos 180 dias).
+ */
+function textoDoSaldo(usado, total, desde) {
+    const resta = total - usado;
+    return `💰 *Créditos:* ${usd(usado)}/${usd(total)} · ${resta >= 0 ? `restam *${usd(resta)}*` : `*${usd(-resta)} acima do total*`}` +
+        ` _(gasto ${desde ? `desde ${desde.split('-').reverse().join('/')}` : 'nos últimos 180 dias'})_`;
 }
 
 // Os cabeçalhos x-ratelimit-* → o texto do chat
@@ -504,12 +566,33 @@ async function mostrarUso(msg, diasDigitado) {
 
     if (comAdmin) {
         try {
-            partes.push(textoDoConsumo((await consultarConsumo({ cmd: '/gpt', dias })).buckets, dias));
+            const total = getSetting('openai.credit.total');
+            const desdeData = getSetting('openai.credit.since');
+            const agora = Math.floor(Date.now() / 1000);
+            const inicioSaldo = desdeData ? Math.floor(Date.parse(desdeData) / 1000) : agora - 180 * 86400;
+
+            // O consumo é obrigatório (o erro dele é o da chave); o custo, o saldo e os outros usos são extras
+            const [consumo, custos, custosDoSaldo, servicos] = await Promise.all([
+                consultarConsumo({ cmd: '/gpt', dias }),
+                consultarCustos({ cmd: '/gpt', desde: agora - dias * 86400 }).catch(() => null),
+                total ? consultarCustos({ cmd: '/gpt', desde: inicioSaldo }).catch(() => null) : null,
+                consultarServicos({ cmd: '/gpt', dias })
+            ]);
+
+            if (custosDoSaldo) partes.push(textoDoSaldo(somaCustos(custosDoSaldo), total, desdeData));
+            partes.push(textoDoConsumo(consumo.buckets, dias, { custos, servicos }));
+            if (!total && custos) {
+                partes.push('💡 _Para ver $usado/$total: /set openai.credit.total <dólares comprados> e ' +
+                    '/set openai.credit.since AAAA-MM-DD (a API da OpenAI não informa o saldo)._');
+            }
         } catch (err) {
             const status = err.response?.status;
+            const motivo = err.response?.data?.error?.message ?? '';
+            const escopo = /api\.usage\.read/.test(motivo);
             partes.push(status === 401 || status === 403
-                ? '🔑 A chave de admin foi recusada. A Usage API pede uma Admin key (sk-admin-...), criada em ' +
-                    'platform.openai.com › Organization › Admin keys.'
+                ? '🔑 A chave de admin foi recusada' + (escopo ? ': ela não tem o escopo api.usage.read.' : '.') +
+                    '\n💡 _A Usage API pede uma Admin key (sk-admin-..., em platform.openai.com › Organization › ' +
+                    'Admin keys) ou uma chave com o escopo Usage em Read. Uma chave de projeto (sk-proj-...) comum não serve._'
                 : erroOpenAi(err, '/gpt -usage'));
         }
     } else {

@@ -20,7 +20,6 @@ const OPENAI_VOZ_URL = 'https://api.openai.com/v1/audio/speech';
 const OPENAI_BASE = 'https://api.openai.com/v1';
 const OPENAI_IMAGEM_URL = `${OPENAI_BASE}/images/generations`;
 const OPENAI_IMAGEM_EDICAO_URL = `${OPENAI_BASE}/images/edits`;
-const OPENAI_USAGE_URL = 'https://api.openai.com/v1/organization/usage/completions';
 
 const chaveOpenAi = () => envOuSetting('OPENAI_API_KEY', 'openai.api.key');
 
@@ -212,6 +211,32 @@ function logarErro(cmd, err) {
     printError(`${cmd}:`, status ?? '', status === 401 ? 'API key inválida' : err.response?.data?.error?.message || err.message);
 }
 
+/*
+ * Lê as páginas de um endpoint de /v1/organization (usage e costs: todos pedem a chave de admin) e junta
+ * os buckets. Em erro, registra no log (sem a chave) e lança o erro do axios.
+ */
+async function buckets({ cmd, caminho, params }) {
+    const todos = [];
+    let pagina = null;
+
+    try {
+        for (let n = 0; n < 6; n++) {
+            const { data } = await axios.get(`${OPENAI_BASE}/organization/${caminho}`, {
+                headers: { Authorization: `Bearer ${chaveAdminOpenAi()}` },
+                timeout: envOuSetting('OPENAI_TIMEOUT_MS', 'openai.timeout.ms'),
+                params: { ...params, ...(pagina ? { page: pagina } : {}) }
+            });
+            todos.push(...(data?.data ?? []));
+            if (!data?.has_more || !data.next_page) break;
+            pagina = data.next_page;
+        }
+        return todos;
+    } catch (err) {
+        logarErro(cmd, err);
+        throw err;
+    }
+}
+
 /**
  * O consumo dos últimos dias (GET /v1/organization/usage/completions), por dia e por modelo. Precisa de
  * uma chave de admin (sk-admin-...); a chave normal não vale.
@@ -221,32 +246,37 @@ function logarErro(cmd, err) {
  * @returns {Promise<{ buckets: object[] }>}  os buckets da OpenAI, de todas as páginas
  */
 async function consultarConsumo({ cmd, dias }) {
-    const buckets = [];
     const fim = Math.floor(Date.now() / 1000);
-    let pagina = null;
+    return {
+        buckets: await buckets({
+            cmd,
+            caminho: 'usage/completions',
+            params: { start_time: fim - dias * 86400, bucket_width: '1d', limit: dias, group_by: ['model'] }
+        })
+    };
+}
 
-    try {
-        for (let n = 0; n < 5; n++) {
-            const { data } = await axios.get(OPENAI_USAGE_URL, {
-                headers: { Authorization: `Bearer ${chaveAdminOpenAi()}` },
-                timeout: envOuSetting('OPENAI_TIMEOUT_MS', 'openai.timeout.ms'),
-                params: {
-                    start_time: fim - dias * 86400,
-                    bucket_width: '1d',
-                    limit: dias,
-                    group_by: ['model'],
-                    ...(pagina ? { page: pagina } : {})
-                }
-            });
-            buckets.push(...(data?.data ?? []));
-            if (!data?.has_more || !data.next_page) break;
-            pagina = data.next_page;
-        }
-        return { buckets };
-    } catch (err) {
-        logarErro(cmd, err);
-        throw err;
-    }
+/**
+ * O custo em dólares (GET /v1/organization/costs), por dia e por item (ex.: "gpt-4o-mini, input").
+ * @param {number} o.desde  início, em segundos (UTC)
+ * @returns {Promise<object[]>}  os buckets da OpenAI
+ */
+const consultarCustos = ({ cmd, desde }) => buckets({
+    cmd, caminho: 'costs', params: { start_time: desde, bucket_width: '1d', limit: 180, group_by: ['line_item'] }
+});
+
+// Os usos além do chat, com o que cada um mede
+const SERVICOS_DE_USO = ['images', 'audio_speeches', 'audio_transcriptions', 'embeddings'];
+
+/**
+ * O uso de imagens, voz, transcrição e embeddings dos últimos dias (o que falhar vem null: é um extra).
+ * @returns {Promise<Record<string, object[] | null>>}
+ */
+async function consultarServicos({ cmd, dias }) {
+    const fim = Math.floor(Date.now() / 1000);
+    const params = { start_time: fim - dias * 86400, bucket_width: '1d', limit: dias };
+    const lidos = await Promise.allSettled(SERVICOS_DE_USO.map(nome => buckets({ cmd, caminho: `usage/${nome}`, params })));
+    return Object.fromEntries(SERVICOS_DE_USO.map((nome, i) => [nome, lidos[i].status === 'fulfilled' ? lidos[i].value : null]));
 }
 
 /**
@@ -284,6 +314,8 @@ module.exports = {
     chaveAdminOpenAi,
     chaveOpenAi,
     consultarConsumo,
+    consultarCustos,
+    consultarServicos,
     consultarLimites,
     erroOpenAi,
     gerarImagem,

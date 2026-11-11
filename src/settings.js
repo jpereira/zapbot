@@ -513,6 +513,21 @@ const SETTINGS_SCHEMA = {
         opcoes: OPENAI_MODELOS,
         desc: 'Modelo do /gpt, usado quando OPENAI_MODEL não está no config/.env (o /gpt -m lista os aceitos).'
     },
+    'openai.credit.since': {
+        default: '',
+        type: 'string',
+        allowEmpty: true,
+        desc: 'Data (AAAA-MM-DD) da compra dos créditos da OpenAI: o /gpt -usage soma o gasto desde ela para mostrar $usado/$total.',
+        validar: (v) => {
+            if (v && (!/^\d{4}-\d{2}-\d{2}$/.test(v) || Number.isNaN(Date.parse(v)))) throw new Error('use AAAA-MM-DD');
+            return v;
+        }
+    },
+    'openai.credit.total': {
+        default: 0,
+        type: 'number', min: 0, max: 100000,
+        desc: 'Total de créditos comprados na OpenAI, em dólares (a API não informa o saldo): o /gpt -usage mostra $usado/$total. 0: não mostra.'
+    },
     'openai.gif.frameMs': {
         default: 200,
         type: 'number', min: 20, max: 2000,

@@ -193,23 +193,49 @@ A Usage API não aceita a chave normal: precisa de uma Admin key (`sk-admin-...`
 platform.openai.com › Organization › Admin keys), no `OPENAI_ADMIN_KEY` do `config/.env` ou no setting
 `openai.admin.key` (`/set openai.admin.key sk-admin-...`, exibido mascarado). Os dias são em UTC.
 
+**Dinheiro** (Costs API, também com a chave de admin): o gasto em dólares do período, por dia e por modelo,
+e os "outros custos" (imagem, voz, transcrição). A API da OpenAI **não informa o saldo** da conta, então o
+`$usado/$total` vem de dois settings seus: `openai.credit.total` (os dólares que você comprou) e
+`openai.credit.since` (a data da compra, `AAAA-MM-DD`). O usado é o gasto desde essa data:
+
+```text
+/set openai.credit.total 10
+/set openai.credit.since 2026-11-01
+/gpt -usage
+💰 Créditos: $1,51/$10,00 · restam $8,49 (gasto desde 01/11/2026)
+```
+
+**Outros usos** (Usage API de imagens, voz, transcrição e embeddings): as requisições e a quantidade
+(imagens, caracteres, segundos de áudio), só dos que tiveram uso no período.
+
 **Limites de agora** (chave normal): o bot faz uma chamada mínima ao chat (16 tokens de saída no
 máximo, ou seja, gasta quase nada) e lê os cabeçalhos `x-ratelimit-*` da resposta: o limite, o que
 ainda resta na janela atual e quando reseta, de tokens e de requisições do modelo em uso.
 
 ```text
 /gpt -usage
+💰 Créditos: $1,51/$10,00 · restam $8,49 (gasto desde 01/11/2026)
+
 📊 Consumo da OpenAI — últimos 7 dias
+💵 Gasto: $0,04
 🔢 3.560 tokens · entrada 3.050 (cache 400) · saída 510
 🔁 13 requisições
 
 📅 Por dia (UTC)
-• 07/11 · 1.260 tokens · 6 req
-• 08/11 · 2.300 tokens · 7 req
+• 07/11 · 1.260 tokens · 6 req · $0,0007
+• 08/11 · 2.300 tokens · 7 req · $0,04
 
 🧠 Por modelo
-• gpt-4o-mini · 3.500 tokens · 12 req
-• gpt-6-sol · 60 tokens · 1 req
+• gpt-4o-mini · 3.500 tokens · 12 req · $0,0019
+• gpt-6-sol · 60 tokens · 1 req · $0,00
+
+🧾 Outros custos
+• gpt-image-2.6-flare · $0,04
+
+🧰 Outros usos
+• 🖼️ Imagens · 3 imagens · 2 req
+• 🔊 Voz · 1.200 caracteres · 1 req
+• 🎙️ Transcrição · 42 s de áudio · 1 req
 
 ⏱️ Limites agora — gpt-4o-mini
 • tokens: 199.984 de 200.000 · reseta em 6ms

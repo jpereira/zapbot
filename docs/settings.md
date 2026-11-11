@@ -66,6 +66,8 @@ e sobrevivem a reinícios. Para ver e alterar, use o [`/set`](comandos/set.md).
 | `openai.admin.key` | texto (pode ser vazio) | *(vazio)* | Chave de admin da OpenAI (`sk-admin-...`) do `/gpt -usage`, usada quando `OPENAI_ADMIN_KEY` não está no `config/.env`. Exibida mascarada; `/set -reset openai.admin.key` apaga |
 | `openai.api.key` | texto (pode ser vazio) | *(vazio)* | Chave da OpenAI, usada quando `OPENAI_API_KEY` não está no `config/.env`. Exibida mascarada (`••••1234`); `/set -reset openai.api.key` apaga |
 | `openai.api.model` | texto (da lista) | `gpt-4o-mini` | Modelo do `/gpt`, usado quando `OPENAI_MODEL` não está no `config/.env`. Aceitos: os listados por `/gpt -m` |
+| `openai.credit.since` | texto (AAAA-MM-DD, pode ser vazio) | *(vazio)* | Data da compra dos créditos da OpenAI: o `/gpt -usage` soma o gasto desde ela para mostrar `$usado/$total` (vazio: os últimos 180 dias) |
+| `openai.credit.total` | 0–100000 | `0` | Total de créditos comprados na OpenAI, em dólares (a API não informa o saldo): o `/gpt -usage` mostra `$usado/$total`. `0`: não mostra |
 | `openai.gif.frameMs` | 20–2000 | `200` | Quanto dura cada quadro do GIF do `/gpt -gif`, em ms (o total é quadros x ms) |
 | `openai.gif.frames` | 2–16 | `9` | Quantos quadros tem o GIF do `/gpt -gif` (quanto mais quadros, mais caro) |
 | `openai.image.model` | texto | `gpt-image-2.6-flare` | Modelo que gera e edita a imagem do `/gpt -img` e o GIF do `/gpt -gif` (só os `gpt-image-2.6-*` fazem GIF): o id que a sua conta tem; se não existir, o bot lista os que a chave vê |
