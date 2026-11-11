@@ -13,6 +13,7 @@ USER root
 # gosu: switches to the node user in the entrypoint (Alpine's su-exec)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gosu \
+    poppler-utils \
     tzdata \
     git \
     bash \
