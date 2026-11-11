@@ -165,9 +165,11 @@ voz** (Ogg/Opus, como as do WhatsApp). O estilo padrão é a voz de robô.
 ```text
 /gpt -voz exterminar todos os humanos          → a nota de voz, em voz de robô
 (respondendo um texto)  /gpt -voz              → fala o texto da mensagem respondida
+(respondendo um texto)  /gpt -voz fale como um robô meio metálico → fala o texto respondido nesse estilo
 ```
 
-- **Sem texto digitado**, fala o da mensagem respondida; com texto digitado, fala o digitado. O `-voz` pode
+- **Sem texto digitado**, fala o da mensagem respondida (um áudio é transcrito antes). **Sem resposta**, fala o
+  digitado. **Com os dois**, fala o respondido e o digitado vira o estilo (só o `gpt-4o-mini-tts` segue o estilo). O `-voz` pode
   vir em qualquer lugar do texto. Até 4096 caracteres.
 - Três settings escolhem como soa: `openai.tts.model` (`gpt-4o-mini-tts`; o id que a sua conta tem),
   `openai.tts.voice` (`onyx`, o padrão, ou `alloy`, `ash`, `ballad`, `coral`, `echo`, `fable`, `nova`,

@@ -116,9 +116,10 @@ const VOZ_MAX_CARACTERES = 4096;
  * @param {object} o
  * @param {string} o.cmd    comando que chamou (para o log)
  * @param {string} o.texto  até VOZ_MAX_CARACTERES
+ * @param {string} [o.estilo]  como falar (sobrepõe o setting openai.tts.instructions)
  * @returns {Promise<Buffer>}
  */
-async function sintetizarVoz({ cmd, texto }) {
+async function sintetizarVoz({ cmd, texto, estilo = null }) {
     const modelo = getSetting('openai.tts.model');
 
     try {
@@ -128,7 +129,7 @@ async function sintetizarVoz({ cmd, texto }) {
             input: texto,
             response_format: 'opus',
             // Só o gpt-4o-mini-tts segue o estilo; o tts-1 e o tts-1-hd recusam o campo
-            ...(modelo.startsWith('gpt-4o') ? { instructions: getSetting('openai.tts.instructions') } : {})
+            ...(modelo.startsWith('gpt-4o') ? { instructions: estilo || getSetting('openai.tts.instructions') } : {})
         }, {
             headers: { Authorization: `Bearer ${chaveOpenAi()}` },
             timeout: envOuSetting('OPENAI_TIMEOUT_MS', 'openai.timeout.ms'),

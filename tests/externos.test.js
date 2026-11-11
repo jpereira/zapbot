@@ -377,6 +377,10 @@ describe('/gpt (/ai)', () => {
         const citada = bot.criarMensagem({ texto: 'bom dia, humano', de: bot.OUTRO.jid });
         await bot.executar('/gpt -voz', { citada });
         assert.equal(rede.chamadas.at(-1).cfg.body.input, 'bom dia, humano');
+        // Com texto digitado e uma mensagem respondida: fala a respondida, no estilo digitado
+        await bot.executar('/gpt -voz fale como um robô meio metálico', { citada });
+        assert.equal(rede.chamadas.at(-1).cfg.body.input, 'bom dia, humano');
+        assert.equal(rede.chamadas.at(-1).cfg.body.instructions, 'fale como um robô meio metálico');
         await bot.executar('/gpt fale -v isso aqui');
         assert.equal(rede.chamadas.at(-1).cfg.body.input, 'fale isso aqui');
 

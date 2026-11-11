@@ -300,12 +300,42 @@ async function erroDoModelo(err, { setting, tipo, nome }) {
 }
 
 /*
+ * O que o /gpt -voz fala da mensagem respondida: o texto dela ou, se for áudio, a transcrição.
+ * @returns {Promise<{ texto?: string, erro?: string }>}  sem texto: não há o que falar na resposta
+ */
+async function conteudoParaFalar(quotedMsg) {
+    const audio = await audioDaResposta(quotedMsg);
+    if (!audio) return { texto: String(quotedMsg?.body ?? '').trim() };
+    if (audio.erro) return { erro: audio.erro };
+
+    try {
+        const transcricao = await transcreverAudio({ cmd: '/gpt', audio: audio.audio });
+        return transcricao ? { texto: transcricao } : { erro: '🤖 Não ouvi fala nenhuma nesse áudio.' };
+    } catch (err) {
+        return { erro: (await erroDoModelo(err, MODELO_DE_AUDIO)) || erroOpenAi(err, '/gpt') };
+    }
+}
+
+/*
  * /gpt -voz [texto]: a voz do texto (v1/audio/speech), de robô por padrão, numa nota de voz. Sem
  * texto digitado, fala o da mensagem respondida.
  */
 async function falarTexto(msg, args, quotedMsg) {
     const digitado = args.replace(/(^|\s)-(?:voz|v)(?=\s|$)/, '').trim();
-    const texto = digitado || String(quotedMsg?.body ?? '').trim();
+    let texto = digitado;
+    let estilo = null;
+
+    // Respondendo um texto (ou um áudio, que é transcrito): o que foi digitado é o estilo da fala
+    // ("/gpt -voz fale como um robô metálico") e o conteúdo respondido é o que se fala.
+    const respondido = await conteudoParaFalar(quotedMsg);
+    if (respondido.erro) {
+        await msg.reply(respondido.erro);
+        return;
+    }
+    if (respondido.texto) {
+        texto = respondido.texto;
+        estilo = digitado || null;
+    }
 
     if (!texto) {
         await msg.reply('❌ Use: /gpt -voz <texto> (ou responda uma mensagem de texto)');
@@ -318,7 +348,7 @@ async function falarTexto(msg, args, quotedMsg) {
 
     const aviso = await avisarProcessando(msg);
     try {
-        const voz = await sintetizarVoz({ cmd: '/gpt', texto });
+        const voz = await sintetizarVoz({ cmd: '/gpt', texto, estilo });
         await msg.reply(new MessageMedia('audio/ogg; codecs=opus', voz.toString('base64'), 'voz.ogg'), null, { sendAudioAsVoice: true });
         await apagarAviso(aviso);
     } catch (err) {

@@ -45,8 +45,8 @@ module.exports = {
         {
             opts: ['voz', 'v'],
             values: [],
-            desc: 'Gera uma nota de voz com o texto e responde com o áudio (v1/audio/speech): voz de robô, por padrão. Sem texto digitado, fala o da mensagem respondida. Até 4096 caracteres. O modelo, a voz e o estilo são os settings openai.tts.model, openai.tts.voice e openai.tts.instructions.',
-            ex: ['/gpt -voz exterminar todos os humanos', '/gpt -voz (respondendo uma mensagem de texto)'],
+            desc: 'Gera uma nota de voz com o texto e responde com o áudio (v1/audio/speech): voz de robô, por padrão. Sem texto digitado, fala o da mensagem respondida (um áudio é transcrito antes); respondendo uma mensagem, o que você digitar vira o estilo da fala (só o gpt-4o-mini-tts segue o estilo). Até 4096 caracteres. O modelo, a voz e o estilo são os settings openai.tts.model, openai.tts.voice e openai.tts.instructions.',
+            ex: ['/gpt -voz exterminar todos os humanos', '/gpt -voz (respondendo uma mensagem de texto)', '/gpt -voz fale como um robô meio metálico (respondendo uma mensagem)'],
             cron: false
         },
         {
