@@ -160,6 +160,8 @@ async function inicializarBanco() {
     `);
     // from_me: enviada pela sua conta (no privado, sender_* é o outro participante)
     await adicionarColunas('messages', { from_me: 'INTEGER DEFAULT 0' });
+    // transcription: a transcrição do áudio, guardada pelo /tldr para não transcrever de novo
+    await adicionarColunas('messages', { transcription: 'TEXT' });
 
     // Consulta do /show: apagadas de um chat, das mais recentes para as mais antigas
     await dbRun('CREATE INDEX IF NOT EXISTS idx_messages_chat_revoked ON messages (chat_id, revoked, revoked_at)');

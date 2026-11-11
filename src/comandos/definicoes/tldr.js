@@ -9,7 +9,7 @@ module.exports = {
     usage: '/tldr [OPÇÃO] [período]',
     aliases: ['/resumo'],
     summary: 'Resume a conversa do chat pelo ChatGPT',
-    help: 'Resume a conversa do chat pelo ChatGPT: assuntos, decisões e pendências.',
+    help: 'Resume a conversa do chat pelo ChatGPT: assuntos, decisões e pendências. Os áudios (os mais recentes) são transcritos e entram no resumo com quem enviou e quando.',
     cmd_opts: [
         {
             opts: ['chat', 'c'],

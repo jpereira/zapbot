@@ -13,6 +13,7 @@ USER root
 # gosu: troca para o usuário node no entrypoint (o su-exec do Alpine)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gosu \
+    poppler-utils \
     tzdata \
     git \
     bash \

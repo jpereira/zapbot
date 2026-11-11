@@ -2,13 +2,17 @@
  * Comando /tldr (alias /resumo).
  */
 
+const fs = require('fs');
+const path = require('path');
+
 const { client, concluirAviso } = require('../cliente');
 const { getCommandSyntax } = require('./base');
 const { MAX_DELETE_WINDOW } = require('../constantes');
 const { idsDoChatAtual } = require('../contatos');
-const { dbAll, dbPronto } = require('../db');
-const { SEM_CHAVE, chaveOpenAi, erroOpenAi, perguntarAoChat } = require('../openaiChat');
+const { dbAll, dbPronto, dbRun } = require('../db');
+const { SEM_CHAVE, chaveOpenAi, erroOpenAi, perguntarAoChat, transcreverAudio } = require('../openaiChat');
 const { getSetting } = require('../settings');
+const { isCaminhoDeMidia } = require('../util/arquivos');
 const { plural, semAcentos } = require('../util/formatar');
 
 /*
@@ -30,7 +34,13 @@ const RESUMO_INSTRUCOES =
     'Você resume conversas de WhatsApp em português do Brasil. Escreva um resumo curto, em tópicos ' +
     'começados por "• ", com os assuntos principais, as decisões, os combinados e as pendências, ' +
     'citando quem disse quando for relevante. No máximo 15 tópicos. Não invente nada que não esteja ' +
-    'nas mensagens e não use títulos nem markdown além de *negrito*.';
+    'nas mensagens e não use títulos nem markdown além de *negrito*. As linhas "[ÁUDIO]" são ' +
+    'transcrições de áudios: resuma cada um (ou os de um mesmo assunto) num tópico no formato ' +
+    '"🎤 *Fulano* enviou áudio DD/MM HH:mm falando sobre ...", com quem enviou e quando.';
+
+const AUDIOS_MAX = 10;                 // só os mais recentes são transcritos (custa a API)
+const AUDIO_MAX_BYTES = 25 * 1024 * 1024;
+const AUDIO_EXTENSOES = new Set(['ogg', 'oga', 'opus', 'mpeg', 'mp3', 'mp4', 'm4a', 'wav', 'webm', 'flac']);
 
 /**
  * Período pedido: "2h", "-2h", "30m" (janela de tempo) ou "300", "-300" (quantidade).
@@ -67,6 +77,33 @@ async function buscarChat(busca) {
 const hora = (ms) => new Date(ms).toLocaleString('pt-BR', {
     timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
 });
+
+/*
+ * A transcrição de um áudio guardado em disco: a já feita (coluna transcription) ou a da OpenAI, que
+ * fica gravada. Sem arquivo, grande demais, formato fora ou erro: null (o áudio fica de fora).
+ */
+async function transcricaoDoAudio(r) {
+    if (r.transcription) return r.transcription;
+
+    const extensao = path.extname(String(r.media_path ?? '')).slice(1).toLowerCase();
+    if (!AUDIO_EXTENSOES.has(extensao) || !isCaminhoDeMidia(r.media_path) || !fs.existsSync(r.media_path)) return null;
+    if (fs.statSync(r.media_path).size > AUDIO_MAX_BYTES) return null;
+
+    try {
+        const texto = await transcreverAudio({
+            cmd: '/tldr',
+            audio: {
+                arquivo: `audio.${extensao === 'oga' || extensao === 'opus' ? 'ogg' : extensao}`,
+                mimetype: `audio/${extensao === 'oga' || extensao === 'opus' ? 'ogg' : extensao}`,
+                data: fs.readFileSync(r.media_path).toString('base64')
+            }
+        });
+        await dbRun('UPDATE messages SET transcription = ? WHERE id = ?', [texto, r.id]).catch(() => {});
+        return texto || null;
+    } catch {
+        return null;
+    }
+}
 
 async function cmdTldr({ msg, opts, chatId, chatName }) {
     if (!chaveOpenAi()) {
@@ -120,17 +157,27 @@ async function cmdTldr({ msg, opts, chatId, chatName }) {
     params.push(periodo.ms ? max : periodo.n);
 
     const rows = (await dbAll(
-        `SELECT sender_name, from_me, body, timestamp
+        `SELECT id, sender_name, from_me, body, timestamp, type, media_path, transcription
            FROM messages
           WHERE chat_id IN (${ids.map(() => '?').join(', ')})
             AND revoked = 0
-            AND TRIM(body) != ''
-            AND body NOT LIKE '/%'
+            AND ((TRIM(body) != '' AND body NOT LIKE '/%')
+                 OR (type IN ('audio', 'ptt') AND (media_path IS NOT NULL OR transcription IS NOT NULL)))
             ${filtroTempo}
           ORDER BY timestamp DESC, rowid DESC
           LIMIT ?`,
         params
     )).reverse();
+
+    // Os áudios (os AUDIOS_MAX mais recentes) viram texto; o que não deu para transcrever sai do resumo
+    const audios = rows.filter(r => ['audio', 'ptt'].includes(r.type)).slice(-AUDIOS_MAX);
+    for (const r of audios) r.body = (await transcricaoDoAudio(r)) ?? '';
+    for (let i = rows.length - 1; i >= 0; i--) {
+        const r = rows[i];
+        if (!['audio', 'ptt'].includes(r.type)) continue;
+        if (r.body && audios.includes(r)) r.body = `[ÁUDIO] ${r.body}`;
+        else rows.splice(i, 1);
+    }
 
     if (rows.length < RESUMO_MIN) {
         await msg.reply(`📝 Poucas mensagens para resumir (${rows.length}) em ${nome}.\n` +

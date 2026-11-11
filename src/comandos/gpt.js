@@ -18,7 +18,7 @@ const {
     listarModelos, perguntarAoChat, sintetizarVoz, transcreverAudio, VOZ_MAX_CARACTERES
 } = require('../openaiChat');
 const { envOuSetting, getSetting, setSetting } = require('../settings');
-const { runCommand } = require('../util/processos');
+const { capturarSaida, runCommand } = require('../util/processos');
 const { fmtNum } = require('../util/formatar');
 
 /*
@@ -139,6 +139,56 @@ async function imagemDaResposta(quotedMsg) {
         return { erro: `❌ A imagem tem mais de ${FOTO_MAX_BYTES / 1024 / 1024} MB: é grande demais para o /gpt.` };
     }
     return { imagem: { mimetype: midia.mimetype, data: midia.data } };
+}
+
+/*
+ * O documento respondido: texto puro (txt, md, csv, json, código...) e PDF (pelo pdftotext). O conteúdo
+ * vai para o chat como texto, depois da pergunta. Outros formatos (docx, xlsx...) não são lidos.
+ */
+const DOC_MAX_BYTES = 10 * 1024 * 1024;
+const DOC_MAX_CARACTERES = 60000;
+const DOC_TIPOS_DE_TEXTO = /^(text\/|application\/(json|xml|x-yaml|yaml|javascript|x-sh|sql|csv))/i;
+const DOC_EXTENSOES_DE_TEXTO = /\.(txt|md|csv|tsv|json|xml|ya?ml|log|ini|conf|sh|js|ts|py|rb|go|rs|c|h|cpp|java|sql|html?|css)$/i;
+
+/**
+ * @returns {Promise<null | { documento: { nome: string, texto: string } } | { erro: string }>}
+ *   null: a mensagem respondida não é um documento
+ */
+async function documentoDaResposta(quotedMsg) {
+    if (!quotedMsg?.hasMedia || quotedMsg.type !== 'document') return null;
+
+    const midia = await quotedMsg.downloadMedia().catch(() => null);
+    if (!midia?.data) return { erro: '❌ Não consegui baixar o documento (ele pode ter expirado no WhatsApp).' };
+    if (midia.data.length * 0.75 > DOC_MAX_BYTES) {
+        return { erro: `❌ O documento tem mais de ${DOC_MAX_BYTES / 1024 / 1024} MB: é grande demais para o /gpt.` };
+    }
+
+    const nome = midia.filename || 'documento';
+    const tipo = String(midia.mimetype).split(';')[0].trim().toLowerCase();
+    const bytes = Buffer.from(midia.data, 'base64');
+    let texto;
+
+    if (tipo === 'application/pdf' || /\.pdf$/i.test(nome)) {
+        const pasta = path.join(TMP_DIR, `doc-${crypto.randomBytes(6).toString('hex')}`);
+        fs.mkdirSync(pasta, { recursive: true });
+        try {
+            const arquivo = path.join(pasta, 'doc.pdf');
+            fs.writeFileSync(arquivo, bytes);
+            texto = await capturarSaida('pdftotext', ['-layout', arquivo, '-'], 60_000);
+        } catch {
+            return { erro: '❌ Não consegui ler o PDF (o pdftotext, do poppler-utils, precisa estar instalado).' };
+        } finally {
+            fs.rmSync(pasta, { recursive: true, force: true });
+        }
+    } else if (DOC_TIPOS_DE_TEXTO.test(tipo) || DOC_EXTENSOES_DE_TEXTO.test(nome)) {
+        texto = bytes.toString('utf8');
+    } else {
+        return { erro: `❌ O /gpt lê documento de texto e PDF, não ${tipo || nome}.` };
+    }
+
+    texto = texto.trim();
+    if (!texto) return { erro: '❌ Não achei texto nesse documento (um PDF escaneado, talvez).' };
+    return { documento: { nome, texto: texto.slice(0, DOC_MAX_CARACTERES) } };
 }
 
 // O áudio respondido: a extensão certa para a OpenAI (o formato vem do nome do arquivo) e o teto dela
@@ -521,8 +571,18 @@ async function cmdGpt({ msg, args, opts, quotedMsg, admin }) {
         return;
     }
 
-    // Respondendo uma mensagem, o texto dela (ou a legenda da foto) entra antes da pergunta
-    let pergunta = [quotedMsg?.body, args].filter(Boolean).join('\n\n').trim();
+    // Respondendo um documento: o conteúdo dele entra junto da pergunta
+    const doc = await documentoDaResposta(quotedMsg);
+    if (doc?.erro) {
+        await msg.reply(doc.erro);
+        return;
+    }
+
+    // Respondendo uma mensagem, o texto dela (ou a legenda da foto, ou o documento) entra antes da pergunta
+    const respondido = doc
+        ? `Documento "${doc.documento.nome}":\n${doc.documento.texto}`
+        : String(quotedMsg?.body ?? '').trim();
+    let pergunta = [respondido, args.trim()].filter(Boolean).join('\n\n');
 
     // Respondendo uma foto, ela vai junto da pergunta (sem pergunta, o /gpt descreve a foto)
     const foto = await imagemDaResposta(quotedMsg);
