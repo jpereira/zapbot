@@ -300,12 +300,42 @@ async function modelError(err, { setting, tipo: type, nome: nameAlt }) {
 }
 
 /*
+ * What /gpt -voz speaks from the replied message: its text or, if it is audio, the transcription.
+ * @returns {Promise<{ texto?: string, erro?: string }>}  without text: there is nothing to speak in the reply
+ */
+async function contentForTalk(quotedMsg) {
+    const audio = await replyAudio(quotedMsg);
+    if (!audio) return { texto: String(quotedMsg?.body ?? '').trim() };
+    if (audio.erro) return { erro: audio.erro };
+
+    try {
+        const transcription = await transcribeAudio({ cmd: '/gpt', audio: audio.audio });
+        return transcription ? { texto: transcription } : { erro: '🤖 Não ouvi fala nenhuma nesse áudio.' };
+    } catch (err) {
+        return { erro: (await modelError(err, AUDIO_MODEL)) || errorOpenAi(err, '/gpt') };
+    }
+}
+
+/*
  * /gpt -voz [text]: the voice of the text (v1/audio/speech), robot by default, in a voice note. Without
  * typed text, speaks the replied message's.
  */
 async function talkText(msg, args, quotedMsg) {
     const typed = args.replace(/(^|\s)-(?:voz|v)(?=\s|$)/, '').trim();
-    const textAlt = typed || String(quotedMsg?.body ?? '').trim();
+    let textAlt = typed;
+    let style = null;
+
+    // Replying to a text (or an audio, which is transcribed): what was typed is the speech style
+    // ("/gpt -voz speak like a metallic robot") and the replied content is what is spoken.
+    const replied = await contentForTalk(quotedMsg);
+    if (replied.erro) {
+        await msg.reply(replied.erro);
+        return;
+    }
+    if (replied.texto) {
+        textAlt = replied.texto;
+        style = typed || null;
+    }
 
     if (!textAlt) {
         await msg.reply('❌ Use: /gpt -voz <texto> (ou responda uma mensagem de texto)');
@@ -318,7 +348,7 @@ async function talkText(msg, args, quotedMsg) {
 
     const notice = await notifyProcessing(msg);
     try {
-        const voice = await synthesizeVoice({ cmd: '/gpt', texto: textAlt });
+        const voice = await synthesizeVoice({ cmd: '/gpt', texto: textAlt, estilo: style });
         await msg.reply(new MessageMedia('audio/ogg; codecs=opus', voice.toString('base64'), 'voz.ogg'), null, { sendAudioAsVoice: true });
         await deleteNotice(notice);
     } catch (err) {
