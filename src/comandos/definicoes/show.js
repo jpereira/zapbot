@@ -7,7 +7,7 @@ const { ADMIN } = require('../../roles').ROLES;
 module.exports = {
     cmd: '/show',
     usage: '/show [-N] [OPÇÃO] [chat]  ou  /show -l [chat]  ou  /show -q <texto|/regex/flags> [-N] [chat]',
-    aliases: [],
+    aliases: ['/mostrar'],
     summary: 'Mostra mensagens do cache do bot',
     help: 'Sem parâmetros no privado, lista o cache de todos os chats, como /show -l. Em grupos, reexibe a última mensagem apagada do grupo. Reexibe as mensagens apagadas, editadas, os status apagados e as reações removidas ou trocadas que estão no cache: deste chat ou de outro (pelo nº do -l, nome, @menção ou /regex/). Publicações de canais (@newsletter) são identificadas com 📰 Canal e o nome, sem nome ou telefone de contato.',
     cmd_opts: [

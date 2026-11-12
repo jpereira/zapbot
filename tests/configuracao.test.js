@@ -110,6 +110,17 @@ const paginasDocs = (dir = DOCS) => fs.readdirSync(dir, { withFileTypes: true })
     ? paginasDocs(path.join(dir, e.name))
     : e.name.endsWith('.md') ? [path.relative(DOCS, path.join(dir, e.name))] : []);
 
+// A documentação é bilíngue: docs/pagina.md é o inglês (en_US, o padrão) e docs/pagina.pt-BR.md, o português
+const ehPt = (arquivo) => arquivo.endsWith('.pt-BR.md');
+const paginasEn = () => paginasDocs().filter(f => !ehPt(f));
+const gemeaPt = (arquivo) => arquivo.replace(/\.md$/, '.pt-BR.md');
+// O texto do idioma de cada página: o que muda entre as duas versões
+const IDIOMAS = [
+    { nome: 'en', sufixo: '.md', delegavel: 'delegable', resumo: '## Summary', data: /`v(\d+\.\d+\.\d+)` \(from (\d{4})-(\d{2})-(\d{2})\)/ },
+    { nome: 'pt-BR', sufixo: '.pt-BR.md', delegavel: 'delegável', resumo: '## Resumo', data: /`v(\d+\.\d+\.\d+)` \(de (\d{2})\/(\d{2})\/(\d{4})\)/ }
+];
+const doc = (idioma, rel) => lerDoc(rel.replace(/\.md$/, idioma.sufixo));
+
 // Sem os blocos de código: um "# comentário" de bash não é título
 const semCodigo = (md) => md.replace(/^```[\s\S]*?^```/gm, '');
 
@@ -165,44 +176,50 @@ describe('documentação', () => {
         }
     });
 
-    test('settings numéricos: padrões e intervalos documentados seguem o schema', () => {
-        const linhas = lerDoc('settings.md').split('\n');
-        for (const [chave, schema] of Object.entries(SETTINGS_SCHEMA)) {
-            if (schema.type !== 'number') continue;
-            const linha = linhas.find(l => l.startsWith(`| \`${chave}\` |`));
-            const colunas = linha.split('|').map(c => c.trim());
-            assert.equal(colunas[2], `${schema.min}–${schema.max}`, `${chave}: intervalo`);
-            assert.equal(colunas[3], `\`${schema.default}\``, `${chave}: padrão`);
+    test('settings numéricos: padrões e intervalos documentados seguem o schema (nos dois idiomas)', () => {
+        for (const idioma of IDIOMAS) {
+            const linhas = doc(idioma, 'settings.md').split('\n');
+            for (const [chave, schema] of Object.entries(SETTINGS_SCHEMA)) {
+                if (schema.type !== 'number') continue;
+                const linha = linhas.find(l => l.startsWith(`| \`${chave}\` |`));
+                const colunas = linha.split('|').map(c => c.trim());
+                assert.equal(colunas[2], `${schema.min}–${schema.max}`, `${idioma.nome} ${chave}: intervalo`);
+                assert.equal(colunas[3], `\`${schema.default}\``, `${idioma.nome} ${chave}: padrão`);
+            }
         }
     });
 
     test('os trechos gerados do comandos/index.md (roles e limites) estão atualizados: node scripts/gerar-docs.js', () => {
         const { gerar } = require(path.join(bot.RAIZ, 'scripts/gerar-docs.js'));
-        const atual = lerDoc('comandos/index.md');
-        assert.equal(gerar(atual), atual, 'rode node scripts/gerar-docs.js');
+        for (const idioma of IDIOMAS) {
+            const atual = doc(idioma, 'comandos/index.md');
+            assert.equal(gerar(atual, idioma.nome), atual, `${idioma.nome}: rode node scripts/gerar-docs.js`);
+        }
     });
 
     test('uma página por comando, com o título igual ao config (aliases e "· owner"/"· admin")', () => {
         for (const c of CONFIG.commands) {
-            const arquivo = `comandos/${c.cmd.slice(1)}.md`;
-            assert.ok(fs.existsSync(path.join(DOCS, arquivo)), `sem a página docs/${arquivo}`);
+            for (const idioma of IDIOMAS) {
+                const arquivo = `comandos/${c.cmd.slice(1)}${idioma.sufixo}`;
+                assert.ok(fs.existsSync(path.join(DOCS, arquivo)), `sem a página docs/${arquivo}`);
 
-            const titulo = lerDoc(arquivo).split('\n')[0];
-            assert.ok(titulo.startsWith(`# \`${c.cmd}\``), `docs/${arquivo}: o título não começa com ${c.cmd}`);
-            const aliases = [...titulo.matchAll(/`(\/[^`]+)`/g)].map(m => m[1]).slice(1);
-            assert.deepEqual(aliases, c.aliases ?? [], `docs/${arquivo}: aliases no título`);
-            assert.equal(titulo.endsWith(' · owner'), c.role === 'owner', `docs/${arquivo}: "· owner" no título`);
-            assert.equal(titulo.endsWith(' · admin'), c.role === 'admin', `docs/${arquivo}: "· admin" no título`);
+                const titulo = lerDoc(arquivo).split('\n')[0];
+                assert.ok(titulo.startsWith(`# \`${c.cmd}\``), `docs/${arquivo}: o título não começa com ${c.cmd}`);
+                const aliases = [...titulo.matchAll(/`(\/[^`]+)`/g)].map(m => m[1]).slice(1);
+                assert.deepEqual(aliases, c.aliases ?? [], `docs/${arquivo}: aliases no título`);
+                assert.equal(titulo.endsWith(' · owner'), c.role === 'owner', `docs/${arquivo}: "· owner" no título`);
+                assert.equal(titulo.endsWith(' · admin'), c.role === 'admin', `docs/${arquivo}: "· admin" no título`);
+            }
         }
 
-        const extras = paginasDocs(path.join(DOCS, 'comandos')).map(f => `/${path.basename(f, '.md')}`)
+        const extras = paginasEn().filter(f => f.startsWith('comandos/')).map(f => `/${path.basename(f, '.md')}`)
             .filter(n => n !== '/index' && !CONFIG.commands.some(c => c.cmd === n));
         assert.deepEqual(extras, [], 'página de comando que não está no config');
     });
 
     test('a tabela de opções de cada página tem as mesmas opções do comandos.js', () => {
-        for (const c of CONFIG.commands) {
-            const arquivo = `comandos/${c.cmd.slice(1)}.md`;
+        for (const c of CONFIG.commands) for (const idioma of IDIOMAS) {
+            const arquivo = `comandos/${c.cmd.slice(1)}${idioma.sufixo}`;
             const doConfig = new Set((c.cmd_opts ?? []).flatMap(o => o.opts ?? []));
 
             // 1ª coluna das tabelas: "| `-nome`, `-n` |" (as linhas de argumento, como `<url>` ou `-N`, ficam de fora)
@@ -218,9 +235,29 @@ describe('documentação', () => {
     });
 
     test('tabela Resumo do site e do README: todos os comandos, em ordem, iguais ao config', () => {
-        conferirResumo(lerDoc('comandos/index.md'), '## Resumo', 'docs/comandos/index.md', { comLinks: true });
+        for (const idioma of IDIOMAS) {
+            conferirResumo(doc(idioma, 'comandos/index.md'), idioma.resumo, `docs/comandos/index${idioma.sufixo.slice(0, -3)}.md`,
+                { comLinks: true, delegavel: idioma.delegavel });
+        }
         conferirResumo(README_PT, '## Comandos', 'README.pt-BR.md', { comLinks: false });
         conferirResumo(README, '## Commands', 'README.md', { comLinks: false, delegavel: 'delegable' });
+    });
+
+    test('cada página em inglês tem a versão pt-BR com a mesma estrutura (títulos, tabelas, blocos de código e links)', () => {
+        const estrutura = (md) => {
+            const linhas = semCodigo(md).split('\n');
+            return {
+                titulos: linhas.filter(l => /^#{1,6} /.test(l)).map(l => l.match(/^#+/)[0].length),
+                tabelas: linhas.filter(l => l.startsWith('|')).length,
+                blocos: [...md.matchAll(/^```(\w*)/gm)].map(m => m[1]),
+                links: [...linhas.join('\n').matchAll(/\]\(([^)\s#]+)(?:#[^)\s]*)?\)/g)].map(m => m[1].replace('/zapbot/pt-BR/', '/zapbot/')).sort()
+            };
+        };
+        for (const f of paginasEn()) {
+            const pt = gemeaPt(f);
+            assert.ok(fs.existsSync(path.join(DOCS, pt)), `sem docs/${pt}`);
+            assert.deepEqual(estrutura(lerDoc(f)), estrutura(lerDoc(pt)), `docs/${f} e docs/${pt} têm estruturas diferentes`);
+        }
     });
 
     test('README.md (en_US) e README.pt-BR.md: apontam um para o outro e têm as mesmas seções, links e blocos de código', () => {
@@ -231,7 +268,9 @@ describe('documentação', () => {
         assert.deepEqual(titulos(README), titulos(README_PT), 'os READMEs têm seções diferentes');
 
         // Os mesmos links para a documentação e os mesmos blocos de código (comandos e .env não se traduzem)
-        const links = (md) => [...semCodigo(md).matchAll(/\]\(((?!https?:\/\/github\.com|README)[^)\s]+)\)/g)].map(m => m[1]);
+        // (sem a âncora, que segue o título de cada idioma, e sem o /pt-BR/ do site em português)
+        const links = (md) => [...semCodigo(md).matchAll(/\]\(((?!https?:\/\/github\.com|README)[^)\s#]+)(?:#[^)\s]*)?\)/g)]
+            .map(m => m[1].replace('/zapbot/pt-BR/', '/zapbot/'));
         assert.deepEqual(links(README), links(README_PT), 'os READMEs apontam para páginas diferentes');
         const blocos = (md) => [...md.matchAll(/^```(\w*)/gm)].map(m => m[1]);
         assert.deepEqual(blocos(README), blocos(README_PT), 'os READMEs têm blocos de código diferentes');
@@ -241,15 +280,18 @@ describe('documentação', () => {
         const yml = fs.readFileSync(path.join(bot.RAIZ, 'mkdocs.yml'), 'utf8');
         const noMenu = [...yml.slice(yml.indexOf('\nnav:')).matchAll(/([\w/-]+\.md)\s*$/gm)].map(m => m[1]);
 
-        assert.deepEqual(ordenado(noMenu), ordenado(paginasDocs()), 'página fora do menu (ou menu com página inexistente)');
+        assert.deepEqual(ordenado(noMenu), ordenado(paginasEn()), 'página fora do menu (ou menu com página inexistente)');
+        for (const f of paginasEn()) assert.ok(paginasDocs().includes(gemeaPt(f)), `sem a versão pt-BR de ${f}`);
         const comandos = noMenu.filter(p => p.startsWith('comandos/') && p !== 'comandos/index.md');
         assert.deepEqual(comandos, ordenado(comandos), 'comandos fora de ordem no menu');
     });
 
     test('tabela de settings: as chaves do SETTINGS_SCHEMA, em ordem', () => {
-        const chaves = semCodigo(lerDoc('settings.md')).split('\n')
-            .filter(l => /^\| `[a-z]/.test(l)).map(l => l.split('`')[1]);
-        assert.deepEqual(chaves, Object.keys(SETTINGS_SCHEMA));
+        for (const idioma of IDIOMAS) {
+            const chaves = semCodigo(doc(idioma, 'settings.md')).split('\n')
+                .filter(l => /^\| `[a-z]/.test(l)).map(l => l.split('`')[1]);
+            assert.deepEqual(chaves, Object.keys(SETTINGS_SCHEMA), idioma.nome);
+        }
     });
 
     test('nenhum link entre os .md quebrado (arquivo e âncora), no docs/ e no README', () => {
@@ -263,10 +305,13 @@ describe('documentação', () => {
                 total++;
 
                 const [caminho, anc] = alvo.split('#');
-                const destino = caminho ? path.resolve(path.dirname(arquivo), caminho) : arquivo;
+                let destino = caminho ? path.resolve(path.dirname(arquivo), caminho) : arquivo;
                 const onde = `${path.relative(bot.RAIZ, arquivo)} → ${alvo}`;
 
                 assert.ok(fs.existsSync(destino), `link quebrado (arquivo): ${onde}`);
+                // Uma página em português aponta para a versão em português da outra (o site resolve assim)
+                if (ehPt(arquivo) && destino.endsWith('.md') && !ehPt(destino)) destino = gemeaPt(destino);
+                if (ehPt(arquivo) && destino.endsWith('.md')) assert.ok(fs.existsSync(destino), `sem a versão pt-BR: ${onde}`);
                 if (anc && destino.endsWith('.md')) {
                     assert.ok(ancorasDe(fs.readFileSync(destino, 'utf8')).has(decodeURIComponent(anc)), `link quebrado (âncora): ${onde}`);
                 }
@@ -280,8 +325,12 @@ describe('documentação', () => {
         const numeros = (v) => v.split('.').map(Number);
         const [x, y, z] = numeros(version);
 
-        const m = lerDoc('instalacao.md').match(/`v(\d+\.\d+\.\d+)` \(de \d{2}\/\d{2}\/\d{4}\)/);
-        assert.ok(m, 'instalacao.md: sem "vX.Y.Z (de DD/MM/AAAA)"');
+        const m = doc(IDIOMAS[1], 'instalacao.md').match(IDIOMAS[1].data);
+        assert.ok(m, 'instalacao.pt-BR.md: sem "vX.Y.Z (de DD/MM/AAAA)"');
+        const en = doc(IDIOMAS[0], 'instalacao.md').match(IDIOMAS[0].data);
+        assert.ok(en, 'instalacao.md: sem "vX.Y.Z (from AAAA-MM-DD)"');
+        assert.equal(en[1], m[1], 'a versão estável difere entre as instalações em inglês e em português');
+        assert.deepEqual([en[2], en[3], en[4]], [m[4], m[3], m[2]], 'a data da estável difere entre os idiomas');
         const [ex, ey, ez] = numeros(m[1]);
         assert.ok(ex < x || (ex === x && (ey < y || (ey === y && ez <= z))), `a estável (${m[1]}) passa da versão do package.json (${version})`);
 
@@ -310,9 +359,12 @@ describe('documentação', () => {
             for (const [, url] of fs.readFileSync(path.join(bot.RAIZ, arquivo), 'utf8').matchAll(SITE)) {
                 total++;
                 // "comandos/show/" → docs/comandos/show.md; "comandos/" → docs/comandos/index.md; "" → docs/index.md
+                // "pt-BR/comandos/show/" → a versão em português (docs/comandos/show.pt-BR.md)
                 const [caminho, anc] = url.split('#');
-                const pagina = caminho.replace(/\/$/, '');
-                const md = [`${pagina}.md`, `${pagina ? `${pagina}/` : ''}index.md`].find(f => fs.existsSync(path.join(DOCS, f)));
+                const pt = /^pt-BR(\/|$)/.test(caminho);
+                const pagina = caminho.replace(/^pt-BR\/?/, '').replace(/\/$/, '');
+                const sufixo = pt ? '.pt-BR.md' : '.md';
+                const md = [`${pagina}${sufixo}`, `${pagina ? `${pagina}/` : ''}index${sufixo}`].find(f => fs.existsSync(path.join(DOCS, f)));
 
                 assert.ok(md, `${arquivo}: página do site não existe: ${url}`);
                 if (anc) assert.ok(ancorasDe(lerDoc(md)).has(decodeURIComponent(anc)), `${arquivo}: âncora não existe: ${url}`);
@@ -549,7 +601,8 @@ describe('ajuda', () => {
         assert.match(texto, /^Uso: \/show \[-N\] \[OPÇÃO\]/);
         assert.match(texto, /-query, -q <texto\|\/regex\/flags>/);
         assert.match(texto, /Argumentos:\n  -N/);
-        assert.doesNotMatch(texto, /Aliases:/);
+        assert.match(texto, /Aliases: \/mostrar$/);
+        assert.doesNotMatch(formatCommandHelp(findCommand('/ping')), /Aliases:/);
         assert.match(formatCommandHelp(findCommand('/mute')), /Aliases: \/mudo$/);
     });
 
@@ -611,7 +664,7 @@ describe('ajuda', () => {
         assert.equal(linhas[i + 5], '        /defi aave');
 
         // Um exemplo só também vai para a linha de baixo; "Paris, Texas" é um exemplo, não dois
-        assert.match(formatCommandHelp(findCommand('/tempo')), /\n {4}Ex: \/tempo Paris, Texas\n/);
+        assert.match(formatCommandHelp(findCommand('/weather')), /\n {4}Ex: \/weather Paris, Texas\n/);
     });
 
     test('a ajuda traz os caminhos reais de cache, mídias e backups', () => {

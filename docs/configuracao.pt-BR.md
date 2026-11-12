@@ -1,0 +1,166 @@
+# Configuração do `config/.env`
+
+O Compose lê o arquivo na sua máquina (`env_file: ../config/.env`) e passa as variáveis para o
+container ao criá-lo: o arquivo não vai para dentro da imagem. Nunca faça commit dele (já está no
+`.gitignore`). Para conferir os valores que o bot está usando, mande `/set` no seu privado (veja
+[Variáveis do `config/.env`](comandos/set.md#variáveis-do-configenv)).
+
+Rodando fora do Docker (`node app.js`), o bot lê o mesmo arquivo que o Compose usa: `config/.env`.
+Variáveis já definidas no ambiente têm prioridade sobre as do arquivo. Fora do Docker o bot ainda espera os programas nos caminhos da
+imagem (Debian): Chromium em `/usr/bin/chromium` (ou no `PUPPETEER_EXECUTABLE_PATH`), `ffmpeg` em
+`/usr/bin/ffmpeg` e `yt-dlp` em `/venv/bin/yt-dlp`; o jeito suportado de rodar é o
+[container Docker](desenvolvimento.md#docker-makefile).
+
+## Docker Compose
+
+| Variável | Exemplo | Descrição |
+|---|---|---|
+| `COMPOSE_PROJECT_NAME` | `zapbot` | Nome do projeto no Compose. Define o prefixo dos volumes (`zapbot_wwebjs_auth`, `zapbot_app_cache`). |
+| `COMPOSE_FILE` | `docker/docker-compose.yml` | Caminho do compose. Útil se você exportar/usar este arquivo como `.env` do Compose. |
+
+## WhatsApp
+
+| Variável | Exemplo | Descrição |
+|---|---|---|
+| `PHONE_NUMBER` | `5521999999999` | **Obrigatório.** Número da conta que será pareada, no formato `DDI + DDD + número`, sem `+`, espaços ou traços. É para ele que o bot manda o aviso de inicialização e, com o debug ligado, os avisos de uso indevido de comandos. Também aparece (mascarado) no e-mail do QR. |
+
+## Avançado
+
+| Variável | Exemplo | Descrição |
+|---|---|---|
+| `ZAPBOT_CACHE_DIR` | `/tmp/zapbot-cache` | Diretório do banco (`zapbot.db`) e das mídias. Padrão: `cache/` na raiz do projeto. Os [testes](desenvolvimento.md#testes) usam uma pasta temporária. **No Docker, não defina**: o volume `app_cache` é montado em `/app/cache`. |
+| `ZAPBOT_COMMIT` | `4465374/vX.Y.Z` | Commit (e, depois da `/`, a tag) mostrados no [`/version`](comandos/version.md) e no `/bot -info` (`X.Y.Z (git+4465374/vX.Y.Z)`); sem a tag, aparece `X.Y.Z (devel) (git+7a89b92/HEAD)`. Normalmente fica vazio: o bot lê os dois do `.git`, que vai para a imagem a cada build. Defina só se montar a imagem sem o `.git`. |
+| `ZAPBOT_HEARTBEAT_FILE` | `/tmp/zapbot-heartbeat.json` | Arquivo do [heartbeat](operacao.md#saúde-do-container-heartbeat). Padrão: `zapbot-heartbeat.json` no diretório temporário. Lido pelo `docker/app/healthcheck.js`. |
+| `ZAPBOT_HEARTBEAT_MAX_AGE_S` | `90` | Idade máxima, em segundos, do heartbeat para o healthcheck considerar o bot saudável. |
+
+## Serviços externos
+
+Comandos que consultam serviços na internet. Só três precisam de chave; os outros funcionam sem
+configuração.
+
+| Comando | Serviço | Chave |
+|---|---|---|
+| `/gpt`, `/tldr` | [OpenAI](https://platform.openai.com/) (pago por uso) | `OPENAI_API_KEY` ou setting `openai.api.key` |
+| `/giphy` | [GIPHY](https://developers.giphy.com/) (chave beta: 100 chamadas/hora) | `GIPHY_API_KEY` ou setting `giphy.api.key` |
+| `/translate` | [Google Translate](https://translate.google.com/) (acesso gratuito, não oficial, sem chave; pode ser limitado por IP) | — |
+| `/weather` | [Open-Meteo](https://open-meteo.com/) | — |
+| `/cve`, `/walissu` | [NVD](https://nvd.nist.gov/) (~5 consultas a cada 30 s) | — |
+| `/news` | Feeds RSS (g1, Gazeta do Povo, The Hacker News...) | — |
+| `/rates` | [Yahoo Finance](https://finance.yahoo.com/) (reserva: [AwesomeAPI](https://docs.awesomeapi.com.br/)) e [Binance](https://www.binance.com/) para o USDT | — |
+| `/crypto` | [Binance](https://www.binance.com/) | — |
+| `/defi` | RPC da Solana (setting `defi.solana.rpc`), a [API da Orca](https://www.orca.so/), o RPC da HyperEVM (setting `defi.hyperevm.rpc`, para o Project X), a API da Aptos (settings `defi.aptos.rpc` e `defi.aptos.indexer`, para a Liquidswap), a [API do Morpho](https://docs.morpho.org/) (setting `defi.morpho.api`) e os contratos do [Aave V3](https://aave.com/docs) pelos RPCs da Ethereum e da Base (`ETHEREUM_RPC_URL`, `BASE_RPC_URL`) | — |
+| `/kernel` | [kernel.org](https://www.kernel.org/) | — |
+| `/meme` | [imgflip](https://imgflip.com/) | — |
+| `/pixelart` | [16colo.rs](https://16colo.rs/) | — |
+
+Para as chaves, a variável do `config/.env` tem prioridade; se estiver vazia, vale o setting, que dá
+para trocar pelo WhatsApp com `/set` sem reiniciar.
+
+## OpenAI (opcional)
+
+| Variável | Exemplo | Descrição |
+|---|---|---|
+| `OPENAI_ADMIN_KEY` | `sk-admin-...` | Chave de **admin** da OpenAI, só do `/gpt -usage` (a Usage API não aceita a chave normal). Se estiver vazia, o bot usa o setting `openai.admin.key`; sem nenhuma das duas, o `-usage` mostra só os limites. Crie em platform.openai.com › Organization › Admin keys. |
+| `OPENAI_API_KEY` | `sk-proj-...` | Chave da OpenAI usada pelo `/gpt` e pelo `/tldr`. Se estiver vazia, o bot usa o setting `openai.api.key`; sem nenhuma das duas, perguntas e resumos são recusados. A consulta e a configuração do modelo pelo `/gpt -m` continuam disponíveis. |
+| `OPENAI_MODEL` | `gpt-4o-mini` | Modelo do `/gpt` e do `/tldr`. Se estiver vazio, o bot usa o setting `openai.api.model` (padrão `gpt-4o-mini`), que dá para trocar pelo WhatsApp com `/gpt -m`. Preenchido, tem prioridade sobre o setting. |
+| `OPENAI_TIMEOUT_MS` | `60000` | Tempo máximo de espera pela resposta, em ms. Se estiver vazio, o bot usa o setting `openai.timeout.ms` (60000). |
+
+## Aave V3 (opcional)
+
+| Variável | Exemplo | Descrição |
+|---|---|---|
+| `AAVE_WALLET_ADDRESS` | `0x1234...abcd` | Carteira (endereço público, `0x` e 40 caracteres hexadecimais) consultada pelo [`/defi aave`](comandos/defi.md#aave-v3) quando não há carteira cadastrada (`/defi aave -wallet`). Se estiver vazia, o bot usa o setting `defi.aave.wallet`. Nunca coloque aqui chave privada nem seed: a consulta é só de leitura. |
+| `ETHEREUM_RPC_URL` | `https://eth-mainnet.g.alchemy.com/v2/<chave>` | RPC da Ethereum do `/defi aave`. Se estiver vazio, vale o setting `defi.ethereum.rpc` (o público, que limita as consultas). |
+| `BASE_RPC_URL` | `https://base-mainnet.g.alchemy.com/v2/<chave>` | RPC da Base do `/defi aave`. Se estiver vazio, vale o setting `defi.base.rpc` (o público, que limita as consultas). |
+
+## Aptos (opcional)
+
+| Variável | Exemplo | Descrição |
+|---|---|---|
+| `APTOS_API_KEY` | `aptoslabs_...` | Chave da API da Aptos ([Geomi](https://geomi.dev/docs/start)) usada pelo [`/defi liquidswap`](comandos/defi.md#api-da-aptos). Opcional: sem ela, vale o limite anônimo por IP. Se estiver vazia, o bot usa o setting `defi.aptos.apikey`. |
+
+## Morpho (opcional)
+
+| Variável | Exemplo | Descrição |
+|---|---|---|
+| `MORPHO_WALLET_ADDRESS` | `0x1234...abcd` | Carteira (endereço público, `0x` e 40 caracteres hexadecimais) consultada pelo [`/defi morpho`](comandos/defi.md#morpho) quando não há carteira cadastrada (`/defi morpho -wallet`). Se estiver vazia, o bot usa o setting `defi.morpho.wallet`. Nunca coloque aqui chave privada nem seed: a consulta é só de leitura. |
+
+## GIPHY (opcional)
+
+| Variável | Exemplo | Descrição |
+|---|---|---|
+| `GIPHY_API_KEY` | | Chave do GIPHY usada pelo `/giphy` ([developers.giphy.com](https://developers.giphy.com/)). Se estiver vazia, o bot usa o setting `giphy.api.key` (`/set giphy.api.key <chave>`). |
+
+### Como gerar a chave do GIPHY
+
+1. Crie uma conta (ou entre) em [developers.giphy.com](https://developers.giphy.com/) e abra o
+   **Dashboard**.
+2. Clique em **Create an API Key** e escolha a opção **API** (a opção SDK é para apps mobile).
+3. Dê um nome ao app (ex.: `zapbot`) e uma descrição curta, aceite os termos e confirme.
+4. A chave aparece no Dashboard. Copie e configure de um dos jeitos:
+   - no `config/.env`: `GIPHY_API_KEY=suachave` (vale no próximo start), ou
+   - pelo WhatsApp, sem reiniciar: `/set giphy.api.key suachave` (o `GIPHY_API_KEY` do `.env`, se
+     existir, tem prioridade).
+
+A chave **beta** permite **100 chamadas por hora**, conforme a
+[documentação do GIPHY](https://developers.giphy.com/docs/api/). Quando a consulta falha, o comando
+avisa que não conseguiu buscar o GIF. Para uma cota maior, solicite a aprovação do app no Dashboard
+e consulte as condições de produção do serviço.
+
+## Google Translate (opcional)
+
+| Variável | Exemplo | Descrição |
+|---|---|---|
+
+## E-mail (QR Code e alertas)
+
+| Variável | Exemplo | Descrição |
+|---|---|---|
+| `QRCODE_EMAIL_ENABLE` | `"true"` / `"false"` | Liga o envio do QR Code por e-mail. Com `false`, ele aparece só no terminal. Os [alertas por e-mail](emails.md#alertas-por-e-mail) não dependem dele. |
+| `QRCODE_EMAIL_FALLBACK_TERMINAL` | `"true"` / `"false"` | Se o envio do QR por e-mail falhar, mostra o QR no terminal. Padrão: `"true"`. |
+| `QRCODE_EMAIL_SMTP_HOST` | `smtp.mail.yahoo.com` | Servidor SMTP. |
+| `QRCODE_EMAIL_SMTP_PORT` | `465` | Porta SMTP. **Use uma porta SSL/TLS implícita (465)**: o bot conecta com `secure: true`, portas STARTTLS como 587 não funcionam. O certificado do servidor é validado: servidores com certificado autoassinado/inválido são recusados, porque um MITM capturaria a senha e o QR Code (que dá acesso à conta). |
+| `QRCODE_EMAIL_IMAP_HOST` | `imap.mail.yahoo.com` | Servidor IMAP (porta 993, SSL). Opcional: sem ele o `/bot -flush-email` fica desativado. Usa o login do SMTP (`_USER` e `_PASS`). Veja [Limpar o e-mail](comandos/bot.md#limpar-o-e-mail). |
+| `QRCODE_EMAIL_SMTP_USER` | `minhaconta@yahoo.com.br` | Usuário de login no SMTP. |
+| `QRCODE_EMAIL_SMTP_PASS` | `abcd efgh ijkl mnop` | Senha do SMTP. Use a credencial SMTP exigida pelo provedor; em contas com senha de app, configure essa senha em vez da senha de login. |
+| `QRCODE_EMAIL_SMTP_FROM` | `ZapBot <minhaconta@yahoo.com.br>` | Remetente. O endereço deve ser o mesmo da conta SMTP, senão o provedor rejeita ou o e-mail cai no spam. |
+| `QRCODE_EMAIL_SMTP_TO` | `Fulano <fulano@gmail.com>` | Destinatário que vai receber o QR (e os [alertas por e-mail](emails.md#alertas-por-e-mail)). É também o destino `email` do `-to`, usado em alertas, backups, `/watch` e `/bot -status`. |
+| `QRCODE_EMAIL_SMTP_ANTIPHISHING` | `MinhaFraseSecreta42` | Código anti-phishing exibido em todo e-mail do bot. Veja [Troque o código anti-phishing](emails.md#troque-o-código-anti-phishing). |
+
+### Por que configurar o e-mail com cuidado
+
+Quando `QRCODE_EMAIL_ENABLE="true"`, **o e-mail é o lugar onde o QR aparece**: ele não é desenhado
+no terminal, a não ser que o envio falhe. Se host, porta, usuário ou senha estiverem errados, o
+envio falha (o erro aparece nos logs como `Erro ao enviar QR por email`) e, com
+`QRCODE_EMAIL_FALLBACK_TERMINAL="true"` (o padrão), o QR sai nos logs para você parear do mesmo
+jeito. Com `"false"`, o bot fica esperando um pareamento que você nunca vai conseguir fazer.
+
+Antes de habilitar:
+
+1. Confira host/porta SSL do seu provedor (ex.: Gmail `smtp.gmail.com:465`, Yahoo
+   `smtp.mail.yahoo.com:465`).
+2. Gere uma senha de app e use-a em `QRCODE_EMAIL_SMTP_PASS`.
+3. Suba o bot e verifique nos logs a linha
+   `QR Code #1 received at (...) and sent to '...' (messageId=...)`.
+4. Se algo der errado, coloque `QRCODE_EMAIL_ENABLE="false"` e leia o QR pelos logs.
+
+Lembre também que **quem tiver acesso a esse QR pode sequestrar sua conta de WhatsApp**: mande-o
+apenas para um e-mail que só você lê.
+
+## Exemplo completo
+
+```dotenv
+COMPOSE_PROJECT_NAME="zapbot"
+COMPOSE_FILE=docker/docker-compose.yml
+
+PHONE_NUMBER=5521999999999
+
+QRCODE_EMAIL_ENABLE="true"
+QRCODE_EMAIL_SMTP_HOST="smtp.gmail.com"
+QRCODE_EMAIL_SMTP_PORT="465"
+QRCODE_EMAIL_SMTP_USER="meubot@gmail.com"
+QRCODE_EMAIL_SMTP_PASS="abcd efgh ijkl mnop"
+QRCODE_EMAIL_SMTP_FROM="ZapBot <meubot@gmail.com>"
+QRCODE_EMAIL_SMTP_TO="Eu <eu@exemplo.com>"
+QRCODE_EMAIL_SMTP_ANTIPHISHING="TroqueEstaFrase-7f3a"
+```

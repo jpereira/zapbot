@@ -1,5 +1,5 @@
 /*
- * Enquetes: registro das enquetes e dos votos (evento 'vote_update') e o placar do /enquete -r.
+ * Enquetes: registro das enquetes e dos votos (evento 'vote_update') e o placar do /poll -r.
  */
 
 const { client } = require('./cliente');
@@ -10,12 +10,12 @@ const { formatarData, plural } = require('./util/formatar');
 
 /*
  * O WhatsApp só entrega os votos a quem criou a enquete: o bot vê os votos
- * das enquetes da sua conta (as do /enquete e as que você cria no celular).
+ * das enquetes da sua conta (as do /poll e as que você cria no celular).
  * Cada 'vote_update' traz a escolha ATUAL de quem votou (lista vazia = tirou
  * o voto), então o voto é gravado por cima do anterior.
  */
 
-// Grava a enquete, se ainda não existe (vinda do /enquete ou do primeiro voto)
+// Grava a enquete, se ainda não existe (vinda do /poll ou do primeiro voto)
 async function registrarEnquete({ id, chatId, chatName = null, pergunta, opcoes, multi = false, criadaEm = Date.now() }) {
     await dbPronto;
     await dbRun(
@@ -91,7 +91,7 @@ async function placarDaEnquete({ chatIds, pollId = null }) {
     if (!enquete) {
         return pollId
             ? '📊 Não tenho os votos dessa enquete: o bot só registra as enquetes da sua conta, a partir dos primeiros votos.'
-            : '📊 Nenhuma enquete registrada neste chat.\n💡 _Crie com /enquete Pergunta? | opção 1 | opção 2_';
+            : '📊 Nenhuma enquete registrada neste chat.\n💡 _Crie com /poll Pergunta? | opção 1 | opção 2_';
     }
 
     const votos = await dbAll('SELECT voter_name, options FROM poll_votes WHERE poll_id = ? ORDER BY voted_at, rowid', [enquete.id]);

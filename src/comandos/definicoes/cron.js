@@ -9,7 +9,7 @@ module.exports = {
     usage: '/cron <quando> [OPÇÃO] <texto>  ou  /cron -edit <nº> [quando] [texto]',
     aliases: ['/agenda', '/lembrete'],
     summary: 'Agenda um texto ou comando para uma hora marcada',
-    help: 'Na hora marcada, envia o texto como se você digitasse (no chat atual ou no do -to) ou, como /lembrete (ou com -lembrete), um ⏰ Lembrete neste chat ou no seu privado (-pv). No texto, {/comando args} roda na hora do envio e a resposta entra no lugar (só comandos de consulta: /crypto, /cotacao, /tempo...). O \\n digitado vira quebra de linha.',
+    help: 'Na hora marcada, envia o texto como se você digitasse (no chat atual ou no do -to) ou, como /lembrete (ou com -lembrete), um ⏰ Lembrete neste chat ou no seu privado (-pv). No texto, {/comando args} roda na hora do envio e a resposta entra no lugar (só comandos de consulta: /crypto, /rates, /weather...). O \\n digitado vira quebra de linha.',
     ex: [
         '/cron 09h -r diario -to /Família/ Bom dia! {/crypto BTC}',
         '/cron 8h -r diario Orca {/defi orca}\\n Prjx {/defi prjx}'

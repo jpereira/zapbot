@@ -7,7 +7,7 @@ const { ADMIN } = require('../../roles').ROLES;
 module.exports = {
     cmd: '/leave',
     usage: '/leave <grupo|nº>...  ou  /leave -l',
-    aliases: [],
+    aliases: ['/sair'],
     summary: 'Sai de um grupo',
     help: 'Sai de um ou mais grupos do WhatsApp, separados por espaço ou vírgula. Cada grupo é buscado como no -to (pelo nome ou parte dele; vários que servem: você escolhe na lista) ou pelo nº da lista do /leave -l. Sem nada, lista os grupos em que você está. Para voltar, precisa de um novo convite (/join).',
     ex: ['/leave /Grupo L200/', '/leave 3', '/leave 3 1 /Família/ 5', '/leave -l'],

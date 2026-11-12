@@ -1,17 +1,19 @@
-# `/help` (`/h`)
+# `/help` (`/h`, `/ajuda`)
 
-Exibe o menu com os comandos, ou a ajuda de um só. Cada um vê só o que pode usar:
+Shows the command menu, or the help for a single command. Everyone sees only what they can use:
 
-- **Você** (o dono) e os [admins extras](bot.md#admins-extras): todos os comandos.
-- **Os outros** (os [usuários](bot.md#usuários)): só os comandos de role `user`, os `user` da
-  [tabela de comandos](index.md#resumo). O menu vem com `(os comandos que você pode usar)` no
-  título, e o `/help` de um comando `admin` ou `owner` responde
+- **You** (the owner) and the [extra admins](bot.md#extra-admins): all commands.
+- **Everyone else** (the [users](bot.md#users)): only the `user` role commands, the `user` ones
+  in the [command table](index.md#summary). The menu has `(os comandos que você pode usar)` in the
+  title, and the `/help` of an `admin` or `owner` command replies
   `⛔ O /show é só do dono do bot (e dos admins).`
-  Quem está limitado a alguns comandos ([`/bot +cmd`](bot.md#comandos-de-cada-usuário)) vê só esses,
-  e um `admin` que o dono liberou (`/bot +u +cmd /gpt`) aparece para quem o recebeu.
+  Anyone limited to a few commands ([`/bot +cmd`](bot.md#each-users-commands)) sees only
+  those, and an `admin` command the owner delegated (`/bot +u +cmd /gpt`) shows up for whoever
+  received it.
 
-O `/help` sozinho lista um comando por linha, só com o que ele faz (o `summary` da
-definição do comando), num bloco monoespaçado (para manter o alinhamento no celular), e termina com a dica de como ver o resto:
+`/help` on its own lists one command per line, with just what it does (the `summary` from the
+command definition), in a monospaced block (to keep the alignment on mobile), and ends with a tip on
+how to see the rest:
 
 ````text
 /help
@@ -25,13 +27,13 @@ definição do comando), num bloco monoespaçado (para manter o alinhamento no c
 💡 Utilize */help /comando* ou */comando -h* para mais informações.
 ````
 
-| Opção | Valor | Descrição |
+| Option | Value | Description |
 |---|---|---|
-| `-role`, `-r` | | Lista os comandos separados por role, só os que você pode usar |
+| `-role`, `-r` | | Lists the commands split by role, only the ones you can use |
 
-Com `-role` (ou `-r`), o menu sai separado por role (`owner`, `admin` e `user`, nessa ordem),
-só com os que você pode usar (um role sem nenhum comando visível não aparece; hoje nenhum
-comando é `owner`):
+With `-role` (or `-r`), the menu comes split by role (`owner`, `admin` and `user`, in that order),
+with only the ones you can use (a role with no visible commands doesn't show up; today no command is
+`owner`):
 
 ````text
 /help -r
@@ -47,22 +49,22 @@ Role: user
 ```
 ````
 
-Para a ajuda completa de um comando:
+For the full help of a command:
 
 ```text
 /help get
-/help alias        → lista os atalhos cadastrados que você pode executar
+/help alias        → lists the registered shortcuts you can run
 /h /show
-/help defi orca    → só a ajuda da Orca no /defi (o mesmo que /defi orca -help)
-/help defi aave    → só a ajuda do Aave V3
-/alias -help       → ajuda de cadastro, listagem e remoção dos atalhos
-/watch -help       → ajuda do /watch, incluindo regras, origens e destinos
-/show -h           → ajuda do /show
+/help defi orca    → only the Orca help in /defi (same as /defi orca -help)
+/help defi aave    → only the Aave V3 help
+/alias -help       → help for registering, listing and removing shortcuts
+/watch -help       → /watch help, including rules, sources and destinations
+/show -h           → /show help
 ```
 
-Todos os comandos ativos e seus aliases aceitam `-h` e `-help`. A ajuda mostra o uso, as opções, os
-argumentos e os aliases. `[]` indica algo opcional; `<>`, um valor a preencher; `...`, algo que pode
-ser repetido. Uma linha iniciada por `Ex:` é um exemplo de comando.
+All active commands and their aliases accept `-h` and `-help`. The help shows the usage, options,
+arguments and aliases. `[]` means something optional; `<>`, a value to fill in; `...`, something that
+can be repeated. A line starting with `Ex:` is an example command.
 
-Comandos desconhecidos ou desativados recebem uma resposta à mensagem para o dono, admins e usuários
-com permissão no chat: `⚠️ Comando '/comando' desconhecido, tente: /help`.
+Unknown or disabled commands get a reply to the message for the owner, admins and users with
+permission in the chat: `⚠️ Comando '/comando' desconhecido, tente: /help`.

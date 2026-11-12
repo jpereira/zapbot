@@ -1,14 +1,14 @@
 # `/whois` (`/who`, `/id`)
 
-Mostra quem é e o que pode no bot, **neste chat**: 🤖 dono, 👑 admin (`+a`), 🗣️ usuário (`+u`) ou 🚫
-sem permissão. Sozinho, mostra você; com pessoas (ou respondendo uma mensagem), mostra elas, mas só
-para o dono e os admins.
+Shows who someone is and what they can do in the bot, **in this chat**: 🤖 owner, 👑 admin (`+a`),
+🗣️ user (`+u`) or 🚫 no permission. On its own, it shows you; with people (or replying to a message),
+it shows them, but only for the owner and admins.
 
-| Argumento | Descrição |
+| Argument | Description |
 |---|---|
-| *(nenhum)* | Você: o seu nível neste chat |
-| `[pessoa...]` | Só o dono e os admins: `/Nome/`, `@menção` ou `+número`, vários de uma vez. A busca é a do `-to` ([Destinos](index.md#destinos-contato-grupo-número-ou-e-mail)) |
-| *(respondendo uma mensagem)* | Só o dono e os admins: quem escreveu a mensagem respondida |
+| *(none)* | You: your level in this chat |
+| `[pessoa...]` | Owner and admins only: `/Nome/`, `@menção` or `+número`, several at once. The lookup is the same as `-to` ([Destinations](index.md#destinations-contact-group-number-or-email)) |
+| *(replying to a message)* | Owner and admins only: who wrote the message being replied to |
 
 ```text
 /whois
@@ -23,30 +23,30 @@ Digite /help para saber quais comandos estão disponíveis.
 ```
 
 ```text
-/whois                          → você
-/who /Rafael Silva/ @Fulano     → (dono e admins) essas pessoas
-/id +5521999999999              → (dono e admins) pelo número
-/whois                          → respondendo uma mensagem: quem a escreveu (dono e admins)
+/whois                          → you
+/who /Rafael Silva/ @Fulano     → (owner and admins) those people
+/id +5521999999999              → (owner and admins) by number
+/whois                          → replying to a message: who wrote it (owner and admins)
 ```
 
-O nível é o mais alto que vale **no chat onde você digitou**:
+The level is the highest one that applies **in the chat where you typed it**:
 
-| Nível | Quando |
+| Level | When |
 |---|---|
-| 🤖 dono | É a conta do bot: usa tudo |
-| 👑 +a | É admin (`/bot +a`): usa tudo |
-| 🗣️ +u | É usuário (`/bot +u`): usa os comandos comuns em qualquer chat, e os de role `admin` que o dono liberar (`+cmd`) |
-| 🗣️ todos | Todos estão liberados (`/set bot.users true`) |
-| 🗣️ +u pelo grupo | O grupo onde você digitou está liberado: todos ali usam os comuns, só dentro dele |
-| 🗣️ +u neste grupo | A pessoa é usuária só neste grupo (o `/bot +u` digitado nele) |
-| 🚫 sem permissão aqui (só em 👥 …) | A pessoa é usuária só noutros grupos: aqui, o bot ignora os comandos dela |
-| 🚫 sem permissão | Nenhum dos de cima: o bot ignora os comandos da pessoa |
+| 🤖 owner | It's the bot's account: uses everything |
+| 👑 +a | Is an admin (`/bot +a`): uses everything |
+| 🗣️ +u | Is a user (`/bot +u`): uses the regular commands in any chat, and the `admin` role ones the owner delegates (`+cmd`) |
+| 🗣️ todos | Everyone is allowed (`/set bot.users true`) |
+| 🗣️ +u pelo grupo | The group where you typed is allowed: everyone there uses the regular ones, only inside it |
+| 🗣️ +u neste grupo | The person is a user only in this group (the `/bot +u` typed in it) |
+| 🚫 sem permissão aqui (só em 👥 …) | The person is a user only in other groups: here, the bot ignores their commands |
+| 🚫 sem permissão | None of the above: the bot ignores the person's commands |
 
-- Quem não tem permissão nenhuma não consegue usar o `/whois` (o bot ignora os comandos dela); quem
-  tem descobre o próprio nível. O dono e os admins veem o de qualquer um.
-- Num grupo, o telefone de quem não participa dele sai escondido (`+5521•••••2222`), como no
-  [`/bot`](bot.md#quem-aparece-na-lista).
-- Quem está limitado a alguns comandos ([`/bot +cmd`](bot.md#comandos-de-cada-usuário)) tem a regra
-  embaixo: `→ Apenas: /cotacao, /crypto` ou `→ Todos, menos: /meme`.
-- Para ver os admins e os usuários de uma vez: o [`/bot -list-users`](bot.md#lista-de-usuários) (os deste
-  chat) ou o `/bot -list-users all` (todos).
+- Anyone with no permission at all can't use `/whois` (the bot ignores their commands); anyone who
+  has some finds out their own level. The owner and admins see anyone's.
+- In a group, the phone number of someone who isn't in it is hidden (`+5521•••••2222`), like in
+  [`/bot`](bot.md#who-shows-up-in-the-list).
+- Anyone limited to a few commands ([`/bot +cmd`](bot.md#each-users-commands)) has the rule
+  below: `→ Apenas: /rates, /crypto` or `→ Todos, menos: /meme`.
+- To see the admins and users at once: [`/bot -list-users`](bot.md#user-list) (the ones in
+  this chat) or `/bot -list-users all` (everyone).

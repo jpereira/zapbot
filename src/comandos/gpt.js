@@ -10,7 +10,7 @@ const { MessageMedia } = require('whatsapp-web.js');
 
 const { concluirAviso } = require('../cliente');
 const { getCommandSyntax } = require('./base');
-const { desenhar } = require('./desenhe');
+const { desenhar } = require('./draw');
 const {
     MODELO_DE_AUDIO, MODELO_DE_VOZ, SO_DONO_GERAR, USOS_DO_GPT, USO_DE_PERGUNTA, apagarAviso, avisarProcessando, ehFoto,
     erroDoModelo, imagemDaMensagem, responderConsumo, semOpcao, trocarModelo
@@ -210,8 +210,8 @@ async function falarTexto(msg, args, quotedMsg) {
 }
 
 /*
- * /gpt -img [pedido] e /gpt -gif [pedido]: criam uma imagem e um GIF animado, como o /desenhe e o
- * /desenhe -gif (src/comandos/desenhe.js). Os dois custam dinheiro, então são só do dono e dos admins.
+ * /gpt -img [pedido] e /gpt -gif [pedido]: criam uma imagem e um GIF animado, como o /draw e o
+ * /draw -gif (src/comandos/draw.js). Os dois custam dinheiro, então são só do dono e dos admins.
  */
 
 // "gere um gif animado de ...", "faça uma animação...": o pedido de GIF sem o -gif (só respondendo uma foto)
@@ -219,7 +219,7 @@ const PEDIU_GIF = /\b(gif|anima[çc][ãa]o|animad[oa]|v[ií]deo)\b/i;
 const VERBO_DE_CRIAR = /\b(ger[ae]r?|cri[ae]r?|fa[çc]a|fazer|faz|anim[ae]r?|transform\w*)\b/i;
 const pedeGif = (texto) => PEDIU_GIF.test(texto) && VERBO_DE_CRIAR.test(texto);
 
-// O -img e o -gif são os do /desenhe (o desenhar() é um só): aqui só o texto do pedido e a mensagem de uso
+// O -img e o -gif são os do /draw (o desenhar() é um só): aqui só o texto do pedido e a mensagem de uso
 const desenharDoGpt = (msg, args, quotedMsg, { opcao, gif, semPedido }) =>
     desenhar({ msg, cmd: '/gpt', pedido: semOpcao(args, opcao), quotedMsg, gif, semPedido });
 

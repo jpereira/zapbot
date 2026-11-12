@@ -1,5 +1,5 @@
 /*
- * O que os comandos da OpenAI (/gpt, /desenhe) repartem: o aviso "Processando", o rodapé de status das
+ * O que os comandos da OpenAI (/gpt, /draw) repartem: o aviso "Processando", o rodapé de status das
  * mídias, o erro de modelo que a conta não tem, a troca de modelo por uso (-m) e a foto de referência.
  * As chamadas e os erros da API ficam no openaiChat.js.
  */
@@ -70,7 +70,7 @@ async function erroDoModelo(err, { setting, tipo, nome }, cmd) {
 }
 
 /*
- * -m: os modelos por uso e a troca de cada um. Cada comando lista os seus usos (o /gpt, todos; o /desenhe,
+ * -m: os modelos por uso e a troca de cada um. Cada comando lista os seus usos (o /gpt, todos; o /draw,
  * a imagem e o GIF) e diz como trocar com o seu nome. A lista é a da chave (GET /v1/models), com a fixa do
  * código de reserva quando a chave não responde.
  */
@@ -118,7 +118,7 @@ const modeloAtual = (uso) => (uso.setting === 'openai.api.model'
  * @param {string} [modelo]  vazio: lista os modelos
  * @param {{ given: Set<string> }} opts  as opções do comando (a que casar com um uso escolhe o uso)
  * @param {object} o
- * @param {string} o.cmd      o comando ("/gpt", "/desenhe")
+ * @param {string} o.cmd      o comando ("/gpt", "/draw")
  * @param {string} o.icone    o emoji do título da lista
  * @param {object[]} o.usos   os usos que o comando tem
  * @param {object} o.padrao   o uso do -m sem outra opção
@@ -178,7 +178,7 @@ const ehFoto = (m) => Boolean(m?.hasMedia) && ['image', 'sticker'].includes(m.ty
 
 /**
  * A imagem de uma mensagem (foto ou figurinha), baixada em base64.
- * @param {object} m    a mensagem respondida ou a própria (a foto com a legenda "/desenhe ...")
+ * @param {object} m    a mensagem respondida ou a própria (a foto com a legenda "/draw ...")
  * @param {string} cmd  o comando, para o aviso de tamanho
  * @returns {Promise<null | { imagem: { mimetype: string, data: string } } | { erro: string }>}
  *   null: a mensagem não é imagem

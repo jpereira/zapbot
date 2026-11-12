@@ -268,10 +268,10 @@ function lerAtalho(texto) {
     };
 }
 
-// "/cotacao,/crypto meme" → ['/cotacao', '/crypto', '/meme']; "all" → ['all']; inválido: lança
+// "/rates,/crypto meme" → ['/rates', '/crypto', '/meme']; "all" → ['all']; inválido: lança
 function lerComandos(texto) {
     const nomes = texto.split(/[\s,]+/).filter(Boolean);
-    if (!nomes.length) throw new Error('informe os comandos, separados por vírgula: +cmd /cotacao,/meme');
+    if (!nomes.length) throw new Error('informe os comandos, separados por vírgula: +cmd /rates,/meme');
     if (nomes.length === 1 && /^all$/i.test(nomes[0])) return ['all'];
     return [...new Set(nomes.map(comandoDeUsuario))];
 }
@@ -431,7 +431,7 @@ async function mudarComandos(msg, itens, { sinal, comandos, comV }, chat) {
             if (!ehUsuario || tudo) nova = tudo ? null : { apenas: true, comandos };
             else if (!regra?.apenas && admins.length) {
                 avisos.push(`❌ ${quem} usa os comandos comuns, e o ${admins.join(', ')} (admin) só entra numa lista "Apenas": ` +
-                    `liste os comandos dele, ex.: /bot +u +cmd /cotacao,${admins[0]}.`);
+                    `liste os comandos dele, ex.: /bot +u +cmd /rates,${admins[0]}.`);
                 continue;
             } else if (!regra) {
                 avisos.push(`ℹ️ ${quem} já usa todos os comandos comuns.`);
@@ -493,7 +493,7 @@ async function tratarAtalho(msg, texto, chatAtual) {
 
     // O +cmd|-cmd é dos usuários: com o +a/-a ou o -u, não
     if (cmd && op && (op.letra === 'a' || op.sinal === '-')) {
-        await msg.reply('❌ O +cmd|-cmd vale só para usuários: /bot +u +cmd /cotacao /Fulano/ ou /bot -cmd /meme /Fulano/.');
+        await msg.reply('❌ O +cmd|-cmd vale só para usuários: /bot +u +cmd /rates /Fulano/ ou /bot -cmd /meme /Fulano/.');
         return;
     }
 

@@ -1,9 +1,9 @@
 # `/kernel`
 
-Versões mainline, stable e longterm publicadas em `kernel.org/releases.json` (até 6 linhas, na ordem
-do kernel.org), com a data de lançamento de cada uma.
+Mainline, stable and longterm versions published at `kernel.org/releases.json` (up to 6 lines, in
+kernel.org order), with the release date of each one.
 
-Exemplo ilustrativo de resposta:
+Illustrative example of a reply:
 
 ```text
 /kernel
@@ -17,4 +17,4 @@ longterm  6.12.111     2026-09-21
 longterm  6.6.157      2026-09-14
 ```
 
-Se o kernel.org não responder, o bot avisa: `❌ Não consegui consultar o kernel.org agora.`
+If kernel.org doesn't respond, the bot says so: `❌ Não consegui consultar o kernel.org agora.`

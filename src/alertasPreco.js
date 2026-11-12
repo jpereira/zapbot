@@ -1,5 +1,5 @@
 /*
- * Alertas de preço do /cotacao -alerta e do /crypto -alerta.
+ * Alertas de preço do /rates -alerta e do /crypto -alerta.
  */
 
 const axios = require('axios');
@@ -19,7 +19,7 @@ const { getSetting } = require('./settings');
 const { formatarData, plural } = require('./util/formatar');
 
 /*
- * Alertas de preço: /cotacao -alerta e /crypto -alerta
+ * Alertas de preço: /rates -alerta e /crypto -alerta
  *   -alerta                 → lista os alertas do comando, numerados
  *   -alerta USD > 5.30      → avisa no seu privado quando o USD passar de R$ 5,30
  *   -alerta BTC < 90000     → (no /crypto) quando o BTC ficar abaixo de $90.000
@@ -36,7 +36,7 @@ const { formatarData, plural } = require('./util/formatar');
  */
 const ALERTA_TIPOS = {
     cotacao: {
-        cmd: '/cotacao',
+        cmd: '/rates',
         suportada: (sym) => Boolean(COTACAO_SUPORTADAS[sym]),
         icone: (sym) => COTACAO_SUPORTADAS[sym].icone,
         par: (sym) => `${sym}/BRL`,

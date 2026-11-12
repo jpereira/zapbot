@@ -91,12 +91,12 @@ const SETTINGS_SCHEMA = {
     'alerta.intervalMin': {
         default: 5,
         type: 'number', min: 1, max: 60,
-        desc: 'Intervalo (minutos) entre as verificações dos alertas do /cotacao e do /crypto.'
+        desc: 'Intervalo (minutos) entre as verificações dos alertas do /rates e do /crypto.'
     },
     'alerta.max': {
         default: 20,
         type: 'number', min: 1, max: 100,
-        desc: 'Máximo de alertas de preço (somando /cotacao e /crypto).'
+        desc: 'Máximo de alertas de preço (somando /rates e /crypto).'
     },
     'ascii.defaultChar': {
         default: '#',
@@ -225,7 +225,7 @@ const SETTINGS_SCHEMA = {
     'cotacao.coins': {
         default: ['EUR', 'USDT'],
         type: 'list',
-        desc: 'Moedas exibidas pelo /cotacao (contra o real).',
+        desc: 'Moedas exibidas pelo /rates (contra o real).',
         item: (v) => {
             const sym = v.toUpperCase();
             if (!COTACAO_SUPORTADAS[sym]) throw new Error(`moeda não suportada: ${sym}`);
@@ -384,7 +384,7 @@ const SETTINGS_SCHEMA = {
     'enquete.retentionDays': {
         default: 90,
         type: 'number', min: 1, max: 365,
-        desc: 'Dias que as enquetes e os votos ficam guardados para o /enquete -r.'
+        desc: 'Dias que as enquetes e os votos ficam guardados para o /poll -r.'
     },
     'flood.intervalCommand': {
         default: 2,
@@ -541,22 +541,22 @@ const SETTINGS_SCHEMA = {
     'openai.gif.frameMs': {
         default: 200,
         type: 'number', min: 20, max: 2000,
-        desc: 'Quanto dura cada quadro do GIF do /desenhe -gif e do /gpt -gif, em ms (20 a 2000; o total é quadros x ms).'
+        desc: 'Quanto dura cada quadro do GIF do /draw -gif e do /gpt -gif, em ms (20 a 2000; o total é quadros x ms).'
     },
     'openai.gif.frames': {
         default: 9,
         type: 'number', min: 2, max: 16,
-        desc: 'Quantos quadros tem o GIF do /desenhe -gif e do /gpt -gif (2 a 16; quanto mais quadros, mais caro).'
+        desc: 'Quantos quadros tem o GIF do /draw -gif e do /gpt -gif (2 a 16; quanto mais quadros, mais caro).'
     },
     'openai.image.gifModel': {
         default: 'gpt-image-2.6-flare',
         type: 'string',
-        desc: 'Modelo que gera o GIF do /desenhe -gif e do /gpt -gif (só os gpt-image-2.6-* fazem GIF e pedem acesso à prévia): o id que a sua conta tem (se não existir, o bot lista os que a chave vê).'
+        desc: 'Modelo que gera o GIF do /draw -gif e do /gpt -gif (só os gpt-image-2.6-* fazem GIF e pedem acesso à prévia): o id que a sua conta tem (se não existir, o bot lista os que a chave vê).'
     },
     'openai.image.model': {
         default: 'gpt-image-2',
         type: 'string',
-        desc: 'Modelo que gera e edita a imagem do /desenhe e do /gpt -img: o id que a sua conta tem (se não existir, o bot lista os que a chave vê). O GIF tem o seu, o openai.image.gifModel.'
+        desc: 'Modelo que gera e edita a imagem do /draw e do /gpt -img: o id que a sua conta tem (se não existir, o bot lista os que a chave vê). O GIF tem o seu, o openai.image.gifModel.'
     },
     'openai.pricing': {
         default: [],
@@ -676,12 +676,12 @@ const SETTINGS_SCHEMA = {
     'tempo.city': {
         default: 'Niteroi, Rio de Janeiro, Brazil',
         type: 'string',
-        desc: 'Cidade padrão do /tempo (ex.: "Niteroi, Rio de Janeiro, Brazil").'
+        desc: 'Cidade padrão do /weather (ex.: "Niteroi, Rio de Janeiro, Brazil").'
     },
     'tempo.maxDays': {
         default: 16,
         type: 'number', min: 1, max: 16, // 16: limite da Open-Meteo
-        desc: 'Máximo de dias do /tempo N (ou Nd), de 1 a 16. Ex.: /tempo 16d Niteroi.'
+        desc: 'Máximo de dias do /weather N (ou Nd), de 1 a 16. Ex.: /weather 16d Niteroi.'
     },
     'tldr.maxMsgs': {
         default: 500,
@@ -691,7 +691,7 @@ const SETTINGS_SCHEMA = {
     'traduzir.lang': {
         default: 'pt',
         type: 'string',
-        desc: 'Idioma de destino padrão do /traduzir (código: pt, en, es...).'
+        desc: 'Idioma de destino padrão do /translate (código: pt, en, es...).'
     },
     'watch.hitsRetentionDays': {
         default: 30,

@@ -7,6 +7,7 @@ const { ADMIN } = require('../../roles').ROLES;
 module.exports = {
     cmd: '/stats',
     usage: '/stats [-N] [/chat/] [-me]  ou  /stats -l  ou  /stats -flush </chat/>  ou  /stats -flush-all',
+    aliases: ['/estatisticas'],
     summary: 'Ranking do chat: quem mais fala, apaga e edita',
     help: 'Ranking do chat atual ou de outro (/Grupo/): quem mais fala, apaga e edita, horários e dia de pico. Com -me, as suas estatísticas. O -l lista os chats com estatísticas; o -flush apaga as de um chat e o -flush-all, todas.',
     cmd_opts: [

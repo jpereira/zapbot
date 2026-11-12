@@ -1,44 +1,44 @@
-# Instalação
+# Installation
 
-## Requisitos
+## Requirements
 
-- Docker com o plugin **Docker Compose v2** (`docker compose ...`)
+- Docker with the **Docker Compose v2** plugin (`docker compose ...`)
 - Git
-- Um celular com WhatsApp para parear
-- (Opcional) Uma conta SMTP, para o QR Code e os alertas por e-mail
+- A phone with WhatsApp to pair
+- (Optional) An SMTP account, for the QR Code and email alerts
 
-Não é preciso ter Node, Chromium, ffmpeg ou yt-dlp instalados: tudo vai dentro da imagem.
+You don't need Node, Chromium, ffmpeg or yt-dlp installed: everything ships inside the image.
 
-## Instalação (Docker)
+## Installation (Docker)
 
-A versão estável atual é a `v2.0.12` (de 05/11/2026); os passos abaixo instalam essa versão. As
-notas de cada uma ficam em [Releases](https://github.com/jpereira/zapbot/releases).
+The current stable version is `v2.0.12` (from 2026-11-05); the steps below install that version. The
+notes for each one are in [Releases](https://github.com/jpereira/zapbot/releases).
 
 ```bash
-# 1. Clonar o projeto e ir para a última versão estável
+# 1. Clone the project and go to the latest stable version
 git clone https://github.com/jpereira/zapbot.git
 cd zapbot
 git checkout v2.0.12
 
-# 2. Criar o arquivo de configuração a partir do exemplo e editá-lo
+# 2. Create the config file from the example and edit it
 cp config/.env.example config/.env
-vim config/.env            # PHONE_NUMBER e, recomendado, o e-mail do QR Code (veja abaixo)
+vim config/.env            # PHONE_NUMBER and, recommended, the QR Code email (see below)
 
-# 3. Build da imagem
+# 3. Build the image
 docker compose -f docker/docker-compose.yml build zapbot
 
-# 4. Subir o container em background
+# 4. Start the container in the background
 docker compose -f docker/docker-compose.yml up -d zapbot
 
-# 5. Acompanhar os logs (e ler o QR Code, se estiver no modo terminal)
+# 5. Follow the logs (and read the QR Code, if in terminal mode)
 docker logs -f zapbot
 ```
 
-> 💡 Para não repetir `-f docker/docker-compose.yml` em todo comando:
+> 💡 To avoid repeating `-f docker/docker-compose.yml` in every command:
 > `export COMPOSE_FILE=docker/docker-compose.yml`
 
-Logo no início dos logs aparece a versão, com o commit e a tag (veja o
-[`/version`](comandos/version.md)), e depois de ler o QR Code você deve ver:
+Right at the start of the logs the version shows up, with the commit and the tag (see
+[`/version`](comandos/version.md)), and after you read the QR Code you should see:
 
 ```text
 [!] 🤖 Starting ZapBot X.Y.Z (git+4465374/vX.Y.Z)...
@@ -47,29 +47,28 @@ Logo no início dos logs aparece a versão, com o commit e a tag (veja o
 [+] 🤖 ZapBot X.Y.Z (git+4465374/vX.Y.Z) inicializado! Informando 5521999999999
 ```
 
-e receber a mesma mensagem no seu WhatsApp. Mande `/ping` para qualquer chat: o bot deve responder
-`pong`.
+and get the same message on your WhatsApp. Send `/ping` to any chat: the bot should reply `pong`.
 
-### Atualizar para uma nova versão
+### Update to a new version
 
-A **versão estável** é a última release, hoje a `v2.0.12` (cada uma tem as notas em
-[Releases](https://github.com/jpereira/zapbot/releases)). Para ir para ela:
+The **stable version** is the latest release, currently `v2.0.12` (each one has its notes in
+[Releases](https://github.com/jpereira/zapbot/releases)). To move to it:
 
 ```bash
 git fetch --tags
 git checkout v2.0.12
-git describe --tags        # confere a versão: v2.0.12
+git describe --tags        # checks the version: v2.0.12
 docker compose -f docker/docker-compose.yml build zapbot
 docker compose -f docker/docker-compose.yml up -d --force-recreate zapbot
 ```
 
-O `git checkout` de uma tag deixa o repositório em *detached HEAD*; o aviso do git é esperado e não
-atrapalha. A sessão do WhatsApp e o banco ficam em volumes, então sobrevivem ao rebuild.
+Checking out a tag leaves the repository in *detached HEAD*; git's warning is expected and harmless.
+The WhatsApp session and the database live in volumes, so they survive the rebuild.
 
-#### Versão de desenvolvimento (HEAD)
+#### Development version (HEAD)
 
-O branch `main` tem as mudanças mais recentes, que ainda não viraram release: pode ter recursos
-incompletos ou quebrados. Use só para testar ou desenvolver.
+The `main` branch has the latest changes, which haven't become a release yet: it may have
+incomplete or broken features. Use it only to test or develop.
 
 ```bash
 git checkout main
@@ -78,21 +77,21 @@ docker compose -f docker/docker-compose.yml build zapbot
 docker compose -f docker/docker-compose.yml up -d --force-recreate zapbot
 ```
 
-Para voltar à estável, repita os comandos de cima (`git fetch --tags` e o `git checkout` da última
-tag).
+To go back to the stable one, repeat the commands above (`git fetch --tags` and the `git checkout`
+of the latest tag).
 
-## Autenticação: QR Code no terminal ou por e-mail
+## Authentication: QR Code in the terminal or by email
 
-Na primeira execução (ou se a sessão expirar) o WhatsApp exige a leitura de um QR Code. O ZapBot
-oferece dois modos, escolhidos por `QRCODE_EMAIL_ENABLE`:
+On the first run (or if the session expires) WhatsApp requires reading a QR Code. ZapBot offers two
+modes, chosen by `QRCODE_EMAIL_ENABLE`:
 
-| Modo | `QRCODE_EMAIL_ENABLE` | Onde aparece o QR |
+| Mode | `QRCODE_EMAIL_ENABLE` | Where the QR shows up |
 |------|------|------|
-| Terminal | `false` | Desenhado em ASCII nos logs do container (`docker logs -f zapbot`) |
-| E-mail   | `true`  | Enviado como imagem PNG para `QRCODE_EMAIL_SMTP_TO` (se o envio falhar, cai no terminal também) |
+| Terminal | `false` | Drawn in ASCII in the container logs (`docker logs -f zapbot`) |
+| Email   | `true`  | Sent as a PNG image to `QRCODE_EMAIL_SMTP_TO` (if sending fails, it falls back to the terminal too) |
 
-O modo e-mail é o **recomendado**, principalmente quando o bot roda num servidor remoto/homelab e
-você não quer ficar olhando logs: o QR chega na sua caixa de entrada, você abre no computador e lê
-com o celular em **WhatsApp › Aparelhos conectados › Conectar um aparelho**. O WhatsApp renova o QR
-periodicamente; cada novo QR gera um novo e-mail numerado (`#1`, `#2`...) e **só o mais recente
-vale**.
+Email mode is the **recommended** one, especially when the bot runs on a remote server/homelab and
+you don't want to keep watching logs: the QR lands in your inbox, you open it on your computer and
+read it with your phone in **WhatsApp › Linked devices › Link a device**. WhatsApp renews the QR
+periodically; each new QR generates a new numbered email (`#1`, `#2`...) and **only the latest one
+is valid**.

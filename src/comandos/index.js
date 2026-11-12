@@ -6,17 +6,17 @@ const { botConfig } = require('../botConfig');
 const { cmdBackup } = require('./backup');
 const { cmdBatch } = require('./batch');
 const { cmdBlock, cmdUnblock } = require('./block');
-const { cmdBoletos } = require('./boletos');
+const { cmdBills } = require('./bills');
 const { cmdBot } = require('./bot');
 const { cmdCache } = require('./cache');
-const { cmdCotacao } = require('./cotacao');
+const { cmdRates } = require('./rates');
 const { cmdCron } = require('./cron');
 const { cmdCrypto } = require('./crypto');
 const { cmdCve } = require('./cve');
 const { cmdDebug } = require('./debug');
 const { cmdDefi } = require('./defi');
-const { cmdDesenhe } = require('./desenhe');
-const { cmdEnquete } = require('./enquete');
+const { cmdDraw } = require('./draw');
+const { cmdPoll } = require('./poll');
 const { cmdGet } = require('./get');
 const { cmdGiphy } = require('./giphy');
 const { cmdGpt } = require('./gpt');
@@ -25,7 +25,7 @@ const { cmdAscii } = require('./ascii');
 const { cmdHelp } = require('./help');
 const { cmdJoke } = require('./joke');
 const { cmdKernel } = require('./kernel');
-const { cmdListaGeral } = require('./listageral');
+const { cmdMembers } = require('./members');
 const { cmdMeme } = require('./meme');
 const { cmdMonitor } = require('./monitor');
 const { cmdMute, cmdUnmute } = require('./mute');
@@ -40,12 +40,12 @@ const { cmdSet } = require('./set');
 const { cmdShow } = require('./show');
 const { cmdStats } = require('./stats');
 const { cmdSticker } = require('./sticker');
-const { cmdTempo } = require('./tempo');
+const { cmdWeather } = require('./weather');
 const { cmdMe } = require('./me');
 const { cmdJoin, cmdLeave } = require('./grupos');
 const { cmdTldr } = require('./tldr');
-const { cmdTodos } = require('./todos');
-const { cmdTraduzir } = require('./traduzir');
+const { cmdEverybody } = require('./everybody');
+const { cmdTranslate } = require('./translate');
 const { cmdUptime } = require('./uptime');
 const { cmdWalissu } = require('./walissu');
 const { cmdWatch } = require('./watch');
@@ -58,18 +58,17 @@ const HANDLERS = {
     '/ascii': cmdAscii,
     '/backup': cmdBackup,
     '/batch': cmdBatch,
+    '/bills': cmdBills,
     '/block': cmdBlock,
-    '/boletos': cmdBoletos,
     '/bot': cmdBot,
     '/cache': cmdCache,
-    '/cotacao': cmdCotacao,
     '/cron': cmdCron,
     '/crypto': cmdCrypto,
     '/cve': cmdCve,
     '/debug': cmdDebug,
     '/defi': cmdDefi,
-    '/desenhe': cmdDesenhe,
-    '/enquete': cmdEnquete,
+    '/draw': cmdDraw,
+    '/everybody': cmdEverybody,
     '/get': cmdGet,
     '/giphy': cmdGiphy,
     '/gpt': cmdGpt,
@@ -78,8 +77,8 @@ const HANDLERS = {
     '/joke': cmdJoke,
     '/kernel': cmdKernel,
     '/leave': cmdLeave,
-    '/listageral': cmdListaGeral,
     '/me': cmdMe,
+    '/members': cmdMembers,
     '/meme': cmdMeme,
     '/monitor': cmdMonitor,
     '/mute': cmdMute,
@@ -88,22 +87,23 @@ const HANDLERS = {
     '/notes': cmdNote,
     '/ping': cmdPing,
     '/pixelart': cmdPixelArt,
+    '/poll': cmdPoll,
     '/profile': cmdProfile,
+    '/rates': cmdRates,
     '/search': cmdSearch,
     '/set': cmdSet,
     '/show': cmdShow,
     '/stats': cmdStats,
     '/sticker': cmdSticker,
-    '/tempo': cmdTempo,
     '/tldr': cmdTldr,
-    '/todos': cmdTodos,
-    '/traduzir': cmdTraduzir,
+    '/translate': cmdTranslate,
     '/unblock': cmdUnblock,
     '/unmute': cmdUnmute,
     '/uptime': cmdUptime,
     '/version': cmdUptime,
     '/walissu': cmdWalissu,
     '/watch': cmdWatch,
+    '/weather': cmdWeather,
     '/whois': cmdWhois
 };
 

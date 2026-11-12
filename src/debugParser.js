@@ -22,7 +22,7 @@ function dadosParserComando(args, command, opts) {
         }
         if (command.cmd === '/cron') return lerAgendamento(args);
         const temDestino = command.cmd_opts?.some(o => o.opts?.includes('to'));
-        const alerta = ['/crypto', '/cotacao'].includes(command.cmd) && opts.given.has('alerta');
+        const alerta = ['/crypto', '/rates'].includes(command.cmd) && opts.given.has('alerta');
         if (!temDestino && !alerta) return opts;
         const destinos = temDestino ? extrairDestinos(args) : null;
         let resto = destinos?.resto ?? args;

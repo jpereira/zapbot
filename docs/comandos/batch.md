@@ -1,8 +1,8 @@
-# `/batch` · admin
+# `/batch` (`/lote`) · admin
 
-Executa vários comandos de uma mensagem só, um depois do outro, e responde um resumo. Serve para
-mandar de uma vez o que você mandaria em vários blocos (ex.: várias anotações pelo seu
-[alias](alias.md)). Também funciona respondendo uma mensagem com os comandos.
+Runs several commands from a single message, one after the other, and replies with a summary. Use it
+to send at once what you'd otherwise send in several blocks (e.g. multiple notes through your
+[alias](alias.md)). It also works when replying to a message that contains the commands.
 
 ![Demonstração do /batch](../assets/demo/12-batch-alias.gif)
 
@@ -11,17 +11,18 @@ mandar de uma vez o que você mandaria em vários blocos (ex.: várias anotaçõ
 <comandos, nas linhas de baixo>
 ```
 
-| Opção | Valor | Descrição |
+| Option | Value | Description |
 |---|---|---|
-| `-stop`, `-s` | | Para no primeiro bloco que falhar (o padrão é seguir com os outros) |
-| `-dry`, `-d` | | Só mostra como os blocos foram separados, sem executar |
-| `-quiet`, `-q` | | Não responde o resumo da execução (os erros ficam só no log). Não vale com `-dry` |
+| `-stop`, `-s` | | Stops at the first block that fails (by default it carries on with the others) |
+| `-dry`, `-d` | | Only shows how the blocks were split, without running anything |
+| `-quiet`, `-q` | | Doesn't reply with the execution summary (errors go only to the log). Doesn't work with `-dry` |
 
-## Como separa os blocos
+## How blocks are split
 
-Uma linha que começa com um comando (ou alias) abre um bloco. O que vem depois, linhas em branco
-inclusas, é do mesmo bloco. Uma linha com `/` que não é comando nem alias (ex.: `/etc/hosts`)
-continua sendo texto do bloco, e o que vier antes do primeiro comando é ignorado (com um aviso).
+A line that starts with a command (or alias) opens a block. Whatever comes after it, blank lines
+included, belongs to the same block. A line with `/` that is neither a command nor an alias (e.g.
+`/etc/hosts`) is still part of the block's text, and anything before the first command is ignored
+(with a warning).
 
 ```text
 /batch
@@ -33,10 +34,10 @@ http://minha.com/?124
 http://g1.com/labala
 ```
 
-Aqui são dois blocos: a URL de cima é do primeiro `/ideia` e a de baixo, do segundo. O `/ideia`
-é um alias, por exemplo `/alias /ideia /notes #ideias $1`.
+That's two blocks: the top URL belongs to the first `/ideia` and the bottom one to the second. The
+`/ideia` is an alias, for example `/alias /ideia /notes #ideias $1`.
 
-A resposta é um resumo só:
+The reply is a single summary:
 
 ```text
 📦 BATCH · 2/2 ok
@@ -47,7 +48,7 @@ A resposta é um resumo só:
    ↳ 📝 #78 · #ideias · Quando puder ler o link sobre isso. http://g1.com/labala
 ```
 
-Com `-dry` (ou `-d`), nada roda; ele só mostra como separou:
+With `-dry` (or `-d`), nothing runs; it only shows how it split things:
 
 ```text
 /batch -dry
@@ -57,11 +58,12 @@ Com `-dry` (ou `-d`), nada roda; ele só mostra como separou:
 2. /ideia Quando puder ler o link sobre isso. (+1 linhas)
 ```
 
-- Cada bloco passa pelo mesmo caminho de uma mensagem normal (alias, `$1`, opções). Quem tem
-  `$1` no alias junta o texto numa linha só, como já faz fora do `/batch`.
-- Sai uma resposta só: `✅`/`❌` por bloco, com o começo do que o comando respondeu.
-- Um bloco falha quando a resposta do comando começa com ❌ ou ⚠️, ou quando ele dá erro. Os outros
-  seguem, a menos que você use `-stop`: ele para no primeiro e avisa quantos não rodaram.
-- Cada bloco leva só o texto dele: uma mídia ou a mensagem respondida do `/batch` não passam para os
-  comandos de dentro.
-- Máximo de 50 blocos; `/batch` dentro de `/batch` é recusado.
+- Each block goes through the same path as a normal message (alias, `$1`, options). An alias with
+  `$1` joins the text into a single line, just like it already does outside `/batch`.
+- You get a single reply: `✅`/`❌` per block, with the start of what the command replied.
+- A block fails when the command's reply starts with ❌ or ⚠️, or when it throws an error. The
+  others carry on, unless you use `-stop`: it stops at the first one and tells you how many didn't
+  run.
+- Each block carries only its own text: media or the message replied to by `/batch` aren't passed
+  on to the commands inside.
+- Maximum of 50 blocks; `/batch` inside `/batch` is refused.

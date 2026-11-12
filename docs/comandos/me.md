@@ -1,15 +1,15 @@
 # `/me`
 
-Envia a mensagem digitada. Cada `{/comando args}` roda na hora e a resposta entra no lugar, como nos
-[comandos no texto do `/cron`](cron.md#comandos-no-texto). Um `\n` digitado vira quebra de linha.
+Sends the message you typed. Each `{/command args}` runs on the spot and the reply goes in its place,
+as in [`/cron`'s commands in the text](cron.md#commands-in-the-text). A typed `\n` becomes a line break.
 
 ```text
 /me [-repeat|-r <n>] <mensagem>
 ```
 
-| Opção | Valor | Descrição |
+| Option | Value | Description |
 |---|---|---|
-| `-repeat`, `-r` | `<n>` | Repete o texto `n` vezes (de 1 a `me.maxRepeat`, padrão 500), emendado, numa mensagem só: `/me -r 3 Haha!` envia `Haha!Haha!Haha!`. Os `{/comando}` rodam uma vez só |
+| `-repeat`, `-r` | `<n>` | Repeats the text `n` times (from 1 to `me.maxRepeat`, default 500), back to back, in a single message: `/me -r 3 Haha!` sends `Haha!Haha!Haha!`. The `{/command}`s run only once |
 
 ```text
 /me Minha mensagem
@@ -18,9 +18,9 @@ Envia a mensagem digitada. Cada `{/comando args}` roda na hora e a resposta entr
 /me O preço do Bitcoin está em {/crypto BTC}
 ```
 
-- A mensagem sai direto no chat, sem citar o comando digitado.
-- Rodam só os comandos de consulta do `/cron` (`/cotacao`, `/crypto`, `/tempo`...), sem as opções
-  que mudam algo. Quem executa precisa de permissão para cada um deles.
-- Uma resposta de várias linhas vira um parágrafo; uma de uma linha só fica na frase. Mídias
-  (`/meme`, `/giphy`) saem depois do texto.
-- Combina com o [`/alias`](alias.md): `/alias -q /haha /me Hahaha vc e burro!`.
+- The message goes straight to the chat, without quoting the command you typed.
+- Only `/cron`'s query commands run (`/rates`, `/crypto`, `/weather`...), without the options that
+  change something. Whoever runs it needs permission for each one of them.
+- A multi-line reply becomes a paragraph; a single-line one stays inline. Media (`/meme`, `/giphy`)
+  goes out after the text.
+- Works with [`/alias`](alias.md): `/alias -q /haha /me Hahaha vc e burro!`.

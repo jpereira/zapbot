@@ -45,7 +45,7 @@ jobs:
         run: mkdocs build --strict
         env:
           NO_MKDOCS_2_WARNING: '1'
-          DOCS_COPYRIGHT: 'ZapBot ${{ github.ref_name }} · Licença MIT · Copyright &copy; 2026 Jorge Pereira'
+          DOCS_COPYRIGHT: 'ZapBot ${{ github.ref_name }} · MIT License / Licença MIT · Copyright &copy; 2026 Jorge Pereira'
 
       - uses: actions/configure-pages@v6
 

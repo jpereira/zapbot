@@ -1,36 +1,37 @@
 # `/backup` (`/bkp`) · admin
 
-Backup do banco (`cache/zapbot.db`): um automático por dia, e pelo WhatsApp você cria, lista,
-compara, restaura, recebe o arquivo ou apaga. Sem opção, mostra o banco atual e os backups.
-O backup inclui os cadastros, históricos e configurações do [`/monitor`](monitor.md).
-Remover contatos ou reduzir o histórico local não altera os backups já existentes.
+Database backup (`cache/zapbot.db`): one automatic per day, and from WhatsApp you can create, list,
+compare, restore, receive the file or delete. With no option, it shows the current database and the
+backups.
+The backup includes the registrations, histories and settings of [`/monitor`](monitor.md).
+Removing contacts or reducing the local history doesn't change the backups that already exist.
 
-| Opção | Valor | Descrição |
+| Option | Value | Description |
 |---|---|---|
-| *(nenhuma)* | | Banco atual (tamanho e entradas de cada tabela), quantos backups há, o último e o próximo automático |
-| `-now`, `-n` | | Cria um backup agora (manual: fica até ser apagado) |
-| `-list`, `-l` | | Lista os backups, numerados do mais novo para o mais antigo, com data, tamanho e motivo |
-| `-info`, `-i` | `<nº>` | Detalhes do backup: data, motivo, versão do bot que o criou (com o commit, ex.: `X.Y.Z (git+4465374/vX.Y.Z)`) e as entradas de cada tabela, comparadas com o banco atual |
-| `-restore`, `-r` | `<nº\|nome>` | Restaura o backup. Sem `-sim`, só mostra o que vai acontecer e o comando para confirmar |
-| `-sim` | | Confirma: junto com `-restore`, a restauração; junto com `-send -to` outro chat, o envio |
-| `-send`, `-s` | `[nº]` | Envia o arquivo do backup (sem nº: o mais recente) no seu privado ou nos destinos do `-to`. Veja [Enviar o arquivo](#enviar-o-arquivo) |
-| `-to` | `<destino>` | Junto com `-send`: por e-mail, como anexo (`email` é o `QRCODE_EMAIL_SMTP_TO`, ou um endereço), ou noutro chat: um contato (`/Jorge Pereira/`), uma menção (`@Fulano Da Silva`), um grupo (`/Grupo L200/`) ou um número (`+5521999999999`) (pede `-sim`). Repita para vários. Veja [Destinos](index.md#destinos-contato-grupo-número-ou-e-mail) |
-| `-rm` | `<nº\|all>` | Apaga o backup nº N (ou todos) |
+| *(none)* | | Current database (size and entries of each table), how many backups there are, the last one and the next automatic one |
+| `-now`, `-n` | | Creates a backup now (manual: stays until deleted) |
+| `-list`, `-l` | | Lists the backups, numbered from newest to oldest, with date, size and reason |
+| `-info`, `-i` | `<nº>` | Backup details: date, reason, version of the bot that created it (with the commit, e.g.: `X.Y.Z (git+4465374/vX.Y.Z)`) and the entries of each table, compared with the current database |
+| `-restore`, `-r` | `<nº\|nome>` | Restores the backup. Without `-sim`, it only shows what will happen and the command to confirm |
+| `-sim` | | Confirms: with `-restore`, the restore; with `-send -to` another chat, the sending |
+| `-send`, `-s` | `[nº]` | Sends the backup file (without nº: the most recent) to your private chat or to the `-to` destinations. See [Send the file](#send-the-file) |
+| `-to` | `<destino>` | With `-send`: by email, as an attachment (`email` is the `QRCODE_EMAIL_SMTP_TO`, or an address), or to another chat: a contact (`/Jorge Pereira/`), a mention (`@Fulano Da Silva`), a group (`/Grupo L200/`) or a number (`+5521999999999`) (asks for `-sim`). Repeat for several. See [Destinations](index.md#destinations-contact-group-number-or-email) |
+| `-rm` | `<nº\|all>` | Deletes backup nº N (or all of them) |
 
 ```text
-/backup                                 → o banco atual e os backups
-/backup -now                            → cria um agora
-/bkp -l                                 → a lista
-/backup -i 2                            → o que tem no nº 2, comparado com o banco atual
-/backup -r 2                            → mostra o que vai acontecer e pede confirmação
-/backup -r zapbot-20261001-030000 -sim  → restaura
-/backup -s                              → o arquivo do mais recente no seu privado
-/backup -s -to eu@gmail.com             → o mais recente, por e-mail
-/backup -s 2 -to email                  → o nº 2, para o QRCODE_EMAIL_SMTP_TO
-/backup -s -to /Jorge Pereira/ -sim     → no privado de um contato
-/backup -s -to @Fulano Da Silva -sim    → num grupo, mencionando a pessoa
-/backup -s -to email -to /Jorge Pereira/ -sim  → por e-mail e no privado do contato
-/backup -rm 3                           → apaga o nº 3
+/backup                                 → the current database and the backups
+/backup -now                            → creates one now
+/bkp -l                                 → the list
+/backup -i 2                            → what's in nº 2, compared with the current database
+/backup -r 2                            → shows what will happen and asks for confirmation
+/backup -r zapbot-20261001-030000 -sim  → restores
+/backup -s                              → the most recent file in your private chat
+/backup -s -to eu@gmail.com             → the most recent, by email
+/backup -s 2 -to email                  → nº 2, to the QRCODE_EMAIL_SMTP_TO
+/backup -s -to /Jorge Pereira/ -sim     → in a contact's private chat
+/backup -s -to @Fulano Da Silva -sim    → in a group, mentioning the person
+/backup -s -to email -to /Jorge Pereira/ -sim  → by email and in the contact's private chat
+/backup -rm 3                           → deletes nº 3
 ```
 
 ```text
@@ -64,16 +65,16 @@ Remover contatos ou reduzir o histórico local não altera os backups já existe
 3. qua 30/09 03:00 · 1.00 MB · automático
 ```
 
-## Backup automático
+## Automatic backup
 
-Todo dia, a partir das 3h de Brasília (setting `backup.hour`), o bot cria um backup. Se estiver fora
-do ar nesse horário, o backup sai assim que ele voltar, no mesmo dia. Desligue com
+Every day, from 3 AM Brasília time (setting `backup.hour`), the bot creates a backup. If it's down
+at that time, the backup is made as soon as it's back, on the same day. Turn it off with
 `/set backup.enabled off`.
 
-A setting `backup.to` define para onde enviar o arquivo diário **além de salvar localmente**. O
-padrão é `""` (só local). Aceita os destinos do `-to`: `email` (o `QRCODE_EMAIL_SMTP_TO`), endereços
-de e-mail, nome de contato ou grupo e número com DDI. Para vários destinos, escreva um `-to` para
-cada um na setting.
+The `backup.to` setting defines where to send the daily file **in addition to saving it locally**.
+The default is `""` (local only). It accepts the `-to` destinations: `email` (the
+`QRCODE_EMAIL_SMTP_TO`), email addresses, contact or group name and number with country code. For
+several destinations, write one `-to` for each in the setting.
 
 ```text
 /set backup.to email
@@ -84,48 +85,48 @@ cada um na setting.
 /set backup.to ""
 ```
 
-Configurar `backup.to` autoriza o envio diário do banco inteiro ao destino, sem pedir `-sim` a cada
-dia. Para nomes com mais de um resultado, use o nome completo ou o número: o envio automático não
-abre uma lista de escolha. Para uma pessoa mencionada num comando, configure seu nome ou número na
-setting. E-mails usam o SMTP do bot e o mesmo limite de 20 MB do envio manual. Backups manuais e os
-de antes de restaurar não são enviados por essa setting.
+Setting `backup.to` authorizes sending the entire database to the destination every day, without
+asking for `-sim` each day. For names with more than one result, use the full name or the number:
+the automatic sending doesn't open a choice list. For a person mentioned in a command, set their
+name or number in the setting. Emails use the bot's SMTP and the same 20 MB limit as manual
+sending. Manual backups and the ones made before restoring aren't sent through this setting.
 
-Ficam os 7 automáticos mais recentes (setting `backup.keep`); os mais antigos são apagados a cada
-backup novo. A mesma conta vale para os backups "antes de restaurar". Os **manuais** (`-now`) nunca
-são apagados sozinhos.
+The 7 most recent automatic ones are kept (setting `backup.keep`); older ones are deleted with
+each new backup. The same count applies to the "before restoring" backups. **Manual** ones (`-now`)
+are never deleted automatically.
 
-Se o backup diário falhar (ex.: disco cheio), o erro vai para o log e para os
-[alertas por e-mail](../emails.md#alertas-por-e-mail) (`💾 Backup falhou`). Se o envio falhar, o
-arquivo local fica preservado e a falha vai para o log e para os alertas
-(`💾 Envio do backup falhou`). O envio é tentado uma vez no dia, quando o backup é criado; outra
-verificação no mesmo dia não repete o envio. Os demais destinos são tentados mesmo que um deles
-falhe.
+If the daily backup fails (e.g., disk full), the error goes to the log and to the
+[email alerts](../emails.md#email-alerts) (`💾 Backup falhou`). If sending fails, the
+local file is preserved and the failure goes to the log and to the alerts
+(`💾 Envio do backup falhou`). Sending is attempted once a day, when the backup is created; another
+check on the same day doesn't repeat the sending. The other destinations are attempted even if one
+of them fails.
 
-## O que entra
+## What's included
 
-O banco inteiro: mensagens guardadas (inclusive as apagadas e as editadas), settings, regras e
-ocorrências do `/watch`, alertas de preço, lembretes e mensagens agendadas, enquetes e estatísticas.
-A cópia é feita com o `VACUUM INTO` do SQLite (consistente, sem parar o
-bot) e compactada com gzip.
+The entire database: stored messages (including deleted and edited ones), settings, `/watch` rules
+and hits, price alerts, reminders and scheduled messages, polls and statistics.
+The copy is made with SQLite's `VACUUM INTO` (consistent, without stopping the
+bot) and compressed with gzip.
 
-As imagens do `/notes` (`cache/notes`) entram num arquivo à parte, só quando existe alguma, e voltam
-junto no `-r`. O `-send` e o backup automático enviam só o banco (as imagens podem passar do limite
-de anexo).
+`/notes` images (`cache/notes`) go in a separate file, only when there are any, and come back
+along with `-r`. `-send` and the automatic backup send only the database (the images may exceed the
+attachment limit).
 
-**As outras mídias (`cache/media`) não entram**: depois de uma restauração, uma apagada com mídia que não
-está mais no disco avisa que o arquivo não está disponível. A sessão do WhatsApp (volume
-`wwebjs_auth`) também não.
+**The other media (`cache/media`) is not included**: after a restore, a deleted message with media that is
+no longer on disk says the file isn't available. The WhatsApp session (volume
+`wwebjs_auth`) isn't included either.
 
-Cada backup são dois ou três arquivos em `cache/backups/`, no volume `app_cache`:
+Each backup is two or three files in `cache/backups/`, in the `app_cache` volume:
 
-- `zapbot-AAAAMMDD-HHMMSS.db.gz`: o banco compactado;
-- `zapbot-AAAAMMDD-HHMMSS.notes.tar.gz`: as imagens do `/notes` (só se houver alguma);
-- `zapbot-AAAAMMDD-HHMMSS.json`: data, motivo, versão do bot e as entradas de cada tabela.
+- `zapbot-AAAAMMDD-HHMMSS.db.gz`: the compressed database;
+- `zapbot-AAAAMMDD-HHMMSS.notes.tar.gz`: the `/notes` images (only if there are any);
+- `zapbot-AAAAMMDD-HHMMSS.json`: date, reason, bot version and the entries of each table.
 
-## Restaurar
+## Restore
 
-`/backup -r <nº>` mostra a data e o motivo e pede a confirmação, já com o nome do backup (um backup
-novo no meio do caminho mudaria os números):
+`/backup -r <nº>` shows the date and reason and asks for confirmation, already with the backup name
+(a new backup in the meantime would change the numbers):
 
 ```text
 /backup -r 2 -sim
@@ -135,25 +136,25 @@ message_edits 10 · messages 1.180 · settings 47 · ...
 💾 O estado anterior ficou no backup zapbot-20261001-101530: para desfazer, /backup -r zapbot-20261001-101530 -sim
 ```
 
-- O banco inteiro volta àquele momento; o que entrou depois se perde. Por isso, antes de restaurar,
-  o bot faz um backup do estado atual (motivo "antes de restaurar"), e a resposta já traz o comando
-  para desfazer.
-- Os settings são recarregados na hora, sem reiniciar.
-- Um backup de uma versão anterior também serve: as tabelas e colunas que ele não tinha ficam
-  vazias.
+- The entire database goes back to that moment; whatever came in afterward is lost. That's why,
+  before restoring, the bot makes a backup of the current state (reason "antes de restaurar"), and
+  the reply already includes the command to undo.
+- Settings are reloaded right away, without restarting.
+- A backup from an earlier version works too: tables and columns it didn't have stay
+  empty.
 
-## Enviar o arquivo
+## Send the file
 
-O `-send` manda o arquivo `.db.gz` no seu privado. Com o `-to`, vai para outro lugar, como nos
-outros comandos ([Destinos](index.md#destinos-contato-grupo-número-ou-e-mail)):
+`-send` sends the `.db.gz` file to your private chat. With `-to`, it goes elsewhere, as in the
+other commands ([Destinations](index.md#destinations-contact-group-number-or-email)):
 
-- **E-mail**: `-to email` (o `QRCODE_EMAIL_SMTP_TO`) ou um ou mais endereços
-  (`-to "a@x.com, b@y.com"`). Vai como anexo, pelo mesmo SMTP do QR Code e dos alertas
-  (`QRCODE_EMAIL_SMTP_*`, veja [Configuração](../configuracao.md#e-mail-qr-code-e-alertas)).
-- **Outro chat**: um contato, um grupo ou um número. Como o banco tem as mensagens guardadas de
-  **todos** os chats, o bot pede confirmação: repita com `-sim`.
-- **Vários**: repita o `-to`. Os e-mails de todos vão num e-mail só; cada chat recebe o arquivo (se
-  falhar num, os outros recebem assim mesmo).
+- **Email**: `-to email` (the `QRCODE_EMAIL_SMTP_TO`) or one or more addresses
+  (`-to "a@x.com, b@y.com"`). It goes as an attachment, through the same SMTP as the QR Code and the
+  alerts (`QRCODE_EMAIL_SMTP_*`, see [Configuration](../configuracao.md#email-qr-code-and-alerts)).
+- **Another chat**: a contact, a group or a number. Since the database has the stored messages of
+  **all** chats, the bot asks for confirmation: repeat with `-sim`.
+- **Several**: repeat `-to`. All the emails go in a single email; each chat receives the file (if
+  one fails, the others still receive it).
 
 ```text
 /backup -s -to fulano@gmail.com
@@ -168,18 +169,19 @@ Para enviar mesmo em 👤 Jorge Pereira, repita com -sim: /backup -send -to /Jor
 Para enviar mesmo em 👤 Jorge Pereira, 👥 Grupo sobre L200, repita com -sim: /backup -send -to email -to /Jorge Pereira/ -to /Grupo L200/ -sim
 ```
 
-- O e-mail traz o código anti-phishing, como os outros do bot, e as instruções para restaurar.
-- Backups acima de 20 MB não vão por e-mail (os provedores recusam anexos grandes): use o `-s` sem
+- The email includes the anti-phishing code, like the bot's other emails, and the restore
+  instructions.
+- Backups above 20 MB don't go by email (providers refuse large attachments): use `-s` without
   `-to`.
-- Sem o SMTP configurado (`QRCODE_EMAIL_SMTP_HOST` e `_USER`), o bot avisa.
-- A forma antiga, com os e-mails direto no `-s` (`/backup -s 2 email`), ainda funciona.
+- Without SMTP configured (`QRCODE_EMAIL_SMTP_HOST` and `_USER`), the bot warns you.
+- The old form, with the emails directly in `-s` (`/backup -s 2 email`), still works.
 
-## Guardar fora do servidor
+## Keep it off the server
 
-Os backups ficam no mesmo volume do banco: se o volume for apagado (ex.:
-`make DOCK_REMOTE=1 destroy`), eles vão junto. O [`/cache -a`](cache.md) e o `/cache -b` também
-apagam os backups. Para guardar uma cópia fora, use `/backup -s` (o arquivo chega no seu WhatsApp),
-mande por e-mail (`/backup -s -to seu@email.com`) ou copie a pasta:
+Backups live on the same volume as the database: if the volume is deleted (e.g.,
+`make DOCK_REMOTE=1 destroy`), they go with it. [`/cache -a`](cache.md) and `/cache -b` also
+delete the backups. To keep a copy elsewhere, use `/backup -s` (the file arrives in your WhatsApp),
+send it by email (`/backup -s -to seu@email.com`) or copy the folder:
 
 ```bash
 docker cp zapbot:/app/cache/backups ./backups-zapbot

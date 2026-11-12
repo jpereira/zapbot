@@ -1,26 +1,27 @@
 # `/defi` · admin
 
-Acompanha posições em DeFi, de cinco protocolos:
+Tracks DeFi positions from five protocols:
 
-- [Orca](https://www.orca.so/) (Whirlpools, na Solana): você cadastra cada posição.
-- [Project X](https://www.prjx.com/portfolio) (na HyperEVM, da Hyperliquid): você cadastra a
-  carteira, e o bot lê as posições abertas dela ([Project X](#project-x)).
-- [Liquidswap](https://liquidswap.com/) (a DEX da Pontem, na Aptos): você cadastra a carteira, e o
-  bot lê as posições de liquidez dela ([Liquidswap](#liquidswap)).
-- [Morpho](https://morpho.org/) (empréstimos, na Base e em outras redes): você cadastra a carteira,
-  e o bot lê o colateral, a dívida e o risco dela ([Morpho](#morpho)).
-- [Aave V3](https://aave.com/) (empréstimos, na Ethereum e na Base): você cadastra a carteira, e o
-  bot lê o fornecido, o emprestado e o Health Factor nos contratos do Aave ([Aave V3](#aave-v3)).
+- [Orca](https://www.orca.so/) (Whirlpools, on Solana): you register each position.
+- [Project X](https://www.prjx.com/portfolio) (on HyperEVM, Hyperliquid's chain): you register the
+  wallet, and the bot reads its open positions ([Project X](#project-x)).
+- [Liquidswap](https://liquidswap.com/) (Pontem's DEX, on Aptos): you register the wallet, and the
+  bot reads its liquidity positions ([Liquidswap](#liquidswap)).
+- [Morpho](https://morpho.org/) (lending, on Base and other networks): you register the wallet, and
+  the bot reads its collateral, debt and risk ([Morpho](#morpho)).
+- [Aave V3](https://aave.com/) (lending, on Ethereum and Base): you register the wallet, and the bot
+  reads what was supplied, what was borrowed and the Health Factor from Aave's contracts
+  ([Aave V3](#aave-v3)).
 
-A Orca cadastra a **posição** (`-address`); o Project X, a Liquidswap, o Morpho e o Aave, a
-**carteira** (`-wallet`). Todos aceitam um nome opcional (`-name`). O `/defi` lê tudo na hora e
-mostra o equivalente ao "Position Details" de cada posição; com `orca`, `prjx`, `liquidswap` (ou
-`liqswp`), `morpho` ou `aave`, só as daquele protocolo. No seu privado, os endereços e as carteiras aparecem inteiros; fora dele,
-abreviados (`0x92…0444`). Com o `-alerta`, o bot avisa quando uma posição sai da faixa, quando volta
-e, com o `-taxas`, quando as taxas a coletar passam de um valor
-([Alerta de saída da faixa](#alerta-de-saída-da-faixa)).
+Orca registers the **position** (`-address`); Project X, Liquidswap, Morpho and Aave register the
+**wallet** (`-wallet`). All of them accept an optional name (`-name`). `/defi` reads everything on
+the spot and shows the equivalent of "Position Details" for each position; with `orca`, `prjx`,
+`liquidswap` (or `liqswp`), `morpho` or `aave`, only the ones from that protocol. In your private
+chat, addresses and wallets show in full; elsewhere, abbreviated (`0x92…0444`). With `-alerta`, the
+bot warns when a position leaves the range, when it comes back and, with `-taxas`, when the fees to
+collect go over a value ([Out-of-range alert](#out-of-range-alert)).
 
-Para todos os protocolos:
+For all protocols:
 
 ```text
 /defi                          → o Position Details de todos
@@ -34,7 +35,7 @@ Para todos os protocolos:
 /defi -alerta <nº|all> [-to <destino>]... [-taxas <valor>]
 ```
 
-Para a Orca:
+For Orca:
 
 ```text
 /defi orca                     → só as posições da Orca
@@ -43,7 +44,7 @@ Para a Orca:
 /defi orca -address <endereço> -n "Posição TAL"   → com um nome
 ```
 
-Para o Project X:
+For Project X:
 
 ```text
 /defi prjx                     → só as do Project X
@@ -52,7 +53,7 @@ Para o Project X:
 /defi prjx -wallet <0x...> -alerta    → cadastra e já liga o alerta (no seu privado)
 ```
 
-Para a Liquidswap (`liquidswap` ou `liqswp`):
+For Liquidswap (`liquidswap` or `liqswp`):
 
 ```text
 /defi liquidswap               → só as da Liquidswap (o mesmo que /defi liqswp)
@@ -60,7 +61,7 @@ Para a Liquidswap (`liquidswap` ou `liqswp`):
 /defi liqswp -wallet <0x...> -n Carteira Aptos   → com um nome
 ```
 
-Para o Morpho:
+For Morpho:
 
 ```text
 /defi morpho                   → as carteiras cadastradas (sem nenhuma: a do MORPHO_WALLET_ADDRESS)
@@ -68,7 +69,7 @@ Para o Morpho:
 /defi morpho -wallet <0x...> -n Carteira Empre   → com um nome
 ```
 
-Para o Aave:
+For Aave:
 
 ```text
 /defi aave                     → as carteiras cadastradas (sem nenhuma: a do AAVE_WALLET_ADDRESS)
@@ -76,33 +77,33 @@ Para o Aave:
 /defi aave -wallet <0x...> -n CarteiraX   → cadastra a carteira (e já mostra a posição)
 ```
 
-| Opção | Valor | Descrição |
+| Option | Value | Description |
 |---|---|---|
-| *(protocolo)* | `orca`, `prjx`, `liquidswap` (ou `liqswp`), `morpho` ou `aave` | Sozinho, mostra o Position Details só dele; com `-address` (`orca`) ou `-wallet` (`prjx`, `liquidswap`, `morpho` e `aave`), cadastra; com `-help`, mostra a ajuda só dele. Sem protocolo, o `/defi` mostra todos os cadastrados |
-| `-list`, `-l` | | Lista os cadastros, com 🔔 nos que têm alerta (e o limite das taxas: `🔔 ≥ $2,000.00`). No seu privado, com os endereços inteiros; fora dele, abreviados (`Hz15…RaPZ`) |
-| `-rm` | `<nº...\|all>` | Remove o cadastro nº N, vários (`-rm 1 3` ou `-rm 1,3`) ou todos; se algum nº não existe, nenhum sai. Junto com `-alerta`: só desliga o alerta da nº N (ou de todas) |
-| `-alerta`, `-a` | `[nº\|all\|valor]` | Sem nº: lista os alertas. Com nº (ou `all`): avisa quando a posição sair da faixa e quando voltar. Só da Orca e do Project X (a Liquidswap, o Morpho e o Aave não têm faixa). No cadastro (com `-address` ou `-wallet`), liga o alerta da posição nova, no seu privado (ou no `-to`); o valor é o limite das taxas, como o `-taxas` (`-alerta 2000`). Veja [Alerta de saída da faixa](#alerta-de-saída-da-faixa) |
-| `-taxas` | `[valor\|off]` | Sozinho: o resumo das taxas a coletar (veja [Resumo das taxas](#resumo-das-taxas)). Junto com `-alerta <nº\|all>`: avisa também quando as taxas a coletar passarem do valor, em dólar (ex.: `-taxas 50`). Avisa uma vez e de novo depois de você coletar; `off` tira |
-| `-to` | `<destino>` | Junto com `-alerta`: para onde vai o aviso. Um contato (`/Jorge Pereira/`), uma menção (`@Fulano Da Silva`), um grupo (`/Grupo L200/`), um número (`+5521999999999`) ou e-mail (`email` é o `QRCODE_EMAIL_SMTP_TO`) ([Destinos](index.md#destinos-contato-grupo-número-ou-e-mail)). Repita para vários: o aviso sai em todos. Sem ele, o seu privado |
-| `-address` | `<endereço>` | Com `orca`: cadastra a posição da Orca pelo endereço dela |
-| `-pool` | `<endereço>` | Com `orca -address`: a pool. Opcional; se vier, o bot confere se bate |
-| `-nft` | `<mint>` | Com `orca -address`: o NFT da posição. Opcional; se vier, o bot confere se bate |
-| `-wallet`, `-w` | `<0x...>` | Com `prjx`, `morpho` ou `aave`: cadastra a carteira (`0x` e 40 caracteres hexadecimais); com `liquidswap`, a carteira da Aptos (`0x` e até 64). O bot lê todas as posições abertas dela |
-| `-mask`, `-m` | | Esconde os números da carteira com `*`, mantendo o formato (`$**,***.**`): saldos, quantidades, valores e o rendimento. As taxas a coletar ficam visíveis. Os endereços da posição (-address) e da carteira (-wallet) também ficam ocultos, inclusive no privado. Preço, faixa, pool, Health Factor, LTV e APY continuam. Vale com qualquer protocolo (`/defi -m`, `/defi aave -mask`) |
-| `-name`, `-n` | `<nome>` | Com `-address` ou `-wallet`: um nome para a posição ou a carteira (opcional, até 40 caracteres), mostrado junto do endereço (`Orca · Posição TAL (Hz15…RaPZ)`, `Project X · Carteira Hare (0x92…0444)`). Com espaços, com ou sem aspas. Numa já cadastrada, troca o nome |
-| `-full`, `-f` | | Com `aave`: os detalhes da posição: LTV, liquidation threshold, available borrows, o APY de cada ativo, o que é colateral, eMode e isolation mode. Veja [Aave V3](#aave-v3) |
+| *(protocol)* | `orca`, `prjx`, `liquidswap` (ou `liqswp`), `morpho` ou `aave` | Alone, shows the Position Details for that protocol only; with `-address` (`orca`) or `-wallet` (`prjx`, `liquidswap`, `morpho` and `aave`), registers; with `-help`, shows help for that protocol only. Without a protocol, `/defi` shows everything registered |
+| `-list`, `-l` | | Lists the registrations, with 🔔 on the ones that have an alert (and the fee threshold: `🔔 ≥ $2,000.00`). In your private chat, with full addresses; elsewhere, abbreviated (`Hz15…RaPZ`) |
+| `-rm` | `<nº...\|all>` | Removes registration no. N, several (`-rm 1 3` or `-rm 1,3`) or all of them; if any number doesn't exist, none is removed. Together with `-alerta`: only turns off the alert for no. N (or for all) |
+| `-alerta`, `-a` | `[nº\|all\|valor]` | Without a number: lists the alerts. With a number (or `all`): warns when the position leaves the range and when it comes back. Orca and Project X only (Liquidswap, Morpho and Aave have no range). On registration (with `-address` or `-wallet`), turns on the alert for the new position, in your private chat (or at `-to`); the value is the fee threshold, same as `-taxas` (`-alerta 2000`). See [Out-of-range alert](#out-of-range-alert) |
+| `-taxas` | `[valor\|off]` | Alone: the summary of fees to collect (see [Fee summary](#fee-summary)). Together with `-alerta <nº\|all>`: also warns when the fees to collect go over the value, in dollars (e.g., `-taxas 50`). Warns once, and again after you collect; `off` removes it |
+| `-to` | `<destino>` | Together with `-alerta`: where the warning goes. A contact (`/Jorge Pereira/`), a mention (`@Fulano Da Silva`), a group (`/Grupo L200/`), a number (`+5521999999999`) or email (`email` is `QRCODE_EMAIL_SMTP_TO`) ([Destinations](index.md#destinations-contact-group-number-or-email)). Repeat it for several: the warning goes to all of them. Without it, your private chat |
+| `-address` | `<endereço>` | With `orca`: registers the Orca position by its address |
+| `-pool` | `<endereço>` | With `orca -address`: the pool. Optional; if given, the bot checks that it matches |
+| `-nft` | `<mint>` | With `orca -address`: the position's NFT. Optional; if given, the bot checks that it matches |
+| `-wallet`, `-w` | `<0x...>` | With `prjx`, `morpho` or `aave`: registers the wallet (`0x` and 40 hexadecimal characters); with `liquidswap`, the Aptos wallet (`0x` and up to 64). The bot reads all of its open positions |
+| `-mask`, `-m` | | Hides the wallet numbers with `*`, keeping the format (`$**,***.**`): balances, amounts, values and yield. Fees to collect stay visible. Position (-address) and wallet (-wallet) addresses are hidden too, even in private chat. Price, range, pool, Health Factor, LTV and APY stay. Works with any protocol (`/defi -m`, `/defi aave -mask`) |
+| `-name`, `-n` | `<nome>` | With `-address` or `-wallet`: a name for the position or wallet (optional, up to 40 characters), shown next to the address (`Orca · Posição TAL (Hz15…RaPZ)`, `Project X · Carteira Hare (0x92…0444)`). With spaces, quoted or not. On one that's already registered, changes the name |
+| `-full`, `-f` | | With `aave`: the position details: LTV, liquidation threshold, available borrows, each asset's APY, what is collateral, eMode and isolation mode. See [Aave V3](#aave-v3) |
 
 ```text
 /defi orca -address Hz15TavvC8p9S7EihCbWa694kWFJGXFzs7AVpvWKRaPZ -pool CeaZcxBNLpJWtxzt58qQmfMBtJY8pQLvursXTJYGQpbN -nft C1MEDy3xt3gxiDtFkHt7HBWxxUVSarKZgt22FUzsKoji
 /defi prjx -wallet 0x926024824BAEAf3ee0b7A2EEFA5A216743230444
 /defi liquidswap -wallet 0x8f3c4d2a1b9e7f6a5c4b3a29180f7e6d5c4b3a2918f7e6d5c4b3a2918f7e6d5c
 /defi morpho -wallet 0x74459EA7df673CFd90afbe39F635AcE08Ccb97C4
-/defi -alerta 1        → avisa no seu privado quando a nº 1 sair da faixa (e voltar)
-/defi -a 1 -taxas 50   → e quando as taxas a coletar da nº 1 passarem de $50
+/defi -alerta 1        → warns in your private chat when no. 1 leaves the range (and comes back)
+/defi -a 1 -taxas 50   → and when no. 1's fees to collect go over $50
 ```
 
-A lista mostra o 🔔 de quem tem alerta e, com o `-taxas` (ou o `-alerta <valor>` no cadastro), o
-limite das taxas:
+The list shows 🔔 for the ones with an alert and, with `-taxas` (or `-alerta <valor>` on
+registration), the fee threshold:
 
 ```text
 /defi -l
@@ -114,11 +115,11 @@ limite das taxas:
 💡 /defi mostra os detalhes; /defi -rm <nº> remove; 🔔 = com alerta (/defi -alerta), ≥ $ é o limite das taxas.
 ```
 
-No seu privado, os endereços saem inteiros.
+In your private chat, addresses show in full.
 
-Para receber o Position Details todo dia, num chat ou junto com outros comandos, use o
-[`/cron`](cron.md#comandos-no-texto) (aceita os cinco protocolos, `-l`, `-mask` e `aave -full`; as
-opções de cadastro e de alerta são recusadas):
+To get the Position Details every day, in a chat or together with other commands, use
+[`/cron`](cron.md#commands-in-the-text) (it accepts the five protocols, `-l`, `-mask` and
+`aave -full`; the registration and alert options are rejected):
 
 ```text
 /cron 06:00 -r diario -to /Grupo da Faculdade/ ⏰ Status da DeFi! {/defi} Preço do BTC! {/crypto BTC}
@@ -148,10 +149,10 @@ opções de cadastro e de alerta são recusadas):
 
 ## Project X
 
-O [Project X](https://www.prjx.com/portfolio) é uma DEX da HyperEVM (a rede EVM da Hyperliquid), um
-fork do Uniswap V3: cada posição é um NFT do contrato de posições, na carteira de quem a abriu. Por
-isso o cadastro é a **carteira**, e o `/defi prjx` mostra cada posição aberta dela, da mais nova
-para a mais velha:
+[Project X](https://www.prjx.com/portfolio) is a HyperEVM DEX (Hyperliquid's EVM network), a Uniswap
+V3 fork: each position is an NFT from the positions contract, held in the wallet of whoever opened
+it. That's why what you register is the **wallet**, and `/defi prjx` shows each open position in it,
+from newest to oldest:
 
 ```text
 /defi prjx -wallet 0x926024824BAEAf3ee0b7A2EEFA5A216743230444
@@ -175,22 +176,22 @@ para a mais velha:
    • 0.004384 USD₮0 (<$0.01)
 ```
 
-- Posições fechadas (sem liquidez) ficam de fora: o NFT continua na carteira, mas não há o que
-  mostrar. O bot lê os 100 NFTs mais novos e mostra até 20 posições abertas.
-- **Taxas a coletar**: o bot simula o `collect` do contrato, como se a carteira chamasse; é o valor
-  exato que o botão "Collect" coletaria.
-- **Dólar**: vem do lado estável do par (USD₮0, USDC, USDe, USDH...). Num par sem stablecoin,
-  aparecem só as quantidades.
-- Cadastrar uma carteira sem posição aberta vale (o bot avisa): o `/defi prjx` mostra as posições
-  quando houver.
+- Closed positions (no liquidity) are left out: the NFT is still in the wallet, but there's nothing
+  to show. The bot reads the 100 newest NFTs and shows up to 20 open positions.
+- **Fees to collect**: the bot simulates the contract's `collect`, as if the wallet called it; it's
+  the exact amount the "Collect" button would collect.
+- **Dollar**: comes from the stable side of the pair (USD₮0, USDC, USDe, USDH...). On a pair with no
+  stablecoin, only the amounts show.
+- Registering a wallet with no open position is allowed (the bot warns you): `/defi prjx` shows the
+  positions once there are any.
 
 ## Liquidswap
 
-A [Liquidswap](https://liquidswap.com/) é a DEX da Pontem na Aptos. As pools são de AMM clássico:
-`x·y = k` nas não correlacionadas e `x³y + xy³ = k` nas estáveis, nas versões v0 e v0.5. A posição
-é a moeda de LP da pool, na carteira de quem colocou a liquidez. Por isso o cadastro é a
-**carteira** da Aptos, e o `/defi liquidswap` (ou `/defi liqswp`) mostra cada pool em que ela tem
-LP, da maior para a menor em dólar:
+[Liquidswap](https://liquidswap.com/) is Pontem's DEX on Aptos. The pools are classic AMM: `x·y = k`
+on the uncorrelated ones and `x³y + xy³ = k` on the stable ones, in versions v0 and v0.5. The
+position is the pool's LP coin, held in the wallet of whoever provided the liquidity. That's why what
+you register is the Aptos **wallet**, and `/defi liquidswap` (or `/defi liqswp`) shows each pool
+where it has LP, from largest to smallest in dollars:
 
 ```text
 /defi liquidswap -wallet 0x8f3c4d2a1b9e7f6a5c4b3a29180f7e6d5c4b3a2918f7e6d5c4b3a2918f7e6d5c
@@ -212,35 +213,35 @@ LP, da maior para a menor em dólar:
 💸 As taxas dos swaps entram na pool: já estão no saldo.
 ```
 
-- **Fatia da pool**: o seu LP dividido pelo total emitido. O saldo de cada token é essa fatia das
-  reservas da pool.
-- **Preço**: nas pools não correlacionadas, a razão entre as reservas; nas estáveis, o preço da
-  curva `x³y + xy³` no ponto atual.
-- **Dólar**: vem do lado estável do par (USDC, USDT...). Num par sem stablecoin, aparecem só as
-  quantidades.
-- **Sem faixa e sem taxas a coletar**: num AMM clássico, a liquidez cobre todos os preços e as
-  taxas dos swaps entram nas reservas. Elas já estão no saldo, e por isso a Liquidswap não tem
+- **Pool share**: your LP divided by the total issued. The balance of each token is that share of the
+  pool's reserves.
+- **Price**: on uncorrelated pools, the ratio between the reserves; on stable ones, the price of the
+  `x³y + xy³` curve at the current point.
+- **Dollar**: comes from the stable side of the pair (USDC, USDT...). On a pair with no stablecoin,
+  only the amounts show.
+- **No range and no fees to collect**: in a classic AMM, the liquidity covers all prices and the swap
+  fees go into the reserves. They're already in the balance, which is why Liquidswap has no
   `-alerta`.
-- O endereço da carteira aceita a forma curta da Aptos (`0x1` é o `0x000…001`) e é guardado por
-  inteiro. O bot mostra até 20 pools por carteira.
-- Cadastrar uma carteira sem LP vale (o bot avisa): o `/defi liquidswap` mostra as posições quando
-  houver.
+- The wallet address accepts Aptos's short form (`0x1` is `0x000…001`) and is stored in full. The bot
+  shows up to 20 pools per wallet.
+- Registering a wallet with no LP is allowed (the bot warns you): `/defi liquidswap` shows the
+  positions once there are any.
 
 ## Morpho
 
-O `/defi morpho` mostra as posições da carteira no [Morpho](https://morpho.org/): o colateral, a
-dívida, o que foi fornecido (num mercado ou num vault) e o risco de cada mercado. Os dados vêm da
-API oficial do Morpho (GraphQL em `https://api.morpho.org/graphql`, setting `defi.morpho.api`), numa
-consulta só por todas as redes do setting `defi.morpho.chains` (padrão: `8453`, a Base; para incluir
-a Ethereum, `/set defi.morpho.chains 8453 1`). A consulta é só de leitura: o bot não pede nem usa
-chave privada.
+`/defi morpho` shows the wallet's positions on [Morpho](https://morpho.org/): the collateral, the
+debt, what was supplied (in a market or a vault) and the risk of each market. The data comes from
+Morpho's official API (GraphQL at `https://api.morpho.org/graphql`, setting `defi.morpho.api`), in a
+single query for all the networks in the `defi.morpho.chains` setting (default: `8453`, Base; to
+include Ethereum, `/set defi.morpho.chains 8453 1`). The query is read-only: the bot neither asks for
+nor uses a private key.
 
-Cadastre a carteira com `/defi morpho -wallet <0x...>` (o bot confere na API antes de guardar): ela
-entra no `/defi`, no `-l` e no `-rm`, junto com as outras. O `-alerta` não vale para o Morpho, que
-não tem faixa. Sem nenhuma carteira cadastrada, o `/defi morpho` consulta a do
-`MORPHO_WALLET_ADDRESS` no `config/.env` (ou a do setting `defi.morpho.wallet`, que vale quando a
-variável está vazia). A resposta fica 30 segundos em memória: repetir o comando nesse intervalo não
-consulta a API de novo.
+Register the wallet with `/defi morpho -wallet <0x...>` (the bot checks the API before saving): it
+shows up in `/defi`, `-l` and `-rm`, along with the others. `-alerta` doesn't apply to Morpho, which
+has no range. With no registered wallet, `/defi morpho` queries the one in `MORPHO_WALLET_ADDRESS` in
+`config/.env` (or the one in the `defi.morpho.wallet` setting, which applies when the variable is
+empty). The response is kept in memory for 30 seconds: repeating the command in that interval doesn't
+query the API again.
 
 ```text
 🦋 MORPHO · cbBTC/USDC · Base
@@ -284,37 +285,37 @@ Utilização do mercado: 90.04%
 🕐 Atualizado: 03:15:42
 ```
 
-Com mais de uma posição (vários mercados, vaults ou redes), vêm primeiro o total líquido, o total
-fornecido (colateral + fornecido) e o total emprestado, e depois cada posição, com o seu próprio
-Health Rate: o de um mercado não vale para outro.
+With more than one position (several markets, vaults or networks), the net total comes first, then
+the total supplied (collateral + supplied) and the total borrowed, and then each position, with its
+own Health Rate: one market's doesn't apply to another.
 
-As contas seguem a [documentação do Morpho](https://docs.morpho.org/learn/concepts/liquidation/),
-com os valores brutos do mercado (em BigInt, sem arredondar no caminho):
+The calculations follow [Morpho's documentation](https://docs.morpho.org/learn/concepts/liquidation/),
+using the market's raw values (in BigInt, without rounding along the way):
 
-- **Valor do colateral** (em token de empréstimo) = colateral × preço do oráculo / 10³⁶.
-- **Health Rate** = valor do colateral × LLTV / emprestado. Abaixo de 1, a posição pode ser
-  liquidada; sem dívida, `∞`.
-- **LTV atual** = emprestado / valor do colateral. A liquidação acontece quando ele passa do
-  **LLTV** do mercado.
-- **Preço de liquidação**: o preço do oráculo em que o Health Rate chega a 1 (emprestado × 10³⁶ /
-  (colateral × LLTV)), em token de empréstimo por token de colateral, como o oráculo.
+- **Collateral value** (in loan token) = collateral × oracle price / 10³⁶.
+- **Health Rate** = collateral value × LLTV / borrowed. Below 1, the position can be liquidated;
+  with no debt, `∞`.
+- **Current LTV** = borrowed / collateral value. Liquidation happens when it goes over the market's
+  **LLTV**.
+- **Liquidation price**: the oracle price at which the Health Rate reaches 1 (borrowed × 10³⁶ /
+  (collateral × LLTV)), in loan token per collateral token, like the oracle.
 
-Os valores em dólar são os da API do Morpho. Um token sem preço lá fica sem o valor em dólar e fora
-dos totais (a mensagem diz quais); nada é estimado.
+The dollar values are the ones from Morpho's API. A token with no price there is left without a
+dollar value and out of the totals (the message says which); nothing is estimated.
 
 ## Aave V3
 
-O `/defi aave` mostra a posição da carteira no [Aave V3](https://aave.com/): o que foi fornecido, o
-que foi emprestado, o Health Factor e a posição líquida, em cada rede do setting `defi.aave.chains`
-(padrão: `1 8453`, a Ethereum e a Base). Tudo é lido on-chain, nos contratos oficiais do Aave
-([documentação](https://aave.com/docs/aave-v3/smart-contracts)), pelo RPC de cada rede:
-`ETHEREUM_RPC_URL` e `BASE_RPC_URL` no `config/.env` ou, vazios, os settings `defi.ethereum.rpc` e
-`defi.base.rpc` (os padrões são públicos e limitam as consultas). Só leitura: o bot não pede nem usa
-chave privada.
+`/defi aave` shows the wallet's position on [Aave V3](https://aave.com/): what was supplied, what was
+borrowed, the Health Factor and the net position, on each network in the `defi.aave.chains` setting
+(default: `1 8453`, Ethereum and Base). Everything is read on-chain, from Aave's official contracts
+([documentation](https://aave.com/docs/aave-v3/smart-contracts)), through each network's RPC:
+`ETHEREUM_RPC_URL` and `BASE_RPC_URL` in `config/.env` or, when empty, the `defi.ethereum.rpc` and
+`defi.base.rpc` settings (the defaults are public and limit queries). Read-only: the bot neither asks
+for nor uses a private key.
 
-A carteira vem do cadastro (`/defi aave -wallet <0x...>`, que já mostra a posição) ou, sem nenhum,
-do `AAVE_WALLET_ADDRESS` (ou do setting `defi.aave.wallet`). A resposta de cada rede fica 30
-segundos em memória.
+The wallet comes from the registration (`/defi aave -wallet <0x...>`, which already shows the
+position) or, with none, from `AAVE_WALLET_ADDRESS` (or the `defi.aave.wallet` setting). Each
+network's response is kept in memory for 30 seconds.
 
 ```text
 🟣 AAVE V3 · Ethereum
@@ -352,38 +353,40 @@ $350,583.00
 🕐 Atualizado: 03:15:42
 ```
 
-Com o `-full`, vêm também o risco (LTV atual e máximo, liquidation threshold, available borrows e o
-colateral considerado), o APY e o `Collateral: Yes/No` de cada ativo, o modo da dívida (`Variable`
-ou `Stable`), o eMode e o isolation mode. Com posições em mais de uma rede, vem primeiro o total
-líquido e depois cada rede, com o seu Health Factor: o de uma rede não vale para a outra. Uma rede
-que não responde aparece com o aviso, e as outras vêm normalmente.
+With `-full`, you also get the risk (current and max LTV, liquidation threshold, available borrows
+and the collateral considered), the APY and the `Collateral: Yes/No` of each asset, the debt mode
+(`Variable` or `Stable`), the eMode and the isolation mode. With positions on more than one network,
+the net total comes first and then each network, with its own Health Factor: one network's doesn't
+apply to the other. A network that doesn't respond shows up with a warning, and the others come as
+usual.
 
-De onde vem cada número:
+Where each number comes from:
 
-- **Health Factor, colateral, dívida, available borrows, liquidation threshold e LTV máximo**: do
-  `Pool.getUserAccountData`, o valor do próprio protocolo (o mesmo do app do Aave). Ele já considera
-  o liquidation threshold de cada ativo, o eMode, o isolation mode e o que foi fornecido sem ser
-  colateral. Sem dívida, o Health Factor é `∞`.
-- **Cada ativo**: o saldo vem do `PoolDataProvider` (o aToken e as dívidas variável e estável), e o
-  preço, do `AaveOracle` (o oráculo que o protocolo usa). O valor em dólar é a quantidade × o preço.
-- **Posição líquida**: todo o fornecido (colateral ou não) − a dívida.
-- **LTV atual**: a dívida / o colateral.
-- **APY**: a taxa do `PoolDataProvider`, composta por segundo, como na documentação do Aave.
-- **Preço de liquidação**: só no `-full` e só com um colateral, que não seja também a dívida: o
-  preço atual / o Health Factor. Com vários colaterais, ele depende do que os outros fizerem, e o
-  bot avisa em vez de calcular.
+- **Health Factor, collateral, debt, available borrows, liquidation threshold and max LTV**: from
+  `Pool.getUserAccountData`, the protocol's own value (the same as in the Aave app). It already
+  accounts for each asset's liquidation threshold, the eMode, the isolation mode and what was
+  supplied without being collateral. With no debt, the Health Factor is `∞`.
+- **Each asset**: the balance comes from the `PoolDataProvider` (the aToken and the variable and
+  stable debts), and the price from the `AaveOracle` (the oracle the protocol uses). The dollar value
+  is the amount × the price.
+- **Net position**: everything supplied (collateral or not) − the debt.
+- **Current LTV**: the debt / the collateral.
+- **APY**: the rate from the `PoolDataProvider`, compounded per second, as in Aave's documentation.
+- **Liquidation price**: only with `-full` and only with a single collateral that isn't also the
+  debt: the current price / the Health Factor. With several collaterals, it depends on what the
+  others do, and the bot warns instead of calculating.
 
-## Resumo das taxas
+## Fee summary
 
-O `-taxas` sozinho junta, numa mensagem só, as taxas a coletar de todas as posições de liquidez: a
-faixa, o preço e as taxas de cada posição da Orca e do Project X, e o total em dólar no fim (com o
-de cada protocolo). A Liquidswap entra, mas num AMM as taxas já estão no saldo: não há o que
-coletar. O protocolo que não está cadastrado aparece como `➖ não cadastrado`. Com o protocolo, só
-ele (`/defi prjx -taxas`); o Morpho e o Aave não têm taxas a coletar.
+`-taxas` alone puts together, in a single message, the fees to collect from all liquidity positions:
+the range, the price and the fees of each Orca and Project X position, and the dollar total at the
+end (with each protocol's). Liquidswap is included, but in an AMM the fees are already in the
+balance: there's nothing to collect. A protocol that isn't registered shows as `➖ não cadastrado`.
+With the protocol, only that one (`/defi prjx -taxas`); Morpho and Aave have no fees to collect.
 
-Com `-alerta` (sem valor), mostra também o alerta de cada cadastro: para onde avisa, o limite das
-taxas e quanto falta para chegar nele. No Project X, o limite vale para a carteira toda (a soma das
-posições), como na verificação do alerta.
+With `-alerta` (no value), it also shows each registration's alert: where it warns, the fee threshold
+and how far it is from reaching it. On Project X, the threshold applies to the whole wallet (the sum
+of the positions), as in the alert check.
 
 ```text
 /defi -taxas                   → o resumo de todos
@@ -424,20 +427,20 @@ posições), como na verificação do alerta.
    • Project X: $98.50
 ```
 
-Uma posição sem preço em dólar (num par sem stablecoin) ou que não deu para ler fica fora do total,
-com um aviso no fim.
+A position with no dollar price (on a pair with no stablecoin) or that couldn't be read is left out of
+the total, with a warning at the end.
 
-## Alerta de saída da faixa
+## Out-of-range alert
 
-Fora da faixa, a posição fica toda num token só e para de render taxas. Com o `-alerta`, o bot lê a
-posição (no Project X, as posições da carteira) a cada 10 minutos (setting
-`defi.alerta.intervalMin`) e avisa:
+Out of range, the position sits entirely in a single token and stops earning fees. With `-alerta`,
+the bot reads the position (on Project X, the wallet's positions) every 10 minutes (setting
+`defi.alerta.intervalMin`) and warns:
 
-- **🚨 quando ela sai da faixa**: uma vez por saída. Enquanto continua fora, não repete.
-- **✅ quando ela volta para a faixa**: também uma vez.
-- **💸 quando as taxas a coletar passam do valor do `-taxas`** (em dólar, opcional): uma vez. Depois
-  que você coleta e elas caem abaixo do valor, o aviso se arma de novo. Num par sem stablecoin (só
-  no Project X), sem preço em dólar, não avisa.
+- **🚨 when it leaves the range**: once per exit. While it stays out, it doesn't repeat.
+- **✅ when it comes back into the range**: also once.
+- **💸 when the fees to collect go over the `-taxas` value** (in dollars, optional): once. After you
+  collect and they drop below the value, the warning re-arms. On a pair with no stablecoin (Project
+  X only), with no dollar price, it doesn't warn.
 
 ```text
 /defi -alerta 1                  → no seu privado
@@ -455,21 +458,22 @@ posição (no Project X, as posições da carteira) a cada 10 minutos (setting
 /defi -alerta -rm 1              → desliga o da nº 1 (a posição continua cadastrada)
 ```
 
-O `-to` aceita:
+`-to` accepts:
 
-- `email` (o `QRCODE_EMAIL_SMTP_TO` do `config/.env`) ou um ou mais e-mails (separados por vírgula,
-  entre aspas). Sai pelo SMTP do bot, sem a formatação do WhatsApp; precisa do
-  `QRCODE_EMAIL_SMTP_HOST` e do `QRCODE_EMAIL_SMTP_USER`.
-- Um contato, um grupo ou um número, como nos outros comandos: nomes exatos têm prioridade; se o
-  nome servir para mais de um, o bot lista e você responde com o nº
-  ([Destinos](index.md#destinos-contato-grupo-número-ou-e-mail)).
-- Vários `-to`, para avisar em todos (o mesmo repetido conta uma vez). Se o envio falhar num, os
-  outros recebem assim mesmo.
+- `email` (the `QRCODE_EMAIL_SMTP_TO` from `config/.env`) or one or more emails (comma-separated,
+  quoted). It goes out through the bot's SMTP, without WhatsApp formatting; it needs
+  `QRCODE_EMAIL_SMTP_HOST` and `QRCODE_EMAIL_SMTP_USER`.
+- A contact, a group or a number, as in the other commands: exact names take priority; if the name
+  fits more than one, the bot lists them and you reply with the number
+  ([Destinations](index.md#destinations-contact-group-number-or-email)).
+- Several `-to`, to warn all of them (the same one repeated counts once). If sending fails for one,
+  the others still receive it.
 
-Ligar de novo uma posição troca os destinos pelos do novo `-to` (sem `-to`, volta ao seu privado) e
-mantém o `-taxas`, se você não mandar outro. Ao ligar, o bot já lê a posição: se ela estiver fora da
-faixa nesse momento, a resposta mostra, e o próximo aviso é o da volta. Se o RPC não responder, a
-posição fica `❔ ainda não lida`, e a primeira leitura fora da faixa já avisa.
+Turning on a position again replaces the destinations with the ones from the new `-to` (without
+`-to`, back to your private chat) and keeps the `-taxas`, if you don't send another. When turning it
+on, the bot already reads the position: if it's out of the range at that moment, the response shows
+it, and the next warning is the comeback one. If the RPC doesn't respond, the position stays
+`❔ ainda não lida`, and the first reading out of the range already warns.
 
 ```text
 /defi -alerta 1 -to email
@@ -481,8 +485,8 @@ posição fica `❔ ainda não lida`, e a primeira leitura fora da faixa já avi
 💡 Veja com /defi -alerta; desligue com /defi -alerta -rm <nº|all>.
 ```
 
-O aviso traz o "Position Details" da posição. Numa carteira do Project X, ela está "na faixa" quando
-todas as posições abertas estão, e o aviso traz só as que saíram:
+The warning carries the position's "Position Details". On a Project X wallet, it's "in range" when
+all the open positions are, and the warning carries only the ones that left:
 
 ```text
 🚨 DeFi: Orca · Hz15…RaPZ saiu da faixa
@@ -494,81 +498,79 @@ todas as posições abertas estão, e o aviso traz só as que saíram:
 💡 Desligue com /defi -alerta -rm 1.
 ```
 
-E os outros avisos, com o mesmo "Position Details":
+And the other warnings, with the same "Position Details":
 
 ```text
 ✅ DeFi: Orca · Hz15…RaPZ voltou para a faixa
 💸 DeFi: Project X · carteira 0x92…0444 tem $98.50 em taxas a coletar (passou de $50.00)
 ```
 
-Na lista do `/defi -l`, as posições com alerta aparecem com 🔔 (e o limite das taxas, se tiver:
-`🔔 ≥ $2,000.00`). Cada leitura gasta consultas no RPC: com os públicos, prefira um intervalo maior
-(ou um RPC próprio: [Solana](#rpc-da-solana), [HyperEVM](#rpc-da-hyperevm)).
+In the `/defi -l` list, positions with an alert show with 🔔 (and the fee threshold, if any:
+`🔔 ≥ $2,000.00`). Each reading spends RPC queries: with the public ones, prefer a longer interval
+(or your own RPC: [Solana](#solana-rpc), [HyperEVM](#hyperevm-rpc)).
 
-## Onde achar os endereços
+## Where to find the addresses
 
-Na Orca, abra a posição (em **Portfolio** ou na página da pool, `www.orca.com/pools/<pool>`): o
-endereço da pool está na URL, e o da posição e o do NFT aparecem nos detalhes da posição (ou no
-explorador, como o [Solscan](https://solscan.io/)). Basta o `-address`: a pool vem da própria
-posição, e o NFT, se informado, é conferido (a posição é derivada dele).
+On Orca, open the position (under **Portfolio** or on the pool page, `www.orca.com/pools/<pool>`):
+the pool address is in the URL, and the position's and the NFT's show in the position details (or in
+an explorer, like [Solscan](https://solscan.io/)). `-address` is enough: the pool comes from the
+position itself, and the NFT, if given, is checked (the position is derived from it).
 
-## O que é mostrado
+## What is shown
 
-- **Status**: dentro ou fora da faixa. Fora dela, a posição fica toda num token só e não rende
-  taxas.
-- **Saldo**: quanto de cada token a sua liquidez vale agora, e em dólar.
-- **Faixa** e **preço atual**: em token B por token A (como na pool), com a posição do preço dentro
-  da faixa e o preço invertido.
-- **Taxas a coletar**: as taxas acumuladas e ainda não coletadas, com a mesma conta do programa da
-  Orca (são as que o botão "Collect" coletaria).
-- **Recompensas a coletar**: só aparecem quando a pool tem incentivos e há algo a coletar.
-- **Rende ~/dia**: estimativa. É a fatia da sua liquidez na liquidez ativa da pool vezes as taxas
-  das últimas 24 h que ficam com os provedores de liquidez (o protocolo leva uma parte). Só aparece
-  dentro da faixa.
-- **Pool**: TVL, volume e taxas das últimas 24 h.
+- **Status**: in or out of the range. Out of it, the position sits entirely in a single token and
+  earns no fees.
+- **Balance**: how much of each token your liquidity is worth now, and in dollars.
+- **Range** and **current price**: in token B per token A (as in the pool), with the price's position
+  within the range and the inverted price.
+- **Fees to collect**: the accumulated, not yet collected fees, using the same calculation as Orca's
+  program (they're the ones the "Collect" button would collect).
+- **Rewards to collect**: only show up when the pool has incentives and there's something to collect.
+- **Earns ~/day**: an estimate. It's your liquidity's share of the pool's active liquidity times the
+  last 24 h of fees that go to the liquidity providers (the protocol takes a cut). Only shows up
+  within the range.
+- **Pool**: TVL, volume and fees for the last 24 h.
 
-Os valores em dólar usam os preços da API pública da Orca. O lucro ou o prejuízo da posição (PnL)
-não aparece: depende dos depósitos e saques feitos, que não estão na conta da posição.
+The dollar values use prices from Orca's public API. The position's profit or loss (PnL) doesn't
+show: it depends on the deposits and withdrawals made, which aren't in the position's account.
 
-## RPC da Solana
+## Solana RPC
 
-As contas são lidas pelo RPC do setting `defi.solana.rpc` (padrão: o público,
-`https://api.mainnet-beta.solana.com`). Ele limita as consultas: se o `/defi` responder que não
-conseguiu ler a posição, tente de novo em instantes ou use um RPC próprio (Helius, QuickNode,
-Alchemy... têm planos grátis):
+The accounts are read through the RPC in the `defi.solana.rpc` setting (default: the public one,
+`https://api.mainnet-beta.solana.com`). It limits queries: if `/defi` says it couldn't read the
+position, try again in a moment or use your own RPC (Helius, QuickNode, Alchemy... have free plans):
 
 ```text
 /set defi.solana.rpc https://mainnet.helius-rpc.com/?api-key=<sua-chave>
 ```
 
-O valor é exibido mascarado no `/set`, já que a URL costuma levar a chave. As posições cadastradas
-(e o alerta de cada uma) ficam na tabela `defi_positions` (até 20, somando posições da Orca e
-carteiras do Project X, da Liquidswap, do Morpho e do Aave).
+The value is displayed masked in `/set`, since the URL usually carries the key. The registered
+positions (and each one's alert) are kept in the `defi_positions` table (up to 20, adding up Orca
+positions and Project X, Liquidswap, Morpho and Aave wallets).
 
-## RPC da HyperEVM
+## HyperEVM RPC
 
-O Project X é lido pelo RPC do setting `defi.hyperevm.rpc` (padrão: o público da Hyperliquid,
-`https://rpc.hyperliquid.xyz/evm`, chain 999). Ele também limita as consultas e recusa lotes
-grandes: o bot manda as chamadas em lotes de 10. Se o `/defi prjx` não conseguir ler a carteira,
-tente de novo em instantes ou use um RPC próprio:
+Project X is read through the RPC in the `defi.hyperevm.rpc` setting (default: Hyperliquid's public
+one, `https://rpc.hyperliquid.xyz/evm`, chain 999). It also limits queries and rejects large
+batches: the bot sends the calls in batches of 10. If `/defi prjx` can't read the wallet, try again
+in a moment or use your own RPC:
 
 ```text
 /set defi.hyperevm.rpc https://<seu-rpc-da-hyperevm>
 ```
 
-## API da Aptos
+## Aptos API
 
-A Liquidswap é lida em duas partes da API pública da Aptos Labs:
+Liquidswap is read from two parts of Aptos Labs's public API:
 
-- o **indexador** (setting `defi.aptos.indexer`), que acha os LPs da carteira, tanto os guardados
-  como coin quanto os já migrados para fungible asset;
-- a **API REST do fullnode** (setting `defi.aptos.rpc`), que lê as reservas das pools, o total de
-  LP emitido e o símbolo e as casas decimais dos tokens.
+- the **indexer** (setting `defi.aptos.indexer`), which finds the wallet's LPs, both those stored as
+  coin and those already migrated to fungible asset;
+- the **fullnode REST API** (setting `defi.aptos.rpc`), which reads the pools' reserves, the total LP
+  issued and the tokens' symbol and decimals.
 
-Sem chave, as duas valem pelo limite anônimo por IP, que basta para o uso do bot. Se o
-`/defi liquidswap` responder que atingiu o limite de consultas, tente de novo em alguns minutos ou
-crie uma chave grátis na [Geomi](https://geomi.dev/docs/start) e coloque no `config/.env` (ou no
-setting):
+Without a key, both are subject to the anonymous per-IP limit, which is enough for the bot's use. If
+`/defi liquidswap` says it hit the query limit, try again in a few minutes or create a free key at
+[Geomi](https://geomi.dev/docs/start) and put it in `config/.env` (or in the setting):
 
 ```text
 APTOS_API_KEY=<sua-chave>

@@ -1,0 +1,409 @@
+# Desenvolvimento
+
+## Docker (Makefile)
+
+Existe um só serviço, o `zapbot` do `docker/docker-compose.yml`, que usa o `config/.env`. O
+`Makefile` tem atalhos para ele:
+
+```bash
+make help    # lista todos os alvos
+make build   # build da imagem zapbot
+make deploy  # build + (re)cria o container
+make shell   # shell dentro do container
+make clean   # remove o container e a imagem zapbot
+make recreate # clean + build sem cache + sobe uma instância nova (volumes intactos)
+make destroy # clean + apaga os volumes (sessão do WhatsApp e cache!)
+make docs    # site da documentação local (veja Documentação)
+```
+
+Os alvos não mostram os comandos que executam. Para depurar, `Q=` (ou `V=1`) mostra todos, inclusive
+os das chamadas internas de outros alvos:
+
+```bash
+make Q= DOCK_REMOTE=1 deploy   # mostra cada comando docker executado
+make V=1 check               # o mesmo, com V=1
+```
+
+O destino das operações Docker e dos testes é selecionado por `DOCK_REMOTE`: `0` (padrão) usa o
+Docker desta máquina; `1` usa o do servidor remoto. O serviço é sempre o `zapbot`. O endereço e o contexto aceitam valores do ambiente ou da linha de comando:
+
+```bash
+make test                    # testes do checkout local
+make DOCK_REMOTE=1 test      # testes da imagem em execução no homelab
+make DOCK_REMOTE=1 deploy      # build + recria o bot remoto
+make DOCK_REMOTE=1 recreate  # o mesmo, mas com a imagem refeita do zero (sem cache)
+make DOCK_REMOTE=1 logs      # logs do bot remoto
+make DOCK_REMOTE=1 shell     # shell dentro do bot remoto
+make DOCK_REMOTE=1 DOCKER_REMOTE_SERVER=ssh://root@homelab.local REMOTE_CONTEXT=homelab test
+
+export DOCK_REMOTE=1
+export DOCKER_REMOTE_SERVER=ssh://root@homelab.local
+export REMOTE_CONTEXT=homelab
+make test                    # remoto, usando as variáveis exportadas
+make DOCK_REMOTE=0 test      # local, mesmo com DOCK_REMOTE=1 no ambiente
+```
+
+`DOCKER_REMOTE_SERVER` tem como padrão `ssh://root@homelab.local`; `REMOTE_CONTEXT`, `homelab`;
+e `LOCAL_CONTEXT`, `default`. O nome do contexto não faz parte do endereço SSH. Definir apenas o
+endereço ou o contexto não ativa o modo remoto: use `DOCK_REMOTE=1`. Cada comando Docker passa o
+contexto explicitamente, sem trocar o contexto global. O alvo `context` cria o contexto remoto ou
+atualiza seu endereço quando ele difere de `DOCKER_REMOTE_SERVER`.
+
+No modo remoto, `test` e `test.coverage` usam o código da imagem implantada, sem enviar o checkout
+local, fazer build ou reiniciar o bot. Banco, rede e WhatsApp são simulados; a sessão e o cache do
+bot não são usados pelos testes. `TEST_ARGS` e `DEBUG_TESTES` também são enviados aos testes no
+container remoto.
+
+`deps`, `lint`, `check` e `docs*` trabalham sempre no checkout local. `check` valida lint, testes
+locais e documentação, independentemente do destino. `clean` remove o container e a imagem do
+ambiente selecionado, preservando os volumes, e apaga o cache de build do contexto Docker
+selecionado. `destroy` remove também os volumes: a sessão e o cache se perdem, e um novo `deploy` pede
+o QR Code. `prune` limpa mídia e mensagens.
+
+## Estrutura do código
+
+O `app.js` só faz o bootstrap (carrega o `.env`, prepara o banco, cria o cliente, registra os
+eventos e inicia as tarefas periódicas). O código fica em `src/`:
+
+```text
+app.js                  bootstrap, na ordem de inicialização
+src/
+  constantes.js         diretórios, janelas de tempo, binários externos
+  telefoneBot.js        número configurado e identificação do bot no WhatsApp
+  versao.js             a versão com o commit e a tag (ou HEAD e o (devel)) que estão rodando, lidos do .git
+  estado.js             estado da conexão, compartilhado entre os módulos
+  log.js                print* coloridos (e a linha dos comandos desconhecidos)
+  debug*.js             contexto, instrumentação, regex, dados dos logs e cópia para chats
+  db.js                 SQLite (dbGet/dbAll/dbRun) e o sinal dbPronto
+  inicializacao.js      tabelas + carga dos settings
+  settings.js           SETTINGS_SCHEMA, getSetting/setSetting e a validação dos valores persistidos
+  botConfig.js          os comandos (src/comandos/comandos.js) carregados e conferidos no boot
+  roles.js              os roles dos comandos (USER, ADMIN, OWNER) e o mais restrito de vários
+  executar.js           o que todo comando faz antes do handler: ler as opções, o que cada um pode (role e outrosChats) e o contexto
+  cliente.js            cliente do whatsapp-web.js, a marca dos envios do bot e o concluirAviso (o "Processando…" ou a pergunta viram a conclusão)
+  conexao.js            QR Code, eventos de conexão, reinício e watchdog
+  backup.js             backup do banco (/backup): criação, diário, retenção e restauração
+  email.js              SMTP e alertas por e-mail
+  enquetes.js           votos das enquetes (vote_update) e o placar do /poll -r
+  heartbeat.js          prova de vida para o HEALTHCHECK do Docker
+  processo.js           crash e sinais (docker stop)
+  limpeza.js            retenção e limpeza periódica
+  stats.js              contadores do /stats
+  status.js             relatório do /bot -status e o envio diário (pela agenda)
+  sistema.js            /bot -info: versões (Node.js, whatsapp-web.js, Chromium, yt-dlp, ffmpeg...), as novas e o sistema
+  moedas.js, cotacoes.js, alertasPreco.js   /crypto, /rates e alertas de preço
+  aliases.js            resolução, listagem e execução (as de texto) dos atalhos persistidos no banco
+  agenda.js             /cron (e /lembrete): leitura, lista e envio na hora
+  notas.js              /notes: anotações, #tags (e a descrição), imagens, o PDF do -export e o -alerta (aviso numa data/hora, uma vez)
+  diagnostico.js        /bot -test: a bateria de testes (cache, disco, banco, WhatsApp, internet, velocidade, SMTP...)
+  imap.js               /bot -flush-email: cliente IMAP mínimo (conta e esvazia Sent e Trash)
+  comandosNoTexto.js    os {/comando} e o \n no texto (o /cron e o /alias): conferidos ao criar e rodados no envio
+  midia.js              /get e /sticker: os argumentos do ffmpeg, o recorte da figurinha (sharp) e a prévia do link
+  stickerTexto.js       /sticker -txt: os quadros em PNG (sharp) e o WebP animado (ffmpeg)
+  openai.js             modelos aceitos pelo /gpt
+  openaiChat.js         chamada ao chat da OpenAI (/gpt e /tldr)
+  contatos.js, opcoes.js                    contatos/@lid e o parser de opções
+  destinos.js           o -to/alvo: contato ou grupo pelo nome, menção (@), número ou e-mail, e o envio ao destino
+  escolhas.js           a lista numerada para escolher (vários contatos/grupos) e a confirmação sim/não (só de quem deu o comando)
+  flood.js              proteção contra flood (o mesmo comando além do limite: um aviso e silêncio)
+  permissoes.js         quem usa os comandos (user, admin delegado), e quais (bot.users, +cmd|-cmd)
+  mudo.js               /mute: quem está silenciado, os avisos cortados e a origem de cada aviso
+  defi/                 Solana, HyperEVM, Aptos e EVM (RPC, indexador, Multicall3), a Orca, o Project X, a Liquidswap, o Morpho e o Aave V3 (/defi) e o -alerta de saída da faixa
+  watch/                regras e verificação do /watch
+  eventos/              message_create, apagadas, editadas, reações
+  comandos/             comandos.js (carrega definicoes/), um arquivo por comando,
+                        index.js (HANDLERS) e base.js (ajuda e utilitários)
+  comandos/definicoes/  a definição de cada comando (cmd, opções, role...), um arquivo por comando
+  util/                 arquivos, formatação, datas digitadas (quando.js), PDF (pdf.js), processos externos, URLs
+tests/                  testes automatizados (veja Testes)
+```
+
+A instrumentação do [`/debug`](comandos/debug.md) é instalada depois do `.env`, antes dos módulos do
+bot. Ela envolve as funções exportadas de `src/` durante o carregamento pelo CommonJS, preservando
+retornos síncronos, promises e o `this`. Os rastros de funções começam no nível `1`; Axios, SMTP,
+processos e métodos do WhatsApp ficam no `2`; consultas ao banco e resultados, no `3`. O contexto
+por execução usa `AsyncLocalStorage` para manter chat e profundidade das chamadas. O módulo de log
+aplica o filtro e a ocultação de credenciais antes do console e da fila de cópia.
+
+## Testes
+
+Os testes usam o test runner do próprio Node (`node:test`), sem dependência extra. Fora do Docker
+precisam do **Node 22.13 ou mais novo** (por causa do `node:sqlite`) e das dependências instaladas
+(`make deps`); no container (`make shell`) é só rodar `make test`.
+
+```bash
+make deps                                  # instala as dependências do package-lock.json
+make test                                  # toda a suíte
+make lint                                  # ESLint (eslint.config.js)
+make test TEST_ARGS=--test-name-pattern=mask  # filtra pelo nome dos testes
+DEBUG_TESTES=1 make test                    # mostra o log do bot durante os testes
+make test.coverage                          # cobertura de src/
+make docs.build                            # documentação em modo estrito
+make check                                 # lint + testes + documentação
+make DOCK_REMOTE=1 test                     # testes da imagem em execução no servidor
+```
+
+No GitHub, o workflow **Testes** (`.github/workflows/ci.yml`) roda o `make lint`, o `make test` e o
+`make docs.build` a cada push no `main` e em cada pull request; o selo no topo do README e da página
+inicial mostra o resultado do último run.
+
+Dois avisos de versão nova ficam no GitHub:
+
+- **Dependabot** (`.github/dependabot.yml`): toda segunda de manhã, abre PRs com as versões novas
+  das dependências npm (as de desenvolvimento num PR só) e da imagem base do Docker (`docker/app`).
+  Ficam de fora o `whatsapp-web.js`, que é um commit fixado do `main` (o
+  [`/bot -info`](comandos/bot.md#informações-do-sistema) avisa as novidades dele), e a troca de
+  major do Node, que é manual.
+- **yt-dlp** (`.github/workflows/yt-dlp.yml`): todo dia às 09:00, confere a última versão no PyPI e,
+  se for nova, abre a issue "yt-dlp X disponível", com os comandos para refazer a imagem, e fecha a
+  da versão anterior. A imagem instala a última a cada build: o aviso é para saber quando refazer.
+
+Quando um alerta de segurança é numa dependência indireta que ainda pede a versão vulnerável, a
+correção vai no `overrides` do `package.json`, que força a versão no lock. Hoje há um:
+
+- `basic-ftp` `^6.2.1` ([GHSA-c475-qrg2-pj4r](https://github.com/advisories/GHSA-c475-qrg2-pj4r)):
+  vem de `whatsapp-web.js → puppeteer → … → get-uri`, que ainda pede `^5.3.1`. Tire o override
+  quando o `get-uri` passar a aceitar a 6 (`npm ls basic-ftp` mostra quem pede o quê).
+
+Nada sai da máquina: o `tests/helpers/ambiente.js` troca, antes de carregar o bot, o WhatsApp (um
+cliente falso que guarda o que o bot enviou), o SQLite (em memória), a rede (`axios` com respostas
+registradas por URL; uma URL sem resposta falha o teste), o SMTP, o `yt-dlp`/ `ffmpeg` e o `sharp`.
+O banco e as mídias ficam numa pasta temporária (`ZAPBOT_CACHE_DIR`), nunca no `cache/`.
+
+As mensagens passam pelo `message_create` de verdade (gravação, `/stats`, `/watch`, permissões e o
+parser de opções), e o teste falha se o bot registrar um erro inesperado no log. O
+`tests/helpers/bot.js` tem os atalhos: `bot.responder('/show -2')` devolve o que o bot respondeu,
+`bot.apagar(msg)` e `bot.editar(msg, 'novo')` disparam os eventos, `bot.reiniciar()` limpa tudo
+entre os casos. As mensagens que o bot envia têm o `edit()` do whatsapp-web.js: troca o texto no
+lugar (com `editada: true`) e dispara o `message_edit`; com `bot.client.recusarEdicao = true`, ele
+devolve `null`, como quando o WhatsApp não deixa editar.
+
+| Arquivo | O que cobre |
+|---|---|
+| `agenda.test.js` | Datas digitadas (`6h`, `+2h`, `às 18h`, `sexta`...) e o `/cron`, nos modos mensagem e lembrete, com vários `-to` num item só, `-edit`, `-pause`/`-resume` e os `{/comando}` e o `\n` no texto (e o `-test`) |
+| `alias.test.js` | Cadastro persistente, descrições com aspas retas e curvas, listagem, remoção individual e total, nomes reservados, argumentos adicionais, permissões do destino e os aliases de texto (`{/comando}`, `\n` e as permissões de cada comando) |
+| `apagadas-editadas.test.js` | Eventos de apagar/editar (o Nome do aviso vem da agenda) (e os avisos `show.alert.*`) e o `/show` (apagadas, editadas e status, o chat pedido e a busca `-q`) |
+| `ascii.test.js` | O `/ascii`: as 5 linhas dentro do bloco de código, a quebra pela largura (`-w`), o `-c`, o texto da mensagem respondida, acentos e erros |
+| `backup.test.js` | `/backup` (criação, lista, restauração, envio no privado, por e-mail e com um ou vários `-to`) e o backup diário |
+| `batch.test.js` | O `/batch`: a separação em blocos (linhas em branco, URLs e `/` que não é comando), o resumo, o `-dry`, o `-stop`, a recusa de `/batch` dentro de `/batch` e o uso só pelo dono |
+| `block.test.js` | `/block` (`/bloquear`) e `/unblock`: pelo nome, pelo número, respondendo, a lista (com os `@lid` convertidos para o telefone) e o nº dela, e o `/unblock -all` |
+| `bump.test.js` | Release e bump em repositórios temporários, versões dos exemplos, tags existentes e prévia sem alterações |
+| `canais.test.js` | Identificação de canais `@newsletter` nos avisos e no `/show` |
+| `comandos.test.js` | `/help` (só com os comandos de quem pediu), `/debug`, `/uptime`, `/version`, `/ping`, `/noffa`, `/bot` (o `-h` em blocos, o status sem opção, o `-on`/`-off`, o `-list-users`, e o `-info`, com as versões novas do yt-dlp e do whatsapp-web.js), `/set` (e o `-append`/`-rm`) |
+| `conexao-email.test.js` | Eventos de conexão, reinício (e as novas tentativas sem internet, no boot e no reinício, e o vigia do `ready`), watchdog, alertas por e-mail, crash e `docker stop` |
+| `configuracao.test.js` | `comandos.js`, settings (e a validação dos valores persistidos), parser de opções, ajuda (uma forma do uso e um exemplo por linha) e a coerência entre config, código, README e `docs/` (inclusive a ordem alfabética, os links e a versão estável da instalação) |
+| `cotacoes.test.js` | `/rates`, `/crypto` (e o filtro por moeda) e os alertas de preço (com um ou vários `-to`, o `-msg` e o `-rm` de vários) |
+| `debug.test.js` | Níveis, parser dos comandos, filtro com destaque, logs de inicialização, cópia para chats e ocultação de credenciais |
+| `defi.test.js` | Solana (base58, PDA), contas da Orca (conferidas com o SDK oficial), o Project X (HyperEVM simulada), a Liquidswap (Aptos simulada: indexador e fullnode, com o preço das pools estáveis e a chave da API), o Morpho (API simulada, com as contas conferidas com as da API), o Aave V3 (blockchain simulada, com o Multicall3 de verdade) e o `/defi`: o filtro por protocolo, o `-rm` de vários, os endereços (inteiros só no privado), a lista (com o 🔔 e o limite), o resumo do `-taxas` (com o total e o `-alerta`) e o `-alerta` (saída e volta da faixa, o `-taxas`, o `-alerta` no cadastro e vários `-to`) |
+| `dependencias.test.js` | Carregamento das dependências sem aviso do módulo `punycode` |
+| `diagnostico.test.js` | O `/bot -test`: os itens com ✅/❌/➖ (rede simulada), a falha de um teste na contagem e a recusa junto de outras opções; o `-flush-email` (sem SMTP, recusa) e a busca das pastas Sent e Trash |
+| `externos.test.js` | `/cve`, `/weather`, `/news`, `/gpt`, `/tldr`, `/translate`, `/giphy`, `/meme`, `/joke`, `/kernel`, `/pixelart` |
+| `get-cache.test.js` | `/get` (a URL, o link e a mídia respondida, e o anti-SSRF), `/cache` e a limpeza periódica |
+| `grupo.test.js` | `/everybody`, `/bills`, `/members`, `/walissu`, `/poll` (e o `-r`), `/sticker` (e o `-txt`) |
+| `grupos.test.js` | `/join` (link, código, `-info`, convite inválido e recusa) e `/leave` (pelo nome, pelo nº, a lista) |
+| `heartbeat.test.js` | Heartbeat e o `docker/app/healthcheck.js` (executado de verdade) |
+| `mascara-telefones.test.js` | Ofuscação de telefones no `/show`, `/watch` e `/bot` |
+| `mensagens.test.js` | Gravação (com o nome da sua agenda, não o pushname) e de localizações sem interpretar a miniatura como texto ou comando, roteamento, permissões (`role`, o `bot.users` com pessoas, grupos, `true`/`false` e as permissões persistidas, bot desligado, admins extras do `bot.admins`, os atalhos `/bot +a`/`+u`, as listas do `-list-users`/`-list-users all`, os comandos de cada usuário (`+cmd`/`-cmd`), o `-reset` com a confirmação, o `/whois` e a proteção contra flood), o log dos comandos desconhecidos e a contagem do `/stats` (sem os avisos do sistema) |
+| `monitor.test.js` | Cadastro, filtro e remoção com o resolvedor compartilhado, alertas online persistentes, migração do banco, `-rm all`, consultas sequenciais, pausas, histórico por contato, limite de entradas, persistência e listagem em texto ou documento |
+| `notes.test.js` | O `/notes`: `-add`, `-list` e `-rm` (vários IDs, `all`, ID inexistente), as `#tags` (a parcial: `#idei` acha `#ideias`), `-tags`, `-desc`, `-move`, `-view` (com imagem), `-export` (PDF, com as imagens), `-search`, imagens e o `-alerta` (no `-add` e por ID ou tag, quando inválido, `-to`, disparo único e `-alerta -rm`) |
+| `mute.test.js` | `/mute` e `/unmute`: avisos silenciados por pessoa, grupo ou comunidade (só o alvo é o `-a`), a busca do alvo (nomes exatos, contato, grupo, menção e lista para escolher pelo nº) e a resposta a um aviso (de onde ele veio) |
+| `presenca.test.js` | Leitura de presença por LID, assinatura compartilhada, cache e ausência de horários válidos sem fabricar dados |
+| `profile.test.js` | O `/profile` (`/perfil`): a foto com a legenda `Contato: nome da agenda <telefone>` (por nome, menção e número), o nome da agenda no lugar do pushname, o seu perfil e o de quem escreveu a mensagem respondida, várias pessoas, sem foto, o download que falha, o `@lid`, `-mask`, grupo recusado e o uso só pelo dono |
+| `reacoes.test.js` | Reações removidas ou trocadas: o evento `message_reaction` (e o que não gera aviso), o aviso `show.alert.reaction`, o `/show -r`, o `/mute -r`, o `/bot -status` e a limpeza |
+| `search.test.js` | `/search` (`/buscar`): neste chat, em todos no seu privado, o `-N` e o limite, mídias e textos longos |
+| `stats.test.js`, `watch.test.js` | `/stats` (com o `/chat/`, o `-l` e o `-flush`) e `/watch` (e um ou vários `-to`) |
+| `status.test.js` | `/bot -status`: o relatório (com o aviso `show.alert.*` desligado e os silenciados do `/mute`) e o envio diário (e o `-to`: pessoas, grupos e e-mails) |
+| `telefone-bot.test.js` | Número da conta configurada, formato esperado, avisos e destinos internos |
+| `util.test.js` | Formatação, contatos/`@lid`, menções, arquivos do cache e a versão com o commit e o `(devel)` (`versao.js`) |
+
+Um comando ou opção novos entram com os testes deles; o `configuracao.test.js` falha se o comando
+não tiver a página dele em `docs/comandos/`, se estiver fora de ordem ou se algum link estiver
+quebrado.
+
+## Documentação
+
+Esta documentação fica em `docs/`, em Markdown, e vira o site
+[jpereira.github.io/zapbot](https://jpereira.github.io/zapbot/pt-BR/) com o
+[MkDocs Material](https://squidfunk.github.io/mkdocs-material/) (`mkdocs.yml` tem o menu e o tema).
+O site é publicado **só nas releases**: o workflow `.github/workflows/docs.yml` roda quando uma tag
+`v*` chega ao GitHub, então ele sempre mostra a versão estável.
+
+Para ver o site com o conteúdo atual (o HEAD, não a última release):
+
+```bash
+make docs                     # 📖 Documentação em http://127.0.0.1:8000/zapbot/
+make docs DOCS_PORT=8001      # em outra porta (DOCS_HOST=0.0.0.0 abre para a rede)
+```
+
+Na primeira vez ele cria o virtualenv `.venv-docs` com o Python 3.12 (o mesmo do CI; no 3.14 o
+`mkdocs serve` ainda não instala) e o recria quando o `docs/requirements.txt` muda. Outro Python:
+`make docs DOCS_PYTHON=python3.13`. A página recarrega sozinha ao salvar um arquivo em `docs/` ou o
+`mkdocs.yml`.
+
+Para conferir o que o workflow gera (falha em link ou âncora quebrados):
+
+```bash
+make docs.build
+```
+
+Ao mudar um comando, mude a página dele em `docs/comandos/` e as tabelas Resumo (a do
+[site](comandos/index.md#resumo) e as dos READMEs); um comando novo também entra no `nav` do
+`mkdocs.yml`, em ordem alfabética.
+
+A documentação é bilíngue: o inglês (en_US) é o padrão e o português (pt-BR) fica ao lado. O
+`docs/pagina.md` é a página em inglês e o `docs/pagina.pt-BR.md`, a gêmea em português; o site (o
+plugin `mkdocs-static-i18n`) mostra o inglês na raiz, o português em `/pt-BR/` e um seletor de idioma no
+cabeçalho. Mude as duas versões juntas; os testes conferem que cada par tem os mesmos títulos, tabelas,
+blocos de código e links. No `docs/comandos/index.md` e no `index.pt-BR.md`, os trechos entre
+`<!-- gerado:... -->` vêm do `node scripts/gerar-docs.js`, nos dois idiomas. Uma página nova também precisa
+da gêmea e de uma entrada no `nav` (com `nav_translations` para o título, se for novo).
+
+O `README.md` é em inglês (en_US) e o `README.pt-BR.md`, o mesmo em português: mude os dois juntos. Eles
+apontam um para o outro, e os testes conferem que têm as mesmas seções, links e blocos de código, e que as
+tabelas de comandos batem com o `comandos.js` (o `bump.sh` também atualiza a versão nos dois).
+
+### Gravar a demonstração
+
+Os GIFs da página [Demonstração](demonstracao.md) são gravados com um roteiro de cenas, com
+`screencapture` e `scripts/gif.sh`: veja [Gravar a demonstração](gravar-demonstracao.md).
+
+## Nova versão
+
+Uma execução do `./scripts/bump.sh` **fecha** a versão atual (a do `package.json`) e **abre** a próxima:
+
+```text
+... commits da X.Y.Z ── Release X.Y.Z (tag vX.Y.Z) ── Bump para X.Y.W ── commits da X.Y.W ...
+```
+
+1. **Release X.Y.Z** (pula se a tag `vX.Y.Z` já existe): a versão estável do README e da
+   instalação (o `vX.Y.Z` logo depois de uma crase, de `checkout ` ou de `versão: `, como em
+   `git checkout vX.Y.Z`) passa para a atual, com a data de hoje ao lado em
+   `vX.Y.Z (de DD/MM/AAAA)`. Os exemplos de saída perdem o rótulo `(devel)`:
+   `X.Y.Z (devel) (git+<commit>/HEAD)` vira `X.Y.Z (git+<commit>/vX.Y.Z)`. Commit
+   `Release X.Y.Z`, com a tag anotada `vX.Y.Z` nele.
+2. **Bump para X.Y.W** (por padrão o patch, X.Y.Z+1; `--minor` abre X.Y+1.0, `--major` abre
+   X+1.0.0, ou a versão informada: `./scripts/bump.sh 3.0.0`): o `package.json` e o `package-lock.json`
+   passam para a nova, e os exemplos voltam a ser da versão em desenvolvimento, com o rótulo:
+   `X.Y.Z (git+…/vX.Y.Z)` vira `X.Y.W (devel) (git+…/HEAD)` e `ZapBot X.Y.Z` vira
+   `ZapBot X.Y.W (devel)`. A versão estável continua a release que acabou de sair. Commit
+   `Bump para X.Y.W`, sem tag.
+3. Grava as refs no `.git/packed-refs` (`git pack-refs --all`), para a imagem Docker saber o commit
+   da tag (o [`/version`](comandos/version.md) mostra `(git+<commit>/<tag>)`).
+
+O bot mostra o mesmo rótulo sozinho: fora de uma tag `vX.Y.Z`, a versão vem como `X.Y.Z (devel)` no
+`/version`, no `/bot -info`, no boot e nos e-mails.
+
+Precisa do working tree limpo e não faz push. A troca fica **só** no README e no `docs/`, e pula as
+linhas que citam o próprio `bump.sh` (os exemplos abaixo). As que explicam o formato usam `X.Y.Z`,
+que o `bump.sh` não troca. No código e nos testes, o mesmo número pode ser outra coisa, como a
+versão de uma dependência: os testes conferem as duas.
+
+```bash
+./scripts/bump.sh -n          # dry-run: mostra o que seria alterado nos dois passos
+./scripts/bump.sh             # Release X.Y.Z (com a tag) + Bump para X.Y.Z+1
+./scripts/bump.sh --minor     # Release X.Y.Z (com a tag) + Bump para X.Y+1.0
+./scripts/bump.sh --major     # Release X.Y.Z (com a tag) + Bump para X+1.0.0
+./scripts/bump.sh 3.0.0       # Release X.Y.Z (com a tag) + Bump para 3.0.0
+git push && git push origin vX.Y.Z   # o push da tag publica o site
+```
+
+O push da tag dispara o workflow da [documentação](#documentação), que publica o site da release em
+alguns minutos (acompanhe em **Actions › Documentação**). As notas ficam na release do GitHub
+(`gh release create vX.Y.Z`), com o que mudou desde a anterior
+(`git log <tag anterior>..vX.Y.Z`).
+
+## Adicionando ou alterando comandos
+
+Os comandos são definidos em `src/comandos/definicoes/`, um arquivo por comando (o nome é o do
+comando, sem a barra: `gpt.js` para o `/gpt`). Cada arquivo exporta a entrada do comando; um módulo
+comum, com `require`, constantes e comentários. O `comandos.js` só carrega a pasta (os arquivos
+que começam com `_`, como o `_opcoes.js`, são de apoio). No boot, o `botConfig.js` confere cada
+entrada (nome, role e nomes repetidos) e falha na hora se algo estiver errado. O handler fica no
+`HANDLERS` do `src/comandos/index.js`: a definição não importa o handler, para o `settings.js` e o
+resto poderem ler os comandos sem carregar o bot inteiro (senão os `require` dariam a volta).
+Cada entrada segue este formato:
+
+```js
+{
+    cmd: '/get',                       // nome principal
+    usage: '/get [OPÇÃO]... <url>',    // linha "Uso:" no -help (formas com "  ou  ": uma por linha)
+    aliases: ['/download'],            // nomes alternativos
+    summary: 'Baixa vídeo ou áudio',   // o que faz, numa linha (a lista do /help)
+    help: 'Baixa vídeo ou áudio...',   // descrição completa (o -help)
+    ex: ['/get <url>', '/get -a <url>'], // exemplos (opcional), um por linha depois do texto
+    cmd_opts: [
+        { opts: ['audio', 'a'], values: [], desc: '...' },                // flag
+        { opts: ['startSec', 'ss'], values: ['<segundo>'], desc: '...' }, // opção com valor
+        { argv: ['<url>'], desc: '...' },                                 // argumento posicional (só doc)
+        { opts: ['a'], sinais: ['+', '-'], values: ['[x]'], desc: '...' }, // par +a/-a numa linha (só doc)
+        { opts: ['add'], values: ['<x>'], desc: '...', cron: false },      // opcional; não roda num {/comando} do /cron
+        { opts: ['flush'], desc: '...', role: OWNER },                     // opcional; só o dono, mesmo delegado
+        { opts: ['chat'], values: ['<x>'], desc: '...', outrosChats: true } // opcional; só o chat atual para quem recebeu
+    ],
+    estrito: true,                     // opcional; opção desconhecida é erro (em vez de ir para o argv)
+    mask: true,                        // opcional; aceita o -mask (telefones ofuscados na saída)
+    digitando: false,                  // opcional; sem o "digitando..." (para os que respondem na hora)
+    argumentosLivres: true,            // opcional; o resto é texto livre, sem ler opções (/alias, /batch)
+    cron: true,                        // opcional; true = roda num {/comando} do texto do /cron
+    role: USER,                        // o nível mínimo: USER, ADMIN (admins e o dono) ou OWNER (só o dono)
+    delegavel: true,                   // opcional; num ADMIN, o dono pode liberar a um usuário (/bot +cmd)
+    disabled: false                    // opcional; true = o bot ignora o comando
+}
+```
+
+- `cron: true` deixa o comando rodar dentro do texto do
+  [`/cron`](comandos/cron.md#comandos-no-texto) (`{/crypto}`), na hora do envio. Só para comandos de
+  consulta, que respondem com `msg.reply` (o texto entra no lugar e as mídias saem depois). Uma
+  opção que muda algo (`-add`, `-alerta`...) leva `cron: false` e é recusada ao criar o item. `cron: 'dono'` (no comando ou na opção) só vale
+  se quem cria o item for o dono (o `/bot -flush-email`).
+- `role` é o nível mínimo de quem usa, e as pessoas têm o mesmo nome (`src/roles.js`): `OWNER` (o
+  dono, a conta pareada ao bot), `ADMIN` (os do `bot.admins`, `/bot +a`) e `USER` (os do
+  `bot.users`, `/bot +u`). Um comando `ADMIN` com `delegavel: true` o dono ainda pode liberar a um
+  usuário com o `/bot +cmd`; sem a marca, só admins e o dono usam. Um atalho do `/alias` ou o `/me`
+  com vários `{/comando}` fica com o role mais alto dos alvos. Veja
+  [Permissões](comandos/index.md#permissões-role).
+- Duas marcas no `cmd_opts` dizem o que um usuário que recebeu o comando não faz, conferidas em
+  `src/executar.js` antes do handler (e também dentro de um `{/comando}`): `role: ADMIN` (a opção
+  exige este nível, ou `OWNER`: trocar o modelo do `/gpt`, apagar dados...) e
+  `outrosChats: true` (a opção, ou o argumento `{ argv }`, olha outros chats). A resposta é a mesma
+  em todos: `⛔ Apenas o dono do bot (ou um admin) pode ...`. A tabela da doc sai dessas marcas:
+  `node scripts/gerar-docs.js` (o teste confere se está atualizada).
+- Todo comando digitado mostra o "digitando..." enquanto roda (`comDigitando`, no
+  `src/executar.js`): vários baixam, consultam ou perguntam ao ChatGPT, e sem isso o chat parece
+  parado. O aviso é reenviado a cada 3 s até o comando acabar, porque uma resposta do meio (o
+  "⏳ Limpando..." do `/bot -fe true`) o apaga. `digitando: false` desliga nos que respondem na hora
+  (`/ping`, `/help`...).
+- `{ argv: ['-N'], numero: true }` faz o parser ler o `-10` como `opts.numero` (o 1º; um segundo é
+  desconhecido), em vez de mandá-lo para o `argv`. Com `estrito: true`, uma opção desconhecida
+  não chega ao handler: o `executar.js` responde `❌ Opção desconhecida: -x` com a sintaxe.
+- Alterar `help`, `usage`, `aliases`, descrições, `role` ou `disabled` não exige código: basta
+  refazer o build e recriar o container.
+- O `-h` é lido no celular, então o formatador quebra as linhas:
+  - cada forma do `usage` separada por `"  ou  "` sai numa linha;
+  - o `help` e cada `desc` saem com uma frase por linha (fim de frase é `. ` seguido de maiúscula:
+    `Máx. 20` e `(ex.: -taxas 50)` não quebram); numa opção, a 1ª frase fica ao lado dela, e as
+    outras, recuadas;
+  - o `ex` (uma lista, no comando, na opção ou no protocolo) vai sempre para a linha de baixo, à
+    esquerda: `Ex: /defi` e, abaixo, os outros, um por linha.
+- `sinais: ['+', '-']` mostra o par numa linha só no `-h` (`+a, -a`), em vez do `-a` em Opções e
+  do `+a` em Argumentos, longe um do outro. O parser continua lendo só o `-a`: o `+a` chega em
+  `argv`, e o handler trata (como o `/bot +a`).
+- `espacado: true` (no comando) separa as opções do `-h` com uma linha em branco: para ajudas
+  longas, como a do `/bot`.
+- `protocolos` (no comando) dá uma ajuda para cada protocolo, como no `/defi`:
+  `{ orca: { nome: 'Orca', usage: '...', help: '...' } }`, e cada opção diz de quais é
+  (`protocolos: ['orca']`; sem a lista, vale para todos). O `/defi orca -help` (ou
+  `/help defi orca`) mostra o `usage` e o `help` do protocolo e só as opções que valem nele; o
+  `/defi -help` mostra todas, agrupadas (` > Orca`, ` > Project X e Morpho`, ` > Todos`).
+- Os textos (`usage`, `help` e `desc`) aceitam template string com as constantes de
+  `src/constantes.js` (`` `... em ${CACHE_DIR}` ``): a ajuda mostra o caminho real (ex.: o `/cache -h`).
+- Uma opção igual em mais de um comando vira uma constante em `definicoes/_opcoes.js`
+  (`OPCAO_ALERTA_TO`, do `/rates` e do `/crypto`), para a descrição ficar num lugar só.
+- Com `disabled: true` o comando não é carregado: o bot não responde a ele nem aos aliases, e ele
+  some do `/help`. No boot aparece nos logs `Disabled N callers (...)`. Para desativar sem rebuild,
+  use o setting `commands.disabled` (`/set commands.disabled noffa`).
+- Um comando **novo** precisa de uma definição em `src/comandos/definicoes/`, do handler em
+  `src/comandos/` e de uma entrada no objeto `HANDLERS` de `src/comandos/index.js`. No boot, o bot
+  avisa nos logs se existir uma definição sem handler.
+  Comandos, handlers, a tabela [Resumo](comandos/index.md#resumo) e as páginas de `docs/comandos/`
+  ficam em **ordem alfabética** (o menu do `mkdocs.yml` também).

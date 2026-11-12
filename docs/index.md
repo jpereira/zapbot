@@ -1,73 +1,73 @@
 <p align="center">
-  <img src="assets/logo.png" alt="Logo do ZapBot: um robô anjo, com auréola e asas, piscando e
-  fazendo joinha num balão de conversa verde, e uma cara de demônio espiando do lado" width="320">
+  <img src="assets/logo.png" alt="ZapBot logo: an angel robot, with a halo and wings, winking and
+  giving a thumbs up in a green chat bubble, and a demon face peeking from the side" width="320">
 </p>
 
 # ZapBot
 
 [![Testes](https://github.com/jpereira/zapbot/actions/workflows/ci.yml/badge.svg)](https://github.com/jpereira/zapbot/actions/workflows/ci.yml)
 
-Bot para WhatsApp escrito em Node.js que roda em cima de uma sessão real do WhatsApp Web. Ele
-recupera mensagens (e status) apagadas e editadas, baixa vídeos de redes sociais, cria figurinhas,
-vigia mensagens por texto/regex e te avisa no privado, traz notícias, tempo e CVEs, conversa com o
-ChatGPT e mais algumas brincadeiras,
-tudo por comandos digitados no próprio chat (`/help`, `/get`, `/show`, `/news`, `/gpt`...).
+A WhatsApp bot written in Node.js that runs on top of a real WhatsApp Web session. It recovers
+deleted and edited messages (and statuses), downloads videos from social networks, creates stickers,
+watches messages by text/regex and alerts you in your private chat, brings news, weather and CVEs,
+talks to ChatGPT and a few more fun things, all through commands typed in the chat itself (`/help`,
+`/get`, `/show`, `/news`, `/gpt`...).
 
-Atalhos persistentes guardam comandos com argumentos e descrição opcional: cadastre com
-`/alias dimdim -desc "Exibe o preço do dólar" /cotacao USD`, execute `/dimdim` e consulte
-`/help alias`. O bot mostra o comando chamado antes do resultado. Um atalho também pode juntar
-vários comandos num texto, como no `/cron`:
+Persistent shortcuts store commands with arguments and an optional description: register one with
+`/alias dimdim -desc "Exibe o preço do dólar" /rates USD`, run `/dimdim` and check
+`/help alias`. The bot shows the command that was called before the result. A shortcut can also
+combine several commands in a text, as in `/cron`:
 `/alias carteira Orca {/defi orca}\n Prjx {/defi prjx}`.
 
-A ideia vem dos velhos tempos do IRC: o ZapBot é inspirado nas antigas
-[eggdrops](https://www.eggheads.org/), os bots que ficavam de plantão nos canais, respondendo a
-comandos, guardando o que rolava e cuidando da casa. Aqui o canal é o grupo do WhatsApp, e os
-comandos começam com `/`.
+The idea comes from the old IRC days: ZapBot is inspired by the old
+[eggdrops](https://www.eggheads.org/), the bots that stood watch in channels, answering commands,
+keeping track of what happened and looking after the place. Here the channel is the WhatsApp group,
+and commands start with `/`.
 
-## Demonstração
+## Demo
 
 <p align="center">
-  <a href="assets/demo/01-aquecimento.gif" target="_blank" rel="noopener"><img src="assets/demo/01-aquecimento.gif" alt="/ping, /version e /help respondendo" title="01-aquecimento.gif" width="220"></a>
-  <a href="assets/demo/02-show.gif" target="_blank" rel="noopener"><img src="assets/demo/02-show.gif" alt="/show reexibindo mensagens apagadas" title="02-show.gif" width="220"></a>
-  <a href="assets/demo/03-monitor.gif" target="_blank" rel="noopener"><img src="assets/demo/03-monitor.gif" alt="/monitor avisando quando um contato fica online" title="03-monitor.gif" width="220"></a>
-  <a href="assets/demo/05-sticker.gif" target="_blank" rel="noopener"><img src="assets/demo/05-sticker.gif" alt="/sticker -txt criando figurinhas de texto" title="05-sticker.gif" width="220"></a>
-  <a href="assets/demo/07-crypto.gif" target="_blank" rel="noopener"><img src="assets/demo/07-crypto.gif" alt="/crypto mostrando a cotação das criptomoedas" title="07-crypto.gif" width="220"></a>
-  <a href="assets/demo/10-watch.gif" target="_blank" rel="noopener"><img src="assets/demo/10-watch.gif" alt="/watch avisando quando uma mensagem casa com uma regra" title="10-watch.gif" width="220"></a>
+  <a href="assets/demo/01-aquecimento.gif" target="_blank" rel="noopener"><img src="assets/demo/01-aquecimento.gif" alt="/ping, /version and /help replying" title="01-aquecimento.gif" width="220"></a>
+  <a href="assets/demo/02-show.gif" target="_blank" rel="noopener"><img src="assets/demo/02-show.gif" alt="/show redisplaying deleted messages" title="02-show.gif" width="220"></a>
+  <a href="assets/demo/03-monitor.gif" target="_blank" rel="noopener"><img src="assets/demo/03-monitor.gif" alt="/monitor alerting when a contact comes online" title="03-monitor.gif" width="220"></a>
+  <a href="assets/demo/05-sticker.gif" target="_blank" rel="noopener"><img src="assets/demo/05-sticker.gif" alt="/sticker -txt creating text stickers" title="05-sticker.gif" width="220"></a>
+  <a href="assets/demo/07-crypto.gif" target="_blank" rel="noopener"><img src="assets/demo/07-crypto.gif" alt="/crypto showing cryptocurrency prices" title="07-crypto.gif" width="220"></a>
+  <a href="assets/demo/10-watch.gif" target="_blank" rel="noopener"><img src="assets/demo/10-watch.gif" alt="/watch alerting when a message matches a rule" title="10-watch.gif" width="220"></a>
 </p>
 
-`/ping`, `/show`, `/monitor`, `/sticker -txt`, `/crypto` e `/watch`. Todas as cenas em
-[Demonstração](demonstracao.md).
+`/ping`, `/show`, `/monitor`, `/sticker -txt`, `/crypto` and `/watch`. All scenes in
+[Demo](demonstracao.md).
 
-**Principais funções:**
+**Main features:**
 
-- Recupera mensagens e status apagados ou editados, e reações removidas: [`/show`](comandos/show.md)
-- 👀 Monitora até 5 contatos, com intervalo configurável e histórico limitado dos horários
-  de visto por último observados e alertas online: [`/monitor`](comandos/monitor.md)
-- Baixa vídeos com yt-dlp e ffmpeg: [`/get`](comandos/get.md)
-- Cria figurinhas: [`/sticker`](comandos/sticker.md)
-- Vigia mensagens por texto ou regex: [`/watch`](comandos/watch.md)
-- Agenda mensagens: [`/cron`](comandos/cron.md)
-- Guarda anotações, com `#tag`, imagens e aviso numa data/hora: [`/notes`](comandos/notes.md)
-- Executa vários comandos de uma mensagem só: [`/batch`](comandos/batch.md)
-- Mostra cotações e alertas de preço: [`/cotacao`](comandos/cotacao.md),
+- Recovers deleted or edited messages and statuses, and removed reactions: [`/show`](comandos/show.md)
+- 👀 Monitors up to 5 contacts, with a configurable interval and a limited history of observed
+  last-seen times and online alerts: [`/monitor`](comandos/monitor.md)
+- Downloads videos with yt-dlp and ffmpeg: [`/get`](comandos/get.md)
+- Creates stickers: [`/sticker`](comandos/sticker.md)
+- Watches messages by text or regex: [`/watch`](comandos/watch.md)
+- Schedules messages: [`/cron`](comandos/cron.md)
+- Stores notes, with `#tag`, images and an alert at a date/time: [`/notes`](comandos/notes.md)
+- Runs several commands in a single message: [`/batch`](comandos/batch.md)
+- Shows prices and price alerts: [`/rates`](comandos/rates.md),
   [`/crypto`](comandos/crypto.md)
-- Acompanha posições DeFi (Orca, Project X, Liquidswap, Morpho, Aave V3): [`/defi`](comandos/defi.md)
-- Integra o ChatGPT: [`/gpt`](comandos/gpt.md), [`/tldr`](comandos/tldr.md),
-  [`/desenhe`](comandos/desenhe.md) (imagens e GIFs)
-- Consulta CVEs, notícias e o tempo: [`/cve`](comandos/cve.md), [`/news`](comandos/news.md),
-  [`/tempo`](comandos/tempo.md)
-- Faz backup do banco: [`/backup`](comandos/backup.md)
-- Controla permissões por usuário e grupo, com proteção contra flood:
+- Tracks DeFi positions (Orca, Project X, Liquidswap, Morpho, Aave V3): [`/defi`](comandos/defi.md)
+- Integrates ChatGPT: [`/gpt`](comandos/gpt.md), [`/tldr`](comandos/tldr.md),
+  [`/draw`](comandos/draw.md) (images and GIFs)
+- Looks up CVEs, news and weather: [`/cve`](comandos/cve.md), [`/news`](comandos/news.md),
+  [`/weather`](comandos/weather.md)
+- Backs up the database: [`/backup`](comandos/backup.md)
+- Controls permissions per user and group, with flood protection:
   [`/bot`](comandos/bot.md)
 
-Por onde começar:
+Where to start:
 
-- [Instalação](instalacao.md): requisitos, instalação pela última release e atualização.
-- [Configuração](configuracao.md): o `config/.env`, as chaves de API e o e-mail.
-- [Comandos](comandos/index.md): todos os comandos, com opções e exemplos.
-- [Operação](operacao.md): o dia a dia, a saúde do container e a solução de problemas.
+- [Installation](instalacao.md): requirements, installing from the latest release, and updating.
+- [Configuration](configuracao.md): `config/.env`, API keys and email.
+- [Commands](comandos/index.md): all commands, with options and examples.
+- [Operation](operacao.md): day-to-day use, container health and troubleshooting.
 
-## Como funciona
+## How it works
 
 ```text
  ┌────────────── container zapbot (node:24-trixie-slim) ──────────────┐
@@ -77,7 +77,7 @@ Por onde começar:
  │     ├──► SQLite  (cache/zapbot.db)  mensagens, settings            │
  │     ├──► cache/media   mídias p/ recuperar mensagens apagadas      │
  │     ├──► yt-dlp + ffmpeg   comando /get                            │
- │     ├──► APIs HTTP (axios)  /gpt /tempo /cve /news /giphy...       │
+ │     ├──► APIs HTTP (axios)  /gpt /weather /cve /news /giphy...       │
  │     └──► SMTP (nodemailer)  QR Code e alertas por e-mail           │
  │                                                                    │
  │  volumes:  wwebjs_auth  → sessão do WhatsApp (.wwebjs_auth)        │
@@ -85,121 +85,121 @@ Por onde começar:
  └────────────────────────────────────────────────────────────────────┘
 ```
 
-- **Sessão WhatsApp**: o [`whatsapp-web.js`](https://github.com/wwebjs/whatsapp-web.js) abre o
-  WhatsApp Web num Chromium headless e pareia com o seu celular como um *aparelho conectado*. A
-  sessão fica salva no volume `wwebjs_auth`, então o QR Code só precisa ser lido na primeira vez (ou
-  quando a sessão for revogada). A versão da biblioteca é fixada no `package-lock.json` para
-  instalações reproduzíveis. Os ajustes locais ficam em `patches/` e são aplicados pelo
-  `scripts/aplicar-patches.js` durante a instalação, usando `git apply`.
-  Para instalar fora do Docker: `PUPPETEER_SKIP_DOWNLOAD=true npm install`.
-- **Número do bot = seu número**: o bot age como a conta que leu o QR Code. As mensagens que *você*
-  envia (de qualquer aparelho) também passam pelo bot.
-- **Persistência**: toda mensagem recebida é gravada no SQLite (mídias vão para `cache/media`).
-  Quando alguém apaga uma mensagem "para todos", o bot encontra a cópia no banco e a reenvia **no
-  seu privado** (chat consigo mesmo; desative o aviso com `/set show.alert.deleted off`, a mensagem
-  continua guardada). Mensagens apagadas ficam guardadas por 30 dias (setting
-  `cache.revokedRetentionDays`) e podem ser reexibidas com `/show`. Status (textos/fotos/vídeos)
-  apagados também são recuperados, com o título `📸 STATUS APAGADO DETECTADO` e reexibidos com
-  `/show -s`. Com `/set show.alert.status off`, novas exclusões de status são ignoradas: não geram
-  aviso nem entram na lista de apagados.
-- **Editadas**: quando alguém edita uma mensagem, o bot grava o texto de antes e o de depois (tabela
-  `message_edits`) e te avisa **no seu privado** com o título `✏️ MENSAGEM EDITADA DETECTADA`
-  (desative o aviso com `/set show.alert.edited off`; a edição continua guardada). As edições ficam
-  30 dias (setting `cache.editedRetentionDays`) e podem ser reexibidas com
-  [`/show -e`](comandos/show.md). As suas próprias edições são ignoradas.
-- **Reações**: quando alguém remove uma reação (ou troca por outra), o bot te avisa **no seu
-  privado** com o título `😶 REAÇÃO REMOVIDA DETECTADA` (ou `🔄 REAÇÃO TROCADA DETECTADA`), com a
-  reação de antes e o texto da mensagem reagida (desative o aviso com
-  `/set show.alert.reaction off`; a reação continua guardada). Elas ficam 30 dias (setting
-  `cache.reactionRetentionDays`) e podem ser reexibidas com [`/show -r`](comandos/show.md#reações).
-- **Silenciar**: o [`/mute`](comandos/mute.md) corta os avisos de apagadas, editadas, status e reações de uma
-  pessoa, de um grupo ou de uma comunidade (a mensagem continua guardada); respondendo um aviso,
-  silencia de onde ele veio. Quem está silenciado também não gera aviso do `/watch` no seu privado.
-  O [`/unmute`](comandos/unmute.md) desfaz.
-- **Limpeza automática**: a cada 10 minutos o bot remove do banco/disco as mensagens comuns com mais
-  de 68 h (janela máxima que o WhatsApp permite apagar; o texto fica mais tempo com o `cache.messageRetentionHours` e as mídias, com o `cache.messageMediaRetentionHours`), as apagadas, as editadas e as reações com
-  mais de 30 dias, as ocorrências do `/watch` com mais de 30 dias (setting `watch.hitsRetentionDays`), os
-  contadores do `/stats` com mais de 90 dias (setting `stats.retentionDays`), as enquetes com mais
-  de 90 dias (setting `enquete.retentionDays`) e os avisos ignorados pelo `/mute` com mais de 30
-  dias.
-- **Monitor de contatos**: o [`/monitor`](comandos/monitor.md) consulta até cinco pessoas,
-  uma por vez, em ordem aleatória e com espera de 1 a 15 segundos entre consultas. O intervalo
-  mínimo por pessoa é de cinco minutos por padrão (`monitor.pool`). Guarda até 30 horários distintos
-  por pessoa (`monitor.maxRecords`) nas tabelas `monitor_contacts` e `monitor_history`.
-  `/monitor` e `/monitor -l` mostram o histórico observado; `/monitor -l /Maria/` filtra uma pessoa.
-  `/monitor -add /Maria/ -alerta` ou `/monitor -alerta /Maria/` ativa avisos online no privado
-  do dono do bot, uma vez por transição observada. `/monitor -rm all` limpa os cadastros
-  e históricos locais. `/set monitor.enabled false` pausa as consultas sem apagar dados.
-  Horários podem vir do cache e não são confirmados; não há garantia de registrar todos os acessos
-  nem de evitar bloqueio da conta pelo WhatsApp.
-- **Estatísticas**: cada mensagem nova (e cada apagada/editada) soma 1 num contador por chat, dia,
-  hora e remetente (tabela `stats`), usado pelo [`/stats`](comandos/stats.md). Só números, sem o
-  texto; ficam 90 dias (setting `stats.retentionDays`). As respostas do bot, o seu privado e os
-  status não entram. Desligue com `/set stats.enable off`.
-- **Alertas de preço**: `/cotacao -alerta USD > 5.30` e `/crypto -alerta BTC < 90000` guardam a
-  regra na tabela `price_alerts`; a cada 5 minutos (setting `alerta.intervalMin`) o bot consulta os
-  preços e avisa **no seu privado** (ou, com um ou vários `-to`, em contatos, grupos, números ou por
-  e-mail) quando a regra é cumprida; com o `-msg`, um texto seu vai no início do aviso. Veja
-  [Alertas de preço](comandos/cotacao.md#alertas-de-preço).
-- **Anotações**: o [`/notes`](comandos/notes.md) guarda textos (e imagens, em `cache/notes/`) na
-  tabela `notes`, cada um com um ID e, se quiser, uma `#tag` (a descrição das tags fica em
-  `note_tags`). O `-alerta` avisa de uma anotação numa data/hora (uma vez; a anotação continua), no
-  seu privado ou nos destinos do `-to`, com uma verificação por minuto.
-- **DeFi**: o [`/defi`](comandos/defi.md) lê on-chain as posições de liquidez da Orca, do Project X e da
-  Liquidswap (pela carteira) cadastradas (tabela `defi_positions`) e, com o `-alerta`, confere a cada 10
-  minutos (setting `defi.alerta.intervalMin`) e avisa (no seu privado ou nos destinos do `-to`)
-  quando uma posição sai da faixa, quando volta e, com o `-taxas`, quando as taxas a coletar passam
-  de um valor. O `/defi morpho` e o `/defi aave` mostram a posição, os empréstimos e o risco de uma
-  carteira no Morpho (pela API oficial) e no Aave V3 (nos contratos, on-chain).
-- **Enquetes**: os votos das enquetes da sua conta (evento `vote_update`) vão para as tabelas
-  `polls` e `poll_votes`, e o [`/enquete -r`](comandos/enquete.md#resultado) mostra o placar. Ficam
-  90 dias (setting `enquete.retentionDays`).
-- **Agenda**: os lembretes e as mensagens do [`/cron`](comandos/cron.md) (também `/agenda` e
-  `/lembrete`) ficam na tabela `schedules`; a cada 30 s o bot envia o que venceu (os repetidos
-  seguem para o próximo horário). Um `{/comando}` no texto roda na hora do envio e a resposta entra
-  no lugar.
-- **Status diário**: com [`/bot -status 06h`](comandos/bot.md#status-do-bot), um relatório das
-  últimas 24 h (no ar, cache, watch, apagadas, editadas, `/mute`) chega todo dia no seu privado.
-- **Backup**: todo dia, às 3h (setting `backup.hour`), o bot guarda uma cópia compactada do banco em
-  `cache/backups`; o [`/backup`](comandos/backup.md) também envia o backup diário ao destino de
-  `backup.to`, quando preenchido. O comando lista, restaura e envia os arquivos (no seu privado, por
-  e-mail ou, com um ou vários `-to`, noutros chats).
-- **Watch**: mensagens recebidas de outras contas, fora dos comandos reconhecidos, são testadas
-  contra as regras do [`/watch`](comandos/watch.md) (setting `watch.rules`); quando casa, a
-  ocorrência é gravada na tabela `watch_hits` e você é avisado **no seu privado** (ou nos destinos
-  do `-to` da regra: outros chats ou e-mails). Quem está silenciado no `/mute` não gera o aviso no
-  privado; a ocorrência é gravada do mesmo jeito.
-- **Configurações (`settings`)**: configurações gerais que podem mudar em tempo de execução (debug,
-  moedas do `/crypto`, limites...) ficam na tabela genérica `settings` do SQLite (`key` → `value` em
-  JSON) e são alteradas pelo [`/set`](comandos/set.md). No boot os valores padrão são gravados, se
-  ainda não existirem, e tudo é carregado em memória. Veja [Settings](settings.md).
-- **Comandos**: definidos em
+- **WhatsApp session**: [`whatsapp-web.js`](https://github.com/wwebjs/whatsapp-web.js) opens
+  WhatsApp Web in a headless Chromium and pairs with your phone as a *linked device*. The session
+  is saved in the `wwebjs_auth` volume, so the QR Code only needs to be read the first time (or
+  when the session is revoked). The library version is pinned in `package-lock.json` for
+  reproducible installs. Local tweaks live in `patches/` and are applied by
+  `scripts/aplicar-patches.js` during installation, using `git apply`.
+  To install outside Docker: `PUPPETEER_SKIP_DOWNLOAD=true npm install`.
+- **Bot number = your number**: the bot acts as the account that read the QR Code. Messages that
+  *you* send (from any device) also go through the bot.
+- **Persistence**: every received message is written to SQLite (media goes to `cache/media`).
+  When someone deletes a message "for everyone", the bot finds the copy in the database and resends
+  it **to your private chat** (the chat with yourself; turn the alert off with
+  `/set show.alert.deleted off`, the message stays stored). Deleted messages are kept for 30 days
+  (setting `cache.revokedRetentionDays`) and can be redisplayed with `/show`. Deleted statuses
+  (texts/photos/videos) are also recovered, with the title `📸 STATUS APAGADO DETECTADO` and
+  redisplayed with `/show -s`. With `/set show.alert.status off`, new status deletions are ignored:
+  they neither generate an alert nor enter the deleted list.
+- **Edited**: when someone edits a message, the bot stores the text from before and after (table
+  `message_edits`) and alerts you **in your private chat** with the title
+  `✏️ MENSAGEM EDITADA DETECTADA` (turn the alert off with `/set show.alert.edited off`; the edit
+  stays stored). Edits are kept for 30 days (setting `cache.editedRetentionDays`) and can be
+  redisplayed with [`/show -e`](comandos/show.md). Your own edits are ignored.
+- **Reactions**: when someone removes a reaction (or swaps it for another), the bot alerts you **in
+  your private chat** with the title `😶 REAÇÃO REMOVIDA DETECTADA` (or
+  `🔄 REAÇÃO TROCADA DETECTADA`), with the previous reaction and the text of the message that was
+  reacted to (turn the alert off with `/set show.alert.reaction off`; the reaction stays stored).
+  They are kept for 30 days (setting `cache.reactionRetentionDays`) and can be redisplayed with
+  [`/show -r`](comandos/show.md#reactions).
+- **Muting**: [`/mute`](comandos/mute.md) cuts the alerts for deleted, edited, status and reaction
+  events from a person, a group or a community (the message stays stored); when you reply to an
+  alert, it mutes where it came from. Someone who is muted also doesn't generate a `/watch` alert in
+  your private chat. [`/unmute`](comandos/unmute.md) undoes it.
+- **Automatic cleanup**: every 10 minutes the bot removes from the database/disk regular messages
+  older than 68 h (the maximum window WhatsApp allows for deleting; the text is kept longer with
+  `cache.messageRetentionHours` and the media with `cache.messageMediaRetentionHours`), deleted and
+  edited ones, and reactions older than 30 days, `/watch` hits older than 30 days (setting
+  `watch.hitsRetentionDays`), `/stats` counters older than 90 days (setting `stats.retentionDays`),
+  polls older than 90 days (setting `enquete.retentionDays`) and alerts skipped by `/mute` older
+  than 30 days.
+- **Contact monitor**: [`/monitor`](comandos/monitor.md) checks up to five people, one at a time,
+  in random order and waiting 1 to 15 seconds between checks. The minimum interval per person is
+  five minutes by default (`monitor.pool`). It keeps up to 30 distinct timestamps per person
+  (`monitor.maxRecords`) in the `monitor_contacts` and `monitor_history` tables. `/monitor` and
+  `/monitor -l` show the observed history; `/monitor -l /Maria/` filters one person.
+  `/monitor -add /Maria/ -alerta` or `/monitor -alerta /Maria/` enables online alerts in the bot
+  owner's private chat, once per observed transition. `/monitor -rm all` clears the local
+  registrations and histories. `/set monitor.enabled false` pauses the checks without deleting data.
+  Timestamps may come from the cache and aren't confirmed; there is no guarantee that every access
+  is recorded or that WhatsApp won't block the account.
+- **Statistics**: each new message (and each deleted/edited one) adds 1 to a counter per chat, day,
+  hour and sender (table `stats`), used by [`/stats`](comandos/stats.md). Numbers only, no text;
+  they are kept for 90 days (setting `stats.retentionDays`). Bot replies, your private chat and
+  statuses are not counted. Turn it off with `/set stats.enable off`.
+- **Price alerts**: `/rates -alerta USD > 5.30` and `/crypto -alerta BTC < 90000` store the rule
+  in the `price_alerts` table; every 5 minutes (setting `alerta.intervalMin`) the bot checks the
+  prices and alerts **your private chat** (or, with one or more `-to`, contacts, groups, numbers or
+  email) when the rule is met; with `-msg`, a text of yours goes at the start of the alert. See
+  [Price alerts](comandos/rates.md#price-alerts).
+- **Notes**: [`/notes`](comandos/notes.md) stores texts (and images, in `cache/notes/`) in the
+  `notes` table, each with an ID and, if you want, a `#tag` (tag descriptions live in
+  `note_tags`). `-alerta` alerts about a note at a date/time (once; the note stays), in your
+  private chat or at the `-to` destinations, with one check per minute.
+- **DeFi**: [`/defi`](comandos/defi.md) reads on-chain the registered liquidity positions on Orca,
+  Project X and Liquidswap (by wallet) (table `defi_positions`) and, with `-alerta`, checks every 10
+  minutes (setting `defi.alerta.intervalMin`) and alerts (in your private chat or at the `-to`
+  destinations) when a position leaves the range, when it comes back and, with `-taxas`, when the
+  fees to collect pass a value. `/defi morpho` and `/defi aave` show a wallet's position, loans and
+  risk on Morpho (through the official API) and on Aave V3 (in the contracts, on-chain).
+- **Polls**: the votes of your account's polls (`vote_update` event) go to the `polls` and
+  `poll_votes` tables, and [`/poll -r`](comandos/poll.md#result) shows the tally. They are
+  kept for 90 days (setting `enquete.retentionDays`).
+- **Schedule**: the reminders and messages of [`/cron`](comandos/cron.md) (also `/agenda` and
+  `/lembrete`) live in the `schedules` table; every 30 s the bot sends what is due (repeating ones
+  move on to the next time). A `{/command}` in the text runs at send time and its reply takes its
+  place.
+- **Daily status**: with [`/bot -status 06h`](comandos/bot.md#bot-status), a report of the last
+  24 h (uptime, cache, watch, deleted, edited, `/mute`) arrives in your private chat every day.
+- **Backup**: every day, at 3 am (setting `backup.hour`), the bot stores a compressed copy of the
+  database in `cache/backups`; [`/backup`](comandos/backup.md) also sends the daily backup to the
+  `backup.to` destination, when set. The command lists, restores and sends the files (to your
+  private chat, by email or, with one or more `-to`, to other chats).
+- **Watch**: messages received from other accounts, outside recognized commands, are tested against
+  the [`/watch`](comandos/watch.md) rules (setting `watch.rules`); on a match, the hit is stored in
+  the `watch_hits` table and you are alerted **in your private chat** (or at the rule's `-to`
+  destinations: other chats or emails). Someone muted with `/mute` doesn't generate the private
+  alert; the hit is stored all the same.
+- **Settings (`settings`)**: general settings that can change at runtime (debug, `/crypto` coins,
+  limits...) live in the generic SQLite `settings` table (`key` → `value` in JSON) and are changed
+  with [`/set`](comandos/set.md). At boot the defaults are written, if they don't exist yet, and
+  everything is loaded into memory. See [Settings](settings.md).
+- **Commands**: defined in
   [`src/comandos/definicoes/`](https://github.com/jpereira/zapbot/tree/main/src/comandos/definicoes)
-  (nome, aliases, opções, ajuda, permissão) e implementados em `src/comandos/` (um arquivo por
-  comando; veja [Estrutura do código](desenvolvimento.md#estrutura-do-código)). Os que consultam a
-  internet (`/gpt`, `/tempo`, `/cve`, `/news`...) usam os serviços da tabela
-  [Serviços externos](configuracao.md#serviços-externos).
-- **Controle**: o [`/bot`](comandos/bot.md) mostra o status (o relatório de 24 h e os usuários),
-  liga/desliga todos os comandos (`-on`/`-off`) e diz quem usa: você, os
-  [admins extras](comandos/bot.md#admins-extras) (`+a`/`-a`) e os
-  [usuários](comandos/bot.md#usuários) (`+u`/`-u`: pessoas e grupos, com os comandos de cada um
-  limitados pelo `+cmd`/ `-cmd`, e com comandos `admin` delegados, se quiser); o `-reset` volta ao
-  padrão, o `-status 06h` manda o
-  relatório todo dia (no seu privado, noutros chats ou por e-mail), o `-info` mostra as versões do
-  que o bot usa e o `-test` confere cache, disco, banco,
-  WhatsApp, internet, SMTP, IMAP e programas. Quem não é admin tem uma
-  [proteção contra flood](comandos/bot.md#proteção-contra-flood). O [`/whois`](comandos/whois.md)
-  diz o nível de cada um no chat.
-- **Reconexão**: em caso de queda o cliente é reiniciado sozinho, exceto quando o motivo exige ação
-  manual (`LOGOUT`, `CONFLICT`, `UNPAIRED`...). Sem internet, ele tenta de novo, com espera
-  crescente, até conectar ([Queda da internet](operacao.md#queda-da-internet)).
-- **Saúde (heartbeat)**: a cada 30 s o bot confere se o WhatsApp Web responde e grava
-  `/tmp/zapbot-heartbeat.json`; o `HEALTHCHECK` do Docker marca o container como `unhealthy` se o
-  arquivo parar de ser atualizado. Veja
-  [Saúde do container](operacao.md#saúde-do-container-heartbeat).
-- **Aviso de início**: quando fica pronto, o bot manda
-  `🤖 ZapBot <versão> (git+<commit>/<tag ou HEAD>) inicializado.` para o `PHONE_NUMBER` (o commit é o
-  do código que está rodando; veja o [`/version`](comandos/version.md)).
-- **Alertas por e-mail**: crash, queda, reconexão, falha de autenticação e outros eventos também vão
-  por e-mail, pelo mesmo SMTP do QR Code (veja [Alertas por e-mail](emails.md#alertas-por-e-mail)).
-  Ligado por padrão (setting `email.alerts`).
+  (name, aliases, options, help, permission) and implemented in `src/comandos/` (one file per
+  command; see [Code structure](desenvolvimento.md#code-structure)). The ones that query the
+  internet (`/gpt`, `/weather`, `/cve`, `/news`...) use the services in the
+  [External services](configuracao.md#external-services) table.
+- **Control**: [`/bot`](comandos/bot.md) shows the status (the 24 h report and the users), turns all
+  commands on/off (`-on`/`-off`) and says who can use the bot: you, the
+  [extra admins](comandos/bot.md#extra-admins) (`+a`/`-a`) and the
+  [users](comandos/bot.md#users) (`+u`/`-u`: people and groups, with each one's commands limited
+  by `+cmd`/`-cmd`, and with delegated `admin` commands, if you want); `-reset` goes back to the
+  default, `-status 06h` sends the report every day (to your private chat, other chats or by
+  email), `-info` shows the versions of what the bot uses and `-test` checks cache, disk, database,
+  WhatsApp, internet, SMTP, IMAP and programs. Anyone who isn't an admin gets
+  [flood protection](comandos/bot.md#flood-protection). [`/whois`](comandos/whois.md) tells
+  each person's level in the chat.
+- **Reconnection**: on an outage the client restarts by itself, except when the reason requires
+  manual action (`LOGOUT`, `CONFLICT`, `UNPAIRED`...). Without internet, it retries, with
+  increasing wait, until it connects ([Internet outage](operacao.md#internet-outage)).
+- **Health (heartbeat)**: every 30 s the bot checks that WhatsApp Web is responding and writes
+  `/tmp/zapbot-heartbeat.json`; Docker's `HEALTHCHECK` marks the container as `unhealthy` if the
+  file stops being updated. See [Container health](operacao.md#container-health-heartbeat).
+- **Startup notice**: when it's ready, the bot sends
+  `🤖 ZapBot <versão> (git+<commit>/<tag ou HEAD>) inicializado.` to `PHONE_NUMBER` (the commit is
+  the one of the code that's running; see [`/version`](comandos/version.md)).
+- **Email alerts**: crash, outage, reconnection, authentication failure and other events also go by
+  email, through the same SMTP as the QR Code (see [Email alerts](emails.md#email-alerts)).
+  Enabled by default (setting `email.alerts`).

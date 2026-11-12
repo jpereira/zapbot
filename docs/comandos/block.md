@@ -1,29 +1,30 @@
 # `/block` (`/bloquear`) · admin
 
-Bloqueia uma ou várias pessoas na sua conta do WhatsApp, como o **Bloquear** do celular: elas deixam
-de conseguir te mandar mensagens e ligar. Respondendo uma mensagem, bloqueia quem a escreveu. Sem nada, lista os
-bloqueados, inclusive os que você bloqueou no celular, numerados para o [`/unblock <nº>`](unblock.md).
+Blocks one or several people on your WhatsApp account, like **Block** on the phone: they can no
+longer message or call you. Replying to a message, it blocks whoever wrote it. With nothing, it lists
+the blocked ones, including those you blocked on the phone, numbered for
+[`/unblock <nº>`](unblock.md).
 
 ```text
 /block [/contato/|@menção|+número]...  ou  /block -l
 ```
 
-| Opção | Valor | Descrição |
+| Option | Value | Description |
 |---|---|---|
-| *(nenhuma)* | `[/contato/\|@menção\|+número]...` | As pessoas, separadas por espaço: contato da agenda pelo nome ou parte dele (vários que servem: você escolhe na lista), alguém mencionado com `@` ou um número. Sem ninguém, respondendo uma mensagem: quem a escreveu. Veja [Várias pessoas](#várias-pessoas) |
-| `-list`, `-l` | | Lista os bloqueados (o mesmo que `/block` sem nada) |
-| `-mask`, `-m` | | Ofusca telefones na saída desta execução. Ex.: `+55219****44` |
+| *(none)* | `[/contato/\|@menção\|+número]...` | The people, separated by spaces: an address book contact by name or part of it (several matches: you choose from the list), someone mentioned with `@` or a number. With no one, replying to a message: whoever wrote it. See [Several people](#several-people) |
+| `-list`, `-l` | | Lists the blocked ones (the same as `/block` with nothing) |
+| `-mask`, `-m` | | Obfuscates phone numbers in this run's output. E.g.: `+55219****44` |
 
-A pessoa é buscada como no `-to` ([Destinos](index.md#destinos-contato-grupo-número-ou-e-mail)),
-só entre os contatos: grupos não se bloqueiam.
+The person is looked up like in `-to` ([Destinations](index.md#destinations-contact-group-number-or-email)),
+among contacts only: groups can't be blocked.
 
 ```text
-/block /Fulano/             → bloqueia o contato
-/block +5521999999999       → pelo número
-/block @Fulano              → num grupo, mencionando a pessoa
-/block +5521999999999 +5521988888888 /Ciclano Souza/  → várias de uma vez
-/block                      → respondendo uma mensagem: quem a escreveu (sem responder: a lista)
-/block -l                   → a lista
+/block /Fulano/             → blocks the contact
+/block +5521999999999       → by number
+/block @Fulano              → in a group, mentioning the person
+/block +5521999999999 +5521988888888 /Ciclano Souza/  → several at once
+/block                      → replying to a message: whoever wrote it (not replying: the list)
+/block -l                   → the list
 ```
 
 ```text
@@ -40,13 +41,13 @@ só entre os contatos: grupos não se bloqueiam.
 💡 Desbloqueie com /unblock <nº|nome>.
 ```
 
-## Várias pessoas
+## Several people
 
-Separe as pessoas por espaço: cada número (`+5521…`), cada `@menção` e cada nome entre barras
-(`/Ciclano Souza/`) ou aspas é uma pessoa. Palavras soltas, sem nenhum desses, são um nome só:
-`/block Ciclano Souza` é o Ciclano Souza, não o Ciclano e o Souza. Cada nome com mais de um contato
-pede a escolha na lista, um de cada vez; quem não é achado tem o erro de sempre, e os outros seguem.
-No fim, um resumo só:
+Separate people with spaces: each number (`+5521…`), each `@mention` and each name in slashes
+(`/Ciclano Souza/`) or quotes is one person. Loose words, with none of those, are a single name:
+`/block Ciclano Souza` is Ciclano Souza, not Ciclano and Souza. Each name with more than one contact
+asks you to choose from the list, one at a time; anyone not found gets the usual error, and the
+others carry on. At the end, a single summary:
 
 ```text
 /block +5521999999999 /Ciclano Souza/ @Beltrano
@@ -60,18 +61,19 @@ No fim, um resumo só:
 💡 Desfaça com /unblock; veja a lista com /block.
 ```
 
-A mesma pessoa repetida conta uma vez.
+The same person repeated counts once.
 
-## Detalhes
+## Details
 
-- O bloqueio é feito pelo id interno da pessoa (`@lid`), que o bot pergunta ao WhatsApp antes; um
-  número que o WhatsApp Web ainda não conhecia também funciona. Depois, o bot confere na lista do
-  WhatsApp: só conta como bloqueado quem entrou nela.
-- Se o WhatsApp recusar (ou a pessoa não entrar na lista), o bot diz por quê, em vez de bloqueado:
-  `⚠️ Não consegui bloquear 👤 Fulano: o WhatsApp recusou o bloqueio (erro "t").`. Com várias
-  pessoas, ela vai para `❌ Não bloqueados`, e as outras seguem.
-- Quem já está bloqueado: o bot avisa (`ℹ️ 👤 Fulano já está bloqueado.`).
-- A conta do próprio bot não pode ser bloqueada.
-- A lista vem do WhatsApp, que guarda os bloqueios pelo id interno (`@lid`): o bot converte cada um
-  para o telefone e usa o nome da sua agenda (ou o do perfil). Quem não tem telefone conhecido
-  aparece pelo id, com `(id interno, sem telefone conhecido)`, depois dos outros.
+- The block is done by the person's internal id (`@lid`), which the bot asks WhatsApp for first; a
+  number that WhatsApp Web didn't know yet also works. Afterwards, the bot checks WhatsApp's list:
+  only someone who made it onto it counts as blocked.
+- If WhatsApp refuses (or the person doesn't make it onto the list), the bot says why, instead of
+  blocked:
+  `⚠️ Não consegui bloquear 👤 Fulano: o WhatsApp recusou o bloqueio (erro "t").`. With several
+  people, they go to `❌ Não bloqueados`, and the others carry on.
+- Someone already blocked: the bot warns you (`ℹ️ 👤 Fulano já está bloqueado.`).
+- The bot's own account can't be blocked.
+- The list comes from WhatsApp, which stores blocks by internal id (`@lid`): the bot converts each one
+  to the phone number and uses the name from your address book (or the profile's). Anyone without a
+  known phone number appears by id, with `(id interno, sem telefone conhecido)`, after the others.

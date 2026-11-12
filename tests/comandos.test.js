@@ -20,7 +20,7 @@ describe('/help (/h)', () => {
         assert.match(r, /MENU DE AJUDA/);
         assert.match(r, /```\n \/alias - .*\n \/ascii - /);
         assert.match(r, /\n \/show - Mostra mensagens do cache do bot\n/);
-        assert.match(r, /\n \/cotacao - /);
+        assert.match(r, /\n \/rates - /);
         assert.doesNotMatch(r, /Uso:/);
         assert.ok(r.endsWith('\n```\n\n💡 Utilize */help /comando* ou */comando -h* para mais informações.'));
     });
@@ -46,12 +46,12 @@ describe('/help (/h)', () => {
     test('quem não é admin vê só os comandos comuns; o admin extra vê tudo', async () => {
         const [r] = await bot.responder('/help', { de: OUTRO.jid });
         assert.match(r, /^🤖 \*MENU DE AJUDA\* _\(os comandos que você pode usar\)_/);
-        assert.match(r, /\n \/cotacao - /);
+        assert.match(r, /\n \/rates - /);
         assert.doesNotMatch(r, /\n \/(show|backup|bot|set) - /);
 
         assert.deepEqual(await bot.responder('/help show', { de: OUTRO.jid }),
             ['⛔ O /show é só do dono do bot (e dos admins).\n💡 _Veja os que você pode usar com /help_']);
-        assert.match((await bot.responder('/help cotacao', { de: OUTRO.jid }))[0], /Uso: \/cotacao/);
+        assert.match((await bot.responder('/help cotacao', { de: OUTRO.jid }))[0], /Uso: \/rates/);
 
         await bot.setSetting('bot.admins', [OUTRO.user]);
         const [admin] = await bot.responder('/help', { de: OUTRO.jid });

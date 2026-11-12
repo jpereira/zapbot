@@ -8,7 +8,7 @@ const { printError } = require('./log');
 const { COTACAO_SUPORTADAS } = require('./moedas');
 
 /*
- * /cotacao [MOEDA...]: fontes das cotações
+ * /rates [MOEDA...]: fontes das cotações
  * Cotação contra o real: valor atual, abertura e fechamento anterior, máxima e
  * mínima do dia e variação. Moedas fiduciárias vêm do Yahoo Finance (se falhar,
  * da AwesomeAPI, que não informa a abertura); o USDT vem dos candles diários
@@ -90,7 +90,7 @@ async function buscarCotacao(moeda) {
     try {
         return await cotacaoYahoo(moeda);
     } catch (err) {
-        printError(`/cotacao: Yahoo falhou para ${moeda} (${err.message}), usando a AwesomeAPI.`);
+        printError(`/rates: Yahoo falhou para ${moeda} (${err.message}), usando a AwesomeAPI.`);
         return cotacaoAwesome(moeda);
     }
 }

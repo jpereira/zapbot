@@ -1,10 +1,10 @@
 # `/noffa` (`/🌈`, `/🏳️‍🌈`)
 
-Coloca emojis de arco-íris entre as palavras. Aceita texto ou reply numa mensagem.
+Puts rainbow emojis between the words. Accepts text or a reply to a message.
 
 ```text
 /noffa bom dia grupo
 → bom 🌈 dia 🏳️‍🌈 grupo
 ```
 
-Se o texto começar com `/`, a resposta ganha um 🌈 na frente, para nunca parecer um comando.
+If the text starts with `/`, the reply gets a 🌈 in front, so it never looks like a command.

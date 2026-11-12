@@ -529,8 +529,9 @@ describe('/show -e (editadas)', () => {
     test('/edit e /e não existem mais', async () => {
         await mensagemEditada('x', 'y');
         assert.deepEqual(await bot.responder('/edit'), ["⚠️ Comando '/edit' desconhecido, tente: /help"]);
-        // O /e agora é o começo do /enquete, o único que começa assim
-        assert.deepEqual(await bot.responder('/e'), await bot.responder('/enquete'));
+        // O /e é o começo de mais de um (o /poll, o /everybody...): o bot lista os possíveis; o /enq é só o /poll
+        assert.match((await bot.responder('/e'))[0], /^🤔 Comando '\/e' ambíguo\. Possíveis comandos: .*\/everybody.*\/poll/);
+        assert.deepEqual(await bot.responder('/enq'), await bot.responder('/poll'));
     });
 
     test('a última e as N últimas, com antes e depois', async () => {

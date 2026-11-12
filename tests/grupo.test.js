@@ -1,6 +1,6 @@
 /*
- * Comandos de grupo e de mídia: /todos (/todes), /boletos, /listageral, /walissu (/ualisu),
- * /enquete (/enq, /quiz) e /sticker (/st).
+ * Comandos de grupo e de mídia: /everybody (/todes), /bills, /members, /walissu (/ualisu),
+ * /poll (/enq, /quiz) e /sticker (/st).
  */
 const bot = require('./helpers/bot');
 
@@ -24,9 +24,9 @@ beforeEach(async () => {
 
 const somenteGrupo = 'Apenas utilizado dentro de grupos.';
 
-describe('/todos (/todes)', () => {
+describe('/everybody (/todes)', () => {
     test('marca todos menos quem chamou, respondendo a mensagem', async () => {
-        const [r] = await bot.executar('/todos', { id: 'CHAMADA' });
+        const [r] = await bot.executar('/everybody', { id: 'CHAMADA' });
         assert.equal(r.chatId, GRUPO);
         assert.equal(r.texto, `@${OUTRO.jid.split('@')[0]} @${CICLANO.jid.split('@')[0]} @777 `);
         assert.deepEqual(r.options.mentions, [OUTRO.jid, CICLANO.jid, '777@lid']);
@@ -34,7 +34,7 @@ describe('/todos (/todes)', () => {
     });
 
     test('fora de grupo', async () => {
-        assert.deepEqual(await bot.responder('/todos', { chat: OUTRO.jid }), [somenteGrupo]);
+        assert.deepEqual(await bot.responder('/everybody', { chat: OUTRO.jid }), [somenteGrupo]);
     });
 
     test('o alias /todes', async () => {
@@ -48,10 +48,10 @@ describe('/todos (/todes)', () => {
     });
 });
 
-describe('/boletos e /walissu', () => {
-    test('/boletos sorteia 2 membros diferentes (nunca o bot)', async () => {
+describe('/bills e /walissu', () => {
+    test('/bills sorteia 2 membros diferentes (nunca o bot)', async () => {
         for (let i = 0; i < 10; i++) {
-            const [r] = await bot.executar('/boletos');
+            const [r] = await bot.executar('/bills');
             const marcados = r.options.mentions;
             assert.equal(marcados.length, 2);
             assert.notEqual(marcados[0], marcados[1]);
@@ -62,9 +62,9 @@ describe('/boletos e /walissu', () => {
 
     test('membros insuficientes e fora de grupo', async () => {
         bot.criarGrupo(GRUPO, 'Família', [DONO.jid, OUTRO.jid]);
-        assert.deepEqual(await bot.responder('/boletos'), ['Membros insuficientes no grupo.']);
+        assert.deepEqual(await bot.responder('/bills'), ['Membros insuficientes no grupo.']);
         assert.deepEqual(await bot.responder('/walissu'), ['Membros insuficientes no grupo.']);
-        assert.deepEqual(await bot.responder('/boletos', { chat: OUTRO.jid }), ['⚠️ O comando /boletos só pode ser chamado dentro de grupos!']);
+        assert.deepEqual(await bot.responder('/bills', { chat: OUTRO.jid }), ['⚠️ O comando /bills só pode ser chamado dentro de grupos!']);
         assert.deepEqual(await bot.responder('/walissu', { chat: OUTRO.jid }), [somenteGrupo]);
     });
 
@@ -86,9 +86,9 @@ describe('/boletos e /walissu', () => {
     });
 });
 
-describe('/listageral', () => {
+describe('/members', () => {
     test('número, nome e admins; @lid sem telefone fica oculto', async () => {
-        const [r] = await bot.responder('/listageral');
+        const [r] = await bot.responder('/members');
         assert.match(r, /👥 \*Membros de Família\* \(4\)/);
         assert.match(r, /\+5521911111111 - Fulano ⭐/);
         assert.match(r, /\+5521922222222 - Ciclano\n/);
@@ -102,15 +102,15 @@ describe('/listageral', () => {
 
     test('@lid com telefone conhecido mostra o número', async () => {
         bot.client.lids.set('777@lid', '5521933333333@c.us');
-        assert.match((await bot.responder('/listageral'))[0], /\+5521933333333 - Desconhecido/);
+        assert.match((await bot.responder('/members'))[0], /\+5521933333333 - Desconhecido/);
     });
 
     test('fora de grupo', async () => {
-        assert.deepEqual(await bot.responder('/listageral', { chat: OUTRO.jid }), [somenteGrupo]);
+        assert.deepEqual(await bot.responder('/members', { chat: OUTRO.jid }), [somenteGrupo]);
     });
 });
 
-describe('/enquete (/enq, /quiz)', () => {
+describe('/poll (/enq, /quiz)', () => {
     const enquete = async (linha) => {
         const [r] = await bot.executar(linha);
         assert.ok(r.content instanceof Poll, `sem enquete para: ${linha}`);
@@ -118,14 +118,14 @@ describe('/enquete (/enq, /quiz)', () => {
     };
 
     test('pergunta e opções separadas por |', async () => {
-        const p = await enquete('/enquete Pizza ou hambúrguer? | Pizza | Hambúrguer');
+        const p = await enquete('/poll Pizza ou hambúrguer? | Pizza | Hambúrguer');
         assert.equal(p.pollName, 'Pizza ou hambúrguer?');
         assert.deepEqual(p.pollOptions.map(o => o.name), ['Pizza', 'Hambúrguer']);
         assert.equal(p.options.allowMultipleAnswers, false);
     });
 
     test('uma por linha; -m no começo permite várias', async () => {
-        const p = await enquete('/enquete -m Quais dias?\nSeg\nTer\nQua');
+        const p = await enquete('/poll -m Quais dias?\nSeg\nTer\nQua');
         assert.equal(p.pollName, 'Quais dias?');
         assert.equal(p.pollOptions.length, 3);
         assert.equal(p.options.allowMultipleAnswers, true);
@@ -133,46 +133,46 @@ describe('/enquete (/enq, /quiz)', () => {
     });
 
     test('-m no meio faz parte da pergunta', async () => {
-        const p = await enquete('/enquete Vale -m aqui? | sim | não');
+        const p = await enquete('/poll Vale -m aqui? | sim | não');
         assert.equal(p.pollName, 'Vale -m aqui?');
         assert.equal(p.options.allowMultipleAnswers, false);
     });
 
     test('pergunta começando com "/" nunca parece comando', async () => {
-        assert.equal((await enquete('/enquete /cache -a | sim | não')).pollName, '📊 /cache -a');
+        assert.equal((await enquete('/poll /cache -a | sim | não')).pollName, '📊 /cache -a');
     });
 
     test('validações: menos de 2 opções, mais de 12, repetidas, longas', async () => {
         const erro = async (linha, esperado) => assert.match((await bot.responder(linha))[0], esperado, linha);
-        await erro('/enquete', /❌ Informe a pergunta e pelo menos 2 opções/);
-        await erro('/enquete Só? | uma', /pelo menos 2 opções/);
-        await erro(`/enquete P? | ${Array.from({ length: 13 }, (_, i) => `op${i}`).join(' | ')}`, /❌ No máximo 12 opções \(foram 13\)/);
-        await erro('/enquete P? | Sim | sim', /❌ Opção repetida: sim/);
-        await erro(`/enquete ${'x'.repeat(256)} | a | b`, /❌ A pergunta vai até 255 caracteres/);
-        await erro(`/enquete P? | ${'x'.repeat(101)} | b`, /cada opção até 100/);
+        await erro('/poll', /❌ Informe a pergunta e pelo menos 2 opções/);
+        await erro('/poll Só? | uma', /pelo menos 2 opções/);
+        await erro(`/poll P? | ${Array.from({ length: 13 }, (_, i) => `op${i}`).join(' | ')}`, /❌ No máximo 12 opções \(foram 13\)/);
+        await erro('/poll P? | Sim | sim', /❌ Opção repetida: sim/);
+        await erro(`/poll ${'x'.repeat(256)} | a | b`, /❌ A pergunta vai até 255 caracteres/);
+        await erro(`/poll P? | ${'x'.repeat(101)} | b`, /cada opção até 100/);
     });
 
     test('só o dono usa', async () => {
-        assert.deepEqual(await bot.responder('/enquete P? | a | b', { de: OUTRO.jid }), []);
+        assert.deepEqual(await bot.responder('/poll P? | a | b', { de: OUTRO.jid }), []);
     });
 });
 
-describe('/enquete -r (resultado)', () => {
+describe('/poll -r (resultado)', () => {
     const CICLANO_JID = '5521922222222@c.us';
 
     beforeEach(() => bot.criarContato(CICLANO_JID, 'Ciclano'));
 
     test('placar da enquete mais recente do chat, com quem votou', async () => {
-        const [enviada] = await bot.executar('/enquete Pizza ou hambúrguer? | Pizza | Hambúrguer | Salada');
+        const [enviada] = await bot.executar('/poll Pizza ou hambúrguer? | Pizza | Hambúrguer | Salada');
 
         // Antes de votarem: a enquete já está registrada
-        assert.match((await bot.responder('/enquete -r'))[0], /📊 \*Resultado: Pizza ou hambúrguer\?\*\n_0 votos de 0 pessoas · criada em [^_]+_\n[\s\S]*_Ninguém votou ainda\._/);
+        assert.match((await bot.responder('/poll -r'))[0], /📊 \*Resultado: Pizza ou hambúrguer\?\*\n_0 votos de 0 pessoas · criada em [^_]+_\n[\s\S]*_Ninguém votou ainda\._/);
 
         await bot.votar(enviada, OUTRO.jid, ['Pizza']);
         await bot.votar(enviada, CICLANO_JID, ['Hambúrguer']);
         await bot.votar(enviada, DONO.jid, ['Pizza']);
 
-        const [r] = await bot.responder('/enquete -r');
+        const [r] = await bot.responder('/poll -r');
         assert.match(r, /_3 votos de 3 pessoas · criada em/);
         assert.match(r, /🏆 \*Pizza\* — 2 \(67%\) █{7}\n   _Fulano, Dono_/);
         assert.match(r, /▫️ \*Hambúrguer\* — 1 \(33%\) ███\n   _Ciclano_/);
@@ -180,13 +180,13 @@ describe('/enquete -r (resultado)', () => {
     });
 
     test('mudar ou tirar o voto; várias respostas', async () => {
-        const [enviada] = await bot.executar('/enquete -m Dias? | Seg | Ter');
+        const [enviada] = await bot.executar('/poll -m Dias? | Seg | Ter');
         await bot.votar(enviada, OUTRO.jid, ['Seg']);
         await bot.votar(enviada, OUTRO.jid, ['Seg', 'Ter']);   // mudou: vale o último
         await bot.votar(enviada, CICLANO_JID, ['Ter']);
         await bot.votar(enviada, CICLANO_JID, []);             // tirou o voto
 
-        const [r] = await bot.responder('/enquete -result');
+        const [r] = await bot.responder('/poll -result');
         assert.match(r, /_2 votos de 1 pessoa · várias respostas ·/);
         assert.match(r, /🏆 \*Seg\* — 1 \(50%\)[^\n]*\n   _Fulano_/);
         assert.match(r, /🏆 \*Ter\* — 1 \(50%\)[^\n]*\n   _Fulano_/);
@@ -199,27 +199,27 @@ describe('/enquete -r (resultado)', () => {
             pollOptions: [{ name: 'Sim', localId: 0 }, { name: 'Não', localId: 1 }]
         };
         await bot.votar(doCelular, OUTRO.jid, ['Sim']);
-        await bot.executar('/enquete Outra? | a | b');   // mais recente
+        await bot.executar('/poll Outra? | a | b');   // mais recente
 
-        assert.match((await bot.responder('/enquete -r'))[0], /Resultado: Outra\?/);
+        assert.match((await bot.responder('/poll -r'))[0], /Resultado: Outra\?/);
 
         const citada = bot.criarMensagem({ tipo: 'poll_creation', id: 'POLL1' });
-        const [r] = await bot.responder('/enquete -r', { citada });
+        const [r] = await bot.responder('/poll -r', { citada });
         assert.match(r, /Resultado: Churrasco\?[\s\S]*🏆 \*Sim\* — 1 \(100%\)/);
 
         const desconhecida = bot.criarMensagem({ tipo: 'poll_creation', id: 'NAOSEI' });
-        assert.match((await bot.responder('/enquete -r', { citada: desconhecida }))[0], /📊 Não tenho os votos dessa enquete/);
+        assert.match((await bot.responder('/poll -r', { citada: desconhecida }))[0], /📊 Não tenho os votos dessa enquete/);
     });
 
     test('sem enquete no chat; -r no meio faz parte da pergunta', async () => {
-        assert.match((await bot.responder('/enquete -r'))[0], /📊 Nenhuma enquete registrada neste chat/);
-        const [r] = await bot.executar('/enquete Vale -r aqui? | sim | não');
+        assert.match((await bot.responder('/poll -r'))[0], /📊 Nenhuma enquete registrada neste chat/);
+        const [r] = await bot.executar('/poll Vale -r aqui? | sim | não');
         assert.equal(r.content.pollName, 'Vale -r aqui?');
     });
 
     test('limpeza: enquetes mais antigas que enquete.retentionDays saem com os votos', async () => {
         const { limparEnquetesAntigas } = bot.src('limpeza');
-        const [enviada] = await bot.executar('/enquete Velha? | a | b');
+        const [enviada] = await bot.executar('/poll Velha? | a | b');
         await bot.votar(enviada, OUTRO.jid, ['a']);
         await bot.dbRun('UPDATE polls SET created_at = ?', [Date.now() - 91 * 86400_000]);
 

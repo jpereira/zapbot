@@ -1,88 +1,87 @@
-# E-mails do bot (QR Code e alertas)
+# Bot emails (QR Code and alerts)
 
-O bot usa o mesmo SMTP (`QRCODE_EMAIL_SMTP_*`) para:
+The bot uses the same SMTP (`QRCODE_EMAIL_SMTP_*`) for:
 
-- QR Code, quando `QRCODE_EMAIL_ENABLE="true"` (se o envio falhar, o QR aparece no terminal;
-  veja `QRCODE_EMAIL_FALLBACK_TERMINAL`);
-- [alertas operacionais](#alertas-por-e-mail), como crash, queda e reconexão;
-- backups enviados com [`/backup -s -to`](comandos/backup.md#enviar-o-arquivo) ou pelo destino
-  configurado em `backup.to` no backup diário;
-- alertas de preço do `/cotacao` e `/crypto`, de posições e taxas do `/defi` e das anotações do
-  [`/notes -alerta`](comandos/notes.md#alertas);
-- ocorrências do `/watch` e relatórios do `/bot -status` com destino de e-mail.
+- QR Code, when `QRCODE_EMAIL_ENABLE="true"` (if sending fails, the QR shows up in the terminal;
+  see `QRCODE_EMAIL_FALLBACK_TERMINAL`);
+- [operational alerts](#email-alerts), like crash, outage and reconnection;
+- backups sent with [`/backup -s -to`](comandos/backup.md#send-the-file) or through the
+  destination set in `backup.to` for the daily backup;
+- price alerts from `/rates` and `/crypto`, position and fee alerts from `/defi`, and note alerts
+  from [`/notes -alerta`](comandos/notes.md#alerts);
+- `/watch` hits and `/bot -status` reports with an email destination.
 
-O destino `email` usa `QRCODE_EMAIL_SMTP_TO`; `-to voce@exemplo.com` escolhe outro endereço.
+The `email` destination uses `QRCODE_EMAIL_SMTP_TO`; `-to voce@exemplo.com` picks another address.
 
-## E-mail do QR Code
+## QR Code email
 
-Assunto: **`[ZapBot] WhatsApp QR Code Authentication`**
+Subject: **`[ZapBot] WhatsApp QR Code Authentication`**
 
-Exemplo dos campos do e-mail:
+Example of the email fields:
 
-| Campo | Conteúdo ilustrativo |
+| Field | Illustrative content |
 |---|---|
 | 🔢 QR Code | `#1` |
 | 📱 Phone Number | `5521XXXX9999` |
 | 🛡️ Anti-Phishing Code | `TroqueEstaFrase-7f3a` |
 | 📅 Generated At | `2026-09-29 14:32:07 BRT` |
 
-O QR aparece como imagem PNG de 300×300 pixels no corpo e em anexo (`qrcode-1.png`). O e-mail avisa
-que esse QR substitui os enviados anteriormente.
+The QR shows up as a 300×300 pixel PNG image in the body and as an attachment (`qrcode-1.png`). The
+email says this QR replaces the ones sent before.
 
-- **QR Code #N**: contador de QRs enviados desde que o container subiu. Use sempre o de número mais
-  alto.
-- **Phone Number**: o `PHONE_NUMBER` com os dígitos do meio mascarados.
-- **Generated At**: horário de geração (fuso `America/Sao_Paulo`).
+- **QR Code #N**: counter of QRs sent since the container started. Always use the highest number.
+- **Phone Number**: the `PHONE_NUMBER` with the middle digits masked.
+- **Generated At**: generation time (`America/Sao_Paulo` timezone).
 
-## Troque o código anti-phishing
+## Change the anti-phishing code
 
-O campo `QRCODE_EMAIL_SMTP_ANTIPHISHING` é uma frase secreta que **só você conhece**. Ela vem em
-todo e-mail legítimo do bot. Se chegar um e-mail "do ZapBot" pedindo para você escanear um QR e a
-frase estiver ausente ou diferente, **é golpe**: escanear um QR de terceiros conecta a *sua* conta
-ao aparelho *deles*.
+The `QRCODE_EMAIL_SMTP_ANTIPHISHING` field is a secret phrase that **only you know**. It comes in
+every legitimate bot email. If an email "from ZapBot" asks you to scan a QR and the phrase is
+missing or different, **it's a scam**: scanning someone else's QR connects *your* account to
+*their* device.
 
-- **Não use o valor do `.env.example`**: ele é público no repositório.
-- Escolha algo pessoal e difícil de adivinhar, e troque se suspeitar de vazamento.
+- **Don't use the `.env.example` value**: it's public in the repository.
+- Pick something personal and hard to guess, and change it if you suspect a leak.
 
-## Alertas por e-mail
+## Email alerts
 
-Quando o WhatsApp cai, o aviso no privado não chega. Por isso os eventos importantes também vão por
-e-mail, pelo mesmo SMTP do QR Code (`QRCODE_EMAIL_SMTP_*`, independente do `QRCODE_EMAIL_ENABLE`).
-Ligado por padrão; desligue com `/set email.alerts off`. Sem `QRCODE_EMAIL_SMTP_HOST`, `_USER` e
-`_TO` preenchidos, nada é enviado.
+When WhatsApp goes down, the alert in your private chat doesn't arrive. That's why the important
+events also go by email, through the same SMTP as the QR Code (`QRCODE_EMAIL_SMTP_*`, independent of
+`QRCODE_EMAIL_ENABLE`). Enabled by default; turn it off with `/set email.alerts off`. Without
+`QRCODE_EMAIL_SMTP_HOST`, `_USER` and `_TO` filled in, nothing is sent.
 
-| Assunto | Quando |
+| Subject | When |
 |---|---|
-| `[ZapBot] 🟢 Bot iniciado` | O bot conectou ao WhatsApp depois de subir (avisa também se está desligado ou só com você usando comandos, o `bot.users` em `false`) |
-| `[ZapBot] 🔄 Reconectado` | Conectou de novo depois de uma queda (com o motivo da queda e, se ficou sem conseguir conectar, por quanto tempo e quantas tentativas falharam) |
-| `[ZapBot] 🔴 Desconectado` | O WhatsApp desconectou; o cliente é reiniciado sozinho |
-| `[ZapBot] 🔴 Desconectado (ação manual)` | Desconectou por `LOGOUT`, `CONFLICT`, `UNPAIRED`...: o bot **não** reinicia sozinho |
-| `[ZapBot] ⚠️ Estado do WhatsApp: <estado>` | O WhatsApp Web entrou num estado de problema (`CONFLICT`, `UNPAIRED`, `TOS_BLOCK`...) |
-| `[ZapBot] ⛔ Falha de autenticação` | A sessão salva não autenticou |
-| `[ZapBot] 🔑 Sessão perdida: novo QR Code` | Pediu QR Code de novo depois de já ter autenticado |
-| `[ZapBot] ♻️ Browser caiu` | O Chromium morreu e o watchdog está reiniciando o cliente |
-| `[ZapBot] 🩺 WhatsApp sem resposta` | Conectado, mas o WhatsApp Web não respondeu `CONNECTED` em 3 verificações seguidas do [heartbeat](operacao.md#saúde-do-container-heartbeat); o cliente é reiniciado |
-| `[ZapBot] ❌ Falha ao reiniciar` | O reinício do cliente falhou (ex.: sem internet); o bot tenta de novo sozinho, com espera crescente. Um e-mail só, na primeira falha ([Queda da internet](operacao.md#queda-da-internet)) |
-| `[ZapBot] 💾 Backup falhou` | O [backup diário](comandos/backup.md#backup-automático) do banco deu erro (ex.: disco cheio) |
-| `[ZapBot] 💾 Envio do backup falhou` | O arquivo diário foi salvo localmente, mas o envio para `backup.to` falhou |
-| `[ZapBot] 💥 Crash` | Exceção ou promise rejeitada sem tratamento (com o stack). O processo sai e o Docker sobe de novo |
-| `[ZapBot] 🛑 Bot encerrado` | `docker stop`/`restart` ou Ctrl+C (SIGTERM/SIGINT) |
+| `[ZapBot] 🟢 Bot iniciado` | The bot connected to WhatsApp after starting (it also says if it's turned off or only you can use commands, `bot.users` set to `false`) |
+| `[ZapBot] 🔄 Reconectado` | Connected again after an outage (with the reason for the outage and, if it couldn't connect for a while, for how long and how many attempts failed) |
+| `[ZapBot] 🔴 Desconectado` | WhatsApp disconnected; the client restarts by itself |
+| `[ZapBot] 🔴 Desconectado (ação manual)` | Disconnected due to `LOGOUT`, `CONFLICT`, `UNPAIRED`...: the bot does **not** restart by itself |
+| `[ZapBot] ⚠️ Estado do WhatsApp: <estado>` | WhatsApp Web entered a problem state (`CONFLICT`, `UNPAIRED`, `TOS_BLOCK`...) |
+| `[ZapBot] ⛔ Falha de autenticação` | The saved session failed to authenticate |
+| `[ZapBot] 🔑 Sessão perdida: novo QR Code` | It asked for a QR Code again after having authenticated |
+| `[ZapBot] ♻️ Browser caiu` | Chromium died and the watchdog is restarting the client |
+| `[ZapBot] 🩺 WhatsApp sem resposta` | Connected, but WhatsApp Web didn't answer `CONNECTED` in 3 consecutive [heartbeat](operacao.md#container-health-heartbeat) checks; the client restarts |
+| `[ZapBot] ❌ Falha ao reiniciar` | The client restart failed (e.g. no internet); the bot tries again by itself, with increasing wait. Only one email, on the first failure ([Internet outage](operacao.md#internet-outage)) |
+| `[ZapBot] 💾 Backup falhou` | The database [daily backup](comandos/backup.md#automatic-backup) failed (e.g. disk full) |
+| `[ZapBot] 💾 Envio do backup falhou` | The daily file was saved locally, but sending it to `backup.to` failed |
+| `[ZapBot] 💥 Crash` | Unhandled exception or rejected promise (with the stack). The process exits and Docker brings it back up |
+| `[ZapBot] 🛑 Bot encerrado` | `docker stop`/`restart` or Ctrl+C (SIGTERM/SIGINT) |
 
-Cada e-mail traz o horário, o número mascarado, a versão com o commit que está rodando
-(`X.Y.Z (git+4465374/vX.Y.Z)`, veja o [`/version`](comandos/version.md)), o host, há quanto tempo
-o processo está no ar e o código anti-phishing. O mesmo evento não se repete antes de 5 minutos
-(exceto crash e encerramento), para não lotar a caixa num loop de reconexão.
+Each email carries the time, the masked number, the version with the commit that's running
+(`X.Y.Z (git+4465374/vX.Y.Z)`, see [`/version`](comandos/version.md)), the host, how long the
+process has been up, and the anti-phishing code. The same event doesn't repeat within 5 minutes
+(except crash and shutdown), so it doesn't flood the inbox during a reconnection loop.
 
-## Pausa depois de falha de login
+## Pause after a login failure
 
-Se o provedor recusar o login (`EAUTH`, por exemplo o Gmail com
-`535 5.7.0 Too many bad auth attempts`), o bot para de usar o SMTP por **30 minutos**:
-qualquer envio nesse período falha na hora, com `SMTP em pausa por falha de autenticação anterior`, sem abrir
-conexão. Cada tentativa errada conta para o bloqueio do provedor, e insistir (um QR novo, um alerta,
-uma reconexão) só o prolonga. Passado o tempo, o bot tenta de novo; se a senha ainda estiver
-errada, a pausa recomeça.
+If the provider refuses the login (`EAUTH`, for example Gmail with
+`535 5.7.0 Too many bad auth attempts`), the bot stops using SMTP for **30 minutes**: any send in
+that period fails right away, with `SMTP em pausa por falha de autenticação anterior`, without
+opening a connection. Each wrong attempt counts toward the provider's block, and insisting (a new
+QR, an alert, a reconnection) only makes it longer. Once the time is up, the bot tries again; if the
+password is still wrong, the pause starts over.
 
-Para sair disso: confira a senha de app em `QRCODE_EMAIL_SMTP_PASS`, espere o bloqueio passar e
-rode o [`/bot -test`](comandos/bot.md#teste-do-bot), que só faz o login (sem enviar nada) e também
-respeita a pausa. Enquanto isso, o QR continua saindo nos logs, se o
-`QRCODE_EMAIL_FALLBACK_TERMINAL` estiver ligado.
+To get out of it: check the app password in `QRCODE_EMAIL_SMTP_PASS`, wait for the block to pass,
+and run [`/bot -test`](comandos/bot.md#bot-test), which only does the login (sends nothing) and
+also respects the pause. Meanwhile, the QR keeps showing up in the logs, if
+`QRCODE_EMAIL_FALLBACK_TERMINAL` is on.

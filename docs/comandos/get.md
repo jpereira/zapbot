@@ -1,116 +1,120 @@
 # `/get` (`/download`)
 
-Baixa vídeos de Instagram, YouTube, X/Twitter, TikTok e outros sites suportados pelo
-[yt-dlp](https://github.com/yt-dlp/yt-dlp). A URL pode vir como argumento ou você pode dar reply
-numa mensagem que contenha o link. A URL digitada vale mais que a mensagem respondida.
+Downloads videos from Instagram, YouTube, X/Twitter, TikTok and other sites supported by
+[yt-dlp](https://github.com/yt-dlp/yt-dlp). The URL can come as an argument or you can reply to a
+message that contains the link. The typed URL wins over the replied message.
 
-Dando reply num vídeo, numa imagem ou num áudio do WhatsApp, o `/get` usa a própria mídia, sem o
-yt-dlp: sem opção, devolve o arquivo original como documento; com `-a`, `-st`, `-ss` ou `-es`, passa
-pelo ffmpeg. Se a mídia tiver um link na legenda, vale a mídia.
+Replying to a WhatsApp video, image or audio, `/get` uses the media itself, without yt-dlp: with no
+option, it returns the original file as a document; with `-a`, `-st`, `-ss` or `-es`, it goes
+through ffmpeg. If the media has a link in the caption, the media wins.
 
-| Opção | Valor | Descrição |
+| Option | Value | Description |
 |---|---|---|
-| `-sticker`, `-st` | | Envia como figurinha animada (até 6 s), enquadrada no meio do vídeo. É o mesmo que o [`/sticker`](sticker.md) |
-| `-pos` | `<topo\|meio\|baixo>` | Com `-st`: onde fica o recorte quadrado (padrão `meio`). Em mídia mais larga que alta, `topo` é a esquerda e `baixo` a direita |
-| `-audio`, `-a` | | Extrai só o áudio (`.mp3`) |
-| `-startSec`, `-ss` | `<tempo>` | Começa neste ponto do vídeo original (padrão 0), em segundos (`22`, `1.5`) ou em `min:seg` (`09:33`, ou `h:min:seg`). Com `-` na frente, conta do **final** do vídeo (`-10`, `-01:44`) |
-| `-endSec`, `-es` | `<tempo>` | Termina neste ponto do vídeo original, no mesmo formato do `-ss` (`-es -5` termina 5 s antes do fim); deve ser maior que o início. Vale também sem `-ss` e para figurinhas |
-| `-verbose`, `-v` | | Mostra os parâmetros usados no yt-dlp/ffmpeg |
-| `<url>` | | Link do vídeo; vale mais que a mensagem respondida |
+| `-sticker`, `-st` | | Sends as an animated sticker (up to 6 s), framed on the middle of the video. Same as [`/sticker`](sticker.md) |
+| `-pos` | `<topo\|meio\|baixo>` | With `-st`: where the square crop goes (default `meio`). On media wider than tall, `topo` is the left and `baixo` the right |
+| `-audio`, `-a` | | Extracts only the audio (`.mp3`) |
+| `-startSec`, `-ss` | `<time>` | Starts at this point of the original video (default 0), in seconds (`22`, `1.5`) or in `min:sec` (`09:33`, or `h:min:sec`). With a `-` in front, counts from the **end** of the video (`-10`, `-01:44`) |
+| `-endSec`, `-es` | `<time>` | Ends at this point of the original video, in the same format as `-ss` (`-es -5` ends 5 s before the end); must be greater than the start. Also works without `-ss` and for stickers |
+| `-verbose`, `-v` | | Shows the parameters used in yt-dlp/ffmpeg |
+| `<url>` | | Video link; wins over the replied message |
 
-O arquivo convertido é limitado a 20 MB (setting `get.maxSizeMB`). O arquivo original de uma mídia
-respondida vai como veio do WhatsApp; sem nome (uma foto da câmera, por exemplo), ganha um como
+The converted file is limited to 20 MB (setting `get.maxSizeMB`). The original file of a replied
+media goes as it came from WhatsApp; with no name (a camera photo, for example), it gets one like
 `zapbot.jpeg`.
 
-Escolha áudio ou figurinha por execução. Figurinhas têm no máximo seis segundos: sem `-es`, pegam os
-seis segundos a partir do `-ss` (ou do início), e um trecho menor definido por `-ss` e `-es` mantém a
-duração pedida. O vídeo e o áudio são enviados como documento.
+Choose audio or sticker per run. Stickers are at most six seconds long: without `-es`, they take
+the six seconds from `-ss` (or from the start), and a shorter range set by `-ss` and `-es` keeps the
+requested duration. The video and the audio are sent as a document.
 
-De um link, com `-ss`, `-es` ou `-st`, o yt-dlp baixa só o trecho pedido (`--download-sections`,
-cortado no tempo exato com `--force-keyframes-at-cuts`), sem o vídeo inteiro. Se o site não deixar
-baixar o trecho, o `/get` baixa o vídeo inteiro e o ffmpeg corta.
+From a link, with `-ss`, `-es` or `-st`, yt-dlp downloads only the requested range
+(`--download-sections`, cut at the exact time with `--force-keyframes-at-cuts`), without the whole
+video. If the site doesn't allow downloading the range, `/get` downloads the whole video and ffmpeg
+cuts it.
 
-#### Tempo contado do final
+#### Time counted from the end
 
-`-ss` e `-es` aceitam o tempo com `-` na frente, que conta a partir do final do vídeo:
+`-ss` and `-es` accept the time with a `-` in front, which counts from the end of the video:
 
-- `-ss -10` começa 10 s antes do fim, ou seja, os **últimos 10 segundos**; `-ss -01:44` começa 1:44
-  antes do fim. Se o vídeo for menor que isso, começa do 0.
-- `-es -5` termina 5 s antes do fim.
-- Dá para misturar (`-ss 150 -es -10`). Se o final cair antes do início, o bot recusa.
-- `-0` não vale, e `-ss -10 -es -20` é recusado como qualquer outro final antes do início.
+- `-ss -10` starts 10 s before the end, that is, the **last 10 seconds**; `-ss -01:44` starts 1:44
+  before the end. If the video is shorter than that, it starts from 0.
+- `-es -5` ends 5 s before the end.
+- You can mix them (`-ss 150 -es -10`). If the end falls before the start, the bot refuses.
+- `-0` isn't valid, and `-ss -10 -es -20` is refused like any other end before the start.
 
-Para saber o ponto exato o bot precisa da duração: de um link, pergunta ao yt-dlp (`--print
-duration`) e baixa só o trecho; se o site não informar, baixa o vídeo inteiro e mede o arquivo com o
-`ffprobe` (que vem com o ffmpeg). Numa mídia respondida, mede o arquivo com o `ffprobe`.
+To know the exact point the bot needs the duration: from a link, it asks yt-dlp (`--print
+duration`) and downloads only the range; if the site doesn't report it, it downloads the whole video
+and measures the file with `ffprobe` (which comes with ffmpeg). On a replied media, it measures the
+file with `ffprobe`.
 
-Na mídia respondida:
+On a replied media:
 
-- Imagem: `-st` faz a figurinha enquadrada no meio, como o `/sticker`; `-ss`, `-es` e `-a` são
-  recusados.
-- Áudio: com `-ss` ou `-es`, o trecho sai em `.mp3`; figurinha é recusada.
-- Outros arquivos (PDF, documentos) são recusados.
+- Image: `-st` makes the sticker framed on the middle, like `/sticker`; `-ss`, `-es` and `-a` are
+  refused.
+- Audio: with `-ss` or `-es`, the range comes out as `.mp3`; sticker is refused.
+- Other files (PDF, documents) are refused.
 
-#### Cache dos downloads
+#### Download cache
 
-Com o setting `get.cache.tmp` ligado (padrão), o que o yt-dlp baixa fica em `cache/tmp` (no Docker,
-`/app/cache/tmp`) como `<sha1>_original.mp4`, e o mesmo link não é baixado de novo, nem pelo `/get`
-nem pelo `/sticker`. Um `-a` ou um `-st` do mesmo link só roda o ffmpeg.
+With the `get.cache.tmp` setting on (default), what yt-dlp downloads stays in `cache/tmp` (in
+Docker, `/app/cache/tmp`) as `<sha1>_original.mp4`, and the same link isn't downloaded again, not by
+`/get` nor by `/sticker`. An `-a` or an `-st` on the same link only runs ffmpeg.
 
-- A chave é o link mais o trecho: com `-ss` e `-es` o yt-dlp baixa só ele, então outro trecho do
-  mesmo vídeo baixa de novo. O vídeo inteiro em cache serve a qualquer trecho (o ffmpeg corta).
-- Só o original baixado é guardado. O arquivo convertido e o log saem a cada execução, e a mídia
-  respondida no WhatsApp não passa pelo yt-dlp, então não entra no cache.
-- Os arquivos em cache duram `get.cache.maxDays` dias (padrão 2) e a limpeza periódica, que roda a
-  cada 10 minutos, apaga os que passaram disso. O `/cache -clean` faz a mesma limpeza na hora.
-- Desligado (`/set get.cache.tmp off`), o original é apagado a cada execução, como antes, e o que
-  sobrou em cache vale como temporário comum (apagado depois de 2 horas).
-- O `/cache -all` apaga o cache dos downloads junto com os outros temporários.
+- The key is the link plus the range: with `-ss` and `-es` yt-dlp downloads only that, so another
+  range of the same video downloads again. The whole video in cache serves any range (ffmpeg cuts).
+- Only the downloaded original is kept. The converted file and the log go away on every run, and the
+  media replied to on WhatsApp doesn't go through yt-dlp, so it doesn't enter the cache.
+- Cached files last `get.cache.maxDays` days (default 2) and the periodic cleanup, which runs every
+  10 minutes, deletes the ones past that. `/cache -clean` does the same cleanup right away.
+- Off (`/set get.cache.tmp off`), the original is deleted on every run, as before, and what was left
+  in cache counts as a regular temporary file (deleted after 2 hours).
+- `/cache -all` deletes the download cache along with the other temporary files.
 
-#### Conteúdo sensível do X
+#### Sensitive content on X
 
-O X só entrega vídeos marcados como sensíveis (NSFW) para quem está logado, e o yt-dlp sem login
-falha nesses links. A saída é dar a ele os cookies de uma conta logada (de preferência uma só para
-isso):
+X only serves videos marked as sensitive (NSFW) to logged-in users, and yt-dlp without a login
+fails on those links. The way out is to give it the cookies of a logged-in account (preferably one
+just for this):
 
 ![Demonstração do /get](../assets/demo/06-get.gif)
 
 ```bash
-./scripts/get-cookie.sh x.com twitter.com    # lê os cookies do Chrome e grava ./cookies.txt (chmod 600)
-make DOCK_REMOTE=1 cookies           # copia para o container: /app/cache/cookies.txt
+./scripts/get-cookie.sh x.com twitter.com    # reads the Chrome cookies and writes ./cookies.txt (chmod 600)
+make DOCK_REMOTE=1 cookies           # copies to the container: /app/cache/cookies.txt
 rm cookies.txt
 ```
 
-- O `get-cookie.sh` usa o `yt-dlp --cookies-from-browser` (`-b firefox` troca o navegador; `-o`
-  muda o arquivo de saída) e guarda só os domínios pedidos. Ele avisa se faltar `auth_token`/`ct0`,
-  ou seja, se a conta não estiver logada no navegador.
-- O `make cookies` usa `docker cp` e dá `chmod 600`. O arquivo cai no volume do cache, então
-  sobrevive a `make recreate`; sem `DOCK_REMOTE=1`, vai para o container do Docker local. `FILE=outro.txt`
-  escolhe outro arquivo.
-- Se `cache/cookies.txt` existe, o bot passa `--cookies` ao yt-dlp em todo download, de qualquer
-  site. Sem o arquivo, baixa sem cookies. Para desligar, apague o arquivo do container.
-- O arquivo dá acesso à conta: não vai para o git (`cookies.txt` está no `.gitignore`) nem pelo
-  WhatsApp. Quando o X deslogar a sessão, o `/get` volta a falhar nesses links: gere e copie de novo.
+- `get-cookie.sh` uses `yt-dlp --cookies-from-browser` (`-b firefox` switches the browser; `-o`
+  changes the output file) and keeps only the requested domains. It warns if `auth_token`/`ct0` is
+  missing, that is, if the account isn't logged in on the browser.
+- `make cookies` uses `docker cp` and does `chmod 600`. The file lands in the cache volume, so it
+  survives `make recreate`; without `DOCK_REMOTE=1`, it goes to the local Docker container.
+  `FILE=outro.txt` picks another file.
+- If `cache/cookies.txt` exists, the bot passes `--cookies` to yt-dlp on every download, from any
+  site. Without the file, it downloads without cookies. To turn it off, delete the file from the
+  container.
+- The file gives access to the account: it doesn't go to git (`cookies.txt` is in `.gitignore`) nor
+  over WhatsApp. When X logs the session out, `/get` goes back to failing on those links: generate
+  and copy it again.
 
-Limites (o `/get` não é admin: quem estiver no `bot.users` usa; com ele em `true`, qualquer um):
+Limits (`/get` isn't admin: whoever is in `bot.users` uses it; with it set to `true`, anyone):
 
-- Download de no máximo 200 MB antes da conversão (setting `get.maxDownloadMB`).
-- Link de playlist baixa só o vídeo do link (`--no-playlist`).
-- yt-dlp e ffmpeg são interrompidos após 5 minutos cada.
-- Opção desconhecida é recusada (`❌ Opção desconhecida: -x`), em vez de virar a URL.
-- No máximo 2 `/get` (ou `/sticker`) com yt-dlp ou ffmpeg ao mesmo tempo. Os demais recebem um aviso
-  para tentar de novo.
+- Download of at most 200 MB before conversion (setting `get.maxDownloadMB`).
+- A playlist link downloads only the video of the link (`--no-playlist`).
+- yt-dlp and ffmpeg are interrupted after 5 minutes each.
+- An unknown option is refused (`❌ Opção desconhecida: -x`), instead of becoming the URL.
+- At most 2 `/get` (or `/sticker`) with yt-dlp or ffmpeg at the same time. The others get a notice
+  to try again.
 
-Enquanto baixa e converte, o bot mostra "⏳ Processando…". No fim, essa mesma mensagem vira
-"✅ Mídia baixada com sucesso!" (ou "✅ Sticker criado com sucesso!"), ou o erro, sem uma mensagem a
-mais.
+While it downloads and converts, the bot shows "⏳ Processando…". At the end, that same message
+becomes "✅ Mídia baixada com sucesso!" (or "✅ Sticker criado com sucesso!"), or the error, without
+an extra message.
 
-URLs que apontam para a rede interna (`localhost`, `10.x`, `192.168.x`, `169.254.x`, IPv6 local
-etc.) são recusadas, para que o `/get` não sirva de ponte para a sua rede (SSRF). A checagem
-recusa também respostas de DNS mistas (um endereço público e um interno), que indicam rebinding.
-Como o yt-dlp resolve o DNS de novo e segue redirects por conta própria, a defesa de raiz é um
-firewall de egresso no container (`docker/app/egress-firewall.sh`, ligado por
-`ZAPBOT_EGRESS_FIREWALL=1`), que bloqueia todo acesso à rede interna a partir do bot.
+URLs that point to the internal network (`localhost`, `10.x`, `192.168.x`, `169.254.x`, local IPv6,
+etc.) are refused, so `/get` doesn't serve as a bridge into your network (SSRF). The check also
+refuses mixed DNS answers (one public and one internal address), which indicate rebinding. Since
+yt-dlp resolves DNS again and follows redirects on its own, the root defense is an egress firewall
+in the container (`docker/app/egress-firewall.sh`, enabled by `ZAPBOT_EGRESS_FIREWALL=1`), which
+blocks all access to the internal network from the bot.
 
 ```text
 /get https://www.instagram.com/reel/XXXXXXXX/
@@ -118,10 +122,10 @@ firewall de egresso no container (`docker/app/egress-firewall.sh`, ligado por
 /get -ss 10 -es 25 https://x.com/usuario/status/123456
 /get -es 15 https://youtu.be/XXXXXXXXXXX
 /get -ss 09:33 -es 09:45 https://youtu.be/XXXXXXXXXXX
-/get -ss -10 https://youtu.be/XXXXXXXXXXX            → os últimos 10 segundos
-/get -ss -01:44 -es -00:30 https://youtu.be/XXXXXXXXXXX → de 1:44 a 0:30 antes do fim
+/get -ss -10 https://youtu.be/XXXXXXXXXXX            → the last 10 seconds
+/get -ss -01:44 -es -00:30 https://youtu.be/XXXXXXXXXXX → from 1:44 to 0:30 before the end
 /download -st -ss 3 -es 6 https://youtu.be/XXXXXXXXXXX
 (reply numa mensagem com link)  /get -a
-(reply num vídeo do WhatsApp)   /get -a              → só o áudio, em .mp3
-(reply num vídeo do WhatsApp)   /get -ss 5 -es 20    → o trecho, como documento
+(reply num vídeo do WhatsApp)   /get -a              → only the audio, as .mp3
+(reply num vídeo do WhatsApp)   /get -ss 5 -es 20    → the range, as a document
 ```

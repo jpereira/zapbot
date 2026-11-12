@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /*
- * Gera, a partir do src/comandos/definicoes/, os trechos de docs/comandos/index.md entre os
+ * Gera, a partir do src/comandos/definicoes/, os trechos de docs/comandos/index.md (em inglês) e de
+ * docs/comandos/index.pt-BR.md (em português) entre os
  * marcadores `<!-- gerado:NOME -->` e `<!-- /gerado:NOME -->`:
  *   roles     "Comandos por role": a lista de cada role;
  *   limites   a tabela do que um `admin` delegado não faz (as marcas `role` e `outrosChats`).
@@ -15,7 +16,7 @@ const path = require('path');
 const { commands } = require('../src/comandos/comandos');
 const { ROLES } = require('../src/roles');
 
-const ARQUIVO = path.join(__dirname, '..', 'docs', 'comandos', 'index.md');
+const DOCS = path.join(__dirname, '..', 'docs', 'comandos');
 const COLUNAS = 98;
 
 // Os links separados por vírgula, quebrando em até 98 colunas (um link nunca quebra no meio)
@@ -34,29 +35,54 @@ function quebrar(itens) {
     return [...linhas, linha].join('\n');
 }
 
-// Os grupos da lista, do mais comum ao mais restrito: [título, os comandos que entram]
-const GRUPOS = [
-    ['**user** (de quem está no `bot.users`)', c => c.role === ROLES.USER],
-    ['**admin, delegáveis** (admins e o dono; o dono libera a um usuário com `+cmd`)',
-        c => c.role === ROLES.ADMIN && c.delegavel],
-    ['**admin** (admins e o dono; nunca delegáveis)', c => c.role === ROLES.ADMIN && !c.delegavel],
-    ['**owner** (só o dono)', c => c.role === ROLES.OWNER]
+// Os textos de cada idioma: o inglês (en) é a página docs/comandos/index.md, e o português (pt-BR), a index.pt-BR.md
+const TEXTOS = {
+    en: {
+        arquivo: 'index.md',
+        porRole: 'Commands by role',
+        grupos: [
+            '**user** (whoever is in `bot.users`)',
+            '**admin, delegable** (admins and the owner; the owner releases them to a user with `+cmd`)',
+            '**admin** (admins and the owner; never delegable)',
+            '**owner** (the owner only)'
+        ],
+        tabela: ['Command', 'Current chat only (left out)', 'Owner and admins only']
+    },
+    'pt-BR': {
+        arquivo: 'index.pt-BR.md',
+        porRole: 'Comandos por role',
+        grupos: [
+            '**user** (de quem está no `bot.users`)',
+            '**admin, delegáveis** (admins e o dono; o dono libera a um usuário com `+cmd`)',
+            '**admin** (admins e o dono; nunca delegáveis)',
+            '**owner** (só o dono)'
+        ],
+        tabela: ['Comando', 'Só o chat atual (fica de fora)', 'Só o dono e os admins']
+    }
+};
+
+// Os grupos da lista, do mais comum ao mais restrito: os comandos que entram em cada um
+const ENTRA = [
+    c => c.role === ROLES.USER,
+    c => c.role === ROLES.ADMIN && c.delegavel,
+    c => c.role === ROLES.ADMIN && !c.delegavel,
+    c => c.role === ROLES.OWNER
 ];
 
-function porRole() {
-    const partes = ['### Comandos por role\n'];
-    for (const [titulo, entra] of GRUPOS) {
-        const links = commands.filter(entra).map(c => `[\`${c.cmd}\`](${c.cmd.slice(1)}.md)`);
+const porRole = (texto) => () => {
+    const partes = [`### ${texto.porRole}\n`];
+    texto.grupos.forEach((titulo, i) => {
+        const links = commands.filter(ENTRA[i]).map(c => `[\`${c.cmd}\`](${c.cmd.slice(1)}.md)`);
         if (links.length) partes.push(`${titulo} (${links.length}):\n\n${quebrar(links)}\n`);
-    }
+    });
     return partes.join('\n');
-}
+};
 
 // As opções (ou os argumentos) marcados no cmd_opts
 const nomeDe = (o) => (o.opts ? `-${o.opts[0]}` : o.argv.join(' '));
 const celula = (itens) => (itens.length ? itens.map(n => `\`${n}\``).join(', ').replace(/\|/g, '\\|') : '');
 
-function limites() {
+const limites = (texto) => () => {
     const linhas = commands.map(c => ({
         cmd: c.cmd,
         outros: celula((c.cmd_opts ?? []).filter(o => o.outrosChats).map(nomeDe)),
@@ -64,35 +90,43 @@ function limites() {
     })).filter(l => l.outros || l.ajustes);
 
     return [
-        '| Comando | Só o chat atual (fica de fora) | Só o dono e os admins |',
+        `| ${texto.tabela.join(' | ')} |`,
         '|---|---|---|',
         ...linhas.map(l => `| \`${l.cmd}\` | ${l.outros} | ${l.ajustes} |`)
     ].join('\n');
-}
+};
 
-const TRECHOS = { roles: porRole, limites };
+const arquivoDe = (idioma) => path.join(DOCS, TEXTOS[idioma].arquivo);
 
-// O index.md com cada trecho gerado trocado pelo novo
-function gerar(conteudo = fs.readFileSync(ARQUIVO, 'utf8')) {
-    return Object.entries(TRECHOS).reduce((md, [nome, fn]) => {
+// A página com cada trecho gerado trocado pelo novo (idioma: 'en' ou 'pt-BR')
+function gerar(conteudo, idioma = 'en') {
+    const texto = TEXTOS[idioma];
+    const trechos = { roles: porRole(texto), limites: limites(texto) };
+    conteudo ??= fs.readFileSync(arquivoDe(idioma), 'utf8');
+    return Object.entries(trechos).reduce((md, [nome, fn]) => {
         const re = new RegExp(`(<!-- gerado:${nome} -->\\n)[\\s\\S]*?(\\n<!-- /gerado:${nome} -->)`);
-        if (!re.test(md)) throw new Error(`docs/comandos/index.md: sem os marcadores gerado:${nome}`);
+        if (!re.test(md)) throw new Error(`docs/comandos/${texto.arquivo}: sem os marcadores gerado:${nome}`);
         return md.replace(re, (_, ini, fim) => `${ini}${fn().trimEnd()}${fim}`);
     }, conteudo);
 }
 
 if (require.main === module) {
-    const atual = fs.readFileSync(ARQUIVO, 'utf8');
-    const novo = gerar(atual);
-    if (process.argv.includes('--check')) {
-        if (novo !== atual) {
-            console.error('docs/comandos/index.md desatualizado: rode node scripts/gerar-docs.js');
-            process.exit(1);
+    let desatualizado = false;
+    for (const idioma of Object.keys(TEXTOS)) {
+        const arquivo = arquivoDe(idioma);
+        const atual = fs.readFileSync(arquivo, 'utf8');
+        const novo = gerar(atual, idioma);
+        if (novo === atual) continue;
+
+        if (process.argv.includes('--check')) {
+            console.error(`docs/comandos/${TEXTOS[idioma].arquivo} desatualizado: rode node scripts/gerar-docs.js`);
+            desatualizado = true;
+        } else {
+            fs.writeFileSync(arquivo, novo);
+            console.log(`docs/comandos/${TEXTOS[idioma].arquivo} atualizado`);
         }
-    } else if (novo !== atual) {
-        fs.writeFileSync(ARQUIVO, novo);
-        console.log('docs/comandos/index.md atualizado');
     }
+    if (desatualizado) process.exit(1);
 }
 
 module.exports = { gerar };

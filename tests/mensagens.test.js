@@ -268,11 +268,29 @@ describe('comando desconhecido', () => {
     });
 });
 
+describe('nomes em inglês e aliases fixos em português', () => {
+    test('/draw, /weather, /everybody, /bills, /rates e /translate respondem também pelos nomes em português', async () => {
+        const pares = [['/draw', '/desenhe'], ['/weather', '/tempo'], ['/everybody', '/todos'], ['/bills', '/boletos'],
+            ['/rates', '/cotacao'], ['/translate', '/traduzir']];
+        for (const [novo, antigo] of pares) {
+            const ajuda = await bot.responder(`${novo} -h`);
+            assert.ok(ajuda[0].includes(`Uso: ${novo}`), `${novo} -h`);
+            assert.deepEqual(await bot.responder(`${antigo} -h`), ajuda, `${antigo} é alias de ${novo}`);
+        }
+        // E o começo do alias também completa (o /temp era o começo do /tempo)
+        assert.deepEqual(await bot.responder('/temp -h'), await bot.responder('/weather -h'));
+    });
+
+    test('quem tinha o nome antigo nos settings passa para o novo (commands.disabled e bot.users.cmds)', async () => {
+        assert.deepEqual(await bot.setSetting('commands.disabled', ['/tempo', '/boletos']), ['/weather', '/bills']);
+    });
+});
+
 describe('permissões', () => {
     test('comandos comuns: exigem liberação e oferecem ajuda aos usuários +u', async () => {
         const comuns = [
-            'boletos', 'cotacao', 'crypto', 'cve', 'get', 'giphy', 'help', 'joke', 'kernel',
-            'meme', 'news', 'noffa', 'ping', 'pixelart', 'sticker', 'tempo', 'traduzir',
+            'bills', 'rates', 'crypto', 'cve', 'get', 'giphy', 'help', 'joke', 'kernel',
+            'meme', 'news', 'noffa', 'ping', 'pixelart', 'sticker', 'weather', 'translate',
             'uptime', 'version', 'whois'
         ];
         await bot.setSetting('bot.users', false);
@@ -292,7 +310,7 @@ describe('permissões', () => {
     test('comandos comuns aceitam limites por usuário; comandos admin continuam restritos', async () => {
         await bot.setSetting('bot.users', [OUTRO.user]);
         await bot.setSetting('bot.users.cmds', [
-            `${OUTRO.user}=/boletos,/news,/ping,/uptime,/version`
+            `${OUTRO.user}=/bills,/news,/ping,/uptime,/version`
         ]);
         assert.deepEqual(await bot.responder('/ping', { de: OUTRO.jid }), ['pong']);
         assert.match((await bot.responder('/noffa oi', { de: OUTRO.jid }))[0], /Limitado aos comandos:/);
@@ -321,8 +339,8 @@ describe('permissões', () => {
         await bot.setSetting('bot.users.cmds', [`${OUTRO.user}=!/ping`]);
         assert.match((await bot.responder('/bot +cmd /gpt /Fulano/', { chat: DONO.jid }))[0], /só entra numa lista "Apenas"/);
         assert.deepEqual(bot.getSetting('bot.users.cmds'), [`${OUTRO.user}=!/ping`]);
-        await bot.responder('/bot +u +cmd /cotacao,/gpt /Fulano/', { chat: DONO.jid });
-        assert.deepEqual(bot.getSetting('bot.users.cmds'), [`${OUTRO.user}=/cotacao,/gpt`]);
+        await bot.responder('/bot +u +cmd /rates,/gpt /Fulano/', { chat: DONO.jid });
+        assert.deepEqual(bot.getSetting('bot.users.cmds'), [`${OUTRO.user}=/rates,/gpt`]);
 
         // o +cmd recusa o owner
         assert.match((await bot.responder('/bot +cmd /set +u /Fulano/', { chat: DONO.jid }))[0], /não dá para liberar/);
@@ -417,7 +435,7 @@ describe('permissões', () => {
         assert.deepEqual(await bot.responder('/debug', { de: OUTRO.jid }), ['🪲 Debug Desativado.'], 'bot.users false');
         assert.match((await bot.responder('/bot'))[0], /\n🔒 \*Comandos:\* só o dono e os admins\n/);
         assert.deepEqual(await bot.responder('/bot -list-users'), ['*Usuários* (1) neste grupo\n• 👑 +a · 👤 Fulano · +5521911111111' + LEGENDA]);
-        assert.deepEqual(await bot.responder('/cotacao -a gbp', { de: OUTRO.jid }), ['✅ 🇬🇧 GBP habilitada.']);
+        assert.deepEqual(await bot.responder('/rates -a gbp', { de: OUTRO.jid }), ['✅ 🇬🇧 GBP habilitada.']);
 
         // Outra pessoa continua de fora
         const CICLANO = '5521922222222@c.us';
@@ -761,11 +779,11 @@ describe('permissões', () => {
 
         // Usa os da lista; outro, o aviso; o /help (só com os dele) e o /whois passam
         assert.equal((await bot.responder('/noffa oi', DELE)).length, 1);
-        assert.deepEqual(await bot.responder('/tempo', DELE), ['🚫 Limitado aos comandos: /noffa, /joke.']);
+        assert.deepEqual(await bot.responder('/weather', DELE), ['🚫 Limitado aos comandos: /noffa, /joke.']);
         const [ajuda] = await bot.responder('/help', DELE);
         assert.match(ajuda, /\n \/joke - /);
-        assert.doesNotMatch(ajuda, /\n \/tempo - /);
-        assert.match((await bot.responder('/help tempo', DELE))[0], /^⛔ O \/tempo não está liberado para você\./);
+        assert.doesNotMatch(ajuda, /\n \/weather - /);
+        assert.match((await bot.responder('/help tempo', DELE))[0], /^⛔ O \/weather não está liberado para você\./);
         assert.match((await bot.responder('/whois', DELE))[0], /• 🗣️ \+u · 👤 Ciclano · \+5521922222222\n → Apenas: \/noffa, \/joke\n/);
 
         // +cmd acrescenta; -cmd tira; o último, não
@@ -781,14 +799,14 @@ describe('permissões', () => {
         assert.deepEqual(regras(), []);
         assert.deepEqual(await bot.responder('/bot +cmd /noffa /Ciclano/', NO_PRIVADO),
             ['ℹ️ 👤 Ciclano · +5521922222222 já usa todos os comandos comuns.']);
-        assert.match((await bot.responder('/bot -cmd /tempo /Ciclano/', NO_PRIVADO))[0], /✅\n → Todos, menos: \/tempo\n/);
+        assert.match((await bot.responder('/bot -cmd /weather /Ciclano/', NO_PRIVADO))[0], /✅\n → Todos, menos: \/weather\n/);
         assert.equal((await bot.responder('/noffa oi', DELE)).length, 1);
-        assert.deepEqual(await bot.responder('/tempo', DELE), ['🚫 O /tempo não está liberado para você.']);
-        await bot.responder('/bot +cmd /tempo /Ciclano/', NO_PRIVADO);
+        assert.deepEqual(await bot.responder('/weather', DELE), ['🚫 O /weather não está liberado para você.']);
+        await bot.responder('/bot +cmd /weather /Ciclano/', NO_PRIVADO);
         assert.deepEqual(regras(), [], 'liberar o único de fora: sem regra');
 
         // -u tira a regra junto
-        await bot.responder('/bot -cmd /tempo /Ciclano/', NO_PRIVADO);
+        await bot.responder('/bot -cmd /weather /Ciclano/', NO_PRIVADO);
         await bot.responder('/bot -u /Ciclano/', NO_PRIVADO);
         assert.deepEqual([bot.getSetting('bot.users'), regras()], [[], []]);
 

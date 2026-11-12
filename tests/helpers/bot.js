@@ -266,7 +266,7 @@ async function editar(original, novoTexto, { antigo = original.body, editadaEm =
 
 /**
  * Evento 'vote_update' do whatsapp-web.js: `voter` escolheu `opcoes` (lista
- * vazia = tirou o voto) na enquete `enquete` (o envio do /enquete ou uma
+ * vazia = tirou o voto) na enquete `enquete` (o envio do /poll ou uma
  * mensagem com pollName/pollOptions/id).
  */
 async function votar(enquete, voter, opcoes, { quando = Date.now() } = {}) {

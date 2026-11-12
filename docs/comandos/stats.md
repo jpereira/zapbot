@@ -1,41 +1,42 @@
-# `/stats` · admin
+# `/stats` (`/estatisticas`) · admin
 
-Role `admin`: só você e os admins extras. O dono libera a uma pessoa ou grupo com
-`/bot +u +cmd /stats` ([Delegando](index.md#delegando-um-comando-admin)).
-Quem recebe vê só o chat atual e não apaga nada: `-l`, o `/chat/`, `-me`, `-flush` e `-flush-all`
-são do dono e dos admins extras.
+Role `admin`: only you and the extra admins. The owner grants it to a person or group with
+`/bot +u +cmd /stats` ([Delegating](index.md#delegating-an-admin-command)).
+Whoever receives it sees only the current chat and deletes nothing: `-l`, `/chat/`, `-me`, `-flush`
+and `-flush-all` are for the owner and extra admins.
 
-Ranking do chat nos últimos N dias (padrão 7): total de mensagens, quem mais fala, quem mais apaga e
-edita, mensagens por faixa de horário, horário e dia de pico. Com `-me`, as **suas** mensagens
-somadas em todos os chats: em quais você mais fala, quantas apagou, seus horários e seu dia de pico.
+Chat ranking over the last N days (default 7): total messages, who talks the most, who deletes and
+edits the most, messages per time-of-day slot, peak hour and peak day. With `-me`, **your** messages
+summed across all chats: which ones you talk in the most, how many you deleted, your hours and your
+peak day.
 
-Os números vêm dos contadores da tabela `stats`, preenchidos a cada mensagem recebida. As suas
-mensagens contam para o seu número em qualquer chat, inclusive no privado com outras pessoas. O chat
-consigo mesmo e os status não entram. Também não contam as respostas do próprio bot nem os avisos do
-WhatsApp (alguém entrou no grupo, o nome mudou, a criptografia, uma chamada...), que não têm autor.
+The numbers come from the counters in the `stats` table, filled on every received message. Your
+messages count toward your number in any chat, including private chats with other people. The chat
+with yourself and statuses are not included. The bot's own replies and WhatsApp notices (someone
+joined the group, the name changed, encryption, a call...), which have no author, don't count either.
 
-| Opção | Valor | Descrição |
+| Option | Value | Description |
 |---|---|---|
-| `-N` | | Período em dias (padrão 7; máximo definido por `stats.retentionDays`, padrão 90 e configurável de 7 a 365). Vem antes ou depois do chat. Ex.: `-30` |
-| *(chat)* | `/Grupo Família/` | Outro chat em vez do atual: um grupo, ou o privado com uma pessoa, buscado pelo nome (sem diferenciar maiúsculas e acentos) entre os que têm estatísticas. Entre barras ou aspas quando tem espaço. Vários com o nome: o bot lista e você responde com o nº |
-| `-me` | | As suas estatísticas, somadas em todos os chats (ou só no chat informado) |
-| `-list`, `-l` | | Lista os chats com estatísticas, do que mais fala para o que menos, com o total e o dia da última mensagem |
-| `-flush`, `-f` | `</chat/>` | Apaga as estatísticas de um chat |
-| `-flush-all` | | Apaga as estatísticas de todos os chats |
+| `-N` | | Period in days (default 7; maximum set by `stats.retentionDays`, default 90 and configurable from 7 to 365). Goes before or after the chat. E.g.: `-30` |
+| *(chat)* | `/Grupo Família/` | Another chat instead of the current one: a group, or the private chat with a person, looked up by name (case- and accent-insensitive) among those that have statistics. In slashes or quotes when it has a space. Several with the name: the bot lists them and you reply with the number |
+| `-me` | | Your statistics, summed across all chats (or only in the given chat) |
+| `-list`, `-l` | | Lists the chats with statistics, from the one that talks the most to the least, with the total and the day of the last message |
+| `-flush`, `-f` | `</chat/>` | Deletes a chat's statistics |
+| `-flush-all` | | Deletes the statistics of all chats |
 
 ![Demonstração do /stats](../assets/demo/11-stats.gif)
 
 ```text
-/stats                         → últimos 7 dias deste chat
-/stats -30                     → últimos 30 dias
-/stats /Grupo Família/         → do grupo "Grupo Família"
-/stats -10 /Grupo Família/     → do grupo, nos últimos 10 dias
-/stats /Grupo Família/ -10     → o mesmo
-/stats -me                     → as suas, em todos os chats
-/stats -me /Família/           → as suas, só no "Família"
-/stats -l                      → os chats que têm estatísticas
-/stats -flush /Grupo Família/  → apaga as do grupo
-/stats -flush-all              → apaga todas
+/stats                         → last 7 days of this chat
+/stats -30                     → last 30 days
+/stats /Grupo Família/         → of the group "Grupo Família"
+/stats -10 /Grupo Família/     → of the group, over the last 10 days
+/stats /Grupo Família/ -10     → the same
+/stats -me                     → yours, across all chats
+/stats -me /Família/           → yours, only in "Família"
+/stats -l                      → the chats that have statistics
+/stats -flush /Grupo Família/  → deletes the group's
+/stats -flush-all              → deletes all of them
 ```
 
 ```text

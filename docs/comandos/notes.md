@@ -1,7 +1,7 @@
-# `/notes` · admin
+# `/notes` (`/notas`) · admin
 
-Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Cada uma tem um ID, e o
-`-alerta` avisa dela numa data/hora. Só o dono (e os admins) usa.
+Notes saved in the database, valid for any chat (group or private). Each one has an ID, and
+`-alerta` notifies you about it at a date/time. Only the owner (and admins) can use it.
 
 ```text
 /notes [-list|-l] [#tag...] [-to <destino>]...
@@ -18,34 +18,34 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 /notes -alerta -rm <id...|#tag...|all>
 ```
 
-| Opção | Valor | Descrição |
+| Option | Value | Description |
 |---|---|---|
-| `-list`, `-l` | `[#tag...]` | Lista as anotações com o ID, agrupadas por `#tag` (o `/notes` sozinho mostra as tags; `/notes #casa` lista as dela). Com uma ou mais tags, só as delas |
-| `-compact`, `-c` | `[#tag...]` | Lista com uma linha por nota (título, os ícones 🖼️ mídia, ⏰ alerta e 🔗 link, e a hora), agrupadas por dia. Também vale no fim: `/notes #pt -c`, `/notes -l -c` |
-| `-search`, `-s` | `[#tag...] <texto\|/regex/flags>` | Só as anotações que casam, agrupadas como na lista. Veja [Buscar](#buscar) |
-| `-update`, `-u` | `<id> [#tag] <novo texto>` | Troca o texto da anotação (e a tag, se vier uma; o alerta e a imagem ficam). Em resposta a uma mensagem, sem texto, usa o dela |
-| `-view`, `-v` | `<id...\|#tag...>` | Mostra a anotação com a mídia (texto na legenda; sem mídia, só o texto). A tag pode vir pela metade. Com `-to`, manda nos destinos (ou por e-mail, com a imagem anexada) |
-| `-move`, `-m` | `#tag #novatag` | Renomeia a tag em todas as anotações. Se a nova já existe, as duas se juntam |
-| `-desc`, `-d` | `#tag [<descrição>\|-rm]` | Descrição da tag, que aparece na lista e no `/notes` sozinho. Sem texto, mostra a atual; com `-rm`, apaga. O `-move` leva a descrição junto |
-| `-export`, `-e` | `[#tag...]` | Manda as anotações num PDF, com as imagens e o texto como legenda (cabeçalho, rodapé com versão, host, data e hora, e paginação). Com tags, só as delas. Veja [Exportar](#exportar) |
-| `#tag <texto>` | | Sem opção na frente, vira uma anotação nova, igual ao `-add`: `/notes #casa não esquecer de remover a opção tal`. A `#tag` é obrigatória: `/notes meu texto` dá erro. Só `/notes #casa`, sem texto, lista as da tag |
-| `-add`, `-a` | `#tag <texto>` | Adiciona uma anotação; a `#tag` é obrigatória e vem no começo do texto. O texto vai até o `-alerta`, se houver, e aceita várias linhas |
-| `-rm`, `-r` | `<id...\|#tag...\|all>` | Remove as anotações com esses IDs (`-r 2`, `-r 1 2 3` ou `-r 1,2,3`), de uma tag (`-r #casa`) ou todas (`all`). Se algum ID ou tag não existe, nenhuma sai. Junto com `-alerta`, tira só o alerta, mantendo as anotações |
-| `-alerta` | `<quando>` | Avisa da anotação (ou de todas as de uma `#tag`) numa data/hora. Veja [Alertas](#alertas) |
-| `-to` | `<destino>` | Com `-alerta`: avisa num contato, grupo, número ou e-mail em vez do seu privado. Com a lista (`-l`, `#tag`) ou o `-export`: manda a lista ou o PDF lá, em vez de responder no chat. Repita para vários |
+| `-list`, `-l` | `[#tag...]` | Lists the notes with the ID, grouped by `#tag` (`/notes` alone shows the tags; `/notes #casa` lists that tag's notes). With one or more tags, only theirs |
+| `-compact`, `-c` | `[#tag...]` | Lists with one line per note (title, the icons 🖼️ media, ⏰ alert and 🔗 link, and the time), grouped by day. Also works at the end: `/notes #pt -c`, `/notes -l -c` |
+| `-search`, `-s` | `[#tag...] <texto\|/regex/flags>` | Only the notes that match, grouped as in the list. See [Search](#search) |
+| `-update`, `-u` | `<id> [#tag] <novo texto>` | Replaces the note's text (and the tag, if one is given; the alert and the image stay). When replying to a message, with no text, uses that message's text |
+| `-view`, `-v` | `<id...\|#tag...>` | Shows the note with its media (text as the caption; with no media, just the text). The tag can be partial. With `-to`, sends to the destinations (or by email, with the image attached) |
+| `-move`, `-m` | `#tag #novatag` | Renames the tag in all notes. If the new one already exists, the two merge |
+| `-desc`, `-d` | `#tag [<descrição>\|-rm]` | Tag description, shown in the list and in `/notes` alone. With no text, shows the current one; with `-rm`, deletes it. `-move` carries the description along |
+| `-export`, `-e` | `[#tag...]` | Sends the notes in a PDF, with the images and the text as the caption (header, footer with version, host, date and time, and pagination). With tags, only theirs. See [Export](#export) |
+| `#tag <texto>` | | With no option in front, it becomes a new note, same as `-add`: `/notes #casa não esquecer de remover a opção tal`. The `#tag` is required: `/notes meu texto` gives an error. Just `/notes #casa`, with no text, lists the tag's notes |
+| `-add`, `-a` | `#tag <texto>` | Adds a note; the `#tag` is required and comes at the start of the text. The text goes up to the `-alerta`, if there is one, and accepts multiple lines |
+| `-rm`, `-r` | `<id...\|#tag...\|all>` | Removes the notes with those IDs (`-r 2`, `-r 1 2 3` or `-r 1,2,3`), of a tag (`-r #casa`) or all (`all`). If any ID or tag doesn't exist, none is removed. Together with `-alerta`, removes only the alert, keeping the notes |
+| `-alerta` | `<quando>` | Notifies you about the note (or all notes of a `#tag`) at a date/time. See [Alerts](#alerts) |
+| `-to` | `<destino>` | With `-alerta`: notifies a contact, group, number or email instead of your private chat. With the list (`-l`, `#tag`) or `-export`: sends the list or the PDF there, instead of replying in the chat. Repeat it for several |
 
 ```text
 /notes -a comprar leite
-/notes comprar pão                                → o mesmo que -a
+/notes comprar pão                                → the same as -a
 /notes -a ligar pro João -alerta amanhã 9h
 /notes -l
 /notes -r 2
 /notes -r all
-/notes -update 3 comprar pão e leite             → troca o texto da nº 3
-/notes -u #3 #casa comprar pão\ne leite          → troca o texto e passa para a #casa
-/notes -move #casa #lar                           → renomeia a #casa para #lar
-/notes -desc #casa Coisas da casa                 → descrição da #casa
-/notes -view 76                                   → a nº 76 com a imagem, se tiver
+/notes -update 3 comprar pão e leite             → replaces the text of #3
+/notes -u #3 #casa comprar pão\ne leite          → replaces the text and moves it to #casa
+/notes -move #casa #lar                           → renames #casa to #lar
+/notes -desc #casa Coisas da casa                 → description of #casa
+/notes -view 76                                   → #76 with the image, if it has one
 /notes                                            → #casa: 3, #duvidas: 1, sem tag: 2
 ```
 
@@ -54,122 +54,129 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 ```text
 /notes #casa Lembrar de comprar pão
 /notes -a #duvidas Olhar sobre como funciona as ETFs
-/notes                → as tags, com a quantidade de anotações
-/notes -l             → lista tudo, uma mensagem por #tag (as sem tag, de antes, por último)
-/notes #casa          → só as da #casa (o mesmo que /notes -l #casa)
-/notes -rm #casa     → remove todas as da #casa
-/notes -rm all       → remove tudo
+/notes                → the tags, with the number of notes
+/notes -l             → lists everything, one message per #tag (the untagged ones, from before, last)
+/notes #casa          → only the ones in #casa (the same as /notes -l #casa)
+/notes -rm #casa     → removes all the ones in #casa
+/notes -rm all       → removes everything
 ```
 
-- Respondendo uma mensagem, `/notes #lembrete` (ou `/notes -a #lembrete`) anota o texto dela, com o
-  ↩️ na frente. Texto digitado junto vale no lugar do da mensagem (sem o ↩️). Dá para juntar com
-  `-alerta`: `/notes -a #lembrete -alerta amanhã 9h`. No PDF, o ↩️ vira `[resp.]`.
-- No texto da anotação, `\n` vira quebra de linha (`/notes #casa pão\nleite`); `\\n` fica como está.
-- A primeira linha é o título (o único em negrito), o resto vem como foi digitado e todo link
-  `http(s)://` sai de onde estava e vai para o fim, em bullets sob `🔗 Links` (na lista, no `-view`,
-  no e-mail e no PDF, onde fica só `Links`, sem o emoji). Isso é feito ao exibir: o texto guardado
-  não muda.
-- A imagem sai com uma borda preta fina no `-view` (chat e e-mail) e no PDF; o gif vai como está.
-- **Mídias:** mande uma imagem, documento, áudio ou vídeo com a legenda `/notes #minhatag Texto` ou
-  responda uma mídia com `/notes #tag [texto]`. O texto é opcional (numa resposta com legenda,
-  vale a legenda, com o ↩️). O arquivo fica em `cache/notes/` (fora do `cache/media/`, então o
-  `/cache -media` não apaga), com o nome original no caso de documentos, e a lista mostra
-  `🖼️ imagem`, `🎬 vídeo`, `🎵 áudio` ou `📎 nome-do-arquivo`. Para receber o arquivo de volta, use o
-  [`-view`](#ver-e-organizar) (o áudio não tem legenda: o texto vai em outra mensagem). O `-rm`
-  apaga o arquivo junto, e o [`/backup`](backup.md) leva as mídias num arquivo à parte.
-- A tag pode vir pela metade na lista, na busca, no `-view`, no `-desc` e no `-export`:
-  `/notes #idei` acha a `#ideias`. A exata ganha; senão valem as que começam com o que você
-  digitou, depois as que contêm. Onde mexe nos dados (`-rm`, `-move` e o `-alerta` com `<quando>`),
-  a tag vai inteira.
-- Cada anotação tem no máximo uma tag, a do começo do texto. Maiúsculas e minúsculas valem igual.
-- Para anotar a tag é obrigatória: `/notes meu texto` (sem tag) dá erro. `/notes #casa` sozinho lista
-  as da tag; numa resposta ou com mídia, anota o que veio nela.
+- When you reply to a message, `/notes #lembrete` (or `/notes -a #lembrete`) saves its text as a
+  note, with ↩️ in front. Text typed along with it takes the place of the message's (without the
+  ↩️). It can be combined with `-alerta`: `/notes -a #lembrete -alerta amanhã 9h`. In the PDF, the
+  ↩️ becomes `[resp.]`.
+- In the note text, `\n` becomes a line break (`/notes #casa pão\nleite`); `\\n` stays as is.
+- The first line is the title (the only one in bold), the rest comes as typed and every
+  `http(s)://` link is moved out of where it was to the end, as bullets under `🔗 Links` (in the
+  list, in `-view`, in the email and in the PDF, where it's just `Links`, without the emoji). This is
+  done when displaying: the stored text doesn't change.
+- The image goes out with a thin black border in `-view` (chat and email) and in the PDF; the gif
+  goes as is.
+- **Media:** send an image, document, audio or video with the caption `/notes #minhatag Texto` or
+  reply to a media with `/notes #tag [texto]`. The text is optional (in a reply with a caption, the
+  caption is used, with the ↩️). The file is kept in `cache/notes/` (outside `cache/media/`, so
+  `/cache -media` doesn't delete it), with the original name in the case of documents, and the list
+  shows `🖼️ imagem`, `🎬 vídeo`, `🎵 áudio` or `📎 nome-do-arquivo`. To get the file back, use
+  [`-view`](#view-and-organize) (audio has no caption: the text goes in another message). `-rm`
+  deletes the file too, and [`/backup`](backup.md) takes the media in a separate file.
+- The tag can be partial in the list, in the search, in `-view`, in `-desc` and in `-export`:
+  `/notes #idei` finds `#ideias`. The exact one wins; otherwise the ones that start with what you
+  typed apply, then the ones that contain it. Where it changes data (`-rm`, `-move` and `-alerta`
+  with `<quando>`), the tag must be complete.
+- Each note has at most one tag, the one at the start of the text. Uppercase and lowercase count the
+  same.
+- To save a note the tag is required: `/notes meu texto` (no tag) gives an error. `/notes #casa`
+  alone lists the tag's notes; in a reply or with media, it saves what came in it.
 
-## Ver e organizar
+## View and organize
 
 ```text
-/notes -v 76                  → a nº 76: a mídia com o texto na legenda (sem mídia, só o texto)
-/notes -v 3 5                 → várias de uma vez, uma mensagem para cada
-/notes -v #idei               → todas da #ideias
-/notes -v 76 -to /Família/    → manda no grupo (por e-mail, o arquivo vai anexado)
-/notes -move #casa #lar       → renomeia a tag em todas as anotações
-/notes -desc #lar Coisas da casa   → descrição da tag
-/notes -d #lar                → mostra a descrição
-/notes -d #lar -rm            → apaga a descrição
+/notes -v 76                  → #76: the media with the text as the caption (no media, just the text)
+/notes -v 3 5                 → several at once, one message for each
+/notes -v #idei               → all of #ideias
+/notes -v 76 -to /Família/    → sends to the group (by email, the file is attached)
+/notes -move #casa #lar       → renames the tag in all notes
+/notes -desc #lar Coisas da casa   → tag description
+/notes -d #lar                → shows the description
+/notes -d #lar -rm            → deletes the description
 ```
 
-- O cabeçalho do `-view` traz o ID, a tag e a data. Um ID ou tag que não existe cancela tudo, sem
-  enviar nada.
-- O `-move` para a tag nova que já existe junta as anotações das duas. A descrição vai junto; se a
-  nova já tinha uma, fica a dela. Tag de origem que não existe, ou igual à nova, é recusada.
-- A descrição aparece embaixo do nome da tag na lista (em itálico) e ao lado dela no `/notes` sozinho:
-  `#casa: 3 · Coisas da casa`. Dá para descrever uma tag que ainda não tem anotações; ela só
-  aparece na lista quando tiver.
+- The `-view` header shows the ID, the tag and the date. An ID or tag that doesn't exist cancels
+  everything, sending nothing.
+- `-move` to a new tag that already exists merges the notes of both. The description goes along; if
+  the new one already had one, it keeps its own. A source tag that doesn't exist, or is the same as
+  the new one, is refused.
+- The description appears below the tag name in the list (in italics) and next to it in `/notes`
+  alone: `#casa: 3 · Coisas da casa`. You can describe a tag that has no notes yet; it only shows up
+  in the list once it has some.
 
-## Buscar
+## Search
 
-O mesmo `-q` do [`/show`](show.md) e do [`/watch`](watch.md): texto sem diferenciar maiúsculas e
-acentos, ou `/regex/flags`.
+The same `-q` as in [`/show`](show.md) and [`/watch`](watch.md): text ignoring case and accents,
+or `/regex/flags`.
 
 ```text
-/notes -s pao                    → as que têm "pão" (e "PAO", "Pão"...)
+/notes -s pao                    → the ones with "pão" (and "PAO", "Pão"...)
 /notes -search /etf|bolsa/i      → regex
-/notes -s "comprar pão"          → com espaços, o texto vale direto (as aspas são opcionais)
-/notes -s #casa leite            → só as da #casa que casam
-/notes -s casa                   → também casa o nome da tag (as da #casa)
-/notes -s etf -to /Família/      → manda o resultado nos destinos
+/notes -s "comprar pão"          → with spaces, the text works directly (the quotes are optional)
+/notes -s #casa leite            → only the ones in #casa that match
+/notes -s casa                   → also matches the tag name (the ones in #casa)
+/notes -s etf -to /Família/      → sends the result to the destinations
 ```
 
-- Regex com risco de travar o bot (como `(x+)+`) é recusada.
+- A regex that risks freezing the bot (like `(x+)+`) is refused.
 
-## Exportar
+## Export
 
 ```text
-/notes -e          → ZapBot_notes_20261027_1530.pdf, com tudo, agrupado por #tag
-/notes -e #casa    → ZapBot_notes_tag-casa_20261027_1530.pdf, só as da #casa
-/notes -e -to /Família/                  → o PDF no grupo Família
-/notes #casa -to /Jorge Pereira/ -to email  → a lista da #casa no contato e por e-mail
+/notes -e          → ZapBot_notes_20261027_1530.pdf, with everything, grouped by #tag
+/notes -e #casa    → ZapBot_notes_tag-casa_20261027_1530.pdf, only the ones in #casa
+/notes -e -to /Família/                  → the PDF in the Família group
+/notes #casa -to /Jorge Pereira/ -to email  → the #casa list to the contact and by email
 ```
 
-O `-to` funciona como nos outros comandos (veja
-[Avisar em outro chat ou por e-mail](cotacao.md#avisar-em-outro-chat-ou-por-e-mail)). Não vale no
-`-rm`.
+`-to` works as in the other commands (see
+[Notify in another chat or by email](rates.md#notify-another-chat-or-by-email)). It doesn't
+work with `-rm`.
 
-- Sai como documento no próprio chat (com `-to`, nos destinos; por e-mail, em anexo). A data e a
-  hora do nome são de Brasília.
-- A descrição das tags (`-desc`) vem no começo do documento, logo depois do total, uma linha por
-  tag que tem: `#casa: Coisas da casa`. Só entram as tags que estão no PDF.
-- As imagens entram no PDF, em cima do texto da anotação (que serve de legenda), reduzidas para caber
-  (JPEG, fundo branco no lugar de transparência). Uma imagem que não abre fica de fora, com um aviso
-  na linha da anotação. Documentos, áudios e vídeos não entram no PDF; a linha da anotação avisa.
-- A fonte do PDF é Latin-1: acentos saem normais, mas emojis e símbolos fora dela são omitidos.
+- It goes out as a document in the chat itself (with `-to`, in the destinations; by email, as an
+  attachment). The date and time in the name are Brasília time.
+- The tag description (`-desc`) comes at the start of the document, right after the total, one line
+  per tag that has one: `#casa: Coisas da casa`. Only the tags that are in the PDF are included.
+- Images go into the PDF, above the note text (which serves as the caption), scaled down to fit
+  (JPEG, white background in place of transparency). An image that won't open is left out, with a
+  warning on the note's line. Documents, audio and video don't go into the PDF; the note's line
+  says so.
+- The PDF font is Latin-1: accents come out fine, but emojis and symbols outside it are omitted.
 
-## Alertas
+## Alerts
 
-O mesmo esquema do `-alerta` do [`/cotacao`](cotacao.md#alertas-de-preço): lista, `-rm`, `-to` e
-uma verificação periódica (a cada minuto). Aqui a condição é uma data/hora, e o aviso é a própria
-anotação.
+The same scheme as the `-alerta` of [`/rates`](rates.md#price-alerts): list, `-rm`, `-to`
+and a periodic check (every minute). Here the condition is a date/time, and the notification is the
+note itself.
 
 ```text
-/notes -a ligar pro João -alerta amanhã 9h       → anota e avisa amanhã às 9h
-/notes -alerta 3 +2h                              → avisa da anotação 3 daqui a 2 horas
-/notes -alerta 3 sexta 18:30 -to /Família/        → avisa no grupo Família
-/notes -alerta #casa +2h -to /Família/            → avisa de todas as da #casa, no grupo Família
+/notes -a ligar pro João -alerta amanhã 9h       → saves it and notifies tomorrow at 9h
+/notes -alerta 3 +2h                              → notifies about note 3 in 2 hours
+/notes -alerta 3 sexta 18:30 -to /Família/        → notifies in the Família group
+/notes -alerta #casa +2h -to /Família/            → notifies about all in #casa, in the Família group
 /notes -a pagar boleto -alerta 25/12 10h -to /Jorge Pereira/ -to email
-/notes -alerta                                    → lista só as anotações com alerta
-/notes -alerta #casa                              → só as da #casa que têm alerta
-/notes -alerta -rm 3                              → tira o alerta da nº 3 (a anotação fica)
-/notes -alerta -rm #casa                          → tira os alertas da #casa
-/notes -alerta -rm all                            → tira todos os alertas
+/notes -alerta                                    → lists only the notes with an alert
+/notes -alerta #casa                              → only the ones in #casa that have an alert
+/notes -alerta -rm 3                              → removes the alert from #3 (the note stays)
+/notes -alerta -rm #casa                          → removes the alerts of #casa
+/notes -alerta -rm all                            → removes all the alerts
 ```
 
-- O `<quando>` é o mesmo do [`/cron`](cron.md): `+2h`, `30m`, `1h30m`, `18h`, `18:30`, `hoje 18h`,
-  `amanhã [9h]`, `sexta [18h]`, `25/12 [10h]`, `25/12/2027 10h` (sem hora: 9h). Máximo de 365 dias à
-  frente; datas passadas são recusadas.
-- O alerta dispara **uma vez** e some; a anotação continua na lista. Para repetir, crie outro
-  `-alerta <id> <quando>` (ele troca o anterior).
-- Com `#tag`, o alerta vai em todas as anotações da tag (trocando os que já tinham), e na hora saem
-  uma mensagem por anotação. Se a tag não existe, nada é mexido.
-- Sem `-to`, o aviso vai para o seu privado. O `-to` aceita os mesmos destinos dos outros alertas
-  (veja [Avisar em outro chat ou por e-mail](cotacao.md#avisar-em-outro-chat-ou-por-e-mail)).
-- Se o bot estava fora do ar na hora, o aviso sai assim que ele voltar.
+- The `<quando>` is the same as in [`/cron`](cron.md): `+2h`, `30m`, `1h30m`, `18h`, `18:30`,
+  `hoje 18h`, `amanhã [9h]`, `sexta [18h]`, `25/12 [10h]`, `25/12/2027 10h` (no time: 9h). Maximum
+  of 365 days ahead; past dates are refused.
+- The alert fires **once** and goes away; the note stays in the list. To repeat, create another
+  `-alerta <id> <quando>` (it replaces the previous one).
+- With a `#tag`, the alert goes on all the tag's notes (replacing the ones that already had one),
+  and at the scheduled time one message goes out per note. If the tag doesn't exist, nothing is
+  touched.
+- Without `-to`, the notification goes to your private chat. `-to` accepts the same destinations as
+  the other alerts (see
+  [Notify in another chat or by email](rates.md#notify-another-chat-or-by-email)).
+- If the bot was down at the scheduled time, the notification goes out as soon as it's back.

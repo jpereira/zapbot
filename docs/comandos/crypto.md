@@ -1,32 +1,32 @@
 # `/crypto` (`/bitcoio`, `/creptomoeda`)
 
-Preço atual e variação de 24 h das moedas ativadas (via API da Binance, par `<TOKEN>USDT`), ou só
-das pedidas. Por padrão: BTC, ETH, SOL e HYPE.
+Current price and 24 h change for the enabled coins (via the Binance API, `<TOKEN>USDT` pair), or
+only the requested ones. Default: BTC, ETH, SOL and HYPE.
 
-| Opção | Valor | Descrição |
+| Option | Value | Description |
 |---|---|---|
-| *(nenhuma)* | `[TOKEN...]` | Cotação das ativadas, ou só das moedas informadas (ativadas ou não), na ordem pedida. Uma que não é suportada: avisa e lista as suportadas |
-| `-list`, `-l` | | Lista as moedas suportadas; as ativadas vêm marcadas com `*` |
-| `-add`, `-a` | `<TOKEN>` | Ativa uma moeda suportada (só o dono do bot ou um [admin](bot.md#admins-extras)) |
-| `-del`, `-d` | `<TOKEN>` | Desativa uma moeda (só o dono do bot ou um [admin](bot.md#admins-extras)) |
-| `-alerta` | `[regra]` | Sem regra, lista os alertas; com regra (ex.: `BTC < 90000`), cria um. A moeda também pode vir antes: `/crypto BTC -alerta < 90000`. Veja [Alertas de preço](cotacao.md#alertas-de-preço) |
-| `-msg` | `<texto>` | Junto com `-alerta`: o texto vai no início do aviso. Vai até o fim do comando. Veja [Mensagem no aviso](cotacao.md#mensagem-no-aviso) |
-| `-rm` | `<nº...\|all>` | Junto com `-alerta`: remove os alertas com esses nºs (`-rm 2`, `-rm 1 2 3` ou `-rm 1,2,3`), ou todos (`all`). Se algum nº não existe, nenhum sai |
-| `-to` | `<destino>` | Junto com `-alerta`: avisa num contato (`/Jorge Pereira/`), numa menção (`@Fulano Da Silva`), num grupo (`/Grupo L200/`), num número (`+5521999999999`) ou por e-mail (`email`) em vez do seu privado. Repita para vários: um alerta só, que avisa em todos. Veja [Avisar em outro chat ou por e-mail](cotacao.md#avisar-em-outro-chat-ou-por-e-mail) |
+| *(none)* | `[TOKEN...]` | Quotes for the enabled coins, or only the given coins (enabled or not), in the order requested. An unsupported one: warns and lists the supported ones |
+| `-list`, `-l` | | Lists the supported coins; the enabled ones are marked with `*` |
+| `-add`, `-a` | `<TOKEN>` | Enables a supported coin (bot owner or an [admin](bot.md#extra-admins) only) |
+| `-del`, `-d` | `<TOKEN>` | Disables a coin (bot owner or an [admin](bot.md#extra-admins) only) |
+| `-alerta` | `[regra]` | Without a rule, lists the alerts; with a rule (e.g. `BTC < 90000`), creates one. The coin can also come first: `/crypto BTC -alerta < 90000`. See [Price alerts](rates.md#price-alerts) |
+| `-msg` | `<texto>` | Together with `-alerta`: the text goes at the start of the notification. It runs to the end of the command. See [Message in the notification](rates.md#message-in-the-notice) |
+| `-rm` | `<nº...\|all>` | Together with `-alerta`: removes the alerts with those numbers (`-rm 2`, `-rm 1 2 3` or `-rm 1,2,3`), or all of them (`all`). If any number doesn't exist, none is removed |
+| `-to` | `<destino>` | Together with `-alerta`: notifies a contact (`/Jorge Pereira/`), a mention (`@Fulano Da Silva`), a group (`/Grupo L200/`), a number (`+5521999999999`) or by email (`email`) instead of your private chat. Repeat for several: a single alert that notifies all of them. See [Notify another chat or by email](rates.md#notify-another-chat-or-by-email) |
 
-Suportadas: BTC, ETH, SOL, HYPE, BNB, XRP, DOGE, ADA, TRX, AVAX, LINK, DOT, LTC, TON, SUI, PEPE,
-SHIB, XLM, NEAR e UNI (lista `CRYPTO_SUPPORTED` em `src/moedas.js`).
+Supported: BTC, ETH, SOL, HYPE, BNB, XRP, DOGE, ADA, TRX, AVAX, LINK, DOT, LTC, TON, SUI, PEPE,
+SHIB, XLM, NEAR and UNI (`CRYPTO_SUPPORTED` list in `src/moedas.js`).
 
-As moedas ativadas ficam na tabela `settings`, chave `crypto.coins`, e sobrevivem a reinícios.
+The enabled coins are stored in the `settings` table, key `crypto.coins`, and survive restarts.
 
 ![Demonstração do /crypto](../assets/demo/07-crypto.gif)
 
 ```text
-/crypto              → as ativadas (padrão: BTC, ETH, SOL e HYPE)
-/crypto BTC          → só o bitcoin
-/crypto btc eth      → bitcoin e ether (também "BTC,ETH")
-/crypto doge         → uma suportada, mesmo sem estar ativada
-/crypto FOO          → ❌ Moeda não suportada: FOO, com a lista das suportadas
+/crypto              → the enabled ones (default: BTC, ETH, SOL and HYPE)
+/crypto BTC          → bitcoin only
+/crypto btc eth      → bitcoin and ether (also "BTC,ETH")
+/crypto doge         → a supported one, even if not enabled
+/crypto FOO          → ❌ Moeda não suportada: FOO, with the list of supported ones
 /creptomoeda
 /crypto -l
 /crypto -a doge

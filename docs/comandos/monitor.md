@@ -1,18 +1,18 @@
 # `/monitor` · admin
 
-👀 Monitora até cinco contatos, consultando uma pessoa por vez e guardando os horários distintos
-de **visto por último observados**. Disponível para o dono do bot e os admins. O cadastro e o
-histórico ficam no SQLite e sobrevivem a reinícios; o backup do banco também os inclui.
+👀 Monitors up to five contacts, checking one person at a time and storing the distinct **last
+seen** times observed. Available to the bot owner and admins. The registrations and the history
+live in SQLite and survive restarts; the database backup includes them too.
 
-| Opção | Descrição |
+| Option | Description |
 |---|---|
-| *(nenhuma)* | Contatos cadastrados, ids, intervalo, estado observado, última verificação e últimos `monitor.maxRecords` horários por contato |
-| `-add`, `-a` | Cadastra uma pessoa pelo nome da agenda, `/nome com espaços/`, menção ou número com DDI e DDD |
-| `-rm`, `-r` | Remove pelo id da lista ou por nome, `/nome com espaços/`, menção real ou telefone; `all` apaga todos os cadastros e históricos locais |
-| `-alerta` | Com `-add`, ativa o aviso online; sozinho, ativa para um contato cadastrado, pelo mesmo resolvedor ou id |
-| `-list`, `-l` | Todos os contatos ou somente o contato informado, com os últimos `monitor.maxRecords` horários distintos por contato; relatório extenso vai em `.txt` |
+| *(none)* | Registered contacts, ids, interval, observed state, last check and the last `monitor.maxRecords` times per contact |
+| `-add`, `-a` | Registers a person by address book name, `/name with spaces/`, mention or number with country and area code |
+| `-rm`, `-r` | Removes by list id or by name, `/name with spaces/`, real mention or phone; `all` deletes all local registrations and histories |
+| `-alerta` | With `-add`, turns on the online alert; alone, turns it on for a registered contact, via the same resolver or id |
+| `-list`, `-l` | All contacts or only the given contact, with the last `monitor.maxRecords` distinct times per contact; long reports go in a `.txt` |
 
-![Demonstração do /monitor](../assets/demo/03-monitor.gif)
+![/monitor demo](../assets/demo/03-monitor.gif)
 
 ```text
 /monitor
@@ -42,20 +42,21 @@ histórico ficam no SQLite e sobrevivem a reinícios; o backup do banco também 
 /monitor -r all
 ```
 
-Os nomes usam a mesma busca dos [destinos](index.md#destinos-contato-grupo-número-ou-e-mail).
-Se vários contatos corresponderem, o bot oferece uma lista para escolher. A menção precisa ser
-selecionada na lista do WhatsApp. Grupos e e-mails não são aceitos. Uma pessoa já cadastrada não
-ocupa outra vaga; o LID vira telefone quando o WhatsApp fornece essa correspondência.
-`/monitor -rm all` e `/monitor -r all` limpam todos os contatos e seus históricos
-locais imediatamente, sem alterar as configurações do monitor.
+Names use the same search as [destinations](index.md#destinations-contact-group-number-or-email).
+If several contacts match, the bot offers a list to choose from. The mention has to be selected
+from the WhatsApp list. Groups and emails aren't accepted. A person who's already registered
+doesn't take another slot; the LID becomes a phone number when WhatsApp provides that mapping.
+`/monitor -rm all` and `/monitor -r all` clear all contacts and their local histories
+immediately, without changing the monitor settings.
 
-O `-rm` usa o mesmo resolvedor de contatos do `-add`, incluindo escolhas por nome ambíguo.
-Os ids mostrados em `/monitor` e `/monitor -l` são estáveis: remover o contato `#1` não renumera
-o `#2`. O prefixo `#` é opcional no id. Só dígitos com até nove posições são id da lista;
-números com dez ou mais dígitos passam pelo resolvedor de telefone. Grupos e e-mails não são
-aceitos na remoção.
+`-rm` uses the same contact resolver as `-add`, including choices for ambiguous names.
+The ids shown in `/monitor` and `/monitor -l` are stable: removing contact `#1` doesn't renumber
+`#2`. The `#` prefix is optional in the id. Only digits with up to nine positions are a list id;
+numbers with ten or more digits go through the phone resolver. Groups and emails aren't
+accepted in removal.
 
-Sem cadastros, `/monitor` informa `👀 Nenhum contato cadastrado.`. Com cadastros, mostra:
+With no registrations, `/monitor` replies `👀 Nenhum contato cadastrado.`. With registrations, it
+shows:
 
 ```text
 👀 MONITOR · ativo
@@ -72,48 +73,48 @@ Sem cadastros, `/monitor` informa `👀 Nenhum contato cadastrado.`. Com cadastr
      Origem: presença do WhatsApp · horário não confirmado
 ```
 
-Tanto `/monitor` quanto `/monitor -l` mostram até `monitor.maxRecords` entradas por contato
-(padrão: 30), do horário mais recente para o mais antigo, com o horário observado e a hora em que
-o bot o encontrou. A origem aparece como `presença do WhatsApp · horário não confirmado`.
-Um mesmo horário não se repete entre as entradas guardadas, mesmo que apareça em várias consultas.
-Relatórios acima de 7.000 caracteres são enviados completos como `monitor-historico.txt`
-para evitar vários replies.
+Both `/monitor` and `/monitor -l` show up to `monitor.maxRecords` entries per contact
+(default: 30), from the most recent time to the oldest, with the observed time and the time the
+bot found it. The source appears as `presença do WhatsApp · horário não confirmado`.
+The same time never repeats among the stored entries, even if it shows up in several checks.
+Reports above 7,000 characters are sent in full as `monitor-historico.txt`
+to avoid several replies.
 
-## Filtro por contato e alerta online
+## Filter by contact and online alert
 
-`/monitor -l <contato>` e `/monitor -list <contato>` filtram somente os cadastros do monitor,
-sem consultar a agenda do WhatsApp. Nome e `/Nome do Contato/` procuram trechos do nome salvo,
-sem diferenciar maiúsculas ou acentos. `/monitor -l /Maria/` encontra o cadastro "Maria Lucia".
-Se mais de um cadastro corresponder, a lista mostra todos os resultados do filtro.
-Telefone, id e menção real são comparados aos identificadores dos cadastros monitorados.
-Sem filtro, mostram todos os monitorados; sem correspondência, informam que nenhum foi encontrado.
+`/monitor -l <contact>` and `/monitor -list <contact>` filter only the monitor registrations,
+without querying the WhatsApp address book. Name and `/Contact Name/` look for fragments of the
+saved name, ignoring case and accents. `/monitor -l /Maria/` finds the registration "Maria Lucia".
+If more than one registration matches, the list shows all the results of the filter.
+Phone, id and real mention are compared against the identifiers of the monitored registrations.
+Without a filter, they show all monitored contacts; with no match, they say none was found.
 
-Cadastre com `/monitor -add /Maria/ -alerta` ou ative para uma pessoa cadastrada com
-`/monitor -alerta /Maria/`. O alerta fica salvo no banco e aparece como ativado na lista.
-O aviso é enviado **no privado do dono do bot**, inclusive quando um admin ativa a opção:
+Register with `/monitor -add /Maria/ -alerta` or turn it on for an already registered person with
+`/monitor -alerta /Maria/`. The alert is saved in the database and shows up as enabled in the list.
+The notice is sent **to the bot owner's private chat**, even when an admin turns the option on:
 
 ```text
 🚨 O contato "Maria" ficou online em "14/10/2026, 17:05:10".
 💡 Para mais, digite /monitor -l
 ```
 
-A data está no horário de São Paulo e indica quando o bot observou a presença online,
-não o instante exato de conexão. A primeira observação online pode gerar aviso; consultas
-seguidas com a pessoa online não repetem o alerta. Uma observação offline permite avisar
-na próxima entrada online. Dados ausentes e falhas não rearmam o alerta.
-Ativar para alguém já observado online aguarda uma observação offline antes de avisar novamente.
-Remover o cadastro também remove o alerta. Pausar o monitor pausa as verificações e os avisos.
-A opção não aumenta a frequência das consultas; acessos entre elas podem passar sem aviso,
-e os dados recebidos podem estar em cache.
+The date is in São Paulo time and indicates when the bot observed the online presence,
+not the exact moment of connection. The first online observation can trigger a notice; consecutive
+checks with the person online don't repeat the alert. An offline observation allows notifying
+on the next online entry. Missing data and failures don't rearm the alert.
+Turning it on for someone already observed online waits for an offline observation before notifying
+again. Removing the registration also removes the alert. Pausing the monitor pauses the checks and
+the notices. The option doesn't increase the frequency of the checks; accesses between them
+can go unnoticed, and the data received may be cached.
 
-## Intervalo e limite
+## Interval and limit
 
-| Setting | Padrão | Valores | Efeito |
+| Setting | Default | Values | Effect |
 |---|---|---|---|
-| `monitor.pool` | `300` | 120–86400 segundos | Intervalo mínimo entre verificações de cada contato; 300 s = 5 min, 120 s = 2 min |
-| `monitor.max` | `5` | 1–5 | Limita os cadastros; remova contatos antes de reduzir abaixo do total cadastrado |
-| `monitor.maxRecords` | `30` | 1–1000 | Máximo de entradas no banco e nas listas por contato; preserva os horários mais recentes |
-| `monitor.enabled` | `true` | true/false | Pausa ou retoma as consultas sem apagar cadastros nem histórico |
+| `monitor.pool` | `300` | 120–86400 seconds | Minimum interval between checks of each contact; 300 s = 5 min, 120 s = 2 min |
+| `monitor.max` | `5` | 1–5 | Limits the registrations; remove contacts before lowering it below the registered total |
+| `monitor.maxRecords` | `30` | 1–1000 | Maximum entries in the database and in the lists per contact; keeps the most recent times |
+| `monitor.enabled` | `true` | true/false | Pauses or resumes the checks without deleting registrations or history |
 
 ```text
 /set monitor.pool
@@ -129,65 +130,65 @@ e os dados recebidos podem estar em cache.
 /set monitor
 ```
 
-A forma `chave=valor` é aceita para os quatro settings de monitoramento; a forma com espaço também
-funciona. As mudanças valem sem reiniciar. **300 segundos é o padrão para reduzir a frequência,
-sem ser uma garantia de segurança.** 120 segundos faz mais consultas; aumentar o intervalo reduz
-a frequência e também aumenta a possibilidade de perder acessos breves.
+The `key=value` form is accepted for the four monitoring settings; the form with a space works
+too. Changes take effect without restarting. **300 seconds is the default to reduce the frequency,
+not a safety guarantee.** 120 seconds makes more queries; increasing the interval reduces
+the frequency and also increases the chance of missing brief accesses.
 
-O agendador confere os contatos pendentes a cada dez segundos, apenas localmente. A primeira
-consulta ocorre na próxima passagem após o cadastro, quando o bot estiver conectado. Cada pessoa
-recebe no máximo uma verificação por `monitor.pool` segundos, contando do início da tentativa;
-a ordem dos contatos pendentes é embaralhada sem repetição em cada passagem. Entre consultas,
-o bot espera de 1 a 15 segundos, escolhidos aleatoriamente, inclusive após falhas. Isso distribui
-as consultas no tempo, sem aumentar sua frequência nem garantir proteção contra bloqueio.
-Durante a espera, pausar o monitor ou remover o contato impede sua próxima consulta.
-Uma consulta aguarda dados por até cinco segundos,
-dentro do prazo de dez segundos para suas tentativas. Falhas também respeitam o intervalo,
-sem tentativas imediatas em loop. O comando de listagem lê somente o banco: não força consultas.
+The scheduler checks the pending contacts every ten seconds, locally only. The first
+check happens on the next pass after registration, once the bot is connected. Each person
+gets at most one check per `monitor.pool` seconds, counted from the start of the attempt;
+the order of the pending contacts is shuffled without repetition on each pass. Between checks,
+the bot waits 1 to 15 seconds, chosen at random, including after failures. This spreads
+the checks over time, without increasing their frequency or guaranteeing protection against
+blocking. During the wait, pausing the monitor or removing the contact prevents its next check.
+A check waits for data for up to five seconds,
+within the ten-second window for its attempts. Failures also respect the interval,
+with no immediate retries in a loop. The list command reads only the database: it doesn't force checks.
 
-O monitoramento pausa com `monitor.enabled false`, `/bot -off`, conexão indisponível ou
-`/set commands.disabled monitor`. Retoma quando essas condições forem resolvidas. Uma consulta
-já iniciada pode terminar. Remover um cadastro impede que seu resultado pendente recrie
-o histórico.
+Monitoring pauses with `monitor.enabled false`, `/bot -off`, an unavailable connection or
+`/set commands.disabled monitor`. It resumes when those conditions are resolved. A check
+that has already started may finish. Removing a registration prevents its pending result from
+recreating the history.
 
-O banco mantém no máximo `monitor.maxRecords` entradas por contato, inclusive após reinícios.
-Reduzir esse valor remove imediatamente as entradas mais antigas excedentes de cada contato.
-Aumentar o limite permite guardar mais entradas futuras; não recupera as já removidas.
+The database keeps at most `monitor.maxRecords` entries per contact, including after restarts.
+Lowering this value immediately removes the oldest excess entries of each contact.
+Raising the limit allows storing more future entries; it doesn't recover the ones already removed.
 
-## O que o histórico representa
+## What the history represents
 
-- O estado pode ser `🟢 online`, `⚫ offline · horário observado`, `❔ sem dados`,
-  `❔ sem horário disponível`, `🔒 horário indisponível` ou `⚠️ consulta falhou`.
-- O bot prefere a coleção de presença pelo LID, mantendo indicadores e horário na mesma fonte.
-  Reaproveita a assinatura ativa e só solicita presença se não houver assinatura ativa.
-  O monitor não abre chats automaticamente nem altera a presença online da conta do bot.
-- O horário `chatstate.t` de um estado offline sem `deny` é um **candidato** ao visto por último.
-  A fonte técnica e essa classificação ficam no banco. Na lista e no relatório, aparece
-  `Origem: presença do WhatsApp · horário não confirmado`; compare com o aplicativo.
-- Dados já em cache podem ser observados e guardados. Um horário distinto não prova que houve
-  uma atualização durante aquela consulta. Um contato online não gera um horário offline novo.
-- `null`, falhas e dados sem horário válido não geram entradas fictícias. Um horário
-  já observado continua no resumo mesmo quando a consulta atual estiver sem dados.
-- Não é um registro completo de entradas e saídas: acessos entre consultas podem passar sem
-  observação. Privacidade do contato, cache, conexão e mudanças do WhatsApp podem impedir dados.
+- The state can be `🟢 online`, `⚫ offline · horário observado`, `❔ sem dados`,
+  `❔ sem horário disponível`, `🔒 horário indisponível` or `⚠️ consulta falhou`.
+- The bot prefers the presence collection by LID, keeping indicators and time in the same source.
+  It reuses the active subscription and only requests presence if there's no active subscription.
+  The monitor doesn't open chats automatically or change the online presence of the bot account.
+- The `chatstate.t` time of an offline state without `deny` is a **candidate** for last seen.
+  The technical source and this classification are stored in the database. In the list and in the
+  report, `Origem: presença do WhatsApp · horário não confirmado` appears; compare it with the app.
+- Data already in cache can be observed and stored. A distinct time doesn't prove there was
+  an update during that check. An online contact doesn't generate a new offline time.
+- `null`, failures and data without a valid time don't generate fictitious entries. A time
+  already observed stays in the summary even when the current check has no data.
+- It isn't a complete record of comings and goings: accesses between checks can go
+  unobserved. Contact privacy, cache, connection and WhatsApp changes can prevent data.
 
-## Risco de bloqueio
+## Risk of being blocked
 
-⚠️ **Intervalos curtos e mais contatos aumentam o volume de consultas e podem contribuir para
-bloqueio pelo WhatsApp.** Não há frequência ou quantidade garantidamente segura, incluindo
-cinco pessoas a cada cinco minutos. O limite de cinco e o mínimo de dois minutos são limites do
-bot, não limites aprovados pelo WhatsApp. Os avisos aparecem no cadastro, na lista e ao alterar
-`monitor.pool` ou `monitor.max` pelo `/set`.
+⚠️ **Short intervals and more contacts increase the volume of queries and can contribute to
+being blocked by WhatsApp.** There's no frequency or quantity that's guaranteed safe, including
+five people every five minutes. The limit of five and the two-minute minimum are limits of the
+bot, not limits approved by WhatsApp. The warnings appear at registration, in the list and when
+changing `monitor.pool` or `monitor.max` through `/set`.
 
-O WhatsApp informa que a coleta automatizada de informações para finalidades não permitidas
-pode causar suspensão temporária ou permanente da conta. Consulte a
-[orientação oficial sobre coleta de informações](https://faq.whatsapp.com/general/security-and-privacy/about-harvesting-personal-information).
+WhatsApp states that automated collection of information for disallowed purposes
+can cause temporary or permanent account suspension. See the
+[official guidance on information harvesting](https://faq.whatsapp.com/general/security-and-privacy/about-harvesting-personal-information).
 
-Para interromper as verificações sem perder dados:
+To stop the checks without losing data:
 
 ```text
 /set monitor.enabled false
 ```
 
-A assinatura nativa pode permanecer ativa na sessão do WhatsApp. Remover o cadastro apaga seu
-histórico local, mas cópias já feitas no backup do banco continuam nos respectivos backups.
+The native subscription may remain active in the WhatsApp session. Removing the registration deletes its
+local history, but copies already made in the database backup remain in the respective backups.

@@ -1,7 +1,7 @@
 /*
  * Destino de um aviso ou alvo de um comando: um contato, um grupo, um número
  * ou (onde faz sentido) e-mails. É o -to de todos os comandos: /cron, os
- * alertas de preço (/cotacao e /crypto -alerta), o /defi -alerta, o /watch e
+ * alertas de preço (/rates e /crypto -alerta), o /defi -alerta, o /watch e
  * o /backup -send; e o alvo do /mute. Todos aceitam vários -to.
  */
 

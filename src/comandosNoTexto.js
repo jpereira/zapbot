@@ -163,7 +163,7 @@ async function rodarComando(chatId, linha, { chatName, isGroup, onde = '/cron', 
 }
 
 /*
- * Coloca a resposta no lugar da marca. Uma de várias linhas (o /crypto, o /tempo...)
+ * Coloca a resposta no lugar da marca. Uma de várias linhas (o /crypto, o /weather...)
  * vira um parágrafo: uma linha em branco antes e depois dela, para não colar no
  * texto em volta. Uma de uma linha só fica no meio da frase, como veio.
  */

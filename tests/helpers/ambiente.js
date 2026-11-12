@@ -284,7 +284,7 @@ function erroHttp(status, mensagem = `HTTP ${status}`, extra = {}) {
 }
 
 /*
- * google-translate-api-x: o pacote do /traduzir, sem rede. A chamada passa pela rede simulada
+ * google-translate-api-x: o pacote do /translate, sem rede. A chamada passa pela rede simulada
  * (rede.responder('post', 'google-translate-api-x', { text, from: { language: { iso } } })) e o
  * texto e as opções (to...) ficam em rede.chamadas.at(-1).cfg.body.
  */

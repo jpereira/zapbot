@@ -1,44 +1,44 @@
 # `/set` (`/config`) · admin
 
-Lista e altera as configurações do bot guardadas na tabela `settings` (veja
-[Settings](../settings.md)). A mudança vale na hora e sobrevive a reinícios.
+Lists and changes the bot's settings stored in the `settings` table (see
+[Settings](../settings.md)). The change takes effect immediately and survives restarts.
 
-| Opção | Valor | Descrição |
+| Option | Value | Description |
 |---|---|---|
-| *(nenhuma)* | | Lista todas as chaves e valores e, no seu privado, as variáveis do `config/.env` |
-| `<chave>` | | Mostra valor, padrão, tipo e descrição |
-| `<trecho>` ou `/regex/` | | Não sendo uma chave: lista as chaves que contêm o trecho (sem diferenciar maiúsculas) ou casam com a regex. Ex.: `/set alerta`, `/set /^show\./` |
-| `<chave> <valor>` | | Altera. Listas: itens separados por vírgula ou espaço (`watch.rules`: uma regra por linha); `""` esvazia |
-| `-append`, `-a` | `<chave> <valor>` | Numa lista, acrescenta os itens (os que já estão ficam). Ex.: `/set -a bot.admins +5521999999999` (no `bot.admins` e no `bot.users` vale também `/Jorge Pereira/` e `@Fulano Da Silva`; no `bot.users`, grupos) |
-| `-rm` | `<chave> <valor>` | Numa lista, tira os itens. Ex.: `/set -rm commands.disabled noffa` |
-| `-reset`, `-r` | `<chave>` | Volta ao valor padrão |
-| `<VARIÁVEL>` | | Uma variável do `config/.env` (ex.: `OPENAI_MODEL`): mostra o valor, só no seu privado |
+| *(none)* | | Lists all keys and values and, in your private chat, the `config/.env` variables |
+| `<chave>` | | Shows value, default, type and description |
+| `<trecho>` or `/regex/` | | If it isn't a key: lists the keys that contain the snippet (case-insensitive) or match the regex. E.g.: `/set alerta`, `/set /^show\./` |
+| `<chave> <valor>` | | Changes it. Lists: items separated by comma or space (`watch.rules`: one rule per line); `""` empties it |
+| `-append`, `-a` | `<chave> <valor>` | In a list, adds the items (the existing ones stay). E.g.: `/set -a bot.admins +5521999999999` (for `bot.admins` and `bot.users`, `/Jorge Pereira/` and `@Fulano Da Silva` also work; for `bot.users`, groups) |
+| `-rm` | `<chave> <valor>` | In a list, removes the items. E.g.: `/set -rm commands.disabled noffa` |
+| `-reset`, `-r` | `<chave>` | Goes back to the default value |
+| `<VARIÁVEL>` | | A `config/.env` variable (e.g.: `OPENAI_MODEL`): shows the value, only in your private chat |
 
 ```text
 /set
 /set show.max
-/set alerta          → só as chaves com "alerta" (alerta.intervalMin, alerta.max)
-/set /^news\./       → as que casam com a regex
+/set alerta          → only the keys with "alerta" (alerta.intervalMin, alerta.max)
+/set /^news\./       → the ones that match the regex
 /set show.max 10
 /set monitor.pool=300
 /set monitor.maxRecords=30
-/config show.max 10  → o mesmo, pelo alias
+/config show.max 10  → the same, through the alias
 /set debug.enabled off
 /set sticker.name "Meu Bot"
 /set commands.disabled noffa todos
 /set commands.disabled ""
 /set -r crypto.coins
 /set watch.rules ""
-/set -a commands.disabled walissu   → desativa mais um, sem reescrever a lista
-/set -rm commands.disabled noffa   → reativa só esse
-/set -a bot.admins /Jorge Pereira/  → um admin extra, pelo nome do contato (veja o /bot)
-/set bot.users /Grupo Familia/      → libera os comandos comuns no grupo (veja o /bot)
+/set -a commands.disabled walissu   → disables one more, without rewriting the list
+/set -rm commands.disabled noffa   → re-enables just that one
+/set -a bot.admins /Jorge Pereira/  → an extra admin, by contact name (see /bot)
+/set bot.users /Grupo Familia/      → allows the regular commands in the group (see /bot)
 ```
 
-## Monitor de contatos
+## Contact monitor
 
-Os quatro settings do [`/monitor`](monitor.md) aceitam `<chave> <valor>` ou `chave=valor`:
-`monitor.enabled`, `monitor.pool`, `monitor.max` e `monitor.maxRecords`.
+The four [`/monitor`](monitor.md) settings accept `<chave> <valor>` or `chave=valor`:
+`monitor.enabled`, `monitor.pool`, `monitor.max` and `monitor.maxRecords`.
 
 ```text
 /set monitor.pool 300
@@ -48,18 +48,18 @@ Os quatro settings do [`/monitor`](monitor.md) aceitam `<chave> <valor>` ou `cha
 /set monitor.enabled=false
 ```
 
-`monitor.pool` é o intervalo mínimo em segundos por contato, e `monitor.max` limita os cadastros.
-`monitor.maxRecords` limita o histórico no banco e nas listas por pessoa; reduzir esse valor
-remove imediatamente os horários mais antigos excedentes. `monitor.enabled=false` pausa sem
-apagar cadastros ou histórico. As mudanças valem sem reiniciar.
+`monitor.pool` is the minimum interval in seconds per contact, and `monitor.max` limits the
+registrations. `monitor.maxRecords` limits the history in the database and in the per-person lists;
+lowering this value immediately removes the oldest excess timestamps. `monitor.enabled=false` pauses
+without deleting registrations or history. Changes take effect without a restart.
 
-## Listas: `-append` e `-rm`
+## Lists: `-append` and `-rm`
 
-Nas chaves que são listas (`bot.admins`, `bot.users`, `commands.disabled`, `crypto.coins`,
-`watch.rules`, os feeds do `news.*`...), o `<chave> <valor>` troca a lista inteira; o `-append`
-(`-a`) acrescenta itens e o `-rm` tira, sem mexer no resto. Os itens passam pela mesma validação do
-`<chave> <valor>`: um número de telefone vira só os dígitos, um comando vira o nome principal
-(`/set -rm commands.disabled /mudo` tira o `/mute`).
+For keys that are lists (`bot.admins`, `bot.users`, `commands.disabled`, `crypto.coins`,
+`watch.rules`, the `news.*` feeds...), `<chave> <valor>` replaces the whole list; `-append` (`-a`)
+adds items and `-rm` removes them, leaving the rest alone. Items go through the same validation as
+`<chave> <valor>`: a phone number becomes just the digits, a command becomes its main name
+(`/set -rm commands.disabled /mudo` removes `/mute`).
 
 ```text
 /set -a crypto.coins hype
@@ -67,20 +67,20 @@ Nas chaves que são listas (`bot.admins`, `bot.users`, `commands.disabled`, `cry
 = BTC, ETH, SOL, HYPE
 ```
 
-Numa chave que não é lista (`show.max`, `debug.enabled`...), o `-append` e o `-rm` são recusados:
-troque o valor com `/set <chave> <valor>` ou volte ao padrão com `/set -reset <chave>` (`-r`).
+On a key that isn't a list (`show.max`, `debug.enabled`...), `-append` and `-rm` are refused: change
+the value with `/set <chave> <valor>` or go back to the default with `/set -reset <chave>` (`-r`).
 
-O `bot.admins` e o `bot.users` só o dono altera (inclusive com `-append`, `-rm` e `-reset`): um
-admin extra não pode se dar (nem dar a outros) esse acesso. Neles, além do número, vale o nome do
-contato (`/Jorge Pereira/`) ou a menção: o bot guarda o telefone e mostra o nome ao lado
-([Admins extras](bot.md#admins-extras)). O `bot.users` aceita também grupos (guarda o id e mostra
-`👥 Nome`) e `true`/ `false` ([Usuários](bot.md#usuários)).
+Only the owner changes `bot.admins` and `bot.users` (including with `-append`, `-rm` and `-reset`):
+an extra admin can't give themselves (or others) that access. In them, besides the number, the
+contact name (`/Jorge Pereira/`) or the mention works: the bot stores the phone number and shows the
+name next to it ([Extra admins](bot.md#extra-admins)). `bot.users` also accepts groups (stores the
+id and shows `👥 Nome`) and `true`/ `false` ([Users](bot.md#users)).
 
-## Variáveis do `config/.env`
+## `config/.env` variables
 
-No seu privado (o chat com você mesmo), o `/set` mostra também as variáveis do
-[`config/.env`](../configuracao.md) que o bot lê, **somente para leitura**: elas mudam no arquivo, e
-valem quando o container é recriado. As chaves e as senhas aparecem mascaradas (`••••1234`).
+In your private chat (the chat with yourself), `/set` also shows the [`config/.env`](../configuracao.md)
+variables the bot reads, **read-only**: they change in the file, and take effect when the container
+is recreated. Keys and passwords appear masked (`••••1234`).
 
 ```text
 🔒 config/.env (somente leitura: mude no arquivo e recrie o container)
@@ -92,7 +92,6 @@ QRCODE_EMAIL_SMTP_PASS          ••••mnop
 ...
 ```
 
-Em outro chat (um grupo, por exemplo), no lugar delas vem só o aviso
-`🔒 As variáveis do config/.env (somente leitura) aparecem só no seu privado.` Tentar alterar uma
-(`/set OPENAI_MODEL gpt-4.1`) é recusado.
-
+In another chat (a group, for example), you get only the notice
+`🔒 As variáveis do config/.env (somente leitura) aparecem só no seu privado.` instead. Trying to
+change one (`/set OPENAI_MODEL gpt-4.1`) is refused.

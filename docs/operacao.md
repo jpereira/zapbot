@@ -1,50 +1,51 @@
-# Operação do dia a dia
+# Day-to-day operation
 
-Execute os comandos Docker na raiz do projeto:
+Run the Docker commands from the project root:
 
-| Ação | Comando |
+| Action | Command |
 |---|---|
-| Ver logs | `docker logs -f zapbot` |
-| Reiniciar | `docker compose -f docker/docker-compose.yml restart zapbot` |
-| Parar | `docker compose -f docker/docker-compose.yml stop zapbot` |
-| Shell no container | `docker exec -it zapbot bash -l` |
-| Consultar o banco | `docker exec -it zapbot sqlite3 cache/zapbot.db` |
-| Ver configurações | `docker exec -it zapbot sqlite3 cache/zapbot.db "SELECT * FROM settings"` |
-| Limpar mensagens/mídias | Pelo WhatsApp: `/cache -a` (tudo, inclusive os backups), `/cache -m` (só as mídias) ou `/cache -b` (só os backups). Veja [`/cache`](comandos/cache.md) |
-| Estado do bot (no ar, cache, apagadas...) | Pelo WhatsApp: `/bot -status` (ou `/bot -status 06h` para receber todo dia). Veja [`/bot -status`](comandos/bot.md#status-do-bot) |
-| Versões (Node.js, Chromium, yt-dlp, ffmpeg...) e sistema | Pelo WhatsApp: `/bot -info`. Veja [Informações do sistema](comandos/bot.md#informações-do-sistema) |
-| Testar tudo (cache, disco, banco, WhatsApp, internet, velocidade, SMTP, programas) | Pelo WhatsApp: `/bot -test`, com ✅ ou ❌ em cada item. Veja [Teste do bot](comandos/bot.md#teste-do-bot) |
-| Monitor de contatos | Pelo WhatsApp: `/monitor -l` (lista e histórico), `/set monitor.enabled false` (pausa), `/monitor -rm all` (apaga cadastros e históricos locais). Veja [`/monitor`](comandos/monitor.md) |
-| Backup do banco | Pelo WhatsApp: `/backup -now` (cria), `/backup -s` (envia o arquivo). Veja [`/backup`](comandos/backup.md) |
-| **Forçar novo QR** (apaga a sessão) | `docker compose -f docker/docker-compose.yml down && docker volume rm zapbot_wwebjs_auth && docker compose -f docker/docker-compose.yml up -d zapbot` |
+| View logs | `docker logs -f zapbot` |
+| Restart | `docker compose -f docker/docker-compose.yml restart zapbot` |
+| Stop | `docker compose -f docker/docker-compose.yml stop zapbot` |
+| Shell in the container | `docker exec -it zapbot bash -l` |
+| Query the database | `docker exec -it zapbot sqlite3 cache/zapbot.db` |
+| View settings | `docker exec -it zapbot sqlite3 cache/zapbot.db "SELECT * FROM settings"` |
+| Clear messages/media | From WhatsApp: `/cache -a` (everything, including backups), `/cache -m` (media only) or `/cache -b` (backups only). See [`/cache`](comandos/cache.md) |
+| Bot status (up, cache, deleted...) | From WhatsApp: `/bot -status` (or `/bot -status 06h` to get it every day). See [`/bot -status`](comandos/bot.md#bot-status) |
+| Versions (Node.js, Chromium, yt-dlp, ffmpeg...) and system | From WhatsApp: `/bot -info`. See [System information](comandos/bot.md#system-information) |
+| Test everything (cache, disk, database, WhatsApp, internet, speed, SMTP, programs) | From WhatsApp: `/bot -test`, with ✅ or ❌ on each item. See [Bot test](comandos/bot.md#bot-test) |
+| Contact monitor | From WhatsApp: `/monitor -l` (list and history), `/set monitor.enabled false` (pause), `/monitor -rm all` (delete local registrations and histories). See [`/monitor`](comandos/monitor.md) |
+| Database backup | From WhatsApp: `/backup -now` (create), `/backup -s` (send the file). See [`/backup`](comandos/backup.md) |
+| **Force a new QR** (deletes the session) | `docker compose -f docker/docker-compose.yml down && docker volume rm zapbot_wwebjs_auth && docker compose -f docker/docker-compose.yml up -d zapbot` |
 
-O container usa `restart: unless-stopped`, então volta sozinho após reboot do host.
+The container uses `restart: unless-stopped`, so it comes back on its own after a host reboot.
 
-## Saúde do container (heartbeat)
+## Container health (heartbeat)
 
-O `restart: unless-stopped` só age quando o processo **morre**. Para o caso do bot travar com o
-processo vivo (Node preso, Chromium sem resposta, sessão num estado ruim), existe um heartbeat:
+`restart: unless-stopped` only kicks in when the process **dies**. For when the bot hangs with the
+process still alive (Node stuck, Chromium not responding, session in a bad state), there's a
+heartbeat:
 
-1. A cada 30 s o bot (`src/heartbeat.js`) confere se está funcionando e, se estiver, grava
-   `/tmp/zapbot-heartbeat.json` com a hora e o estado. "Funcionando" é: conectado e o WhatsApp Web
-   respondendo `CONNECTED` em até 10 s; ou ainda não conectado (boot, esperando o QR Code,
-   reconectando), em que o processo vivo basta; ou reiniciando há menos de 5 minutos.
-2. O `HEALTHCHECK` da imagem (`docker/app/healthcheck.js`) só olha a idade do arquivo: parado há
-   mais de 90 s, o container fica `unhealthy` (há 2 min de tolerância no boot).
-3. Conectado mas sem `CONNECTED` 3 vezes seguidas, o próprio bot reinicia o cliente do WhatsApp e
-   avisa por e-mail (`🩺 WhatsApp sem resposta`).
+1. Every 30 s the bot (`src/heartbeat.js`) checks whether it's working and, if so, writes
+   `/tmp/zapbot-heartbeat.json` with the time and the state. "Working" means: connected and WhatsApp
+   Web answering `CONNECTED` within 10 s; or not connected yet (boot, waiting for the QR Code,
+   reconnecting), in which case a live process is enough; or restarting for less than 5 minutes.
+2. The image's `HEALTHCHECK` (`docker/app/healthcheck.js`) only looks at the file's age: stale for
+   more than 90 s, and the container becomes `unhealthy` (there's a 2 min grace period on boot).
+3. Connected but without `CONNECTED` 3 times in a row, the bot itself restarts the WhatsApp client
+   and warns by email (`🩺 WhatsApp sem resposta`).
 
-No reinício (e numa falha do `initialize`), o bot fecha o cliente e, se o Chromium perdeu a conexão
-mas continua vivo (ele prende o diretório da sessão e todo `initialize` seguinte falharia com
-`browser is already running`), mata o processo com `SIGKILL` (`Matando o Chromium órfão (PID ...)`
-no log). O container sobe com `init: true` (tini como PID 1), que recolhe os processos do Chromium
-que ficam zumbis.
+On a restart (and on an `initialize` failure), the bot closes the client and, if Chromium lost the
+connection but is still alive (it holds the session directory and every following `initialize` would
+fail with `browser is already running`), kills the process with `SIGKILL` (`Matando o Chromium órfão
+(PID ...)` in the log). The container starts with `init: true` (tini as PID 1), which reaps the
+Chromium processes that turn into zombies.
 
-### Queda da internet
+### Internet outage
 
-Sem internet, o reinício falha (`initialize falhou: net::ERR_NAME_NOT_RESOLVED`). O bot não para:
-tenta de novo sozinho, com espera crescente (15 s, 30 s, 1 min, 2 min e depois a cada 5 min), até
-conectar. No boot sem internet, o mesmo.
+Without internet, the restart fails (`initialize falhou: net::ERR_NAME_NOT_RESOLVED`). The bot
+doesn't stop: it tries again on its own, with growing waits (15 s, 30 s, 1 min, 2 min and then every
+5 min), until it connects. Same on a boot without internet.
 
 ```text
 ♻️ Reiniciando cliente. Motivo: heartbeat: OPENING
@@ -55,13 +56,13 @@ initialize falhou: net::ERR_NAME_NOT_RESOLVED at https://web.whatsapp.com/
 🤖 ZapBot 2.0.13 (devel) inicializado!
 ```
 
-- Um e-mail só, na primeira falha (`❌ Falha ao reiniciar`); com a internet fora, ele também falha, e
-  o `🔄 Reconectado` diz quanto tempo o bot ficou sem conseguir conectar e quantas tentativas
-  falharam.
-- Enquanto tenta, o heartbeat continua batendo, com o estado `reconectando (N falhas seguidas)`:
-  reiniciar o container não traria a internet de volta.
-- Se a página abrir mas a conexão não terminar em 3 minutos (a rede caiu no meio), o bot reinicia o
-  cliente. Esperando alguém ler o QR Code, não.
+- Only one email, on the first failure (`❌ Falha ao reiniciar`); with the internet down, it fails
+  too, and the `🔄 Reconectado` says how long the bot went without being able to connect and how
+  many attempts failed.
+- While it keeps trying, the heartbeat keeps beating, with the state
+  `reconectando (N falhas seguidas)`: restarting the container wouldn't bring the internet back.
+- If the page opens but the connection doesn't finish within 3 minutes (the network dropped midway),
+  the bot restarts the client. While waiting for someone to scan the QR Code, it doesn't.
 
 ```bash
 docker ps                                          # STATUS: Up 2 hours (healthy)
@@ -69,9 +70,9 @@ docker inspect --format '{{json .State.Health}}' zapbot
 docker exec zapbot cat /tmp/zapbot-heartbeat.json
 ```
 
-O Docker (fora do Swarm) **só marca** o container como `unhealthy`: não reinicia. Para reiniciar
-automaticamente, rode o [autoheal](https://github.com/willfarrell/docker-autoheal) ao lado do bot e
-adicione ao serviço `zapbot` o label `autoheal=true`:
+Docker (outside Swarm) **only marks** the container as `unhealthy`: it doesn't restart it. To
+restart automatically, run [autoheal](https://github.com/willfarrell/docker-autoheal) next to the
+bot and add the label `autoheal=true` to the `zapbot` service:
 
 ```yaml
   autoheal:
@@ -83,27 +84,27 @@ adicione ao serviço `zapbot` o label `autoheal=true`:
       - /var/run/docker.sock:/var/run/docker.sock
 ```
 
-## Solução de problemas
+## Troubleshooting
 
-| Sintoma | Causa provável / solução |
+| Symptom | Likely cause / fix |
 |---|---|
-| `env file .../config/.env not found` | Crie o arquivo a partir do exemplo: `cp config/.env.example config/.env`. |
-| QR não aparece nos logs | `QRCODE_EMAIL_ENABLE` está `"true"`: o QR vai por e-mail e só cai nos logs se o envio falhar (`QRCODE_EMAIL_FALLBACK_TERMINAL`, padrão `"true"`). Veja o e-mail ou mude para `"false"`. |
-| `Erro ao enviar QR por email` | Host/porta/usuário/senha SMTP errados. Use porta 465 e senha de app. Com `QRCODE_EMAIL_FALLBACK_TERMINAL="true"` (padrão), o QR sai nos logs do mesmo jeito. |
-| `Too many bad auth attempts` (`535 5.7.0`, `EAUTH`) ou `SMTP em pausa` | O provedor bloqueou o login por tentativas erradas (senha de app errada ou revogada). O bot para de tentar por 30 minutos para não piorar. Confira a senha, espere o bloqueio passar e teste com `/bot -test`. Veja [Pausa depois de falha de login](emails.md#pausa-depois-de-falha-de-login). |
-| `Erro ao enviar QR por email: ... self-signed certificate` / `unable to verify` | O certificado do SMTP não é válido. Use o host oficial do provedor (o nome precisa bater com o certificado). |
-| E-mail do QR chega no spam | `QRCODE_EMAIL_SMTP_FROM` diferente da conta SMTP. |
-| Não chegam os alertas por e-mail | Confira `QRCODE_EMAIL_SMTP_HOST`, `_USER` e `_TO` (sem eles nada é enviado) e o setting `email.alerts` (`/set email.alerts`). Falhas do SMTP aparecem no log como `Alerta por e-mail '...' falhou`. |
-| Um comando não responde | Veja nos logs se aparece `executed unknown command`: o nome está errado ou o comando está desativado (`commands.disabled`, ou `"disabled": true` no `comandos.js`). Dos outros, só aparece com o [`/debug`](comandos/debug.md) ligado. |
-| `docker ps` mostra `(unhealthy)` | O bot parou de gravar o heartbeat. Veja o motivo com `docker inspect --format '{{json .State.Health}}' zapbot` e os logs; reinicie com `docker compose -f docker/docker-compose.yml restart zapbot`. Veja [Saúde do container](#saúde-do-container-heartbeat). |
-| `make test`: `No such built-in module: node:sqlite` | Node antigo: os testes precisam do Node 22.13+. |
-| `Motivo 'LOGOUT' exige ação manual` | Sessão desconectada pelo celular. Reinicie o container para gerar novo QR. |
-| `Motivo 'CONFLICT' ...` | O WhatsApp Web foi aberto em outro lugar com a mesma sessão, ou há dois containers rodando. |
-| `browser is already running` | Lock antigo do Chromium; o entrypoint limpa no boot e, num reinício, o bot mata o Chromium órfão sozinho (`Matando o Chromium órfão`). Persistindo, reinicie o container. |
-| Nenhum comando responde a outra pessoa | O `bot.users` vem `false`: só você usa comandos até `/bot +u <pessoa\|grupo>` (alguns, veja [Usuários](comandos/bot.md#usuários)) ou `/set bot.users true` (todos). Os comandos `owner` e `admin` continuam só seus, a não ser para quem estiver no `bot.admins` (`/bot +a <pessoa>`, veja [Admins extras](comandos/bot.md#admins-extras)). Veja [Permissões](comandos/index.md#permissões-role). |
-| Liberei o `/gpt` (ou outro `admin`) e a pessoa ou o grupo não consegue usar | O `admin` só entra numa lista "Apenas": `/bot +u +cmd /gpt` (no grupo) ou `/bot +u +cmd /gpt /Grupo/`. Quem já usa todos os comuns não ganha um `admin` com o `+cmd`; liste os comandos dele (`+cmd /cotacao,/gpt`). Um `owner` (`/set`, `/bot`...) não se delega. Veja [Delegando](comandos/index.md#delegando-um-comando-admin). |
-| `/get` falha em algum site | O site mudou; refaça o build (`--no-cache`) para pegar o yt-dlp mais recente. A versão em uso aparece no `/bot -info`. |
+| `env file .../config/.env not found` | Create the file from the example: `cp config/.env.example config/.env`. |
+| QR doesn't show up in the logs | `QRCODE_EMAIL_ENABLE` is `"true"`: the QR goes by email and only lands in the logs if sending fails (`QRCODE_EMAIL_FALLBACK_TERMINAL`, default `"true"`). Check your email or set it to `"false"`. |
+| `Erro ao enviar QR por email` | Wrong SMTP host/port/user/password. Use port 465 and an app password. With `QRCODE_EMAIL_FALLBACK_TERMINAL="true"` (default), the QR shows up in the logs anyway. |
+| `Too many bad auth attempts` (`535 5.7.0`, `EAUTH`) or `SMTP em pausa` | The provider blocked the login because of wrong attempts (wrong or revoked app password). The bot stops trying for 30 minutes so it doesn't make things worse. Check the password, wait for the block to pass and test with `/bot -test`. See [Pause after a login failure](emails.md#pause-after-a-login-failure). |
+| `Erro ao enviar QR por email: ... self-signed certificate` / `unable to verify` | The SMTP certificate isn't valid. Use the provider's official host (the name has to match the certificate). |
+| QR email lands in spam | `QRCODE_EMAIL_SMTP_FROM` is different from the SMTP account. |
+| Email alerts don't arrive | Check `QRCODE_EMAIL_SMTP_HOST`, `_USER` and `_TO` (nothing is sent without them) and the `email.alerts` setting (`/set email.alerts`). SMTP failures show up in the log as `Alerta por e-mail '...' falhou`. |
+| A command doesn't respond | Check the logs for `executed unknown command`: the name is wrong or the command is disabled (`commands.disabled`, or `"disabled": true` in `comandos.js`). For the others, it only shows up with [`/debug`](comandos/debug.md) on. |
+| `docker ps` shows `(unhealthy)` | The bot stopped writing the heartbeat. Find out why with `docker inspect --format '{{json .State.Health}}' zapbot` and the logs; restart with `docker compose -f docker/docker-compose.yml restart zapbot`. See [Container health](#container-health-heartbeat). |
+| `make test`: `No such built-in module: node:sqlite` | Old Node: the tests need Node 22.13+. |
+| `Motivo 'LOGOUT' exige ação manual` | Session disconnected from the phone. Restart the container to generate a new QR. |
+| `Motivo 'CONFLICT' ...` | WhatsApp Web was opened somewhere else with the same session, or there are two containers running. |
+| `browser is already running` | Stale Chromium lock; the entrypoint cleans it up on boot and, on a restart, the bot kills the orphan Chromium on its own (`Matando o Chromium órfão`). If it persists, restart the container. |
+| No command responds to anyone else | `bot.users` is `false`: only you can use commands until `/bot +u <person\|group>` (some of them, see [Users](comandos/bot.md#users)) or `/set bot.users true` (everyone). The `owner` and `admin` commands stay yours only, unless the person is in `bot.admins` (`/bot +a <person>`, see [Extra admins](comandos/bot.md#extra-admins)). See [Permissions](comandos/index.md#permissions-role). |
+| I enabled `/gpt` (or another `admin` command) and the person or group can't use it | An `admin` command only goes into an "Only" list: `/bot +u +cmd /gpt` (in the group) or `/bot +u +cmd /gpt /Grupo/`. Whoever already uses all the regular commands doesn't get an `admin` one with `+cmd`; list its commands (`+cmd /rates,/gpt`). An `owner` command (`/set`, `/bot`...) can't be delegated. See [Delegating](comandos/index.md#delegating-an-admin-command). |
+| `/get` fails on some site | The site changed; rebuild (`--no-cache`) to get the latest yt-dlp. The version in use shows up in `/bot -info`. |
 
 ---
 
-Feito por **Jorge Pereira**. Contribuições são bem-vindas via issues e pull requests.
+Made by **Jorge Pereira**. Contributions are welcome via issues and pull requests.

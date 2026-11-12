@@ -1,5 +1,5 @@
 /*
- * Opções iguais em mais de um comando (o /cotacao e o /crypto, o /get e o /sticker): a descrição
+ * Opções iguais em mais de um comando (o /rates e o /crypto, o /get e o /sticker): a descrição
  * fica num lugar só.
  */
 
@@ -37,7 +37,7 @@ const OPCAO_VERBOSE_FFMPEG = {
     desc: 'Mostra os comandos usados no yt-dlp e no ffmpeg.'
 };
 
-// -status|-s do /gpt, do /tldr e do /desenhe: o consumo da chamada no rodapé (veja src/openaiChat.js)
+// -status|-s do /gpt, do /tldr e do /draw: o consumo da chamada no rodapé (veja src/openaiChat.js)
 const opcaoStatus = (exemplo) => ({
     opts: ['status', 's'],
     values: [],

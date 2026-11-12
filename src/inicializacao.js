@@ -255,7 +255,7 @@ async function inicializarBanco() {
     await dbRun("DELETE FROM stats WHERE sender_id = 'UNKNOWN'");
 
     /*
-     * Alertas de preço do /cotacao -alerta e do /crypto -alerta (disparam uma
+     * Alertas de preço do /rates -alerta e do /crypto -alerta (disparam uma
      * vez e saem). dest_*: o chat do aviso (-to); dest_email: os e-mails (-to email);
      * vazio = o seu privado. Com vários -to, recipients tem todos (e as dest_*, o primeiro).
      */
@@ -312,7 +312,7 @@ async function inicializarBanco() {
     });
 
     /*
-     * Enquetes da sua conta (as do /enquete e as que chegam com os votos) e os
+     * Enquetes da sua conta (as do /poll e as que chegam com os votos) e os
      * votos, um por pessoa: o 'vote_update' traz a escolha atual de quem votou.
      */
     await dbRun(`

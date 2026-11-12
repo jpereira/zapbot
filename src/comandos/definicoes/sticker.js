@@ -8,7 +8,7 @@ const { OPCAO_VERBOSE_FFMPEG } = require('./_opcoes');
 module.exports = {
     cmd: '/sticker',
     usage: '/sticker [OPÇÃO]... [url]  (ou respondendo uma imagem, vídeo ou link)  ou  /sticker -txt <texto> [-bg <cor>] [-fg <cor>]',
-    aliases: [],
+    aliases: ['/figurinha'],
     summary: 'Cria uma figurinha',
     help: 'Cria uma figurinha: é o /get -sticker. Da URL ou do link respondido, baixa o vídeo; sem vídeo, usa a prévia do link. De um vídeo, até 6 s com recorte quadrado no meio, no trecho do -ss e do -es. De uma imagem, o recorte quadrado no meio. O -pos muda o recorte para o topo ou para baixo. Com -txt, uma figurinha animada com o texto, piscando entre as cores do -fg e do -bg.',
     cmd_opts: [

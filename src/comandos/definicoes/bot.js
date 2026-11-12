@@ -40,9 +40,9 @@ module.exports = {
             values: ['<comandos>'],
             desc: 'Os comandos de um usuário (vírgula entre eles). Com o +u, define: +u +cmd /a,/b, só esses; +u -cmd /a, todos menos esse. Sozinho, +cmd libera e -cmd tira (quem não é usuário entra só com eles); +cmd all libera todos de novo. Na lista, embaixo da pessoa: → Apenas: ... O /help e o /whois sempre passam. Só o dono.',
             ex: [
-                '/bot +cmd /cotacao,/crypto +u /Sofia Izabel/',
+                '/bot +cmd /rates,/crypto +u /Sofia Izabel/',
                 '/bot -cmd /meme /Fulano/',
-                '/bot +u +cmd /cotacao'
+                '/bot +u +cmd /rates'
             ],
             cron: false
         },

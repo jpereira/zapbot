@@ -1,52 +1,53 @@
-# Gravar a demonstração
+# Recording the demo
 
-Roteiro para gravar o bot funcionando de verdade, com comandos reais, em cenas curtas. Cada cena
-tem as mensagens prontas para colar no chat do bot. Os GIFs prontos estão na
-[Demonstração](demonstracao.md).
+Script for recording the bot working for real, with real commands, in short scenes. Each scene has
+the messages ready to paste into the bot's chat. The finished GIFs are in the
+[Demo](demonstracao.md).
 
-## Antes de gravar
+## Before recording
 
-- Use um chat só para a gravação (o seu privado com o bot ou um grupo de teste) e feche as outras
-  conversas da lateral do WhatsApp.
-- Os comandos são do dono: grave na sua conta (veja o [`/whois`](comandos/whois.md)).
-- O `-mask` esconde telefones no `/block`, `/bot`, `/profile`, `/search`, `/show` e `/watch`, e as
-  carteiras no `/defi`. Use sempre que o comando aceitar.
-- **Sem `-mask`:** `/monitor`, `/join -l`, `/leave -l` e `/stats` mostram nomes de contatos e
-  grupos. Grave num chat de teste e borre ou corte essas cenas se houver dado seu.
-- Troque os links, nomes e números dos exemplos pelos seus (ou por dados de teste).
-- Aumente a fonte da janela do WhatsApp (`Cmd +`) para a legenda ficar legível no GIF.
+- Use a chat just for the recording (your private chat with the bot or a test group) and close the
+  other conversations in the WhatsApp sidebar.
+- The commands are owner commands: record on your own account (see [`/whois`](comandos/whois.md)).
+- `-mask` hides phone numbers in `/block`, `/bot`, `/profile`, `/search`, `/show` and `/watch`, and
+  wallets in `/defi`. Always use it when the command accepts it.
+- **Without `-mask`:** `/monitor`, `/join -l`, `/leave -l` and `/stats` show contact and group names.
+  Record in a test chat and blur or cut those scenes if they contain your data.
+- Replace the links, names and numbers in the examples with your own (or with test data).
+- Increase the font size of the WhatsApp window (`Cmd +`) so the caption is readable in the GIF.
 
-## Gravando
+## Recording
 
-Grave só a área da janela do WhatsApp. O app não expõe o ID da janela ao AppleScript, então pegue
-a posição e o tamanho pelo System Events (o macOS pode pedir permissão de Acessibilidade ao
-terminal) e passe ao `screencapture -R`:
+Record only the WhatsApp window area. The app doesn't expose the window ID to AppleScript, so get the
+position and size through System Events (macOS may ask the terminal for Accessibility permission) and
+pass them to `screencapture -R`:
 
 ```bash
 osascript -e 'tell application "System Events" to tell process "WhatsApp" to get {position, size} of window 1'
-# 421, 34, 1307, 1083  →  x, y, largura, altura
-screencapture -v -R421,34,1307,1083 cena-01.mov   # Ctrl+C encerra
+# 421, 34, 1307, 1083  →  x, y, width, height
+screencapture -v -R421,34,1307,1083 cena-01.mov   # Ctrl+C stops
 ```
 
-Para pegar só a conversa, some a largura da lista de contatos ao `x` e tire o mesmo valor da
-largura. Para converter em GIF (ou MP4 leve), use o
+To get only the conversation, add the width of the contact list to `x` and subtract the same value
+from the width. To convert to a GIF (or a light MP4), use
 [`scripts/gif.sh`](https://github.com/jpereira/zapbot/blob/main/scripts/gif.sh):
 
 ```bash
-scripts/gif.sh cena-01.mov            # gera cena-01.gif (720 px de largura, 12 fps)
-scripts/gif.sh cena-01.mov 560 10     # largura e fps
-scripts/gif.sh cena-01.mov 560 10 33  # corta 33% da esquerda (a lista de contatos)
+scripts/gif.sh cena-01.mov            # generates cena-01.gif (720 px wide, 12 fps)
+scripts/gif.sh cena-01.mov 560 10     # width and fps
+scripts/gif.sh cena-01.mov 560 10 33  # crops 33% from the left (the contact list)
 ```
 
-O 4º argumento corta a faixa da esquerda para ficar só a conversa com o bot. Ajuste a porcentagem
-até a lista sumir (a largura dela varia com o tamanho da janela) e confira o GIF antes de
-publicar. O mais seguro é nem gravar a lista: use `-R` só na área da conversa.
+The 4th argument crops the strip on the left so only the conversation with the bot remains. Adjust
+the percentage until the list is gone (its width varies with the window size) and check the GIF
+before publishing. The safest is not to record the list at all: use `-R` on the conversation area
+only.
 
-Dica: uma cena por arquivo. Espere a resposta chegar antes de mandar o próximo comando.
+Tip: one scene per file. Wait for the reply to arrive before sending the next command.
 
-## Sequência
+## Sequence
 
-### 1. Aquecimento
+### 1. Warm-up
 
 ```text
 /ping
@@ -55,9 +56,9 @@ Dica: uma cena por arquivo. Espere a resposta chegar antes de mandar o próximo 
 /help get
 ```
 
-### 2. Recuperar o que foi apagado: `/show`
+### 2. Recovering what was deleted: `/show`
 
-Peça para alguém (ou para outra conta sua) mandar uma mensagem e apagar, depois:
+Ask someone (or another account of yours) to send a message and delete it, then:
 
 ```text
 /show -mask
@@ -66,7 +67,7 @@ Peça para alguém (ou para outra conta sua) mandar uma mensagem e apagar, depoi
 /show -s -mask
 ```
 
-### 3. Quem está online: `/monitor`
+### 3. Who's online: `/monitor`
 
 ```text
 /monitor
@@ -74,9 +75,9 @@ Peça para alguém (ou para outra conta sua) mandar uma mensagem e apagar, depoi
 /monitor
 ```
 
-Sem `-mask`: use um contato de teste.
+Without `-mask`: use a test contact.
 
-### 4. Entrar e sair de grupos: `/join` e `/leave`
+### 4. Joining and leaving groups: `/join` and `/leave`
 
 ```text
 /join -info https://chat.whatsapp.com/<codigo-de-um-grupo-de-teste>
@@ -86,23 +87,23 @@ Sem `-mask`: use um contato de teste.
 /leave 1
 ```
 
-Sem `-mask`: o `-l` lista os seus grupos. Faça a cena com poucos grupos, só os de teste.
+Without `-mask`: `-l` lists your groups. Do the scene with few groups, only the test ones.
 
-### 5. Figurinhas: `/sticker`
+### 5. Stickers: `/sticker`
 
 ```text
 /sticker -txt "Bom dia!"
 /sticker -txt "Partiu praia?" -bg "#2980B9" -fg "#FFFFFF"
 ```
 
-Depois, responda uma foto sua com:
+Then, reply to a photo of yours with:
 
 ```text
 /sticker
 /sticker -pos topo
 ```
 
-### 6. Baixar vídeos: `/get`
+### 6. Downloading videos: `/get`
 
 ```text
 /get https://www.instagram.com/reel/<codigo>/
@@ -110,7 +111,7 @@ Depois, responda uma foto sua com:
 /get -sticker -ss 3 -es 6 https://youtu.be/<id>
 ```
 
-### 7. Cotações: `/crypto`
+### 7. Quotes: `/crypto`
 
 ```text
 /crypto
@@ -120,7 +121,7 @@ Depois, responda uma foto sua com:
 
 ### 8. DeFi: `/defi`
 
-Sempre com `-mask` (esconde saldos e carteiras):
+Always with `-mask` (hides balances and wallets):
 
 ```text
 /defi -mask
@@ -128,7 +129,7 @@ Sempre com `-mask` (esconde saldos e carteiras):
 /defi -taxas -alerta -mask
 ```
 
-### 9. Agendar mensagens: `/cron`
+### 9. Scheduling messages: `/cron`
 
 ```text
 /cron 1m Oi do futuro!
@@ -137,9 +138,9 @@ Sempre com `-mask` (esconde saldos e carteiras):
 /cron
 ```
 
-Veja as opções (`-to`, `-repetir`, remover) no [`/cron`](comandos/cron.md).
+See the options (`-to`, `-repetir`, removing) in [`/cron`](comandos/cron.md).
 
-### 10. Vigiar mensagens: `/watch`
+### 10. Watching messages: `/watch`
 
 ```text
 /watch /pix/i -in /Fulano/ -mask
@@ -147,9 +148,9 @@ Veja as opções (`-to`, `-repetir`, remover) no [`/cron`](comandos/cron.md).
 /watch -10 -mask
 ```
 
-Mande um "pix" da outra conta e mostre o aviso chegando no privado.
+Send a "pix" from the other account and show the alert arriving in your private chat.
 
-### 11. Estatísticas: `/stats`
+### 11. Statistics: `/stats`
 
 ```text
 /stats
@@ -158,11 +159,11 @@ Mande um "pix" da outra conta e mostre o aviso chegando no privado.
 /stats -l
 ```
 
-Sem `-mask`: numa gravação pública, escolha um grupo de teste.
+Without `-mask`: in a public recording, pick a test group.
 
-### 12. Fechando: `/batch` e `/alias`
+### 12. Wrapping up: `/batch` and `/alias`
 
-Um atalho que roda vários comandos de uma vez:
+A shortcut that runs several commands at once:
 
 ```text
 /alias demo -desc "Mostra o bot em ação" /ping
@@ -171,12 +172,14 @@ Um atalho que roda vários comandos de uma vez:
 /crypto btc
 ```
 
-## Refazendo os GIFs
+## Redoing the GIFs
 
-Os GIFs ficam em `docs/assets/demo/`. Os `.mov` não vão para o git (estão no `.gitignore`). Para gerar de novo, a partir da gravação:
+The GIFs live in `docs/assets/demo/`. The `.mov` files don't go to git (they're in `.gitignore`). To
+generate them again from the recording:
 
 ```bash
 scripts/gif.sh docs/assets/demo/05-sticker.mov 900 15
 ```
 
-Os GIFs de hoje usam `900 15`. Para um arquivo menor, baixe a largura ou o fps (o `/get`, o maior, é o que mais pesa).
+Today's GIFs use `900 15`. For a smaller file, lower the width or the fps (`/get`, the biggest one,
+is the heaviest).

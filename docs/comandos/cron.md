@@ -1,28 +1,27 @@
 # `/cron` (`/agenda`, `/lembrete`) · admin
 
-Faz algo na hora marcada. Tem dois modos, na mesma agenda:
+Does something at the scheduled time. It has two modes, in the same schedule:
 
-- **Mensagem** (`/cron`, `/agenda`): envia o texto como se você digitasse, no chat atual ou, com
-  `-to`, num contato, num grupo ou num número. Serve para aniversários, avisos e mensagens
-  recorrentes.
-- **Lembrete** (`/lembrete`, ou qualquer um com `-lembrete`/ `-lem`): envia `⏰ Lembrete` e o texto,
-  respondendo a mensagem do comando, no chat atual (ou no seu privado, com `-pv`). Respondendo
-  (reply) uma mensagem, o lembrete cita essa mensagem, e o texto dela vira o lembrete se você não
-  escrever outro.
+- **Message** (`/cron`, `/agenda`): sends the text as if you typed it, in the current chat or, with
+  `-to`, to a contact, a group or a number. Good for birthdays, notices and recurring messages.
+- **Reminder** (`/lembrete`, or any of them with `-lembrete`/ `-lem`): sends `⏰ Lembrete` and the
+  text, replying to the command message, in the current chat (or in your private chat, with `-pv`).
+  When you reply to a message, the reminder quotes that message, and its text becomes the reminder
+  if you don't write another one.
 
-| Opção | Valor | Descrição |
+| Option | Value | Description |
 |---|---|---|
-| `<quando>` | | Quando: `6h`, `às 18h`, `+2h`, `30m`, `amanhã 9h`, `sexta 18h`, `25/12 10:00`... Veja [Quando](#quando) |
-| `-to` | `<destino>` | Modo mensagem: envia num contato (`/Jorge Pereira/`), numa menção (`@Fulano Da Silva`), num grupo (`/Grupo L200/`) ou num número (`+5521999999999`) em vez do chat atual. Repita para vários: um item só, que sai em todos os destinos. Nomes exatos têm prioridade; vários resultados: você escolhe na lista. E-mail não vale: a mensagem sai no WhatsApp. Veja [Destinos](index.md#destinos-contato-grupo-número-ou-e-mail) |
-| `-lembrete`, `-lem` | | Modo lembrete (o mesmo de chamar como `/lembrete`) |
-| `-pv` | | Modo lembrete: lembra no seu privado em vez do chat atual |
-| `-repetir`, `-r` | `<diario\|semanal\|mensal>` | Repete no mesmo horário: todo dia, toda semana ou todo mês |
-| `-list`, `-l` | | Lista os lembretes e as mensagens, com o texto inteiro (o mesmo que o comando sem nada) |
-| `-edit` | `<nº>` | Edita o item nº N: troca a hora, o texto e/ou o `-repetir`. Veja [Editar, pausar e retomar](#editar-pausar-e-retomar) |
-| `-pause` | `<nº...\|all>` | Pausa o item nº N, vários (`-pause 1 3` ou `1,3`) ou todos: fica na lista, mas não sai. Se algum nº não existe, nenhum é pausado |
-| `-resume` | `<nº...\|all>` | Retoma itens pausados: um, vários ou todos |
-| `-rm` | `<nº...\|all>` | Remove o item nº N da lista, vários de uma vez (`-rm 1 3 5` ou `-rm 1,3,5`) ou todos. Se algum nº não existe, nenhum sai |
-| `-test` | `<nº>` | Monta o item nº N agora, rodando os `{/comando}` do texto, e mostra aqui como ele sairia. Veja [Comandos no texto](#comandos-no-texto) |
+| `<quando>` | | When: `6h`, `às 18h`, `+2h`, `30m`, `amanhã 9h`, `sexta 18h`, `25/12 10:00`... See [When](#when) |
+| `-to` | `<destino>` | Message mode: sends to a contact (`/Jorge Pereira/`), a mention (`@Fulano Da Silva`), a group (`/Grupo L200/`) or a number (`+5521999999999`) instead of the current chat. Repeat it for several: a single item, which goes out to all destinations. Exact names take priority; several results: you pick from the list. Email doesn't work: the message goes out on WhatsApp. See [Destinations](index.md#destinations-contact-group-number-or-email) |
+| `-lembrete`, `-lem` | | Reminder mode (the same as calling it as `/lembrete`) |
+| `-pv` | | Reminder mode: reminds you in your private chat instead of the current chat |
+| `-repetir`, `-r` | `<diario\|semanal\|mensal>` | Repeats at the same time: every day, every week or every month |
+| `-list`, `-l` | | Lists the reminders and messages, with the full text (the same as the command with nothing) |
+| `-edit` | `<nº>` | Edits item #N: changes the time, the text and/or the `-repetir`. See [Edit, pause and resume](#edit-pause-and-resume) |
+| `-pause` | `<nº...\|all>` | Pauses item #N, several (`-pause 1 3` or `1,3`) or all: they stay in the list but don't go out. If any number doesn't exist, none is paused |
+| `-resume` | `<nº...\|all>` | Resumes paused items: one, several or all |
+| `-rm` | `<nº...\|all>` | Removes item #N from the list, several at once (`-rm 1 3 5` or `-rm 1,3,5`) or all. If any number doesn't exist, none is removed |
+| `-test` | `<nº>` | Builds item #N now, running the `{/comando}` in the text, and shows here how it would go out. See [Commands in the text](#commands-in-the-text) |
 
 ![Demonstração do /cron](../assets/demo/09-cron.gif)
 
@@ -32,21 +31,21 @@ Faz algo na hora marcada. Tem dois modos, na mesma agenda:
 /cron seg 8h -repetir semanal -to trabalho Bom dia! Pauta da semana no drive.
 /agenda 05/11 9h -repetir mensal -to +5521999999999 Lembrete: aluguel vence hoje.
 /cron amanhã 8h -to /Jorge Pereira/ Bom dia! Não esquece a reunião.
-/cron 18h -to @Fulano Da Silva Já saiu do trabalho?   (num grupo, mencionando)
+/cron 18h -to @Fulano Da Silva Já saiu do trabalho?   (in a group, mentioning)
 /cron 20/10 -to /Família/ Parabéns, vó! 🎂
-/cron 8h -r diario -to /Família/ -to /Trabalho/ Bom dia!   (um item, nos dois grupos)
+/cron 8h -r diario -to /Família/ -to /Trabalho/ Bom dia!   (one item, in both groups)
 /lembrete 30m tirar o bolo do forno
 /lembrete às 18h pagar o boleto
 /lembrete -pv amanhã 9h ligar pro banco
 /cron -lem sexta 18h -r semanal enviar o relatório
-/lembrete +2h                   (respondendo uma mensagem: lembra dela daqui a 2 horas)
-/cron 6h -r diario -to /Grupo L200/ Bom dia!   (todo dia às 06:00)
+/lembrete +2h                   (replying to a message: reminds you of it in 2 hours)
+/cron 6h -r diario -to /Grupo L200/ Bom dia!   (every day at 06:00)
 /cron 9h -r diario -to /ZapBot/ O preço do Bitcoin agora: {/crypto BTC}
-/cron                           → a lista
-/cron -edit 2 18:30             → o nº 2 passa para 18:30
-/cron -pause 3                  → segura o nº 3 (e /cron -resume 3 solta)
-/cron -rm 2                     → remove o nº 2
-/cron -rm 1 3 5                 → remove o 1, o 3 e o 5 (os números da lista de antes)
+/cron                           → the list
+/cron -edit 2 18:30             → #2 moves to 18:30
+/cron -pause 3                  → holds #3 (and /cron -resume 3 releases it)
+/cron -rm 2                     → removes #2
+/cron -rm 1 3 5                 → removes 1, 3 and 5 (the numbers from the previous list)
 ```
 
 ```text
@@ -57,7 +56,7 @@ Faz algo na hora marcada. Tem dois modos, na mesma agenda:
 📝 enviar o relatório
 ```
 
-Na hora, a mensagem sai como você a escreveu; o lembrete sai assim:
+At the scheduled time, the message goes out as you wrote it; the reminder goes out like this:
 
 ```text
 ⏰ Lembrete
@@ -65,9 +64,9 @@ Na hora, a mensagem sai como você a escreveu; o lembrete sai assim:
 enviar o relatório
 ```
 
-A lista mostra os dois tipos juntos, na ordem em que vão sair (📅 mensagem, ⏰ lembrete), com o texto
-inteiro, como foi cadastrado (os `{/comando}` também), e os números são os do `-edit`, do `-pause`/
-`-resume` e do `-rm`. Um item com vários `-to` mostra um destino por linha:
+The list shows both types together, in the order they'll go out (📅 message, ⏰ reminder), with the
+full text, as it was registered (the `{/comando}` too), and the numbers are the ones used by `-edit`,
+`-pause`/`-resume` and `-rm`. An item with several `-to` shows one destination per line:
 
 ```text
 /cron -l
@@ -83,48 +82,50 @@ inteiro, como foi cadastrado (os `{/comando}` também), e os números são os do
    → 👤 Fulano
 ```
 
-## Editar, pausar e retomar
+## Edit, pause and resume
 
-O `-edit <nº>` troca o que vier depois dele, com a mesma leitura de um item novo: um "quando" muda a
-hora, o `-repetir` (`-r`) muda a repetição (`-r nao` tira) e o resto vira o texto novo. O destino e
-o modo (mensagem ou lembrete) não mudam: para isso, remova (`-rm`) e crie de novo.
+`-edit <nº>` changes whatever comes after it, read the same way as a new item: a "when" changes the
+time, `-repetir` (`-r`) changes the repetition (`-r nao` removes it) and the rest becomes the new
+text. The destination and the mode (message or reminder) don't change: to do that, remove (`-rm`)
+and create it again.
 
 ```text
-/cron -edit 2 18:30                       → só a hora
-/cron -edit 2 Bom dia, pessoal!           → só o texto
-/cron -edit 2 sexta 9h -r semanal Pauta   → hora, repetição e texto
-/cron -edit 2 -r nao                      → deixa de repetir
+/cron -edit 2 18:30                       → just the time
+/cron -edit 2 Bom dia, pessoal!           → just the text
+/cron -edit 2 sexta 9h -r semanal Pauta   → time, repetition and text
+/cron -edit 2 -r nao                      → stops repeating
 ```
 
-O `-pause <nº...|all>` segura o item (ou vários: `-pause 1 3`): ele continua na lista (com ⏸️), mas
-não sai. O `-resume <nº...|all>` solta. Um item repetido que venceu enquanto estava pausado pula
-para o próximo horário; um item único que já passou sai na hora (a resposta avisa).
+`-pause <nº...|all>` holds the item (or several: `-pause 1 3`): it stays in the list (with ⏸️) but
+doesn't go out. `-resume <nº...|all>` releases it. A repeating item that came due while it was
+paused skips to the next time; a one-time item that has already passed goes out right away (the
+reply tells you).
 
-## Comandos no texto
+## Commands in the text
 
-Um `{/comando args}` no texto roda **na hora do envio**, e a resposta dele entra no lugar. Vale nos
-dois modos, em qualquer ponto do texto e mais de uma vez:
+A `{/comando args}` in the text runs **at send time**, and its reply takes its place. It works in
+both modes, anywhere in the text and more than once:
 
 ```text
 /cron 09:24 -to /ZapBot/ O preço do Bitcoin agora: {/crypto BTC}
-/cron 8h -r diario -to /Família/ Bom dia! {/tempo Rio de Janeiro}
-/cron seg 9h -r semanal Dólar: {/cotacao USD} · BTC: {/crypto BTC}
+/cron 8h -r diario -to /Família/ Bom dia! {/weather Rio de Janeiro}
+/cron seg 9h -r semanal Dólar: {/rates USD} · BTC: {/crypto BTC}
 /lembrete sexta 18h -r semanal {/stats -7}
-/cron 12h -to /Grupo L200/ {/meme}       (só mídia: sai a imagem, sem texto)
+/cron 12h -to /Grupo L200/ {/meme}       (media only: the image goes out, no text)
 ```
 
-Vários comandos e vários destinos no mesmo item (um item só; na hora, ele sai em cada destino, com
-os comandos rodando para cada chat):
+Several commands and several destinations in the same item (a single item; at send time, it goes
+out to each destination, with the commands running for each chat):
 
 ```text
-/cron 06:00 -r diario -to /Krishina Da Silva/ -to /Grupo da Faculdade/ ⏰ Status da DeFi! {/defi} Preço do BTC! {/crypto BTC} Preço do Dólar! {/cotacao USD}
-/cron 07:30 -r diario -to /Família/ Bom dia! ☀️ {/tempo Recife} Cripto: {/crypto BTC ETH} Câmbio: {/cotacao USD EUR}
+/cron 06:00 -r diario -to /Krishina Da Silva/ -to /Grupo da Faculdade/ ⏰ Status da DeFi! {/defi} Preço do BTC! {/crypto BTC} Preço do Dólar! {/rates USD}
+/cron 07:30 -r diario -to /Família/ Bom dia! ☀️ {/weather Recife} Cripto: {/crypto BTC ETH} Câmbio: {/rates USD EUR}
 /cron seg 08:00 -r semanal -to /Trabalho/ -to @Fulano Da Silva Resumo da semana: {/news -hack 5} CVEs: {/cve -high 3}
 /lembrete -pv 23:00 -r diario Fechamento do dia: {/crypto} {/defi}
 ```
 
-Cada resposta de várias linhas vira um parágrafo, e o texto em volta fica entre elas. O primeiro
-exemplo chega assim, todo dia às 06:00, nos dois chats:
+Each multi-line reply becomes a paragraph, and the surrounding text stays between them. The first
+example arrives like this, every day at 06:00, in both chats:
 
 ```text
 ⏰ Status da DeFi!
@@ -150,47 +151,48 @@ Preço do Dólar!
    ...
 ```
 
-- O comando roda como se você o digitasse no chat de destino, com o resultado daquele momento: num
-  item repetido, cada envio traz um valor novo.
-- A resposta em texto entra no lugar do `{...}`. Uma de várias linhas (o `/crypto`, o `/tempo`...)
-  vira um parágrafo, com uma linha em branco antes e depois, para não colar no texto em volta; uma
-  de uma linha só fica na frase. Um comando que responde mais de uma vez (o `/defi`, uma por
-  posição) tem as respostas separadas por uma linha em branco. Mídias (`/meme`, `/giphy`,
-  `/pixelart`) saem logo depois da mensagem.
-- Só os comandos de consulta rodam aí: `/cotacao`, `/crypto`, `/cve`, `/defi`, `/giphy`, `/joke`,
-  `/kernel`, `/meme`, `/news`, `/pixelart`, `/stats`, `/tempo`, `/uptime` e `/version` (nas
-  definições, os com `cron: true`). As opções que mudam algo também não: o `-add`, o `-del` e
-  o `-alerta` do `/crypto` e do `/cotacao`; o `-address`, o `-wallet`, o `-pool`, o `-nft`, o
-  `-name`, o `-rm`, o `-alerta`, o `-taxas` e o `-to` do `/defi` (rodam os quatro protocolos, o
-  `-l`, o `-mask` e o `aave -full`); e o `-flush` e o `-flush-all` do `/stats`.
-- O `/bot` é a exceção: só o dono cria um item com `{/bot -flush-email true}` (nele, só o `-info` e o
-  `-flush-email` rodam; as outras opções são recusadas). Um admin que não é o dono leva erro ao criar.
-- O comando é conferido ao criar (e no `-edit`): um que não existe ou que não roda no `/cron` dá
-  erro na hora, não no envio.
-- Se o comando falhar na hora do envio, a mensagem sai assim mesmo, com `⚠️ /crypto falhou` no
-  lugar.
-- Fora das chaves, nada roda: um texto que comece com `/` continua sendo só texto.
+- The command runs as if you typed it in the destination chat, with the result from that moment: in
+  a repeating item, each send brings a fresh value.
+- The text reply takes the place of the `{...}`. A multi-line one (`/crypto`, `/weather`...) becomes a
+  paragraph, with a blank line before and after, so it doesn't stick to the surrounding text; a
+  single-line one stays in the sentence. A command that replies more than once (`/defi`, one per
+  position) has its replies separated by a blank line. Media (`/meme`, `/giphy`, `/pixelart`) goes
+  out right after the message.
+- Only lookup commands run there: `/rates`, `/crypto`, `/cve`, `/defi`, `/giphy`, `/joke`,
+  `/kernel`, `/meme`, `/news`, `/pixelart`, `/stats`, `/weather`, `/uptime` and `/version` (in the
+  settings, the ones with `cron: true`). Options that change something don't run either: `-add`,
+  `-del` and `-alerta` of `/crypto` and `/rates`; `-address`, `-wallet`, `-pool`, `-nft`, `-name`,
+  `-rm`, `-alerta`, `-taxas` and `-to` of `/defi` (the four protocols, `-l`, `-mask` and
+  `aave -full` run); and `-flush` and `-flush-all` of `/stats`.
+- `/bot` is the exception: only the owner creates an item with `{/bot -flush-email true}` (in it,
+  only `-info` and `-flush-email` run; the other options are refused). An admin who isn't the owner
+  gets an error on creation.
+- The command is checked on creation (and on `-edit`): one that doesn't exist or doesn't run in
+  `/cron` gives an error right away, not at send time.
+- If the command fails at send time, the message goes out anyway, with `⚠️ /crypto falhou` in its
+  place.
+- Outside the braces, nothing runs: a text that starts with `/` is still just text.
 
-Um [alias de comando](alias.md) também vale dentro do `{...}` (`{/dolar}`, `{/rec 10 20 url}`), com
-os `$1`, `$2` e os valores padrão `${1:-USD}` aplicados como no `/alias`. Alias de **texto** não: ele
-é recusado, para um alias não chamar a si mesmo.
+A [command alias](alias.md) also works inside the `{...}` (`{/dolar}`, `{/rec 10 20 url}`), with the
+`$1`, `$2` and the default values `${1:-USD}` applied as in `/alias`. **Text** aliases don't: they
+are refused, so an alias doesn't call itself.
 
-Para quebrar a linha sem sair do campo de texto, digite `\n`: ele vira uma quebra de linha, e os
-espaços em volta dele são removidos. Vale em qualquer texto do `/cron`, com ou sem comandos, ao
-criar e no `-edit`:
+To break the line without leaving the text field, type `\n`: it becomes a line break, and the spaces
+around it are removed. It works in any `/cron` text, with or without commands, on creation and in
+`-edit`:
 
 ```text
 /cron 8h -r diario Verificando Orca {/defi orca}\n Verificando Prjx {/defi prjx}
-/cron 07:30 -r diario -to /Família/ Bom dia! ☀️\n{/tempo Recife}\nCâmbio: {/cotacao USD}
+/cron 07:30 -r diario -to /Família/ Bom dia! ☀️\n{/weather Recife}\nCâmbio: {/rates USD}
 /lembrete sexta 18h Fechar a semana:\n- relatório\n- backup\n- planilha
 /cron -edit 2 Linha 1\nLinha 2
 ```
 
-Para rodar o mesmo texto na hora que quiser, sem agendar, salve-o como um
-[alias de texto](alias.md#texto-com-comandos): `/alias carteira {/defi orca}\n{/defi prjx}`.
+To run the same text whenever you want, without scheduling it, save it as a
+[text alias](alias.md#text-with-commands): `/alias carteira {/defi orca}\n{/defi prjx}`.
 
-O `-test <nº>` monta o item agora e mostra aqui como ele sairia, sem enviar ao destino nem mudar o
-horário:
+`-test <nº>` builds the item now and shows here how it would go out, without sending it to the
+destination or changing the time:
 
 ```text
 /cron -test 1
@@ -199,31 +201,31 @@ horário:
 O preço do Bitcoin agora: (a resposta do /crypto BTC naquele momento)
 ```
 
-## Quando
+## When
 
-O "quando" vem no começo, junto com as opções (em qualquer ordem); o texto é o resto, como foi
-digitado (com várias linhas, se for o caso). Tudo no horário de Brasília.
+The "when" comes at the beginning, together with the options (in any order); the text is the rest,
+as typed (with several lines, if needed). Everything in Brasília time.
 
-| Forma | Exemplo | Significa |
+| Form | Example | Meaning |
 |---|---|---|
-| Horário | `6h`, `07h`, `18:30`, `18h30`, `às 18h` | Hoje nesse horário; se já passou, amanhã |
-| Duração | `+2h`, `em 2h`, `daqui a 2h`, `30m`, `1d`, `1h30m` | Daqui a tanto tempo. Horas sozinhas são horário (`6h` é 06:00): para "daqui a 6 horas", use `+6h` ou `em 6h` |
-| Hoje / amanhã | `hoje 22h`, `amanhã`, `amanhã 10:00` | Sem hora: 9h |
-| Dia da semana | `sexta`, `seg 8h`, `sábado 10:00` | O próximo (hoje, se a hora ainda não passou). Sem hora: 9h |
-| Data | `25/12`, `25/12 10:00`, `25/12/2027 10h` | Sem ano: a próxima vez que a data chega. Sem hora: 9h |
+| Time | `6h`, `07h`, `18:30`, `18h30`, `às 18h` | Today at that time; if it has passed, tomorrow |
+| Duration | `+2h`, `em 2h`, `daqui a 2h`, `30m`, `1d`, `1h30m` | That long from now. Hours alone are a time of day (`6h` is 06:00): for "6 hours from now", use `+6h` or `em 6h` |
+| Today / tomorrow | `hoje 22h`, `amanhã`, `amanhã 10:00` | No time: 9h |
+| Day of the week | `sexta`, `seg 8h`, `sábado 10:00` | The next one (today, if the time hasn't passed yet). No time: 9h |
+| Date | `25/12`, `25/12 10:00`, `25/12/2027 10h` | No year: the next time the date comes around. No time: 9h |
 
-Até 366 dias à frente. O `-repetir mensal` (ou `-r mensal`) mantém o dia do mês: um item do dia 31
-vai no último dia dos meses mais curtos e volta ao 31 depois.
+Up to 366 days ahead. `-repetir mensal` (or `-r mensal`) keeps the day of the month: an item on the
+31st goes out on the last day of shorter months and goes back to the 31st afterward.
 
-## Detalhes
+## Details
 
-- Tudo fica na tabela `schedules`, sobrevive a reinícios e é verificado a cada 30 s. Se o bot
-  estiver fora do ar na hora, o item vai quando ele voltar (o lembrete avisa:
-  `(atrasado: era para ...)`). Um repetido vai uma vez e segue para o próximo horário.
-- Uma mensagem que comece com `/` é enviada, mas nunca roda como comando (só os `{/comando}` rodam;
-  veja [Comandos no texto](#comandos-no-texto)).
-- O `-to` é só do modo mensagem; o `-pv`, só do lembrete. Com vários `-to`, é um item só, que sai em
-  todos os destinos (e conta 1 no limite); o mesmo destino repetido conta uma vez. Se o envio falhar
-  num destino, os outros recebem assim mesmo. Os `-edit`, `-pause` e `-rm` valem para o item
-  inteiro.
-- O limite é de 50 itens, somando os dois tipos (setting `agenda.max`).
+- Everything is stored in the `schedules` table, survives restarts and is checked every 30 s. If the
+  bot is down at the scheduled time, the item goes out when it comes back (the reminder says so:
+  `(atrasado: era para ...)`). A repeating one goes out once and moves on to the next time.
+- A message that starts with `/` is sent, but never runs as a command (only the `{/comando}` run;
+  see [Commands in the text](#commands-in-the-text)).
+- `-to` is for message mode only; `-pv`, for reminders only. With several `-to`, it's a single item,
+  which goes out to all destinations (and counts as 1 toward the limit); the same destination
+  repeated counts once. If sending fails for one destination, the others receive it anyway. `-edit`,
+  `-pause` and `-rm` apply to the whole item.
+- The limit is 50 items, adding up both types (setting `agenda.max`).

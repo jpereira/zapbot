@@ -1,8 +1,8 @@
 # `/joke` (`/piada`, `/humor`)
 
-Piada em português, no estilo "piada de tiozão", sorteada da lista em
+Joke in Portuguese, "dad joke" style, drawn from the list in
 [`src/comandos/piadas.json`](https://github.com/jpereira/zapbot/blob/main/src/comandos/piadas.json).
-Nenhuma se repete até todas terem saído, e a mesma nunca vem duas vezes seguidas.
+None repeats until all of them have come out, and the same one never comes up twice in a row.
 
 ```text
 /joke
@@ -12,8 +12,8 @@ O que a impressora falou para a outra impressora?
 ```
 
 ```text
-/piada          → o mesmo, pelo alias
+/piada          → the same, through the alias
 ```
 
-Não depende de serviço externo. Para incluir piadas, acrescente
-`{ "pergunta": "...", "resposta": "..." }` no `piadas.json` e refaça o build.
+It doesn't depend on an external service. To add jokes, append
+`{ "pergunta": "...", "resposta": "..." }` to `piadas.json` and rebuild.
