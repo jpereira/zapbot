@@ -107,3 +107,7 @@ adicione ao serviço `zapbot` o label `autoheal=true`:
 ---
 
 Feito por **Jorge Pereira**. Contribuições são bem-vindas via issues e pull requests.
+
+Fique à vontade para postar suas dúvidas ou problemas em qualquer um dos fóruns de discussão abaixo:
+
+[![Join WhatsApp Group](https://img.shields.io/badge/Join-WhatsApp%20Group-blue.svg?logo=WhatsApp)](https://chat.whatsapp.com/LrYlfasTbRx5lBhGdGNj4F?mode=gi_t)

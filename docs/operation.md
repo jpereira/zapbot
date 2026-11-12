@@ -108,3 +108,7 @@ bot and add the label `autoheal=true` to the `zapbot` service:
 ---
 
 Made by **Jorge Pereira**. Contributions are welcome via issues and pull requests.
+
+Feel free to post your queries or concerns on any of the discussion forums mentioned below:
+
+[![Join WhatsApp Group](https://img.shields.io/badge/Join-WhatsApp%20Group-blue.svg?logo=WhatsApp)](https://chat.whatsapp.com/LrYlfasTbRx5lBhGdGNj4F?mode=gi_t)
