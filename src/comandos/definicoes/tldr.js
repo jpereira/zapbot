@@ -27,7 +27,7 @@ module.exports = {
         opcaoStatus('/tldr -s 2h'),
         {
             argv: ['[período]'],
-            desc: '2h ou 30m: as mensagens desse tempo para cá; 300: as últimas 300 (máx. tldr.maxMsgs). Padrão: as últimas 100. Respondendo uma mensagem (sem período nem -c): da mensagem respondida até agora.'
+            desc: 'Um tempo, como no /cron (30m, 2h, 1d, 1h30m, 2d4h): as mensagens desse tempo para cá; um número (300): as últimas 300 (máx. tldr.maxMsgs). Padrão: as últimas 100. Respondendo uma mensagem (sem período nem -c): da mensagem respondida até agora.'
         }
     ],
     estrito: 'primeira',

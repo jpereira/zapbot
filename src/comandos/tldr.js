@@ -14,11 +14,12 @@ const { SEM_CHAVE, chaveOpenAi, erroOpenAi, medirConsumo, perguntarAoChat, rodap
 const { getSetting } = require('../settings');
 const { isCaminhoDeMidia } = require('../util/arquivos');
 const { plural, semAcentos } = require('../util/formatar');
+const { lerDuracao } = require('../util/quando');
 
 /*
  * /tldr: resume a conversa de um chat pelo ChatGPT (mesma chave e modelo do /gpt).
  *   /tldr              → as últimas 100 mensagens deste chat
- *   /tldr 2h | 30m     → as das últimas 2 horas | 30 minutos (o "-" na frente é opcional)
+ *   /tldr 2h | 1d     → as do último tempo, como no /cron: 30m, 2h, 1d, 1h30m (o "-" na frente é opcional)
  *   /tldr 300          → as últimas 300 (máx. setting 'tldr.maxMsgs')
  *   /tldr -c família   → de outro chat, buscado pelo nome
  *   /tldr -pv          → no seu privado em vez de expor no chat atual
@@ -44,16 +45,27 @@ const AUDIO_MAX_BYTES = 25 * 1024 * 1024;
 const AUDIO_EXTENSOES = new Set(['ogg', 'oga', 'opus', 'mpeg', 'mp3', 'mp4', 'm4a', 'wav', 'webm', 'flac']);
 
 /**
- * Período pedido: "2h", "-2h", "30m" (janela de tempo) ou "300", "-300" (quantidade).
+ * Período pedido, com a mesma duração do /cron: "30m", "2h", "1d", "1h30m", "2d4h" (janela de tempo, o "-"
+ * na frente é opcional) ou "300" (quantidade de mensagens).
  * @returns {{ ms?: number, n?: number } | null} null se o texto não é um período
  */
 function lerPeriodo(texto) {
-    const m = String(texto).trim().match(/^-?(\d+)\s*(h|m|min)?$/i);
-    if (!m || Number(m[1]) < 1) return null;
+    const t = String(texto).trim().toLowerCase().replace(/^-/, '').replace(/\s+/g, '');
+    if (/^\d+$/.test(t)) return Number(t) >= 1 ? { n: Number(t) } : null;
 
-    const n = Number(m[1]);
-    if (!m[2]) return { n };
-    return { ms: n * (m[2].toLowerCase() === 'h' ? 3600_000 : 60_000) };
+    const ms = lerDuracao(t);
+    return ms ? { ms } : null;
+}
+
+// "2 horas", "1 dia e 12 horas", "30 minutos"
+function porExtenso(ms) {
+    const minutos = Math.round(ms / 60_000);
+    const partes = [
+        [Math.floor(minutos / 1440), 'dia', 'dias'],
+        [Math.floor((minutos % 1440) / 60), 'hora', 'horas'],
+        [minutos % 60, 'minuto', 'minutos']
+    ].filter(([n]) => n).map(([n, um, varios]) => plural(n, um, varios));
+    return partes.length > 1 ? `${partes.slice(0, -1).join(', ')} e ${partes.at(-1)}` : partes[0];
 }
 
 // Chats com mensagens no banco cujo nome tem todas as palavras da busca
@@ -136,7 +148,7 @@ async function resumir({ msg, opts, chatId, chatName, quotedMsg }) {
     }
 
     if (periodo.ms > MAX_DELETE_WINDOW) {
-        avisos.push('as mensagens comuns ficam só 68 h no banco');
+        avisos.push(`as mensagens comuns ficam só ${porExtenso(MAX_DELETE_WINDOW)} (68 h) no banco`);
         periodo.ms = MAX_DELETE_WINDOW;
     }
 
@@ -205,7 +217,14 @@ async function resumir({ msg, opts, chatId, chatName, quotedMsg }) {
     const primeira = rows[rows.length - linhas.length].timestamp;
     const ultima = rows[rows.length - 1].timestamp;
 
-    const aviso = await msg.reply('⏳ Processando o /tldr, aguarde.', null, { linkPreview: false });
+    // O que está sendo resumido: a quantidade, a janela de tempo ou "desde a mensagem respondida"
+    const mensagens = plural(linhas.length, 'mensagem', 'mensagens');
+    const escopo = desdeAResposta
+        ? `das ${mensagens} de ${nome} desde a mensagem respondida (há ${porExtenso(periodo.ms)})`
+        : periodo.ms
+            ? `das ${mensagens} de ${nome} do período de ${porExtenso(periodo.ms)}`
+            : `das últimas ${mensagens} de ${nome}`;
+    const aviso = await msg.reply(`⏳ Processando o /tldr ${escopo}, aguarde.`, null, { linkPreview: false });
     try {
         const resumo = await perguntarAoChat({
             cmd: '/tldr',
