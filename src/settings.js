@@ -188,6 +188,16 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 1, max: 365,
         desc: 'Dias que as mensagens editadas ficam guardadas para o /show -e.'
     },
+    'cache.messageMediaRetentionHours': {
+        default: 68,
+        type: 'number', min: 68, max: 2160,
+        desc: 'Horas que as mídias das mensagens comuns (fotos, vídeos, áudios, documentos) ficam no disco (68, o padrão; até 2160 = 90 dias). Nunca passam do cache.messageRetentionHours: a mídia sai junto com a mensagem. Ocupa espaço em cache/media; /cache -media libera só elas.'
+    },
+    'cache.messageRetentionHours': {
+        default: 68,
+        type: 'number', min: 68, max: 2160,
+        desc: 'Horas que o texto das mensagens comuns fica no banco (68, o padrão, é a janela de apagar para todos; até 2160 = 90 dias): quanto mais, mais o /tldr alcança. As mídias têm o seu prazo, o cache.messageMediaRetentionHours.'
+    },
     'cache.reactionRetentionDays': {
         default: 30,
         type: 'number', min: 1, max: 365,

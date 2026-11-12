@@ -231,7 +231,7 @@ async function initializeDb() {
 
     /*
      * /stats statistics: counters per chat, day, hour and sender.
-     * Regular messages leave the database in 68 h; the counters stay
+     * Regular messages leave the database in cache.messageRetentionHours (68 h); the counters stay
      * 'stats.retentionDays' dias.
      */
     await dbRun(`

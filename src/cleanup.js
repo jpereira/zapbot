@@ -6,7 +6,7 @@ const path = require('path');
 const fs = require('fs-extra');
 
 const { deleteAllBackups } = require('./backup');
-const { CACHE_DIR, DAY_MS, MAX_DELETE_WINDOW, MEDIA_DIR, TMP_DIR } = require('./constants');
+const { CACHE_DIR, DAY_MS, HOUR_MS, MAX_DELETE_WINDOW, MEDIA_DIR, TMP_DIR } = require('./constants');
 const { dbAll, dbGet, dbReady, dbRun } = require('./db');
 const { printError, printInfo } = require('./log');
 const { getSetting } = require('./settings');
@@ -15,12 +15,18 @@ const { getDirSize, mediaIsPath, cleanContentDirectory } = require('./util/files
 
 /*
  * Database + media cleanup:
- * - normal messages: removed after the "delete for everyone" window (68h),
- * because after that they can no longer be deleted;
+ * - normal messages: the text leaves the database after 'cache.messageRetentionHours' and the media, after
+ * 'cache.messageMediaRetentionHours' (default 68 h, the "delete for everyone" window: after it not even
+ * can no longer be deleted); the media never goes past the text;
  * - DELETED messages (revoked=1): kept for 'cache.revokedRetentionDays' (default 30),
  * so /show keeps working.
  */
-async function cleanCacheOld(maxDeleteWin = MAX_DELETE_WINDOW, retentionDeleted = getSetting('cache.revokedRetentionDays') * DAY_MS) {
+async function cleanCacheOld(
+    maxDeleteWin = MAX_DELETE_WINDOW,
+    retentionDeleted = getSetting('cache.revokedRetentionDays') * DAY_MS,
+    retentionMessages = getSetting('cache.messageRetentionHours') * HOUR_MS,
+    retentionMedia = getSetting('cache.messageMediaRetentionHours') * HOUR_MS
+) {
     await dbReady;
 
     const nowAlt = Date.now();
@@ -28,9 +34,21 @@ async function cleanCacheOld(maxDeleteWin = MAX_DELETE_WINDOW, retentionDeleted 
         (revoked = 0 AND timestamp < ?)
         OR (revoked = 1 AND COALESCE(revoked_at, timestamp) < ?)
     `;
-    const params = [nowAlt - maxDeleteWin, nowAlt - retentionDeleted];
+    const params = [nowAlt - Math.max(retentionMessages, maxDeleteWin), nowAlt - retentionDeleted];
 
     try {
+        // A regular message's media goes out on its own schedule, even if the text stays longer (the media_path disappears)
+        const deadlineOutside = 'revoked = 0 AND timestamp < ? AND media_path IS NOT NULL';
+        const limitMedia = nowAlt - Math.max(retentionMedia, maxDeleteWin);
+        const old = await dbAll(`SELECT media_path FROM messages WHERE ${deadlineOutside}`, [limitMedia]);
+        for (const row of old) {
+            if (mediaIsPath(row.media_path) && fs.existsSync(row.media_path)) {
+                printInfo(`Removendo ${row.media_path}`);
+                fs.unlinkSync(row.media_path);
+            }
+        }
+        if (old.length) await dbRun(`UPDATE messages SET media_path = NULL WHERE ${deadlineOutside}`, [limitMedia]);
+
         const rows = await dbAll(`SELECT media_path FROM messages WHERE media_path IS NOT NULL AND (${filter})`, params);
 
         for (const row of rows) {
