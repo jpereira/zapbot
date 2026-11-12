@@ -1280,7 +1280,20 @@ describe('/tldr (/resumo)', () => {
         assert.equal(r[1].chatId, bot.OWNER.jid);
         assert.match(r[1].texto, /🤖 \*Resumo de Trabalho Rio\*/);
 
-        assert.match((await bot.replyAlt('/tldr -c xyz'))[0], /❌ Nenhum chat com mensagens guardadas tem "xyz" no nome/);
+        assert.match((await bot.replyAlt('/tldr -c xyz'))[0], /❌ Nenhum chat no cache casa com "xyz"/);
+
+        // Like /show: /regex/ and @mention; more than one chat matches: lists and waits for the no.
+        const r2 = await bot.executar('/tldr -c /rio$/ -pv');
+        assert.match(r2[1].texto, /🤖 \*Resumo de Trabalho Rio\*/);
+
+        const OTHER_GROUP = '120363000000000003@g.us';
+        bot.createGroup(OTHER_GROUP, 'Trabalho SP', [bot.OWNER.jid, bot.OTHERAlt.jid]);
+        for (const textAlt of ['bom dia', 'oi', 'ok']) {
+            await bot.deliver(bot.createMessage({ texto: textAlt, de: bot.OTHERAlt.jid, chat: OTHER_GROUP }));
+        }
+        const choosing = await bot.replyChoosing('/tldr -c trabalho -pv', '2');
+        assert.match(choosing[0], /🔎 "trabalho" corresponde a 2 chats/);
+        assert.match(choosing.join('\n'), /🤖 \*Resumo de Trabalho (Rio|SP)\*/);
     });
 
     test('poucas mensagens, período inválido, sem chave e erro da OpenAI', async () => {

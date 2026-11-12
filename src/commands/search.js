@@ -5,6 +5,7 @@
 const { client } = require('../client');
 const { getCommandSyntax } = require('./base');
 const { chatCurrentIds, contactName } = require('../contacts');
+const { t } = require('../i18n');
 const { printError } = require('../log');
 const { formatData, paraMs, plural } = require('../util/format');
 
@@ -52,17 +53,17 @@ async function readMessage({ msg, id, chatId, todos: allAlt2 }) {
         foundAlt = await client.getMessageById(id);
     } catch (err) {
         printError(`/search -read "${id}":`, err.message);
-        await msg.reply(`⚠️ Não consegui ler a mensagem: ${err.message}`);
+        await msg.reply(t('search.readFailed', { error: err.message }));
         return;
     }
 
     // Outside your private chat, only this chat's messages
     if (!foundAlt || (!allAlt2 && (foundAlt.id?.remote ?? foundAlt.from) !== chatId)) {
-        await msg.reply(`🔎 Mensagem "${id}" não encontrada ${allAlt2 ? 'em nenhum chat' : 'neste chat'}.`);
+        await msg.reply(t('search.notFound', { id, where: allAlt2 ? t('search.noChat') : t('search.thisChat') }));
         return;
     }
 
-    const who = foundAlt.fromMe ? 'Você' : await nameAltAlt(foundAlt.author || foundAlt.from, new Map());
+    const who = foundAlt.fromMe ? t('search.you') : await nameAltAlt(foundAlt.author || foundAlt.from, new Map());
     const chat = allAlt2 ? ` · 💬 ${await chatNameAlt(foundAlt.id?.remote ?? foundAlt.from, new Map())}` : '';
     const textAlt = String(foundAlt.body ?? '').trim();
     const mediaAlt = foundAlt.hasMedia ? `📎 _[${foundAlt.type}]_${textAlt ? '\n' : ''}` : '';
@@ -97,7 +98,7 @@ async function cmdSearch({ msg, opts, chatId }) {
     let notice = '';
     n ??= DEFAULT;
     if (n > MAX) {
-        notice = `\n_(limitado a ${MAX} por vez)_`;
+        notice = '\n' + t('search.limited', { max: MAX });
         n = MAX;
     }
 
@@ -109,15 +110,15 @@ async function cmdSearch({ msg, opts, chatId }) {
         foundAlt3 = await client.searchMessages(textAlt, { page: 1, limit: n, ...(allAlt2 ? {} : { chatId }) });
     } catch (err) {
         printError(`/search "${textAlt}":`, err.message);
-        await msg.reply(`⚠️ A busca do WhatsApp falhou: ${err.message}`);
+        await msg.reply(t('search.failed', { error: err.message }));
         return;
     }
 
     // The /search message itself also has the text
     foundAlt3 = foundAlt3.filter(m => m.id?._serialized !== msg.id?._serialized);
-    const whereAlt = allAlt2 ? 'em nenhum chat' : 'neste chat';
+    const whereAlt = allAlt2 ? t('search.noChat') : t('search.thisChat');
     if (!foundAlt3.length) {
-        await msg.reply(`🔎 Nada com "${textAlt}" ${whereAlt}.`);
+        await msg.reply(t('search.nothing', { text: textAlt, where: whereAlt }));
         return;
     }
 
@@ -126,16 +127,16 @@ async function cmdSearch({ msg, opts, chatId }) {
     const names = new Map();
     const chats = new Map();
     const linesAlt = await Promise.all(foundAlt3.map(async (m, i) => {
-        const who = m.fromMe ? 'Você' : await nameAltAlt(m.author || m.from, names);
+        const who = m.fromMe ? t('search.you') : await nameAltAlt(m.author || m.from, names);
         const chat = allAlt2 ? ` · 💬 ${await chatNameAlt(m.id?.remote ?? m.from, chats)}` : '';
         return `${i + 1}. 📅 ${formatData(m.timestamp)}${chat} · 👤 ${who}\n   ${snippet(m)}` +
             `\n   🆔 ${m.id?._serialized}`;
     }));
 
-    await msg.reply(`🔎 *${plural(foundAlt3.length, 'mensagem', 'mensagens')} com* "${textAlt}"` +
-        `${allAlt2 ? ' _(todos os chats)_' : ''}${notice}\n\n${linesAlt.join('\n\n')}` +
-        (foundAlt3.length >= n ? '\n\n💡 _Pode haver mais: use -N para ver mais (ex.: /search -30 <texto>)._' : '') +
-        '\n\n📖 _Para ler uma inteira: /search -read <id>._',
+    await msg.reply(t('search.header', { count: plural(foundAlt3.length, t('search.message'), t('search.messages')), text: textAlt }) +
+        `${allAlt2 ? ' ' + t('search.allChats') : ''}${notice}\n\n${linesAlt.join('\n\n')}` +
+        (foundAlt3.length >= n ? '\n\n' + t('search.more') : '') +
+        '\n\n' + t('search.readHint'),
     null, { linkPreview: false });
 }
 

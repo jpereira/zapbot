@@ -1,4 +1,4 @@
-# `/notes` (`/notas`) · admin
+# `/notes` · admin
 
 Notes saved in the database, valid for any chat (group or private). Each one has an ID, and
 `-alerta` notifies you about it at a date/time. Only the owner (and admins) can use it.

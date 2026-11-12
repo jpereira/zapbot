@@ -15,6 +15,7 @@ const { positionDetails, validatePosition } = require('../defi/orca');
 const { walletPositions } = require('../defi/prjx');
 const { isEnderecoSolana: isAddressSolana } = require('../defi/solana');
 const { describeDestinations, destinationsSaved, extractDestinations, recipientsDe, resolverDestinations } = require('../destinations');
+const { language, t } = require('../i18n');
 const { printError } = require('../log');
 const { GetOptFromCommand } = require('../options');
 const { envOuSetting, getSetting } = require('../settings');
@@ -65,12 +66,18 @@ function rangeBar(current, inferior, superior) {
     if (current >= superior) return `▕${'─'.repeat(N)}▏ ●`;
 
     const k = Math.min(N, Math.round(((current - inferior) / (superior - inferior)) * N));
-    return `▕${'─'.repeat(k)}●${'─'.repeat(N - k)}▏ ${Math.round(((current - inferior) / (superior - inferior)) * 100)}% da faixa`;
+    return `▕${'─'.repeat(k)}●${'─'.repeat(N - k)}▏ ${t('defi.rangePct', { pct: Math.round(((current - inferior) / (superior - inferior)) * 100) })}`;
 }
 
 const PROTOCOLS = { aave: 'Aave', liquidswap: 'Liquidswap', morpho: 'Morpho', orca: 'Orca', prjx: 'Project X' };
-// "da Orca", "do Project X": in the messages
-const PROTOCOL = { aave: 'do Aave', liquidswap: 'da Liquidswap', morpho: 'do Morpho', orca: 'da Orca', prjx: 'do Project X' };
+// Protocol variables in the messages: {protocol}, {of} (of Orca), {in} (in Orca), {In} and {the} (the Orca)
+const protocolAlt = (p) => ({
+    protocol: PROTOCOLS[p],
+    of: t(`defi.of.${p}`),
+    in: t(`defi.in.${p}`),
+    In: t(`defi.In.${p}`),
+    the: t(`defi.the.${p}`)
+});
 // Those that register a wallet (-wallet), and not a position (-address)
 const WALLET = ['aave', 'liquidswap', 'morpho', 'prjx'];
 // Those that have a range (the -alerta)
@@ -85,7 +92,7 @@ const addressAlt2 = (p) => p.address ?? p.wallet;
  * The end says how the address appears: abbreviated (the default) or in full (in your
  * privado).
  */
-const walletWithName = (p, end) => (p.name ? `${p.name} (${end(p.wallet)})` : `carteira ${end(p.wallet)}`);
+const walletWithName = (p, end) => (p.name ? `${p.name} (${end(p.wallet)})` : t('defi.walletLower', { addr: end(p.wallet) }));
 const positionWithName = (p, end) => (p.name ? `${p.name} (${end(p.address)})` : end(p.address));
 const describe = (p, end = short) => (WALLET.includes(p.protocol)
     ? `${PROTOCOLS[p.protocol]} · ${walletWithName(p, end)}`
@@ -113,18 +120,18 @@ function positionPrjxText(x, nameAlt = null, m = SHOW) {
         (x.usd1 === null ? '' : ` ${show(fmtUsd(a * x.usd0 + b * x.usd1))}`);
     const qtd = (q) => m(fmtQtd(q));
     const status = x.naFaixa
-        ? '✅ dentro da faixa'
-        : `⚠️ *fora da faixa* (preço ${x.preco < x.inferior ? 'abaixo' : 'acima'}: a posição não rende taxas)`;
+        ? t('defi.inRange')
+        : t('defi.outOfRange', { dir: t(x.preco < x.inferior ? 'defi.below' : 'defi.above') });
 
-    return `🌊 *Project X · ${x.simbolo0}/${x.simbolo1}* · taxa ${(x.taxa / 10000).toLocaleString('en-US', { maximumFractionDigits: 2 })}%\n` +
+    return `🌊 *Project X · ${x.simbolo0}/${x.simbolo1}* · ${t('defi.fee', { fee: (x.taxa / 10000).toLocaleString('en-US', { maximumFractionDigits: 2 }) })}\n` +
         `📍 #${x.id}${nameAlt ? ` · 👛 ${nameAlt}` : ''} · ${status}\n\n` +
-        `💰 *Saldo:*${total(x.qtd0, x.qtd1)}\n` +
+        `${t('defi.l.balance')}${total(x.qtd0, x.qtd1)}\n` +
         `   • ${qtd(x.qtd0)} ${x.simbolo0}${usd(x.qtd0, x.usd0)}\n` +
         `   • ${qtd(x.qtd1)} ${x.simbolo1}${usd(x.qtd1, x.usd1)}\n\n` +
-        `📏 *Faixa:* ${fmtPrice(x.inferior)} – ${fmtPrice(x.superior)} ${x.simbolo1} por ${x.simbolo0}\n` +
-        `🎯 *Preço atual:* ${fmtPrice(x.preco)} ${x.simbolo1} por ${x.simbolo0}\n` +
+        `${t('defi.l.range')} ${fmtPrice(x.inferior)} – ${fmtPrice(x.superior)} ${t('defi.per', { q: x.simbolo1, b: x.simbolo0 })}\n` +
+        `${t('defi.l.price')} ${fmtPrice(x.preco)} ${t('defi.per', { q: x.simbolo1, b: x.simbolo0 })}\n` +
         `   ${rangeBar(x.preco, x.inferior, x.superior)}\n\n` +
-        `💸 *Taxas a coletar:*${total(x.taxa0, x.taxa1, SHOW)}\n` +
+        `${t('defi.l.fees')}${total(x.taxa0, x.taxa1, SHOW)}\n` +
         `   • ${fmtQtd(x.taxa0)} ${x.simbolo0}${usd(x.taxa0, x.usd0, SHOW)}\n` +
         `   • ${fmtQtd(x.taxa1)} ${x.simbolo1}${usd(x.taxa1, x.usd1, SHOW)}`;
 }
@@ -139,16 +146,16 @@ function positionLiquidswapText(x, nameAlt = null, m = SHOW) {
     const tvl = x.usdY === null ? '' : `TVL ${fmtCompact(x.reservaX * x.usdX + x.reservaY * x.usdY)} · `;
     const slice = (x.fatia * 100).toLocaleString('en-US', { maximumSignificantDigits: 3 });
 
-    return `🌊 *Liquidswap · ${x.simboloX}/${x.simboloY}* · taxa ${x.taxa.toLocaleString('en-US', { maximumFractionDigits: 2 })}%` +
-        ` · ${x.versao} ${x.estavel ? 'estável' : 'não correlacionada'}\n` +
-        `📍 ${nameAlt ? `👛 ${nameAlt} · ` : ''}${m(slice)}% da pool\n\n` +
-        `💰 *Saldo:*${total}\n` +
+    return `🌊 *Liquidswap · ${x.simboloX}/${x.simboloY}* · ${t('defi.fee', { fee: x.taxa.toLocaleString('en-US', { maximumFractionDigits: 2 }) })}` +
+        ` · ${x.versao} ${t(x.estavel ? 'defi.stable' : 'defi.uncorrelated')}\n` +
+        `📍 ${nameAlt ? `👛 ${nameAlt} · ` : ''}${t('defi.poolShare', { pct: m(slice) })}\n\n` +
+        `${t('defi.l.balance')}${total}\n` +
         `   • ${m(fmtQtd(x.qtdX))} ${x.simboloX}${usd(x.qtdX, x.usdX)}\n` +
         `   • ${m(fmtQtd(x.qtdY))} ${x.simboloY}${usd(x.qtdY, x.usdY)}\n\n` +
-        `🎯 *Preço atual:* ${fmtPrice(x.preco)} ${x.simboloY} por ${x.simboloX}\n` +
+        `${t('defi.l.price')} ${fmtPrice(x.preco)} ${t('defi.per', { q: x.simboloY, b: x.simboloX })}\n` +
         (x.preco ? `   _(1 ${x.simboloY} = ${fmtPrice(1 / x.preco)} ${x.simboloX})_\n\n` : '\n') +
-        `🏊 *Pool:* ${tvl}${fmtQtd(x.reservaX)} ${x.simboloX} + ${fmtQtd(x.reservaY)} ${x.simboloY}\n` +
-        '💸 _As taxas dos swaps entram na pool: já estão no saldo._';
+        `${t('defi.l.pool')} ${tvl}${fmtQtd(x.reservaX)} ${x.simboloX} + ${fmtQtd(x.reservaY)} ${x.simboloY}\n` +
+        t('defi.ammFeesNote');
 }
 
 /**
@@ -230,19 +237,19 @@ function positionText(d, end = short, nameAlt = null, m = SHOW) {
     const { simA, simB, usdA, usdB, atual: current, inferior, superior, qtdA, qtdB, taxaA: rateA, taxaB: rateB } = orcaNumbers(d);
 
     const status = c.naFaixa
-        ? '✅ dentro da faixa'
-        : `⚠️ *fora da faixa* (preço ${current < inferior ? 'abaixo' : 'acima'}: a posição não rende taxas)`;
+        ? t('defi.inRange')
+        : t('defi.outOfRange', { dir: t(current < inferior ? 'defi.below' : 'defi.above') });
 
-    let textAlt = `🌊 *Orca · ${simA}/${simB}* · taxa ${(d.pool.feeRate / 10000).toLocaleString('en-US', { maximumFractionDigits: 2 })}%\n` +
+    let textAlt = `🌊 *Orca · ${simA}/${simB}* · ${t('defi.fee', { fee: (d.pool.feeRate / 10000).toLocaleString('en-US', { maximumFractionDigits: 2 }) })}\n` +
         `📍 ${nameAlt ? `${nameAlt} (${end(d.endereco)})` : end(d.endereco)} · ${status}\n\n` +
-        `💰 *Saldo:* ${m(fmtUsd(qtdA * usdA + qtdB * usdB))}\n` +
+        `${t('defi.l.balance')} ${m(fmtUsd(qtdA * usdA + qtdB * usdB))}\n` +
         `   • ${m(fmtQtd(qtdA))} ${simA} (${m(fmtUsd(qtdA * usdA))})\n` +
         `   • ${m(fmtQtd(qtdB))} ${simB} (${m(fmtUsd(qtdB * usdB))})\n\n` +
-        `📏 *Faixa:* ${fmtPrice(inferior)} – ${fmtPrice(superior)} ${simB} por ${simA}\n` +
-        `🎯 *Preço atual:* ${fmtPrice(current)} ${simB} por ${simA}\n` +
+        `${t('defi.l.range')} ${fmtPrice(inferior)} – ${fmtPrice(superior)} ${t('defi.per', { q: simB, b: simA })}\n` +
+        `${t('defi.l.price')} ${fmtPrice(current)} ${t('defi.per', { q: simB, b: simA })}\n` +
         `   ${rangeBar(current, inferior, superior)}\n` +
         `   _(1 ${simB} = ${fmtPrice(1 / current)} ${simA})_\n\n` +
-        `💸 *Taxas a coletar:* ${fmtUsd(rateA * usdA + rateB * usdB)}\n` +
+        `${t('defi.l.fees')} ${fmtUsd(rateA * usdA + rateB * usdB)}\n` +
         `   • ${fmtQtd(rateA)} ${simA} (${fmtUsd(rateA * usdA)})\n` +
         `   • ${fmtQtd(rateB)} ${simB} (${fmtUsd(rateB * usdB)})\n`;
 
@@ -252,7 +259,7 @@ function positionText(d, end = short, nameAlt = null, m = SHOW) {
         .filter(r => r.quantidade > 0n && r.token);
 
     if (rewards.length) {
-        textAlt += '🎁 *Recompensas a coletar:*\n' + rewards.map(r => {
+        textAlt += t('defi.rewards') + '\n' + rewards.map(r => {
             const qtd = Number(r.quantidade) / 10 ** r.token.decimals;
             return `   • ${m(fmtQtd(qtd))} ${r.token.metadata?.symbol ?? short(r.mint)} (${m(fmtUsd(qtd * Number(r.token.priceUsdc ?? 0)))})`;
         }).join('\n') + '\n';
@@ -267,15 +274,22 @@ function positionText(d, end = short, nameAlt = null, m = SHOW) {
     if (c.naFaixa && d.pool.liquidez > 0n && Number(s24.fees) > 0) {
         const slice = Number(d.posicao.liquidez) / Number(d.pool.liquidez);
         const dosLps = Number(s24.fees) * (1 - d.pool.taxaProtocolo / 10000);
-        textAlt += `📊 *Rende ~${m(fmtUsd(slice * dosLps))}/dia* _(estimativa: ${(slice * 100).toLocaleString('en-US', { maximumSignificantDigits: 3 })}% da liquidez ativa × as taxas 24h dos LPs)_\n`;
+        textAlt += t('defi.yield', {
+            usd: m(fmtUsd(slice * dosLps)),
+            pct: (slice * 100).toLocaleString('en-US', { maximumSignificantDigits: 3 })
+        }) + '\n';
     }
 
-    textAlt += `\n🏊 *Pool:* TVL ${fmtCompact(infoPool.tvlUsdc ?? 0)} · volume 24h ${fmtCompact(s24.volume ?? 0)} · taxas 24h ${fmtCompact(s24.fees ?? 0)}`;
+    textAlt += '\n' + t('defi.poolLine', {
+        tvl: fmtCompact(infoPool.tvlUsdc ?? 0),
+        volume: fmtCompact(s24.volume ?? 0),
+        fees: fmtCompact(s24.fees ?? 0)
+    });
 
     return textAlt;
 }
 
-const EXAMPLES = '💡 _/defi orca -address <endereço> -pool <endereço> -nft <mint>\n/defi prjx -wallet <0x...>\n/defi liquidswap -wallet <0x...>\n/defi morpho -wallet <0x...>\n/defi aave -wallet <0x...>_';
+const examples = () => t('defi.examples');
 
 // The protocol word: /defi orca, /defi prjx -wallet ..., /defi morpho, /defi liqswp (= liquidswap)
 const WORDS = { aave: 'aave', liqswp: 'liquidswap', liquidswap: 'liquidswap', morpho: 'morpho', orca: 'orca', prjx: 'prjx' };
@@ -284,11 +298,11 @@ const protocolAlt2 = (word) => WORDS[String(word ?? '').toLowerCase()] ?? null;
 async function limitOrRepeated(msg, protocol, address, end) {
     const column = WALLET.includes(protocol) ? 'wallet' : 'address';
     if (await dbGet(`SELECT 1 AS ok FROM defi_positions WHERE protocol = ? AND lower(${column}) = lower(?)`, [protocol, address])) {
-        await msg.reply(`ℹ️ ${end(address)} já está cadastrada ${PROTOCOL[protocol].replace(/^d/, 'n')}. Veja com /defi ${protocol}`);
+        await msg.reply(t('defi.alreadyRegistered', { addr: end(address), cmd: protocol, ...protocolAlt(protocol) }));
         return true;
     }
     if ((await dbGet('SELECT COUNT(*) AS n FROM defi_positions')).n >= MAX_POSITIONS) {
-        await msg.reply(`❌ Limite de ${MAX_POSITIONS} cadastros. Remova algum com /defi -rm <nº>`);
+        await msg.reply(t('defi.limit', { max: MAX_POSITIONS }));
         return true;
     }
     return false;
@@ -312,13 +326,13 @@ const READ_WALLET = {
         return { abertas: openAlt, texto: (end, nameAlt, optionsAlt) => textAave(r, end, nameAlt, optionsAlt) };
     }
 };
-const TIP_APTOS = '💡 _A API pública da Aptos limita as consultas por IP; uma chave da Geomi vai no APTOS_API_KEY (ou no setting defi.aptos.apikey)._';
 const WALLET_TIP = {
-    prjx: '💡 _O RPC público da HyperEVM limita as consultas; um RPC próprio vai no setting defi.hyperevm.rpc._',
-    liquidswap: TIP_APTOS,
-    morpho: '💡 _Tente de novo em alguns instantes._',
-    aave: '💡 _Tente de novo em alguns instantes; um RPC próprio vai no ETHEREUM_RPC_URL e no BASE_RPC_URL._'
+    prjx: 'defi.tipHyperevm',
+    liquidswap: 'defi.tipAptos',
+    morpho: 'defi.tipRetry',
+    aave: 'defi.tipAave'
 };
+const tip = (table, protocol) => (table[protocol] ? t(table[protocol]) : '');
 
 /*
  * Each network's wallet: Aptos' (Liquidswap) has up to 64 hex digits and is
@@ -328,13 +342,13 @@ const WALLETS = {
     aptos: {
         valida: isAddressAptos,
         normalizar: normalizeAddress,
-        erro: (c) => `❌ -wallet: "${c}" não é uma carteira da Aptos (0x e até 64 caracteres hexadecimais).`,
+        erro: (c) => t('defi.notAptos', { wallet: c }),
         exemplo: '0x8f3c4d2a1b9e7f6a5c4b3a29180f7e6d5c4b3a2918f7e6d5c4b3a2918f7e6d5c'
     },
     evm: {
         valida: isAddressEvm,
         normalizar: (c) => c.toLowerCase(),
-        erro: (c) => `❌ -wallet: "${c}" não é uma carteira EVM (0x e 40 caracteres hexadecimais).`,
+        erro: (c) => t('defi.notEvm', { wallet: c }),
         exemplo: '0x12b2C3d4E5f60718293A4b5C6d7E8f9012345678'
     }
 };
@@ -351,7 +365,7 @@ async function registerWallet(msg, o, protocol, end) {
     const nickname = o.name || null;
 
     if (!typed) {
-        await msg.reply(`❌ Informe a carteira: -wallet <0x...>\n💡 _/defi ${protocol} -wallet ${type.exemplo}_`);
+        await msg.reply(t('defi.walletMissing', { proto: protocol, example: type.exemplo }));
         return;
     }
     if (!type.valida(typed)) {
@@ -366,7 +380,7 @@ async function registerWallet(msg, o, protocol, end) {
     const existing = await dbGet('SELECT * FROM defi_positions WHERE protocol = ? AND wallet = ?', [protocol, wallet]);
     if (existing && nickname) {
         await dbRun('UPDATE defi_positions SET name = ? WHERE id = ?', [nickname, existing.id]);
-        await msg.reply(`✏️ *Nome trocado:* ${describe({ ...existing, name: nickname }, end)}`);
+        await msg.reply(t('defi.renamed', { desc: describe({ ...existing, name: nickname }, end) }));
         return;
     }
     if (await limitOrRepeated(msg, protocol, shown, end)) return;
@@ -377,15 +391,17 @@ async function registerWallet(msg, o, protocol, end) {
         ({ abertas: openAlt, texto: textAlt } = await READ_WALLET[protocol](shown));
     } catch (err) {
         printError(`/defi ${protocol} ${shown}:`, err.message);
-        await msg.reply(`⚠️ Não consegui ler a carteira agora: ${err.motivo ?? `${err.message}.`}\n${WALLET_TIP[protocol]}`);
+        await msg.reply(t('defi.walletReadFailed', { reason: err.motivo ?? `${err.message}.`, tip: tip(WALLET_TIP, protocol) }));
         return;
     }
 
     await dbRun('INSERT INTO defi_positions (protocol, wallet, name, created_at) VALUES (?, ?, ?, ?)',
         [protocol, wallet, nickname, Date.now()]);
-    await msg.reply(`✅ *Carteira ${PROTOCOL[protocol]} cadastrada:* ${nickname ? `${nickname} (${end(shown)})` : end(shown)}\n` +
-        (openAlt ? `📍 ${plural(openAlt, 'posição aberta', 'posições abertas')}.` : `ℹ️ Nenhuma posição aberta agora: o /defi ${protocol} mostra quando houver.`) +
-        `\n💡 _Veja com /defi ${protocol}_`);
+    await msg.reply(t('defi.walletRegistered', { ...protocolAlt(protocol), addr: nickname ? `${nickname} (${end(shown)})` : end(shown) }) + '\n' +
+        (openAlt
+            ? `📍 ${plural(openAlt, t('defi.openPosition'), t('defi.openPositions'))}.`
+            : t('defi.noOpenPosition', { cmd: protocol })) +
+        '\n' + t('defi.seeWith', { cmd: protocol }));
     if (openAlt && textAlt) await msg.reply(textAlt(end, nickname, { full: Boolean(o.full), m: o.mask ? HIDE : SHOW }));
     return wallet;
 }
@@ -396,31 +412,31 @@ async function registerWallet(msg, o, protocol, end) {
  */
 async function register(msg, { opt: o, given }, protocol, end) {
     if (!protocol) {
-        await msg.reply(`❌ Informe o protocolo antes do -address ou do -wallet: orca, prjx, liquidswap, morpho ou aave.\n${EXAMPLES}`);
+        await msg.reply(t('defi.needProtocol', { examples: examples() }));
         return null;
     }
     if (WALLET.includes(protocol)) {
         if (given.has('address')) {
-            await msg.reply(`❌ ${PROTOCOL[protocol].replace(/^d/, 'N')}, a carteira vai no -wallet: /defi ${protocol} -wallet <0x...>`);
+            await msg.reply(t('defi.walletGoesInWallet', { ...protocolAlt(protocol), cmd: protocol }));
             return null;
         }
         return registerWallet(msg, o, protocol, end);
     }
     if (given.has('wallet')) {
-        await msg.reply('❌ Na Orca, a posição vai no -address: /defi orca -address <endereço>');
+        await msg.reply(t('defi.orcaGoesInAddress'));
         return null;
     }
 
     const [address, nft, pool] = [o.address, o.nft, o.pool].map(v => (v ? String(v).trim() : null));
 
     if (!address) {
-        await msg.reply('❌ Informe o endereço da posição: -address <endereço>');
+        await msg.reply(t('defi.addressMissing'));
         return;
     }
 
     const invalid = [['-address', address], ['-nft', nft], ['-pool', pool]].find(([, v]) => v && !isAddressSolana(v));
     if (invalid) {
-        await msg.reply(`❌ ${invalid[0]}: "${invalid[1]}" não é um endereço da Solana.`);
+        await msg.reply(t('defi.notSolana', { opt: invalid[0], value: invalid[1] }));
         return;
     }
 
@@ -428,7 +444,7 @@ async function register(msg, { opt: o, given }, protocol, end) {
     const existing = await dbGet('SELECT * FROM defi_positions WHERE protocol = ? AND address = ?', ['orca', address]);
     if (existing && o.name) {
         await dbRun('UPDATE defi_positions SET name = ? WHERE id = ?', [o.name, existing.id]);
-        await msg.reply(`✏️ *Nome trocado:* ${describe({ ...existing, name: o.name }, end)}`);
+        await msg.reply(t('defi.renamed', { desc: describe({ ...existing, name: o.name }, end) }));
         return;
     }
     if (await limitOrRepeated(msg, 'orca', address, end)) return;
@@ -443,28 +459,28 @@ async function register(msg, { opt: o, given }, protocol, end) {
         ['orca', address, o.name || null, r.posicao.mint, r.posicao.whirlpool, Date.now()]);
 
     const registered = positionWithName({ address: address, name: o.name || null }, end);
-    await msg.reply(`✅ *Posição da Orca cadastrada:* ${registered}\n💡 _Veja com /defi orca_`);
+    await msg.reply(t('defi.orcaRegistered', { addr: registered }));
     return address;
 }
 
 const TIP_RPC = {
-    liquidswap: TIP_APTOS,
-    orca: '💡 _O RPC público da Solana limita as consultas; um RPC próprio vai no setting defi.solana.rpc._',
-    prjx: '💡 _O RPC público da HyperEVM limita as consultas; um RPC próprio vai no setting defi.hyperevm.rpc._'
+    liquidswap: 'defi.tipAptos',
+    orca: 'defi.tipSolana',
+    prjx: 'defi.tipHyperevm'
 };
 
 async function showAlt(msg, positions, end, { full = false, m = SHOW } = {}) {
     for (const p of positions) {
         try {
             const { textos: texts } = await readRegistration(p, end, { full, m });
-            if (!texts.length) await msg.reply(`🌊 ${describe(p, end)}: nenhuma posição aberta.`);
+            if (!texts.length) await msg.reply(t('defi.noOpen', { desc: describe(p, end) }));
             for (const textAlt of texts) await msg.reply(textAlt);
         } catch (err) {
             printError(`/defi ${addressAlt2(p)}:`, err.response?.status ?? '', err.message);
             // Morpho and Aave already bring the readable reason (and the details stayed in the log)
             await msg.reply(err.motivo
-                ? `⚠️ Não consegui ler ${describe(p, end)} agora: ${err.motivo}\n${WALLET_TIP[p.protocol] ?? ''}`
-                : `⚠️ Não consegui ler ${describe(p, end)} agora: ${err.message}.\n${TIP_RPC[p.protocol] ?? ''}`);
+                ? t('defi.readFailed', { desc: describe(p, end), reason: err.motivo, tip: tip(WALLET_TIP, p.protocol) })
+                : t('defi.readFailed', { desc: describe(p, end), reason: `${err.message}.`, tip: tip(TIP_RPC, p.protocol) }));
         }
     }
 }
@@ -500,8 +516,8 @@ const tokenIcon = (symbolAlt) => (/BTC/i.test(symbolAlt) ? '₿' : STABLE.test(s
 function itemText(item, label = '', m = SHOW) {
     return [
         `${tokenIcon(item.simbolo)} *${item.simbolo}*${label}`,
-        item.qtd !== null && `Quantidade: \`${m(fmtQtdToken(item.qtd, item))} ${item.simbolo}\``,
-        item.usd !== null && `Valor: \`${m(fmtUsd(item.usd))}\``
+        item.qtd !== null && `${t('defi.amount')}: \`${m(fmtQtdToken(item.qtd, item))} ${item.simbolo}\``,
+        item.usd !== null && `${t('defi.value')}: \`${m(fmtUsd(item.usd))}\``
     ].filter(Boolean).join('\n');
 }
 
@@ -524,7 +540,7 @@ function positionMorphoText(p, { hfNoRisco: hfInRisk, m = SHOW }) {
 
     const entered = [
         p.colateral && itemText(p.colateral, '', m),
-        p.fornecido && itemText(p.fornecido, p.colateral ? ' _(fornecido)_' : '', m)
+        p.fornecido && itemText(p.fornecido, p.colateral ? ` _(${t('defi.supplied')})_` : '', m)
     ].filter(Boolean);
     if (entered.length) blocks.push(`📥 *SUPPLIED / COLLATERAL*\n\n${entered.join('\n')}`);
 
@@ -534,14 +550,14 @@ function positionMorphoText(p, { hfNoRisco: hfInRisk, m = SHOW }) {
     if (p.emprestado || p.colateral) {
         const linesAlt = [];
         if (hfInRisk) linesAlt.push(`Health Rate: \`${fmtHf(p.hf)}\``);
-        if (p.emprestado && p.ltv !== null) linesAlt.push(`LTV atual: \`${fmtPct(p.ltv)}\``);
+        if (p.emprestado && p.ltv !== null) linesAlt.push(`${t('defi.currentLtv')}: \`${fmtPct(p.ltv)}\``);
         linesAlt.push(`LLTV: \`${fmtPct(p.lltv)}\``);
 
         const inLoan = (v) => `${fmtQtdToken(v, { simbolo: p.simboloEmprestimo, decimals: 8 })} ${p.simboloEmprestimo}`;
-        if (p.precoOraculo !== null) linesAlt.push(`Preço ${p.simboloColateral} (oráculo): \`${inLoan(p.precoOraculo)}\``);
-        if (p.precoLiquidacao !== null) linesAlt.push(`Preço de liquidação: \`${inLoan(p.precoLiquidacao)}\``);
-        if (p.utilizacao !== null) linesAlt.push(`Utilização do mercado: \`${fmtPct(p.utilizacao)}\``);
-        blocks.push(`📊 *RISCO*\n\n${linesAlt.join('\n')}`);
+        if (p.precoOraculo !== null) linesAlt.push(t('defi.oraclePrice', { symbol: p.simboloColateral, value: inLoan(p.precoOraculo) }));
+        if (p.precoLiquidacao !== null) linesAlt.push(`${t('defi.liquidationPrice')}: \`${inLoan(p.precoLiquidacao)}\``);
+        if (p.utilizacao !== null) linesAlt.push(`${t('defi.utilization')}: \`${fmtPct(p.utilizacao)}\``);
+        blocks.push(`${t('defi.riskTitle')}\n\n${linesAlt.join('\n')}`);
     }
 
     return blocks;
@@ -551,30 +567,34 @@ const positionTitle = (p) => (p.tipo === 'vault'
     ? `Vault ${p.nome} · ${p.rede}`
     : `${p.simboloColateral}/${p.simboloEmprestimo} · ${p.rede}`);
 
+// The footer: the wallet, the network(s) and the time of the reading
+const walletFooter = (r, end, nameAlt, networks, several) =>
+    `👛 ${t('defi.walletLabel')}: ${nameAlt ? `${nameAlt} · ` : ''}\`${end(r.carteira)}\`\n` +
+    `🌐 ${t(several ? 'defi.networks' : 'defi.network')}: \`${networks}\`\n` +
+    `🕐 ${t('defi.updated')}: \`${new Date(r.quando).toLocaleTimeString(language() === 'pt_BR' ? 'pt-BR' : 'en-US', { timeZone: 'America/Sao_Paulo' })}\``;
+
 /**
  * The /defi morpho message: with one position, it directly; with several, the
  * totals and each with its own Health Rate (one market's does not apply to another).
  */
 function textMorpho(r, end = short, nameAlt = null, m = SHOW) {
-    const { posicoes: positions, totais: t } = r;
-    const footer = `👛 Carteira: ${nameAlt ? `${nameAlt} · ` : ''}\`${end(r.carteira)}\`\n` +
-        `🌐 ${positions.length > 1 ? 'Redes' : 'Rede'}: \`${[...new Set(positions.map(p => p.rede))].join(', ')}\`\n` +
-        `🕐 Atualizado: \`${new Date(r.quando).toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo' })}\``;
-    const withoutPrice = t.semPreco.length ? `\n_Sem preço em USD (fora dos totais): ${t.semPreco.join(', ')}_` : '';
+    const { posicoes: positions, totais: tot } = r;
+    const footer = walletFooter(r, end, nameAlt, [...new Set(positions.map(p => p.rede))].join(', '), positions.length > 1);
+    const withoutPrice = tot.semPreco.length ? '\n' + t('defi.noUsdPrice', { list: tot.semPreco.join(', ') }) : '';
 
     if (positions.length === 1) {
         const [p] = positions;
-        const net = t.semPreco.length ? withoutPrice.trim() : `💰 *Posição líquida*\n\`${m(fmtUsdWithSignal(t.liquido))}\``;
+        const net = tot.semPreco.length ? withoutPrice.trim() : `${t('defi.netPosition')}\n\`${m(fmtUsdWithSignal(tot.liquido))}\``;
         const top = [`🦋 *MORPHO* · ${positionTitle(p)}`, net, hfHighlight(p)].filter(Boolean).join('\n\n');
         return [top, ...positionMorphoText(p, { hfNoRisco: false, m }), footer].join(`\n\n${SEPARATOR}\n\n`);
     }
 
     const top = '🦋 *MORPHO*\n\n' +
-        `💰 *Total líquido*\n\`${m(fmtUsdWithSignal(t.liquido))}\`\n\n` +
-        `📥 *Total supplied/collateral*\n\`${m(fmtUsd(t.fornecido))}\`\n\n` +
-        `📤 *Total borrowed*\n\`${m(fmtUsd(t.emprestado))}\`${withoutPrice}`;
+        `${t('defi.netTotal')}\n\`${m(fmtUsdWithSignal(tot.liquido))}\`\n\n` +
+        `📥 *Total supplied/collateral*\n\`${m(fmtUsd(tot.fornecido))}\`\n\n` +
+        `📤 *Total borrowed*\n\`${m(fmtUsd(tot.emprestado))}\`${withoutPrice}`;
     const each = positions.map((p, i) =>
-        [`*POSIÇÃO ${i + 1}* · ${positionTitle(p)}`, ...positionMorphoText(p, { hfNoRisco: true, m })].join('\n\n'));
+        [`${t('defi.positionN', { n: i + 1 })} · ${positionTitle(p)}`, ...positionMorphoText(p, { hfNoRisco: true, m })].join('\n\n'));
 
     return [top, ...each, footer].join(`\n\n${SEPARATOR}\n\n`);
 }
@@ -605,27 +625,27 @@ function itemAaveFull(x, debt, m = SHOW) {
 
 // The network summary: the short one (with highlight, on a single network) or the technical one (-full)
 function summaryAave(x, { full, destaque: highlight, m = SHOW }) {
-    const withoutPrice = x.semPreco.length ? `\n_Sem preço (fora dos totais): ${x.semPreco.join(', ')}_` : '';
+    const withoutPrice = x.semPreco.length ? '\n' + t('defi.noPrice', { list: x.semPreco.join(', ') }) : '';
     if (!full) {
         return highlight
-            ? `💰 *Posição líquida*\n\`${m(fmtUsdWithSignal(x.liquidoUsd))}\`\n\n❤️ *Health Factor*\n\`${fmtHf(x.hf)}\`${withoutPrice}`
+            ? `${t('defi.netPosition')}\n\`${m(fmtUsdWithSignal(x.liquidoUsd))}\`\n\n❤️ *Health Factor*\n\`${fmtHf(x.hf)}\`${withoutPrice}`
             : `Net: \`${m(fmtUsdWithSignal(x.liquidoUsd))}\`\nHealth Factor: \`${fmtHf(x.hf)}\`${withoutPrice}`;
     }
 
     const risk = [
-        x.ltvAtual !== null && `LTV atual: \`${fmtPct(x.ltvAtual)}\``,
-        `LTV máximo: \`${fmtPct(x.ltvMaximo)}\``,
+        x.ltvAtual !== null && `${t('defi.currentLtv')}: \`${fmtPct(x.ltvAtual)}\``,
+        `${t('defi.maxLtv')}: \`${fmtPct(x.ltvMaximo)}\``,
         `Liquidation Threshold: \`${fmtPct(x.liquidationThreshold)}\``,
         `Available Borrows: \`${m(fmtUsd(x.disponivelUsd))}\``,
-        `Collateral (risco): \`${m(fmtUsd(x.colateralUsd))}\``,
-        x.precoLiquidacao && `Preço de liquidação (${x.precoLiquidacao.simbolo}): \`${fmtUsd(x.precoLiquidacao.usd)}\``,
-        x.liquidacaoAmbigua && '⚠️ _Preço de liquidação individual não é determinístico com múltiplos collaterals._'
+        `${t('defi.collateralRisk')}: \`${m(fmtUsd(x.colateralUsd))}\``,
+        x.precoLiquidacao && t('defi.liquidationPriceOf', { symbol: x.precoLiquidacao.simbolo, value: fmtUsd(x.precoLiquidacao.usd) }),
+        x.liquidacaoAmbigua && t('defi.ambiguousLiquidation')
     ].filter(Boolean).join('\n');
 
     return `💰 Net Position: \`${m(fmtUsdWithSignal(x.liquidoUsd))}\`\n` +
         `📥 Supplied: \`${m(fmtUsd(x.fornecidoUsd))}\`\n` +
         `📤 Borrowed: \`${m(fmtUsd(x.dividaUsd))}\`${withoutPrice}\n\n` +
-        `❤️ Health Factor: \`${fmtHf(x.hf)}\`\n\n📊 *Risco*\n${risk}`;
+        `❤️ Health Factor: \`${fmtHf(x.hf)}\`\n\n${t('defi.risk')}\n${risk}`;
 }
 
 // A network's sections: the summary and the assets (and, with -full, the configuration)
@@ -639,11 +659,11 @@ function sectionsAave(x, { full, titulo: title, m = SHOW }) {
     ];
 
     if (full) {
-        const emode = x.emode ? `Enabled (${x.emode.nome || `categoria ${x.emode.id}`})` : 'Disabled';
+        const emode = x.emode ? `Enabled (${x.emode.nome || t('defi.category', { id: x.emode.id })})` : 'Disabled';
         const isolation = x.isolamento
             ? `Yes (${x.isolamento.simbolo}, debt ceiling ${fmtUsd(x.isolamento.tetoUsd)})`
             : 'No';
-        sections.push(`⚙️ *CONFIGURAÇÃO*\n\neMode: \`${emode}\`\nIsolation Mode: \`${isolation}\``);
+        sections.push(`${t('defi.configTitle')}\n\neMode: \`${emode}\`\nIsolation Mode: \`${isolation}\``);
     }
     return sections.filter(Boolean);
 }
@@ -669,9 +689,7 @@ function textAave(r, end = short, nameAlt = null, { full = false, m = SHOW } = {
         sections.push(r.falhas.map(f => `⚠️ *${f.rede}*: ${f.motivo}`).join('\n'));
     }
 
-    sections.push(`👛 Carteira: ${nameAlt ? `${nameAlt} · ` : ''}\`${end(r.carteira)}\`\n` +
-        `🌐 ${networks.length > 1 ? 'Redes' : 'Rede'}: \`${networks.map(x => x.rede).join(', ') || '-'}\`\n` +
-        `🕐 Atualizado: \`${new Date(r.quando).toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo' })}\``);
+    sections.push(walletFooter(r, end, nameAlt, networks.map(x => x.rede).join(', ') || '-', networks.length > 1));
 
     return sections.join(`\n\n${SEPARATOR}\n\n`);
 }
@@ -684,13 +702,13 @@ const DO_ENV = {
     morpho: {
         nome: 'Morpho', env: 'MORPHO_WALLET_ADDRESS', setting: 'defi.morpho.wallet', ler: positionsMorpho,
         vazio: (r) => !r.posicoes.length,
-        semPosicao: (end, wallet) => `🦋 *MORPHO*\n\nNenhuma posição aberta na carteira \`${end(wallet)}\` (chain ${getSetting('defi.morpho.chains').join(', ')}).`,
+        semPosicao: (end, wallet) => t('defi.noPosition', { head: '🦋 *MORPHO*', wallet: end(wallet), chains: getSetting('defi.morpho.chains').join(', ') }),
         texto: (r, end, { m }) => textMorpho(r, end, null, m)
     },
     aave: {
         nome: 'Aave', env: 'AAVE_WALLET_ADDRESS', setting: 'defi.aave.wallet', ler: positionsAave,
         vazio: (r) => !r.redes.length && !r.falhas.length,
-        semPosicao: (end, wallet) => `🟣 *AAVE V3*\n\nNenhuma posição aberta na carteira \`${end(wallet)}\` (chain ${getSetting('defi.aave.chains').join(', ')}).`,
+        semPosicao: (end, wallet) => t('defi.noPosition', { head: '🟣 *AAVE V3*', wallet: end(wallet), chains: getSetting('defi.aave.chains').join(', ') }),
         texto: (r, end, optionsAlt) => textAave(r, end, null, optionsAlt)
     }
 };
@@ -699,9 +717,7 @@ async function envShow(msg, protocol, end, optionsAlt) {
     const d = DO_ENV[protocol];
     const wallet = envOuSetting(d.env, d.setting);
     if (!wallet) {
-        await msg.reply(`❌ Endereço da carteira ${d.nome} não configurado.\n\n` +
-            `Configure ${d.env} no arquivo .env (ou /set ${d.setting} <0x...>), ` +
-            `ou cadastre a carteira: /defi ${protocol} -wallet <0x...>`);
+        await msg.reply(t('defi.walletNotConfigured', { name: d.nome, env: d.env, setting: d.setting, proto: protocol }));
         return;
     }
 
@@ -710,8 +726,7 @@ async function envShow(msg, protocol, end, optionsAlt) {
         r = await d.ler(wallet);
     } catch (err) {
         if (!err.motivo) printError(`[${d.nome.toUpperCase()}] Erro inesperado:`, err.message);
-        await msg.reply(`❌ *Erro ao consultar ${d.nome}*\n\n${err.motivo ?? 'Não foi possível obter os dados neste momento.'}\n\n` +
-            'Tente novamente em alguns instantes.');
+        await msg.reply(t('defi.queryError', { name: d.nome, reason: err.motivo ?? t('defi.noData') }));
         return;
     }
 
@@ -726,7 +741,7 @@ async function envShow(msg, protocol, end, optionsAlt) {
  */
 function alertDescribeDestination(p) {
     const destinations = alertDestinations(p);
-    return destinations.length ? describeDestinations(destinations) : 'seu privado';
+    return destinations.length ? describeDestinations(destinations) : t('defi.yourPrivate');
 }
 
 // The destinations stored on the position (the -to ones); []: your private chat
@@ -737,22 +752,22 @@ function alertDestinations(p) {
     return destinationsSaved(p.alert_recipients, single);
 }
 
-const RANGE_STATE = { 1: '✅ na faixa', 0: '⚠️ fora da faixa' };
+const RANGE_STATE = { 1: 'defi.stateIn', 0: 'defi.stateOut' };
 const ratesLimit = (p) => (p.alert_fees ? ` · 💸 ≥ ${fmtUsd(p.alert_fees)}` : '');
-const rangeState = (p) => RANGE_STATE[p.in_range] ?? '❔ ainda não lida';
-const eachMinutes = () => plural(getSetting('defi.alerta.intervalMin'), 'minuto', 'minutos');
+const rangeState = (p) => t(RANGE_STATE[p.in_range] ?? 'defi.stateUnknown');
+const eachMinutes = () => plural(getSetting('defi.alerta.intervalMin'), t('alerts.minute'), t('alerts.minutes'));
 
 async function listAlerts(msg, positions, end) {
     const withAlert = positions.map((p, i) => ({ p, n: i + 1 })).filter(({ p }) => p.alert);
 
     if (!withAlert.length) {
-        await msg.reply('🔕 Nenhum alerta no /defi.\n💡 _Ligue com /defi -alerta <nº> (avisa quando a posição sair da faixa e quando voltar)._');
+        await msg.reply(t('defi.noAlerts'));
         return;
     }
 
-    await msg.reply(`🔔 *Alertas do /defi* (${withAlert.length})\n\n` +
+    await msg.reply(`${t('defi.alertsTitle', { n: withAlert.length })}\n\n` +
         withAlert.map(({ p, n }) => `${n}. ${describe(p, end)} · ${rangeState(p)}${ratesLimit(p)} → ${alertDescribeDestination(p)}`).join('\n') +
-        `\n\n💡 _Verificados a cada ${eachMinutes()}. Desligue com /defi -alerta -rm <nº|all>._`);
+        '\n\n' + t('defi.alertsFooter', { every: eachMinutes() }));
 }
 
 async function handleAlert(msg, opts, positions, { comDestino: withDestination, destinosTexto: destinationsText }, end = short) {
@@ -765,7 +780,7 @@ async function handleAlert(msg, opts, positions, { comDestino: withDestination, 
         const targets = rm === 'all' ? positions.filter(p => p.alert) : [byNumber(rm)].filter(Boolean);
 
         if (rm !== 'all' && !targets.length) {
-            await msg.reply(`❌ Posição nº ${o.rm ?? '?'} não existe. Veja a lista com /defi -l`);
+            await msg.reply(t('defi.positionNotFound', { n: o.rm ?? '?' }));
             return;
         }
 
@@ -775,8 +790,8 @@ async function handleAlert(msg, opts, positions, { comDestino: withDestination, 
                 in_range = NULL WHERE id = ?`, [p.id]);
         }
         await msg.reply(rm === 'all'
-            ? `🔕 ${plural(targets.length, 'alerta desligado', 'alertas desligados')}.`
-            : `🔕 Alerta desligado: ${describe(targets[0], end)}`);
+            ? `🔕 ${plural(targets.length, t('defi.alertOff'), t('defi.alertsOff'))}.`
+            : t('defi.alertOffOne', { desc: describe(targets[0], end) }));
         return;
     }
 
@@ -784,7 +799,7 @@ async function handleAlert(msg, opts, positions, { comDestino: withDestination, 
 
     if (!target) {
         if (withDestination) {
-            await msg.reply('❌ Informe a posição: /defi -alerta <nº|all> -to <destino>');
+            await msg.reply(t('defi.alertNeedPosition'));
             return;
         }
         await listAlerts(msg, positions, end);
@@ -797,23 +812,23 @@ async function handleAlert(msg, opts, positions, { comDestino: withDestination, 
         : [byNumber(target)].filter(Boolean);
     if (!chosen.length) {
         await msg.reply(target === 'all'
-            ? `🌊 Nenhuma posição da Orca ou do Project X cadastrada.\n${EXAMPLES}`
-            : `❌ Posição nº ${o.alerta} não existe. Veja a lista com /defi -l`);
+            ? t('defi.noRangePositions', { examples: examples() })
+            : t('defi.positionNotFound', { n: o.alerta }));
         return;
     }
     const withoutRange = chosen.find(p => !WITH_RANGE.includes(p.protocol));
     if (withoutRange) {
-        await msg.reply(`❌ O alerta do /defi é de faixa, só da Orca e do Project X: a nº ${positions.indexOf(withoutRange) + 1} é ${PROTOCOL[withoutRange.protocol]}.`);
+        await msg.reply(t('defi.rangeOnlyPos', { n: positions.indexOf(withoutRange) + 1, ...protocolAlt(withoutRange.protocol) }));
         return;
     }
 
     // -taxas <value>: the limit in dollars; off (or 0) removes it; without -taxas, what was there stays
     let rates;
     if (opts.given.has('taxas')) {
-        const t = String(o.taxas ?? '').trim().toLowerCase().replace(/^\$/, '').replace(',', '.');
-        rates = t === 'off' || t === '0' ? null : Number(t);
+        const v = String(o.taxas ?? '').trim().toLowerCase().replace(/^\$/, '').replace(',', '.');
+        rates = v === 'off' || v === '0' ? null : Number(v);
         if (rates !== null && !(rates > 0)) {
-            await msg.reply('❌ -taxas: informe o valor em dólar (ex.: -taxas 50) ou off.');
+            await msg.reply(t('defi.feesInvalid'));
             return;
         }
     }
@@ -846,16 +861,16 @@ async function handleAlert(msg, opts, positions, { comDestino: withDestination, 
 
         const updated = { ...p, in_range: inRange, alert_fees: limitAlt };
         linesAlt.push(`${positions.indexOf(p) + 1}. ${describe(p, end)} · ${rangeState(updated)}${ratesLimit(updated)}` +
-            (inRange === 0 ? ' _(avisa quando voltar para a faixa)_' : ''));
+            (inRange === 0 ? ' ' + t('defi.warnWhenBack') : ''));
     }
 
-    const whereWarn = destinations.length ? describeDestinations(destinations) : 'seu privado';
+    const whereWarn = destinations.length ? describeDestinations(destinations) : t('defi.yourPrivate');
 
-    await msg.reply(`🔔 *Alerta do /defi ligado* (${chosen.length})\n\n${linesAlt.join('\n')}\n\n` +
-        `📣 Aviso: ${whereWarn}, quando a posição sair da faixa e quando voltar` +
-        (rates ? `, e quando as taxas a coletar passarem de ${fmtUsd(rates)}` : '') +
-        ` (verificada a cada ${eachMinutes()}).\n` +
-        '💡 _Veja com /defi -alerta; desligue com /defi -alerta -rm <nº|all>._');
+    await msg.reply(`${t('defi.alertOn', { n: chosen.length })}\n\n${linesAlt.join('\n')}\n\n` +
+        t('defi.alertNotice', { where: whereWarn }) +
+        (rates ? t('defi.alertNoticeFees', { fees: fmtUsd(rates) }) : '') +
+        t('defi.alertNoticeEvery', { every: eachMinutes() }) + '\n' +
+        t('defi.alertOnTip'));
 }
 
 /*
@@ -866,14 +881,14 @@ async function registerWithAlert(msg, opts, protocol, destination, end) {
     const o = opts.opt;
     let limitAlt = null;
     if (opts.given.has('alerta') && protocol && !WITH_RANGE.includes(protocol)) {
-        await msg.reply(`❌ O alerta do /defi é de faixa, só da Orca e do Project X: ${PROTOCOL[protocol].slice(1)} não tem.`);
+        await msg.reply(t('defi.rangeOnlyProto', protocolAlt(protocol)));
         return;
     }
     if (opts.given.has('alerta')) {
         const v = String(o.alerta ?? '').trim().replace(/^\$/, '').replace(',', '.');
         limitAlt = v ? Number(v) : null;
         if (v && !(limitAlt > 0)) {
-            await msg.reply('❌ No cadastro, o -alerta leva o limite das taxas em dólar (ex.: -alerta 2000) ou nada.');
+            await msg.reply(t('defi.alertFeesInvalid'));
             return;
         }
     }
@@ -928,14 +943,14 @@ const ratesInUsd = (x) => (x.usd0 === null || x.usd1 === null ? null : x.taxa0 *
 function ratesText(x) {
     const usd = (q, price) => (price === null ? '' : ` (${fmtUsd(q * price)})`);
     const total = ratesInUsd(x);
-    const outside = x.naFaixa ? '' : ' ⚠️ *fora da faixa*';
+    const outside = x.naFaixa ? '' : ' ' + t('defi.outShort');
 
     return `🌊 *${x.titulo}* · 📍 ${x.onde}\n` +
-        `📏 *Faixa:* ${fmtPrice(x.inferior)} – ${fmtPrice(x.superior)} ${x.sim1} por ${x.sim0}\n` +
-        `🎯 *Preço atual:* ${fmtPrice(x.preco)} ${x.sim1} por ${x.sim0}\n` +
+        `${t('defi.l.range')} ${fmtPrice(x.inferior)} – ${fmtPrice(x.superior)} ${t('defi.per', { q: x.sim1, b: x.sim0 })}\n` +
+        `${t('defi.l.price')} ${fmtPrice(x.preco)} ${t('defi.per', { q: x.sim1, b: x.sim0 })}\n` +
         `   ${rangeBar(x.preco, x.inferior, x.superior)}${outside}\n` +
         (x.preco ? `   _(1 ${x.sim1} = ${fmtPrice(1 / x.preco)} ${x.sim0})_\n` : '') +
-        `💸 *Taxas a coletar:*${total === null ? ' _(sem preço em US$)_' : ` ${fmtUsd(total)}`}\n` +
+        `${t('defi.l.fees')}${total === null ? ' ' + t('defi.noUsdShort') : ` ${fmtUsd(total)}`}\n` +
         `   • ${fmtQtd(x.taxa0)} ${x.sim0}${usd(x.taxa0, x.usd0)}\n` +
         `   • ${fmtQtd(x.taxa1)} ${x.sim1}${usd(x.taxa1, x.usd1)}`;
 }
@@ -946,12 +961,12 @@ function ratesText(x) {
  * src/defi/alerts.js check.
  */
 function alertInRatesText(p, n, sumUsd) {
-    if (!p.alert) return `🔕 _Sem alerta (ligue com /defi -alerta ${n})_`;
-    const range = `🔔 *Alerta:* faixa${p.alert_fees ? ` e taxas ≥ ${fmtUsd(p.alert_fees)}` : ''} → ${alertDescribeDestination(p)}`;
+    if (!p.alert) return t('defi.noAlertHint', { n });
+    const range = t(p.alert_fees ? 'defi.alertLineFees' : 'defi.alertLine', { fees: fmtUsd(p.alert_fees ?? 0), where: alertDescribeDestination(p) });
     if (!p.alert_fees || sumUsd === null) return range;
     return `${range}\n   ${sumUsd >= p.alert_fees
-        ? '✅ _passou do limite: hora de coletar_'
-        : `_faltam ${fmtUsd(p.alert_fees - sumUsd)} (${Math.floor((sumUsd / p.alert_fees) * 100)}% do limite)_`}`;
+        ? t('defi.overLimit')
+        : t('defi.missing', { usd: fmtUsd(p.alert_fees - sumUsd), pct: Math.floor((sumUsd / p.alert_fees) * 100) })}`;
 }
 
 async function summarizeRates(msg, positions, protocol, end, { comAlerta: withAlert = false } = {}) {
@@ -962,7 +977,7 @@ async function summarizeRates(msg, positions, protocol, end, { comAlerta: withAl
     for (const proto of protocol ? [protocol] : WITH_RATES) {
         const registrations = positions.filter(p => p.protocol === proto);
         if (!registrations.length) {
-            blocks.push(`🌊 *${PROTOCOLS[proto]}* · ➖ _não cadastrado_`);
+            blocks.push(t('defi.notRegistered', { protocol: PROTOCOLS[proto] }));
             continue;
         }
 
@@ -972,18 +987,18 @@ async function summarizeRates(msg, positions, protocol, end, { comAlerta: withAl
             try {
                 const { faixas: ranges, amm } = await readRates(p, end);
                 if (amm !== undefined) {
-                    blocks.push(`🌊 *Liquidswap* · 📍 ${walletWithName(p, end)}\n💧 _${amm ? plural(amm, 'pool', 'pools') + ': a' : 'Nenhuma posição aberta. A'}` +
-                        's taxas dos swaps entram na pool (já estão no saldo): não há o que coletar._');
+                    blocks.push(`🌊 *Liquidswap* · 📍 ${walletWithName(p, end)}\n` +
+                        (amm ? t('defi.ammNote', { pools: plural(amm, t('defi.pool'), t('defi.pools')) }) : t('defi.ammNoneNote')));
                     continue;
                 }
-                if (!ranges.length) blocks.push(`🌊 *${describe(p, end)}* · nenhuma posição aberta`);
+                if (!ranges.length) blocks.push(t('defi.noOpenShort', { desc: describe(p, end) }));
                 let registration = 0;
                 let withoutPrice = false;
                 for (const x of ranges) {
                     blocks.push(ratesText(x));
                     const v = ratesInUsd(x);
                     if (v === null) {
-                        totalOutside.push(`${x.titulo} (sem preço)`);
+                        totalOutside.push(t('defi.noPriceItem', { title: x.titulo }));
                         withoutPrice = true;
                     } else {
                         registration += v;
@@ -998,20 +1013,20 @@ async function summarizeRates(msg, positions, protocol, end, { comAlerta: withAl
                 }
             } catch (err) {
                 printError(`/defi -taxas ${addressAlt2(p)}:`, err.response?.status ?? '', err.message);
-                blocks.push(`🌊 *${describe(p, end)}* · ⚠️ não consegui ler agora: ${err.motivo ?? `${err.message}.`}`);
-                totalOutside.push(`${describe(p, end)} (não lida)`);
+                blocks.push(t('defi.cantReadNow', { desc: describe(p, end), reason: err.motivo ?? `${err.message}.` }));
+                totalOutside.push(t('defi.notRead', { desc: describe(p, end) }));
             }
         }
         if (withValue) byProtocol.push([PROTOCOLS[proto], sum]);
     }
 
     const total = byProtocol.reduce((s, [, v]) => s + v, 0);
-    const when = formatData(Date.now()).replace(/,? (\d\d:\d\d):\d\d$/, ' às $1');
+    const when = formatData(Date.now()).replace(/,? (\d\d:\d\d):\d\d$/, (_, hour) => ` ${t('defi.at')} ${hour}`);
     const detail = byProtocol.length > 1 ? `\n${byProtocol.map(([nameAlt, v]) => `   • ${nameAlt}: ${fmtUsd(v)}`).join('\n')}` : '';
-    const outside = totalOutside.length ? `\n⚠️ _Fora do total: ${totalOutside.join(', ')}._` : '';
+    const outside = totalOutside.length ? '\n' + t('defi.outOfTotal', { list: totalOutside.join(', ') }) : '';
 
-    await msg.reply(`💸 *Resumo das taxas a coletar* · ${when}\n\n${blocks.join('\n\n')}\n\n${SEPARATOR}\n` +
-        `💰 *Total a coletar: ${fmtUsd(total)}*${detail}${outside}`);
+    await msg.reply(`${t('defi.feesSummary', { when: when })}\n\n${blocks.join('\n\n')}\n\n${SEPARATOR}\n` +
+        `${t('defi.totalToCollect', { total: fmtUsd(total) })}${detail}${outside}`);
 }
 
 // -rm 2, -rm 1 3 5, -rm 1,3 (the numbers from the previous list) or all; if any does not exist: none is removed
@@ -1020,22 +1035,22 @@ async function removeAlt2(msg, o, argv, positions, end) {
 
     if (partsAlt.includes('all')) {
         await dbRun('DELETE FROM defi_positions');
-        await msg.reply(`🗑️ ${plural(positions.length, 'cadastro removido', 'cadastros removidos')}.`);
+        await msg.reply(`🗑️ ${plural(positions.length, t('defi.registryRemoved'), t('defi.registriesRemoved'))}.`);
         return;
     }
 
     const numbers = [...new Set(partsAlt.map(Number))].sort((a, b) => a - b);
     const missing = numbers.filter(n => !positions[n - 1]);
     if (!numbers.length || missing.length) {
-        await msg.reply(`❌ Nº ${missing.join(', ') || '?'} não existe${missing.length > 1 ? 'm' : ''}. Nada foi removido; veja a lista com /defi -l`);
+        await msg.reply(t(missing.length > 1 ? 'defi.numbersNotFoundMany' : 'defi.numbersNotFoundOne', { list: missing.join(', ') || '?' }));
         return;
     }
 
     const removed = numbers.map(n => positions[n - 1]);
     for (const p of removed) await dbRun('DELETE FROM defi_positions WHERE id = ?', [p.id]);
     await msg.reply(removed.length === 1
-        ? `🗑️ Removido: ${describe(removed[0], end)}`
-        : `🗑️ *Removidos* (${removed.length})\n${removed.map(p => `• ${describe(p, end)}`).join('\n')}`);
+        ? t('defi.removedOne', { desc: describe(removed[0], end) })
+        : `${t('defi.removedMany', { n: removed.length })}\n${removed.map(p => `• ${describe(p, end)}`).join('\n')}`);
 }
 
 // The alert's 🔔, with the fee limit if there is one (🔔 ≥ $2,000.00)
@@ -1045,10 +1060,10 @@ const alertBell = (p) => (p.alert ? ` 🔔${p.alert_fees ? ` ≥ ${fmtUsd(p.aler
 function listText(positions, end, endPool = end) {
     const line = (p, i) => `${i + 1}. ${PROTOCOLS[p.protocol] ?? p.protocol} · ` +
         (WALLET.includes(p.protocol) ? walletWithName(p, end) : `${positionWithName(p, end)} · pool ${endPool(p.pool)}`) +
-        ` _(desde ${formatData(p.created_at).split(',')[0]})_${alertBell(p)}`;
+        ` ${t('defi.since', { date: formatData(p.created_at).split(',')[0] })}${alertBell(p)}`;
 
-    return `🌊 *Posições DeFi* (${positions.length})\n\n${positions.map(line).join('\n')}\n\n` +
-        '💡 _/defi mostra os detalhes; /defi -rm <nº> remove; 🔔 = com alerta (/defi -alerta), ≥ $ é o limite das taxas._';
+    return `${t('defi.listTitle', { n: positions.length })}\n\n${positions.map(line).join('\n')}\n\n` +
+        t('defi.listFooter');
 }
 
 async function cmdDefi({ msg, opts: commandOpts, args, chatId }) {
@@ -1068,7 +1083,7 @@ async function cmdDefi({ msg, opts: commandOpts, args, chatId }) {
     const end = o.mask ? () => '****…****' : endNormal;
 
     if (withDestination && !opts.given.has('alerta')) {
-        await msg.reply('❌ O -to é do -alerta: /defi -alerta <nº|all> -to <destino>');
+        await msg.reply(t('defi.toIsForAlert'));
         return;
     }
 
@@ -1086,9 +1101,9 @@ async function cmdDefi({ msg, opts: commandOpts, args, chatId }) {
         const nameAlt = [o.name, ...argv].filter(Boolean).join(' ').trim();
         argv.length = 0;
         const errorAlt = !opts.given.has('wallet') && !opts.given.has('address')
-            ? '❌ O -name vai junto com o cadastro: /defi orca -address <endereço> -n <nome> ou /defi prjx -wallet <0x...> -n <nome>'
-            : !nameAlt ? '❌ Informe o nome: -n <nome> (ex.: -n Carteira Hare).'
-                : nameAlt.length > MAX_NAME ? `❌ O nome tem até ${MAX_NAME} caracteres.` : null;
+            ? t('defi.nameWithRegistration')
+            : !nameAlt ? t('defi.nameMissing')
+                : nameAlt.length > MAX_NAME ? t('defi.nameTooLong', { max: MAX_NAME }) : null;
         if (errorAlt) {
             await msg.reply(errorAlt);
             return;
@@ -1120,16 +1135,16 @@ async function cmdDefi({ msg, opts: commandOpts, args, chatId }) {
     // -taxas without -alerta: the summary of fees to collect
     if (opts.given.has('taxas')) {
         const errorAlt = o.taxas
-            ? '❌ O -taxas com valor é do alerta: /defi -alerta <nº|all> -taxas <valor>. Sozinho, /defi -taxas mostra o resumo das taxas a coletar.'
+            ? t('defi.feesWithValue')
             : protocol && !WITH_RATES.includes(protocol)
-                ? `❌ ${PROTOCOL[protocol].replace(/^d/, 'N')} não há taxas a coletar: o -taxas é da Orca, do Project X e da Liquidswap.`
-                : argv.length ? `❌ "${argv[0]}" não é um protocolo: use orca, prjx ou liquidswap (liqswp).` : null;
+                ? t('defi.noFeesFor', protocolAlt(protocol))
+                : argv.length ? t('defi.notProtocolFees', { word: argv[0] }) : null;
         if (errorAlt) await msg.reply(errorAlt);
         else await summarizeRates(msg, positions, protocol, end, { comAlerta: summaryWithAlert });
         return;
     }
 
-    const empty = `🌊 Nenhuma posição cadastrada.\n${EXAMPLES}`;
+    const empty = t('defi.noneRegistered', { examples: examples() });
 
     if (o.list) {
         await msg.reply(positions.length ? listText(positions, end, endNormal) : empty);
@@ -1137,7 +1152,7 @@ async function cmdDefi({ msg, opts: commandOpts, args, chatId }) {
     }
 
     if (argv.length) {
-        await msg.reply(`❌ "${argv[0]}" não é um protocolo: use orca, prjx, liquidswap (liqswp), morpho ou aave.\n\n\`\`\`${getCommandSyntax('/defi')}\`\`\``);
+        await msg.reply(`${t('defi.notProtocol', { word: argv[0] })}\n\n\`\`\`${getCommandSyntax('/defi')}\`\`\``);
         return;
     }
 
@@ -1154,7 +1169,7 @@ async function cmdDefi({ msg, opts: commandOpts, args, chatId }) {
     }
 
     if (!chosen.length) {
-        await msg.reply(protocol ? `🌊 Nada cadastrado ${PROTOCOL[protocol]}.\n${EXAMPLES}` : empty);
+        await msg.reply(protocol ? t('defi.nothingRegistered', { ...protocolAlt(protocol), examples: examples() }) : empty);
         return;
     }
     await showAlt(msg, chosen, end, show);

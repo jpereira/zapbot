@@ -7,6 +7,7 @@
 
 const axios = require('axios');
 
+const { t } = require('../i18n');
 const { envOuSetting, getSetting } = require('../settings');
 
 const TIMEOUT_MS = 15000;
@@ -24,7 +25,8 @@ const headers = () => {
 function errorAptos(err, whereAlt) {
     const body = err.response?.data;
     const reasonAlt = body?.message ?? body?.errors?.[0]?.message ?? err.message;
-    const e = new Error(`${whereAlt} da Aptos: ${err.response?.status === 429 ? 'limite de consultas atingido' : reasonAlt}`);
+    const e = new Error(t(whereAlt === 'RPC' ? 'defi.err.aptosRpc' : 'defi.err.aptosIndexer',
+        { reason: err.response?.status === 429 ? t('defi.err.rateLimited') : reasonAlt }));
     e.status = err.response?.status;
     return e;
 }

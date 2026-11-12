@@ -17,9 +17,8 @@ You can send them in **any chat** (private, group, or the chat with yourself).
 - `/help` lists the commands you can use (the owner and admins see all of them); `/help get` or
   `/help /get` show a specific one, and `/help -r` groups the list by role (`owner`, `admin`, and
   `user`).
-- The commands have English names; every one has a fixed alias in Portuguese (`/desenhe`, `/tempo`,
-  `/todos`, `/boletos`, `/cotacao`, `/traduzir`, `/enquete`, `/listageral`, `/notas`,
-  `/mostrar`...) that keeps working. Aliases work just like the original command
+- The commands have English names; the ones that had a Portuguese name keep it as a fixed alias (`/desenhe`,
+  `/tempo`, `/todos`, `/boletos`, `/cotacao`, `/traduzir`, `/enquete`, `/listageral`...). Aliases work just like the original command
   (`/download` = `/get`) and don't depend on the language. [`/alias`](alias.md) saves
   shortcuts with arguments or texts with several `{/comando}`; `/help alias` lists the shortcuts
   available to you.
@@ -206,7 +205,7 @@ even if they start with `/`. Without that, someone could use a command that echo
 | [`/alias`](alias.md) | | `admin` | Registers, lists, and removes shortcuts for commands with arguments or texts with several `{/comando}` |
 | [`/ascii`](ascii.md) | | `user` | The text in big ASCII letters, in a block that fits a phone screen |
 | [`/backup`](backup.md) | `/bkp` | `admin` | Daily local backup and delivery through `backup.to`; lists, details, restores, and sends the database |
-| [`/batch`](batch.md) | `/lote` | `admin` | Runs several commands from a single message, in sequence (each line that starts with a command opens a block), and replies with a summary; `-stop` and `-dry` |
+| [`/batch`](batch.md) |  | `admin` | Runs several commands from a single message, in sequence (each line that starts with a command opens a block), and replies with a summary; `-stop` and `-dry` |
 | [`/bills`](bills.md) | `/boletos` | `user` | Draws 2 members to "pay a boleto" |
 | [`/block`](block.md) | `/bloquear` | `admin` | Blocks one or more people on your WhatsApp account (replying to a message, whoever wrote it); with nothing, lists the blocked ones; `-mask` obfuscates phone numbers |
 | [`/bot`](bot.md) | | `admin` | Bot status (24 h report and the users); turns commands on/off (`-on`/`-off`) and says who uses them: admins (`+a`/`-a`) and users (`+u`/`-u`, in any chat or just in one group, and each one's commands with `+cmd`/`-cmd`); `-reset` goes back to the default; `-status` (`-s`): report for the last 24 h, and `-s 06h` sends it every day; `-info` (`-i`): versions and system; `-test` (`-t`): tests cache, disk, database, WhatsApp, internet, SMTP, and programs |
@@ -221,19 +220,19 @@ even if they start with `/`. Without that, someone could use a command that echo
 | [`/get`](get.md) | `/download` | `user` | Downloads video/audio from social networks or from the replied media |
 | [`/giphy`](giphy.md) | `/gif` | `user` | GIPHY GIF by tag, URL, or ID, sent looping |
 | [`/gpt`](gpt.md) | `/ai` | `admin` · delegable | Asks ChatGPT (OpenAI); `-img`, `-gif`, `-voz`, `-prices` and `-usage` |
-| [`/help`](help.md) | `/h`, `/ajuda` | `user` | Help menu, only with the commands the requester can use |
-| [`/join`](join.md) | `/entrar` | `admin` | Joins a group through the invite link (`-info` shows the group without joining); `-l` lists your groups |
+| [`/help`](help.md) | `/h` | `user` | Help menu, only with the commands the requester can use |
+| [`/join`](join.md) |  | `admin` | Joins a group through the invite link (`-info` shows the group without joining); `-l` lists your groups |
 | [`/joke`](joke.md) | `/piada`, `/humor` | `user` | Random joke in Portuguese |
 | [`/kernel`](kernel.md) | | `user` | Current Linux kernel versions (kernel.org) |
-| [`/leave`](leave.md) | `/sair` | `admin` | Leaves one or more groups, by name or by list number; `-l` lists your groups |
+| [`/leave`](leave.md) |  | `admin` | Leaves one or more groups, by name or by list number; `-l` lists your groups |
 | [`/me`](me.md) | | `user` | Sends the typed message; `{/comando}` runs and the reply goes in its place, `\n` breaks the line |
 | [`/members`](members.md) | `/listageral`, `/list` | `admin` · delegable | Lists the group's members |
 | [`/meme`](meme.md) | | `user` | Random meme template (imgflip) |
 | [`/monitor`](monitor.md) | | `admin` | 👀 Up to 5 contacts, limited history, per-contact filter, and online-presence alerts |
 | [`/mute`](mute.md) | `/mudo` | `admin` | Silences the notices for deleted, edited, status, and reactions (and those from `/watch`) of a person, a group, or a community; replying to a notice, from where it came |
-| [`/news`](news.md) | `/noticias` | `user` | Headlines from RSS feeds: `-hack`, `-g1`, `-gazeta`, `-brasil` |
+| [`/news`](news.md) |  | `user` | Headlines from RSS feeds: `-hack`, `-g1`, `-gazeta`, `-brasil` |
 | [`/noffa`](noffa.md) | `/🌈`, `/🏳️‍🌈` | `user` | Decorates the text with rainbows |
-| [`/notes`](notes.md) | `/notas` | `admin` | Notes with ID and `#tag` (`-a`, `-l`, `-s`, `-r`): view with the media (`-v`), edit (`-u`), rename a tag (`-m`), describe a tag (`-d`), export to PDF (`-e`), and `-alerta` that notifies at a date/time |
+| [`/notes`](notes.md) |  | `admin` | Notes with ID and `#tag` (`-a`, `-l`, `-s`, `-r`): view with the media (`-v`), edit (`-u`), rename a tag (`-m`), describe a tag (`-d`), export to PDF (`-e`), and `-alerta` that notifies at a date/time |
 | [`/ping`](ping.md) | | `user` | Checks whether the bot is alive |
 | [`/pixelart`](pixelart.md) | `/ansi`, `/px` | `user` | Random ANSI/ASCII art (16colo.rs) |
 | [`/poll`](poll.md) | `/enquete`, `/quiz` | `admin` · delegable | Creates a native WhatsApp poll in the chat; `-r` shows the result |
@@ -241,16 +240,16 @@ even if they start with `/`. Without that, someone could use a command that echo
 | [`/rates`](rates.md) | `/cotacao`, `/cambio` | `user` | EUR and USDT (and USD, GBP) quotes against the real: current, open, close, and change; price alerts |
 | [`/search`](search.md) | `/buscar` | `admin` | Searches the WhatsApp Web history, not just the cache: in this chat or, in your private chat, in all of them (`-N` for more); `-mask` obfuscates phone numbers |
 | [`/set`](set.md) | `/config` | `admin` | Lists and changes the settings; `-a`/`-rm` add and remove items in lists (e.g., `bot.admins` and `bot.users`) |
-| [`/show`](show.md) | `/mostrar` | `admin` · delegable | In your private chat, lists the cache; redisplays deleted messages, edits (`-e`), status (`-s`), and removed or changed reactions (`-r`); `-q` searches (text or regex) and `-mask` obfuscates phone numbers |
-| [`/stats`](stats.md) | `/estatisticas` | `admin` · delegable | Ranking for this chat or another (`/Grupo/`): who talks, deletes, and edits the most, peak hours; `-me` for yours, `-l` lists the chats, `-flush` deletes |
-| [`/sticker`](sticker.md) | `/figurinha` | `user` | Sticker from an image, video, or link (the `/get -st`); with `-txt`, an animated text sticker |
+| [`/show`](show.md) |  | `admin` · delegable | In your private chat, lists the cache; redisplays deleted messages, edits (`-e`), status (`-s`), and removed or changed reactions (`-r`); `-q` searches (text or regex) and `-mask` obfuscates phone numbers |
+| [`/stats`](stats.md) |  | `admin` · delegable | Ranking for this chat or another (`/Grupo/`): who talks, deletes, and edits the most, peak hours; `-me` for yours, `-l` lists the chats, `-flush` deletes |
+| [`/sticker`](sticker.md) |  | `user` | Sticker from an image, video, or link (the `/get -st`); with `-txt`, an animated text sticker |
 | [`/tldr`](tldr.md) | `/resumo` | `admin` · delegable | Summarizes the chat's conversation with ChatGPT (`30m`, `2h`, `1d`, `1h30m` or `300` messages; replying to a message, from it on) |
 | [`/translate`](translate.md) | `/traduzir` | `user` | Translates the text or the replied message with Google Translate, no key; `-para en` changes the language |
-| [`/unblock`](unblock.md) | `/desbloquear` | `admin` | Unblocks a person: by name, by number, by the `/block` list number, or by replying to a message |
-| [`/unmute`](unmute.md) | `/desmutar` | `admin` | Undoes the `/mute` silence: by name, by list number, by replying to a notice, or all (`-all`) |
+| [`/unblock`](unblock.md) |  | `admin` | Unblocks a person: by name, by number, by the `/block` list number, or by replying to a message |
+| [`/unmute`](unmute.md) |  | `admin` | Undoes the `/mute` silence: by name, by list number, by replying to a notice, or all (`-all`) |
 | [`/uptime`](uptime.md) | | `user` | Run time and connection time |
-| [`/version`](version.md) | `/versao` | `user` | Bot version (same banner as `/uptime`) |
+| [`/version`](version.md) |  | `user` | Bot version (same banner as `/uptime`) |
 | [`/walissu`](walissu.md) | `/ualisu` | `user` | Walissu CVE BOT: tags 2 members with a random CVE |
-| [`/watch`](watch.md) | `/vigiar` | `admin` | Text/regex rules, with an optional source in `-in`; lists occurrences, searches them with `-q`, and notifies the `-to` destinations; `-mask` obfuscates phone numbers and `-mask N` turns on 🔒 for rule N |
+| [`/watch`](watch.md) |  | `admin` | Text/regex rules, with an optional source in `-in`; lists occurrences, searches them with `-q`, and notifies the `-to` destinations; `-mask` obfuscates phone numbers and `-mask N` turns on 🔒 for rule N |
 | [`/weather`](weather.md) | `/tempo` | `user` | Weather now and the day's max/min (Open-Meteo); `/weather 16d` shows up to 16 days, counting today; without a city it uses `tempo.city` |
 | [`/whois`](whois.md) | `/who`, `/id` | `user` | Who you are and what you can do in the bot, in this chat: 🤖 owner, 👑 admin, 🗣️ user, or 🚫 no permission; the owner and admins see others |

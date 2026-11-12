@@ -9,6 +9,7 @@
  * /regex/flags → JavaScript RegExp (the g and y flags are ignored)
  * When it matches, the occurrence goes to watch_hits and you are notified in private.
  */
+const { t } = require('../i18n');
 const { withoutAccents } = require('../util/format');
 const { MAX_TEXT_TESTED, regexDangerous } = require('../util/safeRegex');
 
@@ -29,13 +30,13 @@ function compileSearch(search) {
     if (m) {
         if (regexDangerous(m[1])) {
             // Backtracking exponencial travaria o bot inteiro (ver util/regexSeguro)
-            throw new Error('regex com risco de travar o bot (quantificador sobre grupo que já se repete, como (x+)+): simplifique');
+            throw new Error(t('watch.err.riskyRegex'));
         }
         let re;
         try {
             re = new RegExp(m[1], m[2].replace(/[gy]/g, ''));
         } catch (e) {
-            throw new Error(`regex inválida: ${e.message}`, { cause: e });
+            throw new Error(t('watch.err.invalidRegex', { error: e.message }), { cause: e });
         }
         // The tested text (the body of any received message) is truncated: defense
         // in depth against the cases the static check does not catch
@@ -50,7 +51,7 @@ function compileRuleWatch(rule) {
     if (rulesCompiled.has(rule)) return rulesCompiled.get(rule);
 
     if (!rule || rule.length > RULE_MAX_LEN) {
-        throw new Error(`a regra precisa ter de 1 a ${RULE_MAX_LEN} caracteres`);
+        throw new Error(t('watch.err.ruleLength', { max: RULE_MAX_LEN }));
     }
 
     const test = compileSearch(rule);

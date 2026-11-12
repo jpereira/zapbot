@@ -28,6 +28,7 @@ const { client } = require('./client');
 const { restartClient } = require('./connection');
 const { alertPerEmail } = require('./email');
 const { estado: stateAlt } = require('./state');
+const { t } = require('./i18n');
 const { printError, printInfo } = require('./log');
 
 const HEARTBEAT_FILE = process.env.ZAPBOT_HEARTBEAT_FILE || path.join(os.tmpdir(), 'zapbot-heartbeat.json');
@@ -115,9 +116,8 @@ async function matchHeart() {
     if (stateAlt.pronto && !stateAlt.reiniciando && ++failuresConsecutive >= FAILURES_FOR_RESTART) {
         failuresConsecutive = 0;
         printInfo('Heartbeat: WhatsApp sem resposta em 3 verificações seguidas, reiniciando o cliente.');
-        alertPerEmail('🩺 WhatsApp sem resposta',
-            `O WhatsApp Web não respondeu CONNECTED em ${FAILURES_FOR_RESTART} verificações seguidas (último estado: ${statusAlt.estado}).\n` +
-            'O cliente será reiniciado automaticamente.');
+        alertPerEmail(t('heartbeat.semRespostaTitulo'),
+            t('heartbeat.semRespostaCorpo', { n: FAILURES_FOR_RESTART, estado: statusAlt.estado }));
         await restartClient(`heartbeat: ${statusAlt.estado}`);
     }
 

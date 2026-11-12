@@ -6,6 +6,7 @@
  */
 
 const { printInfo } = require('./log');
+const { t } = require('./i18n');
 
 const CHOICE_MS = 2 * 60_000;
 
@@ -81,7 +82,7 @@ async function replyChoice(msg, chatId, textAlt) {
     if (!p || authorAlt(msg) !== p.autor) return false;
 
     if (p.confirmacao) {
-        const reply = /^sim$/i.test(textAlt) ? true : /^n[aã]o$/i.test(textAlt) ? false : null;
+        const reply = /^(sim|yes)$/i.test(textAlt) ? true : /^(n[aã]o|no)$/i.test(textAlt) ? false : null;
         if (reply === null) return false;
         printInfo(`Confirmação em ${chatId}: ${textAlt}`);
         close(chatId, reply);
@@ -92,7 +93,7 @@ async function replyChoice(msg, chatId, textAlt) {
 
     const n = Number(textAlt);
     if (n < 1 || n > p.opcoes.length) {
-        await msg.reply(`❌ Escolha um nº de 1 a ${p.opcoes.length}.`);
+        await msg.reply(t('escolhas.invalida', { max: p.opcoes.length }));
         return true;
     }
 

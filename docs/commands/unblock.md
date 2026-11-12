@@ -1,4 +1,4 @@
-# `/unblock` (`/desbloquear`) · admin
+# `/unblock` · admin
 
 Unblocks a person blocked by [`/block`](block.md) or on the phone, or everyone with `-all`. Replying
 to a message, unblocks whoever wrote it. With nothing, shows the `/block` list.

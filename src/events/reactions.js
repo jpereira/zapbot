@@ -6,6 +6,7 @@ const { client } = require('../client');
 const { contactName, resolveLidToPhone } = require('../contacts');
 const { dbGet, dbReady, dbRun } = require('../db');
 const { printError, printInfo } = require('../log');
+const { t } = require('../i18n');
 const { ignoreNotice, registerNotice } = require('../mudo');
 const { getSetting } = require('../settings');
 const { formatData, paraMs } = require('../util/format');
@@ -39,22 +40,25 @@ function messageKey(key) {
 
 async function sendReactionUndone(destination, row, { contagem: count = null } = {}) {
     const removed = !row.new_reaction;
-    const type = removed ? '😶 *REAÇÃO REMOVIDA' : '🔄 *REAÇÃO TROCADA';
-    const title = count ? `${type}* (${count})` : `${type} DETECTADA*`;
+    const title = t(`reacoes.${removed ? 'removida' : 'trocada'}${count ? 'Contagem' : 'Detectada'}`, { contagem: count });
 
     const body = String(row.body ?? '');
-    const messageAlt = row.body == null ? '_(fora do cache)_'
-        : `"${body.length > SNIPPET ? `${body.slice(0, SNIPPET)}…` : body || '(sem texto)'}"`;
+    const messageAlt = row.body == null ? t('reacoes.foraDoCache')
+        : `"${body.length > SNIPPET ? `${body.slice(0, SNIPPET)}…` : body || t('reacoes.semTexto')}"`;
 
     const textAlt = `${title}\n\n` +
         headerOrigin({
             chatId: row.chat_id, chatName: row.chat_name, isGroup: row.is_group,
             senderName: row.sender_name, senderNumber: row.sender_number
         }) +
-        `📅 *Reagiu em:* ${formatData(row.reacted_at)}\n` +
-        `${removed ? '🗑️ *Removida em:*' : '🔄 *Trocada em:*'} ${formatData(row.changed_at)}\n` +
-        `😶 *Reação:* ${removed ? row.old_reaction : `${row.old_reaction} → ${row.new_reaction}`}\n` +
-        `💬 *Na ${row.msg_from_me ? 'sua mensagem' : 'mensagem'}:* ${messageAlt}`;
+        t('reacoes.corpo', {
+            reagiu: formatData(row.reacted_at),
+            quandoRotulo: t(removed ? 'reacoes.removidaEm' : 'reacoes.trocadaEm'),
+            quando: formatData(row.changed_at),
+            reacao: removed ? row.old_reaction : `${row.old_reaction} → ${row.new_reaction}`,
+            naMensagem: t(row.msg_from_me ? 'reacoes.naSuaMensagem' : 'reacoes.naMensagem'),
+            mensagem: messageAlt
+        });
 
     // Records where it came from (/mute replying to the notice)
     const sent = await client.sendMessage(destination, textAlt, { linkPreview: false });
@@ -66,7 +70,7 @@ async function registerReactionUndone({ chave: keyAlt, sender, antes: beforeAlt,
     const phoneAlt = sender.endsWith('@lid') ? await resolveLidToPhone(sender) : sender;
     const numberAlt = phoneAlt?.endsWith('@c.us') ? phoneAlt.split('@')[0] : null;
     const contactAlt = await client.getContactById(phoneAlt || sender).catch(() => null);
-    const nameSender = contactName(contactAlt) || (numberAlt ? `+${numberAlt}` : 'Desconhecido');
+    const nameSender = contactName(contactAlt) || (numberAlt ? `+${numberAlt}` : t('core.desconhecido'));
 
     const isGroup = keyAlt.chatId.endsWith('@g.us');
     const original = await dbGet('SELECT body, chat_name FROM messages WHERE id = ?', [keyAlt.id]);
@@ -75,7 +79,7 @@ async function registerReactionUndone({ chave: keyAlt, sender, antes: beforeAlt,
     const row = {
         message_id: keyAlt.id,
         chat_id: keyAlt.chatId,
-        chat_name: original?.chat_name || chat?.name || (isGroup ? 'Grupo desconhecido' : nameSender),
+        chat_name: original?.chat_name || chat?.name || (isGroup ? t('reacoes.grupoDesconhecido') : nameSender),
         is_group: isGroup ? 1 : 0,
         sender_name: nameSender,
         sender_number: numberAlt,

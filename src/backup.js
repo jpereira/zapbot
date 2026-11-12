@@ -19,6 +19,7 @@ const { printError, printInfo } = require('./log');
 const { loadSettings, getSetting } = require('./settings');
 const { fmtWhen, instantInBrasilia, partsInBrasilia } = require('./util/when');
 const { versionWithCommit } = require('./version');
+const { t } = require('./i18n');
 
 /*
  * Each backup is a pair of files in BACKUP_DIR:
@@ -46,17 +47,26 @@ const REASONS = {
     restaurar: 'antes de restaurar'
 };
 
+// The reason is stored in Portuguese (MOTIVOS): on screen, in the current language
+const REASONS_IN_SCREEN = {
+    [REASONS.automatico]: 'adm.backup.reasonAuto',
+    [REASONS.manual]: 'adm.backup.reasonManual',
+    [REASONS.restaurar]: 'adm.backup.reasonRestore'
+};
+const reasonText = (reasonAlt) => (REASONS_IN_SCREEN[reasonAlt] ? t(REASONS_IN_SCREEN[reasonAlt]) : reasonAlt);
+
 const two = (n) => String(n).padStart(2, '0');
 
 async function sendBackupPerEmail(b, emails) {
     if (b.bytes > MAX_ATTACHMENT_BYTES) {
-        throw new Error('O backup passa do limite de 20 MB para envio por e-mail.');
+        throw new Error(t('adm.backup.tooBigEmail'));
     }
     await sendFilePerEmail({
         para: emails,
-        assunto: `💾 Backup de ${fmtWhen(b.criadoEm)}`,
-        texto: `Backup do banco do ZapBot de ${fmtWhen(b.criadoEm)} (${b.motivo}, ZapBot ${b.versao}).\n` +
-            `Para restaurar: copie o arquivo para ${BACKUP_DIR} e use /backup -r ${b.nome} -sim.`,
+        assunto: t('adm.backup.emailSubject', { quando: fmtWhen(b.criadoEm) }),
+        texto: t('adm.backup.emailBody', {
+            quando: fmtWhen(b.criadoEm), motivo: reasonText(b.motivo), versao: b.versao, dir: BACKUP_DIR, nome: b.nome
+        }),
         arquivo: b.arquivo,
         nomeArquivo: `${b.nome}.db.gz`
     });
@@ -65,13 +75,13 @@ async function sendBackupPerEmail(b, emails) {
 async function sendBackupOnChat(b, id) {
     await client.sendMessage(id, MessageMedia.fromFilePath(b.arquivo), {
         sendMediaAsDocument: true,
-        caption: `💾 Backup de ${fmtWhen(b.criadoEm)} (${b.motivo})`
+        caption: t('adm.backup.caption', { quando: fmtWhen(b.criadoEm), motivo: reasonText(b.motivo) })
     });
 }
 
 async function sendBackupAutomatic(b, valueAlt) {
     const list = /^-to(?:\s|$)/.test(valueAlt) ? extractDestinations(valueAlt) : null;
-    if (list?.resto) throw new Error('backup.to: use -to <destino> para cada destino.');
+    if (list?.resto) throw new Error(t('adm.backup.toUsage'));
     const texts = list ? list.destinos : [valueAlt.replace(/^(["'/])(.*)\1$/, '$2')];
     const destinations = [];
     const failures = [];
@@ -81,10 +91,10 @@ async function sendBackupAutomatic(b, valueAlt) {
             const d = await resolverDestination(textAlt, { aceitaEmail: true });
             if (d.erro) throw new Error(d.erro);
             // Without someone to pick a number: an ambiguous name does not win a coin toss.
-            if (d.opcoes) throw new Error('mais de um contato ou grupo; use o nome completo ou número');
+            if (d.opcoes) throw new Error(t('adm.backup.ambiguous'));
             if (!destinations.some(x => d.email ? x.email === d.email : x.id === d.id)) destinations.push(d);
         } catch (err) {
-            failures.push(`${textAlt ?? '-to vazio'}: ${err.message}`);
+            failures.push(`${textAlt ?? t('adm.backup.emptyTo')}: ${err.message}`);
         }
     }
 
@@ -92,7 +102,7 @@ async function sendBackupAutomatic(b, valueAlt) {
         .flatMap(d => d.email.split(/\s*,\s*/)))];
     if (emails.length) {
         await sendBackupPerEmail(b, emails)
-            .catch(err => failures.push(`e-mail: ${err.message}`));
+            .catch(err => failures.push(`${t('adm.backup.emailWord')}: ${err.message}`));
     }
     for (const d of destinations.filter(d => d.id)) {
         await sendBackupOnChat(b, d.id)
@@ -310,14 +320,14 @@ async function checkBackupDaily(nowAlt = Date.now()) {
                 await sendBackupAutomatic(b, destination);
             } catch (err) {
                 printError('Envio do backup diário falhou:', err.message);
-                await alertPerEmail('💾 Envio do backup falhou',
-                    `O backup ${b.nome} está salvo localmente, mas o envio falhou: ${err.message}`);
+                await alertPerEmail(t('adm.backup.sendFailAlertSubject'),
+                    t('adm.backup.sendFailAlert', { nome: b.nome, erro: err.message }));
             }
         }
         return b;
     } catch (err) {
         printError('Backup diário falhou:', err.message);
-        alertPerEmail('💾 Backup falhou', `O backup diário do banco falhou: ${err.message}`);
+        alertPerEmail(t('adm.backup.failAlertSubject'), t('adm.backup.failAlert', { erro: err.message }));
         return null;
     } finally {
         doingBackup = false;
@@ -350,6 +360,7 @@ module.exports = {
     sendBackupPerEmail,
     startBackup,
     listBackups,
+    reasonText,
     nextBackupDaily,
     removeBackup,
     restoreBackup,

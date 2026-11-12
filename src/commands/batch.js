@@ -10,6 +10,7 @@ const { isCommandOrAlias, textRunAlias, resolverAlias } = require('../aliases');
 const { readOptions: commandReadOptions } = require('../execute');
 const { printError, printInfo } = require('../log');
 const { summarizeText } = require('../util/format');
+const { t } = require('../i18n');
 
 const MAX_BLOCKS = 50;
 const MAX_REPLY = 300;
@@ -64,8 +65,8 @@ async function runBlock(line, context) {
     const resolved = await resolverAlias(line);
     const command = resolved?.command;
 
-    if (!command) return { ok: false, respostas: ['comando desconhecido'] };
-    if (command.cmd === '/batch') return { ok: false, respostas: ['/batch dentro de /batch não vale'] };
+    if (!command) return { ok: false, respostas: [t('adm.batch.unknown')] };
+    if (command.cmd === '/batch') return { ok: false, respostas: [t('adm.batch.nested')] };
 
     const msg = blockMsg(context.msg, line, replies);
     const args = resolved.args ?? line.slice(line.split(/\s+/, 1)[0].length).trim();
@@ -80,7 +81,7 @@ async function runBlock(line, context) {
         });
     } else {
         const handler = HANDLERS[command.cmd];
-        if (!handler) return { ok: false, respostas: [`${command.cmd} ainda não foi implementado`] };
+        if (!handler) return { ok: false, respostas: [t('adm.batch.notImplemented', { cmd: command.cmd })] };
         await handler({ ...context, msg, args, opts: commandReadOptions(command, args), quotedMsg: null });
     }
 
@@ -95,25 +96,25 @@ async function cmdBatch(context) {
     const textAlt = typed || (quotedMsg?.body ?? '').trim();
 
     if (!textAlt) {
-        await msg.reply('❌ Use: /batch [-stop] [-dry|-d] e, nas linhas de baixo, os comandos (ou responda uma mensagem com eles)');
+        await msg.reply(t('adm.batch.usage'));
         return;
     }
 
     const { blocos: blocks, sobra: leftOver } = await separateBlocks(textAlt);
     if (!blocks.length) {
-        await msg.reply('❌ Nenhum comando encontrado. Cada bloco começa com um comando ou alias, ex: /ideia ver isso');
+        await msg.reply(t('adm.batch.noCommand'));
         return;
     }
     if (blocks.length > MAX_BLOCKS) {
-        await msg.reply(`❌ São ${blocks.length} blocos; o máximo é ${MAX_BLOCKS}. Nada foi executado.`);
+        await msg.reply(t('adm.batch.tooMany', { n: blocks.length, max: MAX_BLOCKS }));
         return;
     }
 
-    const notice = leftOver ? '\n⚠️ _O texto antes do primeiro comando foi ignorado._' : '';
+    const notice = leftOver ? t('adm.batch.ignored') : '';
 
     if (optionsAlt.dry) {
-        const linesAlt = blocks.map((b, i) => `${i + 1}. ${top(b)}${b.includes('\n') ? ` (+${b.split('\n').length - 1} linhas)` : ''}`);
-        await msg.reply(`📦 *BATCH* (${blocks.length}) · só a separação, nada executado\n\n${linesAlt.join('\n')}${notice}`, undefined, WITHOUT_PREVIEW);
+        const linesAlt = blocks.map((b, i) => `${i + 1}. ${top(b)}${b.includes('\n') ? t('adm.batch.extraLines', { n: b.split('\n').length - 1 }) : ''}`);
+        await msg.reply(t('adm.batch.dry', { n: blocks.length, linhas: linesAlt.join('\n'), aviso: notice }), undefined, WITHOUT_PREVIEW);
         return;
     }
 
@@ -132,13 +133,13 @@ async function cmdBatch(context) {
 
         if (!r.ok) failures++;
         if (!r.ok && optionsAlt.quiet) printInfo(`/batch -quiet: bloco ${i + 1} falhou (${top(block)}):`, r.respostas.join(' | '));
-        const reply = r.respostas.filter(t => !t.includes('```')).join('\n').trim();
-        contents.push(...r.respostas.filter(t => t.includes('```')));
+        const reply = r.respostas.filter(x => !x.includes('```')).join('\n').trim();
+        contents.push(...r.respostas.filter(x => x.includes('```')));
         const detail = reply ? `\n   ↳ ${summarizeText(reply.replace(/\n+/g, ' · '), MAX_REPLY)}` : '';
         linesAlt.push(`${r.ok ? '✅' : '❌'} ${i + 1} · ${top(block)}${detail}`);
 
         if (!r.ok && optionsAlt.stop) {
-            if (i + 1 < blocks.length) linesAlt.push(`⏹️ Parou no bloco ${i + 1}; ${blocks.length - i - 1} não rodaram.`);
+            if (i + 1 < blocks.length) linesAlt.push(t('adm.batch.stopped', { i: i + 1, resto: blocks.length - i - 1 }));
             break;
         }
     }
@@ -146,7 +147,7 @@ async function cmdBatch(context) {
     // -quiet: without the summary (what the commands send outside the summary, like media, goes out the same)
     if (!optionsAlt.quiet) {
         const ok = blocks.length - failures;
-        await msg.reply(`📦 *BATCH* · ${ok}/${blocks.length} ok\n\n${linesAlt.join('\n')}${notice}`, undefined, WITHOUT_PREVIEW);
+        await msg.reply(t('adm.batch.summary', { ok, n: blocks.length, linhas: linesAlt.join('\n'), aviso: notice }), undefined, WITHOUT_PREVIEW);
     }
     for (const c of contents) await msg.reply(c);
 }

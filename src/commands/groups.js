@@ -3,9 +3,9 @@
  */
 
 const { client } = require('../client');
+const { t } = require('../i18n');
 const { resolverOrChoose } = require('../destinations');
 const { printError, printInfo } = require('../log');
-const { plural } = require('../util/format');
 const { textItems } = require('./set');
 
 /*
@@ -42,42 +42,41 @@ async function listAlt(msg) {
     lastList = chats.map(c => ({ id: c.id._serialized, nome: c.name }));
 
     if (!chats.length) {
-        await msg.reply('👥 Você não está em nenhum grupo.\n\n💡 _Entre com /join <link do convite>._');
+        await msg.reply(t('grp.join.noGroups'));
         return;
     }
     const linesAlt = chats.map((c, i) => {
         const n = c.participants?.length;
-        return `${i + 1}. ${c.name}${n ? ` · ${plural(n, 'participante', 'participantes')}` : ''}`;
+        return `${i + 1}. ${c.name}${n ? ` · ${t('grp.join.participants', { n: n === 1 ? 1 : 2, count: n })}` : ''}`;
     });
-    await msg.reply(`👥 *GRUPOS* (${chats.length})\n\n${linesAlt.join('\n')}\n\n` +
-        '💡 *Dicas*\n/join <link> entra\n/leave <nº|nome> sai');
+    await msg.reply(t('grp.join.list', { n: chats.length, list: linesAlt.join('\n') }));
 }
 
 async function cmdJoin({ msg, opts }) {
     if (opts.opt.list) return listAlt(msg);
 
     const textAlt = opts.argv.join(' ').trim();
-    if (!textAlt) return msg.reply('❌ Use: /join [-info] <link do convite (chat.whatsapp.com/...)> ou /join -l');
+    if (!textAlt) return msg.reply(t('grp.join.usage'));
 
     const codeAlt = inviteCode(textAlt);
-    if (!codeAlt) return msg.reply('❌ Link de convite inválido. Ex.: https://chat.whatsapp.com/AbCdEfGhIjKlMnOpQrStUv');
+    if (!codeAlt) return msg.reply(t('grp.join.badLink'));
 
     let info;
     try {
         info = await client.getInviteInfo(codeAlt);
     } catch (e) {
         printInfo(`[JOIN] convite ${codeAlt} não resolvido:`, e.message);
-        return msg.reply('❌ Convite inválido, expirado ou revogado.');
+        return msg.reply(t('grp.join.badInvite'));
     }
-    const nameAlt = info?.subject || 'grupo sem nome';
+    const nameAlt = info?.subject || t('grp.join.unnamed');
 
     if (opts.opt.info) {
         const n = info?.size ?? info?.participants?.length;
         return msg.reply([
             `👥 *${nameAlt}*`,
-            n && `👤 ${plural(n, 'participante', 'participantes')}`,
+            n && `👤 ${t('grp.join.participants', { n: n === 1 ? 1 : 2, count: n })}`,
             info?.desc && `📝 ${info.desc}`,
-            `💡 _Entre com /join ${textAlt.replace(/^-\w+\s+/, '')}_`
+            t('grp.join.enterHint', { arg: textAlt.replace(/^-\w+\s+/, '') })
         ].filter(Boolean).join('\n'), undefined, { linkPreview: false });
     }
 
@@ -85,21 +84,21 @@ async function cmdJoin({ msg, opts }) {
         await client.acceptInvite(codeAlt);
     } catch (e) {
         printError(`[JOIN] não entrou em "${nameAlt}":`, e.message);
-        return msg.reply(`❌ Não consegui entrar em 👥 ${nameAlt}: ${e.message || 'o WhatsApp recusou'}.`);
+        return msg.reply(t('grp.join.failed', { name: nameAlt, reason: e.message || t('grp.refused') }));
     }
     printInfo(`[JOIN] entrou em "${nameAlt}"`);
-    await msg.reply(`✅ Entrei em 👥 ${nameAlt}`);
+    await msg.reply(t('grp.join.joined', { name: nameAlt }));
 }
 
 // Leaves a group; returns the error (text) or null
 async function leave(target) {
     const chat = await client.getChatById(target.id).catch(() => null);
-    if (!chat?.isGroup || typeof chat.leave !== 'function') return 'não é um grupo em que você está';
+    if (!chat?.isGroup || typeof chat.leave !== 'function') return t('grp.leave.notMember');
     try {
         await chat.leave();
     } catch (e) {
         printError(`[LEAVE] não saiu de "${target.nome}":`, e.message);
-        return e.message || 'o WhatsApp recusou';
+        return e.message || t('grp.refused');
     }
     printInfo(`[LEAVE] saiu de "${target.nome}"`);
     return null;
@@ -128,7 +127,7 @@ async function cmdLeave({ msg, opts }) {
         if (/^\d{1,4}$/.test(item)) {
             target = list[Number(item) - 1];
             if (!target) {
-                errors.push(`❌ Nº ${item} fora da lista; veja os grupos com /leave -l.`);
+                errors.push(t('grp.leave.outOfList', { n: item }));
                 continue;
             }
         } else {
@@ -141,13 +140,13 @@ async function cmdLeave({ msg, opts }) {
     const left = [];
     for (const target of targets) {
         const errorAlt = await leave(target);
-        if (errorAlt) errors.push(`❌ Não consegui sair de 👥 ${target.nome}: ${errorAlt}.`);
+        if (errorAlt) errors.push(t('grp.leave.failed', { name: target.nome, reason: errorAlt }));
         else left.push(target);
     }
 
     const linesAlt = [
-        left.length === 1 && targets.length === 1 ? `👋 Saí de 👥 ${left[0].nome}`
-            : left.length && `👋 Saí de ${plural(left.length, 'grupo', 'grupos')}:\n${left.map(g => `👥 ${g.nome}`).join('\n')}`,
+        left.length === 1 && targets.length === 1 ? t('grp.leave.left', { name: left[0].nome })
+            : left.length && t('grp.leave.leftMany', { n: left.length === 1 ? 1 : 2, count: left.length, list: left.map(g => `👥 ${g.nome}`).join('\n') }),
         ...errors
     ].filter(Boolean);
     // When leaving the group where the command was given, the reply may have nowhere left to go

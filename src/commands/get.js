@@ -13,6 +13,7 @@ const { BIN_FFMPEG, BIN_FFPROBE, BIN_YT, CACHE_DIR, GET_MAX_CONCURRENT, TMP_DIR 
 const { printDebug, printError, printInfo } = require('../log');
 const { STICKER_ANIMATED_MAX_BYTES, ATTEMPTS_STICKER, argsDoFfmpeg, fitSticker, readPosition, thumbnailDoLink } = require('../media');
 const { getSetting, isDebugMode, stickerMeta } = require('../settings');
+const { t } = require('../i18n');
 const { humanSize } = require('../util/files');
 const { captureOutput, runCommand } = require('../util/processes');
 const { extractFirstUrl, isUrlPublic, isValidHttpUrl } = require('../util/url');
@@ -20,7 +21,7 @@ const { extractFirstUrl, isUrlPublic, isValidHttpUrl } = require('../util/url');
 let getInProgress = 0;
 
 const MSG_STICKER = { sendMediaAsSticker: true };
-const MSG_DOCUMENT = { caption: '📥 Aqui está a mídia para download.', sendMediaAsDocument: true };
+const msgDocument = () => ({ caption: t('get.documentCaption'), sendMediaAsDocument: true });
 
 async function cmdGet(ctx) {
     await downloadMedia(ctx, { cmd: '/get' });
@@ -37,9 +38,9 @@ async function cmdGet(ctx) {
 async function downloadMedia({ msg, opts, quotedMsg, senderName }, { cmd }) {
     if (!(await optionsValid(msg, opts, cmd))) return;
 
-    const origin = mediaOrigin(opts, quotedMsg);
+    const origin = mediaOrigin(opts, quotedMsg, msg);
     if (!origin) {
-        await msg.reply(quotedMsg ? '❌ A mensagem respondida não tem mídia nem link.' : '```' + getCommandSyntax(cmd) + '```');
+        await msg.reply(quotedMsg ? t('get.quotedNoMedia') : '```' + getCommandSyntax(cmd) + '```');
         return;
     }
 
@@ -54,7 +55,7 @@ async function downloadMedia({ msg, opts, quotedMsg, senderName }, { cmd }) {
 
     // Allowed users use it too: two downloads already put enough work on the CPU.
     if (getInProgress >= GET_MAX_CONCURRENT) {
-        await msg.reply(`⏳ Já existem ${GET_MAX_CONCURRENT} downloads em andamento. Tente de novo em instantes.`);
+        await msg.reply(t('get.busy', { max: GET_MAX_CONCURRENT }));
         return;
     }
 
@@ -101,8 +102,7 @@ function resolverTimes(opts, duration) {
     if (Number(opt.startSec) < 0) opt.startSec = round(Math.max(0, duration + Number(opt.startSec)));
     if (Number(opt.endSec) < 0) opt.endSec = round(duration + Number(opt.endSec));
     if (opt.endSec != null && Number(opt.endSec) <= Number(opt.startSec ?? 0)) {
-        throw new Error(`O trecho pedido ficou vazio: o vídeo tem ${duration} s e o final (-es) caiu em ${opt.endSec} s, `
-            + `não depois do início (-ss, ${opt.startSec ?? 0} s).`);
+        throw new Error(t('get.emptyClip', { duration: duration, end: opt.endSec, start: opt.startSec ?? 0 }));
     }
     return { ...opts, opt };
 }
@@ -114,7 +114,7 @@ function argsDeCookies() {
     return fs.existsSync(FILE_COOKIES) ? ['--cookies', FILE_COOKIES] : [];
 }
 
-const errorDuration = () => new Error('Não consegui descobrir a duração do vídeo, necessária para o tempo contado do final (-ss -10)');
+const errorDuration = () => new Error(t('get.noDuration'));
 
 async function fileDuration(fileAlt) {
     const duration = await captureOutput(BIN_FFPROBE, [
@@ -134,19 +134,18 @@ async function optionsValid(msg, opts, cmd) {
     // The parser leaves the option it does not know in argv: without this, it would become the URL
     const unknown = opts.argv.find(a => /^-\S/.test(a));
     if (unknown) {
-        await msg.reply(`❌ Opção desconhecida: ${unknown}\n💡 _Veja as opções com ${cmd} -h_`);
+        await msg.reply(t('get.unknownOption', { option: unknown, cmd }));
         return false;
     }
     for (const nameAlt of ['startSec', 'endSec']) {
         if (!opts.given.has(nameAlt)) continue;
         const seconds = readTime(opts.opt[nameAlt]);
         if (seconds === null) {
-            await msg.reply(`❌ -${nameAlt} precisa de um tempo em segundos (0, 10, 2.5) ou em minutos (09:33, 1:02:03); `
-                + 'com "-" na frente conta do final (-10, -01:44).');
+            await msg.reply(t('get.badTime', { name: nameAlt }));
             return false;
         }
         if (!Number.isFinite(seconds)) {
-            await msg.reply(`❌ Valor de -${nameAlt} grande demais.`);
+            await msg.reply(t('get.timeTooBig', { name: nameAlt }));
             return false;
         }
         // ffmpeg always receives seconds
@@ -155,35 +154,37 @@ async function optionsValid(msg, opts, cmd) {
     // Mixing start and end (-ss 10 -es -5) can only be checked with the video duration
     const [start, end] = [Number(opts.opt.startSec ?? 0), opts.opt.endSec == null ? null : Number(opts.opt.endSec)];
     if (end !== null && (start < 0) === (end < 0) && end <= start) {
-        await msg.reply('❌ O segundo final (-es) deve ser maior que o inicial (-ss, padrão 0).');
+        await msg.reply(t('get.endBeforeStart'));
         return false;
     }
     if (opts.given.has('pos')) {
         const pos = readPosition(opts.opt.pos);
         if (!pos) {
-            await msg.reply(`❌ -pos: "${opts.opt.pos ?? ''}" não vale. Use topo, meio ou baixo.`);
+            await msg.reply(t('get.badPos', { value: opts.opt.pos ?? '' }));
             return false;
         }
         if (!opts.opt.sticker) {
-            await msg.reply('❌ O -pos é da figurinha: use com -st (ou /sticker).');
+            await msg.reply(t('get.posNeedsSticker'));
             return false;
         }
         opts.opt.pos = pos;
     }
     if (opts.opt.audio && opts.opt.sticker) {
-        await msg.reply('❌ Escolha áudio (-a) ou figurinha (-st) para esta execução.');
+        await msg.reply(t('get.audioOrSticker'));
         return false;
     }
     return true;
 }
 
 /*
- * The typed URL beats the replied message. On the replied one, the media
+ * The typed URL beats the replied message, and that beats the media of the
+ * message (the command in the caption). On the replied one, the media
  * counts more than a link in its caption.
  */
-function mediaOrigin(opts, quotedMsg) {
+function mediaOrigin(opts, quotedMsg, msg) {
     if (opts.argv[0]) return { url: opts.argv[0] };
-    if (!quotedMsg) return null;
+    // Without a reply: the message itself with the media and the command in the caption (image with "/sticker")
+    if (!quotedMsg) return msg?.hasMedia ? { citada: msg } : null;
     if (quotedMsg.hasMedia) return { citada: quotedMsg };
 
     const url = quotedMsg.links?.length ? quotedMsg.links[0].link : extractFirstUrl(quotedMsg.body);
@@ -196,7 +197,7 @@ async function downloadQuoted(msg, quoted) {
         return null;
     });
     if (!media?.data) {
-        await msg.reply('❌ Não consegui baixar a mídia respondida: ela pode não estar mais disponível no WhatsApp.');
+        await msg.reply(t('get.quotedDownloadFailed'));
         return null;
     }
     return media;
@@ -217,10 +218,10 @@ async function sendWithoutConverter(msg, media, opts) {
     const cut = opts.given.has('startSec') || opts.given.has('endSec');
     const { audio, sticker } = opts.opt;
 
-    const errorAlt = !type ? '❌ A mídia respondida não é imagem, vídeo nem áudio.'
-        : type === 'imagem' && cut ? '❌ O -ss e o -es só valem para vídeo.'
-            : type === 'imagem' && audio ? '❌ A imagem respondida não tem áudio.'
-                : type === 'audio' && sticker ? '❌ Não dá para fazer figurinha de um áudio.'
+    const errorAlt = !type ? t('get.quotedNotMedia')
+        : type === 'imagem' && cut ? t('get.cutOnlyVideo')
+            : type === 'imagem' && audio ? t('get.imageNoAudio')
+                : type === 'audio' && sticker ? t('get.audioNoSticker')
                     : null;
     if (errorAlt) {
         await msg.reply(errorAlt);
@@ -235,7 +236,7 @@ async function sendWithoutConverter(msg, media, opts) {
     // Without a requested conversion: the original file, as a document (without a name, WhatsApp shows "Sem título")
     if (type === 'imagem' || (!audio && !sticker && !cut)) {
         const fileAlt = media.filename ? media : new MessageMedia(media.mimetype, media.data, `zapbot.${extension(media)}`);
-        await msg.reply(fileAlt, null, { ...MSG_DOCUMENT, linkPreview: false });
+        await msg.reply(fileAlt, null, { ...msgDocument(), linkPreview: false });
         return true;
     }
 
@@ -283,15 +284,15 @@ async function converterAndSend({ msg, opts, senderName, url, media, previa: pre
         }
 
         if (url && !isValidHttpUrl(url)) {
-            throw errorOnDownload(`A URL '${url}' é inválida. Ignorando`);
+            throw errorOnDownload(t('get.invalidUrl', { url }));
         }
 
         if (url && !(await isUrlPublic(url))) {
             printInfo(`/get: URL recusada (host privado ou não resolvido) de '${senderName}': ${url}`);
-            throw errorOnDownload(`A URL '${url}' aponta para um endereço não permitido. Ignorando`);
+            throw errorOnDownload(t('get.forbiddenUrl', { url }));
         }
 
-        notice = await msg.reply(`⏳ Processando ${isSticker ? 'seu sticker' : 'sua mídia'}, aguarde.`, null, { linkPreview: false });
+        notice = await msg.reply(t(isSticker ? 'get.processingSticker' : 'get.processingMedia'), null, { linkPreview: false });
 
         fs.mkdirSync(TMP_DIR, { recursive: true });
 
@@ -338,7 +339,7 @@ async function converterAndSend({ msg, opts, senderName, url, media, previa: pre
 
                 // Above --max-filesize yt-dlp aborts with no error and no file
                 if (!fs.existsSync(originalFile)) {
-                    throw errorOnDownload(`Nada foi baixado (acima de ${getSetting('get.maxDownloadMB')} MB? veja o setting get.maxDownloadMB)`);
+                    throw errorOnDownload(t('get.nothingDownloaded', { max: getSetting('get.maxDownloadMB') }));
                 }
                 printInfo(`> Baixado ${optsFfmpeg === opts ? 'o vídeo inteiro' : 'o trecho'}: ${humanSize(fs.statSync(originalFile).size)}`);
 
@@ -368,21 +369,20 @@ async function converterAndSend({ msg, opts, senderName, url, media, previa: pre
                 fs.writeSync(logCmd, `\n\n# Executando: ${cmdFfmpeg}\n`);
                 await runCommand(BIN_FFMPEG, ffmpegArgs, logCmd);
             } catch (inner) {
-                const errorAlt = new Error(`Problemas para decodificar com '${BIN_FFMPEG}'`, { cause: inner });
+                const errorAlt = new Error(t('get.decodeFailed', { bin: BIN_FFMPEG }), { cause: inner });
                 errorAlt.cmd = cmdFfmpeg;
                 throw errorAlt;
             }
 
             if (!isSticker || fs.statSync(outputFile).size <= STICKER_ANIMATED_MAX_BYTES) break;
             if (attemptAlt === attempts.at(-1)) {
-                throw new Error(`Figurinha grande demais para o WhatsApp (máx. ${STICKER_ANIMATED_MAX_BYTES / 1024} KB): `
-                    + 'tente um trecho menor com -ss e -es');
+                throw new Error(t('get.stickerTooBig', { max: STICKER_ANIMATED_MAX_BYTES / 1024 }));
             }
         }
 
         const maxSizeMB = getSetting('get.maxSizeMB');
         if (fs.statSync(outputFile).size > maxSizeMB * 1024 * 1024) {
-            throw new Error(`Arquivo muito grande para WhatsApp Web (máx. ${maxSizeMB} MB)`);
+            throw new Error(t('get.fileTooBig', { max: maxSizeMB }));
         }
 
         try {
@@ -402,16 +402,16 @@ async function converterAndSend({ msg, opts, senderName, url, media, previa: pre
                 await msg.reply(outputAlt, null, { linkPreview: false, ...MSG_STICKER, ...stickerMeta() });
             } else {
                 printInfo(`> Enviando a mídia ${outputFile} para '${senderName}'`);
-                await msg.reply(outputAlt, null, { linkPreview: false, ...MSG_DOCUMENT, ...stickerMeta() });
+                await msg.reply(outputAlt, null, { linkPreview: false, ...msgDocument(), ...stickerMeta() });
             }
         } catch (inner) {
-            throw new Error(`Problemas para enviar com 'MessageMedia.fromFilePath(${outputFile})'`, {
+            throw new Error(t('get.sendFailed', { file: outputFile }), {
                 cause: inner
             });
         }
 
         // WhatsApp only edits text: the media goes separately and the notice becomes the confirmation
-        await completeNotice(msg, notice, `✅ ${isSticker ? 'Sticker criado' : 'Mídia baixada'} com sucesso!`, { linkPreview: false });
+        await completeNotice(msg, notice, t(isSticker ? 'get.stickerDone' : 'get.mediaDone'), { linkPreview: false });
     } catch (e) {
         if (e.aoBaixar && preview && (await previewSticker(msg, preview, notice, e, opts.opt.pos))) return;
         printError(e.message);
@@ -473,7 +473,7 @@ async function downloadWithYtDlp(url, originalFile, logCmd, snippet = null) {
         fs.writeSync(logCmd, `# Executando: ${cmdYt}\n`);
         await runCommand(BIN_YT, cmdYtArgs, logCmd);
     } catch (inner) {
-        const errorAlt = errorOnDownload(`Problemas para baixar com '${BIN_YT}'`, { cause: inner });
+        const errorAlt = errorOnDownload(t('get.downloadFailed', { bin: BIN_YT }), { cause: inner });
         errorAlt.cmd = cmdYt;
         throw errorAlt;
     }
@@ -497,7 +497,7 @@ async function previewSticker(msg, quoted, notice, reasonAlt, pos) {
 
         printInfo(`/sticker: sem o vídeo do link (${reasonAlt.message}); usando a prévia`);
         await msg.reply(await fitSticker(thumb, pos), null, { ...MSG_STICKER, ...stickerMeta() });
-        if (notice) await completeNotice(msg, notice, '✅ Sticker criado com sucesso!', { linkPreview: false });
+        if (notice) await completeNotice(msg, notice, t('get.stickerDone'), { linkPreview: false });
         return true;
     } catch (err) {
         printError('/sticker: falha ao usar a prévia do link:', err.message);

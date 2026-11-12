@@ -1,6 +1,8 @@
 /*
  * Preserves /regex with spaces/flags and /chat names/ in /watch.
  */
+const { t } = require('../i18n');
+
 function tokensWatch(args) {
     const tokens = [];
     let textAlt = args.trim();
@@ -25,11 +27,11 @@ function tokensWatch(args) {
             }
             if (c === delimiter && !kind) break;
         }
-        if (end === textAlt.length) throw new Error('aspas ou barras não foram fechadas');
+        if (end === textAlt.length) throw new Error(t('watch.err.unclosed'));
         const content = textAlt.slice(1, end);
         end++;
         if (delimiter === '/') while (end < textAlt.length && /[a-z]/i.test(textAlt[end])) end++;
-        if (textAlt[end] && !/\s/.test(textAlt[end])) throw new Error('separe os argumentos com espaço');
+        if (textAlt[end] && !/\s/.test(textAlt[end])) throw new Error(t('watch.err.separate'));
         const raw = textAlt.slice(0, end);
         tokens.push({ valor: content, regra: delimiter === '/' ? raw : content });
         textAlt = textAlt.slice(end).trimStart();
@@ -44,23 +46,23 @@ function readOptionsWatch(args) {
         flush: 'flush', f: 'flush', mask: 'mask', m: 'mask', umask: 'umask', u: 'umask', in: 'in', to: 'to', query: 'query', q: 'query' };
     const rule = [];
     for (let i = 0; i < tokens.length; i++) {
-        const t = tokens[i];
+        const tk = tokens[i];
         // Only tokens without quotes/slashes are options.
-        if (!t.opcao || !t.regra.startsWith('-')) { rule.push(t.regra); continue; }
-        if (/^-\d+$/.test(t.valor)) {
-            if (o.limite !== null) throw new Error('informe apenas uma quantidade -N');
-            o.limite = Number(t.valor.slice(1));
+        if (!tk.opcao || !tk.regra.startsWith('-')) { rule.push(tk.regra); continue; }
+        if (/^-\d+$/.test(tk.valor)) {
+            if (o.limite !== null) throw new Error(t('watch.err.oneCount'));
+            o.limite = Number(tk.valor.slice(1));
             continue;
         }
-        const nameAlt = aliases[t.valor.slice(1)];
-        if (!nameAlt) throw new Error(`opção desconhecida: ${t.valor}`);
+        const nameAlt = aliases[tk.valor.slice(1)];
+        if (!nameAlt) throw new Error(t('watch.err.unknownOption', { option: tk.valor }));
         // -mask N / -umask N: the persistent 🔒 of rule N. Without the no., -mask only obfuscates this output
         const next = tokens[i + 1];
         const ruleN = next?.opcao && /^\d+$/.test(next.valor) ? Number(next.valor) : null;
         if (nameAlt === 'mask' && ruleN === null) { o.mask = true; continue; }
         if (nameAlt === 'mask' || nameAlt === 'umask') {
-            if (ruleN === null) throw new Error('informe o nº da regra: -umask N');
-            if (o.trava) throw new Error('use apenas um -mask N ou -umask N');
+            if (ruleN === null) throw new Error(t('watch.err.needRuleNumber'));
+            if (o.trava) throw new Error(t('watch.err.oneMask'));
             o.trava = { n: ruleN, ligar: nameAlt === 'mask' };
             i++;
             continue;
@@ -68,22 +70,20 @@ function readOptionsWatch(args) {
         if (nameAlt === 'to' || nameAlt === 'in' || nameAlt === 'query') {
             const valueAlt = tokens[++i];
             if (!valueAlt || valueAlt.regra.startsWith('-') || !valueAlt.valor.trim()) {
-                throw new Error(nameAlt === 'query'
-                    ? 'informe o que buscar: -q <texto|/regex/flags> (com espaços, entre aspas: -q "bom dia")'
-                    : `informe o valor de -${nameAlt}`);
+                throw new Error(nameAlt === 'query' ? t('watch.err.needQuery') : t('watch.err.needValue', { name: nameAlt }));
             }
             if (nameAlt === 'query') {
-                if (o.busca !== null) throw new Error('informe apenas uma busca -q');
+                if (o.busca !== null) throw new Error(t('watch.err.oneQuery'));
                 // With slashes, it comes whole: /carro/i
                 o.busca = valueAlt.regra.trim();
             } else if (nameAlt === 'to') o.destinos.push(valueAlt.valor);
             else {
-                if (o.origem !== null) throw new Error('informe apenas uma origem -in');
+                if (o.origem !== null) throw new Error(t('watch.err.oneSource'));
                 o.origem = valueAlt.valor;
             }
             continue;
         }
-        if (o.acao) throw new Error('use apenas uma ação: -list, -show, -rm ou -flush');
+        if (o.acao) throw new Error(t('watch.err.oneAction'));
         o.acao = nameAlt;
         if (nameAlt !== 'list' && /^-?\d+$/.test(tokens[i + 1]?.valor ?? '')) {
             o.n = Number(tokens[++i].valor.replace(/^-/, ''));
@@ -91,9 +91,9 @@ function readOptionsWatch(args) {
     }
     o.regra = rule.join(' ').trim();
     if (o.trava) {
-        if (!o.trava.n) throw new Error('o número da regra deve ser maior que zero');
+        if (!o.trava.n) throw new Error(t('watch.err.ruleGtZero'));
         if (o.regra || o.acao || o.destinos.length || o.origem !== null || o.busca !== null || o.limite !== null) {
-            throw new Error('use -mask N e -umask N sozinhos');
+            throw new Error(t('watch.err.maskAlone'));
         }
     }
     // -s/-r/-f also accept the rule itself in place of the no.: /watch -s /Jorge/
@@ -101,17 +101,17 @@ function readOptionsWatch(args) {
         o.ref = o.regra;
         o.regra = '';
     }
-    if (o.acao && o.regra) throw new Error('não combine regra nova com ações de consulta ou remoção');
-    if (o.origem !== null && !o.regra) throw new Error('o -in acompanha uma regra nova');
+    if (o.acao && o.regra) throw new Error(t('watch.err.noMixRule'));
+    if (o.origem !== null && !o.regra) throw new Error(t('watch.err.inNeedsRule'));
     if (o.busca !== null && (o.regra || o.destinos.length || ['rm', 'flush', 'list'].includes(o.acao))) {
-        throw new Error('o -q só filtra as ocorrências: use com /watch -s [N|regra] ou /watch [-N]');
+        throw new Error(t('watch.err.queryOnlyFilters'));
     }
     if (o.limite !== null && (!o.limite || o.limite > 100)) {
-        throw new Error('a quantidade -N deve estar entre 1 e 100');
+        throw new Error(t('watch.err.countRange'));
     }
-    if (o.n !== null && !o.n) throw new Error('o número da regra deve ser maior que zero');
+    if (o.n !== null && !o.n) throw new Error(t('watch.err.ruleGtZero'));
     if (['rm', 'flush', 'list'].includes(o.acao) && o.limite !== null) {
-        throw new Error('use -N para a quantidade de matches na listagem ou no -show');
+        throw new Error(t('watch.err.countOnlyList'));
     }
     return o;
 }

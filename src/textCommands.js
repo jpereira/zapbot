@@ -10,6 +10,7 @@ const { activeCommands, findCommand } = require('./commands/base');
 const { printError } = require('./log');
 const { optionsError, readOptions, assembleContext, denial } = require('./execute');
 const { dbGet, dbReady } = require('./db');
+const { t } = require('./i18n');
 
 /*
  * Only the commands with "cron": true in commands.js (the query ones), and without the
@@ -74,18 +75,18 @@ async function readCommand(line, whereAlt = '/cron', owner = false) {
     const caller = line.split(/\s+/, 1)[0].toLowerCase();
     const foundAlt2 = await findCommandAlt(line);
 
-    if (!foundAlt2) return { erro: `❌ {${line}}: o ${caller} não existe.` };
-    if (foundAlt2.textoAlias) return { erro: `❌ {${line}}: o alias ${caller} é um texto e não roda dentro do ${whereAlt}.` };
+    if (!foundAlt2) return { erro: t('cnt.naoExiste', { linha: line, caller }) };
+    if (foundAlt2.textoAlias) return { erro: t('cnt.aliasTexto', { linha: line, caller, onde: whereAlt }) };
 
     const { command, args } = foundAlt2;
     if (!command.cron || (command.cron === 'dono' && !owner)) {
-        return { erro: `❌ {${line}}: o ${command.cmd} não roda dentro do ${whereAlt}.\n💡 _Rodam: ${allowed().join(', ')}._` };
+        return { erro: t('cnt.naoRoda', { linha: line, cmd: command.cmd, onde: whereAlt, lista: allowed().join(', ') }) };
     }
 
     const opts = readOptions(command, args);
     const prohibited = (command.cmd_opts ?? []).find(o => (o.cron === false || (o.cron === 'dono' && !owner)) &&
         o.opts?.some(nameAlt => opts.given.has(nameAlt)));
-    if (prohibited) return { erro: `❌ {${line}}: o -${prohibited.opts[0]} do ${command.cmd} não roda dentro do ${whereAlt}.` };
+    if (prohibited) return { erro: t('cnt.opcaoNaoRoda', { linha: line, opt: prohibited.opts[0], cmd: command.cmd, onde: whereAlt }) };
 
     return { command, args, opts };
 }
@@ -136,14 +137,14 @@ function messageSynthetic(chatId, line, replies) {
  */
 async function runCommand(chatId, line, { chatName, isGroup, onde: whereAlt = '/cron', quem: who = null }) {
     const { erro: errorAlt, command, args, opts } = await readCommand(line, whereAlt, !who); // without `quem`: runs as the owner
-    if (errorAlt) return { texto: `⚠️ ${line.split(/\s+/, 1)[0]} não roda no ${whereAlt}`, midias: [] };
+    if (errorAlt) return { texto: t('cnt.naoRodaNo', { cmd: line.split(/\s+/, 1)[0], onde: whereAlt }), midias: [] };
 
     // The handler lives in commands/index, which loads /cron (and this file): only here, at the time
     const { HANDLERS } = require('./commands/index');
     const replies = [];
     const msg = messageSynthetic(chatId, line, replies);
 
-    const owner = { nivel: ROLES.OWNER, admin: true, senderName: client.info?.pushname || 'Você' };
+    const owner = { nivel: ROLES.OWNER, admin: true, senderName: client.info?.pushname || t('core.voce') };
     const reject = optionsError(command, opts) ?? denial(command, opts, who?.nivel ?? owner.nivel);
     if (reject) return { texto: reject, midias: [] };
 

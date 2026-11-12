@@ -9,6 +9,7 @@ const { client, completeNotice } = require('./client');
 const { contactName: nameScheduleFirst, resolveLidToPhone } = require('./contacts');
 const { sendEmail, smtpForSend } = require('./email');
 const { waitChoice, authorAlt } = require('./choices');
+const { t } = require('./i18n');
 const { printDebug, printError } = require('./log');
 const { isDebugMode } = require('./settings');
 const { withoutAccents } = require('./util/format');
@@ -32,7 +33,7 @@ const { maskPhones } = require('./util/phone');
  * more than one fits, the command lists and you reply with the no. (resolverOrChoose).
  */
 const DESTINATION = /(^|\s)-to(?=\s|$)(?:\s+("([^"]*)"|'([^']*)'|\/([^/]*)\/|(\S+)))?/;
-const EXAMPLE = '/Jorge Pereira/, /Grupo L200/ ou +5521999999999';
+const example = () => t('grp.dest.examples');
 const LIMIT = 10;
 
 const EMAIL = /^[^\s@<>,;]+@[^\s@<>,;]+\.[^\s@<>,;]+$/;
@@ -173,7 +174,7 @@ function searchInWhatsApp(words) {
 
     let limitAlt;
     const time = new Promise((_, reject) => {
-        limitAlt = setTimeout(() => reject(new Error(`o WhatsApp Web não respondeu em ${SEARCH_TIMEOUT_MS / 1000} s`)), SEARCH_TIMEOUT_MS);
+        limitAlt = setTimeout(() => reject(new Error(t('grp.dest.timeout', { s: SEARCH_TIMEOUT_MS / 1000 }))), SEARCH_TIMEOUT_MS);
     });
     return Promise.race([search, time]).finally(() => clearTimeout(limitAlt));
 }
@@ -230,10 +231,10 @@ function readEmails(textAlt) {
     const emails = partsAlt.flatMap(p => (isWordEmail(p) ? emailsDoSmtpTo() : [p])).map(e => e.trim());
 
     if (emails.some(e => !EMAIL.test(e))) {
-        return { erro: '❌ O "email" usa o QRCODE_EMAIL_SMTP_TO, que está vazio (ou inválido) no config/.env. Informe o e-mail: -to voce@exemplo.com' };
+        return { erro: t('grp.dest.emptySmtpTo') };
     }
     if (!smtpForSend()) {
-        return { erro: '❌ SMTP não configurado (QRCODE_EMAIL_SMTP_HOST e QRCODE_EMAIL_SMTP_USER no config/.env): não há como enviar por e-mail.' };
+        return { erro: t('grp.dest.noSmtp') };
     }
 
     const list = [...new Set(emails)].join(', ');
@@ -256,18 +257,17 @@ function readEmails(textAlt) {
  */
 async function resolverDestination(valueAlt, {
     aceitaEmail: acceptsEmail = false, aceitaCanal: acceptsChannel = false, tipo: type,
-    semEmail: withoutEmail = '❌ Aqui o destino não pode ser um e-mail.', mencoes: mentions = []
+    semEmail: withoutEmail = t('grp.dest.noEmail'), mencoes: mentions = []
 } = {}) {
     const textAlt = String(valueAlt ?? '').trim();
     if (acceptsChannel && isChannelAlt(textAlt)) {
         const channel = await client.getChatById(textAlt).catch(() => null);
         return channel ? { id: textAlt, nome: channel.name || textAlt, grupo: false, canal: true }
-            : { erro: `❌ Canal não encontrado: ${textAlt}` };
+            : { erro: t('grp.dest.channelNotFound', { text: textAlt }) };
     }
 
     if (!textAlt) {
-        return { erro: `❌ Informe o destino do -to: um contato, um grupo ou um número (${EXAMPLE})` +
-            `${acceptsEmail ? ', ou email (o QRCODE_EMAIL_SMTP_TO) e e-mails' : ''}.` };
+        return { erro: t(acceptsEmail ? 'grp.dest.needDestEmail' : 'grp.dest.needDest', { examples: example() }) };
     }
 
     // Mention: "@<id>" in the text, with the same id in msg.mentionedIds
@@ -282,11 +282,11 @@ async function resolverDestination(valueAlt, {
     const digits = type === 'grupo' ? null : readNumber(textAlt);
     if (digits !== null) {
         if (digits.length < 10 || digits.length > 15) {
-            return { erro: `❌ Número inválido: ${textAlt}. Use DDI + DDD + número (ex.: +5521999999999).` };
+            return { erro: t('grp.dest.badNumber', { text: textAlt }) };
         }
 
         const wid = await client.getNumberId(digits).catch(() => null);
-        if (!wid) return { erro: `❌ O número +${digits} não está no WhatsApp.` };
+        if (!wid) return { erro: t('grp.dest.notOnWhatsApp', { number: digits }) };
 
         return { id: wid._serialized, nome: await contactName(wid._serialized, digits), grupo: false };
     }
@@ -300,7 +300,7 @@ async function resolverDestination(valueAlt, {
         foundAlt6 = await contactsAndGroups(words);
     } catch (err) {
         printError(`[DESTINO] busca por "${textAlt}" falhou:`, err.message);
-        return { erro: `⚠️ Não consegui buscar "${textAlt}" nos contatos e grupos agora (${err.message}). Tente de novo ou use o número: +5521999999999` };
+        return { erro: t('grp.dest.searchFailed', { text: textAlt, error: err.message }) };
     }
     const contacts = type === 'grupo' ? [] : await withoutAsCopiesByLid(foundAlt6.contatos);
     const groups = type === 'contato' ? [] : foundAlt6.grupos;
@@ -328,8 +328,8 @@ async function resolverDestination(valueAlt, {
     if (candidates.length === 1) return candidates[0];
 
     if (!candidates.length) {
-        if (type) return { erro: `❌ Nenhum ${type} com "${textAlt}" no nome.` };
-        return { erro: `❌ Nenhum contato ou grupo${acceptsChannel ? ' ou canal' : ''} com "${textAlt}" no nome.\n💡 _Use o nome como está na sua agenda ou o número: ${EXAMPLE}_` };
+        if (type) return { erro: t('grp.dest.noneOfType', { type: t(type === 'grupo' ? 'grp.dest.typeGroup' : 'grp.dest.typeContact'), text: textAlt }) };
+        return { erro: t(acceptsChannel ? 'grp.dest.noneWithChannel' : 'grp.dest.none', { text: textAlt, examples: example() }) };
     }
 
     return { opcoes: candidates.slice(0, LIMIT), busca: textAlt, mais: Math.max(0, candidates.length - LIMIT) };
@@ -353,17 +353,16 @@ async function resolverOrChoose(msg, valueAlt, o = {}) {
     }
     if (!r.opcoes) return r;
 
-    const type = r.opcoes[0].canal ? 'canais' : r.opcoes[0].grupo ? 'grupos' : 'contatos';
+    const type = t(r.opcoes[0].canal ? 'grp.dest.kindChannels' : r.opcoes[0].grupo ? 'grp.dest.kindGroups' : 'grp.dest.kindContacts');
     const linesAlt = r.opcoes.map((d, i) => `${i + 1}. ${describeDestination(d)}${d.numero ? ` · +${d.numero}` : ''}`);
-    const more = r.mais ? `\n_+${r.mais} ${type}: use mais palavras do nome para ver os outros_` : '';
+    const more = r.mais ? '\n' + t('grp.dest.more', { n: r.mais, kind: type }) : '';
 
-    const question = await msg.reply(`🔎 "${r.busca}" corresponde a ${r.opcoes.length + r.mais} ${type}:\n\n${linesAlt.join('\n')}${more}\n\n` +
-        '💡 _Responda só com o nº (em até 2 minutos), ou repita o comando com mais palavras do nome._');
+    const question = await msg.reply(t('grp.dest.matches', { search: r.busca, n: r.opcoes.length + r.mais, kind: type, list: linesAlt.join('\n'), more: more }));
 
     const chatId = msg.id?.remote ?? msg.from;
     return waitChoice(chatId, r.opcoes, {
         autor: authorAlt(msg),
-        aoExpirar: () => completeNotice(msg, question, `⌛ Nenhum nº escolhido para "${r.busca}" em 2 minutos: nada foi feito.`)
+        aoExpirar: () => completeNotice(msg, question, t('grp.dest.expired', { search: r.busca }))
     });
 }
 
@@ -398,7 +397,7 @@ async function resolverDestinations(msg, texts, o = {}) {
  * @param {string} [o.assunto]  of the email
  * @param {object} [o.opcoes]   for client.sendMessage (e.g.: { linkPreview: false })
  */
-async function sendOnDestination(destination, textAlt, { assunto: subject = 'Aviso', opcoes: optionsAlt = {} } = {}) {
+async function sendOnDestination(destination, textAlt, { assunto: subject = t('grp.dest.subject'), opcoes: optionsAlt = {} } = {}) {
     if (destination?.email) {
         const withoutFormatting = textAlt.replace(/[*_]/g, '');
         await sendEmail({ para: destination.email.split(/\s*,\s*/), assunto: subject,
@@ -417,7 +416,7 @@ async function sendToDestinations(destinations, textAlt, o = {}) {
     const failures = [];
     for (const d of destinations.length ? destinations : [null]) {
         await sendOnDestination(d, textAlt, o)
-            .catch(err => failures.push(`${d ? describeDestination(d) : 'seu privado'}: ${err.message}`));
+            .catch(err => failures.push(`${d ? describeDestination(d) : t('grp.dest.yourPrivate')}: ${err.message}`));
     }
     if (failures.length) throw new Error(failures.join('; '));
 }
@@ -461,7 +460,7 @@ const destinationsSaved = (recipients, single) => (recipients ? JSON.parse(recip
 async function personMentioned(digits, mentions) {
     const id = mentions.map(m => (typeof m === 'string' ? m : m?._serialized)).find(m => m?.split('@')[0] === digits);
     if (!id) {
-        return { erro: `❌ "@${digits}" não é uma menção: mencione a pessoa escolhendo na lista do @ do WhatsApp, ou use o nome ou o número (${EXAMPLE}).` };
+        return { erro: t('grp.dest.notMention', { digits: digits, examples: example() }) };
     }
 
     const phoneAlt = id.endsWith('@lid') ? await resolveLidToPhone(id) : id;

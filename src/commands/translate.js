@@ -5,6 +5,7 @@
 const { translate, languages } = require('google-translate-api-x');
 
 const { getCommandSyntax } = require('./base');
+const { t } = require('../i18n');
 const { printError } = require('../log');
 const { getSetting } = require('../settings');
 
@@ -30,18 +31,17 @@ const withTimeLimit = (url, init) => fetch(url, { ...init, signal: AbortSignal.t
 function errorTranslation(err) {
     const status = err.cause?.response?.status;
 
-    if (err.name === 'TimeoutError' || err.name === 'AbortError') return '⏱️ O Google Translate não respondeu. Tente de novo.';
+    if (err.name === 'TimeoutError' || err.name === 'AbortError') return t('translate.timeout');
     if (status === 429 || /too many requests/i.test(err.message)) {
-        return '💸 O Google Translate limitou os pedidos deste servidor (acesso gratuito, sem chave). Tente mais tarde.';
+        return t('translate.limited');
     }
-    if (status === 403) return '⛔ O Google recusou o pedido deste servidor. Tente mais tarde.';
-    return `❌ Erro no /translate: ${err.message}`;
+    if (status === 403) return t('translate.refused');
+    return t('translate.error', { erro: err.message });
 }
 
 async function listLanguages(msg) {
     const languagesAlt = [...CODES.values()].map(c => `${c} ${languages[c]}`);
-    await msg.reply(`🌐 *Idiomas do /translate* (${languagesAlt.length})\n\n\`\`\`${languagesAlt.join('\n')}\`\`\`\n\n` +
-        `💡 _Use o código: /translate -para en bom dia. Padrão: ${getSetting('traduzir.lang')} (setting traduzir.lang)._`);
+    await msg.reply(t('translate.languages', { n: languagesAlt.length, lista: languagesAlt.join('\n'), padrao: getSetting('traduzir.lang') }));
 }
 
 async function cmdTranslate({ msg, args, opts, quotedMsg }) {
@@ -55,7 +55,7 @@ async function cmdTranslate({ msg, args, opts, quotedMsg }) {
         }
 
         if (!target) {
-            await msg.reply(`❌ Idioma inválido: ${request}. Use o código (en, es, pt, zh-CN...). Veja os aceitos com /translate -l`);
+            await msg.reply(t('translate.invalid', { pedido: request }));
             return;
         }
 
@@ -69,16 +69,16 @@ async function cmdTranslate({ msg, args, opts, quotedMsg }) {
         }
 
         if (textAlt.length > MAX_CHARS) {
-            await msg.reply(`❌ Texto grande demais: ${textAlt.length} caracteres (máx. ${MAX_CHARS}).`);
+            await msg.reply(t('translate.tooLong', { n: textAlt.length, max: MAX_CHARS }));
             return;
         }
 
         const resultAlt = await translate(textAlt, { to: target, requestFunction: withTimeLimit });
         const origin = resultAlt.from?.language?.iso;
-        let reply = `🌐 *Tradução* _(${origin ?? '?'} → ${target})_\n\n${resultAlt.text}`;
+        let reply = t('translate.result', { origem: origin ?? '?', alvo: target, texto: resultAlt.text });
 
         if (origin && origin.toLowerCase() === target.toLowerCase().split('-')[0]) {
-            reply += `\n\n💡 _O texto já estava em ${target}. Para outro idioma: /translate -para en_`;
+            reply += t('translate.sameLang', { alvo: target });
         }
 
         await msg.reply(reply);

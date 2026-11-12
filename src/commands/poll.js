@@ -5,6 +5,7 @@
 const { Poll } = require('whatsapp-web.js');
 
 const { client } = require('../client');
+const { t } = require('../i18n');
 const { getCommandSyntax } = require('./base');
 const { chatCurrentIds } = require('../contacts');
 const { pollScoreboard, registerPoll } = require('../polls');
@@ -46,24 +47,24 @@ async function cmdPoll({ msg, args, chatId, chatName, quotedMsg }) {
     const errorAlt = (m) => msg.reply(`❌ ${m}\n\n` + '```' + getCommandSyntax('/poll') + '```');
 
     if (!question || optionsAlt.length < 2) {
-        await errorAlt('Informe a pergunta e pelo menos 2 opções.');
+        await errorAlt(t('grp.poll.needOptions'));
         return;
     }
 
     if (optionsAlt.length > POLL_MAX_OPTIONS) {
-        await errorAlt(`No máximo ${POLL_MAX_OPTIONS} opções (foram ${optionsAlt.length}).`);
+        await errorAlt(t('grp.poll.maxOptions', { max: POLL_MAX_OPTIONS, n: optionsAlt.length }));
         return;
     }
 
     if (question.length > POLL_MAX_QUESTION || optionsAlt.some(o => o.length > POLL_MAX_OPTION)) {
-        await errorAlt(`A pergunta vai até ${POLL_MAX_QUESTION} caracteres e cada opção até ${POLL_MAX_OPTION}.`);
+        await errorAlt(t('grp.poll.maxLength', { question: POLL_MAX_QUESTION, option: POLL_MAX_OPTION }));
         return;
     }
 
     // WhatsApp does not accept repeated options
     const repeated = optionsAlt.filter((o, i) => optionsAlt.findIndex(x => x.toLowerCase() === o.toLowerCase()) !== i);
     if (repeated.length) {
-        await errorAlt(`Opção repetida: ${[...new Set(repeated)].join(', ')}`);
+        await errorAlt(t('grp.poll.duplicate', { list: [...new Set(repeated)].join(', ') }));
         return;
     }
 

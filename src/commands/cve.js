@@ -5,6 +5,7 @@
 const axios = require('axios');
 
 const { DAY_MS } = require('../constants');
+const { t } = require('../i18n');
 const { printError } = require('../log');
 const { SETTINGS_SCHEMA, getSetting } = require('../settings');
 const { summarizeText } = require('../util/format');
@@ -26,7 +27,7 @@ const CVE_DAYS_RECENT = 2;
 // The NVD wants ISO-8601 without the 'Z'
 const nvdData = (d) => d.toISOString().replace('Z', '');
 
-const periodDays = (daysAlt) => daysAlt === 1 ? 'último dia' : `últimos ${daysAlt} dias`;
+const periodDays = (daysAlt) => t('cve.period', { n: daysAlt });
 
 // Preferred score: CVSS v3.1 > v4.0 > v3.0 > v2 (Primary metric, otherwise the first)
 function noteCvss(cve) {
@@ -122,24 +123,24 @@ async function cmdCve({ msg, opts }) {
             const id = normalizeId(textAlt);
             if (id) {
                 const cve = await searchCve(id);
-                await msg.reply(cve ? formatCve(cve) : `🛡️ ${id} não encontrada no NVD.`, null, { linkPreview: false });
+                await msg.reply(cve ? formatCve(cve) : t('cve.notFound', { id }), null, { linkPreview: false });
                 return;
             }
 
             const max = getSetting('cve.max');
             const { total, cves } = await searchPerText(textAlt, max);
             if (!cves.length) {
-                await msg.reply(`🛡️ Nenhuma CVE com "${textAlt}".`);
+                await msg.reply(t('cve.noneText', { text: textAlt }));
                 return;
             }
 
             const more = total > cves.length
-                ? `\n\n💡 _Há mais ${total - cves.length} (use um texto mais específico ou o id)._` : '';
-            await msg.reply(`🔎 *${cves.length} de ${total} CVEs com* "${textAlt}"\n\n` +
+                ? '\n\n' + t('cve.more', { n: total - cves.length }) : '';
+            await msg.reply(`${t('cve.searchTitle', { n: cves.length, total, text: textAlt })}\n\n` +
                 `${cves.map(formatResult).join('\n\n')}${more}`, null, { linkPreview: false });
         } catch (err) {
             printError('/cve:', err.response?.status ?? '', err.message);
-            await msg.reply('❌ Não consegui consultar o NVD agora (limite de consultas? tente em 30s).');
+            await msg.reply(t('cve.failed'));
         }
         return;
     }
@@ -153,7 +154,7 @@ async function cmdCve({ msg, opts }) {
     const max = Number(valueAlt);
 
     if (!Number.isInteger(max) || max < 1 || max > limitAlt) {
-        await msg.reply(`❌ Quantidade inválida: ${valueAlt}. Use de 1 a ${limitAlt}.\n💡 _/cve -high 5_`);
+        await msg.reply(t('cve.invalidCount', { value: valueAlt, max: limitAlt }));
         return;
     }
 
@@ -161,18 +162,18 @@ async function cmdCve({ msg, opts }) {
         const cves = await searchCvesRecent({ dias: daysAlt, max, critical });
 
         if (!cves.length) {
-            await msg.reply(`🛡️ Nenhuma CVE${critical ? ' crítica' : ''} publicada no ${periodDays(daysAlt)}.`);
+            await msg.reply(t(critical ? 'cve.noneCritical' : 'cve.noneRecent', { period: periodDays(daysAlt) }));
             return;
         }
 
         const title = critical
-            ? `🔥 *${cves.length} CVEs críticas mais recentes* _(CVSS ≥ 9, ${periodDays(daysAlt)})_`
-            : `🛡️ *Últimas ${cves.length} CVEs publicadas* _(${periodDays(daysAlt)})_`;
+            ? t('cve.titleCritical', { n: cves.length, period: periodDays(daysAlt) })
+            : t('cve.titleRecent', { n: cves.length, period: periodDays(daysAlt) });
 
         await msg.reply(`${title}\n\n${cves.map(formatCve).join('\n\n')}`, null, { linkPreview: false });
     } catch (err) {
         printError('/cve:', err.response?.status ?? '', err.message);
-        await msg.reply('❌ Não consegui consultar o NVD agora (limite de consultas? tente em 30s).');
+        await msg.reply(t('cve.failed'));
     }
 }
 

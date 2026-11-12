@@ -1,4 +1,4 @@
-# `/sticker` (`/figurinha`)
+# `/sticker`
 
 O `/sticker` é o [`/get -sticker`](get.md): aceita uma URL, ou o reply numa mensagem com link, num
 vídeo/GIF ou numa imagem, e devolve a figurinha. Nome e autor da figurinha vêm dos settings
@@ -10,6 +10,8 @@ vídeo/GIF ou numa imagem, e devolve a figurinha. Nome e autor da figurinha vêm
 - **Imagem respondida**: um quadrado 512x512 **enquadrado no meio da imagem**: numa foto deitada as
   laterais são cortadas, numa em pé o topo e a base. GIFs (imagem) mantêm a animação. Figurinhas
   (WebP) vão como estão.
+- **Imagem ou vídeo enviado com `/sticker` na legenda** (sem reply): igual ao acima, usando a mídia
+  da própria mensagem.
 
 O vídeo vira um quadrado 512x512 enquadrado no meio, com no máximo seis segundos: sem `-es`, os seis
 segundos a partir do `-ss` (ou do início). Enquanto baixa e converte, o bot mostra
@@ -19,6 +21,7 @@ segundos a partir do `-ss` (ou do início). Enquanto baixa e converte, o bot mos
 
 ```text
 (reply numa foto)                /sticker
+(foto com a legenda)             /sticker
 (reply num link)                 /sticker
 (reply num vídeo)                /sticker -ss 12            → de 0:12 a 0:18
 (reply num link)                 /sticker -ss 10 -es 13     → de 0:10 a 0:13

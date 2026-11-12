@@ -3,6 +3,7 @@
  */
 
 const { withoutAccents } = require('./format');
+const { t } = require('../i18n');
 
 const TIMEZONE = 'America/Sao_Paulo';
 const HOUR_DEFAULT = { h: 9, m: 0 }; // "amanhã", "sexta", "25/12" without a time
@@ -14,7 +15,9 @@ const WEEK_DAYS = {
     qua: 3, quarta: 3, 'quarta-feira': 3,
     qui: 4, quinta: 4, 'quinta-feira': 4,
     sex: 5, sexta: 5, 'sexta-feira': 5,
-    sab: 6, sabado: 6
+    sab: 6, sabado: 6,
+    sun: 0, sunday: 0, mon: 1, monday: 1, tue: 2, tuesday: 2, wed: 3, wednesday: 3,
+    thu: 4, thursday: 4, fri: 5, friday: 5, sat: 6, saturday: 6
 };
 
 const formatter = new Intl.DateTimeFormat('en-US', {
@@ -78,7 +81,7 @@ function readWhen(words, nowAlt = Date.now()) {
         const duration = readDuration(first.slice(1));
         return duration ? { ms: nowAlt + duration, usadas: 1 } : null;
     }
-    if (first === 'em' || first === 'daqui') {
+    if (first === 'em' || first === 'daqui' || first === 'in') {
         const comA = first === 'daqui' && monday === 'a';
         const duration = readDuration(comA ? third : monday);
         if (duration) return { ms: nowAlt + duration, usadas: comA ? 3 : 2 };
@@ -93,7 +96,7 @@ function readWhen(words, nowAlt = Date.now()) {
     const withHour = (h) => ({ hora: h ?? HOUR_DEFAULT, usadas: h ? 2 : 1 });
 
     // Only the time ("18:30", "18h30" or "às 18h"): today, or tomorrow if it has passed
-    const withAs = first === 'as' && hourNext;
+    const withAs = (first === 'as' || first === 'at') && hourNext;
     const soHour = withAs ? hourNext : readHour(first);
     if (soHour) {
         let ms = instantInBrasilia(today.ano, today.mes, today.dia, soHour.h, soHour.m);
@@ -101,9 +104,9 @@ function readWhen(words, nowAlt = Date.now()) {
         return { ms, usadas: withAs ? 2 : 1 };
     }
 
-    if (first === 'hoje' || first === 'amanha') {
+    if (first === 'hoje' || first === 'amanha' || first === 'today' || first === 'tomorrow') {
         const { hora: hour, usadas: used } = withHour(hourNext);
-        const day = today.dia + (first === 'amanha' ? 1 : 0);
+        const day = today.dia + (first === 'amanha' || first === 'tomorrow' ? 1 : 0);
         return { ms: instantInBrasilia(today.ano, today.mes, day, hour.h, hour.m), usadas: used };
     }
 
@@ -137,14 +140,13 @@ function readWhen(words, nowAlt = Date.now()) {
     return null;
 }
 
-const WEEK_PT = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
 const two = (n) => String(n).padStart(2, '0');
 
 // "qua 01/10 18:30" (with the year, if it is not the current one)
 function fmtWhen(ms, nowAlt = Date.now()) {
     const p = partsInBrasilia(ms);
     const year = p.ano !== partsInBrasilia(nowAlt).ano ? `/${p.ano}` : '';
-    return `${WEEK_PT[p.semana]} ${two(p.dia)}/${two(p.mes)}${year} ${two(p.h)}:${two(p.m)}`;
+    return `${t(`quando.dia${p.semana}`)} ${two(p.dia)}/${two(p.mes)}${year} ${two(p.h)}:${two(p.m)}`;
 }
 
 /*
@@ -152,9 +154,9 @@ function fmtWhen(ms, nowAlt = Date.now()) {
  * (daily, weekly) and the day of the month (monthly; in a month without the day, the last day).
  */
 const REPETITIONS = {
-    diario: { rotulo: 'todo dia', dias: 1 },
-    semanal: { rotulo: 'toda semana', dias: 7 },
-    mensal: { rotulo: 'todo mês', meses: 1 }
+    diario: { get rotulo() { return t('quando.todoDia'); }, dias: 1 },
+    semanal: { get rotulo() { return t('quando.todaSemana'); }, dias: 7 },
+    mensal: { get rotulo() { return t('quando.todoMes'); }, meses: 1 }
 };
 
 function nextRepetition(ms, repeatAlt, dayOriginal) {

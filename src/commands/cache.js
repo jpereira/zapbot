@@ -7,9 +7,10 @@ const { formatErrorCommand } = require('./base');
 const { BACKUP_DIR, CACHE_DIR, MEDIA_DIR } = require('../constants');
 const { dbGet } = require('../db');
 const { cleanFilesOld, cleanCacheOld, cleanEditedOld, cleanPollsOld, cleanIgnoredOld, cleanMedia, cleanReactionsOld, cleanStatsOld, cleanAll, cleanWatchOld } = require('../cleanup');
+const { t } = require('../i18n');
 const { printError } = require('../log');
 const { humanSize, listCacheLevelOnly } = require('../util/files');
-const { plural } = require('../util/format');
+const { countAlt } = require('../util/count');
 
 async function cmdCache({ msg, opts }) {
     try {
@@ -19,13 +20,15 @@ async function cmdCache({ msg, opts }) {
             // Everything: messages, deleted, edited, reactions, media, temporaries and backups
             const r = await cleanAll();
 
-            textMsg =
-                `🧹 *Limpeza geral concluída* _(${CACHE_DIR})_\n\n` +
-                `🗄️ Mensagens removidas: *${r.total}* _(${r.apagadas} apagada${r.apagadas === 1 ? '' : 's'})_\n` +
-                `✏️ Edições removidas: *${r.editadas}*\n` +
-                `😶 Reações removidas: *${r.reacoes}*\n` +
-                `📦 Backups removidos: *${r.backups}*\n` +
-                `💾 Espaço liberado: *${humanSize(r.liberado)}*`;
+            textMsg = t('cache.allDone', {
+                dir: CACHE_DIR,
+                total: r.total,
+                deleted: countAlt('cache.deletedCount', r.apagadas),
+                edited: r.editadas,
+                reactions: r.reacoes,
+                backups: r.backups,
+                freed: humanSize(r.liberado)
+            });
         } else if (opts.opt.clean || opts.opt.media || opts.opt.backup) {
             const partsAlt = [];
 
@@ -39,17 +42,17 @@ async function cmdCache({ msg, opts }) {
                 await cleanStatsOld();
                 await cleanPollsOld();
                 await cleanIgnoredOld();
-                partsAlt.push('🧹 Cache limpo (itens fora da janela de retenção).');
+                partsAlt.push(t('cache.cleaned'));
             }
 
             if (opts.opt.media) {
                 const r = await cleanMedia();
-                partsAlt.push(`🖼️ Mídias apagadas de ${MEDIA_DIR}: *${r.arquivos}* _(${humanSize(r.bytes)})_`);
+                partsAlt.push(t('cache.mediaDeleted', { dir: MEDIA_DIR, count: r.arquivos, size: humanSize(r.bytes) }));
             }
 
             if (opts.opt.backup) {
                 const r = await deleteAllBackups();
-                partsAlt.push(`📦 Backups apagados de ${BACKUP_DIR}: *${r.backups}* _(${humanSize(r.bytes)})_`);
+                partsAlt.push(t('cache.backupsDeleted', { dir: BACKUP_DIR, count: r.backups, size: humanSize(r.bytes) }));
             }
 
             textMsg = partsAlt.join('\n');
@@ -60,13 +63,13 @@ async function cmdCache({ msg, opts }) {
             const { editadas: edited } = await dbGet('SELECT COUNT(*) AS editadas FROM message_edits');
             const { reacoes: reactions } = await dbGet('SELECT COUNT(*) AS reacoes FROM reaction_changes');
 
-            textMsg = `🗂️ Exibindo conteúdo de ${CACHE_DIR}/*`;
+            textMsg = t('cache.showing', { dir: CACHE_DIR });
             textMsg += '\n\n```' + listCacheLevelOnly(CACHE_DIR) + '```\n\n';
-            textMsg += `🗄️ ${plural(total, 'mensagem', 'mensagens')} no cache.\n`;
-            textMsg += `🗑️ ${plural(deletedAlt, 'apagada', 'apagadas')}.\n`;
-            textMsg += `✏️ ${plural(edited, 'edição', 'edições')}.\n`;
-            textMsg += `😶 ${plural(reactions, 'reação removida ou trocada', 'reações removidas ou trocadas')}.\n`;
-            textMsg += `📦 Backups: ${(await listBackups()).length} (veja /backup).`;
+            textMsg += t('cache.messages', { messages: countAlt('cache.messagesCount', total) });
+            textMsg += t('cache.deletedLine', { deleted: countAlt('cache.deletedCount', deletedAlt) });
+            textMsg += t('cache.editedLine', { edited: countAlt('cache.editsCount', edited) });
+            textMsg += t('cache.reactionsLine', { reactions: countAlt('cache.reactionsCount', reactions) });
+            textMsg += t('cache.backupsLine', { count: (await listBackups()).length });
         }
 
         await msg.reply(textMsg, null, { linkPreview: false });

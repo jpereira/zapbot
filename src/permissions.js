@@ -10,6 +10,7 @@
  */
 
 const { botConfig } = require('./botConfig');
+const { t } = require('./i18n');
 const { ROLES } = require('./roles');
 const { getSetting, setSetting } = require('./settings');
 
@@ -53,7 +54,7 @@ const allows = (rule, cmd) => !rule || ALWAYS_RELEASED.includes(cmd) ||
 
 // "Only: /a, /b" or "All, except: /a"
 const describeRule = (rule) =>
-    `${rule.apenas ? 'Apenas' : 'Todos, menos'}: ${rule.comandos.join(', ')}`;
+    `${t(rule.apenas ? 'grp.perm.only' : 'grp.perm.allBut')}: ${rule.comandos.join(', ')}`;
 
 /**
  * What whoever sent can do in this chat: the bot.users entries that allow it
@@ -107,9 +108,9 @@ function levelAlt({ fromMe, numero: numberAlt, permissao: permission }) {
 function limitNotice(rulesThatLimit, cmd) {
     if (rulesThatLimit.every(r => r.apenas)) {
         const commands = [...new Set(rulesThatLimit.flatMap(r => r.comandos))];
-        return `🚫 Limitado aos comandos: ${commands.join(', ')}.`;
+        return t('grp.perm.limited', { list: commands.join(', ') });
     }
-    return `🚫 O ${cmd} não está liberado para você.`;
+    return t('grp.perm.notAllowed', { cmd });
 }
 
 module.exports = {

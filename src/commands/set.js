@@ -9,6 +9,7 @@ const { resolverOrChoose } = require('../destinations');
 const { printInfo } = require('../log');
 const { SETTINGS_SCHEMA, getSetting, setSetting, validateSetting } = require('../settings');
 const { regexDangerous } = require('../util/safeRegex');
+const { t } = require('../i18n');
 
 /*
  * /set
@@ -53,7 +54,7 @@ const ENV_VARIABLES = [
     { nome: 'ZAPBOT_HEARTBEAT_MAX_AGE_S' }
 ];
 
-const SO_IN_PRIVATE = '🔒 _As variáveis do config/.env (somente leitura) aparecem só no seu privado._';
+const soInPrivate = () => t('adm.set.envOnlyPrivate');
 
 const inMyPrivate = async (chatId) => (await chatCurrentIds(chatId)).includes(client.info.wid._serialized);
 
@@ -63,7 +64,7 @@ function envText() {
     const linesAlt = ENV_VARIABLES
         .map(v => `${v.nome.padEnd(widthAlt)}  ${formatValueSetting(process.env[v.nome] ?? '', ', ', v.secret)}`)
         .join('\n');
-    return '🔒 *config/.env* _(somente leitura: mude no arquivo e recrie o container)_\n\n```\n' + linesAlt + '\n```';
+    return t('adm.set.envTitle') + '\n\n```\n' + linesAlt + '\n```';
 }
 // "key  value" aligned, in alphabetical order
 function settingsList(keys) {
@@ -101,9 +102,9 @@ function filterKeys(filter) {
 }
 
 function formatValueSetting(value, sep = ', ', secret = false) {
-    if (Array.isArray(value)) return value.length ? value.join(sep) : '(vazio)';
+    if (Array.isArray(value)) return value.length ? value.join(sep) : t('adm.set.empty');
     if (typeof value === 'boolean') return value ? 'on' : 'off';
-    if (value === '') return '(vazio)';
+    if (value === '') return t('adm.set.empty');
     // Secret: shows only the last 4 characters
     if (secret) return `••••${String(value).slice(-4)}`;
     return String(value);
@@ -148,9 +149,7 @@ async function peopleItems(msg, key, textAlt) {
         }
 
         const person = await resolverOrChoose(msg, item, {
-            semEmail: withGroups
-                ? `❌ O *${key}* é de pessoas e grupos: informe um contato, um grupo ou um número, não um e-mail.`
-                : `❌ O *${key}* é de pessoas: informe um contato ou um número, não um e-mail.`
+            semEmail: t(withGroups ? 'adm.set.semEmailPeopleGroups' : 'adm.set.semEmailPeople', { key })
         });
         if (!person) return null;
 
@@ -161,16 +160,14 @@ async function peopleItems(msg, key, textAlt) {
 
         // Admin group: everyone there would command the bot (/set, /backup -send...). Better not
         if (person.grupo) {
-            await msg.reply(`❌ ${person.nome} é um grupo: o *${key}* é de pessoas (um contato ou um número).` +
-                (key === 'bot.admins'
-                    ? `\n💡 _Um grupo não pode ser admin (todos ali mandariam no bot). Para liberar os comandos comuns dentro dele: /bot +u /${person.nome}/_`
-                    : ''));
+            await msg.reply(t('adm.set.isGroup', { nome: person.nome, key }) +
+                (key === 'bot.admins' ? t('adm.set.groupNotAdmin', { nome: person.nome }) : ''));
             return null;
         }
 
         const phoneAlt = person.id.endsWith('@c.us') ? person.id : await resolveLidToPhone(person.id);
         if (!phoneAlt?.endsWith('@c.us')) {
-            await msg.reply(`❌ Não sei o telefone de ${person.nome} (o WhatsApp só informou o id interno): use o número, ex.: +5521999999999.`);
+            await msg.reply(t('adm.set.noPhone', { nome: person.nome }));
             return null;
         }
         items.push(phoneAlt.split('@')[0]);
@@ -185,10 +182,10 @@ const isOOwner = (numberAlt) => numberAlt === client.info?.wid?.user;
 // "5521999999999 (Jorge Pereira)": the saved contact name, if any; a group, "👥 Família";
 // o all, "true (todos)"
 async function withName(numberAlt) {
-    if (numberAlt === 'all') return 'true (todos)';
+    if (numberAlt === 'all') return t('adm.set.allTrue');
     // The person in a single group: "5521999999999 (Maria) only in 👥 Amigos"
     const soInGroup = numberAlt.match(/^(\d+):(.+@g\.us)$/);
-    if (soInGroup) return `${await withName(soInGroup[1])} só em ${await withName(soInGroup[2])}`;
+    if (soInGroup) return `${await withName(soInGroup[1])}${t('adm.set.onlyIn')}${await withName(soInGroup[2])}`;
     if (numberAlt.endsWith('@g.us')) {
         return `👥 ${await groupResolverName(numberAlt).catch(() => null) || numberAlt}`;
     }
@@ -214,16 +211,15 @@ async function changeList(msg, optionsAlt) {
     const optionAlt = append ? '-append' : '-rm';
 
     if (!schema) {
-        await msg.reply(`❌ Setting desconhecido: ${key ?? ''}\n💡 _Veja todos com /set_`);
+        await msg.reply(t('adm.set.unknown', { key: key ?? '' }));
         return;
     }
     if (schema.type !== 'list') {
-        await msg.reply(`❌ *${key}* não é uma lista: o ${optionAlt} vale só para chaves com várias entradas.\n` +
-            `💡 _Troque o valor com /set ${key} <valor> ou volte ao padrão com /set -reset ${key} (-r)._`);
+        await msg.reply(t('adm.set.notList', { key, opcao: optionAlt }));
         return;
     }
     if (!raw) {
-        await msg.reply(`❌ Informe o que ${append ? 'acrescentar a' : 'tirar de'} *${key}*: /set ${optionAlt} ${key} <valor>`);
+        await msg.reply(t(append ? 'adm.set.needValueAdd' : 'adm.set.needValueRm', { key, opcao: optionAlt }));
         return;
     }
 
@@ -231,7 +227,7 @@ async function changeList(msg, optionsAlt) {
     try {
         items = validateSetting(key, raw);
     } catch (e) {
-        await msg.reply(`❌ Valor inválido para *${key}*: ${e.message}`);
+        await msg.reply(t('adm.set.invalid', { key, erro: e.message }));
         return;
     }
 
@@ -241,8 +237,8 @@ async function changeList(msg, optionsAlt) {
     if (!change.length) {
         const which = (await showAlt(items)).join(', ');
         await msg.reply(append
-            ? `ℹ️ *${key}* já tem ${which}.`
-            : `❌ *${key}* não tem ${which}.\n💡 _Veja os itens com ${see}_`);
+            ? t('adm.set.alreadyHas', { key, quais: which })
+            : t('adm.set.doesNotHave', { key, quais: which, veja: see }));
         return;
     }
 
@@ -251,7 +247,7 @@ async function changeList(msg, optionsAlt) {
         const freshAlt = append ? [...current, ...change] : current.filter(i => !change.includes(i));
         valueAlt = await setSetting(key, freshAlt);
     } catch (e) {
-        await msg.reply(`❌ Valor inválido para *${key}*: ${e.message}`);
+        await msg.reply(t('adm.set.invalid', { key, erro: e.message }));
         return;
     }
     const sep = schema.separator ? ' | ' : ', ';
@@ -260,8 +256,12 @@ async function changeList(msg, optionsAlt) {
         await msg.reply(await reply(change, valueAlt));
         return;
     }
-    await msg.reply(`✅ *${key}* ${append ? '+' : '−'} ${formatValueSetting(await showItems(key, change), sep, schema.secret)}\n` +
-        `= ${formatValueSetting(await showItems(key, valueAlt), sep, schema.secret)}`);
+    await msg.reply(t('adm.set.listChanged', {
+        key,
+        sinal: append ? '+' : '−',
+        mudou: formatValueSetting(await showItems(key, change), sep, schema.secret),
+        valor: formatValueSetting(await showItems(key, valueAlt), sep, schema.secret)
+    }));
 }
 
 async function cmdSet({ msg, opts, args, chatId }) {
@@ -276,7 +276,7 @@ async function cmdSet({ msg, opts, args, chatId }) {
     // The option key (-reset, -append, -rm) or the 1st word
     const keyTarget = opts.opt.reset ?? opts.opt.append ?? opts.opt.rm ?? opts.argv[0];
     if (SO_O_OWNER.includes(keyTarget) && !msg.fromMe && (opts.opt.reset || opts.opt.append || opts.opt.rm || opts.argv.length > 1)) {
-        await msg.reply(`⛔ Só o dono do bot altera o *${keyTarget}*.`);
+        await msg.reply(t('adm.set.ownerOnly', { key: keyTarget }));
         return;
     }
 
@@ -300,20 +300,20 @@ async function cmdSet({ msg, opts, args, chatId }) {
         const schema = SETTINGS_SCHEMA[key];
 
         if (!schema) {
-            await msg.reply(`❌ Setting desconhecido: ${key}\n💡 _Veja todos com /set_`);
+            await msg.reply(t('adm.set.unknown', { key }));
             return;
         }
 
         await setSetting(key, schema.default);
-        await msg.reply(`♻️ *${key}* = ${formatValueSetting(getSetting(key), ', ', schema.secret)} _(padrão)_`);
+        await msg.reply(t('adm.set.resetDone', { key, valor: formatValueSetting(getSetting(key), ', ', schema.secret) }));
         return;
     }
 
     const [key, ...rest] = opts.argv;
 
     if (!key) {
-        const env = await inMyPrivate(chatId) ? envText() : SO_IN_PRIVATE;
-        await msg.reply('⚙️ *SETTINGS*\n\n```\n' + settingsList(Object.keys(SETTINGS_SCHEMA)) + '\n```\n💡 _/set <chave> para detalhes_\n\n' + env);
+        const env = await inMyPrivate(chatId) ? envText() : soInPrivate();
+        await msg.reply(`${t('adm.set.title')}\n\n\`\`\`\n${settingsList(Object.keys(SETTINGS_SCHEMA))}\n\`\`\`\n${t('adm.set.detailsHint')}\n\n${env}`);
         return;
     }
 
@@ -322,11 +322,11 @@ async function cmdSet({ msg, opts, args, chatId }) {
 
     if (variable) {
         if (rest.length) {
-            await msg.reply(`❌ ${key} é do config/.env (somente leitura): mude no arquivo e recrie o container.`);
+            await msg.reply(t('adm.set.envReadOnly', { key }));
         } else if (!(await inMyPrivate(chatId))) {
-            await msg.reply(SO_IN_PRIVATE);
+            await msg.reply(soInPrivate());
         } else {
-            await msg.reply(`🔒 *${key}* = ${formatValueSetting(process.env[key] ?? '', ', ', variable.secret)}\n_config/.env, somente leitura_`);
+            await msg.reply(t('adm.set.envValue', { key, valor: formatValueSetting(process.env[key] ?? '', ', ', variable.secret) }));
         }
         return;
     }
@@ -338,17 +338,17 @@ async function cmdSet({ msg, opts, args, chatId }) {
         const keys = filterKeys(key);
 
         if (keys === null) {
-            await msg.reply(`❌ Regex inválida: ${key}`);
+            await msg.reply(t('adm.set.badRegex', { key }));
         } else if (!keys.length) {
-            await msg.reply(`❌ Nenhum setting com "${key}".\n💡 _Veja todos com /set_`);
+            await msg.reply(t('adm.set.noMatch', { key }));
         } else {
-            await msg.reply(`⚙️ *SETTINGS* com "${key}" (${keys.length})\n\n\`\`\`\n${settingsList(keys)}\n\`\`\`\n💡 _/set <chave> para detalhes_`);
+            await msg.reply(`${t('adm.set.titleFiltered', { key, n: keys.length })}\n\n\`\`\`\n${settingsList(keys)}\n\`\`\`\n${t('adm.set.detailsHint')}`);
         }
         return;
     }
 
     if (!schema) {
-        await msg.reply(`❌ Setting desconhecido: ${key}\n💡 _Veja todos com /set_`);
+        await msg.reply(t('adm.set.unknown', { key }));
         return;
     }
 
@@ -360,12 +360,9 @@ async function cmdSet({ msg, opts, args, chatId }) {
             ? '\n' + (await showItems(key, valueAlt)).map((v, i) => `${i + 1}. ${v}`).join('\n')
             : formatValueSetting(valueAlt, ', ', schema.secret);
 
-        await msg.reply(
-            `⚙️ *${key}*\n${schema.desc}\n\n` +
-            `*Valor:* ${valueText}\n` +
-            `*Padrão:* ${formatValueSetting(schema.default)}\n` +
-            `*Tipo:* ${schema.type}${limits}`
-        );
+        await msg.reply(t('adm.set.detail', {
+            key, desc: schema.desc, valor: valueText, padrao: formatValueSetting(schema.default), tipo: `${schema.type}${limits}`
+        }));
         return;
     }
 
@@ -383,10 +380,10 @@ async function cmdSet({ msg, opts, args, chatId }) {
         const valueAlt = await setSetting(key, raw);
         printInfo(`Setting '${key}' alterado para ${schema.secret ? formatValueSetting(valueAlt, ', ', true) : JSON.stringify(valueAlt)}`);
         const notice = ['monitor.pool', 'monitor.max'].includes(key)
-            ? '\n⚠️ Intervalos curtos e mais contatos aumentam as consultas e podem contribuir para bloqueio pelo WhatsApp. Nenhum valor garante segurança.' : '';
+            ? `\n${t('adm.set.pollWarning')}` : '';
         await msg.reply(`✅ *${key}* = ${formatValueSetting(await showItems(key, valueAlt), schema.separator ? ' | ' : ', ', schema.secret)}${notice}`);
     } catch (e) {
-        await msg.reply(`❌ Valor inválido para *${key}*: ${e.message}`);
+        await msg.reply(t('adm.set.invalid', { key, erro: e.message }));
     }
 }
 

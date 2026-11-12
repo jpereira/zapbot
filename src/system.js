@@ -17,10 +17,11 @@ const { dbGet, dbReady } = require('./db');
 const { getBotUptime } = require('./log');
 const { humanSize } = require('./util/files');
 const { versionWithCommit, botVersion } = require('./version');
+const { t } = require('./i18n');
 
 // Each external program has this long to report its version
 const VERSION_TIMEOUT_MS = 5000;
-const NOT_FOUND = '_não encontrado_';
+const notFound = () => t('sistema.naoEncontrado');
 
 /**
  * The 1st line of the output of "<bin> <args>", or null if the program does not run.
@@ -50,7 +51,7 @@ const wwebjsInstalled = () => {
 
 function wwebjsVersion() {
     const version = wwebjsInstalled();
-    if (!version) return NOT_FOUND;
+    if (!version) return notFound();
     const commit = commitDoWwebjs();
     return commit ? `${version} (commit ${commit})` : version;
 }
@@ -103,19 +104,19 @@ function compareVersions(a, b) {
 // " · ⬆️ new: X" or " · ✅ the latest"; if one of the two is unknown, nothing
 function versionNote(installed, last) {
     if (!installed || !last) return '';
-    return compareVersions(last, installed) > 0 ? ` · ⬆️ *nova: ${last}*` : ' · ✅ a mais recente';
+    return compareVersions(last, installed) > 0 ? t('sistema.nova', { v: last }) : t('sistema.maisRecente');
 }
 
 function wwebjsNote({ wwebjs, commitsNoMain: commitsInMain }) {
     const note = versionNote(wwebjsInstalled(), wwebjs);
-    return commitsInMain ? `${note} · ⬆️ ${commitsInMain} commit${commitsInMain === 1 ? '' : 's'} novo${commitsInMain === 1 ? '' : 's'} no main` : note;
+    return commitsInMain ? `${note}${t('sistema.commitsNovos', { n: commitsInMain })}` : note;
 }
 
 // When connected, Puppeteer's own Chromium answers; otherwise, the binary
 async function chromiumVersion() {
     const browser = await client.pupBrowser?.version?.().catch(() => null);
     if (browser) return browser.replace(/^HeadlessChrome\//, 'Chromium ');
-    return await output(BIN_CHROMIUM, ['--version']) ?? NOT_FOUND;
+    return await output(BIN_CHROMIUM, ['--version']) ?? notFound();
 }
 
 const inDocker = () => fs.existsSync('/.dockerenv');
@@ -142,23 +143,28 @@ async function infoText() {
     const cpus = os.cpus();
     const carga = os.loadavg().map(n => n.toFixed(2)).join(' · ');
 
-    return `ℹ️ *ZapBot ${botVersion()}* · informações do sistema\n\n` +
-        '🤖 *Bot*\n' +
-        `• ZapBot: ${versionWithCommit()}\n` +
-        `• Node.js: ${process.version} (V8 ${process.versions.v8})\n` +
-        `• whatsapp-web.js: ${wwebjsVersion()}${wwebjsNote(freshAlt2)}\n` +
-        `• WhatsApp Web: ${whatsappWeb ?? (stateAlt.pronto ? NOT_FOUND : '_não conectado_')}\n` +
-        `• SQLite: ${sqlite ?? NOT_FOUND}\n\n` +
-        '🧰 *Programas*\n' +
-        `• Chromium: ${chromium}\n` +
-        `• yt-dlp: ${ytDlp ?? NOT_FOUND}${versionNote(ytDlp, freshAlt2.ytDlp)}\n` +
-        `• ffmpeg: ${ffmpeg ?? NOT_FOUND}\n\n` +
-        '🖥️ *Sistema*\n' +
-        `• ${uname ?? `${os.type()} ${os.release()} ${os.arch()}`}\n` +
-        `• Host: ${os.hostname()}${inDocker() ? ' (Docker)' : ''}\n` +
-        `• CPU: ${cpus.length}× ${cpus[0]?.model?.trim() ?? os.arch()} · carga ${carga}\n` +
-        `• Memória: ${humanSize(total - livre)} de ${humanSize(total)} em uso · o bot usa ${humanSize(memoria.rss)}\n` +
-        `• No ar: sistema há ${getBotUptime(Date.now() - os.uptime() * 1000)} · bot há ${getBotUptime(BOT_START_TIME)} (PID ${process.pid})`;
+    return t('sistema.info', {
+        versao: botVersion(),
+        zapbot: versionWithCommit(),
+        node: process.version,
+        v8: process.versions.v8,
+        wwebjs: `${wwebjsVersion()}${wwebjsNote(freshAlt2)}`,
+        whatsappWeb: whatsappWeb ?? (stateAlt.pronto ? notFound() : t('sistema.naoConectado')),
+        sqlite: sqlite ?? notFound(),
+        chromium,
+        ytDlp: `${ytDlp ?? notFound()}${versionNote(ytDlp, freshAlt2.ytDlp)}`,
+        ffmpeg: ffmpeg ?? notFound(),
+        uname: uname ?? `${os.type()} ${os.release()} ${os.arch()}`,
+        host: `${os.hostname()}${inDocker() ? ' (Docker)' : ''}`,
+        cpu: `${cpus.length}× ${cpus[0]?.model?.trim() ?? os.arch()}`,
+        carga,
+        memUsada: humanSize(total - livre),
+        memTotal: humanSize(total),
+        memBot: humanSize(memoria.rss),
+        sistemaNoAr: getBotUptime(Date.now() - os.uptime() * 1000),
+        botNoAr: getBotUptime(BOT_START_TIME),
+        pid: process.pid
+    });
 }
 
 module.exports = {
@@ -167,5 +173,6 @@ module.exports = {
     versionNote,
     output,
     infoText,
+    notFound,
     chromiumVersion
 };

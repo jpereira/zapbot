@@ -6,6 +6,7 @@
 
 const sharp = require('sharp');
 
+const { t } = require('../i18n');
 const { OPENAI_MODELS } = require('../openai');
 const { keyOpenAi, listModels, consumptionFooter } = require('../openaiChat');
 const { envOuSetting, getSetting, setSetting } = require('../settings');
@@ -14,7 +15,7 @@ const { envOuSetting, getSetting, setSetting } = require('../settings');
  * As in /get: the "⏳ Processando…" goes out before the call and becomes the reply (WhatsApp edits the message).
  * Media cannot be edited: on it the notice is deleted when the media goes out.
  */
-const notifyProcessing = (msg, cmd) => msg.reply(`⏳ Processando o ${cmd}, aguarde.`, null, { linkPreview: false });
+const notifyProcessing = (msg, cmd) => msg.reply(t('openai.processing', { cmd }), null, { linkPreview: false });
 
 async function deleteNotice(notice) {
     try {
@@ -29,7 +30,7 @@ async function replyConsumption(msg) {
 }
 
 // The message for whoever is neither owner nor admin
-const SO_OWNER_GENERATE = (o) => `⛔ Apenas o dono do bot (ou um admin) pode ${o}.`;
+const SO_OWNER_GENERATE = (action) => t('openai.ownerOnly', { acao: action });
 
 // The request text without the option (-img, -gif)
 const withoutOption = (args, names) => args.replace(new RegExp(`(^|\\s)-(?:${names})(?=\\s|$)`), '').trim();
@@ -38,10 +39,10 @@ const withoutOption = (args, names) => args.replace(new RegExp(`(^|\\s)-(?:${nam
  * For the model error and for -m: the model setting, the account's model list filter and the
  * recurso.
  */
-const AUDIO_MODEL = { setting: 'openai.transcribe.model', tipo: /whisper|transcribe|audio/i, nome: 'transcrição' };
-const VOICE_MODEL = { setting: 'openai.tts.model', tipo: /tts|speech|audio/i, nome: 'voz' };
-const IMAGE_MODEL = { setting: 'openai.image.model', tipo: /image|dall/i, nome: 'imagem' };
-const GIF_MODEL = { setting: 'openai.image.gifModel', tipo: /image/i, nome: 'GIF' };
+const AUDIO_MODEL = { setting: 'openai.transcribe.model', tipo: /whisper|transcribe|audio/i, get nome() { return t('openai.kindAudio'); } };
+const VOICE_MODEL = { setting: 'openai.tts.model', tipo: /tts|speech|audio/i, get nome() { return t('openai.kindVoice'); } };
+const IMAGE_MODEL = { setting: 'openai.image.model', tipo: /image|dall/i, get nome() { return t('openai.kindImage'); } };
+const GIF_MODEL = { setting: 'openai.image.gifModel', tipo: /image/i, get nome() { return t('openai.kindGif'); } };
 
 /*
  * "The model 'x' does not exist": the setting points to a model the account does not have. Instead of the raw error,
@@ -64,9 +65,9 @@ async function modelError(err, { setting, tipo: type, nome: nameAlt }, cmd) {
         candidates = (await listModels({ cmd })).filter(id => type.test(id));
     } catch { /* without the list, only the warning */ }
 
-    return `❌ O modelo ${modelAlt} não existe na sua conta da OpenAI (${nameAlt}).\n` +
-        (candidates.length ? `💡 _A sua chave vê: ${candidates.join(', ')}_\n` : '💡 _Não achei na lista da sua chave nenhum modelo parecido._\n') +
-        `💡 _Troque com /set ${setting} <modelo>_`;
+    return t('openai.modelMissing', { modelo: modelAlt, nome: nameAlt }) +
+        (candidates.length ? t('openai.modelCandidates', { lista: candidates.join(', ') }) : t('openai.modelNoCandidates')) +
+        t('openai.modelSwitch', { setting });
 }
 
 /*
@@ -75,23 +76,23 @@ async function modelError(err, { setting, tipo: type, nome: nameAlt }, cmd) {
  * fallback code when the key does not respond.
  */
 const QUESTION_USAGE = {
-    nome: 'Padrão', detalhe: 'perguntas', opcoes: [], setting: 'openai.api.model',
+    get nome() { return t('openai.useDefault'); }, get detalhe() { return t('openai.detailQuestions'); }, opcoes: [], setting: 'openai.api.model',
     exemplo: (cmd) => `${cmd} -m <modelo>`, daConta: (id) => OPENAI_MODELS.includes(id), reserva: OPENAI_MODELS
 };
 const IMAGE_USAGE = {
-    nome: '-img', detalhe: 'imagens', opcoes: ['img'], setting: 'openai.image.model',
+    nome: '-img', get detalhe() { return t('openai.detailImages'); }, opcoes: ['img'], setting: 'openai.image.model',
     exemplo: (cmd) => (cmd === '/gpt' ? '/gpt -m <modelo> -img' : `${cmd} -m <modelo>`), daConta: (id) => /image|dall-e/i.test(id)
 };
 const GIF_USAGE = {
-    nome: '-gif', detalhe: 'GIF', opcoes: ['gif', 'frames', 'ms'], setting: 'openai.image.gifModel',
+    nome: '-gif', get detalhe() { return t('openai.detailGif'); }, opcoes: ['gif', 'frames', 'ms'], setting: 'openai.image.gifModel',
     exemplo: (cmd) => (cmd === '/gpt' ? '/gpt -m <modelo> -gif' : `${cmd} -gif -m <modelo>`), daConta: (id) => /image/i.test(id)
 };
 const AUDIO_USAGE = {
-    nome: '-audio', detalhe: 'transcrição de áudio', opcoes: ['audio'], setting: 'openai.transcribe.model',
+    nome: '-audio', get detalhe() { return t('openai.detailAudio'); }, opcoes: ['audio'], setting: 'openai.transcribe.model',
     exemplo: (cmd) => `${cmd} -m <modelo> -audio`, daConta: (id) => /transcribe|whisper/i.test(id)
 };
 const VOICE_USAGE = {
-    nome: '-voz', detalhe: 'voz', opcoes: ['voz'], setting: 'openai.tts.model',
+    nome: '-voz', get detalhe() { return t('openai.detailVoice'); }, opcoes: ['voz'], setting: 'openai.tts.model',
     exemplo: (cmd) => `${cmd} -m <modelo> -voz`, daConta: (id) => /tts/i.test(id)
 };
 
@@ -134,13 +135,13 @@ async function swapModel(msg, modelAlt, opts, { cmd, icone: iconAlt, usos: uses,
             const current = modelCurrent(usage);
             const usageAlt = ids ? ids.filter(usage.daConta) : (usage.reserva ?? []);
             const list = [...new Set([current, ...(usageAlt.length ? usageAlt : (usage.reserva ?? []))])];
-            const linesAlt = list.map(m => `${m === current ? '✅' : '▫️'} ${m}${ids && !ids.includes(m) ? ' ⚠️ a sua chave não vê' : ''}`);
-            const origin = usage.setting === 'openai.api.model' && doEnv ? ' _(o atual vem do OPENAI_MODEL no .env)_' : '';
-            return `*${usage.nome}* (${usage.detalhe}) — ${usage.exemplo(cmd)}${origin}\n${linesAlt.join('\n')}`;
+            const linesAlt = list.map(m => `${m === current ? '✅' : '▫️'} ${m}${ids && !ids.includes(m) ? t('openai.keyCantSeeTag') : ''}`);
+            const origin = usage.setting === 'openai.api.model' && doEnv ? t('openai.envOrigin') : '';
+            return t('openai.modelBlock', { nome: usage.nome, detalhe: usage.detalhe, exemplo: usage.exemplo(cmd), origem: origin, linhas: linesAlt.join('\n') });
         });
-        await msg.reply(`${iconAlt} *Modelos do ${cmd}*\n\n${blocks.join('\n\n')}\n\n` + (ids
-            ? '💡 _A lista é a da sua chave (GET /v1/models)._'
-            : '💡 _Sem a lista da sua chave (sem chave ou sem resposta da OpenAI): só os padrões._'));
+        await msg.reply(`${t('openai.modelsTitle', { icone: iconAlt, cmd })}\n\n${blocks.join('\n\n')}\n\n` + (ids
+            ? t('openai.listFromKey')
+            : t('openai.listDefaults')));
         return;
     }
 
@@ -148,25 +149,25 @@ async function swapModel(msg, modelAlt, opts, { cmd, icone: iconAlt, usos: uses,
     const usage = request ?? defaults;
     if (usage.setting !== 'openai.api.model' && ids && !ids.includes(modelAlt)) {
         const candidates = ids.filter(usage.daConta);
-        await msg.reply(`❌ A sua chave não vê o modelo ${modelAlt} (${usage.detalhe}).` +
-            (candidates.length ? `\n💡 _Os que ela vê: ${candidates.join(', ')}_` : ''));
+        await msg.reply(t('openai.keyCantSee', { modelo: modelAlt, detalhe: usage.detalhe }) +
+            (candidates.length ? t('openai.keySees', { lista: candidates.join(', ') }) : ''));
         return;
     }
 
     try {
         await setSetting(usage.setting, modelAlt);
     } catch (e) {
-        await msg.reply(`❌ Modelo ${e.message}`);
+        await msg.reply(t('openai.modelError', { erro: e.message }));
         return;
     }
 
     if (request) {
-        await msg.reply(`✅ Modelo de ${request.detalhe} do ${cmd}: *${getSetting(usage.setting)}*`);
+        await msg.reply(t('openai.modelSetFor', { detalhe: request.detalhe, cmd, modelo: getSetting(usage.setting) }));
         return;
     }
-    await msg.reply(`✅ Modelo do ${cmd}: *${getSetting(usage.setting)}*` +
+    await msg.reply(t('openai.modelSet', { cmd, modelo: getSetting(usage.setting) }) +
         (doEnv && usage.setting === 'openai.api.model'
-            ? `\n⚠️ _O OPENAI_MODEL do .env (${doEnv}) tem prioridade enquanto estiver definido._`
+            ? t('openai.envPriority', { env: doEnv })
             : ''));
 }
 
@@ -187,12 +188,12 @@ async function messageImage(m, cmd) {
     if (!isPhoto(m)) return null;
 
     const mediaAlt = await m.downloadMedia().catch(() => null);
-    if (!mediaAlt?.data) return { erro: '❌ Não consegui baixar a imagem (ela pode ter expirado no WhatsApp).' };
+    if (!mediaAlt?.data) return { erro: t('openai.photoDownload') };
     if (!PHOTO_TYPES.includes(mediaAlt.mimetype)) {
-        return { erro: `❌ A OpenAI não lê imagem ${mediaAlt.mimetype}: só ${PHOTO_TYPES.map(t => t.split('/')[1]).join(', ')}.` };
+        return { erro: t('openai.photoType', { tipo: mediaAlt.mimetype, tipos: PHOTO_TYPES.map(x => x.split('/')[1]).join(', ') }) };
     }
     if (mediaAlt.data.length * 0.75 > PHOTO_MAX_BYTES) {
-        return { erro: `❌ A imagem tem mais de ${PHOTO_MAX_BYTES / 1024 / 1024} MB: é grande demais para o ${cmd}.` };
+        return { erro: t('openai.photoSize', { mb: PHOTO_MAX_BYTES / 1024 / 1024, cmd }) };
     }
     return { imagem: { mimetype: mediaAlt.mimetype, data: mediaAlt.data } };
 }

@@ -7,7 +7,6 @@ const { USER } = require('../../roles').ROLES;
 module.exports = {
     cmd: '/news',
     usage: '/news <-hack|-g1|-gazeta|-brasil> [count]',
-    aliases: ['/noticias'],
     summary: 'Latest headlines from the RSS feeds',
     help: 'Latest headlines from the RSS feeds, with source, date and link. Categories can be combined: /news -g1 -gazeta. Feeds for each one in the setting news.<category>.',
     cmd_opts: [
