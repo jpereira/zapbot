@@ -67,7 +67,10 @@ const pediuMascara = (command, opts) => Boolean(command.mask && opts.opt.mask);
 // "❌ Opção desconhecida: -x" com a sintaxe, ou null (só nos comandos "estrito: true")
 function erroDeOpcoes(command, opts) {
     if (!opts.desconhecidas.length) return null;
-    return `❌ Opção desconhecida: ${opts.desconhecidas.join(' ')}\n\n\`\`\`${getCommandSyntax(command.cmd)}\`\`\``;
+    const lista = opts.desconhecidas.join(' ');
+    // O /gpt e o /tldr (estrito: 'primeira') só sugerem a ajuda; os outros mostram a sintaxe
+    if (command.estrito === 'primeira') return `❌ Opção desconhecida: ${lista}\n💡 _Veja as opções com ${command.cmd} -h|-help_`;
+    return `❌ Opção desconhecida: ${lista}\n\n\`\`\`${getCommandSyntax(command.cmd)}\`\`\``;
 }
 
 /**

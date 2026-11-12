@@ -78,6 +78,7 @@ module.exports = {
             ex: ['/gpt explique SSRF em 3 linhas', '/gpt qual a raça desse cachorro? (respondendo a foto)', '/gpt agora transcreva isso (respondendo um áudio)', '/gpt resuma esse áudio']
         }
     ],
+    estrito: 'primeira',
     delegavel: true,
     role: ADMIN // delegável: gasta a API do dono (o -model e o -usage são só do dono e dos admins)
 };

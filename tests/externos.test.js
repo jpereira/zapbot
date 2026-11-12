@@ -307,6 +307,19 @@ describe('/gpt (/ai)', () => {
         assert.equal(rede.chamadas.at(-1).cfg.body.messages[1].content, 'legenda do vídeo\n\nresuma');
     });
 
+    test('1ª palavra que parece opção e não existe (/gpt -price): erro com a dica do -h, sem chamar a OpenAI', async () => {
+        await bot.setSetting('openai.api.key', 'sk-teste');
+        rede.responder('post', 'api.openai.com/v1/chat/completions', { choices: [{ message: { content: 'Oi.' } }] });
+
+        assert.deepEqual(await bot.responder('/gpt -price'), ['❌ Opção desconhecida: -price\n💡 _Veja as opções com /gpt -h|-help_']);
+        assert.deepEqual(await bot.responder('/ai -x oi'), ['❌ Opção desconhecida: -x\n💡 _Veja as opções com /gpt -h|-help_']);
+        assert.equal(rede.chamadas.length, 0);
+
+        // Só a 1ª palavra: no meio do texto, o "-price" é pergunta; "-1" e "- item" também
+        assert.equal((await bot.responder('/gpt o que faz o -price?'))[0], '🤖 Oi.');
+        assert.equal((await bot.responder('/gpt -1 é negativo?'))[0], '🤖 Oi.');
+    });
+
     test('-status|-s (ou o setting openai.status): rodapé com os bytes TX/RX e os tokens gastos', async () => {
         await bot.setSetting('openai.api.key', 'sk-teste');
         rede.responder('post', 'api.openai.com/v1/chat/completions', {
@@ -956,6 +969,13 @@ describe('/tldr (/resumo)', () => {
         assert.deepEqual(lerPeriodo('-300'), { n: 300 });
         assert.equal(lerPeriodo('0'), null);
         assert.equal(lerPeriodo('ontem'), null);
+    });
+
+    test('opção desconhecida na 1ª palavra (/tldr -price): erro com a dica do -h, sem chamar a OpenAI; -2h continua valendo', async () => {
+        await bot.setSetting('openai.api.key', 'sk-teste');
+        assert.deepEqual(await bot.responder('/tldr -price'), ['❌ Opção desconhecida: -price\n💡 _Veja as opções com /tldr -h|-help_']);
+        assert.equal(rede.chamadas.length, 0);
+        assert.doesNotMatch((await bot.responder('/tldr -2h'))[0], /Opção desconhecida/);
     });
 
     test('resume as mensagens do chat; comandos, apagadas e mídias sem legenda ficam de fora', async () => {

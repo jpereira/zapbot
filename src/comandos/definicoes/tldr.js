@@ -35,6 +35,7 @@ module.exports = {
             desc: '2h ou 30m: as mensagens desse tempo para cá; 300: as últimas 300 (máx. tldr.maxMsgs). Padrão: as últimas 100.'
         }
     ],
+    estrito: 'primeira',
     delegavel: true,
     role: ADMIN // delegável: gasta a API do dono, só o chat atual
 };

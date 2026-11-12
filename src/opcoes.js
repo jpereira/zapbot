@@ -66,7 +66,8 @@ const ehTempoNegativo = (token) => /^-\d[\d:.]*$/.test(token);
  *   numero: true (numa entrada de cmd_opts) lê o "-10" como `numero` (o 1º; um 2º é erro), em vez
  *     de mandá-lo para o argv;
  *   estrito: true (no comando) guarda a opção desconhecida em `desconhecidas`, em vez de mandá-la
- *     para o argv (o handler nunca a vê).
+ *     para o argv (o handler nunca a vê); 'primeira' só faz isso com a 1ª palavra, se ela parece uma
+ *     opção (-letra), para os comandos em que o resto é texto livre (/gpt, /tldr).
  */
 function GetOptFromCommand(input, config = {}) {
     const tokens = tokenizeCommand(input);
@@ -119,7 +120,10 @@ function GetOptFromCommand(input, config = {}) {
 
         // Opção desconhecida vai para argv (ou, no comando estrito, para `desconhecidas`)
         if (!option) {
-            if (config.estrito) desconhecidas.push(token);
+            // estrito: 'primeira' só recusa a 1ª palavra (/gpt -price), pois o resto é texto livre
+            // (a pergunta do /gpt); e só a que parece opção (-letra): "-2h" do /tldr e "-1" passam
+            const recusar = config.estrito === 'primeira' ? i === 0 && /^-[A-Za-z]/.test(token) : config.estrito;
+            if (recusar) desconhecidas.push(token);
             else argv.push(normalizeArg(token));
             continue;
         }
