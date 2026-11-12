@@ -22,6 +22,7 @@ const { plural, semAcentos } = require('../util/formatar');
  *   /tldr 300          → as últimas 300 (máx. setting 'tldr.maxMsgs')
  *   /tldr -c família   → de outro chat, buscado pelo nome
  *   /tldr -pv          → no seu privado em vez de expor no chat atual
+ *   (respondendo)      → da mensagem respondida até agora (o período digitado ou o -c ganham)
  * Usa o texto já gravado no banco: as mensagens comuns ficam 68 h. Ficam de
  * fora os comandos, as apagadas e as mídias sem legenda.
  */
@@ -105,14 +106,22 @@ async function transcricaoDoAudio(r) {
     }
 }
 
-async function resumir({ msg, opts, chatId, chatName }) {
+async function resumir({ msg, opts, chatId, chatName, quotedMsg }) {
     if (!chaveOpenAi()) {
         await msg.reply(SEM_CHAVE('/tldr'));
         return;
     }
 
     const extras = opts.argv.filter(Boolean);
-    const periodo = extras.length ? lerPeriodo(extras.join('')) : { n: RESUMO_PADRAO };
+    let periodo = extras.length ? lerPeriodo(extras.join('')) : { n: RESUMO_PADRAO };
+    const avisos = [];
+
+    // Respondendo uma mensagem (sem período digitado nem -c): resume dela até agora
+    const desdeAResposta = !extras.length && !opts.opt.chat && quotedMsg?.timestamp;
+    if (desdeAResposta) {
+        periodo = { ms: Math.max(Date.now() - quotedMsg.timestamp * 1000, 0) };
+        avisos.push('a partir da mensagem respondida');
+    }
 
     if (!periodo) {
         await msg.reply('```' + getCommandSyntax('/tldr') + '```');
@@ -120,7 +129,6 @@ async function resumir({ msg, opts, chatId, chatName }) {
     }
 
     const max = getSetting('tldr.maxMsgs');
-    const avisos = [];
 
     if (periodo.n > max) {
         avisos.push(`limitado a ${max} mensagens (setting tldr.maxMsgs)`);
@@ -168,6 +176,8 @@ async function resumir({ msg, opts, chatId, chatName }) {
           LIMIT ?`,
         params
     )).reverse();
+
+    if (desdeAResposta && rows.length >= max) avisos.push(`só as ${max} mais recentes (setting tldr.maxMsgs)`);
 
     // Os áudios (os AUDIOS_MAX mais recentes) viram texto; o que não deu para transcrever sai do resumo
     const audios = rows.filter(r => ['audio', 'ptt'].includes(r.type)).slice(-AUDIOS_MAX);

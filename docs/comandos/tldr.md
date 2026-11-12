@@ -12,6 +12,7 @@ Markdown para a formatação do WhatsApp do `/gpt` (veja [Formatação no WhatsA
 | Opção | Valor | Descrição |
 |---|---|---|
 | `[período]` | | `2h` ou `30m`: as mensagens desse tempo para cá; `300`: as últimas 300 (limite padrão 500, configurável até 2000 em `tldr.maxMsgs`). Padrão: as últimas 100. O `-` na frente é opcional (`-2h`) |
+| *(respondendo)* | | Resume da mensagem respondida até agora; o período digitado ou o `-chat` ganham |
 | `-chat`, `-c` | `<nome>` | Resume outro chat, buscado pelo nome: todas as palavras, em qualquer ordem, sem diferenciar acentos. Nome com espaço vai entre aspas: `-c "trabalho rio"` |
 | `-status`, `-s` | | Acrescenta no rodapé o consumo da chamada: bytes TX/RX e tokens (veja [Status](gpt.md#status--status)) |
 | `-pv` | | Envia no seu privado em vez de expor no chat atual |
@@ -22,7 +23,13 @@ Markdown para a formatação do WhatsApp do `/gpt` (veja [Formatação no WhatsA
 /resumo 30m          → as dos últimos 30 minutos (pelo alias)
 /tldr 300 -pv        → as últimas 300, no seu privado
 /tldr -c família 3h -pv
+(respondendo uma mensagem)  /tldr  → dela até agora
 ```
+
+Respondendo uma mensagem, o `/tldr` resume a conversa **a partir dela** (inclusive) até agora, como um
+"onde parei de ler". Se você digitar um período (`2h`, `300`) ou usar o `-chat`, o respondido é
+ignorado. As mensagens ainda são as do banco (68 h) e vale o limite `tldr.maxMsgs`: acima dele, o
+resumo pega as mais recentes e avisa.
 
 ```text
 🤖 Resumo de Família

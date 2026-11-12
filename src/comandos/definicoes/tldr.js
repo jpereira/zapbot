@@ -32,7 +32,7 @@ module.exports = {
         },
         {
             argv: ['[período]'],
-            desc: '2h ou 30m: as mensagens desse tempo para cá; 300: as últimas 300 (máx. tldr.maxMsgs). Padrão: as últimas 100.'
+            desc: '2h ou 30m: as mensagens desse tempo para cá; 300: as últimas 300 (máx. tldr.maxMsgs). Padrão: as últimas 100. Respondendo uma mensagem (sem período nem -c): da mensagem respondida até agora.'
         }
     ],
     estrito: 'primeira',
