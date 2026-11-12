@@ -620,6 +620,44 @@ describe('limpeza periódica', () => {
         fs.unlinkSync(guardada);
     });
 
+    test('cache.messageRetentionHours guarda o texto; a mídia tem o seu prazo (cache.messageMediaRetentionHours)', async () => {
+        const hora = 60 * 60 * 1000;
+        const cria = (nome) => {
+            const arquivo = path.join(MEDIA_DIR, nome);
+            fs.mkdirSync(MEDIA_DIR, { recursive: true });
+            fs.writeFileSync(arquivo, 'x');
+            return arquivo;
+        };
+        const meio = cria('meio.jpg');
+        const longe = cria('longe.jpg');
+        await bot.setSetting('cache.messageRetentionHours', 240);
+        await bot.dbRun('INSERT INTO messages (id, timestamp, revoked, media_path) VALUES (?, ?, 0, ?), (?, ?, 0, ?)',
+            ['meio', Date.now() - 100 * hora, meio, 'longe', Date.now() - 300 * hora, longe]);
+
+        // Mídia no padrão (68 h): a de 100 h sai, mas o texto fica; o de 300 h sai com tudo
+        await limpeza.limparCacheAntigo();
+        assert.ok(!fs.existsSync(meio));
+        assert.ok(!fs.existsSync(longe));
+        assert.deepEqual(await bot.dbAll("SELECT id, media_path FROM messages WHERE id IN ('meio', 'longe') ORDER BY id"),
+            [{ id: 'meio', media_path: null }]);
+
+        // Mídia de 200 h: a de 100 h fica com o texto
+        const fica = cria('fica.jpg');
+        await bot.setSetting('cache.messageMediaRetentionHours', 200);
+        await bot.dbRun("UPDATE messages SET media_path = ? WHERE id = 'meio'", [fica]);
+        await limpeza.limparCacheAntigo();
+        assert.ok(fs.existsSync(fica), 'com 100 h (de 200), a mídia fica');
+        fs.unlinkSync(fica);
+
+        // Nunca passa do texto: com a mídia em 2160 h e o texto em 240 h, sai junto com o texto
+        const perdida = cria('perdida.jpg');
+        await bot.setSetting('cache.messageMediaRetentionHours', 2160);
+        await bot.dbRun('INSERT INTO messages (id, timestamp, revoked, media_path) VALUES (?, ?, 0, ?)', ['perdida', Date.now() - 300 * hora, perdida]);
+        await limpeza.limparCacheAntigo();
+        assert.ok(!fs.existsSync(perdida));
+        await assert.rejects(bot.setSetting('cache.messageMediaRetentionHours', 10), /68/);
+    });
+
     test('a limpeza periódica roda 1 minuto depois do boot e a cada 10', async (t) => {
         t.mock.timers.enable({ apis: ['setTimeout', 'setInterval'] });
         const velho = Date.now() - 40 * DIA;

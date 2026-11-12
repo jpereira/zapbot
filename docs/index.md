@@ -117,7 +117,7 @@ Por onde começar:
   silencia de onde ele veio. Quem está silenciado também não gera aviso do `/watch` no seu privado.
   O [`/unmute`](comandos/unmute.md) desfaz.
 - **Limpeza automática**: a cada 10 minutos o bot remove do banco/disco as mensagens comuns com mais
-  de 68 h (janela máxima que o WhatsApp permite apagar), as apagadas, as editadas e as reações com
+  de 68 h (janela máxima que o WhatsApp permite apagar; o texto fica mais tempo com o `cache.messageRetentionHours` e as mídias, com o `cache.messageMediaRetentionHours`), as apagadas, as editadas e as reações com
   mais de 30 dias, as ocorrências do `/watch` com mais de 30 dias (setting `watch.hitsRetentionDays`), os
   contadores do `/stats` com mais de 90 dias (setting `stats.retentionDays`), as enquetes com mais
   de 90 dias (setting `enquete.retentionDays`) e os avisos ignorados pelo `/mute` com mais de 30

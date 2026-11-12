@@ -231,7 +231,7 @@ async function inicializarBanco() {
 
     /*
      * Estatísticas do /stats: contadores por chat, dia, hora e remetente.
-     * As mensagens comuns saem do banco em 68 h; os contadores ficam
+     * As mensagens comuns saem do banco em cache.messageRetentionHours (68 h); os contadores ficam
      * 'stats.retentionDays' dias.
      */
     await dbRun(`

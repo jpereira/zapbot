@@ -9,11 +9,13 @@ const ROOT_DIR = path.join(__dirname, '..');
 
 const BOT_START_TIME = Date.now();
 
-// Tempo máximo que o WhatsApp permite apagar para todos: 68 horas em milissegundos
+// Tempo máximo que o WhatsApp permite apagar para todos: 68 horas em milissegundos (o mínimo da retenção
+// das mensagens comuns e das mídias: 'cache.messageRetentionHours' e 'cache.messageMediaRetentionHours')
 const MAX_DELETE_WINDOW = 68 * 60 * 60 * 1000;
 
 // 1 dia em milissegundos (retenção das apagadas: setting 'cache.revokedRetentionDays')
 const DAY_MS = 24 * 60 * 60 * 1000;
+const HOUR_MS = 60 * 60 * 1000;
 
 // ZAPBOT_CACHE_DIR troca o diretório do banco e das mídias (os testes usam uma pasta temporária)
 const CACHE_DIR = process.env.ZAPBOT_CACHE_DIR || path.join(ROOT_DIR, 'cache');
@@ -48,6 +50,7 @@ module.exports = {
     BOT_START_TIME,
     CACHE_DIR,
     DAY_MS,
+    HOUR_MS,
     GET_MAX_CONCURRENT,
     GET_TIMEOUT_MS,
     MAX_DELETE_WINDOW,

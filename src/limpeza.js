@@ -6,7 +6,7 @@ const path = require('path');
 const fs = require('fs-extra');
 
 const { apagarTodosBackups } = require('./backup');
-const { CACHE_DIR, DAY_MS, MAX_DELETE_WINDOW, MEDIA_DIR, TMP_DIR } = require('./constantes');
+const { CACHE_DIR, DAY_MS, HOUR_MS, MAX_DELETE_WINDOW, MEDIA_DIR, TMP_DIR } = require('./constantes');
 const { dbAll, dbGet, dbPronto, dbRun } = require('./db');
 const { printError, printInfo } = require('./log');
 const { getSetting } = require('./settings');
@@ -15,12 +15,18 @@ const { getDirSize, isCaminhoDeMidia, limparConteudoDiretorio } = require('./uti
 
 /*
  * Limpeza do banco + mídias:
- *  - mensagens normais: removidas após a janela de "apagar para todos" (68h),
- *    porque depois disso não podem mais ser apagadas;
+ *  - mensagens normais: o texto sai do banco após 'cache.messageRetentionHours' e a mídia, após
+ *    'cache.messageMediaRetentionHours' (padrão 68 h, a janela de "apagar para todos": depois dela nem
+ *    podem mais ser apagadas); a mídia nunca passa do texto;
  *  - mensagens APAGADAS (revoked=1): guardadas por 'cache.revokedRetentionDays' (padrão 30),
  *    para o /show continuar funcionando.
  */
-async function limparCacheAntigo(maxDeleteWin = MAX_DELETE_WINDOW, retencaoApagadas = getSetting('cache.revokedRetentionDays') * DAY_MS) {
+async function limparCacheAntigo(
+    maxDeleteWin = MAX_DELETE_WINDOW,
+    retencaoApagadas = getSetting('cache.revokedRetentionDays') * DAY_MS,
+    retencaoMensagens = getSetting('cache.messageRetentionHours') * HOUR_MS,
+    retencaoMidias = getSetting('cache.messageMediaRetentionHours') * HOUR_MS
+) {
     await dbPronto;
 
     const agora = Date.now();
@@ -28,9 +34,21 @@ async function limparCacheAntigo(maxDeleteWin = MAX_DELETE_WINDOW, retencaoApaga
         (revoked = 0 AND timestamp < ?)
         OR (revoked = 1 AND COALESCE(revoked_at, timestamp) < ?)
     `;
-    const params = [agora - maxDeleteWin, agora - retencaoApagadas];
+    const params = [agora - Math.max(retencaoMensagens, maxDeleteWin), agora - retencaoApagadas];
 
     try {
+        // A mídia de uma mensagem comum sai no seu prazo, mesmo que o texto fique mais tempo (o media_path some)
+        const foraDoPrazo = 'revoked = 0 AND timestamp < ? AND media_path IS NOT NULL';
+        const limiteMidia = agora - Math.max(retencaoMidias, maxDeleteWin);
+        const antigas = await dbAll(`SELECT media_path FROM messages WHERE ${foraDoPrazo}`, [limiteMidia]);
+        for (const row of antigas) {
+            if (isCaminhoDeMidia(row.media_path) && fs.existsSync(row.media_path)) {
+                printInfo(`Removendo ${row.media_path}`);
+                fs.unlinkSync(row.media_path);
+            }
+        }
+        if (antigas.length) await dbRun(`UPDATE messages SET media_path = NULL WHERE ${foraDoPrazo}`, [limiteMidia]);
+
         const rows = await dbAll(`SELECT media_path FROM messages WHERE media_path IS NOT NULL AND (${filtro})`, params);
 
         for (const row of rows) {
