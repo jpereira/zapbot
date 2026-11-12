@@ -250,6 +250,12 @@ The code lives in `src/` (`app.js` only does the bootstrap). See
 [Development](https://jpereira.github.io/zapbot/desenvolvimento/) for the structure, the tests, the
 documentation and the releases' `scripts/bump.sh`.
 
+## Contributions
+
+Contributions are welcome via issues and pull requests. Feel free to post your queries or concerns on any of the discussion forums mentioned below:
+
+[![Join WhatsApp Group](https://img.shields.io/badge/Join-WhatsApp%20Group-blue.svg?logo=WhatsApp)](https://chat.whatsapp.com/LrYlfasTbRx5lBhGdGNj4F?mode=gi_t)
+
 ---
 
 **Author:** Jorge Pereira ([@jpereira](https://github.com/jpereira)) · jpereiran@gmail.com

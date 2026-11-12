@@ -249,6 +249,12 @@ O código fica em `src/` (o `app.js` só faz o bootstrap). Veja
 [Desenvolvimento](https://jpereira.github.io/zapbot/pt-BR/desenvolvimento/) para a estrutura, os testes, a
 documentação e o `scripts/bump.sh` das releases.
 
+## Contribuições
+
+Contribuições são bem-vindas via issues e pull requests. Fique à vontade para postar suas dúvidas ou problemas em qualquer um dos fóruns de discussão abaixo:
+
+[![Join WhatsApp Group](https://img.shields.io/badge/Join-WhatsApp%20Group-blue.svg?logo=WhatsApp)](https://chat.whatsapp.com/LrYlfasTbRx5lBhGdGNj4F?mode=gi_t)
+
 ---
 
 **Autor:** Jorge Pereira ([@jpereira](https://github.com/jpereira)) · jpereiran@gmail.com
