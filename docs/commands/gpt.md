@@ -37,6 +37,8 @@ pergunta, mostra a ajuda.
 | `-img` | | Só dono e admins. Cria uma imagem com o pedido (respondendo uma foto, a edita). Veja [Imagem e GIF](#imagem-e-gif--img--gif) |
 | `-gif` | | Só dono e admins. Cria um GIF (respondendo uma foto, a anima). Veja [Imagem e GIF](#imagem-e-gif--img--gif) |
 | `-voz`, `-v` | `[texto]` | Responde uma nota de voz de robô com o texto (ou com o da mensagem respondida). Veja [Voz](#voz--voz) |
+| `-status`, `-s` | | Acrescenta no rodapé da resposta o consumo da chamada: bytes TX/RX e tokens. Veja [Status](#status--status) |
+| `-prices` | | Só dono e admins. Busca os preços no site da OpenAI e atualiza o `openai.pricing`. Veja [Status](#status--status) |
 | `-usage`, `-u` | `[dias]` | Só dono e admins. O consumo dos últimos dias (padrão 7, até 31) e os limites de agora. Veja [Consumo e limites](#consumo-e-limites--usage) |
 
 ## Formatação no WhatsApp
@@ -177,6 +179,33 @@ voz** (Ogg/Opus, como as do WhatsApp). O estilo padrão é a voz de robô.
   `/set openai.tts.instructions Fale como um locutor de rádio animado`). Só o `gpt-4o-mini-tts` segue o estilo:
   com o `tts-1`, a voz sai normal.
 - A voz é cobrada por caractere, e o texto passa pelo servidor da OpenAI.
+
+## Status (`-status`)
+
+Com `-status` (ou `-s`) a resposta ganha um rodapé com o consumo da chamada. Vem ligado por padrão em todas as respostas
+(também no `/tldr`); para desligar, `/set openai.status false` (aí só o `-status` mostra).
+
+```text
+/gpt -s explique SSRF em 3 linhas
+
+🤖 SSRF é quando o servidor faz a requisição que o atacante pediu...
+
+📡 ⬆️ 1.2 KB TX · ⬇️ 3.4 KB RX · 🪙 150 tokens (📥 120 · 📤 30)
+💵 ~$0.000090 · 🏦 saldo ~$12.31 de $20.00
+```
+
+- **TX/RX**: bytes do corpo enviado e recebido (o JSON, o áudio, a imagem), sem cabeçalhos nem TLS.
+- **Tokens**: os que a OpenAI informa (`usage`): total, entrada (📥) e saída (📤). A voz não informa.
+- **💵 Custo**: estimado (o `~`), tokens × o preço do modelo no setting `openai.pricing`
+  (`modelo=entrada/saída`, dólares por 1M de tokens). Os preços vêm vazios: sem preço, ou sem tokens (a voz), o rodapé mostra `custo n/d`. Para atualizar os preços, `/gpt -prices` (só dono e admins) lê a tabela Standard do site da
+  OpenAI e grava no `openai.pricing`, mostrando o que mudou; o que você adicionou à mão e a página não tem
+  fica como está. Com a chave da OpenAI configurada, o bot faz isso sozinho a cada 15 dias
+  (`openai.pricing.auto`, ligado por padrão; `/set openai.pricing.auto false` para só atualizar à mão).
+  Com os preços de mais de 30 dias, o rodapé avisa (`⚠️ preços de N dias: /gpt -prices`). Se o site mudar de formato, o comando avisa e nada é alterado (use `/set openai.pricing`).
+- **🏦 Saldo**: só com a chave de admin e o `openai.credit.total` (como no `-usage`). O gasto vem da Costs API,
+  lido a cada 5 minutos (ela atrasa), mais a estimativa das chamadas feitas desde então.
+- **🔁 N chamadas**: aparece quando o comando fez mais de uma (áudio transcrito e depois o chat).
+- Voz, imagem e GIF não têm texto para o rodapé: o status vai numa mensagem à parte.
 
 ## Consumo e limites (`-usage`)
 

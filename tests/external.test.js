@@ -240,6 +240,9 @@ describe('/news', () => {
 });
 
 describe('/gpt (/ai)', () => {
+    // The status footer is on by default: the tests compare the exact reply, without it
+    beforeEach(() => bot.setSetting('openai.status', false));
+
     test('sem chave: desativado', async () => {
         assert.match((await bot.replyAlt('/gpt oi'))[0], /⚠️ API key da OpenAI não encontrada/);
     });
@@ -302,6 +305,36 @@ describe('/gpt (/ai)', () => {
         const video = bot.createMessage({ texto: 'legenda do vídeo', de: bot.OTHERAlt.jid, tipo: 'video', midia: { mimetype: 'video/mp4', data: 'QUJD' } });
         await bot.replyAlt('/gpt resuma', { citada: video });
         assert.equal(network.chamadas.at(-1).cfg.body.messages[1].content, 'legenda do vídeo\n\nresuma');
+    });
+
+    test('-status|-s (ou o setting openai.status): rodapé com os bytes TX/RX e os tokens gastos', async () => {
+        await bot.setSetting('openai.api.key', 'sk-teste');
+        network.responder('post', 'api.openai.com/v1/chat/completions', {
+            choices: [{ message: { content: 'Oi.' } }],
+            usage: { prompt_tokens: 20, completion_tokens: 5, total_tokens: 25 }
+        });
+
+        const [without] = await bot.replyAlt('/gpt oi');
+        assert.equal(without, '🤖 Oi.');
+
+        // The prices come empty: cost n/a until /gpt -prices (or the automatic update)
+        await bot.setSetting('openai.status', true);
+        assert.match((await bot.replyAlt('/gpt oi'))[0], /_💵 custo n\/d \(rode \/gpt -prices\)_$/);
+        await bot.setSetting('openai.status', false);
+        await bot.setSetting('openai.pricing', ['gpt-4o-mini=0.15/0.6']);
+
+        // Default (on)
+        await bot.setSetting('openai.status', true);
+        assert.match((await bot.replyAlt('/gpt oi'))[0], /📡 ⬆️/);
+        await bot.setSetting('openai.status', false);
+
+        const [withValue] = await bot.replyAlt('/gpt -s oi');
+        assert.match(withValue, /^🤖 Oi\.\n\n_📡 ⬆️ \d+ B TX · ⬇️ \d+ B RX · 🪙 25 tokens \(📥 20 · 📤 5\)_\n_💵 ~\$0\.00000\d_$/);
+
+        // Model without a price in openai.pricing: cost n/a
+        await bot.setSetting('openai.pricing', ['gpt-4.1=2/8']);
+        assert.match((await bot.replyAlt('/gpt -s oi'))[0], /_💵 custo n\/d \(rode \/gpt -prices\)_$/);
+
     });
 
     test('respondendo um áudio: transcreve (v1/audio/transcriptions); com outra pergunta, o chat em cima da transcrição', async () => {
@@ -603,6 +636,83 @@ describe('/gpt (/ai)', () => {
         }
     });
 
+    test('-prices: lê a tabela Standard do site da OpenAI e atualiza o openai.pricing, sem tocar no que a página não tem', async () => {
+        const line = (nameAlt, ...v) => `[1,[[0,&quot;${nameAlt}&quot;]${v.map(x => `,[0,${typeof x === 'string' ? `&quot;${x}&quot;` : x}]`).join('')}]]`;
+        const page = '<astro-island props="' + [
+            line('gpt-4o-mini', 0.2, 0.075, 0.7),                 // mudou
+            line('gpt-9-novo (&lt;272K context length)', 3, 0.3, '-', 12), // new, and the range leaves the name
+            line('gpt-9-novo (&gt;272K context length)', 6, '-', '-', 24),  // a primeira linha vale
+            line('gpt-9-pro', 30, '-', '-', 180),                 // pro: fora
+            line('gpt-4o-mini-2024-07-18', 3, 0.15),              // fine-tuning (data): fora
+            line('gpt-4o-mini-tts', 0.6, '-', 12),                // voz: fora
+            line('gpt-4o-mini', 0.075, '-', 0.3)                  // Batch: a primeira linha vale
+        ].join(',') + '"></astro-island>';
+        network.responder('get', 'developers.openai.com/api/docs/pricing', page);
+        await bot.setSetting('openai.pricing', ['gpt-4o-mini=0.15/0.6', 'meu-modelo=1/2']);
+
+        const [r] = await bot.replyAlt('/gpt -prices');
+        assert.match(r, /1 alterado, 1 novo, 0 sem mudança/);
+        assert.match(r, /🔄 gpt-4o-mini: 0\.15\/0\.6 → \*0\.2\/0\.7\*/);
+        assert.match(r, /➕ gpt-9-novo/);
+        assert.deepEqual(bot.getSetting('openai.pricing'), ['gpt-4o-mini=0.2/0.7', 'meu-modelo=1/2', 'gpt-9-novo=3/12']);
+
+        // No change: only warns
+        assert.match((await bot.replyAlt('/gpt -prices'))[0], /✅ Os 2 preços já estão em dia/);
+
+        // Page without the table: error and nothing changes
+        network.responder('get', 'developers.openai.com/api/docs/pricing', '<html></html>');
+        assert.match((await bot.replyAlt('/gpt -prices'))[0], /❌ Não consegui atualizar os preços: não achei a tabela/);
+        assert.equal(bot.getSetting('openai.pricing').length, 3);
+    });
+
+    test('atualização automática dos preços: a cada 15 dias, só com a chave e o openai.pricing.auto; aviso no rodapé com 30+', async () => {
+        const { updatePricesSeExpired } = bot.src('openaiChat');
+        const page = '<x props="[1,[[0,&quot;gpt-4o-mini&quot;],[0,0.3],[0,0.1],[0,0.9]]]"></x>';
+        network.responder('get', 'developers.openai.com/api/docs/pricing', page);
+        const day = 86400000;
+        const today = Date.now();
+
+        // Without the key: nothing
+        assert.equal(await updatePricesSeExpired(today + 40 * day), null);
+        await bot.setSetting('openai.api.key', 'sk-teste');
+
+        // Never updated (prices and date empty, the default): updates now, without waiting for the 15 days
+        const first = await updatePricesSeExpired(today);
+        assert.deepEqual(first.novos, ['gpt-4o-mini']);
+        assert.deepEqual(bot.getSetting('openai.pricing'), ['gpt-4o-mini=0.3/0.9']);
+        await bot.setSetting('openai.pricing', ['gpt-4o-mini=0.15/0.6']);
+
+        // Just updated: not expired yet
+        await bot.setSetting('openai.pricing.updated', new Date(today).toISOString().slice(0, 10));
+        assert.equal(await updatePricesSeExpired(today + 10 * day), null);
+
+        // Turned off by openai.pricing.auto: nothing, even if expired
+        const queries = () => network.chamadas.filter(c => c.url.includes('/pricing')).length;
+        const beforeAlt = queries();
+        await bot.setSetting('openai.pricing.auto', false);
+        assert.equal(await updatePricesSeExpired(today + 40 * day), null);
+        assert.equal(queries(), beforeAlt);
+
+        // Vencido (16 dias) e ligado: atualiza e grava a data
+        await bot.setSetting('openai.pricing.auto', true);
+        const r = await updatePricesSeExpired(today + 16 * day);
+        assert.equal(r.mudados.length, 1);
+        assert.ok(bot.getSetting('openai.pricing').includes('gpt-4o-mini=0.3/0.9'));
+        assert.equal(bot.getSetting('openai.pricing.updated'), new Date().toISOString().slice(0, 10));
+
+        // Failure (site down): touches nothing and waits before trying again
+        await bot.setSetting('openai.pricing.updated', '2026-01-01');
+        network.responder('get', 'developers.openai.com/api/docs/pricing', '<html></html>');
+        assert.equal(await updatePricesSeExpired(today), null);
+        const n = network.chamadas.length;
+        assert.equal(await updatePricesSeExpired(today + 1000), null);
+        assert.equal(network.chamadas.length, n, 'não tenta de novo antes do intervalo');
+
+        // Old prices (30+ days): the -status footer warns
+        network.responder('post', 'api.openai.com/v1/chat/completions', { choices: [{ message: { content: 'Oi.' } }], usage: { prompt_tokens: 1, completion_tokens: 1 } });
+        assert.match((await bot.replyAlt('/gpt -s oi'))[0], /_⚠️ preços de \d+ dias: \/gpt -prices_$/);
+    });
+
     test('-usage: o consumo (Usage API, chave de admin) por dia e por modelo, e os limites de agora (cabeçalhos)', async () => {
         assert.match((await bot.replyAlt('/gpt -usage'))[0], /⚠️ API key da OpenAI não encontrada/);
 
@@ -824,6 +934,7 @@ describe('/gpt (/ai)', () => {
 
 describe('/tldr (/resumo)', () => {
     const { readPeriod } = bot.src('commands/tldr');
+    beforeEach(() => bot.setSetting('openai.status', false));
 
     // Messages received in the group, saved `minutos` minutes ago
     async function chat(linesAlt, minutes = 10) {

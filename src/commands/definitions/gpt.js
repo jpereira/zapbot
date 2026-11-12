@@ -6,7 +6,7 @@ const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/gpt',
-    usage: '/gpt [pergunta]  ou  /gpt -model [modelo] [-img|-gif|-audio|-voz]  ou  /gpt -usage|-u [dias]  ou  /gpt -voz [texto]  ou  /gpt -img <pedido>  ou  /gpt -gif [pedido]',
+    usage: '/gpt [-status|-s] [pergunta]  ou  /gpt -model [modelo] [-img|-gif|-audio|-voz]  ou  /gpt -prices  ou  /gpt -usage|-u [dias]  ou  /gpt -voz [texto]  ou  /gpt -img <pedido>  ou  /gpt -gif [pedido]',
     aliases: ['/ai'],
     summary: 'Pergunta ao ChatGPT',
     help: 'Pergunta ao ChatGPT (OpenAI). Respondendo uma mensagem, o texto dela entra na pergunta; respondendo uma foto, ela vai junto (o ChatGPT vê a imagem); respondendo um áudio, ele é transcrito; respondendo um documento (texto ou PDF), o conteúdo vai junto; com -voz, o texto vira uma nota de voz de robô; com -img e -gif, cria uma imagem e um GIF. Precisa de OPENAI_API_KEY no config/.env ou do setting openai.api.key.',
@@ -50,11 +50,26 @@ module.exports = {
             cron: false
         },
         {
+            opts: ['prices'],
+            values: [],
+            desc: 'Busca a tabela de preços no site da OpenAI e atualiza o setting openai.pricing (dólares por 1M de tokens), usado no custo estimado do -status. Mostra o que mudou; os modelos que você adicionou e a página não tem ficam como estão.',
+            ex: ['/gpt -prices'],
+            role: ADMIN,
+            cron: false
+        },
+        {
             opts: ['usage', 'u'],
             values: ['[dias]'],
             desc: 'O consumo da OpenAI dos últimos dias (padrão 7, até 31): tokens de entrada, saída e cache, requisições, por dia e por modelo, pela Usage API (v1/organization/usage/completions), que pede a chave de admin (OPENAI_ADMIN_KEY ou o setting openai.admin.key). E os limites de agora, lidos dos cabeçalhos x-ratelimit-* de uma chamada mínima ao chat (gasta uns poucos tokens). Só o dono e os admins, mesmo que o /gpt tenha sido liberado a um usuário.',
             ex: ['/gpt -usage [dias]', '/gpt -u 30'],
             role: ADMIN,
+            cron: false
+        },
+        {
+            opts: ['status', 's'],
+            values: [],
+            desc: 'Acrescenta no rodapé da resposta o consumo da chamada: bytes enviados (TX) e recebidos (RX) e tokens gastos. Para deixar sempre ligado: /set openai.status true.',
+            ex: ['/gpt -s explique SSRF em 3 linhas'],
             cron: false
         },
         {

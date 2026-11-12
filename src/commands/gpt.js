@@ -14,12 +14,12 @@ const { getCommandSyntax } = require('./base');
 const { BIN_FFMPEG, TMP_DIR } = require('../constants');
 const { OPENAI_MODELS } = require('../openai');
 const {
-    WITHOUT_KEY, keyAdminOpenAi, keyOpenAi, queryConsumption, queryCosts, queryLimits, queryServices, errorOpenAi, generateImage,
-    listModels, askOnChat, synthesizeVoice, transcribeAudio, VOICE_MAX_CHARACTERS
+    WITHOUT_KEY, updatePrices, keyAdminOpenAi, keyOpenAi, queryConsumption, queryCosts, queryLimits, queryServices, errorOpenAi, generateImage,
+    listModels, measureConsumption, askOnChat, consumptionFooter, synthesizeVoice, transcribeAudio, VOICE_MAX_CHARACTERS
 } = require('../openaiChat');
 const { envOuSetting, getSetting, setSetting } = require('../settings');
 const { captureOutput, runCommand } = require('../util/processes');
-const { fmtInA } = require('../util/format');
+const { fmtInA, plural } = require('../util/format');
 
 /*
  * /gpt: asks ChatGPT (the call and the errors live in openaiChat.js).
@@ -257,17 +257,23 @@ async function replyOnAudio(msg, { audio, erro: errorAlt }, args) {
             return;
         }
         if (soTranscribe(args)) {
-            await completeNotice(msg, notice, `🤖 *Transcrição:*\n${transcription}`);
+            await completeNotice(msg, notice, `🤖 *Transcrição:*\n${transcription}${await consumptionFooter()}`);
             return;
         }
 
         const reply = await askOnChat({
             cmd: '/gpt', sistema: GPT_INSTRUCTIONS, texto: `${args.trim()}\n\nTranscrição do áudio:\n${transcription}`
         });
-        await completeNotice(msg, notice, `🤖 ${reply}`);
+        await completeNotice(msg, notice, `🤖 ${reply}${await consumptionFooter()}`);
     } catch (err) {
         await completeNotice(msg, notice, (transcribing && await modelError(err, AUDIO_MODEL)) || errorOpenAi(err, '/gpt'));
     }
+}
+
+// Media (voice, image, GIF) has no footer: with the status on, the usage goes in a separate message
+async function replyConsumption(msg) {
+    const footer = (await consumptionFooter()).trim();
+    if (footer) await msg.reply(footer);
 }
 
 // For the model error: the setting, the account's model list filter and the resource name
@@ -351,6 +357,7 @@ async function talkText(msg, args, quotedMsg) {
         const voice = await synthesizeVoice({ cmd: '/gpt', texto: textAlt, estilo: style });
         await msg.reply(new MessageMedia('audio/ogg; codecs=opus', voice.toString('base64'), 'voz.ogg'), null, { sendAudioAsVoice: true });
         await deleteNotice(notice);
+        await replyConsumption(msg);
     } catch (err) {
         await completeNotice(msg, notice, (await modelError(err, VOICE_MODEL)) || errorOpenAi(err, '/gpt'));
     }
@@ -395,6 +402,7 @@ async function createImage(msg, args, quotedMsg) {
         const b64 = await generateImage({ cmd: '/gpt', prompt: request, imagem: photo ? await photoInPng(photo) : null });
         await msg.reply(new MessageMedia('image/png', b64, 'imagem.png'));
         await deleteNotice(notice);
+        await replyConsumption(msg);
     } catch (err) {
         await completeNotice(msg, notice, (await modelError(err, IMAGE_MODEL)) || errorOpenAi(err, '/gpt'));
     }
@@ -444,6 +452,7 @@ async function createGif(msg, args, quotedMsg) {
         const mp4 = await gifParaMp4(Buffer.from(b64, 'base64'));
         await msg.reply(new MessageMedia('video/mp4', mp4.toString('base64'), 'gif.mp4'), null, { sendVideoAsGif: true });
         await deleteNotice(notice);
+        await replyConsumption(msg);
     } catch (err) {
         const messageAlt = err.response?.data?.error?.message ?? '';
         await completeNotice(msg, notice, await modelError(err, IMAGE_MODEL) ||
@@ -640,7 +649,29 @@ async function showUsage(msg, daysTyped) {
     await msg.reply(partsAlt.join('\n\n'));
 }
 
-async function cmdGpt({ msg, args, opts, quotedMsg, admin }) {
+/*
+ * /gpt -prices: fetches the price table from the OpenAI site and updates openai.pricing (the estimated cost
+ * of -status). The models you added by hand that the page does not have stay as they are.
+ */
+async function showPrices(msg) {
+    const notice = await notifyProcessing(msg);
+    try {
+        const { novos: freshAlt3, mudados: changed, iguais: equal } = await updatePrices({ cmd: '/gpt' });
+        const linesAlt = [
+            ...changed.map(m => `🔄 ${m.modelo}: ${m.antes} → *${m.depois}*`),
+            ...freshAlt3.map(m => `➕ ${m}`)
+        ];
+        const summary = linesAlt.length
+            ? `✅ *Preços atualizados* (${plural(changed.length, 'alterado', 'alterados')}, ${plural(freshAlt3.length, 'novo', 'novos')}, ${equal} sem mudança)\n${linesAlt.slice(0, 20).join('\n')}` +
+                (linesAlt.length > 20 ? `\n_…e mais ${linesAlt.length - 20}_` : '')
+            : `✅ Os ${equal} preços já estão em dia.`;
+        await completeNotice(msg, notice, `${summary}\n💡 _Dólares por 1M de tokens, entrada/saída (openai.pricing)._`);
+    } catch (err) {
+        await completeNotice(msg, notice, `❌ Não consegui atualizar os preços: ${err.message}`);
+    }
+}
+
+async function ask({ msg, args, opts, quotedMsg, admin }) {
     if (opts?.given.has('usage')) {
         await showUsage(msg, opts.opt.usage);
         return;
@@ -648,6 +679,11 @@ async function cmdGpt({ msg, args, opts, quotedMsg, admin }) {
 
     if (opts?.given.has('model')) {
         await swapModel(msg, opts.opt.model, opts);
+        return;
+    }
+
+    if (opts?.given.has('prices')) {
+        await showPrices(msg);
         return;
     }
 
@@ -717,11 +753,14 @@ async function cmdGpt({ msg, args, opts, quotedMsg, admin }) {
         });
 
         // The 🤖 in front also guarantees the reply never starts with "/" (see markSentByBot)
-        await completeNotice(msg, notice, `🤖 ${reply}`);
+        await completeNotice(msg, notice, `🤖 ${reply}${await consumptionFooter()}`);
     } catch (err) {
         await completeNotice(msg, notice, errorOpenAi(err, '/gpt'));
     }
 }
+
+// The -status|-s (or the openai.status setting) shows the call usage in the footer
+const cmdGpt = (ctx) => measureConsumption(ctx.opts?.given.has('status'), () => ask(ctx));
 
 module.exports = {
     cmdGpt

@@ -347,7 +347,7 @@ describe('/set (/config)', () => {
         assert.match(r, /^⚙️ \*SETTINGS\* com "alerta" \(3\)\n\n```\nalerta\.intervalMin       5\nalerta\.max               20\ndefi\.alerta\.intervalMin  10\n```\n💡 _\/set <chave> para detalhes_$/);
 
         const keys = (textAlt) => [...textAlt.matchAll(/^([a-z][\w.]+)\s{2}/gm)].map(m => m[1]);
-        assert.deepEqual(keys((await bot.replyAlt('/set OPENAI'))[0]), ['openai.admin.key', 'openai.api.key', 'openai.api.model', 'openai.credit.since', 'openai.credit.total', 'openai.gif.frameMs', 'openai.gif.frames', 'openai.image.model', 'openai.timeout.ms', 'openai.transcribe.model', 'openai.tts.instructions', 'openai.tts.model', 'openai.tts.voice']);
+        assert.deepEqual(keys((await bot.replyAlt('/set OPENAI'))[0]), ['openai.admin.key', 'openai.api.key', 'openai.api.model', 'openai.credit.since', 'openai.credit.total', 'openai.gif.frameMs', 'openai.gif.frames', 'openai.image.model', 'openai.pricing', 'openai.pricing.auto', 'openai.pricing.updated', 'openai.status', 'openai.timeout.ms', 'openai.transcribe.model', 'openai.tts.instructions', 'openai.tts.model', 'openai.tts.voice']);
         assert.deepEqual(keys((await bot.replyAlt('/set /^show\\./'))[0]), ['show.alert.deleted', 'show.alert.edited', 'show.alert.reaction', 'show.alert.status', 'show.delayMs', 'show.max']);
         assert.deepEqual(keys((await bot.replyAlt('/set /max$/'))[0]).length > 3, true);
 
