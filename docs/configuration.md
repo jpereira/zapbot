@@ -144,7 +144,7 @@ rate limit by IP.
 
 When `QRCODE_EMAIL_ENABLE="true"`, **email is where the QR shows up**: it isn't drawn in the
 terminal, unless sending fails. If the host, port, user or password are wrong, sending fails (the
-error shows up in the logs as `Erro ao enviar QR por email`) and, with
+error shows up in the logs as `Error sending QR by e-mail`) and, with
 `QRCODE_EMAIL_FALLBACK_TERMINAL="true"` (the default), the QR goes to the logs so you can pair
 anyway. With `"false"`, the bot sits waiting for a pairing you'll never be able to do.
 
