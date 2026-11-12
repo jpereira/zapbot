@@ -103,6 +103,7 @@ const { startSchedule } = require('./src/schedule');
 const { priceStartAlerts } = require('./src/priceAlerts');
 const { startNotes } = require('./src/notes');
 const { startBackup } = require('./src/backup');
+const { startPricesAutomatic } = require('./src/openaiChat');
 const { startAlertsDefi } = require('./src/defi/alerts');
 const { startHeartbeat } = require('./src/heartbeat');
 const { startCleanupPeriodic } = require('./src/cleanup');
@@ -118,6 +119,7 @@ startNotes();
 startAlertsDefi();
 startSchedule();
 startBackup();
+startPricesAutomatic();
 startMonitor();
 
 startBot();

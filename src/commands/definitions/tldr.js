@@ -6,7 +6,7 @@ const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/tldr',
-    usage: '/tldr [OPÇÃO] [período]',
+    usage: '/tldr [-status|-s] [OPÇÃO] [período]',
     aliases: ['/resumo'],
     summary: 'Resume a conversa do chat pelo ChatGPT',
     help: 'Resume a conversa do chat pelo ChatGPT: assuntos, decisões e pendências. Os áudios (os mais recentes) são transcritos e entram no resumo com quem enviou e quando.',
@@ -22,6 +22,13 @@ module.exports = {
             values: [],
             desc: 'Envia no seu privado em vez de expor no chat atual.',
             outrosChats: true
+        },
+        {
+            opts: ['status', 's'],
+            values: [],
+            desc: 'Acrescenta no rodapé da resposta o consumo da chamada: bytes enviados (TX) e recebidos (RX) e tokens gastos. Para deixar sempre ligado: /set openai.status true.',
+            ex: ['/tldr -s 2h'],
+            cron: false
         },
         {
             argv: ['[período]'],

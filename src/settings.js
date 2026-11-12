@@ -543,6 +543,31 @@ const SETTINGS_SCHEMA = {
         type: 'string',
         desc: 'Modelo que gera e edita a imagem do /gpt -img e o GIF do /gpt -gif (só os gpt-image-2.6-* fazem GIF): o id que a sua conta tem (se não existir, o bot lista os que a chave vê).'
     },
+    'openai.pricing': {
+        default: [],
+        type: 'list',
+        desc: 'Preço por 1M de tokens em dólares, modelo=entrada/saída, para o custo estimado do rodapé de status do /gpt e do /tldr (modelo sem preço: custo n/d). Vem vazio: o /gpt -prices ou a atualização automática (openai.pricing.auto) preenche. Vale o nome exato ou o prefixo mais longo.',
+        item: (v) => {
+            if (!/^[^=\s]+=\d+(\.\d+)?\/\d+(\.\d+)?$/.test(v)) throw new Error(`use modelo=entrada/saida (ex.: gpt-4o-mini=0.15/0.6): ${v}`);
+            return v;
+        }
+    },
+    'openai.pricing.auto': {
+        default: true,
+        type: 'boolean',
+        desc: 'Atualiza o openai.pricing sozinho a cada 15 dias, lendo a tabela de preços do site da OpenAI (o mesmo do /gpt -prices). Só roda com a chave da OpenAI configurada. false: só atualiza à mão.'
+    },
+    'openai.pricing.updated': {
+        default: '',
+        type: 'string',
+        allowEmpty: true,
+        desc: 'Data (AAAA-MM-DD) da última atualização do openai.pricing, gravada pelo /gpt -prices e pela atualização automática. Vazio: ainda não atualizou.'
+    },
+    'openai.status': {
+        default: true,
+        type: 'boolean',
+        desc: 'Rodapé de status nas respostas do /gpt e do /tldr: bytes enviados (TX) e recebidos (RX), tokens gastos, custo estimado e saldo (o -status|-s liga só naquela vez, se estiver desligado).'
+    },
     'openai.timeout.ms': {
         default: 60000,
         type: 'number', min: 5000, max: 300000,

@@ -10,7 +10,7 @@ const { getCommandSyntax } = require('./base');
 const { MAX_DELETE_WINDOW } = require('../constants');
 const { chatCurrentIds } = require('../contacts');
 const { dbAll, dbReady, dbRun } = require('../db');
-const { WITHOUT_KEY, keyOpenAi, errorOpenAi, askOnChat, transcribeAudio } = require('../openaiChat');
+const { WITHOUT_KEY, keyOpenAi, errorOpenAi, measureConsumption, askOnChat, consumptionFooter, transcribeAudio } = require('../openaiChat');
 const { getSetting } = require('../settings');
 const { mediaIsPath } = require('../util/files');
 const { plural, withoutAccents } = require('../util/format');
@@ -105,7 +105,7 @@ async function audioTranscription(r) {
     }
 }
 
-async function cmdTldr({ msg, opts, chatId, chatName }) {
+async function summarize({ msg, opts, chatId, chatName }) {
     if (!keyOpenAi()) {
         await msg.reply(WITHOUT_KEY('/tldr'));
         return;
@@ -206,7 +206,7 @@ async function cmdTldr({ msg, opts, chatId, chatName }) {
         const textAlt = `🤖 *Resumo de ${nameAlt}*\n` +
             `_${plural(linesAlt.length, 'mensagem', 'mensagens')} · ${hour(first)} a ${hour(last)}_` +
             (notices.length ? `\n_(${notices.join('; ')})_` : '') +
-            `\n\n${summary}`;
+            `\n\n${summary}${await consumptionFooter()}`;
 
         if (opts.opt.pv) {
             await completeNotice(msg, notice, '🤖 Resumo enviado no seu privado.');
@@ -218,6 +218,9 @@ async function cmdTldr({ msg, opts, chatId, chatName }) {
         await completeNotice(msg, notice, errorOpenAi(err, '/tldr'));
     }
 }
+
+// The -status|-s (or the openai.status setting) shows the call usage in the footer
+const cmdTldr = (ctx) => measureConsumption(ctx.opts?.given.has('status'), () => summarize(ctx));
 
 module.exports = {
     cmdTldr,
