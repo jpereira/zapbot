@@ -63,7 +63,7 @@ DOCS_PATH := $(shell sed -nE 's|^site_url: *https?://[^/]+||p' mkdocs.yml)
 
 .DEFAULT_GOAL := help
 
-.PHONY: help all context build up logs ps shell images volume cookies clean recreate destroy prune \
+.PHONY: help all context build deploy logs ps shell images volume cookies clean recreate destroy prune \
     deps test test.coverage lint check docs docs.deps docs.build
 
 help: ## Shows this help
@@ -128,7 +128,7 @@ endif
 build: context ## Builds the image on the selected target
 	$(Q)$(COMPOSE) build $(OPTS) $(SERVICE)
 
-up: context ## Build + (re)creates the service on the selected target
+deploy: context ## Build + (re)creates the service on the selected target
 	$(Q)$(MAKE) build
 	$(Q)$(COMPOSE) up -d --force-recreate $(SERVICE)
 
@@ -159,10 +159,10 @@ clean: context ## Removes the selected environment's container and image, preser
 	-$(Q)$(DOCKER) rmi -f $(SERVICE)
 	-$(Q)$(DOCKER) builder prune -f -a
 
-# clean removes container and image (and the builder cache); up then builds without cache and recreates the
+# clean removes container and image (and the builder cache); deploy then builds without cache and recreates the
 # service. The volumes (WhatsApp session and cache) are not even touched: only destroy removes them.
 recreate: clean ## Recreates image (no cache) and container from scratch on the selected target, preserving the volumes
-	$(Q)$(MAKE) up OPTS="--no-cache --pull"
+	$(Q)$(MAKE) deploy OPTS="--no-cache --pull"
 
 destroy: clean ## Also removes the selected environment's volumes (session and cache!)
 	$(Q)$(DOCKER) volume rm -f $(VOLUMES)

@@ -8,7 +8,7 @@ Existe um só serviço, o `zapbot` do `docker/docker-compose.yml`, que usa o `co
 ```bash
 make help    # lista todos os alvos
 make build   # build da imagem zapbot
-make up      # build + (re)cria o container
+make deploy  # build + (re)cria o container
 make shell   # shell dentro do container
 make clean   # remove o container e a imagem zapbot
 make recreate # clean + build sem cache + sobe uma instância nova (volumes intactos)
@@ -20,7 +20,7 @@ Os alvos não mostram os comandos que executam. Para depurar, `Q=` (ou `V=1`) mo
 os das chamadas internas de outros alvos:
 
 ```bash
-make Q= DOCK_REMOTE=1 up     # mostra cada comando docker executado
+make Q= DOCK_REMOTE=1 deploy   # mostra cada comando docker executado
 make V=1 check               # o mesmo, com V=1
 ```
 
@@ -30,7 +30,7 @@ Docker desta máquina; `1` usa o do servidor remoto. O serviço é sempre o `zap
 ```bash
 make test                    # testes do checkout local
 make DOCK_REMOTE=1 test      # testes da imagem em execução no homelab
-make DOCK_REMOTE=1 up        # build + recria o bot remoto
+make DOCK_REMOTE=1 deploy      # build + recria o bot remoto
 make DOCK_REMOTE=1 recreate  # o mesmo, mas com a imagem refeita do zero (sem cache)
 make DOCK_REMOTE=1 logs      # logs do bot remoto
 make DOCK_REMOTE=1 shell     # shell dentro do bot remoto
@@ -57,7 +57,7 @@ container remoto.
 `deps`, `lint`, `check` e `docs*` trabalham sempre no checkout local. `check` valida lint, testes
 locais e documentação, independentemente do destino. `clean` remove o container e a imagem do
 ambiente selecionado, preservando os volumes, e apaga o cache de build do contexto Docker
-selecionado. `destroy` remove também os volumes: a sessão e o cache se perdem, e um novo `up` pede
+selecionado. `destroy` remove também os volumes: a sessão e o cache se perdem, e um novo `deploy` pede
 o QR Code. `prune` limpa mídia e mensagens.
 
 ## Estrutura do código
