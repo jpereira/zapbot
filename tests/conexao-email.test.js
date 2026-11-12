@@ -39,7 +39,7 @@ describe('alertas por e-mail', () => {
         const [e] = emails;
         assert.equal(e.subject, '[ZapBot] 🧪 Teste formato');
         assert.equal(e.to, 'dono@teste');
-        assert.match(e.text, /motivo <b>[\s\S]*📱 Número: 5521XXXX0000[\s\S]*🛡️ Anti-Phishing Code: frase-secreta/);
+        assert.match(e.text, /motivo <b>[\s\S]*📱 Número: 5521XXXX0000[\s\S]*🛡️ Código antiphishing: frase-secreta/);
         assert.match(e.text, /🤖 Versão: [\d.]+(?: \(devel\))? \(git\+[0-9a-f]{7}\/[\w.-]+\)\n/);
         assert.match(e.html, /🤖 Versão<\/strong><\/td><td>[\d.]+(?: \(devel\))? \(git\+[0-9a-f]{7}\/[\w.-]+\)</);
         assert.match(e.html, /motivo &lt;b&gt;/);
@@ -140,7 +140,7 @@ describe('eventos de conexão', () => {
         bot.estado.ultimaQueda = null;
         await emitir('qr', 'codigo-qr');
         assert.deepEqual(emails, []);
-        assert.ok(bot.logs.some(l => /QR Code received at .*scan it please/.test(l)));
+        assert.ok(bot.logs.some(l => /QR Code recebido em .*escaneie por favor/.test(l)));
 
         bot.estado.autenticadoEm = Date.now();
         await emitir('qr', 'codigo-qr-2');
@@ -156,7 +156,7 @@ describe('eventos de conexão', () => {
             await emitir('qr', 'qr-A');
             await emitir('qr', 'qr-B');
 
-            const qrs = emails.filter(e => /QR Code Authentication/.test(e.subject));
+            const qrs = emails.filter(e => /Autenticação do QR Code/.test(e.subject));
             assert.equal(qrs.length, 2);
             assert.match(qrs[0].html, /#1[\s\S]*5521XXXX0000[\s\S]*frase-secreta/);
             assert.equal(qrs[1].attachments[0].filename, 'qrcode-2.png');

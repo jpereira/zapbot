@@ -53,7 +53,7 @@ function agendarNovaTentativa(motivo, erro) {
         alertarPorEmail(t('conexao.falhaReiniciarTitulo'), t('conexao.falhaReiniciarCorpo', { motivo, erro }));
     }
 
-    printInfo(`♻️ Nova tentativa de conectar em ${espera / 1000}s (falhas seguidas: ${estado.tentativas}).`);
+    printInfo(t('conexao.logNovaTentativa', { s: espera / 1000, n: estado.tentativas }));
     clearTimeout(novaTentativa);
     novaTentativa = setTimeout(() => {
         novaTentativa = null;
@@ -68,7 +68,7 @@ function vigiarReady() {
     vigiaDoReady = setTimeout(() => {
         vigiaDoReady = null;
         if (estado.pronto || estado.reiniciando || estado.aguardandoQr) return;
-        printError(`Sem conexão ${CONEXAO_MAX_MS / 60000} min depois de iniciar: reiniciando o cliente.`);
+        printError(t('conexao.logSemConexao', { min: CONEXAO_MAX_MS / 60000 }));
         restartClient(t('conexao.motivoSemReady', { min: CONEXAO_MAX_MS / 60000 }));
     }, CONEXAO_MAX_MS);
     vigiaDoReady.unref?.();
@@ -82,24 +82,24 @@ function vigiarReady() {
 function matarBrowserOrfao() {
     const processo = client.pupBrowser?.process?.();
     if (!processo || processo.exitCode !== null || processo.signalCode !== null) return;
-    printInfo(`Matando o Chromium órfão (PID ${processo.pid}).`);
+    printInfo(t('conexao.logMatandoChromium', { pid: processo.pid }));
     processo.kill('SIGKILL');
 }
 
 async function restartClient(motivo) {
     if (estado.reiniciando) {
-        printInfo(`Restart ignorado (já em andamento). Motivo: ${motivo}`);
+        printInfo(t('conexao.logRestartIgnorado', { motivo }));
         return;
     }
 
     estado.reiniciando = true;
     estado.pronto = false;
-    printInfo(`♻️ Reiniciando cliente. Motivo: ${motivo}`);
+    printInfo(t('conexao.logReiniciando', { motivo }));
 
     try {
         await client.destroy();
     } catch (e) {
-        printError('destroy falhou:', e.message);
+        printError(t('conexao.logDestroyFalhou'), e.message);
     }
     matarBrowserOrfao();
 
@@ -110,7 +110,7 @@ async function restartClient(motivo) {
         await client.initialize();
     } catch (e) {
         erro = e;
-        printError('initialize falhou:', e.message);
+        printError(t('conexao.logInitializeFalhou'), e.message);
     } finally {
         estado.reiniciando = false;
     }
@@ -155,14 +155,14 @@ client.on('qr', async (qr) => {
     // Diagnóstico: QR depois de já ter autenticado indica sessão perdida.
     if (estado.autenticadoEm > 0 || estado.ultimaQueda) {
         printError(
-            '⚠️ QR recebido APÓS autenticação.',
+            t('conexao.logQrAposAuth'),
             `lastDisconnect=${estado.ultimaQueda} restarting=${estado.reiniciando} ready=${estado.pronto}`
         );
         alertarPorEmail(t('conexao.sessaoPerdidaTitulo'), t('conexao.sessaoPerdidaCorpo', { motivo: estado.ultimaQueda ?? '-' }));
     }
 
     if (!emailEnabled) {
-        printInfo(`QR Code received at (${currentdatetimeday}), scan it please`);
+        printInfo(t('conexao.logQrRecebido', { quando: currentdatetimeday }));
         qrcodeTerminal.generate(qr, { small: true });
         return;
     }
@@ -184,30 +184,30 @@ client.on('qr', async (qr) => {
         const info = await transporter.sendMail({
             from: process.env.QRCODE_EMAIL_SMTP_FROM,
             to: process.env.QRCODE_EMAIL_SMTP_TO,
-            subject: '[ZapBot] WhatsApp QR Code Authentication',
+            subject: `[ZapBot] ${t('conexao.qrAssunto')}`,
             html: `
                 <table width="50%" style="background:#f8f8f8;border:1px solid #dddddd;border-radius:5px;">
                     <tr>
                         <td style="padding:12px;">
-                            <strong>🔢 QR Code:</strong>
+                            <strong>${t('conexao.qrCodigo')}</strong>
                             <span style="color:#d9534f;font-weight:bold;">#${nextQrEmailCounter}</span>
                         </td>
                     </tr>
                     <tr>
                         <td style="padding:12px;">
-                            <strong>📱 Phone Number:</strong>
+                            <strong>${t('conexao.qrTelefone')}</strong>
                             <span style="color:#d9534f;font-weight:bold;">${maskPhone}</span>
                         </td>
                     </tr>
                     <tr>
                         <td style="padding:12px;">
-                            <strong>🛡️ Anti-Phishing Code:</strong>
+                            <strong>${t('email.antiPhishing')}:</strong>
                             <span style="color:#d9534f;font-weight:bold;">${myantiphishing}</span>
                         </td>
                     </tr>
                     <tr>
                         <td style="padding:12px;">
-                            <strong>📅 Generated At:</strong>
+                            <strong>${t('conexao.qrGeradoEm')}</strong>
                             <span style="color:#000000;font-weight:bold;">${currentdatetimeday}</span>
                         </td>
                     </tr>
@@ -239,15 +239,17 @@ client.on('qr', async (qr) => {
         qrEmailCounter = nextQrEmailCounter;
 
         printInfo(
-            `QR Code #${qrEmailCounter} received at (${currentdatetimeday}) ` +
-            `and sent to '${process.env.QRCODE_EMAIL_SMTP_TO}' (messageId=${info.messageId})`
+            t('conexao.logQrEnviado', {
+                n: qrEmailCounter, quando: currentdatetimeday,
+                para: process.env.QRCODE_EMAIL_SMTP_TO, id: info.messageId
+            })
         );
     } catch (err) {
-        printError('Erro ao enviar QR por email:', err);
+        printError(t('conexao.logQrErroEmail'), err);
 
         // Sem o e-mail o QR não chegaria a lugar nenhum: mostra no terminal (padrão on)
         if (String(process.env.QRCODE_EMAIL_FALLBACK_TERMINAL ?? 'true').trim().toLowerCase() !== 'false') {
-            printInfo(`QR Code received at (${currentdatetimeday}), e-mail falhou, scan it please`);
+            printInfo(t('conexao.logQrEmailFalhou', { quando: currentdatetimeday }));
             qrcodeTerminal.generate(qr, { small: true });
         }
     } finally {
@@ -303,10 +305,10 @@ client.on('disconnected', async (reason) => {
     estado.pronto = false;
     estado.autenticadoEm = 0;
     estado.ultimaQueda = reason;
-    printInfo(`💥 WhatsApp desconectou: ${reason}`);
+    printInfo(t('conexao.logDesconectou', { motivo: reason }));
 
     if (NAO_REINICIAR.has(String(reason))) {
-        printError(`Motivo '${reason}' exige ação manual (outra instância ou sessão revogada). Não vou reiniciar em loop.`);
+        printError(t('conexao.logAcaoManual', { motivo: reason }));
         alertarPorEmail(t('conexao.desconectadoManualTitulo'), t('conexao.desconectadoManualCorpo', { motivo: reason }));
         return;
     }
@@ -376,23 +378,23 @@ client.on('ready', () => comContextoDebug({ semFiltro: true }, async () => {
  */
 async function iniciarBot() {
     try {
-        printInfo('Starting WhatsApp authentication...');
+        printInfo(t('conexao.logIniciando'));
         await client.initialize();
         vigiarReady();
     } catch (error) {
-        printError('Erro capturado na inicialização:', error.message);
+        printError(t('conexao.logErroInit'), error.message);
 
         // Fecha o navegador antigo se ele tiver sido aberto parcialmente
         try {
-            printInfo('Fechando instâncias pendentes do navegador...');
+            printInfo(t('conexao.logFechando'));
             await client.destroy();
         } catch {
-            printInfo('Nenhum navegador ativo para destruir.');
+            printInfo(t('conexao.logNenhumBrowser'));
         }
         matarBrowserOrfao();
 
         if (error.message.includes('Execution context was destroyed') || error.message.includes('browser is already running')) {
-            printInfo('Reiniciando o processo de inicialização em 5 segundos...');
+            printInfo(t('conexao.logReiniciandoInit'));
             setTimeout(iniciarBot, 5000);
             return;
         }

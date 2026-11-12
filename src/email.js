@@ -101,7 +101,7 @@ async function alertarPorEmail(evento, detalhes = '', { forcar = false } = {}) {
 
         const agora = Date.now();
         if (!forcar && agora - (ultimoAlertaEmail.get(evento) ?? 0) < ALERTA_EMAIL_INTERVALO_MS) {
-            printInfo(`Alerta por e-mail '${evento}' não enviado: repetido em menos de 5 minutos.`);
+            printInfo(t('email.logAlertaRepetido', { evento }));
             return;
         }
         ultimoAlertaEmail.set(evento, agora);
@@ -114,7 +114,7 @@ async function alertarPorEmail(evento, detalhes = '', { forcar = false } = {}) {
             [t('email.versao'), versaoComCommit()],
             ['🖥️ Host', os.hostname()],
             [t('email.noAr'), getBotUptime(BOT_START_TIME)],
-            ['🛡️ Anti-Phishing Code', process.env.QRCODE_EMAIL_SMTP_ANTIPHISHING || '-']
+            [`🛡️ ${t('email.antiPhishing')}`, process.env.QRCODE_EMAIL_SMTP_ANTIPHISHING || '-']
         ];
 
         await transporter.sendMail({
@@ -131,9 +131,9 @@ async function alertarPorEmail(evento, detalhes = '', { forcar = false } = {}) {
             `
         });
 
-        printInfo(`Alerta por e-mail enviado: ${evento}`);
+        printInfo(t('email.logAlertaEnviado', { evento }));
     } catch (err) {
-        printError(`Alerta por e-mail '${evento}' falhou:`, err.message);
+        printError(t('email.logAlertaFalhou', { evento }), err.message);
     }
 }
 
@@ -155,11 +155,11 @@ async function enviarEmail({ para, assunto, texto, anexos = [] }) {
         from: process.env.QRCODE_EMAIL_SMTP_FROM || process.env.QRCODE_EMAIL_SMTP_USER,
         to: para.join(', '),
         subject: `[ZapBot] ${assunto}`,
-        text: `${texto}\n\n🛡️ Anti-Phishing Code: ${antiPhishing}`,
+        text: `${texto}\n\n🛡️ ${t('email.antiPhishing')}: ${antiPhishing}`,
         ...(anexos.length ? { attachments: anexos } : {})
     });
 
-    printInfo(`E-mail '${assunto}' enviado para ${para.join(', ')}`);
+    printInfo(t('email.logEnviado', { assunto, para: para.join(', ') }));
 }
 
 // Um arquivo em anexo (ex.: o /backup -send)

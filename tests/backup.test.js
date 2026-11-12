@@ -175,7 +175,7 @@ describe('/backup (/bkp)', () => {
             assert.equal(m.to, 'fulano@x.com, ciclano@y.com');
             assert.equal(m.from, 'ZapBot <bot@exemplo.com>');
             assert.match(m.subject, /^\[ZapBot\] 💾 Backup de /);
-            assert.match(m.text, /Anti-Phishing Code: Frase42/);
+            assert.match(m.text, /Código antiphishing: Frase42/);
             assert.deepEqual(m.attachments, [{ filename: `${b.nome}.db.gz`, path: b.arquivo }]);
 
             await bot.responder('/backup -s 2 -to email');
