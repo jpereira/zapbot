@@ -91,6 +91,7 @@ nav:
       - /cve: commands/cve.md
       - /debug: commands/debug.md
       - /defi: commands/defi.md
+      - /desenhe: commands/desenhe.md
       - /enquete: commands/enquete.md
       - /get: commands/get.md
       - /giphy: commands/giphy.md

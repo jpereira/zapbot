@@ -531,17 +531,22 @@ const SETTINGS_SCHEMA = {
     'openai.gif.frameMs': {
         default: 200,
         type: 'number', min: 20, max: 2000,
-        desc: 'Quanto dura cada quadro do GIF do /gpt -gif, em ms (20 a 2000; o total é quadros x ms).'
+        desc: 'Quanto dura cada quadro do GIF do /desenhe -gif e do /gpt -gif, em ms (20 a 2000; o total é quadros x ms).'
     },
     'openai.gif.frames': {
         default: 9,
         type: 'number', min: 2, max: 16,
-        desc: 'Quantos quadros tem o GIF do /gpt -gif (2 a 16; quanto mais quadros, mais caro).'
+        desc: 'Quantos quadros tem o GIF do /desenhe -gif e do /gpt -gif (2 a 16; quanto mais quadros, mais caro).'
     },
-    'openai.image.model': {
+    'openai.image.gifModel': {
         default: 'gpt-image-2.6-flare',
         type: 'string',
-        desc: 'Modelo que gera e edita a imagem do /gpt -img e o GIF do /gpt -gif (só os gpt-image-2.6-* fazem GIF): o id que a sua conta tem (se não existir, o bot lista os que a chave vê).'
+        desc: 'Modelo que gera o GIF do /desenhe -gif e do /gpt -gif (só os gpt-image-2.6-* fazem GIF e pedem acesso à prévia): o id que a sua conta tem (se não existir, o bot lista os que a chave vê).'
+    },
+    'openai.image.model': {
+        default: 'gpt-image-2',
+        type: 'string',
+        desc: 'Modelo que gera e edita a imagem do /desenhe e do /gpt -img: o id que a sua conta tem (se não existir, o bot lista os que a chave vê). O GIF tem o seu, o openai.image.gifModel.'
     },
     'openai.pricing': {
         default: [],
