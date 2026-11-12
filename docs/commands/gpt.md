@@ -30,6 +30,10 @@ pergunta, mostra a ajuda.
 /gpt -h              → ajuda do comando
 ```
 
+Se a **primeira palavra** parece uma opção mas não existe (`/gpt -price`), o bot responde
+`❌ Opção desconhecida: -price` e sugere o `-h|-help`, sem chamar a OpenAI. Só a primeira palavra: no
+resto do texto, um `-x` é pergunta. O `/tldr` age igual (o `-2h` e o `-30m` continuam valendo).
+
 | Opção | Valor | Descrição |
 |---|---|---|
 | `-model`, `-m` | `[modelo]` | Só dono e admins. Lista os modelos por uso, os que a sua chave vê, e troca o de cada um (veja [Escolhendo o modelo](#escolhendo-o-modelo)) |

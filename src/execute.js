@@ -67,7 +67,10 @@ const askedMask = (command, opts) => Boolean(command.mask && opts.opt.mask);
 // "❌ Opção desconhecida: -x" with the syntax, or null (only in commands with "strict: true")
 function optionsError(command, opts) {
     if (!opts.desconhecidas.length) return null;
-    return `❌ Opção desconhecida: ${opts.desconhecidas.join(' ')}\n\n\`\`\`${getCommandSyntax(command.cmd)}\`\`\``;
+    const list = opts.desconhecidas.join(' ');
+    // /gpt and /tldr (strict: 'primeira') only suggest the help; the others show the syntax
+    if (command.estrito === 'primeira') return `❌ Opção desconhecida: ${list}\n💡 _Veja as opções com ${command.cmd} -h|-help_`;
+    return `❌ Opção desconhecida: ${list}\n\n\`\`\`${getCommandSyntax(command.cmd)}\`\`\``;
 }
 
 /**

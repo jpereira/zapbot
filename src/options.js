@@ -66,7 +66,8 @@ const isTimeNegative = (token) => /^-\d[\d:.]*$/.test(token);
  * numero: true (in a cmd_opts entry) reads "-10" as `numero` (the 1st; a 2nd is an error), instead
  * before sending it to argv;
  * strict: true (in the command) stores the unknown option in `desconhecidas`, instead of sending it
- * to argv (the handler never sees it).
+ * to argv (the handler never sees it); 'primeira' only does that with the 1st word, if it looks like a
+ * option (-letter), for the commands where the rest is free text (/gpt, /tldr).
  */
 function GetOptFromCommand(input, config = {}) {
     const tokens = tokenizeCommand(input);
@@ -119,7 +120,10 @@ function GetOptFromCommand(input, config = {}) {
 
         // An unknown option goes to argv (or, in a strict command, to `desconhecidas`)
         if (!option) {
-            if (config.estrito) unknown.push(token);
+            // strict: 'primeira' only refuses the 1st word (/gpt -price), since the rest is free text
+            // (the /gpt question); and only what looks like an option (-letter): "-2h" of /tldr and "-1" pass
+            const reject = config.estrito === 'primeira' ? i === 0 && /^-[A-Za-z]/.test(token) : config.estrito;
+            if (reject) unknown.push(token);
             else argv.push(normalizeArg(token));
             continue;
         }
