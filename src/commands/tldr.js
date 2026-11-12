@@ -7,7 +7,7 @@ const path = require('path');
 
 const { client, completeNotice } = require('../client');
 const { getCommandSyntax } = require('./base');
-const { MAX_DELETE_WINDOW } = require('../constants');
+const { HOUR_MS } = require('../constants');
 const { chatCurrentIds } = require('../contacts');
 const { dbAll, dbReady, dbRun } = require('../db');
 const { WITHOUT_KEY, keyOpenAi, errorOpenAi, measureConsumption, askOnChat, consumptionFooter, transcribeAudio } = require('../openaiChat');
@@ -24,7 +24,7 @@ const { readDuration } = require('../util/when');
  * /tldr -c família   → from another chat, looked up by name
  * /tldr -pv          → in your private chat instead of exposing it in the current chat
  * (replying)      → from the replied message until now (the typed period or -c win)
- * Uses the text already stored in the database: regular messages stay 68 h. They stay
+ * Uses the text already stored in the database: regular messages stay cache.messageRetentionHours (68 h). They stay
  * except the commands, the deleted ones and the media without a caption.
  */
 const SUMMARY_DEFAULT = 100;
@@ -147,9 +147,12 @@ async function summarize({ msg, opts, chatId, chatName, quotedMsg }) {
         period.n = max;
     }
 
-    if (period.ms > MAX_DELETE_WINDOW) {
-        notices.push(`as mensagens comuns ficam só ${byLong(MAX_DELETE_WINDOW)} (68 h) no banco`);
-        period.ms = MAX_DELETE_WINDOW;
+    // The database stores the text of regular messages for cache.messageRetentionHours
+    const hoursSaved = getSetting('cache.messageRetentionHours');
+    const saved = hoursSaved * HOUR_MS;
+    if (period.ms > saved) {
+        notices.push(`as mensagens comuns ficam só ${byLong(saved)} (${hoursSaved} h) no banco (setting cache.messageRetentionHours)`);
+        period.ms = saved;
     }
 
     await dbReady;
@@ -203,7 +206,7 @@ async function summarize({ msg, opts, chatId, chatName, quotedMsg }) {
 
     if (rows.length < SUMMARY_MIN) {
         await msg.reply(`📝 Poucas mensagens para resumir (${rows.length}) em ${nameAlt}.\n` +
-            '💡 _O resumo usa o texto guardado no banco: as mensagens comuns ficam 68 h, e comandos e mídias sem legenda não entram._');
+            `💡 _O resumo usa o texto guardado no banco: as mensagens comuns ficam ${getSetting('cache.messageRetentionHours')} h (setting cache.messageRetentionHours), e comandos e mídias sem legenda não entram._`);
         return;
     }
 

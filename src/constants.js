@@ -9,11 +9,13 @@ const ROOT_DIR = path.join(__dirname, '..');
 
 const BOT_START_TIME = Date.now();
 
-// Maximum time WhatsApp allows deleting for everyone: 68 hours in milliseconds
+// Maximum time WhatsApp allows deleting for everyone: 68 hours in milliseconds (the retention minimum
+// of regular messages and media: 'cache.messageRetentionHours' and 'cache.messageMediaRetentionHours')
 const MAX_DELETE_WINDOW = 68 * 60 * 60 * 1000;
 
 // 1 day in milliseconds (retention of deleted ones: setting 'cache.revokedRetentionDays')
 const DAY_MS = 24 * 60 * 60 * 1000;
+const HOUR_MS = 60 * 60 * 1000;
 
 // ZAPBOT_CACHE_DIR swaps the directory of the database and media (the tests use a temporary folder)
 const CACHE_DIR = process.env.ZAPBOT_CACHE_DIR || path.join(ROOT_DIR, 'cache');
@@ -48,6 +50,7 @@ module.exports = {
     BOT_START_TIME,
     CACHE_DIR,
     DAY_MS,
+    HOUR_MS,
     GET_MAX_CONCURRENT,
     GET_TIMEOUT_MS,
     MAX_DELETE_WINDOW,
