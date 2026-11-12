@@ -375,6 +375,10 @@ async function synthesizeVoice({ cmd, texto: textAlt, estilo: style = null }) {
     }
 }
 
+const GIF_SIZE = '512x512';
+const TIMEOUT_IMAGE_MS = 3 * 60 * 1000;
+const TIMEOUT_GIF_MS = 5 * 60 * 1000;
+
 /**
  * Generates an image (v1/images/generations) or, with `imagem`, edits the one that came (v1/images/edits). With
  * `gif`, the result is an animated GIF (output_format gif, only on the gpt-image-2.6-* models).
@@ -386,11 +390,16 @@ async function synthesizeVoice({ cmd, texto: textAlt, estilo: style = null }) {
  * @returns {Promise<string>}  the image (PNG) or the GIF, in base64
  */
 async function generateImage({ cmd, prompt, imagem: image = null, gif = null }) {
-    const modelAlt = getSetting('openai.image.model');
-    const extras = gif ? { output_format: 'gif', frame_count: gif.frames, frame_duration_ms: gif.frameMs } : {};
+    // The GIF has its own model (only the gpt-image-2.6-* ones do it) and the frames come out at 512x512: OpenAI charges the
+    // pixels of all of them
+    const modelAlt = getSetting(gif ? 'openai.image.gifModel' : 'openai.image.model');
+    const extras = gif
+        ? { size: GIF_SIZE, output_format: 'gif', frame_count: gif.frames, frame_duration_ms: gif.frameMs }
+        : {};
     const config = {
         headers: { Authorization: `Bearer ${keyOpenAi()}` },
-        timeout: envOuSetting('OPENAI_TIMEOUT_MS', 'openai.timeout.ms')
+        // An image takes much longer than a text reply: at least 3 minutes (the GIF, 5)
+        timeout: Math.max(envOuSetting('OPENAI_TIMEOUT_MS', 'openai.timeout.ms'), gif ? TIMEOUT_GIF_MS : TIMEOUT_IMAGE_MS)
     };
 
     try {

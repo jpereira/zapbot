@@ -465,7 +465,7 @@ describe('/gpt (/ai)', () => {
         assert.equal(r.content.data, 'UE5H');
         const generate = network.chamadas.at(-1);
         assert.equal(generate.url, 'https://api.openai.com/v1/images/generations');
-        assert.deepEqual(generate.cfg.body, { model: 'gpt-image-2.6-flare', prompt: 'um robô nadando em aquarela', n: 1 });
+        assert.deepEqual(generate.cfg.body, { model: 'gpt-image-2', prompt: 'um robô nadando em aquarela', n: 1 });
 
         // Replying to a photo: the edit (multipart), with the photo as PNG
         network.responder('post', 'api.openai.com/v1/images/edits', { data: [{ b64_json: 'RURJVA==' }] });
@@ -475,7 +475,7 @@ describe('/gpt (/ai)', () => {
         const edit = network.chamadas.at(-1);
         assert.equal(edit.url, 'https://api.openai.com/v1/images/edits');
         assert.equal(edit.cfg.body.get('prompt'), 'coloque um chapéu nele');
-        assert.equal(edit.cfg.body.get('model'), 'gpt-image-2.6-flare');
+        assert.equal(edit.cfg.body.get('model'), 'gpt-image-2');
         assert.equal(edit.cfg.body.get('image').type, 'image/png');
 
         // OpenAI without the image in the reply: readable error
@@ -489,19 +489,19 @@ describe('/gpt (/ai)', () => {
         network.responder('get', 'api.openai.com/v1/models', { data: [{ id: 'gpt-4o' }, { id: 'gpt-image-2' }, { id: 'dall-e-3' }, { id: 'sora-2' }, { id: 'whisper-1' }, { id: 'tts-1' }] });
 
         // Imagem
-        network.responder('post', 'api.openai.com/v1/images/generations', withoutModel('gpt-image-2.6-flare'));
+        network.responder('post', 'api.openai.com/v1/images/generations', withoutModel('gpt-image-2'));
         assert.deepEqual(await bot.replyAlt('/gpt -img um robô', { erroEsperado: true }), [
-            '❌ O modelo gpt-image-2.6-flare não existe na sua conta da OpenAI (imagem).\n' +
+            '❌ O modelo gpt-image-2 não existe na sua conta da OpenAI (imagem).\n' +
             '💡 _A sua chave vê: dall-e-3, gpt-image-2_\n' +
             '💡 _Troque com /set openai.image.model <modelo>_'
         ]);
 
         // The model is free: switch to whichever the account has and works
-        await bot.setSetting('openai.image.model', 'gpt-image-2');
+        await bot.setSetting('openai.image.model', 'dall-e-3');
         network.responder('post', 'api.openai.com/v1/images/generations', { data: [{ b64_json: 'UE5H' }] });
         const ok = (await bot.executar('/gpt -img um robô')).at(-1);
         assert.equal(ok.content.data, 'UE5H');
-        assert.equal(network.chamadas.filter(c => c.url.endsWith('/images/generations')).at(-1).cfg.body.model, 'gpt-image-2');
+        assert.equal(network.chamadas.filter(c => c.url.endsWith('/images/generations')).at(-1).cfg.body.model, 'dall-e-3');
 
         // Voice, transcription and video follow the same notice
         network.responder('post', 'api.openai.com/v1/audio/speech', withoutModel('gpt-4o-mini-tts'));
@@ -511,9 +511,9 @@ describe('/gpt (/ai)', () => {
         const voice = bot.createMessage({ de: bot.OTHERAlt.jid, tipo: 'ptt', midia: { mimetype: 'audio/ogg; codecs=opus', data: 'QUJD' } });
         assert.match((await bot.replyAlt('/gpt', { citada: voice, erroEsperado: true }))[0], /^❌ O modelo gpt-transcribe não existe .*\(transcrição\)\.\n💡 _A sua chave vê: whisper-1_\n💡 _Troque com \/set openai\.transcribe\.model/s);
 
-        await bot.setSetting('openai.image.model', 'gpt-image-1');
+        await bot.setSetting('openai.image.gifModel', 'gpt-image-1');
         network.responder('post', 'api.openai.com/v1/images/generations', withoutModel('gpt-image-1'));
-        assert.match((await bot.replyAlt('/gpt -gif um gato', { erroEsperado: true })).at(-1), /^❌ O modelo gpt-image-1 não existe .*\(imagem\)\.\n💡 _A sua chave vê: dall-e-3, gpt-image-2_/s);
+        assert.match((await bot.replyAlt('/desenhe -gif um gato', { erroEsperado: true })).at(-1), /^❌ O modelo gpt-image-1 não existe .*\(GIF\)\.\n💡 _A sua chave vê: gpt-image-2_\n💡 _Troque com \/set openai\.image\.gifModel/s);
 
         // Without the list (/v1/models fails too): only the warning
         network.responder('get', 'api.openai.com/v1/models', errorHttp(500));
@@ -536,7 +536,7 @@ describe('/gpt (/ai)', () => {
         const generation = network.chamadas.at(-1);
         assert.equal(generation.url, 'https://api.openai.com/v1/images/generations');
         assert.deepEqual(generation.cfg.body, {
-            model: 'gpt-image-2.6-flare', prompt: 'um gato de óculos escuros', n: 1,
+            model: 'gpt-image-2.6-flare', prompt: 'um gato de óculos escuros', n: 1, size: '512x512',
             output_format: 'gif', frame_count: 9, frame_duration_ms: 200
         });
         // The GIF went through ffmpeg: .gif input, .mp4 output with no audio
@@ -581,7 +581,10 @@ describe('/gpt (/ai)', () => {
         network.responder('post', 'api.openai.com/v1/images/generations', { data: [{ b64_json: 'R0lG' }] });
         processes.falhar = 'ffmpeg';
         try {
-            assert.match((await bot.replyAlt('/gpt -gif x', { erroEsperado: true }))[0], /^❌ Erro no \/gpt: .*ffmpeg/);
+            // Without the conversion, the .gif still arrives, as a document
+            const document = (await bot.executar('/gpt -gif x', { erroEsperado: true })).at(-1);
+            assert.equal(document.content.mimetype, 'image/gif');
+            assert.equal(document.options.sendMediaAsDocument, true);
         } finally {
             processes.falhar = null;
         }
@@ -839,7 +842,8 @@ describe('/gpt (/ai)', () => {
         const [r] = await bot.replyAlt('/gpt -m');
         assert.match(r, /^🤖 \*Modelos do \/gpt\*\n\n\*Padrão\* \(perguntas\) — \/gpt -m <modelo>\n✅ gpt-4o-mini\n/);
         assert.match(r, /▫️ gpt-6-astra/);
-        assert.match(r, /\*-img, -gif\* \(imagens e GIF\) — \/gpt -m <modelo> -gif\n✅ gpt-image-2\.6-flare\n\n/);
+        assert.match(r, /\*-img\* \(imagens\) — \/gpt -m <modelo> -img\n✅ gpt-image-2\n\n/);
+        assert.match(r, /\*-gif\* \(GIF\) — \/gpt -m <modelo> -gif\n✅ gpt-image-2\.6-flare\n\n/);
         assert.match(r, /\*-audio\* \(transcrição de áudio\) — \/gpt -m <modelo> -audio\n✅ gpt-transcribe\n\n/);
         assert.match(r, /\*-voz\* \(voz\) — \/gpt -m <modelo> -voz\n✅ gpt-4o-mini-tts\n\n/);
         assert.match(r, /💡 _Sem a lista da sua chave/);
@@ -862,9 +866,14 @@ describe('/gpt (/ai)', () => {
             '✅ gpt-4o-mini',
             '▫️ gpt-4.1',
             '',
-            '*-img, -gif* (imagens e GIF) — /gpt -m <modelo> -gif',
-            '✅ gpt-image-2.6-flare ⚠️ a sua chave não vê'.replace(' ⚠️ a sua chave não vê', ''),
+            '*-img* (imagens) — /gpt -m <modelo> -img',
+            '✅ gpt-image-2 ⚠️ a sua chave não vê',
             '▫️ dall-e-3',
+            '▫️ gpt-image-2.5-flare',
+            '▫️ gpt-image-2.6-flare',
+            '',
+            '*-gif* (GIF) — /gpt -m <modelo> -gif',
+            '✅ gpt-image-2.6-flare',
             '▫️ gpt-image-2.5-flare',
             '',
             '*-audio* (transcrição de áudio) — /gpt -m <modelo> -audio',
@@ -880,28 +889,29 @@ describe('/gpt (/ai)', () => {
 
         // A single use
         const [soImage] = await bot.replyAlt('/gpt -m -gif');
-        assert.match(soImage, /^🤖 \*Modelos do \/gpt\*\n\n\*-img, -gif\*/);
+        assert.match(soImage, /^🤖 \*Modelos do \/gpt\*\n\n\*-gif\*/);
         assert.doesNotMatch(soImage, /Padrão|-audio|-voz/);
 
         // Swap per use
         assert.deepEqual(await bot.replyAlt('/gpt -m gpt-4.1'), ['✅ Modelo do /gpt: *gpt-4.1*']);
-        assert.deepEqual(await bot.replyAlt('/gpt -m gpt-image-2.5-flare -gif'), ['✅ Modelo de imagens e GIF do /gpt: *gpt-image-2.5-flare*']);
+        assert.deepEqual(await bot.replyAlt('/gpt -m gpt-image-2.5-flare -img'), ['✅ Modelo de imagens do /gpt: *gpt-image-2.5-flare*']);
+        assert.deepEqual(await bot.replyAlt('/gpt -m gpt-image-2.6-flare -gif'), ['✅ Modelo de GIF do /gpt: *gpt-image-2.6-flare*']);
         assert.deepEqual(await bot.replyAlt('/gpt -m whisper-1 -audio'), ['✅ Modelo de transcrição de áudio do /gpt: *whisper-1*']);
         assert.deepEqual(await bot.replyAlt('/gpt -m tts-1 -voz'), ['✅ Modelo de voz do /gpt: *tts-1*']);
-        assert.deepEqual([bot.getSetting('openai.api.model'), bot.getSetting('openai.image.model'),
+        assert.deepEqual([bot.getSetting('openai.api.model'), bot.getSetting('openai.image.model'), bot.getSetting('openai.image.gifModel'),
             bot.getSetting('openai.transcribe.model'), bot.getSetting('openai.tts.model')],
-        ['gpt-4.1', 'gpt-image-2.5-flare', 'whisper-1', 'tts-1']);
+        ['gpt-4.1', 'gpt-image-2.5-flare', 'gpt-image-2.6-flare', 'whisper-1', 'tts-1']);
 
         // A model the key cannot see is not saved, and the error shows the ones of the use; the questions' follows the fixed list
         assert.deepEqual(await bot.replyAlt('/gpt -m gpt-image-1 -img'), [
-            '❌ A sua chave não vê o modelo gpt-image-1 (imagens e GIF).\n💡 _Os que ela vê: dall-e-3, gpt-image-2.5-flare, gpt-image-2.6-flare_'
+            '❌ A sua chave não vê o modelo gpt-image-1 (imagens).\n💡 _Os que ela vê: dall-e-3, gpt-image-2.5-flare, gpt-image-2.6-flare_'
         ]);
         assert.equal(bot.getSetting('openai.image.model'), 'gpt-image-2.5-flare');
         assert.match((await bot.replyAlt('/gpt -m gpt-5-pro'))[0], /❌ Modelo não suportado: gpt-5-pro \(aceitos: gpt-6-astra/);
 
         // A current one the key cannot see appears with the warning
         await bot.setSetting('openai.image.model', 'gpt-image-1');
-        assert.match((await bot.replyAlt('/gpt -m -gif'))[0], /✅ gpt-image-1 ⚠️ a sua chave não vê\n▫️ dall-e-3/);
+        assert.match((await bot.replyAlt('/gpt -m -img'))[0], /✅ gpt-image-1 ⚠️ a sua chave não vê\n▫️ dall-e-3/);
     });
 
     test('-m <modelo> troca o setting; modelo fora da lista é recusado', async () => {
@@ -942,6 +952,178 @@ describe('/gpt (/ai)', () => {
             assert.match((await bot.replyAlt('/gpt oi', { erroEsperado: true }))[0], expected);
             assert.ok(!bot.logs.slice(logBefore).some(l => l.includes('sk-tes')), 'a chave apareceu no log');
         }
+    });
+});
+
+describe('/desenhe (/desenha, /draw, /img)', () => {
+    const PNG_4X2 = Buffer.from('png:4x2').toString('base64');
+    const GIF = Buffer.from('GIF89a').toString('base64');
+    const imageCalls = () => network.chamadas.filter(c => /\/images\/(generations|edits)$/.test(c.url));
+
+    beforeEach(async () => {
+        await bot.setSetting('openai.status', false);
+        await bot.setSetting('openai.api.key', 'sk-teste');
+        network.responder('post', 'api.openai.com/v1/images/generations', { data: [{ b64_json: 'UE5H' }] });
+        network.responder('post', 'api.openai.com/v1/images/edits', { data: [{ b64_json: 'RURJVA==' }] });
+    });
+
+    test('sem chave e sem pedido', async () => {
+        await bot.setSetting('openai.api.key', '');
+        assert.match((await bot.replyAlt('/desenhe um gato'))[0], /⚠️ API key da OpenAI não encontrada: o \/desenhe está desativado/);
+
+        await bot.setSetting('openai.api.key', 'sk-teste');
+        assert.match((await bot.replyAlt('/desenhe'))[0], /Uso: \/desenhe/);
+        assert.equal(imageCalls().length, 0);
+    });
+
+    test('desenha a imagem (modelo openai.image.model) com o pedido na legenda; os aliases valem', async () => {
+        const r = (await bot.executar('/desenhe um gato astronauta')).at(-1);
+        assert.ok(r.content instanceof MessageMedia);
+        assert.equal(r.content.mimetype, 'image/png');
+        assert.equal(r.content.data, 'UE5H');
+        assert.equal(r.options.caption, '🎨 um gato astronauta');
+        const { cfg, url } = imageCalls().at(-1);
+        assert.equal(url, 'https://api.openai.com/v1/images/generations');
+        assert.deepEqual(cfg.body, { model: 'gpt-image-2', prompt: 'um gato astronauta', n: 1 });
+        assert.equal(cfg.headers.Authorization, 'Bearer sk-teste');
+        assert.ok(cfg.timeout >= 180000, 'imagem leva mais que 1 minuto: no mínimo 3');
+
+        for (const alias of ['/desenha', '/draw', '/img']) {
+            assert.equal((await bot.executar(`${alias} um cachorro`)).at(-1).content.data, 'UE5H');
+        }
+        // Replying to a message, its text goes before the request
+        const quoted = bot.createMessage({ texto: 'um castelo', de: bot.OTHERAlt.jid });
+        await bot.executar('/desenhe na neve', { citada: quoted });
+        assert.equal(imageCalls().at(-1).cfg.body.prompt, 'um castelo\n\nna neve');
+    });
+
+    test('numa foto (respondida ou na legenda): edita a foto', async () => {
+        const photo = bot.createMessage({ de: bot.OTHERAlt.jid, tipo: 'image', midia: { mimetype: 'image/jpeg', data: PNG_4X2 } });
+        const r = (await bot.executar('/desenhe coloque um chapéu nele', { citada: photo })).at(-1);
+        assert.equal(r.content.data, 'RURJVA==');
+        const edit = imageCalls().at(-1);
+        assert.equal(edit.url, 'https://api.openai.com/v1/images/edits');
+        assert.equal(edit.cfg.body.get('prompt'), 'coloque um chapéu nele');
+        assert.equal(edit.cfg.body.get('image').type, 'image/png');
+
+        // The photo with the command caption
+        const captionAlt = bot.createMessage({ texto: '/desenhe vire um desenho a lápis', tipo: 'image', midia: { mimetype: 'image/png', data: PNG_4X2 } });
+        await bot.deliver(captionAlt);
+        assert.equal(imageCalls().at(-1).url, 'https://api.openai.com/v1/images/edits');
+        assert.equal(imageCalls().at(-1).cfg.body.get('prompt'), 'vire um desenho a lápis');
+    });
+
+    test('-gif: GIF 512x512 de 9 quadros (settings), -frames e -ms sobrepõem e valem como -gif; vira MP4 em loop', async () => {
+        network.responder('post', 'api.openai.com/v1/images/generations', { data: [{ b64_json: GIF }] });
+
+        const gif = (await bot.executar('/img -gif um gato dançando')).at(-1);
+        assert.equal(gif.content.mimetype, 'video/mp4');
+        assert.equal(gif.options.sendVideoAsGif, true);
+        assert.equal(gif.options.caption, '🎞️ um gato dançando');
+        const { cfg } = imageCalls().at(-1);
+        assert.deepEqual(cfg.body, {
+            model: 'gpt-image-2.6-flare', prompt: 'um gato dançando', n: 1, size: '512x512',
+            output_format: 'gif', frame_count: 9, frame_duration_ms: 200
+        });
+        assert.ok(cfg.timeout >= 300000, 'o GIF leva mais: no mínimo 5 minutos');
+
+        // -frames and -ms (and the short -g, -f) count as -gif
+        await bot.executar('/desenhe -f 6 -ms 300 uma bandeira ao vento');
+        assert.deepEqual([imageCalls().at(-1).cfg.body.frame_count, imageCalls().at(-1).cfg.body.frame_duration_ms], [6, 300]);
+        await bot.executar('/desenhe -g -f 4 uma bandeira');
+        assert.deepEqual([imageCalls().at(-1).cfg.body.frame_count, imageCalls().at(-1).cfg.body.frame_duration_ms], [4, 200]);
+        assert.equal(imageCalls().at(-1).cfg.body.prompt, 'uma bandeira');
+
+        // The limits are those of the settings, and nothing goes to OpenAI
+        const beforeAlt = imageCalls().length;
+        assert.deepEqual(await bot.replyAlt('/desenhe -gif -f 1 x'), ['❌ -frames precisa ser um inteiro de 2 a 16.']);
+        assert.deepEqual(await bot.replyAlt('/desenhe -ms 5000 x'), ['❌ -ms precisa ser um inteiro de 20 a 2000.']);
+        assert.deepEqual(await bot.replyAlt('/desenhe -gif -f abc x'), ['❌ -frames precisa ser um inteiro de 2 a 16.']);
+        assert.equal(imageCalls().length, beforeAlt);
+    });
+
+    test('-gif numa foto (respondida ou na legenda): edita e anima; o GIF vem como documento se o ffmpeg falhar', async () => {
+        network.responder('post', 'api.openai.com/v1/images/edits', { data: [{ b64_json: GIF }] });
+        const photo = bot.createMessage({ de: bot.OTHERAlt.jid, tipo: 'image', midia: { mimetype: 'image/jpeg', data: PNG_4X2 } });
+
+        const animated = (await bot.executar('/desenhe -gif', { citada: photo })).at(-1);
+        assert.equal(animated.options.sendVideoAsGif, true);
+        const edit = imageCalls().at(-1);
+        assert.equal(edit.url, 'https://api.openai.com/v1/images/edits');
+        assert.equal(edit.cfg.body.get('output_format'), 'gif');
+        assert.equal(edit.cfg.body.get('size'), '512x512');
+        assert.equal(edit.cfg.body.get('prompt'), 'Anime esta imagem em um GIF. Com um movimento sutil e natural.');
+
+        const captionAlt = bot.createMessage({ texto: '/desenhe -gif nadando', tipo: 'image', midia: { mimetype: 'image/png', data: PNG_4X2 } });
+        await bot.deliver(captionAlt);
+        assert.equal(imageCalls().at(-1).cfg.body.get('prompt'), 'Anime esta imagem em um GIF. nadando');
+
+        processes.falhar = 'ffmpeg';
+        try {
+            const document = (await bot.executar('/desenhe -gif nadando', { citada: photo, erroEsperado: true })).at(-1);
+            assert.equal(document.content.mimetype, 'image/gif');
+            assert.equal(document.options.sendMediaAsDocument, true);
+        } finally {
+            processes.falhar = null;
+        }
+    });
+
+    test('-m: o modelo da imagem e o do GIF (-gif -m); sem a lista da chave, só os atuais', async () => {
+        network.responder('get', 'api.openai.com/v1/models', { data: [
+            { id: 'gpt-4o' }, { id: 'gpt-image-2' }, { id: 'gpt-image-2.6-flare' }, { id: 'gpt-image-2.6-sunburst' }, { id: 'dall-e-3' }
+        ] });
+
+        assert.equal((await bot.replyAlt('/desenhe -m'))[0], [
+            '🎨 *Modelos do /desenhe*',
+            '',
+            '*-img* (imagens) — /desenhe -m <modelo>',
+            '✅ gpt-image-2',
+            '▫️ dall-e-3',
+            '▫️ gpt-image-2.6-flare',
+            '▫️ gpt-image-2.6-sunburst',
+            '',
+            '*-gif* (GIF) — /desenhe -gif -m <modelo>',
+            '✅ gpt-image-2.6-flare',
+            '▫️ gpt-image-2',
+            '▫️ gpt-image-2.6-sunburst',
+            '',
+            '💡 _A lista é a da sua chave (GET /v1/models)._'
+        ].join('\n'));
+
+        assert.deepEqual(await bot.replyAlt('/desenhe -m dall-e-3'), ['✅ Modelo do /desenhe: *dall-e-3*']);
+        assert.deepEqual(await bot.replyAlt('/desenhe -gif -m gpt-image-2.6-sunburst'), ['✅ Modelo de GIF do /desenhe: *gpt-image-2.6-sunburst*']);
+        assert.deepEqual([bot.getSetting('openai.image.model'), bot.getSetting('openai.image.gifModel')], ['dall-e-3', 'gpt-image-2.6-sunburst']);
+
+        // What the key cannot see is not saved
+        assert.deepEqual(await bot.replyAlt('/desenhe -m gpt-image-1'), [
+            '❌ A sua chave não vê o modelo gpt-image-1 (imagens).\n💡 _Os que ela vê: dall-e-3, gpt-image-2, gpt-image-2.6-flare, gpt-image-2.6-sunburst_'
+        ]);
+        assert.equal(bot.getSetting('openai.image.model'), 'dall-e-3');
+
+        // Each command uses the model of its use
+        await bot.executar('/desenhe um gato');
+        assert.equal(imageCalls().at(-1).cfg.body.model, 'dall-e-3');
+    });
+
+    test('primeira palavra que parece opção e não existe: erro com a dica do -h, sem chamar a OpenAI', async () => {
+        assert.deepEqual(await bot.replyAlt('/desenhe -gifs um gato'), ['❌ Opção desconhecida: -gifs\n💡 _Veja as opções com /desenhe -h|-help_']);
+        assert.equal(imageCalls().length, 0);
+    });
+
+    test('só o dono e os admins; delegado a um usuário, ele desenha mas não troca o modelo', async () => {
+        await bot.setSetting('bot.users', [bot.OTHERAlt.user]);
+        assert.deepEqual(await bot.replyAlt('/desenhe um gato', { de: bot.OTHERAlt.jid }), []);
+
+        await bot.setSetting('bot.users.cmds', [`${bot.OTHERAlt.user}=/desenhe`]);
+        assert.equal((await bot.executar('/desenhe um gato', { de: bot.OTHERAlt.jid })).at(-1).content.data, 'UE5H');
+        assert.deepEqual(await bot.replyAlt('/desenhe -m gpt-image-2', { de: bot.OTHERAlt.jid }),
+            ['⛔ Apenas o dono do bot (ou um admin) pode usar o -model do /desenhe.']);
+    });
+
+    test('-status: o consumo no rodapé, numa mensagem à parte (a mídia não tem rodapé)', async () => {
+        const replies = await bot.executar('/desenhe -s um gato');
+        assert.equal(replies.at(-2).content.data, 'UE5H');
+        assert.match(replies.at(-1).content ?? replies.at(-1), /^_📡 ⬆️ \d+ B TX · ⬇️ \d+ B RX/);
     });
 });
 

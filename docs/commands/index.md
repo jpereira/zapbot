@@ -149,6 +149,7 @@ responde `⛔ Apenas o dono do bot (ou um admin) pode ver outros chats.`
 |---|---|---|
 | `/cotacao` |  | `-add`, `-del` |
 | `/crypto` |  | `-add`, `-del` |
+| `/desenhe` |  | `-model` |
 | `/gpt` |  | `-model`, `-img`, `-gif`, `-audio`, `-prices`, `-usage` |
 | `/profile` | `[/contato/\|@menção\|+número]...` |  |
 | `/show` | `-list`, `chat` | `-flush` |
@@ -172,11 +173,11 @@ destino: quem pode o `/gpt` usa os atalhos para ele, e o nome de um atalho não 
 [`/tempo`](tempo.md), [`/traduzir`](traduzir.md), [`/uptime`](uptime.md), [`/version`](version.md),
 [`/walissu`](walissu.md), [`/whois`](whois.md)
 
-**admin, delegáveis** (admins e o dono; o dono libera a um usuário com `+cmd`) (8):
+**admin, delegáveis** (admins e o dono; o dono libera a um usuário com `+cmd`) (9):
 
-[`/enquete`](enquete.md), [`/gpt`](gpt.md), [`/listageral`](listageral.md),
-[`/profile`](profile.md), [`/show`](show.md), [`/stats`](stats.md), [`/tldr`](tldr.md),
-[`/todos`](todos.md)
+[`/desenhe`](desenhe.md), [`/enquete`](enquete.md), [`/gpt`](gpt.md),
+[`/listageral`](listageral.md), [`/profile`](profile.md), [`/show`](show.md), [`/stats`](stats.md),
+[`/tldr`](tldr.md), [`/todos`](todos.md)
 
 **admin** (admins e o dono; nunca delegáveis) (19):
 
@@ -209,6 +210,7 @@ mesmo que comecem com `/`. Sem isso, alguém poderia usar um comando que ecoa te
 | [`/cve`](cve.md) | | `user` | Últimas CVEs publicadas (NVD); `-highscore` só as críticas |
 | [`/debug`](debug.md) | `/d`, `/dbg` | `admin` | Logs de debug com níveis, filtro e cópia para chats |
 | [`/defi`](defi.md) | | `admin` | Posições de liquidez da Orca e do Project X: saldo, faixa, preço e taxas a coletar, lidos on-chain; `-alerta` avisa quando sai e volta para a faixa e quando as taxas passam de um valor. `liquidswap`: posições de LP na Aptos. `morpho` e `aave`: posição, empréstimos e risco no Morpho e no Aave V3 |
+| [`/desenhe`](desenhe.md) | `/desenha`, `/draw`, `/img` | `admin` · delegável | Desenha uma imagem com o GPT Image (OpenAI) |
 | [`/enquete`](enquete.md) | `/quiz` | `admin` · delegável | Cria uma enquete nativa do WhatsApp no chat; `-r` mostra o resultado |
 | [`/get`](get.md) | `/download` | `user` | Baixa vídeo/áudio de redes sociais ou da mídia respondida |
 | [`/giphy`](giphy.md) | `/gif` | `user` | GIF do GIPHY por tag, URL ou ID, enviado em loop |

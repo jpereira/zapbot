@@ -15,6 +15,7 @@ const { cmdCrypto } = require('./crypto');
 const { cmdCve } = require('./cve');
 const { cmdDebug } = require('./debug');
 const { cmdDefi } = require('./defi');
+const { cmdDraw } = require('./desenhe');
 const { cmdPoll } = require('./enquete');
 const { cmdGet } = require('./get');
 const { cmdGiphy } = require('./giphy');
@@ -67,6 +68,7 @@ const HANDLERS = {
     '/cve': cmdCve,
     '/debug': cmdDebug,
     '/defi': cmdDefi,
+    '/desenhe': cmdDraw,
     '/enquete': cmdPoll,
     '/get': cmdGet,
     '/giphy': cmdGiphy,

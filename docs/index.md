@@ -52,7 +52,8 @@ comandos começam com `/`.
 - Mostra cotações e alertas de preço: [`/cotacao`](commands/cotacao.md),
   [`/crypto`](commands/crypto.md)
 - Acompanha posições DeFi (Orca, Project X, Liquidswap, Morpho, Aave V3): [`/defi`](commands/defi.md)
-- Integra o ChatGPT: [`/gpt`](commands/gpt.md), [`/tldr`](commands/tldr.md)
+- Integra o ChatGPT: [`/gpt`](commands/gpt.md), [`/tldr`](commands/tldr.md),
+  [`/desenhe`](commands/desenhe.md) (imagens e GIFs)
 - Consulta CVEs, notícias e o tempo: [`/cve`](commands/cve.md), [`/news`](commands/news.md),
   [`/tempo`](commands/tempo.md)
 - Faz backup do banco: [`/backup`](commands/backup.md)

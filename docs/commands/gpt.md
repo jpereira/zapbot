@@ -123,45 +123,20 @@ oi, tudo bem? te ligo mais tarde, só queria confirmar o horário da reunião.
 
 ## Imagem e GIF (`-img`, `-gif`)
 
-Os dois **gastam a sua conta da OpenAI**, então são só do dono e dos admins, mesmo que o `/gpt` tenha sido
-liberado a um usuário. Os dois usam a API de imagens (`v1/images`) e o modelo do setting
-`openai.image.model` (padrão `gpt-image-2.6-flare`).
-
-**`/gpt -img <pedido>`** cria uma imagem e responde com ela. Respondendo uma foto, a OpenAI **edita** essa
-foto (`v1/images/edits`) conforme o pedido.
+O `/gpt -img <pedido>` e o `/gpt -gif [pedido]` são o [`/desenhe`](desenhe.md) e o `/desenhe -gif`: o mesmo
+código, então o resultado é igual (imagem, edição de foto, GIF animado, modelo que a conta não tem). Os dois
+**gastam a sua conta da OpenAI**, então são só do dono e dos admins, mesmo que o `/gpt` tenha sido liberado a
+um usuário. O modelo da imagem é o `openai.image.model` e o do GIF, o `openai.image.gifModel`.
 
 ```text
 /gpt -img um robô nadando em aquarela
 (respondendo uma foto)  /gpt -img coloque um chapéu nele
-```
-
-**`/gpt -gif [pedido]`** cria um **GIF animado**: é o `output_format: gif` dos modelos `gpt-image-2.6-*`, com
-`frame_count` quadros de `frame_duration_ms` cada. Respondendo uma foto, ela é a base e o GIF a anima.
-Sem o `-gif`, "gere um gif animado..." respondendo uma foto também vale; o bot reconhece um verbo de criar
-(gere, crie, faça, anime) junto de gif, animação, animado ou vídeo.
-
-```text
+/gpt -gif um gato de óculos escuros
 (respondendo uma foto)  /gpt gere um gif animado de como se estivesse nadando
-(o GIF, em loop)
-/gpt -gif um gato de óculos escuros      → sem foto, só pelo texto
 ```
 
-- O GIF sai com **9 quadros de 200 ms** (1,8 s); os settings `openai.gif.frames` (2 a 16) e
-  `openai.gif.frameMs` (20 a 2000) mudam. Mais quadros custam mais.
-- A OpenAI devolve um `.gif`; o bot o converte em MP4 sem áudio com o ffmpeg e o manda como GIF
-  (`sendVideoAsGif`), que é como o WhatsApp toca um GIF em loop, igual ao [`/giphy`](giphy.md).
-- O GIF **pede acesso à prévia** do modelo. Sem ele, o bot responde `🔒 A sua conta/modelo não faz GIF
-  animado` com a mensagem da OpenAI.
-- **Modelo que a conta não tem**: os modelos de imagem, voz e transcrição (`openai.image.model`,
-  `openai.tts.model`, `openai.transcribe.model`) são settings de texto livre, porque os nomes mudam (o
-  `gpt-image-1` saiu do ar em 23/10/2026, por exemplo). Se a OpenAI responder que o modelo não existe, o bot
-  lista os que a sua chave vê (parecidos com o recurso) e mostra o `/set` para trocar:
-
-  ```text
-  ❌ O modelo gpt-image-1 não existe na sua conta da OpenAI (imagem).
-  💡 A sua chave vê: gpt-image-2.5-flare, gpt-image-2.6-flare
-  💡 Troque com /set openai.image.model <modelo>
-  ```
+Sem o `-gif`, "gere um gif animado..." respondendo uma foto também vale. Para ajustar os quadros e o tempo
+de cada um numa chamada (`-frames`, `-ms`), use o [`/desenhe -gif`](desenhe.md#gif-animado--gif).
 
 ## Voz (`-voz`)
 

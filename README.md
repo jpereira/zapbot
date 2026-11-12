@@ -55,7 +55,8 @@ comandos começam com `/`.
 - Mostra cotações e alertas de preço: [`/cotacao`](docs/commands/cotacao.md),
   [`/crypto`](docs/commands/crypto.md)
 - Acompanha posições DeFi (Orca, Project X, Liquidswap, Morpho, Aave V3): [`/defi`](docs/commands/defi.md)
-- Integra o ChatGPT: [`/gpt`](docs/commands/gpt.md), [`/tldr`](docs/commands/tldr.md)
+- Integra o ChatGPT: [`/gpt`](docs/commands/gpt.md), [`/tldr`](docs/commands/tldr.md),
+  [`/desenhe`](docs/commands/desenhe.md) (imagens e GIFs)
 - Consulta CVEs, notícias e o tempo: [`/cve`](docs/commands/cve.md), [`/news`](docs/commands/news.md),
   [`/tempo`](docs/commands/tempo.md)
 - Faz backup do banco: [`/backup`](docs/commands/backup.md)
@@ -181,6 +182,7 @@ O `/whois` diz o seu nível
 | [`/cve`](https://jpereira.github.io/zapbot/commands/cve/) | | `user` | Últimas CVEs publicadas (NVD); `-highscore` só as críticas |
 | [`/debug`](https://jpereira.github.io/zapbot/commands/debug/) | `/d`, `/dbg` | `admin` | Logs de debug com níveis, filtro e cópia para chats |
 | [`/defi`](https://jpereira.github.io/zapbot/commands/defi/) | | `admin` | Posições de liquidez da Orca e do Project X: saldo, faixa, preço e taxas a coletar, lidos on-chain; `-alerta` avisa quando sai e volta para a faixa e quando as taxas passam de um valor. `liquidswap`: posições de LP na Aptos. `morpho` e `aave`: posição, empréstimos e risco no Morpho e no Aave V3 |
+| [`/desenhe`](https://jpereira.github.io/zapbot/commands/desenhe/) | `/desenha`, `/draw`, `/img` | `admin` · delegável | Desenha uma imagem com o GPT Image (OpenAI) |
 | [`/enquete`](https://jpereira.github.io/zapbot/commands/enquete/) | `/quiz` | `admin` · delegável | Cria uma enquete nativa do WhatsApp no chat; `-r` mostra o resultado |
 | [`/get`](https://jpereira.github.io/zapbot/commands/get/) | `/download` | `user` | Baixa vídeo/áudio de redes sociais ou da mídia respondida |
 | [`/giphy`](https://jpereira.github.io/zapbot/commands/giphy/) | `/gif` | `user` | GIF do GIPHY por tag, URL ou ID, enviado em loop |
