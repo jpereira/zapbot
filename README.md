@@ -173,7 +173,7 @@ role); `/<command> -h` shows the help of one. The person typing and each command
 | [`/alias`](https://jpereira.github.io/zapbot/comandos/alias/) | | `admin` | Registers, lists and removes shortcuts for commands with arguments, or texts with several `{/command}` |
 | [`/ascii`](https://jpereira.github.io/zapbot/comandos/ascii/) | | `user` | The text in big ASCII letters, in a block that fits on the phone screen |
 | [`/backup`](https://jpereira.github.io/zapbot/comandos/backup/) | `/bkp` | `admin` | Daily local backup and sending through `backup.to`; lists, details, restores and sends the database |
-| [`/batch`](https://jpereira.github.io/zapbot/comandos/batch/) | `/lote` | `admin` | Runs several commands from a single message, in sequence (each line that starts with a command opens a block), and replies with a summary; `-stop` and `-dry` |
+| [`/batch`](https://jpereira.github.io/zapbot/comandos/batch/) |  | `admin` | Runs several commands from a single message, in sequence (each line that starts with a command opens a block), and replies with a summary; `-stop` and `-dry` |
 | [`/bills`](https://jpereira.github.io/zapbot/comandos/bills/) | `/boletos` | `user` | Draws 2 members to "pay a bill" |
 | [`/block`](https://jpereira.github.io/zapbot/comandos/block/) | `/bloquear` | `admin` | Blocks one or several people on your WhatsApp account (replying to a message, whoever wrote it); with nothing, lists the blocked ones; `-mask` hides phone numbers |
 | [`/bot`](https://jpereira.github.io/zapbot/comandos/bot/) | | `admin` | Bot status (24 h report and the users); turns the commands on/off (`-on`/`-off`) and says who uses them: admins (`+a`/`-a`) and users (`+u`/`-u`, in any chat or only in one group, and each one's commands with `+cmd`/`-cmd`); `-reset` goes back to the default; `-status` (`-s`): report of the last 24 h, and `-s 06h` sends it every day; `-info` (`-i`): versions and system; `-test` (`-t`): tests cache, disk, database, WhatsApp, internet, SMTP, IMAP and programs; `-flush-email [true]`: counts and clears the messages in Sent and Trash; `-passwd <password\|off>` (owner) and `-login <password>`: an outsider becomes admin with the password |
@@ -188,19 +188,19 @@ role); `/<command> -h` shows the help of one. The person typing and each command
 | [`/get`](https://jpereira.github.io/zapbot/comandos/get/) | `/download` | `user` | Downloads video/audio from social networks or from the replied media |
 | [`/giphy`](https://jpereira.github.io/zapbot/comandos/giphy/) | `/gif` | `user` | A GIPHY GIF by tag, URL or ID, sent looping |
 | [`/gpt`](https://jpereira.github.io/zapbot/comandos/gpt/) | `/ai` | `admin` · delegable | Asks ChatGPT (OpenAI) |
-| [`/help`](https://jpereira.github.io/zapbot/comandos/help/) | `/h`, `/ajuda` | `user` | Help menu, with only the commands the requester can use |
-| [`/join`](https://jpereira.github.io/zapbot/comandos/join/) | `/entrar` | `admin` | Joins a group through the invite link (`-info` shows the group without joining); `-l` lists your groups |
+| [`/help`](https://jpereira.github.io/zapbot/comandos/help/) | `/h` | `user` | Help menu, with only the commands the requester can use |
+| [`/join`](https://jpereira.github.io/zapbot/comandos/join/) |  | `admin` | Joins a group through the invite link (`-info` shows the group without joining); `-l` lists your groups |
 | [`/joke`](https://jpereira.github.io/zapbot/comandos/joke/) | `/piada`, `/humor` | `user` | A random joke in Portuguese |
 | [`/kernel`](https://jpereira.github.io/zapbot/comandos/kernel/) | | `user` | Current Linux kernel versions (kernel.org) |
-| [`/leave`](https://jpereira.github.io/zapbot/comandos/leave/) | `/sair` | `admin` | Leaves one or more groups, by name or by the number in the list; `-l` lists your groups |
+| [`/leave`](https://jpereira.github.io/zapbot/comandos/leave/) |  | `admin` | Leaves one or more groups, by name or by the number in the list; `-l` lists your groups |
 | [`/me`](https://jpereira.github.io/zapbot/comandos/me/) | | `user` | Sends the typed message; `{/command}` runs and the reply takes its place, `\n` breaks the line |
 | [`/members`](https://jpereira.github.io/zapbot/comandos/members/) | `/listageral`, `/list` | `admin` · delegable | Lists the group members |
 | [`/meme`](https://jpereira.github.io/zapbot/comandos/meme/) | | `user` | A random meme template (imgflip) |
 | [`/monitor`](https://jpereira.github.io/zapbot/comandos/monitor/) | | `admin` | 👀 Up to 5 contacts, limited history, per-contact filter and online-entry alerts |
 | [`/mute`](https://jpereira.github.io/zapbot/comandos/mute/) | `/mudo` | `admin` | Silences the alerts of deleted, edited, status and reactions (and the `/watch` ones) of a person, a group or a community; replying to an alert, of where it came from |
-| [`/news`](https://jpereira.github.io/zapbot/comandos/news/) | `/noticias` | `user` | Headlines from RSS feeds: `-hack`, `-g1`, `-gazeta`, `-brasil` |
+| [`/news`](https://jpereira.github.io/zapbot/comandos/news/) |  | `user` | Headlines from RSS feeds: `-hack`, `-g1`, `-gazeta`, `-brasil` |
 | [`/noffa`](https://jpereira.github.io/zapbot/comandos/noffa/) | `/🌈`, `/🏳️‍🌈` | `user` | Decorates the text with a rainbow |
-| [`/notes`](https://jpereira.github.io/zapbot/comandos/notes/) | `/notas` | `admin` | Notes with ID and `#tag` (`-a`, `-l`, `-s`, `-r`): view with the media (`-u`), rename a tag (`-m`), describe a tag (`-d`), export to PDF (`-e`) and `-alerta`, which warns at a date/time |
+| [`/notes`](https://jpereira.github.io/zapbot/comandos/notes/) |  | `admin` | Notes with ID and `#tag` (`-a`, `-l`, `-s`, `-r`): view with the media (`-u`), rename a tag (`-m`), describe a tag (`-d`), export to PDF (`-e`) and `-alerta`, which warns at a date/time |
 | [`/ping`](https://jpereira.github.io/zapbot/comandos/ping/) | | `user` | Checks that the bot is alive |
 | [`/pixelart`](https://jpereira.github.io/zapbot/comandos/pixelart/) | `/ansi`, `/px` | `user` | Random ANSI/ASCII art (16colo.rs) |
 | [`/poll`](https://jpereira.github.io/zapbot/comandos/poll/) | `/enquete`, `/quiz` | `admin` · delegable | Creates a native WhatsApp poll in the chat; `-r` shows the result |
@@ -208,17 +208,17 @@ role); `/<command> -h` shows the help of one. The person typing and each command
 | [`/rates`](https://jpereira.github.io/zapbot/comandos/rates/) | `/cotacao`, `/cambio` | `user` | EUR and USDT (and USD, GBP) exchange rates against the real: current, open, close and change; price alerts |
 | [`/search`](https://jpereira.github.io/zapbot/comandos/search/) | `/buscar` | `admin` | Searches the WhatsApp Web history, not just the cache: in this chat or, in your private chat, in all of them (`-N` for more); `-mask` hides phone numbers |
 | [`/set`](https://jpereira.github.io/zapbot/comandos/set/) | `/config` | `admin` | Lists and changes the settings; `-a`/`-rm` add and remove list items (e.g. `bot.admins` and `bot.users`) |
-| [`/show`](https://jpereira.github.io/zapbot/comandos/show/) | `/mostrar` | `admin` · delegable | In private, lists the cache; redisplays deleted messages, edits (`-e`), statuses (`-s`) and removed or changed reactions (`-r`); `-q` searches (text or regex) and `-mask` hides phone numbers |
-| [`/stats`](https://jpereira.github.io/zapbot/comandos/stats/) | `/estatisticas` | `admin` · delegable | Ranking of this chat or another (`/Group/`): who talks, deletes and edits the most, peak hours; `-me` for yours, `-l` lists the chats, `-flush` deletes |
-| [`/sticker`](https://jpereira.github.io/zapbot/comandos/sticker/) | `/figurinha` | `user` | Sticker from an image, video or link (`/get -st`); with `-txt`, an animated text sticker |
+| [`/show`](https://jpereira.github.io/zapbot/comandos/show/) |  | `admin` · delegable | In private, lists the cache; redisplays deleted messages, edits (`-e`), statuses (`-s`) and removed or changed reactions (`-r`); `-q` searches (text or regex) and `-mask` hides phone numbers |
+| [`/stats`](https://jpereira.github.io/zapbot/comandos/stats/) |  | `admin` · delegable | Ranking of this chat or another (`/Group/`): who talks, deletes and edits the most, peak hours; `-me` for yours, `-l` lists the chats, `-flush` deletes |
+| [`/sticker`](https://jpereira.github.io/zapbot/comandos/sticker/) |  | `user` | Sticker from an image, video or link (`/get -st`); with `-txt`, an animated text sticker |
 | [`/tldr`](https://jpereira.github.io/zapbot/comandos/tldr/) | `/resumo` | `admin` · delegable | Summarizes the chat's conversation with ChatGPT (`2h`, `1d`, `300`...) |
 | [`/translate`](https://jpereira.github.io/zapbot/comandos/translate/) | `/traduzir` | `user` | Translates the text or the replied message with Google Translate, no key needed; `-para en` changes the language |
-| [`/unblock`](https://jpereira.github.io/zapbot/comandos/unblock/) | `/desbloquear` | `admin` | Unblocks a person: by name, by number, by the `/block` list number or by replying to a message |
-| [`/unmute`](https://jpereira.github.io/zapbot/comandos/unmute/) | `/desmutar` | `admin` | Undoes `/mute`: by name, by list number, by replying to an alert, or all of them (`-all`) |
+| [`/unblock`](https://jpereira.github.io/zapbot/comandos/unblock/) |  | `admin` | Unblocks a person: by name, by number, by the `/block` list number or by replying to a message |
+| [`/unmute`](https://jpereira.github.io/zapbot/comandos/unmute/) |  | `admin` | Undoes `/mute`: by name, by list number, by replying to an alert, or all of them (`-all`) |
 | [`/uptime`](https://jpereira.github.io/zapbot/comandos/uptime/) | | `user` | Run time and connection time |
-| [`/version`](https://jpereira.github.io/zapbot/comandos/version/) | `/versao` | `user` | Bot version (same banner as `/uptime`) |
+| [`/version`](https://jpereira.github.io/zapbot/comandos/version/) |  | `user` | Bot version (same banner as `/uptime`) |
 | [`/walissu`](https://jpereira.github.io/zapbot/comandos/walissu/) | `/ualisu` | `user` | Walissu CVE BOT: tags 2 members with a random CVE |
-| [`/watch`](https://jpereira.github.io/zapbot/comandos/watch/) | `/vigiar` | `admin` | Text/regex rules, with an optional source in `-in`; lists hits, searches them with `-q` and alerts the `-to` destinations; `-mask` hides phone numbers and `-mask N` turns on 🔒 on rule N |
+| [`/watch`](https://jpereira.github.io/zapbot/comandos/watch/) |  | `admin` | Text/regex rules, with an optional source in `-in`; lists hits, searches them with `-q` and alerts the `-to` destinations; `-mask` hides phone numbers and `-mask N` turns on 🔒 on rule N |
 | [`/weather`](https://jpereira.github.io/zapbot/comandos/weather/) | `/tempo` | `user` | Weather now and the day's max/min (Open-Meteo); `/weather 16d` shows up to 16 days, counting today; without a city it uses `tempo.city` |
 | [`/whois`](https://jpereira.github.io/zapbot/comandos/whois/) | `/who`, `/id` | `user` | Who you are and what you can do in the bot, in this chat: 🤖 owner, 👑 admin, 🗣️ user or 🚫 no permission; the owner and the admins see the others |
 

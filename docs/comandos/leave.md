@@ -1,4 +1,4 @@
-# `/leave` (`/sair`) · admin
+# `/leave` · admin
 
 Leaves one or more WhatsApp groups. With nothing, lists the groups you're in, numbered. To come back,
 you need a new invite ([`/join`](join.md)).

@@ -14,10 +14,12 @@ const { aguardarEscolha, autorDe } = require('../escolhas');
 const { enviarMensagemApagada, isStatus, resolverAutorApagada } = require('../eventos/apagadas');
 const { enviarMensagemEditada } = require('../eventos/editadas');
 const { enviarReacaoDesfeita } = require('../eventos/reacoes');
+const { t: tr } = require('../i18n');
 const { printError, printInfo } = require('../log');
 const { getSetting } = require('../settings');
 const { humanSize, isCaminhoDeMidia } = require('../util/arquivos');
-const { esperar, formatarData, paraMs, plural, semAcentos } = require('../util/formatar');
+const { contar } = require('../util/contar');
+const { esperar, formatarData, paraMs, semAcentos } = require('../util/formatar');
 const { ehCanal } = require('../util/origem');
 const { regexPerigosa } = require('../util/regexSeguro');
 const { compilarBusca } = require('../watch/regras');
@@ -51,6 +53,7 @@ const STATUS = 'status@broadcast';
 // O que muda entre as apagadas (-d), as editadas (-e), os status (-s) e as reações (-r)
 const TIPOS = {
     apagadas: {
+        chave: 'apagadas',
         opt: 'deleted',
         flag: '-d',
         tabela: 'messages',
@@ -64,15 +67,10 @@ const TIPOS = {
         comMidia: true,
         textos: (r) => [r.body],
         icone: '♻️',
-        iconeLista: '🗑️',
-        rotulo: 'Apagadas',
-        um: 'mensagem apagada',
-        varios: 'mensagens apagadas',
-        unidade: ['mensagem', 'mensagens'],
-        nenhuma: 'Nenhuma mensagem apagada',
-        registrada: 'registrada'
+        iconeLista: '🗑️'
     },
     editadas: {
+        chave: 'editadas',
         opt: 'edited',
         flag: '-e',
         tabela: 'message_edits',
@@ -86,15 +84,10 @@ const TIPOS = {
         comMidia: false,
         textos: (r) => [r.old_body, r.new_body],
         icone: '✏️',
-        iconeLista: '✏️',
-        rotulo: 'Editadas',
-        um: 'mensagem editada',
-        varios: 'mensagens editadas',
-        unidade: ['mensagem', 'mensagens'],
-        nenhuma: 'Nenhuma mensagem editada',
-        registrada: 'registrada'
+        iconeLista: '✏️'
     },
     status: {
+        chave: 'status',
         opt: 'status',
         flag: '-s',
         tabela: 'messages',
@@ -108,15 +101,10 @@ const TIPOS = {
         comMidia: true,
         textos: (r) => [r.body],
         icone: '📸',
-        iconeLista: '📸',
-        rotulo: 'Status',
-        um: 'status apagado',
-        varios: 'status apagados',
-        unidade: ['status', 'status'],
-        nenhuma: 'Nenhum status apagado',
-        registrada: 'registrado'
+        iconeLista: '📸'
     },
     reacoes: {
+        chave: 'reacoes',
         opt: 'reaction',
         flag: '-r',
         tabela: 'reaction_changes',
@@ -130,18 +118,15 @@ const TIPOS = {
         comMidia: false,
         textos: (r) => [r.old_reaction, r.new_reaction, r.body],
         icone: '😶',
-        iconeLista: '😶',
-        rotulo: 'Reações',
-        um: 'reação removida ou trocada',
-        varios: 'reações removidas ou trocadas',
-        unidade: ['reação', 'reações'],
-        nenhuma: 'Nenhuma reação removida ou trocada',
-        registrada: 'registrada'
+        iconeLista: '😶'
     }
 };
 
 // Vários tipos juntos: o que muda nos textos
-const JUNTOS = { icone: '🗄️', nenhuma: 'Nada no cache', registrada: 'registrado' };
+const JUNTOS = { chave: 'juntos', icone: '🗄️' };
+
+// Os textos de um tipo (ou do JUNTOS): show.<chave>.<campo>
+const tx = (tipo, campo, vars) => tr(`show.${tipo.chave}.${campo}`, vars);
 
 // O filtro do tipo, só nos ids (null: de todos os chats)
 function ondeDo(t, ids) {
@@ -191,7 +176,7 @@ const paraAlvo = async (c) => ({ ids: await idsDoChatAtual(c.chat_id), nome: nom
  * acentos. Responde o erro quando nenhum casa.
  * @returns {Promise<{ casam: object[], exato?: object, mencao?: object } | null>} null: já respondeu
  */
-async function chatsQueCasam(msg, texto, chats) {
+async function chatsQueCasam(msg, texto, chats, { numero = true } = {}) {
     if (/^@\d+$/.test(texto)) {
         const r = await resolverDestino(texto, { mencoes: msg.mentionedIds ?? [] });
         if (r.erro) {
@@ -202,11 +187,11 @@ async function chatsQueCasam(msg, texto, chats) {
         return { casam: chats.filter(c => ids.includes(c.chat_id)), mencao: { ids, nome: r.nome } };
     }
 
-    if (/^\d+$/.test(texto)) {
+    if (numero && /^\d+$/.test(texto)) {
         const lista = ultimaListaDeChats.length ? ultimaListaDeChats : chats.map(c => c.chat_id);
         const chat = chats.find(c => c.chat_id === lista[Number(texto) - 1]);
         if (!chat) {
-            await msg.reply(`❌ Chat nº ${texto} não existe (ou não tem mais nada no cache).\n💡 _Veja a lista atual com /show -l_`);
+            await msg.reply(tr('show.chatNotFound', { n: texto }));
             return null;
         }
         return { casam: [chat], exato: chat };
@@ -218,14 +203,14 @@ async function chatsQueCasam(msg, texto, chats) {
 
     if (regex) {
         if (regexPerigosa(regex[1])) {
-            await msg.reply(`❌ Regex com risco de travar o bot: ${texto}. Simplifique (evite (x+)+).`);
+            await msg.reply(tr('show.regexRisky', { text: texto }));
             return null;
         }
         let re;
         try {
             re = new RegExp(tirarAcentos(regex[1]), 'i');
         } catch (err) {
-            await msg.reply(`❌ Regex inválida: ${texto} (${err.message}).`);
+            await msg.reply(tr('show.regexInvalid', { text: texto, error: err.message }));
             return null;
         }
         casam = chats.filter(c => re.test(tirarAcentos(nomeDoChat(c))));
@@ -237,7 +222,7 @@ async function chatsQueCasam(msg, texto, chats) {
     }
 
     if (!casam.length) {
-        await msg.reply(`❌ Nenhum chat no cache casa com "${texto}".\n💡 _Veja os que têm algo com /show -l_`);
+        await msg.reply(tr('show.noChatMatches', { text: texto }));
         return null;
     }
     return { casam, exato };
@@ -246,17 +231,18 @@ async function chatsQueCasam(msg, texto, chats) {
 /**
  * O chat pedido (veja o chatsQueCasam; o nome exato ganha).
  * Vários: lista e espera o nº, como no /stats.
+ * `chats` troca a lista de onde buscar (o /tldr usa os chats com mensagens guardadas, sem o nº do -l).
  * @returns {Promise<{ ids: string[], nome: string } | null>} null: já respondeu
  */
-async function resolverAlvo(msg, texto) {
+async function resolverAlvo(msg, texto, { chats: seusChats } = {}) {
     // A menção vale mesmo sem nada no cache: a resposta diz que não há nada dela
-    const chats = await chatsDoCache();
+    const chats = seusChats ?? await chatsDoCache();
     if (!chats.length && !/^@\d+$/.test(texto)) {
-        await msg.reply('🗄️ Nada no cache: nenhuma mensagem apagada, editada, status apagado ou reação removida.');
+        await msg.reply(tr('show.cacheEmpty'));
         return null;
     }
 
-    const r = await chatsQueCasam(msg, texto, chats);
+    const r = await chatsQueCasam(msg, texto, chats, { numero: !seusChats });
     if (!r) return null;
     if (r.mencao) return r.mencao;
 
@@ -264,13 +250,13 @@ async function resolverAlvo(msg, texto) {
     if (exato || casam.length === 1) return paraAlvo(exato ?? casam[0]);
 
     const opcoes = casam.slice(0, 10);
-    const pergunta = await msg.reply(`🔎 "${texto}" corresponde a ${casam.length} chats:\n\n` +
+    const pergunta = await msg.reply(tr('show.multiMatch', { text: texto, count: casam.length }) +
         opcoes.map((c, i) => `${i + 1}. ${descreverChat(c)}`).join('\n') +
-        '\n\n💡 _Responda só com o nº (em até 2 minutos), ou repita o comando com mais do nome._');
+        tr('show.multiMatchFooter'));
 
     const escolhido = await aguardarEscolha(msg.id?.remote ?? msg.from, opcoes, {
         autor: autorDe(msg),
-        aoExpirar: () => concluirAviso(msg, pergunta, `⌛ Nenhum nº escolhido para "${texto}" em 2 minutos: nada foi feito.`)
+        aoExpirar: () => concluirAviso(msg, pergunta, tr('show.choiceExpired', { text: texto }))
     });
     return escolhido ? paraAlvo(escolhido) : null;
 }
@@ -301,12 +287,12 @@ async function listarCache({ msg, chatId, filtro }) {
         // Um chat só: o nome dele (o "2" do -l 2 não diz nada); vários: o que foi digitado
         de = r.mencao?.nome ?? (r.casam.length === 1 ? nomeDoChat(r.casam[0]) : filtro);
         if (!chats.length) {
-            await msg.reply(`🗄️ Nada no cache de ${de}.`);
+            await msg.reply(tr('show.listNothingOf', { name: de }));
             return;
         }
     }
 
-    let texto = de ? `🗄️ *Mensagens no cache de:* ${de}\n\n` : '🗄️ *Mensagens no cache*\n\n';
+    let texto = de ? tr('show.listTitleOf', { name: de }) : tr('show.listTitle');
 
     for (const t of Object.values(TIPOS)) {
         const { where, params } = ondeDo(t, ids);
@@ -320,15 +306,15 @@ async function listarCache({ msg, chatId, filtro }) {
         );
 
         const detalhes = [];
-        if (resumo.com_midia > 0) detalhes.push(`${resumo.com_midia} com mídia`);
+        if (resumo.com_midia > 0) detalhes.push(tr('show.withMedia', { count: resumo.com_midia }));
 
         if (resumo.total > 0 && resumo.mais_antiga) {
             const expiraEm = paraMs(resumo.mais_antiga) + getSetting(t.retencao) * DAY_MS;
             const dias = Math.max(0, Math.ceil((expiraEm - Date.now()) / DAY_MS));
-            detalhes.push(`a mais antiga expira em ${plural(dias, 'dia', 'dias')}`);
+            detalhes.push(tr('show.oldestExpires', { days: contar('show.days', dias) }));
         }
 
-        texto += `${t.iconeLista} *${t.rotulo}:* ${resumo.total}`;
+        texto += `${t.iconeLista} *${tx(t, 'label')}:* ${resumo.total}`;
         texto += detalhes.length ? ` _(${detalhes.join(' · ')})_\n` : '\n';
     }
 
@@ -340,20 +326,16 @@ async function listarCache({ msg, chatId, filtro }) {
             .filter(([tipo]) => c[tipo] > 0)
             .map(([tipo, t]) => `${t.iconeLista} ${c[tipo]}`)
             .join(' · ');
-        const atual = idsDoChat.includes(c.chat_id) ? ' ← _este chat_' : '';
+        const atual = idsDoChat.includes(c.chat_id) ? tr('show.thisChat') : '';
         const n = ultimaListaDeChats.indexOf(c.chat_id) + 1;
-        return `${n}. ${descreverChat(c)} — ${contas} _(última ${formatarData(c.ultima)})_${atual}\n`;
+        return tr('show.listLine', { n, chat: descreverChat(c), counts: contas, date: formatarData(c.ultima), current: atual });
     };
 
     if (chats.length) {
         texto += '\n';
         chats.forEach((c) => { texto += linha(c); });
 
-        texto += '\n💡 _/show <nº, nome, @menção ou /regex/> reexibe as de um chat: apagadas, editadas, status e reações juntos._' +
-                 '\n   _-d, -e, -s e -r filtram_' +
-                 `\n   _-N para mais (máx. ${getSetting('show.max')})_` +
-                 '\n   _-l <chat> lista só os que casam_' +
-                 '\n   _-f remove do cache as deste chat (no seu privado: de todos)_';
+        texto += tr('show.listHint', { max: getSetting('show.max') });
     }
 
     await msg.reply(texto);
@@ -420,41 +402,41 @@ async function limparDoCache({ msg, tipos, alvo, ids, geral, cmd }) {
 
     if (!total) {
         await msg.reply(geral
-            ? `${u.icone} ${u.nenhuma} no cache.`
+            ? tr('show.noneAll', { icon: u.icone, none: tx(u, 'none') })
             : alvo
-                ? `${u.icone} ${u.nenhuma} de ${alvo.nome}.`
-                : `${u.icone} ${u.nenhuma} ${u.registrada} neste chat.`);
+                ? tr('show.noneOf', { icon: u.icone, none: tx(u, 'none'), name: alvo.nome })
+                : tr('show.noneHere', { icon: u.icone, none: tx(u, 'none'), registered: tx(u, 'registered') }));
         return;
     }
 
-    const contas = removidas.map(r => `${r.n} ${r.t.rotulo.toLowerCase()}`).join(', ');
+    const contas = removidas.map(r => `${r.n} ${tx(r.t, 'label').toLowerCase()}`).join(', ');
     printInfo(`/show -flush (${geral ? 'geral' : alvo?.nome ?? ids[0]}): ${contas}; ${arquivos} arquivos removidos`);
 
     let texto = geral
-        ? '🧹 *Flush geral do cache*\n\n'
+        ? tr('show.flushAll')
         : alvo
-            ? `🧹 *Flush do cache de:* ${alvo.nome}\n\n`
-            : '🧹 *Flush do cache deste chat*\n\n';
+            ? tr('show.flushOf', { name: alvo.nome })
+            : tr('show.flushHere');
 
     for (const { t, n } of removidas) {
-        texto += `${t.iconeLista} ${t.rotulo}: *${plural(n, ...t.unidade)}*\n`;
+        texto += `${t.iconeLista} ${tx(t, 'label')}: *${contar(`show.${t.chave}.count`, n)}*\n`;
     }
 
     if (removidas.some(r => r.t.comMidia)) {
-        texto += `📎 Mídias apagadas do disco: *${arquivos}*${arquivos ? ` _(${humanSize(bytes)})_` : ''}\n`;
+        texto += tr('show.flushMedia', { count: arquivos, size: arquivos ? ` _(${humanSize(bytes)})_` : '' });
     }
 
     if (geral) {
         const LIMITE = 10;
         const chats = [...porChat.values()].sort((a, b) => b.total - a.total);
 
-        texto += `\n*Por chat* (${chats.length}):\n`;
+        texto += tr('show.flushPerChat', { count: chats.length });
         chats.slice(0, LIMITE).forEach((c, i) => {
             texto += `${i + 1}. ${descreverChat(c)} — *${c.total}*\n`;
         });
-        if (chats.length > LIMITE) texto += `_+${chats.length - LIMITE} chat(s)_\n`;
+        if (chats.length > LIMITE) texto += tr('show.flushMore', { count: chats.length - LIMITE });
     } else if (!alvo) {
-        texto += `\n💡 _Para limpar as de todos os chats, use ${cmd} -f no seu privado._`;
+        texto += tr('show.flushHint', { cmd });
     }
 
     await msg.reply(texto);
@@ -465,8 +447,8 @@ async function reenviarApagada(destino, row, i, total) {
     const info = await resolverAutorApagada(row);
 
     await enviarMensagemApagada(destino, row, info, {
-        titulo: `${isStatus(row) ? '📸 *STATUS APAGADO*' : '❌ *MENSAGEM APAGADA*'} (${i + 1}/${total})`,
-        extras: [`🗑️ *Apagada em:* ${formatarData(row.revoked_at)}`]
+        titulo: tr(isStatus(row) ? 'show.deletedStatusTitle' : 'show.deletedTitle', { i: i + 1, total }),
+        extras: [tr('show.deletedAt', { date: formatarData(row.revoked_at) })]
     });
 }
 
@@ -475,10 +457,10 @@ const REENVIO_CACHE = {
     status: reenviarApagada,
     editadas: async (destino, row, i, total) => {
         await enviarMensagemEditada(destino, row, {
-            nomeChat: row.chat_name || 'Conversa desconhecida',
-            nomeRemetente: row.sender_name || 'Desconhecido',
+            nomeChat: row.chat_name || tr('show.unknownChat'),
+            nomeRemetente: row.sender_name || tr('show.unknownSender'),
             numeroRemetente: row.sender_number || null
-        }, { titulo: `✏️ *MENSAGEM EDITADA* (${i + 1}/${total})` });
+        }, { titulo: tr('show.editedTitle', { i: i + 1, total }) });
     },
     reacoes: (destino, row, i, total) => enviarReacaoDesfeita(destino, row, { contagem: `${i + 1}/${total}` })
 };
@@ -487,14 +469,14 @@ const REENVIO_CACHE = {
 function resumoDosItens(tipos, rows) {
     if (tipos.length === 1) {
         const t = TIPOS[tipos[0]];
-        return `${t.icone} *${plural(rows.length, t.um, t.varios)}*`;
+        return `${t.icone} *${contar(`show.${t.chave}.summary`, rows.length)}*`;
     }
 
     const contas = Object.entries(TIPOS)
         .map(([tipo, t]) => [t, rows.filter(r => r._tipo === tipo).length])
         .filter(([, n]) => n)
         .map(([t, n]) => `${t.iconeLista} ${n}`);
-    const total = plural(rows.length, 'mensagem', 'mensagens');
+    const total = contar('show.juntos.summary', rows.length);
     return `${JUNTOS.icone} *${total}* (${contas.join(' · ')})`;
 }
 
@@ -515,8 +497,8 @@ async function cmdShow({ msg, opts, chatId, admin }) {
     const busca = opts.given.has('query') ? String(opts.opt.query ?? '').trim() : null;
     if (busca !== null && (!busca || opts.opt.flush || opts.opt.list)) {
         await msg.reply(busca
-            ? '❌ O -q não combina com o -f nem com o -l.'
-            : `❌ Informe o que buscar: ${cmd} -q <texto|/regex/flags>\n💡 _Com espaços, entre aspas: -q "bom dia"_`);
+            ? tr('show.queryNoCombine')
+            : tr('show.queryEmpty', { cmd }));
         return;
     }
     let casa = null;
@@ -524,7 +506,7 @@ async function cmdShow({ msg, opts, chatId, admin }) {
         try {
             casa = compilarBusca(busca);
         } catch (err) {
-            await msg.reply(`❌ Busca inválida: ${err.message}`);
+            await msg.reply(tr('show.queryInvalid', { error: err.message }));
             return;
         }
     }
@@ -565,7 +547,7 @@ async function cmdShow({ msg, opts, chatId, admin }) {
     let aviso = '';
     const max = getSetting('show.max');
     if (n > max) {
-        aviso = `\n_(limitado a ${max} por vez)_`;
+        aviso = tr('show.limited', { max });
         n = max;
     }
 
@@ -591,33 +573,31 @@ async function cmdShow({ msg, opts, chatId, admin }) {
     rows = rows.slice(0, n);
 
     if (!rows.length) {
-        const onde = todos ? 'em nenhum chat' : alvo ? `em ${alvo.nome}` : 'neste chat';
+        const onde = todos ? tr('show.whereNone') : alvo ? tr('show.whereChat', { name: alvo.nome }) : tr('show.whereHere');
 
         // No privado, sem chat, quase sempre a intenção era ver outro chat
         await msg.reply(busca
-            ? `${u.icone} ${u.nenhuma} com "${busca}" ${onde}.`
+            ? tr('show.noneWithQuery', { icon: u.icone, none: tx(u, 'none'), query: busca, where: onde })
             : alvo || todos
-                ? `${u.icone} ${u.nenhuma} ${onde}.`
+                ? tr('show.noneWhere', { icon: u.icone, none: tx(u, 'none'), where: onde })
                 : noMeuPrivado
-                    ? `${u.icone} ${u.nenhuma} neste chat.\n` +
-                      `💡 _Para ver as de outro chat: /show -l e depois ${cmd} -N <chat>_\n` +
-                      `💡 _Para buscar em todos: ${cmd} -q <texto|/regex/>_`
-                    : `${u.icone} ${u.nenhuma} ${u.registrada} neste chat.`);
+                    ? tr('show.noneOtherChat', { icon: u.icone, none: tx(u, 'none'), cmd })
+                    : tr('show.noneHere', { icon: u.icone, none: tx(u, 'none'), registered: tx(u, 'registered') }));
         return;
     }
 
     // Busca as mais recentes, exibe da mais antiga para a mais recente
     rows.reverse();
 
-    const faltaram = !busca && n > rows.length ? ` (pedidas ${n}, encontradas ${rows.length})` : '';
+    const faltaram = !busca && n > rows.length ? tr('show.missing', { n, found: rows.length }) : '';
     let resumo = `${resumoDosItens(tipos, rows)}${faltaram}${aviso}`;
 
     if (busca) {
-        resumo += ` com "${busca}"` + (encontradas > rows.length ? ` _(as ${rows.length} mais recentes de ${encontradas}; use -N para mais)_` : '');
+        resumo += tr('show.withQuery', { query: busca }) + (encontradas > rows.length ? tr('show.queryMore', { shown: rows.length, found: encontradas }) : '');
     }
 
-    if (todos) resumo += '\n💬 *Chats:* todos';
-    if (alvo) resumo += `\n${alvo.ids.every(ehCanal) ? '📰 *Canal:*' : '💬 *Chat:*'} ${alvo.nome}`;
+    if (todos) resumo += tr('show.allChats');
+    if (alvo) resumo += tr(alvo.ids.every(ehCanal) ? 'show.channelLabel' : 'show.chatLabel', { name: alvo.nome });
 
     await msg.reply(resumo);
 
@@ -626,7 +606,7 @@ async function cmdShow({ msg, opts, chatId, admin }) {
             await REENVIO_CACHE[row._tipo](chatId, row, i, rows.length);
         } catch (err) {
             printError(`/show: falha ao reenviar ${row.id}:`, err.message);
-            await client.sendMessage(chatId, `⚠️ Não consegui reenviar a mensagem ${i + 1}/${rows.length}: ${err.message}`);
+            await client.sendMessage(chatId, tr('show.resendFailed', { i: i + 1, total: rows.length, error: err.message }));
         }
 
         if (i < rows.length - 1) await esperar(getSetting('show.delayMs'));
@@ -634,5 +614,6 @@ async function cmdShow({ msg, opts, chatId, admin }) {
 }
 
 module.exports = {
-    cmdShow
+    cmdShow,
+    resolverAlvo
 };

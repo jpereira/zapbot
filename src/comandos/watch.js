@@ -10,8 +10,10 @@ const {
     resolverDestinos, resolverOuEscolher
 } = require('../destinos');
 const { printInfo } = require('../log');
+const { t } = require('../i18n');
 const { getSetting, setSetting } = require('../settings');
-const { formatarData, plural, resumirTexto, semAcentos } = require('../util/formatar');
+const { contar } = require('../util/contar');
+const { formatarData, resumirTexto, semAcentos } = require('../util/formatar');
 const { ehCanal } = require('../util/origem');
 const { mascararTelefones } = require('../util/telefone');
 const { REGRA_REGEX, compilarBusca, compilarRegraWatch } = require('../watch/regras');
@@ -53,7 +55,7 @@ async function regrasTravadas() {
     return new Set((await dbAll('SELECT rule FROM watch_masks')).map(r => r.rule));
 }
 
-const ondeAvisa = (destinos) => (destinos.length ? descreverDestinos(destinos) : 'seu privado');
+const ondeAvisa = (destinos) => (destinos.length ? descreverDestinos(destinos) : t('watch.yourPrivate'));
 
 /**
  * Os destinos dos -to: "off" (ou "privado") volta ao seu privado; senão, cada um
@@ -61,9 +63,9 @@ const ondeAvisa = (destinos) => (destinos.length ? descreverDestinos(destinos) :
  * @returns {Promise<{ destinos: object[] } | null>}  null: já respondeu o erro
  */
 async function lerDestinosDoTo(msg, textos) {
-    if (textos.some(t => /^(off|privado)$/i.test(String(t ?? '').trim()))) {
+    if (textos.some(x => /^(off|privado|private)$/i.test(String(x ?? '').trim()))) {
         if (textos.length > 1) {
-            await msg.reply('❌ O -to off volta ao seu privado: use-o sozinho, sem outros -to.');
+            await msg.reply(t('watch.toOffAlone'));
             return null;
         }
         return { destinos: [] };
@@ -88,19 +90,14 @@ async function numeroDaRegra(msg, ref, regras) {
     if (contem.length === 1) return contem[0].n;
 
     await msg.reply(contem.length
-        ? `🔎 "${ref}" corresponde a ${contem.length} regras:\n\n` +
+        ? t('watch.multiMatch', { ref, count: contem.length }) +
             contem.map(({ r, n }) => `#${n}  ${r}`).join('\n') +
-            '\n\n💡 _Repita com o nº da regra (ex.: /watch -s N) ou com ela inteira._'
-        : `❌ Nenhuma regra casa com "${ref}".\n💡 _Veja as regras com /watch -l_`);
+            t('watch.multiMatchFooter')
+        : t('watch.noRuleMatches', { ref }));
     return null;
 }
 
-const DICAS = '\n\n💡 *Dicas* _(N: o nº ou a própria regra)_\n' +
-    '/watch -s N mostra as mensagens completas.\n' +
-    '/watch -s N -q <texto|/regex/> só as que casam.\n' +
-    '/watch -s N -to <destino|off> troca os destinos.\n' +
-    '/watch -f N limpa as ocorrências.\n' +
-    '/watch -mask N liga o 🔒 (telefones ofuscados nos avisos); -umask N desliga.';
+const dicas = () => t('watch.tips');
 
 async function listarRegras(regras) {
     const contagem = new Map((await dbAll('SELECT rule, COUNT(*) AS total FROM watch_hits GROUP BY rule'))
@@ -111,14 +108,13 @@ async function listarRegras(regras) {
     const width = String(regras.length).length + 1;
     const lista = regras.map((r, i) => {
         const origem = origens.get(r);
-        const apenas = origem ? ` apenas em ${origem.source_kind === 'canal' ? '📰'
-            : origem.source_kind === 'grupo' ? '👥' : '👤'} ${origem.source_name}` : '';
+        const apenas = origem ? t('watch.onlyIn', { icon: origem.source_kind === 'canal' ? '📰'
+            : origem.source_kind === 'grupo' ? '👥' : '👤', name: origem.source_name }) : '';
         return `${`#${i + 1}`.padEnd(width)}  ${r}  (${contagem.get(r) ?? 0})${travadas.has(r) ? ' 🔒' : ''}${apenas}` +
             (destinos.get(r)?.length ? `  → ${descreverDestinos(destinos.get(r))}` : '');
     });
-    return `👀 *WATCH: REGRAS* (${regras.length}/${getSetting('watch.max')})\n\n` +
-        (lista.length ? lista.join('\n') : '_Nenhuma regra cadastrada._\n' +
-            '💡 _Adicione com /watch <texto|/regex/flags>_');
+    return t('watch.listTitle', { count: regras.length, max: getSetting('watch.max') }) +
+        (lista.length ? lista.join('\n') : t('watch.noRules'));
 }
 
 /*
@@ -144,13 +140,12 @@ async function listarOcorrencias(regra, regras, limite, completa = false, busca 
         rows = casam.slice(0, max);
     }
     const travadas = await regrasTravadas();
-    let texto = '👀 *WATCH: OCORRÊNCIAS*\n' + (regra === null ? '🔎 *Regras:* todas\n'
-        : `🔎 *Regra #${regras.indexOf(regra) + 1}:* ${regra}\n`);
-    if (busca !== null) texto += `🔍 *Busca:* "${busca}"\n`;
-    texto += `📦 *Total:* ${total}${total > rows.length
-        ? ` _(exibindo as ${rows.length} mais recentes)_` : ''}\n`;
+    let texto = t('watch.hitsTitle') + (regra === null ? t('watch.rulesAll')
+        : t('watch.ruleLine', { n: regras.indexOf(regra) + 1, rule: regra }));
+    if (busca !== null) texto += t('watch.searchLine', { query: busca });
+    texto += t('watch.total', { total, shown: total > rows.length ? t('watch.showingLatest', { count: rows.length }) : '' });
     if (!rows.length) {
-        texto += busca === null ? '\n_Nenhuma mensagem casou ainda._' : `\n_Nenhuma mensagem com "${busca}"._`;
+        texto += busca === null ? t('watch.noneYet') : t('watch.noneWith', { query: busca });
     }
     for (const [i, h] of rows.entries()) {
         const grupo = h.is_group ? (await resolverNomeDoGrupo(h.chat_id)) || h.chat_name : null;
@@ -159,11 +154,11 @@ async function listarOcorrencias(regra, regras, limite, completa = false, busca 
         const onde = canal ? `📰 ${canal}`
             : h.is_group ? `👥 ${grupo} · 👤 ${h.sender_name}` : `👤 ${h.sender_name}`;
         const n = regras.indexOf(h.rule) + 1;
-        const qual = regra === null ? ` · 🔎 ${n ? `#${n}` : '(removida)'}` : '';
+        const qual = regra === null ? ` · 🔎 ${n ? `#${n}` : t('watch.removed')}` : '';
         const resolvido = await resolverMencoes(h.body);
         const body = travadas.has(h.rule) ? mascararTelefones(resolvido) : resolvido;
-        texto += `\n${i + 1}. 📅 ${formatarData(h.timestamp)}${qual}\n` +
-            `    ${onde}\n    💬 "${completa ? body : resumirTexto(body)}"\n`;
+        texto += t('watch.hitLine', { i: i + 1, date: formatarData(h.timestamp), which: qual, where: onde,
+            body: completa ? body : resumirTexto(body) });
     }
     return { total, texto };
 }
@@ -174,7 +169,7 @@ async function cmdWatch({ msg, args }) {
     try {
         o = lerOpcoesWatch(args);
     } catch (err) {
-        await msg.reply(`❌ ${err.message}.\n\n` + '```' + getCommandSyntax('/watch') + '```');
+        await msg.reply(t('watch.optionError', { error: err.message }) + '```' + getCommandSyntax('/watch') + '```');
         return;
     }
     const regras = getSetting('watch.rules');
@@ -183,34 +178,34 @@ async function cmdWatch({ msg, args }) {
         const { n, ligar } = o.trava;
         const alvo = regras[n - 1];
         if (!alvo) {
-            await msg.reply(`❌ A regra #${n} não existe.\n💡 _Existem ${plural(regras.length, 'regra', 'regras')}: veja /watch -l_`);
+            await msg.reply(t('watch.ruleMissing', { n, rules: contar('watch.rules', regras.length) }));
             return;
         }
         if (ligar) await dbRun('INSERT OR IGNORE INTO watch_masks (rule) VALUES (?)', [alvo]);
         else await dbRun('DELETE FROM watch_masks WHERE rule = ?', [alvo]);
         await msg.reply(ligar
-            ? `🔒 Regra *#${n}* (${alvo}): telefones ofuscados nos avisos e nas ocorrências.`
-            : `🔓 Regra *#${n}* (${alvo}): telefones à mostra de novo.`);
+            ? t('watch.maskOn', { n, rule: alvo })
+            : t('watch.maskOff', { n, rule: alvo }));
         return;
     }
     if (o.regra) {
         if (o.limite !== null) { await ajuda(); return; }
         try { compilarRegraWatch(o.regra); } catch (err) {
-            await msg.reply(`❌ Regra inválida: ${err.message}`);
+            await msg.reply(t('watch.invalidRule', { error: err.message }));
             return;
         }
         if (regras.includes(o.regra)) {
-            await msg.reply(`ℹ️ A regra #${regras.indexOf(o.regra) + 1} já existe: ${o.regra}`);
+            await msg.reply(t('watch.exists', { n: regras.indexOf(o.regra) + 1, rule: o.regra }));
             return;
         }
         if (regras.length >= getSetting('watch.max')) {
-            await msg.reply(`❌ Limite de ${getSetting('watch.max')} regras atingido (setting watch.max).\n💡 _Remova uma com /watch -rm N_`);
+            await msg.reply(t('watch.limitReached', { max: getSetting('watch.max') }));
             return;
         }
         let origem;
         if (o.origem !== null) {
             origem = await resolverOuEscolher(msg, o.origem, { aceitaCanal: true,
-                semEmail: '❌ O -in aceita contato, grupo ou canal do WhatsApp, não e-mail.' });
+                semEmail: t('watch.inNoEmail') });
             if (!origem) return;
         }
         const lido = o.destinos.length ? await lerDestinosDoTo(msg, o.destinos) : { destinos: [] };
@@ -227,18 +222,18 @@ async function cmdWatch({ msg, args }) {
                     ? 'grupo' : 'contato']);
         }
         await gravarDestinos(o.regra, lido.destinos);
-        const tipo = REGRA_REGEX.test(o.regra) ? 'regex' : 'texto';
+        const tipo = t(REGRA_REGEX.test(o.regra) ? 'watch.kindRegex' : 'watch.kindText');
         printInfo(`/watch: regra #${regras.length + 1} adicionada: ${o.regra}`);
-        await msg.reply(`✅ Regra *#${regras.length + 1}* adicionada _(${tipo})_: ${o.regra}\n` +
-            (origem ? `📍 Apenas em ${descreverDestinos([origem])}.\n` : '') +
-            (o.mask ? '🔒 Telefones ofuscados nos avisos (desligue com /watch -umask N).\n' : '') +
-            `💡 _Avisos ${lido.destinos.length ? `em ${ondeAvisa(lido.destinos)}`
-                : 'no seu privado'}._`);
+        await msg.reply(t('watch.added', { n: regras.length + 1, kind: tipo, rule: o.regra }) +
+            (origem ? t('watch.addedOnlyIn', { where: descreverDestinos([origem]) }) : '') +
+            (o.mask ? t('watch.addedMask') : '') +
+            t('watch.addedAlerts', { where: lido.destinos.length ? t('watch.alertsIn', { where: ondeAvisa(lido.destinos) })
+                : t('watch.alertsPrivate') }));
         return;
     }
     if (o.busca !== null) {
         try { compilarBusca(o.busca); } catch (err) {
-            await msg.reply(`❌ Busca inválida: ${err.message}`);
+            await msg.reply(t('watch.queryInvalid', { error: err.message }));
             return;
         }
     }
@@ -249,20 +244,18 @@ async function cmdWatch({ msg, args }) {
     const n = o.n ?? (o.destinos.length ? o.limite : null);
     const regra = n === null ? null : regras[n - 1];
     if (n !== null && !regra) {
-        await msg.reply(`❌ A regra #${n} não existe.\n💡 _Existem ${plural(regras.length, 'regra', 'regras')}: veja /watch -l_`);
+        await msg.reply(t('watch.ruleMissing', { n, rules: contar('watch.rules', regras.length) }));
         return;
     }
     if (o.destinos.length) {
         if (!regra || (o.acao && o.acao !== 'show')) {
-            await msg.reply('❌ Use o -to ao adicionar uma regra ou com o -s:\n' +
-                '/watch <regra> -to <destino>\n' +
-                '/watch -s <N ou regra> -to <destino|off>');
+            await msg.reply(t('watch.badTo'));
             return;
         }
         const lido = await lerDestinosDoTo(msg, o.destinos);
         if (!lido) return;
         await gravarDestinos(regra, lido.destinos);
-        await msg.reply(`📣 Regra *#${n}* (${regra}): os avisos vão para *${ondeAvisa(lido.destinos)}*.`);
+        await msg.reply(t('watch.toSet', { n, rule: regra, where: ondeAvisa(lido.destinos) }));
         return;
     }
     if (o.acao === 'rm') {
@@ -272,22 +265,21 @@ async function cmdWatch({ msg, args }) {
         await gravarDestinos(regra, []);
         await dbRun('DELETE FROM watch_sources WHERE rule = ?', [regra]);
         await dbRun('DELETE FROM watch_masks WHERE rule = ?', [regra]);
-        await msg.reply(`🗑️ Regra *#${n}* removida: ${regra}\n` +
-            `🗄️ Ocorrências apagadas: *${res.changes}*` +
-            (n < regras.length ? '\n💡 _As regras seguintes foram renumeradas: veja /watch -l_' : ''));
+        await msg.reply(t('watch.removedRule', { n, rule: regra }) +
+            t('watch.deletedHits', { count: res.changes }) +
+            (n < regras.length ? t('watch.renumbered') : ''));
         return;
     }
     if (o.acao === 'flush') {
         const res = regra === null ? await dbRun('DELETE FROM watch_hits')
             : await dbRun('DELETE FROM watch_hits WHERE rule = ?', [regra]);
-        await msg.reply((regra === null ? '🧹 *Flush das ocorrências de todas as regras*\n'
-            : `🧹 *Flush das ocorrências da regra #${n}:* ${regra}\n`) +
-            `🗄️ Ocorrências apagadas: *${res.changes}*\n` +
-            '💡 _As regras continuam ativas: veja /watch -l_');
+        await msg.reply((regra === null ? t('watch.flushAll') : t('watch.flushOne', { n, rule: regra })) +
+            t('watch.deletedHits', { count: res.changes }) + '\n' +
+            t('watch.flushFooter'));
         return;
     }
     if (o.acao === 'show') {
-        await msg.reply((await listarOcorrencias(regra, regras, o.limite, true, o.busca)).texto + DICAS);
+        await msg.reply((await listarOcorrencias(regra, regras, o.limite, true, o.busca)).texto + dicas());
         return;
     }
     let texto = await listarRegras(regras);
@@ -295,7 +287,7 @@ async function cmdWatch({ msg, args }) {
         const ocorrencias = await listarOcorrencias(null, regras, o.limite, false, o.busca);
         if (ocorrencias.total || o.busca !== null) texto += '\n\n' + ocorrencias.texto;
     }
-    await msg.reply(texto + DICAS);
+    await msg.reply(texto + dicas());
 }
 
 module.exports = { cmdWatch };

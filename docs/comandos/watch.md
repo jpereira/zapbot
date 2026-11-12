@@ -1,4 +1,4 @@
-# `/watch` (`/vigiar`) · admin
+# `/watch` · admin
 
 Watches incoming messages that match text or regex rules and sends notices to your private chat or
 to each rule's destinations. With no parameters, it lists the rules and, when there are matches,

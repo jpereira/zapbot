@@ -1,4 +1,4 @@
-# `/show` (`/mostrar`) · admin
+# `/show` · admin
 
 Role `admin`: just you and the extra admins. The owner grants it to a person or group with
 `/bot +u +cmd /show` ([Delegating](index.md#delegating-an-admin-command)).

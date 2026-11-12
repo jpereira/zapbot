@@ -7,6 +7,7 @@ const { messageToSelf } = require('./cliente');
 const { dbAll, dbGet, dbPronto, dbRun } = require('./db');
 const { estado } = require('./estado');
 const { getSetting } = require('./settings');
+const { idioma, t } = require('./i18n');
 const { limitarHistoricoMonitor } = require('./monitorHistorico');
 const { consultarPresenca } = require('./presenca');
 const { printError } = require('./log');
@@ -94,10 +95,10 @@ function dadosDaPresenca(dados) {
     const lastSeen = p.isOnline !== true && p.hasData !== false && state.deny !== true &&
         Number.isSafeInteger(segundos) && segundos > 0 &&
         Number.isFinite(new Date(segundos * 1000).getTime()) ? segundos : null;
-    const status = p.isOnline === true ? '🟢 online'
-        : p.hasData === false ? '❔ sem dados'
-            : state.deny === true ? '🔒 horário indisponível'
-                : lastSeen ? '⚫ offline · horário observado' : '❔ sem horário disponível';
+    const status = p.isOnline === true ? t('monitor.status.online')
+        : p.hasData === false ? t('monitor.status.noData')
+            : state.deny === true ? t('monitor.status.denied')
+                : lastSeen ? t('monitor.status.offlineSeen') : t('monitor.status.noTime');
     return { lastSeen, status };
 }
 
@@ -152,10 +153,9 @@ async function verificarMonitor() {
                 if (ativo() && atual === geracao && resultado.changes &&
                     salvo?.alert_enabled && online === 1 &&
                     salvo.online_state !== 1) {
-                    const quando = new Date(at).toLocaleString('pt-BR',
+                    const quando = new Date(at).toLocaleString(idioma() === 'pt_BR' ? 'pt-BR' : 'en-US',
                         { timeZone: 'America/Sao_Paulo' });
-                    await messageToSelf(`🚨 O contato "${salvo.contact_name}" ficou online em "${quando}".\n` +
-                        '💡 Para mais, digite /monitor -l');
+                    await messageToSelf(t('monitor.alert.fired', { name: salvo.contact_name, when: quando }));
                 }
                 await dbRun(`UPDATE monitor_contacts SET last_checked_at = ?, last_status = ?,
                     last_seen = CASE WHEN ? IS NULL THEN last_seen
@@ -166,7 +166,7 @@ async function verificarMonitor() {
                 consultou = true;
                 await dbRun(`UPDATE monitor_contacts SET last_checked_at = ?, last_status = ?,
                     last_error = ? WHERE id = ?`,
-                [Date.now(), '⚠️ consulta falhou', String(err.message ?? err).slice(0, 300),
+                [Date.now(), t('monitor.status.failed'), String(err.message ?? err).slice(0, 300),
                     contato.id]);
             }
         }

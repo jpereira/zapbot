@@ -9,6 +9,7 @@ const { client, concluirAviso } = require('./cliente');
 const { nomeDoContato: nomeAgendaPrimeiro, resolveLidToPhone } = require('./contatos');
 const { enviarEmail, smtpParaEnviar } = require('./email');
 const { aguardarEscolha, autorDe } = require('./escolhas');
+const { t } = require('./i18n');
 const { printDebug, printError } = require('./log');
 const { isDebugMode } = require('./settings');
 const { semAcentos } = require('./util/formatar');
@@ -32,7 +33,7 @@ const { mascararTelefones } = require('./util/telefone');
  * mais de um servir, o comando lista e você responde com o nº (resolverOuEscolher).
  */
 const DESTINO = /(^|\s)-to(?=\s|$)(?:\s+("([^"]*)"|'([^']*)'|\/([^/]*)\/|(\S+)))?/;
-const EXEMPLO = '/Jorge Pereira/, /Grupo L200/ ou +5521999999999';
+const exemplo = () => t('grp.dest.examples');
 const LIMITE = 10;
 
 const EMAIL = /^[^\s@<>,;]+@[^\s@<>,;]+\.[^\s@<>,;]+$/;
@@ -173,7 +174,7 @@ function buscarNoWhatsApp(palavras) {
 
     let limite;
     const tempo = new Promise((_, rejeitar) => {
-        limite = setTimeout(() => rejeitar(new Error(`o WhatsApp Web não respondeu em ${BUSCA_TIMEOUT_MS / 1000} s`)), BUSCA_TIMEOUT_MS);
+        limite = setTimeout(() => rejeitar(new Error(t('grp.dest.timeout', { s: BUSCA_TIMEOUT_MS / 1000 }))), BUSCA_TIMEOUT_MS);
     });
     return Promise.race([busca, tempo]).finally(() => clearTimeout(limite));
 }
@@ -230,10 +231,10 @@ function lerEmails(texto) {
     const emails = partes.flatMap(p => (ehPalavraEmail(p) ? emailsDoSmtpTo() : [p])).map(e => e.trim());
 
     if (emails.some(e => !EMAIL.test(e))) {
-        return { erro: '❌ O "email" usa o QRCODE_EMAIL_SMTP_TO, que está vazio (ou inválido) no config/.env. Informe o e-mail: -to voce@exemplo.com' };
+        return { erro: t('grp.dest.emptySmtpTo') };
     }
     if (!smtpParaEnviar()) {
-        return { erro: '❌ SMTP não configurado (QRCODE_EMAIL_SMTP_HOST e QRCODE_EMAIL_SMTP_USER no config/.env): não há como enviar por e-mail.' };
+        return { erro: t('grp.dest.noSmtp') };
     }
 
     const lista = [...new Set(emails)].join(', ');
@@ -256,18 +257,17 @@ function lerEmails(texto) {
  */
 async function resolverDestino(valor, {
     aceitaEmail = false, aceitaCanal = false, tipo,
-    semEmail = '❌ Aqui o destino não pode ser um e-mail.', mencoes = []
+    semEmail = t('grp.dest.noEmail'), mencoes = []
 } = {}) {
     const texto = String(valor ?? '').trim();
     if (aceitaCanal && ehCanal(texto)) {
         const canal = await client.getChatById(texto).catch(() => null);
         return canal ? { id: texto, nome: canal.name || texto, grupo: false, canal: true }
-            : { erro: `❌ Canal não encontrado: ${texto}` };
+            : { erro: t('grp.dest.channelNotFound', { text: texto }) };
     }
 
     if (!texto) {
-        return { erro: `❌ Informe o destino do -to: um contato, um grupo ou um número (${EXEMPLO})` +
-            `${aceitaEmail ? ', ou email (o QRCODE_EMAIL_SMTP_TO) e e-mails' : ''}.` };
+        return { erro: t(aceitaEmail ? 'grp.dest.needDestEmail' : 'grp.dest.needDest', { examples: exemplo() }) };
     }
 
     // Menção: "@<id>" no texto, com o mesmo id em msg.mentionedIds
@@ -282,11 +282,11 @@ async function resolverDestino(valor, {
     const digitos = tipo === 'grupo' ? null : lerNumero(texto);
     if (digitos !== null) {
         if (digitos.length < 10 || digitos.length > 15) {
-            return { erro: `❌ Número inválido: ${texto}. Use DDI + DDD + número (ex.: +5521999999999).` };
+            return { erro: t('grp.dest.badNumber', { text: texto }) };
         }
 
         const wid = await client.getNumberId(digitos).catch(() => null);
-        if (!wid) return { erro: `❌ O número +${digitos} não está no WhatsApp.` };
+        if (!wid) return { erro: t('grp.dest.notOnWhatsApp', { number: digitos }) };
 
         return { id: wid._serialized, nome: await nomeDoContato(wid._serialized, digitos), grupo: false };
     }
@@ -300,7 +300,7 @@ async function resolverDestino(valor, {
         encontrados = await contatosEGrupos(palavras);
     } catch (err) {
         printError(`[DESTINO] busca por "${texto}" falhou:`, err.message);
-        return { erro: `⚠️ Não consegui buscar "${texto}" nos contatos e grupos agora (${err.message}). Tente de novo ou use o número: +5521999999999` };
+        return { erro: t('grp.dest.searchFailed', { text: texto, error: err.message }) };
     }
     const contatos = tipo === 'grupo' ? [] : await semAsCopiasPeloLid(encontrados.contatos);
     const grupos = tipo === 'contato' ? [] : encontrados.grupos;
@@ -328,8 +328,8 @@ async function resolverDestino(valor, {
     if (candidatos.length === 1) return candidatos[0];
 
     if (!candidatos.length) {
-        if (tipo) return { erro: `❌ Nenhum ${tipo} com "${texto}" no nome.` };
-        return { erro: `❌ Nenhum contato ou grupo${aceitaCanal ? ' ou canal' : ''} com "${texto}" no nome.\n💡 _Use o nome como está na sua agenda ou o número: ${EXEMPLO}_` };
+        if (tipo) return { erro: t('grp.dest.noneOfType', { type: t(tipo === 'grupo' ? 'grp.dest.typeGroup' : 'grp.dest.typeContact'), text: texto }) };
+        return { erro: t(aceitaCanal ? 'grp.dest.noneWithChannel' : 'grp.dest.none', { text: texto, examples: exemplo() }) };
     }
 
     return { opcoes: candidatos.slice(0, LIMITE), busca: texto, mais: Math.max(0, candidatos.length - LIMITE) };
@@ -353,17 +353,16 @@ async function resolverOuEscolher(msg, valor, o = {}) {
     }
     if (!r.opcoes) return r;
 
-    const tipo = r.opcoes[0].canal ? 'canais' : r.opcoes[0].grupo ? 'grupos' : 'contatos';
+    const tipo = t(r.opcoes[0].canal ? 'grp.dest.kindChannels' : r.opcoes[0].grupo ? 'grp.dest.kindGroups' : 'grp.dest.kindContacts');
     const linhas = r.opcoes.map((d, i) => `${i + 1}. ${descreverDestino(d)}${d.numero ? ` · +${d.numero}` : ''}`);
-    const mais = r.mais ? `\n_+${r.mais} ${tipo}: use mais palavras do nome para ver os outros_` : '';
+    const mais = r.mais ? '\n' + t('grp.dest.more', { n: r.mais, kind: tipo }) : '';
 
-    const pergunta = await msg.reply(`🔎 "${r.busca}" corresponde a ${r.opcoes.length + r.mais} ${tipo}:\n\n${linhas.join('\n')}${mais}\n\n` +
-        '💡 _Responda só com o nº (em até 2 minutos), ou repita o comando com mais palavras do nome._');
+    const pergunta = await msg.reply(t('grp.dest.matches', { search: r.busca, n: r.opcoes.length + r.mais, kind: tipo, list: linhas.join('\n'), more: mais }));
 
     const chatId = msg.id?.remote ?? msg.from;
     return aguardarEscolha(chatId, r.opcoes, {
         autor: autorDe(msg),
-        aoExpirar: () => concluirAviso(msg, pergunta, `⌛ Nenhum nº escolhido para "${r.busca}" em 2 minutos: nada foi feito.`)
+        aoExpirar: () => concluirAviso(msg, pergunta, t('grp.dest.expired', { search: r.busca }))
     });
 }
 
@@ -398,7 +397,7 @@ async function resolverDestinos(msg, textos, o = {}) {
  * @param {string} [o.assunto]  do e-mail
  * @param {object} [o.opcoes]   do client.sendMessage (ex.: { linkPreview: false })
  */
-async function enviarAoDestino(destino, texto, { assunto = 'Aviso', opcoes = {} } = {}) {
+async function enviarAoDestino(destino, texto, { assunto = t('grp.dest.subject'), opcoes = {} } = {}) {
     if (destino?.email) {
         const semFormatacao = texto.replace(/[*_]/g, '');
         await enviarEmail({ para: destino.email.split(/\s*,\s*/), assunto,
@@ -417,7 +416,7 @@ async function enviarAosDestinos(destinos, texto, o = {}) {
     const falhas = [];
     for (const d of destinos.length ? destinos : [null]) {
         await enviarAoDestino(d, texto, o)
-            .catch(err => falhas.push(`${d ? descreverDestino(d) : 'seu privado'}: ${err.message}`));
+            .catch(err => falhas.push(`${d ? descreverDestino(d) : t('grp.dest.yourPrivate')}: ${err.message}`));
     }
     if (falhas.length) throw new Error(falhas.join('; '));
 }
@@ -461,7 +460,7 @@ const destinosSalvos = (recipients, unico) => (recipients ? JSON.parse(recipient
 async function pessoaMencionada(digitos, mencoes) {
     const id = mencoes.map(m => (typeof m === 'string' ? m : m?._serialized)).find(m => m?.split('@')[0] === digitos);
     if (!id) {
-        return { erro: `❌ "@${digitos}" não é uma menção: mencione a pessoa escolhendo na lista do @ do WhatsApp, ou use o nome ou o número (${EXEMPLO}).` };
+        return { erro: t('grp.dest.notMention', { digits: digitos, examples: exemplo() }) };
     }
 
     const telefone = id.endsWith('@lid') ? await resolveLidToPhone(id) : id;

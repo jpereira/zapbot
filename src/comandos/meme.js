@@ -5,6 +5,7 @@
 const { MessageMedia } = require('whatsapp-web.js');
 const axios = require('axios');
 
+const { t } = require('../i18n');
 const { printError } = require('../log');
 
 // /meme [busca]: template aleatório do imgflip
@@ -15,7 +16,7 @@ async function cmdMeme({ msg, args }) {
         const memes = data.data.memes.filter(m => !busca || m.name.toLowerCase().includes(busca));
 
         if (!memes.length) {
-            await msg.reply(`❌ Nenhum meme com "${args.trim()}".`);
+            await msg.reply(t('meme.none', { busca: args.trim() }));
             return;
         }
 
@@ -26,7 +27,7 @@ async function cmdMeme({ msg, args }) {
         await msg.reply(media, null, { caption: `🖼️ ${meme.name}` });
     } catch (err) {
         printError('/meme:', err.message);
-        await msg.reply('❌ Não consegui buscar um meme agora.');
+        await msg.reply(t('meme.fail'));
     }
 }
 

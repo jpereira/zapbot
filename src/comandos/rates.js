@@ -6,6 +6,7 @@ const { tratarAlertaDePreco } = require('../alertasPreco');
 const { getCommandSyntax } = require('./base');
 const { buscarCotacao, fmtReal, fmtVariacao } = require('../cotacoes');
 const { dbPronto } = require('../db');
+const { idioma, t } = require('../i18n');
 const { printError } = require('../log');
 const { COTACAO_SUPORTADAS } = require('../moedas');
 const { getSetting, setSetting } = require('../settings');
@@ -26,8 +27,7 @@ async function cmdRates(ctx) {
             .map(([sym, { icone, nome }]) => `${ativas.includes(sym) ? '✅' : '▫️'} ${icone} *${sym}* — ${nome}`)
             .join('\n');
 
-        await msg.reply('💱 *MOEDAS SUPORTADAS* _(contra o real)_\n\n' + lista +
-            '\n\n_✅ = habilitada (aparece no /rates)_\n💡 _/cotacao -a <MOEDA> habilita, /rates -d <MOEDA> desabilita._');
+        await msg.reply(t('rates.supported', { list: lista }));
         return;
     }
 
@@ -41,19 +41,19 @@ async function cmdRates(ctx) {
         }
 
         if (!COTACAO_SUPORTADAS[sym]) {
-            await msg.reply(`❌ Moeda não suportada: ${sym}\n💡 _Veja as suportadas com /rates -l_`);
+            await msg.reply(t('rates.unsupported', { sym }));
             return;
         }
 
         if (adicionar === ativas.includes(sym)) {
-            await msg.reply(`ℹ️ ${sym} já está ${adicionar ? 'habilitada' : 'desabilitada'}.`);
+            await msg.reply(t(adicionar ? 'rates.alreadyEnabled' : 'rates.alreadyDisabled', { sym }));
             return;
         }
 
         await setSetting('cotacao.coins', adicionar ? [...ativas, sym] : ativas.filter(c => c !== sym));
         await msg.reply(adicionar
-            ? `✅ ${COTACAO_SUPORTADAS[sym].icone} ${sym} habilitada.`
-            : `🗑️ ${sym} desabilitada.`);
+            ? t('rates.enabled', { icon: COTACAO_SUPORTADAS[sym].icone, sym })
+            : t('rates.disabled', { sym }));
         return;
     }
 
@@ -64,18 +64,18 @@ async function cmdRates(ctx) {
     const invalidas = pedidas.filter(m => !COTACAO_SUPORTADAS[m]);
 
     if (invalidas.length) {
-        await msg.reply(`❌ Moeda não suportada: ${invalidas.join(', ')}\n💡 _Suportadas: ${Object.keys(COTACAO_SUPORTADAS).join(', ')}_`);
+        await msg.reply(t('rates.unsupportedList', { list: invalidas.join(', '), supported: Object.keys(COTACAO_SUPORTADAS).join(', ') }));
         return;
     }
 
     if (!pedidas.length) {
-        await msg.reply('ℹ️ Nenhuma moeda habilitada.\n💡 _Habilite com /rates -a <MOEDA> (veja /rates -l)._');
+        await msg.reply(t('rates.noneEnabled'));
         return;
     }
 
     const resultados = await Promise.allSettled(pedidas.map(buscarCotacao));
     const fontes = new Set();
-    let texto = '💱 *COTAÇÕES* _(em reais)_\n';
+    let texto = t('rates.title') + '\n';
 
     pedidas.forEach((moeda, i) => {
         const { icone, nome } = COTACAO_SUPORTADAS[moeda];
@@ -85,7 +85,7 @@ async function cmdRates(ctx) {
 
         if (r.status === 'rejected') {
             printError(`/rates ${moeda}:`, r.reason?.message);
-            texto += '   ⚠️ _Cotação indisponível agora._\n';
+            texto += t('rates.unavailable') + '\n';
             return;
         }
 
@@ -96,14 +96,14 @@ async function cmdRates(ctx) {
         const desdeAbertura = fmtVariacao(c.atual, c.abertura);
 
         texto += `   💰 *${fmtReal(c.atual)}*${doDia ? `  ${doDia}` : ''}\n`;
-        texto += `   🔔 Abertura: ${c.abertura ? fmtReal(c.abertura) : '—'}${desdeAbertura ? ` _(${desdeAbertura} desde a abertura)_` : ''}\n`;
-        texto += `   🏁 Fechamento anterior: ${c.fechamento ? fmtReal(c.fechamento) : '—'}\n`;
-        if (c.max && c.min) texto += `   📈 Máx: ${fmtReal(c.max)}  📉 Mín: ${fmtReal(c.min)}\n`;
+        texto += `   🔔 ${t('rates.open')}: ${c.abertura ? fmtReal(c.abertura) : '—'}${desdeAbertura ? ` _(${t('rates.sinceOpen', { change: desdeAbertura })})_` : ''}\n`;
+        texto += `   🏁 ${t('rates.prevClose')}: ${c.fechamento ? fmtReal(c.fechamento) : '—'}\n`;
+        if (c.max && c.min) texto += `   ${t('rates.maxMin', { max: fmtReal(c.max), min: fmtReal(c.min) })}\n`;
     });
 
-    const agora = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', dateStyle: 'short', timeStyle: 'short' });
+    const agora = new Date().toLocaleString(idioma() === 'pt_BR' ? 'pt-BR' : 'en-US', { timeZone: 'America/Sao_Paulo', dateStyle: 'short', timeStyle: 'short' });
     texto += `\n🕐 _${agora}${fontes.size ? ` · ${[...fontes].join(', ')}` : ''}_\n`;
-    texto += '💡 _% ao lado do valor: variação desde o fechamento anterior._';
+    texto += t('rates.footer');
 
     await msg.reply(texto);
 }

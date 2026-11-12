@@ -5,6 +5,7 @@
 
 const axios = require('axios');
 
+const { t } = require('../i18n');
 const { getSetting } = require('../settings');
 
 const RPC_TIMEOUT_MS = 15000;
@@ -50,12 +51,12 @@ async function lote(chamadas) {
     const { data } = await axios.post(getSetting('defi.hyperevm.rpc'), corpo, { timeout: RPC_TIMEOUT_MS });
 
     // Sem lote (erro geral, como o "rate limited"), vem um objeto só
-    if (!Array.isArray(data)) throw new Error(`RPC da HyperEVM: ${data?.error?.message ?? 'resposta inesperada'}`);
+    if (!Array.isArray(data)) throw new Error(t('defi.err.hyperevm', { reason: data?.error?.message ?? t('defi.err.unexpected') }));
 
     const porId = new Map(data.map(r => [r.id, r]));
     return chamadas.map((c, id) => {
         const r = porId.get(id);
-        if (!r || r.error) throw new Error(`RPC da HyperEVM: ${r?.error?.message ?? 'sem resposta'} (${c.to})`);
+        if (!r || r.error) throw new Error(t('defi.err.hyperevm', { reason: `${r?.error?.message ?? t('defi.err.noResponse')} (${c.to})` }));
         return r.result;
     });
 }

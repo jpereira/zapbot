@@ -9,6 +9,7 @@ const { BOT_START_TIME } = require('./constantes');
 const { getBotUptime, printError, printInfo } = require('./log');
 const { getSetting } = require('./settings');
 const { versaoComCommit } = require('./versao');
+const { idioma, t } = require('./i18n');
 
 // Transporte SMTP: usado pelo e-mail do QR Code e pelos alertas abaixo
 const transporter = nodemailer.createTransport({
@@ -37,7 +38,7 @@ function exigirSmtpSemPausa() {
     if (Date.now() >= eauthAte) return;
 
     const minutos = Math.ceil((eauthAte - Date.now()) / 60000);
-    const err = new Error(`SMTP em pausa por falha de autenticação anterior (mais ${minutos} min)`);
+    const err = new Error(t('email.pausa', { min: minutos }));
     err.code = 'EAUTH_PAUSA';
     throw err;
 }
@@ -105,14 +106,14 @@ async function alertarPorEmail(evento, detalhes = '', { forcar = false } = {}) {
         }
         ultimoAlertaEmail.set(evento, agora);
 
-        const quando = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+        const quando = new Date().toLocaleString(idioma() === 'pt_BR' ? 'pt-BR' : 'en-US', { timeZone: 'America/Sao_Paulo' });
         const telefone = String(process.env.PHONE_NUMBER ?? '').split('@')[0].replace(/(\d{4})\d+(\d{4})$/, '$1XXXX$2');
         const linhas = [
-            ['📅 Quando', quando],
-            ['📱 Número', telefone || '-'],
-            ['🤖 Versão', versaoComCommit()],
+            [t('email.quando'), quando],
+            [t('email.numero'), telefone || '-'],
+            [t('email.versao'), versaoComCommit()],
             ['🖥️ Host', os.hostname()],
-            ['⏱️ Processo no ar há', getBotUptime(BOT_START_TIME)],
+            [t('email.noAr'), getBotUptime(BOT_START_TIME)],
             ['🛡️ Anti-Phishing Code', process.env.QRCODE_EMAIL_SMTP_ANTIPHISHING || '-']
         ];
 
@@ -147,7 +148,7 @@ const smtpParaEnviar = () => ['QRCODE_EMAIL_SMTP_HOST', 'QRCODE_EMAIL_SMTP_USER'
  * @param {Array<{filename: string, path: string}>} [o.anexos]
  */
 async function enviarEmail({ para, assunto, texto, anexos = [] }) {
-    if (!smtpParaEnviar()) throw new Error('SMTP não configurado (QRCODE_EMAIL_SMTP_HOST e QRCODE_EMAIL_SMTP_USER no config/.env)');
+    if (!smtpParaEnviar()) throw new Error(t('email.naoConfigurado'));
 
     const antiPhishing = process.env.QRCODE_EMAIL_SMTP_ANTIPHISHING || '-';
     await transporter.sendMail({

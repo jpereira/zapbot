@@ -16,23 +16,24 @@ const {
     erroDoModelo, imagemDaMensagem, responderConsumo, semOpcao, trocarModelo
 } = require('./openaiComum');
 const { TMP_DIR } = require('../constantes');
+const { idioma, t } = require('../i18n');
 const {
     SEM_CHAVE, atualizarPrecos, chaveAdminOpenAi, chaveOpenAi, consultarConsumo, consultarCustos, consultarLimites, consultarServicos, erroOpenAi,
     medirConsumo, perguntarAoChat, rodapeDeConsumo, sintetizarVoz, transcreverAudio, VOZ_MAX_CARACTERES
 } = require('../openaiChat');
 const { getSetting } = require('../settings');
 const { capturarSaida } = require('../util/processos');
-const { fmtNum, plural } = require('../util/formatar');
 
 /*
  * /gpt: pergunta ao ChatGPT (a chamada e os erros ficam no openaiChat.js).
  */
-const GPT_INSTRUCOES = 'Você é um assistente no WhatsApp. Responda de forma direta, em português, salvo se pedirem outro idioma. ' +
-    'Formate para o WhatsApp, que não é Markdown: *negrito* com um asterisco só, _itálico_, ~tachado~, ' +
-    'listas com "- " ou "1. ", código entre crases (``` para blocos). Não use títulos com #, tabelas, ' +
-    'linhas "---" nem **dois asteriscos**.';
+const GPT_INSTRUCOES = () => t('gpt.instructions');
 
-const PERGUNTA_DA_FOTO = 'Descreva esta imagem.';
+const PERGUNTA_DA_FOTO = () => t('gpt.describePhoto');
+
+// Número e dinheiro no formato do idioma (pt-BR: 1.234,50; en-US: 1,234.50)
+const loc = () => (idioma() === 'pt_BR' ? 'pt-BR' : 'en-US');
+const fmtNum = (n) => Number(n).toLocaleString(loc());
 
 /*
  * O documento respondido: texto puro (txt, md, csv, json, código...) e PDF (pelo pdftotext). O conteúdo
@@ -51,12 +52,12 @@ async function documentoDaResposta(quotedMsg) {
     if (!quotedMsg?.hasMedia || quotedMsg.type !== 'document') return null;
 
     const midia = await quotedMsg.downloadMedia().catch(() => null);
-    if (!midia?.data) return { erro: '❌ Não consegui baixar o documento (ele pode ter expirado no WhatsApp).' };
+    if (!midia?.data) return { erro: t('gpt.docDownload') };
     if (midia.data.length * 0.75 > DOC_MAX_BYTES) {
-        return { erro: `❌ O documento tem mais de ${DOC_MAX_BYTES / 1024 / 1024} MB: é grande demais para o /gpt.` };
+        return { erro: t('gpt.docTooBig', { mb: DOC_MAX_BYTES / 1024 / 1024 }) };
     }
 
-    const nome = midia.filename || 'documento';
+    const nome = midia.filename || t('gpt.docName');
     const tipo = String(midia.mimetype).split(';')[0].trim().toLowerCase();
     const bytes = Buffer.from(midia.data, 'base64');
     let texto;
@@ -69,18 +70,18 @@ async function documentoDaResposta(quotedMsg) {
             fs.writeFileSync(arquivo, bytes);
             texto = await capturarSaida('pdftotext', ['-layout', arquivo, '-'], 60_000);
         } catch {
-            return { erro: '❌ Não consegui ler o PDF (o pdftotext, do poppler-utils, precisa estar instalado).' };
+            return { erro: t('gpt.pdfRead') };
         } finally {
             fs.rmSync(pasta, { recursive: true, force: true });
         }
     } else if (DOC_TIPOS_DE_TEXTO.test(tipo) || DOC_EXTENSOES_DE_TEXTO.test(nome)) {
         texto = bytes.toString('utf8');
     } else {
-        return { erro: `❌ O /gpt lê documento de texto e PDF, não ${tipo || nome}.` };
+        return { erro: t('gpt.docType', { tipo: tipo || nome }) };
     }
 
     texto = texto.trim();
-    if (!texto) return { erro: '❌ Não achei texto nesse documento (um PDF escaneado, talvez).' };
+    if (!texto) return { erro: t('gpt.docEmpty') };
     return { documento: { nome, texto: texto.slice(0, DOC_MAX_CARACTERES) } };
 }
 
@@ -100,16 +101,16 @@ async function audioDaResposta(quotedMsg) {
     if (!quotedMsg?.hasMedia || !['audio', 'ptt'].includes(quotedMsg.type)) return null;
 
     const midia = await quotedMsg.downloadMedia().catch(() => null);
-    if (!midia?.data) return { erro: '❌ Não consegui baixar o áudio (ele pode ter expirado no WhatsApp).' };
+    if (!midia?.data) return { erro: t('gpt.audioDownload') };
 
     // "audio/ogg; codecs=opus" (a nota de voz do WhatsApp) → "audio/ogg"
     const tipo = String(midia.mimetype).split(';')[0].trim().toLowerCase();
     const extensao = EXTENSOES_DE_AUDIO[tipo];
     if (!extensao) {
-        return { erro: `❌ A OpenAI não transcreve áudio ${tipo}: só ${[...new Set(Object.values(EXTENSOES_DE_AUDIO))].join(', ')}.` };
+        return { erro: t('gpt.audioFormat', { tipo, formatos: [...new Set(Object.values(EXTENSOES_DE_AUDIO))].join(', ') }) };
     }
     if (midia.data.length * 0.75 > AUDIO_MAX_BYTES) {
-        return { erro: `❌ O áudio tem mais de ${AUDIO_MAX_BYTES / 1024 / 1024} MB: é grande demais para transcrever.` };
+        return { erro: t('gpt.audioTooBig', { mb: AUDIO_MAX_BYTES / 1024 / 1024 }) };
     }
     return { audio: { arquivo: `audio.${extensao}`, mimetype: tipo, data: midia.data } };
 }
@@ -134,16 +135,16 @@ async function responderAoAudio(msg, { audio, erro }, args) {
         const transcricao = await transcreverAudio({ cmd: '/gpt', audio });
         transcrevendo = false;
         if (!transcricao) {
-            await concluirAviso(msg, aviso, '🤖 Não ouvi fala nenhuma nesse áudio.');
+            await concluirAviso(msg, aviso, t('gpt.noSpeech'));
             return;
         }
         if (soTranscrever(args)) {
-            await concluirAviso(msg, aviso, `🤖 *Transcrição:*\n${transcricao}${await rodapeDeConsumo()}`);
+            await concluirAviso(msg, aviso, `${t('gpt.transcription', { texto: transcricao })}${await rodapeDeConsumo()}`);
             return;
         }
 
         const resposta = await perguntarAoChat({
-            cmd: '/gpt', sistema: GPT_INSTRUCOES, texto: `${args.trim()}\n\nTranscrição do áudio:\n${transcricao}`
+            cmd: '/gpt', sistema: GPT_INSTRUCOES(), texto: t('gpt.audioPrompt', { pergunta: args.trim(), transcricao })
         });
         await concluirAviso(msg, aviso, `🤖 ${resposta}${await rodapeDeConsumo()}`);
     } catch (err) {
@@ -162,7 +163,7 @@ async function conteudoParaFalar(quotedMsg) {
 
     try {
         const transcricao = await transcreverAudio({ cmd: '/gpt', audio: audio.audio });
-        return transcricao ? { texto: transcricao } : { erro: '🤖 Não ouvi fala nenhuma nesse áudio.' };
+        return transcricao ? { texto: transcricao } : { erro: t('gpt.noSpeech') };
     } catch (err) {
         return { erro: (await erroDoModelo(err, MODELO_DE_AUDIO, '/gpt')) || erroOpenAi(err, '/gpt') };
     }
@@ -190,11 +191,11 @@ async function falarTexto(msg, args, quotedMsg) {
     }
 
     if (!texto) {
-        await msg.reply('❌ Use: /gpt -voz <texto> (ou responda uma mensagem de texto)');
+        await msg.reply(t('gpt.voiceUsage'));
         return;
     }
     if (texto.length > VOZ_MAX_CARACTERES) {
-        await msg.reply(`❌ O texto tem ${texto.length} caracteres: a voz aceita até ${VOZ_MAX_CARACTERES}.`);
+        await msg.reply(t('gpt.voiceTooLong', { n: texto.length, max: VOZ_MAX_CARACTERES }));
         return;
     }
 
@@ -215,8 +216,8 @@ async function falarTexto(msg, args, quotedMsg) {
  */
 
 // "gere um gif animado de ...", "faça uma animação...": o pedido de GIF sem o -gif (só respondendo uma foto)
-const PEDIU_GIF = /\b(gif|anima[çc][ãa]o|animad[oa]|v[ií]deo)\b/i;
-const VERBO_DE_CRIAR = /\b(ger[ae]r?|cri[ae]r?|fa[çc]a|fazer|faz|anim[ae]r?|transform\w*)\b/i;
+const PEDIU_GIF = /\b(gif|anima[çc][ãa]o|animation|animad[oa]|animated|v[ií]deo|video)\b/i;
+const VERBO_DE_CRIAR = /\b(ger[ae]r?|cri[ae]r?|fa[çc]a|fazer|faz|anim[ae]r?|transform\w*|generate|create|make|animate)\b/i;
 const pedeGif = (texto) => PEDIU_GIF.test(texto) && VERBO_DE_CRIAR.test(texto);
 
 // O -img e o -gif são os do /draw (o desenhar() é um só): aqui só o texto do pedido e a mensagem de uso
@@ -227,11 +228,11 @@ const DIAS_PADRAO = 7;
 const DIAS_MAX = 31;
 
 const soma = () => ({ entrada: 0, saida: 0, cache: 0, requisicoes: 0 });
-const tokens = (t) => t.entrada + t.saida;
-const resumo = (t) => `${fmtNum(tokens(t))} tokens · ${fmtNum(t.requisicoes)} req`;
+const tokens = (x) => x.entrada + x.saida;
+const resumo = (x) => `${fmtNum(tokens(x))} tokens · ${fmtNum(x.requisicoes)} req`;
 
-// Dólares em pt-BR: centavos, ou 4 casas quando é menos de 1 centavo ($0,0012)
-const usd = (v) => `$${v.toLocaleString('pt-BR', v === 0 || v >= 0.01
+// Dólares: centavos, ou 4 casas quando é menos de 1 centavo ($0,0012)
+const usd = (v) => `$${v.toLocaleString(loc(), v === 0 || v >= 0.01
     ? { minimumFractionDigits: 2, maximumFractionDigits: 2 }
     : { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`;
 
@@ -242,9 +243,9 @@ const dataCurta = (inicio) => new Date(inicio * 1000).toISOString().slice(5, 10)
 function linhasDosServicos(servicos) {
     const somar = (buckets, campo) => (buckets ?? []).reduce((t, b) => t + (b.results ?? []).reduce((s, r) => s + (r[campo] ?? 0), 0), 0);
     const defs = [
-        ['images', '🖼️ Imagens', 'images', 'imagens'],
-        ['audio_speeches', '🔊 Voz', 'characters', 'caracteres'],
-        ['audio_transcriptions', '🎙️ Transcrição', 'seconds', 's de áudio'],
+        ['images', t('gpt.svcImages'), 'images', t('gpt.unitImages')],
+        ['audio_speeches', t('gpt.svcVoice'), 'characters', t('gpt.unitChars')],
+        ['audio_transcriptions', t('gpt.svcTranscription'), 'seconds', t('gpt.unitAudio')],
         ['embeddings', '🧬 Embeddings', 'input_tokens', 'tokens']
     ];
     return defs.flatMap(([nome, rotulo, campo, unidade]) => {
@@ -262,19 +263,19 @@ function textoDoConsumo(buckets, dias, { custos = null, servicos = null } = {}) 
     const porDia = new Map();
     const porModelo = new Map();
     const acumular = (mapa, chave, r) => {
-        const t = mapa.get(chave) ?? soma();
-        t.entrada += r.input_tokens ?? 0;
-        t.saida += r.output_tokens ?? 0;
-        t.cache += r.input_cached_tokens ?? 0;
-        t.requisicoes += r.num_model_requests ?? 0;
-        mapa.set(chave, t);
+        const x = mapa.get(chave) ?? soma();
+        x.entrada += r.input_tokens ?? 0;
+        x.saida += r.output_tokens ?? 0;
+        x.cache += r.input_cached_tokens ?? 0;
+        x.requisicoes += r.num_model_requests ?? 0;
+        mapa.set(chave, x);
     };
 
     for (const b of buckets) {
         for (const r of b.results ?? []) {
             acumular(new Map([[0, total]]), 0, r);
             acumular(porDia, b.start_time, r);
-            acumular(porModelo, r.model ?? '(sem modelo)', r);
+            acumular(porModelo, r.model ?? t('gpt.noModel'), r);
         }
     }
 
@@ -286,30 +287,30 @@ function textoDoConsumo(buckets, dias, { custos = null, servicos = null } = {}) 
         for (const r of b.results ?? []) {
             const v = Number(r.amount?.value ?? 0);
             custoDia.set(b.start_time, (custoDia.get(b.start_time) ?? 0) + v);
-            const item = String(r.line_item ?? '(outros)').split(', ')[0];
+            const item = String(r.line_item ?? t('gpt.otherItem')).split(', ')[0];
             custoItem.set(item, (custoItem.get(item) ?? 0) + v);
         }
     }
     const comCusto = custos !== null;
     const custo = (v) => (comCusto ? ` · ${usd(v ?? 0)}` : '');
 
-    const linhas = [`📊 *Consumo da OpenAI* — ${dias === 1 ? 'hoje' : `últimos ${dias} dias`}`];
-    if (comCusto) linhas.push(`💵 Gasto: *${usd(somaCustos(doPeriodo))}*`);
+    const linhas = [dias === 1 ? t('gpt.usageTitleToday') : t('gpt.usageTitleDays', { dias })];
+    if (comCusto) linhas.push(t('gpt.spent', { valor: usd(somaCustos(doPeriodo)) }));
     linhas.push(
-        `🔢 ${fmtNum(tokens(total))} tokens · entrada ${fmtNum(total.entrada)} (cache ${fmtNum(total.cache)}) · saída ${fmtNum(total.saida)}`,
-        `🔁 ${fmtNum(total.requisicoes)} requisições`
+        t('gpt.tokensLine', { total: fmtNum(tokens(total)), entrada: fmtNum(total.entrada), cache: fmtNum(total.cache), saida: fmtNum(total.saida) }),
+        t('gpt.requests', { n: fmtNum(total.requisicoes) })
     );
 
     if (porDia.size) {
-        linhas.push('', '📅 *Por dia* _(UTC)_');
-        for (const [dia, t] of [...porDia].sort((a, b) => a[0] - b[0])) {
-            linhas.push(`• ${dataCurta(dia)} · ${resumo(t)}${custo(custoDia.get(dia))}`);
+        linhas.push('', t('gpt.byDay'));
+        for (const [dia, x] of [...porDia].sort((a, b) => a[0] - b[0])) {
+            linhas.push(`• ${dataCurta(dia)} · ${resumo(x)}${custo(custoDia.get(dia))}`);
         }
     }
     if (porModelo.size) {
-        linhas.push('', '🧠 *Por modelo*');
-        for (const [modelo, t] of [...porModelo].sort((a, b) => tokens(b[1]) - tokens(a[1])).slice(0, 8)) {
-            linhas.push(`• ${modelo} · ${resumo(t)}${custo(custoItem.get(modelo))}`);
+        linhas.push('', t('gpt.byModel'));
+        for (const [modelo, x] of [...porModelo].sort((a, b) => tokens(b[1]) - tokens(a[1])).slice(0, 8)) {
+            linhas.push(`• ${modelo} · ${resumo(x)}${custo(custoItem.get(modelo))}`);
         }
     }
 
@@ -317,11 +318,11 @@ function textoDoConsumo(buckets, dias, { custos = null, servicos = null } = {}) 
     const outros = [...custoItem].filter(([item, v]) => !porModelo.has(item) && v > 0).sort((a, b) => b[1] - a[1]).slice(0, 8);
     const extras = linhasDosServicos(servicos);
     if (outros.length) {
-        linhas.push('', '🧾 *Outros custos*', ...outros.map(([item, v]) => `• ${item} · ${usd(v)}`));
+        linhas.push('', t('gpt.otherCosts'), ...outros.map(([item, v]) => `• ${item} · ${usd(v)}`));
     }
-    if (extras.length) linhas.push('', '🧰 *Outros usos*', ...extras);
+    if (extras.length) linhas.push('', t('gpt.otherUses'), ...extras);
 
-    if (!porDia.size && !porModelo.size && !extras.length) linhas.push('', 'ℹ️ Nenhum uso nesse período.');
+    if (!porDia.size && !porModelo.size && !extras.length) linhas.push('', t('gpt.noUsage'));
     return linhas.join('\n');
 }
 
@@ -331,17 +332,22 @@ function textoDoConsumo(buckets, dias, { custos = null, servicos = null } = {}) 
  */
 function textoDoSaldo(usado, total, desde) {
     const resta = total - usado;
-    return `💰 *Créditos:* ${usd(usado)}/${usd(total)} · ${resta >= 0 ? `restam *${usd(resta)}*` : `*${usd(-resta)} acima do total*`}` +
-        ` _(gasto ${desde ? `desde ${desde.split('-').reverse().join('/')}` : 'nos últimos 180 dias'})_`;
+    return t('gpt.balance', {
+        usado: usd(usado),
+        total: usd(total),
+        resta: resta >= 0 ? t('gpt.balanceLeft', { valor: usd(resta) }) : t('gpt.balanceOver', { valor: usd(-resta) }),
+        periodo: desde ? t('gpt.balanceSince', { data: desde.split('-').reverse().join('/') }) : t('gpt.balance180')
+    });
 }
 
 // Os cabeçalhos x-ratelimit-* → o texto do chat
-function textoDosLimites({ modelo, tokens: t, requisicoes: r }) {
+function textoDosLimites({ modelo, tokens: tk, requisicoes: r }) {
     const linha = (nome, x) => (x.limite
-        ? `• ${nome}: ${fmtNum(x.restante ?? 0)} de ${fmtNum(x.limite)}${x.reseta ? ` · reseta em ${x.reseta}` : ''}`
+        ? t('gpt.limitLine', { nome, restante: fmtNum(x.restante ?? 0), limite: fmtNum(x.limite) }) +
+            (x.reseta ? t('gpt.limitReset', { reseta: x.reseta }) : '')
         : null);
-    const linhas = [linha('tokens', t), linha('requisições', r)].filter(Boolean);
-    return [`⏱️ *Limites agora* — ${modelo}`, ...(linhas.length ? linhas : ['• A OpenAI não informou os limites.'])].join('\n');
+    const linhas = [linha('tokens', tk), linha(t('gpt.limitRequests'), r)].filter(Boolean);
+    return [t('gpt.limitsTitle', { modelo }), ...(linhas.length ? linhas : [t('gpt.limitsNone')])].join('\n');
 }
 
 /*
@@ -351,14 +357,14 @@ function textoDosLimites({ modelo, tokens: t, requisicoes: r }) {
 async function mostrarUso(msg, diasDigitado) {
     const dias = diasDigitado == null ? DIAS_PADRAO : Number(diasDigitado);
     if (!Number.isInteger(dias) || dias < 1 || dias > DIAS_MAX) {
-        await msg.reply(`❌ Use: /gpt -usage [dias] (de 1 a ${DIAS_MAX}; padrão ${DIAS_PADRAO})`);
+        await msg.reply(t('gpt.usageUsage', { max: DIAS_MAX, padrao: DIAS_PADRAO }));
         return;
     }
 
     const comAdmin = Boolean(chaveAdminOpenAi());
     const comChave = Boolean(chaveOpenAi());
     if (!comAdmin && !comChave) {
-        await msg.reply(`${SEM_CHAVE('/gpt')}\n💡 _Para o consumo, a chave de admin: OPENAI_ADMIN_KEY ou /set openai.admin.key_`);
+        await msg.reply(`${SEM_CHAVE('/gpt')}\n${t('gpt.adminKeyHint')}`);
         return;
     }
 
@@ -382,21 +388,18 @@ async function mostrarUso(msg, diasDigitado) {
             if (custosDoSaldo) partes.push(textoDoSaldo(somaCustos(custosDoSaldo), total, desdeData));
             partes.push(textoDoConsumo(consumo.buckets, dias, { custos, servicos }));
             if (!total && custos) {
-                partes.push('💡 _Para ver $usado/$total: /set openai.credit.total <dólares comprados> e ' +
-                    '/set openai.credit.since AAAA-MM-DD (a API da OpenAI não informa o saldo)._');
+                partes.push(t('gpt.creditHint'));
             }
         } catch (err) {
             const status = err.response?.status;
             const motivo = err.response?.data?.error?.message ?? '';
             const escopo = /api\.usage\.read/.test(motivo);
             partes.push(status === 401 || status === 403
-                ? '🔑 A chave de admin foi recusada' + (escopo ? ': ela não tem o escopo api.usage.read.' : '.') +
-                    '\n💡 _A Usage API pede uma Admin key (sk-admin-..., em platform.openai.com › Organization › ' +
-                    'Admin keys) ou uma chave com o escopo Usage em Read. Uma chave de projeto (sk-proj-...) comum não serve._'
+                ? t(escopo ? 'gpt.adminRefusedScope' : 'gpt.adminRefused') + '\n' + t('gpt.adminRefusedHint')
                 : erroOpenAi(err, '/gpt -usage'));
         }
     } else {
-        partes.push('💡 _Para ver o consumo, defina a chave de admin: OPENAI_ADMIN_KEY no config/.env ou /set openai.admin.key <chave>_');
+        partes.push(t('gpt.adminMissing'));
     }
 
     if (comChave) {
@@ -423,12 +426,16 @@ async function mostrarPrecos(msg) {
             ...novos.map(m => `➕ ${m}`)
         ];
         const resumo = linhas.length
-            ? `✅ *Preços atualizados* (${plural(mudados.length, 'alterado', 'alterados')}, ${plural(novos.length, 'novo', 'novos')}, ${iguais} sem mudança)\n${linhas.slice(0, 20).join('\n')}` +
-                (linhas.length > 20 ? `\n_…e mais ${linhas.length - 20}_` : '')
-            : `✅ Os ${iguais} preços já estão em dia.`;
-        await concluirAviso(msg, aviso, `${resumo}\n💡 _Dólares por 1M de tokens, entrada/saída (openai.pricing)._`);
+            ? t('gpt.pricesUpdated', {
+                mudados: t(mudados.length === 1 ? 'gpt.priceChangedOne' : 'gpt.priceChangedMany', { n: mudados.length }),
+                novos: t(novos.length === 1 ? 'gpt.priceNewOne' : 'gpt.priceNewMany', { n: novos.length }),
+                iguais,
+                linhas: linhas.slice(0, 20).join('\n')
+            }) + (linhas.length > 20 ? t('gpt.pricesMore', { n: linhas.length - 20 }) : '')
+            : t('gpt.pricesUpToDate', { iguais });
+        await concluirAviso(msg, aviso, `${resumo}\n${t('gpt.pricesFooter')}`);
     } catch (err) {
-        await concluirAviso(msg, aviso, `❌ Não consegui atualizar os preços: ${err.message}`);
+        await concluirAviso(msg, aviso, t('gpt.pricesFail', { erro: err.message }));
     }
 }
 
@@ -458,18 +465,18 @@ async function perguntar({ msg, args, opts, quotedMsg, admin }) {
     if (opts?.given.has('img')) {
         await desenharDoGpt(msg, args, quotedMsg, {
             opcao: 'img', gif: null,
-            semPedido: '❌ Use: /gpt -img <o que criar> (respondendo uma foto, ela é editada)'
+            semPedido: t('gpt.imgUsage')
         });
         return;
     }
     if (opts?.given.has('gif') || (ehFoto(quotedMsg) && pedeGif(args))) {
         if (!admin) {
-            await msg.reply(SO_DONO_GERAR('gerar GIF'));
+            await msg.reply(SO_DONO_GERAR(t('gpt.actionGif')));
             return;
         }
         await desenharDoGpt(msg, args, quotedMsg, {
             opcao: 'gif', gif: {},
-            semPedido: '❌ Use: /gpt -gif <o que animar> (respondendo uma foto, ela é animada)'
+            semPedido: t('gpt.gifUsage')
         });
         return;
     }
@@ -496,7 +503,7 @@ async function perguntar({ msg, args, opts, quotedMsg, admin }) {
 
     // Respondendo uma mensagem, o texto dela (ou a legenda da foto, ou o documento) entra antes da pergunta
     const respondido = doc
-        ? `Documento "${doc.documento.nome}":\n${doc.documento.texto}`
+        ? t('gpt.docPrompt', { nome: doc.documento.nome, texto: doc.documento.texto })
         : String(quotedMsg?.body ?? '').trim();
     let pergunta = [respondido, args.trim()].filter(Boolean).join('\n\n');
 
@@ -506,7 +513,7 @@ async function perguntar({ msg, args, opts, quotedMsg, admin }) {
         await msg.reply(foto.erro);
         return;
     }
-    if (foto && !pergunta) pergunta = PERGUNTA_DA_FOTO;
+    if (foto && !pergunta) pergunta = PERGUNTA_DA_FOTO();
 
     if (!pergunta) {
         await msg.reply('```' + getCommandSyntax('/gpt') + '```');
@@ -516,7 +523,7 @@ async function perguntar({ msg, args, opts, quotedMsg, admin }) {
     const aviso = await avisarProcessando(msg, '/gpt');
     try {
         const resposta = await perguntarAoChat({
-            cmd: '/gpt', sistema: GPT_INSTRUCOES, texto: pergunta, imagem: foto?.imagem
+            cmd: '/gpt', sistema: GPT_INSTRUCOES(), texto: pergunta, imagem: foto?.imagem
         });
 
         // O 🤖 na frente também garante que a resposta nunca começa com "/" (ver marcarEnviadaPeloBot)

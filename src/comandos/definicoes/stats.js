@@ -7,7 +7,6 @@ const { ADMIN } = require('../../roles').ROLES;
 module.exports = {
     cmd: '/stats',
     usage: '/stats [-N] [/chat/] [-me]  or  /stats -l  or  /stats -flush </chat/>  or  /stats -flush-all',
-    aliases: ['/estatisticas'],
     summary: 'Chat ranking: who talks, deletes and edits the most',
     help: 'Ranking of the current chat or another one (/Group/): who talks, deletes and edits the most, hours and peak day. With -me, your own stats. -l lists the chats with stats; -flush deletes those of a chat and -flush-all, all of them.',
     cmd_opts: [

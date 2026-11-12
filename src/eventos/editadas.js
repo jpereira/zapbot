@@ -6,6 +6,7 @@ const { client } = require('../cliente');
 const { dbGet, dbPronto, dbRun } = require('../db');
 const { resolverAutorApagada } = require('./apagadas');
 const { printError, printInfo } = require('../log');
+const { t } = require('../i18n');
 const { ignorarAviso, registrarAviso } = require('../mudo');
 const { getSetting } = require('../settings');
 const { contarStats } = require('../stats');
@@ -19,17 +20,17 @@ const { cabecalhoOrigem, idDoCanal } = require('../util/origem');
  * antes e de depois) na tabela message_edits e avisa você no privado (setting
  * 'show.alert.edited'); o /show -e reexibe sob demanda.
  */
-async function enviarMensagemEditada(destino, row, info, { titulo = '✏️ *MENSAGEM EDITADA DETECTADA*' } = {}) {
+async function enviarMensagemEditada(destino, row, info, { titulo = t('editadas.titulo') } = {}) {
     let texto = `${titulo}\n\n`;
 
     texto += cabecalhoOrigem({
         chatId: row.chat_id, chatName: info.nomeChat, isGroup: row.is_group,
         senderName: info.nomeRemetente, senderNumber: info.numeroRemetente
     }) +
-        `📅 *Enviada em:* ${formatarData(row.timestamp)}\n` +
-        `✏️ *Editada em:* ${formatarData(row.edited_at)}\n` +
-        `📝 *Antes:* "${row.old_body || '(vazio)'}"\n` +
-        `💬 *Depois:* "${row.new_body || '(vazio)'}"`;
+        t('editadas.corpo', {
+            enviada: formatarData(row.timestamp), editada: formatarData(row.edited_at),
+            antes: row.old_body || t('editadas.vazio'), depois: row.new_body || t('editadas.vazio')
+        });
 
     // Guarda de onde veio (o /mute respondendo o aviso)
     const enviada = await client.sendMessage(destino, texto, { linkPreview: false });

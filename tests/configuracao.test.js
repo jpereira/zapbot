@@ -640,7 +640,7 @@ describe('ajuda', () => {
         assert.match(texto, /^Uso: \/show \[-N\] \[OPÇÃO\]/);
         assert.match(texto, /-query, -q <texto\|\/regex\/flags>/);
         assert.match(texto, /Argumentos:\n  -N/);
-        assert.match(texto, /Aliases: \/mostrar$/);
+        assert.doesNotMatch(texto, /Aliases:/);
         assert.doesNotMatch(formatCommandHelp(findCommand('/ping')), /Aliases:/);
         assert.match(formatCommandHelp(findCommand('/mute')), /Aliases: \/mudo$/);
     });

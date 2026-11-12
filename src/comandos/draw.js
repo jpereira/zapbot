@@ -13,6 +13,7 @@ const { MessageMedia } = require('whatsapp-web.js');
 const { concluirAviso } = require('../cliente');
 const { getCommandSyntax } = require('./base');
 const { BIN_FFMPEG, TMP_DIR } = require('../constantes');
+const { t } = require('../i18n');
 const { printError } = require('../log');
 const { SEM_CHAVE, chaveOpenAi, erroOpenAi, gerarImagem, medirConsumo } = require('../openaiChat');
 const { SETTINGS_SCHEMA, getSetting } = require('../settings');
@@ -96,7 +97,7 @@ async function desenhar({ msg, cmd, pedido, quotedMsg = null, gif = null, semPed
         frames: gif.frames ?? getSetting('openai.gif.frames'),
         frameMs: gif.frameMs ?? getSetting('openai.gif.frameMs')
     };
-    const prompt = animacao && foto ? `Anime esta imagem em um GIF. ${texto || 'Com um movimento sutil e natural.'}` : texto;
+    const prompt = animacao && foto ? t('draw.animatePrompt', { texto: texto || t('draw.animateDefault') }) : texto;
     const legenda = `${animacao ? '🎞️' : '🎨'} ${texto.length > LEGENDA_MAX ? `${texto.slice(0, LEGENDA_MAX)}…` : texto}`.trim();
 
     const aviso = await avisarProcessando(msg, cmd);
@@ -110,7 +111,7 @@ async function desenhar({ msg, cmd, pedido, quotedMsg = null, gif = null, semPed
         const mensagem = err.response?.data?.error?.message ?? '';
         await concluirAviso(msg, aviso, await erroDoModelo(err, animacao ? MODELO_DE_GIF : MODELO_DE_IMAGEM, cmd) ||
             (animacao && /gif|preview/i.test(mensagem)
-                ? `🔒 A sua conta/modelo não faz GIF animado: ${mensagem}\n💡 _Só os gpt-image-2.6-* fazem GIF, e pedem acesso à prévia. Troque com /set openai.image.gifModel <modelo>_`
+                ? t('draw.gifDenied', { mensagem })
                 : erroOpenAi(err, cmd)));
     }
 }
@@ -119,7 +120,7 @@ async function desenhar({ msg, cmd, pedido, quotedMsg = null, gif = null, semPed
 function lerInteiro(valor, { min, max }, nome) {
     if (valor == null) return null;
     const n = Number(valor);
-    if (!Number.isInteger(n) || n < min || n > max) throw new Error(`${nome} precisa ser um inteiro de ${min} a ${max}.`);
+    if (!Number.isInteger(n) || n < min || n > max) throw new Error(t('draw.intRange', { nome, min, max }));
     return n;
 }
 

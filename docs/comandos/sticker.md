@@ -1,4 +1,4 @@
-# `/sticker` (`/figurinha`)
+# `/sticker`
 
 `/sticker` is [`/get -sticker`](get.md): it accepts a URL, or a reply to a message with a link, a
 video/GIF or an image, and returns the sticker. The sticker's name and author come from the
@@ -10,6 +10,8 @@ video/GIF or an image, and returns the sticker. The sticker's name and author co
 - **Replied image**: a 512x512 square **framed on the middle of the image**: on a landscape photo the
   sides are cropped, on a portrait one the top and bottom. GIFs (image) keep the animation. Stickers
   (WebP) go as they are.
+- **Image or video sent with `/sticker` as the caption** (no reply): same as above, using the
+  message's own media.
 
 The video becomes a 512x512 square framed on the middle, at most six seconds long: without `-es`, the
 six seconds from `-ss` (or from the start). While it downloads and converts, the bot shows
@@ -20,6 +22,7 @@ error).
 
 ```text
 (reply to a photo)               /sticker
+(photo with the caption)         /sticker
 (reply to a link)                /sticker
 (reply to a video)               /sticker -ss 12            → from 0:12 to 0:18
 (reply to a link)                /sticker -ss 10 -es 13     → from 0:10 to 0:13

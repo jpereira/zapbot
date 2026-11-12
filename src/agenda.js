@@ -12,7 +12,8 @@ const {
 const { printError, printInfo } = require('./log');
 const { destinosDoStatus, textoDoStatus } = require('./status');
 const { getSetting } = require('./settings');
-const { plural, resumirTexto, semAcentos } = require('./util/formatar');
+const { resumirTexto, semAcentos } = require('./util/formatar');
+const { t } = require('./i18n');
 const { REPETICOES, fmtQuando, lerQuando, partesEmBrasilia, proximaRepeticao } = require('./util/quando');
 
 /*
@@ -33,21 +34,21 @@ const TIPOS = {
     lembrete: {
         cmd: '/lembrete',
         icone: '⏰',
-        criado: 'Lembrete criado',
-        exemplo: '/lembrete 18:30 pagar o boleto',
+        criado: 'adm.agenda.createdReminder',
+        exemplo: 'adm.agenda.exReminder',
         aceitaTo: false,
         aceitaPv: true
     },
     agendar: {
         cmd: '/cron',
         icone: '📅',
-        criado: 'Mensagem agendada',
-        exemplo: '/cron sexta 18h -to /Grupo L200/ Bom fim de semana!',
+        criado: 'adm.agenda.createdMessage',
+        exemplo: 'adm.agenda.exMessage',
         aceitaTo: true,
         aceitaPv: false
     }
 };
-const EXEMPLOS = `💡 _Ex.: ${TIPOS.agendar.exemplo}\n${TIPOS.lembrete.exemplo}_`;
+const exemplos = () => t('adm.agenda.examples', { a: t(TIPOS.agendar.exemplo), b: t(TIPOS.lembrete.exemplo) });
 
 const MAX_DIAS = 366;
 const ATRASO_TOLERADO_MS = 5 * 60_000;
@@ -97,20 +98,20 @@ const destinosDoItem = (s) => (s.recipients
     : [{ id: s.chat_id, nome: s.chat_name, grupo: Boolean(s.is_group) }]);
 
 // Para onde vai: "👥 Grupo", "👤 Contato" ou "seu privado"
-const ondeDoDestino = (d) => (d.id === client.info.wid._serialized ? 'seu privado' : `${d.grupo ? '👥' : '👤'} ${d.nome}`);
+const ondeDoDestino = (d) => (d.id === client.info.wid._serialized ? t('adm.agenda.myPrivate') : `${d.grupo ? '👥' : '👤'} ${d.nome}`);
 const ondeDoItem = (s) => destinosDoItem(s).map(ondeDoDestino).join(', ');
 
 // O mesmo, com o id (grupo) ou o número (pessoa), para o log
 function ondeNoLog(d) {
     const onde = ondeDoDestino(d);
-    if (onde === 'seu privado') return onde;
+    if (d.id === client.info.wid._serialized) return onde;
     const numero = !d.grupo && d.id.endsWith('@c.us') ? `+${d.id.split('@')[0]}` : d.id;
     return `${onde} (${numero})`;
 }
 
 function linhaDaLista(s, i) {
     const repete = s.repeat ? ` 🔁 ${REPETICOES[s.repeat].rotulo}` : '';
-    const pausado = s.paused ? ' ⏸️ _pausado_' : '';
+    const pausado = s.paused ? t('adm.agenda.paused') : '';
     // O texto inteiro, como foi cadastrado; as linhas seguintes recuadas, como a do destino
     const texto = s.text.replace(/\n/g, '\n   ');
     const destinos = destinosDoItem(s).map(d => `\n   → ${ondeDoDestino(d)}`).join('');
@@ -143,12 +144,12 @@ function itensDosNumeros(itens, valor) {
 
 // "❌ Nº 7, 9 não existem. Nada foi <feito>; ..."
 const erroDosNumeros = (faltando, feito, uso) =>
-    `❌ Nº ${faltando.join(', ')} não existe${faltando.length > 1 ? 'm' : ''}. Nada foi ${feito}; veja a lista com /cron -l\n💡 _${uso}_`;
+    t('adm.agenda.noItem', { n: faltando.length, lista: faltando.join(', '), feito, uso });
 
 // O "quando" de um item novo ou editado: no futuro e até MAX_DIAS
 function erroDoQuando(ms, agora = Date.now()) {
-    if (ms <= agora) return `❌ ${fmtQuando(ms)} já passou.`;
-    if (ms > agora + MAX_DIAS * 86400_000) return `❌ No máximo ${MAX_DIAS} dias à frente.`;
+    if (ms <= agora) return t('adm.agenda.pastErr', { quando: fmtQuando(ms) });
+    if (ms > agora + MAX_DIAS * 86400_000) return t('adm.agenda.maxDays', { n: MAX_DIAS });
     return null;
 }
 
@@ -161,7 +162,7 @@ async function pausarOuRetomar(msg, itens, pausar, valor) {
     const { alvos, faltando } = itensDosNumeros(itens, valor);
 
     if (faltando) {
-        await msg.reply(erroDosNumeros(faltando, pausar ? 'pausado' : 'retomado', `/cron ${opcao} <nº> [nº...] ou ${opcao} all`));
+        await msg.reply(erroDosNumeros(faltando, t(pausar ? 'adm.agenda.donePaused' : 'adm.agenda.doneResumed'), t('adm.agenda.usePause', { opcao })));
         return;
     }
 
@@ -172,17 +173,17 @@ async function pausarOuRetomar(msg, itens, pausar, valor) {
         if (!pausar && s.repeat) while (dueAt <= agora) dueAt = proximaRepeticao(dueAt, s.repeat, s.day_of_month);
 
         await dbRun('UPDATE schedules SET paused = ?, due_at = ? WHERE id = ?', [pausar ? 1 : 0, dueAt, s.id]);
-        const vencido = !pausar && dueAt <= agora ? ' _(já passou: sai agora)_' : '';
+        const vencido = !pausar && dueAt <= agora ? t('adm.agenda.overdue') : '';
         linhas.push(`• *${fmtQuando(dueAt)}* — ${resumirTexto(s.text, 60)}${vencido}`);
     }
 
     if (!linhas.length) {
-        await msg.reply(pausar ? 'ℹ️ Já estava pausado.' : 'ℹ️ Não estava pausado.');
+        await msg.reply(t(pausar ? 'adm.agenda.wasPaused' : 'adm.agenda.wasNotPaused'));
         return;
     }
 
-    await msg.reply(`${pausar ? '⏸️ *Pausado*' : '▶️ *Retomado*'} (${linhas.length})\n${linhas.join('\n')}` +
-        (pausar ? '\n💡 _Volta com /cron -resume <nº|all>._' : ''));
+    await msg.reply(`${t(pausar ? 'adm.agenda.pausedTitle' : 'adm.agenda.resumedTitle')} (${linhas.length})\n${linhas.join('\n')}` +
+        (pausar ? t('adm.agenda.resumeHint') : ''));
 }
 
 /*
@@ -193,11 +194,11 @@ async function editar(msg, itens, { opt, quando, texto }) {
     const [s] = itensDoNumero(itens, opt.edit ?? '') ?? [];
 
     if (!s || semAcentos(opt.edit).trim() === 'all') {
-        await msg.reply(`❌ Nº ${opt.edit || '?'} não existe. Veja a lista com /cron -l\n💡 _/cron -edit <nº> [quando] [texto]_`);
+        await msg.reply(t('adm.agenda.editNotFound', { n: opt.edit || '?' }));
         return;
     }
     if (!quando && !texto && opt.repetir === undefined) {
-        await msg.reply('❌ Informe o que mudar: a hora, o texto e/ou o -repetir.\n💡 _/cron -edit 2 18h · /cron -edit 2 novo texto · /cron -edit 2 sexta 9h -r semanal outro texto_');
+        await msg.reply(t('adm.agenda.editNothing'));
         return;
     }
 
@@ -206,7 +207,7 @@ async function editar(msg, itens, { opt, quando, texto }) {
         repetir = semAcentos(opt.repetir).trim();
         if (['nao', 'off', 'no'].includes(repetir)) repetir = null;
         else if (!REPETICOES[repetir]) {
-            await msg.reply('❌ Use -repetir (-r) diario, semanal, mensal ou nao.');
+            await msg.reply(t('adm.agenda.useRepeatOff'));
             return;
         }
     }
@@ -229,8 +230,8 @@ async function editar(msg, itens, { opt, quando, texto }) {
     await dbRun('UPDATE schedules SET due_at = ?, day_of_month = ?, text = ?, repeat = ? WHERE id = ?',
         [dueAt, quando ? partesEmBrasilia(dueAt).dia : s.day_of_month, texto || s.text, repetir, s.id]);
 
-    await msg.reply(`✏️ *Editado:* ${TIPOS[s.kind]?.icone ?? '📅'} *${fmtQuando(dueAt)}*` +
-        (repetir ? ` 🔁 ${REPETICOES[repetir].rotulo}` : '') + (s.paused ? ' ⏸️ _pausado_' : '') +
+    await msg.reply(t('adm.agenda.edited', { icone: TIPOS[s.kind]?.icone ?? '📅', quando: fmtQuando(dueAt) }) +
+        (repetir ? ` 🔁 ${REPETICOES[repetir].rotulo}` : '') + (s.paused ? t('adm.agenda.paused') : '') +
         `\n📝 ${resumirTexto(texto || s.text, 100)}`);
 }
 
@@ -242,17 +243,17 @@ async function tratarAgenda({ msg, args, chatId, chatName, isGroup, quotedMsg })
     // Modo lembrete: chamado como /lembrete, ou com -lembrete
     const chamado = String(msg.body ?? '').trim().split(/\s+/, 1)[0].toLowerCase();
     const kind = chamado === '/lembrete' || opt.lembrete ? 'lembrete' : 'agendar';
-    const t = TIPOS[kind];
-    const sintaxe = `💡 _Ex.: ${t.exemplo}_`;
+    const tipo = TIPOS[kind];
+    const sintaxe = t('adm.agenda.syntax', { ex: t(tipo.exemplo) });
     const itens = await listar();
 
-    if (opt.pv && !t.aceitaPv) {
-        await msg.reply('❌ O -pv é do modo lembrete: use /lembrete (ou -lembrete) para lembrar no seu privado.');
+    if (opt.pv && !tipo.aceitaPv) {
+        await msg.reply(t('adm.agenda.pvOnlyReminder'));
         return;
     }
 
-    if (comDestino && !t.aceitaTo) {
-        await msg.reply('❌ O lembrete não tem -to: ele vem neste chat (ou no seu privado, com -pv). Para mandar uma mensagem a outro chat, use o /cron sem -lembrete.');
+    if (comDestino && !tipo.aceitaTo) {
+        await msg.reply(t('adm.agenda.reminderNoTo'));
         return;
     }
 
@@ -260,14 +261,14 @@ async function tratarAgenda({ msg, args, chatId, chatName, isGroup, quotedMsg })
     if (opt.rm !== undefined) {
         if (/\ball\b/i.test(opt.rm)) {
             await dbRun("DELETE FROM schedules WHERE kind != 'status'");
-            await msg.reply(`🗑️ ${plural(itens.length, 'removido', 'removidos')}.`);
+            await msg.reply(t('adm.agenda.allRemoved', { n: itens.length === 1 ? 1 : 2, total: itens.length }));
             return;
         }
 
         // Algum que não existe: não remove nenhum (a lista fica como estava)
         const { alvos: removidos, faltando } = itensDosNumeros(itens, opt.rm);
         if (faltando) {
-            await msg.reply(erroDosNumeros(faltando, 'removido', '/cron -rm <nº> [nº...] ou -rm all'));
+            await msg.reply(erroDosNumeros(faltando, t('adm.agenda.doneRemoved'), t('adm.agenda.useRm')));
             return;
         }
 
@@ -275,8 +276,8 @@ async function tratarAgenda({ msg, args, chatId, chatName, isGroup, quotedMsg })
 
         const linha = (s) => `*${fmtQuando(s.due_at)}* — ${resumirTexto(s.text, 60)}`;
         await msg.reply(removidos.length === 1
-            ? `🗑️ Removido: ${linha(removidos[0])}`
-            : `🗑️ *Removidos* (${removidos.length})\n${removidos.map(s => `• ${linha(s)}`).join('\n')}`);
+            ? t('adm.agenda.removedOne', { linha: linha(removidos[0]) })
+            : `${t('adm.agenda.removedMany', { n: removidos.length })}\n${removidos.map(s => `• ${linha(s)}`).join('\n')}`);
         return;
     }
 
@@ -289,7 +290,7 @@ async function tratarAgenda({ msg, args, chatId, chatName, isGroup, quotedMsg })
     // -edit <nº> [quando] [-repetir ...] [texto]
     if (opt.edit !== undefined) {
         if (comDestino || opt.pv || opt.lembrete) {
-            await msg.reply('❌ O -edit troca só a hora, o texto e o -repetir. Para mudar o destino ou o modo, remova (-rm) e crie de novo.');
+            await msg.reply(t('adm.agenda.editLimits'));
             return;
         }
         await editar(msg, itens, { opt, quando, texto: digitado });
@@ -305,18 +306,17 @@ async function tratarAgenda({ msg, args, chatId, chatName, isGroup, quotedMsg })
     // -l, ou nada: a lista (lembretes e mensagens)
     if (opt.list || (!quando && !digitado && !quotedMsg)) {
         if (!itens.length) {
-            await msg.reply(`📅 Nada agendado.\n${EXEMPLOS}`);
+            await msg.reply(t('adm.agenda.nothing', { exemplos: exemplos() }));
             return;
         }
 
-        await msg.reply(`📅 *Agenda* (${itens.length})\n\n${itens.map(linhaDaLista).join('\n')}\n\n` +
-            '💡 _📅 mensagem · ⏰ lembrete_\n💡 _-edit <nº> muda_\n💡 _-pause/-resume <nº...> segura e solta_\n' +
-            '💡 _-rm <nº...|all> remove_');
+        await msg.reply(`${t('adm.agenda.listTitle', { n: itens.length })}\n\n${itens.map(linhaDaLista).join('\n')}\n\n` +
+            t('adm.agenda.listHints'));
         return;
     }
 
     if (!quando) {
-        await msg.reply(`❌ Não entendi quando. Use 6h, 18:30, às 18h (horário), +2h ou 30m (daqui a tanto tempo), amanhã 9h, sexta 18h ou 25/12 10:00.\n${sintaxe}`);
+        await msg.reply(t('adm.agenda.badWhen', { sintaxe }));
         return;
     }
 
@@ -324,7 +324,7 @@ async function tratarAgenda({ msg, args, chatId, chatName, isGroup, quotedMsg })
     const texto = digitado || (kind === 'lembrete' ? quotedMsg?.body?.trim() : '') || '';
 
     if (!texto) {
-        await msg.reply(`❌ Faltou o texto.\n${sintaxe}`);
+        await msg.reply(t('adm.agenda.noText', { sintaxe }));
         return;
     }
 
@@ -346,7 +346,7 @@ async function tratarAgenda({ msg, args, chatId, chatName, isGroup, quotedMsg })
     if (opt.repetir !== undefined) {
         repetir = semAcentos(opt.repetir).trim();
         if (!REPETICOES[repetir]) {
-            await msg.reply('❌ Use -repetir (-r) diario, semanal ou mensal.');
+            await msg.reply(t('adm.agenda.useRepeat'));
             return;
         }
     }
@@ -354,7 +354,7 @@ async function tratarAgenda({ msg, args, chatId, chatName, isGroup, quotedMsg })
     const max = getSetting('agenda.max');
     const { n: total } = await dbGet("SELECT COUNT(*) AS n FROM schedules WHERE kind != 'status'");
     if (total + 1 > max) {
-        await msg.reply(`❌ Limite de ${max} lembretes e mensagens agendadas (setting agenda.max). Remova algum antes.`);
+        await msg.reply(t('adm.agenda.limit', { max }));
         return;
     }
 
@@ -367,7 +367,7 @@ async function tratarAgenda({ msg, args, chatId, chatName, isGroup, quotedMsg })
         for (const destinoTexto of destinosTexto) {
             // Vários contatos ou grupos com o nome: espera você escolher na lista
             const destino = await resolverOuEscolher(msg, destinoTexto, {
-                semEmail: '❌ O /cron envia a mensagem como se você digitasse, no WhatsApp: o -to é um contato, um grupo ou um número, não um e-mail.'
+                semEmail: t('adm.agenda.semEmail')
             });
             if (!destino) return;
             if (!destinos.some(d => d.id === destino.id)) destinos.push(destino);
@@ -392,19 +392,23 @@ async function tratarAgenda({ msg, args, chatId, chatName, isGroup, quotedMsg })
             partesEmBrasilia(quando.ms).dia, citada, agora, recipients]
     );
 
-    const onde = (d) => (d.id === meuId ? 'no seu privado' : d.id === chatId ? 'neste chat' : `em ${descreverDestino(d)}`);
-    await msg.reply(`${t.icone} *${t.criado}* para *${fmtQuando(quando.ms)}*` +
-        (repetir ? ` 🔁 ${REPETICOES[repetir].rotulo}` : '') +
-        (destinos.length > 1
-            ? ` em ${destinos.length} chats:\n${destinos.map(d => `• ${descreverDestino(d)}`).join('\n')}\n`
-            : ` ${onde(destinos[0])}.\n`) +
-        `📝 ${resumirTexto(texto, 100)}`);
+    const onde = (d) => (d.id === meuId ? t('adm.agenda.inPrivate') : d.id === chatId ? t('adm.agenda.inThisChat') : t('adm.agenda.inDest', { destino: descreverDestino(d) }));
+    await msg.reply(t('adm.agenda.created', {
+        icone: tipo.icone,
+        criado: t(tipo.criado),
+        quando: fmtQuando(quando.ms),
+        repete: repetir ? ` 🔁 ${REPETICOES[repetir].rotulo}` : '',
+        onde: destinos.length > 1
+            ? t('adm.agenda.inChats', { n: destinos.length, lista: destinos.map(d => `• ${descreverDestino(d)}`).join('\n') })
+            : ` ${onde(destinos[0])}.\n`,
+        texto: resumirTexto(texto, 100)
+    }));
 }
 
 // O que sai no chat: o texto puro (modo mensagem) ou o ⏰ Lembrete
 function textoDoItem(s, texto, atrasado = false) {
     if (s.kind === 'agendar') return texto;
-    return `⏰ *Lembrete*\n\n${texto}` + (atrasado ? `\n\n_(atrasado: era para ${fmtQuando(s.due_at)})_` : '');
+    return `${t('adm.agenda.reminderTitle')}\n\n${texto}` + (atrasado ? t('adm.agenda.late', { quando: fmtQuando(s.due_at) }) : '');
 }
 
 /*
@@ -415,15 +419,19 @@ async function testar(msg, itens, valor) {
     const [s] = itensDoNumero(itens, valor ?? '') ?? [];
 
     if (!s || semAcentos(valor).trim() === 'all') {
-        await msg.reply(`❌ Nº ${valor || '?'} não existe. Veja a lista com /cron -l\n💡 _/cron -test <nº>_`);
+        await msg.reply(t('adm.agenda.testNotFound', { n: valor || '?' }));
         return;
     }
 
     // Os {/comando} rodam como no primeiro destino
     const { texto, midias } = await montarTexto(s.text, s);
 
-    await msg.reply(`🧪 *Teste do nº ${valor.trim()}* _(sai em ${fmtQuando(s.due_at)} → ${ondeDoItem(s)})_\n\n` +
-        (texto ? textoDoItem(s, texto) : '_(só mídia)_'));
+    await msg.reply(t('adm.agenda.testTitle', {
+        n: valor.trim(),
+        quando: fmtQuando(s.due_at),
+        onde: ondeDoItem(s),
+        texto: texto ? textoDoItem(s, texto) : t('adm.agenda.onlyMedia')
+    }));
     for (const { content, options } of midias) await msg.reply(content, undefined, { caption: options?.caption });
 }
 
@@ -444,7 +452,7 @@ async function dispararItem(s, agora) {
         // O relatório do /bot -status, montado na hora, nos destinos do -to (sem eles, o privado)
         const destinos = destinosDoStatus(s);
         const texto = await textoDoStatus(agora);
-        await enviarAosDestinos(destinos, texto, { assunto: '📊 Status do ZapBot' })
+        await enviarAosDestinos(destinos, texto, { assunto: t('adm.agenda.statusSubject') })
             .catch(err => printError('/bot -status: falha ao enviar:', err.message));
         printInfo(`/bot -status: enviado para ${destinos.length ? destinos.map(d => d.email ?? d.id).join(', ') : 'seu privado'}` +
             (atrasado ? ' (atrasado)' : ''));

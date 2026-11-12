@@ -8,6 +8,7 @@ const { client } = require('../cliente');
 const { resolveLidToPhone, resolverNomeDoGrupo } = require('../contatos');
 const { descreverRegra, permissaoAqui } = require('../permissoes');
 const { resolverOuEscolher } = require('../destinos');
+const { t } = require('../i18n');
 const { getSetting } = require('../settings');
 
 /*
@@ -25,19 +26,19 @@ async function nivelDe(numero, { chatId, isGroup }) {
     const users = getSetting('bot.users');
     const soNosGrupos = users.filter(u => u.startsWith(`${numero}:`))
         .map(u => u.slice(u.indexOf(':') + 1));
-    if (ehODono(numero)) return `${PAPEIS.dono} dono`;
-    if (getSetting('bot.admins').includes(numero)) return `${PAPEIS.admin} +a`;
-    if (users.includes(numero)) return `${PAPEIS.usuario} +u`;
-    if (users.includes('all')) return `${PAPEIS.usuario} todos`;
-    if (isGroup && users.includes(chatId)) return `${PAPEIS.usuario} +u pelo grupo`;
-    if (isGroup && soNosGrupos.includes(chatId)) return `${PAPEIS.usuario} +u neste grupo`;
+    if (ehODono(numero)) return `${PAPEIS.dono} ${t('whois.owner')}`;
+    if (getSetting('bot.admins').includes(numero)) return `${PAPEIS.admin} ${t('whois.admin')}`;
+    if (users.includes(numero)) return `${PAPEIS.usuario} ${t('whois.user')}`;
+    if (users.includes('all')) return `${PAPEIS.usuario} ${t('whois.everyone')}`;
+    if (isGroup && users.includes(chatId)) return `${PAPEIS.usuario} ${t('whois.userByGroup')}`;
+    if (isGroup && soNosGrupos.includes(chatId)) return `${PAPEIS.usuario} ${t('whois.userInThisGroup')}`;
 
     // Só noutros grupos: diz onde
     if (soNosGrupos.length) {
         const grupos = await Promise.all(soNosGrupos.map(async g => `👥 ${await resolverNomeDoGrupo(g).catch(() => null) || g}`));
-        return `${PAPEIS.nenhum} sem permissão aqui (só em ${grupos.join(', ')})`;
+        return `${PAPEIS.nenhum} ${t('whois.noneHere', { groups: grupos.join(', ') })}`;
     }
-    return `${PAPEIS.nenhum} sem permissão`;
+    return `${PAPEIS.nenhum} ${t('whois.none')}`;
 }
 
 // O telefone de um id (o LID vira o telefone, se o WhatsApp souber); null: não sei
@@ -61,18 +62,18 @@ async function telefonesDoTexto(msg, texto) {
         }
 
         const pessoa = await resolverOuEscolher(msg, item, {
-            semEmail: '❌ O /whois é de pessoas: informe um contato, uma menção ou um número, não um e-mail.'
+            semEmail: t('whois.noEmail')
         });
         if (!pessoa) return null;
 
         if (pessoa.grupo) {
-            await msg.reply(`❌ ${pessoa.nome} é um grupo: o /whois é de pessoas.\n💡 _Para ver quem usa o bot no grupo: /bot_`);
+            await msg.reply(t('whois.isGroup', { name: pessoa.nome }));
             return null;
         }
 
         const telefone = await telefoneDe(pessoa.id);
         if (!telefone) {
-            await msg.reply(`❌ Não sei o telefone de ${pessoa.nome} (o WhatsApp só informou o id interno): use o número, ex.: /whois +5521999999999.`);
+            await msg.reply(t('whois.unknownPhoneOf', { name: pessoa.nome }));
             return null;
         }
         numeros.push(telefone);
@@ -87,7 +88,7 @@ async function cmdWhois({ msg, args, quotedMsg, senderNumber, chatId, isGroup, a
 
     // Os outros, só o dono e os admins: quem usa o bot não precisa saber o nível de todo mundo
     if (outros && !admin) {
-        await msg.reply('⛔ Só o dono do bot (e os admins) vê o nível dos outros.\n💡 _/whois sozinho mostra o seu._');
+        await msg.reply(t('whois.ownerOnly'));
         return;
     }
 
@@ -101,7 +102,7 @@ async function cmdWhois({ msg, args, quotedMsg, senderNumber, chatId, isGroup, a
             : (quotedMsg.author || quotedMsg.from);
         const telefone = await telefoneDe(autor);
         if (!telefone) {
-            await msg.reply('❌ Não sei o telefone de quem escreveu essa mensagem (o WhatsApp só informou o id interno).');
+            await msg.reply(t('whois.unknownPhoneAuthor'));
             return;
         }
         numeros = [telefone];
@@ -109,7 +110,7 @@ async function cmdWhois({ msg, args, quotedMsg, senderNumber, chatId, isGroup, a
         // Você mesmo: o dono pela conta do bot; os outros, pelo telefone de quem mandou
         const eu = msg.fromMe ? client.info.wid.user : senderNumber;
         if (!eu) {
-            await msg.reply('❌ Não sei o seu telefone (o WhatsApp só informou o id interno).');
+            await msg.reply(t('whois.unknownPhoneYou'));
             return;
         }
         numeros = [eu];
@@ -126,12 +127,12 @@ async function cmdWhois({ msg, args, quotedMsg, senderNumber, chatId, isGroup, a
             (usuario && regras.length ? `\n → ${regras.map(descreverRegra).join('; ')}` : '');
     }));
 
-    await msg.reply(`*Quem é?* (${numeros.length})\n${linhas.join('\n')}\n\n` +
+    await msg.reply(`${t('whois.title', { n: numeros.length })}\n${linhas.join('\n')}\n\n` +
         permissoes({
             dono: numeros.some(ehODono),
             semPermissao: niveis.some(n => n.startsWith(PAPEIS.nenhum))
         }) +
-        '\n\nDigite /help para saber quais comandos estão disponíveis.');
+        '\n\n' + t('whois.helpHint'));
 }
 
 module.exports = {

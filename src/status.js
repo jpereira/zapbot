@@ -5,10 +5,11 @@
 const fs = require('fs');
 
 const { estado } = require('./estado');
-const { listarBackups } = require('./backup');
+const { listarBackups, motivoTexto } = require('./backup');
 const { client } = require('./cliente');
 const { BOT_START_TIME, CACHE_DIR, DAY_MS, DB_PATH, MEDIA_DIR } = require('./constantes');
 const { dbAll, dbGet, dbPronto, dbRun } = require('./db');
+const { t } = require('./i18n');
 const { getBotUptime } = require('./log');
 const { descreverDestinos, destinosParaSalvar, destinosSalvos } = require('./destinos');
 const { getSetting } = require('./settings');
@@ -26,7 +27,7 @@ const { fmtQuando, instanteEmBrasilia, partesEmBrasilia } = require('./util/quan
 const KIND = 'status';
 
 // Ao lado da contagem, quando o setting do aviso está off: como ligar de novo
-const desligado = (chave, oQue) => (getSetting(chave) ? '' : ` _(${oQue}; ligue com /set ${chave} on)_`);
+const desligado = (chave, oQue) => (getSetting(chave) ? '' : ' ' + t('status.offHint', { what: oQue, key: chave }));
 
 const tamanho = (p) => (fs.existsSync(p) ? (fs.statSync(p).isDirectory() ? getDirSize(p) : fs.statSync(p).size) : 0);
 
@@ -59,26 +60,36 @@ async function textoDoStatus(agora = Date.now(), { estadoDoBot = '', usuarios = 
     // /mute: avisos cortados, por tipo
     const ignoradas = await dbAll('SELECT kind, COUNT(*) AS n FROM mute_hits WHERE at >= ? GROUP BY kind ORDER BY kind', [desde]);
     const totalIgnoradas = ignoradas.reduce((s, r) => s + r.n, 0);
-    const ROTULOS = { apagada: 'apagadas', editada: 'editadas', status: 'status', reacao: 'reações', watch: 'watch' };
+    const ROTULOS = { apagada: t('status.kind.apagada'), editada: t('status.kind.editada'), status: t('status.kind.status'), reacao: t('status.kind.reacao'), watch: t('status.kind.watch') };
     const silenciados = await conta('SELECT COUNT(*) AS n FROM mutes', []);
 
     const [ultimoBackup] = await listarBackups();
-    const conectado = estado.autenticadoEm ? getBotUptime(estado.autenticadoEm) : 'não conectado';
+    const conectado = estado.autenticadoEm ? getBotUptime(estado.autenticadoEm) : t('uptime.notConnected');
     const banco = tamanho(DB_PATH);
 
-    let texto = `📊 *Status do ZapBot ${versaoDoBot()}* · últimas 24 h\n_${fmtQuando(agora, agora)}_\n\n` +
+    let texto = t('status.title', { version: versaoDoBot(), when: fmtQuando(agora, agora) }) + '\n\n' +
         (estadoDoBot ? `${estadoDoBot}\n\n` : '') +
-        `🤖 *No ar:* ${getBotUptime(BOT_START_TIME)} · conectado: ${conectado}\n` +
-        `🗄️ *Cache:* ${humanSize(tamanho(CACHE_DIR))} _(banco ${humanSize(banco)} · mídias ${humanSize(tamanho(MEDIA_DIR))})_ · ${fmtNum(mensagens)} ${mensagens === 1 ? 'mensagem' : 'mensagens'}\n` +
-        `👀 *Watch:* ${fmtNum(totalWatch)} ocorrência${totalWatch === 1 ? '' : 's'}${detalheWatch ? ` _(${detalheWatch})_` : ''}\n` +
-        `🗑️ *Apagadas:* ${fmtNum(apagadas)}${desligado('show.alert.deleted', 'aviso desligado')}\n` +
-        `✏️ *Editadas:* ${fmtNum(editadas)}${desligado('show.alert.edited', 'aviso desligado')}\n` +
-        `📸 *Status apagados:* ${fmtNum(statusApagados)}${desligado('show.alert.status', 'recuperação desligada')}\n` +
-        `😶 *Reações removidas ou trocadas:* ${fmtNum(reacoes)}${desligado('show.alert.reaction', 'aviso desligado')}\n` +
-        `🔇 *Ignoradas (/mute):* ${fmtNum(totalIgnoradas)}` +
+        t('status.up', { up: getBotUptime(BOT_START_TIME), connected: conectado }) + '\n' +
+        t('status.cache', {
+            size: humanSize(tamanho(CACHE_DIR)),
+            db: humanSize(banco),
+            media: humanSize(tamanho(MEDIA_DIR)),
+            messages: `${fmtNum(mensagens)} ${t(mensagens === 1 ? 'status.message' : 'status.messages')}`
+        }) + '\n' +
+        t('status.watch', {
+            count: `${fmtNum(totalWatch)} ${t(totalWatch === 1 ? 'status.hit' : 'status.hits')}`,
+            detail: detalheWatch ? ` _(${detalheWatch})_` : ''
+        }) + '\n' +
+        t('status.deleted', { n: fmtNum(apagadas), off: desligado('show.alert.deleted', t('status.alertOff')) }) + '\n' +
+        t('status.edited', { n: fmtNum(editadas), off: desligado('show.alert.edited', t('status.alertOff')) }) + '\n' +
+        t('status.statusDeleted', { n: fmtNum(statusApagados), off: desligado('show.alert.status', t('status.recoveryOff')) }) + '\n' +
+        t('status.reactions', { n: fmtNum(reacoes), off: desligado('show.alert.reaction', t('status.alertOff')) }) + '\n' +
+        t('status.muted', { n: fmtNum(totalIgnoradas) }) +
         (totalIgnoradas ? ` _(${ignoradas.map(r => `${ROTULOS[r.kind] ?? r.kind} ${fmtNum(r.n)}`).join(', ')})_` : '') +
-        (silenciados ? ` · ${plural(silenciados, 'silenciado', 'silenciados')}` : '') + '\n' +
-        `💾 *Último backup:* ${ultimoBackup ? `${fmtQuando(ultimoBackup.criadoEm, agora)} (${ultimoBackup.motivo})` : 'nenhum'}`;
+        (silenciados ? ` · ${plural(silenciados, t('status.mutedOne'), t('status.mutedMany'))}` : '') + '\n' +
+        t('status.lastBackup', {
+            value: ultimoBackup ? `${fmtQuando(ultimoBackup.criadoEm, agora)} (${motivoTexto(ultimoBackup.motivo)})` : t('status.none')
+        });
 
     // Embaixo, os usuários (só no /bot) e, no fim, o envio diário
     return `${texto}${usuarios ? `\n\n${usuarios}` : ''}\n\n${await textoDoEnvioDiario(agora)}`;
@@ -91,10 +102,12 @@ async function textoDoEnvioDiario(agora = Date.now()) {
     const diario = await agendamentoDiario();
 
     return diario
-        ? `⏰ *Status diário:* todo dia às *${horaDoItem(diario)}*${ondeVai(destinosDoStatus(diario))}\n` +
-            `📅 Próximo: ${fmtQuando(diario.due_at, agora)}\n` +
-            '💡 _Mude com /bot -status <hora> ou desligue com /bot -status off._'
-        : '🔕 Status diário desligado.\n💡 _Ligue com /bot -status 06h (no horário que quiser)._';
+        ? t('status.daily', {
+            time: horaDoItem(diario),
+            where: ondeVai(destinosDoStatus(diario)),
+            next: fmtQuando(diario.due_at, agora)
+        })
+        : t('status.dailyOff');
 }
 
 const agendamentoDiario = () => dbGet('SELECT * FROM schedules WHERE kind = ?', [KIND]);
@@ -105,7 +118,7 @@ const destinosDoStatus = (item) => destinosSalvos(item?.recipients, null);
 // " → 📧 a@b.com, 👥 Grupo" ou ", no seu privado."
 const ondeVai = (destinos) => (destinos.length
     ? ` → ${descreverDestinos(destinos)}`
-    : ', no seu privado.');
+    : t('status.wherePrivate'));
 
 const dois = (n) => String(n).padStart(2, '0');
 const horaDoItem = (s) => {

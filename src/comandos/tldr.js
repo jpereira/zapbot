@@ -7,13 +7,14 @@ const path = require('path');
 
 const { client, concluirAviso } = require('../cliente');
 const { getCommandSyntax } = require('./base');
+const { resolverAlvo } = require('./show');
 const { HOUR_MS } = require('../constantes');
 const { idsDoChatAtual } = require('../contatos');
 const { dbAll, dbPronto, dbRun } = require('../db');
+const { idioma, t } = require('../i18n');
 const { SEM_CHAVE, chaveOpenAi, erroOpenAi, medirConsumo, perguntarAoChat, rodapeDeConsumo, transcreverAudio } = require('../openaiChat');
 const { getSetting } = require('../settings');
 const { isCaminhoDeMidia } = require('../util/arquivos');
-const { plural, semAcentos } = require('../util/formatar');
 const { lerDuracao } = require('../util/quando');
 
 /*
@@ -21,7 +22,7 @@ const { lerDuracao } = require('../util/quando');
  *   /tldr              → as últimas 100 mensagens deste chat
  *   /tldr 2h | 1d     → as do último tempo, como no /cron: 30m, 2h, 1d, 1h30m (o "-" na frente é opcional)
  *   /tldr 300          → as últimas 300 (máx. setting 'tldr.maxMsgs')
- *   /tldr -c família   → de outro chat, buscado pelo nome
+ *   /tldr -c família   → de outro chat: nome, /regex/, @contato (como o /show)
  *   /tldr -pv          → no seu privado em vez de expor no chat atual
  *   (respondendo)      → da mensagem respondida até agora (o período digitado ou o -c ganham)
  * Usa o texto já gravado no banco: as mensagens comuns ficam cache.messageRetentionHours (68 h). Ficam de
@@ -32,13 +33,7 @@ const RESUMO_MIN = 3;
 const RESUMO_MAX_CHARS_MSG = 500;      // cada mensagem é cortada aqui
 const RESUMO_MAX_CHARS = 60000;        // e o total, das mais antigas para as mais novas
 
-const RESUMO_INSTRUCOES =
-    'Você resume conversas de WhatsApp em português do Brasil. Escreva um resumo curto, em tópicos ' +
-    'começados por "• ", com os assuntos principais, as decisões, os combinados e as pendências, ' +
-    'citando quem disse quando for relevante. No máximo 15 tópicos. Não invente nada que não esteja ' +
-    'nas mensagens e não use títulos nem markdown além de *negrito*. As linhas "[ÁUDIO]" são ' +
-    'transcrições de áudios: resuma cada um (ou os de um mesmo assunto) num tópico no formato ' +
-    '"🎤 *Fulano* enviou áudio DD/MM HH:mm falando sobre ...", com quem enviou e quando.';
+const RESUMO_INSTRUCOES = () => t('tldr.instructions', { tag: t('tldr.audioTag') });
 
 const AUDIOS_MAX = 10;                 // só os mais recentes são transcritos (custa a API)
 const AUDIO_MAX_BYTES = 25 * 1024 * 1024;
@@ -61,33 +56,14 @@ function lerPeriodo(texto) {
 function porExtenso(ms) {
     const minutos = Math.round(ms / 60_000);
     const partes = [
-        [Math.floor(minutos / 1440), 'dia', 'dias'],
-        [Math.floor((minutos % 1440) / 60), 'hora', 'horas'],
-        [minutos % 60, 'minuto', 'minutos']
-    ].filter(([n]) => n).map(([n, um, varios]) => plural(n, um, varios));
-    return partes.length > 1 ? `${partes.slice(0, -1).join(', ')} e ${partes.at(-1)}` : partes[0];
+        [Math.floor(minutos / 1440), 'tldr.days'],
+        [Math.floor((minutos % 1440) / 60), 'tldr.hours'],
+        [minutos % 60, 'tldr.minutes']
+    ].filter(([n]) => n).map(([n, chave]) => t(chave, { n }));
+    return partes.length > 1 ? `${partes.slice(0, -1).join(', ')}${t('tldr.and')}${partes.at(-1)}` : partes[0];
 }
 
-// Chats com mensagens no banco cujo nome tem todas as palavras da busca
-async function buscarChat(busca) {
-    const chats = await dbAll(
-        `SELECT chat_id, MAX(chat_name) AS chat_name, COUNT(*) AS total
-           FROM messages GROUP BY chat_id ORDER BY MAX(timestamp) DESC`
-    );
-    const palavras = semAcentos(busca).trim().split(/\s+/);
-    const encontrados = chats.filter(c => palavras.every(p => semAcentos(c.chat_name).includes(p)));
-    const exato = encontrados.find(c => semAcentos(c.chat_name) === semAcentos(busca).trim());
-
-    if (exato || encontrados.length === 1) return { chat: exato || encontrados[0] };
-    if (!encontrados.length) return { erro: `❌ Nenhum chat com mensagens guardadas tem "${busca}" no nome.` };
-
-    return {
-        erro: `🔎 "${busca}" corresponde a ${encontrados.length} chats. Seja mais específico:\n` +
-            encontrados.slice(0, 10).map(c => `• ${c.chat_name}`).join('\n')
-    };
-}
-
-const hora = (ms) => new Date(ms).toLocaleString('pt-BR', {
+const hora = (ms) => new Date(ms).toLocaleString(idioma() === 'pt_BR' ? 'pt-BR' : 'en-US', {
     timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
 });
 
@@ -132,7 +108,7 @@ async function resumir({ msg, opts, chatId, chatName, quotedMsg }) {
     const desdeAResposta = !extras.length && !opts.opt.chat && quotedMsg?.timestamp;
     if (desdeAResposta) {
         periodo = { ms: Math.max(Date.now() - quotedMsg.timestamp * 1000, 0) };
-        avisos.push('a partir da mensagem respondida');
+        avisos.push(t('tldr.sinceReply'));
     }
 
     if (!periodo) {
@@ -143,7 +119,7 @@ async function resumir({ msg, opts, chatId, chatName, quotedMsg }) {
     const max = getSetting('tldr.maxMsgs');
 
     if (periodo.n > max) {
-        avisos.push(`limitado a ${max} mensagens (setting tldr.maxMsgs)`);
+        avisos.push(t('tldr.limited', { max }));
         periodo.n = max;
     }
 
@@ -151,7 +127,7 @@ async function resumir({ msg, opts, chatId, chatName, quotedMsg }) {
     const horasGuardadas = getSetting('cache.messageRetentionHours');
     const guardado = horasGuardadas * HOUR_MS;
     if (periodo.ms > guardado) {
-        avisos.push(`as mensagens comuns ficam só ${porExtenso(guardado)} (${horasGuardadas} h) no banco (setting cache.messageRetentionHours)`);
+        avisos.push(t('tldr.retention', { tempo: porExtenso(guardado), horas: horasGuardadas }));
         periodo.ms = guardado;
     }
 
@@ -162,13 +138,15 @@ async function resumir({ msg, opts, chatId, chatName, quotedMsg }) {
     let nome = chatName;
 
     if (opts.opt.chat) {
-        const r = await buscarChat(String(opts.opt.chat));
-        if (r.erro) {
-            await msg.reply(r.erro);
-            return;
-        }
-        ids = [r.chat.chat_id];
-        nome = r.chat.chat_name;
+        // Como o /show: /regex/, @contato, nº do /show -l ou o nome; vários: lista e espera o nº
+        const chats = await dbAll(
+            `SELECT chat_id, MAX(chat_name) AS chat_name, MAX(is_group) AS is_group
+               FROM messages GROUP BY chat_id ORDER BY MAX(timestamp) DESC`
+        );
+        const alvo = await resolverAlvo(msg, String(opts.opt.chat).trim(), { chats });
+        if (!alvo) return;
+        ids = alvo.ids;
+        nome = alvo.nome;
     }
 
     const params = [...ids];
@@ -192,7 +170,7 @@ async function resumir({ msg, opts, chatId, chatName, quotedMsg }) {
         params
     )).reverse();
 
-    if (desdeAResposta && rows.length >= max) avisos.push(`só as ${max} mais recentes (setting tldr.maxMsgs)`);
+    if (desdeAResposta && rows.length >= max) avisos.push(t('tldr.latest', { max }));
 
     // Os áudios (os AUDIOS_MAX mais recentes) viram texto; o que não deu para transcrever sai do resumo
     const audios = rows.filter(r => ['audio', 'ptt'].includes(r.type)).slice(-AUDIOS_MAX);
@@ -200,19 +178,18 @@ async function resumir({ msg, opts, chatId, chatName, quotedMsg }) {
     for (let i = rows.length - 1; i >= 0; i--) {
         const r = rows[i];
         if (!['audio', 'ptt'].includes(r.type)) continue;
-        if (r.body && audios.includes(r)) r.body = `[ÁUDIO] ${r.body}`;
+        if (r.body && audios.includes(r)) r.body = `${t('tldr.audioTag')} ${r.body}`;
         else rows.splice(i, 1);
     }
 
     if (rows.length < RESUMO_MIN) {
-        await msg.reply(`📝 Poucas mensagens para resumir (${rows.length}) em ${nome}.\n` +
-            `💡 _O resumo usa o texto guardado no banco: as mensagens comuns ficam ${getSetting('cache.messageRetentionHours')} h (setting cache.messageRetentionHours), e comandos e mídias sem legenda não entram._`);
+        await msg.reply(t('tldr.few', { total: rows.length, nome, horas: getSetting('cache.messageRetentionHours') }));
         return;
     }
 
     // Uma linha por mensagem; acima do limite, saem as mais antigas. As suas vão com o nome do seu perfil.
-    const meuNome = client.info.pushname || 'Você';
-    const autor = (r) => (r.from_me ? meuNome : r.sender_name || 'Desconhecido');
+    const meuNome = client.info.pushname || t('tldr.me');
+    const autor = (r) => (r.from_me ? meuNome : r.sender_name || t('tldr.unknown'));
     const linhas = rows.map(r => `[${hora(r.timestamp)}] ${autor(r)}: ${r.body.replace(/\s+/g, ' ').slice(0, RESUMO_MAX_CHARS_MSG)}`);
     let tamanho = linhas.reduce((s, l) => s + l.length + 1, 0);
     while (tamanho > RESUMO_MAX_CHARS && linhas.length > RESUMO_MIN) tamanho -= linhas.shift().length + 1;
@@ -221,27 +198,26 @@ async function resumir({ msg, opts, chatId, chatName, quotedMsg }) {
     const ultima = rows[rows.length - 1].timestamp;
 
     // O que está sendo resumido: a quantidade, a janela de tempo ou "desde a mensagem respondida"
-    const mensagens = plural(linhas.length, 'mensagem', 'mensagens');
+    const mensagens = t('tldr.messages', { n: linhas.length });
     const escopo = desdeAResposta
-        ? `das ${mensagens} de ${nome} desde a mensagem respondida (há ${porExtenso(periodo.ms)})`
+        ? t('tldr.scopeReply', { mensagens, nome, tempo: porExtenso(periodo.ms) })
         : periodo.ms
-            ? `das ${mensagens} de ${nome} do período de ${porExtenso(periodo.ms)}`
-            : `das últimas ${mensagens} de ${nome}`;
-    const aviso = await msg.reply(`⏳ Processando o /tldr ${escopo}, aguarde.`, null, { linkPreview: false });
+            ? t('tldr.scopePeriod', { mensagens, nome, tempo: porExtenso(periodo.ms) })
+            : t('tldr.scopeLast', { mensagens, nome });
+    const aviso = await msg.reply(t('tldr.processing', { escopo }), null, { linkPreview: false });
     try {
         const resumo = await perguntarAoChat({
             cmd: '/tldr',
-            sistema: RESUMO_INSTRUCOES,
-            texto: `Conversa "${nome}" (${linhas.length} mensagens):\n\n${linhas.join('\n')}`
+            sistema: RESUMO_INSTRUCOES(),
+            texto: t('tldr.prompt', { nome, total: linhas.length, linhas: linhas.join('\n') })
         });
 
-        const texto = `🤖 *Resumo de ${nome}*\n` +
-            `_${plural(linhas.length, 'mensagem', 'mensagens')} · ${hora(primeira)} a ${hora(ultima)}_` +
+        const texto = t('tldr.header', { nome, mensagens, inicio: hora(primeira), fim: hora(ultima) }) +
             (avisos.length ? `\n_(${avisos.join('; ')})_` : '') +
             `\n\n${resumo}${await rodapeDeConsumo()}`;
 
         if (opts.opt.pv) {
-            await concluirAviso(msg, aviso, '🤖 Resumo enviado no seu privado.');
+            await concluirAviso(msg, aviso, t('tldr.sentPrivate'));
             await client.sendMessage(client.info.wid._serialized, texto);
         } else {
             await concluirAviso(msg, aviso, texto);

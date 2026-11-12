@@ -5,6 +5,7 @@
 const { spawn } = require('child_process');
 
 const { GET_TIMEOUT_MS } = require('../constantes');
+const { t } = require('../i18n');
 
 function runCommand(bin, args, logFd, timeoutMs = GET_TIMEOUT_MS) {
     return new Promise((resolve, reject) => {
@@ -21,7 +22,7 @@ function runCommand(bin, args, logFd, timeoutMs = GET_TIMEOUT_MS) {
             clearTimeout(timer);
             if (code === 0) return resolve();
             reject(new Error(signal === 'SIGKILL'
-                ? `${bin} excedeu ${timeoutMs / 1000}s e foi interrompido`
+                ? t('processos.timeout', { bin, s: timeoutMs / 1000 })
                 : `${bin} exited with code ${code}`));
         });
     });

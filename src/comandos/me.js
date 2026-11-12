@@ -5,6 +5,7 @@
  * numa mensagem só (os {/comando} rodam uma vez só).
  */
 const { client } = require('../cliente');
+const { t } = require('../i18n');
 const { getSetting } = require('../settings');
 const { enviarMidias, erroDosComandos, montarTexto, quebrarLinhas } = require('../comandosNoTexto');
 
@@ -16,11 +17,11 @@ async function cmdMe({ msg, args, chatId, chatName, isGroup, nivel, admin, podeU
     });
     const maximo = getSetting('me.maxRepeat');
     if (vezes < 1 || vezes > maximo) {
-        return msg.reply(`❌ -repeat precisa de um número de 1 a ${maximo}`);
+        return msg.reply(t('me.invalidRepeat', { max: maximo }));
     }
 
     const texto = quebrarLinhas(resto);
-    if (!texto) return msg.reply('❌ Use: /me [-repeat|-r <n>] <mensagem com {/comando}>');
+    if (!texto) return msg.reply(t('me.usage'));
 
     const erro = await erroDosComandos(texto, '/me');
     if (erro) return msg.reply(erro);

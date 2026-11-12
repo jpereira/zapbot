@@ -6,6 +6,7 @@
 const crypto = require('crypto');
 const axios = require('axios');
 
+const { t } = require('../i18n');
 const { getSetting } = require('../settings');
 
 const ALFABETO = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
@@ -111,7 +112,7 @@ async function lerContas(enderecos) {
         jsonrpc: '2.0', id: 1, method: 'getMultipleAccounts', params: [enderecos, { encoding: 'base64' }]
     }, { timeout: RPC_TIMEOUT_MS });
 
-    if (data.error) throw new Error(`RPC da Solana: ${data.error.message}`);
+    if (data.error) throw new Error(t('defi.err.solana', { reason: data.error.message }));
     return data.result.value.map(v => (v ? { dados: Buffer.from(v.data[0], 'base64'), dono: v.owner } : null));
 }
 

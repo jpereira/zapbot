@@ -17,7 +17,8 @@ const {
 } = require('./destinos');
 const { enviarEmail } = require('./email');
 const { printError, printInfo } = require('./log');
-const { formatarData, plural, resumirTexto } = require('./util/formatar');
+const { formatarData, paraMs, resumirTexto } = require('./util/formatar');
+const { idioma, t } = require('./i18n');
 const { gerarPdf } = require('./util/pdf');
 const { compilarBusca } = require('./watch/regras');
 const { fmtQuando, lerQuando } = require('./util/quando');
@@ -56,12 +57,14 @@ const MAX_DIAS = 365;
 const ALERTA = /(^|\s)-alerta(?=\s|$)([\s\S]*)$/;
 
 const destinosDaNota = (n) => destinosSalvos(n.recipients, destinoDaLinha(n));
-const ondeDoAviso = (destinos) => (destinos.length ? descreverDestinos(destinos) : 'seu privado');
+const ondeDoAviso = (destinos) => (destinos.length ? descreverDestinos(destinos) : t('notes.yourPrivate'));
+// Plural pelo n === 1 (o Intl do pt trata o 0 como singular): {count} é o número mostrado
+const contar = (chave, n, vars = {}) => t(chave, { ...vars, n: n === 1 ? 1 : 2, count: n });
 const recuar = (texto) => texto.replace(/\n(?=[^\n])/g, '\n   ');
 
 const listarNotas = () => dbAll('SELECT * FROM notes ORDER BY id');
 
-const SEM_TAG = 'sem tag';
+const semTag = () => t('notes.noTag');
 const SEM_PREVIA = { linkPreview: false };  // listas não mostram thumbnail de link
 const lerTag = (t) => t.replace(/^#/, '').toLowerCase();
 
@@ -128,7 +131,14 @@ function formatarTexto(texto, plano = false) {
 }
 
 // 10:30 04/11/2026 (hora, depois dia/mês/ano, sem os segundos)
-const dataCurta = (valor) => formatarData(valor).replace(/^(\d+\/\d+\/\d+),? (\d+:\d+):\d+$/, '$2 $1');
+function dataCurta(valor) {
+    const p = Object.fromEntries(new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+    }).formatToParts(paraMs(valor)).map(x => [x.type, x.value]));
+    const dia = idioma() === 'pt_BR' ? `${p.day}/${p.month}/${p.year}` : `${p.month}/${p.day}/${p.year}`;
+    return `${p.hour}:${p.minute} ${dia}`;
+}
 
 function linhaDaNota(n, plano = false, posicao = 0) {
     const alerta = n.alert_at
@@ -167,15 +177,15 @@ async function removerNotas(msg, textoIds, soAlerta) {
     if (!todos && (!ids.length || faltando.length)) {
         const rotulo = faltando?.every(f => !f.startsWith('#')) ? 'ID' : '';
         await msg.reply(faltando?.length > 1
-            ? `❌ ${rotulo}${rotulo ? 's ' : ''}${faltando.join(', ')} não existem. Nada foi mexido; veja a lista com /notes -l`
-            : `❌ ${rotulo ? 'ID ' : ''}${faltando?.[0] ?? '?'} não existe. Veja a lista com /notes -l\n💡 _Uso: ${cmd} <id...|#tag...|all>_`);
+            ? t('notes.rm.missingMany', { what: rotulo ? t('notes.idsLabel', { list: faltando.join(', ') }) : faltando.join(', ') })
+            : t('notes.rm.missingOne', { what: rotulo ? t('notes.idLabel', { id: faltando?.[0] ?? '?' }) : (faltando?.[0] ?? '?'), cmd }));
         return;
     }
 
     if (soAlerta) {
         const comAlerta = notas.filter(n => ids.includes(n.id) && n.alert_at);
         for (const n of comAlerta) await dbRun('UPDATE notes SET alert_at = NULL WHERE id = ?', [n.id]);
-        await msg.reply(`🔕 ${plural(comAlerta.length, 'alerta removido', 'alertas removidos')}.`);
+        await msg.reply(contar('notes.rm.alertsRemoved', comAlerta.length));
         return;
     }
 
@@ -183,7 +193,7 @@ async function removerNotas(msg, textoIds, soAlerta) {
         await dbRun('DELETE FROM notes WHERE id = ?', [n.id]);
         if (n.media_path) await fs.remove(n.media_path).catch(err => printError('/notes: imagem não apagada:', err.message));
     }
-    await msg.reply(`🗑️ ${plural(ids.length, 'anotação removida', 'anotações removidas')}.`);
+    await msg.reply(contar('notes.rm.removed', ids.length));
 }
 
 // "<quando>" inteiro (sem sobra) → ms, ou o erro para responder
@@ -193,10 +203,10 @@ function lerDataDoAlerta(texto) {
     const agora = Date.now();
 
     if (!q || q.usadas !== palavras.length) {
-        return { erro: `❌ Quando inválido: "${texto}"\n💡 _Ex.: +2h, 30m, 18h, amanhã 9h, sexta 18:30, 25/12 10h_` };
+        return { erro: t('notes.when.invalid', { text: texto }) };
     }
-    if (q.ms <= agora) return { erro: `❌ ${fmtQuando(q.ms)} já passou.` };
-    if (q.ms > agora + MAX_DIAS * 86400_000) return { erro: `❌ No máximo ${MAX_DIAS} dias à frente.` };
+    if (q.ms <= agora) return { erro: t('notes.when.past', { when: fmtQuando(q.ms) }) };
+    if (q.ms > agora + MAX_DIAS * 86400_000) return { erro: t('notes.when.tooFar', { days: MAX_DIAS }) };
     return { ms: q.ms };
 }
 
@@ -226,16 +236,16 @@ const nomeOriginal = (arquivo) => path.basename(arquivo).replace(/^\d+_[a-z0-9]+
 function rotuloDaMidia(n, plano = false) {
     const mime = String(n.media_mime ?? '');
     const italico = (t) => (plano ? t : `_${t}_`);
-    if (ehImagem(mime)) return `🖼️ ${italico('imagem')}`;
-    if (mime.startsWith('video/')) return `🎬 ${italico('vídeo')}`;
-    if (mime.startsWith('audio/')) return `🎵 ${italico('áudio')}`;
+    if (ehImagem(mime)) return `🖼️ ${italico(t('notes.media.image'))}`;
+    if (mime.startsWith('video/')) return `🎬 ${italico(t('notes.media.video'))}`;
+    if (mime.startsWith('audio/')) return `🎵 ${italico(t('notes.media.audio'))}`;
     return `📎 ${italico(nomeOriginal(n.media_path))}`;
 }
 
 // Baixa e guarda a mídia em NOTES_DIR: { path, mime }, ou { erro } para responder
 async function guardarMidia(origem) {
     const media = await origem.downloadMedia().catch(() => null);
-    if (!media?.data) return { erro: '❌ Não consegui baixar a mídia.' };
+    if (!media?.data) return { erro: t('notes.media.downloadFail') };
 
     const mime = String(media.mimetype ?? 'application/octet-stream').split(';')[0].trim().toLowerCase();
     // O nome do documento, se veio (sem caminho e sem caracteres estranhos); senão, "arquivo.<ext>"
@@ -246,9 +256,6 @@ async function guardarMidia(origem) {
     await fs.outputFile(arquivo, Buffer.from(media.data, 'base64'));
     return { path: arquivo, mime };
 }
-
-const ERRO_SINTAXE = '❌ Use: /notes #tag <texto> [-alerta <quando> [-to <destino>]...]';
-const ERRO_SEM_TEXTO = '❌ Falta o texto: /notes #tag <texto>';
 
 // "\n" digitado vira quebra de linha ("\\n" fica como texto)
 const comQuebras = (t) => t.replace(/(?<!\\)\\n/g, '\n').replace(/\\\\n/g, '\\n');
@@ -263,7 +270,7 @@ async function adicionar(msg, textoDigitado, quotedMsg) {
 
     // A sintaxe é sempre /notes #tag <texto>: sem tag não anota
     if (!tag) {
-        await msg.reply(`${ERRO_SINTAXE}\n💡 _Falta a #tag. Veja as tags com /notes_`, undefined, SEM_PREVIA);
+        await msg.reply(`${t('notes.add.syntax')}\n${t('notes.add.missingTag')}`, undefined, SEM_PREVIA);
         return;
     }
 
@@ -272,19 +279,19 @@ async function adicionar(msg, textoDigitado, quotedMsg) {
     if (!texto && quotedMsg) {
         const citado = String(quotedMsg.body ?? '').trim();
         if (!citado && !origem) {
-            await msg.reply('❌ A mensagem respondida não tem texto.');
+            await msg.reply(t('notes.add.quotedNoText'));
             return;
         }
         if (citado) texto = `${MARCA_RESPOSTA} ${citado}`;
     }
 
     if (!texto && !origem) {
-        await msg.reply(ERRO_SEM_TEXTO, undefined, SEM_PREVIA);
+        await msg.reply(t('notes.add.noText'), undefined, SEM_PREVIA);
         return;
     }
 
     if (comDestino && !m) {
-        await msg.reply('❌ O -to só vale com o -alerta: /notes -add <texto> -alerta amanhã 9h -to /Grupo L200/');
+        await msg.reply(t('notes.add.toNeedsAlert'));
         return;
     }
 
@@ -330,20 +337,20 @@ async function adicionar(msg, textoDigitado, quotedMsg) {
 async function atualizar(msg, resto, quotedMsg) {
     const m = resto.match(/^#?(\d+)(?:\s+([\s\S]*))?$/);
     if (!m) {
-        await msg.reply('❌ Use: /notes -update <id> [#tag] <novo texto>');
+        await msg.reply(t('notes.update.usage'));
         return;
     }
 
     const nota = await dbGet('SELECT * FROM notes WHERE id = ?', [Number(m[1])]);
     if (!nota) {
-        await msg.reply(`❌ ID ${m[1]} não existe. Veja a lista com /notes -l`);
+        await msg.reply(t('notes.idNotFound', { id: m[1] }));
         return;
     }
 
     let { tag, texto } = separarTag(comQuebras(m[2] ?? '').trim());
     if (!texto && quotedMsg?.body?.trim()) texto = `${MARCA_RESPOSTA} ${quotedMsg.body.trim()}`;
     if (!texto) {
-        await msg.reply('❌ Use: /notes -update <id> [#tag] <novo texto>');
+        await msg.reply(t('notes.update.usage'));
         return;
     }
 
@@ -368,7 +375,7 @@ async function alertar(msg, resto) {
 
     if (!texto || (porTag && !quandoTexto)) {
         if (comDestino) {
-            await msg.reply('❌ O -to só vale ao criar o alerta: /notes -alerta <id|#tag> amanhã 9h -to /Grupo L200/');
+            await msg.reply(t('notes.alert.toOnlyCreate'));
             return;
         }
         const todasNotas = await listarNotas();
@@ -376,16 +383,16 @@ async function alertar(msg, resto) {
         const comAlerta = todasNotas.filter(n => n.alert_at && (!tags.length || tagsAchadas.includes(n.tag)));
         const rotulo = tags.length ? ` ${tagsAchadas.map(t => `#${t}`).join(' ')}` : '';
         await msg.reply(comAlerta.length
-            ? `🔔 *ALERTAS DAS ANOTAÇÕES${rotulo}*\n\n${comAlerta.map(linhaDaNota).join('\n\n')}\n\n` +
-              '💡 _Tire com /notes -alerta -rm <id...|#tag...|all>_'
-            : `🔔 Nenhuma anotação${rotulo ? ` em${rotulo}` : ''} com alerta.\n💡 _Crie com /notes -alerta <id|#tag> <quando>_`,
+            ? `${t('notes.alert.listTitle', { tags: rotulo })}\n\n${comAlerta.map(linhaDaNota).join('\n\n')}\n\n` +
+              t('notes.alert.listHint')
+            : `${rotulo ? t('notes.alert.noneIn', { tags: rotulo }) : t('notes.alert.none')}\n${t('notes.alert.createHint')}`,
         undefined, SEM_PREVIA);
         return;
     }
 
     const m = porTag ? null : texto.match(/^(\d+)\s+([\s\S]+)$/);
     if (!porTag && !m) {
-        await msg.reply('❌ Use: /notes -alerta <id|#tag> <quando> [-to <destino>]...');
+        await msg.reply(t('notes.alert.usage'));
         return;
     }
 
@@ -394,14 +401,14 @@ async function alertar(msg, resto) {
         const todas = await listarNotas();
         const semNotas = tags.filter(t => !todas.some(n => n.tag === t));
         if (semNotas.length) {
-            await msg.reply(`❌ Nenhuma anotação em ${semNotas.map(t => `#${t}`).join(' ')}. Veja as tags com /notes`);
+            await msg.reply(t('notes.alert.noNotesInTags', { tags: semNotas.map(x => `#${x}`).join(' ') }));
             return;
         }
         alvos = todas.filter(n => tags.includes(n.tag));
     } else {
         const nota = await dbGet('SELECT * FROM notes WHERE id = ?', [Number(m[1])]);
         if (!nota) {
-            await msg.reply(`❌ ID ${m[1]} não existe. Veja a lista com /notes -l`);
+            await msg.reply(t('notes.idNotFound', { id: m[1] }));
             return;
         }
         alvos = [nota];
@@ -427,9 +434,9 @@ async function alertar(msg, resto) {
 
     const onde = `⏰ ${fmtQuando(quando.ms)} → ${ondeDoAviso(destinos)}`;
     await msg.reply(alvos.length === 1 && !porTag
-        ? `🔔 *Alerta criado* na anotação #${alvos[0].id}\n${resumirTexto(alvos[0].text, 80)}\n${onde}`
-        : `🔔 *Alerta criado* em ${plural(alvos.length, 'anotação', 'anotações')} de ` +
-          `${tags.map(t => `#${t}`).join(' ')} (${alvos.map(n => `#${n.id}`).join(', ')})\n${onde}`,
+        ? t('notes.alert.createdOne', { id: alvos[0].id, text: resumirTexto(alvos[0].text, 80), where: onde })
+        : t('notes.alert.createdMany', { notes: contar('notes.countNotes', alvos.length), tags: tags.map(x => `#${x}`).join(' '),
+            ids: alvos.map(n => `#${n.id}`).join(', '), where: onde }),
     undefined, SEM_PREVIA);
 }
 
@@ -478,7 +485,7 @@ function agruparPorTag(notas, descricoes = new Map(), { plano = true, limpo = fa
         const desc = descricoes.get(k);
         if (soSemTag && !limpo) return itens;
         const resumo = limpo || compacto ? resumoDasNotas(doGrupo) : '';
-        return `🏷️ ${k ? (limpo || compacto ? k : `#${k}`) : SEM_TAG} (${doGrupo.length})${resumo}` +
+        return `🏷️ ${k ? (limpo || compacto ? k : `#${k}`) : semTag()} (${doGrupo.length})${resumo}` +
             `${desc ? `\n${limpo || compacto ? '👉 ' : ''}${desc}` : ''}\n\n${itens}`;
     });
 }
@@ -489,14 +496,6 @@ async function destinosDoEnvio(msg, destinosTexto, comDestino) {
     return resolverDestinos(msg, destinosTexto, { aceitaEmail: true });
 }
 
-const DICAS = '\n\n💡 *Dicas*\n' +
-    '/notes #tag <texto> anota\n' +
-    '/notes -v <id...|#tag...> mostra com a imagem\n' +
-    '/notes -r <id...|#tag...|all> remove\n' +
-    '-alerta <quando> avisa.';
-
-const DICAS_COMPACTAS = '\n\n💡 _🖼️ mídia · ⏰ alerta · 🔗 link_\n💡 _-v <nº> abre a nota inteira_\n' +
-    '💡 _sem o -c, a lista completa_';
 
 // Responde no chat ou, com -to, manda nos destinos (e responde que mandou).
 // `texto` pode ser uma lista: cada item vai numa mensagem, e a dica só depois do último
@@ -511,9 +510,9 @@ async function entregarTexto(msg, destinos, texto, assunto, dica = '', semBloco 
     }
     try {
         for (const parte of partes) await enviarAosDestinos(destinos, parte, { assunto, opcoes: SEM_PREVIA });
-        await msg.reply(`📝 Anotações enviadas em ${descreverDestinos(destinos)}.`);
+        await msg.reply(t('notes.sentTo', { where: descreverDestinos(destinos) }));
     } catch (err) {
-        await msg.reply(`❌ Não consegui enviar as anotações: ${err.message}`);
+        await msg.reply(t('notes.sendFail', { error: err.message }));
     }
 }
 
@@ -544,7 +543,7 @@ async function listar(msg, filtro = '', comBusca = false, compacto = false) {
     if (comBusca) {
         ({ tags, busca } = lerBusca(resto));
         if (!busca) {
-            await msg.reply('❌ Use: /notes -search [#tag...] <texto|/regex/flags> [-to <destino>]...');
+            await msg.reply(t('notes.list.searchUsage'));
             return;
         }
         try {
@@ -554,7 +553,7 @@ async function listar(msg, filtro = '', comBusca = false, compacto = false) {
             return;
         }
     } else if (!tags) {
-        await msg.reply('❌ Use: /notes -l [#tag...] [-to <destino>]...');
+        await msg.reply(t('notes.list.usage'));
         return;
     }
 
@@ -566,13 +565,16 @@ async function listar(msg, filtro = '', comBusca = false, compacto = false) {
     tags = resolverTags(tags, todas);
     const notas = todas.filter(n => (!tags.length || tags.includes(n.tag)) &&
         (!testar || testar(n.text) || (n.tag && testar(`#${n.tag}`))));
-    const rotulo = tags.length ? ` ${tags.map(t => `#${t}`).join(' ')}` : '';
+    const rotulo = tags.length ? ` ${tags.map(x => `#${x}`).join(' ')}` : '';
     const achado = busca ? ` 🔎 ${resumirTexto(busca, 40)}` : '';
 
     if (!notas.length) {
         await msg.reply(tags.length || busca
-            ? `📝 Nenhuma anotação${rotulo ? ` em${rotulo}` : ''}${busca ? ` com 🔎 ${resumirTexto(busca, 40)}` : ''}.`
-            : '📝 Nenhuma anotação.\n💡 _Anote com /notes #tag <texto>_', undefined, SEM_PREVIA);
+            ? t('notes.list.none', {
+                inTags: rotulo ? t('notes.inTags', { tags: rotulo }) : '',
+                withSearch: busca ? t('notes.withSearch', { search: resumirTexto(busca, 40) }) : ''
+            })
+            : `${t('notes.none')}\n${t('notes.addHint')}`, undefined, SEM_PREVIA);
         return;
     }
 
@@ -580,42 +582,43 @@ async function listar(msg, filtro = '', comBusca = false, compacto = false) {
     const limpa = tags.length === 1 || compacto;
     const partes = agruparPorTag(notas, await descricoesDasTags(),
         { plano: !limpa, limpo: tags.length === 1, compacto });
-    partes[0] = limpa ? `📝 *ANOTAÇÕES*${achado}${tags.length === 1 ? '' : ` (${notas.length})`}\n\n${partes[0]}`
-        : `📝 ANOTAÇÕES${rotulo}${achado} (${notas.length})\n\n${partes[0]}`;
-    await entregarTexto(msg, destinos, partes, `📝 Anotações${rotulo}${achado}`, compacto ? DICAS_COMPACTAS : DICAS, limpa);
+    partes[0] = limpa ? `${t('notes.list.titleClean', { found: achado, count: tags.length === 1 ? '' : ` (${notas.length})` })}\n\n${partes[0]}`
+        : `${t('notes.list.titleFull', { tags: rotulo, found: achado, total: notas.length })}\n\n${partes[0]}`;
+    await entregarTexto(msg, destinos, partes, t('notes.subject.list', { tags: rotulo, found: achado }),
+        t(compacto ? 'notes.tipsCompact' : 'notes.tips'), limpa);
 }
 
 // -move: renomeia a tag em todas as anotações (se a nova já existe, elas se juntam)
 async function moverTag(msg, texto) {
     const m = texto.trim().match(/^#([^\s#]+)\s+#([^\s#]+)$/);
     if (!m) {
-        await msg.reply('❌ Use: /notes -move #tag #novatag');
+        await msg.reply(t('notes.move.usage'));
         return;
     }
 
     const [de, para] = [lerTag(m[1]), lerTag(m[2])];
     if (de === para) {
-        await msg.reply('❌ A tag nova é igual à atual.');
+        await msg.reply(t('notes.move.same'));
         return;
     }
 
     const r = await dbRun('UPDATE notes SET tag = ? WHERE tag = ?', [para, de]);
     if (!r.changes) {
-        await msg.reply(`❌ #${de} não existe. Veja as tags com /notes`);
+        await msg.reply(t('notes.move.notFound', { tag: de }));
         return;
     }
     // A descrição vai junto (se a nova já tinha uma, fica a dela)
     await dbRun('INSERT OR IGNORE INTO note_tags (tag, description) SELECT ?, description FROM note_tags WHERE tag = ?', [para, de]);
     await dbRun('DELETE FROM note_tags WHERE tag = ?', [de]);
 
-    await msg.reply(`🏷️ #${de} → #${para} · ${plural(r.changes, 'anotação', 'anotações')}`);
+    await msg.reply(contar('notes.move.done', r.changes, { from: de, to: para }));
 }
 
 // -desc: descrição da tag. "-d #tag texto" grava, "-d #tag" mostra, "-d #tag -rm" apaga
 async function descreverTag(msg, texto) {
     const m = texto.trim().match(/^#([^\s#]+)(?:\s+([\s\S]+))?$/);
     if (!m) {
-        await msg.reply('❌ Use: /notes -desc #tag [<descrição>] (ou /notes -desc #tag -rm para apagar)');
+        await msg.reply(t('notes.desc.usage'));
         return;
     }
 
@@ -627,31 +630,32 @@ async function descreverTag(msg, texto) {
     const atual = (await dbGet('SELECT description FROM note_tags WHERE tag = ?', [tag]))?.description;
 
     if (!desc) {
-        await msg.reply(atual ? `🏷️ *#${tag}*\n${atual}` : `🏷️ #${tag} não tem descrição.\n💡 _Crie com /notes -desc #${tag} <texto>_`,
+        await msg.reply(atual ? t('notes.desc.shown', { tag, desc: atual })
+            : `${t('notes.desc.none', { tag })}\n${t('notes.desc.createHint', { tag })}`,
             undefined, SEM_PREVIA);
         return;
     }
 
     if (/^-rm$/i.test(desc)) {
         if (!atual) {
-            await msg.reply(`❌ #${tag} não tem descrição.`);
+            await msg.reply(t('notes.desc.noneToRemove', { tag }));
             return;
         }
         await dbRun('DELETE FROM note_tags WHERE tag = ?', [tag]);
-        await msg.reply(`🗑️ Descrição da #${tag} apagada.`);
+        await msg.reply(t('notes.desc.removed', { tag }));
         return;
     }
 
     await dbRun('INSERT INTO note_tags (tag, description) VALUES (?, ?) ON CONFLICT(tag) DO UPDATE SET description = excluded.description',
         [tag, desc]);
-    await msg.reply(`🏷️ *#${tag}* · ${atual ? 'descrição trocada' : 'descrição salva'}`, undefined, SEM_PREVIA);
+    await msg.reply(t(atual ? 'notes.desc.replaced' : 'notes.desc.saved', { tag }), undefined, SEM_PREVIA);
 }
 
 // -view: manda cada anotação (a imagem com o texto na legenda; sem imagem, só o texto)
 async function verNotas(msg, filtro) {
     const { destinos: destinosTexto, informado: comDestino, resto } = extrairDestinos(filtro);
     if (!resto.trim()) {
-        await msg.reply('❌ Use: /notes -view <id...|#tag...> [-to <destino>]...');
+        await msg.reply(t('notes.view.usage'));
         return;
     }
 
@@ -663,7 +667,7 @@ async function verNotas(msg, filtro) {
     const faltando = [...ids.filter(i => !/^\d+$/.test(i) || !todas.some(n => n.id === Number(i))),
         ...pedidas.filter(t => !resolverTags([t], todas).some(x => todas.some(n => n.tag === x))).map(t => `#${t}`)];
     if (faltando.length) {
-        await msg.reply(`❌ ${faltando.join(', ')} não ${faltando.length > 1 ? 'existem' : 'existe'}. Veja a lista com /notes -l`);
+        await msg.reply(t(faltando.length > 1 ? 'notes.view.missingMany' : 'notes.view.missingOne', { list: faltando.join(', ') }));
         return;
     }
 
@@ -687,7 +691,7 @@ async function verNotas(msg, filtro) {
                 m.filename = nomeOriginal(n.media_path);
                 return m;
             }).catch(() => null);
-            if (!media) falhas.push(`#${n.id}: arquivo da mídia não encontrado`);
+            if (!media) falhas.push(t('notes.view.fileNotFound', { id: n.id }));
         }
 
         // Áudio não tem legenda: o texto vai em outra mensagem
@@ -708,16 +712,16 @@ async function verNotas(msg, filtro) {
         const emails = [...new Set(destinos.filter(d => d.email).flatMap(d => d.email.split(/\s*,\s*/)))];
         if (emails.length) {
             await enviarEmail({
-                para: emails, assunto: `📝 Anotação #${n.id}`,
+                para: emails, assunto: t('notes.subject.note', { id: n.id }),
                 texto: [semMarcas(cabecalho(n)), n.text && formatarTexto(n.text, true)].filter(Boolean).join('\n'),
                 anexos: media ? [{ filename: nomeOriginal(n.media_path), contentType: n.media_mime,
                     ...(comBorda ? { content: comBorda } : { path: n.media_path }) }] : []
-            }).catch(err => falhas.push(`e-mail: ${err.message}`));
+            }).catch(err => falhas.push(t('notes.failEmail', { error: err.message })));
         }
     }
 
     if (destinos && alvos.length && !falhas.length) {
-        await msg.reply(`📝 ${plural(alvos.length, 'anotação enviada', 'anotações enviadas')} em ${descreverDestinos(destinos)}.`);
+        await msg.reply(contar('notes.view.sent', alvos.length, { where: descreverDestinos(destinos) }));
     }
     if (falhas.length) await msg.reply(`❌ ${falhas.join('; ')}`);
 }
@@ -726,7 +730,7 @@ async function verNotas(msg, filtro) {
 async function listarTags(msg) {
     const notas = await listarNotas();
     if (!notas.length) {
-        await msg.reply('📝 Nenhuma anotação.\n💡 _Anote com /notes #tag <texto>_');
+        await msg.reply(`${t('notes.none')}\n${t('notes.addHint')}`);
         return;
     }
 
@@ -734,11 +738,11 @@ async function listarTags(msg) {
     for (const n of notas) contagem.set(n.tag ?? '', (contagem.get(n.tag ?? '') ?? 0) + 1);
     const chaves = [...contagem.keys()].sort((a, b) => (a === '') - (b === '') || a.localeCompare(b));
     const descricoes = await descricoesDasTags();
-    const linhas = chaves.map(k => `${k ? `#${k}` : SEM_TAG}: ${contagem.get(k)}${descricoes.has(k) ? ` · ${descricoes.get(k)}` : ''}`);
+    const linhas = chaves.map(k => `${k ? `#${k}` : semTag()}: ${contagem.get(k)}${descricoes.has(k) ? ` · ${descricoes.get(k)}` : ''}`);
 
     await entregarTexto(msg, undefined,
-        `📝 Anotações (${notas.length})\n\n🏷️ TAGS (${chaves.filter(Boolean).length})\n\n${linhas.join('\n')}`,
-        '🏷️ Tags das anotações', '\n\n💡 _/notes #tag lista as anotações de uma tag_');
+        t('notes.tags.title', { total: notas.length, tags: chaves.filter(Boolean).length, lines: linhas.join('\n') }),
+        t('notes.subject.tags'), t('notes.tipsTags'));
 }
 
 // 20261027_1530, na hora de Brasília (a mesma do formatarData)
@@ -785,7 +789,7 @@ async function exportar(msg, filtro = '') {
     const { destinos: destinosTexto, informado: comDestino, resto } = extrairDestinos(filtro);
     let tags = resto.trim() ? soTags(resto) : [];
     if (!tags) {
-        await msg.reply('❌ Use: /notes -export [#tag...] [-to <destino>]...');
+        await msg.reply(t('notes.export.usage'));
         return;
     }
 
@@ -796,19 +800,20 @@ async function exportar(msg, filtro = '') {
     tags = resolverTags(tags, todas);
     const notas = tags.length ? todas.filter(n => tags.includes(n.tag)) : todas;
     if (!notas.length) {
-        await msg.reply(tags.length ? `📝 Nenhuma anotação em ${tags.map(t => `#${t}`).join(' ')}.` : '📝 Nenhuma anotação.');
+        await msg.reply(tags.length ? t('notes.list.none', { inTags: t('notes.inTags', { tags: ` ${tags.map(x => `#${x}`).join(' ')}` }), withSearch: '' })
+            : t('notes.none'));
         return;
     }
 
     const agora = Date.now();
-    const rotulo = tags.length ? ` ${tags.map(t => `#${t}`).join(' ')}` : '';
+    const rotulo = tags.length ? ` ${tags.map(x => `#${x}`).join(' ')}` : '';
     const grupos = new Map();
     for (const n of notas) grupos.set(n.tag ?? '', [...(grupos.get(n.tag ?? '') ?? []), n]);
     const chaves = [...grupos.keys()].sort((a, b) => (a === '') - (b === '') || a.localeCompare(b));
 
     const blocos = [{
         tipo: 'texto', icone: 'nota',
-        texto: `${plural(notas.length, 'anotação', 'anotações')}${rotulo ? ` em${rotulo}` : ''}`
+        texto: `${contar('notes.countNotes', notas.length)}${rotulo ? t('notes.inTags', { tags: rotulo }) : ''}`
     }];
 
     const descricoes = await descricoesDasTags();
@@ -817,18 +822,19 @@ async function exportar(msg, filtro = '') {
         const itens = grupos.get(k);
         if (!(chaves.length === 1 && k === '')) {
             // "#tag (n)" com o resumo em texto (o PDF não tem emoji) e a descrição da tag embaixo
-            const resumo = [[itens.filter(n => n.media_path).length, 'com mídia'], [itens.filter(n => n.alert_at).length, 'com alerta'],
-                [itens.filter(n => partesDoTexto(n.text).links.length).length, 'com link']]
+            const resumo = [[itens.filter(n => n.media_path).length, t('notes.pdf.withMedia')], [itens.filter(n => n.alert_at).length, t('notes.pdf.withAlert')],
+                [itens.filter(n => partesDoTexto(n.text).links.length).length, t('notes.pdf.withLink')]]
                 .filter(([qtd]) => qtd).map(([qtd, rotuloItem]) => `${qtd} ${rotuloItem}`).join(', ');
-            blocos.push({ tipo: 'titulo', icone: 'tag', texto: `${k ? `#${k}` : SEM_TAG} (${itens.length})${resumo ? ` · ${resumo}` : ''}` });
+            blocos.push({ tipo: 'titulo', icone: 'tag', texto: `${k ? `#${k}` : semTag()} (${itens.length})${resumo ? ` · ${resumo}` : ''}` });
             if (descricoes.get(k)) blocos.push({ tipo: 'texto', texto: descricoes.get(k) });
             blocos.push({ tipo: 'espaco', altura: 6 });
         }
         for (const [pos, n] of itens.entries()) {
             const imagem = n.media_path && ehImagem(n.media_mime) ? await imagemParaPdf(n.media_path) : null;
             const alerta = (n.media_path && !imagem
-                ? (ehImagem(n.media_mime) ? ' · imagem não incluída' : ` · arquivo não incluído (${nomeOriginal(n.media_path)})`) : '') + (n.alert_at ? ` · alerta ${fmtQuando(n.alert_at)}` : '');
-            const { titulo, corpo, links } = partesDoTexto(n.text.replace(MARCA_RESPOSTA, '[resp.]'));
+                ? (ehImagem(n.media_mime) ? t('notes.pdf.imageNotIncluded') : t('notes.pdf.fileNotIncluded', { name: nomeOriginal(n.media_path) })) : '') +
+                (n.alert_at ? t('notes.pdf.alert', { when: fmtQuando(n.alert_at) }) : '');
+            const { titulo, corpo, links } = partesDoTexto(n.text.replace(MARCA_RESPOSTA, t('notes.pdf.replyMark')));
             blocos.push({ tipo: titulo ? 'negrito' : 'texto', texto: `${pos + 1}.  ${titulo}`, recuo: 0 });
             // O título vem primeiro e a imagem depois dele, com uma quebra de linha antes
             if (imagem) {
@@ -851,16 +857,16 @@ async function exportar(msg, filtro = '') {
     }
 
     const pdf = gerarPdf({
-        titulo: `ZapBot · Anotações${rotulo}`,
+        titulo: t('notes.pdf.title', { tags: rotulo }),
         direita: formatarData(agora),
-        rodape: `ZapBot ${packageJson.version} · ${os.hostname()} · gerado em ${formatarData(agora)}`,
+        rodape: t('notes.pdf.footer', { version: packageJson.version, host: os.hostname(), date: formatarData(agora) }),
         blocos
     });
     const sufixo = tags.length ? `tag-${tags.map(t => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
         .replace(/[^a-z0-9_-]/gi, '_')).join('-')}_` : '';
     const nome = `ZapBot_notes_${sufixo}${carimboDeArquivo(agora)}.pdf`;
 
-    const caption = `📝 *ANOTAÇÕES${rotulo}* (${notas.length}) em PDF`;
+    const caption = t('notes.export.caption', { tags: rotulo, total: notas.length });
     const media = new MessageMedia('application/pdf', pdf.toString('base64'), nome);
 
     if (!destinos) {
@@ -875,10 +881,10 @@ async function exportar(msg, filtro = '') {
 
     if (emails.length) {
         await enviarEmail({
-            para: emails, assunto: `📝 Anotações${rotulo}`, texto: caption.replace(/\*/g, ''),
+            para: emails, assunto: t('notes.subject.export', { tags: rotulo }), texto: caption.replace(/\*/g, ''),
             anexos: [{ filename: nome, content: pdf, contentType: 'application/pdf' }]
         }).then(() => enviados.push(...destinos.filter(d => d.email)))
-            .catch(err => falhas.push(`e-mail: ${err.message}`));
+            .catch(err => falhas.push(t('notes.failEmail', { error: err.message })));
     }
     for (const d of destinos.filter(x => x.id)) {
         await client.sendMessage(d.id, media, { sendMediaAsDocument: true, caption })
@@ -886,8 +892,8 @@ async function exportar(msg, filtro = '') {
             .catch(err => falhas.push(`${descreverDestinos([d])}: ${err.message}`));
     }
 
-    if (enviados.length) await msg.reply(`📝 PDF das anotações enviado em ${descreverDestinos(enviados)}.`);
-    if (falhas.length) await msg.reply(`❌ Não consegui enviar o PDF: ${falhas.join('; ')}`);
+    if (enviados.length) await msg.reply(t('notes.export.sent', { where: descreverDestinos(enviados) }));
+    if (falhas.length) await msg.reply(t('notes.export.fail', { list: falhas.join('; ') }));
 }
 
 async function cmdNote({ msg, args, quotedMsg }) {
@@ -917,14 +923,14 @@ async function cmdNote({ msg, args, quotedMsg }) {
     if (tagsDoTexto) return (quotedMsg || msg.hasMedia) && tagsDoTexto.length === 1 ? adicionar(msg, texto, quotedMsg) : listar(msg, texto);
     if (nome === '-add' || nome === '-a') return adicionar(msg, resto, quotedMsg);
     if (comDestino && (nome === '-rm' || nome === '-rm' || nome === '-r')) {
-        return msg.reply('❌ O -to não vale ao remover. Ele serve para -list, #tag e -export (e, no -add, para o -alerta).');
+        return msg.reply(t('notes.rm.noTo'));
     }
     if (nome === '-rm' || nome === '-rm' || nome === '-r') return removerNotas(msg, palavras.join(' '), false);
     if (nome === '-alerta') return alertar(msg, resto);
 
     // Opção que não existe: erro. Sem "-" na frente, o texto todo é uma anotação nova (o mesmo que -add)
     if (nome.startsWith('-')) {
-        return msg.reply('❌ Use: /notes [-list] [#tag] [-to ...] | -search <texto|/regex/> | -view <id...|#tag...> | -move #tag #nova | -desc #tag <texto> | -update <id> <texto> | -export [#tag] [-to ...] | #tag <texto> [-alerta <quando>] | -rm <id...|#tag...|all> | -alerta ...');
+        return msg.reply(t('notes.usage'));
     }
 
     return adicionar(msg, texto);
@@ -950,8 +956,8 @@ async function verificarNotas() {
 
             const destinos = destinosDaNota(n);
             await enviarAosDestinos(destinos,
-                `🔔 *ANOTAÇÃO #${n.id}*\n\n${n.text}\n\n📅 Anotada em ${formatarData(n.created_at)}`,
-                { assunto: `🔔 Anotação #${n.id}: ${resumirTexto(n.text, 60)}`, opcoes: SEM_PREVIA }
+                t('notes.alert.fired', { id: n.id, text: n.text, date: formatarData(n.created_at) }),
+                { assunto: t('notes.subject.alert', { id: n.id, text: resumirTexto(n.text, 60) }), opcoes: SEM_PREVIA }
             ).catch(err => printError('/notes -alerta: falha ao avisar:', err.message));
 
             printInfo(`/notes -alerta disparado: #${n.id}` +

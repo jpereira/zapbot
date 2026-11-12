@@ -11,6 +11,7 @@ const { commandsByPrefix, findCommand } = require('./comandos/base');
 const { botConfig } = require('./botConfig');
 const { roleMaisRestrito } = require('./roles');
 const { acharComando, comAlvos, comandosNoTexto, montarTexto } = require('./comandosNoTexto');
+const { t } = require('./i18n');
 
 const ehAliasDeTexto = (salvo) => !salvo.startsWith('/');
 
@@ -130,14 +131,10 @@ async function listarAliases(msg, pode = () => true) {
         }));
         if (alvos.length && alvos.every(alvo => alvo && pode(alvo))) aliases.push(a);
     }
-    await msg.reply(aliases.length ? `🔗 *ALIASES* (${aliases.length})\n\n` + aliases.map(blocoDoAlias).join('\n\n') + DICAS_ALIAS
-        : '🔗 Nenhum alias disponível.\n\n💡 _Crie com /alias <nome> </comando argumentos>_', undefined, { linkPreview: false });
+    await msg.reply(aliases.length
+        ? `${t('adm.alias.list', { n: aliases.length })}\n\n` + aliases.map(blocoDoAlias).join('\n\n') + t('adm.alias.tips')
+        : t('adm.alias.none'), undefined, { linkPreview: false });
 }
-
-const DICAS_ALIAS = '\n\n💡 *Dicas*\n' +
-    '/alias <nome> </comando args> cria\n' +
-    '/alias -rm <nome...> remove\n' +
-    '🔇 = sem o cabeçalho ao executar';
 
 // O nome em negrito (🔇 se for quiet), a descrição e o destino; o texto com {/comando} segue em várias linhas
 function blocoDoAlias(a) {

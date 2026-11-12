@@ -8,6 +8,7 @@ const { tratarAlertaDePreco } = require('../alertasPreco');
 const { getCommandSyntax } = require('./base');
 const { fmtPrecoCrypto } = require('../cotacoes');
 const { dbPronto } = require('../db');
+const { t } = require('../i18n');
 const { printError } = require('../log');
 const { CRYPTO_SUPPORTED } = require('../moedas');
 const { getSetting, setSetting } = require('../settings');
@@ -29,7 +30,7 @@ async function cmdCrypto(ctx) {
             .map(([sym, icon]) => `${ativas.includes(sym) ? '*' : ' '} ${icon} ${sym}`)
             .join('\n');
 
-        await msg.reply('🪙 *MOEDAS SUPORTADAS*\n\n```\n' + lista + '\n```\n_* = ativada_');
+        await msg.reply(t('crypto.supported', { list: lista }));
         return;
     }
 
@@ -45,24 +46,24 @@ async function cmdCrypto(ctx) {
 
         if (adicionar) {
             if (!CRYPTO_SUPPORTED[sym]) {
-                await msg.reply(`❌ Moeda não suportada: ${sym}\n💡 _Veja as suportadas com /crypto -l_`);
+                await msg.reply(t('crypto.unsupported', { sym }));
                 return;
             }
             if (ativas.includes(sym)) {
-                await msg.reply(`ℹ️ ${sym} já está ativada.`);
+                await msg.reply(t('crypto.alreadyEnabled', { sym }));
                 return;
             }
             await setSetting('crypto.coins', [...ativas, sym]);
-            await msg.reply(`✅ ${CRYPTO_SUPPORTED[sym]} ${sym} adicionada.`);
+            await msg.reply(t('crypto.added', { icon: CRYPTO_SUPPORTED[sym], sym }));
             return;
         }
 
         if (!ativas.includes(sym)) {
-            await msg.reply(`ℹ️ ${sym} não está ativada.`);
+            await msg.reply(t('crypto.notEnabled', { sym }));
             return;
         }
         await setSetting('crypto.coins', ativas.filter(c => c !== sym));
-        await msg.reply(`🗑️ ${sym} removida.`);
+        await msg.reply(t('crypto.removed', { sym }));
         return;
     }
 
@@ -73,13 +74,15 @@ async function cmdCrypto(ctx) {
     const invalidas = pedidas.filter(sym => !CRYPTO_SUPPORTED[sym]);
 
     if (invalidas.length) {
-        await msg.reply(`❌ ${invalidas.length === 1 ? 'Moeda não suportada' : 'Moedas não suportadas'}: ${invalidas.join(', ')}\n` +
-            `💡 _Suportadas: ${Object.keys(CRYPTO_SUPPORTED).join(', ')}_`);
+        await msg.reply(t(invalidas.length === 1 ? 'crypto.unsupportedOne' : 'crypto.unsupportedMany', {
+            list: invalidas.join(', '),
+            supported: Object.keys(CRYPTO_SUPPORTED).join(', ')
+        }));
         return;
     }
 
     if (!pedidas.length) {
-        await msg.reply('ℹ️ Nenhuma moeda ativada.\n💡 _Adicione com /crypto -a <TOKEN>_');
+        await msg.reply(t('crypto.noneEnabled'));
         return;
     }
 
@@ -119,7 +122,7 @@ async function cmdCrypto(ctx) {
 
         const topGainer = [...coins].sort((a, b) => b.change - a.change)[0];
 
-        let text = '🚀 *MERCADO CRIPTO*\n```\n';
+        let text = t('crypto.title') + '\n```\n';
 
         for (const c of coins) {
             const priceLine = `💰 $${fmtPrice(c.price)}`.padEnd(14);
@@ -133,14 +136,14 @@ async function cmdCrypto(ctx) {
         }
 
         text += '```';
-        text += `🔥 *Top:* ${topGainer.icon} ${topGainer.symbol}\n`;
+        text += t('crypto.top', { icon: topGainer.icon, symbol: topGainer.symbol }) + '\n';
         text += '🟡 Binance\n';
         text += '⚡ Live Market Data';
 
         await msg.reply(text);
     } catch (error) {
         printError('/crypto:', error.message);
-        await msg.reply('❌ Não consegui consultar as cotações de criptomoedas. Tente de novo.');
+        await msg.reply(t('crypto.failed'));
     }
 }
 

@@ -1,4 +1,4 @@
-# `/batch` (`/lote`) · admin
+# `/batch` · admin
 
 Executa vários comandos de uma mensagem só, um depois do outro, e responde um resumo. Serve para
 mandar de uma vez o que você mandaria em vários blocos (ex.: várias anotações pelo seu

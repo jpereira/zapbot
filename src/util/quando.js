@@ -3,6 +3,7 @@
  */
 
 const { semAcentos } = require('./formatar');
+const { t } = require('../i18n');
 
 const FUSO = 'America/Sao_Paulo';
 const HORA_PADRAO = { h: 9, m: 0 }; // "amanhã", "sexta", "25/12" sem hora
@@ -14,7 +15,9 @@ const DIAS_DA_SEMANA = {
     qua: 3, quarta: 3, 'quarta-feira': 3,
     qui: 4, quinta: 4, 'quinta-feira': 4,
     sex: 5, sexta: 5, 'sexta-feira': 5,
-    sab: 6, sabado: 6
+    sab: 6, sabado: 6,
+    sun: 0, sunday: 0, mon: 1, monday: 1, tue: 2, tuesday: 2, wed: 3, wednesday: 3,
+    thu: 4, thursday: 4, fri: 5, friday: 5, sat: 6, saturday: 6
 };
 
 const formatador = new Intl.DateTimeFormat('en-US', {
@@ -78,7 +81,7 @@ function lerQuando(palavras, agora = Date.now()) {
         const duracao = lerDuracao(primeira.slice(1));
         return duracao ? { ms: agora + duracao, usadas: 1 } : null;
     }
-    if (primeira === 'em' || primeira === 'daqui') {
+    if (primeira === 'em' || primeira === 'daqui' || primeira === 'in') {
         const comA = primeira === 'daqui' && segunda === 'a';
         const duracao = lerDuracao(comA ? terceira : segunda);
         if (duracao) return { ms: agora + duracao, usadas: comA ? 3 : 2 };
@@ -93,7 +96,7 @@ function lerQuando(palavras, agora = Date.now()) {
     const comHora = (h) => ({ hora: h ?? HORA_PADRAO, usadas: h ? 2 : 1 });
 
     // Só a hora ("18:30", "18h30" ou "às 18h"): hoje, ou amanhã se já passou
-    const comAs = primeira === 'as' && horaSeguinte;
+    const comAs = (primeira === 'as' || primeira === 'at') && horaSeguinte;
     const soHora = comAs ? horaSeguinte : lerHora(primeira);
     if (soHora) {
         let ms = instanteEmBrasilia(hoje.ano, hoje.mes, hoje.dia, soHora.h, soHora.m);
@@ -101,9 +104,9 @@ function lerQuando(palavras, agora = Date.now()) {
         return { ms, usadas: comAs ? 2 : 1 };
     }
 
-    if (primeira === 'hoje' || primeira === 'amanha') {
+    if (primeira === 'hoje' || primeira === 'amanha' || primeira === 'today' || primeira === 'tomorrow') {
         const { hora, usadas } = comHora(horaSeguinte);
-        const dia = hoje.dia + (primeira === 'amanha' ? 1 : 0);
+        const dia = hoje.dia + (primeira === 'amanha' || primeira === 'tomorrow' ? 1 : 0);
         return { ms: instanteEmBrasilia(hoje.ano, hoje.mes, dia, hora.h, hora.m), usadas };
     }
 
@@ -137,14 +140,13 @@ function lerQuando(palavras, agora = Date.now()) {
     return null;
 }
 
-const SEMANA_PT = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
 const dois = (n) => String(n).padStart(2, '0');
 
 // "qua 01/10 18:30" (com o ano, se não for o atual)
 function fmtQuando(ms, agora = Date.now()) {
     const p = partesEmBrasilia(ms);
     const ano = p.ano !== partesEmBrasilia(agora).ano ? `/${p.ano}` : '';
-    return `${SEMANA_PT[p.semana]} ${dois(p.dia)}/${dois(p.mes)}${ano} ${dois(p.h)}:${dois(p.m)}`;
+    return `${t(`quando.dia${p.semana}`)} ${dois(p.dia)}/${dois(p.mes)}${ano} ${dois(p.h)}:${dois(p.m)}`;
 }
 
 /*
@@ -152,9 +154,9 @@ function fmtQuando(ms, agora = Date.now()) {
  * (diário, semanal) e o dia do mês (mensal; num mês sem o dia, o último dia).
  */
 const REPETICOES = {
-    diario: { rotulo: 'todo dia', dias: 1 },
-    semanal: { rotulo: 'toda semana', dias: 7 },
-    mensal: { rotulo: 'todo mês', meses: 1 }
+    diario: { get rotulo() { return t('quando.todoDia'); }, dias: 1 },
+    semanal: { get rotulo() { return t('quando.todaSemana'); }, dias: 7 },
+    mensal: { get rotulo() { return t('quando.todoMes'); }, meses: 1 }
 };
 
 function proximaRepeticao(ms, repetir, diaOriginal) {

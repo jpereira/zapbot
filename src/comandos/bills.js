@@ -3,6 +3,7 @@
  */
 
 const { client } = require('../cliente');
+const { t } = require('../i18n');
 
 // Sorteia `n` participantes diferentes (fora o próprio bot)
 function sortearParticipantes(participantes, n) {
@@ -31,22 +32,19 @@ async function cmdBills({ msg }) {
     const chat = await msg.getChat().catch(() => null);
 
     if (!chat?.isGroup) {
-        await msg.reply('⚠️ O comando /bills só pode ser chamado dentro de grupos!');
+        await msg.reply(t('bills.groupOnly'));
         return;
     }
 
     const sorteados = sortearParticipantes(chat.participants, 2);
 
     if (sorteados.length < 2) {
-        await msg.reply('Membros insuficientes no grupo.');
+        await msg.reply(t('bills.notEnough'));
         return;
     }
 
     await enviarSorteio(msg, chat, sorteados, ([a, b]) =>
-        `🥳 Parabéns ${a} e ${b} 🎉\n` +
-        'Vocês foram sorteados para pagar um boleto! 💸✨\n' +
-        'Anote o número: 📝 001 9 337370000000100 05009 401448 16060680935031\n' +
-        'Boa sorte pagando! 😉💰'
+        t('bills.winners', { a, b })
     );
 }
 

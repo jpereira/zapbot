@@ -4,14 +4,15 @@ const { resolveLidToPhone } = require('../contatos');
 const { getSetting } = require('../settings');
 const { estado } = require('../estado');
 const { semAcentos } = require('../util/formatar');
+const { idioma, t } = require('../i18n');
 const {
     ativarAlertaMonitor, cadastrarMonitorado, historicoMonitorado, listarMonitorados, removerMonitorado,
     removerTodosMonitorados
 } = require('../monitor');
 
-const RISCO = '⚠️ Consultas frequentes e mais contatos podem contribuir para bloqueio pelo WhatsApp. Nenhum intervalo garante segurança.';
-const quando = at => at ? new Date(at).toLocaleString('pt-BR',
-    { timeZone: 'America/Sao_Paulo' }) : 'ainda não verificado';
+const risco = () => t('monitor.risk');
+const quando = at => at ? new Date(at).toLocaleString(idioma() === 'pt_BR' ? 'pt-BR' : 'en-US',
+    { timeZone: 'America/Sao_Paulo' }) : t('monitor.notChecked');
 const semDelimitadores = texto => String(texto ?? '').trim()
     .replace(/^(?:\/([^/]*)\/|"([^"]*)"|'([^']*)')$/, '$1$2$3');
 
@@ -28,7 +29,7 @@ async function buscarMonitorado(msg, valor) {
     if (/^#?\d{1,9}$/.test(valor)) {
         const id = Number(valor.replace(/^#/, ''));
         const contato = contatos.find(c => c.id === id);
-        if (!contato) await msg.reply(`❌ Contato #${id} não cadastrado. Veja /monitor`);
+        if (!contato) await msg.reply(t('monitor.idNotFound', { id }));
         return contato;
     }
     const pessoa = await resolverPessoa(msg, valor);
@@ -38,7 +39,7 @@ async function buscarMonitorado(msg, valor) {
             ? await resolveLidToPhone(c.contact_id) ?? c.contact_id : c.contact_id;
         if (phone === pessoa.id) return c;
     }
-    await msg.reply(`❌ ${pessoa.nome} não está cadastrado no monitor. Veja /monitor -l`);
+    await msg.reply(t('monitor.notRegistered', { name: pessoa.nome }));
     return null;
 }
 
@@ -66,37 +67,37 @@ async function responderLista(msg, valor = null) {
     const todos = await listarMonitorados();
     const contatos = valor ? filtrarMonitorados(todos, msg, valor) : todos;
     if (valor && !contatos.length) {
-        await msg.reply(`❌ Nenhum contato monitorado encontrado para "${valor}". Veja /monitor -l`);
+        await msg.reply(t('monitor.noneFound', { value: valor }));
         return;
     }
-    const situacao = !getSetting('monitor.enabled') || getSetting('bot.paused') ? 'pausado'
-        : !estado.pronto || estado.reiniciando ? 'aguardando conexão' : 'ativo';
+    const situacao = !getSetting('monitor.enabled') || getSetting('bot.paused') ? t('monitor.state.paused')
+        : !estado.pronto || estado.reiniciando ? t('monitor.state.waiting') : t('monitor.state.active');
     const linhas = [
-        `👀 *MONITOR* · ${situacao}`,
-        `⏱️ Verificação de cada contato a cada ${intervaloMonitor()}, no mínimo.`,
-        `👥 Contatos: ${todos.length}/${getSetting('monitor.max')} · horários de São Paulo`, ''
+        t('monitor.list.title', { state: situacao }),
+        t('monitor.list.interval', { interval: intervaloMonitor() }),
+        t('monitor.list.contacts', { count: todos.length, max: getSetting('monitor.max') }), ''
     ];
-    if (!contatos.length) linhas.push('👀 Nenhum contato cadastrado.',
-        '💡 /monitor -add /Nome do Contato/');
+    if (!contatos.length) linhas.push(t('monitor.list.empty'),
+        t('monitor.list.addHint'));
     for (const c of contatos) {
         linhas.push(`📹 #${c.id} · ${c.contact_name}`,
-            `   ${c.last_status ?? '⏳ aguardando primeira verificação'}`,
-            `   🔎 Verificado: ${quando(c.last_checked_at)}`,
-            `   🕒 Último horário observado: ${c.last_seen ? quando(c.last_seen * 1000) : 'nenhum'}`);
-        linhas.push(`   🚨 Alerta online: ${c.alert_enabled ? 'ativado' : 'desativado'}`);
+            `   ${c.last_status ?? t('monitor.list.waitingFirst')}`,
+            t('monitor.list.checked', { when: quando(c.last_checked_at) }),
+            t('monitor.list.lastSeen', { when: c.last_seen ? quando(c.last_seen * 1000) : t('monitor.list.lastSeenNone') }));
+        linhas.push(t(c.alert_enabled ? 'monitor.list.alertOn' : 'monitor.list.alertOff'));
         if (c.last_error) linhas.push(`   ⚠️ ${c.last_error}`);
         {
             const registros = await historicoMonitorado(c.id);
-            linhas.push(`   📜 Histórico: ${registros.length} horário(s) distinto(s) · limite: ${getSetting('monitor.maxRecords')}`);
+            linhas.push(t('monitor.list.history', { count: registros.length, max: getSetting('monitor.maxRecords') }));
             for (const h of registros) {
-                linhas.push(`   • ${quando(h.last_seen * 1000)} · observado em ${quando(h.observed_at)}`,
-                    '     Origem: presença do WhatsApp · horário não confirmado');
+                linhas.push(t('monitor.list.entry', { seen: quando(h.last_seen * 1000), observed: quando(h.observed_at) }),
+                    t('monitor.list.source'));
             }
-            if (!registros.length) linhas.push('   Nenhum visto por último observado ainda.');
+            if (!registros.length) linhas.push(t('monitor.list.noHistory'));
         }
         linhas.push('');
     }
-    linhas.push(RISCO);
+    linhas.push(risco());
     const texto = linhas.join('\n');
     if (texto.length <= 7000) {
         await msg.reply(texto, undefined, { linkPreview: false });
@@ -104,7 +105,7 @@ async function responderLista(msg, valor = null) {
         const media = new MessageMedia('text/plain', Buffer.from(texto).toString('base64'),
             'monitor-historico.txt');
         await msg.reply(media, undefined, {
-            sendMediaAsDocument: true, caption: `👀 Histórico · a cada ${intervaloMonitor()}`
+            sendMediaAsDocument: true, caption: t('monitor.list.fileCaption', { interval: intervaloMonitor() })
         });
     }
 }
@@ -121,13 +122,13 @@ async function cmdMonitor({ msg, args }) {
     if (alerta) {
         const valor = semDelimitadores(alerta[1]);
         if (!valor) {
-            await msg.reply('❌ Informe um contato cadastrado: /monitor -alerta /Maria/');
+            await msg.reply(t('monitor.alert.usage'));
             return;
         }
         const contato = await buscarMonitorado(msg, valor);
         if (!contato) return;
         await ativarAlertaMonitor(contato.id);
-        await msg.reply(`🚨 Alerta online ativado para "${contato.contact_name}" no privado do dono do bot.`);
+        await msg.reply(t('monitor.alert.enabled', { name: contato.contact_name }));
         return;
     }
     const adicionar = texto.match(/^-(?:add|a)(?:\s+([\s\S]+))?$/);
@@ -136,7 +137,7 @@ async function cmdMonitor({ msg, args }) {
         const valor = semDelimitadores(comAlerta
             ? adicionar[1].replace(/\s+-alerta$/, '') : adicionar[1]);
         if (!valor) {
-            await msg.reply('❌ Informe um contato: /monitor -add /Jorge Pereira/');
+            await msg.reply(t('monitor.add.usage'));
             return;
         }
         const contato = await resolverPessoa(msg, valor);
@@ -145,19 +146,18 @@ async function cmdMonitor({ msg, args }) {
         const cadastrado = r.contato ?? r.existente;
         if (comAlerta && cadastrado) await ativarAlertaMonitor(cadastrado.id);
         if (r.existente) {
-            await msg.reply(`👀 ${r.existente.contact_name} já está cadastrado: #${r.existente.id}.`);
+            await msg.reply(t('monitor.add.exists', { name: r.existente.contact_name, id: r.existente.id }));
         } else if (r.limite) {
-            await msg.reply(`❌ Limite de ${getSetting('monitor.max')} contatos atingido. Remova um com /monitor -rm <id>.`);
+            await msg.reply(t('monitor.add.limit', { max: getSetting('monitor.max') }));
         } else {
-            await msg.reply(`👀 #${r.contato.id} · ${r.contato.contact_name} cadastrado.\n` +
-                `⏱️ Verificação a cada ${intervaloMonitor()}, um contato por vez.\n` +
-                `💡 /monitor -list mostra o histórico; /monitor -rm ${r.contato.id} remove.\n${RISCO}`);
+            await msg.reply(t('monitor.add.done', { id: r.contato.id, name: r.contato.contact_name,
+                interval: intervaloMonitor(), risk: risco() }));
             if (!getSetting('monitor.enabled')) {
-                await msg.reply('⏸️ Monitor pausado. Retome com /set monitor.enabled true.');
+                await msg.reply(t('monitor.add.paused'));
             }
         }
         if (comAlerta && cadastrado) {
-            await msg.reply(`🚨 Alerta online ativado para "${cadastrado.contact_name}" no privado do dono do bot.`);
+            await msg.reply(t('monitor.alert.enabled', { name: cadastrado.contact_name }));
         }
         return;
     }
@@ -165,23 +165,23 @@ async function cmdMonitor({ msg, args }) {
     if (remover) {
         const valor = semDelimitadores(remover[1]);
         if (!valor) {
-            await msg.reply('❌ Informe o id da lista ou um contato: /monitor -rm 1 ou /monitor -r /Jorge Pereira/');
+            await msg.reply(t('monitor.rm.usage'));
             return;
         }
         if (valor.toLowerCase() === 'all') {
             const total = await removerTodosMonitorados();
-            await msg.reply(`🗑️ Monitor limpo: ${total} contato(s) e seus históricos removidos.`);
+            await msg.reply(t('monitor.rm.all', { count: total }));
             return;
         }
         const contato = await buscarMonitorado(msg, valor);
         if (!contato) return;
         const id = contato.id;
         const c = await removerMonitorado(id);
-        await msg.reply(c ? `🗑️ #${c.id} · ${c.contact_name}: cadastro e histórico removidos.`
-            : `❌ Contato #${id} não cadastrado. Veja /monitor`);
+        await msg.reply(c ? t('monitor.rm.done', { id: c.id, name: c.contact_name })
+            : t('monitor.idNotFound', { id }));
         return;
     }
-    await msg.reply('❌ Use /monitor, /monitor -add <contato> [-alerta], /monitor -alerta <contato>, /monitor -rm <id, contato ou all> ou /monitor -list [contato].');
+    await msg.reply(t('monitor.usage'));
 }
 
-module.exports = { cmdMonitor, intervaloMonitor, RISCO };
+module.exports = { cmdMonitor, intervaloMonitor, risco };

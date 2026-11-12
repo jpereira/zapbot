@@ -1,4 +1,4 @@
-# `/unmute` (`/desmutar`) · admin
+# `/unmute` · admin
 
 Undoes the silence from [`/mute`](mute.md): the warnings about deleted and edited messages, deleted
 statuses and removed or changed reactions from the person, group or community come back.

@@ -9,6 +9,7 @@ const { dbAll, dbRun } = require('../db');
 const { destinoDaLinha, destinosSalvos, enviarAoDestino } = require('../destinos');
 const { printError, printInfo } = require('../log');
 const { ignorarAviso } = require('../mudo');
+const { t } = require('../i18n');
 const { getSetting } = require('../settings');
 const { formatarData } = require('../util/formatar');
 const { mascararTelefones } = require('../util/telefone');
@@ -64,8 +65,8 @@ async function verificarWatch({
 
     const detalhes =
         cabecalhoOrigem({ chatId, chatName, isGroup, senderName, senderNumber }) +
-        `📅 *Enviada em:* ${formatarData(timestamp)}\n` +
-        `💬 *Texto:* "${await resolverMencoes(body, msg.mentionedIds)}"`;
+        t('watch.sentAt', { date: formatarData(timestamp) }) +
+        t('watch.text', { text: await resolverMencoes(body, msg.mentionedIds) });
 
     /*
      * Um aviso por destino, só com as regras dele (sem -to: o seu privado). Uma
@@ -97,9 +98,9 @@ async function verificarWatch({
 
     for (const { destino, regras } of porDestino.values()) {
         const ofusca = regras.some(c => travadas.has(c.regra));
-        const mascara = (t) => ofusca ? mascararTelefones(t) : t;
-        const texto = mascara('👀 *WATCH: MENSAGEM DETECTADA*\n\n' +
-            regras.map(c => `🔎 *Regra #${c.n}:* ${c.regra}\n`).join('') + detalhes);
+        const mascara = (s) => ofusca ? mascararTelefones(s) : s;
+        const texto = mascara(t('watch.detected') +
+            regras.map(c => t('watch.ruleLine', { n: c.n, rule: c.regra })).join('') + detalhes);
 
         await enviarAoDestino(destino, texto, {
             assunto: mascara(`👀 Watch: ${regras.map(c => `#${c.n} ${c.regra}`).join(', ')}`),

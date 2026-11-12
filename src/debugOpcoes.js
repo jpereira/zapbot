@@ -2,15 +2,17 @@
  * Regex e opções do /debug: o parser comum não preserva espaços dentro de /regex/.
  */
 
+const { t } = require('./i18n');
+
 function compilarFiltroDebug(valor) {
     if (!valor) return null;
-    if (valor.length > 100) throw new Error('o filtro tem até 100 caracteres');
+    if (valor.length > 100) throw new Error(t('adm.debug.filterMax'));
     const m = valor.match(/^\/(.*)\/([a-z]*)$/s);
-    if (!m) throw new Error('use uma regex no formato /expressão/flags');
+    if (!m) throw new Error(t('adm.debug.filterFormat'));
     try {
         return new RegExp(m[1], m[2]);
     } catch (err) {
-        throw new Error(`regex inválida: ${err.message}`, { cause: err });
+        throw new Error(t('adm.debug.badRegex', { erro: err.message }), { cause: err });
     }
 }
 
@@ -22,8 +24,8 @@ function lerOpcoesDebug(args) {
     while (texto) {
         const m = texto.match(/^-([a-z-]+)(?=\s|$)/);
         const nome = m && aliases[m[1]];
-        if (!nome) throw new Error(`opção desconhecida: ${texto.split(/\s/)[0]}`);
-        if (Object.hasOwn(opcoes, nome)) throw new Error(`opção repetida: -${m[1]}`);
+        if (!nome) throw new Error(t('adm.debug.unknownOpt', { opcao: texto.split(/\s/)[0] }));
+        if (Object.hasOwn(opcoes, nome)) throw new Error(t('adm.debug.repeatedOpt', { opcao: m[1] }));
         texto = texto.slice(m[0].length).trimStart();
         if (nome === 'on' || nome === 'off') {
             opcoes[nome] = true;
@@ -48,13 +50,13 @@ function lerOpcoesDebug(args) {
                 }
                 if (c === inicio && !classe) break;
             }
-            if (fim === texto.length) throw new Error(`valor de -${m[1]} não foi fechado`);
+            if (fim === texto.length) throw new Error(t('adm.debug.unclosed', { opcao: m[1] }));
             fim++;
             if (nome === 'filter' && inicio === '/') {
                 while (/[a-z]/i.test(texto[fim] ?? '') && fim < texto.length) fim++;
             }
             if (texto[fim] && !/\s/.test(texto[fim])) {
-                throw new Error(`separe as opções de -${m[1]} com espaço`);
+                throw new Error(t('adm.debug.separate', { opcao: m[1] }));
             }
             const valor = texto.slice(0, fim);
             opcoes[nome] = nome === 'filter' && inicio === '/' ? valor : valor.slice(1, -1);

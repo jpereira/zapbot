@@ -8,6 +8,7 @@ const qrcodeTerminal = require('qrcode-terminal');
 const { estado } = require('./estado');
 const { client, messageToSelf } = require('./cliente');
 const { dbPronto } = require('./db');
+const { t } = require('./i18n');
 const { alertarPorEmail, transporter } = require('./email');
 const { printDebug, printError, printInfo, printSuccess } = require('./log');
 const { getSetting, isDebugMode } = require('./settings');
@@ -49,17 +50,14 @@ function agendarNovaTentativa(motivo, erro) {
     // Um e-mail só, na 1ª falha (com a internet fora, ele nem sai: o "Reconectado" conta o resto)
     if (estado.tentativas === 1) {
         motivoOriginal = motivo;
-        alertarPorEmail('❌ Falha ao reiniciar', `Motivo do reinício: ${motivo}
-initialize falhou: ${erro}
-` +
-            'O bot vai tentar de novo sozinho, com espera crescente, até conectar.');
+        alertarPorEmail(t('conexao.falhaReiniciarTitulo'), t('conexao.falhaReiniciarCorpo', { motivo, erro }));
     }
 
     printInfo(`♻️ Nova tentativa de conectar em ${espera / 1000}s (falhas seguidas: ${estado.tentativas}).`);
     clearTimeout(novaTentativa);
     novaTentativa = setTimeout(() => {
         novaTentativa = null;
-        restartClient(`nova tentativa nº ${estado.tentativas + 1} (${motivoOriginal})`);
+        restartClient(t('conexao.motivoNovaTentativa', { n: estado.tentativas + 1, motivo: motivoOriginal }));
     }, espera);
     novaTentativa.unref?.();
 }
@@ -71,7 +69,7 @@ function vigiarReady() {
         vigiaDoReady = null;
         if (estado.pronto || estado.reiniciando || estado.aguardandoQr) return;
         printError(`Sem conexão ${CONEXAO_MAX_MS / 60000} min depois de iniciar: reiniciando o cliente.`);
-        restartClient(`sem 'ready' em ${CONEXAO_MAX_MS / 60000} min`);
+        restartClient(t('conexao.motivoSemReady', { min: CONEXAO_MAX_MS / 60000 }));
     }, CONEXAO_MAX_MS);
     vigiaDoReady.unref?.();
 }
@@ -126,8 +124,8 @@ async function vigiarBrowser() {
     if (!estado.pronto || estado.reiniciando) return;
 
     if (!client.pupBrowser?.isConnected()) {
-        alertarPorEmail('♻️ Browser caiu', 'O Chromium desconectou; o watchdog está reiniciando o cliente.');
-        await restartClient('browser desconectado (watchdog)');
+        alertarPorEmail(t('conexao.browserCaiuTitulo'), t('conexao.browserCaiuCorpo'));
+        await restartClient(t('conexao.motivoBrowser'));
     }
 }
 
@@ -160,9 +158,7 @@ client.on('qr', async (qr) => {
             '⚠️ QR recebido APÓS autenticação.',
             `lastDisconnect=${estado.ultimaQueda} restarting=${estado.reiniciando} ready=${estado.pronto}`
         );
-        alertarPorEmail('🔑 Sessão perdida: novo QR Code',
-            `O WhatsApp pediu um novo QR Code depois de já ter autenticado (último motivo: ${estado.ultimaQueda ?? '-'}).\n` +
-            'Leia o QR Code no terminal (docker logs) ou no e-mail do QR Code, se QRCODE_EMAIL_ENABLE=true.');
+        alertarPorEmail(t('conexao.sessaoPerdidaTitulo'), t('conexao.sessaoPerdidaCorpo', { motivo: estado.ultimaQueda ?? '-' }));
     }
 
     if (!emailEnabled) {
@@ -217,13 +213,13 @@ client.on('qr', async (qr) => {
                     </tr>
                     <tr>
                         <td style="padding:12px;background:#fff3cd;border:1px solid #ffeeba;">
-                            <strong>⚠️ Atenção:</strong>
-                            Este QR Code substitui qualquer QR Code enviado anteriormente.
+                            <strong>${t('conexao.qrAtencao')}</strong>
+                            ${t('conexao.qrSubstitui')}
                         </td>
                     </tr>
                     <tr>
                         <td style="padding:12px;">
-                            <strong>📱 Escaneie o QR:</strong>
+                            <strong>${t('conexao.qrEscaneie')}</strong>
                             <br><br>
                             <img src="cid:qrcode">
                         </td>
@@ -311,12 +307,11 @@ client.on('disconnected', async (reason) => {
 
     if (NAO_REINICIAR.has(String(reason))) {
         printError(`Motivo '${reason}' exige ação manual (outra instância ou sessão revogada). Não vou reiniciar em loop.`);
-        alertarPorEmail('🔴 Desconectado (ação manual)',
-            `Motivo: ${reason}\nO bot NÃO vai reiniciar sozinho: outra instância abriu a sessão ou ela foi revogada no celular.`);
+        alertarPorEmail(t('conexao.desconectadoManualTitulo'), t('conexao.desconectadoManualCorpo', { motivo: reason }));
         return;
     }
 
-    alertarPorEmail('🔴 Desconectado', `Motivo: ${reason}\nO cliente será reiniciado automaticamente.`);
+    alertarPorEmail(t('conexao.desconectadoTitulo'), t('conexao.desconectadoCorpo', { motivo: reason }));
 
     await restartClient(`disconnected: ${reason}`);
 });
@@ -327,7 +322,7 @@ client.on('loading_screen', (percent, message) => {
 
 client.on('auth_failure', msg => {
     printError('[WA] auth_failure:', msg);
-    alertarPorEmail('⛔ Falha de autenticação', `auth_failure: ${msg}`);
+    alertarPorEmail(t('conexao.authFalhaTitulo'), `auth_failure: ${msg}`);
 });
 
 // Estados em que o WhatsApp Web parou de funcionar para esta sessão
@@ -335,7 +330,7 @@ const ESTADOS_PROBLEMA = new Set(['CONFLICT', 'UNPAIRED', 'UNPAIRED_IDLE', 'DEPR
 
 client.on('change_state', state => {
     printInfo(`[WA STATE]=${state}`);
-    if (ESTADOS_PROBLEMA.has(state)) alertarPorEmail(`⚠️ Estado do WhatsApp: ${state}`, `O WhatsApp Web mudou para o estado ${state}.`);
+    if (ESTADOS_PROBLEMA.has(state)) alertarPorEmail(t('conexao.estadoTitulo', { estado: state }), t('conexao.estadoCorpo', { estado: state }));
 });
 
 let jaFicouPronto = false;
@@ -353,23 +348,23 @@ client.on('ready', () => comContextoDebug({ semFiltro: true }, async () => {
     pararReconexao();
     const minutosFora = foraDesde ? Math.max(1, Math.round((Date.now() - foraDesde) / 60000)) : 0;
     const foraPor = foraDesde
-        ? `Ficou ${minutosFora} min sem conseguir conectar (${tentativas} tentativa${tentativas === 1 ? '' : 's'} falharam).`
+        ? t('conexao.foraPor', { min: minutosFora, n: tentativas })
         : null;
 
     // Os settings vêm do banco: avisa já no boot se o bot está desligado ou só com você usando
     await dbPronto;
     const listaAvisos = [
-        getSetting('bot.paused') && 'Bot desligado: use /bot -on para ativar os comandos.',
+        getSetting('bot.paused') && t('conexao.avisoDesligado'),
         !getSetting('bot.users').length &&
-            'Só você (e os admins) usa comandos: /bot +u <pessoa|grupo> libera para alguns.'
+            t('conexao.avisoSoVoce')
     ].filter(Boolean);
     const avisos = listaAvisos.map(a => ` ${a}`).join('');
 
     printSuccess(`🤖 ZapBot ${versaoComCommit()} inicializado! Informando ${process.env.PHONE_NUMBER}`);
-    messageToSelf(`🤖 ZapBot ${versaoComCommit()} inicializado.${avisos}`);
+    messageToSelf(t('conexao.inicializado', { versao: versaoComCommit(), avisos }));
 
-    alertarPorEmail(jaFicouPronto ? '🔄 Reconectado' : '🟢 Bot iniciado',
-        [jaFicouPronto ? `Conectado de novo${motivoDaQueda ? ` (a queda foi: ${motivoDaQueda})` : ''}.` : 'Conectado ao WhatsApp.',
+    alertarPorEmail(t(jaFicouPronto ? 'conexao.reconectadoTitulo' : 'conexao.iniciadoTitulo'),
+        [jaFicouPronto ? (motivoDaQueda ? t('conexao.conectadoDeNovoQueda', { motivo: motivoDaQueda }) : t('conexao.conectadoDeNovo')) : t('conexao.conectado'),
          foraPor, ...listaAvisos].filter(Boolean).join('\n'));
     jaFicouPronto = true;
     // O SMTP pode terminar depois: o contexto mantém esse aviso visível sem atrasar o filtro.
@@ -403,7 +398,7 @@ async function iniciarBot() {
         }
 
         // Qualquer outro erro (ex.: sem internet no boot): tenta de novo, com espera crescente
-        agendarNovaTentativa('inicialização', error.message);
+        agendarNovaTentativa(t('conexao.motivoInicializacao'), error.message);
     }
 }
 

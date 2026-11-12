@@ -5,6 +5,7 @@
 const axios = require('axios');
 
 const { getCommandSyntax } = require('./base');
+const { t } = require('../i18n');
 const { printError } = require('../log');
 const { SETTINGS_SCHEMA, getSetting } = require('../settings');
 const { formatarData } = require('../util/formatar');
@@ -19,7 +20,7 @@ const NEWS_CATEGORIAS = {
     hack: '🏴‍☠️ *Hacking News*',
     g1: '📰 *g1*',
     gazeta: '📰 *Gazeta do Povo*',
-    brasil: '🇧🇷 *Brasil*'
+    get brasil() { return t('news.brazil'); }
 };
 
 const ENTIDADES_XML = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
@@ -66,14 +67,14 @@ async function cmdNews({ msg, opts }) {
     const max = Number(valor);
 
     if (!Number.isInteger(max) || max < 1 || max > limite) {
-        await msg.reply(`❌ Quantidade inválida: ${valor}. Use de 1 a ${limite}.\n💡 _/news -g1 5_`);
+        await msg.reply(t('news.invalidCount', { value: valor, max: limite }));
         return;
     }
 
     const feeds = categorias.flatMap(c => getSetting(`news.${c}`));
 
     if (!feeds.length) {
-        await msg.reply(`ℹ️ Nenhum feed configurado.\n💡 _Adicione com /set news.${categorias[0]} <url1> <url2>_`);
+        await msg.reply(t('news.noFeeds', { cat: categorias[0] }));
         return;
     }
 
@@ -93,14 +94,14 @@ async function cmdNews({ msg, opts }) {
         .slice(0, max);
 
     if (!itens.length) {
-        await msg.reply('❌ Não consegui buscar as manchetes agora.');
+        await msg.reply(t('news.failed'));
         return;
     }
 
     const linhas = itens.map((i, n) =>
         `${n + 1}. *${i.titulo}*\n_${i.fonte}${i.data ? ` · ${formatarData(i.data)}` : ''}_${i.link ? `\n${i.link}` : ''}`);
 
-    const titulo = categorias.length === 1 ? NEWS_CATEGORIAS[categorias[0]] : '📰 *News*';
+    const titulo = categorias.length === 1 ? NEWS_CATEGORIAS[categorias[0]] : t('news.title');
 
     await msg.reply(`${titulo}\n\n${linhas.join('\n\n')}`, null, { linkPreview: false });
 }

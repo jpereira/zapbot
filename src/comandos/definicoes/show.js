@@ -7,7 +7,6 @@ const { ADMIN } = require('../../roles').ROLES;
 module.exports = {
     cmd: '/show',
     usage: '/show [-N] [OPTION] [chat]  or  /show -l [chat]  or  /show -q <text|/regex/flags> [-N] [chat]',
-    aliases: ['/mostrar'],
     summary: 'Shows messages from the bot cache',
     help: 'With no parameters in the private chat, lists the cache of all chats, like /show -l. In groups, shows again the last deleted message of the group. Shows again the deleted and edited messages, the deleted statuses and the removed or changed reactions that are in the cache: from this chat or another (by the -l number, name, @mention or /regex/). Channel (@newsletter) posts are identified with 📰 Canal and the name, without a contact name or phone number.',
     cmd_opts: [

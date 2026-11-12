@@ -19,6 +19,7 @@ const { esconderNoBanco, senhaDoLogin, tentarLogin } = require('../login');
 const { SEMPRE_LIBERADOS, avisoDeLimite, nivelDe, permissaoAqui } = require('../permissoes');
 const { ROLES, atende } = require('../roles');
 const { printCall, printComandoDesconhecido, printDebug, printError, printInfo } = require('../log');
+const { t } = require('../i18n');
 const { getSetting, isDebugMode } = require('../settings');
 const { contarStats, meuIdStats } = require('../stats');
 const { isCaminhoDeMidia, nomeSeguro, obterPastaMidia } = require('../util/arquivos');
@@ -129,10 +130,12 @@ client.on('message_create', (msg) => comContextoDebug({
             (isBroadcast ? null : msg?._data?.notifyName) ||
             senderNumber ||
             originalSenderJid ||
-            'Desconhecido';
+            t('core.desconhecido');
         if (isBroadcast) {
-            const tipo = chatId === 'status@broadcast' || msg.isStatus ? 'Status' : 'Transmissão';
-            chatName = tipo + (senderJid === 'UNKNOWN' ? '' : ` de ${senderName}`);
+            const status = chatId === 'status@broadcast' || msg.isStatus;
+            chatName = senderJid === 'UNKNOWN'
+                ? t(status ? 'mensagens.status' : 'mensagens.transmissao')
+                : t(status ? 'mensagens.statusDe' : 'mensagens.transmissaoDe', { nome: senderName });
         }
         Object.assign(contextoDebug(), { chatName, senderName });
         printDebugNivel(1, 'message_create remetente e chat', { chatName, senderName, senderJid });
@@ -211,7 +214,7 @@ client.on('message_create', (msg) => comContextoDebug({
             await contarStats({
                 chatId, chatName, isGroup,
                 senderId: msg.fromMe ? meuIdStats() : (senderNumber || senderJid),
-                senderName: msg.fromMe ? (client.info?.pushname || 'Você') : senderName,
+                senderName: msg.fromMe ? (client.info?.pushname || t('core.voce')) : senderName,
                 quando: paraMs(msg.timestamp) || timestamp,
                 campos: { msgs: 1, media: hasMedia }
             });
@@ -285,7 +288,7 @@ client.on('message_create', (msg) => comContextoDebug({
 
         if (!command) {
             if (msg.fromMe || isDebugMode()) {
-                const quem = msg.fromMe ? (client.info?.pushname || 'Você') : senderName;
+                const quem = msg.fromMe ? (client.info?.pushname || t('core.voce')) : senderName;
                 printComandoDesconhecido(quem, body.length > 100 ? `${body.slice(0, 100)}…` : body, { doDono: msg.fromMe });
             }
             const permissao = permissaoAqui({ numero: senderNumber, chatId, isGroup });
@@ -298,8 +301,8 @@ client.on('message_create', (msg) => comContextoDebug({
                     .every(cmd => SEMPRE_LIBERADOS.includes(cmd) || permissao.pode(cmd)))
                 .map(c => c.cmd);
             await msg.reply(possiveis.length
-                ? `🤔 Comando '${caller}' ambíguo. Possíveis comandos: ${possiveis.join(', ')}`
-                : `⚠️ Comando '${body}' desconhecido, tente: /help`);
+                ? t('mensagens.ambiguo', { caller, lista: possiveis.join(', ') })
+                : t('mensagens.desconhecido', { body }));
             return;
         }
 
@@ -313,7 +316,7 @@ client.on('message_create', (msg) => comContextoDebug({
         const senhaLogin = command.cmd === '/bot' ? senhaDoLogin(args) : null;
         if (senhaLogin !== null) {
             await esconderNoBanco(msgIdPure);
-            if (msg.fromMe) await msg.reply('👑 Você é o dono, já manda em tudo.');
+            if (msg.fromMe) await msg.reply(t('mensagens.voceEDono'));
             else await msg.reply(await tentarLogin({ numero: senderNumber, nome: senderName, senha: senhaLogin, isGroup }));
             return;
         }
@@ -336,7 +339,7 @@ client.on('message_create', (msg) => comContextoDebug({
             if (!isGroup && permissao.soNosGrupos.length) {
                 const grupos = await Promise.all(permissao.soNosGrupos.map(async (id) =>
                     `👥 ${await resolverNomeDoGrupo(id).catch(() => null) || id}`));
-                await msg.reply(`🚫 Sem permissão para comandos no privado. Permitido apenas em: ${grupos.join(', ')}.`);
+                await msg.reply(t('mensagens.semPermissaoPrivado', { grupos: grupos.join(', ') }));
             }
             return;
         }
@@ -348,7 +351,7 @@ client.on('message_create', (msg) => comContextoDebug({
          */
         if (!atende(nivel, command.role) && !(command.alvos ?? [command.cmd]).every(cmd => permissao.pode(cmd))) {
             if (isDebugMode()) {
-                messageToSelf(`⚠️ ${senderName} tentou executar ${command.cmd} dentro de ${chatName}, mas sem permissão`);
+                messageToSelf(t('mensagens.tentouExecutar', { nome: senderName, cmd: command.cmd, chat: chatName }));
             }
             return;
         }
@@ -360,8 +363,10 @@ client.on('message_create', (msg) => comContextoDebug({
                 if (flood.avisar) {
                     printInfo(`Flood: ${senderName} repetiu ${command.cmd}; ignorado por ${flood.segundos}s`);
                     const maximo = getSetting('flood.maxCommandRepeated');
-                    await msg.reply(`⚠️ Não é permitido executar o mesmo comando mais de ${maximo} ${maximo === 1 ? 'vez' : 'vezes'} seguidas. ` +
-                        `Aguarde ${flood.segundos} ${flood.segundos === 1 ? 'segundo' : 'segundos'}.`);
+                    await msg.reply(t('mensagens.flood', {
+                        max: t(maximo === 1 ? 'mensagens.vez' : 'mensagens.vezes', { n: maximo }),
+                        espera: t(flood.segundos === 1 ? 'mensagens.segundo' : 'mensagens.segundos', { n: flood.segundos })
+                    }));
                 }
                 return;
             }
@@ -383,7 +388,7 @@ client.on('message_create', (msg) => comContextoDebug({
 
         // Alias de texto: os {/comando} rodam aqui, com as permissões de quem chamou (os argumentos ficam de fora)
         if (resolvido.texto) {
-            printCall(msg.fromMe ? (client.info?.pushname || 'Você') : senderName, body, chatName);
+            printCall(msg.fromMe ? (client.info?.pushname || t('core.voce')) : senderName, body, chatName);
             await comDigitando(msg, command, () => executarAliasDeTexto(msg, resolvido, {
                 chatId, chatName, isGroup,
                 quem: { nivel, admin, podeUsar: admin ? () => true : permissao.pode, senderContact, senderName, senderNumber }
@@ -393,7 +398,7 @@ client.on('message_create', (msg) => comContextoDebug({
 
         if (resolvido.alias) {
             const chamada = [resolvido.destino, args].filter(Boolean).join(' ');
-            if (!resolvido.quiet) await msg.reply(`🔗 Alias ${resolvido.alias} -> ${chamada}`, undefined, { linkPreview: false });
+            if (!resolvido.quiet) await msg.reply(t('mensagens.alias', { alias: resolvido.alias, chamada }), undefined, { linkPreview: false });
         }
 
         // As opções do comando salvo pertencem ao alvo, inclusive -h e -rm.
@@ -418,12 +423,12 @@ client.on('message_create', (msg) => comContextoDebug({
         }
 
         // No privado, o senderName das suas mensagens é o do OUTRO participante (ver rawSenderId)
-        printCall(msg.fromMe ? (client.info?.pushname || 'Você') : senderName, body, chatName);
+        printCall(msg.fromMe ? (client.info?.pushname || t('core.voce')) : senderName, body, chatName);
 
         const handler = HANDLERS[command.cmd];
 
         if (!handler) {
-            await msg.reply(`⚠️ O comando ${command.cmd} ainda não foi implementado.`);
+            await msg.reply(t('mensagens.naoImplementado', { cmd: command.cmd }));
             return;
         }
 

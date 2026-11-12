@@ -7,6 +7,7 @@ const { estado } = require('../estado');
 const { descrever, descreverDestinoDoAlerta, destinosDoAlerta, enderecoDo, fmtUsd, lerCadastro } = require('../comandos/defi');
 const { dbAll, dbPronto, dbRun } = require('../db');
 const { enviarAosDestinos } = require('../destinos');
+const { t } = require('../i18n');
 const { printError, printInfo } = require('../log');
 const { getSetting } = require('../settings');
 
@@ -19,7 +20,7 @@ const { getSetting } = require('../settings');
  * Numa carteira do Project X, "na faixa" é todas as posições abertas na faixa.
  */
 async function avisar(p, n, emoji, titulo, textos) {
-    const texto = `${emoji} *${titulo}*\n\n${textos.join('\n\n')}\n\n💡 _Desligue com /defi -alerta -rm ${n}._`;
+    const texto = `${emoji} *${titulo}*\n\n${textos.join('\n\n')}\n\n${t('defi.alertTip', { n })}`;
     await enviarAosDestinos(destinosDoAlerta(p), texto, { assunto: titulo })
         .then(() => printInfo(`/defi -alerta: ${titulo} → ${descreverDestinoDoAlerta(p)}`))
         .catch(err => printError(`/defi -alerta: falha ao avisar (${enderecoDo(p)}):`, err.message));
@@ -34,8 +35,8 @@ async function verificarFaixa(p, n, lido) {
     await dbRun('UPDATE defi_positions SET in_range = ? WHERE id = ?', [naFaixa, p.id]);
     if (naFaixa && p.in_range === null) return;   // primeira leitura, já na faixa: só registra
 
-    if (naFaixa) await avisar(p, n, '✅', `DeFi: ${descrever(p)} voltou para a faixa`, lido.textos);
-    else await avisar(p, n, '🚨', `DeFi: ${descrever(p)} saiu da faixa`, lido.foraDaFaixa);
+    if (naFaixa) await avisar(p, n, '✅', t('defi.backInRange', { desc: descrever(p) }), lido.textos);
+    else await avisar(p, n, '🚨', t('defi.leftRange', { desc: descrever(p) }), lido.foraDaFaixa);
 }
 
 async function verificarTaxas(p, n, lido) {
@@ -45,7 +46,7 @@ async function verificarTaxas(p, n, lido) {
 
     await dbRun('UPDATE defi_positions SET fees_notified = ? WHERE id = ?', [passou, p.id]);
     if (passou) {
-        await avisar(p, n, '💸', `DeFi: ${descrever(p)} tem ${fmtUsd(lido.taxasUsd)} em taxas a coletar (passou de ${fmtUsd(p.alert_fees)})`, lido.textos);
+        await avisar(p, n, '💸', t('defi.feesOver', { desc: descrever(p), fees: fmtUsd(lido.taxasUsd), limit: fmtUsd(p.alert_fees) }), lido.textos);
     }
 }
 

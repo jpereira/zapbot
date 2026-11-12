@@ -6,11 +6,10 @@
 
 const { getCommandSyntax } = require('./comandos/base');
 const { GetOptFromCommand } = require('./opcoes');
+const { t } = require('./i18n');
 const { ROLES, atende } = require('./roles');
 const { pediuAjudaWatch, pediuMascaraWatch } = require('./watch/opcoes');
 
-const SO_DONO = '⛔ Apenas o dono do bot (ou um admin) pode';
-const SO_DONO_SEM_ADMIN = '⛔ Apenas o dono do bot pode';
 const PEDIU_AJUDA = /^-h(?:elp)?$/;
 
 // Os comandos com um leitor de opções próprio: o /watch tem regras e regex com espaços
@@ -69,8 +68,8 @@ function erroDeOpcoes(command, opts) {
     if (!opts.desconhecidas.length) return null;
     const lista = opts.desconhecidas.join(' ');
     // O /gpt e o /tldr (estrito: 'primeira') só sugerem a ajuda; os outros mostram a sintaxe
-    if (command.estrito === 'primeira') return `❌ Opção desconhecida: ${lista}\n💡 _Veja as opções com ${command.cmd} -h|-help_`;
-    return `❌ Opção desconhecida: ${lista}\n\n\`\`\`${getCommandSyntax(command.cmd)}\`\`\``;
+    if (command.estrito === 'primeira') return t('executar.opcaoDesconhecidaAjuda', { lista, cmd: command.cmd });
+    return t('executar.opcaoDesconhecidaSintaxe', { lista, sintaxe: getCommandSyntax(command.cmd) });
 }
 
 /**
@@ -86,9 +85,9 @@ function negacao(command, opts, nivel) {
         const usada = o.opts ? o.opts.some(nome => opts.given.has(nome)) : opts.argv.length > 0;
         if (!usada) continue;
         if (o.role && !atende(nivel, o.role)) {
-            return `${o.role === ROLES.OWNER ? SO_DONO_SEM_ADMIN : SO_DONO} usar o -${o.opts[0]} do ${command.cmd}.`;
+            return t(o.role === ROLES.OWNER ? 'executar.soDonoOpcao' : 'executar.soAdminOpcao', { opt: o.opts[0], cmd: command.cmd });
         }
-        if (o.outrosChats && !atende(nivel, ROLES.ADMIN)) return `${SO_DONO} ver outros chats.`;
+        if (o.outrosChats && !atende(nivel, ROLES.ADMIN)) return t('executar.soAdminOutrosChats');
     }
     return null;
 }
@@ -115,7 +114,6 @@ function montarContexto({ msg, args, opts, quotedMsg = null, chat, quem }) {
 }
 
 module.exports = {
-    SO_DONO,
     comDigitando,
     erroDeOpcoes,
     lerOpcoes,

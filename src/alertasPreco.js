@@ -14,6 +14,7 @@ const {
 } = require('./destinos');
 const { printError, printInfo } = require('./log');
 const { COTACAO_SUPORTADAS, CRYPTO_SUPPORTED } = require('./moedas');
+const { t } = require('./i18n');
 const { GetOptFromCommand } = require('./opcoes');
 const { getSetting } = require('./settings');
 const { formatarData, plural } = require('./util/formatar');
@@ -64,8 +65,8 @@ const ALERTA_TIPOS = {
 };
 
 const OPERADORES = {
-    '>': { testar: (preco, alvo) => preco > alvo, texto: 'acima de', icone: '📈' },
-    '<': { testar: (preco, alvo) => preco < alvo, texto: 'abaixo de', icone: '📉' }
+    '>': { testar: (preco, alvo) => preco > alvo, get texto() { return t('alerts.above'); }, icone: '📈' },
+    '<': { testar: (preco, alvo) => preco < alvo, get texto() { return t('alerts.below'); }, icone: '📉' }
 };
 
 // "5.30", "5,30" ou "90000" (sem separador de milhar)
@@ -109,14 +110,14 @@ function extrairMensagem(texto) {
 const linhaDaMensagem = (a) => (a.message ? `\n   💬 ${a.message.replace(/\n/g, '\n   ')}` : '');
 
 function descreverAlerta(kind, a) {
-    const t = ALERTA_TIPOS[kind];
+    const tipo = ALERTA_TIPOS[kind];
     const destinos = destinosDoAlerta(a);
-    return `${t.icone(a.symbol)} ${t.par(a.symbol)} ${OPERADORES[a.op].texto} *${t.fmt(a.target)}*` +
+    return `${tipo.icone(a.symbol)} ${tipo.par(a.symbol)} ${OPERADORES[a.op].texto} *${tipo.fmt(a.target)}*` +
         (destinos.length ? ` → ${descreverDestinos(destinos)}` : '');
 }
 
 async function tratarAlertaDePreco(kind, { msg, args, admin }) {
-    const t = ALERTA_TIPOS[kind];
+    const tipo = ALERTA_TIPOS[kind];
 
     /*
      * Destinos e mensagem são extraídos antes da regra de preço, preservando
@@ -125,11 +126,11 @@ async function tratarAlertaDePreco(kind, { msg, args, admin }) {
     const { destinos: destinosTexto, informado: comDestino, resto: semDestino } =
         extrairDestinos(args);
     const { mensagem, informado: comMensagem, resto } = extrairMensagem(semDestino);
-    const opts = GetOptFromCommand(resto, findCommand(t.cmd));
+    const opts = GetOptFromCommand(resto, findCommand(tipo.cmd));
 
     // Os avisos usam a sua conta (no seu privado ou nos chats do -to): só o dono e os admins
     if (!admin) {
-        await msg.reply('⛔ Apenas o dono do bot (ou um admin) pode usar os alertas.');
+        await msg.reply(t('alerts.ownerOnly'));
         return;
     }
 
@@ -143,7 +144,7 @@ async function tratarAlertaDePreco(kind, { msg, args, admin }) {
 
         if (partes.includes('all')) {
             await dbRun('DELETE FROM price_alerts WHERE kind = ?', [kind]);
-            await msg.reply(`🗑️ ${plural(alertas.length, 'alerta removido', 'alertas removidos')}.`);
+            await msg.reply(t('alerts.removedAll', { count: plural(alertas.length, t('alerts.removedOne'), t('alerts.removedMany')) }));
             return;
         }
 
@@ -152,16 +153,16 @@ async function tratarAlertaDePreco(kind, { msg, args, admin }) {
 
         if (!numeros.length || faltando.length) {
             await msg.reply(faltando.length > 1
-                ? `❌ Alertas nº ${faltando.join(', ')} não existem. Nada foi removido; veja a lista com ${t.cmd} -alerta`
-                : `❌ Alerta nº ${faltando[0] ?? '?'} não existe. Veja a lista com ${t.cmd} -alerta`);
+                ? t('alerts.notFoundMany', { list: faltando.join(', '), cmd: tipo.cmd })
+                : t('alerts.notFoundOne', { n: faltando[0] ?? '?', cmd: tipo.cmd }));
             return;
         }
 
         const removidos = numeros.map(n => alertas[Number(n) - 1]);
         for (const a of removidos) await dbRun('DELETE FROM price_alerts WHERE id = ?', [a.id]);
         await msg.reply(removidos.length === 1
-            ? `🗑️ Alerta removido: ${descreverAlerta(kind, removidos[0])}`
-            : `🗑️ *Alertas removidos* (${removidos.length})\n` +
+            ? t('alerts.removedOneDone', { alert: descreverAlerta(kind, removidos[0]) })
+            : t('alerts.removedManyDone', { n: removidos.length }) + '\n' +
               removidos.map(a => `• ${descreverAlerta(kind, a)}`).join('\n'));
         return;
     }
@@ -169,44 +170,46 @@ async function tratarAlertaDePreco(kind, { msg, args, admin }) {
     const regraTexto = opts.argv.join(' ').trim();
 
     if (!regraTexto && comDestino) {
-        await msg.reply(`❌ O -to só vale ao criar um alerta: ${t.cmd} -alerta ${t.exemplo} -to /Grupo L200/`);
+        await msg.reply(t('alerts.toOnlyCreate', { cmd: tipo.cmd, example: tipo.exemplo }));
         return;
     }
 
     if (!regraTexto && comMensagem) {
-        await msg.reply(`❌ O -msg só vale ao criar um alerta: ${t.cmd} -alerta ${t.exemplo} -msg <texto>`);
+        await msg.reply(t('alerts.msgOnlyCreate', { cmd: tipo.cmd, example: tipo.exemplo }));
         return;
     }
 
     if (comMensagem && !mensagem) {
-        await msg.reply(`❌ Informe o texto do -msg: ${t.cmd} -alerta ${t.exemplo} -msg <texto>`);
+        await msg.reply(t('alerts.msgEmpty', { cmd: tipo.cmd, example: tipo.exemplo }));
         return;
     }
 
     // Sem regra: lista
     if (!regraTexto) {
         if (!alertas.length) {
-            await msg.reply(`🔔 Nenhum alerta no ${t.cmd}.\n💡 _Crie com ${t.cmd} -alerta ${t.exemplo}_`);
+            await msg.reply(t('alerts.none', { cmd: tipo.cmd, example: tipo.exemplo }));
             return;
         }
 
-        const linhas = alertas.map((a, i) => `${i + 1}. ${descreverAlerta(kind, a)} _(criado ${formatarData(a.created_at)})_` +
+        const linhas = alertas.map((a, i) => t('alerts.listItem', { n: i + 1, alert: descreverAlerta(kind, a), date: formatarData(a.created_at) }) +
             linhaDaMensagem(a));
-        await msg.reply(`🔔 *ALERTAS DE PREÇO* _(${t.cmd})_\n\n${linhas.join('\n')}\n\n` +
-            `💡 _Verificados a cada ${plural(getSetting('alerta.intervalMin'), 'minuto', 'minutos')}_\n` +
-            `💡 _Remova com ${t.cmd} -alerta -rm <nº...|all>_`);
+        await msg.reply(t('alerts.list', {
+            cmd: tipo.cmd,
+            items: linhas.join('\n'),
+            every: plural(getSetting('alerta.intervalMin'), t('alerts.minute'), t('alerts.minutes'))
+        }));
         return;
     }
 
     const regra = lerRegraAlerta(regraTexto);
 
     if (!regra) {
-        await msg.reply(`❌ Regra inválida: "${regraTexto}"\n💡 _Formato: ${t.cmd} -alerta ${t.exemplo} (use > ou <; sem separador de milhar)_`);
+        await msg.reply(t('alerts.invalidRule', { rule: regraTexto, cmd: tipo.cmd, example: tipo.exemplo }));
         return;
     }
 
-    if (!t.suportada(regra.sym)) {
-        await msg.reply(`❌ Moeda não suportada: ${regra.sym}\n💡 _Veja as suportadas com ${t.cmd} -l_`);
+    if (!tipo.suportada(regra.sym)) {
+        await msg.reply(t('alerts.unsupported', { sym: regra.sym, cmd: tipo.cmd }));
         return;
     }
 
@@ -222,17 +225,17 @@ async function tratarAlertaDePreco(kind, { msg, args, admin }) {
     const total = (await dbGet('SELECT COUNT(*) AS n FROM price_alerts')).n;
 
     if (total >= max) {
-        await msg.reply(`❌ Limite de ${max} alertas atingido (setting alerta.max). Remova algum antes.`);
+        await msg.reply(t('alerts.limit', { max }));
         return;
     }
 
     let preco;
     try {
-        preco = (await t.precos([regra.sym]))[regra.sym];
+        preco = (await tipo.precos([regra.sym]))[regra.sym];
         if (!Number.isFinite(preco)) throw new Error('sem preço');
     } catch (err) {
-        printError(`${t.cmd} -alerta: preço de ${regra.sym}:`, err.message);
-        await msg.reply(`⚠️ Não consegui consultar o preço de ${regra.sym} agora. Tente de novo em instantes.`);
+        printError(`${tipo.cmd} -alerta: preço de ${regra.sym}:`, err.message);
+        await msg.reply(t('alerts.priceFailed', { sym: regra.sym }));
         return;
     }
 
@@ -240,7 +243,7 @@ async function tratarAlertaDePreco(kind, { msg, args, admin }) {
 
     // Já cumprido: dispararia na hora, o que não é o que se quer de um alerta
     if (op.testar(preco, regra.alvo)) {
-        await msg.reply(`ℹ️ ${t.par(regra.sym)} já está ${op.texto} ${t.fmt(regra.alvo)}: agora está em *${t.fmt(preco)}*.`);
+        await msg.reply(t('alerts.alreadyMet', { pair: tipo.par(regra.sym), op: op.texto, target: tipo.fmt(regra.alvo), price: tipo.fmt(preco) }));
         return;
     }
 
@@ -253,11 +256,13 @@ async function tratarAlertaDePreco(kind, { msg, args, admin }) {
             recipientsDe(destinos), mensagem]
     );
 
-    await msg.reply(`🔔 *Alerta criado*\n${descreverAlerta(kind, { symbol: regra.sym, op: regra.op, target: regra.alvo })}` +
-        `${linhaDaMensagem({ message: mensagem })}\n` +
-        `💰 Agora: ${t.fmt(preco)}\n` +
-        `💡 _Aviso ${destinos.length ? `em ${descreverDestinos(destinos)}` : 'no seu privado'}; ` +
-        `verificação a cada ${plural(getSetting('alerta.intervalMin'), 'minuto', 'minutos')}._`);
+    await msg.reply(t('alerts.created', {
+        alert: descreverAlerta(kind, { symbol: regra.sym, op: regra.op, target: regra.alvo }) +
+            linhaDaMensagem({ message: mensagem }),
+        price: tipo.fmt(preco),
+        where: destinos.length ? t('alerts.whereIn', { dest: descreverDestinos(destinos) }) : t('alerts.wherePrivate'),
+        every: plural(getSetting('alerta.intervalMin'), t('alerts.minute'), t('alerts.minutes'))
+    }));
 }
 
 /*
@@ -279,15 +284,15 @@ async function verificarAlertasDePreco({ forcar = false } = {}) {
         await dbPronto;
         const alertas = await dbAll('SELECT * FROM price_alerts ORDER BY id');
 
-        for (const [kind, t] of Object.entries(ALERTA_TIPOS)) {
+        for (const [kind, tipo] of Object.entries(ALERTA_TIPOS)) {
             const doTipo = alertas.filter(a => a.kind === kind);
             if (!doTipo.length) continue;
 
             let precos;
             try {
-                precos = await t.precos([...new Set(doTipo.map(a => a.symbol))]);
+                precos = await tipo.precos([...new Set(doTipo.map(a => a.symbol))]);
             } catch (err) {
-                printError(`Alertas ${t.cmd}: falha ao consultar preços:`, err.message);
+                printError(`Alertas ${tipo.cmd}: falha ao consultar preços:`, err.message);
                 continue;
             }
 
@@ -303,11 +308,17 @@ async function verificarAlertasDePreco({ forcar = false } = {}) {
                 // A mensagem do -msg vem antes de tudo
                 await enviarAosDestinos(destinos,
                     (a.message ? `${a.message}\n\n` : '') +
-                    `🔔 *ALERTA DE PREÇO*\n\n` +
-                    `${OPERADORES[a.op].icone} ${t.icone(a.symbol)} *${t.par(a.symbol)}* ficou ${OPERADORES[a.op].texto} ${t.fmt(a.target)}\n` +
-                    `💰 Agora: *${t.fmt(preco)}*${variacao ? ` _(${variacao} desde a criação)_` : ''}\n` +
-                    `📅 Alerta criado em ${formatarData(a.created_at)}`,
-                    { assunto: `🔔 Alerta de preço: ${t.par(a.symbol)} ${OPERADORES[a.op].texto} ${t.fmt(a.target)}` }
+                    t('alerts.fired', {
+                        opIcon: OPERADORES[a.op].icone,
+                        icon: tipo.icone(a.symbol),
+                        pair: tipo.par(a.symbol),
+                        op: OPERADORES[a.op].texto,
+                        target: tipo.fmt(a.target),
+                        price: tipo.fmt(preco),
+                        change: variacao ? t('alerts.sinceCreation', { change: variacao }) : '',
+                        date: formatarData(a.created_at)
+                    }),
+                    { assunto: t('alerts.subject', { pair: tipo.par(a.symbol), op: OPERADORES[a.op].texto, target: tipo.fmt(a.target) }) }
                 ).catch(err => printError('Alerta de preço: falha ao avisar:', err.message));
 
                 printInfo(`Alerta de preço disparado: ${a.symbol} ${a.op} ${a.target} (agora ${preco})` +

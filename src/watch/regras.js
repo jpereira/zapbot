@@ -9,6 +9,7 @@
  *   /regex/flags → RegExp do JavaScript (as flags g e y são ignoradas)
  * Quando casa, a ocorrência vai para watch_hits e você é avisado no privado.
  */
+const { t } = require('../i18n');
 const { semAcentos } = require('../util/formatar');
 const { MAX_TEXTO_TESTADO, regexPerigosa } = require('../util/regexSeguro');
 
@@ -29,13 +30,13 @@ function compilarBusca(busca) {
     if (m) {
         if (regexPerigosa(m[1])) {
             // Backtracking exponencial travaria o bot inteiro (ver util/regexSeguro)
-            throw new Error('regex com risco de travar o bot (quantificador sobre grupo que já se repete, como (x+)+): simplifique');
+            throw new Error(t('watch.err.riskyRegex'));
         }
         let re;
         try {
             re = new RegExp(m[1], m[2].replace(/[gy]/g, ''));
         } catch (e) {
-            throw new Error(`regex inválida: ${e.message}`, { cause: e });
+            throw new Error(t('watch.err.invalidRegex', { error: e.message }), { cause: e });
         }
         // O texto testado (corpo de qualquer mensagem recebida) é truncado: defesa
         // em profundidade contra os casos que a verificação estática não pega
@@ -50,7 +51,7 @@ function compilarRegraWatch(regra) {
     if (regrasCompiladas.has(regra)) return regrasCompiladas.get(regra);
 
     if (!regra || regra.length > REGRA_MAX_LEN) {
-        throw new Error(`a regra precisa ter de 1 a ${REGRA_MAX_LEN} caracteres`);
+        throw new Error(t('watch.err.ruleLength', { max: REGRA_MAX_LEN }));
     }
 
     const testar = compilarBusca(regra);

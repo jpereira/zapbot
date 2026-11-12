@@ -8,9 +8,11 @@ const { DAY_MS } = require('../constantes');
 const { idsDoChatAtual } = require('../contatos');
 const { dbAll, dbGet, dbPronto, dbRun } = require('../db');
 const { aguardarEscolha, autorDe } = require('../escolhas');
+const { t } = require('../i18n');
 const { getSetting } = require('../settings');
 const { diaEHora, meuIdStats } = require('../stats');
-const { fmtNum, plural, semAcentos } = require('../util/formatar');
+const { contar } = require('../util/contar');
+const { fmtNum, semAcentos } = require('../util/formatar');
 
 /*
  * /stats [-N] [/chat/] [-me]
@@ -25,6 +27,9 @@ const { fmtNum, plural, semAcentos } = require('../util/formatar');
  * antes ou depois dele.
  */
 const MEDALHAS = ['🥇', '🥈', '🥉'];
+
+// "1 msg" / "3 msgs" (o número já formatado)
+const msgs = (n) => t('stats.msgs', { n: n === 1 ? 1 : 2, count: fmtNum(n) });
 
 // 8 faixas de 3 horas com barra proporcional, horário e dia de pico
 async function textoHorariosStats(filtro, params) {
@@ -42,17 +47,17 @@ async function textoHorariosStats(filtro, params) {
 
     const pico = porHora.reduce((a, b) => (b.msgs > a.msgs ? b : a));
 
-    let texto = '\n🕐 *Por horário*\n```\n';
+    let texto = t('stats.hourTitle');
     for (const f of faixas) {
         const barra = '█'.repeat(Math.round((f.msgs / maior) * 10)) || (f.msgs ? '▏' : '');
         texto += `${String(f.ini).padStart(2, '0')}–${String(f.ini + 3).padStart(2, '0')}h ${barra.padEnd(10)} ${f.msgs}\n`;
     }
     texto += '```\n';
-    texto += `⏰ *Horário de pico:* ${pico.hour}h–${(pico.hour + 1) % 24}h _(${fmtNum(pico.msgs)} ${pico.msgs === 1 ? 'msg' : 'msgs'})_\n`;
+    texto += t('stats.peakHour', { from: pico.hour, to: (pico.hour + 1) % 24, msgs: msgs(pico.msgs) });
 
     if (porDia?.msgs) {
         const [a, m, d] = porDia.day.split('-');
-        texto += `📅 *Dia mais movimentado:* ${d}/${m}/${a} _(${fmtNum(porDia.msgs)} ${porDia.msgs === 1 ? 'msg' : 'msgs'})_\n`;
+        texto += t('stats.busiestDay', { date: `${d}/${m}/${a}`, msgs: msgs(porDia.msgs) });
     }
 
     return texto;
@@ -80,23 +85,26 @@ async function textoStatsDoChat(filtro, params, dias) {
     const falantes = pessoas.filter(p => p.msgs > 0).sort((a, b) => b.msgs - a.msgs);
     const midia = pessoas.reduce((s, p) => s + p.media, 0);
 
-    let texto = `📊 *Estatísticas${nomeChat ? ` de ${nomeChat}` : ''}*\n` +
-                `_Últimos ${plural(dias, 'dia', 'dias')}_\n\n` +
-                `💬 *Mensagens:* ${fmtNum(total)} _(média ${fmtNum(Math.round(total / dias))}/dia)_\n` +
-                `📎 *Com mídia:* ${fmtNum(midia)}\n` +
-                `👥 *Participantes ativos:* ${falantes.length}\n`;
+    let texto = t('stats.chatHeader', {
+        chat: nomeChat ? t('stats.of', { name: nomeChat }) : '',
+        days: contar('stats.days', dias),
+        total: fmtNum(total),
+        avg: fmtNum(Math.round(total / dias)),
+        media: fmtNum(midia),
+        active: falantes.length
+    });
 
     if (falantes.length) {
-        texto += '\n🏆 *Quem mais fala*\n';
+        texto += t('stats.topTalkers');
         falantes.slice(0, 10).forEach((p, i) => {
             const pct = Math.round((p.msgs / total) * 100);
             texto += `${MEDALHAS[i] || `${i + 1}.`} ${p.nome || p.sender_id} — *${fmtNum(p.msgs)}* _(${pct}%)_\n`;
         });
-        if (falantes.length > 10) texto += `_+${falantes.length - 10} pessoa(s)_\n`;
+        if (falantes.length > 10) texto += t('stats.morePeople', { count: falantes.length - 10 });
     }
 
     // Quem mais apaga / edita (só aparece se alguém apagou/editou)
-    for (const [campo, titulo] of [['deleted', '🗑️ *Quem mais apaga*'], ['edited', '✏️ *Quem mais edita*']]) {
+    for (const [campo, titulo] of [['deleted', t('stats.topDeleters')], ['edited', t('stats.topEditors')]]) {
         const lista = pessoas.filter(p => p[campo] > 0).sort((a, b) => b[campo] - a[campo]).slice(0, 5);
         if (!lista.length) continue;
 
@@ -129,22 +137,26 @@ async function textoStatsMeu(filtro, params, dias, umChat) {
     const midia = chats.reduce((s, c) => s + c.media, 0);
     const ativos = chats.filter(c => c.msgs > 0).sort((a, b) => b.msgs - a.msgs);
 
-    let texto = `📊 *Suas estatísticas${umChat && chats[0]?.nome ? ` em ${chats[0].nome}` : ''}*\n` +
-                `_Últimos ${plural(dias, 'dia', 'dias')}${umChat ? '' : ', todos os chats'}_\n\n` +
-                `💬 *Mensagens:* ${fmtNum(total)} _(média ${fmtNum(Math.round(total / dias))}/dia)_\n` +
-                `📎 *Com mídia:* ${fmtNum(midia)}\n`;
+    let texto = t('stats.myHeader', {
+        chat: umChat && chats[0]?.nome ? t('stats.in', { name: chats[0].nome }) : '',
+        days: contar('stats.days', dias),
+        scope: umChat ? '' : t('stats.allChatsScope'),
+        total: fmtNum(total),
+        avg: fmtNum(Math.round(total / dias)),
+        media: fmtNum(midia)
+    });
 
-    if (apagadas) texto += `🗑️ *Apagadas por você:* ${fmtNum(apagadas)}\n`;
+    if (apagadas) texto += t('stats.deletedByYou', { count: fmtNum(apagadas) });
 
     if (!umChat && ativos.length) {
-        texto += `👥 *Chats em que você falou:* ${ativos.length}\n`;
-        texto += '\n🏆 *Onde você mais fala*\n';
+        texto += t('stats.activeChats', { count: ativos.length });
+        texto += t('stats.whereTalk');
         ativos.slice(0, 10).forEach((c, i) => {
             const pct = Math.round((c.msgs / total) * 100);
             const icone = c.is_group ? '👥' : '👤';
             texto += `${MEDALHAS[i] || `${i + 1}.`} ${icone} ${c.nome || c.chat_id.split('@')[0]} — *${fmtNum(c.msgs)}* _(${pct}%)_\n`;
         });
-        if (ativos.length > 10) texto += `_+${ativos.length - 10} chat(s)_\n`;
+        if (ativos.length > 10) texto += t('stats.moreChats', { count: ativos.length - 10 });
     }
 
     return texto + await textoHorariosStats(filtro, params);
@@ -188,31 +200,30 @@ async function acharChat(msg, alvo) {
 
     if (exato || casam.length === 1) return exato ?? casam[0];
     if (!casam.length) {
-        await msg.reply(`❌ Nenhum chat com estatísticas tem "${alvo}" no nome.\n💡 _Veja os que têm com /stats -l_`);
+        await msg.reply(t('stats.noChatHas', { text: alvo }));
         return null;
     }
 
-    const pergunta = await msg.reply(`🔎 "${alvo}" corresponde a ${casam.length} chats:\n\n` +
+    const pergunta = await msg.reply(t('stats.multiMatch', { text: alvo, count: casam.length }) +
         casam.slice(0, 10).map((c, i) => `${i + 1}. ${descreverChat(c)}`).join('\n') +
-        '\n\n💡 _Responda só com o nº (em até 2 minutos), ou repita o comando com mais palavras do nome._');
+        t('stats.multiMatchFooter'));
     return aguardarEscolha(msg.id?.remote ?? msg.from, casam.slice(0, 10), {
         autor: autorDe(msg),
-        aoExpirar: () => concluirAviso(msg, pergunta, `⌛ Nenhum nº escolhido para "${alvo}" em 2 minutos: nada foi feito.`)
+        aoExpirar: () => concluirAviso(msg, pergunta, t('stats.choiceExpired', { text: alvo }))
     });
 }
 
 async function listarChats(msg) {
     const chats = await chatsComStats();
     if (!chats.length) {
-        await msg.reply('📊 Nenhuma estatística guardada ainda.');
+        await msg.reply(t('stats.none'));
         return;
     }
 
     const data = (dia) => dia.split('-').reverse().slice(0, 2).join('/');
-    await msg.reply(`📊 *Chats com estatísticas* (${chats.length})\n` +
-        `_Até ${plural(getSetting('stats.retentionDays'), 'dia', 'dias')} guardados_\n\n` +
-        chats.map((c, i) => `${i + 1}. ${descreverChat(c)} — ${fmtNum(c.msgs)} msgs _(última em ${data(c.ultimo)})_`).join('\n') +
-        '\n\n💡 _/stats /nome/ mostra um_\n💡 _/stats -f /nome/ apaga as dele_');
+    await msg.reply(t('stats.listHeader', { count: chats.length, days: contar('stats.days', getSetting('stats.retentionDays')) }) +
+        chats.map((c, i) => t('stats.listLine', { n: i + 1, chat: descreverChat(c), msgs: fmtNum(c.msgs), date: data(c.ultimo) })).join('\n') +
+        t('stats.listFooter'));
 }
 
 async function cmdStats({ msg, opts, chatId }) {
@@ -228,12 +239,12 @@ async function cmdStats({ msg, opts, chatId }) {
     if (r.flushAll) {
         const { n } = await dbGet('SELECT COUNT(DISTINCT chat_id) AS n FROM stats');
         await dbRun('DELETE FROM stats');
-        await msg.reply(`🗑️ Estatísticas apagadas: ${plural(n, 'chat', 'chats')}.`);
+        await msg.reply(t('stats.flushedAll', { chats: contar('stats.chats', n) }));
         return;
     }
 
     if (r.flush && !r.alvo) {
-        await msg.reply('❌ Informe o chat: /stats -flush /Grupo/ (ou /stats -flush-all para todos).');
+        await msg.reply(t('stats.flushNeedsChat'));
         return;
     }
 
@@ -248,7 +259,7 @@ async function cmdStats({ msg, opts, chatId }) {
 
     if (r.flush) {
         await dbRun(`DELETE FROM stats WHERE chat_id IN (${ids.map(() => '?').join(', ')})`, ids);
-        await msg.reply(`🗑️ Estatísticas de ${descreverChat(chat)} apagadas.`);
+        await msg.reply(t('stats.flushedChat', { chat: descreverChat(chat) }));
         return;
     }
 
@@ -279,15 +290,15 @@ async function cmdStats({ msg, opts, chatId }) {
         : await textoStatsDoChat(filtro, params, dias);
 
     if (!texto) {
-        const onde = r.me ? (chat ? `suas em ${descreverChat(chat)}` : 'suas') : chat ? `de ${descreverChat(chat)}` : 'deste chat';
-        await msg.reply(`📊 Sem estatísticas ${onde} nos últimos ${plural(dias, 'dia', 'dias')}.` +
-            (getSetting('stats.enable') ? '' : '\n💡 _A contagem está desligada: /set stats.enable on_'));
+        const onde = r.me ? (chat ? t('stats.whereMineIn', { chat: descreverChat(chat) }) : t('stats.whereMine')) : chat ? t('stats.whereOf', { chat: descreverChat(chat) }) : t('stats.whereHere');
+        await msg.reply(t('stats.noneIn', { where: onde, days: contar('stats.days', dias) }) +
+            (getSetting('stats.enable') ? '' : t('stats.countingOff')));
         return;
     }
 
-    texto += `\n💡 _/stats -N para outro período (máx. ${maxDias} dias)_` +
-        (r.me ? '' : '\n💡 _/stats -me para as suas_') +
-        '\n💡 _/stats -l para os outros chats_';
+    texto += t('stats.footerPeriod', { max: maxDias }) +
+        (r.me ? '' : t('stats.footerMe')) +
+        t('stats.footerList');
     await msg.reply(texto);
 }
 

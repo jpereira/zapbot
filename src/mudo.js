@@ -3,6 +3,7 @@
  */
 
 const { dbAll, dbGet, dbPronto, dbRun } = require('./db');
+const { t } = require('./i18n');
 const { printInfo } = require('./log');
 
 /*
@@ -19,10 +20,10 @@ const { printInfo } = require('./log');
  * Cada aviso cortado vai para `mute_hits` (o /bot -status conta as ignoradas).
  */
 const TIPOS = {
-    apagada: { coluna: 'deleted', rotulo: 'apagadas' },
-    editada: { coluna: 'edited', rotulo: 'editadas' },
-    status: { coluna: 'status', rotulo: 'status' },
-    reacao: { coluna: 'reaction', rotulo: 'reações' }
+    apagada: { coluna: 'deleted', get rotulo() { return t('grp.mute.type.deleted'); } },
+    editada: { coluna: 'edited', get rotulo() { return t('grp.mute.type.edited'); } },
+    status: { coluna: 'status', get rotulo() { return t('grp.mute.type.status'); } },
+    reacao: { coluna: 'reaction', get rotulo() { return t('grp.mute.type.reaction'); } }
 };
 
 // O número de um jid de pessoa (5521...@c.us → 5521...); @lid e grupos ficam inteiros

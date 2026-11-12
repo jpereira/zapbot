@@ -5,6 +5,7 @@
 const { MessageMedia } = require('whatsapp-web.js');
 const axios = require('axios');
 
+const { t } = require('../i18n');
 const { printError } = require('../log');
 const { envOuSetting, getSetting } = require('../settings');
 
@@ -14,9 +15,7 @@ async function cmdGiphy({ msg, args }) {
     const apiKey = envOuSetting('GIPHY_API_KEY', 'giphy.api.key');
 
     if (!apiKey) {
-        await msg.reply(
-            '⚠️ Chave do GIPHY não configurada: defina GIPHY_API_KEY no config/.env ou use /set giphy.api.key <chave>.'
-        );
+        await msg.reply(t('giphy.noKey'));
         return;
     }
 
@@ -71,7 +70,7 @@ async function cmdGiphy({ msg, args }) {
             gifData?.images?.downsized_medium?.mp4;
 
         if (!mp4) {
-            await msg.reply('❌ Nenhum GIF encontrado.');
+            await msg.reply(t('giphy.none'));
             return;
         }
 
@@ -93,7 +92,7 @@ async function cmdGiphy({ msg, args }) {
 
     } catch (err) {
         printError('/giphy:', err.message);
-        await msg.reply('❌ Não consegui buscar esse GIF.');
+        await msg.reply(t('giphy.fail'));
     }
 }
 

@@ -5,6 +5,7 @@
 const { Poll } = require('whatsapp-web.js');
 
 const { client } = require('../cliente');
+const { t } = require('../i18n');
 const { getCommandSyntax } = require('./base');
 const { idsDoChatAtual } = require('../contatos');
 const { placarDaEnquete, registrarEnquete } = require('../enquetes');
@@ -46,24 +47,24 @@ async function cmdPoll({ msg, args, chatId, chatName, quotedMsg }) {
     const erro = (m) => msg.reply(`❌ ${m}\n\n` + '```' + getCommandSyntax('/poll') + '```');
 
     if (!pergunta || opcoes.length < 2) {
-        await erro('Informe a pergunta e pelo menos 2 opções.');
+        await erro(t('grp.poll.needOptions'));
         return;
     }
 
     if (opcoes.length > ENQUETE_MAX_OPCOES) {
-        await erro(`No máximo ${ENQUETE_MAX_OPCOES} opções (foram ${opcoes.length}).`);
+        await erro(t('grp.poll.maxOptions', { max: ENQUETE_MAX_OPCOES, n: opcoes.length }));
         return;
     }
 
     if (pergunta.length > ENQUETE_MAX_PERGUNTA || opcoes.some(o => o.length > ENQUETE_MAX_OPCAO)) {
-        await erro(`A pergunta vai até ${ENQUETE_MAX_PERGUNTA} caracteres e cada opção até ${ENQUETE_MAX_OPCAO}.`);
+        await erro(t('grp.poll.maxLength', { question: ENQUETE_MAX_PERGUNTA, option: ENQUETE_MAX_OPCAO }));
         return;
     }
 
     // O WhatsApp não aceita opções repetidas
     const repetidas = opcoes.filter((o, i) => opcoes.findIndex(x => x.toLowerCase() === o.toLowerCase()) !== i);
     if (repetidas.length) {
-        await erro(`Opção repetida: ${[...new Set(repetidas)].join(', ')}`);
+        await erro(t('grp.poll.duplicate', { list: [...new Set(repetidas)].join(', ') }));
         return;
     }
 

@@ -8,7 +8,6 @@ const { OPCAO_VERBOSE_FFMPEG } = require('./_opcoes');
 module.exports = {
     cmd: '/sticker',
     usage: '/sticker [OPTION]... [url]  (or replying to an image, video or link)  or  /sticker -txt <text> [-bg <color>] [-fg <color>]',
-    aliases: ['/figurinha'],
     summary: 'Creates a sticker',
     help: 'Creates a sticker: same as /get -sticker. Downloads the video from the URL or from the replied link; with no video, uses the link preview. From a video, up to 6 s with a square crop from the middle, from the -ss to -es range. From an image, the square crop from the middle. -pos moves the crop to the top or the bottom. With -txt, an animated sticker with the text, blinking between the -fg and -bg colors.',
     cmd_opts: [

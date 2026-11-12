@@ -9,6 +9,7 @@ const { client } = require('../cliente');
 const { nomeDoContato, resolveLidToPhone, resolverNomeDoCanal } = require('../contatos');
 const { dbGet, dbPronto, dbRun } = require('../db');
 const { printDebug, printError } = require('../log');
+const { t } = require('../i18n');
 const { ignorarAviso, registrarAviso } = require('../mudo');
 const { getSetting } = require('../settings');
 const { contarStats, meuIdStats } = require('../stats');
@@ -39,7 +40,7 @@ async function resolverAutorApagada(row, { after, before, protocolKey } = {}) {
         return { nomeChat: nome, nomeRemetente: nome, numeroRemetente: null };
     }
     let nomeChat = row.chat_name || 'Conversa desconhecida';
-    let nomeRemetente = row.sender_name || 'Desconhecido';
+    let nomeRemetente = row.sender_name || t('core.desconhecido');
     let numeroRemetente = row.sender_number || null;
 
     // Nome real do chat onde a exclusão aconteceu
@@ -99,7 +100,7 @@ async function resolverAutorApagada(row, { after, before, protocolKey } = {}) {
  * @param {string} [opcoes.titulo]      primeira linha do alerta
  * @param {string[]} [opcoes.extras]    linhas extras após "Enviada em"
  */
-async function enviarMensagemApagada(destino, row, info, { titulo = '❌ *MENSAGEM APAGADA DETECTADA*', extras = [] } = {}) {
+async function enviarMensagemApagada(destino, row, info, { titulo = t('apagadas.titulo'), extras = [] } = {}) {
     // Cada mensagem do aviso guarda de onde ele veio (o /mute respondendo ela)
     const remetente = info.numeroRemetente || row.sender_number || row.sender_jid;
     const origem = { chatId: row.chat_id, remetente };
@@ -111,7 +112,7 @@ async function enviarMensagemApagada(destino, row, info, { titulo = '❌ *MENSAG
         chatId: row.chat_id, chatName: info.nomeChat, isGroup: row.is_group,
         senderName: info.nomeRemetente, senderNumber: info.numeroRemetente
     }) +
-        `📅 *Enviada em:* ${formatarData(row.timestamp)}\n`;
+        t('apagadas.enviadaEm', { data: formatarData(row.timestamp) });
 
     for (const linha of extras) {
         alertaTexto += `${linha}\n`;
@@ -123,11 +124,10 @@ async function enviarMensagemApagada(destino, row, info, { titulo = '❌ *MENSAG
         const longitude = Number(row.location_lng);
 
         alertaTexto +=
-            '🗺️ *Tipo:* LOCALIZAÇÃO\n' +
-            `🔗 *Link do mapa:* https://www.google.com/maps?q=${latitude},${longitude}`;
+            t('apagadas.localizacao', { url: `https://www.google.com/maps?q=${latitude},${longitude}` });
 
         await enviar(destino, alertaTexto);
-        const local = new Location(latitude, longitude, row.body || 'Localização compartilhada');
+        const local = new Location(latitude, longitude, row.body || t('apagadas.localizacaoCompartilhada'));
         await enviar(destino, local);
         return;
     }
@@ -135,15 +135,14 @@ async function enviarMensagemApagada(destino, row, info, { titulo = '❌ *MENSAG
     // Contato / vCard
     if (['vcard', 'contact', 'multi_vcard'].includes(row.type)) {
         alertaTexto +=
-            '📇 *Tipo:* CARTÃO DE CONTATO\n' +
-            '💡 *Nota:* O contato está anexado abaixo.';
+            t('apagadas.contato');
 
         // O body vem de quem enviou: só vai cru se for mesmo um vCard (nunca um texto como "/cache -a")
         if (!row.body || /^BEGIN:VCARD/i.test(row.body.trim())) {
             await enviar(destino, alertaTexto);
             if (row.body) await enviar(destino, row.body, { parseVCards: true });
         } else {
-            await enviar(destino, `${alertaTexto}\n💬 *Conteúdo:* "${row.body}"`);
+            await enviar(destino, `${alertaTexto}${t('apagadas.conteudo', { texto: row.body })}`);
         }
         return;
     }
@@ -152,10 +151,10 @@ async function enviarMensagemApagada(destino, row, info, { titulo = '❌ *MENSAG
     if (row.has_media && isCaminhoDeMidia(row.media_path) && fs.existsSync(row.media_path)) {
         const mediaAnexo = MessageMedia.fromFilePath(row.media_path);
         const mimetype = mediaAnexo.mimetype || '';
-        const legenda = row.body || 'Sem texto';
+        const legenda = row.body || t('apagadas.semTexto');
 
         if (row.type === 'audio' || row.type === 'ptt' || mimetype.startsWith('audio/')) {
-            alertaTexto += '🎵 *Tipo:* ÁUDIO / NOTA DE VOZ';
+            alertaTexto += t('apagadas.audio');
 
             await enviar(destino, alertaTexto);
             await enviar(destino, mediaAnexo, { sendAudioAsVoice: true });
@@ -164,16 +163,14 @@ async function enviarMensagemApagada(destino, row, info, { titulo = '❌ *MENSAG
 
         if (row.type === 'video' || row.type === 'image' || mimetype.startsWith('image/') || mimetype.startsWith('video/')) {
             alertaTexto +=
-                `🎬 *Tipo:* ${String(row.type).toUpperCase()}\n` +
-                `💬 *Legenda:* "${legenda}"`;
+                t('apagadas.midia', { tipo: String(row.type).toUpperCase(), legenda });
 
             await enviar(destino, mediaAnexo, { caption: alertaTexto });
             return;
         }
 
         alertaTexto +=
-            '📄 *Tipo:* DOCUMENTO\n' +
-            `💬 *Legenda:* "${legenda}"`;
+            t('apagadas.documento', { legenda });
 
         await enviar(destino, mediaAnexo, { caption: alertaTexto, sendMediaAsDocument: true });
         return;
@@ -181,11 +178,11 @@ async function enviarMensagemApagada(destino, row, info, { titulo = '❌ *MENSAG
 
     // Mídia que existia mas o arquivo já não está no disco
     if (row.has_media) {
-        alertaTexto += `📎 *Tipo:* ${String(row.type).toUpperCase()} _(arquivo não disponível no cache)_\n`;
+        alertaTexto += t('apagadas.arquivoIndisponivel', { tipo: String(row.type).toUpperCase() });
     }
 
     // Texto
-    alertaTexto += `💬 *Texto:* "${row.body || 'Mensagem sem conteúdo'}"`;
+    alertaTexto += t('apagadas.texto', { texto: row.body || t('apagadas.semConteudo') });
 
     await enviar(destino, alertaTexto, { linkPreview: true });
 }
@@ -240,7 +237,7 @@ client.on('message_revoke_everyone', async (after, before) => {
         await contarStats({
             chatId: row.chat_id, chatName: info.nomeChat, isGroup: row.is_group,
             senderId: deMim ? meuIdStats() : (row.sender_number || row.sender_jid),
-            senderName: deMim ? (client.info?.pushname || 'Você') : info.nomeRemetente,
+            senderName: deMim ? (client.info?.pushname || t('core.voce')) : info.nomeRemetente,
             campos: { deleted: 1 }
         });
 
@@ -251,7 +248,7 @@ client.on('message_revoke_everyone', async (after, before) => {
         if (await ignorarAviso(isStatus(row) ? 'status' : 'apagada', { chatId: row.chat_id, remetentes })) return;
 
         await enviarMensagemApagada(client.info.wid._serialized, row, info, {
-            titulo: isStatus(row) ? '📸 *STATUS APAGADO DETECTADO*' : '❌ *MENSAGEM APAGADA DETECTADA*'
+            titulo: isStatus(row) ? t('apagadas.tituloStatus') : t('apagadas.titulo')
         });
     } catch (sendError) {
         printError('[Revoke] Erro ao processar item apagado:', sendError.message);

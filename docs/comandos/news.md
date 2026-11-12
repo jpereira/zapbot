@@ -1,4 +1,4 @@
-# `/news` (`/noticias`)
+# `/news`
 
 Gathers the most recent headlines from a category's RSS feeds, with source, date and link. Without a
 category, it shows the help with all the options. It's a regular command, available to users allowed

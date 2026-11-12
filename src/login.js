@@ -11,6 +11,7 @@ const { dbRun } = require('./db');
 const { alertarPorEmail } = require('./email');
 const { printInfo } = require('./log');
 const { getSetting, setSetting } = require('./settings');
+const { t } = require('./i18n');
 
 const MAX_ERROS = 5;
 const BLOQUEIO_MS = 15 * 60 * 1000;
@@ -44,12 +45,11 @@ function senhaDoLogin(args) {
 async function definirSenha(senha) {
     if (/^off$/i.test(senha)) {
         await setSetting('bot.login', '');
-        return '🔓 *Login desligado:* ninguém de fora vira admin pela senha.';
+        return t('login.desligado');
     }
-    if (senha.length < SENHA_MIN) return `❌ A senha precisa de pelo menos ${SENHA_MIN} caracteres.`;
+    if (senha.length < SENHA_MIN) return t('login.senhaCurta', { min: SENHA_MIN });
     await setSetting('bot.login', criarHash(senha));
-    return '🔐 *Senha gravada* (só o hash fica no banco). Quem mandar `/bot -login <senha>` no ' +
-        'privado vira admin e você é avisado.\n💡 _Apague a sua mensagem com a senha._';
+    return t('login.senhaGravada');
 }
 
 // Apaga a senha do banco de mensagens (o bot grava todo corpo antes de tratar o comando)
@@ -61,35 +61,34 @@ const esconderNoBanco = (id) =>
  * @param {{ numero: string, nome: string, senha: string, isGroup: boolean }} o
  */
 async function tentarLogin({ numero, nome, senha, isGroup }) {
-    if (isGroup) return '🚫 Use o login só no privado.';
+    if (isGroup) return t('login.soPrivado');
     const guardado = getSetting('bot.login');
-    if (!guardado) return '🚫 Login desativado.';
-    if (!numero) return '🚫 Não consegui identificar o seu número.';
-    if (!senha) return '❌ Uso: /bot -login <senha>';
+    if (!guardado) return t('login.desativado');
+    if (!numero) return t('login.semNumero');
+    if (!senha) return t('login.uso');
 
-    const t = tentativas.get(numero) ?? { erros: 0, ate: 0 };
-    if (t.ate > Date.now()) return `⛔ Muitas tentativas. Aguarde ${Math.ceil((t.ate - Date.now()) / 60000)} min.`;
+    const tent = tentativas.get(numero) ?? { erros: 0, ate: 0 };
+    if (tent.ate > Date.now()) return t('login.muitasTentativas', { min: Math.ceil((tent.ate - Date.now()) / 60000) });
 
     if (!conferirSenha(senha, guardado)) {
-        t.erros += 1;
-        if (t.erros >= MAX_ERROS) {
-            t.erros = 0;
-            t.ate = Date.now() + BLOQUEIO_MS;
-            await avisarDono('🚨 Login bloqueado', `${nome} (+${numero}) errou a senha do /bot -login ` +
-                `${MAX_ERROS} vezes. Bloqueado por ${BLOQUEIO_MS / 60000} min.`);
+        tent.erros += 1;
+        if (tent.erros >= MAX_ERROS) {
+            tent.erros = 0;
+            tent.ate = Date.now() + BLOQUEIO_MS;
+            await avisarDono(t('login.bloqueadoTitulo'),
+                t('login.bloqueadoCorpo', { nome, numero, erros: MAX_ERROS, min: BLOQUEIO_MS / 60000 }));
         }
-        tentativas.set(numero, t);
+        tentativas.set(numero, tent);
         printInfo(`/bot -login: senha errada de ${nome} (+${numero})`);
-        return '❌ Senha incorreta.';
+        return t('login.senhaIncorreta');
     }
 
     tentativas.delete(numero);
     const admins = getSetting('bot.admins');
-    if (admins.includes(numero)) return '👑 Você já é admin.';
+    if (admins.includes(numero)) return t('login.jaAdmin');
     await setSetting('bot.admins', [...admins, numero]);
-    await avisarDono('🔑 Novo admin por senha', `${nome} (+${numero}) virou admin com o /bot -login.\n` +
-        `Para revogar: /bot -a +${numero}`);
-    return '👑 *Pronto:* você agora é admin do bot.';
+    await avisarDono(t('login.novoAdminTitulo'), t('login.novoAdminCorpo', { nome, numero }));
+    return t('login.pronto');
 }
 
 async function avisarDono(titulo, detalhes) {

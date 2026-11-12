@@ -7,6 +7,7 @@ const axios = require('axios');
 const sharp = require('sharp');
 
 const { DAY_MS } = require('../constantes');
+const { t } = require('../i18n');
 const { printError } = require('../log');
 const { getSetting } = require('../settings');
 
@@ -111,13 +112,13 @@ async function cmdPixelArt({ msg, opts }) {
         } else if (opts.opt.year !== null) {
             const ano = Number(opts.opt.year);
             if (!Number.isInteger(ano) || ano < 1980 || ano > new Date().getFullYear()) {
-                await msg.reply('❌ Ano inválido. Ex.: /pixelart -y 1996');
+                await msg.reply(t('pixelart.invalidYear'));
                 return;
             }
             candidatos = await packsDoAno(ano);
         } else if (opts.argv[0]) {
             if (!PACK_NOME.test(opts.argv[0])) {
-                await msg.reply('❌ Nome de pack inválido. Ex.: /pixelart chuck-norris-lvl');
+                await msg.reply(t('pixelart.invalidPack'));
                 return;
             }
             candidatos = [opts.argv[0]];
@@ -126,7 +127,7 @@ async function cmdPixelArt({ msg, opts }) {
         }
 
         if (!candidatos.length) {
-            await msg.reply('❌ Nenhum pack encontrado.');
+            await msg.reply(t('pixelart.noPack'));
             return;
         }
 
@@ -138,12 +139,12 @@ async function cmdPixelArt({ msg, opts }) {
         }
 
         if (!pack) {
-            await msg.reply(`❌ Pack não encontrado: ${candidatos[0]}\n💡 _Veja os packs em ${SIXTEEN_URL}_`);
+            await msg.reply(t('pixelart.packNotFound', { pack: candidatos[0], url: SIXTEEN_URL }));
             return;
         }
 
         if (!pack.artes.length) {
-            await msg.reply(`❌ O pack ${pack.nome} não tem artes ANSI/ASCII.`);
+            await msg.reply(t('pixelart.noArt', { pack: pack.nome }));
             return;
         }
 
@@ -166,19 +167,19 @@ async function cmdPixelArt({ msg, opts }) {
         let legenda = `🎨 *${sauce?.titulo || arte.filename}*\n`;
         if (autoria) legenda += `👤 ${autoria}\n`;
         legenda += `📦 ${pack.nome} (${sauce?.data || pack.ano})\n🔗 ${pagina}`;
-        if (partes.length > 1) legenda += `\n🧩 Parte 1/${partes.length}${cortada ? ' _(arte cortada: veja inteira no link)_' : ''}`;
+        if (partes.length > 1) legenda += `${t('pixelart.part1', { total: partes.length })}${cortada ? t('pixelart.cropped') : ''}`;
 
         for (const [i, parte] of partes.entries()) {
             const media = new MessageMedia('image/png', parte.toString('base64'), `${arte.filename}.png`);
             await msg.reply(media, null, {
-                caption: i === 0 ? legenda : `🧩 Parte ${i + 1}/${partes.length}`,
+                caption: i === 0 ? legenda : t('pixelart.partN', { i: i + 1, total: partes.length }),
                 sendMediaAsHd: true,
                 linkPreview: false
             });
         }
     } catch (err) {
         printError('/pixelart:', err.message);
-        await msg.reply('❌ Não consegui buscar a arte no 16colo.rs agora.');
+        await msg.reply(t('pixelart.fail'));
     }
 }
 

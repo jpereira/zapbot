@@ -6,6 +6,7 @@ const { AsyncLocalStorage } = require('node:async_hooks');
 
 const axios = require('axios');
 
+const { t } = require('./i18n');
 const { printError, printInfo } = require('./log');
 const { envOuSetting, getSetting, setSetting } = require('./settings');
 const { paraWhatsapp } = require('./util/whatsapp');
@@ -29,17 +30,16 @@ const chaveOpenAi = () => envOuSetting('OPENAI_API_KEY', 'openai.api.key');
 // A chave de admin (sk-admin-...), só do /gpt -usage: a Usage API não aceita a chave normal
 const chaveAdminOpenAi = () => envOuSetting('OPENAI_ADMIN_KEY', 'openai.admin.key');
 
-const SEM_CHAVE = (cmd) => `⚠️ API key da OpenAI não encontrada: o ${cmd} está desativado.\n` +
-    '💡 _Defina OPENAI_API_KEY no config/.env ou use /set openai.api.key <chave>_';
+const SEM_CHAVE = (cmd) => t('openai.noKey', { cmd });
 
 // Erro da OpenAI → mensagem para o chat (nunca contém a chave)
 function erroOpenAi(err, cmd) {
     const timeout = envOuSetting('OPENAI_TIMEOUT_MS', 'openai.timeout.ms');
 
-    if (err.code === 'ECONNABORTED') return `⏱️ A OpenAI não respondeu em ${timeout / 1000}s. Tente de novo ou aumente o openai.timeout.ms.`;
-    if (err.response?.status === 401) return '🔑 API key da OpenAI inválida. Confira o OPENAI_API_KEY ou o openai.api.key.';
-    if (err.response?.status === 429) return '💸 Limite ou créditos da OpenAI esgotados. Tente mais tarde.';
-    return `❌ Erro no ${cmd}: ${err.response?.data?.error?.message || err.message}`;
+    if (err.code === 'ECONNABORTED') return t('openai.timeout', { s: timeout / 1000 });
+    if (err.response?.status === 401) return t('openai.badKey');
+    if (err.response?.status === 429) return t('openai.quota');
+    return t('openai.error', { cmd, erro: err.response?.data?.error?.message || err.message });
 }
 
 /*
@@ -152,7 +152,7 @@ async function buscarPrecos({ cmd }) {
  */
 async function atualizarPrecos({ cmd }) {
     const encontrados = await buscarPrecos({ cmd });
-    if (!encontrados.size) throw new Error('não achei a tabela de preços na página da OpenAI (o formato dela mudou?)');
+    if (!encontrados.size) throw new Error(t('openai.pricesNotFound'));
 
     const atuais = new Map(getSetting('openai.pricing').map(item => item.split('=')));
     const novos = [];
@@ -249,14 +249,14 @@ async function rodapeDeConsumo() {
     if (!c?.ligado || !c.chamadas) return '';
     const tokens = c.total ? ` · 🪙 ${c.total} tokens (📥 ${c.entrada} · 📤 ${c.saida})` : '';
     const linhas = [`📡 ⬆️ ${tamanho(c.tx)} TX · ⬇️ ${tamanho(c.rx)} RX${tokens}` +
-        `${c.chamadas > 1 ? ` · 🔁 ${c.chamadas} chamadas` : ''}`];
+        `${c.chamadas > 1 ? t('openai.calls', { n: c.chamadas }) : ''}`];
 
     // O ~ marca que o valor é estimado
     const saldo = await saldoEstimado(c);
-    linhas.push(`💵 ${c.semPreco ? 'custo n/d (rode /gpt -prices)' : `~${dolar(c.custo)}`}` +
-        (saldo ? ` · 🏦 saldo ~${dolar(saldo.restante)} de ${dolar(saldo.total)}` : ''));
+    linhas.push(`💵 ${c.semPreco ? t('openai.noPrice') : `~${dolar(c.custo)}`}` +
+        (saldo ? t('openai.balance', { restante: dolar(saldo.restante), total: dolar(saldo.total) }) : ''));
     const idade = idadeDosPrecos();
-    if (Number.isFinite(idade) && idade > PRECOS_AVISO_DIAS) linhas.push(`⚠️ preços de ${idade} dias: /gpt -prices`);
+    if (Number.isFinite(idade) && idade > PRECOS_AVISO_DIAS) linhas.push(t('openai.oldPrices', { dias: idade }));
     return `\n\n${linhas.map(l => `_${l}_`).join('\n')}`;
 }
 
@@ -420,7 +420,7 @@ async function gerarImagem({ cmd, prompt, imagem = null, gif = null }) {
         contar(enviado, resposta.data, resposta.data?.usage, modelo);
 
         const b64 = resposta.data?.data?.[0]?.b64_json;
-        if (!b64) throw new Error('a OpenAI não devolveu a imagem');
+        if (!b64) throw new Error(t('openai.noImage'));
         return b64;
     } catch (err) {
         logarErro(cmd, err);

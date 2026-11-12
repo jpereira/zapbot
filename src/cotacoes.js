@@ -4,6 +4,7 @@
 
 const axios = require('axios');
 
+const { idioma } = require('./i18n');
 const { printError } = require('./log');
 const { COTACAO_SUPORTADAS } = require('./moedas');
 
@@ -95,14 +96,16 @@ async function buscarCotacao(moeda) {
     }
 }
 
-const fmtReal = (v) => `R$ ${Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`;
+const localeNumeros = () => (idioma() === 'pt_BR' ? 'pt-BR' : 'en-US');
+
+const fmtReal = (v) => `R$ ${Number(v).toLocaleString(localeNumeros(), { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`;
 
 function fmtVariacao(atual, base) {
     if (!base) return null;
     const pct = ((atual - base) / base) * 100;
     const sinal = pct > 0 ? '+' : '';
     const icone = pct > 0 ? '🟢' : pct < 0 ? '🔴' : '⚪';
-    return `${icone} ${sinal}${pct.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`;
+    return `${icone} ${sinal}${pct.toLocaleString(localeNumeros(), { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`;
 }
 
 module.exports = {

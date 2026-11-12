@@ -4,6 +4,7 @@
 
 const axios = require('axios');
 
+const { t } = require('../i18n');
 const { printError } = require('../log');
 
 // /kernel: versões atuais publicadas em kernel.org
@@ -22,7 +23,7 @@ async function cmdKernel({ msg }) {
         );
     } catch (err) {
         printError('/kernel:', err.message);
-        await msg.reply('❌ Não consegui consultar o kernel.org agora.');
+        await msg.reply(t('kernel.failed'));
     }
 }
 

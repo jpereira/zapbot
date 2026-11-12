@@ -457,6 +457,13 @@ describe('cache dos downloads (get.cache.tmp)', () => {
         assert.equal(guardados().length, 2);
     });
 
+    test('imagem com a legenda /sticker (sem responder ninguém) vira figurinha', async () => {
+        const midia = { mimetype: 'image/png', data: Buffer.from('png').toString('base64'), filename: 'foto.png' };
+        const r = await bot.executar('/sticker', { tipo: 'image', midia });
+        assert.ok(r.some(e => e.options?.sendMediaAsSticker), 'enviou a figurinha');
+        assert.equal(processos.chamadas.length, 0, 'imagem não precisa de yt-dlp nem ffmpeg');
+    });
+
     test('o trecho é parte da chave; o vídeo inteiro em cache serve a qualquer trecho', async () => {
         await bot.executar(`/get -ss 10 -es 25 ${URL}`);
         assert.equal(guardados().length, 1);

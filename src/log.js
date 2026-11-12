@@ -7,6 +7,7 @@ const colors = require('colors');
 const { contextoDebug, podeFiltrarDebug } = require('./debugContexto');
 const { configurarDebug, dadosDebug, limparTextoDebug } = require('./debugDados');
 const { compilarFiltroDebug } = require('./debugOpcoes');
+const { t } = require('./i18n');
 
 let filtroTexto;
 let filtro;
@@ -62,10 +63,10 @@ function getBotUptime(startedTime) {
 
     const parts = [];
 
-    if (days) parts.push(`${days} ${days === 1 ? 'dia' : 'dias'}`);
-    if (hours) parts.push(`${hours} ${hours === 1 ? 'hora' : 'horas'}`);
-    if (minutes) parts.push(`${minutes} ${minutes === 1 ? 'minuto' : 'minutos'}`);
-    if (!days && !hours) parts.push(`${seconds} ${seconds === 1 ? 'segundo' : 'segundos'}`);
+    if (days) parts.push(t(days === 1 ? 'log.dia' : 'log.dias', { n: days }));
+    if (hours) parts.push(t(hours === 1 ? 'log.hora' : 'log.horas', { n: hours }));
+    if (minutes) parts.push(t(minutes === 1 ? 'log.minuto' : 'log.minutos', { n: minutes }));
+    if (!days && !hours) parts.push(t(seconds === 1 ? 'log.segundo' : 'log.segundos', { n: seconds }));
 
     return parts.join(', ');
 }

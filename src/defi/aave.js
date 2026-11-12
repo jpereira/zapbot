@@ -30,6 +30,7 @@
 
 const { ErroEvm, listaDeEnderecosAbi, listaDeUint, multicall, textoNaPalavra } = require('./evm');
 const { enderecoAbi, enderecoDe, isEnderecoEvm, uintAbi, uintDe } = require('./hyperevm');
+const { t } = require('../i18n');
 const { printError, printInfo } = require('../log');
 const { envOuSetting, getSetting } = require('../settings');
 
@@ -128,7 +129,7 @@ async function contratosDaRede(id, url, rotulo) {
     const seletores = [SEL.getPool, SEL.getPriceOracle, SEL.getPoolDataProvider];
     const [pool, oraculo, dados] = await multicall(url, seletores.map(data => ({ to: provider, data })), rotulo);
     if (![pool, oraculo, dados].every(r => r.ok && r.data.length >= 66)) {
-        throw new ErroEvm('Não achei os contratos do Aave nessa rede.',
+        throw new ErroEvm(t('defi.err.aaveNoContracts'),
             `PoolAddressesProvider ${provider}: resposta inválida`);
     }
 
@@ -145,7 +146,7 @@ async function contratosDaRede(id, url, rotulo) {
 // (ABI diferente, rede errada...)
 function exigir(r, oQue) {
     if (!r?.ok || r.data.length < 66) {
-        throw new ErroEvm('O contrato do Aave respondeu diferente do esperado.',
+        throw new ErroEvm(t('defi.err.aaveDifferent'),
             `${oQue}: chamada falhou ou veio vazia`);
     }
     return r.data;
@@ -324,7 +325,7 @@ const limparCacheAave = () => {
  */
 async function posicoesAave(carteira) {
     if (!isEnderecoEvm(carteira)) {
-        throw new ErroEvm(`"${carteira}" não é uma carteira EVM (0x e 40 caracteres hexadecimais).`);
+        throw new ErroEvm(t('defi.err.notEvm', { wallet: carteira }));
     }
 
     const ids = getSetting('defi.aave.chains').map(Number);
@@ -333,7 +334,7 @@ async function posicoesAave(carteira) {
 
     const resultados = await Promise.all(ids.map(async (id) => {
         if (!REDES[id]) {
-            const motivo = `Rede sem Aave V3 no bot (chain ${id}): confira o setting defi.aave.chains.`;
+            const motivo = t('defi.err.aaveNoChain', { id });
             return { falha: { rede: `chain ${id}`, motivo } };
         }
 
@@ -348,7 +349,7 @@ async function posicoesAave(carteira) {
         } catch (err) {
             const tipo = /timeout/i.test(err.message) ? 'Timeout' : 'RPC error';
             printError(`[AAVE] ${tipo} ${REDES[id].nome}: ${err.message}`);
-            const motivo = err.motivo ?? 'Não foi possível obter os dados neste momento.';
+            const motivo = err.motivo ?? t('defi.noData');
             return { falha: { rede: REDES[id].nome, motivo } };
         }
     }));

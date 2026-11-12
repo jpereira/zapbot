@@ -6,7 +6,7 @@ const fs = require('fs');
 
 const {
     MAX_ANEXO_BYTES, MOTIVOS, contarEntradas, criarBackup, enviarBackupAoChat,
-    enviarBackupPorEmail, listarBackups, proximoBackupDiario, removerBackup, restaurarBackup
+    enviarBackupPorEmail, listarBackups, motivoTexto, proximoBackupDiario, removerBackup, restaurarBackup
 } = require('../backup');
 const { findCommand } = require('./base');
 const { client } = require('../cliente');
@@ -18,7 +18,8 @@ const { printError } = require('../log');
 const { GetOptFromCommand } = require('../opcoes');
 const { getSetting } = require('../settings');
 const { humanSize } = require('../util/arquivos');
-const { fmtNum, plural } = require('../util/formatar');
+const { fmtNum } = require('../util/formatar');
+const { t } = require('../i18n');
 const { fmtQuando, partesEmBrasilia } = require('../util/quando');
 
 /*
@@ -35,19 +36,11 @@ const { fmtQuando, partesEmBrasilia } = require('../util/quando');
  *                         antiga, com os e-mails direto no -s (/backup -s 2 email), vale
  * /backup -rm <nº|all>  → apaga
  */
-const AJUDA = '💡 *Dicas*\n' +
-    '/backup -now cria um agora\n' +
-    '/backup -l lista\n' +
-    '/backup -i <nº> detalha\n' +
-    '/backup -r <nº> restaura\n' +
-    '/backup -s [nº] [-to <destino>] envia o arquivo\n' +
-    '/backup -rm <nº|all> apaga';
-
 const entradasEmLinha = (entradas) => Object.entries(entradas)
-    .map(([t, n]) => `${t} ${fmtNum(n)}`).join(' · ');
+    .map(([tabela, n]) => `${tabela} ${fmtNum(n)}`).join(' · ');
 
 const linhaDoBackup = (b, i) => `${i + 1}. *${fmtQuando(b.criadoEm)}* · ${humanSize(b.bytes)}` +
-    `${b.bytesNotas ? ` + 🖼️ ${humanSize(b.bytesNotas)}` : ''} · ${b.motivo}`;
+    `${b.bytesNotas ? ` + 🖼️ ${humanSize(b.bytesNotas)}` : ''} · ${motivoTexto(b.motivo)}`;
 
 // "2" (nº da lista) ou o nome do arquivo (com ou sem .db.gz)
 function acharBackup(lista, valor) {
@@ -72,19 +65,26 @@ async function status(msg) {
 
     // Um item por bullet; as entradas do banco, um sub-bullet por tabela
     const itens = [
-        `🗄️ *Banco atual:* ${bytesBanco === null ? '—' : humanSize(bytesBanco)}\n` +
-            Object.entries(entradas).map(([t, n]) => `   ◦ ${t}: ${fmtNum(n)}`).join('\n'),
-        `📦 *Backups:* ${lista.length}${lista.length ? ` (${humanSize(total)})` : ''} em ${BACKUP_DIR}`,
-        `🕐 *Último:* ${ultimo ? `${fmtQuando(ultimo.criadoEm)} (${ultimo.motivo}, ${humanSize(ultimo.bytes)})` : 'nenhum'}`,
+        t('adm.backup.dbNow', { tamanho: bytesBanco === null ? '—' : humanSize(bytesBanco) }) + '\n' +
+            Object.entries(entradas).map(([tabela, n]) => `   ◦ ${tabela}: ${fmtNum(n)}`).join('\n'),
+        t('adm.backup.count', { n: lista.length, total: lista.length ? ` (${humanSize(total)})` : '', dir: BACKUP_DIR }),
+        t('adm.backup.last', {
+            valor: ultimo
+                ? t('adm.backup.lastValue', { quando: fmtQuando(ultimo.criadoEm), motivo: motivoTexto(ultimo.motivo), tamanho: humanSize(ultimo.bytes) })
+                : t('adm.backup.none')
+        }),
         getSetting('backup.enabled')
-            ? `⏭️ *Próximo automático:* ${fmtQuando(proximoBackupDiario(Date.now(), feitoHoje))} ` +
-              `_(todo dia às ${getSetting('backup.hour')}h, guarda ${getSetting('backup.keep')})_`
-            : '⏭️ *Backup automático:* desligado _(setting backup.enabled)_',
-        `📤 *Destino automático:* ${getSetting('backup.to') || 'só local'}`
+            ? t('adm.backup.next', {
+                quando: fmtQuando(proximoBackupDiario(Date.now(), feitoHoje)),
+                hora: getSetting('backup.hour'),
+                keep: getSetting('backup.keep')
+            })
+            : t('adm.backup.autoOff'),
+        t('adm.backup.autoTo', { valor: getSetting('backup.to') || t('adm.backup.localOnly') })
     ];
-    const texto = `💾 *Backup*\n\n${itens.map(i => `• ${i}`).join('\n')}\n`;
+    const texto = `${t('adm.backup.title')}\n\n${itens.map(i => `• ${i}`).join('\n')}\n`;
 
-    await msg.reply(`${texto}\n${AJUDA}`, null, { linkPreview: false });
+    await msg.reply(`${texto}\n${t('adm.backup.tips')}`, null, { linkPreview: false });
 }
 
 async function cmdBackup({ msg, opts: optsDoComando, args }) {
@@ -97,18 +97,22 @@ async function cmdBackup({ msg, opts: optsDoComando, args }) {
     const o = opts.opt;
 
     if (comDestino && !opts.given.has('send')) {
-        await msg.reply('❌ O -to é do -send: /backup -send [nº] -to <destino>');
+        await msg.reply(t('adm.backup.toIsSend'));
         return;
     }
 
     const lista = await listarBackups();
-    const semBackups = '💾 Nenhum backup ainda. Crie um com /backup -now';
+    const semBackups = t('adm.backup.noBackups');
 
     // -now
     if (o.now) {
         const b = await criarBackup(MOTIVOS.manual);
-        await msg.reply(`💾 *Backup criado*\n📄 ${b.nome}\n📦 ${humanSize(b.bytes)}` +
-            `${b.bytesNotas ? `\n🖼️ ${humanSize(b.bytesNotas)} de imagens do /notes` : ''}\n_${entradasEmLinha(b.entradas)}_`);
+        await msg.reply(t('adm.backup.created', {
+            nome: b.nome,
+            tamanho: humanSize(b.bytes),
+            notas: b.bytesNotas ? t('adm.backup.createdNotes', { tamanho: humanSize(b.bytesNotas) }) : '',
+            entradas: entradasEmLinha(b.entradas)
+        }));
         return;
     }
 
@@ -118,8 +122,8 @@ async function cmdBackup({ msg, opts: optsDoComando, args }) {
             await msg.reply(semBackups);
             return;
         }
-        await msg.reply(`💾 *Backups* (${lista.length})\n\n${lista.map(linhaDoBackup).join('\n')}\n\n` +
-            '💡 _/backup -i <nº> mostra as entradas_\n💡 _/backup -r <nº> restaura_');
+        await msg.reply(`${t('adm.backup.listTitle', { n: lista.length })}\n\n${lista.map(linhaDoBackup).join('\n')}\n\n` +
+            t('adm.backup.listHints'));
         return;
     }
 
@@ -127,18 +131,18 @@ async function cmdBackup({ msg, opts: optsDoComando, args }) {
     if (opts.given.has('info')) {
         const b = acharBackup(lista, o.info);
         if (!b) {
-            await msg.reply(lista.length ? `❌ Backup ${o.info ?? '?'} não existe. Veja a lista com /backup -l` : semBackups);
+            await msg.reply(lista.length ? t('adm.backup.notFound', { n: o.info ?? '?' }) : semBackups);
             return;
         }
 
         const atual = await contarEntradas();
         const nomes = [...new Set([...Object.keys(b.entradas ?? {}), ...Object.keys(atual)])].sort();
-        const linhas = nomes.map(t => `${t}: ${fmtNum(b.entradas?.[t] ?? 0)} → ${fmtNum(atual[t] ?? 0)}`);
+        const linhas = nomes.map(tabela => `${tabela}: ${fmtNum(b.entradas?.[tabela] ?? 0)} → ${fmtNum(atual[tabela] ?? 0)}`);
 
-        await msg.reply(`💾 *Backup ${lista.indexOf(b) + 1}*\n` +
-            `📄 ${b.nome}\n🕐 ${fmtQuando(b.criadoEm)} · ${b.motivo} · ZapBot ${b.versao}\n📦 ${humanSize(b.bytes)}\n` +
-            `${b.bytesNotas ? `🖼️ ${humanSize(b.bytesNotas)} de imagens do /notes${b.imagens ? ` (${b.imagens})` : ''}\n` : ''}\n` +
-            `*Entradas* _(backup → atual)_\n\`\`\`${linhas.join('\n')}\`\`\``);
+        await msg.reply(`${t('adm.backup.infoHead', { n: lista.indexOf(b) + 1 })}\n` +
+            `📄 ${b.nome}\n🕐 ${fmtQuando(b.criadoEm)} · ${motivoTexto(b.motivo)} · ZapBot ${b.versao}\n📦 ${humanSize(b.bytes)}\n` +
+            `${b.bytesNotas ? t('adm.backup.infoNotes', { tamanho: humanSize(b.bytesNotas), imagens: b.imagens ? ` (${b.imagens})` : '' }) : ''}\n` +
+            `${t('adm.backup.infoEntries')}\n\`\`\`${linhas.join('\n')}\`\`\``);
         return;
     }
 
@@ -146,25 +150,27 @@ async function cmdBackup({ msg, opts: optsDoComando, args }) {
     if (opts.given.has('restore')) {
         const b = acharBackup(lista, o.restore);
         if (!b) {
-            await msg.reply(lista.length ? `❌ Backup ${o.restore ?? '?'} não existe. Veja a lista com /backup -l` : semBackups);
+            await msg.reply(lista.length ? t('adm.backup.notFound', { n: o.restore ?? '?' }) : semBackups);
             return;
         }
 
         if (!o.sim) {
-            await msg.reply(`⚠️ *Restaurar o backup de ${fmtQuando(b.criadoEm)}?*\n` +
-                `📄 ${b.nome} (${b.motivo}, ZapBot ${b.versao})\n\n` +
-                'O banco inteiro volta a esse momento: mensagens guardadas, apagadas, editadas, settings, ' +
-                'regras do /watch, alertas, lembretes, estatísticas... O que entrou depois se perde, mas ' +
-                'antes o bot faz um backup do estado atual.' +
-                `${b.arquivoNotas ? '\nAs imagens do /notes deste backup voltam junto.' : '\nEste backup não tem imagens do /notes.'}\n\n` +
-                `Para confirmar: /backup -r ${b.nome} -sim`);
+            await msg.reply(t('adm.backup.restoreAsk', {
+                quando: fmtQuando(b.criadoEm),
+                nome: b.nome,
+                motivo: motivoTexto(b.motivo),
+                versao: b.versao,
+                notas: t(b.arquivoNotas ? 'adm.backup.restoreNotesYes' : 'adm.backup.restoreNotesNo')
+            }));
             return;
         }
 
         const r = await restaurarBackup(b);
-        await msg.reply(`♻️ *Backup restaurado:* ${fmtQuando(b.criadoEm)}\n` +
-            `_${entradasEmLinha(r.entradas)}_\n\n` +
-            `💾 O estado anterior ficou no backup ${r.seguranca.nome}: para desfazer, /backup -r ${r.seguranca.nome} -sim`);
+        await msg.reply(t('adm.backup.restored', {
+            quando: fmtQuando(b.criadoEm),
+            entradas: entradasEmLinha(r.entradas),
+            seguranca: r.seguranca.nome
+        }));
         return;
     }
 
@@ -177,7 +183,7 @@ async function cmdBackup({ msg, opts: optsDoComando, args }) {
         const antigos = valores.filter(v => v !== numero);
 
         if (antigos.length && comDestino) {
-            await msg.reply('❌ Informe o destino só no -to: /backup -send [nº] -to <destino>');
+            await msg.reply(t('adm.backup.destOnlyTo'));
             return;
         }
 
@@ -185,14 +191,15 @@ async function cmdBackup({ msg, opts: optsDoComando, args }) {
         const invalidos = emailsAntigos.filter(e => !e || !/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(e));
 
         if (invalidos.length) {
-            await msg.reply(`❌ E-mail inválido: ${invalidos.map(e => e || '(QRCODE_EMAIL_SMTP_TO vazio)').join(', ')}\n` +
-                '💡 _/backup -s [nº] -to <destino>: sem -to, vai no seu privado; -to email usa o QRCODE_EMAIL_SMTP_TO._');
+            await msg.reply(t('adm.backup.badEmail', {
+                lista: invalidos.map(e => e || t('adm.backup.smtpToEmpty')).join(', ')
+            }));
             return;
         }
 
         const b = numero ? acharBackup(lista, numero) : lista[0];
         if (!b) {
-            await msg.reply(lista.length ? `❌ Backup ${numero} não existe. Veja a lista com /backup -l` : semBackups);
+            await msg.reply(lista.length ? t('adm.backup.notFound', { n: numero }) : semBackups);
             return;
         }
 
@@ -209,10 +216,12 @@ async function cmdBackup({ msg, opts: optsDoComando, args }) {
 
         // Noutro chat: o banco tem as mensagens guardadas de TODOS os chats, então pede -sim
         if (outrosChats.length && !o.sim) {
-            const tos = destinosTexto.map(t => `-to ${/\s/.test(t) ? `/${t}/` : t}`).join(' ');
-            await msg.reply(`⚠️ O backup tem o banco inteiro: as mensagens guardadas de todos os chats, as apagadas, os settings...\n` +
-                `Para enviar mesmo em ${descreverDestinos(outrosChats)}, repita com -sim: ` +
-                `/backup -send${numero ? ` ${numero}` : ''} ${tos} -sim`);
+            const tos = destinosTexto.map(d => `-to ${/\s/.test(d) ? `/${d}/` : d}`).join(' ');
+            await msg.reply(t('adm.backup.sendConfirm', {
+                onde: descreverDestinos(outrosChats),
+                numero: numero ? ` ${numero}` : '',
+                tos
+            }));
             return;
         }
 
@@ -223,16 +232,16 @@ async function cmdBackup({ msg, opts: optsDoComando, args }) {
 
         if (emails.length) {
             if (b.bytes > MAX_ANEXO_BYTES) {
-                await msg.reply(`❌ O backup tem ${humanSize(b.bytes)}: grande demais para anexar (máx. ${humanSize(MAX_ANEXO_BYTES)}). Use /backup -s sem -to (vai no seu privado).`);
+                await msg.reply(t('adm.backup.tooBigAttach', { tamanho: humanSize(b.bytes), max: humanSize(MAX_ANEXO_BYTES) }));
                 return;
             }
 
             try {
                 await enviarBackupPorEmail(b, emails);
-                await msg.reply(`📧 Backup de ${fmtQuando(b.criadoEm)} enviado para ${emails.join(', ')}.`);
+                await msg.reply(t('adm.backup.emailSent', { quando: fmtQuando(b.criadoEm), emails: emails.join(', ') }));
             } catch (err) {
                 printError('/backup -send por e-mail:', err.message);
-                await msg.reply(`❌ Não consegui enviar o e-mail: ${err.message}`);
+                await msg.reply(t('adm.backup.emailFail', { erro: err.message }));
             }
         }
 
@@ -244,17 +253,17 @@ async function cmdBackup({ msg, opts: optsDoComando, args }) {
                 enviados.push(d);
             } catch (err) {
                 printError(`/backup -send para ${d.id}:`, err.message);
-                const onde = d.id === meuId ? 'seu privado' : descreverDestinos([d]);
-                await msg.reply(`❌ Não consegui enviar o backup em ${onde}: ${err.message}`);
+                const onde = d.id === meuId ? t('adm.backup.myPrivate') : descreverDestinos([d]);
+                await msg.reply(t('adm.backup.chatFail', { onde, erro: err.message }));
             }
         }
 
         // "no seu privado" só se o comando não veio de lá (ou se foi junto com outros chats)
         const outros = enviados.filter(d => d.id !== meuId);
         const noPrivado = enviados.some(d => d.id === meuId) && (outros.length || msg.id?.remote !== meuId);
-        const onde = [noPrivado && 'no seu privado', outros.length && `em ${descreverDestinos(outros)}`]
+        const onde = [noPrivado && t('adm.backup.inPrivate'), outros.length && t('adm.backup.inChats', { onde: descreverDestinos(outros) })]
             .filter(Boolean);
-        if (onde.length) await msg.reply(`💾 Backup enviado ${onde.join(' e ')}.`);
+        if (onde.length) await msg.reply(t('adm.backup.sent', { onde: onde.join(t('adm.backup.and')) }));
         return;
     }
 
@@ -262,18 +271,18 @@ async function cmdBackup({ msg, opts: optsDoComando, args }) {
     if (opts.given.has('rm')) {
         if (String(o.rm ?? '').toLowerCase() === 'all') {
             for (const b of lista) await removerBackup(b);
-            await msg.reply(`🗑️ ${plural(lista.length, 'backup removido', 'backups removidos')}.`);
+            await msg.reply(t('adm.backup.removedAll', { n: lista.length === 1 ? 1 : 2, total: lista.length }));
             return;
         }
 
         const b = acharBackup(lista, o.rm);
         if (!b) {
-            await msg.reply(lista.length ? `❌ Backup ${o.rm ?? '?'} não existe. Veja a lista com /backup -l` : semBackups);
+            await msg.reply(lista.length ? t('adm.backup.notFound', { n: o.rm ?? '?' }) : semBackups);
             return;
         }
 
         await removerBackup(b);
-        await msg.reply(`🗑️ Backup removido: ${fmtQuando(b.criadoEm)} (${b.motivo})`);
+        await msg.reply(t('adm.backup.removed', { quando: fmtQuando(b.criadoEm), motivo: motivoTexto(b.motivo) }));
         return;
     }
 

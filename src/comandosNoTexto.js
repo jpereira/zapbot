@@ -10,6 +10,7 @@ const { activeCommands, findCommand } = require('./comandos/base');
 const { printError } = require('./log');
 const { erroDeOpcoes, lerOpcoes, montarContexto, negacao } = require('./executar');
 const { dbGet, dbPronto } = require('./db');
+const { t } = require('./i18n');
 
 /*
  * Só os comandos com "cron": true no comandos.js (os de consulta), e sem as
@@ -74,18 +75,18 @@ async function lerComando(linha, onde = '/cron', dono = false) {
     const caller = linha.split(/\s+/, 1)[0].toLowerCase();
     const achado = await acharComando(linha);
 
-    if (!achado) return { erro: `❌ {${linha}}: o ${caller} não existe.` };
-    if (achado.textoAlias) return { erro: `❌ {${linha}}: o alias ${caller} é um texto e não roda dentro do ${onde}.` };
+    if (!achado) return { erro: t('cnt.naoExiste', { linha, caller }) };
+    if (achado.textoAlias) return { erro: t('cnt.aliasTexto', { linha, caller, onde }) };
 
     const { command, args } = achado;
     if (!command.cron || (command.cron === 'dono' && !dono)) {
-        return { erro: `❌ {${linha}}: o ${command.cmd} não roda dentro do ${onde}.\n💡 _Rodam: ${permitidos().join(', ')}._` };
+        return { erro: t('cnt.naoRoda', { linha, cmd: command.cmd, onde, lista: permitidos().join(', ') }) };
     }
 
     const opts = lerOpcoes(command, args);
     const proibida = (command.cmd_opts ?? []).find(o => (o.cron === false || (o.cron === 'dono' && !dono)) &&
         o.opts?.some(nome => opts.given.has(nome)));
-    if (proibida) return { erro: `❌ {${linha}}: o -${proibida.opts[0]} do ${command.cmd} não roda dentro do ${onde}.` };
+    if (proibida) return { erro: t('cnt.opcaoNaoRoda', { linha, opt: proibida.opts[0], cmd: command.cmd, onde }) };
 
     return { command, args, opts };
 }
@@ -136,14 +137,14 @@ function mensagemSintetica(chatId, linha, respostas) {
  */
 async function rodarComando(chatId, linha, { chatName, isGroup, onde = '/cron', quem = null }) {
     const { erro, command, args, opts } = await lerComando(linha, onde, !quem); // sem `quem`: roda como o dono
-    if (erro) return { texto: `⚠️ ${linha.split(/\s+/, 1)[0]} não roda no ${onde}`, midias: [] };
+    if (erro) return { texto: t('cnt.naoRodaNo', { cmd: linha.split(/\s+/, 1)[0], onde }), midias: [] };
 
     // O handler fica no comandos/index, que carrega o /cron (e este arquivo): só aqui, na hora
     const { HANDLERS } = require('./comandos/index');
     const respostas = [];
     const msg = mensagemSintetica(chatId, linha, respostas);
 
-    const dono = { nivel: ROLES.OWNER, admin: true, senderName: client.info?.pushname || 'Você' };
+    const dono = { nivel: ROLES.OWNER, admin: true, senderName: client.info?.pushname || t('core.voce') };
     const recusa = erroDeOpcoes(command, opts) ?? negacao(command, opts, quem?.nivel ?? dono.nivel);
     if (recusa) return { texto: recusa, midias: [] };
 

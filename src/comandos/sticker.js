@@ -5,6 +5,7 @@
 const { MessageMedia } = require('whatsapp-web.js');
 const { baixarMidia } = require('./get');
 
+const { t } = require('../i18n');
 const { printError } = require('../log');
 const { stickerMeta } = require('../settings');
 const { MAX_CARACTERES, lerCor, stickerDeTexto } = require('../stickerTexto');
@@ -40,11 +41,11 @@ function lerTexto(args) {
 
 async function stickerComTexto(msg, { texto, bg: bgDigitado, fg: fgDigitado }) {
     const [bg, fg] = [lerCor(bgDigitado), lerCor(fgDigitado)];
-    const erro = !texto ? '❌ Informe o texto: /sticker -txt "Bom dia!"'
-        : texto.length > MAX_CARACTERES ? `❌ Texto longo demais: até ${MAX_CARACTERES} caracteres.`
-            : !bg ? `❌ -bg: "${bgDigitado}" não é uma cor. Use #RRGGBB (ex.: #FFFFFF).`
-                : !fg ? `❌ -fg: "${fgDigitado}" não é uma cor. Use #RRGGBB (ex.: #000000).`
-                    : bg === fg ? '❌ O -bg e o -fg são a mesma cor: o texto não apareceria.'
+    const erro = !texto ? t('sticker.needText')
+        : texto.length > MAX_CARACTERES ? t('sticker.tooLong', { max: MAX_CARACTERES })
+            : !bg ? t('sticker.badBg', { cor: bgDigitado })
+                : !fg ? t('sticker.badFg', { cor: fgDigitado })
+                    : bg === fg ? t('sticker.sameColor')
                         : null;
     if (erro) {
         await msg.reply(erro);
@@ -56,7 +57,7 @@ async function stickerComTexto(msg, { texto, bg: bgDigitado, fg: fgDigitado }) {
         await msg.reply(new MessageMedia('image/webp', webp, 'sticker.webp'), null, { sendMediaAsSticker: true, ...stickerMeta() });
     } catch (err) {
         printError('/sticker -txt:', err.message);
-        await msg.reply(`❌ Não consegui gerar a figurinha: ${err.message}`);
+        await msg.reply(t('sticker.fail', { erro: err.message }));
     }
 }
 
@@ -66,21 +67,21 @@ async function stickerComTexto(msg, { texto, bg: bgDigitado, fg: fgDigitado }) {
  */
 async function cmdSticker(ctx) {
     const { msg, args, opts } = ctx;
-    const t = lerTexto(args);
-    if (t.semTxt) {
-        await msg.reply('❌ O -bg e o -fg são do -txt: /sticker -txt "Bom dia!" -bg "#FFFFFF" -fg "#000000"');
+    const txt = lerTexto(args);
+    if (txt.semTxt) {
+        await msg.reply(t('sticker.colorsNeedTxt'));
         return;
     }
-    if (t.comVideo) {
-        await msg.reply('❌ O -txt não combina com -ss, -es, -v nem com uma URL: ele faz a figurinha só do texto.');
+    if (txt.comVideo) {
+        await msg.reply(t('sticker.txtConflict'));
         return;
     }
-    if (t.comTexto && opts.given.has('pos')) {
-        await msg.reply('❌ O -pos é do recorte de imagem e vídeo: não vale com -txt.');
+    if (txt.comTexto && opts.given.has('pos')) {
+        await msg.reply(t('sticker.posConflict'));
         return;
     }
-    if (t.comTexto) {
-        await stickerComTexto(msg, t);
+    if (txt.comTexto) {
+        await stickerComTexto(msg, txt);
         return;
     }
 

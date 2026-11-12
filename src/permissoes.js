@@ -10,6 +10,7 @@
  */
 
 const { botConfig } = require('./botConfig');
+const { t } = require('./i18n');
 const { ROLES } = require('./roles');
 const { getSetting, setSetting } = require('./settings');
 
@@ -53,7 +54,7 @@ const permite = (regra, cmd) => !regra || SEMPRE_LIBERADOS.includes(cmd) ||
 
 // "Apenas: /a, /b" ou "Todos, menos: /a"
 const descreverRegra = (regra) =>
-    `${regra.apenas ? 'Apenas' : 'Todos, menos'}: ${regra.comandos.join(', ')}`;
+    `${t(regra.apenas ? 'grp.perm.only' : 'grp.perm.allBut')}: ${regra.comandos.join(', ')}`;
 
 /**
  * O que quem mandou pode neste chat: as entradas do bot.users que o liberam
@@ -107,9 +108,9 @@ function nivelDe({ fromMe, numero, permissao }) {
 function avisoDeLimite(regrasQueLimitam, cmd) {
     if (regrasQueLimitam.every(r => r.apenas)) {
         const comandos = [...new Set(regrasQueLimitam.flatMap(r => r.comandos))];
-        return `🚫 Limitado aos comandos: ${comandos.join(', ')}.`;
+        return t('grp.perm.limited', { list: comandos.join(', ') });
     }
-    return `🚫 O ${cmd} não está liberado para você.`;
+    return t('grp.perm.notAllowed', { cmd });
 }
 
 module.exports = {

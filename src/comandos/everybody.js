@@ -3,13 +3,14 @@
  */
 
 const { client } = require('../cliente');
+const { t } = require('../i18n');
 const { printDebug, printError, printSuccess } = require('../log');
 
 async function cmdEverybody({ msg, senderContact }) {
     const groupChat = await msg.getChat().catch(() => null);
 
     if (!groupChat?.isGroup) {
-        await msg.reply('Apenas utilizado dentro de grupos.');
+        await msg.reply(t('grp.onlyGroups'));
         return;
     }
 

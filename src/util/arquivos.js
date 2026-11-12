@@ -7,6 +7,7 @@ const fs = require('fs-extra');
 
 const { CACHE_DIR, MEDIA_DIR } = require('../constantes');
 const { printInfo } = require('../log');
+const { t } = require('../i18n');
 
 function getDirSize(dir) {
     let total = 0;
@@ -30,7 +31,7 @@ function listCacheLevelOnly(dir = CACHE_DIR) {
     const entries = fs.readdirSync(dir, { withFileTypes: true })
         .sort((a, b) => a.name.localeCompare(b.name));
 
-    if (!entries.length) return 'Diretório vazio.\n';
+    if (!entries.length) return t('arquivos.vazio');
 
     let totalBytes = 0;
 

@@ -1,4 +1,4 @@
-# `/stats` (`/estatisticas`) · admin
+# `/stats` · admin
 
 Role `admin`: só você e os admins extras. O dono libera a uma pessoa ou grupo com
 `/bot +u +cmd /stats` ([Delegando](index.md#delegando-um-comando-admin)).

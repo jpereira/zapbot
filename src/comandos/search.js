@@ -5,6 +5,7 @@
 const { client } = require('../cliente');
 const { getCommandSyntax } = require('./base');
 const { idsDoChatAtual, nomeDoContato } = require('../contatos');
+const { t } = require('../i18n');
 const { printError } = require('../log');
 const { formatarData, paraMs, plural } = require('../util/formatar');
 
@@ -52,17 +53,17 @@ async function lerMensagem({ msg, id, chatId, todos }) {
         achada = await client.getMessageById(id);
     } catch (err) {
         printError(`/search -read "${id}":`, err.message);
-        await msg.reply(`⚠️ Não consegui ler a mensagem: ${err.message}`);
+        await msg.reply(t('search.readFailed', { error: err.message }));
         return;
     }
 
     // Fora do seu privado, só as mensagens deste chat
     if (!achada || (!todos && (achada.id?.remote ?? achada.from) !== chatId)) {
-        await msg.reply(`🔎 Mensagem "${id}" não encontrada ${todos ? 'em nenhum chat' : 'neste chat'}.`);
+        await msg.reply(t('search.notFound', { id, where: todos ? t('search.noChat') : t('search.thisChat') }));
         return;
     }
 
-    const quem = achada.fromMe ? 'Você' : await nomeDe(achada.author || achada.from, new Map());
+    const quem = achada.fromMe ? t('search.you') : await nomeDe(achada.author || achada.from, new Map());
     const chat = todos ? ` · 💬 ${await nomeDoChat(achada.id?.remote ?? achada.from, new Map())}` : '';
     const texto = String(achada.body ?? '').trim();
     const midia = achada.hasMedia ? `📎 _[${achada.type}]_${texto ? '\n' : ''}` : '';
@@ -97,7 +98,7 @@ async function cmdSearch({ msg, opts, chatId }) {
     let aviso = '';
     n ??= PADRAO;
     if (n > MAXIMO) {
-        aviso = `\n_(limitado a ${MAXIMO} por vez)_`;
+        aviso = '\n' + t('search.limited', { max: MAXIMO });
         n = MAXIMO;
     }
 
@@ -109,15 +110,15 @@ async function cmdSearch({ msg, opts, chatId }) {
         achadas = await client.searchMessages(texto, { page: 1, limit: n, ...(todos ? {} : { chatId }) });
     } catch (err) {
         printError(`/search "${texto}":`, err.message);
-        await msg.reply(`⚠️ A busca do WhatsApp falhou: ${err.message}`);
+        await msg.reply(t('search.failed', { error: err.message }));
         return;
     }
 
     // A própria mensagem do /search também tem o texto
     achadas = achadas.filter(m => m.id?._serialized !== msg.id?._serialized);
-    const onde = todos ? 'em nenhum chat' : 'neste chat';
+    const onde = todos ? t('search.noChat') : t('search.thisChat');
     if (!achadas.length) {
-        await msg.reply(`🔎 Nada com "${texto}" ${onde}.`);
+        await msg.reply(t('search.nothing', { text: texto, where: onde }));
         return;
     }
 
@@ -126,16 +127,16 @@ async function cmdSearch({ msg, opts, chatId }) {
     const nomes = new Map();
     const chats = new Map();
     const linhas = await Promise.all(achadas.map(async (m, i) => {
-        const quem = m.fromMe ? 'Você' : await nomeDe(m.author || m.from, nomes);
+        const quem = m.fromMe ? t('search.you') : await nomeDe(m.author || m.from, nomes);
         const chat = todos ? ` · 💬 ${await nomeDoChat(m.id?.remote ?? m.from, chats)}` : '';
         return `${i + 1}. 📅 ${formatarData(m.timestamp)}${chat} · 👤 ${quem}\n   ${trechoDe(m)}` +
             `\n   🆔 ${m.id?._serialized}`;
     }));
 
-    await msg.reply(`🔎 *${plural(achadas.length, 'mensagem', 'mensagens')} com* "${texto}"` +
-        `${todos ? ' _(todos os chats)_' : ''}${aviso}\n\n${linhas.join('\n\n')}` +
-        (achadas.length >= n ? '\n\n💡 _Pode haver mais: use -N para ver mais (ex.: /search -30 <texto>)._' : '') +
-        '\n\n📖 _Para ler uma inteira: /search -read <id>._',
+    await msg.reply(t('search.header', { count: plural(achadas.length, t('search.message'), t('search.messages')), text: texto }) +
+        `${todos ? ' ' + t('search.allChats') : ''}${aviso}\n\n${linhas.join('\n\n')}` +
+        (achadas.length >= n ? '\n\n' + t('search.more') : '') +
+        '\n\n' + t('search.readHint'),
     null, { linkPreview: false });
 }
 

@@ -4,6 +4,8 @@
  * não couber saem.
  */
 
+const { t } = require('../i18n');
+
 const LARGURA = 595;
 const ALTURA = 842;
 const MARGEM = 50;
@@ -201,7 +203,7 @@ function gerarPdf({ titulo, direita = '', rodape = '', blocos }) {
             else c += texto(it.fonte, it.tamanho, it.cor, it.x, it.y, it.texto);
         }
         c += linhaHorizontal(52);
-        const pag = `Página ${i + 1} de ${total}`;
+        const pag = t('pdf.pagina', { n: i + 1, total });
         c += texto('F1', 8, '0.4 0.4 0.4', MARGEM, 38, rod);
         c += texto('F1', 8, '0.4 0.4 0.4', LARGURA - MARGEM - larguraDe(pag, 8), 38, pag);
 

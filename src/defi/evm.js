@@ -6,6 +6,7 @@
 
 const axios = require('axios');
 
+const { t } = require('../i18n');
 const { enderecoAbi, uintAbi, uintDe } = require('./hyperevm');
 
 const RPC_TIMEOUT_MS = 15000;
@@ -47,32 +48,32 @@ async function ethCall(url, { to, data }, rotulo) {
         const status = err.response?.status;
         const estourou = err.code === 'ECONNABORTED' || err.code === 'ETIMEDOUT' || /timeout/i.test(err.message);
         if (estourou) {
-            throw new ErroEvm(`O ${rotulo} não respondeu em ${RPC_TIMEOUT_MS / 1000} segundos.`,
+            throw new ErroEvm(t('defi.err.evmTimeout', { label: rotulo, s: RPC_TIMEOUT_MS / 1000 }),
                 `timeout: ${err.message}`);
         }
         if (status === 429) {
-            throw new ErroEvm(`Muitas consultas seguidas: o ${rotulo} pediu um tempo.`, 'HTTP 429 (rate limit)');
+            throw new ErroEvm(t('defi.err.evmRate', { label: rotulo }), 'HTTP 429 (rate limit)');
         }
-        if (status >= 500) throw new ErroEvm(`O ${rotulo} está fora do ar.`, `HTTP ${status}`);
-        if (status) throw new ErroEvm(`O ${rotulo} respondeu com erro.`, `HTTP ${status}`);
-        throw new ErroEvm(`Não consegui falar com o ${rotulo}.`, err.message);
+        if (status >= 500) throw new ErroEvm(t('defi.err.evmDown', { label: rotulo }), `HTTP ${status}`);
+        if (status) throw new ErroEvm(t('defi.err.evmHttp', { label: rotulo }), `HTTP ${status}`);
+        throw new ErroEvm(t('defi.err.evmCannotTalk', { label: rotulo }), err.message);
     }
 
     const { data: corpo } = resposta;
     if (corpo?.error) {
         const limite = /rate|limit|too many/i.test(corpo.error.message ?? '');
         const motivo = limite
-            ? `Muitas consultas seguidas: o ${rotulo} pediu um tempo.`
-            : `O ${rotulo} recusou a consulta.`;
+            ? t('defi.err.evmRate', { label: rotulo })
+            : t('defi.err.evmRefused', { label: rotulo });
         throw new ErroEvm(motivo, `${rotulo}: ${corpo.error.message ?? JSON.stringify(corpo.error)}`);
     }
     if (typeof corpo?.result !== 'string' || !/^0x[0-9a-f]*$/i.test(corpo.result)) {
-        throw new ErroEvm(`O ${rotulo} mandou uma resposta inesperada.`,
+        throw new ErroEvm(t('defi.err.evmUnexpected', { label: rotulo }),
             `resultado inválido: ${JSON.stringify(corpo)?.slice(0, 200)}`);
     }
     // Endereço sem contrato: o eth_call "funciona" e devolve vazio
     if (corpo.result === '0x') {
-        throw new ErroEvm('Contrato não encontrado na rede.', `${to}: eth_call vazio (sem contrato?)`);
+        throw new ErroEvm(t('defi.err.evmNoContract'), `${to}: eth_call vazio (sem contrato?)`);
     }
     return corpo.result;
 }
@@ -133,11 +134,11 @@ async function multicall(url, chamadas, rotulo) {
         try {
             lidos = decodificarAggregate3(hex);
         } catch (err) {
-            throw new ErroEvm(`O ${rotulo} mandou uma resposta inesperada.`,
+            throw new ErroEvm(t('defi.err.evmUnexpected', { label: rotulo }),
                 `aggregate3 ilegível: ${err.message}`);
         }
         if (lidos.length !== lote.length) {
-            throw new ErroEvm(`O ${rotulo} mandou uma resposta inesperada.`,
+            throw new ErroEvm(t('defi.err.evmUnexpected', { label: rotulo }),
                 `aggregate3: ${lidos.length} de ${lote.length} resultados`);
         }
         resultados.push(...lidos);

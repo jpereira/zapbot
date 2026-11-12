@@ -1,4 +1,4 @@
-# `/help` (`/h`, `/ajuda`)
+# `/help` (`/h`)
 
 Shows the command menu, or the help for a single command. Everyone sees only what they can use:
 

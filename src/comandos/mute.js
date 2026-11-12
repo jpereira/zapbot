@@ -6,9 +6,9 @@ const { client } = require('../cliente');
 const { getCommandSyntax } = require('./base');
 const { nomeDoContato, resolveLidToPhone, resolverNomeDoGrupo } = require('../contatos');
 const { dbAll, dbGet, dbPronto, dbRun } = require('../db');
+const { t } = require('../i18n');
 const { descreverDestino, resolverOuEscolher } = require('../destinos');
 const { TIPOS, chaveDoId, origemDoAviso } = require('../mudo');
-const { plural } = require('../util/formatar');
 
 /*
  * /mute (/mudo, /m) <opção> </contato ou grupo/|@menção|+número>
@@ -35,10 +35,13 @@ const OPCOES = {
     a: 'all', all: 'all'
 };
 const COLUNAS = ['deleted', 'edited', 'status', 'reaction'];
-const ROTULO = Object.fromEntries(Object.values(TIPOS).map(t => [t.coluna, t.rotulo]));
-const EXEMPLOS = '/Jorge Pereira/, /Grupo L200/ ou +5521999999999';
+const rotulos = () => Object.fromEntries(Object.values(TIPOS).map(tipo => [tipo.coluna, tipo.rotulo]));
+const exemplos = () => t('grp.mute.examples');
 
-const descrever = (m) => COLUNAS.filter(c => m[c]).map(c => ROTULO[c]).join(', ');
+const descrever = (m) => {
+    const rotulo = rotulos();
+    return COLUNAS.filter(c => m[c]).map(c => rotulo[c]).join(', ');
+};
 
 // "🏘️ Comunidade", "👥 Grupo" ou "👤 Pessoa"
 function descreverAlvo(alvo) {
@@ -73,7 +76,7 @@ function lerMudo(args) {
         } else if (OPCOES[nome]) {
             r.colunas.add(OPCOES[nome]);
         } else {
-            return { erro: `❌ Opção desconhecida: -${nome}` };
+            return { erro: t('grp.mute.unknownOption', { name: nome }) };
         }
     }
 
@@ -125,14 +128,14 @@ async function alvoDaResposta(msg, quotedMsg) {
         const cabecalho = String(quotedMsg.body ?? '').split(
             /\n(?:📅|✏️|📝|💬|❌|🗑️|😶)/
         )[0];
-        const nomeGrupo = cabecalho.match(/^👥\s+\*?Grupo:\*?\s*(.+)$/m)?.[1]?.trim();
+        const nomeGrupo = cabecalho.match(/^👥\s+\*?(?:Grupo|Group):\*?\s*(.+)$/m)?.[1]?.trim();
         if (nomeGrupo) {
             const alvo = await resolverOuEscolher(msg, nomeGrupo, { tipo: 'grupo' });
             return alvo ? grupo(alvo.id) : null;
         }
-        const numero = cabecalho.match(/^📱\s+\*?Número:\*?\s*\+(\d{10,15})\s*$/m)?.[1];
+        const numero = cabecalho.match(/^📱\s+\*?(?:Número|Number):\*?\s*\+(\d{10,15})\s*$/m)?.[1];
         if (numero) return pessoa(numero);
-        const nome = cabecalho.match(/^👤\s+\*?Nome:\*?\s*(.+)$/m)?.[1]?.trim();
+        const nome = cabecalho.match(/^👤\s+\*?(?:Nome|Name):\*?\s*(.+)$/m)?.[1]?.trim();
         if (nome) return resolverOuEscolher(msg, nome, { tipo: 'contato' });
     }
 
@@ -141,7 +144,7 @@ async function alvoDaResposta(msg, quotedMsg) {
         const telefone = autor?.endsWith('@lid') ? await resolveLidToPhone(autor) : autor;
         if (telefone) return pessoa(telefone.split('@')[0]);
     }
-    return { erro: `❌ Não sei de quem é essa mensagem: responda um aviso (apagada, editada, status, reação) ou informe quem: ${EXEMPLOS}.` };
+    return { erro: t('grp.mute.unknownMessage', { examples: exemplos() }) };
 }
 
 /**
@@ -151,8 +154,7 @@ async function alvoDaResposta(msg, quotedMsg) {
 async function lerAlvo(msg, texto, quotedMsg, comando) {
     if (texto) {
         return resolverOuEscolher(msg, texto, {
-            semEmail: `❌ O ${comando} ${comando === '/mute' ? 'silencia' : 'desfaz o silêncio de'} uma pessoa ou um grupo: ` +
-                'informe um contato, um grupo ou um número, não um e-mail.'
+            semEmail: t(comando === '/mute' ? 'grp.mute.noEmailMute' : 'grp.mute.noEmailUnmute', { cmd: comando })
         });
     }
 
@@ -172,22 +174,21 @@ async function listar(msg) {
     );
 
     if (!mutes.length) {
-        await msg.reply(`🔇 Ninguém silenciado.\n💡 _Ex.: /mute ${EXEMPLOS}, ou responda um aviso com /mute._`);
+        await msg.reply(t('grp.mute.none', { examples: exemplos() }));
         return;
     }
 
     const linhas = mutes.map((m, i) => `${i + 1}. ${descreverAlvo(m)} — ${descrever(m)}` +
-        (m.ignoradas ? ` _(${plural(m.ignoradas, 'aviso ignorado', 'avisos ignorados')})_` : ''));
+        (m.ignoradas ? ` _(${t('grp.mute.ignored', { n: m.ignoradas === 1 ? 1 : 2, count: m.ignoradas })})_` : ''));
 
-    await msg.reply(`🔇 *Silenciados* (${mutes.length})\n\n${linhas.join('\n')}\n\n` +
-        '💡 _Desfaça com /unmute <nº|nome> (ou /unmute -all, todos)._');
+    await msg.reply(t('grp.mute.list', { n: mutes.length, list: linhas.join('\n') }));
 }
 
 // Desfaz todos (o /unmute -all e o /mute -rm all)
 async function desfazerTodos(msg) {
     const { n } = await dbGet('SELECT COUNT(*) AS n FROM mutes');
     await dbRun('DELETE FROM mutes');
-    await msg.reply(`🔊 ${plural(n, 'silenciado removido', 'silenciados removidos')}: os avisos voltam.`);
+    await msg.reply(t('grp.mute.removedAll', { n: n === 1 ? 1 : 2, count: n }));
 }
 
 // Desfaz o nº N da lista
@@ -195,12 +196,12 @@ async function desfazerNumero(msg, valor) {
     const mutes = await dbAll('SELECT * FROM mutes ORDER BY id');
     const m = /^\d+$/.test(valor) ? mutes[Number(valor) - 1] : null;
     if (!m) {
-        await msg.reply(`❌ Nº ${valor || '?'} não existe. Veja a lista com /mute`);
+        await msg.reply(t('grp.mute.noNumber', { value: valor || '?' }));
         return;
     }
 
     await dbRun('DELETE FROM mutes WHERE id = ?', [m.id]);
-    await msg.reply(`🔊 Os avisos de ${descreverAlvo(m)} voltam.`);
+    await msg.reply(t('grp.mute.back', { target: descreverAlvo(m) }));
 }
 
 async function cmdMute({ msg, args, quotedMsg }) {
@@ -228,7 +229,7 @@ async function cmdMute({ msg, args, quotedMsg }) {
     const destino = await lerAlvo(msg, r.alvo, quotedMsg, '/mute');
     if (destino === null) return;
     if (!destino) {
-        await msg.reply(`❌ Informe quem (${EXEMPLOS}), ou responda um aviso com /mute.`);
+        await msg.reply(t('grp.mute.needTarget', { examples: exemplos() }));
         return;
     }
 
@@ -251,8 +252,7 @@ async function cmdMute({ msg, args, quotedMsg }) {
             flags.deleted, flags.edited, flags.status, flags.reaction, Date.now()]
     );
 
-    await msg.reply(`🔇 *${antes ? 'Atualizado' : 'Silenciado'}:* ${descreverAlvo(destino)} — ${descrever(flags)}\n` +
-        '💡 _Só o aviso some: as mensagens continuam guardadas para o /show. Veja a lista com /mute; desfaça com /unmute._');
+    await msg.reply(t(antes ? 'grp.mute.updated' : 'grp.mute.muted', { target: descreverAlvo(destino), what: descrever(flags) }));
 }
 
 async function cmdUnmute({ msg, args, opts, quotedMsg }) {
@@ -283,12 +283,12 @@ async function cmdUnmute({ msg, args, opts, quotedMsg }) {
     const mutes = await dbAll('SELECT * FROM mutes');
     const m = mutes.find(x => chaveDoId(x.target_id) === chaveDoId(destino.id));
     if (!m) {
-        await msg.reply(`ℹ️ ${descreverAlvo(destino)} não está silenciado.\n💡 _Veja a lista com /mute_`);
+        await msg.reply(t('grp.mute.notMuted', { target: descreverAlvo(destino) }));
         return;
     }
 
     await dbRun('DELETE FROM mutes WHERE id = ?', [m.id]);
-    await msg.reply(`🔊 Os avisos de ${descreverAlvo(m)} voltam.`);
+    await msg.reply(t('grp.mute.back', { target: descreverAlvo(m) }));
 }
 
 module.exports = {

@@ -5,9 +5,10 @@
 const { client, concluirAviso } = require('../cliente');
 const { nomeDaAgenda, nomeDoContato, resolveLidToPhone } = require('../contatos');
 const { resolverOuEscolher } = require('../destinos');
+const { t } = require('../i18n');
 const { printError, printInfo } = require('../log');
 const { itensDoTexto } = require('./set');
-const { esperar, plural } = require('../util/formatar');
+const { esperar } = require('../util/formatar');
 
 /*
  * /block <pessoa>       → bloqueia na sua conta do WhatsApp (/contato/, @menção
@@ -18,7 +19,7 @@ const { esperar, plural } = require('../util/formatar');
  * A lista vem do WhatsApp: quem você bloqueou no celular também aparece.
  * Grupos não se bloqueiam.
  */
-const EXEMPLOS = '/Fulano/, @menção ou +5521999999999';
+const exemplos = () => t('grp.block.examples');
 
 /*
  * O último -l ({ id, telefone, nome }): o "nº 2" do /unblock 2 é o da lista
@@ -55,7 +56,7 @@ async function bloqueado(c) {
 
 // "Fulano · +5521...", "+5521..." ou, sem nome nem telefone conhecido, o id interno
 const descrever = (b) => (b.nome ? `${b.nome}${b.telefone ? ` · +${b.telefone}` : ''}`
-    : b.telefone ? `+${b.telefone}` : `${b.id.split('@')[0]} _(id interno, sem telefone conhecido)_`);
+    : b.telefone ? `+${b.telefone}` : `${b.id.split('@')[0]} _(${t('grp.block.internalId')})_`);
 
 /*
  * Os bloqueados: com nome (em ordem), depois só com telefone, depois só com o
@@ -74,14 +75,13 @@ async function listar(msg) {
     ultimaLista = lista;
 
     if (!lista.length) {
-        await msg.reply(`🚫 Ninguém bloqueado.\n💡 _Ex.: /block ${EXEMPLOS}, ou responda uma mensagem com /block._`);
+        await msg.reply(t('grp.block.none', { examples: exemplos() }));
         return;
     }
 
     const linhas = lista.map((b, i) => `${i + 1}. 👤 ${descrever(b)}`);
 
-    await msg.reply(`🚫 *Bloqueados* (${lista.length})\n\n${linhas.join('\n')}\n\n` +
-        '💡 _Desbloqueie com /unblock <nº|nome>._');
+    await msg.reply(t('grp.block.list', { n: lista.length, list: linhas.join('\n') }));
 }
 
 /**
@@ -93,17 +93,17 @@ async function lerPessoa(msg, texto, quotedMsg, cmd) {
     if (texto) {
         const d = await resolverOuEscolher(msg, texto, {
             tipo: 'contato',
-            semEmail: `❌ O ${cmd} é de pessoas: informe um contato, uma menção ou um número, não um e-mail.`
+            semEmail: t('grp.block.noEmail', { cmd })
         });
         if (!d) return null;
         if (d.grupo) {
-            await msg.reply(`❌ ${d.nome} é um grupo: o ${cmd} é de pessoas.`);
+            await msg.reply(t('grp.block.isGroup', { name: d.nome, cmd }));
             return null;
         }
         return d;
     }
 
-    if (quotedMsg.fromMe) return { id: client.info.wid._serialized, nome: 'você' };
+    if (quotedMsg.fromMe) return { id: client.info.wid._serialized, nome: t('grp.block.you') };
 
     const id = quotedMsg.author || quotedMsg.from;
     const contato = await client.getContactById(id).catch(() => null);
@@ -152,7 +152,7 @@ async function naLista(ids, { esperarSeNao = false } = {}) {
  * @returns {Promise<'bloqueado'|'ja'|string>} o que aconteceu, ou o motivo de não bloquear
  */
 async function bloquearUma(pessoa) {
-    if (pessoa.id === client.info.wid._serialized) return 'é a conta do próprio bot';
+    if (pessoa.id === client.info.wid._serialized) return PROPRIO;
 
     try {
         const lid = await lidDe(pessoa.id);
@@ -163,39 +163,40 @@ async function bloquearUma(pessoa) {
         const contato = await client.getContactById(lid ?? pessoa.id);
         await contato.block();
 
-        if (!(await naLista(ids, { esperarSeNao: true }))) return 'o WhatsApp não bloqueou (não entrou na lista)';
+        if (!(await naLista(ids, { esperarSeNao: true }))) return t('grp.block.notBlocked');
     } catch (err) {
         printError(`/block: ${pessoa.nome} (${pessoa.id}):`, err.message);
-        return `o WhatsApp recusou o bloqueio (erro "${err.message}")`;
+        return t('grp.block.refused', { error: err.message });
     }
 
     printInfo(`/block: ${pessoa.nome} (${pessoa.id}) bloqueado`);
     return 'bloqueado';
 }
 
-const DICA_BLOCK = '💡 _Desfaça com /unblock; veja a lista com /block._';
+const PROPRIO = 'proprio';
+const dicaBlock = () => t('grp.block.hint');
 
 // Uma pessoa: a resposta de sempre
 async function responderUma(msg, pessoa, r) {
-    await msg.reply(r === 'bloqueado' ? `🚫 *Bloqueado:* 👤 ${pessoa.nome}\n${DICA_BLOCK}`
-        : r === 'ja' ? `ℹ️ 👤 ${pessoa.nome} já está bloqueado.\n💡 _Veja a lista com /block_`
-            : r === 'é a conta do próprio bot' ? '❌ Não dá para bloquear a conta do próprio bot.'
-                : `⚠️ Não consegui bloquear 👤 ${pessoa.nome}: ${r}.`);
+    await msg.reply(r === 'bloqueado' ? t('grp.block.blocked', { name: pessoa.nome, hint: dicaBlock() })
+        : r === 'ja' ? t('grp.block.already', { name: pessoa.nome })
+            : r === PROPRIO ? t('grp.block.cantSelf')
+                : t('grp.block.cantBlock', { name: pessoa.nome, reason: r }));
 }
 
 // Várias: um resumo só, por resultado
 async function responderVarias(msg, resultados) {
-    const grupo = (titulo, lista, comMotivo = false) => (lista.length
-        ? `${titulo} (${lista.length}):*\n${lista.map(({ pessoa, r }) => `👤 ${pessoa.nome}${comMotivo ? `: ${r}` : ''}`).join('\n')}`
+    const grupo = (chave, lista, comMotivo = false) => (lista.length
+        ? `${t(chave, { n: lista.length })}\n${lista.map(({ pessoa, r }) => `👤 ${pessoa.nome}${comMotivo ? `: ${r === PROPRIO ? t('grp.block.selfReason') : r}` : ''}`).join('\n')}`
         : null);
 
     const partes = [
-        grupo('🚫 *Bloqueados', resultados.filter(x => x.r === 'bloqueado')),
-        grupo('ℹ️ *Já estavam bloqueados', resultados.filter(x => x.r === 'ja')),
-        grupo('❌ *Não bloqueados', resultados.filter(x => x.r !== 'bloqueado' && x.r !== 'ja'), true)
+        grupo('grp.block.groupBlocked', resultados.filter(x => x.r === 'bloqueado')),
+        grupo('grp.block.groupAlready', resultados.filter(x => x.r === 'ja')),
+        grupo('grp.block.groupFailed', resultados.filter(x => x.r !== 'bloqueado' && x.r !== 'ja'), true)
     ].filter(Boolean);
 
-    await msg.reply(`${partes.join('\n\n')}\n\n${DICA_BLOCK}`);
+    await msg.reply(`${partes.join('\n\n')}\n\n${dicaBlock()}`);
 }
 
 async function cmdBlock({ msg, opts, quotedMsg }) {
@@ -242,7 +243,7 @@ async function aindaBloqueados(lista) {
 
 // Desbloqueia pelo id exato da lista de bloqueados, sem a troca pelo @lid do whatsapp-web.js
 async function desbloquearPeloId(id) {
-    if (!client.pupPage) throw new Error('sem a página do WhatsApp Web');
+    if (!client.pupPage) throw new Error(t('grp.block.noPage'));
     await client.pupPage.evaluate(async (contactId) => {
         const contato = await window.require('WAWebCollections').Contact.find(contactId);
         await window.require('WAWebBlockContactAction').unblockContact(contato, 'ChatListBlock');
@@ -275,7 +276,7 @@ async function desbloquear(lista) {
         await desbloquearPeloId(b.id).catch(err => printError(`/unblock: ${b.id} pelo id da lista:`, err.message));
     }
     ficaram = await aindaBloqueados(ficaram);
-    for (const b of ficaram) falhas.set(b.id, 'o WhatsApp não desbloqueou (continua na lista)');
+    for (const b of ficaram) falhas.set(b.id, t('grp.block.notUnblocked'));
 
     return lista.filter(b => falhas.has(b.id)).map(b => ({ b, motivo: falhas.get(b.id) }));
 }
@@ -289,17 +290,17 @@ async function desbloquearTodos(msg) {
     ultimaLista = [];
 
     if (!lista.length) {
-        await msg.reply('🚫 Ninguém bloqueado.');
+        await msg.reply(t('grp.block.noneShort'));
         return;
     }
 
-    const aviso = await msg.reply(`⏳ Desbloqueando ${plural(lista.length, 'contato', 'contatos')}, aguarde.`);
+    const aviso = await msg.reply(t('grp.block.unblocking', { n: lista.length === 1 ? 1 : 2, count: lista.length }));
     const falhas = await desbloquear(lista);
 
     const ok = lista.length - falhas.length;
     printInfo(`/unblock -all: ${ok} desbloqueados, ${falhas.length} falhas`);
-    await concluirAviso(msg, aviso, `✅ ${plural(ok, 'desbloqueado', 'desbloqueados')}.` +
-        (falhas.length ? `\n\n⚠️ Não consegui desbloquear (${falhas.length}):\n` +
+    await concluirAviso(msg, aviso, t('grp.block.unblockedCount', { n: ok === 1 ? 1 : 2, count: ok }) +
+        (falhas.length ? '\n\n' + t('grp.block.unblockFailures', { n: falhas.length }) + '\n' +
             falhas.map(f => `• ${descrever(f.b)}: ${f.motivo}`).join('\n') : ''));
 }
 
@@ -334,7 +335,7 @@ async function cmdUnblock({ msg, opts, quotedMsg }) {
     if (/^\d{1,3}$/.test(texto)) {
         const b = (ultimaLista.length ? ultimaLista : atuais)[Number(texto) - 1];
         if (!b) {
-            await msg.reply(`❌ Nº ${texto} não existe. Veja a lista com /block`);
+            await msg.reply(t('grp.block.noNumber', { value: texto }));
             return;
         }
         nome = descrever(b);
@@ -348,17 +349,17 @@ async function cmdUnblock({ msg, opts, quotedMsg }) {
     }
 
     if (!alvo) {
-        await msg.reply(`ℹ️ 👤 ${nome} não está bloqueado.\n💡 _Veja a lista com /block_`);
+        await msg.reply(t('grp.block.notInList', { name: nome }));
         return;
     }
 
     const [falha] = await desbloquear([alvo]);
     if (falha) {
-        await msg.reply(`⚠️ Não consegui desbloquear 👤 ${nome}: ${falha.motivo}.`);
+        await msg.reply(t('grp.block.cantUnblock', { name: nome, reason: falha.motivo }));
         return;
     }
     printInfo(`/unblock: ${nome} (${alvo.id}) desbloqueado`);
-    await msg.reply(`✅ *Desbloqueado:* 👤 ${nome}`);
+    await msg.reply(t('grp.block.unblocked', { name: nome }));
 }
 
 module.exports = {

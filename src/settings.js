@@ -6,6 +6,7 @@ const { OPENAI_MODELOS, OPENAI_VOZES } = require('./openai');
 const { compilarFiltroDebug } = require('./debugOpcoes');
 const { botConfig } = require('./botConfig');
 const { ROLES } = require('./roles');
+const { t } = require('./i18n');
 const { dbAll, dbGet, dbRun } = require('./db');
 const { limitarHistoricoMonitor } = require('./monitorHistorico');
 const { printError, printInfo, printSuccess } = require('./log');
@@ -30,7 +31,7 @@ const { compilarRegraWatch } = require('./watch/regras');
 // Um telefone com DDI (bot.admins e bot.users): "+55 (21) 99999-9999" → "5521999999999"
 function telefoneDoItem(v) {
     const digitos = v.replace(/[\s()+-]/g, '');
-    if (!/^\d{10,15}$/.test(digitos)) throw new Error(`número inválido: ${v} (use DDI + DDD + número, ex.: +5521999999999)`);
+    if (!/^\d{10,15}$/.test(digitos)) throw new Error(t('adm.settings.badNumber', { v }));
     return digitos;
 }
 
@@ -49,16 +50,16 @@ function itemDeUsuario(v) {
 function comandoDeUsuario(v) {
     const nome = v.startsWith('/') ? v.toLowerCase() : `/${v.toLowerCase()}`;
     const command = botConfig.commands.find(c => c.cmd === nome || c.aliases?.includes(nome));
-    if (!command) throw new Error(`comando desconhecido: ${nome}`);
+    if (!command) throw new Error(t('adm.settings.unknownCommand', { nome }));
     if (command.role !== ROLES.USER && !command.delegavel) {
-        throw new Error(`o ${command.cmd} é só ${command.role === ROLES.OWNER ? 'do dono' : 'do dono e dos admins'}, não dá para liberar`);
+        throw new Error(t(command.role === ROLES.OWNER ? 'adm.settings.ownerOnlyCmd' : 'adm.settings.adminOnlyCmd', { cmd: command.cmd }));
     }
     return command.cmd;
 }
 
 // item() das listas de feeds do /news e validar() dos RPCs do /defi
 function validarUrlFeed(v) {
-    if (!isValidHttpUrl(v)) throw new Error(`URL inválida: ${v}`);
+    if (!isValidHttpUrl(v)) throw new Error(t('adm.settings.badUrl', { v }));
     return v;
 }
 
@@ -103,7 +104,7 @@ const SETTINGS_SCHEMA = {
         type: 'string',
         desc: 'Caractere do traço das letras do /ascii quando -char não é informado.',
         validar: (v) => {
-            if ([...v].length !== 1) throw new Error('precisa ser um único caractere');
+            if ([...v].length !== 1) throw new Error(t('adm.settings.oneChar'));
             return v;
         }
     },
@@ -159,7 +160,7 @@ const SETTINGS_SCHEMA = {
         item: itemDeUsuario,
         lista: (itens) => {
             if (itens.includes('all') && itens.length > 1) {
-                throw new Error('o true (todos) não se mistura com pessoas e grupos: para liberar só alguns, /set bot.users false antes');
+                throw new Error(t('adm.settings.trueMixed'));
             }
             return itens;
         }
@@ -176,9 +177,9 @@ const SETTINGS_SCHEMA = {
         desc: 'Os comandos de cada usuário (o /bot +cmd|-cmd): item=/a,/b (só esses) ou item=!/a,/b (todos os comuns, menos esses), com o item do bot.users. Um comando admin (/gpt...) só vale na lista "só esses". Sem linha: todos os comuns.',
         item: (v) => {
             const m = v.match(/^(.+)=(!?)(.+)$/);
-            if (!m) throw new Error(`use item=/cmd,/cmd (ou item=!/cmd para todos menos esse): ${v}`);
+            if (!m) throw new Error(t('adm.settings.cmdsFormat', { v }));
             const alvo = itemDeUsuario(m[1]);
-            if (!alvo || alvo === 'all') throw new Error(`item inválido: ${m[1]}`);
+            if (!alvo || alvo === 'all') throw new Error(t('adm.settings.badItem', { item: m[1] }));
             const comandos = [...new Set(m[3].split(',').filter(Boolean).map(comandoDeUsuario))];
             return `${alvo}=${m[2]}${comandos.join(',')}`;
         }
@@ -217,8 +218,8 @@ const SETTINGS_SCHEMA = {
             // Nomes de versões anteriores (salvos no banco) que viraram outro comando
             const nome = COMANDOS_RENOMEADOS[digitado] ?? digitado;
             const command = botConfig.commands.find(c => c.cmd === nome || c.aliases?.includes(nome));
-            if (!command) throw new Error(`comando desconhecido: ${nome}`);
-            if (command.cmd === '/set') throw new Error('o /set não pode ser desativado');
+            if (!command) throw new Error(t('adm.settings.unknownCommand', { nome }));
+            if (command.cmd === '/set') throw new Error(t('adm.settings.setNotDisabled'));
             return command.cmd;
         }
     },
@@ -228,7 +229,7 @@ const SETTINGS_SCHEMA = {
         desc: 'Moedas exibidas pelo /rates (contra o real).',
         item: (v) => {
             const sym = v.toUpperCase();
-            if (!COTACAO_SUPORTADAS[sym]) throw new Error(`moeda não suportada: ${sym}`);
+            if (!COTACAO_SUPORTADAS[sym]) throw new Error(t('adm.settings.unsupportedCoin', { sym }));
             return sym;
         }
     },
@@ -238,7 +239,7 @@ const SETTINGS_SCHEMA = {
         desc: 'Moedas exibidas pelo /crypto.',
         item: (v) => {
             const sym = v.toUpperCase().replace(/USDT$/, '');
-            if (!CRYPTO_SUPPORTED[sym]) throw new Error(`moeda não suportada: ${sym}`);
+            if (!CRYPTO_SUPPORTED[sym]) throw new Error(t('adm.settings.unsupportedCoin', { sym }));
             return sym;
         }
     },
@@ -258,7 +259,7 @@ const SETTINGS_SCHEMA = {
         desc: 'Chat que recebe a cópia dos logs; configure pelo /debug -copy-to. Vazio: só console.',
         validar: (v) => {
             if (!/^[\d-]+@(c\.us|g\.us|lid)$/.test(v)) {
-                throw new Error('configure o destino pelo /debug -copy-to');
+                throw new Error(t('adm.settings.copyToHint'));
             }
             return v;
         }
@@ -284,7 +285,7 @@ const SETTINGS_SCHEMA = {
         type: 'list',
         desc: 'Redes (chain id) em que o /defi aave procura as posições: 1 (Ethereum), 8453 (Base).',
         item: (v) => {
-            if (!['1', '8453'].includes(v)) throw new Error(`rede sem Aave V3 no bot: ${v} (use 1 = Ethereum, 8453 = Base)`);
+            if (!['1', '8453'].includes(v)) throw new Error(t('adm.settings.aaveNetwork', { v }));
             return v;
         }
     },
@@ -293,7 +294,7 @@ const SETTINGS_SCHEMA = {
         type: 'string',
         allowEmpty: true,
         validar: (v) => {
-            if (!/^0x[0-9a-fA-F]{40}$/.test(v)) throw new Error(`carteira EVM é 0x e 40 caracteres hexadecimais: ${v}`);
+            if (!/^0x[0-9a-fA-F]{40}$/.test(v)) throw new Error(t('adm.settings.badWallet', { v }));
             return v;
         },
         desc: 'Carteira do /defi aave quando não há carteira cadastrada, usada quando AAVE_WALLET_ADDRESS não está no config/.env.'
@@ -355,7 +356,7 @@ const SETTINGS_SCHEMA = {
         type: 'list',
         desc: 'Redes (chain id) em que o /defi morpho procura as posições: 8453 (Base), 1 (Ethereum)...',
         item: (v) => {
-            if (!/^\d+$/.test(v)) throw new Error(`chain id é um número (8453 = Base, 1 = Ethereum): ${v}`);
+            if (!/^\d+$/.test(v)) throw new Error(t('adm.settings.badChainId', { v }));
             return v;
         }
     },
@@ -364,7 +365,7 @@ const SETTINGS_SCHEMA = {
         type: 'string',
         allowEmpty: true,
         validar: (v) => {
-            if (!/^0x[0-9a-fA-F]{40}$/.test(v)) throw new Error(`carteira EVM é 0x e 40 caracteres hexadecimais: ${v}`);
+            if (!/^0x[0-9a-fA-F]{40}$/.test(v)) throw new Error(t('adm.settings.badWallet', { v }));
             return v;
         },
         desc: 'Carteira do /defi morpho quando não há carteira cadastrada, usada quando MORPHO_WALLET_ADDRESS não está no config/.env.'
@@ -529,7 +530,7 @@ const SETTINGS_SCHEMA = {
         allowEmpty: true,
         desc: 'Data (AAAA-MM-DD) da compra dos créditos da OpenAI: o /gpt -usage soma o gasto desde ela para mostrar $usado/$total.',
         validar: (v) => {
-            if (v && (!/^\d{4}-\d{2}-\d{2}$/.test(v) || Number.isNaN(Date.parse(v)))) throw new Error('use AAAA-MM-DD');
+            if (v && (!/^\d{4}-\d{2}-\d{2}$/.test(v) || Number.isNaN(Date.parse(v)))) throw new Error(t('adm.settings.dateFormat'));
             return v;
         }
     },
@@ -563,7 +564,7 @@ const SETTINGS_SCHEMA = {
         type: 'list',
         desc: 'Preço por 1M de tokens em dólares, modelo=entrada/saída, para o custo estimado do rodapé de status do /gpt e do /tldr (modelo sem preço: custo n/d). Vem vazio: o /gpt -prices ou a atualização automática (openai.pricing.auto) preenche. Vale o nome exato ou o prefixo mais longo.',
         item: (v) => {
-            if (!/^[^=\s]+=\d+(\.\d+)?\/\d+(\.\d+)?$/.test(v)) throw new Error(`use modelo=entrada/saida (ex.: gpt-4o-mini=0.15/0.6): ${v}`);
+            if (!/^[^=\s]+=\d+(\.\d+)?\/\d+(\.\d+)?$/.test(v)) throw new Error(t('adm.settings.priceFormat', { v }));
             return v;
         }
     },
@@ -619,7 +620,7 @@ const SETTINGS_SCHEMA = {
         type: 'list',
         desc: 'Packs do 16colo.rs sorteados pelo /pixelart sem argumentos.',
         item: (v) => {
-            if (!/^[A-Za-z0-9._-]{1,100}$/.test(v)) throw new Error(`nome de pack inválido: ${v}`);
+            if (!/^[A-Za-z0-9._-]{1,100}$/.test(v)) throw new Error(t('adm.settings.badPack', { v }));
             return v;
         }
     },
@@ -723,7 +724,7 @@ const SETTINGS_SCHEMA = {
         type: 'string',
         opcoes: ['en_US', 'pt_BR'],
         normalizar: (v) => ({ en: 'en_US', en_us: 'en_US', pt: 'pt_BR', pt_br: 'pt_BR' })[v.toLowerCase().replace('-', '_')] ?? v,
-        desc: 'Idioma do bot: en_US (padrão) ou pt_BR. Hoje traduz a ajuda (-h e /help); as respostas dos comandos estão sendo migradas. Ex.: /set zapbot.lang pt_BR.'
+        desc: 'Idioma do bot (ajuda, respostas, avisos, datas e números): en_US (padrão) ou pt_BR. Ex.: /set zapbot.lang pt_BR.'
     }
 };
 
@@ -735,7 +736,7 @@ const settings = new Map();
  */
 function validarSetting(key, value) {
     const schema = SETTINGS_SCHEMA[key];
-    if (!schema) throw new Error(`setting desconhecido: ${key}`);
+    if (!schema) throw new Error(t('adm.settings.unknown', { key }));
 
     switch (schema.type) {
         case 'boolean': {
@@ -743,13 +744,13 @@ function validarSetting(key, value) {
             const v = String(value).trim().toLowerCase();
             if (['on', 'true', '1', 'sim', 'yes'].includes(v)) return true;
             if (['off', 'false', '0', 'nao', 'não', 'no'].includes(v)) return false;
-            throw new Error('use on|off');
+            throw new Error(t('adm.settings.onOff'));
         }
 
         case 'number': {
             const n = Number(value);
-            if (String(value).trim() === '' || !Number.isInteger(n)) throw new Error('precisa ser um número inteiro');
-            if (n < schema.min || n > schema.max) throw new Error(`precisa estar entre ${schema.min} e ${schema.max}`);
+            if (String(value).trim() === '' || !Number.isInteger(n)) throw new Error(t('adm.settings.integer'));
+            if (n < schema.min || n > schema.max) throw new Error(t('adm.settings.range', { min: schema.min, max: schema.max }));
             return n;
         }
 
@@ -759,8 +760,8 @@ function validarSetting(key, value) {
             if (!s && schema.allowEmpty) return s;
             // Chaves de API passam de 100 (as sk-proj- da OpenAI têm ~164)
             const max = schema.secret ? 500 : 100;
-            if (!s || s.length > max) throw new Error(`precisa ter de 1 a ${max} caracteres`);
-            if (schema.opcoes && !schema.opcoes.includes(s)) throw new Error(`não suportado: ${s} (aceitos: ${schema.opcoes.join(', ')})`);
+            if (!s || s.length > max) throw new Error(t('adm.settings.length', { max }));
+            if (schema.opcoes && !schema.opcoes.includes(s)) throw new Error(t('adm.settings.unsupported', { s, lista: schema.opcoes.join(', ') }));
             return schema.validar ? schema.validar(s) : s;
         }
 
@@ -774,7 +775,7 @@ function validarSetting(key, value) {
         }
     }
 
-    throw new Error(`tipo inválido no schema: ${schema.type}`);
+    throw new Error(t('adm.settings.badType', { tipo: schema.type }));
 }
 
 /*
@@ -908,7 +909,7 @@ async function setSetting(key, value) {
     value = validarSetting(key, value);
     if (key === 'monitor.max') {
         const { n } = await dbGet('SELECT COUNT(*) AS n FROM monitor_contacts');
-        if (value < n) throw new Error(`há ${n} contatos cadastrados: remova contatos pelo /monitor -rm antes de reduzir o limite`);
+        if (value < n) throw new Error(t('adm.settings.monitorMax', { n }));
     }
 
     await dbRun(
