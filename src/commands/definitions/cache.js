@@ -7,22 +7,22 @@ const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/cache',
-    usage: '/cache [OPÇÃO]',
+    usage: '/cache [OPTION]',
     aliases: [],
-    summary: 'Exibe o espaço ocupado pelo cache e limpa',
-    help: `Exibe o espaço ocupado em ${CACHE_DIR} e limpa o cache.`,
+    summary: 'Shows the space used by the cache and cleans it',
+    help: `Shows the space used in ${CACHE_DIR} and cleans the cache.`,
     cmd_opts: [
         {
             opts: ['all', 'a'],
             values: [],
-            desc: `Apaga TUDO em ${CACHE_DIR}: as mensagens (inclusive as guardadas para o /show), os temporários, as mídias baixadas em ${MEDIA_DIR} e os backups em ${BACKUP_DIR}.`
+            desc: `Deletes EVERYTHING in ${CACHE_DIR}: the messages (including the ones kept for /show), temporary files, the media downloaded to ${MEDIA_DIR} and the backups in ${BACKUP_DIR}.`
         },
-        { opts: ['backup', 'b'], values: [], desc: `Apaga os backups do /backup em ${BACKUP_DIR}.` },
-        { opts: ['clean', 'c'], values: [], desc: 'Limpa só o que passou das janelas de retenção.' },
+        { opts: ['backup', 'b'], values: [], desc: `Deletes the /backup backups in ${BACKUP_DIR}.` },
+        { opts: ['clean', 'c'], values: [], desc: 'Cleans only what is past the retention windows.' },
         {
             opts: ['media', 'm'],
             values: [],
-            desc: `Apaga as mídias baixadas em ${MEDIA_DIR} (as mensagens ficam, sem o arquivo).`
+            desc: `Deletes the media downloaded to ${MEDIA_DIR} (the messages stay, without the file).`
         }
     ],
     role: ADMIN // apaga dados

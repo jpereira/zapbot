@@ -6,62 +6,62 @@ const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/show',
-    usage: '/show [-N] [OPÇÃO] [chat]  ou  /show -l [chat]  ou  /show -q <texto|/regex/flags> [-N] [chat]',
+    usage: '/show [-N] [OPTION] [chat]  or  /show -l [chat]  or  /show -q <text|/regex/flags> [-N] [chat]',
     aliases: ['/mostrar'],
-    summary: 'Mostra mensagens do cache do bot',
-    help: 'Sem parâmetros no privado, lista o cache de todos os chats, como /show -l. Em grupos, reexibe a última mensagem apagada do grupo. Reexibe as mensagens apagadas, editadas, os status apagados e as reações removidas ou trocadas que estão no cache: deste chat ou de outro (pelo nº do -l, nome, @menção ou /regex/). Publicações de canais (@newsletter) são identificadas com 📰 Canal e o nome, sem nome ou telefone de contato.',
+    summary: 'Shows messages from the bot cache',
+    help: 'With no parameters in the private chat, lists the cache of all chats, like /show -l. In groups, shows again the last deleted message of the group. Shows again the deleted and edited messages, the deleted statuses and the removed or changed reactions that are in the cache: from this chat or another (by the -l number, name, @mention or /regex/). Channel (@newsletter) posts are identified with 📰 Canal and the name, without a contact name or phone number.',
     cmd_opts: [
-        { opts: ['deleted', 'd'], values: [], desc: 'Mensagens apagadas (sem chat, o padrão).' },
+        { opts: ['deleted', 'd'], values: [], desc: 'Deleted messages (without chat, the default).' },
         {
             opts: ['edited', 'e'],
             values: [],
-            desc: 'Mensagens editadas, com o texto de antes e o de depois.'
+            desc: 'Edited messages, with the text before and after.'
         },
         {
             opts: ['status', 's'],
             values: [],
-            desc: 'Status apagados: num privado, os da pessoa; no seu privado, sem chat, de todos.'
+            desc: 'Deleted statuses: in a private chat, the person\'s; in your private chat, without chat, everyone\'s.'
         },
         {
             opts: ['reaction', 'r'],
             values: [],
-            desc: 'Reações removidas ou trocadas, com a reação de antes (e a nova, se trocou) e o texto da mensagem reagida.'
+            desc: 'Removed or changed reactions, with the previous reaction (and the new one, if changed) and the text of the reacted message.'
         },
         {
             opts: ['list', 'l'],
             values: [],
-            desc: 'Lista os chats com conteúdo no cache, numerados para o /show <nº>, marcando o chat atual. Com chat (nº, nome, @menção ou /regex/), só os que casam, e as contas só deles.',
+            desc: 'Lists the chats with content in the cache, numbered for /show <no.>, marking the current chat. With chat (no., name, @mention or /regex/), only the ones that match, and the counts only for them.',
             ex: ['/show -l', '/show -l /^Maria/'],
             outrosChats: true
         },
         {
             opts: ['flush', 'f'],
             values: [],
-            desc: 'Remove do cache as apagadas deste chat ou, com -e/-s/-r/chat, o que foi pedido (no seu privado, sem chat: de todos).',
+            desc: 'Removes the deleted ones of this chat from the cache or, with -e/-s/-r/chat, whatever was requested (in your private chat, without chat: all of them).',
             role: ADMIN
         },
         {
             opts: ['query', 'q'],
-            values: ['<texto|/regex/flags>'],
-            desc: 'Busca as que têm o texto (sem diferenciar maiúsculas nem acentos) ou que casam com a /regex/flags. Neste chat, no chat pedido ou, no seu privado, em todos. Sem -N: as 5 mais recentes. Com espaços, entre aspas.',
+            values: ['<text|/regex/flags>'],
+            desc: 'Searches for the ones that contain the text (case- and accent-insensitive) or that match the /regex/flags. In this chat, in the requested chat or, in your private chat, in all of them. Without -N: the 5 most recent. With spaces, use quotes.',
             ex: ['/show -q pix', '/show -e -q "bom dia"', '/show -5 -q /pix|boleto/i']
         },
         {
             argv: ['-N'],
-            desc: 'Quantidade de mensagens (padrão 1, máx. show.max).',
+            desc: 'Number of messages (default 1, max. show.max).',
             ex: ['/show -3'],
             numero: true
         },
         {
             argv: ['chat'],
-            desc: 'Outro chat: o nº da lista do -l, parte do nome, @menção ou /regex/ (sem diferenciar maiúsculas nem acentos). Sem -d, -e, -s e -r, vêm apagadas, editadas, status e reações juntos, por data.',
+            desc: 'Another chat: the number from the -l list, part of the name, @mention or /regex/ (case- and accent-insensitive). Without -d, -e, -s and -r, deleted, edited, statuses and reactions come together, by date.',
             ex: ['/show -3 /^Maria/'],
             outrosChats: true
         },
         {
             opts: ['mask', 'm'],
             values: [],
-            desc: 'Ofusca telefones com 10 a 15 dígitos contínuos na saída desta execução, mantendo os cinco primeiros e os dois últimos (como +55219****44). Os dados salvos e os destinos usam os números completos.',
+            desc: 'Obfuscates phone numbers with 10 to 15 consecutive digits in this run\'s output, keeping the first five and the last two (like +55219****44). Saved data and destinations use the full numbers.',
             ex: ['/show -mask']
         }
     ],

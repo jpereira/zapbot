@@ -6,41 +6,41 @@ const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/mute',
-    usage: '/mute [OPÇÃO]... [/contato ou grupo/|@menção|+número]',
+    usage: '/mute [OPTION]... [/contact or group/|@mention|+number]',
     aliases: ['/mudo'],
-    summary: 'Silencia os avisos de apagadas, editadas e reações de uma pessoa',
-    help: 'Silencia os avisos de apagadas, editadas, status apagados e/ou reações removidas ou trocadas de uma pessoa, de um grupo ou de uma comunidade. Só o alvo, sem opção, silencia tudo (o -a). Respondendo um aviso, silencia de onde ele veio: a pessoa (privado e status), o grupo ou a comunidade. As mensagens continuam guardadas para o /show. O /watch também não avisa no seu privado de quem está silenciado, em qualquer tipo (os -to continuam recebendo). Sem nada, lista os silenciados.',
+    summary: 'Mutes the notices of deleted, edited and reactions from a person',
+    help: 'Mutes the notices of deleted, edited, deleted status and/or removed or changed reactions from a person, a group or a community. Just the target, with no option, mutes everything (the -a). Replying to a notice mutes where it came from: the person (private and status), the group or the community. The messages stay saved for /show. /watch also does not notify your private chat about muted ones, of any type (the -to destinations still receive). With nothing, lists the muted ones.',
     cmd_opts: [
         {
             opts: ['all', 'a'],
             values: [],
-            desc: 'Silencia tudo: apagadas, editadas, status e reações. É o padrão: só o alvo, sem opção, faz o mesmo.'
+            desc: 'Mutes everything: deleted, edited, status and reactions. It is the default: just the target, with no option, does the same.'
         },
-        { opts: ['deleted', 'd'], values: [], desc: 'Silencia os avisos de mensagens apagadas.' },
-        { opts: ['edited', 'e'], values: [], desc: 'Silencia os avisos de edições.' },
+        { opts: ['deleted', 'd'], values: [], desc: 'Mutes the notices of deleted messages.' },
+        { opts: ['edited', 'e'], values: [], desc: 'Mutes the notices of edits.' },
         {
             opts: ['list', 'l'],
             values: [],
-            desc: 'Lista os silenciados (também sem argumentos), com quantos avisos foram ignorados.'
+            desc: 'Lists the muted ones (also with no arguments), with how many notices were ignored.'
         },
         {
             opts: ['reaction', 'r'],
             values: [],
-            desc: 'Silencia os avisos de reações removidas ou trocadas.'
+            desc: 'Mutes the notices of removed or changed reactions.'
         },
         {
             opts: ['rm'],
-            values: ['<nº|all>'],
-            desc: 'Desfaz o silêncio do nº N da lista (ou de todos): o mesmo do /unmute.'
+            values: ['<no.|all>'],
+            desc: 'Undoes the mute of no. N in the list (or of all): same as /unmute.'
         },
-        { opts: ['status', 's'], values: [], desc: 'Silencia os avisos de status apagados.' },
+        { opts: ['status', 's'], values: [], desc: 'Mutes the notices of deleted status.' },
         {
-            argv: ['[/contato ou grupo/|@menção|+número]'],
-            desc: 'Contato ou grupo pelo nome ou parte dele, com prioridade para nomes exatos (vários: você escolhe na lista), alguém mencionado com @ ou um número. Respondendo um aviso, silencia a origem: grupo primeiro; sem grupo, número ou nome da pessoa.',
+            argv: ['[/contact or group/|@mention|+number]'],
+            desc: 'Contact or group by name or part of it, with priority for exact names (several: you pick from the list), someone mentioned with @ or a number. Replying to a notice mutes the origin: group first; with no group, the person\'s number or name.',
             ex: [
                 '/mute /Grupo L200/',
                 '/mute /Jorge Pereira/',
-                '/m @Fulano',
+                '/m @John',
                 '/mute -s +5521999999999',
                 '/mute -r /Grupo L200/'
             ]

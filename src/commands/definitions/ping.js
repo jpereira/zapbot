@@ -8,8 +8,8 @@ module.exports = {
     cmd: '/ping',
     usage: '/ping',
     aliases: [],
-    summary: 'Verifica se o bot está respondendo',
-    help: 'Verifica se o bot está respondendo (responde pong).',
+    summary: 'Checks whether the bot is responding',
+    help: 'Checks whether the bot is responding (replies pong).',
     digitando: false, // replies right away: without the "typing..."
     role: USER
 };

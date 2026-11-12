@@ -3,7 +3,9 @@
  */
 
 const { botConfig } = require('../botConfig');
+const { t } = require('../i18n');
 const { getSetting } = require('../settings');
+const { locate } = require('./localize');
 
 // Active commands: those in commands.js minus those in the 'commands.disabled' setting (via /set)
 function activeCommands() {
@@ -51,9 +53,9 @@ function textLines(textAlt, examples = [], start = '', indent = '') {
  * grouped by protocol (" > Orca", " > Project X and Morpho", " > All").
  */
 function optionGroup(command, o) {
-    if (!o.protocolos?.length) return { chave: '', ordem: Infinity, titulo: 'Todos' };
+    if (!o.protocolos?.length) return { chave: '', ordem: Infinity, titulo: t('help.groupAll') };
     const names = o.protocolos.map(p => command.protocolos[p]?.nome ?? p);
-    const title = names.length > 1 ? `${names.slice(0, -1).join(', ')} e ${names.at(-1)}` : names[0];
+    const title = names.length > 1 ? `${names.slice(0, -1).join(', ')}${t('help.and')}${names.at(-1)}` : names[0];
     return { chave: o.protocolos.join(','), ordem: o.protocolos.length, titulo: title };
 }
 
@@ -63,13 +65,15 @@ function optionGroup(command, o) {
  * @param {string} [o.protocolo]  only this protocol's help (the command.protocolos keys)
  */
 function formatCommandHelp(command, { protocolo: protocol } = {}) {
+    command = locate(command);
     const protocolAlt = protocol ? command.protocolos?.[protocol] : null;
     if (protocolAlt) command = { ...command, usage: protocolAlt.usage, help: protocolAlt.help, ex: protocolAlt.ex };
     const isWorthHere = (o) => !protocolAlt || !o.protocolos?.length || o.protocolos.includes(protocol);
 
     // Each usage form ("... or ...") on a line, aligned below the first
-    const forms = String(command.usage ?? command.cmd).split(/\s{2}ou\s{2}/);
-    const lines = forms.map((f, i) => `${i ? '     ' : 'Uso: '}${f}`);
+    const forms = String(command.usage ?? command.cmd).split(/\s{2}(?:or|ou)\s{2}/);
+    const indent = ' '.repeat(t('help.usage').length);
+    const lines = forms.map((f, i) => `${i ? indent : t('help.usage')}${f}`);
 
     if (command.help) lines.push(...textLines(command.help, command.ex));
 
@@ -104,25 +108,25 @@ function formatCommandHelp(command, { protocolo: protocol } = {}) {
             if (!groups.has(g.chave)) groups.set(g.chave, { ...g, opcoes: [] });
             groups.get(g.chave).opcoes.push(o);
         }
-        lines.push('', 'Opções:');
+        lines.push('', t('help.options'));
         [...groups.values()].sort((a, b) => a.ordem - b.ordem).forEach((g, i) => {
             lines.push(...(i ? [''] : []), ` > ${g.titulo}`);
             g.opcoes.forEach(o => lines.push(...line(o)));
         });
     } else if (options.length) {
-        lines.push('', 'Opções:');
+        lines.push('', t('help.options'));
         options.forEach((o, i) => lines.push(...(command.espacado && i ? [''] : []), ...line(o)));
     }
 
     if (positional.length) {
-        lines.push('', 'Argumentos:');
+        lines.push('', t('help.arguments'));
         positional.forEach(a => lines.push(...line(a)));
     }
 
-    lines.push('', 'Ajuda: -help, -h');
+    lines.push('', t('help.helpLine'));
 
     if (command.aliases?.length) {
-        lines.push('', `Aliases: ${command.aliases.join(', ')}`);
+        lines.push('', t('help.aliases', { list: command.aliases.join(', ') }));
     }
 
     return lines.join('\n');

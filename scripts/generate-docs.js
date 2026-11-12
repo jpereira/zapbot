@@ -14,6 +14,7 @@ const fs = require('fs');
 const path = require('path');
 
 const { commands } = require('../src/commands/commands');
+const { locate } = require('../src/commands/localize');
 const { ROLES } = require('../src/roles');
 
 const DOCS = path.join(__dirname, '..', 'docs', 'commands');
@@ -38,6 +39,7 @@ function lineBreak(items) {
 // The text of each language: English (en) is the docs/commands/index.md page, and Portuguese (pt-BR), index.pt-BR.md
 const TEXTS = {
     en: {
+        lang: 'en_US',
         arquivo: 'index.md',
         porRole: 'Commands by role',
         grupos: [
@@ -49,6 +51,7 @@ const TEXTS = {
         tabela: ['Command', 'Current chat only (left out)', 'Owner and admins only']
     },
     'pt-BR': {
+        lang: 'pt_BR',
         arquivo: 'index.pt-BR.md',
         porRole: 'Comandos por role',
         grupos: [
@@ -83,7 +86,7 @@ const nameAltAlt = (o) => (o.opts ? `-${o.opts[0]}` : o.argv.join(' '));
 const cell = (items) => (items.length ? items.map(n => `\`${n}\``).join(', ').replace(/\|/g, '\\|') : '');
 
 const limits = (textAlt) => () => {
-    const linesAlt = commands.map(c => ({
+    const linesAlt = commands.map(c => locate(c, textAlt.lang)).map(c => ({
         cmd: c.cmd,
         outros: cell((c.cmd_opts ?? []).filter(o => o.outrosChats).map(nameAltAlt)),
         ajustes: cell((c.cmd_opts ?? []).filter(o => o.role && o.role !== ROLES.USER).map(nameAltAlt))

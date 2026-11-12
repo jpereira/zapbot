@@ -6,28 +6,28 @@ const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/batch',
-    usage: '/batch [-stop|-s] [-dry|-d] [-quiet|-q] (os comandos vêm nas linhas de baixo)',
+    usage: '/batch [-stop|-s] [-dry|-d] [-quiet|-q] (the commands go on the lines below)',
     aliases: ['/lote'],
-    summary: 'Executa vários comandos seguidos, de uma mensagem só',
-    help: 'Executa vários comandos seguidos, de uma mensagem só (ou da mensagem respondida), e responde um resumo. Uma linha que começa com um comando (ou alias) abre um bloco; o que vem depois, linhas em branco inclusas, é do mesmo bloco. Com -stop (-s), para no primeiro erro. Com -dry (-d), só mostra como separou os blocos, sem executar. Com -quiet (-q), não responde o resumo da execução (os erros ficam só no log). Um bloco é um comando e tudo até o próximo (um /ideia com a URL embaixo, por exemplo). Só o dono usa.',
+    summary: 'Runs several commands in a row, from a single message',
+    help: 'Runs several commands in a row, from a single message (or the replied message), and replies with a summary. A line that starts with a command (or alias) opens a block; what comes after, blank lines included, belongs to the same block. With -stop (-s), stops at the first error. With -dry (-d), only shows how the blocks were split, without running. With -quiet (-q), does not reply with the run summary (errors stay only in the log). A block is a command and everything up to the next one (an /ideia with the URL below it, for example). Owner only.',
     ex: ['/batch', '/batch -dry', '/batch -d', '/batch -stop'],
     cmd_opts: [
         {
             opts: ['stop', 's'],
             values: [],
-            desc: 'Para no primeiro bloco que falhar (o padrão é continuar).',
+            desc: 'Stops at the first block that fails (the default is to continue).',
             cron: false
         },
         {
             opts: ['dry', 'd'],
             values: [],
-            desc: 'Só mostra como os blocos foram separados, sem executar.',
+            desc: 'Only shows how the blocks were split, without running.',
             cron: false
         },
         {
             opts: ['quiet', 'q'],
             values: [],
-            desc: 'Não responde o resumo da execução (o ✅/❌ de cada bloco). Não vale com -dry, que só existe para mostrar a separação.',
+            desc: 'Does not reply with the run summary (the ✅/❌ of each block). Does not apply with -dry, which exists only to show the split.',
             cron: false
         }
     ],

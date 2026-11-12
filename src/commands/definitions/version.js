@@ -8,8 +8,8 @@ module.exports = {
     cmd: '/version',
     usage: '/version',
     aliases: ['/versao'],
-    summary: 'Exibe a versão do bot',
-    help: 'Exibe a versão do bot (mesmo banner do /uptime).',
+    summary: 'Shows the bot version',
+    help: 'Shows the bot version (same banner as /uptime).',
     digitando: false, // replies right away: without the "typing..."
     role: USER,
     cron: true

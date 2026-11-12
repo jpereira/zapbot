@@ -266,10 +266,11 @@ async function changeList(msg, optionsAlt) {
 
 async function cmdSet({ msg, opts, args, chatId }) {
     await dbReady;
-    const monitor = String(args ?? '').match(/^(monitor\.(?:pool|max|maxRecords|enabled))\s*=\s*(.*)$/s);
-    if (monitor) {
-        args = `${monitor[1]} ${monitor[2]}`;
-        opts = { ...opts, argv: [monitor[1], monitor[2]] };
+    // /set key=value (zapbot.lang=pt_BR) counts as /set key value
+    const equal = String(args ?? '').match(/^([\w.]+)\s*=\s*(.*)$/s);
+    if (equal && SETTINGS_SCHEMA[equal[1]]) {
+        args = `${equal[1]} ${equal[2]}`;
+        opts = { ...opts, argv: [equal[1], equal[2]] };
     }
 
     // The option key (-reset, -append, -rm) or the 1st word

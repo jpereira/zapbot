@@ -6,17 +6,17 @@ const { USER } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/me',
-    usage: '/me [-repeat|-r <n>] <mensagem>',
+    usage: '/me [-repeat|-r <n>] <message>',
     aliases: [],
-    summary: 'Envia a mensagem digitada',
-    help: 'Envia a mensagem digitada. {/comando args} roda na hora e a resposta entra no lugar (só comandos de consulta, como no /cron). O \\n digitado vira quebra de linha.',
-    ex: ['/me O Bitcoin está em {/crypto BTC}', '/me Linha 1\\nLinha 2', '/me -r 3 Haha!'],
+    summary: 'Sends the typed message',
+    help: 'Sends the typed message. {/command args} runs right away and the reply takes its place (query commands only, as in /cron). A typed \\n becomes a line break.',
+    ex: ['/me Bitcoin is at {/crypto BTC}', '/me Line 1\\nLine 2', '/me -r 3 Haha!'],
     cmd_opts: [
         {
             opts: ['repeat', 'r'],
             values: ['<n>'],
-            desc: 'Repete o texto n vezes (de 1 a me.maxRepeat, padrão 500), emendado, numa mensagem só; os {/comando} rodam uma vez só.',
-            ex: ['/me -r 3 Haha! envia Haha!Haha!Haha!']
+            desc: 'Repeats the text n times (1 to me.maxRepeat, default 500), joined together, in a single message; the {/command}s run only once.',
+            ex: ['/me -r 3 Haha! sends Haha!Haha!Haha!']
         }
     ],
     role: USER

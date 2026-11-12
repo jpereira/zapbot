@@ -1,0 +1,67 @@
+{
+  "summary": "Logs de depuração com níveis e filtro",
+  "usage": "/debug [OPÇÃO]",
+  "help": "Logs de depuração com níveis cumulativos DEBUG0 a DEBUG3, filtro /regex/flags e cópia para um chat do WhatsApp. As configurações ficam salvas nos settings debug.*.",
+  "ex": [
+    "/debug -on",
+    "/debug -on -level 2 -filter /sapato/ -copy-to /Jorge Pereira/"
+  ],
+  "cmd_opts": [
+    {
+      "opts": [
+        "copy-to"
+      ],
+      "values": [
+        "[destino]"
+      ],
+      "desc": "Copia os logs para contato, grupo, menção ou número, como no -to; não aceita e-mail. Sem destino, usa este chat.",
+      "ex": [
+        "-copy-to /Jorge Pereira/",
+        "-copy-to @Jorge (menção)",
+        "-copy-to"
+      ]
+    },
+    {
+      "opts": [
+        "filter",
+        "f"
+      ],
+      "values": [
+        "[/regex/flags]"
+      ],
+      "desc": "Exibe e copia linhas que casam com a regex, com matches destacados no console. Os logs de inicialização aparecem sem filtro, inclusive o aviso por e-mail de bot iniciado. Aceita flags do JavaScript (i, g, m, s, u, y...). Sem regex, limpa o filtro.",
+      "ex": [
+        "-filter /chatName.*Jorge/i",
+        "-filter"
+      ]
+    },
+    {
+      "opts": [
+        "level",
+        "lvl"
+      ],
+      "values": [
+        "<0|1|2|3>"
+      ],
+      "desc": "Nível cumulativo: 0 (padrão) logs básicos e argumentos dos comandos; 1 comandos recebidos, chamadas do parser e funções exportadas; 2 APIs e outras integrações com parâmetros; 3 resultados, SQL e diagnósticos de desenvolvimento. Precisa do debug ligado ou de -on no mesmo comando.",
+      "ex": [
+        "-level 2",
+        "-on -lvl 3"
+      ]
+    },
+    {
+      "opts": [
+        "off"
+      ],
+      "values": [],
+      "desc": "Desliga o debug e limpa o filtro e o destino da cópia."
+    },
+    {
+      "opts": [
+        "on"
+      ],
+      "values": [],
+      "desc": "Liga o debug no nível configurado. Pode combinar com nível, filtro e cópia."
+    }
+  ]
+}
