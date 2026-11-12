@@ -3,6 +3,7 @@
  */
 
 const { ADMIN } = require('../../roles').ROLES;
+const { opcaoStatus } = require('./_opcoes');
 
 module.exports = {
     cmd: '/gpt',
@@ -14,14 +15,14 @@ module.exports = {
         {
             opts: ['model', 'm'],
             values: ['[modelo]'],
-            desc: 'Lista os modelos por uso, os que a sua chave vê, e troca o de cada um: sem opção, o das perguntas (setting openai.api.model); com -img ou -gif, o das imagens e do GIF; com -audio, o da transcrição; com -voz, o da voz. Sem modelo, só lista (com -gif, -audio ou -voz, só aquele uso).',
+            desc: 'Lista os modelos por uso, os que a sua chave vê, e troca o de cada um: sem opção, o das perguntas (setting openai.api.model); com -img, o da imagem; com -gif, o do GIF; com -audio, o da transcrição; com -voz, o da voz. Sem modelo, só lista (com -gif, -audio ou -voz, só aquele uso).',
             ex: ['/gpt -m', '/gpt -m gpt-4.1', '/gpt -m gpt-image-2.6-flare -gif', '/gpt -m gpt-transcribe -audio', '/gpt -m gpt-4o-mini-tts -voz'],
             role: ADMIN
         },
         {
             opts: ['img'],
             values: [],
-            desc: 'Cria uma imagem com o pedido (v1/images, modelo openai.image.model) e responde com ela. Respondendo uma foto, a edita. Só o dono e os admins: gasta a sua conta da OpenAI.',
+            desc: 'O mesmo do /desenhe: cria uma imagem com o pedido (v1/images, modelo openai.image.model) e responde com ela. Respondendo uma foto, a edita. Só o dono e os admins: gasta a sua conta da OpenAI.',
             ex: ['/gpt -img um robô nadando em aquarela', '/gpt -img coloque um chapéu nele (respondendo uma foto)'],
             role: ADMIN,
             cron: false
@@ -29,7 +30,7 @@ module.exports = {
         {
             opts: ['gif'],
             values: [],
-            desc: 'Cria um GIF animado (API de imagens, output_format gif, só nos modelos gpt-image-2.6-*) e responde com ele. Respondendo uma foto, a anima; "gere um gif animado de..." respondendo uma foto também vale, sem o -gif. Os quadros e o tempo de cada um são os settings openai.gif.frames e openai.gif.frameMs. Só o dono e os admins: gasta a sua conta da OpenAI.',
+            desc: 'O mesmo do /desenhe -gif: cria um GIF animado (API de imagens, output_format gif, modelo openai.image.gifModel, só os gpt-image-2.6-*) e responde com ele. Respondendo uma foto, a anima; "gere um gif animado de..." respondendo uma foto também vale, sem o -gif. Os quadros e o tempo de cada um são os settings openai.gif.frames e openai.gif.frameMs. Só o dono e os admins: gasta a sua conta da OpenAI.',
             ex: ['/gpt -gif um gato de óculos escuros', '/gpt gere um gif animado dele nadando (respondendo uma foto)'],
             role: ADMIN,
             cron: false
@@ -65,13 +66,7 @@ module.exports = {
             role: ADMIN,
             cron: false
         },
-        {
-            opts: ['status', 's'],
-            values: [],
-            desc: 'Acrescenta no rodapé da resposta o consumo da chamada: bytes enviados (TX) e recebidos (RX) e tokens gastos. Para deixar sempre ligado: /set openai.status true.',
-            ex: ['/gpt -s explique SSRF em 3 linhas'],
-            cron: false
-        },
+        opcaoStatus('/gpt -s explique SSRF em 3 linhas'),
         {
             argv: ['<pergunta>'],
             desc: 'O que perguntar. Respondendo uma foto (ou figurinha), ela vai junto da pergunta; sem pergunta, o ChatGPT descreve a foto. Respondendo um áudio ou nota de voz, o /gpt transcreve (sem pergunta, ou com "transcreva") ou, com outra pergunta, responde em cima da transcrição.',

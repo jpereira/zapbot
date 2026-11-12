@@ -37,7 +37,17 @@ const OPCAO_VERBOSE_FFMPEG = {
     desc: 'Mostra os comandos usados no yt-dlp e no ffmpeg.'
 };
 
+// -status|-s do /gpt, do /tldr e do /desenhe: o consumo da chamada no rodapé (veja src/openaiChat.js)
+const opcaoStatus = (exemplo) => ({
+    opts: ['status', 's'],
+    values: [],
+    desc: 'Acrescenta no rodapé da resposta o consumo da chamada: bytes enviados (TX) e recebidos (RX), tokens gastos, custo estimado e saldo. Para deixar sempre ligado: /set openai.status true.',
+    ex: [exemplo],
+    cron: false
+});
+
 module.exports = {
+    opcaoStatus,
     OPCAO_ALERTA_MSG,
     OPCAO_ALERTA_RM,
     OPCAO_ALERTA_TO,

@@ -3,6 +3,7 @@
  */
 
 const { ADMIN } = require('../../roles').ROLES;
+const { opcaoStatus } = require('./_opcoes');
 
 module.exports = {
     cmd: '/tldr',
@@ -23,13 +24,7 @@ module.exports = {
             desc: 'Envia no seu privado em vez de expor no chat atual.',
             outrosChats: true
         },
-        {
-            opts: ['status', 's'],
-            values: [],
-            desc: 'Acrescenta no rodapé da resposta o consumo da chamada: bytes enviados (TX) e recebidos (RX) e tokens gastos. Para deixar sempre ligado: /set openai.status true.',
-            ex: ['/tldr -s 2h'],
-            cron: false
-        },
+        opcaoStatus('/tldr -s 2h'),
         {
             argv: ['[período]'],
             desc: '2h ou 30m: as mensagens desse tempo para cá; 300: as últimas 300 (máx. tldr.maxMsgs). Padrão: as últimas 100. Respondendo uma mensagem (sem período nem -c): da mensagem respondida até agora.'

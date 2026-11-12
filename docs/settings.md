@@ -68,9 +68,10 @@ e sobrevivem a reinícios. Para ver e alterar, use o [`/set`](comandos/set.md).
 | `openai.api.model` | texto (da lista) | `gpt-4o-mini` | Modelo do `/gpt`, usado quando `OPENAI_MODEL` não está no `config/.env`. Aceitos: os listados por `/gpt -m` |
 | `openai.credit.since` | texto (AAAA-MM-DD, pode ser vazio) | *(vazio)* | Data da compra dos créditos da OpenAI: o `/gpt -usage` soma o gasto desde ela para mostrar `$usado/$total` (vazio: os últimos 180 dias) |
 | `openai.credit.total` | 0–100000 | `0` | Total de créditos comprados na OpenAI, em dólares (a API não informa o saldo): o `/gpt -usage` mostra `$usado/$total`. `0`: não mostra |
-| `openai.gif.frameMs` | 20–2000 | `200` | Quanto dura cada quadro do GIF do `/gpt -gif`, em ms (o total é quadros x ms) |
-| `openai.gif.frames` | 2–16 | `9` | Quantos quadros tem o GIF do `/gpt -gif` (quanto mais quadros, mais caro) |
-| `openai.image.model` | texto | `gpt-image-2.6-flare` | Modelo que gera e edita a imagem do `/gpt -img` e o GIF do `/gpt -gif` (só os `gpt-image-2.6-*` fazem GIF): o id que a sua conta tem; se não existir, o bot lista os que a chave vê |
+| `openai.gif.frameMs` | 20–2000 | `200` | Quanto dura cada quadro do GIF do `/desenhe -gif` e do `/gpt -gif`, em ms (o total é quadros x ms) |
+| `openai.gif.frames` | 2–16 | `9` | Quantos quadros tem o GIF do `/desenhe -gif` e do `/gpt -gif` (quanto mais quadros, mais caro) |
+| `openai.image.gifModel` | texto | `gpt-image-2.6-flare` | Modelo que gera o GIF do `/desenhe -gif` e do `/gpt -gif` (só os `gpt-image-2.6-*` fazem GIF e pedem acesso à prévia): o id que a sua conta tem (se não existir, o bot lista os que a chave vê) |
+| `openai.image.model` | texto | `gpt-image-2` | Modelo que gera e edita a imagem do `/desenhe` e do `/gpt -img`: o id que a sua conta tem (se não existir, o bot lista os que a chave vê). O GIF tem o seu, o `openai.image.gifModel` |
 | `openai.pricing` | lista `modelo=entrada/saída` | *(vazia)* (o `/gpt -prices` ou a atualização automática preenche) | Preço por 1M de tokens, em dólares, para o custo estimado do rodapé de status do `/gpt` e do `/tldr` (modelo sem preço: `custo n/d`). Vale o nome exato ou o prefixo mais longo |
 | `openai.pricing.auto` | liga/desliga | `ligado` | Atualiza o `openai.pricing` sozinho a cada 15 dias, lendo o site da OpenAI (como o `/gpt -prices`); só roda com a chave da OpenAI configurada. Desligado: só à mão |
 | `openai.pricing.updated` | `AAAA-MM-DD` | *(vazio)* | Data da última atualização do `openai.pricing` (gravada pelo bot): vazio: ainda não atualizou |
