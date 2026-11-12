@@ -5,6 +5,8 @@
 const { listAliases } = require('../aliases');
 const { ROLES, answer } = require('../roles');
 const { activeCommands, findCommand, formatCommandHelp, helpProtocol } = require('./base');
+const { locate } = require('./localize');
+const { t } = require('../i18n');
 
 // The /help -full order: from the most restricted to the common
 const ROLES_IN_HELP = [ROLES.OWNER, ROLES.ADMIN, ROLES.USER];
@@ -40,34 +42,34 @@ async function cmdHelp({ msg, args: typed, opts, nivel: level, admin,
         const command = findCommand(requestedCommand);
 
         if (!command) {
-            await msg.reply(`❌ Comando não encontrado: ${requestedCommand}`);
+            await msg.reply(t('help.notFound', { cmd: requestedCommand }));
             return;
         }
 
         if (!can(command)) {
             await msg.reply((command.role !== ROLES.USER
-                ? `⛔ O ${command.cmd} é só do dono do bot${command.role === ROLES.OWNER ? '' : ' (e dos admins)'}.`
-                : `⛔ O ${command.cmd} não está liberado para você.`) +
-                '\n💡 _Veja os que você pode usar com /help_');
+                ? t('help.restricted', { cmd: command.cmd, e: command.role === ROLES.OWNER ? '' : t('help.andAdmins') })
+                : t('help.notAllowed', { cmd: command.cmd })) +
+                `\n${t('help.seeAllowed')}`);
             return;
         }
 
         const protocol = helpProtocol(command, rest);
-        await msg.reply('🤖 *AJUDA*\n\n```' + formatCommandHelp(command, { protocolo: protocol }) + '\n```');
+        await msg.reply(`${t('help.title')}\n\n\`\`\`${formatCommandHelp(command, { protocolo: protocol })}\n\`\`\``);
         return;
     }
 
     // /help alone: one command per line, only with what it does; with -role, separated by role
-    const line = (c) => ` ${c.cmd} - ${c.summary ?? c.help}`;
+    const line = (c) => { const l = locate(c); return ` ${c.cmd} - ${l.summary ?? l.help}`; };
     const visible = activeCommands().filter(can);
     const list = opts?.opt?.role
         ? ROLES_IN_HELP.map(g => [g, visible.filter(c => c.role === g)]).filter(([, cs]) => cs.length)
             .map(([g, cs]) => `Role: ${g}\n${cs.map(line).join('\n')}`).join('\n\n')
         : visible.map(line).join('\n');
     const helpText =
-        '🤖 *MENU DE AJUDA*' + (admin ? '' : ' _(os comandos que você pode usar)_') + '\n\n```\n' +
+        t('help.menuTitle') + (admin ? '' : ` ${t('help.menuUserNote')}`) + '\n\n```\n' +
         list +
-        '\n```\n\n💡 Utilize */help /comando* ou */comando -h* para mais informações.';
+        `\n\`\`\`\n\n${t('help.menuFooter')}`;
 
     await msg.reply(helpText);
 }

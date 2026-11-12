@@ -286,6 +286,45 @@ describe('documentação', () => {
         assert.deepEqual(commands, sorted(commands), 'comandos fora de ordem no menu');
     });
 
+    test('exemplos dos blocos de código (docs e READMEs): os comandos usam só opções que existem', () => {
+        const byName = new Map();
+        for (const c of CONFIG.commands) for (const n of [c.cmd, ...(c.aliases ?? [])]) byName.set(n, c);
+        // What comes after these is another command (the shortcut, the message, the batch...): the options are its own
+        const withTarget = new Set(['/alias', '/me', '/batch', '/cron', '/help']);
+        const files = [...READMES, ...pagesDocs().map(f => `docs/${f}`)];
+        let linesAlt = 0;
+
+        for (const fileAlt of files) {
+            const md = fs.readFileSync(path.join(bot.ROOT, fileAlt), 'utf8');
+            for (const [, block] of md.matchAll(/^```[^\n]*\n([\s\S]*?)^```/gm)) {
+                for (const line of block.split('\n')) {
+                    const m = line.match(/^\s*(\/[^\s]+)\s+(.*)$/);
+                    const c = m && byName.get(m[1]);
+                    if (!c || withTarget.has(c.cmd)) continue;
+                    linesAlt++;
+                    const validAlt = new Set(['help', 'h', ...(c.cmd_opts ?? []).flatMap(o => o.opts ?? [])]);
+                    const rest = m[2].replace(/\s{2,}(→|\().*$/, '').replace(/"[^"]*"/g, '').replace(/\{[^}]*\}/g, '');
+                    for (const [, , nameAlt] of rest.matchAll(/(?:^|\s)([-+])([A-Za-z][\w-]*)/g)) {
+                        assert.ok(validAlt.has(nameAlt), `${fileAlt}: "${line.trim()}" usa -${nameAlt}, que ${c.cmd} não tem`);
+                    }
+                }
+            }
+        }
+        assert.ok(linesAlt > 500, `poucos exemplos conferidos (${linesAlt})`);
+    });
+
+    test('settings: o padrão documentado (on/off, número e texto) é o do SETTINGS_SCHEMA, nos dois idiomas', () => {
+        for (const language of LANGUAGES) {
+            const linesAlt = doc(language, 'settings.md').split('\n');
+            for (const [keyAlt, schema] of Object.entries(SETTINGS_SCHEMA)) {
+                const line = linesAlt.find(l => l.startsWith(`| \`${keyAlt}\` |`));
+                const defaults = line.split('|')[3].trim();
+                if (schema.type === 'boolean') assert.equal(defaults, `\`${schema.default ? 'on' : 'off'}\``, `${language.nome} ${keyAlt}`);
+                if (schema.type === 'string' && schema.default !== '') assert.equal(defaults, `\`${schema.default}\``, `${language.nome} ${keyAlt}`);
+            }
+        }
+    });
+
     test('tabela de settings: as chaves do SETTINGS_SCHEMA, em ordem', () => {
         for (const language of LANGUAGES) {
             const keys = withoutCode(doc(language, 'settings.md')).split('\n')

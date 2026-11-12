@@ -1,0 +1,6 @@
+{
+  "summary": "Sorteia 2 membros do grupo para pagar um boleto",
+  "usage": "/bills",
+  "help": "Sorteia 2 membros do grupo para pagar um boleto.",
+  "cmd_opts": []
+}

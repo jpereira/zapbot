@@ -6,15 +6,15 @@ const { USER } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/whois',
-    usage: '/whois [pessoa...]',
+    usage: '/whois [person...]',
     aliases: ['/who', '/id'],
-    summary: 'Mostra quem é e o que pode no bot, neste chat',
-    help: 'Mostra quem é e o que pode no bot, neste chat: 🤖 dono, 👑 admin (+a), 🗣️ usuário (+u) ou 🚫 sem permissão; quem tem os comandos limitados (/bot +cmd), com a lista deles. Sozinho, mostra você. Com pessoas (ou respondendo uma mensagem), mostra elas, mas só para o dono e os admins.',
+    summary: 'Shows who someone is and what they can do in the bot, in this chat',
+    help: 'Shows who someone is and what they can do in the bot, in this chat: 🤖 owner, 👑 admin (+a), 🗣️ user (+u) or 🚫 no permission; who has limited commands (/bot +cmd), with their list. Alone, shows you. With people (or replying to a message), shows them, but only for the owner and admins.',
     ex: ['/whois', '/whois /Rafael Silva/'],
     cmd_opts: [
         {
-            argv: ['[pessoa...]'],
-            desc: 'Só o dono e os admins: /nome/, @menção ou +número (vários de uma vez). Respondendo uma mensagem, sem pessoa: quem a escreveu.',
+            argv: ['[person...]'],
+            desc: 'Only the owner and admins: /name/, @mention or +number (several at once). Replying to a message, without a person: whoever wrote it.',
             ex: ['/whois @Fulano', '/whois +5521999999999']
         }
     ],

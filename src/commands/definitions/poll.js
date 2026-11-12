@@ -6,20 +6,20 @@ const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/poll',
-    usage: '/poll [-m] <pergunta> | <opção 1> | <opção 2> [| ...]  ou  /poll -r',
+    usage: '/poll [-m] <question> | <option 1> | <option 2> [| ...]  or  /poll -r',
     aliases: ['/enquete', '/quiz'],
-    summary: 'Cria uma enquete no chat ou mostra o resultado',
-    help: 'Cria uma enquete no chat (separe pergunta e opções, de 2 a 12, com | ou uma por linha) ou mostra o resultado com -r.',
+    summary: 'Creates a poll in the chat or shows the result',
+    help: 'Creates a poll in the chat (separate the question and options, 2 to 12, with | or one per line) or shows the result with -r.',
     cmd_opts: [
         {
             opts: ['multi', 'm'],
             values: [],
-            desc: 'Permite marcar mais de uma opção (só no começo do texto).'
+            desc: 'Allows selecting more than one option (only at the start of the text).'
         },
         {
             opts: ['result', 'r'],
             values: [],
-            desc: 'Resultado da enquete mais recente do chat (ou da enquete respondida): votos por opção e quem votou.'
+            desc: 'Result of the most recent poll in the chat (or of the replied poll): votes per option and who voted.'
         }
     ],
     delegavel: true,

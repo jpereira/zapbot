@@ -1,0 +1,6 @@
+{
+  "summary": "Piada aleatória",
+  "usage": "/joke",
+  "help": "Piada aleatória em português (nenhuma se repete até todas saírem).",
+  "cmd_opts": []
+}

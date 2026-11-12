@@ -6,20 +6,20 @@ const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/unblock',
-    usage: '/unblock [/contato/|@menção|+número|nº]  ou  /unblock -all',
+    usage: '/unblock [/contact/|@mention|+number|#]  or  /unblock -all',
     aliases: ['/desbloquear'],
-    summary: 'Desbloqueia pessoas bloqueadas',
-    help: 'Desbloqueia uma pessoa bloqueada (pelo /block ou no celular), ou todas com -all. Respondendo uma mensagem, desbloqueia quem a escreveu. Sem nada, lista os bloqueados.',
+    summary: 'Unblocks blocked people',
+    help: 'Unblocks a blocked person (via /block or on the phone), or everyone with -all. Replying to a message, unblocks whoever wrote it. With nothing, lists the blocked ones.',
     cmd_opts: [
         {
             opts: ['all', 'a'],
             values: [],
-            desc: 'Desbloqueia todos os bloqueados (inclusive os que você bloqueou no celular).',
+            desc: 'Unblocks everyone blocked (including the ones you blocked on the phone).',
             ex: ['/unblock -all']
         },
         {
-            argv: ['[/contato/|@menção|+número|nº]'],
-            desc: 'A pessoa, como no /block, ou o nº da lista do /block.',
+            argv: ['[/contact/|@mention|+number|#]'],
+            desc: 'The person, as in /block, or the # from the /block list.',
             ex: ['/unblock /Fulano/', '/unblock 2']
         }
     ],

@@ -6,16 +6,16 @@ const { USER } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/pixelart',
-    usage: '/pixelart [OPÇÃO] [pack]',
+    usage: '/pixelart [OPTION] [pack]',
     aliases: ['/ansi', '/px'],
-    summary: 'Arte ANSI/ASCII aleatória do 16colo.rs',
-    help: 'Arte ANSI/ASCII aleatória do 16colo.rs, com título e artista. Packs padrão no setting pixelart.packs.',
+    summary: 'Random ANSI/ASCII art from 16colo.rs',
+    help: 'Random ANSI/ASCII art from 16colo.rs, with title and artist. Default packs in the pixelart.packs setting.',
     cmd_opts: [
-        { opts: ['random', 'r'], values: [], desc: 'Sorteia de qualquer pack do arquivo.' },
-        { opts: ['year', 'y'], values: ['<ano>'], desc: 'Sorteia de um pack do ano (ex.: 1996).' },
+        { opts: ['random', 'r'], values: [], desc: 'Picks from any pack in the archive.' },
+        { opts: ['year', 'y'], values: ['<year>'], desc: 'Picks from a pack of the year (e.g.: 1996).' },
         {
             argv: ['<pack>'],
-            desc: 'Nome do pack (ex.: chuck-norris-lvl). Sem ele: setting pixelart.packs.'
+            desc: 'Pack name (e.g.: chuck-norris-lvl). Without it: pixelart.packs setting.'
         }
     ],
     role: USER,

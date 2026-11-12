@@ -6,15 +6,15 @@ const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/stats',
-    usage: '/stats [-N] [/chat/] [-me]  ou  /stats -l  ou  /stats -flush </chat/>  ou  /stats -flush-all',
+    usage: '/stats [-N] [/chat/] [-me]  or  /stats -l  or  /stats -flush </chat/>  or  /stats -flush-all',
     aliases: ['/estatisticas'],
-    summary: 'Ranking do chat: quem mais fala, apaga e edita',
-    help: 'Ranking do chat atual ou de outro (/Grupo/): quem mais fala, apaga e edita, horários e dia de pico. Com -me, as suas estatísticas. O -l lista os chats com estatísticas; o -flush apaga as de um chat e o -flush-all, todas.',
+    summary: 'Chat ranking: who talks, deletes and edits the most',
+    help: 'Ranking of the current chat or another one (/Group/): who talks, deletes and edits the most, hours and peak day. With -me, your own stats. -l lists the chats with stats; -flush deletes those of a chat and -flush-all, all of them.',
     cmd_opts: [
         {
             opts: ['flush', 'f'],
             values: ['</chat/>'],
-            desc: 'Apaga as estatísticas de um chat: um grupo, ou o privado com uma pessoa, buscado pelo nome entre os que têm estatísticas.',
+            desc: 'Deletes the stats of a chat: a group, or the private chat with a person, searched by name among those that have stats.',
             ex: ['/stats -flush /Grupo Família/'],
             cron: false,
             role: ADMIN
@@ -22,31 +22,31 @@ module.exports = {
         {
             opts: ['flush-all'],
             values: [],
-            desc: 'Apaga as estatísticas de todos os chats.',
+            desc: 'Deletes the stats of all chats.',
             cron: false,
             role: ADMIN
         },
         {
             opts: ['list', 'l'],
             values: [],
-            desc: 'Lista os chats com estatísticas, do que mais fala para o que menos, com o total e o dia da última mensagem.',
+            desc: 'Lists the chats with stats, from the most active to the least, with the total and the day of the last message.',
             outrosChats: true
         },
         {
             opts: ['me'],
             values: [],
-            desc: 'As suas mensagens, somadas em todos os chats (ou só no /chat/): onde você mais fala, horários e pico.',
+            desc: 'Your messages, summed across all chats (or only in /chat/): where you talk the most, hours and peak.',
             outrosChats: true
         },
         {
             argv: ['-N'],
-            desc: 'Período em dias (padrão 7, máx. stats.retentionDays). Vem antes ou depois do /chat/.',
+            desc: 'Period in days (default 7, max. stats.retentionDays). Goes before or after /chat/.',
             ex: ['/stats -30', '/stats /Grupo Família/ -10'],
             numero: true
         },
         {
             argv: ['</chat/>'],
-            desc: 'Outro chat em vez do atual: um grupo, ou o privado com uma pessoa, buscado pelo nome (sem diferenciar maiúsculas e acentos) entre os que têm estatísticas; vários com o nome: você escolhe na lista.',
+            desc: 'Another chat instead of the current one: a group, or the private chat with a person, searched by name (case and accent insensitive) among those that have stats; several with the name: you pick from the list.',
             ex: ['/stats /Grupo Família/', '/stats -10 /Família/', '/stats -me /Família/'],
             outrosChats: true
         }

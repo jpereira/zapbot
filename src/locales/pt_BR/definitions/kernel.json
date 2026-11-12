@@ -1,0 +1,6 @@
+{
+  "summary": "Versões atuais do kernel Linux",
+  "usage": "/kernel",
+  "help": "Versões atuais do kernel Linux (kernel.org).",
+  "cmd_opts": []
+}

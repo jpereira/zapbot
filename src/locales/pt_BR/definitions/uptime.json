@@ -1,0 +1,6 @@
+{
+  "summary": "Há quanto tempo o bot está rodando",
+  "usage": "/uptime",
+  "help": "Exibe há quanto tempo o bot está rodando e conectado.",
+  "cmd_opts": []
+}
