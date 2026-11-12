@@ -45,7 +45,7 @@ Cada categoria lê a lista do seu setting (`news.<categoria>`), que aceita qualq
 
 Detalhes:
 
-- Várias categorias no mesmo comando somam os feeds.
+- Várias categorias no mesmo comando somam os feeds, sob o título "📰 News".
 - Cada fonte ocupa no máximo a sua fatia da lista (ex.: 6 manchetes de 2 feeds → até 3 de cada);
   senão a que publica mais toma tudo.
 - Um feed fora do ar não derruba os outros: ele só aparece no log.

@@ -10,7 +10,8 @@ edits the most, messages per time-of-day slot, peak hour and peak day. With `-me
 summed across all chats: which ones you talk in the most, how many you deleted, your hours and your
 peak day.
 
-The numbers come from the counters in the `stats` table, filled on every received message. Your
+The numbers come from the counters in the `stats` table, filled on every received message (setting `stats.enable`, on by default; off stops counting
+and keeps the history). Your
 messages count toward your number in any chat, including private chats with other people. The chat
 with yourself and statuses are not included. The bot's own replies and WhatsApp notices (someone
 joined the group, the name changed, encryption, a call...), which have no author, don't count either.

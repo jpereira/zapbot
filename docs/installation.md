@@ -88,7 +88,7 @@ modes, chosen by `QRCODE_EMAIL_ENABLE`:
 | Mode | `QRCODE_EMAIL_ENABLE` | Where the QR shows up |
 |------|------|------|
 | Terminal | `false` | Drawn in ASCII in the container logs (`docker logs -f zapbot`) |
-| Email   | `true`  | Sent as a PNG image to `QRCODE_EMAIL_SMTP_TO` (if sending fails, it falls back to the terminal too) |
+| Email   | `true`  | Sent as a PNG image to `QRCODE_EMAIL_SMTP_TO` (if sending fails, it falls back to the terminal too, unless `QRCODE_EMAIL_FALLBACK_TERMINAL` is `false`) |
 
 Email mode is the **recommended** one, especially when the bot runs on a remote server/homelab and
 you don't want to keep watching logs: the QR lands in your inbox, you open it on your computer and

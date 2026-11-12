@@ -115,7 +115,7 @@ Quando usar cada opção:
 | Liberar para uma pessoa, em qualquer chat | `/bot +u /Maria Lucia/` |
 | Liberar só alguns comandos para alguém | `/bot +u +cmd /rates,/crypto /Sofia Izabel/` |
 | Liberar só o `/gpt` para o grupo Familia | `/bot +u +cmd /gpt`, digitado no grupo (ou `/bot +u +cmd /gpt /Familia/`) |
-| Dar a alguém os comandos admin e owner | `/bot +a /Jorge Pereira/` |
+| Dar a alguém os comandos admin | `/bot +a /Jorge Pereira/` |
 | Parar o bot por completo por um tempo, sem derrubar o container | `/bot -off` |
 | Tirar todos os usuários, de uma vez (os admins ficam) | `/bot -reset` |
 | Desfazer tudo: só você de novo, sem admins nem usuários | `/bot -reset force` |
@@ -134,8 +134,8 @@ Detalhes:
 
 ## Admins extras
 
-Outras pessoas podem usar os comandos **admin** e **owner** (os com esse role na
-[tabela de comandos](index.md#resumo)), e também os comuns, em qualquer chat, se você as puser como
+Outras pessoas podem usar os comandos **admin** (os com esse role na
+[tabela de comandos](index.md#resumo)), e também os comuns, em qualquer chat, se você as tornar
 admins:
 
 ```text
@@ -171,8 +171,8 @@ contato de quem o WhatsApp só informa o id interno (LID), sem o telefone, tamb�
 ## Usuários
 
 Os usuários usam os comandos de role **`user`** (veja a coluna Role da
-[tabela de comandos](index.md#resumo)). Os `owner` continuam só seus e dos admins, e os `admin`
-também, a menos que você os [delegue](index.md#delegando-um-comando-admin) com o `+cmd`.
+[tabela de comandos](index.md#resumo)). Os `admin` continuam só seus e dos admins, a menos que você
+os [delegue](index.md#delegando-um-comando-admin) com o `+cmd` (só os marcados como delegáveis).
 
 | Quem | Onde usa |
 |---|---|
@@ -260,10 +260,10 @@ mostra só os dele).
 - O `-cmd` em quem usa todos deixa "Todos, menos" esses. Tirar o último comando de uma lista é
   recusado: para tirar a pessoa, `/bot -u`; para liberar todos, `/bot +cmd all`.
 - Os comandos vão pelo nome ou pelo alias (`/creptomoeda` vira `/crypto`), separados por vírgula.
-  Um comando `owner` (`/set`, `/bot`...) não entra: o bot recusa. Um `admin` (`/gpt`, `/show`...)
-  entra só numa lista "Apenas": o `-cmd` ("Todos, menos") e o `bot.users = true` não o liberam, e
+  Um comando não delegável (`/set`, `/bot`...) não entra: o bot recusa. Um `admin` delegável
+  (`/gpt`, `/show`...) entra só numa lista "Apenas": o `-cmd` ("Todos, menos") e o `bot.users = true` não o liberam, e
   quem já usa todos os comuns não o ganha com o `+cmd` (o bot recusa e pede a lista "Apenas").
-  Para acrescentar um `admin` a quem usa os comuns, liste os comandos dele: `+u +cmd /rates,/gpt`.
+  Para acrescentar um `admin` delegável a quem usa os comuns, liste os comandos dele: `+u +cmd /rates,/gpt`.
 - O nome de um atalho do [`/alias`](alias.md) não entra no `+cmd`: o atalho herda a permissão do
   comando de destino (quem pode o `/gpt` usa os atalhos para ele).
 - Num grupo, a pessoa é a de lá (como no `+u`); se ela for usuária em qualquer chat, é essa

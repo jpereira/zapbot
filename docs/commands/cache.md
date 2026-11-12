@@ -5,9 +5,9 @@ command help (`/cache -h`) the paths appear in full (in Docker, `/app/cache` and
 
 | Option | Description |
 |---|---|
-| `-all`, `-a` | Deletes **everything** in `cache/`: messages (including the ones kept for `/show`), temp files, media downloaded to `cache/media` and the [`/backup`](backup.md) backups in `cache/backups`, and compacts the database. `/watch` hits, `/stats` counters, polls, price alerts and settings are kept |
+| `-all`, `-a` | Deletes **everything** in `cache/`: messages (including the ones kept for `/show`), edits, reactions, temp files, media downloaded to `cache/media` and the [`/backup`](backup.md) backups in `cache/backups`, and compacts the database. `/watch` hits, `/stats` counters, polls, price alerts and settings are kept |
 | `-backup`, `-b` | Deletes the [`/backup`](backup.md) backups in `cache/backups` (the database stays as is) |
-| `-clean`, `-c` | Removes only what is past the retention window (68 h, or `cache.messageRetentionHours` for regular message text and `cache.messageMediaRetentionHours` for media / `cache.revokedRetentionDays` for deleted / `cache.editedRetentionDays` for edited / `cache.reactionRetentionDays` for reactions / `watch.hitsRetentionDays` for `/watch` hits / `stats.retentionDays` for `/stats` counters / `enquete.retentionDays` for polls; in `cache/tmp`, temp files older than 2 h and the [cached downloads](get.md#download-cache) from `/get` older than `get.cache.maxDays` days) |
+| `-clean`, `-c` | Removes only what is past the retention window (68 h, or `cache.messageRetentionHours` for regular message text and `cache.messageMediaRetentionHours` for media / `cache.revokedRetentionDays` for deleted / `cache.editedRetentionDays` for edited / `cache.reactionRetentionDays` for reactions / `watch.hitsRetentionDays` for `/watch` hits / `stats.retentionDays` for `/stats` counters / `enquete.retentionDays` for polls / 30 days for the [`/mute`](mute.md) notices; in `cache/tmp`, temp files older than 2 h and the [cached downloads](get.md#download-cache) from `/get` older than `get.cache.maxDays` days) |
 | `-media`, `-m` | Deletes the media downloaded to `cache/media` (photos, videos, audio and documents kept to recover deleted messages). The messages stay: a deleted one recovered later says the file is no longer available |
 
 ```text
@@ -43,4 +43,4 @@ Total:            405.57 MB
 ```
 
 `-a` leaves no backup behind: if you want to keep a copy first, use `/backup -s` (the file arrives
-in your private chat). The `-c`, `-m` and `-b` options can be used together.
+in your private chat). The `-c`, `-m` and `-b` options can be used together; `-a` overrides them.

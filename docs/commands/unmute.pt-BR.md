@@ -16,5 +16,8 @@ apagados e de reações removidas ou trocadas da pessoa, do grupo ou da comunida
 /unmute -all                → todos (o mesmo que /unmute -a ou /mute -rm all)
 ```
 
-- Quem não está silenciado: o bot avisa (`ℹ️ 👤 Fulano não está silenciado.`).
+- Quem não está silenciado: o bot avisa (`ℹ️ 👤 Fulano não está silenciado.`, com a dica de ver a
+  lista do `/mute`).
+- O `/unmute -all` responde quantos foram removidos (`🔊 2 silenciados removidos: os avisos voltam.`).
+- Um nº que não está na lista: `❌ Nº 9 não existe. Veja a lista com /mute`.
 - Sem nada (e sem responder um aviso), mostra a lista do `/mute`.

@@ -9,7 +9,7 @@ das pedidas. Por padrão: BTC, ETH, SOL e HYPE.
 | `-list`, `-l` | | Lista as moedas suportadas; as ativadas vêm marcadas com `*` |
 | `-add`, `-a` | `<TOKEN>` | Ativa uma moeda suportada (só o dono do bot ou um [admin](bot.md#admins-extras)) |
 | `-del`, `-d` | `<TOKEN>` | Desativa uma moeda (só o dono do bot ou um [admin](bot.md#admins-extras)) |
-| `-alerta` | `[regra]` | Sem regra, lista os alertas; com regra (ex.: `BTC < 90000`), cria um. A moeda também pode vir antes: `/crypto BTC -alerta < 90000`. Veja [Alertas de preço](rates.md#alertas-de-preço) |
+| `-alerta` | `[regra]` | Sem regra, lista os alertas; com regra (ex.: `BTC < 90000`), cria um (só o dono do bot ou um [admin](bot.md#admins-extras)). A moeda também pode vir antes: `/crypto BTC -alerta < 90000`. Veja [Alertas de preço](rates.md#alertas-de-preço) |
 | `-msg` | `<texto>` | Junto com `-alerta`: o texto vai no início do aviso. Vai até o fim do comando. Veja [Mensagem no aviso](rates.md#mensagem-no-aviso) |
 | `-rm` | `<nº...\|all>` | Junto com `-alerta`: remove os alertas com esses nºs (`-rm 2`, `-rm 1 2 3` ou `-rm 1,2,3`), ou todos (`all`). Se algum nº não existe, nenhum sai |
 | `-to` | `<destino>` | Junto com `-alerta`: avisa num contato (`/Jorge Pereira/`), numa menção (`@Fulano Da Silva`), num grupo (`/Grupo L200/`), num número (`+5521999999999`) ou por e-mail (`email`) em vez do seu privado. Repita para vários: um alerta só, que avisa em todos. Veja [Avisar em outro chat ou por e-mail](rates.md#avisar-em-outro-chat-ou-por-e-mail) |

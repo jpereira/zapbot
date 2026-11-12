@@ -25,6 +25,9 @@ one given with `-para`.
 Onde fica a farmácia mais próxima?
 ```
 
+If the text is already in the target language, the reply adds a tip to use `-para` with another
+language.
+
 It's not admin: anyone in `bot.users` can use it (with it set to `true`, anyone).
 
 ## How it works

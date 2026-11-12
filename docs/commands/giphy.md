@@ -14,4 +14,6 @@ doesn't exist, the `giphy.api.key` setting (`/set giphy.api.key <key>`).
 
 Accepted URLs use `giphy.com/gifs/<ID>` or `giphy.com/gifs/<name>-<ID>`. An alphanumeric argument
 with at least ten characters is interpreted as an ID; the others are tags. The video is downloaded
-as MP4, with a 10 MB limit. With no result, the bot warns in the chat.
+as MP4, with a 10 MB limit. With no result, the bot replies `❌ Nenhum GIF encontrado.`; if the search or the download fails,
+`❌ Não consegui buscar esse GIF.`. Without a key, it warns how to set it. The random GIF is
+rated up to PG-13.

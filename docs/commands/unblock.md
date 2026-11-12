@@ -21,7 +21,7 @@ to a message, unblocks whoever wrote it. With nothing, shows the `/block` list.
 
 ```text
 /unblock 2
-✅ Desbloqueado: 👤 Fulano · +5521999999999
+✅ *Desbloqueado:* 👤 Fulano · +5521999999999
 
 /unblock -all
 ⏳ Desbloqueando 36 contatos, aguarde.
@@ -44,4 +44,7 @@ At the end, that same message turns into the result (as in [`/get`](get.md)):
   (`o WhatsApp não desbloqueou (continua na lista)`), not as unblocked.
 - `-all` unblocks one by one: a failure doesn't hold up the others, and the reply lists the failures
   (`⚠️ Não consegui desbloquear (1):`, with each one's reason).
-- Someone who isn't blocked: the bot lets you know (`ℹ️ 👤 Fulano não está bloqueado.`).
+- Someone who isn't blocked: the bot lets you know (`ℹ️ 👤 Fulano não está bloqueado.`, with a tip to
+  see the `/block` list).
+- A number that isn't in the list: `❌ Nº 9 não existe. Veja a lista com /block`. `/unblock -all` with
+  no one blocked: `🚫 Ninguém bloqueado.`

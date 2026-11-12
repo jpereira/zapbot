@@ -45,7 +45,7 @@ Each category reads the list from its setting (`news.<categoria>`), which accept
 
 Details:
 
-- Several categories in the same command add up their feeds.
+- Several categories in the same command add up their feeds, under the title "📰 News".
 - Each source takes at most its share of the list (e.g. 6 headlines from 2 feeds → up to 3 from
   each); otherwise the one that publishes the most takes everything.
 - A feed that's down doesn't take the others down: it only shows up in the log.

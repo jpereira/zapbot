@@ -66,7 +66,7 @@ Remover contatos ou reduzir o histórico local não altera os backups já existe
 
 ## Backup automático
 
-Todo dia, a partir das 3h de Brasília (setting `backup.hour`), o bot cria um backup. Se estiver fora
+Todo dia, a partir das 3h de Brasília (setting `backup.hour`, de 0 a 23), o bot cria um backup. Se estiver fora
 do ar nesse horário, o backup sai assim que ele voltar, no mesmo dia. Desligue com
 `/set backup.enabled off`.
 
@@ -90,7 +90,7 @@ abre uma lista de escolha. Para uma pessoa mencionada num comando, configure seu
 setting. E-mails usam o SMTP do bot e o mesmo limite de 20 MB do envio manual. Backups manuais e os
 de antes de restaurar não são enviados por essa setting.
 
-Ficam os 7 automáticos mais recentes (setting `backup.keep`); os mais antigos são apagados a cada
+Ficam os 7 automáticos mais recentes (setting `backup.keep`, de 1 a 90); os mais antigos são apagados a cada
 backup novo. A mesma conta vale para os backups "antes de restaurar". Os **manuais** (`-now`) nunca
 são apagados sozinhos.
 

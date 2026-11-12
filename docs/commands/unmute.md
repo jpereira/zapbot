@@ -16,5 +16,8 @@ statuses and removed or changed reactions from the person, group or community co
 /unmute -all                → all of them (same as /unmute -a or /mute -rm all)
 ```
 
-- Someone who isn't muted: the bot lets you know (`ℹ️ 👤 Fulano não está silenciado.`).
+- Someone who isn't muted: the bot lets you know (`ℹ️ 👤 Fulano não está silenciado.`, with a tip to
+  see the `/mute` list).
+- `/unmute -all` replies with how many were removed (`🔊 2 silenciados removidos: os avisos voltam.`).
+- A number that isn't in the list: `❌ Nº 9 não existe. Veja a lista com /mute`.
 - With nothing (and not replying to a warning), shows the `/mute` list.

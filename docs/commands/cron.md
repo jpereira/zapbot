@@ -158,12 +158,12 @@ Preço do Dólar!
   single-line one stays in the sentence. A command that replies more than once (`/defi`, one per
   position) has its replies separated by a blank line. Media (`/meme`, `/giphy`, `/pixelart`) goes
   out right after the message.
-- Only lookup commands run there: `/rates`, `/crypto`, `/cve`, `/defi`, `/giphy`, `/joke`,
-  `/kernel`, `/meme`, `/news`, `/pixelart`, `/stats`, `/weather`, `/uptime` and `/version` (in the
-  settings, the ones with `cron: true`). Options that change something don't run either: `-add`,
-  `-del` and `-alerta` of `/crypto` and `/rates`; `-address`, `-wallet`, `-pool`, `-nft`, `-name`,
-  `-rm`, `-alerta`, `-taxas` and `-to` of `/defi` (the four protocols, `-l`, `-mask` and
-  `aave -full` run); and `-flush` and `-flush-all` of `/stats`.
+- Only lookup commands run there: `/ascii`, `/rates`, `/crypto`, `/cve`, `/defi`, `/giphy`,
+  `/joke`, `/kernel`, `/meme`, `/news`, `/pixelart`, `/stats`, `/weather`, `/uptime` and `/version`
+  (in the definitions, the ones with `cron: true`). Options that change something don't run
+  either: `-width` and `-char` of `/ascii`; `-add`, `-del` and `-alerta` of `/crypto` and `/rates`;
+  `-address`, `-wallet`, `-pool`, `-nft`, `-name`, `-rm`, `-alerta`, `-taxas` and `-to` of `/defi`
+  (the protocols, `-l`, `-mask` and `aave -full` run); and `-flush` and `-flush-all` of `/stats`.
 - `/bot` is the exception: only the owner creates an item with `{/bot -flush-email true}` (in it,
   only `-info` and `-flush-email` run; the other options are refused). An admin who isn't the owner
   gets an error on creation.
@@ -212,7 +212,7 @@ as typed (with several lines, if needed). Everything in Brasília time.
 | Duration | `+2h`, `em 2h`, `daqui a 2h`, `30m`, `1d`, `1h30m` | That long from now. Hours alone are a time of day (`6h` is 06:00): for "6 hours from now", use `+6h` or `em 6h` |
 | Today / tomorrow | `hoje 22h`, `amanhã`, `amanhã 10:00` | No time: 9h |
 | Day of the week | `sexta`, `seg 8h`, `sábado 10:00` | The next one (today, if the time hasn't passed yet). No time: 9h |
-| Date | `25/12`, `25/12 10:00`, `25/12/2027 10h` | No year: the next time the date comes around. No time: 9h |
+| Date | `25/12`, `25/12 10:00`, `25/12/2027 10h` | No year: the next time the date comes around (a 2-digit year also works: `25/12/27`). No time: 9h |
 
 Up to 366 days ahead. `-repetir mensal` (or `-r mensal`) keeps the day of the month: an item on the
 31st goes out on the last day of shorter months and goes back to the 31st afterward.
@@ -228,4 +228,5 @@ Up to 366 days ahead. `-repetir mensal` (or `-r mensal`) keeps the day of the mo
   which goes out to all destinations (and counts as 1 toward the limit); the same destination
   repeated counts once. If sending fails for one destination, the others receive it anyway. `-edit`,
   `-pause` and `-rm` apply to the whole item.
-- The limit is 50 items, adding up both types (setting `agenda.max`).
+- The limit is 50 items by default, adding up both types (setting `agenda.max`, from 1 to 500).
+- The `(atrasado: ...)` notice only appears when it goes out more than 5 minutes late.

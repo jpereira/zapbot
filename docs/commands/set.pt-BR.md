@@ -9,6 +9,7 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 | `<chave>` | | Mostra valor, padrão, tipo e descrição |
 | `<trecho>` ou `/regex/` | | Não sendo uma chave: lista as chaves que contêm o trecho (sem diferenciar maiúsculas) ou casam com a regex. Ex.: `/set alerta`, `/set /^show\./` |
 | `<chave> <valor>` | | Altera. Listas: itens separados por vírgula ou espaço (`watch.rules`: uma regra por linha); `""` esvazia |
+| `<chave>=<valor>` | | O mesmo que `<chave> <valor>`, para qualquer chave. Ex.: `/set zapbot.lang=pt_BR` |
 | `-append`, `-a` | `<chave> <valor>` | Numa lista, acrescenta os itens (os que já estão ficam). Ex.: `/set -a bot.admins +5521999999999` (no `bot.admins` e no `bot.users` vale também `/Jorge Pereira/` e `@Fulano Da Silva`; no `bot.users`, grupos) |
 | `-rm` | `<chave> <valor>` | Numa lista, tira os itens. Ex.: `/set -rm commands.disabled noffa` |
 | `-reset`, `-r` | `<chave>` | Volta ao valor padrão |
@@ -22,10 +23,11 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 /set show.max 10
 /set monitor.pool=300
 /set monitor.maxRecords=30
+/set zapbot.lang=pt_BR  → o mesmo que /set zapbot.lang pt_BR
 /config show.max 10  → o mesmo, pelo alias
 /set debug.enabled off
 /set sticker.name "Meu Bot"
-/set commands.disabled noffa todos
+/set commands.disabled noffa everybody
 /set commands.disabled ""
 /set -r crypto.coins
 /set watch.rules ""
@@ -37,7 +39,8 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 
 ## Monitor de contatos
 
-Os quatro settings do [`/monitor`](monitor.md) aceitam `<chave> <valor>` ou `chave=valor`:
+Como qualquer outra chave, os quatro settings do [`/monitor`](monitor.md) aceitam
+`<chave> <valor>` ou `chave=valor`:
 `monitor.enabled`, `monitor.pool`, `monitor.max` e `monitor.maxRecords`.
 
 ```text

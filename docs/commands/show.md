@@ -106,7 +106,7 @@ With slashes, it's a JavaScript regex, with flags (`-q /pix|boleto/i`). It tests
 without the `i` flag, it's case-sensitive, and accents count. The `g` and `y` flags are ignored.
 
 ```text
-/show -q pix
+/show -2 -q pix
 ♻️ 2 mensagens apagadas com "pix" (as 2 mais recentes de 4; use -N para mais)
 
 /show -5 -q /\bpix\b|boleto/i

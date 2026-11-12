@@ -29,7 +29,7 @@ segundos a partir do `-ss` (ou do início). Enquanto baixa e converte, o bot mos
 
 | Opção | Valor | Descrição |
 |---|---|---|
-| `-pos` | `<topo\|meio\|baixo>` | Onde fica o recorte quadrado da imagem ou do vídeo (padrão `meio`). Em mídia mais larga que alta, `topo` é a esquerda e `baixo` a direita. Não vale com `-txt` |
+| `-pos` | `<topo\|meio\|baixo>` | Onde fica o recorte quadrado da imagem ou do vídeo (padrão `meio`; `top`, `middle`, `bottom`, `cima` e `centro` também valem). Em mídia mais larga que alta, `topo` é a esquerda e `baixo` a direita. Não vale com `-txt` |
 | `-txt` | `<texto>` | Figurinha animada com o texto, sem precisar responder nada. Veja [Figurinha de texto](#figurinha-de-texto) |
 | `-bg` | `<cor>` | Com `-txt`: a cor de fundo, em `#RRGGBB` (padrão `#FFFFFF`, branco) |
 | `-fg` | `<cor>` | Com `-txt`: a cor da letra, em `#RRGGBB` (padrão `#000000`, preto) |

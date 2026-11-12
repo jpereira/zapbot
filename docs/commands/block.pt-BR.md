@@ -72,6 +72,7 @@ A mesma pessoa repetida conta uma vez.
   pessoas, ela vai para `❌ Não bloqueados`, e as outras seguem.
 - Quem já está bloqueado: o bot avisa (`ℹ️ 👤 Fulano já está bloqueado.`).
 - A conta do próprio bot não pode ser bloqueada.
+- Sem ninguém bloqueado, a lista diz `🚫 Ninguém bloqueado.`.
 - A lista vem do WhatsApp, que guarda os bloqueios pelo id interno (`@lid`): o bot converte cada um
   para o telefone e usa o nome da sua agenda (ou o do perfil). Quem não tem telefone conhecido
   aparece pelo id, com `(id interno, sem telefone conhecido)`, depois dos outros.

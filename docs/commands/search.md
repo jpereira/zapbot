@@ -37,6 +37,8 @@ type and the caption). Long texts are cut at 200 characters.
 2. 📅 12/10/2026, 18:40:05 · 💬 Trabalho · 👤 Você
    📎 [image] "comprovante do pix"
    🆔 true_120363000000000000@g.us_3EB0C3D4
+
+📖 Para ler uma inteira: /search -read <id>.
 ```
 
 ```text
@@ -48,6 +50,7 @@ manda o pix que eu pago, o texto todo, sem corte
 
 - Each result carries the `🆔` for `-read`. With `-mask`, the id is obfuscated too (it won't work for `-read`).
 - `-read` works only for this chat; in your private chat, for any chat. For media, it shows the type and the caption.
+- Above 50, `-N` is capped at 50 and the reply says so.
 - The `/search` message itself doesn't show up in the results.
 - When as many results come back as `-N`, the bot warns that there may be more.
 - Anything WhatsApp Web hasn't loaded from the phone yet doesn't show up: it's the same limitation

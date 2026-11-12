@@ -115,7 +115,7 @@ When to use each option:
 | Allow it for one person, in any chat | `/bot +u /Maria Lucia/` |
 | Allow only some commands for someone | `/bot +u +cmd /rates,/crypto /Sofia Izabel/` |
 | Allow only `/gpt` for the Familia group | `/bot +u +cmd /gpt`, typed in the group (or `/bot +u +cmd /gpt /Familia/`) |
-| Give someone the admin and owner commands | `/bot +a /Jorge Pereira/` |
+| Give someone the admin commands | `/bot +a /Jorge Pereira/` |
 | Stop the bot completely for a while, without taking down the container | `/bot -off` |
 | Remove all users at once (the admins stay) | `/bot -reset` |
 | Undo everything: only you again, no admins or users | `/bot -reset force` |
@@ -134,7 +134,7 @@ Details:
 
 ## Extra admins
 
-Other people can use the **admin** and **owner** commands (the ones with that role in the
+Other people can use the **admin** commands (the ones with that role in the
 [command table](index.md#summary)), and also the common ones, in any chat, if you make them admins:
 
 ```text
@@ -172,8 +172,9 @@ number.
 ## Users
 
 Users use the commands with the **`user`** role (see the Role column of the
-[command table](index.md#summary)). The `owner` ones stay only yours and the admins', and so do the
-`admin` ones, unless you [delegate](index.md#delegating-an-admin-command) them with `+cmd`.
+[command table](index.md#summary)). The `admin` ones stay only yours and the admins', unless you
+[delegate](index.md#delegating-an-admin-command) them with `+cmd` (only the ones marked as
+delegable).
 
 | Who | Where they use it |
 |---|---|
@@ -261,11 +262,11 @@ A user (a person or a group) can be limited to some common commands, or receive 
   those again.
 - `-cmd` on someone who uses all leaves "Todos, menos" those. Removing the last command of a list is
   refused: to remove the person, `/bot -u`; to allow all, `/bot +cmd all`.
-- Commands go by name or alias (`/creptomoeda` becomes `/crypto`), separated by commas. An `owner`
-  command (`/set`, `/bot`...) doesn't go in: the bot refuses. An `admin` one (`/gpt`, `/show`...)
-  goes in only in an "Apenas" list: `-cmd` ("Todos, menos") and `bot.users = true` don't allow it,
+- Commands go by name or alias (`/creptomoeda` becomes `/crypto`), separated by commas. A
+  command that isn't delegable (`/set`, `/bot`...) doesn't go in: the bot refuses. A delegable
+  `admin` one (`/gpt`, `/show`...) goes in only in an "Apenas" list: `-cmd` ("Todos, menos") and `bot.users = true` don't allow it,
   and someone who already uses all the common ones doesn't get it with `+cmd` (the bot refuses and
-  asks for the "Apenas" list). To add an `admin` one to someone who uses the common ones, list their
+  asks for the "Apenas" list). To add a delegable `admin` one to someone who uses the common ones, list their
   commands: `+u +cmd /rates,/gpt`.
 - The name of a shortcut from [`/alias`](alias.md) doesn't go in `+cmd`: the shortcut inherits the
   permission of the target command (whoever can use `/gpt` uses the shortcuts for it).

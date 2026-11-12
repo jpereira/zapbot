@@ -14,7 +14,7 @@ Markdown para a formatação do WhatsApp do `/gpt` (veja [Formatação no WhatsA
 | `[período]` | | Um tempo, como no [`/cron`](cron.md) (`30m`, `2h`, `1d`, `1h30m`, `2d4h`): as mensagens desse tempo para cá; um número (`300`): as últimas 300 (limite padrão 500, configurável até 2000 em `tldr.maxMsgs`). Padrão: as últimas 100. O `-` na frente é opcional (`-2h`) |
 | *(respondendo)* | | Resume da mensagem respondida até agora; o período digitado ou o `-chat` ganham |
 | `-chat`, `-c` | `<nome>` | Resume outro chat, buscado pelo nome: todas as palavras, em qualquer ordem, sem diferenciar acentos. Nome com espaço vai entre aspas: `-c "trabalho rio"` |
-| `-status`, `-s` | | Acrescenta no rodapé o consumo da chamada: bytes TX/RX e tokens (veja [Status](gpt.md#status--status)) |
+| `-status`, `-s` | | Acrescenta no rodapé o consumo da chamada: bytes TX/RX, tokens, custo e saldo (veja [Status](gpt.md#status--status)) |
 | `-pv` | | Envia no seu privado em vez de expor no chat atual |
 
 ```text
@@ -77,6 +77,9 @@ Detalhes:
   (há 3 horas)`).
 - Ficam de fora os comandos, as mensagens apagadas e as mídias sem legenda. As suas mensagens
   aparecem com o nome do seu perfil; as respostas do bot (que saem pela sua conta) entram como suas.
+- Os áudios (os 10 mais recentes do período) são transcritos, até 25 MB cada, e entram no resumo com
+  quem enviou e quando. A transcrição fica gravada, então não é paga duas vezes. O áudio que não dá
+  para transcrever (sem arquivo, grande demais, outro formato) fica de fora.
 - Cada mensagem vai até 500 caracteres, e o total até 60 mil: acima disso saem as mais antigas.
 - É restrito ao dono e aos admins extras (`+a`): cada resumo gasta créditos da OpenAI, e o texto das
   conversas vai para a OpenAI.

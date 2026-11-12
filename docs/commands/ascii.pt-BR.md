@@ -59,6 +59,10 @@ Textos longos quebram em várias linhas de letras, separadas por uma linha em br
 ### ###
 ```
 
-Não depende de serviço
-externo e pode ser usado dentro de um [`/alias`](alias.md) ou do [`/cron`](cron.md) com
-`{/ascii Oi}`.
+Erros: sem texto (e sem mensagem respondida) mostra o uso; mais de 40 caracteres, `-width` fora de
+10 a 60 e `-char` com mais de um caractere são recusados; um texto sem nada desenhável (ex.: `#$%`)
+responde `❌ Nada para desenhar`.
+
+Não depende de serviço externo e pode ser usado dentro de um [`/alias`](alias.md) ou do
+[`/cron`](cron.md) com `{/ascii Oi}`. Dentro deles as opções `-width` e `-char` não são aceitas:
+use o setting `ascii.defaultChar`.

@@ -37,6 +37,7 @@ The picture comes with the caption:
 Contato: Jorge Pereira <+5521999999999>
 ```
 
+- In a group, the caption is `Grupo: <name>`. The same person given twice shows once.
 - The name is the one from your address book; someone who isn't in it shows up with their own
   profile name, or just the number.
 - With no picture, or with the picture hidden by the contact's privacy settings, only the caption
