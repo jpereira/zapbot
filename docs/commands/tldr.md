@@ -11,7 +11,7 @@ Markdown para a formatação do WhatsApp do `/gpt` (veja [Formatação no WhatsA
 
 | Opção | Valor | Descrição |
 |---|---|---|
-| `[período]` | | `2h` ou `30m`: as mensagens desse tempo para cá; `300`: as últimas 300 (limite padrão 500, configurável até 2000 em `tldr.maxMsgs`). Padrão: as últimas 100. O `-` na frente é opcional (`-2h`) |
+| `[período]` | | Um tempo, como no [`/cron`](cron.md) (`30m`, `2h`, `1d`, `1h30m`, `2d4h`): as mensagens desse tempo para cá; um número (`300`): as últimas 300 (limite padrão 500, configurável até 2000 em `tldr.maxMsgs`). Padrão: as últimas 100. O `-` na frente é opcional (`-2h`) |
 | *(respondendo)* | | Resume da mensagem respondida até agora; o período digitado ou o `-chat` ganham |
 | `-chat`, `-c` | `<nome>` | Resume outro chat, buscado pelo nome: todas as palavras, em qualquer ordem, sem diferenciar acentos. Nome com espaço vai entre aspas: `-c "trabalho rio"` |
 | `-status`, `-s` | | Acrescenta no rodapé o consumo da chamada: bytes TX/RX e tokens (veja [Status](gpt.md#status--status)) |
@@ -21,6 +21,8 @@ Markdown para a formatação do WhatsApp do `/gpt` (veja [Formatação no WhatsA
 /tldr                → as últimas 100 mensagens deste chat
 /tldr 2h             → as das últimas 2 horas
 /resumo 30m          → as dos últimos 30 minutos (pelo alias)
+/tldr 1d             → as do último dia (1h30m, 2d4h... valem; o banco guarda só 68 h)
+/tldr 30             → as últimas 30 mensagens (sem a letra, é quantidade)
 /tldr 300 -pv        → as últimas 300, no seu privado
 /tldr -c família 3h -pv
 (respondendo uma mensagem)  /tldr  → dela até agora
@@ -46,6 +48,9 @@ Detalhes:
 
 - O resumo usa o texto já gravado no banco. As mensagens comuns ficam 68 h (a janela em que o
   WhatsApp deixa apagar), então períodos maiores são cortados e o bot avisa.
+- Enquanto processa, o aviso diz o que está resumindo: `⏳ Processando o /tldr das 87 mensagens de Família do
+  período de 2 horas, aguarde.` (ou `das últimas 100 mensagens de ...`, ou `... desde a mensagem respondida
+  (há 3 horas)`).
 - Ficam de fora os comandos, as mensagens apagadas e as mídias sem legenda. As suas mensagens
   aparecem com o nome do seu perfil; as respostas do bot (que saem pela sua conta) entram como suas.
 - Cada mensagem vai até 500 caracteres, e o total até 60 mil: acima disso saem as mais antigas.
