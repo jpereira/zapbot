@@ -1,4 +1,4 @@
-# `/join` (`/entrar`) · admin
+# `/join` · admin
 
 Joins a WhatsApp group through the invite link. With `-info`, shows the group (name, participants and
 description) without joining. To leave, use [`/leave`](leave.md).

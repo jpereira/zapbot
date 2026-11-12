@@ -14,6 +14,7 @@ const {
 } = require('./destinations');
 const { printError, printInfo } = require('./log');
 const { QUOTE_SUPPORTED, CRYPTO_SUPPORTED } = require('./currencies');
+const { t } = require('./i18n');
 const { GetOptFromCommand } = require('./options');
 const { getSetting } = require('./settings');
 const { formatData, plural } = require('./util/format');
@@ -64,8 +65,8 @@ const ALERT_TYPES = {
 };
 
 const OPERATORS = {
-    '>': { testar: (price, target) => price > target, texto: 'acima de', icone: '📈' },
-    '<': { testar: (price, target) => price < target, texto: 'abaixo de', icone: '📉' }
+    '>': { testar: (price, target) => price > target, get texto() { return t('alerts.above'); }, icone: '📈' },
+    '<': { testar: (price, target) => price < target, get texto() { return t('alerts.below'); }, icone: '📉' }
 };
 
 // "5.30", "5,30" or "90000" (without a thousands separator)
@@ -109,14 +110,14 @@ function extractMessage(textAlt) {
 const messageLine = (a) => (a.message ? `\n   💬 ${a.message.replace(/\n/g, '\n   ')}` : '');
 
 function describeAlert(kind, a) {
-    const t = ALERT_TYPES[kind];
+    const type = ALERT_TYPES[kind];
     const destinations = alertDestinations(a);
-    return `${t.icone(a.symbol)} ${t.par(a.symbol)} ${OPERATORS[a.op].texto} *${t.fmt(a.target)}*` +
+    return `${type.icone(a.symbol)} ${type.par(a.symbol)} ${OPERATORS[a.op].texto} *${type.fmt(a.target)}*` +
         (destinations.length ? ` → ${describeDestinations(destinations)}` : '');
 }
 
 async function priceHandleAlert(kind, { msg, args, admin }) {
-    const t = ALERT_TYPES[kind];
+    const type = ALERT_TYPES[kind];
 
     /*
      * Destinations and message are extracted before the price rule, preserving
@@ -125,11 +126,11 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
     const { destinos: destinationsText, informado: withDestination, resto: withoutDestination } =
         extractDestinations(args);
     const { mensagem: messageAlt, informado: withMessage, resto: rest } = extractMessage(withoutDestination);
-    const opts = GetOptFromCommand(rest, findCommand(t.cmd));
+    const opts = GetOptFromCommand(rest, findCommand(type.cmd));
 
     // The notices use your account (in your private chat or in the -to chats): owner and admins only
     if (!admin) {
-        await msg.reply('⛔ Apenas o dono do bot (ou um admin) pode usar os alertas.');
+        await msg.reply(t('alerts.ownerOnly'));
         return;
     }
 
@@ -143,7 +144,7 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
 
         if (partsAlt.includes('all')) {
             await dbRun('DELETE FROM price_alerts WHERE kind = ?', [kind]);
-            await msg.reply(`🗑️ ${plural(alerts.length, 'alerta removido', 'alertas removidos')}.`);
+            await msg.reply(t('alerts.removedAll', { count: plural(alerts.length, t('alerts.removedOne'), t('alerts.removedMany')) }));
             return;
         }
 
@@ -152,16 +153,16 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
 
         if (!numbers.length || missing.length) {
             await msg.reply(missing.length > 1
-                ? `❌ Alertas nº ${missing.join(', ')} não existem. Nada foi removido; veja a lista com ${t.cmd} -alerta`
-                : `❌ Alerta nº ${missing[0] ?? '?'} não existe. Veja a lista com ${t.cmd} -alerta`);
+                ? t('alerts.notFoundMany', { list: missing.join(', '), cmd: type.cmd })
+                : t('alerts.notFoundOne', { n: missing[0] ?? '?', cmd: type.cmd }));
             return;
         }
 
         const removed = numbers.map(n => alerts[Number(n) - 1]);
         for (const a of removed) await dbRun('DELETE FROM price_alerts WHERE id = ?', [a.id]);
         await msg.reply(removed.length === 1
-            ? `🗑️ Alerta removido: ${describeAlert(kind, removed[0])}`
-            : `🗑️ *Alertas removidos* (${removed.length})\n` +
+            ? t('alerts.removedOneDone', { alert: describeAlert(kind, removed[0]) })
+            : t('alerts.removedManyDone', { n: removed.length }) + '\n' +
               removed.map(a => `• ${describeAlert(kind, a)}`).join('\n'));
         return;
     }
@@ -169,44 +170,46 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
     const ruleText = opts.argv.join(' ').trim();
 
     if (!ruleText && withDestination) {
-        await msg.reply(`❌ O -to só vale ao criar um alerta: ${t.cmd} -alerta ${t.exemplo} -to /Grupo L200/`);
+        await msg.reply(t('alerts.toOnlyCreate', { cmd: type.cmd, example: type.exemplo }));
         return;
     }
 
     if (!ruleText && withMessage) {
-        await msg.reply(`❌ O -msg só vale ao criar um alerta: ${t.cmd} -alerta ${t.exemplo} -msg <texto>`);
+        await msg.reply(t('alerts.msgOnlyCreate', { cmd: type.cmd, example: type.exemplo }));
         return;
     }
 
     if (withMessage && !messageAlt) {
-        await msg.reply(`❌ Informe o texto do -msg: ${t.cmd} -alerta ${t.exemplo} -msg <texto>`);
+        await msg.reply(t('alerts.msgEmpty', { cmd: type.cmd, example: type.exemplo }));
         return;
     }
 
     // Without a rule: lists
     if (!ruleText) {
         if (!alerts.length) {
-            await msg.reply(`🔔 Nenhum alerta no ${t.cmd}.\n💡 _Crie com ${t.cmd} -alerta ${t.exemplo}_`);
+            await msg.reply(t('alerts.none', { cmd: type.cmd, example: type.exemplo }));
             return;
         }
 
-        const linesAlt = alerts.map((a, i) => `${i + 1}. ${describeAlert(kind, a)} _(criado ${formatData(a.created_at)})_` +
+        const linesAlt = alerts.map((a, i) => t('alerts.listItem', { n: i + 1, alert: describeAlert(kind, a), date: formatData(a.created_at) }) +
             messageLine(a));
-        await msg.reply(`🔔 *ALERTAS DE PREÇO* _(${t.cmd})_\n\n${linesAlt.join('\n')}\n\n` +
-            `💡 _Verificados a cada ${plural(getSetting('alerta.intervalMin'), 'minuto', 'minutos')}_\n` +
-            `💡 _Remova com ${t.cmd} -alerta -rm <nº...|all>_`);
+        await msg.reply(t('alerts.list', {
+            cmd: type.cmd,
+            items: linesAlt.join('\n'),
+            every: plural(getSetting('alerta.intervalMin'), t('alerts.minute'), t('alerts.minutes'))
+        }));
         return;
     }
 
     const rule = readRuleAlert(ruleText);
 
     if (!rule) {
-        await msg.reply(`❌ Regra inválida: "${ruleText}"\n💡 _Formato: ${t.cmd} -alerta ${t.exemplo} (use > ou <; sem separador de milhar)_`);
+        await msg.reply(t('alerts.invalidRule', { rule: ruleText, cmd: type.cmd, example: type.exemplo }));
         return;
     }
 
-    if (!t.suportada(rule.sym)) {
-        await msg.reply(`❌ Moeda não suportada: ${rule.sym}\n💡 _Veja as suportadas com ${t.cmd} -l_`);
+    if (!type.suportada(rule.sym)) {
+        await msg.reply(t('alerts.unsupported', { sym: rule.sym, cmd: type.cmd }));
         return;
     }
 
@@ -222,17 +225,17 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
     const total = (await dbGet('SELECT COUNT(*) AS n FROM price_alerts')).n;
 
     if (total >= max) {
-        await msg.reply(`❌ Limite de ${max} alertas atingido (setting alerta.max). Remova algum antes.`);
+        await msg.reply(t('alerts.limit', { max }));
         return;
     }
 
     let price;
     try {
-        price = (await t.precos([rule.sym]))[rule.sym];
+        price = (await type.precos([rule.sym]))[rule.sym];
         if (!Number.isFinite(price)) throw new Error('sem preço');
     } catch (err) {
-        printError(`${t.cmd} -alerta: preço de ${rule.sym}:`, err.message);
-        await msg.reply(`⚠️ Não consegui consultar o preço de ${rule.sym} agora. Tente de novo em instantes.`);
+        printError(`${type.cmd} -alerta: preço de ${rule.sym}:`, err.message);
+        await msg.reply(t('alerts.priceFailed', { sym: rule.sym }));
         return;
     }
 
@@ -240,7 +243,7 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
 
     // Already fulfilled: it would fire right away, which is not what you want from an alert
     if (op.testar(price, rule.alvo)) {
-        await msg.reply(`ℹ️ ${t.par(rule.sym)} já está ${op.texto} ${t.fmt(rule.alvo)}: agora está em *${t.fmt(price)}*.`);
+        await msg.reply(t('alerts.alreadyMet', { pair: type.par(rule.sym), op: op.texto, target: type.fmt(rule.alvo), price: type.fmt(price) }));
         return;
     }
 
@@ -253,11 +256,13 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
             recipientsDe(destinations), messageAlt]
     );
 
-    await msg.reply(`🔔 *Alerta criado*\n${describeAlert(kind, { symbol: rule.sym, op: rule.op, target: rule.alvo })}` +
-        `${messageLine({ message: messageAlt })}\n` +
-        `💰 Agora: ${t.fmt(price)}\n` +
-        `💡 _Aviso ${destinations.length ? `em ${describeDestinations(destinations)}` : 'no seu privado'}; ` +
-        `verificação a cada ${plural(getSetting('alerta.intervalMin'), 'minuto', 'minutos')}._`);
+    await msg.reply(t('alerts.created', {
+        alert: describeAlert(kind, { symbol: rule.sym, op: rule.op, target: rule.alvo }) +
+            messageLine({ message: messageAlt }),
+        price: type.fmt(price),
+        where: destinations.length ? t('alerts.whereIn', { dest: describeDestinations(destinations) }) : t('alerts.wherePrivate'),
+        every: plural(getSetting('alerta.intervalMin'), t('alerts.minute'), t('alerts.minutes'))
+    }));
 }
 
 /*
@@ -279,15 +284,15 @@ async function priceCheckAlerts({ forcar: force = false } = {}) {
         await dbReady;
         const alerts = await dbAll('SELECT * FROM price_alerts ORDER BY id');
 
-        for (const [kind, t] of Object.entries(ALERT_TYPES)) {
+        for (const [kind, type] of Object.entries(ALERT_TYPES)) {
             const typeAlt = alerts.filter(a => a.kind === kind);
             if (!typeAlt.length) continue;
 
             let prices;
             try {
-                prices = await t.precos([...new Set(typeAlt.map(a => a.symbol))]);
+                prices = await type.precos([...new Set(typeAlt.map(a => a.symbol))]);
             } catch (err) {
-                printError(`Alertas ${t.cmd}: falha ao consultar preços:`, err.message);
+                printError(`Alertas ${type.cmd}: falha ao consultar preços:`, err.message);
                 continue;
             }
 
@@ -303,11 +308,17 @@ async function priceCheckAlerts({ forcar: force = false } = {}) {
                 // The -msg message comes before everything
                 await sendToDestinations(destinations,
                     (a.message ? `${a.message}\n\n` : '') +
-                    `🔔 *ALERTA DE PREÇO*\n\n` +
-                    `${OPERATORS[a.op].icone} ${t.icone(a.symbol)} *${t.par(a.symbol)}* ficou ${OPERATORS[a.op].texto} ${t.fmt(a.target)}\n` +
-                    `💰 Agora: *${t.fmt(price)}*${changeAlt ? ` _(${changeAlt} desde a criação)_` : ''}\n` +
-                    `📅 Alerta criado em ${formatData(a.created_at)}`,
-                    { assunto: `🔔 Alerta de preço: ${t.par(a.symbol)} ${OPERATORS[a.op].texto} ${t.fmt(a.target)}` }
+                    t('alerts.fired', {
+                        opIcon: OPERATORS[a.op].icone,
+                        icon: type.icone(a.symbol),
+                        pair: type.par(a.symbol),
+                        op: OPERATORS[a.op].texto,
+                        target: type.fmt(a.target),
+                        price: type.fmt(price),
+                        change: changeAlt ? t('alerts.sinceCreation', { change: changeAlt }) : '',
+                        date: formatData(a.created_at)
+                    }),
+                    { assunto: t('alerts.subject', { pair: type.par(a.symbol), op: OPERATORS[a.op].texto, target: type.fmt(a.target) }) }
                 ).catch(err => printError('Alerta de preço: falha ao avisar:', err.message));
 
                 printInfo(`Alerta de preço disparado: ${a.symbol} ${a.op} ${a.target} (agora ${price})` +

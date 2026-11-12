@@ -13,10 +13,24 @@
 const LANGUAGES = ['en_US', 'pt_BR'];
 const DEFAULT = 'en_US';
 
-const catalogs = {
-    en_US: require('./locales/en_US'),
-    pt_BR: require('./locales/pt_BR')
-};
+// src/locales/<language>.js (help) + src/locales/<language>/*.js (one file per subject: command replies...)
+const fs = require('fs');
+const path = require('path');
+
+function load(lang) {
+    const catalog = { ...require(`./locales/${lang}`) };
+    const dir = path.join(__dirname, 'locales', lang);
+    const files = fs.existsSync(dir) ? fs.readdirSync(dir).filter(f => f.endsWith('.js')).sort() : [];
+    for (const f of files) {
+        for (const [keyAlt, textAlt] of Object.entries(require(path.join(dir, f)))) {
+            if (keyAlt in catalog) throw new Error(`i18n: chave repetida em ${lang}/${f}: ${keyAlt}`);
+            catalog[keyAlt] = textAlt;
+        }
+    }
+    return catalog;
+}
+
+const catalogs = { en_US: load('en_US'), pt_BR: load('pt_BR') };
 
 // The setting (only read at the time of use: settings.js does not depend on i18n)
 function language() {
@@ -35,7 +49,9 @@ function language() {
 function t(keyAlt, vars = {}, lang = language()) {
     let textAlt = catalogs[lang]?.[keyAlt] ?? catalogs[DEFAULT][keyAlt] ?? keyAlt;
     if (textAlt && typeof textAlt === 'object') {
-        const form = new Intl.PluralRules(lang.replace('_', '-')).select(Number(vars.n));
+        const n = Number(vars.n);
+        // pt: Intl treats 0 as singular ("0 voto"); here 0 is plural ("0 votos"), as in English
+        const form = n === 1 ? 'one' : n === 0 ? 'other' : new Intl.PluralRules(lang.replace('_', '-')).select(n);
         textAlt = textAlt[form] ?? textAlt.other;
     }
     return String(textAlt).replace(/\{(\w+)\}/g, (integer, nameAlt) => (nameAlt in vars ? String(vars[nameAlt]) : integer));

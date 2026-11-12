@@ -6,6 +6,7 @@ const { client } = require('../client');
 const { dbGet, dbReady, dbRun } = require('../db');
 const { resolverAuthorDeleted } = require('./deleted');
 const { printError, printInfo } = require('../log');
+const { t } = require('../i18n');
 const { ignoreNotice, registerNotice } = require('../mudo');
 const { getSetting } = require('../settings');
 const { countStats } = require('../stats');
@@ -19,17 +20,17 @@ const { headerOrigin, channelId } = require('../util/origin');
  * before and after) in the message_edits table and notifies you in private (setting
  * 'show.alert.edited'); o /show -e reexibe sob demanda.
  */
-async function sendMessageEdited(destination, row, info, { titulo: title = '✏️ *MENSAGEM EDITADA DETECTADA*' } = {}) {
+async function sendMessageEdited(destination, row, info, { titulo: title = t('editadas.titulo') } = {}) {
     let textAlt = `${title}\n\n`;
 
     textAlt += headerOrigin({
         chatId: row.chat_id, chatName: info.nomeChat, isGroup: row.is_group,
         senderName: info.nomeRemetente, senderNumber: info.numeroRemetente
     }) +
-        `📅 *Enviada em:* ${formatData(row.timestamp)}\n` +
-        `✏️ *Editada em:* ${formatData(row.edited_at)}\n` +
-        `📝 *Antes:* "${row.old_body || '(vazio)'}"\n` +
-        `💬 *Depois:* "${row.new_body || '(vazio)'}"`;
+        t('editadas.corpo', {
+            enviada: formatData(row.timestamp), editada: formatData(row.edited_at),
+            antes: row.old_body || t('editadas.vazio'), depois: row.new_body || t('editadas.vazio')
+        });
 
     // Records where it came from (/mute replying to the notice)
     const sent = await client.sendMessage(destination, textAlt, { linkPreview: false });

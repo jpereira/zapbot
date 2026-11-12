@@ -1,4 +1,4 @@
-# `/version` (`/versao`)
+# `/version`
 
 Exibe o mesmo banner do `/uptime`, com a versão do bot (é o mesmo tratador). Também pode ser usado
 dentro de um [`/alias`](alias.md) ou do [`/cron`](cron.md) com `{/version}`.

@@ -9,6 +9,7 @@ const { dbAll, dbRun } = require('../db');
 const { lineDestination, destinationsSaved, sendOnDestination } = require('../destinations');
 const { printError, printInfo } = require('../log');
 const { ignoreNotice } = require('../mudo');
+const { t } = require('../i18n');
 const { getSetting } = require('../settings');
 const { formatData } = require('../util/format');
 const { maskPhones } = require('../util/phone');
@@ -64,8 +65,8 @@ async function checkWatch({
 
     const details =
         headerOrigin({ chatId, chatName, isGroup, senderName, senderNumber }) +
-        `📅 *Enviada em:* ${formatData(timestamp)}\n` +
-        `💬 *Texto:* "${await resolverMentions(body, msg.mentionedIds)}"`;
+        t('watch.sentAt', { date: formatData(timestamp) }) +
+        t('watch.text', { text: await resolverMentions(body, msg.mentionedIds) });
 
     /*
      * One notice per destination, with only its rules (without -to: your private chat). A
@@ -97,9 +98,9 @@ async function checkWatch({
 
     for (const { destino: destination, regras: rules } of byDestination.values()) {
         const obfuscate = rules.some(c => locked.has(c.regra));
-        const mask = (t) => obfuscate ? maskPhones(t) : t;
-        const textAlt = mask('👀 *WATCH: MENSAGEM DETECTADA*\n\n' +
-            rules.map(c => `🔎 *Regra #${c.n}:* ${c.regra}\n`).join('') + details);
+        const mask = (s) => obfuscate ? maskPhones(s) : s;
+        const textAlt = mask(t('watch.detected') +
+            rules.map(c => t('watch.ruleLine', { n: c.n, rule: c.regra })).join('') + details);
 
         await sendOnDestination(destination, textAlt, {
             assunto: mask(`👀 Watch: ${rules.map(c => `#${c.n} ${c.regra}`).join(', ')}`),

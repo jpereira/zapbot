@@ -7,6 +7,7 @@ const { estado: stateAlt } = require('../state');
 const { describe, alertDescribeDestination, alertDestinations, addressAlt2, fmtUsd, readRegistration } = require('../commands/defi');
 const { dbAll, dbReady, dbRun } = require('../db');
 const { sendToDestinations } = require('../destinations');
+const { t } = require('../i18n');
 const { printError, printInfo } = require('../log');
 const { getSetting } = require('../settings');
 
@@ -19,7 +20,7 @@ const { getSetting } = require('../settings');
  * In a Project X wallet, "in range" means all the open positions in range.
  */
 async function notify(p, n, emoji, title, texts) {
-    const textAlt = `${emoji} *${title}*\n\n${texts.join('\n\n')}\n\n💡 _Desligue com /defi -alerta -rm ${n}._`;
+    const textAlt = `${emoji} *${title}*\n\n${texts.join('\n\n')}\n\n${t('defi.alertTip', { n })}`;
     await sendToDestinations(alertDestinations(p), textAlt, { assunto: title })
         .then(() => printInfo(`/defi -alerta: ${title} → ${alertDescribeDestination(p)}`))
         .catch(err => printError(`/defi -alerta: falha ao avisar (${addressAlt2(p)}):`, err.message));
@@ -34,8 +35,8 @@ async function checkRange(p, n, lido) {
     await dbRun('UPDATE defi_positions SET in_range = ? WHERE id = ?', [inRange, p.id]);
     if (inRange && p.in_range === null) return;   // first read, already in range: only records
 
-    if (inRange) await notify(p, n, '✅', `DeFi: ${describe(p)} voltou para a faixa`, lido.textos);
-    else await notify(p, n, '🚨', `DeFi: ${describe(p)} saiu da faixa`, lido.foraDaFaixa);
+    if (inRange) await notify(p, n, '✅', t('defi.backInRange', { desc: describe(p) }), lido.textos);
+    else await notify(p, n, '🚨', t('defi.leftRange', { desc: describe(p) }), lido.foraDaFaixa);
 }
 
 async function checkRates(p, n, lido) {
@@ -45,7 +46,7 @@ async function checkRates(p, n, lido) {
 
     await dbRun('UPDATE defi_positions SET fees_notified = ? WHERE id = ?', [passed, p.id]);
     if (passed) {
-        await notify(p, n, '💸', `DeFi: ${describe(p)} tem ${fmtUsd(lido.taxasUsd)} em taxas a coletar (passou de ${fmtUsd(p.alert_fees)})`, lido.textos);
+        await notify(p, n, '💸', t('defi.feesOver', { desc: describe(p), fees: fmtUsd(lido.taxasUsd), limit: fmtUsd(p.alert_fees) }), lido.textos);
     }
 }
 

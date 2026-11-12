@@ -4,6 +4,8 @@
  * does not fit, they leave.
  */
 
+const { t } = require('../i18n');
+
 const WIDTH = 595;
 const HEIGHT = 842;
 const MARGIN = 50;
@@ -201,7 +203,7 @@ function generatePdf({ titulo: title, direita: right = '', rodape: footer = '', 
             else c += textAlt(it.fonte, it.tamanho, it.cor, it.x, it.y, it.texto);
         }
         c += lineHorizontal(52);
-        const pag = `Página ${i + 1} de ${total}`;
+        const pag = t('pdf.pagina', { n: i + 1, total });
         c += textAlt('F1', 8, '0.4 0.4 0.4', MARGIN, 38, rod);
         c += textAlt('F1', 8, '0.4 0.4 0.4', WIDTH - MARGIN - width(pag, 8), 38, pag);
 

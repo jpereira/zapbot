@@ -15,7 +15,8 @@ const { dbGet, dbReady } = require('./db');
 const { smtpForSend, checkSmtp } = require('./email');
 const { estado: stateAlt } = require('./state');
 const { boxConfigured, check: checkImap } = require('./imap');
-const { output, chromiumVersion } = require('./system');
+const { notFound, output, chromiumVersion } = require('./system');
+const { t } = require('./i18n');
 const { humanSize } = require('./util/files');
 
 const TEST_TIMEOUT_MS = 20 * 1000;
@@ -37,8 +38,8 @@ async function testCache() {
     try {
         await fs.promises.writeFile(fileAlt, dataAlt);
         const lido = await fs.promises.readFile(fileAlt);
-        if (!lido.equals(dataAlt)) return { ok: false, detalhe: 'o que foi lido difere do escrito' };
-        return { ok: true, detalhe: `escrita e leitura de ${humanSize(dataAlt.length)} (${ms(start)})` };
+        if (!lido.equals(dataAlt)) return { ok: false, detalhe: t('diag.leituraDifere') };
+        return { ok: true, detalhe: t('diag.escritaLeitura', { tam: humanSize(dataAlt.length), ms: ms(start) }) };
     } finally {
         await fs.promises.rm(fileAlt, { force: true });
     }
@@ -48,7 +49,7 @@ async function testDisk() {
     const { bavail, bsize, blocks } = await fs.promises.statfs(CACHE_DIR);
     const livre = bavail * bsize;
     const pct = Math.round((bavail / blocks) * 100);
-    return { ok: livre >= DISK_MIN_BYTES, detalhe: `${humanSize(livre)} livres (${pct}%)` };
+    return { ok: livre >= DISK_MIN_BYTES, detalhe: t('diag.livres', { tam: humanSize(livre), pct }) };
 }
 
 async function testDb() {
@@ -56,12 +57,12 @@ async function testDb() {
     const start = performance.now();
     const r = await dbGet('PRAGMA quick_check');
     const resultAlt = Object.values(r ?? {})[0];
-    return { ok: resultAlt === 'ok', detalhe: resultAlt === 'ok' ? `íntegro (${ms(start)})` : String(resultAlt) };
+    return { ok: resultAlt === 'ok', detalhe: resultAlt === 'ok' ? t('diag.integro', { ms: ms(start) }) : String(resultAlt) };
 }
 
 async function testWhatsApp() {
-    if (stateAlt.reiniciando) return { ok: false, detalhe: 'reiniciando' };
-    if (!stateAlt.pronto) return { ok: false, detalhe: 'sem conexão com o WhatsApp' };
+    if (stateAlt.reiniciando) return { ok: false, detalhe: t('diag.reiniciando') };
+    if (!stateAlt.pronto) return { ok: false, detalhe: t('diag.semConexao') };
 
     const start = performance.now();
     const statusAlt = await client.getState();
@@ -81,29 +82,29 @@ async function testInternet() {
 }
 
 async function testSmtp() {
-    if (!smtpForSend()) return { ok: null, detalhe: 'não configurado (QRCODE_EMAIL_SMTP_*)' };
+    if (!smtpForSend()) return { ok: null, detalhe: t('diag.naoConfiguradoSmtp') };
 
     const start = performance.now();
     await checkSmtp();
-    return { ok: true, detalhe: `login ok (${ms(start)})` };
+    return { ok: true, detalhe: t('diag.loginOk', { ms: ms(start) }) };
 }
 
 async function testImap() {
-    if (!boxConfigured()) return { ok: null, detalhe: 'não configurado (QRCODE_EMAIL_IMAP_HOST)' };
+    if (!boxConfigured()) return { ok: null, detalhe: t('diag.naoConfiguradoImap') };
 
     const start = performance.now();
     await checkImap();
-    return { ok: true, detalhe: `login ok (${ms(start)})` };
+    return { ok: true, detalhe: t('diag.loginOk', { ms: ms(start) }) };
 }
 
 const testProgram = (nameAlt, bin, args, extract = (l) => l) => async () => {
     const line = await output(bin, args);
-    return line ? { ok: true, detalhe: extract(line) } : { ok: false, detalhe: `não rodou (${nameAlt})` };
+    return line ? { ok: true, detalhe: extract(line) } : { ok: false, detalhe: t('diag.naoRodou', { nome: nameAlt }) };
 };
 
 async function testChromium() {
     const version = await chromiumVersion();
-    return { ok: !/não encontrado/.test(version), detalhe: version.replace(/_/g, '') };
+    return { ok: version !== notFound(), detalhe: version.replace(/_/g, '') };
 }
 
 // Alone at the end: nothing else uses the network while it measures
@@ -126,20 +127,20 @@ async function testSpeed() {
     };
 }
 
-const TESTES = [
-    ['Cache', testCache],
-    ['Disco', testDisk],
-    ['Banco SQLite', testDb],
+const TESTES = () => [
+    [t('diag.nomeCache'), testCache],
+    [t('diag.nomeDisco'), testDisk],
+    [t('diag.nomeBanco'), testDb],
     ['WhatsApp', testWhatsApp],
     ['DNS', testDns],
     ['Internet', testInternet],
-    ['E-mail (SMTP)', testSmtp],
-    ['E-mail (IMAP)', testImap],
+    [t('diag.nomeSmtp'), testSmtp],
+    [t('diag.nomeImap'), testImap],
     ['Chromium', testChromium],
     ['yt-dlp', testProgram('yt-dlp', BIN_YT, ['--version'])],
     ['ffmpeg', testProgram('ffmpeg', BIN_FFMPEG, ['-version'], (l) => l.match(/version\s+(\S+)/)?.[1] ?? l)]
 ];
-const TEST_FINAL = ['Velocidade', testSpeed];
+const TEST_FINAL = () => [t('diag.nomeVelocidade'), testSpeed];
 
 // A test that hangs or throws becomes ❌ with the reason, without taking the others down
 async function run([nameAlt, test]) {
@@ -148,7 +149,7 @@ async function run([nameAlt, test]) {
     try {
         const r = await Promise.race([
             test(),
-            new Promise((_, reject) => { limitAlt = setTimeout(() => reject(new Error(`sem resposta em ${TEST_TIMEOUT_MS / 1000}s`)), TEST_TIMEOUT_MS); })
+            new Promise((_, reject) => { limitAlt = setTimeout(() => reject(new Error(t('diag.semResposta', { s: TEST_TIMEOUT_MS / 1000 }))), TEST_TIMEOUT_MS); })
         ]);
         return { nome: nameAlt, ...r };
     } catch (err) {
@@ -164,16 +165,16 @@ const line = ({ nome: nameAlt, ok, detalhe: detail }) => `${ok === null ? '➖' 
  * Runs all the tests and builds the /bot -test text.
  */
 async function testText() {
-    const results = await Promise.all(TESTES.map(run));
-    results.push(await run(TEST_FINAL));
+    const results = await Promise.all(TESTES().map(run));
+    results.push(await run(TEST_FINAL()));
 
     const counted = results.filter(r => r.ok !== null);
     const failures = counted.filter(r => !r.ok).length;
 
-    return `🧪 *TESTE DO BOT*\n\n${results.map(line).join('\n')}\n\n` +
+    return t('diag.titulo', { linhas: results.map(line).join('\n') }) +
         (failures
-            ? `❌ ${failures} de ${counted.length} com falha`
-            : `✅ ${counted.length} de ${counted.length} ok`);
+            ? t('diag.comFalha', { falhas: failures, total: counted.length })
+            : t('diag.todosOk', { total: counted.length }));
 }
 
 module.exports = {

@@ -6,6 +6,7 @@ const { priceHandleAlert } = require('../priceAlerts');
 const { getCommandSyntax } = require('./base');
 const { searchQuote, fmtReal, fmtChange } = require('../quotes');
 const { dbReady } = require('../db');
+const { language, t } = require('../i18n');
 const { printError } = require('../log');
 const { QUOTE_SUPPORTED } = require('../currencies');
 const { getSetting, setSetting } = require('../settings');
@@ -26,8 +27,7 @@ async function cmdRates(ctx) {
             .map(([sym, { icone: iconAlt, nome: nameAlt }]) => `${active.includes(sym) ? '✅' : '▫️'} ${iconAlt} *${sym}* — ${nameAlt}`)
             .join('\n');
 
-        await msg.reply('💱 *MOEDAS SUPORTADAS* _(contra o real)_\n\n' + list +
-            '\n\n_✅ = habilitada (aparece no /rates)_\n💡 _/cotacao -a <MOEDA> habilita, /rates -d <MOEDA> desabilita._');
+        await msg.reply(t('rates.supported', { list: list }));
         return;
     }
 
@@ -41,19 +41,19 @@ async function cmdRates(ctx) {
         }
 
         if (!QUOTE_SUPPORTED[sym]) {
-            await msg.reply(`❌ Moeda não suportada: ${sym}\n💡 _Veja as suportadas com /rates -l_`);
+            await msg.reply(t('rates.unsupported', { sym }));
             return;
         }
 
         if (addAlt === active.includes(sym)) {
-            await msg.reply(`ℹ️ ${sym} já está ${addAlt ? 'habilitada' : 'desabilitada'}.`);
+            await msg.reply(t(addAlt ? 'rates.alreadyEnabled' : 'rates.alreadyDisabled', { sym }));
             return;
         }
 
         await setSetting('cotacao.coins', addAlt ? [...active, sym] : active.filter(c => c !== sym));
         await msg.reply(addAlt
-            ? `✅ ${QUOTE_SUPPORTED[sym].icone} ${sym} habilitada.`
-            : `🗑️ ${sym} desabilitada.`);
+            ? t('rates.enabled', { icon: QUOTE_SUPPORTED[sym].icone, sym })
+            : t('rates.disabled', { sym }));
         return;
     }
 
@@ -64,18 +64,18 @@ async function cmdRates(ctx) {
     const invalid = requestedAlt.filter(m => !QUOTE_SUPPORTED[m]);
 
     if (invalid.length) {
-        await msg.reply(`❌ Moeda não suportada: ${invalid.join(', ')}\n💡 _Suportadas: ${Object.keys(QUOTE_SUPPORTED).join(', ')}_`);
+        await msg.reply(t('rates.unsupportedList', { list: invalid.join(', '), supported: Object.keys(QUOTE_SUPPORTED).join(', ') }));
         return;
     }
 
     if (!requestedAlt.length) {
-        await msg.reply('ℹ️ Nenhuma moeda habilitada.\n💡 _Habilite com /rates -a <MOEDA> (veja /rates -l)._');
+        await msg.reply(t('rates.noneEnabled'));
         return;
     }
 
     const results = await Promise.allSettled(requestedAlt.map(searchQuote));
     const sourcesAlt = new Set();
-    let textAlt = '💱 *COTAÇÕES* _(em reais)_\n';
+    let textAlt = t('rates.title') + '\n';
 
     requestedAlt.forEach((currency, i) => {
         const { icone: iconAlt, nome: nameAlt } = QUOTE_SUPPORTED[currency];
@@ -85,7 +85,7 @@ async function cmdRates(ctx) {
 
         if (r.status === 'rejected') {
             printError(`/rates ${currency}:`, r.reason?.message);
-            textAlt += '   ⚠️ _Cotação indisponível agora._\n';
+            textAlt += t('rates.unavailable') + '\n';
             return;
         }
 
@@ -96,14 +96,14 @@ async function cmdRates(ctx) {
         const sinceOpening = fmtChange(c.atual, c.abertura);
 
         textAlt += `   💰 *${fmtReal(c.atual)}*${dayAlt ? `  ${dayAlt}` : ''}\n`;
-        textAlt += `   🔔 Abertura: ${c.abertura ? fmtReal(c.abertura) : '—'}${sinceOpening ? ` _(${sinceOpening} desde a abertura)_` : ''}\n`;
-        textAlt += `   🏁 Fechamento anterior: ${c.fechamento ? fmtReal(c.fechamento) : '—'}\n`;
-        if (c.max && c.min) textAlt += `   📈 Máx: ${fmtReal(c.max)}  📉 Mín: ${fmtReal(c.min)}\n`;
+        textAlt += `   🔔 ${t('rates.open')}: ${c.abertura ? fmtReal(c.abertura) : '—'}${sinceOpening ? ` _(${t('rates.sinceOpen', { change: sinceOpening })})_` : ''}\n`;
+        textAlt += `   🏁 ${t('rates.prevClose')}: ${c.fechamento ? fmtReal(c.fechamento) : '—'}\n`;
+        if (c.max && c.min) textAlt += `   ${t('rates.maxMin', { max: fmtReal(c.max), min: fmtReal(c.min) })}\n`;
     });
 
-    const nowAlt = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', dateStyle: 'short', timeStyle: 'short' });
+    const nowAlt = new Date().toLocaleString(language() === 'pt_BR' ? 'pt-BR' : 'en-US', { timeZone: 'America/Sao_Paulo', dateStyle: 'short', timeStyle: 'short' });
     textAlt += `\n🕐 _${nowAlt}${sourcesAlt.size ? ` · ${[...sourcesAlt].join(', ')}` : ''}_\n`;
-    textAlt += '💡 _% ao lado do valor: variação desde o fechamento anterior._';
+    textAlt += t('rates.footer');
 
     await msg.reply(textAlt);
 }

@@ -8,6 +8,7 @@ const { MessageMedia } = require('whatsapp-web.js');
 const { readPerson, textPeople, withoutDelimiters } = require('./block');
 const { client } = require('../client');
 const { scheduleName, contactName, resolveLidToPhone, groupResolverName } = require('../contacts');
+const { t } = require('../i18n');
 const { printError } = require('../log');
 
 /*
@@ -60,27 +61,27 @@ async function photoAlt(ids) {
 async function showProfile(msg, person) {
     const { telefone: phoneAlt, nome: nameAlt, ids } = await dataAlt(person.id);
     const label = nameAlt ?? person.nome ?? (phoneAlt ? `+${phoneAlt}` : person.id.split('@')[0]);
-    const contactAlt = `Contato: ${label}${phoneAlt ? ` <+${phoneAlt}>` : ''}`;
+    const contactAlt = t('profile.contact', { label: label + (phoneAlt ? ` <+${phoneAlt}>` : '') });
 
     const photo = await photoAlt(ids);
     if (photo) {
         await msg.reply(photo, undefined, { caption: contactAlt });
         return;
     }
-    await msg.reply(`${contactAlt}\n🚫 Sem foto de perfil (ou ela está escondida pela privacidade do contato).`);
+    await msg.reply(`${contactAlt}\n${t('profile.noPhoto')}`);
 }
 
 // The group photo, with the caption Grupo: name
 async function showGroup(msg, chatId) {
     const nameAlt = await groupResolverName(chatId).catch(() => null);
-    const group = `Grupo: ${nameAlt ?? chatId.split('@')[0]}`;
+    const group = t('profile.group', { name: nameAlt ?? chatId.split('@')[0] });
 
     const photo = await photoAlt([chatId]);
     if (photo) {
         await msg.reply(photo, undefined, { caption: group });
         return;
     }
-    await msg.reply(`${group}\n🚫 Sem foto do grupo.`);
+    await msg.reply(`${group}\n${t('profile.noGroupPhoto')}`);
 }
 
 async function cmdProfile({ msg, opts, quotedMsg, chatId, isGroup }) {

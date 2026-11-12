@@ -6,6 +6,7 @@
 const crypto = require('crypto');
 const axios = require('axios');
 
+const { t } = require('../i18n');
 const { base58Decode, keyAlt, addressPda, readAccounts, u128 } = require('./solana');
 
 /*
@@ -191,18 +192,18 @@ function calculatePosition({ posicao: position, pool, tickInf, tickSup, agora: n
 async function validatePosition({ endereco: address, nft = null, pool = null }) {
     const [account] = await readAccounts([address]);
 
-    if (!account) return { erro: `❌ A conta ${address} não existe na Solana.` };
+    if (!account) return { erro: t('defi.err.orcaNoAccount', { addr: address }) };
     if (account.dono !== WHIRLPOOL_PROGRAM || !typeIs(account.dados, 'posicao')) {
-        return { erro: `❌ ${address} não é uma posição da Orca (Whirlpool).` };
+        return { erro: t('defi.err.orcaNotPosition', { addr: address }) };
     }
 
     const position = decodePosition(account.dados);
 
     if (pool && pool !== position.whirlpool) {
-        return { erro: `❌ A posição é da pool ${position.whirlpool}, não da ${pool}.` };
+        return { erro: t('defi.err.orcaOtherPool', { actual: position.whirlpool, pool }) };
     }
     if (nft && (nft !== position.mint || positionAddress(nft) !== address)) {
-        return { erro: `❌ O NFT ${nft} não é o desta posição (o dela é ${position.mint}).` };
+        return { erro: t('defi.err.orcaOtherNft', { nft, mint: position.mint }) };
     }
 
     return { posicao: position };
@@ -216,8 +217,8 @@ const orcaApi = async (pathAlt) => (await axios.get(`${ORCA_API}/${pathAlt}`, { 
  */
 async function positionDetails(address, addressPool, nowAlt = Date.now()) {
     const [accountPosition, accountPool] = await readAccounts([address, addressPool]);
-    if (!accountPosition || !typeIs(accountPosition.dados, 'posicao')) throw new Error('a posição não existe mais (foi fechada?)');
-    if (!accountPool || !typeIs(accountPool.dados, 'pool')) throw new Error('a pool da posição não foi encontrada');
+    if (!accountPosition || !typeIs(accountPosition.dados, 'posicao')) throw new Error(t('defi.err.orcaGone'));
+    if (!accountPool || !typeIs(accountPool.dados, 'pool')) throw new Error(t('defi.err.orcaPoolGone'));
 
     const position = decodePosition(accountPosition.dados);
     const pool = decodePool(accountPool.dados);

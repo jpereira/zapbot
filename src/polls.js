@@ -6,7 +6,8 @@ const { client } = require('./client');
 const { contactName, resolveLidToPhone } = require('./contacts');
 const { dbAll, dbGet, dbReady, dbRun } = require('./db');
 const { printError, printInfo } = require('./log');
-const { formatData, plural } = require('./util/format');
+const { t } = require('./i18n');
+const { formatData } = require('./util/format');
 
 /*
  * WhatsApp only delivers the votes to whoever created the poll: the bot sees the votes
@@ -27,7 +28,7 @@ async function registerPoll({ id, chatId, chatName = null, pergunta: question, o
 
 // Name of who voted: their profile, the contact or the number
 async function voterName(voter) {
-    if (voter === client.info.wid._serialized) return client.info.pushname || 'Você';
+    if (voter === client.info.wid._serialized) return client.info.pushname || t('grp.poll.you');
 
     const jid = voter.endsWith('@lid') ? (await resolveLidToPhone(voter)) || voter : voter;
     const contactAlt = await client.getContactById(jid).catch(() => null);
@@ -90,8 +91,8 @@ async function pollScoreboard({ chatIds, pollId = null }) {
 
     if (!pollAlt) {
         return pollId
-            ? '📊 Não tenho os votos dessa enquete: o bot só registra as enquetes da sua conta, a partir dos primeiros votos.'
-            : '📊 Nenhuma enquete registrada neste chat.\n💡 _Crie com /poll Pergunta? | opção 1 | opção 2_';
+            ? t('grp.poll.noVotes')
+            : t('grp.poll.none');
     }
 
     const votes = await dbAll('SELECT voter_name, options FROM poll_votes WHERE poll_id = ? ORDER BY voted_at, rowid', [pollAlt.id]);
@@ -109,9 +110,13 @@ async function pollScoreboard({ chatIds, pollId = null }) {
     const ranking = [...byOption.entries()].sort((a, b) => b[1].length - a[1].length);
     const leader = ranking[0]?.[1].length ?? 0;
 
-    let textAlt = `📊 *Resultado: ${pollAlt.question}*\n` +
-        `_${plural(totalVotes, 'voto', 'votos')} de ${plural(votes.length, 'pessoa', 'pessoas')}` +
-        `${pollAlt.multi ? ' · várias respostas' : ''} · criada em ${formatData(pollAlt.created_at)}_\n`;
+    let textAlt = t('grp.poll.result', {
+        question: pollAlt.question,
+        votes: t('grp.poll.votes', { n: totalVotes === 1 ? 1 : 2, count: totalVotes }),
+        people: t('grp.poll.people', { n: votes.length === 1 ? 1 : 2, count: votes.length }),
+        multi: pollAlt.multi ? t('grp.poll.multi') : '',
+        date: formatData(pollAlt.created_at)
+    });
 
     for (const [optionAlt, names] of ranking) {
         const pct = totalVotes ? Math.round((names.length / totalVotes) * 100) : 0;
@@ -120,7 +125,7 @@ async function pollScoreboard({ chatIds, pollId = null }) {
         if (names.length) textAlt += `\n   _${names.join(', ')}_`;
     }
 
-    if (!votes.length) textAlt += '\n\n_Ninguém votou ainda._';
+    if (!votes.length) textAlt += '\n\n' + t('grp.poll.nobody');
 
     return textAlt;
 }

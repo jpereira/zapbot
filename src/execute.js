@@ -6,11 +6,10 @@
 
 const { getCommandSyntax } = require('./commands/base');
 const { GetOptFromCommand } = require('./options');
+const { t } = require('./i18n');
 const { ROLES, answer } = require('./roles');
 const { askedHelpWatch, askedMaskWatch } = require('./watch/options');
 
-const SO_OWNER = '⛔ Apenas o dono do bot (ou um admin) pode';
-const SO_OWNER_WITHOUT_ADMIN = '⛔ Apenas o dono do bot pode';
 const ASKED_HELP = /^-h(?:elp)?$/;
 
 // The commands with their own option reader: /watch has rules and regexes with spaces
@@ -69,8 +68,8 @@ function optionsError(command, opts) {
     if (!opts.desconhecidas.length) return null;
     const list = opts.desconhecidas.join(' ');
     // /gpt and /tldr (strict: 'primeira') only suggest the help; the others show the syntax
-    if (command.estrito === 'primeira') return `❌ Opção desconhecida: ${list}\n💡 _Veja as opções com ${command.cmd} -h|-help_`;
-    return `❌ Opção desconhecida: ${list}\n\n\`\`\`${getCommandSyntax(command.cmd)}\`\`\``;
+    if (command.estrito === 'primeira') return t('executar.opcaoDesconhecidaAjuda', { lista: list, cmd: command.cmd });
+    return t('executar.opcaoDesconhecidaSintaxe', { lista: list, sintaxe: getCommandSyntax(command.cmd) });
 }
 
 /**
@@ -86,9 +85,9 @@ function denial(command, opts, level) {
         const used = o.opts ? o.opts.some(nameAlt => opts.given.has(nameAlt)) : opts.argv.length > 0;
         if (!used) continue;
         if (o.role && !answer(level, o.role)) {
-            return `${o.role === ROLES.OWNER ? SO_OWNER_WITHOUT_ADMIN : SO_OWNER} usar o -${o.opts[0]} do ${command.cmd}.`;
+            return t(o.role === ROLES.OWNER ? 'executar.soDonoOpcao' : 'executar.soAdminOpcao', { opt: o.opts[0], cmd: command.cmd });
         }
-        if (o.outrosChats && !answer(level, ROLES.ADMIN)) return `${SO_OWNER} ver outros chats.`;
+        if (o.outrosChats && !answer(level, ROLES.ADMIN)) return t('executar.soAdminOutrosChats');
     }
     return null;
 }
@@ -115,7 +114,6 @@ function assembleContext({ msg, args, opts, quotedMsg = null, chat, quem: who })
 }
 
 module.exports = {
-    SO_OWNER,
     withTyping,
     optionsError,
     readOptions,

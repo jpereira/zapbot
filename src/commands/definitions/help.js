@@ -7,7 +7,7 @@ const { USER } = require('../../roles').ROLES;
 module.exports = {
     cmd: '/help',
     usage: '/help [-role|-r] [command] [protocol]',
-    aliases: ['/h', '/ajuda'],
+    aliases: ['/h'],
     summary: 'Lists the commands or details one of them',
     help: 'Shows the help menu, only with the commands you can use (the owner and admins see all of them); with a command, only its help.',
     ex: ['/help show'],

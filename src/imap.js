@@ -6,6 +6,8 @@
 
 const tls = require('tls');
 
+const { t } = require('./i18n');
+
 const TIMEOUT_MS = 20 * 1000;
 
 const boxConfigured = () => ['QRCODE_EMAIL_IMAP_HOST', 'QRCODE_EMAIL_SMTP_USER', 'QRCODE_EMAIL_SMTP_PASS']
@@ -26,7 +28,7 @@ function open(host, port) {
             if (pending) pending.erro(err);
             else reject(err);
         };
-        socket.setTimeout(TIMEOUT_MS, () => fail(new Error(`sem resposta em ${TIMEOUT_MS / 1000}s`)));
+        socket.setTimeout(TIMEOUT_MS, () => fail(new Error(t('imap.semResposta', { s: TIMEOUT_MS / 1000 }))));
         socket.on('error', fail);
 
         const cmd = (textAlt) => new Promise((ok, errorAlt) => {
@@ -93,7 +95,7 @@ async function empty(cmd, folder) {
 
 /** Only connects and logs in (the IMAP item of /bot -test), touching nothing. */
 async function check() {
-    if (!boxConfigured()) throw new Error('não configurado');
+    if (!boxConfigured()) throw new Error(t('imap.naoConfigurado'));
 
     const { cmd, fechar: close } = await open(process.env.QRCODE_EMAIL_IMAP_HOST.trim(), 993);
     try {
@@ -110,7 +112,7 @@ async function check() {
  */
 async function boxes({ apagar: removeAlt = false } = {}) {
     if (!boxConfigured()) {
-        throw new Error('QRCODE_EMAIL_IMAP_HOST, QRCODE_EMAIL_SMTP_USER e _PASS não configurados no config/.env');
+        throw new Error(t('imap.naoConfiguradoVars'));
     }
 
     const { cmd, fechar: close } = await open(process.env.QRCODE_EMAIL_IMAP_HOST.trim(), 993);
@@ -118,7 +120,7 @@ async function boxes({ apagar: removeAlt = false } = {}) {
         await cmd(`LOGIN ${quotes(process.env.QRCODE_EMAIL_SMTP_USER)} ${quotes(process.env.QRCODE_EMAIL_SMTP_PASS)}`);
         const folders = findFolders(await cmd('LIST "" "*"'));
         if (!folders.sent || !folders.trash) {
-            throw new Error(`pasta ${[!folders.sent && 'Sent', !folders.trash && 'Trash'].filter(Boolean).join(' e ')} não encontrada`);
+            throw new Error(t('imap.pastaNaoEncontrada', { pastas: [!folders.sent && 'Sent', !folders.trash && 'Trash'].filter(Boolean).join(t('imap.e')) }));
         }
 
         const sent = await messagesIn(cmd, folders.sent);

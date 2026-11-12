@@ -5,21 +5,25 @@
 const axios = require('axios');
 
 const { printError } = require('../log');
+const { language, t } = require('../i18n');
 const { getSetting } = require('../settings');
 
 // /weather [N|Nd] [city]: Open-Meteo (no API key); with N, the forecast for the next N days
 const WEATHER_WMO = {
-    0: ['☀️', 'Céu limpo'], 1: ['🌤️', 'Predominantemente limpo'], 2: ['⛅', 'Parcialmente nublado'],
-    3: ['☁️', 'Nublado'], 45: ['🌫️', 'Neblina'], 48: ['🌫️', 'Neblina com geada'],
-    51: ['🌦️', 'Garoa fraca'], 53: ['🌦️', 'Garoa'], 55: ['🌦️', 'Garoa forte'],
-    56: ['🌧️', 'Garoa congelante'], 57: ['🌧️', 'Garoa congelante forte'],
-    61: ['🌧️', 'Chuva fraca'], 63: ['🌧️', 'Chuva'], 65: ['🌧️', 'Chuva forte'],
-    66: ['🌧️', 'Chuva congelante'], 67: ['🌧️', 'Chuva congelante forte'],
-    71: ['🌨️', 'Neve fraca'], 73: ['🌨️', 'Neve'], 75: ['❄️', 'Neve forte'], 77: ['🌨️', 'Grãos de neve'],
-    80: ['🌦️', 'Pancadas de chuva'], 81: ['🌧️', 'Pancadas de chuva fortes'], 82: ['⛈️', 'Pancadas violentas'],
-    85: ['🌨️', 'Pancadas de neve'], 86: ['❄️', 'Pancadas de neve fortes'],
-    95: ['⛈️', 'Trovoada'], 96: ['⛈️', 'Trovoada com granizo'], 99: ['⛈️', 'Trovoada com granizo forte']
+    0: '☀️', 1: '🌤️', 2: '⛅', 3: '☁️', 45: '🌫️', 48: '🌫️',
+    51: '🌦️', 53: '🌦️', 55: '🌦️', 56: '🌧️', 57: '🌧️',
+    61: '🌧️', 63: '🌧️', 65: '🌧️', 66: '🌧️', 67: '🌧️',
+    71: '🌨️', 73: '🌨️', 75: '❄️', 77: '🌨️',
+    80: '🌦️', 81: '🌧️', 82: '⛈️', 85: '🌨️', 86: '❄️',
+    95: '⛈️', 96: '⛈️', 99: '⛈️'
 };
+
+// [icon, description] from the WMO code, in the current language
+function weatherWmo(codeAlt) {
+    return codeAlt in WEATHER_WMO
+        ? [WEATHER_WMO[codeAlt], t(`weather.wmo.${codeAlt}`)]
+        : ['🌡️', t('weather.code', { code: codeAlt })];
+}
 
 const OPEN_METEO_GEO_URL = 'https://geocoding-api.open-meteo.com/v1/search';
 const OPEN_METEO_URL = 'https://api.open-meteo.com/v1/forecast';
@@ -38,12 +42,12 @@ const GEO_CACHE_MAX = 100;
  * relevant (normally the most populous).
  */
 async function geocodeCity(city) {
-    const keyAlt = city.toLowerCase();
+    const keyAlt = `${language()}:${city.toLowerCase()}`;
     if (geoCache.has(keyAlt)) return geoCache.get(keyAlt);
 
     const { data } = await axios.get(OPEN_METEO_GEO_URL, {
         timeout: 15000,
-        params: { name: city, count: 1, language: 'pt' }
+        params: { name: city, count: 1, language: language() === 'pt_BR' ? 'pt' : 'en' }
     });
     const local = data.results?.[0] ?? null;
 
@@ -79,20 +83,25 @@ async function queryTime({ latitude, longitude }, daysAlt = 1) {
 const measure = (valueAlt, unit) => valueAlt == null ? '-' : `${Math.round(valueAlt)}${unit}`;
 
 function formatTime(local, { current: c, daily: d }) {
-    const [iconAlt, description] = WEATHER_WMO[c.weather_code] ?? ['🌡️', `Código ${c.weather_code}`];
+    const [iconAlt, description] = weatherWmo(c.weather_code);
     const whereAlt = [local.name, local.admin1, local.country].filter(Boolean).join(', ');
     const temp = Math.round(c.temperature_2m);
 
-    let textAlt =
-        `${iconAlt} *Tempo em ${whereAlt}*\n\n` +
-        `${description}\n` +
-        `🌡️ *Agora:* ${measure(c.temperature_2m, '°C')} _(sensação ${measure(c.apparent_temperature, '°C')})_\n` +
-        `📈 *Máx:* ${measure(d.temperature_2m_max?.[0], '°C')}  📉 *Mín:* ${measure(d.temperature_2m_min?.[0], '°C')}\n` +
-        `💧 *Umidade:* ${measure(c.relative_humidity_2m, '%')}  🌬️ *Vento:* ${measure(c.wind_speed_10m, ' km/h')}\n` +
-        `☔ *Chance de chuva:* ${measure(d.precipitation_probability_max?.[0], '%')}`;
+    let textAlt = t('weather.now', {
+        icon: iconAlt,
+        place: whereAlt,
+        desc: description,
+        temp: measure(c.temperature_2m, '°C'),
+        feels: measure(c.apparent_temperature, '°C'),
+        max: measure(d.temperature_2m_max?.[0], '°C'),
+        min: measure(d.temperature_2m_min?.[0], '°C'),
+        humidity: measure(c.relative_humidity_2m, '%'),
+        wind: measure(c.wind_speed_10m, ' km/h'),
+        rain: measure(d.precipitation_probability_max?.[0], '%')
+    });
 
-    if (temp <= TIME_COLD) textAlt += '\n\n🥶 Tá congelando!';
-    if (temp >= TIME_CALOR) textAlt += '\n\n🔥 Que calor da porra!';
+    if (temp <= TIME_COLD) textAlt += '\n\n' + t('weather.freezing');
+    if (temp >= TIME_CALOR) textAlt += '\n\n' + t('weather.hot');
 
     return textAlt;
 }
@@ -100,20 +109,20 @@ function formatTime(local, { current: c, daily: d }) {
 // "2026-09-30" → "qua 30/09" (the date already comes in the city timezone: timezone=auto)
 function dayLabel(iso) {
     const [, mes, day] = iso.split('-');
-    const week = new Date(`${iso}T12:00:00Z`).toLocaleDateString('pt-BR', { weekday: 'short', timeZone: 'UTC' }).replace('.', '');
+    const week = new Date(`${iso}T12:00:00Z`).toLocaleDateString(language() === 'pt_BR' ? 'pt-BR' : 'en-US', { weekday: 'short', timeZone: 'UTC' }).replace('.', '');
     return `${week} ${day}/${mes}`;
 }
 
 // One line per day: icon, day, max/min, chance of rain and condition
 function formatForecast({ daily: d }) {
     const linesAlt = d.time.map((iso, i) => {
-        const [iconAlt, description] = WEATHER_WMO[d.weather_code?.[i]] ?? ['🌡️', `Código ${d.weather_code?.[i]}`];
-        const when = i === 0 ? `Hoje (${dayLabel(iso)})` : dayLabel(iso);
+        const [iconAlt, description] = weatherWmo(d.weather_code?.[i]);
+        const when = i === 0 ? t('weather.today', { day: dayLabel(iso) }) : dayLabel(iso);
         return `${iconAlt} *${when}:* ${measure(d.temperature_2m_max?.[i], '°')}/${measure(d.temperature_2m_min?.[i], '°')}` +
                ` · ☔ ${measure(d.precipitation_probability_max?.[i], '%')} · ${description}`;
     });
 
-    const title = d.time.length === 1 ? 'Previsão de hoje' : `Próximos ${d.time.length} dias`;
+    const title = d.time.length === 1 ? t('weather.forecastToday') : t('weather.forecastDays', { n: d.time.length });
     return `📅 *${title}*\n${linesAlt.join('\n')}`;
 }
 
@@ -131,7 +140,7 @@ async function cmdWeather({ msg, args }) {
     const max = getSetting('tempo.maxDays');
 
     if (request.dias !== null && (request.dias < 1 || request.dias > max)) {
-        await msg.reply(`❌ Quantidade de dias inválida: ${request.dias}. Use de 1 a ${max}.\n💡 _/tempo 7d Niteroi (máximo no setting tempo.maxDays, até ${TIME_DAYS_API})_`);
+        await msg.reply(t('weather.invalidDays', { n: request.dias, max, api: TIME_DAYS_API }));
         return;
     }
 
@@ -142,7 +151,7 @@ async function cmdWeather({ msg, args }) {
         const local = await geocodeCity(city);
 
         if (!local) {
-            await msg.reply(`❌ Cidade não encontrada: ${city}\n💡 _Tente com estado e país: /weather Niteroi, Rio de Janeiro, Brazil_`);
+            await msg.reply(t('weather.cityNotFound', { city: city }));
             return;
         }
 
@@ -153,7 +162,7 @@ async function cmdWeather({ msg, args }) {
         await msg.reply(textAlt);
     } catch (err) {
         printError('/weather:', err.response?.status ?? '', err.message);
-        await msg.reply('❌ Não consegui consultar o tempo agora.');
+        await msg.reply(t('weather.failed'));
     }
 }
 

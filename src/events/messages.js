@@ -19,6 +19,7 @@ const { hideInDb, loginPassword, tryLogin } = require('../login');
 const { ALWAYS_RELEASED, limitNotice, levelAlt, permissionHere } = require('../permissions');
 const { ROLES, answer } = require('../roles');
 const { printCall, printCommandUnknown, printDebug, printError, printInfo } = require('../log');
+const { t } = require('../i18n');
 const { getSetting, isDebugMode } = require('../settings');
 const { countStats, myIdStats } = require('../stats');
 const { mediaIsPath, nameSafe, getFolderMedia } = require('../util/files');
@@ -129,10 +130,12 @@ client.on('message_create', (msg) => withContextDebug({
             (isBroadcast ? null : msg?._data?.notifyName) ||
             senderNumber ||
             originalSenderJid ||
-            'Desconhecido';
+            t('core.desconhecido');
         if (isBroadcast) {
-            const type = chatId === 'status@broadcast' || msg.isStatus ? 'Status' : 'Transmissão';
-            chatName = type + (senderJid === 'UNKNOWN' ? '' : ` de ${senderName}`);
+            const status = chatId === 'status@broadcast' || msg.isStatus;
+            chatName = senderJid === 'UNKNOWN'
+                ? t(status ? 'mensagens.status' : 'mensagens.transmissao')
+                : t(status ? 'mensagens.statusDe' : 'mensagens.transmissaoDe', { nome: senderName });
         }
         Object.assign(contextDebug(), { chatName, senderName });
         printDebugLevel(1, 'message_create remetente e chat', { chatName, senderName, senderJid });
@@ -211,7 +214,7 @@ client.on('message_create', (msg) => withContextDebug({
             await countStats({
                 chatId, chatName, isGroup,
                 senderId: msg.fromMe ? myIdStats() : (senderNumber || senderJid),
-                senderName: msg.fromMe ? (client.info?.pushname || 'Você') : senderName,
+                senderName: msg.fromMe ? (client.info?.pushname || t('core.voce')) : senderName,
                 quando: paraMs(msg.timestamp) || timestamp,
                 campos: { msgs: 1, media: hasMedia }
             });
@@ -285,7 +288,7 @@ client.on('message_create', (msg) => withContextDebug({
 
         if (!command) {
             if (msg.fromMe || isDebugMode()) {
-                const who = msg.fromMe ? (client.info?.pushname || 'Você') : senderName;
+                const who = msg.fromMe ? (client.info?.pushname || t('core.voce')) : senderName;
                 printCommandUnknown(who, body.length > 100 ? `${body.slice(0, 100)}…` : body, { doDono: msg.fromMe });
             }
             const permission = permissionHere({ numero: senderNumber, chatId, isGroup });
@@ -298,8 +301,8 @@ client.on('message_create', (msg) => withContextDebug({
                     .every(cmd => ALWAYS_RELEASED.includes(cmd) || permission.pode(cmd)))
                 .map(c => c.cmd);
             await msg.reply(possible.length
-                ? `🤔 Comando '${caller}' ambíguo. Possíveis comandos: ${possible.join(', ')}`
-                : `⚠️ Comando '${body}' desconhecido, tente: /help`);
+                ? t('mensagens.ambiguo', { caller, lista: possible.join(', ') })
+                : t('mensagens.desconhecido', { body }));
             return;
         }
 
@@ -313,7 +316,7 @@ client.on('message_create', (msg) => withContextDebug({
         const passwordLogin = command.cmd === '/bot' ? loginPassword(args) : null;
         if (passwordLogin !== null) {
             await hideInDb(msgIdPure);
-            if (msg.fromMe) await msg.reply('👑 Você é o dono, já manda em tudo.');
+            if (msg.fromMe) await msg.reply(t('mensagens.voceEDono'));
             else await msg.reply(await tryLogin({ numero: senderNumber, nome: senderName, senha: passwordLogin, isGroup }));
             return;
         }
@@ -336,7 +339,7 @@ client.on('message_create', (msg) => withContextDebug({
             if (!isGroup && permission.soNosGrupos.length) {
                 const groups = await Promise.all(permission.soNosGrupos.map(async (id) =>
                     `👥 ${await groupResolverName(id).catch(() => null) || id}`));
-                await msg.reply(`🚫 Sem permissão para comandos no privado. Permitido apenas em: ${groups.join(', ')}.`);
+                await msg.reply(t('mensagens.semPermissaoPrivado', { grupos: groups.join(', ') }));
             }
             return;
         }
@@ -348,7 +351,7 @@ client.on('message_create', (msg) => withContextDebug({
          */
         if (!answer(level, command.role) && !(command.alvos ?? [command.cmd]).every(cmd => permission.pode(cmd))) {
             if (isDebugMode()) {
-                messageToSelf(`⚠️ ${senderName} tentou executar ${command.cmd} dentro de ${chatName}, mas sem permissão`);
+                messageToSelf(t('mensagens.tentouExecutar', { nome: senderName, cmd: command.cmd, chat: chatName }));
             }
             return;
         }
@@ -360,8 +363,10 @@ client.on('message_create', (msg) => withContextDebug({
                 if (flood.avisar) {
                     printInfo(`Flood: ${senderName} repetiu ${command.cmd}; ignorado por ${flood.segundos}s`);
                     const max = getSetting('flood.maxCommandRepeated');
-                    await msg.reply(`⚠️ Não é permitido executar o mesmo comando mais de ${max} ${max === 1 ? 'vez' : 'vezes'} seguidas. ` +
-                        `Aguarde ${flood.segundos} ${flood.segundos === 1 ? 'segundo' : 'segundos'}.`);
+                    await msg.reply(t('mensagens.flood', {
+                        max: t(max === 1 ? 'mensagens.vez' : 'mensagens.vezes', { n: max }),
+                        espera: t(flood.segundos === 1 ? 'mensagens.segundo' : 'mensagens.segundos', { n: flood.segundos })
+                    }));
                 }
                 return;
             }
@@ -383,7 +388,7 @@ client.on('message_create', (msg) => withContextDebug({
 
         // Text alias: the {/command}s run here, with the permissions of whoever called (the arguments stay out)
         if (resolved.texto) {
-            printCall(msg.fromMe ? (client.info?.pushname || 'Você') : senderName, body, chatName);
+            printCall(msg.fromMe ? (client.info?.pushname || t('core.voce')) : senderName, body, chatName);
             await withTyping(msg, command, () => textRunAlias(msg, resolved, {
                 chatId, chatName, isGroup,
                 quem: { nivel: level, admin, podeUsar: admin ? () => true : permission.pode, senderContact, senderName, senderNumber }
@@ -393,7 +398,7 @@ client.on('message_create', (msg) => withContextDebug({
 
         if (resolved.alias) {
             const call = [resolved.destino, args].filter(Boolean).join(' ');
-            if (!resolved.quiet) await msg.reply(`🔗 Alias ${resolved.alias} -> ${call}`, undefined, { linkPreview: false });
+            if (!resolved.quiet) await msg.reply(t('mensagens.alias', { alias: resolved.alias, chamada: call }), undefined, { linkPreview: false });
         }
 
         // The saved command's options belong to the target, including -h and -rm.
@@ -418,12 +423,12 @@ client.on('message_create', (msg) => withContextDebug({
         }
 
         // In private, the senderName of your messages is the OTHER participant's (see rawSenderId)
-        printCall(msg.fromMe ? (client.info?.pushname || 'Você') : senderName, body, chatName);
+        printCall(msg.fromMe ? (client.info?.pushname || t('core.voce')) : senderName, body, chatName);
 
         const handler = HANDLERS[command.cmd];
 
         if (!handler) {
-            await msg.reply(`⚠️ O comando ${command.cmd} ainda não foi implementado.`);
+            await msg.reply(t('mensagens.naoImplementado', { cmd: command.cmd }));
             return;
         }
 

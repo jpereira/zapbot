@@ -30,6 +30,7 @@
 const axios = require('axios');
 
 const { isAddressEvm } = require('./hyperevm');
+const { t } = require('../i18n');
 const { printError, printInfo } = require('../log');
 const { getSetting } = require('../settings');
 
@@ -169,7 +170,7 @@ function marketPosition(x, network) {
     const m = x?.market;
     const s = x?.state;
     if (!m || !s) {
-        throw new ErrorMorpho('A API do Morpho mandou uma posição incompleta.',
+        throw new ErrorMorpho(t('defi.err.morphoIncomplete'),
             `posição sem market/state: ${JSON.stringify(x)?.slice(0, 200)}`);
     }
 
@@ -177,7 +178,7 @@ function marketPosition(x, network) {
         [s.collateral, s.borrowAssets, s.supplyAssets].map(v => integer(v ?? 0));
     const lltv = integer(m.lltv);
     if ([collateralRaw, borrowedRaw, providedRaw, lltv].includes(null)) {
-        throw new ErrorMorpho('A API do Morpho mandou números que não consegui ler.',
+        throw new ErrorMorpho(t('defi.err.morphoNumbers'),
             `valores inválidos no mercado ${m.marketId}`);
     }
     if (!collateralRaw && !borrowedRaw && !providedRaw) return null;
@@ -232,7 +233,7 @@ function vaultPosition(x, network) {
     const v = x?.vault;
     const raw = integer(x?.state?.assets ?? x?.assets ?? 0);
     if (!v || raw === null) {
-        throw new ErrorMorpho('A API do Morpho mandou um vault que não consegui ler.',
+        throw new ErrorMorpho(t('defi.err.morphoVault'),
             `vault inválido: ${JSON.stringify(x)?.slice(0, 200)}`);
     }
     if (!raw) return null;
@@ -288,21 +289,21 @@ function translateError(err) {
     const doGraphql = err.response?.data?.errors?.[0]?.message;
 
     if (err.code === 'ECONNABORTED' || err.code === 'ETIMEDOUT' || /timeout/i.test(err.message)) {
-        return new ErrorMorpho(`A API do Morpho não respondeu em ${API_TIMEOUT_MS / 1000} segundos.`,
+        return new ErrorMorpho(t('defi.err.morphoTimeout', { s: API_TIMEOUT_MS / 1000 }),
             `timeout: ${err.message}`);
     }
     if (status === 429) {
-        return new ErrorMorpho('Muitas consultas seguidas: a API do Morpho pediu um tempo.', 'HTTP 429 (rate limit)');
+        return new ErrorMorpho(t('defi.err.morphoRate'), 'HTTP 429 (rate limit)');
     }
     if (/unsupported chainId/i.test(doGraphql ?? '')) {
         const network = doGraphql.match(/\d+/)?.[0] ?? '?';
-        return new ErrorMorpho(`Rede não suportada pelo Morpho (${network}): confira o setting defi.morpho.chains.`,
+        return new ErrorMorpho(t('defi.err.morphoChain', { id: network }),
             doGraphql);
     }
-    if (doGraphql) return new ErrorMorpho('A API do Morpho recusou a consulta.', `GraphQL: ${doGraphql}`);
-    if (status >= 500) return new ErrorMorpho('A API do Morpho está fora do ar.', `HTTP ${status}`);
-    if (status) return new ErrorMorpho('A API do Morpho respondeu com erro.', `HTTP ${status}`);
-    return new ErrorMorpho('Não consegui falar com a API do Morpho.', err.message);
+    if (doGraphql) return new ErrorMorpho(t('defi.err.morphoRefused'), `GraphQL: ${doGraphql}`);
+    if (status >= 500) return new ErrorMorpho(t('defi.err.morphoDown'), `HTTP ${status}`);
+    if (status) return new ErrorMorpho(t('defi.err.morphoHttp'), `HTTP ${status}`);
+    return new ErrorMorpho(t('defi.err.morphoCannotTalk'), err.message);
 }
 
 /**
@@ -314,7 +315,7 @@ function translateError(err) {
  */
 async function positionsMorpho(wallet) {
     if (!isAddressEvm(wallet)) {
-        throw new ErrorMorpho(`"${wallet}" não é uma carteira EVM (0x e 40 caracteres hexadecimais).`);
+        throw new ErrorMorpho(t('defi.err.notEvm', { wallet: wallet }));
     }
 
     const networks = getSetting('defi.morpho.chains').map(Number);

@@ -3,6 +3,7 @@
  * WhatsApp). The letters are 3 columns wide and 5 lines tall, and the text wraps in
  * several lines of letters to fit the phone screen (30 columns by default).
  */
+const { t } = require('../i18n');
 const { getSetting } = require('../settings');
 
 const MAX_TEXT = 40;
@@ -100,28 +101,28 @@ function generateAscii(textAlt, { largura: widthAlt = WIDTH_DEFAULT, traco = '#'
 async function cmdAscii({ msg, opts, quotedMsg }) {
     const typed = opts.argv.join(' ').trim();
     const textAlt = typed || String(quotedMsg?.body ?? '').trim();
-    const usage = '❌ Use: /ascii [-width|-w <colunas>] [-char|-c <caractere>] <texto (\\n quebra a linha)>';
+    const usage = t('ascii.usage');
 
     if (!textAlt) return msg.reply(usage);
-    if (textAlt.length > MAX_TEXT) return msg.reply(`❌ O texto tem no máximo ${MAX_TEXT} caracteres.`);
+    if (textAlt.length > MAX_TEXT) return msg.reply(t('ascii.tooLong', { max: MAX_TEXT }));
 
     let widthAlt = WIDTH_DEFAULT;
     if (opts.given.has('width')) {
         widthAlt = /^\d+$/.test(opts.opt.width ?? '') ? Number(opts.opt.width) : 0;
         if (widthAlt < WIDTH_MIN || widthAlt > WIDTH_MAX) {
-            return msg.reply(`❌ -width precisa de um número de ${WIDTH_MIN} a ${WIDTH_MAX}`);
+            return msg.reply(t('ascii.width', { min: WIDTH_MIN, max: WIDTH_MAX }));
         }
     }
 
     let traco = getSetting('ascii.defaultChar');
     if (opts.given.has('char')) {
         const c = opts.opt.char ?? '';
-        if ([...c].length !== 1) return msg.reply('❌ -char precisa de um único caractere, ex: -char @');
+        if ([...c].length !== 1) return msg.reply(t('ascii.char'));
         traco = c;
     }
 
     const art = generateAscii(textAlt, { largura: widthAlt, traco });
-    if (!art) return msg.reply('❌ Nada para desenhar: use letras, números ou ! ? . , : - + _ /');
+    if (!art) return msg.reply(t('ascii.nothing'));
 
     return msg.reply(`\`\`\`\n${art}\n\`\`\``);
 }

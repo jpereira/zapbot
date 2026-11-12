@@ -6,6 +6,7 @@
 
 const axios = require('axios');
 
+const { t } = require('../i18n');
 const { addressAbi, uintAbi, uintDe } = require('./hyperevm');
 
 const RPC_TIMEOUT_MS = 15000;
@@ -47,32 +48,32 @@ async function ethCall(url, { to, data }, label) {
         const status = err.response?.status;
         const exceeded = err.code === 'ECONNABORTED' || err.code === 'ETIMEDOUT' || /timeout/i.test(err.message);
         if (exceeded) {
-            throw new ErrorEvm(`O ${label} não respondeu em ${RPC_TIMEOUT_MS / 1000} segundos.`,
+            throw new ErrorEvm(t('defi.err.evmTimeout', { label: label, s: RPC_TIMEOUT_MS / 1000 }),
                 `timeout: ${err.message}`);
         }
         if (status === 429) {
-            throw new ErrorEvm(`Muitas consultas seguidas: o ${label} pediu um tempo.`, 'HTTP 429 (rate limit)');
+            throw new ErrorEvm(t('defi.err.evmRate', { label: label }), 'HTTP 429 (rate limit)');
         }
-        if (status >= 500) throw new ErrorEvm(`O ${label} está fora do ar.`, `HTTP ${status}`);
-        if (status) throw new ErrorEvm(`O ${label} respondeu com erro.`, `HTTP ${status}`);
-        throw new ErrorEvm(`Não consegui falar com o ${label}.`, err.message);
+        if (status >= 500) throw new ErrorEvm(t('defi.err.evmDown', { label: label }), `HTTP ${status}`);
+        if (status) throw new ErrorEvm(t('defi.err.evmHttp', { label: label }), `HTTP ${status}`);
+        throw new ErrorEvm(t('defi.err.evmCannotTalk', { label: label }), err.message);
     }
 
     const { data: body } = reply;
     if (body?.error) {
         const limitAlt = /rate|limit|too many/i.test(body.error.message ?? '');
         const reasonAlt = limitAlt
-            ? `Muitas consultas seguidas: o ${label} pediu um tempo.`
-            : `O ${label} recusou a consulta.`;
+            ? t('defi.err.evmRate', { label: label })
+            : t('defi.err.evmRefused', { label: label });
         throw new ErrorEvm(reasonAlt, `${label}: ${body.error.message ?? JSON.stringify(body.error)}`);
     }
     if (typeof body?.result !== 'string' || !/^0x[0-9a-f]*$/i.test(body.result)) {
-        throw new ErrorEvm(`O ${label} mandou uma resposta inesperada.`,
+        throw new ErrorEvm(t('defi.err.evmUnexpected', { label: label }),
             `resultado inválido: ${JSON.stringify(body)?.slice(0, 200)}`);
     }
     // Address with no contract: the eth_call "works" and returns empty
     if (body.result === '0x') {
-        throw new ErrorEvm('Contrato não encontrado na rede.', `${to}: eth_call vazio (sem contrato?)`);
+        throw new ErrorEvm(t('defi.err.evmNoContract'), `${to}: eth_call vazio (sem contrato?)`);
     }
     return body.result;
 }
@@ -133,11 +134,11 @@ async function multicall(url, calls, label) {
         try {
             read = decodeAggregate3(hex);
         } catch (err) {
-            throw new ErrorEvm(`O ${label} mandou uma resposta inesperada.`,
+            throw new ErrorEvm(t('defi.err.evmUnexpected', { label: label }),
                 `aggregate3 ilegível: ${err.message}`);
         }
         if (read.length !== batch.length) {
-            throw new ErrorEvm(`O ${label} mandou uma resposta inesperada.`,
+            throw new ErrorEvm(t('defi.err.evmUnexpected', { label: label }),
                 `aggregate3: ${read.length} de ${batch.length} resultados`);
         }
         results.push(...read);

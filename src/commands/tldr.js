@@ -7,13 +7,14 @@ const path = require('path');
 
 const { client, completeNotice } = require('../client');
 const { getCommandSyntax } = require('./base');
+const { resolverTarget } = require('./show');
 const { HOUR_MS } = require('../constants');
 const { chatCurrentIds } = require('../contacts');
 const { dbAll, dbReady, dbRun } = require('../db');
+const { language, t } = require('../i18n');
 const { WITHOUT_KEY, keyOpenAi, errorOpenAi, measureConsumption, askOnChat, consumptionFooter, transcribeAudio } = require('../openaiChat');
 const { getSetting } = require('../settings');
 const { mediaIsPath } = require('../util/files');
-const { plural, withoutAccents } = require('../util/format');
 const { readDuration } = require('../util/when');
 
 /*
@@ -21,7 +22,7 @@ const { readDuration } = require('../util/when');
  * /tldr              → the last 100 messages of this chat
  * /tldr 2h | 1d     → those of the last period, as in /cron: 30m, 2h, 1d, 1h30m (the "-" in front is optional)
  * /tldr 300          → the last 300 (max. setting 'tldr.maxMsgs')
- * /tldr -c família   → from another chat, looked up by name
+ * /tldr -c família   → from another chat: name, /regex/, @contact (like /show)
  * /tldr -pv          → in your private chat instead of exposing it in the current chat
  * (replying)      → from the replied message until now (the typed period or -c win)
  * Uses the text already stored in the database: regular messages stay cache.messageRetentionHours (68 h). They stay
@@ -32,13 +33,7 @@ const SUMMARY_MIN = 3;
 const SUMMARY_MAX_CHARS_MSG = 500;      // each message is cut here
 const SUMMARY_MAX_CHARS = 60000;        // and the total, from oldest to newest
 
-const SUMMARY_INSTRUCTIONS =
-    'Você resume conversas de WhatsApp em português do Brasil. Escreva um resumo curto, em tópicos ' +
-    'começados por "• ", com os assuntos principais, as decisões, os combinados e as pendências, ' +
-    'citando quem disse quando for relevante. No máximo 15 tópicos. Não invente nada que não esteja ' +
-    'nas mensagens e não use títulos nem markdown além de *negrito*. As linhas "[ÁUDIO]" são ' +
-    'transcrições de áudios: resuma cada um (ou os de um mesmo assunto) num tópico no formato ' +
-    '"🎤 *Fulano* enviou áudio DD/MM HH:mm falando sobre ...", com quem enviou e quando.';
+const SUMMARY_INSTRUCTIONS = () => t('tldr.instructions', { tag: t('tldr.audioTag') });
 
 const AUDIOS_MAX = 10;                 // only the most recent are transcribed (it costs API)
 const AUDIO_MAX_BYTES = 25 * 1024 * 1024;
@@ -61,33 +56,14 @@ function readPeriod(textAlt) {
 function byLong(ms) {
     const minutes = Math.round(ms / 60_000);
     const partsAlt = [
-        [Math.floor(minutes / 1440), 'dia', 'dias'],
-        [Math.floor((minutes % 1440) / 60), 'hora', 'horas'],
-        [minutes % 60, 'minuto', 'minutos']
-    ].filter(([n]) => n).map(([n, um, several]) => plural(n, um, several));
-    return partsAlt.length > 1 ? `${partsAlt.slice(0, -1).join(', ')} e ${partsAlt.at(-1)}` : partsAlt[0];
+        [Math.floor(minutes / 1440), 'tldr.days'],
+        [Math.floor((minutes % 1440) / 60), 'tldr.hours'],
+        [minutes % 60, 'tldr.minutes']
+    ].filter(([n]) => n).map(([n, keyAlt]) => t(keyAlt, { n }));
+    return partsAlt.length > 1 ? `${partsAlt.slice(0, -1).join(', ')}${t('tldr.and')}${partsAlt.at(-1)}` : partsAlt[0];
 }
 
-// Chats with messages in the database whose name has all the words of the search
-async function searchChat(search) {
-    const chats = await dbAll(
-        `SELECT chat_id, MAX(chat_name) AS chat_name, COUNT(*) AS total
-           FROM messages GROUP BY chat_id ORDER BY MAX(timestamp) DESC`
-    );
-    const words = withoutAccents(search).trim().split(/\s+/);
-    const foundAlt6 = chats.filter(c => words.every(p => withoutAccents(c.chat_name).includes(p)));
-    const exact = foundAlt6.find(c => withoutAccents(c.chat_name) === withoutAccents(search).trim());
-
-    if (exact || foundAlt6.length === 1) return { chat: exact || foundAlt6[0] };
-    if (!foundAlt6.length) return { erro: `❌ Nenhum chat com mensagens guardadas tem "${search}" no nome.` };
-
-    return {
-        erro: `🔎 "${search}" corresponde a ${foundAlt6.length} chats. Seja mais específico:\n` +
-            foundAlt6.slice(0, 10).map(c => `• ${c.chat_name}`).join('\n')
-    };
-}
-
-const hour = (ms) => new Date(ms).toLocaleString('pt-BR', {
+const hour = (ms) => new Date(ms).toLocaleString(language() === 'pt_BR' ? 'pt-BR' : 'en-US', {
     timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
 });
 
@@ -132,7 +108,7 @@ async function summarize({ msg, opts, chatId, chatName, quotedMsg }) {
     const sinceAReply = !extras.length && !opts.opt.chat && quotedMsg?.timestamp;
     if (sinceAReply) {
         period = { ms: Math.max(Date.now() - quotedMsg.timestamp * 1000, 0) };
-        notices.push('a partir da mensagem respondida');
+        notices.push(t('tldr.sinceReply'));
     }
 
     if (!period) {
@@ -143,7 +119,7 @@ async function summarize({ msg, opts, chatId, chatName, quotedMsg }) {
     const max = getSetting('tldr.maxMsgs');
 
     if (period.n > max) {
-        notices.push(`limitado a ${max} mensagens (setting tldr.maxMsgs)`);
+        notices.push(t('tldr.limited', { max }));
         period.n = max;
     }
 
@@ -151,7 +127,7 @@ async function summarize({ msg, opts, chatId, chatName, quotedMsg }) {
     const hoursSaved = getSetting('cache.messageRetentionHours');
     const saved = hoursSaved * HOUR_MS;
     if (period.ms > saved) {
-        notices.push(`as mensagens comuns ficam só ${byLong(saved)} (${hoursSaved} h) no banco (setting cache.messageRetentionHours)`);
+        notices.push(t('tldr.retention', { tempo: byLong(saved), horas: hoursSaved }));
         period.ms = saved;
     }
 
@@ -162,13 +138,15 @@ async function summarize({ msg, opts, chatId, chatName, quotedMsg }) {
     let nameAlt = chatName;
 
     if (opts.opt.chat) {
-        const r = await searchChat(String(opts.opt.chat));
-        if (r.erro) {
-            await msg.reply(r.erro);
-            return;
-        }
-        ids = [r.chat.chat_id];
-        nameAlt = r.chat.chat_name;
+        // Like /show: /regex/, @contact, no. from /show -l or the name; several: lists and waits for the no.
+        const chats = await dbAll(
+            `SELECT chat_id, MAX(chat_name) AS chat_name, MAX(is_group) AS is_group
+               FROM messages GROUP BY chat_id ORDER BY MAX(timestamp) DESC`
+        );
+        const target = await resolverTarget(msg, String(opts.opt.chat).trim(), { chats });
+        if (!target) return;
+        ids = target.ids;
+        nameAlt = target.nome;
     }
 
     const params = [...ids];
@@ -192,7 +170,7 @@ async function summarize({ msg, opts, chatId, chatName, quotedMsg }) {
         params
     )).reverse();
 
-    if (sinceAReply && rows.length >= max) notices.push(`só as ${max} mais recentes (setting tldr.maxMsgs)`);
+    if (sinceAReply && rows.length >= max) notices.push(t('tldr.latest', { max }));
 
     // The audios (the AUDIOS_MAX most recent) become text; whatever could not be transcribed leaves the summary
     const audios = rows.filter(r => ['audio', 'ptt'].includes(r.type)).slice(-AUDIOS_MAX);
@@ -200,19 +178,18 @@ async function summarize({ msg, opts, chatId, chatName, quotedMsg }) {
     for (let i = rows.length - 1; i >= 0; i--) {
         const r = rows[i];
         if (!['audio', 'ptt'].includes(r.type)) continue;
-        if (r.body && audios.includes(r)) r.body = `[ÁUDIO] ${r.body}`;
+        if (r.body && audios.includes(r)) r.body = `${t('tldr.audioTag')} ${r.body}`;
         else rows.splice(i, 1);
     }
 
     if (rows.length < SUMMARY_MIN) {
-        await msg.reply(`📝 Poucas mensagens para resumir (${rows.length}) em ${nameAlt}.\n` +
-            `💡 _O resumo usa o texto guardado no banco: as mensagens comuns ficam ${getSetting('cache.messageRetentionHours')} h (setting cache.messageRetentionHours), e comandos e mídias sem legenda não entram._`);
+        await msg.reply(t('tldr.few', { total: rows.length, nome: nameAlt, horas: getSetting('cache.messageRetentionHours') }));
         return;
     }
 
     // One line per message; above the limit, the oldest leave. Yours go with your profile name.
-    const myName = client.info.pushname || 'Você';
-    const author = (r) => (r.from_me ? myName : r.sender_name || 'Desconhecido');
+    const myName = client.info.pushname || t('tldr.me');
+    const author = (r) => (r.from_me ? myName : r.sender_name || t('tldr.unknown'));
     const linesAlt = rows.map(r => `[${hour(r.timestamp)}] ${author(r)}: ${r.body.replace(/\s+/g, ' ').slice(0, SUMMARY_MAX_CHARS_MSG)}`);
     let size = linesAlt.reduce((s, l) => s + l.length + 1, 0);
     while (size > SUMMARY_MAX_CHARS && linesAlt.length > SUMMARY_MIN) size -= linesAlt.shift().length + 1;
@@ -221,27 +198,26 @@ async function summarize({ msg, opts, chatId, chatName, quotedMsg }) {
     const last = rows[rows.length - 1].timestamp;
 
     // What is being summarized: the amount, the time window or "since the replied message"
-    const messages = plural(linesAlt.length, 'mensagem', 'mensagens');
+    const messages = t('tldr.messages', { n: linesAlt.length });
     const scope = sinceAReply
-        ? `das ${messages} de ${nameAlt} desde a mensagem respondida (há ${byLong(period.ms)})`
+        ? t('tldr.scopeReply', { mensagens: messages, nome: nameAlt, tempo: byLong(period.ms) })
         : period.ms
-            ? `das ${messages} de ${nameAlt} do período de ${byLong(period.ms)}`
-            : `das últimas ${messages} de ${nameAlt}`;
-    const notice = await msg.reply(`⏳ Processando o /tldr ${scope}, aguarde.`, null, { linkPreview: false });
+            ? t('tldr.scopePeriod', { mensagens: messages, nome: nameAlt, tempo: byLong(period.ms) })
+            : t('tldr.scopeLast', { mensagens: messages, nome: nameAlt });
+    const notice = await msg.reply(t('tldr.processing', { escopo: scope }), null, { linkPreview: false });
     try {
         const summary = await askOnChat({
             cmd: '/tldr',
-            sistema: SUMMARY_INSTRUCTIONS,
-            texto: `Conversa "${nameAlt}" (${linesAlt.length} mensagens):\n\n${linesAlt.join('\n')}`
+            sistema: SUMMARY_INSTRUCTIONS(),
+            texto: t('tldr.prompt', { nome: nameAlt, total: linesAlt.length, linhas: linesAlt.join('\n') })
         });
 
-        const textAlt = `🤖 *Resumo de ${nameAlt}*\n` +
-            `_${plural(linesAlt.length, 'mensagem', 'mensagens')} · ${hour(first)} a ${hour(last)}_` +
+        const textAlt = t('tldr.header', { nome: nameAlt, mensagens: messages, inicio: hour(first), fim: hour(last) }) +
             (notices.length ? `\n_(${notices.join('; ')})_` : '') +
             `\n\n${summary}${await consumptionFooter()}`;
 
         if (opts.opt.pv) {
-            await completeNotice(msg, notice, '🤖 Resumo enviado no seu privado.');
+            await completeNotice(msg, notice, t('tldr.sentPrivate'));
             await client.sendMessage(client.info.wid._serialized, textAlt);
         } else {
             await completeNotice(msg, notice, textAlt);

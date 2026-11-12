@@ -27,6 +27,7 @@ const {
 const { fmtWhen, readHour } = require('../util/when');
 const { maskPhones, removeOptionMask } = require('../util/phone');
 const { contextDebug } = require('../debugContext');
+const { t } = require('../i18n');
 
 /*
  * /bot: the bot and who uses it (settings 'bot.paused', 'bot.admins' and 'bot.users')
@@ -59,14 +60,10 @@ const { contextDebug } = require('../debugContext');
 // Who uses the commands, by bot.users
 function whoUses() {
     const users = getSetting('bot.users');
-    const admins = getSetting('bot.admins').length ? ' e os admins' : '';
-    if (users.includes('all')) {
-        return '🔓 *Comandos:* todos usam os comuns\n' +
-            '⚠️ _Atenção: qualquer pessoa pode executar os comandos comuns do bot, em qualquer chat. ' +
-            'Para restringir: /set bot.users false (e depois /bot +u para liberar alguns)._';
-    }
-    if (!users.length) return `🔒 *Comandos:* só o dono${admins}`;
-    return '👥 *Comandos:* o dono e quem está na lista abaixo';
+    const admins = getSetting('bot.admins').length ? t('adm.bot.andAdmins') : '';
+    if (users.includes('all')) return t('adm.bot.everyone');
+    if (!users.length) return t('adm.bot.ownerOnly', { admins });
+    return t('adm.bot.ownerAndList');
 }
 
 // The marks of each role
@@ -111,7 +108,7 @@ async function chatScope({ chatId, isGroup, todos: allAlt2 = false } = {}) {
             return soIn ? soIn === chatId : members.has(numberAlt);
         };
         const show = allAlt2 ? null : group;
-        return { chatId, membros: members, mostra: show, onde: 'deste grupo', aqui: 'neste grupo' };
+        return { chatId, membros: members, mostra: show, onde: t('adm.bot.whereGroup'), aqui: t('adm.bot.hereGroup') };
     }
 
     const ids = chatId ? await chatCurrentIds(chatId) : [];
@@ -121,7 +118,7 @@ async function chatScope({ chatId, isGroup, todos: allAlt2 = false } = {}) {
 
     const phoneAlt = ids.find(i => i.endsWith('@c.us'))?.split('@')[0];
     const personAlt = (item) => readItem(item).numero === phoneAlt;
-    return { chatId, membros: null, mostra: personAlt, onde: 'deste chat', aqui: 'neste chat' };
+    return { chatId, membros: null, mostra: personAlt, onde: t('adm.bot.whereChat'), aqui: t('adm.bot.hereChat') };
 }
 
 // 5521999982222 → 5521•••••2222 (the country code and area code stay, and the last 4)
@@ -141,8 +138,8 @@ async function itemName(item) {
 // " · only in this group" or " · only in 👥 Amigos Faculdade" (the person is in a single group)
 async function soInText(soIn, scope) {
     if (!soIn) return '';
-    if (soIn === scope?.chatId) return ' · só neste grupo';
-    return ` · só em 👥 ${await itemName(soIn) || soIn}`;
+    if (soIn === scope?.chatId) return t('adm.bot.onlyInGroup');
+    return t('adm.bot.onlyInNamed', { nome: await itemName(soIn) || soIn });
 }
 
 /*
@@ -168,7 +165,7 @@ function marks(item, admins, users) {
     const { numero: numberAlt, soEm: soIn } = readItem(item);
     if (soIn) return [`${ROLES.usuario} +u`];
     return [
-        isOOwner(numberAlt) && `${ROLES.dono} dono`,
+        isOOwner(numberAlt) && `${ROLES.dono} ${t('adm.bot.markOwner')}`,
         admins.includes(item) && `${ROLES.admin} +a`,
         users.includes(item) && `${ROLES.usuario} +u`
     ].filter(Boolean);
@@ -191,12 +188,10 @@ async function usersList(scope, { novos: freshAlt3 = [], dica: tip = 'todos' } =
     const { mostra: show, onde: whereAlt, aqui: here } = scope;
     const items = show ? allAlt2.filter(show) : allAlt2;
     const outside = allAlt2.length - items.length;
-    const asSee = tip === 'todos'
-        ? `⚠️ _Para listar todos: /bot -list-users all ou /bot -lu all. Cuidado: mostra também quem não é ${whereAlt}._`
-        : '_Listar usuários: /bot -list-users_';
-    const footer = outside ? `\n\n💡 _Só quem é ${whereAlt}; mais ${outside} fora daqui._\n${asSee}` : '';
-    const title = `*Usuários* (${items.length})${show ? ` ${here}` : ''}`;
-    if (!items.length) return `${title}\n_Ninguém ${whereAlt}._${footer}`;
+    const asSee = tip === 'todos' ? t('adm.bot.seeAllHint', { onde: whereAlt }) : t('adm.bot.listUsersHint');
+    const footer = outside ? `\n\n${t('adm.bot.footerOutside', { onde: whereAlt, fora: outside, comoVer: asSee })}` : '';
+    const title = show ? t('adm.bot.usersTitleScoped', { n: items.length, aqui: here }) : t('adm.bot.usersTitle', { n: items.length });
+    if (!items.length) return `${title}\n${t('adm.bot.nobody', { onde: whereAlt })}${footer}`;
 
     const linesAlt = await Promise.all(items.map(async (item) => {
         const freshAlt = freshAlt3.includes(item) ? ' ✅' : '';
@@ -212,19 +207,15 @@ async function usersList(scope, { novos: freshAlt3 = [], dica: tip = 'todos' } =
 
 // What each mark means (the owner's, with only you in the list; the no-permission one, in /whois)
 function permissions({ dono: owner = false, semPermissao: withoutPermission = false } = {}) {
-    return '*Permissões*\n' +
-        (owner ? `${ROLES.dono} dono: você, que já usa tudo\n` : '') +
-        `${ROLES.admin} +a: admin, usa tudo\n` +
-        `${ROLES.usuario} +u: usuário, usa os comandos comuns` +
-        (withoutPermission ? `\n${ROLES.nenhum} sem permissão: o bot ignora os comandos dela` : '');
+    return `${t('adm.bot.permTitle')}\n` +
+        (owner ? `${t('adm.bot.permOwner', { e: ROLES.dono })}\n` : '') +
+        `${t('adm.bot.permAdmin', { e: ROLES.admin })}\n` +
+        t('adm.bot.permUser', { e: ROLES.usuario }) +
+        (withoutPermission ? `\n${t('adm.bot.permNone', { e: ROLES.nenhum })}` : '');
 }
 
 // On or off, and who uses the commands
-const botState = () => (getSetting('bot.paused')
-    ? '⏸️ *Bot:* desligado (todos os comandos são ignorados)'
-    : '▶️ *Bot:* ativo') + '\n' + whoUses();
-
-const MORE_INFORMATION = 'ℹ️ _Mais informações em /bot -h_';
+const botState = () => (getSetting('bot.paused') ? t('adm.bot.paused') : t('adm.bot.active')) + '\n' + whoUses();
 
 // The -list-users [all] list (with nobody in it, the line of who uses the commands)
 async function usersText(chat) {
@@ -235,7 +226,7 @@ async function usersText(chat) {
 async function report(chat) {
     const usersAlt = await usersList(await chatScope(chat));
     const textAlt = await statusText(Date.now(), { estadoDoBot: botState(), usuarios: usersAlt });
-    return `${textAlt}\n\n${MORE_INFORMATION}`;
+    return `${textAlt}\n\n${t('adm.bot.moreInfo')}`;
 }
 
 // +a/-a (bot.admins), +u/-u (bot.users) and +cmd/-cmd (each user's commands), in any
@@ -271,11 +262,10 @@ function readShortcut(textAlt) {
 // "/rates,/crypto meme" → ['/rates', '/crypto', '/meme']; "all" → ['all']; invalid: throws
 function readCommands(textAlt) {
     const names = textAlt.split(/[\s,]+/).filter(Boolean);
-    if (!names.length) throw new Error('informe os comandos, separados por vírgula: +cmd /rates,/meme');
+    if (!names.length) throw new Error(t('adm.bot.needCommands'));
     if (names.length === 1 && /^all$/i.test(names[0])) return ['all'];
     return [...new Set(names.map(userCommand))];
 }
-const WHO = { 'bot.admins': { um: 'admin', varios: 'admins' }, 'bot.users': { um: 'usuário', varios: 'usuários' } };
 
 /*
  * Nobody, the chat where the command was typed: in a group, the group; in the
@@ -285,21 +275,19 @@ const WHO = { 'bot.admins': { um: 'admin', varios: 'admins' }, 'bot.users': { um
 async function chatItems(msg, key, { chatId, isGroup }) {
     if (isGroup) {
         if (key === 'bot.users') return [chatId];
-        await msg.reply('❌ Um grupo não pode ser admin (todos ali mandariam no bot).\n' +
-            '💡 _Para liberar os comandos comuns neste grupo: /bot +u_');
+        await msg.reply(t('adm.bot.groupNotAdmin'));
         return null;
     }
 
     const ids = await chatCurrentIds(chatId);
     if (ids.includes(client.info.wid._serialized)) {
-        await msg.reply('❌ Este é o seu privado: você (o dono) já usa tudo.\n' +
-            '💡 _Use num grupo ou no privado de alguém, ou informe quem: /bot +u /Nome/_');
+        await msg.reply(t('adm.bot.ownPrivate'));
         return null;
     }
 
     const phoneAlt = ids.find(i => i.endsWith('@c.us'));
     if (!phoneAlt) {
-        await msg.reply('❌ Não sei o telefone desta pessoa (o WhatsApp só informou o id interno): use o número, ex.: /bot +u +5521999999999.');
+        await msg.reply(t('adm.bot.noPhone'));
         return null;
     }
     return [phoneAlt.split('@')[0]];
@@ -322,7 +310,7 @@ async function textItems(msg, key, textAlt, { chatId, isGroup }) {
         return null;
     }
     if (items.includes('all')) {
-        await msg.reply('❌ Informe quem: /nome/, @menção, +número ou /grupo/.');
+        await msg.reply(t('adm.bot.needWho'));
         return null;
     }
 
@@ -348,13 +336,12 @@ function aRemove(item, current, { isGroup }) {
  */
 async function changeList(msg, key, items, append, chat) {
     const current = getSetting(key);
-    const who = WHO[key];
+    const admin = key === 'bot.admins';
     const scope = await chatScope(chat);
     const short = (list) => Promise.all(list.map(i => describeItem(i, scope)));
 
     if (append && current.includes('all')) {
-        await msg.reply('❌ Todos já usam os comandos comuns (/set bot.users true). ' +
-            'Para liberar só alguns: /set bot.users false antes.');
+        await msg.reply(t('adm.bot.everyoneAlready'));
         return;
     }
 
@@ -364,7 +351,7 @@ async function changeList(msg, key, items, append, chat) {
         // Already has it: the item itself or, for whoever would only gain a group, the general permission
         freshAlt3 = items.filter(i => !current.includes(i) && !current.includes(readItem(i).numero));
         if (!freshAlt3.length) {
-            await msg.reply(`ℹ️ Já é ${who.um}: ${(await short(items)).join(', ')}.`);
+            await msg.reply(t(admin ? 'adm.bot.alreadyAdmin' : 'adm.bot.alreadyUser', { lista: (await short(items)).join(', ') }));
             return;
         }
         await setSetting(key, [...current, ...freshAlt3]);
@@ -373,7 +360,7 @@ async function changeList(msg, key, items, append, chat) {
     } else {
         removed = [...new Set(items.flatMap(i => aRemove(i, current, chat)))];
         if (!removed.length) {
-            await msg.reply(`❌ Não é ${who.um}: ${(await short(items)).join(', ')}.\n💡 _Veja com /bot -list-users_`);
+            await msg.reply(t(admin ? 'adm.bot.notAdmin' : 'adm.bot.notUser', { lista: (await short(items)).join(', ') }));
             return;
         }
         await setSetting(key, current.filter(i => !removed.includes(i)));
@@ -402,8 +389,7 @@ async function changeList(msg, key, items, append, chat) {
 async function changeCommands(msg, items, { sinal: signalAlt, comandos: commands, comV: withV }, chat) {
     const users = getSetting('bot.users');
     if (users.includes('all')) {
-        await msg.reply('❌ Todos já usam os comandos comuns (/set bot.users true). ' +
-            'Para liberar só alguns: /set bot.users false antes.');
+        await msg.reply(t('adm.bot.everyoneAlready'));
         return;
     }
 
@@ -430,21 +416,20 @@ async function changeCommands(msg, items, { sinal: signalAlt, comandos: commands
         } else if (signalAlt === '+') {
             if (!isUser || all) fresh = all ? null : { apenas: true, comandos: commands };
             else if (!rule?.apenas && admins.length) {
-                notices.push(`❌ ${who} usa os comandos comuns, e o ${admins.join(', ')} (admin) só entra numa lista "Apenas": ` +
-                    `liste os comandos dele, ex.: /bot +u +cmd /rates,${admins[0]}.`);
+                notices.push(t('adm.bot.adminNeedsOnly', { quem: who, admins: admins.join(', '), ex: admins[0] }));
                 continue;
             } else if (!rule) {
-                notices.push(`ℹ️ ${who} já usa todos os comandos comuns.`);
+                notices.push(t('adm.bot.alreadyAll', { quem: who }));
                 continue;
             } else if (rule.apenas) fresh = { apenas: true, comandos: union };
             else fresh = leftOver.length ? { apenas: false, comandos: leftOver } : null;
         } else {
             if (!isUser) {
-                notices.push(`❌ Não é usuário: ${who}.`);
+                notices.push(t('adm.bot.notUserWho', { quem: who }));
                 continue;
             }
             if (all || (rule?.apenas && !leftOver.length)) {
-                notices.push(`❌ Não sobraria comando para ${who}: para tirar a pessoa, /bot -u; para liberar todos, /bot +cmd all.`);
+                notices.push(t('adm.bot.nothingLeft', { quem: who }));
                 continue;
             }
             if (!rule) fresh = { apenas: false, comandos: commands };
@@ -453,7 +438,7 @@ async function changeCommands(msg, items, { sinal: signalAlt, comandos: commands
 
         const same = JSON.stringify(fresh) === JSON.stringify(rule);
         if (isUser && same) {
-            notices.push(`ℹ️ Nada mudou: ${who}${rule ? ` (${describeRule(rule)})` : ''}.`);
+            notices.push(t('adm.bot.nothingChanged', { quem: who, regra: rule ? ` (${describeRule(rule)})` : '' }));
             continue;
         }
         if (!isUser) newUsers.push(target);
@@ -487,13 +472,13 @@ async function handleShortcut(msg, textAlt, chatCurrent) {
 
     // Owner only: an extra admin promotes nobody (not even themselves)
     if (!msg.fromMe) {
-        await msg.reply(`⛔ Só o dono do bot adiciona e tira ${WHO[key].varios}.`);
+        await msg.reply(t(key === 'bot.admins' ? 'adm.bot.ownerOnlyAdmins' : 'adm.bot.ownerOnlyUsers'));
         return;
     }
 
     // +cmd|-cmd belongs to users: with +a/-a or -u, no
     if (cmd && op && (op.letra === 'a' || op.sinal === '-')) {
-        await msg.reply('❌ O +cmd|-cmd vale só para usuários: /bot +u +cmd /rates /Fulano/ ou /bot -cmd /meme /Fulano/.');
+        await msg.reply(t('adm.bot.cmdOnlyUsers'));
         return;
     }
 
@@ -506,7 +491,7 @@ async function handleShortcut(msg, textAlt, chatCurrent) {
             return;
         }
         if (cmd.sinal === '-' && commands.includes('all')) {
-            await msg.reply('❌ Para tirar todos os comandos, tire a pessoa: /bot -u.');
+            await msg.reply(t('adm.bot.cmdRemoveAll'));
             return;
         }
     }
@@ -540,34 +525,34 @@ async function handleStatus(msg, values, { destinosTexto: destinationsText, comD
         }
         // Outward, the report goes without the list of who uses it
         const textAlt = await statusText(Date.now(), { estadoDoBot: botState() });
-        await sendToDestinations(destinations, textAlt, { assunto: '📊 Status do ZapBot' })
-            .then(() => msg.reply(`📊 Status enviado em ${describeDestinations(destinations)}.`))
-            .catch(err => msg.reply(`❌ Não consegui enviar o status: ${err.message}`));
+        await sendToDestinations(destinations, textAlt, { assunto: t('adm.bot.statusSubject') })
+            .then(() => msg.reply(t('adm.bot.statusSent', { onde: describeDestinations(destinations) })))
+            .catch(err => msg.reply(t('adm.bot.statusFail', { erro: err.message })));
         return;
     }
 
     if (values.length === 1 && values[0].toLowerCase() === 'off') {
         if (destinations) {
-            await msg.reply('❌ O -to não vale com o off: /bot -status off desliga o envio diário.');
+            await msg.reply(t('adm.bot.toNotWithOff'));
             return;
         }
         await msg.reply(await turnOffStatusDaily()
-            ? '🔕 Status diário desligado.'
-            : 'ℹ️ O status diário já estava desligado.');
+            ? t('adm.bot.dailyOff')
+            : t('adm.bot.dailyWasOff'));
         return;
     }
 
     // "at 6h" or "6h": the time of the daily send
     const hour = readHour(values.filter(e => !/^[àa]s$/i.test(e)).join(''));
     if (!hour || values.length > 2) {
-        await msg.reply('❌ Não entendi a hora. Use 06h, 6h30, 06:00 ou às 18h (ou off para desligar).\n\n```' + getCommandSyntax('/bot') + '```');
+        await msg.reply(t('adm.bot.badHour', { sintaxe: getCommandSyntax('/bot') }));
         return;
     }
 
     const next = await scheduleStatusDaily(hour, Date.now(), destinations);
     const two = (n) => String(n).padStart(2, '0');
     const whereAlt = whereGoes(statusDestinations(await schedulingDaily()));
-    await msg.reply(`⏰ *Status diário:* todo dia às *${two(hour.h)}:${two(hour.m)}*${whereAlt}\n📅 Próximo: ${fmtWhen(next)}`);
+    await msg.reply(t('adm.bot.dailySet', { hora: `${two(hour.h)}:${two(hour.m)}`, onde: whereAlt, proximo: fmtWhen(next) }));
 }
 
 // What each -reset puts back to default (the daily send of -status always stays)
@@ -584,22 +569,18 @@ const CONFIRM_RESET_MS = 10_000;
  */
 async function reset(msg, { chatId, completo: complete }) {
     if (!msg.fromMe) {
-        await msg.reply(complete ? '⛔ Só o dono do bot volta o /bot ao padrão.' : '⛔ Só o dono do bot tira todos os usuários.');
+        await msg.reply(t(complete ? 'adm.bot.resetOwnerFull' : 'adm.bot.resetOwner'));
         return;
     }
 
     const seconds = CONFIRM_RESET_MS / 1000;
-    const question = await msg.reply(complete
-        ? '⚠️ *Voltar tudo ao padrão?* Tira os usuários *e os admins extras* e liga o bot: só você usa comandos.\n' +
-            `💡 _Responda *sim* em ${seconds} s para confirmar._`
-        : '⚠️ *Tirar todos os usuários?* Ficam só você e os admins extras usando comandos.\n' +
-            `💡 _Responda *sim* em ${seconds} s para confirmar (ou /bot -r force, para voltar tudo ao padrão)._`);
+    const question = await msg.reply(t(complete ? 'adm.bot.askFull' : 'adm.bot.ask', { segundos: seconds }));
     const confirmed = await waitConfirmation(chatId, {
         ms: CONFIRM_RESET_MS,
         autor: authorAlt(msg),
-        aoExpirar: () => completeNotice(msg, question, `⌛ Nada mudou: sem *sim* em ${seconds} s.`)
+        aoExpirar: () => completeNotice(msg, question, t('adm.bot.resetExpired', { segundos: seconds }))
     });
-    if (confirmed === false) await msg.reply('👍 Nada mudou.');
+    if (confirmed === false) await msg.reply(t('adm.bot.nothingChangedShort'));
     if (!confirmed) return;
 
     const usersAlt = getSetting('bot.users').length;
@@ -607,38 +588,33 @@ async function reset(msg, { chatId, completo: complete }) {
 
     if (complete) {
         printInfo('/bot -reset force: usuários, admins e bot.paused de volta ao padrão');
-        await msg.reply(`♻️ *Padrão restaurado:* bot ligado, sem admins extras e sem usuários.\n\n${botState()}`);
+        await msg.reply(t('adm.bot.resetFullDone', { estado: botState() }));
         return;
     }
     printInfo(`/bot -reset: ${usersAlt} usuário(s) e os limites deles removidos`);
-    await msg.reply(`🧹 *Usuários removidos* (${usersAlt}): ficam só você e os admins extras.\n\n${botState()}`);
+    await msg.reply(t('adm.bot.resetDone', { n: usersAlt, estado: botState() }));
 }
 
 // -flush-email: counts the Sent and Trash messages; with "true", deletes everything (owner only)
 async function cleanEmail(msg, { apagar: removeAlt }) {
     if (removeAlt && !msg.fromMe) {
-        await msg.reply('⛔ Só o dono do bot limpa a caixa de e-mail.');
+        await msg.reply(t('adm.bot.flushOwner'));
         return;
     }
 
-    const notice = removeAlt ? await msg.reply('⏳ Limpando a caixa de e-mail...') : null;
+    const notice = removeAlt ? await msg.reply(t('adm.bot.flushing')) : null;
     try {
         const { sent, trash } = await boxes({ apagar: removeAlt });
         printInfo(`/bot -flush-email${removeAlt ? ' true' : ''}: Sent ${sent}, Trash ${trash}`);
         const textAlt = removeAlt
-            ? `🧹 *E-mail limpo:* ${sent} em Sent e ${trash} em Trash (${sent + trash} no total)`
-            : `📧 *Caixa de e-mail:* ${sent} em Sent e ${trash} em Trash\n` +
-                '💡 _/bot -flush-email true para apagar tudo_';
+            ? t('adm.bot.flushed', { sent, trash, total: sent + trash })
+            : t('adm.bot.flushCount', { sent, trash });
         await (removeAlt ? completeNotice(msg, notice, textAlt) : msg.reply(textAlt));
     } catch (err) {
-        const textAlt = `❌ Não consegui acessar a caixa de e-mail: ${err.message}`;
+        const textAlt = t('adm.bot.flushFail', { erro: err.message });
         await (removeAlt ? completeNotice(msg, notice, textAlt) : msg.reply(textAlt));
     }
 }
-
-const USAGE = '❌ Uso: /bot [-on|-off] [-list-users [all]]  ou  ' +
-    '/bot +a|-a|+u|-u [+cmd|-cmd <comandos>] [pessoa...] [-list-users all]  ou  /bot -reset [force]  ou  ' +
-    '/bot -status [<hora>|off] [-to <destino>]...  ou  /bot -info  ou  /bot -test  ou  /bot -flush-email [true]  ou  /bot -passwd <senha|off>  ou  /bot -login <senha>\n💡 _/bot -h para ajuda_';
 
 async function cmdBot({ msg, opts: commandOpts, args, chatId, isGroup }) {
     args = removeOptionMask(args);
@@ -655,13 +631,13 @@ async function cmdBot({ msg, opts: commandOpts, args, chatId, isGroup }) {
     const listAlt = opts.given.has('list-users');
     const allAlt2 = listAlt && /^all$/i.test(opts.opt['list-users'] ?? '');
     if (listAlt && opts.opt['list-users'] && !allAlt2) {
-        await msg.reply('❌ Use: /bot -list-users [all]');
+        await msg.reply(t('adm.bot.listUsersUse'));
         return;
     }
     const chat = { chatId, isGroup, todos: allAlt2 };
 
     if (withDestination && !opts.given.has('status')) {
-        await msg.reply('❌ O -to é do -status: /bot -status [<hora>] -to <destino>');
+        await msg.reply(t('adm.bot.toIsStatus'));
         return;
     }
 
@@ -670,11 +646,11 @@ async function cmdBot({ msg, opts: commandOpts, args, chatId, isGroup }) {
     // -passwd <password|off>: the /bot -login password (owner only)
     if (opts.given.has('passwd')) {
         if (!msg.fromMe) {
-            await msg.reply('⛔ Só o dono do bot define a senha do login.');
+            await msg.reply(t('adm.bot.passwdOwner'));
             return;
         }
         const password = [opts.opt.passwd, ...opts.argv].filter(Boolean).join(' ').trim();
-        await msg.reply(password ? await definePassword(password) : '❌ Uso: /bot -passwd <senha|off>');
+        await msg.reply(password ? await definePassword(password) : t('adm.bot.passwdUsage'));
         return;
     }
 
@@ -687,12 +663,12 @@ async function cmdBot({ msg, opts: commandOpts, args, chatId, isGroup }) {
         const force = new RegExp(`^${alone === 'reset' ? 'force' : 'true'}$`, 'i').test(valueAlt ?? '');
         const combined = on || off || listAlt || opts.given.has('status') || other.some(o => opts.given.has(o));
         if (combined || opts.argv.length || (valueAlt && !force)) {
-            await msg.reply(`❌ O -${alone} não combina com as outras opções.\n💡 _/bot -${alone}_`);
+            await msg.reply(t('adm.bot.noCombine', { opcao: alone }));
             return;
         }
         if (alone === 'info') await msg.reply(await infoText());
         else if (alone === 'test') {
-            const notice = await msg.reply('🧪 Testando... (a velocidade da internet leva alguns segundos)');
+            const notice = await msg.reply(t('adm.bot.testing'));
             await completeNotice(msg, notice, await testText());
         } else if (alone === 'flush-email') await cleanEmail(msg, { apagar: force });
         else await reset(msg, { chatId, completo: force });
@@ -702,7 +678,7 @@ async function cmdBot({ msg, opts: commandOpts, args, chatId, isGroup }) {
     // -status [<time>|off] [-to ...]: the parser takes one value; "às 18h" leaves the rest in argv
     if (opts.given.has('status')) {
         if (on || off || listAlt) {
-            await msg.reply('❌ O -status não combina com as outras opções.\n💡 _/bot -status [<hora>|off] [-to <destino>]_');
+            await msg.reply(t('adm.bot.statusNoCombine'));
             return;
         }
         const values = [opts.opt.status, ...opts.argv].filter(Boolean);
@@ -711,7 +687,7 @@ async function cmdBot({ msg, opts: commandOpts, args, chatId, isGroup }) {
     }
 
     if (opts.argv.length || (on && off)) {
-        await msg.reply(USAGE);
+        await msg.reply(t('adm.bot.usage'));
         return;
     }
 
