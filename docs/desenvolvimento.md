@@ -247,8 +247,12 @@ make docs.build
 ```
 
 Ao mudar um comando, mude a página dele em `docs/comandos/` e as tabelas Resumo (a do
-[site](comandos/index.md#resumo) e a do README); um comando novo também entra no `nav` do
+[site](comandos/index.md#resumo) e as dos READMEs); um comando novo também entra no `nav` do
 `mkdocs.yml`, em ordem alfabética.
+
+O `README.md` é em inglês (en_US) e o `README.pt-BR.md`, o mesmo em português: mude os dois juntos. Eles
+apontam um para o outro, e os testes conferem que têm as mesmas seções, links e blocos de código, e que as
+tabelas de comandos batem com o `comandos.js` (o `bump.sh` também atualiza a versão nos dois).
 
 ### Gravar a demonstração
 

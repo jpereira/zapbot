@@ -15,7 +15,10 @@ const { findCommand, formatCommandHelp, getCommandSyntax, activeCommands } = bot
 const { HANDLERS } = bot.src('comandos/index');
 
 const CONFIG = bot.src('comandos/comandos');
+// O README é em inglês (en_US) e o README.pt-BR.md, o mesmo em português: os testes conferem os dois
 const README = fs.readFileSync(path.join(bot.RAIZ, 'README.md'), 'utf8');
+const README_PT = fs.readFileSync(path.join(bot.RAIZ, 'README.pt-BR.md'), 'utf8');
+const READMES = ['README.md', 'README.pt-BR.md'];
 
 const ordenado = (lista) => [...lista].sort((a, b) => a.localeCompare(b));
 
@@ -127,7 +130,7 @@ function tabelaDeComandos(md, titulo) {
     return tabela.map(l => ({ linha: l, cmd: l.match(/`(\/[a-z]+)`/)[1], colunas: l.split('|') }));
 }
 
-function conferirResumo(md, titulo, onde, { comLinks }) {
+function conferirResumo(md, titulo, onde, { comLinks, delegavel = 'delegável' }) {
     const linhas = tabelaDeComandos(md, titulo);
     const nomes = linhas.map(l => l.cmd);
 
@@ -139,14 +142,14 @@ function conferirResumo(md, titulo, onde, { comLinks }) {
         const { linha, colunas } = linhas.find(l => l.cmd === c.cmd);
         const aliases = [...colunas[2].matchAll(/`([^`]+)`/g)].map(m => m[1]);
         assert.deepEqual(aliases, c.aliases ?? [], `${onde}: aliases de ${c.cmd} no Resumo`);
-        assert.equal(colunas[3].trim(), `\`${c.role}\`${c.delegavel ? ' · delegável' : ''}`, `${onde}: coluna Role de ${c.cmd}`);
+        assert.equal(colunas[3].trim(), `\`${c.role}\`${c.delegavel ? ` · ${delegavel}` : ''}`, `${onde}: coluna Role de ${c.cmd}`);
         if (comLinks) assert.ok(linha.includes(`](${c.cmd.slice(1)}.md)`), `${onde}: ${c.cmd} sem link para a página`);
     }
 }
 
 describe('documentação', () => {
     test('tabelas Markdown mantêm o número de colunas e escapam pipes nos valores', () => {
-        for (const arquivo of ['README.md', ...paginasDocs().map(f => `docs/${f}`)]) {
+        for (const arquivo of [...READMES, ...paginasDocs().map(f => `docs/${f}`)]) {
             const linhas = semCodigo(fs.readFileSync(path.join(bot.RAIZ, arquivo), 'utf8'))
                 .split('\n');
             let colunas = null;
@@ -216,7 +219,22 @@ describe('documentação', () => {
 
     test('tabela Resumo do site e do README: todos os comandos, em ordem, iguais ao config', () => {
         conferirResumo(lerDoc('comandos/index.md'), '## Resumo', 'docs/comandos/index.md', { comLinks: true });
-        conferirResumo(README, '## Comandos', 'README.md', { comLinks: false });
+        conferirResumo(README_PT, '## Comandos', 'README.pt-BR.md', { comLinks: false });
+        conferirResumo(README, '## Commands', 'README.md', { comLinks: false, delegavel: 'delegable' });
+    });
+
+    test('README.md (en_US) e README.pt-BR.md: apontam um para o outro e têm as mesmas seções, links e blocos de código', () => {
+        assert.match(README, /\[README\.pt-BR\.md\]\(README\.pt-BR\.md\)/, 'o README em inglês não aponta para o pt-BR');
+        assert.match(README_PT, /\[README\.md\]\(README\.md\)/, 'o README em português não aponta para o inglês');
+
+        const titulos = (md) => [...semCodigo(md).matchAll(/^(#{1,6}) /gm)].map(m => m[1].length);
+        assert.deepEqual(titulos(README), titulos(README_PT), 'os READMEs têm seções diferentes');
+
+        // Os mesmos links para a documentação e os mesmos blocos de código (comandos e .env não se traduzem)
+        const links = (md) => [...semCodigo(md).matchAll(/\]\(((?!https?:\/\/github\.com|README)[^)\s]+)\)/g)].map(m => m[1]);
+        assert.deepEqual(links(README), links(README_PT), 'os READMEs apontam para páginas diferentes');
+        const blocos = (md) => [...md.matchAll(/^```(\w*)/gm)].map(m => m[1]);
+        assert.deepEqual(blocos(README), blocos(README_PT), 'os READMEs têm blocos de código diferentes');
     });
 
     test('menu do mkdocs.yml: todas as páginas, comandos em ordem alfabética', () => {
@@ -235,7 +253,7 @@ describe('documentação', () => {
     });
 
     test('nenhum link entre os .md quebrado (arquivo e âncora), no docs/ e no README', () => {
-        const arquivos = [...paginasDocs().map(f => path.join(DOCS, f)), path.join(bot.RAIZ, 'README.md')];
+        const arquivos = [...paginasDocs().map(f => path.join(DOCS, f)), ...READMES.map(f => path.join(bot.RAIZ, f))];
         let total = 0;
 
         for (const arquivo of arquivos) {
@@ -267,12 +285,14 @@ describe('documentação', () => {
         const [ex, ey, ez] = numeros(m[1]);
         assert.ok(ex < x || (ex === x && (ey < y || (ey === y && ez <= z))), `a estável (${m[1]}) passa da versão do package.json (${version})`);
 
-        assert.match(README, new RegExp(`hoje a \`v${m[1].replaceAll('.', '\\.')}\``));
-        assert.match(README, new RegExp(`git checkout v${m[1].replaceAll('.', '\\.')}\n`));
+        const v = m[1].replaceAll('.', '\\.');
+        assert.match(README_PT, new RegExp(`hoje a \`v${v}\``));
+        assert.match(README, new RegExp(`currently \`v${v}\``));
+        for (const md of [README_PT, README]) assert.match(md, new RegExp(`git checkout v${v}\n`));
     });
 
     test('nenhum título repetido na mesma página (a âncora ficaria ambígua), no docs/ e no README', () => {
-        const arquivos = [...paginasDocs().map(f => `docs/${f}`), 'README.md'];
+        const arquivos = [...paginasDocs().map(f => `docs/${f}`), ...READMES];
         for (const arquivo of arquivos) {
             const titulos = [...semCodigo(fs.readFileSync(path.join(bot.RAIZ, arquivo), 'utf8')).matchAll(/^#{1,6} (.+)$/gm)]
                 .map(m => ancora(m[1]));
@@ -283,7 +303,7 @@ describe('documentação', () => {
 
     test('links para o site (jpereira.github.io/zapbot) apontam para páginas e âncoras do docs/', () => {
         const SITE = /https:\/\/jpereira\.github\.io\/zapbot\/([^)\s"'`]*)/g;
-        const arquivos = ['README.md', 'SECURITY.md', ...arquivosDeDefinicao(), ...paginasDocs().map(f => `docs/${f}`)];
+        const arquivos = [...READMES, 'SECURITY.md', ...arquivosDeDefinicao(), ...paginasDocs().map(f => `docs/${f}`)];
         let total = 0;
 
         for (const arquivo of arquivos) {

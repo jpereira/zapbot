@@ -148,8 +148,8 @@ CODIGO_BUMP="
     s#(?<![-\\d./])${A}(?![0-9.])(?! \\(devel\\))#${nova} (devel)#g;
     s#\\x00ESTAVEL\\x00#v${atual}#g;"
 
-# README e docs/ (fora o requirements.txt)
-arquivos() { git ls-files README.md 'docs/*.md' 'docs/**/*.md'; }
+# README (em inglês e em português) e docs/ (fora o requirements.txt)
+arquivos() { git ls-files README.md README.pt-BR.md 'docs/*.md' 'docs/**/*.md'; }
 
 # Aplica o código perl; as linhas que citam o próprio bump.sh ficam como estão
 aplicar() {
