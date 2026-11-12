@@ -15,7 +15,10 @@ const { findCommand, formatCommandHelp, getCommandSyntax, activeCommands } = bot
 const { HANDLERS } = bot.src('commands/index');
 
 const CONFIG = bot.src('commands/commands');
+// The README is in English (en_US) and README.pt-BR.md is the same in Portuguese: the tests check both
 const README = fs.readFileSync(path.join(bot.ROOT, 'README.md'), 'utf8');
+const README_PT = fs.readFileSync(path.join(bot.ROOT, 'README.pt-BR.md'), 'utf8');
+const READMES = ['README.md', 'README.pt-BR.md'];
 
 const sorted = (list) => [...list].sort((a, b) => a.localeCompare(b));
 
@@ -127,7 +130,7 @@ function commandsTable(md, title) {
     return table.map(l => ({ linha: l, cmd: l.match(/`(\/[a-z]+)`/)[1], colunas: l.split('|') }));
 }
 
-function checkSummary(md, title, whereAlt, { comLinks: withLinks }) {
+function checkSummary(md, title, whereAlt, { comLinks: withLinks, delegavel = 'delegável' }) {
     const linesAlt = commandsTable(md, title);
     const names = linesAlt.map(l => l.cmd);
 
@@ -139,14 +142,14 @@ function checkSummary(md, title, whereAlt, { comLinks: withLinks }) {
         const { linha: line, colunas: columns } = linesAlt.find(l => l.cmd === c.cmd);
         const aliases = [...columns[2].matchAll(/`([^`]+)`/g)].map(m => m[1]);
         assert.deepEqual(aliases, c.aliases ?? [], `${whereAlt}: aliases de ${c.cmd} no Resumo`);
-        assert.equal(columns[3].trim(), `\`${c.role}\`${c.delegavel ? ' · delegável' : ''}`, `${whereAlt}: coluna Role de ${c.cmd}`);
+        assert.equal(columns[3].trim(), `\`${c.role}\`${c.delegavel ? ` · ${delegavel}` : ''}`, `${whereAlt}: coluna Role de ${c.cmd}`);
         if (withLinks) assert.ok(line.includes(`](${c.cmd.slice(1)}.md)`), `${whereAlt}: ${c.cmd} sem link para a página`);
     }
 }
 
 describe('documentação', () => {
     test('tabelas Markdown mantêm o número de colunas e escapam pipes nos valores', () => {
-        for (const fileAlt of ['README.md', ...pagesDocs().map(f => `docs/${f}`)]) {
+        for (const fileAlt of [...READMES, ...pagesDocs().map(f => `docs/${f}`)]) {
             const linesAlt = withoutCode(fs.readFileSync(path.join(bot.ROOT, fileAlt), 'utf8'))
                 .split('\n');
             let columns = null;
@@ -216,7 +219,22 @@ describe('documentação', () => {
 
     test('tabela Resumo do site e do README: todos os comandos, em ordem, iguais ao config', () => {
         checkSummary(readDoc('commands/index.md'), '## Resumo', 'docs/commands/index.md', { comLinks: true });
-        checkSummary(README, '## Comandos', 'README.md', { comLinks: false });
+        checkSummary(README_PT, '## Comandos', 'README.pt-BR.md', { comLinks: false });
+        checkSummary(README, '## Commands', 'README.md', { comLinks: false, delegavel: 'delegable' });
+    });
+
+    test('README.md (en_US) e README.pt-BR.md: apontam um para o outro e têm as mesmas seções, links e blocos de código', () => {
+        assert.match(README, /\[README\.pt-BR\.md\]\(README\.pt-BR\.md\)/, 'o README em inglês não aponta para o pt-BR');
+        assert.match(README_PT, /\[README\.md\]\(README\.md\)/, 'o README em português não aponta para o inglês');
+
+        const titles = (md) => [...withoutCode(md).matchAll(/^(#{1,6}) /gm)].map(m => m[1].length);
+        assert.deepEqual(titles(README), titles(README_PT), 'os READMEs têm seções diferentes');
+
+        // The same links to the documentation and the same code blocks (commands and .env are not translated)
+        const links = (md) => [...withoutCode(md).matchAll(/\]\(((?!https?:\/\/github\.com|README)[^)\s]+)\)/g)].map(m => m[1]);
+        assert.deepEqual(links(README), links(README_PT), 'os READMEs apontam para páginas diferentes');
+        const blocks = (md) => [...md.matchAll(/^```(\w*)/gm)].map(m => m[1]);
+        assert.deepEqual(blocks(README), blocks(README_PT), 'os READMEs têm blocos de código diferentes');
     });
 
     test('menu do mkdocs.yml: todas as páginas, comandos em ordem alfabética', () => {
@@ -235,7 +253,7 @@ describe('documentação', () => {
     });
 
     test('nenhum link entre os .md quebrado (arquivo e âncora), no docs/ e no README', () => {
-        const files = [...pagesDocs().map(f => path.join(DOCS, f)), path.join(bot.ROOT, 'README.md')];
+        const files = [...pagesDocs().map(f => path.join(DOCS, f)), ...READMES.map(f => path.join(bot.ROOT, f))];
         let total = 0;
 
         for (const fileAlt of files) {
@@ -267,12 +285,14 @@ describe('documentação', () => {
         const [ex, ey, ez] = numbers(m[1]);
         assert.ok(ex < x || (ex === x && (ey < y || (ey === y && ez <= z))), `a estável (${m[1]}) passa da versão do package.json (${version})`);
 
-        assert.match(README, new RegExp(`hoje a \`v${m[1].replaceAll('.', '\\.')}\``));
-        assert.match(README, new RegExp(`git checkout v${m[1].replaceAll('.', '\\.')}\n`));
+        const v = m[1].replaceAll('.', '\\.');
+        assert.match(README_PT, new RegExp(`hoje a \`v${v}\``));
+        assert.match(README, new RegExp(`currently \`v${v}\``));
+        for (const md of [README_PT, README]) assert.match(md, new RegExp(`git checkout v${v}\n`));
     });
 
     test('nenhum título repetido na mesma página (a âncora ficaria ambígua), no docs/ e no README', () => {
-        const files = [...pagesDocs().map(f => `docs/${f}`), 'README.md'];
+        const files = [...pagesDocs().map(f => `docs/${f}`), ...READMES];
         for (const fileAlt of files) {
             const titles = [...withoutCode(fs.readFileSync(path.join(bot.ROOT, fileAlt), 'utf8')).matchAll(/^#{1,6} (.+)$/gm)]
                 .map(m => ancora(m[1]));
@@ -283,7 +303,7 @@ describe('documentação', () => {
 
     test('links para o site (jpereira.github.io/zapbot) apontam para páginas e âncoras do docs/', () => {
         const SITE = /https:\/\/jpereira\.github\.io\/zapbot\/([^)\s"'`]*)/g;
-        const files = ['README.md', 'SECURITY.md', ...definitionFiles(), ...pagesDocs().map(f => `docs/${f}`)];
+        const files = [...READMES, 'SECURITY.md', ...definitionFiles(), ...pagesDocs().map(f => `docs/${f}`)];
         let total = 0;
 
         for (const fileAlt of files) {
