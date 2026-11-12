@@ -7,7 +7,7 @@ const { ADMIN } = require('../../roles').ROLES;
 module.exports = {
     cmd: '/join',
     usage: '/join <link do convite>  ou  /join -info|-i <link>  ou  /join -l',
-    aliases: [],
+    aliases: ['/entrar'],
     summary: 'Entra em um grupo pelo link de convite',
     help: 'Entra em um grupo do WhatsApp pelo link de convite (chat.whatsapp.com/<código>, com ou sem https://, ou só o código). Com -info, mostra o nome, os participantes e a descrição do grupo sem entrar. Com -list, lista os grupos em que você está (o mesmo que /leave -l). Para sair, use /leave.',
     ex: [

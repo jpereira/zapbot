@@ -2,11 +2,11 @@
  * Comando /walissu (alias /ualisu).
  */
 
-const { sendDraw, drawParticipants } = require('./boletos');
+const { sendDraw, drawParticipants } = require('./bills');
 const { searchCvesRecent, formatCve } = require('./cve');
 const { printError } = require('../log');
 
-// /walissu: Walissu CVE BOT (usa o sorteio do /boletos e as CVEs do /cve)
+// /walissu: Walissu CVE BOT (uses the /bills draw and the /cve CVEs)
 async function cmdWalissu({ msg }) {
     const chat = await msg.getChat().catch(() => null);
 

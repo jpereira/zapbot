@@ -1,5 +1,5 @@
 /*
- * Currencies supported by /crypto and /cotacao.
+ * Currencies supported by /crypto and /rates.
  */
 
 /*
@@ -12,7 +12,7 @@ const CRYPTO_SUPPORTED = {
     SUI: '💧', PEPE: '🐸', SHIB: '🐕', XLM: '🚀', NEAR: 'Ⓝ', UNI: '🦄'
 };
 
-// /cotacao currencies, against the real. The enabled ones stay in the 'cotacao.coins' setting.
+// /rates currencies, against the real. The enabled ones stay in the 'cotacao.coins' setting.
 const QUOTE_SUPPORTED = {
     USD: { icone: '🇺🇸', nome: 'Dólar', fonte: 'fiat' },
     EUR: { icone: '🇪🇺', nome: 'Euro', fonte: 'fiat' },

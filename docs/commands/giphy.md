@@ -1,17 +1,17 @@
 # `/giphy` (`/gif`)
 
-Envia um GIF do GIPHY como vídeo em loop: aleatório por tag ou específico por URL ou ID. Sem
-argumento usa o setting `gif.tag`. Precisa de uma chave do GIPHY: `GIPHY_API_KEY` no `config/.env`
-ou, se ela não existir, o setting `giphy.api.key` (`/set giphy.api.key <chave>`).
+Sends a GIPHY GIF as a looping video: random by tag or a specific one by URL or ID. With no argument
+it uses the `gif.tag` setting. It needs a GIPHY key: `GIPHY_API_KEY` in `config/.env` or, if it
+doesn't exist, the `giphy.api.key` setting (`/set giphy.api.key <key>`).
 
 ```text
-/giphy          → tag padrão (setting gif.tag)
-/giphy gatos    → GIF com a tag "gatos"
-/gif gatos      → o mesmo, pelo alias
+/giphy          → default tag (setting gif.tag)
+/giphy gatos    → GIF with the tag "gatos"
+/gif gatos      → the same, through the alias
 /giphy https://giphy.com/gifs/h5WUvmDSB0njFcFeCE
-/giphy h5WUvmDSB0njFcFeCE  → o mesmo GIF pelo ID
+/giphy h5WUvmDSB0njFcFeCE  → the same GIF by ID
 ```
 
-URLs aceitas usam `giphy.com/gifs/<ID>` ou `giphy.com/gifs/<nome>-<ID>`. Um argumento alfanumérico
-com pelo menos dez caracteres é interpretado como ID; os demais são tags. O vídeo é baixado em MP4,
-com limite de 10 MB. Sem resultado, o bot avisa no chat.
+Accepted URLs use `giphy.com/gifs/<ID>` or `giphy.com/gifs/<name>-<ID>`. An alphanumeric argument
+with at least ten characters is interpreted as an ID; the others are tags. The video is downloaded
+as MP4, with a 10 MB limit. With no result, the bot warns in the chat.

@@ -284,7 +284,7 @@ function errorHttp(status, messageAlt = `HTTP ${status}`, extra = {}) {
 }
 
 /*
- * google-translate-api-x: the /traduzir package, without network. The call goes through the simulated network
+ * google-translate-api-x: the /translate package, without network. The call goes through the simulated network
  * (rede.responder('post', 'google-translate-api-x', { text, from: { language: { iso } } })) e o
  * text and the options (to...) stay in rede.chamadas.at(-1).cfg.body.
  */

@@ -268,10 +268,10 @@ function readShortcut(textAlt) {
     };
 }
 
-// "/cotacao,/crypto meme" → ['/cotacao', '/crypto', '/meme']; "all" → ['all']; invalid: throws
+// "/rates,/crypto meme" → ['/rates', '/crypto', '/meme']; "all" → ['all']; invalid: throws
 function readCommands(textAlt) {
     const names = textAlt.split(/[\s,]+/).filter(Boolean);
-    if (!names.length) throw new Error('informe os comandos, separados por vírgula: +cmd /cotacao,/meme');
+    if (!names.length) throw new Error('informe os comandos, separados por vírgula: +cmd /rates,/meme');
     if (names.length === 1 && /^all$/i.test(names[0])) return ['all'];
     return [...new Set(names.map(userCommand))];
 }
@@ -431,7 +431,7 @@ async function changeCommands(msg, items, { sinal: signalAlt, comandos: commands
             if (!isUser || all) fresh = all ? null : { apenas: true, comandos: commands };
             else if (!rule?.apenas && admins.length) {
                 notices.push(`❌ ${who} usa os comandos comuns, e o ${admins.join(', ')} (admin) só entra numa lista "Apenas": ` +
-                    `liste os comandos dele, ex.: /bot +u +cmd /cotacao,${admins[0]}.`);
+                    `liste os comandos dele, ex.: /bot +u +cmd /rates,${admins[0]}.`);
                 continue;
             } else if (!rule) {
                 notices.push(`ℹ️ ${who} já usa todos os comandos comuns.`);
@@ -493,7 +493,7 @@ async function handleShortcut(msg, textAlt, chatCurrent) {
 
     // +cmd|-cmd belongs to users: with +a/-a or -u, no
     if (cmd && op && (op.letra === 'a' || op.sinal === '-')) {
-        await msg.reply('❌ O +cmd|-cmd vale só para usuários: /bot +u +cmd /cotacao /Fulano/ ou /bot -cmd /meme /Fulano/.');
+        await msg.reply('❌ O +cmd|-cmd vale só para usuários: /bot +u +cmd /rates /Fulano/ ou /bot -cmd /meme /Fulano/.');
         return;
     }
 

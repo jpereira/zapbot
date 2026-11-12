@@ -8,7 +8,7 @@ const { printError } = require('./log');
 const { QUOTE_SUPPORTED } = require('./currencies');
 
 /*
- * /cotacao [CURRENCY...]: quote sources
+ * /rates [CURRENCY...]: quote sources
  * Quote against the real: current value, open and previous close, high and
  * day low and change. Fiat currencies come from Yahoo Finance (if it fails,
  * of AwesomeAPI, which does not report the open); USDT comes from the daily candles
@@ -90,7 +90,7 @@ async function searchQuote(currency) {
     try {
         return await quoteYahoo(currency);
     } catch (err) {
-        printError(`/cotacao: Yahoo falhou para ${currency} (${err.message}), usando a AwesomeAPI.`);
+        printError(`/rates: Yahoo falhou para ${currency} (${err.message}), usando a AwesomeAPI.`);
         return quoteAwesome(currency);
     }
 }

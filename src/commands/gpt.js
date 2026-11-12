@@ -10,7 +10,7 @@ const { MessageMedia } = require('whatsapp-web.js');
 
 const { completeNotice } = require('../client');
 const { getCommandSyntax } = require('./base');
-const { drawAlt } = require('./desenhe');
+const { drawAlt } = require('./draw');
 const {
     AUDIO_MODEL, VOICE_MODEL, SO_OWNER_GENERATE, GPT_USES, QUESTION_USAGE, deleteNotice, notifyProcessing, isPhoto,
     modelError, messageImage, replyConsumption, withoutOption, swapModel
@@ -210,8 +210,8 @@ async function talkText(msg, args, quotedMsg) {
 }
 
 /*
- * /gpt -img [request] and /gpt -gif [request]: create an image and an animated GIF, like /desenhe and
- * /desenhe -gif (src/commands/desenhe.js). Both cost money, so they are owner and admins only.
+ * /gpt -img [request] and /gpt -gif [request]: create an image and an animated GIF, like /draw and
+ * /draw -gif (src/commands/draw.js). Both cost money, so they are owner and admins only.
  */
 
 // "gere um gif animado de ...", "faça uma animação...": the GIF request without -gif (only when replying to a photo)
@@ -219,7 +219,7 @@ const ASKED_GIF = /\b(gif|anima[çc][ãa]o|animad[oa]|v[ií]deo)\b/i;
 const CREATE_VERB = /\b(ger[ae]r?|cri[ae]r?|fa[çc]a|fazer|faz|anim[ae]r?|transform\w*)\b/i;
 const asksGif = (textAlt) => ASKED_GIF.test(textAlt) && CREATE_VERB.test(textAlt);
 
-// -img and -gif are those of /desenhe (desenhar() is a single one): here only the request text and the usage message
+// -img and -gif are those of /draw (desenhar() is a single one): here only the request text and the usage message
 const gptDraw = (msg, args, quotedMsg, { opcao: optionAlt, gif, semPedido: withoutRequest }) =>
     drawAlt({ msg, cmd: '/gpt', pedido: withoutOption(args, optionAlt), quotedMsg, gif, semPedido: withoutRequest });
 

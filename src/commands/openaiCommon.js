@@ -1,5 +1,5 @@
 /*
- * What the OpenAI commands (/gpt, /desenhe) share: the "Processando" notice, the status footer of the
+ * What the OpenAI commands (/gpt, /draw) share: the "Processando" notice, the status footer of the
  * media, the model error for a model the account does not have, the per-use model swap (-m) and the reference photo.
  * The API calls and errors live in openaiChat.js.
  */
@@ -70,7 +70,7 @@ async function modelError(err, { setting, tipo: type, nome: nameAlt }, cmd) {
 }
 
 /*
- * -m: the models per use and the swap for each one. Each command lists its uses (/gpt, all; /desenhe,
+ * -m: the models per use and the swap for each one. Each command lists its uses (/gpt, all; /draw,
  * the image and the GIF) and says how to swap it with your name. The list is the key's (GET /v1/models), with the fixed one of the
  * fallback code when the key does not respond.
  */
@@ -118,7 +118,7 @@ const modelCurrent = (usage) => (usage.setting === 'openai.api.model'
  * @param {string} [modelo]  empty: lists the models
  * @param {{ given: Set<string> }} opts  the command options (the one that matches a use picks the use)
  * @param {object} o
- * @param {string} o.cmd      o comando ("/gpt", "/desenhe")
+ * @param {string} o.cmd      o comando ("/gpt", "/draw")
  * @param {string} o.icone    the emoji of the list title
  * @param {object[]} o.usos   the uses the command has
  * @param {object} o.padrao   the use of -m without another option
@@ -178,7 +178,7 @@ const isPhoto = (m) => Boolean(m?.hasMedia) && ['image', 'sticker'].includes(m.t
 
 /**
  * A message's image (photo or sticker), downloaded as base64.
- * @param {object} m    the replied message or the message itself (the photo with the caption "/desenhe ...")
+ * @param {object} m    the replied message or the message itself (the photo with the caption "/draw ...")
  * @param {string} cmd  the command, for the size notice
  * @returns {Promise<null | { imagem: { mimetype: string, data: string } } | { erro: string }>}
  * null: the message is not an image

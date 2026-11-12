@@ -7,6 +7,7 @@ const { ADMIN } = require('../../roles').ROLES;
 module.exports = {
     cmd: '/unblock',
     usage: '/unblock [/contato/|@menção|+número|nº]  ou  /unblock -all',
+    aliases: ['/desbloquear'],
     summary: 'Desbloqueia pessoas bloqueadas',
     help: 'Desbloqueia uma pessoa bloqueada (pelo /block ou no celular), ou todas com -all. Respondendo uma mensagem, desbloqueia quem a escreveu. Sem nada, lista os bloqueados.',
     cmd_opts: [

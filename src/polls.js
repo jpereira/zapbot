@@ -1,5 +1,5 @@
 /*
- * Polls: record of the polls and votes ('vote_update' event) and the /enquete -r scoreboard.
+ * Polls: record of the polls and votes ('vote_update' event) and the /poll -r scoreboard.
  */
 
 const { client } = require('./client');
@@ -10,12 +10,12 @@ const { formatData, plural } = require('./util/format');
 
 /*
  * WhatsApp only delivers the votes to whoever created the poll: the bot sees the votes
- * of your account's polls (those from /enquete and those you create on the phone).
+ * of your account's polls (those from /poll and those you create on the phone).
  * Each 'vote_update' brings the CURRENT choice of whoever voted (empty list = withdrew
  * the vote), so the vote is stored over the previous one.
  */
 
-// Saves the poll, if it does not exist yet (coming from /enquete or from the first vote)
+// Saves the poll, if it does not exist yet (coming from /poll or from the first vote)
 async function registerPoll({ id, chatId, chatName = null, pergunta: question, opcoes: optionsAlt, multi = false, criadaEm: createdIn = Date.now() }) {
     await dbReady;
     await dbRun(
@@ -91,7 +91,7 @@ async function pollScoreboard({ chatIds, pollId = null }) {
     if (!pollAlt) {
         return pollId
             ? '📊 Não tenho os votos dessa enquete: o bot só registra as enquetes da sua conta, a partir dos primeiros votos.'
-            : '📊 Nenhuma enquete registrada neste chat.\n💡 _Crie com /enquete Pergunta? | opção 1 | opção 2_';
+            : '📊 Nenhuma enquete registrada neste chat.\n💡 _Crie com /poll Pergunta? | opção 1 | opção 2_';
     }
 
     const votes = await dbAll('SELECT voter_name, options FROM poll_votes WHERE poll_id = ? ORDER BY voted_at, rowid', [pollAlt.id]);

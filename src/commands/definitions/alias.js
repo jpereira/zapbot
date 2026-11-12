@@ -25,7 +25,7 @@ module.exports = {
             opts: ['desc', 'd'],
             values: ['<texto>'],
             desc: 'Descrição opcional entre aspas retas ou curvas, inclusive misturadas, antes do comando ou do texto. Sem comando, atualiza só a descrição de um alias que já existe.',
-            ex: ['/alias /eita -desc "Dólar" /cotacao USD', '/alias /eita -d "Novo texto"']
+            ex: ['/alias /eita -desc "Dólar" /rates USD', '/alias /eita -d "Novo texto"']
         },
         { opts: ['list', 'l'], values: [], desc: 'Lista os atalhos cadastrados.' },
         {

@@ -1,6 +1,6 @@
 # `/ping`
 
-Verifica se o bot está respondendo.
+Checks whether the bot is responding.
 
 ```text
 /ping  → pong

@@ -7,6 +7,7 @@ const { ADMIN } = require('../../roles').ROLES;
 module.exports = {
     cmd: '/unmute',
     usage: '/unmute [/contato ou grupo/|@menção|+número|nº]  ou  /unmute -all',
+    aliases: ['/desmutar'],
     summary: 'Desfaz o silêncio do /mute',
     help: 'Desfaz o silêncio do /mute: os avisos de apagadas, editadas, status e reações da pessoa, do grupo ou da comunidade voltam. Respondendo um aviso, desfaz o silêncio de onde ele veio. Sem nada, lista os silenciados.',
     cmd_opts: [

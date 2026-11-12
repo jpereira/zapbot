@@ -1,7 +1,7 @@
-# `/join` · admin
+# `/join` (`/entrar`) · admin
 
-Entra em um grupo do WhatsApp pelo link de convite. Com `-info`, mostra o grupo (nome, participantes
-e descrição) sem entrar. Para sair, use o [`/leave`](leave.md).
+Joins a WhatsApp group through the invite link. With `-info`, shows the group (name, participants and
+description) without joining. To leave, use [`/leave`](leave.md).
 
 ![Demonstração do /join](../assets/demo/04-join-leave.gif)
 
@@ -9,11 +9,11 @@ e descrição) sem entrar. Para sair, use o [`/leave`](leave.md).
 /join <link do convite>  ou  /join -info <link>  ou  /join -l
 ```
 
-| Opção | Valor | Descrição |
+| Option | Value | Description |
 |---|---|---|
-| *(nenhuma)* | `<link do convite>` | O link (`https://chat.whatsapp.com/<código>`, com ou sem `https://`) ou só o código |
-| `-info`, `-i` | | Mostra o grupo do convite (nome, participantes e descrição) sem entrar |
-| `-list`, `-l` | | Lista os grupos em que você está, numerados (o mesmo que `/leave -l`) |
+| *(none)* | `<invite link>` | The link (`https://chat.whatsapp.com/<code>`, with or without `https://`) or just the code |
+| `-info`, `-i` | | Shows the invite's group (name, participants and description) without joining |
+| `-list`, `-l` | | Lists the groups you're in, numbered (same as `/leave -l`) |
 
 ```text
 /join https://chat.whatsapp.com/AbCdEfGhIjKlMnOpQrStUv
@@ -25,5 +25,5 @@ e descrição) sem entrar. Para sair, use o [`/leave`](leave.md).
 📝 Avisos e fotos
 ```
 
-- Convite inválido, expirado ou revogado: `❌ Convite inválido, expirado ou revogado.`
-- Grupos que exigem aprovação de um admin podem recusar a entrada; o motivo do WhatsApp vem na resposta.
+- Invalid, expired or revoked invite: `❌ Convite inválido, expirado ou revogado.`
+- Groups that require an admin's approval may refuse the join; WhatsApp's reason comes in the reply.

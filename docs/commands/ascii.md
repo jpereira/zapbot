@@ -1,18 +1,18 @@
 # `/ascii`
 
-O texto em letras grandes de ASCII, num bloco de código (monoespaçado no WhatsApp). As letras têm 3
-colunas de largura e 5 linhas de altura, e o texto quebra em várias linhas de letras para caber na
-tela do celular: 30 colunas por padrão.
+The text in big ASCII letters, in a code block (monospaced on WhatsApp). The letters are 3 columns
+wide and 5 rows tall, and the text wraps into several rows of letters to fit on a phone screen: 30
+columns by default.
 
 ```text
 /ascii [-width|-w <colunas>] [-char|-c <caractere>] <texto>
 ```
 
-| Opção | Valor | Descrição |
+| Option | Value | Description |
 |---|---|---|
-| *(nenhuma)* | `<texto>` | Até 40 caracteres (`\n` quebra a linha): letras (sem acento), números e `! ? . , : - + _ /`. Maiúsculas e minúsculas saem iguais; o que não tem desenho é ignorado. Sem texto, usa o da mensagem respondida |
-| `-width`, `-w` | `<colunas>` | Colunas por linha de letras, de 10 a 60 (padrão 30) |
-| `-char`, `-c` | `<caractere>` | O caractere do traço das letras (padrão: setting `ascii.defaultChar`, `#`) |
+| *(none)* | `<texto>` | Up to 40 characters (`\n` breaks the line): letters (no accents), numbers and `! ? . , : - + _ /`. Uppercase and lowercase come out the same; anything without a drawing is ignored. Without text, uses the replied message's |
+| `-width`, `-w` | `<colunas>` | Columns per row of letters, from 10 to 60 (default 30) |
+| `-char`, `-c` | `<caractere>` | The character for the letter strokes (default: setting `ascii.defaultChar`, `#`) |
 
 ```text
 /ascii Jorge!
@@ -33,7 +33,7 @@ tela do celular: 30 colunas por padrão.
  #  ### # #  ## ### #
 ```
 
-Textos longos quebram em várias linhas de letras, separadas por uma linha em branco:
+Long texts wrap into several rows of letters, separated by a blank line:
 
 ```text
 /ascii Feliz aniversario
@@ -59,6 +59,5 @@ Textos longos quebram em várias linhas de letras, separadas por uma linha em br
 ### ###
 ```
 
-Não depende de serviço
-externo e pode ser usado dentro de um [`/alias`](alias.md) ou do [`/cron`](cron.md) com
-`{/ascii Oi}`.
+It doesn't depend on an external service and can be used inside an [`/alias`](alias.md) or
+[`/cron`](cron.md) with `{/ascii Oi}`.

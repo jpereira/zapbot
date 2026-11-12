@@ -1,6 +1,6 @@
 # `/uptime`
 
-Mostra a versão e há quanto tempo o bot está no ar e conectado ao WhatsApp.
+Shows the version and how long the bot has been up and connected to WhatsApp.
 
 ```text
 /uptime

@@ -1,30 +1,29 @@
 # `/cache` · admin
 
-Mostra o espaço ocupado em `cache/` (banco, mídias, temporários, backups) e limpa o cache. Na ajuda
-do comando (`/cache -h`) os caminhos aparecem completos (no Docker, `/app/cache` e
-`/app/cache/media`).
+Shows the space used in `cache/` (database, media, temp files, backups) and cleans the cache. In the
+command help (`/cache -h`) the paths appear in full (in Docker, `/app/cache` and `/app/cache/media`).
 
-| Opção | Descrição |
+| Option | Description |
 |---|---|
-| `-all`, `-a` | Apaga **tudo** em `cache/`: as mensagens (inclusive as guardadas para o `/show`), os temporários, as mídias baixadas em `cache/media` e os backups do [`/backup`](backup.md) em `cache/backups`, e compacta o banco. Ocorrências do `/watch`, contadores do `/stats`, enquetes, alertas de preço e settings são mantidos |
-| `-backup`, `-b` | Apaga os backups do [`/backup`](backup.md) em `cache/backups` (o banco fica como está) |
-| `-clean`, `-c` | Remove só o que passou da janela de retenção (68 h, ou `cache.messageRetentionHours` para o texto das mensagens comuns e `cache.messageMediaRetentionHours` para as mídias / `cache.revokedRetentionDays` para apagadas / `cache.editedRetentionDays` para editadas / `cache.reactionRetentionDays` para reações / `watch.hitsRetentionDays` para ocorrências do `/watch` / `stats.retentionDays` para os contadores do `/stats` / `enquete.retentionDays` para as enquetes; em `cache/tmp`, os temporários com mais de 2 h e os [downloads em cache](get.md#cache-dos-downloads) do `/get` com mais de `get.cache.maxDays` dias) |
-| `-media`, `-m` | Apaga as mídias baixadas em `cache/media` (fotos, vídeos, áudios e documentos guardados para recuperar apagadas). As mensagens ficam: uma apagada recuperada depois avisa que o arquivo não está mais disponível |
+| `-all`, `-a` | Deletes **everything** in `cache/`: messages (including the ones kept for `/show`), temp files, media downloaded to `cache/media` and the [`/backup`](backup.md) backups in `cache/backups`, and compacts the database. `/watch` hits, `/stats` counters, polls, price alerts and settings are kept |
+| `-backup`, `-b` | Deletes the [`/backup`](backup.md) backups in `cache/backups` (the database stays as is) |
+| `-clean`, `-c` | Removes only what is past the retention window (68 h, or `cache.messageRetentionHours` for regular message text and `cache.messageMediaRetentionHours` for media / `cache.revokedRetentionDays` for deleted / `cache.editedRetentionDays` for edited / `cache.reactionRetentionDays` for reactions / `watch.hitsRetentionDays` for `/watch` hits / `stats.retentionDays` for `/stats` counters / `enquete.retentionDays` for polls; in `cache/tmp`, temp files older than 2 h and the [cached downloads](get.md#download-cache) from `/get` older than `get.cache.maxDays` days) |
+| `-media`, `-m` | Deletes the media downloaded to `cache/media` (photos, videos, audio and documents kept to recover deleted messages). The messages stay: a deleted one recovered later says the file is no longer available |
 
 ```text
-/cache           → lista o conteúdo de cache/ e o total de mensagens
-/cache -clean        → limpeza normal (retenção)
-/cache -m        → só as mídias
-/cache -c -m     → limpeza normal e as mídias
-/cache -b        → só os backups
-/cache -a        → tudo, inclusive os backups
+/cache           → lists the contents of cache/ and the total number of messages
+/cache -clean        → normal cleanup (retention)
+/cache -m        → media only
+/cache -c -m     → normal cleanup and media
+/cache -b        → backups only
+/cache -a        → everything, including backups
 ```
 
-Sem opções, mostra os arquivos e diretórios do primeiro nível em ordem alfabética. O tamanho de cada
-diretório inclui seu conteúdo; o total soma arquivos e diretórios. As contagens de mensagens,
-apagadas, edições e backups aparecem abaixo da árvore.
+Without options, it shows the first-level files and directories in alphabetical order. The size of
+each directory includes its contents; the total adds up files and directories. The counts of
+messages, deleted ones, edits and backups appear below the tree.
 
-Exemplo:
+Example:
 
 ```text
 🗂️ Exibindo conteúdo de /app/cache/*
@@ -43,5 +42,5 @@ Total:            405.57 MB
 📦 Backups: 3 (veja /backup).
 ```
 
-O `-a` não deixa nenhum backup para trás: se quiser guardar uma cópia antes, use `/backup -s` (o
-arquivo chega no seu privado). As opções `-c`, `-m` e `-b` podem ser usadas juntas.
+`-a` leaves no backup behind: if you want to keep a copy first, use `/backup -s` (the file arrives
+in your private chat). The `-c`, `-m` and `-b` options can be used together.

@@ -1,7 +1,7 @@
-# `/leave` · admin
+# `/leave` (`/sair`) · admin
 
-Sai de um ou mais grupos do WhatsApp. Sem nada, lista os grupos em que você está, numerados. Para voltar, é
-preciso um novo convite ([`/join`](join.md)).
+Leaves one or more WhatsApp groups. With nothing, lists the groups you're in, numbered. To come back,
+you need a new invite ([`/join`](join.md)).
 
 ![Demonstração do /leave](../assets/demo/04-join-leave.gif)
 
@@ -9,10 +9,10 @@ preciso um novo convite ([`/join`](join.md)).
 /leave <grupo|nº>...  ou  /leave -l
 ```
 
-| Opção | Valor | Descrição |
+| Option | Value | Description |
 |---|---|---|
-| *(nenhuma)* | `<grupo\|nº>...` | Os grupos, separados por espaço ou vírgula, pelo nome ou parte dele, como no `-to` ([Destinos](index.md#destinos-contato-grupo-número-ou-e-mail); vários que servem: você escolhe na lista), ou pelo nº da última lista do `-l` (nome com espaço entre `/.../` ou aspas; palavras soltas, sem nº, barras nem aspas, são um nome só) |
-| `-list`, `-l` | | Lista os grupos em que você está (o mesmo que `/leave` sem nada) |
+| *(none)* | `<grupo\|nº>...` | The groups, separated by space or comma, by name or part of it, like in `-to` ([Destinations](index.md#destinations-contact-group-number-or-email); if several fit: you choose from the list), or by the no. from the last `-l` list (name with spaces between `/.../` or quotes; loose words, with no no., slashes or quotes, are a single name) |
+| `-list`, `-l` | | Lists the groups you're in (same as `/leave` with nothing) |
 
 ```text
 /leave -l
@@ -24,7 +24,8 @@ preciso um novo convite ([`/join`](join.md)).
 /leave 2
 👋 Saí de 👥 Trabalho
 
-/leave 2 1 /Grupo L200/  → vários de uma vez
+/leave 2 1 /Grupo L200/  → several at once
 ```
 
-Saindo do próprio grupo em que o comando foi dado, a confirmação pode não chegar (você já não está lá).
+When leaving the very group where the command was given, the confirmation may not arrive (you're no
+longer there).

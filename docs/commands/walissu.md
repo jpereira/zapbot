@@ -1,15 +1,15 @@
 # `/walissu` (`/ualisu`)
 
-Só em grupos: o Walissu CVE BOT sorteia 2 membros diferentes (fora o bot), os marca e responde com
-uma CVE aleatória entre as 50 publicadas mais recentemente no [NVD](https://nvd.nist.gov/) nos
-últimos 2 dias.
+Groups only: the Walissu CVE BOT picks 2 different members (not counting the bot), tags them and
+replies with a random CVE among the 50 most recently published on [NVD](https://nvd.nist.gov/) in the
+last 2 days.
 
 ```text
 /walissu
-/ualisu        → o mesmo, pelo alias
+/ualisu        → the same, through the alias
 ```
 
-Exemplo ilustrativo de resposta:
+Illustrative example of a reply:
 
 ```text
 Hey @Fulano e @Beltrano, aqui é o Walissu CVE BOT! Dá uma olhada nesse CVE ou você vai sair da rave 😊
@@ -21,10 +21,10 @@ https://nvd.nist.gov/vuln/detail/CVE-AAAA-NNNN
 Cadê o exploit? Preciso sair de Brasília!
 ```
 
-Detalhes:
+Details:
 
-- Usa o mesmo sorteio do [`/boletos`](boletos.md) e a mesma consulta do [`/cve`](cve.md): grupos com
-  menos de 2 membros (fora o bot) são recusados, e vale o limite do NVD sem chave (~5 consultas a
-  cada 30 s).
-- A CVE pode vir de qualquer severidade; nos raros dias sem nenhuma publicação o bot avisa em vez de
-  marcar alguém.
+- It uses the same draw as [`/bills`](bills.md) and the same query as [`/cve`](cve.md): groups
+  with fewer than 2 members (not counting the bot) are refused, and the NVD limit without a key
+  applies (~5 queries every 30 s).
+- The CVE can be of any severity; on the rare days with no publications at all, the bot says so
+  instead of tagging anyone.
