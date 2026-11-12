@@ -35,6 +35,7 @@ A foto sai com a legenda:
 Contato: Jorge Pereira <+5521999999999>
 ```
 
+- No grupo, a legenda é `Grupo: <nome>`. A mesma pessoa informada duas vezes sai uma vez só.
 - O nome é o da sua agenda; quem não está nela aparece com o nome do próprio perfil, ou só com o
   número.
 - Sem foto, ou com a foto escondida pela privacidade do contato, sai só a legenda, com um aviso.

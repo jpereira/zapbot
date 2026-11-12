@@ -103,7 +103,7 @@ Com barras, é uma regex do JavaScript, com flags (`-q /pix|boleto/i`). Ela test
 sem a flag `i`, diferencia maiúsculas, e os acentos contam. As flags `g` e `y` são ignoradas.
 
 ```text
-/show -q pix
+/show -2 -q pix
 ♻️ 2 mensagens apagadas com "pix" (as 2 mais recentes de 4; use -N para mais)
 
 /show -5 -q /\bpix\b|boleto/i

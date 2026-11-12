@@ -74,6 +74,7 @@ The same person repeated counts once.
   people, they go to `❌ Não bloqueados`, and the others carry on.
 - Someone already blocked: the bot warns you (`ℹ️ 👤 Fulano já está bloqueado.`).
 - The bot's own account can't be blocked.
+- With nobody blocked, the list says `🚫 Ninguém bloqueado.`.
 - The list comes from WhatsApp, which stores blocks by internal id (`@lid`): the bot converts each one
   to the phone number and uses the name from your address book (or the profile's). Anyone without a
   known phone number appears by id, with `(id interno, sem telefone conhecido)`, after the others.

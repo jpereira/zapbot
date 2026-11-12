@@ -50,7 +50,7 @@ Rules are tested against the original message text. In notices and in the histor
 | Option | Value | Description |
 |---|---|---|
 | *(none)* | | Lists rules, sources, destinations and counts; adds recent matches when there are any |
-| `-N` | | Number of recent matches, across all rules. E.g.: `/watch -10` |
+| `-N` | | Number of recent matches, across all rules (1 to 100, capped by `watch.showMax`). E.g.: `/watch -10` |
 | `-list`, `-l` | | Lists only the rules, sources, destinations and counts |
 | `-show`, `-s` | `[N\|regra]` | Shows the full texts of the matches of rule N (or of the rule by its text); without N, of all. `-N` controls the quantity |
 | `-query`, `-q` | `<texto\|/regex/flags>` | Only the matches that contain the text (ignoring case and accents) or that match the regex. With `-s` or in the listing. See [Search](#search) |
@@ -84,6 +84,7 @@ the `-to` destinations or by email. `-s` and the hits listing of that rule also 
 - It's per rule: the ones you already have stay as they are (no 🔒) until you turn it on.
 - It applies to the whole notice: the sender's number, the message text and the rule. If a single
   notice combines a rule with 🔒 and one without, it comes out obfuscated.
+- `-mask N` and `-umask N` go alone, with no other option or rule.
 - The mask is presentation only: hits are stored in full in the database.
 - The 🔒 is stored with the rule text. Removing the rule with `-rm` removes the 🔒 too.
 
@@ -119,6 +120,7 @@ A listing, with the tips at the end, one per line:
 /watch -s N -q <texto|/regex/> só as que casam.
 /watch -s N -to <destino|off> troca os destinos.
 /watch -f N limpa as ocorrências.
+/watch -mask N liga o 🔒 (telefones ofuscados nos avisos); -umask N desliga.
 ```
 
 ## Search
@@ -170,7 +172,8 @@ and `/bot -status`, as `watch`.
 
 The account's own messages and recognized commands are left out of detection. The same message
 doesn't generate two notices for the same rule. Rules are stored in `watch.rules`, with a maximum
-set by `watch.max`; hits are retained for `watch.hitsRetentionDays` or until a `/watch -flush`. The
+set by `watch.max` (default 20, up to 100); a rule has 1 to 200 characters, and a repeated one is
+refused; hits are retained for `watch.hitsRetentionDays` or until a `/watch -flush`. The
 replies go to the chat where the command was typed.
 
 Location thumbnails are left out of the text and regex rules. The location and its

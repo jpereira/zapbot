@@ -17,7 +17,7 @@ Quem é? (1)
 
 Permissões
 👑 +a: admin, usa tudo
-🗣️ +u: usuário, usa os comandos comuns (e os admin que o dono liberou)
+🗣️ +u: usuário, usa os comandos comuns
 
 Digite /help para saber quais comandos estão disponíveis.
 ```
@@ -43,7 +43,10 @@ O nível é o mais alto que vale **no chat onde você digitou**:
 | 🚫 sem permissão | Nenhum dos de cima: o bot ignora os comandos da pessoa |
 
 - Quem não tem permissão nenhuma não consegue usar o `/whois` (o bot ignora os comandos dela); quem
-  tem descobre o próprio nível. O dono e os admins veem o de qualquer um.
+  tem descobre o próprio nível, mesmo limitado a alguns comandos (o `/whois` e o `/help` sempre
+  passam). O dono e os admins veem o de qualquer um.
+- Grupo e e-mail são recusados (o `/whois` é de pessoas), assim como um contato cujo telefone o
+  WhatsApp não informou (use o número: `/whois +5521999999999`).
 - Num grupo, o telefone de quem não participa dele sai escondido (`+5521•••••2222`), como no
   [`/bot`](bot.md#quem-aparece-na-lista).
 - Quem está limitado a alguns comandos ([`/bot +cmd`](bot.md#comandos-de-cada-usuário)) tem a regra

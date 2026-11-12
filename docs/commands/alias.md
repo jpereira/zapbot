@@ -39,6 +39,9 @@ aliases. Whoever runs a shortcut needs permission for the target commands.
 /alias -rm all
 ```
 
+The start of a saved name also completes (`/dol` runs `/dolar`, if it's the only match; with
+several, the bot lists them).
+
 The name accepts letters, numbers, `_`, `-` and `.` (`/alias meu.comando /me Olá`), with or without
 the slash on registration and removal. To run it, use the slash: `/eita`. Registering the same name
 again replaces its command and its description. Without `-desc`, the description is empty. The
@@ -53,7 +56,7 @@ Arguments typed when running are appended to the end of the saved command:
 
 ```text
 /alias /dolar /rates USD
-/dolar -h                    → /rates help
+/dolar -h                    → the /rates help
 ```
 
 ### Parameters `$1`, `$N`

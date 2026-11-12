@@ -11,7 +11,7 @@ pelo ffmpeg. Se a mídia tiver um link na legenda, vale a mídia.
 | Opção | Valor | Descrição |
 |---|---|---|
 | `-sticker`, `-st` | | Envia como figurinha animada (até 6 s), enquadrada no meio do vídeo. É o mesmo que o [`/sticker`](sticker.md) |
-| `-pos` | `<topo\|meio\|baixo>` | Com `-st`: onde fica o recorte quadrado (padrão `meio`). Em mídia mais larga que alta, `topo` é a esquerda e `baixo` a direita |
+| `-pos` | `<topo\|meio\|baixo>` | Com `-st`: onde fica o recorte quadrado (padrão `meio`; `top`, `middle`, `bottom`, `cima` e `centro` também valem). Em mídia mais larga que alta, `topo` é a esquerda e `baixo` a direita |
 | `-audio`, `-a` | | Extrai só o áudio (`.mp3`) |
 | `-startSec`, `-ss` | `<tempo>` | Começa neste ponto do vídeo original (padrão 0), em segundos (`22`, `1.5`) ou em `min:seg` (`09:33`, ou `h:min:seg`). Com `-` na frente, conta do **final** do vídeo (`-10`, `-01:44`) |
 | `-endSec`, `-es` | `<tempo>` | Termina neste ponto do vídeo original, no mesmo formato do `-ss` (`-es -5` termina 5 s antes do fim); deve ser maior que o início. Vale também sem `-ss` e para figurinhas |
@@ -97,11 +97,11 @@ Limites (o `/get` não é admin: quem estiver no `bot.users` usa; com ele em `tr
 - Download de no máximo 200 MB antes da conversão (setting `get.maxDownloadMB`).
 - Link de playlist baixa só o vídeo do link (`--no-playlist`).
 - yt-dlp e ffmpeg são interrompidos após 5 minutos cada.
-- Opção desconhecida é recusada (`❌ Opção desconhecida: -x`), em vez de virar a URL.
+- Opção desconhecida é recusada (`❌ Opção desconhecida: -x`, com a dica de usar `/get -h`), em vez de virar a URL.
 - No máximo 2 `/get` (ou `/sticker`) com yt-dlp ou ffmpeg ao mesmo tempo. Os demais recebem um aviso
   para tentar de novo.
 
-Enquanto baixa e converte, o bot mostra "⏳ Processando…". No fim, essa mesma mensagem vira
+Enquanto baixa e converte, o bot mostra "⏳ Processando sua mídia, aguarde." (ou "seu sticker"). No fim, essa mesma mensagem vira
 "✅ Mídia baixada com sucesso!" (ou "✅ Sticker criado com sucesso!"), ou o erro, sem uma mensagem a
 mais.
 

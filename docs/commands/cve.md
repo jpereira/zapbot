@@ -23,7 +23,7 @@ the description and the link to the NVD page.
 Illustrative example of a reply:
 
 ```text
-🔥 1 CVE crítica mais recentes (CVSS ≥ 9, últimos 7 dias)
+🔥 1 CVEs críticas mais recentes (CVSS ≥ 9, últimos 7 dias)
 
 🛡️ CVE-AAAA-NNNN — 9 CRITICAL
 Descrição resumida da vulnerabilidade…
@@ -41,12 +41,13 @@ Details:
   Each result brings the severity (🔴 critical, 🟠 high, 🟡 medium, 🟢 low, ⚪ no score), the ID, the
   publication date and the summarized description. If there are more than `cve.max`, the bot says how
   many were left out.
+- With an `<id>` or a `<texto>`, `-highscore` is ignored.
 - The `-highscore` window comes from the `cve.maxDays` setting (default 7). The NVD doesn't accept
   windows larger than 120 days, which is why the setting goes from 1 to 120.
 - The score shown follows the order CVSS v3.1 → v4.0 → v3.0 → v2, preferring the primary metric
   (from the NVD). Newly published CVEs may still come without a score.
 - The critical filter uses the CVSS v3 severity: CVEs rated only in v4.0 or v2 aren't included in
   `-highscore`.
-- Without an API key, the NVD accepts about 5 queries every 30 s and is sometimes slow. Each `/cve`
-  makes 2 queries (the NVD only sorts from oldest to newest: one counts the total and the other
-  fetches the end of the list). On error, the bot asks you to try again in 30 s.
+- Without an API key, the NVD accepts about 5 queries every 30 s and is sometimes slow. Each list or
+  text search makes 2 queries (the NVD only sorts from oldest to newest: one counts the total and
+  the other fetches the end of the list). On error, the bot asks you to try again in 30 s.

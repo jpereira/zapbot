@@ -7,7 +7,7 @@ gravado no fim do arquivo original (sem ele, a legenda leva o nome do arquivo e 
 | Opção | Valor | Descrição |
 |---|---|---|
 | `-random`, `-r` | | Sorteia de qualquer pack do arquivo |
-| `-year`, `-y` | `<ano>` | Sorteia de um pack do ano (ex.: 1996) |
+| `-year`, `-y` | `<ano>` | Sorteia de um pack do ano (ex.: 1996; de 1980 ao ano atual) |
 | `pack` | | Nome do pack (ex.: `chuck-norris-lvl`). Sem ele usa o setting `pixelart.packs` |
 
 ```text
@@ -38,8 +38,8 @@ Exemplo de resposta:
 Detalhes:
 
 - Pixel art sofre com a compressão do WhatsApp: a imagem é dobrada sem suavizar e enviada em HD.
-- Artes mais altas que 4096 px vão em partes, até o setting `pixelart.maxParts` (3); o que passar
-  disso fica só no link.
-- No `-r` e no `-y`, packs sem artes ANSI/ASCII (só executáveis ou textos) são trocados por outro
-  sorteio, até 5 tentativas.
+- Artes mais altas que 4096 px vão em partes, até o setting `pixelart.maxParts` (3, de 1 a 10); o que
+  passar disso fica só no link.
+- No `-r`, no `-y` ou com vários packs no `pixelart.packs`, packs sem artes ANSI/ASCII (só
+  executáveis ou textos) são trocados por outro sorteio, até 5 tentativas.
 - A lista completa de packs do `-r` é baixada no máximo uma vez por dia.

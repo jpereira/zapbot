@@ -157,12 +157,13 @@ Preço do Dólar!
   de uma linha só fica na frase. Um comando que responde mais de uma vez (o `/defi`, uma por
   posição) tem as respostas separadas por uma linha em branco. Mídias (`/meme`, `/giphy`,
   `/pixelart`) saem logo depois da mensagem.
-- Só os comandos de consulta rodam aí: `/rates`, `/crypto`, `/cve`, `/defi`, `/giphy`, `/joke`,
-  `/kernel`, `/meme`, `/news`, `/pixelart`, `/stats`, `/weather`, `/uptime` e `/version` (nas
-  definições, os com `cron: true`). As opções que mudam algo também não: o `-add`, o `-del` e
-  o `-alerta` do `/crypto` e do `/rates`; o `-address`, o `-wallet`, o `-pool`, o `-nft`, o
-  `-name`, o `-rm`, o `-alerta`, o `-taxas` e o `-to` do `/defi` (rodam os quatro protocolos, o
-  `-l`, o `-mask` e o `aave -full`); e o `-flush` e o `-flush-all` do `/stats`.
+- Só os comandos de consulta rodam aí: `/ascii`, `/rates`, `/crypto`, `/cve`, `/defi`, `/giphy`,
+  `/joke`, `/kernel`, `/meme`, `/news`, `/pixelart`, `/stats`, `/weather`, `/uptime` e `/version`
+  (nas definições, os com `cron: true`). As opções que mudam algo também não: o `-width` e o `-char`
+  do `/ascii`; o `-add`, o `-del` e o `-alerta` do `/crypto` e do `/rates`; o `-address`, o
+  `-wallet`, o `-pool`, o `-nft`, o `-name`, o `-rm`, o `-alerta`, o `-taxas` e o `-to` do `/defi`
+  (rodam os protocolos, o `-l`, o `-mask` e o `aave -full`); e o `-flush` e o `-flush-all` do
+  `/stats`.
 - O `/bot` é a exceção: só o dono cria um item com `{/bot -flush-email true}` (nele, só o `-info` e o
   `-flush-email` rodam; as outras opções são recusadas). Um admin que não é o dono leva erro ao criar.
 - O comando é conferido ao criar (e no `-edit`): um que não existe ou que não roda no `/cron` dá
@@ -210,7 +211,7 @@ digitado (com várias linhas, se for o caso). Tudo no horário de Brasília.
 | Duração | `+2h`, `em 2h`, `daqui a 2h`, `30m`, `1d`, `1h30m` | Daqui a tanto tempo. Horas sozinhas são horário (`6h` é 06:00): para "daqui a 6 horas", use `+6h` ou `em 6h` |
 | Hoje / amanhã | `hoje 22h`, `amanhã`, `amanhã 10:00` | Sem hora: 9h |
 | Dia da semana | `sexta`, `seg 8h`, `sábado 10:00` | O próximo (hoje, se a hora ainda não passou). Sem hora: 9h |
-| Data | `25/12`, `25/12 10:00`, `25/12/2027 10h` | Sem ano: a próxima vez que a data chega. Sem hora: 9h |
+| Data | `25/12`, `25/12 10:00`, `25/12/2027 10h` | Sem ano: a próxima vez que a data chega (ano com 2 dígitos também vale: `25/12/27`). Sem hora: 9h |
 
 Até 366 dias à frente. O `-repetir mensal` (ou `-r mensal`) mantém o dia do mês: um item do dia 31
 vai no último dia dos meses mais curtos e volta ao 31 depois.
@@ -226,4 +227,5 @@ vai no último dia dos meses mais curtos e volta ao 31 depois.
   todos os destinos (e conta 1 no limite); o mesmo destino repetido conta uma vez. Se o envio falhar
   num destino, os outros recebem assim mesmo. Os `-edit`, `-pause` e `-rm` valem para o item
   inteiro.
-- O limite é de 50 itens, somando os dois tipos (setting `agenda.max`).
+- O limite padrão é de 50 itens, somando os dois tipos (setting `agenda.max`, de 1 a 500).
+- O aviso `(atrasado: ...)` só aparece quando o envio sai com mais de 5 minutos de atraso.

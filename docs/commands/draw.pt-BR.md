@@ -4,7 +4,7 @@ Role `admin`: só você e os admins extras. O dono libera a uma pessoa ou grupo 
 `/bot +u +cmd /draw` ([Delegando](index.md#delegando-um-comando-admin)). Quem recebe só desenha: o `-model`
 (ver e trocar o modelo) é do dono e dos admins. Cada imagem **gasta a sua conta da OpenAI**.
 
-Desenha uma imagem com o GPT Image da OpenAI (API `v1/images`) e manda no chat, com o pedido na legenda.
+Desenha uma imagem com o GPT Image da OpenAI (API `v1/images`) e manda no chat, com o pedido na legenda (cortado em 200 caracteres).
 Com `-gif`, faz um **GIF animado**. Numa **foto** (a da própria mensagem, na legenda, ou a respondida), o
 pedido **edita** a foto ou, no `-gif`, a **anima**. Respondendo uma mensagem, o texto dela entra antes do
 pedido. O `/gpt -img` e o `/gpt -gif` são o mesmo código: o resultado é igual.
@@ -26,7 +26,7 @@ Se a **primeira palavra** parece uma opção mas não existe (`/draw -price`), o
 | `-frames`, `-f` | `<n>` | Quadros do GIF, de 2 a 16 (padrão: `openai.gif.frames`, 9). Vale como `-gif` |
 | `-ms` | `<ms>` | Duração de cada quadro do GIF, de 20 a 2000 ms (padrão: `openai.gif.frameMs`, 200). Vale como `-gif` |
 | `-model`, `-m` | `[modelo]` | Só dono e admins. Sem modelo, lista o atual e os que a sua chave vê; com modelo, troca (`openai.image.model`; com `-gif`, `openai.image.gifModel`) |
-| `-status`, `-s` | | Acrescenta no rodapé o consumo da chamada: bytes TX/RX, tokens, custo e saldo. Veja [Status](gpt.md#status--status) |
+| `-status`, `-s` | | Acrescenta no rodapé o consumo da chamada: bytes TX/RX, tokens, custo e saldo (imagem e GIF: numa mensagem à parte). Veja [Status](gpt.md#status--status) |
 | `<pedido>` | | O que desenhar ou animar. Respondendo uma mensagem, o texto dela entra antes; numa foto, o pedido a edita |
 
 Usa a mesma chave do [`/gpt`](gpt.md): `OPENAI_API_KEY` no `config/.env` ou o setting `openai.api.key`
@@ -62,6 +62,8 @@ Numa foto, o GIF a anima; sem pedido, com um movimento sutil e natural.
   ele, o bot responde `🔒 A sua conta/modelo não faz GIF animado` com a mensagem da OpenAI.
 - O GIF sai com **9 quadros de 200 ms** (1,8 s); os settings `openai.gif.frames` (2 a 16) e
   `openai.gif.frameMs` (20 a 2000) mudam, e o `-frames` e o `-ms` sobrepõem numa chamada.
+- `-frames` e `-ms` fora do intervalo respondem `❌ -frames precisa ser um inteiro de 2 a 16.` (ou o
+  `-ms`, de 20 a 2000).
 - Cada quadro sai em **512x512**: a OpenAI cobra os pixels de todos os quadros, então mais quadros custam mais.
 - A OpenAI devolve um `.gif`; o bot o converte em MP4 sem áudio com o ffmpeg e o manda como GIF
   (`sendVideoAsGif`), que é como o WhatsApp toca um GIF em loop, igual ao [`/giphy`](giphy.md). Se a

@@ -16,7 +16,7 @@ WhatsApp formatting conversion as `/gpt` (see
 | `[período]` | | A time, as in [`/cron`](cron.md) (`30m`, `2h`, `1d`, `1h30m`, `2d4h`): the messages from that time until now; a number (`300`): the last 300 (default limit 500, configurable up to 2000 in `tldr.maxMsgs`). Default: the last 100. The `-` in front is optional (`-2h`) |
 | *(replying)* | | Summarizes from the replied message until now; a typed period or `-chat` win |
 | `-chat`, `-c` | `<name>` | Summarizes another chat, looked up by name: all the words, in any order, ignoring accents. A name with a space goes in quotes: `-c "trabalho rio"` |
-| `-status`, `-s` | | Adds the call's usage to the footer: TX/RX bytes and tokens (see [Status](gpt.md#status--status)) |
+| `-status`, `-s` | | Adds the call's usage to the footer: TX/RX bytes, tokens, cost and balance (see [Status](gpt.md#status--status)) |
 | `-pv` | | Sends to your private chat instead of exposing it in the current chat |
 
 ```text
@@ -82,6 +82,9 @@ Details:
   `... desde a mensagem respondida (há 3 horas)`).
 - Commands, deleted messages and media without a caption are left out. Your messages show up with
   your profile name; the bot's replies (which go out through your account) count as yours.
+- Audio messages (the 10 most recent ones in the period) are transcribed, up to 25 MB each, and
+  go into the summary with who sent them and when. The transcription is saved, so it isn't paid
+  twice. An audio that can't be transcribed (no file, too large, another format) is left out.
 - Each message goes up to 500 characters, and the total up to 60 thousand: above that, the oldest
   ones drop out.
 - It's restricted to the owner and the extra admins (`+a`): each summary spends OpenAI credits, and

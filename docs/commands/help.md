@@ -4,12 +4,12 @@ Shows the command menu, or the help for a single command. Everyone sees only wha
 
 - **You** (the owner) and the [extra admins](bot.md#extra-admins): all commands.
 - **Everyone else** (the [users](bot.md#users)): only the `user` role commands, the `user` ones
-  in the [command table](index.md#summary). The menu has `(os comandos que você pode usar)` in the
+  in the [command table](index.md#summary). The menu has `(the commands you can use)` in the
   title, and the `/help` of an `admin` or `owner` command replies
-  `⛔ O /show é só do dono do bot (e dos admins).`
+  `⛔ /show is only for the bot owner (and admins).`
   Anyone limited to a few commands ([`/bot +cmd`](bot.md#each-users-commands)) sees only
   those, and an `admin` command the owner delegated (`/bot +u +cmd /gpt`) shows up for whoever
-  received it.
+  received it. `/help` and `/whois` always go through.
 
 `/help` on its own lists one command per line, with just what it does (the `summary` from the
 command definition), in a monospaced block (to keep the alignment on mobile), and ends with a tip on
@@ -19,12 +19,12 @@ how to see the rest:
 /help
 
 ```
- /alias - Salva atalhos para comandos com argumentos
- /ascii - O texto em letras grandes de ASCII
+ /alias - Saves shortcuts for commands with arguments
+ /ascii - The text in big ASCII letters
  ...
 ```
 
-💡 Utilize */help /comando* ou */comando -h* para mais informações.
+💡 Use */help /command* or */command -h* for more information.
 ````
 
 | Option | Value | Description |
@@ -40,11 +40,11 @@ with only the ones you can use (a role with no visible commands doesn't show up;
 
 ```
 Role: admin
- /alias - Salva atalhos para comandos com argumentos
+ /alias - Saves shortcuts for commands with arguments
  ...
 
 Role: user
- /ascii - O texto em letras grandes de ASCII
+ /ascii - The text in big ASCII letters
  ...
 ```
 ````
@@ -67,4 +67,31 @@ arguments and aliases. `[]` means something optional; `<>`, a value to fill in; 
 can be repeated. A line starting with `Ex:` is an example command.
 
 Unknown or disabled commands get a reply to the message for the owner, admins and users with
-permission in the chat: `⚠️ Comando '/comando' desconhecido, tente: /help`.
+permission in the chat: `⚠️ Comando '/comando' desconhecido, tente: /help` (this reply is still in
+Portuguese). `/help /xyz`, with a command that doesn't exist, replies
+`❌ Command not found: /xyz`.
+
+## Language
+
+`-h`, `-help` and `/help` follow the `zapbot.lang` setting: `en_US` (English, the default) or
+`pt_BR`. Change it with `/set zapbot.lang pt_BR` (or `/set zapbot.lang=en_US`); it applies right
+away, with no restart. The replies of the other commands are still in Portuguese, being
+migrated.
+
+```text
+/set zapbot.lang en_US
+/ping -h
+Usage: /ping
+Checks whether the bot is responding (replies pong).
+
+Help: -help, -h
+```
+
+```text
+/set zapbot.lang pt_BR
+/ping -h
+Uso: /ping
+Verifica se o bot está respondendo (responde pong).
+
+Ajuda: -help, -h
+```

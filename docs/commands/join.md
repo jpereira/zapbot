@@ -23,7 +23,10 @@ description) without joining. To leave, use [`/leave`](leave.md).
 👥 *Família*
 👤 12 participantes
 📝 Avisos e fotos
+💡 Entre com /join chat.whatsapp.com/AbCdEfGhIjKlMnOpQrStUv
 ```
 
+- Not a link or code: `❌ Link de convite inválido.` plus an example.
 - Invalid, expired or revoked invite: `❌ Convite inválido, expirado ou revogado.`
-- Groups that require an admin's approval may refuse the join; WhatsApp's reason comes in the reply.
+- Groups that require an admin's approval may refuse the join; WhatsApp's reason comes in the
+  reply (`❌ Não consegui entrar em 👥 <grupo>: <motivo>.`).

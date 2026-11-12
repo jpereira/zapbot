@@ -1,6 +1,7 @@
 # `/version` (`/versao`)
 
-Shows the same banner as `/uptime`, with the bot version.
+Shows the same banner as `/uptime`, with the bot version (it is the same handler). It can also be
+used inside an [`/alias`](alias.md) or [`/cron`](cron.md) with `{/version}`.
 
 ```text
 /version

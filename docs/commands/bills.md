@@ -10,4 +10,6 @@ Anote o número: 📝 001 9 337370000000100 05009 401448 16060680935031
 Boa sorte pagando! 😉💰
 ```
 
-Groups with fewer than 2 members (not counting the bot) are refused.
+Groups with fewer than 2 members (not counting the bot) are refused with
+`Membros insuficientes no grupo.`, and outside a group the bot warns that `/bills` only works in
+groups.

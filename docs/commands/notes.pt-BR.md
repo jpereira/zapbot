@@ -5,6 +5,7 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 
 ```text
 /notes [-list|-l] [#tag...] [-to <destino>]...
+/notes -compact|-c [#tag...]
 /notes -search|-s [#tag...] <texto|/regex/flags> [-to <destino>]...
 /notes -update|-u <id> [#tag] <novo texto>
 /notes -view|-v <id...|#tag...> [-to <destino>]...
@@ -35,9 +36,9 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 | `-to` | `<destino>` | Com `-alerta`: avisa num contato, grupo, número ou e-mail em vez do seu privado. Com a lista (`-l`, `#tag`) ou o `-export`: manda a lista ou o PDF lá, em vez de responder no chat. Repita para vários |
 
 ```text
-/notes -a comprar leite
-/notes comprar pão                                → o mesmo que -a
-/notes -a ligar pro João -alerta amanhã 9h
+/notes -a #casa comprar leite
+/notes #casa comprar pão                             → o mesmo que -a
+/notes -a #contatos ligar pro João -alerta amanhã 9h
 /notes -l
 /notes -r 2
 /notes -r all
@@ -151,11 +152,11 @@ uma verificação periódica (a cada minuto). Aqui a condição é uma data/hora
 anotação.
 
 ```text
-/notes -a ligar pro João -alerta amanhã 9h       → anota e avisa amanhã às 9h
+/notes -a #contatos ligar pro João -alerta amanhã 9h       → anota e avisa amanhã às 9h
 /notes -alerta 3 +2h                              → avisa da anotação 3 daqui a 2 horas
 /notes -alerta 3 sexta 18:30 -to /Família/        → avisa no grupo Família
 /notes -alerta #casa +2h -to /Família/            → avisa de todas as da #casa, no grupo Família
-/notes -a pagar boleto -alerta 25/12 10h -to /Jorge Pereira/ -to email
+/notes -a #contas pagar boleto -alerta 25/12 10h -to /Jorge Pereira/ -to email
 /notes -alerta                                    → lista só as anotações com alerta
 /notes -alerta #casa                              → só as da #casa que têm alerta
 /notes -alerta -rm 3                              → tira o alerta da nº 3 (a anotação fica)

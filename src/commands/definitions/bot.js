@@ -82,7 +82,7 @@ module.exports = {
         {
             opts: ['test', 't'],
             values: [],
-            desc: 'Tests everything: cache write/read, disk space, SQLite database, WhatsApp connection, DNS and internet, speed (downloads 8 MB and uploads 1 MB at speed.cloudflare.com), SMTP login, and the external programs (Chromium, yt-dlp, ffmpeg). Each item comes out with ✅ or ❌ (➖ = not configured). Alone: the other options are refused.',
+            desc: 'Tests everything: cache write/read, disk space, SQLite database, WhatsApp connection, DNS and internet, speed (downloads 8 MB and uploads 1 MB at speed.cloudflare.com), SMTP login, IMAP login (if configured), and the external programs (Chromium, yt-dlp, ffmpeg). Each item comes out with ✅ or ❌ (➖ = not configured). Alone: the other options are refused.',
             cron: false
         },
         {
