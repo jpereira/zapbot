@@ -15,24 +15,24 @@ O destino `email` usa `QRCODE_EMAIL_SMTP_TO`; `-to voce@exemplo.com` escolhe out
 
 ## E-mail do QR Code
 
-Assunto: **`[ZapBot] WhatsApp QR Code Authentication`**
+Assunto: **`[ZapBot] Autenticação do QR Code do WhatsApp`**
 
 Exemplo dos campos do e-mail:
 
 | Campo | Conteúdo ilustrativo |
 |---|---|
 | 🔢 QR Code | `#1` |
-| 📱 Phone Number | `5521XXXX9999` |
-| 🛡️ Anti-Phishing Code | `TroqueEstaFrase-7f3a` |
-| 📅 Generated At | `2026-09-29 14:32:07 BRT` |
+| 📱 Número do telefone | `5521XXXX9999` |
+| 🛡️ Código antiphishing | `TroqueEstaFrase-7f3a` |
+| 📅 Gerado em | `2026-09-29 14:32:07 BRT` |
 
 O QR aparece como imagem PNG de 300×300 pixels no corpo e em anexo (`qrcode-1.png`). O e-mail avisa
 que esse QR substitui os enviados anteriormente.
 
 - **QR Code #N**: contador de QRs enviados desde que o container subiu. Use sempre o de número mais
   alto.
-- **Phone Number**: o `PHONE_NUMBER` com os dígitos do meio mascarados.
-- **Generated At**: horário de geração (fuso `America/Sao_Paulo`).
+- **Número do telefone**: o `PHONE_NUMBER` com os dígitos do meio mascarados.
+- **Gerado em**: horário de geração (fuso `America/Sao_Paulo`).
 
 ## Troque o código anti-phishing
 

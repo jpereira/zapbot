@@ -101,7 +101,7 @@ async function alertPerEmail(event, details = '', { forcar: force = false } = {}
 
         const nowAlt = Date.now();
         if (!force && nowAlt - (lastAlertEmail.get(event) ?? 0) < ALERT_EMAIL_INTERVAL_MS) {
-            printInfo(`Alerta por e-mail '${event}' não enviado: repetido em menos de 5 minutos.`);
+            printInfo(t('email.logAlertaRepetido', { evento: event }));
             return;
         }
         lastAlertEmail.set(event, nowAlt);
@@ -114,7 +114,7 @@ async function alertPerEmail(event, details = '', { forcar: force = false } = {}
             [t('email.versao'), versionWithCommit()],
             ['🖥️ Host', os.hostname()],
             [t('email.noAr'), getBotUptime(BOT_START_TIME)],
-            ['🛡️ Anti-Phishing Code', process.env.QRCODE_EMAIL_SMTP_ANTIPHISHING || '-']
+            [`🛡️ ${t('email.antiPhishing')}`, process.env.QRCODE_EMAIL_SMTP_ANTIPHISHING || '-']
         ];
 
         await transporter.sendMail({
@@ -131,9 +131,9 @@ async function alertPerEmail(event, details = '', { forcar: force = false } = {}
             `
         });
 
-        printInfo(`Alerta por e-mail enviado: ${event}`);
+        printInfo(t('email.logAlertaEnviado', { evento: event }));
     } catch (err) {
-        printError(`Alerta por e-mail '${event}' falhou:`, err.message);
+        printError(t('email.logAlertaFalhou', { evento: event }), err.message);
     }
 }
 
@@ -155,11 +155,11 @@ async function sendEmail({ para, assunto: subject, texto: textAlt, anexos: attac
         from: process.env.QRCODE_EMAIL_SMTP_FROM || process.env.QRCODE_EMAIL_SMTP_USER,
         to: para.join(', '),
         subject: `[ZapBot] ${subject}`,
-        text: `${textAlt}\n\n🛡️ Anti-Phishing Code: ${antiPhishing}`,
+        text: `${textAlt}\n\n🛡️ ${t('email.antiPhishing')}: ${antiPhishing}`,
         ...(attachments.length ? { attachments: attachments } : {})
     });
 
-    printInfo(`E-mail '${subject}' enviado para ${para.join(', ')}`);
+    printInfo(t('email.logEnviado', { assunto: subject, para: para.join(', ') }));
 }
 
 // A file as an attachment (e.g.: /backup -send)
