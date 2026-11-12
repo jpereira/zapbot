@@ -266,7 +266,7 @@ async function edit(original, newText, { antigo: oldAlt2 = original.body, editad
 
 /**
  * whatsapp-web.js 'vote_update' event: `voter` chose `opcoes` (list
- * empty = withdrew the vote) in the `enquete` poll (the /enquete send or a
+ * empty = withdrew the vote) in the `enquete` poll (the /poll send or a
  * message with pollName/pollOptions/id).
  */
 async function voteAlt(pollAlt, voter, optionsAlt, { quando: when = Date.now() } = {}) {

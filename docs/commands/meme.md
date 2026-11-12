@@ -1,11 +1,11 @@
 # `/meme`
 
-Template de meme aleatório do [imgflip](https://imgflip.com/), opcionalmente filtrado pelo nome
-(`/meme drake`). A imagem vem com o nome do template na legenda.
+Random meme template from [imgflip](https://imgflip.com/), optionally filtered by name
+(`/meme drake`). The image comes with the template name as the caption.
 
 ```text
-/meme           → um template qualquer
-/meme drake     → um com "drake" no nome
+/meme           → any template
+/meme drake     → one with "drake" in the name
 ```
 
 ```text
@@ -14,5 +14,5 @@ Template de meme aleatório do [imgflip](https://imgflip.com/), opcionalmente fi
 🖼️ Drake Hotline Bling
 ```
 
-Sem nenhum template com o nome pedido, o bot responde `❌ Nenhum meme com "<busca>".`; se o imgflip
-não responder, `❌ Não consegui buscar um meme agora.`
+With no template matching the requested name, the bot replies `❌ Nenhum meme com "<busca>".`; if
+imgflip doesn't respond, `❌ Não consegui buscar um meme agora.`

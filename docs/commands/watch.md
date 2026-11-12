@@ -1,75 +1,76 @@
-# `/watch` · admin
+# `/watch` (`/vigiar`) · admin
 
-Vigia mensagens recebidas que casam com regras de texto ou regex e envia avisos ao seu privado ou
-aos destinos de cada regra. Sem parâmetros, lista as regras e, quando há matches, acrescenta as
-ocorrências mais recentes. `/watch -10` mostra os últimos dez matches de todas as regras, limitado
-pelo setting `watch.showMax`.
+Watches incoming messages that match text or regex rules and sends notices to your private chat or
+to each rule's destinations. With no parameters, it lists the rules and, when there are matches,
+adds the most recent hits. `/watch -10` shows the last ten matches of all rules, capped by the
+`watch.showMax` setting.
 
-![Demonstração do /watch](../assets/demo/10-watch.gif)
+![/watch demo](../assets/demo/10-watch.gif)
 
 ```text
-/watch /Defesa.*Civil/i                → cria uma regra (regex)
-/watch /pix/i -in /Jorge Pereira/      → só nas mensagens do Jorge
-/watch /chuva/i -in /Defesa Civil/     → só nas publicações do canal
-/watch promoção -to /Grupo Ofertas/    → avisa no grupo, não no privado
-/watch                                 → as regras e os últimos matches
-/watch -10                             → os 10 últimos matches
-/watch -s 3                            → os matches da regra #3, completos
-/watch -s /Jorge/                      → o mesmo, pela regra
-/watch -s /Jorge/ -q "carro"           → só os que têm "carro"
-/watch -s 3 -q /carr(o|ão)/i           → só os que casam com a regex
-/watch -s 3 -to /Jorge Pereira/        → troca os destinos da regra #3
-/watch -rm 3                          → remove a regra #3
-/watch -flush /Jorge/                  → limpa as ocorrências da /Jorge/
-/watch -mask 3                         → 🔒 liga o mask na regra #3 (avisos com telefone ofuscado)
-/watch -umask 3                        → desliga o 🔒 da regra #3
+/watch /Defesa.*Civil/i                → creates a rule (regex)
+/watch /pix/i -in /Jorge Pereira/      → only in Jorge's messages
+/watch /chuva/i -in /Defesa Civil/     → only in the channel's posts
+/watch promoção -to /Grupo Ofertas/    → notifies in the group, not in your private chat
+/watch                                 → the rules and the latest matches
+/watch -10                             → the last 10 matches
+/watch -s 3                            → the matches of rule #3, in full
+/watch -s /Jorge/                      → the same, by rule
+/watch -s /Jorge/ -q "carro"           → only the ones with "carro"
+/watch -s 3 -q /carr(o|ão)/i           → only the ones that match the regex
+/watch -s 3 -to /Jorge Pereira/        → changes the destinations of rule #3
+/watch -rm 3                          → removes rule #3
+/watch -flush /Jorge/                  → clears the hits of /Jorge/
+/watch -mask 3                         → 🔒 turns on mask for rule #3 (notices with obfuscated phone)
+/watch -umask 3                        → turns off the 🔒 of rule #3
 ```
-Uma regra sem `-in` vale em qualquer lugar. Com `-in`, você escolhe a origem:
+A rule without `-in` applies everywhere. With `-in`, you choose the source:
 
-- **Contato:** testa mensagens desse remetente, em privados, grupos e status. Aceita o nome, uma
-  menção real do WhatsApp ou o telefone com DDI.
-- **Grupo:** testa mensagens recebidas somente naquele grupo.
-- **Canal:** testa publicações daquele `@newsletter`. Aceita o nome ou o ID do canal.
+- **Contact:** tests messages from that sender, in private chats, groups and status. Accepts the
+  name, a real WhatsApp mention or the phone with country code.
+- **Group:** tests messages received only in that group.
+- **Channel:** tests posts from that `@newsletter`. Accepts the channel name or ID.
 
-Nomes com espaços ficam entre barras ou aspas (`/Jorge Pereira/`, `"Grupo Ofertas"`). Se houver
-vários resultados, o bot apresenta uma lista para escolher. E-mail não é uma origem aceita. A origem
-fica guardada com a regra e sobrevive a reinícios.
+Names with spaces go between slashes or quotes (`/Jorge Pereira/`, `"Grupo Ofertas"`). If there are
+several results, the bot presents a list to choose from. Email isn't an accepted source. The source
+is stored with the rule and survives restarts.
 
-Tipos de regra:
+Rule types:
 
-- **Texto:** casa se a mensagem contém o texto, sem diferenciar maiúsculas nem acentos.
-- **`/regex/flags`:** expressão regular JavaScript, com espaços e escapes preservados. As flags `g`
-  e `y` são ignoradas na detecção, para cada mensagem ser avaliada independentemente. Regex com risco
-  de travar o bot (quantificador sobre um grupo que já se repete, como `(x+)+`) é recusada: como ela
-  é testada contra toda mensagem recebida, um backtracking exponencial congelaria o bot inteiro.
+- **Text:** matches if the message contains the text, ignoring case and accents.
+- **`/regex/flags`:** JavaScript regular expression, with spaces and escapes preserved. The `g`
+  and `y` flags are ignored in detection, so each message is evaluated independently. A regex that
+  risks hanging the bot (a quantifier over a group that already repeats, like `(x+)+`) is refused:
+  since it's tested against every incoming message, exponential backtracking would freeze the whole
+  bot.
 
-As regras são testadas contra o texto original da mensagem. Nos avisos e no histórico, menções como
-`@100000000000001` aparecem com o nome do contato quando ele pode ser resolvido.
+Rules are tested against the original message text. In notices and in the history, mentions like
+`@100000000000001` appear with the contact's name when it can be resolved.
 
-| Opção | Valor | Descrição |
+| Option | Value | Description |
 |---|---|---|
-| *(nenhuma)* | | Lista regras, origens, destinos e contagens; acrescenta os matches recentes quando houver |
-| `-N` | | Quantidade de matches recentes, de todas as regras. Ex.: `/watch -10` |
-| `-list`, `-l` | | Lista somente as regras, origens, destinos e contagens |
-| `-show`, `-s` | `[N\|regra]` | Mostra os textos completos dos matches da regra N (ou da regra pelo texto); sem N, de todas. `-N` controla a quantidade |
-| `-query`, `-q` | `<texto\|/regex/flags>` | Só os matches que têm o texto (sem diferenciar maiúsculas nem acentos) ou que casam com a regex. Com `-s` ou na listagem. Veja [Buscar](#buscar) |
-| `-in` | `<origem>` | Restringe uma regra nova a contato, grupo ou canal |
-| `-rm`, `-r` | `N\|regra` | Remove a regra N (ou a regra pelo texto), suas ocorrências, origem e destinos; as seguintes são renumeradas |
-| `-flush`, `-f` | `[N\|regra]` | Apaga as ocorrências da regra N (ou da regra pelo texto); sem N, de todas. Mantém regras, origens e destinos |
-| `-to` | `<destino\|off>` | Define onde os avisos serão enviados, ao criar a regra ou com `-s N`. Repita para vários destinos; `off` volta ao seu privado |
-| `-mask`, `-m` | `[N]` | Sem N, ofusca telefones só na saída desta execução. Com N, liga o 🔒 da regra N (veja [Mask nos avisos](#mask-nos-avisos)). Ex.: `+55219****44` |
-| `-umask`, `-u` | `N` | Desliga o 🔒 da regra N |
+| *(none)* | | Lists rules, sources, destinations and counts; adds recent matches when there are any |
+| `-N` | | Number of recent matches, across all rules. E.g.: `/watch -10` |
+| `-list`, `-l` | | Lists only the rules, sources, destinations and counts |
+| `-show`, `-s` | `[N\|regra]` | Shows the full texts of the matches of rule N (or of the rule by its text); without N, of all. `-N` controls the quantity |
+| `-query`, `-q` | `<texto\|/regex/flags>` | Only the matches that contain the text (ignoring case and accents) or that match the regex. With `-s` or in the listing. See [Search](#search) |
+| `-in` | `<origem>` | Restricts a new rule to a contact, group or channel |
+| `-rm`, `-r` | `N\|regra` | Removes rule N (or the rule by its text), its hits, source and destinations; the following ones are renumbered |
+| `-flush`, `-f` | `[N\|regra]` | Deletes the hits of rule N (or of the rule by its text); without N, of all. Keeps rules, sources and destinations |
+| `-to` | `<destino\|off>` | Sets where the notices will be sent, when creating the rule or with `-s N`. Repeat for several destinations; `off` goes back to your private chat |
+| `-mask`, `-m` | `[N]` | Without N, obfuscates phones only in this run's output. With N, turns on the 🔒 of rule N (see [Mask in notices](#mask-in-notices)). E.g.: `+55219****44` |
+| `-umask`, `-u` | `N` | Turns off the 🔒 of rule N |
 
-Use `/watch -s 3 -mask` para ver os matches com telefones ofuscados, mantendo os cinco primeiros e
-os dois últimos dígitos. As regras, os destinos e as ocorrências ficam guardados completos. Sem o
-número da regra, a máscara vale só para aquela execução.
+Use `/watch -s 3 -mask` to see the matches with obfuscated phones, keeping the first five and
+the last two digits. Rules, destinations and hits are stored in full. Without the rule
+number, the mask applies only to that run.
 
-## Mask nos avisos
+## Mask in notices
 
-Com `/watch -mask 3` a regra #3 ganha um 🔒 na listagem, e a partir daí os avisos dela saem com os
-telefones ofuscados (o mesmo formato do `-mask`, `+55219****44`), seja no seu privado, nos `-to` ou
-por e-mail. O `-s` e a listagem de ocorrências dessa regra também saem ofuscados. `/watch -umask 3`
-tira o 🔒.
+With `/watch -mask 3`, rule #3 gets a 🔒 in the listing, and from then on its notices go out with
+obfuscated phones (the same format as `-mask`, `+55219****44`), whether in your private chat, in
+the `-to` destinations or by email. `-s` and the hits listing of that rule also come out obfuscated.
+`/watch -umask 3` removes the 🔒.
 
 ```text
 👀 WATCH: REGRAS (3/20)
@@ -79,25 +80,25 @@ tira o 🔒.
 #3  /(tcpro|tc pro)/i  (5) 🔒
 ```
 
-- Ao criar a regra, o `-mask` já liga o 🔒: `/watch /(tcpro|tc pro)/i -mask`.
-- É por regra: as que você já tem continuam como estão (sem 🔒) até você ligar.
-- Vale para o aviso inteiro: o número do remetente, o texto da mensagem e a regra. Se um mesmo
-  aviso juntar uma regra com 🔒 e outra sem, ele sai ofuscado.
-- O mask é só na apresentação: as ocorrências ficam guardadas completas no banco.
-- O 🔒 é guardado com o texto da regra. Remover a regra pelo `-rm` tira o 🔒 também.
+- When creating the rule, `-mask` already turns on the 🔒: `/watch /(tcpro|tc pro)/i -mask`.
+- It's per rule: the ones you already have stay as they are (no 🔒) until you turn it on.
+- It applies to the whole notice: the sender's number, the message text and the rule. If a single
+  notice combines a rule with 🔒 and one without, it comes out obfuscated.
+- The mask is presentation only: hits are stored in full in the database.
+- The 🔒 is stored with the rule text. Removing the rule with `-rm` removes the 🔒 too.
 
-## Listar e consultar
+## List and query
 
-Os números positivos após `-s`, `-rm` e `-flush` identificam **regras**, conforme a listagem. O
-número com hífen `-N` é a quantidade de matches a exibir. A listagem normal resume os textos; `-s`
-mostra os textos completos. A ordem é da ocorrência mais recente para a mais antiga.
+The positive numbers after `-s`, `-rm` and `-flush` identify **rules**, as in the listing. The
+hyphenated number `-N` is the number of matches to display. The normal listing summarizes the texts;
+`-s` shows the full texts. The order is from the most recent hit to the oldest.
 
-No lugar do número, `-s`, `-rm` e `-flush` aceitam a própria regra, como aparece no `/watch -l`:
-`/watch -s /Jorge/` é o mesmo que `/watch -s 3` quando a regra #3 é `/Jorge/`. Vale a regra
-inteira, sem diferenciar maiúsculas nem acentos, ou um trecho que esteja em uma só regra
-(`/watch -s Sportiva`). Se o trecho estiver em mais de uma, o bot lista as regras que casam.
+In place of the number, `-s`, `-rm` and `-flush` accept the rule itself, as it appears in `/watch -l`:
+`/watch -s /Jorge/` is the same as `/watch -s 3` when rule #3 is `/Jorge/`. The whole rule works,
+ignoring case and accents, or a fragment that's in only one rule
+(`/watch -s Sportiva`). If the fragment is in more than one, the bot lists the rules that match.
 
-Uma listagem, com as dicas no fim, uma por linha:
+A listing, with the tips at the end, one per line:
 
 ```text
 👀 WATCH: REGRAS (2/20)
@@ -120,15 +121,15 @@ Uma listagem, com as dicas no fim, uma por linha:
 /watch -f N limpa as ocorrências.
 ```
 
-## Buscar
+## Search
 
-O `-q <texto>` filtra os matches pelo corpo da mensagem, sem diferenciar maiúsculas nem acentos.
-Com espaços, vai entre aspas (`-q "bom dia"`). Funciona com o `-s` (de uma regra ou, sem N, de
-todas) e na listagem (`/watch -q carro`). O total conta só os que casam, e o `-N` limita quantos
-são exibidos. Não combina com `-l`, `-rm`, `-flush` nem com uma regra nova.
+`-q <text>` filters the matches by the message body, ignoring case and accents.
+With spaces, put it in quotes (`-q "bom dia"`). It works with `-s` (of one rule or, without N, of
+all) and in the listing (`/watch -q carro`). The total counts only the ones that match, and `-N`
+limits how many are displayed. It can't be combined with `-l`, `-rm`, `-flush` or a new rule.
 
-Com barras, é uma regex com flags, como nas regras (`-q /carr(o|ão)/i`): testa o texto como veio,
-então, sem a flag `i`, diferencia maiúsculas, e os acentos contam.
+With slashes, it's a regex with flags, as in rules (`-q /carr(o|ão)/i`): it tests the text as it
+came, so, without the `i` flag, it's case sensitive, and accents count.
 
 ```text
 /watch -s /Jorge/ -q "carro"
@@ -142,11 +143,11 @@ então, sem a flag `i`, diferencia maiúsculas, e os acentos contam.
     💬 "Jorge vendeu o carro"
 ```
 
-## Avisar em outro lugar
+## Notify somewhere else
 
-O `-in` escolhe **onde detectar**; o `-to` escolhe **onde avisar**. Destinos aceitam contato, grupo,
-número, menção ou e-mail, como nos outros comandos
-([Destinos](index.md#destinos-contato-grupo-número-ou-e-mail)).
+`-in` chooses **where to detect**; `-to` chooses **where to notify**. Destinations accept a contact,
+group, number, mention or email, as in the other commands
+([Destinations](index.md#destinations-contact-group-number-or-email)).
 
 ```text
 /watch /vaga de emprego/i -in /Grupo Trabalho/ -to /Grupo Carreira/ -to email
@@ -155,30 +156,30 @@ número, menção ou e-mail, como nos outros comandos
 /watch -s 1 -to off
 ```
 
-E-mail exige SMTP configurado; `email` usa `QRCODE_EMAIL_SMTP_TO`. Uma ocorrência gera um aviso por
-destino, reunindo as regras que casaram para aquele destino.
+Email requires SMTP to be configured; `email` uses `QRCODE_EMAIL_SMTP_TO`. A hit generates one
+notice per destination, gathering the rules that matched for that destination.
 
-## Silenciados no `/mute`
+## Muted in `/mute`
 
-Pessoas e grupos silenciados no [`/mute`](mute.md), em qualquer tipo, não geram aviso no seu
-privado. A ocorrência continua sendo gravada (aparece no `/watch -N`), e as regras com `-to`
-continuam avisando nos seus destinos. Cada aviso cortado conta nas ignoradas do `/mute` e do
-`/bot -status`, como `watch`.
+People and groups muted in [`/mute`](mute.md), of any type, don't generate a notice in your
+private chat. The hit is still recorded (it shows up in `/watch -N`), and rules with `-to`
+still notify their destinations. Each suppressed notice counts toward the ignored ones in `/mute`
+and `/bot -status`, as `watch`.
 
-## Detalhes
+## Details
 
-As mensagens da própria conta e os comandos reconhecidos ficam fora da detecção. A mesma mensagem
-não gera dois avisos para a mesma regra. As regras ficam em `watch.rules`, com máximo definido por
-`watch.max`; as ocorrências são retidas por `watch.hitsRetentionDays` ou até um `/watch -flush`. As
-respostas saem no chat onde o comando foi digitado.
+The account's own messages and recognized commands are left out of detection. The same message
+doesn't generate two notices for the same rule. Rules are stored in `watch.rules`, with a maximum
+set by `watch.max`; hits are retained for `watch.hitsRetentionDays` or until a `/watch -flush`. The
+replies go to the chat where the command was typed.
 
-Miniaturas de localização ficam fora das regras de texto e regex. A localização e suas
-coordenadas continuam guardadas no cache; recebê-la não executa comandos.
+Location thumbnails are left out of the text and regex rules. The location and its
+coordinates are still stored in the cache; receiving it doesn't run commands.
 
-Em status e transmissões (`@broadcast`), o remetente é identificado pelo autor da mensagem. Um
-`@lid` é convertido para telefone quando o WhatsApp fornece a correspondência. Sem ela, o número
-fica indisponível; sem autor, o nome aparece como `Desconhecido`.
+In status and broadcasts (`@broadcast`), the sender is identified by the message author. A
+`@lid` is converted to a phone number when WhatsApp provides the mapping. Without it, the number
+is unavailable; with no author, the name shows as `Desconhecido`.
 
-Publicações de canais (`@newsletter`) aparecem com `📰 Canal: <nome>` nos avisos; o histórico usa 📰 e
-o nome do canal. Canais não exibem nome nem telefone de contato. Quando o canal não pode ser
-consultado, o histórico usa o nome salvo.
+Channel posts (`@newsletter`) appear with `📰 Canal: <nome>` in notices; the history uses 📰 and
+the channel name. Channels don't show a contact name or phone. When the channel can't be
+queried, the history uses the saved name.

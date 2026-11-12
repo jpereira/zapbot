@@ -1,8 +1,8 @@
 # `/alias` · admin
 
-Salva atalhos no banco do bot: para um comando com argumentos ou para um texto com vários
-`{/comando}`, como no [`/cron`](cron.md#comandos-no-texto). O dono e os admins cadastram e removem
-aliases. Quem executa um atalho precisa ter permissão para os comandos de destino.
+Saves shortcuts in the bot's database: for a command with arguments or for a text with several
+`{/comando}`, as in [`/cron`](cron.md#commands-in-the-text). The owner and admins register and remove
+aliases. Whoever runs a shortcut needs permission for the target commands.
 
 ```text
 /alias <nome> [-quiet|-q] [-desc|-d "Descrição"] </comando argumentos>
@@ -13,20 +13,20 @@ aliases. Quem executa um atalho precisa ter permissão para os comandos de desti
 /alias -rm <nome...|all>
 ```
 
-| Opção | Valor | Descrição |
+| Option | Value | Description |
 |---|---|---|
-| `-quiet`, `-q` | | Ao executar, omite o cabeçalho `🔗 Alias ...`; vale antes ou depois do nome |
-| `-desc`, `-d` | `<texto>` | Descrição opcional entre aspas, antes do comando ou do texto; sem comando, atualiza só a descrição de um alias existente |
-| `-list`, `-l` | | Lista os aliases; o mesmo que `/alias` sem argumentos |
-| `-move`, `-m` | `<nome atual> <novo nome>` | Renomeia um alias, mantendo comando, descrição e quiet; o novo nome não pode existir |
-| `-rm` | `<nome...\|all>` | Remove um ou mais aliases (separados por espaço ou vírgula), com ou sem `/`; `all` remove todos |
+| `-quiet`, `-q` | | When running, omits the `🔗 Alias ...` header; works before or after the name |
+| `-desc`, `-d` | `<text>` | Optional description in quotes, before the command or the text; without a command, updates only the description of an existing alias |
+| `-list`, `-l` | | Lists the aliases; same as `/alias` without arguments |
+| `-move`, `-m` | `<current name> <new name>` | Renames an alias, keeping command, description and quiet; the new name can't exist |
+| `-rm` | `<name...\|all>` | Removes one or more aliases (separated by space or comma), with or without `/`; `all` removes all of them |
 
 ```text
-/alias /eita -desc "Meu teste para dólar" /cotacao USD
+/alias /eita -desc "Meu teste para dólar" /rates USD
 /alias /nome /crypto USD
-/alias /eita2 /cotacao EUR
-/alias eita3 /cotacao USDT
-/alias dimdim -desc “Exibe Dinheiro" /cotacao
+/alias /eita2 /rates EUR
+/alias eita3 /rates USDT
+/alias dimdim -desc “Exibe Dinheiro" /rates
 /alias -l
 /eita
 /eita2
@@ -39,85 +39,87 @@ aliases. Quem executa um atalho precisa ter permissão para os comandos de desti
 /alias -rm all
 ```
 
-O nome aceita letras, números, `_`, `-` e `.` (`/alias meu.comando /me Olá`), com ou sem a barra no cadastro e na remoção. Para
-executar, use a barra: `/eita`. Cadastrar novamente o mesmo nome substitui seu comando e sua
-descrição. Sem `-desc`, a descrição fica vazia. A descrição aceita aspas retas ou curvas,
-inclusive misturadas, como `-desc “Exibe Dinheiro"`.
+The name accepts letters, numbers, `_`, `-` and `.` (`/alias meu.comando /me Olá`), with or without
+the slash on registration and removal. To run it, use the slash: `/eita`. Registering the same name
+again replaces its command and its description. Without `-desc`, the description is empty. The
+description accepts straight or curly quotes, even mixed, like `-desc “Exibe Dinheiro"`.
 
-No alias de comando, o destino deve ser um comando ativo do bot, inclusive seus aliases fixos. Não pode ser `/alias` nem outro atalho
-cadastrado. Nomes de comandos do bot são reservados, mesmo quando estão desativados. O nome `all` também é reservado e não pode ser cadastrado. Argumentos, aspas
-e opções do destino são preservados.
+In a command alias, the target must be an active bot command, including its fixed aliases. It can't
+be `/alias` or another registered shortcut. Bot command names are reserved, even when they're
+disabled. The name `all` is also reserved and can't be registered. The target's arguments, quotes
+and options are preserved.
 
-Argumentos digitados ao executar são acrescentados ao final do comando salvo:
+Arguments typed when running are appended to the end of the saved command:
 
 ```text
-/alias /dolar /cotacao USD
-/dolar -h                    → ajuda do /cotacao
+/alias /dolar /rates USD
+/dolar -h                    → /rates help
 ```
 
-### Parâmetros `$1`, `$N`
+### Parameters `$1`, `$N`
 
-No alias de comando, `$1`, `$2`... pegam os argumentos digitados ao executar, na ordem. Os usados
-saem da lista; os que sobram continuam indo para o fim do comando. Um `$N` sem argumento fica vazio,
-a não ser que tenha um valor padrão: `${N:-valor}`.
+In a command alias, `$1`, `$2`... take the arguments typed when running, in order. The ones used
+leave the list; the leftovers still go to the end of the command. A `$N` without an argument is
+empty, unless it has a default value: `${N:-valor}`.
 
 ```text
 /alias /rec /sticker -ss $1 -es $2
 /rec 10 20 http://minhaurl/foo   → /sticker -ss 10 -es 20 http://minhaurl/foo
 
-/alias /dolar /cotacao ${1:-USD}
-/dolar                           → /cotacao USD
-/dolar EUR                       → /cotacao EUR
+/alias /dolar /rates ${1:-USD}
+/dolar                           → /rates USD
+/dolar EUR                       → /rates EUR
 ```
 
-Com `$N`, o que sobra dos argumentos vai para o fim do comando separado por um espaço, então as
-quebras de linha do texto viram espaço. Sem `$N`, o texto vai como foi digitado, quebras de linha
-inclusas. Para executar vários atalhos de uma vez, veja o [`/batch`](batch.md).
+With `$N`, what's left of the arguments goes to the end of the command separated by a space, so the
+text's line breaks become spaces. Without `$N`, the text goes as typed, line breaks included. To run
+several shortcuts at once, see [`/batch`](batch.md).
 
-As permissões, o controle de repetição e a desativação de comandos são os do comando de destino.
-Quem pode usar o `/gpt` (ex.: `/bot +u +cmd /gpt`) usa também todo atalho para ele, sem liberar o
-atalho à parte; o `/bot +cmd` não aceita o nome de um atalho, só de comandos. Num atalho de texto,
-a pessoa precisa poder todos os `{/comando}`.
-O `/help alias` lista os atalhos que você pode executar, com a descrição e o comando salvo.
-O `/alias -h` ou `/alias -help` mostra a ajuda de cadastro. O `/alias` sem argumentos ou com
-`-list`/`-l` lista todos os atalhos cadastrados, inclusive os de comandos desativados.
+Permissions, repeat control and command disabling are those of the target command. Whoever can use
+`/gpt` (e.g., `/bot +u +cmd /gpt`) also uses every shortcut to it, without needing the shortcut to
+be enabled separately; `/bot +cmd` doesn't accept a shortcut's name, only commands. In a text
+shortcut, the person needs to be allowed every `{/comando}`.
+`/help alias` lists the shortcuts you can run, with the description and the saved command.
+`/alias -h` or `/alias -help` shows the registration help. `/alias` without arguments or with
+`-list`/`-l` lists all the registered shortcuts, including those of disabled commands.
 
-Antes de executar um alias, o bot imprime o nome do atalho e o comando que será chamado,
-incluindo os argumentos adicionais. Por exemplo:
+Before running an alias, the bot prints the shortcut's name and the command that will be called,
+including any additional arguments. For example:
 
 ```text
-/alias /dimdim -desc "Exibe o preço do dólar" /cotacao USD
+/alias /dimdim -desc "Exibe o preço do dólar" /rates USD
 /dimdim
 ```
 
-O bot responde com o aviso abaixo e depois com o resultado de `/cotacao USD`:
+The bot replies with the notice below and then with the result of `/rates USD`:
 
 ```text
-🔗 Alias /dimdim -> /cotacao USD
+🔗 Alias /dimdim -> /rates USD
 ```
 
-Com `-quiet` (ou `-q`), o cabeçalho não é impresso e só o resultado aparece:
+With `-quiet` (or `-q`), the header isn't printed and only the result shows up:
 
 ```text
 /alias -q /haha /me Hahahahahahhahahaha vc e burro!
 /haha  → Hahahahahahhahahaha vc e burro!
 ```
 
-## Texto com comandos
+## Text with commands
 
-Quando o que vem depois do nome (e da descrição) não começa com `/`, o alias guarda um texto. Cada
-`{/comando args}` dele roda na hora em que o alias é chamado, e a resposta entra no lugar, como nos
-[comandos no texto do `/cron`](cron.md#comandos-no-texto). Sai uma mensagem só, com todas as
-respostas. Um `\n` digitado vira uma quebra de linha, e os espaços em volta dele são removidos.
+When what comes after the name (and the description) doesn't start with `/`, the alias stores a
+text. Each `{/comando args}` in it runs at the moment the alias is called, and the reply goes in
+its place, as in the [`/cron` commands in the text](cron.md#commands-in-the-text). A single message
+comes out, with all the replies. A typed `\n` becomes a line break, and the spaces around it are
+removed.
 
 ```text
 /alias nome2 Verificando Orca {/defi orca}\n Verificando Prjx {/defi prjx}
-/alias bomdia -d "Resumo da manhã" Bom dia! ☀️ {/tempo Recife}\nCâmbio: {/cotacao USD EUR}\nCripto: {/crypto BTC ETH}
+/alias bomdia -d "Resumo da manhã" Bom dia! ☀️ {/weather Recife}\nCâmbio: {/rates USD EUR}\nCripto: {/crypto BTC ETH}
 /alias carteira {/defi orca}\n{/defi prjx}\n{/defi morpho}\n{/defi aave}
 /alias risco CVEs críticas: {/cve -highscore}
 ```
 
-O `/nome2` roda o `/defi orca` e o `/defi prjx` e responde:
+`/nome2` runs `/defi orca` and `/defi prjx` and replies:
 
 ```text
 🔗 Alias /nome2 -> /defi orca, /defi prjx
@@ -135,15 +137,15 @@ Verificando Prjx
    ...
 ```
 
-- Os comandos rodam no chat em que o alias foi chamado, com as permissões de quem chamou. Se a
-  pessoa não puder usar algum deles, o alias inteiro não roda: um comando só do dono, como o
-  `/defi`, faz o alias ser ignorado em silêncio, e um comando fora da regra dela (`/bot -cmd`) mostra
-  o aviso do limite. O `/help alias` só lista os aliases em que ela pode usar todos os comandos.
-- Rodam os mesmos comandos de consulta do `/cron` (`/cotacao`, `/crypto`, `/cve`, `/defi`,
-  `/tempo`...), sem as opções que mudam algo, como o `-add` do `/crypto`. Eles são conferidos no
-  cadastro: um que não existe ou que não roda no texto dá erro na hora.
-- Uma resposta de várias linhas vira um parágrafo, com uma linha em branco antes e depois; uma de
-  uma linha só fica na frase. Mídias (`/meme`, `/giphy`) saem depois do texto.
-- Argumentos digitados ao chamar um alias de texto são ignorados.
-- O texto precisa de pelo menos um `{/comando}`; sem nenhum, o cadastro é recusado.
-- O `{/comando}` pode ser outro alias de comando (com `$N`), mas não um alias de texto.
+- The commands run in the chat where the alias was called, with the permissions of whoever called
+  it. If the person can't use one of them, the whole alias doesn't run: an owner-only command, like
+  `/defi`, makes the alias be silently ignored, and a command outside their rule (`/bot -cmd`) shows
+  the limit notice. `/help alias` only lists the aliases in which they can use all the commands.
+- The same query commands as `/cron` run (`/rates`, `/crypto`, `/cve`, `/defi`, `/weather`...),
+  without the options that change something, like `/crypto`'s `-add`. They're checked on
+  registration: one that doesn't exist or doesn't run in the text errors right away.
+- A multi-line reply becomes a paragraph, with a blank line before and after; a single-line one
+  stays in the sentence. Media (`/meme`, `/giphy`) comes out after the text.
+- Arguments typed when calling a text alias are ignored.
+- The text needs at least one `{/comando}`; without any, the registration is refused.
+- The `{/comando}` can be another command alias (with `$N`), but not a text alias.

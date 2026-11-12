@@ -126,7 +126,8 @@ fi
 
 re() { printf '%s' "${1//./\\.}"; }
 A="$(re "$atual")"
-hoje="$(date +%d/%m/%Y)"
+hoje="$(date +%d/%m/%Y)"          # docs em português: "(de DD/MM/AAAA)"
+today_iso="$(date +%Y-%m-%d)"     # docs em inglês: "(from AAAA-MM-DD)"
 
 # The stable version: the vX.Y.Z right after a backtick, "checkout " or "versão: "
 # (the "Node.js: v24.9.0" of /bot -info, for example, stays as is)
@@ -136,6 +137,7 @@ STABLE_BEFORE='(?:(?<=`)|(?<=checkout )|(?<=versão: ))'
 CODE_RELEASE="
     s#${STABLE_BEFORE}v[0-9]+\\.[0-9]+\\.[0-9]+(?![0-9.])#v${atual}#g;
     s|(v${A}\`? \\(de )\\d{2}/\\d{2}/\\d{4}|\${1}${hoje}|g;
+    s|(v${A}\`? \\(from )\\d{4}-\\d{2}-\\d{2}|\${1}${today_iso}|g;
     s#(?<![-\\d./])${A} \\(devel\\) \\(git\\+([0-9a-f]+)/HEAD\\)#${atual} (git+\${1}/v${atual})#g;
     s#(?<![-\\d./])${A} \\(devel\\)#${atual}#g;"
 

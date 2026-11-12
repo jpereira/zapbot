@@ -268,11 +268,29 @@ describe('comando desconhecido', () => {
     });
 });
 
+describe('nomes em inglês e aliases fixos em português', () => {
+    test('/draw, /weather, /everybody, /bills, /rates e /translate respondem também pelos nomes em português', async () => {
+        const pairs = [['/draw', '/desenhe'], ['/weather', '/tempo'], ['/everybody', '/todos'], ['/bills', '/boletos'],
+            ['/rates', '/cotacao'], ['/translate', '/traduzir']];
+        for (const [freshAlt, oldAlt2] of pairs) {
+            const help = await bot.replyAlt(`${freshAlt} -h`);
+            assert.ok(help[0].includes(`Uso: ${freshAlt}`), `${freshAlt} -h`);
+            assert.deepEqual(await bot.replyAlt(`${oldAlt2} -h`), help, `${oldAlt2} é alias de ${freshAlt}`);
+        }
+        // And the start of the alias also completes (/temp was the start of /tempo)
+        assert.deepEqual(await bot.replyAlt('/temp -h'), await bot.replyAlt('/weather -h'));
+    });
+
+    test('quem tinha o nome antigo nos settings passa para o novo (commands.disabled e bot.users.cmds)', async () => {
+        assert.deepEqual(await bot.setSetting('commands.disabled', ['/tempo', '/boletos']), ['/weather', '/bills']);
+    });
+});
+
 describe('permissões', () => {
     test('comandos comuns: exigem liberação e oferecem ajuda aos usuários +u', async () => {
         const common = [
-            'boletos', 'cotacao', 'crypto', 'cve', 'get', 'giphy', 'help', 'joke', 'kernel',
-            'meme', 'news', 'noffa', 'ping', 'pixelart', 'sticker', 'tempo', 'traduzir',
+            'bills', 'rates', 'crypto', 'cve', 'get', 'giphy', 'help', 'joke', 'kernel',
+            'meme', 'news', 'noffa', 'ping', 'pixelart', 'sticker', 'weather', 'translate',
             'uptime', 'version', 'whois'
         ];
         await bot.setSetting('bot.users', false);
@@ -292,7 +310,7 @@ describe('permissões', () => {
     test('comandos comuns aceitam limites por usuário; comandos admin continuam restritos', async () => {
         await bot.setSetting('bot.users', [OTHERAlt.user]);
         await bot.setSetting('bot.users.cmds', [
-            `${OTHERAlt.user}=/boletos,/news,/ping,/uptime,/version`
+            `${OTHERAlt.user}=/bills,/news,/ping,/uptime,/version`
         ]);
         assert.deepEqual(await bot.replyAlt('/ping', { de: OTHERAlt.jid }), ['pong']);
         assert.match((await bot.replyAlt('/noffa oi', { de: OTHERAlt.jid }))[0], /Limitado aos comandos:/);
@@ -321,8 +339,8 @@ describe('permissões', () => {
         await bot.setSetting('bot.users.cmds', [`${OTHERAlt.user}=!/ping`]);
         assert.match((await bot.replyAlt('/bot +cmd /gpt /Fulano/', { chat: OWNER.jid }))[0], /só entra numa lista "Apenas"/);
         assert.deepEqual(bot.getSetting('bot.users.cmds'), [`${OTHERAlt.user}=!/ping`]);
-        await bot.replyAlt('/bot +u +cmd /cotacao,/gpt /Fulano/', { chat: OWNER.jid });
-        assert.deepEqual(bot.getSetting('bot.users.cmds'), [`${OTHERAlt.user}=/cotacao,/gpt`]);
+        await bot.replyAlt('/bot +u +cmd /rates,/gpt /Fulano/', { chat: OWNER.jid });
+        assert.deepEqual(bot.getSetting('bot.users.cmds'), [`${OTHERAlt.user}=/rates,/gpt`]);
 
         // o +cmd recusa o owner
         assert.match((await bot.replyAlt('/bot +cmd /set +u /Fulano/', { chat: OWNER.jid }))[0], /não dá para liberar/);
@@ -417,7 +435,7 @@ describe('permissões', () => {
         assert.deepEqual(await bot.replyAlt('/debug', { de: OTHERAlt.jid }), ['🪲 Debug Desativado.'], 'bot.users false');
         assert.match((await bot.replyAlt('/bot'))[0], /\n🔒 \*Comandos:\* só o dono e os admins\n/);
         assert.deepEqual(await bot.replyAlt('/bot -list-users'), ['*Usuários* (1) neste grupo\n• 👑 +a · 👤 Fulano · +5521911111111' + CAPTION]);
-        assert.deepEqual(await bot.replyAlt('/cotacao -a gbp', { de: OTHERAlt.jid }), ['✅ 🇬🇧 GBP habilitada.']);
+        assert.deepEqual(await bot.replyAlt('/rates -a gbp', { de: OTHERAlt.jid }), ['✅ 🇬🇧 GBP habilitada.']);
 
         // Another person stays out
         const CICLANO = '5521922222222@c.us';
@@ -761,11 +779,11 @@ describe('permissões', () => {
 
         // Uses those on the list; another, the notice; /help (only with theirs) and /whois pass
         assert.equal((await bot.replyAlt('/noffa oi', DELE)).length, 1);
-        assert.deepEqual(await bot.replyAlt('/tempo', DELE), ['🚫 Limitado aos comandos: /noffa, /joke.']);
+        assert.deepEqual(await bot.replyAlt('/weather', DELE), ['🚫 Limitado aos comandos: /noffa, /joke.']);
         const [help] = await bot.replyAlt('/help', DELE);
         assert.match(help, /\n \/joke - /);
-        assert.doesNotMatch(help, /\n \/tempo - /);
-        assert.match((await bot.replyAlt('/help tempo', DELE))[0], /^⛔ O \/tempo não está liberado para você\./);
+        assert.doesNotMatch(help, /\n \/weather - /);
+        assert.match((await bot.replyAlt('/help tempo', DELE))[0], /^⛔ O \/weather não está liberado para você\./);
         assert.match((await bot.replyAlt('/whois', DELE))[0], /• 🗣️ \+u · 👤 Ciclano · \+5521922222222\n → Apenas: \/noffa, \/joke\n/);
 
         // +cmd adds; -cmd removes; the last one, no
@@ -781,14 +799,14 @@ describe('permissões', () => {
         assert.deepEqual(rules(), []);
         assert.deepEqual(await bot.replyAlt('/bot +cmd /noffa /Ciclano/', IN_PRIVATE),
             ['ℹ️ 👤 Ciclano · +5521922222222 já usa todos os comandos comuns.']);
-        assert.match((await bot.replyAlt('/bot -cmd /tempo /Ciclano/', IN_PRIVATE))[0], /✅\n → Todos, menos: \/tempo\n/);
+        assert.match((await bot.replyAlt('/bot -cmd /weather /Ciclano/', IN_PRIVATE))[0], /✅\n → Todos, menos: \/weather\n/);
         assert.equal((await bot.replyAlt('/noffa oi', DELE)).length, 1);
-        assert.deepEqual(await bot.replyAlt('/tempo', DELE), ['🚫 O /tempo não está liberado para você.']);
-        await bot.replyAlt('/bot +cmd /tempo /Ciclano/', IN_PRIVATE);
+        assert.deepEqual(await bot.replyAlt('/weather', DELE), ['🚫 O /weather não está liberado para você.']);
+        await bot.replyAlt('/bot +cmd /weather /Ciclano/', IN_PRIVATE);
         assert.deepEqual(rules(), [], 'liberar o único de fora: sem regra');
 
         // -u tira a regra junto
-        await bot.replyAlt('/bot -cmd /tempo /Ciclano/', IN_PRIVATE);
+        await bot.replyAlt('/bot -cmd /weather /Ciclano/', IN_PRIVATE);
         await bot.replyAlt('/bot -u /Ciclano/', IN_PRIVATE);
         assert.deepEqual([bot.getSetting('bot.users'), rules()], [[], []]);
 

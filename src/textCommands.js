@@ -163,7 +163,7 @@ async function runCommand(chatId, line, { chatName, isGroup, onde: whereAlt = '/
 }
 
 /*
- * Puts the reply in place of the mark. One of several lines (/crypto, /tempo...)
+ * Puts the reply in place of the mark. One of several lines (/crypto, /weather...)
  * becomes a paragraph: a blank line before and after it, so it does not stick to the
  * surrounding text. A single-line one stays in the middle of the sentence, as it came.
  */

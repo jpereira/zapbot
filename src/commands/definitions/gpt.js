@@ -22,7 +22,7 @@ module.exports = {
         {
             opts: ['img'],
             values: [],
-            desc: 'O mesmo do /desenhe: cria uma imagem com o pedido (v1/images, modelo openai.image.model) e responde com ela. Respondendo uma foto, a edita. Só o dono e os admins: gasta a sua conta da OpenAI.',
+            desc: 'O mesmo do /draw: cria uma imagem com o pedido (v1/images, modelo openai.image.model) e responde com ela. Respondendo uma foto, a edita. Só o dono e os admins: gasta a sua conta da OpenAI.',
             ex: ['/gpt -img um robô nadando em aquarela', '/gpt -img coloque um chapéu nele (respondendo uma foto)'],
             role: ADMIN,
             cron: false
@@ -30,7 +30,7 @@ module.exports = {
         {
             opts: ['gif'],
             values: [],
-            desc: 'O mesmo do /desenhe -gif: cria um GIF animado (API de imagens, output_format gif, modelo openai.image.gifModel, só os gpt-image-2.6-*) e responde com ele. Respondendo uma foto, a anima; "gere um gif animado de..." respondendo uma foto também vale, sem o -gif. Os quadros e o tempo de cada um são os settings openai.gif.frames e openai.gif.frameMs. Só o dono e os admins: gasta a sua conta da OpenAI.',
+            desc: 'O mesmo do /draw -gif: cria um GIF animado (API de imagens, output_format gif, modelo openai.image.gifModel, só os gpt-image-2.6-*) e responde com ele. Respondendo uma foto, a anima; "gere um gif animado de..." respondendo uma foto também vale, sem o -gif. Os quadros e o tempo de cada um são os settings openai.gif.frames e openai.gif.frameMs. Só o dono e os admins: gasta a sua conta da OpenAI.',
             ex: ['/gpt -gif um gato de óculos escuros', '/gpt gere um gif animado dele nadando (respondendo uma foto)'],
             role: ADMIN,
             cron: false

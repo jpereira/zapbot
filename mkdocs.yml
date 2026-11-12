@@ -3,7 +3,7 @@
 # To see it locally: make docs
 site_name: ZapBot
 site_url: https://jpereira.github.io/zapbot/
-site_description: Bot para WhatsApp que recupera mensagens apagadas e editadas, baixa vídeos, cria figurinhas e mais.
+site_description: WhatsApp bot that recovers deleted and edited messages, downloads videos, creates stickers and more.
 site_author: Jorge Pereira
 repo_url: https://github.com/jpereira/zapbot
 repo_name: jpereira/zapbot
@@ -14,11 +14,11 @@ exclude_docs: |
   requirements.txt
 
 # The release workflow fills in the published version
-copyright: !ENV [DOCS_COPYRIGHT, "ZapBot (desenvolvimento) · Licença MIT · Copyright &copy; 2026 Jorge Pereira"]
+copyright: !ENV [DOCS_COPYRIGHT, "ZapBot (development) · MIT License · Copyright &copy; 2026 Jorge Pereira"]
 
 theme:
   name: material
-  language: pt-BR
+  language: en
   logo: assets/logo.png
   favicon: assets/favicon.png
   icon:
@@ -30,14 +30,14 @@ theme:
       accent: light green
       toggle:
         icon: material/weather-night
-        name: Modo escuro
+        name: Dark mode / Modo escuro
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
       primary: green
       accent: light green
       toggle:
         icon: material/weather-sunny
-        name: Modo claro
+        name: Light mode / Modo claro
   features:
     - content.code.copy
     - navigation.footer
@@ -46,6 +46,33 @@ theme:
     - navigation.tracking
     - search.highlight
     - search.suggest
+
+# Bilingual documentation: English (en_US) is the default (docs/page.md) and Portuguese (pt-BR) sits beside
+# (docs/page.pt-BR.md), under /pt-BR/ on the site, with the language selector in the header.
+plugins:
+  - search
+  - i18n:
+      docs_structure: suffix
+      fallback_to_default: true
+      reconfigure_material: true
+      reconfigure_search: true
+      languages:
+        - locale: en
+          default: true
+          name: English
+          build: true
+        - locale: pt-BR
+          name: Português (Brasil)
+          build: true
+          nav_translations:
+            Home: Início
+            Installation: Instalação
+            Configuration: Configuração
+            Commands: Comandos
+            Demo: Demonstração
+            Operation: Operação
+            Development: Desenvolvimento
+            Record the demo: Gravar a demonstração
 
 extra_javascript:
   - javascripts/new-tab-gifs.js
@@ -71,28 +98,27 @@ validation:
     unrecognized_links: warn
 
 nav:
-  - Início: index.md
-  - Instalação: installation.md
-  - Configuração: configuration.md
+  - Home: index.md
+  - Installation: installation.md
+  - Configuration: configuration.md
   - E-mails: emails.md
-  - Comandos:
+  - Commands:
       - commands/index.md
       - /alias: commands/alias.md
       - /ascii: commands/ascii.md
       - /backup: commands/backup.md
       - /batch: commands/batch.md
+      - /bills: commands/bills.md
       - /block: commands/block.md
-      - /boletos: commands/boletos.md
       - /bot: commands/bot.md
       - /cache: commands/cache.md
-      - /cotacao: commands/cotacao.md
       - /cron: commands/cron.md
       - /crypto: commands/crypto.md
       - /cve: commands/cve.md
       - /debug: commands/debug.md
       - /defi: commands/defi.md
-      - /desenhe: commands/desenhe.md
-      - /enquete: commands/enquete.md
+      - /draw: commands/draw.md
+      - /everybody: commands/everybody.md
       - /get: commands/get.md
       - /giphy: commands/giphy.md
       - /gpt: commands/gpt.md
@@ -101,8 +127,8 @@ nav:
       - /joke: commands/joke.md
       - /kernel: commands/kernel.md
       - /leave: commands/leave.md
-      - /listageral: commands/listageral.md
       - /me: commands/me.md
+      - /members: commands/members.md
       - /meme: commands/meme.md
       - /monitor: commands/monitor.md
       - /mute: commands/mute.md
@@ -111,26 +137,27 @@ nav:
       - /notes: commands/notes.md
       - /ping: commands/ping.md
       - /pixelart: commands/pixelart.md
+      - /poll: commands/poll.md
       - /profile: commands/profile.md
+      - /rates: commands/rates.md
       - /search: commands/search.md
       - /set: commands/set.md
       - /show: commands/show.md
       - /stats: commands/stats.md
       - /sticker: commands/sticker.md
-      - /tempo: commands/tempo.md
       - /tldr: commands/tldr.md
-      - /todos: commands/todos.md
-      - /traduzir: commands/traduzir.md
+      - /translate: commands/translate.md
       - /unblock: commands/unblock.md
       - /unmute: commands/unmute.md
       - /uptime: commands/uptime.md
       - /version: commands/version.md
       - /walissu: commands/walissu.md
       - /watch: commands/watch.md
+      - /weather: commands/weather.md
       - /whois: commands/whois.md
-  - Demonstração: demo.md
+  - Demo: demo.md
   - Settings: settings.md
-  - Operação: operation.md
-  - Desenvolvimento:
+  - Operation: operation.md
+  - Development:
       - development.md
-      - Gravar a demonstração: record-demo.md
+      - Record the demo: record-demo.md

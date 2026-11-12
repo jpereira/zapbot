@@ -1,28 +1,28 @@
-# `/news`
+# `/news` (`/noticias`)
 
-Junta as manchetes mais recentes dos feeds RSS de uma categoria, com fonte, data e link. Sem
-categoria, mostra a ajuda com todas as opções. É um comando comum, disponível aos usuários liberados
-pelo `/bot +u` ou pelo setting `bot.users`.
+Gathers the most recent headlines from a category's RSS feeds, with source, date and link. Without a
+category, it shows the help with all the options. It's a regular command, available to users allowed
+through `/bot +u` or the `bot.users` setting.
 
-| Opção | Valor | Descrição |
+| Option | Value | Description |
 |---|---|---|
-| `-hack`, `-hacknews` | | Hacking/segurança: The Hacker News, BleepingComputer e Krebs on Security (setting `news.hack`) |
-| `-g1` | | Últimas notícias do [g1](https://g1.globo.com/) (setting `news.g1`) |
-| `-gazeta`, `-gaz` | | [Gazeta do Povo](https://www.gazetadopovo.com.br/), seção Brasil (setting `news.gazeta`) |
-| `-brasil`, `-br` | | Blogs sobre o Brasil listados no [feedspot](https://rss.feedspot.com/brazil_rss_feeds/), a maioria em inglês (setting `news.brasil`) |
-| `quantidade` | 1–10 | Quantas manchetes. Sem ela usa o setting `news.max` (5) |
+| `-hack`, `-hacknews` | | Hacking/security: The Hacker News, BleepingComputer and Krebs on Security (setting `news.hack`) |
+| `-g1` | | Latest news from [g1](https://g1.globo.com/) (setting `news.g1`) |
+| `-gazeta`, `-gaz` | | [Gazeta do Povo](https://www.gazetadopovo.com.br/), Brazil section (setting `news.gazeta`) |
+| `-brasil`, `-br` | | Blogs about Brazil listed on [feedspot](https://rss.feedspot.com/brazil_rss_feeds/), mostly in English (setting `news.brasil`) |
+| `quantidade` | 1–10 | How many headlines. Without it, uses the `news.max` setting (5) |
 
 ```text
-/news                → ajuda com todas as opções
-/news -g1            → as 5 mais recentes do g1
-/news -gazeta 3      → as 3 mais recentes da Gazeta do Povo
-/news -br 5          → as 5 mais recentes dos blogs sobre o Brasil
-/news -hack 10       → as 10 mais recentes de hacking
-/news -g1 -gazeta 6  → g1 e Gazeta juntos (3 de cada, no máximo)
-/news -h             → ajuda do comando
+/news                → help with all the options
+/news -g1            → the 5 most recent from g1
+/news -gazeta 3      → the 3 most recent from Gazeta do Povo
+/news -br 5          → the 5 most recent from the blogs about Brazil
+/news -hack 10       → the 10 most recent about hacking
+/news -g1 -gazeta 6  → g1 and Gazeta together (3 from each, at most)
+/news -h             → command help
 ```
 
-Exemplo ilustrativo de resposta:
+Illustrative example of a reply:
 
 ```text
 📰 g1
@@ -32,23 +32,23 @@ g1 · 30/09/2026, 00:29:33
 https://g1.globo.com/...
 ```
 
-## Alterando os feeds
+## Changing the feeds
 
-Cada categoria lê a lista do seu setting (`news.<categoria>`), que aceita qualquer feed RSS:
+Each category reads the list from its setting (`news.<categoria>`), which accepts any RSS feed:
 
 ```text
 /set news.g1 https://g1.globo.com/rss/g1/economia/
 /set news.hack https://feeds.feedburner.com/TheHackersNews https://krebsonsecurity.com/feed/
-/set -reset news.g1                → volta ao padrão
-/set news.max 3                    → muda a quantidade padrão
+/set -reset news.g1                → back to the default
+/set news.max 3                    → changes the default count
 ```
 
-Detalhes:
+Details:
 
-- Várias categorias no mesmo comando somam os feeds.
-- Cada fonte ocupa no máximo a sua fatia da lista (ex.: 6 manchetes de 2 feeds → até 3 de cada);
-  senão a que publica mais toma tudo.
-- Um feed fora do ar não derruba os outros: ele só aparece no log.
-- O `-brasil` lê cerca de 15 feeds de uma vez; a página do feedspot é HTML, então os feeds dela
-  foram copiados para o setting `news.brasil` (não é lida a cada uso).
-- Os feeds precisam ser RSS (`<item>`); feeds só em Atom (`<entry>`) não são lidos.
+- Several categories in the same command add up their feeds.
+- Each source takes at most its share of the list (e.g. 6 headlines from 2 feeds → up to 3 from
+  each); otherwise the one that publishes the most takes everything.
+- A feed that's down doesn't take the others down: it only shows up in the log.
+- `-brasil` reads about 15 feeds at once; the feedspot page is HTML, so its feeds were copied into
+  the `news.brasil` setting (it isn't read on every use).
+- Feeds must be RSS (`<item>`); Atom-only feeds (`<entry>`) aren't read.

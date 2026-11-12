@@ -1,29 +1,29 @@
 # `/search` (`/buscar`) · admin
 
-Busca mensagens no histórico do WhatsApp Web, com a mesma busca do campo de pesquisa do WhatsApp:
-vale para as mensagens que o WhatsApp Web tem, inclusive as que nunca passaram pelo cache do bot. O
-[`/show -q`](show.md#buscar) busca só no cache (apagadas, editadas, status e reações).
+Searches messages in the WhatsApp Web history, using the same search as WhatsApp's search box: it
+covers the messages WhatsApp Web has, including ones that never went through the bot's cache.
+[`/show -q`](show.md#search) searches only the cache (deleted, edited, status and reactions).
 
 ```text
 /search [-N] <texto>
 /search -read <id>
 ```
 
-| Opção | Valor | Descrição |
+| Option | Value | Description |
 |---|---|---|
-| `-N` | | Quantidade de mensagens (padrão 10, máx. 50). Ex.: `-30` |
-| *(nenhuma)* | `<texto>` | O que buscar, como na busca do WhatsApp (sem diferenciar maiúsculas) |
-| `-read`, `-r` | `<id>` | Exibe inteira a mensagem de um id da lista da busca. Mesmo escopo da busca |
-| `-mask`, `-m` | | Ofusca telefones na saída desta execução. Ex.: `+55219****44` |
+| `-N` | | Number of messages (default 10, max 50). E.g.: `-30` |
+| *(none)* | `<texto>` | What to search for, like in WhatsApp's search (case-insensitive) |
+| `-read`, `-r` | `<id>` | Shows the full message for an id from the search list. Same scope as the search |
+| `-mask`, `-m` | | Obfuscates phone numbers in this run's output. E.g.: `+55219****44` |
 
-O escopo é **este chat**; no **seu privado**, todos os chats, e cada resultado diz de qual chat é.
-Os resultados vêm do mais recente para o mais antigo, com a data, quem mandou e o texto (numa mídia,
-o tipo e a legenda). Textos longos são cortados em 200 caracteres.
+The scope is **this chat**; in **your private chat**, all chats, and each result says which chat it's
+from. Results come from newest to oldest, with the date, who sent it and the text (for media, the
+type and the caption). Long texts are cut at 200 characters.
 
 ```text
-/search pix                 → as 10 mais recentes com "pix" neste chat
-/search -30 boleto          → até 30
-/buscar bom dia             → com espaços, sem aspas (/buscar é o mesmo que /search)
+/search pix                 → the 10 most recent with "pix" in this chat
+/search -30 boleto          → up to 30
+/buscar bom dia             → with spaces, no quotes (/buscar is the same as /search)
 ```
 
 ```text
@@ -46,9 +46,9 @@ o tipo e a legenda). Textos longos são cortados em 200 caracteres.
 manda o pix que eu pago, o texto todo, sem corte
 ```
 
-- Cada resultado traz o `🆔` para o `-read`. Com `-mask`, o id também é ofuscado (não serve para o `-read`).
-- O `-read` vale só para este chat; no seu privado, para qualquer chat. Numa mídia, mostra o tipo e a legenda.
-- A própria mensagem do `/search` não entra nos resultados.
-- Quando vêm tantos resultados quanto o `-N`, o bot avisa que pode haver mais.
-- O que o WhatsApp Web ainda não carregou do celular não aparece: é a mesma limitação da busca do
-  WhatsApp Web.
+- Each result carries the `🆔` for `-read`. With `-mask`, the id is obfuscated too (it won't work for `-read`).
+- `-read` works only for this chat; in your private chat, for any chat. For media, it shows the type and the caption.
+- The `/search` message itself doesn't show up in the results.
+- When as many results come back as `-N`, the bot warns that there may be more.
+- Anything WhatsApp Web hasn't loaded from the phone yet doesn't show up: it's the same limitation
+  as WhatsApp Web's search.

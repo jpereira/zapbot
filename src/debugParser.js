@@ -22,7 +22,7 @@ function dataParserCommand(args, command, opts) {
         }
         if (command.cmd === '/cron') return readScheduling(args);
         const hasDestination = command.cmd_opts?.some(o => o.opts?.includes('to'));
-        const alert = ['/crypto', '/cotacao'].includes(command.cmd) && opts.given.has('alerta');
+        const alert = ['/crypto', '/rates'].includes(command.cmd) && opts.given.has('alerta');
         if (!hasDestination && !alert) return opts;
         const destinations = hasDestination ? extractDestinations(args) : null;
         let rest = destinations?.resto ?? args;

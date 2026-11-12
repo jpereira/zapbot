@@ -1,5 +1,5 @@
 /*
- * Price alerts from /cotacao -alerta and /crypto -alerta.
+ * Price alerts from /rates -alerta and /crypto -alerta.
  */
 
 const axios = require('axios');
@@ -19,7 +19,7 @@ const { getSetting } = require('./settings');
 const { formatData, plural } = require('./util/format');
 
 /*
- * Price alerts: /cotacao -alerta and /crypto -alerta
+ * Price alerts: /rates -alerta and /crypto -alerta
  * -alerta                 → lists the command's alerts, numbered
  * -alerta USD > 5.30      → notifies your private chat when USD goes above R$ 5.30
  * -alerta BTC < 90000     → (in /crypto) when BTC drops below $90,000
@@ -36,7 +36,7 @@ const { formatData, plural } = require('./util/format');
  */
 const ALERT_TYPES = {
     cotacao: {
-        cmd: '/cotacao',
+        cmd: '/rates',
         suportada: (sym) => Boolean(QUOTE_SUPPORTED[sym]),
         icone: (sym) => QUOTE_SUPPORTED[sym].icone,
         par: (sym) => `${sym}/BRL`,

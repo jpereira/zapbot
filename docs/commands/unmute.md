@@ -1,20 +1,20 @@
-# `/unmute` · admin
+# `/unmute` (`/desmutar`) · admin
 
-Desfaz o silêncio do [`/mute`](mute.md): os avisos de mensagens apagadas, editadas, de status
-apagados e de reações removidas ou trocadas da pessoa, do grupo ou da comunidade voltam.
+Undoes the silence from [`/mute`](mute.md): the warnings about deleted and edited messages, deleted
+statuses and removed or changed reactions from the person, group or community come back.
 
-| Opção | Valor | Descrição |
+| Option | Value | Description |
 |---|---|---|
-| *(nenhuma)* | `[/contato ou grupo/\|@menção\|+número\|nº]` | Quem: buscado como no `/mute`, ou o nº da lista do `/mute`. Sem ninguém, respondendo um aviso, de onde ele veio. Sem nada, a lista |
-| `-all`, `-a` | | Desfaz todos os silenciados |
+| *(none)* | `[/contato ou grupo/\|@menção\|+número\|nº]` | Who: looked up as in `/mute`, or the number from the `/mute` list. With no one, when replying to a warning, where it came from. With nothing, the list |
+| `-all`, `-a` | | Undoes all the muted ones |
 
 ```text
-/unmute /Jorge Pereira/     → os avisos do contato voltam
-/unmute /Grupo L200/        → os do grupo
-/unmute 2                   → o nº 2 da lista do /mute
-/unmute                     → respondendo um aviso: de onde ele veio (a pessoa, o grupo ou a comunidade)
-/unmute -all                → todos (o mesmo que /unmute -a ou /mute -rm all)
+/unmute /Jorge Pereira/     → the contact's warnings come back
+/unmute /Grupo L200/        → the group's
+/unmute 2                   → no. 2 from the /mute list
+/unmute                     → replying to a warning: where it came from (the person, the group or the community)
+/unmute -all                → all of them (same as /unmute -a or /mute -rm all)
 ```
 
-- Quem não está silenciado: o bot avisa (`ℹ️ 👤 Fulano não está silenciado.`).
-- Sem nada (e sem responder um aviso), mostra a lista do `/mute`.
+- Someone who isn't muted: the bot lets you know (`ℹ️ 👤 Fulano não está silenciado.`).
+- With nothing (and not replying to a warning), shows the `/mute` list.

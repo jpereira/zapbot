@@ -255,7 +255,7 @@ async function initializeDb() {
     await dbRun("DELETE FROM stats WHERE sender_id = 'UNKNOWN'");
 
     /*
-     * Price alerts from /cotacao -alerta and /crypto -alerta (fire once
+     * Price alerts from /rates -alerta and /crypto -alerta (fire once
      * time and go away). dest_*: the notice chat (-to); dest_email: the emails (-to email);
      * empty = your private chat. With several -to, recipients has all of them (and the dest_*, the first).
      */
@@ -312,7 +312,7 @@ async function initializeDb() {
     });
 
     /*
-     * Your account's polls (those from /enquete and those that arrive with votes) and the
+     * Your account's polls (those from /poll and those that arrive with votes) and the
      * votes, one per person: 'vote_update' brings the current choice of whoever voted.
      */
     await dbRun(`

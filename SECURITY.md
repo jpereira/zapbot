@@ -4,7 +4,7 @@
 
 Só a **última release** (tag `vX.Y.Z` mais recente) recebe correções de segurança. As correções
 saem numa release nova; atualize seguindo a
-[documentação](https://jpereira.github.io/zapbot/instalacao/#atualizar-para-uma-nova-versão).
+[documentação](https://jpereira.github.io/zapbot/pt-BR/instalacao/#atualizar-para-uma-nova-versão).
 
 ## Como reportar uma vulnerabilidade
 
@@ -23,7 +23,7 @@ Alguns pontos merecem atenção especial num relato:
 
 - **Sessão do WhatsApp** (`.wwebjs_auth`) e o **QR Code**: quem tiver um dos dois controla a conta.
   O QR pode ir por e-mail (veja o código anti-phishing em
-  [E-mails](https://jpereira.github.io/zapbot/emails/)).
+  [E-mails](https://jpereira.github.io/zapbot/pt-BR/emails/)).
 - **Níveis dos comandos** (owner > admin > user): qualquer forma de alguém executar um comando
   acima do nível dele, ou de role `admin` sem o dono ter liberado (`/bot +cmd`, só nos
   delegáveis), inclusive fazendo o bot "digitar" um comando ou por um atalho do `/alias`. Ou de um
