@@ -7,39 +7,39 @@ const { OPCAO_VERBOSE_FFMPEG } = require('./_opcoes');
 
 module.exports = {
     cmd: '/get',
-    usage: '/get [OPÇÃO]... <url>  ou  /get [OPÇÃO]... (respondendo um link ou uma mídia)',
+    usage: '/get [OPTION]... <url>  or  /get [OPTION]... (replying to a link or media)',
     aliases: ['/download'],
-    summary: 'Baixa vídeo ou áudio de redes sociais',
-    help: 'Baixa vídeo ou áudio de redes sociais (Instagram, YouTube, X, TikTok e outros sites do yt-dlp), pela URL ou respondendo uma mensagem com link. Respondendo um vídeo, uma imagem ou um áudio do WhatsApp, usa a própria mídia: sem opção, devolve o arquivo original. Escolha áudio ou figurinha por execução; vídeo e áudio são enviados como documento.',
+    summary: 'Downloads video or audio from social networks',
+    help: 'Downloads video or audio from social networks (Instagram, YouTube, X, TikTok and other yt-dlp sites), from the URL or by replying to a message with a link. Replying to a WhatsApp video, image or audio uses that media itself: with no option, returns the original file. Pick audio or sticker per run; video and audio are sent as a document.',
     cmd_opts: [
         {
             opts: ['sticker', 'st'],
             values: [],
-            desc: 'Envia como figurinha animada (até 6 s, recorte quadrado no meio do vídeo). É o mesmo que o /sticker.'
+            desc: 'Sends as an animated sticker (up to 6 s, square crop from the middle of the video). Same as /sticker.'
         },
         {
             opts: ['pos'],
-            values: ['<topo|meio|baixo>'],
-            desc: 'Com -st: onde fica o recorte quadrado, topo, meio (padrão) ou baixo. Em mídia mais larga que alta, topo é a esquerda e baixo a direita.',
+            values: ['<top|middle|bottom>'],
+            desc: 'With -st: where the square crop goes, top, middle (default) or bottom. On media wider than tall, top is the left and bottom is the right.',
             ex: ['/get -st -pos topo <url>']
         },
-        { opts: ['audio', 'a'], values: [], desc: 'Só o áudio, em .mp3.' },
+        { opts: ['audio', 'a'], values: [], desc: 'Audio only, as .mp3.' },
         {
             opts: ['startSec', 'ss'],
-            values: ['<tempo>'],
-            desc: 'Começa neste ponto do vídeo original (padrão 0), em segundos ou em min:seg. Aceita decimal com ponto. Com - na frente, conta do final (-ss -10 são os últimos 10 s).',
+            values: ['<time>'],
+            desc: 'Starts at this point of the original video (default 0), in seconds or min:sec. Accepts a decimal with a dot. With a leading -, counts from the end (-ss -10 is the last 10 s).',
             ex: ['-ss 1.5', '-ss 09:33', '-ss -10', '-ss -01:44']
         },
         {
             opts: ['endSec', 'es'],
-            values: ['<tempo>'],
-            desc: 'Termina neste ponto do vídeo original (segundos ou min:seg); deve ser maior que o início. Com - na frente, conta do final (-es -5 termina 5 s antes do fim). Vale sem -ss e para figurinhas, limitadas a seis segundos.',
+            values: ['<time>'],
+            desc: 'Ends at this point of the original video (seconds or min:sec); must be greater than the start. With a leading -, counts from the end (-es -5 ends 5 s before the end). Works without -ss and for stickers, limited to six seconds.',
             ex: ['-es 15', '-es 09:45', '-es -5']
         },
         OPCAO_VERBOSE_FFMPEG,
         {
             argv: ['<url>'],
-            desc: 'Link do vídeo; vale mais que a mensagem respondida.',
+            desc: 'Video link; takes precedence over the replied message.',
             ex: ['https://youtu.be/...']
         }
     ],

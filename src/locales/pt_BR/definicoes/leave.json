@@ -1,0 +1,31 @@
+{
+  "summary": "Sai de um grupo",
+  "usage": "/leave <grupo|nº>...  ou  /leave -l",
+  "help": "Sai de um ou mais grupos do WhatsApp, separados por espaço ou vírgula. Cada grupo é buscado como no -to (pelo nome ou parte dele; vários que servem: você escolhe na lista) ou pelo nº da lista do /leave -l. Sem nada, lista os grupos em que você está. Para voltar, precisa de um novo convite (/join).",
+  "ex": [
+    "/leave /Grupo L200/",
+    "/leave 3",
+    "/leave 3 1 /Família/ 5",
+    "/leave -l"
+  ],
+  "cmd_opts": [
+    {
+      "argv": [
+        "<grupo|nº>..."
+      ],
+      "desc": "Os grupos, separados por espaço ou vírgula: pelo nome (nome com espaço entre /.../ ou aspas) ou pelo nº da última lista do -l. Palavras soltas, sem nº, barras nem aspas, são um nome só.",
+      "ex": [
+        "/leave /Grupo L200/",
+        "/leave 3 1 /Família/ 5"
+      ]
+    },
+    {
+      "opts": [
+        "list",
+        "l"
+      ],
+      "values": [],
+      "desc": "Lista os grupos em que você está, numerados (o mesmo que /leave sem nada)."
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "summary": "Marca 2 membros do grupo com uma CVE aleatória",
+  "usage": "/walissu",
+  "help": "Walissu CVE BOT: marca 2 membros do grupo com uma CVE aleatória.",
+  "cmd_opts": []
+}

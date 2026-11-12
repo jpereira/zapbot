@@ -1,25 +1,25 @@
 /*
- * /cve: CVEs recentes do NVD
+ * /cve: Recent CVEs from the NVD
  */
 
 const { USER } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/cve',
-    usage: '/cve [<id>|<texto>] [-highscore [max]]',
-    summary: 'CVEs recentes do NVD',
-    help: 'CVEs publicadas nos últimos dois dias no NVD, da mais recente para a mais antiga (quantidade: cve.max). Com -highscore, a janela é cve.maxDays. Com um id, consulta essa CVE; com um texto, busca as mais recentes que o citam.',
+    usage: '/cve [<id>|<text>] [-highscore [max]]',
+    summary: 'Recent CVEs from the NVD',
+    help: 'CVEs published in the last two days on the NVD, newest first (count: cve.max). With -highscore, the window is cve.maxDays. With an id, looks up that CVE; with a text, searches the most recent ones that mention it.',
     ex: ['/cve CVE-2026-1234', '/cve 2026-1234', '/cve kernel 2.4.5', '/cve -high 3'],
     cmd_opts: [
         {
             opts: ['highscore', 'high'],
             values: ['[max]'],
-            desc: 'Só as críticas com severidade CVSS v3 CRITICAL (nota ≥ 9), dos últimos cve.maxDays dias. Quantidade de 1 a 20, padrão cve.max. Métricas somente v4 ou v2 ficam fora do filtro.',
+            desc: 'Only critical ones with CVSS v3 severity CRITICAL (score ≥ 9), from the last cve.maxDays days. Count from 1 to 20, default cve.max. CVEs with only v4 or v2 metrics are left out of the filter.',
             ex: ['/cve -high 5']
         },
         {
-            argv: ['<id|texto>'],
-            desc: 'Um id consulta essa CVE no NVD (com ou sem o prefixo CVE-); qualquer outro texto busca nas descrições e lista até cve.max, as mais recentes primeiro.',
+            argv: ['<id|text>'],
+            desc: 'An id looks up that CVE on the NVD (with or without the CVE- prefix); any other text searches the descriptions and lists up to cve.max, newest first.',
             ex: ['/cve CVE-2026-1234', '/cve 2026-1234', '/cve PHP longjmp']
         }
     ],

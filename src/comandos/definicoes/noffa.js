@@ -6,10 +6,10 @@ const { USER } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/noffa',
-    usage: '/noffa [texto]',
+    usage: '/noffa [text]',
     aliases: ['/🌈', '/🏳️‍🌈'],
-    summary: 'Floreia o texto com emojis de arco-íris',
-    help: 'Dá uma floreada no texto com emojis de arco-íris. Aceita texto ou resposta a uma mensagem.',
+    summary: 'Decorates the text with rainbow emojis',
+    help: 'Decorates the text with rainbow emojis. Accepts text or a reply to a message.',
     digitando: false, // responde na hora: sem o "digitando..."
     role: USER
 };

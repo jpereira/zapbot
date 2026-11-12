@@ -1,31 +1,31 @@
 /*
- * /news: Manchetes mais recentes dos feeds RSS
+ * /news: Latest headlines from the RSS feeds
  */
 
 const { USER } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/news',
-    usage: '/news <-hack|-g1|-gazeta|-brasil> [quantidade]',
+    usage: '/news <-hack|-g1|-gazeta|-brasil> [count]',
     aliases: ['/noticias'],
-    summary: 'Manchetes mais recentes dos feeds RSS',
-    help: 'Manchetes mais recentes dos feeds RSS, com fonte, data e link. Categorias combinam: /news -g1 -gazeta. Feeds de cada uma no setting news.<categoria>.',
+    summary: 'Latest headlines from the RSS feeds',
+    help: 'Latest headlines from the RSS feeds, with source, date and link. Categories can be combined: /news -g1 -gazeta. Feeds for each one in the setting news.<category>.',
     cmd_opts: [
         {
             opts: ['hack', 'hacknews'],
             values: [],
-            desc: 'Hacking/segurança: The Hacker News, BleepingComputer, Krebs.'
+            desc: 'Hacking/security: The Hacker News, BleepingComputer, Krebs.'
         },
-        { opts: ['g1'], values: [], desc: 'g1 (últimas notícias).' },
-        { opts: ['gazeta', 'gaz'], values: [], desc: 'Gazeta do Povo (Brasil).' },
+        { opts: ['g1'], values: [], desc: 'g1 (latest news).' },
+        { opts: ['gazeta', 'gaz'], values: [], desc: 'Gazeta do Povo (Brazil).' },
         {
             opts: ['brasil', 'br'],
             values: [],
-            desc: 'Blogs sobre o Brasil listados no feedspot (em inglês, na maioria).'
+            desc: 'Blogs about Brazil listed on feedspot (mostly in English).'
         },
         {
-            argv: ['quantidade'],
-            desc: 'Manchetes, de 1 a 10 (padrão: setting news.max, 5).',
+            argv: ['count'],
+            desc: 'Headlines, from 1 to 10 (default: setting news.max, 5).',
             ex: ['/news -hack 3']
         }
     ],

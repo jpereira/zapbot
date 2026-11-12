@@ -1,5 +1,5 @@
 /*
- * /rates: Cotação das moedas contra o real
+ * /rates: Currency exchange rates against the real
  */
 
 const { ADMIN, USER } = require('../../roles').ROLES;
@@ -7,35 +7,35 @@ const { OPCAO_ALERTA_MSG, OPCAO_ALERTA_RM, OPCAO_ALERTA_TO } = require('./_opcoe
 
 module.exports = {
     cmd: '/rates',
-    usage: '/rates [OPÇÃO] [MOEDA...]  ou  /rates [MOEDA] -alerta [regra] [-to <destino>]... [-msg <texto>]  ou  /rates -alerta -rm <nº...|all>',
+    usage: '/rates [OPTION] [CURRENCY...]  or  /rates [CURRENCY] -alerta [rule] [-to <target>]... [-msg <text>]  or  /rates -alerta -rm <num...|all>',
     aliases: ['/cotacao', '/cambio'],
-    summary: 'Cotação das moedas contra o real',
-    help: 'Cotação contra o real das moedas habilitadas (padrão: EUR e USDT): atual, abertura, fechamento anterior, máx./mín. e variação.',
+    summary: 'Currency exchange rates against the Brazilian real',
+    help: 'Exchange rates against the real for the enabled currencies (default: EUR and USDT): current, open, previous close, high/low and change.',
     cmd_opts: [
         {
             opts: ['add', 'a'],
-            values: ['<MOEDA>'],
-            desc: 'Habilita uma moeda suportada. Só o dono (ou um admin).',
+            values: ['<CURRENCY>'],
+            desc: 'Enables a supported currency. Owner (or an admin) only.',
             cron: false,
             role: ADMIN
         },
         {
             opts: ['alerta'],
             values: [],
-            desc: 'Sem regra: lista os alertas. Com regra (ex.: USD > 5.30): avisa no seu privado (ou nos destinos do -to) quando o preço passar do valor. A moeda também pode vir antes: /rates USD -alerta > 5.30. Só o dono (ou um admin).',
+            desc: 'Without a rule: lists the alerts. With a rule (e.g. USD > 5.30): notifies you in your private chat (or at the -to targets) when the price crosses the value. The currency can also come first: /rates USD -alerta > 5.30. Owner (or an admin) only.',
             cron: false
         },
         {
             opts: ['del', 'd'],
-            values: ['<MOEDA>'],
-            desc: 'Desabilita uma moeda. Só o dono (ou um admin).',
+            values: ['<CURRENCY>'],
+            desc: 'Disables a currency. Owner (or an admin) only.',
             cron: false,
             role: ADMIN
         },
         {
             opts: ['list', 'l'],
             values: [],
-            desc: 'Lista as moedas suportadas e quais estão habilitadas.'
+            desc: 'Lists the supported currencies and which ones are enabled.'
         },
         OPCAO_ALERTA_MSG,
         OPCAO_ALERTA_RM,

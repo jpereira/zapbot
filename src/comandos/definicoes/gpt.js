@@ -7,38 +7,38 @@ const { opcaoStatus } = require('./_opcoes');
 
 module.exports = {
     cmd: '/gpt',
-    usage: '/gpt [-status|-s] [pergunta]  ou  /gpt -model [modelo] [-img|-gif|-audio|-voz]  ou  /gpt -prices  ou  /gpt -usage|-u [dias]  ou  /gpt -voz [texto]  ou  /gpt -img <pedido>  ou  /gpt -gif [pedido]',
+    usage: '/gpt [-status|-s] [question]  or  /gpt -model [model] [-img|-gif|-audio|-voz]  or  /gpt -prices  or  /gpt -usage|-u [days]  or  /gpt -voz [text]  or  /gpt -img <request>  or  /gpt -gif [request]',
     aliases: ['/ai'],
-    summary: 'Pergunta ao ChatGPT',
-    help: 'Pergunta ao ChatGPT (OpenAI). Respondendo uma mensagem, o texto dela entra na pergunta; respondendo uma foto, ela vai junto (o ChatGPT vê a imagem); respondendo um áudio, ele é transcrito; respondendo um documento (texto ou PDF), o conteúdo vai junto; com -voz, o texto vira uma nota de voz de robô; com -img e -gif, cria uma imagem e um GIF. Precisa de OPENAI_API_KEY no config/.env ou do setting openai.api.key.',
+    summary: 'Asks ChatGPT',
+    help: 'Asks ChatGPT (OpenAI). Replying to a message, its text goes into the question; replying to a photo, it goes along (ChatGPT sees the image); replying to an audio, it is transcribed; replying to a document (text or PDF), the content goes along; with -voz, the text becomes a robot voice note; with -img and -gif, creates an image and a GIF. Requires OPENAI_API_KEY in config/.env or the openai.api.key setting.',
     cmd_opts: [
         {
             opts: ['model', 'm'],
-            values: ['[modelo]'],
-            desc: 'Lista os modelos por uso, os que a sua chave vê, e troca o de cada um: sem opção, o das perguntas (setting openai.api.model); com -img, o da imagem; com -gif, o do GIF; com -audio, o da transcrição; com -voz, o da voz. Sem modelo, só lista (com -gif, -audio ou -voz, só aquele uso).',
+            values: ['[model]'],
+            desc: 'Lists the models by use, the ones your key can see, and switches each one: with no option, the questions model (setting openai.api.model); with -img, the image one; with -gif, the GIF one; with -audio, the transcription one; with -voz, the voice one. Without a model, it only lists (with -gif, -audio or -voz, only that use).',
             ex: ['/gpt -m', '/gpt -m gpt-4.1', '/gpt -m gpt-image-2.6-flare -gif', '/gpt -m gpt-transcribe -audio', '/gpt -m gpt-4o-mini-tts -voz'],
             role: ADMIN
         },
         {
             opts: ['img'],
             values: [],
-            desc: 'O mesmo do /draw: cria uma imagem com o pedido (v1/images, modelo openai.image.model) e responde com ela. Respondendo uma foto, a edita. Só o dono e os admins: gasta a sua conta da OpenAI.',
-            ex: ['/gpt -img um robô nadando em aquarela', '/gpt -img coloque um chapéu nele (respondendo uma foto)'],
+            desc: 'Same as /draw: creates an image from the request (v1/images, model openai.image.model) and replies with it. Replying to a photo, edits it. Owner and admins only: spends your OpenAI account.',
+            ex: ['/gpt -img a robot swimming in watercolor', '/gpt -img put a hat on it (replying to a photo)'],
             role: ADMIN,
             cron: false
         },
         {
             opts: ['gif'],
             values: [],
-            desc: 'O mesmo do /draw -gif: cria um GIF animado (API de imagens, output_format gif, modelo openai.image.gifModel, só os gpt-image-2.6-*) e responde com ele. Respondendo uma foto, a anima; "gere um gif animado de..." respondendo uma foto também vale, sem o -gif. Os quadros e o tempo de cada um são os settings openai.gif.frames e openai.gif.frameMs. Só o dono e os admins: gasta a sua conta da OpenAI.',
-            ex: ['/gpt -gif um gato de óculos escuros', '/gpt gere um gif animado dele nadando (respondendo uma foto)'],
+            desc: 'Same as /draw -gif: creates an animated GIF (images API, output_format gif, model openai.image.gifModel, only the gpt-image-2.6-* ones) and replies with it. Replying to a photo, animates it; "gere um gif animado de..." replying to a photo also works, without -gif. The frames and the time of each are the settings openai.gif.frames and openai.gif.frameMs. Owner and admins only: spends your OpenAI account.',
+            ex: ['/gpt -gif a cat in sunglasses', '/gpt gere um gif animado dele nadando (replying to a photo)'],
             role: ADMIN,
             cron: false
         },
         {
             opts: ['audio'],
             values: [],
-            desc: 'Só junto do -m: escolhe o modelo da transcrição de áudio (setting openai.transcribe.model). O áudio respondido é transcrito sem esta opção.',
+            desc: 'Only together with -m: picks the audio transcription model (setting openai.transcribe.model). A replied audio is transcribed without this option.',
             ex: ['/gpt -m gpt-transcribe -audio'],
             role: ADMIN,
             cron: false
@@ -46,31 +46,31 @@ module.exports = {
         {
             opts: ['voz', 'v'],
             values: [],
-            desc: 'Gera uma nota de voz com o texto e responde com o áudio (v1/audio/speech): voz de robô, por padrão. Sem texto digitado, fala o da mensagem respondida (um áudio é transcrito antes); respondendo uma mensagem, o que você digitar vira o estilo da fala (só o gpt-4o-mini-tts segue o estilo). Até 4096 caracteres. O modelo, a voz e o estilo são os settings openai.tts.model, openai.tts.voice e openai.tts.instructions.',
-            ex: ['/gpt -voz exterminar todos os humanos', '/gpt -voz (respondendo uma mensagem de texto)', '/gpt -voz fale como um robô meio metálico (respondendo uma mensagem)'],
+            desc: 'Generates a voice note from the text and replies with the audio (v1/audio/speech): robot voice, by default. Without typed text, speaks the replied message\'s (an audio is transcribed first); replying to a message, what you type becomes the speech style (only gpt-4o-mini-tts follows the style). Up to 4096 characters. The model, voice and style are the settings openai.tts.model, openai.tts.voice and openai.tts.instructions.',
+            ex: ['/gpt -voz exterminate all humans', '/gpt -voz (replying to a text message)', '/gpt -voz speak like a kind of metallic robot (replying to a message)'],
             cron: false
         },
         {
             opts: ['prices'],
             values: [],
-            desc: 'Busca a tabela de preços no site da OpenAI e atualiza o setting openai.pricing (dólares por 1M de tokens), usado no custo estimado do -status. Mostra o que mudou; os modelos que você adicionou e a página não tem ficam como estão.',
+            desc: 'Fetches the price table from the OpenAI site and updates the openai.pricing setting (dollars per 1M tokens), used in the estimated cost of -status. Shows what changed; models you added that the page does not have stay as they are.',
             ex: ['/gpt -prices'],
             role: ADMIN,
             cron: false
         },
         {
             opts: ['usage', 'u'],
-            values: ['[dias]'],
-            desc: 'O consumo da OpenAI dos últimos dias (padrão 7, até 31): tokens de entrada, saída e cache, requisições, por dia e por modelo, pela Usage API (v1/organization/usage/completions), que pede a chave de admin (OPENAI_ADMIN_KEY ou o setting openai.admin.key). E os limites de agora, lidos dos cabeçalhos x-ratelimit-* de uma chamada mínima ao chat (gasta uns poucos tokens). Só o dono e os admins, mesmo que o /gpt tenha sido liberado a um usuário.',
-            ex: ['/gpt -usage [dias]', '/gpt -u 30'],
+            values: ['[days]'],
+            desc: 'OpenAI usage over the last days (default 7, up to 31): input, output and cache tokens, requests, per day and per model, via the Usage API (v1/organization/usage/completions), which requires the admin key (OPENAI_ADMIN_KEY or the openai.admin.key setting). And the current limits, read from the x-ratelimit-* headers of a minimal chat call (spends a few tokens). Owner and admins only, even if /gpt was made available to a user.',
+            ex: ['/gpt -usage [days]', '/gpt -u 30'],
             role: ADMIN,
             cron: false
         },
         opcaoStatus('/gpt -s explique SSRF em 3 linhas'),
         {
-            argv: ['<pergunta>'],
-            desc: 'O que perguntar. Respondendo uma foto (ou figurinha), ela vai junto da pergunta; sem pergunta, o ChatGPT descreve a foto. Respondendo um áudio ou nota de voz, o /gpt transcreve (sem pergunta, ou com "transcreva") ou, com outra pergunta, responde em cima da transcrição.',
-            ex: ['/gpt explique SSRF em 3 linhas', '/gpt qual a raça desse cachorro? (respondendo a foto)', '/gpt agora transcreva isso (respondendo um áudio)', '/gpt resuma esse áudio']
+            argv: ['<question>'],
+            desc: 'What to ask. Replying to a photo (or sticker), it goes along with the question; without a question, ChatGPT describes the photo. Replying to an audio or voice note, /gpt transcribes it (without a question, or with "transcreva") or, with another question, answers on top of the transcription.',
+            ex: ['/gpt explain SSRF in 3 lines', '/gpt what breed is this dog? (replying to the photo)', '/gpt now transcribe this (replying to an audio)', '/gpt summarize this audio']
         }
     ],
     estrito: 'primeira',

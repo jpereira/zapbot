@@ -6,15 +6,15 @@ const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/unmute',
-    usage: '/unmute [/contato ou grupo/|@menção|+número|nº]  ou  /unmute -all',
+    usage: '/unmute [/contact or group/|@mention|+number|#]  or  /unmute -all',
     aliases: ['/desmutar'],
-    summary: 'Desfaz o silêncio do /mute',
-    help: 'Desfaz o silêncio do /mute: os avisos de apagadas, editadas, status e reações da pessoa, do grupo ou da comunidade voltam. Respondendo um aviso, desfaz o silêncio de onde ele veio. Sem nada, lista os silenciados.',
+    summary: 'Undoes the /mute silence',
+    help: 'Undoes the /mute silence: the notices for deleted and edited messages, statuses and reactions from the person, group or community come back. Replying to a notice, unmutes where it came from. With nothing, lists the muted ones.',
     cmd_opts: [
-        { opts: ['all', 'a'], values: [], desc: 'Desfaz todos os silenciados.' },
+        { opts: ['all', 'a'], values: [], desc: 'Unmutes everyone muted.' },
         {
-            argv: ['[/contato ou grupo/|@menção|+número|nº]'],
-            desc: 'Quem: buscado como no /mute, ou o nº da lista do /mute. Sem ele, respondendo um aviso, de onde o aviso veio.',
+            argv: ['[/contact or group/|@mention|+number|#]'],
+            desc: 'Who: searched as in /mute, or the # from the /mute list. Without it, replying to a notice, where the notice came from.',
             ex: ['/unmute /Jorge Pereira/', '/unmute 2', '/unmute -all']
         }
     ],

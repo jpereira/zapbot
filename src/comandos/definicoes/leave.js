@@ -1,26 +1,26 @@
 /*
- * /leave: Sai de um grupo
+ * /leave: Leaves a group
  */
 
 const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/leave',
-    usage: '/leave <grupo|nº>...  ou  /leave -l',
+    usage: '/leave <group|num>...  or  /leave -l',
     aliases: ['/sair'],
-    summary: 'Sai de um grupo',
-    help: 'Sai de um ou mais grupos do WhatsApp, separados por espaço ou vírgula. Cada grupo é buscado como no -to (pelo nome ou parte dele; vários que servem: você escolhe na lista) ou pelo nº da lista do /leave -l. Sem nada, lista os grupos em que você está. Para voltar, precisa de um novo convite (/join).',
+    summary: 'Leaves a group',
+    help: 'Leaves one or more WhatsApp groups, separated by spaces or commas. Each group is looked up like in -to (by name or part of it; if several match, you pick from the list) or by its number in the /leave -l list. With nothing, lists the groups you are in. To come back, you need a new invite (/join).',
     ex: ['/leave /Grupo L200/', '/leave 3', '/leave 3 1 /Família/ 5', '/leave -l'],
     cmd_opts: [
         {
-            argv: ['<grupo|nº>...'],
-            desc: 'Os grupos, separados por espaço ou vírgula: pelo nome (nome com espaço entre /.../ ou aspas) ou pelo nº da última lista do -l. Palavras soltas, sem nº, barras nem aspas, são um nome só.',
+            argv: ['<group|num>...'],
+            desc: 'The groups, separated by spaces or commas: by name (a name with spaces goes between /.../ or quotes) or by the number in the last -l list. Loose words, without a number, slashes or quotes, are a single name.',
             ex: ['/leave /Grupo L200/', '/leave 3 1 /Família/ 5']
         },
         {
             opts: ['list', 'l'],
             values: [],
-            desc: 'Lista os grupos em que você está, numerados (o mesmo que /leave sem nada).'
+            desc: 'Lists the groups you are in, numbered (same as /leave with nothing).'
         }
     ],
     role: ADMIN // sai de grupos

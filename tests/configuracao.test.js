@@ -286,6 +286,45 @@ describe('documentação', () => {
         assert.deepEqual(comandos, ordenado(comandos), 'comandos fora de ordem no menu');
     });
 
+    test('exemplos dos blocos de código (docs e READMEs): os comandos usam só opções que existem', () => {
+        const porNome = new Map();
+        for (const c of CONFIG.commands) for (const n of [c.cmd, ...(c.aliases ?? [])]) porNome.set(n, c);
+        // O que vem depois destes é outro comando (o atalho, a mensagem, o lote...): as opções são dele
+        const comAlvo = new Set(['/alias', '/me', '/batch', '/cron', '/help']);
+        const arquivos = [...READMES, ...paginasDocs().map(f => `docs/${f}`)];
+        let linhas = 0;
+
+        for (const arquivo of arquivos) {
+            const md = fs.readFileSync(path.join(bot.RAIZ, arquivo), 'utf8');
+            for (const [, bloco] of md.matchAll(/^```[^\n]*\n([\s\S]*?)^```/gm)) {
+                for (const linha of bloco.split('\n')) {
+                    const m = linha.match(/^\s*(\/[^\s]+)\s+(.*)$/);
+                    const c = m && porNome.get(m[1]);
+                    if (!c || comAlvo.has(c.cmd)) continue;
+                    linhas++;
+                    const validas = new Set(['help', 'h', ...(c.cmd_opts ?? []).flatMap(o => o.opts ?? [])]);
+                    const resto = m[2].replace(/\s{2,}(→|\().*$/, '').replace(/"[^"]*"/g, '').replace(/\{[^}]*\}/g, '');
+                    for (const [, , nome] of resto.matchAll(/(?:^|\s)([-+])([A-Za-z][\w-]*)/g)) {
+                        assert.ok(validas.has(nome), `${arquivo}: "${linha.trim()}" usa -${nome}, que ${c.cmd} não tem`);
+                    }
+                }
+            }
+        }
+        assert.ok(linhas > 500, `poucos exemplos conferidos (${linhas})`);
+    });
+
+    test('settings: o padrão documentado (on/off, número e texto) é o do SETTINGS_SCHEMA, nos dois idiomas', () => {
+        for (const idioma of IDIOMAS) {
+            const linhas = doc(idioma, 'settings.md').split('\n');
+            for (const [chave, schema] of Object.entries(SETTINGS_SCHEMA)) {
+                const linha = linhas.find(l => l.startsWith(`| \`${chave}\` |`));
+                const padrao = linha.split('|')[3].trim();
+                if (schema.type === 'boolean') assert.equal(padrao, `\`${schema.default ? 'on' : 'off'}\``, `${idioma.nome} ${chave}`);
+                if (schema.type === 'string' && schema.default !== '') assert.equal(padrao, `\`${schema.default}\``, `${idioma.nome} ${chave}`);
+            }
+        }
+    });
+
     test('tabela de settings: as chaves do SETTINGS_SCHEMA, em ordem', () => {
         for (const idioma of IDIOMAS) {
             const chaves = semCodigo(doc(idioma, 'settings.md')).split('\n')

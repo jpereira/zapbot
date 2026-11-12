@@ -8,8 +8,8 @@ module.exports = {
     cmd: '/members',
     usage: '/members',
     aliases: ['/listageral', '/list'],
-    summary: 'Lista os membros do grupo',
-    help: 'Lista os membros do grupo (número, nome, admins).',
+    summary: 'Lists the group members',
+    help: 'Lists the group members (number, name, admins).',
     delegavel: true,
     role: ADMIN // delegável: lista o grupo atual
 };

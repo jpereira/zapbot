@@ -1,5 +1,5 @@
 /*
- * /crypto: Preço e variação de 24 h das criptomoedas
+ * /crypto: Price and 24 h change of cryptocurrencies
  */
 
 const { ADMIN, USER } = require('../../roles').ROLES;
@@ -7,32 +7,32 @@ const { OPCAO_ALERTA_MSG, OPCAO_ALERTA_RM, OPCAO_ALERTA_TO } = require('./_opcoe
 
 module.exports = {
     cmd: '/crypto',
-    usage: '/crypto [OPÇÃO] [MOEDA...]  ou  /crypto [MOEDA] -alerta [regra] [-to <destino>]... [-msg <texto>]  ou  /crypto -alerta -rm <nº...|all>',
+    usage: '/crypto [OPTION] [CURRENCY...]  or  /crypto [CURRENCY] -alerta [rule] [-to <target>]... [-msg <text>]  or  /crypto -alerta -rm <num...|all>',
     aliases: ['/bitcoio', '/creptomoeda'],
-    summary: 'Preço e variação de 24 h das criptomoedas',
-    help: 'Preço atual e variação de 24 h das criptomoedas ativadas (Binance) ou só das pedidas (ex.: /crypto BTC ETH).',
+    summary: 'Price and 24 h change of cryptocurrencies',
+    help: 'Current price and 24 h change of the enabled cryptocurrencies (Binance) or only the requested ones (e.g. /crypto BTC ETH).',
     cmd_opts: [
         {
             opts: ['add', 'a'],
             values: ['<TOKEN>'],
-            desc: 'Ativa uma moeda suportada. Só o dono (ou um admin).',
+            desc: 'Enables a supported coin. Owner (or an admin) only.',
             cron: false,
             role: ADMIN
         },
         {
             opts: ['alerta'],
             values: [],
-            desc: 'Sem regra: lista os alertas. Com regra (ex.: BTC < 90000): avisa no seu privado (ou nos destinos do -to) quando o preço passar do valor. A moeda também pode vir antes: /crypto BTC -alerta < 90000. Só o dono (ou um admin).',
+            desc: 'Without a rule: lists the alerts. With a rule (e.g. BTC < 90000): notifies you in your private chat (or at the -to targets) when the price crosses the value. The coin can also come first: /crypto BTC -alerta < 90000. Owner (or an admin) only.',
             cron: false
         },
         {
             opts: ['del', 'd'],
             values: ['<TOKEN>'],
-            desc: 'Desativa uma moeda. Só o dono (ou um admin).',
+            desc: 'Disables a coin. Owner (or an admin) only.',
             cron: false,
             role: ADMIN
         },
-        { opts: ['list', 'l'], values: [], desc: 'Lista as moedas suportadas (* = ativada).' },
+        { opts: ['list', 'l'], values: [], desc: 'Lists the supported coins (* = enabled).' },
         OPCAO_ALERTA_MSG,
         OPCAO_ALERTA_RM,
         OPCAO_ALERTA_TO

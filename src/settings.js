@@ -717,6 +717,13 @@ const SETTINGS_SCHEMA = {
         default: 20,
         type: 'number', min: 1, max: 100,
         desc: 'Máximo de ocorrências listadas por /watch -show.'
+    },
+    'zapbot.lang': {
+        default: 'en_US',
+        type: 'string',
+        opcoes: ['en_US', 'pt_BR'],
+        normalizar: (v) => ({ en: 'en_US', en_us: 'en_US', pt: 'pt_BR', pt_br: 'pt_BR' })[v.toLowerCase().replace('-', '_')] ?? v,
+        desc: 'Idioma do bot: en_US (padrão) ou pt_BR. Hoje traduz a ajuda (-h e /help); as respostas dos comandos estão sendo migradas. Ex.: /set zapbot.lang pt_BR.'
     }
 };
 
@@ -747,7 +754,8 @@ function validarSetting(key, value) {
         }
 
         case 'string': {
-            const s = String(value ?? '').trim();
+            let s = String(value ?? '').trim();
+            if (schema.normalizar) s = schema.normalizar(s);
             if (!s && schema.allowEmpty) return s;
             // Chaves de API passam de 100 (as sk-proj- da OpenAI têm ~164)
             const max = schema.secret ? 500 : 100;

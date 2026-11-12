@@ -1,0 +1,6 @@
+{
+  "summary": "Floreia o texto com emojis de arco-íris",
+  "usage": "/noffa [texto]",
+  "help": "Dá uma floreada no texto com emojis de arco-íris. Aceita texto ou resposta a uma mensagem.",
+  "cmd_opts": []
+}

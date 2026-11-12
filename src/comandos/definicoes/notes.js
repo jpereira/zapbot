@@ -6,22 +6,22 @@ const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/notes',
-    usage: '/notes [-list|-l] [#tag...] [-to <destino>]...  ou  /notes -compact|-c [#tag...]  ou  /notes -search|-s [#tag...] <texto|/regex/flags> [-to <destino>]...  ou  /notes -update|-u <id> [#tag] <novo texto>  ou  /notes -view|-v <id...|#tag...> [-to <destino>]...  ou  /notes -move|-m #tag #novatag  ou  /notes -desc|-d #tag [<descrição>|-rm]  ou  /notes -export|-e [#tag...] [-to <destino>]...  ou  /notes #tag <texto>  ou  /notes -add|-a #tag <texto> [-alerta <quando> [-to <destino>]...]  ou  /notes -rm|-r <id...|#tag...|all>  ou  /notes -alerta [<id|#tag...> [<quando> [-to <destino>]...]]  ou  /notes -alerta -rm <id...|#tag...|all>',
+    usage: '/notes [-list|-l] [#tag...] [-to <destination>]...  or  /notes -compact|-c [#tag...]  or  /notes -search|-s [#tag...] <text|/regex/flags> [-to <destination>]...  or  /notes -update|-u <id> [#tag] <new text>  or  /notes -view|-v <id...|#tag...> [-to <destination>]...  or  /notes -move|-m #tag #newtag  or  /notes -desc|-d #tag [<description>|-rm]  or  /notes -export|-e [#tag...] [-to <destination>]...  or  /notes #tag <text>  or  /notes -add|-a #tag <text> [-alerta <when> [-to <destination>]...]  or  /notes -rm|-r <id...|#tag...|all>  or  /notes -alerta [<id|#tag...> [<when> [-to <destination>]...]]  or  /notes -alerta -rm <id...|#tag...|all>',
     aliases: ['/notas'],
-    summary: 'Anotações salvas no banco',
-    help: 'Anotações salvas no banco. Para anotar, a sintaxe é /notes #tag <texto>: sem a #tag dá erro, e só /notes #tag lista as anotações da tag. Respondendo uma mensagem, o texto dela vira a anotação, com ↩️ (/notes #lembrete); uma mídia (imagem, documento, áudio, vídeo...) na própria mensagem ou na respondida é guardada no disco junto da anotação. Sem nada, mostra as tags com a quantidade e a descrição de cada uma; -l lista todas as anotações, com o ID, agrupadas por #tag (uma mensagem por tag). O -alerta lembra de uma anotação numa data/hora (uma vez; a anotação continua): no seu privado ou nos destinos do -to.',
+    summary: 'Notes saved in the database',
+    help: 'Notes saved in the database. To add one, the syntax is /notes #tag <text>: without the #tag it errors, and just /notes #tag lists the tag\'s notes. Replying to a message, its text becomes the note, with ↩️ (/notes #lembrete); media (image, document, audio, video...) in the message itself or in the replied one is saved to disk along with the note. With nothing, shows the tags with the count and description of each; -l lists all notes, with the ID, grouped by #tag (one message per tag). The -alerta reminds you of a note at a date/time (once; the note stays): in your private chat or at the -to destinations.',
     ex: [
-        '/notes #casa comprar leite',
+        '/notes #casa buy milk',
         '/notes #casa',
         '/notes -s /pão|leite/i',
         '/notes -v 76',
-        '/notes #idei (acha a #ideias)',
+        '/notes #idei (finds #ideias)',
         '/notes -m #casa #lar',
-        '/notes -d #casa Coisas da casa',
-        '/notes -update 3 novo texto',
+        '/notes -d #casa Home stuff',
+        '/notes -update 3 new text',
         '/notes -e #casa',
         '/notes -r #casa',
-        '/notes #lembrete ligar pro João -alerta amanhã 9h',
+        '/notes #lembrete call João -alerta amanhã 9h',
         '/notes -alerta 3 +2h -to /Família/',
         '/notes -alerta #casa 18h -to /Família/',
         '/notes -r 2'
@@ -29,69 +29,69 @@ module.exports = {
     cmd_opts: [
         {
             opts: ['add', 'a'],
-            values: ['#tag <texto>'],
-            desc: 'Adiciona uma anotação: a #tag é obrigatória e vem no começo (o texto vai até o -alerta, se houver).',
-            ex: ['/notes -a #casa comprar leite'],
+            values: ['#tag <text>'],
+            desc: 'Adds a note: the #tag is required and comes first (the text goes up to the -alerta, if any).',
+            ex: ['/notes -a #casa buy milk'],
             cron: false
         },
         {
             opts: ['list', 'l'],
             values: ['[#tag...]'],
-            desc: 'Lista as anotações, cada uma com o ID, agrupadas por #tag. Com tags, só as delas (a tag pode vir pela metade: #idei acha a #ideias).',
+            desc: 'Lists the notes, each with its ID, grouped by #tag. With tags, only theirs (the tag can be partial: #idei finds #ideias).',
             ex: ['/notes -l #casa', '/notes -l #idei']
         },
         {
             opts: ['compact', 'c'],
             values: ['[#tag...]'],
-            desc: 'Lista com uma linha por nota (título, ícones 🖼️ mídia, ⏰ alerta e 🔗 link, e a hora), agrupadas por dia. Também vale como /notes #tag -c ou -l -c.',
+            desc: 'Lists one line per note (title, icons 🖼️ media, ⏰ alert and 🔗 link, and the time), grouped by day. Also works as /notes #tag -c or -l -c.',
             ex: ['/notes -c', '/notes #pt -c']
         },
         {
             opts: ['search', 's'],
-            values: ['[#tag...] <texto|/regex/flags>'],
-            desc: 'Só as anotações que casam: texto (sem diferenciar maiúsculas/acentos) ou /regex/flags, como o -q do /show. Casa também o nome da tag.',
-            ex: ['/notes -s /pão|leite/i', '/notes -s #casa leite'],
+            values: ['[#tag...] <text|/regex/flags>'],
+            desc: 'Only the notes that match: text (case/accent-insensitive) or /regex/flags, like the -q of /show. Also matches the tag name.',
+            ex: ['/notes -s /pão|leite/i', '/notes -s #casa milk'],
             cron: false
         },
         {
             opts: ['update', 'u'],
-            values: ['<id> [#tag] <novo texto>'],
-            desc: 'Troca o texto da anotação (e a tag, se vier uma).',
-            ex: ['/notes -update 3 comprar pão e leite'],
+            values: ['<id> [#tag] <new text>'],
+            desc: 'Replaces the note text (and the tag, if one is given).',
+            ex: ['/notes -update 3 buy bread and milk'],
             cron: false
         },
         {
             opts: ['view', 'v'],
             values: ['<id...|#tag...>'],
-            desc: 'Mostra a anotação com a imagem (o texto vai na legenda; sem imagem, só o texto). Aceita vários IDs ou tags (a tag pode vir pela metade). Com -to, manda no destino; por e-mail, a imagem vai anexada.',
+            desc: 'Shows the note with its image (the text goes in the caption; without an image, just the text). Accepts several IDs or tags (the tag can be partial). With -to, sends to the destination; by email, the image is attached.',
             ex: ['/notes -v 76', '/notes -v 3 5', '/notes -v #idei', '/notes -v 76 -to /Família/'],
             cron: false
         },
         {
             opts: ['move', 'm'],
-            values: ['#tag #novatag'],
-            desc: 'Renomeia a tag em todas as anotações (se a nova já existe, as duas se juntam). A tag vai inteira, e a descrição dela vai junto.',
+            values: ['#tag #newtag'],
+            desc: 'Renames the tag in all notes (if the new one already exists, the two merge). The tag must be complete, and its description goes along.',
             ex: ['/notes -move #casa #lar'],
             cron: false
         },
         {
             opts: ['desc', 'd'],
-            values: ['#tag [<descrição>|-rm]'],
-            desc: 'Descrição da tag, mostrada na lista e no /notes sozinho. Sem texto, mostra a atual; com -rm, apaga. A tag pode vir pela metade.',
-            ex: ['/notes -desc #casa Coisas da casa', '/notes -d #casa', '/notes -d #casa -rm'],
+            values: ['#tag [<description>|-rm]'],
+            desc: 'Tag description, shown in the list and in plain /notes. Without text, shows the current one; with -rm, deletes it. The tag can be partial.',
+            ex: ['/notes -desc #casa Home stuff', '/notes -d #casa', '/notes -d #casa -rm'],
             cron: false
         },
         {
             opts: ['export', 'e'],
             values: ['[#tag...]'],
-            desc: 'Manda as anotações num PDF, com as imagens e o texto como legenda (ZapBot_notes_YYYYMMDD_HHMM.pdf), ou só as das tags (ZapBot_notes_tag-casa_YYYYMMDD_HHMM.pdf). A tag pode vir pela metade, e a descrição dela (-desc) vem no começo do documento. Com -to, o PDF vai no destino.',
+            desc: 'Sends the notes in a PDF, with the images and the text as caption (ZapBot_notes_YYYYMMDD_HHMM.pdf), or only those of the tags (ZapBot_notes_tag-casa_YYYYMMDD_HHMM.pdf). The tag can be partial, and its description (-desc) comes at the start of the document. With -to, the PDF goes to the destination.',
             ex: ['/notes -e', '/notes -e #casa', '/notes -e #casa -to /Família/'],
             cron: false
         },
         {
             opts: ['rm', 'r'],
             values: ['<id...|#tag...|all>'],
-            desc: 'Remove as anotações com esses IDs (-rm 1 2 3 ou -rm 1,2,3), de uma tag (-rm #casa) ou todas (all). Se algum ID ou tag não existe, nenhuma sai. A tag vai inteira. Junto com -alerta, tira só o alerta, mantendo as anotações.',
+            desc: 'Removes the notes with those IDs (-rm 1 2 3 or -rm 1,2,3), of a tag (-rm #casa) or all (all). If any ID or tag does not exist, none is removed. The tag must be complete. Together with -alerta, removes only the alert, keeping the notes.',
             ex: [
                 '/notes -rm 2',
                 '/notes -rm 1 2 3',
@@ -103,14 +103,14 @@ module.exports = {
         },
         {
             opts: ['alerta'],
-            values: ['<quando>'],
-            desc: 'Avisa da anotação numa data/hora. Com -add: /notes -a texto -alerta amanhã 9h. Com ID: /notes -alerta 3 +2h. Com #tag: avisa de todas as anotações da tag (/notes -alerta #casa 18h -to /Família/). Sozinho, lista as anotações com alerta (com #tag, só as da tag); com -rm <id...|#tag...|all>, tira o alerta. O quando aceita +2h, 30m, 18h, amanhã 9h, sexta 18:30, 25/12 10h.',
+            values: ['<when>'],
+            desc: 'Reminds you of the note at a date/time. With -add: /notes -a text -alerta amanhã 9h. With ID: /notes -alerta 3 +2h. With #tag: reminds of all the tag\'s notes (/notes -alerta #casa 18h -to /Família/). Alone, lists the notes with an alert (with #tag, only the tag\'s); with -rm <id...|#tag...|all>, removes the alert. The when accepts +2h, 30m, 18h, amanhã 9h, sexta 18:30, 25/12 10h.',
             cron: false
         },
         {
             opts: ['to'],
-            values: ['<destino>'],
-            desc: 'Com a lista (-l, #tag), o -view ou o -export: manda no destino em vez de responder aqui. Com -alerta: avisa num contato, num grupo, num número ou por e-mail em vez do seu privado. Repita para vários: um alerta só, que avisa em todos.',
+            values: ['<destination>'],
+            desc: 'With the list (-l, #tag), -view or -export: sends to the destination instead of replying here. With -alerta: notifies a contact, a group, a number or by email instead of your private chat. Repeat for several: a single alert, which notifies all of them.',
             ex: [
                 '/notes -e #casa -to /Família/',
                 '-to /Jorge Pereira/',

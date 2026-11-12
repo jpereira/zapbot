@@ -5,6 +5,8 @@
 const { listarAliases } = require('../aliases');
 const { ROLES, atende } = require('../roles');
 const { activeCommands, findCommand, formatCommandHelp, protocoloDaAjuda } = require('./base');
+const { localizar } = require('./localizar');
+const { t } = require('../i18n');
 
 // A ordem do /help -full: do mais restrito ao comum
 const ROLES_NA_AJUDA = [ROLES.OWNER, ROLES.ADMIN, ROLES.USER];
@@ -40,34 +42,34 @@ async function cmdHelp({ msg, args: digitado, opts, nivel, admin,
         const command = findCommand(requestedCommand);
 
         if (!command) {
-            await msg.reply(`❌ Comando não encontrado: ${requestedCommand}`);
+            await msg.reply(t('help.notFound', { cmd: requestedCommand }));
             return;
         }
 
         if (!pode(command)) {
             await msg.reply((command.role !== ROLES.USER
-                ? `⛔ O ${command.cmd} é só do dono do bot${command.role === ROLES.OWNER ? '' : ' (e dos admins)'}.`
-                : `⛔ O ${command.cmd} não está liberado para você.`) +
-                '\n💡 _Veja os que você pode usar com /help_');
+                ? t('help.restricted', { cmd: command.cmd, e: command.role === ROLES.OWNER ? '' : t('help.andAdmins') })
+                : t('help.notAllowed', { cmd: command.cmd })) +
+                `\n${t('help.seeAllowed')}`);
             return;
         }
 
         const protocolo = protocoloDaAjuda(command, resto);
-        await msg.reply('🤖 *AJUDA*\n\n```' + formatCommandHelp(command, { protocolo }) + '\n```');
+        await msg.reply(`${t('help.title')}\n\n\`\`\`${formatCommandHelp(command, { protocolo })}\n\`\`\``);
         return;
     }
 
     // /help sozinho: um comando por linha, só com o que ele faz; com o -role, separados por role
-    const linha = (c) => ` ${c.cmd} - ${c.summary ?? c.help}`;
+    const linha = (c) => { const l = localizar(c); return ` ${c.cmd} - ${l.summary ?? l.help}`; };
     const visiveis = activeCommands().filter(pode);
     const lista = opts?.opt?.role
         ? ROLES_NA_AJUDA.map(g => [g, visiveis.filter(c => c.role === g)]).filter(([, cs]) => cs.length)
             .map(([g, cs]) => `Role: ${g}\n${cs.map(linha).join('\n')}`).join('\n\n')
         : visiveis.map(linha).join('\n');
     const helpText =
-        '🤖 *MENU DE AJUDA*' + (admin ? '' : ' _(os comandos que você pode usar)_') + '\n\n```\n' +
+        t('help.menuTitle') + (admin ? '' : ` ${t('help.menuUserNote')}`) + '\n\n```\n' +
         lista +
-        '\n```\n\n💡 Utilize */help /comando* ou */comando -h* para mais informações.';
+        `\n\`\`\`\n\n${t('help.menuFooter')}`;
 
     await msg.reply(helpText);
 }

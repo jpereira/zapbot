@@ -6,22 +6,22 @@ const { USER } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/help',
-    usage: '/help [-role|-r] [comando] [protocolo]',
+    usage: '/help [-role|-r] [command] [protocol]',
     aliases: ['/h', '/ajuda'],
-    summary: 'Lista os comandos ou detalha um deles',
-    help: 'Exibe o menu de ajuda, só com os comandos que você pode usar (o dono e os admins veem todos); com um comando, só a ajuda dele.',
+    summary: 'Lists the commands or details one of them',
+    help: 'Shows the help menu, only with the commands you can use (the owner and admins see all of them); with a command, only its help.',
     ex: ['/help show'],
     cmd_opts: [
         {
             opts: ['role', 'r'],
             values: [],
-            desc: 'Lista os comandos separados por role (owner, admin e user), só os que você pode usar.',
+            desc: 'Lists the commands grouped by role (owner, admin and user), only the ones you can use.',
             ex: ['/help -r']
         },
-        { argv: ['[comando]'], desc: 'Comando (com ou sem /, nome ou alias).', ex: ['/help get'] },
+        { argv: ['[command]'], desc: 'Command (with or without /, name or alias).', ex: ['/help get'] },
         {
-            argv: ['[protocolo]'],
-            desc: 'No /defi, só a ajuda de um protocolo: orca, prjx, liquidswap, morpho ou aave. Equivale a /defi <protocolo> -help.',
+            argv: ['[protocol]'],
+            desc: 'In /defi, only the help for one protocol: orca, prjx, liquidswap, morpho or aave. Same as /defi <protocol> -help.',
             ex: ['/help defi aave']
         }
     ],

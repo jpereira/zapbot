@@ -6,39 +6,39 @@ const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/debug',
-    usage: '/debug [OPÇÃO]',
+    usage: '/debug [OPTION]',
     aliases: ['/d', '/dbg'],
-    summary: 'Logs de depuração com níveis e filtro',
-    help: 'Logs de depuração com níveis cumulativos DEBUG0 a DEBUG3, filtro /regex/flags e cópia para um chat do WhatsApp. As configurações ficam salvas nos settings debug.*.',
+    summary: 'Debug logs with levels and filter',
+    help: 'Debug logs with cumulative levels DEBUG0 to DEBUG3, a /regex/flags filter and a copy to a WhatsApp chat. The settings are saved in the debug.* settings.',
     ex: ['/debug -on', '/debug -on -level 2 -filter /sapato/ -copy-to /Jorge Pereira/'],
     cmd_opts: [
         {
             opts: ['copy-to'],
-            values: ['[destino]'],
-            desc: 'Copia os logs para contato, grupo, menção ou número, como no -to; não aceita e-mail. Sem destino, usa este chat.',
-            ex: ['-copy-to /Jorge Pereira/', '-copy-to @Jorge (menção)', '-copy-to']
+            values: ['[destination]'],
+            desc: 'Copies the logs to a contact, group, mention or number, as in -to; does not accept email. With no destination, uses this chat.',
+            ex: ['-copy-to /Jorge Pereira/', '-copy-to @Jorge (mention)', '-copy-to']
         },
         {
             opts: ['filter', 'f'],
             values: ['[/regex/flags]'],
-            desc: 'Exibe e copia linhas que casam com a regex, com matches destacados no console. Os logs de inicialização aparecem sem filtro, inclusive o aviso por e-mail de bot iniciado. Aceita flags do JavaScript (i, g, m, s, u, y...). Sem regex, limpa o filtro.',
+            desc: 'Shows and copies lines that match the regex, with matches highlighted in the console. Startup logs appear unfiltered, including the bot-started email notice. Accepts JavaScript flags (i, g, m, s, u, y...). With no regex, clears the filter.',
             ex: ['-filter /chatName.*Jorge/i', '-filter']
         },
         {
             opts: ['level', 'lvl'],
             values: ['<0|1|2|3>'],
-            desc: 'Nível cumulativo: 0 (padrão) logs básicos e argumentos dos comandos; 1 comandos recebidos, chamadas do parser e funções exportadas; 2 APIs e outras integrações com parâmetros; 3 resultados, SQL e diagnósticos de desenvolvimento. Precisa do debug ligado ou de -on no mesmo comando.',
+            desc: 'Cumulative level: 0 (default) basic logs and command arguments; 1 received commands, parser calls and exported functions; 2 APIs and other integrations with parameters; 3 results, SQL and development diagnostics. Needs debug on or -on in the same command.',
             ex: ['-level 2', '-on -lvl 3']
         },
         {
             opts: ['off'],
             values: [],
-            desc: 'Desliga o debug e limpa o filtro e o destino da cópia.'
+            desc: 'Turns debug off and clears the filter and the copy destination.'
         },
         {
             opts: ['on'],
             values: [],
-            desc: 'Liga o debug no nível configurado. Pode combinar com nível, filtro e cópia.'
+            desc: 'Turns debug on at the configured level. Can be combined with level, filter and copy.'
         }
     ],
     role: ADMIN // logs do bot

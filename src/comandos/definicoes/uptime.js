@@ -8,8 +8,8 @@ module.exports = {
     cmd: '/uptime',
     usage: '/uptime',
     aliases: [],
-    summary: 'Há quanto tempo o bot está rodando',
-    help: 'Exibe há quanto tempo o bot está rodando e conectado.',
+    summary: 'How long the bot has been running',
+    help: 'Shows how long the bot has been running and connected.',
     digitando: false, // responde na hora: sem o "digitando..."
     role: USER,
     cron: true

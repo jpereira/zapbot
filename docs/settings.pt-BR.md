@@ -75,9 +75,9 @@ e sobrevivem a reinícios. Para ver e alterar, use o [`/set`](comandos/set.md).
 | `openai.image.gifModel` | texto | `gpt-image-2.6-flare` | Modelo que gera o GIF do `/draw -gif` e do `/gpt -gif` (só os `gpt-image-2.6-*` fazem GIF e pedem acesso à prévia): o id que a sua conta tem (se não existir, o bot lista os que a chave vê) |
 | `openai.image.model` | texto | `gpt-image-2` | Modelo que gera e edita a imagem do `/draw` e do `/gpt -img`: o id que a sua conta tem (se não existir, o bot lista os que a chave vê). O GIF tem o seu, o `openai.image.gifModel` |
 | `openai.pricing` | lista `modelo=entrada/saída` | *(vazia)* (o `/gpt -prices` ou a atualização automática preenche) | Preço por 1M de tokens, em dólares, para o custo estimado do rodapé de status do `/gpt` e do `/tldr` (modelo sem preço: `custo n/d`). Vale o nome exato ou o prefixo mais longo |
-| `openai.pricing.auto` | liga/desliga | `ligado` | Atualiza o `openai.pricing` sozinho a cada 15 dias, lendo o site da OpenAI (como o `/gpt -prices`); só roda com a chave da OpenAI configurada. Desligado: só à mão |
+| `openai.pricing.auto` | liga/desliga | `on` | Atualiza o `openai.pricing` sozinho a cada 15 dias, lendo o site da OpenAI (como o `/gpt -prices`); só roda com a chave da OpenAI configurada. Desligado: só à mão |
 | `openai.pricing.updated` | `AAAA-MM-DD` | *(vazio)* | Data da última atualização do `openai.pricing` (gravada pelo bot): vazio: ainda não atualizou |
-| `openai.status` | liga/desliga | `ligado` | Rodapé de status nas respostas do `/gpt` e do `/tldr`: bytes enviados (TX) e recebidos (RX), tokens gastos, custo estimado e saldo (com ele desligado, o `-status` liga só naquela vez) |
+| `openai.status` | liga/desliga | `on` | Rodapé de status nas respostas do `/gpt` e do `/tldr`: bytes enviados (TX) e recebidos (RX), tokens gastos, custo estimado e saldo (com ele desligado, o `-status` liga só naquela vez) |
 | `openai.timeout.ms` | 5000–300000 | `60000` | Timeout do `/gpt`, usado quando `OPENAI_TIMEOUT_MS` não está no `config/.env` |
 | `openai.transcribe.model` | texto | `gpt-transcribe` | Modelo que transcreve o áudio respondido com o `/gpt`: o id que a sua conta tem (o `whisper-1` sai do ar em fev/2027) |
 | `openai.tts.instructions` | texto | `Fale como um robô: voz metálica, monótona e pausada, sem emoção.` | Estilo da voz do `/gpt -voz` (só o `gpt-4o-mini-tts` usa) |
@@ -103,6 +103,7 @@ e sobrevivem a reinícios. Para ver e alterar, use o [`/set`](comandos/set.md).
 | `watch.max` | 1–100 | `20` | Máximo de regras do `/watch` |
 | `watch.rules` | lista (uma por linha) | *(vazia)* | Regras do `/watch`: texto ou `/regex/flags`. Criadas por `/watch <regra>` e removidas por `/watch -rm N` |
 | `watch.showMax` | 1–100 | `20` | Máximo de ocorrências exibidas pelo `/watch`, inclusive com `-N` e `-show` |
+| `zapbot.lang` | `en_US`, `pt_BR` | `en_US` | Idioma do bot: a ajuda (`-h`, `/help`) sai nele. `/set zapbot.lang pt_BR` (ou `/set zapbot.lang=pt_BR`) troca para o português; `pt-BR`, `pt` e `en` também valem. As respostas dos comandos estão sendo migradas para o mesmo setting |
 
 Uma chave nova é declarada em `SETTINGS_SCHEMA` (`src/settings.js`), **em ordem alfabética**, com
 padrão, tipo, descrição e limites (`allowEmpty` para texto que pode ficar vazio, `secret` para

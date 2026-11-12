@@ -7,51 +7,51 @@ const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/backup',
-    usage: '/backup [OPÇÃO]',
+    usage: '/backup [OPTION]',
     aliases: ['/bkp'],
-    summary: 'Backup do banco: lista, detalha, restaura, envia ou apaga',
-    help: `Backup do banco em ${BACKUP_DIR}: um automático por dia, e você lista, detalha, restaura, envia ou apaga. O backup diário também é enviado ao destino da setting backup.to (contato, grupo, número ou e-mail, como no -to), sem pedir -sim; vazia, só salva localmente. Sem opção, mostra o banco atual e os backups.`,
+    summary: 'Database backup: lists, details, restores, sends or deletes',
+    help: `Database backup in ${BACKUP_DIR}: one automatic per day, and you can list, detail, restore, send or delete. The daily backup is also sent to the destination in the backup.to setting (contact, group, number or email, as in -to), without asking for -sim; if empty, it only saves locally. With no option, shows the current database and the backups.`,
     cmd_opts: [
         {
             opts: ['info', 'i'],
-            values: ['<nº>'],
-            desc: 'Detalhes do backup nº N: data, motivo, versão e as entradas de cada tabela, comparadas com o banco atual.'
+            values: ['<no.>'],
+            desc: 'Details of backup no. N: date, reason, version and the entries of each table, compared with the current database.'
         },
         {
             opts: ['list', 'l'],
             values: [],
-            desc: 'Lista os backups, do mais novo para o mais antigo.'
+            desc: 'Lists the backups, from newest to oldest.'
         },
         {
             opts: ['now', 'n'],
             values: [],
-            desc: 'Cria um backup agora (manual: fica até ser apagado).'
+            desc: 'Creates a backup now (manual: kept until deleted).'
         },
         {
             opts: ['restore', 'r'],
-            values: ['<nº|nome>'],
-            desc: 'Restaura o backup (pede confirmação com -sim). Antes, faz um backup do estado atual.'
+            values: ['<no.|name>'],
+            desc: 'Restores the backup (asks for confirmation with -sim). First, backs up the current state.'
         },
-        { opts: ['rm'], values: ['<nº|all>'], desc: 'Apaga o backup nº N (ou todos).' },
+        { opts: ['rm'], values: ['<no.|all>'], desc: 'Deletes backup no. N (or all).' },
         {
             opts: ['send', 's'],
-            values: ['[nº]'],
-            desc: 'Envia o arquivo do backup (sem nº: o mais recente) no seu privado ou nos destinos do -to.'
+            values: ['[no.]'],
+            desc: 'Sends the backup file (without a no.: the latest) to your private chat or to the -to destinations.'
         },
         {
             opts: ['sim'],
             values: [],
-            desc: 'Confirma: junto com -restore, a restauração; junto com -send -to outro chat, o envio (o banco tem as mensagens de todos os chats).'
+            desc: 'Confirms: with -restore, the restore; with -send -to another chat, the sending (the database has the messages of all chats).'
         },
         {
             opts: ['to'],
-            values: ['<destino>'],
-            desc: 'Junto com -send: por e-mail, como anexo (email = o QRCODE_EMAIL_SMTP_TO), ou noutro chat: um contato, uma menção, um grupo ou um número (pede -sim). Repita para vários.',
+            values: ['<destination>'],
+            desc: 'With -send: by email, as an attachment (email = the QRCODE_EMAIL_SMTP_TO), or to another chat: a contact, a mention, a group or a number (asks for -sim). Repeat for several.',
             ex: [
                 '-to email',
-                '-to voce@exemplo.com',
+                '-to you@example.com',
                 '-to /Jorge Pereira/',
-                '-to @Fulano (menção)',
+                '-to @John (mention)',
                 '-to /Grupo L200/',
                 '-to +5521999999999'
             ]

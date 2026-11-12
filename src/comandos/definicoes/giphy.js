@@ -8,9 +8,9 @@ module.exports = {
     cmd: '/giphy',
     usage: '/giphy [tag|URL|ID]',
     aliases: ['/gif'],
-    summary: 'Envia um GIF do GIPHY',
-    help: 'Envia um GIF do GIPHY como vídeo em loop: aleatório pela tag (padrão: gif.tag), ou o GIF escolhido por URL ou ID. Precisa de GIPHY_API_KEY no config/.env ou do setting giphy.api.key.',
-    ex: ['/giphy gatos', '/giphy https://giphy.com/gifs/h5WUvmDSB0njFcFeCE'],
+    summary: 'Sends a GIF from GIPHY',
+    help: 'Sends a GIF from GIPHY as a looping video: random by tag (default: gif.tag), or the GIF chosen by URL or ID. Needs GIPHY_API_KEY in config/.env or the giphy.api.key setting.',
+    ex: ['/giphy cats', '/giphy https://giphy.com/gifs/h5WUvmDSB0njFcFeCE'],
     role: USER,
     cron: true
 };

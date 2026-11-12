@@ -1,0 +1,6 @@
+{
+  "summary": "Verifica se o bot está respondendo",
+  "usage": "/ping",
+  "help": "Verifica se o bot está respondendo (responde pong).",
+  "cmd_opts": []
+}

@@ -1,15 +1,15 @@
 /*
- * /join: Entra em um grupo pelo link de convite
+ * /join: Joins a group through an invite link
  */
 
 const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/join',
-    usage: '/join <link do convite>  ou  /join -info|-i <link>  ou  /join -l',
+    usage: '/join <invite link>  or  /join -info|-i <link>  or  /join -l',
     aliases: ['/entrar'],
-    summary: 'Entra em um grupo pelo link de convite',
-    help: 'Entra em um grupo do WhatsApp pelo link de convite (chat.whatsapp.com/<código>, com ou sem https://, ou só o código). Com -info, mostra o nome, os participantes e a descrição do grupo sem entrar. Com -list, lista os grupos em que você está (o mesmo que /leave -l). Para sair, use /leave.',
+    summary: 'Joins a group through an invite link',
+    help: 'Joins a WhatsApp group through the invite link (chat.whatsapp.com/<code>, with or without https://, or just the code). With -info, shows the group name, participants and description without joining. With -list, lists the groups you are in (same as /leave -l). To leave, use /leave.',
     ex: [
         '/join https://chat.whatsapp.com/AbCdEfGhIjKlMnOpQrStUv',
         '/join -info chat.whatsapp.com/AbCdEfGhIjKlMnOpQrStUv',
@@ -17,20 +17,20 @@ module.exports = {
     ],
     cmd_opts: [
         {
-            argv: ['<link do convite>'],
-            desc: 'O link do grupo (https://chat.whatsapp.com/<código>) ou só o código.',
+            argv: ['<invite link>'],
+            desc: 'The group link (https://chat.whatsapp.com/<code>) or just the code.',
             ex: ['/join https://chat.whatsapp.com/AbCdEfGhIjKlMnOpQrStUv']
         },
         {
             opts: ['info', 'i'],
             values: [],
-            desc: 'Mostra o grupo do convite (nome, participantes e descrição) sem entrar.',
+            desc: 'Shows the invited group (name, participants and description) without joining.',
             ex: ['/join -info chat.whatsapp.com/AbCdEfGhIjKlMnOpQrStUv']
         },
         {
             opts: ['list', 'l'],
             values: [],
-            desc: 'Lista os grupos em que você está, numerados para o /leave <nº>.'
+            desc: 'Lists the groups you are in, numbered for /leave <num>.'
         }
     ],
     role: ADMIN // entra em grupos

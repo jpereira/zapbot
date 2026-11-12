@@ -1,0 +1,6 @@
+{
+  "summary": "Exibe a versão do bot",
+  "usage": "/version",
+  "help": "Exibe a versão do bot (mesmo banner do /uptime).",
+  "cmd_opts": []
+}

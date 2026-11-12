@@ -1,36 +1,36 @@
 /*
- * /search: Busca mensagens no histórico do WhatsApp Web
+ * /search: Searches messages in the WhatsApp Web history
  */
 
 const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/search',
-    usage: '/search [-N] <texto> | -read <id>',
+    usage: '/search [-N] <text> | -read <id>',
     aliases: ['/buscar'],
-    summary: 'Busca mensagens no histórico do WhatsApp Web',
-    help: 'Busca mensagens no histórico do WhatsApp Web, inclusive as que nunca passaram pelo cache do bot (o /show -q busca só no cache). Neste chat; no seu privado, em todos os chats. Mostra data, quem mandou (e o chat, na busca em todos), o texto e o id; com -read, exibe a mensagem inteira.',
+    summary: 'Searches messages in the WhatsApp Web history',
+    help: 'Searches messages in the WhatsApp Web history, including ones that never went through the bot cache (/show -q searches the cache only). In this chat; in your private chat, in all chats. Shows the date, the sender (and the chat, when searching all), the text and the id; with -read, shows the whole message.',
     cmd_opts: [
         {
             argv: ['-N'],
-            desc: 'Quantidade de mensagens (padrão 10, máx. 50).',
+            desc: 'Number of messages (default 10, max 50).',
             ex: ['/search -30 boleto']
         },
         {
-            argv: ['<texto>'],
-            desc: 'O que buscar, como na busca do WhatsApp (sem diferenciar maiúsculas).',
-            ex: ['/search pix', '/search bom dia']
+            argv: ['<text>'],
+            desc: 'What to search for, like the WhatsApp search (case-insensitive).',
+            ex: ['/search pix', '/search good morning']
         },
         {
             opts: ['read', 'r'],
             values: ['<id>'],
-            desc: 'Exibe inteira a mensagem de um id da lista da busca (mesmo escopo: este chat, ou todos no seu privado).',
+            desc: 'Shows the whole message for an id from the search list (same scope: this chat, or all chats in your private chat).',
             ex: ['/search -read false_5521988887777@c.us_3EB0A1B2']
         },
         {
             opts: ['mask', 'm'],
             values: [],
-            desc: 'Ofusca telefones com 10 a 15 dígitos contínuos na saída desta execução, mantendo os cinco primeiros e os dois últimos (como +55219****44).',
+            desc: 'Obfuscates phone numbers with 10 to 15 consecutive digits in this run\'s output, keeping the first five and the last two (like +55219****44).',
             ex: ['/search -mask pix']
         }
     ],

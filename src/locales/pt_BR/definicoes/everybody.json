@@ -1,0 +1,6 @@
+{
+  "summary": "Responde marcando todos do grupo",
+  "usage": "/everybody",
+  "help": "Responde marcando todos do grupo (exceto você).",
+  "cmd_opts": []
+}

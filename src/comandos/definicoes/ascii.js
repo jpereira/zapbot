@@ -1,29 +1,29 @@
 /*
- * /ascii: O texto em letras grandes de ASCII
+ * /ascii: The text in big ASCII letters
  */
 
 const { USER } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/ascii',
-    usage: '/ascii [-width|-w <colunas>] [-char|-c <caractere>] <texto>',
+    usage: '/ascii [-width|-w <columns>] [-char|-c <character>] <text>',
     aliases: [],
-    summary: 'O texto em letras grandes de ASCII',
-    help: 'O texto em letras grandes de ASCII, num bloco monoespaçado que cabe na tela do celular (quebra em várias linhas de letras). Aceita letras (sem acento), números e ! ? . , : - + _ /, até 40 caracteres. Sem texto, usa o da mensagem respondida.',
-    ex: ['/ascii Jorge!', '/ascii -w 20 Feliz aniversario', '/ascii -c @ Oi'],
+    summary: 'The text in big ASCII letters',
+    help: 'The text in big ASCII letters, in a monospaced block that fits the phone screen (wraps into several lines of letters). Accepts letters (no accents), numbers and ! ? . , : - + _ /, up to 40 characters. With no text, uses the replied message\'s.',
+    ex: ['/ascii Jorge!', '/ascii -w 20 Happy birthday', '/ascii -c @ Hi'],
     cmd_opts: [
         {
             opts: ['width', 'w'],
-            values: ['<colunas>'],
-            desc: 'Colunas por linha de letras, de 10 a 60 (padrão 30, o que cabe na tela do celular).',
-            ex: ['/ascii -w 20 Feliz aniversario'],
+            values: ['<columns>'],
+            desc: 'Columns per line of letters, from 10 to 60 (default 30, what fits the phone screen).',
+            ex: ['/ascii -w 20 Happy birthday'],
             cron: false
         },
         {
             opts: ['char', 'c'],
-            values: ['<caractere>'],
-            desc: 'O caractere do traço das letras (padrão: setting ascii.defaultChar, #).',
-            ex: ['/ascii -c @ Oi'],
+            values: ['<character>'],
+            desc: 'The character used to draw the letters (default: setting ascii.defaultChar, #).',
+            ex: ['/ascii -c @ Hi'],
             cron: false
         }
     ],

@@ -14,6 +14,7 @@ const fs = require('fs');
 const path = require('path');
 
 const { commands } = require('../src/comandos/comandos');
+const { localizar } = require('../src/comandos/localizar');
 const { ROLES } = require('../src/roles');
 
 const DOCS = path.join(__dirname, '..', 'docs', 'comandos');
@@ -38,6 +39,7 @@ function quebrar(itens) {
 // Os textos de cada idioma: o inglês (en) é a página docs/comandos/index.md, e o português (pt-BR), a index.pt-BR.md
 const TEXTOS = {
     en: {
+        lang: 'en_US',
         arquivo: 'index.md',
         porRole: 'Commands by role',
         grupos: [
@@ -49,6 +51,7 @@ const TEXTOS = {
         tabela: ['Command', 'Current chat only (left out)', 'Owner and admins only']
     },
     'pt-BR': {
+        lang: 'pt_BR',
         arquivo: 'index.pt-BR.md',
         porRole: 'Comandos por role',
         grupos: [
@@ -83,7 +86,7 @@ const nomeDe = (o) => (o.opts ? `-${o.opts[0]}` : o.argv.join(' '));
 const celula = (itens) => (itens.length ? itens.map(n => `\`${n}\``).join(', ').replace(/\|/g, '\\|') : '');
 
 const limites = (texto) => () => {
-    const linhas = commands.map(c => ({
+    const linhas = commands.map(c => localizar(c, texto.lang)).map(c => ({
         cmd: c.cmd,
         outros: celula((c.cmd_opts ?? []).filter(o => o.outrosChats).map(nomeDe)),
         ajustes: celula((c.cmd_opts ?? []).filter(o => o.role && o.role !== ROLES.USER).map(nomeDe))

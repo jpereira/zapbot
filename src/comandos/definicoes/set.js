@@ -6,33 +6,33 @@ const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/set',
-    usage: '/set [OPÇÃO] [<chave> [<valor>]]',
+    usage: '/set [OPTION] [<key> [<value>]]',
     aliases: ['/config'],
-    summary: 'Lista, exibe e altera as configurações do bot',
-    help: 'Lista, exibe e altera as configurações do bot (settings); nas listas, -append (-a) e -rm acrescentam e tiram itens. No seu privado, mostra também o config/.env (somente leitura).',
+    summary: 'Lists, shows and changes the bot settings',
+    help: 'Lists, shows and changes the bot settings; on lists, -append (-a) and -rm add and remove items. In your private chat, also shows config/.env (read-only).',
     cmd_opts: [
         {
             opts: ['append', 'a'],
-            values: ['<chave>'],
-            desc: 'Numa lista, acrescenta os itens que vierem depois da chave. No bot.admins e no bot.users, vale o nome do contato (no bot.users, também o do grupo).',
+            values: ['<key>'],
+            desc: 'On a list, adds the items that come after the key. In bot.admins and bot.users, the contact name works (in bot.users, the group name too).',
             ex: ['/set -a bot.admins /Jorge Pereira/']
         },
         {
             opts: ['rm'],
-            values: ['<chave>'],
-            desc: 'Numa lista, tira os itens que vierem depois da chave.',
+            values: ['<key>'],
+            desc: 'On a list, removes the items that come after the key.',
             ex: ['/set -rm commands.disabled noffa']
         },
-        { opts: ['reset', 'r'], values: ['<chave>'], desc: 'Volta a chave ao valor padrão.' },
-        { argv: ['<chave>'], desc: 'Exibe valor, padrão e descrição da chave.' },
+        { opts: ['reset', 'r'], values: ['<key>'], desc: 'Resets the key to its default value.' },
+        { argv: ['<key>'], desc: 'Shows the key\'s value, default and description.' },
         {
-            argv: ['<trecho|/regex/>'],
-            desc: 'Não sendo uma chave: lista as chaves que casam.',
+            argv: ['<snippet|/regex/>'],
+            desc: 'If it is not a key: lists the keys that match.',
             ex: ['/set alerta']
         },
         {
-            argv: ['<chave> <valor>'],
-            desc: 'Altera. Listas: itens separados por vírgula ou espaço (watch.rules: uma regra por linha; bot.users.cmds: separados por espaço, já que cada item tem vírgulas).'
+            argv: ['<key> <value>'],
+            desc: 'Changes it. Lists: items separated by comma or space (watch.rules: one rule per line; bot.users.cmds: separated by space, since each item has commas).'
         }
     ],
     digitando: true, // responde na hora: sem o "digitando..."

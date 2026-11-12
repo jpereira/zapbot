@@ -266,10 +266,11 @@ async function mudarLista(msg, opcoes) {
 
 async function cmdSet({ msg, opts, args, chatId }) {
     await dbPronto;
-    const monitor = String(args ?? '').match(/^(monitor\.(?:pool|max|maxRecords|enabled))\s*=\s*(.*)$/s);
-    if (monitor) {
-        args = `${monitor[1]} ${monitor[2]}`;
-        opts = { ...opts, argv: [monitor[1], monitor[2]] };
+    // /set chave=valor (zapbot.lang=pt_BR) vale como /set chave valor
+    const igual = String(args ?? '').match(/^([\w.]+)\s*=\s*(.*)$/s);
+    if (igual && SETTINGS_SCHEMA[igual[1]]) {
+        args = `${igual[1]} ${igual[2]}`;
+        opts = { ...opts, argv: [igual[1], igual[2]] };
     }
 
     // A chave da opção (-reset, -append, -rm) ou a 1ª palavra

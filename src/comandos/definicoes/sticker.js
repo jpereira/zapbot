@@ -7,49 +7,49 @@ const { OPCAO_VERBOSE_FFMPEG } = require('./_opcoes');
 
 module.exports = {
     cmd: '/sticker',
-    usage: '/sticker [OPÇÃO]... [url]  (ou respondendo uma imagem, vídeo ou link)  ou  /sticker -txt <texto> [-bg <cor>] [-fg <cor>]',
+    usage: '/sticker [OPTION]... [url]  (or replying to an image, video or link)  or  /sticker -txt <text> [-bg <color>] [-fg <color>]',
     aliases: ['/figurinha'],
-    summary: 'Cria uma figurinha',
-    help: 'Cria uma figurinha: é o /get -sticker. Da URL ou do link respondido, baixa o vídeo; sem vídeo, usa a prévia do link. De um vídeo, até 6 s com recorte quadrado no meio, no trecho do -ss e do -es. De uma imagem, o recorte quadrado no meio. O -pos muda o recorte para o topo ou para baixo. Com -txt, uma figurinha animada com o texto, piscando entre as cores do -fg e do -bg.',
+    summary: 'Creates a sticker',
+    help: 'Creates a sticker: same as /get -sticker. Downloads the video from the URL or from the replied link; with no video, uses the link preview. From a video, up to 6 s with a square crop from the middle, from the -ss to -es range. From an image, the square crop from the middle. -pos moves the crop to the top or the bottom. With -txt, an animated sticker with the text, blinking between the -fg and -bg colors.',
     cmd_opts: [
         {
             opts: ['bg'],
-            values: ['<cor>'],
-            desc: 'Com -txt: a cor de fundo, em #RRGGBB (padrão #FFFFFF, branco).'
+            values: ['<color>'],
+            desc: 'With -txt: the background color, as #RRGGBB (default #FFFFFF, white).'
         },
         {
             opts: ['fg'],
-            values: ['<cor>'],
-            desc: 'Com -txt: a cor da letra, em #RRGGBB (padrão #000000, preto).'
+            values: ['<color>'],
+            desc: 'With -txt: the text color, as #RRGGBB (default #000000, black).'
         },
         {
             opts: ['pos'],
-            values: ['<topo|meio|baixo>'],
-            desc: 'Onde fica o recorte quadrado da imagem ou do vídeo: topo, meio (padrão) ou baixo. Em mídia mais larga que alta, topo é a esquerda e baixo a direita.',
+            values: ['<top|middle|bottom>'],
+            desc: 'Where the square crop of the image or video goes: top, middle (default) or bottom. On media wider than tall, top is the left and bottom is the right.',
             ex: ['/sticker -pos topo', '/sticker -ss 10 -pos baixo']
         },
         {
             opts: ['txt'],
-            values: ['<texto>'],
-            desc: 'Figurinha animada com o texto (até 200 caracteres), que pisca trocando as cores do -fg e do -bg a cada meio segundo. Não combina com -ss, -es, -v nem URL.',
-            ex: ['/sticker -txt "Bom dia!"', '/sticker -txt Partiu? -bg "#C0392B" -fg "#FFFFFF"']
+            values: ['<text>'],
+            desc: 'Animated sticker with the text (up to 200 characters), blinking between the -fg and -bg colors every half second. Cannot be combined with -ss, -es, -v or a URL.',
+            ex: ['/sticker -txt "Good morning!"', '/sticker -txt Let\'s go? -bg "#C0392B" -fg "#FFFFFF"']
         },
         {
             opts: ['startSec', 'ss'],
-            values: ['<tempo>'],
-            desc: 'Vídeo: começa neste ponto (padrão 0), em segundos ou em min:seg, e pega os 6 s seguintes. Aceita decimal com ponto. Com - na frente, conta do final (-ss -10 começa 10 s antes do fim).',
+            values: ['<time>'],
+            desc: 'Video: starts at this point (default 0), in seconds or min:sec, and takes the next 6 s. Accepts a decimal with a dot. With a leading -, counts from the end (-ss -10 starts 10 s before the end).',
             ex: ['-ss 1.5', '-ss 01:12', '-ss -10']
         },
         {
             opts: ['endSec', 'es'],
-            values: ['<tempo>'],
-            desc: 'Vídeo: termina neste ponto (segundos ou min:seg), maior que o início; a figurinha tem no máximo 6 s. Com - na frente, conta do final.',
+            values: ['<time>'],
+            desc: 'Video: ends at this point (seconds or min:sec), greater than the start; the sticker is at most 6 s. With a leading -, counts from the end.',
             ex: ['/sticker -ss 10 -es 13', '/sticker -ss 01:10 -es 01:13', '/sticker -es -2']
         },
         OPCAO_VERBOSE_FFMPEG,
         {
             argv: ['[url]'],
-            desc: 'Link do vídeo; vale mais que a mensagem respondida.',
+            desc: 'Video link; takes precedence over the replied message.',
             ex: ['https://youtu.be/...']
         }
     ],

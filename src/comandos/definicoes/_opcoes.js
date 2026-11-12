@@ -5,43 +5,43 @@
 
 const OPCAO_ALERTA_MSG = {
     opts: ['msg'],
-    values: ['<texto>'],
-    desc: 'Junto com -alerta: o texto vai no início do aviso. Vai até o fim do comando (pode ter espaços).',
-    ex: ['-msg Hora de vender!'],
+    values: ['<text>'],
+    desc: 'Together with -alerta: the text goes at the start of the notice. It runs to the end of the command (may have spaces).',
+    ex: ['-msg Time to sell!'],
     cron: false
 };
 
 const OPCAO_ALERTA_RM = {
     opts: ['rm'],
-    values: ['<nº...|all>'],
-    desc: 'Junto com -alerta: remove o alerta nº N da lista, vários de uma vez (-rm 1 2 3 ou -rm 1,2,3) ou todos. Se algum nº não existe, nenhum sai.'
+    values: ['<#...|all>'],
+    desc: 'Together with -alerta: removes alert #N from the list, several at once (-rm 1 2 3 or -rm 1,2,3), or all. If any # does not exist, none is removed.'
 };
 
 const OPCAO_ALERTA_TO = {
     opts: ['to'],
-    values: ['<destino>'],
-    desc: 'Junto com -alerta: avisa num contato, num grupo, num número ou por e-mail em vez do seu privado (vários com o nome: você escolhe na lista). Repita para vários: um alerta só, que avisa em todos.',
+    values: ['<destination>'],
+    desc: 'Together with -alerta: notifies a contact, a group, a number, or an email instead of your private chat (several with the name: you pick from the list). Repeat for several: a single alert that notifies all of them.',
     ex: [
         '-to /Jorge Pereira/',
-        '-to @Fulano (menção)',
+        '-to @Fulano (mention)',
         '-to /Grupo L200/ -to /Família/',
         '-to +5521999999999',
-        '-to email (o QRCODE_EMAIL_SMTP_TO)',
-        '-to voce@exemplo.com'
+        '-to email (the QRCODE_EMAIL_SMTP_TO)',
+        '-to you@example.com'
     ]
 };
 
 const OPCAO_VERBOSE_FFMPEG = {
     opts: ['verbose', 'v'],
     values: [],
-    desc: 'Mostra os comandos usados no yt-dlp e no ffmpeg.'
+    desc: 'Shows the commands used in yt-dlp and ffmpeg.'
 };
 
 // -status|-s do /gpt, do /tldr e do /draw: o consumo da chamada no rodapé (veja src/openaiChat.js)
 const opcaoStatus = (exemplo) => ({
     opts: ['status', 's'],
     values: [],
-    desc: 'Acrescenta no rodapé da resposta o consumo da chamada: bytes enviados (TX) e recebidos (RX), tokens gastos, custo estimado e saldo. Para deixar sempre ligado: /set openai.status true.',
+    desc: 'Adds the call usage to the reply footer: bytes sent (TX) and received (RX), tokens spent, estimated cost, and balance. To keep it always on: /set openai.status true.',
     ex: [exemplo],
     cron: false
 });

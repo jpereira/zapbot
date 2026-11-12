@@ -1,24 +1,24 @@
 /*
- * /block: Bloqueia pessoas na sua conta do WhatsApp
+ * /block: Blocks people on your WhatsApp account
  */
 
 const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/block',
-    usage: '/block [/contato/|@menção|+número]...  ou  /block -l',
+    usage: '/block [/contact/|@mention|+number]...  or  /block -l',
     aliases: ['/bloquear'],
-    summary: 'Bloqueia pessoas na sua conta do WhatsApp',
-    help: 'Bloqueia uma ou várias pessoas na sua conta do WhatsApp, como o Bloquear do celular. Respondendo uma mensagem, bloqueia quem a escreveu. Sem nada, lista os bloqueados (inclusive os que você bloqueou no celular), numerados para o /unblock <nº>. Grupos não se bloqueiam.',
+    summary: 'Blocks people on your WhatsApp account',
+    help: 'Blocks one or more people on your WhatsApp account, like Block on the phone. Replying to a message blocks whoever wrote it. With nothing, lists the blocked people (including the ones you blocked on the phone), numbered for /unblock <num>. Groups cannot be blocked.',
     cmd_opts: [
         {
             opts: ['list', 'l'],
             values: [],
-            desc: 'Lista os bloqueados (o mesmo que /block sem nada).'
+            desc: 'Lists the blocked people (same as /block with nothing).'
         },
         {
-            argv: ['[/contato/|@menção|+número]...'],
-            desc: 'As pessoas, separadas por espaço: contato da agenda pelo nome ou parte dele (nome com espaço entre /.../ ou aspas; vários que servem: você escolhe na lista), alguém mencionado com @ ou um número. Palavras soltas, sem número, menção, barras nem aspas, são um nome só.',
+            argv: ['[/contact/|@mention|+number]...'],
+            desc: 'The people, separated by spaces: an address book contact by name or part of it (a name with spaces goes between /.../ or quotes; if several match, you pick from the list), someone mentioned with @, or a number. Loose words, without a number, mention, slashes or quotes, are a single name.',
             ex: [
                 '/block /Fulano/',
                 '/block +5521999999999',
@@ -28,7 +28,7 @@ module.exports = {
         {
             opts: ['mask', 'm'],
             values: [],
-            desc: 'Ofusca telefones com 10 a 15 dígitos contínuos na saída desta execução, mantendo os cinco primeiros e os dois últimos (como +55219****44).',
+            desc: 'Obfuscates phone numbers with 10 to 15 consecutive digits in this run\'s output, keeping the first five and the last two (like +55219****44).',
             ex: ['/block -mask']
         }
     ],

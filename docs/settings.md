@@ -103,6 +103,7 @@ and survive restarts. To view and change them, use [`/set`](comandos/set.md).
 | `watch.max` | 1–100 | `20` | Max `/watch` rules |
 | `watch.rules` | list (one per line) | *(empty)* | `/watch` rules: text or `/regex/flags`. Created with `/watch <rule>` and removed with `/watch -rm N` |
 | `watch.showMax` | 1–100 | `20` | Max hits shown by `/watch`, including with `-N` and `-show` |
+| `zapbot.lang` | `en_US`, `pt_BR` | `en_US` | Language of the bot: the help (`-h`, `/help`) is shown in it. `/set zapbot.lang pt_BR` (or `/set zapbot.lang=pt_BR`) switches to Portuguese; `pt-BR`, `pt` and `en` are accepted too. The replies of the commands are being migrated to the same setting |
 
 A new key is declared in `SETTINGS_SCHEMA` (`src/settings.js`), **in alphabetical order**, with
 default, type, description and limits (`allowEmpty` for text that can be empty, `secret` to mask

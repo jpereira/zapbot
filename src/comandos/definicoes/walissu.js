@@ -8,7 +8,7 @@ module.exports = {
     cmd: '/walissu',
     usage: '/walissu',
     aliases: ['/ualisu'],
-    summary: 'Marca 2 membros do grupo com uma CVE aleatória',
-    help: 'Walissu CVE BOT: marca 2 membros do grupo com uma CVE aleatória.',
+    summary: 'Mentions 2 group members with a random CVE',
+    help: 'Walissu CVE BOT: mentions 2 group members with a random CVE.',
     role: USER
 };

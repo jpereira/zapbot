@@ -1,0 +1,39 @@
+{
+  "summary": "Lista os comandos ou detalha um deles",
+  "usage": "/help [-role|-r] [comando] [protocolo]",
+  "help": "Exibe o menu de ajuda, só com os comandos que você pode usar (o dono e os admins veem todos); com um comando, só a ajuda dele.",
+  "ex": [
+    "/help show"
+  ],
+  "cmd_opts": [
+    {
+      "opts": [
+        "role",
+        "r"
+      ],
+      "values": [],
+      "desc": "Lista os comandos separados por role (owner, admin e user), só os que você pode usar.",
+      "ex": [
+        "/help -r"
+      ]
+    },
+    {
+      "argv": [
+        "[comando]"
+      ],
+      "desc": "Comando (com ou sem /, nome ou alias).",
+      "ex": [
+        "/help get"
+      ]
+    },
+    {
+      "argv": [
+        "[protocolo]"
+      ],
+      "desc": "No /defi, só a ajuda de um protocolo: orca, prjx, liquidswap, morpho ou aave. Equivale a /defi <protocolo> -help.",
+      "ex": [
+        "/help defi aave"
+      ]
+    }
+  ]
+}

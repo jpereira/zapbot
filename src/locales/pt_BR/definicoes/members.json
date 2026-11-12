@@ -1,0 +1,6 @@
+{
+  "summary": "Lista os membros do grupo",
+  "usage": "/members",
+  "help": "Lista os membros do grupo (número, nome, admins).",
+  "cmd_opts": []
+}

@@ -52,6 +52,7 @@ async function reiniciar() {
     for (const t of TABELAS) await dbRun(`DELETE FROM ${t}`);
     await carregarSettings();
     await setSetting('bot.users', ['all']);
+    await setSetting('zapbot.lang', 'pt_BR'); // as asserções dos testes são em português; o en_US tem testes à parte
     await setSetting('flood.maxCommandRepeated', 0);
 
     // O cache dos downloads do /get não vaza de um teste para o outro

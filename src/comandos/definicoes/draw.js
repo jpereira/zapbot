@@ -7,44 +7,44 @@ const { opcaoStatus } = require('./_opcoes');
 
 module.exports = {
     cmd: '/draw',
-    usage: '/draw [pedido]  ou  /draw -gif [-frames N] [-ms N] [pedido]  ou  /draw [-gif] -model [modelo]',
+    usage: '/draw [request]  or  /draw -gif [-frames N] [-ms N] [request]  or  /draw [-gif] -model [model]',
     aliases: ['/desenhe', '/desenha', '/img'],
-    summary: 'Desenha uma imagem com o GPT Image (OpenAI)',
-    help: 'Desenha uma imagem com o GPT Image (OpenAI); com -gif, um GIF animado (GPT Image 2.6), e numa foto (legenda ou resposta) edita a foto ou a anima. Respondendo uma mensagem, o texto dela entra no pedido. Precisa de OPENAI_API_KEY no config/.env ou do setting openai.api.key.',
+    summary: 'Draws an image with GPT Image (OpenAI)',
+    help: 'Draws an image with GPT Image (OpenAI); with -gif, an animated GIF (GPT Image 2.6), and on a photo (caption or reply) edits the photo or animates it. When replying to a message, its text is added to the request. Requires OPENAI_API_KEY in config/.env or the openai.api.key setting.',
     cmd_opts: [
         {
             opts: ['gif', 'g'],
             values: [],
-            desc: 'GIF animado (modelo openai.image.gifModel; só os gpt-image-2.6-*). Numa foto, ou respondendo uma, anima a foto. Os quadros e o tempo de cada um são os settings openai.gif.frames e openai.gif.frameMs.',
-            ex: ['/img -gif um gato dançando', '/img -gif a bandeira ao vento (respondendo uma foto)'],
+            desc: 'Animated GIF (model openai.image.gifModel; only the gpt-image-2.6-* ones). On a photo, or replying to one, animates the photo. The frames and the time of each are the settings openai.gif.frames and openai.gif.frameMs.',
+            ex: ['/img -gif a dancing cat', '/img -gif the flag in the wind (replying to a photo)'],
             cron: false
         },
         {
             opts: ['frames', 'f'],
             values: ['<n>'],
-            desc: 'Quadros do GIF, de 2 a 16 (padrão: o setting openai.gif.frames, 9). Vale como -gif; quanto mais quadros, mais caro.',
-            ex: ['/img -f 6 uma bandeira ao vento'],
+            desc: 'GIF frames, from 2 to 16 (default: the openai.gif.frames setting, 9). Counts as -gif; the more frames, the more expensive.',
+            ex: ['/img -f 6 a flag in the wind'],
             cron: false
         },
         {
             opts: ['ms'],
             values: ['<ms>'],
-            desc: 'Duração de cada quadro do GIF, de 20 a 2000 ms (padrão: o setting openai.gif.frameMs, 200). Vale como -gif.',
-            ex: ['/img -gif -f 6 -ms 300 uma bandeira ao vento'],
+            desc: 'Duration of each GIF frame, from 20 to 2000 ms (default: the openai.gif.frameMs setting, 200). Counts as -gif.',
+            ex: ['/img -gif -f 6 -ms 300 a flag in the wind'],
             cron: false
         },
         {
             opts: ['model', 'm'],
-            values: ['[modelo]'],
-            desc: 'Troca o modelo da imagem (setting openai.image.model) ou, com -gif, o do GIF (openai.image.gifModel). Sem modelo, lista o atual e os que a sua chave vê.',
+            values: ['[model]'],
+            desc: 'Changes the image model (openai.image.model setting) or, with -gif, the GIF one (openai.image.gifModel). Without a model, lists the current one and the ones your key can see.',
             ex: ['/draw -m', '/draw -m gpt-image-2', '/draw -gif -m gpt-image-2.6-flare'],
             role: ADMIN
         },
-        opcaoStatus('/draw -s um gato astronauta em aquarela'),
+        opcaoStatus('/draw -s an astronaut cat in watercolor'),
         {
-            argv: ['<pedido>'],
-            desc: 'O que desenhar ou animar. Respondendo uma mensagem, o texto dela entra antes do pedido; numa foto (a da própria mensagem, na legenda, ou a respondida), o pedido edita a foto (ou, no -gif, a anima; sem pedido, com um movimento sutil).',
-            ex: ['/draw um gato astronauta em aquarela', '/draw coloque um chapéu nele (respondendo uma foto)']
+            argv: ['<request>'],
+            desc: 'What to draw or animate. When replying to a message, its text goes before the request; on a photo (the message\'s own, in the caption, or the replied one), the request edits the photo (or, with -gif, animates it; with no request, with a subtle motion).',
+            ex: ['/draw an astronaut cat in watercolor', '/draw put a hat on it (replying to a photo)']
         }
     ],
     estrito: 'primeira',

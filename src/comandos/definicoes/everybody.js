@@ -8,8 +8,8 @@ module.exports = {
     cmd: '/everybody',
     usage: '/everybody',
     aliases: ['/todos', '/todes'],
-    summary: 'Responde marcando todos do grupo',
-    help: 'Responde marcando todos do grupo (exceto você).',
+    summary: 'Replies mentioning everyone in the group',
+    help: 'Replies mentioning everyone in the group (except you).',
     delegavel: true,
     role: ADMIN // delegável: marca o grupo atual
 };

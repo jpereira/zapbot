@@ -6,19 +6,19 @@ const { USER } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/weather',
-    usage: '/weather [N|Nd] [cidade]',
+    usage: '/weather [N|Nd] [city]',
     aliases: ['/tempo'],
-    summary: 'Tempo agora, máxima e mínima',
-    help: 'Tempo agora, máx./mín. e chance de chuva do dia (Open-Meteo); com N (ou Nd), previsão de N dias contando hoje. Sem cidade usa o setting tempo.city.',
+    summary: 'Weather now, high and low',
+    help: 'Weather now, high/low and chance of rain for the day (Open-Meteo); with N (or Nd), a forecast of N days counting today. Without a city, uses the tempo.city setting.',
     cmd_opts: [
         {
             argv: ['[N|Nd]'],
-            desc: 'Previsão de N dias, contando hoje (1 a tempo.maxDays, padrão 16 e máximo da API). Só como primeiro argumento; sem N, mostra só hoje.',
+            desc: 'Forecast of N days, counting today (1 to tempo.maxDays, default 16 and the API maximum). Only as the first argument; without N, shows only today.',
             ex: ['/weather 16d Niteroi', '/weather 3']
         },
         {
-            argv: ['[cidade]'],
-            desc: 'Cidade, opcionalmente com estado ou país após uma vírgula.',
+            argv: ['[city]'],
+            desc: 'City, optionally with state or country after a comma.',
             ex: ['/weather Paris, Texas']
         }
     ],

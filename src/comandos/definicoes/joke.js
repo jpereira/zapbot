@@ -8,8 +8,8 @@ module.exports = {
     cmd: '/joke',
     usage: '/joke',
     aliases: ['/piada', '/humor'],
-    summary: 'Piada aleatória',
-    help: 'Piada aleatória em português (nenhuma se repete até todas saírem).',
+    summary: 'Random joke',
+    help: 'Random joke in Portuguese (none repeats until all have been told).',
     role: USER,
     cron: true
 };

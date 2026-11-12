@@ -6,9 +6,9 @@ const { USER } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/meme',
-    usage: '/meme [busca]',
-    summary: 'Template de meme aleatório do imgflip',
-    help: 'Template de meme aleatório do imgflip, opcionalmente filtrado pelo nome.',
+    usage: '/meme [search]',
+    summary: 'Random meme template from imgflip',
+    help: 'Random meme template from imgflip, optionally filtered by name.',
     role: USER,
     cron: true
 };

@@ -6,10 +6,10 @@ const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/alias',
-    usage: '/alias <nome> [-quiet|-q] [-desc|-d "Descrição"] </comando argumentos>  ou  /alias <nome> [-quiet|-q] [-desc|-d "Descrição"] <texto com {/comando}>  ou  /alias [-list|-l]  ou  /alias -move|-m <nome atual> <novo nome>  ou  /alias -rm <nome...|all>',
+    usage: '/alias <name> [-quiet|-q] [-desc|-d "Description"] </command arguments>  or  /alias <name> [-quiet|-q] [-desc|-d "Description"] <text with {/command}>  or  /alias [-list|-l]  or  /alias -move|-m <current name> <new name>  or  /alias -rm <name...|all>',
     aliases: [],
-    summary: 'Salva atalhos para comandos com argumentos',
-    help: 'Salva atalhos para comandos com argumentos ou para um texto com vários {/comando}, como no /cron: cada um roda e a resposta entra no lugar, numa mensagem só. No texto, \\n vira quebra de linha. Sem opção, lista os aliases cadastrados. No atalho de comando, $1, $2... pegam os argumentos digitados (ex: /alias /rec /sticker -ss $1 -es $2; /rec 10 20 url); a sintaxe com chaves e :- define um valor padrão (veja a documentação do /alias).  Ao executar o atalho, o bot imprime o comando chamado, acrescenta os argumentos adicionais e respeita as permissões dos comandos de destino. O nome aceita letras, números, _, - e ., com ou sem barra no cadastro. Cadastrar o mesmo nome substitui o comando e a descrição. O destino deve ser um comando ativo do bot, inclusive seus aliases fixos; não pode ser /alias nem outro atalho cadastrado. Nomes de comandos e all são reservados. Use /help alias para listar os atalhos disponíveis para você.',
+    summary: 'Saves shortcuts for commands with arguments',
+    help: 'Saves shortcuts for commands with arguments or for a text with several {/command}, like in /cron: each one runs and the reply takes its place, in a single message. In the text, \\n becomes a line break. With no option, lists the registered aliases. In a command shortcut, $1, $2... take the typed arguments (e.g. /alias /rec /sticker -ss $1 -es $2; /rec 10 20 url); the syntax with braces and :- sets a default value (see the /alias documentation).  When running the shortcut, the bot prints the called command, appends the additional arguments and respects the permissions of the target commands. The name accepts letters, numbers, _, - and ., with or without a slash when registering. Registering the same name replaces the command and the description. The target must be an active bot command, including its fixed aliases; it cannot be /alias or another registered shortcut. Command names and all are reserved. Use /help alias to list the shortcuts available to you.',
     ex: [
         '/alias /dolar /crypto USD',
         '/alias orca Verificando Orca {/defi orca}\\n Verificando Prjx {/defi prjx}'
@@ -18,26 +18,26 @@ module.exports = {
         {
             opts: ['quiet', 'q'],
             values: [],
-            desc: 'Ao executar o atalho, não imprime o cabeçalho "🔗 Alias /nome -> comando".',
+            desc: 'When running the shortcut, does not print the "🔗 Alias /nome -> comando" header.',
             ex: ['/alias -q /haha /me Hahaha!']
         },
         {
             opts: ['desc', 'd'],
-            values: ['<texto>'],
-            desc: 'Descrição opcional entre aspas retas ou curvas, inclusive misturadas, antes do comando ou do texto. Sem comando, atualiza só a descrição de um alias que já existe.',
-            ex: ['/alias /eita -desc "Dólar" /rates USD', '/alias /eita -d "Novo texto"']
+            values: ['<text>'],
+            desc: 'Optional description in straight or curly quotes, even mixed, before the command or the text. Without a command, updates only the description of an alias that already exists.',
+            ex: ['/alias /eita -desc "Dollar" /rates USD', '/alias /eita -d "New text"']
         },
-        { opts: ['list', 'l'], values: [], desc: 'Lista os atalhos cadastrados.' },
+        { opts: ['list', 'l'], values: [], desc: 'Lists the registered shortcuts.' },
         {
             opts: ['move', 'm'],
-            values: ['<nome atual>', '<novo nome>'],
-            desc: 'Renomeia um alias, mantendo o comando, a descrição e o quiet; o novo nome não pode existir.',
+            values: ['<current name>', '<new name>'],
+            desc: 'Renames an alias, keeping the command, the description and the quiet flag; the new name must not exist.',
             ex: ['/alias -move /dolar /usd']
         },
         {
             opts: ['rm'],
-            values: ['<nome...|all>'],
-            desc: 'Remove um ou mais aliases (separados por espaço ou vírgula), com ou sem a barra; all remove todos.',
+            values: ['<name...|all>'],
+            desc: 'Removes one or more aliases (separated by space or comma), with or without the slash; all removes all of them.',
             ex: ['/alias -rm /eita', '/alias -rm eita eita2 /dolar', '/alias -rm all']
         }
     ],
