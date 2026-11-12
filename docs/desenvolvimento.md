@@ -80,7 +80,7 @@ src/
   botConfig.js          the commands (src/comandos/comandos.js) loaded and checked at boot
   roles.js              the command roles (USER, ADMIN, OWNER) and the most restrictive of several
   executar.js           what every command does before the handler: read the options, what each one can do (role and outrosChats) and the context
-  cliente.js            whatsapp-web.js client, the mark on the bot's sent messages and concluirAviso (the "Processando…" or the question becomes the conclusion)
+  cliente.js            whatsapp-web.js client, the mark on the bot's sent messages and concluirAviso (the "Processing…" notice or the question becomes the conclusion)
   conexao.js            QR Code, connection events, restart and watchdog
   backup.js             database backup (/backup): creation, daily, retention and restore
   email.js              SMTP and email alerts
@@ -103,7 +103,8 @@ src/
   openai.js             models accepted by /gpt
   openaiChat.js         call to the OpenAI chat (/gpt and /tldr) and the status footer (bytes, tokens, cost)
   i18n.js               t('key', {vars}) and the bot's language (setting zapbot.lang)
-  locales/              en_US.js and pt_BR.js (the catalogs) and pt_BR/definicoes/ (the Portuguese text of each command)
+  locales/              the catalogs: <lang>.js (help) and <lang>/*.js (one file per subject), and
+                        pt_BR/definicoes/ (the Portuguese text of each command)
   login.js              /bot -login: the password (scrypt) that turns an outsider into an admin
   monitor.js, monitorHistorico.js, presenca.js   /monitor: contacts, history and one presence query at a time
   contatos.js, opcoes.js                    contacts/@lid and the option parser
@@ -212,6 +213,7 @@ The messages the bot sends have whatsapp-web.js's `edit()`: it swaps the text in
 | `grupo.test.js` | `/everybody`, `/bills`, `/members`, `/walissu`, `/poll` (and `-r`), `/sticker` (and `-txt`) |
 | `grupos.test.js` | `/join` (link, code, `-info`, invalid invite and refusal) and `/leave` (by name, by number, the list) |
 | `i18n.test.js` | The `zapbot.lang` setting (default `en_US`, `pt-BR`/`pt`/`en` accepted), the catalogs (same keys and `{placeholders}`), the English text of the definitions with a Portuguese translation for each, and `-h`/`/help` in both languages |
+| `i18n-adm.test.js`, `i18n-ai.test.js`, `i18n-core.test.js`, `i18n-data.test.js`, `i18n-grp.test.js`, `i18n-info.test.js`, `i18n-notes.test.js` | The replies in `en_US` (the other tests run in `pt_BR`), one file per catalog subject: administration (`/bot`, `/set`, `/backup`, `/alias`, `/batch`, `/debug`, `/cron`), AI and media (`/gpt`, `/tldr`, `/draw`...), core (login, unknown option and command, notices), data (`/get`, `/show`, `/stats`, `/watch`, `/cache`), groups (`/mute`, `/block`, `/poll`, `/leave`...), information (`/rates`, `/crypto`, `/bills`, `/whois`, `/me`, `/bot -status`, `/uptime`) and notes (`/notes`, `/monitor`) |
 | `heartbeat.test.js` | Heartbeat and `docker/app/healthcheck.js` (actually executed) |
 | `mascara-telefones.test.js` | Phone number obfuscation in `/show`, `/watch` and `/bot` |
 | `mensagens.test.js` | Recording (with the name from your contacts, not the pushname) and of locations without interpreting the thumbnail as text or command, routing, permissions (`role`, `bot.users` with people, groups, `true`/`false` and the persisted permissions, bot off, extra admins from `bot.admins`, the `/bot +a`/`+u` shortcuts, the `-list-users`/`-list-users all` lists, each user's commands (`+cmd`/`-cmd`), `-reset` with confirmation, `/whois` and flood protection), the log of unknown commands and the `/stats` count (without the system notices) |
@@ -357,7 +359,7 @@ loop back). Each entry follows this format:
     estrito: true,                     // optional; unknown option is an error (instead of going to argv)
                                        // ('primeira': only an unknown FIRST word, like /gpt -price)
     mask: true,                        // optional; accepts -mask (obfuscated phone numbers in the output)
-    digitando: false,                  // optional; no "digitando..." (for the ones that reply right away)
+    digitando: false,                  // optional; no "typing..." (for the ones that reply right away)
     argumentosLivres: true,            // optional; the rest is free text, no options read (/alias, /batch)
     cron: true,                        // optional; true = runs in a {/comando} in the /cron text
     role: USER,                        // the minimum level: USER, ADMIN (admins and the owner) or OWNER (owner only)
@@ -382,16 +384,16 @@ loop back). Each entry follows this format:
   `src/executar.js` before the handler (and also inside a `{/comando}`): `role: ADMIN` (the option
   requires this level, or `OWNER`: changing the `/gpt` model, deleting data...) and
   `outrosChats: true` (the option, or the `{ argv }` argument, looks at other chats). The reply is
-  the same in all of them: `⛔ Apenas o dono do bot (ou um admin) pode ...`. The doc table comes
+  the same in all of them: `⛔ Only the bot owner (or an admin) can ...`. The doc table comes
   from these marks: `node scripts/gerar-docs.js` (the test checks that it's up to date).
-- Every typed command shows "digitando..." while it runs (`comDigitando`, in `src/executar.js`):
+- Every typed command shows "typing..." while it runs (`comDigitando`, in `src/executar.js`):
   several download, query or ask ChatGPT, and without it the chat looks stuck. The notice is resent
-  every 3 s until the command finishes, because a message in the middle (the "⏳ Limpando..." from
+  every 3 s until the command finishes, because a message in the middle (the "⏳ Cleaning the mailbox..." from
   `/bot -fe true`) clears it. `digitando: false` turns it off for the ones that reply right away
   (`/ping`, `/help`...).
 - `{ argv: ['-N'], numero: true }` makes the parser read `-10` as `opts.numero` (the 1st; a second
   one is unknown), instead of sending it to `argv`. With `estrito: true`, an unknown option doesn't
-  reach the handler: `executar.js` replies `❌ Opção desconhecida: -x` with the syntax. With
+  reach the handler: `executar.js` replies `❌ Unknown option: -x` with the syntax. With
   `estrito: 'primeira'` (`/gpt`, `/tldr` and `/draw`), only an unknown **first** word that looks like an
   option (`/gpt -price`) is rejected, with a hint to use `-h` instead of the syntax; later ones
   are part of the text.
@@ -432,26 +434,34 @@ loop back). Each entry follows this format:
 
 The bot's language is the `zapbot.lang` [setting](settings.md): `en_US` (default) or `pt_BR`.
 `/set zapbot.lang pt_BR` (or `/set zapbot.lang=pt_BR`) switches it right away; `pt-BR`, `pt` and
-`en` are accepted and normalized. Today it translates the help (`-h`, `/help`); the **replies of the
-commands are still in Portuguese** and are being migrated to the same mechanism.
+`en` are accepted and normalized. It translates the help (`-h`, `/help`) and all the replies,
+notices, errors, dates and numbers of the bot. The only text left in Portuguese is the description of
+each setting shown by `/set`.
 
-- `src/i18n.js` has `t('key', { vars })`: it looks the key up in the catalog of the current language
-  (`src/locales/en_US.js` and `src/locales/pt_BR.js`, plain modules of key → text), replaces the
-  `{placeholders}` and, for a plural, picks the form from `{ one, other }` using `vars.n`. A key
-  missing in the language falls back to `en_US` and, failing that, to the key itself.
+- `src/i18n.js` loads, for each language, `src/locales/<lang>.js` (the help) and merges over it every
+  `src/locales/<lang>/*.js`, one file per subject (`core`, `adm`, `ai`, `data`, `grp`, `info`,
+  `notes`): plain modules of key → text. A key repeated in two files of the same language fails at
+  load. A new subject is just a new file, with the same name in both languages.
+- `t('key', { vars })` looks the key up in the catalog of the current language, replaces the
+  `{placeholders}` and returns the text. A key missing in the language falls back to `en_US` and,
+  failing that, to the key itself. A third argument forces the language (`t('key', {}, 'pt_BR')`).
+- **Plural**: the entry is an object `{ one, other }` and `vars.n` picks the form. `1` is `one` and
+  `0` is `other` (`0 votes`, also in Portuguese, where `Intl.PluralRules` would say singular); the
+  other numbers follow `Intl.PluralRules` of the language.
 - The text of a command (`summary`, `usage`, `help`, `ex` and, in the options, `desc`, `ex`, `values` and
   `argv`) lives **in English** in `src/comandos/definicoes/`. The Portuguese translation goes in
   `src/locales/pt_BR/definicoes/<cmd>.json`, with the same fields in the same places, and
   `src/comandos/localizar.js` merges it over the definition when the language is not the default.
   The rest of the definition (`opts`, `role`...) is the same for every language.
-- **A string**: add the key to `en_US.js` and to `pt_BR.js` (same `{placeholders}`) and use
-  `t('key', { ... })` in the code.
+- **A string**: add the key to the catalog of its subject in `en_US/` and in `pt_BR/` (same
+  `{placeholders}`) and use `t('key', { ... })` in the code.
 - **A command text**: write it in English in the definition and the translation in the `.json`.
-- **A language**: create `src/locales/<lang>.js` and `src/locales/<lang>/definicoes/`, register the
-  language in `IDIOMAS` and in the catalogs of `src/i18n.js`, and in `opcoes` and `normalizar` of
-  `zapbot.lang` in `SETTINGS_SCHEMA`.
+- **A language**: create `src/locales/<lang>.js`, `src/locales/<lang>/*.js` and
+  `src/locales/<lang>/definicoes/`, register the language in `IDIOMAS` and in the catalogs of
+  `src/i18n.js`, and in `opcoes` and `normalizar` of `zapbot.lang` in `SETTINGS_SCHEMA`.
 
 The tests run in `pt_BR` (`bot.reiniciar()` sets it), because their assertions are in Portuguese.
 `tests/i18n.test.js` changes the language on purpose and checks both: the catalogs have the same
 keys and placeholders, every definition has its translation with the same structure, and the help comes
-out right in `en_US` and in `pt_BR`.
+out right in `en_US` and in `pt_BR`. The `tests/i18n-*.test.js` (one per subject) set `en_US` and check
+the replies of each command in English.

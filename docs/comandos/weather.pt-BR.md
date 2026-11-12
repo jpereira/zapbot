@@ -46,7 +46,8 @@ Acima do máximo o bot recusa e diz o limite. Para limitar as consultas, use `/s
 `/set -reset tempo.maxDays` define o limite de 16 dias. Um limite salvo continua valendo após
 reiniciar. Sem N, a resposta traz só o tempo de hoje. Os dias seguem o fuso da cidade consultada.
 Com `1`, o bloco da previsão se chama "Previsão de hoje". Com 5°C ou menos a resposta termina
-com "🥶 Tá congelando!", e com 30°C ou mais, com "🔥 Que calor da porra!".
+com "🥶 Tá congelando!", e com 30°C ou mais, com "🔥 Que calor da porra!". Os textos das condições e os nomes dos lugares seguem o
+setting `zapbot.lang`.
 
 ## Alterando a cidade padrão
 

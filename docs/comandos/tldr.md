@@ -13,9 +13,9 @@ WhatsApp formatting conversion as `/gpt` (see
 
 | Option | Value | Description |
 |---|---|---|
-| `[período]` | | A time, as in [`/cron`](cron.md) (`30m`, `2h`, `1d`, `1h30m`, `2d4h`): the messages from that time until now; a number (`300`): the last 300 (default limit 500, configurable up to 2000 in `tldr.maxMsgs`). Default: the last 100. The `-` in front is optional (`-2h`) |
+| `[period]` | | A time, as in [`/cron`](cron.md) (`30m`, `2h`, `1d`, `1h30m`, `2d4h`): the messages from that time until now; a number (`300`): the last 300 (default limit 500, configurable from 10 to 2000 in `tldr.maxMsgs`). Default: the last 100. The `-` in front is optional (`-2h`) |
 | *(replying)* | | Summarizes from the replied message until now; a typed period or `-chat` win |
-| `-chat`, `-c` | `<name>` | Summarizes another chat, looked up by name: all the words, in any order, ignoring accents. A name with a space goes in quotes: `-c "trabalho rio"` |
+| `-chat`, `-c` | `<chat>` | Summarizes another chat, the group or contact name (all the words, in any order, ignoring accents), `/regex/` or `@contact`. A name with a space goes in quotes: `-c "work rio"`. If several chats match, it lists them and waits for the number |
 | `-status`, `-s` | | Adds the call's usage to the footer: TX/RX bytes, tokens, cost and balance (see [Status](gpt.md#status--status)) |
 | `-pv` | | Sends to your private chat instead of exposing it in the current chat |
 
@@ -26,8 +26,8 @@ WhatsApp formatting conversion as `/gpt` (see
 /tldr 1d             → the ones from the last day (1h30m, 2d4h... work; the database keeps 68 h, or `cache.messageRetentionHours`)
 /tldr 30             → the last 30 messages (without the letter, it's a count)
 /tldr 300 -pv        → the last 300, in your private chat
-/tldr -c família 3h -pv
-(respondendo uma mensagem)  /tldr  → from it until now
+/tldr -c family 3h -pv
+(replying to a message)  /tldr  → from it until now
 ```
 
 Replying to a message, `/tldr` summarizes the conversation **starting from it** (inclusive) until
@@ -37,12 +37,12 @@ replied message is ignored. The messages are still the ones in the database (68 
 most recent ones and warns.
 
 ```text
-🤖 Resumo de Família
-42 mensagens · 30/09, 18:02 a 30/09, 20:47
+🤖 Summary of Family
+42 messages · 09/30, 06:02 PM to 09/30, 08:47 PM
 
-• Tia propôs o almoço de domingo na casa da Vó; todos confirmaram, menos o Primo.
-• Tio fica com a churrasqueira; a Tia leva a sobremesa.
-• Pendente: quem busca a Vó (o Tio responde até sábado).
+• Aunt proposed Sunday lunch at Grandma's; everyone confirmed, except Cousin.
+• Uncle handles the barbecue; Aunt brings the dessert.
+• Pending: who picks up Grandma (Uncle answers by Saturday).
 ```
 
 ## Fuller summaries
@@ -77,9 +77,11 @@ Details:
   `/set cache.messageRetentionHours 720` keeps 30 days of messages. Media has its own period,
   `cache.messageMediaRetentionHours` (default 68 h): an audio without a file and without a
   transcription stops going into the summary.
-- While it processes, the notice says what it's summarizing: `⏳ Processando o /tldr das 87
-  mensagens de Família do período de 2 horas, aguarde.` (or `das últimas 100 mensagens de ...`, or
-  `... desde a mensagem respondida (há 3 horas)`).
+- While it processes, the notice says what it's summarizing: `⏳ Processing /tldr for the 87
+  messages in Family over the last 2 hours, hold on.` (or `for the latest 100 messages in ...`, or
+  `... since the replied message (3 hours ago)`).
+- An unknown first word that looks like an option (`/tldr -price`) is rejected with a hint to use
+  `-h`, instead of being read as a period.
 - Commands, deleted messages and media without a caption are left out. Your messages show up with
   your profile name; the bot's replies (which go out through your account) count as yours.
 - Audio messages (the 10 most recent ones in the period) are transcribed, up to 25 MB each, and

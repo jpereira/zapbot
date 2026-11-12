@@ -7,8 +7,8 @@ used inside an [`/alias`](alias.md) or [`/cron`](cron.md) with `{/version}`.
 /version
 🤖 ZapBot 2.0.13 (devel) (git+7a89b92/HEAD)
 ━━━━━━━━━━━━━━━━━━
-⚡ Online: 2 dias, 3 horas
-🔐 Conectado: 2 dias, 2 horas, 58 minutos
+⚡ Online: 2 days, 3 hours
+🔐 Connected: 2 days, 2 hours, 58 minutes
 ```
 
 The `git+4465374/vX.Y.Z` says where the running code comes from: the commit and, after the `/`, its

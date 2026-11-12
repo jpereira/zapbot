@@ -24,73 +24,73 @@ collect go over a value ([Out-of-range alert](#out-of-range-alert)).
 For all protocols:
 
 ```text
-/defi                          → o Position Details de todos
-/defi -help                    → a ajuda de todos (/defi orca -help: só a da Orca)
-/defi -mask                    → o mesmo, com os números da carteira escondidos ($**,***.**)
-/defi -l                       → a lista dos cadastros
-/defi -rm 2                    → remove o nº 2
-/defi -rm 1 3                  → remove o 1 e o 3 (ou -rm 1,3; -rm all remove todos)
-/defi -taxas                   → o resumo das taxas a coletar, com o total
-/defi -taxas -alerta           → o mesmo, com o alerta de cada cadastro
-/defi -alerta <nº|all> [-to <destino>]... [-taxas <valor>]
+/defi                          → the Position Details of all
+/defi -help                    → the help for all (/defi orca -help: just Orca's)
+/defi -mask                    → the same, with the wallet numbers hidden ($**,***.**)
+/defi -l                       → the list of registrations
+/defi -rm 2                    → removes no. 2
+/defi -rm 1 3                  → removes 1 and 3 (or -rm 1,3; -rm all removes all)
+/defi -taxas                   → the summary of fees to collect, with the total
+/defi -taxas -alerta           → the same, with each registration's alert
+/defi -alerta <n|all> [-to <destination>]... [-taxas <value>]
 ```
 
 For Orca:
 
 ```text
-/defi orca                     → só as posições da Orca
-/defi orca -address <endereço> -pool <endereço> -nft <mint>
-/defi orca -address <endereço> -alerta 2000   → cadastra e já liga o alerta (no seu privado)
-/defi orca -address <endereço> -n "Posição TAL"   → com um nome
+/defi orca                     → just the Orca positions
+/defi orca -address <address> -pool <address> -nft <mint>
+/defi orca -address <address> -alerta 2000   → registers and turns on the alert (in your private chat)
+/defi orca -address <address> -n "Position X"   → with a name
 ```
 
 For Project X:
 
 ```text
-/defi prjx                     → só as do Project X
-/defi prjx -wallet <0x...>     → cadastra a carteira
-/defi prjx -wallet <0x...> -n Carteira Hare   → com um nome (de novo, com outro: troca o nome)
-/defi prjx -wallet <0x...> -alerta    → cadastra e já liga o alerta (no seu privado)
+/defi prjx                     → just the Project X ones
+/defi prjx -wallet <0x...>     → registers the wallet
+/defi prjx -wallet <0x...> -n Hare Wallet   → with a name (again, with another: changes the name)
+/defi prjx -wallet <0x...> -alerta    → registers and turns on the alert (in your private chat)
 ```
 
 For Liquidswap (`liquidswap` or `liqswp`):
 
 ```text
-/defi liquidswap               → só as da Liquidswap (o mesmo que /defi liqswp)
-/defi liquidswap -wallet <0x...>   → cadastra a carteira da Aptos
-/defi liqswp -wallet <0x...> -n Carteira Aptos   → com um nome
+/defi liquidswap               → just the Liquidswap ones (same as /defi liqswp)
+/defi liquidswap -wallet <0x...>   → registers the Aptos wallet
+/defi liqswp -wallet <0x...> -n Aptos Wallet   → with a name
 ```
 
 For Morpho:
 
 ```text
-/defi morpho                   → as carteiras cadastradas (sem nenhuma: a do MORPHO_WALLET_ADDRESS)
-/defi morpho -wallet <0x...>   → cadastra a carteira
-/defi morpho -wallet <0x...> -n Carteira Empre   → com um nome
+/defi morpho                   → the registered wallets (with none: MORPHO_WALLET_ADDRESS's)
+/defi morpho -wallet <0x...>   → registers the wallet
+/defi morpho -wallet <0x...> -n Loan Wallet   → with a name
 ```
 
 For Aave:
 
 ```text
-/defi aave                     → as carteiras cadastradas (sem nenhuma: a do AAVE_WALLET_ADDRESS)
-/defi aave -full               → os detalhes (risco, APY, colateral, eMode, isolation mode)
-/defi aave -wallet <0x...> -n CarteiraX   → cadastra a carteira (e já mostra a posição)
+/defi aave                     → the registered wallets (with none: AAVE_WALLET_ADDRESS's)
+/defi aave -full               → the details (risk, APY, collateral, eMode, isolation mode)
+/defi aave -wallet <0x...> -n WalletX   → registers the wallet (and shows the position)
 ```
 
 | Option | Value | Description |
 |---|---|---|
-| *(protocol)* | `orca`, `prjx`, `liquidswap` (ou `liqswp`), `morpho` ou `aave` | Alone, shows the Position Details for that protocol only; with `-address` (`orca`) or `-wallet` (`prjx`, `liquidswap`, `morpho` and `aave`), registers; with `-help`, shows help for that protocol only. Without a protocol, `/defi` shows everything registered |
+| *(protocol)* | `orca`, `prjx`, `liquidswap` (or `liqswp`), `morpho` or `aave` | Alone, shows the Position Details for that protocol only; with `-address` (`orca`) or `-wallet` (`prjx`, `liquidswap`, `morpho` and `aave`), registers; with `-help`, shows help for that protocol only. Without a protocol, `/defi` shows everything registered |
 | `-list`, `-l` | | Lists the registrations, with 🔔 on the ones that have an alert (and the fee threshold: `🔔 ≥ $2,000.00`). In your private chat, with full addresses; elsewhere, abbreviated (`Hz15…RaPZ`) |
-| `-rm` | `<nº...\|all>` | Removes registration no. N, several (`-rm 1 3` or `-rm 1,3`) or all of them; if any number doesn't exist, none is removed. Together with `-alerta`: only turns off the alert for no. N (or for all) |
-| `-alerta`, `-a` | `[nº\|all\|valor]` | Without a number: lists the alerts. With a number (or `all`): warns when the position leaves the range and when it comes back. Orca and Project X only (Liquidswap, Morpho and Aave have no range). On registration (with `-address` or `-wallet`), turns on the alert for the new position, in your private chat (or at `-to`); the value is the fee threshold, same as `-taxas` (`-alerta 2000`). See [Out-of-range alert](#out-of-range-alert) |
-| `-taxas` | `[valor\|off]` | Alone: the summary of fees to collect (see [Fee summary](#fee-summary)). Together with `-alerta <nº\|all>`: also warns when the fees to collect go over the value, in dollars (e.g., `-taxas 50`). Warns once, and again after you collect; `off` removes it |
-| `-to` | `<destino>` | Together with `-alerta`: where the warning goes. A contact (`/Jorge Pereira/`), a mention (`@Fulano Da Silva`), a group (`/Grupo L200/`), a number (`+5521999999999`) or email (`email` is `QRCODE_EMAIL_SMTP_TO`) ([Destinations](index.md#destinations-contact-group-number-or-email)). Repeat it for several: the warning goes to all of them. Without it, your private chat |
-| `-address` | `<endereço>` | With `orca`: registers the Orca position by its address |
-| `-pool` | `<endereço>` | With `orca -address`: the pool. Optional; if given, the bot checks that it matches |
+| `-rm` | `<#...\|all>` | Removes registration no. N, several (`-rm 1 3` or `-rm 1,3`) or all of them; if any number doesn't exist, none is removed. Together with `-alerta`: only turns off the alert for no. N (or for all) |
+| `-alerta`, `-a` | `[#\|all\|value]` | Without a number: lists the alerts. With a number (or `all`): warns when the position leaves the range and when it comes back. Orca and Project X only (Liquidswap, Morpho and Aave have no range). On registration (with `-address` or `-wallet`), turns on the alert for the new position, in your private chat (or at `-to`); the value is the fee threshold, same as `-taxas` (`-alerta 2000`). See [Out-of-range alert](#out-of-range-alert) |
+| `-taxas` | `[value\|off]` | Alone: the summary of fees to collect (see [Fee summary](#fee-summary)). Together with `-alerta <#\|all>`: also warns when the fees to collect go over the value, in dollars (e.g., `-taxas 50`). Warns once, and again after you collect; `off` removes it |
+| `-to` | `<destination>` | Together with `-alerta`: where the warning goes. A contact (`/Jorge Pereira/`), a mention (`@Fulano Da Silva`), a group (`/Grupo L200/`), a number (`+5521999999999`) or email (`email` is `QRCODE_EMAIL_SMTP_TO`) ([Destinations](index.md#destinations-contact-group-number-or-email)). Repeat it for several: the warning goes to all of them. Without it, your private chat |
+| `-address` | `<address>` | With `orca`: registers the Orca position by its address |
+| `-pool` | `<address>` | With `orca -address`: the pool. Optional; if given, the bot checks that it matches |
 | `-nft` | `<mint>` | With `orca -address`: the position's NFT. Optional; if given, the bot checks that it matches |
 | `-wallet`, `-w` | `<0x...>` | With `prjx`, `morpho` or `aave`: registers the wallet (`0x` and 40 hexadecimal characters); with `liquidswap`, the Aptos wallet (`0x` and up to 64). The bot reads all of its open positions |
 | `-mask`, `-m` | | Hides the wallet numbers with `*`, keeping the format (`$**,***.**`): balances, amounts, values and yield. Fees to collect stay visible. Position (-address) and wallet (-wallet) addresses are hidden too, even in private chat. Price, range, pool, Health Factor, LTV and APY stay. Works with any protocol (`/defi -m`, `/defi aave -mask`) |
-| `-name`, `-n` | `<nome>` | With `-address` or `-wallet`: a name for the position or wallet (optional, up to 40 characters), shown next to the address (`Orca · Posição TAL (Hz15…RaPZ)`, `Project X · Carteira Hare (0x92…0444)`). With spaces, quoted or not. On one that's already registered, changes the name |
+| `-name`, `-n` | `<name>` | With `-address` or `-wallet`: a name for the position or wallet (optional, up to 40 characters), shown next to the address (`Orca · Position X (Hz15…RaPZ)`, `Project X · Hare Wallet (0x92…0444)`). With spaces, quoted or not. On one that's already registered, changes the name |
 | `-full`, `-f` | | With `aave`: the position details: LTV, liquidation threshold, available borrows, each asset's APY, what is collateral, eMode and isolation mode. See [Aave V3](#aave-v3) |
 
 ```text
@@ -107,12 +107,12 @@ registration), the fee threshold:
 
 ```text
 /defi -l
-🌊 Posições DeFi (2)
+🌊 DeFi positions (2)
 
-1. Orca · Hz15…RaPZ · pool CeaZ…QpbN (desde 02/10/2026) 🔔 ≥ $2,000.00
-2. Project X · carteira 0x92…0444 (desde 02/10/2026) 🔔
+1. Orca · Hz15…RaPZ · pool CeaZ…QpbN (since 10/2/2026) 🔔 ≥ $2,000.00
+2. Project X · carteira 0x92…0444 (since 10/2/2026) 🔔
 
-💡 /defi mostra os detalhes; /defi -rm <nº> remove; 🔔 = com alerta (/defi -alerta), ≥ $ é o limite das taxas.
+💡 /defi shows the details; /defi -rm <num> removes; 🔔 = with alert (/defi -alerta), ≥ $ is the fees limit.
 ```
 
 In your private chat, addresses show in full.
@@ -122,29 +122,29 @@ To get the Position Details every day, in a chat or together with other commands
 `aave -full`; the registration and alert options are rejected):
 
 ```text
-/cron 06:00 -r diario -to /Grupo da Faculdade/ ⏰ Status da DeFi! {/defi} Preço do BTC! {/crypto BTC}
+/cron 06:00 -r diario -to /Grupo da Faculdade/ ⏰ DeFi status! {/defi} BTC price! {/crypto BTC}
 ```
 
 ```text
 /defi orca
-🌊 Orca · SOL/cbBTC · taxa 0.16%
-📍 7xKp…3mQa · ✅ dentro da faixa
+🌊 Orca · SOL/cbBTC · fee 0.16%
+📍 7xKp…3mQa · ✅ in range
 
-💰 Saldo: $2,476.30
+💰 Balance: $2,476.30
    • 12.4521 SOL ($1,470.55)
    • 0.012 cbBTC ($1,005.75)
 
-📏 Faixa: 0.00140324 – 0.0014605 cbBTC por SOL
-🎯 Preço atual: 0.00140381 cbBTC por SOL
-   ▕●──────────▏ 1% da faixa
+📏 Range: 0.00140324 – 0.0014605 cbBTC per SOL
+🎯 Current price: 0.00140381 cbBTC per SOL
+   ▕●──────────▏ 1% of the range
    (1 cbBTC = 712.349 SOL)
 
-💸 Taxas a coletar: $18.42
+💸 Fees to collect: $18.42
    • 0.0812 SOL ($9.59)
    • 0.0001054 cbBTC ($8.83)
-📊 Rende ~$6.71/dia (estimativa: 0.0648% da liquidez ativa × as taxas 24h dos LPs)
+📊 Earns ~$6.71/day (estimate: 0.0648% of the active liquidity × the LPs' 24h fees)
 
-🏊 Pool: TVL $9.62M · volume 24h $7.44M · taxas 24h $11.9K
+🏊 Pool: TVL $9.62M · 24h volume $7.44M · 24h fees $11.9K
 ```
 
 ## Project X
@@ -156,23 +156,23 @@ from newest to oldest:
 
 ```text
 /defi prjx -wallet 0x926024824BAEAf3ee0b7A2EEFA5A216743230444
-✅ Carteira do Project X cadastrada: 0x92…0444
-📍 2 posições abertas.
-💡 Veja com /defi prjx
+✅ Project X wallet registered: 0x92…0444
+📍 2 open positions.
+💡 See it with /defi prjx
 
 /defi prjx
-🌊 Project X · UBTC/USD₮0 · taxa 0.05%
-📍 #558492 · ✅ dentro da faixa
+🌊 Project X · UBTC/USD₮0 · fee 0.05%
+📍 #558492 · ✅ in range
 
-💰 Saldo: $10.09
+💰 Balance: $10.09
    • 0.00005428 UBTC ($4.67)
    • 5.4195 USD₮0 ($5.42)
 
-📏 Faixa: 83,686.6 – 88,241.4 USD₮0 por UBTC
-🎯 Preço atual: 86,104.4 USD₮0 por UBTC
-   ▕─────●─────▏ 53% da faixa
+📏 Range: 83,686.6 – 88,241.4 USD₮0 per UBTC
+🎯 Current price: 86,104.4 USD₮0 per UBTC
+   ▕─────●─────▏ 53% of the range
 
-💸 Taxas a coletar: <$0.01
+💸 Fees to collect: <$0.01
    • 0 UBTC ($0.00)
    • 0.004384 USD₮0 (<$0.01)
 ```
@@ -196,23 +196,23 @@ where it has LP, from largest to smallest in dollars:
 
 ```text
 /defi liquidswap -wallet 0x8f3c4d2a1b9e7f6a5c4b3a29180f7e6d5c4b3a2918f7e6d5c4b3a2918f7e6d5c
-✅ Carteira da Liquidswap cadastrada: 0x8f…6d5c
-📍 2 posições abertas.
-💡 Veja com /defi liquidswap
+✅ Liquidswap wallet registered: 0x8f…6d5c
+📍 2 open positions.
+💡 See it with /defi liquidswap
 
 /defi liqswp
-🌊 Liquidswap · USDC/APT · taxa 0.3% · v0 não correlacionada
-📍 0.5% da pool
+🌊 Liquidswap · USDC/APT · fee 0.3% · v0 uncorrelated
+📍 0.5% of the pool
 
-💰 Saldo: $439.83
+💰 Balance: $439.83
    • 219.9144 USDC ($219.91)
    • 294.4688 APT ($219.91)
 
-🎯 Preço atual: 1.33902 APT por USDC
+🎯 Current price: 1.33902 APT per USDC
    (1 APT = 0.746817 USDC)
 
 🏊 Pool: TVL $87.97K · 43,982.87 USDC + 58,893.75 APT
-💸 As taxas dos swaps entram na pool: já estão no saldo.
+💸 Swap fees go into the pool: they are already in the balance.
 ```
 
 - **Pool share**: your LP divided by the total issued. The balance of each token is that share of the
@@ -248,7 +248,7 @@ query the API again.
 ```text
 🦋 MORPHO · cbBTC/USDC · Base
 
-💰 Posição líquida
+💰 Net position
 $11,236.16
 
 ❤️ Health Rate
@@ -259,32 +259,32 @@ $11,236.16
 📥 SUPPLIED / COLLATERAL
 
 ₿ cbBTC
-Quantidade: 0.19324183 cbBTC
-Valor: $16,407.88
+Amount: 0.19324183 cbBTC
+Value: $16,407.88
 
 ━━━━━━━━━━━━━━━━━━
 
 📤 BORROWED
 
 💵 USDC
-Quantidade: 5,171.79 USDC
-Valor: $5,171.72
+Amount: 5,171.79 USDC
+Value: $5,171.72
 
 ━━━━━━━━━━━━━━━━━━
 
-📊 RISCO
+📊 RISK
 
-LTV atual: 31.52%
+Current LTV: 31.52%
 LLTV: 86.00%
-Preço cbBTC (oráculo): 84,909.56 USDC
-Preço de liquidação: 31,120.13 USDC
-Utilização do mercado: 90.04%
+cbBTC price (oracle): 84,909.56 USDC
+Liquidation price: 31,120.13 USDC
+Market utilization: 90.04%
 
 ━━━━━━━━━━━━━━━━━━
 
-👛 Carteira: 0x74…97C4
-🌐 Rede: Base
-🕐 Atualizado: 03:15:42
+👛 Wallet: 0x74…97C4
+🌐 Network: Base
+🕐 Updated: 3:15:42 AM
 ```
 
 With more than one position (several markets, vaults or networks), the net total comes first, then
@@ -322,7 +322,7 @@ network's response is kept in memory for 30 seconds.
 ```text
 🟣 AAVE V3 · Ethereum
 
-💰 Posição líquida
+💰 Net position
 $364,079.92
 
 ❤️ Health Factor
@@ -350,9 +350,9 @@ $350,583.00
 
 ━━━━━━━━━━━━━━━━━━
 
-👛 Carteira: 0x12…abcd
-🌐 Rede: Ethereum
-🕐 Atualizado: 03:15:42
+👛 Wallet: 0x12…abcd
+🌐 Network: Ethereum
+🕐 Updated: 3:15:42 AM
 ```
 
 With `-full`, you also get the risk (current and max LTV, liquidation threshold, available borrows
@@ -383,7 +383,7 @@ Where each number comes from:
 `-taxas` alone puts together, in a single message, the fees to collect from all liquidity positions:
 the range, the price and the fees of each Orca and Project X position, and the dollar total at the
 end (with each protocol's). Liquidswap is included, but in an AMM the fees are already in the
-balance: there's nothing to collect. A protocol that isn't registered shows as `➖ não cadastrado`.
+balance: there's nothing to collect. A protocol that isn't registered shows as `➖ not registered`.
 With the protocol, only that one (`/defi prjx -taxas`); Morpho and Aave have no fees to collect.
 
 With `-alerta` (no value), it also shows each registration's alert: where it warns, the fee threshold
@@ -391,40 +391,40 @@ and how far it is from reaching it. On Project X, the threshold applies to the w
 of the positions), as in the alert check.
 
 ```text
-/defi -taxas                   → o resumo de todos
-/defi prjx -taxas              → só do Project X
-/defi -taxas -alerta           → com o alerta de cada cadastro
-/cron 8h -r diario {/defi -taxas}   → o resumo todo dia às 8h
+/defi -taxas                   → the summary of all
+/defi prjx -taxas              → just Project X's
+/defi -taxas -alerta           → with each registration's alert
+/cron 8h -r diario {/defi -taxas}   → the summary every day at 8h
 ```
 
 ```text
-💸 Resumo das taxas a coletar · 07/10/2026 às 20:55
+💸 Fees to collect summary · 10/7/2026 at 20:55
 
 🌊 Orca · SOL/cbBTC · 📍 Hz15…RaPZ
-📏 Faixa: 0.00140324 – 0.0014605 cbBTC por SOL
-🎯 Preço atual: 0.00140382 cbBTC por SOL
-   ▕●──────────▏ 1% da faixa
+📏 Range: 0.00140324 – 0.0014605 cbBTC per SOL
+🎯 Current price: 0.00140382 cbBTC per SOL
+   ▕●──────────▏ 1% of the range
    (1 cbBTC = 712.344 SOL)
-💸 Taxas a coletar: $1,426.35
+💸 Fees to collect: $1,426.35
    • 6.2494 SOL ($738.04)
    • 0.008212 cbBTC ($688.31)
-🔕 Sem alerta (ligue com /defi -alerta 1)
+🔕 No alert (turn on with /defi -alerta 1)
 
 🌊 Project X · UBTC/USD₮0 · 📍 #7
-📏 Faixa: 81,213.4 – 91,567.3 USD₮0 por UBTC
-🎯 Preço atual: 86,000 USD₮0 por UBTC
-   ▕─────●─────▏ 46% da faixa
+📏 Range: 81,213.4 – 91,567.3 USD₮0 per UBTC
+🎯 Current price: 86,000 USD₮0 per UBTC
+   ▕─────●─────▏ 46% of the range
    (1 USD₮0 = 0.0000116279 UBTC)
-💸 Taxas a coletar: $98.50
+💸 Fees to collect: $98.50
    • 0.001 UBTC ($86.00)
    • 12.5 USD₮0 ($12.50)
-🔔 Alerta: faixa e taxas ≥ $200.00 → seu privado
-   faltam $101.50 (49% do limite)
+🔔 Alert: range and fees ≥ $200.00 → your private chat
+   $101.50 to go (49% of the limit)
 
-🌊 Liquidswap · ➖ não cadastrado
+🌊 Liquidswap · ➖ not registered
 
 ━━━━━━━━━━━━━━━━━━
-💰 Total a coletar: $1,524.85
+💰 Total to collect: $1,524.85
    • Orca: $1,426.35
    • Project X: $98.50
 ```
@@ -445,19 +445,19 @@ the bot reads the position (on Project X, the wallet's positions) every 10 minut
   X only), with no dollar price, it doesn't warn.
 
 ```text
-/defi -alerta 1                  → no seu privado
-/defi -a all -to email           → todas, por e-mail (QRCODE_EMAIL_SMTP_TO)
-/defi -a 2 -to voce@exemplo.com  → por e-mail, para esse endereço
-/defi -a 1 -to /Jorge Pereira/   → no privado do contato
-/defi -a 1 -to /Grupo L200/      → no grupo
-/defi -a 1 -to +5521999999999    → no privado do número
-/defi -a 1 -to @Fulano Da Silva  → num grupo, mencionando a pessoa
-/defi -a 1 -to /Grupo L200/ -to email  → no grupo e por e-mail
-/defi -a 1 -taxas 50             → e quando as taxas a coletar passarem de $50
-/defi -a 1 -taxas off            → tira o aviso das taxas (o da faixa continua)
-/defi orca -address <endereço> -alerta 2000   → no cadastro: liga já, com o limite de $2000
-/defi -alerta                    → a lista dos alertas
-/defi -alerta -rm 1              → desliga o da nº 1 (a posição continua cadastrada)
+/defi -alerta 1                  → in your private chat
+/defi -a all -to email           → all, by email (QRCODE_EMAIL_SMTP_TO)
+/defi -a 2 -to you@example.com   → by email, to that address
+/defi -a 1 -to /Jorge Pereira/   → in the contact's private chat
+/defi -a 1 -to /Grupo L200/      → in the group
+/defi -a 1 -to +5521999999999    → in the number's private chat
+/defi -a 1 -to @Fulano Da Silva  → in a group, mentioning the person
+/defi -a 1 -to /Grupo L200/ -to email  → in the group and by email
+/defi -a 1 -taxas 50             → and when the fees to collect go over $50
+/defi -a 1 -taxas off            → removes the fees notice (the range one stays)
+/defi orca -address <address> -alerta 2000   → on registration: turns it on, with a $2000 limit
+/defi -alerta                    → the list of alerts
+/defi -alerta -rm 1              → turns off no. 1's (the position stays registered)
 ```
 
 `-to` accepts:
@@ -475,36 +475,36 @@ Turning on a position again replaces the destinations with the ones from the new
 `-to`, back to your private chat) and keeps the `-taxas`, if you don't send another. When turning it
 on, the bot already reads the position: if it's out of the range at that moment, the response shows
 it, and the next warning is the comeback one. If the RPC doesn't respond, the position stays
-`❔ ainda não lida`, and the first reading out of the range already warns.
+`❔ not read yet`, and the first reading out of the range already warns.
 
 ```text
 /defi -alerta 1 -to email
-🔔 Alerta do /defi ligado (1)
+🔔 /defi alert on (1)
 
-1. Orca · Hz15…RaPZ · ✅ na faixa
+1. Orca · Hz15…RaPZ · ✅ in range
 
-📣 Aviso: 📧 voce@exemplo.com, quando a posição sair da faixa e quando voltar (verificada a cada 10 minutos).
-💡 Veja com /defi -alerta; desligue com /defi -alerta -rm <nº|all>.
+📣 Notice: 📧 you@example.com, when the position leaves the range and when it comes back (checked every 10 minutes).
+💡 See it with /defi -alerta; turn off with /defi -alerta -rm <num|all>.
 ```
 
 The warning carries the position's "Position Details". On a Project X wallet, it's "in range" when
 all the open positions are, and the warning carries only the ones that left:
 
 ```text
-🚨 DeFi: Orca · Hz15…RaPZ saiu da faixa
+🚨 DeFi: Orca · Hz15…RaPZ left the range
 
-🌊 Orca · SOL/cbBTC · taxa 0.16%
-📍 Hz15…RaPZ · ⚠️ fora da faixa (preço abaixo: a posição não rende taxas)
+🌊 Orca · SOL/cbBTC · fee 0.16%
+📍 Hz15…RaPZ · ⚠️ out of range (price below the range: the position earns no fees)
 ...
 
-💡 Desligue com /defi -alerta -rm 1.
+💡 Turn off with /defi -alerta -rm 1.
 ```
 
 And the other warnings, with the same "Position Details":
 
 ```text
-✅ DeFi: Orca · Hz15…RaPZ voltou para a faixa
-💸 DeFi: Project X · carteira 0x92…0444 tem $98.50 em taxas a coletar (passou de $50.00)
+✅ DeFi: Orca · Hz15…RaPZ is back in range
+💸 DeFi: Project X · wallet 0x92…0444 has $98.50 in fees to collect (over $50.00)
 ```
 
 In the `/defi -l` list, positions with an alert show with 🔔 (and the fee threshold, if any:
@@ -543,7 +543,7 @@ The accounts are read through the RPC in the `defi.solana.rpc` setting (default:
 position, try again in a moment or use your own RPC (Helius, QuickNode, Alchemy... have free plans):
 
 ```text
-/set defi.solana.rpc https://mainnet.helius-rpc.com/?api-key=<sua-chave>
+/set defi.solana.rpc https://mainnet.helius-rpc.com/?api-key=<your-key>
 ```
 
 The value is displayed masked in `/set`, since the URL usually carries the key. The registered
@@ -558,7 +558,7 @@ batches: the bot sends the calls in batches of 10. If `/defi prjx` can't read th
 in a moment or use your own RPC:
 
 ```text
-/set defi.hyperevm.rpc https://<seu-rpc-da-hyperevm>
+/set defi.hyperevm.rpc https://<your-hyperevm-rpc>
 ```
 
 ## Aptos API
@@ -575,6 +575,6 @@ Without a key, both are subject to the anonymous per-IP limit, which is enough f
 [Geomi](https://geomi.dev/docs/start) and put it in `config/.env` (or in the setting):
 
 ```text
-APTOS_API_KEY=<sua-chave>
-/set defi.aptos.apikey <sua-chave>
+APTOS_API_KEY=<your-key>
+/set defi.aptos.apikey <your-key>
 ```

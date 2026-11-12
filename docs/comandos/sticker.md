@@ -15,8 +15,9 @@ video/GIF or an image, and returns the sticker. The sticker's name and author co
 
 The video becomes a 512x512 square framed on the middle, at most six seconds long: without `-es`, the
 six seconds from `-ss` (or from the start). While it downloads and converts, the bot shows
-"⏳ Processando seu sticker, aguarde.", which turns into "✅ Sticker criado com sucesso!" (or the
-error).
+"⏳ Processing your sticker, please wait.", which turns into "✅ Sticker created successfully!"
+(or the error). The animated sticker has to fit in 500 KB (WhatsApp's limit): the bot retries with
+lower quality and, if it still doesn't fit, suggests a shorter clip with `-ss` and `-es`.
 
 ![Demonstração do /sticker](../assets/demo/05-sticker.gif)
 
@@ -33,12 +34,12 @@ error).
 
 | Option | Value | Description |
 |---|---|---|
-| `-pos` | `<topo\|meio\|baixo>` | Where the square crop of the image or video sits (default `meio`; `top`, `middle`, `bottom`, `cima` and `centro` also work). On media wider than tall, `topo` is the left and `baixo` the right. Doesn't work with `-txt` |
-| `-txt` | `<texto>` | Animated sticker with the text, without having to reply to anything. See [Text sticker](#text-sticker) |
-| `-bg` | `<cor>` | With `-txt`: the background color, in `#RRGGBB` (default `#FFFFFF`, white) |
-| `-fg` | `<cor>` | With `-txt`: the letter color, in `#RRGGBB` (default `#000000`, black) |
-| `-startSec`, `-ss` | `<tempo>` | Video: starts at this point (default 0) and takes the next 6 s. In seconds (`12`, `1.5`) or in `min:sec` (`01:12`). With a leading `-`, counts from the end (`-10`) |
-| `-endSec`, `-es` | `<tempo>` | Video: ends at this point, in the same format as `-ss` (also with a leading `-`) and after the start; at most 6 s after `-ss` |
+| `-pos` | `<top\|middle\|bottom>` | Where the square crop of the image or video sits (default `middle`; `topo`, `meio`, `baixo`, `cima` and `centro` also work). On media wider than tall, `top` is the left and `bottom` the right. Doesn't work with `-txt` |
+| `-txt` | `<text>` | Animated sticker with the text, without having to reply to anything. See [Text sticker](#text-sticker) |
+| `-bg` | `<color>` | With `-txt`: the background color, in `#RRGGBB` (default `#FFFFFF`, white) |
+| `-fg` | `<color>` | With `-txt`: the letter color, in `#RRGGBB` (default `#000000`, black) |
+| `-startSec`, `-ss` | `<time>` | Video: starts at this point (default 0) and takes the next 6 s. In seconds (`12`, `1.5`) or in `min:sec` (`01:12`). With a leading `-`, counts from the end (`-10`) |
+| `-endSec`, `-es` | `<time>` | Video: ends at this point, in the same format as `-ss` (also with a leading `-`) and after the start; at most 6 s after `-ss` |
 | `-verbose`, `-v` | | Shows the parameters used in yt-dlp/ffmpeg |
 | `[url]` | | Video link; takes precedence over the replied message |
 
@@ -52,9 +53,9 @@ preview thumbnail, when it comes from another address, goes through the same pro
 letters are the biggest size that fits.
 
 ```text
-/sticker -txt "Bom dia!"                                → black letters on a white background
-/sticker -txt "Partiu praia?" -bg "#2980B9" -fg "#FFFFFF"
-/sticker -txt Feliz aniversário, vó! -bg #C0392B -fg #fff
+/sticker -txt "Good morning!"                            → black letters on a white background
+/sticker -txt "Beach time?" -bg "#2980B9" -fg "#FFFFFF"
+/sticker -txt Happy birthday, grandma! -bg #C0392B -fg #fff
 ```
 
 - The text goes with or without quotes (up to 200 characters); colors, in `#RRGGBB` or `#RGB`, with

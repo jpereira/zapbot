@@ -16,14 +16,15 @@ Podem ser enviados em **qualquer chat** (privado, grupo ou no chat consigo mesmo
 - `/help` lista os comandos que você pode usar (o dono e os admins veem todos); `/help get` ou
   `/help /get` mostram um específico, e `/help -r` agrupa a lista por role (`owner`, `admin` e
   `user`).
-- Os comandos têm nome em inglês; os que tinham nome em português o mantêm como alias fixo (`/desenhe`,
-  `/tempo`, `/todos`, `/boletos`, `/cotacao`, `/traduzir`, `/enquete`, `/listageral`...). Aliases funcionam igual ao comando original
-  (`/download` = `/get`) e não dependem do idioma. O [`/alias`](alias.md) salva
-  atalhos com argumentos ou textos com vários `{/comando}`; `/help alias` lista os atalhos
-  disponíveis para você.
+- Os comandos têm nome em inglês; os que tinham nome em português o mantêm como alias fixo
+  (`/desenhe`, `/tempo`, `/todos`, `/boletos`, `/cotacao`, `/traduzir`, `/enquete`,
+  `/listageral`...). Aliases funcionam igual ao comando original (`/download` = `/get`) e não
+  dependem do idioma. O [`/alias`](alias.md) salva atalhos com argumentos ou textos com vários
+  `{/comando}`; `/help alias` lista os atalhos disponíveis para você.
 - O idioma é o setting `zapbot.lang` (`en_US`, o padrão, ou `pt_BR`; veja
-  [Idioma](../configuracao.md#idioma)). Hoje ele traduz o `-h` e o `/help`; as respostas dos
-  comandos ainda estão em português e estão sendo migradas.
+  [Idioma](../configuracao.md#idioma)). Ele traduz o `-h` e o `/help` e também as respostas, os
+  avisos, os erros, as datas e os números do bot. As descrições que o `/set` mostra de cada
+  setting ainda estão em português.
 - Basta digitar o começo do comando: `/wat` ou `/watc` viram `/watch`. Se o começo servir para mais
   de um (`/wa`), o bot responde com os possíveis comandos (`/walissu, /watch`). O nome exato e os
   atalhos do `/alias` têm prioridade.
@@ -33,7 +34,9 @@ Podem ser enviados em **qualquer chat** (privado, grupo ou no chat consigo mesmo
 Os comandos com envio a destinos usam **`-to`**: o [`/cron`](cron.md), os alertas do
 [`/rates`](rates.md#avisar-em-outro-chat-ou-por-e-mail) e do [`/crypto`](crypto.md), o
 [`/defi -alerta`](defi.md#alerta-de-saída-da-faixa), o [`/watch`](watch.md#avisar-em-outro-lugar) e
-o [`/backup -send`](backup.md#enviar-o-arquivo). O `/bot -status` também aceita `-to`. Esses
+o [`/backup -send`](backup.md#enviar-o-arquivo) e os alertas do
+[`/notes -alerta`](notes.md#alertas) (o `/notes` também usa para enviar uma lista, uma
+visualização ou uma exportação). O `/bot -status` também aceita `-to`. Esses
 comandos aceitam vários `-to`: o aviso (ou a mensagem, ou o arquivo) sai em cada destino. O alvo do
 [`/mute`](mute.md), as pessoas do [`/bot +a`/`+u`](bot.md#admins-extras) e do [`/whois`](whois.md)
 usam a mesma busca. Sem `-to`, os avisos (e o arquivo do `/backup`) vão para o seu privado, e o
@@ -45,7 +48,7 @@ usam a mesma busca. Sem `-to`, os avisos (e o arquivo do `/backup`) vão para o 
 | Grupo | `/Grupo L200/`, `"Grupo L200"` ou `L200` | O grupo, com prioridade para o nome exato |
 | Menção | `@Fulano` (escolhido na lista do `@` do WhatsApp) | A pessoa mencionada. Útil num grupo, para quem não está na sua agenda. Um `@número` digitado, sem ser menção, é recusado |
 | Número | `+5521999999999` | O privado do número: DDI + DDD + número (o `+` é opcional; o bot confere se ele está no WhatsApp) |
-| E-mail | `email`, `voce@exemplo.com` ou `"a@x.com, b@y.com"` | Nos alertas (`/rates`, `/crypto` e `/defi`), no `/watch`, no `/bot -status` e no `/backup -send`: `email` é o `QRCODE_EMAIL_SMTP_TO`; sai pelo SMTP do bot, sem a formatação do WhatsApp ([E-mails](../emails.md)) |
+| E-mail | `email`, `voce@exemplo.com` ou `"a@x.com, b@y.com"` | Nos alertas (`/rates`, `/crypto`, `/defi` e `/notes`), no `/watch`, no `/bot -status` e no `/backup -send`: `email` é o `QRCODE_EMAIL_SMTP_TO`; sai pelo SMTP do bot, sem a formatação do WhatsApp ([E-mails](../emails.md)) |
 
 O `/debug` usa `-copy-to` para copiar logs a um chat, sem aceitar e-mail. O `/watch -in` seleciona a
 origem das mensagens: contato, grupo ou canal `@newsletter`.
@@ -84,7 +87,8 @@ As mesmas formas, num comando só:
 💡 Responda só com o nº (em até 2 minutos), ou repita o comando com mais palavras do nome.
 
 1
-🔇 Silenciado: 👤 Jorge Pereira — apagadas, editadas, status
+🔇 Silenciado: 👤 Jorge Pereira — apagadas, editadas, status, reações
+💡 Só o aviso some: as mensagens continuam guardadas para o /show. Veja a lista com /mute; desfaça com /unmute.
 ```
 
 Sem resposta em 2 minutos, nada é feito, e a própria lista vira o aviso (sem outra mensagem):
@@ -127,7 +131,7 @@ num grupo vale só nesse grupo; com `/set bot.users true`, todos. O `/bot +cmd`/
 comandos de cada usuário. Veja [Usuários](bot.md#usuários). Para saber o seu nível (ou, sendo dono
 ou admin, o de alguém), use o [`/whois`](whois.md). Quem não é admin tem uma
 [proteção contra flood](bot.md#proteção-contra-flood): o mesmo comando, no máximo 3 vezes em 2
-segundos.
+segundos por padrão (`flood.maxCommandRepeated` e `flood.intervalCommand`).
 
 ### Delegando um comando admin
 
@@ -203,11 +207,11 @@ mesmo que comecem com `/`. Sem isso, alguém poderia usar um comando que ecoa te
 |---|---|:-:|---|
 | [`/alias`](alias.md) | | `admin` | Cadastra, lista e remove atalhos para comandos com argumentos ou textos com vários `{/comando}` |
 | [`/ascii`](ascii.md) | | `user` | O texto em letras grandes de ASCII, num bloco que cabe na tela do celular |
-| [`/backup`](backup.md) | `/bkp` | `admin` | Backup diário local e envio por `backup.to`; lista, detalha, restaura e envia o banco |
+| [`/backup`](backup.md) | `/bkp` | `admin` | Backup diário local e envio por `backup.to`; lista, detalha, restaura, envia e apaga o banco |
 | [`/batch`](batch.md) |  | `admin` | Executa vários comandos de uma mensagem só, em sequência (cada linha que começa com um comando abre um bloco), e responde um resumo; `-stop` e `-dry` |
 | [`/bills`](bills.md) | `/boletos` | `user` | Sorteia 2 membros para "pagar um boleto" |
 | [`/block`](block.md) | `/bloquear` | `admin` | Bloqueia uma ou várias pessoas na sua conta do WhatsApp (respondendo uma mensagem, quem a escreveu); sem nada, lista os bloqueados; `-mask` ofusca telefones |
-| [`/bot`](bot.md) | | `admin` | Status do bot (relatório de 24 h e os usuários); liga/desliga os comandos (`-on`/`-off`) e diz quem usa: admins (`+a`/`-a`) e usuários (`+u`/`-u`, em qualquer chat ou só num grupo, e os comandos de cada um com `+cmd`/`-cmd`); `-reset` volta ao padrão; `-status` (`-s`): relatório das últimas 24 h, e `-s 06h` manda todo dia; `-info` (`-i`): versões e sistema; `-test` (`-t`): testa cache, disco, banco, WhatsApp, internet, SMTP e programas |
+| [`/bot`](bot.md) | | `admin` | Status do bot (relatório de 24 h e os usuários); liga/desliga os comandos (`-on`/`-off`) e diz quem usa: admins (`+a`/`-a`) e usuários (`+u`/`-u`, em qualquer chat ou só num grupo, e os comandos de cada um com `+cmd`/`-cmd`); `-reset` volta ao padrão; `-status` (`-s`): relatório das últimas 24 h, e `-s 06h` manda todo dia; `-info` (`-i`): versões e sistema; `-test` (`-t`): testa cache, disco, banco, WhatsApp, internet, SMTP, IMAP e programas |
 | [`/cache`](cache.md) | | `admin` | Árvore do cache com tamanhos, contagens de mensagens e limpeza |
 | [`/cron`](cron.md) | `/agenda`, `/lembrete` | `admin` | Na hora marcada (`30m`, `às 18h`, `sexta 9h`...): envia uma mensagem (aqui ou com `-to`, em um ou vários chats) ou, como `/lembrete`, um ⏰ lembrete; pode repetir, editar e pausar, e rodar comandos no texto (`{/crypto}`) |
 | [`/crypto`](crypto.md) | `/bitcoio`, `/creptomoeda` | `user` | Cotação das criptos ativadas (padrão: BTC, ETH, SOL e HYPE) ou só das pedidas (`BTC ETH`); alertas de preço |
@@ -218,7 +222,7 @@ mesmo que comecem com `/`. Sem isso, alguém poderia usar um comando que ecoa te
 | [`/everybody`](everybody.md) | `/todos`, `/todes` | `admin` · delegável | Menciona todos do grupo |
 | [`/get`](get.md) | `/download` | `user` | Baixa vídeo/áudio de redes sociais ou da mídia respondida |
 | [`/giphy`](giphy.md) | `/gif` | `user` | GIF do GIPHY por tag, URL ou ID, enviado em loop |
-| [`/gpt`](gpt.md) | `/ai` | `admin` · delegável | Pergunta ao ChatGPT (OpenAI); `-img`, `-gif`, `-voz`, `-prices` e `-usage` |
+| [`/gpt`](gpt.md) | `/ai` | `admin` · delegável | Pergunta ao ChatGPT (OpenAI); `-img`, `-gif`, `-voz`, `-prices`, `-usage` e `-status` (bytes, tokens, custo e saldo) |
 | [`/help`](help.md) | `/h` | `user` | Menu de ajuda, só com os comandos que quem pediu pode usar |
 | [`/join`](join.md) |  | `admin` | Entra em um grupo pelo link de convite (`-info` mostra o grupo sem entrar); `-l` lista os seus grupos |
 | [`/joke`](joke.md) | `/piada`, `/humor` | `user` | Piada aleatória em português |
@@ -241,7 +245,7 @@ mesmo que comecem com `/`. Sem isso, alguém poderia usar um comando que ecoa te
 | [`/set`](set.md) | `/config` | `admin` | Lista e altera as configurações (settings); `-a`/`-rm` acrescentam e tiram itens das listas (ex.: o `bot.admins` e o `bot.users`) |
 | [`/show`](show.md) |  | `admin` · delegável | No privado, lista o cache; reexibe apagadas, edições (`-e`), status (`-s`) e reações removidas ou trocadas (`-r`); `-q` busca (texto ou regex) e `-mask` ofusca telefones |
 | [`/stats`](stats.md) |  | `admin` · delegável | Ranking deste chat ou de outro (`/Grupo/`): quem mais fala, apaga e edita, horários de pico; `-me` para as suas, `-l` lista os chats, `-flush` apaga |
-| [`/sticker`](sticker.md) |  | `user` | Figurinha de imagem, vídeo ou link (o `/get -st`); com `-txt`, uma figurinha animada de texto |
+| [`/sticker`](sticker.md) |  | `user` | Figurinha de imagem, vídeo ou link (o `/get -st`), respondendo ou na legenda da mídia; com `-txt`, uma figurinha animada de texto |
 | [`/tldr`](tldr.md) | `/resumo` | `admin` · delegável | Resume a conversa do chat pelo ChatGPT (`30m`, `2h`, `1d`, `1h30m` ou `300` mensagens; respondendo uma mensagem, a partir dela) |
 | [`/translate`](translate.md) | `/traduzir` | `user` | Traduz o texto ou a mensagem respondida pelo Google Translate, sem chave; `-para en` muda o idioma |
 | [`/unblock`](unblock.md) |  | `admin` | Desbloqueia uma pessoa: pelo nome, pelo número, pelo nº da lista do `/block` ou respondendo uma mensagem |

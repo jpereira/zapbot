@@ -33,7 +33,7 @@ heartbeat:
 2. The image's `HEALTHCHECK` (`docker/app/healthcheck.js`) only looks at the file's age: stale for
    more than 90 s, and the container becomes `unhealthy` (there's a 2 min grace period on boot).
 3. Connected but without `CONNECTED` 3 times in a row, the bot itself restarts the WhatsApp client
-   and warns by email (`🩺 WhatsApp sem resposta`).
+   and warns by email (`🩺 WhatsApp not responding`).
 
 On a restart (and on an `initialize` failure), the bot closes the client and, if Chromium lost the
 connection but is still alive (it holds the session directory and every following `initialize` would
@@ -56,8 +56,8 @@ initialize falhou: net::ERR_NAME_NOT_RESOLVED at https://web.whatsapp.com/
 🤖 ZapBot 2.0.13 (devel) inicializado!
 ```
 
-- Only one email, on the first failure (`❌ Falha ao reiniciar`); with the internet down, it fails
-  too, and the `🔄 Reconectado` says how long the bot went without being able to connect and how
+- Only one email, on the first failure (`❌ Restart failed`); with the internet down, it fails
+  too, and the `🔄 Reconnected` says how long the bot went without being able to connect and how
   many attempts failed.
 - While it keeps trying, the heartbeat keeps beating, with the state
   `reconectando (N falhas seguidas)`: restarting the container wouldn't bring the internet back.
@@ -91,7 +91,7 @@ bot and add the label `autoheal=true` to the `zapbot` service:
 | `env file .../config/.env not found` | Create the file from the example: `cp config/.env.example config/.env`. |
 | QR doesn't show up in the logs | `QRCODE_EMAIL_ENABLE` is `"true"`: the QR goes by email and only lands in the logs if sending fails (`QRCODE_EMAIL_FALLBACK_TERMINAL`, default `"true"`). Check your email or set it to `"false"`. |
 | `Erro ao enviar QR por email` | Wrong SMTP host/port/user/password. Use port 465 and an app password. With `QRCODE_EMAIL_FALLBACK_TERMINAL="true"` (default), the QR shows up in the logs anyway. |
-| `Too many bad auth attempts` (`535 5.7.0`, `EAUTH`) or `SMTP em pausa` | The provider blocked the login because of wrong attempts (wrong or revoked app password). The bot stops trying for 30 minutes so it doesn't make things worse. Check the password, wait for the block to pass and test with `/bot -test`. See [Pause after a login failure](emails.md#pause-after-a-login-failure). |
+| `Too many bad auth attempts` (`535 5.7.0`, `EAUTH`) or `SMTP paused` | The provider blocked the login because of wrong attempts (wrong or revoked app password). The bot stops trying for 30 minutes so it doesn't make things worse. Check the password, wait for the block to pass and test with `/bot -test`. See [Pause after a login failure](emails.md#pause-after-a-login-failure). |
 | `Erro ao enviar QR por email: ... self-signed certificate` / `unable to verify` | The SMTP certificate isn't valid. Use the provider's official host (the name has to match the certificate). |
 | QR email lands in spam | `QRCODE_EMAIL_SMTP_FROM` is different from the SMTP account. |
 | Email alerts don't arrive | Check `QRCODE_EMAIL_SMTP_HOST`, `_USER` and `_TO` (nothing is sent without them) and the `email.alerts` setting (`/set email.alerts`). SMTP failures show up in the log as `Alerta por e-mail '...' falhou`. |

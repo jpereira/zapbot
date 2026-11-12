@@ -6,8 +6,9 @@ draw: `-model` (view and switch the model) is for the owner and admins. Each ima
 OpenAI account**.
 
 Draws an image with OpenAI's GPT Image (`v1/images` API) and sends it to the chat, with the request
-in the caption (cut at 200 characters). With `-gif`, it makes an **animated GIF**. On a **photo** (the message's own, in the
-caption, or the replied one), the request **edits** the photo or, with `-gif`, **animates** it.
+in the caption (cut at 200 characters). With `-gif`, it makes an **animated GIF**. On a **photo** (the
+message's own, in the caption, or the replied one), the request **edits** the photo or, with
+`-gif`, **animates** it.
 Replying to a message, its text goes before the request. `/gpt -img` and `/gpt -gif` are the same
 code: the result is the same.
 
@@ -20,7 +21,7 @@ code: the result is the same.
 ```
 
 If the **first word** looks like an option but doesn't exist (`/draw -price`), the bot replies
-`❌ Opção desconhecida: -price` and suggests `-h|-help`, without calling OpenAI.
+`❌ Unknown option: -price` and suggests `-h|-help`, without calling OpenAI.
 
 | Option | Value | Description |
 |---|---|---|
@@ -54,7 +55,7 @@ movement.
 
 ```text
 /img -gif um gato dançando
-→ ⏳ Processando o /draw, aguarde.
+→ ⏳ Processing /draw, hold on.
 → (the GIF, looping) 🎞️ um gato dançando
 
 /img -gif -f 6 -ms 300 uma bandeira ao vento
@@ -63,20 +64,21 @@ movement.
 
 - Uses the model from the `openai.image.gifModel` setting (default `gpt-image-2.6-flare`;
   `gpt-image-2.6-sunburst` is more detailed). Only the 2.6 family makes GIFs, and it **requires
-  preview access**. Without it, the bot replies `🔒 A sua conta/modelo não faz GIF animado` with
+  preview access**. Without it, the bot replies `🔒 Your account/model cannot make animated GIFs` with
   OpenAI's message.
 - The GIF comes out with **9 frames of 200 ms** (1.8 s); the `openai.gif.frames` (2 to 16) and
   `openai.gif.frameMs` (20 to 2000) settings change that, and `-frames` and `-ms` override them on
   a call.
-- `-frames` and `-ms` outside the range get `❌ -frames precisa ser um inteiro de 2 a 16.` (or `-ms`,
+- `-frames` and `-ms` outside the range get `❌ -frames must be an integer from 2 to 16.` (or `-ms`,
   from 20 to 2000).
 - Each frame comes out at **512x512**: OpenAI charges for the pixels of all the frames, so more
   frames cost more.
 - OpenAI returns a `.gif`; the bot converts it to a silent MP4 with ffmpeg and sends it as a GIF
   (`sendVideoAsGif`), which is how WhatsApp plays a looping GIF, same as [`/giphy`](giphy.md). If the
   conversion fails, the `.gif` arrives as a document.
-- On `/gpt`, "gere um gif animado..." replying to a photo also works, without `-gif`: the bot
-  recognizes a creation verb (gere, crie, faça, anime) next to gif, animação, animado or vídeo.
+- On `/gpt`, "generate an animated gif..." replying to a photo also works, without `-gif`: the bot
+  recognizes a creation verb (generate, create, make, animate, transform; or gere, crie, faça,
+  anime) next to gif, animation, animated or video (or animação, animado, vídeo).
 
 ## Model the account doesn't have
 
@@ -86,10 +88,10 @@ model doesn't exist, the bot lists the ones your key sees (similar to the featur
 `/set` to switch:
 
 ```text
-❌ O modelo gpt-image-1 não existe na sua conta da OpenAI (imagem).
-💡 A sua chave vê: gpt-image-2.5-flare, gpt-image-2.6-flare
-💡 Troque com /set openai.image.model <modelo>
+❌ The model gpt-image-1 does not exist in your OpenAI account (image).
+💡 Your key sees: gpt-image-2.5-flare, gpt-image-2.6-flare
+💡 Change it with /set openai.image.model <model>
 ```
 
-`/draw -m` shows the image model and the GIF one, and switches each (`/draw -gif -m <modelo>`).
+`/draw -m` shows the image model and the GIF one, and switches each (`/draw -gif -m <model>`).
 A model your key doesn't see isn't saved.

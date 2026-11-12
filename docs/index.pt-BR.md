@@ -7,6 +7,8 @@
 
 [![Testes](https://github.com/jpereira/zapbot/actions/workflows/ci.yml/badge.svg)](https://github.com/jpereira/zapbot/actions/workflows/ci.yml)
 
+> 🇺🇸 **English version: [English](https://jpereira.github.io/zapbot/).**
+
 Bot para WhatsApp escrito em Node.js que roda em cima de uma sessão real do WhatsApp Web. Ele
 recupera mensagens (e status) apagadas e editadas, baixa vídeos de redes sociais, cria figurinhas,
 vigia mensagens por texto/regex e te avisa no privado, traz notícias, tempo e CVEs, conversa com o
@@ -72,16 +74,16 @@ Por onde começar:
 ```text
  ┌────────────── container zapbot (node:24-trixie-slim) ──────────────┐
  │                                                                    │
- │   app.js ──► whatsapp-web.js ──► Puppeteer ──► Chromium            │──► WhatsApp Web
- │     │                                          (headless)          │
- │     ├──► SQLite  (cache/zapbot.db)  mensagens, settings            │
- │     ├──► cache/media   mídias p/ recuperar mensagens apagadas      │
- │     ├──► yt-dlp + ffmpeg   comando /get                            │
- │     ├──► APIs HTTP (axios)  /gpt /weather /cve /news /giphy...       │
- │     └──► SMTP (nodemailer)  QR Code e alertas por e-mail           │
+ │  app.js ──► whatsapp-web.js ──► Puppeteer ──► Chromium             │──► WhatsApp Web
+ │    │                                          (headless)           │
+ │    ├──► SQLite  (cache/zapbot.db)  mensagens, settings             │
+ │    ├──► cache/media  mídias p/ recuperar mensagens apagadas        │
+ │    ├──► yt-dlp + ffmpeg  comando /get                              │
+ │    ├──► APIs HTTP (axios)  /gpt /weather /cve /news /giphy ...     │
+ │    └──► SMTP (nodemailer)  QR Code e alertas por e-mail            │
  │                                                                    │
- │  volumes:  wwebjs_auth  → sessão do WhatsApp (.wwebjs_auth)        │
- │            app_cache    → banco SQLite + mídias (cache/)           │
+ │ volumes:  wwebjs_auth  → sessão do WhatsApp (.wwebjs_auth)         │
+ │           app_cache    → banco SQLite + mídias (cache/)            │
  └────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -141,7 +143,7 @@ Por onde começar:
   preços e avisa **no seu privado** (ou, com um ou vários `-to`, em contatos, grupos, números ou por
   e-mail) quando a regra é cumprida; com o `-msg`, um texto seu vai no início do aviso. Veja
   [Alertas de preço](comandos/rates.md#alertas-de-preço).
-- **Anotações**: o [`/notes`](comandos/notes.md) guarda textos (e imagens, em `cache/notes/`) na
+- **Anotações**: o [`/notes`](comandos/notes.md) guarda textos (e mídias: imagem, documento, áudio, vídeo) na
   tabela `notes`, cada um com um ID e, se quiser, uma `#tag` (a descrição das tags fica em
   `note_tags`). O `-alerta` avisa de uma anotação numa data/hora (uma vez; a anotação continua), no
   seu privado ou nos destinos do `-to`, com uma verificação por minuto.
@@ -173,6 +175,9 @@ Por onde começar:
   moedas do `/crypto`, limites...) ficam na tabela genérica `settings` do SQLite (`key` → `value` em
   JSON) e são alteradas pelo [`/set`](comandos/set.md). No boot os valores padrão são gravados, se
   ainda não existirem, e tudo é carregado em memória. Veja [Settings](settings.md).
+- **Idioma**: o setting `zapbot.lang` (`en_US`, o padrão, ou `pt_BR`) escolhe o idioma da ajuda,
+  das respostas, dos avisos, dos erros, e das datas e números. Veja
+  [Idioma](configuracao.md#idioma).
 - **Comandos**: definidos em
   [`src/comandos/definicoes/`](https://github.com/jpereira/zapbot/tree/main/src/comandos/definicoes)
   (nome, aliases, opções, ajuda, permissão) e implementados em `src/comandos/` (um arquivo por

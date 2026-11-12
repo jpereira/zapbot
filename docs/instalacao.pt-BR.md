@@ -47,7 +47,7 @@ Logo no início dos logs aparece a versão, com o commit e a tag (veja o
 [+] 🤖 ZapBot X.Y.Z (git+4465374/vX.Y.Z) inicializado! Informando 5521999999999
 ```
 
-e receber a mesma mensagem no seu WhatsApp. Mande `/ping` para qualquer chat: o bot deve responder
+e receber uma mensagem no seu WhatsApp (`🤖 ZapBot X.Y.Z (git+4465374/vX.Y.Z) inicializado.`). Mande `/ping` para qualquer chat: o bot deve responder
 `pong`.
 
 ### Atualizar para uma nova versão

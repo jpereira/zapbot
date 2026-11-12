@@ -16,7 +16,7 @@ profile) or, in a group, the group's picture; when replying to a message, the on
 | Option | Value | Description |
 |---|---|---|
 | *(none)* | `[/contato/\|@menção\|+número]...` | The people, separated by spaces: an address book contact by name or part of it (a name with spaces goes between `/.../` or quotes; if several match, you pick from the list), someone mentioned with `@` or a number. With nobody given, the person in the private chat (in your own, your profile), the group's picture in a group, or the one who wrote the message being replied to |
-| `-mask`, `-m` | | Obfuscates phone numbers in this run's output. E.g.: `+55219****44` |
+| `-mask`, `-m` | | Obfuscates phone numbers (10 to 15 consecutive digits) in this run's output, keeping the first five and the last two. E.g.: `+55219****44` |
 
 The person is looked up like in `-to` ([Destinations](index.md#destinations-contact-group-number-or-email)),
 among contacts only: groups are refused.
@@ -34,10 +34,10 @@ among contacts only: groups are refused.
 The picture comes with the caption:
 
 ```text
-Contato: Jorge Pereira <+5521999999999>
+Contact: Jorge Pereira <+5521999999999>
 ```
 
-- In a group, the caption is `Grupo: <name>`. The same person given twice shows once.
+- In a group, the caption is `Group: <name>`. The same person given twice shows once.
 - The name is the one from your address book; someone who isn't in it shows up with their own
   profile name, or just the number.
 - With no picture, or with the picture hidden by the contact's privacy settings, only the caption

@@ -8,7 +8,8 @@
 [![Testes](https://github.com/jpereira/zapbot/actions/workflows/ci.yml/badge.svg)](https://github.com/jpereira/zapbot/actions/workflows/ci.yml)
 
 > 🇺🇸 **English version: [README.md](README.md).** Este é o README em português (pt_BR): a
-> documentação, os comandos e as mensagens do bot estão em português do Brasil. A documentação também
+> documentação e os comandos estão em português do Brasil, e o bot responde em português com
+> `/set zapbot.lang pt_BR` (o padrão é `en_US`). A documentação também
 > existe em inglês (`docs/` e o site, com seletor de idioma).
 
 Bot para WhatsApp escrito em Node.js que roda em cima de uma sessão real do WhatsApp Web. Ele
@@ -72,16 +73,16 @@ comandos começam com `/`.
 ```text
  ┌────────────── container zapbot (node:24-trixie-slim) ──────────────┐
  │                                                                    │
- │   app.js ──► whatsapp-web.js ──► Puppeteer ──► Chromium            │──► WhatsApp Web
- │     │                                          (headless)          │
- │     ├──► SQLite  (cache/zapbot.db)  mensagens, settings            │
- │     ├──► cache/media   mídias p/ recuperar mensagens apagadas      │
- │     ├──► yt-dlp + ffmpeg   comando /get                            │
- │     ├──► APIs HTTP (axios)  /gpt /weather /cve /news /giphy...       │
- │     └──► SMTP (nodemailer)  QR Code e alertas por e-mail           │
+ │  app.js ──► whatsapp-web.js ──► Puppeteer ──► Chromium             │──► WhatsApp Web
+ │    │                                          (headless)           │
+ │    ├──► SQLite  (cache/zapbot.db)  mensagens, settings             │
+ │    ├──► cache/media  mídias p/ recuperar mensagens apagadas        │
+ │    ├──► yt-dlp + ffmpeg  comando /get                              │
+ │    ├──► APIs HTTP (axios)  /gpt /weather /cve /news /giphy ...     │
+ │    └──► SMTP (nodemailer)  QR Code e alertas por e-mail            │
  │                                                                    │
- │  volumes:  wwebjs_auth  → sessão do WhatsApp (.wwebjs_auth)        │
- │            app_cache    → banco SQLite + mídias (cache/)           │
+ │ volumes:  wwebjs_auth  → sessão do WhatsApp (.wwebjs_auth)         │
+ │           app_cache    → banco SQLite + mídias (cache/)            │
  └────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -171,7 +172,7 @@ O `/whois` diz o seu nível
 |---|---|:-:|---|
 | [`/alias`](https://jpereira.github.io/zapbot/pt-BR/comandos/alias/) | | `admin` | Cadastra, lista e remove atalhos para comandos com argumentos ou textos com vários `{/comando}` |
 | [`/ascii`](https://jpereira.github.io/zapbot/pt-BR/comandos/ascii/) | | `user` | O texto em letras grandes de ASCII, num bloco que cabe na tela do celular |
-| [`/backup`](https://jpereira.github.io/zapbot/pt-BR/comandos/backup/) | `/bkp` | `admin` | Backup diário local e envio por `backup.to`; lista, detalha, restaura e envia o banco |
+| [`/backup`](https://jpereira.github.io/zapbot/pt-BR/comandos/backup/) | `/bkp` | `admin` | Backup diário local e envio por `backup.to`; lista, detalha, restaura, envia e apaga o banco |
 | [`/batch`](https://jpereira.github.io/zapbot/pt-BR/comandos/batch/) |  | `admin` | Executa vários comandos de uma mensagem só, em sequência (cada linha que começa com um comando abre um bloco), e responde um resumo; `-stop` e `-dry` |
 | [`/bills`](https://jpereira.github.io/zapbot/pt-BR/comandos/bills/) | `/boletos` | `user` | Sorteia 2 membros para "pagar um boleto" |
 | [`/block`](https://jpereira.github.io/zapbot/pt-BR/comandos/block/) | `/bloquear` | `admin` | Bloqueia uma ou várias pessoas na sua conta do WhatsApp (respondendo uma mensagem, quem a escreveu); sem nada, lista os bloqueados; `-mask` ofusca telefones |
@@ -182,11 +183,11 @@ O `/whois` diz o seu nível
 | [`/cve`](https://jpereira.github.io/zapbot/pt-BR/comandos/cve/) | | `user` | Últimas CVEs publicadas (NVD); `-highscore` só as críticas |
 | [`/debug`](https://jpereira.github.io/zapbot/pt-BR/comandos/debug/) | `/d`, `/dbg` | `admin` | Logs de debug com níveis, filtro e cópia para chats |
 | [`/defi`](https://jpereira.github.io/zapbot/pt-BR/comandos/defi/) | | `admin` | Posições de liquidez da Orca e do Project X: saldo, faixa, preço e taxas a coletar, lidos on-chain; `-alerta` avisa quando sai e volta para a faixa e quando as taxas passam de um valor. `liquidswap`: posições de LP na Aptos. `morpho` e `aave`: posição, empréstimos e risco no Morpho e no Aave V3 |
-| [`/draw`](https://jpereira.github.io/zapbot/pt-BR/comandos/draw/) | `/desenhe`, `/desenha`, `/img` | `admin` · delegável | Desenha uma imagem com o GPT Image (OpenAI) |
+| [`/draw`](https://jpereira.github.io/zapbot/pt-BR/comandos/draw/) | `/desenhe`, `/desenha`, `/img` | `admin` · delegável | Desenha uma imagem ou um GIF animado (`-gif`) com o GPT Image (OpenAI); numa foto, edita ou anima |
 | [`/everybody`](https://jpereira.github.io/zapbot/pt-BR/comandos/everybody/) | `/todos`, `/todes` | `admin` · delegável | Menciona todos do grupo |
 | [`/get`](https://jpereira.github.io/zapbot/pt-BR/comandos/get/) | `/download` | `user` | Baixa vídeo/áudio de redes sociais ou da mídia respondida |
 | [`/giphy`](https://jpereira.github.io/zapbot/pt-BR/comandos/giphy/) | `/gif` | `user` | GIF do GIPHY por tag, URL ou ID, enviado em loop |
-| [`/gpt`](https://jpereira.github.io/zapbot/pt-BR/comandos/gpt/) | `/ai` | `admin` · delegável | Pergunta ao ChatGPT (OpenAI) |
+| [`/gpt`](https://jpereira.github.io/zapbot/pt-BR/comandos/gpt/) | `/ai` | `admin` · delegável | Pergunta ao ChatGPT (OpenAI); `-img`, `-gif`, `-voz`, `-prices`, `-usage` e `-status` (bytes, tokens, custo e saldo) |
 | [`/help`](https://jpereira.github.io/zapbot/pt-BR/comandos/help/) | `/h` | `user` | Menu de ajuda, só com os comandos que quem pediu pode usar |
 | [`/join`](https://jpereira.github.io/zapbot/pt-BR/comandos/join/) |  | `admin` | Entra em um grupo pelo link de convite (`-info` mostra o grupo sem entrar); `-l` lista os seus grupos |
 | [`/joke`](https://jpereira.github.io/zapbot/pt-BR/comandos/joke/) | `/piada`, `/humor` | `user` | Piada aleatória em português |
@@ -199,7 +200,7 @@ O `/whois` diz o seu nível
 | [`/mute`](https://jpereira.github.io/zapbot/pt-BR/comandos/mute/) | `/mudo` | `admin` | Silencia os avisos de apagadas, editadas, status e reações (e os do `/watch`) de uma pessoa, um grupo ou uma comunidade; respondendo um aviso, de onde ele veio |
 | [`/news`](https://jpereira.github.io/zapbot/pt-BR/comandos/news/) |  | `user` | Manchetes de feeds RSS: `-hack`, `-g1`, `-gazeta`, `-brasil` |
 | [`/noffa`](https://jpereira.github.io/zapbot/pt-BR/comandos/noffa/) | `/🌈`, `/🏳️‍🌈` | `user` | Enfeita o texto com arco-íris |
-| [`/notes`](https://jpereira.github.io/zapbot/pt-BR/comandos/notes/) |  | `admin` | Anotações com ID e `#tag` (`-a`, `-l`, `-s`, `-r`): ver com a mídia (`-u`), renomear tag (`-m`), descrever tag (`-d`), exportar em PDF (`-e`) e `-alerta` que avisa numa data/hora |
+| [`/notes`](https://jpereira.github.io/zapbot/pt-BR/comandos/notes/) |  | `admin` | Anotações com ID e `#tag` (`-a`, `-l`, `-s`, `-r`): ver com a mídia (`-v`), editar (`-u`), renomear tag (`-m`), descrever tag (`-d`), exportar em PDF (`-e`) e `-alerta` que avisa numa data/hora |
 | [`/ping`](https://jpereira.github.io/zapbot/pt-BR/comandos/ping/) | | `user` | Verifica se o bot está vivo |
 | [`/pixelart`](https://jpereira.github.io/zapbot/pt-BR/comandos/pixelart/) | `/ansi`, `/px` | `user` | Arte ANSI/ASCII aleatória (16colo.rs) |
 | [`/poll`](https://jpereira.github.io/zapbot/pt-BR/comandos/poll/) | `/enquete`, `/quiz` | `admin` · delegável | Cria uma enquete nativa do WhatsApp no chat; `-r` mostra o resultado |
@@ -209,8 +210,8 @@ O `/whois` diz o seu nível
 | [`/set`](https://jpereira.github.io/zapbot/pt-BR/comandos/set/) | `/config` | `admin` | Lista e altera as configurações (settings); `-a`/`-rm` acrescentam e tiram itens das listas (ex.: o `bot.admins` e o `bot.users`) |
 | [`/show`](https://jpereira.github.io/zapbot/pt-BR/comandos/show/) |  | `admin` · delegável | No privado, lista o cache; reexibe apagadas, edições (`-e`), status (`-s`) e reações removidas ou trocadas (`-r`); `-q` busca (texto ou regex) e `-mask` ofusca telefones |
 | [`/stats`](https://jpereira.github.io/zapbot/pt-BR/comandos/stats/) |  | `admin` · delegável | Ranking deste chat ou de outro (`/Grupo/`): quem mais fala, apaga e edita, horários de pico; `-me` para as suas, `-l` lista os chats, `-flush` apaga |
-| [`/sticker`](https://jpereira.github.io/zapbot/pt-BR/comandos/sticker/) |  | `user` | Figurinha de imagem, vídeo ou link (o `/get -st`); com `-txt`, uma figurinha animada de texto |
-| [`/tldr`](https://jpereira.github.io/zapbot/pt-BR/comandos/tldr/) | `/resumo` | `admin` · delegável | Resume a conversa do chat pelo ChatGPT (`2h`, `300`...) |
+| [`/sticker`](https://jpereira.github.io/zapbot/pt-BR/comandos/sticker/) |  | `user` | Figurinha de imagem, vídeo ou link (o `/get -st`), respondendo ou na legenda da mídia; com `-txt`, uma figurinha animada de texto |
+| [`/tldr`](https://jpereira.github.io/zapbot/pt-BR/comandos/tldr/) | `/resumo` | `admin` · delegável | Resume a conversa do chat pelo ChatGPT (`30m`, `2h`, `1d`, `1h30m` ou `300` mensagens; respondendo uma mensagem, a partir dela) |
 | [`/translate`](https://jpereira.github.io/zapbot/pt-BR/comandos/translate/) | `/traduzir` | `user` | Traduz o texto ou a mensagem respondida pelo Google Translate, sem chave; `-para en` muda o idioma |
 | [`/unblock`](https://jpereira.github.io/zapbot/pt-BR/comandos/unblock/) |  | `admin` | Desbloqueia uma pessoa: pelo nome, pelo número, pelo nº da lista do `/block` ou respondendo uma mensagem |
 | [`/unmute`](https://jpereira.github.io/zapbot/pt-BR/comandos/unmute/) |  | `admin` | Desfaz o silêncio do `/mute`: pelo nome, pelo nº da lista, respondendo um aviso ou todos (`-all`) |

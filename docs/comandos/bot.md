@@ -49,21 +49,21 @@ together with them, `+cmd`/ `-cmd` (only with users) and `-list-users all` (the 
 The list shows up in the status (`/bot` with no option), in `-list-users [all]` and in the reply of
 `+a`/ `-a`/ `+u`/ `-u`. It joins the admins and the users, the way the rest of the bot shows a
 destination: `👤 Name · +number` (or just `👤 +number`, without the contact in the address book) and
-`👥 Group`; whoever only uses it in a group, with `só em 👥 Grupo` (or `só neste grupo`). Someone who
-is both admin and user appears once, with both marks; you, if you are on it, with `🤖 dono`. Below,
-the **Permissões** explain what each mark means.
+`👥 Group`; whoever only uses it in a group, with `only in 👥 Group` (or `only in this group`).
+Someone who is both admin and user appears once, with both marks; you, if you are on it, with
+`🤖 owner`. Below, the **Permissions** explain what each mark means.
 
 ```text
-/bot -list-users               (no seu privado)
-Usuários (4)
+/bot -list-users               (in your private chat)
+Users (4)
 • 👑 +a · 👤 Jorge Pereira · +5521999999999
 • 👑 +a 🗣️ +u · 👤 Ana Souza · +5511988887777
 • 🗣️ +u · 👤 Maria Lucia · +5521999982222
-• 🗣️ +u · 👤 Maria Lucia · +5521999986666 · só em 👥 Amigos Faculdade
+• 🗣️ +u · 👤 Maria Lucia · +5521999986666 · only in 👥 Amigos Faculdade
 
-Permissões
-👑 +a: admin, usa tudo
-🗣️ +u: usuário, usa os comandos comuns
+Permissions
+👑 +a: admin, uses everything
+🗣️ +u: user, uses the regular commands
 ```
 
 ### Who shows up in the list
@@ -81,17 +81,17 @@ When someone is left out, the list says how many and how to see everyone, being 
 in the group who isn't from there:
 
 ```text
-/bot -list-users               (no grupo Amigos Faculdade)
-Usuários (2) neste grupo
+/bot -list-users               (in the group Amigos Faculdade)
+Users (2) in this group
 • 🗣️ +u · 👤 Jorge Chip L200 · +5521999983333
-• 🗣️ +u · 👤 Sofia Izabel · +5521•••••7777 · só neste grupo
+• 🗣️ +u · 👤 Sofia Izabel · +5521•••••7777 · only in this group
 
-Permissões
-👑 +a: admin, usa tudo
-🗣️ +u: usuário, usa os comandos comuns
+Permissions
+👑 +a: admin, uses everything
+🗣️ +u: user, uses the regular commands
 
-💡 Só quem é deste grupo; mais 1 fora daqui.
-⚠️ Para listar todos: /bot -list-users all ou /bot -lu all. Cuidado: mostra também quem não é deste grupo.
+💡 Only those from this group; 1 more outside.
+⚠️ To list everyone: /bot -list-users all or /bot -lu all. Careful: it also shows those who are not from this group.
 ```
 
 In a group, the phone of someone who isn't in it is hidden (the country code, the area code and the
@@ -101,9 +101,9 @@ With everyone allowed (`/set bot.users true`), the list shows only the admins, a
 anyone is using the commands:
 
 ```text
-▶️ Bot: ativo
-🔓 Comandos: todos usam os comuns
-⚠️ Atenção: qualquer pessoa pode executar os comandos comuns do bot, em qualquer chat. Para restringir: /set bot.users false (e depois /bot +u para liberar alguns).
+▶️ Bot: on
+🔓 Commands: everyone uses the regular ones
+⚠️ Warning: anyone can run the bot's regular commands, in any chat. To restrict: /set bot.users false (and then /bot +u to allow a few).
 ```
 
 When to use each option:
@@ -128,7 +128,8 @@ Details:
 - Only the **commands** are affected: recovery of deleted and edited messages, `/watch` and the price
   alerts keep working.
 - Ignored commands show up in the log: `Comando '/ping' ignorado: bot desligado` (always) and
-  `Comando '/ping' de Fulano ignorado: fora do bot.users` (only with [debug](debug.md) on).
+  `Comando '/ping' de Fulano ignorado: fora do bot.users` (only with [debug](debug.md) on). The log
+  stays in Portuguese.
 - "You" is the account paired with the bot, from any device. To turn off only some commands, for
   everyone, use the `commands.disabled` setting.
 
@@ -143,7 +144,7 @@ Other people can use the **admin** commands (the ones with that role in the
 /bot +a @Fulano Da Silva              → or, in a group, by mentioning the person
 /bot +a                               → in someone's private chat: that person
 /bot -a /Jorge Pereira/               → removes
-/bot -list-users                           → the list: 👑 +a · 👤 Jorge Pereira · +5521999999999
+/bot -list-users                      → the list: 👑 +a · 👤 Jorge Pereira · +5521999999999
 ```
 
 The name is searched like in `-to` ([Destinations](index.md#destinations-contact-group-number-or-email)):
@@ -185,44 +186,44 @@ delegable).
 | Everyone (`/set bot.users true`) | Anyone, in any chat (`/bot` warns) |
 
 ```text
-/bot +u /Maria Lucia/                      → no seu privado: a Maria, em qualquer chat
-/bot +u /Maria Lucia/                      → no grupo Amigos Faculdade: a Maria, só nele
-/bot +u                                    → digitado num grupo: o grupo; no privado de alguém: a pessoa
-/bot +u /Amigos Faculdade/ @Fulano +5521999999999  → vários de uma vez
-/bot -u /Maria Lucia/                      → no grupo: tira a permissão de lá
-/bot -u /Maria Lucia/                      → no seu privado: tira todas as da Maria
-/bot -u                                    → tira o chat atual
+/bot +u /Maria Lucia/                      → in your private chat: Maria, in any chat
+/bot +u /Maria Lucia/                      → in the group Amigos Faculdade: Maria, only there
+/bot +u                                    → typed in a group: the group; in someone's private chat: the person
+/bot +u /Amigos Faculdade/ @Fulano +5521999999999  → several at once
+/bot -u /Maria Lucia/                      → in the group: removes the permission there
+/bot -u /Maria Lucia/                      → in your private chat: removes all of Maria's
+/bot -u                                    → removes the current chat
 ```
 
 Someone who only has permission in groups and sends a command in private gets:
 
 ```text
-🚫 Sem permissão para comandos no privado. Permitido apenas em: 👥 Amigos Faculdade.
+🚫 No permission for commands in private. Allowed only in: 👥 Amigos Faculdade.
 ```
 
 The reply of `+a`/ `-a`/ `+u`/ `-u` is the chat's [user list](#user-list), with ✅ on whoever
 just came in; whoever left comes in a 🗑️ line on top. With nobody on the list, it shows the line
-about who uses the commands (`🔒 Comandos: só o dono`):
+about who uses the commands (`🔒 Commands: owner only`):
 
 ```text
-/bot +u /Sofia Izabel/    (no grupo Amigos Faculdade)
-Usuários (2) neste grupo
+/bot +u /Sofia Izabel/    (in the group Amigos Faculdade)
+Users (2) in this group
 • 🗣️ +u · 👤 Jorge Chip L200 · +5521999983333
-• 🗣️ +u · 👤 Sofia Izabel · +5521•••••7777 · só neste grupo ✅
+• 🗣️ +u · 👤 Sofia Izabel · +5521•••••7777 · only in this group ✅
 
-Permissões
-👑 +a: admin, usa tudo
-🗣️ +u: usuário, usa os comandos comuns
+Permissions
+👑 +a: admin, uses everything
+🗣️ +u: user, uses the regular commands
 
-💡 Só quem é deste grupo; mais 1 fora daqui.
-Listar usuários: /bot -list-users
+💡 Only those from this group; 1 more outside.
+List users: /bot -list-users
 ```
 
 ```text
-/bot -u /Sofia Izabel/    (no grupo Amigos Faculdade)
-🗑️ 👤 Sofia Izabel · +5521•••••7777 · só neste grupo
+/bot -u /Sofia Izabel/    (in the group Amigos Faculdade)
+🗑️ 👤 Sofia Izabel · +5521•••••7777 · only in this group
 
-Usuários (1) neste grupo
+Users (1) in this group
 • 🗣️ +u · 👤 Jorge Chip L200 · +5521999983333
 ...
 ```
@@ -246,47 +247,47 @@ A user (a person or a group) can be limited to some common commands, or receive 
 `admin` role (`/gpt`, `/show`...). `/help` and `/whois` always go through (`/help` shows only theirs).
 
 ```text
-/bot +cmd /rates,/crypto,/meme +u /Sofia Izabel/  → a Sofia entra só com esses
-/bot +u +cmd /rates                               → digitado num grupo: o grupo inteiro, só /rates
-/bot +u -cmd /meme /Fulano/                         → o Fulano usa todos, menos /meme
-/bot +cmd /weather /Sofia Izabel/                     → acrescenta /weather aos dela
-/bot -cmd /rates /Fulano Pereira/                 → tira /rates dos dele
-/bot -cmd /meme /Grupo Familia/ /Fulano da Silva/   → vários de uma vez
-/bot -cmd /meme                                     → do chat atual (o grupo, ou a pessoa do privado)
-/bot +cmd all /Sofia Izabel/                        → a Sofia volta a usar todos os comuns
-/bot +u +cmd /gpt                                   → digitado num grupo: todos ali usam só o /gpt
+/bot +cmd /rates,/crypto,/meme +u /Sofia Izabel/  → Sofia gets in with only these
+/bot +u +cmd /rates                               → typed in a group: the whole group, only /rates
+/bot +u -cmd /meme /Fulano/                       → Fulano uses all, except /meme
+/bot +cmd /weather /Sofia Izabel/                 → adds /weather to hers
+/bot -cmd /rates /Fulano Pereira/                 → removes /rates from his
+/bot -cmd /meme /Grupo Familia/ /Fulano da Silva/ → several at once
+/bot -cmd /meme                                   → from the current chat (the group, or the person in private)
+/bot +cmd all /Sofia Izabel/                      → Sofia goes back to using all the regular ones
+/bot +u +cmd /gpt                                 → typed in a group: everyone there uses only /gpt
 ```
 
 - `+cmd` on someone who isn't a user yet already adds the person (or the group), with only those
-  commands. On someone who uses all, it changes nothing; on someone with "Todos, menos", it allows
+  commands. On someone who uses all, it changes nothing; on someone with "All but", it allows
   those again.
-- `-cmd` on someone who uses all leaves "Todos, menos" those. Removing the last command of a list is
+- `-cmd` on someone who uses all leaves "All but" those. Removing the last command of a list is
   refused: to remove the person, `/bot -u`; to allow all, `/bot +cmd all`.
 - Commands go by name or alias (`/creptomoeda` becomes `/crypto`), separated by commas. A
   command that isn't delegable (`/set`, `/bot`...) doesn't go in: the bot refuses. A delegable
-  `admin` one (`/gpt`, `/show`...) goes in only in an "Apenas" list: `-cmd` ("Todos, menos") and `bot.users = true` don't allow it,
-  and someone who already uses all the common ones doesn't get it with `+cmd` (the bot refuses and
-  asks for the "Apenas" list). To add a delegable `admin` one to someone who uses the common ones, list their
+  `admin` one (`/gpt`, `/show`...) goes in only in an "Only" list: `-cmd` ("All but") and `bot.users = true` don't allow it, and someone
+  who already uses all the common ones doesn't get it with `+cmd` (the bot refuses and asks for
+  the "Only" list). To add a delegable `admin` one to someone who uses the common ones, list their
   commands: `+u +cmd /rates,/gpt`.
 - The name of a shortcut from [`/alias`](alias.md) doesn't go in `+cmd`: the shortcut inherits the
   permission of the target command (whoever can use `/gpt` uses the shortcuts for it).
 - In a group, the person is the one from there (like in `+u`); if they are a user in any chat, that's
   the permission that changes.
-- In the list, under the person, `→ Apenas: /rates, /crypto, /meme` or `→ Todos, menos: /meme`:
+- In the list, under the person, `→ Only: /rates, /crypto, /meme` or `→ All but: /meme`:
 
 ```text
-Usuários (2)
+Users (2)
 • 🗣️ +u · 👤 Jorge Chip L200 · +5521999983333
 • 🗣️ +u · 👤 Sofia Izabel · +5521999987777 ✅
- → Apenas: /rates, /crypto, /meme
+ → Only: /rates, /crypto, /meme
 
-Permissões
-👑 +a: admin, usa tudo
-🗣️ +u: usuário, usa os comandos comuns
+Permissions
+👑 +a: admin, uses everything
+🗣️ +u: user, uses the regular commands
 ```
 
-- Outside the list, the bot replies `🚫 Limitado aos comandos: /rates, /crypto, /meme.` (or
-  `🚫 O /meme não está liberado para você.`).
+- Outside the list, the bot replies `🚫 Limited to the commands: /rates, /crypto, /meme.` (or
+  `🚫 /meme is not enabled for you.`).
 - If more than one permission applies there (the person and the group, for example), the broadest
   one wins: one with no limit allows all the common ones.
 - `-u` and `-reset` (with or without `force`) remove the limits too.
@@ -298,7 +299,7 @@ command at most 3 times in 2 seconds. Past that, the bot warns once and ignores 
 commands until the interval ends:
 
 ```text
-⚠️ Não é permitido executar o mesmo comando mais de 3 vezes seguidas. Aguarde 2 segundos.
+⚠️ Running the same command more than 3 in a row is not allowed. Wait 2 seconds.
 ```
 
 - Aliases count as the command (`/noffa` and `/🌈` are the same); different commands count
@@ -309,9 +310,9 @@ commands until the interval ends:
 
 ## Back to the default
 
-Two levels, both owner-only and both ask for confirmation: reply **sim** within 10 seconds, in the
-same chat (**não**, or nothing, leaves everything as is; with no reply, the question becomes
-`⌛ Nada mudou: sem sim em 10 s.`).
+Two levels, both owner-only and both ask for confirmation: reply **yes** within 10 seconds, in the
+same chat (**no**, or nothing, leaves everything as is; with no reply, the question becomes
+`⌛ Nothing changed: no *yes* within 10 s.`). The bot also accepts **sim** and **não**.
 
 | | `/bot -reset` (`-r`) | `/bot -reset force` |
 |---|---|---|
@@ -324,23 +325,26 @@ They accept `-mask`, but don't combine with the other options.
 
 ```text
 /bot -reset
-⚠️ Tirar todos os usuários? Ficam só você e os admins extras usando comandos.
-💡 Responda sim em 10 s para confirmar (ou /bot -r force, para voltar tudo ao padrão).
+⚠️ Remove all users? Only you and the extra admins will keep using commands.
+💡 Reply yes within 10 s to confirm (or /bot -r force, to reset everything to the default).
 
-sim
-🧹 Usuários removidos (4): ficam só você e os admins extras.
+yes
+🧹 Users removed (4): only you and the extra admins remain.
+
+▶️ Bot: on
+🔒 Commands: owner only and admins
 ```
 
 ```text
 /bot -reset force
-⚠️ Voltar tudo ao padrão? Tira os usuários e os admins extras e liga o bot: só você usa comandos.
-💡 Responda sim em 10 s para confirmar.
+⚠️ Reset everything to the default? It removes the users and the extra admins and turns the bot on: only you use commands.
+💡 Reply yes within 10 s to confirm.
 
-sim
-♻️ Padrão restaurado: bot ligado, sem admins extras e sem usuários.
+yes
+♻️ Default restored: bot on, no extra admins and no users.
 
-▶️ Bot: ativo
-🔒 Comandos: só o dono
+▶️ Bot: on
+🔒 Commands: owner only
 ```
 
 ## Bot status
@@ -358,69 +362,69 @@ time, the report goes out every day at that time, to your private chat or to the
 | `/bot -status off` | Turns off the daily delivery |
 
 ```text
-/bot                                     → o status agora
-/bot -s                                  → o mesmo
-/bot -status 06h                         → todo dia às 06:00, no seu privado
-/bot -s 06h -to voce@exemplo.com         → todo dia às 06:00, por e-mail
-/bot -s 7h -to /Grupo Familia/ -to email → no grupo e por e-mail
-/bot -s às 18h30                         → todo dia às 18:30 (nos mesmos destinos)
-/bot -s -to /Jorge Pereira/              → o relatório agora, no privado do contato
-/bot -s off                              → para de enviar
+/bot                                     → the status now
+/bot -s                                  → the same
+/bot -status 06h                         → every day at 06:00, in your private chat
+/bot -s 06h -to voce@exemplo.com         → every day at 06:00, by email
+/bot -s 7h -to /Grupo Familia/ -to email → in the group and by email
+/bot -s às 18h30                         → every day at 18:30 (to the same destinations)
+/bot -s -to /Jorge Pereira/              → the report now, in the contact's private chat
+/bot -s off                              → stops sending
 ```
 
 ```text
-📊 Status do ZapBot 2.0.13 (devel) · últimas 24 h
-qui 01/10 06:00
+📊 ZapBot Status 2.0.13 (devel) · last 24 h
+Thu 01/10 06:00
 
-▶️ Bot: ativo
-👥 Comandos: o dono e quem está na lista abaixo
+▶️ Bot: on
+👥 Commands: the owner and those in the list below
 
-🤖 No ar: 2 dias, 3 horas · conectado: 2 dias, 2 horas
-🗄️ Cache: 45.20 MB (banco 4.20 MB · mídias 40.10 MB) · 1.234 mensagens
-👀 Watch: 5 ocorrências (#1 pix: 3, #2 boleto: 2)
-🗑️ Apagadas: 12
-✏️ Editadas: 4
-📸 Status apagados: 2
-😶 Reações removidas ou trocadas: 1
-🔇 Ignoradas (/mute): 8 (apagadas 5, editadas 2, watch 1) · 3 silenciados
-💾 Último backup: qui 01/10 03:00 (automático)
+🤖 Up: 2 days, 3 hours · connected: 2 days, 2 hours
+🗄️ Cache: 45.20 MB (database 4.20 MB · media 40.10 MB) · 1,234 messages
+👀 Watch: 5 hits (#1 pix: 3, #2 boleto: 2)
+🗑️ Deleted: 12
+✏️ Edited: 4
+📸 Deleted statuses: 2
+😶 Reactions removed or changed: 1
+🔇 Ignored (/mute): 8 (deleted 5, edited 2, watch 1) · 3 muted
+💾 Last backup: Thu 01/10 03:00 (automatic)
 
-Usuários (2)
+Users (2)
 • 🗣️ +u · 👤 Maria Lucia · +5521999982222
 • 🗣️ +u · 👥 Grupo Familia
 
-Permissões
-👑 +a: admin, usa tudo
-🗣️ +u: usuário, usa os comandos comuns
+Permissions
+👑 +a: admin, uses everything
+🗣️ +u: user, uses the regular commands
 
-⏰ Status diário: todo dia às 06:00 → 📧 voce@exemplo.com, 👥 Grupo Familia
-📅 Próximo: sex 02/10 06:00
-💡 Mude com /bot -status <hora> ou desligue com /bot -status off.
+⏰ Daily status: every day at 06:00 → 📧 voce@exemplo.com, 👥 Grupo Familia
+📅 Next: Fri 02/10 06:00
+💡 Change it with /bot -status <time> or turn it off with /bot -status off.
 
-ℹ️ Mais informações em /bot -h
+ℹ️ More information in /bot -h
 ```
 
 What goes in:
 
-- **No ar**: how long the process has been running and how long it has been connected to WhatsApp
+- **Up**: how long the process has been running and how long it has been connected to WhatsApp
   (same as [`/uptime`](uptime.md)).
 - **Cache**: the size of `cache/` (database, media, backups and temporary files) and how many
   messages are stored.
 - **Watch**: occurrences of the [`/watch`](watch.md) rules, with each rule's no. (the 5 that matched
   the most).
-- **Apagadas**, **editadas**, **status apagados** and **reações removidas ou trocadas**: what was
+- **Deleted**, **Edited**, **Deleted statuses** and **Reactions removed or changed**: what was
   recovered in the last 24 h, including what [`/mute`](mute.md) silenced. With the alert turned off
   (`show.alert.deleted`, `show.alert.edited`, `show.alert.status` or `show.alert.reaction` set to
   `off`), the line says how to turn it back on:
-  `✏️ Editadas: 4 (aviso desligado; ligue com /set show.alert.edited on)`.
-- **Ignoradas (/mute)**: the alerts `/mute` cut in the last 24 h, by type (deleted, edited, status,
+  `✏️ Edited: 4 (alert off; turn it back on with /set show.alert.edited on)`.
+- **Ignored (/mute)**: the alerts `/mute` cut in the last 24 h, by type (deleted, edited, status,
   reactions and `watch`, the ones from [`/watch`](watch.md)), and how many are silenced right now.
   With someone silenced, the 0 only means that none of their alerts came in the 24 h.
-- **Último backup**: the most recent one from [`/backup`](backup.md).
-- **Usuários**: this chat's list ([Who shows up in the list](#who-shows-up-in-the-list)). The report
+- **Last backup**: the most recent one from [`/backup`](backup.md).
+- **Users**: this chat's list ([Who shows up in the list](#who-shows-up-in-the-list)). The report
   sent by `-to` or by the daily delivery goes without it.
-- **Status diário**: the time, the destinations (👤 person, 👥 group or 📧 email; without `-to`, your
-  private chat) and the next delivery, or `🔕 Status diário desligado`.
+- **Daily status**: the time, the destinations (👤 person, 👥 group or 📧 email; without `-to`, your
+  private chat) and the next delivery, or `🔕 Daily status is off.`.
 
 The daily delivery stays in the bot's schedule (`schedules` table), but doesn't show up in
 [`/cron`](cron.md) nor count toward its limit. If the bot is down at that time, the report goes out
@@ -433,30 +437,30 @@ right then, what's wrong: full disk, slow internet, wrong SMTP password, WhatsAp
 
 ```text
 /bot -test
-🧪 *TESTE DO BOT*
+🧪 BOT TEST
 
-✅ Cache — escrita e leitura de 256 KB (3 ms)
-✅ Disco — 48.2 GB livres (62%)
-✅ Banco SQLite — íntegro (2 ms)
+✅ Cache — wrote and read 256 KB (3 ms)
+✅ Disk — 48.2 GB free (62%)
+✅ SQLite database — intact (2 ms)
 ✅ WhatsApp — CONNECTED (180 ms)
 ✅ DNS — web.whatsapp.com → 157.240.0.60 (14 ms)
 ✅ Internet — HTTP 200 (96 ms)
 ❌ E-mail (SMTP) — Invalid login: 535 5.7.0 (#AUTH005) Too many bad auth attempts.
-➖ E-mail (IMAP) — não configurado (QRCODE_EMAIL_IMAP_HOST)
+➖ E-mail (IMAP) — not configured (QRCODE_EMAIL_IMAP_HOST)
 ✅ Chromium — Chromium 131.0.6778.204
 ✅ yt-dlp — 2026.10.01
 ✅ ffmpeg — 7.1.1
-✅ Velocidade — ↓ 92.4 Mbps · ↑ 21.8 Mbps
+✅ Speed — ↓ 92.4 Mbps · ↑ 21.8 Mbps
 
-❌ 1 de 11 com falha
+❌ 1 of 11 failed
 ```
 
-- **Cache**: writes, reads and deletes a 256 KB file in the cache directory. **Disco**: ❌ with less
+- **Cache**: writes, reads and deletes a 256 KB file in the cache directory. **Disk**: ❌ with less
   than 500 MB free.
 - **WhatsApp**: the connection state (`CONNECTED`). **DNS** and **Internet**: resolve and open
   `web.whatsapp.com`.
-- **Velocidade**: downloads 8 MB and uploads 1 MB on `speed.cloudflare.com`; ❌ on error or below
-  1 Mbps. It runs last, alone, and the first reply (`🧪 Testando...`) warns that it takes a while.
+- **Speed**: downloads 8 MB and uploads 1 MB on `speed.cloudflare.com`; ❌ on error or below
+  1 Mbps. It runs last, alone, and the first reply (`🧪 Testing... (the internet speed test takes a few seconds)`) warns that it takes a while.
 - **E-mail (SMTP)**: only logs in, sends nothing; ➖ if SMTP isn't configured. If the login failed
   recently (`EAUTH`), the test doesn't try again during the 30-minute pause, so it doesn't extend the
   provider's block.
@@ -472,12 +476,12 @@ much space that takes and cleans it.
 
 ```text
 /bot -flush-email
-📧 *Caixa de e-mail:* 128 em Sent e 14 em Trash
-💡 /bot -flush-email true para apagar tudo
+📧 Mailbox: 128 in Sent and 14 in Trash
+💡 /bot -flush-email true to delete everything
 
 /bot -flush-email true
-⏳ Limpando a caixa de e-mail...        (editada ao concluir)
-🧹 *E-mail limpo:* 128 em Sent e 14 em Trash (142 no total)
+⏳ Cleaning the mailbox...        (edited when done)
+🧹 Mailbox cleaned: 128 in Sent and 14 in Trash (142 in total)
 ```
 
 - Without `true`, it only counts; with `true`, it deletes everything from Sent and then from Trash
@@ -497,26 +501,26 @@ also warns when there's a new version of `yt-dlp` and `whatsapp-web.js`.
 
 ```text
 /bot -info
-ℹ️ ZapBot 2.0.13 (devel) · informações do sistema
+ℹ️ ZapBot 2.0.13 (devel) · system information
 
 🤖 Bot
 • ZapBot: 2.0.13 (devel) (git+7a89b92/HEAD)
 • Node.js: v24.9.0 (V8 13.6.233.10-node.27)
-• whatsapp-web.js: 1.34.7 (commit 58ddf15) · ✅ a mais recente · ⬆️ 1 commit novo no main
+• whatsapp-web.js: 1.34.7 (commit 58ddf15) · ✅ the latest · ⬆️ 1 new commit on main
 • WhatsApp Web: 2.3000.1027123456
 • SQLite: 3.50.4
 
-🧰 Programas
+🧰 Programs
 • Chromium: Chromium 141.0.7390.54
-• yt-dlp: 2026.09.21 · ⬆️ nova: 2026.9.30
+• yt-dlp: 2026.09.21 · ⬆️ new: 2026.9.30
 • ffmpeg: 7.1.1
 
-🖥️ Sistema
+🖥️ System
 • Linux 9f2c1a7d3e4b 6.8.0-85-generic #85-Ubuntu SMP x86_64 Linux
 • Host: 9f2c1a7d3e4b (Docker)
-• CPU: 4× Intel(R) Core(TM) i5-8500T CPU @ 2.10GHz · carga 0.32 · 0.41 · 0.38
-• Memória: 2.10 GB de 7.66 GB em uso · o bot usa 412.30 MB
-• No ar: sistema há 12 dias, 3 horas · bot há 2 dias, 1 hora (PID 1)
+• CPU: 4× Intel(R) Core(TM) i5-8500T CPU @ 2.10GHz · load 0.32 · 0.41 · 0.38
+• Memory: 2.10 GB of 7.66 GB in use · the bot uses 412.30 MB
+• Uptime: system for 12 days, 3 hours · bot for 2 days, 1 hour (PID 1)
 ```
 
 - **ZapBot** shows the commit and the tag that are running (`git+4465374/vX.Y.Z`; outside a release,
@@ -531,5 +535,5 @@ also warns when there's a new version of `yt-dlp` and `whatsapp-web.js`.
   for 6 h; without internet (or with the API down), the line comes out without the note. To update
   `yt-dlp`, rebuild the image (`docker compose build --no-cache zapbot`).
 - A program that doesn't respond in 5 s (or doesn't exist, like `yt-dlp` outside Docker) shows up as
-  _não encontrado_.
-- **Carga** is the average number of processes in the system queue over 1, 5 and 15 minutes.
+  _not found_.
+- **Load** is the average number of processes in the system queue over 1, 5 and 15 minutes.

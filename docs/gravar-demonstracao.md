@@ -96,7 +96,8 @@ Without `-mask`: `-l` lists your groups. Do the scene with few groups, only the 
 /sticker -txt "Partiu praia?" -bg "#2980B9" -fg "#FFFFFF"
 ```
 
-Then, reply to a photo of yours with:
+Then, reply to a photo of yours with the commands below (or send the photo with `/sticker` as
+the caption):
 
 ```text
 /sticker

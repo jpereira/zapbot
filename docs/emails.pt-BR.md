@@ -70,6 +70,9 @@ Ligado por padrão; desligue com `/set email.alerts off`. Sem `QRCODE_EMAIL_SMTP
 | `[ZapBot] 🔑 Novo admin por senha` | Alguém virou admin com o [`/bot -login`](comandos/bot.md) (o dono também é avisado no WhatsApp). Não segue a regra dos 5 minutos |
 | `[ZapBot] 🚨 Login bloqueado` | Alguém errou demais a senha do `/bot -login` e foi bloqueado. Não segue a regra dos 5 minutos |
 
+Os assuntos seguem o idioma do bot (`zapbot.lang`, inglês por padrão; a tabela mostra os em
+português). Crash e encerramento são a exceção: `💥 Crash` e `🛑 Bot encerrado` saem sempre assim.
+
 Cada e-mail traz o horário, o número mascarado, a versão com o commit que está rodando
 (`X.Y.Z (git+4465374/vX.Y.Z)`, veja o [`/version`](comandos/version.md)), o host, há quanto tempo
 o processo está no ar e o código anti-phishing. O mesmo evento não se repete antes de 5 minutos
@@ -80,7 +83,7 @@ reconexão.
 
 Se o provedor recusar o login (`EAUTH`, por exemplo o Gmail com
 `535 5.7.0 Too many bad auth attempts`), o bot para de usar o SMTP por **30 minutos**:
-qualquer envio nesse período falha na hora, com `SMTP em pausa por falha de autenticação anterior`, sem abrir
+qualquer envio nesse período falha na hora, com `SMTP em pausa por falha de autenticação anterior (mais N min)`, sem abrir
 conexão. Cada tentativa errada conta para o bloqueio do provedor, e insistir (um QR novo, um alerta,
 uma reconexão) só o prolonga. Passado o tempo, o bot tenta de novo; se a senha ainda estiver
 errada, a pausa recomeça.

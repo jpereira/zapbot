@@ -103,7 +103,8 @@ src/
   openai.js             modelos aceitos pelo /gpt
   openaiChat.js         chamada ao chat da OpenAI (/gpt e /tldr) e o rodapé de status (bytes, tokens, custo)
   i18n.js               t('chave', {vars}) e o idioma do bot (o setting zapbot.lang)
-  locales/              en_US.js e pt_BR.js (os catálogos) e pt_BR/definicoes/ (o texto em português de cada comando)
+  locales/              os catálogos: <lang>.js (a ajuda) e <lang>/*.js (um arquivo por assunto), e
+                        pt_BR/definicoes/ (o texto em português de cada comando)
   login.js              /bot -login: a senha (scrypt) que transforma quem é de fora em admin
   monitor.js, monitorHistorico.js, presenca.js   /monitor: contatos, histórico e uma consulta de presença por vez
   contatos.js, opcoes.js                    contatos/@lid e o parser de opções
@@ -209,6 +210,7 @@ devolve `null`, como quando o WhatsApp não deixa editar.
 | `grupo.test.js` | `/everybody`, `/bills`, `/members`, `/walissu`, `/poll` (e o `-r`), `/sticker` (e o `-txt`) |
 | `grupos.test.js` | `/join` (link, código, `-info`, convite inválido e recusa) e `/leave` (pelo nome, pelo nº, a lista) |
 | `i18n.test.js` | O setting `zapbot.lang` (padrão `en_US`, aceita `pt-BR`/`pt`/`en`), os catálogos (mesmas chaves e `{placeholders}`), o texto das definições em inglês com a tradução em português de cada uma, e o `-h`/`/help` nos dois idiomas |
+| `i18n-adm.test.js`, `i18n-ai.test.js`, `i18n-core.test.js`, `i18n-data.test.js`, `i18n-grp.test.js`, `i18n-info.test.js`, `i18n-notes.test.js` | As respostas em `en_US` (os outros testes rodam em `pt_BR`), um arquivo por assunto do catálogo: administração (`/bot`, `/set`, `/backup`, `/alias`, `/batch`, `/debug`, `/cron`), IA e mídia (`/gpt`, `/tldr`, `/draw`...), núcleo (login, opção e comando desconhecidos, avisos), dados (`/get`, `/show`, `/stats`, `/watch`, `/cache`), grupos (`/mute`, `/block`, `/poll`, `/leave`...), informação (`/rates`, `/crypto`, `/bills`, `/whois`, `/me`, `/bot -status`, `/uptime`) e notas (`/notes`, `/monitor`) |
 | `heartbeat.test.js` | Heartbeat e o `docker/app/healthcheck.js` (executado de verdade) |
 | `mascara-telefones.test.js` | Ofuscação de telefones no `/show`, `/watch` e `/bot` |
 | `mensagens.test.js` | Gravação (com o nome da sua agenda, não o pushname) e de localizações sem interpretar a miniatura como texto ou comando, roteamento, permissões (`role`, o `bot.users` com pessoas, grupos, `true`/`false` e as permissões persistidas, bot desligado, admins extras do `bot.admins`, os atalhos `/bot +a`/`+u`, as listas do `-list-users`/`-list-users all`, os comandos de cada usuário (`+cmd`/`-cmd`), o `-reset` com a confirmação, o `/whois` e a proteção contra flood), o log dos comandos desconhecidos e a contagem do `/stats` (sem os avisos do sistema) |
@@ -382,7 +384,7 @@ Cada entrada segue este formato:
 - Todo comando digitado mostra o "digitando..." enquanto roda (`comDigitando`, no
   `src/executar.js`): vários baixam, consultam ou perguntam ao ChatGPT, e sem isso o chat parece
   parado. O aviso é reenviado a cada 3 s até o comando acabar, porque uma resposta do meio (o
-  "⏳ Limpando..." do `/bot -fe true`) o apaga. `digitando: false` desliga nos que respondem na hora
+  "⏳ Limpando a caixa de e-mail..." do `/bot -fe true`) o apaga. `digitando: false` desliga nos que respondem na hora
   (`/ping`, `/help`...).
 - `{ argv: ['-N'], numero: true }` faz o parser ler o `-10` como `opts.numero` (o 1º; um segundo é
   desconhecido), em vez de mandá-lo para o `argv`. Com `estrito: true`, uma opção desconhecida
@@ -425,27 +427,34 @@ Cada entrada segue este formato:
 ## Internacionalização (i18n)
 
 O idioma do bot é o [setting](settings.md) `zapbot.lang`: `en_US` (padrão) ou `pt_BR`.
-O `/set zapbot.lang pt_BR` (ou `/set zapbot.lang=pt_BR`) troca na hora; `pt-BR`, `pt` e `en` também
-valem e são normalizados. Hoje ele traduz a ajuda (`-h`, `/help`); as **respostas dos comandos ainda
-são em português** e estão sendo migradas para o mesmo mecanismo.
+`/set zapbot.lang pt_BR` (ou `/set zapbot.lang=pt_BR`) troca na hora; `pt-BR`, `pt` e `en` são aceitos e
+normalizados. Ele traduz a ajuda (`-h`, `/help`) e todas as respostas, avisos, erros, datas e números do
+bot. O único texto que ficou em português é a descrição de cada setting mostrada pelo `/set`.
 
-- O `src/i18n.js` tem o `t('chave', { vars })`: procura a chave no catálogo do idioma atual
-  (`src/locales/en_US.js` e `src/locales/pt_BR.js`, módulos simples de chave → texto), troca os
-  `{placeholders}` e, no plural, escolhe a forma de `{ one, other }` pelo `vars.n`. A chave que falta no
-  idioma cai no `en_US` e, na falta dele, na própria chave.
+- O `src/i18n.js` carrega, para cada idioma, o `src/locales/<lang>.js` (a ajuda) e junta por cima todos
+  os `src/locales/<lang>/*.js`, um arquivo por assunto (`core`, `adm`, `ai`, `data`, `grp`, `info`,
+  `notes`): módulos simples de chave → texto. Uma chave repetida em dois arquivos do mesmo idioma
+  falha no carregamento. Um assunto novo é só um arquivo novo, com o mesmo nome nos dois idiomas.
+- O `t('chave', { vars })` procura a chave no catálogo do idioma atual, troca os `{placeholders}` e
+  devolve o texto. A chave que falta no idioma cai no `en_US` e, na falta dele, na própria chave. Um
+  terceiro argumento força o idioma (`t('chave', {}, 'pt_BR')`).
+- **Plural**: a entrada é um objeto `{ one, other }` e o `vars.n` escolhe a forma. `1` é `one` e `0` é
+  `other` (`0 votos`, também em português, onde o `Intl.PluralRules` diria singular); os outros números
+  seguem o `Intl.PluralRules` do idioma.
 - O texto de um comando (`summary`, `usage`, `help`, `ex` e, nas opções, `desc`, `ex`, `values` e `argv`)
   fica **em inglês** em `src/comandos/definicoes/`. A tradução em português vai em
   `src/locales/pt_BR/definicoes/<cmd>.json`, com os mesmos campos nos mesmos lugares, e o
   `src/comandos/localizar.js` junta por cima da definição quando o idioma não é o padrão. O resto da
   definição (`opts`, `role`...) vale para qualquer idioma.
-- **Um texto**: adicione a chave no `en_US.js` e no `pt_BR.js` (com os mesmos `{placeholders}`) e use
-  `t('chave', { ... })` no código.
+- **Um texto**: adicione a chave no catálogo do assunto em `en_US/` e em `pt_BR/` (com os mesmos
+  `{placeholders}`) e use `t('chave', { ... })` no código.
 - **O texto de um comando**: escreva em inglês na definição e a tradução no `.json`.
-- **Um idioma**: crie o `src/locales/<lang>.js` e o `src/locales/<lang>/definicoes/`, registre o idioma
-  em `IDIOMAS` e nos catálogos do `src/i18n.js`, e em `opcoes` e `normalizar` do `zapbot.lang` no
-  `SETTINGS_SCHEMA`.
+- **Um idioma**: crie o `src/locales/<lang>.js`, o `src/locales/<lang>/*.js` e o
+  `src/locales/<lang>/definicoes/`, registre o idioma em `IDIOMAS` e nos catálogos do `src/i18n.js`, e em
+  `opcoes` e `normalizar` do `zapbot.lang` no `SETTINGS_SCHEMA`.
 
 Os testes rodam em `pt_BR` (o `bot.reiniciar()` liga), porque as asserções são em português. O
 `tests/i18n.test.js` troca o idioma de propósito e confere os dois: os catálogos têm as mesmas chaves e
 placeholders, toda definição tem a tradução com a mesma estrutura, e a ajuda sai certa em `en_US` e em
-`pt_BR`.
+`pt_BR`. Os `tests/i18n-*.test.js` (um por assunto) ligam o `en_US` e conferem as respostas de cada
+comando em inglês.

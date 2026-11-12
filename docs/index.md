@@ -7,6 +7,8 @@
 
 [![Testes](https://github.com/jpereira/zapbot/actions/workflows/ci.yml/badge.svg)](https://github.com/jpereira/zapbot/actions/workflows/ci.yml)
 
+> 🇧🇷 **Leia em português (pt_BR): [Português](https://jpereira.github.io/zapbot/pt-BR/).**
+
 A WhatsApp bot written in Node.js that runs on top of a real WhatsApp Web session. It recovers
 deleted and edited messages (and statuses), downloads videos from social networks, creates stickers,
 watches messages by text/regex and alerts you in your private chat, brings news, weather and CVEs,
@@ -14,7 +16,7 @@ talks to ChatGPT and a few more fun things, all through commands typed in the ch
 `/get`, `/show`, `/news`, `/gpt`...).
 
 Persistent shortcuts store commands with arguments and an optional description: register one with
-`/alias dimdim -desc "Exibe o preço do dólar" /rates USD`, run `/dimdim` and check
+`/alias dimdim -desc "Shows the dollar price" /rates USD`, run `/dimdim` and check
 `/help alias`. The bot shows the command that was called before the result. A shortcut can also
 combine several commands in a text, as in `/cron`:
 `/alias carteira Orca {/defi orca}\n Prjx {/defi prjx}`.
@@ -72,16 +74,16 @@ Where to start:
 ```text
  ┌────────────── container zapbot (node:24-trixie-slim) ──────────────┐
  │                                                                    │
- │   app.js ──► whatsapp-web.js ──► Puppeteer ──► Chromium            │──► WhatsApp Web
- │     │                                          (headless)          │
- │     ├──► SQLite  (cache/zapbot.db)  mensagens, settings            │
- │     ├──► cache/media   mídias p/ recuperar mensagens apagadas      │
- │     ├──► yt-dlp + ffmpeg   comando /get                            │
- │     ├──► APIs HTTP (axios)  /gpt /weather /cve /news /giphy...       │
- │     └──► SMTP (nodemailer)  QR Code e alertas por e-mail           │
+ │  app.js ──► whatsapp-web.js ──► Puppeteer ──► Chromium             │──► WhatsApp Web
+ │    │                                          (headless)           │
+ │    ├──► SQLite  (cache/zapbot.db)  messages, settings              │
+ │    ├──► cache/media  media to recover deleted messages             │
+ │    ├──► yt-dlp + ffmpeg  the /get command                          │
+ │    ├──► HTTP APIs (axios)  /gpt /weather /cve /news /giphy ...     │
+ │    └──► SMTP (nodemailer)  QR Code and email alerts                │
  │                                                                    │
- │  volumes:  wwebjs_auth  → sessão do WhatsApp (.wwebjs_auth)        │
- │            app_cache    → banco SQLite + mídias (cache/)           │
+ │ volumes:  wwebjs_auth  → WhatsApp session (.wwebjs_auth)           │
+ │           app_cache    → SQLite database + media (cache/)          │
  └────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -99,17 +101,17 @@ Where to start:
   it **to your private chat** (the chat with yourself; turn the alert off with
   `/set show.alert.deleted off`, the message stays stored). Deleted messages are kept for 30 days
   (setting `cache.revokedRetentionDays`) and can be redisplayed with `/show`. Deleted statuses
-  (texts/photos/videos) are also recovered, with the title `📸 STATUS APAGADO DETECTADO` and
+  (texts/photos/videos) are also recovered, with the title `📸 DELETED STATUS DETECTED` and
   redisplayed with `/show -s`. With `/set show.alert.status off`, new status deletions are ignored:
   they neither generate an alert nor enter the deleted list.
 - **Edited**: when someone edits a message, the bot stores the text from before and after (table
   `message_edits`) and alerts you **in your private chat** with the title
-  `✏️ MENSAGEM EDITADA DETECTADA` (turn the alert off with `/set show.alert.edited off`; the edit
+  `✏️ EDITED MESSAGE DETECTED` (turn the alert off with `/set show.alert.edited off`; the edit
   stays stored). Edits are kept for 30 days (setting `cache.editedRetentionDays`) and can be
   redisplayed with [`/show -e`](comandos/show.md). Your own edits are ignored.
 - **Reactions**: when someone removes a reaction (or swaps it for another), the bot alerts you **in
-  your private chat** with the title `😶 REAÇÃO REMOVIDA DETECTADA` (or
-  `🔄 REAÇÃO TROCADA DETECTADA`), with the previous reaction and the text of the message that was
+  your private chat** with the title `😶 REACTION REMOVED DETECTED` (or
+  `🔄 REACTION CHANGED DETECTED`), with the previous reaction and the text of the message that was
   reacted to (turn the alert off with `/set show.alert.reaction off`; the reaction stays stored).
   They are kept for 30 days (setting `cache.reactionRetentionDays`) and can be redisplayed with
   [`/show -r`](comandos/show.md#reactions).
@@ -143,7 +145,7 @@ Where to start:
   prices and alerts **your private chat** (or, with one or more `-to`, contacts, groups, numbers or
   email) when the rule is met; with `-msg`, a text of yours goes at the start of the alert. See
   [Price alerts](comandos/rates.md#price-alerts).
-- **Notes**: [`/notes`](comandos/notes.md) stores texts (and images, in `cache/notes/`) in the
+- **Notes**: [`/notes`](comandos/notes.md) stores texts (and media: image, document, audio, video) in the
   `notes` table, each with an ID and, if you want, a `#tag` (tag descriptions live in
   `note_tags`). `-alerta` alerts about a note at a date/time (once; the note stays), in your
   private chat or at the `-to` destinations, with one check per minute.
@@ -175,6 +177,9 @@ Where to start:
   limits...) live in the generic SQLite `settings` table (`key` → `value` in JSON) and are changed
   with [`/set`](comandos/set.md). At boot the defaults are written, if they don't exist yet, and
   everything is loaded into memory. See [Settings](settings.md).
+- **Language**: the `zapbot.lang` setting (`en_US`, the default, or `pt_BR`) picks the language of
+  the help, the replies, the alerts, the errors, and the dates and numbers. See
+  [Language](configuracao.md#language).
 - **Commands**: defined in
   [`src/comandos/definicoes/`](https://github.com/jpereira/zapbot/tree/main/src/comandos/definicoes)
   (name, aliases, options, help, permission) and implemented in `src/comandos/` (one file per
@@ -198,7 +203,7 @@ Where to start:
   `/tmp/zapbot-heartbeat.json`; Docker's `HEALTHCHECK` marks the container as `unhealthy` if the
   file stops being updated. See [Container health](operacao.md#container-health-heartbeat).
 - **Startup notice**: when it's ready, the bot sends
-  `🤖 ZapBot <versão> (git+<commit>/<tag ou HEAD>) inicializado.` to `PHONE_NUMBER` (the commit is
+  `🤖 ZapBot <version> (git+<commit>/<tag or HEAD>) started.` to `PHONE_NUMBER` (the commit is
   the one of the code that's running; see [`/version`](comandos/version.md)).
 - **Email alerts**: crash, outage, reconnection, authentication failure and other events also go by
   email, through the same SMTP as the QR Code (see [Email alerts](emails.md#email-alerts)).

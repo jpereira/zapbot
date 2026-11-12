@@ -95,7 +95,8 @@ Sem `-mask`: o `-l` lista os seus grupos. Faça a cena com poucos grupos, só os
 /sticker -txt "Partiu praia?" -bg "#2980B9" -fg "#FFFFFF"
 ```
 
-Depois, responda uma foto sua com:
+Depois, responda uma foto sua com os comandos abaixo (ou mande a foto com o `/sticker` como
+legenda):
 
 ```text
 /sticker

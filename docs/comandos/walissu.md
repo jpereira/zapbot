@@ -12,13 +12,13 @@ last 2 days.
 Illustrative example of a reply:
 
 ```text
-Hey @Fulano e @Beltrano, aqui é o Walissu CVE BOT! Dá uma olhada nesse CVE ou você vai sair da rave 😊
+Hey @Fulano and @Beltrano, this is the Walissu CVE BOT! Take a look at this CVE or you are leaving the rave 😊
 
 🛡️ CVE-AAAA-NNNN — 9 CRITICAL
-Descrição resumida da vulnerabilidade…
+Short description of the vulnerability…
 https://nvd.nist.gov/vuln/detail/CVE-AAAA-NNNN
 
-Cadê o exploit? Preciso sair de Brasília!
+Where is the exploit? I need to get out of Brasília!
 ```
 
 Details:
@@ -27,5 +27,5 @@ Details:
   with fewer than 2 members (not counting the bot) are refused, and the NVD limit without a key
   applies (~5 queries every 30 s).
 - The CVE can be of any severity; on the rare days with no publications at all, the bot says so
-  instead of tagging anyone. Outside a group, it replies `Apenas utilizado dentro de grupos.`; if
-  the NVD fails, `❌ Não consegui consultar o NVD agora.`
+  instead of tagging anyone. Outside a group, it replies `Only usable inside groups.`; if
+  the NVD fails, `❌ I couldn't query the NVD right now.`

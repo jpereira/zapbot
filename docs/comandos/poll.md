@@ -23,8 +23,8 @@ Campo
 ```
 
 WhatsApp limits: question up to 255 characters, options up to 100 and no repeats (case is ignored).
-A question that starts with `/` gets a `📊` in front, so it never looks like a command. `/quiz` is just a
-shortcut: WhatsApp Web doesn't offer quiz mode (with a correct answer) for bots.
+A question that starts with `/` gets a `📊` in front, so it never looks like a command. `/quiz` is
+just a shortcut: WhatsApp Web doesn't offer quiz mode (with a correct answer) for bots.
 
 ## Result
 
@@ -33,8 +33,8 @@ and who voted for each one. When replying to a poll, the scoreboard is that poll
 
 ```text
 /poll -r
-📊 Resultado: Pizza ou hambúrguer?
-3 votos de 3 pessoas · criada em 30/09/2026, 18:02:11
+📊 Result: Pizza ou hambúrguer?
+3 votes from 3 people · created on 9/30/2026, 18:02:11
 
 🏆 Pizza — 2 (67%) ███████
    Fulano, Tia
@@ -51,5 +51,7 @@ and who voted for each one. When replying to a poll, the scoreboard is that poll
   vote.
 - Votes only start being counted while the bot is up: data on polls from before that (or from when
   it was disconnected) doesn't show up.
-- Polls and votes are kept for 90 days (setting `enquete.retentionDays`, default 90, from 1 to 365), in the `polls` and
-  `poll_votes` tables.
+- Polls and votes are kept for 90 days (setting `enquete.retentionDays`, default 90, from 1 to
+  365), in the `polls` and `poll_votes` tables.
+- With no poll recorded in the chat, the bot says so. Replying to a poll the bot doesn't have the
+  votes of (one that isn't from your account), it says that too.

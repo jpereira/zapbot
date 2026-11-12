@@ -12,14 +12,14 @@ it shows them, but only for the owner and admins.
 
 ```text
 /whois
-Quem é? (1)
+Who is it? (1)
 • 🗣️ +u · 👤 Rafael Silva · +15559998888
 
-Permissões
-👑 +a: admin, usa tudo
-🗣️ +u: usuário, usa os comandos comuns
+Permissions
+👑 +a: admin, uses everything
+🗣️ +u: user, uses the regular commands
 
-Digite /help para saber quais comandos estão disponíveis.
+Type /help to see which commands are available.
 ```
 
 ```text
@@ -36,11 +36,11 @@ The level is the highest one that applies **in the chat where you typed it**:
 | 🤖 owner | It's the bot's account: uses everything |
 | 👑 +a | Is an admin (`/bot +a`): uses everything |
 | 🗣️ +u | Is a user (`/bot +u`): uses the regular commands in any chat, and the `admin` role ones the owner delegates (`+cmd`) |
-| 🗣️ todos | Everyone is allowed (`/set bot.users true`) |
-| 🗣️ +u pelo grupo | The group where you typed is allowed: everyone there uses the regular ones, only inside it |
-| 🗣️ +u neste grupo | The person is a user only in this group (the `/bot +u` typed in it) |
-| 🚫 sem permissão aqui (só em 👥 …) | The person is a user only in other groups: here, the bot ignores their commands |
-| 🚫 sem permissão | None of the above: the bot ignores the person's commands |
+| 🗣️ everyone | Everyone is allowed (`/set bot.users true`) |
+| 🗣️ +u by group | The group where you typed is allowed: everyone there uses the regular ones, only inside it |
+| 🗣️ +u in this group | The person is a user only in this group (the `/bot +u` typed in it) |
+| 🚫 no permission here (only in 👥 …) | The person is a user only in other groups: here, the bot ignores their commands |
+| 🚫 no permission | None of the above: the bot ignores the person's commands |
 
 - Anyone with no permission at all can't use `/whois` (the bot ignores their commands); anyone who
   has some finds out their own level, even limited to a few commands (`/whois` and `/help` are
@@ -50,6 +50,6 @@ The level is the highest one that applies **in the chat where you typed it**:
 - In a group, the phone number of someone who isn't in it is hidden (`+5521•••••2222`), like in
   [`/bot`](bot.md#who-shows-up-in-the-list).
 - Anyone limited to a few commands ([`/bot +cmd`](bot.md#each-users-commands)) has the rule
-  below: `→ Apenas: /rates, /crypto` or `→ Todos, menos: /meme`.
+  below: `→ Only: /rates, /crypto` or `→ All but: /meme`.
 - To see the admins and users at once: [`/bot -list-users`](bot.md#user-list) (the ones in
   this chat) or `/bot -list-users all` (everyone).

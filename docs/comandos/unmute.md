@@ -5,7 +5,7 @@ statuses and removed or changed reactions from the person, group or community co
 
 | Option | Value | Description |
 |---|---|---|
-| *(none)* | `[/contato ou grupo/\|@menção\|+número\|nº]` | Who: looked up as in `/mute`, or the number from the `/mute` list. With no one, when replying to a warning, where it came from. With nothing, the list |
+| *(none)* | `[/contact or group/\|@mention\|+number\|#]` | Who: looked up as in `/mute`, or the number from the `/mute` list. With no one, when replying to a warning, where it came from. With nothing, the list |
 | `-all`, `-a` | | Undoes all the muted ones |
 
 ```text
@@ -16,8 +16,8 @@ statuses and removed or changed reactions from the person, group or community co
 /unmute -all                → all of them (same as /unmute -a or /mute -rm all)
 ```
 
-- Someone who isn't muted: the bot lets you know (`ℹ️ 👤 Fulano não está silenciado.`, with a tip to
+- Someone who isn't muted: the bot lets you know (`ℹ️ 👤 Fulano is not muted.`, with a tip to
   see the `/mute` list).
-- `/unmute -all` replies with how many were removed (`🔊 2 silenciados removidos: os avisos voltam.`).
-- A number that isn't in the list: `❌ Nº 9 não existe. Veja a lista com /mute`.
+- `/unmute -all` replies with how many were removed (`🔊 2 muted entries removed: the alerts are back.`).
+- A number that isn't in the list: `❌ No. 9 does not exist. See the list with /mute`.
 - With nothing (and not replying to a warning), shows the `/mute` list.

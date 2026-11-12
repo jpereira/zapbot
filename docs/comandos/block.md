@@ -3,15 +3,15 @@
 Blocks one or several people on your WhatsApp account, like **Block** on the phone: they can no
 longer message or call you. Replying to a message, it blocks whoever wrote it. With nothing, it lists
 the blocked ones, including those you blocked on the phone, numbered for
-[`/unblock <nº>`](unblock.md).
+[`/unblock <no.>`](unblock.md).
 
 ```text
-/block [/contato/|@menção|+número]...  ou  /block -l
+/block [/contact/|@mention|+number]...  or  /block -l
 ```
 
 | Option | Value | Description |
 |---|---|---|
-| *(none)* | `[/contato/\|@menção\|+número]...` | The people, separated by spaces: an address book contact by name or part of it (several matches: you choose from the list), someone mentioned with `@` or a number. With no one, replying to a message: whoever wrote it. See [Several people](#several-people) |
+| *(none)* | `[/contact/\|@mention\|+number]...` | The people, separated by spaces: an address book contact by name or part of it (several matches: you choose from the list), someone mentioned with `@` or a number. With no one, replying to a message: whoever wrote it. See [Several people](#several-people) |
 | `-list`, `-l` | | Lists the blocked ones (the same as `/block` with nothing) |
 | `-mask`, `-m` | | Obfuscates phone numbers in this run's output. E.g.: `+55219****44` |
 
@@ -29,16 +29,16 @@ among contacts only: groups can't be blocked.
 
 ```text
 /block /Fulano/
-🚫 Bloqueado: 👤 Fulano
-💡 Desfaça com /unblock; veja a lista com /block.
+🚫 Blocked: 👤 Fulano
+💡 Undo with /unblock; see the list with /block.
 
 /block
-🚫 Bloqueados (2)
+🚫 Blocked (2)
 
 1. 👤 Beltrano · +5521988887777
 2. 👤 Fulano · +5521999999999
 
-💡 Desbloqueie com /unblock <nº|nome>.
+💡 Unblock with /unblock <no.|name>.
 ```
 
 ## Several people
@@ -51,14 +51,14 @@ others carry on. At the end, a single summary:
 
 ```text
 /block +5521999999999 /Ciclano Souza/ @Beltrano
-🚫 Bloqueados (2):
+🚫 Blocked (2):
 👤 Fulano
 👤 Ciclano Souza
 
-ℹ️ Já estavam bloqueados (1):
+ℹ️ Already blocked (1):
 👤 Beltrano
 
-💡 Desfaça com /unblock; veja a lista com /block.
+💡 Undo with /unblock; see the list with /block.
 ```
 
 The same person repeated counts once.
@@ -70,11 +70,11 @@ The same person repeated counts once.
   only someone who made it onto it counts as blocked.
 - If WhatsApp refuses (or the person doesn't make it onto the list), the bot says why, instead of
   blocked:
-  `⚠️ Não consegui bloquear 👤 Fulano: o WhatsApp recusou o bloqueio (erro "t").`. With several
-  people, they go to `❌ Não bloqueados`, and the others carry on.
-- Someone already blocked: the bot warns you (`ℹ️ 👤 Fulano já está bloqueado.`).
+  `⚠️ I could not block 👤 Fulano: WhatsApp refused the block (error "t").`. With several
+  people, they go to `❌ Not blocked`, and the others carry on.
+- Someone already blocked: the bot warns you (`ℹ️ 👤 Fulano is already blocked.`).
 - The bot's own account can't be blocked.
-- With nobody blocked, the list says `🚫 Ninguém bloqueado.`.
+- With nobody blocked, the list says `🚫 Nobody blocked.`.
 - The list comes from WhatsApp, which stores blocks by internal id (`@lid`): the bot converts each one
   to the phone number and uses the name from your address book (or the profile's). Anyone without a
-  known phone number appears by id, with `(id interno, sem telefone conhecido)`, after the others.
+  known phone number appears by id, with `(internal id, no known phone)`, after the others.

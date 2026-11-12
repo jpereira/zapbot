@@ -24,7 +24,7 @@ Notes saved in the database, valid for any chat (group or private). Each one has
 | `-list`, `-l` | `[#tag...]` | Lists the notes with the ID, grouped by `#tag` (`/notes` alone shows the tags; `/notes #casa` lists that tag's notes). With one or more tags, only theirs |
 | `-compact`, `-c` | `[#tag...]` | Lists with one line per note (title, the icons 🖼️ media, ⏰ alert and 🔗 link, and the time), grouped by day. Also works at the end: `/notes #pt -c`, `/notes -l -c` |
 | `-search`, `-s` | `[#tag...] <texto\|/regex/flags>` | Only the notes that match, grouped as in the list. See [Search](#search) |
-| `-update`, `-u` | `<id> [#tag] <novo texto>` | Replaces the note's text (and the tag, if one is given; the alert and the image stay). When replying to a message, with no text, uses that message's text |
+| `-update`, `-u` | `<id> [#tag] <novo texto>` | Replaces the note's text (and the tag, if one is given; the alert and the image stay). When replying to a message, with no text, uses that message's text (with the ↩️) |
 | `-view`, `-v` | `<id...\|#tag...>` | Shows the note with its media (text as the caption; with no media, just the text). The tag can be partial. With `-to`, sends to the destinations (or by email, with the image attached) |
 | `-move`, `-m` | `#tag #novatag` | Renames the tag in all notes. If the new one already exists, the two merge |
 | `-desc`, `-d` | `#tag [<descrição>\|-rm]` | Tag description, shown in the list and in `/notes` alone. With no text, shows the current one; with `-rm`, deletes it. `-move` carries the description along |
@@ -47,7 +47,7 @@ Notes saved in the database, valid for any chat (group or private). Each one has
 /notes -move #casa #lar                           → renames #casa to #lar
 /notes -desc #casa Coisas da casa                 → description of #casa
 /notes -view 76                                   → #76 with the image, if it has one
-/notes                                            → #casa: 3, #duvidas: 1, sem tag: 2
+/notes                                            → #casa: 3, #duvidas: 1, no tag: 2
 ```
 
 ## Tags
@@ -65,7 +65,7 @@ Notes saved in the database, valid for any chat (group or private). Each one has
 - When you reply to a message, `/notes #lembrete` (or `/notes -a #lembrete`) saves its text as a
   note, with ↩️ in front. Text typed along with it takes the place of the message's (without the
   ↩️). It can be combined with `-alerta`: `/notes -a #lembrete -alerta amanhã 9h`. In the PDF, the
-  ↩️ becomes `[resp.]`.
+  ↩️ becomes `[reply]`.
 - In the note text, `\n` becomes a line break (`/notes #casa pão\nleite`); `\\n` stays as is.
 - The first line is the title (the only one in bold), the rest comes as typed and every
   `http(s)://` link is moved out of where it was to the end, as bullets under `🔗 Links` (in the
@@ -142,8 +142,8 @@ work with `-rm`.
 
 - It goes out as a document in the chat itself (with `-to`, in the destinations; by email, as an
   attachment). The date and time in the name are Brasília time.
-- The tag description (`-desc`) comes at the start of the document, right after the total, one line
-  per tag that has one: `#casa: Coisas da casa`. Only the tags that are in the PDF are included.
+- The tag description (`-desc`) comes right below the tag's heading (`#casa (3)`), for each tag that
+  has one. The heading also summarizes how many notes have media, alert and link.
 - Images go into the PDF, above the note text (which serves as the caption), scaled down to fit
   (JPEG, white background in place of transparency). An image that won't open is left out, with a
   warning on the note's line. Documents, audio and video don't go into the PDF; the note's line
@@ -174,6 +174,8 @@ note itself.
   of 365 days ahead; past dates are refused.
 - The alert fires **once** and goes away; the note stays in the list. To repeat, create another
   `-alerta <id> <quando>` (it replaces the previous one).
+- `-to` with `-add` only works together with `-alerta`; with `-alerta` alone (the list) it gives an
+  error: the destinations are only set when creating the alert.
 - With a `#tag`, the alert goes on all the tag's notes (replacing the ones that already had one),
   and at the scheduled time one message goes out per note. If the tag doesn't exist, nothing is
   touched.

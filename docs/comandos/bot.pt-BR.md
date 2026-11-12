@@ -325,6 +325,9 @@ Aceitam `-mask`, mas não combinam com as outras opções.
 
 sim
 🧹 Usuários removidos (4): ficam só você e os admins extras.
+
+▶️ Bot: ativo
+🔒 Comandos: só o dono e os admins
 ```
 
 ```text

@@ -48,9 +48,13 @@ o tipo e a legenda). Textos longos são cortados em 200 caracteres.
 manda o pix que eu pago, o texto todo, sem corte
 ```
 
-- Cada resultado traz o `🆔` para o `-read`. Com `-mask`, o id também é ofuscado (não serve para o `-read`).
-- O `-read` vale só para este chat; no seu privado, para qualquer chat. Numa mídia, mostra o tipo e a legenda.
-- Acima de 50, o `-N` é limitado a 50 e a resposta avisa.
+- Cada resultado traz o `🆔` para o `-read`. Com `-mask`, o id também é ofuscado (não serve para o
+  `-read`).
+- O `-read` vale só para este chat; no seu privado, para qualquer chat. Numa mídia, mostra o tipo e a
+  legenda.
+- Acima de 50, o `-N` é limitado a 50 e a resposta avisa. O `-N` tem que ser 1 ou mais.
+- O `-mask` ofusca números com 10 a 15 dígitos seguidos, mantendo os cinco primeiros e os dois
+  últimos.
 - A própria mensagem do `/search` não entra nos resultados.
 - Quando vêm tantos resultados quanto o `-N`, o bot avisa que pode haver mais.
 - O que o WhatsApp Web ainda não carregou do celular não aparece: é a mesma limitação da busca do

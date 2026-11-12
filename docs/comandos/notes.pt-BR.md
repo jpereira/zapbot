@@ -24,7 +24,7 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 | `-list`, `-l` | `[#tag...]` | Lista as anotações com o ID, agrupadas por `#tag` (o `/notes` sozinho mostra as tags; `/notes #casa` lista as dela). Com uma ou mais tags, só as delas |
 | `-compact`, `-c` | `[#tag...]` | Lista com uma linha por nota (título, os ícones 🖼️ mídia, ⏰ alerta e 🔗 link, e a hora), agrupadas por dia. Também vale no fim: `/notes #pt -c`, `/notes -l -c` |
 | `-search`, `-s` | `[#tag...] <texto\|/regex/flags>` | Só as anotações que casam, agrupadas como na lista. Veja [Buscar](#buscar) |
-| `-update`, `-u` | `<id> [#tag] <novo texto>` | Troca o texto da anotação (e a tag, se vier uma; o alerta e a imagem ficam). Em resposta a uma mensagem, sem texto, usa o dela |
+| `-update`, `-u` | `<id> [#tag] <novo texto>` | Troca o texto da anotação (e a tag, se vier uma; o alerta e a imagem ficam). Em resposta a uma mensagem, sem texto, usa o dela (com o ↩️) |
 | `-view`, `-v` | `<id...\|#tag...>` | Mostra a anotação com a mídia (texto na legenda; sem mídia, só o texto). A tag pode vir pela metade. Com `-to`, manda nos destinos (ou por e-mail, com a imagem anexada) |
 | `-move`, `-m` | `#tag #novatag` | Renomeia a tag em todas as anotações. Se a nova já existe, as duas se juntam |
 | `-desc`, `-d` | `#tag [<descrição>\|-rm]` | Descrição da tag, que aparece na lista e no `/notes` sozinho. Sem texto, mostra a atual; com `-rm`, apaga. O `-move` leva a descrição junto |
@@ -138,8 +138,8 @@ O `-to` funciona como nos outros comandos (veja
 
 - Sai como documento no próprio chat (com `-to`, nos destinos; por e-mail, em anexo). A data e a
   hora do nome são de Brasília.
-- A descrição das tags (`-desc`) vem no começo do documento, logo depois do total, uma linha por
-  tag que tem: `#casa: Coisas da casa`. Só entram as tags que estão no PDF.
+- A descrição da tag (`-desc`) vem logo abaixo do título da tag (`#casa (3)`), para cada tag que
+  tem. O título também resume quantas anotações têm mídia, alerta e link.
 - As imagens entram no PDF, em cima do texto da anotação (que serve de legenda), reduzidas para caber
   (JPEG, fundo branco no lugar de transparência). Uma imagem que não abre fica de fora, com um aviso
   na linha da anotação. Documentos, áudios e vídeos não entram no PDF; a linha da anotação avisa.
@@ -169,6 +169,8 @@ anotação.
   frente; datas passadas são recusadas.
 - O alerta dispara **uma vez** e some; a anotação continua na lista. Para repetir, crie outro
   `-alerta <id> <quando>` (ele troca o anterior).
+- O `-to` no `-add` só vale junto com o `-alerta`; no `-alerta` sozinho (a lista) dá erro: os
+  destinos só são definidos ao criar o alerta.
 - Com `#tag`, o alerta vai em todas as anotações da tag (trocando os que já tinham), e na hora saem
   uma mensagem por anotação. Se a tag não existe, nada é mexido.
 - Sem `-to`, o aviso vai para o seu privado. O `-to` aceita os mesmos destinos dos outros alertas

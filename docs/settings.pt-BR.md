@@ -1,7 +1,8 @@
 # Settings
 
 Configurações gerais do bot guardadas na tabela `settings` do SQLite. Mudam na hora, sem reiniciar,
-e sobrevivem a reinícios. Para ver e alterar, use o [`/set`](comandos/set.md).
+e sobrevivem a reinícios. Para ver e alterar, use o [`/set`](comandos/set.md) (as descrições dele são as mesmas daqui,
+em português).
 
 | Chave | Tipo | Padrão | Descrição |
 |---|---|---|---|
@@ -103,7 +104,7 @@ e sobrevivem a reinícios. Para ver e alterar, use o [`/set`](comandos/set.md).
 | `watch.max` | 1–100 | `20` | Máximo de regras do `/watch` |
 | `watch.rules` | lista (uma por linha) | *(vazia)* | Regras do `/watch`: texto ou `/regex/flags`. Criadas por `/watch <regra>` e removidas por `/watch -rm N` |
 | `watch.showMax` | 1–100 | `20` | Máximo de ocorrências exibidas pelo `/watch`, inclusive com `-N` e `-show` |
-| `zapbot.lang` | `en_US`, `pt_BR` | `en_US` | Idioma do bot: a ajuda (`-h`, `/help`) sai nele. `/set zapbot.lang pt_BR` (ou `/set zapbot.lang=pt_BR`) troca para o português; `pt-BR`, `pt` e `en` também valem. As respostas dos comandos estão sendo migradas para o mesmo setting |
+| `zapbot.lang` | `en_US`, `pt_BR` | `en_US` | Idioma do bot: a ajuda (`-h`, `/help`) e todas as respostas, avisos, erros, datas e números saem nele. `/set zapbot.lang pt_BR` (ou `/set zapbot.lang=pt_BR`) troca para o português; `pt-BR`, `pt` e `en` também valem. As descrições que o `/set` mostra de cada setting continuam em português |
 
 Uma chave nova é declarada em `SETTINGS_SCHEMA` (`src/settings.js`), **em ordem alfabética**, com
 padrão, tipo, descrição e limites (`allowEmpty` para texto que pode ficar vazio, `secret` para

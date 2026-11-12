@@ -10,7 +10,7 @@ through `/bot +u` or the `bot.users` setting.
 | `-g1` | | Latest news from [g1](https://g1.globo.com/) (setting `news.g1`) |
 | `-gazeta`, `-gaz` | | [Gazeta do Povo](https://www.gazetadopovo.com.br/), Brazil section (setting `news.gazeta`) |
 | `-brasil`, `-br` | | Blogs about Brazil listed on [feedspot](https://rss.feedspot.com/brazil_rss_feeds/), mostly in English (setting `news.brasil`) |
-| `quantidade` | 1–10 | How many headlines. Without it, uses the `news.max` setting (5) |
+| `count` | 1–10 | How many headlines. Without it, uses the `news.max` setting (5) |
 
 ```text
 /news                → help with all the options
@@ -27,14 +27,14 @@ Illustrative example of a reply:
 ```text
 📰 g1
 
-1. Manchete recebida do feed…
-g1 · 30/09/2026, 00:29:33
+1. Headline received from the feed…
+g1 · 9/30/2026, 00:29:33
 https://g1.globo.com/...
 ```
 
 ## Changing the feeds
 
-Each category reads the list from its setting (`news.<categoria>`), which accepts any RSS feed:
+Each category reads the list from its setting (`news.<category>`), which accepts any RSS feed:
 
 ```text
 /set news.g1 https://g1.globo.com/rss/g1/economia/
@@ -52,3 +52,5 @@ Details:
 - `-brasil` reads about 15 feeds at once; the feedspot page is HTML, so its feeds were copied into
   the `news.brasil` setting (it isn't read on every use).
 - Feeds must be RSS (`<item>`); Atom-only feeds (`<entry>`) aren't read.
+- With a single category, the title is the category's name (e.g. "📰 g1", "🇧🇷 Brazil" for
+  `-brasil`). If a category has no feed set, the bot says so and suggests `/set news.<category>`.

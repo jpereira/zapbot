@@ -52,22 +52,26 @@ events also go by email, through the same SMTP as the QR Code (`QRCODE_EMAIL_SMT
 
 | Subject | When |
 |---|---|
-| `[ZapBot] 🟢 Bot iniciado` | The bot connected to WhatsApp after starting (it also says if it's turned off or only you can use commands, `bot.users` set to `false`) |
-| `[ZapBot] 🔄 Reconectado` | Connected again after an outage (with the reason for the outage and, if it couldn't connect for a while, for how long and how many attempts failed) |
-| `[ZapBot] 🔴 Desconectado` | WhatsApp disconnected; the client restarts by itself |
-| `[ZapBot] 🔴 Desconectado (ação manual)` | Disconnected due to `LOGOUT`, `CONFLICT`, `UNPAIRED`...: the bot does **not** restart by itself |
-| `[ZapBot] ⚠️ Estado do WhatsApp: <estado>` | WhatsApp Web entered a problem state (`CONFLICT`, `UNPAIRED`, `TOS_BLOCK`...) |
-| `[ZapBot] ⛔ Falha de autenticação` | The saved session failed to authenticate |
-| `[ZapBot] 🔑 Sessão perdida: novo QR Code` | It asked for a QR Code again after having authenticated |
-| `[ZapBot] ♻️ Browser caiu` | Chromium died and the watchdog is restarting the client |
-| `[ZapBot] 🩺 WhatsApp sem resposta` | Connected, but WhatsApp Web didn't answer `CONNECTED` in 3 consecutive [heartbeat](operacao.md#container-health-heartbeat) checks; the client restarts |
-| `[ZapBot] ❌ Falha ao reiniciar` | The client restart failed (e.g. no internet); the bot tries again by itself, with increasing wait. Only one email, on the first failure ([Internet outage](operacao.md#internet-outage)) |
-| `[ZapBot] 💾 Backup falhou` | The database [daily backup](comandos/backup.md#automatic-backup) failed (e.g. disk full) |
-| `[ZapBot] 💾 Envio do backup falhou` | The daily file was saved locally, but sending it to `backup.to` failed |
+| `[ZapBot] 🟢 Bot started` | The bot connected to WhatsApp after starting (it also says if it's turned off or only you can use commands, `bot.users` set to `false`) |
+| `[ZapBot] 🔄 Reconnected` | Connected again after an outage (with the reason for the outage and, if it couldn't connect for a while, for how long and how many attempts failed) |
+| `[ZapBot] 🔴 Disconnected` | WhatsApp disconnected; the client restarts by itself |
+| `[ZapBot] 🔴 Disconnected (manual action)` | Disconnected due to `LOGOUT`, `CONFLICT`, `UNPAIRED`...: the bot does **not** restart by itself |
+| `[ZapBot] ⚠️ WhatsApp state: <state>` | WhatsApp Web entered a problem state (`CONFLICT`, `UNPAIRED`, `TOS_BLOCK`...) |
+| `[ZapBot] ⛔ Authentication failure` | The saved session failed to authenticate |
+| `[ZapBot] 🔑 Session lost: new QR Code` | It asked for a QR Code again after having authenticated |
+| `[ZapBot] ♻️ Browser crashed` | Chromium died and the watchdog is restarting the client |
+| `[ZapBot] 🩺 WhatsApp not responding` | Connected, but WhatsApp Web didn't answer `CONNECTED` in 3 consecutive [heartbeat](operacao.md#container-health-heartbeat) checks; the client restarts |
+| `[ZapBot] ❌ Restart failed` | The client restart failed (e.g. no internet); the bot tries again by itself, with increasing wait. Only one email, on the first failure ([Internet outage](operacao.md#internet-outage)) |
+| `[ZapBot] 💾 Backup failed` | The database [daily backup](comandos/backup.md#automatic-backup) failed (e.g. disk full) |
+| `[ZapBot] 💾 Backup sending failed` | The daily file was saved locally, but sending it to `backup.to` failed |
 | `[ZapBot] 💥 Crash` | Unhandled exception or rejected promise (with the stack). The process exits and Docker brings it back up |
 | `[ZapBot] 🛑 Bot encerrado` | `docker stop`/`restart` or Ctrl+C (SIGTERM/SIGINT) |
-| `[ZapBot] 🔑 Novo admin por senha` | Someone became admin with [`/bot -login`](comandos/bot.md) (the owner is also warned on WhatsApp). Not subject to the 5-minute rule |
-| `[ZapBot] 🚨 Login bloqueado` | Someone got the `/bot -login` password wrong too many times and was blocked. Not subject to the 5-minute rule |
+| `[ZapBot] 🔑 New admin by password` | Someone became admin with [`/bot -login`](comandos/bot.md) (the owner is also warned on WhatsApp). Not subject to the 5-minute rule |
+| `[ZapBot] 🚨 Login blocked` | Someone got the `/bot -login` password wrong too many times and was blocked. Not subject to the 5-minute rule |
+
+The subjects follow the bot's language (`zapbot.lang`, English by default; the table shows the
+English ones). Crash and shutdown are the exception: `💥 Crash` and `🛑 Bot encerrado` always go like
+that.
 
 Each email carries the time, the masked number, the version with the commit that's running
 (`X.Y.Z (git+4465374/vX.Y.Z)`, see [`/version`](comandos/version.md)), the host, how long the
@@ -79,7 +83,7 @@ reconnection loop.
 
 If the provider refuses the login (`EAUTH`, for example Gmail with
 `535 5.7.0 Too many bad auth attempts`), the bot stops using SMTP for **30 minutes**: any send in
-that period fails right away, with `SMTP em pausa por falha de autenticação anterior`, without
+that period fails right away, with `SMTP paused after an earlier authentication failure (N more min)`, without
 opening a connection. Each wrong attempt counts toward the provider's block, and insisting (a new
 QR, an alert, a reconnection) only makes it longer. Once the time is up, the bot tries again; if the
 password is still wrong, the pause starts over.

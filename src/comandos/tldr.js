@@ -22,7 +22,7 @@ const { lerDuracao } = require('../util/quando');
  *   /tldr              → as últimas 100 mensagens deste chat
  *   /tldr 2h | 1d     → as do último tempo, como no /cron: 30m, 2h, 1d, 1h30m (o "-" na frente é opcional)
  *   /tldr 300          → as últimas 300 (máx. setting 'tldr.maxMsgs')
- *   /tldr -c família   → de outro chat: nome, /regex/, @contato (como o /show)
+ *   /tldr -c família   → de outro chat: nome, /regex/ ou @contato
  *   /tldr -pv          → no seu privado em vez de expor no chat atual
  *   (respondendo)      → da mensagem respondida até agora (o período digitado ou o -c ganham)
  * Usa o texto já gravado no banco: as mensagens comuns ficam cache.messageRetentionHours (68 h). Ficam de

@@ -11,9 +11,9 @@ Markdown para a formatação do WhatsApp do `/gpt` (veja [Formatação no WhatsA
 
 | Opção | Valor | Descrição |
 |---|---|---|
-| `[período]` | | Um tempo, como no [`/cron`](cron.md) (`30m`, `2h`, `1d`, `1h30m`, `2d4h`): as mensagens desse tempo para cá; um número (`300`): as últimas 300 (limite padrão 500, configurável até 2000 em `tldr.maxMsgs`). Padrão: as últimas 100. O `-` na frente é opcional (`-2h`) |
+| `[período]` | | Um tempo, como no [`/cron`](cron.md) (`30m`, `2h`, `1d`, `1h30m`, `2d4h`): as mensagens desse tempo para cá; um número (`300`): as últimas 300 (limite padrão 500, configurável de 10 a 2000 em `tldr.maxMsgs`). Padrão: as últimas 100. O `-` na frente é opcional (`-2h`) |
 | *(respondendo)* | | Resume da mensagem respondida até agora; o período digitado ou o `-chat` ganham |
-| `-chat`, `-c` | `<nome>` | Resume outro chat, buscado pelo nome: todas as palavras, em qualquer ordem, sem diferenciar acentos. Nome com espaço vai entre aspas: `-c "trabalho rio"` |
+| `-chat`, `-c` | `<chat>` | Resume outro chat, nome do grupo ou do contato (todas as palavras, em qualquer ordem, sem diferenciar acentos), `/regex/` ou `@contato`. Nome com espaço vai entre aspas: `-c "trabalho rio"`. Se vários chats casarem, lista e espera o nº |
 | `-status`, `-s` | | Acrescenta no rodapé o consumo da chamada: bytes TX/RX, tokens, custo e saldo (veja [Status](gpt.md#status--status)) |
 | `-pv` | | Envia no seu privado em vez de expor no chat atual |
 
@@ -75,6 +75,8 @@ Detalhes:
 - Enquanto processa, o aviso diz o que está resumindo: `⏳ Processando o /tldr das 87 mensagens de Família do
   período de 2 horas, aguarde.` (ou `das últimas 100 mensagens de ...`, ou `... desde a mensagem respondida
   (há 3 horas)`).
+- Uma primeira palavra desconhecida que parece uma opção (`/tldr -price`) é recusada com a dica de
+  usar `-h`, em vez de ser lida como período.
 - Ficam de fora os comandos, as mensagens apagadas e as mídias sem legenda. As suas mensagens
   aparecem com o nome do seu perfil; as respostas do bot (que saem pela sua conta) entram como suas.
 - Os áudios (os 10 mais recentes do período) são transcritos, até 25 MB cada, e entram no resumo com

@@ -17,4 +17,4 @@ longterm  6.12.111     2026-09-21
 longterm  6.6.157      2026-09-14
 ```
 
-If kernel.org doesn't respond, the bot says so: `❌ Não consegui consultar o kernel.org agora.`
+If kernel.org doesn't respond, the bot says so: `❌ I couldn't query kernel.org right now.`

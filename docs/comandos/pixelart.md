@@ -7,7 +7,7 @@ the end of the original file (without it, the caption carries the file name and 
 | Option | Value | Description |
 |---|---|---|
 | `-random`, `-r` | | Picks from any pack in the archive |
-| `-year`, `-y` | `<ano>` | Picks from a pack of the year (e.g., 1996; from 1980 to the current year) |
+| `-year`, `-y` | `<year>` | Picks from a pack of the year (e.g., 1996; from 1980 to the current year) |
 | `pack` | | Pack name (e.g., `chuck-norris-lvl`). Without it, uses the `pixelart.packs` setting |
 
 ```text
@@ -21,7 +21,7 @@ the end of the original file (without it, the caption carries the file name and 
 Example reply:
 
 ```text
-[imagem da arte]
+[art image]
 🎨 Chuck Norris
 👤 lord jazz / ACiD
 📦 chuck-norris-lvl (01/04/2021)
@@ -43,4 +43,5 @@ Details:
   anything beyond that stays as a link only.
 - With `-r`, `-y` or several packs in `pixelart.packs`, packs with no ANSI/ASCII art (only
   executables or texts) are swapped for another draw, up to 5 attempts.
+- If you combine them, `-r` wins over `-y`, which wins over a pack name.
 - The full pack list for `-r` is downloaded at most once a day.

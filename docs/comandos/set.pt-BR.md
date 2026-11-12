@@ -6,9 +6,9 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 | Opção | Valor | Descrição |
 |---|---|---|
 | *(nenhuma)* | | Lista todas as chaves e valores e, no seu privado, as variáveis do `config/.env` |
-| `<chave>` | | Mostra valor, padrão, tipo e descrição |
+| `<chave>` | | Mostra valor, padrão, tipo e descrição (a descrição ainda é em português) |
 | `<trecho>` ou `/regex/` | | Não sendo uma chave: lista as chaves que contêm o trecho (sem diferenciar maiúsculas) ou casam com a regex. Ex.: `/set alerta`, `/set /^show\./` |
-| `<chave> <valor>` | | Altera. Listas: itens separados por vírgula ou espaço (`watch.rules`: uma regra por linha); `""` esvazia |
+| `<chave> <valor>` | | Altera. Listas: itens separados por vírgula ou espaço (`watch.rules`: uma regra por linha; `bot.users.cmds`: separados por espaço, pois cada item tem vírgulas); `""` esvazia |
 | `<chave>=<valor>` | | O mesmo que `<chave> <valor>`, para qualquer chave. Ex.: `/set zapbot.lang=pt_BR` |
 | `-append`, `-a` | `<chave> <valor>` | Numa lista, acrescenta os itens (os que já estão ficam). Ex.: `/set -a bot.admins +5521999999999` (no `bot.admins` e no `bot.users` vale também `/Jorge Pereira/` e `@Fulano Da Silva`; no `bot.users`, grupos) |
 | `-rm` | `<chave> <valor>` | Numa lista, tira os itens. Ex.: `/set -rm commands.disabled noffa` |
@@ -18,7 +18,7 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 ```text
 /set
 /set show.max
-/set alerta          → só as chaves com "alerta" (alerta.intervalMin, alerta.max)
+/set alerta          → só as chaves com "alerta" (alerta.intervalMin, alerta.max, defi.alerta.intervalMin)
 /set /^news\./       → as que casam com a regex
 /set show.max 10
 /set monitor.pool=300
@@ -51,8 +51,9 @@ Como qualquer outra chave, os quatro settings do [`/monitor`](monitor.md) aceita
 /set monitor.enabled=false
 ```
 
-`monitor.pool` é o intervalo mínimo em segundos por contato, e `monitor.max` limita os cadastros.
-`monitor.maxRecords` limita o histórico no banco e nas listas por pessoa; reduzir esse valor
+`monitor.pool` é o intervalo mínimo em segundos por contato (120 a 86400, padrão 300), e
+`monitor.max` limita os cadastros (1 a 5, padrão 5). `monitor.maxRecords` limita o histórico no
+banco e nas listas por pessoa (1 a 1000, padrão 30); reduzir esse valor
 remove imediatamente os horários mais antigos excedentes. `monitor.enabled=false` pausa sem
 apagar cadastros ou histórico. As mudanças valem sem reiniciar.
 
@@ -77,7 +78,7 @@ O `bot.admins` e o `bot.users` só o dono altera (inclusive com `-append`, `-rm`
 admin extra não pode se dar (nem dar a outros) esse acesso. Neles, além do número, vale o nome do
 contato (`/Jorge Pereira/`) ou a menção: o bot guarda o telefone e mostra o nome ao lado
 ([Admins extras](bot.md#admins-extras)). O `bot.users` aceita também grupos (guarda o id e mostra
-`👥 Nome`) e `true`/ `false` ([Usuários](bot.md#usuários)).
+`👥 Nome`) e `true`/`false` ([Usuários](bot.md#usuários)).
 
 ## Variáveis do `config/.env`
 

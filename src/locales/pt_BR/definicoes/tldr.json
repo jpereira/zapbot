@@ -11,7 +11,7 @@
       "values": [
         "<nome>"
       ],
-      "desc": "Resume outro chat, como no /show: um nome (todas as palavras, sem diferenciar acentos), /regex/ ou @contato. Se vários casarem, lista e espera o nº."
+      "desc": "Resume outro chat: nome do grupo ou do contato, /regex/ ou @contato. Se vários casarem, lista e espera o nº."
     },
     {
       "opts": [
