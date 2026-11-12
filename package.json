@@ -21,7 +21,7 @@
     "qrcode-terminal": "^0.12.0",
     "sharp": "^0.35.5",
     "sqlite3": "^6.0.1",
-    "whatsapp-web.js": "github:wwebjs/whatsapp-web.js#58ddf1561cd783d6a548fa812eb70a05944604b4"
+    "whatsapp-web.js": "github:wwebjs/whatsapp-web.js#eb076b0c4075f5c295d5633f4c587d02ef4e5cf1"
   },
   "allowScripts": {
     "puppeteer": false,

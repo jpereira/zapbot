@@ -24,8 +24,7 @@ test('patches reais são aplicados sem repositório, repetíveis e recusam arqui
     fs.cpSync(path.join(project, 'patches'), path.join(root, 'patches'), { recursive: true });
     const files = [
         'node_modules/tr46/index.js',
-        'node_modules/whatwg-url/lib/url-state-machine.js',
-        'node_modules/whatsapp-web.js/src/util/Injected/Utils.js'
+        'node_modules/whatwg-url/lib/url-state-machine.js'
     ];
     for (const fileAlt of files) {
         const destination = path.join(root, fileAlt);
@@ -42,7 +41,6 @@ test('patches reais são aplicados sem repositório, repetíveis e recusam arqui
     const content = files.map(a => fs.readFileSync(path.join(root, a), 'utf8'));
     assert.match(content[0], /require\("punycode\/"\)/);
     assert.match(content[1], /require\("punycode\/"\)/);
-    assert.match(content[2], /delete message\.__x_id/);
     applyPatches(root);
     assert.deepEqual(files.map(a => fs.readFileSync(path.join(root, a), 'utf8')), content);
     fs.writeFileSync(path.join(root, files[0]), 'arquivo incompatível\n');
