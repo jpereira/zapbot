@@ -37,14 +37,15 @@ imagem (Debian): Chromium em `/usr/bin/chromium` (ou no `PUPPETEER_EXECUTABLE_PA
 ## Idioma
 
 O idioma do bot é o setting `zapbot.lang`: `en_US` (padrão) ou `pt_BR` (`/set zapbot.lang pt_BR`).
-Hoje ele traduz a ajuda (`-h` e `/help`); as respostas dos comandos ainda estão em português e
-estão sendo migradas. Os nomes dos comandos em português (`/desenhe`, `/tempo`...) são aliases
-fixos e funcionam em qualquer idioma.
+Ele traduz a ajuda (`-h` e `/help`) e também as respostas, os avisos, os erros, as datas e os
+números do bot (`11/12/2026` e `1,234` em `en_US`; `12/11/2026` e `1.234` em `pt_BR`). As
+descrições que o `/set` mostra de cada setting ainda estão em português. Os nomes dos comandos em
+português (`/desenhe`, `/tempo`...) são aliases fixos e funcionam em qualquer idioma.
 
 ## Serviços externos
 
-Comandos que consultam serviços na internet. Só duas precisam de chave (OpenAI e GIPHY; a da Aptos é opcional); os outros funcionam sem
-configuração.
+Comandos que consultam serviços na internet. Só duas precisam de chave (OpenAI e GIPHY; a da Aptos é opcional); os outros funcionam
+sem configuração.
 
 | Comando | Serviço | Chave |
 |---|---|---|

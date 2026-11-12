@@ -55,30 +55,33 @@ The ids shown in `/monitor` and `/monitor -l` are stable: removing contact `#1` 
 numbers with ten or more digits go through the phone resolver. Groups and emails aren't
 accepted in removal.
 
-With no registrations, `/monitor` shows the header followed by `👀 Nenhum contato cadastrado.` and the
-hint `💡 /monitor -add /Nome do Contato/`. With registrations, it shows:
+With no registrations, `/monitor` shows the header followed by `👀 No contacts registered.` and the
+hint `💡 /monitor -add /Contact Name/`. With registrations, it shows:
 
 ```text
-👀 MONITOR · ativo
-⏱️ Verificação de cada contato a cada 5 min (300 s), no mínimo.
-👥 Contatos: 1/5 · horários de São Paulo
+👀 MONITOR · active
+⏱️ Each contact is checked every 5 min (300 s) at the most.
+👥 Contacts: 1/5 · São Paulo time
 
 📹 #1 · Jorge Chip L200
-   ⚫ offline · horário observado
-   🔎 Verificado: 14/10/2026, 16:55:10
-   🕒 Último horário observado: 14/10/2026, 16:49:59
-   🚨 Alerta online: desativado
-   📜 Histórico: 1 horário(s) distinto(s) · limite: 30
-   • 14/10/2026, 16:49:59 · observado em 14/10/2026, 16:55:10
-     Origem: presença do WhatsApp · horário não confirmado
+   ⚫ offline · time observed
+   🔎 Checked: 10/14/2026, 4:55:10 PM
+   🕒 Last seen observed: 10/14/2026, 4:49:59 PM
+   🚨 Online alert: off
+   📜 History: 1 distinct time(s) · limit: 30
+   • 10/14/2026, 4:49:59 PM · observed on 10/14/2026, 4:55:10 PM
+     Source: WhatsApp presence · time not confirmed
+
+⚠️ Frequent checks and more contacts may contribute to WhatsApp blocking. No interval guarantees safety.
 ```
 
-The header says `ativo`, `pausado` (monitor disabled or bot paused) or `aguardando conexão`. A contact
-not checked yet shows `⏳ aguardando primeira verificação`.
+The header says `active`, `paused` (monitor disabled or bot paused) or `waiting for connection`. A
+contact not checked yet shows `⏳ waiting for the first check`. Dates follow `zapbot.lang` (above,
+en_US; in pt_BR: `14/10/2026, 16:55:10`), always in São Paulo time.
 
 Both `/monitor` and `/monitor -l` show up to `monitor.maxRecords` entries per contact
 (default: 30), from the most recent time to the oldest, with the observed time and the time the
-bot found it. The source appears as `presença do WhatsApp · horário não confirmado`.
+bot found it. The source appears as `WhatsApp presence · time not confirmed`.
 The same time never repeats among the stored entries, even if it shows up in several checks.
 Reports above 7,000 characters are sent in full as `monitor-historico.txt`
 to avoid several replies.
@@ -97,8 +100,8 @@ Register with `/monitor -add /Maria/ -alerta` or turn it on for an already regis
 The notice is sent **to the bot owner's private chat**, even when an admin turns the option on:
 
 ```text
-🚨 O contato "Maria" ficou online em "14/10/2026, 17:05:10".
-💡 Para mais, digite /monitor -l
+🚨 The contact "Maria" came online at "10/14/2026, 5:05:10 PM".
+💡 For more, type /monitor -l
 ```
 
 The date is in São Paulo time and indicates when the bot observed the online presence,
@@ -160,14 +163,14 @@ Raising the limit allows storing more future entries; it doesn't recover the one
 
 ## What the history represents
 
-- The state can be `🟢 online`, `⚫ offline · horário observado`, `❔ sem dados`,
-  `❔ sem horário disponível`, `🔒 horário indisponível` or `⚠️ consulta falhou`.
+- The state can be `🟢 online`, `⚫ offline · time observed`, `❔ no data`,
+  `❔ no time available`, `🔒 time unavailable` or `⚠️ check failed`.
 - The bot prefers the presence collection by LID, keeping indicators and time in the same source.
   It reuses the active subscription and only requests presence if there's no active subscription.
   The monitor doesn't open chats automatically or change the online presence of the bot account.
 - The `chatstate.t` time of an offline state without `deny` is a **candidate** for last seen.
   The technical source and this classification are stored in the database. In the list and in the
-  report, `Origem: presença do WhatsApp · horário não confirmado` appears; compare it with the app.
+  report, `Source: WhatsApp presence · time not confirmed` appears; compare it with the app.
 - Data already in cache can be observed and stored. A distinct time doesn't prove there was
   an update during that check. An online contact doesn't generate a new offline time.
 - `null`, failures and data without a valid time don't generate fictitious entries. A time

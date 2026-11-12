@@ -52,6 +52,15 @@ Sem opções, mostra o estado, o nível, o filtro e o destino ativos. Destinos c
 escritos como `/Nome do Grupo/` ou entre aspas. Nomes ambíguos abrem uma lista para escolher, como
 no `-to` dos outros comandos.
 
+O `-level`, o `-filter` e o `-copy-to` só funcionam com o debug ligado (ou `-on` no mesmo comando);
+senão o bot responde `❌ Ligue o debug primeiro: /debug -on -level 0`. A resposta mostra o estado:
+
+```text
+🪲 Debug Ativado. [DEBUG2]
+🔎 Filter: /sapato/i
+📋 Copy: 👤 Jorge
+```
+
 A cópia envia os logs em lotes, com o prefixo `🪲 [ZapBot log]`. O próprio envio da cópia não gera
 logs adicionais. A fila é limitada e descarta os blocos mais antigos quando fica cheia. Os logs
 aguardam na fila enquanto a conexão com o WhatsApp não está pronta. Se o envio falhar, a cópia pausa

@@ -16,26 +16,26 @@ you need a new invite ([`/join`](join.md)).
 
 ```text
 /leave -l
-👥 *GRUPOS* (2)
+👥 *GROUPS* (2)
 
-1. Família · 12 participantes
-2. Trabalho · 40 participantes
+1. Family · 12 participants
+2. Work · 40 participants
 
-💡 *Dicas*
-/join <link> entra
-/leave <nº|nome> sai
+💡 *Tips*
+/join <link> joins
+/leave <no.|name> leaves
 
 /leave 2
-👋 Saí de 👥 Trabalho
+👋 Left 👥 Work
 
-/leave 2 1 /Grupo L200/  → several at once
+/leave 2 1 /Group L200/  → several at once
 ```
 
-- The numbers are from the last list you saw. A number outside it: `❌ Nº 9 fora da lista; veja os
-  grupos com /leave -l.`
+- The numbers are from the last list you saw. A number outside it:
+  `❌ No. 9 is out of the list; see the groups with /leave -l.`
 - A failure doesn't hold up the others: each one that fails gets its own line
-  (`❌ Não consegui sair de 👥 <grupo>: <motivo>.`).
-- Leaving several, the confirmation lists the groups (`👋 Saí de 2 grupos:`).
+  (`❌ I could not leave 👥 <group>: <reason>.`).
+- Leaving several, the confirmation lists the groups (`👋 Left 2 groups:`).
 
 When leaving the very group where the command was given, the confirmation may not arrive (you're no
 longer there).

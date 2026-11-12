@@ -67,16 +67,15 @@ arguments and aliases. `[]` means something optional; `<>`, a value to fill in; 
 can be repeated. A line starting with `Ex:` is an example command.
 
 Unknown or disabled commands get a reply to the message for the owner, admins and users with
-permission in the chat: `⚠️ Comando '/comando' desconhecido, tente: /help` (this reply is still in
-Portuguese). `/help /xyz`, with a command that doesn't exist, replies
+permission in the chat: `⚠️ Unknown command '/comando', try: /help`. `/help /xyz`, with a command that doesn't exist, replies
 `❌ Command not found: /xyz`.
 
 ## Language
 
 `-h`, `-help` and `/help` follow the `zapbot.lang` setting: `en_US` (English, the default) or
-`pt_BR`. Change it with `/set zapbot.lang pt_BR` (or `/set zapbot.lang=en_US`); it applies right
-away, with no restart. The replies of the other commands are still in Portuguese, being
-migrated.
+`pt_BR`, and so do all the other replies, alerts, errors, dates and numbers of the bot. Change it
+with `/set zapbot.lang pt_BR` (or `/set zapbot.lang=en_US`); it applies right away, with no
+restart. The descriptions `/set` shows for each setting are still in Portuguese.
 
 ```text
 /set zapbot.lang en_US

@@ -11,7 +11,8 @@ entra antes da pergunta; respondendo uma **foto**, ela vai junto e o ChatGPT a v
 [Com documento](#com-documento)); respondendo um **áudio**, ele é transcrito (veja [Com áudio](#com-áudio)); com `-voz`, o texto vira
 uma nota de voz de robô (veja [Voz](#voz--voz)); com `-img` e `-gif`, ele cria uma imagem e um GIF (veja
 [Imagem e GIF](#imagem-e-gif--img--gif)). Enquanto espera a resposta, o bot aparece como "digitando...". Sem
-pergunta, mostra a ajuda.
+pergunta, mostra a ajuda. O modelo responde no idioma do `zapbot.lang` (padrão `en_US`), a não ser
+que você peça outro.
 
 ```text
 /gpt explique o que é SSRF em 3 linhas
@@ -168,12 +169,12 @@ voz** (Ogg/Opus, como as do WhatsApp). O estilo padrão é a voz de robô.
 ```
 
 - **Sem texto digitado**, fala o da mensagem respondida (um áudio é transcrito antes). **Sem resposta**, fala o
-  digitado. **Com os dois**, fala o respondido e o digitado vira o estilo (só o `gpt-4o-mini-tts` segue o estilo). O `-voz` pode
+  digitado. **Com os dois**, fala o respondido e o digitado vira o estilo (só os `gpt-4o-*` seguem o estilo). O `-voz` pode
   vir em qualquer lugar do texto. Até 4096 caracteres.
 - Três settings escolhem como soa: `openai.tts.model` (`gpt-4o-mini-tts`; o id que a sua conta tem),
   `openai.tts.voice` (`onyx`, o padrão, ou `alloy`, `ash`, `ballad`, `coral`, `echo`, `fable`, `nova`,
   `sage`, `shimmer`, `verse`) e `openai.tts.instructions` (o estilo: o padrão pede voz de robô; ex.:
-  `/set openai.tts.instructions Fale como um locutor de rádio animado`). Só o `gpt-4o-mini-tts` segue o estilo:
+  `/set openai.tts.instructions Fale como um locutor de rádio animado`). Só os `gpt-4o-*` seguem o estilo:
   com o `tts-1`, a voz sai normal.
 - A voz é cobrada por caractere, e o texto passa pelo servidor da OpenAI.
 
@@ -194,11 +195,11 @@ Com `-status` (ou `-s`) a resposta ganha um rodapé com o consumo da chamada. Ve
 - **TX/RX**: bytes do corpo enviado e recebido (o JSON, o áudio, a imagem), sem cabeçalhos nem TLS.
 - **Tokens**: os que a OpenAI informa (`usage`): total, entrada (📥) e saída (📤). A voz não informa.
 - **💵 Custo**: estimado (o `~`), tokens × o preço do modelo no setting `openai.pricing`
-  (`modelo=entrada/saída`, dólares por 1M de tokens). Os preços vêm vazios: sem preço, ou sem tokens (a voz), o rodapé mostra `custo n/d`. Para atualizar os preços, `/gpt -prices` (só dono e admins) lê a tabela Standard do site da
+  (`modelo=entrada/saída`, dólares por 1M de tokens). Os preços vêm vazios: sem preço, ou sem tokens (a voz), o rodapé mostra `custo n/d (rode /gpt -prices)`. Para atualizar os preços, `/gpt -prices` (só dono e admins) lê a tabela Standard do site da
   OpenAI e grava no `openai.pricing`, mostrando o que mudou; o que você adicionou à mão e a página não tem
   fica como está. Com a chave da OpenAI configurada, o bot faz isso sozinho a cada 15 dias
   (`openai.pricing.auto`, ligado por padrão; `/set openai.pricing.auto false` para só atualizar à mão).
-  Com os preços de mais de 30 dias, o rodapé avisa (`⚠️ preços de N dias: /gpt -prices`). Se o site mudar de formato, o comando avisa e nada é alterado (use `/set openai.pricing`).
+  Com os preços de mais de 30 dias, o rodapé avisa (`⚠️ preços de N dias: /gpt -prices`, só depois de os preços terem sido atualizados ao menos uma vez). Se o site mudar de formato, o comando avisa e nada é alterado (use `/set openai.pricing`).
 - **🏦 Saldo**: só com a chave de admin e o `openai.credit.total` (como no `-usage`). O gasto vem da Costs API,
   lido a cada 5 minutos (ela atrasa), mais a estimativa das chamadas feitas desde então. Sem o `openai.credit.since`, conta os últimos 180
   dias.
@@ -274,7 +275,8 @@ ainda resta na janela atual e quando reseta, de tokens e de requisições do mod
 - **Sem a chave de admin**: sai só os limites, com a dica de como configurar. **Chave de admin
   recusada** (401 ou 403): o aviso de que a Usage API pede uma Admin key (ou uma chave com o escopo
   Usage em Read), e os limites saem do mesmo jeito.
-- **Sem nenhuma chave**: `⚠️ API key da OpenAI não encontrada`.
+- **Sem nenhuma chave**: `⚠️ API key da OpenAI não encontrada: o /gpt está desativado.` com uma dica.
+- Número de dias inválido: `❌ Use: /gpt -usage [dias] (de 1 a 31; padrão 7)`.
 - Não há limites por projeto aqui: o endpoint `organization/projects/<id>/rate_limits` precisa do id
   do projeto, e os cabeçalhos já mostram o limite que vale para a chave em uso.
 
@@ -352,7 +354,7 @@ O `/gpt` precisa de uma API key da OpenAI (paga por uso: crie em
 2. o setting `openai.api.key`, que dá para trocar pelo WhatsApp sem reiniciar:
    `/set openai.api.key sk-proj-...` (exibido mascarado; `/set -reset openai.api.key` apaga).
 
-Sem nenhuma das duas, perguntas respondem `API key da OpenAI não encontrada`. A consulta e a
+Sem nenhuma das duas, perguntas respondem `⚠️ API key da OpenAI não encontrada: o /gpt está desativado.`. A consulta e a
 configuração do modelo continuam disponíveis. O tempo máximo de espera segue a mesma ordem:
 `OPENAI_TIMEOUT_MS` no `.env` ou o setting `openai.timeout.ms` (padrão 60000, de 5000 a 300000). Um
 valor inválido no `.env` é ignorado (com aviso no log) e vale o setting. Para o modelo, veja

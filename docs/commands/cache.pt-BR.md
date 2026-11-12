@@ -12,12 +12,12 @@ do comando (`/cache -h`) os caminhos aparecem completos (no Docker, `/app/cache`
 | `-media`, `-m` | Apaga as mídias baixadas em `cache/media` (fotos, vídeos, áudios e documentos guardados para recuperar apagadas). As mensagens ficam: uma apagada recuperada depois avisa que o arquivo não está mais disponível |
 
 ```text
-/cache           → lista o conteúdo de cache/ e o total de mensagens
+/cache               → lista o conteúdo de cache/ e o total de mensagens
 /cache -clean        → limpeza normal (retenção)
-/cache -m        → só as mídias
-/cache -c -m     → limpeza normal e as mídias
-/cache -b        → só os backups
-/cache -a        → tudo, inclusive os backups
+/cache -m            → só as mídias
+/cache -c -m         → limpeza normal e as mídias
+/cache -b            → só os backups
+/cache -a            → tudo, inclusive os backups
 ```
 
 Sem opções, mostra os arquivos e diretórios do primeiro nível em ordem alfabética. O tamanho de cada

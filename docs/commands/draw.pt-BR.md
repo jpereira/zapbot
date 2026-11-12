@@ -69,7 +69,8 @@ Numa foto, o GIF a anima; sem pedido, com um movimento sutil e natural.
   (`sendVideoAsGif`), que é como o WhatsApp toca um GIF em loop, igual ao [`/giphy`](giphy.md). Se a
   conversão falhar, o `.gif` chega como documento.
 - No `/gpt`, "gere um gif animado..." respondendo uma foto também vale, sem o `-gif`: o bot reconhece um
-  verbo de criar (gere, crie, faça, anime) junto de gif, animação, animado ou vídeo.
+  verbo de criar (gere, crie, faça, anime, ou generate, create, make, animate, transform) junto
+  de gif, animação, animado ou vídeo (ou animation, animated, video).
 
 ## Modelo que a conta não tem
 

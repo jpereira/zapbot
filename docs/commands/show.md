@@ -14,7 +14,7 @@ Redisplays what's still in the cache: deleted messages (`-d`), edited ones (`-e`
 `cache.editedRetentionDays`), and reactions, 30 days (setting `cache.reactionRetentionDays`).
 Sends are spaced by `show.delayMs` (700 ms) to avoid flooding.
 
-Channel messages (`@newsletter`) are identified with `📰 Canal: <nome>`, in the deleted and edited
+Channel messages (`@newsletter`) are identified with `📰 Channel: <name>`, in the deleted and edited
 message notices and in the `/show` redisplay. `/show -l` marks channels with 📰; they can be
 selected by name, regex or list number, like the other chats. When the channel can't be queried,
 the redisplay uses the saved name. There's no contact name or phone in a channel's items. Statuses
@@ -22,8 +22,7 @@ the redisplay uses the saved name. There's no contact name or phone in a channel
 
 With the private notice turned off (`/set show.alert.deleted off`, `/set show.alert.edited off` or
 `/set show.alert.reaction off`), messages are still stored and `/show` redisplays them normally.
-With
-`/set show.alert.status off`, new status deletions are ignored: they don't generate a notice or
+With `/set show.alert.status off`, new status deletions are ignored: they don't generate a notice or
 enter the deleted list.
 
 | Option | Value | Description |
@@ -34,8 +33,8 @@ enter the deleted list.
 | `-edited`, `-e` | | Edited messages, with the text from before and after. Each edit is an item: a message edited twice shows up twice |
 | `-status`, `-s` | | Deleted statuses: in a private chat, the person's; in your private chat, with no chat, everyone's |
 | `-reaction`, `-r` | | Removed or changed reactions, with the previous reaction (and the new one, if changed) and the text of the message reacted to. See [Reactions](#reactions) |
-| `-list`, `-l` | `[chat]` | Lists all chats with content in the cache (in any chat), numbered for `/show <nº>`, marking the current chat with `← este chat`. With a chat (number, name, `@mention` or `/regex/`), only the ones that match. See [List](#list) |
-| `-query`, `-q` | `<texto\|/regex/flags>` | Searches for the ones that have the text (ignoring case and accents) or that match the regex: in this chat, in the requested chat or, in your private chat, in all of them. Without `-N`: the 5 most recent. See [Search](#search) |
+| `-list`, `-l` | `[chat]` | Lists all chats with content in the cache (in any chat), numbered for `/show <nº>`, marking the current chat with `← this chat`. With a chat (number, name, `@mention` or `/regex/`), only the ones that match. See [List](#list) |
+| `-query`, `-q` | `<text\|/regex/flags>` | Searches for the ones that have the text (ignoring case and accents) or that match the regex: in this chat, in the requested chat or, in your private chat, in all of them. Without `-N`: the 5 most recent. See [Search](#search) |
 | `-flush`, `-f` | | Removes from the cache the deleted ones of this chat or, with `-e`, `-s`, `-r` or chat, whatever was requested (in your private chat, with no chat: from all chats) |
 | `-mask`, `-m` | | Obfuscates phone numbers in the texts and captions of this run. E.g.: `+55219****44` |
 
@@ -57,13 +56,13 @@ your private chat), you get everything together, by date.
 /show -5 -deleted /Carlos$/ → the last 5 deleted of the chat that ends with "Carlos"
 /show -3 -edited @Jorge     → the last 3 edited of the private chat with Jorge
 /show -s Marcio             → Marcio's last deleted status
-/show -3 -r Família         → the last 3 removed or changed reactions in the Família group
+/show -3 -r Family         → the last 3 removed or changed reactions in the Family group
 /show 2                     → from chat #2 of /show -l
 /show -l                    → what's in the cache, by chat
 /show -l /^Maria/          → the same, only for chats that start with "Maria"
 /show -f                    → deletes this chat's deleted ones from the cache
 /show -e -f                 → deletes this chat's edited ones from the cache
-/show -f Trabalho           → deletes everything from the Trabalho chat from the cache
+/show -f Work               → deletes everything from the Work chat from the cache
 /show -q pix                → the deleted ones with "pix" (in your private chat: everything, from all chats)
 /show -e -q "bom dia" -10   → up to 10 edited ones with "bom dia"
 /show -5 -q /pix|boleto/i   → up to 5 deleted ones that match the regex
@@ -74,9 +73,9 @@ line:
 
 ```text
 /show -e
-✏️ Nenhuma mensagem editada neste chat.
-💡 Para ver as de outro chat: /show -l e depois /show -e -N <chat>
-💡 Para buscar em todos: /show -e -q <texto|/regex/>
+✏️ No edited messages in this chat.
+💡 To see the ones from another chat: /show -l and then /show -e -N <chat>
+💡 To search in all of them: /show -e -q <text|/regex/>
 ```
 
 ## The chat
@@ -92,11 +91,11 @@ that have something in the cache, ignoring case and accents:
 
 In a private chat, the statuses are the person's. If more than one chat matches, the bot lists them
 and waits for you to reply with just the number (within 2 minutes; with no reply, the list becomes
-the notice `⌛ Nenhum nº escolhido…`). It works in any chat.
+the notice `⌛ No number chosen…`). It works in any chat.
 
 ## Search
 
-`-q <texto>` filters by the snippet, ignoring case and accents (for edited ones, by the text from
+`-q <text>` filters by the snippet, ignoring case and accents (for edited ones, by the text from
 before or after; for reactions, by the reaction or the text of the message reacted to). With spaces,
 it goes in quotes (`-q "bom dia"`). The scope is the usual one: this chat, the requested chat or, **in
 your private chat, all chats** (and, without `-d`, `-e`, `-s` or `-r`, all types). Without `-N`, you
@@ -107,10 +106,10 @@ without the `i` flag, it's case-sensitive, and accents count. The `g` and `y` fl
 
 ```text
 /show -2 -q pix
-♻️ 2 mensagens apagadas com "pix" (as 2 mais recentes de 4; use -N para mais)
+♻️ 2 deleted messages with "pix" (the 2 most recent of 4; use -N for more)
 
 /show -5 -q /\bpix\b|boleto/i
-♻️ 2 mensagens apagadas com "/\bpix\b|boleto/i"
+♻️ 2 deleted messages with "/\bpix\b|boleto/i"
 ```
 
 `-q` doesn't combine with `-l` or `-f`. Without the text, or with an invalid regex, the bot warns
@@ -118,8 +117,8 @@ you:
 
 ```text
 /show -q
-❌ Informe o que buscar: /show -q <texto|/regex/flags>
-💡 Com espaços, entre aspas: -q "bom dia"
+❌ Say what to search for: /show -q <text|/regex/flags>
+💡 With spaces, use quotes: -q "good morning"
 ```
 
 ## List
@@ -128,22 +127,22 @@ you:
 end come one per line:
 
 ```text
-🗄️ Mensagens no cache
+🗄️ Messages in the cache
 
-🗑️ Apagadas: 3 (1 com mídia · a mais antiga expira em 29 dias)
-✏️ Editadas: 1 (a mais antiga expira em 30 dias)
-📸 Status: 1 (a mais antiga expira em 30 dias)
-😶 Reações: 0
+🗑️ Deleted: 3 (1 with media · the oldest expires in 29 days)
+✏️ Edited: 1 (the oldest expires in 30 days)
+📸 Status: 1 (the oldest expires in 30 days)
+😶 Reactions: 0
 
-1. 👥 Família — 🗑️ 2 (última 30/09/2026, 10:02:11) ← este chat
-2. 👤 Beltrano — 🗑️ 1 · 📸 1 (última 30/09/2026, 09:40:05)
-3. 👥 Trabalho — ✏️ 1 (última 30/09/2026, 11:15:42)
+1. 👥 Family — 🗑️ 2 (last 9/30/2026, 10:02:11) ← this chat
+2. 👤 Beltrano — 🗑️ 1 · 📸 1 (last 9/30/2026, 09:40:05)
+3. 👥 Work — ✏️ 1 (last 9/30/2026, 11:15:42)
 
-💡 /show <nº, nome, @menção ou /regex/> reexibe as de um chat: apagadas, editadas, status e reações juntos.
-   -d, -e, -s e -r filtram
-   -N para mais (máx. 20)
-   -l <chat> lista só os que casam
-   -f remove do cache as deste chat (no seu privado: de todos)
+💡 /show <number, name, @mention or /regex/> shows the ones of a chat: deleted, edited, status and reactions together.
+   -d, -e, -s and -r filter
+   -N for more (max. 20)
+   -l <chat> lists only the matching ones
+   -f removes this chat's from the cache (in your private chat: everyone's)
 ```
 
 With a chat (`/show -l <nº, nome, @menção ou /regex/>`), `-l` shows only the chats that match (all of
@@ -152,17 +151,17 @@ become just theirs. The title shows the chat name when only one matches; with se
 typed. With `@mention`, the person's private chat and statuses are included:
 
 ```text
-/show -l trab
-🗄️ Mensagens no cache de: Trabalho
+/show -l work
+🗄️ Messages in the cache of: Work
 
-🗑️ Apagadas: 0
-✏️ Editadas: 1 (a mais antiga expira em 30 dias)
+🗑️ Deleted: 0
+✏️ Edited: 1 (the oldest expires in 30 days)
 📸 Status: 0
-😶 Reações: 0
+😶 Reactions: 0
 
-3. 👥 Trabalho — ✏️ 1 (última 30/09/2026, 11:15:42)
+3. 👥 Work — ✏️ 1 (last 9/30/2026, 11:15:42)
 
-💡 /show <nº, nome, @menção ou /regex/> reexibe as de um chat: apagadas, editadas, status e reações juntos.
+💡 /show <number, name, @mention or /regex/> shows the ones of a chat: deleted, edited, status and reactions together.
    …
 ```
 
@@ -172,7 +171,7 @@ With a chat and without `-d`, `-e`, `-s` or `-r`, the summary counts each type:
 
 ```text
 /show -5 Beltrano
-🗄️ 2 mensagens (🗑️ 1 · 📸 1) (pedidas 5, encontradas 2)
+🗄️ 2 messages (🗑️ 1 · 📸 1) (asked for 5, found 2)
 💬 Chat: Beltrano
 ```
 
@@ -183,15 +182,15 @@ message arrives, so the ones already stored stay as they were.
 An edited message redisplayed with `-e`:
 
 ```text
-✏️ MENSAGEM EDITADA (1/1)
+✏️ EDITED MESSAGE (1/1)
 
-👥 Grupo: Trabalho
-👤 Nome: Fulano
-📱 Número: +5521999999999
-📅 Enviada em: 30/09/2026, 11:14:03
-✏️ Editada em: 30/09/2026, 11:15:42
-📝 Antes: "reunião às 14h"
-💬 Depois: "reunião às 15h"
+👥 Group: Work
+👤 Name: Fulano
+📱 Number: +5521999999999
+📅 Sent at: 9/30/2026, 11:14:03
+✏️ Edited at: 9/30/2026, 11:15:42
+📝 Before: "meeting at 2pm"
+💬 After: "meeting at 3pm"
 ```
 
 ## Reactions
@@ -204,30 +203,30 @@ reactions (which are anonymous) are ignored. A reaction made before the bot was 
 generate anything when removed: the bot doesn't know what it was.
 
 The text of the message reacted to comes from the cache, as it was at the time; if it had already
-left the cache, the notice says `(fora do cache)`. Each change is an item: changing twice generates
+left the cache, the notice says `(not in the cache)`. Each change is an item: changing twice generates
 two.
 
 ```text
-😶 REAÇÃO REMOVIDA DETECTADA
+😶 REACTION REMOVED DETECTED
 
-👥 Grupo: Família
-👤 Nome: Fulano
-📱 Número: +5521999999999
-📅 Reagiu em: 30/09/2026, 11:14:03
-🗑️ Removida em: 30/09/2026, 11:15:42
-😶 Reação: 😂
-💬 Na mensagem: "o chefe vai adorar"
+👥 Group: Family
+👤 Name: Fulano
+📱 Number: +5521999999999
+📅 Reacted at: 9/30/2026, 11:14:03
+🗑️ Removed at: 9/30/2026, 11:15:42
+😶 Reaction: 😂
+💬 On the message: "the boss will love it"
 ```
 
 When changed, the title and the reaction line show both:
 
 ```text
-🔄 REAÇÃO TROCADA (1/1)
+🔄 REACTION CHANGED (1/1)
 
 …
-🔄 Trocada em: 30/09/2026, 11:15:42
-😶 Reação: 👍 → ❤️
-💬 Na sua mensagem: "chego às 8"
+🔄 Changed at: 9/30/2026, 11:15:42
+😶 Reaction: 👍 → ❤️
+💬 On your message: "I arrive at 8"
 ```
 
 To stop receiving notices from someone (or from a group), use [`/mute -r`](mute.md).

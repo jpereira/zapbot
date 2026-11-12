@@ -4,24 +4,24 @@ Does something at the scheduled time. It has two modes, in the same schedule:
 
 - **Message** (`/cron`, `/agenda`): sends the text as if you typed it, in the current chat or, with
   `-to`, to a contact, a group or a number. Good for birthdays, notices and recurring messages.
-- **Reminder** (`/lembrete`, or any of them with `-lembrete`/ `-lem`): sends `⏰ Lembrete` and the
+- **Reminder** (`/lembrete`, or any of them with `-lembrete`/ `-lem`): sends `⏰ Reminder` and the
   text, replying to the command message, in the current chat (or in your private chat, with `-pv`).
   When you reply to a message, the reminder quotes that message, and its text becomes the reminder
   if you don't write another one.
 
 | Option | Value | Description |
 |---|---|---|
-| `<quando>` | | When: `6h`, `às 18h`, `+2h`, `30m`, `amanhã 9h`, `sexta 18h`, `25/12 10:00`... See [When](#when) |
-| `-to` | `<destino>` | Message mode: sends to a contact (`/Jorge Pereira/`), a mention (`@Fulano Da Silva`), a group (`/Grupo L200/`) or a number (`+5521999999999`) instead of the current chat. Repeat it for several: a single item, which goes out to all destinations. Exact names take priority; several results: you pick from the list. Email doesn't work: the message goes out on WhatsApp. See [Destinations](index.md#destinations-contact-group-number-or-email) |
+| `<when>` | | When: `6h`, `at 18h`, `+2h`, `30m`, `tomorrow 9h`, `friday 18h`, `25/12 10:00`... See [When](#when) |
+| `-to` | `<destination>` | Message mode: sends to a contact (`/Jorge Pereira/`), a mention (`@Fulano Da Silva`), a group (`/Grupo L200/`) or a number (`+5521999999999`) instead of the current chat. Repeat it for several: a single item, which goes out to all destinations. Exact names take priority; several results: you pick from the list. Email doesn't work: the message goes out on WhatsApp. See [Destinations](index.md#destinations-contact-group-number-or-email) |
 | `-lembrete`, `-lem` | | Reminder mode (the same as calling it as `/lembrete`) |
 | `-pv` | | Reminder mode: reminds you in your private chat instead of the current chat |
 | `-repetir`, `-r` | `<diario\|semanal\|mensal>` | Repeats at the same time: every day, every week or every month |
 | `-list`, `-l` | | Lists the reminders and messages, with the full text (the same as the command with nothing) |
-| `-edit` | `<nº>` | Edits item #N: changes the time, the text and/or the `-repetir`. See [Edit, pause and resume](#edit-pause-and-resume) |
-| `-pause` | `<nº...\|all>` | Pauses item #N, several (`-pause 1 3` or `1,3`) or all: they stay in the list but don't go out. If any number doesn't exist, none is paused |
-| `-resume` | `<nº...\|all>` | Resumes paused items: one, several or all |
-| `-rm` | `<nº...\|all>` | Removes item #N from the list, several at once (`-rm 1 3 5` or `-rm 1,3,5`) or all. If any number doesn't exist, none is removed |
-| `-test` | `<nº>` | Builds item #N now, running the `{/comando}` in the text, and shows here how it would go out. See [Commands in the text](#commands-in-the-text) |
+| `-edit` | `<n>` | Edits item #N: changes the time, the text and/or the `-repetir`. See [Edit, pause and resume](#edit-pause-and-resume) |
+| `-pause` | `<n...\|all>` | Pauses item #N, several (`-pause 1 3` or `1,3`) or all: they stay in the list but don't go out. If any number doesn't exist, none is paused |
+| `-resume` | `<n...\|all>` | Resumes paused items: one, several or all |
+| `-rm` | `<n...\|all>` | Removes item #N from the list, several at once (`-rm 1 3 5` or `-rm 1,3,5`) or all. If any number doesn't exist, none is removed |
+| `-test` | `<n>` | Builds item #N now, running the `{/comando}` in the text, and shows here how it would go out. See [Commands in the text](#commands-in-the-text) |
 
 ![Demonstração do /cron](../assets/demo/09-cron.gif)
 
@@ -49,17 +49,17 @@ Does something at the scheduled time. It has two modes, in the same schedule:
 ```
 
 ```text
-📅 Mensagem agendada para sex 02/10 18:00 em 👥 Grupo sobre L200.
+📅 Message scheduled for Fri 02/10 18:00 in 👥 Grupo sobre L200.
 📝 Bom fim de semana!
 
-⏰ Lembrete criado para sex 02/10 18:00 🔁 toda semana neste chat.
+⏰ Reminder created for Fri 02/10 18:00 🔁 every week in this chat.
 📝 enviar o relatório
 ```
 
 At the scheduled time, the message goes out as you wrote it; the reminder goes out like this:
 
 ```text
-⏰ Lembrete
+⏰ Reminder
 
 enviar o relatório
 ```
@@ -70,15 +70,15 @@ full text, as it was registered (the `{/comando}` too), and the numbers are the 
 
 ```text
 /cron -l
-📅 Agenda (3)
+📅 Schedule (3)
 
-1. ⏰ qui 01/10 18:00 — pagar o boleto
+1. ⏰ Thu 01/10 18:00 — pagar o boleto
    → 👥 Família
-2. 📅 sex 02/10 18:00 — Bom fim de semana!
+2. 📅 Fri 02/10 18:00 — Bom fim de semana!
    → 👥 Grupo sobre L200
    → 👥 Família
    → 👤 Lourival Neto
-3. 📅 qui 05/11 09:00 🔁 todo mês ⏸️ pausado — Lembrete: aluguel vence hoje.
+3. 📅 Thu 05/11 09:00 🔁 every month ⏸️ paused — Lembrete: aluguel vence hoje.
    → 👤 Fulano
 ```
 
@@ -138,16 +138,16 @@ example arrives like this, every day at 06:00, in both chats:
 
 Preço do BTC!
 
-🚀 MERCADO CRIPTO
+🚀 CRYPTO MARKET
 ₿ BTC
     💰 $86,906.96  🟢 +3.81%
     ...
 
 Preço do Dólar!
 
-💱 COTAÇÕES (em reais)
-🇺🇸 USD/BRL (Dólar)
-   💰 R$ 5,2000  🟢 +0,50%
+💱 EXCHANGE RATES (in reais)
+🇺🇸 USD/BRL (Dollar)
+   💰 R$ 5.2000  🟢 +0.50%
    ...
 ```
 
@@ -170,7 +170,7 @@ Preço do Dólar!
 - The command is checked on creation (and on `-edit`): one that doesn't exist or doesn't run in
   `/cron` gives an error right away, not at send time.
 - If the command fails at send time, the message goes out anyway, with `⚠️ /crypto falhou` in its
-  place.
+  place (that text is the same in both languages).
 - Outside the braces, nothing runs: a text that starts with `/` is still just text.
 
 A [command alias](alias.md) also works inside the `{...}` (`{/dolar}`, `{/rec 10 20 url}`), with the
@@ -196,7 +196,7 @@ destination or changing the time:
 
 ```text
 /cron -test 1
-🧪 Teste do nº 1 (sai em sex 02/10 09:24 → 👥 ZapBot)
+🧪 Test of no. 1 (goes out at Fri 02/10 09:24 → 👥 ZapBot)
 
 O preço do Bitcoin agora: (a resposta do /crypto BTC naquele momento)
 ```
@@ -208,10 +208,10 @@ as typed (with several lines, if needed). Everything in Brasília time.
 
 | Form | Example | Meaning |
 |---|---|---|
-| Time | `6h`, `07h`, `18:30`, `18h30`, `às 18h` | Today at that time; if it has passed, tomorrow |
-| Duration | `+2h`, `em 2h`, `daqui a 2h`, `30m`, `1d`, `1h30m` | That long from now. Hours alone are a time of day (`6h` is 06:00): for "6 hours from now", use `+6h` or `em 6h` |
-| Today / tomorrow | `hoje 22h`, `amanhã`, `amanhã 10:00` | No time: 9h |
-| Day of the week | `sexta`, `seg 8h`, `sábado 10:00` | The next one (today, if the time hasn't passed yet). No time: 9h |
+| Time | `6h`, `07h`, `18:30`, `18h30`, `at 18h` (or `às 18h`) | Today at that time; if it has passed, tomorrow |
+| Duration | `+2h`, `in 2h`, `30m`, `1d`, `1h30m` (also `em 2h`, `daqui a 2h`) | That long from now. Hours alone are a time of day (`6h` is 06:00): for "6 hours from now", use `+6h` or `in 6h` |
+| Today / tomorrow | `today 22h`, `tomorrow`, `tomorrow 10:00` (or `hoje`, `amanhã`) | No time: 9h |
+| Day of the week | `friday`, `mon 8h`, `saturday 10:00` (or `sexta`, `seg`, `sábado`) | The next one (today, if the time hasn't passed yet). No time: 9h |
 | Date | `25/12`, `25/12 10:00`, `25/12/2027 10h` | No year: the next time the date comes around (a 2-digit year also works: `25/12/27`). No time: 9h |
 
 Up to 366 days ahead. `-repetir mensal` (or `-r mensal`) keeps the day of the month: an item on the
@@ -221,7 +221,7 @@ Up to 366 days ahead. `-repetir mensal` (or `-r mensal`) keeps the day of the mo
 
 - Everything is stored in the `schedules` table, survives restarts and is checked every 30 s. If the
   bot is down at the scheduled time, the item goes out when it comes back (the reminder says so:
-  `(atrasado: era para ...)`). A repeating one goes out once and moves on to the next time.
+  `(late: was due ...)`). A repeating one goes out once and moves on to the next time.
 - A message that starts with `/` is sent, but never runs as a command (only the `{/comando}` run;
   see [Commands in the text](#commands-in-the-text)).
 - `-to` is for message mode only; `-pv`, for reminders only. With several `-to`, it's a single item,
@@ -229,4 +229,4 @@ Up to 366 days ahead. `-repetir mensal` (or `-r mensal`) keeps the day of the mo
   repeated counts once. If sending fails for one destination, the others receive it anyway. `-edit`,
   `-pause` and `-rm` apply to the whole item.
 - The limit is 50 items by default, adding up both types (setting `agenda.max`, from 1 to 500).
-- The `(atrasado: ...)` notice only appears when it goes out more than 5 minutes late.
+- The `(late: ...)` notice only appears when it goes out more than 5 minutes late.

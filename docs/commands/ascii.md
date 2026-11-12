@@ -55,7 +55,7 @@ Long texts wrap into several rows of letters, separated by a blank line:
 
 Errors: no text (and no replied message) shows the usage; more than 40 characters, `-width` outside
 10 to 60 and `-char` with more than one character are rejected; a text with nothing drawable
-(e.g. `#$%`) replies `❌ Nada para desenhar`.
+(e.g. `#$%`) replies `❌ Nothing to draw: use letters, numbers or ! ? . , : - + _ /`.
 
 It doesn't depend on an external service and can be used inside an [`/alias`](alias.md) or
 [`/cron`](cron.md) with `{/ascii Hi}`. Inside them the `-width` and `-char` options are not

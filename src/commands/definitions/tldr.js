@@ -15,7 +15,7 @@ module.exports = {
         {
             opts: ['chat', 'c'],
             values: ['<name>'],
-            desc: 'Summarizes another chat, as in /show: a name (all the words, accent-insensitive), /regex/ or @contact. If several match, lists them and waits for the number.',
+            desc: 'Summarizes another chat: the group or contact name, /regex/ or @contact. If several match, lists them and waits for the number.',
             outrosChats: true
         },
         {

@@ -14,7 +14,7 @@ ninguém, mostra a pessoa do privado (no seu próprio privado, o seu perfil) ou,
 | Opção | Valor | Descrição |
 |---|---|---|
 | *(nenhuma)* | `[/contato/\|@menção\|+número]...` | As pessoas, separadas por espaço: contato da agenda pelo nome ou parte dele (nome com espaço entre `/.../` ou aspas; vários que servem: você escolhe na lista), alguém mencionado com `@` ou um número. Sem ninguém, a pessoa do privado (no seu próprio, o seu perfil), a foto do grupo no grupo, ou o de quem escreveu a mensagem respondida |
-| `-mask`, `-m` | | Ofusca telefones na saída desta execução. Ex.: `+55219****44` |
+| `-mask`, `-m` | | Ofusca telefones (10 a 15 dígitos seguidos) na saída desta execução, mantendo os cinco primeiros e os dois últimos. Ex.: `+55219****44` |
 
 A pessoa é buscada como no `-to` ([Destinos](index.md#destinos-contato-grupo-número-ou-e-mail)),
 só entre os contatos: grupos são recusados.

@@ -4,11 +4,11 @@ Runs several commands from a single message, one after the other, and replies wi
 to send at once what you'd otherwise send in several blocks (e.g. multiple notes through your
 [alias](alias.md)). It also works when replying to a message that contains the commands.
 
-![Demonstração do /batch](../assets/demo/12-batch-alias.gif)
+![/batch demo](../assets/demo/12-batch-alias.gif)
 
 ```text
 /batch [-stop|-s] [-dry|-d] [-quiet|-q]
-<comandos, nas linhas de baixo>
+<commands, on the lines below>
 ```
 
 | Option | Value | Description |
@@ -52,10 +52,10 @@ With `-dry` (or `-d`), nothing runs; it only shows how it split things:
 
 ```text
 /batch -dry
-📦 BATCH (2) · só a separação, nada executado
+📦 BATCH (2) · only the split, nothing executed
 
-1. /ideia Preciso ver sobre isso (+2 linhas)
-2. /ideia Quando puder ler o link sobre isso. (+1 linhas)
+1. /ideia Preciso ver sobre isso (+2 lines)
+2. /ideia Quando puder ler o link sobre isso. (+1 lines)
 ```
 
 - Each block goes through the same path as a normal message (alias, `$1`, options). An alias with
