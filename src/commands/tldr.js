@@ -22,6 +22,7 @@ const { plural, withoutAccents } = require('../util/format');
  * /tldr 300          → the last 300 (max. setting 'tldr.maxMsgs')
  * /tldr -c família   → from another chat, looked up by name
  * /tldr -pv          → in your private chat instead of exposing it in the current chat
+ * (replying)      → from the replied message until now (the typed period or -c win)
  * Uses the text already stored in the database: regular messages stay 68 h. They stay
  * except the commands, the deleted ones and the media without a caption.
  */
@@ -105,14 +106,22 @@ async function audioTranscription(r) {
     }
 }
 
-async function summarize({ msg, opts, chatId, chatName }) {
+async function summarize({ msg, opts, chatId, chatName, quotedMsg }) {
     if (!keyOpenAi()) {
         await msg.reply(WITHOUT_KEY('/tldr'));
         return;
     }
 
     const extras = opts.argv.filter(Boolean);
-    const period = extras.length ? readPeriod(extras.join('')) : { n: SUMMARY_DEFAULT };
+    let period = extras.length ? readPeriod(extras.join('')) : { n: SUMMARY_DEFAULT };
+    const notices = [];
+
+    // Replying to a message (without a typed period or -c): summarizes from it until now
+    const sinceAReply = !extras.length && !opts.opt.chat && quotedMsg?.timestamp;
+    if (sinceAReply) {
+        period = { ms: Math.max(Date.now() - quotedMsg.timestamp * 1000, 0) };
+        notices.push('a partir da mensagem respondida');
+    }
 
     if (!period) {
         await msg.reply('```' + getCommandSyntax('/tldr') + '```');
@@ -120,7 +129,6 @@ async function summarize({ msg, opts, chatId, chatName }) {
     }
 
     const max = getSetting('tldr.maxMsgs');
-    const notices = [];
 
     if (period.n > max) {
         notices.push(`limitado a ${max} mensagens (setting tldr.maxMsgs)`);
@@ -168,6 +176,8 @@ async function summarize({ msg, opts, chatId, chatName }) {
           LIMIT ?`,
         params
     )).reverse();
+
+    if (sinceAReply && rows.length >= max) notices.push(`só as ${max} mais recentes (setting tldr.maxMsgs)`);
 
     // The audios (the AUDIOS_MAX most recent) become text; whatever could not be transcribed leaves the summary
     const audios = rows.filter(r => ['audio', 'ptt'].includes(r.type)).slice(-AUDIOS_MAX);

@@ -997,6 +997,22 @@ describe('/tldr (/resumo)', () => {
         assert.doesNotMatch(textAlt, /ping|segredo/);
     });
 
+    test('respondendo uma mensagem: resume dela até agora; o período digitado ou o -c ganham', async () => {
+        await chat([['velha 1'], ['velha 2'], ['velha 3']], 300);
+        await chat([['nova 1'], ['nova 2'], ['nova 3']], 30);
+        const quoted = bot.createMessage({ texto: 'onde parei', de: bot.OTHERAlt.jid, timestamp: Math.floor((Date.now() - 60 * 60_000) / 1000) });
+
+        const [r] = await bot.replyAlt('/tldr', { citada: quoted });
+        assert.match(r, /\(a partir da mensagem respondida\)/);
+        const textAlt = network.chamadas.at(-1).cfg.body.messages[1].content;
+        assert.doesNotMatch(textAlt, /velha/);
+        assert.match(textAlt, /nova 1[\s\S]*nova 3/);
+
+        // With a typed period, the replied one does not count
+        await bot.replyAlt('/tldr 400m', { citada: quoted });
+        assert.match(network.chamadas.at(-1).cfg.body.messages[1].content, /velha 1/);
+    });
+
     test('período: 2h pega só as recentes; N limita a quantidade', async () => {
         await chat([['velha 1'], ['velha 2'], ['velha 3']], 300);
         await chat([['nova 1'], ['nova 2'], ['nova 3']], 30);
