@@ -14,11 +14,12 @@ const { WITHOUT_KEY, keyOpenAi, errorOpenAi, measureConsumption, askOnChat, cons
 const { getSetting } = require('../settings');
 const { mediaIsPath } = require('../util/files');
 const { plural, withoutAccents } = require('../util/format');
+const { readDuration } = require('../util/when');
 
 /*
  * /tldr: summarizes a chat's conversation through ChatGPT (same key and model as /gpt).
  * /tldr              → the last 100 messages of this chat
- * /tldr 2h | 30m     → those of the last 2 hours | 30 minutes (the "-" in front is optional)
+ * /tldr 2h | 1d     → those of the last period, as in /cron: 30m, 2h, 1d, 1h30m (the "-" in front is optional)
  * /tldr 300          → the last 300 (max. setting 'tldr.maxMsgs')
  * /tldr -c família   → from another chat, looked up by name
  * /tldr -pv          → in your private chat instead of exposing it in the current chat
@@ -44,16 +45,27 @@ const AUDIO_MAX_BYTES = 25 * 1024 * 1024;
 const AUDIO_EXTENSIONS = new Set(['ogg', 'oga', 'opus', 'mpeg', 'mp3', 'mp4', 'm4a', 'wav', 'webm', 'flac']);
 
 /**
- * Requested period: "2h", "-2h", "30m" (time window) or "300", "-300" (amount).
+ * Requested period, with the same duration as /cron: "30m", "2h", "1d", "1h30m", "2d4h" (time window, the "-"
+ * in front is optional) or "300" (number of messages).
  * @returns {{ ms?: number, n?: number } | null} null if the text is not a period
  */
 function readPeriod(textAlt) {
-    const m = String(textAlt).trim().match(/^-?(\d+)\s*(h|m|min)?$/i);
-    if (!m || Number(m[1]) < 1) return null;
+    const t = String(textAlt).trim().toLowerCase().replace(/^-/, '').replace(/\s+/g, '');
+    if (/^\d+$/.test(t)) return Number(t) >= 1 ? { n: Number(t) } : null;
 
-    const n = Number(m[1]);
-    if (!m[2]) return { n };
-    return { ms: n * (m[2].toLowerCase() === 'h' ? 3600_000 : 60_000) };
+    const ms = readDuration(t);
+    return ms ? { ms } : null;
+}
+
+// "2 horas", "1 dia e 12 horas", "30 minutos"
+function byLong(ms) {
+    const minutes = Math.round(ms / 60_000);
+    const partsAlt = [
+        [Math.floor(minutes / 1440), 'dia', 'dias'],
+        [Math.floor((minutes % 1440) / 60), 'hora', 'horas'],
+        [minutes % 60, 'minuto', 'minutos']
+    ].filter(([n]) => n).map(([n, um, several]) => plural(n, um, several));
+    return partsAlt.length > 1 ? `${partsAlt.slice(0, -1).join(', ')} e ${partsAlt.at(-1)}` : partsAlt[0];
 }
 
 // Chats with messages in the database whose name has all the words of the search
@@ -136,7 +148,7 @@ async function summarize({ msg, opts, chatId, chatName, quotedMsg }) {
     }
 
     if (period.ms > MAX_DELETE_WINDOW) {
-        notices.push('as mensagens comuns ficam só 68 h no banco');
+        notices.push(`as mensagens comuns ficam só ${byLong(MAX_DELETE_WINDOW)} (68 h) no banco`);
         period.ms = MAX_DELETE_WINDOW;
     }
 
@@ -205,7 +217,14 @@ async function summarize({ msg, opts, chatId, chatName, quotedMsg }) {
     const first = rows[rows.length - linesAlt.length].timestamp;
     const last = rows[rows.length - 1].timestamp;
 
-    const notice = await msg.reply('⏳ Processando o /tldr, aguarde.', null, { linkPreview: false });
+    // What is being summarized: the amount, the time window or "since the replied message"
+    const messages = plural(linesAlt.length, 'mensagem', 'mensagens');
+    const scope = sinceAReply
+        ? `das ${messages} de ${nameAlt} desde a mensagem respondida (há ${byLong(period.ms)})`
+        : period.ms
+            ? `das ${messages} de ${nameAlt} do período de ${byLong(period.ms)}`
+            : `das últimas ${messages} de ${nameAlt}`;
+    const notice = await msg.reply(`⏳ Processando o /tldr ${scope}, aguarde.`, null, { linkPreview: false });
     try {
         const summary = await askOnChat({
             cmd: '/tldr',

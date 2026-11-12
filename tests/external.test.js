@@ -1145,12 +1145,40 @@ describe('/tldr (/resumo)', () => {
         network.responder('post', 'api.openai.com', { choices: [{ message: { content: '• Combinaram o almoço de domingo.' } }] });
     });
 
-    test('lerPeriodo: horas, minutos ou quantidade, com ou sem "-"', () => {
+    test('lerPeriodo: a duração do /cron (30m, 2h, 1d, 1h30m, 2d4h) ou a quantidade, com ou sem "-"', () => {
         assert.deepEqual(readPeriod('2h'), { ms: 2 * 3600_000 });
         assert.deepEqual(readPeriod('-30m'), { ms: 30 * 60_000 });
+        assert.deepEqual(readPeriod('45min'), { ms: 45 * 60_000 });
+        assert.deepEqual(readPeriod('1d'), { ms: 24 * 3600_000 });
+        assert.deepEqual(readPeriod('-1h30m'), { ms: 90 * 60_000 });
+        assert.deepEqual(readPeriod('2d4h'), { ms: (2 * 24 + 4) * 3600_000 });
+        assert.deepEqual(readPeriod('1h 30m'), { ms: 90 * 60_000 });
         assert.deepEqual(readPeriod('-300'), { n: 300 });
+        assert.deepEqual(readPeriod('30'), { n: 30 });
         assert.equal(readPeriod('0'), null);
+        assert.equal(readPeriod('0h'), null);
         assert.equal(readPeriod('ontem'), null);
+    });
+
+    test('o aviso de processamento diz o que está sendo resumido (quantidade, janela de tempo ou desde a resposta)', async () => {
+        await chat([['a'], ['b'], ['c'], ['d']], 30);
+        // The notice becomes the summary (WhatsApp edits the message): its text is read when the OpenAI call goes out
+        let visto = null;
+        network.responder('post', 'api.openai.com', () => {
+            visto = bot.client.enviadas.at(-1).content;
+            return { choices: [{ message: { content: '• Resumo.' } }] };
+        });
+        const notice = async (commandAlt) => {
+            await bot.executar(commandAlt);
+            return visto;
+        };
+
+        assert.equal(await notice('/tldr'), '⏳ Processando o /tldr das últimas 4 mensagens de Família, aguarde.');
+        assert.equal(await notice('/tldr 3'), '⏳ Processando o /tldr das últimas 3 mensagens de Família, aguarde.');
+        assert.equal(await notice('/tldr 2h'), '⏳ Processando o /tldr das 4 mensagens de Família do período de 2 horas, aguarde.');
+        assert.equal(await notice('/tldr 1d'), '⏳ Processando o /tldr das 4 mensagens de Família do período de 1 dia, aguarde.');
+        assert.equal(await notice('/tldr 1h30m'), '⏳ Processando o /tldr das 4 mensagens de Família do período de 1 hora e 30 minutos, aguarde.');
+        assert.equal(await notice('/tldr 30d'), '⏳ Processando o /tldr das 4 mensagens de Família do período de 2 dias e 20 horas, aguarde.');
     });
 
     test('opção desconhecida na 1ª palavra (/tldr -price): erro com a dica do -h, sem chamar a OpenAI; -2h continua valendo', async () => {
@@ -1212,7 +1240,7 @@ describe('/tldr (/resumo)', () => {
         await chat([['a'], ['b'], ['c']]);
         await bot.setSetting('tldr.maxMsgs', 10);
         assert.match((await bot.replyAlt('/tldr 50'))[0], /_\(limitado a 10 mensagens \(setting tldr\.maxMsgs\)\)_/);
-        assert.match((await bot.replyAlt('/tldr 100h'))[0], /_\(as mensagens comuns ficam só 68 h no banco\)_/);
+        assert.match((await bot.replyAlt('/tldr 100h'))[0], /_\(as mensagens comuns ficam só 2 dias e 20 horas \(68 h\) no banco\)_/);
     });
 
     test('-c pelo nome e -pv', async () => {
