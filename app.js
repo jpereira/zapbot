@@ -103,6 +103,7 @@ const { iniciarAgenda } = require('./src/agenda');
 const { iniciarAlertasDePreco } = require('./src/alertasPreco');
 const { iniciarNotas } = require('./src/notas');
 const { iniciarBackup } = require('./src/backup');
+const { iniciarPrecosAutomaticos } = require('./src/openaiChat');
 const { iniciarAlertasDefi } = require('./src/defi/alertas');
 const { iniciarHeartbeat } = require('./src/heartbeat');
 const { iniciarLimpezaPeriodica } = require('./src/limpeza');
@@ -118,6 +119,7 @@ iniciarNotas();
 iniciarAlertasDefi();
 iniciarAgenda();
 iniciarBackup();
+iniciarPrecosAutomaticos();
 iniciarMonitor();
 
 iniciarBot();

@@ -10,7 +10,7 @@ const { getCommandSyntax } = require('./base');
 const { MAX_DELETE_WINDOW } = require('../constantes');
 const { idsDoChatAtual } = require('../contatos');
 const { dbAll, dbPronto, dbRun } = require('../db');
-const { SEM_CHAVE, chaveOpenAi, erroOpenAi, perguntarAoChat, transcreverAudio } = require('../openaiChat');
+const { SEM_CHAVE, chaveOpenAi, erroOpenAi, medirConsumo, perguntarAoChat, rodapeDeConsumo, transcreverAudio } = require('../openaiChat');
 const { getSetting } = require('../settings');
 const { isCaminhoDeMidia } = require('../util/arquivos');
 const { plural, semAcentos } = require('../util/formatar');
@@ -105,7 +105,7 @@ async function transcricaoDoAudio(r) {
     }
 }
 
-async function cmdTldr({ msg, opts, chatId, chatName }) {
+async function resumir({ msg, opts, chatId, chatName }) {
     if (!chaveOpenAi()) {
         await msg.reply(SEM_CHAVE('/tldr'));
         return;
@@ -206,7 +206,7 @@ async function cmdTldr({ msg, opts, chatId, chatName }) {
         const texto = `🤖 *Resumo de ${nome}*\n` +
             `_${plural(linhas.length, 'mensagem', 'mensagens')} · ${hora(primeira)} a ${hora(ultima)}_` +
             (avisos.length ? `\n_(${avisos.join('; ')})_` : '') +
-            `\n\n${resumo}`;
+            `\n\n${resumo}${await rodapeDeConsumo()}`;
 
         if (opts.opt.pv) {
             await concluirAviso(msg, aviso, '🤖 Resumo enviado no seu privado.');
@@ -218,6 +218,9 @@ async function cmdTldr({ msg, opts, chatId, chatName }) {
         await concluirAviso(msg, aviso, erroOpenAi(err, '/tldr'));
     }
 }
+
+// O -status|-s (ou o setting openai.status) mostra o consumo da chamada no rodapé
+const cmdTldr = (ctx) => medirConsumo(ctx.opts?.given.has('status'), () => resumir(ctx));
 
 module.exports = {
     cmdTldr,

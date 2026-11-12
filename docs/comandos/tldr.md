@@ -13,6 +13,7 @@ Markdown para a formatação do WhatsApp do `/gpt` (veja [Formatação no WhatsA
 |---|---|---|
 | `[período]` | | `2h` ou `30m`: as mensagens desse tempo para cá; `300`: as últimas 300 (limite padrão 500, configurável até 2000 em `tldr.maxMsgs`). Padrão: as últimas 100. O `-` na frente é opcional (`-2h`) |
 | `-chat`, `-c` | `<nome>` | Resume outro chat, buscado pelo nome: todas as palavras, em qualquer ordem, sem diferenciar acentos. Nome com espaço vai entre aspas: `-c "trabalho rio"` |
+| `-status`, `-s` | | Acrescenta no rodapé o consumo da chamada: bytes TX/RX e tokens (veja [Status](gpt.md#status--status)) |
 | `-pv` | | Envia no seu privado em vez de expor no chat atual |
 
 ```text

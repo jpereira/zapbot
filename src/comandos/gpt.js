@@ -14,12 +14,12 @@ const { getCommandSyntax } = require('./base');
 const { BIN_FFMPEG, TMP_DIR } = require('../constantes');
 const { OPENAI_MODELOS } = require('../openai');
 const {
-    SEM_CHAVE, chaveAdminOpenAi, chaveOpenAi, consultarConsumo, consultarCustos, consultarLimites, consultarServicos, erroOpenAi, gerarImagem,
-    listarModelos, perguntarAoChat, sintetizarVoz, transcreverAudio, VOZ_MAX_CARACTERES
+    SEM_CHAVE, atualizarPrecos, chaveAdminOpenAi, chaveOpenAi, consultarConsumo, consultarCustos, consultarLimites, consultarServicos, erroOpenAi, gerarImagem,
+    listarModelos, medirConsumo, perguntarAoChat, rodapeDeConsumo, sintetizarVoz, transcreverAudio, VOZ_MAX_CARACTERES
 } = require('../openaiChat');
 const { envOuSetting, getSetting, setSetting } = require('../settings');
 const { capturarSaida, runCommand } = require('../util/processos');
-const { fmtNum } = require('../util/formatar');
+const { fmtNum, plural } = require('../util/formatar');
 
 /*
  * /gpt: pergunta ao ChatGPT (a chamada e os erros ficam no openaiChat.js).
@@ -257,17 +257,23 @@ async function responderAoAudio(msg, { audio, erro }, args) {
             return;
         }
         if (soTranscrever(args)) {
-            await concluirAviso(msg, aviso, `🤖 *Transcrição:*\n${transcricao}`);
+            await concluirAviso(msg, aviso, `🤖 *Transcrição:*\n${transcricao}${await rodapeDeConsumo()}`);
             return;
         }
 
         const resposta = await perguntarAoChat({
             cmd: '/gpt', sistema: GPT_INSTRUCOES, texto: `${args.trim()}\n\nTranscrição do áudio:\n${transcricao}`
         });
-        await concluirAviso(msg, aviso, `🤖 ${resposta}`);
+        await concluirAviso(msg, aviso, `🤖 ${resposta}${await rodapeDeConsumo()}`);
     } catch (err) {
         await concluirAviso(msg, aviso, (transcrevendo && await erroDoModelo(err, MODELO_DE_AUDIO)) || erroOpenAi(err, '/gpt'));
     }
+}
+
+// Mídia (voz, imagem, GIF) não tem rodapé: com o status ligado, o consumo vai numa mensagem à parte
+async function responderConsumo(msg) {
+    const rodape = (await rodapeDeConsumo()).trim();
+    if (rodape) await msg.reply(rodape);
 }
 
 // Para o erro de modelo: o setting, o filtro da lista de modelos da conta e o nome do recurso
@@ -351,6 +357,7 @@ async function falarTexto(msg, args, quotedMsg) {
         const voz = await sintetizarVoz({ cmd: '/gpt', texto, estilo });
         await msg.reply(new MessageMedia('audio/ogg; codecs=opus', voz.toString('base64'), 'voz.ogg'), null, { sendAudioAsVoice: true });
         await apagarAviso(aviso);
+        await responderConsumo(msg);
     } catch (err) {
         await concluirAviso(msg, aviso, (await erroDoModelo(err, MODELO_DE_VOZ)) || erroOpenAi(err, '/gpt'));
     }
@@ -395,6 +402,7 @@ async function criarImagem(msg, args, quotedMsg) {
         const b64 = await gerarImagem({ cmd: '/gpt', prompt: pedido, imagem: foto ? await fotoEmPng(foto) : null });
         await msg.reply(new MessageMedia('image/png', b64, 'imagem.png'));
         await apagarAviso(aviso);
+        await responderConsumo(msg);
     } catch (err) {
         await concluirAviso(msg, aviso, (await erroDoModelo(err, MODELO_DE_IMAGEM)) || erroOpenAi(err, '/gpt'));
     }
@@ -444,6 +452,7 @@ async function criarGif(msg, args, quotedMsg) {
         const mp4 = await gifParaMp4(Buffer.from(b64, 'base64'));
         await msg.reply(new MessageMedia('video/mp4', mp4.toString('base64'), 'gif.mp4'), null, { sendVideoAsGif: true });
         await apagarAviso(aviso);
+        await responderConsumo(msg);
     } catch (err) {
         const mensagem = err.response?.data?.error?.message ?? '';
         await concluirAviso(msg, aviso, await erroDoModelo(err, MODELO_DE_IMAGEM) ||
@@ -640,7 +649,29 @@ async function mostrarUso(msg, diasDigitado) {
     await msg.reply(partes.join('\n\n'));
 }
 
-async function cmdGpt({ msg, args, opts, quotedMsg, admin }) {
+/*
+ * /gpt -prices: busca a tabela de preços no site da OpenAI e atualiza o openai.pricing (o custo estimado
+ * do -status). Os modelos que você adicionou à mão e a página não tem ficam como estão.
+ */
+async function mostrarPrecos(msg) {
+    const aviso = await avisarProcessando(msg);
+    try {
+        const { novos, mudados, iguais } = await atualizarPrecos({ cmd: '/gpt' });
+        const linhas = [
+            ...mudados.map(m => `🔄 ${m.modelo}: ${m.antes} → *${m.depois}*`),
+            ...novos.map(m => `➕ ${m}`)
+        ];
+        const resumo = linhas.length
+            ? `✅ *Preços atualizados* (${plural(mudados.length, 'alterado', 'alterados')}, ${plural(novos.length, 'novo', 'novos')}, ${iguais} sem mudança)\n${linhas.slice(0, 20).join('\n')}` +
+                (linhas.length > 20 ? `\n_…e mais ${linhas.length - 20}_` : '')
+            : `✅ Os ${iguais} preços já estão em dia.`;
+        await concluirAviso(msg, aviso, `${resumo}\n💡 _Dólares por 1M de tokens, entrada/saída (openai.pricing)._`);
+    } catch (err) {
+        await concluirAviso(msg, aviso, `❌ Não consegui atualizar os preços: ${err.message}`);
+    }
+}
+
+async function perguntar({ msg, args, opts, quotedMsg, admin }) {
     if (opts?.given.has('usage')) {
         await mostrarUso(msg, opts.opt.usage);
         return;
@@ -648,6 +679,11 @@ async function cmdGpt({ msg, args, opts, quotedMsg, admin }) {
 
     if (opts?.given.has('model')) {
         await trocarModelo(msg, opts.opt.model, opts);
+        return;
+    }
+
+    if (opts?.given.has('prices')) {
+        await mostrarPrecos(msg);
         return;
     }
 
@@ -717,11 +753,14 @@ async function cmdGpt({ msg, args, opts, quotedMsg, admin }) {
         });
 
         // O 🤖 na frente também garante que a resposta nunca começa com "/" (ver marcarEnviadaPeloBot)
-        await concluirAviso(msg, aviso, `🤖 ${resposta}`);
+        await concluirAviso(msg, aviso, `🤖 ${resposta}${await rodapeDeConsumo()}`);
     } catch (err) {
         await concluirAviso(msg, aviso, erroOpenAi(err, '/gpt'));
     }
 }
+
+// O -status|-s (ou o setting openai.status) mostra o consumo da chamada no rodapé
+const cmdGpt = (ctx) => medirConsumo(ctx.opts?.given.has('status'), () => perguntar(ctx));
 
 module.exports = {
     cmdGpt

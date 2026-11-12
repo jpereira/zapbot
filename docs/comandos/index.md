@@ -149,7 +149,7 @@ responde `⛔ Apenas o dono do bot (ou um admin) pode ver outros chats.`
 |---|---|---|
 | `/cotacao` |  | `-add`, `-del` |
 | `/crypto` |  | `-add`, `-del` |
-| `/gpt` |  | `-model`, `-img`, `-gif`, `-audio`, `-usage` |
+| `/gpt` |  | `-model`, `-img`, `-gif`, `-audio`, `-prices`, `-usage` |
 | `/profile` | `[/contato/\|@menção\|+número]...` |  |
 | `/show` | `-list`, `chat` | `-flush` |
 | `/stats` | `-list`, `-me`, `</chat/>` | `-flush`, `-flush-all` |
