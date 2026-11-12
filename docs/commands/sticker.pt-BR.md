@@ -16,6 +16,8 @@ vídeo/GIF ou numa imagem, e devolve a figurinha. Nome e autor da figurinha vêm
 O vídeo vira um quadrado 512x512 enquadrado no meio, com no máximo seis segundos: sem `-es`, os seis
 segundos a partir do `-ss` (ou do início). Enquanto baixa e converte, o bot mostra
 "⏳ Processando seu sticker, aguarde.", que vira "✅ Sticker criado com sucesso!" (ou o erro).
+A figurinha animada precisa caber em 500 KB (limite do WhatsApp): o bot tenta de novo com menos
+qualidade e, se ainda não couber, sugere um trecho menor com `-ss` e `-es`.
 
 ![Demonstração do /sticker](../assets/demo/05-sticker.gif)
 

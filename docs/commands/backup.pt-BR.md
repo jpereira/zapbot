@@ -28,7 +28,7 @@ Remover contatos ou reduzir o histórico local não altera os backups já existe
 /backup -s -to eu@gmail.com             → o mais recente, por e-mail
 /backup -s 2 -to email                  → o nº 2, para o QRCODE_EMAIL_SMTP_TO
 /backup -s -to /Jorge Pereira/ -sim     → no privado de um contato
-/backup -s -to @Fulano Da Silva -sim    → num grupo, mencionando a pessoa
+/backup -s -to @Fulano Da Silva -sim    → no privado da pessoa mencionada
 /backup -s -to email -to /Jorge Pereira/ -sim  → por e-mail e no privado do contato
 /backup -rm 3                           → apaga o nº 3
 ```
@@ -62,12 +62,15 @@ Remover contatos ou reduzir o histórico local não altera os backups já existe
 1. qui 01/10 03:00 · 1.10 MB · automático
 2. qua 30/09 15:20 · 1.00 MB · manual
 3. qua 30/09 03:00 · 1.00 MB · automático
+
+💡 /backup -i <nº> mostra as entradas
+💡 /backup -r <nº> restaura
 ```
 
 ## Backup automático
 
-Todo dia, a partir das 3h de Brasília (setting `backup.hour`, de 0 a 23), o bot cria um backup. Se estiver fora
-do ar nesse horário, o backup sai assim que ele voltar, no mesmo dia. Desligue com
+Todo dia, a partir das 3h de Brasília (setting `backup.hour`, de 0 a 23), o bot cria um backup. Se
+estiver fora do ar nesse horário, o backup sai assim que ele voltar, no mesmo dia. Desligue com
 `/set backup.enabled off`.
 
 A setting `backup.to` define para onde enviar o arquivo diário **além de salvar localmente**. O
@@ -90,8 +93,8 @@ abre uma lista de escolha. Para uma pessoa mencionada num comando, configure seu
 setting. E-mails usam o SMTP do bot e o mesmo limite de 20 MB do envio manual. Backups manuais e os
 de antes de restaurar não são enviados por essa setting.
 
-Ficam os 7 automáticos mais recentes (setting `backup.keep`, de 1 a 90); os mais antigos são apagados a cada
-backup novo. A mesma conta vale para os backups "antes de restaurar". Os **manuais** (`-now`) nunca
+Ficam os 7 automáticos mais recentes (setting `backup.keep`, de 1 a 90); os mais antigos são
+apagados a cada backup novo. A mesma conta vale para os backups "antes de restaurar". Os **manuais** (`-now`) nunca
 são apagados sozinhos.
 
 Se o backup diário falhar (ex.: disco cheio), o erro vai para o log e para os
@@ -112,8 +115,8 @@ As imagens do `/notes` (`cache/notes`) entram num arquivo à parte, só quando e
 junto no `-r`. O `-send` e o backup automático enviam só o banco (as imagens podem passar do limite
 de anexo).
 
-**As outras mídias (`cache/media`) não entram**: depois de uma restauração, uma apagada com mídia que não
-está mais no disco avisa que o arquivo não está disponível. A sessão do WhatsApp (volume
+**As outras mídias (`cache/media`) não entram**: depois de uma restauração, uma apagada com mídia
+que não está mais no disco avisa que o arquivo não está disponível. A sessão do WhatsApp (volume
 `wwebjs_auth`) também não.
 
 Cada backup são dois ou três arquivos em `cache/backups/`, no volume `app_cache`:

@@ -22,7 +22,7 @@ const { readDuration } = require('../util/when');
  * /tldr              → the last 100 messages of this chat
  * /tldr 2h | 1d     → those of the last period, as in /cron: 30m, 2h, 1d, 1h30m (the "-" in front is optional)
  * /tldr 300          → the last 300 (max. setting 'tldr.maxMsgs')
- * /tldr -c família   → from another chat: name, /regex/, @contact (like /show)
+ * /tldr -c família   → from another chat: name, /regex/ or @contact
  * /tldr -pv          → in your private chat instead of exposing it in the current chat
  * (replying)      → from the replied message until now (the typed period or -c win)
  * Uses the text already stored in the database: regular messages stay cache.messageRetentionHours (68 h). They stay

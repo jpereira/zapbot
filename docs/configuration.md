@@ -38,14 +38,15 @@ at `/venv/bin/yt-dlp`; the supported way to run it is the
 ## Language
 
 The bot's language is the `zapbot.lang` setting: `en_US` (default) or `pt_BR`
-(`/set zapbot.lang pt_BR`). Today it translates the help (`-h` and `/help`); the replies of the
-commands are still in Portuguese and are being migrated. The Portuguese command names
-(`/desenhe`, `/tempo`...) are fixed aliases and work in either language.
+(`/set zapbot.lang pt_BR`). It translates the help (`-h` and `/help`) and also the replies,
+alerts, errors, dates, and numbers of the bot (`11/12/2026` and `1,234` in `en_US`; `12/11/2026` and `1.234` in
+`pt_BR`). The descriptions that `/set` shows for each setting are still in Portuguese. The
+Portuguese command names (`/desenhe`, `/tempo`...) are fixed aliases and work in either language.
 
 ## External services
 
-Commands that query services on the internet. Only two need a key (OpenAI and GIPHY; the Aptos one is optional); the others work without any
-configuration.
+Commands that query services on the internet. Only two need a key (OpenAI and GIPHY; the Aptos
+one is optional); the others work without any configuration.
 
 | Command | Service | Key |
 |---|---|---|

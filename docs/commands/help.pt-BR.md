@@ -66,15 +66,15 @@ argumentos e os aliases. `[]` indica algo opcional; `<>`, um valor a preencher; 
 ser repetido. Uma linha iniciada por `Ex:` é um exemplo de comando.
 
 Comandos desconhecidos ou desativados recebem uma resposta à mensagem para o dono, admins e usuários
-com permissão no chat: `⚠️ Comando '/comando' desconhecido, tente: /help` (essa resposta ainda é em
-português nos dois idiomas). `/help /xyz`, com um comando que não existe, responde
+com permissão no chat: `⚠️ Comando '/comando' desconhecido, tente: /help`. `/help /xyz`, com um comando que não existe, responde
 `❌ Comando não encontrado: /xyz`.
 
 ## Idioma
 
 O `-h`, o `-help` e o `/help` seguem o setting `zapbot.lang`: `en_US` (inglês, o padrão) ou `pt_BR`.
-Mude com `/set zapbot.lang pt_BR` (ou `/set zapbot.lang=en_US`); vale na hora, sem reiniciar. As
-respostas dos outros comandos ainda são em português, e estão sendo migradas.
+Vale também para as demais respostas, avisos, erros, datas e números do bot. Mude com
+`/set zapbot.lang pt_BR` (ou `/set zapbot.lang=en_US`); vale na hora, sem reiniciar. As descrições
+que o `/set` mostra de cada setting ainda são em português.
 
 ```text
 /set zapbot.lang en_US

@@ -30,22 +30,22 @@ change (🟢 up, 🔴 down). Supported: `USD`, `EUR`, `GBP` and `USDT`.
 ```
 
 ```text
-💱 COTAÇÕES (em reais)
+💱 EXCHANGE RATES (in reais)
 
 🇪🇺 EUR/BRL (Euro)
-   💰 R$ 5,8569  🔴 -0,67%
-   🔔 Abertura: R$ 5,8811 (🔴 -0,41% desde a abertura)
-   🏁 Fechamento anterior: R$ 5,8962
-   📈 Máx: R$ 5,9117  📉 Mín: R$ 5,8531
+   💰 R$ 5.8569  🔴 -0.67%
+   🔔 Open: R$ 5.8811 (🔴 -0.41% since the open)
+   🏁 Previous close: R$ 5.8962
+   📈 Max: R$ 5.9117  📉 Min: R$ 5.8531
 
 🪙 USDT/BRL (Tether)
-   💰 R$ 5,1816  🔴 -0,70%
-   🔔 Abertura: R$ 5,2181 (🔴 -0,70% desde a abertura)
-   🏁 Fechamento anterior: R$ 5,2181
-   📈 Máx: R$ 5,2259  📉 Mín: R$ 5,1725
+   💰 R$ 5.1816  🔴 -0.70%
+   🔔 Open: R$ 5.2181 (🔴 -0.70% since the open)
+   🏁 Previous close: R$ 5.2181
+   📈 Max: R$ 5.2259  📉 Min: R$ 5.1725
 
-🕐 30/09/2026, 16:57 · Yahoo Finance, Binance
-💡 % ao lado do valor: variação desde o fechamento anterior.
+🕐 9/30/26, 4:57 PM · Yahoo Finance, Binance
+💡 % next to the value: change since the previous close.
 ```
 
 ## Price alerts
@@ -80,26 +80,26 @@ Each alert fires once and is removed. Only the bot owner (and the
 
 ### Message in the notice
 
-With `-msg <text>`, the text goes at the start of the notice, before the `🔔 ALERTA DE PREÇO`. It
+With `-msg <text>`, the text goes at the start of the notice, before the `🔔 PRICE ALERT`. It
 runs to the end of the command, so it can have spaces and punctuation; `-to` can come before or
 after it.
 
 ```text
-/crypto BTC -alerta > 90000 -to /Jorge Pereira/ -msg Isso é uma mensagem que vai no início!
-/rates USD -alerta > 6 -msg Dólar nas alturas! -to /Família/
+/crypto BTC -alerta > 90000 -to /Jorge Pereira/ -msg This message goes at the start!
+/rates USD -alerta > 6 -msg Dollar through the roof! -to /Family/
 ```
 
 ```text
-Isso é uma mensagem que vai no início!
+This message goes at the start!
 
-🔔 ALERTA DE PREÇO
+🔔 PRICE ALERT
 
-📈 ₿ BTC/USDT ficou acima de $90,000.00
-💰 Agora: $90,512.30 (🟢 +0,57% desde a criação)
-📅 Alerta criado em 02/10/2026, 18:40:12
+📈 ₿ BTC/USDT went above $90,000.00
+💰 Now: $90,512.30 (🟢 +0.57% since creation)
+📅 Alert created on 10/2/2026, 18:40:12
 ```
 
-- The list (`-alerta`) shows the text under the alert: `💬 Isso é uma mensagem...`.
+- The list (`-alerta`) shows the text under the alert: `💬 This message goes...`.
 - The text just can't have a loose ` -to ` in the middle: it's read as a destination.
 
 ### Notify another chat or by email
@@ -129,9 +129,9 @@ message. The destination is a contact, group, number or email. Exact names take 
   `→ 📧 voce@exemplo.com` (several: `→ 👥 Grupo sobre L200, 📧 voce@exemplo.com`).
 
 ```text
-🔔 ALERTA DE PREÇO
+🔔 PRICE ALERT
 
-📈 🇺🇸 USD/BRL ficou acima de R$ 5,3000
-💰 Agora: R$ 5,3100 (🟢 +2,12% desde a criação)
-📅 Alerta criado em 30/09/2026, 10:12:03
+📈 🇺🇸 USD/BRL went above R$ 5.3000
+💰 Now: R$ 5.3100 (🟢 +2.12% since creation)
+📅 Alert created on 9/30/2026, 10:12:03
 ```

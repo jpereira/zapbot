@@ -139,7 +139,7 @@ Verificando Prjx
 ```
 
 - Os comandos rodam no chat em que o alias foi chamado, com as permissões de quem chamou. Se a
-  pessoa não puder usar algum deles, o alias inteiro não roda: um comando só do dono, como o
+  pessoa não puder usar algum deles, o alias inteiro não roda: um comando acima do nível dela, como o
   `/defi`, faz o alias ser ignorado em silêncio, e um comando fora da regra dela (`/bot -cmd`) mostra
   o aviso do limite. O `/help alias` só lista os aliases em que ela pode usar todos os comandos.
 - Rodam os mesmos comandos de consulta do `/cron` (`/rates`, `/crypto`, `/cve`, `/defi`,

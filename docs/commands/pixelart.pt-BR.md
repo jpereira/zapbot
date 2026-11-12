@@ -42,4 +42,5 @@ Detalhes:
   passar disso fica só no link.
 - No `-r`, no `-y` ou com vários packs no `pixelart.packs`, packs sem artes ANSI/ASCII (só
   executáveis ou textos) são trocados por outro sorteio, até 5 tentativas.
+- Se combinar, o `-r` vale mais que o `-y`, que vale mais que o nome do pack.
 - A lista completa de packs do `-r` é baixada no máximo uma vez por dia.

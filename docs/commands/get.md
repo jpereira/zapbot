@@ -2,7 +2,8 @@
 
 Downloads videos from Instagram, YouTube, X/Twitter, TikTok and other sites supported by
 [yt-dlp](https://github.com/yt-dlp/yt-dlp). The URL can come as an argument or you can reply to a
-message that contains the link. The typed URL wins over the replied message.
+message that contains the link. The typed URL wins over the replied message. A video, image or audio sent with `/get` as the
+caption (no reply) is handled as if it had been replied to.
 
 Replying to a WhatsApp video, image or audio, `/get` uses the media itself, without yt-dlp: with no
 option, it returns the original file as a document; with `-a`, `-st`, `-ss` or `-es`, it goes
@@ -11,7 +12,7 @@ through ffmpeg. If the media has a link in the caption, the media wins.
 | Option | Value | Description |
 |---|---|---|
 | `-sticker`, `-st` | | Sends as an animated sticker (up to 6 s), framed on the middle of the video. Same as [`/sticker`](sticker.md) |
-| `-pos` | `<topo\|meio\|baixo>` | With `-st`: where the square crop goes (default `meio`; `top`, `middle`, `bottom` and `cima`, `centro` also work). On media wider than tall, `topo` is the left and `baixo` the right |
+| `-pos` | `<top\|middle\|bottom>` | With `-st`: where the square crop goes (default `middle`; `topo`, `meio`, `baixo`, `cima` and `centro` also work). On media wider than tall, `top` is the left and `bottom` the right |
 | `-audio`, `-a` | | Extracts only the audio (`.mp3`) |
 | `-startSec`, `-ss` | `<time>` | Starts at this point of the original video (default 0), in seconds (`22`, `1.5`) or in `min:sec` (`09:33`, or `h:min:sec`). With a `-` in front, counts from the **end** of the video (`-10`, `-01:44`) |
 | `-endSec`, `-es` | `<time>` | Ends at this point of the original video, in the same format as `-ss` (`-es -5` ends 5 s before the end); must be greater than the start. Also works without `-ss` and for stickers |
@@ -101,13 +102,13 @@ Limits (`/get` isn't admin: whoever is in `bot.users` uses it; with it set to `t
 - Download of at most 200 MB before conversion (setting `get.maxDownloadMB`).
 - A playlist link downloads only the video of the link (`--no-playlist`).
 - yt-dlp and ffmpeg are interrupted after 5 minutes each.
-- An unknown option is refused (`❌ Opção desconhecida: -x`, with a hint to use `/get -h`), instead of becoming the URL.
+- An unknown option is refused (`❌ Unknown option: -x`, with a hint to use `/get -h`), instead of becoming the URL.
 - At most 2 `/get` (or `/sticker`) with yt-dlp or ffmpeg at the same time. The others get a notice
   to try again.
 
-While it downloads and converts, the bot shows "⏳ Processando sua mídia, aguarde." (or "seu sticker"). At the
-end, that same message becomes "✅ Mídia baixada com sucesso!" (or "✅ Sticker criado com
-sucesso!"), or the error, without an extra message.
+While it downloads and converts, the bot shows "⏳ Processing your media, please wait." (or "your sticker"). At the
+end, that same message becomes "✅ Media downloaded successfully!" (or "✅ Sticker created
+successfully!"), or the error, without an extra message.
 
 URLs that point to the internal network (`localhost`, `10.x`, `192.168.x`, `169.254.x`, local IPv6,
 etc.) are refused, so `/get` doesn't serve as a bridge into your network (SSRF). The check also
@@ -125,7 +126,7 @@ blocks all access to the internal network from the bot.
 /get -ss -10 https://youtu.be/XXXXXXXXXXX            → the last 10 seconds
 /get -ss -01:44 -es -00:30 https://youtu.be/XXXXXXXXXXX → from 1:44 to 0:30 before the end
 /download -st -ss 3 -es 6 https://youtu.be/XXXXXXXXXXX
-(reply numa mensagem com link)  /get -a
-(reply num vídeo do WhatsApp)   /get -a              → only the audio, as .mp3
-(reply num vídeo do WhatsApp)   /get -ss 5 -es 20    → the range, as a document
+(reply to a message with a link)  /get -a
+(reply to a WhatsApp video)       /get -a              → only the audio, as .mp3
+(reply to a WhatsApp video)       /get -ss 5 -es 20    → the range, as a document
 ```

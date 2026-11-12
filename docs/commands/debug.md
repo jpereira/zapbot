@@ -51,6 +51,15 @@ Without options, it shows the active state, level, filter and destination. Desti
 can be written as `/Nome do Grupo/` or in quotes. Ambiguous names open a list to choose from, like in
 `-to` of the other commands.
 
+`-level`, `-filter` and `-copy-to` only work with debug on (or `-on` in the same command); otherwise
+the bot answers `❌ Turn debug on first: /debug -on -level 0`. The reply shows the state:
+
+```text
+🪲 Debug Enabled. [DEBUG2]
+🔎 Filter: /sapato/i
+📋 Copy: 👤 Jorge
+```
+
 The copy sends the logs in batches, with the prefix `🪲 [ZapBot log]`. Sending the copy doesn't
 itself generate additional logs. The queue is bounded and drops the oldest blocks when it's full.
 Logs wait in the queue while the WhatsApp connection isn't ready. If sending fails, the copy pauses

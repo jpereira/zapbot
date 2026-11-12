@@ -52,3 +52,5 @@ Detalhes:
 - O `-brasil` lê cerca de 15 feeds de uma vez; a página do feedspot é HTML, então os feeds dela
   foram copiados para o setting `news.brasil` (não é lida a cada uso).
 - Os feeds precisam ser RSS (`<item>`); feeds só em Atom (`<entry>`) não são lidos.
+- Com uma categoria só, o título é o nome dela (ex.: "📰 g1", "🇧🇷 Brasil" no `-brasil`). Se a
+  categoria não tem nenhum feed configurado, o bot avisa e sugere `/set news.<categoria>`.

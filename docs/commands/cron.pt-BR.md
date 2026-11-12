@@ -207,10 +207,10 @@ digitado (com várias linhas, se for o caso). Tudo no horário de Brasília.
 
 | Forma | Exemplo | Significa |
 |---|---|---|
-| Horário | `6h`, `07h`, `18:30`, `18h30`, `às 18h` | Hoje nesse horário; se já passou, amanhã |
-| Duração | `+2h`, `em 2h`, `daqui a 2h`, `30m`, `1d`, `1h30m` | Daqui a tanto tempo. Horas sozinhas são horário (`6h` é 06:00): para "daqui a 6 horas", use `+6h` ou `em 6h` |
-| Hoje / amanhã | `hoje 22h`, `amanhã`, `amanhã 10:00` | Sem hora: 9h |
-| Dia da semana | `sexta`, `seg 8h`, `sábado 10:00` | O próximo (hoje, se a hora ainda não passou). Sem hora: 9h |
+| Horário | `6h`, `07h`, `18:30`, `18h30`, `às 18h` (ou `at 18h`) | Hoje nesse horário; se já passou, amanhã |
+| Duração | `+2h`, `em 2h`, `daqui a 2h`, `30m`, `1d`, `1h30m` (também `in 2h`) | Daqui a tanto tempo. Horas sozinhas são horário (`6h` é 06:00): para "daqui a 6 horas", use `+6h` ou `em 6h` |
+| Hoje / amanhã | `hoje 22h`, `amanhã`, `amanhã 10:00` (ou `today`, `tomorrow`) | Sem hora: 9h |
+| Dia da semana | `sexta`, `seg 8h`, `sábado 10:00` (ou `friday`, `mon`) | O próximo (hoje, se a hora ainda não passou). Sem hora: 9h |
 | Data | `25/12`, `25/12 10:00`, `25/12/2027 10h` | Sem ano: a próxima vez que a data chega (ano com 2 dígitos também vale: `25/12/27`). Sem hora: 9h |
 
 Até 366 dias à frente. O `-repetir mensal` (ou `-r mensal`) mantém o dia do mês: um item do dia 31

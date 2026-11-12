@@ -131,19 +131,19 @@ removed.
 ```text
 Verificando Orca
 
-🌊 Orca · SOL/cbBTC · taxa 0.16%
+🌊 Orca · SOL/cbBTC · fee 0.16%
    ...
 
 Verificando Prjx
 
-🌊 Project X · UBTC/USD₮0 · taxa 0.05%
+🌊 Project X · UBTC/USD₮0 · fee 0.05%
    ...
 ```
 
 - The commands run in the chat where the alias was called, with the permissions of whoever called
-  it. If the person can't use one of them, the whole alias doesn't run: an owner-only command, like
-  `/defi`, makes the alias be silently ignored, and a command outside their rule (`/bot -cmd`) shows
-  the limit notice. `/help alias` only lists the aliases in which they can use all the commands.
+  it. If the person can't use one of them, the whole alias doesn't run: a command above their
+  level, like `/defi`, makes the alias be silently ignored, and a command outside their rule
+  (`/bot -cmd`) shows the limit notice. `/help alias` only lists the aliases in which they can use all the commands.
 - The same query commands as `/cron` run (`/rates`, `/crypto`, `/cve`, `/defi`, `/weather`...),
   without the options that change something, like `/crypto`'s `-add`. They're checked on
   registration: one that doesn't exist or doesn't run in the text errors right away.

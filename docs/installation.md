@@ -47,7 +47,7 @@ Right at the start of the logs the version shows up, with the commit and the tag
 [+] 🤖 ZapBot X.Y.Z (git+4465374/vX.Y.Z) inicializado! Informando 5521999999999
 ```
 
-and get the same message on your WhatsApp. Send `/ping` to any chat: the bot should reply `pong`.
+and get a message on your WhatsApp (`🤖 ZapBot X.Y.Z (git+4465374/vX.Y.Z) started.`). Send `/ping` to any chat: the bot should reply `pong`.
 
 ### Update to a new version
 

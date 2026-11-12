@@ -10,8 +10,7 @@ edita, mensagens por faixa de horário, horário e dia de pico. Com `-me`, as **
 somadas em todos os chats: em quais você mais fala, quantas apagou, seus horários e seu dia de pico.
 
 Os números vêm dos contadores da tabela `stats`, preenchidos a cada mensagem recebida (setting `stats.enable`, ligado por padrão; desligado para
-de contar e mantém o histórico). As suas
-mensagens contam para o seu número em qualquer chat, inclusive no privado com outras pessoas. O chat
+de contar e mantém o histórico). As suas mensagens contam para o seu número em qualquer chat, inclusive no privado com outras pessoas. O chat
 consigo mesmo e os status não entram. Também não contam as respostas do próprio bot nem os avisos do
 WhatsApp (alguém entrou no grupo, o nome mudou, a criptografia, uma chamada...), que não têm autor.
 
@@ -79,6 +78,10 @@ Até 90 dias guardados
 ...
 ⏰ Horário de pico: 14h–15h (13 msgs)
 📅 Dia mais movimentado: 30/09/2026 (16 msgs)
+
+💡 /stats -N para outro período (máx. 90 dias)
+💡 /stats -me para as suas
+💡 /stats -l para os outros chats
 ```
 
 ```text
@@ -97,4 +100,7 @@ Até 90 dias guardados
 
 🕐 Por horário
 ...
+
+💡 /stats -N para outro período (máx. 90 dias)
+💡 /stats -l para os outros chats
 ```

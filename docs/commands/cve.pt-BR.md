@@ -20,7 +20,7 @@ descrição e o link para a página no NVD.
 /set cve.maxDays 30  → o -highscore passa a olhar os últimos 30 dias
 ```
 
-Exemplo ilustrativo de resposta:
+Exemplo ilustrativo de resposta (as descrições vêm sempre em inglês, como o NVD publica):
 
 ```text
 🔥 1 CVEs críticas mais recentes (CVSS ≥ 9, últimos 7 dias)
@@ -39,7 +39,8 @@ Detalhes:
   se ela não existe, avisa que não encontrou.
 - Com `<texto>`, a busca é a de palavras-chave do NVD, em qualquer época (sem a janela de dias). Cada
   resultado traz a severidade (🔴 crítica, 🟠 alta, 🟡 média, 🟢 baixa, ⚪ sem nota), o ID, a data de
-  publicação e a descrição resumida. Se há mais do que `cve.max`, o bot diz quantas ficaram de fora.
+  publicação e a descrição resumida. Se há mais do que `cve.max`, o bot diz quantas ficaram de fora
+  (`🔎 N de TOTAL CVEs com "texto"` no título).
 - Com um `<id>` ou um `<texto>`, o `-highscore` é ignorado.
 - A janela do `-highscore` vem do setting `cve.maxDays` (padrão 7). O NVD não aceita janelas maiores
   que 120 dias, por isso o setting vai de 1 a 120.

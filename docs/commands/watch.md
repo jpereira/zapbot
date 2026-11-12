@@ -52,12 +52,12 @@ Rules are tested against the original message text. In notices and in the histor
 | *(none)* | | Lists rules, sources, destinations and counts; adds recent matches when there are any |
 | `-N` | | Number of recent matches, across all rules (1 to 100, capped by `watch.showMax`). E.g.: `/watch -10` |
 | `-list`, `-l` | | Lists only the rules, sources, destinations and counts |
-| `-show`, `-s` | `[N\|regra]` | Shows the full texts of the matches of rule N (or of the rule by its text); without N, of all. `-N` controls the quantity |
-| `-query`, `-q` | `<texto\|/regex/flags>` | Only the matches that contain the text (ignoring case and accents) or that match the regex. With `-s` or in the listing. See [Search](#search) |
-| `-in` | `<origem>` | Restricts a new rule to a contact, group or channel |
-| `-rm`, `-r` | `N\|regra` | Removes rule N (or the rule by its text), its hits, source and destinations; the following ones are renumbered |
-| `-flush`, `-f` | `[N\|regra]` | Deletes the hits of rule N (or of the rule by its text); without N, of all. Keeps rules, sources and destinations |
-| `-to` | `<destino\|off>` | Sets where the notices will be sent, when creating the rule or with `-s N`. Repeat for several destinations; `off` goes back to your private chat |
+| `-show`, `-s` | `[N\|rule]` | Shows the full texts of the matches of rule N (or of the rule by its text); without N, of all. `-N` controls the quantity |
+| `-query`, `-q` | `<text\|/regex/flags>` | Only the matches that contain the text (ignoring case and accents) or that match the regex. With `-s` or in the listing. See [Search](#search) |
+| `-in` | `<source>` | Restricts a new rule to a contact, group or channel |
+| `-rm`, `-r` | `N\|rule` | Removes rule N (or the rule by its text), its hits, source and destinations; the following ones are renumbered |
+| `-flush`, `-f` | `[N\|rule]` | Deletes the hits of rule N (or of the rule by its text); without N, of all. Keeps rules, sources and destinations |
+| `-to` | `<destination\|off>` | Sets where the notices will be sent, when creating the rule or with `-s N`. Repeat for several destinations; `off` goes back to your private chat |
 | `-mask`, `-m` | `[N]` | Without N, obfuscates phones only in this run's output. With N, turns on the 🔒 of rule N (see [Mask in notices](#mask-in-notices)). E.g.: `+55219****44` |
 | `-umask`, `-u` | `N` | Turns off the 🔒 of rule N |
 
@@ -73,7 +73,7 @@ the `-to` destinations or by email. `-s` and the hits listing of that rule also 
 `/watch -umask 3` removes the 🔒.
 
 ```text
-👀 WATCH: REGRAS (3/20)
+👀 WATCH: RULES (3/20)
 
 #1  /TCPRO.*La.*Sportiva/i  (1)
 #2  /Renato.*r38tao/  (1)
@@ -102,25 +102,25 @@ ignoring case and accents, or a fragment that's in only one rule
 A listing, with the tips at the end, one per line:
 
 ```text
-👀 WATCH: REGRAS (2/20)
+👀 WATCH: RULES (2/20)
 
-#1  /Defesa.*Civil/i  (1) apenas em 📰 Defesa Civil
-#2  /pix/i  (0) apenas em 👤 Jorge Pereira
+#1  /Defesa.*Civil/i  (1) only in 📰 Defesa Civil
+#2  /pix/i  (0) only in 👤 Jorge Pereira
 
-👀 WATCH: OCORRÊNCIAS
-🔎 Regras: todas
+👀 WATCH: HITS
+🔎 Rules: all
 📦 Total: 1
 
-1. 📅 06/10/2026, 01:09:35 · 🔎 #1
+1. 📅 10/6/2026, 01:09:35 · 🔎 #1
     📰 Defesa Civil
     💬 "A Defesa Civil informa: alerta de chuva"
 
-💡 Dicas (N: o nº ou a própria regra)
-/watch -s N mostra as mensagens completas.
-/watch -s N -q <texto|/regex/> só as que casam.
-/watch -s N -to <destino|off> troca os destinos.
-/watch -f N limpa as ocorrências.
-/watch -mask N liga o 🔒 (telefones ofuscados nos avisos); -umask N desliga.
+💡 Tips (N: the number or the rule itself)
+/watch -s N shows the full messages.
+/watch -s N -q <text|/regex/> only the matching ones.
+/watch -s N -to <destination|off> changes the destinations.
+/watch -f N clears the hits.
+/watch -mask N turns on the 🔒 (phone numbers masked in alerts); -umask N turns it off.
 ```
 
 ## Search
@@ -135,12 +135,12 @@ came, so, without the `i` flag, it's case sensitive, and accents count.
 
 ```text
 /watch -s /Jorge/ -q "carro"
-👀 WATCH: OCORRÊNCIAS
-🔎 Regra #3: /Jorge/
-🔍 Busca: "carro"
+👀 WATCH: HITS
+🔎 Rule #3: /Jorge/
+🔍 Search: "carro"
 📦 Total: 1
 
-1. 📅 09/10/2026, 10:12:40
+1. 📅 10/9/2026, 10:12:40
     👥 Família · 👤 Fulano
     💬 "Jorge vendeu o carro"
 ```
@@ -181,8 +181,8 @@ coordinates are still stored in the cache; receiving it doesn't run commands.
 
 In status and broadcasts (`@broadcast`), the sender is identified by the message author. A
 `@lid` is converted to a phone number when WhatsApp provides the mapping. Without it, the number
-is unavailable; with no author, the name shows as `Desconhecido`.
+is unavailable; with no author, the name shows as `Unknown`.
 
-Channel posts (`@newsletter`) appear with `📰 Canal: <nome>` in notices; the history uses 📰 and
+Channel posts (`@newsletter`) appear with `📰 Channel: <name>` in notices; the history uses 📰 and
 the channel name. Channels don't show a contact name or phone. When the channel can't be
 queried, the history uses the saved name.

@@ -71,10 +71,13 @@ Sem cadastros, `/monitor` mostra o cabeçalho seguido de `👀 Nenhum contato ca
    📜 Histórico: 1 horário(s) distinto(s) · limite: 30
    • 14/10/2026, 16:49:59 · observado em 14/10/2026, 16:55:10
      Origem: presença do WhatsApp · horário não confirmado
+
+⚠️ Consultas frequentes e mais contatos podem contribuir para bloqueio pelo WhatsApp. Nenhum intervalo garante segurança.
 ```
 
 O cabeçalho mostra `ativo`, `pausado` (monitor desligado ou bot pausado) ou `aguardando conexão`.
-Um contato ainda não verificado mostra `⏳ aguardando primeira verificação`.
+Um contato ainda não verificado mostra `⏳ aguardando primeira verificação`. As datas seguem
+o `zapbot.lang` (acima, pt_BR; em en_US: `10/14/2026, 4:55:10 PM`), sempre no horário de São Paulo.
 
 Tanto `/monitor` quanto `/monitor -l` mostram até `monitor.maxRecords` entradas por contato
 (padrão: 30), do horário mais recente para o mais antigo, com o horário observado e a hora em que
@@ -112,7 +115,7 @@ e os dados recebidos podem estar em cache.
 
 ## Intervalo e limite
 
-| Setting | Padrão | Valores | Efeito |
+| Chave | Padrão | Valores | Efeito |
 |---|---|---|---|
 | `monitor.pool` | `300` | 120–86400 segundos | Intervalo mínimo entre verificações de cada contato; 300 s = 5 min, 120 s = 2 min |
 | `monitor.max` | `5` | 1–5 | Limita os cadastros; remova contatos antes de reduzir abaixo do total cadastrado |

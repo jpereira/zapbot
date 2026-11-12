@@ -2,7 +2,8 @@
 
 Baixa vídeos de Instagram, YouTube, X/Twitter, TikTok e outros sites suportados pelo
 [yt-dlp](https://github.com/yt-dlp/yt-dlp). A URL pode vir como argumento ou você pode dar reply
-numa mensagem que contenha o link. A URL digitada vale mais que a mensagem respondida.
+numa mensagem que contenha o link. A URL digitada vale mais que a mensagem respondida. Um vídeo, imagem ou áudio enviado com `/get`
+na legenda (sem responder) é tratado como se tivesse sido respondido.
 
 Dando reply num vídeo, numa imagem ou num áudio do WhatsApp, o `/get` usa a própria mídia, sem o
 yt-dlp: sem opção, devolve o arquivo original como documento; com `-a`, `-st`, `-ss` ou `-es`, passa

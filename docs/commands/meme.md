@@ -14,5 +14,5 @@ Random meme template from [imgflip](https://imgflip.com/), optionally filtered b
 🖼️ Drake Hotline Bling
 ```
 
-With no template matching the requested name, the bot replies `❌ Nenhum meme com "<busca>".`; if
-imgflip doesn't respond, `❌ Não consegui buscar um meme agora.`
+With no template matching the requested name, the bot replies `❌ No meme with "<search>".`; if
+imgflip doesn't respond, `❌ Could not fetch a meme right now.`

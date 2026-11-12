@@ -11,64 +11,67 @@ Removing contacts or reducing the local history doesn't change the backups that 
 | *(none)* | | Current database (size and entries of each table), how many backups there are, the last one and the next automatic one |
 | `-now`, `-n` | | Creates a backup now (manual: stays until deleted) |
 | `-list`, `-l` | | Lists the backups, numbered from newest to oldest, with date, size and reason |
-| `-info`, `-i` | `<nº>` | Backup details: date, reason, version of the bot that created it (with the commit, e.g.: `X.Y.Z (git+4465374/vX.Y.Z)`) and the entries of each table, compared with the current database |
-| `-restore`, `-r` | `<nº\|nome>` | Restores the backup. Without `-sim`, it only shows what will happen and the command to confirm |
+| `-info`, `-i` | `<no.>` | Backup details: date, reason, version of the bot that created it (with the commit, e.g.: `X.Y.Z (git+4465374/vX.Y.Z)`) and the entries of each table, compared with the current database |
+| `-restore`, `-r` | `<no.\|name>` | Restores the backup. Without `-sim`, it only shows what will happen and the command to confirm |
 | `-sim` | | Confirms: with `-restore`, the restore; with `-send -to` another chat, the sending |
-| `-send`, `-s` | `[nº]` | Sends the backup file (without nº: the most recent) to your private chat or to the `-to` destinations. See [Send the file](#send-the-file) |
-| `-to` | `<destino>` | With `-send`: by email, as an attachment (`email` is the `QRCODE_EMAIL_SMTP_TO`, or an address), or to another chat: a contact (`/Jorge Pereira/`), a mention (`@Fulano Da Silva`), a group (`/Grupo L200/`) or a number (`+5521999999999`) (asks for `-sim`). Repeat for several. See [Destinations](index.md#destinations-contact-group-number-or-email) |
-| `-rm` | `<nº\|all>` | Deletes backup nº N (or all of them) |
+| `-send`, `-s` | `[no.]` | Sends the backup file (without no.: the most recent) to your private chat or to the `-to` destinations. See [Send the file](#send-the-file) |
+| `-to` | `<destination>` | With `-send`: by email, as an attachment (`email` is the `QRCODE_EMAIL_SMTP_TO`, or an address), or to another chat: a contact (`/Jorge Pereira/`), a mention (`@Fulano Da Silva`), a group (`/Grupo L200/`) or a number (`+5521999999999`) (asks for `-sim`). Repeat for several. See [Destinations](index.md#destinations-contact-group-number-or-email) |
+| `-rm` | `<no.\|all>` | Deletes backup no. N (or all of them) |
 
 ```text
 /backup                                 → the current database and the backups
 /backup -now                            → creates one now
 /bkp -l                                 → the list
-/backup -i 2                            → what's in nº 2, compared with the current database
+/backup -i 2                            → what's in no. 2, compared with the current database
 /backup -r 2                            → shows what will happen and asks for confirmation
 /backup -r zapbot-20261001-030000 -sim  → restores
 /backup -s                              → the most recent file in your private chat
 /backup -s -to eu@gmail.com             → the most recent, by email
-/backup -s 2 -to email                  → nº 2, to the QRCODE_EMAIL_SMTP_TO
+/backup -s 2 -to email                  → no. 2, to the QRCODE_EMAIL_SMTP_TO
 /backup -s -to /Jorge Pereira/ -sim     → in a contact's private chat
-/backup -s -to @Fulano Da Silva -sim    → in a group, mentioning the person
+/backup -s -to @Fulano Da Silva -sim    → in the mentioned person's private chat
 /backup -s -to email -to /Jorge Pereira/ -sim  → by email and in the contact's private chat
-/backup -rm 3                           → deletes nº 3
+/backup -rm 3                           → deletes no. 3
 ```
 
 ```text
 💾 Backup
 
-• 🗄️ Banco atual: 4.20 MB
+• 🗄️ Current database: 4.20 MB
    ◦ message_edits: 12
    ◦ messages: 1.234
    ◦ polls: 3
    ◦ ...
-• 📦 Backups: 7 (8.40 MB) em /app/cache/backups
-• 🕐 Último: qui 01/10 03:00 (automático, 1.10 MB)
-• ⏭️ Próximo automático: sex 02/10 03:00 (todo dia às 3h, guarda 7)
-• 📤 Destino automático: só local
+• 📦 Backups: 7 (8.40 MB) in /app/cache/backups
+• 🕐 Last: Thu 01/10 03:00 (automatic, 1.10 MB)
+• ⏭️ Next automatic: Fri 02/10 03:00 (every day at 3h, keeps 7)
+• 📤 Automatic destination: local only
 
-💡 Dicas
-/backup -now cria um agora
-/backup -l lista
-/backup -i <nº> detalha
-/backup -r <nº> restaura
-/backup -s [nº] [-to <destino>] envia o arquivo
-/backup -rm <nº|all> apaga
+💡 Tips
+/backup -now creates one now
+/backup -l lists
+/backup -i <no.> shows details
+/backup -r <no.> restores
+/backup -s [no.] [-to <destination>] sends the file
+/backup -rm <no.|all> deletes
 ```
 
 ```text
 /backup -l
 💾 Backups (3)
 
-1. qui 01/10 03:00 · 1.10 MB · automático
-2. qua 30/09 15:20 · 1.00 MB · manual
-3. qua 30/09 03:00 · 1.00 MB · automático
+1. Thu 01/10 03:00 · 1.10 MB · automatic
+2. Wed 30/09 15:20 · 1.00 MB · manual
+3. Wed 30/09 03:00 · 1.00 MB · automatic
+
+💡 /backup -i <no.> shows the entries
+💡 /backup -r <no.> restores
 ```
 
 ## Automatic backup
 
-Every day, from 3 AM Brasília time (setting `backup.hour`, 0 to 23), the bot creates a backup. If it's down
-at that time, the backup is made as soon as it's back, on the same day. Turn it off with
+Every day, from 3 AM Brasília time (setting `backup.hour`, 0 to 23), the bot creates a backup. If
+it's down at that time, the backup is made as soon as it's back, on the same day. Turn it off with
 `/set backup.enabled off`.
 
 The `backup.to` setting defines where to send the daily file **in addition to saving it locally**.
@@ -91,14 +94,14 @@ the automatic sending doesn't open a choice list. For a person mentioned in a co
 name or number in the setting. Emails use the bot's SMTP and the same 20 MB limit as manual
 sending. Manual backups and the ones made before restoring aren't sent through this setting.
 
-The 7 most recent automatic ones are kept (setting `backup.keep`, 1 to 90); older ones are deleted with
-each new backup. The same count applies to the "before restoring" backups. **Manual** ones (`-now`)
+The 7 most recent automatic ones are kept (setting `backup.keep`, 1 to 90); older ones are deleted
+with each new backup. The same count applies to the "before restoring" backups. **Manual** ones (`-now`)
 are never deleted automatically.
 
 If the daily backup fails (e.g., disk full), the error goes to the log and to the
-[email alerts](../emails.md#email-alerts) (`💾 Backup falhou`). If sending fails, the
+[email alerts](../emails.md#email-alerts) (`💾 Backup failed`). If sending fails, the
 local file is preserved and the failure goes to the log and to the alerts
-(`💾 Envio do backup falhou`). Sending is attempted once a day, when the backup is created; another
+(`💾 Backup sending failed`). Sending is attempted once a day, when the backup is created; another
 check on the same day doesn't repeat the sending. The other destinations are attempted even if one
 of them fails.
 
@@ -113,8 +116,8 @@ bot) and compressed with gzip.
 along with `-r`. `-send` and the automatic backup send only the database (the images may exceed the
 attachment limit).
 
-**The other media (`cache/media`) is not included**: after a restore, a deleted message with media that is
-no longer on disk says the file isn't available. The WhatsApp session (volume
+**The other media (`cache/media`) is not included**: after a restore, a deleted message with media
+that is no longer on disk says the file isn't available. The WhatsApp session (volume
 `wwebjs_auth`) isn't included either.
 
 Each backup is two or three files in `cache/backups/`, in the `app_cache` volume:
@@ -125,19 +128,19 @@ Each backup is two or three files in `cache/backups/`, in the `app_cache` volume
 
 ## Restore
 
-`/backup -r <nº>` shows the date and reason and asks for confirmation, already with the backup name
+`/backup -r <no.>` shows the date and reason and asks for confirmation, already with the backup name
 (a new backup in the meantime would change the numbers):
 
 ```text
 /backup -r 2 -sim
-♻️ Backup restaurado: qua 30/09 15:20
-message_edits 10 · messages 1.180 · settings 47 · ...
+♻️ Backup restored: Wed 30/09 15:20
+message_edits 10 · messages 1,180 · settings 47 · ...
 
-💾 O estado anterior ficou no backup zapbot-20261001-101530: para desfazer, /backup -r zapbot-20261001-101530 -sim
+💾 The previous state was kept in backup zapbot-20261001-101530: to undo, /backup -r zapbot-20261001-101530 -sim
 ```
 
 - The entire database goes back to that moment; whatever came in afterward is lost. That's why,
-  before restoring, the bot makes a backup of the current state (reason "antes de restaurar"), and
+  before restoring, the bot makes a backup of the current state (reason "before restoring"), and
   the reply already includes the command to undo.
 - Settings are reloaded right away, without restarting.
 - A backup from an earlier version works too: tables and columns it didn't have stay
@@ -158,15 +161,15 @@ other commands ([Destinations](index.md#destinations-contact-group-number-or-ema
 
 ```text
 /backup -s -to fulano@gmail.com
-📧 Backup de qui 01/10 03:00 enviado para fulano@gmail.com.
+📧 Backup from Thu 01/10 03:00 sent to fulano@gmail.com.
 
 /backup -s -to /Jorge Pereira/
-⚠️ O backup tem o banco inteiro: as mensagens guardadas de todos os chats, as apagadas, os settings...
-Para enviar mesmo em 👤 Jorge Pereira, repita com -sim: /backup -send -to /Jorge Pereira/ -sim
+⚠️ The backup has the whole database: the saved messages of all chats, the deleted ones, the settings...
+To send it to 👤 Jorge Pereira anyway, repeat with -sim: /backup -send -to /Jorge Pereira/ -sim
 
 /backup -s -to email -to /Jorge Pereira/ -to /Grupo L200/
-⚠️ O backup tem o banco inteiro: as mensagens guardadas de todos os chats, as apagadas, os settings...
-Para enviar mesmo em 👤 Jorge Pereira, 👥 Grupo sobre L200, repita com -sim: /backup -send -to email -to /Jorge Pereira/ -to /Grupo L200/ -sim
+⚠️ The backup has the whole database: the saved messages of all chats, the deleted ones, the settings...
+To send it to 👤 Jorge Pereira, 👥 Grupo sobre L200 anyway, repeat with -sim: /backup -send -to email -to /Jorge Pereira/ -to /Grupo L200/ -sim
 ```
 
 - The email includes the anti-phishing code, like the bot's other emails, and the restore

@@ -20,7 +20,7 @@ one given with `-para`.
 
 ```text
 /translate Where is the nearest pharmacy?
-🌐 Tradução (en → pt)
+🌐 Translation (en → pt)
 
 Onde fica a farmácia mais próxima?
 ```
@@ -41,10 +41,10 @@ IP address. If that happens, the bot warns you:
 
 | Reply | Cause |
 |---|---|
-| `💸 O Google Translate limitou os pedidos deste servidor` | Too many requests from the same IP in a short time. Try again later |
-| `⛔ O Google recusou o pedido deste servidor` | Google blocked the IP. Try again later |
-| `⏱️ O Google Translate não respondeu` | Over 15 seconds without a response |
-| `❌ Idioma inválido` | The code doesn't exist: see the accepted ones with `/translate -l` |
+| `💸 Google Translate rate-limited this server` | Too many requests from the same IP in a short time. Try again later |
+| `⛔ Google refused this server's request` | Google blocked the IP. Try again later |
+| `⏱️ Google Translate did not answer` | Over 15 seconds without a response |
+| `❌ Invalid language` | The code doesn't exist: see the accepted ones with `/translate -l` |
 
 For heavy use or use that can't fail, Google has the official paid API (Cloud Translation); the bot
 no longer uses that API.

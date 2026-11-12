@@ -7,7 +7,7 @@ it also shows the forecast for the next days.
 | Argument | Description |
 |---|---|
 | `[N]` or `[Nd]` | N-day forecast, counting today (`16` or `16d`). From 1 up to the `tempo.maxDays` setting (default 16, Open-Meteo's maximum). Only valid as the first argument |
-| `[cidade]` | City to look up, optionally with a state or country after a comma. Without it, uses the `tempo.city` setting |
+| `[city]` | City to look up, optionally with a state or country after a comma. Without it, uses the `tempo.city` setting |
 
 ```text
 /weather                         → default city (tempo.city)
@@ -24,30 +24,30 @@ it also shows the forecast for the next days.
 Example reply:
 
 ```text
-⛅ Tempo em Niterói, Rio de Janeiro, Brasil
+⛅ Weather in Niterói, Rio de Janeiro, Brazil
 
-Parcialmente nublado
-🌡️ Agora: 24°C (sensação 25°C)
-📈 Máx: 27°C  📉 Mín: 20°C
-💧 Umidade: 78%  🌬️ Vento: 12 km/h
-☔ Chance de chuva: 35%
+Partly cloudy
+🌡️ Now: 24°C (feels like 25°C)
+📈 Max: 27°C  📉 Min: 20°C
+💧 Humidity: 78%  🌬️ Wind: 12 km/h
+☔ Chance of rain: 35%
 ```
 
 With days (`/weather 3d Niteroi`), after the current weather:
 
 ```text
-📅 Próximos 3 dias
-🌦️ Hoje (qua 30/09): 32°/22° · ☔ 29% · Pancadas de chuva
-🌦️ qui 01/10: 33°/22° · ☔ 92% · Garoa
-🌦️ sex 02/10: 22°/20° · ☔ 100% · Pancadas de chuva
+📅 Next 3 days
+🌦️ Today (Wed 30/09): 32°/22° · ☔ 29% · Rain showers
+🌦️ Thu 01/10: 33°/22° · ☔ 92% · Drizzle
+🌦️ Fri 02/10: 22°/20° · ☔ 100% · Rain showers
 ```
 
 Above the maximum the bot refuses and states the limit. To limit queries, use
 `/set tempo.maxDays 7`; `/set -reset tempo.maxDays` sets the limit back to 16 days. A saved limit
 keeps applying after a restart. Without N, the reply has only today's weather. Days follow the
-timezone of the city being queried. With `1`, the forecast block is titled "Previsão de hoje".
-At 5°C or below the reply ends with "🥶 Tá congelando!", and at 30°C or above with "🔥 Que calor
-da porra!".
+timezone of the city being queried. With `1`, the forecast block is titled "Today's forecast".
+At 5°C or below the reply ends with "🥶 It is freezing!", and at 30°C or above with "🔥 Damn, it is
+hot!". The condition texts and the place names follow the `zapbot.lang` setting.
 
 ## Changing the default city
 
@@ -66,5 +66,5 @@ The change takes effect immediately, without a restart. Tips:
 - Use `city, state` or `city, country` when the name repeats elsewhere: just `Niteroi` also works,
   but the search picks the most relevant one with that name (usually the most populous).
 - Accents are optional (`Niteroi` or `Niterói`) and the country can be in Portuguese or English.
-- If the city isn't found the bot replies `❌ Cidade não encontrada`; test first with
-  `/weather <cidade>` and only then save it to `tempo.city`.
+- If the city isn't found the bot replies `❌ City not found`; test first with
+  `/weather <city>` and only then save it to `tempo.city`.

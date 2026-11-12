@@ -11,12 +11,12 @@ command help (`/cache -h`) the paths appear in full (in Docker, `/app/cache` and
 | `-media`, `-m` | Deletes the media downloaded to `cache/media` (photos, videos, audio and documents kept to recover deleted messages). The messages stay: a deleted one recovered later says the file is no longer available |
 
 ```text
-/cache           → lists the contents of cache/ and the total number of messages
+/cache               → lists the contents of cache/ and the total number of messages
 /cache -clean        → normal cleanup (retention)
-/cache -m        → media only
-/cache -c -m     → normal cleanup and media
-/cache -b        → backups only
-/cache -a        → everything, including backups
+/cache -m            → media only
+/cache -c -m         → normal cleanup and media
+/cache -b            → backups only
+/cache -a            → everything, including backups
 ```
 
 Without options, it shows the first-level files and directories in alphabetical order. The size of
@@ -26,7 +26,7 @@ messages, deleted ones, edits and backups appear below the tree.
 Example:
 
 ```text
-🗂️ Exibindo conteúdo de /app/cache/*
+🗂️ Showing contents of /app/cache/*
 
 ├── 📁 backups/   118.33 KB
 ├── 📁 media/     404.77 MB
@@ -35,11 +35,11 @@ Example:
 ───────────────────────────
 Total:            405.57 MB
 
-🗄️ 1150 mensagens no cache.
-🗑️ 79 apagadas.
-✏️ 3 edições.
-😶 1 reação removida ou trocada.
-📦 Backups: 3 (veja /backup).
+🗄️ 1150 messages in the cache.
+🗑️ 79 deleted.
+✏️ 3 edits.
+😶 1 removed or changed reaction.
+📦 Backups: 3 (see /backup).
 ```
 
 `-a` leaves no backup behind: if you want to keep a copy first, use `/backup -s` (the file arrives
