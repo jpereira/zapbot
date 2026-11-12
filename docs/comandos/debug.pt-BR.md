@@ -7,7 +7,7 @@ boot, o debug começa desligado, no nível `0`.
 | Opção | Descrição |
 |---|---|
 | `-on` | Ativa o debug |
-| `-off` | Desativa o debug e limpa o filtro e a cópia; mantém o nível |
+| `-off` | Desativa o debug e limpa o filtro e a cópia; mantém o nível. Só vale sozinho (junto de outras opções é recusado) |
 | `-level`, `-lvl` | Define o nível `N` de `0` a `3`; exige debug ligado ou `-on` no mesmo comando |
 | `-filter`, `-f` | Exibe e copia somente os logs que casam com `/regex/flags` (até 100 caracteres). Sem valor, limpa o filtro |
 | `-copy-to` | Copia os logs para contato, grupo, número ou menção. Sem valor, usa o chat do comando. Não aceita e-mail |

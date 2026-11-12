@@ -64,6 +64,8 @@ With `-dry` (or `-d`), nothing runs; it only shows how it split things:
 - A block fails when the command's reply starts with ❌ or ⚠️, or when it throws an error. The
   others carry on, unless you use `-stop`: it stops at the first one and tells you how many didn't
   run.
+- Each command's reply is cut at 300 characters in the summary; a reply with a code block (e.g.
+  `/ascii`) comes out whole, in its own message after the summary.
 - Each block carries only its own text: media or the message replied to by `/batch` aren't passed
   on to the commands inside.
 - Maximum of 50 blocks; `/batch` inside `/batch` is refused.

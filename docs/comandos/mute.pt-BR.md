@@ -58,8 +58,9 @@ for encontrado, avisa e não silencia ninguém. Sem grupo, usa `📱 Número:` o
 identificar a pessoa. Se houver mais de um resultado, pede que você escolha na lista.
 
 As opções valem do mesmo jeito: respondendo, `/mute -s` silencia só os status, `/mute -d` só as
-apagadas, `/mute -e` só as edições, `/mute -r` só as reações e `/mute` (ou `/mute -a`) tudo. Respondendo a mensagem de alguém
-(que não é um aviso), silencia quem a mandou.
+apagadas, `/mute -e` só as edições, `/mute -r` só as reações e `/mute` (ou `/mute -a`) tudo.
+Respondendo a mensagem de alguém (que não é um aviso), silencia quem a mandou. Respondendo uma
+mensagem do próprio bot que não é um aviso, ele não sabe de quem é e pede que você informe quem.
 
 ```text
 ❌ MENSAGEM APAGADA DETECTADA
@@ -70,6 +71,7 @@ apagadas, `/mute -e` só as edições, `/mute -r` só as reações e `/mute` (ou
 
 /mute                       (respondendo o aviso)
 🔇 Silenciado: 👥 Grupo sobre L200 — apagadas, editadas, status, reações
+💡 Só o aviso some: as mensagens continuam guardadas para o /show. Veja a lista com /mute; desfaça com /unmute.
 ```
 
 ## A lista
@@ -87,6 +89,8 @@ apagadas, `/mute -e` só as edições, `/mute -r` só as reações e `/mute` (ou
 
 Detalhes:
 
+- As opções vão antes do alvo (`/mute -d -e /Grupo L200/`); uma desconhecida é recusada.
+- Sem ninguém silenciado, a lista diz `🔇 Ninguém silenciado.`.
 - As opções se combinam (`-d -e`), e silenciar de novo o mesmo alvo soma ao que já estava.
 - Os silenciados ficam na tabela `mutes`; cada aviso cortado, em `mute_hits` (30 dias), de onde saem
   os números de ignorados da lista e do [`/bot -status`](bot.md#status-do-bot). A origem de cada

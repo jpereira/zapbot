@@ -1,6 +1,8 @@
 # `/uptime`
 
-Mostra a versão e há quanto tempo o bot está no ar e conectado ao WhatsApp.
+Mostra a versão e há quanto tempo o bot está no ar e conectado ao WhatsApp (`Conectado: não
+conectado` enquanto não estiver conectado). Pode ser usado dentro de um [`/alias`](alias.md) ou do
+[`/cron`](cron.md) com `{/uptime}`.
 
 ```text
 /uptime

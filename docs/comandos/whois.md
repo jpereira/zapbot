@@ -7,7 +7,7 @@ it shows them, but only for the owner and admins.
 | Argument | Description |
 |---|---|
 | *(none)* | You: your level in this chat |
-| `[pessoa...]` | Owner and admins only: `/Nome/`, `@menção` or `+número`, several at once. The lookup is the same as `-to` ([Destinations](index.md#destinations-contact-group-number-or-email)) |
+| `[person...]` | Owner and admins only: `/name/`, `@mention` or `+number`, several at once. The lookup is the same as `-to` ([Destinations](index.md#destinations-contact-group-number-or-email)) |
 | *(replying to a message)* | Owner and admins only: who wrote the message being replied to |
 
 ```text
@@ -17,7 +17,7 @@ Quem é? (1)
 
 Permissões
 👑 +a: admin, usa tudo
-🗣️ +u: usuário, usa os comandos comuns (e os admin que o dono liberou)
+🗣️ +u: usuário, usa os comandos comuns
 
 Digite /help para saber quais comandos estão disponíveis.
 ```
@@ -43,7 +43,10 @@ The level is the highest one that applies **in the chat where you typed it**:
 | 🚫 sem permissão | None of the above: the bot ignores the person's commands |
 
 - Anyone with no permission at all can't use `/whois` (the bot ignores their commands); anyone who
-  has some finds out their own level. The owner and admins see anyone's.
+  has some finds out their own level, even limited to a few commands (`/whois` and `/help` are
+  always allowed). The owner and admins see anyone's.
+- Groups and e-mails are refused (`/whois` is for people), and so is a contact whose phone the
+  WhatsApp didn't tell (use the number instead: `/whois +5521999999999`).
 - In a group, the phone number of someone who isn't in it is hidden (`+5521•••••2222`), like in
   [`/bot`](bot.md#who-shows-up-in-the-list).
 - Anyone limited to a few commands ([`/bot +cmd`](bot.md#each-users-commands)) has the rule

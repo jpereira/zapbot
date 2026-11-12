@@ -118,7 +118,7 @@ registration), the fee threshold:
 In your private chat, addresses show in full.
 
 To get the Position Details every day, in a chat or together with other commands, use
-[`/cron`](cron.md#commands-in-the-text) (it accepts the five protocols, `-l`, `-mask` and
+[`/cron`](cron.md#commands-in-the-text) (it accepts the five protocols, `-l`, `-taxas`, `-mask` and
 `aave -full`; the registration and alert options are rejected):
 
 ```text
@@ -158,6 +158,7 @@ from newest to oldest:
 /defi prjx -wallet 0x926024824BAEAf3ee0b7A2EEFA5A216743230444
 ✅ Carteira do Project X cadastrada: 0x92…0444
 📍 2 posições abertas.
+💡 Veja com /defi prjx
 
 /defi prjx
 🌊 Project X · UBTC/USD₮0 · taxa 0.05%
@@ -197,6 +198,7 @@ where it has LP, from largest to smallest in dollars:
 /defi liquidswap -wallet 0x8f3c4d2a1b9e7f6a5c4b3a29180f7e6d5c4b3a2918f7e6d5c4b3a2918f7e6d5c
 ✅ Carteira da Liquidswap cadastrada: 0x8f…6d5c
 📍 2 posições abertas.
+💡 Veja com /defi liquidswap
 
 /defi liqswp
 🌊 Liquidswap · USDC/APT · taxa 0.3% · v0 não correlacionada
@@ -434,7 +436,7 @@ the total, with a warning at the end.
 
 Out of range, the position sits entirely in a single token and stops earning fees. With `-alerta`,
 the bot reads the position (on Project X, the wallet's positions) every 10 minutes (setting
-`defi.alerta.intervalMin`) and warns:
+`defi.alerta.intervalMin`, from 1 to 1440 minutes) and warns:
 
 - **🚨 when it leaves the range**: once per exit. While it stays out, it doesn't repeat.
 - **✅ when it comes back into the range**: also once.

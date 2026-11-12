@@ -16,11 +16,15 @@ Podem ser enviados em **qualquer chat** (privado, grupo ou no chat consigo mesmo
 - `/help` lista os comandos que você pode usar (o dono e os admins veem todos); `/help get` ou
   `/help /get` mostram um específico, e `/help -r` agrupa a lista por role (`owner`, `admin` e
   `user`).
-- Os comandos têm nome em inglês; cada um tem um alias fixo em português (`/desenhe`, `/tempo`, `/todos`,
-  `/boletos`, `/cotacao`, `/traduzir`, `/enquete`, `/listageral`, `/notas`, `/mostrar`...) que continua valendo. Aliases funcionam igual ao comando original
-  (`/download` = `/get`). O [`/alias`](alias.md) salva
+- Os comandos têm nome em inglês; cada um tem um alias fixo em português (`/desenhe`, `/tempo`,
+  `/todos`, `/boletos`, `/cotacao`, `/traduzir`, `/enquete`, `/listageral`, `/notas`,
+  `/mostrar`...) que continua valendo. Aliases funcionam igual ao comando original
+  (`/download` = `/get`) e não dependem do idioma. O [`/alias`](alias.md) salva
   atalhos com argumentos ou textos com vários `{/comando}`; `/help alias` lista os atalhos
   disponíveis para você.
+- O idioma é o setting `zapbot.lang` (`en_US`, o padrão, ou `pt_BR`; veja
+  [Idioma](../configuracao.md#idioma)). Hoje ele traduz o `-h` e o `/help`; as respostas dos
+  comandos ainda estão em português e estão sendo migradas.
 - Basta digitar o começo do comando: `/wat` ou `/watc` viram `/watch`. Se o começo servir para mais
   de um (`/wa`), o bot responde com os possíveis comandos (`/walissu, /watch`). O nome exato e os
   atalhos do `/alias` têm prioridade.
@@ -211,11 +215,11 @@ mesmo que comecem com `/`. Sem isso, alguém poderia usar um comando que ecoa te
 | [`/cve`](cve.md) | | `user` | Últimas CVEs publicadas (NVD); `-highscore` só as críticas |
 | [`/debug`](debug.md) | `/d`, `/dbg` | `admin` | Logs de debug com níveis, filtro e cópia para chats |
 | [`/defi`](defi.md) | | `admin` | Posições de liquidez da Orca e do Project X: saldo, faixa, preço e taxas a coletar, lidos on-chain; `-alerta` avisa quando sai e volta para a faixa e quando as taxas passam de um valor. `liquidswap`: posições de LP na Aptos. `morpho` e `aave`: posição, empréstimos e risco no Morpho e no Aave V3 |
-| [`/draw`](draw.md) | `/desenhe`, `/desenha`, `/img` | `admin` · delegável | Desenha uma imagem com o GPT Image (OpenAI) |
+| [`/draw`](draw.md) | `/desenhe`, `/desenha`, `/img` | `admin` · delegável | Desenha uma imagem ou um GIF animado (`-gif`) com o GPT Image (OpenAI); numa foto, edita ou anima |
 | [`/everybody`](everybody.md) | `/todos`, `/todes` | `admin` · delegável | Menciona todos do grupo |
 | [`/get`](get.md) | `/download` | `user` | Baixa vídeo/áudio de redes sociais ou da mídia respondida |
 | [`/giphy`](giphy.md) | `/gif` | `user` | GIF do GIPHY por tag, URL ou ID, enviado em loop |
-| [`/gpt`](gpt.md) | `/ai` | `admin` · delegável | Pergunta ao ChatGPT (OpenAI) |
+| [`/gpt`](gpt.md) | `/ai` | `admin` · delegável | Pergunta ao ChatGPT (OpenAI); `-img`, `-gif`, `-voz`, `-prices` e `-usage` |
 | [`/help`](help.md) | `/h`, `/ajuda` | `user` | Menu de ajuda, só com os comandos que quem pediu pode usar |
 | [`/join`](join.md) | `/entrar` | `admin` | Entra em um grupo pelo link de convite (`-info` mostra o grupo sem entrar); `-l` lista os seus grupos |
 | [`/joke`](joke.md) | `/piada`, `/humor` | `user` | Piada aleatória em português |
@@ -228,7 +232,7 @@ mesmo que comecem com `/`. Sem isso, alguém poderia usar um comando que ecoa te
 | [`/mute`](mute.md) | `/mudo` | `admin` | Silencia os avisos de apagadas, editadas, status e reações (e os do `/watch`) de uma pessoa, um grupo ou uma comunidade; respondendo um aviso, de onde ele veio |
 | [`/news`](news.md) | `/noticias` | `user` | Manchetes de feeds RSS: `-hack`, `-g1`, `-gazeta`, `-brasil` |
 | [`/noffa`](noffa.md) | `/🌈`, `/🏳️‍🌈` | `user` | Enfeita o texto com arco-íris |
-| [`/notes`](notes.md) | `/notas` | `admin` | Anotações com ID e `#tag` (`-a`, `-l`, `-s`, `-r`): ver com a mídia (`-u`), renomear tag (`-m`), descrever tag (`-d`), exportar em PDF (`-e`) e `-alerta` que avisa numa data/hora |
+| [`/notes`](notes.md) | `/notas` | `admin` | Anotações com ID e `#tag` (`-a`, `-l`, `-s`, `-r`): ver com a mídia (`-v`), editar (`-u`), renomear tag (`-m`), descrever tag (`-d`), exportar em PDF (`-e`) e `-alerta` que avisa numa data/hora |
 | [`/ping`](ping.md) | | `user` | Verifica se o bot está vivo |
 | [`/pixelart`](pixelart.md) | `/ansi`, `/px` | `user` | Arte ANSI/ASCII aleatória (16colo.rs) |
 | [`/poll`](poll.md) | `/enquete`, `/quiz` | `admin` · delegável | Cria uma enquete nativa do WhatsApp no chat; `-r` mostra o resultado |
@@ -239,7 +243,7 @@ mesmo que comecem com `/`. Sem isso, alguém poderia usar um comando que ecoa te
 | [`/show`](show.md) | `/mostrar` | `admin` · delegável | No privado, lista o cache; reexibe apagadas, edições (`-e`), status (`-s`) e reações removidas ou trocadas (`-r`); `-q` busca (texto ou regex) e `-mask` ofusca telefones |
 | [`/stats`](stats.md) | `/estatisticas` | `admin` · delegável | Ranking deste chat ou de outro (`/Grupo/`): quem mais fala, apaga e edita, horários de pico; `-me` para as suas, `-l` lista os chats, `-flush` apaga |
 | [`/sticker`](sticker.md) | `/figurinha` | `user` | Figurinha de imagem, vídeo ou link (o `/get -st`); com `-txt`, uma figurinha animada de texto |
-| [`/tldr`](tldr.md) | `/resumo` | `admin` · delegável | Resume a conversa do chat pelo ChatGPT (`2h`, `300`...) |
+| [`/tldr`](tldr.md) | `/resumo` | `admin` · delegável | Resume a conversa do chat pelo ChatGPT (`30m`, `2h`, `1d`, `1h30m` ou `300` mensagens; respondendo uma mensagem, a partir dela) |
 | [`/translate`](translate.md) | `/traduzir` | `user` | Traduz o texto ou a mensagem respondida pelo Google Translate, sem chave; `-para en` muda o idioma |
 | [`/unblock`](unblock.md) | `/desbloquear` | `admin` | Desbloqueia uma pessoa: pelo nome, pelo número, pelo nº da lista do `/block` ou respondendo uma mensagem |
 | [`/unmute`](unmute.md) | `/desmutar` | `admin` | Desfaz o silêncio do `/mute`: pelo nome, pelo nº da lista, respondendo um aviso ou todos (`-all`) |

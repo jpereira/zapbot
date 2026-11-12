@@ -15,10 +15,10 @@ Acompanha posições em DeFi, de cinco protocolos:
 A Orca cadastra a **posição** (`-address`); o Project X, a Liquidswap, o Morpho e o Aave, a
 **carteira** (`-wallet`). Todos aceitam um nome opcional (`-name`). O `/defi` lê tudo na hora e
 mostra o equivalente ao "Position Details" de cada posição; com `orca`, `prjx`, `liquidswap` (ou
-`liqswp`), `morpho` ou `aave`, só as daquele protocolo. No seu privado, os endereços e as carteiras aparecem inteiros; fora dele,
-abreviados (`0x92…0444`). Com o `-alerta`, o bot avisa quando uma posição sai da faixa, quando volta
-e, com o `-taxas`, quando as taxas a coletar passam de um valor
-([Alerta de saída da faixa](#alerta-de-saída-da-faixa)).
+`liqswp`), `morpho` ou `aave`, só as daquele protocolo. No seu privado, os endereços e as
+carteiras aparecem inteiros; fora dele, abreviados (`0x92…0444`). Com o `-alerta`, o bot avisa
+quando uma posição sai da faixa, quando volta e, com o `-taxas`, quando as taxas a coletar passam
+de um valor ([Alerta de saída da faixa](#alerta-de-saída-da-faixa)).
 
 Para todos os protocolos:
 
@@ -117,8 +117,8 @@ limite das taxas:
 No seu privado, os endereços saem inteiros.
 
 Para receber o Position Details todo dia, num chat ou junto com outros comandos, use o
-[`/cron`](cron.md#comandos-no-texto) (aceita os cinco protocolos, `-l`, `-mask` e `aave -full`; as
-opções de cadastro e de alerta são recusadas):
+[`/cron`](cron.md#comandos-no-texto) (aceita os cinco protocolos, `-l`, `-taxas`, `-mask` e
+`aave -full`; as opções de cadastro e de alerta são recusadas):
 
 ```text
 /cron 06:00 -r diario -to /Grupo da Faculdade/ ⏰ Status da DeFi! {/defi} Preço do BTC! {/crypto BTC}
@@ -157,6 +157,7 @@ para a mais velha:
 /defi prjx -wallet 0x926024824BAEAf3ee0b7A2EEFA5A216743230444
 ✅ Carteira do Project X cadastrada: 0x92…0444
 📍 2 posições abertas.
+💡 Veja com /defi prjx
 
 /defi prjx
 🌊 Project X · UBTC/USD₮0 · taxa 0.05%
@@ -196,6 +197,7 @@ LP, da maior para a menor em dólar:
 /defi liquidswap -wallet 0x8f3c4d2a1b9e7f6a5c4b3a29180f7e6d5c4b3a2918f7e6d5c4b3a2918f7e6d5c
 ✅ Carteira da Liquidswap cadastrada: 0x8f…6d5c
 📍 2 posições abertas.
+💡 Veja com /defi liquidswap
 
 /defi liqswp
 🌊 Liquidswap · USDC/APT · taxa 0.3% · v0 não correlacionada
@@ -431,7 +433,7 @@ com um aviso no fim.
 
 Fora da faixa, a posição fica toda num token só e para de render taxas. Com o `-alerta`, o bot lê a
 posição (no Project X, as posições da carteira) a cada 10 minutos (setting
-`defi.alerta.intervalMin`) e avisa:
+`defi.alerta.intervalMin`, de 1 a 1440 minutos) e avisa:
 
 - **🚨 quando ela sai da faixa**: uma vez por saída. Enquanto continua fora, não repete.
 - **✅ quando ela volta para a faixa**: também uma vez.

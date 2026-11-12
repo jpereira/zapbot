@@ -2,12 +2,13 @@
 
 Role `admin`: só você e os admins extras. O dono libera a uma pessoa ou grupo com
 `/bot +u +cmd /gpt` ([Delegando](index.md#delegando-um-comando-admin)).
-Quem recebe só pergunta: o `-model` (ver e trocar o modelo) e o `-usage`, `-u` (consumo e limites) são do
-dono e dos admins.
+Quem recebe pergunta e usa o `-voz`: o `-model`, `-audio`, `-img`, `-gif`, `-prices` e o `-usage`, `-u`
+são do dono e dos admins.
 
 Pergunta ao ChatGPT pela API da OpenAI e responde no chat. Respondendo uma mensagem, o texto dela
 entra antes da pergunta; respondendo uma **foto**, ela vai junto e o ChatGPT a vê (veja
-[Com foto](#com-foto)); respondendo um **áudio**, ele é transcrito (veja [Com áudio](#com-áudio)); com `-voz`, o texto vira
+[Com foto](#com-foto)); respondendo um **documento** (texto ou PDF), o conteúdo dele vai junto (veja
+[Com documento](#com-documento)); respondendo um **áudio**, ele é transcrito (veja [Com áudio](#com-áudio)); com `-voz`, o texto vira
 uma nota de voz de robô (veja [Voz](#voz--voz)); com `-img` e `-gif`, ele cria uma imagem e um GIF (veja
 [Imagem e GIF](#imagem-e-gif--img--gif)). Enquanto espera a resposta, o bot aparece como "digitando...". Sem
 pergunta, mostra a ajuda.
@@ -32,7 +33,7 @@ pergunta, mostra a ajuda.
 
 Se a **primeira palavra** parece uma opção mas não existe (`/gpt -price`), o bot responde
 `❌ Opção desconhecida: -price` e sugere o `-h|-help`, sem chamar a OpenAI. Só a primeira palavra: no
-resto do texto, um `-x` é pergunta. O `/tldr` age igual (o `-2h` e o `-30m` continuam valendo).
+resto do texto, um `-x` é pergunta. O `/tldr` e o `/draw` agem igual (o `-2h` e o `-30m` continuam valendo).
 
 | Opção | Valor | Descrição |
 |---|---|---|
@@ -41,7 +42,7 @@ resto do texto, um `-x` é pergunta. O `/tldr` age igual (o `-2h` e o `-30m` con
 | `-img` | | Só dono e admins. Cria uma imagem com o pedido (respondendo uma foto, a edita). Veja [Imagem e GIF](#imagem-e-gif--img--gif) |
 | `-gif` | | Só dono e admins. Cria um GIF (respondendo uma foto, a anima). Veja [Imagem e GIF](#imagem-e-gif--img--gif) |
 | `-voz`, `-v` | `[texto]` | Responde uma nota de voz de robô com o texto (ou com o da mensagem respondida). Veja [Voz](#voz--voz) |
-| `-status`, `-s` | | Acrescenta no rodapé da resposta o consumo da chamada: bytes TX/RX e tokens. Veja [Status](#status--status) |
+| `-status`, `-s` | | Acrescenta no rodapé da resposta o consumo da chamada: bytes TX/RX, tokens, custo e saldo. Veja [Status](#status--status) |
 | `-prices` | | Só dono e admins. Busca os preços no site da OpenAI e atualiza o `openai.pricing`. Veja [Status](#status--status) |
 | `-usage`, `-u` | `[dias]` | Só dono e admins. O consumo dos últimos dias (padrão 7, até 31) e os limites de agora. Veja [Consumo e limites](#consumo-e-limites--usage) |
 
@@ -91,11 +92,28 @@ ordem. Sem pergunta nenhuma, o ChatGPT descreve a foto.
 🤖 Parece um labrador retriever, pelo focinho e pelo pelo curto...
 ```
 
-- Valem JPEG, PNG, WebP e GIF (sem animação), até 15 MB. Outro formato, imagem que já expirou no
+- Valem JPEG, PNG, WebP e GIF, até 15 MB. Outro formato, imagem que já expirou no
   WhatsApp ou grande demais respondem com um aviso, e nada é enviado à OpenAI.
-- Vídeo, áudio e documento não são imagens: o `/gpt` usa só o texto (a legenda) deles.
+- Vídeo não é imagem: o `/gpt` usa só o texto (a legenda) dele. Áudio e documento têm as suas
+  seções.
 - O modelo precisa ler imagens (os da lista do `-m` leem). A foto passa pelo servidor da OpenAI,
   como qualquer pergunta; ela não fica salva no banco do bot.
+
+## Com documento
+
+Respondendo um documento com o `/gpt`, o bot o lê e manda o conteúdo como texto, depois da pergunta
+(ou sozinho, se você não digitou nada).
+
+```text
+(respondendo um PDF)
+/gpt resuma esse documento
+```
+
+- Valem texto puro (txt, md, csv, json, xml, yaml, logs, código-fonte, html...) e PDF, até 10 MB. O
+  PDF é lido com o `pdftotext` (o poppler-utils precisa estar instalado). Outros formatos (docx,
+  xlsx...), documento expirado ou grande demais respondem com um aviso, e nada é enviado à OpenAI.
+- Só os primeiros 60 mil caracteres vão. Documento sem texto (um PDF escaneado) responde com um aviso.
+- O conteúdo passa pelo servidor da OpenAI, como qualquer pergunta.
 
 ## Com áudio
 
@@ -182,7 +200,8 @@ Com `-status` (ou `-s`) a resposta ganha um rodapé com o consumo da chamada. Ve
   (`openai.pricing.auto`, ligado por padrão; `/set openai.pricing.auto false` para só atualizar à mão).
   Com os preços de mais de 30 dias, o rodapé avisa (`⚠️ preços de N dias: /gpt -prices`). Se o site mudar de formato, o comando avisa e nada é alterado (use `/set openai.pricing`).
 - **🏦 Saldo**: só com a chave de admin e o `openai.credit.total` (como no `-usage`). O gasto vem da Costs API,
-  lido a cada 5 minutos (ela atrasa), mais a estimativa das chamadas feitas desde então.
+  lido a cada 5 minutos (ela atrasa), mais a estimativa das chamadas feitas desde então. Sem o `openai.credit.since`, conta os últimos 180
+  dias.
 - **🔁 N chamadas**: aparece quando o comando fez mais de uma (áudio transcrito e depois o chat).
 - Voz, imagem e GIF não têm texto para o rodapé: o status vai numa mensagem à parte.
 
@@ -253,8 +272,8 @@ ainda resta na janela atual e quando reseta, de tokens e de requisições do mod
 ```
 
 - **Sem a chave de admin**: sai só os limites, com a dica de como configurar. **Chave de admin
-  recusada** (401 ou 403): o aviso de que a Usage API pede uma Admin key, e os limites saem do mesmo
-  jeito.
+  recusada** (401 ou 403): o aviso de que a Usage API pede uma Admin key (ou uma chave com o escopo
+  Usage em Read), e os limites saem do mesmo jeito.
 - **Sem nenhuma chave**: `⚠️ API key da OpenAI não encontrada`.
 - Não há limites por projeto aqui: o endpoint `organization/projects/<id>/rate_limits` precisa do id
   do projeto, e os cabeçalhos já mostram o limite que vale para a chave em uso.
@@ -267,7 +286,8 @@ marcado por ✅. Só o dono e os admins usam. O `-m <modelo>` troca o do uso ped
 | Uso | Troca com | Setting |
 |---|---|---|
 | Padrão (perguntas) | `/gpt -m <modelo>` | `openai.api.model` |
-| Imagens e GIF | `/gpt -m <modelo> -gif` (ou `-img`) | `openai.image.model` |
+| Imagens | `/gpt -m <modelo> -img` | `openai.image.model` |
+| GIF | `/gpt -m <modelo> -gif` | `openai.image.gifModel` |
 | Transcrição de áudio | `/gpt -m <modelo> -audio` | `openai.transcribe.model` |
 | Voz | `/gpt -m <modelo> -voz` | `openai.tts.model` |
 
@@ -279,7 +299,10 @@ Padrão (perguntas) — /gpt -m <modelo>
 ✅ gpt-4o-mini
 ▫️ gpt-4.1
 
--img, -gif (imagens e GIF) — /gpt -m <modelo> -gif
+-img (imagens) — /gpt -m <modelo> -img
+✅ gpt-image-2
+
+-gif (GIF) — /gpt -m <modelo> -gif
 ✅ gpt-image-2.6-flare
 ▫️ gpt-image-2.5-flare
 
@@ -291,13 +314,13 @@ Padrão (perguntas) — /gpt -m <modelo>
 
 A lista é a da sua chave (GET /v1/models).
 
-/gpt -m -gif                        → lista só as imagens
-/gpt -m gpt-image-2.5-flare -gif    → ✅ Modelo de imagens e GIF do /gpt: gpt-image-2.5-flare
+/gpt -m -gif                        → lista só o do GIF
+/gpt -m gpt-image-2.5-flare -gif    → ✅ Modelo de GIF do /gpt: gpt-image-2.5-flare
 ```
 
 - Com uma opção e **sem modelo** (`/gpt -m -gif`), lista só aquele uso.
-- O modelo que a chave **não vê** não é gravado: o bot mostra os que ela vê (`❌ A sua chave não vê o modelo
-  gpt-image-1 (imagens e GIF)`). Um atual que a chave não vê aparece com `⚠️ a sua chave não vê`.
+- Nas imagens, no GIF, no áudio e na voz, o modelo que a chave **não vê** não é gravado: o bot mostra os que ela vê (`❌ A sua chave não vê o modelo
+  gpt-image-1 (GIF)`). Um atual que a chave não vê aparece com `⚠️ a sua chave não vê`.
 - Sem chave, ou se a OpenAI não responder, a lista cai nos padrões do código (e o aviso diz isso).
 - Os modelos das perguntas seguem a lista fixa abaixo (`gpt-5-pro`, por exemplo, não vale); os de imagem,
   áudio e voz são livres, porque os nomes mudam.

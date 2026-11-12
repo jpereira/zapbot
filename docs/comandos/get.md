@@ -11,7 +11,7 @@ through ffmpeg. If the media has a link in the caption, the media wins.
 | Option | Value | Description |
 |---|---|---|
 | `-sticker`, `-st` | | Sends as an animated sticker (up to 6 s), framed on the middle of the video. Same as [`/sticker`](sticker.md) |
-| `-pos` | `<topo\|meio\|baixo>` | With `-st`: where the square crop goes (default `meio`). On media wider than tall, `topo` is the left and `baixo` the right |
+| `-pos` | `<topo\|meio\|baixo>` | With `-st`: where the square crop goes (default `meio`; `top`, `middle`, `bottom` and `cima`, `centro` also work). On media wider than tall, `topo` is the left and `baixo` the right |
 | `-audio`, `-a` | | Extracts only the audio (`.mp3`) |
 | `-startSec`, `-ss` | `<time>` | Starts at this point of the original video (default 0), in seconds (`22`, `1.5`) or in `min:sec` (`09:33`, or `h:min:sec`). With a `-` in front, counts from the **end** of the video (`-10`, `-01:44`) |
 | `-endSec`, `-es` | `<time>` | Ends at this point of the original video, in the same format as `-ss` (`-es -5` ends 5 s before the end); must be greater than the start. Also works without `-ss` and for stickers |
@@ -101,13 +101,13 @@ Limits (`/get` isn't admin: whoever is in `bot.users` uses it; with it set to `t
 - Download of at most 200 MB before conversion (setting `get.maxDownloadMB`).
 - A playlist link downloads only the video of the link (`--no-playlist`).
 - yt-dlp and ffmpeg are interrupted after 5 minutes each.
-- An unknown option is refused (`❌ Opção desconhecida: -x`), instead of becoming the URL.
+- An unknown option is refused (`❌ Opção desconhecida: -x`, with a hint to use `/get -h`), instead of becoming the URL.
 - At most 2 `/get` (or `/sticker`) with yt-dlp or ffmpeg at the same time. The others get a notice
   to try again.
 
-While it downloads and converts, the bot shows "⏳ Processando…". At the end, that same message
-becomes "✅ Mídia baixada com sucesso!" (or "✅ Sticker criado com sucesso!"), or the error, without
-an extra message.
+While it downloads and converts, the bot shows "⏳ Processando sua mídia, aguarde." (or "seu sticker"). At the
+end, that same message becomes "✅ Mídia baixada com sucesso!" (or "✅ Sticker criado com
+sucesso!"), or the error, without an extra message.
 
 URLs that point to the internal network (`localhost`, `10.x`, `192.168.x`, `169.254.x`, local IPv6,
 etc.) are refused, so `/get` doesn't serve as a bridge into your network (SSRF). The check also

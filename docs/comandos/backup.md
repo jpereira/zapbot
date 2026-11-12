@@ -67,7 +67,7 @@ Removing contacts or reducing the local history doesn't change the backups that 
 
 ## Automatic backup
 
-Every day, from 3 AM Brasília time (setting `backup.hour`), the bot creates a backup. If it's down
+Every day, from 3 AM Brasília time (setting `backup.hour`, 0 to 23), the bot creates a backup. If it's down
 at that time, the backup is made as soon as it's back, on the same day. Turn it off with
 `/set backup.enabled off`.
 
@@ -91,7 +91,7 @@ the automatic sending doesn't open a choice list. For a person mentioned in a co
 name or number in the setting. Emails use the bot's SMTP and the same 20 MB limit as manual
 sending. Manual backups and the ones made before restoring aren't sent through this setting.
 
-The 7 most recent automatic ones are kept (setting `backup.keep`); older ones are deleted with
+The 7 most recent automatic ones are kept (setting `backup.keep`, 1 to 90); older ones are deleted with
 each new backup. The same count applies to the "before restoring" backups. **Manual** ones (`-now`)
 are never deleted automatically.
 

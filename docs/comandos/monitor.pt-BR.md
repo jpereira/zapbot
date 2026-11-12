@@ -55,7 +55,8 @@ o `#2`. O prefixo `#` é opcional no id. Só dígitos com até nove posições s
 números com dez ou mais dígitos passam pelo resolvedor de telefone. Grupos e e-mails não são
 aceitos na remoção.
 
-Sem cadastros, `/monitor` informa `👀 Nenhum contato cadastrado.`. Com cadastros, mostra:
+Sem cadastros, `/monitor` mostra o cabeçalho seguido de `👀 Nenhum contato cadastrado.` e da dica
+`💡 /monitor -add /Nome do Contato/`. Com cadastros, mostra:
 
 ```text
 👀 MONITOR · ativo
@@ -71,6 +72,9 @@ Sem cadastros, `/monitor` informa `👀 Nenhum contato cadastrado.`. Com cadastr
    • 14/10/2026, 16:49:59 · observado em 14/10/2026, 16:55:10
      Origem: presença do WhatsApp · horário não confirmado
 ```
+
+O cabeçalho mostra `ativo`, `pausado` (monitor desligado ou bot pausado) ou `aguardando conexão`.
+Um contato ainda não verificado mostra `⏳ aguardando primeira verificação`.
 
 Tanto `/monitor` quanto `/monitor -l` mostram até `monitor.maxRecords` entradas por contato
 (padrão: 30), do horário mais recente para o mais antigo, com o horário observado e a hora em que

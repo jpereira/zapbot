@@ -30,7 +30,7 @@ error).
 
 | Option | Value | Description |
 |---|---|---|
-| `-pos` | `<topo\|meio\|baixo>` | Where the square crop of the image or video sits (default `meio`). On media wider than tall, `topo` is the left and `baixo` the right. Doesn't work with `-txt` |
+| `-pos` | `<topo\|meio\|baixo>` | Where the square crop of the image or video sits (default `meio`; `top`, `middle`, `bottom`, `cima` and `centro` also work). On media wider than tall, `topo` is the left and `baixo` the right. Doesn't work with `-txt` |
 | `-txt` | `<texto>` | Animated sticker with the text, without having to reply to anything. See [Text sticker](#text-sticker) |
 | `-bg` | `<cor>` | With `-txt`: the background color, in `#RRGGBB` (default `#FFFFFF`, white) |
 | `-fg` | `<cor>` | With `-txt`: the letter color, in `#RRGGBB` (default `#000000`, black) |

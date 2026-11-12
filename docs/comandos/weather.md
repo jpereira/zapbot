@@ -45,7 +45,9 @@ With days (`/weather 3d Niteroi`), after the current weather:
 Above the maximum the bot refuses and states the limit. To limit queries, use
 `/set tempo.maxDays 7`; `/set -reset tempo.maxDays` sets the limit back to 16 days. A saved limit
 keeps applying after a restart. Without N, the reply has only today's weather. Days follow the
-timezone of the city being queried.
+timezone of the city being queried. With `1`, the forecast block is titled "Previsão de hoje".
+At 5°C or below the reply ends with "🥶 Tá congelando!", and at 30°C or above with "🔥 Que calor
+da porra!".
 
 ## Changing the default city
 

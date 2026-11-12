@@ -10,7 +10,7 @@ option; with `-m` at the start, they can pick several.
 | Option | Description |
 |---|---|
 | `-multi`, `-m` | Allows picking more than one option. Only works at the start of the text |
-| `-result`, `-r` | Shows the result of the chat's most recent poll (or of the poll being replied to). See [Result](#result) |
+| `-result`, `-r` | Shows the result of the chat's most recent poll (or of the poll being replied to). Only works at the start of the text. See [Result](#result) |
 
 ```text
 /poll Pizza ou hambúrguer? | Pizza | Hambúrguer
@@ -22,7 +22,8 @@ Montanha
 Campo
 ```
 
-WhatsApp limits: question up to 255 characters, options up to 100 and no repeats. `/quiz` is just a
+WhatsApp limits: question up to 255 characters, options up to 100 and no repeats (case is ignored).
+A question that starts with `/` gets a `📊` in front, so it never looks like a command. `/quiz` is just a
 shortcut: WhatsApp Web doesn't offer quiz mode (with a correct answer) for bots.
 
 ## Result
@@ -50,5 +51,5 @@ and who voted for each one. When replying to a poll, the scoreboard is that poll
   vote.
 - Votes only start being counted while the bot is up: data on polls from before that (or from when
   it was disconnected) doesn't show up.
-- Polls and votes are kept for 90 days (setting `enquete.retentionDays`), in the `polls` and
+- Polls and votes are kept for 90 days (setting `enquete.retentionDays`, default 90, from 1 to 365), in the `polls` and
   `poll_votes` tables.

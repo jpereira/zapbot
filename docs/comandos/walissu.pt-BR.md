@@ -27,4 +27,5 @@ Detalhes:
   menos de 2 membros (fora o bot) são recusados, e vale o limite do NVD sem chave (~5 consultas a
   cada 30 s).
 - A CVE pode vir de qualquer severidade; nos raros dias sem nenhuma publicação o bot avisa em vez de
-  marcar alguém.
+  marcar alguém. Fora de um grupo, responde `Apenas utilizado dentro de grupos.`; se o NVD falha,
+  `❌ Não consegui consultar o NVD agora.`

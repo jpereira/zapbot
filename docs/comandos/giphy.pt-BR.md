@@ -14,4 +14,6 @@ ou, se ela não existir, o setting `giphy.api.key` (`/set giphy.api.key <chave>`
 
 URLs aceitas usam `giphy.com/gifs/<ID>` ou `giphy.com/gifs/<nome>-<ID>`. Um argumento alfanumérico
 com pelo menos dez caracteres é interpretado como ID; os demais são tags. O vídeo é baixado em MP4,
-com limite de 10 MB. Sem resultado, o bot avisa no chat.
+com limite de 10 MB. Sem resultado, o bot responde `❌ Nenhum GIF encontrado.`; se a busca ou o download falha,
+`❌ Não consegui buscar esse GIF.`. Sem a chave, avisa como configurá-la. O GIF aleatório tem
+classificação de até PG-13.

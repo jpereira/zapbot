@@ -101,7 +101,11 @@ src/
   midia.js              /get e /sticker: os argumentos do ffmpeg, o recorte da figurinha (sharp) e a prévia do link
   stickerTexto.js       /sticker -txt: os quadros em PNG (sharp) e o WebP animado (ffmpeg)
   openai.js             modelos aceitos pelo /gpt
-  openaiChat.js         chamada ao chat da OpenAI (/gpt e /tldr)
+  openaiChat.js         chamada ao chat da OpenAI (/gpt e /tldr) e o rodapé de status (bytes, tokens, custo)
+  i18n.js               t('chave', {vars}) e o idioma do bot (o setting zapbot.lang)
+  locales/              en_US.js e pt_BR.js (os catálogos) e pt_BR/definicoes/ (o texto em português de cada comando)
+  login.js              /bot -login: a senha (scrypt) que transforma quem é de fora em admin
+  monitor.js, monitorHistorico.js, presenca.js   /monitor: contatos, histórico e uma consulta de presença por vez
   contatos.js, opcoes.js                    contatos/@lid e o parser de opções
   destinos.js           o -to/alvo: contato ou grupo pelo nome, menção (@), número ou e-mail, e o envio ao destino
   escolhas.js           a lista numerada para escolher (vários contatos/grupos) e a confirmação sim/não (só de quem deu o comando)
@@ -113,7 +117,10 @@ src/
   eventos/              message_create, apagadas, editadas, reações
   comandos/             comandos.js (carrega definicoes/), um arquivo por comando,
                         index.js (HANDLERS) e base.js (ajuda e utilitários)
-  comandos/definicoes/  a definição de cada comando (cmd, opções, role...), um arquivo por comando
+  comandos/definicoes/  a definição de cada comando (cmd, opções, role...), um arquivo por comando, com o texto em inglês
+  comandos/localizar.js o texto do comando no idioma do bot (junta o locales/pt_BR/definicoes/<cmd>.json)
+  comandos/openaiComum.js  o que o /gpt e o /draw repartem: o aviso "Processando", o rodapé de status e a troca de modelo
+  comandos/draw.js      /draw (e a imagem/GIF do /gpt -img, -gif)
   util/                 arquivos, formatação, datas digitadas (quando.js), PDF (pdf.js), processos externos, URLs
 tests/                  testes automatizados (veja Testes)
 ```
@@ -197,10 +204,11 @@ devolve `null`, como quando o WhatsApp não deixa editar.
 | `defi.test.js` | Solana (base58, PDA), contas da Orca (conferidas com o SDK oficial), o Project X (HyperEVM simulada), a Liquidswap (Aptos simulada: indexador e fullnode, com o preço das pools estáveis e a chave da API), o Morpho (API simulada, com as contas conferidas com as da API), o Aave V3 (blockchain simulada, com o Multicall3 de verdade) e o `/defi`: o filtro por protocolo, o `-rm` de vários, os endereços (inteiros só no privado), a lista (com o 🔔 e o limite), o resumo do `-taxas` (com o total e o `-alerta`) e o `-alerta` (saída e volta da faixa, o `-taxas`, o `-alerta` no cadastro e vários `-to`) |
 | `dependencias.test.js` | Carregamento das dependências sem aviso do módulo `punycode` |
 | `diagnostico.test.js` | O `/bot -test`: os itens com ✅/❌/➖ (rede simulada), a falha de um teste na contagem e a recusa junto de outras opções; o `-flush-email` (sem SMTP, recusa) e a busca das pastas Sent e Trash |
-| `externos.test.js` | `/cve`, `/weather`, `/news`, `/gpt`, `/tldr`, `/translate`, `/giphy`, `/meme`, `/joke`, `/kernel`, `/pixelart` |
+| `externos.test.js` | `/cve`, `/weather`, `/news`, `/gpt`, `/tldr`, `/draw`, `/translate`, `/giphy`, `/meme`, `/joke`, `/kernel`, `/pixelart` |
 | `get-cache.test.js` | `/get` (a URL, o link e a mídia respondida, e o anti-SSRF), `/cache` e a limpeza periódica |
 | `grupo.test.js` | `/everybody`, `/bills`, `/members`, `/walissu`, `/poll` (e o `-r`), `/sticker` (e o `-txt`) |
 | `grupos.test.js` | `/join` (link, código, `-info`, convite inválido e recusa) e `/leave` (pelo nome, pelo nº, a lista) |
+| `i18n.test.js` | O setting `zapbot.lang` (padrão `en_US`, aceita `pt-BR`/`pt`/`en`), os catálogos (mesmas chaves e `{placeholders}`), o texto das definições em inglês com a tradução em português de cada uma, e o `-h`/`/help` nos dois idiomas |
 | `heartbeat.test.js` | Heartbeat e o `docker/app/healthcheck.js` (executado de verdade) |
 | `mascara-telefones.test.js` | Ofuscação de telefones no `/show`, `/watch` e `/bot` |
 | `mensagens.test.js` | Gravação (com o nome da sua agenda, não o pushname) e de localizações sem interpretar a miniatura como texto ou comando, roteamento, permissões (`role`, o `bot.users` com pessoas, grupos, `true`/`false` e as permissões persistidas, bot desligado, admins extras do `bot.admins`, os atalhos `/bot +a`/`+u`, as listas do `-list-users`/`-list-users all`, os comandos de cada usuário (`+cmd`/`-cmd`), o `-reset` com a confirmação, o `/whois` e a proteção contra flood), o log dos comandos desconhecidos e a contagem do `/stats` (sem os avisos do sistema) |
@@ -211,9 +219,11 @@ devolve `null`, como quando o WhatsApp não deixa editar.
 | `profile.test.js` | O `/profile` (`/perfil`): a foto com a legenda `Contato: nome da agenda <telefone>` (por nome, menção e número), o nome da agenda no lugar do pushname, o seu perfil e o de quem escreveu a mensagem respondida, várias pessoas, sem foto, o download que falha, o `@lid`, `-mask`, grupo recusado e o uso só pelo dono |
 | `reacoes.test.js` | Reações removidas ou trocadas: o evento `message_reaction` (e o que não gera aviso), o aviso `show.alert.reaction`, o `/show -r`, o `/mute -r`, o `/bot -status` e a limpeza |
 | `search.test.js` | `/search` (`/buscar`): neste chat, em todos no seu privado, o `-N` e o limite, mídias e textos longos |
+| `sticker-pos.test.js` | `/sticker -pos`: o recorte quadrado no topo, no meio (padrão) ou embaixo |
 | `stats.test.js`, `watch.test.js` | `/stats` (com o `/chat/`, o `-l` e o `-flush`) e `/watch` (e um ou vários `-to`) |
 | `status.test.js` | `/bot -status`: o relatório (com o aviso `show.alert.*` desligado e os silenciados do `/mute`) e o envio diário (e o `-to`: pessoas, grupos e e-mails) |
 | `telefone-bot.test.js` | Número da conta configurada, formato esperado, avisos e destinos internos |
+| `url.test.js` | Anti-SSRF do `/get` e da prévia do link: endereços internos bloqueados, respostas DNS mistas recusadas e IP fixado com revalidação dos redirects |
 | `util.test.js` | Formatação, contatos/`@lid`, menções, arquivos do cache e a versão com o commit e o `(devel)` (`versao.js`) |
 
 Um comando ou opção novos entram com os testes deles; o `configuracao.test.js` falha se o comando
@@ -326,14 +336,14 @@ Cada entrada segue este formato:
 ```js
 {
     cmd: '/get',                       // nome principal
-    usage: '/get [OPÇÃO]... <url>',    // linha "Uso:" no -help (formas com "  ou  ": uma por linha)
+    usage: '/get [OPTION]... <url>',   // linha "Usage:" no -help (formas com "  or  ": uma por linha)
     aliases: ['/download'],            // nomes alternativos
-    summary: 'Baixa vídeo ou áudio',   // o que faz, numa linha (a lista do /help)
-    help: 'Baixa vídeo ou áudio...',   // descrição completa (o -help)
+    summary: 'Downloads video or audio', // o que faz, numa linha (a lista do /help)
+    help: 'Downloads video or audio...', // descrição completa (o -help)
     ex: ['/get <url>', '/get -a <url>'], // exemplos (opcional), um por linha depois do texto
     cmd_opts: [
         { opts: ['audio', 'a'], values: [], desc: '...' },                // flag
-        { opts: ['startSec', 'ss'], values: ['<segundo>'], desc: '...' }, // opção com valor
+        { opts: ['startSec', 'ss'], values: ['<time>'], desc: '...' },   // opção com valor
         { argv: ['<url>'], desc: '...' },                                 // argumento posicional (só doc)
         { opts: ['a'], sinais: ['+', '-'], values: ['[x]'], desc: '...' }, // par +a/-a numa linha (só doc)
         { opts: ['add'], values: ['<x>'], desc: '...', cron: false },      // opcional; não roda num {/comando} do /cron
@@ -341,6 +351,7 @@ Cada entrada segue este formato:
         { opts: ['chat'], values: ['<x>'], desc: '...', outrosChats: true } // opcional; só o chat atual para quem recebeu
     ],
     estrito: true,                     // opcional; opção desconhecida é erro (em vez de ir para o argv)
+                                       // ('primeira': só a PRIMEIRA palavra desconhecida, como /gpt -price)
     mask: true,                        // opcional; aceita o -mask (telefones ofuscados na saída)
     digitando: false,                  // opcional; sem o "digitando..." (para os que respondem na hora)
     argumentosLivres: true,            // opcional; o resto é texto livre, sem ler opções (/alias, /batch)
@@ -375,11 +386,14 @@ Cada entrada segue este formato:
   (`/ping`, `/help`...).
 - `{ argv: ['-N'], numero: true }` faz o parser ler o `-10` como `opts.numero` (o 1º; um segundo é
   desconhecido), em vez de mandá-lo para o `argv`. Com `estrito: true`, uma opção desconhecida
-  não chega ao handler: o `executar.js` responde `❌ Opção desconhecida: -x` com a sintaxe.
+  não chega ao handler: o `executar.js` responde `❌ Opção desconhecida: -x` com a sintaxe. Com
+  `estrito: 'primeira'` (`/gpt`, `/tldr` e `/draw`), só a **primeira** palavra desconhecida que parece uma
+  opção (`/gpt -price`) é recusada, com a dica de usar o `-h` em vez da sintaxe; as outras fazem parte
+  do texto.
 - Alterar `help`, `usage`, `aliases`, descrições, `role` ou `disabled` não exige código: basta
   refazer o build e recriar o container.
 - O `-h` é lido no celular, então o formatador quebra as linhas:
-  - cada forma do `usage` separada por `"  ou  "` sai numa linha;
+  - cada forma do `usage` separada por `"  or  "` (`"  ou  "` em português) sai numa linha;
   - o `help` e cada `desc` saem com uma frase por linha (fim de frase é `. ` seguido de maiúscula:
     `Máx. 20` e `(ex.: -taxas 50)` não quebram); numa opção, a 1ª frase fica ao lado dela, e as
     outras, recuadas;
@@ -407,3 +421,31 @@ Cada entrada segue este formato:
   avisa nos logs se existir uma definição sem handler.
   Comandos, handlers, a tabela [Resumo](comandos/index.md#resumo) e as páginas de `docs/comandos/`
   ficam em **ordem alfabética** (o menu do `mkdocs.yml` também).
+
+## Internacionalização (i18n)
+
+O idioma do bot é o [setting](settings.md) `zapbot.lang`: `en_US` (padrão) ou `pt_BR`.
+O `/set zapbot.lang pt_BR` (ou `/set zapbot.lang=pt_BR`) troca na hora; `pt-BR`, `pt` e `en` também
+valem e são normalizados. Hoje ele traduz a ajuda (`-h`, `/help`); as **respostas dos comandos ainda
+são em português** e estão sendo migradas para o mesmo mecanismo.
+
+- O `src/i18n.js` tem o `t('chave', { vars })`: procura a chave no catálogo do idioma atual
+  (`src/locales/en_US.js` e `src/locales/pt_BR.js`, módulos simples de chave → texto), troca os
+  `{placeholders}` e, no plural, escolhe a forma de `{ one, other }` pelo `vars.n`. A chave que falta no
+  idioma cai no `en_US` e, na falta dele, na própria chave.
+- O texto de um comando (`summary`, `usage`, `help`, `ex` e, nas opções, `desc`, `ex`, `values` e `argv`)
+  fica **em inglês** em `src/comandos/definicoes/`. A tradução em português vai em
+  `src/locales/pt_BR/definicoes/<cmd>.json`, com os mesmos campos nos mesmos lugares, e o
+  `src/comandos/localizar.js` junta por cima da definição quando o idioma não é o padrão. O resto da
+  definição (`opts`, `role`...) vale para qualquer idioma.
+- **Um texto**: adicione a chave no `en_US.js` e no `pt_BR.js` (com os mesmos `{placeholders}`) e use
+  `t('chave', { ... })` no código.
+- **O texto de um comando**: escreva em inglês na definição e a tradução no `.json`.
+- **Um idioma**: crie o `src/locales/<lang>.js` e o `src/locales/<lang>/definicoes/`, registre o idioma
+  em `IDIOMAS` e nos catálogos do `src/i18n.js`, e em `opcoes` e `normalizar` do `zapbot.lang` no
+  `SETTINGS_SCHEMA`.
+
+Os testes rodam em `pt_BR` (o `bot.reiniciar()` liga), porque as asserções são em português. O
+`tests/i18n.test.js` troca o idioma de propósito e confere os dois: os catálogos têm as mesmas chaves e
+placeholders, toda definição tem a tradução com a mesma estrutura, e a ajuda sai certa em `en_US` e em
+`pt_BR`.

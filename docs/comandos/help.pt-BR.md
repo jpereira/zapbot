@@ -8,7 +8,8 @@ Exibe o menu com os comandos, ou a ajuda de um só. Cada um vê só o que pode u
   título, e o `/help` de um comando `admin` ou `owner` responde
   `⛔ O /show é só do dono do bot (e dos admins).`
   Quem está limitado a alguns comandos ([`/bot +cmd`](bot.md#comandos-de-cada-usuário)) vê só esses,
-  e um `admin` que o dono liberou (`/bot +u +cmd /gpt`) aparece para quem o recebeu.
+  e um `admin` que o dono liberou (`/bot +u +cmd /gpt`) aparece para quem o recebeu. O `/help` e o
+  `/whois` sempre passam.
 
 O `/help` sozinho lista um comando por linha, só com o que ele faz (o `summary` da
 definição do comando), num bloco monoespaçado (para manter o alinhamento no celular), e termina com a dica de como ver o resto:
@@ -65,4 +66,30 @@ argumentos e os aliases. `[]` indica algo opcional; `<>`, um valor a preencher; 
 ser repetido. Uma linha iniciada por `Ex:` é um exemplo de comando.
 
 Comandos desconhecidos ou desativados recebem uma resposta à mensagem para o dono, admins e usuários
-com permissão no chat: `⚠️ Comando '/comando' desconhecido, tente: /help`.
+com permissão no chat: `⚠️ Comando '/comando' desconhecido, tente: /help` (essa resposta ainda é em
+português nos dois idiomas). `/help /xyz`, com um comando que não existe, responde
+`❌ Comando não encontrado: /xyz`.
+
+## Idioma
+
+O `-h`, o `-help` e o `/help` seguem o setting `zapbot.lang`: `en_US` (inglês, o padrão) ou `pt_BR`.
+Mude com `/set zapbot.lang pt_BR` (ou `/set zapbot.lang=en_US`); vale na hora, sem reiniciar. As
+respostas dos outros comandos ainda são em português, e estão sendo migradas.
+
+```text
+/set zapbot.lang en_US
+/ping -h
+Usage: /ping
+Checks whether the bot is responding (replies pong).
+
+Help: -help, -h
+```
+
+```text
+/set zapbot.lang pt_BR
+/ping -h
+Uso: /ping
+Verifica se o bot está respondendo (responde pong).
+
+Ajuda: -help, -h
+```

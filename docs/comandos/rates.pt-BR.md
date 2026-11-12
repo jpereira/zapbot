@@ -6,11 +6,11 @@ das pedidas: valor atual, abertura e fechamento anterior, máxima e mínima do d
 
 | Opção | Valor | Descrição |
 |---|---|---|
-| *(nenhuma)* | `[MOEDA...]` | Cotação das habilitadas, ou só das moedas informadas |
+| *(nenhuma)* | `[MOEDA...]` | Cotação das habilitadas, ou só das moedas informadas (habilitadas ou não). Uma que não é suportada: avisa e lista as suportadas |
 | `-list`, `-l` | | Lista as suportadas; as habilitadas vêm com ✅ |
 | `-add`, `-a` | `<MOEDA>` | Habilita uma moeda suportada (só o dono do bot ou um [admin](bot.md#admins-extras)) |
 | `-del`, `-d` | `<MOEDA>` | Desabilita uma moeda (só o dono do bot ou um [admin](bot.md#admins-extras)) |
-| `-alerta` | `[regra]` | Sem regra, lista os alertas; com regra (ex.: `USD > 5.30`), cria um. A moeda também pode vir antes: `/rates USD -alerta > 5.30`. Veja [Alertas de preço](#alertas-de-preço) |
+| `-alerta` | `[regra]` | Sem regra, lista os alertas; com regra (ex.: `USD > 5.30`), cria um (só o dono do bot ou um [admin](bot.md#admins-extras)). A moeda também pode vir antes: `/rates USD -alerta > 5.30`. Veja [Alertas de preço](#alertas-de-preço) |
 | `-msg` | `<texto>` | Junto com `-alerta`: o texto vai no início do aviso. Vai até o fim do comando. Veja [Mensagem no aviso](#mensagem-no-aviso) |
 | `-rm` | `<nº...\|all>` | Junto com `-alerta`: remove os alertas com esses nºs (`-rm 2`, `-rm 1 2 3` ou `-rm 1,2,3`), ou todos (`all`). Se algum nº não existe, nenhum sai |
 | `-to` | `<destino>` | Junto com `-alerta`: avisa num contato (`/Jorge Pereira/`), numa menção (`@Fulano Da Silva`), num grupo (`/Grupo L200/`), num número (`+5521999999999`) ou por e-mail (`email`) em vez do seu privado. Repita para vários: um alerta só, que avisa em todos. Veja [Avisar em outro chat ou por e-mail](#avisar-em-outro-chat-ou-por-e-mail) |
@@ -72,8 +72,9 @@ cria, lista e remove.
 - O `/rates` compara em reais; o `/crypto`, em dólares (par `<TOKEN>USDT`).
 - Se o preço **já** está do lado pedido, o alerta não é criado (dispararia na hora): o bot mostra o
   valor atual.
-- Os preços são consultados a cada 5 minutos (setting `alerta.intervalMin`), uma vez por moeda. O
-  limite é de 20 alertas no total (setting `alerta.max`).
+- Os preços são consultados a cada 5 minutos (setting `alerta.intervalMin`, de 1 a 60), uma vez por
+  moeda. O limite é de 20 alertas no total (setting `alerta.max`, de 1 a 100), somando `/rates` e
+  `/crypto`.
 - No `-rm` com vários nºs, se algum não existir, nenhum é removido (o bot diz quais faltam). Os nºs
   são os da lista de antes de remover.
 - Os alertas ficam na tabela `price_alerts` e sobrevivem a reinícios.

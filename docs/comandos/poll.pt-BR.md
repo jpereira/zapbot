@@ -10,7 +10,7 @@ começo, pode marcar várias.
 | Opção | Descrição |
 |---|---|
 | `-multi`, `-m` | Permite marcar mais de uma opção. Só vale no começo do texto |
-| `-result`, `-r` | Mostra o resultado da enquete mais recente do chat (ou da enquete respondida). Veja [Resultado](#resultado) |
+| `-result`, `-r` | Mostra o resultado da enquete mais recente do chat (ou da enquete respondida). Só vale no começo do texto. Veja [Resultado](#resultado) |
 
 ```text
 /poll Pizza ou hambúrguer? | Pizza | Hambúrguer
@@ -22,7 +22,9 @@ Montanha
 Campo
 ```
 
-Limites do WhatsApp: pergunta com até 255 caracteres, opções com até 100 e sem repetir. O `/quiz` é
+Limites do WhatsApp: pergunta com até 255 caracteres, opções com até 100 e sem repetir (maiúsculas e
+minúsculas não contam). Uma pergunta que começa com `/` ganha um `📊` na frente, para nunca parecer
+um comando. O `/quiz` é
 só um atalho: o WhatsApp Web não oferece o modo quiz (com resposta certa) para bots.
 
 ## Resultado
@@ -49,6 +51,6 @@ votou em cada uma. Respondendo (reply) uma enquete, o placar é o dela.
   placar. Com `-m`, cada opção marcada conta um voto.
 - Os votos começam a ser contados com o bot no ar: os dados em enquetes de antes disso (ou de quando
   ele estava desconectado) não aparecem.
-- As enquetes e os votos ficam 90 dias (setting `enquete.retentionDays`), nas tabelas `polls` e
+- As enquetes e os votos ficam 90 dias (setting `enquete.retentionDays`, padrão 90, de 1 a 365), nas tabelas `polls` e
   `poll_votes`.
 

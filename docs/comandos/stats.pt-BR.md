@@ -9,7 +9,8 @@ Ranking do chat nos últimos N dias (padrão 7): total de mensagens, quem mais f
 edita, mensagens por faixa de horário, horário e dia de pico. Com `-me`, as **suas** mensagens
 somadas em todos os chats: em quais você mais fala, quantas apagou, seus horários e seu dia de pico.
 
-Os números vêm dos contadores da tabela `stats`, preenchidos a cada mensagem recebida. As suas
+Os números vêm dos contadores da tabela `stats`, preenchidos a cada mensagem recebida (setting `stats.enable`, ligado por padrão; desligado para
+de contar e mantém o histórico). As suas
 mensagens contam para o seu número em qualquer chat, inclusive no privado com outras pessoas. O chat
 consigo mesmo e os status não entram. Também não contam as respostas do próprio bot nem os avisos do
 WhatsApp (alguém entrou no grupo, o nome mudou, a criptografia, uma chamada...), que não têm autor.

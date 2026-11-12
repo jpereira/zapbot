@@ -21,11 +21,21 @@ you need a new invite ([`/join`](join.md)).
 1. Família · 12 participantes
 2. Trabalho · 40 participantes
 
+💡 *Dicas*
+/join <link> entra
+/leave <nº|nome> sai
+
 /leave 2
 👋 Saí de 👥 Trabalho
 
 /leave 2 1 /Grupo L200/  → several at once
 ```
+
+- The numbers are from the last list you saw. A number outside it: `❌ Nº 9 fora da lista; veja os
+  grupos com /leave -l.`
+- A failure doesn't hold up the others: each one that fails gets its own line
+  (`❌ Não consegui sair de 👥 <grupo>: <motivo>.`).
+- Leaving several, the confirmation lists the groups (`👋 Saí de 2 grupos:`).
 
 When leaving the very group where the command was given, the confirmation may not arrive (you're no
 longer there).

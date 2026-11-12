@@ -10,7 +10,7 @@ private chat: the occurrence stays saved in the `/watch` history, and rules with
 their destinations. These suppressed alerts also count as ignored, as `watch`.
 
 ```text
-/mute [OPÇÃO]... [/contato ou grupo/|@menção|+número]
+/mute [OPTION]... [/contato ou grupo/|@menção|+número]
 ```
 
 | Option | Value | Description |
@@ -60,7 +60,8 @@ the person. If there's more than one result, it asks you to choose from the list
 
 The options work the same way: when replying, `/mute -s` mutes only statuses, `/mute -d` only deleted
 ones, `/mute -e` only edits, `/mute -r` only reactions and `/mute` (or `/mute -a`) everything. When
-replying to someone's message (that isn't an alert), it mutes whoever sent it.
+replying to someone's message (that isn't an alert), it mutes whoever sent it. Replying to a
+message from the bot itself that isn't an alert, it doesn't know whose it is and asks you to say who.
 
 ```text
 ❌ MENSAGEM APAGADA DETECTADA
@@ -71,6 +72,7 @@ replying to someone's message (that isn't an alert), it mutes whoever sent it.
 
 /mute                       (replying to the alert)
 🔇 Silenciado: 👥 Grupo sobre L200 — apagadas, editadas, status, reações
+💡 Só o aviso some: as mensagens continuam guardadas para o /show. Veja a lista com /mute; desfaça com /unmute.
 ```
 
 ## The list
@@ -88,6 +90,8 @@ replying to someone's message (that isn't an alert), it mutes whoever sent it.
 
 Details:
 
+- The options go before the target (`/mute -d -e /Grupo L200/`); an unknown one is refused.
+- With nobody muted, the list says `🔇 Ninguém silenciado.`.
 - Options combine (`-d -e`), and muting the same target again adds to what was already there.
 - The muted ones live in the `mutes` table; each suppressed alert goes in `mute_hits` (30 days),
   which is where the ignored counts in the list and in [`/bot -status`](bot.md#bot-status) come

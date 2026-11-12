@@ -39,6 +39,9 @@ aliases. Quem executa um atalho precisa ter permissão para os comandos de desti
 /alias -rm all
 ```
 
+O começo do nome de um alias salvo também completa (`/dol` roda o `/dolar`, se for o único;
+com vários, o bot lista).
+
 O nome aceita letras, números, `_`, `-` e `.` (`/alias meu.comando /me Olá`), com ou sem a barra no cadastro e na remoção. Para
 executar, use a barra: `/eita`. Cadastrar novamente o mesmo nome substitui seu comando e sua
 descrição. Sem `-desc`, a descrição fica vazia. A descrição aceita aspas retas ou curvas,

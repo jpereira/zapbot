@@ -95,7 +95,7 @@ bot and add the label `autoheal=true` to the `zapbot` service:
 | `Erro ao enviar QR por email: ... self-signed certificate` / `unable to verify` | The SMTP certificate isn't valid. Use the provider's official host (the name has to match the certificate). |
 | QR email lands in spam | `QRCODE_EMAIL_SMTP_FROM` is different from the SMTP account. |
 | Email alerts don't arrive | Check `QRCODE_EMAIL_SMTP_HOST`, `_USER` and `_TO` (nothing is sent without them) and the `email.alerts` setting (`/set email.alerts`). SMTP failures show up in the log as `Alerta por e-mail '...' falhou`. |
-| A command doesn't respond | Check the logs for `executed unknown command`: the name is wrong or the command is disabled (`commands.disabled`, or `"disabled": true` in `comandos.js`). For the others, it only shows up with [`/debug`](comandos/debug.md) on. |
+| A command doesn't respond | Check the logs for `executed unknown command`: the name is wrong or the command is disabled (`commands.disabled`, or `disabled: true` in the command definition). For the others, it only shows up with [`/debug`](comandos/debug.md) on. |
 | `docker ps` shows `(unhealthy)` | The bot stopped writing the heartbeat. Find out why with `docker inspect --format '{{json .State.Health}}' zapbot` and the logs; restart with `docker compose -f docker/docker-compose.yml restart zapbot`. See [Container health](#container-health-heartbeat). |
 | `make test`: `No such built-in module: node:sqlite` | Old Node: the tests need Node 22.13+. |
 | `Motivo 'LOGOUT' exige ação manual` | Session disconnected from the phone. Restart the container to generate a new QR. |

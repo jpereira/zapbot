@@ -49,7 +49,7 @@ As regras são testadas contra o texto original da mensagem. Nos avisos e no his
 | Opção | Valor | Descrição |
 |---|---|---|
 | *(nenhuma)* | | Lista regras, origens, destinos e contagens; acrescenta os matches recentes quando houver |
-| `-N` | | Quantidade de matches recentes, de todas as regras. Ex.: `/watch -10` |
+| `-N` | | Quantidade de matches recentes, de todas as regras (1 a 100, limitada pelo `watch.showMax`). Ex.: `/watch -10` |
 | `-list`, `-l` | | Lista somente as regras, origens, destinos e contagens |
 | `-show`, `-s` | `[N\|regra]` | Mostra os textos completos dos matches da regra N (ou da regra pelo texto); sem N, de todas. `-N` controla a quantidade |
 | `-query`, `-q` | `<texto\|/regex/flags>` | Só os matches que têm o texto (sem diferenciar maiúsculas nem acentos) ou que casam com a regex. Com `-s` ou na listagem. Veja [Buscar](#buscar) |
@@ -83,6 +83,7 @@ tira o 🔒.
 - É por regra: as que você já tem continuam como estão (sem 🔒) até você ligar.
 - Vale para o aviso inteiro: o número do remetente, o texto da mensagem e a regra. Se um mesmo
   aviso juntar uma regra com 🔒 e outra sem, ele sai ofuscado.
+- O `-mask N` e o `-umask N` vão sozinhos, sem outra opção nem regra.
 - O mask é só na apresentação: as ocorrências ficam guardadas completas no banco.
 - O 🔒 é guardado com o texto da regra. Remover a regra pelo `-rm` tira o 🔒 também.
 
@@ -118,6 +119,7 @@ Uma listagem, com as dicas no fim, uma por linha:
 /watch -s N -q <texto|/regex/> só as que casam.
 /watch -s N -to <destino|off> troca os destinos.
 /watch -f N limpa as ocorrências.
+/watch -mask N liga o 🔒 (telefones ofuscados nos avisos); -umask N desliga.
 ```
 
 ## Buscar
@@ -169,7 +171,8 @@ continuam avisando nos seus destinos. Cada aviso cortado conta nas ignoradas do 
 
 As mensagens da própria conta e os comandos reconhecidos ficam fora da detecção. A mesma mensagem
 não gera dois avisos para a mesma regra. As regras ficam em `watch.rules`, com máximo definido por
-`watch.max`; as ocorrências são retidas por `watch.hitsRetentionDays` ou até um `/watch -flush`. As
+`watch.max` (padrão 20, até 100); uma regra tem de 1 a 200 caracteres, e uma repetida é
+recusada; as ocorrências são retidas por `watch.hitsRetentionDays` ou até um `/watch -flush`. As
 respostas saem no chat onde o comando foi digitado.
 
 Miniaturas de localização ficam fora das regras de texto e regex. A localização e suas

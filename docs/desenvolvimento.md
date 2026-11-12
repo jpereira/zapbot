@@ -101,7 +101,11 @@ src/
   midia.js              /get and /sticker: the ffmpeg arguments, the sticker crop (sharp) and the link preview
   stickerTexto.js       /sticker -txt: the PNG frames (sharp) and the animated WebP (ffmpeg)
   openai.js             models accepted by /gpt
-  openaiChat.js         call to the OpenAI chat (/gpt and /tldr)
+  openaiChat.js         call to the OpenAI chat (/gpt and /tldr) and the status footer (bytes, tokens, cost)
+  i18n.js               t('key', {vars}) and the bot's language (setting zapbot.lang)
+  locales/              en_US.js and pt_BR.js (the catalogs) and pt_BR/definicoes/ (the Portuguese text of each command)
+  login.js              /bot -login: the password (scrypt) that turns an outsider into an admin
+  monitor.js, monitorHistorico.js, presenca.js   /monitor: contacts, history and one presence query at a time
   contatos.js, opcoes.js                    contacts/@lid and the option parser
   destinos.js           the -to/target: contact or group by name, mention (@), number or email, and sending to the destination
   escolhas.js           the numbered list to choose from (several contacts/groups) and the yes/no confirmation (only from whoever gave the command)
@@ -113,7 +117,10 @@ src/
   eventos/              message_create, deleted, edited, reactions
   comandos/             comandos.js (loads definicoes/), one file per command,
                         index.js (HANDLERS) and base.js (help and utilities)
-  comandos/definicoes/  the definition of each command (cmd, options, role...), one file per command
+  comandos/definicoes/  the definition of each command (cmd, options, role...), one file per command, with the text in English
+  comandos/localizar.js the command text in the bot's language (merges locales/pt_BR/definicoes/<cmd>.json)
+  comandos/openaiComum.js  what /gpt and /draw share: the "Processing" notice, the status footer and the model switch
+  comandos/draw.js      /draw (and the image/GIF of /gpt -img, -gif)
   util/                 files, formatting, typed dates (quando.js), PDF (pdf.js), external processes, URLs
 tests/                  automated tests (see Tests)
 ```
@@ -181,7 +188,7 @@ The messages the bot sends have whatsapp-web.js's `edit()`: it swaps the text in
 `editada: true`) and fires `message_edit`; with `bot.client.recusarEdicao = true`, it returns
 `null`, as when WhatsApp doesn't allow editing.
 
-| Arquivo | O que cobre |
+| File | What it covers |
 |---|---|
 | `agenda.test.js` | Typed dates (`6h`, `+2h`, `às 18h`, `sexta`...) and `/cron`, in message and reminder modes, with several `-to` in a single item, `-edit`, `-pause`/`-resume` and the `{/comando}` and the `\n` in the text (and `-test`) |
 | `alias.test.js` | Persistent registration, descriptions with straight and curly quotes, listing, single and full removal, reserved names, additional arguments, target permissions and the text aliases (`{/comando}`, `\n` and each command's permissions) |
@@ -200,10 +207,11 @@ The messages the bot sends have whatsapp-web.js's `edit()`: it swaps the text in
 | `defi.test.js` | Solana (base58, PDA), Orca accounts (checked against the official SDK), Project X (simulated HyperEVM), Liquidswap (simulated Aptos: indexer and fullnode, with the price of the stable pools and the API key), Morpho (simulated API, with the accounts checked against the API's), Aave V3 (simulated blockchain, with the real Multicall3) and `/defi`: the filter by protocol, `-rm` of several, the addresses (full only in private), the list (with the 🔔 and the limit), the `-taxas` summary (with the total and `-alerta`) and `-alerta` (leaving and returning to the range, `-taxas`, `-alerta` on registration and several `-to`) |
 | `dependencias.test.js` | Loading of the dependencies without the `punycode` module warning |
 | `diagnostico.test.js` | `/bot -test`: the items with ✅/❌/➖ (simulated network), a test failure in the count and the refusal alongside other options; `-flush-email` (without SMTP, refusal) and the lookup of the Sent and Trash folders |
-| `externos.test.js` | `/cve`, `/weather`, `/news`, `/gpt`, `/tldr`, `/translate`, `/giphy`, `/meme`, `/joke`, `/kernel`, `/pixelart` |
+| `externos.test.js` | `/cve`, `/weather`, `/news`, `/gpt`, `/tldr`, `/draw`, `/translate`, `/giphy`, `/meme`, `/joke`, `/kernel`, `/pixelart` |
 | `get-cache.test.js` | `/get` (the URL, the link and the replied media, and the anti-SSRF), `/cache` and the periodic cleanup |
 | `grupo.test.js` | `/everybody`, `/bills`, `/members`, `/walissu`, `/poll` (and `-r`), `/sticker` (and `-txt`) |
 | `grupos.test.js` | `/join` (link, code, `-info`, invalid invite and refusal) and `/leave` (by name, by number, the list) |
+| `i18n.test.js` | The `zapbot.lang` setting (default `en_US`, `pt-BR`/`pt`/`en` accepted), the catalogs (same keys and `{placeholders}`), the English text of the definitions with a Portuguese translation for each, and `-h`/`/help` in both languages |
 | `heartbeat.test.js` | Heartbeat and `docker/app/healthcheck.js` (actually executed) |
 | `mascara-telefones.test.js` | Phone number obfuscation in `/show`, `/watch` and `/bot` |
 | `mensagens.test.js` | Recording (with the name from your contacts, not the pushname) and of locations without interpreting the thumbnail as text or command, routing, permissions (`role`, `bot.users` with people, groups, `true`/`false` and the persisted permissions, bot off, extra admins from `bot.admins`, the `/bot +a`/`+u` shortcuts, the `-list-users`/`-list-users all` lists, each user's commands (`+cmd`/`-cmd`), `-reset` with confirmation, `/whois` and flood protection), the log of unknown commands and the `/stats` count (without the system notices) |
@@ -214,9 +222,11 @@ The messages the bot sends have whatsapp-web.js's `edit()`: it swaps the text in
 | `profile.test.js` | `/profile` (`/perfil`): the photo with the caption `Contato: nome da agenda <telefone>` (by name, mention and number), the contacts name instead of the pushname, your profile and that of whoever wrote the replied message, several people, no photo, a failing download, the `@lid`, `-mask`, group refused and owner-only use |
 | `reacoes.test.js` | Removed or changed reactions: the `message_reaction` event (and what doesn't generate a notice), the `show.alert.reaction` notice, `/show -r`, `/mute -r`, `/bot -status` and the cleanup |
 | `search.test.js` | `/search` (`/buscar`): in this chat, in all of them in your private chat, `-N` and the limit, media and long texts |
+| `sticker-pos.test.js` | `/sticker -pos`: the square crop at the top, middle (default) or bottom |
 | `stats.test.js`, `watch.test.js` | `/stats` (with `/chat/`, `-l` and `-flush`) and `/watch` (and one or several `-to`) |
 | `status.test.js` | `/bot -status`: the report (with the `show.alert.*` notice off and the ones muted by `/mute`) and the daily send (and `-to`: people, groups and emails) |
 | `telefone-bot.test.js` | Number of the configured account, expected format, notices and internal destinations |
+| `url.test.js` | Anti-SSRF of `/get` and of the link preview: internal addresses blocked, mixed DNS answers refused and IP pinning with redirect revalidation |
 | `util.test.js` | Formatting, contacts/`@lid`, mentions, cache files and the version with the commit and the `(devel)` (`versao.js`) |
 
 A new command or option comes with its tests; `configuracao.test.js` fails if the command doesn't
@@ -330,14 +340,14 @@ loop back). Each entry follows this format:
 ```js
 {
     cmd: '/get',                       // main name
-    usage: '/get [OPÇÃO]... <url>',    // "Uso:" line in -help (forms with "  ou  ": one per line)
+    usage: '/get [OPTION]... <url>',   // "Usage:" line in -help (forms with "  or  ": one per line)
     aliases: ['/download'],            // alternative names
-    summary: 'Baixa vídeo ou áudio',   // what it does, in one line (the /help list)
-    help: 'Baixa vídeo ou áudio...',   // full description (the -help)
+    summary: 'Downloads video or audio', // what it does, in one line (the /help list)
+    help: 'Downloads video or audio...', // full description (the -help)
     ex: ['/get <url>', '/get -a <url>'], // examples (optional), one per line after the text
     cmd_opts: [
         { opts: ['audio', 'a'], values: [], desc: '...' },                // flag
-        { opts: ['startSec', 'ss'], values: ['<segundo>'], desc: '...' }, // option with a value
+        { opts: ['startSec', 'ss'], values: ['<time>'], desc: '...' },   // option with a value
         { argv: ['<url>'], desc: '...' },                                 // positional argument (doc only)
         { opts: ['a'], sinais: ['+', '-'], values: ['[x]'], desc: '...' }, // +a/-a pair on one line (doc only)
         { opts: ['add'], values: ['<x>'], desc: '...', cron: false },      // optional; doesn't run in a /cron {/comando}
@@ -345,6 +355,7 @@ loop back). Each entry follows this format:
         { opts: ['chat'], values: ['<x>'], desc: '...', outrosChats: true } // optional; only the current chat for whoever received it
     ],
     estrito: true,                     // optional; unknown option is an error (instead of going to argv)
+                                       // ('primeira': only an unknown FIRST word, like /gpt -price)
     mask: true,                        // optional; accepts -mask (obfuscated phone numbers in the output)
     digitando: false,                  // optional; no "digitando..." (for the ones that reply right away)
     argumentosLivres: true,            // optional; the rest is free text, no options read (/alias, /batch)
@@ -380,11 +391,14 @@ loop back). Each entry follows this format:
   (`/ping`, `/help`...).
 - `{ argv: ['-N'], numero: true }` makes the parser read `-10` as `opts.numero` (the 1st; a second
   one is unknown), instead of sending it to `argv`. With `estrito: true`, an unknown option doesn't
-  reach the handler: `executar.js` replies `❌ Opção desconhecida: -x` with the syntax.
+  reach the handler: `executar.js` replies `❌ Opção desconhecida: -x` with the syntax. With
+  `estrito: 'primeira'` (`/gpt`, `/tldr` and `/draw`), only an unknown **first** word that looks like an
+  option (`/gpt -price`) is rejected, with a hint to use `-h` instead of the syntax; later ones
+  are part of the text.
 - Changing `help`, `usage`, `aliases`, descriptions, `role` or `disabled` doesn't require code:
   just rebuild and recreate the container.
 - The `-h` is read on a phone, so the formatter breaks the lines:
-  - each form of the `usage` separated by `"  ou  "` comes out on its own line;
+  - each form of the `usage` separated by `"  or  "` (`"  ou  "` in Portuguese) comes out on its own line;
   - the `help` and each `desc` come out with one sentence per line (the end of a sentence is `. `
     followed by a capital letter: `Máx. 20` and `(ex.: -taxas 50)` don't break); on an option, the
     1st sentence stays next to it, and the others are indented;
@@ -413,3 +427,31 @@ loop back). Each entry follows this format:
   warns in the logs if there's a definition without a handler.
   Commands, handlers, the [Summary](comandos/index.md#summary) table and the pages in
   `docs/comandos/` are kept in **alphabetical order** (the `mkdocs.yml` menu too).
+
+## Internationalization (i18n)
+
+The bot's language is the `zapbot.lang` [setting](settings.md): `en_US` (default) or `pt_BR`.
+`/set zapbot.lang pt_BR` (or `/set zapbot.lang=pt_BR`) switches it right away; `pt-BR`, `pt` and
+`en` are accepted and normalized. Today it translates the help (`-h`, `/help`); the **replies of the
+commands are still in Portuguese** and are being migrated to the same mechanism.
+
+- `src/i18n.js` has `t('key', { vars })`: it looks the key up in the catalog of the current language
+  (`src/locales/en_US.js` and `src/locales/pt_BR.js`, plain modules of key → text), replaces the
+  `{placeholders}` and, for a plural, picks the form from `{ one, other }` using `vars.n`. A key
+  missing in the language falls back to `en_US` and, failing that, to the key itself.
+- The text of a command (`summary`, `usage`, `help`, `ex` and, in the options, `desc`, `ex`, `values` and
+  `argv`) lives **in English** in `src/comandos/definicoes/`. The Portuguese translation goes in
+  `src/locales/pt_BR/definicoes/<cmd>.json`, with the same fields in the same places, and
+  `src/comandos/localizar.js` merges it over the definition when the language is not the default.
+  The rest of the definition (`opts`, `role`...) is the same for every language.
+- **A string**: add the key to `en_US.js` and to `pt_BR.js` (same `{placeholders}`) and use
+  `t('key', { ... })` in the code.
+- **A command text**: write it in English in the definition and the translation in the `.json`.
+- **A language**: create `src/locales/<lang>.js` and `src/locales/<lang>/definicoes/`, register the
+  language in `IDIOMAS` and in the catalogs of `src/i18n.js`, and in `opcoes` and `normalizar` of
+  `zapbot.lang` in `SETTINGS_SCHEMA`.
+
+The tests run in `pt_BR` (`bot.reiniciar()` sets it), because their assertions are in Portuguese.
+`tests/i18n.test.js` changes the language on purpose and checks both: the catalogs have the same
+keys and placeholders, every definition has its translation with the same structure, and the help comes
+out right in `en_US` and in `pt_BR`.

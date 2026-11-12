@@ -55,8 +55,8 @@ The ids shown in `/monitor` and `/monitor -l` are stable: removing contact `#1` 
 numbers with ten or more digits go through the phone resolver. Groups and emails aren't
 accepted in removal.
 
-With no registrations, `/monitor` replies `👀 Nenhum contato cadastrado.`. With registrations, it
-shows:
+With no registrations, `/monitor` shows the header followed by `👀 Nenhum contato cadastrado.` and the
+hint `💡 /monitor -add /Nome do Contato/`. With registrations, it shows:
 
 ```text
 👀 MONITOR · ativo
@@ -72,6 +72,9 @@ shows:
    • 14/10/2026, 16:49:59 · observado em 14/10/2026, 16:55:10
      Origem: presença do WhatsApp · horário não confirmado
 ```
+
+The header says `ativo`, `pausado` (monitor disabled or bot paused) or `aguardando conexão`. A contact
+not checked yet shows `⏳ aguardando primeira verificação`.
 
 Both `/monitor` and `/monitor -l` show up to `monitor.maxRecords` entries per contact
 (default: 30), from the most recent time to the oldest, with the observed time and the time the

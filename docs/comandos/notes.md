@@ -5,6 +5,7 @@ Notes saved in the database, valid for any chat (group or private). Each one has
 
 ```text
 /notes [-list|-l] [#tag...] [-to <destino>]...
+/notes -compact|-c [#tag...]
 /notes -search|-s [#tag...] <texto|/regex/flags> [-to <destino>]...
 /notes -update|-u <id> [#tag] <novo texto>
 /notes -view|-v <id...|#tag...> [-to <destino>]...
@@ -35,9 +36,9 @@ Notes saved in the database, valid for any chat (group or private). Each one has
 | `-to` | `<destino>` | With `-alerta`: notifies a contact, group, number or email instead of your private chat. With the list (`-l`, `#tag`) or `-export`: sends the list or the PDF there, instead of replying in the chat. Repeat it for several |
 
 ```text
-/notes -a comprar leite
-/notes comprar pão                                → the same as -a
-/notes -a ligar pro João -alerta amanhã 9h
+/notes -a #casa comprar leite
+/notes #casa comprar pão                             → the same as -a
+/notes -a #contatos ligar pro João -alerta amanhã 9h
 /notes -l
 /notes -r 2
 /notes -r all
@@ -156,11 +157,11 @@ and a periodic check (every minute). Here the condition is a date/time, and the 
 note itself.
 
 ```text
-/notes -a ligar pro João -alerta amanhã 9h       → saves it and notifies tomorrow at 9h
+/notes -a #contatos ligar pro João -alerta amanhã 9h       → saves it and notifies tomorrow at 9h
 /notes -alerta 3 +2h                              → notifies about note 3 in 2 hours
 /notes -alerta 3 sexta 18:30 -to /Família/        → notifies in the Família group
 /notes -alerta #casa +2h -to /Família/            → notifies about all in #casa, in the Família group
-/notes -a pagar boleto -alerta 25/12 10h -to /Jorge Pereira/ -to email
+/notes -a #contas pagar boleto -alerta 25/12 10h -to /Jorge Pereira/ -to email
 /notes -alerta                                    → lists only the notes with an alert
 /notes -alerta #casa                              → only the ones in #casa that have an alert
 /notes -alerta -rm 3                              → removes the alert from #3 (the note stays)

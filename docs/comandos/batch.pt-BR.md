@@ -62,6 +62,8 @@ Com `-dry` (ou `-d`), nada roda; ele só mostra como separou:
 - Sai uma resposta só: `✅`/`❌` por bloco, com o começo do que o comando respondeu.
 - Um bloco falha quando a resposta do comando começa com ❌ ou ⚠️, ou quando ele dá erro. Os outros
   seguem, a menos que você use `-stop`: ele para no primeiro e avisa quantos não rodaram.
+- A resposta de cada comando é cortada em 300 caracteres no resumo; uma resposta com bloco de código
+  (ex.: `/ascii`) sai inteira, numa mensagem à parte depois do resumo.
 - Cada bloco leva só o texto dele: uma mídia ou a mensagem respondida do `/batch` não passam para os
   comandos de dentro.
 - Máximo de 50 blocos; `/batch` dentro de `/batch` é recusado.

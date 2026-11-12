@@ -9,6 +9,7 @@ Lists and changes the bot's settings stored in the `settings` table (see
 | `<chave>` | | Shows value, default, type and description |
 | `<trecho>` or `/regex/` | | If it isn't a key: lists the keys that contain the snippet (case-insensitive) or match the regex. E.g.: `/set alerta`, `/set /^show\./` |
 | `<chave> <valor>` | | Changes it. Lists: items separated by comma or space (`watch.rules`: one rule per line); `""` empties it |
+| `<chave>=<valor>` | | The same as `<chave> <valor>`, for any key. E.g.: `/set zapbot.lang=pt_BR` |
 | `-append`, `-a` | `<chave> <valor>` | In a list, adds the items (the existing ones stay). E.g.: `/set -a bot.admins +5521999999999` (for `bot.admins` and `bot.users`, `/Jorge Pereira/` and `@Fulano Da Silva` also work; for `bot.users`, groups) |
 | `-rm` | `<chave> <valor>` | In a list, removes the items. E.g.: `/set -rm commands.disabled noffa` |
 | `-reset`, `-r` | `<chave>` | Goes back to the default value |
@@ -22,10 +23,11 @@ Lists and changes the bot's settings stored in the `settings` table (see
 /set show.max 10
 /set monitor.pool=300
 /set monitor.maxRecords=30
+/set zapbot.lang=pt_BR  → the same as /set zapbot.lang pt_BR
 /config show.max 10  → the same, through the alias
 /set debug.enabled off
 /set sticker.name "Meu Bot"
-/set commands.disabled noffa todos
+/set commands.disabled noffa everybody
 /set commands.disabled ""
 /set -r crypto.coins
 /set watch.rules ""
@@ -37,7 +39,8 @@ Lists and changes the bot's settings stored in the `settings` table (see
 
 ## Contact monitor
 
-The four [`/monitor`](monitor.md) settings accept `<chave> <valor>` or `chave=valor`:
+Like any other key, the four [`/monitor`](monitor.md) settings accept `<chave> <valor>` or
+`chave=valor`:
 `monitor.enabled`, `monitor.pool`, `monitor.max` and `monitor.maxRecords`.
 
 ```text

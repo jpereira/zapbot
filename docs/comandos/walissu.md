@@ -27,4 +27,5 @@ Details:
   with fewer than 2 members (not counting the bot) are refused, and the NVD limit without a key
   applies (~5 queries every 30 s).
 - The CVE can be of any severity; on the rare days with no publications at all, the bot says so
-  instead of tagging anyone.
+  instead of tagging anyone. Outside a group, it replies `Apenas utilizado dentro de grupos.`; if
+  the NVD fails, `❌ Não consegui consultar o NVD agora.`

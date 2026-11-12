@@ -7,7 +7,7 @@ starts off, at level `0`.
 | Option | Description |
 |---|---|
 | `-on` | Turns debug on |
-| `-off` | Turns debug off and clears the filter and the copy; keeps the level |
+| `-off` | Turns debug off and clears the filter and the copy; keeps the level. Only works alone (combined with other options it's refused) |
 | `-level`, `-lvl` | Sets the level `N` from `0` to `3`; requires debug on or `-on` in the same command |
 | `-filter`, `-f` | Shows and copies only the logs that match `/regex/flags` (up to 100 characters). Without a value, clears the filter |
 | `-copy-to` | Copies the logs to a contact, group, number or mention. Without a value, uses the command's chat. Doesn't accept email |

@@ -6,11 +6,11 @@ change (🟢 up, 🔴 down). Supported: `USD`, `EUR`, `GBP` and `USDT`.
 
 | Option | Value | Description |
 |---|---|---|
-| *(none)* | `[MOEDA...]` | Rate for the enabled currencies, or only the given ones |
+| *(none)* | `[CURRENCY...]` | Rate for the enabled currencies, or only the given ones (enabled or not). An unsupported one: warns and lists the supported ones |
 | `-list`, `-l` | | Lists the supported ones; the enabled ones come with ✅ |
-| `-add`, `-a` | `<MOEDA>` | Enables a supported currency (bot owner or an [admin](bot.md#extra-admins) only) |
-| `-del`, `-d` | `<MOEDA>` | Disables a currency (bot owner or an [admin](bot.md#extra-admins) only) |
-| `-alerta` | `[regra]` | Without a rule, lists the alerts; with a rule (e.g., `USD > 5.30`), creates one. The currency can also come first: `/rates USD -alerta > 5.30`. See [Price alerts](#price-alerts) |
+| `-add`, `-a` | `<CURRENCY>` | Enables a supported currency (bot owner or an [admin](bot.md#extra-admins) only) |
+| `-del`, `-d` | `<CURRENCY>` | Disables a currency (bot owner or an [admin](bot.md#extra-admins) only) |
+| `-alerta` | `[regra]` | Without a rule, lists the alerts; with a rule (e.g., `USD > 5.30`), creates one (bot owner or an [admin](bot.md#extra-admins) only). The currency can also come first: `/rates USD -alerta > 5.30`. See [Price alerts](#price-alerts) |
 | `-msg` | `<text>` | Together with `-alerta`: the text goes at the start of the notice. Runs to the end of the command. See [Message in the notice](#message-in-the-notice) |
 | `-rm` | `<nº...\|all>` | Together with `-alerta`: removes the alerts with those numbers (`-rm 2`, `-rm 1 2 3` or `-rm 1,2,3`), or all of them (`all`). If any number doesn't exist, none is removed |
 | `-to` | `<destination>` | Together with `-alerta`: notifies a contact (`/Jorge Pereira/`), a mention (`@Fulano Da Silva`), a group (`/Grupo L200/`), a number (`+5521999999999`) or by email (`email`) instead of your private chat. Repeat for several: a single alert that notifies all of them. See [Notify another chat or by email](#notify-another-chat-or-by-email) |
@@ -67,13 +67,13 @@ Each alert fires once and is removed. Only the bot owner (and the
 /crypto -alerta -rm all        → removes all the /crypto ones
 ```
 
-- The rule is `<MOEDA> > value` or `<MOEDA> < value`. The value accepts `.` or `,` as the decimal
+- The rule is `<CURRENCY> > value` or `<CURRENCY> < value`. The value accepts `.` or `,` as the decimal
   separator, **without** a thousands separator (`90000`, not `90.000`).
 - `/rates` compares in reais; `/crypto`, in dollars (`<TOKEN>USDT` pair).
 - If the price is **already** on the requested side, the alert isn't created (it would fire right
   away): the bot shows the current value.
-- Prices are checked every 5 minutes (setting `alerta.intervalMin`), once per currency. The limit is
-  20 alerts in total (setting `alerta.max`).
+- Prices are checked every 5 minutes (setting `alerta.intervalMin`, 1 to 60), once per currency. The
+  limit is 20 alerts in total (setting `alerta.max`, 1 to 100), `/rates` and `/crypto` together.
 - With `-rm` and several numbers, if any doesn't exist, none is removed (the bot says which ones are
   missing). The numbers are the ones from the list before removing.
 - Alerts are kept in the `price_alerts` table and survive restarts.

@@ -25,6 +25,9 @@ traduz o texto dela. O idioma de origem é detectado sozinho; o de destino é o 
 Onde fica a farmácia mais próxima?
 ```
 
+Se o texto já estiver no idioma de destino, a resposta acrescenta uma dica para usar o `-para` com
+outro idioma.
+
 Não é admin: quem estiver no `bot.users` usa (com ele em `true`, qualquer pessoa).
 
 ## Como funciona

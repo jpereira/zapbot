@@ -21,7 +21,7 @@ Respondendo uma mensagem, desbloqueia quem a escreveu. Sem nada, mostra a lista 
 
 ```text
 /unblock 2
-✅ Desbloqueado: 👤 Fulano · +5521999999999
+✅ *Desbloqueado:* 👤 Fulano · +5521999999999
 
 /unblock -all
 ⏳ Desbloqueando 36 contatos, aguarde.
@@ -44,4 +44,7 @@ No fim, essa mesma mensagem vira o resultado (como no [`/get`](get.md)):
   aparece como falha (`o WhatsApp não desbloqueou (continua na lista)`), não como desbloqueado.
 - O `-all` desbloqueia um por um: quem falhar não segura os outros, e a resposta lista as falhas
   (`⚠️ Não consegui desbloquear (1):`, com o motivo de cada uma).
-- Quem não está bloqueado: o bot avisa (`ℹ️ 👤 Fulano não está bloqueado.`).
+- Quem não está bloqueado: o bot avisa (`ℹ️ 👤 Fulano não está bloqueado.`, com a dica de ver a
+  lista do `/block`).
+- Um nº que não está na lista: `❌ Nº 9 não existe. Veja a lista com /block`. O `/unblock -all` sem
+  ninguém bloqueado: `🚫 Ninguém bloqueado.`

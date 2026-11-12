@@ -33,15 +33,23 @@ at `/venv/bin/yt-dlp`; the supported way to run it is the
 | `ZAPBOT_COMMIT` | `4465374/vX.Y.Z` | Commit (and, after the `/`, the tag) shown in [`/version`](comandos/version.md) and in `/bot -info` (`X.Y.Z (git+4465374/vX.Y.Z)`); without the tag, it shows `X.Y.Z (devel) (git+7a89b92/HEAD)`. Usually empty: the bot reads both from `.git`, which goes into the image on every build. Only set it if you build the image without `.git`. |
 | `ZAPBOT_HEARTBEAT_FILE` | `/tmp/zapbot-heartbeat.json` | [Heartbeat](operacao.md#container-health-heartbeat) file. Default: `zapbot-heartbeat.json` in the temporary directory. Read by `docker/app/healthcheck.js`. |
 | `ZAPBOT_HEARTBEAT_MAX_AGE_S` | `90` | Maximum age, in seconds, of the heartbeat for the healthcheck to consider the bot healthy. |
+| `ZAPBOT_EGRESS_FIREWALL` | `1` | Egress firewall (blocks access to the internal network, closing the SSRF in `/get`). Set in `docker/docker-compose.yml`, not in `config/.env`; needs `cap_add: NET_ADMIN`. Use `0` to turn it off. |
+
+## Language
+
+The bot's language is the `zapbot.lang` setting: `en_US` (default) or `pt_BR`
+(`/set zapbot.lang pt_BR`). Today it translates the help (`-h` and `/help`); the replies of the
+commands are still in Portuguese and are being migrated. The Portuguese command names
+(`/desenhe`, `/tempo`...) are fixed aliases and work in either language.
 
 ## External services
 
-Commands that query services on the internet. Only three need a key; the others work without any
+Commands that query services on the internet. Only two need a key (OpenAI and GIPHY; the Aptos one is optional); the others work without any
 configuration.
 
 | Command | Service | Key |
 |---|---|---|
-| `/gpt`, `/tldr` | [OpenAI](https://platform.openai.com/) (pay per use) | `OPENAI_API_KEY` or setting `openai.api.key` |
+| `/gpt`, `/tldr`, `/draw` | [OpenAI](https://platform.openai.com/) (pay per use) | `OPENAI_API_KEY` or setting `openai.api.key` |
 | `/giphy` | [GIPHY](https://developers.giphy.com/) (beta key: 100 calls/hour) | `GIPHY_API_KEY` or setting `giphy.api.key` |
 | `/translate` | [Google Translate](https://translate.google.com/) (free, unofficial access, no key; may be rate limited by IP) | — |
 | `/weather` | [Open-Meteo](https://open-meteo.com/) | — |
@@ -65,6 +73,9 @@ can change it from WhatsApp with `/set` without restarting.
 | `OPENAI_API_KEY` | `sk-proj-...` | OpenAI key used by `/gpt` and `/tldr`. If empty, the bot uses the `openai.api.key` setting; with neither, questions and summaries are refused. Viewing and setting the model with `/gpt -m` remain available. |
 | `OPENAI_MODEL` | `gpt-4o-mini` | Model for `/gpt` and `/tldr`. If empty, the bot uses the `openai.api.model` setting (default `gpt-4o-mini`), which you can change from WhatsApp with `/gpt -m`. When set, it takes priority over the setting. |
 | `OPENAI_TIMEOUT_MS` | `60000` | Maximum time to wait for the response, in ms. If empty, the bot uses the `openai.timeout.ms` setting (60000). |
+
+The cost estimate in the `-status` footer of `/gpt`, `/tldr` and `/draw` uses the `openai.pricing`
+setting, which `openai.pricing.auto` keeps up to date (see [Settings](settings.md)).
 
 ## Aave V3 (optional)
 
@@ -110,8 +121,8 @@ and check the service's production terms.
 
 ## Google Translate (optional)
 
-| Variable | Example | Description |
-|---|---|---|
+No variable needed: `/translate` uses Google Translate with no key. The only cost is the possible
+rate limit by IP.
 
 ## Email (QR Code and alerts)
 

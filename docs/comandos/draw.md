@@ -6,7 +6,7 @@ draw: `-model` (view and switch the model) is for the owner and admins. Each ima
 OpenAI account**.
 
 Draws an image with OpenAI's GPT Image (`v1/images` API) and sends it to the chat, with the request
-in the caption. With `-gif`, it makes an **animated GIF**. On a **photo** (the message's own, in the
+in the caption (cut at 200 characters). With `-gif`, it makes an **animated GIF**. On a **photo** (the message's own, in the
 caption, or the replied one), the request **edits** the photo or, with `-gif`, **animates** it.
 Replying to a message, its text goes before the request. `/gpt -img` and `/gpt -gif` are the same
 code: the result is the same.
@@ -28,8 +28,8 @@ If the **first word** looks like an option but doesn't exist (`/draw -price`), t
 | `-frames`, `-f` | `<n>` | GIF frames, from 2 to 16 (default: `openai.gif.frames`, 9). Implies `-gif` |
 | `-ms` | `<ms>` | Duration of each GIF frame, from 20 to 2000 ms (default: `openai.gif.frameMs`, 200). Implies `-gif` |
 | `-model`, `-m` | `[model]` | Owner and admins only. Without a model, lists the current one and the ones your key sees; with a model, switches (`openai.image.model`; with `-gif`, `openai.image.gifModel`) |
-| `-status`, `-s` | | Adds the call's usage to the footer: TX/RX bytes, tokens, cost and balance. See [Status](gpt.md#status--status) |
-| `<pedido>` | | What to draw or animate. Replying to a message, its text goes before; on a photo, the request edits it |
+| `-status`, `-s` | | Adds the call's usage to the footer: TX/RX bytes, tokens, cost and balance (image and GIF: in a separate message). See [Status](gpt.md#status--status) |
+| `<request>` | | What to draw or animate. Replying to a message, its text goes before; on a photo, the request edits it |
 
 Uses the same key as [`/gpt`](gpt.md): `OPENAI_API_KEY` in `config/.env` or the `openai.api.key`
 setting (see [Setting up the key](gpt.md#setting-up-the-key)). The image can take more than a
@@ -68,6 +68,8 @@ movement.
 - The GIF comes out with **9 frames of 200 ms** (1.8 s); the `openai.gif.frames` (2 to 16) and
   `openai.gif.frameMs` (20 to 2000) settings change that, and `-frames` and `-ms` override them on
   a call.
+- `-frames` and `-ms` outside the range get `❌ -frames precisa ser um inteiro de 2 a 16.` (or `-ms`,
+  from 20 to 2000).
 - Each frame comes out at **512x512**: OpenAI charges for the pixels of all the frames, so more
   frames cost more.
 - OpenAI returns a `.gif`; the bot converts it to a silent MP4 with ffmpeg and sends it as a GIF

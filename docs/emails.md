@@ -66,11 +66,14 @@ events also go by email, through the same SMTP as the QR Code (`QRCODE_EMAIL_SMT
 | `[ZapBot] 💾 Envio do backup falhou` | The daily file was saved locally, but sending it to `backup.to` failed |
 | `[ZapBot] 💥 Crash` | Unhandled exception or rejected promise (with the stack). The process exits and Docker brings it back up |
 | `[ZapBot] 🛑 Bot encerrado` | `docker stop`/`restart` or Ctrl+C (SIGTERM/SIGINT) |
+| `[ZapBot] 🔑 Novo admin por senha` | Someone became admin with [`/bot -login`](comandos/bot.md) (the owner is also warned on WhatsApp). Not subject to the 5-minute rule |
+| `[ZapBot] 🚨 Login bloqueado` | Someone got the `/bot -login` password wrong too many times and was blocked. Not subject to the 5-minute rule |
 
 Each email carries the time, the masked number, the version with the commit that's running
 (`X.Y.Z (git+4465374/vX.Y.Z)`, see [`/version`](comandos/version.md)), the host, how long the
 process has been up, and the anti-phishing code. The same event doesn't repeat within 5 minutes
-(except crash and shutdown), so it doesn't flood the inbox during a reconnection loop.
+(except crash, shutdown and the `/bot -login` ones), so it doesn't flood the inbox during a
+reconnection loop.
 
 ## Pause after a login failure
 

@@ -17,11 +17,15 @@ You can send them in **any chat** (private, group, or the chat with yourself).
 - `/help` lists the commands you can use (the owner and admins see all of them); `/help get` or
   `/help /get` show a specific one, and `/help -r` groups the list by role (`owner`, `admin`, and
   `user`).
-- The commands have English names; every one has a fixed alias in Portuguese (`/desenhe`, `/tempo`, `/todos`,
-  `/boletos`, `/cotacao`, `/traduzir`, `/enquete`, `/listageral`, `/notas`, `/mostrar`...) that keeps working. Aliases work just like the original command
-  (`/download` = `/get`). [`/alias`](alias.md) saves
+- The commands have English names; every one has a fixed alias in Portuguese (`/desenhe`, `/tempo`,
+  `/todos`, `/boletos`, `/cotacao`, `/traduzir`, `/enquete`, `/listageral`, `/notas`,
+  `/mostrar`...) that keeps working. Aliases work just like the original command
+  (`/download` = `/get`) and don't depend on the language. [`/alias`](alias.md) saves
   shortcuts with arguments or texts with several `{/comando}`; `/help alias` lists the shortcuts
   available to you.
+- The language is the `zapbot.lang` setting (`en_US`, the default, or `pt_BR`; see
+  [Language](../configuracao.md#language)). Today it translates `-h` and `/help`; the replies of
+  the commands are still in Portuguese and are being migrated.
 - Just type the beginning of the command: `/wat` or `/watc` become `/watch`. If the beginning
   matches more than one (`/wa`), the bot replies with the possible commands (`/walissu, /watch`).
   The exact name and the `/alias` shortcuts take priority.
@@ -212,11 +216,11 @@ even if they start with `/`. Without that, someone could use a command that echo
 | [`/cve`](cve.md) | | `user` | Latest published CVEs (NVD); `-highscore` only the critical ones |
 | [`/debug`](debug.md) | `/d`, `/dbg` | `admin` | Debug logs with levels, filtering, and copying to chats |
 | [`/defi`](defi.md) | | `admin` | Liquidity positions on Orca and Project X: balance, range, price, and fees to collect, read on-chain; `-alerta` warns when it leaves and returns to the range and when fees go over a value. `liquidswap`: LP positions on Aptos. `morpho` and `aave`: position, loans, and risk on Morpho and Aave V3 |
-| [`/draw`](draw.md) | `/desenhe`, `/desenha`, `/img` | `admin` · delegable | Draws an image with GPT Image (OpenAI) |
+| [`/draw`](draw.md) | `/desenhe`, `/desenha`, `/img` | `admin` · delegable | Draws an image or an animated GIF (`-gif`) with GPT Image (OpenAI); on a photo, edits or animates it |
 | [`/everybody`](everybody.md) | `/todos`, `/todes` | `admin` · delegable | Mentions everyone in the group |
 | [`/get`](get.md) | `/download` | `user` | Downloads video/audio from social networks or from the replied media |
 | [`/giphy`](giphy.md) | `/gif` | `user` | GIPHY GIF by tag, URL, or ID, sent looping |
-| [`/gpt`](gpt.md) | `/ai` | `admin` · delegable | Asks ChatGPT (OpenAI) |
+| [`/gpt`](gpt.md) | `/ai` | `admin` · delegable | Asks ChatGPT (OpenAI); `-img`, `-gif`, `-voz`, `-prices` and `-usage` |
 | [`/help`](help.md) | `/h`, `/ajuda` | `user` | Help menu, only with the commands the requester can use |
 | [`/join`](join.md) | `/entrar` | `admin` | Joins a group through the invite link (`-info` shows the group without joining); `-l` lists your groups |
 | [`/joke`](joke.md) | `/piada`, `/humor` | `user` | Random joke in Portuguese |
@@ -229,7 +233,7 @@ even if they start with `/`. Without that, someone could use a command that echo
 | [`/mute`](mute.md) | `/mudo` | `admin` | Silences the notices for deleted, edited, status, and reactions (and those from `/watch`) of a person, a group, or a community; replying to a notice, from where it came |
 | [`/news`](news.md) | `/noticias` | `user` | Headlines from RSS feeds: `-hack`, `-g1`, `-gazeta`, `-brasil` |
 | [`/noffa`](noffa.md) | `/🌈`, `/🏳️‍🌈` | `user` | Decorates the text with rainbows |
-| [`/notes`](notes.md) | `/notas` | `admin` | Notes with ID and `#tag` (`-a`, `-l`, `-s`, `-r`): view with the media (`-u`), rename a tag (`-m`), describe a tag (`-d`), export to PDF (`-e`), and `-alerta` that notifies at a date/time |
+| [`/notes`](notes.md) | `/notas` | `admin` | Notes with ID and `#tag` (`-a`, `-l`, `-s`, `-r`): view with the media (`-v`), edit (`-u`), rename a tag (`-m`), describe a tag (`-d`), export to PDF (`-e`), and `-alerta` that notifies at a date/time |
 | [`/ping`](ping.md) | | `user` | Checks whether the bot is alive |
 | [`/pixelart`](pixelart.md) | `/ansi`, `/px` | `user` | Random ANSI/ASCII art (16colo.rs) |
 | [`/poll`](poll.md) | `/enquete`, `/quiz` | `admin` · delegable | Creates a native WhatsApp poll in the chat; `-r` shows the result |
@@ -240,7 +244,7 @@ even if they start with `/`. Without that, someone could use a command that echo
 | [`/show`](show.md) | `/mostrar` | `admin` · delegable | In your private chat, lists the cache; redisplays deleted messages, edits (`-e`), status (`-s`), and removed or changed reactions (`-r`); `-q` searches (text or regex) and `-mask` obfuscates phone numbers |
 | [`/stats`](stats.md) | `/estatisticas` | `admin` · delegable | Ranking for this chat or another (`/Grupo/`): who talks, deletes, and edits the most, peak hours; `-me` for yours, `-l` lists the chats, `-flush` deletes |
 | [`/sticker`](sticker.md) | `/figurinha` | `user` | Sticker from an image, video, or link (the `/get -st`); with `-txt`, an animated text sticker |
-| [`/tldr`](tldr.md) | `/resumo` | `admin` · delegable | Summarizes the chat's conversation with ChatGPT (`2h`, `300`...) |
+| [`/tldr`](tldr.md) | `/resumo` | `admin` · delegable | Summarizes the chat's conversation with ChatGPT (`30m`, `2h`, `1d`, `1h30m` or `300` messages; replying to a message, from it on) |
 | [`/translate`](translate.md) | `/traduzir` | `user` | Translates the text or the replied message with Google Translate, no key; `-para en` changes the language |
 | [`/unblock`](unblock.md) | `/desbloquear` | `admin` | Unblocks a person: by name, by number, by the `/block` list number, or by replying to a message |
 | [`/unmute`](unmute.md) | `/desmutar` | `admin` | Undoes the `/mute` silence: by name, by list number, by replying to a notice, or all (`-all`) |

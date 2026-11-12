@@ -67,11 +67,14 @@ Ligado por padrão; desligue com `/set email.alerts off`. Sem `QRCODE_EMAIL_SMTP
 | `[ZapBot] 💾 Envio do backup falhou` | O arquivo diário foi salvo localmente, mas o envio para `backup.to` falhou |
 | `[ZapBot] 💥 Crash` | Exceção ou promise rejeitada sem tratamento (com o stack). O processo sai e o Docker sobe de novo |
 | `[ZapBot] 🛑 Bot encerrado` | `docker stop`/`restart` ou Ctrl+C (SIGTERM/SIGINT) |
+| `[ZapBot] 🔑 Novo admin por senha` | Alguém virou admin com o [`/bot -login`](comandos/bot.md) (o dono também é avisado no WhatsApp). Não segue a regra dos 5 minutos |
+| `[ZapBot] 🚨 Login bloqueado` | Alguém errou demais a senha do `/bot -login` e foi bloqueado. Não segue a regra dos 5 minutos |
 
 Cada e-mail traz o horário, o número mascarado, a versão com o commit que está rodando
 (`X.Y.Z (git+4465374/vX.Y.Z)`, veja o [`/version`](comandos/version.md)), o host, há quanto tempo
 o processo está no ar e o código anti-phishing. O mesmo evento não se repete antes de 5 minutos
-(exceto crash e encerramento), para não lotar a caixa num loop de reconexão.
+(exceto crash, encerramento e os do `/bot -login`), para não lotar a caixa num loop de
+reconexão.
 
 ## Pausa depois de falha de login
 
