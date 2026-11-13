@@ -1,0 +1,28 @@
+{
+  "summary": "Lê o QR Code de uma imagem",
+  "usage": "/decodeqr [-encode|-e] [<texto>]",
+  "help": "Lê o QR Code de uma foto e responde com o texto dele. Respondendo a foto, ou mandando a foto com /decodeqr na legenda. Com -encode, faz o contrário: gera o QR Code do texto (igual ao /qr).",
+  "ex": [
+    "/decodeqr",
+    "/decodeqr -e https://exemplo.com"
+  ],
+  "cmd_opts": [
+    {
+      "opts": [
+        "encode",
+        "e"
+      ],
+      "values": [],
+      "desc": "Gera o QR Code do texto em vez de ler um (igual ao /qr).",
+      "ex": [
+        "/decodeqr -e https://exemplo.com"
+      ]
+    },
+    {
+      "argv": [
+        "[<texto>]"
+      ],
+      "desc": "Com -encode, o texto do QR Code (até 1000 caracteres; sem ele, o da mensagem respondida)."
+    }
+  ]
+}

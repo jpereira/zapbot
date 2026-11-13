@@ -1,0 +1,28 @@
+{
+  "summary": "Gera o QR Code de um texto",
+  "usage": "/qr [-decode|-d] [<texto>]",
+  "help": "Gera o QR Code (imagem PNG) do texto, de até 1000 caracteres. Sem texto, usa o da mensagem respondida. Com -decode, faz o contrário: lê o QR Code de uma foto (respondida, ou enviada com /qr -d na legenda) e responde com o texto dele (igual ao /decodeqr).",
+  "ex": [
+    "/qr https://exemplo.com",
+    "/qr -d"
+  ],
+  "cmd_opts": [
+    {
+      "opts": [
+        "decode",
+        "d"
+      ],
+      "values": [],
+      "desc": "Lê o QR Code de uma foto em vez de gerar um (igual ao /decodeqr).",
+      "ex": [
+        "/qr -d"
+      ]
+    },
+    {
+      "argv": [
+        "[<texto>]"
+      ],
+      "desc": "O texto do QR Code (até 1000 caracteres; sem ele, o da mensagem respondida)."
+    }
+  ]
+}
