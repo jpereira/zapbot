@@ -188,6 +188,7 @@ role); `/<command> -h` shows the help of one. The person typing and each command
 | [`/everybody`](https://jpereira.github.io/zapbot/comandos/everybody/) | `/todos`, `/todes` | `admin` · delegable | Mentions everyone in the group |
 | [`/get`](https://jpereira.github.io/zapbot/comandos/get/) | `/download` | `user` | Downloads video/audio from social networks or from the replied media |
 | [`/giphy`](https://jpereira.github.io/zapbot/comandos/giphy/) | `/gif` | `user` | A GIPHY GIF by tag, URL or ID, sent looping |
+| [`/goodbye`](https://jpereira.github.io/zapbot/comandos/goodbye/) | | `admin` · delegable | Message when someone leaves the group (per group; `{name}`, `{group}`) |
 | [`/gpt`](https://jpereira.github.io/zapbot/comandos/gpt/) | `/ai` | `admin` · delegable | Asks ChatGPT (OpenAI); `-img`, `-gif`, `-voz`, `-prices`, `-usage` and `-status` (bytes, tokens, cost and balance) |
 | [`/help`](https://jpereira.github.io/zapbot/comandos/help/) | `/h` | `user` | Help menu, with only the commands the requester can use |
 | [`/join`](https://jpereira.github.io/zapbot/comandos/join/) |  | `admin` | Joins a group through the invite link (`-info` shows the group without joining); `-l` lists your groups |
@@ -221,6 +222,7 @@ role); `/<command> -h` shows the help of one. The person typing and each command
 | [`/walissu`](https://jpereira.github.io/zapbot/comandos/walissu/) | `/ualisu` | `user` | Walissu CVE BOT: tags 2 members with a random CVE |
 | [`/watch`](https://jpereira.github.io/zapbot/comandos/watch/) |  | `admin` | Text/regex rules, with an optional source in `-in`; lists hits, searches them with `-q` and alerts the `-to` destinations; `-mask` hides phone numbers and `-mask N` turns on 🔒 on rule N |
 | [`/weather`](https://jpereira.github.io/zapbot/comandos/weather/) | `/tempo` | `user` | Weather now and the day's max/min (Open-Meteo); `/weather 16d` shows up to 16 days, counting today; without a city it uses `tempo.city` |
+| [`/welcome`](https://jpereira.github.io/zapbot/comandos/welcome/) | | `admin` · delegable | Message when someone joins the group (per group; `{name}`, `{group}`) |
 | [`/whois`](https://jpereira.github.io/zapbot/comandos/whois/) | `/who`, `/id` | `user` | Who you are and what you can do in the bot, in this chat: 🤖 owner, 👑 admin, 🗣️ user or 🚫 no permission; the owner and the admins see the others |
 
 ## Documentation

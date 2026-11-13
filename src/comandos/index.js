@@ -23,6 +23,7 @@ const { cmdGpt } = require('./gpt');
 const { cmdAlias } = require('./alias');
 const { cmdAscii } = require('./ascii');
 const { cmdHelp } = require('./help');
+const { cmdGoodbye, cmdWelcome } = require('./saudacoes');
 const { cmdJoke } = require('./joke');
 const { cmdKernel } = require('./kernel');
 const { cmdMembers } = require('./members');
@@ -71,6 +72,7 @@ const HANDLERS = {
     '/everybody': cmdEverybody,
     '/get': cmdGet,
     '/giphy': cmdGiphy,
+    '/goodbye': cmdGoodbye,
     '/gpt': cmdGpt,
     '/help': cmdHelp,
     '/join': cmdJoin,
@@ -104,6 +106,7 @@ const HANDLERS = {
     '/walissu': cmdWalissu,
     '/watch': cmdWatch,
     '/weather': cmdWeather,
+    '/welcome': cmdWelcome,
     '/whois': cmdWhois
 };
 

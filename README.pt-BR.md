@@ -187,6 +187,7 @@ O `/whois` diz o seu nível
 | [`/everybody`](https://jpereira.github.io/zapbot/pt-BR/comandos/everybody/) | `/todos`, `/todes` | `admin` · delegável | Menciona todos do grupo |
 | [`/get`](https://jpereira.github.io/zapbot/pt-BR/comandos/get/) | `/download` | `user` | Baixa vídeo/áudio de redes sociais ou da mídia respondida |
 | [`/giphy`](https://jpereira.github.io/zapbot/pt-BR/comandos/giphy/) | `/gif` | `user` | GIF do GIPHY por tag, URL ou ID, enviado em loop |
+| [`/goodbye`](https://jpereira.github.io/zapbot/pt-BR/comandos/goodbye/) | | `admin` · delegável | Mensagem quando alguém sai do grupo (por grupo; `{name}`, `{group}`) |
 | [`/gpt`](https://jpereira.github.io/zapbot/pt-BR/comandos/gpt/) | `/ai` | `admin` · delegável | Pergunta ao ChatGPT (OpenAI); `-img`, `-gif`, `-voz`, `-prices`, `-usage` e `-status` (bytes, tokens, custo e saldo) |
 | [`/help`](https://jpereira.github.io/zapbot/pt-BR/comandos/help/) | `/h` | `user` | Menu de ajuda, só com os comandos que quem pediu pode usar |
 | [`/join`](https://jpereira.github.io/zapbot/pt-BR/comandos/join/) |  | `admin` | Entra em um grupo pelo link de convite (`-info` mostra o grupo sem entrar); `-l` lista os seus grupos |
@@ -220,6 +221,7 @@ O `/whois` diz o seu nível
 | [`/walissu`](https://jpereira.github.io/zapbot/pt-BR/comandos/walissu/) | `/ualisu` | `user` | Walissu CVE BOT: marca 2 membros com uma CVE aleatória |
 | [`/watch`](https://jpereira.github.io/zapbot/pt-BR/comandos/watch/) |  | `admin` | Regras de texto/regex, com origem opcional em `-in`; lista ocorrências, busca nelas com `-q` e avisa nos destinos de `-to`; `-mask` ofusca telefones e `-mask N` liga o 🔒 na regra N |
 | [`/weather`](https://jpereira.github.io/zapbot/pt-BR/comandos/weather/) | `/tempo` | `user` | Tempo agora e máx./mín. do dia (Open-Meteo); `/weather 16d` mostra até 16 dias, contando hoje; sem cidade usa `tempo.city` |
+| [`/welcome`](https://jpereira.github.io/zapbot/pt-BR/comandos/welcome/) | | `admin` · delegável | Mensagem quando alguém entra no grupo (por grupo; `{name}`, `{group}`) |
 | [`/whois`](https://jpereira.github.io/zapbot/pt-BR/comandos/whois/) | `/who`, `/id` | `user` | Quem é e o que pode no bot, neste chat: 🤖 dono, 👑 admin, 🗣️ usuário ou 🚫 sem permissão; o dono e os admins veem os outros |
 
 ## Documentação

@@ -378,6 +378,18 @@ async function inicializarBanco() {
     await adicionarColunas('defi_positions', { name: 'TEXT', ...COLUNAS_DO_ALERTA_DEFI });
 
     /*
+     * /welcome e /goodbye: a saudação de cada grupo (kind), com o texto próprio (NULL: o padrão do idioma).
+     */
+    await dbRun(`
+        CREATE TABLE IF NOT EXISTS group_greetings (
+            chat_id TEXT NOT NULL,
+            kind TEXT NOT NULL,
+            text TEXT,
+            PRIMARY KEY (chat_id, kind)
+        )
+    `);
+
+    /*
      * /mute: pessoas e grupos com os avisos em silêncio (o que: deleted, edited,
      * status, reaction) e cada aviso cortado (mute_hits, para o /bot -status; 30 dias).
      */

@@ -98,6 +98,7 @@ require('./src/eventos/editadas');
 require('./src/eventos/reacoes');
 require('./src/eventos/mensagens');
 require('./src/enquetes');
+require('./src/saudacoes');
 
 const { iniciarAgenda } = require('./src/agenda');
 const { iniciarAlertasDePreco } = require('./src/alertasPreco');

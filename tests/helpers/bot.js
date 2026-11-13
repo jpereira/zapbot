@@ -18,6 +18,7 @@ src('eventos/editadas');
 src('eventos/reacoes');
 src('eventos/mensagens');
 src('enquetes');
+src('saudacoes');
 
 const { dbAll, dbGet, dbRun, marcarBancoPronto } = src('db');
 const { inicializarBanco } = src('inicializacao');
@@ -34,7 +35,7 @@ const preparar = () => (banco ??= inicializarBanco().then(marcarBancoPronto));
 
 const TABELAS = ['command_aliases', 'messages', 'message_edits', 'stats', 'watch_hits', 'watch_destinations', 'price_alerts',
     'settings', 'polls', 'poll_votes', 'schedules', 'defi_positions', 'mutes', 'mute_hits',
-    'alerts', 'watch_sources', 'watch_masks', 'reactions', 'reaction_changes', 'monitor_contacts', 'monitor_history'];
+    'alerts', 'watch_sources', 'watch_masks', 'reactions', 'reaction_changes', 'monitor_contacts', 'monitor_history', 'group_greetings'];
 
 /*
  * Estado limpo para cada teste: tabelas vazias, settings no padrão, nada

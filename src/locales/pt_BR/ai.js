@@ -205,5 +205,9 @@ module.exports = {
     'sticker.fail': '❌ Não consegui gerar a figurinha: {erro}',
     'sticker.colorsNeedTxt': '❌ O -bg e o -fg são do -txt: /sticker -txt "Bom dia!" -bg "#FFFFFF" -fg "#000000"',
     'sticker.txtConflict': '❌ O -txt não combina com -ss, -es, -v nem com uma URL: ele faz a figurinha só do texto.',
-    'sticker.posConflict': '❌ O -pos é do recorte de imagem e vídeo: não vale com -txt.'
+    'sticker.posConflict': '❌ O -pos é do recorte de imagem e vídeo: não vale com -txt.',
+
+
+
+
 };

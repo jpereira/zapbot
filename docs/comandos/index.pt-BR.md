@@ -182,11 +182,11 @@ destino: quem pode o `/gpt` usa os atalhos para ele, e o nome de um atalho não 
 [`/sticker`](sticker.md), [`/translate`](translate.md), [`/uptime`](uptime.md),
 [`/version`](version.md), [`/walissu`](walissu.md), [`/weather`](weather.md), [`/whois`](whois.md)
 
-**admin, delegáveis** (admins e o dono; o dono libera a um usuário com `+cmd`) (9):
+**admin, delegáveis** (admins e o dono; o dono libera a um usuário com `+cmd`) (11):
 
-[`/draw`](draw.md), [`/everybody`](everybody.md), [`/gpt`](gpt.md), [`/members`](members.md),
-[`/poll`](poll.md), [`/profile`](profile.md), [`/show`](show.md), [`/stats`](stats.md),
-[`/tldr`](tldr.md)
+[`/draw`](draw.md), [`/everybody`](everybody.md), [`/goodbye`](goodbye.md), [`/gpt`](gpt.md),
+[`/members`](members.md), [`/poll`](poll.md), [`/profile`](profile.md), [`/show`](show.md),
+[`/stats`](stats.md), [`/tldr`](tldr.md), [`/welcome`](welcome.md)
 
 **admin** (admins e o dono; nunca delegáveis) (19):
 
@@ -222,6 +222,7 @@ mesmo que comecem com `/`. Sem isso, alguém poderia usar um comando que ecoa te
 | [`/everybody`](everybody.md) | `/todos`, `/todes` | `admin` · delegável | Menciona todos do grupo |
 | [`/get`](get.md) | `/download` | `user` | Baixa vídeo/áudio de redes sociais ou da mídia respondida |
 | [`/giphy`](giphy.md) | `/gif` | `user` | GIF do GIPHY por tag, URL ou ID, enviado em loop |
+| [`/goodbye`](goodbye.md) | | `admin` · delegável | Mensagem quando alguém sai do grupo (por grupo; `{name}`, `{group}`) |
 | [`/gpt`](gpt.md) | `/ai` | `admin` · delegável | Pergunta ao ChatGPT (OpenAI); `-img`, `-gif`, `-voz`, `-prices`, `-usage` e `-status` (bytes, tokens, custo e saldo) |
 | [`/help`](help.md) | `/h` | `user` | Menu de ajuda, só com os comandos que quem pediu pode usar |
 | [`/join`](join.md) |  | `admin` | Entra em um grupo pelo link de convite (`-info` mostra o grupo sem entrar); `-l` lista os seus grupos |
@@ -255,4 +256,5 @@ mesmo que comecem com `/`. Sem isso, alguém poderia usar um comando que ecoa te
 | [`/walissu`](walissu.md) | `/ualisu` | `user` | Walissu CVE BOT: marca 2 membros com uma CVE aleatória |
 | [`/watch`](watch.md) |  | `admin` | Regras de texto/regex, com origem opcional em `-in`; lista ocorrências, busca nelas com `-q` e avisa nos destinos de `-to`; `-mask` ofusca telefones e `-mask N` liga o 🔒 na regra N |
 | [`/weather`](weather.md) | `/tempo` | `user` | Tempo agora e máx./mín. do dia (Open-Meteo); `/weather 16d` mostra até 16 dias, contando hoje; sem cidade usa `tempo.city` |
+| [`/welcome`](welcome.md) | | `admin` · delegável | Mensagem quando alguém entra no grupo (por grupo; `{name}`, `{group}`) |
 | [`/whois`](whois.md) | `/who`, `/id` | `user` | Quem é e o que pode no bot, neste chat: 🤖 dono, 👑 admin, 🗣️ usuário ou 🚫 sem permissão; o dono e os admins veem os outros |

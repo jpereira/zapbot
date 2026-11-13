@@ -121,6 +121,7 @@ nav:
       - /everybody: comandos/everybody.md
       - /get: comandos/get.md
       - /giphy: comandos/giphy.md
+      - /goodbye: comandos/goodbye.md
       - /gpt: comandos/gpt.md
       - /help: comandos/help.md
       - /join: comandos/join.md
@@ -154,6 +155,7 @@ nav:
       - /walissu: comandos/walissu.md
       - /watch: comandos/watch.md
       - /weather: comandos/weather.md
+      - /welcome: comandos/welcome.md
       - /whois: comandos/whois.md
   - Demo: demonstracao.md
   - Settings: settings.md

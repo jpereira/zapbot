@@ -1,0 +1,49 @@
+{
+  "summary": "Mensagem quando alguém entra no grupo",
+  "usage": "/welcome [-on|-off|-test] [<texto>]",
+  "help": "Define a mensagem que o bot manda no grupo quando alguém entra (pelo link de convite ou adicionado por um admin). Vale por grupo: sem nada, mostra a deste grupo. {name} é a pessoa (uma menção) e {group}, o nome do grupo. Só funciona em grupos.",
+  "ex": [
+    "/welcome",
+    "/welcome Boas-vindas ao {group}, {name}! 🎉",
+    "/welcome -off"
+  ],
+  "cmd_opts": [
+    {
+      "opts": [
+        "on"
+      ],
+      "values": [],
+      "desc": "Liga com o texto padrão.",
+      "ex": [
+        "/welcome -on"
+      ]
+    },
+    {
+      "opts": [
+        "off"
+      ],
+      "values": [],
+      "desc": "Desliga neste grupo.",
+      "ex": [
+        "/welcome -off"
+      ]
+    },
+    {
+      "opts": [
+        "test",
+        "t"
+      ],
+      "values": [],
+      "desc": "Manda a mensagem como ela ficaria, com você no lugar de quem entra (com o texto que você deu, ou o atual).",
+      "ex": [
+        "/welcome -test"
+      ]
+    },
+    {
+      "argv": [
+        "[<texto>]"
+      ],
+      "desc": "A mensagem ({name} = a pessoa, {group} = o nome do grupo; até 1000 caracteres). Pode ter várias linhas."
+    }
+  ]
+}

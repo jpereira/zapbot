@@ -100,6 +100,7 @@ src/
   comandosNoTexto.js    the {/command} and the \n in the text (/cron and /alias): checked on creation and run on send
   midia.js              /get and /sticker: the ffmpeg arguments, the sticker crop (sharp) and the link preview
   stickerTexto.js       /sticker -txt: the PNG frames (sharp) and the animated WebP (ffmpeg)
+  saudacoes.js          /welcome and /goodbye: the message of each group (table `group_greetings`) and the group_join/group_leave events
   openai.js             models accepted by /gpt
   openaiChat.js         call to the OpenAI chat (/gpt and /tldr) and the status footer (bytes, tokens, cost)
   i18n.js               t('key', {vars}) and the bot's language (setting zapbot.lang)
@@ -221,6 +222,7 @@ The messages the bot sends have whatsapp-web.js's `edit()`: it swaps the text in
 | `notes.test.js` | `/notes`: `-add`, `-list` and `-rm` (several IDs, `all`, nonexistent ID), the `#tags` (the partial one: `#idei` finds `#ideias`), `-tags`, `-desc`, `-move`, `-view` (with image), `-export` (PDF, with the images), `-search`, images and `-alerta` (in `-add` and by ID or tag, when invalid, `-to`, single trigger and `-alerta -rm`) |
 | `mute.test.js` | `/mute` and `/unmute`: notices muted per person, group or community (only the target is `-a`), the target lookup (exact names, contact, group, mention and a list to choose by number) and the reply to a notice (where it came from) |
 | `presenca.test.js` | Presence reading by LID, shared subscription, cache and absence of valid times without fabricating data |
+| `saudacoes.test.js` | `/welcome` and `/goodbye`: the text per group (`{name}`, `{group}`, mention), `-on`, `-off`, `-test`, the `group_join`/`group_leave` events and who doesn't trigger them |
 | `profile.test.js` | `/profile` (`/perfil`): the photo with the caption `Contato: nome da agenda <telefone>` (by name, mention and number), the contacts name instead of the pushname, your profile and that of whoever wrote the replied message, several people, no photo, a failing download, the `@lid`, `-mask`, group refused and owner-only use |
 | `reacoes.test.js` | Removed or changed reactions: the `message_reaction` event (and what doesn't generate a notice), the `show.alert.reaction` notice, `/show -r`, `/mute -r`, `/bot -status` and the cleanup |
 | `search.test.js` | `/search` (`/buscar`): in this chat, in all of them in your private chat, `-N` and the limit, media and long texts |
