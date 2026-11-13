@@ -5,7 +5,7 @@ dentro de um [`/alias`](alias.md) ou do [`/cron`](cron.md) com `{/version}`.
 
 ```text
 /version
-🤖 ZapBot 2.0.13 (devel) (git+7a89b92/HEAD)
+🤖 ZapBot 2.0.13 (git+7a89b92/v2.0.13)
 ━━━━━━━━━━━━━━━━━━
 ⚡ Online: 2 dias, 3 horas
 🔐 Conectado: 2 dias, 2 horas, 58 minutos

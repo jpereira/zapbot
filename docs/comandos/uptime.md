@@ -6,7 +6,7 @@ connected` while it isn't connected). It can be used inside an [`/alias`](alias.
 
 ```text
 /uptime
-🤖 ZapBot 2.0.13 (devel) (git+7a89b92/HEAD)
+🤖 ZapBot 2.0.13 (git+7a89b92/v2.0.13)
 ━━━━━━━━━━━━━━━━━━
 ⚡ Online: 2 days, 3 hours
 🔐 Connected: 2 days, 2 hours, 58 minutes

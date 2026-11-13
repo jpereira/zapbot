@@ -1,4 +1,4 @@
-# 🤖 ZapBot v2.0.13 (devel)
+# 🤖 ZapBot v2.0.13
 
 <p align="center">
   <img src="docs/assets/logo.png" alt="ZapBot logo: an angel robot with a halo and wings, winking and
@@ -104,12 +104,12 @@ reacts to commands typed in any chat. Details in
 ## Installation
 
 All you need is Docker with Compose v2, Git and a phone with WhatsApp. The stable version is the
-latest release, currently `v2.0.12`:
+latest release, currently `v2.0.13`:
 
 ```bash
 git clone https://github.com/jpereira/zapbot.git
 cd zapbot
-git checkout v2.0.12
+git checkout v2.0.13
 
 cp config/.env.example config/.env   # fill in PHONE_NUMBER and the e-mail (see below)
 

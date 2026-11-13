@@ -53,7 +53,7 @@ initialize failed: net::ERR_NAME_NOT_RESOLVED at https://web.whatsapp.com/
 ♻️ Retrying to connect in 15s (consecutive failures: 1).
 ♻️ Restarting client. Reason: retry #2 (heartbeat: OPENING)
 ...
-🤖 ZapBot 2.0.13 (devel) inicializado!
+🤖 ZapBot 2.0.13 inicializado!
 ```
 
 - Only one email, on the first failure (`❌ Restart failed`); with the internet down, it fails
