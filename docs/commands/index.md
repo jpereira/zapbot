@@ -183,12 +183,12 @@ and a shortcut's name doesn't go in `+cmd`.
 [`/sticker`](sticker.md), [`/translate`](translate.md), [`/uptime`](uptime.md),
 [`/version`](version.md), [`/walissu`](walissu.md), [`/weather`](weather.md), [`/whois`](whois.md)
 
-**admin, delegable** (admins and the owner; the owner releases them to a user with `+cmd`) (14):
+**admin, delegable** (admins and the owner; the owner releases them to a user with `+cmd`) (15):
 
 [`/demote`](demote.md), [`/draw`](draw.md), [`/everybody`](everybody.md), [`/goodbye`](goodbye.md),
 [`/gpt`](gpt.md), [`/members`](members.md), [`/ocr`](ocr.md), [`/poll`](poll.md),
 [`/profile`](profile.md), [`/promote`](promote.md), [`/show`](show.md), [`/stats`](stats.md),
-[`/tldr`](tldr.md), [`/welcome`](welcome.md)
+[`/tldr`](tldr.md), [`/tts`](tts.md), [`/welcome`](welcome.md)
 
 **admin** (admins and the owner; never delegable) (20):
 
@@ -255,6 +255,7 @@ even if they start with `/`. Without that, someone could use a command that echo
 | [`/sticker`](sticker.md) |  | `user` | Sticker from an image, video, or link (the `/get -st`), replying or as the caption of the media; with `-txt`, an animated text sticker |
 | [`/tldr`](tldr.md) | `/resumo` | `admin` · delegable | Summarizes the chat's conversation with ChatGPT (`30m`, `2h`, `1d`, `1h30m` or `300` messages; replying to a message, from it on) |
 | [`/translate`](translate.md) | `/traduzir` | `user` | Translates the text or the replied message with Google Translate, no key; `-para en` changes the language |
+| [`/tts`](tts.md) | | `admin` · delegable | The text as a robot voice note (OpenAI) |
 | [`/unblock`](unblock.md) |  | `admin` | Unblocks a person: by name, by number, by the `/block` list number, or by replying to a message |
 | [`/unmute`](unmute.md) |  | `admin` | Undoes the `/mute` silence: by name, by list number, by replying to a notice, or all (`-all`) |
 | [`/uptime`](uptime.md) | | `user` | Run time and connection time |
