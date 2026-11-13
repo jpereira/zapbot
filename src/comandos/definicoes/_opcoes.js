@@ -6,7 +6,7 @@
 const OPCAO_ALERTA_MSG = {
     opts: ['msg'],
     values: ['<text>'],
-    desc: 'Together with -alerta: the text goes at the start of the notice. It runs to the end of the command (may have spaces).',
+    desc: 'The text goes at the start of the notice (with -alerta). It runs to the end of the command (may have spaces).',
     ex: ['-msg Time to sell!'],
     cron: false
 };
@@ -14,13 +14,13 @@ const OPCAO_ALERTA_MSG = {
 const OPCAO_ALERTA_RM = {
     opts: ['rm'],
     values: ['<#...|all>'],
-    desc: 'Together with -alerta: removes alert #N from the list, several at once (-rm 1 2 3 or -rm 1,2,3), or all. If any # does not exist, none is removed.'
+    desc: 'Removes alert #N from the list, several at once (-rm 1 2 3 or -rm 1,2,3), or all (with -alerta). If any # does not exist, none is removed.'
 };
 
 const OPCAO_ALERTA_TO = {
     opts: ['to'],
     values: ['<destination>'],
-    desc: 'Together with -alerta: notifies a contact, a group, a number, or an email instead of your private chat (several with the name: you pick from the list). Repeat for several: a single alert that notifies all of them.',
+    desc: 'Notifies a contact, a group, a number, or an email instead of your private chat (several with the name: you pick from the list) (with -alerta). Repeat for several: a single alert that notifies all of them.',
     ex: [
         '-to /Jorge Pereira/',
         '-to @Fulano (mention)',

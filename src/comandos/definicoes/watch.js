@@ -6,7 +6,7 @@ const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/watch',
-    usage: '/watch [text|/regex/flags] [-in <source>] [-to <destination>]...  or  /watch [-N] [-q <text|/regex/flags>]  or  /watch -s [N|rule] [-q <text|/regex/flags>] [-to <destination|off>]...  or  /watch -rm <N|rule>  or  /watch -flush [N|rule]  or  /watch -mask N  or  /watch -umask N',
+    usage: '/watch [text|/regex/flags] [-in <source>] [-to <destination>]...  or  /watch [-N] [-q <text>]  or  /watch -s|-rm|-flush|-mask|-umask [N|rule]',
     summary: 'Watches incoming messages with text or regex rules',
     help: 'Watches incoming messages with text or regex rules. Location thumbnails are not text and are left out of the rules. A rule without -in applies everywhere; -in restricts it to a contact (sender), group or channel. With no parameters, lists rules and latest matches; -N sets the amount. @newsletter posts are identified with 📰 and the channel name. Anyone muted in /mute does not trigger an alert in your private chat (the -to destinations still receive it). The numbers after -s, -rm and -flush identify rules; in their place, the rule itself works, whole or a fragment. The number of matches comes from -N. With -mask N (🔒), the alerts and occurrences of rule N come out with obfuscated phone numbers; -umask N turns it off.',
     cmd_opts: [
@@ -65,7 +65,7 @@ module.exports = {
         {
             opts: ['mask', 'm'],
             values: ['[N]'],
-            desc: 'Without N, obfuscates phone numbers with 10 to 15 consecutive digits in this run\'s output, keeping the first five and the last two (like +55219****44). With N, turns on the 🔒 of rule N: its alerts (private chat, -to and email) and occurrences come out obfuscated, until -umask. Saved data uses the full numbers.',
+            desc: 'Obfuscates phone numbers in the output. With N, turns on the 🔒 of rule N: its alerts and occurrences come out obfuscated, until -umask.',
             ex: ['/watch -mask', '/watch -mask 3']
         },
         {

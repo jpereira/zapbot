@@ -6,7 +6,7 @@ const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/notes',
-    usage: '/notes [-list|-l] [#tag...] [-to <destination>]...  or  /notes -compact|-c [#tag...]  or  /notes -search|-s [#tag...] <text|/regex/flags> [-to <destination>]...  or  /notes -update|-u <id> [#tag] <new text>  or  /notes -view|-v <id...|#tag...> [-to <destination>]...  or  /notes -move|-m #tag #newtag  or  /notes -desc|-d #tag [<description>|-rm]  or  /notes -export|-e [#tag...] [-to <destination>]...  or  /notes #tag <text>  or  /notes -add|-a #tag <text> [-alerta <when> [-to <destination>]...]  or  /notes -rm|-r <id...|#tag...|all>  or  /notes -alerta [<id|#tag...> [<when> [-to <destination>]...]]  or  /notes -alerta -rm <id...|#tag...|all>',
+    usage: '/notes #tag <text>  or  /notes [-list|-l] [#tag...] [-to <destination>]...  or  /notes -search|-view|-update|-export|-move|-desc|-rm|-alerta <...>',
     summary: 'Notes saved in the database',
     help: 'Notes saved in the database. To add one, the syntax is /notes #tag <text>: without the #tag it errors, and just /notes #tag lists the tag\'s notes. Replying to a message, its text becomes the note, with ↩️ (/notes #lembrete); media (image, document, audio, video...) in the message itself or in the replied one is saved to disk along with the note. With nothing, shows the tags with the count and description of each; -l lists all notes, with the ID, grouped by #tag (one message per tag). The -alerta reminds you of a note at a date/time (once; the note stays): in your private chat or at the -to destinations.',
     ex: [
@@ -109,7 +109,7 @@ module.exports = {
         {
             opts: ['to'],
             values: ['<destination>'],
-            desc: 'With the list (-l, #tag), -view or -export: sends to the destination instead of replying here. With -alerta: notifies a contact, a group, a number or by email instead of your private chat. Repeat for several: a single alert, which notifies all of them.',
+            desc: 'Sends to the destination instead of replying here (list, -view and -export), or notifies it (-alerta). Repeat for several.',
             ex: [
                 '/notes -e #casa -to /Família/',
                 '-to /Jorge Pereira/',

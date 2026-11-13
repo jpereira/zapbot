@@ -1,6 +1,6 @@
 {
   "summary": "Liga/desliga o bot e diz quem usa os comandos",
-  "usage": "/bot [-on|-off] [-list-users [all]]  ou  /bot +a|-a|+u|-u [+cmd|-cmd <comandos>] [pessoa...] [-list-users all]  ou  /bot -reset [force]  ou  /bot -status [<hora>|off] [-to <destino>]...  ou  /bot -info  ou  /bot -test  ou  /bot -flush-email [true]  ou  /bot -passwd <senha|off>  ou  /bot -login <senha>",
+  "usage": "/bot [-on|-off]  ou  /bot +a|-a|+u|-u [+cmd|-cmd <comandos>] [pessoa...]  ou  /bot -status|-info|-test|-reset  ou  /bot -passwd|-login <senha>",
   "help": "Liga/desliga o bot e diz quem usa os comandos: você e os admins usam tudo; os usuários, os comandos comuns. Sem opção, mostra o status (o mesmo do -status). O -info mostra as versões do que ele usa.",
   "cmd_opts": [
     {
@@ -108,7 +108,7 @@
       "values": [
         "<destino>"
       ],
-      "desc": "Junto com -status: para onde vai o relatório, em vez do seu privado. Uma pessoa, um grupo ou um e-mail (email = o QRCODE_EMAIL_SMTP_TO); repita para vários. No fim do relatório, o envio diário mostra os destinos: 👤 pessoa, 👥 grupo ou 📧 e-mail.",
+      "desc": "Para onde vai o relatório, em vez do seu privado (com -status). Uma pessoa, um grupo ou um e-mail (email = o QRCODE_EMAIL_SMTP_TO); repita para vários. No fim do relatório, o envio diário mostra os destinos: 👤 pessoa, 👥 grupo ou 📧 e-mail.",
       "ex": [
         "-to /Jorge Pereira/",
         "-to /Grupo Familia/ -to email"
@@ -174,7 +174,7 @@
         "m"
       ],
       "values": [],
-      "desc": "Ofusca telefones com 10 a 15 dígitos contínuos na saída desta execução, mantendo os cinco primeiros e os dois últimos (como +55219****44). Os dados salvos e os destinos usam os números completos.",
+      "desc": "Ofusca telefones na saída (ex.: +55219****44). Os dados salvos e os destinos usam os números completos.",
       "ex": [
         "/bot -mask"
       ]

@@ -21,7 +21,7 @@ module.exports = {
         {
             opts: ['pv'],
             values: [],
-            desc: 'Sends it to your private chat instead of showing it in the current chat.',
+            desc: 'Sends it to your private chat.',
             outrosChats: true
         },
         opcaoStatus('/tldr -s 2h'),

@@ -6,7 +6,7 @@ const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/defi',
-    usage: '/defi [orca|prjx|liquidswap|morpho|aave] [-mask]  or  /defi -l  or  /defi -rm <#...|all>  or  /defi [protocol] -taxas [-alerta]  or  /defi -alerta <#|all> [-to <destination>]... [-taxas <value>]  or  /defi <protocol> <options>',
+    usage: '/defi [protocol] [-mask]  or  /defi -l  or  /defi -rm <#...|all>  or  /defi [protocol] -taxas [-alerta]  or  /defi <protocol> <options>',
     summary: 'DeFi positions (Orca, Project X, Liquidswap, Morpho, and Aave)',
     help: 'Positions on Orca (Solana), Project X (HyperEVM), Liquidswap (Aptos), Morpho, and Aave V3, read on the spot: balance, range, and fees to collect for the liquidity ones; collateral, debt, and risk for the lending ones. With nothing, shows all; with the protocol, only its own. Each protocol has its own help.',
     ex: [
@@ -77,7 +77,7 @@ module.exports = {
         {
             opts: ['rm'],
             values: ['<#...|all>'],
-            desc: 'Removes registration #N, several (-rm 1 3 or 1,3), or all; if any # does not exist, none is removed. Together with -alerta: only turns off the alert of #N (or of all).',
+            desc: 'Removes registration #N, several (-rm 1 3 or 1,3), or all; if any # does not exist, none is removed. Only turns off the alert of #N (or of all) (with -alerta).',
             cron: false
         },
         {
@@ -90,7 +90,7 @@ module.exports = {
         {
             opts: ['to'],
             values: ['<destination>'],
-            desc: 'Together with -alerta: notifies a contact, a group, a number, or an email instead of your private chat (several with the name: you pick from the list). Repeat to notify several.',
+            desc: 'Notifies a contact, a group, a number, or an email instead of your private chat (several with the name: you pick from the list) (with -alerta). Repeat to notify several.',
             ex: [
                 '-to /Jorge Pereira/',
                 '-to @Fulano (mention)',

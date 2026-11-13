@@ -3,7 +3,7 @@
  */
 
 const { botConfig } = require('../botConfig');
-const { t } = require('../i18n');
+const { idioma, t } = require('../i18n');
 const { getSetting } = require('../settings');
 const { localizar } = require('./localizar');
 
@@ -24,27 +24,74 @@ function commandsByPrefix(name) {
 }
 
 /*
- * A ajuda é lida no celular: cada frase numa linha, e o "Ex:" (o `ex` do comandos.js) sempre na
- * linha de baixo, à esquerda, com um exemplo por linha ("Ex: /a 1, /a 2"). Fim de frase é
- * ". " seguido de maiúscula (ou "{"): "Máx. 20" e "(ex.: -taxas 50)" não quebram.
+ * A ajuda (-h) é lida no celular, num bloco de código de uns 46 caracteres: só o essencial. O comando
+ * mostra o resumo de uma linha, as opções com a 1ª frase de cada uma (o resto fica na página do site, cujo
+ * link vem no fim) e no máximo 3 exemplos. Fim de frase é ". " seguido de maiúscula (ou "{"): "Máx. 20"
+ * e "(ex.: -taxas 50)" não quebram.
  */
 const FIM_DE_FRASE = /(?<=[.!?])\s+(?=[A-ZÀ-ÖØ-Þ{])/u;
+const LARGURA = 46;        // colunas do bloco no celular
+const MAX_FRASE = 70;      // a 1ª frase de uma opção passa disso: corta numa vírgula (ou numa palavra, com "…")
+const MAX_EXEMPLOS = 3;
+const SITE = 'https://jpereira.github.io/zapbot';
 
-/**
- * @param {string} texto
- * @param {string[]} exemplos  o `ex` do comandos.js: um por linha, depois das frases
- * @param {string} inicio  o que vem antes da 1ª frase ("" ou a coluna da opção)
- * @param {string} recuo   o começo das linhas seguintes
- */
-function linhasDoTexto(texto, exemplos = [], inicio = '', recuo = '') {
-    const frases = String(texto ?? '').split(FIM_DE_FRASE).filter(Boolean);
-
-    return [
-        `${inicio}${frases[0] ?? ''}`,
-        ...frases.slice(1).map(f => `${recuo}${f}`),
-        ...exemplos.map((e, k) => `${recuo}${k ? '    ' : 'Ex: '}${e}`)
-    ];
+// A 1ª frase, só até o primeiro ":", ";" ou " (" (o que vem depois fica no site) e sem passar de MAX_FRASE
+function primeiraFrase(texto) {
+    let frase = String(texto ?? '').split(FIM_DE_FRASE).filter(Boolean)[0]?.trim() ?? '';
+    const corte = [...frase.matchAll(/:\s|;\s|\s\(|\s[—–]\s/g)].find(m => m.index >= 12)?.index;
+    if (corte != null) frase = frase.slice(0, corte);
+    if (frase.length > MAX_FRASE) {
+        const ate = frase.slice(0, MAX_FRASE);
+        const virgula = ate.lastIndexOf(', ');
+        frase = virgula >= 24 ? ate.slice(0, virgula) : `${ate.replace(/\s+\S*$/, '')}…`;
+    }
+    // Sem parêntese ou aspas abertos no fim
+    const aberto = frase.lastIndexOf('(');
+    if (aberto > 0 && aberto > frase.lastIndexOf(')')) frase = frase.slice(0, aberto).trim();
+    return frase.replace(/[.,;:]$/, '');
 }
+
+// O texto quebrado em linhas de até `largura` caracteres, entre palavras
+function quebrar(texto, largura) {
+    const linhas = [];
+    let atual = '';
+    for (const palavra of String(texto).split(/\s+/).filter(Boolean)) {
+        if (atual && atual.length + 1 + palavra.length > largura) {
+            linhas.push(atual);
+            atual = palavra;
+        } else {
+            atual = atual ? `${atual} ${palavra}` : palavra;
+        }
+    }
+    return atual ? [...linhas, atual] : linhas;
+}
+
+/*
+ * Uma opção ou argumento: se o nome e a 1ª frase cabem numa linha, ficam juntos (nomes alinhados); senão,
+ * o nome fica sozinho e a descrição vem abaixo, recuada.
+ * @param {number} coluna  a largura da coluna dos nomes que cabem junto da descrição
+ */
+function linhaDaOpcao({ syntax, desc, cabe }, coluna) {
+    const frase = primeiraFrase(desc);
+    if (!frase) return [`  ${syntax}`];
+    if (cabe) return [`  ${syntax.padEnd(coluna)}  ${frase}`];
+    return [`  ${syntax}`, ...quebrar(frase, LARGURA - 4).map(r => `    ${r}`)];
+}
+
+// Os exemplos do comando; sem eles, os das opções (os que são comandos inteiros primeiro; um pedaço como
+// "-ss 1.5" ganha o comando na frente), no máximo MAX_EXEMPLOS
+function exemplosDo(command, cmdOpts) {
+    let lista = command.ex ?? [];
+    if (!lista.length) {
+        const dasOpcoes = cmdOpts.flatMap(o => o.ex ?? []);
+        const inteiros = dasOpcoes.filter(e => e.startsWith('/'));
+        lista = inteiros.length ? inteiros : dasOpcoes.map(e => `${command.cmd} ${e}`);
+    }
+    return [...new Set(lista)].slice(0, MAX_EXEMPLOS);
+}
+
+// O link da página do comando no site (a pt-BR fica em /pt-BR/)
+const paginaDoComando = (cmd) => `${SITE}${idioma() === 'pt_BR' ? '/pt-BR' : ''}/comandos/${cmd.replace(/^\//, '')}/`;
 
 /*
  * Comando com protocolos (o /defi): cada opção diz de quais é ("protocolos":
@@ -65,9 +112,10 @@ function grupoDaOpcao(command, o) {
  * @param {string} [o.protocolo]  só a ajuda deste protocolo (as chaves de command.protocolos)
  */
 function formatCommandHelp(command, { protocolo } = {}) {
+    const original = command;
     command = localizar(command);
     const doProtocolo = protocolo ? command.protocolos?.[protocolo] : null;
-    if (doProtocolo) command = { ...command, usage: doProtocolo.usage, help: doProtocolo.help, ex: doProtocolo.ex };
+    if (doProtocolo) command = { ...command, usage: doProtocolo.usage, summary: primeiraFrase(doProtocolo.help), ex: doProtocolo.ex };
     const valeAqui = (o) => !doProtocolo || !o.protocolos?.length || o.protocolos.includes(protocolo);
 
     // Cada forma do uso ("... ou ...") numa linha, alinhada embaixo da primeira
@@ -75,7 +123,9 @@ function formatCommandHelp(command, { protocolo } = {}) {
     const recuo = ' '.repeat(t('help.usage').length);
     const lines = formas.map((f, i) => `${i ? recuo : t('help.usage')}${f}`);
 
-    if (command.help) lines.push(...linhasDoTexto(command.help, command.ex));
+    // O que o comando faz, em uma linha (o texto longo fica no site)
+    const resumo = command.summary ?? primeiraFrase(command.help);
+    if (resumo) lines.push(...quebrar(resumo, LARGURA));
 
     const cmdOpts = (command.cmd_opts ?? []).filter(valeAqui);
     const notEmpty = v => v != null && v !== '';
@@ -87,19 +137,21 @@ function formatCommandHelp(command, { protocolo } = {}) {
             const opts = o.opts.filter(Boolean)
                 .flatMap(opt => (o.sinais ?? ['-']).map(sinal => `${sinal}${opt}`)).join(', ');
             const values = (o.values ?? []).filter(notEmpty).join(' ');
-            return { syntax: values ? `${opts} ${values}` : opts, desc: o.desc, ex: o.ex, o };
+            return { syntax: values ? `${opts} ${values}` : opts, desc: o.desc, o };
         });
 
     // A ajuda de um protocolo não precisa do argumento do protocolo
     const positional = cmdOpts
         .filter(o => o?.argv?.length && !doProtocolo)
-        .map(o => ({ syntax: o.argv.filter(Boolean).join(' '), desc: o.desc, ex: o.ex }));
+        .map(o => ({ syntax: o.argv.filter(Boolean).join(' '), desc: o.desc }));
 
-    // Uma única coluna para opções e argumentos ficarem alinhados.
-    const width = Math.max(0, ...[...options, ...positional].map(o => o.syntax.length));
-    const linha = (o) => linhasDoTexto(o.desc, o.ex, `  ${o.syntax.padEnd(width)}  `, '    ');
+    // Cabem numa linha (nome + 1ª frase)? Esses ficam alinhados numa coluna; os outros, nome e descrição embaixo
+    const todas = [...options, ...positional];
+    for (const o of todas) o.cabe = 2 + o.syntax.length + 2 + primeiraFrase(o.desc).length <= LARGURA;
+    const coluna = Math.max(0, ...todas.filter(o => o.cabe).map(o => o.syntax.length));
+    for (const o of todas) o.cabe = o.cabe && 2 + coluna + 2 + primeiraFrase(o.desc).length <= LARGURA;
+    const linha = (o) => linhaDaOpcao(o, coluna);
 
-    // "espacado": uma linha em branco entre as opções (ajudas longas, como a do /bot)
     if (options.length && command.protocolos && !doProtocolo) {
         // Agrupadas: os de um protocolo só primeiro, os que valem para todos no fim
         const grupos = new Map();
@@ -115,7 +167,7 @@ function formatCommandHelp(command, { protocolo } = {}) {
         });
     } else if (options.length) {
         lines.push('', t('help.options'));
-        options.forEach((o, i) => lines.push(...(command.espacado && i ? [''] : []), ...linha(o)));
+        options.forEach(o => lines.push(...linha(o)));
     }
 
     if (positional.length) {
@@ -123,11 +175,17 @@ function formatCommandHelp(command, { protocolo } = {}) {
         positional.forEach(a => lines.push(...linha(a)));
     }
 
-    lines.push('', t('help.helpLine'));
+    const exemplos = exemplosDo(command, cmdOpts);
+    if (exemplos.length) {
+        lines.push('');
+        exemplos.forEach((e, k) => lines.push(`${k ? '    ' : 'Ex: '}${e}`));
+    }
 
     if (command.aliases?.length) {
         lines.push('', t('help.aliases', { list: command.aliases.join(', ') }));
     }
+
+    lines.push('', t('help.more', { url: paginaDoComando(original.cmd) }));
 
     return lines.join('\n');
 }

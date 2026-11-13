@@ -405,18 +405,20 @@ loop back). Each entry follows this format:
   are part of the text.
 - Changing `help`, `usage`, `aliases`, descriptions, `role` or `disabled` doesn't require code:
   just rebuild and recreate the container.
-- The `-h` is read on a phone, so the formatter breaks the lines:
-  - each form of the `usage` separated by `"  or  "` (`"  ou  "` in Portuguese) comes out on its own line;
-  - the `help` and each `desc` come out with one sentence per line (the end of a sentence is `. `
-    followed by a capital letter: `Máx. 20` and `(ex.: -taxas 50)` don't break); on an option, the
-    1st sentence stays next to it, and the others are indented;
-  - the `ex` (a list, on the command, on the option or on the protocol) always goes on the line
-    below, on the left: `Ex: /defi` and, below it, the others, one per line.
+- The `-h` is read on a phone, in a code block about 46 columns wide, so it is short on purpose: the
+  details live on the command's page on the site, linked at the end (`Details: ...`). The formatter:
+  - each form of the `usage` separated by `"  or  "` (`"  ou  "` in Portuguese) comes out on its own
+    line (keep it to 4 forms or fewer: group the options, like `-status|-info|-test`);
+  - the command is described by its `summary`, one line (the `help` is not shown in the `-h`);
+  - each option or argument shows only the 1st sentence of its `desc`, cut before the first `:`, `;` or
+    ` (` and at about 70 characters, so **put the essential first**: "Removes alert #N (with -alerta)",
+    not "With -alerta: removes alert #N". If name and sentence fit on a line, they stay together;
+    otherwise the sentence goes below the name;
+  - the `ex` of the command comes at the end, at most 3, one per line (`Ex: /defi` and, below it, the
+    others); without a command `ex`, the options' are used.
 - `sinais: ['+', '-']` shows the pair on a single line in `-h` (`+a, -a`), instead of `-a` in
   Options and `+a` in Arguments, far from each other. The parser still reads only `-a`: `+a`
   arrives in `argv`, and the handler deals with it (like `/bot +a`).
-- `espacado: true` (on the command) separates the `-h` options with a blank line: for long help
-  texts, like the one for `/bot`.
 - `protocolos` (on the command) gives a help for each protocol, as in `/defi`:
   `{ orca: { nome: 'Orca', usage: '...', help: '...' } }`, and each option says which ones it
   belongs to (`protocolos: ['orca']`; without the list, it applies to all). `/defi orca -help` (or

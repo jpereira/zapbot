@@ -189,13 +189,14 @@ describe('/noffa', () => {
 });
 
 describe('/bot', () => {
-    test('-h: os pares +a/-a, +u/-u e +cmd/-cmd juntos, uma opção por bloco (separadas por uma linha em branco)', async () => {
+    test('-h: os pares +a/-a, +u/-u e +cmd/-cmd juntos, uma opção por bloco', async () => {
         const [r] = await bot.responder('/bot -h');
         const linhas = r.split('\n').filter(l => /^  [+-]/.test(l)).map(l => l.trim().split(/\s{2,}/)[0]);
         assert.deepEqual(linhas, ['-on', '-off', '+a, -a [pessoa...]', '+u, -u [pessoa|grupo...]', '+cmd, -cmd <comandos>',
             '-list-users, -lu [all]', '-reset, -r [force]', '-status, -s [<hora>|off]', '-to <destino>',
             '-info, -i', '-test, -t', '-passwd <senha|off>', '-login <senha>', '-flush-email, -fe [true]', '-mask, -m']);
-        assert.match(r, /\n  -on {2,}Liga o bot\.\n\n  -off /);
+        assert.match(r, /\n  -on +Liga o bot\n/);
+        assert.match(r, /\nDetalhes: https:\/\/jpereira\.github\.io\/zapbot\/pt-BR\/comandos\/bot\/```$/);
         assert.doesNotMatch(r, /admin, -admin|Argumentos:/);
     });
 

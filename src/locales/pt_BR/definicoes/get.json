@@ -18,7 +18,7 @@
       "values": [
         "<topo|meio|baixo>"
       ],
-      "desc": "Com -st: onde fica o recorte quadrado, topo, meio (padrão) ou baixo. Em mídia mais larga que alta, topo é a esquerda e baixo a direita.",
+      "desc": "Onde fica o recorte quadrado: topo, meio (padrão) ou baixo.",
       "ex": [
         "/get -st -pos topo <url>"
       ]

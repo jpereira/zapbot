@@ -6,7 +6,7 @@ const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/bot',
-    usage: '/bot [-on|-off] [-list-users [all]]  or  /bot +a|-a|+u|-u [+cmd|-cmd <commands>] [person...] [-list-users all]  or  /bot -reset [force]  or  /bot -status [<time>|off] [-to <destination>]...  or  /bot -info  or  /bot -test  or  /bot -flush-email [true]  or  /bot -passwd <password|off>  or  /bot -login <password>',
+    usage: '/bot [-on|-off]  or  /bot +a|-a|+u|-u [+cmd|-cmd <commands>] [person...]  or  /bot -status|-info|-test|-reset  or  /bot -passwd|-login <password>',
     aliases: [],
     summary: 'Turns the bot on/off and sets who uses the commands',
     help: 'Turns the bot on/off and sets who uses the commands: you and the admins use everything; users, the common commands. Without an option, shows the status (same as -status). -info shows the versions of what it uses.',
@@ -70,7 +70,7 @@ module.exports = {
         {
             opts: ['to'],
             values: ['<destination>'],
-            desc: 'Together with -status: where the report goes, instead of your private chat. A person, a group, or an email (email = the QRCODE_EMAIL_SMTP_TO); repeat for several. At the end of the report, the daily delivery shows the destinations: 👤 person, 👥 group, or 📧 email.',
+            desc: 'Where the report goes, instead of your private chat (with -status). A person, a group, or an email (email = the QRCODE_EMAIL_SMTP_TO); repeat for several. At the end of the report, the daily delivery shows the destinations: 👤 person, 👥 group, or 📧 email.',
             ex: ['-to /Jorge Pereira/', '-to /Grupo Familia/ -to email'],
             cron: false
         },
@@ -109,13 +109,12 @@ module.exports = {
         {
             opts: ['mask', 'm'],
             values: [],
-            desc: 'Obfuscates phone numbers with 10 to 15 contiguous digits in the output of this run, keeping the first five and the last two (like +55219****44). Saved data and destinations use the full numbers.',
+            desc: 'Obfuscates phone numbers in the output (e.g. +55219****44). Saved data and destinations use the full numbers.',
             ex: ['/bot -mask'],
             cron: false
         }
     ],
     mask: true,
     role: ADMIN, // permissões, senha e liga/desliga
-    cron: 'dono',
-    espacado: true
+    cron: 'dono'
 };

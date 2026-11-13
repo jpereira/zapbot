@@ -66,8 +66,9 @@ Para a ajuda completa de um comando:
 /show -h           → ajuda do /show
 ```
 
-Todos os comandos ativos e seus aliases aceitam `-h` e `-help`. A ajuda mostra o uso, as opções, os
-argumentos e os aliases. `[]` indica algo opcional; `<>`, um valor a preencher; `...`, algo que pode
+Todos os comandos ativos e seus aliases aceitam `-h` e `-help`. A ajuda é curta de propósito: o uso, o resumo de uma
+linha, as opções e os argumentos (uma linha cada), até 3 exemplos e, no fim, o link da página do comando
+no site (`Detalhes: ...`), onde está tudo explicado. `[]` indica algo opcional; `<>`, um valor a preencher; `...`, algo que pode
 ser repetido. Uma linha iniciada por `Ex:` é um exemplo de comando.
 
 Comandos desconhecidos ou desativados recebem uma resposta à mensagem para o dono, admins e usuários

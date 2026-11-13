@@ -67,8 +67,9 @@ For the full help of a command:
 /show -h           → /show help
 ```
 
-All active commands and their aliases accept `-h` and `-help`. The help shows the usage, options,
-arguments and aliases. `[]` means something optional; `<>`, a value to fill in; `...`, something that
+All active commands and their aliases accept `-h` and `-help`. The help is short on purpose: the usage, the one-line summary, the
+options and arguments (one line each), up to 3 examples and, at the end, the link to the command's
+page on the site (`Details: ...`), where everything is explained. `[]` means something optional; `<>`, a value to fill in; `...`, something that
 can be repeated. A line starting with `Ex:` is an example command.
 
 Unknown or disabled commands get a reply to the message for the owner, admins and users with

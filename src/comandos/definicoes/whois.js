@@ -14,7 +14,7 @@ module.exports = {
     cmd_opts: [
         {
             argv: ['[person...]'],
-            desc: 'Only the owner and admins: /name/, @mention or +number (several at once). Replying to a message, without a person: whoever wrote it.',
+            desc: 'Who to look up (owner and admins only): /name/, @mention or +number, several at once. Replying to a message, without a person: whoever wrote it.',
             ex: ['/whois @Fulano', '/whois +5521999999999']
         }
     ],

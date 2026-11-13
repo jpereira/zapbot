@@ -2,7 +2,7 @@
  * /cache: Exibe o espaço ocupado pelo cache e limpa
  */
 
-const { BACKUP_DIR, CACHE_DIR, MEDIA_DIR } = require('../../constantes');
+const { CACHE_DIR } = require('../../constantes');
 const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
@@ -15,14 +15,14 @@ module.exports = {
         {
             opts: ['all', 'a'],
             values: [],
-            desc: `Deletes EVERYTHING in ${CACHE_DIR}: the messages (including the ones kept for /show), temporary files, the media downloaded to ${MEDIA_DIR} and the backups in ${BACKUP_DIR}.`
+            desc: 'Deletes everything in the cache (messages, media, backups).'
         },
-        { opts: ['backup', 'b'], values: [], desc: `Deletes the /backup backups in ${BACKUP_DIR}.` },
+        { opts: ['backup', 'b'], values: [], desc: 'Deletes the /backup backups.' },
         { opts: ['clean', 'c'], values: [], desc: 'Cleans only what is past the retention windows.' },
         {
             opts: ['media', 'm'],
             values: [],
-            desc: `Deletes the media downloaded to ${MEDIA_DIR} (the messages stay, without the file).`
+            desc: 'Deletes the downloaded media (the messages stay).'
         }
     ],
     role: ADMIN // apaga dados

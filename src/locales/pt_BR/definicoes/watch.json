@@ -1,6 +1,6 @@
 {
   "summary": "Vigia mensagens recebidas com regras de texto ou regex",
-  "usage": "/watch [texto|/regex/flags] [-in <origem>] [-to <destino>]...  ou  /watch [-N] [-q <texto|/regex/flags>]  ou  /watch -s [N|regra] [-q <texto|/regex/flags>] [-to <destino|off>]...  ou  /watch -rm <N|regra>  ou  /watch -flush [N|regra]  ou  /watch -mask N  ou  /watch -umask N",
+  "usage": "/watch [texto|/regex/flags] [-in <origem>] [-to <destino>]...  ou  /watch [-N] [-q <texto>]  ou  /watch -s|-rm|-flush|-mask|-umask [N|regra]",
   "help": "Vigia mensagens recebidas com regras de texto ou regex. Miniaturas de localização não são texto e ficam fora das regras. Uma regra sem -in vale em qualquer lugar; -in restringe a um contato (remetente), grupo ou canal. Sem parâmetros, lista regras e últimos matches; -N escolhe a quantidade. Publicações de @newsletter são identificadas com 📰 e o nome do canal. Quem está silenciado no /mute não gera aviso no seu privado (os -to continuam recebendo). Os números após -s, -rm e -flush identificam regras; no lugar deles, vale a própria regra, inteira ou um trecho. A quantidade de matches vem no -N. Com -mask N (🔒), os avisos e as ocorrências da regra N saem com telefones ofuscados; -umask N desliga.",
   "cmd_opts": [
     {
@@ -123,7 +123,7 @@
       "values": [
         "[N]"
       ],
-      "desc": "Sem N, ofusca telefones com 10 a 15 dígitos contínuos na saída desta execução, mantendo os cinco primeiros e os dois últimos (como +55219****44). Com N, liga o 🔒 da regra N: os avisos (privado, -to e e-mail) e as ocorrências dela passam a sair ofuscados, até o -umask. Os dados salvos usam os números completos.",
+      "desc": "Ofusca telefones na saída. Com N, liga o 🔒 da regra N: os avisos e ocorrências dela saem ofuscados, até o -umask.",
       "ex": [
         "/watch -mask",
         "/watch -mask 3"
