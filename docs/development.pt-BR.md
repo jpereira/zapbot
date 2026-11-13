@@ -400,18 +400,21 @@ Cada entrada segue este formato:
   do texto.
 - Alterar `help`, `usage`, `aliases`, descrições, `role` ou `disabled` não exige código: basta
   refazer o build e recriar o container.
-- O `-h` é lido no celular, então o formatador quebra as linhas:
-  - cada forma do `usage` separada por `"  or  "` (`"  ou  "` em português) sai numa linha;
-  - o `help` e cada `desc` saem com uma frase por linha (fim de frase é `. ` seguido de maiúscula:
-    `Máx. 20` e `(ex.: -taxas 50)` não quebram); numa opção, a 1ª frase fica ao lado dela, e as
-    outras, recuadas;
-  - o `ex` (uma lista, no comando, na opção ou no protocolo) vai sempre para a linha de baixo, à
-    esquerda: `Ex: /defi` e, abaixo, os outros, um por linha.
+- O `-h` é lido no celular, num bloco de código de uns 46 caracteres de largura, então ele é curto de
+  propósito: os detalhes ficam na página do comando no site, com o link no fim (`Detalhes: ...`). O
+  formatador:
+  - cada forma do `usage` separada por `"  or  "` (`"  ou  "` em português) sai numa linha (mantenha 4
+    formas ou menos: agrupe as opções, como `-status|-info|-test`);
+  - o comando é descrito pelo `summary`, em uma linha (o `help` não aparece no `-h`);
+  - cada opção ou argumento mostra só a 1ª frase do `desc`, cortada antes do primeiro `:`, `;` ou ` (`
+    e em uns 70 caracteres, então **coloque o essencial primeiro**: "Remove o alerta nº N (com
+    -alerta)", e não "Junto com -alerta: remove o alerta nº N". Se o nome e a frase cabem numa linha,
+    ficam juntos; senão, a frase vai embaixo do nome;
+  - o `ex` do comando vem no fim, no máximo 3, um por linha (`Ex: /defi` e, abaixo, os outros); sem `ex`
+    no comando, usa os das opções.
 - `sinais: ['+', '-']` mostra o par numa linha só no `-h` (`+a, -a`), em vez do `-a` em Opções e
   do `+a` em Argumentos, longe um do outro. O parser continua lendo só o `-a`: o `+a` chega em
   `argv`, e o handler trata (como o `/bot +a`).
-- `espacado: true` (no comando) separa as opções do `-h` com uma linha em branco: para ajudas
-  longas, como a do `/bot`.
 - `protocolos` (no comando) dá uma ajuda para cada protocolo, como no `/defi`:
   `{ orca: { nome: 'Orca', usage: '...', help: '...' } }`, e cada opção diz de quais é
   (`protocolos: ['orca']`; sem a lista, vale para todos). O `/defi orca -help` (ou

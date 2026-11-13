@@ -45,7 +45,7 @@
       "values": [
         "<texto>"
       ],
-      "desc": "Junto com -alerta: o texto vai no início do aviso. Vai até o fim do comando (pode ter espaços).",
+      "desc": "O texto vai no início do aviso (com -alerta). Vai até o fim do comando (pode ter espaços).",
       "ex": [
         "-msg Hora de vender!"
       ]
@@ -57,7 +57,7 @@
       "values": [
         "<nº...|all>"
       ],
-      "desc": "Junto com -alerta: remove o alerta nº N da lista, vários de uma vez (-rm 1 2 3 ou -rm 1,2,3) ou todos. Se algum nº não existe, nenhum sai."
+      "desc": "Remove o alerta nº N da lista, vários de uma vez (-rm 1 2 3 ou -rm 1,2,3) ou todos (com -alerta). Se algum nº não existe, nenhum sai."
     },
     {
       "opts": [
@@ -66,7 +66,7 @@
       "values": [
         "<destino>"
       ],
-      "desc": "Junto com -alerta: avisa num contato, num grupo, num número ou por e-mail em vez do seu privado (vários com o nome: você escolhe na lista). Repita para vários: um alerta só, que avisa em todos.",
+      "desc": "Avisa num contato, num grupo, num número ou por e-mail em vez do seu privado (vários com o nome: você escolhe na lista) (com -alerta). Repita para vários: um alerta só, que avisa em todos.",
       "ex": [
         "-to /Jorge Pereira/",
         "-to @Fulano (menção)",

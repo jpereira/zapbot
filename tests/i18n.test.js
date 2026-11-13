@@ -116,10 +116,10 @@ describe('ajuda nos dois idiomas', () => {
     test('en_US: /gpt -h e /help em inglês', async () => {
         await setSetting('zapbot.lang', 'en_US');
         const [help] = await bot.replyAlt('/gpt -h');
-        assert.match(help, /Usage: \/gpt \[-status\|-s\] \[question\]/);
+        assert.match(help, /Usage: \/gpt \[-s\] \[question\]/);
         assert.match(help, /Options:\n/);
         assert.match(help, /Arguments:\n/);
-        assert.match(help, /Help: -help, -h/);
+        assert.match(help, /\nDetails: https:\/\/jpereira\.github\.io\/zapbot\/commands\/gpt\/```$/);
         assert.doesNotMatch(help, /Uso:|Opções:|Argumentos:/);
 
         const [menu] = await bot.replyAlt('/help');
@@ -133,9 +133,9 @@ describe('ajuda nos dois idiomas', () => {
     test('pt_BR: o mesmo, em português', async () => {
         await setSetting('zapbot.lang', 'pt_BR');
         const [help] = await bot.replyAlt('/gpt -h');
-        assert.match(help, /Uso: \/gpt \[-status\|-s\] \[pergunta\]/);
+        assert.match(help, /Uso: \/gpt \[-s\] \[pergunta\]/);
         assert.match(help, /Opções:\n/);
-        assert.match(help, /Ajuda: -help, -h/);
+        assert.match(help, /\nDetalhes: https:\/\/jpereira\.github\.io\/zapbot\/pt-BR\/commands\/gpt\/```$/);
 
         const [menu] = await bot.replyAlt('/help');
         assert.match(menu, /^🤖 \*MENU DE AJUDA\*/);

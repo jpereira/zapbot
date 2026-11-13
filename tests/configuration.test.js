@@ -631,7 +631,7 @@ describe('ajuda', () => {
         assert.match(textAlt, /^Uso:/);
         assert.match(textAlt, /\nOpções:\n/);
         assert.match(textAlt, /\nArgumentos:\n/);
-        assert.match(textAlt, /\nAjuda: -help, -h$/);
+        assert.match(textAlt, /\nDetalhes: https:\/\/jpereira\.github\.io\/zapbot\/pt-BR\/commands\/get\/$/);
         assert.doesNotMatch(textAlt, /Usage:|Options:|Arguments:|\[OPTION\]/);
     });
 
@@ -643,16 +643,16 @@ describe('ajuda', () => {
         assert.doesNotMatch(textAlt, /Aliases:/);
         assert.doesNotMatch(formatCommandHelp(findCommand('/ping')), /Aliases:/);
         const withAlias = { ...findCommand('/ping'), aliases: ['/p'] };
-        assert.match(formatCommandHelp(withAlias), /Aliases: \/p$/);
+        assert.match(formatCommandHelp(withAlias), /\nAliases: \/p\n/);
     });
 
     test('as formas do uso ("  ou  ") saem uma por linha, alinhadas', () => {
         const textAlt = formatCommandHelp(findCommand('/defi'));
         const linesAlt = textAlt.split('\n');
-        assert.equal(linesAlt[0], 'Uso: /defi [orca|prjx|liquidswap|morpho|aave] [-mask]');
+        assert.equal(linesAlt[0], 'Uso: /defi [protocolo] [-mask]');
         assert.equal(linesAlt[1], '     /defi -l');
         assert.equal(linesAlt[3], '     /defi [protocolo] -taxas [-alerta]');
-        assert.equal(linesAlt[5], '     /defi <protocolo> <opções>');
+        assert.equal(linesAlt[4], '     /defi <protocolo> <opções>');
         assert.doesNotMatch(textAlt, / {2}ou {2}/);
     });
 
@@ -660,7 +660,7 @@ describe('ajuda', () => {
         const general = formatCommandHelp(findCommand('/defi'));
         const groups = general.split('\n').filter(l => l.startsWith(' > '));
         assert.deepEqual(groups, [' > Orca', ' > Aave', ' > Orca e Project X', ' > Project X, Liquidswap, Morpho e Aave', ' > Todos']);
-        assert.match(general, / > Orca\n {2}-address <endereço> +Cadastra a posição da Orca/);
+        assert.match(general, / > Orca\n {2}-address <endereço>\n {4}Cadastra a posição da Orca/);
 
         const morpho = formatCommandHelp(findCommand('/defi'), { protocolo: 'morpho' });
         assert.match(morpho, /^Uso: \/defi morpho \[-mask\]\n {5}\/defi morpho -wallet <0x\.\.\.> \[-name <nome>\]\nPosição, empréstimos e risco no Morpho/);
@@ -675,7 +675,7 @@ describe('ajuda', () => {
         // By the command's -help and by /help
         assert.equal((await bot.replyAlt('/defi prjx -help'))[0], '```' + formatCommandHelp(findCommand('/defi'), { protocolo: 'prjx' }) + '```');
         assert.match((await bot.replyAlt('/help defi orca'))[0], /^🤖 \*AJUDA\*\n\n```Uso: \/defi orca \[-mask\]\n/);
-        assert.match((await bot.replyAlt('/defi xyz -help'))[0], /^```Uso: \/defi \[orca\|prjx\|liquidswap\|morpho\|aave\]/, 'protocolo desconhecido: a geral');
+        assert.match((await bot.replyAlt('/defi xyz -help'))[0], /^```Uso: \/defi \[protocolo\]/, 'protocolo desconhecido: a geral');
 
         // The protocol alias also finds its help
         const liquidswap = '```' + formatCommandHelp(findCommand('/defi'), { protocolo: 'liquidswap' }) + '```';
@@ -684,49 +684,58 @@ describe('ajuda', () => {
         assert.match((await bot.replyAlt('/help defi liqswp'))[0], /```Uso: \/defi liquidswap\|liqswp/);
     });
 
-    test('ajuda para o celular: uma frase por linha e o "Ex:" na linha de baixo, um exemplo por linha', () => {
-        // In the command text: the sentences and the Ex: start at column 0
+    test('ajuda para o celular: o resumo em uma linha, no máximo 3 exemplos e o link do site', () => {
+        // The summary comes right after the usage (the long text stays on the site page)
         const cron = formatCommandHelp(findCommand('/cron')).split('\n');
-        assert.match(cron[2], /^Na hora marcada, .* \(-pv\)\.$/);
-        assert.match(cron[3], /^No texto, \{\/comando args\} roda/);
-        assert.equal(cron[4], 'O \\n digitado vira quebra de linha.');
-        assert.equal(cron[5], 'Ex: /cron 09h -r diario -to /Família/ Bom dia! {/crypto BTC}');
-        assert.equal(cron[6], '    /cron 8h -r diario Orca {/defi orca}\\n Prjx {/defi prjx}');
+        assert.match(cron[0], /^Uso: \/cron <quando>/);
+        assert.equal(cron[2], 'Agenda um texto ou comando para uma hora');
+        assert.equal(cron[3], 'marcada');
+        assert.doesNotMatch(cron.join('\n'), /O \\n digitado vira quebra de linha/);
 
-        // In the options: the 1st sentence beside; the others and the Ex:, indented 4 spaces
-        const linesAlt = formatCommandHelp(findCommand('/defi')).split('\n');
-        const i = linesAlt.findIndex(l => l.startsWith('  [orca|prjx|liquidswap|morpho|aave]'));
-        assert.match(linesAlt[i], /ou aave \(Aave V3\)\.$/);
-        assert.match(linesAlt[i + 1], /^ {4}Sozinho, mostra/);
-        assert.equal(linesAlt[i + 2], '    Ex: /defi');
-        assert.equal(linesAlt[i + 3], '        /defi orca');
-        assert.equal(linesAlt[i + 4], '        /defi liqswp');
-        assert.equal(linesAlt[i + 5], '        /defi aave');
+        // The Ex: on the line below, one per line, at most 3
+        const examples = cron.slice(cron.findIndex(l => l.startsWith('Ex: '))).filter(l => /^(Ex: |    \/)/.test(l));
+        assert.deepEqual(examples, ['Ex: /cron 09h -r diario -to /Família/ Bom dia! {/crypto BTC}',
+            '    /cron 8h -r diario Orca {/defi orca}\\n Prjx {/defi prjx}']);
+        assert.equal(cron.at(-1), 'Detalhes: https://jpereira.github.io/zapbot/pt-BR/commands/cron/');
 
-        // A single example also goes to the line below; "Paris, Texas" is one example, not two
-        assert.match(formatCommandHelp(findCommand('/weather')), /\n {4}Ex: \/weather Paris, Texas\n/);
+        // "Paris, Texas" is one example, not two; the Ex: comes after the options and the arguments
+        assert.match(formatCommandHelp(findCommand('/weather')), /\nEx: \/weather 16d Niteroi\n/);
+
+        // Only the 1st sentence of each option, cut before ":" or " (", and those that do not fit on the line go below the name
+        const defi = formatCommandHelp(findCommand('/defi')).split('\n');
+        const i = defi.findIndex(l => l.startsWith('  [orca|prjx|liquidswap|morpho|aave]'));
+        assert.match(defi[i + 1], /^ {4}\S/);
+        assert.doesNotMatch(defi.join('\n'), /…\n {4}\S|Sozinho, mostra/);
     });
 
-    test('a ajuda traz os caminhos reais de cache, mídias e backups', () => {
-        const { CACHE_DIR, MEDIA_DIR } = bot.src('constants');
+    test('a ajuda em inglês aponta para a página em inglês do site', async () => {
+        await setSetting('zapbot.lang', 'en_US');
         const help = getCommandSyntax('/cache');
-        assert.ok(help.includes(`Exibe o espaço ocupado em ${CACHE_DIR} e limpa o cache.`), help);
-        assert.ok(help.includes(`mídias baixadas em ${MEDIA_DIR}`));
+        assert.match(help, /^Usage: \/cache \[OPTION\]\n/);
+        assert.match(help, /\nDetails: https:\/\/jpereira\.github\.io\/zapbot\/commands\/cache\/$/);
         assert.doesNotMatch(help, /\$\{/);
     });
 
-    test('ajuda de todos os comandos e protocolos resolve variáveis e mantém o recuo', () => {
+    test('ajuda de todos os comandos e protocolos: sem variáveis soltas, enxuta, cabe no celular e com o link do site', () => {
         for (const command of activeCommands()) {
             for (const protocol of [undefined, ...Object.keys(command.protocolos ?? {})]) {
                 const textAlt = formatCommandHelp(command, { protocolo: protocol });
+                const linesAlt = textAlt.split('\n');
                 const whereAlt = `${command.cmd} ${protocol ?? ''}`;
                 assert.doesNotMatch(textAlt, /\t|\$\{|[ \t]+$/m, whereAlt);
-                assert.match(textAlt, /\nAjuda: -help, -h(?:\n|$)/, whereAlt);
+                assert.match(linesAlt.at(-1), /^Detalhes: https:\/\/jpereira\.github\.io\/zapbot\/pt-BR\/commands\/[a-z]+\/$/, whereAlt);
+                assert.ok(linesAlt.length <= 60, `${whereAlt}: ${linesAlt.length} linhas (o resto vai para o site)`);
+                const iEx = linesAlt.findIndex(l => l.startsWith('Ex: '));
+                const nEx = iEx < 0 ? 0 : linesAlt.slice(iEx).filter(l => /^(Ex: |    \/)/.test(l)).length;
+                assert.ok(nEx <= 3, `${whereAlt}: no máximo 3 exemplos (${nEx})`);
+                // The options text fits the phone screen (the usage and the examples may be longer)
+                const optionsAltAlt = linesAlt.filter(l => /^ {4}[^/ ]/.test(l) || /^ {2}\S.* {2}\S/.test(l));
+                for (const l of optionsAltAlt) assert.ok(l.length <= 46, `${whereAlt}: "${l}" tem ${l.length} colunas`);
                 if (!protocol) continue;
                 for (const optionAlt of command.cmd_opts.filter(o => o.opts)) {
                     const presente = !optionAlt.protocolos || optionAlt.protocolos.includes(protocol);
                     const syntax = `  -${optionAlt.opts[0]}`;
-                    assert.equal(textAlt.split('\n').some(l => l.startsWith(`${syntax} `)
+                    assert.equal(linesAlt.some(l => l.startsWith(`${syntax} `)
                         || l.startsWith(`${syntax},`)), presente, `${whereAlt}: ${syntax}`);
                 }
             }

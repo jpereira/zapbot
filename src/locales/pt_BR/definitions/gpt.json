@@ -1,6 +1,6 @@
 {
   "summary": "Pergunta ao ChatGPT",
-  "usage": "/gpt [-status|-s] [pergunta]  ou  /gpt -model [modelo] [-img|-gif|-audio|-voz]  ou  /gpt -prices  ou  /gpt -usage|-u [dias]  ou  /gpt -voz [texto]  ou  /gpt -img <pedido>  ou  /gpt -gif [pedido]",
+  "usage": "/gpt [-s] [pergunta]  ou  /gpt -voz|-img|-gif <texto>  ou  /gpt -model [modelo]  ou  /gpt -prices|-usage [dias]",
   "help": "Pergunta ao ChatGPT (OpenAI). Respondendo uma mensagem, o texto dela entra na pergunta; respondendo uma foto, ela vai junto (o ChatGPT vê a imagem); respondendo um áudio, ele é transcrito; respondendo um documento (texto ou PDF), o conteúdo vai junto; com -voz, o texto vira uma nota de voz de robô; com -img e -gif, cria uma imagem e um GIF. Precisa de OPENAI_API_KEY no config/.env ou do setting openai.api.key.",
   "cmd_opts": [
     {
@@ -70,7 +70,7 @@
         "prices"
       ],
       "values": [],
-      "desc": "Busca a tabela de preços no site da OpenAI e atualiza o setting openai.pricing (dólares por 1M de tokens), usado no custo estimado do -status. Mostra o que mudou; os modelos que você adicionou e a página não tem ficam como estão.",
+      "desc": "Atualiza a tabela de preços (setting openai.pricing) pelo site da OpenAI.",
       "ex": [
         "/gpt -prices"
       ]

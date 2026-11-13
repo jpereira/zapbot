@@ -28,7 +28,7 @@ module.exports = {
         {
             opts: ['mask', 'm'],
             values: [],
-            desc: 'Obfuscates phone numbers with 10 to 15 consecutive digits in this run\'s output, keeping the first five and the last two (like +55219****44).',
+            desc: 'Obfuscates phone numbers in the output (e.g. +55219****44).',
             ex: ['/profile -mask /Fulano/']
         }
     ],

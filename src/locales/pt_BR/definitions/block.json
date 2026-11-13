@@ -28,7 +28,7 @@
         "m"
       ],
       "values": [],
-      "desc": "Ofusca telefones com 10 a 15 dígitos contínuos na saída desta execução, mantendo os cinco primeiros e os dois últimos (como +55219****44).",
+      "desc": "Ofusca telefones na saída (ex.: +55219****44).",
       "ex": [
         "/block -mask"
       ]

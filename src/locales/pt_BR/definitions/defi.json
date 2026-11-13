@@ -1,6 +1,6 @@
 {
   "summary": "Posições DeFi (Orca, Project X, Liquidswap, Morpho e Aave)",
-  "usage": "/defi [orca|prjx|liquidswap|morpho|aave] [-mask]  ou  /defi -l  ou  /defi -rm <nº...|all>  ou  /defi [protocolo] -taxas [-alerta]  ou  /defi -alerta <nº|all> [-to <destino>]... [-taxas <valor>]  ou  /defi <protocolo> <opções>",
+  "usage": "/defi [protocolo] [-mask]  ou  /defi -l  ou  /defi -rm <#...|all>  ou  /defi [protocolo] -taxas [-alerta]  ou  /defi <protocolo> <opções>",
   "help": "Posições da Orca (Solana), do Project X (HyperEVM), da Liquidswap (Aptos), do Morpho e do Aave V3, lidas na hora: saldo, faixa e taxas a coletar das de liquidez; colateral, dívida e risco das de empréstimo. Sem nada, mostra todas; com o protocolo, só as dele. Cada protocolo tem a sua ajuda.",
   "ex": [
     "/defi orca -help",
@@ -103,7 +103,7 @@
       "values": [
         "<nº...|all>"
       ],
-      "desc": "Remove o cadastro nº N, vários (-rm 1 3 ou 1,3) ou todos; se algum nº não existe, nenhum sai. Junto com -alerta: só desliga o alerta da nº N (ou de todas)."
+      "desc": "Remove o cadastro nº N, vários (-rm 1 3 ou 1,3) ou todos; se algum nº não existe, nenhum sai. Só desliga o alerta da nº N (ou de todas) (com -alerta)."
     },
     {
       "opts": [
@@ -126,7 +126,7 @@
       "values": [
         "<destino>"
       ],
-      "desc": "Junto com -alerta: avisa num contato, num grupo, num número ou por e-mail em vez do seu privado (vários com o nome: você escolhe na lista). Repita para avisar em vários.",
+      "desc": "Avisa num contato, num grupo, num número ou por e-mail em vez do seu privado (vários com o nome: você escolhe na lista) (com -alerta). Repita para avisar em vários.",
       "ex": [
         "-to /Jorge Pereira/",
         "-to @Fulano (menção)",

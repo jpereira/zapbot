@@ -6,7 +6,7 @@ const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/alias',
-    usage: '/alias <name> [-quiet|-q] [-desc|-d "Description"] </command arguments>  or  /alias <name> [-quiet|-q] [-desc|-d "Description"] <text with {/command}>  or  /alias [-list|-l]  or  /alias <name>  or  /alias -move|-m <current name> <new name>  or  /alias -rm <name...|all>',
+    usage: '/alias <name> [-q] [-d "Description"] <command or text with {/command}>  or  /alias [<name>|-l]  or  /alias -m <name> <new name>  or  /alias -rm <name...|all>',
     aliases: [],
     summary: 'Saves shortcuts for commands with arguments',
     help: 'Saves shortcuts for commands with arguments or for a text with several {/command}, like in /cron: each one runs and the reply takes its place, in a single message. In the text, \\n becomes a line break. With no option, lists the registered aliases; with only a name (/alias /dolar), shows what that alias does, or an error if it is not an alias. In a command shortcut, $1, $2... take the typed arguments (e.g. /alias /rec /sticker -ss $1 -es $2; /rec 10 20 url); the syntax with braces and :- sets a default value (see the /alias documentation).  When running the shortcut, the bot prints the called command, appends the additional arguments and respects the permissions of the target commands. The name accepts letters, numbers, _, - and ., with or without a slash when registering. Registering the same name replaces the command and the description. The target must be an active bot command, including its fixed aliases; it cannot be /alias or another registered shortcut. Command names and all are reserved. Use /help alias to list the shortcuts available to you.',
@@ -18,7 +18,7 @@ module.exports = {
         {
             opts: ['quiet', 'q'],
             values: [],
-            desc: 'When running the shortcut, does not print the "🔗 Alias /nome -> comando" header.',
+            desc: 'No "🔗 Alias" header when running the shortcut.',
             ex: ['/alias -q /haha /me Hahaha!']
         },
         {

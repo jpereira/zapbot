@@ -3,7 +3,7 @@
  */
 
 const { botConfig } = require('../botConfig');
-const { t } = require('../i18n');
+const { language, t } = require('../i18n');
 const { getSetting } = require('../settings');
 const { locate } = require('./localize');
 
@@ -24,27 +24,74 @@ function commandsByPrefix(name) {
 }
 
 /*
- * The help is read on the phone: each sentence on a line, and the "Ex:" (the `ex` of commands.js) always on the
- * line below, on the left, with one example per line ("Ex: /a 1, /a 2"). End of sentence is
- * ". " followed by an uppercase letter (or "{"): "Max. 20" and "(e.g.: -rates 50)" do not break.
+ * The help (-h) is read on the phone, in a code block of about 46 characters: only the essentials. The command
+ * shows the one-line summary, the options with the 1st sentence of each (the rest stays on the site page, whose
+ * link comes at the end) and at most 3 examples. End of sentence is ". " followed by an uppercase letter (or "{"): "Max. 20"
+ * and "(e.g.: -taxas 50)" do not break.
  */
 const PHRASE_END = /(?<=[.!?])\s+(?=[A-ZÀ-ÖØ-Þ{])/u;
+const WIDTH = 46;        // block columns on the phone
+const MAX_PHRASE = 70;      // the 1st sentence of an option goes over that: cuts at a comma (or at a word, with "…")
+const MAX_EXAMPLES = 3;
+const SITE = 'https://jpereira.github.io/zapbot';
 
-/**
- * @param {string} texto
- * @param {string[]} exemplos  the `ex` from commands.js: one per line, after the sentences
- * @param {string} inicio  what comes before the 1st sentence ("" or the option column)
- * @param {string} recuo   the start of the following lines
- */
-function textLines(textAlt, examples = [], start = '', indent = '') {
-    const phrases = String(textAlt ?? '').split(PHRASE_END).filter(Boolean);
-
-    return [
-        `${start}${phrases[0] ?? ''}`,
-        ...phrases.slice(1).map(f => `${indent}${f}`),
-        ...examples.map((e, k) => `${indent}${k ? '    ' : 'Ex: '}${e}`)
-    ];
+// The 1st sentence, only up to the first ":", ";" or " (" (what comes after stays on the site) and not exceeding MAX_PHRASE
+function firstPhrase(textAlt) {
+    let phrase = String(textAlt ?? '').split(PHRASE_END).filter(Boolean)[0]?.trim() ?? '';
+    const cut = [...phrase.matchAll(/:\s|;\s|\s\(|\s[—–]\s/g)].find(m => m.index >= 12)?.index;
+    if (cut != null) phrase = phrase.slice(0, cut);
+    if (phrase.length > MAX_PHRASE) {
+        const ate = phrase.slice(0, MAX_PHRASE);
+        const virgula = ate.lastIndexOf(', ');
+        phrase = virgula >= 24 ? ate.slice(0, virgula) : `${ate.replace(/\s+\S*$/, '')}…`;
+    }
+    // Without an open parenthesis or quote at the end
+    const open = phrase.lastIndexOf('(');
+    if (open > 0 && open > phrase.lastIndexOf(')')) phrase = phrase.slice(0, open).trim();
+    return phrase.replace(/[.,;:]$/, '');
 }
+
+// The text broken into lines of up to `largura` characters, between words
+function lineBreak(textAlt, widthAlt) {
+    const linesAlt = [];
+    let current = '';
+    for (const word of String(textAlt).split(/\s+/).filter(Boolean)) {
+        if (current && current.length + 1 + word.length > widthAlt) {
+            linesAlt.push(current);
+            current = word;
+        } else {
+            current = current ? `${current} ${word}` : word;
+        }
+    }
+    return current ? [...linesAlt, current] : linesAlt;
+}
+
+/*
+ * An option or argument: if the name and the 1st sentence fit on a line, they stay together (names aligned); otherwise,
+ * the name stays alone and the description comes below, indented.
+ * @param {number} coluna  the width of the name column that fits next to the description
+ */
+function optionLine({ syntax, desc, cabe: fits }, column) {
+    const phrase = firstPhrase(desc);
+    if (!phrase) return [`  ${syntax}`];
+    if (fits) return [`  ${syntax.padEnd(column)}  ${phrase}`];
+    return [`  ${syntax}`, ...lineBreak(phrase, WIDTH - 4).map(r => `    ${r}`)];
+}
+
+// The command's examples; without them, the options' (the full-command ones first; a piece like
+// "-ss 1.5" gets the command in front), at most MAX_EXAMPLES
+function examplesAlt(command, cmdOpts) {
+    let list = command.ex ?? [];
+    if (!list.length) {
+        const optionsAltAlt = cmdOpts.flatMap(o => o.ex ?? []);
+        const integers = optionsAltAlt.filter(e => e.startsWith('/'));
+        list = integers.length ? integers : optionsAltAlt.map(e => `${command.cmd} ${e}`);
+    }
+    return [...new Set(list)].slice(0, MAX_EXAMPLES);
+}
+
+// The link to the command page on the site (the pt-BR one is under /pt-BR/)
+const commandPage = (cmd) => `${SITE}${language() === 'pt_BR' ? '/pt-BR' : ''}/commands/${cmd.replace(/^\//, '')}/`;
 
 /*
  * Command with protocols (/defi): each option says which ones it is for ("protocolos":
@@ -65,9 +112,10 @@ function optionGroup(command, o) {
  * @param {string} [o.protocolo]  only this protocol's help (the command.protocolos keys)
  */
 function formatCommandHelp(command, { protocolo: protocol } = {}) {
+    const original = command;
     command = locate(command);
     const protocolAlt = protocol ? command.protocolos?.[protocol] : null;
-    if (protocolAlt) command = { ...command, usage: protocolAlt.usage, help: protocolAlt.help, ex: protocolAlt.ex };
+    if (protocolAlt) command = { ...command, usage: protocolAlt.usage, summary: firstPhrase(protocolAlt.help), ex: protocolAlt.ex };
     const isWorthHere = (o) => !protocolAlt || !o.protocolos?.length || o.protocolos.includes(protocol);
 
     // Each usage form ("... or ...") on a line, aligned below the first
@@ -75,7 +123,9 @@ function formatCommandHelp(command, { protocolo: protocol } = {}) {
     const indent = ' '.repeat(t('help.usage').length);
     const lines = forms.map((f, i) => `${i ? indent : t('help.usage')}${f}`);
 
-    if (command.help) lines.push(...textLines(command.help, command.ex));
+    // What the command does, on one line (the long text stays on the site)
+    const summary = command.summary ?? firstPhrase(command.help);
+    if (summary) lines.push(...lineBreak(summary, WIDTH));
 
     const cmdOpts = (command.cmd_opts ?? []).filter(isWorthHere);
     const notEmpty = v => v != null && v !== '';
@@ -87,19 +137,21 @@ function formatCommandHelp(command, { protocolo: protocol } = {}) {
             const opts = o.opts.filter(Boolean)
                 .flatMap(opt => (o.sinais ?? ['-']).map(signalAlt => `${signalAlt}${opt}`)).join(', ');
             const values = (o.values ?? []).filter(notEmpty).join(' ');
-            return { syntax: values ? `${opts} ${values}` : opts, desc: o.desc, ex: o.ex, o };
+            return { syntax: values ? `${opts} ${values}` : opts, desc: o.desc, o };
         });
 
     // A protocol's help does not need the protocol argument
     const positional = cmdOpts
         .filter(o => o?.argv?.length && !protocolAlt)
-        .map(o => ({ syntax: o.argv.filter(Boolean).join(' '), desc: o.desc, ex: o.ex }));
+        .map(o => ({ syntax: o.argv.filter(Boolean).join(' '), desc: o.desc }));
 
-    // A single column so options and arguments line up.
-    const width = Math.max(0, ...[...options, ...positional].map(o => o.syntax.length));
-    const line = (o) => textLines(o.desc, o.ex, `  ${o.syntax.padEnd(width)}  `, '    ');
+    // Do they fit on one line (name + 1st sentence)? Those stay aligned in a column; the others, name and description below
+    const allAlt = [...options, ...positional];
+    for (const o of allAlt) o.cabe = 2 + o.syntax.length + 2 + firstPhrase(o.desc).length <= WIDTH;
+    const column = Math.max(0, ...allAlt.filter(o => o.cabe).map(o => o.syntax.length));
+    for (const o of allAlt) o.cabe = o.cabe && 2 + column + 2 + firstPhrase(o.desc).length <= WIDTH;
+    const line = (o) => optionLine(o, column);
 
-    // "spaced": a blank line between the options (long helps, like the one for /bot)
     if (options.length && command.protocolos && !protocolAlt) {
         // Grouped: those of a single protocol first, those that apply to all at the end
         const groups = new Map();
@@ -115,7 +167,7 @@ function formatCommandHelp(command, { protocolo: protocol } = {}) {
         });
     } else if (options.length) {
         lines.push('', t('help.options'));
-        options.forEach((o, i) => lines.push(...(command.espacado && i ? [''] : []), ...line(o)));
+        options.forEach(o => lines.push(...line(o)));
     }
 
     if (positional.length) {
@@ -123,11 +175,17 @@ function formatCommandHelp(command, { protocolo: protocol } = {}) {
         positional.forEach(a => lines.push(...line(a)));
     }
 
-    lines.push('', t('help.helpLine'));
+    const examples = examplesAlt(command, cmdOpts);
+    if (examples.length) {
+        lines.push('');
+        examples.forEach((e, k) => lines.push(`${k ? '    ' : 'Ex: '}${e}`));
+    }
 
     if (command.aliases?.length) {
         lines.push('', t('help.aliases', { list: command.aliases.join(', ') }));
     }
+
+    lines.push('', t('help.more', { url: commandPage(original.cmd) }));
 
     return lines.join('\n');
 }
