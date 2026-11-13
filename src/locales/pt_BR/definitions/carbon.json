@@ -1,0 +1,24 @@
+{
+  "summary": "O código numa imagem de janela de editor",
+  "usage": "/carbon [-theme|-t <dark|light>] <código>",
+  "help": "Desenha o código numa imagem que parece uma janela de editor (cores para comentários, textos, números e palavras-chave), feita no próprio bot. Várias linhas valem, e a cerca do Markdown (```) sai. Sem código, usa o da mensagem respondida. Até 60 linhas de 120 colunas.",
+  "ex": [
+    "/carbon console.log(\"oi\")",
+    "/carbon -t light print(42)"
+  ],
+  "cmd_opts": [
+    {
+      "opts": [
+        "theme",
+        "t"
+      ],
+      "values": [
+        "<dark|light>"
+      ],
+      "desc": "O tema de cores: dark (padrão) ou light. Só vale no começo do comando (o resto é código).",
+      "ex": [
+        "/carbon -t light print(42)"
+      ]
+    }
+  ]
+}

@@ -174,13 +174,13 @@ and a shortcut's name doesn't go in `+cmd`.
 <!-- gerado:roles -->
 ### Commands by role
 
-**user** (whoever is in `bot.users`) (25):
+**user** (whoever is in `bot.users`) (26):
 
-[`/ascii`](ascii.md), [`/bills`](bills.md), [`/crypto`](crypto.md), [`/cve`](cve.md),
-[`/decodeqr`](decodeqr.md), [`/get`](get.md), [`/giphy`](giphy.md), [`/help`](help.md),
-[`/joke`](joke.md), [`/kernel`](kernel.md), [`/me`](me.md), [`/meme`](meme.md), [`/news`](news.md),
-[`/noffa`](noffa.md), [`/ping`](ping.md), [`/pixelart`](pixelart.md), [`/qr`](qr.md),
-[`/rates`](rates.md), [`/sticker`](sticker.md), [`/translate`](translate.md),
+[`/ascii`](ascii.md), [`/bills`](bills.md), [`/carbon`](carbon.md), [`/crypto`](crypto.md),
+[`/cve`](cve.md), [`/decodeqr`](decodeqr.md), [`/get`](get.md), [`/giphy`](giphy.md),
+[`/help`](help.md), [`/joke`](joke.md), [`/kernel`](kernel.md), [`/me`](me.md), [`/meme`](meme.md),
+[`/news`](news.md), [`/noffa`](noffa.md), [`/ping`](ping.md), [`/pixelart`](pixelart.md),
+[`/qr`](qr.md), [`/rates`](rates.md), [`/sticker`](sticker.md), [`/translate`](translate.md),
 [`/uptime`](uptime.md), [`/version`](version.md), [`/walissu`](walissu.md),
 [`/weather`](weather.md), [`/whois`](whois.md)
 
@@ -216,6 +216,7 @@ even if they start with `/`. Without that, someone could use a command that echo
 | [`/block`](block.md) | `/bloquear` | `admin` | Blocks one or more people on your WhatsApp account (replying to a message, whoever wrote it); with nothing, lists the blocked ones; `-mask` obfuscates phone numbers |
 | [`/bot`](bot.md) | | `admin` | Bot status (24 h report and the users); turns commands on/off (`-on`/`-off`) and says who uses them: admins (`+a`/`-a`) and users (`+u`/`-u`, in any chat or just in one group, and each one's commands with `+cmd`/`-cmd`); `-reset` goes back to the default; `-status` (`-s`): report for the last 24 h, and `-s 06h` sends it every day; `-info` (`-i`): versions and system; `-test` (`-t`): tests cache, disk, database, WhatsApp, internet, SMTP, IMAP, and programs |
 | [`/cache`](cache.md) | | `admin` | Cache tree with sizes, message counts, and cleanup |
+| [`/carbon`](carbon.md) | | `user` | The code in an editor-window image |
 | [`/cron`](cron.md) | `/agenda`, `/lembrete` | `admin` | At the set time (`30m`, `às 18h`, `sexta 9h`...): sends a message (here or with `-to`, to one or several chats) or, as `/lembrete`, an ⏰ reminder; can repeat, be edited and paused, and run commands in the text (`{/crypto}`) |
 | [`/crypto`](crypto.md) | `/bitcoio`, `/creptomoeda` | `user` | Quote for the enabled cryptos (default: BTC, ETH, SOL, and HYPE) or just the requested ones (`BTC ETH`); price alerts |
 | [`/cve`](cve.md) | | `user` | Latest published CVEs (NVD); `-highscore` only the critical ones |
