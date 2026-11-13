@@ -57,6 +57,7 @@ describe('/bills e /walissu', () => {
             assert.notEqual(marcados[0], marcados[1]);
             assert.ok(!marcados.includes(DONO.jid));
             assert.match(r.texto, /🥳 Parabéns @\S+ e @\S+ 🎉\nVocês foram sorteados para pagar um boleto!/);
+            assert.match(r.texto, /\n\n🤡 _É só uma piada! Não existe boleto nenhum: não pague nada\._$/);
         }
     });
 
@@ -75,7 +76,7 @@ describe('/bills e /walissu', () => {
 
         const [r] = await bot.executar('/walissu');
         assert.equal(r.options.mentions.length, 2);
-        assert.match(r.texto, /Walissu CVE BOT[\s\S]*\*CVE-2026-0001\*[\s\S]*Preciso sair de Brasília!/);
+        assert.match(r.texto, /Walissu CVE BOT[\s\S]*\*CVE-2026-0001\*[\s\S]*Preciso sair de Brasília!\n\n🤡 _É só uma piada do Walissu CVE BOT/);
     });
 
     test('/walissu sem CVE ou com o NVD fora do ar', async () => {

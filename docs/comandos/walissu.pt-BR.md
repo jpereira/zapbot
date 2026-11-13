@@ -1,6 +1,6 @@
 # `/walissu`
 
-Só em grupos: o Walissu CVE BOT sorteia 2 membros diferentes (fora o bot), os marca e responde com
+Uma **piada**. Só em grupos: o Walissu CVE BOT sorteia 2 membros diferentes (fora o bot), os marca e responde com
 uma CVE aleatória entre as 50 publicadas mais recentemente no [NVD](https://nvd.nist.gov/) nos
 últimos 2 dias.
 
@@ -18,6 +18,8 @@ Descrição resumida da vulnerabilidade…
 https://nvd.nist.gov/vuln/detail/CVE-AAAA-NNNN
 
 Cadê o exploit? Preciso sair de Brasília!
+
+🤡 É só uma piada do Walissu CVE BOT: ninguém vai sair de Brasília, mas a CVE é de verdade.
 ```
 
 Detalhes:

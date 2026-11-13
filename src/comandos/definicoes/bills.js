@@ -8,7 +8,7 @@ module.exports = {
     cmd: '/bills',
     usage: '/bills',
     aliases: [],
-    summary: 'Picks 2 group members to pay a bill',
-    help: 'Picks 2 group members to pay a bill.',
+    summary: 'Joke: picks 2 group members to "pay a bill"',
+    help: 'A joke: picks 2 group members to "pay a bill" (there is no bill, and the reply says so).',
     role: USER
 };

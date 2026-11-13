@@ -8,8 +8,8 @@ module.exports = {
     cmd: '/noffa',
     usage: '/noffa [text]',
     aliases: [],
-    summary: 'Decorates the text with rainbow emojis',
-    help: 'Decorates the text with rainbow emojis. Accepts text or a reply to a message.',
+    summary: 'Joke: decorates the text with rainbow emojis',
+    help: 'A joke: decorates the text with rainbow emojis (the reply says it is a joke). Accepts text or a reply to a message.',
     digitando: false, // responde na hora: sem o "digitando..."
     role: USER
 };

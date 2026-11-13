@@ -170,12 +170,12 @@ describe('/uptime e /version', () => {
 
 describe('/noffa', () => {
     test('enfeita os espaços do texto', async () => {
-        assert.deepEqual(await bot.responder('/noffa bom dia grupo'), ['bom 🌈 dia 🏳️‍🌈 grupo']);
+        assert.deepEqual(await bot.responder('/noffa bom dia grupo'), ['bom 🌈 dia 🏳️‍🌈 grupo\n\n🤡 _É só uma piada do /noffa._']);
     });
 
     test('usa o texto da mensagem respondida', async () => {
         const citada = bot.criarMensagem({ texto: 'olá mundo', de: OUTRO.jid });
-        assert.deepEqual(await bot.responder('/noffa', { citada }), ['olá 🌈 mundo']);
+        assert.deepEqual(await bot.responder('/noffa', { citada }), ['olá 🌈 mundo\n\n🤡 _É só uma piada do /noffa._']);
     });
 
     test('sem texto mostra a sintaxe', async () => {

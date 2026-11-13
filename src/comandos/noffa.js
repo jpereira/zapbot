@@ -22,7 +22,7 @@ async function cmdNoffa({ msg, args, quotedMsg }) {
     // A resposta nunca começa com "/": não pode ser lida como comando (ver marcarEnviadaPeloBot)
     if (rainbowText.startsWith('/')) rainbowText = `${rainbowHearts[0]} ${rainbowText}`;
 
-    await msg.reply(rainbowText);
+    await msg.reply(`${rainbowText}\n\n${t('noffa.joke')}`);
 }
 
 module.exports = {
