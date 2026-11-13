@@ -192,6 +192,7 @@ role); `/<command> -h` shows the help of one. The person typing and each command
 | [`/goodbye`](https://jpereira.github.io/zapbot/comandos/goodbye/) | | `admin` · delegable | Message when someone leaves the group (per group; `{name}`, `{group}`) |
 | [`/gpt`](https://jpereira.github.io/zapbot/comandos/gpt/) | `/ai` | `admin` · delegable | Asks ChatGPT (OpenAI); `-img`, `-gif`, `-voz`, `-prices`, `-usage` and `-status` (bytes, tokens, cost and balance) |
 | [`/help`](https://jpereira.github.io/zapbot/comandos/help/) | `/h` | `user` | Help menu, with only the commands the requester can use |
+| [`/invite`](https://jpereira.github.io/zapbot/comandos/invite/) | | `admin` | The group invite link (`-revoke` makes a new one) |
 | [`/join`](https://jpereira.github.io/zapbot/comandos/join/) |  | `admin` | Joins a group through the invite link (`-info` shows the group without joining); `-l` lists your groups |
 | [`/joke`](https://jpereira.github.io/zapbot/comandos/joke/) | `/piada`, `/humor` | `user` | A random joke in Portuguese |
 | [`/kernel`](https://jpereira.github.io/zapbot/comandos/kernel/) | | `user` | Current Linux kernel versions (kernel.org) |

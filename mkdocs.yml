@@ -125,6 +125,7 @@ nav:
       - /goodbye: comandos/goodbye.md
       - /gpt: comandos/gpt.md
       - /help: comandos/help.md
+      - /invite: comandos/invite.md
       - /join: comandos/join.md
       - /joke: comandos/joke.md
       - /kernel: comandos/kernel.md

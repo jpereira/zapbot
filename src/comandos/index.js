@@ -24,6 +24,7 @@ const { cmdDemote, cmdPromote } = require('./admins');
 const { cmdAlias } = require('./alias');
 const { cmdAscii } = require('./ascii');
 const { cmdHelp } = require('./help');
+const { cmdInvite } = require('./invite');
 const { cmdGoodbye, cmdWelcome } = require('./saudacoes');
 const { cmdJoke } = require('./joke');
 const { cmdKernel } = require('./kernel');
@@ -77,6 +78,7 @@ const HANDLERS = {
     '/goodbye': cmdGoodbye,
     '/gpt': cmdGpt,
     '/help': cmdHelp,
+    '/invite': cmdInvite,
     '/join': cmdJoin,
     '/joke': cmdJoke,
     '/kernel': cmdKernel,

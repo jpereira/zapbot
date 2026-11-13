@@ -92,3 +92,26 @@ describe('/promote e /demote', () => {
         assert.deepEqual(await bot.responder('/demote @Fulano', { chat: OUTRO.jid }), ['Apenas utilizado dentro de grupos.']);
     });
 });
+
+describe('/invite', () => {
+    test('o link do grupo', async () => {
+        assert.deepEqual(await bot.responder('/invite'), ['🔗 Link de convite do grupo:\nhttps://chat.whatsapp.com/ABC123']);
+    });
+
+    test('-revoke gera outro', async () => {
+        assert.deepEqual(await bot.responder('/invite -r'), [
+            '🔗 O link antigo deixou de valer. Novo link de convite do grupo:\nhttps://chat.whatsapp.com/NOVO456'
+        ]);
+    });
+
+    test('sem o código (a conta não é admin): o aviso', async () => {
+        grupo.getInviteCode = async () => undefined;
+        const [r] = await bot.executar('/invite', { erroEsperado: true });
+        assert.match(r.texto, /^❌ Não consegui o link de convite: O WhatsApp não deu o link/);
+    });
+
+    test('fora de grupo; e um usuário comum não usa (admin, não delegável)', async () => {
+        assert.deepEqual(await bot.responder('/invite', { chat: OUTRO.jid }), ['Apenas utilizado dentro de grupos.']);
+        assert.deepEqual(await bot.responder('/invite', { de: OUTRO.jid }), [], 'o bot não responde a quem não é admin');
+    });
+});

@@ -1,0 +1,22 @@
+{
+  "summary": "O link de convite do grupo",
+  "usage": "/invite [-revoke|-r]",
+  "help": "Responde com o link de convite do grupo. O bot (a sua conta) precisa ser admin do grupo. Com -revoke, o link atual deixa de valer e sai um novo. Só funciona em grupos.",
+  "ex": [
+    "/invite",
+    "/invite -r"
+  ],
+  "cmd_opts": [
+    {
+      "opts": [
+        "revoke",
+        "r"
+      ],
+      "values": [],
+      "desc": "Invalida o link atual e gera um novo.",
+      "ex": [
+        "/invite -r"
+      ]
+    }
+  ]
+}

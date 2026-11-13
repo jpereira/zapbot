@@ -189,13 +189,13 @@ destino: quem pode o `/gpt` usa os atalhos para ele, e o nome de um atalho não 
 [`/promote`](promote.md), [`/show`](show.md), [`/stats`](stats.md), [`/tldr`](tldr.md),
 [`/welcome`](welcome.md)
 
-**admin** (admins e o dono; nunca delegáveis) (19):
+**admin** (admins e o dono; nunca delegáveis) (20):
 
 [`/alias`](alias.md), [`/backup`](backup.md), [`/batch`](batch.md), [`/block`](block.md),
 [`/bot`](bot.md), [`/cache`](cache.md), [`/cron`](cron.md), [`/debug`](debug.md),
-[`/defi`](defi.md), [`/join`](join.md), [`/leave`](leave.md), [`/monitor`](monitor.md),
-[`/mute`](mute.md), [`/notes`](notes.md), [`/search`](search.md), [`/set`](set.md),
-[`/unblock`](unblock.md), [`/unmute`](unmute.md), [`/watch`](watch.md)
+[`/defi`](defi.md), [`/invite`](invite.md), [`/join`](join.md), [`/leave`](leave.md),
+[`/monitor`](monitor.md), [`/mute`](mute.md), [`/notes`](notes.md), [`/search`](search.md),
+[`/set`](set.md), [`/unblock`](unblock.md), [`/unmute`](unmute.md), [`/watch`](watch.md)
 <!-- /gerado:roles -->
 
 As **respostas do próprio bot** também saem pela sua conta, mas nunca são tratadas como comando,
@@ -227,6 +227,7 @@ mesmo que comecem com `/`. Sem isso, alguém poderia usar um comando que ecoa te
 | [`/goodbye`](goodbye.md) | | `admin` · delegável | Mensagem quando alguém sai do grupo (por grupo; `{name}`, `{group}`) |
 | [`/gpt`](gpt.md) | `/ai` | `admin` · delegável | Pergunta ao ChatGPT (OpenAI); `-img`, `-gif`, `-voz`, `-prices`, `-usage` e `-status` (bytes, tokens, custo e saldo) |
 | [`/help`](help.md) | `/h` | `user` | Menu de ajuda, só com os comandos que quem pediu pode usar |
+| [`/invite`](invite.md) | | `admin` | O link de convite do grupo (`-revoke` gera outro) |
 | [`/join`](join.md) |  | `admin` | Entra em um grupo pelo link de convite (`-info` mostra o grupo sem entrar); `-l` lista os seus grupos |
 | [`/joke`](joke.md) | `/piada`, `/humor` | `user` | Piada aleatória em português |
 | [`/kernel`](kernel.md) | | `user` | Versões atuais do kernel Linux (kernel.org) |
