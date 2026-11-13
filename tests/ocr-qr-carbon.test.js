@@ -160,3 +160,49 @@ describe('/qr e /decodeqr', () => {
             ['❌ Não consegui baixar a imagem.']);
     });
 });
+
+describe('/carbon', () => {
+    const { assembleSvg, codeLines } = bot.src('carbon');
+
+    test('o código vira uma imagem PNG (SVG desenhado pelo sharp)', async () => {
+        sharp.entradas.length = 0;
+        const r = (await bot.executar('/carbon const x = 42; // oi')).at(-1);
+        assert.ok(r.content instanceof MessageMedia);
+        assert.equal(r.content.mimetype, 'image/png');
+        assert.equal(r.content.filename, 'carbon.png');
+
+        const svg = sharp.entradas.at(-1).toString();
+        assert.match(svg, /^<svg /);
+        assert.match(svg, /fill="#cba6f7">const<\/tspan>/);     // palavra-chave
+        assert.match(svg, /fill="#fab387">42<\/tspan>/);        // number
+        assert.match(svg, /fill="#6c7086">\/\/ oi<\/tspan>/);   // comment
+    });
+
+    test('-theme|-t só vale no começo; tema desconhecido', async () => {
+        sharp.entradas.length = 0;
+        await bot.executar('/carbon -t light print(1)');
+        assert.match(sharp.entradas.at(-1).toString(), /fill="#fafafa"/);
+
+        // a "-t" in the middle is code
+        await bot.executar('/carbon ls -t x');
+        assert.match(sharp.entradas.at(-1).toString(), /fill="#1e1e2e"/);
+        assert.match(sharp.entradas.at(-1).toString(), /ls -t x/);
+
+        assert.deepEqual(await bot.replyAlt('/carbon -t neon x'), ['❌ Tema "neon" desconhecido. Disponíveis: dark, light.']);
+    });
+
+    test('sem código: o da mensagem respondida; sem nada, o uso', async () => {
+        sharp.entradas.length = 0;
+        const quoted = bot.createMessage({ texto: 'let a = 1;', de: OTHERAlt.jid });
+        await bot.executar('/carbon', { citada: quoted });
+        assert.match(sharp.entradas.at(-1).toString(), /let<\/tspan> a = <tspan fill="#fab387">1/);
+        assert.match((await bot.replyAlt('/carbon'))[0], /^❌ Use: \/carbon /);
+    });
+
+    test('a cerca do Markdown sai, o texto é escapado e os limites valem', () => {
+        assert.deepEqual(codeLines('```js\na < b\n\tb\n```'), ['a < b', '    b']);
+        assert.match(assembleSvg('if (a < b && "x") {}'), /a &lt; b &amp;&amp; <tspan fill="#a6e3a1">&quot;x&quot;<\/tspan>/);
+        assert.equal(codeLines(Array(100).fill('x').join('\n')).length, 60);
+        assert.equal(codeLines('y'.repeat(500))[0].length, 120);
+    });
+});

@@ -173,13 +173,13 @@ destino: quem pode o `/gpt` usa os atalhos para ele, e o nome de um atalho não 
 <!-- gerado:roles -->
 ### Comandos por role
 
-**user** (de quem está no `bot.users`) (25):
+**user** (de quem está no `bot.users`) (26):
 
-[`/ascii`](ascii.md), [`/bills`](bills.md), [`/crypto`](crypto.md), [`/cve`](cve.md),
-[`/decodeqr`](decodeqr.md), [`/get`](get.md), [`/giphy`](giphy.md), [`/help`](help.md),
-[`/joke`](joke.md), [`/kernel`](kernel.md), [`/me`](me.md), [`/meme`](meme.md), [`/news`](news.md),
-[`/noffa`](noffa.md), [`/ping`](ping.md), [`/pixelart`](pixelart.md), [`/qr`](qr.md),
-[`/rates`](rates.md), [`/sticker`](sticker.md), [`/translate`](translate.md),
+[`/ascii`](ascii.md), [`/bills`](bills.md), [`/carbon`](carbon.md), [`/crypto`](crypto.md),
+[`/cve`](cve.md), [`/decodeqr`](decodeqr.md), [`/get`](get.md), [`/giphy`](giphy.md),
+[`/help`](help.md), [`/joke`](joke.md), [`/kernel`](kernel.md), [`/me`](me.md), [`/meme`](meme.md),
+[`/news`](news.md), [`/noffa`](noffa.md), [`/ping`](ping.md), [`/pixelart`](pixelart.md),
+[`/qr`](qr.md), [`/rates`](rates.md), [`/sticker`](sticker.md), [`/translate`](translate.md),
 [`/uptime`](uptime.md), [`/version`](version.md), [`/walissu`](walissu.md),
 [`/weather`](weather.md), [`/whois`](whois.md)
 
@@ -215,6 +215,7 @@ mesmo que comecem com `/`. Sem isso, alguém poderia usar um comando que ecoa te
 | [`/block`](block.md) | `/bloquear` | `admin` | Bloqueia uma ou várias pessoas na sua conta do WhatsApp (respondendo uma mensagem, quem a escreveu); sem nada, lista os bloqueados; `-mask` ofusca telefones |
 | [`/bot`](bot.md) | | `admin` | Status do bot (relatório de 24 h e os usuários); liga/desliga os comandos (`-on`/`-off`) e diz quem usa: admins (`+a`/`-a`) e usuários (`+u`/`-u`, em qualquer chat ou só num grupo, e os comandos de cada um com `+cmd`/`-cmd`); `-reset` volta ao padrão; `-status` (`-s`): relatório das últimas 24 h, e `-s 06h` manda todo dia; `-info` (`-i`): versões e sistema; `-test` (`-t`): testa cache, disco, banco, WhatsApp, internet, SMTP, IMAP e programas |
 | [`/cache`](cache.md) | | `admin` | Árvore do cache com tamanhos, contagens de mensagens e limpeza |
+| [`/carbon`](carbon.md) | | `user` | O código numa imagem de janela de editor |
 | [`/cron`](cron.md) | `/agenda`, `/lembrete` | `admin` | Na hora marcada (`30m`, `às 18h`, `sexta 9h`...): envia uma mensagem (aqui ou com `-to`, em um ou vários chats) ou, como `/lembrete`, um ⏰ lembrete; pode repetir, editar e pausar, e rodar comandos no texto (`{/crypto}`) |
 | [`/crypto`](crypto.md) | `/bitcoio`, `/creptomoeda` | `user` | Cotação das criptos ativadas (padrão: BTC, ETH, SOL e HYPE) ou só das pedidas (`BTC ETH`); alertas de preço |
 | [`/cve`](cve.md) | | `user` | Últimas CVEs publicadas (NVD); `-highscore` só as críticas |
