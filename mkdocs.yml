@@ -152,6 +152,7 @@ nav:
       - /sticker: commands/sticker.md
       - /tldr: commands/tldr.md
       - /translate: commands/translate.md
+      - /tts: commands/tts.md
       - /unblock: commands/unblock.md
       - /unmute: commands/unmute.md
       - /uptime: commands/uptime.md

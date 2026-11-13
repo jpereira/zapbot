@@ -1,0 +1,28 @@
+{
+  "summary": "O texto numa nota de voz",
+  "usage": "/tts [-status|-s] [<texto>]",
+  "help": "Transforma o texto numa nota de voz de robô (API de voz da OpenAI), como o /gpt -voz. Até 4096 caracteres. Respondendo um texto, fala a mensagem (um áudio é transcrito antes), e o que você digitou vira o estilo da fala (\"fale como um robô\"). Exige OPENAI_API_KEY no config/.env ou o setting openai.api.key.",
+  "ex": [
+    "/tts Bom dia!",
+    "/tts fale devagar"
+  ],
+  "cmd_opts": [
+    {
+      "opts": [
+        "status",
+        "s"
+      ],
+      "values": [],
+      "desc": "Acrescenta no rodapé da resposta o consumo da chamada: bytes enviados (TX) e recebidos (RX), tokens gastos, custo estimado e saldo. Para deixar sempre ligado: /set openai.status true.",
+      "ex": [
+        "/tts -s Olá"
+      ]
+    },
+    {
+      "argv": [
+        "[<texto>]"
+      ],
+      "desc": "O que falar. Respondendo uma mensagem, o estilo da fala."
+    }
+  ]
+}

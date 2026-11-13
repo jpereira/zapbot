@@ -213,6 +213,8 @@ module.exports = {
     'ocr.prompt': 'Extract the text of this image.',
     'ocr.noText': '🔎 No text found in the image.',
 
+    // /tts
+    'tts.usage': '❌ Use: /tts <text> (or reply to a text message)',
 
 
 };
