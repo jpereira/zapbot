@@ -204,6 +204,7 @@ O `/whois` diz o seu nível
 | [`/news`](https://jpereira.github.io/zapbot/pt-BR/comandos/news/) |  | `user` | Manchetes de feeds RSS: `-hack`, `-g1`, `-gazeta`, `-brasil` |
 | [`/noffa`](https://jpereira.github.io/zapbot/pt-BR/comandos/noffa/) | `/🌈`, `/🏳️‍🌈` | `user` | Enfeita o texto com arco-íris |
 | [`/notes`](https://jpereira.github.io/zapbot/pt-BR/comandos/notes/) |  | `admin` | Anotações com ID e `#tag` (`-a`, `-l`, `-s`, `-r`): ver com a mídia (`-v`), editar (`-u`), renomear tag (`-m`), descrever tag (`-d`), exportar em PDF (`-e`) e `-alerta` que avisa numa data/hora |
+| [`/ocr`](https://jpereira.github.io/zapbot/pt-BR/comandos/ocr/) | | `admin` · delegável | O texto de uma foto, lido pelo ChatGPT (visão) |
 | [`/ping`](https://jpereira.github.io/zapbot/pt-BR/comandos/ping/) | | `user` | Verifica se o bot está vivo |
 | [`/pixelart`](https://jpereira.github.io/zapbot/pt-BR/comandos/pixelart/) | `/ansi`, `/px` | `user` | Arte ANSI/ASCII aleatória (16colo.rs) |
 | [`/poll`](https://jpereira.github.io/zapbot/pt-BR/comandos/poll/) | `/enquete`, `/quiz` | `admin` · delegável | Cria uma enquete nativa do WhatsApp no chat; `-r` mostra o resultado |

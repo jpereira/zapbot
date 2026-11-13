@@ -138,6 +138,7 @@ nav:
       - /news: comandos/news.md
       - /noffa: comandos/noffa.md
       - /notes: comandos/notes.md
+      - /ocr: comandos/ocr.md
       - /ping: comandos/ping.md
       - /pixelart: comandos/pixelart.md
       - /poll: comandos/poll.md

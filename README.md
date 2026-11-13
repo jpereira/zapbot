@@ -205,6 +205,7 @@ role); `/<command> -h` shows the help of one. The person typing and each command
 | [`/news`](https://jpereira.github.io/zapbot/comandos/news/) |  | `user` | Headlines from RSS feeds: `-hack`, `-g1`, `-gazeta`, `-brasil` |
 | [`/noffa`](https://jpereira.github.io/zapbot/comandos/noffa/) | `/🌈`, `/🏳️‍🌈` | `user` | Decorates the text with a rainbow |
 | [`/notes`](https://jpereira.github.io/zapbot/comandos/notes/) |  | `admin` | Notes with ID and `#tag` (`-a`, `-l`, `-s`, `-r`): view with the media (`-v`), edit (`-u`), rename a tag (`-m`), describe a tag (`-d`), export to PDF (`-e`) and `-alerta`, which warns at a date/time |
+| [`/ocr`](https://jpereira.github.io/zapbot/comandos/ocr/) | | `admin` · delegable | The text in a photo, read by ChatGPT (vision) |
 | [`/ping`](https://jpereira.github.io/zapbot/comandos/ping/) | | `user` | Checks that the bot is alive |
 | [`/pixelart`](https://jpereira.github.io/zapbot/comandos/pixelart/) | `/ansi`, `/px` | `user` | Random ANSI/ASCII art (16colo.rs) |
 | [`/poll`](https://jpereira.github.io/zapbot/comandos/poll/) | `/enquete`, `/quiz` | `admin` · delegable | Creates a native WhatsApp poll in the chat; `-r` shows the result |

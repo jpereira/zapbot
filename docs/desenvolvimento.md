@@ -224,6 +224,7 @@ The messages the bot sends have whatsapp-web.js's `edit()`: it swaps the text in
 | `mute.test.js` | `/mute` and `/unmute`: notices muted per person, group or community (only the target is `-a`), the target lookup (exact names, contact, group, mention and a list to choose by number) and the reply to a notice (where it came from) |
 | `presenca.test.js` | Presence reading by LID, shared subscription, cache and absence of valid times without fabricating data |
 | `saudacoes.test.js` | `/welcome` and `/goodbye`: the text per group (`{name}`, `{group}`, mention), `-on`, `-off`, `-test`, the `group_join`/`group_leave` events and who doesn't trigger them |
+| `ocr-qr-carbon.test.js` | `/ocr` (photo to ChatGPT), `/tts`, `/qr` and `/decodeqr` (`-d`/`-e`, reading the pixels with jsqr), `/carbon` (SVG, themes, limits) and `/profile -set` (group, account, refusal) |
 | `profile.test.js` | `/profile` (`/perfil`): the photo with the caption `Contato: nome da agenda <telefone>` (by name, mention and number), the contacts name instead of the pushname, your profile and that of whoever wrote the replied message, several people, no photo, a failing download, the `@lid`, `-mask`, group refused and owner-only use |
 | `reacoes.test.js` | Removed or changed reactions: the `message_reaction` event (and what doesn't generate a notice), the `show.alert.reaction` notice, `/show -r`, `/mute -r`, `/bot -status` and the cleanup |
 | `search.test.js` | `/search` (`/buscar`): in this chat, in all of them in your private chat, `-N` and the limit, media and long texts |

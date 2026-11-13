@@ -182,12 +182,12 @@ destino: quem pode o `/gpt` usa os atalhos para ele, e o nome de um atalho não 
 [`/sticker`](sticker.md), [`/translate`](translate.md), [`/uptime`](uptime.md),
 [`/version`](version.md), [`/walissu`](walissu.md), [`/weather`](weather.md), [`/whois`](whois.md)
 
-**admin, delegáveis** (admins e o dono; o dono libera a um usuário com `+cmd`) (13):
+**admin, delegáveis** (admins e o dono; o dono libera a um usuário com `+cmd`) (14):
 
 [`/demote`](demote.md), [`/draw`](draw.md), [`/everybody`](everybody.md), [`/goodbye`](goodbye.md),
-[`/gpt`](gpt.md), [`/members`](members.md), [`/poll`](poll.md), [`/profile`](profile.md),
-[`/promote`](promote.md), [`/show`](show.md), [`/stats`](stats.md), [`/tldr`](tldr.md),
-[`/welcome`](welcome.md)
+[`/gpt`](gpt.md), [`/members`](members.md), [`/ocr`](ocr.md), [`/poll`](poll.md),
+[`/profile`](profile.md), [`/promote`](promote.md), [`/show`](show.md), [`/stats`](stats.md),
+[`/tldr`](tldr.md), [`/welcome`](welcome.md)
 
 **admin** (admins e o dono; nunca delegáveis) (20):
 
@@ -240,6 +240,7 @@ mesmo que comecem com `/`. Sem isso, alguém poderia usar um comando que ecoa te
 | [`/news`](news.md) |  | `user` | Manchetes de feeds RSS: `-hack`, `-g1`, `-gazeta`, `-brasil` |
 | [`/noffa`](noffa.md) | `/🌈`, `/🏳️‍🌈` | `user` | Enfeita o texto com arco-íris |
 | [`/notes`](notes.md) |  | `admin` | Anotações com ID e `#tag` (`-a`, `-l`, `-s`, `-r`): ver com a mídia (`-v`), editar (`-u`), renomear tag (`-m`), descrever tag (`-d`), exportar em PDF (`-e`) e `-alerta` que avisa numa data/hora |
+| [`/ocr`](ocr.md) | | `admin` · delegável | O texto de uma foto, lido pelo ChatGPT (visão) |
 | [`/ping`](ping.md) | | `user` | Verifica se o bot está vivo |
 | [`/pixelart`](pixelart.md) | `/ansi`, `/px` | `user` | Arte ANSI/ASCII aleatória (16colo.rs) |
 | [`/poll`](poll.md) | `/enquete`, `/quiz` | `admin` · delegável | Cria uma enquete nativa do WhatsApp no chat; `-r` mostra o resultado |

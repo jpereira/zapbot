@@ -1,0 +1,21 @@
+{
+  "summary": "O texto de uma imagem (OCR)",
+  "usage": "/ocr [-status|-s]",
+  "help": "Lê o texto de uma foto pelo ChatGPT (visão) e responde com ele. Respondendo a foto, ou mandando a foto com /ocr na legenda. Exige OPENAI_API_KEY no config/.env ou o setting openai.api.key.",
+  "ex": [
+    "/ocr"
+  ],
+  "cmd_opts": [
+    {
+      "opts": [
+        "status",
+        "s"
+      ],
+      "values": [],
+      "desc": "Acrescenta no rodapé da resposta o consumo da chamada: bytes enviados (TX) e recebidos (RX), tokens gastos, custo estimado e saldo. Para deixar sempre ligado: /set openai.status true.",
+      "ex": [
+        "/ocr -s"
+      ]
+    }
+  ]
+}

@@ -25,6 +25,7 @@ const { cmdAlias } = require('./alias');
 const { cmdAscii } = require('./ascii');
 const { cmdHelp } = require('./help');
 const { cmdInvite } = require('./invite');
+const { cmdOcr } = require('./ocr');
 const { cmdGoodbye, cmdWelcome } = require('./saudacoes');
 const { cmdJoke } = require('./joke');
 const { cmdKernel } = require('./kernel');
@@ -91,6 +92,7 @@ const HANDLERS = {
     '/news': cmdNews,
     '/noffa': cmdNoffa,
     '/notes': cmdNote,
+    '/ocr': cmdOcr,
     '/ping': cmdPing,
     '/pixelart': cmdPixelArt,
     '/poll': cmdPoll,
