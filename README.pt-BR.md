@@ -188,6 +188,7 @@ O `/whois` diz o seu nível
 | [`/demote`](https://jpereira.github.io/zapbot/pt-BR/comandos/demote/) | | `admin` · delegável | Tira o admin de alguém do grupo |
 | [`/draw`](https://jpereira.github.io/zapbot/pt-BR/comandos/draw/) | | `admin` · delegável | Desenha uma imagem ou um GIF animado (`-gif`) com o GPT Image (OpenAI); numa foto, edita ou anima |
 | [`/everybody`](https://jpereira.github.io/zapbot/pt-BR/comandos/everybody/) | | `admin` · delegável | Menciona todos do grupo |
+| [`/forward`](https://jpereira.github.io/zapbot/pt-BR/comandos/forward/) | | `admin` | Encaminha a mensagem respondida para pessoas, grupos e e-mails (`-to`), só se todos os destinatários forem encontrados |
 | [`/get`](https://jpereira.github.io/zapbot/pt-BR/comandos/get/) | | `user` | Baixa vídeo/áudio de redes sociais ou da mídia respondida |
 | [`/giphy`](https://jpereira.github.io/zapbot/pt-BR/comandos/giphy/) | | `user` | GIF do GIPHY por tag, URL ou ID, enviado em loop |
 | [`/goodbye`](https://jpereira.github.io/zapbot/pt-BR/comandos/goodbye/) | | `admin` · delegável | Mensagem quando alguém sai do grupo (por grupo; `{name}`, `{group}`) |

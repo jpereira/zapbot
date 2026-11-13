@@ -188,13 +188,14 @@ destino: quem pode o `/gpt` usa os atalhos para ele, e o nome de um atalho não 
 [`/profile`](profile.md), [`/promote`](promote.md), [`/show`](show.md), [`/stats`](stats.md),
 [`/tldr`](tldr.md), [`/tts`](tts.md), [`/welcome`](welcome.md)
 
-**admin** (admins e o dono; nunca delegáveis) (20):
+**admin** (admins e o dono; nunca delegáveis) (21):
 
 [`/alias`](alias.md), [`/backup`](backup.md), [`/batch`](batch.md), [`/block`](block.md),
 [`/bot`](bot.md), [`/cache`](cache.md), [`/cron`](cron.md), [`/debug`](debug.md),
-[`/defi`](defi.md), [`/invite`](invite.md), [`/join`](join.md), [`/leave`](leave.md),
-[`/monitor`](monitor.md), [`/mute`](mute.md), [`/notes`](notes.md), [`/search`](search.md),
-[`/set`](set.md), [`/unblock`](unblock.md), [`/unmute`](unmute.md), [`/watch`](watch.md)
+[`/defi`](defi.md), [`/forward`](forward.md), [`/invite`](invite.md), [`/join`](join.md),
+[`/leave`](leave.md), [`/monitor`](monitor.md), [`/mute`](mute.md), [`/notes`](notes.md),
+[`/search`](search.md), [`/set`](set.md), [`/unblock`](unblock.md), [`/unmute`](unmute.md),
+[`/watch`](watch.md)
 <!-- /gerado:roles -->
 
 As **respostas do próprio bot** também saem pela sua conta, mas nunca são tratadas como comando,
@@ -223,6 +224,7 @@ mesmo que comecem com `/`. Sem isso, alguém poderia usar um comando que ecoa te
 | [`/demote`](demote.md) | | `admin` · delegável | Tira o admin de alguém do grupo |
 | [`/draw`](draw.md) | | `admin` · delegável | Desenha uma imagem ou um GIF animado (`-gif`) com o GPT Image (OpenAI); numa foto, edita ou anima |
 | [`/everybody`](everybody.md) | | `admin` · delegável | Menciona todos do grupo |
+| [`/forward`](forward.md) | | `admin` | Encaminha a mensagem respondida para pessoas, grupos e e-mails (`-to`), só se todos os destinatários forem encontrados |
 | [`/get`](get.md) | | `user` | Baixa vídeo/áudio de redes sociais ou da mídia respondida |
 | [`/giphy`](giphy.md) | | `user` | GIF do GIPHY por tag, URL ou ID, enviado em loop |
 | [`/goodbye`](goodbye.md) | | `admin` · delegável | Mensagem quando alguém sai do grupo (por grupo; `{name}`, `{group}`) |

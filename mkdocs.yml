@@ -122,6 +122,7 @@ nav:
       - /demote: comandos/demote.md
       - /draw: comandos/draw.md
       - /everybody: comandos/everybody.md
+      - /forward: comandos/forward.md
       - /get: comandos/get.md
       - /giphy: comandos/giphy.md
       - /goodbye: comandos/goodbye.md

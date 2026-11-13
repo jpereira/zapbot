@@ -150,4 +150,23 @@ module.exports = {
     'grp.invite.revoked': '🔗 O link antigo deixou de valer. Novo link de convite do grupo:\n{link}',
     'grp.invite.noCode': 'O WhatsApp não deu o link (a sua conta é admin do grupo?)',
     'grp.invite.failed': '❌ Não consegui o link de convite: {error}',
+
+    // /forward
+    'forward.needReply': '❌ Responda a mensagem que você quer encaminhar, ou diga a posição dela (ex.: /forward -1 /Fulano/).',
+    'forward.replyAndNumbers': '❌ Use a resposta ou os números (-1, -3..-1), não os dois.',
+    'forward.badPosition': '❌ As posições começam em -1 (a mensagem logo acima).',
+    'forward.tooMany': '❌ Encaminho até {max} mensagens por vez (você pediu {n}). O limite é o setting forward.max.',
+    'forward.notEnough': '❌ Só encontrei {n} mensagens acima, e você pediu a -{pos}.',
+    'forward.fetchFailed': '❌ Não consegui ler as mensagens acima: {error}',
+    'forward.errorAt': '❌ Mensagem -{pos}: {error}',
+    'forward.download': '❌ Não consegui baixar a mídia da mensagem.',
+    'forward.empty': '❌ Essa mensagem não tem nada que eu possa encaminhar.',
+    'forward.header': '🤖 Mensagem encaminhada pelo ZapBot!',
+    'forward.subject': 'Mensagem encaminhada',
+    'forward.noText': '(sem texto, veja o anexo)',
+    'forward.processing': { one: '⏳ Encaminhando mensagem...', other: '⏳ Encaminhando {n} mensagens...' },
+    'forward.done': { one: '✉️ Mensagem encaminhada com sucesso!', other: '✉️ {n} mensagens encaminhadas com sucesso!' },
+    'forward.doneList': { one: '✉️ Mensagem encaminhada com sucesso!\n\n{list}', other: '✉️ {n} mensagens encaminhadas com sucesso!\n\n{list}' },
+    'forward.partial': '⚠️ Encaminhada para {ok} de {n}\n\n{list}',
+    'forward.allFailed': '❌ Não consegui encaminhar a mensagem\n\n{list}'
 };

@@ -189,13 +189,14 @@ and a shortcut's name doesn't go in `+cmd`.
 [`/profile`](profile.md), [`/promote`](promote.md), [`/show`](show.md), [`/stats`](stats.md),
 [`/tldr`](tldr.md), [`/tts`](tts.md), [`/welcome`](welcome.md)
 
-**admin** (admins and the owner; never delegable) (20):
+**admin** (admins and the owner; never delegable) (21):
 
 [`/alias`](alias.md), [`/backup`](backup.md), [`/batch`](batch.md), [`/block`](block.md),
 [`/bot`](bot.md), [`/cache`](cache.md), [`/cron`](cron.md), [`/debug`](debug.md),
-[`/defi`](defi.md), [`/invite`](invite.md), [`/join`](join.md), [`/leave`](leave.md),
-[`/monitor`](monitor.md), [`/mute`](mute.md), [`/notes`](notes.md), [`/search`](search.md),
-[`/set`](set.md), [`/unblock`](unblock.md), [`/unmute`](unmute.md), [`/watch`](watch.md)
+[`/defi`](defi.md), [`/forward`](forward.md), [`/invite`](invite.md), [`/join`](join.md),
+[`/leave`](leave.md), [`/monitor`](monitor.md), [`/mute`](mute.md), [`/notes`](notes.md),
+[`/search`](search.md), [`/set`](set.md), [`/unblock`](unblock.md), [`/unmute`](unmute.md),
+[`/watch`](watch.md)
 <!-- /gerado:roles -->
 
 The **bot's own replies** also go out through your account, but they're never treated as commands,
@@ -224,6 +225,7 @@ even if they start with `/`. Without that, someone could use a command that echo
 | [`/demote`](demote.md) | | `admin` · delegable | Removes someone's group admin |
 | [`/draw`](draw.md) | | `admin` · delegable | Draws an image or an animated GIF (`-gif`) with GPT Image (OpenAI); on a photo, edits or animates it |
 | [`/everybody`](everybody.md) | | `admin` · delegable | Mentions everyone in the group |
+| [`/forward`](forward.md) | | `admin` | Forwards the replied message to people, groups and emails (`-to`), only if every recipient is found |
 | [`/get`](get.md) | | `user` | Downloads video/audio from social networks or from the replied media |
 | [`/giphy`](giphy.md) | | `user` | GIPHY GIF by tag, URL, or ID, sent looping |
 | [`/goodbye`](goodbye.md) | | `admin` · delegable | Message when someone leaves the group (per group; `{name}`, `{group}`) |

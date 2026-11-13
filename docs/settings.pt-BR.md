@@ -50,6 +50,9 @@ em português).
 | `enquete.retentionDays` | 1–365 | `90` | Dias que as enquetes e os votos ficam guardados para o [`/poll -r`](comandos/poll.md#resultado) |
 | `flood.intervalCommand` | 1–3600 | `2` | Proteção contra flood: a janela, em segundos, em que se conta o `flood.maxCommandRepeated`, e quanto tempo o bot ignora quem passou do limite. Veja [Proteção contra flood](comandos/bot.md#proteção-contra-flood) |
 | `flood.maxCommandRepeated` | 0–100 | `3` | Quantas vezes quem não é admin pode repetir o mesmo comando em `flood.intervalCommand` segundos; passou, o bot avisa uma vez e ignora a pessoa até o intervalo acabar. `0` desliga |
+| `forward.delayMs` | 0–10000 | `1000` | Pausa (ms) entre as mensagens quando o [`/forward`](comandos/forward.md) encaminha várias, para não encher o WhatsApp de uma vez |
+| `forward.header` | on/off | `on` | Cabeçalho "Mensagem encaminhada pelo ZapBot!" no começo do que o [`/forward`](comandos/forward.md) envia e a lista de quem recebeu no resultado; desligado, vai só a mensagem e o `✉️ ... com sucesso!` |
+| `forward.max` | 1–50 | `10` | Máximo de mensagens que o [`/forward -N`](comandos/forward.md#várias-mensagens--n) encaminha de uma vez |
 | `get.cache.maxDays` | 1–365 | `2` | Dias que os downloads em cache (`get.cache.tmp`) ficam em `cache/tmp` antes de a limpeza periódica apagá-los |
 | `get.cache.tmp` | on/off | `on` | Guarda em `cache/tmp` o que o yt-dlp baixa no `/get` e no `/sticker`: o mesmo link (e o mesmo trecho) não baixa de novo. Veja [Cache dos downloads](comandos/get.md#cache-dos-downloads). `off` apaga o original a cada execução |
 | `get.maxDownloadMB` | 10–2000 | `200` | Tamanho máximo baixado pelo yt-dlp no `/get` e no `/sticker`, antes da conversão |

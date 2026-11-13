@@ -397,6 +397,21 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 0, max: 100,
         desc: 'Proteção contra flood: quantas vezes quem não é admin pode repetir o mesmo comando em flood.intervalCommand segundos; passou, o bot avisa uma vez e ignora a pessoa até o intervalo acabar. 0 desliga.'
     },
+    'forward.delayMs': {
+        default: 1000,
+        type: 'number', min: 0, max: 10000,
+        desc: 'Pausa (ms) entre as mensagens quando o /forward encaminha várias, para não encher o WhatsApp de uma vez.'
+    },
+    'forward.header': {
+        default: true,
+        type: 'boolean',
+        desc: 'Cabeçalho "Mensagem encaminhada pelo ZapBot!" no começo do que o /forward envia e a lista de quem recebeu no resultado (desligado, vai só a mensagem e o "✉️ ... com sucesso!").'
+    },
+    'forward.max': {
+        default: 10,
+        type: 'number', min: 1, max: 50,
+        desc: 'Máximo de mensagens que o /forward -N encaminha de uma vez.'
+    },
     'get.cache.maxDays': {
         default: 2,
         type: 'number', min: 1, max: 365,

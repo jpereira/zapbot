@@ -211,6 +211,7 @@ The messages the bot sends have whatsapp-web.js's `edit()`: it swaps the text in
 | `dependencias.test.js` | Loading of the dependencies without the `punycode` module warning |
 | `diagnostico.test.js` | `/bot -test`: the items with ✅/❌/➖ (simulated network), a test failure in the count and the refusal alongside other options; `-flush-email` (without SMTP, refusal) and the lookup of the Sent and Trash folders |
 | `externos.test.js` | `/cve`, `/weather`, `/news`, `/gpt`, `/tldr`, `/draw`, `/translate`, `/giphy`, `/meme`, `/joke`, `/kernel`, `/pixelart` |
+| `forward.test.js` | `/forward`: several recipients (name, `/Name/`, mention, number, `-to` email), only sending if all match, the `forward.header` header, media (caption, audio, attachment), location, the ✅/❌ status and owner/admin only |
 | `get-cache.test.js` | `/get` (the URL, the link and the replied media, and the anti-SSRF), `/cache` and the periodic cleanup |
 | `grupo.test.js` | `/everybody`, `/bills`, `/members`, `/walissu`, `/poll` (and `-r`), `/sticker` (and `-txt`) |
 | `admins-invite.test.js` | `/promote` and `/demote` (by name, mention, number and replying; already admin, not in the group, the creator, the `@lid` participant, the bot not being an admin and the refusal) and `/invite` (and `-revoke`) |

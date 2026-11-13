@@ -1,0 +1,53 @@
+{
+  "summary": "Encaminha a mensagem respondida para pessoas, grupos ou e-mails",
+  "usage": "/forward [-q] [-N] <destinatário>... [-to <destino>]...",
+  "help": "Encaminha a mensagem que você respondeu (texto, foto, vídeo, áudio, documento, figurinha, localização...) para os destinatários. Sem resposta, diga antes a posição das mensagens acima: -1 é a logo acima, -1 -4 -6 ou -1,-4,-6 são várias, -3..-1 é uma faixa (até forward.max, enviadas da mais antiga para a mais nova; o cabeçalho vai uma vez, antes delas). Só envia se todos os destinatários forem encontrados; senão, não manda nada e o bot diz qual falhou. Responde na hora com quem vai receber e, no fim, edita essa mensagem com o status (um ❌ e o motivo para quem falhou); com -quiet, não mostra status. Por padrão a mensagem vai com o cabeçalho \"Mensagem encaminhada pelo ZapBot!\" (setting forward.header).",
+  "ex": [
+    "/forward /Fulano de Tal/",
+    "/forward /Jorge Pereira/ @Maria -to fulano@exemplo.com",
+    "/forward -to root@exemplo.org -to /Família/"
+  ],
+  "cmd_opts": [
+    {
+      "argv": [
+        "[/contato/|@menção|+número]..."
+      ],
+      "desc": "Quem recebe: nome, /Nome Aqui/, @menção, número ou e-mail, separados por espaço. Se vários servirem, você escolhe na lista."
+    },
+    {
+      "argv": [
+        "[-N|-N,-N|-N..-N]"
+      ],
+      "desc": "Posições das mensagens acima, sem resposta: -1 é a logo acima; -1 -4 -6, -1,-4,-6 ou -3..-1. As mensagens do próprio bot não contam.",
+      "ex": [
+        "/forward -1 /Fulano/",
+        "/forward -1 -4 -6 /Fulano/ /Família/",
+        "/forward -3..-1 /Fulano/"
+      ]
+    },
+    {
+      "opts": [
+        "to"
+      ],
+      "values": [
+        "<destino>"
+      ],
+      "desc": "Mais um destinatário: um contato, um grupo, um número ou um e-mail (vários com o nome: você escolhe na lista). Repita para vários.",
+      "ex": [
+        "-to fulano@exemplo.com",
+        "-to /Jorge Pereira/ -to @Maria"
+      ]
+    },
+    {
+      "opts": [
+        "quiet",
+        "q"
+      ],
+      "values": [],
+      "desc": "Não mostra status: nem o aviso, nem a lista. Só as falhas são avisadas.",
+      "ex": [
+        "/forward -q /Jorge Pereira/"
+      ]
+    }
+  ]
+}

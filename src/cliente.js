@@ -110,6 +110,23 @@ function consumirEnvioDoBot(chatId) {
     return achou;
 }
 
+/*
+ * Os ids das últimas mensagens que o bot enviou (respostas, avisos, status): o /forward -N pula essas
+ * ao contar as mensagens "acima". Só na memória; depois de um reinício, o que ficou para trás conta.
+ */
+const MAX_IDS_DO_BOT = 500;
+const idsEnviadosPeloBot = new Set();
+
+function registrarEnvioDoBot(enviada) {
+    const id = enviada?.id?._serialized;
+    if (!id) return;
+    idsEnviadosPeloBot.add(id);
+    if (idsEnviadosPeloBot.size > MAX_IDS_DO_BOT) idsEnviadosPeloBot.delete(idsEnviadosPeloBot.values().next().value);
+}
+
+// true: esta mensagem foi enviada pelo bot (resposta, aviso, status...)
+const enviadaPeloBot = (m) => idsEnviadosPeloBot.has(m?.id?._serialized);
+
 const sendMessageOriginal = client.sendMessage.bind(client);
 
 client.sendMessage = (chatId, content, options = {}) => {
@@ -123,7 +140,10 @@ client.sendMessage = (chatId, content, options = {}) => {
     }
     marcarEnviadaPeloBot(textoDoEnvio(content, options));
     marcarEnvioDoBot(chatId);
-    return sendMessageOriginal(chatId, content, options);
+    return sendMessageOriginal(chatId, content, options).then((enviada) => {
+        registrarEnvioDoBot(enviada);
+        return enviada;
+    });
 };
 
 /**
@@ -171,6 +191,7 @@ module.exports = {
     client,
     concluirAviso,
     consumirEnvioDoBot,
+    enviadaPeloBot,
     foiEnviadaPeloBot,
     iniciarLimpezaDasMarcas,
     limparMarcas,
