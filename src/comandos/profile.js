@@ -6,6 +6,7 @@ const axios = require('axios');
 const { MessageMedia } = require('whatsapp-web.js');
 
 const { lerPessoa, pessoasDoTexto, semDelimitadores } = require('./block');
+const { ehFoto } = require('./openaiComum');
 const { client } = require('../cliente');
 const { nomeDaAgenda, nomeDoContato, resolveLidToPhone, resolverNomeDoGrupo } = require('../contatos');
 const { t } = require('../i18n');
@@ -18,6 +19,9 @@ const { printError } = require('../log');
  *   /profile <pessoa>...    → /Nome/, @menção ou +número (vários que servem: você escolhe na lista)
  *   /profile, respondendo   → quem escreveu a mensagem respondida
  * Sem foto, ou com a foto escondida pela privacidade do contato, sai só o texto.
+ *
+ *   /profile -set|-s        → troca a foto pela imagem respondida (ou enviada com o comando na legenda):
+ *                             a do grupo, no grupo; a da sua conta, nos outros chats
  */
 const TIMEOUT_MS = 15000;
 const MAX_BYTES = 10 * 1024 * 1024;
@@ -84,7 +88,39 @@ async function mostrarGrupo(msg, chatId) {
     await msg.reply(`${grupo}\n${t('profile.noGroupPhoto')}`);
 }
 
+// -set: a foto do grupo (se o WhatsApp deixar você mexer nela) ou a da sua conta
+async function trocarFoto(msg, quotedMsg, isGroup) {
+    const origem = [quotedMsg, msg].find(ehFoto);
+    if (!origem) {
+        await msg.reply(t('profile.setUsage'));
+        return;
+    }
+
+    const midia = await origem.downloadMedia().catch(() => null);
+    if (!midia?.data) {
+        await msg.reply(t('profile.setDownload'));
+        return;
+    }
+
+    try {
+        if (isGroup) {
+            const grupo = await msg.getChat();
+            await msg.reply(await grupo.setPicture(midia) ? t('profile.setGroupOk') : t('profile.setGroupDenied'));
+        } else {
+            await msg.reply(await client.setProfilePicture(midia) ? t('profile.setOwnOk') : t('profile.setFailed', { error: '-' }));
+        }
+    } catch (err) {
+        printError('/profile -set:', err.message);
+        await msg.reply(t('profile.setFailed', { error: err.message }));
+    }
+}
+
 async function cmdProfile({ msg, opts, quotedMsg, chatId, isGroup }) {
+    if (opts.given.has('set')) {
+        await trocarFoto(msg, quotedMsg, isGroup);
+        return;
+    }
+
     const texto = opts.argv.join(' ').trim();
 
     // Sem ninguém: a mensagem respondida (quem a escreveu), o grupo ou a pessoa do privado (você, no seu)

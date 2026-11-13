@@ -206,3 +206,36 @@ describe('/carbon', () => {
         assert.equal(linhasDoCodigo('y'.repeat(500))[0].length, 120);
     });
 });
+
+describe('/profile -set', () => {
+    let grupo;
+    let trocadas;
+
+    beforeEach(() => {
+        trocadas = [];
+        grupo = bot.criarGrupo(GRUPO, 'Família', [DONO.jid, OUTRO.jid]);
+        grupo.setPicture = async (media) => { trocadas.push(['grupo', media]); return true; };
+        bot.client.setProfilePicture = async (media) => { trocadas.push(['conta', media]); return true; };
+    });
+
+    test('no grupo troca a foto do grupo; nos outros chats, a da conta', async () => {
+        assert.deepEqual(await bot.responder('/profile -set', { citada: foto() }), ['✅ Foto do grupo trocada.']);
+        assert.deepEqual(await bot.responder('/profile -s', { chat: DONO.jid, citada: foto({ chat: DONO.jid }) }), ['✅ A foto do seu perfil foi trocada.']);
+        assert.deepEqual(trocadas.map(([quem, media]) => [quem, media.data]), [['grupo', 'QUJD'], ['conta', 'QUJD']]);
+    });
+
+    test('a foto enviada com o comando na legenda vale', async () => {
+        const msg = bot.criarMensagem({ texto: '/profile -set', tipo: 'image', midia: FOTO });
+        assert.equal((await bot.entregar(msg)).at(-1).texto, '✅ Foto do grupo trocada.');
+    });
+
+    test('o WhatsApp recusando (não é admin), sem imagem e erro', async () => {
+        grupo.setPicture = async () => false;
+        assert.match((await bot.responder('/profile -set', { citada: foto() }))[0], /^🚫 O WhatsApp não me deixou trocar a foto do grupo/);
+        assert.match((await bot.responder('/profile -set'))[0], /^❌ Responda uma imagem com \/profile -set/);
+
+        grupo.setPicture = async () => { throw new Error('boom'); };
+        const [r] = await bot.executar('/profile -set', { citada: foto(), erroEsperado: true });
+        assert.equal(r.texto, '❌ Não consegui trocar a foto: boom');
+    });
+});

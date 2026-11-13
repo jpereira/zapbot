@@ -159,7 +159,7 @@ your private chat replies `⛔ Only the bot owner (or an admin) can see other ch
 | `/crypto` |  | `-add`, `-del` |
 | `/draw` |  | `-model` |
 | `/gpt` |  | `-model`, `-img`, `-gif`, `-audio`, `-prices`, `-usage` |
-| `/profile` | `[/contact/\|@mention\|+number]...` |  |
+| `/profile` | `[/contact/\|@mention\|+number]...` | `-set` |
 | `/rates` |  | `-add`, `-del` |
 | `/show` | `-list`, `chat` | `-flush` |
 | `/stats` | `-list`, `-me`, `</chat/>` | `-flush`, `-flush-all` |

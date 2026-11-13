@@ -179,6 +179,12 @@ module.exports = {
     'profile.noPhoto': '🚫 Sem foto de perfil (ou ela está escondida pela privacidade do contato).',
     'profile.group': 'Grupo: {name}',
     'profile.noGroupPhoto': '🚫 Sem foto do grupo.',
+    'profile.setUsage': '❌ Responda uma imagem com /profile -set (ou envie a foto com /profile -set na legenda).',
+    'profile.setDownload': '❌ Não consegui baixar a imagem.',
+    'profile.setGroupOk': '✅ Foto do grupo trocada.',
+    'profile.setGroupDenied': '🚫 O WhatsApp não me deixou trocar a foto do grupo (só admins podem, a menos que o grupo deixe todos).',
+    'profile.setOwnOk': '✅ A foto do seu perfil foi trocada.',
+    'profile.setFailed': '❌ Não consegui trocar a foto: {error}',
 
     // /uptime
     'uptime.notConnected': 'não conectado',
