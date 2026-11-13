@@ -184,6 +184,7 @@ role); `/<command> -h` shows the help of one. The person typing and each command
 | [`/cve`](https://jpereira.github.io/zapbot/comandos/cve/) | | `user` | Latest published CVEs (NVD); `-highscore` only the critical ones |
 | [`/debug`](https://jpereira.github.io/zapbot/comandos/debug/) | `/d`, `/dbg` | `admin` | Debug logs with levels, filter and copy to chats |
 | [`/defi`](https://jpereira.github.io/zapbot/comandos/defi/) | | `admin` | Orca and Project X liquidity positions: balance, range, price and fees to collect, read on-chain; `-alerta` warns when a position leaves and re-enters its range and when fees pass a value. `liquidswap`: LP positions on Aptos. `morpho` and `aave`: position, loans and risk on Morpho and Aave V3 |
+| [`/demote`](https://jpereira.github.io/zapbot/comandos/demote/) | | `admin` · delegable | Removes someone's group admin |
 | [`/draw`](https://jpereira.github.io/zapbot/comandos/draw/) | `/desenhe`, `/desenha`, `/img` | `admin` · delegable | Draws an image or an animated GIF (`-gif`) with GPT Image (OpenAI); on a photo, edits or animates it |
 | [`/everybody`](https://jpereira.github.io/zapbot/comandos/everybody/) | `/todos`, `/todes` | `admin` · delegable | Mentions everyone in the group |
 | [`/get`](https://jpereira.github.io/zapbot/comandos/get/) | `/download` | `user` | Downloads video/audio from social networks or from the replied media |
@@ -207,6 +208,7 @@ role); `/<command> -h` shows the help of one. The person typing and each command
 | [`/pixelart`](https://jpereira.github.io/zapbot/comandos/pixelart/) | `/ansi`, `/px` | `user` | Random ANSI/ASCII art (16colo.rs) |
 | [`/poll`](https://jpereira.github.io/zapbot/comandos/poll/) | `/enquete`, `/quiz` | `admin` · delegable | Creates a native WhatsApp poll in the chat; `-r` shows the result |
 | [`/profile`](https://jpereira.github.io/zapbot/comandos/profile/) | `/perfil` | `admin` · delegable | A contact's profile picture, with the name from your address book and the phone number |
+| [`/promote`](https://jpereira.github.io/zapbot/comandos/promote/) | | `admin` · delegable | Makes someone a group admin |
 | [`/rates`](https://jpereira.github.io/zapbot/comandos/rates/) | `/cotacao`, `/cambio` | `user` | EUR and USDT (and USD, GBP) exchange rates against the real: current, open, close and change; price alerts |
 | [`/search`](https://jpereira.github.io/zapbot/comandos/search/) | `/buscar` | `admin` | Searches the WhatsApp Web history, not just the cache: in this chat or, in your private chat, in all of them (`-N` for more); `-mask` hides phone numbers |
 | [`/set`](https://jpereira.github.io/zapbot/comandos/set/) | `/config` | `admin` | Lists and changes the settings; `-a`/`-rm` add and remove list items (e.g. `bot.admins` and `bot.users`) |

@@ -183,6 +183,7 @@ O `/whois` diz o seu nível
 | [`/cve`](https://jpereira.github.io/zapbot/pt-BR/comandos/cve/) | | `user` | Últimas CVEs publicadas (NVD); `-highscore` só as críticas |
 | [`/debug`](https://jpereira.github.io/zapbot/pt-BR/comandos/debug/) | `/d`, `/dbg` | `admin` | Logs de debug com níveis, filtro e cópia para chats |
 | [`/defi`](https://jpereira.github.io/zapbot/pt-BR/comandos/defi/) | | `admin` | Posições de liquidez da Orca e do Project X: saldo, faixa, preço e taxas a coletar, lidos on-chain; `-alerta` avisa quando sai e volta para a faixa e quando as taxas passam de um valor. `liquidswap`: posições de LP na Aptos. `morpho` e `aave`: posição, empréstimos e risco no Morpho e no Aave V3 |
+| [`/demote`](https://jpereira.github.io/zapbot/pt-BR/comandos/demote/) | | `admin` · delegável | Tira o admin de alguém do grupo |
 | [`/draw`](https://jpereira.github.io/zapbot/pt-BR/comandos/draw/) | `/desenhe`, `/desenha`, `/img` | `admin` · delegável | Desenha uma imagem ou um GIF animado (`-gif`) com o GPT Image (OpenAI); numa foto, edita ou anima |
 | [`/everybody`](https://jpereira.github.io/zapbot/pt-BR/comandos/everybody/) | `/todos`, `/todes` | `admin` · delegável | Menciona todos do grupo |
 | [`/get`](https://jpereira.github.io/zapbot/pt-BR/comandos/get/) | `/download` | `user` | Baixa vídeo/áudio de redes sociais ou da mídia respondida |
@@ -206,6 +207,7 @@ O `/whois` diz o seu nível
 | [`/pixelart`](https://jpereira.github.io/zapbot/pt-BR/comandos/pixelart/) | `/ansi`, `/px` | `user` | Arte ANSI/ASCII aleatória (16colo.rs) |
 | [`/poll`](https://jpereira.github.io/zapbot/pt-BR/comandos/poll/) | `/enquete`, `/quiz` | `admin` · delegável | Cria uma enquete nativa do WhatsApp no chat; `-r` mostra o resultado |
 | [`/profile`](https://jpereira.github.io/zapbot/pt-BR/comandos/profile/) | `/perfil` | `admin` · delegável | A foto de perfil de um contato, com o nome da sua agenda e o telefone |
+| [`/promote`](https://jpereira.github.io/zapbot/pt-BR/comandos/promote/) | | `admin` · delegável | Torna alguém admin do grupo |
 | [`/rates`](https://jpereira.github.io/zapbot/pt-BR/comandos/rates/) | `/cotacao`, `/cambio` | `user` | Cotação de EUR e USDT (e USD, GBP) contra o real: atual, abertura, fechamento e variação; alertas de preço |
 | [`/search`](https://jpereira.github.io/zapbot/pt-BR/comandos/search/) | `/buscar` | `admin` | Busca no histórico do WhatsApp Web, não só no cache: neste chat ou, no seu privado, em todos (`-N` para mais); `-mask` ofusca telefones |
 | [`/set`](https://jpereira.github.io/zapbot/pt-BR/comandos/set/) | `/config` | `admin` | Lista e altera as configurações (settings); `-a`/`-rm` acrescentam e tiram itens das listas (ex.: o `bot.admins` e o `bot.users`) |

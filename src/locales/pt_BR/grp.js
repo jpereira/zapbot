@@ -134,5 +134,15 @@ module.exports = {
     'saudacoes.current': '👋 A mensagem {kind} deste grupo (ligada):\n\n{text}\n\n💡 _Troque com {cmd} <texto> ({name} = a pessoa, {group} = o grupo), desligue com {cmd} -off, veja como fica com {cmd} -test_',
     'saudacoes.tooLong': '❌ O texto tem {n} caracteres: até {max}.',
 
+    // /promote, /demote
+    'grp.admin.botNotAdmin': '🚫 A sua conta não é admin deste grupo, então o WhatsApp não deixa o bot mexer nos admins.',
+    'grp.admin.usage': '❌ Use: {cmd} [/contato/|@menção|+número]... (ou responda uma mensagem)',
+    'grp.admin.notMember': '⚠️ {name} não está neste grupo.',
+    'grp.admin.alreadyAdmin': '⚠️ {name} já é admin.',
+    'grp.admin.notAdmin': '⚠️ {name} não é admin.',
+    'grp.admin.creator': '🚫 {name} criou o grupo: o admin não pode ser tirado.',
+    'grp.admin.promoted': '✅ {name} agora é admin do grupo.',
+    'grp.admin.demoted': '✅ {name} deixou de ser admin do grupo.',
+    'grp.admin.failed': '❌ O WhatsApp recusou a mudança para {name}: {error}',
 
 };

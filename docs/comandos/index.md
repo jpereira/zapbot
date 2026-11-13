@@ -183,11 +183,12 @@ and a shortcut's name doesn't go in `+cmd`.
 [`/sticker`](sticker.md), [`/translate`](translate.md), [`/uptime`](uptime.md),
 [`/version`](version.md), [`/walissu`](walissu.md), [`/weather`](weather.md), [`/whois`](whois.md)
 
-**admin, delegable** (admins and the owner; the owner releases them to a user with `+cmd`) (11):
+**admin, delegable** (admins and the owner; the owner releases them to a user with `+cmd`) (13):
 
-[`/draw`](draw.md), [`/everybody`](everybody.md), [`/goodbye`](goodbye.md), [`/gpt`](gpt.md),
-[`/members`](members.md), [`/poll`](poll.md), [`/profile`](profile.md), [`/show`](show.md),
-[`/stats`](stats.md), [`/tldr`](tldr.md), [`/welcome`](welcome.md)
+[`/demote`](demote.md), [`/draw`](draw.md), [`/everybody`](everybody.md), [`/goodbye`](goodbye.md),
+[`/gpt`](gpt.md), [`/members`](members.md), [`/poll`](poll.md), [`/profile`](profile.md),
+[`/promote`](promote.md), [`/show`](show.md), [`/stats`](stats.md), [`/tldr`](tldr.md),
+[`/welcome`](welcome.md)
 
 **admin** (admins and the owner; never delegable) (19):
 
@@ -219,6 +220,7 @@ even if they start with `/`. Without that, someone could use a command that echo
 | [`/cve`](cve.md) | | `user` | Latest published CVEs (NVD); `-highscore` only the critical ones |
 | [`/debug`](debug.md) | `/d`, `/dbg` | `admin` | Debug logs with levels, filtering, and copying to chats |
 | [`/defi`](defi.md) | | `admin` | Liquidity positions on Orca and Project X: balance, range, price, and fees to collect, read on-chain; `-alerta` warns when it leaves and returns to the range and when fees go over a value. `liquidswap`: LP positions on Aptos. `morpho` and `aave`: position, loans, and risk on Morpho and Aave V3 |
+| [`/demote`](demote.md) | | `admin` · delegable | Removes someone's group admin |
 | [`/draw`](draw.md) | `/desenhe`, `/desenha`, `/img` | `admin` · delegable | Draws an image or an animated GIF (`-gif`) with GPT Image (OpenAI); on a photo, edits or animates it |
 | [`/everybody`](everybody.md) | `/todos`, `/todes` | `admin` · delegable | Mentions everyone in the group |
 | [`/get`](get.md) | `/download` | `user` | Downloads video/audio from social networks or from the replied media |
@@ -242,6 +244,7 @@ even if they start with `/`. Without that, someone could use a command that echo
 | [`/pixelart`](pixelart.md) | `/ansi`, `/px` | `user` | Random ANSI/ASCII art (16colo.rs) |
 | [`/poll`](poll.md) | `/enquete`, `/quiz` | `admin` · delegable | Creates a native WhatsApp poll in the chat; `-r` shows the result |
 | [`/profile`](profile.md) | `/perfil` | `admin` · delegable | A contact's profile picture, with the name from your contacts and the phone number |
+| [`/promote`](promote.md) | | `admin` · delegable | Makes someone a group admin |
 | [`/rates`](rates.md) | `/cotacao`, `/cambio` | `user` | EUR and USDT (and USD, GBP) quotes against the real: current, open, close, and change; price alerts |
 | [`/search`](search.md) | `/buscar` | `admin` | Searches the WhatsApp Web history, not just the cache: in this chat or, in your private chat, in all of them (`-N` for more); `-mask` obfuscates phone numbers |
 | [`/set`](set.md) | `/config` | `admin` | Lists and changes the settings; `-a`/`-rm` add and remove items in lists (e.g., `bot.admins` and `bot.users`) |

@@ -1,0 +1,18 @@
+{
+  "summary": "Torna alguém admin do grupo",
+  "usage": "/promote [/contato/|@menção|+número]...",
+  "help": "Torna pessoas admins do grupo. Respondendo uma mensagem, é quem a escreveu. O bot (a sua conta) precisa ser admin do grupo. Só funciona em grupos.",
+  "ex": [
+    "/promote @Fulano",
+    "/promote /Fulano de Tal/",
+    "/promote +5521999999999"
+  ],
+  "cmd_opts": [
+    {
+      "argv": [
+        "[/contato/|@menção|+número]..."
+      ],
+      "desc": "As pessoas, separadas por espaço: contato da agenda pelo nome ou parte dele (nome com espaço entre /.../ ou aspas; vários que servem: você escolhe na lista), alguém mencionado com @ ou um número. Sem ninguém, respondendo uma mensagem, quem a escreveu."
+    }
+  ]
+}

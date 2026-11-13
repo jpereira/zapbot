@@ -134,5 +134,15 @@ module.exports = {
     'saudacoes.current': '👋 The {kind} message of this group (on):\n\n{text}\n\n💡 _Change it with {cmd} <text> ({name} = the person, {group} = the group), turn it off with {cmd} -off, preview with {cmd} -test_',
     'saudacoes.tooLong': '❌ The text has {n} characters: up to {max}.',
 
+    // /promote, /demote
+    'grp.admin.botNotAdmin': '🚫 Your account is not an admin of this group, so WhatsApp does not let the bot change admins.',
+    'grp.admin.usage': '❌ Use: {cmd} [/contact/|@mention|+number]... (or reply to a message)',
+    'grp.admin.notMember': '⚠️ {name} is not in this group.',
+    'grp.admin.alreadyAdmin': '⚠️ {name} is already an admin.',
+    'grp.admin.notAdmin': '⚠️ {name} is not an admin.',
+    'grp.admin.creator': '🚫 {name} created the group: the admin cannot be removed.',
+    'grp.admin.promoted': '✅ {name} is now a group admin.',
+    'grp.admin.demoted': '✅ {name} is no longer a group admin.',
+    'grp.admin.failed': '❌ WhatsApp refused the change for {name}: {error}',
 
 };

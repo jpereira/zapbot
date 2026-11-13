@@ -1,0 +1,18 @@
+{
+  "summary": "Tira o admin de alguém do grupo",
+  "usage": "/demote [/contato/|@menção|+número]...",
+  "help": "Tira o admin de pessoas do grupo. Respondendo uma mensagem, é quem a escreveu. O bot (a sua conta) precisa ser admin do grupo. Só funciona em grupos.",
+  "ex": [
+    "/demote @Fulano",
+    "/demote /Fulano de Tal/",
+    "/demote +5521999999999"
+  ],
+  "cmd_opts": [
+    {
+      "argv": [
+        "[/contato/|@menção|+número]..."
+      ],
+      "desc": "As pessoas, separadas por espaço: contato da agenda pelo nome ou parte dele (nome com espaço entre /.../ ou aspas; vários que servem: você escolhe na lista), alguém mencionado com @ ou um número. Sem ninguém, respondendo uma mensagem, quem a escreveu."
+    }
+  ]
+}
