@@ -1,4 +1,4 @@
-# 🤖 ZapBot v2.0.13
+# 🤖 ZapBot v2.0.14 (devel)
 
 <p align="center">
   <img src="docs/assets/logo.png" alt="ZapBot logo: an angel robot with a halo and wings, winking and
