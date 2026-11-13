@@ -19,10 +19,21 @@ watches messages by text/regex and notifies you in private, brings news, weather
 ChatGPT and a few more fun things, all through commands typed in the chat itself (`/help`, `/get`,
 `/show`, `/news`, `/gpt`...).
 
-Persistent aliases store commands with arguments and an optional description: register one with
-`/alias dimdim -desc "Shows the dollar price" /rates USD`, run `/dimdim` and check `/help alias`.
-The bot shows the command that was called before the result. An alias can also chain several commands
-in one text, as in `/cron`: `/alias carteira Orca {/defi orca}\n Prjx {/defi prjx}`.
+Persistent shortcuts (`/alias`) save a command with its arguments under a name you choose, with an
+optional description:
+
+```text
+/alias dimdim -desc "Shows the dollar price" /rates USD     → registers the shortcut
+/dimdim                                                     → runs /rates USD
+/help alias                                                 → lists your shortcuts
+```
+
+The bot shows the command that was called before the result. A shortcut can also chain several
+commands in one text, as in `/cron`:
+
+```text
+/alias carteira Orca {/defi orca}\n Prjx {/defi prjx}
+```
 
 The idea comes from the old IRC days: ZapBot is inspired by the old
 [eggdrops](https://www.eggheads.org/), the bots that stood watch in the channels, answering
@@ -168,6 +179,20 @@ role); `/<command> -h` shows the help of one. The person typing and each command
 
 `/whois` tells you your level
 ([Permissions](https://jpereira.github.io/zapbot/comandos/#permissions-role)).
+
+💡 **Too many parameters?** Simplify them with [`/alias`](https://jpereira.github.io/zapbot/comandos/alias/)
+and make the bot your own:
+
+```text
+/alias -q /usd /rates USD          → shows the USD price
+/alias -q /btc /crypto BTC         → shows the Bitcoin price
+/alias -q /clima /weather ${1:-Rio de Janeiro}   → /clima shows Rio; /clima Lisboa, Lisbon
+/alias /rec /sticker -ss $1 -es $2           → /rec 10 20 <link> runs /sticker -ss 10 -es 20 <link>
+/alias -q /tofriends /forward -q /Family Group/ +5521999999999 /Maria Lucia/ /Rafael Silva/   → a shortcut for a /forward list
+```
+
+`$1`, `$2`... take the arguments you type when running, and `${1:-default}` sets a default value
+(`/clima` alone uses it). That is the power of `/alias`: type `/usd` and it's done.
 
 | Command | Aliases | Role | Description |
 |---|---|:-:|---|

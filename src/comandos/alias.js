@@ -3,7 +3,7 @@
  */
 const { botConfig } = require('../botConfig');
 const { dbGet, dbPronto, dbRun } = require('../db');
-const { ehAliasDeTexto, listarAliases } = require('../aliases');
+const { blocoDoAlias, ehAliasDeTexto, listarAliases } = require('../aliases');
 const { comandosNoTexto, erroDosComandos, quebrarLinhas } = require('../comandosNoTexto');
 const { findCommand } = require('./base');
 const { t } = require('../i18n');
@@ -54,6 +54,14 @@ async function cmdAlias({ msg, args }) {
             removidos.length && t('adm.alias.removedMany', { n: removidos.length, lista: removidos.join(', ') }),
             faltando.length && t('adm.alias.missing', { n: faltando.length, lista: faltando.join(', ') })
         ].filter(Boolean).join('\n'));
+    }
+    // Só o nome (/alias /dolar): mostra o que o alias faz; se não for um alias, o erro
+    if (/^\/?[\p{L}\p{N}_.][\p{L}\p{N}_.-]*$/u.test(texto)) {
+        const nome = nomeDoAlias(texto);
+        const alias = await dbGet('SELECT * FROM command_aliases WHERE name = ?', [nome]);
+        if (alias) return msg.reply(blocoDoAlias(alias), undefined, { linkPreview: false });
+        const ehComando = botConfig.commands.some(c => c.cmd === nome || c.aliases?.includes(nome));
+        return msg.reply(t(ehComando ? 'adm.alias.isCommand' : 'adm.alias.notFound', { nome }));
     }
     // -q|-quiet: sem o cabeçalho "🔗 Alias ..." ao executar; vale antes do nome, depois dele ou da descrição
     let quiet = false;

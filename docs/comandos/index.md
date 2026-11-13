@@ -203,6 +203,24 @@ The **bot's own replies** also go out through your account, but they're never tr
 even if they start with `/`. Without that, someone could use a command that echoes text (e.g.,
 `/noffa /cache -a`) to make the bot "type" an admin command.
 
+## Shortcuts with `/alias`
+
+If you think the bot has too many parameters, simplify it with [`/alias`](alias.md) and make it your
+own. Each shortcut is saved in the database and works like a command:
+
+```text
+/alias -q /usd /rates USD          → shows the USD price
+/alias -q /btc /crypto BTC         → shows the Bitcoin price
+/alias -q /clima /weather ${1:-Rio de Janeiro}   → /clima shows Rio; /clima Lisboa, Lisbon
+/alias /rec /sticker -ss $1 -es $2           → /rec 10 20 <link> runs /sticker -ss 10 -es 20 <link>
+/alias -q /tofriends /forward -q /Family Group/ +5521999999999 /Maria Lucia/ /Rafael Silva/   → a shortcut for a /forward list
+```
+
+`$1`, `$2`... take the arguments you type when running, and `${1:-default}` sets a default value
+(`/clima` alone uses it; see [Parameters](alias.md#parameters-1-n)). That is the power of `/alias`: type
+`/usd` and it's done. The shortcut follows the permissions of its
+target command, and `/alias /usd` shows what a shortcut does.
+
 ## Summary
 
 | Command | Aliases | Role | Description |

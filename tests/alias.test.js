@@ -57,6 +57,21 @@ test('parâmetros $1, $N: pegam os argumentos digitados e as sobras vão para o 
     assert.equal((await resolverAlias('/rec 5')).args, '-ss 5 -es', 'sem o $2, fica vazio');
 });
 
+test('/alias /nome mostra o que o alias faz; não sendo alias, o erro', async () => {
+    await bot.responder('/alias /dolar -desc "Dólar" /rates USD');
+    await bot.responder('/alias texto Oi {/rates USD}');
+    await bot.responder('/alias -q /quieto /rates EUR');
+
+    assert.deepEqual(await bot.responder('/alias /dolar'), ['*/dolar*\n📝 Dólar\n→ /rates USD']);
+    assert.deepEqual(await bot.responder('/alias dolar'), ['*/dolar*\n📝 Dólar\n→ /rates USD'], 'sem a barra também');
+    assert.deepEqual(await bot.responder('/alias /quieto'), ['*/quieto* 🔇\n→ /rates EUR']);
+    assert.deepEqual(await bot.responder('/alias texto'), ['*/texto*\n→ Oi {/rates USD}']);
+
+    assert.deepEqual(await bot.responder('/alias /naoexiste'), ['❌ Alias /naoexiste não encontrado.']);
+    assert.deepEqual(await bot.responder('/alias /gpt'), ['❌ /gpt já é um comando do bot.']);
+    assert.equal((await aliases()).length, 3, 'consultar não cadastra nada');
+});
+
 test('opções do alvo são preservadas e aliases fixos são destinos válidos', async () => {
     await bot.responder('/alias socorro /rates -h');
     assert.equal((await aliases())[0].command, '/rates -h');

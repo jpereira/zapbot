@@ -202,6 +202,24 @@ As **respostas do próprio bot** também saem pela sua conta, mas nunca são tra
 mesmo que comecem com `/`. Sem isso, alguém poderia usar um comando que ecoa texto (ex.:
 `/noffa /cache -a`) para fazer o bot "digitar" um comando de admin.
 
+## Atalhos com o `/alias`
+
+Se você acha que o bot tem parâmetros demais, simplifique com o [`/alias`](alias.md) e deixe do seu
+jeito. Cada atalho fica salvo no banco e funciona como um comando:
+
+```text
+/alias -q /usd /rates USD          → mostra o preço do dólar
+/alias -q /btc /crypto BTC         → mostra o preço do Bitcoin
+/alias -q /clima /weather ${1:-Rio de Janeiro}   → /clima mostra o Rio; /clima Lisboa, Lisboa
+/alias /rec /sticker -ss $1 -es $2           → /rec 10 20 <link> executa /sticker -ss 10 -es 20 <link>
+/alias -q /tofriends /forward -q /Grupo da Família/ +5521999999999 /Maria Lucia/ /Rafael Silva/   → um atalho para uma lista de /forward
+```
+
+`$1`, `$2`... pegam os argumentos digitados ao executar, e `${1:-padrão}` define um valor padrão
+(o `/clima` sozinho usa ele; veja [Parâmetros](alias.md#parâmetros-1-n)). Esse é o poder do `/alias`:
+digite `/usd` e pronto. O atalho segue as permissões do comando de destino,
+e o `/alias /usd` mostra o que um atalho faz.
+
 ## Resumo
 
 | Comando | Aliases | Role | Descrição |

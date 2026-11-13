@@ -147,4 +147,4 @@ function blocoDoAlias(a) {
     ].filter(Boolean).join('\n');
 }
 
-module.exports = { aplicarParametros, ehAliasDeTexto, ehComandoOuAlias, executarAliasDeTexto, listarAliases, resolverAlias };
+module.exports = { aplicarParametros, blocoDoAlias, ehAliasDeTexto, ehComandoOuAlias, executarAliasDeTexto, listarAliases, resolverAlias };

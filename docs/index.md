@@ -15,11 +15,21 @@ watches messages by text/regex and alerts you in your private chat, brings news,
 talks to ChatGPT and a few more fun things, all through commands typed in the chat itself (`/help`,
 `/get`, `/show`, `/news`, `/gpt`...).
 
-Persistent shortcuts store commands with arguments and an optional description: register one with
-`/alias dimdim -desc "Shows the dollar price" /rates USD`, run `/dimdim` and check
-`/help alias`. The bot shows the command that was called before the result. A shortcut can also
-combine several commands in a text, as in `/cron`:
-`/alias carteira Orca {/defi orca}\n Prjx {/defi prjx}`.
+Persistent shortcuts (`/alias`) save a command with its arguments under a name you choose, with an
+optional description:
+
+```text
+/alias dimdim -desc "Shows the dollar price" /rates USD     → registers the shortcut
+/dimdim                                                     → runs /rates USD
+/help alias                                                 → lists your shortcuts
+```
+
+The bot shows the command that was called before the result. A shortcut can also chain several
+commands in one text, as in `/cron`:
+
+```text
+/alias carteira Orca {/defi orca}\n Prjx {/defi prjx}
+```
 
 The idea comes from the old IRC days: ZapBot is inspired by the old
 [eggdrops](https://www.eggheads.org/), the bots that stood watch in channels, answering commands,

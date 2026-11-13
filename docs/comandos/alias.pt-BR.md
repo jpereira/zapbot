@@ -9,6 +9,7 @@ aliases. Quem executa um atalho precisa ter permissão para os comandos de desti
 /alias <nome> [-quiet|-q] [-desc|-d "Descrição"] <texto com {/comando}>
 /alias
 /alias [-list|-l]
+/alias <nome>
 /alias -move|-m <nome atual> <novo nome>
 /alias -rm <nome...|all>
 ```
@@ -17,7 +18,7 @@ aliases. Quem executa um atalho precisa ter permissão para os comandos de desti
 |---|---|---|
 | `-quiet`, `-q` | | Ao executar, omite o cabeçalho `🔗 Alias ...`; vale antes ou depois do nome |
 | `-desc`, `-d` | `<texto>` | Descrição opcional entre aspas, antes do comando ou do texto; sem comando, atualiza só a descrição de um alias existente |
-| `-list`, `-l` | | Lista os aliases; o mesmo que `/alias` sem argumentos |
+| `-list`, `-l` | | Lista os aliases; o mesmo que `/alias` sem argumentos. Só com um nome (`/alias /eita`), mostra o que aquele alias faz (descrição e comando); se o nome não for um alias, o bot responde com um erro |
 | `-move`, `-m` | `<nome atual> <novo nome>` | Renomeia um alias, mantendo comando, descrição e quiet; o novo nome não pode existir |
 | `-rm` | `<nome...\|all>` | Remove um ou mais aliases (separados por espaço ou vírgula), com ou sem `/`; `all` remove todos |
 
@@ -28,6 +29,7 @@ aliases. Quem executa um atalho precisa ter permissão para os comandos de desti
 /alias eita3 /rates USDT
 /alias dimdim -desc “Exibe Dinheiro" /rates
 /alias -l
+/alias /eita
 /eita
 /eita2
 /help alias
