@@ -8,6 +8,24 @@ const { activeCommands, findCommand, formatCommandHelp, protocoloDaAjuda } = req
 const { localizar } = require('./localizar');
 const { t } = require('../i18n');
 
+// Largura do menu no bloco de código (o celular em pé mostra uns 46 caracteres sem quebrar)
+const COLUNAS_DO_MENU = 46;
+
+// O texto em linhas de até `largura` caracteres, quebrando entre palavras
+function quebrarEmLinhas(texto, largura) {
+    const linhas = [];
+    let atual = '';
+    for (const palavra of String(texto).split(/\s+/).filter(Boolean)) {
+        if (atual && atual.length + 1 + palavra.length > largura) {
+            linhas.push(atual);
+            atual = palavra;
+        } else {
+            atual = atual ? `${atual} ${palavra}` : palavra;
+        }
+    }
+    return atual ? [...linhas, atual] : linhas;
+}
+
 // A ordem do /help -full: do mais restrito ao comum
 const ROLES_NA_AJUDA = [ROLES.OWNER, ROLES.ADMIN, ROLES.USER];
 
@@ -60,8 +78,15 @@ async function cmdHelp({ msg, args: digitado, opts, nivel, admin,
     }
 
     // /help sozinho: um comando por linha, só com o que ele faz; com o -role, separados por role
-    const linha = (c) => { const l = localizar(c); return ` ${c.cmd} - ${l.summary ?? l.help}`; };
+    // Os nomes alinhados na mesma coluna e a descrição que sobra quebrada com recuo, para ler bem no celular
     const visiveis = activeCommands().filter(pode);
+    const larguraDoNome = Math.max(0, ...visiveis.map(c => c.cmd.length));
+    const recuo = ' '.repeat(larguraDoNome + 4);
+    const linha = (c) => {
+        const l = localizar(c);
+        const [primeira = '', ...resto] = quebrarEmLinhas(l.summary ?? l.help, COLUNAS_DO_MENU - recuo.length);
+        return [` ${c.cmd.padEnd(larguraDoNome)} - ${primeira}`, ...resto.map(r => recuo + r)].join('\n');
+    };
     const lista = opts?.opt?.role
         ? ROLES_NA_AJUDA.map(g => [g, visiveis.filter(c => c.role === g)]).filter(([, cs]) => cs.length)
             .map(([g, cs]) => `Role: ${g}\n${cs.map(linha).join('\n')}`).join('\n\n')

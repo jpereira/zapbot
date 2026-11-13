@@ -124,7 +124,7 @@ describe('ajuda nos dois idiomas', () => {
 
         const [menu] = await bot.responder('/help');
         assert.match(menu, /^🤖 \*HELP MENU\*/);
-        assert.match(menu, /\/gpt - Asks ChatGPT/);
+        assert.match(menu, /\/gpt +- Asks ChatGPT/);
         assert.match(menu, /Use \*\/help \/command\* or \*\/command -h\* for more information\./);
 
         assert.deepEqual(await bot.responder('/help /naoexiste'), ['❌ Command not found: /naoexiste']);
@@ -139,7 +139,7 @@ describe('ajuda nos dois idiomas', () => {
 
         const [menu] = await bot.responder('/help');
         assert.match(menu, /^🤖 \*MENU DE AJUDA\*/);
-        assert.match(menu, /\/gpt - Pergunta ao ChatGPT/);
+        assert.match(menu, /\/gpt +- Pergunta ao ChatGPT/);
     });
 
     test('a ajuda segue o idioma na hora, sem reiniciar', async () => {

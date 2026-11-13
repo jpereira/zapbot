@@ -18,18 +18,24 @@ describe('/help (/h)', () => {
     test('sem argumento (o dono): todos os comandos ativos', async () => {
         const [r] = await bot.responder('/help');
         assert.match(r, /MENU DE AJUDA/);
-        assert.match(r, /```\n \/alias - .*\n \/ascii - /);
-        assert.match(r, /\n \/show - Mostra mensagens do cache do bot\n/);
-        assert.match(r, /\n \/rates - /);
+        assert.match(r, /```\n \/alias +- [^]*\n \/ascii +- /);
+        assert.match(r, /\n \/show +- Mostra mensagens do cache do bot\n/);
+        assert.match(r, /\n \/rates +- /);
         assert.doesNotMatch(r, /Uso:/);
         assert.ok(r.endsWith('\n```\n\n💡 Utilize */help /comando* ou */comando -h* para mais informações.'));
     });
 
-    test('a lista traz uma linha por comando, "/cmd - o que faz", sem quebra no meio', async () => {
+    test('a lista tem "/cmd - o que faz" com os nomes alinhados e o resto da descrição recuado', async () => {
         const [r] = await bot.responder('/help');
-        const linhas = r.split('\n').filter(l => l.startsWith(' /'));
+        const bloco = r.split('```')[1].split('\n').filter(Boolean);
+        const linhas = bloco.filter(l => /^ \//.test(l));
         assert.equal(linhas.length, COMANDOS.commands.length);
-        for (const l of linhas) assert.match(l, /^ \/[a-z]+ - \S.*[^.\s]$/, l);
+
+        // O " - " fica sempre na mesma coluna e a descrição que quebra começa embaixo dela
+        const coluna = linhas[0].indexOf(' - ');
+        for (const l of linhas) assert.equal(l.indexOf(' - '), coluna, l);
+        for (const l of bloco.filter(l => !/^ \//.test(l))) assert.match(l, new RegExp(`^ {${coluna + 3}}\\S`), l);
+        assert.ok(bloco.every(l => l.length <= 46), 'cabe na tela do celular');
     });
 
     test('um comando, com ou sem "/", por nome ou alias', async () => {
@@ -46,7 +52,7 @@ describe('/help (/h)', () => {
     test('quem não é admin vê só os comandos comuns; o admin extra vê tudo', async () => {
         const [r] = await bot.responder('/help', { de: OUTRO.jid });
         assert.match(r, /^🤖 \*MENU DE AJUDA\* _\(os comandos que você pode usar\)_/);
-        assert.match(r, /\n \/rates - /);
+        assert.match(r, /\n \/rates +- /);
         assert.doesNotMatch(r, /\n \/(show|backup|bot|set) - /);
 
         assert.deepEqual(await bot.responder('/help show', { de: OUTRO.jid }),
@@ -56,24 +62,24 @@ describe('/help (/h)', () => {
         await bot.setSetting('bot.admins', [OUTRO.user]);
         const [admin] = await bot.responder('/help', { de: OUTRO.jid });
         assert.match(admin, /^🤖 \*MENU DE AJUDA\*\n/);
-        assert.match(admin, /\n \/show - /);
+        assert.match(admin, /\n \/show +- /);
     });
 
     test('-role|-r: lista por role (owner, admin, user), só o que a pessoa pode usar', async () => {
         const [r] = await bot.responder('/help -r');
-        assert.match(r, /```\nRole: admin\n \/alias - [^]*\n\nRole: user\n \/ascii - /);
+        assert.match(r, /```\nRole: admin\n \/alias +- [^]*\n\nRole: user\n \/ascii +- /);
         assert.doesNotMatch(r, /Role: owner/);
-        assert.ok(r.indexOf(' /show - ') < r.indexOf('Role: user'));
+        assert.ok(r.search(/ \/show +- /) < r.indexOf('Role: user'));
         assert.deepEqual(await bot.responder('/help -role'), [r]);
 
         const [outro] = await bot.responder('/help -r', { de: OUTRO.jid });
-        assert.match(outro, /```\nRole: user\n \/ascii - /);
+        assert.match(outro, /```\nRole: user\n \/ascii +- /);
         assert.doesNotMatch(outro, /Role: (owner|admin)/);
 
         await bot.setSetting('bot.users.cmds', [`${OUTRO.user}=/ping,/show`]);
         await bot.setSetting('bot.users', [OUTRO.user]);
         const [deleg] = await bot.responder('/help -r', { de: OUTRO.jid });
-        assert.match(deleg, /Role: admin\n \/show - [^]*\n\nRole: user\n \/help - [^]*\n \/ping - /);
+        assert.match(deleg, /Role: admin\n \/show +- [^]*\n\nRole: user\n \/help +- [^]*\n \/ping +- /);
         assert.doesNotMatch(deleg, /Role: owner/);
 
         // com o comando, o -r não atrapalha
@@ -82,7 +88,7 @@ describe('/help (/h)', () => {
 
     test('comando desativado por setting some do menu', async () => {
         await bot.setSetting('commands.disabled', 'noffa');
-        assert.doesNotMatch((await bot.responder('/help'))[0], /\n \/noffa - /);
+        assert.doesNotMatch((await bot.responder('/help'))[0], /\n \/noffa +- /);
     });
 });
 

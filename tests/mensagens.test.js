@@ -781,8 +781,8 @@ describe('permissões', () => {
         assert.equal((await bot.responder('/noffa oi', DELE)).length, 1);
         assert.deepEqual(await bot.responder('/weather', DELE), ['🚫 Limitado aos comandos: /noffa, /joke.']);
         const [ajuda] = await bot.responder('/help', DELE);
-        assert.match(ajuda, /\n \/joke - /);
-        assert.doesNotMatch(ajuda, /\n \/weather - /);
+        assert.match(ajuda, /\n \/joke +- /);
+        assert.doesNotMatch(ajuda, /\n \/weather +- /);
         assert.match((await bot.responder('/help tempo', DELE))[0], /^⛔ O \/weather não está liberado para você\./);
         assert.match((await bot.responder('/whois', DELE))[0], /• 🗣️ \+u · 👤 Ciclano · \+5521922222222\n → Apenas: \/noffa, \/joke\n/);
 
