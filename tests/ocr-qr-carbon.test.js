@@ -65,3 +65,37 @@ describe('/ocr', () => {
         assert.match(r.at(-1).texto, /Invalid|inválida|🔑/);
     });
 });
+
+describe('/tts', () => {
+    beforeEach(() => bot.setSetting('openai.status', false));
+
+    test('sem a chave, sem texto e o texto vira nota de voz (como o /gpt -voz)', async () => {
+        assert.match((await bot.responder('/tts oi'))[0], /⚠️ API key da OpenAI não encontrada: o \/tts está desativado/);
+
+        await bot.setSetting('openai.api.key', 'sk-teste');
+        assert.deepEqual(await bot.responder('/tts'), ['❌ Use: /tts <texto> (ou responda uma mensagem de texto)']);
+
+        rede.responder('post', 'api.openai.com/v1/audio/speech', Buffer.from('OGGDATA'));
+        const r = (await bot.executar('/tts Bom dia!')).at(-1);
+        assert.ok(r.content instanceof MessageMedia);
+        assert.equal(r.content.mimetype, 'audio/ogg; codecs=opus');
+        assert.equal(r.options.sendAudioAsVoice, true);
+        assert.equal(rede.chamadas.at(-1).cfg.body.input, 'Bom dia!');
+    });
+
+    test('respondendo um texto: fala a mensagem, e o que foi digitado é o estilo', async () => {
+        await bot.setSetting('openai.api.key', 'sk-teste');
+        rede.responder('post', 'api.openai.com/v1/audio/speech', Buffer.from('OGGDATA'));
+        const citada = bot.criarMensagem({ texto: 'Olá, mundo', de: OUTRO.jid });
+
+        await bot.executar('/tts fale devagar', { citada });
+        const { body } = rede.chamadas.at(-1).cfg;
+        assert.equal(body.input, 'Olá, mundo');
+        assert.equal(body.instructions, 'fale devagar');
+    });
+
+    test('texto grande demais', async () => {
+        await bot.setSetting('openai.api.key', 'sk-teste');
+        assert.match((await bot.responder(`/tts ${'a'.repeat(4097)}`))[0], /❌ O texto tem 4097 caracteres: a voz aceita até 4096\./);
+    });
+});

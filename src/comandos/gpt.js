@@ -156,16 +156,16 @@ async function responderAoAudio(msg, { audio, erro }, args) {
  * O que o /gpt -voz fala da mensagem respondida: o texto dela ou, se for áudio, a transcrição.
  * @returns {Promise<{ texto?: string, erro?: string }>}  sem texto: não há o que falar na resposta
  */
-async function conteudoParaFalar(quotedMsg) {
+async function conteudoParaFalar(quotedMsg, cmd = '/gpt') {
     const audio = await audioDaResposta(quotedMsg);
     if (!audio) return { texto: String(quotedMsg?.body ?? '').trim() };
     if (audio.erro) return { erro: audio.erro };
 
     try {
-        const transcricao = await transcreverAudio({ cmd: '/gpt', audio: audio.audio });
+        const transcricao = await transcreverAudio({ cmd, audio: audio.audio });
         return transcricao ? { texto: transcricao } : { erro: t('gpt.noSpeech') };
     } catch (err) {
-        return { erro: (await erroDoModelo(err, MODELO_DE_AUDIO, '/gpt')) || erroOpenAi(err, '/gpt') };
+        return { erro: (await erroDoModelo(err, MODELO_DE_AUDIO, cmd)) || erroOpenAi(err, cmd) };
     }
 }
 
@@ -173,14 +173,14 @@ async function conteudoParaFalar(quotedMsg) {
  * /gpt -voz [texto]: a voz do texto (v1/audio/speech), de robô por padrão, numa nota de voz. Sem
  * texto digitado, fala o da mensagem respondida.
  */
-async function falarTexto(msg, args, quotedMsg) {
+async function falarTexto(msg, args, quotedMsg, cmd = '/gpt') {
     const digitado = args.replace(/(^|\s)-(?:voz|v)(?=\s|$)/, '').trim();
     let texto = digitado;
     let estilo = null;
 
     // Respondendo um texto (ou um áudio, que é transcrito): o que foi digitado é o estilo da fala
     // ("/gpt -voz fale como um robô metálico") e o conteúdo respondido é o que se fala.
-    const respondido = await conteudoParaFalar(quotedMsg);
+    const respondido = await conteudoParaFalar(quotedMsg, cmd);
     if (respondido.erro) {
         await msg.reply(respondido.erro);
         return;
@@ -191,7 +191,7 @@ async function falarTexto(msg, args, quotedMsg) {
     }
 
     if (!texto) {
-        await msg.reply(t('gpt.voiceUsage'));
+        await msg.reply(t(cmd === '/tts' ? 'tts.usage' : 'gpt.voiceUsage'));
         return;
     }
     if (texto.length > VOZ_MAX_CARACTERES) {
@@ -199,14 +199,14 @@ async function falarTexto(msg, args, quotedMsg) {
         return;
     }
 
-    const aviso = await avisarProcessando(msg, '/gpt');
+    const aviso = await avisarProcessando(msg, cmd);
     try {
-        const voz = await sintetizarVoz({ cmd: '/gpt', texto, estilo });
+        const voz = await sintetizarVoz({ cmd, texto, estilo });
         await msg.reply(new MessageMedia('audio/ogg; codecs=opus', voz.toString('base64'), 'voz.ogg'), null, { sendAudioAsVoice: true });
         await apagarAviso(aviso);
         await responderConsumo(msg);
     } catch (err) {
-        await concluirAviso(msg, aviso, (await erroDoModelo(err, MODELO_DE_VOZ, '/gpt')) || erroOpenAi(err, '/gpt'));
+        await concluirAviso(msg, aviso, (await erroDoModelo(err, MODELO_DE_VOZ, cmd)) || erroOpenAi(err, cmd));
     }
 }
 
@@ -537,5 +537,6 @@ async function perguntar({ msg, args, opts, quotedMsg, admin }) {
 const cmdGpt = (ctx) => medirConsumo(ctx.opts?.given.has('status'), () => perguntar(ctx));
 
 module.exports = {
-    cmdGpt
+    cmdGpt,
+    falarTexto
 };

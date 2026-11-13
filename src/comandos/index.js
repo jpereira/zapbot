@@ -27,6 +27,7 @@ const { cmdHelp } = require('./help');
 const { cmdInvite } = require('./invite');
 const { cmdOcr } = require('./ocr');
 const { cmdGoodbye, cmdWelcome } = require('./saudacoes');
+const { cmdTts } = require('./tts');
 const { cmdJoke } = require('./joke');
 const { cmdKernel } = require('./kernel');
 const { cmdMembers } = require('./members');
@@ -106,6 +107,7 @@ const HANDLERS = {
     '/sticker': cmdSticker,
     '/tldr': cmdTldr,
     '/translate': cmdTranslate,
+    '/tts': cmdTts,
     '/unblock': cmdUnblock,
     '/unmute': cmdUnmute,
     '/uptime': cmdUptime,

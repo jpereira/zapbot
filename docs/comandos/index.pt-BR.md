@@ -182,12 +182,12 @@ destino: quem pode o `/gpt` usa os atalhos para ele, e o nome de um atalho não 
 [`/sticker`](sticker.md), [`/translate`](translate.md), [`/uptime`](uptime.md),
 [`/version`](version.md), [`/walissu`](walissu.md), [`/weather`](weather.md), [`/whois`](whois.md)
 
-**admin, delegáveis** (admins e o dono; o dono libera a um usuário com `+cmd`) (14):
+**admin, delegáveis** (admins e o dono; o dono libera a um usuário com `+cmd`) (15):
 
 [`/demote`](demote.md), [`/draw`](draw.md), [`/everybody`](everybody.md), [`/goodbye`](goodbye.md),
 [`/gpt`](gpt.md), [`/members`](members.md), [`/ocr`](ocr.md), [`/poll`](poll.md),
 [`/profile`](profile.md), [`/promote`](promote.md), [`/show`](show.md), [`/stats`](stats.md),
-[`/tldr`](tldr.md), [`/welcome`](welcome.md)
+[`/tldr`](tldr.md), [`/tts`](tts.md), [`/welcome`](welcome.md)
 
 **admin** (admins e o dono; nunca delegáveis) (20):
 
@@ -254,6 +254,7 @@ mesmo que comecem com `/`. Sem isso, alguém poderia usar um comando que ecoa te
 | [`/sticker`](sticker.md) |  | `user` | Figurinha de imagem, vídeo ou link (o `/get -st`), respondendo ou na legenda da mídia; com `-txt`, uma figurinha animada de texto |
 | [`/tldr`](tldr.md) | `/resumo` | `admin` · delegável | Resume a conversa do chat pelo ChatGPT (`30m`, `2h`, `1d`, `1h30m` ou `300` mensagens; respondendo uma mensagem, a partir dela) |
 | [`/translate`](translate.md) | `/traduzir` | `user` | Traduz o texto ou a mensagem respondida pelo Google Translate, sem chave; `-para en` muda o idioma |
+| [`/tts`](tts.md) | | `admin` · delegável | O texto numa nota de voz de robô (OpenAI) |
 | [`/unblock`](unblock.md) |  | `admin` | Desbloqueia uma pessoa: pelo nome, pelo número, pelo nº da lista do `/block` ou respondendo uma mensagem |
 | [`/unmute`](unmute.md) |  | `admin` | Desfaz o silêncio do `/mute`: pelo nome, pelo nº da lista, respondendo um aviso ou todos (`-all`) |
 | [`/uptime`](uptime.md) | | `user` | Tempo de execução e de conexão |

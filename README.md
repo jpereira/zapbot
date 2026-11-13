@@ -219,6 +219,7 @@ role); `/<command> -h` shows the help of one. The person typing and each command
 | [`/sticker`](https://jpereira.github.io/zapbot/comandos/sticker/) |  | `user` | Sticker from an image, video or link (`/get -st`), replying or as the caption of the media; with `-txt`, an animated text sticker |
 | [`/tldr`](https://jpereira.github.io/zapbot/comandos/tldr/) | `/resumo` | `admin` · delegable | Summarizes the chat's conversation with ChatGPT (`30m`, `2h`, `1d`, `1h30m` or `300` messages; replying to a message, from it on) |
 | [`/translate`](https://jpereira.github.io/zapbot/comandos/translate/) | `/traduzir` | `user` | Translates the text or the replied message with Google Translate, no key needed; `-para en` changes the language |
+| [`/tts`](https://jpereira.github.io/zapbot/comandos/tts/) | | `admin` · delegable | The text as a robot voice note (OpenAI) |
 | [`/unblock`](https://jpereira.github.io/zapbot/comandos/unblock/) |  | `admin` | Unblocks a person: by name, by number, by the `/block` list number or by replying to a message |
 | [`/unmute`](https://jpereira.github.io/zapbot/comandos/unmute/) |  | `admin` | Undoes `/mute`: by name, by list number, by replying to an alert, or all of them (`-all`) |
 | [`/uptime`](https://jpereira.github.io/zapbot/comandos/uptime/) | | `user` | Run time and connection time |

@@ -218,6 +218,7 @@ O `/whois` diz o seu nível
 | [`/sticker`](https://jpereira.github.io/zapbot/pt-BR/comandos/sticker/) |  | `user` | Figurinha de imagem, vídeo ou link (o `/get -st`), respondendo ou na legenda da mídia; com `-txt`, uma figurinha animada de texto |
 | [`/tldr`](https://jpereira.github.io/zapbot/pt-BR/comandos/tldr/) | `/resumo` | `admin` · delegável | Resume a conversa do chat pelo ChatGPT (`30m`, `2h`, `1d`, `1h30m` ou `300` mensagens; respondendo uma mensagem, a partir dela) |
 | [`/translate`](https://jpereira.github.io/zapbot/pt-BR/comandos/translate/) | `/traduzir` | `user` | Traduz o texto ou a mensagem respondida pelo Google Translate, sem chave; `-para en` muda o idioma |
+| [`/tts`](https://jpereira.github.io/zapbot/pt-BR/comandos/tts/) | | `admin` · delegável | O texto numa nota de voz de robô (OpenAI) |
 | [`/unblock`](https://jpereira.github.io/zapbot/pt-BR/comandos/unblock/) |  | `admin` | Desbloqueia uma pessoa: pelo nome, pelo número, pelo nº da lista do `/block` ou respondendo uma mensagem |
 | [`/unmute`](https://jpereira.github.io/zapbot/pt-BR/comandos/unmute/) |  | `admin` | Desfaz o silêncio do `/mute`: pelo nome, pelo nº da lista, respondendo um aviso ou todos (`-all`) |
 | [`/uptime`](https://jpereira.github.io/zapbot/pt-BR/comandos/uptime/) | | `user` | Tempo de execução e de conexão |
