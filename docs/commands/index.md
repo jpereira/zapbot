@@ -183,11 +183,11 @@ and a shortcut's name doesn't go in `+cmd`.
 [`/sticker`](sticker.md), [`/translate`](translate.md), [`/uptime`](uptime.md),
 [`/version`](version.md), [`/walissu`](walissu.md), [`/weather`](weather.md), [`/whois`](whois.md)
 
-**admin, delegable** (admins and the owner; the owner releases them to a user with `+cmd`) (9):
+**admin, delegable** (admins and the owner; the owner releases them to a user with `+cmd`) (11):
 
-[`/draw`](draw.md), [`/everybody`](everybody.md), [`/gpt`](gpt.md), [`/members`](members.md),
-[`/poll`](poll.md), [`/profile`](profile.md), [`/show`](show.md), [`/stats`](stats.md),
-[`/tldr`](tldr.md)
+[`/draw`](draw.md), [`/everybody`](everybody.md), [`/goodbye`](goodbye.md), [`/gpt`](gpt.md),
+[`/members`](members.md), [`/poll`](poll.md), [`/profile`](profile.md), [`/show`](show.md),
+[`/stats`](stats.md), [`/tldr`](tldr.md), [`/welcome`](welcome.md)
 
 **admin** (admins and the owner; never delegable) (19):
 
@@ -223,6 +223,7 @@ even if they start with `/`. Without that, someone could use a command that echo
 | [`/everybody`](everybody.md) | `/todos`, `/todes` | `admin` · delegable | Mentions everyone in the group |
 | [`/get`](get.md) | `/download` | `user` | Downloads video/audio from social networks or from the replied media |
 | [`/giphy`](giphy.md) | `/gif` | `user` | GIPHY GIF by tag, URL, or ID, sent looping |
+| [`/goodbye`](goodbye.md) | | `admin` · delegable | Message when someone leaves the group (per group; `{name}`, `{group}`) |
 | [`/gpt`](gpt.md) | `/ai` | `admin` · delegable | Asks ChatGPT (OpenAI); `-img`, `-gif`, `-voz`, `-prices`, `-usage`, and `-status` (bytes, tokens, cost, and balance) |
 | [`/help`](help.md) | `/h` | `user` | Help menu, only with the commands the requester can use |
 | [`/join`](join.md) |  | `admin` | Joins a group through the invite link (`-info` shows the group without joining); `-l` lists your groups |
@@ -256,4 +257,5 @@ even if they start with `/`. Without that, someone could use a command that echo
 | [`/walissu`](walissu.md) | `/ualisu` | `user` | Walissu CVE BOT: tags 2 members with a random CVE |
 | [`/watch`](watch.md) |  | `admin` | Text/regex rules, with an optional source in `-in`; lists occurrences, searches them with `-q`, and notifies the `-to` destinations; `-mask` obfuscates phone numbers and `-mask N` turns on 🔒 for rule N |
 | [`/weather`](weather.md) | `/tempo` | `user` | Weather now and the day's max/min (Open-Meteo); `/weather 16d` shows up to 16 days, counting today; without a city it uses `tempo.city` |
+| [`/welcome`](welcome.md) | | `admin` · delegable | Message when someone joins the group (per group; `{name}`, `{group}`) |
 | [`/whois`](whois.md) | `/who`, `/id` | `user` | Who you are and what you can do in the bot, in this chat: 🤖 owner, 👑 admin, 🗣️ user, or 🚫 no permission; the owner and admins see others |

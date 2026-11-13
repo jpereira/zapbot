@@ -205,5 +205,9 @@ module.exports = {
     'sticker.fail': '❌ Could not generate the sticker: {erro}',
     'sticker.colorsNeedTxt': '❌ -bg and -fg belong to -txt: /sticker -txt "Good morning!" -bg "#FFFFFF" -fg "#000000"',
     'sticker.txtConflict': '❌ -txt does not combine with -ss, -es, -v or a URL: it makes the sticker from the text only.',
-    'sticker.posConflict': '❌ -pos is for cropping images and videos: it does not apply with -txt.'
+    'sticker.posConflict': '❌ -pos is for cropping images and videos: it does not apply with -txt.',
+
+
+
+
 };

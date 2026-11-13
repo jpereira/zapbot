@@ -1,0 +1,49 @@
+{
+  "summary": "Mensagem quando alguém sai do grupo",
+  "usage": "/goodbye [-on|-off|-test] [<texto>]",
+  "help": "Define a mensagem que o bot manda no grupo quando alguém sai (ou é removido). Vale por grupo: sem nada, mostra a deste grupo. {name} é a pessoa e {group}, o nome do grupo. Só funciona em grupos.",
+  "ex": [
+    "/goodbye",
+    "/goodbye {name} saiu do {group}. 👋",
+    "/goodbye -off"
+  ],
+  "cmd_opts": [
+    {
+      "opts": [
+        "on"
+      ],
+      "values": [],
+      "desc": "Liga com o texto padrão.",
+      "ex": [
+        "/goodbye -on"
+      ]
+    },
+    {
+      "opts": [
+        "off"
+      ],
+      "values": [],
+      "desc": "Desliga neste grupo.",
+      "ex": [
+        "/goodbye -off"
+      ]
+    },
+    {
+      "opts": [
+        "test",
+        "t"
+      ],
+      "values": [],
+      "desc": "Manda a mensagem como ela ficaria, com você no lugar de quem sai (com o texto que você deu, ou o atual).",
+      "ex": [
+        "/goodbye -test"
+      ]
+    },
+    {
+      "argv": [
+        "[<texto>]"
+      ],
+      "desc": "A mensagem ({name} = a pessoa, {group} = o nome do grupo; até 1000 caracteres). Pode ter várias linhas."
+    }
+  ]
+}
