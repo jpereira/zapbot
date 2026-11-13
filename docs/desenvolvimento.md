@@ -101,6 +101,7 @@ src/
   midia.js              /get and /sticker: the ffmpeg arguments, the sticker crop (sharp) and the link preview
   stickerTexto.js       /sticker -txt: the PNG frames (sharp) and the animated WebP (ffmpeg)
   saudacoes.js          /welcome and /goodbye: the message of each group (table `group_greetings`) and the group_join/group_leave events
+  carbon.js             /carbon: the code as an editor-window image (SVG turned into PNG by sharp)
   openai.js             models accepted by /gpt
   openaiChat.js         call to the OpenAI chat (/gpt and /tldr) and the status footer (bytes, tokens, cost)
   i18n.js               t('key', {vars}) and the bot's language (setting zapbot.lang)

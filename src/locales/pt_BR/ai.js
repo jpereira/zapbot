@@ -223,4 +223,8 @@ module.exports = {
     'qr.download': '❌ Não consegui baixar a imagem.',
     'qr.notFound': '🔎 Nenhum QR Code encontrado na imagem.',
 
+    // /carbon
+    'carbon.usage': '❌ Use: /carbon [-theme|-t dark|light] <código> (ou responda uma mensagem com o código)',
+    'carbon.badTheme': '❌ Tema "{theme}" desconhecido. Disponíveis: {themes}.',
+    'carbon.failed': '❌ Não consegui desenhar a imagem: {error}'
 };

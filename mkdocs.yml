@@ -112,6 +112,7 @@ nav:
       - /block: comandos/block.md
       - /bot: comandos/bot.md
       - /cache: comandos/cache.md
+      - /carbon: comandos/carbon.md
       - /cron: comandos/cron.md
       - /crypto: comandos/crypto.md
       - /cve: comandos/cve.md
