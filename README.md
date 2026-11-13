@@ -189,6 +189,7 @@ role); `/<command> -h` shows the help of one. The person typing and each command
 | [`/demote`](https://jpereira.github.io/zapbot/commands/demote/) | | `admin` · delegable | Removes someone's group admin |
 | [`/draw`](https://jpereira.github.io/zapbot/commands/draw/) | | `admin` · delegable | Draws an image or an animated GIF (`-gif`) with GPT Image (OpenAI); on a photo, edits or animates it |
 | [`/everybody`](https://jpereira.github.io/zapbot/commands/everybody/) | | `admin` · delegable | Mentions everyone in the group |
+| [`/forward`](https://jpereira.github.io/zapbot/commands/forward/) | | `admin` | Forwards the replied message to people, groups and emails (`-to`), only if every recipient is found |
 | [`/get`](https://jpereira.github.io/zapbot/commands/get/) | | `user` | Downloads video/audio from social networks or from the replied media |
 | [`/giphy`](https://jpereira.github.io/zapbot/commands/giphy/) | | `user` | A GIPHY GIF by tag, URL or ID, sent looping |
 | [`/goodbye`](https://jpereira.github.io/zapbot/commands/goodbye/) | | `admin` · delegable | Message when someone leaves the group (per group; `{name}`, `{group}`) |

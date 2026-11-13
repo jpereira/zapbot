@@ -110,6 +110,23 @@ function botConsumeSending(chatId) {
     return found;
 }
 
+/*
+ * The ids of the last messages the bot sent (replies, notices, status): /forward -N skips these
+ * when counting the messages "above". Memory only; after a restart, what was left behind counts.
+ */
+const MAX_IDS_DO_BOT = 500;
+const idsSentByBot = new Set();
+
+function botRegisterSending(sent) {
+    const id = sent?.id?._serialized;
+    if (!id) return;
+    idsSentByBot.add(id);
+    if (idsSentByBot.size > MAX_IDS_DO_BOT) idsSentByBot.delete(idsSentByBot.values().next().value);
+}
+
+// true: this message was sent by the bot (reply, notice, status...)
+const sentByBot = (m) => idsSentByBot.has(m?.id?._serialized);
+
 const sendMessageOriginal = client.sendMessage.bind(client);
 
 client.sendMessage = (chatId, content, options = {}) => {
@@ -123,7 +140,10 @@ client.sendMessage = (chatId, content, options = {}) => {
     }
     markSentByBot(sendingText(content, options));
     botMarkSending(chatId);
-    return sendMessageOriginal(chatId, content, options);
+    return sendMessageOriginal(chatId, content, options).then((sent) => {
+        botRegisterSending(sent);
+        return sent;
+    });
 };
 
 /**
@@ -171,6 +191,7 @@ module.exports = {
     client,
     completeNotice,
     botConsumeSending,
+    sentByBot,
     wasSentByBot,
     marksStartCleanup,
     cleanMarks,

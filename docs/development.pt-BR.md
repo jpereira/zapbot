@@ -208,6 +208,7 @@ devolve `null`, como quando o WhatsApp não deixa editar.
 | `dependencias.test.js` | Carregamento das dependências sem aviso do módulo `punycode` |
 | `diagnostico.test.js` | O `/bot -test`: os itens com ✅/❌/➖ (rede simulada), a falha de um teste na contagem e a recusa junto de outras opções; o `-flush-email` (sem SMTP, recusa) e a busca das pastas Sent e Trash |
 | `externos.test.js` | `/cve`, `/weather`, `/news`, `/gpt`, `/tldr`, `/draw`, `/translate`, `/giphy`, `/meme`, `/joke`, `/kernel`, `/pixelart` |
+| `forward.test.js` | O `/forward`: vários destinatários (nome, `/Nome/`, menção, número, `-to` e-mail), só enviar se todos casarem, o cabeçalho do `forward.header`, mídia (legenda, áudio, anexo), localização, o status ✅/❌ e o uso só do dono e admins |
 | `get-cache.test.js` | `/get` (a URL, o link e a mídia respondida, e o anti-SSRF), `/cache` e a limpeza periódica |
 | `grupo.test.js` | `/everybody`, `/bills`, `/members`, `/walissu`, `/poll` (e o `-r`), `/sticker` (e o `-txt`) |
 | `admins-invite.test.js` | `/promote` e `/demote` (por nome, menção, número e respondendo; já é admin, fora do grupo, o criador, o participante `@lid`, o bot sem ser admin e a recusa) e `/invite` (e `-revoke`) |

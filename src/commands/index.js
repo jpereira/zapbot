@@ -18,6 +18,7 @@ const { cmdDebug } = require('./debug');
 const { cmdDefi } = require('./defi');
 const { cmdDraw } = require('./draw');
 const { cmdPoll } = require('./poll');
+const { cmdForward } = require('./forward');
 const { cmdGet } = require('./get');
 const { cmdGiphy } = require('./giphy');
 const { cmdGpt } = require('./gpt');
@@ -79,6 +80,7 @@ const HANDLERS = {
     '/demote': cmdDemote,
     '/draw': cmdDraw,
     '/everybody': cmdEverybody,
+    '/forward': cmdForward,
     '/get': cmdGet,
     '/giphy': cmdGiphy,
     '/goodbye': cmdGoodbye,

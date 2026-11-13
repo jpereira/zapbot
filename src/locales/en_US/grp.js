@@ -150,4 +150,23 @@ module.exports = {
     'grp.invite.revoked': '🔗 The old link no longer works. New group invite link:\n{link}',
     'grp.invite.noCode': 'WhatsApp did not give the link (is your account an admin of the group?)',
     'grp.invite.failed': '❌ Could not get the invite link: {error}',
+
+    // /forward
+    'forward.needReply': '❌ Reply to the message you want to forward, or give its position (e.g. /forward -1 /Fulano/).',
+    'forward.replyAndNumbers': '❌ Use the reply or the numbers (-1, -3..-1), not both.',
+    'forward.badPosition': '❌ The positions start at -1 (the message right above).',
+    'forward.tooMany': '❌ I forward up to {max} messages at a time (you asked for {n}). The limit is the forward.max setting.',
+    'forward.notEnough': '❌ I only found {n} messages above, and you asked for -{pos}.',
+    'forward.fetchFailed': '❌ I could not read the messages above: {error}',
+    'forward.errorAt': '❌ Message -{pos}: {error}',
+    'forward.download': '❌ I could not download the media of the message.',
+    'forward.empty': '❌ That message has nothing I can forward.',
+    'forward.header': '🤖 Message forwarded by ZapBot!',
+    'forward.subject': 'Forwarded message',
+    'forward.noText': '(no text, see the attachment)',
+    'forward.processing': { one: '⏳ Forwarding message...', other: '⏳ Forwarding {n} messages...' },
+    'forward.done': { one: '✉️ Message forwarded successfully!', other: '✉️ {n} messages forwarded successfully!' },
+    'forward.doneList': { one: '✉️ Message forwarded successfully!\n\n{list}', other: '✉️ {n} messages forwarded successfully!\n\n{list}' },
+    'forward.partial': '⚠️ Forwarded to {ok} of {n}\n\n{list}',
+    'forward.allFailed': '❌ I could not forward the message\n\n{list}'
 };
