@@ -1,12 +1,13 @@
 {
   "summary": "A foto de perfil de um contato",
-  "usage": "/profile [/contato/|@menção|+número]...",
-  "help": "A foto de perfil de um contato, com a legenda Contato: nome na sua agenda <telefone>. Sem ninguém, mostra o da pessoa do privado (no seu próprio privado, o seu) ou, no grupo, a foto do grupo; respondendo uma mensagem, o de quem a escreveu. Sem foto, ou com a foto escondida pela privacidade do contato, sai só o texto.",
+  "usage": "/profile [/contato/|@menção|+número]...  ou  /profile -set|-s",
+  "help": "A foto de perfil de um contato, com a legenda Contato: nome na sua agenda <telefone>. Sem ninguém, mostra o da pessoa do privado (no seu próprio privado, o seu) ou, no grupo, a foto do grupo; respondendo uma mensagem, o de quem a escreveu. Sem foto, ou com a foto escondida pela privacidade do contato, sai só o texto. Com -set, troca a foto: a do grupo (no grupo, se você for admin dele) ou a da sua conta (em qualquer outro chat).",
   "ex": [
     "/profile",
     "/profile /Jorge Pereira/",
     "/profile @Fulano",
-    "/profile +5521999999999"
+    "/profile +5521999999999",
+    "/profile -set"
   ],
   "cmd_opts": [
     {
@@ -14,6 +15,17 @@
         "[/contato/|@menção|+número]..."
       ],
       "desc": "As pessoas: contato da agenda pelo nome ou parte dele (nome com espaço entre /.../ ou aspas; vários que servem: você escolhe na lista), alguém mencionado com @ ou um número. Sem ninguém, o da pessoa do privado (no seu próprio, o seu), a foto do grupo no grupo, ou o de quem escreveu a mensagem respondida."
+    },
+    {
+      "opts": [
+        "set",
+        "s"
+      ],
+      "values": [],
+      "desc": "Troca a foto pela imagem que você respondeu (ou pela foto enviada com /profile -set na legenda): a do grupo, no grupo (o bot precisa ser admin, a menos que o grupo deixe todos editarem), ou a da sua conta, em qualquer outro chat. Só o dono e os admins, mesmo com o comando delegado.",
+      "ex": [
+        "/profile -set"
+      ]
     },
     {
       "opts": [
