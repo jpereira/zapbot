@@ -173,14 +173,15 @@ destino: quem pode o `/gpt` usa os atalhos para ele, e o nome de um atalho não 
 <!-- gerado:roles -->
 ### Comandos por role
 
-**user** (de quem está no `bot.users`) (23):
+**user** (de quem está no `bot.users`) (25):
 
 [`/ascii`](ascii.md), [`/bills`](bills.md), [`/crypto`](crypto.md), [`/cve`](cve.md),
-[`/get`](get.md), [`/giphy`](giphy.md), [`/help`](help.md), [`/joke`](joke.md),
-[`/kernel`](kernel.md), [`/me`](me.md), [`/meme`](meme.md), [`/news`](news.md),
-[`/noffa`](noffa.md), [`/ping`](ping.md), [`/pixelart`](pixelart.md), [`/rates`](rates.md),
-[`/sticker`](sticker.md), [`/translate`](translate.md), [`/uptime`](uptime.md),
-[`/version`](version.md), [`/walissu`](walissu.md), [`/weather`](weather.md), [`/whois`](whois.md)
+[`/decodeqr`](decodeqr.md), [`/get`](get.md), [`/giphy`](giphy.md), [`/help`](help.md),
+[`/joke`](joke.md), [`/kernel`](kernel.md), [`/me`](me.md), [`/meme`](meme.md), [`/news`](news.md),
+[`/noffa`](noffa.md), [`/ping`](ping.md), [`/pixelart`](pixelart.md), [`/qr`](qr.md),
+[`/rates`](rates.md), [`/sticker`](sticker.md), [`/translate`](translate.md),
+[`/uptime`](uptime.md), [`/version`](version.md), [`/walissu`](walissu.md),
+[`/weather`](weather.md), [`/whois`](whois.md)
 
 **admin, delegáveis** (admins e o dono; o dono libera a um usuário com `+cmd`) (15):
 
@@ -218,6 +219,7 @@ mesmo que comecem com `/`. Sem isso, alguém poderia usar um comando que ecoa te
 | [`/crypto`](crypto.md) | `/bitcoio`, `/creptomoeda` | `user` | Cotação das criptos ativadas (padrão: BTC, ETH, SOL e HYPE) ou só das pedidas (`BTC ETH`); alertas de preço |
 | [`/cve`](cve.md) | | `user` | Últimas CVEs publicadas (NVD); `-highscore` só as críticas |
 | [`/debug`](debug.md) | `/d`, `/dbg` | `admin` | Logs de debug com níveis, filtro e cópia para chats |
+| [`/decodeqr`](decodeqr.md) | | `user` | Lê o QR Code de uma foto (`-encode` gera um) |
 | [`/defi`](defi.md) | | `admin` | Posições de liquidez da Orca e do Project X: saldo, faixa, preço e taxas a coletar, lidos on-chain; `-alerta` avisa quando sai e volta para a faixa e quando as taxas passam de um valor. `liquidswap`: posições de LP na Aptos. `morpho` e `aave`: posição, empréstimos e risco no Morpho e no Aave V3 |
 | [`/demote`](demote.md) | | `admin` · delegável | Tira o admin de alguém do grupo |
 | [`/draw`](draw.md) | `/desenhe`, `/desenha`, `/img` | `admin` · delegável | Desenha uma imagem ou um GIF animado (`-gif`) com o GPT Image (OpenAI); numa foto, edita ou anima |
@@ -246,6 +248,7 @@ mesmo que comecem com `/`. Sem isso, alguém poderia usar um comando que ecoa te
 | [`/poll`](poll.md) | `/enquete`, `/quiz` | `admin` · delegável | Cria uma enquete nativa do WhatsApp no chat; `-r` mostra o resultado |
 | [`/profile`](profile.md) | `/perfil` | `admin` · delegável | A foto de perfil de um contato, com o nome da sua agenda e o telefone |
 | [`/promote`](promote.md) | | `admin` · delegável | Torna alguém admin do grupo |
+| [`/qr`](qr.md) | | `user` | Gera o QR Code de um texto (`-decode` lê um) |
 | [`/rates`](rates.md) | `/cotacao`, `/cambio` | `user` | Cotação de EUR e USDT (e USD, GBP) contra o real: atual, abertura, fechamento e variação; alertas de preço |
 | [`/search`](search.md) | `/buscar` | `admin` | Busca no histórico do WhatsApp Web, não só no cache: neste chat ou, no seu privado, em todos (`-N` para mais); `-mask` ofusca telefones |
 | [`/set`](set.md) | `/config` | `admin` | Lista e altera as configurações (settings); `-a`/`-rm` acrescentam e tiram itens das listas (ex.: o `bot.admins` e o `bot.users`) |

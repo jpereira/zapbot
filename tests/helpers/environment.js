@@ -377,6 +377,9 @@ const sharpFake = (inputAlt) => {
         },
         extract: ({ width, height }) => { dim = { width, height }; return chainAlt; },
         webp: () => chainAlt,
+        // /qr -d: the RGBA pixels that the test puts in sharpFake.pixels ({ data, width, height })
+        ensureAlpha: () => chainAlt,
+        raw: () => { format = 'raw'; return chainAlt; },
         composite: () => chainAlt,
         extend: () => chainAlt,
         png: () => { format = 'png'; return chainAlt; },
@@ -386,6 +389,10 @@ const sharpFake = (inputAlt) => {
         jpeg: () => { format = 'jpeg'; return chainAlt; },
         metadata: async () => dim,
         toBuffer: async (optionsAlt) => {
+            if (format === 'raw') {
+                const { data, width, height } = sharpFake.pixels;
+                return optionsAlt?.resolveWithObject ? { data, info: { width, height, channels: 4 } } : data;
+            }
             if (format !== 'jpeg') {
                 const data = Buffer.from(format === 'png' ? `png:${dim.width}x${dim.height}` : 'webp-enquadrado');
                 return optionsAlt?.resolveWithObject ? { data, info: dim } : data;
@@ -400,6 +407,7 @@ const sharpFake = (inputAlt) => {
     return chainAlt;
 };
 sharpFake.entradas = [];
+sharpFake.pixels = null;   // what raw() returns (see /qr -d)
 sharpFake.resizes = [];   // the options of each resize (fit, position)
 
 const SIMULATED = {

@@ -182,6 +182,7 @@ O `/whois` diz o seu nível
 | [`/crypto`](https://jpereira.github.io/zapbot/pt-BR/commands/crypto/) | `/bitcoio`, `/creptomoeda` | `user` | Cotação das criptos ativadas (padrão: BTC, ETH, SOL e HYPE) ou só das pedidas (`BTC ETH`); alertas de preço |
 | [`/cve`](https://jpereira.github.io/zapbot/pt-BR/commands/cve/) | | `user` | Últimas CVEs publicadas (NVD); `-highscore` só as críticas |
 | [`/debug`](https://jpereira.github.io/zapbot/pt-BR/commands/debug/) | `/d`, `/dbg` | `admin` | Logs de debug com níveis, filtro e cópia para chats |
+| [`/decodeqr`](https://jpereira.github.io/zapbot/pt-BR/commands/decodeqr/) | | `user` | Lê o QR Code de uma foto (`-encode` gera um) |
 | [`/defi`](https://jpereira.github.io/zapbot/pt-BR/commands/defi/) | | `admin` | Posições de liquidez da Orca e do Project X: saldo, faixa, preço e taxas a coletar, lidos on-chain; `-alerta` avisa quando sai e volta para a faixa e quando as taxas passam de um valor. `liquidswap`: posições de LP na Aptos. `morpho` e `aave`: posição, empréstimos e risco no Morpho e no Aave V3 |
 | [`/demote`](https://jpereira.github.io/zapbot/pt-BR/commands/demote/) | | `admin` · delegável | Tira o admin de alguém do grupo |
 | [`/draw`](https://jpereira.github.io/zapbot/pt-BR/commands/draw/) | `/desenhe`, `/desenha`, `/img` | `admin` · delegável | Desenha uma imagem ou um GIF animado (`-gif`) com o GPT Image (OpenAI); numa foto, edita ou anima |
@@ -210,6 +211,7 @@ O `/whois` diz o seu nível
 | [`/poll`](https://jpereira.github.io/zapbot/pt-BR/commands/poll/) | `/enquete`, `/quiz` | `admin` · delegável | Cria uma enquete nativa do WhatsApp no chat; `-r` mostra o resultado |
 | [`/profile`](https://jpereira.github.io/zapbot/pt-BR/commands/profile/) | `/perfil` | `admin` · delegável | A foto de perfil de um contato, com o nome da sua agenda e o telefone |
 | [`/promote`](https://jpereira.github.io/zapbot/pt-BR/commands/promote/) | | `admin` · delegável | Torna alguém admin do grupo |
+| [`/qr`](https://jpereira.github.io/zapbot/pt-BR/commands/qr/) | | `user` | Gera o QR Code de um texto (`-decode` lê um) |
 | [`/rates`](https://jpereira.github.io/zapbot/pt-BR/commands/rates/) | `/cotacao`, `/cambio` | `user` | Cotação de EUR e USDT (e USD, GBP) contra o real: atual, abertura, fechamento e variação; alertas de preço |
 | [`/search`](https://jpereira.github.io/zapbot/pt-BR/commands/search/) | `/buscar` | `admin` | Busca no histórico do WhatsApp Web, não só no cache: neste chat ou, no seu privado, em todos (`-N` para mais); `-mask` ofusca telefones |
 | [`/set`](https://jpereira.github.io/zapbot/pt-BR/commands/set/) | `/config` | `admin` | Lista e altera as configurações (settings); `-a`/`-rm` acrescentam e tiram itens das listas (ex.: o `bot.admins` e o `bot.users`) |
