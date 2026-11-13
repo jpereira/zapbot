@@ -191,6 +191,7 @@ O `/whois` diz o seu nível
 | [`/goodbye`](https://jpereira.github.io/zapbot/pt-BR/commands/goodbye/) | | `admin` · delegável | Mensagem quando alguém sai do grupo (por grupo; `{name}`, `{group}`) |
 | [`/gpt`](https://jpereira.github.io/zapbot/pt-BR/commands/gpt/) | `/ai` | `admin` · delegável | Pergunta ao ChatGPT (OpenAI); `-img`, `-gif`, `-voz`, `-prices`, `-usage` e `-status` (bytes, tokens, custo e saldo) |
 | [`/help`](https://jpereira.github.io/zapbot/pt-BR/commands/help/) | `/h` | `user` | Menu de ajuda, só com os comandos que quem pediu pode usar |
+| [`/invite`](https://jpereira.github.io/zapbot/pt-BR/commands/invite/) | | `admin` | O link de convite do grupo (`-revoke` gera outro) |
 | [`/join`](https://jpereira.github.io/zapbot/pt-BR/commands/join/) |  | `admin` | Entra em um grupo pelo link de convite (`-info` mostra o grupo sem entrar); `-l` lista os seus grupos |
 | [`/joke`](https://jpereira.github.io/zapbot/pt-BR/commands/joke/) | `/piada`, `/humor` | `user` | Piada aleatória em português |
 | [`/kernel`](https://jpereira.github.io/zapbot/pt-BR/commands/kernel/) | | `user` | Versões atuais do kernel Linux (kernel.org) |

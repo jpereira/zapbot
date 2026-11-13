@@ -145,4 +145,9 @@ module.exports = {
     'grp.admin.demoted': '✅ {name} is no longer a group admin.',
     'grp.admin.failed': '❌ WhatsApp refused the change for {name}: {error}',
 
+    // /invite
+    'grp.invite.link': '🔗 Group invite link:\n{link}',
+    'grp.invite.revoked': '🔗 The old link no longer works. New group invite link:\n{link}',
+    'grp.invite.noCode': 'WhatsApp did not give the link (is your account an admin of the group?)',
+    'grp.invite.failed': '❌ Could not get the invite link: {error}'
 };
