@@ -149,5 +149,5 @@ module.exports = {
     'grp.invite.link': '🔗 Link de convite do grupo:\n{link}',
     'grp.invite.revoked': '🔗 O link antigo deixou de valer. Novo link de convite do grupo:\n{link}',
     'grp.invite.noCode': 'O WhatsApp não deu o link (a sua conta é admin do grupo?)',
-    'grp.invite.failed': '❌ Não consegui o link de convite: {error}'
+    'grp.invite.failed': '❌ Não consegui o link de convite: {error}',
 };

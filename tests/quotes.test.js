@@ -1,5 +1,5 @@
 /*
- * /rates (/cambio), /crypto and the price alerts (-alerta).
+ * /rates, /crypto and the price alerts (-alerta).
  */
 const bot = require('./helpers/bot');
 
@@ -57,7 +57,7 @@ beforeEach(async () => {
     simulateMarket();
 });
 
-describe('/rates (/cambio)', () => {
+describe('/rates', () => {
     test('sem argumento: as habilitadas (EUR e USDT), com abertura, fechamento e variação', async () => {
         const [r] = await bot.replyAlt('/rates');
         assert.match(r, /💱 \*COTAÇÕES\* _\(em reais\)_/);
@@ -67,8 +67,8 @@ describe('/rates (/cambio)', () => {
         assert.doesNotMatch(r, /USD\/BRL/);
     });
 
-    test('com argumentos: só as pedidas; /cambio é o mesmo', async () => {
-        const [r] = await bot.replyAlt('/cambio usd, gbp');
+    test('com argumentos: só as pedidas', async () => {
+        const [r] = await bot.replyAlt('/rates usd, gbp');
         assert.match(r, /USD\/BRL[\s\S]*GBP\/BRL/);
         assert.doesNotMatch(r, /EUR\/BRL|USDT/);
     });
@@ -117,7 +117,7 @@ describe('/rates (/cambio)', () => {
     });
 });
 
-describe('/crypto (/bitcoio, /creptomoeda)', () => {
+describe('/crypto', () => {
     test('preços das ativadas, na ordem configurada, com o top', async () => {
         const [r] = await bot.replyAlt('/crypto');
         assert.match(r, /^🚀 \*MERCADO CRIPTO\*\n```\n₿ BTC\n/);   // a single line between the title and the block
@@ -147,7 +147,7 @@ describe('/crypto (/bitcoio, /creptomoeda)', () => {
     });
 
     test('-l lista as suportadas com * nas ativadas', async () => {
-        const [r] = await bot.replyAlt('/creptomoeda -l');
+        const [r] = await bot.replyAlt('/crypto -l');
         assert.match(r, /\* ₿ BTC/);
         assert.match(r, /\n {2}\S+ DOGE\n/);        // supported, without the mark
         assert.doesNotMatch(r, /\* \S+ DOGE/);

@@ -1,4 +1,4 @@
-# `/tldr` (`/resumo`) · admin
+# `/tldr` · admin
 
 Role `admin`: só você e os admins extras. O dono libera a uma pessoa ou grupo com
 `/bot +u +cmd /tldr` ([Delegando](index.md#delegando-um-comando-admin)).
@@ -20,7 +20,6 @@ Markdown para a formatação do WhatsApp do `/gpt` (veja [Formatação no WhatsA
 ```text
 /tldr                → as últimas 100 mensagens deste chat
 /tldr 2h             → as das últimas 2 horas
-/resumo 30m          → as dos últimos 30 minutos (pelo alias)
 /tldr 1d             → as do último dia (1h30m, 2d4h... valem; o banco guarda 68 h, ou o `cache.messageRetentionHours`)
 /tldr 30             → as últimas 30 mensagens (sem a letra, é quantidade)
 /tldr 300 -pv        → as últimas 300, no seu privado

@@ -7,7 +7,7 @@ const { USER } = require('../../roles').ROLES;
 module.exports = {
     cmd: '/translate',
     usage: '/translate [-para <language>] [text]',
-    aliases: ['/traduzir'],
+    aliases: [],
     summary: 'Translates text with Google Translate',
     help: 'Translates the text (or the replied message) with Google Translate, no key and no cost. The source language is detected.',
     ex: ['/translate Where is the pharmacy?', '/translate -para en bom dia', '/translate -p es'],

@@ -1,4 +1,4 @@
-# `/giphy` (`/gif`)
+# `/giphy`
 
 Sends a GIPHY GIF as a looping video: random by tag or a specific one by URL or ID. With no argument
 it uses the `gif.tag` setting. It needs a GIPHY key: `GIPHY_API_KEY` in `config/.env` or, if it
@@ -7,7 +7,6 @@ doesn't exist, the `giphy.api.key` setting (`/set giphy.api.key <key>`).
 ```text
 /giphy          → default tag (setting gif.tag)
 /giphy cats     → GIF with the tag "cats"
-/gif cats       → the same, through the alias
 /giphy https://giphy.com/gifs/h5WUvmDSB0njFcFeCE
 /giphy h5WUvmDSB0njFcFeCE  → the same GIF by ID
 ```

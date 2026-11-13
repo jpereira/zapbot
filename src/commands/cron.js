@@ -1,5 +1,5 @@
 /*
- * /cron command (aliases /agenda and /lembrete; the logic is in schedule.js).
+ * /cron command (the logic is in schedule.js).
  */
 
 const { handleSchedule } = require('../schedule');

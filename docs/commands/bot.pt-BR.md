@@ -259,7 +259,7 @@ mostra só os dele).
   usa todos, não muda nada; em quem tem "Todos, menos", libera esses de novo.
 - O `-cmd` em quem usa todos deixa "Todos, menos" esses. Tirar o último comando de uma lista é
   recusado: para tirar a pessoa, `/bot -u`; para liberar todos, `/bot +cmd all`.
-- Os comandos vão pelo nome ou pelo alias (`/creptomoeda` vira `/crypto`), separados por vírgula.
+- Os comandos vão pelo nome (com ou sem a `/`), separados por vírgula.
   Um comando não delegável (`/set`, `/bot`...) não entra: o bot recusa. Um `admin` delegável
   (`/gpt`, `/show`...) entra só numa lista "Apenas": o `-cmd` ("Todos, menos") e o `bot.users = true` não o liberam, e
   quem já usa todos os comuns não o ganha com o `+cmd` (o bot recusa e pede a lista "Apenas").
@@ -297,8 +297,7 @@ até o intervalo acabar:
 ⚠️ Não é permitido executar o mesmo comando mais de 3 vezes seguidas. Aguarde 2 segundos.
 ```
 
-- Os aliases contam como o comando (`/noffa` e `/🌈` são o mesmo); comandos diferentes contam à
-  parte.
+- Comandos diferentes contam à parte.
 - Você e os admins não têm limite.
 - Os limites são settings: `/set flood.maxCommandRepeated 5` (`0` desliga) e
   `/set flood.intervalCommand 10` (em segundos). Veja [Settings](../settings.md).

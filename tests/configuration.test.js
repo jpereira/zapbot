@@ -463,9 +463,9 @@ describe('settings', () => {
     });
 
     test('commands.disabled: aceita nome ou alias, recusa o /set', async () => {
-        assert.deepEqual(await setSetting('commands.disabled', 'noffa /mudo'), ['/noffa', '/mute']);
-        // A value saved under the old name (/ualisu, today an alias) becomes the current name
-        assert.deepEqual(await setSetting('commands.disabled', ['/ualisu']), ['/walissu']);
+        assert.deepEqual(await setSetting('commands.disabled', 'noffa /mute'), ['/noffa', '/mute']);
+        // A value saved under the old name (/walissu, today an alias) becomes the current name
+        assert.deepEqual(await setSetting('commands.disabled', ['/walissu']), ['/walissu']);
         await assert.rejects(setSetting('commands.disabled', 'set'), /não pode ser desativado/);
         await assert.rejects(setSetting('commands.disabled', 'naoexiste'), /desconhecido/);
     });
@@ -631,7 +631,7 @@ describe('ajuda', () => {
         assert.match(textAlt, /^Uso:/);
         assert.match(textAlt, /\nOpções:\n/);
         assert.match(textAlt, /\nArgumentos:\n/);
-        assert.match(textAlt, /\nAjuda: -help, -h\n/);
+        assert.match(textAlt, /\nAjuda: -help, -h$/);
         assert.doesNotMatch(textAlt, /Usage:|Options:|Arguments:|\[OPTION\]/);
     });
 
@@ -642,7 +642,8 @@ describe('ajuda', () => {
         assert.match(textAlt, /Argumentos:\n  -N/);
         assert.doesNotMatch(textAlt, /Aliases:/);
         assert.doesNotMatch(formatCommandHelp(findCommand('/ping')), /Aliases:/);
-        assert.match(formatCommandHelp(findCommand('/mute')), /Aliases: \/mudo$/);
+        const withAlias = { ...findCommand('/ping'), aliases: ['/p'] };
+        assert.match(formatCommandHelp(withAlias), /Aliases: \/p$/);
     });
 
     test('as formas do uso ("  ou  ") saem uma por linha, alinhadas', () => {

@@ -1,5 +1,5 @@
 /*
- * /watch (/w): text and regex rules, private notices and the command options.
+ * /watch: text and regex rules, private notices and the command options.
  */
 const bot = require('./helpers/bot');
 

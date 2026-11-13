@@ -1,4 +1,4 @@
-# `/whois` (`/who`, `/id`)
+# `/whois`
 
 Mostra quem é e o que pode no bot, **neste chat**: 🤖 dono, 👑 admin (`+a`), 🗣️ usuário (`+u`) ou 🚫
 sem permissão. Sozinho, mostra você; com pessoas (ou respondendo uma mensagem), mostra elas, mas só
@@ -24,8 +24,8 @@ Digite /help para saber quais comandos estão disponíveis.
 
 ```text
 /whois                          → você
-/who /Rafael Silva/ @Fulano     → (dono e admins) essas pessoas
-/id +5521999999999              → (dono e admins) pelo número
+/whois /Rafael Silva/ @Fulano     → (dono e admins) essas pessoas
+/whois +5521999999999              → (dono e admins) pelo número
 /whois                          → respondendo uma mensagem: quem a escreveu (dono e admins)
 ```
 

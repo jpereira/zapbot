@@ -11,7 +11,7 @@ const { describeDestination, resolverOrChoose } = require('../destinations');
 const { TYPES, idKey, noticeOrigin } = require('../mudo');
 
 /*
- * /mute (/mudo, /m) <option> </contact or group/|@mention|+number>
+ * /mute <option> </contact or group/|@mention|+number>
  * -d (-deleted)  mutes the deleted message notices
  * -e (-edited)   mutes the edit notices
  * -s (-status)   mutes the deleted status notices

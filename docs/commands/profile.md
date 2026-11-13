@@ -1,4 +1,4 @@
-# `/profile` (`/perfil`) · admin
+# `/profile` · admin
 
 Role `admin`: only you and the extra admins. The owner delegates it to a person or group with
 `/bot +u +cmd /profile` ([Delegating](index.md#delegating-an-admin-command)).

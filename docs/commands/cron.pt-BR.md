@@ -1,11 +1,11 @@
-# `/cron` (`/agenda`, `/lembrete`) · admin
+# `/cron` · admin
 
 Faz algo na hora marcada. Tem dois modos, na mesma agenda:
 
-- **Mensagem** (`/cron`, `/agenda`): envia o texto como se você digitasse, no chat atual ou, com
+- **Mensagem** (`/cron`): envia o texto como se você digitasse, no chat atual ou, com
   `-to`, num contato, num grupo ou num número. Serve para aniversários, avisos e mensagens
   recorrentes.
-- **Lembrete** (`/lembrete`, ou qualquer um com `-lembrete`/ `-lem`): envia `⏰ Lembrete` e o texto,
+- **Lembrete** (`/cron` com `-lembrete`/`-lem`): envia `⏰ Lembrete` e o texto,
   respondendo a mensagem do comando, no chat atual (ou no seu privado, com `-pv`). Respondendo
   (reply) uma mensagem, o lembrete cita essa mensagem, e o texto dela vira o lembrete se você não
   escrever outro.
@@ -14,7 +14,7 @@ Faz algo na hora marcada. Tem dois modos, na mesma agenda:
 |---|---|---|
 | `<quando>` | | Quando: `6h`, `às 18h`, `+2h`, `30m`, `amanhã 9h`, `sexta 18h`, `25/12 10:00`... Veja [Quando](#quando) |
 | `-to` | `<destino>` | Modo mensagem: envia num contato (`/Jorge Pereira/`), numa menção (`@Fulano Da Silva`), num grupo (`/Grupo L200/`) ou num número (`+5521999999999`) em vez do chat atual. Repita para vários: um item só, que sai em todos os destinos. Nomes exatos têm prioridade; vários resultados: você escolhe na lista. E-mail não vale: a mensagem sai no WhatsApp. Veja [Destinos](index.md#destinos-contato-grupo-número-ou-e-mail) |
-| `-lembrete`, `-lem` | | Modo lembrete (o mesmo de chamar como `/lembrete`) |
+| `-lembrete`, `-lem` | | Modo lembrete |
 | `-pv` | | Modo lembrete: lembra no seu privado em vez do chat atual |
 | `-repetir`, `-r` | `<diario\|semanal\|mensal>` | Repete no mesmo horário: todo dia, toda semana ou todo mês |
 | `-list`, `-l` | | Lista os lembretes e as mensagens, com o texto inteiro (o mesmo que o comando sem nada) |
@@ -30,16 +30,16 @@ Faz algo na hora marcada. Tem dois modos, na mesma agenda:
 /cron 25/12 00:00 Feliz Natal, família! 🎄
 /cron sexta 18h -to /Grupo L200/ Bom fim de semana!
 /cron seg 8h -repetir semanal -to trabalho Bom dia! Pauta da semana no drive.
-/agenda 05/11 9h -repetir mensal -to +5521999999999 Lembrete: aluguel vence hoje.
+/cron 05/11 9h -repetir mensal -to +5521999999999 Lembrete: aluguel vence hoje.
 /cron amanhã 8h -to /Jorge Pereira/ Bom dia! Não esquece a reunião.
 /cron 18h -to @Fulano Da Silva Já saiu do trabalho?   (num grupo, mencionando)
 /cron 20/10 -to /Família/ Parabéns, vó! 🎂
 /cron 8h -r diario -to /Família/ -to /Trabalho/ Bom dia!   (um item, nos dois grupos)
-/lembrete 30m tirar o bolo do forno
-/lembrete às 18h pagar o boleto
-/lembrete -pv amanhã 9h ligar pro banco
+/cron -lembrete 30m tirar o bolo do forno
+/cron -lembrete às 18h pagar o boleto
+/cron -lembrete -pv amanhã 9h ligar pro banco
 /cron -lem sexta 18h -r semanal enviar o relatório
-/lembrete +2h                   (respondendo uma mensagem: lembra dela daqui a 2 horas)
+/cron -lembrete +2h                   (respondendo uma mensagem: lembra dela daqui a 2 horas)
 /cron 6h -r diario -to /Grupo L200/ Bom dia!   (todo dia às 06:00)
 /cron 9h -r diario -to /ZapBot/ O preço do Bitcoin agora: {/crypto BTC}
 /cron                           → a lista
@@ -109,7 +109,7 @@ dois modos, em qualquer ponto do texto e mais de uma vez:
 /cron 09:24 -to /ZapBot/ O preço do Bitcoin agora: {/crypto BTC}
 /cron 8h -r diario -to /Família/ Bom dia! {/weather Rio de Janeiro}
 /cron seg 9h -r semanal Dólar: {/rates USD} · BTC: {/crypto BTC}
-/lembrete sexta 18h -r semanal {/stats -7}
+/cron -lembrete sexta 18h -r semanal {/stats -7}
 /cron 12h -to /Grupo L200/ {/meme}       (só mídia: sai a imagem, sem texto)
 ```
 
@@ -120,7 +120,7 @@ os comandos rodando para cada chat):
 /cron 06:00 -r diario -to /Krishina Da Silva/ -to /Grupo da Faculdade/ ⏰ Status da DeFi! {/defi} Preço do BTC! {/crypto BTC} Preço do Dólar! {/rates USD}
 /cron 07:30 -r diario -to /Família/ Bom dia! ☀️ {/weather Recife} Cripto: {/crypto BTC ETH} Câmbio: {/rates USD EUR}
 /cron seg 08:00 -r semanal -to /Trabalho/ -to @Fulano Da Silva Resumo da semana: {/news -hack 5} CVEs: {/cve -high 3}
-/lembrete -pv 23:00 -r diario Fechamento do dia: {/crypto} {/defi}
+/cron -lembrete -pv 23:00 -r diario Fechamento do dia: {/crypto} {/defi}
 ```
 
 Cada resposta de várias linhas vira um parágrafo, e o texto em volta fica entre elas. O primeiro
@@ -183,7 +183,7 @@ criar e no `-edit`:
 ```text
 /cron 8h -r diario Verificando Orca {/defi orca}\n Verificando Prjx {/defi prjx}
 /cron 07:30 -r diario -to /Família/ Bom dia! ☀️\n{/weather Recife}\nCâmbio: {/rates USD}
-/lembrete sexta 18h Fechar a semana:\n- relatório\n- backup\n- planilha
+/cron -lembrete sexta 18h Fechar a semana:\n- relatório\n- backup\n- planilha
 /cron -edit 2 Linha 1\nLinha 2
 ```
 

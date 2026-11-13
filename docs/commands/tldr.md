@@ -1,4 +1,4 @@
-# `/tldr` (`/resumo`) · admin
+# `/tldr` · admin
 
 Role `admin`: only you and the extra admins. The owner enables it for a person or group with
 `/bot +u +cmd /tldr` ([Delegating](index.md#delegating-an-admin-command)).
@@ -22,7 +22,6 @@ WhatsApp formatting conversion as `/gpt` (see
 ```text
 /tldr                → the last 100 messages of this chat
 /tldr 2h             → the ones from the last 2 hours
-/resumo 30m          → the ones from the last 30 minutes (via the alias)
 /tldr 1d             → the ones from the last day (1h30m, 2d4h... work; the database keeps 68 h, or `cache.messageRetentionHours`)
 /tldr 30             → the last 30 messages (without the letter, it's a count)
 /tldr 300 -pv        → the last 300, in your private chat

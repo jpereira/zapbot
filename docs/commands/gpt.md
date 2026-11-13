@@ -1,4 +1,4 @@
-# `/gpt` (`/ai`) · admin
+# `/gpt` · admin
 
 Role `admin`: only you and the extra admins. The owner can grant it to a person or group with
 `/bot +u +cmd /gpt` ([Delegating](index.md#delegating-an-admin-command)).
@@ -17,7 +17,7 @@ goes before the question; when you reply to a **photo**, it's sent along and Cha
 
 ```text
 /gpt explique o que é SSRF em 3 linhas
-/ai qual a capital da Mongólia?
+/gpt qual a capital da Mongólia?
 /gpt resuma          (respondendo uma mensagem)
 /gpt qual a raça desse cachorro?   (respondendo uma foto)
 /gpt agora transcreva isso         (respondendo um áudio)

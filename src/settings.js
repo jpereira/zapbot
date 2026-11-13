@@ -46,7 +46,7 @@ function userItem(v) {
     return itemPhone(v);
 }
 
-// "/creptomoeda" or "crypto" → "/crypto"; command that does not exist or that the owner does not delegate: error
+// "crypto" or "/crypto" → "/crypto"; command that does not exist or that the owner does not delegate: error
 function userCommand(v) {
     const nameAlt = v.startsWith('/') ? v.toLowerCase() : `/${v.toLowerCase()}`;
     const command = botConfig.commands.find(c => c.cmd === nameAlt || c.aliases?.includes(nameAlt));
@@ -687,7 +687,7 @@ const SETTINGS_SCHEMA = {
     'tldr.maxMsgs': {
         default: 500,
         type: 'number', min: 10, max: 2000,
-        desc: 'Máximo de mensagens enviadas à OpenAI por /tldr (/resumo).'
+        desc: 'Máximo de mensagens enviadas à OpenAI por /tldr.'
     },
     'traduzir.lang': {
         default: 'pt',

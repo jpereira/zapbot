@@ -1,4 +1,4 @@
-# `/rates` (`/cotacao`, `/cambio`)
+# `/rates`
 
 Cotação contra o real das moedas habilitadas (setting `cotacao.coins`, padrão: EUR e USDT), ou só
 das pedidas: valor atual, abertura e fechamento anterior, máxima e mínima do dia e variação (🟢 alta,
@@ -23,7 +23,7 @@ das pedidas: valor atual, abertura e fechamento anterior, máxima e mínima do d
 ```text
 /rates             → as habilitadas (padrão: EUR e USDT)
 /rates usd         → só o dólar
-/cambio usd eur gbp  → dólar, euro e libra
+/rates usd eur gbp  → dólar, euro e libra
 /rates -l          → suportadas, com ✅ nas habilitadas
 /rates -a usd      → passa a mostrar o dólar
 /rates -d eur      → deixa de mostrar o euro

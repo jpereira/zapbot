@@ -1,5 +1,5 @@
 /*
- * Comando /walissu (alias /ualisu).
+ * Comando /walissu.
  */
 
 const { sendDraw, drawParticipants } = require('./bills');

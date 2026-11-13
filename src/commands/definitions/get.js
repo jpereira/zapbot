@@ -8,7 +8,7 @@ const { OPTION_VERBOSE_FFMPEG } = require('./_options');
 module.exports = {
     cmd: '/get',
     usage: '/get [OPTION]... <url>  or  /get [OPTION]... (replying to a link or media)',
-    aliases: ['/download'],
+    aliases: [],
     summary: 'Downloads video or audio from social networks',
     help: 'Downloads video or audio from social networks (Instagram, YouTube, X, TikTok and other yt-dlp sites), from the URL or by replying to a message with a link. Replying to a WhatsApp video, image or audio uses that media itself: with no option, returns the original file. Pick audio or sticker per run; video and audio are sent as a document.',
     cmd_opts: [

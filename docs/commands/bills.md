@@ -1,4 +1,4 @@
-# `/bills` (`/boletos`)
+# `/bills`
 
 Groups only: draws 2 different members (not counting the bot) and tags them to "pay a boleto".
 

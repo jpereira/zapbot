@@ -3,6 +3,7 @@
  */
 
 const { getCommandSyntax } = require('./base');
+const { t } = require('../i18n');
 
 async function cmdNoffa({ msg, args, quotedMsg }) {
     const rainbowHearts = ['🌈', '🏳️‍🌈', '🏳️‍⚧️', '🧡', '💛', '💚', '💙', '💜'];

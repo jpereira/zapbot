@@ -1,4 +1,4 @@
-# `/draw` (`/desenhe`, `/desenha`, `/img`) · admin
+# `/draw` · admin
 
 Role `admin`: só você e os admins extras. O dono libera a uma pessoa ou grupo com
 `/bot +u +cmd /draw` ([Delegando](index.md#delegando-um-comando-admin)). Quem recebe só desenha: o `-model`
@@ -11,8 +11,8 @@ pedido. O `/gpt -img` e o `/gpt -gif` são o mesmo código: o resultado é igual
 
 ```text
 /draw um gato astronauta em aquarela
-/desenha um castelo na neve
-/img -gif um gato dançando
+/draw um castelo na neve
+/draw -gif um gato dançando
 /draw -m                       → o modelo atual e os que a sua chave vê
 /draw -h                       → ajuda do comando
 ```
@@ -49,11 +49,11 @@ Respondendo uma foto (ou mandando a foto com a legenda `/draw ...`), a OpenAI **
 Numa foto, o GIF a anima; sem pedido, com um movimento sutil e natural.
 
 ```text
-/img -gif um gato dançando
+/draw -gif um gato dançando
 → ⏳ Processando o /draw, aguarde.
 → (o GIF, em loop) 🎞️ um gato dançando
 
-/img -gif -f 6 -ms 300 uma bandeira ao vento
+/draw -gif -f 6 -ms 300 uma bandeira ao vento
 (respondendo uma foto)  /draw -gif como se estivesse nadando
 ```
 

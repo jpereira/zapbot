@@ -1,4 +1,4 @@
-# `/pixelart` (`/ansi`, `/px`)
+# `/pixelart`
 
 Arte ANSI/ASCII aleatória do [16colo.rs](https://16colo.rs/), o arquivo da cena artística das BBS. A
 imagem vem renderizada pelo próprio site; título, artista, grupo e data saem do registro SAUCE
@@ -15,7 +15,6 @@ gravado no fim do arquivo original (sem ele, a legenda leva o nome do arquivo e 
 /pixelart chuck-norris-lvl   → do pack informado
 /pixelart -r                 → de qualquer pack do arquivo
 /pixelart -y 1996            → de um pack de 1996
-/px                          → o mesmo que /pixelart, pelo alias
 ```
 
 Exemplo de resposta:

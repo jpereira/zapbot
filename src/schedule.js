@@ -1,5 +1,5 @@
 /*
- * Schedule: the reminders (/lembrete) and the scheduled messages (/cron), with the periodic check.
+ * Schedule: the reminders (/cron -lembrete) and the scheduled messages (/cron), with the periodic check.
  */
 
 const { sendMedia, commandsError, assembleText, breakLines } = require('./textCommands');
@@ -17,12 +17,12 @@ const { t } = require('./i18n');
 const { REPETITIONS, fmtWhen, readWhen, partsInBrasilia, nextRepetition } = require('./util/when');
 
 /*
- * /cron (aliases /agenda and /lembrete) has two modes, in the same table
+ * /cron has two modes, in the same table
  * `schedules` and in the same timer:
  * agendar  → (message mode) the plain text, as if you typed it, in the current chat or in the -to one;
  * reminder → "⏰ Lembrete" in the chat where it was created (replying to the message of
  * command, or the message it replied to), or in your private chat with
- * -pv. It is the mode of /lembrete and of -lembrete.
+ * -pv. It is the mode of -lembrete.
  * Both accept -repetir (-r) diario|semanal|mensal. The message mode accepts
  * several -to (a single item, with all the destinations). In the list, -edit <no.> changes the time, the text
  * or an item's repetition, and -pause/-resume <no....|all> hold and release it.
@@ -32,7 +32,7 @@ const { REPETITIONS, fmtWhen, readWhen, partsInBrasilia, nextRepetition } = requ
  */
 const TYPES = {
     lembrete: {
-        cmd: '/lembrete',
+        cmd: '/cron -lembrete',
         icone: '⏰',
         criado: 'adm.agenda.createdReminder',
         exemplo: 'adm.agenda.exReminder',
@@ -240,9 +240,8 @@ async function handleSchedule({ msg, args, chatId, chatName, isGroup, quotedMsg 
 
     const { opt, quando: when, texto: typed, destinos: destinationsText, comDestino: withDestination } = readScheduling(args);
 
-    // Reminder mode: called as /lembrete, or with -lembrete
-    const called = String(msg.body ?? '').trim().split(/\s+/, 1)[0].toLowerCase();
-    const kind = called === '/lembrete' || opt.lembrete ? 'lembrete' : 'agendar';
+    // Reminder mode: with -lembrete
+    const kind = opt.lembrete ? 'lembrete' : 'agendar';
     const type = TYPES[kind];
     const syntax = t('adm.agenda.syntax', { ex: t(type.exemplo) });
     const items = await listAlt();

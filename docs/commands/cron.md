@@ -1,10 +1,10 @@
-# `/cron` (`/agenda`, `/lembrete`) · admin
+# `/cron` · admin
 
 Does something at the scheduled time. It has two modes, in the same schedule:
 
-- **Message** (`/cron`, `/agenda`): sends the text as if you typed it, in the current chat or, with
+- **Message** (`/cron`): sends the text as if you typed it, in the current chat or, with
   `-to`, to a contact, a group or a number. Good for birthdays, notices and recurring messages.
-- **Reminder** (`/lembrete`, or any of them with `-lembrete`/ `-lem`): sends `⏰ Reminder` and the
+- **Reminder** (`/cron` with `-lembrete`/`-lem`): sends `⏰ Reminder` and the
   text, replying to the command message, in the current chat (or in your private chat, with `-pv`).
   When you reply to a message, the reminder quotes that message, and its text becomes the reminder
   if you don't write another one.
@@ -13,7 +13,7 @@ Does something at the scheduled time. It has two modes, in the same schedule:
 |---|---|---|
 | `<when>` | | When: `6h`, `at 18h`, `+2h`, `30m`, `tomorrow 9h`, `friday 18h`, `25/12 10:00`... See [When](#when) |
 | `-to` | `<destination>` | Message mode: sends to a contact (`/Jorge Pereira/`), a mention (`@Fulano Da Silva`), a group (`/Grupo L200/`) or a number (`+5521999999999`) instead of the current chat. Repeat it for several: a single item, which goes out to all destinations. Exact names take priority; several results: you pick from the list. Email doesn't work: the message goes out on WhatsApp. See [Destinations](index.md#destinations-contact-group-number-or-email) |
-| `-lembrete`, `-lem` | | Reminder mode (the same as calling it as `/lembrete`) |
+| `-lembrete`, `-lem` | | Reminder mode |
 | `-pv` | | Reminder mode: reminds you in your private chat instead of the current chat |
 | `-repetir`, `-r` | `<diario\|semanal\|mensal>` | Repeats at the same time: every day, every week or every month |
 | `-list`, `-l` | | Lists the reminders and messages, with the full text (the same as the command with nothing) |
@@ -29,16 +29,16 @@ Does something at the scheduled time. It has two modes, in the same schedule:
 /cron 25/12 00:00 Feliz Natal, família! 🎄
 /cron sexta 18h -to /Grupo L200/ Bom fim de semana!
 /cron seg 8h -repetir semanal -to trabalho Bom dia! Pauta da semana no drive.
-/agenda 05/11 9h -repetir mensal -to +5521999999999 Lembrete: aluguel vence hoje.
+/cron 05/11 9h -repetir mensal -to +5521999999999 Lembrete: aluguel vence hoje.
 /cron amanhã 8h -to /Jorge Pereira/ Bom dia! Não esquece a reunião.
 /cron 18h -to @Fulano Da Silva Já saiu do trabalho?   (in a group, mentioning)
 /cron 20/10 -to /Família/ Parabéns, vó! 🎂
 /cron 8h -r diario -to /Família/ -to /Trabalho/ Bom dia!   (one item, in both groups)
-/lembrete 30m tirar o bolo do forno
-/lembrete às 18h pagar o boleto
-/lembrete -pv amanhã 9h ligar pro banco
+/cron -lembrete 30m tirar o bolo do forno
+/cron -lembrete às 18h pagar o boleto
+/cron -lembrete -pv amanhã 9h ligar pro banco
 /cron -lem sexta 18h -r semanal enviar o relatório
-/lembrete +2h                   (replying to a message: reminds you of it in 2 hours)
+/cron -lembrete +2h                   (replying to a message: reminds you of it in 2 hours)
 /cron 6h -r diario -to /Grupo L200/ Bom dia!   (every day at 06:00)
 /cron 9h -r diario -to /ZapBot/ O preço do Bitcoin agora: {/crypto BTC}
 /cron                           → the list
@@ -110,7 +110,7 @@ both modes, anywhere in the text and more than once:
 /cron 09:24 -to /ZapBot/ O preço do Bitcoin agora: {/crypto BTC}
 /cron 8h -r diario -to /Família/ Bom dia! {/weather Rio de Janeiro}
 /cron seg 9h -r semanal Dólar: {/rates USD} · BTC: {/crypto BTC}
-/lembrete sexta 18h -r semanal {/stats -7}
+/cron -lembrete sexta 18h -r semanal {/stats -7}
 /cron 12h -to /Grupo L200/ {/meme}       (media only: the image goes out, no text)
 ```
 
@@ -121,7 +121,7 @@ out to each destination, with the commands running for each chat):
 /cron 06:00 -r diario -to /Krishina Da Silva/ -to /Grupo da Faculdade/ ⏰ Status da DeFi! {/defi} Preço do BTC! {/crypto BTC} Preço do Dólar! {/rates USD}
 /cron 07:30 -r diario -to /Família/ Bom dia! ☀️ {/weather Recife} Cripto: {/crypto BTC ETH} Câmbio: {/rates USD EUR}
 /cron seg 08:00 -r semanal -to /Trabalho/ -to @Fulano Da Silva Resumo da semana: {/news -hack 5} CVEs: {/cve -high 3}
-/lembrete -pv 23:00 -r diario Fechamento do dia: {/crypto} {/defi}
+/cron -lembrete -pv 23:00 -r diario Fechamento do dia: {/crypto} {/defi}
 ```
 
 Each multi-line reply becomes a paragraph, and the surrounding text stays between them. The first
@@ -184,7 +184,7 @@ around it are removed. It works in any `/cron` text, with or without commands, o
 ```text
 /cron 8h -r diario Verificando Orca {/defi orca}\n Verificando Prjx {/defi prjx}
 /cron 07:30 -r diario -to /Família/ Bom dia! ☀️\n{/weather Recife}\nCâmbio: {/rates USD}
-/lembrete sexta 18h Fechar a semana:\n- relatório\n- backup\n- planilha
+/cron -lembrete sexta 18h Fechar a semana:\n- relatório\n- backup\n- planilha
 /cron -edit 2 Linha 1\nLinha 2
 ```
 

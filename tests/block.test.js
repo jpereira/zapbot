@@ -1,5 +1,5 @@
 /*
- * /block (/bloquear) and /unblock: the block on your WhatsApp account.
+ * /block and /unblock: the block on your WhatsApp account.
  */
 const bot = require('./helpers/bot');
 
@@ -27,8 +27,8 @@ describe('/block e /unblock', () => {
         assert.equal(contactAlt(OTHERAlt.jid).isBlocked, true);
         assert.match((await bot.replyAlt('/block /Fulano/'))[0], /^ℹ️ 👤 Fulano já está bloqueado\./);
 
-        await bot.replyAlt('/bloquear +5521922222222');
-        assert.equal(contactAlt(BELTRANO.jid).isBlocked, true, 'o /bloquear é o mesmo');
+        await bot.replyAlt('/block +5521922222222');
+        assert.equal(contactAlt(BELTRANO.jid).isBlocked, true, 'o /block é o mesmo');
 
         const [list] = await bot.replyAlt('/block');
         assert.equal(list, '🚫 *Bloqueados* (2)\n\n1. 👤 Beltrano · +5521922222222\n2. 👤 Fulano · +5521911111111\n\n' +

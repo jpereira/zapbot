@@ -1,4 +1,4 @@
-# `/weather` (`/tempo`)
+# `/weather`
 
 Current weather (condition, temperature, feels-like, humidity and wind), the day's high, low and
 chance of rain, from [Open-Meteo](https://open-meteo.com/) (free, no API key). With a number of days,
@@ -13,7 +13,6 @@ it also shows the forecast for the next days.
 /weather                         → default city (tempo.city)
 /weather Rio de Janeiro          → Rio de Janeiro, RJ
 /weather Paris, Texas            → Paris in the US (not the one in France)
-/tempo Lisboa                  → the same, through the alias
 /temp Lisboa                    → same, completed from the start of the name
 /weather 7d Niteroi              → now + forecast for today and the next 6 days
 /weather 16d Niteroi             → today and the next 15 days
