@@ -147,4 +147,4 @@ function aliasBlock(a) {
     ].filter(Boolean).join('\n');
 }
 
-module.exports = { applyParams, textIsAlias, isCommandOrAlias, textRunAlias, listAliases, resolverAlias };
+module.exports = { applyParams, aliasBlock, textIsAlias, isCommandOrAlias, textRunAlias, listAliases, resolverAlias };

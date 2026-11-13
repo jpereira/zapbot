@@ -15,11 +15,21 @@ vigia mensagens por texto/regex e te avisa no privado, traz notícias, tempo e C
 ChatGPT e mais algumas brincadeiras,
 tudo por comandos digitados no próprio chat (`/help`, `/get`, `/show`, `/news`, `/gpt`...).
 
-Atalhos persistentes guardam comandos com argumentos e descrição opcional: cadastre com
-`/alias dimdim -desc "Exibe o preço do dólar" /rates USD`, execute `/dimdim` e consulte
-`/help alias`. O bot mostra o comando chamado antes do resultado. Um atalho também pode juntar
-vários comandos num texto, como no `/cron`:
-`/alias carteira Orca {/defi orca}\n Prjx {/defi prjx}`.
+Atalhos persistentes (`/alias`) guardam um comando com os argumentos sob o nome que você escolher,
+com uma descrição opcional:
+
+```text
+/alias dimdim -desc "Exibe o preço do dólar" /rates USD     → cadastra o atalho
+/dimdim                                                     → executa o /rates USD
+/help alias                                                 → lista os seus atalhos
+```
+
+O bot mostra o comando chamado antes do resultado. Um atalho também pode juntar vários comandos
+num texto, como no `/cron`:
+
+```text
+/alias carteira Orca {/defi orca}\n Prjx {/defi prjx}
+```
 
 A ideia vem dos velhos tempos do IRC: o ZapBot é inspirado nas antigas
 [eggdrops](https://www.eggheads.org/), os bots que ficavam de plantão nos canais, respondendo a
