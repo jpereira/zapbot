@@ -6,7 +6,7 @@ conectado` enquanto não estiver conectado). Pode ser usado dentro de um [`/alia
 
 ```text
 /uptime
-🤖 ZapBot 1.0.22 (git+7a89b92/v1.0.22)
+🤖 ZapBot 1.0.23 (devel) (git+7a89b92/HEAD)
 ━━━━━━━━━━━━━━━━━━
 ⚡ Online: 2 dias, 3 horas
 🔐 Conectado: 2 dias, 2 horas, 58 minutos
