@@ -174,14 +174,15 @@ and a shortcut's name doesn't go in `+cmd`.
 <!-- gerado:roles -->
 ### Commands by role
 
-**user** (whoever is in `bot.users`) (23):
+**user** (whoever is in `bot.users`) (25):
 
 [`/ascii`](ascii.md), [`/bills`](bills.md), [`/crypto`](crypto.md), [`/cve`](cve.md),
-[`/get`](get.md), [`/giphy`](giphy.md), [`/help`](help.md), [`/joke`](joke.md),
-[`/kernel`](kernel.md), [`/me`](me.md), [`/meme`](meme.md), [`/news`](news.md),
-[`/noffa`](noffa.md), [`/ping`](ping.md), [`/pixelart`](pixelart.md), [`/rates`](rates.md),
-[`/sticker`](sticker.md), [`/translate`](translate.md), [`/uptime`](uptime.md),
-[`/version`](version.md), [`/walissu`](walissu.md), [`/weather`](weather.md), [`/whois`](whois.md)
+[`/decodeqr`](decodeqr.md), [`/get`](get.md), [`/giphy`](giphy.md), [`/help`](help.md),
+[`/joke`](joke.md), [`/kernel`](kernel.md), [`/me`](me.md), [`/meme`](meme.md), [`/news`](news.md),
+[`/noffa`](noffa.md), [`/ping`](ping.md), [`/pixelart`](pixelart.md), [`/qr`](qr.md),
+[`/rates`](rates.md), [`/sticker`](sticker.md), [`/translate`](translate.md),
+[`/uptime`](uptime.md), [`/version`](version.md), [`/walissu`](walissu.md),
+[`/weather`](weather.md), [`/whois`](whois.md)
 
 **admin, delegable** (admins and the owner; the owner releases them to a user with `+cmd`) (15):
 
@@ -219,6 +220,7 @@ even if they start with `/`. Without that, someone could use a command that echo
 | [`/crypto`](crypto.md) | `/bitcoio`, `/creptomoeda` | `user` | Quote for the enabled cryptos (default: BTC, ETH, SOL, and HYPE) or just the requested ones (`BTC ETH`); price alerts |
 | [`/cve`](cve.md) | | `user` | Latest published CVEs (NVD); `-highscore` only the critical ones |
 | [`/debug`](debug.md) | `/d`, `/dbg` | `admin` | Debug logs with levels, filtering, and copying to chats |
+| [`/decodeqr`](decodeqr.md) | | `user` | Reads the QR Code in a photo (`-encode` makes one) |
 | [`/defi`](defi.md) | | `admin` | Liquidity positions on Orca and Project X: balance, range, price, and fees to collect, read on-chain; `-alerta` warns when it leaves and returns to the range and when fees go over a value. `liquidswap`: LP positions on Aptos. `morpho` and `aave`: position, loans, and risk on Morpho and Aave V3 |
 | [`/demote`](demote.md) | | `admin` · delegable | Removes someone's group admin |
 | [`/draw`](draw.md) | `/desenhe`, `/desenha`, `/img` | `admin` · delegable | Draws an image or an animated GIF (`-gif`) with GPT Image (OpenAI); on a photo, edits or animates it |
@@ -247,6 +249,7 @@ even if they start with `/`. Without that, someone could use a command that echo
 | [`/poll`](poll.md) | `/enquete`, `/quiz` | `admin` · delegable | Creates a native WhatsApp poll in the chat; `-r` shows the result |
 | [`/profile`](profile.md) | `/perfil` | `admin` · delegable | A contact's profile picture, with the name from your contacts and the phone number |
 | [`/promote`](promote.md) | | `admin` · delegable | Makes someone a group admin |
+| [`/qr`](qr.md) | | `user` | Makes the QR Code of a text (`-decode` reads one) |
 | [`/rates`](rates.md) | `/cotacao`, `/cambio` | `user` | EUR and USDT (and USD, GBP) quotes against the real: current, open, close, and change; price alerts |
 | [`/search`](search.md) | `/buscar` | `admin` | Searches the WhatsApp Web history, not just the cache: in this chat or, in your private chat, in all of them (`-N` for more); `-mask` obfuscates phone numbers |
 | [`/set`](set.md) | `/config` | `admin` | Lists and changes the settings; `-a`/`-rm` add and remove items in lists (e.g., `bot.admins` and `bot.users`) |

@@ -116,6 +116,7 @@ nav:
       - /crypto: comandos/crypto.md
       - /cve: comandos/cve.md
       - /debug: comandos/debug.md
+      - /decodeqr: comandos/decodeqr.md
       - /defi: comandos/defi.md
       - /demote: comandos/demote.md
       - /draw: comandos/draw.md
@@ -144,6 +145,7 @@ nav:
       - /poll: comandos/poll.md
       - /profile: comandos/profile.md
       - /promote: comandos/promote.md
+      - /qr: comandos/qr.md
       - /rates: comandos/rates.md
       - /search: comandos/search.md
       - /set: comandos/set.md

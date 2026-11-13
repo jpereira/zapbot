@@ -99,3 +99,64 @@ describe('/tts', () => {
         assert.match((await bot.responder(`/tts ${'a'.repeat(4097)}`))[0], /❌ O texto tem 4097 caracteres: a voz aceita até 4096\./);
     });
 });
+
+// Os pixels RGBA de um QR Code (o que o sharp devolveria da foto dele)
+function pixelsDoQr(texto, escala = 4) {
+    const { size, data } = QRCode.create(texto).modules;
+    const lado = (size + 8) * escala;
+    const rgba = new Uint8ClampedArray(lado * lado * 4).fill(255);
+    for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+        if (!data[y * size + x]) continue;
+        for (let dy = 0; dy < escala; dy++) for (let dx = 0; dx < escala; dx++) {
+            const i = (((y + 4) * escala + dy) * lado + (x + 4) * escala + dx) * 4;
+            rgba[i] = rgba[i + 1] = rgba[i + 2] = 0;
+        }
+    }
+    return { data: Buffer.from(rgba), width: lado, height: lado };
+}
+
+describe('/qr e /decodeqr', () => {
+    test('/qr <texto>: a imagem PNG do QR Code, que o jsqr lê de volta', async () => {
+        const r = (await bot.executar('/qr https://exemplo.com/a?b=1')).at(-1);
+        assert.ok(r.content instanceof MessageMedia);
+        assert.equal(r.content.mimetype, 'image/png');
+        assert.equal(r.content.filename, 'qrcode.png');
+        const png = Buffer.from(r.content.data, 'base64');
+        assert.deepEqual([...png.subarray(0, 4)], [0x89, 0x50, 0x4e, 0x47]);
+
+        // O texto é o do comando (o PNG é o que a biblioteca qrcode gera; aqui conferimos o pixelsDoQr, usado abaixo)
+        const { data, width, height } = pixelsDoQr('https://exemplo.com/a?b=1');
+        assert.equal(jsQR(new Uint8ClampedArray(data), width, height).data, 'https://exemplo.com/a?b=1');
+    });
+
+    test('sem texto: o da mensagem respondida; sem nada, o uso; grande demais', async () => {
+        const citada = bot.criarMensagem({ texto: 'meu texto', de: OUTRO.jid });
+        assert.ok((await bot.executar('/qr', { citada })).at(-1).content instanceof MessageMedia);
+        assert.match((await bot.responder('/qr'))[0], /^❌ Use: \/qr <texto>/);
+        assert.match((await bot.responder(`/qr ${'a'.repeat(1001)}`))[0], /❌ O texto tem 1001 caracteres: o QR Code aceita até 1000\./);
+    });
+
+    test('/qr -d e /decodeqr leem o QR Code de uma foto', async () => {
+        sharp.pixels = pixelsDoQr('https://exemplo.com/lido');
+        assert.deepEqual(await bot.responder('/qr -d', { citada: foto() }), ['📱 https://exemplo.com/lido']);
+        assert.deepEqual(await bot.responder('/decodeqr', { citada: foto() }), ['📱 https://exemplo.com/lido']);
+
+        // A foto com a legenda
+        const msg = bot.criarMensagem({ texto: '/decodeqr', tipo: 'image', midia: FOTO });
+        assert.equal((await bot.entregar(msg)).at(-1).texto, '📱 https://exemplo.com/lido');
+    });
+
+    test('/decodeqr -e gera (igual ao /qr)', async () => {
+        const r = (await bot.executar('/decodeqr -e oi')).at(-1);
+        assert.ok(r.content instanceof MessageMedia);
+        assert.equal(r.content.mimetype, 'image/png');
+    });
+
+    test('foto sem QR Code, sem foto e sem conseguir baixar', async () => {
+        sharp.pixels = { data: Buffer.alloc(40 * 40 * 4, 255), width: 40, height: 40 };
+        assert.deepEqual(await bot.responder('/qr -d', { citada: foto() }), ['🔎 Nenhum QR Code encontrado na imagem.']);
+        assert.match((await bot.responder('/decodeqr'))[0], /^❌ Responda a foto de um QR Code com \/decodeqr/);
+        assert.deepEqual(await bot.responder('/qr -d', { citada: foto({ midia: FOTO, extras: { downloadMedia: async () => null } }) }),
+            ['❌ Não consegui baixar a imagem.']);
+    });
+});
