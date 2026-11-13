@@ -378,6 +378,18 @@ async function initializeDb() {
     await addColumns('defi_positions', { name: 'TEXT', ...ALERT_DEFI_COLUMNS });
 
     /*
+     * /welcome and /goodbye: each group's greeting (kind), with its own text (NULL: the language default).
+     */
+    await dbRun(`
+        CREATE TABLE IF NOT EXISTS group_greetings (
+            chat_id TEXT NOT NULL,
+            kind TEXT NOT NULL,
+            text TEXT,
+            PRIMARY KEY (chat_id, kind)
+        )
+    `);
+
+    /*
      * /mute: people and groups with muted notices (what: deleted, edited,
      * status, reaction) and each cut notice (mute_hits, for /bot -status; 30 days).
      */

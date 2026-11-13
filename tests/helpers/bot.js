@@ -18,6 +18,7 @@ src('events/edited');
 src('events/reactions');
 src('events/messages');
 src('polls');
+src('greetings');
 
 const { dbAll, dbGet, dbRun, markDbReady } = src('db');
 const { initializeDb } = src('initialization');
@@ -34,7 +35,7 @@ const prepare = () => (db ??= initializeDb().then(markDbReady));
 
 const TABLES = ['command_aliases', 'messages', 'message_edits', 'stats', 'watch_hits', 'watch_destinations', 'price_alerts',
     'settings', 'polls', 'poll_votes', 'schedules', 'defi_positions', 'mutes', 'mute_hits',
-    'alerts', 'watch_sources', 'watch_masks', 'reactions', 'reaction_changes', 'monitor_contacts', 'monitor_history'];
+    'alerts', 'watch_sources', 'watch_masks', 'reactions', 'reaction_changes', 'monitor_contacts', 'monitor_history', 'group_greetings'];
 
 /*
  * Clean state for each test: empty tables, settings at default, no

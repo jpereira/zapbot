@@ -121,5 +121,18 @@ module.exports = {
     'grp.dest.expired': '⌛ No number chosen for "{search}" in 2 minutes: nothing was done.',
     'grp.dest.subject': 'Notice',
     'grp.dest.yourPrivate': 'your private chat',
-    'grp.dest.notMention': '❌ "@{digits}" is not a mention: mention the person by picking from the WhatsApp @ list, or use the name or the number ({examples}).'
+    'grp.dest.notMention': '❌ "@{digits}" is not a mention: mention the person by picking from the WhatsApp @ list, or use the name or the number ({examples}).',
+
+    // /welcome, /goodbye
+    'saudacoes.kind.welcome': 'welcome',
+    'saudacoes.kind.goodbye': 'goodbye',
+    'saudacoes.welcomeDefault': '👋 Welcome to {group}, {name}!',
+    'saudacoes.goodbyeDefault': '👋 {name} left {group}.',
+    'saudacoes.set': '✅ The {kind} message is on in this group:\n\n{text}',
+    'saudacoes.off': '🔕 The {kind} message is off in this group.',
+    'saudacoes.none': '🔕 This group has no {kind} message.\n💡 _Turn it on with {cmd} -on (default text) or {cmd} <text>_',
+    'saudacoes.current': '👋 The {kind} message of this group (on):\n\n{text}\n\n💡 _Change it with {cmd} <text> ({name} = the person, {group} = the group), turn it off with {cmd} -off, preview with {cmd} -test_',
+    'saudacoes.tooLong': '❌ The text has {n} characters: up to {max}.',
+
+
 };

@@ -121,5 +121,18 @@ module.exports = {
     'grp.dest.expired': '⌛ Nenhum nº escolhido para "{search}" em 2 minutos: nada foi feito.',
     'grp.dest.subject': 'Aviso',
     'grp.dest.yourPrivate': 'seu privado',
-    'grp.dest.notMention': '❌ "@{digits}" não é uma menção: mencione a pessoa escolhendo na lista do @ do WhatsApp, ou use o nome ou o número ({examples}).'
+    'grp.dest.notMention': '❌ "@{digits}" não é uma menção: mencione a pessoa escolhendo na lista do @ do WhatsApp, ou use o nome ou o número ({examples}).',
+
+    // /welcome, /goodbye
+    'saudacoes.kind.welcome': 'de boas-vindas',
+    'saudacoes.kind.goodbye': 'de despedida',
+    'saudacoes.welcomeDefault': '👋 Boas-vindas ao {group}, {name}!',
+    'saudacoes.goodbyeDefault': '👋 {name} saiu do {group}.',
+    'saudacoes.set': '✅ A mensagem {kind} está ligada neste grupo:\n\n{text}',
+    'saudacoes.off': '🔕 A mensagem {kind} está desligada neste grupo.',
+    'saudacoes.none': '🔕 Este grupo não tem mensagem {kind}.\n💡 _Ligue com {cmd} -on (texto padrão) ou {cmd} <texto>_',
+    'saudacoes.current': '👋 A mensagem {kind} deste grupo (ligada):\n\n{text}\n\n💡 _Troque com {cmd} <texto> ({name} = a pessoa, {group} = o grupo), desligue com {cmd} -off, veja como fica com {cmd} -test_',
+    'saudacoes.tooLong': '❌ O texto tem {n} caracteres: até {max}.',
+
+
 };
