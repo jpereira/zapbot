@@ -1,6 +1,6 @@
 /*
  * i18n (en_US) of the /welcome, /goodbye, /promote, /demote, /invite, /ocr, /tts, /qr, /decodeqr replies,
- * /carbon and /profile -set. The other tests run in pt_BR.
+ * /carbon, /profile -set and /forward. The other tests run in pt_BR.
  */
 const bot = require('./helpers/bot');
 
@@ -53,4 +53,14 @@ test('/ocr, /tts, /qr, /decodeqr, /carbon e /profile -set', async () => {
     assert.deepEqual(await bot.replyAlt('/carbon -t neon x'), ['❌ Unknown theme "neon". Available: dark, light.']);
     assert.match((await bot.replyAlt('/carbon'))[0], /^❌ Use: \/carbon /);
     assert.deepEqual(await bot.replyAlt('/profile -set'), ['❌ Reply to an image with /profile -set (or send the photo with /profile -set as the caption).']);
+});
+
+test('/forward', async () => {
+    assert.match((await bot.replyAlt('/forward'))[0], /^```Usage: \/forward /);
+    assert.deepEqual(await bot.replyAlt('/forward /Fulano/'), ['❌ Reply to the message you want to forward, or give its position (e.g. /forward -1 /Fulano/).']);
+
+    const quoted = bot.createMessage({ texto: 'Meeting at 10', de: OTHERAlt.jid });
+    const sendings = await bot.executar('/forward /Fulano/', { citada: quoted });
+    assert.equal(sendings.find(e => e.chatId === OTHERAlt.jid).content, '🤖 Message forwarded by ZapBot!\n\nMeeting at 10');
+    assert.equal(sendings.find(e => /forwarded successfully/.test(e.texto)).texto, '✉️ Message forwarded successfully!\n\n👤 Fulano');
 });
