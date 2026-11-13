@@ -1,4 +1,4 @@
-# `/rates` (`/cotacao`, `/cambio`)
+# `/rates`
 
 Exchange rate against the real for the enabled currencies (setting `cotacao.coins`, default: EUR and
 USDT), or only the requested ones: current value, open and previous close, day high and low, and
@@ -23,7 +23,7 @@ change (🟢 up, 🔴 down). Supported: `USD`, `EUR`, `GBP` and `USDT`.
 ```text
 /rates             → the enabled ones (default: EUR and USDT)
 /rates usd         → the dollar only
-/cambio usd eur gbp  → dollar, euro and pound
+/rates usd eur gbp  → dollar, euro and pound
 /rates -l          → supported ones, with ✅ on the enabled ones
 /rates -a usd      → starts showing the dollar
 /rates -d eur      → stops showing the euro

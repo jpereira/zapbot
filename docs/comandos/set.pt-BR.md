@@ -1,4 +1,4 @@
-# `/set` (`/config`) · admin
+# `/set` · admin
 
 Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 [Settings](../settings.md)). A mudança vale na hora e sobrevive a reinícios.
@@ -24,7 +24,6 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 /set monitor.pool=300
 /set monitor.maxRecords=30
 /set zapbot.lang=pt_BR  → o mesmo que /set zapbot.lang pt_BR
-/config show.max 10  → o mesmo, pelo alias
 /set debug.enabled off
 /set sticker.name "Meu Bot"
 /set commands.disabled noffa everybody
@@ -63,7 +62,7 @@ Nas chaves que são listas (`bot.admins`, `bot.users`, `commands.disabled`, `cry
 `watch.rules`, os feeds do `news.*`...), o `<chave> <valor>` troca a lista inteira; o `-append`
 (`-a`) acrescenta itens e o `-rm` tira, sem mexer no resto. Os itens passam pela mesma validação do
 `<chave> <valor>`: um número de telefone vira só os dígitos, um comando vira o nome principal
-(`/set -rm commands.disabled /mudo` tira o `/mute`).
+(`/set -rm commands.disabled /mute` tira o `/mute`).
 
 ```text
 /set -a crypto.coins hype

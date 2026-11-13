@@ -1,6 +1,6 @@
 /*
- * Comandos de grupo e de mídia: /everybody (/todes), /bills, /members, /walissu (/ualisu),
- * /poll (/enq, /quiz) e /sticker (/st).
+ * Comandos de grupo e de mídia: /everybody, /bills, /members, /walissu,
+ * /poll e /sticker.
  */
 const bot = require('./helpers/bot');
 
@@ -24,7 +24,7 @@ beforeEach(async () => {
 
 const somenteGrupo = 'Apenas utilizado dentro de grupos.';
 
-describe('/everybody (/todes)', () => {
+describe('/everybody', () => {
     test('marca todos menos quem chamou, respondendo a mensagem', async () => {
         const [r] = await bot.executar('/everybody', { id: 'CHAMADA' });
         assert.equal(r.chatId, GRUPO);
@@ -37,8 +37,8 @@ describe('/everybody (/todes)', () => {
         assert.deepEqual(await bot.responder('/everybody', { chat: OUTRO.jid }), [somenteGrupo]);
     });
 
-    test('o alias /todes', async () => {
-        const [r] = await bot.executar('/todes');
+    test('o alias /everybody', async () => {
+        const [r] = await bot.executar('/everybody');
         assert.equal(r.chatId, GRUPO);
         assert.deepEqual(r.options.mentions, [OUTRO.jid, CICLANO.jid, '777@lid']);
     });
@@ -68,7 +68,7 @@ describe('/bills e /walissu', () => {
         assert.deepEqual(await bot.responder('/walissu', { chat: OUTRO.jid }), [somenteGrupo]);
     });
 
-    test('/walissu: 2 membros e uma CVE recente', async () => {
+    test('/walissu: 2 membros e uma CVE recente (com o aviso de piada)', async () => {
         rede.responder('get', 'services.nvd.nist.gov', (url, cfg) => cfg.params.startIndex === undefined
             ? { totalResults: 1 }
             : { vulnerabilities: [{ cve: { id: 'CVE-2026-0001', descriptions: [{ lang: 'en', value: 'Bug.' }], metrics: {} } }] });
@@ -78,11 +78,11 @@ describe('/bills e /walissu', () => {
         assert.match(r.texto, /Walissu CVE BOT[\s\S]*\*CVE-2026-0001\*[\s\S]*Preciso sair de Brasília!/);
     });
 
-    test('/walissu (e o alias /ualisu) sem CVE ou com o NVD fora do ar', async () => {
+    test('/walissu sem CVE ou com o NVD fora do ar', async () => {
         rede.responder('get', 'services.nvd.nist.gov', { totalResults: 0 });
         assert.deepEqual(await bot.responder('/walissu'), ['🛡️ Nenhuma CVE publicada nos últimos 2 dias.']);
         rede.responder('get', 'services.nvd.nist.gov', new Error('503'));
-        assert.deepEqual(await bot.responder('/ualisu', { erroEsperado: true }), ['❌ Não consegui consultar o NVD agora.']);
+        assert.deepEqual(await bot.responder('/walissu', { erroEsperado: true }), ['❌ Não consegui consultar o NVD agora.']);
     });
 });
 
@@ -96,10 +96,6 @@ describe('/members', () => {
         assert.match(r, /\(número oculto\) - Desconhecido/);
     });
 
-    test('pelo alias /list', async () => {
-        assert.match((await bot.responder('/list'))[0], /👥 \*Membros de Família\* \(4\)/);
-    });
-
     test('@lid com telefone conhecido mostra o número', async () => {
         bot.client.lids.set('777@lid', '5521933333333@c.us');
         assert.match((await bot.responder('/members'))[0], /\+5521933333333 - Desconhecido/);
@@ -110,7 +106,7 @@ describe('/members', () => {
     });
 });
 
-describe('/poll (/enq, /quiz)', () => {
+describe('/poll', () => {
     const enquete = async (linha) => {
         const [r] = await bot.executar(linha);
         assert.ok(r.content instanceof Poll, `sem enquete para: ${linha}`);
@@ -129,7 +125,7 @@ describe('/poll (/enq, /quiz)', () => {
         assert.equal(p.pollName, 'Quais dias?');
         assert.equal(p.pollOptions.length, 3);
         assert.equal(p.options.allowMultipleAnswers, true);
-        assert.equal((await enquete('/quiz -multi A? | 1 | 2')).options.allowMultipleAnswers, true);
+        assert.equal((await enquete('/poll -multi A? | 1 | 2')).options.allowMultipleAnswers, true);
     });
 
     test('-m no meio faz parte da pergunta', async () => {
@@ -229,7 +225,7 @@ describe('/poll -r (resultado)', () => {
     });
 });
 
-describe('/sticker (/st)', () => {
+describe('/sticker', () => {
     const foto = { mimetype: 'image/jpeg', data: Buffer.from('jpg').toString('base64') };
 
     test('sem responder uma mensagem', async () => {

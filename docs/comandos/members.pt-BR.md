@@ -1,4 +1,4 @@
-# `/members` (`/listageral`, `/list`) · admin
+# `/members` · admin
 
 Role `admin`: só você e os admins extras. O dono libera a uma pessoa ou grupo com
 `/bot +u +cmd /members` ([Delegando](index.md#delegando-um-comando-admin)).
@@ -9,7 +9,6 @@ linha como `+número - nome`, com 👑 dono e ⭐ admin. Um número que o WhatsA
 
 ```text
 /members
-/list           → o mesmo, pelo alias
 
 👥 *Membros de Grupo L200* (2)
 

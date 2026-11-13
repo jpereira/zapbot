@@ -263,7 +263,7 @@ A user (a person or a group) can be limited to some common commands, or receive 
   those again.
 - `-cmd` on someone who uses all leaves "All but" those. Removing the last command of a list is
   refused: to remove the person, `/bot -u`; to allow all, `/bot +cmd all`.
-- Commands go by name or alias (`/creptomoeda` becomes `/crypto`), separated by commas. A
+- Commands go by name (with or without the `/`), separated by commas. A
   command that isn't delegable (`/set`, `/bot`...) doesn't go in: the bot refuses. A delegable
   `admin` one (`/gpt`, `/show`...) goes in only in an "Only" list: `-cmd` ("All but") and `bot.users = true` don't allow it, and someone
   who already uses all the common ones doesn't get it with `+cmd` (the bot refuses and asks for
@@ -302,8 +302,7 @@ commands until the interval ends:
 ⚠️ Running the same command more than 3 in a row is not allowed. Wait 2 seconds.
 ```
 
-- Aliases count as the command (`/noffa` and `/🌈` are the same); different commands count
-  separately.
+- Different commands count separately.
 - You and the admins have no limit.
 - The limits are settings: `/set flood.maxCommandRepeated 5` (`0` turns it off) and
   `/set flood.intervalCommand 10` (in seconds). See [Settings](../settings.md).

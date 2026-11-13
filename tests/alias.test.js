@@ -93,7 +93,7 @@ test('cadastro substitui o atalho e remoção aceita com ou sem barra', async ()
 
 test('recusa nomes reservados, cadastro inválido, destinos inexistentes e ciclos', async () => {
     await bot.setSetting('commands.disabled', ['/ping']);
-    for (const linha of ['/alias ping /rates USD', '/alias mudo /rates USD',
+    for (const linha of ['/alias ping /rates USD', '/alias mute /rates USD',
         '/alias all /rates USD', '/alias /all /rates USD', '/alias foo/bar /ping', '/alias foo', '/alias foo -d semaspas /rates USD',
         '/alias foo /naoexiste', '/alias foo /alias', '/alias foo /foo', '/alias foo /ping']) {
         assert.match((await bot.responder(linha))[0], /^❌/, linha);

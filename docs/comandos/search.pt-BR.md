@@ -1,4 +1,4 @@
-# `/search` (`/buscar`) · admin
+# `/search` · admin
 
 Busca mensagens no histórico do WhatsApp Web, com a mesma busca do campo de pesquisa do WhatsApp:
 vale para as mensagens que o WhatsApp Web tem, inclusive as que nunca passaram pelo cache do bot. O
@@ -23,7 +23,7 @@ o tipo e a legenda). Textos longos são cortados em 200 caracteres.
 ```text
 /search pix                 → as 10 mais recentes com "pix" neste chat
 /search -30 boleto          → até 30
-/buscar bom dia             → com espaços, sem aspas (/buscar é o mesmo que /search)
+/search bom dia             → com espaços, sem aspas (/search é o mesmo que /search)
 ```
 
 ```text

@@ -1,5 +1,5 @@
 /*
- * /get (/download), /cache (/c) e as rotinas de limpeza do cache.
+ * /get, /cache e as rotinas de limpeza do cache.
  * yt-dlp e ffmpeg são simulados: o spawn falso só cria os arquivos de saída.
  */
 const bot = require('./helpers/bot');
@@ -47,7 +47,7 @@ describe('URLs (anti-SSRF do /get)', () => {
     });
 });
 
-describe('/get (/download)', () => {
+describe('/get', () => {
     // O cache dos downloads (get.cache.tmp) tem os seus testes, mais abaixo
     beforeEach(() => bot.setSetting('get.cache.tmp', false));
 
@@ -68,7 +68,7 @@ describe('/get (/download)', () => {
     });
 
     test('-a: só o áudio em mp3', async () => {
-        await bot.executar(`/download -a ${URL}`);
+        await bot.executar(`/get -a ${URL}`);
         const ff = argsDo('ffmpeg');
         assert.ok(ff.includes('-vn') && ff.includes('libmp3lame'));
         assert.match(ff.at(-1), /_output\.mp3$/);
@@ -507,7 +507,7 @@ describe('cache dos downloads (get.cache.tmp)', () => {
     });
 });
 
-describe('/cache (/c)', () => {
+describe('/cache', () => {
     test('sem opção: conteúdo do cache e contagem de mensagens', async () => {
         await bot.executar('oi', { de: OUTRO.jid });
         const [r] = await bot.responder('/cache');

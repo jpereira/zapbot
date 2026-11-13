@@ -1,4 +1,4 @@
-# `/get` (`/download`)
+# `/get`
 
 Downloads videos from Instagram, YouTube, X/Twitter, TikTok and other sites supported by
 [yt-dlp](https://github.com/yt-dlp/yt-dlp). The URL can come as an argument or you can reply to a
@@ -125,7 +125,7 @@ blocks all access to the internal network from the bot.
 /get -ss 09:33 -es 09:45 https://youtu.be/XXXXXXXXXXX
 /get -ss -10 https://youtu.be/XXXXXXXXXXX            → the last 10 seconds
 /get -ss -01:44 -es -00:30 https://youtu.be/XXXXXXXXXXX → from 1:44 to 0:30 before the end
-/download -st -ss 3 -es 6 https://youtu.be/XXXXXXXXXXX
+/get -st -ss 3 -es 6 https://youtu.be/XXXXXXXXXXX
 (reply to a message with a link)  /get -a
 (reply to a WhatsApp video)       /get -a              → only the audio, as .mp3
 (reply to a WhatsApp video)       /get -ss 5 -es 20    → the range, as a document

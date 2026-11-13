@@ -1,4 +1,4 @@
-# `/walissu` (`/ualisu`)
+# `/walissu`
 
 Groups only: the Walissu CVE BOT picks 2 different members (not counting the bot), tags them and
 replies with a random CVE among the 50 most recently published on [NVD](https://nvd.nist.gov/) in the
@@ -6,7 +6,6 @@ last 2 days.
 
 ```text
 /walissu
-/ualisu        → the same, through the alias
 ```
 
 Illustrative example of a reply:

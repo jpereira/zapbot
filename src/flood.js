@@ -12,7 +12,7 @@ const bloqueados = new Map();   // quem → até quando o bot a ignora
 
 /**
  * @param {string} quem     o telefone (ou o id) de quem mandou
- * @param {string} comando  o nome principal (/crypto, não /creptomoeda)
+ * @param {string} comando  o nome principal (/crypto)
  * @returns {{ liberado: boolean, avisar?: boolean, segundos?: number }}
  *   avisar: acabou de passar do limite (o aviso sai uma vez só)
  */

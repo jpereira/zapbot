@@ -1,4 +1,4 @@
-# `/debug` (`/d`, `/dbg`) · admin
+# `/debug` · admin
 
 Controls the diagnostic logs in the console, with cumulative levels, regex filtering and copying to a
 WhatsApp chat. The settings are saved in the settings and survive restarts. On first boot, debug

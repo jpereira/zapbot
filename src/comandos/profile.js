@@ -13,7 +13,7 @@ const { t } = require('../i18n');
 const { printError } = require('../log');
 
 /*
- * /profile (/perfil): a foto de perfil de um contato, com o nome da sua agenda e o telefone.
+ * /profile: a foto de perfil de um contato, com o nome da sua agenda e o telefone.
  *   /profile                → no privado, a pessoa dele (o seu, no seu próprio privado);
  *                             no grupo, a foto do grupo
  *   /profile <pessoa>...    → /Nome/, @menção ou +número (vários que servem: você escolhe na lista)

@@ -1,5 +1,5 @@
 /*
- * Agenda: os lembretes (/lembrete) e as mensagens agendadas (/cron), com a verificação periódica.
+ * Agenda: os lembretes (/cron -lembrete) e as mensagens agendadas (/cron), com a verificação periódica.
  */
 
 const { enviarMidias, erroDosComandos, montarTexto, quebrarLinhas } = require('./comandosNoTexto');
@@ -17,12 +17,12 @@ const { t } = require('./i18n');
 const { REPETICOES, fmtQuando, lerQuando, partesEmBrasilia, proximaRepeticao } = require('./util/quando');
 
 /*
- * O /cron (aliases /agenda e /lembrete) tem dois modos, na mesma tabela
+ * O /cron tem dois modos, na mesma tabela
  * `schedules` e no mesmo timer:
  *   agendar  → (modo mensagem) o texto puro, como se você digitasse, no chat atual ou no do -to;
  *   lembrete → "⏰ Lembrete" no chat onde foi criado (respondendo a mensagem do
  *              comando, ou a mensagem que ele respondeu), ou no seu privado com
- *              -pv. É o modo do /lembrete e do -lembrete.
+ *              -pv. É o modo do -lembrete.
  * Os dois aceitam -repetir (-r) diario|semanal|mensal. O modo mensagem aceita
  * vários -to (um item só, com todos os destinos). Na lista, -edit <nº> troca a hora, o texto
  * ou a repetição de um item, e -pause/-resume <nº...|all> o seguram e soltam.
@@ -32,7 +32,7 @@ const { REPETICOES, fmtQuando, lerQuando, partesEmBrasilia, proximaRepeticao } =
  */
 const TIPOS = {
     lembrete: {
-        cmd: '/lembrete',
+        cmd: '/cron -lembrete',
         icone: '⏰',
         criado: 'adm.agenda.createdReminder',
         exemplo: 'adm.agenda.exReminder',
@@ -240,9 +240,8 @@ async function tratarAgenda({ msg, args, chatId, chatName, isGroup, quotedMsg })
 
     const { opt, quando, texto: digitado, destinos: destinosTexto, comDestino } = lerAgendamento(args);
 
-    // Modo lembrete: chamado como /lembrete, ou com -lembrete
-    const chamado = String(msg.body ?? '').trim().split(/\s+/, 1)[0].toLowerCase();
-    const kind = chamado === '/lembrete' || opt.lembrete ? 'lembrete' : 'agendar';
+    // Modo lembrete: com -lembrete
+    const kind = opt.lembrete ? 'lembrete' : 'agendar';
     const tipo = TIPOS[kind];
     const sintaxe = t('adm.agenda.syntax', { ex: t(tipo.exemplo) });
     const itens = await listar();

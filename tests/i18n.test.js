@@ -119,7 +119,7 @@ describe('ajuda nos dois idiomas', () => {
         assert.match(ajuda, /Usage: \/gpt \[-status\|-s\] \[question\]/);
         assert.match(ajuda, /Options:\n/);
         assert.match(ajuda, /Arguments:\n/);
-        assert.match(ajuda, /Help: -help, -h\n\nAliases: \/ai/);
+        assert.match(ajuda, /Help: -help, -h/);
         assert.doesNotMatch(ajuda, /Uso:|Opções:|Argumentos:/);
 
         const [menu] = await bot.responder('/help');

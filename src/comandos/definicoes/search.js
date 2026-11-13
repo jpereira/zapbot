@@ -7,7 +7,7 @@ const { ADMIN } = require('../../roles').ROLES;
 module.exports = {
     cmd: '/search',
     usage: '/search [-N] <text> | -read <id>',
-    aliases: ['/buscar'],
+    aliases: [],
     summary: 'Searches messages in the WhatsApp Web history',
     help: 'Searches messages in the WhatsApp Web history, including ones that never went through the bot cache (/show -q searches the cache only). In this chat; in your private chat, in all chats. Shows the date, the sender (and the chat, when searching all), the text and the id; with -read, shows the whole message.',
     cmd_opts: [

@@ -1,4 +1,4 @@
-# `/draw` (`/desenhe`, `/desenha`, `/img`) · admin
+# `/draw` · admin
 
 Role `admin`: only you and the extra admins. The owner enables it for a person or group with
 `/bot +u +cmd /draw` ([Delegating](index.md#delegating-an-admin-command)). Whoever gets it can only
@@ -14,8 +14,8 @@ code: the result is the same.
 
 ```text
 /draw um gato astronauta em aquarela
-/desenha um castelo na neve
-/img -gif um gato dançando
+/draw um castelo na neve
+/draw -gif um gato dançando
 /draw -m                       → the current model and the ones your key sees
 /draw -h                       → command help
 ```
@@ -54,11 +54,11 @@ It's the `output_format: gif` of the `gpt-image-2.6-*` models, with `frame_count
 movement.
 
 ```text
-/img -gif um gato dançando
+/draw -gif um gato dançando
 → ⏳ Processing /draw, hold on.
 → (the GIF, looping) 🎞️ um gato dançando
 
-/img -gif -f 6 -ms 300 uma bandeira ao vento
+/draw -gif -f 6 -ms 300 uma bandeira ao vento
 (respondendo uma foto)  /draw -gif como se estivesse nadando
 ```
 

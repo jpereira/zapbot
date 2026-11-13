@@ -1,4 +1,4 @@
-# `/backup` (`/bkp`) · admin
+# `/backup` · admin
 
 Database backup (`cache/zapbot.db`): one automatic per day, and from WhatsApp you can create, list,
 compare, restore, receive the file or delete. With no option, it shows the current database and the
@@ -21,7 +21,7 @@ Removing contacts or reducing the local history doesn't change the backups that 
 ```text
 /backup                                 → the current database and the backups
 /backup -now                            → creates one now
-/bkp -l                                 → the list
+/backup -l                                 → the list
 /backup -i 2                            → what's in no. 2, compared with the current database
 /backup -r 2                            → shows what will happen and asks for confirmation
 /backup -r zapbot-20261001-030000 -sim  → restores

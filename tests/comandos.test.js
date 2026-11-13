@@ -14,7 +14,7 @@ const { OUTRO } = bot;
 
 beforeEach(bot.reiniciar);
 
-describe('/help (/h)', () => {
+describe('/help', () => {
     test('sem argumento (o dono): todos os comandos ativos', async () => {
         const [r] = await bot.responder('/help');
         assert.match(r, /MENU DE AJUDA/);
@@ -39,7 +39,7 @@ describe('/help (/h)', () => {
     });
 
     test('um comando, com ou sem "/", por nome ou alias', async () => {
-        for (const linha of ['/help show', '/help /show', '/h show']) {
+        for (const linha of ['/help show', '/help /show', '/help show']) {
             const [r] = await bot.responder(linha);
             assert.match(r, /AJUDA[\s\S]*Uso: \/show/, linha);
         }
@@ -57,7 +57,7 @@ describe('/help (/h)', () => {
 
         assert.deepEqual(await bot.responder('/help show', { de: OUTRO.jid }),
             ['⛔ O /show é só do dono do bot (e dos admins).\n💡 _Veja os que você pode usar com /help_']);
-        assert.match((await bot.responder('/help cotacao', { de: OUTRO.jid }))[0], /Uso: \/rates/);
+        assert.match((await bot.responder('/help rates', { de: OUTRO.jid }))[0], /Uso: \/rates/);
 
         await bot.setSetting('bot.admins', [OUTRO.user]);
         const [admin] = await bot.responder('/help', { de: OUTRO.jid });
@@ -139,13 +139,13 @@ describe('"digitando..." ao executar um comando', () => {
     });
 });
 
-describe('/debug (/d, /dbg)', () => {
+describe('/debug', () => {
     test('-on e -off gravam o setting; sem opção mostra o estado', async () => {
         assert.deepEqual(await bot.responder('/debug -on'), ['🪲 Debug Ativado. [DEBUG0]']);
         assert.equal(bot.getSetting('debug.enabled'), true);
-        assert.deepEqual(await bot.responder('/dbg -off'), ['🪲 Debug Desativado.']);
+        assert.deepEqual(await bot.responder('/debug -off'), ['🪲 Debug Desativado.']);
         assert.equal(bot.getSetting('debug.enabled'), false);
-        assert.deepEqual(await bot.responder('/d'), ['🪲 Debug Desativado.']);
+        assert.deepEqual(await bot.responder('/debug'), ['🪲 Debug Desativado.']);
     });
 });
 
@@ -282,7 +282,7 @@ describe('/bot', () => {
     });
 });
 
-describe('/set (/config)', () => {
+describe('/set', () => {
     test('sem argumento lista todas as chaves, em ordem', async () => {
         const [r] = await bot.responder('/set');
         const chaves = [...r.matchAll(/^([a-z][\w.]+)\s{2}/gm)].map(m => m[1]);
@@ -298,7 +298,7 @@ describe('/set (/config)', () => {
     test('<chave> <valor> altera; valor inválido é recusado', async () => {
         assert.deepEqual(await bot.responder('/set show.max 10'), ['✅ *show.max* = 10']);
         assert.equal(bot.getSetting('show.max'), 10);
-        assert.deepEqual(await bot.responder('/config show.max 12'), ['✅ *show.max* = 12']);
+        assert.deepEqual(await bot.responder('/set show.max 12'), ['✅ *show.max* = 12']);
         assert.equal(bot.getSetting('show.max'), 12);
         assert.match((await bot.responder('/set show.max 500'))[0], /❌ Valor inválido para \*show.max\*: precisa estar entre 1 e 100/);
     });

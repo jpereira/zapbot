@@ -1,4 +1,4 @@
-# `/poll` (`/enquete`, `/quiz`) · admin
+# `/poll` · admin
 
 Role `admin`: só você e os admins extras. O dono libera a uma pessoa ou grupo com
 `/bot +u +cmd /poll` ([Delegando](index.md#delegando-um-comando-admin)).
@@ -16,7 +16,7 @@ começo, pode marcar várias.
 /poll Pizza ou hambúrguer? | Pizza | Hambúrguer
 /poll -r                  → o resultado da última enquete do chat
 /poll -m Quais dias você pode? | Seg | Ter | Qua | Qui | Sex
-/quiz Onde vamos?
+/poll Onde vamos?
 Praia
 Montanha
 Campo
@@ -24,8 +24,8 @@ Campo
 
 Limites do WhatsApp: pergunta com até 255 caracteres, opções com até 100 e sem repetir (maiúsculas e
 minúsculas não contam). Uma pergunta que começa com `/` ganha um `📊` na frente, para nunca parecer
-um comando. O `/quiz` é
-só um atalho: o WhatsApp Web não oferece o modo quiz (com resposta certa) para bots.
+um comando. O WhatsApp Web
+não oferece o modo quiz (com resposta certa) para bots.
 
 ## Resultado
 

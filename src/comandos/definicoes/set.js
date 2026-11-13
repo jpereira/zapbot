@@ -7,7 +7,7 @@ const { ADMIN } = require('../../roles').ROLES;
 module.exports = {
     cmd: '/set',
     usage: '/set [OPTION] [<key> [<value>]]',
-    aliases: ['/config'],
+    aliases: [],
     summary: 'Lists, shows and changes the bot settings',
     help: 'Lists, shows and changes the bot settings; on lists, -append (-a) and -rm add and remove items. In your private chat, also shows config/.env (read-only).',
     cmd_opts: [

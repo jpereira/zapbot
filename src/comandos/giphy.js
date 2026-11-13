@@ -1,5 +1,5 @@
 /*
- * Comando /giphy (alias /gif).
+ * Comando /giphy.
  */
 
 const { MessageMedia } = require('whatsapp-web.js');

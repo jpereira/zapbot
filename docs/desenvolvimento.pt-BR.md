@@ -93,7 +93,7 @@ src/
   sistema.js            /bot -info: versões (Node.js, whatsapp-web.js, Chromium, yt-dlp, ffmpeg...), as novas e o sistema
   moedas.js, cotacoes.js, alertasPreco.js   /crypto, /rates e alertas de preço
   aliases.js            resolução, listagem e execução (as de texto) dos atalhos persistidos no banco
-  agenda.js             /cron (e /lembrete): leitura, lista e envio na hora
+  agenda.js             /cron: leitura, lista e envio na hora
   notas.js              /notes: anotações, #tags (e a descrição), imagens, o PDF do -export e o -alerta (aviso numa data/hora, uma vez)
   diagnostico.js        /bot -test: a bateria de testes (cache, disco, banco, WhatsApp, internet, velocidade, SMTP...)
   imap.js               /bot -flush-email: cliente IMAP mínimo (conta e esvazia Sent e Trash)
@@ -196,7 +196,7 @@ devolve `null`, como quando o WhatsApp não deixa editar.
 | `ascii.test.js` | O `/ascii`: as 5 linhas dentro do bloco de código, a quebra pela largura (`-w`), o `-c`, o texto da mensagem respondida, acentos e erros |
 | `backup.test.js` | `/backup` (criação, lista, restauração, envio no privado, por e-mail e com um ou vários `-to`) e o backup diário |
 | `batch.test.js` | O `/batch`: a separação em blocos (linhas em branco, URLs e `/` que não é comando), o resumo, o `-dry`, o `-stop`, a recusa de `/batch` dentro de `/batch` e o uso só pelo dono |
-| `block.test.js` | `/block` (`/bloquear`) e `/unblock`: pelo nome, pelo número, respondendo, a lista (com os `@lid` convertidos para o telefone) e o nº dela, e o `/unblock -all` |
+| `block.test.js` | `/block` e `/unblock`: pelo nome, pelo número, respondendo, a lista (com os `@lid` convertidos para o telefone) e o nº dela, e o `/unblock -all` |
 | `bump.test.js` | Release e bump em repositórios temporários, versões dos exemplos, tags existentes e prévia sem alterações |
 | `canais.test.js` | Identificação de canais `@newsletter` nos avisos e no `/show` |
 | `comandos.test.js` | `/help` (só com os comandos de quem pediu), `/debug`, `/uptime`, `/version`, `/ping`, `/noffa`, `/bot` (o `-h` em blocos, o status sem opção, o `-on`/`-off`, o `-list-users`, e o `-info`, com as versões novas do yt-dlp e do whatsapp-web.js), `/set` (e o `-append`/`-rm`) |
@@ -223,9 +223,9 @@ devolve `null`, como quando o WhatsApp não deixa editar.
 | `presenca.test.js` | Leitura de presença por LID, assinatura compartilhada, cache e ausência de horários válidos sem fabricar dados |
 | `saudacoes.test.js` | `/welcome` e `/goodbye`: o texto por grupo (`{name}`, `{group}`, menção), `-on`, `-off`, `-test`, os eventos `group_join`/`group_leave` e quem não dispara |
 | `ocr-qr-carbon.test.js` | `/ocr` (a foto para o ChatGPT), `/tts`, `/qr` e `/decodeqr` (`-d`/`-e`, leitura dos pixels com o jsqr), `/carbon` (SVG, temas, limites) e `/profile -set` (grupo, conta, recusa) |
-| `profile.test.js` | O `/profile` (`/perfil`): a foto com a legenda `Contato: nome da agenda <telefone>` (por nome, menção e número), o nome da agenda no lugar do pushname, o seu perfil e o de quem escreveu a mensagem respondida, várias pessoas, sem foto, o download que falha, o `@lid`, `-mask`, grupo recusado e o uso só pelo dono |
+| `profile.test.js` | O `/profile`: a foto com a legenda `Contato: nome da agenda <telefone>` (por nome, menção e número), o nome da agenda no lugar do pushname, o seu perfil e o de quem escreveu a mensagem respondida, várias pessoas, sem foto, o download que falha, o `@lid`, `-mask`, grupo recusado e o uso só pelo dono |
 | `reacoes.test.js` | Reações removidas ou trocadas: o evento `message_reaction` (e o que não gera aviso), o aviso `show.alert.reaction`, o `/show -r`, o `/mute -r`, o `/bot -status` e a limpeza |
-| `search.test.js` | `/search` (`/buscar`): neste chat, em todos no seu privado, o `-N` e o limite, mídias e textos longos |
+| `search.test.js` | `/search`: neste chat, em todos no seu privado, o `-N` e o limite, mídias e textos longos |
 | `sticker-pos.test.js` | `/sticker -pos`: o recorte quadrado no topo, no meio (padrão) ou embaixo |
 | `stats.test.js`, `watch.test.js` | `/stats` (com o `/chat/`, o `-l` e o `-flush`) e `/watch` (e um ou vários `-to`) |
 | `status.test.js` | `/bot -status`: o relatório (com o aviso `show.alert.*` desligado e os silenciados do `/mute`) e o envio diário (e o `-to`: pessoas, grupos e e-mails) |
@@ -344,7 +344,7 @@ Cada entrada segue este formato:
 {
     cmd: '/get',                       // nome principal
     usage: '/get [OPTION]... <url>',   // linha "Usage:" no -help (formas com "  or  ": uma por linha)
-    aliases: ['/download'],            // nomes alternativos
+    aliases: ['/dl'],                  // nomes alternativos
     summary: 'Downloads video or audio', // o que faz, numa linha (a lista do /help)
     help: 'Downloads video or audio...', // descrição completa (o -help)
     ex: ['/get <url>', '/get -a <url>'], // exemplos (opcional), um por linha depois do texto

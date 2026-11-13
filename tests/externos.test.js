@@ -95,7 +95,7 @@ describe('/cve', () => {
     });
 });
 
-describe('/weather (/t, /weather)', () => {
+describe('/weather', () => {
     const local = { name: 'Niterói', admin1: 'Rio de Janeiro', country: 'Brasil', latitude: -22.9, longitude: -43.1 };
     const previsao = (temp, codigo = 0) => ({
         current: { temperature_2m: temp, apparent_temperature: temp + 1, relative_humidity_2m: 70, weather_code: codigo, wind_speed_10m: 12.4 },
@@ -239,7 +239,7 @@ describe('/news', () => {
     });
 });
 
-describe('/gpt (/ai)', () => {
+describe('/gpt', () => {
     // O rodapé de status vem ligado por padrão: os testes comparam a resposta exata, sem ele
     beforeEach(() => bot.setSetting('openai.status', false));
 
@@ -252,7 +252,7 @@ describe('/gpt (/ai)', () => {
         rede.responder('post', 'api.openai.com', { choices: [{ message: { content: ' Resposta! ' } }] });
 
         const citada = bot.criarMensagem({ texto: 'texto citado', de: bot.OUTRO.jid });
-        assert.deepEqual(await bot.responder('/ai resuma', { citada }), ['🤖 Resposta!']);
+        assert.deepEqual(await bot.responder('/gpt resuma', { citada }), ['🤖 Resposta!']);
 
         const { cfg } = rede.chamadas.at(-1);
         assert.equal(cfg.headers.Authorization, 'Bearer sk-teste');
@@ -312,7 +312,7 @@ describe('/gpt (/ai)', () => {
         rede.responder('post', 'api.openai.com/v1/chat/completions', { choices: [{ message: { content: 'Oi.' } }] });
 
         assert.deepEqual(await bot.responder('/gpt -price'), ['❌ Opção desconhecida: -price\n💡 _Veja as opções com /gpt -h|-help_']);
-        assert.deepEqual(await bot.responder('/ai -x oi'), ['❌ Opção desconhecida: -x\n💡 _Veja as opções com /gpt -h|-help_']);
+        assert.deepEqual(await bot.responder('/gpt -x oi'), ['❌ Opção desconhecida: -x\n💡 _Veja as opções com /gpt -h|-help_']);
         assert.equal(rede.chamadas.length, 0);
 
         // Só a 1ª palavra: no meio do texto, o "-price" é pergunta; "-1" e "- item" também
@@ -955,7 +955,7 @@ describe('/gpt (/ai)', () => {
     });
 });
 
-describe('/draw (/desenha, /draw, /img)', () => {
+describe('/draw', () => {
     const PNG_4X2 = Buffer.from('png:4x2').toString('base64');
     const GIF = Buffer.from('GIF89a').toString('base64');
     const chamadasDeImagem = () => rede.chamadas.filter(c => /\/images\/(generations|edits)$/.test(c.url));
@@ -988,7 +988,7 @@ describe('/draw (/desenha, /draw, /img)', () => {
         assert.equal(cfg.headers.Authorization, 'Bearer sk-teste');
         assert.ok(cfg.timeout >= 180000, 'imagem leva mais que 1 minuto: no mínimo 3');
 
-        for (const alias of ['/desenha', '/draw', '/img']) {
+        for (const alias of ['/draw', '/draw', '/draw']) {
             assert.equal((await bot.executar(`${alias} um cachorro`)).at(-1).content.data, 'UE5H');
         }
         // Respondendo uma mensagem, o texto dela entra antes do pedido
@@ -1016,7 +1016,7 @@ describe('/draw (/desenha, /draw, /img)', () => {
     test('-gif: GIF 512x512 de 9 quadros (settings), -frames e -ms sobrepõem e valem como -gif; vira MP4 em loop', async () => {
         rede.responder('post', 'api.openai.com/v1/images/generations', { data: [{ b64_json: GIF }] });
 
-        const gif = (await bot.executar('/img -gif um gato dançando')).at(-1);
+        const gif = (await bot.executar('/draw -gif um gato dançando')).at(-1);
         assert.equal(gif.content.mimetype, 'video/mp4');
         assert.equal(gif.options.sendVideoAsGif, true);
         assert.equal(gif.options.caption, '🎞️ um gato dançando');
@@ -1127,7 +1127,7 @@ describe('/draw (/desenha, /draw, /img)', () => {
     });
 });
 
-describe('/tldr (/resumo)', () => {
+describe('/tldr', () => {
     const { lerPeriodo } = bot.src('comandos/tldr');
     beforeEach(() => bot.setSetting('openai.status', false));
 
@@ -1230,7 +1230,7 @@ describe('/tldr (/resumo)', () => {
         await bot.responder('/tldr 2h');
         assert.doesNotMatch(rede.chamadas.at(-1).cfg.body.messages[1].content, /velha/);
 
-        await bot.responder('/resumo -4');
+        await bot.responder('/tldr -4');
         const texto = rede.chamadas.at(-1).cfg.body.messages[1].content;
         assert.match(texto, /\(4 mensagens\)/);
         assert.match(texto, /velha 3[\s\S]*nova 3/);
@@ -1309,7 +1309,7 @@ describe('/tldr (/resumo)', () => {
     });
 });
 
-describe('/translate (/tr, /translate)', () => {
+describe('/translate', () => {
     const traducao = (text, iso = 'en') => ({ text, from: { language: { iso, didYouMean: false } } });
     const erroDoPacote = (statusText, status, nome = 'Error') => {
         const err = new Error(statusText, { cause: { response: { status } } });
@@ -1393,7 +1393,7 @@ describe('/translate (/tr, /translate)', () => {
     });
 });
 
-describe('/giphy (/gif)', () => {
+describe('/giphy', () => {
     test('sem chave', async () => {
         assert.match((await bot.responder('/giphy'))[0], /⚠️ Chave do GIPHY não configurada/);
     });
@@ -1409,7 +1409,7 @@ describe('/giphy (/gif)', () => {
         assert.equal(r.content.mimetype, 'video/mp4');
         assert.equal(r.options.sendVideoAsGif, true);
 
-        await bot.executar('/gif gatos');
+        await bot.executar('/giphy gatos');
         assert.equal(rede.chamadas.at(-2).cfg.params.tag, 'gatos');
     });
 
@@ -1425,7 +1425,7 @@ describe('/giphy (/gif)', () => {
 
         for (const entrada of [id, `https://giphy.com/gifs/reaction-${id}?origem=chat`]) {
             const antes = rede.chamadas.length;
-            const [r] = await bot.executar(`/gif ${entrada}`);
+            const [r] = await bot.executar(`/giphy ${entrada}`);
             const consulta = rede.chamadas[antes];
             assert.equal(consulta.url, endpoint);
             assert.deepEqual(consulta.cfg.params, { api_key: 'giphy' });
@@ -1440,9 +1440,9 @@ describe('/giphy (/gif)', () => {
     test('nenhum GIF; GIPHY fora do ar', async () => {
         await bot.setSetting('giphy.api.key', 'giphy');
         rede.responder('get', 'api.giphy.com', { data: {} });
-        assert.deepEqual(await bot.responder('/gif'), ['❌ Nenhum GIF encontrado.']);
+        assert.deepEqual(await bot.responder('/giphy'), ['❌ Nenhum GIF encontrado.']);
         rede.responder('get', 'api.giphy.com', erroHttp(500));
-        assert.deepEqual(await bot.responder('/gif', { erroEsperado: true }),
+        assert.deepEqual(await bot.responder('/giphy', { erroEsperado: true }),
             ['❌ Não consegui buscar esse GIF.']);
     });
 });
@@ -1467,7 +1467,7 @@ describe('/meme', () => {
     });
 });
 
-describe('/pixelart (/ansi, /px)', () => {
+describe('/pixelart', () => {
     const { lerSauce, reiniciarPacks } = bot.src('comandos/pixelart');
 
     beforeEach(reiniciarPacks);
@@ -1501,7 +1501,7 @@ describe('/pixelart (/ansi, /px)', () => {
     test('pack padrão do setting, com a autoria do SAUCE na legenda e em HD', async () => {
         simularPack('chuck-norris-lvl', { arquivos: ['FILE_ID.DIZ', 'LEIAME.TXT', 'CHUCK.ANS'], sauce: { titulo: 'Chuck', autor: 'lord jazz', grupo: 'ACiD', data: '20210401' } });
 
-        const [r] = await bot.executar('/px');
+        const [r] = await bot.executar('/pixelart');
         assert.equal(r.content.mimetype, 'image/png');
         assert.equal(r.options.caption, '🎨 *Chuck*\n👤 lord jazz / ACiD\n📦 chuck-norris-lvl (01/04/2021)\n🔗 https://16colo.rs/pack/chuck-norris-lvl/CHUCK.ANS');
         assert.equal(r.options.sendMediaAsHd, true);
@@ -1548,7 +1548,7 @@ describe('/pixelart (/ansi, /px)', () => {
     });
 });
 
-describe('/joke (/piada, /humor)', () => {
+describe('/joke', () => {
     const { PIADAS, reiniciarPiadas } = bot.src('comandos/joke');
 
     test('pergunta e resposta, sem rede', async () => {
@@ -1561,7 +1561,7 @@ describe('/joke (/piada, /humor)', () => {
     test('nenhuma se repete até todas saírem, nem na virada de uma rodada para a outra', async () => {
         reiniciarPiadas();
         const contadas = [];
-        for (let i = 0; i < PIADAS.length * 10; i++) contadas.push((await bot.responder(i % 2 ? '/piada' : '/humor'))[0]);
+        for (let i = 0; i < PIADAS.length * 10; i++) contadas.push((await bot.responder(i % 2 ? '/joke' : '/joke'))[0]);
 
         for (let r = 0; r < 10; r++) {
             const rodada = contadas.slice(r * PIADAS.length, (r + 1) * PIADAS.length);

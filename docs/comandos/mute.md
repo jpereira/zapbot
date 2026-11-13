@@ -1,4 +1,4 @@
-# `/mute` (`/mudo`) · admin
+# `/mute` · admin
 
 Mutes the alerts that arrive in your private chat when a person, a group or a community deletes
 messages, edits messages, deletes statuses or removes (or changes) a reaction. **Only the alert goes

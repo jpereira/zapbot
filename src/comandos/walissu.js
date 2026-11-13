@@ -1,5 +1,5 @@
 /*
- * Comando /walissu (alias /ualisu).
+ * Comando /walissu.
  */
 
 const { enviarSorteio, sortearParticipantes } = require('./bills');

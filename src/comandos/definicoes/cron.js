@@ -7,9 +7,9 @@ const { ADMIN } = require('../../roles').ROLES;
 module.exports = {
     cmd: '/cron',
     usage: '/cron <when> [OPTION] <text>  or  /cron -edit <n> [when] [text]',
-    aliases: ['/agenda', '/lembrete'],
+    aliases: [],
     summary: 'Schedules a text or command for a set time',
-    help: 'At the set time, sends the text as if you typed it (in the current chat or the -to one) or, as /lembrete (or with -lembrete), a ⏰ Lembrete in this chat or in your private chat (-pv). In the text, {/command args} runs at send time and the reply takes its place (query commands only: /crypto, /rates, /weather...). A typed \\n becomes a line break.',
+    help: 'At the set time, sends the text as if you typed it (in the current chat or the -to one) or, with -lembrete, a ⏰ Lembrete in this chat or in your private chat (-pv). In the text, {/command args} runs at send time and the reply takes its place (query commands only: /crypto, /rates, /weather...). A typed \\n becomes a line break.',
     ex: [
         '/cron 09h -r diario -to /Família/ Good morning! {/crypto BTC}',
         '/cron 8h -r diario Orca {/defi orca}\\n Prjx {/defi prjx}'
@@ -24,7 +24,7 @@ module.exports = {
         {
             opts: ['lembrete', 'lem'],
             values: [],
-            desc: 'Reminder mode (same as calling it as /lembrete): ⏰ Lembrete replying to the command message.'
+            desc: 'Reminder mode: ⏰ Lembrete replying to the command message.'
         },
         {
             opts: ['list', 'l'],

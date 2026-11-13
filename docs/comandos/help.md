@@ -1,4 +1,4 @@
-# `/help` (`/h`)
+# `/help`
 
 Shows the command menu, or the help for a single command. Everyone sees only what they can use:
 
@@ -59,7 +59,7 @@ For the full help of a command:
 ```text
 /help get
 /help alias        → lists the registered shortcuts you can run
-/h /show
+/help /show
 /help defi orca    → only the Orca help in /defi (same as /defi orca -help)
 /help defi aave    → only the Aave V3 help
 /alias -help       → help for registering, listing and removing shortcuts

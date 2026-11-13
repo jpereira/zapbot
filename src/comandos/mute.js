@@ -11,7 +11,7 @@ const { descreverDestino, resolverOuEscolher } = require('../destinos');
 const { TIPOS, chaveDoId, origemDoAviso } = require('../mudo');
 
 /*
- * /mute (/mudo, /m) <opção> </contato ou grupo/|@menção|+número>
+ * /mute <opção> </contato ou grupo/|@menção|+número>
  *   -d (-deleted)  silencia os avisos de mensagens apagadas
  *   -e (-edited)   silencia os avisos de edições
  *   -s (-status)   silencia os avisos de status apagados

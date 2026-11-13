@@ -7,7 +7,7 @@ const { USER } = require('../../roles').ROLES;
 module.exports = {
     cmd: '/whois',
     usage: '/whois [person...]',
-    aliases: ['/who', '/id'],
+    aliases: [],
     summary: 'Shows who someone is and what they can do in the bot, in this chat',
     help: 'Shows who someone is and what they can do in the bot, in this chat: 🤖 owner, 👑 admin (+a), 🗣️ user (+u) or 🚫 no permission; who has limited commands (/bot +cmd), with their list. Alone, shows you. With people (or replying to a message), shows them, but only for the owner and admins.',
     ex: ['/whois', '/whois /Rafael Silva/'],

@@ -7,7 +7,7 @@ const { ADMIN } = require('../../roles').ROLES;
 module.exports = {
     cmd: '/mute',
     usage: '/mute [OPTION]... [/contact or group/|@mention|+number]',
-    aliases: ['/mudo'],
+    aliases: [],
     summary: 'Mutes the notices of deleted, edited and reactions from a person',
     help: 'Mutes the notices of deleted, edited, deleted status and/or removed or changed reactions from a person, a group or a community. Just the target, with no option, mutes everything (the -a). Replying to a notice mutes where it came from: the person (private and status), the group or the community. The messages stay saved for /show. /watch also does not notify your private chat about muted ones, of any type (the -to destinations still receive). With nothing, lists the muted ones.',
     cmd_opts: [

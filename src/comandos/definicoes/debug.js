@@ -7,7 +7,7 @@ const { ADMIN } = require('../../roles').ROLES;
 module.exports = {
     cmd: '/debug',
     usage: '/debug [OPTION]',
-    aliases: ['/d', '/dbg'],
+    aliases: [],
     summary: 'Debug logs with levels and filter',
     help: 'Debug logs with cumulative levels DEBUG0 to DEBUG3, a /regex/flags filter and a copy to a WhatsApp chat. The settings are saved in the debug.* settings.',
     ex: ['/debug -on', '/debug -on -level 2 -filter /sapato/ -copy-to /Jorge Pereira/'],

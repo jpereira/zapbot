@@ -1,5 +1,5 @@
 /*
- * /backup (/bkp): criação, lista, detalhes, restauração, envio, remoção e o backup diário.
+ * /backup: criação, lista, detalhes, restauração, envio, remoção e o backup diário.
  */
 const bot = require('./helpers/bot');
 
@@ -22,7 +22,7 @@ beforeEach(async () => {
 const contar = async (tabela) => (await bot.dbGet(`SELECT COUNT(*) AS n FROM ${tabela}`)).n;
 const nomes = async () => (await listarBackups()).map(b => b.nome);
 
-describe('/backup (/bkp)', () => {
+describe('/backup', () => {
     test('-now: banco compactado em cache/backups, com o .json das entradas', async () => {
         await bot.setSetting('watch.rules', 'promoção');
         await bot.entregar(bot.criarMensagem({ texto: 'oi', de: bot.OUTRO.jid }));
@@ -71,7 +71,7 @@ describe('/backup (/bkp)', () => {
     });
 
     test('sem opção: banco atual, último backup e o próximo automático', async () => {
-        let [r] = await bot.responder('/bkp');
+        let [r] = await bot.responder('/backup');
         assert.match(r, /💾 \*Backup\*\n\n• 🗄️ \*Banco atual:\* .*\n   ◦ .*\n(   ◦ .*\n)*• 📦 \*Backups:\* 0 em .*backups\n• 🕐 \*Último:\* nenhum\n• ⏭️ \*Próximo automático:\* .* _\(todo dia às 3h, guarda 7\)_/);
 
         await criarBackup();
@@ -102,7 +102,7 @@ describe('/backup (/bkp)', () => {
     test('-r pede confirmação; com -sim restaura tudo e guarda o estado de antes', async () => {
         await bot.setSetting('watch.rules', 'promoção');
         await bot.setSetting('tempo.city', 'Recife');
-        await bot.responder('/lembrete +2h antes do backup');
+        await bot.responder('/cron -lembrete +2h antes do backup');
         const b = await criarBackup();
 
         // Depois do backup

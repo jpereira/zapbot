@@ -11,8 +11,8 @@
       "values": [],
       "desc": "GIF animado (modelo openai.image.gifModel; só os gpt-image-2.6-*). Numa foto, ou respondendo uma, anima a foto. Os quadros e o tempo de cada um são os settings openai.gif.frames e openai.gif.frameMs.",
       "ex": [
-        "/img -gif um gato dançando",
-        "/img -gif a bandeira ao vento (respondendo uma foto)"
+        "/draw -gif um gato dançando",
+        "/draw -gif a bandeira ao vento (respondendo uma foto)"
       ]
     },
     {
@@ -25,7 +25,7 @@
       ],
       "desc": "Quadros do GIF, de 2 a 16 (padrão: o setting openai.gif.frames, 9). Vale como -gif; quanto mais quadros, mais caro.",
       "ex": [
-        "/img -f 6 uma bandeira ao vento"
+        "/draw -f 6 uma bandeira ao vento"
       ]
     },
     {
@@ -37,7 +37,7 @@
       ],
       "desc": "Duração de cada quadro do GIF, de 20 a 2000 ms (padrão: o setting openai.gif.frameMs, 200). Vale como -gif.",
       "ex": [
-        "/img -gif -f 6 -ms 300 uma bandeira ao vento"
+        "/draw -gif -f 6 -ms 300 uma bandeira ao vento"
       ]
     },
     {

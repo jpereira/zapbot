@@ -1,4 +1,4 @@
-# `/block` (`/bloquear`) · admin
+# `/block` · admin
 
 Blocks one or several people on your WhatsApp account, like **Block** on the phone: they can no
 longer message or call you. Replying to a message, it blocks whoever wrote it. With nothing, it lists

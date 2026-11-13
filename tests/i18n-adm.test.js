@@ -41,7 +41,7 @@ test('/alias, /batch e /debug em inglês: erros de uso', async () => {
 
 test('/cron em inglês: lista vazia, criar lembrete e erro de nº', async () => {
     assert.match((await bot.responder('/cron'))[0], /^📅 Nothing scheduled\.\n💡 _E\.g\.: \/cron friday 18h/);
-    assert.match((await bot.responder('/lembrete +2h pay the bill'))[0], /^⏰ \*Reminder created\* for \*.+\* in this chat\.\n📝 pay the bill$/);
+    assert.match((await bot.responder('/cron -lembrete +2h pay the bill'))[0], /^⏰ \*Reminder created\* for \*.+\* in this chat\.\n📝 pay the bill$/);
     assert.match((await bot.responder('/cron -rm 7'))[0], /^❌ No\. 7 does not exist\. Nothing was removed;/);
 });
 

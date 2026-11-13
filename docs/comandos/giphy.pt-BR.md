@@ -1,4 +1,4 @@
-# `/giphy` (`/gif`)
+# `/giphy`
 
 Envia um GIF do GIPHY como vídeo em loop: aleatório por tag ou específico por URL ou ID. Sem
 argumento usa o setting `gif.tag`. Precisa de uma chave do GIPHY: `GIPHY_API_KEY` no `config/.env`
@@ -7,7 +7,6 @@ ou, se ela não existir, o setting `giphy.api.key` (`/set giphy.api.key <chave>`
 ```text
 /giphy          → tag padrão (setting gif.tag)
 /giphy gatos    → GIF com a tag "gatos"
-/gif gatos      → o mesmo, pelo alias
 /giphy https://giphy.com/gifs/h5WUvmDSB0njFcFeCE
 /giphy h5WUvmDSB0njFcFeCE  → o mesmo GIF pelo ID
 ```

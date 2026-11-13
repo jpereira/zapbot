@@ -1,5 +1,5 @@
 /*
- * Comando /cron (aliases /agenda e /lembrete; a lógica fica no agenda.js).
+ * Comando /cron (a lógica fica no agenda.js).
  */
 
 const { tratarAgenda } = require('../agenda');

@@ -93,7 +93,7 @@ src/
   sistema.js            /bot -info: versions (Node.js, whatsapp-web.js, Chromium, yt-dlp, ffmpeg...), the new ones and the system
   moedas.js, cotacoes.js, alertasPreco.js   /crypto, /rates and price alerts
   aliases.js            resolution, listing and execution (of the text ones) of the shortcuts persisted in the database
-  agenda.js             /cron (and /lembrete): reading, list and send on time
+  agenda.js             /cron: reading, list and send on time
   notas.js              /notes: notes, #tags (and the description), images, the -export PDF and the -alerta (a notice at a date/time, once)
   diagnostico.js        /bot -test: the test battery (cache, disk, database, WhatsApp, internet, speed, SMTP...)
   imap.js               /bot -flush-email: minimal IMAP client (logs in and empties Sent and Trash)
@@ -199,7 +199,7 @@ The messages the bot sends have whatsapp-web.js's `edit()`: it swaps the text in
 | `ascii.test.js` | `/ascii`: the 5 lines inside the code block, wrapping by width (`-w`), `-c`, the replied message's text, accents and errors |
 | `backup.test.js` | `/backup` (creation, list, restore, sending in private, by email and with one or several `-to`) and the daily backup |
 | `batch.test.js` | `/batch`: the split into blocks (blank lines, URLs and a `/` that isn't a command), the summary, `-dry`, `-stop`, the refusal of `/batch` inside `/batch` and owner-only use |
-| `block.test.js` | `/block` (`/bloquear`) and `/unblock`: by name, by number, replying, the list (with the `@lid` converted to the phone number) and its number, and `/unblock -all` |
+| `block.test.js` | `/block` and `/unblock`: by name, by number, replying, the list (with the `@lid` converted to the phone number) and its number, and `/unblock -all` |
 | `bump.test.js` | Release and bump in temporary repositories, example versions, existing tags and preview without changes |
 | `canais.test.js` | Identification of `@newsletter` channels in the notices and in `/show` |
 | `comandos.test.js` | `/help` (only with the commands of whoever asked), `/debug`, `/uptime`, `/version`, `/ping`, `/noffa`, `/bot` (the `-h` in blocks, the status without option, `-on`/`-off`, `-list-users`, and `-info`, with the new yt-dlp and whatsapp-web.js versions), `/set` (and `-append`/`-rm`) |
@@ -226,9 +226,9 @@ The messages the bot sends have whatsapp-web.js's `edit()`: it swaps the text in
 | `presenca.test.js` | Presence reading by LID, shared subscription, cache and absence of valid times without fabricating data |
 | `saudacoes.test.js` | `/welcome` and `/goodbye`: the text per group (`{name}`, `{group}`, mention), `-on`, `-off`, `-test`, the `group_join`/`group_leave` events and who doesn't trigger them |
 | `ocr-qr-carbon.test.js` | `/ocr` (photo to ChatGPT), `/tts`, `/qr` and `/decodeqr` (`-d`/`-e`, reading the pixels with jsqr), `/carbon` (SVG, themes, limits) and `/profile -set` (group, account, refusal) |
-| `profile.test.js` | `/profile` (`/perfil`): the photo with the caption `Contato: nome da agenda <telefone>` (by name, mention and number), the contacts name instead of the pushname, your profile and that of whoever wrote the replied message, several people, no photo, a failing download, the `@lid`, `-mask`, group refused and owner-only use |
+| `profile.test.js` | `/profile`: the photo with the caption `Contato: nome da agenda <telefone>` (by name, mention and number), the contacts name instead of the pushname, your profile and that of whoever wrote the replied message, several people, no photo, a failing download, the `@lid`, `-mask`, group refused and owner-only use |
 | `reacoes.test.js` | Removed or changed reactions: the `message_reaction` event (and what doesn't generate a notice), the `show.alert.reaction` notice, `/show -r`, `/mute -r`, `/bot -status` and the cleanup |
-| `search.test.js` | `/search` (`/buscar`): in this chat, in all of them in your private chat, `-N` and the limit, media and long texts |
+| `search.test.js` | `/search`: in this chat, in all of them in your private chat, `-N` and the limit, media and long texts |
 | `sticker-pos.test.js` | `/sticker -pos`: the square crop at the top, middle (default) or bottom |
 | `stats.test.js`, `watch.test.js` | `/stats` (with `/chat/`, `-l` and `-flush`) and `/watch` (and one or several `-to`) |
 | `status.test.js` | `/bot -status`: the report (with the `show.alert.*` notice off and the ones muted by `/mute`) and the daily send (and `-to`: people, groups and emails) |
@@ -348,7 +348,7 @@ loop back). Each entry follows this format:
 {
     cmd: '/get',                       // main name
     usage: '/get [OPTION]... <url>',   // "Usage:" line in -help (forms with "  or  ": one per line)
-    aliases: ['/download'],            // alternative names
+    aliases: ['/dl'],                  // alternative names
     summary: 'Downloads video or audio', // what it does, in one line (the /help list)
     help: 'Downloads video or audio...', // full description (the -help)
     ex: ['/get <url>', '/get -a <url>'], // examples (optional), one per line after the text

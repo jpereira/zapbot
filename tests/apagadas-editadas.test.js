@@ -1,6 +1,6 @@
 /*
  * Mensagens apagadas e editadas: os eventos do WhatsApp e os comandos
- * /show (/s): as apagadas (padrão, ou -d) e as editadas (-e).
+ * /show: as apagadas (padrão, ou -d) e as editadas (-e).
  */
 const bot = require('./helpers/bot');
 
@@ -208,7 +208,7 @@ describe('evento: mensagem editada', () => {
     });
 });
 
-describe('/show (/s)', () => {
+describe('/show', () => {
     test('sem apagadas neste chat', async () => {
         assert.deepEqual(await bot.responder('/show'), ['♻️ Nenhuma mensagem apagada registrada neste chat.']);
     });
@@ -526,12 +526,10 @@ describe('/show -e (editadas)', () => {
         assert.equal((await bot.responder('/show -d -e -2'))[0], '🗄️ *2 mensagens* (🗑️ 1 · ✏️ 1)');
     });
 
-    test('/edit e /e não existem mais', async () => {
+    test('/edit não existe mais', async () => {
         await mensagemEditada('x', 'y');
         assert.deepEqual(await bot.responder('/edit'), ["⚠️ Comando '/edit' desconhecido, tente: /help"]);
-        // O /e é o começo de mais de um (o /poll, o /everybody...): o bot lista os possíveis; o /enq é só o /poll
-        assert.match((await bot.responder('/e'))[0], /^🤔 Comando '\/e' ambíguo\. Possíveis comandos: .*\/everybody.*\/poll/);
-        assert.deepEqual(await bot.responder('/enq'), await bot.responder('/poll'));
+        assert.deepEqual(await bot.responder('/enquete'), ["⚠️ Comando '/enquete' desconhecido, tente: /help"]);
     });
 
     test('a última e as N últimas, com antes e depois', async () => {

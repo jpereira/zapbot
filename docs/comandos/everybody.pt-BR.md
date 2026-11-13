@@ -1,4 +1,4 @@
-# `/everybody` (`/todos`, `/todes`) · admin
+# `/everybody` · admin
 
 Role `admin`: só você e os admins extras. O dono libera a uma pessoa ou grupo com
 `/bot +u +cmd /everybody` ([Delegando](index.md#delegando-um-comando-admin)).
@@ -8,6 +8,4 @@ mencionando todos os participantes (exceto você); sem mais ninguém no grupo, n
 
 ```text
 /everybody
-/todos          → o mesmo, pelo alias
-/todes          → o mesmo, pelo alias
 ```

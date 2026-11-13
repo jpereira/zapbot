@@ -1,5 +1,5 @@
 /*
- * /mute (/mudo, /m) e /unmute: silenciar os avisos de apagadas, editadas e status
+ * /mute e /unmute: silenciar os avisos de apagadas, editadas e status
  * apagados de uma pessoa, de um grupo ou de uma comunidade, e desfazer.
  */
 const bot = require('./helpers/bot');
@@ -34,7 +34,7 @@ async function editada(texto, novo, opcoes = {}) {
 
 const hits = () => bot.dbAll('SELECT target_id, kind FROM mute_hits ORDER BY id');
 
-describe('/mute (/mudo, /m)', () => {
+describe('/mute', () => {
     test('lerMudo: opções antes do alvo; /nome/ e aspas', () => {
         assert.deepEqual([...lerMudo('-d -e /Grupo L200/').colunas], ['deleted', 'edited']);
         assert.equal(lerMudo('-d -e /Grupo L200/').alvo, 'Grupo L200');
@@ -174,8 +174,8 @@ describe('/mute (/mudo, /m)', () => {
         assert.deepEqual((await bot.dbAll('SELECT target_id FROM mutes')).map(m => m.target_id), [CICLANO.jid]);
     });
 
-    test('/mudo é o /mute', async () => {
-        assert.match((await bot.responder('/mudo -d /Grupo L200/'))[0], /^🔇 \*Silenciado:\* 👥 Grupo sobre L200 — apagadas/);
+    test('/mute é o /mute', async () => {
+        assert.match((await bot.responder('/mute -d /Grupo L200/'))[0], /^🔇 \*Silenciado:\* 👥 Grupo sobre L200 — apagadas/);
         assert.match((await bot.responder('/mute'))[0], /^🔇 \*Silenciados\* \(1\)/);
     });
 

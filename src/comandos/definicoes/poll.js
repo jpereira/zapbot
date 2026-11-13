@@ -7,7 +7,7 @@ const { ADMIN } = require('../../roles').ROLES;
 module.exports = {
     cmd: '/poll',
     usage: '/poll [-m] <question> | <option 1> | <option 2> [| ...]  or  /poll -r',
-    aliases: ['/enquete', '/quiz'],
+    aliases: [],
     summary: 'Creates a poll in the chat or shows the result',
     help: 'Creates a poll in the chat (separate the question and options, 2 to 12, with | or one per line) or shows the result with -r.',
     cmd_opts: [

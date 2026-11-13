@@ -158,8 +158,7 @@ Where to start:
 - **Polls**: the votes of your account's polls (`vote_update` event) go to the `polls` and
   `poll_votes` tables, and [`/poll -r`](comandos/poll.md#result) shows the tally. They are
   kept for 90 days (setting `enquete.retentionDays`).
-- **Schedule**: the reminders and messages of [`/cron`](comandos/cron.md) (also `/agenda` and
-  `/lembrete`) live in the `schedules` table; every 30 s the bot sends what is due (repeating ones
+- **Schedule**: the reminders and messages of [`/cron`](comandos/cron.md) live in the `schedules` table; every 30 s the bot sends what is due (repeating ones
   move on to the next time). A `{/command}` in the text runs at send time and its reply takes its
   place.
 - **Daily status**: with [`/bot -status 06h`](comandos/bot.md#bot-status), a report of the last

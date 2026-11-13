@@ -1,4 +1,4 @@
-# `/noffa` (`/🌈`, `/🏳️‍🌈`)
+# `/noffa`
 
 Puts rainbow emojis between the words. Accepts text or a reply to a message (the typed text and the
 replied message's text are joined). With neither, it shows the usage.

@@ -1,5 +1,5 @@
 /*
- * Comando /tldr (alias /resumo).
+ * Comando /tldr.
  */
 
 const fs = require('fs');

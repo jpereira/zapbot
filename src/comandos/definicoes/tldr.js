@@ -8,7 +8,7 @@ const { opcaoStatus } = require('./_opcoes');
 module.exports = {
     cmd: '/tldr',
     usage: '/tldr [-status|-s] [OPTION] [period]',
-    aliases: ['/resumo'],
+    aliases: [],
     summary: 'Summarizes the chat conversation with ChatGPT',
     help: 'Summarizes the chat conversation with ChatGPT: topics, decisions and pending items. Audio messages (the most recent ones) are transcribed and included in the summary with who sent them and when.',
     cmd_opts: [

@@ -12,7 +12,7 @@ const { t } = require('../i18n');
 const { getSetting } = require('../settings');
 
 /*
- * /whois (/who, /id): quem é e o que pode no bot, neste chat
+ * /whois: quem é e o que pode no bot, neste chat
  *   /whois                → você (quem digitou)
  *   /whois <pessoa...>    → (dono e admins) outras pessoas: /Nome/, @menção ou +número
  *   /whois, respondendo   → (dono e admins) quem escreveu a mensagem respondida

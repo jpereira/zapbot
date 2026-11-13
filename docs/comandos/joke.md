@@ -1,4 +1,4 @@
-# `/joke` (`/piada`, `/humor`)
+# `/joke`
 
 Joke in Portuguese, "dad joke" style, drawn from the list in
 [`src/comandos/piadas.json`](https://github.com/jpereira/zapbot/blob/main/src/comandos/piadas.json).
@@ -12,7 +12,6 @@ O que a impressora falou para a outra impressora?
 ```
 
 ```text
-/piada          → the same, through the alias
 ```
 
 It doesn't depend on an external service. To add jokes, append

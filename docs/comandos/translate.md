@@ -1,4 +1,4 @@
-# `/translate` (`/traduzir`)
+# `/translate`
 
 Translates text with Google Translate, no key and no cost. When replying to a message, it translates
 that message's text. The source language is detected automatically; the target is Portuguese, or the

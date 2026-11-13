@@ -1,5 +1,5 @@
 /*
- * Comando /search (/buscar): busca no histórico do WhatsApp (não só no cache do bot).
+ * Comando /search: busca no histórico do WhatsApp (não só no cache do bot).
  */
 
 const { client } = require('../cliente');

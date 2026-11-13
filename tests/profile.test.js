@@ -24,7 +24,7 @@ const ultima = () => bot.client.enviadas.at(-1);
 
 test('foto com a legenda "Contato: nome da agenda <telefone>", por nome, menção e número', async () => {
     comFoto();
-    for (const linha of ['/profile /Fulano/', '/profile Fulano', `/profile +${OUTRO.user}`, '/perfil Ful']) {
+    for (const linha of ['/profile /Fulano/', '/profile Fulano', `/profile +${OUTRO.user}`, '/profile Ful']) {
         const antes = bot.client.enviadas.length;
         await bot.responder(linha);
         const e = ultima();

@@ -8,7 +8,7 @@ const { opcaoStatus } = require('./_opcoes');
 module.exports = {
     cmd: '/gpt',
     usage: '/gpt [-status|-s] [question]  or  /gpt -model [model] [-img|-gif|-audio|-voz]  or  /gpt -prices  or  /gpt -usage|-u [days]  or  /gpt -voz [text]  or  /gpt -img <request>  or  /gpt -gif [request]',
-    aliases: ['/ai'],
+    aliases: [],
     summary: 'Asks ChatGPT',
     help: 'Asks ChatGPT (OpenAI). Replying to a message, its text goes into the question; replying to a photo, it goes along (ChatGPT sees the image); replying to an audio, it is transcribed; replying to a document (text or PDF), the content goes along; with -voz, the text becomes a robot voice note; with -img and -gif, creates an image and a GIF. Requires OPENAI_API_KEY in config/.env or the openai.api.key setting.',
     cmd_opts: [

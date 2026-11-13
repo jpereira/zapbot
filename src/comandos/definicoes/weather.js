@@ -7,7 +7,7 @@ const { USER } = require('../../roles').ROLES;
 module.exports = {
     cmd: '/weather',
     usage: '/weather [N|Nd] [city]',
-    aliases: ['/tempo'],
+    aliases: [],
     summary: 'Weather now, high and low',
     help: 'Weather now, high/low and chance of rain for the day (Open-Meteo); with N (or Nd), a forecast of N days counting today. Without a city, uses the tempo.city setting.',
     cmd_opts: [

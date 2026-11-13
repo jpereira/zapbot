@@ -8,7 +8,7 @@ const { OPCAO_ALERTA_MSG, OPCAO_ALERTA_RM, OPCAO_ALERTA_TO } = require('./_opcoe
 module.exports = {
     cmd: '/crypto',
     usage: '/crypto [OPTION] [CURRENCY...]  or  /crypto [CURRENCY] -alerta [rule] [-to <target>]... [-msg <text>]  or  /crypto -alerta -rm <num...|all>',
-    aliases: ['/bitcoio', '/creptomoeda'],
+    aliases: [],
     summary: 'Price and 24 h change of cryptocurrencies',
     help: 'Current price and 24 h change of the enabled cryptocurrencies (Binance) or only the requested ones (e.g. /crypto BTC ETH).',
     cmd_opts: [

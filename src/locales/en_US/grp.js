@@ -149,5 +149,5 @@ module.exports = {
     'grp.invite.link': '🔗 Group invite link:\n{link}',
     'grp.invite.revoked': '🔗 The old link no longer works. New group invite link:\n{link}',
     'grp.invite.noCode': 'WhatsApp did not give the link (is your account an admin of the group?)',
-    'grp.invite.failed': '❌ Could not get the invite link: {error}'
+    'grp.invite.failed': '❌ Could not get the invite link: {error}',
 };
