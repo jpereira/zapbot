@@ -12,14 +12,18 @@ Exibe o menu com os comandos, ou a ajuda de um só. Cada um vê só o que pode u
   `/whois` sempre passam.
 
 O `/help` sozinho lista um comando por linha, só com o que ele faz (o `summary` da
-definição do comando), num bloco monoespaçado (para manter o alinhamento no celular), e termina com a dica de como ver o resto:
+definição do comando), num bloco monoespaçado com os nomes alinhados numa coluna (a descrição que não cabe na tela do
+celular continua na linha de baixo, recuada sob ela), e termina com a dica de como ver o resto:
 
 ````text
 /help
 
 ```
- /alias - Salva atalhos para comandos com argumentos
- /ascii - O texto em letras grandes de ASCII
+ /alias  - Salva atalhos para comandos com
+           argumentos
+ /ascii  - O texto em letras grandes de ASCII
+ /backup - Backup do banco: lista, detalha,
+           restaura, envia ou apaga
  ...
 ```
 
@@ -39,11 +43,12 @@ comando é `owner`):
 
 ```
 Role: admin
- /alias - Salva atalhos para comandos com argumentos
+ /alias  - Salva atalhos para comandos com
+           argumentos
  ...
 
 Role: user
- /ascii - O texto em letras grandes de ASCII
+ /ascii  - O texto em letras grandes de ASCII
  ...
 ```
 ````
