@@ -6,6 +6,7 @@ const axios = require('axios');
 const { MessageMedia } = require('whatsapp-web.js');
 
 const { readPerson, textPeople, withoutDelimiters } = require('./block');
+const { isPhoto } = require('./openaiCommon');
 const { client } = require('../client');
 const { scheduleName, contactName, resolveLidToPhone, groupResolverName } = require('../contacts');
 const { t } = require('../i18n');
@@ -18,6 +19,9 @@ const { printError } = require('../log');
  * /profile <person>...    → /Name/, @mention or +number (several that match: you choose from the list)
  * /profile, replying   → who wrote the replied message
  * Without a photo, or with the photo hidden by the contact's privacy, only the text goes out.
+ *
+ * /profile -set|-s        → changes the photo to the replied image (or sent with the command in the caption):
+ * the group's, in the group; your account's, in the other chats
  */
 const TIMEOUT_MS = 15000;
 const MAX_BYTES = 10 * 1024 * 1024;
@@ -84,7 +88,39 @@ async function showGroup(msg, chatId) {
     await msg.reply(`${group}\n${t('profile.noGroupPhoto')}`);
 }
 
+// -set: the group photo (if WhatsApp lets you touch it) or your account's
+async function swapPhoto(msg, quotedMsg, isGroup) {
+    const origin = [quotedMsg, msg].find(isPhoto);
+    if (!origin) {
+        await msg.reply(t('profile.setUsage'));
+        return;
+    }
+
+    const mediaAlt = await origin.downloadMedia().catch(() => null);
+    if (!mediaAlt?.data) {
+        await msg.reply(t('profile.setDownload'));
+        return;
+    }
+
+    try {
+        if (isGroup) {
+            const group = await msg.getChat();
+            await msg.reply(await group.setPicture(mediaAlt) ? t('profile.setGroupOk') : t('profile.setGroupDenied'));
+        } else {
+            await msg.reply(await client.setProfilePicture(mediaAlt) ? t('profile.setOwnOk') : t('profile.setFailed', { error: '-' }));
+        }
+    } catch (err) {
+        printError('/profile -set:', err.message);
+        await msg.reply(t('profile.setFailed', { error: err.message }));
+    }
+}
+
 async function cmdProfile({ msg, opts, quotedMsg, chatId, isGroup }) {
+    if (opts.given.has('set')) {
+        await swapPhoto(msg, quotedMsg, isGroup);
+        return;
+    }
+
     const textAlt = opts.argv.join(' ').trim();
 
     // Nobody: the replied message (whoever wrote it), the group or the private chat person (you, in yours)
