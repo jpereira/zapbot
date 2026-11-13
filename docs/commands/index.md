@@ -190,13 +190,13 @@ and a shortcut's name doesn't go in `+cmd`.
 [`/promote`](promote.md), [`/show`](show.md), [`/stats`](stats.md), [`/tldr`](tldr.md),
 [`/welcome`](welcome.md)
 
-**admin** (admins and the owner; never delegable) (19):
+**admin** (admins and the owner; never delegable) (20):
 
 [`/alias`](alias.md), [`/backup`](backup.md), [`/batch`](batch.md), [`/block`](block.md),
 [`/bot`](bot.md), [`/cache`](cache.md), [`/cron`](cron.md), [`/debug`](debug.md),
-[`/defi`](defi.md), [`/join`](join.md), [`/leave`](leave.md), [`/monitor`](monitor.md),
-[`/mute`](mute.md), [`/notes`](notes.md), [`/search`](search.md), [`/set`](set.md),
-[`/unblock`](unblock.md), [`/unmute`](unmute.md), [`/watch`](watch.md)
+[`/defi`](defi.md), [`/invite`](invite.md), [`/join`](join.md), [`/leave`](leave.md),
+[`/monitor`](monitor.md), [`/mute`](mute.md), [`/notes`](notes.md), [`/search`](search.md),
+[`/set`](set.md), [`/unblock`](unblock.md), [`/unmute`](unmute.md), [`/watch`](watch.md)
 <!-- /gerado:roles -->
 
 The **bot's own replies** also go out through your account, but they're never treated as commands,
@@ -228,6 +228,7 @@ even if they start with `/`. Without that, someone could use a command that echo
 | [`/goodbye`](goodbye.md) | | `admin` · delegable | Message when someone leaves the group (per group; `{name}`, `{group}`) |
 | [`/gpt`](gpt.md) | `/ai` | `admin` · delegable | Asks ChatGPT (OpenAI); `-img`, `-gif`, `-voz`, `-prices`, `-usage`, and `-status` (bytes, tokens, cost, and balance) |
 | [`/help`](help.md) | `/h` | `user` | Help menu, only with the commands the requester can use |
+| [`/invite`](invite.md) | | `admin` | The group invite link (`-revoke` makes a new one) |
 | [`/join`](join.md) |  | `admin` | Joins a group through the invite link (`-info` shows the group without joining); `-l` lists your groups |
 | [`/joke`](joke.md) | `/piada`, `/humor` | `user` | Random joke in Portuguese |
 | [`/kernel`](kernel.md) | | `user` | Current Linux kernel versions (kernel.org) |
