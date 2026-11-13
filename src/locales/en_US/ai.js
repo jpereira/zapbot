@@ -207,6 +207,11 @@ module.exports = {
     'sticker.txtConflict': '❌ -txt does not combine with -ss, -es, -v or a URL: it makes the sticker from the text only.',
     'sticker.posConflict': '❌ -pos is for cropping images and videos: it does not apply with -txt.',
 
+    // /ocr
+    'ocr.usage': '❌ Reply to a photo with /ocr (or send the photo with /ocr as the caption).',
+    'ocr.instructions': 'You are an OCR. Reply only with the text that appears in the image, keeping the line breaks and the original language. Do not describe the image or add comments. If there is no readable text, reply exactly {vazio}.',
+    'ocr.prompt': 'Extract the text of this image.',
+    'ocr.noText': '🔎 No text found in the image.',
 
 
 
