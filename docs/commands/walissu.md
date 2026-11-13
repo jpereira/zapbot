@@ -1,6 +1,6 @@
 # `/walissu`
 
-Groups only: the Walissu CVE BOT picks 2 different members (not counting the bot), tags them and
+A **joke**. Groups only: the Walissu CVE BOT picks 2 different members (not counting the bot), tags them and
 replies with a random CVE among the 50 most recently published on [NVD](https://nvd.nist.gov/) in the
 last 2 days.
 
@@ -18,6 +18,8 @@ Short description of the vulnerability…
 https://nvd.nist.gov/vuln/detail/CVE-AAAA-NNNN
 
 Where is the exploit? I need to get out of Brasília!
+
+🤡 Just a joke from the Walissu CVE BOT: nobody is leaving Brasília, but the CVE is real.
 ```
 
 Details:

@@ -210,7 +210,7 @@ even if they start with `/`. Without that, someone could use a command that echo
 | [`/ascii`](ascii.md) | | `user` | The text in big ASCII letters, in a block that fits a phone screen |
 | [`/backup`](backup.md) | | `admin` | Daily local backup and delivery through `backup.to`; lists, details, restores, sends, and deletes the database |
 | [`/batch`](batch.md) | | `admin` | Runs several commands from a single message, in sequence (each line that starts with a command opens a block), and replies with a summary; `-stop` and `-dry` |
-| [`/bills`](bills.md) | | `user` | Draws 2 members to "pay a boleto" |
+| [`/bills`](bills.md) | | `user` | Joke: draws 2 members to "pay a boleto" |
 | [`/block`](block.md) | | `admin` | Blocks one or more people on your WhatsApp account (replying to a message, whoever wrote it); with nothing, lists the blocked ones; `-mask` obfuscates phone numbers |
 | [`/bot`](bot.md) | | `admin` | Bot status (24 h report and the users); turns commands on/off (`-on`/`-off`) and says who uses them: admins (`+a`/`-a`) and users (`+u`/`-u`, in any chat or just in one group, and each one's commands with `+cmd`/`-cmd`); `-reset` goes back to the default; `-status` (`-s`): report for the last 24 h, and `-s 06h` sends it every day; `-info` (`-i`): versions and system; `-test` (`-t`): tests cache, disk, database, WhatsApp, internet, SMTP, IMAP, and programs |
 | [`/cache`](cache.md) | | `admin` | Cache tree with sizes, message counts, and cleanup |
@@ -240,7 +240,7 @@ even if they start with `/`. Without that, someone could use a command that echo
 | [`/monitor`](monitor.md) | | `admin` | 👀 Up to 5 contacts, limited history, per-contact filter, and online-presence alerts |
 | [`/mute`](mute.md) | | `admin` | Silences the notices for deleted, edited, status, and reactions (and those from `/watch`) of a person, a group, or a community; replying to a notice, from where it came |
 | [`/news`](news.md) | | `user` | Headlines from RSS feeds: `-hack`, `-g1`, `-gazeta`, `-brasil` |
-| [`/noffa`](noffa.md) | | `user` | Decorates the text with rainbows |
+| [`/noffa`](noffa.md) | | `user` | Joke: decorates the text with rainbows |
 | [`/notes`](notes.md) | | `admin` | Notes with ID and `#tag` (`-a`, `-l`, `-s`, `-r`): view with the media (`-v`), edit (`-u`), rename a tag (`-m`), describe a tag (`-d`), export to PDF (`-e`), and `-alerta` that notifies at a date/time |
 | [`/ocr`](ocr.md) | | `admin` · delegable | The text in a photo, read by ChatGPT (vision) |
 | [`/ping`](ping.md) | | `user` | Checks whether the bot is alive |
@@ -262,7 +262,7 @@ even if they start with `/`. Without that, someone could use a command that echo
 | [`/unmute`](unmute.md) | | `admin` | Undoes the `/mute` silence: by name, by list number, by replying to a notice, or all (`-all`) |
 | [`/uptime`](uptime.md) | | `user` | Run time and connection time |
 | [`/version`](version.md) | | `user` | Bot version (same banner as `/uptime`) |
-| [`/walissu`](walissu.md) | | `user` | Walissu CVE BOT: tags 2 members with a random CVE |
+| [`/walissu`](walissu.md) | | `user` | Joke: Walissu CVE BOT: tags 2 members with a random CVE |
 | [`/watch`](watch.md) | | `admin` | Text/regex rules, with an optional source in `-in`; lists occurrences, searches them with `-q`, and notifies the `-to` destinations; `-mask` obfuscates phone numbers and `-mask N` turns on 🔒 for rule N |
 | [`/weather`](weather.md) | | `user` | Weather now and the day's max/min (Open-Meteo); `/weather 16d` shows up to 16 days, counting today; without a city it uses `tempo.city` |
 | [`/welcome`](welcome.md) | | `admin` · delegable | Message when someone joins the group (per group; `{name}`, `{group}`) |

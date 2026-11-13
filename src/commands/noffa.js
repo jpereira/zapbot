@@ -22,7 +22,7 @@ async function cmdNoffa({ msg, args, quotedMsg }) {
     // The reply never starts with "/": it must not be read as a command (see markSentByBot)
     if (rainbowText.startsWith('/')) rainbowText = `${rainbowHearts[0]} ${rainbowText}`;
 
-    await msg.reply(rainbowText);
+    await msg.reply(`${rainbowText}\n\n${t('noffa.joke')}`);
 }
 
 module.exports = {
