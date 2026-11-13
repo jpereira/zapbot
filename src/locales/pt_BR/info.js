@@ -94,7 +94,7 @@ module.exports = {
     // /bills
     'bills.groupOnly': '⚠️ O comando /bills só pode ser chamado dentro de grupos!',
     'bills.notEnough': 'Membros insuficientes no grupo.',
-    'bills.winners': '🥳 Parabéns {a} e {b} 🎉\nVocês foram sorteados para pagar um boleto! 💸✨\nAnote o número: 📝 001 9 337370000000100 05009 401448 16060680935031\nBoa sorte pagando! 😉💰',
+    'bills.winners': '🥳 Parabéns {a} e {b} 🎉\nVocês foram sorteados para pagar um boleto! 💸✨\nAnote o número: 📝 001 9 337370000000100 05009 401448 16060680935031\nBoa sorte pagando! 😉💰\n\n🤡 _É só uma piada! Não existe boleto nenhum: não pague nada._',
 
     // /crypto
     'crypto.supported': '🪙 *MOEDAS SUPORTADAS*\n\n```\n{list}\n```\n_* = ativada_',
@@ -149,7 +149,8 @@ module.exports = {
     // /walissu
     'walissu.groupOnly': 'Apenas utilizado dentro de grupos.',
     'walissu.noCve': '🛡️ Nenhuma CVE publicada nos últimos 2 dias.',
-    'walissu.message': 'Hey {a} e {b}, aqui é o Walissu CVE BOT! Dá uma olhada nesse CVE ou você vai sair da rave 😊\n\n{cve}\n\nCadê o exploit? Preciso sair de Brasília!',
+    'walissu.message': 'Hey {a} e {b}, aqui é o Walissu CVE BOT! Dá uma olhada nesse CVE ou você vai sair da rave 😊\n\n{cve}\n\nCadê o exploit? Preciso sair de Brasília!\n\n🤡 _É só uma piada do Walissu CVE BOT: ninguém vai sair de Brasília, mas a CVE é de verdade._',
+    'noffa.joke': '🤡 _É só uma piada do /noffa._',
     'walissu.failed': '❌ Não consegui consultar o NVD agora.',
 
     // /whois
