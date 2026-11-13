@@ -183,12 +183,12 @@ and a shortcut's name doesn't go in `+cmd`.
 [`/sticker`](sticker.md), [`/translate`](translate.md), [`/uptime`](uptime.md),
 [`/version`](version.md), [`/walissu`](walissu.md), [`/weather`](weather.md), [`/whois`](whois.md)
 
-**admin, delegable** (admins and the owner; the owner releases them to a user with `+cmd`) (13):
+**admin, delegable** (admins and the owner; the owner releases them to a user with `+cmd`) (14):
 
 [`/demote`](demote.md), [`/draw`](draw.md), [`/everybody`](everybody.md), [`/goodbye`](goodbye.md),
-[`/gpt`](gpt.md), [`/members`](members.md), [`/poll`](poll.md), [`/profile`](profile.md),
-[`/promote`](promote.md), [`/show`](show.md), [`/stats`](stats.md), [`/tldr`](tldr.md),
-[`/welcome`](welcome.md)
+[`/gpt`](gpt.md), [`/members`](members.md), [`/ocr`](ocr.md), [`/poll`](poll.md),
+[`/profile`](profile.md), [`/promote`](promote.md), [`/show`](show.md), [`/stats`](stats.md),
+[`/tldr`](tldr.md), [`/welcome`](welcome.md)
 
 **admin** (admins and the owner; never delegable) (20):
 
@@ -241,6 +241,7 @@ even if they start with `/`. Without that, someone could use a command that echo
 | [`/news`](news.md) |  | `user` | Headlines from RSS feeds: `-hack`, `-g1`, `-gazeta`, `-brasil` |
 | [`/noffa`](noffa.md) | `/🌈`, `/🏳️‍🌈` | `user` | Decorates the text with rainbows |
 | [`/notes`](notes.md) |  | `admin` | Notes with ID and `#tag` (`-a`, `-l`, `-s`, `-r`): view with the media (`-v`), edit (`-u`), rename a tag (`-m`), describe a tag (`-d`), export to PDF (`-e`), and `-alerta` that notifies at a date/time |
+| [`/ocr`](ocr.md) | | `admin` · delegable | The text in a photo, read by ChatGPT (vision) |
 | [`/ping`](ping.md) | | `user` | Checks whether the bot is alive |
 | [`/pixelart`](pixelart.md) | `/ansi`, `/px` | `user` | Random ANSI/ASCII art (16colo.rs) |
 | [`/poll`](poll.md) | `/enquete`, `/quiz` | `admin` · delegable | Creates a native WhatsApp poll in the chat; `-r` shows the result |
