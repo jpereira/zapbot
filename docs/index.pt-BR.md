@@ -156,8 +156,7 @@ Por onde começar:
 - **Enquetes**: os votos das enquetes da sua conta (evento `vote_update`) vão para as tabelas
   `polls` e `poll_votes`, e o [`/poll -r`](commands/poll.md#resultado) mostra o placar. Ficam
   90 dias (setting `enquete.retentionDays`).
-- **Agenda**: os lembretes e as mensagens do [`/cron`](commands/cron.md) (também `/agenda` e
-  `/lembrete`) ficam na tabela `schedules`; a cada 30 s o bot envia o que venceu (os repetidos
+- **Agenda**: os lembretes e as mensagens do [`/cron`](commands/cron.md) ficam na tabela `schedules`; a cada 30 s o bot envia o que venceu (os repetidos
   seguem para o próximo horário). Um `{/comando}` no texto roda na hora do envio e a resposta entra
   no lugar.
 - **Status diário**: com [`/bot -status 06h`](commands/bot.md#status-do-bot), um relatório das

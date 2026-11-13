@@ -1,4 +1,4 @@
-# `/weather` (`/tempo`)
+# `/weather`
 
 Tempo agora (condição, temperatura, sensação, umidade e vento), máxima, mínima e chance de chuva do
 dia, pela [Open-Meteo](https://open-meteo.com/) (gratuita, sem chave de API). Com um número de dias,
@@ -13,7 +13,6 @@ mostra também a previsão dos próximos dias.
 /weather                         → cidade padrão (tempo.city)
 /weather Rio de Janeiro          → Rio de Janeiro, RJ
 /weather Paris, Texas            → Paris dos EUA (não a da França)
-/tempo Lisboa                  → o mesmo, pelo alias
 /temp Lisboa                    → idem, completado pelo começo do nome
 /weather 7d Niteroi              → agora + previsão de hoje e dos próximos 6 dias
 /weather 16d Niteroi             → hoje e os próximos 15 dias

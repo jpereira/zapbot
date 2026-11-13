@@ -4,7 +4,7 @@
 module.exports = {
     'adm.agenda.createdReminder': 'Lembrete criado',
     'adm.agenda.createdMessage': 'Mensagem agendada',
-    'adm.agenda.exReminder': '/lembrete 18:30 pagar o boleto',
+    'adm.agenda.exReminder': '/cron -lembrete 18:30 pagar o boleto',
     'adm.agenda.exMessage': '/cron sexta 18h -to /Grupo L200/ Bom fim de semana!',
     'adm.agenda.examples': '💡 _Ex.: {a}\n{b}_',
     'adm.agenda.syntax': '💡 _Ex.: {ex}_',
@@ -28,7 +28,7 @@ module.exports = {
     'adm.agenda.editNothing': '❌ Informe o que mudar: a hora, o texto e/ou o -repetir.\n💡 _/cron -edit 2 18h · /cron -edit 2 novo texto · /cron -edit 2 sexta 9h -r semanal outro texto_',
     'adm.agenda.useRepeatOff': '❌ Use -repetir (-r) diario, semanal, mensal ou nao.',
     'adm.agenda.edited': '✏️ *Editado:* {icone} *{quando}*',
-    'adm.agenda.pvOnlyReminder': '❌ O -pv é do modo lembrete: use /lembrete (ou -lembrete) para lembrar no seu privado.',
+    'adm.agenda.pvOnlyReminder': '❌ O -pv é do modo lembrete: use -lembrete para lembrar no seu privado.',
     'adm.agenda.reminderNoTo': '❌ O lembrete não tem -to: ele vem neste chat (ou no seu privado, com -pv). Para mandar uma mensagem a outro chat, use o /cron sem -lembrete.',
     'adm.agenda.allRemoved': { one: '🗑️ {total} removido.', other: '🗑️ {total} removidos.' },
     'adm.agenda.removedOne': '🗑️ Removido: {linha}',

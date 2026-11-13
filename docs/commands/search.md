@@ -1,4 +1,4 @@
-# `/search` (`/buscar`) · admin
+# `/search` · admin
 
 Searches messages in the WhatsApp Web history, using the same search as WhatsApp's search box: it
 covers the messages WhatsApp Web has, including ones that never went through the bot's cache.
@@ -23,7 +23,7 @@ type and the caption). Long texts are cut at 200 characters.
 ```text
 /search pix                 → the 10 most recent with "pix" in this chat
 /search -30 boleto          → up to 30
-/buscar bom dia             → with spaces, no quotes (/buscar is the same as /search)
+/search bom dia             → with spaces, no quotes (/search is the same as /search)
 ```
 
 ```text

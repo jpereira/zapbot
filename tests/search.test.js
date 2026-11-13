@@ -1,5 +1,5 @@
 /*
- * /search (/buscar): WhatsApp Web's search, in the history (not only in the cache).
+ * /search: WhatsApp Web's search, in the history (not only in the cache).
  */
 const bot = require('./helpers/bot');
 
@@ -15,7 +15,7 @@ const foundAlt = (textAlt, { chat = GROUP, de = OTHERAlt.jid, quando: when = Dat
     ...bot.createMessage({ texto: textAlt, chat, de, timestamp: Math.floor(when / 1000) }), ...extras
 });
 
-describe('/search (/buscar)', () => {
+describe('/search', () => {
     test('no grupo, só nele; do mais recente para o mais antigo, com quem mandou', async () => {
         bot.client.resultadosDaBusca = [
             foundAlt('manda o pix', { quando: Date.UTC(2026, 9, 12, 12) }),
@@ -29,7 +29,7 @@ describe('/search (/buscar)', () => {
             `2. 📅 12/10/2026, 09:00:00 · 👤 Fulano\n   "manda o pix"\n   🆔 ${bot.client.resultadosDaBusca[0].id._serialized}` +
             '\n\n📖 _Para ler uma inteira: /search -read <id>._');
 
-        assert.equal((await bot.replyAlt('/buscar pix'))[0], r, 'o /buscar é o mesmo');
+        assert.equal((await bot.replyAlt('/search pix'))[0], r, 'o /search é o mesmo');
         assert.equal(bot.client.buscas[1].query, 'pix');
     });
 

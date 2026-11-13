@@ -12,7 +12,7 @@ const { t } = require('../i18n');
 const { getSetting } = require('../settings');
 
 /*
- * /whois (/who, /id): who you are and what you can do in the bot, in this chat
+ * /whois: who you are and what you can do in the bot, in this chat
  * /whois                → you (whoever typed)
  * /whois <person...>    → (owner and admins) other people: /Name/, @mention or +number
  * /whois, replying   → (owner and admins) who wrote the replied message

@@ -1,4 +1,4 @@
-# `/crypto` (`/bitcoio`, `/creptomoeda`)
+# `/crypto`
 
 Current price and 24 h change for the enabled coins (via the Binance API, `<TOKEN>USDT` pair), or
 only the requested ones. Default: BTC, ETH, SOL and HYPE.
@@ -27,7 +27,7 @@ The enabled coins are stored in the `settings` table, key `crypto.coins`, and su
 /crypto btc eth      → bitcoin and ether (also "BTC,ETH")
 /crypto doge         → a supported one, even if not enabled
 /crypto FOO          → ❌ Unsupported coin: FOO, with the list of supported ones
-/creptomoeda
+/crypto
 /crypto -l
 /crypto -a doge
 /crypto -d hype

@@ -1,4 +1,4 @@
-# `/crypto` (`/bitcoio`, `/creptomoeda`)
+# `/crypto`
 
 Preço atual e variação de 24 h das moedas ativadas (via API da Binance, par `<TOKEN>USDT`), ou só
 das pedidas. Por padrão: BTC, ETH, SOL e HYPE.
@@ -27,7 +27,7 @@ As moedas ativadas ficam na tabela `settings`, chave `crypto.coins`, e sobrevive
 /crypto btc eth      → bitcoin e ether (também "BTC,ETH")
 /crypto doge         → uma suportada, mesmo sem estar ativada
 /crypto FOO          → ❌ Moeda não suportada: FOO, com a lista das suportadas
-/creptomoeda
+/crypto
 /crypto -l
 /crypto -a doge
 /crypto -d hype

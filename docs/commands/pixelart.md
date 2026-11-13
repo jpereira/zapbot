@@ -1,4 +1,4 @@
-# `/pixelart` (`/ansi`, `/px`)
+# `/pixelart`
 
 Random ANSI/ASCII art from [16colo.rs](https://16colo.rs/), the BBS art scene archive. The image
 comes rendered by the site itself; title, artist, group and date come from the SAUCE record stored at
@@ -15,7 +15,6 @@ the end of the original file (without it, the caption carries the file name and 
 /pixelart chuck-norris-lvl   → from the given pack
 /pixelart -r                 → from any pack in the archive
 /pixelart -y 1996            → from a 1996 pack
-/px                          → same as /pixelart, via the alias
 ```
 
 Example reply:

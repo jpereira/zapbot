@@ -12,7 +12,7 @@ const blockedAlt = new Map();   // who → until when the bot ignores them
 
 /**
  * @param {string} quem     the phone (or id) of who sent it
- * @param {string} comando  the main name (/crypto, not /creptomoeda)
+ * @param {string} comando  o nome principal (/crypto)
  * @returns {{ liberado: boolean, avisar?: boolean, segundos?: number }}
  * notify: just went over the limit (the notice goes out only once)
  */

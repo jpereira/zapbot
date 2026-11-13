@@ -1,5 +1,5 @@
 /*
- * /search (/buscar) command: searches the WhatsApp history (not only the bot cache).
+ * /search command: searches the WhatsApp history (not only the bot cache).
  */
 
 const { client } = require('../client');

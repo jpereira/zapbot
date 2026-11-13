@@ -24,7 +24,7 @@ const last = () => bot.client.enviadas.at(-1);
 
 test('foto com a legenda "Contato: nome da agenda <telefone>", por nome, menção e número', async () => {
     withPhoto();
-    for (const line of ['/profile /Fulano/', '/profile Fulano', `/profile +${OTHERAlt.user}`, '/perfil Ful']) {
+    for (const line of ['/profile /Fulano/', '/profile Fulano', `/profile +${OTHERAlt.user}`, '/profile Ful']) {
         const beforeAlt = bot.client.enviadas.length;
         await bot.replyAlt(line);
         const e = last();

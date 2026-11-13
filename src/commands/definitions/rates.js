@@ -8,7 +8,7 @@ const { OPTION_ALERT_MSG, OPTION_ALERT_RM, OPTION_ALERT_TO } = require('./_optio
 module.exports = {
     cmd: '/rates',
     usage: '/rates [OPTION] [CURRENCY...]  or  /rates [CURRENCY] -alerta [rule] [-to <target>]... [-msg <text>]  or  /rates -alerta -rm <num...|all>',
-    aliases: ['/cotacao', '/cambio'],
+    aliases: [],
     summary: 'Currency exchange rates against the Brazilian real',
     help: 'Exchange rates against the real for the enabled currencies (default: EUR and USDT): current, open, previous close, high/low and change.',
     cmd_opts: [

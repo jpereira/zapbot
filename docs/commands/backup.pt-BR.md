@@ -1,4 +1,4 @@
-# `/backup` (`/bkp`) · admin
+# `/backup` · admin
 
 Backup do banco (`cache/zapbot.db`): um automático por dia, e pelo WhatsApp você cria, lista,
 compara, restaura, recebe o arquivo ou apaga. Sem opção, mostra o banco atual e os backups.
@@ -20,7 +20,7 @@ Remover contatos ou reduzir o histórico local não altera os backups já existe
 ```text
 /backup                                 → o banco atual e os backups
 /backup -now                            → cria um agora
-/bkp -l                                 → a lista
+/backup -l                                 → a lista
 /backup -i 2                            → o que tem no nº 2, comparado com o banco atual
 /backup -r 2                            → mostra o que vai acontecer e pede confirmação
 /backup -r zapbot-20261001-030000 -sim  → restaura

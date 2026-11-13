@@ -268,21 +268,19 @@ describe('comando desconhecido', () => {
     });
 });
 
-describe('nomes em inglês e aliases fixos em português', () => {
-    test('/draw, /weather, /everybody, /bills, /rates e /translate respondem também pelos nomes em português', async () => {
-        const pairs = [['/draw', '/desenhe'], ['/weather', '/tempo'], ['/everybody', '/todos'], ['/bills', '/boletos'],
-            ['/rates', '/cotacao'], ['/translate', '/traduzir']];
-        for (const [freshAlt, oldAlt2] of pairs) {
-            const help = await bot.replyAlt(`${freshAlt} -h`);
-            assert.ok(help[0].includes(`Uso: ${freshAlt}`), `${freshAlt} -h`);
-            assert.deepEqual(await bot.replyAlt(`${oldAlt2} -h`), help, `${oldAlt2} é alias de ${freshAlt}`);
+describe('nomes em inglês, sem aliases fixos em português', () => {
+    test('os nomes em inglês respondem; os antigos aliases em português não existem mais (use o /alias)', async () => {
+        for (const nameAlt of ['/draw', '/weather', '/everybody', '/bills', '/rates', '/translate']) {
+            assert.ok((await bot.replyAlt(`${nameAlt} -h`))[0].includes(`Uso: ${nameAlt}`), `${nameAlt} -h`);
         }
-        // And the start of the alias also completes (/temp was the start of /tempo)
-        assert.deepEqual(await bot.replyAlt('/temp -h'), await bot.replyAlt('/weather -h'));
+        for (const oldAlt2 of ['/desenhe', '/tempo', '/todos', '/boletos', '/cotacao', '/traduzir', '/bloquear', '/agenda',
+            '/lembrete', '/download', '/ai', '/mudo', '/perfil', '/buscar', '/config', '/resumo']) {
+            assert.deepEqual(await bot.replyAlt(oldAlt2), [`⚠️ Comando '${oldAlt2}' desconhecido, tente: /help`], oldAlt2);
+        }
     });
 
     test('quem tinha o nome antigo nos settings passa para o novo (commands.disabled e bot.users.cmds)', async () => {
-        assert.deepEqual(await bot.setSetting('commands.disabled', ['/tempo', '/boletos']), ['/weather', '/bills']);
+        assert.deepEqual(await bot.setSetting('commands.disabled', ['/weather', '/bills']), ['/weather', '/bills']);
     });
 });
 
@@ -772,8 +770,8 @@ describe('permissões', () => {
         const DELE = { de: CICLANO, chat: CICLANO };
         const rules = () => bot.getSetting('bot.users.cmds');
 
-        // +u +cmd: enters only with these (the alias becomes the main name)
-        assert.deepEqual(await bot.replyAlt('/bot +cmd /noffa,/piada +u /Ciclano/', IN_PRIVATE), ['*Usuários* (1)\n' +
+        // +u +cmd: enters only with these (the main name)
+        assert.deepEqual(await bot.replyAlt('/bot +cmd /noffa,/joke +u /Ciclano/', IN_PRIVATE), ['*Usuários* (1)\n' +
             '• 🗣️ +u · 👤 Ciclano · +5521922222222 ✅\n → Apenas: /noffa, /joke' + CAPTION]);
         assert.deepEqual(rules(), ['5521922222222=/noffa,/joke']);
 
@@ -783,7 +781,7 @@ describe('permissões', () => {
         const [help] = await bot.replyAlt('/help', DELE);
         assert.match(help, /\n \/joke +- /);
         assert.doesNotMatch(help, /\n \/weather +- /);
-        assert.match((await bot.replyAlt('/help tempo', DELE))[0], /^⛔ O \/weather não está liberado para você\./);
+        assert.match((await bot.replyAlt('/help weather', DELE))[0], /^⛔ O \/weather não está liberado para você\./);
         assert.match((await bot.replyAlt('/whois', DELE))[0], /• 🗣️ \+u · 👤 Ciclano · \+5521922222222\n → Apenas: \/noffa, \/joke\n/);
 
         // +cmd adds; -cmd removes; the last one, no
@@ -844,7 +842,7 @@ describe('permissões', () => {
         assert.deepEqual(bot.getSetting('bot.users.cmds'), []);
     });
 
-    test('/whois (/who, /id): o seu nível neste chat; o dos outros, só para o dono e os admins', async () => {
+    test('/whois: o seu nível neste chat; o dos outros, só para o dono e os admins', async () => {
         const FOOTER = '\n\nDigite /help para saber quais comandos estão disponíveis.';
         const CICLANO = '5521922222222@c.us';
         const WORK = '120363000000000300@g.us';
@@ -853,7 +851,7 @@ describe('permissões', () => {
 
         // You: a user by the list, by everyone (true) or by the group
         await bot.setSetting('bot.users', ['5521911111111', WORK]);
-        for (const line of ['/whois', '/who', '/id']) {
+        for (const line of ['/whois', '/whois', '/whois']) {
             assert.deepEqual(await bot.replyAlt(line, { de: OTHERAlt.jid }),
                 ['*Quem é?* (1)\n• 🗣️ +u · 👤 Fulano · +5521911111111' + CAPTION + FOOTER], line);
         }
@@ -890,11 +888,11 @@ describe('permissões', () => {
         const CICLANO = '5521922222222@c.us';
         bot.createContact(CICLANO, 'Ciclano');
 
-        // 3 times go through (aliases count as the same command); the 4th warns; after that, nothing
-        for (const line of ['/noffa oi', '/🌈 oi', '/noffa oi']) {
+        // 3 times go through; the 4th warns; after that, nothing
+        for (const line of ['/noffa oi', '/noffa oi', '/noffa oi']) {
             assert.equal((await bot.replyAlt(line, { de: OTHERAlt.jid })).length, 1, line);
         }
-        assert.deepEqual(await bot.replyAlt('/🌈 oi', { de: OTHERAlt.jid }),
+        assert.deepEqual(await bot.replyAlt('/noffa oi', { de: OTHERAlt.jid }),
             ['⚠️ Não é permitido executar o mesmo comando mais de 3 vezes seguidas. Aguarde 10 segundos.']);
         assert.deepEqual(await bot.replyAlt('/noffa oi', { de: OTHERAlt.jid }), [], 'no intervalo, silêncio');
         assert.deepEqual(await bot.replyAlt('/joke', { de: OTHERAlt.jid }), [], 'qualquer comando');

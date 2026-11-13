@@ -1,4 +1,4 @@
-# `/joke` (`/piada`, `/humor`)
+# `/joke`
 
 Piada em português, no estilo "piada de tiozão", sorteada da lista em
 [`src/commands/jokes.json`](https://github.com/jpereira/zapbot/blob/main/src/commands/jokes.json).
@@ -12,7 +12,6 @@ O que a impressora falou para a outra impressora?
 ```
 
 ```text
-/piada          → o mesmo, pelo alias
 ```
 
 Não depende de serviço externo. Para incluir piadas, acrescente

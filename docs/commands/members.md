@@ -1,4 +1,4 @@
-# `/members` (`/listageral`, `/list`) · admin
+# `/members` · admin
 
 Role `admin`: only you and the extra admins. The owner can grant it to a person or group with
 `/bot +u +cmd /members` ([Delegating](index.md#delegating-an-admin-command)).
@@ -9,7 +9,6 @@ per line as `+number - name`, with 👑 owner and ⭐ admin. A number WhatsApp h
 
 ```text
 /members
-/list           → the same, through the alias
 
 👥 *Members of Group L200* (2)
 

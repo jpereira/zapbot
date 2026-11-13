@@ -8,7 +8,7 @@ const { ADMIN } = require('../../roles').ROLES;
 module.exports = {
     cmd: '/backup',
     usage: '/backup [OPTION]',
-    aliases: ['/bkp'],
+    aliases: [],
     summary: 'Database backup: lists, details, restores, sends or deletes',
     help: `Database backup in ${BACKUP_DIR}: one automatic per day, and you can list, detail, restore, send or delete. The daily backup is also sent to the destination in the backup.to setting (contact, group, number or email, as in -to), without asking for -sim; if empty, it only saves locally. With no option, shows the current database and the backups.`,
     cmd_opts: [

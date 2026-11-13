@@ -1,4 +1,4 @@
-# `/translate` (`/traduzir`)
+# `/translate`
 
 Traduz um texto pelo Google Translate, sem chave e sem custo. Respondendo (reply) uma mensagem,
 traduz o texto dela. O idioma de origem é detectado sozinho; o de destino é o português, ou o do

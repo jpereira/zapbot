@@ -7,7 +7,7 @@ const { USER } = require('../../roles').ROLES;
 module.exports = {
     cmd: '/pixelart',
     usage: '/pixelart [OPTION] [pack]',
-    aliases: ['/ansi', '/px'],
+    aliases: [],
     summary: 'Random ANSI/ASCII art from 16colo.rs',
     help: 'Random ANSI/ASCII art from 16colo.rs, with title and artist. Default packs in the pixelart.packs setting.',
     cmd_opts: [

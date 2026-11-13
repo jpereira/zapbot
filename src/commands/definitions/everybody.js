@@ -7,7 +7,7 @@ const { ADMIN } = require('../../roles').ROLES;
 module.exports = {
     cmd: '/everybody',
     usage: '/everybody',
-    aliases: ['/todos', '/todes'],
+    aliases: [],
     summary: 'Replies mentioning everyone in the group',
     help: 'Replies mentioning everyone in the group (except you).',
     delegavel: true,

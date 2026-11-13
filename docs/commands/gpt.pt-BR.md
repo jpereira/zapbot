@@ -1,4 +1,4 @@
-# `/gpt` (`/ai`) · admin
+# `/gpt` · admin
 
 Role `admin`: só você e os admins extras. O dono libera a uma pessoa ou grupo com
 `/bot +u +cmd /gpt` ([Delegando](index.md#delegando-um-comando-admin)).
@@ -16,7 +16,7 @@ que você peça outro.
 
 ```text
 /gpt explique o que é SSRF em 3 linhas
-/ai qual a capital da Mongólia?
+/gpt qual a capital da Mongólia?
 /gpt resuma          (respondendo uma mensagem)
 /gpt qual a raça desse cachorro?   (respondendo uma foto)
 /gpt agora transcreva isso         (respondendo um áudio)

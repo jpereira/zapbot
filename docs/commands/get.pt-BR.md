@@ -1,4 +1,4 @@
-# `/get` (`/download`)
+# `/get`
 
 Baixa vídeos de Instagram, YouTube, X/Twitter, TikTok e outros sites suportados pelo
 [yt-dlp](https://github.com/yt-dlp/yt-dlp). A URL pode vir como argumento ou você pode dar reply
@@ -121,7 +121,7 @@ firewall de egresso no container (`docker/app/egress-firewall.sh`, ligado por
 /get -ss 09:33 -es 09:45 https://youtu.be/XXXXXXXXXXX
 /get -ss -10 https://youtu.be/XXXXXXXXXXX            → os últimos 10 segundos
 /get -ss -01:44 -es -00:30 https://youtu.be/XXXXXXXXXXX → de 1:44 a 0:30 antes do fim
-/download -st -ss 3 -es 6 https://youtu.be/XXXXXXXXXXX
+/get -st -ss 3 -es 6 https://youtu.be/XXXXXXXXXXX
 (reply numa mensagem com link)  /get -a
 (reply num vídeo do WhatsApp)   /get -a              → só o áudio, em .mp3
 (reply num vídeo do WhatsApp)   /get -ss 5 -es 20    → o trecho, como documento

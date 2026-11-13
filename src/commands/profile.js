@@ -13,7 +13,7 @@ const { t } = require('../i18n');
 const { printError } = require('../log');
 
 /*
- * /profile (/perfil): a contact's profile photo, with the name from your address book and the phone.
+ * /profile: a contact's profile photo, with the name from your address book and the phone.
  * /profile                → in private, the person's (yours, in your own private chat);
  * in the group, the group photo
  * /profile <person>...    → /Name/, @mention or +number (several that match: you choose from the list)
