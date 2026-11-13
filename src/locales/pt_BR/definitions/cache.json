@@ -9,7 +9,7 @@
         "a"
       ],
       "values": [],
-      "desc": "Apaga TUDO em ${CACHE_DIR}: as mensagens (inclusive as guardadas para o /show), os temporários, as mídias baixadas em ${MEDIA_DIR} e os backups em ${BACKUP_DIR}."
+      "desc": "Apaga TUDO do cache (mensagens, mídias e backups)."
     },
     {
       "opts": [
@@ -17,7 +17,7 @@
         "b"
       ],
       "values": [],
-      "desc": "Apaga os backups do /backup em ${BACKUP_DIR}."
+      "desc": "Apaga os backups do /backup."
     },
     {
       "opts": [
@@ -33,7 +33,7 @@
         "m"
       ],
       "values": [],
-      "desc": "Apaga as mídias baixadas em ${MEDIA_DIR} (as mensagens ficam, sem o arquivo)."
+      "desc": "Apaga as mídias baixadas (as mensagens ficam)."
     }
   ]
 }

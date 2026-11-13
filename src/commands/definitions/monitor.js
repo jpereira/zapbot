@@ -20,7 +20,7 @@ module.exports = {
         {
             opts: ['alerta'],
             values: [],
-            desc: 'With -add, turns on the came-online alert in the bot owner\'s private chat. Alone, give an already registered contact (or list id).',
+            desc: 'Alerts you when the contact comes online (with -add, or alone on a registered one).',
             ex: [
                 '-add /Maria/ -alerta',
                 '-alerta /Maria/. Alerts once per observed transition; does not guarantee every access.'

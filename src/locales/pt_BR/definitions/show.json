@@ -94,7 +94,7 @@
         "m"
       ],
       "values": [],
-      "desc": "Ofusca telefones com 10 a 15 dígitos contínuos na saída desta execução, mantendo os cinco primeiros e os dois últimos (como +55219****44). Os dados salvos e os destinos usam os números completos.",
+      "desc": "Ofusca telefones na saída (ex.: +55219****44). Os dados salvos e os destinos usam os números completos.",
       "ex": [
         "/show -mask"
       ]

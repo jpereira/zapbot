@@ -28,7 +28,7 @@
         "alerta"
       ],
       "values": [],
-      "desc": "Com -add, ativa o aviso de entrada online no privado do dono do bot. Sozinho, informe um contato já cadastrado (ou id da lista).",
+      "desc": "Avisa quando o contato ficar online (com -add, ou sozinho num já cadastrado).",
       "ex": [
         "-add /Maria/ -alerta",
         "-alerta /Maria/. Avisa uma vez por transição observada; não garante todos os acessos."

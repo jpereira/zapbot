@@ -314,8 +314,8 @@ describe('backup diário', () => {
         assert.equal(emails[1].to, 'outro@exemplo.com');
     });
 
-    test('backup.to aparece na ajuda e no status; anexo grande não é enviado por e-mail', async () => {
-        assert.match((await bot.replyAlt('/backup -h'))[0], /setting backup\.to/);
+    test('o -to aparece na ajuda e backup.to, no status; anexo grande não é enviado por e-mail', async () => {
+        assert.match((await bot.replyAlt('/backup -h'))[0], /\n  -to <destino>/);
         await bot.setSetting('backup.to', 'Fulano');
         assert.match((await bot.replyAlt('/backup'))[0], /• 📤 \*Destino automático:\* Fulano/);
         const { MAX_ATTACHMENT_BYTES, sendBackupPerEmail } = bot.src('backup');

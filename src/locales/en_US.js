@@ -6,7 +6,7 @@ module.exports = {
     'help.usage': 'Usage: ',
     'help.options': 'Options:',
     'help.arguments': 'Arguments:',
-    'help.helpLine': 'Help: -help, -h',
+    'help.more': 'Details: {url}',
     'help.aliases': 'Aliases: {list}',
     'help.groupAll': 'All',
     'help.and': ' and ',

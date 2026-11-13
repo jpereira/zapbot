@@ -20,7 +20,7 @@ module.exports = {
         {
             opts: ['pos'],
             values: ['<top|middle|bottom>'],
-            desc: 'With -st: where the square crop goes, top, middle (default) or bottom. On media wider than tall, top is the left and bottom is the right.',
+            desc: 'Where the square crop sits: top, middle (default) or bottom.',
             ex: ['/get -st -pos topo <url>']
         },
         { opts: ['audio', 'a'], values: [], desc: 'Audio only, as .mp3.' },

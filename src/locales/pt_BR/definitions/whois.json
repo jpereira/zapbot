@@ -11,7 +11,7 @@
       "argv": [
         "[pessoa...]"
       ],
-      "desc": "Só o dono e os admins: /nome/, @menção ou +número (vários de uma vez). Respondendo uma mensagem, sem pessoa: quem a escreveu.",
+      "desc": "Quem consultar (só dono e admins): /nome/, @menção ou +número, vários de uma vez. Respondendo uma mensagem, sem pessoa: quem a escreveu.",
       "ex": [
         "/whois @Fulano",
         "/whois +5521999999999"
