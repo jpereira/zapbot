@@ -117,6 +117,7 @@ nav:
       - /cve: commands/cve.md
       - /debug: commands/debug.md
       - /defi: commands/defi.md
+      - /demote: commands/demote.md
       - /draw: commands/draw.md
       - /everybody: commands/everybody.md
       - /get: commands/get.md
@@ -140,6 +141,7 @@ nav:
       - /pixelart: commands/pixelart.md
       - /poll: commands/poll.md
       - /profile: commands/profile.md
+      - /promote: commands/promote.md
       - /rates: commands/rates.md
       - /search: commands/search.md
       - /set: commands/set.md

@@ -20,6 +20,7 @@ const { cmdPoll } = require('./poll');
 const { cmdGet } = require('./get');
 const { cmdGiphy } = require('./giphy');
 const { cmdGpt } = require('./gpt');
+const { cmdDemote, cmdPromote } = require('./admins');
 const { cmdAlias } = require('./alias');
 const { cmdAscii } = require('./ascii');
 const { cmdHelp } = require('./help');
@@ -68,6 +69,7 @@ const HANDLERS = {
     '/cve': cmdCve,
     '/debug': cmdDebug,
     '/defi': cmdDefi,
+    '/demote': cmdDemote,
     '/draw': cmdDraw,
     '/everybody': cmdEverybody,
     '/get': cmdGet,
@@ -91,6 +93,7 @@ const HANDLERS = {
     '/pixelart': cmdPixelArt,
     '/poll': cmdPoll,
     '/profile': cmdProfile,
+    '/promote': cmdPromote,
     '/rates': cmdRates,
     '/search': cmdSearch,
     '/set': cmdSet,
