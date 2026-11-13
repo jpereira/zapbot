@@ -3,7 +3,7 @@
  */
 const { botConfig } = require('../botConfig');
 const { dbGet, dbReady, dbRun } = require('../db');
-const { textIsAlias, listAliases } = require('../aliases');
+const { aliasBlock, textIsAlias, listAliases } = require('../aliases');
 const { commandsInText, commandsError, breakLines } = require('../textCommands');
 const { findCommand } = require('./base');
 const { t } = require('../i18n');
@@ -54,6 +54,14 @@ async function cmdAlias({ msg, args }) {
             removed.length && t('adm.alias.removedMany', { n: removed.length, lista: removed.join(', ') }),
             missing.length && t('adm.alias.missing', { n: missing.length, lista: missing.join(', ') })
         ].filter(Boolean).join('\n'));
+    }
+    // Only the name (/alias /dolar): shows what the alias does; if it is not an alias, the error
+    if (/^\/?[\p{L}\p{N}_.][\p{L}\p{N}_.-]*$/u.test(textAlt)) {
+        const nameAlt = aliasName(textAlt);
+        const alias = await dbGet('SELECT * FROM command_aliases WHERE name = ?', [nameAlt]);
+        if (alias) return msg.reply(aliasBlock(alias), undefined, { linkPreview: false });
+        const isCommand = botConfig.commands.some(c => c.cmd === nameAlt || c.aliases?.includes(nameAlt));
+        return msg.reply(t(isCommand ? 'adm.alias.isCommand' : 'adm.alias.notFound', { nome: nameAlt }));
     }
     // -q|-quiet: without the "🔗 Alias ..." header when running; works before the name, after it or after the description
     let quiet = false;
