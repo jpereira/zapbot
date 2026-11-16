@@ -11,6 +11,7 @@ const { MessageMedia } = require('whatsapp-web.js');
 const { completeNotice } = require('../client');
 const { commandUsage } = require('./base');
 const { drawAlt } = require('./draw');
+const { imagesContext, textReadProfile, resolverProfiles } = require('./profileInAi');
 const {
     AUDIO_MODEL, VOICE_MODEL, SO_OWNER_GENERATE, GPT_USES, QUESTION_USAGE, deleteNotice, notifyProcessing, isPhoto,
     modelError, messageImage, replyConsumption, withoutOption, swapModel
@@ -222,8 +223,8 @@ const CREATE_VERB = /\b(ger[ae]r?|cri[ae]r?|fa[çc]a|fazer|faz|anim[ae]r?|transf
 const asksGif = (textAlt) => ASKED_GIF.test(textAlt) && CREATE_VERB.test(textAlt);
 
 // -img and -gif are those of /draw (desenhar() is a single one): here only the request text and the usage message
-const gptDraw = (msg, args, quotedMsg, { opcao: optionAlt, gif, semPedido: withoutRequest }) =>
-    drawAlt({ msg, cmd: '/gpt', pedido: withoutOption(args, optionAlt), quotedMsg, gif, semPedido: withoutRequest });
+const gptDraw = (msg, args, quotedMsg, { opcao: optionAlt, gif, perfis: profiles = [], semPedido: withoutRequest }) =>
+    drawAlt({ msg, cmd: '/gpt', pedido: withoutOption(args, optionAlt), quotedMsg, gif, perfis: profiles, semPedido: withoutRequest });
 
 const DAYS_DEFAULT = 7;
 const DAYS_MAX = 31;
@@ -440,7 +441,7 @@ async function showPrices(msg) {
     }
 }
 
-async function ask({ msg, args, opts, quotedMsg, admin }) {
+async function ask({ msg, args, opts, quotedMsg, admin, chatId, isGroup }) {
     if (opts?.given.has('usage')) {
         await showUsage(msg, opts.opt.usage);
         return;
@@ -461,11 +462,21 @@ async function ask({ msg, args, opts, quotedMsg, admin }) {
         return;
     }
 
+    // -p [people]: the profile photos come along with the images (only in -img, -gif and in the question; -p leaves the text)
+    const profileText = opts?.given.has('profile') ? await textReadProfile(args) : null;
+    const prepareProfiles = async () => {
+        if (!profileText) return [];
+        args = profileText.texto;
+        return resolverProfiles({ msg, quotedMsg, chatId, isGroup, itens: profileText.itens, cmd: '/gpt' });
+    };
+
     // -img: creates (or, replying to a photo, edits) an image; -gif: a GIF (replying to a photo, animates it).
     // Without -gif, "gere um gif animado..." replying to a photo also works (and is also owner and admins only).
     if (opts?.given.has('img')) {
+        const profiles = await prepareProfiles();
+        if (!profiles) return;
         await gptDraw(msg, args, quotedMsg, {
-            opcao: 'img', gif: null,
+            opcao: 'img', gif: null, perfis: profiles,
             semPedido: t('gpt.imgUsage')
         });
         return;
@@ -475,8 +486,10 @@ async function ask({ msg, args, opts, quotedMsg, admin }) {
             await msg.reply(SO_OWNER_GENERATE(t('gpt.actionGif')));
             return;
         }
+        const profiles = await prepareProfiles();
+        if (!profiles) return;
         await gptDraw(msg, args, quotedMsg, {
-            opcao: 'gif', gif: {},
+            opcao: 'gif', gif: {}, perfis: profiles,
             semPedido: t('gpt.gifUsage')
         });
         return;
@@ -494,6 +507,10 @@ async function ask({ msg, args, opts, quotedMsg, admin }) {
         await replyOnAudio(msg, audio, args);
         return;
     }
+
+    // -p: the people's profile photos, to go along with the question
+    const profiles = await prepareProfiles();
+    if (!profiles) return;
 
     // Replying to a document: its content goes along with the question
     const doc = await replyDocument(quotedMsg);
@@ -514,7 +531,9 @@ async function ask({ msg, args, opts, quotedMsg, admin }) {
         await msg.reply(photo.erro);
         return;
     }
-    if (photo && !question) question = PHOTO_QUESTION();
+    if ((photo || profiles.length) && !question) question = PHOTO_QUESTION();
+    const context = imagesContext({ comFotoDaMensagem: Boolean(photo), perfis: profiles });
+    if (context) question = `${question}\n\n${context}`;
 
     if (!question) {
         await msg.reply(commandUsage('/gpt'));
@@ -524,7 +543,7 @@ async function ask({ msg, args, opts, quotedMsg, admin }) {
     const notice = await notifyProcessing(msg, '/gpt');
     try {
         const reply = await askOnChat({
-            cmd: '/gpt', sistema: GPT_INSTRUCTIONS(), texto: question, imagem: photo?.imagem
+            cmd: '/gpt', sistema: GPT_INSTRUCTIONS(), texto: question, imagens: [photo?.imagem, ...profiles.map(p => p.imagem)].filter(Boolean)
         });
 
         // The 🤖 in front also guarantees the reply never starts with "/" (see markSentByBot)

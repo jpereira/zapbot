@@ -45,6 +45,7 @@ still work).
 | `-img` | | Owner and admins only. Creates an image from the request (replying to a photo, it edits it). See [Image and GIF](#image-and-gif--img--gif) |
 | `-gif` | | Owner and admins only. Creates a GIF (replying to a photo, it animates it). See [Image and GIF](#image-and-gif--img--gif) |
 | `-voice`, `-v` | `[text]` | Replies with a robot voice note of the text (or of the replied message). See [Voice](#voice--voice) |
+| `-profile`, `-p` | | Adds the profile photo of one or more people to the images of the question (`-p /Rafael Silva/`, `@mention`, `+number`). See [With the profile photo of someone](#with-the-profile-photo-of-someone--profile) |
 | `-status`, `-s` | | Appends the call's usage to the reply footer: TX/RX bytes, tokens, cost and balance. See [Status](#status--status) |
 | `-prices` | | Owner and admins only. Fetches the prices from OpenAI's site and updates `gpt.pricing`. See [Status](#status--status) |
 | `-usage`, `-u` | `[days]` | Owner and admins only. Usage for the last days (default 7, up to 31) and the current limits. See [Usage and limits](#usage-and-limits--usage) |
@@ -164,6 +165,51 @@ doesn't have). Both **spend your OpenAI account**, so they're for the owner and 
 Without `-gif`, "generate an animated gif..." replying to a photo also works. To adjust the frames and
 the time of each one in a single call (`-frames`, `-ms`), use
 [`/draw -gif`](draw.md#animated-gif--gif).
+
+## With the profile photo of someone (`-profile`)
+
+`-profile` (`-p`) adds the **WhatsApp profile photo** of one or more people to the images of the
+question, next to the photo you reply to. It works in a plain question, in `-img` and in `-gif`
+(the last two, for the owner and admins). Who goes after `-p`: `/Name/`, `@mention` or `+number`
+(up to 4); with nobody, it is the person of the private chat or, in a group, whoever wrote the
+message you reply to. All the details, and the drawing examples, are in
+[`/draw`](draw.md#with-the-profile-photo-of-someone--profile).
+
+```text
+/gpt -p /Rafael Silva/ describe this person
+🤖 A man in his thirties, smiling, with short dark hair and a beard, in front of a blue wall...
+```
+
+```text
+(replying to a photo of a group of friends)
+/gpt -p /Rafael Silva/ is Rafael in this photo? What is he wearing?
+🤖 Yes, he seems to be the one in the middle, with the same beard as in his profile photo. He wears a green shirt...
+```
+
+```text
+(replying to a photo of a dog)
+/gpt -img -p /Rafael Silva/ put Rafael walking this dog in a park
+🎨 put Rafael walking this dog in a park
+```
+
+```text
+(in the private chat with Rafael)
+/gpt -p what would he look like with a mustache?
+🤖 With a thick mustache, he would look more serious, with something of a 1970s detective...
+```
+
+`@me` (or `$me`) is your own photo: `/gpt -p @me how do I look in this photo?`. Plain names work too, and several at once (up to 4), joined with the photo you replied to:
+
+```text
+(replying to a photo of a meeting)
+/gpt -p fulano beltrano are Fulano and Beltrano in this photo?
+🤖 Yes: Fulano is the second from the left, and Beltrano is the one at the table's end...
+```
+
+- Without a question, `/gpt -p /Rafael Silva/` describes the photo, like `/gpt` does on a replied photo.
+- A person with no photo visible is refused with `🙈` and nothing goes to OpenAI.
+- The text of the request is sent with a line telling which image is which ("Attached images, in
+  this order: 1) the photo of the message; 2) the profile photo of Rafael Silva.").
 
 ## Voice (`-voice`)
 

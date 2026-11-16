@@ -270,12 +270,13 @@ async function consumptionFooter() {
  * @param {{ mimetype: string, data: string }} [o.imagem]  an image (base64) that goes along with the question
  * @returns {Promise<string>}
  */
-async function askOnChat({ cmd, sistema: system, texto: textAlt, imagem: image = null }) {
-    // With an image, the content becomes the list of parts (text + image as data URL)
-    const content = image
+async function askOnChat({ cmd, sistema: system, texto: textAlt, imagem: image = null, imagens: images = [] }) {
+    // With image(s), the content becomes the list of parts (text + images as data URL)
+    const allAlt = [image, ...images].filter(Boolean);
+    const content = allAlt.length
         ? [
             { type: 'text', text: textAlt },
-            { type: 'image_url', image_url: { url: `data:${image.mimetype};base64,${image.data}` } }
+            ...allAlt.map(i => ({ type: 'image_url', image_url: { url: `data:${i.mimetype};base64,${i.data}` } }))
         ]
         : textAlt;
 
@@ -389,7 +390,8 @@ const TIMEOUT_GIF_MS = 5 * 60 * 1000;
  * @param {{ frames: number, frameMs: number }} [o.gif]  asks for the GIF, with the frames and the duration of each
  * @returns {Promise<string>}  the image (PNG) or the GIF, in base64
  */
-async function generateImage({ cmd, prompt, imagem: image = null, gif = null }) {
+async function generateImage({ cmd, prompt, imagem: image = null, imagens: images = [], gif = null }) {
+    const inputs = [image, ...images].filter(Boolean); // PNG in a Buffer; more than one: image[] (the photo and the profiles)
     // The GIF has its own model (only the gpt-image-2.6-* ones do it) and the frames come out at 512x512: OpenAI charges the
     // pixels of all of them
     const modelAlt = getSetting(gif ? 'gpt.image.gifModel' : 'gpt.image.model');
@@ -405,12 +407,12 @@ async function generateImage({ cmd, prompt, imagem: image = null, gif = null }) 
     try {
         let reply;
         let sentAlt;
-        if (image) {
+        if (inputs.length) {
             const form = new FormData();
             form.append('model', modelAlt);
             form.append('prompt', prompt);
             for (const [campo, valueAlt] of Object.entries(extras)) form.append(campo, String(valueAlt));
-            form.append('image', new Blob([image], { type: 'image/png' }), 'imagem.png');
+            inputs.forEach((png, i) => form.append(inputs.length > 1 ? 'image[]' : 'image', new Blob([png], { type: 'image/png' }), `imagem${i + 1}.png`));
             sentAlt = form;
             reply = await axios.post(OPENAI_IMAGE_EDIT_URL, form, { ...config, maxBodyLength: Infinity });
         } else {
