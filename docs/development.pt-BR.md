@@ -32,7 +32,7 @@ make test                    # testes do checkout local
 make DOCK_REMOTE=1 test      # testes da imagem em execução no homelab
 make DOCK_REMOTE=1 deploy      # build + recria o bot remoto
 make DOCK_REMOTE=1 recreate  # o mesmo, mas com a imagem refeita do zero (sem cache)
-make DOCK_REMOTE=1 logs      # logs do bot remoto
+make DOCK_REMOTE=1 logs      # logs do bot remoto (segue depois de um deploy; Ctrl+C sai)
 make DOCK_REMOTE=1 shell     # shell dentro do bot remoto
 make DOCK_REMOTE=1 DOCKER_REMOTE_SERVER=ssh://root@homelab.local REMOTE_CONTEXT=homelab test
 

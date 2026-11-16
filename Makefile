@@ -132,8 +132,15 @@ deploy: context ## Build + (re)creates the service on the selected target
 	$(Q)$(MAKE) build
 	$(Q)$(COMPOSE) up -d --force-recreate $(SERVICE)
 
-logs: context ## Follows the selected service's logs
-	$(Q)$(DOCKER) logs -f $(SERVICE)
+# A deploy's new container has another id: a plain `logs -f` dies on it. Here the loop reopens the log
+# (without repeating what already came out) until you quit with Ctrl+C.
+logs: context ## Follows the selected service's logs; keeps going after a deploy/restart
+	$(Q)trap 'exit 0' INT; args="--tail 50"; while true; do \
+		inicio=$$(date -u +%Y-%m-%dT%H:%M:%SZ); \
+		$(DOCKER) logs -f $$args $(SERVICE) 2>&1 || true; \
+		args="--since $$inicio"; \
+		echo "[logs] $(SERVICE) parou ou foi recriado; esperando voltar..."; sleep 2; \
+	done
 
 ps: context ## Lists the selected target's containers
 	$(Q)$(DOCKER) ps
