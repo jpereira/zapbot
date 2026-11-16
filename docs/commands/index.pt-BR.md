@@ -185,7 +185,7 @@ destino: quem pode o `/gpt` usa os atalhos para ele, e o nome de um atalho não 
 [`/kernel`](kernel.md), [`/me`](me.md), [`/meme`](meme.md), [`/news`](news.md),
 [`/noffa`](noffa.md), [`/ping`](ping.md), [`/pixelart`](pixelart.md), [`/qr`](qr.md),
 [`/rates`](rates.md), [`/sticker`](sticker.md), [`/translate`](translate.md),
-[`/uptime`](uptime.md), [`/version`](version.md), [`/walissu`](walissu.md),
+[`/uptime`](uptime.md), [`/usage`](usage.md), [`/version`](version.md), [`/walissu`](walissu.md),
 [`/weather`](weather.md), [`/whois`](whois.md)
 
 **admin, delegáveis** (admins e o dono; o dono libera a um usuário com `+cmd`) (15):
@@ -291,6 +291,7 @@ e o `/alias /usd` mostra o que um atalho faz.
 | [`/unblock`](unblock.md) | | `admin` | Desbloqueia uma pessoa: pelo nome, pelo número, pelo nº da lista do `/block` ou respondendo uma mensagem |
 | [`/unmute`](unmute.md) | | `admin` | Desfaz o silêncio do `/mute`: pelo nome, pelo nº da lista, respondendo um aviso ou todos (`-all`) |
 | [`/uptime`](uptime.md) | | `user` | Tempo de execução e de conexão |
+| [`/usage`](usage.md) | | `user` | Os seus limites de uso (definidos pelo dono com o `/bot +limit`): usados, restantes e quando renovam; `-l` mostra as suas últimas chamadas |
 | [`/version`](version.md) | | `user` | Versão do bot (mesmo banner do `/uptime`) |
 | [`/walissu`](walissu.md) | | `user` | Piada: Walissu CVE BOT: marca 2 membros com uma CVE aleatória |
 | [`/watch`](watch.md) | | `admin` | Regras de texto/regex, com origem opcional em `-in`; lista ocorrências, busca nelas com `-q` e avisa nos destinos de `-to`; `-mask` ofusca telefones e `-mask N` liga o 🔒 na regra N |

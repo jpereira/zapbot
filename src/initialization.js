@@ -398,6 +398,19 @@ async function initializeDb() {
         )
     `);
 
+    // Usage limit (/bot +limit): one row per call that counted, in the period window (src/usageLimit.js)
+    await dbRun(`
+        CREATE TABLE IF NOT EXISTS usage_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            item TEXT NOT NULL,
+            cmd TEXT NOT NULL,
+            used_at INTEGER NOT NULL,
+            chat TEXT,
+            params TEXT
+        )
+    `);
+    await dbRun('CREATE INDEX IF NOT EXISTS idx_usage_log ON usage_log (item, cmd, used_at)');
+
     /*
      * /mute: people and groups with muted notices (what: deleted, edited,
      * status, reaction) and each cut notice (mute_hits, for /bot -status; 30 days).

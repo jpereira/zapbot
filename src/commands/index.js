@@ -29,6 +29,7 @@ const { cmdAscii } = require('./ascii');
 const { cmdHelp } = require('./help');
 const { cmdInvite } = require('./invite');
 const { cmdOcr } = require('./ocr');
+const { cmdUsage } = require('./usage');
 const { cmdQr } = require('./qr');
 const { cmdGoodbye, cmdWelcome } = require('./greetings');
 const { cmdTts } = require('./tts');
@@ -119,6 +120,7 @@ const HANDLERS = {
     '/unblock': cmdUnblock,
     '/unmute': cmdUnmute,
     '/uptime': cmdUptime,
+    '/usage': cmdUsage,
     '/version': cmdUptime,
     '/walissu': cmdWalissu,
     '/watch': cmdWatch,

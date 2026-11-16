@@ -34,9 +34,35 @@ messages stay on your server. You type commands in any chat and it answers (`/he
 | 📅 | **Schedule and automate** | One-off and recurring messages, reminders, your own shortcuts, several commands in one message, notes with `#tags` and alerts, recipient lists | [`/cron`](commands/cron.md) · [`/alias`](commands/alias.md) · [`/batch`](commands/batch.md) · [`/notes`](commands/notes.md) · [`/forward`](commands/forward.md) |
 | 👥 | **Group management** | Mentions everyone, promotes and demotes, invite links, polls, welcome and goodbye messages, mutes and blocks | [`/everybody`](commands/everybody.md) · [`/promote`](commands/promote.md) · [`/invite`](commands/invite.md) · [`/poll`](commands/poll.md) · [`/welcome`](commands/welcome.md) · [`/mute`](commands/mute.md) |
 | 🌎 | **Everyday info** | Weather checked against more than one source, news, CVEs, Linux kernel versions, translation and chat statistics | [`/weather`](commands/weather.md) · [`/news`](commands/news.md) · [`/cve`](commands/cve.md) · [`/kernel`](commands/kernel.md) · [`/translate`](commands/translate.md) · [`/stats`](commands/stats.md) |
+| ⭐ | **Pro: limits per person** | Share `/gpt` and other commands with friends and groups, with a limit of successful calls per person, per day, week or month, and `/usage` to see what is left | [`/usage`](commands/usage.md) |
 | 🛡️ | **Yours, and safe** | Owner, admin and user roles per command, flood protection, anti-SSRF in downloads, backups, QR Code login by e-mail, and English or Brazilian Portuguese | [`/bot`](commands/bot.md) · [`/backup`](commands/backup.md) · [`/set`](commands/set.md) |
 
 All the commands, with their options and examples, are in [Commands](commands/index.md).
+
+## ⭐ Pro: let friends use `/gpt` without emptying your credit
+
+The commands people most want in groups and among friends (`/gpt` first of all) cost you money on
+every call. With a **usage limit per person**, you decide how many *successful* calls each one gets,
+per day, week or month. When it runs out, the command does not even run:
+
+```text
+/bot +u /Rafael Silva/ +cmd /gpt +limit 5/day      → Rafael: 5 calls of /gpt per day
+/bot +u +cmd /gpt,/tldr +limit 20/month            → typed in a group: shared by everyone there
+/bot -limit /gpt /Rafael Silva/                    → takes the limit away
+```
+
+```text
+/gpt what is the capital of France?
+🚫 /gpt limit reached: 3 of 3 per day. It renews on Tue 17/11 00:00.
+
+/usage
+⏱️ *Usage limits*
+• /gpt  2/3 per day · renews Tue 17/11 00:00
+• /tldr  0/3 per day · renews Tue 17/11 00:00
+```
+
+Help, usage and errors never count, you and the admins have no limit, and the history is one
+`/usage -l` away. All of it in [`/usage`](commands/usage.md) and [`/bot`](commands/bot.md#usage-limits-per-user-limit).
 
 ## 👀 See it in action
 

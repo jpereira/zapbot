@@ -61,7 +61,7 @@ async function ethCall(url, { to, data }, label) {
 
     const { data: body } = reply;
     if (body?.error) {
-        const limitAlt = /rate|limit|too many/i.test(body.error.message ?? '');
+        const limitAlt = /usage|limit|too many/i.test(body.error.message ?? '');
         const reasonAlt = limitAlt
             ? t('defi.err.evmRate', { label: label })
             : t('defi.err.evmRefused', { label: label });

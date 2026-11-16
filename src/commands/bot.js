@@ -14,6 +14,7 @@ const { GetOptFromCommand } = require('../options');
 const { boxes } = require('../imap');
 const { printInfo } = require('../log');
 const { delegavel, describeRule, recordRule, regraDe } = require('../permissions');
+const { commandLimitable, describeLimit, recordLimitAlt, readLimit, limitsAlt } = require('../usageLimit');
 const {
     SETTINGS_SCHEMA, userCommand, getSetting, setSetting, validateSetting
 } = require('../settings');
@@ -197,8 +198,10 @@ async function usersList(scope, { novos: freshAlt3 = [], dica: tip = 'todos' } =
         const freshAlt = freshAlt3.includes(item) ? ' ✅' : '';
         // The +cmd|-cmd rule below (admin uses everything: without it)
         const rule = !admins.includes(item) && regraDe(item);
+        const limits = admins.includes(item) ? [] : [...limitsAlt(item)].map(([c, l]) => `${c} ${describeLimit(l)}`);
         return `• ${marks(item, admins, users).join(' ')} · ${await describeItem(item, scope)}${freshAlt}` +
-            (rule ? `\n → ${describeRule(rule)}` : '');
+            (rule ? `\n → ${describeRule(rule)}` : '') +
+            (limits.length ? `\n ⏱️ ${limits.join(', ')}` : '');
     }));
 
     const owner = items.some(i => !readItem(i).soEm && isOOwner(i));
@@ -231,7 +234,8 @@ async function report(chat) {
 
 // +a/-a (bot.admins), +u/-u (bot.users) and +cmd/-cmd (each user's commands), in any
 // ordem
-const SHORTCUT = /(^|\s)[+-](a|u|cmd)(?=\s|$)/;
+const SHORTCUT = /(^|\s)[+-](a|u|cmd|limit)(?=\s|$)/;
+const OPTION_LIMIT = /(^|\s)([+-])limit(?:\s+([^\s+-]\S*))?(?=\s|$)/;
 const OPERATION = /(^|\s)([+-])([au])(?=\s|$)/;
 const OPTION_CMD = /(^|\s)([+-])cmd(?:\s+((?:[^\s+,-][^\s,]*,\s*)*[^\s+,-][^\s,]*))?(?=\s|$)/;
 const SHORTCUT_LIST = { a: 'bot.admins', u: 'bot.users' };
@@ -249,9 +253,11 @@ function readShortcut(textAlt) {
     };
     const allAlt2 = Boolean(remove(/(^|\s)-(?:list-users|lu)\s+all(?=\s|$)/));
     remove(/(^|\s)-(?:list-users|lu)(?=\s|$)/);
+    const limit = remove(OPTION_LIMIT);
     const cmd = remove(OPTION_CMD);
     const op = remove(OPERATION);
     return {
+        limit: limit ? { sinal: limit[2], texto: limit[3] ?? '' } : null,
         op: op ? { sinal: op[2], letra: op[3] } : null,
         cmd: cmd ? { sinal: cmd[2], texto: cmd[3] ?? '' } : null,
         todos: allAlt2,
@@ -364,7 +370,12 @@ async function changeList(msg, key, items, append, chat) {
             return;
         }
         await setSetting(key, current.filter(i => !removed.includes(i)));
-        if (key === 'bot.users') for (const i of removed) await recordRule(i, null);
+        if (key === 'bot.users') {
+            for (const i of removed) {
+                await recordRule(i, null);
+                for (const c of limitsAlt(i).keys()) await recordLimitAlt(i, c, null);
+            }
+        }
     }
     printInfo(`/bot: ${key} ${append ? '+' : '-'} ${JSON.stringify(append ? freshAlt3 : removed)}`);
 
@@ -386,7 +397,7 @@ async function changeList(msg, key, items, append, chat) {
  *         "Todos, menos" esses; "Todos, menos" ganha esses.
  * In a group, the person is the one there ("phone:group") or, without it, the one from any chat.
  */
-async function changeCommands(msg, items, { sinal: signalAlt, comandos: commands, comV: withV }, chat) {
+async function changeCommands(msg, items, { sinal: signalAlt, comandos: commands, comV: withV }, chat, afterRecord = null) {
     const users = getSetting('bot.users');
     if (users.includes('all')) {
         await msg.reply(t('adm.bot.everyoneAlready'));
@@ -399,10 +410,12 @@ async function changeCommands(msg, items, { sinal: signalAlt, comandos: commands
     const changed = [];
     const newUsers = [];
     const notices = [];
+    const targets = [];
 
     for (const item of items) {
         const { numero: numberAlt, soEm: soIn } = readItem(item);
         const target = !users.includes(item) && soIn && users.includes(numberAlt) ? numberAlt : item;
+        targets.push(target);
         const isUser = users.includes(target);
         const rule = regraDe(target);
         const who = await describeItem(target, scope);
@@ -447,6 +460,8 @@ async function changeCommands(msg, items, { sinal: signalAlt, comandos: commands
     }
 
     if (newUsers.length) await setSetting('bot.users', [...users, ...newUsers]);
+    // The +limit on the same line: saves now (the users already exist) and the list below already shows the ⏱️
+    if (afterRecord) notices.push(...await afterRecord(targets));
     if (!changed.length) {
         await msg.reply(notices.join('\n'));
         return;
@@ -459,14 +474,72 @@ async function changeCommands(msg, items, { sinal: signalAlt, comandos: commands
         ...notices,
         ...(await Promise.all(listOutside.map(async i => {
             const rule = regraDe(i);
-            return `✅ ${await describeItem(i, scope)}${rule ? `\n → ${describeRule(rule)}` : ''}`;
+            const limits = [...limitsAlt(i)].map(([c, l]) => `${c} ${describeLimit(l)}`);
+            return `✅ ${await describeItem(i, scope)}${rule ? `\n → ${describeRule(rule)}` : ''}` +
+                (limits.length ? `\n ⏱️ ${limits.join(', ')}` : '');
         })))
     ];
     await msg.reply((inTop.length ? `${inTop.join('\n')}\n\n` : '') + (list || whoUses()));
 }
 
+/*
+ * +limit N[/period] (with the +cmd on the same line) records the limit of those commands for the items;
+ * -limit /cmd,/cmd (or all) removes it. It only applies to whoever is a user (bot.users).
+ */
+async function applyLimits(targets, limit, commands, chat) {
+    const users = getSetting('bot.users');
+    const scope = await chatScope(chat);
+    const limitAlt = readLimit(limit.texto);
+    const notices = [];
+    for (const target of targets) {
+        if (!users.includes(target)) {
+            notices.push(t('usage.notUser', { quem: await describeItem(target, scope) }));
+            continue;
+        }
+        for (const cmd of commands) await recordLimitAlt(target, cmd, limitAlt);
+    }
+    printInfo(`/bot: bot.users.limits +limit ${limit.texto} ${commands.join(',')} → ${JSON.stringify(targets)}`);
+    return notices;
+}
+
+async function changeLimits(msg, items, limit, commands, chat) {
+    const users = getSetting('bot.users');
+    const scope = await chatScope(chat);
+    const linesAlt = [];
+
+    if (limit.sinal === '+') {
+        const limitAlt = readLimit(limit.texto);
+        for (const cmd of commands) {
+            if (!commandLimitable(cmd)) throw new Error(t('usage.notLimitable', { cmd }));
+        }
+        for (const item of items) {
+            const { numero: numberAlt, soEm: soIn } = readItem(item);
+            const target = !users.includes(item) && soIn && users.includes(numberAlt) ? numberAlt : item;
+            if (!users.includes(target)) {
+                linesAlt.push(t('usage.notUser', { quem: await describeItem(target, scope) }));
+                continue;
+            }
+            for (const cmd of commands) await recordLimitAlt(target, cmd, limitAlt);
+            linesAlt.push(`⏱️ ${await describeItem(target, scope)}\n → ${commands.join(', ')}: ${describeLimit(limitAlt)}`);
+        }
+    } else {
+        for (const item of items) {
+            const { numero: numberAlt, soEm: soIn } = readItem(item);
+            const target = limitsAlt(item).size || !soIn ? item : numberAlt;
+            const dele = [...limitsAlt(target).keys()];
+            const remove = commands.includes('all') ? dele : commands.filter(c => dele.includes(c));
+            for (const cmd of remove) await recordLimitAlt(target, cmd, null);
+            linesAlt.push(remove.length
+                ? `✅ ${await describeItem(target, scope)}\n → ${t('usage.removed', { cmds: remove.join(', ') })}`
+                : t('usage.nothingToRemove', { quem: await describeItem(target, scope) }));
+        }
+    }
+    printInfo(`/bot: bot.users.limits ${limit.sinal}limit → ${JSON.stringify(items)}`);
+    await msg.reply(linesAlt.join('\n'));
+}
+
 async function handleShortcut(msg, textAlt, chatCurrent) {
-    const { op, cmd, todos: allAlt2, quem: who } = readShortcut(textAlt);
+    const { op, cmd, limit, todos: allAlt2, quem: who } = readShortcut(textAlt);
     const key = SHORTCUT_LIST[op?.letra ?? 'u'];
     const chat = { ...chatCurrent, todos: allAlt2 };
 
@@ -480,6 +553,22 @@ async function handleShortcut(msg, textAlt, chatCurrent) {
     if (cmd && op && (op.letra === 'a' || op.sinal === '-')) {
         await msg.reply(t('adm.bot.cmdOnlyUsers'));
         return;
+    }
+
+    // +limit needs the commands (the +cmd on the same line); -limit, the commands to release (or all)
+    let limitCommands = null;
+    if (limit) {
+        try {
+            if (limit.sinal === '+') {
+                if (!cmd || cmd.sinal !== '+') throw new Error(t('usage.needsCmd'));
+                readLimit(limit.texto);
+            } else {
+                limitCommands = readCommands(limit.texto);
+            }
+        } catch (e) {
+            await msg.reply(`❌ ${e.message}`);
+            return;
+        }
     }
 
     let commands = null;
@@ -501,11 +590,30 @@ async function handleShortcut(msg, textAlt, chatCurrent) {
         : await chatItems(msg, key, chat);
     if (!items) return;
 
-    if (cmd) {
-        await changeCommands(msg, items, { sinal: cmd.sinal, comandos: commands, comV: Boolean(op) }, chat);
-        return;
+    // +cmd and +limit together: a single reply (the list, already with each user's ⏱️)
+    const together = limit?.sinal === '+' && cmd;
+    if (together) {
+        for (const c of commands) {
+            if (!commandLimitable(c)) {
+                await msg.reply(`❌ ${t('usage.notLimitable', { cmd: c })}`);
+                return;
+            }
+        }
     }
-    await changeList(msg, key, items, op.sinal === '+', chat);
+    if (cmd) {
+        await changeCommands(msg, items, { sinal: cmd.sinal, comandos: commands, comV: Boolean(op) }, chat,
+            together ? (targets) => applyLimits(targets, limit, commands, chat) : null);
+    } else if (op) {
+        await changeList(msg, key, items, op.sinal === '+', chat);
+    }
+
+    if (limit && !together) {
+        try {
+            await changeLimits(msg, items, limit, limit.sinal === '+' ? commands : limitCommands, chat);
+        } catch (e) {
+            await msg.reply(`❌ ${e.message}`);
+        }
+    }
 }
 
 /*
@@ -556,7 +664,7 @@ async function handleStatus(msg, values, { destinosTexto: destinationsText, comD
 }
 
 // What each -reset puts back to default (the daily send of -status always stays)
-const DO_RESET = ['bot.users', 'bot.users.cmds'];
+const DO_RESET = ['bot.users', 'bot.users.cmds', 'bot.users.limits'];
 const RESET_COMPLETE = [...DO_RESET, 'bot.admins', 'bot.paused'];
 
 // Quanto tempo o -reset espera o "sim"

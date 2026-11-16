@@ -2,7 +2,7 @@
  * Who uses the common commands, and which ones: bot.users (the people, the groups and
  * the people only in a group) and bot.users.cmds (each one's rule, from /bot
  * +cmd|-cmd). Without a rule, all the common ones; with a rule, only those on the list ("Only")
- * or all except those on the list ("All, except"). /help and /whois always pass.
+ * or all except those on the list ("All, except"). /help, /whois and /usage always pass.
  *
  * Users (+u) use the `role: USER` commands. A `role: ADMIN` with `delegavel: true` only reaches
  * to a user cited in an "Only" (/bot +cmd): an "All, except" or bot.users = true does not
@@ -15,7 +15,7 @@ const { ROLES } = require('./roles');
 const { getSetting, setSetting } = require('./settings');
 
 const KEY = 'bot.users.cmds';
-const ALWAYS_RELEASED = ['/help', '/whois'];
+const ALWAYS_RELEASED = ['/help', '/whois', '/usage'];
 
 const command = (cmd) => botConfig.commands.find(c => c.cmd === cmd);
 

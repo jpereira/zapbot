@@ -39,9 +39,35 @@ messages stay on your server. You type commands in any chat and it answers (`/he
 | 📅 | **Schedule and automate** | One-off and recurring messages, reminders, your own shortcuts, several commands in one message, notes with `#tags` and alerts, recipient lists | [`/cron`](docs/commands/cron.md) · [`/alias`](docs/commands/alias.md) · [`/batch`](docs/commands/batch.md) · [`/notes`](docs/commands/notes.md) · [`/forward`](docs/commands/forward.md) |
 | 👥 | **Group management** | Mentions everyone, promotes and demotes, invite links, polls, welcome and goodbye messages, mutes and blocks | [`/everybody`](docs/commands/everybody.md) · [`/promote`](docs/commands/promote.md) · [`/invite`](docs/commands/invite.md) · [`/poll`](docs/commands/poll.md) · [`/welcome`](docs/commands/welcome.md) · [`/mute`](docs/commands/mute.md) |
 | 🌎 | **Everyday info** | Weather checked against more than one source, news, CVEs, Linux kernel versions, translation and chat statistics | [`/weather`](docs/commands/weather.md) · [`/news`](docs/commands/news.md) · [`/cve`](docs/commands/cve.md) · [`/kernel`](docs/commands/kernel.md) · [`/translate`](docs/commands/translate.md) · [`/stats`](docs/commands/stats.md) |
+| ⭐ | **Pro: limits per person** | Share `/gpt` and other commands with friends and groups, with a limit of successful calls per person, per day, week or month, and `/usage` to see what is left | [`/usage`](docs/commands/usage.md) |
 | 🛡️ | **Yours, and safe** | Owner, admin and user roles per command, flood protection, anti-SSRF in downloads, backups, QR Code login by e-mail, and English or Brazilian Portuguese | [`/bot`](docs/commands/bot.md) · [`/backup`](docs/commands/backup.md) · [`/set`](docs/commands/set.md) |
 
 All the commands, with their options and examples, are in [Commands](docs/commands/index.md).
+
+## ⭐ Pro: let friends use `/gpt` without emptying your credit
+
+The commands people most want in groups and among friends (`/gpt` first of all) cost you money on
+every call. With a **usage limit per person**, you decide how many *successful* calls each one gets,
+per day, week or month. When it runs out, the command does not even run:
+
+```text
+/bot +u /Rafael Silva/ +cmd /gpt +limit 5/day      → Rafael: 5 calls of /gpt per day
+/bot +u +cmd /gpt,/tldr +limit 20/month            → typed in a group: shared by everyone there
+/bot -limit /gpt /Rafael Silva/                    → takes the limit away
+```
+
+```text
+/gpt what is the capital of France?
+🚫 /gpt limit reached: 3 of 3 per day. It renews on Tue 17/11 00:00.
+
+/usage
+⏱️ *Usage limits*
+• /gpt  2/3 per day · renews Tue 17/11 00:00
+• /tldr  0/3 per day · renews Tue 17/11 00:00
+```
+
+Help, usage and errors never count, you and the admins have no limit, and the history is one
+`/usage -l` away. All of it in [`/usage`](docs/commands/usage.md) and [`/bot`](docs/commands/bot.md#usage-limits-per-user-limit).
 
 ## 👀 See it in action
 
@@ -301,6 +327,7 @@ and make the bot your own:
 | [`/unblock`](https://jpereira.github.io/zapbot/commands/unblock/) | | `admin` | Unblocks a person: by name, by number, by the `/block` list number or by replying to a message |
 | [`/unmute`](https://jpereira.github.io/zapbot/commands/unmute/) | | `admin` | Undoes `/mute`: by name, by list number, by replying to an alert, or all of them (`-all`) |
 | [`/uptime`](https://jpereira.github.io/zapbot/commands/uptime/) | | `user` | Run time and connection time |
+| [`/usage`](https://jpereira.github.io/zapbot/commands/usage/) | | `user` | Your usage limits (set by the owner with `/bot +limit`): used, left and when they renew; `-l` shows your last calls |
 | [`/version`](https://jpereira.github.io/zapbot/commands/version/) | | `user` | Bot version (same banner as `/uptime`) |
 | [`/walissu`](https://jpereira.github.io/zapbot/commands/walissu/) | | `user` | Joke: Walissu CVE BOT: tags 2 members with a random CVE |
 | [`/watch`](https://jpereira.github.io/zapbot/commands/watch/) | | `admin` | Text/regex rules, with an optional source in `-in`; lists hits, searches them with `-q` and alerts the `-to` destinations; `-mask` hides phone numbers and `-mask N` turns on 🔒 on rule N |

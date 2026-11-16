@@ -10,6 +10,7 @@ const { logIsCopy } = require('./debugCopy');
 const { contextDebug } = require('./debugContext');
 const { maskPhones } = require('./util/phone');
 const { phoneBotJid } = require('./botPhone');
+const { register: registerReply } = require('./usageCollector');
 
 const client = new Client({
     authStrategy: new LocalAuth(),
@@ -130,6 +131,7 @@ const sentByBot = (m) => idsSentByBot.has(m?.id?._serialized);
 const sendMessageOriginal = client.sendMessage.bind(client);
 
 client.sendMessage = (chatId, content, options = {}) => {
+    registerReply(content);
     // The copy is ignored by message_create, so it leaves no mark for the next message.
     if (logIsCopy(content)) return sendMessageOriginal(chatId, content, options);
     if (contextDebug().maskTelefones) {
@@ -154,6 +156,7 @@ client.sendMessage = (chatId, content, options = {}) => {
  * @returns {Promise<object|null>} the message with the conclusion
  */
 async function completeNotice(msg, notice, textAlt, options = {}) {
+    registerReply(textAlt);
     if (contextDebug().maskTelefones) textAlt = maskPhones(textAlt);
     if (notice) {
         try {

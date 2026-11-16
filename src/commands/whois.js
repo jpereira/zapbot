@@ -9,6 +9,7 @@ const { resolveLidToPhone, groupResolverName } = require('../contacts');
 const { describeRule, permissionHere } = require('../permissions');
 const { resolverOrChoose } = require('../destinations');
 const { t } = require('../i18n');
+const { limitsWithUsage, usageLine } = require('../usageLimit');
 const { getSetting } = require('../settings');
 
 /*
@@ -123,8 +124,11 @@ async function cmdWhois({ msg, args, quotedMsg, senderNumber, chatId, isGroup, a
     const linesAlt = await Promise.all(numbers.map(async (n, i) => {
         const { regras: rules } = permissionHere({ numero: n, chatId, isGroup });
         const user = levels[i].startsWith(ROLES.usuario);
+        // And the usage limits (/bot +limit), with what has already been used
+        const limits = user ? await limitsWithUsage({ numero: n, chatId, isGroup }) : [];
         return `• ${levels[i]} · ${await describeItem(n, scope)}` +
-            (user && rules.length ? `\n → ${rules.map(describeRule).join('; ')}` : '');
+            (user && rules.length ? `\n → ${rules.map(describeRule).join('; ')}` : '') +
+            (limits.length ? `\n ⏱️ ${limits.map(usageLine).join('; ')}` : '');
     }));
 
     await msg.reply(`${t('whois.title', { n: numbers.length })}\n${linesAlt.join('\n')}\n\n` +
@@ -136,5 +140,7 @@ async function cmdWhois({ msg, args, quotedMsg, senderNumber, chatId, isGroup, a
 }
 
 module.exports = {
-    cmdWhois
+    cmdWhois,
+    phoneAlt3,
+    textPhones
 };

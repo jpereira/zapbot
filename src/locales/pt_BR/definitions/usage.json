@@ -1,0 +1,33 @@
+{
+  "summary": "Seus limites de uso: usados, restantes e quando renovam",
+  "usage": "/usage [OPÇÃO] [pessoa...]",
+  "help": "Mostra os limites de uso que o dono definiu para você (/bot +cmd /gpt +limit 5/dia): em cada comando, quantas chamadas você usou, o limite e quando renova. Só chamada que deu certo conta: ajuda, uso e erros não. O dono e os admins não têm limite. Com -log, as suas últimas chamadas: quando, comando e parâmetros. O dono e os admins consultam outras pessoas.",
+  "ex": [
+    "/usage",
+    "/usage -log",
+    "/usage /Rafael Silva/"
+  ],
+  "cmd_opts": [
+    {
+      "opts": [
+        "log",
+        "l"
+      ],
+      "values": [],
+      "desc": "As últimas chamadas que contaram: quando, comando e parâmetros.",
+      "ex": [
+        "/usage -l"
+      ]
+    },
+    {
+      "argv": [
+        "[pessoa...]"
+      ],
+      "desc": "De quem mostrar os limites (só o dono e os admins): /nome/, @menção ou +número. Sem ela, os seus.",
+      "ex": [
+        "/usage /Rafael Silva/",
+        "/usage -l +5521999999999"
+      ]
+    }
+  ]
+}

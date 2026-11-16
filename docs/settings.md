@@ -19,6 +19,7 @@ shows are in Portuguese; the ones here are in English).
 | `bot.paused` | on/off | `off` | Bot turned off: all commands ignored, except `/bot` (same as `/bot -on`/`-off`) |
 | `bot.users` | list | `false` | Who uses the regular (non-admin) commands, besides you and `bot.admins`: `false` (nobody), `true` (everybody) or people and groups (for a group, everyone in it can use them, but only inside it); a person in just one group is stored as `phone:group-id`. Only the owner can change it; `/bot +u`/`-u` is the shortcut. See [Users](commands/bot.md#users) |
 | `bot.users.cmds` | list | *(empty)* | Each user's commands (`/bot +cmd`/`-cmd`): `item=/a,/b` (only those) or `item=!/a,/b` (all regular ones, except those), with the `bot.users` item. An `admin` command (`/gpt`...) only works in the "only those" list. No line: all regular commands. See [Each user's commands](commands/bot.md#each-users-commands) |
+| `bot.users.limits` | list | *(empty)* | Usage limit of each user per command (`/bot +cmd /gpt +limit 5/day`): `item=/gpt:5/day,/tldr:3`. See [Usage limits per user](commands/bot.md#usage-limits-per-user-limit) |
 | `cache.editedRetentionDays` | 1–365 | `30` | Days edited messages are kept for `/show -e` |
 | `cache.messageMediaRetentionHours` | 68–2160 | `68` | Hours the media of regular messages (photos, videos, audios, documents) stays on disk (68; up to 2160 = 90 days). Never longer than `cache.messageRetentionHours`: the media goes away with the message. It takes space in `cache/media`; `/cache -media` frees only it |
 | `cache.messageRetentionHours` | 68–2160 | `68` | Hours the text of regular messages stays in the database (68, the delete-for-everyone window; up to 2160 = 90 days): the more, the further back `/tldr` reaches. Media has its own limit, `cache.messageMediaRetentionHours` |
@@ -105,6 +106,8 @@ shows are in Portuguese; the ones here are in English).
 | `sticker.name` | text | `ZapBot` | Sticker pack name |
 | `tldr.maxMsgs` | 10–2000 | `500` | Max messages sent to OpenAI per [`/tldr`](commands/tldr.md) |
 | `translate.lang` | text | `pt` | Default target language of [`/translate`](commands/translate.md) (code: `pt`, `en`, `es`...) |
+| `usage.footer` | on/off | `on` | After a command with a usage limit, says how many calls are left (`📊 /gpt: 1 of 3 per day left`) |
+| `usage.logDays` | 1–365 | `90` | Days the history of limited calls (`/usage -l`) is kept |
 | `watch.hitsRetentionDays` | 1–365 | `30` | Days `/watch` hits are kept |
 | `watch.max` | 1–100 | `20` | Max `/watch` rules |
 | `watch.rules` | list (one per line) | *(empty)* | `/watch` rules: text or `/regex/flags`. Created with `/watch <rule>` and removed with `/watch -rm N` |

@@ -160,6 +160,7 @@ nav:
       - /unblock: commands/unblock.md
       - /unmute: commands/unmute.md
       - /uptime: commands/uptime.md
+      - /usage: commands/usage.md
       - /version: commands/version.md
       - /walissu: commands/walissu.md
       - /watch: commands/watch.md

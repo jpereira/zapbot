@@ -19,6 +19,7 @@ em português).
 | `bot.paused` | on/off | `off` | Bot desligado: todos os comandos ignorados, exceto o `/bot` (o mesmo do `/bot -on`/`-off`) |
 | `bot.users` | lista | `false` | Quem usa os comandos comuns (os não-admin), além de você e do `bot.admins`: `false` (ninguém), `true` (todos) ou pessoas e grupos (num grupo, todos ali usam, mas só dentro dele); uma pessoa só num grupo fica como `telefone:id-do-grupo`. Só o dono altera; o `/bot +u`/`-u` é o atalho. Veja [Usuários](commands/bot.md#usuários) |
 | `bot.users.cmds` | lista | *(vazia)* | Os comandos de cada usuário (o `/bot +cmd`/`-cmd`): `item=/a,/b` (só esses) ou `item=!/a,/b` (todos os comuns, menos esses), com o item do `bot.users`. Um comando `admin` (`/gpt`...) só vale na lista "só esses". Sem linha: todos os comuns. Veja [Comandos de cada usuário](commands/bot.md#comandos-de-cada-usuário) |
+| `bot.users.limits` | lista | *(vazia)* | Limite de uso de cada usuário por comando (`/bot +cmd /gpt +limit 5/dia`): `item=/gpt:5/day,/tldr:3`. Veja [Limite de uso por usuário](commands/bot.md#limite-de-uso-por-usuário-limit) |
 | `cache.editedRetentionDays` | 1–365 | `30` | Dias que as mensagens editadas ficam guardadas para o `/show -e` |
 | `cache.messageMediaRetentionHours` | 68–2160 | `68` | Horas que as mídias das mensagens comuns (fotos, vídeos, áudios, documentos) ficam no disco (68; até 2160 = 90 dias). Nunca passam do `cache.messageRetentionHours`: a mídia sai junto com a mensagem. Ocupam espaço em `cache/media`; `/cache -media` libera só elas |
 | `cache.messageRetentionHours` | 68–2160 | `68` | Horas que o texto das mensagens comuns fica no banco (68, a janela de apagar para todos; até 2160 = 90 dias): quanto mais, mais o `/tldr` alcança. As mídias têm o seu prazo, o `cache.messageMediaRetentionHours` |
@@ -105,6 +106,8 @@ em português).
 | `sticker.name` | texto | `ZapBot` | Nome do pacote das figurinhas |
 | `tldr.maxMsgs` | 10–2000 | `500` | Máximo de mensagens enviadas à OpenAI por [`/tldr`](commands/tldr.md) |
 | `translate.lang` | texto | `pt` | Idioma de destino padrão do [`/translate`](commands/translate.md) (código: `pt`, `en`, `es`...) |
+| `usage.footer` | on/off | `on` | Depois de um comando com limite de uso, avisa quantas chamadas restam (`📊 /gpt: restam 1 de 3 por dia`) |
+| `usage.logDays` | 1–365 | `90` | Dias que o histórico das chamadas com limite (`/usage -l`) fica guardado |
 | `watch.hitsRetentionDays` | 1–365 | `30` | Dias que as ocorrências do `/watch` ficam guardadas |
 | `watch.max` | 1–100 | `20` | Máximo de regras do `/watch` |
 | `watch.rules` | lista (uma por linha) | *(vazia)* | Regras do `/watch`: texto ou `/regex/flags`. Criadas por `/watch <regra>` e removidas por `/watch -rm N` |

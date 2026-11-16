@@ -31,6 +31,7 @@ const { printDebugLevel } = require('../log');
 const { instrumentObject } = require('../debugInstrumentation');
 const { channelResolverName } = require('../contacts');
 const { isChannelAlt, channelId } = require('../util/origin');
+const { withLimit } = require('../usageLimit');
 const { withTyping, optionsError, readOptions, assembleContext, denial, askedMask } = require('../execute');
 const { dataParserCommand } = require('../debugParser');
 
@@ -389,10 +390,13 @@ client.on('message_create', (msg) => withContextDebug({
         // Text alias: the {/command}s run here, with the permissions of whoever called (the arguments stay out)
         if (resolved.texto) {
             printCall(msg.fromMe ? (client.info?.pushname || t('core.voce')) : senderName, body, chatName);
-            await withTyping(msg, command, () => textRunAlias(msg, resolved, {
+            const runAlias = () => withTyping(msg, command, () => textRunAlias(msg, resolved, {
                 chatId, chatName, isGroup,
                 quem: { nivel: level, admin, podeUsar: admin ? () => true : permission.pode, senderContact, senderName, senderNumber }
             }));
+            // The usage limit (/bot +limit) applies to each {/command} of the alias; the owner and the admins have none
+            if (admin) await runAlias();
+            else await withLimit({ msg, quem: { numero: senderNumber, chatId, isGroup }, cmds: command.alvos ?? [command.cmd], params: body }, runAlias);
             return;
         }
 
@@ -434,11 +438,22 @@ client.on('message_create', (msg) => withContextDebug({
 
         const quotedMsg = msg.hasQuotedMsg ? await msg.getQuotedMessage().catch(() => null) : null;
 
-        await withTyping(msg, command, () => handler(assembleContext({
+        const run = () => withTyping(msg, command, () => handler(assembleContext({
             msg, args, opts, quotedMsg,
             chat: { chatId, chatName, isGroup },
             quem: { nivel: level, admin, podeUsar: admin ? () => true : permission.pode, senderContact, senderName, senderNumber }
         })));
+
+        /*
+         * The usage limit (/bot +limit): only counts what succeeded (src/usageLimit.js). The usageFree options of the
+         * command (queries, like /gpt's -prices) never count. The owner and the admins have no limit.
+         */
+        if (admin) {
+            await run();
+        } else {
+            const gratis = (command.usageFree ?? []).some(o => opts.given.has(o));
+            await withLimit({ msg, quem: { numero: senderNumber, chatId, isGroup }, cmds: [command.cmd], gratis, params: args }, run);
+        }
     } catch (error) {
         printError('[message_create] Erro geral controlado:', {
             error: error?.message || String(error),
