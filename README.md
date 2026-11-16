@@ -219,7 +219,6 @@ and make the bot your own:
 | [`/crypto`](https://jpereira.github.io/zapbot/commands/crypto/) | | `user` | Prices of the enabled cryptos (default: BTC, ETH, SOL and HYPE) or only the requested ones (`BTC ETH`); price alerts |
 | [`/cve`](https://jpereira.github.io/zapbot/commands/cve/) | | `user` | Latest published CVEs (NVD); `-highscore` only the critical ones |
 | [`/debug`](https://jpereira.github.io/zapbot/commands/debug/) | | `admin` | Debug logs with levels, filter and copy to chats |
-| [`/decodeqr`](https://jpereira.github.io/zapbot/commands/decodeqr/) | | `user` | Reads the QR Code in a photo (`-encode` makes one) |
 | [`/defi`](https://jpereira.github.io/zapbot/commands/defi/) | | `admin` | Orca and Project X liquidity positions: balance, range, price and fees to collect, read on-chain; `-alert` warns when a position leaves and re-enters its range and when fees pass a value. `liquidswap`: LP positions on Aptos. `morpho` and `aave`: position, loans and risk on Morpho and Aave V3 |
 | [`/demote`](https://jpereira.github.io/zapbot/commands/demote/) | | `admin` · delegable | Removes someone's group admin |
 | [`/draw`](https://jpereira.github.io/zapbot/commands/draw/) | | `admin` · delegable | Draws an image or an animated GIF (`-gif`) with GPT Image (OpenAI); on a photo, edits or animates it |

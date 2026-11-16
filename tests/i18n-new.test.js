@@ -1,5 +1,5 @@
 /*
- * i18n (en_US) of the /welcome, /goodbye, /promote, /demote, /invite, /ocr, /tts, /qr, /decodeqr replies,
+ * i18n (en_US) of the /welcome, /goodbye, /promote, /demote, /invite, /ocr, /tts, /qr replies,
  * /carbon, /profile -set and /forward. The other tests run in pt_BR.
  */
 const bot = require('./helpers/bot');
@@ -40,7 +40,7 @@ test('/promote, /demote e /invite', async () => {
     assert.deepEqual(await bot.replyAlt('/welcome Hi', { chat: OTHERAlt.jid }), ['Only usable inside groups.']);
 });
 
-test('/ocr, /tts, /qr, /decodeqr, /carbon e /profile -set', async () => {
+test('/ocr, /tts, /qr, /carbon e /profile -set', async () => {
     assert.match((await bot.replyAlt('/ocr'))[0], /^⚠️ OpenAI API key not found: \/ocr is disabled\./);
     assert.match((await bot.replyAlt('/tts hi'))[0], /^⚠️ OpenAI API key not found: \/tts is disabled\./);
 
@@ -49,7 +49,7 @@ test('/ocr, /tts, /qr, /decodeqr, /carbon e /profile -set', async () => {
     assert.deepEqual(await bot.replyAlt('/tts'), ['❌ Usage: /tts <text> (or reply to a text message)']);
 
     assert.match((await bot.replyAlt('/qr'))[0], /^❌ Usage: \/qr <text> /);
-    assert.deepEqual(await bot.replyAlt('/decodeqr'), ['❌ Reply to a photo of a QR Code with /decodeqr (or send the photo with /decodeqr as the caption).']);
+    assert.deepEqual(await bot.replyAlt('/qr -d'), ['❌ Reply to a photo of a QR Code with /qr -d (or send the photo with /qr -d as the caption).']);
     assert.deepEqual(await bot.replyAlt('/carbon -t neon x'), ['❌ Unknown theme "neon". Available: dark, light.']);
     assert.match((await bot.replyAlt('/carbon'))[0], /^❌ Usage: \/carbon /);
     assert.deepEqual(await bot.replyAlt('/profile -set'), ['❌ Reply to an image with /profile -set (or send the photo with /profile -set as the caption).']);

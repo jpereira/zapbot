@@ -1,7 +1,8 @@
 # `/qr`
 
 Gera o **QR Code** de um texto, como imagem PNG. Com `-decode` faz o contrário e lê o QR Code de uma
-foto (igual ao [`/decodeqr`](decodeqr.md)). A biblioteca `qrcode` do próprio bot gera e a `jsqr` lê:
+foto. **Responder uma foto com `/qr`** (ou enviar a foto com `/qr` na legenda) também lê, sem
+`-decode`; texto digitado sempre gera um QR Code. A biblioteca `qrcode` do próprio bot gera e a `jsqr` lê:
 nada vai para um serviço externo.
 
 ```text
@@ -11,7 +12,7 @@ nada vai para um serviço externo.
 | Opção | Valor | Descrição |
 |---|---|---|
 | *(nenhuma)* | `[<texto>]` | O texto do QR Code, até 1000 caracteres. Sem ele, usa o da mensagem respondida |
-| `-decode`, `-d` | | Lê o QR Code de uma foto em vez de gerar um: responda a foto, ou envie com `/qr -d` na legenda |
+| `-decode`, `-d` | | Lê o QR Code de uma foto em vez de gerar um: responda a foto, ou envie com `/qr -d` na legenda. Automático ao responder uma foto (ou enviar uma) com `/qr` e sem texto |
 
 ```text
 /qr https://exemplo.com      → o QR Code do link

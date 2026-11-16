@@ -176,13 +176,13 @@ destino: quem pode o `/gpt` usa os atalhos para ele, e o nome de um atalho não 
 <!-- gerado:roles -->
 ### Comandos por role
 
-**user** (de quem está no `bot.users`) (26):
+**user** (de quem está no `bot.users`) (25):
 
 [`/ascii`](ascii.md), [`/bills`](bills.md), [`/carbon`](carbon.md), [`/crypto`](crypto.md),
-[`/cve`](cve.md), [`/decodeqr`](decodeqr.md), [`/get`](get.md), [`/giphy`](giphy.md),
-[`/help`](help.md), [`/joke`](joke.md), [`/kernel`](kernel.md), [`/me`](me.md), [`/meme`](meme.md),
-[`/news`](news.md), [`/noffa`](noffa.md), [`/ping`](ping.md), [`/pixelart`](pixelart.md),
-[`/qr`](qr.md), [`/rates`](rates.md), [`/sticker`](sticker.md), [`/translate`](translate.md),
+[`/cve`](cve.md), [`/get`](get.md), [`/giphy`](giphy.md), [`/help`](help.md), [`/joke`](joke.md),
+[`/kernel`](kernel.md), [`/me`](me.md), [`/meme`](meme.md), [`/news`](news.md),
+[`/noffa`](noffa.md), [`/ping`](ping.md), [`/pixelart`](pixelart.md), [`/qr`](qr.md),
+[`/rates`](rates.md), [`/sticker`](sticker.md), [`/translate`](translate.md),
 [`/uptime`](uptime.md), [`/version`](version.md), [`/walissu`](walissu.md),
 [`/weather`](weather.md), [`/whois`](whois.md)
 
@@ -242,7 +242,6 @@ e o `/alias /usd` mostra o que um atalho faz.
 | [`/crypto`](crypto.md) | | `user` | Cotação das criptos ativadas (padrão: BTC, ETH, SOL e HYPE) ou só das pedidas (`BTC ETH`); alertas de preço |
 | [`/cve`](cve.md) | | `user` | Últimas CVEs publicadas (NVD); `-highscore` só as críticas |
 | [`/debug`](debug.md) | | `admin` | Logs de debug com níveis, filtro e cópia para chats |
-| [`/decodeqr`](decodeqr.md) | | `user` | Lê o QR Code de uma foto (`-encode` gera um) |
 | [`/defi`](defi.md) | | `admin` | Posições de liquidez da Orca e do Project X: saldo, faixa, preço e taxas a coletar, lidos on-chain; `-alert` avisa quando sai e volta para a faixa e quando as taxas passam de um valor. `liquidswap`: posições de LP na Aptos. `morpho` e `aave`: posição, empréstimos e risco no Morpho e no Aave V3 |
 | [`/demote`](demote.md) | | `admin` · delegável | Tira o admin de alguém do grupo |
 | [`/draw`](draw.md) | | `admin` · delegável | Desenha uma imagem ou um GIF animado (`-gif`) com o GPT Image (OpenAI); numa foto, edita ou anima |

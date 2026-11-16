@@ -1,5 +1,5 @@
 /*
- * /ocr, /tts, /qr, /decodeqr, /carbon e o /profile -set.
+ * /ocr, /tts, /qr, /carbon e o /profile -set.
  */
 const bot = require('./helpers/bot');
 
@@ -115,7 +115,7 @@ function pixelsDoQr(textAlt, scale = 4) {
     return { data: Buffer.from(rgba), width: side, height: side };
 }
 
-describe('/qr e /decodeqr', () => {
+describe('/qr', () => {
     test('/qr <texto>: a imagem PNG do QR Code, que o jsqr lê de volta', async () => {
         const r = (await bot.executar('/qr https://exemplo.com/a?b=1')).at(-1);
         assert.ok(r.content instanceof MessageMedia);
@@ -136,26 +136,31 @@ describe('/qr e /decodeqr', () => {
         assert.match((await bot.replyAlt(`/qr ${'a'.repeat(1001)}`))[0], /❌ O texto tem 1001 caracteres: o QR Code aceita até 1000\./);
     });
 
-    test('/qr -d e /decodeqr leem o QR Code de uma foto', async () => {
+    test('/qr -d lê o QR Code de uma foto', async () => {
         sharp.pixels = pixelsDoQr('https://exemplo.com/lido');
         assert.deepEqual(await bot.replyAlt('/qr -d', { citada: photo() }), ['📱 https://exemplo.com/lido']);
-        assert.deepEqual(await bot.replyAlt('/decodeqr', { citada: photo() }), ['📱 https://exemplo.com/lido']);
 
         // The photo with the caption
-        const msg = bot.createMessage({ texto: '/decodeqr', tipo: 'image', midia: PHOTO });
+        const msg = bot.createMessage({ texto: '/qr -d', tipo: 'image', midia: PHOTO });
         assert.equal((await bot.deliver(msg)).at(-1).texto, '📱 https://exemplo.com/lido');
     });
 
-    test('/decodeqr -e gera (igual ao /qr)', async () => {
-        const r = (await bot.executar('/decodeqr -e oi')).at(-1);
+    test('/qr sem texto, respondendo uma foto (ou a foto na legenda), lê o QR Code sozinho; com texto, gera', async () => {
+        sharp.pixels = pixelsDoQr('https://exemplo.com/auto');
+        assert.deepEqual(await bot.replyAlt('/qr', { citada: photo() }), ['📱 https://exemplo.com/auto']);
+
+        const msg = bot.createMessage({ texto: '/qr', tipo: 'image', midia: PHOTO });
+        assert.equal((await bot.deliver(msg)).at(-1).texto, '📱 https://exemplo.com/auto');
+
+        // Typed text always generates, even when replying to a photo
+        const r = (await bot.executar('/qr oi', { citada: photo() })).at(-1);
         assert.ok(r.content instanceof MessageMedia);
-        assert.equal(r.content.mimetype, 'image/png');
     });
 
     test('foto sem QR Code, sem foto e sem conseguir baixar', async () => {
         sharp.pixels = { data: Buffer.alloc(40 * 40 * 4, 255), width: 40, height: 40 };
         assert.deepEqual(await bot.replyAlt('/qr -d', { citada: photo() }), ['🔎 Nenhum QR Code encontrado na imagem.']);
-        assert.match((await bot.replyAlt('/decodeqr'))[0], /^❌ Responda a foto de um QR Code com \/decodeqr/);
+        assert.match((await bot.replyAlt('/qr -d'))[0], /^❌ Responda a foto de um QR Code com \/qr -d/);
         assert.deepEqual(await bot.replyAlt('/qr -d', { citada: photo({ midia: PHOTO, extras: { downloadMedia: async () => null } }) }),
             ['❌ Não consegui baixar a imagem.']);
     });

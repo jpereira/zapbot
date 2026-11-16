@@ -28,7 +28,7 @@ const { cmdAscii } = require('./ascii');
 const { cmdHelp } = require('./help');
 const { cmdInvite } = require('./invite');
 const { cmdOcr } = require('./ocr');
-const { cmdDecodeqr, cmdQr } = require('./qr');
+const { cmdQr } = require('./qr');
 const { cmdGoodbye, cmdWelcome } = require('./greetings');
 const { cmdTts } = require('./tts');
 const { cmdJoke } = require('./joke');
@@ -75,7 +75,6 @@ const HANDLERS = {
     '/crypto': cmdCrypto,
     '/cve': cmdCve,
     '/debug': cmdDebug,
-    '/decodeqr': cmdDecodeqr,
     '/defi': cmdDefi,
     '/demote': cmdDemote,
     '/draw': cmdDraw,
