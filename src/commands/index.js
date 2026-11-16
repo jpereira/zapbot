@@ -33,6 +33,7 @@ const { cmdUsage } = require('./usage');
 const { cmdQr } = require('./qr');
 const { cmdGoodbye, cmdWelcome } = require('./greetings');
 const { cmdTts } = require('./tts');
+const { cmdGames } = require('./games');
 const { cmdJoke } = require('./joke');
 const { cmdKernel } = require('./kernel');
 const { cmdMembers } = require('./members');
@@ -83,6 +84,7 @@ const HANDLERS = {
     '/draw': cmdDraw,
     '/everybody': cmdEverybody,
     '/forward': cmdForward,
+    '/games': cmdGames,
     '/get': cmdGet,
     '/giphy': cmdGiphy,
     '/goodbye': cmdGoodbye,

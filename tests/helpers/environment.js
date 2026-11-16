@@ -56,6 +56,7 @@ class ClientFake extends EventEmitter {
         super();
         this.info = { wid: { _serialized: OWNER.jid, user: OWNER.user }, pushname: OWNER.nome };
         this.enviadas = [];            // { chatId, content, options }
+        this.reagidas = [];            // { id, emoji } of each bot msg.react()
         this.contatos = new Map();     // jid -> contato
         this.chats = new Map();        // chatId -> chat
         this.lids = new Map();         // "123@lid" -> "5521...@c.us"

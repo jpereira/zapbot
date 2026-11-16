@@ -1,0 +1,55 @@
+{
+  "summary": "Jogos de grupo: bola 8 mágica, verdade, desafio e quiz",
+  "usage": "/games -8ball <pergunta>  ou  /games -truth|-dare  ou  /games -trivia [A|B|C|D]",
+  "help": "Jogos de grupo: a bola 8 mágica responde uma pergunta, verdade e desafio sorteiam uma pergunta ou um desafio para o grupo, e o trivia faz uma pergunta de conhecimentos gerais com 4 opções (responda com /games -trivia B em até 5 minutos). Dá para jogar também só respondendo (reply) a mensagem do bot: a letra no trivia, outra pergunta na bola 8, a sua resposta na verdade ou no desafio (o bot reage com ✅; \"outra\" sorteia mais uma). As listas seguem o idioma do bot (zapbot.lang).",
+  "ex": [
+    "/games -8ball vou passar na prova?",
+    "/games -truth",
+    "/games -dare",
+    "/games -trivia",
+    "/games -trivia B"
+  ],
+  "cmd_opts": [
+    {
+      "opts": [
+        "8ball"
+      ],
+      "values": [],
+      "desc": "A bola 8 mágica: faça uma pergunta de sim ou não e ela responde (sim, não ou talvez).",
+      "ex": [
+        "/games -8ball vai chover amanhã?"
+      ]
+    },
+    {
+      "opts": [
+        "truth"
+      ],
+      "values": [],
+      "desc": "Uma pergunta de verdade para o grupo.",
+      "ex": [
+        "/games -truth"
+      ]
+    },
+    {
+      "opts": [
+        "dare"
+      ],
+      "values": [],
+      "desc": "Um desafio para o grupo.",
+      "ex": [
+        "/games -dare"
+      ]
+    },
+    {
+      "opts": [
+        "trivia"
+      ],
+      "values": [],
+      "desc": "Uma pergunta de conhecimentos gerais com 4 opções. Responda com a letra (A, B, C ou D) em até 5 minutos: `-trivia B`. Uma pergunta aberta por chat.",
+      "ex": [
+        "/games -trivia",
+        "/games -trivia C"
+      ]
+    }
+  ]
+}
