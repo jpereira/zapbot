@@ -196,14 +196,14 @@ and a shortcut's name doesn't go in `+cmd`.
 [`/profile`](profile.md), [`/promote`](promote.md), [`/show`](show.md), [`/stats`](stats.md),
 [`/tldr`](tldr.md), [`/tts`](tts.md), [`/welcome`](welcome.md)
 
-**admin** (admins and the owner; never delegable) (21):
+**admin** (admins and the owner; never delegable) (22):
 
 [`/alias`](alias.md), [`/backup`](backup.md), [`/batch`](batch.md), [`/block`](block.md),
 [`/bot`](bot.md), [`/cache`](cache.md), [`/cron`](cron.md), [`/debug`](debug.md),
 [`/defi`](defi.md), [`/forward`](forward.md), [`/invite`](invite.md), [`/join`](join.md),
 [`/leave`](leave.md), [`/monitor`](monitor.md), [`/mute`](mute.md), [`/notes`](notes.md),
-[`/search`](search.md), [`/set`](set.md), [`/unblock`](unblock.md), [`/unmute`](unmute.md),
-[`/watch`](watch.md)
+[`/search`](search.md), [`/set`](set.md), [`/status`](status.md), [`/unblock`](unblock.md),
+[`/unmute`](unmute.md), [`/watch`](watch.md)
 
 **owner** (the owner only) (1):
 
@@ -286,6 +286,7 @@ target command, and `/alias /usd` shows what a shortcut does.
 | [`/set`](set.md) | | `admin` | Lists and changes the settings; `-a`/`-rm` add and remove items in lists (e.g., `bot.admins` and `bot.users`) |
 | [`/show`](show.md) | | `admin` · delegable | In your private chat, lists the cache; redisplays deleted messages, edits (`-e`), status (`-s`), and removed or changed reactions (`-r`); `-q` searches (text or regex) and `-mask` obfuscates phone numbers |
 | [`/stats`](stats.md) | | `admin` · delegable | Ranking for this chat or another (`/Grupo/`): who talks, deletes, and edits the most, peak hours; `-me` for yours, `-l` lists the chats, `-flush` deletes |
+| [`/status`](status.md) | | `admin` | Posts on your WhatsApp Status (text, photo or video); `/cron -status` schedules it |
 | [`/sticker`](sticker.md) | | `user` | Sticker from an image, video, or link (the `/get -st`), replying or as the caption of the media; with `-txt`, an animated text sticker |
 | [`/tldr`](tldr.md) | | `admin` · delegable | Summarizes the chat's conversation with ChatGPT (`30m`, `2h`, `1d`, `1h30m` or `300` messages; replying to a message, from it on) |
 | [`/translate`](translate.md) | | `user` | Translates the text or the replied message with Google Translate, no key; `-to en` changes the language |

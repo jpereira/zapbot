@@ -22,6 +22,7 @@ Faz algo na hora marcada. Tem dois modos, na mesma agenda:
 | `-pause` | `<nº...\|all>` | Pausa o item nº N, vários (`-pause 1 3` ou `1,3`) ou todos: fica na lista, mas não sai. Se algum nº não existe, nenhum é pausado |
 | `-resume` | `<nº...\|all>` | Retoma itens pausados: um, vários ou todos |
 | `-rm` | `<nº...\|all>` | Remove o item nº N da lista, vários de uma vez (`-rm 1 3 5` ou `-rm 1,3,5`) ou todos. Se algum nº não existe, nenhum sai |
+| `-status` | | Modo mensagem: posta o texto no seu Status do WhatsApp em vez de enviar a um chat ([`/status`](status.md)) |
 | `-test` | `<nº>` | Monta o item nº N agora, rodando os `{/comando}` do texto, e mostra aqui como ele sairia. Veja [Comandos no texto](#comandos-no-texto) |
 
 ![Demonstração do /cron](../assets/demo/09-cron.gif)

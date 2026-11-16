@@ -32,6 +32,7 @@ const { cmdOcr } = require('./ocr');
 const { cmdUsage } = require('./usage');
 const { cmdQr } = require('./qr');
 const { cmdGoodbye, cmdWelcome } = require('./greetings');
+const { cmdStatus } = require('./status');
 const { cmdTts } = require('./tts');
 const { cmdGames } = require('./games');
 const { cmdJoke } = require('./joke');
@@ -115,6 +116,7 @@ const HANDLERS = {
     '/set': cmdSet,
     '/show': cmdShow,
     '/stats': cmdStats,
+    '/status': cmdStatus,
     '/sticker': cmdSticker,
     '/tldr': cmdTldr,
     '/translate': cmdTranslate,

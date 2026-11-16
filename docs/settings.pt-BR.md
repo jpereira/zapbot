@@ -102,6 +102,7 @@ em português).
 | `show.max` | 1–100 | `20` | Máximo de mensagens por `/show -N` |
 | `stats.enable` | on/off | `on` | Conta as mensagens de cada chat para o `/stats`; `off` para de contar (o histórico fica) |
 | `stats.retentionDays` | 7–365 | `90` | Dias que os contadores do `/stats` ficam guardados (e período máximo do `/stats -N`) |
+| `status.warnAfter` | 1–50 | `3` | A partir de quantas postagens no Status em 24 horas o `/status` avisa do risco de banimento (não bloqueia) |
 | `sticker.author` | texto | `https://github.com/jpereira/zapbot/` | Autor das figurinhas |
 | `sticker.name` | texto | `ZapBot` | Nome do pacote das figurinhas |
 | `tldr.maxMsgs` | 10–2000 | `500` | Máximo de mensagens enviadas à OpenAI por [`/tldr`](commands/tldr.md) |

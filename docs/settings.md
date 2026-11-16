@@ -102,6 +102,7 @@ shows are in Portuguese; the ones here are in English).
 | `show.max` | 1–100 | `20` | Max messages per `/show -N` |
 | `stats.enable` | on/off | `on` | Counts each chat's messages for `/stats`; `off` stops counting (the history stays) |
 | `stats.retentionDays` | 7–365 | `90` | Days the `/stats` counters are kept (and the max period of `/stats -N`) |
+| `status.warnAfter` | 1–50 | `3` | From how many Status posts in 24 hours `/status` warns about the risk of a ban (it doesn't block) |
 | `sticker.author` | text | `https://github.com/jpereira/zapbot/` | Sticker author |
 | `sticker.name` | text | `ZapBot` | Sticker pack name |
 | `tldr.maxMsgs` | 10–2000 | `500` | Max messages sent to OpenAI per [`/tldr`](commands/tldr.md) |
