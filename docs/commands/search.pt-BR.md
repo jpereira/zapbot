@@ -13,7 +13,8 @@ vale para as mensagens que o WhatsApp Web tem, inclusive as que nunca passaram p
 |---|---|---|
 | `-N` | | Quantidade de mensagens (padrão 10, máx. 50). Ex.: `-30` |
 | *(nenhuma)* | `<texto>` | O que buscar, como na busca do WhatsApp (sem diferenciar maiúsculas) |
-| `-read`, `-r` | `<id>` | Exibe inteira a mensagem de um id da lista da busca. Mesmo escopo da busca |
+| `-all`, `-a` | | Busca em todos os chats, de qualquer lugar, e manda a lista no seu privado (só o dono). Sem ele, fora do seu privado a busca olha só o chat onde você digitou |
+| `-read`, `-r` | `<nº\|id>` | Exibe inteira a mensagem de um resultado da última busca, pelo número da lista (`-r 1`) ou pelo id inteiro. Mesmo escopo da busca |
 | `-mask`, `-m` | | Ofusca telefones na saída desta execução. Ex.: `+55219****44` |
 
 O escopo é **este chat**; no **seu privado**, todos os chats, e cada resultado diz de qual chat é.
@@ -38,7 +39,7 @@ o tipo e a legenda). Textos longos são cortados em 200 caracteres.
    📎 [image] "comprovante do pix"
    🆔 true_120363000000000000@g.us_3EB0C3D4
 
-📖 Para ler uma inteira: /search -read <id>.
+📖 Para ler uma inteira: /search -read <nº>.
 ```
 
 ```text
@@ -48,7 +49,8 @@ o tipo e a legenda). Textos longos são cortados em 200 caracteres.
 manda o pix que eu pago, o texto todo, sem corte
 ```
 
-- Cada resultado traz o `🆔` para o `-read`. Com `-mask`, o id também é ofuscado (não serve para o
+- O número da lista vale por 2 horas depois da busca, por chat (`/search -r 1`); uma busca nova troca a
+  lista. O id inteiro (`🆔`) continua valendo para qualquer mensagem. Cada resultado traz o `🆔`. Com `-mask`, o id também é ofuscado (não serve para o
   `-read`).
 - O `-read` vale só para este chat; no seu privado, para qualquer chat. Numa mídia, mostra o tipo e a
   legenda.

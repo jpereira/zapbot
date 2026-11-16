@@ -6,7 +6,7 @@ const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/search',
-    usage: '/search [-N] <text> | -read <id>',
+    usage: '/search [-N] [-all] <text> | -read <no.|id>',
     aliases: [],
     summary: 'Searches messages in the WhatsApp Web history',
     help: 'Searches messages in the WhatsApp Web history, including ones that never went through the bot cache (/show -q searches the cache only). In this chat; in your private chat, in all chats. Shows the date, the sender (and the chat, when searching all), the text and the id; with -read, shows the whole message.',
@@ -22,10 +22,16 @@ module.exports = {
             ex: ['/search pix', '/search good morning']
         },
         {
+            opts: ['all', 'a'],
+            values: [],
+            desc: 'Searches all chats from anywhere and sends the list to your private chat (so the other chats\' messages do not show up where you typed). Owner only.',
+            ex: ['/search -all correct']
+        },
+        {
             opts: ['read', 'r'],
-            values: ['<id>'],
-            desc: 'Shows the whole message for an id from the search list (same scope: this chat, or all chats in your private chat).',
-            ex: ['/search -r false_5521988887777@c.us_3EB0A1B2']
+            values: ['<no.|id>'],
+            desc: 'Shows the whole message of a result of the last search, by its number in the list (or by its whole id). Same scope: this chat, or all chats in your private chat.',
+            ex: ['/search -r 1', '/search -r false_5521988887777@c.us_3EB0A1B2']
         },
         {
             opts: ['mask', 'm'],

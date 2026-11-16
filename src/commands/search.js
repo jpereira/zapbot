@@ -7,6 +7,7 @@ const { commandUsage } = require('./base');
 const { chatCurrentIds, contactName } = require('../contacts');
 const { t } = require('../i18n');
 const { printError } = require('../log');
+const { ROLES } = require('../roles');
 const { formatData, paraMs, plural } = require('../util/format');
 
 /*
@@ -19,8 +20,12 @@ const { formatData, paraMs, plural } = require('../util/format');
  * Shows in full the message of a search-list id (same scope as the search).
  */
 const DEFAULT = 10;
+const LIST_MS_VALIDITY = 2 * 60 * 60 * 1000; // -read <no.> works for the last search of up to 2 h
 const MAX = 50;
 const SNIPPET = 200;
+
+// The /search command you typed earlier and the list the bot replied: just noise in another search
+const searchPreviousIs = (m) => m.fromMe && /^\s*(\/search\b|🔎 )/i.test(String(m.body ?? ''));
 
 // "Fulano" from an id, without repeating the lookup for the same id
 async function nameAltAlt(id, cache) {
@@ -46,7 +51,19 @@ function snippet(m) {
     return m.hasMedia ? `📎 _[${m.type}]_${short ? ` "${short}"` : ''}` : `"${short}"`;
 }
 
-// -read <id>: the whole message, without cutting the text
+// The ids of each chat's last search, so -read accepts the list number (the whole id is huge)
+const lastSearches = new Map();
+
+// "3" → the id of the 3rd result of the last search in this chat; a whole id passes as is
+function resultId(request, chatId) {
+    if (!/^\d{1,3}$/.test(request)) return { id: request };
+    const last = lastSearches.get(chatId);
+    if (!last || Date.now() - last.quando > LIST_MS_VALIDITY) return { erro: t('search.noList') };
+    const id = last.ids[Number(request) - 1];
+    return id ? { id } : { erro: t('search.outOfList', { n: request, max: last.ids.length }) };
+}
+
+// -read <no.|id>: the whole message, without cutting the text
 async function readMessage({ msg, id, chatId, todos: allAlt2 }) {
     let foundAlt;
     try {
@@ -72,11 +89,16 @@ async function readMessage({ msg, id, chatId, todos: allAlt2 }) {
         null, { linkPreview: false });
 }
 
-async function cmdSearch({ msg, opts, chatId }) {
+async function cmdSearch({ msg, opts, chatId, nivel: level }) {
     const idLido = opts.opt.read;
     if (idLido) {
         const allAlt2 = (await chatCurrentIds(chatId)).includes(client.info.wid._serialized);
-        await readMessage({ msg, id: String(idLido).trim(), chatId, todos: allAlt2 });
+        const { id, erro: errorAlt } = resultId(String(idLido).trim(), chatId);
+        if (errorAlt) {
+            await msg.reply(errorAlt);
+            return;
+        }
+        await readMessage({ msg, id, chatId, todos: allAlt2 });
         return;
     }
 
@@ -102,8 +124,17 @@ async function cmdSearch({ msg, opts, chatId }) {
         n = MAX;
     }
 
-    // In your private chat, all chats; in the others, only this one
-    const allAlt2 = (await chatCurrentIds(chatId)).includes(client.info.wid._serialized);
+    // In your private chat, all chats; in the others, only this one. With -all, all chats from anywhere, but
+    // the reply goes to your private chat (in a conversation or a group it would leak what belongs to other chats)
+    const myId = client.info.wid._serialized;
+    const inMyPrivate = (await chatCurrentIds(chatId)).includes(myId);
+    const inAll = opts.given.has('all');
+    if (inAll && level !== ROLES.OWNER) {
+        await msg.reply(t('search.allOwnerOnly'));
+        return;
+    }
+    const allAlt2 = inMyPrivate || inAll;
+    const paraOPrivate = inAll && !inMyPrivate;
 
     let foundAlt3;
     try {
@@ -114,11 +145,12 @@ async function cmdSearch({ msg, opts, chatId }) {
         return;
     }
 
-    // The /search message itself also has the text
-    foundAlt3 = foundAlt3.filter(m => m.id?._serialized !== msg.id?._serialized);
+    // The /search message itself also has the text, and so do the previous searches (the command and the list)
+    foundAlt3 = foundAlt3.filter(m => m.id?._serialized !== msg.id?._serialized && !searchPreviousIs(m));
     const whereAlt = allAlt2 ? t('search.noChat') : t('search.thisChat');
     if (!foundAlt3.length) {
-        await msg.reply(t('search.nothing', { text: textAlt, where: whereAlt }));
+        // In a chat that is not your private chat, the search only looked at it: reminds about -all
+        await msg.reply(t('search.nothing', { text: textAlt, where: whereAlt }) + (allAlt2 ? '' : `\n${t('search.allHint')}`));
         return;
     }
 
@@ -133,13 +165,27 @@ async function cmdSearch({ msg, opts, chatId }) {
             `\n   🆔 ${m.id?._serialized}`;
     }));
 
-    await msg.reply(t('search.header', { count: plural(foundAlt3.length, t('search.message'), t('search.messages')), text: textAlt }) +
+    lastSearches.set(chatId, { ids: foundAlt3.map(m => m.id?._serialized), quando: Date.now() });
+
+    const reply = t('search.header', { count: plural(foundAlt3.length, t('search.message'), t('search.messages')), text: textAlt }) +
         `${allAlt2 ? ' ' + t('search.allChats') : ''}${notice}\n\n${linesAlt.join('\n\n')}` +
         (foundAlt3.length >= n ? '\n\n' + t('search.more') : '') +
-        '\n\n' + t('search.readHint'),
-    null, { linkPreview: false });
+        '\n\n' + t('search.readHint');
+
+    if (paraOPrivate) {
+        // The -read <no.> in your private chat uses this list
+        lastSearches.set(myId, lastSearches.get(chatId));
+        await client.sendMessage(myId, reply, { linkPreview: false });
+        await msg.reply(t('search.sentPrivate', { count: foundAlt3.length }));
+        return;
+    }
+    await msg.reply(reply, null, { linkPreview: false });
 }
 
+// Forgets the lists of the latest searches (the tests start from zero)
+const cleanLastSearches = () => lastSearches.clear();
+
 module.exports = {
-    cmdSearch
+    cmdSearch,
+    cleanLastSearches
 };
