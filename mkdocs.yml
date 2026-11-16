@@ -154,6 +154,7 @@ nav:
       - /set: commands/set.md
       - /show: commands/show.md
       - /stats: commands/stats.md
+      - /status: commands/status.md
       - /sticker: commands/sticker.md
       - /tldr: commands/tldr.md
       - /translate: commands/translate.md

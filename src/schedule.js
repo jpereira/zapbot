@@ -11,6 +11,7 @@ const {
 } = require('./destinations');
 const { printError, printInfo } = require('./log');
 const { statusDestinations, statusText } = require('./status');
+const { STATUS_ID, register: registerPost } = require('./commands/status');
 const { getSetting } = require('./settings');
 const { summarizeText, withoutAccents } = require('./util/format');
 const { t } = require('./i18n');
@@ -73,6 +74,7 @@ function readScheduling(args) {
 
         if (nameAlt === 'list' || nameAlt === 'l') opt.list = true;
         else if (nameAlt === 'private') opt.private = true;
+        else if (nameAlt === 'status') opt.status = true;
         else if (nameAlt === 'reminder' || nameAlt === 'rem') opt.reminder = true;
         else if (['rm', 'pause', 'resume'].includes(nameAlt)) {
             // One or several numbers (-rm 2, -rm 1 3 5, -rm 1,3,5) or all
@@ -247,6 +249,12 @@ async function handleSchedule({ msg, args, chatId, chatName, isGroup, quotedMsg 
     const syntax = t('adm.agenda.syntax', { ex: t(type.exemplo) });
     const items = await listAlt();
 
+    // -status: the text goes to the WhatsApp Status (message only; without -to or -private)
+    if (opt.status && (opt.reminder || opt.private || withDestination)) {
+        await msg.reply(t('adm.agenda.statusConflict'));
+        return;
+    }
+
     if (opt.private && !type.aceitaPv) {
         await msg.reply(t('adm.agenda.pvOnlyReminder'));
         return;
@@ -362,7 +370,9 @@ async function handleSchedule({ msg, args, chatId, chatName, isGroup, quotedMsg 
     const myId = client.info.wid._serialized;
     let destinations = [{ id: chatId, nome: chatName, grupo: Boolean(isGroup) }];
 
-    if (withDestination) {
+    if (opt.status) {
+        destinations = [{ id: STATUS_ID, nome: t('adm.agenda.statusName'), grupo: false }];
+    } else if (withDestination) {
         destinations = [];
         for (const destinationText of destinationsText) {
             // Several contacts or groups with the name: waits for you to choose from the list
@@ -402,7 +412,7 @@ async function handleSchedule({ msg, args, chatId, chatName, isGroup, quotedMsg 
             ? t('adm.agenda.inChats', { n: destinations.length, lista: destinations.map(d => `• ${describeDestination(d)}`).join('\n') })
             : ` ${whereAlt(destinations[0])}.\n`,
         texto: summarizeText(textAlt, 100)
-    }));
+    }) + (opt.status ? `\n${t('adm.agenda.statusRisk')}` : ''));
 }
 
 // What goes out in the chat: the plain text (message mode) or the ⏰ Reminder
@@ -484,6 +494,7 @@ async function itemSendOnDestination(s, d, late) {
             .catch(() => client.sendMessage(d.id, textAlt));
     }
     await sendMedia(d.id, mediaAltAlt);
+    if (d.id === STATUS_ID) await registerPost(null).catch(() => {});
 
     printInfo(`${TYPES[s.kind]?.cmd}: sent to ${whereInLog(d)}` +
         (commands.length ? `, with ${commands.map(c => `{${c}}`).join(', ')}` : '') +

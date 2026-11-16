@@ -1,0 +1,21 @@
+{
+  "summary": "Posta no seu Status do WhatsApp (texto, foto ou vídeo)",
+  "usage": "/status <texto>  ou  envie/responda uma foto ou vídeo com /status [legenda]",
+  "help": "Posta no Status do WhatsApp da conta do bot: um texto (até 700 caracteres) ou, respondendo uma foto ou vídeo (ou enviando com /status na legenda), a mídia com o texto de legenda. ⚠️ Risco: postar muitas vezes seguidas é o que o WhatsApp pune com banimento; a partir de status.warnAfter postagens em 24 horas o bot avisa. Para agendar: /cron 8h -r d -status Bom dia! {/weather}.",
+  "ex": [
+    "/status Bom dia!",
+    "/status (respondendo uma foto) Fim de semana!",
+    "/cron 8h -r d -status Bom dia! {/weather}"
+  ],
+  "cmd_opts": [
+    {
+      "argv": [
+        "<texto>"
+      ],
+      "desc": "O texto do Status (até 700 caracteres) ou a legenda da foto/vídeo.",
+      "ex": [
+        "/status Bom dia!"
+      ]
+    }
+  ]
+}

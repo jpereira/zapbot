@@ -82,6 +82,16 @@
     },
     {
       "opts": [
+        "status"
+      ],
+      "values": [],
+      "desc": "No modo mensagem: posta o texto no seu Status do WhatsApp em vez de enviar a um chat (sem -to, -private nem -reminder). ⚠️ Risco: postar demais é o que o WhatsApp pune com banimento.",
+      "ex": [
+        "/cron 8h -r d -status Bom dia! {/weather}"
+      ]
+    },
+    {
+      "opts": [
         "test"
       ],
       "values": [

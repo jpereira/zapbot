@@ -321,6 +321,7 @@ and make the bot your own:
 | [`/set`](https://jpereira.github.io/zapbot/commands/set/) | | `admin` | Lists and changes the settings; `-a`/`-rm` add and remove list items (e.g. `bot.admins` and `bot.users`) |
 | [`/show`](https://jpereira.github.io/zapbot/commands/show/) | | `admin` · delegable | In private, lists the cache; redisplays deleted messages, edits (`-e`), statuses (`-s`) and removed or changed reactions (`-r`); `-q` searches (text or regex) and `-mask` hides phone numbers |
 | [`/stats`](https://jpereira.github.io/zapbot/commands/stats/) | | `admin` · delegable | Ranking of this chat or another (`/Group/`): who talks, deletes and edits the most, peak hours; `-me` for yours, `-l` lists the chats, `-flush` deletes |
+| [`/status`](https://jpereira.github.io/zapbot/commands/status/) | | `admin` | Posts on your WhatsApp Status (text, photo or video); `/cron -status` schedules it |
 | [`/sticker`](https://jpereira.github.io/zapbot/commands/sticker/) | | `user` | Sticker from an image, video or link (`/get -st`), replying or as the caption of the media; with `-txt`, an animated text sticker |
 | [`/tldr`](https://jpereira.github.io/zapbot/commands/tldr/) | | `admin` · delegable | Summarizes the chat's conversation with ChatGPT (`30m`, `2h`, `1d`, `1h30m` or `300` messages; replying to a message, from it on) |
 | [`/translate`](https://jpereira.github.io/zapbot/commands/translate/) | | `user` | Translates the text or the replied message with Google Translate, no key needed; `-to en` changes the language |

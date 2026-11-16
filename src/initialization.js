@@ -398,6 +398,15 @@ async function initializeDb() {
         )
     `);
 
+    // /status (and /cron -status) posts: to warn about the risk of posting too much (src/commands/status.js)
+    await dbRun(`
+        CREATE TABLE IF NOT EXISTS status_posts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            posted_at INTEGER NOT NULL,
+            chat TEXT
+        )
+    `);
+
     // Usage limit (/bot +limit): one row per call that counted, in the period window (src/usageLimit.js)
     await dbRun(`
         CREATE TABLE IF NOT EXISTS usage_log (

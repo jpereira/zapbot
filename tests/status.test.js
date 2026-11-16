@@ -145,7 +145,7 @@ describe('/bot -status', () => {
 
     test('só o dono', async () => {
         assert.deepEqual(await bot.replyAlt('/bot -s', { de: OTHERAlt.jid, chat: GROUP }), []);
-        assert.deepEqual(await bot.replyAlt('/status'),
-            ["⚠️ Comando '/status' desconhecido, tente: /help"], 'o /status virou /bot -status');
+        // Today's /status posts to the WhatsApp Status (admin); whoever is not an admin is ignored
+        assert.deepEqual(await bot.replyAlt('/status oi', { de: OTHERAlt.jid, chat: GROUP }), []);
     });
 });

@@ -57,6 +57,12 @@ module.exports = {
             desc: 'Removes item N from the list, several at once (-rm 1 3 5 or -rm 1,3,5) or all. If any number does not exist, none is removed.'
         },
         {
+            opts: ['status'],
+            values: [],
+            desc: 'In message mode: posts the text on your WhatsApp Status instead of sending it to a chat (no -to, -private or -reminder). ⚠️ Risk: posting too often is what WhatsApp punishes with a ban.',
+            ex: ['/cron 8h -r d -status Good morning! {/weather}']
+        },
+        {
             opts: ['test'],
             values: ['<n>'],
             desc: 'Builds item N now and shows here how it would go out. Runs the {/command}s in the text (does not send to the destination nor change the time).'

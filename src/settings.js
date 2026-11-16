@@ -748,6 +748,11 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 7, max: 365,
         desc: 'Dias que os contadores do /stats ficam guardados.'
     },
+    'status.warnAfter': {
+        default: 3,
+        type: 'number', min: 1, max: 50,
+        desc: 'A partir de quantas postagens no Status em 24 horas o /status avisa do risco de banimento (não bloqueia).'
+    },
     'sticker.author': {
         default: 'https://github.com/jpereira/zapbot/',
         type: 'string',

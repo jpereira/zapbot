@@ -21,6 +21,7 @@ Does something at the scheduled time. It has two modes, in the same schedule:
 | `-pause` | `<n...\|all>` | Pauses item #N, several (`-pause 1 3` or `1,3`) or all: they stay in the list but don't go out. If any number doesn't exist, none is paused |
 | `-resume` | `<n...\|all>` | Resumes paused items: one, several or all |
 | `-rm` | `<n...\|all>` | Removes item #N from the list, several at once (`-rm 1 3 5` or `-rm 1,3,5`) or all. If any number doesn't exist, none is removed |
+| `-status` | | Message mode: posts the text on your WhatsApp Status instead of sending it to a chat ([`/status`](status.md)) |
 | `-test` | `<n>` | Builds item #N now, running the `{/command}` in the text, and shows here how it would go out. See [Commands in the text](#commands-in-the-text) |
 
 ![Demo of /cron](../assets/demo/09-cron.gif)

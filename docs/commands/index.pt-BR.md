@@ -195,14 +195,14 @@ destino: quem pode o `/gpt` usa os atalhos para ele, e o nome de um atalho não 
 [`/profile`](profile.md), [`/promote`](promote.md), [`/show`](show.md), [`/stats`](stats.md),
 [`/tldr`](tldr.md), [`/tts`](tts.md), [`/welcome`](welcome.md)
 
-**admin** (admins e o dono; nunca delegáveis) (21):
+**admin** (admins e o dono; nunca delegáveis) (22):
 
 [`/alias`](alias.md), [`/backup`](backup.md), [`/batch`](batch.md), [`/block`](block.md),
 [`/bot`](bot.md), [`/cache`](cache.md), [`/cron`](cron.md), [`/debug`](debug.md),
 [`/defi`](defi.md), [`/forward`](forward.md), [`/invite`](invite.md), [`/join`](join.md),
 [`/leave`](leave.md), [`/monitor`](monitor.md), [`/mute`](mute.md), [`/notes`](notes.md),
-[`/search`](search.md), [`/set`](set.md), [`/unblock`](unblock.md), [`/unmute`](unmute.md),
-[`/watch`](watch.md)
+[`/search`](search.md), [`/set`](set.md), [`/status`](status.md), [`/unblock`](unblock.md),
+[`/unmute`](unmute.md), [`/watch`](watch.md)
 
 **owner** (só o dono) (1):
 
@@ -285,6 +285,7 @@ e o `/alias /usd` mostra o que um atalho faz.
 | [`/set`](set.md) | | `admin` | Lista e altera as configurações (settings); `-a`/`-rm` acrescentam e tiram itens das listas (ex.: o `bot.admins` e o `bot.users`) |
 | [`/show`](show.md) | | `admin` · delegável | No privado, lista o cache; reexibe apagadas, edições (`-e`), status (`-s`) e reações removidas ou trocadas (`-r`); `-q` busca (texto ou regex) e `-mask` ofusca telefones |
 | [`/stats`](stats.md) | | `admin` · delegável | Ranking deste chat ou de outro (`/Grupo/`): quem mais fala, apaga e edita, horários de pico; `-me` para as suas, `-l` lista os chats, `-flush` apaga |
+| [`/status`](status.md) | | `admin` | Posta no seu Status do WhatsApp (texto, foto ou vídeo); o `/cron -status` agenda |
 | [`/sticker`](sticker.md) | | `user` | Figurinha de imagem, vídeo ou link (o `/get -st`), respondendo ou na legenda da mídia; com `-txt`, uma figurinha animada de texto |
 | [`/tldr`](tldr.md) | | `admin` · delegável | Resume a conversa do chat pelo ChatGPT (`30m`, `2h`, `1d`, `1h30m` ou `300` mensagens; respondendo uma mensagem, a partir dela) |
 | [`/translate`](translate.md) | | `user` | Traduz o texto ou a mensagem respondida pelo Google Translate, sem chave; `-to en` muda o idioma |
