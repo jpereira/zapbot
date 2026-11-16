@@ -9,6 +9,11 @@ em português).
 | `agenda.max` | 1–500 | `50` | Máximo de itens do [`/cron`](commands/cron.md), somando lembretes e mensagens |
 | `alert.intervalMin` | 1–60 | `5` | Intervalo, em minutos, entre as verificações dos [alertas de preço](commands/rates.md#alertas-de-preço) |
 | `alert.max` | 1–100 | `20` | Máximo de alertas de preço (somando `/rates` e `/crypto`) |
+| `api.enabled` | on/off | `off` | Liga a API HTTP local ([API e MCP](api.md)): `/health`, `/status`, `/notes` e `/send`, com a `api.key`. Vale ao reiniciar o bot |
+| `api.host` | texto | `127.0.0.1` | Endereço em que a API escuta. O padrão só atende a própria máquina; fora dele, ponha um proxy com HTTPS na frente. Vale ao reiniciar |
+| `api.key` | texto (pode ser vazio) | *(vazio)* | A chave da API (cabeçalho `Authorization: Bearer <chave>` ou `X-API-Key`). Vazia: a API não inicia. Exibida mascarada; use uma chave longa e aleatória |
+| `api.port` | 1024–65535 | `3100` | Porta da API HTTP. Vale ao reiniciar |
+| `api.sendTo` | lista | *(vazia)* | Para onde o `POST /send` e o `send_message` do MCP podem mandar além do seu próprio chat: telefones com DDI, ids de grupo (`…@g.us`) ou `all` (qualquer destino: só se você confia em quem tem a chave) |
 | `ascii.defaultChar` | 1 caractere | `#` | Caractere do traço das letras do [`/ascii`](commands/ascii.md) quando `-char` não é informado |
 | `backup.enabled` | on/off | `on` | [Backup automático](commands/backup.md#backup-automático) do banco, uma vez por dia |
 | `backup.hour` | 0–23 | `3` | Hora (de Brasília) do backup automático |
@@ -80,6 +85,7 @@ em português).
 | `gpt.tts.instructions` | texto | `Fale como um robô: voz metálica, monótona e pausada, sem emoção.` | Estilo da voz do `/gpt -voice` (só o `gpt-4o-mini-tts` usa) |
 | `gpt.tts.model` | texto | `gpt-4o-mini-tts` | Modelo que gera a voz do `/gpt -voice`: o id que a sua conta tem (só os `gpt-4o-*` seguem o estilo) |
 | `gpt.tts.voice` | texto (da lista) | `onyx` | Voz do `/gpt -voice`: `alloy`, `ash`, `ballad`, `coral`, `echo`, `fable`, `nova`, `onyx`, `sage`, `shimmer` ou `verse` |
+| `mcp.enabled` | on/off | `off` | **Experimental.** Liga o servidor MCP da API (`POST /mcp`), para um cliente de IA enviar mensagens (para o `api.sendTo`) e ler as suas `/notes`. Exige `api.enabled` e `api.key` |
 | `me.maxRepeat` | 1–1000 | `500` | Máximo de repetições do [`/me -repeat`](commands/me.md) (`-r <n>`) |
 | `monitor.enabled` | on/off | `on` | Consultas periódicas do [`/monitor`](commands/monitor.md); `off` pausa sem apagar contatos ou histórico |
 | `monitor.max` | 1–5 | `5` | Máximo de contatos monitorados. Mais contatos aumentam as consultas e o risco de bloqueio; limite absoluto de 5. Remova contatos antes de reduzir abaixo do total cadastrado |

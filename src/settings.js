@@ -35,6 +35,14 @@ function itemPhone(v) {
     return digits;
 }
 
+// An api.sendTo destination: all, a group id (…@g.us) or a phone with country code
+function apiDestination(v) {
+    const s = v.trim().toLowerCase();
+    if (s === 'all') return s;
+    if (/^[\d-]+@g\.us$/.test(s)) return s;
+    return itemPhone(v);
+}
+
 // A bot.users item: 'all', null (false), a group, a person or a person only in a group
 function userItem(v) {
     const s = v.trim().toLowerCase();
@@ -125,6 +133,34 @@ const SETTINGS_SCHEMA = {
         default: 20,
         type: 'number', min: 1, max: 100,
         desc: 'Máximo de alertas de preço (somando /rates e /crypto).'
+    },
+    'api.enabled': {
+        default: false,
+        type: 'boolean',
+        desc: 'Liga a API HTTP local (src/api.js): /health, /status, /notes e /send, com a api.key. Desligada por padrão; muda só ao reiniciar o bot.'
+    },
+    'api.host': {
+        default: '127.0.0.1',
+        type: 'string',
+        desc: 'Endereço em que a API escuta. O padrão (127.0.0.1) só atende a própria máquina; fora dele, ponha um proxy com HTTPS na frente. Muda só ao reiniciar o bot.'
+    },
+    'api.key': {
+        default: '',
+        type: 'string',
+        allowEmpty: true,
+        secret: true,
+        desc: 'A chave da API HTTP (cabeçalho Authorization: Bearer <chave> ou X-API-Key). Vazia: a API não inicia. Use uma chave longa e aleatória.'
+    },
+    'api.port': {
+        default: 3100,
+        type: 'number', min: 1024, max: 65535,
+        desc: 'Porta da API HTTP. Muda só ao reiniciar o bot.'
+    },
+    'api.sendTo': {
+        default: [],
+        type: 'list',
+        desc: 'Para onde o POST /send e o send_message do MCP podem mandar além do seu próprio chat: telefones com DDI, ids de grupo (…@g.us) ou all (qualquer destino: use só se confiar em quem tem a chave).',
+        item: apiDestination
     },
     'ascii.defaultChar': {
         default: '#',
@@ -604,6 +640,11 @@ const SETTINGS_SCHEMA = {
         type: 'string',
         opcoes: OPENAI_VOICES,
         desc: 'A voz do /gpt -voice: alloy, ash, ballad, coral, echo, fable, nova, onyx, sage, shimmer ou verse.'
+    },
+    'mcp.enabled': {
+        default: false,
+        type: 'boolean',
+        desc: 'EXPERIMENTAL. Liga o servidor MCP da API (POST /mcp), para um cliente de IA enviar mensagens (para o api.sendTo) e ler as notas do /notes. Exige api.enabled e api.key.'
     },
     'me.maxRepeat': {
         default: 500,
