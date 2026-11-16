@@ -9,6 +9,11 @@ shows are in Portuguese; the ones here are in English).
 | `agenda.max` | 1–500 | `50` | Max items in [`/cron`](commands/cron.md), counting reminders and messages together |
 | `alert.intervalMin` | 1–60 | `5` | Interval, in minutes, between [price alert](commands/rates.md#price-alerts) checks |
 | `alert.max` | 1–100 | `20` | Max price alerts (`/rates` and `/crypto` combined) |
+| `api.enabled` | on/off | `off` | Turns on the local HTTP API ([API and MCP](api.md)): `/health`, `/status`, `/notes` and `/send`, with `api.key`. Takes effect after restarting the bot |
+| `api.host` | text | `127.0.0.1` | Address the API listens on. The default only serves the machine itself; elsewhere, put an HTTPS proxy in front. Takes effect after restarting |
+| `api.key` | text (can be empty) | *(empty)* | The API key (`Authorization: Bearer <key>` or `X-API-Key` header). Empty: the API does not start. Shown masked; use a long random key |
+| `api.port` | 1024–65535 | `3100` | Port of the HTTP API. Takes effect after restarting |
+| `api.sendTo` | list | *(empty)* | Where `POST /send` and the MCP `send_message` may send besides your own chat: phone numbers with country code, group ids (`…@g.us`) or `all` (any destination: only if you trust whoever has the key) |
 | `ascii.defaultChar` | 1 character | `#` | Character used for the strokes of [`/ascii`](commands/ascii.md) letters when `-char` is not given |
 | `backup.enabled` | on/off | `on` | [Automatic backup](commands/backup.md#automatic-backup) of the database, once a day |
 | `backup.hour` | 0–23 | `3` | Hour (Brasília time) of the automatic backup |
@@ -80,6 +85,7 @@ shows are in Portuguese; the ones here are in English).
 | `gpt.tts.instructions` | text | `Fale como um robô: voz metálica, monótona e pausada, sem emoção.` | Voice style for `/gpt -voice` (only `gpt-4o-mini-tts` uses it) |
 | `gpt.tts.model` | text | `gpt-4o-mini-tts` | Model that generates the voice for `/gpt -voice`: the id your account has (only the `gpt-4o-*` ones follow the style) |
 | `gpt.tts.voice` | text (from the list) | `onyx` | Voice for `/gpt -voice`: `alloy`, `ash`, `ballad`, `coral`, `echo`, `fable`, `nova`, `onyx`, `sage`, `shimmer` or `verse` |
+| `mcp.enabled` | on/off | `off` | **Experimental.** Turns on the API's MCP server (`POST /mcp`), so an AI client can send messages (to `api.sendTo`) and read your `/notes`. Needs `api.enabled` and `api.key` |
 | `me.maxRepeat` | 1–1000 | `500` | Max repetitions of [`/me -repeat`](commands/me.md) (`-r <n>`) |
 | `monitor.enabled` | on/off | `on` | Periodic checks of [`/monitor`](commands/monitor.md); `off` pauses without deleting contacts or history |
 | `monitor.max` | 1–5 | `5` | Max monitored contacts. More contacts mean more queries and a higher risk of being blocked; hard limit of 5. Remove contacts before lowering it below the number registered |

@@ -108,6 +108,7 @@ const { startPricesAutomatic } = require('./src/openaiChat');
 const { startAlertsDefi } = require('./src/defi/alerts');
 const { startHeartbeat } = require('./src/heartbeat');
 const { startCleanupPeriodic } = require('./src/cleanup');
+const { startApi } = require('./src/api');
 const { startMonitor } = require('./src/monitor');
 
 // Periodic tasks
@@ -122,5 +123,6 @@ startSchedule();
 startBackup();
 startPricesAutomatic();
 startMonitor();
+startApi();
 
 startBot();
