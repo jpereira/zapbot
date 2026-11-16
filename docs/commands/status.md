@@ -66,3 +66,5 @@ posted:
   is what gets accounts banned the most.
 - It doesn't repost anything on its own: every post comes from a `/status` or a `/cron -status` you
   wrote.
+
+See also [`/profile -about`](profile.md#the-about-text--about), the note under your name.
