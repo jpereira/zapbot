@@ -22,32 +22,93 @@
 > `/set zapbot.lang pt_BR` (o padrão é `en_US`). A documentação também
 > existe em inglês (`docs/` e o site, com seletor de idioma).
 
-Bot para WhatsApp escrito em Node.js que roda em cima de uma sessão real do WhatsApp Web. Ele
-recupera mensagens (e status) apagadas e editadas, baixa vídeos de redes sociais, cria figurinhas,
-vigia mensagens por texto/regex e te avisa no privado, traz notícias, tempo e CVEs, conversa com o
-ChatGPT e mais algumas brincadeiras,
-tudo por comandos digitados no próprio chat (`/help`, `/get`, `/show`, `/news`, `/gpt`...).
+**O cão de guarda do seu grupo de WhatsApp.** O ZapBot é um bot de WhatsApp auto-hospedado, escrito em Node.js. Ele roda
+em cima de uma sessão real do WhatsApp Web, como um *aparelho conectado* da sua própria conta: sem API Business, sem
+mensalidade, e as suas mensagens ficam no seu servidor. Você digita comandos em qualquer chat e ele responde
+(`/help`, `/show`, `/gpt`, `/qr`...).
 
-Atalhos persistentes (`/alias`) guardam um comando com os argumentos sob o nome que você escolher,
-com uma descrição opcional:
+## ✨ O que ele faz
+
+| | Habilidade | O que faz | Experimente |
+|---|---|---|---|
+| 🕵️ | **Recuperar o que foi apagado** | Reexibe as mensagens apagadas e editadas (e os status, e as reações removidas), com a mídia original | [`/show`](docs/commands/show.md) · `/show -e` · `/show -s` |
+| 🤖 | **Conversar com o ChatGPT** | Responde perguntas, lê fotos e PDFs, transcreve notas de voz, resume conversas, desenha imagens e GIFs, transforma texto em voz e lê o texto de figuras | [`/gpt`](docs/commands/gpt.md) · [`/tldr`](docs/commands/tldr.md) · [`/draw`](docs/commands/draw.md) · [`/tts`](docs/commands/tts.md) · [`/ocr`](docs/commands/ocr.md) |
+| 📱 | **QR Codes** | Gera um QR Code de qualquer texto e lê um quando você responde a foto dele | [`/qr`](docs/commands/qr.md) |
+| 🎞️ | **Mídia e figurinhas** | Baixa vídeos e áudios de redes sociais, cria figurinhas (de imagens, vídeos ou texto), memes, GIFs, imagens de código e arte ASCII | [`/get`](docs/commands/get.md) · [`/sticker`](docs/commands/sticker.md) · [`/meme`](docs/commands/meme.md) · [`/giphy`](docs/commands/giphy.md) · [`/carbon`](docs/commands/carbon.md) · [`/ascii`](docs/commands/ascii.md) |
+| 🔔 | **Vigiar e avisar** | Vigia mensagens por texto ou regex, avisa de cotações de moedas e cripto, de posições DeFi fora da faixa e de contatos que ficaram online, no seu privado, num grupo ou por e-mail | [`/watch`](docs/commands/watch.md) · [`/rates`](docs/commands/rates.md) · [`/crypto`](docs/commands/crypto.md) · [`/defi`](docs/commands/defi.md) · [`/monitor`](docs/commands/monitor.md) |
+| 📅 | **Agendar e automatizar** | Mensagens avulsas e recorrentes, lembretes, atalhos seus, vários comandos numa mensagem só, anotações com `#tags` e alertas, listas de destinatários | [`/cron`](docs/commands/cron.md) · [`/alias`](docs/commands/alias.md) · [`/batch`](docs/commands/batch.md) · [`/notes`](docs/commands/notes.md) · [`/forward`](docs/commands/forward.md) |
+| 👥 | **Gerir grupos** | Marca todo mundo, promove e rebaixa, links de convite, enquetes, boas-vindas e despedidas, silencia e bloqueia | [`/everybody`](docs/commands/everybody.md) · [`/promote`](docs/commands/promote.md) · [`/invite`](docs/commands/invite.md) · [`/poll`](docs/commands/poll.md) · [`/welcome`](docs/commands/welcome.md) · [`/mute`](docs/commands/mute.md) |
+| 🌎 | **Informação do dia a dia** | Tempo conferido em mais de uma fonte, notícias, CVEs, versões do kernel Linux, tradução e estatísticas do chat | [`/weather`](docs/commands/weather.md) · [`/news`](docs/commands/news.md) · [`/cve`](docs/commands/cve.md) · [`/kernel`](docs/commands/kernel.md) · [`/translate`](docs/commands/translate.md) · [`/stats`](docs/commands/stats.md) |
+| 🛡️ | **Seu, e seguro** | Papéis de dono, admin e usuário por comando, proteção contra flood, anti-SSRF nos downloads, backups, login do QR Code por e-mail, em inglês ou português do Brasil | [`/bot`](docs/commands/bot.md) · [`/backup`](docs/commands/backup.md) · [`/set`](docs/commands/set.md) |
+
+Todos os comandos, com as opções e os exemplos, estão em [Comandos](docs/commands/index.md).
+
+## 👀 Veja funcionando
+
+**Alguém editou uma mensagem? Você ainda tem a original:**
+
+```text
+/show -e
+✏️ MENSAGEM EDITADA (1/1)
+
+👥 Grupo: Trabalho
+👤 Nome: Fulano
+📅 Enviada em: 30/09/2026, 11:14:03
+✏️ Editada em: 30/09/2026, 11:15:42
+📝 Antes: "reunião às 14h"
+💬 Depois: "reunião às 15h"
+```
+
+**Pergunte ao ChatGPT sobre uma foto, um PDF ou uma nota de voz** (é só responder a ela):
+
+```text
+(respondendo a foto de um cachorro)
+/gpt qual a raça desse cachorro?
+🤖 Parece um labrador retriever, pelo focinho e pelo pelo curto...
+```
+
+**QR Codes, nos dois sentidos:**
+
+```text
+/qr https://exemplo.com            → manda a imagem do QR Code
+(respondendo a foto de um QR Code)
+/qr                                → 📱 https://exemplo.com
+```
+
+**Um alerta de preço que vem até você:**
+
+```text
+/crypto -alert BTC < 90000
+🔔 Alerta criado
+₿ BTC/USDT abaixo de $90,000.00
+💰 Agora: $64,820.55
+💡 Aviso no seu privado; verificação a cada 5 minutos.
+```
+
+**Seus próprios atalhos, e vários comandos em um:**
 
 ```text
 /alias dimdim -d "Exibe o preço do dólar" /rates USD     → cadastra o atalho
-/dimdim                                                     → executa o /rates USD
-/help alias                                                 → lista os seus atalhos
+/dimdim                                                  → executa o /rates USD
+/alias carteira Orca {/defi orca}\n Prjx {/defi prjx}   → um texto, vários comandos
 ```
 
-O bot mostra o comando chamado antes do resultado. Um atalho também pode juntar vários comandos
-num texto, como no `/cron`:
-
-```text
-/alias carteira Orca {/defi orca}\n Prjx {/defi prjx}
-```
+O bot mostra o comando chamado antes do resultado. Os atalhos seguem as permissões dos comandos que chamam, e o
+`/help alias` lista os seus.
 
 A ideia vem dos velhos tempos do IRC: o ZapBot é inspirado nas antigas
 [eggdrops](https://www.eggheads.org/), os bots que ficavam de plantão nos canais, respondendo a
 comandos, guardando o que rolava e cuidando da casa. Aqui o canal é o grupo do WhatsApp, e os
 comandos começam com `/`.
+
+## ℹ️ Bom saber
+
+- O ZapBot **não tem vínculo com o WhatsApp nem com a Meta**. Ele usa um cliente não oficial (`whatsapp-web.js`), então o
+  WhatsApp pode bloquear contas que automatizam demais: use com cuidado (veja as notas sobre o risco no
+  [`/monitor`](docs/commands/monitor.md)).
+- **Tudo fica com você**: o banco, as mídias e os backups ficam em `cache/`, no seu servidor. O que sai dele são só as
+  consultas aos serviços que você ligar (OpenAI, GIPHY, tempo, notícias...).
+- O bot responde em **inglês por padrão**; `/set zapbot.lang pt_BR` troca as respostas para português do Brasil.
 
 ## Demonstração
 
@@ -62,28 +123,6 @@ comandos começam com `/`.
 
 `/ping`, `/show`, `/monitor`, `/sticker -txt`, `/crypto` e `/watch`. Todas as cenas em
 [Demonstração](docs/demo.md).
-
-**Principais funções:**
-
-- Recupera mensagens e status apagados ou editados, e reações removidas: [`/show`](docs/commands/show.md)
-- 👀 Monitora até 5 contatos, com intervalo configurável e histórico limitado dos horários
-  de visto por último observados e alertas online: [`/monitor`](docs/commands/monitor.md)
-- Baixa vídeos com yt-dlp e ffmpeg: [`/get`](docs/commands/get.md)
-- Cria figurinhas: [`/sticker`](docs/commands/sticker.md)
-- Vigia mensagens por texto ou regex: [`/watch`](docs/commands/watch.md)
-- Agenda mensagens: [`/cron`](docs/commands/cron.md)
-- Guarda anotações, com `#tag`, mídias (imagem, documento, áudio, vídeo) e aviso numa data/hora: [`/notes`](docs/commands/notes.md)
-- Executa vários comandos de uma mensagem só: [`/batch`](docs/commands/batch.md)
-- Mostra cotações e alertas de preço: [`/rates`](docs/commands/rates.md),
-  [`/crypto`](docs/commands/crypto.md)
-- Acompanha posições DeFi (Orca, Project X, Liquidswap, Morpho, Aave V3): [`/defi`](docs/commands/defi.md)
-- Integra o ChatGPT: [`/gpt`](docs/commands/gpt.md), [`/tldr`](docs/commands/tldr.md),
-  [`/draw`](docs/commands/draw.md) (imagens e GIFs)
-- Consulta CVEs, notícias e o tempo: [`/cve`](docs/commands/cve.md), [`/news`](docs/commands/news.md),
-  [`/weather`](docs/commands/weather.md)
-- Faz backup do banco: [`/backup`](docs/commands/backup.md)
-- Controla permissões por usuário e grupo, com proteção contra flood:
-  [`/bot`](docs/commands/bot.md)
 
 📖 **Documentação completa: [jpereira.github.io/zapbot](https://jpereira.github.io/zapbot/pt-BR/)** (da
 última release; a do `main` fica em [`docs/`](docs/index.md)).

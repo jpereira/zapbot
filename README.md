@@ -23,32 +23,93 @@
 > a language selector on the site. The bot itself speaks English by default; `/set zapbot.lang pt_BR` switches its help, replies,
 > alerts, and errors to Brazilian Portuguese.
 
-A WhatsApp bot written in Node.js that runs on top of a real WhatsApp Web session. It recovers
-deleted and edited messages (and statuses), downloads videos from social networks, creates stickers,
-watches messages by text/regex and notifies you in private, brings news, weather and CVEs, talks to
-ChatGPT and a few more fun things, all through commands typed in the chat itself (`/help`, `/get`,
-`/show`, `/news`, `/gpt`...).
+**Your WhatsApp group's guard dog.** ZapBot is a self-hosted WhatsApp bot written in Node.js. It runs on top of
+a real WhatsApp Web session, as a *linked device* of your own account: no Business API, no monthly fee, and your
+messages stay on your server. You type commands in any chat and it answers (`/help`, `/show`, `/gpt`, `/qr`...).
 
-Persistent shortcuts (`/alias`) save a command with its arguments under a name you choose, with an
-optional description:
+## ✨ What it can do
+
+| | Skill | What it does | Try it |
+|---|---|---|---|
+| 🕵️ | **Recover what was erased** | Shows again the deleted and edited messages (and statuses, and removed reactions), with the original media | [`/show`](docs/commands/show.md) · `/show -e` · `/show -s` |
+| 🤖 | **Talk to ChatGPT** | Answers questions, reads photos and PDFs, transcribes voice notes, summarizes conversations, draws images and GIFs, turns text into voice and reads text in pictures | [`/gpt`](docs/commands/gpt.md) · [`/tldr`](docs/commands/tldr.md) · [`/draw`](docs/commands/draw.md) · [`/tts`](docs/commands/tts.md) · [`/ocr`](docs/commands/ocr.md) |
+| 📱 | **QR Codes** | Makes a QR Code from any text and reads one when you reply to its photo | [`/qr`](docs/commands/qr.md) |
+| 🎞️ | **Media and stickers** | Downloads videos and audio from social networks, makes stickers (from images, videos or text), memes, GIFs, code snapshots and ASCII art | [`/get`](docs/commands/get.md) · [`/sticker`](docs/commands/sticker.md) · [`/meme`](docs/commands/meme.md) · [`/giphy`](docs/commands/giphy.md) · [`/carbon`](docs/commands/carbon.md) · [`/ascii`](docs/commands/ascii.md) |
+| 🔔 | **Watch and alerts** | Watches messages by text or regex, alerts on currency and crypto prices, DeFi positions out of range and contacts coming online, in your private chat, in a group or by e-mail | [`/watch`](docs/commands/watch.md) · [`/rates`](docs/commands/rates.md) · [`/crypto`](docs/commands/crypto.md) · [`/defi`](docs/commands/defi.md) · [`/monitor`](docs/commands/monitor.md) |
+| 📅 | **Schedule and automate** | One-off and recurring messages, reminders, your own shortcuts, several commands in one message, notes with `#tags` and alerts, recipient lists | [`/cron`](docs/commands/cron.md) · [`/alias`](docs/commands/alias.md) · [`/batch`](docs/commands/batch.md) · [`/notes`](docs/commands/notes.md) · [`/forward`](docs/commands/forward.md) |
+| 👥 | **Group management** | Mentions everyone, promotes and demotes, invite links, polls, welcome and goodbye messages, mutes and blocks | [`/everybody`](docs/commands/everybody.md) · [`/promote`](docs/commands/promote.md) · [`/invite`](docs/commands/invite.md) · [`/poll`](docs/commands/poll.md) · [`/welcome`](docs/commands/welcome.md) · [`/mute`](docs/commands/mute.md) |
+| 🌎 | **Everyday info** | Weather checked against more than one source, news, CVEs, Linux kernel versions, translation and chat statistics | [`/weather`](docs/commands/weather.md) · [`/news`](docs/commands/news.md) · [`/cve`](docs/commands/cve.md) · [`/kernel`](docs/commands/kernel.md) · [`/translate`](docs/commands/translate.md) · [`/stats`](docs/commands/stats.md) |
+| 🛡️ | **Yours, and safe** | Owner, admin and user roles per command, flood protection, anti-SSRF in downloads, backups, QR Code login by e-mail, and English or Brazilian Portuguese | [`/bot`](docs/commands/bot.md) · [`/backup`](docs/commands/backup.md) · [`/set`](docs/commands/set.md) |
+
+All the commands, with their options and examples, are in [Commands](docs/commands/index.md).
+
+## 👀 See it in action
+
+**Someone edited a message? You still have the original:**
 
 ```text
-/alias dimdim -d "Shows the dollar price" /rates USD     → registers the shortcut
-/dimdim                                                     → runs /rates USD
-/help alias                                                 → lists your shortcuts
+/show -e
+✏️ EDITED MESSAGE (1/1)
+
+👥 Group: Work
+👤 Name: Fulano
+📅 Sent at: 9/30/2026, 11:14:03
+✏️ Edited at: 9/30/2026, 11:15:42
+📝 Before: "meeting at 2pm"
+💬 After: "meeting at 3pm"
 ```
 
-The bot shows the command that was called before the result. A shortcut can also chain several
-commands in one text, as in `/cron`:
+**Ask ChatGPT about a photo, a PDF or a voice note** (just reply to it):
 
 ```text
-/alias carteira Orca {/defi orca}\n Prjx {/defi prjx}
+(replying to a photo of a dog)
+/gpt what breed is this dog?
+🤖 It looks like a Labrador Retriever, from the snout and the short coat...
 ```
+
+**QR Codes, both ways:**
+
+```text
+/qr https://example.com            → sends the QR Code image
+(replying to a photo of a QR Code)
+/qr                                → 📱 https://example.com
+```
+
+**A price alert that comes to you:**
+
+```text
+/crypto -alert BTC < 90000
+🔔 Alert created
+₿ BTC/USDT below $90,000.00
+💰 Now: $64,820.55
+💡 Notice in your private chat; checked every 5 minutes.
+```
+
+**Your own shortcuts, and several commands in one:**
+
+```text
+/alias money -d "Shows the dollar price" /rates USD     → registers the shortcut
+/money                                                  → runs /rates USD
+/alias wallet Orca {/defi orca}\n Prjx {/defi prjx}     → one text, several commands
+```
+
+The bot shows the command that was called before the result. Shortcuts follow the permissions of the commands
+they call, and `/help alias` lists yours.
 
 The idea comes from the old IRC days: ZapBot is inspired by the old
 [eggdrops](https://www.eggheads.org/), the bots that stood watch in the channels, answering
 commands, keeping track of what happened and taking care of the place. Here the channel is the
 WhatsApp group, and commands start with `/`.
+
+## ℹ️ Good to know
+
+- ZapBot is **not affiliated with WhatsApp or Meta**. It uses an unofficial client (`whatsapp-web.js`), so WhatsApp
+  may block accounts that automate too aggressively: use it with care (see the notes on the
+  [`/monitor`](docs/commands/monitor.md) risk).
+- **Everything stays with you**: the database, the media and the backups live in `cache/`, on your server. The only
+  things that leave it are the requests to the services you turn on (OpenAI, GIPHY, weather, news...).
+- The bot answers in **English by default**; `/set zapbot.lang pt_BR` switches its replies to Brazilian
+  Portuguese.
 
 ## Demo
 
@@ -63,28 +124,6 @@ WhatsApp group, and commands start with `/`.
 
 `/ping`, `/show`, `/monitor`, `/sticker -txt`, `/crypto` and `/watch`. All the scenes are in
 [Demo](docs/demo.md).
-
-**Main features:**
-
-- Recovers deleted or edited messages and statuses, and removed reactions: [`/show`](docs/commands/show.md)
-- 👀 Monitors up to 5 contacts, with a configurable interval, a limited history of the observed
-  last-seen times and online alerts: [`/monitor`](docs/commands/monitor.md)
-- Downloads videos with yt-dlp and ffmpeg: [`/get`](docs/commands/get.md)
-- Creates stickers: [`/sticker`](docs/commands/sticker.md)
-- Watches messages by text or regex: [`/watch`](docs/commands/watch.md)
-- Schedules messages: [`/cron`](docs/commands/cron.md)
-- Keeps notes, with `#tag`, media (image, document, audio, video) and a reminder at a date/time:
-  [`/notes`](docs/commands/notes.md)
-- Runs several commands from a single message: [`/batch`](docs/commands/batch.md)
-- Shows exchange rates and price alerts: [`/rates`](docs/commands/rates.md),
-  [`/crypto`](docs/commands/crypto.md)
-- Tracks DeFi positions (Orca, Project X, Liquidswap, Morpho, Aave V3): [`/defi`](docs/commands/defi.md)
-- Integrates ChatGPT: [`/gpt`](docs/commands/gpt.md), [`/tldr`](docs/commands/tldr.md),
-  [`/draw`](docs/commands/draw.md) (images and GIFs)
-- Looks up CVEs, news and the weather: [`/cve`](docs/commands/cve.md), [`/news`](docs/commands/news.md),
-  [`/weather`](docs/commands/weather.md)
-- Backs up the database: [`/backup`](docs/commands/backup.md)
-- Controls permissions per user and group, with flood protection: [`/bot`](docs/commands/bot.md)
 
 📖 **Full documentation: [jpereira.github.io/zapbot](https://jpereira.github.io/zapbot/)** (from the
 latest release; the `main` one is in [`docs/`](docs/index.md)).
@@ -196,7 +235,7 @@ and make the bot your own:
 ```text
 /alias -q /usd /rates USD          → shows the USD price
 /alias -q /btc /crypto BTC         → shows the Bitcoin price
-/alias -q /clima /weather ${1:-Rio de Janeiro}   → /clima shows Rio; /clima Lisboa, Lisbon
+/alias -q /forecast /weather ${1:-Rio de Janeiro}   → /forecast shows Rio; /forecast Lisboa, Lisbon
 /alias /rec /sticker -ss $1 -es $2           → /rec 10 20 <link> runs /sticker -ss 10 -es 20 <link>
 /alias -q /tofriends /forward -q /Family Group/ +5521999999999 /Maria Lucia/ /Rafael Silva/   → a shortcut for a /forward list
 ```
@@ -215,7 +254,7 @@ and make the bot your own:
 | [`/bot`](https://jpereira.github.io/zapbot/commands/bot/) | | `admin` | Bot status (24 h report and the users); turns the commands on/off (`-on`/`-off`) and says who uses them: admins (`+a`/`-a`) and users (`+u`/`-u`, in any chat or only in one group, and each one's commands with `+cmd`/`-cmd`); `-reset` goes back to the default; `-status` (`-s`): report of the last 24 h, and `-s 06h` sends it every day; `-info` (`-i`): versions and system; `-test` (`-t`): tests cache, disk, database, WhatsApp, internet, SMTP, IMAP and programs; `-flush-email [true]`: counts and clears the messages in Sent and Trash; `-passwd <password\|off>` (owner) and `-login <password>`: an outsider becomes admin with the password |
 | [`/cache`](https://jpereira.github.io/zapbot/commands/cache/) | | `admin` | Cache tree with sizes, message counts and cleanup |
 | [`/carbon`](https://jpereira.github.io/zapbot/commands/carbon/) | | `user` | The code in an editor-window image |
-| [`/cron`](https://jpereira.github.io/zapbot/commands/cron/) | | `admin` | At the scheduled time (`30m`, `às 18h`, `sexta 9h`...): sends a message (here or with `-to`, to one or several chats) or, with `-reminder`, a ⏰ reminder; can repeat, be edited and paused, and run commands in the text (`{/crypto}`) |
+| [`/cron`](https://jpereira.github.io/zapbot/commands/cron/) | | `admin` | At the scheduled time (`30m`, `at 18h`, `friday 9h`...): sends a message (here or with `-to`, to one or several chats) or, with `-reminder`, a ⏰ reminder; can repeat, be edited and paused, and run commands in the text (`{/crypto}`) |
 | [`/crypto`](https://jpereira.github.io/zapbot/commands/crypto/) | | `user` | Prices of the enabled cryptos (default: BTC, ETH, SOL and HYPE) or only the requested ones (`BTC ETH`); price alerts |
 | [`/cve`](https://jpereira.github.io/zapbot/commands/cve/) | | `user` | Latest published CVEs (NVD); `-highscore` only the critical ones |
 | [`/debug`](https://jpereira.github.io/zapbot/commands/debug/) | | `admin` | Debug logs with levels, filter and copy to chats |
