@@ -65,3 +65,5 @@ O `-status` não leva `-to`, `-private` nem `-reminder` (o Status não tem desti
   conta.
 - Não reposta nada sozinho: toda postagem vem de um `/status` ou de um `/cron -status` que você
   escreveu.
+
+Veja também o [`/profile -about`](profile.md#o-texto-de-recado--about), o recado embaixo do seu nome.

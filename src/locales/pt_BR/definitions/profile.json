@@ -1,15 +1,30 @@
 {
   "summary": "A foto de perfil de um contato",
-  "usage": "/profile [/contato/|@menção|+número]...  ou  /profile -set|-s",
+  "usage": "/profile [-about|-a] [/contato/|@menção|+número]...  ou  /profile -set|-s [texto]",
   "help": "A foto de perfil de um contato, com a legenda Contato: nome na sua agenda <telefone>. Sem ninguém, mostra o da pessoa do privado (no seu próprio privado, o seu) ou, no grupo, a foto do grupo; respondendo uma mensagem, o de quem a escreveu. Sem foto, ou com a foto escondida pela privacidade do contato, sai só o texto. Com -set, troca a foto: a do grupo (no grupo, se você for admin dele) ou a da sua conta (em qualquer outro chat).",
   "ex": [
     "/profile",
     "/profile /Jorge Pereira/",
     "/profile @Fulano",
     "/profile +5521999999999",
-    "/profile -s"
+    "/profile -s",
+    "/profile -a /Fulano/",
+    "/profile -s Ocupado até segunda"
   ],
   "cmd_opts": [
+    {
+      "opts": [
+        "about",
+        "a"
+      ],
+      "values": [],
+      "desc": "Mostra o recado (o texto embaixo do nome) das pessoas em vez da foto; sem ninguém, o do privado (no grupo, a descrição do grupo). Escondido pela privacidade ou vazio: avisa.",
+      "ex": [
+        "/profile -a",
+        "/profile -a /Fulano/",
+        "/profile -a @Fulano"
+      ]
+    },
     {
       "argv": [
         "[/contato/|@menção|+número]..."
@@ -22,9 +37,10 @@
         "s"
       ],
       "values": [],
-      "desc": "Troca a foto pela imagem que você respondeu (ou pela foto enviada com /profile -set na legenda): a do grupo, no grupo (o bot precisa ser admin, a menos que o grupo deixe todos editarem), ou a da sua conta, em qualquer outro chat. Só o dono e os admins, mesmo com o comando delegado.",
+      "desc": "Troca a foto pela imagem que você respondeu (ou pela foto enviada com /profile -set na legenda): a do grupo, no grupo (o bot precisa ser admin, a menos que o grupo deixe todos editarem), ou a da sua conta, em qualquer outro chat. Com texto e sem imagem, troca o seu **recado** (o texto embaixo do nome): até 139 caracteres, sem quebra de linha nem invisíveis. Só o dono e os admins, mesmo com o comando delegado.",
       "ex": [
-        "/profile -s"
+        "/profile -s",
+        "/profile -s Ocupado até segunda"
       ]
     },
     {

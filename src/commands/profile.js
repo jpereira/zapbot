@@ -22,7 +22,16 @@ const { printError } = require('../log');
  *
  * /profile -set|-s        → changes the photo to the replied image (or sent with the command in the caption):
  * the group's, in the group; your account's, in the other chats
+ *
+ * /profile -about|-a [person...]  → the person's message (about), as text; with nobody, same as /profile
+ * (in a group, the group description)
+ * /profile -set <text>           → changes YOUR message (without an image): up to 139 characters, without
+ * line break nor control characters
  */
+const ABOUT_MAX = 139;
+// Control characters (including the line break), invisibles that hide text and those that reverse direction (the
+// 200D, which joins emojis, and FE0F, which paints them, stay)
+const ABOUT_PROHIBITED = /[\p{Cc}\p{Cs}\p{Co}\p{Cn}\u2028\u2029\u200B\u200C\u200E\u200F\u202A-\u202E\u2060\u2066-\u2069\uFEFF]/u;
 const TIMEOUT_MS = 15000;
 const MAX_BYTES = 10 * 1024 * 1024;
 
@@ -75,6 +84,56 @@ async function showProfile(msg, person) {
     await msg.reply(`${contactAlt}\n${t('profile.noPhoto')}`);
 }
 
+// Someone's message (about), or null (no message, or hidden by privacy)
+async function messageAlt(ids) {
+    for (const id of ids) {
+        const contactAlt = await client.getContactById(id).catch(() => null);
+        const message = await contactAlt?.getAbout?.().catch(() => null);
+        if (message) return message;
+    }
+    return null;
+}
+
+async function showMessage(msg, person) {
+    const { telefone: phoneAlt, nome: nameAlt, ids } = await dataAlt(person.id);
+    const label = nameAlt ?? person.nome ?? (phoneAlt ? `+${phoneAlt}` : person.id.split('@')[0]);
+    const who = label + (phoneAlt ? ` <+${phoneAlt}>` : '');
+
+    const message = await messageAlt(ids);
+    await msg.reply(message ? t('profile.about', { label: who, text: message }) : t('profile.noAbout', { label: who }));
+}
+
+// -about in a group, with nobody: the group description
+async function groupShowDescription(msg, chatId) {
+    const nameAlt = await groupResolverName(chatId).catch(() => null) ?? chatId.split('@')[0];
+    const group = await msg.getChat().catch(() => null);
+    const description = String(group?.description ?? '').trim();
+    await msg.reply(description
+        ? t('profile.groupAbout', { name: nameAlt, text: description })
+        : t('profile.noGroupAbout', { name: nameAlt }));
+}
+
+// -set <text>: your message
+async function defineMessage(msg, textAlt) {
+    const size = [...textAlt].length;
+    if (size > ABOUT_MAX) {
+        await msg.reply(t('profile.aboutTooLong', { max: ABOUT_MAX, n: size }));
+        return;
+    }
+    if (ABOUT_PROHIBITED.test(textAlt)) {
+        await msg.reply(t('profile.aboutBadChars'));
+        return;
+    }
+
+    try {
+        await client.setStatus(textAlt);
+        await msg.reply(t('profile.aboutSet', { text: textAlt }));
+    } catch (err) {
+        printError('/profile -set (recado):', err.message);
+        await msg.reply(t('profile.setFailed', { error: err.message }));
+    }
+}
+
 // The group photo, with the caption Grupo: name
 async function showGroup(msg, chatId) {
     const nameAlt = await groupResolverName(chatId).catch(() => null);
@@ -116,23 +175,28 @@ async function swapPhoto(msg, quotedMsg, isGroup) {
 }
 
 async function cmdProfile({ msg, opts, quotedMsg, chatId, isGroup }) {
+    const textAlt = opts.argv.join(' ').trim();
+
     if (opts.given.has('set')) {
-        await swapPhoto(msg, quotedMsg, isGroup);
+        // With text and no image: the message; otherwise, the photo
+        if (textAlt && ![quotedMsg, msg].some(isPhoto)) await defineMessage(msg, textAlt);
+        else await swapPhoto(msg, quotedMsg, isGroup);
         return;
     }
 
-    const textAlt = opts.argv.join(' ').trim();
+    const message = opts.given.has('about');
+    const showAlt = message ? showMessage : showProfile;
 
     // Nobody: the replied message (whoever wrote it), the group or the private chat person (you, in yours)
     if (!textAlt) {
         if (!quotedMsg && isGroup) {
-            await showGroup(msg, chatId);
+            await (message ? groupShowDescription(msg, chatId) : showGroup(msg, chatId));
             return;
         }
         const person = quotedMsg
             ? await readPerson(msg, '', quotedMsg, '/profile')
             : { id: chatId };
-        if (person) await showProfile(msg, person);
+        if (person) await showAlt(msg, person);
         return;
     }
 
@@ -141,7 +205,7 @@ async function cmdProfile({ msg, opts, quotedMsg, chatId, isGroup }) {
         const person = await readPerson(msg, withoutDelimiters(item), null, '/profile');
         if (!person || seen.has(person.id)) continue;
         seen.add(person.id);
-        await showProfile(msg, person);
+        await showAlt(msg, person);
     }
 }
 
