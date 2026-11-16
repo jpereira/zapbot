@@ -16,10 +16,15 @@ voltar, é preciso um novo convite ([`/join`](join.md)).
 
 ```text
 /leave -l
-👥 *GRUPOS* (2)
+👥 *GRUPOS* (7)
 
-1. Família · 12 participantes
-2. Trabalho · 40 participantes
+1. 🍕 Pizza de sexta · 9 participantes
+2. 📚 Clube do livro · 14 participantes
+3. 🏔️ Turma da trilha 2026 · 38 participantes
+4. Associação de moradores · 212 participantes
+5. Festa surpresa da Ana · 1 participante
+6. Amigos antigos
+7. Trabalho · 40 participantes
 
 💡 *Dicas*
 /join <link> entra

@@ -41,6 +41,34 @@ aliases. Quem executa um atalho precisa ter permissão para os comandos de desti
 /alias -rm all
 ```
 
+A lista (`/alias -l`) mostra cada atalho com a descrição (📝), o comando que ele roda (→) e, com 🔇, os que
+rodam sem o cabeçalho `🔗 Alias ...` (`-q`):
+
+```text
+🔗 *ALIASES* (4)
+
+*/bitcoin* 🔇
+→ /crypto BTC
+
+*/dolar*
+📝 Preço do dólar
+→ /rates USD
+
+*/endereco* 🔇
+📝 Meu endereço
+→ /me
+   Rua das Flores, 123
+   Centro, Rio de Janeiro - RJ
+
+*/vai* 🔇
+→ /ascii -c # VAMOS!
+
+💡 *Dicas*
+/alias <nome> </comando args> cria
+/alias -rm <nome...> remove
+🔇 = sem o cabeçalho ao executar
+```
+
 O começo do nome de um alias salvo também completa (`/dol` roda o `/dolar`, se for o único;
 com vários, o bot lista).
 

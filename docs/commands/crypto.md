@@ -21,6 +21,40 @@ The enabled coins are stored in the `settings` table, key `crypto.coins`, and su
 
 ![Demonstração do /crypto](../assets/demo/07-crypto.gif)
 
+Example reply (`/crypto`): price, 24 h change, high, low and volume of each coin, in a monospaced block, and the
+one that rose the most:
+
+```text
+🚀 CRYPTO MARKET
+₿ BTC
+    💰 $64,820.55  🟢 +1.04%
+    📈 $65,870.10
+    📉 $63,512.00
+    📊 $1.52B
+
+Ξ ETH
+    💰 $1,812.40   🟢 +1.42%
+    📈 $1,838.20
+    📉 $1,765.95
+    📊 $648.10M
+
+◎ SOL
+    💰 $71.95      🟢 +2.15%
+    📈 $73.00
+    📉 $69.10
+    📊 $281.45M
+
+Ⓗ HYPE
+    💰 $66.20      🔴 -0.85%
+    📈 $68.90
+    📉 $64.30
+    📊 $35.02M
+
+🔥 Top: ◎ SOL
+🟡 Binance
+⚡ Live Market Data
+```
+
 ```text
 /crypto              → the enabled ones (default: BTC, ETH, SOL and HYPE)
 /crypto BTC          → bitcoin only

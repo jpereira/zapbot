@@ -41,6 +41,34 @@ aliases. Whoever runs a shortcut needs permission for the target commands.
 /alias -rm all
 ```
 
+The list (`/alias -l`) shows each shortcut with its description (📝), the command it runs (→) and, with 🔇,
+the ones that run without the `🔗 Alias ...` header (`-q`):
+
+```text
+🔗 *ALIASES* (4)
+
+*/bitcoin* 🔇
+→ /crypto BTC
+
+*/dolar*
+📝 Dollar price
+→ /rates USD
+
+*/endereco* 🔇
+📝 My address
+→ /me
+   Flower Street, 123
+   Downtown, Rio de Janeiro - RJ
+
+*/go* 🔇
+→ /ascii -c # LET'S GO!
+
+💡 *Tips*
+/alias <name> </command args> creates
+/alias -rm <name...> removes
+🔇 = no header when running
+```
+
 The start of a saved name also completes (`/dol` runs `/dolar`, if it's the only match; with
 several, the bot lists them).
 

@@ -26,10 +26,15 @@ description) without joining. To leave, use [`/leave`](leave.md).
 💡 _Join with /join chat.whatsapp.com/AbCdEfGhIjKlMnOpQrStUv_
 
 /join -l
-👥 *GROUPS* (2)
+👥 *GROUPS* (7)
 
-1. Família · 12 participants
-2. Trabalho · 40 participants
+1. 🍕 Friday night pizza · 9 participants
+2. 📚 Book club · 14 participants
+3. 🏔️ Trail crew 2026 · 38 participants
+4. Neighborhood association · 212 participants
+5. Surprise party for Ana · 1 participant
+6. Old friends
+7. Work · 40 participants
 
 💡 *Tips*
 /join <link> joins

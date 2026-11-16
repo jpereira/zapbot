@@ -99,6 +99,33 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 /notes -d #lar -r            → apaga a descrição
 ```
 
+A lista compacta (`/notes -c`) traz uma linha por anotação, agrupada por tag e por dia, com a descrição da
+tag em itálico, o ID, o começo do texto, os ícones e a hora:
+
+```text
+📝 *ANOTAÇÕES* (6)
+
+🏷️ casa (3) · 🔗 1
+👉 Coisas do apartamento
+
+📆 03/11/2026
+#12 Comprar um chuveiro novo · 09:15
+#13 Ligar para o encanador sobre o vazamento · 09:20
+#14 resenha-tomada-inteligente.exemplo.com/melho… 🔗 · 20:02
+
+🏷️ ideias (3)
+👉 Ideias para o projeto de fim de semana
+
+📆 05/11/2026
+#15 Parede de fotos com as imagens da viagem · 18:40
+#16 Montar uma estante com paletes · 18:44
+#17 Conhecer a trilha nova perto da lagoa · 22:03
+
+💡 _🖼️ mídia · ⏰ alerta · 🔗 link_
+💡 _-v <nº> abre a nota inteira_
+💡 _sem o -c, a lista completa_
+```
+
 - O cabeçalho do `-view` traz o ID, a tag e a data. Um ID ou tag que não existe cancela tudo, sem
   enviar nada.
 - O `-move` para a tag nova que já existe junta as anotações das duas. A descrição vai junto; se a
