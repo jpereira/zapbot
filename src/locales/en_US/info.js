@@ -186,6 +186,9 @@ module.exports = {
     'whois.unknownPhoneAuthor': "❌ I don't know the phone number of whoever wrote that message (WhatsApp only gave the internal id).",
     'whois.unknownPhoneYou': "❌ I don't know your phone number (WhatsApp only gave the internal id).",
     'whois.title': '*Who is it?* ({n})',
+    'whois.idsTitle': '*🆔 IDs*',
+    'whois.idGroup': 'Group',
+    'whois.idChat': 'Chat',
     'whois.helpHint': 'Type /help to see which commands are available.',
 
     // /me
