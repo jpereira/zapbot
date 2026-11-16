@@ -26,7 +26,7 @@ module.exports = {
             opts: ['query', 'q'],
             values: ['<text|/regex/flags>'],
             desc: 'Only the matches that contain the text (case- and accent-insensitive) or that match the /regex/flags. With -s or in the listing. With spaces, use quotes.',
-            ex: ['/watch -s /Jorge/ -q "carro"', '/watch -s 3 -q /carr(o|ão)/i']
+            ex: ['/watch -s /Jorge/ -q "car"', '/watch -s 3 -q /cars?/i']
         },
         {
             opts: ['in'],
@@ -50,7 +50,7 @@ module.exports = {
             opts: ['to'],
             values: ['<destination|off>'],
             desc: 'Alert destination: contact, group, number, mention or email. When creating the rule or with -s N. Repeat for several; off goes back to your private chat.',
-            ex: ['/watch /pix/i -to /Jorge/', '/watch -s 3 -to email']
+            ex: ['/watch /refund/i -to /Jorge/', '/watch -s 3 -to email']
         },
         {
             argv: ['-N'],
@@ -60,7 +60,7 @@ module.exports = {
         {
             argv: ['[text|/regex/flags]'],
             desc: 'Creates a rule everywhere, or only at the -in source. Accepts spaces; keep the regex between slashes.',
-            ex: ['/watch /Jorge Pereira/i', '/watch promoção']
+            ex: ['/watch /Jorge Pereira/i', '/watch sale']
         },
         {
             opts: ['mask', 'm'],

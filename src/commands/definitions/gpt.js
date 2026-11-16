@@ -31,7 +31,7 @@ module.exports = {
             opts: ['gif'],
             values: [],
             desc: 'Same as /draw -gif: creates an animated GIF (images API, output_format gif, model gpt.image.gifModel, only the gpt-image-2.6-* ones) and replies with it. Replying to a photo, animates it; "gere um gif animado de..." replying to a photo also works, without -gif. The frames and the time of each are the settings gpt.gif.frames and gpt.gif.frameMs. Owner and admins only: spends your OpenAI account.',
-            ex: ['/gpt -gif a cat in sunglasses', '/gpt gere um gif animado dele nadando (replying to a photo)'],
+            ex: ['/gpt -gif a cat in sunglasses', '/gpt generate an animated gif of it swimming (replying to a photo)'],
             role: ADMIN,
             cron: false
         },

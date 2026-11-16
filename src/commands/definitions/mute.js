@@ -38,11 +38,11 @@ module.exports = {
             argv: ['[/contact or group/|@mention|+number]'],
             desc: 'Contact or group by name or part of it, with priority for exact names (several: you pick from the list), someone mentioned with @ or a number. Replying to a notice mutes the origin: group first; with no group, the person\'s number or name.',
             ex: [
-                '/mute /Grupo L200/',
+                '/mute /L200 Group/',
                 '/mute /Jorge Pereira/',
                 '/m @John',
                 '/mute -s +5521999999999',
-                '/mute -r /Grupo L200/'
+                '/mute -r /L200 Group/'
             ]
         }
     ],

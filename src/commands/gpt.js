@@ -116,9 +116,9 @@ async function replyAudio(quotedMsg) {
     return { audio: { arquivo: `audio.${extension}`, mimetype: type, data: mediaAlt.data } };
 }
 
-// "agora transcreva isso", "transcreve": it is only the transcription (no question for the chat)
+// "agora transcreva isso", "transcreve", "now transcribe this": it is only the transcription (no question for the chat)
 const soTranscribe = (args) => !args.trim() ||
-    (/^(agora\s+)?transcrev\w*/i.test(args.trim()) && args.trim().split(/\s+/).length <= 6);
+    (/^((agora|now)\s+)?(transcrev|transcrib)\w*/i.test(args.trim()) && args.trim().split(/\s+/).length <= 6);
 
 /*
  * Replying to an audio: transcribes (v1/audio/transcriptions). Without a question, or just "transcreva", replies the

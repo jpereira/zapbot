@@ -25,7 +25,7 @@ module.exports = {
             opts: ['pos'],
             values: ['<top|middle|bottom>'],
             desc: 'Where the square crop of the image or video goes: top, middle (default) or bottom. On media wider than tall, top is the left and bottom is the right.',
-            ex: ['/sticker -pos topo', '/sticker -ss 10 -pos baixo']
+            ex: ['/sticker -pos top', '/sticker -ss 10 -pos bottom']
         },
         {
             opts: ['txt'],
