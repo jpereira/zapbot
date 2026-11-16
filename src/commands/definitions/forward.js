@@ -6,7 +6,7 @@ const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/forward',
-    usage: '/forward [-q] [-N] <recipient>... [-to <destination>]...',
+    usage: '/forward [-q] [-d] [-N] <recipient>... [-to <destination>]...',
     aliases: [],
     summary: 'Forwards the replied message to people, groups or emails',
     help: 'Forwards the message you replied to (text, photo, video, audio, document, sticker, location...) to the recipients. Without a reply, give the position of the messages above first: -1 is the one right above, -1 -4 -6 or -1,-4,-6 are several, -3..-1 is a range (up to forward.max, sent from the oldest to the newest; the header goes once, before them). It only sends if every recipient is found; otherwise nothing is sent and the bot says which one failed. It replies right away with who will receive it and, when done, edits that message with the status (a ❌ and the reason for any that failed); with -quiet, no status is shown. By default the message comes with the header "Message forwarded by ZapBot!" (setting forward.header).',
@@ -32,6 +32,12 @@ module.exports = {
             values: [],
             desc: 'Shows no status: neither the notice nor the list. Only failures are reported.',
             ex: ['/forward -q /Jorge Pereira/']
+        },
+        {
+            opts: ['dry', 'd'],
+            values: [],
+            desc: 'Only validates the recipients: replies with who was found (or what is wrong) and sends nothing. Needs no reply or positions.',
+            ex: ['/forward -d /Jorge Pereira/ ', '/forward -d -to fulano@example.com']
         }
     ],
     role: ADMIN // sends messages on behalf of your account

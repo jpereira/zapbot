@@ -10,7 +10,7 @@ replies right away with `⏳ Forwarding message...` and, when it finishes, edits
 with the result (below).
 
 ```text
-/forward [-quiet|-q] [-N|-N,-N|-N..-N] [/contact/|@mention|+number]... [-to <destination>]...
+/forward [-q|-q] [-d|-d] [-N|-N,-N|-N..-N] [/contact/|@mention|+number]... [-to <destination>]...
 ```
 
 | Option | Value | Description |
@@ -19,6 +19,7 @@ with the result (below).
 | `-to` | `<destination>` | One more recipient: a contact, a group, a number or an email (see [Destinations](index.md#destinations-contact-group-number-or-email)). Repeat for several |
 | `-N` | `-N,-N` · `-N..-N` | Without a reply: the position of the messages above (see [Several messages](#several-messages--n)) |
 | `-quiet`, `-q` | | Shows no status: neither the notice while sending nor the list at the end. Only failures are reported |
+| `-dry`, `-d` | | Only validates the recipients: replies with who was found (or what is wrong) and sends nothing. Needs no reply or positions |
 
 ```text
 /forward /Fulano de Tal/

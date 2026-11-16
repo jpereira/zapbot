@@ -9,7 +9,7 @@ destinatários forem encontrados**: se algum não casar, não manda nada e o bot
 `⏳ Encaminhando mensagem...` e, quando termina, edita essa mesma mensagem com o resultado (abaixo).
 
 ```text
-/forward [-quiet|-q] [-N|-N,-N|-N..-N] [/contato/|@menção|+número]... [-to <destino>]...
+/forward [-q|-q] [-d|-d] [-N|-N,-N|-N..-N] [/contato/|@menção|+número]... [-to <destino>]...
 ```
 
 | Opção | Valor | Descrição |
@@ -18,6 +18,7 @@ destinatários forem encontrados**: se algum não casar, não manda nada e o bot
 | `-to` | `<destino>` | Mais um destinatário: um contato, um grupo, um número ou um e-mail (veja [Destinos](index.md#destinos-contato-grupo-número-ou-e-mail)). Repita para vários |
 | `-N` | `-N,-N` · `-N..-N` | Sem resposta: a posição das mensagens acima (veja [Várias mensagens](#várias-mensagens--n)) |
 | `-quiet`, `-q` | | Não mostra nenhum status: nem o aviso enquanto envia, nem a lista no fim. Só as falhas são avisadas |
+| `-dry`, `-d` | | Só valida os destinatários: responde quem foi encontrado (ou o que está errado) e não envia nada. Não precisa de resposta nem de posições |
 
 ```text
 /forward /Fulano de Tal/

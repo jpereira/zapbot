@@ -5,6 +5,7 @@
  * /forward -1 /Fulano/                       → without a reply: the message right above (-1)
  * /forward -1 -4 -6 /Fulano/                 → the messages at positions -1, -4 and -6 (also -1,-4,-6)
  * /forward -3..-1 /Fulano/                   → from -3 to -1, in sequence
+ * /forward -dry /Fulano/                     → only validates the recipients, without sending
  * Only sends if all recipients are found. With -quiet|-q it shows neither the notice nor the status
  * (only the failures). The "forwarded by ZapBot" header comes from the forward.header setting (default on):
  * with several messages, it goes only once, before them.
@@ -123,7 +124,8 @@ async function messagesAbove(msg, positions) {
 
 async function cmdForward({ msg, args: typed, opts, quotedMsg }) {
     const silent = Boolean(opts?.given.has('quiet'));
-    const withoutQuiet = typed.replace(/(^|\s)-(?:quiet|q)(?=\s|$)/g, ' ').trim();
+    const simulation = Boolean(opts?.given.has('dry'));
+    const withoutQuiet = typed.replace(/(^|\s)-(?:quiet|q|dry|d)(?=\s|$)/g, ' ').trim();
     const { posicoes: positions, resto: withoutPositions } = readPositions(withoutQuiet);
 
     // The -to (emails and also chats) and, in the rest, the recipients: /Name/, "Name", @mention, +number, words
@@ -132,6 +134,13 @@ async function cmdForward({ msg, args: typed, opts, quotedMsg }) {
 
     if (!texts.length) {
         await msg.reply('```' + getCommandSyntax('/forward') + '```');
+        return;
+    }
+    // -dry: only validates the recipients (the error for whoever was not found is already replied), without sending
+    if (simulation) {
+        const foundAlt6 = await resolverDestinations(msg, texts, { aceitaEmail: true });
+        if (!foundAlt6) return;
+        await msg.reply(t('forward.dry', { n: foundAlt6.length, list: foundAlt6.map(describeDestination).join('\n') }));
         return;
     }
     if (quotedMsg && positions.length) {
