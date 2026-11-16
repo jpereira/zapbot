@@ -136,7 +136,7 @@ async function fitSticker(media, pos = 'meio') {
         return new MessageMedia('image/webp', outputAlt.toString('base64'), 'sticker.webp');
     } catch (err) {
         // Without the crop the sticker still goes out, just not centered
-        printError('/sticker: falha ao enquadrar a imagem, enviando sem recorte:', err.message);
+        printError('/sticker: failed to frame the image, sending without cropping:', err.message);
         return media;
     }
 }
@@ -185,7 +185,7 @@ async function thumbnailDoLink(quotedMsg) {
                 const mime = String(headers['content-type'] || 'image/jpeg').split(';')[0];
                 media = new MessageMedia(mime, Buffer.from(data).toString('base64'), 'thumbnail.jpg');
             } catch (err) {
-                printInfo(`Prévia do link recusada ou indisponível: ${err.message}`);
+                printInfo(`Link preview refused or unavailable: ${err.message}`);
             }
         }
     }

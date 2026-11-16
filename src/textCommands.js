@@ -154,7 +154,7 @@ async function runCommand(chatId, line, { chatName, isGroup, onde: whereAlt = '/
             msg, args, opts, chat: { chatId, chatName, isGroup }, quem: { ...owner, ...who }
         }));
     } catch (err) {
-        printError(`${whereAlt}: ${line} falhou:`, err.message);
+        printError(`${whereAlt}: ${line} failed:`, err.message);
         return { texto: `⚠️ ${command.cmd} falhou`, midias: [] };
     }
 

@@ -501,7 +501,7 @@ describe('settings', () => {
         await bot.dbRun("UPDATE settings SET value = '999' WHERE key = 'show.max'");
         await loadSettings();
         assert.equal(getSetting('show.max'), 20);
-        assert.ok(bot.errorsInLog().some(l => l.includes("Setting 'show.max' inválido")));
+        assert.ok(bot.errorsInLog().some(l => l.includes("Setting 'show.max' invalid")));
     });
 
     test('lista no banco com item que deixou de existir: fica com os outros; comando renomeado vira o novo', async () => {
@@ -509,7 +509,7 @@ describe('settings', () => {
         await bot.dbRun("UPDATE settings SET value = ? WHERE key = 'commands.disabled'", [JSON.stringify(['/walissu', '/status', '/agendar'])]);
         await loadSettings();
         assert.deepEqual(getSetting('commands.disabled'), ['/walissu', '/cron']);
-        assert.ok(bot.errorsInLog().some(l => l.includes("Setting 'commands.disabled' com item inválido")));
+        assert.ok(bot.errorsInLog().some(l => l.includes("Setting 'commands.disabled' with an invalid item")));
     });
 
     test('settings renomeados: o valor antigo vai para o novo (se ele está no padrão) e o antigo sai', async () => {
@@ -531,7 +531,7 @@ describe('settings', () => {
 
         const old = await bot.dbAll("SELECT key FROM settings WHERE key IN ('resumo.maxMsgs', 'edit.alert', 'show.revoke.status', 'stats.enabled')");
         assert.deepEqual(old, []);
-        assert.ok(bot.logs.some(l => l.includes("Setting 'resumo.maxMsgs' renomeado para 'tldr.maxMsgs': o valor salvo foi mantido")));
+        assert.ok(bot.logs.some(l => l.includes("Setting 'resumo.maxMsgs' renamed to 'tldr.maxMsgs': the saved value was kept")));
     });
 
     test('envOuSetting: .env vence; .env inválido cai no setting', async () => {

@@ -56,7 +56,7 @@ async function photoAlt(ids) {
             const mime = String(headers?.['content-type'] ?? 'image/jpeg').split(';')[0];
             return new MessageMedia(mime, Buffer.from(data).toString('base64'), 'perfil.jpg');
         } catch (err) {
-            printError('/profile: não baixei a foto:', err.message);
+            printError('/profile: could not download the photo:', err.message);
         }
     }
     return null;

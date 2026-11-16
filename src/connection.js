@@ -53,7 +53,7 @@ function scheduleNewAttempt(reasonAlt, errorAlt) {
         alertPerEmail(t('conexao.falhaReiniciarTitulo'), t('conexao.falhaReiniciarCorpo', { motivo: reasonAlt, erro: errorAlt }));
     }
 
-    printInfo(t('conexao.logNovaTentativa', { s: wait / 1000, n: stateAlt.tentativas }));
+    printInfo(`♻️ Retrying to connect in ${wait / 1000}s (consecutive failures: ${stateAlt.tentativas}).`);
     clearTimeout(newAttempt);
     newAttempt = setTimeout(() => {
         newAttempt = null;
@@ -68,7 +68,7 @@ function watchReady() {
     vigiaDoReady = setTimeout(() => {
         vigiaDoReady = null;
         if (stateAlt.pronto || stateAlt.reiniciando || stateAlt.aguardandoQr) return;
-        printError(t('conexao.logSemConexao', { min: CONNECTION_MAX_MS / 60000 }));
+        printError(`No connection ${CONNECTION_MAX_MS / 60000} min after starting: restarting the client.`);
         restartClient(t('conexao.motivoSemReady', { min: CONNECTION_MAX_MS / 60000 }));
     }, CONNECTION_MAX_MS);
     vigiaDoReady.unref?.();
@@ -82,24 +82,24 @@ function watchReady() {
 function killBrowserOrphan() {
     const proc = client.pupBrowser?.process?.();
     if (!proc || proc.exitCode !== null || proc.signalCode !== null) return;
-    printInfo(t('conexao.logMatandoChromium', { pid: proc.pid }));
+    printInfo(`Killing the orphan Chromium (PID ${proc.pid}).`);
     proc.kill('SIGKILL');
 }
 
 async function restartClient(reasonAlt) {
     if (stateAlt.reiniciando) {
-        printInfo(t('conexao.logRestartIgnorado', { motivo: reasonAlt }));
+        printInfo(`Restart ignored (already in progress). Reason: ${reasonAlt}`);
         return;
     }
 
     stateAlt.reiniciando = true;
     stateAlt.pronto = false;
-    printInfo(t('conexao.logReiniciando', { motivo: reasonAlt }));
+    printInfo(`♻️ Restarting client. Reason: ${reasonAlt}`);
 
     try {
         await client.destroy();
     } catch (e) {
-        printError(t('conexao.logDestroyFalhou'), e.message);
+        printError('destroy failed:', e.message);
     }
     killBrowserOrphan();
 
@@ -110,7 +110,7 @@ async function restartClient(reasonAlt) {
         await client.initialize();
     } catch (e) {
         errorAlt = e;
-        printError(t('conexao.logInitializeFalhou'), e.message);
+        printError('initialize failed:', e.message);
     } finally {
         stateAlt.reiniciando = false;
     }
@@ -155,14 +155,14 @@ client.on('qr', async (qr) => {
     // Diagnostic: a QR after already authenticating indicates a lost session.
     if (stateAlt.autenticadoEm > 0 || stateAlt.ultimaQueda) {
         printError(
-            t('conexao.logQrAposAuth'),
+            '⚠️ QR received AFTER authentication.',
             `lastDisconnect=${stateAlt.ultimaQueda} restarting=${stateAlt.reiniciando} ready=${stateAlt.pronto}`
         );
         alertPerEmail(t('conexao.sessaoPerdidaTitulo'), t('conexao.sessaoPerdidaCorpo', { motivo: stateAlt.ultimaQueda ?? '-' }));
     }
 
     if (!emailEnabled) {
-        printInfo(t('conexao.logQrRecebido', { quando: currentdatetimeday }));
+        printInfo(`QR Code received at (${currentdatetimeday}), scan it please`);
         qrcodeTerminal.generate(qr, { small: true });
         return;
     }
@@ -239,17 +239,14 @@ client.on('qr', async (qr) => {
         qrEmailCounter = nextQrEmailCounter;
 
         printInfo(
-            t('conexao.logQrEnviado', {
-                n: qrEmailCounter, quando: currentdatetimeday,
-                para: process.env.QRCODE_EMAIL_SMTP_TO, id: info.messageId
-            })
+            `QR Code #${qrEmailCounter} received at (${currentdatetimeday}) and sent to '${process.env.QRCODE_EMAIL_SMTP_TO}' (messageId=${info.messageId})`
         );
     } catch (err) {
-        printError(t('conexao.logQrErroEmail'), err);
+        printError('Error sending QR by e-mail:', err);
 
         // Without the email the QR would reach nowhere: shows it in the terminal (default on)
         if (String(process.env.QRCODE_EMAIL_FALLBACK_TERMINAL ?? 'true').trim().toLowerCase() !== 'false') {
-            printInfo(t('conexao.logQrEmailFalhou', { quando: currentdatetimeday }));
+            printInfo(`QR Code received at (${currentdatetimeday}), e-mail failed, scan it please`);
             qrcodeTerminal.generate(qr, { small: true });
         }
     } finally {
@@ -270,7 +267,7 @@ client.on('authenticated', () => {
     const page = client.pupPage;
 
     if (!page) {
-        printDebug('[WA] pupPage ainda não disponível');
+        printDebug('[WA] pupPage not available yet');
         return;
     }
 
@@ -305,10 +302,10 @@ client.on('disconnected', async (reason) => {
     stateAlt.pronto = false;
     stateAlt.autenticadoEm = 0;
     stateAlt.ultimaQueda = reason;
-    printInfo(t('conexao.logDesconectou', { motivo: reason }));
+    printInfo(`💥 WhatsApp disconnected: ${reason}`);
 
     if (NOT_RESTART.has(String(reason))) {
-        printError(t('conexao.logAcaoManual', { motivo: reason }));
+        printError(`Reason '${reason}' needs manual action (another instance or revoked session). Not restarting in a loop.`);
         alertPerEmail(t('conexao.desconectadoManualTitulo'), t('conexao.desconectadoManualCorpo', { motivo: reason }));
         return;
     }
@@ -362,7 +359,7 @@ client.on('ready', () => withContextDebug({ semFiltro: true }, async () => {
     ].filter(Boolean);
     const notices = listNotices.map(a => ` ${a}`).join('');
 
-    printSuccess(`🤖 ZapBot ${versionWithCommit()} inicializado! Informando ${process.env.PHONE_NUMBER}`);
+    printSuccess(`🤖 ZapBot ${versionWithCommit()} ready! Reporting to ${process.env.PHONE_NUMBER}`);
     messageToSelf(t('conexao.inicializado', { versao: versionWithCommit(), avisos: notices }));
 
     alertPerEmail(t(jaStayedReady ? 'conexao.reconectadoTitulo' : 'conexao.iniciadoTitulo'),
@@ -378,23 +375,23 @@ client.on('ready', () => withContextDebug({ semFiltro: true }, async () => {
  */
 async function startBot() {
     try {
-        printInfo(t('conexao.logIniciando'));
+        printInfo('Starting WhatsApp authentication...');
         await client.initialize();
         watchReady();
     } catch (error) {
-        printError(t('conexao.logErroInit'), error.message);
+        printError('Error caught during initialization:', error.message);
 
         // Closes the old browser if it was partially opened
         try {
-            printInfo(t('conexao.logFechando'));
+            printInfo('Closing pending browser instances...');
             await client.destroy();
         } catch {
-            printInfo(t('conexao.logNenhumBrowser'));
+            printInfo('No active browser to destroy.');
         }
         killBrowserOrphan();
 
         if (error.message.includes('Execution context was destroyed') || error.message.includes('browser is already running')) {
-            printInfo(t('conexao.logReiniciandoInit'));
+            printInfo('Restarting the initialization process in 5 seconds...');
             setTimeout(startBot, 5000);
             return;
         }

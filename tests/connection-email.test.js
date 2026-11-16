@@ -66,7 +66,7 @@ describe('alertas por e-mail', () => {
         nodemailer.falhar = true;
         const logBefore = bot.logs.length;
         await alertPerEmail('🧪 SMTP fora');
-        assert.ok(bot.errorsInLog(logBefore).some(l => l.includes("Alerta por e-mail '🧪 SMTP fora' falhou: SMTP fora do ar")));
+        assert.ok(bot.errorsInLog(logBefore).some(l => l.includes("E-mail alert '🧪 SMTP fora' failed: SMTP fora do ar")));
     });
 });
 
@@ -125,7 +125,7 @@ describe('eventos de conexão', () => {
         await bot.waitWithClock(t, Promise.all([restartClient('teste 1'), restartClient('teste 2')]));
 
         assert.equal(bot.client.destruido, destroyed + 1);
-        assert.ok(bot.logs.some(l => l.includes('Restart ignorado (já em andamento). Motivo: teste 2')));
+        assert.ok(bot.logs.some(l => l.includes('Restart ignored (already in progress). Reason: teste 2')));
     });
 
     test('auth_failure e estados de problema avisam por e-mail; os normais não', async () => {
@@ -140,7 +140,7 @@ describe('eventos de conexão', () => {
         bot.estado.ultimaQueda = null;
         await emit('qr', 'codigo-qr');
         assert.deepEqual(emails, []);
-        assert.ok(bot.logs.some(l => /QR Code recebido em .*escaneie por favor/.test(l)));
+        assert.ok(bot.logs.some(l => /QR Code received at .*scan it please/.test(l)));
 
         bot.estado.autenticadoEm = Date.now();
         await emit('qr', 'codigo-qr-2');
@@ -197,7 +197,7 @@ describe('eventos de conexão', () => {
         })());
 
         assert.deepEqual(signals, ['SIGKILL']);
-        assert.ok(bot.logs.some(l => l.includes('Matando o Chromium órfão (PID 13753)')));
+        assert.ok(bot.logs.some(l => l.includes('Killing the orphan Chromium (PID 13753)')));
     });
 
     test('watchdog não mexe num cliente que ainda não ficou pronto', async (t) => {
@@ -245,14 +245,14 @@ describe('eventos de conexão', () => {
 
         await startBot();
         assert.equal(attempts, 1);
-        assert.ok(bot.logs.some(l => l.includes('Nova tentativa de conectar em 15s (falhas seguidas: 1)')));
+        assert.ok(bot.logs.some(l => l.includes('Retrying to connect in 15s (consecutive failures: 1)')));
 
         // 15 s of waiting and the 5 s of restartClient: connects
         await bot.waitWithClock(t, (async () => {
             while (attempts < 2) await new Promise(setImmediate);
         })());
         assert.equal(attempts, 2);
-        assert.ok(bot.logs.some(l => l.includes('Motivo: nova tentativa nº 2 (inicialização)')));
+        assert.ok(bot.logs.some(l => l.includes('Reason: nova tentativa nº 2 (inicialização)')));
     });
 
     test('initialize falhando (internet fora): tenta de novo até conectar; um e-mail só; o "Reconectado" conta quanto tempo', async (t) => {
@@ -275,10 +275,10 @@ describe('eventos de conexão', () => {
 
         // 15 s, 30 s, 60 s: a 4ª conecta
         await ate(4);
-        const waits = bot.logs.filter(l => l.includes('Nova tentativa de conectar em'))
-            .map(l => l.match(/em (\d+)s/)[1]);
+        const waits = bot.logs.filter(l => l.includes('Retrying to connect in'))
+            .map(l => l.match(/in (\d+)s/)[1]);
         assert.deepEqual(waits, ['15', '30', '60']);
-        assert.ok(bot.logs.some(l => l.includes('Motivo: nova tentativa nº 4 (heartbeat: OPENING)')));
+        assert.ok(bot.logs.some(l => l.includes('Reason: nova tentativa nº 4 (heartbeat: OPENING)')));
         assert.deepEqual(subjects(), ['[ZapBot] ❌ Falha ao reiniciar'], 'um e-mail só, na 1ª falha');
         assert.match(emails[0].text, /initialize falhou: net::ERR_NAME_NOT_RESOLVED[\s\S]*vai tentar de novo sozinho/);
 
@@ -317,8 +317,8 @@ describe('eventos de conexão', () => {
         await bot.waitWithClock(t, (async () => {
             while (bot.client.inicializado < initializations + 4) await new Promise(setImmediate);
         })());
-        assert.ok(bot.logs.some(l => l.includes('Sem conexão 3 min depois de iniciar: reiniciando o cliente.')));
-        assert.ok(bot.logs.some(l => l.includes("Motivo: sem 'ready' em 3 min")));
+        assert.ok(bot.logs.some(l => l.includes('No connection 3 min after starting: restarting the client.')));
+        assert.ok(bot.logs.some(l => l.includes("Reason: sem 'ready' em 3 min")));
     });
 
     test('authenticated com debug ligado liga o log do browser', async (t) => {

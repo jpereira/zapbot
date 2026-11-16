@@ -725,7 +725,7 @@ async function envShow(msg, protocol, end, optionsAlt) {
     try {
         r = await d.ler(wallet);
     } catch (err) {
-        if (!err.motivo) printError(`[${d.nome.toUpperCase()}] Erro inesperado:`, err.message);
+        if (!err.motivo) printError(`[${d.nome.toUpperCase()}] Unexpected error:`, err.message);
         await msg.reply(t('defi.queryError', { name: d.nome, reason: err.motivo ?? t('defi.noData') }));
         return;
     }

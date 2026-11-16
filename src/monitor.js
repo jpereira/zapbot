@@ -171,7 +171,7 @@ async function checkMonitor() {
             }
         }
     } catch (err) {
-        printError('Monitor: falha na verificação:', err.message);
+        printError('Monitor: check failed:', err.message);
     } finally {
         checking = false;
     }

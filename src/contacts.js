@@ -78,7 +78,7 @@ async function resolveLidToPhone(lidJid) {
 
         return null;
     } catch (error) {
-        printError('[LID] Falha ao converter LID para telefone:', normalizedLid, error?.message || String(error));
+        printError('[LID] Failed to convert LID to phone:', normalizedLid, error?.message || String(error));
         return null;
     }
 }
@@ -98,7 +98,7 @@ async function groupResolverName(chatId) {
     if (cache && Date.now() - cache.at < GROUP_NAME_TTL_MS) return cache.name;
 
     const chat = await client.getChatById(chatId).catch((err) => {
-        if (isDebugMode()) printDebug(`[GRUPO] getChatById falhou para ${chatId}: ${err?.message || err}`);
+        if (isDebugMode()) printDebug(`[GROUP] getChatById failed for ${chatId}: ${err?.message || err}`);
         return null;
     });
 
@@ -158,7 +158,7 @@ async function groupInStoreName(chatId) {
 
         return GroupMetadata?.get(wid)?.subject || chat?.name || chat?.formattedTitle || null;
     }, chatId).catch((err) => {
-        if (isDebugMode()) printDebug(`[GRUPO] Store sem o grupo ${chatId}: ${err?.message || err}`);
+        if (isDebugMode()) printDebug(`[GROUP] Store without the group ${chatId}: ${err?.message || err}`);
         return null;
     });
 }

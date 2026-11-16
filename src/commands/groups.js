@@ -66,7 +66,7 @@ async function cmdJoin({ msg, opts }) {
     try {
         info = await client.getInviteInfo(codeAlt);
     } catch (e) {
-        printInfo(`[JOIN] convite ${codeAlt} não resolvido:`, e.message);
+        printInfo(`[JOIN] invite ${codeAlt} not resolved:`, e.message);
         return msg.reply(t('grp.join.badInvite'));
     }
     const nameAlt = info?.subject || t('grp.join.unnamed');
@@ -84,10 +84,10 @@ async function cmdJoin({ msg, opts }) {
     try {
         await client.acceptInvite(codeAlt);
     } catch (e) {
-        printError(`[JOIN] não entrou em "${nameAlt}":`, e.message);
+        printError(`[JOIN] did not join "${nameAlt}":`, e.message);
         return msg.reply(t('grp.join.failed', { name: nameAlt, reason: e.message || t('grp.refused') }));
     }
-    printInfo(`[JOIN] entrou em "${nameAlt}"`);
+    printInfo(`[JOIN] joined "${nameAlt}"`);
     await msg.reply(t('grp.join.joined', { name: nameAlt }));
 }
 
@@ -98,10 +98,10 @@ async function leave(target) {
     try {
         await chat.leave();
     } catch (e) {
-        printError(`[LEAVE] não saiu de "${target.nome}":`, e.message);
+        printError(`[LEAVE] did not leave "${target.nome}":`, e.message);
         return e.message || t('grp.refused');
     }
-    printInfo(`[LEAVE] saiu de "${target.nome}"`);
+    printInfo(`[LEAVE] left "${target.nome}"`);
     return null;
 }
 
@@ -151,7 +151,7 @@ async function cmdLeave({ msg, opts }) {
         ...errors
     ].filter(Boolean);
     // When leaving the group where the command was given, the reply may have nowhere left to go
-    if (linesAlt.length) await msg.reply(linesAlt.join('\n\n')).catch(e => printInfo(`[LEAVE] sem resposta: ${e.message}`));
+    if (linesAlt.length) await msg.reply(linesAlt.join('\n\n')).catch(e => printInfo(`[LEAVE] no response: ${e.message}`));
 }
 
 module.exports = { cmdJoin, cmdLeave, inviteCode };

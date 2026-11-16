@@ -193,7 +193,7 @@ function mediaOrigin(opts, quotedMsg, msg) {
 
 async function downloadQuoted(msg, quoted) {
     const media = await quoted.downloadMedia().catch((err) => {
-        printError('/get: falha ao baixar a mídia respondida:', err.message);
+        printError('/get: failed to download the replied media:', err.message);
         return null;
     });
     if (!media?.data) {
@@ -288,7 +288,7 @@ async function converterAndSend({ msg, opts, senderName, url, media, previa: pre
         }
 
         if (url && !(await isUrlPublic(url))) {
-            printInfo(`/get: URL recusada (host privado ou não resolvido) de '${senderName}': ${url}`);
+            printInfo(`/get: URL refused (private or unresolved host) from '${senderName}': ${url}`);
             throw errorOnDownload(t('get.forbiddenUrl', { url }));
         }
 
@@ -301,7 +301,7 @@ async function converterAndSend({ msg, opts, senderName, url, media, previa: pre
         logCmdFile = path.join(TMP_DIR, `${id}_cmd.log`);
         logCmd = fs.openSync(logCmdFile, 'a');
 
-        printInfo(`> Todo o output dos comandos salvo em ${logCmdFile}`);
+        printInfo(`> All the commands' output saved in ${logCmdFile}`);
 
         let cmdYt = null;
         let optsFfmpeg = opts; // with the snippet downloaded, ffmpeg's cut starts at 0
@@ -321,7 +321,7 @@ async function converterAndSend({ msg, opts, senderName, url, media, previa: pre
                 originalFile = inCacheAlt.arquivo;
                 inCache = true;
                 if (inCacheAlt.trecho) optsFfmpeg = snippetOpts(opts, inCacheAlt.trecho);
-                printInfo(`> Do cache (get.cache.tmp), sem baixar: ${path.basename(originalFile)}`);
+                printInfo(`> From the cache (get.cache.tmp), without downloading: ${path.basename(originalFile)}`);
             } else {
                 // With a cut, tries to download only the snippet; if the site does not allow it, downloads everything and ffmpeg cuts
                 if (snippet) {
@@ -329,7 +329,7 @@ async function converterAndSend({ msg, opts, senderName, url, media, previa: pre
                         cmdYt = await downloadWithYtDlp(url, originalFile, logCmd, snippet);
                         optsFfmpeg = snippetOpts(opts, snippet);
                     } catch (inner) {
-                        printInfo(`> O trecho falhou (${inner.message}): baixando o vídeo inteiro`);
+                        printInfo(`> The snippet failed (${inner.message}): downloading the whole video`);
                         fs.rmSync(originalFile, { force: true });
                     }
                 }
@@ -341,7 +341,7 @@ async function converterAndSend({ msg, opts, senderName, url, media, previa: pre
                 if (!fs.existsSync(originalFile)) {
                     throw errorOnDownload(t('get.nothingDownloaded', { max: getSetting('get.maxDownloadMB') }));
                 }
-                printInfo(`> Baixado ${optsFfmpeg === opts ? 'o vídeo inteiro' : 'o trecho'}: ${humanSize(fs.statSync(originalFile).size)}`);
+                printInfo(`> Downloaded ${optsFfmpeg === opts ? 'the whole video' : 'the snippet'}: ${humanSize(fs.statSync(originalFile).size)}`);
 
                 // Renames only at the end: whoever asks for the same link in the middle of the download does not get a half file
                 if (useCache) {
@@ -365,7 +365,7 @@ async function converterAndSend({ msg, opts, senderName, url, media, previa: pre
             cmdFfmpeg = [BIN_FFMPEG, ...ffmpegArgs].join(' ');
 
             try {
-                printInfo(`> Executando: ${cmdFfmpeg}`);
+                printInfo(`> Running: ${cmdFfmpeg}`);
                 fs.writeSync(logCmd, `\n\n# Executando: ${cmdFfmpeg}\n`);
                 await runCommand(BIN_FFMPEG, ffmpegArgs, logCmd);
             } catch (inner) {
@@ -398,10 +398,10 @@ async function converterAndSend({ msg, opts, senderName, url, media, previa: pre
             }
 
             if (isSticker) {
-                printInfo(`> Enviando a mídia como sticker para '${senderName}'`);
+                printInfo(`> Sending the media as a sticker to '${senderName}'`);
                 await msg.reply(outputAlt, null, { linkPreview: false, ...MSG_STICKER, ...stickerMeta() });
             } else {
-                printInfo(`> Enviando a mídia ${outputFile} para '${senderName}'`);
+                printInfo(`> Sending the media ${outputFile} to '${senderName}'`);
                 await msg.reply(outputAlt, null, { linkPreview: false, ...msgDocument(), ...stickerMeta() });
             }
         } catch (inner) {
@@ -469,7 +469,7 @@ async function downloadWithYtDlp(url, originalFile, logCmd, snippet = null) {
     const cmdYt = [BIN_YT, ...cmdYtArgs].join(' ');
 
     try {
-        printInfo(`> Executando: ${cmdYt}`);
+        printInfo(`> Running: ${cmdYt}`);
         fs.writeSync(logCmd, `# Executando: ${cmdYt}\n`);
         await runCommand(BIN_YT, cmdYtArgs, logCmd);
     } catch (inner) {
@@ -495,12 +495,12 @@ async function previewSticker(msg, quoted, notice, reasonAlt, pos) {
         const thumb = await thumbnailDoLink(quoted);
         if (!thumb) return false;
 
-        printInfo(`/sticker: sem o vídeo do link (${reasonAlt.message}); usando a prévia`);
+        printInfo(`/sticker: no video from the link (${reasonAlt.message}); using the preview`);
         await msg.reply(await fitSticker(thumb, pos), null, { ...MSG_STICKER, ...stickerMeta() });
         if (notice) await completeNotice(msg, notice, t('get.stickerDone'), { linkPreview: false });
         return true;
     } catch (err) {
-        printError('/sticker: falha ao usar a prévia do link:', err.message);
+        printError('/sticker: failed to use the link preview:', err.message);
         return false;
     }
 }

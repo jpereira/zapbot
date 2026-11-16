@@ -53,7 +53,7 @@ async function muted(type, { chatId, remetentes: senders = [] }) {
 // Records a cut notice (for /bot -status and for the /mute list)
 async function registerIgnored(mute, type) {
     await dbRun('INSERT INTO mute_hits (target_id, kind, at) VALUES (?, ?, ?)', [mute.target_id, type, Date.now()]);
-    printInfo(`/mute: aviso de ${type} de ${mute.target_name} ignorado`);
+    printInfo(`/mute: ${type} notice from ${mute.target_name} ignored`);
 }
 
 /**

@@ -44,7 +44,7 @@ Logo no início dos logs aparece a versão, com o commit e a tag (veja o
 [!] 🤖 Starting ZapBot X.Y.Z (git+4465374/vX.Y.Z)...
 ...
 [+] 🔐 Whatsapp authentication success!
-[+] 🤖 ZapBot X.Y.Z (git+4465374/vX.Y.Z) inicializado! Informando 5521999999999
+[+] 🤖 ZapBot X.Y.Z (git+4465374/vX.Y.Z) ready! Reporting to 5521999999999
 ```
 
 e receber uma mensagem no seu WhatsApp (`🤖 ZapBot X.Y.Z (git+4465374/vX.Y.Z) inicializado.`). Mande `/ping` para qualquer chat: o bot deve responder

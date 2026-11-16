@@ -101,7 +101,7 @@ test('localização vira texto com o link do mapa', async () => {
 
 test('sem a mensagem respondida, sem destinatários e sem nada para encaminhar', async () => {
     assert.deepEqual(await bot.replyAlt('/forward /Fulano/'), ['Responda a mensagem que você quer encaminhar, ou diga a posição dela (ex.: /forward -1 /Fulano/).\n💡 _/forward -h para ajuda_']);
-    assert.match((await bot.replyAlt('/forward', { citada: quoted() }))[0], /^```Usage: \/forward \[-q\] \[-d\] \[-N\] \[#lista\]\.\.\. <destinatário>\.\.\. \[-to <destino>\]\.\.\.\n     \/forward -add|-list|-rm|-move|-desc <\.\.\.>\n/);
+    assert.match((await bot.replyAlt('/forward', { citada: quoted() }))[0], /^```Usage: \/forward \[-q\] \[-d\] \[-N\] \[#lista\]\.\.\. <destinatário>\.\.\. \[-to <destino>\]\.\.\.\n     \/forward -a|-list|-rm|-move|-desc <\.\.\.>\n/);
     assert.deepEqual(await bot.replyAlt('/forward /Fulano/', { citada: quoted({ texto: '' }) }), ['❌ Essa mensagem não tem nada que eu possa encaminhar.']);
 });
 
@@ -145,7 +145,7 @@ test('avisa na hora para quem vai e, depois de enviar, edita o aviso com o statu
     };
     try {
         const sendings = await bot.executar('/forward /Fulano/ -to a@b.com', { citada: quoted() });
-        assert.equal(noticeBefore, '⏳ Encaminhando mensagem...');
+        assert.equal(noticeBefore, '⏳ Encaminhando mensagem, aguarde.');
         assert.equal(status(sendings).texto, '✉️ Mensagem encaminhada com sucesso!\n\n👤 Fulano\n📧 a@b.com');
         assert.equal(sendings.filter(e => /Encaminhando|encaminhada com sucesso/.test(e.texto)).length, 1, 'uma mensagem só, editada');
     } finally {
@@ -241,7 +241,7 @@ describe('várias mensagens: /forward -N', () => {
         };
         try {
             await bot.executar('/forward -2 -1 /Fulano/');
-            assert.equal(notice, '⏳ Encaminhando 2 mensagens...');
+            assert.equal(notice, '⏳ Encaminhando 2 mensagens, aguarde.');
         } finally {
             bot.client.sendMessage = original;
         }
@@ -339,13 +339,13 @@ describe('listas de destinatários (#lista)', () => {
 
         r = list(await bot.executar('/forward -add #amigos /Fulano/ -to a@b.com'));
         assert.match(r, /Lista #amigos atualizada: \+1 \(agora 3\)/);
-        assert.match(list(await bot.executar('/forward -add #amigos /Fulano/')), /Ninguém novo/);
+        assert.match(list(await bot.executar('/forward -a #amigos /Fulano/')), /Ninguém novo/);
 
         assert.match(list(await bot.executar('/forward -l')), /• #amigos \(3\)/);
         const r2 = list(await bot.executar('/forward -l #ami'));
         assert.match(r2, /#amigos\* · 3\/30/);
         assert.match(r2, /Pessoas \(2\)\*\n1\. Fulano\n2\. Ciclano\n\n.*E-mails \(1\)\*\n3\. a@b\.com/s);
-        assert.match(r2, /💡 _\/forward #amigos → envia_\n_\/forward -rm #amigos 2 → tira o nº 2_\n_\/forward -add #amigos <destinatários> → acrescenta_$/);
+        assert.match(r2, /💡 _\/forward #amigos → envia_\n_\/forward -rm #amigos 2 → tira o nº 2_\n_\/forward -a #amigos <destinatários> → acrescenta_$/);
         assert.match(list(await bot.executar('/forward -l #xyz')), /A lista #xyz não existe/);
     });
 
@@ -379,7 +379,7 @@ describe('listas de destinatários (#lista)', () => {
         sendings = await bot.executar('/forward #amigos /Fulano/', { citada: quoted(), chat: OTHERAlt.jid });
         assert.equal(forwarded(sendings, OTHERAlt.jid).length, 1, 'digitado de propósito, vai');
 
-        assert.match(list(await bot.executar('/forward -dry #amigos', { chat: OTHERAlt.jid })), /Ficou de fora, por ser este chat: 👤 Fulano/);
+        assert.match(list(await bot.executar('/forward -d #amigos', { chat: OTHERAlt.jid })), /Ficou de fora, por ser este chat: 👤 Fulano/);
 
         await bot.executar('/forward -add #so /Fulano/');
         sendings = await bot.executar('/forward #so', { citada: quoted(), chat: OTHERAlt.jid });
@@ -418,9 +418,9 @@ describe('listas de destinatários (#lista)', () => {
         await bot.executar('/forward -add #a /Fulano/');
         await bot.executar('/forward -add #b -to a@b.com');
 
-        assert.match(list(await bot.executar('/forward -move #a #c')), /#a renomeada para #c/);
-        assert.match(list(await bot.executar('/forward -move #c #b')), /#c juntada em #b \(2 destinatários\)/);
-        assert.match(list(await bot.executar('/forward -move #c #b')), /A lista #c não existe/);
+        assert.match(list(await bot.executar('/forward -m #a #c')), /#a renomeada para #c/);
+        assert.match(list(await bot.executar('/forward -m #c #b')), /#c juntada em #b \(2 destinatários\)/);
+        assert.match(list(await bot.executar('/forward -m #c #b')), /A lista #c não existe/);
 
         assert.match(list(await bot.executar('/forward -desc #b A turma')), /Descrição de #b salva/);
         assert.match(list(await bot.executar('/forward -desc #b')), /#b\*: A turma/);
@@ -429,10 +429,10 @@ describe('listas de destinatários (#lista)', () => {
     });
 
     test('nome inválido e o limite forward.maxRecipients', async () => {
-        assert.match(list(await bot.executar('/forward -add #a.b /Fulano/')), /Nome de lista inválido: #a\.b/);
+        assert.match(list(await bot.executar('/forward -a #a.b /Fulano/')), /Nome de lista inválido: #a\.b/);
 
         await bot.setSetting('forward.maxRecipients', 1);
-        assert.match(list(await bot.executar('/forward -add #amigos /Fulano/ -to a@b.com')), /acima do limite de 1/);
+        assert.match(list(await bot.executar('/forward -a #amigos /Fulano/ -to a@b.com')), /acima do limite de 1/);
         assert.match(list(await bot.executar('/forward -l')), /Nenhuma lista/);
         const sendings = await bot.executar('/forward /Fulano/ -to a@b.com', { citada: quoted() });
         assert.match(sendings[0].texto, /São 2 destinatários, acima do limite de 1/);

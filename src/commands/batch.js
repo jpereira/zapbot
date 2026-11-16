@@ -128,12 +128,12 @@ async function cmdBatch(context) {
         try {
             r = await runBlock(block, context);
         } catch (err) {
-            printError(`/batch: erro no bloco ${i + 1}:`, err?.message || err);
+            printError(`/batch: error in block ${i + 1}:`, err?.message || err);
             r = { ok: false, respostas: [err?.message || String(err)] };
         }
 
         if (!r.ok) failures++;
-        if (!r.ok && optionsAlt.quiet) printInfo(`/batch -quiet: bloco ${i + 1} falhou (${top(block)}):`, r.respostas.join(' | '));
+        if (!r.ok && optionsAlt.quiet) printInfo(`/batch -quiet: block ${i + 1} failed (${top(block)}):`, r.respostas.join(' | '));
         const reply = r.respostas.filter(x => !x.includes('```')).join('\n').trim();
         contents.push(...r.respostas.filter(x => x.includes('```')));
         const detail = reply ? `\n   ↳ ${summarizeText(reply.replace(/\n+/g, ' · '), MAX_REPLY)}` : '';

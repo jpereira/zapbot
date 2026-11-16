@@ -251,7 +251,7 @@ async function changeList(msg, optionsAlt) {
         return;
     }
     const sep = schema.separator ? ' | ' : ', ';
-    printInfo(`Setting '${key}' ${append ? '+' : '-'} ${schema.secret ? '(segredo)' : JSON.stringify(change)}`);
+    printInfo(`Setting '${key}' ${append ? '+' : '-'} ${schema.secret ? '(secret)' : JSON.stringify(change)}`);
     if (reply) {
         await msg.reply(await reply(change, valueAlt));
         return;
@@ -378,7 +378,7 @@ async function cmdSet({ msg, opts, args, chatId }) {
 
     try {
         const valueAlt = await setSetting(key, raw);
-        printInfo(`Setting '${key}' alterado para ${schema.secret ? formatValueSetting(valueAlt, ', ', true) : JSON.stringify(valueAlt)}`);
+        printInfo(`Setting '${key}' changed to ${schema.secret ? formatValueSetting(valueAlt, ', ', true) : JSON.stringify(valueAlt)}`);
         const notice = ['monitor.pool', 'monitor.max'].includes(key)
             ? `\n${t('adm.set.pollWarning')}` : '';
         await msg.reply(`✅ *${key}* = ${formatValueSetting(await showItems(key, valueAlt), schema.separator ? ' | ' : ', ', schema.secret)}${notice}`);

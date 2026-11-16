@@ -299,7 +299,7 @@ async function resolverDestination(valueAlt, {
     try {
         foundAlt6 = await contactsAndGroups(words);
     } catch (err) {
-        printError(`[DESTINO] busca por "${textAlt}" falhou:`, err.message);
+        printError(`[DESTINATION] lookup for "${textAlt}" failed:`, err.message);
         return { erro: t('grp.dest.searchFailed', { text: textAlt, error: err.message }) };
     }
     const contacts = type === 'grupo' ? [] : await withoutAsCopiesByLid(foundAlt6.contatos);
@@ -311,8 +311,8 @@ async function resolverDestination(valueAlt, {
             .map(c => ({ id: c.id._serialized, nome: c.name, grupo: false, canal: true })) : [];
 
     if (isDebugMode()) {
-        printDebug(`[DESTINO] "${textAlt}": contatos ${contacts.map(c => `${c.name}=${c.id._serialized}`).join(', ') || '-'}; ` +
-            `grupos ${groups.map(g => `${g.name}=${g.id._serialized}`).join(', ') || '-'}`);
+        printDebug(`[DESTINATION] "${textAlt}": contacts ${contacts.map(c => `${c.name}=${c.id._serialized}`).join(', ') || '-'}; ` +
+            `groups ${groups.map(g => `${g.name}=${g.id._serialized}`).join(', ') || '-'}`);
     }
 
     const exact = contacts.find(c => normalize(c.name) === search) ?? null;

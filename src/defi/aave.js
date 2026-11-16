@@ -233,7 +233,7 @@ async function readNetwork(id, wallet) {
         };
 
         if (!valid) {
-            printError(`[AAVE] ${NETWORKS[id].nome}: decimals inválidos em ${a.simbolo} (${decimals})`);
+            printError(`[AAVE] ${NETWORKS[id].nome}: invalid decimals in ${a.simbolo} (${decimals})`);
         }
 
         if (a.fornecido > 0n) {
@@ -268,7 +268,7 @@ async function readNetwork(id, wallet) {
     // Check: the sum of the assets has to match the protocol total (1% slack)
     const sumDebt = debts.reduce((s, d) => s + (d.usd ?? 0), 0);
     if (Math.abs(sumDebt - debtUsd) > Math.max(0.01, debtUsd * 0.01)) {
-        printError(`[AAVE] ${NETWORKS[id].nome}: dívida somada ${sumDebt} ≠ ${debtUsd} do protocolo`);
+        printError(`[AAVE] ${NETWORKS[id].nome}: summed debt ${sumDebt} ≠ ${debtUsd} from the protocol`);
     }
 
     const providedUsd = provided.reduce((s, f) => s + (f.usd ?? 0), 0);
@@ -330,7 +330,7 @@ async function positionsAave(wallet) {
 
     const ids = getSetting('defi.aave.chains').map(Number);
     const start = Date.now();
-    printInfo(`[AAVE] Consultando wallet ${abbreviate(wallet)}`);
+    printInfo(`[AAVE] Querying wallet ${abbreviate(wallet)}`);
 
     const results = await Promise.all(ids.map(async (id) => {
         if (!NETWORKS[id]) {
@@ -366,7 +366,7 @@ async function positionsAave(wallet) {
         printInfo(`[AAVE] ${r.rede}: Health Factor ${hf}`);
         printInfo(`[AAVE] ${r.rede}: Net position $${r.liquidoUsd.toFixed(2)}`);
     }
-    printInfo(`[AAVE] Consulta concluída em ${Date.now() - start}ms`);
+    printInfo(`[AAVE] Query finished in ${Date.now() - start}ms`);
 
     const when = Math.min(...results.filter(r => !r.falha).map(r => r.quando));
     return { carteira: wallet, redes: networks, falhas: failures, quando: when };

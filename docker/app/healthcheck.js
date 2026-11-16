@@ -22,12 +22,12 @@ try {
     const age = Math.round((Date.now() - heartbeat.epoch) / 1000);
 
     if (!(age <= maxAge)) {
-        console.log(`unhealthy: último heartbeat há ${age}s (${heartbeat.estado}); limite ${maxAge}s`);
+        console.log(`unhealthy: last heartbeat ${age}s ago (${heartbeat.estado}); limit ${maxAge}s`);
         process.exit(1);
     }
 
-    console.log(`healthy: ${heartbeat.estado}, heartbeat há ${age}s`);
+    console.log(`healthy: ${heartbeat.estado}, heartbeat ${age}s ago`);
 } catch (err) {
-    console.log(`unhealthy: sem heartbeat em ${fileAlt} (${err.code || err.message})`);
+    console.log(`unhealthy: no heartbeat at ${fileAlt} (${err.code || err.message})`);
     process.exit(1);
 }

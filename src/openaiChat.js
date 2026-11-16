@@ -194,11 +194,11 @@ async function updatePricesSeExpired(nowAlt = Date.now()) {
 
     try {
         const r = await updatePrices({ cmd: '/gpt' });
-        printInfo(`gpt.pricing atualizado: ${r.mudados.length} alterados, ${r.novos.length} novos`);
+        printInfo(`gpt.pricing updated: ${r.mudados.length} changed, ${r.novos.length} new`);
         return r;
     } catch (err) {
         pricesNextAttempt = nowAlt + PRICES_RETRY_MS;
-        printError('Atualização automática dos preços da OpenAI falhou:', err.message);
+        printError('Automatic update of the OpenAI prices failed:', err.message);
         return null;
     }
 }
@@ -299,7 +299,7 @@ async function askOnChat({ cmd, sistema: system, texto: textAlt, imagem: image =
     } catch (err) {
         // On a 401 OpenAI's message carries a piece of the key: it does not go to the log
         const status = err.response?.status;
-        printError(`${cmd}:`, status ?? '', status === 401 ? 'API key inválida' : err.response?.data?.error?.message || err.message);
+        printError(`${cmd}:`, status ?? '', status === 401 ? 'invalid API key' : err.response?.data?.error?.message || err.message);
         throw err;
     }
 }
@@ -449,7 +449,7 @@ async function listModels({ cmd }) {
 // OpenAI error in the log, without the key (on a 401 the message carries a piece of it)
 function logError(cmd, err) {
     const status = err.response?.status;
-    printError(`${cmd}:`, status ?? '', status === 401 ? 'API key inválida' : err.response?.data?.error?.message || err.message);
+    printError(`${cmd}:`, status ?? '', status === 401 ? 'invalid API key' : err.response?.data?.error?.message || err.message);
 }
 
 /*

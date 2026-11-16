@@ -234,7 +234,7 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
         price = (await type.precos([rule.sym]))[rule.sym];
         if (!Number.isFinite(price)) throw new Error('sem preço');
     } catch (err) {
-        printError(`${type.cmd} -alert: preço de ${rule.sym}:`, err.message);
+        printError(`${type.cmd} -alert: price of ${rule.sym}:`, err.message);
         await msg.reply(t('alerts.priceFailed', { sym: rule.sym }));
         return;
     }
@@ -292,7 +292,7 @@ async function priceCheckAlerts({ forcar: force = false } = {}) {
             try {
                 prices = await type.precos([...new Set(typeAlt.map(a => a.symbol))]);
             } catch (err) {
-                printError(`Alertas ${type.cmd}: falha ao consultar preços:`, err.message);
+                printError(`${type.cmd} alerts: failed to fetch prices:`, err.message);
                 continue;
             }
 
@@ -319,14 +319,14 @@ async function priceCheckAlerts({ forcar: force = false } = {}) {
                         date: formatData(a.created_at)
                     }),
                     { assunto: t('alerts.subject', { pair: type.par(a.symbol), op: OPERATORS[a.op].texto, target: type.fmt(a.target) }) }
-                ).catch(err => printError('Alerta de preço: falha ao avisar:', err.message));
+                ).catch(err => printError('Price alert: failed to notify:', err.message));
 
-                printInfo(`Alerta de preço disparado: ${a.symbol} ${a.op} ${a.target} (agora ${price})` +
+                printInfo(`Price alert triggered: ${a.symbol} ${a.op} ${a.target} (now ${price})` +
                     (destinations.length ? ` → ${destinations.map(d => d.email ?? d.id).join(', ')}` : ''));
             }
         }
     } catch (err) {
-        printError('Erro ao verificar alertas de preço:', err.message);
+        printError('Error checking price alerts:', err.message);
     } finally {
         checkingAlerts = false;
     }

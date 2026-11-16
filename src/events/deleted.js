@@ -49,7 +49,7 @@ async function resolverAuthorDeleted(row, { after, before, protocolKey } = {}) {
             const chat = await after.getChat();
             if (chat?.name) nameChat = chat.name;
         } catch (chatError) {
-            printError('[Revoke] Não foi possível recuperar o chat:', chatError.message);
+            printError('[Revoke] Could not retrieve the chat:', chatError.message);
         }
     }
 
@@ -69,7 +69,7 @@ async function resolverAuthorDeleted(row, { after, before, protocolKey } = {}) {
                 numberSender = contactAlt.number;
             }
         } catch (contactError) {
-            printError('[Revoke] Não foi possível recuperar o contato original:', contactError.message);
+            printError('[Revoke] Could not retrieve the original contact:', contactError.message);
         }
     }
 
@@ -192,7 +192,7 @@ client.on('message_revoke_everyone', async (after, before) => {
     const targetId = protocolKey?.id || before?.id?.id || after?.id?.id;
 
     if (!targetId) {
-        printError('[Revoke] Não foi possível identificar a mensagem apagada.');
+        printError('[Revoke] Could not identify the deleted message.');
         return;
     }
 
@@ -201,17 +201,17 @@ client.on('message_revoke_everyone', async (after, before) => {
         await dbReady;
         row = await dbGet('SELECT * FROM messages WHERE id = ?', [targetId]);
     } catch (err) {
-        printError('[Revoke] Erro ao consultar banco:', err.message);
+        printError('[Revoke] Error querying the database:', err.message);
         return;
     }
 
     if (!row) {
-        printError(`[Revoke] Mensagem apagada ID ${targetId} não encontrada no banco.`);
+        printError(`[Revoke] Deleted message ID ${targetId} not found in the database.`);
         return;
     }
 
     if (isStatus(row) && !getSetting('show.alert.status')) {
-        printDebug(`[Revoke] Status apagado ID ${targetId} ignorado (show.alert.status off).`);
+        printDebug(`[Revoke] Deleted status ID ${targetId} ignored (show.alert.status off).`);
         return;
     }
 
@@ -251,7 +251,7 @@ client.on('message_revoke_everyone', async (after, before) => {
             titulo: isStatus(row) ? t('apagadas.tituloStatus') : t('apagadas.titulo')
         });
     } catch (sendError) {
-        printError('[Revoke] Erro ao processar item apagado:', sendError.message);
+        printError('[Revoke] Error processing the deleted item:', sendError.message);
     }
 });
 

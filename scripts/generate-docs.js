@@ -122,11 +122,11 @@ if (require.main === module) {
         if (freshAlt === current) continue;
 
         if (process.argv.includes('--check')) {
-            console.error(`docs/commands/${TEXTS[language].arquivo} desatualizado: rode node scripts/generate-docs.js`);
+            console.error(`docs/commands/${TEXTS[language].arquivo} out of date: run node scripts/generate-docs.js`);
             outdated = true;
         } else {
             fs.writeFileSync(fileAlt, freshAlt);
-            console.log(`docs/commands/${TEXTS[language].arquivo} atualizado`);
+            console.log(`docs/commands/${TEXTS[language].arquivo} updated`);
         }
     }
     if (outdated) process.exit(1);

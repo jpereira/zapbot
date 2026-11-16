@@ -85,7 +85,7 @@ async function checkWatch({
         }
     }
 
-    printInfo(`/watch: regra(s) ${freshAlt2.map(c => `#${c.n}`).join(',')} casaram em '${chatName}' (${senderName})`);
+    printInfo(`/watch: rule(s) ${freshAlt2.map(c => `#${c.n}`).join(',')} matched in '${chatName}' (${senderName})`);
 
     // /mute: the notice in your private chat is muted (the occurrence stays saved and the -to receive it)
     if (byDestination.has('privado') &&
@@ -105,7 +105,7 @@ async function checkWatch({
         await sendOnDestination(destination, textAlt, {
             assunto: mask(`👀 Watch: ${rules.map(c => `#${c.n} ${c.regra}`).join(', ')}`),
             opcoes: { linkPreview: false }
-        }).catch(err => printError('/watch: falha ao avisar:', err.message));
+        }).catch(err => printError('/watch: failed to notify:', err.message));
     }
 }
 

@@ -201,7 +201,7 @@ function marketPosition(x, network) {
     const daApi = numberAlt(x.healthFactor);
     const diverged = daApi !== null && Math.abs(risk.hf - daApi) > Math.max(0.01, daApi * 0.01);
     if (Number.isFinite(risk.hf) && diverged) {
-        printError(`[MORPHO] HF divergente no mercado ${m.marketId}: calculado ${risk.hf}, API ${daApi}`);
+        printError(`[MORPHO] HF mismatch in market ${m.marketId}: computed ${risk.hf}, API ${daApi}`);
     }
 
     const qtdCollateral = inTokens(collateralRaw, collateral.decimals);
@@ -325,7 +325,7 @@ async function positionsMorpho(wallet) {
     if (saved && Date.now() - saved.quando < CACHE_MS) return { ...saved, carteira: wallet, doCache: true };
 
     const start = Date.now();
-    printInfo(`[MORPHO] Consultando carteira ${abbreviate(wallet)}`);
+    printInfo(`[MORPHO] Querying wallet ${abbreviate(wallet)}`);
 
     let data;
     try {
@@ -334,13 +334,13 @@ async function positionsMorpho(wallet) {
             { timeout: API_TIMEOUT_MS, headers: { 'Content-Type': 'application/json' } }));
     } catch (err) {
         const errorAlt = translateError(err);
-        printError(`[MORPHO] Erro na API: ${errorAlt.message}`);
+        printError(`[MORPHO] API error: ${errorAlt.message}`);
         throw errorAlt;
     }
 
     if (data?.errors?.length) {
         const errorAlt = translateError({ response: { data } });
-        printError(`[MORPHO] Erro na API: ${errorAlt.message}`);
+        printError(`[MORPHO] API error: ${errorAlt.message}`);
         throw errorAlt;
     }
 
@@ -370,7 +370,7 @@ async function positionsMorpho(wallet) {
         }
     } catch (err) {
         const errorAlt = translateError(err);
-        printError(`[MORPHO] Erro na API: ${errorAlt.message}`);
+        printError(`[MORPHO] API error: ${errorAlt.message}`);
         throw errorAlt;
     }
 
@@ -384,7 +384,7 @@ async function positionsMorpho(wallet) {
     printInfo(`[MORPHO] ${openAlt.length} ${foundAlt5}`);
     printInfo(`[MORPHO] Total supplied: ${usd(resultAlt.totais.fornecido)}`);
     printInfo(`[MORPHO] Total borrowed: ${usd(resultAlt.totais.emprestado)}`);
-    printInfo(`[MORPHO] Consulta concluída em ${Date.now() - start}ms`);
+    printInfo(`[MORPHO] Query finished in ${Date.now() - start}ms`);
 
     return { ...resultAlt, doCache: false };
 }

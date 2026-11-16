@@ -101,7 +101,7 @@ async function alertPerEmail(event, details = '', { forcar: force = false } = {}
 
         const nowAlt = Date.now();
         if (!force && nowAlt - (lastAlertEmail.get(event) ?? 0) < ALERT_EMAIL_INTERVAL_MS) {
-            printInfo(t('email.logAlertaRepetido', { evento: event }));
+            printInfo(`E-mail alert '${event}' not sent: repeated in less than 5 minutes.`);
             return;
         }
         lastAlertEmail.set(event, nowAlt);
@@ -131,9 +131,9 @@ async function alertPerEmail(event, details = '', { forcar: force = false } = {}
             `
         });
 
-        printInfo(t('email.logAlertaEnviado', { evento: event }));
+        printInfo(`E-mail alert sent: ${event}`);
     } catch (err) {
-        printError(t('email.logAlertaFalhou', { evento: event }), err.message);
+        printError(`E-mail alert '${event}' failed:`, err.message);
     }
 }
 
@@ -159,7 +159,7 @@ async function sendEmail({ para, assunto: subject, texto: textAlt, anexos: attac
         ...(attachments.length ? { attachments: attachments } : {})
     });
 
-    printInfo(t('email.logEnviado', { assunto: subject, para: para.join(', ') }));
+    printInfo(`E-mail '${subject}' sent to ${para.join(', ')}`);
 }
 
 // A file as an attachment (e.g.: /backup -send)

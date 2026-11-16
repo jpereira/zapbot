@@ -49,8 +49,8 @@ client.on('message_create', (msg) => withContextDebug({
     if (msg.fromMe && logIsCopy(msg.body)) return;
     instrumentObject(msg, 'WhatsApp.Message', 2,
         ['reply', 'downloadMedia', 'getChat', 'getContact', 'getQuotedMessage', 'getMentions']);
-    printDebugLevel(1, 'message_create início', { body: msg.body, type: msg.type });
-    printDebugLevel(3, 'message_create dados do WhatsApp', msg._data);
+    printDebugLevel(1, 'message_create start', { body: msg.body, type: msg.type });
+    printDebugLevel(3, 'message_create WhatsApp data', msg._data);
     try {
         const timestamp = Date.now();
         const msgIdPure = msg?.id?.id || `fallback_${timestamp}`;
@@ -138,7 +138,7 @@ client.on('message_create', (msg) => withContextDebug({
                 : t(status ? 'mensagens.statusDe' : 'mensagens.transmissaoDe', { nome: senderName });
         }
         Object.assign(contextDebug(), { chatName, senderName });
-        printDebugLevel(1, 'message_create remetente e chat', { chatName, senderName, senderJid });
+        printDebugLevel(1, 'message_create sender and chat', { chatName, senderName, senderJid });
 
         const senderContact = contact || {
             id: { _serialized: senderJid, user: senderJid.split('@')[0] },
@@ -188,7 +188,7 @@ client.on('message_create', (msg) => withContextDebug({
                     localMediaPath = fileAlt;
                 }
             } catch (error) {
-                printError('Falha ao baixar mídia:', error.message);
+                printError('Failed to download media:', error.message);
                 hasMedia = 0;
             }
         }
@@ -253,7 +253,7 @@ client.on('message_create', (msg) => withContextDebug({
                 lat, lng,
                 'desativado', msg.fromMe ? 1 : 0
             ]
-        ).catch(err => printError('Erro ao salvar mensagem:', err.message));
+        ).catch(err => printError('Error saving message:', err.message));
 
         // The location body contains the base64 thumbnail, not text or a command.
         const body = msgType === 'location' ? '' : (msg.body || '').trim();
@@ -265,7 +265,7 @@ client.on('message_create', (msg) => withContextDebug({
         const sentByBot = msg.fromMe && body.startsWith('/') && wasSentByBot(body);
         const caller = body.startsWith('/') && !sentByBot ? body.split(/\s+/, 1)[0] : null;
 
-        if (sentByBot) printInfo(`Mensagem do próprio bot começando com '/' ignorada como comando: ${body.slice(0, 60)}`);
+        if (sentByBot) printInfo(`Bot's own message starting with '/' ignored as a command: ${body.slice(0, 60)}`);
         const resolved = caller ? await resolverAlias(body) : null;
         const command = resolved?.command ?? null;
 
@@ -276,7 +276,7 @@ client.on('message_create', (msg) => withContextDebug({
             await checkWatch({
                 msg, msgIdPure, body, chatId, chatName, isGroup, senderName, senderJid,
                 senderNumber, timestamp
-            }).catch(err => printError('/watch: erro ao verificar regras:', err.message));
+            }).catch(err => printError('/watch: error checking rules:', err.message));
         }
 
         /*
@@ -308,7 +308,7 @@ client.on('message_create', (msg) => withContextDebug({
 
         // Bot off: everything ignored (including your commands) until /bot -on
         if (getSetting('bot.paused') && command.cmd !== '/bot') {
-            printInfo(`Comando '${command.cmd}' ignorado: bot desligado (/bot -on para ativar)`);
+            printInfo(`Command '${command.cmd}' ignored: bot is off (/bot -on to enable)`);
             return;
         }
 
@@ -335,7 +335,7 @@ client.on('message_create', (msg) => withContextDebug({
         const level = levelAlt({ fromMe: msg.fromMe, numero: senderNumber, permissao: permission });
         const admin = answer(level, ROLES.ADMIN); // the owner or an admin
         if (!level) {
-            printDebug(`Comando '${command.cmd}' de ${senderName} ignorado: fora do bot.users`);
+            printDebug(`Command '${command.cmd}' from ${senderName} ignored: outside bot.users`);
             if (!isGroup && permission.soNosGrupos.length) {
                 const groups = await Promise.all(permission.soNosGrupos.map(async (id) =>
                     `👥 ${await groupResolverName(id).catch(() => null) || id}`));
@@ -361,7 +361,7 @@ client.on('message_create', (msg) => withContextDebug({
             const flood = checkFlood(senderNumber || senderJid, command.cmd);
             if (!flood.liberado) {
                 if (flood.avisar) {
-                    printInfo(`Flood: ${senderName} repetiu ${command.cmd}; ignorado por ${flood.segundos}s`);
+                    printInfo(`Flood: ${senderName} repeated ${command.cmd}; ignored for ${flood.segundos}s`);
                     const max = getSetting('flood.maxCommandRepeated');
                     await msg.reply(t('mensagens.flood', {
                         max: t(max === 1 ? 'mensagens.vez' : 'mensagens.vezes', { n: max }),
@@ -376,15 +376,15 @@ client.on('message_create', (msg) => withContextDebug({
         const denied = !admin && (command.alvos ?? [command.cmd])
             .find(cmd => !ALWAYS_RELEASED.includes(cmd) && !permission.pode(cmd));
         if (denied) {
-            printDebug(`Comando '${denied}' de ${senderName} ignorado: fora dos comandos dele`);
+            printDebug(`Command '${denied}' from ${senderName} ignored: outside their commands`);
             await msg.reply(limitNotice(permission.regras, denied));
             return;
         }
 
-        if (resolved.prefixo) printDebug(`Comando '${resolved.prefixo}' completado para '${command.cmd}'`);
+        if (resolved.prefixo) printDebug(`Command '${resolved.prefixo}' completed to '${command.cmd}'`);
         printDebug(isGroup
-            ? `Executando comando '${body}' de '${senderName}' no grupo '${chatName}'`
-            : `Executando comando '${body}' em '${chatName}'`);
+            ? `Running command '${body}' from '${senderName}' in group '${chatName}'`
+            : `Running command '${body}' in '${chatName}'`);
 
         // Text alias: the {/command}s run here, with the permissions of whoever called (the arguments stay out)
         if (resolved.texto) {
@@ -406,7 +406,7 @@ client.on('message_create', (msg) => withContextDebug({
         contextDebug().maskTelefones = askedMask(command, opts);
 
         if (isDebugMode()) {
-            printDebug('Parser do comando:', command.cmd, dataParserCommand(args, command, opts));
+            printDebug('Command parser:', command.cmd, dataParserCommand(args, command, opts));
         }
 
         // foo -help
@@ -440,7 +440,7 @@ client.on('message_create', (msg) => withContextDebug({
             quem: { nivel: level, admin, podeUsar: admin ? () => true : permission.pode, senderContact, senderName, senderNumber }
         })));
     } catch (error) {
-        printError('[message_create] Erro geral controlado:', {
+        printError('[message_create] Handled general error:', {
             error: error?.message || String(error),
             stack: error?.stack,
             from: msg?.from,
@@ -450,6 +450,6 @@ client.on('message_create', (msg) => withContextDebug({
             type: msg?.type
         });
     } finally {
-        printDebugLevel(1, 'message_create fim');
+        printDebugLevel(1, 'message_create end');
     }
 }));

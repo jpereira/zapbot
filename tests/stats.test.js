@@ -140,7 +140,7 @@ describe('/stats', () => {
         await countAlt('a', 'A', 2, { chatId: WORK, chatName: 'Trabalho' });
         await countAlt('a', 'A', 5);
 
-        assert.match((await stats('/stats -flush'))[0], /Informe o chat: \/stats -flush \/Grupo\//);
+        assert.match((await stats('/stats -f'))[0], /Informe o chat: \/stats -f \/Grupo\//);
         assert.deepEqual(await stats('/stats -f /Trabalho/'), ['🗑️ Estatísticas de 👥 Trabalho apagadas.']);
         assert.deepEqual((await bot.dbAll('SELECT DISTINCT chat_name FROM stats')).map(c => c.chat_name), ['Família']);
 

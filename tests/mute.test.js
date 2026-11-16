@@ -83,7 +83,7 @@ describe('/mute', () => {
         assert.equal(list, '🔇 *Silenciados* (2)\n\n' +
             '1. 👤 Fulano — editadas, status _(1 aviso ignorado)_\n' +
             '2. 👥 Grupo sobre L200 — apagadas, editadas\n\n' +
-            '💡 _Desfaça com /unmute <nº|nome> (ou /unmute -all, todos)._');
+            '💡 _Desfaça com /unmute <nº|nome> (ou /unmute -a, todos)._');
         assert.equal((await bot.replyAlt('/mute -l'))[0], list);
     });
 
@@ -319,7 +319,7 @@ describe('/mute', () => {
         // -all (and -a); with nothing, the list
         await bot.replyAlt('/mute /Grupo L200/');
         await bot.replyAlt('/mute +5521911111111');
-        assert.deepEqual(await bot.replyAlt('/unmute -all'), ['🔊 2 silenciados removidos: os avisos voltam.']);
+        assert.deepEqual(await bot.replyAlt('/unmute -a'), ['🔊 2 silenciados removidos: os avisos voltam.']);
         await bot.replyAlt('/mute /Grupo L200/');
         assert.deepEqual(await bot.replyAlt('/unmute -a'), ['🔊 1 silenciado removido: os avisos voltam.']);
         assert.match((await bot.replyAlt('/unmute'))[0], /^🔇 Ninguém silenciado\./);

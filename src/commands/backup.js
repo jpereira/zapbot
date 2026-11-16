@@ -240,7 +240,7 @@ async function cmdBackup({ msg, opts: commandOpts, args }) {
                 await sendBackupPerEmail(b, emails);
                 await msg.reply(t('adm.backup.emailSent', { quando: fmtWhen(b.criadoEm), emails: emails.join(', ') }));
             } catch (err) {
-                printError('/backup -send por e-mail:', err.message);
+                printError('/backup -send by e-mail:', err.message);
                 await msg.reply(t('adm.backup.emailFail', { erro: err.message }));
             }
         }
@@ -252,7 +252,7 @@ async function cmdBackup({ msg, opts: commandOpts, args }) {
                 await sendBackupOnChat(b, d.id);
                 sentAlt3.push(d);
             } catch (err) {
-                printError(`/backup -send para ${d.id}:`, err.message);
+                printError(`/backup -send to ${d.id}:`, err.message);
                 const whereAlt = d.id === myId ? t('adm.backup.myPrivate') : describeDestinations([d]);
                 await msg.reply(t('adm.backup.chatFail', { onde: whereAlt, erro: err.message }));
             }

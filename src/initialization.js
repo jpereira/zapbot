@@ -20,7 +20,7 @@ async function addColumns(table, columns) {
     for (const [column, type] of Object.entries(columns)) {
         if (existingAlt.has(column)) continue;
         await dbRun(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`);
-        printInfo(`Coluna ${table}.${column} criada`);
+        printInfo(`Column ${table}.${column} created`);
         created.push(column);
     }
     return created;
@@ -80,7 +80,7 @@ async function migrateDefiForAddressAndWallet() {
           FROM defi_positions_antiga
     `);
     await dbRun('DROP TABLE defi_positions_antiga');
-    printInfo('defi_positions: o position virou address (Orca) e wallet (carteiras)');
+    printInfo('defi_positions: position became address (Orca) and wallet (wallets)');
 }
 
 /*

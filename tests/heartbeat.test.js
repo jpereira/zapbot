@@ -118,19 +118,19 @@ describe('docker/app/healthcheck.js', () => {
         record(5);
         const r = healthcheck();
         assert.equal(r.codigo, 0);
-        assert.match(r.saida, /healthy: CONNECTED, heartbeat há 5s/);
+        assert.match(r.saida, /healthy: CONNECTED, heartbeat 5s ago/);
     });
 
     test('heartbeat velho ou ausente: unhealthy (exit 1)', () => {
         record(120, 'aguardando conexão');
         const oldAlt = healthcheck();
         assert.equal(oldAlt.codigo, 1);
-        assert.match(oldAlt.saida, /unhealthy: último heartbeat há 120s \(aguardando conexão\); limite 90s/);
+        assert.match(oldAlt.saida, /unhealthy: last heartbeat 120s ago \(aguardando conexão\); limit 90s/);
 
         fs.rmSync(HEARTBEAT_FILE);
         const absent = healthcheck();
         assert.equal(absent.codigo, 1);
-        assert.match(absent.saida, /unhealthy: sem heartbeat em .* \(ENOENT\)/);
+        assert.match(absent.saida, /unhealthy: no heartbeat at .* \(ENOENT\)/);
     });
 
     test('arquivo corrompido: unhealthy; limite configurável', () => {

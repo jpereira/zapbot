@@ -104,7 +104,7 @@ async function messagesAbove(msg, positions) {
         const chat = await msg.getChat();
         buscadas = await chat.fetchMessages({ limit: Math.min(greater + 50, 300) });
     } catch (err) {
-        printError('/forward: não li as mensagens do chat:', err.message);
+        printError('/forward: could not read the chat messages:', err.message);
         return { erro: t('forward.fetchFailed', { error: err.message }) };
     }
 
@@ -255,10 +255,10 @@ async function cmdForward({ msg, args: typed, opts, quotedMsg }) {
                 }
             }
             linesAlt.push(who);
-            printInfo(`/forward: ${contents.length} mensagem(ns) para ${nameAlt}`);
+            printInfo(`/forward: ${contents.length} message(s) to ${nameAlt}`);
         } catch (err) {
             failed++;
-            printError(`/forward: falhou para ${nameAlt}:`, err.message);
+            printError(`/forward: failed for ${nameAlt}:`, err.message);
             linesAlt.push(`${who} · ❌ ${err.message}`);
         }
     }

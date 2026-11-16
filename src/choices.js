@@ -84,7 +84,7 @@ async function replyChoice(msg, chatId, textAlt) {
     if (p.confirmacao) {
         const reply = /^(sim|yes)$/i.test(textAlt) ? true : /^(n[aã]o|no)$/i.test(textAlt) ? false : null;
         if (reply === null) return false;
-        printInfo(`Confirmação em ${chatId}: ${textAlt}`);
+        printInfo(`Confirmation in ${chatId}: ${textAlt}`);
         close(chatId, reply);
         return true;
     }
@@ -97,7 +97,7 @@ async function replyChoice(msg, chatId, textAlt) {
         return true;
     }
 
-    printInfo(`Escolha nº ${n} de ${p.opcoes.length} em ${chatId}`);
+    printInfo(`Choice #${n} of ${p.opcoes.length} in ${chatId}`);
     close(chatId, p.opcoes[n - 1]);
     return true;
 }

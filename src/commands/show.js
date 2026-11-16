@@ -410,7 +410,7 @@ async function cacheClean({ msg, tipos: types, alvo: target, ids, geral: general
     }
 
     const accounts = removed.map(r => `${r.n} ${tx(r.t, 'label').toLowerCase()}`).join(', ');
-    printInfo(`/show -flush (${general ? 'geral' : target?.nome ?? ids[0]}): ${accounts}; ${files} arquivos removidos`);
+    printInfo(`/show -flush (${general ? 'general' : target?.nome ?? ids[0]}): ${accounts}; ${files} files removed`);
 
     let textAlt = general
         ? tr('show.flushAll')
@@ -605,7 +605,7 @@ async function cmdShow({ msg, opts, chatId, admin }) {
         try {
             await RESEND_CACHE[row._tipo](chatId, row, i, rows.length);
         } catch (err) {
-            printError(`/show: falha ao reenviar ${row.id}:`, err.message);
+            printError(`/show: failed to resend ${row.id}:`, err.message);
             await client.sendMessage(chatId, tr('show.resendFailed', { i: i + 1, total: rows.length, error: err.message }));
         }
 

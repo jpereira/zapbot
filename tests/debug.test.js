@@ -38,7 +38,7 @@ describe('/debug', () => {
             `-to /Jorge Pereira/ -to /Lourival Neto/ -msg "${messageAlt}"`;
         const [reply] = await bot.replyAlt(commandAlt);
         assert.match(reply, /Alerta criado/);
-        const parser = bot.logs.find(l => l.includes('Parser do comando: /crypto'));
+        const parser = bot.logs.find(l => l.includes('Command parser: /crypto'));
         assert.match(parser, /DEBUG0/);
         assert.match(parser, /argv: \[ 'BTC', '>', '90000' \]/);
         assert.equal((parser.match(/\bargv:/g) ?? []).length, 1);
@@ -54,7 +54,7 @@ describe('/debug', () => {
     test('DEBUG0 usa o parser do watch para regex, flags, origem, destinos e máscara', async () => {
         await configure('-on -lvl 0');
         await bot.replyAlt('/watch /sapato -h azul/gi -in /Família/ -to /Fulano/ -m');
-        const parser = bot.logs.find(l => l.includes('Parser do comando: /watch'));
+        const parser = bot.logs.find(l => l.includes('Command parser: /watch'));
         assert.match(parser, /regra: '\/sapato -h azul\/gi'/);
         assert.match(parser, /origem: 'Família'/);
         assert.match(parser, /destinos: \[ 'Fulano' \]/);
@@ -65,7 +65,7 @@ describe('/debug', () => {
         async () => {
             await configure('-on -lvl 0');
             await bot.replyAlt('/debug -lvl 0 -filter /azul claro/i -copy-to');
-            const parser = bot.logs.find(l => l.includes('Parser do comando: /debug'));
+            const parser = bot.logs.find(l => l.includes('Command parser: /debug'));
             assert.match(parser, /level: '0'/);
             assert.match(parser, /filter: '\/azul claro\/i'/);
             assert.match(parser, /copyTo: null/);
@@ -75,7 +75,7 @@ describe('/debug', () => {
     test('DEBUG0 mostra aliases, booleanos, valores agrupados e argumentos numéricos', async () => {
         await configure('-on -lvl 0');
         await bot.replyAlt('/show -q "Jorge Pereira" -3 -m');
-        const parser = bot.logs.find(l => l.includes('Parser do comando: /show'));
+        const parser = bot.logs.find(l => l.includes('Command parser: /show'));
         assert.match(parser, /query: 'Jorge Pereira'/);
         assert.match(parser, /mask: true/);
         assert.match(parser, /numero: 3/);
@@ -85,7 +85,7 @@ describe('/debug', () => {
     test('DEBUG0 mostra a agenda com texto livre e destinos repetidos', async () => {
         await configure('-on -lvl 0');
         await bot.replyAlt('/cron 10m -r daily -to /Fulano/ -to /Família/ Bom dia, pessoal!');
-        const parser = bot.logs.find(l => l.includes('Parser do comando: /cron'));
+        const parser = bot.logs.find(l => l.includes('Command parser: /cron'));
         assert.match(parser, /repeat: 'daily'/);
         assert.match(parser, /texto: 'Bom dia, pessoal!'/);
         assert.match(parser, /destinos: \[ 'Fulano', 'Família' \]/);
@@ -97,7 +97,7 @@ describe('/debug', () => {
             { symbol: 'BTCUSDT', price: '80000' }
         ]);
         await bot.replyAlt('/crypto BTC -alert > 90000 -msg Bitcoin subiu! 🚀 -to "Fulano"');
-        const parser = bot.logs.find(l => l.includes('Parser do comando: /crypto'));
+        const parser = bot.logs.find(l => l.includes('Command parser: /crypto'));
         assert.match(parser, /argv: \[ 'BTC', '>', '90000' \]/);
         assert.match(parser, /msg: 'Bitcoin subiu! 🚀'/);
         assert.match(parser, /to: \[ 'Fulano' \]/);
@@ -129,7 +129,7 @@ describe('/debug', () => {
         assert.match(textLogs(), /Starting ZapBot/);
         assert.match(textLogs(), /loading_screen/);
         assert.match(textLogs(), /authentication success/);
-        assert.match(textLogs(), /inicializado!/);
+        assert.match(textLogs(), /ready!/);
         bot.logs.length = 0;
         printInfo('não casa');
         printInfo('sapato depois do boot');
@@ -196,7 +196,7 @@ describe('/debug', () => {
 
     test('padrão e nível exigem ativação; aceita aliases quando ligado', async () => {
         assert.equal(bot.getSetting('debug.level'), 0);
-        assert.match((await bot.replyAlt('/debug -level 2'))[0], /Ligue.*\/debug -on -level 2/);
+        assert.match((await bot.replyAlt('/debug -lvl 2'))[0], /Ligue.*\/debug -on -lvl 2/);
         assert.equal(bot.getSetting('debug.level'), 0);
         assert.match((await configure('-on'))[0], /DEBUG0/);
         assert.match((await configure('-lvl 2'))[0], /DEBUG2/);
@@ -245,9 +245,9 @@ describe('/debug', () => {
             assert.equal(bot.logs.length, level + 1);
             await bot.replyAlt('/ping');
             if (level >= 1) {
-                assert.match(textLogs(), /DEBUG1.*message_create início/);
-                assert.match(textLogs(), /GetOptFromCommand início/);
-                assert.match(textLogs(), /cmdPing fim/);
+                assert.match(textLogs(), /DEBUG1.*message_create start/);
+                assert.match(textLogs(), /GetOptFromCommand start/);
+                assert.match(textLogs(), /cmdPing end/);
                 assert.match(textLogs(), /chatName=Família/);
             } else assert.doesNotMatch(textLogs(), /DEBUG[123]/);
             bot.network.responder('get', 'kernel.org/releases.json', {
@@ -255,13 +255,13 @@ describe('/debug', () => {
             });
             await bot.replyAlt('/kernel');
             if (level >= 2) {
-                assert.match(textLogs(), /DEBUG2.*axios.get início/);
+                assert.match(textLogs(), /DEBUG2.*axios.get start/);
                 assert.match(textLogs(), /kernel.org\/releases.json/);
                 assert.match(textLogs(), /timeout: 15000/);
             } else assert.doesNotMatch(textLogs(), /DEBUG2/);
             if (level === 3) {
-                assert.match(textLogs(), /DEBUG3.*dbRun início/);
-                assert.match(textLogs(), /DEBUG3.*resultado/);
+                assert.match(textLogs(), /DEBUG3.*dbRun start/);
+                assert.match(textLogs(), /DEBUG3.*result/);
             } else assert.doesNotMatch(textLogs(), /DEBUG3/);
         }
     });
@@ -431,8 +431,8 @@ describe('instrumentação', () => {
         await assert.rejects(object.rejeitar(), e => e === errorAlt);
         assert.throws(() => object.falharSemErro(), e => e === 0);
         await assert.rejects(object.rejeitarSemErro(), e => e === undefined);
-        assert.equal(bot.logs.filter(l => /exemplo.falhar erro/.test(l)).length, 1);
-        assert.equal(bot.logs.filter(l => /exemplo.rejeitar erro/.test(l)).length, 1);
+        assert.equal(bot.logs.filter(l => /exemplo.falhar error/.test(l)).length, 1);
+        assert.equal(bot.logs.filter(l => /exemplo.rejeitar error/.test(l)).length, 1);
     });
 
     test('credenciais não vazam; objetos circulares, getters e buffers são resumidos', async () => {

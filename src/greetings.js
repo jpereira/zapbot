@@ -70,10 +70,10 @@ async function greet(type, notification) {
         for (const id of people) {
             const textAlt = assembleText(type, greeting, { nome: await nameAltAlt(id, type === 'welcome'), grupo: group });
             await client.sendMessage(chatId, textAlt, type === 'welcome' ? { mentions: [id] } : {});
-            printInfo(`/${type}: ${id} em ${group}`);
+            printInfo(`/${type}: ${id} in ${group}`);
         }
     } catch (err) {
-        printError(`/${type}: falhou:`, err.message);
+        printError(`/${type}: failed:`, err.message);
     }
 }
 

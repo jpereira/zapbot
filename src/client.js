@@ -41,7 +41,7 @@ printSuccess('Client created');
 // Message to your own number (PHONE_NUMBER): bot notices
 function messageToSelf(message) {
     return client.sendMessage(phoneBotJid(), message)
-        .catch(err => printError('messageToSelf falhou:', err.message));
+        .catch(err => printError('messageToSelf failed:', err.message));
 }
 
 /*
@@ -159,7 +159,7 @@ async function completeNotice(msg, notice, textAlt, options = {}) {
         try {
             if (await notice.edit(textAlt, options)) return notice;
         } catch (e) {
-            printError(`Não consegui editar o aviso: ${e.message}`);
+            printError(`Could not edit the notice: ${e.message}`);
         }
     }
     return msg.reply(textAlt, null, options);

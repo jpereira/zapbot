@@ -58,7 +58,7 @@ client.on('message_edit', async (msg, newBody, prevBody) => {
         const chatId = channelId(msg.from, msg.id?.remote, msg.to) || msg.id?.remote || msg.from;
 
         if (!messageId || !chatId) {
-            printError('[Edit] Não foi possível identificar a mensagem editada.');
+            printError('[Edit] Could not identify the edited message.');
             return;
         }
 
@@ -101,7 +101,7 @@ client.on('message_edit', async (msg, newBody, prevBody) => {
         // If the message is deleted later, /show shows the final text
         await dbRun('UPDATE messages SET body = ? WHERE id = ? AND revoked = 0', [afterAlt, messageId]);
 
-        printInfo(`[Edit] Mensagem ${messageId} editada em ${row.chat_name}`);
+        printInfo(`[Edit] Message ${messageId} edited in ${row.chat_name}`);
 
         await countStats({
             chatId, chatName: row.chat_name, isGroup: row.is_group,
@@ -116,7 +116,7 @@ client.on('message_edit', async (msg, newBody, prevBody) => {
             await sendMessageEdited(client.info.wid._serialized, row, info);
         }
     } catch (err) {
-        printError('[Edit] Erro ao processar mensagem editada:', err.message);
+        printError('[Edit] Error processing the edited message:', err.message);
     }
 });
 

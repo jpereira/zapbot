@@ -69,7 +69,7 @@ module.exports = {
     'gpt.noSpeech': '🤖 Não ouvi fala nenhuma nesse áudio.',
     'gpt.transcription': '🤖 *Transcrição:*\n{texto}',
     'gpt.audioPrompt': '{pergunta}\n\nTranscrição do áudio:\n{transcricao}',
-    'gpt.voiceUsage': 'Usage: /gpt -voice <texto> (ou responda uma mensagem de texto)\n💡 _/gpt -h para ajuda_',
+    'gpt.voiceUsage': 'Usage: /gpt -v <texto> (ou responda uma mensagem de texto)\n💡 _/gpt -h para ajuda_',
     'gpt.voiceTooLong': '❌ O texto tem {n} caracteres: a voz aceita até {max}.',
     'gpt.imgUsage': 'Usage: /gpt -img <o que criar> (respondendo uma foto, ela é editada)\n💡 _/gpt -h para ajuda_',
     'gpt.gifUsage': 'Usage: /gpt -gif <o que animar> (respondendo uma foto, ela é animada)\n💡 _/gpt -h para ajuda_',
@@ -102,7 +102,7 @@ module.exports = {
     'gpt.limitRequests': 'requisições',
     'gpt.limitLine': '• {nome}: {restante} de {limite}',
     'gpt.limitReset': ' · reseta em {reseta}',
-    'gpt.usageUsage': 'Usage: /gpt -usage [dias] (de 1 a {max}; padrão {padrao})\n💡 _/gpt -h para ajuda_',
+    'gpt.usageUsage': 'Usage: /gpt -u [dias] (de 1 a {max}; padrão {padrao})\n💡 _/gpt -h para ajuda_',
     'gpt.adminKeyHint': '💡 _Para o consumo, a chave de admin: OPENAI_ADMIN_KEY ou /set gpt.admin.key_',
     'gpt.creditHint': '💡 _Para ver $usado/$total: /set gpt.credit.total <dólares comprados> e ' +
         '/set gpt.credit.since AAAA-MM-DD (a API da OpenAI não informa o saldo)._',

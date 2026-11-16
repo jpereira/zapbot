@@ -62,7 +62,7 @@ describe('evento: mensagem apagada', () => {
         const ghost = bot.createMessage({ texto: 'x', de: OTHERAlt.jid, id: 'NUNCA_VISTA' });
         const logBefore = bot.logs.length;
         assert.deepEqual(await bot.apagar(ghost), []);
-        assert.ok(bot.errorsInLog(logBefore).some(l => l.includes('NUNCA_VISTA não encontrada')));
+        assert.ok(bot.errorsInLog(logBefore).some(l => l.includes('NUNCA_VISTA not found')));
     });
 
     test('show.alert.deleted off: guarda sem avisar; o /show reexibe', async () => {
@@ -521,8 +521,8 @@ describe('/show -e (editadas)', () => {
         await messageEdited('antes', 'depois');
 
         assert.match((await bot.replyAlt('/show -d'))[1], /MENSAGEM APAGADA[\s\S]*"apagada"/);
-        assert.match((await bot.replyAlt('/show -deleted'))[1], /"apagada"/);
-        assert.match((await bot.replyAlt('/show -edited'))[1], /MENSAGEM EDITADA[\s\S]*"depois"/);
+        assert.match((await bot.replyAlt('/show -d'))[1], /"apagada"/);
+        assert.match((await bot.replyAlt('/show -e'))[1], /MENSAGEM EDITADA[\s\S]*"depois"/);
         assert.equal((await bot.replyAlt('/show -d -e -2'))[0], '🗄️ *2 mensagens* (🗑️ 1 · ✏️ 1)');
     });
 

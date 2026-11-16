@@ -47,10 +47,10 @@ tenta de novo sozinho, com espera crescente (15 s, 30 s, 1 min, 2 min e depois a
 conectar. No boot sem internet, o mesmo.
 
 ```text
-♻️ Reiniciando cliente. Motivo: heartbeat: OPENING
-initialize falhou: net::ERR_NAME_NOT_RESOLVED at https://web.whatsapp.com/
-♻️ Nova tentativa de conectar em 15s (falhas seguidas: 1).
-♻️ Reiniciando cliente. Motivo: nova tentativa nº 2 (heartbeat: OPENING)
+♻️ Restarting client. Reason: heartbeat: OPENING
+initialize failed: net::ERR_NAME_NOT_RESOLVED at https://web.whatsapp.com/
+♻️ Retrying to connect in 15s (consecutive failures: 1).
+♻️ Restarting client. Reason: nova tentativa nº 2 (heartbeat: OPENING)
 ...
 🤖 ZapBot 1.0.23 inicializado!
 ```

@@ -169,7 +169,7 @@ async function blockA(person) {
         return t('grp.block.refused', { error: err.message });
     }
 
-    printInfo(`/block: ${person.nome} (${person.id}) bloqueado`);
+    printInfo(`/block: ${person.nome} (${person.id}) blocked`);
     return 'bloqueado';
 }
 
@@ -272,8 +272,8 @@ async function unblock(list) {
 
     let stayed = await stillBlocked(list.filter(b => !failures.has(b.id)));
     for (const b of stayed) {
-        printInfo(`/unblock: ${describe(b)} (${b.id}) continua bloqueado; desbloqueando pelo id da lista`);
-        await unblockById(b.id).catch(err => printError(`/unblock: ${b.id} pelo id da lista:`, err.message));
+        printInfo(`/unblock: ${describe(b)} (${b.id}) is still blocked; unblocking by the list id`);
+        await unblockById(b.id).catch(err => printError(`/unblock: ${b.id} by the list id:`, err.message));
     }
     stayed = await stillBlocked(stayed);
     for (const b of stayed) failures.set(b.id, t('grp.block.notUnblocked'));
@@ -298,7 +298,7 @@ async function unblockAll(msg) {
     const failures = await unblock(list);
 
     const ok = list.length - failures.length;
-    printInfo(`/unblock -all: ${ok} desbloqueados, ${failures.length} falhas`);
+    printInfo(`/unblock -all: ${ok} unblocked, ${failures.length} failures`);
     await completeNotice(msg, notice, t('grp.block.unblockedCount', { n: ok === 1 ? 1 : 2, count: ok }) +
         (failures.length ? '\n\n' + t('grp.block.unblockFailures', { n: failures.length }) + '\n' +
             failures.map(f => `• ${describe(f.b)}: ${f.motivo}`).join('\n') : ''));
@@ -358,7 +358,7 @@ async function cmdUnblock({ msg, opts, quotedMsg }) {
         await msg.reply(t('grp.block.cantUnblock', { name: nameAlt, reason: failure.motivo }));
         return;
     }
-    printInfo(`/unblock: ${nameAlt} (${target.id}) desbloqueado`);
+    printInfo(`/unblock: ${nameAlt} (${target.id}) unblocked`);
     await msg.reply(t('grp.block.unblocked', { name: nameAlt }));
 }
 

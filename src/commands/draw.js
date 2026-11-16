@@ -63,7 +63,7 @@ async function sendGif(msg, b64, captionAlt, cmd) {
     try {
         mp4 = await gifParaMp4(Buffer.from(b64, 'base64'));
     } catch (err) {
-        printError(`${cmd} -gif: ffmpeg falhou:`, err.message);
+        printError(`${cmd} -gif: ffmpeg failed:`, err.message);
         await msg.reply(new MessageMedia('image/gif', b64, 'desenho.gif'), null, { caption: captionAlt, sendMediaAsDocument: true });
         return;
     }

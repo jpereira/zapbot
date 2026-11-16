@@ -223,7 +223,7 @@ async function cmdWatch({ msg, args }) {
         }
         await recordDestinations(o.regra, lido.destinos);
         const type = t(RULE_REGEX.test(o.regra) ? 'watch.kindRegex' : 'watch.kindText');
-        printInfo(`/watch: regra #${rules.length + 1} adicionada: ${o.regra}`);
+        printInfo(`/watch: rule #${rules.length + 1} added: ${o.regra}`);
         await msg.reply(t('watch.added', { n: rules.length + 1, kind: type, rule: o.regra }) +
             (origin ? t('watch.addedOnlyIn', { where: describeDestinations([origin]) }) : '') +
             (o.mask ? t('watch.addedMask') : '') +

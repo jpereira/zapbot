@@ -68,9 +68,9 @@ client.on('vote_update', async (vote) => {
             [pollId, vote.voter, await voterName(vote.voter), JSON.stringify(choices), vote.interractedAtTs || Date.now()]
         );
 
-        printInfo(`Enquete "${pollAlt.pollName}": voto de ${vote.voter} (${choices.join(', ')})`);
+        printInfo(`Poll "${pollAlt.pollName}": vote from ${vote.voter} (${choices.join(', ')})`);
     } catch (err) {
-        printError('Erro ao registrar o voto:', err.message);
+        printError('Error recording the vote:', err.message);
     }
 });
 

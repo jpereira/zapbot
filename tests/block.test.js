@@ -34,7 +34,7 @@ describe('/block e /unblock', () => {
         assert.equal(list, '🚫 *Bloqueados* (2)\n\n1. 👤 Beltrano · +5521922222222\n2. 👤 Fulano · +5521911111111\n\n' +
             '💡 _Desbloqueie com /unblock <nº|nome>._');
         assert.equal((await bot.replyAlt('/block -l'))[0], list);
-        assert.match((await bot.replyAlt('/block -mask /Beltrano/'))[0], /^ℹ️ 👤 Beltrano já está bloqueado\./,
+        assert.match((await bot.replyAlt('/block -m /Beltrano/'))[0], /^ℹ️ 👤 Beltrano já está bloqueado\./,
             'o -mask não entra no nome');
 
         // -mask (-m): the phones obfuscated, in the list and in the confirmation
@@ -42,7 +42,7 @@ describe('/block e /unblock', () => {
             '💡 _Desbloqueie com /unblock <nº|nome>._';
         assert.equal((await bot.replyAlt('/block -l -m'))[0], masked);
         assert.equal((await bot.replyAlt('/block -m'))[0], masked);
-        assert.equal((await bot.replyAlt('/block -mask'))[0], masked);
+        assert.equal((await bot.replyAlt('/block -m'))[0], masked);
         assert.equal((await bot.replyAlt('/block'))[0], list, 'sem o -mask, completos de novo');
 
         assert.equal((await bot.replyAlt('/unblock 2'))[0], '✅ *Desbloqueado:* 👤 Fulano · +5521911111111');
@@ -141,7 +141,7 @@ describe('/block e /unblock', () => {
     });
 
     test('/unblock -all: todos; quem falha não segura os outros', async () => {
-        assert.equal((await bot.replyAlt('/unblock -all'))[0], '🚫 Ninguém bloqueado.');
+        assert.equal((await bot.replyAlt('/unblock -a'))[0], '🚫 Ninguém bloqueado.');
 
         contactAlt(OTHERAlt.jid).isBlocked = true;
         contactAlt(BELTRANO.jid).isBlocked = true;
@@ -158,7 +158,7 @@ describe('/block e /unblock', () => {
     test('/unblock -all: se o WhatsApp não deixa editar o aviso, o resultado vai em outra mensagem', async () => {
         contactAlt(OTHERAlt.jid).isBlocked = true;
         bot.client.recusarEdicao = true;
-        assert.deepEqual(await bot.replyAlt('/unblock -all'), ['⏳ Desbloqueando 1 contato, aguarde.', '✅ 1 desbloqueado.']);
+        assert.deepEqual(await bot.replyAlt('/unblock -a'), ['⏳ Desbloqueando 1 contato, aguarde.', '✅ 1 desbloqueado.']);
     });
 
     describe('o unblock() do whatsapp-web.js não confere: o bot confere na lista', () => {

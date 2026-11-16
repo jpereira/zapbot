@@ -153,12 +153,12 @@ describe('/cron -reminder: o modo lembrete', () => {
         for (const v of ['s', 'semanal', 'w', 'weekly']) assert.equal(readRepetition(v), 'weekly', v);
         for (const v of ['m', 'mensal', 'monthly']) assert.equal(readRepetition(v), 'monthly', v);
         for (const v of ['x', '', 'anual', undefined]) assert.equal(readRepetition(v), null, String(v));
-        assert.match((await bot.replyAlt('/cron -reminder amanhã 8h -r semanal tomar água'))[0], /🔁 toda semana/);
-        assert.match((await bot.replyAlt('/cron -reminder amanhã 8h -r m tomar água'))[0], /🔁 todo mês/);
+        assert.match((await bot.replyAlt('/cron -rem amanhã 8h -r semanal tomar água'))[0], /🔁 toda semana/);
+        assert.match((await bot.replyAlt('/cron -rem amanhã 8h -r m tomar água'))[0], /🔁 todo mês/);
     });
 
     test('-repeat: continua na lista com o próximo horário', async () => {
-        assert.match((await bot.replyAlt('/cron -reminder amanhã 8h -repeat daily tomar água'))[0], /🔁 todo dia neste chat/);
+        assert.match((await bot.replyAlt('/cron -rem amanhã 8h -r daily tomar água'))[0], /🔁 todo dia neste chat/);
         await expire();
         const [item] = await items();
         assert.ok(item.due_at > Date.now() && item.due_at <= Date.now() + 24 * HOUR, 'próximo envio nas próximas 24 h');
@@ -187,12 +187,12 @@ describe('/cron -reminder: o modo lembrete', () => {
 
         const [list] = await bot.replyAlt('/cron -reminder');
         assert.match(list, /^📅 \*Agenda\* \(2\)\n\n1\. ⏰ \*[^*]+\* — primeiro\n   → seu privado\n2\. ⏰ \*[^*]+\* — segundo\n   → 👥 Família\n\n💡 _📅 mensagem · ⏰ lembrete_\n💡 _-edit <nº> muda_\n💡 _-pause\/-resume <nº\.\.\.> segura e solta_\n💡 _-rm <nº\.\.\.\|all> remove_$/);
-        assert.equal((await bot.replyAlt('/cron -reminder -l'))[0], list);
+        assert.equal((await bot.replyAlt('/cron -rem -l'))[0], list);
 
-        assert.match((await bot.replyAlt('/cron -reminder -rm 1'))[0], /🗑️ Removido: \*[^*]+\* — primeiro/);
-        assert.match((await bot.replyAlt('/cron -reminder -rm 5'))[0], /❌ Nº 5 não existe/);
-        assert.deepEqual(await bot.replyAlt('/cron -reminder -rm all'), ['🗑️ 1 removido.']);
-        assert.match((await bot.replyAlt('/cron -reminder'))[0], /^📅 Nada agendado\.\n💡 _Ex\.: \/cron sexta 18h .*\n\/cron -reminder 18:30 pagar o boleto_$/);
+        assert.match((await bot.replyAlt('/cron -rem -rm 1'))[0], /🗑️ Removido: \*[^*]+\* — primeiro/);
+        assert.match((await bot.replyAlt('/cron -rem -rm 5'))[0], /❌ Nº 5 não existe/);
+        assert.deepEqual(await bot.replyAlt('/cron -rem -rm all'), ['🗑️ 1 removido.']);
+        assert.match((await bot.replyAlt('/cron -rem'))[0], /^📅 Nada agendado\.\n💡 _Ex\.: \/cron sexta 18h .*\n\/cron -rem 18:30 pagar o boleto_$/);
     });
 
     test('-l mostra o texto inteiro, sem cortar; as linhas seguintes recuadas', async () => {
@@ -248,7 +248,7 @@ describe('/cron -reminder: o modo lembrete', () => {
     });
 
     test('só o dono', async () => {
-        assert.deepEqual(await bot.replyAlt('/cron -reminder +1h x', { de: OTHERAlt.jid }), []);
+        assert.deepEqual(await bot.replyAlt('/cron -rem +1h x', { de: OTHERAlt.jid }), []);
     });
 });
 
@@ -277,12 +277,12 @@ describe('/cron', () => {
 
         // The log says where it went: the name and the number (person) or the id (group)
         await expire();
-        assert.ok(bot.logs.some(l => l.includes(`/cron: enviado para 👤 Fulano (+${OTHERAlt.jid.split('@')[0]}) (monthly)`)));
-        assert.ok(bot.logs.some(l => /\/cron: enviado para 👥 \S.* \(\d+@g\.us\)$/.test(l)));
+        assert.ok(bot.logs.some(l => l.includes(`/cron: sent to 👤 Fulano (+${OTHERAlt.jid.split('@')[0]}) (monthly)`)));
+        assert.ok(bot.logs.some(l => /\/cron: sent to 👥 \S.* \(\d+@g\.us\)$/.test(l)));
     });
 
     test('"6h" com -repeat é o horário (06:00 todo dia); "+6h" é daqui a 6 horas', async () => {
-        assert.match((await bot.replyAlt('/cron 6h -repeat daily -to L200 Bom dia!'))[0],
+        assert.match((await bot.replyAlt('/cron 6h -r daily -to L200 Bom dia!'))[0],
             /^📅 \*Mensagem agendada\* para \*[a-zá]{3} \d\d\/\d\d 06:00\* 🔁 todo dia em 👥 Grupo sobre L200\./);
         assert.match((await bot.replyAlt('/cron 07h -to L200 Bom dia!'))[0], /para \*[a-zá]{3} \d\d\/\d\d 07:00\*/);
 
@@ -374,9 +374,9 @@ describe('/cron', () => {
         const sentAlt3 = await expire();
         assert.deepEqual(sentAlt3.map(e => e.chatId), [L200, OTHERAlt.jid]);
         for (const e of sentAlt3) assert.match(e.content, /^Reunião às 10h!\n\n🤖 \*ZapBot/);
-        const logs = bot.logs.slice(beforeAlt).filter(l => l.includes('/cron: enviado para'));
+        const logs = bot.logs.slice(beforeAlt).filter(l => l.includes('/cron: sent to'));
         assert.equal(logs.length, 2);
-        assert.match(logs[1], /enviado para 👤 Fulano \(\+\d+\), com \{\/version\} \(daily\)$/);
+        assert.match(logs[1], /sent to 👤 Fulano \(\+\d+\), with \{\/version\} \(daily\)$/);
         assert.equal((await items()).length, 1, 'repetido: continua um item');
 
         // Counts 1 against the limit, with any number of -to
@@ -396,7 +396,7 @@ describe('/cron', () => {
             const beforeAlt = bot.logs.length;
             const sentAlt3 = await expire();
             assert.deepEqual(sentAlt3.map(e => e.chatId), [OTHERAlt.jid]);
-            assert.ok(bot.errorsInLog(beforeAlt).some(l => /falha ao enviar \d+ para 👥 Grupo sobre L200.*grupo fora do ar/.test(l)));
+            assert.ok(bot.errorsInLog(beforeAlt).some(l => /failed to send \d+ to 👥 Grupo sobre L200.*grupo fora do ar/.test(l)));
         } finally {
             bot.client.sendMessage = send;
         }
@@ -488,7 +488,7 @@ describe('/cron: comandos no texto ({/comando})', () => {
         assert.equal(sentAlt3[0].options.quotedMessageId, undefined);
 
         // One log line per send, with the destination and the commands executed
-        assert.ok(bot.logs.some(l => l.endsWith(`/cron: enviado para 👥 Grupo sobre L200 (${L200}), com {/uptime}`)));
+        assert.ok(bot.logs.some(l => l.endsWith(`/cron: sent to 👥 Grupo sobre L200 (${L200}), with {/uptime}`)));
     });
 
     test('resposta de várias linhas vira um parágrafo (linha em branco antes e depois); de uma linha, fica na frase', async () => {
@@ -509,7 +509,7 @@ describe('/cron: comandos no texto ({/comando})', () => {
     });
 
     test('{/bot -flush-email true} só o dono agenda; as outras opções do /bot são recusadas', async () => {
-        assert.match((await bot.replyAlt('/cron +1h -to L200 Hora de limpar {/bot -flush-email true}'))[0],
+        assert.match((await bot.replyAlt('/cron +1h -to L200 Hora de limpar {/bot -fe true}'))[0],
             /^📅 \*Mensagem agendada\*/);
         assert.match((await bot.replyAlt('/cron +1h -to L200 x {/bot -off}', { erroEsperado: true }))[0],
             /o -off do \/bot não roda dentro do \/cron/);
@@ -554,10 +554,10 @@ describe('/cron: comandos no texto ({/comando})', () => {
     test('conferido ao criar e no -edit: não existe, não roda no /cron, opção que muda algo', async () => {
         assert.equal((await bot.replyAlt('/cron +1h oi {/xyz}'))[0], '❌ {/xyz}: o /xyz não existe.');
         assert.match((await bot.replyAlt('/cron +1h {/set show.max 5}'))[0], /^❌ \{\/set show\.max 5\}: o \/set não roda dentro do \/cron\.\n💡 _Rodam: .*\/crypto.*\._$/);
-        assert.equal((await bot.replyAlt('/cron +1h {/crypto -add DOGE}'))[0], '❌ {/crypto -add DOGE}: o -add do /crypto não roda dentro do /cron.');
+        assert.equal((await bot.replyAlt('/cron +1h {/crypto -a DOGE}'))[0], '❌ {/crypto -a DOGE}: o -add do /crypto não roda dentro do /cron.');
         assert.equal((await bot.replyAlt('/cron +1h {/stats -flush-all}'))[0], '❌ {/stats -flush-all}: o -flush-all do /stats não roda dentro do /cron.');
         assert.equal((await bot.replyAlt('/cron +1h {/defi -rm 1}'))[0], '❌ {/defi -rm 1}: o -rm do /defi não roda dentro do /cron.');
-        assert.equal((await bot.replyAlt('/cron +1h {/defi -alert all}'))[0], '❌ {/defi -alert all}: o -alert do /defi não roda dentro do /cron.');
+        assert.equal((await bot.replyAlt('/cron +1h {/defi -a all}'))[0], '❌ {/defi -a all}: o -alert do /defi não roda dentro do /cron.');
         assert.deepEqual(await items(), []);
 
         await bot.replyAlt('/cron +1h oi');
@@ -598,8 +598,8 @@ describe('/cron: comandos no texto ({/comando})', () => {
 describe('/cron: os dois modos', () => {
     test('sem -reminder é a mensagem agendada; com -reminder, o modo lembrete', async () => {
         assert.match((await bot.replyAlt('/cron +1h -to L200 oi'))[0], /^📅 \*Mensagem agendada\*/);
-        assert.match((await bot.replyAlt('/cron -reminder +2h -private beber água'))[0], /^⏰ \*Lembrete criado\* .* no seu privado\./);
-        assert.match((await bot.replyAlt('/cron -reminder +3h -r daily alongar'))[0], /^⏰ \*Lembrete criado\* .* 🔁 todo dia neste chat\./);
+        assert.match((await bot.replyAlt('/cron -rem +2h -private beber água'))[0], /^⏰ \*Lembrete criado\* .* no seu privado\./);
+        assert.match((await bot.replyAlt('/cron -rem +3h -r daily alongar'))[0], /^⏰ \*Lembrete criado\* .* 🔁 todo dia neste chat\./);
 
         assert.deepEqual((await items()).map(i => [i.kind, i.chat_id, i.repeat]),
             [['agendar', L200, null], ['lembrete', OWNER.jid, null], ['lembrete', GROUP, 'daily']]);
@@ -613,7 +613,7 @@ describe('/cron: os dois modos', () => {
         assert.match(list, /1\. ⏰ \*[^*]+\* — lembrete\n   → 👥 Família\n2\. 📅 \*[^*]+\* — mensagem\n   → 👥 Grupo sobre L200/);
 
         assert.match((await bot.replyAlt('/cron -rm 1'))[0], /🗑️ Removido: \*[^*]+\* — lembrete/);
-        assert.deepEqual(await bot.replyAlt('/cron -reminder -rm all'), ['🗑️ 1 removido.']);
+        assert.deepEqual(await bot.replyAlt('/cron -rem -rm all'), ['🗑️ 1 removido.']);
         assert.deepEqual(await items(), []);
     });
 });

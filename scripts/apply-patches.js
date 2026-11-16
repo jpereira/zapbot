@@ -22,7 +22,7 @@ function applyPatches(root = path.resolve(__dirname, '..')) {
         const check = run(['--check', fileAlt]);
         if (check.status !== 0) {
             if (run(['--reverse', '--check', fileAlt]).status === 0) {
-                console.log(`✅ Patch já aplicado: ${nameAlt}`);
+                console.log(`✅ Patch already applied: ${nameAlt}`);
                 continue;
             }
             throw new Error(`Patch incompatível: ${nameAlt}\n${check.stderr.trim()}`);
@@ -31,7 +31,7 @@ function applyPatches(root = path.resolve(__dirname, '..')) {
         if (resultAlt.status !== 0) {
             throw new Error(`Falha ao aplicar ${nameAlt}: ${resultAlt.stderr.trim()}`);
         }
-        console.log(`✅ Patch aplicado: ${nameAlt}`);
+        console.log(`✅ Patch applied: ${nameAlt}`);
     }
 }
 

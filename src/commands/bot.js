@@ -587,11 +587,11 @@ async function reset(msg, { chatId, completo: complete }) {
     for (const key of complete ? RESET_COMPLETE : DO_RESET) await setSetting(key, SETTINGS_SCHEMA[key].default);
 
     if (complete) {
-        printInfo('/bot -reset force: usuários, admins e bot.paused de volta ao padrão');
+        printInfo('/bot -reset force: users, admins and bot.paused back to the default');
         await msg.reply(t('adm.bot.resetFullDone', { estado: botState() }));
         return;
     }
-    printInfo(`/bot -reset: ${usersAlt} usuário(s) e os limites deles removidos`);
+    printInfo(`/bot -reset: ${usersAlt} user(s) and their limits removed`);
     await msg.reply(t('adm.bot.resetDone', { n: usersAlt, estado: botState() }));
 }
 

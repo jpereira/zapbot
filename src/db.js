@@ -23,7 +23,7 @@ function dbMigrateName(dir = CACHE_DIR, freshAlt = path.basename(DB_PATH)) {
     for (const suffix of ['', '-wal', '-shm', '-journal']) {
         if (fs.existsSync(oldAlt2 + suffix)) fs.renameSync(oldAlt2 + suffix, current + suffix);
     }
-    printInfo(`Banco renomeado: bot_database.db → ${freshAlt}`);
+    printInfo(`Database renamed: bot_database.db → ${freshAlt}`);
     return true;
 }
 
@@ -32,8 +32,8 @@ fs.mkdirSync(CACHE_DIR, { recursive: true });
 dbMigrateName();
 
 const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) return printError('Erro ao conectar ao SQLite:', err.message);
-    printInfo(`Conectado com sucesso ao banco de dados SQLite: ${dbPath}`);
+    if (err) return printError('Error connecting to SQLite:', err.message);
+    printInfo(`Connected to the SQLite database: ${dbPath}`);
 });
 
 // Promise versions to use async/await

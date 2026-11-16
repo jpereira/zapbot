@@ -52,7 +52,7 @@ test('/ocr, /tts, /qr, /carbon e /profile -set', async () => {
     assert.deepEqual(await bot.replyAlt('/qr -d'), ['Reply to a photo of a QR Code with /qr -d (or send the photo with /qr -d as the caption).\n💡 _/qr -h for help_']);
     assert.deepEqual(await bot.replyAlt('/carbon -t neon x'), ['❌ Unknown theme "neon". Available: dark, light.']);
     assert.match((await bot.replyAlt('/carbon'))[0], /^```Usage: \/carbon /);
-    assert.deepEqual(await bot.replyAlt('/profile -set'), ['Reply to an image with /profile -set (or send the photo with /profile -set as the caption).\n💡 _/profile -h for help_']);
+    assert.deepEqual(await bot.replyAlt('/profile -s'), ['Reply to an image with /profile -s (or send the photo with /profile -s as the caption).\n💡 _/profile -h for help_']);
 });
 
 test('/forward', async () => {

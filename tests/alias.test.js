@@ -25,7 +25,7 @@ test('/alias cadastra com barra, sem barra, descrição longa e persiste no banc
     const [list] = await bot.replyAlt('/alias');
     assert.match(list, /Meu teste para dolar/);
     assert.match(list, /\*\/eita3\*\n→ \/rates USDT/);
-    assert.equal((await bot.replyAlt('/alias -list'))[0], list);
+    assert.equal((await bot.replyAlt('/alias -l'))[0], list);
     assert.equal((await bot.replyAlt('/alias -l'))[0], list);
     assert.equal((await bot.replyAlt('/help alias'))[0], list);
     assert.equal((await bot.replyAlt('/help /alias'))[0], list);
@@ -272,7 +272,7 @@ test('/me envia a mensagem, roda {/comando} e aceita \\n', async t => {
 
 test('/me -repeat|-r repete a mensagem n vezes', async () => {
     assert.deepEqual(await bot.replyAlt('/me -r 3 Haha!'), ['Haha!Haha!Haha!']);
-    assert.deepEqual(await bot.replyAlt('/me -repeat 2 Haha!\\n'), ['Haha!\nHaha!\n']);
+    assert.deepEqual(await bot.replyAlt('/me -r 2 Haha!\\n'), ['Haha!\nHaha!\n']);
     for (const bad of ['0', '501', 'x'])
         assert.match((await bot.replyAlt(`/me -r ${bad} Haha!`))[0], /^❌ -repeat precisa de um número de 1 a 500/);
     assert.equal((await bot.replyAlt('/me -r 500 a'))[0], 'a'.repeat(500));
@@ -369,10 +369,10 @@ test('-move renomeia o alias e recusa nome existente, de comando ou alias inexis
     assert.equal(a.quiet, 1);
     assert.equal((await aliases()).some(a => a.name === '/velho'), false);
 
-    assert.match((await bot.replyAlt('/alias -move novo outro'))[0], /Já existe um alias \/outro/);
-    assert.match((await bot.replyAlt('/alias -move nao x'))[0], /não encontrado/);
-    assert.match((await bot.replyAlt('/alias -move novo /help'))[0], /já é um comando/);
-    assert.match((await bot.replyAlt('/alias -move novo'))[0], /Usage: \/alias -move/);
+    assert.match((await bot.replyAlt('/alias -m novo outro'))[0], /Já existe um alias \/outro/);
+    assert.match((await bot.replyAlt('/alias -m nao x'))[0], /não encontrado/);
+    assert.match((await bot.replyAlt('/alias -m novo /help'))[0], /já é um comando/);
+    assert.match((await bot.replyAlt('/alias -m novo'))[0], /Usage: \/alias -m/);
     await bot.replyAlt('/alias -rm all');
 });
 

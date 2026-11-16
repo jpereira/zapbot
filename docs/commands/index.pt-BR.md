@@ -178,7 +178,7 @@ destino: quem pode o `/gpt` usa os atalhos para ele, e o nome de um atalho não 
 <!-- gerado:roles -->
 ### Comandos por role
 
-**user** (de quem está no `bot.users`) (25):
+**user** (de quem está no `bot.users`) (26):
 
 [`/ascii`](ascii.md), [`/bills`](bills.md), [`/carbon`](carbon.md), [`/crypto`](crypto.md),
 [`/cve`](cve.md), [`/get`](get.md), [`/giphy`](giphy.md), [`/help`](help.md), [`/joke`](joke.md),

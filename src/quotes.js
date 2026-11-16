@@ -91,7 +91,7 @@ async function searchQuote(currency) {
     try {
         return await quoteYahoo(currency);
     } catch (err) {
-        printError(`/rates: Yahoo falhou para ${currency} (${err.message}), usando a AwesomeAPI.`);
+        printError(`/rates: Yahoo failed for ${currency} (${err.message}), using AwesomeAPI.`);
         return quoteAwesome(currency);
     }
 }

@@ -105,17 +105,17 @@ async function matchHeart() {
         try {
             recordHeartbeat(statusAlt.estado);
         } catch (err) {
-            printError(`Heartbeat: não consegui gravar ${HEARTBEAT_FILE}:`, err.message);
+            printError(`Heartbeat: could not write ${HEARTBEAT_FILE}:`, err.message);
         }
         return statusAlt;
     }
 
-    printError(`Heartbeat: sem batimento (${statusAlt.estado}).`);
+    printError(`Heartbeat: no beat (${statusAlt.estado}).`);
 
     // Only the connection that does not respond is restarted here; a stuck restart is left to Docker
     if (stateAlt.pronto && !stateAlt.reiniciando && ++failuresConsecutive >= FAILURES_FOR_RESTART) {
         failuresConsecutive = 0;
-        printInfo('Heartbeat: WhatsApp sem resposta em 3 verificações seguidas, reiniciando o cliente.');
+        printInfo('Heartbeat: WhatsApp did not respond in 3 checks in a row, restarting the client.');
         alertPerEmail(t('heartbeat.semRespostaTitulo'),
             t('heartbeat.semRespostaCorpo', { n: FAILURES_FOR_RESTART, estado: statusAlt.estado }));
         await restartClient(`heartbeat: ${statusAlt.estado}`);
@@ -126,7 +126,7 @@ async function matchHeart() {
 
 // Called in app.js: a beat right at boot and then every 30 s
 function startHeartbeat() {
-    printInfo(`Heartbeat em ${HEARTBEAT_FILE} (a cada ${HEARTBEAT_INTERVAL_MS / 1000}s)`);
+    printInfo(`Heartbeat at ${HEARTBEAT_FILE} (every ${HEARTBEAT_INTERVAL_MS / 1000}s)`);
     matchHeart();
     setInterval(matchHeart, HEARTBEAT_INTERVAL_MS);
 }

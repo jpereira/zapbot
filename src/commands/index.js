@@ -127,7 +127,7 @@ const HANDLERS = {
 
 // Warns at boot if commands.js has a command without a handler (or vice versa)
 for (const c of botConfig.commands) {
-    if (!HANDLERS[c.cmd]) printError(`Comando '${c.cmd}' está no commands.js mas não tem handler.`);
+    if (!HANDLERS[c.cmd]) printError(`Command '${c.cmd}' is in commands.js but has no handler.`);
 }
 
 module.exports = {

@@ -23,7 +23,7 @@ async function notify(p, n, emoji, title, texts) {
     const textAlt = `${emoji} *${title}*\n\n${texts.join('\n\n')}\n\n${t('defi.alertTip', { n })}`;
     await sendToDestinations(alertDestinations(p), textAlt, { assunto: title })
         .then(() => printInfo(`/defi -alert: ${title} → ${alertDescribeDestination(p)}`))
-        .catch(err => printError(`/defi -alert: falha ao avisar (${addressAlt2(p)}):`, err.message));
+        .catch(err => printError(`/defi -alert: failed to notify (${addressAlt2(p)}):`, err.message));
 }
 
 // Saves BEFORE notifying: if the send fails, it does not repeat on every check
@@ -72,7 +72,7 @@ async function checkAlertsDefi({ forcar: force = false } = {}) {
             try {
                 lido = await readRegistration(p);
             } catch (err) {
-                printError(`/defi -alert: não consegui ler ${addressAlt2(p)}:`, err.message);
+                printError(`/defi -alert: could not read ${addressAlt2(p)}:`, err.message);
                 continue;
             }
 
@@ -80,7 +80,7 @@ async function checkAlertsDefi({ forcar: force = false } = {}) {
             await checkRates(p, i + 1, lido);
         }
     } catch (err) {
-        printError('Erro ao verificar os alertas do /defi:', err.message);
+        printError('Error checking the /defi alerts:', err.message);
     } finally {
         checking = false;
     }

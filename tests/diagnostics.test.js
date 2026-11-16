@@ -52,16 +52,16 @@ test('/bot -test: o que falha vira ❌ com o motivo e entra na contagem', async 
 });
 
 test('/bot -test não combina com as outras opções', async () => {
-    assert.match((await bot.replyAlt('/bot -test -info'))[0], /não combina/);
-    assert.match((await bot.replyAlt('/bot -info -test'))[0], /não combina/);
-    assert.match((await bot.replyAlt('/bot -test -on'))[0], /O -test não combina/);
+    assert.match((await bot.replyAlt('/bot -t -i'))[0], /não combina/);
+    assert.match((await bot.replyAlt('/bot -i -t'))[0], /não combina/);
+    assert.match((await bot.replyAlt('/bot -t -on'))[0], /O -test não combina/);
 });
 
 test('/bot -flush-email: sem IMAP configurado avisa; não combina com as outras opções', async () => {
     delete process.env.QRCODE_EMAIL_IMAP_HOST;
-    assert.match((await bot.replyAlt('/bot -flush-email'))[0], /❌ Não consegui.*QRCODE_EMAIL_IMAP_HOST/);
-    assert.match((await bot.replyAlt('/bot -flush-email -test'))[0], /não combina/);
-    assert.match((await bot.replyAlt('/bot -flush-email talvez'))[0], /O -flush-email não combina/);
+    assert.match((await bot.replyAlt('/bot -fe'))[0], /❌ Não consegui.*QRCODE_EMAIL_IMAP_HOST/);
+    assert.match((await bot.replyAlt('/bot -fe -t'))[0], /não combina/);
+    assert.match((await bot.replyAlt('/bot -fe talvez'))[0], /O -flush-email não combina/);
 });
 
 test('imap: acha Sent e Trash pelo atributo ou pelo nome', () => {

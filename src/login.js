@@ -79,7 +79,7 @@ async function tryLogin({ numero: numberAlt, nome: nameAlt, senha: password, isG
                 t('login.bloqueadoCorpo', { nome: nameAlt, numero: numberAlt, erros: MAX_ERRORS, min: BLOCK_MS / 60000 }));
         }
         attempts.set(numberAlt, tent);
-        printInfo(`/bot -login: senha errada de ${nameAlt} (+${numberAlt})`);
+        printInfo(`/bot -login: wrong password from ${nameAlt} (+${numberAlt})`);
         return t('login.senhaIncorreta');
     }
 

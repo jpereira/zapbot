@@ -74,7 +74,7 @@ describe('en_US: informação', () => {
     test('/bills sem membros, /whois e /me', async () => {
         assert.equal((await bot.replyAlt('/bills'))[0], 'Not enough members in the group.');
         assert.match((await bot.replyAlt('/whois'))[0], /^\*Who is it\?\* \(1\)\n• .*owner/);
-        assert.equal((await bot.replyAlt('/me -repeat 0 oi'))[0],
+        assert.equal((await bot.replyAlt('/me -r 0 oi'))[0],
             `❌ -repeat needs a number from 1 to ${getSetting('me.maxRepeat')}`);
     });
 });

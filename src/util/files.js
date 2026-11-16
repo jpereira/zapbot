@@ -90,7 +90,7 @@ function mediaIsPath(fileAlt) {
 
 function cleanContentDirectory(dirPath) {
     if (!fs.existsSync(dirPath)) {
-        printInfo(`Diretório não existe: ${dirPath}`);
+        printInfo(`Directory does not exist: ${dirPath}`);
         return;
     }
 
@@ -100,7 +100,7 @@ function cleanContentDirectory(dirPath) {
         fs.rmSync(path.join(dirPath, entry.name), { recursive: true, force: true });
     }
 
-    printInfo(`Conteúdo de ${dirPath} removido (${entries.length} itens).`);
+    printInfo(`Contents of ${dirPath} removed (${entries.length} items).`);
 }
 
 module.exports = {

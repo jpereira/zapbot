@@ -82,7 +82,7 @@ async function querySources(local, today) {
     const results = await Promise.allSettled(queries);
     return results.flatMap((r, i) => {
         if (r.status === 'rejected') {
-            printInfo(`/weather: a fonte ${on[i]} não respondeu:`, r.reason?.message ?? r.reason);
+            printInfo(`/weather: the source ${on[i]} did not respond:`, r.reason?.message ?? r.reason);
             return [];
         }
         return r.value ? [r.value] : [];

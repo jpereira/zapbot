@@ -191,7 +191,7 @@ async function removeNotes(msg, textIds, soAlert) {
 
     for (const n of notes.filter(x => ids.includes(x.id))) {
         await dbRun('DELETE FROM notes WHERE id = ?', [n.id]);
-        if (n.media_path) await fs.remove(n.media_path).catch(err => printError('/notes: imagem não apagada:', err.message));
+        if (n.media_path) await fs.remove(n.media_path).catch(err => printError('/notes: image not deleted:', err.message));
     }
     await msg.reply(countAlt('notes.rm.removed', ids.length));
 }
@@ -767,7 +767,7 @@ async function imageWithBorder(fileAlt, mime) {
         return await sharp(data).extend({ top: border, bottom: border, left: border, right: border, background: '#000000' })
             .toBuffer();
     } catch (err) {
-        printError('/notes: borda da imagem:', err.message);
+        printError('/notes: image border:', err.message);
         return null;
     }
 }
@@ -781,7 +781,7 @@ async function imageForPdf(fileAlt) {
             .toBuffer({ resolveWithObject: true });
         return { jpeg: data, largura: info.width, altura: info.height };
     } catch (err) {
-        printError('/notes: imagem fora do PDF:', err.message);
+        printError('/notes: image left out of the PDF:', err.message);
         return null;
     }
 }
@@ -959,13 +959,13 @@ async function checkNotes() {
             await sendToDestinations(destinations,
                 t('notes.alert.fired', { id: n.id, text: n.text, date: formatData(n.created_at) }),
                 { assunto: t('notes.subject.alert', { id: n.id, text: summarizeText(n.text, 60) }), opcoes: WITHOUT_PREVIEW }
-            ).catch(err => printError('/notes -alert: falha ao avisar:', err.message));
+            ).catch(err => printError('/notes -alert: failed to notify:', err.message));
 
-            printInfo(`/notes -alert disparado: #${n.id}` +
+            printInfo(`/notes -alert triggered: #${n.id}` +
                 (destinations.length ? ` → ${destinations.map(d => d.email ?? d.id).join(', ')}` : ''));
         }
     } catch (err) {
-        printError('Erro ao verificar os alertas do /notes:', err.message);
+        printError('Error checking the /notes alerts:', err.message);
     } finally {
         checking = false;
     }

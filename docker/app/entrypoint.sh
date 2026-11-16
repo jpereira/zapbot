@@ -2,7 +2,7 @@
 export UID=$(id -u)
 export GID=$(id -g)
 
-echo "Iniciando com UID=$UID e GID=$GID"
+echo "Starting with UID=$UID e GID=$GID"
 
 # cleanup
 rm -vf \

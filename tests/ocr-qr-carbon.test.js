@@ -224,7 +224,7 @@ describe('/profile -set', () => {
     });
 
     test('no grupo troca a foto do grupo; nos outros chats, a da conta', async () => {
-        assert.deepEqual(await bot.replyAlt('/profile -set', { citada: photo() }), ['✅ Foto do grupo trocada.']);
+        assert.deepEqual(await bot.replyAlt('/profile -s', { citada: photo() }), ['✅ Foto do grupo trocada.']);
         assert.deepEqual(await bot.replyAlt('/profile -s', { chat: OWNER.jid, citada: photo({ chat: OWNER.jid }) }), ['✅ A foto do seu perfil foi trocada.']);
         assert.deepEqual(swapped.map(([who, media]) => [who, media.data]), [['grupo', 'QUJD'], ['conta', 'QUJD']]);
     });
@@ -236,8 +236,8 @@ describe('/profile -set', () => {
 
     test('o WhatsApp recusando (não é admin), sem imagem e erro', async () => {
         group.setPicture = async () => false;
-        assert.match((await bot.replyAlt('/profile -set', { citada: photo() }))[0], /^🚫 O WhatsApp não me deixou trocar a foto do grupo/);
-        assert.match((await bot.replyAlt('/profile -set'))[0], /^Responda uma imagem com \/profile -set/);
+        assert.match((await bot.replyAlt('/profile -s', { citada: photo() }))[0], /^🚫 O WhatsApp não me deixou trocar a foto do grupo/);
+        assert.match((await bot.replyAlt('/profile -s'))[0], /^Responda uma imagem com \/profile -s/);
 
         group.setPicture = async () => { throw new Error('boom'); };
         const [r] = await bot.executar('/profile -set', { citada: photo(), erroEsperado: true });

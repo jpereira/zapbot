@@ -43,7 +43,7 @@ async function cleanCacheOld(
         const old = await dbAll(`SELECT media_path FROM messages WHERE ${deadlineOutside}`, [limitMedia]);
         for (const row of old) {
             if (mediaIsPath(row.media_path) && fs.existsSync(row.media_path)) {
-                printInfo(`Removendo ${row.media_path}`);
+                printInfo(`Removing ${row.media_path}`);
                 fs.unlinkSync(row.media_path);
             }
         }
@@ -53,17 +53,17 @@ async function cleanCacheOld(
 
         for (const row of rows) {
             if (mediaIsPath(row.media_path) && fs.existsSync(row.media_path)) {
-                printInfo(`Removendo ${row.media_path}`);
+                printInfo(`Removing ${row.media_path}`);
                 fs.unlinkSync(row.media_path);
             }
         }
 
         const res = await dbRun(`DELETE FROM messages WHERE ${filter}`, params);
         if (res.changes > 0) {
-            printInfo(`Limpeza: ${res.changes} registros antigos limpos.`);
+            printInfo(`Cleanup: ${res.changes} old records cleared.`);
         }
     } catch (err) {
-        printError('Erro na limpeza do cache:', err.message);
+        printError('Cache cleanup error:', err.message);
     }
 }
 
@@ -127,7 +127,7 @@ async function cleanMedia() {
     }
 
     const { changes } = await dbRun('UPDATE messages SET media_path = NULL WHERE media_path IS NOT NULL');
-    printInfo(`/cache -media: ${files} arquivos (${bytes} bytes) apagados de ${MEDIA_DIR}; ${changes} mensagens sem mídia`);
+    printInfo(`/cache -media: ${files} files (${bytes} bytes) deleted from ${MEDIA_DIR}; ${changes} messages without media`);
 
     return { arquivos: files, bytes };
 }
@@ -141,10 +141,10 @@ async function cleanEditedOld() {
             [Date.now() - getSetting('cache.editedRetentionDays') * DAY_MS]);
 
         if (res.changes > 0) {
-            printInfo(`Limpeza: ${res.changes} edições antigas removidas.`);
+            printInfo(`Cleanup: ${res.changes} old edits removed.`);
         }
     } catch (err) {
-        printError('Erro na limpeza das editadas:', err.message);
+        printError('Edited-messages cleanup error:', err.message);
     }
 }
 
@@ -161,10 +161,10 @@ async function cleanReactionsOld() {
         await dbRun('DELETE FROM reactions WHERE reacted_at < ?', [limitAlt]);
 
         if (res.changes > 0) {
-            printInfo(`Limpeza: ${res.changes} reações antigas removidas.`);
+            printInfo(`Cleanup: ${res.changes} old reactions removed.`);
         }
     } catch (err) {
-        printError('Erro na limpeza das reações:', err.message);
+        printError('Reactions cleanup error:', err.message);
     }
 }
 
@@ -177,10 +177,10 @@ async function cleanStatsOld() {
         const res = await dbRun('DELETE FROM stats WHERE day < ?', [day]);
 
         if (res.changes > 0) {
-            printInfo(`Limpeza: ${res.changes} contadores antigos do /stats removidos.`);
+            printInfo(`Cleanup: ${res.changes} old /stats counters removed.`);
         }
     } catch (err) {
-        printError('Erro na limpeza do /stats:', err.message);
+        printError('/stats cleanup error:', err.message);
     }
 }
 
@@ -194,10 +194,10 @@ async function cleanPollsOld() {
         const res = await dbRun('DELETE FROM polls WHERE created_at < ?', [limitAlt]);
 
         if (res.changes > 0) {
-            printInfo(`Limpeza: ${res.changes} enquetes antigas removidas.`);
+            printInfo(`Cleanup: ${res.changes} old polls removed.`);
         }
     } catch (err) {
-        printError('Erro na limpeza das enquetes:', err.message);
+        printError('Polls cleanup error:', err.message);
     }
 }
 
@@ -212,9 +212,9 @@ async function cleanIgnoredOld() {
         const res = await dbRun('DELETE FROM mute_hits WHERE at < ?', [limitAlt]);
         const notices = await dbRun('DELETE FROM alerts WHERE created_at < ?', [limitAlt]);
         const total = res.changes + notices.changes;
-        if (total > 0) printInfo(`Limpeza: ${total} registros antigos do /mute removidos.`);
+        if (total > 0) printInfo(`Cleanup: ${total} old /mute records removed.`);
     } catch (err) {
-        printError('Erro na limpeza do /mute:', err.message);
+        printError('/mute cleanup error:', err.message);
     }
 }
 
@@ -227,10 +227,10 @@ async function cleanWatchOld() {
             [Date.now() - getSetting('watch.hitsRetentionDays') * DAY_MS]);
 
         if (res.changes > 0) {
-            printInfo(`Limpeza: ${res.changes} ocorrências antigas do /watch removidas.`);
+            printInfo(`Cleanup: ${res.changes} old /watch occurrences removed.`);
         }
     } catch (err) {
-        printError('Erro na limpeza do /watch:', err.message);
+        printError('/watch cleanup error:', err.message);
     }
 }
 

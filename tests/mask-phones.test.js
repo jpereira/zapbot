@@ -98,7 +98,7 @@ describe('-mask / -m', () => {
         textMasked((await bot.replyAlt('/bot -list-users -mask'))[0]);
         textMasked((await bot.replyAlt('/bot -mask'))[0]);
         assert.ok(bot.getSetting('bot.users').includes(`${PHONE}:${bot.GROUP}`));
-        assert.ok((await bot.replyAlt('/bot -list-users'))[0].includes(PHONE));
+        assert.ok((await bot.replyAlt('/bot -lu'))[0].includes(PHONE));
     });
 
     test('execuções concorrentes mantêm a máscara isolada por mensagem', async () => {

@@ -29,7 +29,7 @@ async function cmdEverybody({ msg, senderContact }) {
     }
 
     if (!mentions.length) {
-        printDebug('Nenhum outro participante encontrado para marcar.');
+        printDebug('No other participant found to mention.');
         return;
     }
 
@@ -40,7 +40,7 @@ async function cmdEverybody({ msg, senderContact }) {
         });
         printSuccess('/everybody responded OK');
     } catch (replyError) {
-        printError('Erro interno do WhatsApp Web ao processar menções:', replyError.message);
+        printError('WhatsApp Web internal error while processing mentions:', replyError.message);
     }
 }
 

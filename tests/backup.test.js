@@ -159,7 +159,7 @@ describe('/backup', () => {
         assert.equal((await listBackups()).length, 1);
         assert.deepEqual(await bot.replyAlt('/backup -rm all'), ['🗑️ 1 backup removido.']);
         assert.equal((await names()).length, 0);
-        assert.deepEqual(await bot.replyAlt('/backup -l'), ['💾 Nenhum backup ainda. Crie um com /backup -now']);
+        assert.deepEqual(await bot.replyAlt('/backup -l'), ['💾 Nenhum backup ainda. Crie um com /backup -n']);
     });
 
     test('-s -to e-mails: anexo pelo SMTP do bot; "email" usa o QRCODE_EMAIL_SMTP_TO; a forma antiga vale', async () => {
@@ -203,7 +203,7 @@ describe('/backup', () => {
         await createBackup();
 
         const [notice] = await bot.replyAlt('/backup -s -to /Fulano/');
-        assert.match(notice, /^⚠️ O backup tem o banco inteiro: .*\nPara enviar mesmo em 👤 Fulano, repita com -yes: \/backup -send -to Fulano -yes$/);
+        assert.match(notice, /^⚠️ O backup tem o banco inteiro: .*\nPara enviar mesmo em 👤 Fulano, repita com -yes: \/backup -s -to Fulano -yes$/);
 
         const r = await bot.executar('/backup -s 1 -to +5521911111111 -yes');
         assert.equal(r[0].chatId, bot.OTHERAlt.jid);
@@ -224,7 +224,7 @@ describe('/backup', () => {
         await createBackup();
 
         const [notice] = await bot.replyAlt('/backup -s -to /Fulano/ -to /Grupo L200/ -to /Fulano/');
-        assert.match(notice, /\nPara enviar mesmo em 👤 Fulano, 👥 Grupo sobre L200, repita com -yes: \/backup -send -to Fulano -to \/Grupo L200\/ -to Fulano -yes$/);
+        assert.match(notice, /\nPara enviar mesmo em 👤 Fulano, 👥 Grupo sobre L200, repita com -yes: \/backup -s -to Fulano -to \/Grupo L200\/ -to Fulano -yes$/);
 
         const r = await bot.executar('/backup -s -to Fulano -to /Grupo L200/ -yes');
         assert.deepEqual(r.slice(0, 2).map(e => e.chatId), [bot.OTHERAlt.jid, L200]);
@@ -261,7 +261,7 @@ describe('/backup', () => {
     });
 
     test('só o dono', async () => {
-        assert.deepEqual(await bot.replyAlt('/backup -now', { de: bot.OTHERAlt.jid }), []);
+        assert.deepEqual(await bot.replyAlt('/backup -n', { de: bot.OTHERAlt.jid }), []);
     });
 });
 
@@ -373,7 +373,7 @@ describe('backup diário', () => {
             const b = await checkBackupDaily(day(i + 1, 3));
             assert.ok(fs.existsSync(b.arquivo));
             assert.deepEqual(bot.client.enviadas, []);
-            assert.match(bot.errorsInLog(beforeAlt).join('\n'), /Envio do backup diário falhou/);
+            assert.match(bot.errorsInLog(beforeAlt).join('\n'), /Sending the daily backup failed/);
             assert.equal(await checkBackupDaily(day(i + 1, 4)), null);
         }
     });
@@ -430,7 +430,7 @@ describe('backup diário', () => {
         try {
             const logBefore = bot.logs.length;
             assert.equal(await checkBackupDaily(day(1, 4)), null);
-            assert.match(bot.errorsInLog(logBefore).join('\n'), /Backup diário falhou/);
+            assert.match(bot.errorsInLog(logBefore).join('\n'), /Daily backup failed/);
         } finally {
             fs.rmSync(BACKUP_DIR, { force: true });
         }

@@ -31,7 +31,7 @@ function installClosing() {
             if (closing) return;
             closing = true;
 
-            printInfo(`🛑 ${signalAlt} recebido, encerrando.`);
+            printInfo(`🛑 ${signalAlt} received, shutting down.`);
             await leaveAlertBefore('🛑 Bot encerrado', `Sinal ${signalAlt} (docker stop/restart ou Ctrl+C).`, 5000);
             process.exit(0);
         });

@@ -109,7 +109,7 @@ async function sendBackupAutomatic(b, valueAlt) {
             .catch(err => failures.push(`${describeDestination(d)}: ${err.message}`));
     }
     if (failures.length) throw new Error(failures.join('; '));
-    printInfo(`Backup diário ${b.nome} enviado para ${valueAlt}`);
+    printInfo(`Daily backup ${b.nome} sent to ${valueAlt}`);
 }
 
 // Database tables (without SQLite's internal ones)
@@ -205,7 +205,7 @@ async function createBackup(reasonAlt = REASONS.manual, nowAlt = Date.now()) {
             { criadoEm: nowAlt, motivo: reasonAlt, versao: versionWithCommit(), bytesBanco: bytesDb, entradas: inputs, imagens: images.length },
             { spaces: 2 });
 
-        printInfo(`Backup ${nameAlt} criado (${reasonAlt})`);
+        printInfo(`Backup ${nameAlt} created (${reasonAlt})`);
     } finally {
         await fs.remove(copy);
     }
@@ -221,7 +221,7 @@ async function applyRetention() {
 
     for (const b of disposable.slice(keep)) {
         await removeBackup(b);
-        printInfo(`Backup ${b.nome} removido (retenção: ${keep})`);
+        printInfo(`Backup ${b.nome} removed (retention: ${keep})`);
     }
 }
 
@@ -285,7 +285,7 @@ async function restoreBackup(b) {
     }
 
     await loadSettings();
-    printInfo(`Backup ${b.nome} restaurado (o estado anterior ficou em ${security.nome})`);
+    printInfo(`Backup ${b.nome} restored (the previous state is in ${security.nome})`);
 
     return { seguranca: security, entradas: await countInputs() };
 }
@@ -319,14 +319,14 @@ async function checkBackupDaily(nowAlt = Date.now()) {
             try {
                 await sendBackupAutomatic(b, destination);
             } catch (err) {
-                printError('Envio do backup diário falhou:', err.message);
+                printError('Sending the daily backup failed:', err.message);
                 await alertPerEmail(t('adm.backup.sendFailAlertSubject'),
                     t('adm.backup.sendFailAlert', { nome: b.nome, erro: err.message }));
             }
         }
         return b;
     } catch (err) {
-        printError('Backup diário falhou:', err.message);
+        printError('Daily backup failed:', err.message);
         alertPerEmail(t('adm.backup.failAlertSubject'), t('adm.backup.failAlert', { erro: err.message }));
         return null;
     } finally {

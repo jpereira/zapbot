@@ -51,7 +51,7 @@ describe('/bot -status', () => {
         assert.match(r, /📸 \*Status apagados:\* 1\n/);
         assert.match(r, /🔇 \*Ignoradas \(\/mute\):\* 1 _\(apagadas 1\)_ · 1 silenciado\n/);
         assert.match(r, /💾 \*Último backup:\* nenhum/);
-        assert.match(r, /\n\n🔕 Status diário desligado\.\n💡 _Ligue com \/bot -status 06h \(no horário que quiser\)\._\n\nℹ️ _Mais informações em \/bot -h_$/);
+        assert.match(r, /\n\n🔕 Status diário desligado\.\n💡 _Ligue com \/bot -s 06h \(no horário que quiser\)\._\n\nℹ️ _Mais informações em \/bot -h_$/);
     });
 
     test('com o aviso desligado, a linha diz como ligar de novo', async () => {
@@ -70,7 +70,7 @@ describe('/bot -status', () => {
         const [r] = await bot.replyAlt('/bot -status 06h');
         assert.match(r, /^⏰ \*Status diário:\* todo dia às \*06:00\*, no seu privado\.\n📅 Próximo: [a-zá]{3} \d\d\/\d\d 06:00$/);
 
-        assert.match((await bot.replyAlt('/bot -status'))[0], /\n\n⏰ \*Status diário:\* todo dia às \*06:00\*, no seu privado\.\n📅 Próximo: [a-zá]{3} \d\d\/\d\d 06:00\n💡 _Mude com \/bot -status <hora> ou desligue com \/bot -status off\._\n\nℹ️ _Mais informações em \/bot -h_$/);
+        assert.match((await bot.replyAlt('/bot -s'))[0], /\n\n⏰ \*Status diário:\* todo dia às \*06:00\*, no seu privado\.\n📅 Próximo: [a-zá]{3} \d\d\/\d\d 06:00\n💡 _Mude com \/bot -s <hora> ou desligue com \/bot -s off\._\n\nℹ️ _Mais informações em \/bot -h_$/);
 
         // Does not appear in the /cron schedule, nor count toward the limit
         assert.match((await bot.replyAlt('/cron'))[0], /📅 Nada agendado/);
@@ -98,11 +98,11 @@ describe('/bot -status', () => {
         await bot.replyAlt('/cron -rm all');
         assert.equal((await bot.dbAll("SELECT * FROM schedules WHERE kind = 'status'")).length, 1);
 
-        assert.deepEqual(await bot.replyAlt('/bot -status off'), ['🔕 Status diário desligado.']);
-        assert.deepEqual(await bot.replyAlt('/bot -status OFF'), ['ℹ️ O status diário já estava desligado.']);
+        assert.deepEqual(await bot.replyAlt('/bot -s off'), ['🔕 Status diário desligado.']);
+        assert.deepEqual(await bot.replyAlt('/bot -s OFF'), ['ℹ️ O status diário já estava desligado.']);
         assert.match((await bot.replyAlt('/bot -s'))[0], /🔕 Status diário desligado/);
-        assert.match((await bot.replyAlt('/bot -status 25h'))[0], /❌ Não entendi a hora/);
-        assert.match((await bot.replyAlt('/bot -on -status'))[0], /❌ O -status não combina com as outras opções/);
+        assert.match((await bot.replyAlt('/bot -s 25h'))[0], /❌ Não entendi a hora/);
+        assert.match((await bot.replyAlt('/bot -on -s'))[0], /❌ O -status não combina com as outras opções/);
         assert.equal(bot.getSetting('bot.paused'), false);
     });
 
@@ -144,7 +144,7 @@ describe('/bot -status', () => {
     });
 
     test('só o dono', async () => {
-        assert.deepEqual(await bot.replyAlt('/bot -status', { de: OTHERAlt.jid, chat: GROUP }), []);
+        assert.deepEqual(await bot.replyAlt('/bot -s', { de: OTHERAlt.jid, chat: GROUP }), []);
         assert.deepEqual(await bot.replyAlt('/status'),
             ["⚠️ Comando '/status' desconhecido, tente: /help"], 'o /status virou /bot -status');
     });

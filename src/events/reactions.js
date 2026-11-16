@@ -103,7 +103,7 @@ async function registerReactionUndone({ chave: keyAlt, sender, antes: beforeAlt,
     // The same change notified again: already saved and notified
     if (!res.changes) return;
 
-    printInfo(`[Reaction] ${nameSender} ${fresh ? `trocou ${beforeAlt.reaction} por ${fresh}` : `removeu ${beforeAlt.reaction}`} em ${row.chat_name}`);
+    printInfo(`[Reaction] ${nameSender} ${fresh ? `changed ${beforeAlt.reaction} to ${fresh}` : `removed ${beforeAlt.reaction}`} in ${row.chat_name}`);
 
     // /mute: this chat's or this person's notice is muted (the reaction stays saved for /show -r)
     const senders = [sender, phoneAlt, numberAlt];
@@ -142,7 +142,7 @@ client.on('message_reaction', async (reaction) => {
 
         await registerReactionUndone({ chave: keyAlt, sender, antes: beforeAlt, nova: fresh, quando: when });
     } catch (err) {
-        printError('[Reaction] Erro ao processar reação:', err.message);
+        printError('[Reaction] Error processing the reaction:', err.message);
     }
 });
 

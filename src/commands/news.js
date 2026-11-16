@@ -83,7 +83,7 @@ async function cmdNews({ msg, opts }) {
 
     results.forEach((r, i) => {
         if (r.status === 'fulfilled') bySource.push(r.value);
-        else printError(`/news: feed ${feeds[i]} falhou:`, r.reason?.message);
+        else printError(`/news: feed ${feeds[i]} failed:`, r.reason?.message);
     });
 
     // Each source takes at most its slice: otherwise the one that publishes more takes the whole list

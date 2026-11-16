@@ -61,7 +61,7 @@ const { markDbReady } = require('./src/db');
 const { initializeDb } = require('./src/initialization');
 
 initializeDb().then(markDbReady).catch((e) => {
-    console.error('Bootstrap Erro:', e);
+    console.error('Bootstrap error:', e);
     process.exit(1);
 });
 

@@ -67,13 +67,13 @@ test('falha segue adiante; com -stop, para no primeiro erro', async () => {
 });
 
 test('-quiet (-q): executa tudo e não responde o resumo; o -dry continua mostrando', async () => {
-    assert.deepEqual(await bot.replyAlt('/batch -quiet\n/notes #t um\n/notes -rm 99\n/notes #t dois'), []);
+    assert.deepEqual(await bot.replyAlt('/batch -q\n/notes #t um\n/notes -rm 99\n/notes #t dois'), []);
     assert.deepEqual((await notes()).map(n => n.text), ['um', 'dois']);
 
-    assert.deepEqual(await bot.replyAlt('/batch -q -stop\n/notes #t três'), []);
+    assert.deepEqual(await bot.replyAlt('/batch -q -s\n/notes #t três'), []);
     assert.equal((await notes()).length, 3);
 
-    assert.match((await bot.replyAlt('/batch -q -dry\n/notes #t quatro'))[0], /só a separação/);
+    assert.match((await bot.replyAlt('/batch -q -d\n/notes #t quatro'))[0], /só a separação/);
 });
 
 test('alias de texto, comando de consulta e a mensagem respondida', async t => {

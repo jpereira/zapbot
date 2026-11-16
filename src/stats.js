@@ -38,7 +38,7 @@ async function countStats({ chatId, chatName, isGroup, senderId, senderName, qua
             deleted     = stats.deleted + excluded.deleted,
             edited      = stats.edited + excluded.edited`,
         [chatId, chatName, isGroup ? 1 : 0, day, hour, senderId, senderName, v.msgs, v.media, v.deleted, v.edited]
-    ).catch(err => printError('/stats: erro ao contar:', err.message));
+    ).catch(err => printError('/stats: error counting:', err.message));
 }
 
 // Your messages count for your number (in any chat)

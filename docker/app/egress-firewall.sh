@@ -25,13 +25,13 @@ if [ "${ZAPBOT_EGRESS_FIREWALL:-0}" != "1" ]; then
 fi
 
 if ! command -v iptables >/dev/null 2>&1; then
-    echo "⚠️  egress-firewall: iptables ausente na imagem; egresso NÃO filtrado" >&2
+    echo "⚠️  egress-firewall: iptables missing from the image; egress NOT filtered" >&2
     return 0 2>/dev/null || exit 0
 fi
 
 # Without NET_ADMIN iptables fails; detects early so as not to bring down the boot
 if ! iptables -L OUTPUT -n >/dev/null 2>&1; then
-    echo "⚠️  egress-firewall: sem NET_ADMIN (cap_add); egresso NÃO filtrado" >&2
+    echo "⚠️  egress-firewall: no NET_ADMIN (cap_add); egress NOT filtered" >&2
     return 0 2>/dev/null || exit 0
 fi
 
@@ -55,7 +55,7 @@ fe80::/10
 ff00::/8
 "
 
-echo "🔒 egress-firewall: bloqueando egresso para faixas internas"
+echo "🔒 egress-firewall: blocking egress to internal ranges"
 
 # Allows replies to connections the container itself started and local traffic
 iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
@@ -76,4 +76,4 @@ if command -v ip6tables >/dev/null 2>&1 && ip6tables -L OUTPUT -n >/dev/null 2>&
     done
 fi
 
-echo "🔒 egress-firewall: ativo"
+echo "🔒 egress-firewall: active"

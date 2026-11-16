@@ -880,9 +880,9 @@ async function migrateSettingsRenamed() {
         if (!current || current.value === JSON.stringify(SETTINGS_SCHEMA[freshAlt].default)) {
             await dbRun(`INSERT INTO settings (key, value) VALUES (?, ?)
                          ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP`, [freshAlt, oldAlt.value]);
-            printInfo(`Setting '${oldAlt2}' renomeado para '${freshAlt}': o valor salvo foi mantido`);
+            printInfo(`Setting '${oldAlt2}' renamed to '${freshAlt}': the saved value was kept`);
         } else {
-            printInfo(`Setting '${oldAlt2}' renomeado para '${freshAlt}': o '${freshAlt}' já tinha valor, o antigo foi descartado`);
+            printInfo(`Setting '${oldAlt2}' renamed to '${freshAlt}': '${freshAlt}' already had a value, the old one was discarded`);
         }
 
         await dbRun('DELETE FROM settings WHERE key = ?', [oldAlt2]);
@@ -901,9 +901,9 @@ async function migrateModeAdmin() {
     const users = await dbGet("SELECT value FROM settings WHERE key = 'bot.users'");
     if (!users && JSON.parse(mode.value) === false) {
         await dbRun("INSERT INTO settings (key, value) VALUES ('bot.users', ?)", [JSON.stringify(['all'])]);
-        printInfo("Setting 'bot.adminMode' (desligado) virou 'bot.users' = true: todos usam os comandos comuns");
+        printInfo("Setting 'bot.adminMode' (off) became 'bot.users' = true: everyone uses the common commands");
     } else {
-        printInfo("Setting 'bot.adminMode' removido: quem usa os comandos comuns agora é o 'bot.users'");
+        printInfo("Setting 'bot.adminMode' removed: who uses the common commands is now 'bot.users'");
     }
 
     await dbRun("DELETE FROM settings WHERE key = 'bot.adminMode'");
@@ -919,7 +919,7 @@ async function loadSettings() {
 
     for (const row of await dbAll('SELECT key, value FROM settings')) {
         if (!SETTINGS_SCHEMA[row.key]) {
-            printInfo(`Setting '${row.key}' desconhecido, ignorado.`);
+            printInfo(`Setting '${row.key}' unknown, ignored.`);
             continue;
         }
 
@@ -930,10 +930,10 @@ async function loadSettings() {
             if (list) {
                 // E.g.: commands.disabled with a command that no longer exists (/status): the others stay
                 settings.set(row.key, list);
-                printError(`Setting '${row.key}' com item inválido (${e.message}), ignorado: ${list.join(',') || '(vazio)'}`);
+                printError(`Setting '${row.key}' with an invalid item (${e.message}), ignored: ${list.join(',') || '(empty)'}`);
                 continue;
             }
-            printError(`Setting '${row.key}' inválido (${e.message}), usando o padrão.`);
+            printError(`Setting '${row.key}' invalid (${e.message}), using the default.`);
         }
     }
 
@@ -961,7 +961,7 @@ function envOuSetting(env, key) {
     try {
         return validateSetting(key, valueAlt);
     } catch (e) {
-        printError(`${env} inválido (${e.message}), usando o setting '${key}'.`);
+        printError(`${env} invalid (${e.message}), using the setting '${key}'.`);
         return getSetting(key);
     }
 }

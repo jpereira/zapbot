@@ -453,16 +453,16 @@ async function triggerItem(s, nowAlt) {
         const destinations = statusDestinations(s);
         const textAlt = await statusText(nowAlt);
         await sendToDestinations(destinations, textAlt, { assunto: t('adm.agenda.statusSubject') })
-            .catch(err => printError('/bot -status: falha ao enviar:', err.message));
-        printInfo(`/bot -status: enviado para ${destinations.length ? destinations.map(d => d.email ?? d.id).join(', ') : 'seu privado'}` +
-            (late ? ' (atrasado)' : ''));
+            .catch(err => printError('/bot -status: failed to send:', err.message));
+        printInfo(`/bot -status: sent to ${destinations.length ? destinations.map(d => d.email ?? d.id).join(', ') : 'your private chat'}` +
+            (late ? ' (late)' : ''));
         return;
     }
 
     // A destination that fails does not hold up the others
     for (const d of itemDestinations(s)) {
         await itemSendOnDestination(s, d, late)
-            .catch(err => printError(`${TYPES[s.kind]?.cmd}: falha ao enviar ${s.id} para ${whereInLog(d)}:`, err.message));
+            .catch(err => printError(`${TYPES[s.kind]?.cmd}: failed to send ${s.id} to ${whereInLog(d)}:`, err.message));
     }
 }
 
@@ -485,9 +485,9 @@ async function itemSendOnDestination(s, d, late) {
     }
     await sendMedia(d.id, mediaAltAlt);
 
-    printInfo(`${TYPES[s.kind]?.cmd}: enviado para ${whereInLog(d)}` +
-        (commands.length ? `, com ${commands.map(c => `{${c}}`).join(', ')}` : '') +
-        `${late ? ' (atrasado)' : ''}${s.repeat ? ` (${s.repeat})` : ''}`);
+    printInfo(`${TYPES[s.kind]?.cmd}: sent to ${whereInLog(d)}` +
+        (commands.length ? `, with ${commands.map(c => `{${c}}`).join(', ')}` : '') +
+        `${late ? ' (late)' : ''}${s.repeat ? ` (${s.repeat})` : ''}`);
 }
 
 /*
@@ -506,10 +506,10 @@ async function checkSchedule() {
         const expiredAlt3 = await dbAll('SELECT * FROM schedules WHERE due_at <= ? AND paused = 0 ORDER BY due_at, id', [nowAlt]);
 
         for (const s of expiredAlt3) {
-            await triggerItem(s, nowAlt).catch(err => printError(`${TYPES[s.kind]?.cmd ?? s.kind}: falha ao enviar ${s.id}:`, err.message));
+            await triggerItem(s, nowAlt).catch(err => printError(`${TYPES[s.kind]?.cmd ?? s.kind}: failed to send ${s.id}:`, err.message));
         }
     } catch (err) {
-        printError('Erro ao verificar a agenda:', err.message);
+        printError('Error checking the schedule:', err.message);
     } finally {
         checking = false;
     }

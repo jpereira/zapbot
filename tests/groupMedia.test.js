@@ -126,7 +126,7 @@ describe('/poll', () => {
         assert.equal(p.pollName, 'Quais dias?');
         assert.equal(p.pollOptions.length, 3);
         assert.equal(p.options.allowMultipleAnswers, true);
-        assert.equal((await pollAlt('/poll -multi A? | 1 | 2')).options.allowMultipleAnswers, true);
+        assert.equal((await pollAlt('/poll -m A? | 1 | 2')).options.allowMultipleAnswers, true);
     });
 
     test('-m no meio faz parte da pergunta', async () => {

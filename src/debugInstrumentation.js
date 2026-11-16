@@ -27,13 +27,13 @@ function wrap(fn, nameAlt, level) {
         const start = Date.now();
         return withContextDebug({ profundidade: (parent.profundidade ?? 0) + 1 }, () => {
             const prefix = `${'  '.repeat(Math.min(parent.profundidade ?? 0, 12))}#${id} ${nameAlt}`;
-            printDebugLevel(level, `${prefix} início`, args);
+            printDebugLevel(level, `${prefix} start`, args);
             const end = (errorAlt, valueAlt, failed = false) => {
                 const duration = Date.now() - start;
-                printDebugLevel(level, `${prefix} ${failed ? 'erro' : 'fim'} +${duration}ms`,
+                printDebugLevel(level, `${prefix} ${failed ? 'error' : 'end'} +${duration}ms`,
                     failed ? { message: errorAlt?.message ?? errorAlt } : '');
                 if (cfg.level >= 3) {
-                    printDebugLevel(3, `${prefix} resultado`, failed ? errorAlt : valueAlt);
+                    printDebugLevel(3, `${prefix} result`, failed ? errorAlt : valueAlt);
                 }
                 if (failed) throw errorAlt;
                 return valueAlt;

@@ -70,7 +70,7 @@ describe('/help', () => {
         assert.match(r, /```\nRole: admin\n \/alias +- [^]*\n\nRole: user\n \/ascii +- /);
         assert.doesNotMatch(r, /Role: owner/);
         assert.ok(r.search(/ \/show +- /) < r.indexOf('Role: user'));
-        assert.deepEqual(await bot.replyAlt('/help -role'), [r]);
+        assert.deepEqual(await bot.replyAlt('/help -r'), [r]);
 
         const [other] = await bot.replyAlt('/help -r', { de: OTHERAlt.jid });
         assert.match(other, /```\nRole: user\n \/ascii +- /);
@@ -207,7 +207,7 @@ describe('/bot', () => {
         assert.match(r, /\n\nℹ️ _Mais informações em \/bot -h_$/);
         // The same as -status (the time and the messages, which count the command itself, separately)
         const without = (t) => t.replace(/_\S{3} [\d/: ]+_/, '').replace(/· \d+ mensage[mn]s?/, '');
-        assert.equal(without((await bot.replyAlt('/bot -status'))[0]), without(r));
+        assert.equal(without((await bot.replyAlt('/bot -s'))[0]), without(r));
     });
 
     test('-off e -on só ligam e desligam: os admins e os usuários ficam', async () => {
@@ -246,7 +246,7 @@ describe('/bot', () => {
         // Down: no note (and no error)
         cleanNews();
         bot.network.limpar();
-        assert.match((await bot.replyAlt('/bot -info'))[0], /• whatsapp-web\.js: [\d.]+ \(commit [0-9a-f]{7}\)\n/);
+        assert.match((await bot.replyAlt('/bot -i'))[0], /• whatsapp-web\.js: [\d.]+ \(commit [0-9a-f]{7}\)\n/);
         cleanNews();
     });
 
@@ -273,7 +273,7 @@ describe('/bot', () => {
         assert.equal(bot.getSetting('bot.paused'), false);
         assert.match(r, /^▶️ \*Bot:\* ativo\n[\s\S]*\n\n\*Usuários\* \(2\)\n/);
         assert.doesNotMatch(r, /fora daqui/);
-        assert.match((await bot.replyAlt('/bot -on -list-users'))[0], /\n\n\*Usuários\* \(1\) neste grupo\n/);
+        assert.match((await bot.replyAlt('/bot -on -lu'))[0], /\n\n\*Usuários\* \(1\) neste grupo\n/);
     });
 
     test('combinações inválidas mostram o uso', async () => {
@@ -368,7 +368,7 @@ describe('/set', () => {
 
     test('-append (-a) e -rm: acrescentam e tiram itens de uma lista; em outra chave, recusa e sugere o -reset', async () => {
         assert.deepEqual(await bot.replyAlt('/set -a commands.disabled noffa /ping'), ['✅ *commands.disabled* + /noffa, /ping\n= /noffa, /ping']);
-        assert.deepEqual(await bot.replyAlt('/set -append commands.disabled walissu'), ['✅ *commands.disabled* + /walissu\n= /noffa, /ping, /walissu']);
+        assert.deepEqual(await bot.replyAlt('/set -a commands.disabled walissu'), ['✅ *commands.disabled* + /walissu\n= /noffa, /ping, /walissu']);
         assert.deepEqual(await bot.replyAlt('/set -a commands.disabled noffa'), ['ℹ️ *commands.disabled* já tem /noffa.']);
         assert.deepEqual(await bot.replyAlt('/set -rm commands.disabled /ping'), ['✅ *commands.disabled* − /ping\n= /noffa, /walissu']);
         assert.match((await bot.replyAlt('/set -rm commands.disabled ping'))[0], /❌ \*commands\.disabled\* não tem \/ping/);
@@ -379,14 +379,14 @@ describe('/set', () => {
 
         assert.deepEqual(await bot.replyAlt('/set -a show.max 5'), [
             '❌ *show.max* não é uma lista: o -append vale só para chaves com várias entradas.\n' +
-            '💡 _Troque o valor com /set show.max <valor> ou volte ao padrão com /set -reset show.max (-r)._']);
+            '💡 _Troque o valor com /set show.max <valor> ou volte ao padrão com /set -r show.max._']);
         assert.match((await bot.replyAlt('/set -rm naoexiste x'))[0], /❌ Setting desconhecido: naoexiste/);
         assert.match((await bot.replyAlt('/set -a commands.disabled'))[0], /Informe o que acrescentar a \*commands\.disabled\*/);
     });
 
     test('-reset volta ao padrão; chave desconhecida', async () => {
         await bot.setSetting('show.max', 5);
-        assert.deepEqual(await bot.replyAlt('/set -reset show.max'), ['♻️ *show.max* = 20 _(padrão)_']);
+        assert.deepEqual(await bot.replyAlt('/set -r show.max'), ['♻️ *show.max* = 20 _(padrão)_']);
         assert.match((await bot.replyAlt('/set -r naoexiste'))[0], /❌ Setting desconhecido: naoexiste/);
         assert.match((await bot.replyAlt('/set naoexiste 1'))[0], /❌ Setting desconhecido: naoexiste/);
         assert.match((await bot.replyAlt('/set naoexiste'))[0], /❌ Nenhum setting com "naoexiste"/);

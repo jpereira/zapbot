@@ -67,7 +67,7 @@ async function read({ msg, quotedMsg }) {
         // The 📱 in front also guarantees the reply never starts with "/" (see markSentByBot)
         await msg.reply(textAlt ? `📱 ${textAlt}` : t('qr.notFound'));
     } catch (err) {
-        printError('/qr: não consegui ler a imagem:', err.message);
+        printError('/qr: could not read the image:', err.message);
         await msg.reply(t('qr.notFound'));
     }
 }
