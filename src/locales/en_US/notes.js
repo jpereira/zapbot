@@ -28,7 +28,7 @@ module.exports = {
     'notes.rm.noTo': `❌ -to doesn't apply when removing. It works with -list, #tag and -export (and, on -add, with -alert).`,
 
     // ---- /notes: alert time
-    'notes.when.invalid': `❌ Invalid time: "{text}"\n💡 _E.g.: +2h, 30m, 18h, amanhã 9h, sexta 18:30, 25/12 10h_`,
+    'notes.when.invalid': `❌ Invalid time: "{text}"\n💡 _E.g.: +2h, 30m, 18h, tomorrow 9h, friday 18:30, 25/12 10h_`,
     'notes.when.past': `❌ {when} has already passed.`,
     'notes.when.tooFar': `❌ At most {days} days ahead.`,
 
@@ -37,13 +37,13 @@ module.exports = {
     'notes.add.missingTag': `💡 _The #tag is missing. See the tags with /notes_`,
     'notes.add.noText': `The text is missing: /notes #tag <text>`,
     'notes.add.quotedNoText': `❌ The replied message has no text.`,
-    'notes.add.toNeedsAlert': `❌ -to only works with -alert: /notes -add <text> -alert amanhã 9h -to /Group L200/`,
+    'notes.add.toNeedsAlert': `❌ -to only works with -alert: /notes -add <text> -alert tomorrow 9h -to /L200 Group/`,
 
     // ---- /notes: -update
     'notes.update.usage': `Usage: /notes -update <id> [#tag] <new text>\n💡 _/notes -h for help_`,
 
     // ---- /notes: -alert
-    'notes.alert.toOnlyCreate': `❌ -to only works when creating the alert: /notes -alert <id|#tag> amanhã 9h -to /Group L200/`,
+    'notes.alert.toOnlyCreate': `❌ -to only works when creating the alert: /notes -alert <id|#tag> tomorrow 9h -to /L200 Group/`,
     'notes.alert.listTitle': `🔔 *NOTE ALERTS{tags}*`,
     'notes.alert.listHint': `💡 _Remove with /notes -alert -rm <id...|#tag...|all>_`,
     'notes.alert.none': `🔔 No notes with an alert.`,

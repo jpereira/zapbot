@@ -438,6 +438,7 @@ describe('/gpt', () => {
 
         const voice = bot.createMessage({ de: bot.OTHERAlt.jid, tipo: 'ptt', midia: { mimetype: 'audio/ogg; codecs=opus', data: 'QUJD' } });
         assert.deepEqual(await bot.replyAlt('/gpt agora transcreva isso', { citada: voice }), ['🤖 *Transcrição:*\nolá, tudo bem?']);
+        assert.deepEqual(await bot.replyAlt('/gpt now transcribe this', { citada: voice }), ['🤖 *Transcrição:*\nolá, tudo bem?'], 'em inglês também');
 
         const { cfg } = network.chamadas.at(-1);
         assert.equal(network.chamadas.at(-1).url, 'https://api.openai.com/v1/audio/transcriptions');

@@ -14,12 +14,12 @@ module.exports = {
         {
             argv: ['-N'],
             desc: 'Number of messages (default 10, max 50).',
-            ex: ['/search -30 boleto']
+            ex: ['/search -30 invoice']
         },
         {
             argv: ['<text>'],
             desc: 'What to search for, like the WhatsApp search (case-insensitive).',
-            ex: ['/search pix', '/search good morning']
+            ex: ['/search refund', '/search good morning']
         },
         {
             opts: ['all', 'a'],
@@ -37,7 +37,7 @@ module.exports = {
             opts: ['mask', 'm'],
             values: [],
             desc: 'Obfuscates phone numbers in the output (e.g. +55219****44).',
-            ex: ['/search -m pix']
+            ex: ['/search -m refund']
         }
     ],
     mask: true,

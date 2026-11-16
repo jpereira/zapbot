@@ -52,7 +52,7 @@ module.exports = {
                 '-to you@example.com',
                 '-to /Jorge Pereira/',
                 '-to @John (mention)',
-                '-to /Grupo L200/',
+                '-to /L200 Group/',
                 '-to +5521999999999'
             ]
         }

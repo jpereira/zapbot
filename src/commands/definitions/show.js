@@ -43,7 +43,7 @@ module.exports = {
             opts: ['query', 'q'],
             values: ['<text|/regex/flags>'],
             desc: 'Searches for the ones that contain the text (case- and accent-insensitive) or that match the /regex/flags. In this chat, in the requested chat or, in your private chat, in all of them. Without -N: the 5 most recent. With spaces, use quotes.',
-            ex: ['/show -q pix', '/show -e -q "bom dia"', '/show -5 -q /pix|boleto/i']
+            ex: ['/show -q refund', '/show -e -q "good morning"', '/show -5 -q /refund|invoice/i']
         },
         {
             argv: ['-N'],

@@ -9,9 +9,9 @@ module.exports = {
     usage: '/cron <when> [OPTION] <text>  or  /cron -edit <n> [when] [text]',
     aliases: [],
     summary: 'Schedules a text or command for a set time',
-    help: 'At the set time, sends the text as if you typed it (in the current chat or the -to one) or, with -reminder, a ⏰ Lembrete in this chat or in your private chat (-private). In the text, {/command args} runs at send time and the reply takes its place (query commands only: /crypto, /rates, /weather...). A typed \\n becomes a line break.',
+    help: 'At the set time, sends the text as if you typed it (in the current chat or the -to one) or, with -reminder, a ⏰ Reminder in this chat or in your private chat (-private). In the text, {/command args} runs at send time and the reply takes its place (query commands only: /crypto, /rates, /weather...). A typed \\n becomes a line break.',
     ex: [
-        '/cron 09h -r d -to /Família/ Good morning! {/crypto BTC}',
+        '/cron 09h -r d -to /Family/ Good morning! {/crypto BTC}',
         '/cron 8h -r d Orca {/defi orca}\\n Prjx {/defi prjx}'
     ],
     cmd_opts: [
@@ -24,7 +24,7 @@ module.exports = {
         {
             opts: ['reminder', 'rem'],
             values: [],
-            desc: 'Reminder mode: ⏰ Lembrete replying to the command message.'
+            desc: 'Reminder mode: ⏰ Reminder replying to the command message.'
         },
         {
             opts: ['list', 'l'],
@@ -68,7 +68,7 @@ module.exports = {
             ex: [
                 '-to /Jorge Pereira/',
                 '-to @Fulano (mention)',
-                '-to /Grupo L200/ -to /Família/',
+                '-to /L200 Group/ -to /Family/',
                 '-to +5521999999999'
             ]
         },

@@ -94,7 +94,7 @@ module.exports = {
             ex: [
                 '-to /Jorge Pereira/',
                 '-to @Fulano (mention)',
-                '-to /Grupo L200/ -to /Família/',
+                '-to /L200 Group/ -to /Family/',
                 '-to +5521999999999',
                 '-to email (the QRCODE_EMAIL_SMTP_TO)',
                 '-to you@example.com'

@@ -1,5 +1,5 @@
 /*
- * /bills: Draws 2 group members to pay a bill
+ * /bills: Draws 2 group members to pay an invoice
  */
 
 const { USER } = require('../../roles').ROLES;

@@ -9,7 +9,7 @@ module.exports = {
     usage: '/profile [/contact/|@mention|+number]...  or  /profile -set|-s',
     aliases: [],
     summary: 'A contact\'s profile picture',
-    help: 'A contact\'s profile picture, with the caption Contato: name in your address book <phone>. With nobody, shows the one of the person in the private chat (in your own private chat, yours) or, in a group, the group picture; replying to a message, the one of whoever wrote it. With no picture, or with the picture hidden by the contact\'s privacy, only the text is sent. With -set, changes the picture: the group\'s (in a group, if you are an admin of it) or your account\'s (in any other chat).',
+    help: 'A contact\'s profile picture, with the caption Contact: name in your address book <phone>. With nobody, shows the one of the person in the private chat (in your own private chat, yours) or, in a group, the group picture; replying to a message, the one of whoever wrote it. With no picture, or with the picture hidden by the contact\'s privacy, only the text is sent. With -set, changes the picture: the group\'s (in a group, if you are an admin of it) or your account\'s (in any other chat).',
     ex: ['/profile', '/profile /Jorge Pereira/', '/profile @Fulano', '/profile +5521999999999', '/profile -s'],
     cmd_opts: [
         {

@@ -31,7 +31,7 @@ module.exports = {
             sinais: ['+', '-'],
             values: ['[person|group...]'],
             desc: 'Adds (+u) and removes (-u) users for common commands: people, in any chat, and groups, anyone inside them. Typed in a group, the +u of a person applies only in that group (in private, they cannot use it). With nobody, the current chat: the group or the person of the private chat. Owner only.',
-            ex: ['/bot +u /Maria Lucia/ /Grupo Familia/', '/bot -u'],
+            ex: ['/bot +u /Maria Lucia/ /Family Group/', '/bot -u'],
             cron: false
         },
         {
@@ -71,7 +71,7 @@ module.exports = {
             opts: ['to'],
             values: ['<destination>'],
             desc: 'Where the report goes, instead of your private chat (with -status). A person, a group, or an email (email = the QRCODE_EMAIL_SMTP_TO); repeat for several. At the end of the report, the daily delivery shows the destinations: 👤 person, 👥 group, or 📧 email.',
-            ex: ['-to /Jorge Pereira/', '-to /Grupo Familia/ -to email'],
+            ex: ['-to /Jorge Pereira/', '-to /Family Group/ -to email'],
             cron: false
         },
         {

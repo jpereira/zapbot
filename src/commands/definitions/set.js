@@ -28,7 +28,7 @@ module.exports = {
         {
             argv: ['<snippet|/regex/>'],
             desc: 'If it is not a key: lists the keys that match.',
-            ex: ['/set alerta']
+            ex: ['/set alert']
         },
         {
             argv: ['<key> <value>'],

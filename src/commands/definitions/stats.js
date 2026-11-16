@@ -14,7 +14,7 @@ module.exports = {
             opts: ['flush', 'f'],
             values: ['</chat/>'],
             desc: 'Deletes the stats of a chat: a group, or the private chat with a person, searched by name among those that have stats.',
-            ex: ['/stats -f /Grupo Família/'],
+            ex: ['/stats -f /Family Group/'],
             cron: false,
             role: ADMIN
         },
@@ -40,13 +40,13 @@ module.exports = {
         {
             argv: ['-N'],
             desc: 'Period in days (default 7, max. stats.retentionDays). Goes before or after /chat/.',
-            ex: ['/stats -30', '/stats /Grupo Família/ -10'],
+            ex: ['/stats -30', '/stats /Family Group/ -10'],
             numero: true
         },
         {
             argv: ['</chat/>'],
             desc: 'Another chat instead of the current one: a group, or the private chat with a person, searched by name (case and accent insensitive) among those that have stats; several with the name: you pick from the list.',
-            ex: ['/stats /Grupo Família/', '/stats -10 /Família/', '/stats -me /Família/'],
+            ex: ['/stats /Family Group/', '/stats -10 /Family/', '/stats -me /Family/'],
             outrosChats: true
         }
     ],
