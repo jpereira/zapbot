@@ -105,6 +105,7 @@ module.exports = {
     'adm.backup.noBackups': '💾 No backups yet. Create one with /backup -n',
     'adm.backup.created': '💾 *Backup created*\n📄 {nome}\n📦 {tamanho}{notas}\n_{entradas}_',
     'adm.backup.createdNotes': '\n🖼️ {tamanho} of /notes images',
+    'adm.backup.createdContacts': '\n📇 {tamanho} of /contacts photos',
     'adm.backup.listTitle': '💾 *Backups* ({n})',
     'adm.backup.listHints': '💡 _/backup -i <no.> shows the entries_\n💡 _/backup -r <no.> restores_',
     'adm.backup.notFound': '❌ Backup {n} does not exist. See the list with /backup -l',
@@ -283,5 +284,17 @@ module.exports = {
     'adm.settings.length': 'must have from 1 to {max} characters',
     'adm.settings.unsupported': 'not supported: {s} (accepted: {lista})',
     'adm.settings.badType': 'invalid type in the schema: {tipo}',
-    'adm.settings.monitorMax': 'there are {n} registered contacts: remove contacts with /monitor -rm before lowering the limit'
+    'adm.settings.monitorMax': 'there are {n} registered contacts: remove contacts with /monitor -rm before lowering the limit',
+
+    'contacts.privateOnly': '🔒 /contacts only works in your own private chat (it exports your whole address book).',
+    'contacts.processing': '⏳ Processing /contacts, please wait.',
+    'contacts.error': '❌ /contacts failed: {error}',
+    'contacts.none': '📇 No contact found in the address book.',
+    'contacts.busy': '⏳ An export is already running. Wait for it to finish.',
+    'contacts.exporting': '⏳ Exporting {count} contacts, please wait. Photos are downloaded slowly, so this may take a while.',
+    'contacts.tooBig': '❌ The file would have {size}, more than WhatsApp accepts. Narrow it down with a filter.',
+    'contacts.done': '📇 {count} contacts · 🖼️ {photos} with photo ({cached} from the cache) · {size}{failed}\n💡 _Open the file on the phone to import it (UID fixed per number)._',
+    'contacts.failed': ' · ⚠️ {count} failed',
+    'contacts.cleared': '🗑️ Contact photos deleted from cache/contacts: *{count}* _({size})_',
+    'contacts.listTitle': '📇 *{count} contacts*',
 };

@@ -24,6 +24,7 @@ const MEDIA_DIR = path.join(CACHE_DIR, 'media'); // media saved to recover delet
 const TMP_DIR = path.join(CACHE_DIR, 'tmp');     // /get temporary files
 const BACKUP_DIR = path.join(CACHE_DIR, 'backups'); // database backups (/backup)
 const NOTES_DIR = path.join(CACHE_DIR, 'notes');   // note images (/notes)
+const CONTACTS_DIR = path.join(CACHE_DIR, 'contacts'); // contacts' profile photos (/contacts)
 
 // The image's (Debian); outside it, PUPPETEER_EXECUTABLE_PATH points to another
 const BIN_CHROMIUM = process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium';
@@ -42,6 +43,7 @@ const THUMBNAIL_MAX_BYTES = 10 * 1024 * 1024;
 module.exports = {
     DB_PATH,
     BACKUP_DIR,
+    CONTACTS_DIR,
     NOTES_DIR,
     BIN_CHROMIUM,
     BIN_FFMPEG,

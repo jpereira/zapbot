@@ -113,6 +113,7 @@ nav:
       - /bot: commands/bot.md
       - /cache: commands/cache.md
       - /carbon: commands/carbon.md
+      - /contacts: commands/contacts.md
       - /cron: commands/cron.md
       - /crypto: commands/crypto.md
       - /cve: commands/cve.md

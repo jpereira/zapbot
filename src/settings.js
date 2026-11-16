@@ -250,6 +250,21 @@ const SETTINGS_SCHEMA = {
             return command.cmd;
         }
     },
+    'contacts.cache': {
+        default: true,
+        type: 'boolean',
+        desc: 'Guarda as fotos de perfil baixadas pelo /contacts em cache/contacts (entram no backup). Desligado: baixa a cada exportação e não guarda nada.'
+    },
+    'contacts.cacheDays': {
+        default: 30,
+        type: 'number', min: 1, max: 365,
+        desc: 'Por quantos dias uma foto em cache/contacts vale antes de ser baixada de novo (/contacts -refresh força).'
+    },
+    'contacts.delayMs': {
+        default: 300,
+        type: 'number', min: 0, max: 5000,
+        desc: 'Pausa, em milissegundos, entre uma foto e outra no /contacts, para não consultar o WhatsApp em rajada.'
+    },
     'crypto.coins': {
         default: ['BTC', 'ETH', 'SOL', 'HYPE'],
         type: 'list',

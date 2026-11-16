@@ -105,6 +105,7 @@ module.exports = {
     'adm.backup.noBackups': '💾 Nenhum backup ainda. Crie um com /backup -n',
     'adm.backup.created': '💾 *Backup criado*\n📄 {nome}\n📦 {tamanho}{notas}\n_{entradas}_',
     'adm.backup.createdNotes': '\n🖼️ {tamanho} de imagens do /notes',
+    'adm.backup.createdContacts': '\n📇 {tamanho} de fotos do /contacts',
     'adm.backup.listTitle': '💾 *Backups* ({n})',
     'adm.backup.listHints': '💡 _/backup -i <nº> mostra as entradas_\n💡 _/backup -r <nº> restaura_',
     'adm.backup.notFound': '❌ Backup {n} não existe. Veja a lista com /backup -l',
@@ -283,5 +284,17 @@ module.exports = {
     'adm.settings.length': 'precisa ter de 1 a {max} caracteres',
     'adm.settings.unsupported': 'não suportado: {s} (aceitos: {lista})',
     'adm.settings.badType': 'tipo inválido no schema: {tipo}',
-    'adm.settings.monitorMax': 'há {n} contatos cadastrados: remova contatos pelo /monitor -rm antes de reduzir o limite'
+    'adm.settings.monitorMax': 'há {n} contatos cadastrados: remova contatos pelo /monitor -rm antes de reduzir o limite',
+
+    'contacts.privateOnly': '🔒 O /contacts só funciona no seu próprio privado (ele exporta a agenda inteira).',
+    'contacts.processing': '⏳ Processando o /contacts, aguarde.',
+    'contacts.error': '❌ O /contacts falhou: {error}',
+    'contacts.none': '📇 Nenhum contato encontrado na agenda.',
+    'contacts.busy': '⏳ Já há uma exportação em andamento. Espere terminar.',
+    'contacts.exporting': '⏳ Exportando {count} contatos, aguarde. As fotos são baixadas devagar, então pode demorar.',
+    'contacts.tooBig': '❌ O arquivo teria {size}, mais do que o WhatsApp aceita. Restrinja com um filtro.',
+    'contacts.done': '📇 {count} contatos · 🖼️ {photos} com foto ({cached} do cache) · {size}{failed}\n💡 _Abra o arquivo no celular para importar (UID fixo por número)._',
+    'contacts.failed': ' · ⚠️ {count} falharam',
+    'contacts.cleared': '🗑️ Fotos de contatos apagadas de cache/contacts: *{count}* _({size})_',
+    'contacts.listTitle': '📇 *{count} contatos*',
 };

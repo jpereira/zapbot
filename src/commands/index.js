@@ -11,6 +11,7 @@ const { cmdBot } = require('./bot');
 const { cmdCarbon } = require('./carbon');
 const { cmdCache } = require('./cache');
 const { cmdRates } = require('./rates');
+const { cmdContacts } = require('./contacts');
 const { cmdCron } = require('./cron');
 const { cmdCrypto } = require('./crypto');
 const { cmdCve } = require('./cve');
@@ -71,6 +72,7 @@ const HANDLERS = {
     '/bot': cmdBot,
     '/cache': cmdCache,
     '/carbon': cmdCarbon,
+    '/contacts': cmdContacts,
     '/cron': cmdCron,
     '/crypto': cmdCrypto,
     '/cve': cmdCve,

@@ -25,6 +25,9 @@ em português).
 | `cache.reactionRetentionDays` | 1–365 | `30` | Dias que as reações removidas ou trocadas ficam guardadas para o `/show -r` |
 | `cache.revokedRetentionDays` | 1–365 | `30` | Dias que as mensagens apagadas ficam guardadas para o `/show` |
 | `commands.disabled` | lista | *(vazia)* | Comandos desativados em tempo de execução: o bot os ignora e eles somem do `/help`. O `/set` não pode ser desativado. Nomes desconhecidos são ignorados com aviso no log; aliases válidos são normalizados |
+| `contacts.cache` | on/off | `on` | Guarda as fotos de perfil baixadas pelo `/contacts` em `cache/contacts` (entram no backup). Desligado: baixa a cada exportação e não guarda nada |
+| `contacts.cacheDays` | 1–365 | `30` | Dias que uma foto em `cache/contacts` vale antes de ser baixada de novo (`/contacts -r` força) |
+| `contacts.delayMs` | 0–5000 | `300` | Pausa, em milissegundos, entre uma foto e outra no `/contacts`, para não consultar o WhatsApp em rajada |
 | `crypto.coins` | lista | `BTC, ETH, SOL, HYPE` | Moedas do `/crypto` (só as suportadas); normalmente alterada pelo `/crypto -a`/`-d` |
 | `cve.max` | 1–20 | `10` | Quantidade de CVEs exibidas pelo `/cve` (o `/cve <max>` sobrepõe) |
 | `cve.maxDays` | 1–120 | `7` | Janela, em dias, do `/cve -highscore` |
