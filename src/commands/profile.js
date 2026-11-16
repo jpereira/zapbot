@@ -145,4 +145,4 @@ async function cmdProfile({ msg, opts, quotedMsg, chatId, isGroup }) {
     }
 }
 
-module.exports = { cmdProfile };
+module.exports = { cmdProfile, dataAlt, photoAlt };

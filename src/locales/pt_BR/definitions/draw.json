@@ -42,6 +42,18 @@
     },
     {
       "opts": [
+        "profile",
+        "p"
+      ],
+      "values": [],
+      "desc": "Junta a foto de perfil de uma ou mais pessoas às imagens enviadas ao modelo, ao lado da foto que você responde. Logo depois do -p, quantas quiser (até 4): os nomes como estão na sua agenda, digitados soltos (-p fulano beltrano; a primeira palavra que não é contato começa o pedido), /Nome Completo/, @menção, +número ou @me (ou $me): a sua própria foto. Sem ninguém: a pessoa do privado (você, no seu) ou, no grupo, quem escreveu a mensagem respondida. Quem esconde a foto pela privacidade é recusado.",
+      "ex": [
+        "/draw -p /Rafael Silva/ desenhe ele como astronauta",
+        "/draw -g -p coloque um chapéu nessa pessoa (respondendo a uma foto)"
+      ]
+    },
+    {
+      "opts": [
         "model",
         "m"
       ],

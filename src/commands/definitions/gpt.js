@@ -66,6 +66,13 @@ module.exports = {
             role: ADMIN,
             cron: false
         },
+        {
+            opts: ['profile', 'p'],
+            values: [],
+            desc: 'Adds the profile photo of one or more people to the images sent to the model, next to the photo you reply to. Right after -p, as many as you want (up to 4): the names as they are in your address book, typed plain (-p fulano beltrano; the first word that is not a contact starts the request), /Full Name/, @mention, +number or @me (or $me): your own photo. Without anyone: the person of the private chat (you, in yours) or, in a group, whoever wrote the message you reply to. Whoever hides the photo by privacy is refused.',
+            ex: ['/gpt -p /Rafael Silva/ describe this person', '/gpt -p /Rafael Silva/ add this person to the photo (replying to a photo, with -img)'],
+            cron: false
+        },
         optionStatus('/gpt -s explique SSRF em 3 linhas'),
         {
             argv: ['<question>'],

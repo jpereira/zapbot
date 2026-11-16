@@ -43,6 +43,7 @@ resto do texto, um `-x` é pergunta. O `/tldr` e o `/draw` agem igual (o `-2h` e
 | `-img` | | Só dono e admins. Cria uma imagem com o pedido (respondendo uma foto, a edita). Veja [Imagem e GIF](#imagem-e-gif--img--gif) |
 | `-gif` | | Só dono e admins. Cria um GIF (respondendo uma foto, a anima). Veja [Imagem e GIF](#imagem-e-gif--img--gif) |
 | `-voice`, `-v` | `[texto]` | Responde uma nota de voz de robô com o texto (ou com o da mensagem respondida). Veja [Voz](#voz--voice) |
+| `-profile`, `-p` | | Junta a foto de perfil de uma ou mais pessoas às imagens da pergunta (`-p /Rafael Silva/`, `@menção`, `+número`). Veja [Com a foto de perfil de alguém](#com-a-foto-de-perfil-de-alguém--profile) |
 | `-status`, `-s` | | Acrescenta no rodapé da resposta o consumo da chamada: bytes TX/RX, tokens, custo e saldo. Veja [Status](#status--status) |
 | `-prices` | | Só dono e admins. Busca os preços no site da OpenAI e atualiza o `gpt.pricing`. Veja [Status](#status--status) |
 | `-usage`, `-u` | `[dias]` | Só dono e admins. O consumo dos últimos dias (padrão 7, até 31) e os limites de agora. Veja [Consumo e limites](#consumo-e-limites--usage) |
@@ -156,6 +157,51 @@ um usuário. O modelo da imagem é o `gpt.image.model` e o do GIF, o `gpt.image.
 
 Sem o `-gif`, "gere um gif animado..." respondendo uma foto também vale. Para ajustar os quadros e o tempo
 de cada um numa chamada (`-frames`, `-ms`), use o [`/draw -gif`](draw.md#gif-animado--gif).
+
+## Com a foto de perfil de alguém (`-profile`)
+
+O `-profile` (`-p`) junta a **foto de perfil do WhatsApp** de uma ou mais pessoas às imagens da
+pergunta, ao lado da foto que você responde. Vale na pergunta comum, no `-img` e no `-gif` (os dois
+últimos, para o dono e os admins). Quem vem depois do `-p`: `/Nome/`, `@menção` ou `+número` (até
+4); sem ninguém, é a pessoa do privado ou, num grupo, quem escreveu a mensagem que você responde.
+Todos os detalhes, e os exemplos de desenho, estão no
+[`/draw`](draw.md#com-a-foto-de-perfil-de-alguém--profile).
+
+```text
+/gpt -p /Rafael Silva/ descreva essa pessoa
+🤖 Um homem na casa dos trinta, sorrindo, de cabelo curto escuro e barba, diante de uma parede azul...
+```
+
+```text
+(respondendo a uma foto de um grupo de amigos)
+/gpt -p /Rafael Silva/ o Rafael está nessa foto? Que roupa ele usa?
+🤖 Sim, parece ser o do meio, com a mesma barba da foto de perfil. Ele veste uma camisa verde...
+```
+
+```text
+(respondendo a uma foto de um cachorro)
+/gpt -img -p /Rafael Silva/ coloque o Rafael passeando com esse cachorro num parque
+🎨 coloque o Rafael passeando com esse cachorro num parque
+```
+
+```text
+(no privado com o Rafael)
+/gpt -p como ele ficaria de bigode?
+🤖 Com um bigode grosso, ele ficaria mais sério, com um ar de detetive dos anos 1970...
+```
+
+O `@me` (ou `$me`) é a sua própria foto: `/gpt -p @me como eu estou nesta foto?`. Os nomes soltos também valem, e vários de uma vez (até 4), junto com a foto que você respondeu:
+
+```text
+(respondendo a foto de uma reunião)
+/gpt -p fulano beltrano o Fulano e o Beltrano estão nesta foto?
+🤖 Sim: o Fulano é o segundo da esquerda, e o Beltrano é o da ponta da mesa...
+```
+
+- Sem pergunta, o `/gpt -p /Rafael Silva/` descreve a foto, como o `/gpt` faz numa foto respondida.
+- Quem não tem foto visível é recusado com `🙈` e nada vai para a OpenAI.
+- O texto do pedido vai com uma linha dizendo qual imagem é qual ("Imagens anexadas, nesta ordem:
+  1) a foto da mensagem; 2) a foto de perfil de Rafael Silva.").
 
 ## Voz (`-voice`)
 

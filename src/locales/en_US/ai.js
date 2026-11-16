@@ -222,5 +222,12 @@ module.exports = {
 
     // /carbon
     'carbon.badTheme': '❌ Unknown theme "{theme}". Available: {themes}.',
-    'carbon.failed': '❌ I could not draw the image: {error}'
+    'carbon.failed': '❌ I could not draw the image: {error}',
+
+    'ai.profileNeedsPerson': '❌ In a group, {cmd} -p needs someone: -p /Name/, -p @mention or reply to a message from the person.',
+    'ai.profileTooMany': '❌ Up to {max} profile photos at a time.',
+    'ai.profileNoPhoto': '🙈 {nome} has no profile photo I can see (no photo, or hidden by privacy).',
+    'ai.imgMessage': 'the photo of the message',
+    'ai.imgProfile': 'the profile photo of {nome}',
+    'ai.imgContext': 'Attached images, in this order: {lista}.'
 };

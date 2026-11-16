@@ -25,6 +25,7 @@ Se a **primeira palavra** parece uma opção mas não existe (`/draw -price`), o
 | `-gif`, `-g` | | GIF animado (setting `gpt.image.gifModel`). Numa foto, ou respondendo uma, anima a foto. Veja [GIF animado](#gif-animado--gif) |
 | `-frames`, `-f` | `<n>` | Quadros do GIF, de 2 a 16 (padrão: `gpt.gif.frames`, 9). Vale como `-gif` |
 | `-ms` | `<ms>` | Duração de cada quadro do GIF, de 20 a 2000 ms (padrão: `gpt.gif.frameMs`, 200). Vale como `-gif` |
+| `-profile`, `-p` | | Junta a foto de perfil de uma ou mais pessoas às imagens (`-p /Rafael Silva/`, `@menção`, `+número`; sem ninguém: a pessoa do chat). Veja [Com a foto de perfil de alguém](#com-a-foto-de-perfil-de-alguém--profile) |
 | `-model`, `-m` | `[modelo]` | Só dono e admins. Sem modelo, lista o atual e os que a sua chave vê; com modelo, troca (`gpt.image.model`; com `-gif`, `gpt.image.gifModel`) |
 | `-status`, `-s` | | Acrescenta no rodapé o consumo da chamada: bytes TX/RX, tokens, custo e saldo (imagem e GIF: numa mensagem à parte). Veja [Status](gpt.md#status--status) |
 | `<pedido>` | | O que desenhar ou animar. Respondendo uma mensagem, o texto dela entra antes; numa foto, o pedido a edita |
@@ -71,6 +72,110 @@ Numa foto, o GIF a anima; sem pedido, com um movimento sutil e natural.
 - No `/gpt`, "gere um gif animado..." respondendo uma foto também vale, sem o `-gif`: o bot reconhece um
   verbo de criar (gere, crie, faça, anime, ou generate, create, make, animate, transform) junto
   de gif, animação, animado ou vídeo (ou animation, animated, video).
+
+## Com a foto de perfil de alguém (`-profile`)
+
+O `-profile` (`-p`) junta a **foto de perfil do WhatsApp** de uma ou mais pessoas às imagens enviadas
+ao modelo, ao lado da foto que você responde. É o jeito de colocar um amigo num desenho, ou no GIF
+de uma foto, sem baixar e mandar a imagem dele.
+
+| Depois do `-p` | Quem é |
+|---|---|
+| Nome solto: `fulano beltrano` | O primeiro nome (ou o nome inteiro) de um contato da sua agenda, sem ligar para acento e caixa; a primeira palavra que **não** é contato começa o pedido. Se vários têm o mesmo, o bot pergunta qual |
+| Nome: `/Rafael Silva/` | O contato pelo nome (como no [`/profile`](profile.md)); se mais de um servir, o bot pergunta qual |
+| Menção: `@Rafael` | A pessoa mencionada |
+| `@me` ou `$me` | **Você**: a sua própria foto de perfil (quem digitou o comando) |
+| Número: `+5521999999999` | Pelo número |
+| *(ninguém)*, num privado | A pessoa do chat (no seu próprio chat, você) |
+| *(ninguém)*, num grupo | Quem escreveu a mensagem que você responde |
+
+```text
+/draw -p /Rafael Silva/ desenhe ele como astronauta na lua
+🎨 desenhe ele como astronauta na lua
+```
+
+**Uma foto e um perfil.** Responda a uma foto e o perfil vai ao lado dela, nesta ordem: a foto da
+mensagem primeiro, depois os perfis:
+
+```text
+(respondendo a uma foto de um cachorro)
+/draw -g -p /Rafael Silva/ faça um gif desse cachorro aplicando uma injeção no Rafael
+🎞️ faça um gif desse cachorro aplicando uma injeção no Rafael
+```
+
+**Nomes soltos, vários de uma vez.** Depois do `-p` dá para digitar os nomes como estão na sua agenda,
+sem barras, quantos quiser (até 4). As palavras que são o primeiro nome (ou o nome inteiro) de um
+contato são pessoas; a primeira que não é começa o pedido. Junto com a foto que você respondeu:
+
+```text
+(respondendo a foto de um bolo de aniversário)
+/draw -p fulano beltrano ponha os dois apagando as velas neste bolo
+🎨 ponha os dois apagando as velas neste bolo
+```
+
+O bot manda 3 imagens ao modelo, nesta ordem: a foto do bolo, o perfil do Fulano e o do Beltrano. Se
+dois contatos têm o mesmo nome (duas "Maria"), ele pergunta qual; para ser exato, use `/Maria Lucia/`.
+Misturar também vale: `-p fulano @Maria +5521999999999 ...`.
+
+**Você mesmo:** `@me` (ou `$me`) é a **sua** foto de perfil, para você também entrar na imagem,
+sozinho ou com os amigos:
+
+```text
+/draw -p @me desenhe eu como um cavaleiro medieval
+/draw -p @me fulano desenhe nós dois como piratas num navio
+🎨 desenhe nós dois como piratas num navio
+```
+
+**Várias pessoas** (até 4), como um retrato de grupo:
+
+```text
+/draw -p /Rafael Silva/ /Maria Lucia/ desenhe os dois numa festa de aniversário
+🎨 desenhe os dois numa festa de aniversário
+```
+
+**Sem dizer quem:** no privado é a outra pessoa; num grupo, quem escreveu a mensagem que você
+responde:
+
+```text
+(no privado com o Rafael)
+/draw -p desenhe ele como um personagem de desenho animado
+🎨 desenhe ele como um personagem de desenho animado
+
+(num grupo, respondendo a uma mensagem da Maria)
+/draw -p transforme ela numa super-heroína
+🎨 transforme ela numa super-heroína
+```
+
+**Por menção ou número:**
+
+```text
+/draw -p @Rafael faça dele um pirata
+/draw -p +5521999999999 faça um retrato em pop art
+```
+
+**O que o modelo recebe.** O bot diz qual imagem é qual, depois do seu pedido (você não vê):
+
+```text
+desenhe os dois numa festa de aniversário
+
+Imagens anexadas, nesta ordem: 1) a foto de perfil de Rafael Silva; 2) a foto de perfil de Maria Lucia.
+```
+
+**Quando é recusado:**
+
+```text
+/draw -p desenhe
+❌ No grupo, o /draw -p precisa de alguém: -p /Nome/, -p @menção ou responda a uma mensagem da pessoa.
+
+/draw -p /Rafael Silva/ desenhe ele como astronauta
+🙈 Fulano não tem foto de perfil que eu consiga ver (sem foto, ou escondida pela privacidade).
+```
+
+- Quem esconde a foto pela privacidade (ou não tem foto) é recusado, e nada vai para a OpenAI.
+- Até **4** fotos de perfil por vez. Mais que isso é recusado.
+- É uma chamada só, então conta uma vez no [limite de uso](bot.md#limite-de-uso-por-usuário-limit).
+- Vale com `-gif`, `-frames` e `-ms`, e com o `/gpt -img` e o `/gpt -gif`.
+- Não vale dentro do `/cron`: uma mensagem agendada não tem foto para responder.
 
 ## Modelo que a conta não tem
 

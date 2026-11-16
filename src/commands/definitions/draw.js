@@ -34,6 +34,13 @@ module.exports = {
             cron: false
         },
         {
+            opts: ['profile', 'p'],
+            values: [],
+            desc: 'Adds the profile photo of one or more people to the images sent to the model, next to the photo you reply to. Right after -p, as many as you want (up to 4): the names as they are in your address book, typed plain (-p fulano beltrano; the first word that is not a contact starts the request), /Full Name/, @mention, +number or @me (or $me): your own photo. Without anyone: the person of the private chat (you, in yours) or, in a group, whoever wrote the message you reply to. Whoever hides the photo by privacy is refused.',
+            ex: ['/draw -p /Rafael Silva/ draw him as an astronaut', '/draw -g -p put a hat on this person (replying to a photo)'],
+            cron: false
+        },
+        {
             opts: ['model', 'm'],
             values: ['[model]'],
             desc: 'Changes the image model (gpt.image.model setting) or, with -gif, the GIF one (gpt.image.gifModel). Without a model, lists the current one and the ones your key can see.',

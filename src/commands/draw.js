@@ -16,6 +16,7 @@ const { BIN_FFMPEG, TMP_DIR } = require('../constants');
 const { t } = require('../i18n');
 const { unescape } = require('../util/format');
 const { printError } = require('../log');
+const { imagesContext, textReadProfile, resolverProfiles } = require('./profileInAi');
 const { WITHOUT_KEY, keyOpenAi, errorOpenAi, generateImage, measureConsumption } = require('../openaiChat');
 const { SETTINGS_SCHEMA, getSetting } = require('../settings');
 const { runCommand } = require('../util/processes');
@@ -78,14 +79,18 @@ async function sendGif(msg, b64, captionAlt, cmd) {
  * @param {string} o.pedido     what the user typed, without the options
  * @param {object} [o.quotedMsg]  the replied message: its text goes into the request and its photo is the base
  * @param {{ frames?: number, frameMs?: number } | null} [o.gif]  asks for the GIF (whatever is missing comes from the settings)
+ * @param {Array<{ nome: string, imagem: object }>} [o.perfis]  the -p profile photos: they go along with the base photo
  * @param {string} o.withoutRequest  the reply when there is nothing to draw
  */
-async function drawAlt({ msg, cmd, pedido: request, quotedMsg = null, gif = null, semPedido: withoutRequest }) {
-    const photo = await referencePhoto(msg, quotedMsg, cmd);
-    if (photo?.erro) {
-        await msg.reply(photo.erro);
+async function drawAlt({ msg, cmd, pedido: request, quotedMsg = null, gif = null, perfis: profiles = [], semPedido: withoutRequest }) {
+    const base = await referencePhoto(msg, quotedMsg, cmd);
+    if (base?.erro) {
+        await msg.reply(base.erro);
         return;
     }
+    // The message photo first and then the profile ones (the context tells the AI which is which)
+    const images = [base?.imagem, ...profiles.map(p => p.imagem)].filter(Boolean);
+    const photo = images.length ? images : null;
 
     // Replying to a message, its text (on a photo, the caption) goes before the request
     const textAlt = [quotedMsg?.body, request].filter(Boolean).join('\n\n').trim();
@@ -98,12 +103,19 @@ async function drawAlt({ msg, cmd, pedido: request, quotedMsg = null, gif = null
         frames: gif.frames ?? getSetting('gpt.gif.frames'),
         frameMs: gif.frameMs ?? getSetting('gpt.gif.frameMs')
     };
-    const prompt = animation && photo ? t('draw.animatePrompt', { texto: textAlt || t('draw.animateDefault') }) : textAlt;
+    const context = imagesContext({ comFotoDaMensagem: Boolean(base?.imagem), perfis: profiles });
+    const withContext = (x) => [x, context].filter(Boolean).join('\n\n');
+    const prompt = animation && photo
+        ? withContext(t('draw.animatePrompt', { texto: textAlt || t('draw.animateDefault') }))
+        : withContext(textAlt);
     const captionAlt = `${animation ? '🎞️' : '🎨'} ${textAlt.length > CAPTION_MAX ? `${textAlt.slice(0, CAPTION_MAX)}…` : textAlt}`.trim();
 
     const notice = await notifyProcessing(msg, cmd);
     try {
-        const b64 = await generateImage({ cmd, prompt, imagem: photo ? await photoInPng(photo) : null, gif: animation });
+        const b64 = await generateImage({
+            cmd, prompt, gif: animation,
+            imagens: photo ? await Promise.all(photo.map(image => photoInPng({ imagem: image }))) : []
+        });
         if (animation) await sendGif(msg, b64, captionAlt, cmd);
         else await msg.reply(new MessageMedia('image/png', b64, 'desenho.png'), null, { caption: captionAlt });
         await deleteNotice(notice);
@@ -125,7 +137,7 @@ function readInteger(valueAlt, { min, max }, nameAlt) {
     return n;
 }
 
-async function draw({ msg, args, opts, quotedMsg }) {
+async function draw({ msg, args, opts, quotedMsg, chatId, isGroup }) {
     if (opts?.given.has('model')) {
         await swapModel(msg, opts.opt.model, opts, { cmd: '/draw', icone: '🎨', usos: DRAW_USES, padrao: IMAGE_USAGE });
         return;
@@ -151,8 +163,19 @@ async function draw({ msg, args, opts, quotedMsg }) {
     }
 
     // Without options, the text goes as typed (with the Enters); with them, only what is left of them
-    const request = unescape(opts?.given.size ? opts.argv.join(' ') : args);
-    await drawAlt({ msg, cmd: '/draw', pedido: request, quotedMsg, gif, semPedido: commandUsage('/draw') });
+    let request = unescape(opts?.given.size ? opts.argv.join(' ') : args);
+
+    // -p [people]: the profile photos come along (the people leave the request)
+    let profiles = [];
+    if (opts?.given.has('profile')) {
+        const profile = await textReadProfile(args);
+        for (const item of profile?.itens ?? []) request = request.replace(item, '');
+        request = request.replace(/\s{2,}/g, ' ').trim();
+        profiles = await resolverProfiles({ msg, quotedMsg, chatId, isGroup, itens: profile?.itens ?? [], cmd: '/draw' });
+        if (!profiles) return;
+    }
+
+    await drawAlt({ msg, cmd: '/draw', pedido: request, quotedMsg, gif, perfis: profiles, semPedido: commandUsage('/draw') });
 }
 
 // The -status|-s (or the gpt.status setting) shows the call usage in the footer
