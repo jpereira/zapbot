@@ -179,7 +179,7 @@ and a shortcut's name doesn't go in `+cmd`.
 <!-- gerado:roles -->
 ### Commands by role
 
-**user** (whoever is in `bot.users`) (25):
+**user** (whoever is in `bot.users`) (26):
 
 [`/ascii`](ascii.md), [`/bills`](bills.md), [`/carbon`](carbon.md), [`/crypto`](crypto.md),
 [`/cve`](cve.md), [`/get`](get.md), [`/giphy`](giphy.md), [`/help`](help.md), [`/joke`](joke.md),

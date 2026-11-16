@@ -521,8 +521,8 @@ describe('/show -e (editadas)', () => {
         await messageEdited('antes', 'depois');
 
         assert.match((await bot.replyAlt('/show -d'))[1], /MENSAGEM APAGADA[\s\S]*"apagada"/);
-        assert.match((await bot.replyAlt('/show -deleted'))[1], /"apagada"/);
-        assert.match((await bot.replyAlt('/show -edited'))[1], /MENSAGEM EDITADA[\s\S]*"depois"/);
+        assert.match((await bot.replyAlt('/show -d'))[1], /"apagada"/);
+        assert.match((await bot.replyAlt('/show -e'))[1], /MENSAGEM EDITADA[\s\S]*"depois"/);
         assert.equal((await bot.replyAlt('/show -d -e -2'))[0], '🗄️ *2 mensagens* (🗑️ 1 · ✏️ 1)');
     });
 

@@ -93,7 +93,7 @@ const AUDIO_USAGE = {
 };
 const VOICE_USAGE = {
     nome: '-voice', get detalhe() { return t('openai.detailVoice'); }, opcoes: ['voice'], setting: 'gpt.tts.model',
-    exemplo: (cmd) => `${cmd} -m <modelo> -voice`, daConta: (id) => /tts/i.test(id)
+    exemplo: (cmd) => `${cmd} -m <modelo> -v`, daConta: (id) => /tts/i.test(id)
 };
 
 const GPT_USES = [QUESTION_USAGE, IMAGE_USAGE, GIF_USAGE, AUDIO_USAGE, VOICE_USAGE];

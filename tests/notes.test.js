@@ -31,7 +31,7 @@ async function expire(id) {
 
 test('-add, -list e -rm (vários IDs, all e ID inexistente sem remover nada)', async () => {
     assert.match((await bot.replyAlt('/notes'))[0], /Nenhuma anotação/);
-    assert.match((await bot.replyAlt('/notes -add #t comprar leite'))[0], /^📝 \*#1\* · #t · comprar leite$/);
+    assert.match((await bot.replyAlt('/notes -a #t comprar leite'))[0], /^📝 \*#1\* · #t · comprar leite$/);
     await bot.replyAlt('/notes -a #t ligar pro João\nsegunda linha');
     await bot.replyAlt('/notes -a #t pagar boleto');
     assert.deepEqual((await notes()).map(n => n.text), ['comprar leite', 'ligar pro João\nsegunda linha', 'pagar boleto']);
@@ -40,7 +40,7 @@ test('-add, -list e -rm (vários IDs, all e ID inexistente sem remover nada)', a
     assert.match(list, /1\. comprar leite/);
     assert.match(list, /3\. pagar boleto/);
     assert.equal((await bot.replyAlt('/notes -l'))[0], list);
-    assert.equal((await bot.replyAlt('/notes -list'))[0], list);
+    assert.equal((await bot.replyAlt('/notes -l'))[0], list);
 
     assert.match((await bot.replyAlt('/notes -r 2 9'))[0], /ID 9 não existe/);
     assert.equal((await notes()).length, 3);
@@ -51,11 +51,11 @@ test('-add, -list e -rm (vários IDs, all e ID inexistente sem remover nada)', a
 });
 
 test('-add sem texto, com -to sem -alert e com quando inválido ou no passado', async () => {
-    assert.match((await bot.replyAlt('/notes -add'))[0], /Usage: \/notes #tag <texto>/);
-    assert.match((await bot.replyAlt('/notes -add #t'))[0], /Falta o texto/);
-    assert.match((await bot.replyAlt('/notes -add #t texto -to /Grupo sobre L200/'))[0], /só vale com o -alert/);
-    assert.match((await bot.replyAlt('/notes -add #t texto -alert banana'))[0], /Quando inválido/);
-    assert.match((await bot.replyAlt('/notes -add #t texto -alert 18h sobra'))[0], /Quando inválido/);
+    assert.match((await bot.replyAlt('/notes -a'))[0], /Usage: \/notes #tag <texto>/);
+    assert.match((await bot.replyAlt('/notes -a #t'))[0], /Falta o texto/);
+    assert.match((await bot.replyAlt('/notes -a #t texto -to /Grupo sobre L200/'))[0], /só vale com o -alert/);
+    assert.match((await bot.replyAlt('/notes -a #t texto -alert banana'))[0], /Quando inválido/);
+    assert.match((await bot.replyAlt('/notes -a #t texto -alert 18h sobra'))[0], /Quando inválido/);
     assert.equal((await notes()).length, 0);
 });
 
@@ -175,7 +175,7 @@ test('-export gera o PDF (tudo ou só da #tag) com o nome por data/hora', async 
     assert.doesNotMatch(Buffer.from(soHome.content.data, 'base64').toString('latin1'), /ETFs/);
 
     assert.match((await bot.replyAlt('/notes -e #nada'))[0], /Nenhuma anotação em #nada/);
-    assert.match((await bot.replyAlt('/notes -e abc'))[0], /Usage: \/notes -export/);
+    assert.match((await bot.replyAlt('/notes -e abc'))[0], /Usage: \/notes -e/);
 });
 
 test('respostas com link na anotação saem sem thumbnail (linkPreview: false)', async () => {
@@ -400,10 +400,10 @@ test('-export: a descrição da tag vem embaixo do cabeçalho dela no PDF, só d
     assert.ok(home.indexOf('(Coisas da casa)') > home.indexOf('(#casa \\(1\\)'), 'embaixo do cabeçalho da tag');
     assert.ok(home.indexOf('(Coisas da casa)') < home.indexOf('1.  p'), 'antes das anotações');
 
-    assert.match(await pdfDe('/notes -export'), /\(Coisas da casa\)/);
-    assert.doesNotMatch(await pdfDe('/notes -export #duvidas'), /Coisas da casa/);
+    assert.match(await pdfDe('/notes -e'), /\(Coisas da casa\)/);
+    assert.doesNotMatch(await pdfDe('/notes -e #duvidas'), /Coisas da casa/);
     await bot.replyAlt('/notes -d #casa -rm');
-    assert.doesNotMatch(await pdfDe('/notes -export #casa'), /Coisas da casa/);
+    assert.doesNotMatch(await pdfDe('/notes -e #casa'), /Coisas da casa/);
     await bot.replyAlt('/notes -rm all');
 });
 
@@ -422,7 +422,7 @@ test('-view: manda a imagem com o texto na legenda (e só o texto, sem imagem)',
     assert.match((await bot.replyAlt('/notes -v 2'))[0], /#2\* · #eleicao[\s\S]*sem imagem/);
     assert.match((await bot.replyAlt('/notes -v #eleic'))[0], /Narrativas|sem imagem/);
     assert.match((await bot.replyAlt('/notes -v 9'))[0], /9 não existe/);
-    assert.match((await bot.replyAlt('/notes -v'))[0], /Usage: \/notes -view/);
+    assert.match((await bot.replyAlt('/notes -v'))[0], /Usage: \/notes -v/);
 
     const n = bot.client.enviadas.length;
     await bot.replyAlt('/notes -v 1 -to /Grupo sobre L200/');
@@ -442,7 +442,7 @@ test('-search: texto (sem acento/maiúscula), /regex/flags, #tag, -to e erros', 
     await bot.replyAlt('/notes #duvidas Olhar sobre ETFs');
     await withoutTag('Ligar pro João amanhã');
 
-    assert.equal((await bot.replyAlt('/notes -search'))[0], 'Usage: /notes -search [#tag...] <texto|/regex/flags> [-to <destino>]...\n💡 _/notes -h para ajuda_');
+    assert.equal((await bot.replyAlt('/notes -s'))[0], 'Usage: /notes -s [#tag...] <texto|/regex/flags> [-to <destino>]...\n💡 _/notes -h para ajuda_');
 
     const [textAlt] = await bot.replyAlt('/notes -s PAO');
     assert.match(textAlt, /🔎 PAO \(1\)/);
@@ -485,9 +485,9 @@ test('-move: renomeia a tag (juntando se a nova já existe)', async () => {
     await bot.replyAlt('/notes #casa um');
     await bot.replyAlt('/notes #casa dois');
     await bot.replyAlt('/notes #lar três');
-    assert.match((await bot.replyAlt('/notes -move #casa #CASA'))[0], /igual/);
+    assert.match((await bot.replyAlt('/notes -m #casa #CASA'))[0], /igual/);
     assert.match((await bot.replyAlt('/notes -m #nada #x'))[0], /#nada não existe/);
-    assert.match((await bot.replyAlt('/notes -m casa'))[0], /Usage: \/notes -move/);
+    assert.match((await bot.replyAlt('/notes -m casa'))[0], /Usage: \/notes -m/);
     assert.match((await bot.replyAlt('/notes -m #casa #lar'))[0], /#casa → #lar · 2 anotações/);
     assert.match((await bot.replyAlt('/notes'))[0], /#lar: 3/);
     await bot.replyAlt('/notes -rm all');
@@ -517,7 +517,7 @@ test('-desc: grava, mostra, aparece na lista e no /notes sozinho, vai no -move e
     assert.match((await bot.replyAlt('/notes -d #lar'))[0], /Coisas de casa/);
     assert.match((await bot.replyAlt('/notes -d #lar -rm'))[0], /apagada/);
     assert.match((await bot.replyAlt('/notes -d #lar -rm'))[0], /não tem descrição/);
-    assert.match((await bot.replyAlt('/notes -d'))[0], /Usage: \/notes -desc/);
+    assert.match((await bot.replyAlt('/notes -d'))[0], /Usage: \/notes -d/);
     await bot.replyAlt('/notes -rm all');
 });
 
@@ -564,17 +564,17 @@ test('-update: troca o texto (e a tag, se vier) e mantém o alerta', async () =>
     await bot.replyAlt('/notes #casa comprar pão -alert +2h');
     await bot.replyAlt('/notes #duvidas ETFs');
 
-    assert.match((await bot.replyAlt('/notes -update 1 comprar pão e leite'))[0], /^✏️ \*#1\* · #casa · comprar pão e leite$/);
+    assert.match((await bot.replyAlt('/notes -u 1 comprar pão e leite'))[0], /^✏️ \*#1\* · #casa · comprar pão e leite$/);
     assert.match((await bot.replyAlt('/notes -u #2 #estudo ver ETFs\\nde novo'))[0], /^✏️ \*#2\* · #estudo · ver ETFs de novo$/);
     assert.deepEqual(await bot.dbAll('SELECT text, tag, alert_at IS NOT NULL AS alerta FROM notes ORDER BY id'), [
         { text: 'comprar pão e leite', tag: 'casa', alerta: 1 },
         { text: 'ver ETFs\nde novo', tag: 'estudo', alerta: 0 }
     ]);
 
-    assert.match((await bot.replyAlt('/notes -update 9 x'))[0], /ID 9 não existe/);
-    assert.match((await bot.replyAlt('/notes -u 1'))[0], /Usage: \/notes -update/);
-    assert.match((await bot.replyAlt('/notes -update #novatag'))[0], /Usage: \/notes -update/);
-    assert.match((await bot.replyAlt('/notes -update 1 #so'))[0], /Usage: \/notes -update/);
+    assert.match((await bot.replyAlt('/notes -u 9 x'))[0], /ID 9 não existe/);
+    assert.match((await bot.replyAlt('/notes -u 1'))[0], /Usage: \/notes -u/);
+    assert.match((await bot.replyAlt('/notes -u #novatag'))[0], /Usage: \/notes -u/);
+    assert.match((await bot.replyAlt('/notes -u 1 #so'))[0], /Usage: \/notes -u/);
 
     // In reply to a message, without text: uses its own, with ↩️
     const quoted = bot.createMessage({ de: bot.OWNER.jid, texto: 'texto citado' });

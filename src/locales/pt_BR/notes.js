@@ -32,15 +32,15 @@ module.exports = {
     'notes.when.past': `❌ {when} já passou.`,
     'notes.when.tooFar': `❌ No máximo {days} dias à frente.`,
 
-    // ---- /notes: -add
+    // ---- /notes: -a
     'notes.add.syntax': `Usage: /notes #tag <texto> [-alert <quando> [-to <destino>]...]\n💡 _/notes -h para ajuda_`,
     'notes.add.missingTag': `💡 _Falta a #tag. Veja as tags com /notes_`,
     'notes.add.noText': `Falta o texto: /notes #tag <texto>`,
     'notes.add.quotedNoText': `❌ A mensagem respondida não tem texto.`,
-    'notes.add.toNeedsAlert': `❌ O -to só vale com o -alert: /notes -add <texto> -alert amanhã 9h -to /Grupo L200/`,
+    'notes.add.toNeedsAlert': `❌ O -to só vale com o -alert: /notes -a <texto> -alert amanhã 9h -to /Grupo L200/`,
 
-    // ---- /notes: -update
-    'notes.update.usage': `Usage: /notes -update <id> [#tag] <novo texto>\n💡 _/notes -h para ajuda_`,
+    // ---- /notes: -u
+    'notes.update.usage': `Usage: /notes -u <id> [#tag] <novo texto>\n💡 _/notes -h para ajuda_`,
 
     // ---- /notes: -alert
     'notes.alert.toOnlyCreate': `❌ O -to só vale ao criar o alerta: /notes -alert <id|#tag> amanhã 9h -to /Grupo L200/`,
@@ -61,7 +61,7 @@ module.exports = {
     'notes.tipsTags': `\n\n💡 _/notes #tag lista as anotações de uma tag_`,
     'notes.sentTo': `📝 Anotações enviadas em {where}.`,
     'notes.sendFail': `❌ Não consegui enviar as anotações: {error}`,
-    'notes.list.searchUsage': `Usage: /notes -search [#tag...] <texto|/regex/flags> [-to <destino>]...\n💡 _/notes -h para ajuda_`,
+    'notes.list.searchUsage': `Usage: /notes -s [#tag...] <texto|/regex/flags> [-to <destino>]...\n💡 _/notes -h para ajuda_`,
     'notes.list.usage': `Usage: /notes -l [#tag...] [-to <destino>]...\n💡 _/notes -h para ajuda_`,
     'notes.list.none': `📝 Nenhuma anotação{inTags}{withSearch}.`,
     'notes.list.titleClean': `📝 *ANOTAÇÕES*{found}{count}`,
@@ -73,29 +73,29 @@ module.exports = {
     'notes.subject.export': `📝 Anotações{tags}`,
     'notes.subject.alert': `🔔 Anotação #{id}: {text}`,
 
-    // ---- /notes: -move, -desc
-    'notes.move.usage': `Usage: /notes -move #tag #novatag\n💡 _/notes -h para ajuda_`,
+    // ---- /notes: -m, -d
+    'notes.move.usage': `Usage: /notes -m #tag #novatag\n💡 _/notes -h para ajuda_`,
     'notes.move.same': `❌ A tag nova é igual à atual.`,
     'notes.move.notFound': `❌ #{tag} não existe. Veja as tags com /notes`,
     'notes.move.done': { one: `🏷️ #{from} → #{to} · {count} anotação`, other: `🏷️ #{from} → #{to} · {count} anotações` },
-    'notes.desc.usage': `Usage: /notes -desc #tag [<descrição>] (ou /notes -desc #tag -rm para apagar)\n💡 _/notes -h para ajuda_`,
+    'notes.desc.usage': `Usage: /notes -d #tag [<descrição>] (ou /notes -d #tag -rm para apagar)\n💡 _/notes -h para ajuda_`,
     'notes.desc.shown': `🏷️ *#{tag}*\n{desc}`,
     'notes.desc.none': `🏷️ #{tag} não tem descrição.`,
-    'notes.desc.createHint': `💡 _Crie com /notes -desc #{tag} <texto>_`,
+    'notes.desc.createHint': `💡 _Crie com /notes -d #{tag} <texto>_`,
     'notes.desc.noneToRemove': `❌ #{tag} não tem descrição.`,
     'notes.desc.removed': `🗑️ Descrição da #{tag} apagada.`,
     'notes.desc.saved': `🏷️ *#{tag}* · descrição salva`,
     'notes.desc.replaced': `🏷️ *#{tag}* · descrição trocada`,
 
-    // ---- /notes: -view
-    'notes.view.usage': `Usage: /notes -view <id...|#tag...> [-to <destino>]...\n💡 _/notes -h para ajuda_`,
+    // ---- /notes: -v
+    'notes.view.usage': `Usage: /notes -v <id...|#tag...> [-to <destino>]...\n💡 _/notes -h para ajuda_`,
     'notes.view.missingOne': `❌ {list} não existe. Veja a lista com /notes -l`,
     'notes.view.missingMany': `❌ {list} não existem. Veja a lista com /notes -l`,
     'notes.view.fileNotFound': `#{id}: arquivo da mídia não encontrado`,
     'notes.view.sent': { one: `📝 {count} anotação enviada em {where}.`, other: `📝 {count} anotações enviadas em {where}.` },
 
-    // ---- /notes: -export (PDF)
-    'notes.export.usage': `Usage: /notes -export [#tag...] [-to <destino>]...\n💡 _/notes -h para ajuda_`,
+    // ---- /notes: -e (PDF)
+    'notes.export.usage': `Usage: /notes -e [#tag...] [-to <destino>]...\n💡 _/notes -h para ajuda_`,
     'notes.pdf.withMedia': `com mídia`,
     'notes.pdf.withAlert': `com alerta`,
     'notes.pdf.withLink': `com link`,
@@ -122,7 +122,7 @@ module.exports = {
     'monitor.list.interval': `⏱️ Verificação de cada contato a cada {interval}, no mínimo.`,
     'monitor.list.contacts': `👥 Contatos: {count}/{max} · horários de São Paulo`,
     'monitor.list.empty': `👀 Nenhum contato cadastrado.`,
-    'monitor.list.addHint': `💡 /monitor -add /Nome do Contato/`,
+    'monitor.list.addHint': `💡 /monitor -a /Nome do Contato/`,
     'monitor.list.waitingFirst': `⏳ aguardando primeira verificação`,
     'monitor.list.checked': `   🔎 Verificado: {when}`,
     'monitor.list.lastSeen': `   🕒 Último horário observado: {when}`,
@@ -137,15 +137,15 @@ module.exports = {
     'monitor.alert.usage': `Informe um contato cadastrado: /monitor -alert /Maria/`,
     'monitor.alert.enabled': `🚨 Alerta online ativado para "{name}" no privado do dono do bot.`,
     'monitor.alert.fired': `🚨 O contato "{name}" ficou online em "{when}".\n💡 Para mais, digite /monitor -l`,
-    'monitor.add.usage': `Informe um contato: /monitor -add /Jorge Pereira/`,
+    'monitor.add.usage': `Informe um contato: /monitor -a /Jorge Pereira/`,
     'monitor.add.exists': `👀 {name} já está cadastrado: #{id}.`,
     'monitor.add.limit': `❌ Limite de {max} contatos atingido. Remova um com /monitor -rm <id>.`,
-    'monitor.add.done': `👀 #{id} · {name} cadastrado.\n⏱️ Verificação a cada {interval}, um contato por vez.\n💡 /monitor -list mostra o histórico; /monitor -rm {id} remove.\n{risk}`,
+    'monitor.add.done': `👀 #{id} · {name} cadastrado.\n⏱️ Verificação a cada {interval}, um contato por vez.\n💡 /monitor -l mostra o histórico; /monitor -rm {id} remove.\n{risk}`,
     'monitor.add.paused': `⏸️ Monitor pausado. Retome com /set monitor.enabled true.`,
     'monitor.rm.usage': `Informe o id da lista ou um contato: /monitor -rm 1 ou /monitor -r /Jorge Pereira/`,
     'monitor.rm.all': `🗑️ Monitor limpo: {count} contato(s) e seus históricos removidos.`,
     'monitor.rm.done': `🗑️ #{id} · {name}: cadastro e histórico removidos.`,
-    'monitor.usage': `Use /monitor, /monitor -add <contato> [-alert], /monitor -alert <contato>, /monitor -rm <id, contato ou all> ou /monitor -list [contato].\n💡 _/monitor -h para ajuda_`,
+    'monitor.usage': `Use /monitor, /monitor -a <contato> [-alert], /monitor -alert <contato>, /monitor -rm <id, contato ou all> ou /monitor -l [contato].\n💡 _/monitor -h para ajuda_`,
     'monitor.status.online': `🟢 online`,
     'monitor.status.noData': `❔ sem dados`,
     'monitor.status.denied': `🔒 horário indisponível`,

@@ -196,7 +196,7 @@ describe('/debug', () => {
 
     test('padrão e nível exigem ativação; aceita aliases quando ligado', async () => {
         assert.equal(bot.getSetting('debug.level'), 0);
-        assert.match((await bot.replyAlt('/debug -level 2'))[0], /Ligue.*\/debug -on -level 2/);
+        assert.match((await bot.replyAlt('/debug -lvl 2'))[0], /Ligue.*\/debug -on -lvl 2/);
         assert.equal(bot.getSetting('debug.level'), 0);
         assert.match((await configure('-on'))[0], /DEBUG0/);
         assert.match((await configure('-lvl 2'))[0], /DEBUG2/);

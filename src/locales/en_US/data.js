@@ -151,7 +151,7 @@ module.exports = {
     'stats.listLine': '{n}. {chat} — {msgs} msgs _(last on {date})_',
     'stats.listFooter': '\n\n💡 _/stats /name/ shows one_\n💡 _/stats -f /name/ deletes its statistics_',
     'stats.flushedAll': '🗑️ Statistics deleted: {chats}.',
-    'stats.flushNeedsChat': 'Say the chat: /stats -flush /Group/ (or /stats -flush-all for all).',
+    'stats.flushNeedsChat': 'Say the chat: /stats -f /Group/ (or /stats -flush-all for all).',
     'stats.flushedChat': '🗑️ Statistics of {chat} deleted.',
     'stats.whereMineIn': 'of yours in {chat}',
     'stats.whereMine': 'of yours',
@@ -175,7 +175,7 @@ module.exports = {
         '/watch -s N -q <text|/regex/> only the matching ones.\n' +
         '/watch -s N -to <destination|off> changes the destinations.\n' +
         '/watch -f N clears the hits.\n' +
-        '/watch -mask N turns on the 🔒 (phone numbers masked in alerts); -umask N turns it off.',
+        '/watch -m N turns on the 🔒 (phone numbers masked in alerts); -u N turns it off.',
     'watch.onlyIn': ' only in {icon} {name}',
     'watch.listTitle': '👀 *WATCH: RULES* ({count}/{max})\n\n',
     'watch.noRules': '_No rules registered._\n💡 _Add one with /watch <text|/regex/flags>_',
@@ -201,7 +201,7 @@ module.exports = {
     'watch.kindText': 'text',
     'watch.added': '✅ Rule *#{n}* added _({kind})_: {rule}\n',
     'watch.addedOnlyIn': '📍 Only in {where}.\n',
-    'watch.addedMask': '🔒 Phone numbers masked in alerts (turn off with /watch -umask N).\n',
+    'watch.addedMask': '🔒 Phone numbers masked in alerts (turn off with /watch -u N).\n',
     'watch.addedAlerts': '💡 _Alerts {where}._',
     'watch.alertsIn': 'in {where}',
     'watch.alertsPrivate': 'in your private chat',

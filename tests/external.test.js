@@ -481,7 +481,7 @@ describe('/gpt', () => {
     });
 
     test('-voice: o texto digitado (ou o da mensagem respondida) vira uma nota de voz de robô (v1/audio/speech)', async () => {
-        assert.match((await bot.replyAlt('/gpt -voice oi'))[0], /⚠️ API key da OpenAI não encontrada/);
+        assert.match((await bot.replyAlt('/gpt -v oi'))[0], /⚠️ API key da OpenAI não encontrada/);
 
         await bot.setSetting('gpt.api.key', 'sk-teste');
         network.responder('post', 'api.openai.com/v1/audio/speech', Buffer.from('OGGDATA'));
@@ -523,14 +523,14 @@ describe('/gpt', () => {
         await bot.setSetting('gpt.api.key', 'sk-teste');
         const beforeAlt = network.chamadas.length;
 
-        assert.deepEqual(await bot.replyAlt('/gpt -voice'), ['Usage: /gpt -voice <texto> (ou responda uma mensagem de texto)\n💡 _/gpt -h para ajuda_']);
-        assert.match((await bot.replyAlt(`/gpt -voice ${'a'.repeat(4097)}`))[0], /❌ O texto tem 4097 caracteres: a voz aceita até 4096\./);
+        assert.deepEqual(await bot.replyAlt('/gpt -v'), ['Usage: /gpt -v <texto> (ou responda uma mensagem de texto)\n💡 _/gpt -h para ajuda_']);
+        assert.match((await bot.replyAlt(`/gpt -v ${'a'.repeat(4097)}`))[0], /❌ O texto tem 4097 caracteres: a voz aceita até 4096\./);
         assert.equal(network.chamadas.length, beforeAlt, 'nada foi para a OpenAI');
 
         network.responder('post', 'api.openai.com/v1/audio/speech', Object.assign(new Error('Request failed with status code 400'), {
             response: { status: 400, data: Buffer.from(JSON.stringify({ error: { message: 'voz inválida' } })) }
         }));
-        assert.deepEqual(await bot.replyAlt('/gpt -voice oi', { erroEsperado: true }), ['❌ Erro no /gpt: voz inválida']);
+        assert.deepEqual(await bot.replyAlt('/gpt -v oi', { erroEsperado: true }), ['❌ Erro no /gpt: voz inválida']);
     });
 
     // The tests' sharp reads the dimensions from "png:WxH" (see sharpFake in tests/helpers/environment.js)
@@ -587,7 +587,7 @@ describe('/gpt', () => {
 
         // Voice, transcription and video follow the same notice
         network.responder('post', 'api.openai.com/v1/audio/speech', withoutModel('gpt-4o-mini-tts'));
-        assert.match((await bot.replyAlt('/gpt -voice oi', { erroEsperado: true }))[0], /^❌ O modelo gpt-4o-mini-tts não existe na sua conta da OpenAI \(voz\)\.\n💡 _A sua chave vê: tts-1_\n/);
+        assert.match((await bot.replyAlt('/gpt -v oi', { erroEsperado: true }))[0], /^❌ O modelo gpt-4o-mini-tts não existe na sua conta da OpenAI \(voz\)\.\n💡 _A sua chave vê: tts-1_\n/);
 
         network.responder('post', 'api.openai.com/v1/audio/transcriptions', withoutModel('gpt-transcribe'));
         const voice = bot.createMessage({ de: bot.OTHERAlt.jid, tipo: 'ptt', midia: { mimetype: 'audio/ogg; codecs=opus', data: 'QUJD' } });
@@ -595,7 +595,7 @@ describe('/gpt', () => {
 
         await bot.setSetting('gpt.image.gifModel', 'gpt-image-1');
         network.responder('post', 'api.openai.com/v1/images/generations', withoutModel('gpt-image-1'));
-        assert.match((await bot.replyAlt('/draw -gif um gato', { erroEsperado: true })).at(-1), /^❌ O modelo gpt-image-1 não existe .*\(GIF\)\.\n💡 _A sua chave vê: gpt-image-2_\n💡 _Troque com \/set gpt\.image\.gifModel/s);
+        assert.match((await bot.replyAlt('/draw -g um gato', { erroEsperado: true })).at(-1), /^❌ O modelo gpt-image-1 não existe .*\(GIF\)\.\n💡 _A sua chave vê: gpt-image-2_\n💡 _Troque com \/set gpt\.image\.gifModel/s);
 
         // Without the list (/v1/models fails too): only the warning
         network.responder('get', 'api.openai.com/v1/models', errorHttp(500));
@@ -812,7 +812,7 @@ describe('/gpt', () => {
     });
 
     test('-usage: o consumo (Usage API, chave de admin) por dia e por modelo, e os limites de agora (cabeçalhos)', async () => {
-        assert.match((await bot.replyAlt('/gpt -usage'))[0], /⚠️ API key da OpenAI não encontrada/);
+        assert.match((await bot.replyAlt('/gpt -u'))[0], /⚠️ API key da OpenAI não encontrada/);
 
         await bot.setSetting('gpt.api.key', 'sk-teste');
         await bot.setSetting('gpt.admin.key', 'sk-admin-teste');
@@ -908,10 +908,10 @@ describe('/gpt', () => {
         assert.match(withoutAdmin, /• tokens: 10 de 1\.000$/);
         assert.doesNotMatch(withoutAdmin, /requisições/);
 
-        assert.deepEqual(await bot.replyAlt('/gpt -u 99'), ['Usage: /gpt -usage [dias] (de 1 a 31; padrão 7)\n💡 _/gpt -h para ajuda_']);
-        assert.deepEqual(await bot.replyAlt('/gpt -usage 0'), ['Usage: /gpt -usage [dias] (de 1 a 31; padrão 7)\n💡 _/gpt -h para ajuda_']);
-        assert.deepEqual(await bot.replyAlt('/gpt -usage 99'), ['Usage: /gpt -usage [dias] (de 1 a 31; padrão 7)\n💡 _/gpt -h para ajuda_']);
-        assert.deepEqual(await bot.replyAlt('/gpt -usage abc'), ['Usage: /gpt -usage [dias] (de 1 a 31; padrão 7)\n💡 _/gpt -h para ajuda_']);
+        assert.deepEqual(await bot.replyAlt('/gpt -u 99'), ['Usage: /gpt -u [dias] (de 1 a 31; padrão 7)\n💡 _/gpt -h para ajuda_']);
+        assert.deepEqual(await bot.replyAlt('/gpt -u 0'), ['Usage: /gpt -u [dias] (de 1 a 31; padrão 7)\n💡 _/gpt -h para ajuda_']);
+        assert.deepEqual(await bot.replyAlt('/gpt -u 99'), ['Usage: /gpt -u [dias] (de 1 a 31; padrão 7)\n💡 _/gpt -h para ajuda_']);
+        assert.deepEqual(await bot.replyAlt('/gpt -u abc'), ['Usage: /gpt -u [dias] (de 1 a 31; padrão 7)\n💡 _/gpt -h para ajuda_']);
 
         await bot.setSetting('gpt.admin.key', 'sk-admin-teste');
         network.responder('get', 'api.openai.com/v1/organization/usage/completions', errorHttp(403));
@@ -927,7 +927,7 @@ describe('/gpt', () => {
         assert.match(r, /\*-img\* \(imagens\) — \/gpt -m <modelo> -img\n✅ gpt-image-2\n\n/);
         assert.match(r, /\*-gif\* \(GIF\) — \/gpt -m <modelo> -gif\n✅ gpt-image-2\.6-flare\n\n/);
         assert.match(r, /\*-audio\* \(transcrição de áudio\) — \/gpt -m <modelo> -audio\n✅ gpt-transcribe\n\n/);
-        assert.match(r, /\*-voice\* \(voz\) — \/gpt -m <modelo> -voice\n✅ gpt-4o-mini-tts\n\n/);
+        assert.match(r, /\*-voice\* \(voz\) — \/gpt -m <modelo> -v\n✅ gpt-4o-mini-tts\n\n/);
         assert.match(r, /💡 _Sem a lista da sua chave/);
         assert.doesNotMatch(r, /OPENAI_MODEL/);
     });
@@ -962,7 +962,7 @@ describe('/gpt', () => {
             '✅ gpt-transcribe',
             '▫️ whisper-1',
             '',
-            '*-voice* (voz) — /gpt -m <modelo> -voice',
+            '*-voice* (voz) — /gpt -m <modelo> -v',
             '✅ gpt-4o-mini-tts',
             '▫️ tts-1',
             '',
@@ -979,7 +979,7 @@ describe('/gpt', () => {
         assert.deepEqual(await bot.replyAlt('/gpt -m gpt-image-2.5-flare -img'), ['✅ Modelo de imagens do /gpt: *gpt-image-2.5-flare*']);
         assert.deepEqual(await bot.replyAlt('/gpt -m gpt-image-2.6-flare -gif'), ['✅ Modelo de GIF do /gpt: *gpt-image-2.6-flare*']);
         assert.deepEqual(await bot.replyAlt('/gpt -m whisper-1 -audio'), ['✅ Modelo de transcrição de áudio do /gpt: *whisper-1*']);
-        assert.deepEqual(await bot.replyAlt('/gpt -m tts-1 -voice'), ['✅ Modelo de voz do /gpt: *tts-1*']);
+        assert.deepEqual(await bot.replyAlt('/gpt -m tts-1 -v'), ['✅ Modelo de voz do /gpt: *tts-1*']);
         assert.deepEqual([bot.getSetting('gpt.api.model'), bot.getSetting('gpt.image.model'), bot.getSetting('gpt.image.gifModel'),
             bot.getSetting('gpt.transcribe.model'), bot.getSetting('gpt.tts.model')],
         ['gpt-4.1', 'gpt-image-2.5-flare', 'gpt-image-2.6-flare', 'whisper-1', 'tts-1']);
@@ -997,7 +997,7 @@ describe('/gpt', () => {
     });
 
     test('-m <modelo> troca o setting; modelo fora da lista é recusado', async () => {
-        assert.deepEqual(await bot.replyAlt('/gpt -model gpt-6-sol'), ['✅ Modelo do /gpt: *gpt-6-sol*']);
+        assert.deepEqual(await bot.replyAlt('/gpt -m gpt-6-sol'), ['✅ Modelo do /gpt: *gpt-6-sol*']);
         assert.equal(bot.getSetting('gpt.api.model'), 'gpt-6-sol');
 
         assert.match((await bot.replyAlt('/gpt -m gpt-5-pro'))[0], /❌ Modelo não suportado: gpt-5-pro \(aceitos: gpt-6-astra/);
@@ -1118,9 +1118,9 @@ describe('/draw', () => {
 
         // The limits are those of the settings, and nothing goes to OpenAI
         const beforeAlt = imageCalls().length;
-        assert.deepEqual(await bot.replyAlt('/draw -gif -f 1 x'), ['❌ -frames precisa ser um inteiro de 2 a 16.']);
+        assert.deepEqual(await bot.replyAlt('/draw -g -f 1 x'), ['❌ -frames precisa ser um inteiro de 2 a 16.']);
         assert.deepEqual(await bot.replyAlt('/draw -ms 5000 x'), ['❌ -ms precisa ser um inteiro de 20 a 2000.']);
-        assert.deepEqual(await bot.replyAlt('/draw -gif -f abc x'), ['❌ -frames precisa ser um inteiro de 2 a 16.']);
+        assert.deepEqual(await bot.replyAlt('/draw -g -f abc x'), ['❌ -frames precisa ser um inteiro de 2 a 16.']);
         assert.equal(imageCalls().length, beforeAlt);
     });
 
@@ -1173,7 +1173,7 @@ describe('/draw', () => {
         ].join('\n'));
 
         assert.deepEqual(await bot.replyAlt('/draw -m dall-e-3'), ['✅ Modelo do /draw: *dall-e-3*']);
-        assert.deepEqual(await bot.replyAlt('/draw -gif -m gpt-image-2.6-sunburst'), ['✅ Modelo de GIF do /draw: *gpt-image-2.6-sunburst*']);
+        assert.deepEqual(await bot.replyAlt('/draw -g -m gpt-image-2.6-sunburst'), ['✅ Modelo de GIF do /draw: *gpt-image-2.6-sunburst*']);
         assert.deepEqual([bot.getSetting('gpt.image.model'), bot.getSetting('gpt.image.gifModel')], ['dall-e-3', 'gpt-image-2.6-sunburst']);
 
         // What the key cannot see is not saved

@@ -323,7 +323,7 @@ describe('/watch com origem e listagem', () => {
         assert.match(r, /pix recente/);
         assert.doesNotMatch(r, /pix antigo/);
         assert.match(r, /\n\n💡 \*Dicas\* _\(N: o nº ou a própria regra\)_\n\/watch -s N mostra as mensagens completas\.\n/);
-        assert.match(r, /\n\/watch -s N -q <texto\|\/regex\/> só as que casam\.\n\/watch -s N -to <destino\|off> troca os destinos\.\n\/watch -f N limpa as ocorrências\.\n\/watch -mask N liga o 🔒 .*; -umask N desliga\.$/);
+        assert.match(r, /\n\/watch -s N -q <texto\|\/regex\/> só as que casam\.\n\/watch -s N -to <destino\|off> troca os destinos\.\n\/watch -f N limpa as ocorrências\.\n\/watch -m N liga o 🔒 .*; -u N desliga\.$/);
         assert.match((await bot.replyAlt('/watch -0'))[0], /quantidade/);
     });
 
@@ -346,14 +346,14 @@ describe('/watch com origem e listagem', () => {
         assert.equal((await someoneWrite('pix aqui')).length, 1);
         assert.deepEqual(await someoneWrite('pix lá', { chat: '120363000000003333@g.us' }), []);
         assert.deepEqual(await someoneWrite('pix privado', { chat: OTHERAlt.jid }), []);
-        assert.match((await bot.replyAlt('/watch -list'))[0], /apenas em 👥 Família/);
+        assert.match((await bot.replyAlt('/watch -l'))[0], /apenas em 👥 Família/);
     });
 
     test('-in canal por nome ou ID restringe à publicação do canal', async () => {
         const id = '120363000009999@newsletter';
         bot.client.chats.set(id, { id: { _serialized: id }, name: 'Defesa Civil', isChannel: true });
         await bot.replyAlt('/watch /chuva/i -in /Defesa Civil/');
-        assert.match((await bot.replyAlt('/watch -list'))[0], /apenas em 📰 Defesa Civil/);
+        assert.match((await bot.replyAlt('/watch -l'))[0], /apenas em 📰 Defesa Civil/);
         assert.equal((await someoneWrite('chuva no canal', { chat: id })).length, 1);
         assert.deepEqual(await someoneWrite('chuva no grupo'), []);
         await bot.replyAlt(`/watch /vento/i -in ${id}`);
@@ -420,7 +420,7 @@ describe('/watch e o /mute', () => {
         assert.equal((await someoneWrite('mais um pix')).length, 1);
 
         // /bot -status counts the ignored /watch ones
-        assert.match((await bot.replyAlt('/bot -status'))[0], /🔇 \*Ignoradas \(\/mute\):\* 2 _\(watch 2\)_\n/);
+        assert.match((await bot.replyAlt('/bot -s'))[0], /🔇 \*Ignoradas \(\/mute\):\* 2 _\(watch 2\)_\n/);
     });
 
     test('/mute corta só o aviso no seu privado: o -to continua recebendo', async () => {
@@ -495,9 +495,9 @@ describe('/watch -q (busca)', () => {
 
         test('liga e desliga o 🔒 da regra; a lista mostra o cadeado', async () => {
             await bot.setSetting('watch.rules', 'liga\npix');
-            assert.match((await bot.replyAlt('/watch -mask 2'))[0], /^🔒 Regra \*#2\* \(pix\)/);
+            assert.match((await bot.replyAlt('/watch -m 2'))[0], /^🔒 Regra \*#2\* \(pix\)/);
             assert.match((await bot.replyAlt('/watch -l'))[0], /#1  liga  \(0\)\n#2  pix  \(0\) 🔒/);
-            assert.match((await bot.replyAlt('/watch -umask 2'))[0], /^🔓 Regra \*#2\*/);
+            assert.match((await bot.replyAlt('/watch -u 2'))[0], /^🔓 Regra \*#2\*/);
             assert.doesNotMatch((await bot.replyAlt('/watch -l'))[0], /\(0\) 🔒/);
             assert.match((await bot.replyAlt('/watch -m 1'))[0], /^🔒 Regra \*#1\*/);
         });
@@ -551,7 +551,7 @@ describe('/watch -q (busca)', () => {
         });
 
         test('regra criada com -mask já nasce com o 🔒, antes ou depois da regra', async () => {
-            assert.match((await bot.replyAlt('/watch -mask /(tcpro|tc pro)/i'))[0], /🔒 Telefones ofuscados/);
+            assert.match((await bot.replyAlt('/watch -m /(tcpro|tc pro)/i'))[0], /🔒 Telefones ofuscados/);
             await bot.replyAlt('/watch pix -m');
             await bot.replyAlt('/watch boleto');
             assert.deepEqual((await bot.dbAll('SELECT rule FROM watch_masks ORDER BY rule')).map(r => r.rule),

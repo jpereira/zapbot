@@ -151,7 +151,7 @@ module.exports = {
     'stats.listLine': '{n}. {chat} — {msgs} msgs _(última em {date})_',
     'stats.listFooter': '\n\n💡 _/stats /nome/ mostra um_\n💡 _/stats -f /nome/ apaga as dele_',
     'stats.flushedAll': '🗑️ Estatísticas apagadas: {chats}.',
-    'stats.flushNeedsChat': 'Informe o chat: /stats -flush /Grupo/ (ou /stats -flush-all para todos).',
+    'stats.flushNeedsChat': 'Informe o chat: /stats -f /Grupo/ (ou /stats -flush-all para todos).',
     'stats.flushedChat': '🗑️ Estatísticas de {chat} apagadas.',
     'stats.whereMineIn': 'suas em {chat}',
     'stats.whereMine': 'suas',
@@ -175,7 +175,7 @@ module.exports = {
         '/watch -s N -q <texto|/regex/> só as que casam.\n' +
         '/watch -s N -to <destino|off> troca os destinos.\n' +
         '/watch -f N limpa as ocorrências.\n' +
-        '/watch -mask N liga o 🔒 (telefones ofuscados nos avisos); -umask N desliga.',
+        '/watch -m N liga o 🔒 (telefones ofuscados nos avisos); -u N desliga.',
     'watch.onlyIn': ' apenas em {icon} {name}',
     'watch.listTitle': '👀 *WATCH: REGRAS* ({count}/{max})\n\n',
     'watch.noRules': '_Nenhuma regra cadastrada._\n💡 _Adicione com /watch <texto|/regex/flags>_',
@@ -201,7 +201,7 @@ module.exports = {
     'watch.kindText': 'texto',
     'watch.added': '✅ Regra *#{n}* adicionada _({kind})_: {rule}\n',
     'watch.addedOnlyIn': '📍 Apenas em {where}.\n',
-    'watch.addedMask': '🔒 Telefones ofuscados nos avisos (desligue com /watch -umask N).\n',
+    'watch.addedMask': '🔒 Telefones ofuscados nos avisos (desligue com /watch -u N).\n',
     'watch.addedAlerts': '💡 _Avisos {where}._',
     'watch.alertsIn': 'em {where}',
     'watch.alertsPrivate': 'no seu privado',

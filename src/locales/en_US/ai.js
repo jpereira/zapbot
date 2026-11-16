@@ -18,7 +18,7 @@ module.exports = {
     'openai.oldPrices': '⚠️ prices are {dias} days old: /gpt -prices',
 
     // src/comandos/openaiComum.js
-    'openai.processing': '⏳ Processing {cmd}, hold on.',
+    'openai.processing': '⏳ Processing {cmd}, please wait.',
     'openai.ownerOnly': '⛔ Only the bot owner (or an admin) can {acao}.',
     'openai.kindAudio': 'transcription',
     'openai.kindVoice': 'voice',
@@ -69,7 +69,7 @@ module.exports = {
     'gpt.noSpeech': '🤖 I heard no speech in this audio.',
     'gpt.transcription': '🤖 *Transcription:*\n{texto}',
     'gpt.audioPrompt': '{pergunta}\n\nAudio transcription:\n{transcricao}',
-    'gpt.voiceUsage': 'Usage: /gpt -voice <text> (or reply to a text message)\n💡 _/gpt -h for help_',
+    'gpt.voiceUsage': 'Usage: /gpt -v <text> (or reply to a text message)\n💡 _/gpt -h for help_',
     'gpt.voiceTooLong': '❌ The text has {n} characters: the voice accepts up to {max}.',
     'gpt.imgUsage': 'Usage: /gpt -img <what to create> (replying to a photo, it gets edited)\n💡 _/gpt -h for help_',
     'gpt.gifUsage': 'Usage: /gpt -gif <what to animate> (replying to a photo, it gets animated)\n💡 _/gpt -h for help_',
@@ -102,7 +102,7 @@ module.exports = {
     'gpt.limitRequests': 'requests',
     'gpt.limitLine': '• {nome}: {restante} of {limite}',
     'gpt.limitReset': ' · resets in {reseta}',
-    'gpt.usageUsage': 'Usage: /gpt -usage [days] (from 1 to {max}; default {padrao})\n💡 _/gpt -h for help_',
+    'gpt.usageUsage': 'Usage: /gpt -u [days] (from 1 to {max}; default {padrao})\n💡 _/gpt -h for help_',
     'gpt.adminKeyHint': '💡 _For the usage, the admin key: OPENAI_ADMIN_KEY or /set gpt.admin.key_',
     'gpt.creditHint': '💡 _To see $used/$total: /set gpt.credit.total <dollars purchased> and ' +
         '/set gpt.credit.since YYYY-MM-DD (the OpenAI API does not report the balance)._',
@@ -145,7 +145,7 @@ module.exports = {
     'tldr.scopeReply': 'for the {mensagens} in {nome} since the replied message ({tempo} ago)',
     'tldr.scopePeriod': 'for the {mensagens} in {nome} over the last {tempo}',
     'tldr.scopeLast': 'for the latest {mensagens} in {nome}',
-    'tldr.processing': '⏳ Processing /tldr {escopo}, hold on.',
+    'tldr.processing': '⏳ Processing /tldr {escopo}, please wait.',
     'tldr.prompt': 'Conversation "{nome}" ({total} messages):\n\n{linhas}',
     'tldr.header': '🤖 *Summary of {nome}*\n_{mensagens} · {inicio} to {fim}_',
     'tldr.sentPrivate': '🤖 Summary sent to your private chat.',

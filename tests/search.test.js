@@ -30,7 +30,7 @@ describe('/search', () => {
         assert.equal(r, '🔎 *2 mensagens com* "pix"\n\n' +
             `1. 📅 13/10/2026, 09:00:00 · 👤 Você\n   "pix feito"\n   🆔 ${bot.client.resultadosDaBusca[1].id._serialized}\n\n` +
             `2. 📅 12/10/2026, 09:00:00 · 👤 Fulano\n   "manda o pix"\n   🆔 ${bot.client.resultadosDaBusca[0].id._serialized}` +
-            '\n\n📖 _Para ler uma inteira: /search -read <nº>._');
+            '\n\n📖 _Para ler uma inteira: /search -r <nº>._');
 
         assert.equal((await bot.replyAlt('/search pix'))[0], r, 'o /search é o mesmo');
         assert.equal(bot.client.buscas[1].query, 'pix');
@@ -66,7 +66,7 @@ describe('/search', () => {
         assert.match((await bot.replyAlt('/search x'))[0], /"x{200}…"\n {3}🆔 /);
 
         bot.client.resultadosDaBusca = [];
-        assert.equal((await bot.replyAlt('/search nada'))[0], '🔎 Nada com "nada" neste chat.\n💡 _Aqui só olhei este chat. Para buscar em todos, use /search -all <texto> (a lista vem no seu privado)._');
+        assert.equal((await bot.replyAlt('/search nada'))[0], '🔎 Nada com "nada" neste chat.\n💡 _Aqui só olhei este chat. Para buscar em todos, use /search -a <texto> (a lista vem no seu privado)._');
         assert.equal((await bot.replyAlt('/search nada', { chat: OWNER.jid }))[0], '🔎 Nada com "nada" em nenhum chat.');
     });
 
@@ -93,8 +93,8 @@ describe('/search', () => {
     test('-all é do dono; nada encontrado responde no próprio chat', async () => {
         bot.client.resultadosDaBusca = [];
         await bot.setSetting('bot.admins', [OTHERAlt.user]);
-        assert.match((await bot.replyAlt('/search -all x', { de: OTHERAlt.jid }))[0], /^⛔ O -all só é do dono/);
-        assert.equal((await bot.replyAlt('/search -all x', { chat: GROUP }))[0], '🔎 Nada com "x" em nenhum chat.');
+        assert.match((await bot.replyAlt('/search -a x', { de: OTHERAlt.jid }))[0], /^⛔ O -all só é do dono/);
+        assert.equal((await bot.replyAlt('/search -a x', { chat: GROUP }))[0], '🔎 Nada com "x" em nenhum chat.');
     });
 
     test('-read (-r) <nº>: o número da lista da última busca; sem lista ou fora dela, avisa', async () => {
@@ -109,7 +109,7 @@ describe('/search', () => {
 
         // The list goes from newest to oldest: 1 is the long one
         assert.equal((await bot.replyAlt('/search -r 1'))[0], `📅 12/10/2026, 09:00:00 · 👤 Fulano\n\n${longa}`);
-        assert.match((await bot.replyAlt('/search -read 2'))[0], /\n\npix antigo$/);
+        assert.match((await bot.replyAlt('/search -r 2'))[0], /\n\npix antigo$/);
         assert.equal((await bot.replyAlt('/search -r 3'))[0], '❌ O nº 3 não está na lista (a última busca tem 2).');
     });
 

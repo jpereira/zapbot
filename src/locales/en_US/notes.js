@@ -32,15 +32,15 @@ module.exports = {
     'notes.when.past': `❌ {when} has already passed.`,
     'notes.when.tooFar': `❌ At most {days} days ahead.`,
 
-    // ---- /notes: -add
+    // ---- /notes: -a
     'notes.add.syntax': `Usage: /notes #tag <text> [-alert <when> [-to <destination>]...]\n💡 _/notes -h for help_`,
     'notes.add.missingTag': `💡 _The #tag is missing. See the tags with /notes_`,
     'notes.add.noText': `The text is missing: /notes #tag <text>`,
     'notes.add.quotedNoText': `❌ The replied message has no text.`,
-    'notes.add.toNeedsAlert': `❌ -to only works with -alert: /notes -add <text> -alert tomorrow 9h -to /L200 Group/`,
+    'notes.add.toNeedsAlert': `❌ -to only works with -alert: /notes -a <text> -alert tomorrow 9h -to /L200 Group/`,
 
-    // ---- /notes: -update
-    'notes.update.usage': `Usage: /notes -update <id> [#tag] <new text>\n💡 _/notes -h for help_`,
+    // ---- /notes: -u
+    'notes.update.usage': `Usage: /notes -u <id> [#tag] <new text>\n💡 _/notes -h for help_`,
 
     // ---- /notes: -alert
     'notes.alert.toOnlyCreate': `❌ -to only works when creating the alert: /notes -alert <id|#tag> tomorrow 9h -to /L200 Group/`,
@@ -61,7 +61,7 @@ module.exports = {
     'notes.tipsTags': `\n\n💡 _/notes #tag lists the notes of a tag_`,
     'notes.sentTo': `📝 Notes sent to {where}.`,
     'notes.sendFail': `❌ Couldn't send the notes: {error}`,
-    'notes.list.searchUsage': `Usage: /notes -search [#tag...] <text|/regex/flags> [-to <destination>]...\n💡 _/notes -h for help_`,
+    'notes.list.searchUsage': `Usage: /notes -s [#tag...] <text|/regex/flags> [-to <destination>]...\n💡 _/notes -h for help_`,
     'notes.list.usage': `Usage: /notes -l [#tag...] [-to <destination>]...\n💡 _/notes -h for help_`,
     'notes.list.none': `📝 No notes{inTags}{withSearch}.`,
     'notes.list.titleClean': `📝 *NOTES*{found}{count}`,
@@ -73,29 +73,29 @@ module.exports = {
     'notes.subject.export': `📝 Notes{tags}`,
     'notes.subject.alert': `🔔 Note #{id}: {text}`,
 
-    // ---- /notes: -move, -desc
-    'notes.move.usage': `Usage: /notes -move #tag #newtag\n💡 _/notes -h for help_`,
+    // ---- /notes: -m, -d
+    'notes.move.usage': `Usage: /notes -m #tag #newtag\n💡 _/notes -h for help_`,
     'notes.move.same': `❌ The new tag is the same as the current one.`,
     'notes.move.notFound': `❌ #{tag} doesn't exist. See the tags with /notes`,
     'notes.move.done': { one: `🏷️ #{from} → #{to} · {count} note`, other: `🏷️ #{from} → #{to} · {count} notes` },
-    'notes.desc.usage': `Usage: /notes -desc #tag [<description>] (or /notes -desc #tag -rm to delete)\n💡 _/notes -h for help_`,
+    'notes.desc.usage': `Usage: /notes -d #tag [<description>] (or /notes -d #tag -rm to delete)\n💡 _/notes -h for help_`,
     'notes.desc.shown': `🏷️ *#{tag}*\n{desc}`,
     'notes.desc.none': `🏷️ #{tag} has no description.`,
-    'notes.desc.createHint': `💡 _Create one with /notes -desc #{tag} <text>_`,
+    'notes.desc.createHint': `💡 _Create one with /notes -d #{tag} <text>_`,
     'notes.desc.noneToRemove': `❌ #{tag} has no description.`,
     'notes.desc.removed': `🗑️ Description of #{tag} deleted.`,
     'notes.desc.saved': `🏷️ *#{tag}* · description saved`,
     'notes.desc.replaced': `🏷️ *#{tag}* · description replaced`,
 
-    // ---- /notes: -view
-    'notes.view.usage': `Usage: /notes -view <id...|#tag...> [-to <destination>]...\n💡 _/notes -h for help_`,
+    // ---- /notes: -v
+    'notes.view.usage': `Usage: /notes -v <id...|#tag...> [-to <destination>]...\n💡 _/notes -h for help_`,
     'notes.view.missingOne': `❌ {list} doesn't exist. See the list with /notes -l`,
     'notes.view.missingMany': `❌ {list} don't exist. See the list with /notes -l`,
     'notes.view.fileNotFound': `#{id}: media file not found`,
     'notes.view.sent': { one: `📝 {count} note sent to {where}.`, other: `📝 {count} notes sent to {where}.` },
 
-    // ---- /notes: -export (PDF)
-    'notes.export.usage': `Usage: /notes -export [#tag...] [-to <destination>]...\n💡 _/notes -h for help_`,
+    // ---- /notes: -e (PDF)
+    'notes.export.usage': `Usage: /notes -e [#tag...] [-to <destination>]...\n💡 _/notes -h for help_`,
     'notes.pdf.withMedia': `with media`,
     'notes.pdf.withAlert': `with alert`,
     'notes.pdf.withLink': `with link`,
@@ -122,7 +122,7 @@ module.exports = {
     'monitor.list.interval': `⏱️ Each contact is checked every {interval} at the most.`,
     'monitor.list.contacts': `👥 Contacts: {count}/{max} · São Paulo time`,
     'monitor.list.empty': `👀 No contacts registered.`,
-    'monitor.list.addHint': `💡 /monitor -add /Contact Name/`,
+    'monitor.list.addHint': `💡 /monitor -a /Contact Name/`,
     'monitor.list.waitingFirst': `⏳ waiting for the first check`,
     'monitor.list.checked': `   🔎 Checked: {when}`,
     'monitor.list.lastSeen': `   🕒 Last seen observed: {when}`,
@@ -137,15 +137,15 @@ module.exports = {
     'monitor.alert.usage': `Give a registered contact: /monitor -alert /Maria/`,
     'monitor.alert.enabled': `🚨 Online alert enabled for "{name}" in the bot owner's private chat.`,
     'monitor.alert.fired': `🚨 The contact "{name}" came online at "{when}".\n💡 For more, type /monitor -l`,
-    'monitor.add.usage': `Give a contact: /monitor -add /Jorge Pereira/`,
+    'monitor.add.usage': `Give a contact: /monitor -a /Jorge Pereira/`,
     'monitor.add.exists': `👀 {name} is already registered: #{id}.`,
     'monitor.add.limit': `❌ Limit of {max} contacts reached. Remove one with /monitor -rm <id>.`,
-    'monitor.add.done': `👀 #{id} · {name} registered.\n⏱️ Checked every {interval}, one contact at a time.\n💡 /monitor -list shows the history; /monitor -rm {id} removes it.\n{risk}`,
+    'monitor.add.done': `👀 #{id} · {name} registered.\n⏱️ Checked every {interval}, one contact at a time.\n💡 /monitor -l shows the history; /monitor -rm {id} removes it.\n{risk}`,
     'monitor.add.paused': `⏸️ Monitor paused. Resume with /set monitor.enabled true.`,
     'monitor.rm.usage': `Give the list id or a contact: /monitor -rm 1 or /monitor -r /Jorge Pereira/`,
     'monitor.rm.all': `🗑️ Monitor cleared: {count} contact(s) and their histories removed.`,
     'monitor.rm.done': `🗑️ #{id} · {name}: registration and history removed.`,
-    'monitor.usage': `Use /monitor, /monitor -add <contact> [-alert], /monitor -alert <contact>, /monitor -rm <id, contact or all> or /monitor -list [contact].\n💡 _/monitor -h for help_`,
+    'monitor.usage': `Use /monitor, /monitor -a <contact> [-alert], /monitor -alert <contact>, /monitor -rm <id, contact or all> or /monitor -l [contact].\n💡 _/monitor -h for help_`,
     'monitor.status.online': `🟢 online`,
     'monitor.status.noData': `❔ no data`,
     'monitor.status.denied': `🔒 time unavailable`,
