@@ -73,7 +73,15 @@ a não ser que tenha um valor padrão: `${N:-valor}`.
 /alias /dolar /rates ${1:-USD}
 /dolar                           → /rates USD
 /dolar EUR                       → /rates EUR
+
+/alias nopt /forward ${1:--l} #nopt
+/nopt                            → /forward -l #nopt
+/nopt -dry                       → /forward -dry #nopt
 ```
+
+O padrão vem depois do `:-`, então um padrão que ele mesmo começa com `-` leva dois hifens: `${1:--l}`. O
+teclado do celular troca `--` por `—` (travessão): o bot entende `${1:—l}` como `${1:--l}` e salva já
+corrigido.
 
 Com `$N`, o que sobra dos argumentos vai para o fim do comando separado por um espaço, então as
 quebras de linha do texto viram espaço. Sem `$N`, o texto vai como foi digitado, quebras de linha

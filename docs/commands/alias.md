@@ -74,7 +74,14 @@ empty, unless it has a default value: `${N:-valor}`.
 /alias /dolar /rates ${1:-USD}
 /dolar                           → /rates USD
 /dolar EUR                       → /rates EUR
+
+/alias nopt /forward ${1:--l} #nopt
+/nopt                            → /forward -l #nopt
+/nopt -dry                       → /forward -dry #nopt
 ```
+
+The default goes after `:-`, so a default that itself starts with `-` takes two hyphens: `${1:--l}`. The
+phone keyboards change `--` into `—` (a long dash): the bot understands `${1:—l}` as `${1:--l}` and saves it fixed.
 
 With `$N`, what's left of the arguments goes to the end of the command separated by a space, so the
 text's line breaks become spaces. Without `$N`, the text goes as typed, line breaks included. To run
