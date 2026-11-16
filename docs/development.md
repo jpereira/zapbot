@@ -86,6 +86,10 @@ src/
   email.js              SMTP and email alerts
   polls.js           poll votes (vote_update) and the /poll -r scoreboard
   heartbeat.js          proof of life for the Docker HEALTHCHECK
+  api.js                the optional local HTTP API (/health, /status, /notes, /send) and the experimental MCP server (api.enabled, mcp.enabled)
+  usageLimit.js          the usage limit per person (/bot +limit, /usage): reservation, refund and the window per period
+  usageCollector.js         collects what a command replies (AsyncLocalStorage), so only the successful calls count
+  contactPhotos.js, vcard.js   /contacts: the photos (cache/contacts) and the vCard 3.0
   process.js           crash and signals (docker stop)
   cleanup.js            retention and periodic cleanup
   stats.js              /stats counters
@@ -227,6 +231,14 @@ The messages the bot sends have whatsapp-web.js's `edit()`: it swaps the text in
 | `presenca.test.js` | Presence reading by LID, shared subscription, cache and absence of valid times without fabricating data |
 | `saudacoes.test.js` | `/welcome` and `/goodbye`: the text per group (`{name}`, `{group}`, mention), `-on`, `-off`, `-test`, the `group_join`/`group_leave` events and who doesn't trigger them |
 | `ocr-qr-carbon.test.js` | `/ocr` (photo to ChatGPT), `/tts`, `/qr` (`-d`, reading the pixels with jsqr), `/carbon` (SVG, themes, limits) and `/profile -set` (group, account, refusal) |
+| `api.test.js` | The local HTTP API (key, `/send` rules and the 10-per-minute limit) and the experimental MCP server (`initialize`, `tools/list`, `tools/call`) |
+| `contacts.test.js` | `/contacts`: the vCard with photos, the filters, the private-chat-only export and the cache |
+| `games.test.js` | `/games`: 8 ball, truth, dare, trivia, and playing just by replying to the bot's message |
+| `perfil-ia.test.js` | `-profile` of `/draw` and `/gpt`: the profile photos next to the images |
+| `profile-about.test.js` | `/profile -about` (people, private chat, replying, group description) and `-set <text>` (139 characters, forbidden characters) |
+| `status-whatsapp.test.js` | `/status` (text, photo, size, ban warning) and `/cron -status` |
+| `usage.test.js` | The usage limit (`/bot +limit`, `/usage`, `/whois`): periods, refund on failure and the reservation |
+| `whois-id.test.js` | `/whois -id`: the ids of the chat and of the person |
 | `profile.test.js` | `/profile`: the photo with the caption `Contact: name in your address book <phone>` (by name, mention and number), the contacts name instead of the pushname, your profile and that of whoever wrote the replied message, several people, no photo, a failing download, the `@lid`, `-mask`, group refused and owner-only use |
 | `reacoes.test.js` | Removed or changed reactions: the `message_reaction` event (and what doesn't generate a notice), the `show.alert.reaction` notice, `/show -r`, `/mute -r`, `/bot -status` and the cleanup |
 | `search.test.js` | `/search`: in this chat, in all of them in your private chat, `-N` and the limit, media and long texts |

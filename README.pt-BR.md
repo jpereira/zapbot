@@ -39,6 +39,9 @@ mensalidade, e as suas mensagens ficam no seu servidor. Você digita comandos em
 | 📅 | **Agendar e automatizar** | Mensagens avulsas e recorrentes, lembretes, atalhos seus, vários comandos numa mensagem só, anotações com `#tags` e alertas, listas de destinatários | [`/cron`](docs/commands/cron.md) · [`/alias`](docs/commands/alias.md) · [`/batch`](docs/commands/batch.md) · [`/notes`](docs/commands/notes.md) · [`/forward`](docs/commands/forward.md) |
 | 👥 | **Gerir grupos** | Marca todo mundo, promove e rebaixa, links de convite, enquetes, boas-vindas e despedidas, silencia e bloqueia | [`/everybody`](docs/commands/everybody.md) · [`/promote`](docs/commands/promote.md) · [`/invite`](docs/commands/invite.md) · [`/poll`](docs/commands/poll.md) · [`/welcome`](docs/commands/welcome.md) · [`/mute`](docs/commands/mute.md) |
 | 🌎 | **Informação do dia a dia** | Tempo conferido em mais de uma fonte, notícias, CVEs, versões do kernel Linux, tradução e estatísticas do chat | [`/weather`](docs/commands/weather.md) · [`/news`](docs/commands/news.md) · [`/cve`](docs/commands/cve.md) · [`/kernel`](docs/commands/kernel.md) · [`/translate`](docs/commands/translate.md) · [`/stats`](docs/commands/stats.md) |
+| 🎲 | **Diversão e jogos** | Bola 8 mágica, verdade, desafio e trivia para o grupo (dá para jogar só respondendo), piadas e os seus amigos desenhados em imagens | [`/games`](docs/commands/games.md) · [`/joke`](docs/commands/joke.md) · [`/draw`](docs/commands/draw.md) |
+| 📣 | **Seu perfil e Status** | Posta no seu Status do WhatsApp (e agenda), mostra o recado de qualquer pessoa e troca o seu, exporta seus contatos com fotos | [`/status`](docs/commands/status.md) · [`/profile`](docs/commands/profile.md) · [`/contacts`](docs/commands/contacts.md) |
+| 🔌 | **API e MCP (experimental)** | Uma API HTTP local (desligada por padrão) para mandar mensagens e ler as suas notas por scripts, e um servidor MCP experimental para clientes de IA | [API e MCP](docs/api.md) |
 | ⭐ | **Pro: limites por pessoa** | Divida o `/gpt` e outros comandos com amigos e grupos, com um limite de chamadas bem-sucedidas por pessoa, por dia, semana ou mês, e o `/usage` para ver o que resta | [`/usage`](docs/commands/usage.md) |
 | 🛡️ | **Seu, e seguro** | Papéis de dono, admin e usuário por comando, proteção contra flood, anti-SSRF nos downloads, backups, login do QR Code por e-mail, em inglês ou português do Brasil | [`/bot`](docs/commands/bot.md) · [`/backup`](docs/commands/backup.md) · [`/set`](docs/commands/set.md) |
 
@@ -121,6 +124,100 @@ Ajuda, uso e erros nunca contam, você e os admins não têm limite, e o histór
 
 O bot mostra o comando chamado antes do resultado. Os atalhos seguem as permissões dos comandos que chamam, e o
 `/help alias` lista os seus.
+
+**Jogos para o grupo, só respondendo:**
+
+```text
+/games -trivia
+🧠 Trivia
+
+Qual é a capital da Austrália?
+
+A) Sydney
+B) Melbourne
+C) Camberra
+D) Perth
+
+(Rafael responde a ela)  c
+✅ Acertou! C) Camberra
+```
+
+```text
+/games -8ball vai chover no sábado?
+🎱 vai chover no sábado?
+Não conte com isso.
+```
+
+**Poste no seu Status (e agende), com o aviso do risco de banimento:**
+
+```text
+/status Bom dia, pessoal! ☀️
+📣 Postado no seu Status.
+
+/cron 8h -r d -status Bom dia! {/weather}
+🗓️ Agendado para ter 17/11 08:00 🔁 diário para 👤 Status do WhatsApp.
+```
+
+**O recado de alguém, e o seu:**
+
+```text
+/profile -a /Fulano/
+📝 Recado de Fulano <+5521999999999>: Disponível só para emergências
+
+/profile -s Ocupado até segunda
+✅ Seu recado agora é: Ocupado até segunda
+```
+
+**Quem é quem: os ids do chat e da pessoa** (para preencher um setting, por exemplo):
+
+```text
+/whois -id
+🆔 IDs
+👥 Grupo: 120363012345678901@g.us
+• 📞 +5521911111111
+  🪪 5521911111111@c.us
+```
+
+**Um lembrete, uma mensagem agendada e uma recorrente:**
+
+```text
+/cron amanhã 9h -rem ligar pro banco
+/cron sexta 18h -to /Família/ O jantar é às 20h!
+/cron 8h -r d Hoje: {/weather}
+```
+
+**Um retrato do grupo com as fotos de perfil, sem baixar nada:**
+
+```text
+/draw -p /Rafael Silva/ /Maria Lucia/ desenhe os dois numa festa de aniversário
+🎨 desenhe os dois numa festa de aniversário
+```
+
+**Seus contatos, com fotos, num arquivo só:**
+
+```text
+/contacts
+📇 1.248 contatos exportados, com fotos. Enviando o .vcf...
+```
+
+**Baixe um vídeo ou só o áudio:**
+
+```text
+/get https://youtu.be/dQw4w9WgXcQ
+/get -a https://youtu.be/dQw4w9WgXcQ
+```
+
+**Fale com o bot pelos seus scripts** (a API local, desligada por padrão; em cima dela há um
+servidor MCP experimental para clientes de IA):
+
+```text
+$ curl -s -X POST http://127.0.0.1:3100/send \
+    -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" \
+    -d '{"to":"5521999999999","text":"Backup feito ✅"}'
+{"ok":true,"to":"5521999999999@c.us"}
+```
+
+Veja [API e MCP](docs/api.md).
 
 A ideia vem dos velhos tempos do IRC: o ZapBot é inspirado nas antigas
 [eggdrops](https://www.eggheads.org/), os bots que ficavam de plantão nos canais, respondendo a
@@ -345,6 +442,7 @@ e deixe o bot do seu jeito:
 | [Comandos](https://jpereira.github.io/zapbot/pt-BR/commands/) | Uma página por comando, com opções e exemplos |
 | [Demonstração](docs/demo.md) | O bot em ação, em GIFs |
 | [Settings](https://jpereira.github.io/zapbot/pt-BR/settings/) | Configurações alteráveis pelo `/set` |
+| [API e MCP](https://jpereira.github.io/zapbot/pt-BR/api/) | A API HTTP local opcional e o servidor MCP experimental para clientes de IA |
 | [Operação](https://jpereira.github.io/zapbot/pt-BR/operacao/) | Dia a dia, saúde do container (heartbeat) e solução de problemas |
 | [Desenvolvimento](https://jpereira.github.io/zapbot/pt-BR/desenvolvimento/) | Estrutura do código, testes, documentação e nova versão |
 

@@ -86,6 +86,10 @@ src/
   email.js              SMTP e alertas por e-mail
   polls.js           votos das enquetes (vote_update) e o placar do /poll -r
   heartbeat.js          prova de vida para o HEALTHCHECK do Docker
+  api.js                a API HTTP local opcional (/health, /status, /notes, /send) e o servidor MCP experimental (api.enabled, mcp.enabled)
+  usageLimit.js          o limite de uso por pessoa (/bot +limit, /usage): reserva, devolução e a janela de cada período
+  usageCollector.js         coleta o que um comando responde (AsyncLocalStorage), para só as chamadas bem-sucedidas contarem
+  contactPhotos.js, vcard.js   /contacts: as fotos (cache/contacts) e o vCard 3.0
   process.js           crash e sinais (docker stop)
   cleanup.js            retenção e limpeza periódica
   stats.js              contadores do /stats
@@ -224,6 +228,14 @@ devolve `null`, como quando o WhatsApp não deixa editar.
 | `presenca.test.js` | Leitura de presença por LID, assinatura compartilhada, cache e ausência de horários válidos sem fabricar dados |
 | `saudacoes.test.js` | `/welcome` e `/goodbye`: o texto por grupo (`{name}`, `{group}`, menção), `-on`, `-off`, `-test`, os eventos `group_join`/`group_leave` e quem não dispara |
 | `ocr-qr-carbon.test.js` | `/ocr` (a foto para o ChatGPT), `/tts`, `/qr` (`-d`, leitura dos pixels com o jsqr), `/carbon` (SVG, temas, limites) e `/profile -set` (grupo, conta, recusa) |
+| `api.test.js` | A API HTTP local (chave, regras do `/send` e o limite de 10 por minuto) e o servidor MCP experimental (`initialize`, `tools/list`, `tools/call`) |
+| `contacts.test.js` | O `/contacts`: o vCard com fotos, os filtros, a exportação só no privado e o cache |
+| `games.test.js` | O `/games`: bola 8, verdade, desafio, trivia, e jogar só respondendo a mensagem do bot |
+| `perfil-ia.test.js` | O `-profile` do `/draw` e do `/gpt`: as fotos de perfil junto das imagens |
+| `profile-about.test.js` | O `/profile -about` (pessoas, privado, respondendo, descrição do grupo) e o `-set <texto>` (139 caracteres, caracteres proibidos) |
+| `status-whatsapp.test.js` | O `/status` (texto, foto, tamanho, aviso de banimento) e o `/cron -status` |
+| `usage.test.js` | O limite de uso (`/bot +limit`, `/usage`, `/whois`): períodos, devolução na falha e a reserva |
+| `whois-id.test.js` | O `/whois -id`: os ids do chat e da pessoa |
 | `profile.test.js` | O `/profile`: a foto com a legenda `Contato: nome da agenda <telefone>` (por nome, menção e número), o nome da agenda no lugar do pushname, o seu perfil e o de quem escreveu a mensagem respondida, várias pessoas, sem foto, o download que falha, o `@lid`, `-mask`, grupo recusado e o uso só pelo dono |
 | `reacoes.test.js` | Reações removidas ou trocadas: o evento `message_reaction` (e o que não gera aviso), o aviso `show.alert.reaction`, o `/show -r`, o `/mute -r`, o `/bot -status` e a limpeza |
 | `search.test.js` | `/search`: neste chat, em todos no seu privado, o `-N` e o limite, mídias e textos longos |
