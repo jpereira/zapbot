@@ -17,7 +17,7 @@ exemplo) enviar mensagens e ler as suas `/notes`.
 
 ## Ligando
 
-Quatro settings, todos pelo [`/set`](commands/set.md) (os três primeiros valem ao reiniciar o bot):
+Os settings, todos pelo [`/set`](commands/set.md) (valem ao reiniciar o bot):
 
 ```text
 /set api.key 5f8d0c1e2b7a49c3a1d6e4f0b9a8c7d2e1f3a4b5c6d7e8f90123456789abcde

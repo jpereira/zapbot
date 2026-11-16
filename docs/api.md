@@ -17,8 +17,7 @@ can send messages and read your `/notes`.
 
 ## Turning it on
 
-Four settings, all with [`/set`](commands/set.md) (the first three take effect after restarting the
-bot):
+The settings, all with [`/set`](commands/set.md) (they take effect after restarting the bot):
 
 ```text
 /set api.key 5f8d0c1e2b7a49c3a1d6e4f0b9a8c7d2e1f3a4b5c6d7e8f90123456789abcde

@@ -39,6 +39,9 @@ messages stay on your server. You type commands in any chat and it answers (`/he
 | 📅 | **Schedule and automate** | One-off and recurring messages, reminders, your own shortcuts, several commands in one message, notes with `#tags` and alerts, recipient lists | [`/cron`](docs/commands/cron.md) · [`/alias`](docs/commands/alias.md) · [`/batch`](docs/commands/batch.md) · [`/notes`](docs/commands/notes.md) · [`/forward`](docs/commands/forward.md) |
 | 👥 | **Group management** | Mentions everyone, promotes and demotes, invite links, polls, welcome and goodbye messages, mutes and blocks | [`/everybody`](docs/commands/everybody.md) · [`/promote`](docs/commands/promote.md) · [`/invite`](docs/commands/invite.md) · [`/poll`](docs/commands/poll.md) · [`/welcome`](docs/commands/welcome.md) · [`/mute`](docs/commands/mute.md) |
 | 🌎 | **Everyday info** | Weather checked against more than one source, news, CVEs, Linux kernel versions, translation and chat statistics | [`/weather`](docs/commands/weather.md) · [`/news`](docs/commands/news.md) · [`/cve`](docs/commands/cve.md) · [`/kernel`](docs/commands/kernel.md) · [`/translate`](docs/commands/translate.md) · [`/stats`](docs/commands/stats.md) |
+| 🎲 | **Fun and games** | Magic 8 ball, truth, dare and trivia for the group (you can play just by replying), jokes and your friends drawn into pictures | [`/games`](docs/commands/games.md) · [`/joke`](docs/commands/joke.md) · [`/draw`](docs/commands/draw.md) |
+| 📣 | **Your profile and Status** | Posts on your WhatsApp Status (and schedules it), shows anyone's About text and changes yours, exports your contacts with photos | [`/status`](docs/commands/status.md) · [`/profile`](docs/commands/profile.md) · [`/contacts`](docs/commands/contacts.md) |
+| 🔌 | **API and MCP (experimental)** | A local HTTP API (off by default) to send messages and read your notes from scripts, and an experimental MCP server for AI clients | [API and MCP](docs/api.md) |
 | ⭐ | **Pro: limits per person** | Share `/gpt` and other commands with friends and groups, with a limit of successful calls per person, per day, week or month, and `/usage` to see what is left | [`/usage`](docs/commands/usage.md) |
 | 🛡️ | **Yours, and safe** | Owner, admin and user roles per command, flood protection, anti-SSRF in downloads, backups, QR Code login by e-mail, and English or Brazilian Portuguese | [`/bot`](docs/commands/bot.md) · [`/backup`](docs/commands/backup.md) · [`/set`](docs/commands/set.md) |
 
@@ -121,6 +124,100 @@ Help, usage and errors never count, you and the admins have no limit, and the hi
 
 The bot shows the command that was called before the result. Shortcuts follow the permissions of the commands
 they call, and `/help alias` lists yours.
+
+**Games for the group, just by replying:**
+
+```text
+/games -trivia
+🧠 Trivia
+
+What is the capital of Australia?
+
+A) Sydney
+B) Melbourne
+C) Canberra
+D) Perth
+
+(Rafael replies to it)  c
+✅ Correct! C) Canberra
+```
+
+```text
+/games -8ball will it rain on Saturday?
+🎱 will it rain on Saturday?
+Don't count on it.
+```
+
+**Post on your Status (and schedule it), with a warning about the ban risk:**
+
+```text
+/status Good morning, everybody! ☀️
+📣 Posted on your Status.
+
+/cron 8h -r d -status Good morning! {/weather}
+🗓️ Scheduled for Tue 17/11 08:00 🔁 daily to 👤 WhatsApp Status.
+```
+
+**Someone's About text, and yours:**
+
+```text
+/profile -a /Fulano/
+📝 About of Fulano <+5521999999999>: Available only for emergencies
+
+/profile -s Busy until Monday
+✅ Your About is now: Busy until Monday
+```
+
+**Who is who: the ids of the chat and of the person** (to fill a setting, for example):
+
+```text
+/whois -id
+🆔 IDs
+👥 Group: 120363012345678901@g.us
+• 📞 +5521911111111
+  🪪 5521911111111@c.us
+```
+
+**A reminder, a scheduled message and a recurring one:**
+
+```text
+/cron tomorrow 9h -rem call the bank
+/cron friday 18h -to /Family/ Dinner is at 8!
+/cron 8h -r d Today: {/weather}
+```
+
+**A group portrait with the profile photos, without downloading anything:**
+
+```text
+/draw -p /Rafael Silva/ /Maria Lucia/ draw the two of them at a birthday party
+🎨 draw the two of them at a birthday party
+```
+
+**Your contacts, with photos, in one file:**
+
+```text
+/contacts
+📇 1,248 contacts exported, with photos. Sending the .vcf...
+```
+
+**Download a video or just the audio:**
+
+```text
+/get https://youtu.be/dQw4w9WgXcQ
+/get -a https://youtu.be/dQw4w9WgXcQ
+```
+
+**Talk to the bot from your own scripts** (the local API, off by default; there is an experimental
+MCP server on top of it for AI clients):
+
+```text
+$ curl -s -X POST http://127.0.0.1:3100/send \
+    -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" \
+    -d '{"to":"5521999999999","text":"Backup done ✅"}'
+{"ok":true,"to":"5521999999999@c.us"}
+```
+
+See [API and MCP](docs/api.md).
 
 The idea comes from the old IRC days: ZapBot is inspired by the old
 [eggdrops](https://www.eggheads.org/), the bots that stood watch in the channels, answering
@@ -347,6 +444,7 @@ and make the bot your own:
 | [Commands](https://jpereira.github.io/zapbot/commands/) | One page per command, with options and examples |
 | [Demo](docs/demo.md) | The bot in action, in GIFs |
 | [Settings](https://jpereira.github.io/zapbot/settings/) | Settings you can change with `/set` |
+| [API and MCP](https://jpereira.github.io/zapbot/api/) | The optional local HTTP API and the experimental MCP server for AI clients |
 | [Operation](https://jpereira.github.io/zapbot/operacao/) | Day to day, container health (heartbeat) and troubleshooting |
 | [Development](https://jpereira.github.io/zapbot/desenvolvimento/) | Code structure, tests, documentation and a new version |
 
