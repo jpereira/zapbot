@@ -33,7 +33,7 @@ columns by default.
  #  ### # #  ## ### #
 ```
 
-Long texts wrap into several rows of letters, separated by a blank line:
+Long texts wrap into several rows of letters, separated by a blank line. The break is at the spaces (the whole word goes down); only a word longer than the row is split, in equal pieces (`NAZARENO` becomes `NAZA` / `RENO`):
 
 ```text
 /ascii Happy birthday

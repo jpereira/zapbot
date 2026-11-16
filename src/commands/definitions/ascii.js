@@ -9,7 +9,7 @@ module.exports = {
     usage: '/ascii [-width|-w <columns>] [-char|-c <character>] <text>',
     aliases: [],
     summary: 'The text in big ASCII letters',
-    help: 'The text in big ASCII letters, in a monospaced block that fits the phone screen (wraps into several lines of letters). Accepts letters (no accents), numbers and ! ? . , : - + _ /, up to 40 characters. With no text, uses the replied message\'s.',
+    help: 'The text in big ASCII letters, in a monospaced block that fits the phone screen (wraps into several lines of letters, at the spaces: the whole word goes down; only a word longer than the line is split). Accepts letters (no accents), numbers and ! ? . , : - + _ /, up to 40 characters. With no text, uses the replied message\'s.',
     ex: ['/ascii Jorge!', '/ascii -w 20 Happy birthday', '/ascii -c @ Hi'],
     cmd_opts: [
         {

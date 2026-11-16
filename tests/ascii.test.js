@@ -83,3 +83,21 @@ test('\\n (digitado) e quebra de linha começam uma nova linha de letras', () =>
     assert.equal(generateAscii('A\\nB'), expected);
     assert.equal(generateAscii('A\nB'), expected);
 });
+
+test('texto grande quebra nos espaços (a palavra inteira desce); só a palavra maior que a linha parte', () => {
+    const groups = (s) => s.split('\n\n');
+    // Each word on its own line of letters
+    assert.equal(groups(generateAscii('jorge pereira nazareno', { largura: 30 })).length, 4); // JORGE / PEREIRA / NAZA / RENO
+    assert.equal(groups(generateAscii('oi eu', { largura: 30 })).length, 1);                   // cabe junto
+    assert.equal(groups(generateAscii('jorge pereira', { largura: 30 })).length, 2);
+
+    // Larger than the line: split into equal pieces, without a lone letter left over
+    const partsAlt = groups(generateAscii('nazareno', { largura: 20 }));
+    assert.equal(partsAlt.length, 2);
+    for (const part of partsAlt) assert.ok(Math.max(...part.split('\n').map(l => l.length)) >= 14, 'pedaços de 4 letras');
+
+    // No line goes past the width
+    for (const w of [10, 20, 30, 60]) {
+        for (const line of generateAscii('jorge pereira nazareno silva', { largura: w }).split('\n')) assert.ok(line.length <= w, `${w}: ${line}`);
+    }
+});

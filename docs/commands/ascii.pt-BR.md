@@ -33,7 +33,7 @@ tela do celular: 30 colunas por padrão.
  #  ### # #  ## ### #
 ```
 
-Textos longos quebram em várias linhas de letras, separadas por uma linha em branco:
+Textos longos quebram em várias linhas de letras, separadas por uma linha em branco. A quebra é nos espaços (a palavra inteira desce); só a palavra maior que a linha é partida, em pedaços iguais (`NAZARENO` vira `NAZA` / `RENO`):
 
 ```text
 /ascii Feliz aniversario
