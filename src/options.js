@@ -42,8 +42,8 @@ function tokenizeCommand(input) {
 }
 
 function normalizeArg(arg) {
-    // Fixes the common typo: uol..com.br
-    return arg.replace('..com.br', '.com.br');
+    // "\-foo" is the text "-foo" (option escape); and fixes the common typo: uol..com.br
+    return arg.replace(/^\\(?=-)/, '').replace('..com.br', '.com.br');
 }
 
 function isOption(token) {

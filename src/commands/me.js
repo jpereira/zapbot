@@ -6,15 +6,16 @@
  */
 const { client } = require('../client');
 const { t } = require('../i18n');
+const { unescape } = require('../util/format');
 const { getSetting } = require('../settings');
 const { sendMedia, commandsError, assembleText, breakLines } = require('../textCommands');
 
 async function cmdMe({ msg, args, chatId, chatName, isGroup, nivel: level, admin, podeUsar: canUse, senderContact, senderName, senderNumber }) {
     let times = 1;
-    const rest = args.trim().replace(/^-(?:repeat|r)\s+(\S+)(?:\s+|$)/i, (_, n) => {
+    const rest = unescape(args.trim().replace(/^-(?:repeat|r)\s+(\S+)(?:\s+|$)/i, (_, n) => {
         times = /^\d+$/.test(n) ? Number(n) : 0;
         return '';
-    });
+    }));
     const max = getSetting('me.maxRepeat');
     if (times < 1 || times > max) {
         return msg.reply(t('me.invalidRepeat', { max: max }));

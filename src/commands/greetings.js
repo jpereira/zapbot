@@ -12,6 +12,7 @@ const {
 } = require('../greetings');
 const { client } = require('../client');
 const { t } = require('../i18n');
+const { unescape } = require('../util/format');
 const { groupResolverName } = require('../contacts');
 
 // The command text without the options (preserves the line breaks of what was typed)
@@ -30,7 +31,7 @@ async function cmdGreeting(type, cmd, { msg, args, opts, chatId, isGroup, sender
         return;
     }
 
-    const textAlt = withoutOptions(args);
+    const textAlt = unescape(withoutOptions(args));
 
     if (opts.given.has('test')) {
         const current = textAlt ? { text: textAlt } : (await readGreeting(chatId, type)) ?? { text: null };

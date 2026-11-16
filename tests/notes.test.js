@@ -674,3 +674,20 @@ test('-c: uma linha por nota, por dia, com 🖼️ ⏰ 🔗; o cabeçalho da tag
     }
     await bot.replyAlt('/notes -rm all');
 });
+
+test('\\-foo é texto: o escape de opção vale no /notes (-to, -alert, -c...)', async () => {
+    const [r] = await bot.replyAlt('/notes #casa comprar \\-to leite \\-alert amanhã e \\-c');
+    assert.match(r, /anotado|Anotação|#casa/i);
+    const [note] = await notes();
+    assert.equal(note.text, 'comprar -to leite -alert amanhã e -c');
+    assert.equal(note.alert_at, null, 'não virou alerta');
+
+    // Without the escape, -to would be read as a destination
+    const [errorAlt] = await bot.replyAlt('/notes #casa comprar -to xyzinexistente');
+    assert.match(errorAlt, /O -to só vale com o -alert/);
+    assert.equal((await notes()).length, 1);
+
+    // -update too
+    await bot.replyAlt('/notes -update 1 #casa novo \\-to texto');
+    assert.equal((await notes())[0].text, 'novo -to texto');
+});
