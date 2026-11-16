@@ -389,6 +389,15 @@ describe('documentação', () => {
         }
     });
 
+    test('HTML cru com assets: no site, a página pt-BR fica em /pt-BR/, então o caminho sobe um nível (../assets/)', () => {
+        // MkDocs only rewrites paths in Markdown ![](...); <img src> and <a href> stay as they are
+        const raw = (fileAlt) => [...fs.readFileSync(path.join(bot.ROOT, fileAlt), 'utf8').matchAll(/(?:src|href)="((?:\.\.\/)?assets\/[^"]+)"/g)].map(m => m[1]);
+        const en = raw('docs/index.md');
+        const pt = raw('docs/index.pt-BR.md');
+        assert.ok(en.length > 0 && en.every(c => c.startsWith('assets/')), 'index.md: assets/ (a raiz do site)');
+        assert.deepEqual(pt, en.map(c => `../${c}`), 'index.pt-BR.md: ../assets/ (um nível acima, a raiz do site)');
+    });
+
     test('links para o site (jpereira.github.io/zapbot) apontam para páginas e âncoras do docs/', () => {
         const SITE = /https:\/\/jpereira\.github\.io\/zapbot\/([^)\s"'`]*)/g;
         const files = [...READMES, 'SECURITY.md', 'SECURITY.pt-BR.md', ...definitionFiles(), ...pagesDocs().map(f => `docs/${f}`)];
