@@ -8,7 +8,10 @@ const assert = require('node:assert/strict');
 
 const { OWNER, GROUP, OTHERAlt } = bot;
 
-beforeEach(bot.restart);
+beforeEach(async () => {
+    await bot.restart();
+    bot.src('commands/search').cleanLastSearches();
+});
 
 // A message as searchMessages returns it
 const foundAlt = (textAlt, { chat = GROUP, de = OTHERAlt.jid, quando: when = Date.now(), ...extras } = {}) => ({
@@ -27,7 +30,7 @@ describe('/search', () => {
         assert.equal(r, '🔎 *2 mensagens com* "pix"\n\n' +
             `1. 📅 13/10/2026, 09:00:00 · 👤 Você\n   "pix feito"\n   🆔 ${bot.client.resultadosDaBusca[1].id._serialized}\n\n` +
             `2. 📅 12/10/2026, 09:00:00 · 👤 Fulano\n   "manda o pix"\n   🆔 ${bot.client.resultadosDaBusca[0].id._serialized}` +
-            '\n\n📖 _Para ler uma inteira: /search -read <id>._');
+            '\n\n📖 _Para ler uma inteira: /search -read <nº>._');
 
         assert.equal((await bot.replyAlt('/search pix'))[0], r, 'o /search é o mesmo');
         assert.equal(bot.client.buscas[1].query, 'pix');
@@ -63,8 +66,62 @@ describe('/search', () => {
         assert.match((await bot.replyAlt('/search x'))[0], /"x{200}…"\n {3}🆔 /);
 
         bot.client.resultadosDaBusca = [];
-        assert.equal((await bot.replyAlt('/search nada'))[0], '🔎 Nada com "nada" neste chat.');
+        assert.equal((await bot.replyAlt('/search nada'))[0], '🔎 Nada com "nada" neste chat.\n💡 _Aqui só olhei este chat. Para buscar em todos, use /search -all <texto> (a lista vem no seu privado)._');
         assert.equal((await bot.replyAlt('/search nada', { chat: OWNER.jid }))[0], '🔎 Nada com "nada" em nenhum chat.');
+    });
+
+    test('-all: busca em todos os chats de qualquer lugar e manda a lista no privado do dono', async () => {
+        bot.client.resultadosDaBusca = [
+            foundAlt('correto', { chat: OTHERAlt.jid, quando: Date.UTC(2026, 9, 12, 12) }),
+            foundAlt('tá correto', { chat: GROUP, quando: Date.UTC(2026, 9, 13, 12) })
+        ];
+        const sendings = await bot.executar('/search -all correto', { chat: GROUP });
+
+        // Without a chat filter, and the list does not show in the group
+        assert.deepEqual(bot.client.buscas.at(-1), { query: 'correto', options: { page: 1, limit: 10 } });
+        const inGroup = sendings.filter(e => e.chatId === GROUP).map(e => e.texto).join('\n');
+        assert.match(inGroup, /2 mensagens encontradas em todos os chats: mandei a lista no seu privado/);
+        assert.doesNotMatch(inGroup, /tá correto/);
+        const inPrivate = sendings.filter(e => e.chatId === OWNER.jid).map(e => e.texto).join('\n');
+        assert.match(inPrivate, /🔎 \*2 mensagens com\* "correto" _\(todos os chats\)_/);
+        assert.match(inPrivate, /tá correto/);
+
+        // The -read <no.> works in private, with that search's list
+        assert.match((await bot.replyAlt('/search -r 1', { chat: OWNER.jid }))[0], /tá correto$/);
+    });
+
+    test('-all é do dono; nada encontrado responde no próprio chat', async () => {
+        bot.client.resultadosDaBusca = [];
+        await bot.setSetting('bot.admins', [OTHERAlt.user]);
+        assert.match((await bot.replyAlt('/search -all x', { de: OTHERAlt.jid }))[0], /^⛔ O -all só é do dono/);
+        assert.equal((await bot.replyAlt('/search -all x', { chat: GROUP }))[0], '🔎 Nada com "x" em nenhum chat.');
+    });
+
+    test('-read (-r) <nº>: o número da lista da última busca; sem lista ou fora dela, avisa', async () => {
+        assert.match((await bot.replyAlt('/search -r 1'))[0], /^❌ Não há uma busca recente neste chat/);
+
+        const longa = 'y'.repeat(250);
+        bot.client.resultadosDaBusca = [
+            foundAlt('pix antigo', { quando: Date.UTC(2026, 9, 11, 12) }),
+            foundAlt(longa, { quando: Date.UTC(2026, 9, 12, 12) })
+        ];
+        await bot.replyAlt('/search pix');
+
+        // The list goes from newest to oldest: 1 is the long one
+        assert.equal((await bot.replyAlt('/search -r 1'))[0], `📅 12/10/2026, 09:00:00 · 👤 Fulano\n\n${longa}`);
+        assert.match((await bot.replyAlt('/search -read 2'))[0], /\n\npix antigo$/);
+        assert.equal((await bot.replyAlt('/search -r 3'))[0], '❌ O nº 3 não está na lista (a última busca tem 2).');
+    });
+
+    test('a busca não lista o /search que você digitou antes nem a lista que o bot respondeu', async () => {
+        bot.client.resultadosDaBusca = [
+            foundAlt('manda o pix', { quando: Date.UTC(2026, 9, 12, 12) }),
+            foundAlt('/search pix', { de: OWNER.jid, quando: Date.UTC(2026, 9, 13, 12) }),
+            foundAlt('🔎 *3 mensagens com* "pix" ...', { de: OWNER.jid, quando: Date.UTC(2026, 9, 13, 13) })
+        ];
+        const [r] = await bot.replyAlt('/search pix');
+        assert.match(r, /^🔎 \*1 mensagem com\* "pix"/);
+        assert.doesNotMatch(r, /3 mensagens com/);
     });
 
     test('-read (-r) <id>: a mensagem inteira, no escopo da busca', async () => {
@@ -83,7 +140,7 @@ describe('/search', () => {
     });
 
     test('sem texto: a sintaxe; a busca falha: o aviso', async () => {
-        assert.match((await bot.replyAlt('/search'))[0], /^```Usage: \/search \[-N\] <texto> \| -read <id>```\n💡 _\/search -h para ajuda_/);
+        assert.match((await bot.replyAlt('/search'))[0], /^```Usage: \/search \[-N\] \[-all\] <texto> \| -read <nº\|id>```\n💡 _\/search -h para ajuda_/);
 
         bot.client.resultadosDaBusca = new Error('page crashed');
         const r = await bot.replyAlt('/search pix', { erroEsperado: true });

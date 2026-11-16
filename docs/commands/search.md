@@ -13,7 +13,8 @@ covers the messages WhatsApp Web has, including ones that never went through the
 |---|---|---|
 | `-N` | | Number of messages (default 10, max 50). E.g.: `-30` |
 | *(none)* | `<text>` | What to search for, like in WhatsApp's search (case-insensitive) |
-| `-read`, `-r` | `<id>` | Shows the full message for an id from the search list. Same scope as the search |
+| `-all`, `-a` | | Searches all chats from anywhere and sends the list to your private chat (owner only). Without it, outside your private chat the search only looks at the chat where you typed |
+| `-read`, `-r` | `<no.\|id>` | Shows the full message of a result of the last search, by its number in the list (`-r 1`) or by its whole id. Same scope as the search |
 | `-mask`, `-m` | | Obfuscates phone numbers in this run's output. E.g.: `+55219****44` |
 
 The scope is **this chat**; in **your private chat**, all chats, and each result says which chat it's
@@ -38,7 +39,7 @@ type and the caption). Long texts are cut at 200 characters.
    📎 [image] "pix receipt"
    🆔 true_120363000000000000@g.us_3EB0C3D4
 
-📖 To read one in full: /search -read <id>.
+📖 To read one in full: /search -read <no.>.
 ```
 
 ```text
@@ -48,7 +49,8 @@ type and the caption). Long texts are cut at 200 characters.
 send the pix and I'll pay, the whole text, no cut
 ```
 
-- Each result carries the `🆔` for `-read`. With `-mask`, the id is obfuscated too (it won't work
+- The number of the list works for 2 hours after the search, per chat (`/search -r 1`); a new search replaces
+  the list. The whole id (`🆔`) keeps working for any message. Each result carries the `🆔`. With `-mask`, the id is obfuscated too (it won't work
   for `-read`).
 - `-read` works only for this chat; in your private chat, for any chat. For media, it shows the type
   and the caption.

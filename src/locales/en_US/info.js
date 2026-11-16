@@ -156,7 +156,12 @@ module.exports = {
     'search.header': '🔎 *{count} matching* "{text}"',
     'search.allChats': '_(all chats)_',
     'search.more': '💡 _There may be more: use -N to see more (e.g. /search -30 <text>)._',
-    'search.readHint': '📖 _To read one in full: /search -read <id>._',
+    'search.readHint': '📖 _To read one in full: /search -read <no.>._',
+    'search.noList': '❌ There is no recent search in this chat: run /search <text> and use the number from the list (or the whole 🆔).',
+    'search.allOwnerOnly': '⛔ -all is owner only: it answers in your private chat with messages from every chat.',
+    'search.allHint': '💡 _I only looked at this chat here. To search all of them, use /search -all <text> (the list comes in your private chat)._',
+    'search.sentPrivate': { one: '🔎 {count} message found in all chats: I sent the list to your private chat.', other: '🔎 {count} messages found in all chats: I sent the list to your private chat.' },
+    'search.outOfList': '❌ No. {n} is not in the list (the last search has {max}).',
 
     // /walissu
     'walissu.groupOnly': 'Only usable inside groups.',
