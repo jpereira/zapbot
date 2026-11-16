@@ -6,7 +6,7 @@
 # workflow), but only choosing a vX.Y.Z tag: from a branch it refuses.
 #
 # Requires, once: Settings › Pages › Build and deployment › Source: GitHub Actions.
-name: Documentação
+name: Documentation
 
 on:
   push:

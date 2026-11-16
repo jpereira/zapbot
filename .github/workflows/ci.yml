@@ -1,7 +1,7 @@
 # CI: lint and tests on every push to main and on every pull request, and the
 # documentation generated in strict mode (a broken link fails).
 # The README and site "Tests" badge shows the result of the last run on main.
-name: Testes
+name: Tests
 
 on:
   push:
