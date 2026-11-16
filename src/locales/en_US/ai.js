@@ -18,6 +18,9 @@ module.exports = {
     'openai.oldPrices': '⚠️ prices are {dias} days old: /gpt -prices',
 
     // src/comandos/openaiComum.js
+    'draw.imageBelow': '🖼️ Image generated below.',
+    'draw.gifBelow': '🎞️ GIF generated below.',
+    'gpt.voiceBelow': '🔊 Audio generated below.',
     'openai.processing': '⏳ Processing {cmd}, please wait.',
     'openai.ownerOnly': '⛔ Only the bot owner (or an admin) can {acao}.',
     'openai.kindAudio': 'transcription',

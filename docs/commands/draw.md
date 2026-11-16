@@ -56,7 +56,7 @@ movement.
 
 ```text
 /draw -g a dancing cat
-→ ⏳ Processing /draw, hold on.
+→ ⏳ Processing /draw, hold on.      (becomes: 🎞️ GIF generated below.)
 → (the GIF, looping) 🎞️ a dancing cat
 
 /draw -g -f 6 -ms 300 a flag in the wind
@@ -80,6 +80,18 @@ movement.
 - On `/gpt`, "generate an animated gif..." replying to a photo also works, without `-gif`: the bot
   recognizes a creation verb (generate, create, make, animate, transform; or gere, crie, faça,
   anime) next to gif, animation, animated or video (or animação, animado, vídeo).
+
+## The "Processing" notice
+
+An image can't be sent by editing a message, so the "⏳ Processing /draw, hold on." notice is edited
+into **🖼️ Image generated below.** (🎞️ for a GIF, and 🔊 for the voice of `/tts`) and stays in the
+chat; the result comes right after it. If it fails, the same notice becomes the error.
+
+```text
+/draw -p @me fulano draw the two of us rock climbing in Patagonia
+⏳ Processing /draw, hold on.   →   🖼️ Image generated below.
+(the image, with the 🎨 caption)
+```
 
 ## With the profile photo of someone (`-profile`)
 

@@ -13,15 +13,9 @@ const { envOuSetting, getSetting, setSetting } = require('../settings');
 
 /*
  * As in /get: the "⏳ Processando…" goes out before the call and becomes the reply (WhatsApp edits the message).
- * Media cannot be edited: on it the notice is deleted when the media goes out.
+ * Media cannot be edited: on it the notice becomes "generated below" (completeNotice) and the media goes out afterward.
  */
 const notifyProcessing = (msg, cmd) => msg.reply(t('openai.processing', { cmd }), null, { linkPreview: false });
-
-async function deleteNotice(notice) {
-    try {
-        await notice?.delete?.(true);
-    } catch { /* the notice stays: it does not get in the way of the reply */ }
-}
 
 // Media (voice, image, GIF) has no footer: with the status on, the usage goes in a separate message
 async function replyConsumption(msg) {
@@ -211,7 +205,6 @@ module.exports = {
     GPT_USES,
     IMAGE_USAGE,
     QUESTION_USAGE,
-    deleteNotice,
     notifyProcessing,
     isPhoto,
     modelError,

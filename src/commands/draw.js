@@ -21,7 +21,7 @@ const { WITHOUT_KEY, keyOpenAi, errorOpenAi, generateImage, measureConsumption }
 const { SETTINGS_SCHEMA, getSetting } = require('../settings');
 const { runCommand } = require('../util/processes');
 const {
-    GIF_MODEL, IMAGE_MODEL, DRAW_USES, IMAGE_USAGE, deleteNotice, notifyProcessing, modelError,
+    GIF_MODEL, IMAGE_MODEL, DRAW_USES, IMAGE_USAGE, notifyProcessing, modelError,
     photoInPng, messageImage, replyConsumption, swapModel
 } = require('./openaiCommon');
 
@@ -116,9 +116,10 @@ async function drawAlt({ msg, cmd, pedido: request, quotedMsg = null, gif = null
             cmd, prompt, gif: animation,
             imagens: photo ? await Promise.all(photo.map(image => photoInPng({ imagem: image }))) : []
         });
+        // Media does not become an edit of the notice: it says the result comes below (and stays), and the media goes out afterward
+        await completeNotice(msg, notice, t(animation ? 'draw.gifBelow' : 'draw.imageBelow'));
         if (animation) await sendGif(msg, b64, captionAlt, cmd);
         else await msg.reply(new MessageMedia('image/png', b64, 'desenho.png'), null, { caption: captionAlt });
-        await deleteNotice(notice);
         await replyConsumption(msg);
     } catch (err) {
         const messageAlt = err.response?.data?.error?.message ?? '';

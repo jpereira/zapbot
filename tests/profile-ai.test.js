@@ -184,3 +184,16 @@ test('-p @me e $me: a sua própria foto, sozinha ou com os outros, e sem duplica
     assert.equal(partsAlt.filter(p => p.type === 'image_url').length, 1);
     assert.match(partsAlt[0].text, /^como eu estou\?\n\n/);
 });
+
+test('imagem pronta: o aviso "Processando" vira "Imagem gerada abaixo" (e fica), e a imagem vem depois', async () => {
+    network.responder('post', 'api.openai.com/v1/images/generations', { data: [{ b64_json: 'RURJVA==' }] });
+    const sentAlt2 = await bot.executar('/draw um gato astronauta');
+    const notice = bot.client.enviadas.find(e => e.editada);
+    assert.ok(notice, 'o aviso foi editado, não apagado');
+    assert.equal(notice.content, '🖼️ Imagem gerada abaixo.');
+    assert.equal(notice.deleted, undefined);
+    const posNotice = bot.client.enviadas.indexOf(notice);
+    const posImage = bot.client.enviadas.findIndex(e => e.content instanceof MessageMedia);
+    assert.ok(posImage > posNotice, 'a imagem sai depois do aviso');
+    assert.equal(sentAlt2.filter(e => e.content instanceof MessageMedia).length, 1);
+});

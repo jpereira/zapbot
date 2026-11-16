@@ -13,7 +13,7 @@ const { commandUsage } = require('./base');
 const { drawAlt } = require('./draw');
 const { imagesContext, textReadProfile, resolverProfiles } = require('./profileInAi');
 const {
-    AUDIO_MODEL, VOICE_MODEL, SO_OWNER_GENERATE, GPT_USES, QUESTION_USAGE, deleteNotice, notifyProcessing, isPhoto,
+    AUDIO_MODEL, VOICE_MODEL, SO_OWNER_GENERATE, GPT_USES, QUESTION_USAGE, notifyProcessing, isPhoto,
     modelError, messageImage, replyConsumption, withoutOption, swapModel
 } = require('./openaiCommon');
 const { TMP_DIR } = require('../constants');
@@ -204,8 +204,8 @@ async function talkText(msg, args, quotedMsg, cmd = '/gpt') {
     const notice = await notifyProcessing(msg, cmd);
     try {
         const voice = await synthesizeVoice({ cmd, texto: textAlt, estilo: style });
+        await completeNotice(msg, notice, t('gpt.voiceBelow'));
         await msg.reply(new MessageMedia('audio/ogg; codecs=opus', voice.toString('base64'), 'voz.ogg'), null, { sendAudioAsVoice: true });
-        await deleteNotice(notice);
         await replyConsumption(msg);
     } catch (err) {
         await completeNotice(msg, notice, (await modelError(err, VOICE_MODEL, cmd)) || errorOpenAi(err, cmd));
