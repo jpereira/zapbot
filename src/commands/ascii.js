@@ -5,6 +5,7 @@
  * spaces (the whole word goes down); only a word longer than the line is broken letter by letter.
  */
 const { t } = require('../i18n');
+const { commandUsage } = require('./base');
 const { getSetting } = require('../settings');
 
 const MAX_TEXT = 40;
@@ -138,9 +139,8 @@ function generateAscii(textAlt, { largura: widthAlt = WIDTH_DEFAULT, traco = '#'
 async function cmdAscii({ msg, opts, quotedMsg }) {
     const typed = opts.argv.join(' ').trim();
     const textAlt = typed || String(quotedMsg?.body ?? '').trim();
-    const usage = t('ascii.usage');
 
-    if (!textAlt) return msg.reply(usage);
+    if (!textAlt) return msg.reply(commandUsage('/ascii'));
     if (textAlt.length > MAX_TEXT) return msg.reply(t('ascii.tooLong', { max: MAX_TEXT }));
 
     let widthAlt = WIDTH_DEFAULT;

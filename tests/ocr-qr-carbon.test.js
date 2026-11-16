@@ -28,7 +28,7 @@ describe('/ocr', () => {
 
     test('sem foto: o uso', async () => {
         await bot.setSetting('gpt.api.key', 'sk-teste');
-        assert.deepEqual(await bot.replyAlt('/ocr'), ['❌ Responda uma foto com /ocr (ou envie a foto com /ocr na legenda).']);
+        assert.deepEqual(await bot.replyAlt('/ocr'), ['Responda uma foto com /ocr (ou envie a foto com /ocr na legenda).\n💡 _/ocr -h para ajuda_']);
         assert.equal(network.chamadas.length, 0);
     });
 
@@ -73,7 +73,7 @@ describe('/tts', () => {
         assert.match((await bot.replyAlt('/tts oi'))[0], /⚠️ API key da OpenAI não encontrada: o \/tts está desativado/);
 
         await bot.setSetting('gpt.api.key', 'sk-teste');
-        assert.deepEqual(await bot.replyAlt('/tts'), ['❌ Usage: /tts <texto> (ou responda uma mensagem de texto)']);
+        assert.deepEqual(await bot.replyAlt('/tts'), ['```Usage: /tts [-status|-s] [<texto>]```\n💡 _/tts -h para ajuda_']);
 
         network.responder('post', 'api.openai.com/v1/audio/speech', Buffer.from('OGGDATA'));
         const r = (await bot.executar('/tts Bom dia!')).at(-1);
@@ -132,7 +132,7 @@ describe('/qr', () => {
     test('sem texto: o da mensagem respondida; sem nada, o uso; grande demais', async () => {
         const quoted = bot.createMessage({ texto: 'meu texto', de: OTHERAlt.jid });
         assert.ok((await bot.executar('/qr', { citada: quoted })).at(-1).content instanceof MessageMedia);
-        assert.match((await bot.replyAlt('/qr'))[0], /^❌ Usage: \/qr <texto>/);
+        assert.match((await bot.replyAlt('/qr'))[0], /^```Usage: \/qr \[-decode\|-d\] \[<texto>\]```\n💡 _\/qr -h para ajuda_/);
         assert.match((await bot.replyAlt(`/qr ${'a'.repeat(1001)}`))[0], /❌ O texto tem 1001 caracteres: o QR Code aceita até 1000\./);
     });
 
@@ -160,7 +160,7 @@ describe('/qr', () => {
     test('foto sem QR Code, sem foto e sem conseguir baixar', async () => {
         sharp.pixels = { data: Buffer.alloc(40 * 40 * 4, 255), width: 40, height: 40 };
         assert.deepEqual(await bot.replyAlt('/qr -d', { citada: photo() }), ['🔎 Nenhum QR Code encontrado na imagem.']);
-        assert.match((await bot.replyAlt('/qr -d'))[0], /^❌ Responda a foto de um QR Code com \/qr -d/);
+        assert.match((await bot.replyAlt('/qr -d'))[0], /^Responda a foto de um QR Code com \/qr -d/);
         assert.deepEqual(await bot.replyAlt('/qr -d', { citada: photo({ midia: PHOTO, extras: { downloadMedia: async () => null } }) }),
             ['❌ Não consegui baixar a imagem.']);
     });
@@ -201,7 +201,7 @@ describe('/carbon', () => {
         const quoted = bot.createMessage({ texto: 'let a = 1;', de: OTHERAlt.jid });
         await bot.executar('/carbon', { citada: quoted });
         assert.match(sharp.entradas.at(-1).toString(), /let<\/tspan> a = <tspan fill="#fab387">1/);
-        assert.match((await bot.replyAlt('/carbon'))[0], /^❌ Usage: \/carbon /);
+        assert.match((await bot.replyAlt('/carbon'))[0], /^```Usage: \/carbon /);
     });
 
     test('a cerca do Markdown sai, o texto é escapado e os limites valem', () => {
@@ -237,7 +237,7 @@ describe('/profile -set', () => {
     test('o WhatsApp recusando (não é admin), sem imagem e erro', async () => {
         group.setPicture = async () => false;
         assert.match((await bot.replyAlt('/profile -set', { citada: photo() }))[0], /^🚫 O WhatsApp não me deixou trocar a foto do grupo/);
-        assert.match((await bot.replyAlt('/profile -set'))[0], /^❌ Responda uma imagem com \/profile -set/);
+        assert.match((await bot.replyAlt('/profile -set'))[0], /^Responda uma imagem com \/profile -set/);
 
         group.setPicture = async () => { throw new Error('boom'); };
         const [r] = await bot.executar('/profile -set', { citada: photo(), erroEsperado: true });

@@ -2,7 +2,7 @@
  * Comando /noffa.
  */
 
-const { getCommandSyntax } = require('./base');
+const { commandUsage } = require('./base');
 const { t } = require('../i18n');
 
 async function cmdNoffa({ msg, args, quotedMsg }) {
@@ -12,7 +12,7 @@ async function cmdNoffa({ msg, args, quotedMsg }) {
     const text = [args, quotedMsg?.body].filter(Boolean).join(' ').trim();
 
     if (!text) {
-        await msg.reply('```' + getCommandSyntax('/noffa') + '```');
+        await msg.reply(commandUsage('/noffa'));
         return;
     }
 

@@ -209,7 +209,7 @@ describe('/defi', () => {
     test('cadastro: só -address basta; erros de protocolo, endereço, conta, NFT, pool e repetida', async () => {
         const errorAlt = async (line, expected) => assert.match((await bot.replyAlt(line))[0], expected, line);
 
-        await errorAlt(`/defi -address ${POSITION}`, /❌ Informe o protocolo antes do -address ou do -wallet: orca, prjx, liquidswap, morpho ou aave/);
+        await errorAlt(`/defi -address ${POSITION}`, /Informe o protocolo antes do -address ou do -wallet: orca, prjx, liquidswap, morpho ou aave/);
         await errorAlt('/defi orca -address', /❌ Informe o endereço da posição/);
         await errorAlt('/defi orca -address xyz', /❌ -address: "xyz" não é um endereço da Solana/);
         await errorAlt(`/defi orca -address ${POSITION} -nft ${POOL}`, /❌ O NFT .* não é o desta posição \(o dela é 9UkH/);
@@ -357,7 +357,7 @@ describe('/defi -alert (-a)', () => {
 
         assert.match((await bot.replyAlt('/defi -a 1 -to +5521911111111'))[0], /📣 Aviso: 👤 Fulano,/);
         assert.match((await bot.replyAlt('/defi -a 1 -to xyz'))[0], /❌ Nenhum contato ou grupo com "xyz" no nome/);
-        assert.match((await bot.replyAlt('/defi -a 1 -to'))[0], /❌ Informe o destino do -to/);
+        assert.match((await bot.replyAlt('/defi -a 1 -to'))[0], /Informe o destino do -to/);
         assert.match((await bot.replyAlt('/defi -to email'))[0], /❌ O -to é do -alert/);
         assert.match((await bot.replyAlt('/defi -a 7'))[0], /❌ Posição nº 7 não existe/);
     });

@@ -12,6 +12,7 @@ const { MessageMedia } = require('whatsapp-web.js');
 
 const { isPhoto } = require('./openaiCommon');
 const { t } = require('../i18n');
+const { commandUsage } = require('./base');
 const { printError } = require('../log');
 
 const MAX_CHARACTERS = 1000;
@@ -23,7 +24,7 @@ const withoutMode = (args) => args.replace(/(^|\s)-(?:decode|d)(?=\s|$)/g, ' ').
 async function generate({ msg, args, quotedMsg }) {
     const textAlt = withoutMode(args) || String(quotedMsg?.body ?? '').trim();
     if (!textAlt) {
-        await msg.reply(t('qr.usage'));
+        await msg.reply(commandUsage('/qr'));
         return;
     }
     if (textAlt.length > MAX_CHARACTERS) {

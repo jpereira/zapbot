@@ -12,7 +12,7 @@
  * with several messages, it goes only once, before them.
  */
 
-const { getCommandSyntax } = require('./base');
+const { commandUsage } = require('./base');
 const { textPeople, withoutDelimiters } = require('./block');
 const { client, completeNotice, sentByBot } = require('../client');
 const { describeDestination, extractDestinations, resolverDestinations } = require('../destinations');
@@ -173,7 +173,7 @@ async function cmdForward({ msg, args: typed, opts, quotedMsg }) {
     const texts = [...textPeople(lists.resto).map(withoutDelimiters), ...porTo];
 
     if (!texts.length && !lists.destinos.length) {
-        await msg.reply('```' + getCommandSyntax('/forward') + '```');
+        await msg.reply(commandUsage('/forward'));
         return;
     }
     // -dry: only validates the recipients (the error for whoever was not found is already replied), without sending

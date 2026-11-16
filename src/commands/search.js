@@ -3,7 +3,7 @@
  */
 
 const { client } = require('../client');
-const { getCommandSyntax } = require('./base');
+const { commandUsage } = require('./base');
 const { chatCurrentIds, contactName } = require('../contacts');
 const { t } = require('../i18n');
 const { printError } = require('../log');
@@ -91,7 +91,7 @@ async function cmdSearch({ msg, opts, chatId }) {
 
     const textAlt = words.join(' ').trim();
     if (!textAlt) {
-        await msg.reply('```' + getCommandSyntax('/search') + '```');
+        await msg.reply(commandUsage('/search'));
         return;
     }
 

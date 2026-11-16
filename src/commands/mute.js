@@ -3,7 +3,7 @@
  */
 
 const { client } = require('../client');
-const { getCommandSyntax } = require('./base');
+const { commandUsage } = require('./base');
 const { contactName, resolveLidToPhone, groupResolverName } = require('../contacts');
 const { dbAll, dbGet, dbReady, dbRun } = require('../db');
 const { t } = require('../i18n');
@@ -209,7 +209,7 @@ async function cmdMute({ msg, args, quotedMsg }) {
     const r = readMuted(args);
 
     if (r.erro) {
-        await msg.reply(`${r.erro}\n\n\`\`\`${getCommandSyntax('/mute')}\`\`\``);
+        await msg.reply(`${r.erro}\n\n${commandUsage('/mute')}`);
         return;
     }
 

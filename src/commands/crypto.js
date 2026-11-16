@@ -5,7 +5,7 @@
 const axios = require('axios');
 
 const { priceHandleAlert } = require('../priceAlerts');
-const { getCommandSyntax } = require('./base');
+const { commandUsage } = require('./base');
 const { fmtPriceCrypto } = require('../quotes');
 const { dbReady } = require('../db');
 const { t } = require('../i18n');
@@ -40,7 +40,7 @@ async function cmdCrypto(ctx) {
         const sym = token(addAlt ? opts.opt.add : opts.opt.del);
 
         if (!sym) {
-            await msg.reply('```' + getCommandSyntax('/crypto') + '```');
+            await msg.reply(commandUsage('/crypto'));
             return;
         }
 

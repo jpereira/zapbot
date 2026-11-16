@@ -36,7 +36,7 @@ e descrição) sem entrar. Para sair, use o [`/leave`](leave.md).
 /leave <nº|nome> sai
 ```
 
-- Sem argumento: `❌ Usage: /join [-info] <link do convite (chat.whatsapp.com/...)> ou /join -l`.
+- Sem argumento: o `Usage:` do comando e a dica do `/join -h`.
 - Não é um link nem um código: `❌ Link de convite inválido. Ex.: https://chat.whatsapp.com/AbCdEfGhIjKlMnOpQrStUv`.
 - Convite inválido, expirado ou revogado: `❌ Convite inválido, expirado ou revogado.`
 - Grupos que exigem aprovação de um admin podem recusar a entrada; o motivo do WhatsApp vem na

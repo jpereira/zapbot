@@ -21,7 +21,7 @@ module.exports = {
     'login.soPrivado': '🚫 Use the login only in private.',
     'login.desativado': '🚫 Login disabled.',
     'login.semNumero': '🚫 Could not identify your number.',
-    'login.uso': '❌ Usage: /bot -login <password>',
+    'login.uso': 'Usage: /bot -login <password>\n💡 _/bot -h for help_',
     'login.muitasTentativas': '⛔ Too many attempts. Wait {min} min.',
     'login.bloqueadoTitulo': '🚨 Login blocked',
     'login.bloqueadoCorpo': '{nome} (+{numero}) got the /bot -login password wrong {erros} times. Blocked for {min} min.',

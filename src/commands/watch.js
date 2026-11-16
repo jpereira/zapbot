@@ -2,7 +2,7 @@
  * Comando /watch.
  */
 
-const { getCommandSyntax } = require('./base');
+const { commandUsage } = require('./base');
 const { resolverMentions, channelResolverName, groupResolverName } = require('../contacts');
 const { dbAll, dbGet, dbReady, dbRun } = require('../db');
 const {
@@ -169,11 +169,11 @@ async function cmdWatch({ msg, args }) {
     try {
         o = readOptionsWatch(args);
     } catch (err) {
-        await msg.reply(t('watch.optionError', { error: err.message }) + '```' + getCommandSyntax('/watch') + '```');
+        await msg.reply(t('watch.optionError', { error: err.message }) + commandUsage('/watch'));
         return;
     }
     const rules = getSetting('watch.rules');
-    const help = () => msg.reply('```' + getCommandSyntax('/watch') + '```');
+    const help = () => msg.reply(commandUsage('/watch'));
     if (o.trava) {
         const { n, ligar: turnOn } = o.trava;
         const target = rules[n - 1];

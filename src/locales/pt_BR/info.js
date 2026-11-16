@@ -173,14 +173,13 @@ module.exports = {
 
     // /me
     'me.invalidRepeat': '❌ -repeat precisa de um número de 1 a {max}',
-    'me.usage': '❌ Usage: /me [-repeat|-r <n>] <mensagem com {/comando}>',
 
     // /profile
     'profile.contact': 'Contato: {label}',
     'profile.noPhoto': '🚫 Sem foto de perfil (ou ela está escondida pela privacidade do contato).',
     'profile.group': 'Grupo: {name}',
     'profile.noGroupPhoto': '🚫 Sem foto do grupo.',
-    'profile.setUsage': '❌ Responda uma imagem com /profile -set (ou envie a foto com /profile -set na legenda).',
+    'profile.setUsage': 'Responda uma imagem com /profile -set (ou envie a foto com /profile -set na legenda).\n💡 _/profile -h para ajuda_',
     'profile.setDownload': '❌ Não consegui baixar a imagem.',
     'profile.setGroupOk': '✅ Foto do grupo trocada.',
     'profile.setGroupDenied': '🚫 O WhatsApp não me deixou trocar a foto do grupo (só admins podem, a menos que o grupo deixe todos).',
@@ -283,7 +282,7 @@ module.exports = {
     'defi.openPositions': 'posições abertas',
     'defi.noOpenPosition': 'ℹ️ Nenhuma posição aberta agora: o /defi {cmd} mostra quando houver.',
     'defi.seeWith': '💡 _Veja com /defi {cmd}_',
-    'defi.needProtocol': '❌ Informe o protocolo antes do -address ou do -wallet: orca, prjx, liquidswap, morpho ou aave.\n{examples}',
+    'defi.needProtocol': 'Informe o protocolo antes do -address ou do -wallet: orca, prjx, liquidswap, morpho ou aave.\n{examples}',
     'defi.walletGoesInWallet': '❌ {In}, a carteira vai no -wallet: /defi {cmd} -wallet <0x...>',
     'defi.orcaGoesInAddress': '❌ Na Orca, a posição vai no -address: /defi orca -address <endereço>',
     'defi.addressMissing': '❌ Informe o endereço da posição: -address <endereço>',
@@ -330,7 +329,7 @@ module.exports = {
     'defi.alertOff': 'alerta desligado',
     'defi.alertsOff': 'alertas desligados',
     'defi.alertOffOne': '🔕 Alerta desligado: {desc}',
-    'defi.alertNeedPosition': '❌ Informe a posição: /defi -alert <nº|all> -to <destino>',
+    'defi.alertNeedPosition': 'Informe a posição: /defi -alert <nº|all> -to <destino>',
     'defi.noRangePositions': '🌊 Nenhuma posição da Orca ou do Project X cadastrada.\n{examples}',
     'defi.rangeOnlyPos': '❌ O alerta do /defi é de faixa, só da Orca e do Project X: a nº {n} é {of}.',
     'defi.feesInvalid': '❌ -fees: informe o valor em dólar (ex.: -fees 50) ou off.',

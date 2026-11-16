@@ -111,7 +111,7 @@ test('recusa nomes reservados, cadastro inválido, destinos inexistentes e ciclo
     for (const line of ['/alias ping /rates USD', '/alias mute /rates USD',
         '/alias all /rates USD', '/alias /all /rates USD', '/alias foo/bar /ping', '/alias foo', '/alias foo -d semaspas /rates USD',
         '/alias foo /naoexiste', '/alias foo /alias', '/alias foo /foo', '/alias foo /ping']) {
-        assert.match((await bot.replyAlt(line))[0], /^❌/, line);
+        assert.match((await bot.replyAlt(line))[0], /^(❌|Usage: \/alias|Informe a descrição)/, line);
     }
     assert.deepEqual(await aliases(), []);
 });
@@ -266,7 +266,7 @@ test('/me envia a mensagem, roda {/comando} e aceita \\n', async t => {
     assert.deepEqual(await bot.replyAlt('/me Linha 1\\nLinha 2'), ['Linha 1\nLinha 2']);
     t.mock.method(HANDLERS, '/crypto', async ({ msg }) => msg.reply('₿ BTC\n💰 $1'));
     assert.deepEqual(await bot.replyAlt('/me O preço está em {/crypto}'), ['O preço está em\n\n₿ BTC\n💰 $1']);
-    assert.match((await bot.replyAlt('/me'))[0], /^❌ Usage: \/me/);
+    assert.match((await bot.replyAlt('/me'))[0], /^```Usage: \/me/);
     assert.match((await bot.replyAlt('/me {/ping}'))[0], /não roda dentro do \/me/);
 });
 
@@ -279,7 +279,7 @@ test('/me -repeat|-r repete a mensagem n vezes', async () => {
     await bot.setSetting('me.maxRepeat', 5);
     assert.match((await bot.replyAlt('/me -r 6 a'))[0], /1 a 5/);
     assert.equal((await bot.replyAlt('/me -r 5 a'))[0], 'aaaaa');
-    assert.match((await bot.replyAlt('/me -r 3'))[0], /^❌ Usage: \/me/);
+    assert.match((await bot.replyAlt('/me -r 3'))[0], /^```Usage: \/me/);
 });
 
 test('/me respeita as permissões dos {/comando} de quem chama', async t => {

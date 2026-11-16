@@ -6,7 +6,7 @@ const { Poll } = require('whatsapp-web.js');
 
 const { client } = require('../client');
 const { t } = require('../i18n');
-const { getCommandSyntax } = require('./base');
+const { commandUsage } = require('./base');
 const { chatCurrentIds } = require('../contacts');
 const { pollScoreboard, registerPoll } = require('../polls');
 
@@ -44,7 +44,7 @@ async function cmdPoll({ msg, args, chatId, chatName, quotedMsg }) {
         .filter(Boolean);
 
     let [question, ...optionsAlt] = partsAlt;
-    const errorAlt = (m) => msg.reply(`❌ ${m}\n\n` + '```' + getCommandSyntax('/poll') + '```');
+    const errorAlt = (m) => msg.reply(`❌ ${m}\n\n` + commandUsage('/poll'));
 
     if (!question || optionsAlt.length < 2) {
         await errorAlt(t('grp.poll.needOptions'));

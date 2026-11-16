@@ -2,7 +2,7 @@
  * Comando /defi.
  */
 
-const { findCommand, getCommandSyntax } = require('./base');
+const { findCommand, commandUsage } = require('./base');
 const { client } = require('../client');
 const { chatCurrentIds } = require('../contacts');
 const { dbAll, dbGet, dbReady, dbRun } = require('../db');
@@ -1152,7 +1152,7 @@ async function cmdDefi({ msg, opts: commandOpts, args, chatId }) {
     }
 
     if (argv.length) {
-        await msg.reply(`${t('defi.notProtocol', { word: argv[0] })}\n\n\`\`\`${getCommandSyntax('/defi')}\`\`\``);
+        await msg.reply(`${t('defi.notProtocol', { word: argv[0] })}\n\n${commandUsage('/defi')}`);
         return;
     }
 

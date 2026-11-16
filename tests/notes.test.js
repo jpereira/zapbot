@@ -442,7 +442,7 @@ test('-search: texto (sem acento/maiúscula), /regex/flags, #tag, -to e erros', 
     await bot.replyAlt('/notes #duvidas Olhar sobre ETFs');
     await withoutTag('Ligar pro João amanhã');
 
-    assert.equal((await bot.replyAlt('/notes -search'))[0], '❌ Usage: /notes -search [#tag...] <texto|/regex/flags> [-to <destino>]...');
+    assert.equal((await bot.replyAlt('/notes -search'))[0], 'Usage: /notes -search [#tag...] <texto|/regex/flags> [-to <destino>]...\n💡 _/notes -h para ajuda_');
 
     const [textAlt] = await bot.replyAlt('/notes -s PAO');
     assert.match(textAlt, /🔎 PAO \(1\)/);

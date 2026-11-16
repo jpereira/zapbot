@@ -8,6 +8,7 @@ const { readPerson, textPeople, withoutDelimiters } = require('./block');
 const { client } = require('../client');
 const { resolveLidToPhone } = require('../contacts');
 const { t } = require('../i18n');
+const { commandUsage } = require('./base');
 const { printError } = require('../log');
 
 // The group participant who is this person (the group id may be their @lid)
@@ -38,7 +39,7 @@ async function changeAdmin(promote, { msg, opts, quotedMsg, isGroup }) {
 
     const textAlt = opts.argv.join(' ').trim();
     if (!textAlt && !quotedMsg) {
-        await msg.reply(t('grp.admin.usage', { cmd }));
+        await msg.reply(commandUsage(cmd));
         return;
     }
 

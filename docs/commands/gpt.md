@@ -293,7 +293,7 @@ remains in the current window, and when it resets, for tokens and requests of th
   key rejected** (401 or 403): the warning that the Usage API needs an Admin key (or a key with the
   Usage scope in Read), and the limits come out anyway.
 - **Without any key**: `⚠️ OpenAI API key not found: /gpt is disabled.` plus a hint.
-- An invalid number of days: `❌ Usage: /gpt -usage [days] (from 1 to 31; default 7)`.
+- An invalid number of days: `Usage: /gpt -usage [days] (from 1 to 31; default 7)`.
 - There are no per-project limits here: the `organization/projects/<id>/rate_limits` endpoint needs
   the project id, and the headers already show the limit that applies to the key in use.
 

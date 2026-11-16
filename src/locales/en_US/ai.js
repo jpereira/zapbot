@@ -69,10 +69,10 @@ module.exports = {
     'gpt.noSpeech': '🤖 I heard no speech in this audio.',
     'gpt.transcription': '🤖 *Transcription:*\n{texto}',
     'gpt.audioPrompt': '{pergunta}\n\nAudio transcription:\n{transcricao}',
-    'gpt.voiceUsage': '❌ Usage: /gpt -voice <text> (or reply to a text message)',
+    'gpt.voiceUsage': 'Usage: /gpt -voice <text> (or reply to a text message)\n💡 _/gpt -h for help_',
     'gpt.voiceTooLong': '❌ The text has {n} characters: the voice accepts up to {max}.',
-    'gpt.imgUsage': '❌ Usage: /gpt -img <what to create> (replying to a photo, it gets edited)',
-    'gpt.gifUsage': '❌ Usage: /gpt -gif <what to animate> (replying to a photo, it gets animated)',
+    'gpt.imgUsage': 'Usage: /gpt -img <what to create> (replying to a photo, it gets edited)\n💡 _/gpt -h for help_',
+    'gpt.gifUsage': 'Usage: /gpt -gif <what to animate> (replying to a photo, it gets animated)\n💡 _/gpt -h for help_',
     'gpt.actionGif': 'generate GIFs',
     'gpt.noModel': '(no model)',
     'gpt.otherItem': '(others)',
@@ -102,7 +102,7 @@ module.exports = {
     'gpt.limitRequests': 'requests',
     'gpt.limitLine': '• {nome}: {restante} of {limite}',
     'gpt.limitReset': ' · resets in {reseta}',
-    'gpt.usageUsage': '❌ Usage: /gpt -usage [days] (from 1 to {max}; default {padrao})',
+    'gpt.usageUsage': 'Usage: /gpt -usage [days] (from 1 to {max}; default {padrao})\n💡 _/gpt -h for help_',
     'gpt.adminKeyHint': '💡 _For the usage, the admin key: OPENAI_ADMIN_KEY or /set gpt.admin.key_',
     'gpt.creditHint': '💡 _To see $used/$total: /set gpt.credit.total <dollars purchased> and ' +
         '/set gpt.credit.since YYYY-MM-DD (the OpenAI API does not report the balance)._',
@@ -181,7 +181,6 @@ module.exports = {
     'pixelart.fail': '❌ Could not fetch the art from 16colo.rs right now.',
 
     // src/comandos/ascii.js
-    'ascii.usage': '❌ Usage: /ascii [-width|-w <columns>] [-char|-c <character>] <text (\\n breaks the line)>',
     'ascii.tooLong': '❌ The text has at most {max} characters.',
     'ascii.width': '❌ -width needs a number from {min} to {max}',
     'ascii.char': '❌ -char needs a single character, e.g.: -char @',
@@ -197,7 +196,7 @@ module.exports = {
     'giphy.fail': '❌ Could not fetch that GIF.',
 
     // src/comandos/sticker.js
-    'sticker.needText': '❌ Provide the text: /sticker -txt "Good morning!"',
+    'sticker.needText': 'Provide the text: /sticker -txt "Good morning!"',
     'sticker.tooLong': '❌ Text too long: up to {max} characters.',
     'sticker.badBg': '❌ -bg: "{cor}" is not a color. Use #RRGGBB (e.g.: #FFFFFF).',
     'sticker.badFg': '❌ -fg: "{cor}" is not a color. Use #RRGGBB (e.g.: #000000).',
@@ -208,23 +207,20 @@ module.exports = {
     'sticker.posConflict': '❌ -pos is for cropping images and videos: it does not apply with -txt.',
 
     // /ocr
-    'ocr.usage': '❌ Reply to a photo with /ocr (or send the photo with /ocr as the caption).',
+    'ocr.usage': 'Reply to a photo with /ocr (or send the photo with /ocr as the caption).\n💡 _/ocr -h for help_',
     'ocr.instructions': 'You are an OCR. Reply only with the text that appears in the image, keeping the line breaks and the original language. Do not describe the image or add comments. If there is no readable text, reply exactly {vazio}.',
     'ocr.prompt': 'Extract the text of this image.',
     'ocr.noText': '🔎 No text found in the image.',
 
     // /tts
-    'tts.usage': '❌ Usage: /tts <text> (or reply to a text message)',
 
     // /qr
-    'qr.usage': '❌ Usage: /qr <text> (or reply to a text message). To read a QR Code: /qr -d on a photo.',
-    'qr.decodeUsage': '❌ Reply to a photo of a QR Code with /qr -d (or send the photo with /qr -d as the caption).',
+    'qr.decodeUsage': 'Reply to a photo of a QR Code with /qr -d (or send the photo with /qr -d as the caption).\n💡 _/qr -h for help_',
     'qr.tooLong': '❌ The text has {n} characters: a QR Code takes up to {max}.',
     'qr.download': '❌ I could not download the image.',
     'qr.notFound': '🔎 No QR Code found in the image.',
 
     // /carbon
-    'carbon.usage': '❌ Usage: /carbon [-theme|-t dark|light] <code> (or reply to a message with the code)',
     'carbon.badTheme': '❌ Unknown theme "{theme}". Available: {themes}.',
     'carbon.failed': '❌ I could not draw the image: {error}'
 };

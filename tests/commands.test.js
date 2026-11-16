@@ -381,7 +381,7 @@ describe('/set', () => {
             '❌ *show.max* não é uma lista: o -append vale só para chaves com várias entradas.\n' +
             '💡 _Troque o valor com /set show.max <valor> ou volte ao padrão com /set -reset show.max (-r)._']);
         assert.match((await bot.replyAlt('/set -rm naoexiste x'))[0], /❌ Setting desconhecido: naoexiste/);
-        assert.match((await bot.replyAlt('/set -a commands.disabled'))[0], /❌ Informe o que acrescentar a \*commands\.disabled\*/);
+        assert.match((await bot.replyAlt('/set -a commands.disabled'))[0], /Informe o que acrescentar a \*commands\.disabled\*/);
     });
 
     test('-reset volta ao padrão; chave desconhecida', async () => {

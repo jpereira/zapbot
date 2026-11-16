@@ -36,7 +36,7 @@ description) without joining. To leave, use [`/leave`](leave.md).
 /leave <no.|name> leaves
 ```
 
-- No argument: `❌ Usage: /join [-info] <invite link (chat.whatsapp.com/...)> or /join -l`.
+- No argument: the `Usage:` of the command and the `/join -h` hint.
 - Not a link or code: `❌ Invalid invite link. E.g.: https://chat.whatsapp.com/AbCdEfGhIjKlMnOpQrStUv`.
 - Invalid, expired or revoked invite: `❌ Invalid, expired or revoked invite.`
 - Groups that require an admin's approval may refuse the join; WhatsApp's reason comes in the

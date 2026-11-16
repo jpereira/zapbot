@@ -100,7 +100,7 @@ test('localização vira texto com o link do mapa', async () => {
 });
 
 test('sem a mensagem respondida, sem destinatários e sem nada para encaminhar', async () => {
-    assert.deepEqual(await bot.replyAlt('/forward /Fulano/'), ['❌ Responda a mensagem que você quer encaminhar, ou diga a posição dela (ex.: /forward -1 /Fulano/).']);
+    assert.deepEqual(await bot.replyAlt('/forward /Fulano/'), ['Responda a mensagem que você quer encaminhar, ou diga a posição dela (ex.: /forward -1 /Fulano/).\n💡 _/forward -h para ajuda_']);
     assert.match((await bot.replyAlt('/forward', { citada: quoted() }))[0], /^```Usage: \/forward \[-q\] \[-d\] \[-N\] \[#lista\]\.\.\. <destinatário>\.\.\. \[-to <destino>\]\.\.\.\n     \/forward -add|-list|-rm|-move|-desc <\.\.\.>\n/);
     assert.deepEqual(await bot.replyAlt('/forward /Fulano/', { citada: quoted({ texto: '' }) }), ['❌ Essa mensagem não tem nada que eu possa encaminhar.']);
 });
