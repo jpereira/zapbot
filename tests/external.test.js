@@ -96,7 +96,11 @@ describe('/cve', () => {
 });
 
 describe('/weather', () => {
-    const local = { name: 'Niterói', admin1: 'Rio de Janeiro', country: 'Brasil', latitude: -22.9, longitude: -43.1 };
+    const local = { name: 'Niterói', admin1: 'Rio de Janeiro', country: 'Brasil', country_code: 'BR', latitude: -22.9, longitude: -43.1 };
+
+    // The tests below are of Open-Meteo alone; the extra sources have the tests further below
+    beforeEach(async () => { await bot.setSetting('weather.sources', []); });
+
     const forecast = (temp, codeAlt = 0) => ({
         current: { temperature_2m: temp, apparent_temperature: temp + 1, relative_humidity_2m: 70, weather_code: codeAlt, wind_speed_10m: 12.4 },
         daily: { temperature_2m_max: [temp + 3], temperature_2m_min: [temp - 3], precipitation_probability_max: [40] }
@@ -108,8 +112,85 @@ describe('/weather', () => {
 
         const [r] = await bot.replyAlt('/weather');
         assert.equal(network.chamadas[0].cfg.params.name, 'Niteroi, Rio de Janeiro, Brazil');
-        assert.match(r, /⛅ \*Tempo em Niterói, Rio de Janeiro, Brasil\*\n\nParcialmente nublado\n🌡️ \*Agora:\* 24°C _\(sensação 25°C\)_/);
-        assert.match(r, /📈 \*Máx:\* 27°C  📉 \*Mín:\* 21°C\n💧 \*Umidade:\* 70%  🌬️ \*Vento:\* 12 km\/h\n☔ \*Chance de chuva:\* 40%/);
+        assert.match(r, /^⛅ \*Niterói, Rio de Janeiro\* · Parcialmente nublado\n🌡️ \*24°C\* _\(sensação 25°C\)_ · 📈 27° 📉 21°\n/);
+        assert.match(r, /\n💧 70%  🌬️ 12 km\/h\n☔ 40%\n\n_fonte: Open-Meteo_$/, 'sem os dados extras, só as linhas básicas e a fonte');
+    });
+
+    test('dados completos: ícone da noite, vento com direção e rajadas, chuva em mm, UV, sol e hora', async () => {
+        network.responder('get', 'geocoding-api.open-meteo.com', { results: [local] });
+        const base = forecast(27, 1);
+        network.responder('get', 'api.open-meteo.com/v1/forecast', {
+            current: { ...base.current, is_day: 0, wind_gusts_10m: 30.4, wind_direction_10m: 135, time: '2026-10-01T21:15' },
+            daily: { ...base.daily, precipitation_sum: [2.14], uv_index_max: [7.6], sunrise: ['2026-10-01T05:12'], sunset: ['2026-10-01T17:40'] }
+        });
+        const [r] = await bot.replyAlt('/weather Niteroi');
+        assert.equal(r, [
+            '🌙 *Niterói, Rio de Janeiro* · Predominantemente limpo',
+            '🌡️ *27°C* _(sensação 28°C)_ · 📈 30° 📉 24°',
+            '💧 70%  🌬️ 12 km/h SE (rajadas 30)',
+            '☔ 40% · 2,1 mm  ☀️ UV 8',
+            '🌅 05:12  🌇 17:40',
+            '',
+            '_atualizado às 21:15 · fonte: Open-Meteo_'
+        ].join('\n'));
+    });
+
+    test('fontes extras: MET Norway e CPTEC aparecem em "Outras fontes" e entram no rodapé', async () => {
+        await bot.setSetting('weather.sources', ['met', 'cptec']);
+        network.responder('get', 'geocoding-api.open-meteo.com', { results: [local] });
+        network.responder('get', 'api.open-meteo.com/v1/forecast', { ...forecast(24, 2), current: { ...forecast(24, 2).current, time: '2026-11-15T14:00' } });
+        network.responder('get', 'api.met.no', { properties: { timeseries: [{ data: { instant: { details: {
+            air_temperature: 25.2, relative_humidity: 80, wind_speed: 4, wind_from_direction: 135 } } } }] } });
+        network.responder('get', 'brasilapi.com.br/api/cptec/v1/cidade/', [{ nome: 'Niterói', id: 3464, estado: 'RJ' }, { nome: 'Niterói', id: 1, estado: 'RS' }]);
+        network.responder('get', 'brasilapi.com.br/api/cptec/v1/clima/previsao/3464/1', { clima: [{ data: '2026-11-15', condicao_desc: 'Chuva', min: 22, max: 26 }] });
+
+        const [r] = await bot.replyAlt('/weather Niteroi');
+        assert.match(r, /\n\n🔎 \*Outras fontes\*\n• MET Norway: 25°C · 💧 80% · 🌬️ 14 km\/h SE\n• CPTEC\/INPE: 📈 26° 📉 22° · Chuva\n/);
+        assert.doesNotMatch(r, /⚠️/, 'dentro de 3°C: sem aviso');
+        assert.match(r, /_atualizado às 14:00 · fonte: Open-Meteo, MET Norway, CPTEC\/INPE_$/);
+        const met = network.chamadas.find(c => c.url.includes('api.met.no'));
+        assert.equal(met.cfg.headers['User-Agent'], 'weather-bot/1.0');
+        assert.deepEqual(met.cfg.params, { lat: '-22.9000', lon: '-43.1000' });
+        assert.ok(network.chamadas.some(c => c.url.endsWith('/clima/previsao/3464/1')), 'a cidade certa pela UF');
+    });
+
+    test('fontes extras: divergência de 3°C ou mais é avisada; fonte que cai some sem derrubar o resto', async () => {
+        await bot.setSetting('weather.sources', ['met', 'cptec']);
+        network.responder('get', 'geocoding-api.open-meteo.com', { results: [{ ...local, name: 'Maricá' }] });
+        network.responder('get', 'api.open-meteo.com/v1/forecast', forecast(24, 2));
+        network.responder('get', 'api.met.no', { properties: { timeseries: [{ data: { instant: { details: { air_temperature: 29, relative_humidity: 60, wind_speed: 2 } } } }] } });
+        network.responder('get', 'brasilapi.com.br', () => { throw new Error('fora do ar'); });
+
+        const [r] = await bot.replyAlt('/weather Marica');
+        assert.match(r, /• MET Norway: 29°C · 💧 60% · 🌬️ 7 km\/h\n⚠️ As fontes divergem em 5°C/);
+        assert.doesNotMatch(r, /CPTEC/);
+        assert.match(r, /_fonte: Open-Meteo, MET Norway_$/);
+    });
+
+    test('fontes extras: a CPTEC só vale no Brasil e sem chutar outra cidade; vazio = só a Open-Meteo', async () => {
+        await bot.setSetting('weather.sources', ['cptec']);
+        network.responder('get', 'geocoding-api.open-meteo.com', { results: [{ ...local, name: 'Lisboa', country_code: 'PT', admin1: 'Lisboa' }] });
+        network.responder('get', 'api.open-meteo.com/v1/forecast', forecast(20));
+        const [outside] = await bot.replyAlt('/weather Lisboa');
+        assert.doesNotMatch(outside, /Outras fontes/);
+        assert.ok(!network.chamadas.some(c => c.url.includes('brasilapi')), 'nem consulta');
+
+        network.responder('get', 'geocoding-api.open-meteo.com', { results: [{ ...local, name: 'Cidade Nova' }] });
+        network.responder('get', 'brasilapi.com.br/api/cptec/v1/cidade/', [{ nome: 'Cidade Nova', id: 9, estado: 'MG' }]);
+        const [other] = await bot.replyAlt('/weather Cidade Nova');
+        assert.doesNotMatch(other, /Outras fontes|CPTEC/, 'a cidade da UF errada não serve');
+    });
+
+    test('weather.sources aceita met e cptec; weather.userAgent vai no cabeçalho da MET', async () => {
+        assert.deepEqual(await bot.setSetting('weather.sources', ['MET']), ['met']);
+        await assert.rejects(bot.setSetting('weather.sources', ['xyz']), /não suportado/);
+        await bot.setSetting('weather.sources', ['met']);
+        await bot.setSetting('weather.userAgent', 'meubot/2.0 contato@exemplo.com');
+        network.responder('get', 'geocoding-api.open-meteo.com', { results: [{ ...local, name: 'Rio Bonito' }] });
+        network.responder('get', 'api.open-meteo.com/v1/forecast', forecast(24));
+        network.responder('get', 'api.met.no', { properties: { timeseries: [{ data: { instant: { details: { air_temperature: 24 } } } }] } });
+        await bot.replyAlt('/weather Rio Bonito');
+        assert.equal(network.chamadas.find(c => c.url.includes('api.met.no')).cfg.headers['User-Agent'], 'meubot/2.0 contato@exemplo.com');
     });
 
     test('cidade informada; calor e frio; valor ausente vira "-"', async () => {
@@ -121,7 +202,7 @@ describe('/weather', () => {
         network.responder('get', 'api.open-meteo.com/v1/forecast', { ...forecast(2), daily: { temperature_2m_max: [null], temperature_2m_min: [null], precipitation_probability_max: [null] } });
         const [cold] = await bot.replyAlt('/weather Curitiba');
         assert.match(cold, /🥶 Tá congelando!/);
-        assert.match(cold, /📈 \*Máx:\* -  📉 \*Mín:\* -/);
+        assert.match(cold, /· 📈 - 📉 -\n/);
     });
 
     // N-day forecast: daily with one item per day
@@ -144,8 +225,8 @@ describe('/weather', () => {
         const [r] = await bot.replyAlt('/weather 3d Olinda');
         assert.equal(network.chamadas.at(-1).cfg.params.forecast_days, 3);
         assert.equal(network.chamadas.find(c => c.url.includes('geocoding')).cfg.params.name, 'Olinda', 'o "3d" não entra no nome');
-        assert.match(r, /🌡️ \*Agora:\* 24°C/, 'mantém o tempo de agora');
-        assert.match(r, /📅 \*Próximos 3 dias\*\n☀️ \*Hoje \(qui 01\/10\):\* 30°\/20° · ☔ 0% · Céu limpo\n🌧️ \*sex 02\/10:\* 31°\/21° · ☔ 10% · Chuva\n⛈️ \*sáb 03\/10:\* 32°\/22° · ☔ 20% · Trovoada/);
+        assert.match(r, /🌡️ \*24°C\*/, 'mantém o tempo de agora');
+        assert.match(r, /📅 \*Próximos 3 dias\*\n☀️ \*Hoje \(qui 01\/10\):\* 30°\/20° · ☔ 0% · Céu limpo\n🌧️ \*sex 02\/10:\* 31°\/21° · ☔ 10% · Chuva\n⛈️ \*sáb 03\/10:\* 32°\/22° · ☔ 20% · Trovoada\n📊 Mín 20° · Máx 32° · chuva provável em 0 dias/);
 
         await bot.setSetting('weather.city', 'Maricá');
         await bot.replyAlt('/weather 5');

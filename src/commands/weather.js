@@ -7,6 +7,7 @@ const axios = require('axios');
 const { printError } = require('../log');
 const { language, t } = require('../i18n');
 const { getSetting } = require('../settings');
+const { querySources } = require('../weatherSources');
 
 // /weather [N|Nd] [city]: Open-Meteo (no API key); with N, the forecast for the next N days
 const WEATHER_WMO = {
@@ -18,10 +19,13 @@ const WEATHER_WMO = {
     95: '⛈️', 96: '⛈️', 99: '⛈️'
 };
 
-// [icon, description] from the WMO code, in the current language
-function weatherWmo(codeAlt) {
+// At night, a clear or almost clear sky is not a sun
+const WEATHER_NIGHT = { 0: '🌙', 1: '🌙', 2: '☁️' };
+
+// [icon, description] from the WMO code, in the current language (daytime, unless `dia` is false)
+function weatherWmo(codeAlt, day = true) {
     return codeAlt in WEATHER_WMO
-        ? [WEATHER_WMO[codeAlt], t(`weather.wmo.${codeAlt}`)]
+        ? [day === false && codeAlt in WEATHER_NIGHT ? WEATHER_NIGHT[codeAlt] : WEATHER_WMO[codeAlt], t(`weather.wmo.${codeAlt}`)]
         : ['🌡️', t('weather.code', { code: codeAlt })];
 }
 
@@ -29,6 +33,8 @@ const OPEN_METEO_GEO_URL = 'https://geocoding-api.open-meteo.com/v1/search';
 const OPEN_METEO_URL = 'https://api.open-meteo.com/v1/forecast';
 const TIME_COLD = 5;   // °C: "It's freezing!"
 const TIME_CALOR = 30; // °C: "So hot!"
+const DIVERGENCE = 3; // °C: from there /weather warns that the sources diverge
+const RAIN_LIKELY = 50; // %: the day counts toward the "rainy days" in the summary
 
 // Geocoding kept in memory: a city's coordinates do not change and the city
 // default (weather.city) is queried all the time
@@ -69,8 +75,8 @@ async function queryTime({ latitude, longitude }, daysAlt = 1) {
         params: {
             latitude,
             longitude,
-            current: 'temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m',
-            daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max',
+            current: 'temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,wind_gusts_10m,wind_direction_10m,is_day',
+            daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,uv_index_max,sunrise,sunset',
             forecast_days: daysAlt,
             timezone: 'auto'
         }
@@ -82,26 +88,90 @@ async function queryTime({ latitude, longitude }, daysAlt = 1) {
 // Missing value (Open-Meteo sometimes sends null) becomes '-'
 const measure = (valueAlt, unit) => valueAlt == null ? '-' : `${Math.round(valueAlt)}${unit}`;
 
-function formatTime(local, { current: c, daily: d }) {
-    const [iconAlt, description] = weatherWmo(c.weather_code);
-    const whereAlt = [local.name, local.admin1, local.country].filter(Boolean).join(', ');
-    const temp = Math.round(c.temperature_2m);
+// The wind direction (degrees it comes from) on the compass rose, in the current language
+const ROSA = { pt_BR: ['N', 'NE', 'L', 'SE', 'S', 'SO', 'O', 'NO'], en_US: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'] };
+const windDirection = (degrees) => (degrees == null ? '' : ROSA[language()][Math.round(degrees / 45) % 8]);
 
-    let textAlt = t('weather.now', {
-        icon: iconAlt,
-        place: whereAlt,
-        desc: description,
-        temp: measure(c.temperature_2m, '°C'),
-        feels: measure(c.apparent_temperature, '°C'),
-        max: measure(d.temperature_2m_max?.[0], '°C'),
-        min: measure(d.temperature_2m_min?.[0], '°C'),
-        humidity: measure(c.relative_humidity_2m, '%'),
-        wind: measure(c.wind_speed_10m, ' km/h'),
-        rain: measure(d.precipitation_probability_max?.[0], '%')
+// "2026-10-01T05:12" (already in the city timezone) → "05:12"
+const hourAlt = (iso) => (iso ? String(iso).slice(11, 16) : '');
+
+// Number with 1 decimal in the language format ("2,1" / "2.1")
+const decimal = (n) => Number(n).toLocaleString(language() === 'pt_BR' ? 'pt-BR' : 'en-US', { maximumFractionDigits: 1 });
+
+// "Other sources": what each one read, and the warning when their temperature differs from the main one
+function sourcesBlock(c, extras) {
+    if (!extras.length) return '';
+
+    const linesAlt = extras.map((e) => {
+        if (e.tipo === 'dia') return t('weather.srcDay', { name: e.fonte, max: measure(e.max, '°'), min: measure(e.min, '°'), desc: e.descricao ?? '' });
+        const dir = windDirection(e.direcao);
+        return t('weather.srcNow', {
+            name: e.fonte, temp: measure(e.temp, '°C'), humidity: measure(e.umidade, '%'),
+            wind: measure(e.vento, ' km/h') + (dir ? ` ${dir}` : '')
+        });
     });
 
+    // Compares the temperature now; CPTEC gives the day's range, so the current one has to fit in it
+    const differences = extras.flatMap((e) => {
+        if (c.temperature_2m == null) return [];
+        if (e.tipo === 'agora' && e.temp != null) return [Math.abs(e.temp - c.temperature_2m)];
+        if (e.tipo === 'dia' && e.max != null && e.min != null) {
+            return [Math.max(0, e.min - c.temperature_2m, c.temperature_2m - e.max)];
+        }
+        return [];
+    });
+    const greater = Math.max(0, ...differences);
+    const notice = greater >= DIVERGENCE ? `\n${t('weather.diverge', { diff: Math.round(greater) })}` : '';
+
+    return `\n\n${t('weather.others')}\n${linesAlt.join('\n')}${notice}`;
+}
+
+function formatTime(local, { current: c, daily: d }, extras = []) {
+    const [iconAlt, description] = weatherWmo(c.weather_code, c.is_day !== 0);
+    // City and state; the country only when there is no state
+    const whereAlt = [local.name, local.admin1 || local.country].filter(Boolean).join(', ');
+    const temp = Math.round(c.temperature_2m);
+
+    const linesAlt = [
+        t('weather.title', { icon: iconAlt, place: whereAlt, desc: description }),
+        t('weather.temp', {
+            temp: measure(c.temperature_2m, '°C'),
+            feels: measure(c.apparent_temperature, '°C'),
+            max: measure(d.temperature_2m_max?.[0], '°'),
+            min: measure(d.temperature_2m_min?.[0], '°')
+        })
+    ];
+
+    // Wind: speed, direction and, if the gusts go well past the average, they
+    const burst = c.wind_gusts_10m != null && c.wind_gusts_10m >= (c.wind_speed_10m ?? 0) + 5
+        ? t('weather.gusts', { gust: measure(c.wind_gusts_10m, '') }) : '';
+    const dir = windDirection(c.wind_direction_10m);
+    linesAlt.push(t('weather.air', {
+        humidity: measure(c.relative_humidity_2m, '%'),
+        wind: measure(c.wind_speed_10m, ' km/h') + (dir ? ` ${dir}` : '') + burst
+    }));
+
+    // Rain (chance and, if any, the day's volume) and UV
+    const mm = d.precipitation_sum?.[0];
+    const uv = d.uv_index_max?.[0];
+    linesAlt.push(t('weather.rain', {
+        rain: measure(d.precipitation_probability_max?.[0], '%'),
+        mm: mm > 0 ? ` · ${decimal(mm)} mm` : '',
+        uv: uv != null ? `  ☀️ UV ${Math.round(uv)}` : ''
+    }));
+
+    const nasce = hourAlt(d.sunrise?.[0]);
+    const poe = hourAlt(d.sunset?.[0]);
+    if (nasce && poe) linesAlt.push(t('weather.sun', { rise: nasce, set: poe }));
+
+    let textAlt = linesAlt.join('\n') + sourcesBlock(c, extras);
     if (temp <= TIME_COLD) textAlt += '\n\n' + t('weather.freezing');
     if (temp >= TIME_CALOR) textAlt += '\n\n' + t('weather.hot');
+
+    // The data sources (Open-Meteo asks for attribution) and the reading time
+    const hour = hourAlt(c.time);
+    const sourcesAlt = ['Open-Meteo', ...extras.map(e => e.fonte)].join(', ');
+    textAlt += '\n\n' + (hour ? t('weather.updated', { time: hour, source: sourcesAlt }) : t('weather.source', { source: sourcesAlt }));
 
     return textAlt;
 }
@@ -123,7 +193,18 @@ function formatForecast({ daily: d }) {
     });
 
     const title = d.time.length === 1 ? t('weather.forecastToday') : t('weather.forecastDays', { n: d.time.length });
-    return `📅 *${title}*\n${linesAlt.join('\n')}`;
+
+    // Several days: the week's range and how many have likely rain
+    let summary = '';
+    const maxAlt = (d.temperature_2m_max ?? []).filter(v => v != null);
+    const min = (d.temperature_2m_min ?? []).filter(v => v != null);
+    if (d.time.length > 1 && maxAlt.length && min.length) {
+        const rainy = (d.precipitation_probability_max ?? []).filter(v => v >= RAIN_LIKELY).length;
+        summary = '\n' + t('weather.summary', {
+            min: Math.round(Math.min(...min)), max: Math.round(Math.max(...maxAlt)), n: rainy
+        });
+    }
+    return `📅 *${title}*\n${linesAlt.join('\n')}${summary}`;
 }
 
 /**
@@ -155,8 +236,11 @@ async function cmdWeather({ msg, args }) {
             return;
         }
 
-        const dataAlt = await queryTime(local, request.dias ?? 1);
-        let textAlt = formatTime(local, dataAlt);
+        // The extra sources go in parallel with Open-Meteo; today, in the city, picks the CPTEC day
+        const query = queryTime(local, request.dias ?? 1);
+        const today = query.then(d => String(d.current?.time ?? d.daily?.time?.[0] ?? '').slice(0, 10));
+        const [dataAlt, extras] = await Promise.all([query, querySources(local, today)]);
+        let textAlt = formatTime(local, dataAlt, extras);
         if (request.dias) textAlt += `\n\n${formatForecast(dataAlt)}`;
 
         await msg.reply(textAlt);

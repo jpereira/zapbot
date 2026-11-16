@@ -765,6 +765,21 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 1, max: 16, // 16: Open-Meteo limit
         desc: 'Máximo de dias do /weather N (ou Nd), de 1 a 16. Ex.: /weather 16d Niteroi.'
     },
+    'weather.sources': {
+        default: ['met', 'cptec'],
+        type: 'list',
+        desc: 'Fontes extras do /weather, além da Open-Meteo (a principal): met (MET Norway) e cptec (CPTEC/INPE, só Brasil). Vazio: só a Open-Meteo.',
+        item: (v) => {
+            const f = v.toLowerCase();
+            if (!['met', 'cptec'].includes(f)) throw new Error(t('adm.settings.unsupported', { s: v, lista: 'met, cptec' }));
+            return f;
+        }
+    },
+    'weather.userAgent': {
+        default: 'weather-bot/1.0',
+        type: 'string',
+        desc: 'O User-Agent das consultas às fontes extras do /weather. A MET Norway pede que ele identifique o cliente e dê um contato (ex.: "meubot/1.0 contato@exemplo.com").'
+    },
     'zapbot.lang': {
         default: 'en_US',
         type: 'string',
