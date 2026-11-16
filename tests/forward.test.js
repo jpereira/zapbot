@@ -101,7 +101,7 @@ test('localização vira texto com o link do mapa', async () => {
 
 test('sem a mensagem respondida, sem destinatários e sem nada para encaminhar', async () => {
     assert.deepEqual(await bot.replyAlt('/forward /Fulano/'), ['❌ Responda a mensagem que você quer encaminhar, ou diga a posição dela (ex.: /forward -1 /Fulano/).']);
-    assert.match((await bot.replyAlt('/forward', { citada: quoted() }))[0], /^```Usage: \/forward \[-q\] \[-N\] <destinatário>\.\.\. \[-to <destino>\]\.\.\.\n/);
+    assert.match((await bot.replyAlt('/forward', { citada: quoted() }))[0], /^```Usage: \/forward \[-q\] \[-d\] \[-N\] <destinatário>\.\.\. \[-to <destino>\]\.\.\.\n/);
     assert.deepEqual(await bot.replyAlt('/forward /Fulano/', { citada: quoted({ texto: '' }) }), ['❌ Essa mensagem não tem nada que eu possa encaminhar.']);
 });
 
@@ -309,4 +309,23 @@ test('lerPosicoes: -1, listas, vírgulas, faixas, e o resto do texto', () => {
     assert.deepEqual(readPositions('-1 -1 Fulano'), { posicoes: [1], resto: 'Fulano' });
     assert.deepEqual(readPositions('/Fulano/ -1'), { posicoes: [], resto: '/Fulano/ -1' });
     assert.deepEqual(readPositions('-to a@b.com'), { posicoes: [], resto: '-to a@b.com' });
+});
+
+test('-dry|-d: só valida os destinatários, sem enviar e sem precisar de resposta', async () => {
+    let sendings = await bot.executar('/forward -dry /Fulano/ -to a@b.com');
+    assert.equal(sendings.length, 1, 'só a resposta da simulação');
+    assert.match(sendings[0].texto, /Simulação.*nada foi enviado/s);
+    assert.match(sendings[0].texto, /Os 2 destinatários foram encontrados/);
+    assert.equal(emails.length, 0);
+
+    // With a reply, it does not send either; -d works in any position
+    sendings = await bot.executar('/forward /Fulano/ -d', { citada: quoted() });
+    assert.equal(sendings.length, 1);
+    assert.equal(para(sendings, OTHERAlt.jid).length, 0);
+
+    // Recipient that does not exist: the usual error
+    sendings = await bot.executar('/forward -d /Naoexiste/');
+    assert.equal(sendings.length, 1);
+    assert.match(sendings[0].texto, /Naoexiste/);
+    assert.doesNotMatch(sendings[0].texto, /Simulação/);
 });
