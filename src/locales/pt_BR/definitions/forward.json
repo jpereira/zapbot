@@ -1,6 +1,6 @@
 {
   "summary": "Encaminha a mensagem respondida para pessoas, grupos ou e-mails",
-  "usage": "/forward [-q] [-d] [-N] <destinatário>... [-to <destino>]...",
+  "usage": "/forward [-q] [-d] [-N] [#lista]... <destinatário>... [-to <destino>]...  ou  /forward -add|-list|-rm|-move|-desc <...>",
   "help": "Encaminha a mensagem que você respondeu (texto, foto, vídeo, áudio, documento, figurinha, localização...) para os destinatários. Sem resposta, diga antes a posição das mensagens acima: -1 é a logo acima, -1 -4 -6 ou -1,-4,-6 são várias, -3..-1 é uma faixa (até forward.max, enviadas da mais antiga para a mais nova; o cabeçalho vai uma vez, antes delas). Só envia se todos os destinatários forem encontrados; senão, não manda nada e o bot diz qual falhou. Responde na hora com quem vai receber e, no fim, edita essa mensagem com o status (um ❌ e o motivo para quem falhou); com -quiet, não mostra status. Por padrão a mensagem vai com o cabeçalho \"Mensagem encaminhada pelo ZapBot!\" (setting forward.header).",
   "ex": [
     "/forward /Fulano de Tal/",
@@ -12,7 +12,11 @@
       "argv": [
         "[/contato/|@menção|+número]..."
       ],
-      "desc": "Quem recebe a mensagem: nome, /Nome Aqui/, @menção, número ou e-mail, separados por espaço. Se vários servirem, você escolhe na lista."
+      "desc": "Quem recebe a mensagem: nome, /Nome Aqui/, @menção, número ou e-mail, separados por espaço. Se vários servirem, você escolhe na lista. Uma #lista (nome inteiro) envia para todos os destinatários dela; dá para misturar com os outros.",
+      "ex": [
+        "/forward #amigos",
+        "/forward #amigos #trabalho /Maria/"
+      ]
     },
     {
       "argv": [
@@ -59,6 +63,77 @@
       "ex": [
         "/forward -d /Jorge Pereira/ @Maria",
         "/forward -d -to fulano@exemplo.com"
+      ]
+    },
+    {
+      "opts": [
+        "add",
+        "a"
+      ],
+      "values": [
+        "#lista <destinatários>..."
+      ],
+      "desc": "Cria a lista de destinatários (ou acrescenta): os destinatários são resolvidos agora e guardados com os ids, como os destinos do -to (nome, /Nome Aqui/, @menção, número, e-mail). Nunca substitui. Até forward.maxRecipients por lista.",
+      "ex": [
+        "/forward -a #amigos /Jorge Pereira/ /Rossam Silva/ +5521999999999 a@b.com",
+        "/forward -a #amigos -to /Família/"
+      ]
+    },
+    {
+      "opts": [
+        "list",
+        "l"
+      ],
+      "values": [
+        "[#lista...]"
+      ],
+      "desc": "Sem nome, mostra todas as listas com o tamanho. Com nomes, mostra os destinatários numerados e agrupados (pessoas, grupos, e-mails), com o tamanho contra o forward.maxRecipients (o nome pode ser parcial: #ami acha #amigos).",
+      "ex": [
+        "/forward -l",
+        "/forward -l #amigos"
+      ]
+    },
+    {
+      "opts": [
+        "rm",
+        "r"
+      ],
+      "values": [
+        "<#lista...|all> ou #lista <destinatário>..."
+      ],
+      "desc": "Remove a lista inteira (ou várias, ou todas), ou só os destinatários indicados de uma lista (pelo número mostrado no -list, ou pelo nome, e-mail ou telefone entre os membros). Se algum não existir, nada é removido. A lista pede o nome inteiro; tirar o último destinatário remove a lista.",
+      "ex": [
+        "/forward -r #amigos",
+        "/forward -r #amigos /Jorge Pereira/",
+        "/forward -r #amigos 2",
+        "/forward -r all"
+      ]
+    },
+    {
+      "opts": [
+        "move",
+        "m"
+      ],
+      "values": [
+        "#lista #nova"
+      ],
+      "desc": "Renomeia a lista (se o nome novo já existe, junta as duas). A lista pede o nome inteiro, e a descrição vai junto.",
+      "ex": [
+        "/forward -m #amigos #time"
+      ]
+    },
+    {
+      "opts": [
+        "desc"
+      ],
+      "values": [
+        "#lista [<descrição>|-rm]"
+      ],
+      "desc": "Descrição da lista, mostrada no -list. Sem texto, mostra a atual; com -rm, apaga. O nome da lista pode ser parcial.",
+      "ex": [
+        "/forward -desc #amigos A turma de sempre",
+        "/forward -desc #amigos",
+        "/forward -desc #amigos -r"
       ]
     }
   ]

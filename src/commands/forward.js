@@ -6,6 +6,7 @@
  * /forward -1 -4 -6 /Fulano/                 → the messages at positions -1, -4 and -6 (also -1,-4,-6)
  * /forward -3..-1 /Fulano/                   → from -3 to -1, in sequence
  * /forward -dry /Fulano/                     → only validates the recipients, without sending
+ * /forward #list ...                        → the saved lists (see forwardLists.js: -add, -l, -rm...)
  * Only sends if all recipients are found. With -quiet|-q it shows neither the notice nor the status
  * (only the failures). The "forwarded by ZapBot" header comes from the forward.header setting (default on):
  * with several messages, it goes only once, before them.
@@ -19,6 +20,7 @@ const { sendEmail } = require('../email');
 const { t } = require('../i18n');
 const { printError, printInfo } = require('../log');
 const { getSetting } = require('../settings');
+const { expandLists, manage } = require('../forwardLists');
 const { wait } = require('../util/format');
 
 // What to send from a message: { text, media, type } or { error }
@@ -122,23 +124,49 @@ async function messagesAbove(msg, positions) {
     return { mensagens: chosen.reverse() };
 }
 
+// The resolved loose ones plus those from the lists, without repeats; over forward.maxRecipients, it does not send
+async function recipients(msg, texts, listsAlt) {
+    const avulsos = texts.length ? await resolverDestinations(msg, texts, { aceitaEmail: true }) : [];
+    if (!avulsos) return null;
+
+    const allAlt2 = [...listsAlt];
+    for (const d of avulsos) if (!allAlt2.some(x => (x.email ?? x.id) === (d.email ?? d.id))) allAlt2.push(d);
+
+    const max = getSetting('forward.maxRecipients');
+    if (allAlt2.length > max) {
+        await msg.reply(t('forward.tooManyRecipients', { n: allAlt2.length, max }));
+        return null;
+    }
+    return allAlt2;
+}
+
 async function cmdForward({ msg, args: typed, opts, quotedMsg }) {
+    // Manage the lists: -add, -list, -rm, -move, -desc (the first word)
+    if (await manage(msg, typed)) return;
+
     const silent = Boolean(opts?.given.has('quiet'));
     const simulation = Boolean(opts?.given.has('dry'));
     const withoutQuiet = typed.replace(/(^|\s)-(?:quiet|q|dry|d)(?=\s|$)/g, ' ').trim();
     const { posicoes: positions, resto: withoutPositions } = readPositions(withoutQuiet);
 
     // The -to (emails and also chats) and, in the rest, the recipients: /Name/, "Name", @mention, +number, words
-    const { destinos: porTo, resto: rest } = extractDestinations(withoutPositions);
-    const texts = [...textPeople(rest).map(withoutDelimiters), ...porTo];
+    const { destinos: porTo, resto: withoutTo } = extractDestinations(withoutPositions);
 
-    if (!texts.length) {
+    // The #lists (whole name) become the saved members; the rest are loose recipients
+    const lists = await expandLists(withoutTo);
+    if (lists.erro) {
+        await msg.reply(lists.erro);
+        return;
+    }
+    const texts = [...textPeople(lists.resto).map(withoutDelimiters), ...porTo];
+
+    if (!texts.length && !lists.destinos.length) {
         await msg.reply('```' + getCommandSyntax('/forward') + '```');
         return;
     }
     // -dry: only validates the recipients (the error for whoever was not found is already replied), without sending
     if (simulation) {
-        const foundAlt6 = await resolverDestinations(msg, texts, { aceitaEmail: true });
+        const foundAlt6 = await recipients(msg, texts, lists.destinos);
         if (!foundAlt6) return;
         await msg.reply(t('forward.dry', { n: foundAlt6.length, list: foundAlt6.map(describeDestination).join('\n') }));
         return;
@@ -162,7 +190,7 @@ async function cmdForward({ msg, args: typed, opts, quotedMsg }) {
     }
 
     // Only sends if all are found (the error for whoever failed was already replied)
-    const destinations = await resolverDestinations(msg, texts, { aceitaEmail: true });
+    const destinations = await recipients(msg, texts, lists.destinos);
     if (!destinations) return;
 
     // Notifies right away whoever is going (downloading the media and sending may take a while) and, when it ends, that same

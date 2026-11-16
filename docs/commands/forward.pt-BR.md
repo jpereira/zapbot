@@ -9,7 +9,7 @@ destinatários forem encontrados**: se algum não casar, não manda nada e o bot
 `⏳ Encaminhando mensagem...` e, quando termina, edita essa mesma mensagem com o resultado (abaixo).
 
 ```text
-/forward [-q|-q] [-d|-d] [-N|-N,-N|-N..-N] [/contato/|@menção|+número]... [-to <destino>]...
+/forward [-q|-q] [-d|-d] [#lista]... [-N|-N,-N|-N..-N] [/contato/|@menção|+número]... [-to <destino>]...
 ```
 
 | Opção | Valor | Descrição |
@@ -19,6 +19,11 @@ destinatários forem encontrados**: se algum não casar, não manda nada e o bot
 | `-N` | `-N,-N` · `-N..-N` | Sem resposta: a posição das mensagens acima (veja [Várias mensagens](#várias-mensagens--n)) |
 | `-quiet`, `-q` | | Não mostra nenhum status: nem o aviso enquanto envia, nem a lista no fim. Só as falhas são avisadas |
 | `-dry`, `-d` | | Só valida os destinatários: responde quem foi encontrado (ou o que está errado) e não envia nada. Não precisa de resposta nem de posições |
+| `-add`, `-a` | `#lista <destinatários>...` | Cria a [lista de destinatários](#listas-de-destinatários) (ou acrescenta). Os destinatários são resolvidos agora e guardados com os ids; nunca substitui |
+| `-list`, `-l` | `[#lista...]` | Sem nome, todas as listas com o tamanho; com nomes, os destinatários delas (o nome pode ser parcial) |
+| `-rm`, `-r` | `<#lista...\|all>` · `#lista <destinatário>...` | Remove a lista inteira, ou só os destinatários indicados dela. Se algum não existir, nada é removido |
+| `-move`, `-m` | `#lista #nova` | Renomeia a lista (se o nome novo já existe, junta as duas) |
+| `-desc` | `#lista [<descrição>\|-rm]` | Descrição da lista, mostrada no `-list`. Sem texto, mostra; com `-rm`, apaga |
 
 ```text
 /forward /Fulano de Tal/
@@ -43,6 +48,39 @@ traz o tipo do destinatário (👤 contato, 👥 grupo, 📧 e-mail). Se algum e
 SMTP fora do ar...), o título é `⚠️ Encaminhada para 2 de 3` e o que falhou vem com `❌` e o motivo
 (`👤 Beltrano · ❌ chat bloqueado`); os outros são enviados do mesmo jeito. Se todos falharem, o título
 é `❌ Não consegui encaminhar a mensagem`.
+
+## Listas de destinatários
+
+Como as tags do [`/notes`](notes.md), uma `#lista` é um grupo salvo de destinatários, para não digitar
+tudo toda vez (uma mala direta).
+
+```text
+/forward -a #amigos /Jorge Pereira/ /Rossam Silva/ +5521999999999 a@b.com   cria (ou acrescenta)
+/forward -a #amigos -to /Família/                                          o -to também vale como membro
+/forward -l                                                                  todas as listas
+/forward -l #amigos                                                          os destinatários de #amigos
+/forward -r #amigos /Jorge Pereira/                                         tira um destinatário
+/forward -r #amigos 2                                                       ...ou pelo número mostrado no -l
+/forward -r #amigos                                                         apaga a lista
+/forward -m #amigos #time                                                 renomeia (junta se #time existe)
+/forward -desc #amigos A turma de sempre                                     descrição
+
+/forward #amigos                        envia para a lista toda (resposta, ou -1 ...)
+/forward #amigos #trabalho /Maria/ -to x@y.com   várias listas e avulsos, ninguém duas vezes
+/forward -d #amigos                   valida e mostra quem receberia, sem enviar
+```
+
+- Os destinatários são resolvidos **na hora de adicionar** (se o nome for ambíguo, você escolhe na
+  lista) e guardados com os ids, então o envio é determinístico.
+- O `-add` só acrescenta, nunca substitui: para recomeçar, `-rm #amigos` e `-add` de novo.
+- Para enviar ou apagar, a lista pede o **nome inteiro**; o nome parcial (`#ami`) só vale para ler
+  (`-list`, `-desc`).
+- O `-rm` é tudo ou nada: se alguma lista ou destinatário não existir, nada é removido. Tirar o último
+  destinatário remove a lista.
+- Os nomes são minúsculos, com letras, dígitos, `_` e `-`.
+- Um envio (listas e avulsos somados) e cada lista são limitados pelo setting
+  `forward.maxRecipients` (padrão 30).
+- Só admin, como o resto do comando.
 
 ## Cabeçalho
 
