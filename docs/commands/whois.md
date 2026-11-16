@@ -4,6 +4,10 @@ Shows who someone is and what they can do in the bot, **in this chat**: 🤖 own
 🗣️ user (`+u`) or 🚫 no permission. On its own, it shows you; with people (or replying to a message),
 it shows them, but only for the owner and admins.
 
+| Option | Value | Description |
+|---|---|---|
+| `-id` | | The ids instead of the level: the chat's and each person's (phone, `@c.us` and, when WhatsApp sent it, the internal `@lid`) |
+
 | Argument | Description |
 |---|---|
 | *(none)* | You: your level in this chat |
@@ -27,6 +31,26 @@ Type /help to see which commands are available.
 /whois /Rafael Silva/ @Fulano     → (owner and admins) those people
 /whois +5521999999999              → (owner and admins) by number
 /whois                          → replying to a message: who wrote it (owner and admins)
+```
+
+## The ids (`-id`)
+
+The bot talks to WhatsApp by **ids**, not by names: a private chat is `<phone>@c.us`, a group is
+`<number>@g.us`, and WhatsApp sometimes hides the phone behind an internal `@lid`. `-id` shows them,
+which helps when you need the group id for a setting or want to know which number someone really is:
+
+```text
+/whois -id
+*🆔 IDs*
+👥 Group: 120363012345678901@g.us
+• 📞 +5521911111111
+  🪪 5521911111111@c.us
+  🔗 98765432109876@lid
+```
+
+```text
+/whois -id +5521999999999       → (owner and admins) the ids of that number
+/whois -id                      → replying to a message: the ids of who wrote it
 ```
 
 The level is the highest one that applies **in the chat where you typed it**:

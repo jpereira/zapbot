@@ -83,8 +83,8 @@ async function textPhones(msg, textAlt) {
     return [...new Set(numbers)];
 }
 
-async function cmdWhois({ msg, args, quotedMsg, senderNumber, chatId, isGroup, admin }) {
-    const textAlt = String(args ?? '').trim();
+async function cmdWhois({ msg, opts, quotedMsg, senderNumber, chatId, isGroup, admin }) {
+    const textAlt = opts.argv.join(' ').trim();
     const other = Boolean(textAlt || quotedMsg);
 
     // The others, only the owner and the admins: whoever uses the bot does not need to know everyone's level
@@ -94,6 +94,7 @@ async function cmdWhois({ msg, args, quotedMsg, senderNumber, chatId, isGroup, a
     }
 
     let numbers;
+    let raw = null;   // the id as WhatsApp sent it (may be the @lid), of whoever typed or was replied to
     if (textAlt) {
         numbers = await textPhones(msg, textAlt);
         if (!numbers) return;
@@ -101,6 +102,7 @@ async function cmdWhois({ msg, args, quotedMsg, senderNumber, chatId, isGroup, a
         const author = quotedMsg.fromMe
             ? client.info.wid._serialized
             : (quotedMsg.author || quotedMsg.from);
+        raw = author;
         const phoneAlt = await phoneAlt3(author);
         if (!phoneAlt) {
             await msg.reply(t('whois.unknownPhoneAuthor'));
@@ -115,6 +117,13 @@ async function cmdWhois({ msg, args, quotedMsg, senderNumber, chatId, isGroup, a
             return;
         }
         numbers = [eu];
+        raw = msg.fromMe ? client.info.wid._serialized : (msg.author || msg.from);
+    }
+
+    // -id: only the identifiers (the chat's and each person's), without the permission level
+    if (opts.opt.id) {
+        await msg.reply(listIds({ numeros: numbers, bruto: raw, chatId, isGroup }));
+        return;
     }
 
     const chat = { chatId, isGroup };
@@ -137,6 +146,20 @@ async function cmdWhois({ msg, args, quotedMsg, senderNumber, chatId, isGroup, a
             semPermissao: levels.some(n => n.startsWith(ROLES.nenhum))
         }) +
         '\n\n' + t('whois.helpHint'));
+}
+
+/*
+ * /whois -id: the chat id (group, private) and each person's: the phone, the @c.us and, when the
+ * WhatsApp sent, the @lid (the internal id, which is not the phone).
+ */
+function listIds({ numeros: numbers, bruto: raw, chatId, isGroup }) {
+    const people = numbers.map(n => {
+        const lid = numbers.length === 1 && raw?.endsWith('@lid') ? `\n  🔗 ${raw}` : '';
+        return `• 📞 +${n}\n  🪪 ${n}@c.us${lid}`;
+    });
+    return `${t('whois.idsTitle')}\n` +
+        `${isGroup ? '👥' : '💬'} ${t(isGroup ? 'whois.idGroup' : 'whois.idChat')}: ${chatId}\n` +
+        people.join('\n');
 }
 
 module.exports = {

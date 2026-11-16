@@ -1,12 +1,24 @@
 {
   "summary": "Mostra quem é e o que pode no bot, neste chat",
-  "usage": "/whois [pessoa...]",
+  "usage": "/whois [-id] [pessoa...]",
   "help": "Mostra quem é e o que pode no bot, neste chat: 🤖 dono, 👑 admin (+a), 🗣️ usuário (+u) ou 🚫 sem permissão; quem tem os comandos limitados (/bot +cmd), com a lista deles. Sozinho, mostra você. Com pessoas (ou respondendo uma mensagem), mostra elas, mas só para o dono e os admins.",
   "ex": [
     "/whois",
-    "/whois /Rafael Silva/"
+    "/whois /Rafael Silva/",
+    "/whois -id"
   ],
   "cmd_opts": [
+    {
+      "opts": [
+        "id"
+      ],
+      "values": [],
+      "desc": "Mostra os ids em vez do nível de permissão: o do chat (o id do grupo ou do privado) e o de cada pessoa (o telefone, o @c.us e, quando o WhatsApp mandou, o @lid interno).",
+      "ex": [
+        "/whois -id",
+        "/whois -id +5521999999999"
+      ]
+    },
     {
       "argv": [
         "[pessoa...]"
