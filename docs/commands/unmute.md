@@ -10,7 +10,7 @@ statuses and removed or changed reactions from the person, group or community co
 
 ```text
 /unmute /Jorge Pereira/     → the contact's warnings come back
-/unmute /Grupo L200/        → the group's
+/unmute /L200 Group/        → the group's
 /unmute 2                   → no. 2 from the /mute list
 /unmute                     → replying to a warning: where it came from (the person, the group or the community)
 /unmute -a                → all of them (same as /unmute -a or /mute -rm all)

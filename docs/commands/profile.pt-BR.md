@@ -8,7 +8,7 @@ Mostra a foto de perfil de um contato, com o nome que ele tem na **sua agenda** 
 ninguém, mostra a pessoa do privado (no seu próprio privado, o seu perfil) ou, no grupo, a foto do grupo; respondendo uma mensagem, o de quem a escreveu.
 
 ```text
-/profile [/contato/|@menção|+número]...  ou  /profile -s|-s
+/profile [/contato/|@menção|+número]...  ou  /profile -set|-s
 ```
 
 | Opção | Valor | Descrição |

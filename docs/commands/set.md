@@ -7,7 +7,7 @@ Lists and changes the bot's settings stored in the `settings` table (see
 |---|---|---|
 | *(none)* | | Lists all keys and values and, in your private chat, the `config/.env` variables |
 | `<key>` | | Shows value, default, type and description (the description is still in Portuguese) |
-| `<snippet>` or `/regex/` | | If it isn't a key: lists the keys that contain the snippet (case-insensitive) or match the regex. E.g.: `/set alerta`, `/set /^show\./` |
+| `<snippet>` or `/regex/` | | If it isn't a key: lists the keys that contain the snippet (case-insensitive) or match the regex. E.g.: `/set alert`, `/set /^show\./` |
 | `<key> <value>` | | Changes it. Lists: items separated by comma or space (`watch.rules`: one rule per line; `bot.users.cmds`: separated by space, since each item has commas); `""` empties it |
 | `<key>=<value>` | | The same as `<key> <value>`, for any key. E.g.: `/set zapbot.lang=pt_BR` |
 | `-append`, `-a` | `<key> <value>` | In a list, adds the items (the existing ones stay). E.g.: `/set -a bot.admins +5521999999999` (for `bot.admins` and `bot.users`, `/Jorge Pereira/` and `@Fulano Da Silva` also work; for `bot.users`, groups) |
@@ -25,7 +25,7 @@ Lists and changes the bot's settings stored in the `settings` table (see
 /set monitor.maxRecords=30
 /set zapbot.lang=pt_BR  → the same as /set zapbot.lang pt_BR
 /set debug.enabled off
-/set sticker.name "Meu Bot"
+/set sticker.name "My Bot"
 /set commands.disabled noffa everybody
 /set commands.disabled ""
 /set -r crypto.coins
@@ -33,7 +33,7 @@ Lists and changes the bot's settings stored in the `settings` table (see
 /set -a commands.disabled walissu   → disables one more, without rewriting the list
 /set -rm commands.disabled noffa   → re-enables just that one
 /set -a bot.admins /Jorge Pereira/  → an extra admin, by contact name (see /bot)
-/set bot.users /Grupo Familia/      → allows the regular commands in the group (see /bot)
+/set bot.users /Family Group/      → allows the regular commands in the group (see /bot)
 ```
 
 ## Contact monitor

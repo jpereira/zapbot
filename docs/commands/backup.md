@@ -15,7 +15,7 @@ Removing contacts or reducing the local history doesn't change the backups that 
 | `-restore`, `-r` | `<no.\|name>` | Restores the backup. Without `-yes`, it only shows what will happen and the command to confirm |
 | `-yes` | | Confirms: with `-restore`, the restore; with `-send -to` another chat, the sending |
 | `-send`, `-s` | `[no.]` | Sends the backup file (without no.: the most recent) to your private chat or to the `-to` destinations. See [Send the file](#send-the-file) |
-| `-to` | `<destination>` | With `-send`: by email, as an attachment (`email` is the `QRCODE_EMAIL_SMTP_TO`, or an address), or to another chat: a contact (`/Jorge Pereira/`), a mention (`@Fulano Da Silva`), a group (`/Grupo L200/`) or a number (`+5521999999999`) (asks for `-yes`). Repeat for several. See [Destinations](index.md#destinations-contact-group-number-or-email) |
+| `-to` | `<destination>` | With `-send`: by email, as an attachment (`email` is the `QRCODE_EMAIL_SMTP_TO`, or an address), or to another chat: a contact (`/Jorge Pereira/`), a mention (`@Fulano Da Silva`), a group (`/L200 Group/`) or a number (`+5521999999999`) (asks for `-yes`). Repeat for several. See [Destinations](index.md#destinations-contact-group-number-or-email) |
 | `-rm` | `<no.\|all>` | Deletes backup no. N (or all of them) |
 
 ```text
@@ -81,10 +81,10 @@ several destinations, write one `-to` for each in the setting.
 
 ```text
 /set backup.to email
-/set backup.to voce@exemplo.com
-/set backup.to /Grupo Familia/
+/set backup.to you@example.com
+/set backup.to /Family Group/
 /set backup.to +5521999999999
-/set backup.to "-to email -to /Grupo Familia/"
+/set backup.to "-to email -to /Family Group/"
 /set backup.to ""
 ```
 
@@ -167,9 +167,9 @@ other commands ([Destinations](index.md#destinations-contact-group-number-or-ema
 ⚠️ The backup has the whole database: the saved messages of all chats, the deleted ones, the settings...
 To send it to 👤 Jorge Pereira anyway, repeat with -yes: /backup -send -to /Jorge Pereira/ -yes
 
-/backup -s -to email -to /Jorge Pereira/ -to /Grupo L200/
+/backup -s -to email -to /Jorge Pereira/ -to /L200 Group/
 ⚠️ The backup has the whole database: the saved messages of all chats, the deleted ones, the settings...
-To send it to 👤 Jorge Pereira, 👥 Grupo sobre L200 anyway, repeat with -yes: /backup -send -to email -to /Jorge Pereira/ -to /Grupo L200/ -yes
+To send it to 👤 Jorge Pereira, 👥 L200 Group anyway, repeat with -yes: /backup -send -to email -to /Jorge Pereira/ -to /L200 Group/ -yes
 ```
 
 - The email includes the anti-phishing code, like the bot's other emails, and the restore
@@ -184,7 +184,7 @@ To send it to 👤 Jorge Pereira, 👥 Grupo sobre L200 anyway, repeat with -yes
 Backups live on the same volume as the database: if the volume is deleted (e.g.,
 `make DOCK_REMOTE=1 destroy`), they go with it. [`/cache -a`](cache.md) and `/cache -b` also
 delete the backups. To keep a copy elsewhere, use `/backup -s` (the file arrives in your WhatsApp),
-send it by email (`/backup -s -to seu@email.com`) or copy the folder:
+send it by email (`/backup -s -to you@example.com`) or copy the folder:
 
 ```bash
 docker cp zapbot:/app/cache/backups ./backups-zapbot

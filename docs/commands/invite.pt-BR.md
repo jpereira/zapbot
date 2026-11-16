@@ -7,7 +7,7 @@ convite do grupo (`https://chat.whatsapp.com/...`). **A sua conta precisa ser ad
 WhatsApp dar o link.
 
 ```text
-/invite [-r|-r]
+/invite [-revoke|-r]
 ```
 
 | Opção | Valor | Descrição |

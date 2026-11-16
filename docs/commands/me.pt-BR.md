@@ -4,7 +4,7 @@ Envia a mensagem digitada. Cada `{/comando args}` roda na hora e a resposta entr
 [comandos no texto do `/cron`](cron.md#comandos-no-texto). Um `\n` digitado vira quebra de linha.
 
 ```text
-/me [-r|-r <n>] <mensagem>
+/me [-repeat|-r <n>] <mensagem>
 ```
 
 | Opção | Valor | Descrição |

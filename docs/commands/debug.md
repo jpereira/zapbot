@@ -48,7 +48,7 @@ sending of that email is still in progress.
 ```
 
 Without options, it shows the active state, level, filter and destination. Destinations with spaces
-can be written as `/Nome do Grupo/` or in quotes. Ambiguous names open a list to choose from, like in
+can be written as `/Group Name/` or in quotes. Ambiguous names open a list to choose from, like in
 `-to` of the other commands.
 
 `-level`, `-filter` and `-copy-to` only work with debug on (or `-on` in the same command); otherwise

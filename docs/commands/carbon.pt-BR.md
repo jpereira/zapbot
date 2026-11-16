@@ -5,7 +5,7 @@ números e palavras-chave. É feita pelo próprio bot (SVG transformado em PNG p
 externo, e o código não sai da máquina.
 
 ```text
-/carbon [-t|-t <dark|light>] <código>
+/carbon [-theme|-t <dark|light>] <código>
 ```
 
 | Opção | Valor | Descrição |

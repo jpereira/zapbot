@@ -153,7 +153,7 @@ make check                                 # lint + testes + documentação
 make DOCK_REMOTE=1 test                     # testes da imagem em execução no servidor
 ```
 
-No GitHub, o workflow **Testes** (`.github/workflows/ci.yml`) roda o `make lint`, o `make test` e o
+No GitHub, o workflow **Tests** (`.github/workflows/ci.yml`) roda o `make lint`, o `make test` e o
 `make docs.build` a cada push no `main` e em cada pull request; o selo no topo do README e da página
 inicial mostra o resultado do último run.
 
@@ -326,7 +326,7 @@ git push && git push origin vX.Y.Z   # o push da tag publica o site
 ```
 
 O push da tag dispara o workflow da [documentação](#documentação), que publica o site da release em
-alguns minutos (acompanhe em **Actions › Documentação**). As notas ficam na release do GitHub
+alguns minutos (acompanhe em **Actions › Documentation**). As notas ficam na release do GitHub
 (`gh release create vX.Y.Z`), com o que mudou desde a anterior
 (`git log <tag anterior>..vX.Y.Z`).
 

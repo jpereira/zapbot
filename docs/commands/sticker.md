@@ -19,7 +19,7 @@ six seconds from `-ss` (or from the start). While it downloads and converts, the
 (or the error). The animated sticker has to fit in 500 KB (WhatsApp's limit): the bot retries with
 lower quality and, if it still doesn't fit, suggests a shorter clip with `-ss` and `-es`.
 
-![Demonstração do /sticker](../assets/demo/05-sticker.gif)
+![Demo of /sticker](../assets/demo/05-sticker.gif)
 
 ```text
 (reply to a photo)               /sticker

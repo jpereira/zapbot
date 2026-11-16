@@ -1,6 +1,6 @@
 # `/bills`
 
-A **joke**. Groups only: draws 2 different members (not counting the bot) and tags them to "pay a boleto". There is no bill, and the reply says so.
+A **joke**. Groups only: draws 2 different members (not counting the bot) and tags them to "pay a invoice". There is no bill, and the reply says so.
 
 ```text
 /bills

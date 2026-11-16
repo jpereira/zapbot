@@ -9,7 +9,7 @@ destinatários forem encontrados**: se algum não casar, não manda nada e o bot
 `⏳ Encaminhando mensagem...` e, quando termina, edita essa mesma mensagem com o resultado (abaixo).
 
 ```text
-/forward [-q|-q] [-d|-d] [#lista]... [-N|-N,-N|-N..-N] [/contato/|@menção|+número]... [-to <destino>]...
+/forward [-quiet|-q] [-dry|-d] [#lista]... [-N|-N,-N|-N..-N] [/contato/|@menção|+número]... [-to <destino>]...
 ```
 
 | Opção | Valor | Descrição |

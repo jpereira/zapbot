@@ -13,13 +13,13 @@ option; with `-m` at the start, they can pick several.
 | `-result`, `-r` | Shows the result of the chat's most recent poll (or of the poll being replied to). Only works at the start of the text. See [Result](#result) |
 
 ```text
-/poll Pizza ou hambúrguer? | Pizza | Hambúrguer
+/poll Pizza or burger? | Pizza | Burger
 /poll -r                  → the result of the chat's last poll
-/poll -m Quais dias você pode? | Seg | Ter | Qua | Qui | Sex
-/poll Onde vamos?
-Praia
-Montanha
-Campo
+/poll -m Which days can you make it? | Mon | Tue | Wed | Thu | Fri
+/poll Where do we go?
+Beach
+Mountain
+Countryside
 ```
 
 WhatsApp limits: question up to 255 characters, options up to 100 and no repeats (case is ignored).
@@ -33,14 +33,14 @@ and who voted for each one. When replying to a poll, the scoreboard is that poll
 
 ```text
 /poll -r
-📊 Result: Pizza ou hambúrguer?
+📊 Result: Pizza or burger?
 3 votes from 3 people · created on 9/30/2026, 18:02:11
 
 🏆 Pizza — 2 (67%) ███████
    Fulano, Tia
-▫️ Hambúrguer — 1 (33%) ███
+▫️ Burger — 1 (33%) ███
    Ciclano
-▫️ Salada — 0 (0%) ▏
+▫️ Salad — 0 (0%) ▏
 ```
 
 - WhatsApp only delivers the votes to whoever created the poll: the bot counts the votes of polls

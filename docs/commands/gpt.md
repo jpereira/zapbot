@@ -16,15 +16,15 @@ goes before the question; when you reply to a **photo**, it's sent along and Cha
 `zapbot.lang` (default `en_US`), unless you ask for another one.
 
 ```text
-/gpt explique o que é SSRF em 3 linhas
-/gpt qual a capital da Mongólia?
-/gpt resuma          (respondendo uma mensagem)
-/gpt qual a raça desse cachorro?   (respondendo uma foto)
-/gpt agora transcreva isso         (respondendo um áudio)
-/gpt resuma esse áudio             (respondendo um áudio)
-/gpt -v exterminar todos os humanos   → replies with a robot voice note
-/gpt -img um robô nadando em aquarela   → creates an image (owner and admins only)
-/gpt gere um gif animado dele nadando   → replying to a photo: a GIF (owner and admins only)
+/gpt explain what SSRF is in 3 lines
+/gpt what is the capital of Mongolia?
+/gpt summarize        (replying to a message)
+/gpt what breed is this dog?   (replying to a photo)
+/gpt now transcribe this         (replying to an audio)
+/gpt summarize this audio         (replying to an audio)
+/gpt -v exterminate all humans   → replies with a robot voice note
+/gpt -img a robot swimming in watercolor   → creates an image (owner and admins only)
+/gpt generate an animated gif of it swimming   → replying to a photo: a GIF (owner and admins only)
 /gpt -m              → the models by use (questions, images, audio, voice), with the current one
 /gpt -m gpt-6-luna   → changes the questions model
 /gpt -m gpt-image-2.6-flare -gif   → changes the image and GIF model
@@ -62,13 +62,13 @@ in `/gpt` and in `/tldr`:
 
 | The model wrote | Arrives on WhatsApp |
 |---|---|
-| `# Título`, `## Título` | `*Título*` |
-| `**negrito**`, `__negrito__` | `*negrito*` |
-| `***forte***` | `*_forte_*` |
-| `~~tachado~~` | `~tachado~` |
+| `# Title`, `## Title` | `*Title*` |
+| `**bold**`, `__bold__` | `*bold*` |
+| `***strong***` | `*_strong_*` |
+| `~~strikethrough~~` | `~strikethrough~` |
 | `* item`, `+ item` | `- item` |
-| `[texto](https://x.com)` | `texto (https://x.com)` |
-| `![foto](https://x.com/a.png)` | `https://x.com/a.png` |
+| `[text](https://x.com)` | `text (https://x.com)` |
+| `![photo](https://x.com/a.png)` | `https://x.com/a.png` |
 | `---` alone on a line | (disappears) |
 | table with `\|` | a code block with the columns aligned |
 | ` ```text ` | ` ``` ` (without the language name) |
@@ -78,10 +78,10 @@ becomes a monospaced block because it's the only way to keep the columns:
 
 ````text
 ```
-Símbolo  Significado
--------  -----------
-∈        Pertence
-∉        Não pertence
+Symbol   Meaning
+-------  -------
+∈        Belongs
+∉        Does not belong
 ```
 ````
 
@@ -92,9 +92,9 @@ with the question to the model, which sees it. The text comes from the photo's c
 one) and from what you typed, in that order. With no question at all, ChatGPT describes the photo.
 
 ```text
-(respondendo a foto de um cachorro)
-/gpt qual a raça desse cachorro?
-🤖 Parece um labrador retriever, pelo focinho e pelo pelo curto...
+(replying to a photo of a dog)
+/gpt what breed is this dog?
+🤖 It looks like a Labrador Retriever, from the snout and the short coat...
 ```
 
 - JPEG, PNG, WebP, and GIF are accepted, up to 15 MB. Another format, an image that
@@ -111,8 +111,8 @@ When you reply to a document with `/gpt`, the bot reads it and sends the content
 question (or alone, if you typed nothing).
 
 ```text
-(respondendo um PDF)
-/gpt resuma esse documento
+(replying to a PDF)
+/gpt summarize this document
 ```
 
 - Plain text (txt, md, csv, json, xml, yaml, logs, source code, html...) and PDF are accepted, up to
@@ -128,18 +128,18 @@ When you reply to an audio or voice note with `/gpt`, the bot downloads the audi
 through OpenAI's transcription API (`v1/audio/transcriptions`), in the language it detects:
 
 ```text
-(respondendo uma nota de voz)
-/gpt agora transcreva isso
+(replying to a voice note)
+/gpt now transcribe this
 🤖 Transcription:
-oi, tudo bem? te ligo mais tarde, só queria confirmar o horário da reunião.
+hi, how are you? I'll call you later, I just wanted to confirm the meeting time.
 ```
 
-- **With no question**, or only with "transcreva" (up to 6 words starting with `transcrev`:
-  "transcreve", "agora transcreva isso"), it replies with the transcription as it came out.
-- **With another question** ("resuma", "traduza para o inglês", "quais são os combinados?"), the bot
+- **With no question**, or only with "transcribe" (up to 6 words starting with `transcrib` or the Portuguese
+  `transcrev`: "transcribe", "now transcribe this", "transcreva"), it replies with the transcription as it came out.
+- **With another question** ("summarize", "translate to Portuguese", "what did we agree on?"), the bot
   sends the question and the transcription to the chat and answers based on it.
 - The transcription model is the `gpt.transcribe.model` setting (default `gpt-transcribe`;
-  `whisper-1` is going away in Feb 2027): `/set gpt.transcribe.model <modelo>`.
+  `whisper-1` is going away in Feb 2027): `/set gpt.transcribe.model <model>`.
 - ogg (the WhatsApp voice note), mp3, m4a, wav, webm, and flac are accepted, up to 25 MB. Another
   format (like raw aac), expired audio, or audio that's too large gets a notice, and nothing is sent
   to OpenAI. Audio without speech replies `🤖 I heard no speech in this audio.`.
@@ -155,25 +155,25 @@ doesn't have). Both **spend your OpenAI account**, so they're for the owner and 
 `gpt.image.gifModel`.
 
 ```text
-/gpt -img um robô nadando em aquarela
-(respondendo uma foto)  /gpt -img coloque um chapéu nele
-/gpt -gif um gato de óculos escuros
-(respondendo uma foto)  /gpt gere um gif animado de como se estivesse nadando
+/gpt -img a robot swimming in watercolor
+(replying to a photo)  /gpt -img put a hat on it
+/gpt -gif a cat in sunglasses
+(replying to a photo)  /gpt generate an animated gif of it swimming
 ```
 
-Without `-gif`, "gere um gif animado..." replying to a photo also works. To adjust the frames and
+Without `-gif`, "generate an animated gif..." replying to a photo also works. To adjust the frames and
 the time of each one in a single call (`-frames`, `-ms`), use
 [`/draw -gif`](draw.md#animated-gif--gif).
 
 ## Voice (`-voice`)
 
-`/gpt -voice <texto>` asks OpenAI (`v1/audio/speech`) for a voice for the text and replies with a
+`/gpt -voice <text>` asks OpenAI (`v1/audio/speech`) for a voice for the text and replies with a
 **voice note** (Ogg/Opus, like WhatsApp's). The default style is the robot voice.
 
 ```text
-/gpt -v exterminar todos os humanos          → the voice note, in a robot voice
-(respondendo um texto)  /gpt -voice              → speaks the replied message's text
-(respondendo um texto)  /gpt -voice fale como um robô meio metálico → speaks the replied text in that style
+/gpt -v exterminate all humans          → the voice note, in a robot voice
+(replying to a text)  /gpt -voice              → speaks the replied message's text
+(replying to a text)  /gpt -voice speak like a metallic robot → speaks the replied text in that style
 ```
 
 - **With no typed text**, it speaks the replied message's (an audio is transcribed first). **With no
@@ -184,7 +184,7 @@ the time of each one in a single call (`-frames`, `-ms`), use
   has), `gpt.tts.voice` (`onyx`, the default, or `alloy`, `ash`, `ballad`, `coral`, `echo`,
   `fable`, `nova`, `sage`, `shimmer`, `verse`), and `gpt.tts.instructions` (the style: the
   default asks for a robot voice; e.g.:
-  `/set gpt.tts.instructions Fale como um locutor de rádio animado`). Only the `gpt-4o-*` models
+  `/set gpt.tts.instructions Speak like a cheerful radio announcer`). Only the `gpt-4o-*` models
   follow the style: with `tts-1`, the voice comes out normal.
 - The voice is billed per character, and the text goes through OpenAI's server.
 
@@ -195,9 +195,9 @@ replies (also in `/tldr`); to turn it off, `/set gpt.status false` (then only `-
 it).
 
 ```text
-/gpt -s explique SSRF em 3 linhas
+/gpt -s explain SSRF in 3 lines
 
-🤖 SSRF é quando o servidor faz a requisição que o atacante pediu...
+🤖 SSRF is when the server makes the request the attacker asked for...
 
 📡 ⬆️ 1.2 KB TX · ⬇️ 3.4 KB RX · 🪙 150 tokens (📥 120 · 📤 30)
 💵 ~$0.000090 · 🏦 balance ~$12.31 of $20.00
@@ -208,7 +208,7 @@ it).
 - **Tokens**: the ones OpenAI reports (`usage`): total, input (📥), and output (📤). Voice doesn't
   report them.
 - **💵 Cost**: estimated (the `~`), tokens × the model's price in the `gpt.pricing` setting
-  (`modelo=entrada/saída`, dollars per 1M tokens). Prices start out empty: with no price, or no
+  (`model=input/output`, dollars per 1M tokens). Prices start out empty: with no price, or no
   tokens (voice), the footer shows `cost n/a (run /gpt -prices)`. To update the prices, `/gpt -prices` (owner and
   admins only) reads the Standard table on OpenAI's site and writes it to `gpt.pricing`, showing
   what changed; whatever you added by hand that the page doesn't have stays as is. With the OpenAI
@@ -224,14 +224,14 @@ it).
 
 ## Usage and limits (`-usage`)
 
-`/gpt -usage [dias]` combines two queries to OpenAI. Only the owner and admins use it, even if
+`/gpt -usage [days]` combines two queries to OpenAI. Only the owner and admins use it, even if
 `/gpt` was granted to a user.
 
 **Usage** (Usage API, with the **admin** key): input, output, and cache tokens, and requests, for the
 last days (default 7, up to 31), by day and by model. It's the equivalent of:
 
 ```bash
-curl "https://api.openai.com/v1/organization/usage/completions?start_time=<7 dias atrás>&bucket_width=1d&limit=7&group_by[]=model" \
+curl "https://api.openai.com/v1/organization/usage/completions?start_time=<7 days ago>&bucket_width=1d&limit=7&group_by[]=model" \
   -H "Authorization: Bearer $OPENAI_ADMIN_KEY"
 ```
 
@@ -300,36 +300,36 @@ remains in the current window, and when it resets, for tokens and requests of th
 ## Choosing the model
 
 `/gpt -m` lists the models **by use**, the ones your key sees (`GET /v1/models`), with the current one
-marked with ✅. Only the owner and admins use it. `-m <modelo>` changes the one for the use requested
+marked with ✅. Only the owner and admins use it. `-m <model>` changes the one for the use requested
 by the option that comes with it:
 
 | Use | Change with | Setting |
 |---|---|---|
-| Default (questions) | `/gpt -m <modelo>` | `gpt.api.model` |
-| Images | `/gpt -m <modelo> -img` | `gpt.image.model` |
-| GIF | `/gpt -m <modelo> -gif` | `gpt.image.gifModel` |
-| Audio transcription | `/gpt -m <modelo> -audio` | `gpt.transcribe.model` |
-| Voice | `/gpt -m <modelo> -voice` | `gpt.tts.model` |
+| Default (questions) | `/gpt -m <model>` | `gpt.api.model` |
+| Images | `/gpt -m <model> -img` | `gpt.image.model` |
+| GIF | `/gpt -m <model> -gif` | `gpt.image.gifModel` |
+| Audio transcription | `/gpt -m <model> -audio` | `gpt.transcribe.model` |
+| Voice | `/gpt -m <model> -voice` | `gpt.tts.model` |
 
 ```text
 /gpt -m
 🤖 */gpt models*
 
-*Default* (questions) — /gpt -m <modelo>
+*Default* (questions) — /gpt -m <model>
 ✅ gpt-4o-mini
 ▫️ gpt-4.1
 
-*-img* (images) — /gpt -m <modelo> -img
+*-img* (images) — /gpt -m <model> -img
 ✅ gpt-image-2
 
-*-gif* (GIF) — /gpt -m <modelo> -gif
+*-gif* (GIF) — /gpt -m <model> -gif
 ✅ gpt-image-2.6-flare
 ▫️ gpt-image-2.5-flare
 
-*-audio* (audio transcription) — /gpt -m <modelo> -audio
+*-audio* (audio transcription) — /gpt -m <model> -audio
 ✅ gpt-transcribe
 
-*-voice* (voice) — /gpt -m <modelo> -voice
+*-voice* (voice) — /gpt -m <model> -voice
 ✅ gpt-4o-mini-tts
 
 💡 The list is the one from your key (GET /v1/models).
@@ -347,8 +347,8 @@ by the option that comes with it:
   audio, and voice ones are free-form, because the names change.
 
 The question model comes from `OPENAI_MODEL` in `config/.env` or, if it's empty, from the
-`gpt.api.model` setting (default `gpt-4o-mini`). `/gpt -m <modelo>` and
-`/set gpt.api.model <modelo>` change the setting right away; with `OPENAI_MODEL` filled in, it
+`gpt.api.model` setting (default `gpt-4o-mini`). `/gpt -m <model>` and
+`/set gpt.api.model <model>` change the setting right away; with `OPENAI_MODEL` filled in, it
 still takes priority (the bot warns).
 
 The bot uses the `v1/chat/completions` endpoint. The list of accepted IDs is in `src/openai.js`.

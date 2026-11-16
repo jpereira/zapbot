@@ -8,7 +8,7 @@ It uses the OpenAI key (`OPENAI_API_KEY` in `config/.env` or the `gpt.api.key` s
 the voice and the style come from the `gpt.tts.*` settings.
 
 ```text
-/tts [-s|-s] [<text>]
+/tts [-status|-s] [<text>]
 ```
 
 | Option | Value | Description |

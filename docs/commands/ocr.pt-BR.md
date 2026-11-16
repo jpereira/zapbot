@@ -8,7 +8,7 @@ com `/ocr` na legenda. Usa a chave da OpenAI (`OPENAI_API_KEY` no `config/.env` 
 `gpt.api.key`), como o [`/gpt`](gpt.md).
 
 ```text
-/ocr [-s|-s]
+/ocr [-status|-s]
 ```
 
 | Opção | Valor | Descrição |

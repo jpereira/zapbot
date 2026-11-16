@@ -4,17 +4,17 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 `-alert` avisa dela numa data/hora. Só o dono (e os admins) usa.
 
 ```text
-/notes [-l|-l] [#tag...] [-to <destino>]...
-/notes -c|-c [#tag...]
-/notes -s|-s [#tag...] <texto|/regex/flags> [-to <destino>]...
-/notes -u|-u <id> [#tag] <novo texto>
-/notes -v|-v <id...|#tag...> [-to <destino>]...
-/notes -m|-m #tag #novatag
-/notes -d|-d #tag [<descrição>|-r]
-/notes -e|-e [#tag...] [-to <destino>]...
+/notes [-list|-l] [#tag...] [-to <destino>]...
+/notes -compact|-c [#tag...]
+/notes -search|-s [#tag...] <texto|/regex/flags> [-to <destino>]...
+/notes -update|-u <id> [#tag] <novo texto>
+/notes -view|-v <id...|#tag...> [-to <destino>]...
+/notes -move|-m #tag #novatag
+/notes -desc|-d #tag [<descrição>|-rm]
+/notes -export|-e [#tag...] [-to <destino>]...
 /notes #tag <texto>
-/notes -a|-a #tag <texto> [-alert <quando> [-to <destino>]...]
-/notes -r|-r <id...|#tag...|all>
+/notes -add|-a #tag <texto> [-alert <quando> [-to <destino>]...]
+/notes -rm|-r <id...|#tag...|all>
 /notes -alert [<id|#tag...> [<quando> [-to <destino>]...]]
 /notes -alert -r <id...|#tag...|all>
 ```

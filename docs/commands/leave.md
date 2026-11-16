@@ -3,15 +3,15 @@
 Leaves one or more WhatsApp groups. With nothing, lists the groups you're in, numbered. To come back,
 you need a new invite ([`/join`](join.md)).
 
-![Demonstração do /leave](../assets/demo/04-join-leave.gif)
+![Demo of /leave](../assets/demo/04-join-leave.gif)
 
 ```text
-/leave <grupo|nº>...  ou  /leave -l
+/leave <group|no.>... or  /leave -l
 ```
 
 | Option | Value | Description |
 |---|---|---|
-| *(none)* | `<grupo\|nº>...` | The groups, separated by space or comma, by name or part of it, like in `-to` ([Destinations](index.md#destinations-contact-group-number-or-email); if several fit: you choose from the list), or by the no. from the last `-l` list (name with spaces between `/.../` or quotes; loose words, with no no., slashes or quotes, are a single name) |
+| *(none)* | `<group\|no.>...` | The groups, separated by space or comma, by name or part of it, like in `-to` ([Destinations](index.md#destinations-contact-group-number-or-email); if several fit: you choose from the list), or by the no. from the last `-l` list (name with spaces between `/.../` or quotes; loose words, with no no., slashes or quotes, are a single name) |
 | `-list`, `-l` | | Lists the groups you're in (same as `/leave` with nothing) |
 
 ```text

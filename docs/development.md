@@ -193,8 +193,8 @@ The messages the bot sends have whatsapp-web.js's `edit()`: it swaps the text in
 
 | File | What it covers |
 |---|---|
-| `agenda.test.js` | Typed dates (`6h`, `+2h`, `às 18h`, `sexta`...) and `/cron`, in message and reminder modes, with several `-to` in a single item, `-edit`, `-pause`/`-resume` and the `{/comando}` and the `\n` in the text (and `-test`) |
-| `alias.test.js` | Persistent registration, descriptions with straight and curly quotes, listing, single and full removal, reserved names, additional arguments, target permissions and the text aliases (`{/comando}`, `\n` and each command's permissions) |
+| `agenda.test.js` | Typed dates (`6h`, `+2h`, `at 18h`, `friday`...) and `/cron`, in message and reminder modes, with several `-to` in a single item, `-edit`, `-pause`/`-resume` and the `{/command}` and the `\n` in the text (and `-test`) |
+| `alias.test.js` | Persistent registration, descriptions with straight and curly quotes, listing, single and full removal, reserved names, additional arguments, target permissions and the text aliases (`{/command}`, `\n` and each command's permissions) |
 | `apagadas-editadas.test.js` | Delete/edit events (the notice's Name comes from the schedule) (and the `show.alert.*` notices) and `/show` (deleted, edited and status, the requested chat and the `-q` search) |
 | `ascii.test.js` | `/ascii`: the 5 lines inside the code block, wrapping by width (`-w`), `-c`, the replied message's text, accents and errors |
 | `backup.test.js` | `/backup` (creation, list, restore, sending in private, by email and with one or several `-to`) and the daily backup |
@@ -222,12 +222,12 @@ The messages the bot sends have whatsapp-web.js's `edit()`: it swaps the text in
 | `mascara-telefones.test.js` | Phone number obfuscation in `/show`, `/watch` and `/bot` |
 | `mensagens.test.js` | Recording (with the name from your contacts, not the pushname) and of locations without interpreting the thumbnail as text or command, routing, permissions (`role`, `bot.users` with people, groups, `true`/`false` and the persisted permissions, bot off, extra admins from `bot.admins`, the `/bot +a`/`+u` shortcuts, the `-list-users`/`-list-users all` lists, each user's commands (`+cmd`/`-cmd`), `-reset` with confirmation, `/whois` and flood protection), the log of unknown commands and the `/stats` count (without the system notices) |
 | `monitor.test.js` | Registration, filter and removal with the shared resolver, persistent online alerts, database migration, `-rm all`, sequential queries, pauses, history per contact, entry limit, persistence and listing as text or document |
-| `notes.test.js` | `/notes`: `-add`, `-list` and `-rm` (several IDs, `all`, nonexistent ID), the `#tags` (the partial one: `#idei` finds `#ideias`), `-tags`, `-desc`, `-move`, `-view` (with image), `-export` (PDF, with the images), `-search`, images and `-alert` (in `-add` and by ID or tag, when invalid, `-to`, single trigger and `-alert -rm`) |
+| `notes.test.js` | `/notes`: `-add`, `-list` and `-rm` (several IDs, `all`, nonexistent ID), the `#tags` (the partial one: `#idea` finds `#ideas`), `-tags`, `-desc`, `-move`, `-view` (with image), `-export` (PDF, with the images), `-search`, images and `-alert` (in `-add` and by ID or tag, when invalid, `-to`, single trigger and `-alert -rm`) |
 | `mute.test.js` | `/mute` and `/unmute`: notices muted per person, group or community (only the target is `-a`), the target lookup (exact names, contact, group, mention and a list to choose by number) and the reply to a notice (where it came from) |
 | `presenca.test.js` | Presence reading by LID, shared subscription, cache and absence of valid times without fabricating data |
 | `saudacoes.test.js` | `/welcome` and `/goodbye`: the text per group (`{name}`, `{group}`, mention), `-on`, `-off`, `-test`, the `group_join`/`group_leave` events and who doesn't trigger them |
 | `ocr-qr-carbon.test.js` | `/ocr` (photo to ChatGPT), `/tts`, `/qr` (`-d`, reading the pixels with jsqr), `/carbon` (SVG, themes, limits) and `/profile -set` (group, account, refusal) |
-| `profile.test.js` | `/profile`: the photo with the caption `Contato: nome da agenda <telefone>` (by name, mention and number), the contacts name instead of the pushname, your profile and that of whoever wrote the replied message, several people, no photo, a failing download, the `@lid`, `-mask`, group refused and owner-only use |
+| `profile.test.js` | `/profile`: the photo with the caption `Contact: name in your address book <phone>` (by name, mention and number), the contacts name instead of the pushname, your profile and that of whoever wrote the replied message, several people, no photo, a failing download, the `@lid`, `-mask`, group refused and owner-only use |
 | `reacoes.test.js` | Removed or changed reactions: the `message_reaction` event (and what doesn't generate a notice), the `show.alert.reaction` notice, `/show -r`, `/mute -r`, `/bot -status` and the cleanup |
 | `search.test.js` | `/search`: in this chat, in all of them in your private chat, `-N` and the limit, media and long texts |
 | `sticker-pos.test.js` | `/sticker -pos`: the square crop at the top, middle (default) or bottom |
@@ -330,7 +330,7 @@ git push && git push origin vX.Y.Z   # pushing the tag publishes the site
 ```
 
 Pushing the tag triggers the [documentation](#documentation) workflow, which publishes the release
-site in a few minutes (follow it in **Actions › Documentação**). The notes go in the GitHub release
+site in a few minutes (follow it in **Actions › Documentation**). The notes go in the GitHub release
 (`gh release create vX.Y.Z`), with what changed since the previous one
 (`git log <previous tag>..vX.Y.Z`).
 
@@ -358,7 +358,7 @@ loop back). Each entry follows this format:
         { opts: ['startSec', 'ss'], values: ['<time>'], desc: '...' },   // option with a value
         { argv: ['<url>'], desc: '...' },                                 // positional argument (doc only)
         { opts: ['a'], sinais: ['+', '-'], values: ['[x]'], desc: '...' }, // +a/-a pair on one line (doc only)
-        { opts: ['add'], values: ['<x>'], desc: '...', cron: false },      // optional; doesn't run in a /cron {/comando}
+        { opts: ['add'], values: ['<x>'], desc: '...', cron: false },      // optional; doesn't run in a /cron {/command}
         { opts: ['flush'], desc: '...', role: OWNER },                     // optional; owner only, even if delegated
         { opts: ['chat'], values: ['<x>'], desc: '...', outrosChats: true } // optional; only the current chat for whoever received it
     ],
@@ -367,7 +367,7 @@ loop back). Each entry follows this format:
     mask: true,                        // optional; accepts -mask (obfuscated phone numbers in the output)
     digitando: false,                  // optional; no "typing..." (for the ones that reply right away)
     argumentosLivres: true,            // optional; the rest is free text, no options read (/alias, /batch)
-    cron: true,                        // optional; true = runs in a {/comando} in the /cron text
+    cron: true,                        // optional; true = runs in a {/command} in the /cron text
     role: USER,                        // the minimum level: USER, ADMIN (admins and the owner) or OWNER (owner only)
     delegavel: true,                   // optional; on an ADMIN, the owner can grant it to a user (/bot +cmd)
     disabled: false                    // optional; true = the bot ignores the command
@@ -384,10 +384,10 @@ loop back). Each entry follows this format:
   `OWNER` (the owner, the account paired to the bot), `ADMIN` (the ones in `bot.admins`, `/bot +a`)
   and `USER` (the ones in `bot.users`, `/bot +u`). An `ADMIN` command with `delegavel: true` can
   still be granted by the owner to a user with `/bot +cmd`; without the mark, only admins and the
-  owner use it. An `/alias` shortcut or `/me` with several `{/comando}` gets the highest role among
+  owner use it. An `/alias` shortcut or `/me` with several `{/command}` gets the highest role among
   the targets. See [Permissions](commands/index.md#permissions-role).
 - Two marks in `cmd_opts` say what a user who was granted the command can't do, checked in
-  `src/execute.js` before the handler (and also inside a `{/comando}`): `role: ADMIN` (the option
+  `src/execute.js` before the handler (and also inside a `{/command}`): `role: ADMIN` (the option
   requires this level, or `OWNER`: changing the `/gpt` model, deleting data...) and
   `outrosChats: true` (the option, or the `{ argv }` argument, looks at other chats). The reply is
   the same in all of them: `⛔ Only the bot owner (or an admin) can ...`. The doc table comes
@@ -407,7 +407,7 @@ loop back). Each entry follows this format:
   just rebuild and recreate the container.
 - The `-h` is read on a phone, in a code block about 46 columns wide, so it is short on purpose: the
   details live on the command's page on the site, linked at the end (`Details: ...`). The formatter:
-  - each form of the `usage` separated by `"  or  "` (`"  ou  "` in Portuguese) comes out on its own
+  - each form of the `usage` separated by `"  or  "` (`" or  "` in Portuguese) comes out on its own
     line (keep it to 4 forms or fewer: group the options, like `-status|-info|-test`);
   - the command is described by its `summary`, one line (the `help` is not shown in the `-h`);
   - each option or argument shows only the 1st sentence of its `desc`, cut before the first `:`, `;` or
@@ -423,7 +423,7 @@ loop back). Each entry follows this format:
   `{ orca: { nome: 'Orca', usage: '...', help: '...' } }`, and each option says which ones it
   belongs to (`protocolos: ['orca']`; without the list, it applies to all). `/defi orca -help` (or
   `/help defi orca`) shows the protocol's `usage` and `help` and only the options that apply to it;
-  `/defi -help` shows all of them, grouped (` > Orca`, ` > Project X e Morpho`, ` > Todos`).
+  `/defi -help` shows all of them, grouped (` > Orca`, ` > Project X and Morpho`, ` > All`).
 - The texts (`usage`, `help` and `desc`) accept template strings with the constants from
   `src/constants.js` (`` `... em ${CACHE_DIR}` ``): the help shows the real path (e.g. the
   `/cache -h`).

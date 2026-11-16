@@ -6,7 +6,7 @@ foto. **Responder uma foto com `/qr`** (ou enviar a foto com `/qr` na legenda) t
 nada vai para um serviço externo.
 
 ```text
-/qr [-d|-d] [<texto>]
+/qr [-decode|-d] [<texto>]
 ```
 
 | Opção | Valor | Descrição |

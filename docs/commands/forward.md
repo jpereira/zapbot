@@ -10,7 +10,7 @@ replies right away with `⏳ Forwarding message...` and, when it finishes, edits
 with the result (below).
 
 ```text
-/forward [-q|-q] [-d|-d] [#list]... [-N|-N,-N|-N..-N] [/contact/|@mention|+number]... [-to <destination>]...
+/forward [-quiet|-q] [-dry|-d] [#list]... [-N|-N,-N|-N..-N] [/contact/|@mention|+number]... [-to <destination>]...
 ```
 
 | Option | Value | Description |

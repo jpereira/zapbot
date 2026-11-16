@@ -11,7 +11,7 @@ The bot uses the same SMTP (`QRCODE_EMAIL_SMTP_*`) for:
   from [`/notes -alert`](commands/notes.md#alerts);
 - `/watch` hits and `/bot -status` reports with an email destination.
 
-The `email` destination uses `QRCODE_EMAIL_SMTP_TO`; `-to voce@exemplo.com` picks another address.
+The `email` destination uses `QRCODE_EMAIL_SMTP_TO`; `-to you@example.com` picks another address.
 
 ## QR Code email
 

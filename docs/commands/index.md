@@ -7,7 +7,7 @@ You can send them in **any chat** (private, group, or the chat with yourself).
 ## General syntax
 
 ```text
-/comando [-opção] [-opção valor] [argumentos]
+/command [-option] [-option value] [arguments]
 ```
 
 - Options use **a single hyphen** and accept the long or the short name: `-audio` = `-a`,
@@ -26,7 +26,7 @@ You can send them in **any chat** (private, group, or the chat with yourself).
   `user`).
 - The commands have English names and there are no fixed aliases: the name is the same in any
   language. [`/alias`](alias.md) saves the shortcuts you want (`/alias tempo /weather`), with
-  arguments or texts with several `{/comando}`; `/help alias` lists the shortcuts available to you.
+  arguments or texts with several `{/command}`; `/help alias` lists the shortcuts available to you.
 - The language is the `zapbot.lang` setting (`en_US`, the default, or `pt_BR`; see
   [Language](../configuration.md#language)). It translates `-h` and `/help` and also the replies,
   alerts, errors, dates, and numbers of the bot. The descriptions that `/set` shows for each
@@ -50,10 +50,10 @@ private chat, and `/cron` goes to the current chat.
 | Form | Example | Finds |
 |---|---|---|
 | Name | `/Jorge Pereira/`, `"Jorge Pereira"` or `Jorge` | Searches contacts and groups; exact names take priority, and contacts win a tie. Your own name (the one saved in your contacts or the one in your profile) is your private chat |
-| Group | `/Grupo L200/`, `"Grupo L200"` or `L200` | The group, with priority for the exact name |
+| Group | `/L200 Group/`, `"L200 Group"` or `L200` | The group, with priority for the exact name |
 | Mention | `@Fulano` (picked from WhatsApp's `@` list) | The mentioned person. Useful in a group, for someone who isn't in your contacts. A typed `@number` that isn't a mention is rejected |
 | Number | `+5521999999999` | The number's private chat: country code + area code + number (the `+` is optional; the bot checks that it's on WhatsApp) |
-| Email | `email`, `voce@exemplo.com` or `"a@x.com, b@y.com"` | In alerts (`/rates`, `/crypto`, `/defi`, and `/notes`), in `/watch`, in `/bot -status`, and in `/backup -send`: `email` is the `QRCODE_EMAIL_SMTP_TO`; it goes out through the bot's SMTP, without WhatsApp formatting ([Emails](../emails.md)) |
+| Email | `email`, `you@example.com` or `"a@x.com, b@y.com"` | In alerts (`/rates`, `/crypto`, `/defi`, and `/notes`), in `/watch`, in `/bot -status`, and in `/backup -send`: `email` is the `QRCODE_EMAIL_SMTP_TO`; it goes out through the bot's SMTP, without WhatsApp formatting ([Emails](../emails.md)) |
 
 `/debug` uses `-copy-to` to copy logs to a chat, and doesn't accept email. `/watch -in` selects the
 source of the messages: contact, group, or `@newsletter` channel.
@@ -61,9 +61,9 @@ source of the messages: contact, group, or `@newsletter` channel.
 The same forms, in a single command:
 
 ```text
-/cron 8h -r d -to /Jorge Pereira/ -to @Fulano Da Silva -to /Grupo L200/ -to +5521999999999 Bom dia!
+/cron 8h -r d -to /Jorge Pereira/ -to @Fulano Da Silva -to /L200 Group/ -to +5521999999999 Good morning!
 /rates -alert USD > 5.30 -to email           → by email (the QRCODE_EMAIL_SMTP_TO)
-/crypto -alert BTC < 90000 -to /Grupo L200/ -to email  → in the group and by email
+/crypto -alert BTC < 90000 -to /L200 Group/ -to email  → in the group and by email
 /mute @Fulano Da Silva                          → the /mute target, by mention
 /bot +a /Jorge Pereira/ +5511988887777         → /bot +a (and +u) accepts several people at once
 ```
@@ -108,7 +108,7 @@ runs for someone with its level or higher.
 |---|---|---|
 | `owner` | You: the account paired with the bot, from any device | Already are |
 | `admin` | The extra admins (setting `bot.admins`) | `/bot +a /Jorge Pereira/`, `@Fulano Da Silva` or `+5521999999999` (see [Extra admins](bot.md#extra-admins)) |
-| `user` | The people and groups in the `bot.users` setting | `/bot +u /Maria Lucia/ /Grupo Familia/` (see [Users](bot.md#users)) |
+| `user` | The people and groups in the `bot.users` setting | `/bot +u /Maria Lucia/ /Family Group/` (see [Users](bot.md#users)) |
 
 A command's `role` (the Role column in the table, and the `role` in the definition) is the minimum
 level needed to use it:
@@ -130,7 +130,7 @@ at `PHONE_NUMBER`:
 ```
 
 `user` commands belong to whoever is in the `bot.users` setting, which **defaults to `false`**: only
-you (and the extra admins) use commands. With `/bot +u /Maria Lucia/ /Grupo Familia/`, those people
+you (and the extra admins) use commands. With `/bot +u /Maria Lucia/ /Family Group/`, those people
 (in any chat) and those groups (any member, inside the group) can use them too; a person's `/bot +u`
 typed in a group only applies in that group; with `/set bot.users true`, everyone. `/bot +cmd` /
 `-cmd` limits each user's commands. See [Users](bot.md#users). To find out your level (or, as
@@ -218,7 +218,7 @@ own. Each shortcut is saved in the database and works like a command:
 ```text
 /alias -q /usd /rates USD          → shows the USD price
 /alias -q /btc /crypto BTC         → shows the Bitcoin price
-/alias -q /clima /weather ${1:-Rio de Janeiro}   → /clima shows Rio; /clima Lisboa, Lisbon
+/alias -q /forecast /weather ${1:-Rio de Janeiro}   → /forecast shows Rio; /forecast Lisboa, Lisbon
 /alias /rec /sticker -ss $1 -es $2           → /rec 10 20 <link> runs /sticker -ss 10 -es 20 <link>
 /alias -q /tofriends /forward -q /Family Group/ +5521999999999 /Maria Lucia/ /Rafael Silva/   → a shortcut for a /forward list
 ```
@@ -232,16 +232,16 @@ target command, and `/alias /usd` shows what a shortcut does.
 
 | Command | Aliases | Role | Description |
 |---|---|:-:|---|
-| [`/alias`](alias.md) | | `admin` | Registers, lists, and removes shortcuts for commands with arguments or texts with several `{/comando}` |
+| [`/alias`](alias.md) | | `admin` | Registers, lists, and removes shortcuts for commands with arguments or texts with several `{/command}` |
 | [`/ascii`](ascii.md) | | `user` | The text in big ASCII letters, in a block that fits a phone screen |
 | [`/backup`](backup.md) | | `admin` | Daily local backup and delivery through `backup.to`; lists, details, restores, sends, and deletes the database |
 | [`/batch`](batch.md) | | `admin` | Runs several commands from a single message, in sequence (each line that starts with a command opens a block), and replies with a summary; `-stop` and `-dry` |
-| [`/bills`](bills.md) | | `user` | Joke: draws 2 members to "pay a boleto" |
+| [`/bills`](bills.md) | | `user` | Joke: draws 2 members to "pay a invoice" |
 | [`/block`](block.md) | | `admin` | Blocks one or more people on your WhatsApp account (replying to a message, whoever wrote it); with nothing, lists the blocked ones; `-mask` obfuscates phone numbers |
 | [`/bot`](bot.md) | | `admin` | Bot status (24 h report and the users); turns commands on/off (`-on`/`-off`) and says who uses them: admins (`+a`/`-a`) and users (`+u`/`-u`, in any chat or just in one group, and each one's commands with `+cmd`/`-cmd`); `-reset` goes back to the default; `-status` (`-s`): report for the last 24 h, and `-s 06h` sends it every day; `-info` (`-i`): versions and system; `-test` (`-t`): tests cache, disk, database, WhatsApp, internet, SMTP, IMAP, and programs |
 | [`/cache`](cache.md) | | `admin` | Cache tree with sizes, message counts, and cleanup |
 | [`/carbon`](carbon.md) | | `user` | The code in an editor-window image |
-| [`/cron`](cron.md) | | `admin` | At the set time (`30m`, `às 18h`, `sexta 9h`...): sends a message (here or with `-to`, to one or several chats) or, with `-reminder`, an ⏰ reminder; can repeat, be edited and paused, and run commands in the text (`{/crypto}`) |
+| [`/cron`](cron.md) | | `admin` | At the set time (`30m`, `at 18h`, `friday 9h`...): sends a message (here or with `-to`, to one or several chats) or, with `-reminder`, an ⏰ reminder; can repeat, be edited and paused, and run commands in the text (`{/crypto}`) |
 | [`/crypto`](crypto.md) | | `user` | Quote for the enabled cryptos (default: BTC, ETH, SOL, and HYPE) or just the requested ones (`BTC ETH`); price alerts |
 | [`/cve`](cve.md) | | `user` | Latest published CVEs (NVD); `-highscore` only the critical ones |
 | [`/debug`](debug.md) | | `admin` | Debug logs with levels, filtering, and copying to chats |
@@ -260,7 +260,7 @@ target command, and `/alias /usd` shows what a shortcut does.
 | [`/joke`](joke.md) | | `user` | Random joke in Portuguese |
 | [`/kernel`](kernel.md) | | `user` | Current Linux kernel versions (kernel.org) |
 | [`/leave`](leave.md) | | `admin` | Leaves one or more groups, by name or by list number; `-l` lists your groups |
-| [`/me`](me.md) | | `user` | Sends the typed message; `{/comando}` runs and the reply goes in its place, `\n` breaks the line |
+| [`/me`](me.md) | | `user` | Sends the typed message; `{/command}` runs and the reply goes in its place, `\n` breaks the line |
 | [`/members`](members.md) | | `admin` · delegable | Lists the group's members |
 | [`/meme`](meme.md) | | `user` | Random meme template (imgflip) |
 | [`/monitor`](monitor.md) | | `admin` | 👀 Up to 5 contacts, limited history, per-contact filter, and online-presence alerts |

@@ -8,7 +8,7 @@ Transforma texto numa **nota de voz** de robô pela API de voz da OpenAI, como o
 `gpt.api.key`). O modelo, a voz e o estilo vêm dos settings `gpt.tts.*`.
 
 ```text
-/tts [-s|-s] [<texto>]
+/tts [-status|-s] [<texto>]
 ```
 
 | Opção | Valor | Descrição |
