@@ -108,6 +108,8 @@ shows are in Portuguese; the ones here are in English).
 | `watch.showMax` | 1–100 | `20` | Max hits shown by `/watch`, including with `-N` and `-show` |
 | `weather.city` | text | `Niteroi, Rio de Janeiro, Brazil` | `/weather` city when none is given |
 | `weather.maxDays` | 1–16 | `16` | Max days of `/weather N` (or `Nd`), counting today; 16 is the Open-Meteo limit |
+| `weather.sources` | list | `met`, `cptec` | Extra sources of [`/weather`](commands/weather.md#other-sources), besides Open-Meteo: `met` (MET Norway) and `cptec` (CPTEC/INPE, Brazil only). Empty: Open-Meteo only |
+| `weather.userAgent` | text | `weather-bot/1.0` | The User-Agent of the queries to the extra sources. MET Norway asks that it identifies the client and gives a contact |
 | `zapbot.lang` | `en_US`, `pt_BR` | `en_US` | Language of the bot: the help (`-h`, `/help`) and all the replies, alerts, errors, dates, and numbers are shown in it. `/set zapbot.lang pt_BR` (or `/set zapbot.lang=pt_BR`) switches to Portuguese; `pt-BR`, `pt` and `en` are accepted too. The descriptions that `/set` shows for each setting stay in Portuguese |
 
 A new key is declared in `SETTINGS_SCHEMA` (`src/settings.js`), **in alphabetical order**, with

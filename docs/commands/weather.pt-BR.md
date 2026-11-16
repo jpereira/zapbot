@@ -23,14 +23,19 @@ mostra também a previsão dos próximos dias.
 Exemplo de resposta:
 
 ```text
-⛅ Tempo em Niterói, Rio de Janeiro, Brasil
+⛅ Niterói, Rio de Janeiro · Parcialmente nublado
+🌡️ 24°C (sensação 25°C) · 📈 27° 📉 20°
+💧 78%  🌬️ 12 km/h SE (rajadas 28)
+☔ 35% · 2,1 mm  ☀️ UV 8
+🌅 05:12  🌇 17:40
 
-Parcialmente nublado
-🌡️ Agora: 24°C (sensação 25°C)
-📈 Máx: 27°C  📉 Mín: 20°C
-💧 Umidade: 78%  🌬️ Vento: 12 km/h
-☔ Chance de chuva: 35%
+_atualizado às 14:00 · fonte: Open-Meteo_
 ```
+
+Toda resposta termina com a fonte dos dados (a licença da Open-Meteo pede o crédito) e, quando ela
+informa, a hora da leitura. O título traz o lugar com o estado (o país só quando não há estado) e a condição. À noite o céu limpo
+vira 🌙. O vento tem a direção, e as rajadas só aparecem quando passam 5 km/h da média. O volume de
+chuva (mm), o UV, o nascer e o pôr do sol e a hora da atualização aparecem quando a Open-Meteo informa.
 
 Com dias (`/weather 3d Niteroi`), depois do tempo de agora:
 
@@ -39,14 +44,41 @@ Com dias (`/weather 3d Niteroi`), depois do tempo de agora:
 🌦️ Hoje (qua 30/09): 32°/22° · ☔ 29% · Pancadas de chuva
 🌦️ qui 01/10: 33°/22° · ☔ 92% · Garoa
 🌦️ sex 02/10: 22°/20° · ☔ 100% · Pancadas de chuva
+📊 Mín 20° · Máx 33° · chuva provável em 2 dias
 ```
+
+A última linha (a partir de 2 dias) traz a faixa do período e quantos dias têm 50% ou mais de chance
+de chuva.
 
 Acima do máximo o bot recusa e diz o limite. Para limitar as consultas, use `/set weather.maxDays 7`;
 `/set -reset weather.maxDays` define o limite de 16 dias. Um limite salvo continua valendo após
 reiniciar. Sem N, a resposta traz só o tempo de hoje. Os dias seguem o fuso da cidade consultada.
 Com `1`, o bloco da previsão se chama "Previsão de hoje". Com 5°C ou menos a resposta termina
-com "🥶 Tá congelando!", e com 30°C ou mais, com "🔥 Que calor da porra!". Os textos das condições e os nomes dos lugares seguem o
+com "🥶 Tá congelando!", e com 30°C ou mais, com "🔥 Que calor!". Os textos das condições e os nomes dos lugares seguem o
 setting `zapbot.lang`.
+
+## Outras fontes
+
+Além da Open-Meteo (a fonte principal, sempre usada), a resposta do tempo de agora pode trazer a leitura
+de outras fontes, para conferir:
+
+```text
+🔎 Outras fontes
+• MET Norway: 25°C · 💧 80% · 🌬️ 14 km/h SE
+• CPTEC/INPE: 📈 26° 📉 22° · Chuva
+⚠️ As fontes divergem em 5°C            ← só quando a diferença é de 3°C ou mais
+```
+
+| Fonte | O que traz | Cobertura |
+|---|---|---|
+| `met` | [MET Norway](https://api.met.no/): temperatura, umidade e vento de agora | Mundial, sem chave |
+| `cptec` | CPTEC/INPE (pela [BrasilAPI](https://brasilapi.com.br/)): mín/máx e condição de hoje | Cidades do Brasil, sem chave |
+
+O setting `weather.sources` escolhe quais (`/set weather.sources met`; vazio deixa só a Open-Meteo). Uma
+fonte fora do ar, ou que não cobre o lugar, simplesmente não aparece, e o rodapé lista só as que
+responderam. A CPTEC só é consultada para cidades do Brasil, e a cidade é casada pelo nome **e** pelo
+estado: ela nunca chuta outra. A MET Norway pede um User-Agent que identifique o cliente com um contato:
+ajuste no `weather.userAgent` (por exemplo `/set weather.userAgent meubot/1.0 eu@exemplo.com`).
 
 ## Alterando a cidade padrão
 
