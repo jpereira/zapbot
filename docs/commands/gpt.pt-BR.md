@@ -276,7 +276,7 @@ ainda resta na janela atual e quando reseta, de tokens e de requisições do mod
   recusada** (401 ou 403): o aviso de que a Usage API pede uma Admin key (ou uma chave com o escopo
   Usage em Read), e os limites saem do mesmo jeito.
 - **Sem nenhuma chave**: `⚠️ API key da OpenAI não encontrada: o /gpt está desativado.` com uma dica.
-- Número de dias inválido: `❌ Usage: /gpt -usage [dias] (de 1 a 31; padrão 7)`.
+- Número de dias inválido: `Usage: /gpt -usage [dias] (de 1 a 31; padrão 7)`.
 - Não há limites por projeto aqui: o endpoint `organization/projects/<id>/rate_limits` precisa do id
   do projeto, e os cabeçalhos já mostram o limite que vale para a chave em uso.
 

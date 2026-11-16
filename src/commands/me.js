@@ -6,6 +6,7 @@
  */
 const { client } = require('../client');
 const { t } = require('../i18n');
+const { commandUsage } = require('./base');
 const { unescape } = require('../util/format');
 const { getSetting } = require('../settings');
 const { sendMedia, commandsError, assembleText, breakLines } = require('../textCommands');
@@ -22,7 +23,7 @@ async function cmdMe({ msg, args, chatId, chatName, isGroup, nivel: level, admin
     }
 
     const textAlt = breakLines(rest);
-    if (!textAlt) return msg.reply(t('me.usage'));
+    if (!textAlt) return msg.reply(commandUsage('/me'));
 
     const errorAlt = await commandsError(textAlt, '/me');
     if (errorAlt) return msg.reply(errorAlt);

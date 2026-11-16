@@ -253,7 +253,7 @@ test('recusa sintaxe inválida, grupo, e-mail e menção digitada', async () => 
         '/monitor -rm -1', '/monitor -list extra', '/monitor -x',
         '/monitor -a /Família/', '/monitor -a fulano@exemplo.com',
         `/monitor -a @${bot.OTHERAlt.user}`]) {
-        assert.match((await bot.replyAlt(line))[0], /^❌/, line);
+        assert.match((await bot.replyAlt(line))[0], /^(❌|Informe|Use \/monitor)/, line);
     }
     assert.equal((await monitor.listMonitored()).length, 0);
 });

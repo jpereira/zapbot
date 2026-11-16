@@ -11,7 +11,7 @@ const path = require('path');
 const { MessageMedia } = require('whatsapp-web.js');
 
 const { completeNotice } = require('../client');
-const { getCommandSyntax } = require('./base');
+const { commandUsage } = require('./base');
 const { BIN_FFMPEG, TMP_DIR } = require('../constants');
 const { t } = require('../i18n');
 const { unescape } = require('../util/format');
@@ -152,7 +152,7 @@ async function draw({ msg, args, opts, quotedMsg }) {
 
     // Without options, the text goes as typed (with the Enters); with them, only what is left of them
     const request = unescape(opts?.given.size ? opts.argv.join(' ') : args);
-    await drawAlt({ msg, cmd: '/draw', pedido: request, quotedMsg, gif, semPedido: '```' + getCommandSyntax('/draw') + '```' });
+    await drawAlt({ msg, cmd: '/draw', pedido: request, quotedMsg, gif, semPedido: commandUsage('/draw') });
 }
 
 // The -status|-s (or the gpt.status setting) shows the call usage in the footer

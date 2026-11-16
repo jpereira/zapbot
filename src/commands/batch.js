@@ -11,6 +11,7 @@ const { readOptions: commandReadOptions } = require('../execute');
 const { printError, printInfo } = require('../log');
 const { summarizeText } = require('../util/format');
 const { t } = require('../i18n');
+const { commandUsage } = require('./base');
 
 const MAX_BLOCKS = 50;
 const MAX_REPLY = 300;
@@ -96,7 +97,7 @@ async function cmdBatch(context) {
     const textAlt = typed || (quotedMsg?.body ?? '').trim();
 
     if (!textAlt) {
-        await msg.reply(t('adm.batch.usage'));
+        await msg.reply(commandUsage('/batch'));
         return;
     }
 

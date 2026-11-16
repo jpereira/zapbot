@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 
 const { client, completeNotice } = require('../client');
-const { getCommandSyntax } = require('./base');
+const { commandUsage } = require('./base');
 const { resolverTarget } = require('./show');
 const { HOUR_MS } = require('../constants');
 const { chatCurrentIds } = require('../contacts');
@@ -112,7 +112,7 @@ async function summarize({ msg, opts, chatId, chatName, quotedMsg }) {
     }
 
     if (!period) {
-        await msg.reply('```' + getCommandSyntax('/tldr') + '```');
+        await msg.reply(commandUsage('/tldr'));
         return;
     }
 

@@ -3,7 +3,7 @@
  */
 
 const { priceHandleAlert } = require('../priceAlerts');
-const { getCommandSyntax } = require('./base');
+const { commandUsage } = require('./base');
 const { searchQuote, fmtReal, fmtChange } = require('../quotes');
 const { dbReady } = require('../db');
 const { language, t } = require('../i18n');
@@ -36,7 +36,7 @@ async function cmdRates(ctx) {
         const sym = String((addAlt ? opts.opt.add : opts.opt.del) ?? '').trim().toUpperCase();
 
         if (!sym) {
-            await msg.reply('```' + getCommandSyntax('/rates') + '```');
+            await msg.reply(commandUsage('/rates'));
             return;
         }
 

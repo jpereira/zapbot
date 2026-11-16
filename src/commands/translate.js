@@ -4,7 +4,7 @@
 
 const { translate, languages } = require('google-translate-api-x');
 
-const { getCommandSyntax } = require('./base');
+const { commandUsage } = require('./base');
 const { t } = require('../i18n');
 const { unescape } = require('../util/format');
 const { printError } = require('../log');
@@ -65,7 +65,7 @@ async function cmdTranslate({ msg, args, opts, quotedMsg }) {
         const textAlt = unescape(typed) || quotedMsg?.body?.trim() || '';
 
         if (!textAlt) {
-            await msg.reply('```' + getCommandSyntax('/translate') + '```');
+            await msg.reply(commandUsage('/translate'));
             return;
         }
 

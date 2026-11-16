@@ -15,7 +15,7 @@ test('/ascii, /giphy e /sticker respondem em inglês', async () => {
     await setSetting('zapbot.lang', 'en_US');
     assert.match((await bot.replyAlt('/ascii -w 3 x'))[0], /^❌ -width needs a number from \d+ to \d+$/);
     assert.match((await bot.replyAlt('/giphy'))[0], /⚠️ GIPHY key not set/);
-    assert.equal((await bot.replyAlt('/sticker -txt'))[0], '❌ Provide the text: /sticker -txt "Good morning!"');
+    assert.equal((await bot.replyAlt('/sticker -txt'))[0], 'Provide the text: /sticker -txt "Good morning!"');
     assert.match((await bot.replyAlt('/sticker -bg #FFF'))[0], /^❌ -bg and -fg belong to -txt/);
 });
 

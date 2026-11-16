@@ -4,7 +4,7 @@
 
 const axios = require('axios');
 
-const { getCommandSyntax } = require('./base');
+const { commandUsage } = require('./base');
 const { t } = require('../i18n');
 const { printError } = require('../log');
 const { SETTINGS_SCHEMA, getSetting } = require('../settings');
@@ -58,7 +58,7 @@ async function cmdNews({ msg, opts }) {
     const categories = Object.keys(NEWS_CATEGORIES).filter(c => opts.opt[c]);
 
     if (!categories.length) {
-        await msg.reply('```' + getCommandSyntax('/news') + '```');
+        await msg.reply(commandUsage('/news'));
         return;
     }
 

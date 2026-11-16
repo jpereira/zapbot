@@ -33,9 +33,9 @@ test('/backup em inglês: vazio, criar e remover', async () => {
 });
 
 test('/alias, /batch e /debug em inglês: erros de uso', async () => {
-    assert.match((await bot.replyAlt('/alias -move a'))[0], /^❌ Usage: \/alias -move <current name> <new name>/);
+    assert.match((await bot.replyAlt('/alias -move a'))[0], /^Usage: \/alias -move <current name> <new name>/);
     assert.equal((await bot.replyAlt('/alias -rm /x'))[0], '❌ Alias /x not found.');
-    assert.match((await bot.replyAlt('/batch'))[0], /^❌ Usage: \/batch .* and, on the lines below/);
+    assert.match((await bot.replyAlt('/batch'))[0], /^```Usage: \/batch .*the commands go on the lines below/);
     assert.match((await bot.replyAlt('/debug -level 9'))[0], /^❌ provide a level from 0 to 3/);
 });
 
@@ -49,5 +49,5 @@ test('/bot em inglês: ligar e desligar, e quem usa', async () => {
     await setSetting('bot.users', []);
     assert.match((await bot.replyAlt('/bot -off'))[0], /^⏸️ \*Bot:\* off \(all commands are ignored\)\n🔒 \*Commands:\* owner only/);
     assert.match((await bot.replyAlt('/bot -on'))[0], /^▶️ \*Bot:\* on\n/);
-    assert.match((await bot.replyAlt('/bot -list-users x'))[0], /^❌ Usage: \/bot -list-users \[all\]/);
+    assert.match((await bot.replyAlt('/bot -list-users x'))[0], /^Usage: \/bot -list-users \[all\]/);
 });

@@ -9,6 +9,7 @@ const { MessageMedia } = require('whatsapp-web.js');
 
 const { THEMES, generateImage } = require('../carbon');
 const { t } = require('../i18n');
+const { commandUsage } = require('./base');
 const { unescape } = require('../util/format');
 const { printError } = require('../log');
 
@@ -31,7 +32,7 @@ async function cmdCarbon({ msg, args, quotedMsg }) {
 
     if (!textAlt.trim()) textAlt = String(quotedMsg?.body ?? '');
     if (!textAlt.trim()) {
-        await msg.reply(t('carbon.usage'));
+        await msg.reply(commandUsage('/carbon'));
         return;
     }
 

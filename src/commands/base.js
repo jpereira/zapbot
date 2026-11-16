@@ -106,6 +106,29 @@ function optionGroup(command, o) {
     return { chave: o.protocolos.join(','), ordem: o.protocolos.length, titulo: title };
 }
 
+// Each usage form ("... or ...") on a line, aligned below the first
+function usageLines(command) {
+    const forms = String(command.usage ?? command.cmd).split(/\s{2}(?:or|ou)\s{2}/);
+    const indent = ' '.repeat(t('help.usage').length);
+    return forms.map((f, i) => `${i ? indent : t('help.usage')}${f}`);
+}
+
+/**
+ * The reply to whoever typed the command without what it needs: only the "Usage:" (the usage forms), in a
+ * block, and the -h tip. Without ❌: a missing parameter is not an error. The summary, the options and the examples stay
+ * no -h.
+ * @param {string} cmd  the command name ('/qr')
+ * @param {string} [protocolo]  only this protocol's usage (/defi orca)
+ */
+function commandUsage(cmd, protocol) {
+    const command = findCommand(cmd);
+    if (!command) return t('help.hint', { cmd });
+    let c = locate(command);
+    const protocolAlt = protocol ? c.protocolos?.[protocol] : null;
+    if (protocolAlt) c = { ...c, usage: protocolAlt.usage };
+    return `\`\`\`${usageLines(c).join('\n')}\`\`\`\n${t('help.hint', { cmd: command.cmd })}`;
+}
+
 /**
  * @param {object} command  the commands.js entry
  * @param {object} [o]
@@ -118,10 +141,7 @@ function formatCommandHelp(command, { protocolo: protocol } = {}) {
     if (protocolAlt) command = { ...command, usage: protocolAlt.usage, summary: firstPhrase(protocolAlt.help), ex: protocolAlt.ex };
     const isWorthHere = (o) => !protocolAlt || !o.protocolos?.length || o.protocolos.includes(protocol);
 
-    // Each usage form ("... or ...") on a line, aligned below the first
-    const forms = String(command.usage ?? command.cmd).split(/\s{2}(?:or|ou)\s{2}/);
-    const indent = ' '.repeat(t('help.usage').length);
-    const lines = forms.map((f, i) => `${i ? indent : t('help.usage')}${f}`);
+    const lines = usageLines(command);
 
     // What the command does, on one line (the long text stays on the site)
     const summary = command.summary ?? firstPhrase(command.help);
@@ -225,5 +245,6 @@ module.exports = {
     formatCommandHelp,
     formatErrorCommand,
     getCommandSyntax,
-    helpProtocol
+    helpProtocol,
+    commandUsage
 };

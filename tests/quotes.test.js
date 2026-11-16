@@ -409,7 +409,7 @@ describe('alertas de preço (-alert)', () => {
         assert.match((await bot.replyAlt('/rates -alert USD > 6 -to xyz'))[0], /❌ Nenhum contato ou grupo com "xyz" no nome/);
         assert.match((await bot.replyAlt('/rates -alert USD > 6 -to +5521988888888'))[0], /❌ O número \+5521988888888 não está no WhatsApp/);
         assert.match((await bot.replyAlt('/rates -alert USD > 6 -to +123'))[0], /❌ Número inválido: \+123/);
-        assert.match((await bot.replyAlt('/rates -alert USD > 6 -to'))[0], /❌ Informe o destino do -to/);
+        assert.match((await bot.replyAlt('/rates -alert USD > 6 -to'))[0], /Informe o destino do -to/);
         assert.match((await bot.replyAlt('/rates -alert -to trabalho'))[0], /❌ O -to só vale ao criar um alerta/);
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM price_alerts')).n, 2);
     });

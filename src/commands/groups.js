@@ -4,6 +4,7 @@
 
 const { client } = require('../client');
 const { t } = require('../i18n');
+const { commandUsage } = require('./base');
 const { resolverOrChoose } = require('../destinations');
 const { printError, printInfo } = require('../log');
 const { textItems } = require('./set');
@@ -56,7 +57,7 @@ async function cmdJoin({ msg, opts }) {
     if (opts.opt.list) return listAlt(msg);
 
     const textAlt = opts.argv.join(' ').trim();
-    if (!textAlt) return msg.reply(t('grp.join.usage'));
+    if (!textAlt) return msg.reply(commandUsage('/join'));
 
     const codeAlt = inviteCode(textAlt);
     if (!codeAlt) return msg.reply(t('grp.join.badLink'));

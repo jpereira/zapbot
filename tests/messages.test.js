@@ -399,7 +399,7 @@ describe('permissões', () => {
         assert.deepEqual(bot.getSetting('bot.users'), [OTHERAlt.user]);
         assert.match((await bot.replyAlt('/bot -list-users', { chat: OWNER.jid }))[0], /Usuários/);
         assert.match((await bot.replyAlt('/bot -lu all', { chat: OWNER.jid }))[0], /Usuários/);
-        assert.match((await bot.replyAlt('/bot -lu xyz', { chat: OWNER.jid }))[0], /❌ Usage: \/bot -list-users \[all\]/);
+        assert.match((await bot.replyAlt('/bot -lu xyz', { chat: OWNER.jid }))[0], /Usage: \/bot -list-users \[all\]/);
         await bot.replyAlt('/bot -u /Fulano/', { chat: OWNER.jid });
         assert.deepEqual(bot.getSetting('bot.users'), []);
 

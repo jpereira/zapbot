@@ -236,7 +236,7 @@ describe('/cron -reminder: o modo lembrete', () => {
     test('erros: sem "quando", sem texto, já passou, longe demais, -repeat inválido, -to, limite', async () => {
         const errorAlt = async (line, expected) => assert.match((await bot.replyAlt(line))[0], expected, line);
         await errorAlt('/cron -reminder pagar o boleto', /❌ Não entendi quando/);
-        await errorAlt('/cron -reminder 30m', /❌ Faltou o texto/);
+        await errorAlt('/cron -reminder 30m', /Faltou o texto/);
         await errorAlt('/cron -reminder 01/01/2020 x', /❌ [a-zá]{3} 01\/01\/2020 09:00 já passou/);
         await errorAlt('/cron -reminder 01/01/2099 x', /❌ No máximo 366 dias à frente/);
         await errorAlt('/cron -reminder +1h -repeat anual x', /❌ Use -repeat \(-r\) diario, semanal ou mensal/);

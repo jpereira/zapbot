@@ -441,7 +441,7 @@ describe('/gpt', () => {
         await bot.setSetting('gpt.api.key', 'sk-teste');
         const beforeAlt = network.chamadas.length;
 
-        assert.deepEqual(await bot.replyAlt('/gpt -voice'), ['❌ Usage: /gpt -voice <texto> (ou responda uma mensagem de texto)']);
+        assert.deepEqual(await bot.replyAlt('/gpt -voice'), ['Usage: /gpt -voice <texto> (ou responda uma mensagem de texto)\n💡 _/gpt -h para ajuda_']);
         assert.match((await bot.replyAlt(`/gpt -voice ${'a'.repeat(4097)}`))[0], /❌ O texto tem 4097 caracteres: a voz aceita até 4096\./);
         assert.equal(network.chamadas.length, beforeAlt, 'nada foi para a OpenAI');
 
@@ -456,7 +456,7 @@ describe('/gpt', () => {
 
     test('-img: gera uma imagem (v1/images/generations) e, respondendo uma foto, a edita (v1/images/edits)', async () => {
         await bot.setSetting('gpt.api.key', 'sk-teste');
-        assert.deepEqual(await bot.replyAlt('/gpt -img'), ['❌ Usage: /gpt -img <o que criar> (respondendo uma foto, ela é editada)']);
+        assert.deepEqual(await bot.replyAlt('/gpt -img'), ['Usage: /gpt -img <o que criar> (respondendo uma foto, ela é editada)\n💡 _/gpt -h para ajuda_']);
 
         network.responder('post', 'api.openai.com/v1/images/generations', { data: [{ b64_json: 'UE5H' }] });
         const r = (await bot.executar('/gpt -img um robô nadando em aquarela')).at(-1);
@@ -523,7 +523,7 @@ describe('/gpt', () => {
 
     test('-gif: o GIF animado da API de imagens (output_format gif) vira um MP4 mandado como GIF; respondendo uma foto, ela é a base', async () => {
         await bot.setSetting('gpt.api.key', 'sk-teste');
-        assert.deepEqual(await bot.replyAlt('/gpt -gif'), ['❌ Usage: /gpt -gif <o que animar> (respondendo uma foto, ela é animada)']);
+        assert.deepEqual(await bot.replyAlt('/gpt -gif'), ['Usage: /gpt -gif <o que animar> (respondendo uma foto, ela é animada)\n💡 _/gpt -h para ajuda_']);
 
         network.responder('post', 'api.openai.com/v1/images/generations', { data: [{ b64_json: Buffer.from('GIF89a').toString('base64') }] });
         network.responder('post', 'api.openai.com/v1/images/edits', { data: [{ b64_json: Buffer.from('GIF89a').toString('base64') }] });
@@ -826,10 +826,10 @@ describe('/gpt', () => {
         assert.match(withoutAdmin, /• tokens: 10 de 1\.000$/);
         assert.doesNotMatch(withoutAdmin, /requisições/);
 
-        assert.deepEqual(await bot.replyAlt('/gpt -u 99'), ['❌ Usage: /gpt -usage [dias] (de 1 a 31; padrão 7)']);
-        assert.deepEqual(await bot.replyAlt('/gpt -usage 0'), ['❌ Usage: /gpt -usage [dias] (de 1 a 31; padrão 7)']);
-        assert.deepEqual(await bot.replyAlt('/gpt -usage 99'), ['❌ Usage: /gpt -usage [dias] (de 1 a 31; padrão 7)']);
-        assert.deepEqual(await bot.replyAlt('/gpt -usage abc'), ['❌ Usage: /gpt -usage [dias] (de 1 a 31; padrão 7)']);
+        assert.deepEqual(await bot.replyAlt('/gpt -u 99'), ['Usage: /gpt -usage [dias] (de 1 a 31; padrão 7)\n💡 _/gpt -h para ajuda_']);
+        assert.deepEqual(await bot.replyAlt('/gpt -usage 0'), ['Usage: /gpt -usage [dias] (de 1 a 31; padrão 7)\n💡 _/gpt -h para ajuda_']);
+        assert.deepEqual(await bot.replyAlt('/gpt -usage 99'), ['Usage: /gpt -usage [dias] (de 1 a 31; padrão 7)\n💡 _/gpt -h para ajuda_']);
+        assert.deepEqual(await bot.replyAlt('/gpt -usage abc'), ['Usage: /gpt -usage [dias] (de 1 a 31; padrão 7)\n💡 _/gpt -h para ajuda_']);
 
         await bot.setSetting('gpt.admin.key', 'sk-admin-teste');
         network.responder('get', 'api.openai.com/v1/organization/usage/completions', errorHttp(403));

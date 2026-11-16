@@ -9,7 +9,7 @@ const path = require('path');
 const { MessageMedia } = require('whatsapp-web.js');
 
 const { completeNotice } = require('../client');
-const { getCommandSyntax } = require('./base');
+const { commandUsage } = require('./base');
 const { drawAlt } = require('./draw');
 const {
     AUDIO_MODEL, VOICE_MODEL, SO_OWNER_GENERATE, GPT_USES, QUESTION_USAGE, deleteNotice, notifyProcessing, isPhoto,
@@ -192,7 +192,7 @@ async function talkText(msg, args, quotedMsg, cmd = '/gpt') {
     }
 
     if (!textAlt) {
-        await msg.reply(t(cmd === '/tts' ? 'tts.usage' : 'gpt.voiceUsage'));
+        await msg.reply(cmd === '/tts' ? commandUsage('/tts') : t('gpt.voiceUsage'));
         return;
     }
     if (textAlt.length > VOICE_MAX_CHARACTERS) {
@@ -517,7 +517,7 @@ async function ask({ msg, args, opts, quotedMsg, admin }) {
     if (photo && !question) question = PHOTO_QUESTION();
 
     if (!question) {
-        await msg.reply('```' + getCommandSyntax('/gpt') + '```');
+        await msg.reply(commandUsage('/gpt'));
         return;
     }
 

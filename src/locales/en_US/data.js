@@ -151,7 +151,7 @@ module.exports = {
     'stats.listLine': '{n}. {chat} — {msgs} msgs _(last on {date})_',
     'stats.listFooter': '\n\n💡 _/stats /name/ shows one_\n💡 _/stats -f /name/ deletes its statistics_',
     'stats.flushedAll': '🗑️ Statistics deleted: {chats}.',
-    'stats.flushNeedsChat': '❌ Say the chat: /stats -flush /Group/ (or /stats -flush-all for all).',
+    'stats.flushNeedsChat': 'Say the chat: /stats -flush /Group/ (or /stats -flush-all for all).',
     'stats.flushedChat': '🗑️ Statistics of {chat} deleted.',
     'stats.whereMineIn': 'of yours in {chat}',
     'stats.whereMine': 'of yours',

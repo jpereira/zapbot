@@ -372,7 +372,7 @@ describe('/sticker', () => {
 
     test('-txt: erros de texto, cor e ffmpeg', async () => {
         const errorAlt = async (line, expected) => assert.deepEqual(await bot.replyAlt(line, { erroEsperado: true }), [expected], line);
-        await errorAlt('/sticker -txt', '❌ Informe o texto: /sticker -txt "Bom dia!"');
+        await errorAlt('/sticker -txt', 'Informe o texto: /sticker -txt "Bom dia!"');
         await errorAlt(`/sticker -txt ${'a'.repeat(201)}`, '❌ Texto longo demais: até 200 caracteres.');
         await errorAlt('/sticker -txt oi -bg azul', '❌ -bg: "azul" não é uma cor. Use #RRGGBB (ex.: #FFFFFF).');
         await errorAlt('/sticker -txt oi -fg #12', '❌ -fg: "#12" não é uma cor. Use #RRGGBB (ex.: #000000).');

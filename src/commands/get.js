@@ -7,7 +7,7 @@ const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs-extra');
 
-const { formatErrorCommand, getCommandSyntax } = require('./base');
+const { formatErrorCommand, commandUsage } = require('./base');
 const { completeNotice } = require('../client');
 const { BIN_FFMPEG, BIN_FFPROBE, BIN_YT, CACHE_DIR, GET_MAX_CONCURRENT, TMP_DIR } = require('../constants');
 const { printDebug, printError, printInfo } = require('../log');
@@ -40,7 +40,7 @@ async function downloadMedia({ msg, opts, quotedMsg, senderName }, { cmd }) {
 
     const origin = mediaOrigin(opts, quotedMsg, msg);
     if (!origin) {
-        await msg.reply(quotedMsg ? t('get.quotedNoMedia') : '```' + getCommandSyntax(cmd) + '```');
+        await msg.reply(quotedMsg ? t('get.quotedNoMedia') : commandUsage(cmd));
         return;
     }
 

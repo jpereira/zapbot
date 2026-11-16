@@ -5,7 +5,7 @@
 const fs = require('fs-extra');
 
 const { client, completeNotice } = require('../client');
-const { getCommandSyntax } = require('./base');
+const { commandUsage } = require('./base');
 const { DAY_MS } = require('../constants');
 const { chatCurrentIds } = require('../contacts');
 const { dbAll, dbGet, dbReady, dbRun } = require('../db');
@@ -483,7 +483,7 @@ function itemsSummary(types, rows) {
 async function cmdShow({ msg, opts, chatId, admin }) {
     await dbReady;
 
-    const syntax = () => msg.reply('```' + getCommandSyntax('/show') + '```');
+    const syntax = () => msg.reply(commandUsage('/show'));
 
     // The "-3" is opts.numero (the parser reads it); the rest of argv is the chat
     let n = opts.numero;

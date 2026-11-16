@@ -2,7 +2,7 @@
  * Comando /stats.
  */
 
-const { getCommandSyntax } = require('./base');
+const { commandUsage } = require('./base');
 const { completeNotice } = require('../client');
 const { DAY_MS } = require('../constants');
 const { chatCurrentIds } = require('../contacts');
@@ -266,7 +266,7 @@ async function cmdStats({ msg, opts, chatId }) {
     const maxDays = getSetting('stats.retentionDays');
     const daysAlt = Math.min(r.dias ?? 7, maxDays);
     if (daysAlt < 1) {
-        await msg.reply('```' + getCommandSyntax('/stats') + '```');
+        await msg.reply(commandUsage('/stats'));
         return;
     }
 

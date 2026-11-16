@@ -35,5 +35,5 @@ test('/notes -alert em inglês: lista vazia e alerta no passado', async () => {
 
 test('/monitor em inglês: lista vazia e uso', async () => {
     assert.match((await bot.replyAlt('/monitor'))[0], /MONITOR[\s\S]*No contacts registered\.[\s\S]*Frequent checks/);
-    assert.match((await bot.replyAlt('/monitor -add'))[0], /^❌ Give a contact:/);
+    assert.match((await bot.replyAlt('/monitor -add'))[0], /^Give a contact:/);
 });

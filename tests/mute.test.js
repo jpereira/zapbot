@@ -104,7 +104,7 @@ describe('/mute', () => {
     });
 
     test('erros: sem alvo, alvo inválido', async () => {
-        assert.match((await bot.replyAlt('/mute -d'))[0], /❌ Informe quem/);
+        assert.match((await bot.replyAlt('/mute -d'))[0], /Informe quem/);
         assert.match((await bot.replyAlt('/mute -d xyz'))[0], /❌ Nenhum contato ou grupo com "xyz" no nome/);
         assert.match((await bot.replyAlt('/mute -d email'))[0], /❌ O \/mute silencia uma pessoa ou um grupo/);
     });
