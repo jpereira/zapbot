@@ -51,7 +51,7 @@ Numa foto, o GIF a anima; sem pedido, com um movimento sutil e natural.
 
 ```text
 /draw -g um gato dançando
-→ ⏳ Processando o /draw, aguarde.
+→ ⏳ Processando o /draw, aguarde.   (vira: 🎞️ GIF gerado abaixo.)
 → (o GIF, em loop) 🎞️ um gato dançando
 
 /draw -g -f 6 -ms 300 uma bandeira ao vento
@@ -72,6 +72,18 @@ Numa foto, o GIF a anima; sem pedido, com um movimento sutil e natural.
 - No `/gpt`, "gere um gif animado..." respondendo uma foto também vale, sem o `-gif`: o bot reconhece um
   verbo de criar (gere, crie, faça, anime, ou generate, create, make, animate, transform) junto
   de gif, animação, animado ou vídeo (ou animation, animated, video).
+
+## O aviso de "Processando"
+
+Uma imagem não dá para mandar editando uma mensagem; por isso o aviso "⏳ Processando o /draw,
+aguarde." é editado para **🖼️ Imagem gerada abaixo.** (🎞️ no GIF, e 🔊 na voz do `/tts`) e fica no
+chat; o resultado vem logo depois. Se falhar, o mesmo aviso vira o erro.
+
+```text
+/draw -p @me fulano desenhe nós dois escalando na Patagônia
+⏳ Processando o /draw, aguarde.   →   🖼️ Imagem gerada abaixo.
+(a imagem, com a legenda 🎨)
+```
 
 ## Com a foto de perfil de alguém (`-profile`)
 
