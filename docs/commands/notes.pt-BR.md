@@ -1,22 +1,22 @@
 # `/notes` · admin
 
 Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Cada uma tem um ID, e o
-`-alerta` avisa dela numa data/hora. Só o dono (e os admins) usa.
+`-alert` avisa dela numa data/hora. Só o dono (e os admins) usa.
 
 ```text
-/notes [-list|-l] [#tag...] [-to <destino>]...
-/notes -compact|-c [#tag...]
-/notes -search|-s [#tag...] <texto|/regex/flags> [-to <destino>]...
-/notes -update|-u <id> [#tag] <novo texto>
-/notes -view|-v <id...|#tag...> [-to <destino>]...
-/notes -move|-m #tag #novatag
-/notes -desc|-d #tag [<descrição>|-rm]
-/notes -export|-e [#tag...] [-to <destino>]...
+/notes [-l|-l] [#tag...] [-to <destino>]...
+/notes -c|-c [#tag...]
+/notes -s|-s [#tag...] <texto|/regex/flags> [-to <destino>]...
+/notes -u|-u <id> [#tag] <novo texto>
+/notes -v|-v <id...|#tag...> [-to <destino>]...
+/notes -m|-m #tag #novatag
+/notes -d|-d #tag [<descrição>|-r]
+/notes -e|-e [#tag...] [-to <destino>]...
 /notes #tag <texto>
-/notes -add|-a #tag <texto> [-alerta <quando> [-to <destino>]...]
-/notes -rm|-r <id...|#tag...|all>
-/notes -alerta [<id|#tag...> [<quando> [-to <destino>]...]]
-/notes -alerta -rm <id...|#tag...|all>
+/notes -a|-a #tag <texto> [-alert <quando> [-to <destino>]...]
+/notes -r|-r <id...|#tag...|all>
+/notes -alert [<id|#tag...> [<quando> [-to <destino>]...]]
+/notes -alert -r <id...|#tag...|all>
 ```
 
 | Opção | Valor | Descrição |
@@ -30,23 +30,23 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 | `-desc`, `-d` | `#tag [<descrição>\|-rm]` | Descrição da tag, que aparece na lista e no `/notes` sozinho. Sem texto, mostra a atual; com `-rm`, apaga. O `-move` leva a descrição junto |
 | `-export`, `-e` | `[#tag...]` | Manda as anotações num PDF, com as imagens e o texto como legenda (cabeçalho, rodapé com versão, host, data e hora, e paginação). Com tags, só as delas. Veja [Exportar](#exportar) |
 | `#tag <texto>` | | Sem opção na frente, vira uma anotação nova, igual ao `-add`: `/notes #casa não esquecer de remover a opção tal`. A `#tag` é obrigatória: `/notes meu texto` dá erro. Só `/notes #casa`, sem texto, lista as da tag |
-| `-add`, `-a` | `#tag <texto>` | Adiciona uma anotação; a `#tag` é obrigatória e vem no começo do texto. O texto vai até o `-alerta`, se houver, e aceita várias linhas |
-| `-rm`, `-r` | `<id...\|#tag...\|all>` | Remove as anotações com esses IDs (`-r 2`, `-r 1 2 3` ou `-r 1,2,3`), de uma tag (`-r #casa`) ou todas (`all`). Se algum ID ou tag não existe, nenhuma sai. Junto com `-alerta`, tira só o alerta, mantendo as anotações |
-| `-alerta` | `<quando>` | Avisa da anotação (ou de todas as de uma `#tag`) numa data/hora. Veja [Alertas](#alertas) |
-| `-to` | `<destino>` | Com `-alerta`: avisa num contato, grupo, número ou e-mail em vez do seu privado. Com a lista (`-l`, `#tag`) ou o `-export`: manda a lista ou o PDF lá, em vez de responder no chat. Repita para vários |
+| `-add`, `-a` | `#tag <texto>` | Adiciona uma anotação; a `#tag` é obrigatória e vem no começo do texto. O texto vai até o `-alert`, se houver, e aceita várias linhas |
+| `-rm`, `-r` | `<id...\|#tag...\|all>` | Remove as anotações com esses IDs (`-r 2`, `-r 1 2 3` ou `-r 1,2,3`), de uma tag (`-r #casa`) ou todas (`all`). Se algum ID ou tag não existe, nenhuma sai. Junto com `-alert`, tira só o alerta, mantendo as anotações |
+| `-alert` | `<quando>` | Avisa da anotação (ou de todas as de uma `#tag`) numa data/hora. Veja [Alertas](#alertas) |
+| `-to` | `<destino>` | Com `-alert`: avisa num contato, grupo, número ou e-mail em vez do seu privado. Com a lista (`-l`, `#tag`) ou o `-export`: manda a lista ou o PDF lá, em vez de responder no chat. Repita para vários |
 
 ```text
 /notes -a #casa comprar leite
 /notes #casa comprar pão                             → o mesmo que -a
-/notes -a #contatos ligar pro João -alerta amanhã 9h
+/notes -a #contatos ligar pro João -alert amanhã 9h
 /notes -l
 /notes -r 2
 /notes -r all
-/notes -update 3 comprar pão e leite             → troca o texto da nº 3
+/notes -u 3 comprar pão e leite             → troca o texto da nº 3
 /notes -u #3 #casa comprar pão\ne leite          → troca o texto e passa para a #casa
-/notes -move #casa #lar                           → renomeia a #casa para #lar
-/notes -desc #casa Coisas da casa                 → descrição da #casa
-/notes -view 76                                   → a nº 76 com a imagem, se tiver
+/notes -m #casa #lar                           → renomeia a #casa para #lar
+/notes -d #casa Coisas da casa                 → descrição da #casa
+/notes -v 76                                   → a nº 76 com a imagem, se tiver
 /notes                                            → #casa: 3, #duvidas: 1, sem tag: 2
 ```
 
@@ -58,13 +58,13 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 /notes                → as tags, com a quantidade de anotações
 /notes -l             → lista tudo, uma mensagem por #tag (as sem tag, de antes, por último)
 /notes #casa          → só as da #casa (o mesmo que /notes -l #casa)
-/notes -rm #casa     → remove todas as da #casa
-/notes -rm all       → remove tudo
+/notes -r #casa     → remove todas as da #casa
+/notes -r all       → remove tudo
 ```
 
 - Respondendo uma mensagem, `/notes #lembrete` (ou `/notes -a #lembrete`) anota o texto dela, com o
   ↩️ na frente. Texto digitado junto vale no lugar do da mensagem (sem o ↩️). Dá para juntar com
-  `-alerta`: `/notes -a #lembrete -alerta amanhã 9h`. No PDF, o ↩️ vira `[resp.]`.
+  `-alert`: `/notes -a #lembrete -alert amanhã 9h`. No PDF, o ↩️ vira `[resp.]`.
 - No texto da anotação, `\n` vira quebra de linha (`/notes #casa pão\nleite`); `\\n` fica como está.
 - A primeira linha é o título (o único em negrito), o resto vem como foi digitado e todo link
   `http(s)://` sai de onde estava e vai para o fim, em bullets sob `🔗 Links` (na lista, no `-view`,
@@ -80,7 +80,7 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
   apaga o arquivo junto, e o [`/backup`](backup.md) leva as mídias num arquivo à parte.
 - A tag pode vir pela metade na lista, na busca, no `-view`, no `-desc` e no `-export`:
   `/notes #idei` acha a `#ideias`. A exata ganha; senão valem as que começam com o que você
-  digitou, depois as que contêm. Onde mexe nos dados (`-rm`, `-move` e o `-alerta` com `<quando>`),
+  digitou, depois as que contêm. Onde mexe nos dados (`-rm`, `-move` e o `-alert` com `<quando>`),
   a tag vai inteira.
 - Cada anotação tem no máximo uma tag, a do começo do texto. Maiúsculas e minúsculas valem igual.
 - Para anotar a tag é obrigatória: `/notes meu texto` (sem tag) dá erro. `/notes #casa` sozinho lista
@@ -93,10 +93,10 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 /notes -v 3 5                 → várias de uma vez, uma mensagem para cada
 /notes -v #idei               → todas da #ideias
 /notes -v 76 -to /Família/    → manda no grupo (por e-mail, o arquivo vai anexado)
-/notes -move #casa #lar       → renomeia a tag em todas as anotações
-/notes -desc #lar Coisas da casa   → descrição da tag
+/notes -m #casa #lar       → renomeia a tag em todas as anotações
+/notes -d #lar Coisas da casa   → descrição da tag
 /notes -d #lar                → mostra a descrição
-/notes -d #lar -rm            → apaga a descrição
+/notes -d #lar -r            → apaga a descrição
 ```
 
 - O cabeçalho do `-view` traz o ID, a tag e a data. Um ID ou tag que não existe cancela tudo, sem
@@ -114,7 +114,7 @@ acentos, ou `/regex/flags`.
 
 ```text
 /notes -s pao                    → as que têm "pão" (e "PAO", "Pão"...)
-/notes -search /etf|bolsa/i      → regex
+/notes -s /etf|bolsa/i      → regex
 /notes -s "comprar pão"          → com espaços, o texto vale direto (as aspas são opcionais)
 /notes -s #casa leite            → só as da #casa que casam
 /notes -s casa                   → também casa o nome da tag (as da #casa)
@@ -147,29 +147,29 @@ O `-to` funciona como nos outros comandos (veja
 
 ## Alertas
 
-O mesmo esquema do `-alerta` do [`/rates`](rates.md#alertas-de-preço): lista, `-rm`, `-to` e
+O mesmo esquema do `-alert` do [`/rates`](rates.md#alertas-de-preço): lista, `-rm`, `-to` e
 uma verificação periódica (a cada minuto). Aqui a condição é uma data/hora, e o aviso é a própria
 anotação.
 
 ```text
-/notes -a #contatos ligar pro João -alerta amanhã 9h       → anota e avisa amanhã às 9h
-/notes -alerta 3 +2h                              → avisa da anotação 3 daqui a 2 horas
-/notes -alerta 3 sexta 18:30 -to /Família/        → avisa no grupo Família
-/notes -alerta #casa +2h -to /Família/            → avisa de todas as da #casa, no grupo Família
-/notes -a #contas pagar boleto -alerta 25/12 10h -to /Jorge Pereira/ -to email
-/notes -alerta                                    → lista só as anotações com alerta
-/notes -alerta #casa                              → só as da #casa que têm alerta
-/notes -alerta -rm 3                              → tira o alerta da nº 3 (a anotação fica)
-/notes -alerta -rm #casa                          → tira os alertas da #casa
-/notes -alerta -rm all                            → tira todos os alertas
+/notes -a #contatos ligar pro João -alert amanhã 9h       → anota e avisa amanhã às 9h
+/notes -alert 3 +2h                              → avisa da anotação 3 daqui a 2 horas
+/notes -alert 3 sexta 18:30 -to /Família/        → avisa no grupo Família
+/notes -alert #casa +2h -to /Família/            → avisa de todas as da #casa, no grupo Família
+/notes -a #contas pagar boleto -alert 25/12 10h -to /Jorge Pereira/ -to email
+/notes -alert                                    → lista só as anotações com alerta
+/notes -alert #casa                              → só as da #casa que têm alerta
+/notes -alert -r 3                              → tira o alerta da nº 3 (a anotação fica)
+/notes -alert -r #casa                          → tira os alertas da #casa
+/notes -alert -r all                            → tira todos os alertas
 ```
 
 - O `<quando>` é o mesmo do [`/cron`](cron.md): `+2h`, `30m`, `1h30m`, `18h`, `18:30`, `hoje 18h`,
   `amanhã [9h]`, `sexta [18h]`, `25/12 [10h]`, `25/12/2027 10h` (sem hora: 9h). Máximo de 365 dias à
   frente; datas passadas são recusadas.
 - O alerta dispara **uma vez** e some; a anotação continua na lista. Para repetir, crie outro
-  `-alerta <id> <quando>` (ele troca o anterior).
-- O `-to` no `-add` só vale junto com o `-alerta`; no `-alerta` sozinho (a lista) dá erro: os
+  `-alert <id> <quando>` (ele troca o anterior).
+- O `-to` no `-add` só vale junto com o `-alert`; no `-alert` sozinho (a lista) dá erro: os
   destinos só são definidos ao criar o alerta.
 - Com `#tag`, o alerta vai em todas as anotações da tag (trocando os que já tinham), e na hora saem
   uma mensagem por anotação. Se a tag não existe, nada é mexido.

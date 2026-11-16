@@ -12,7 +12,7 @@ module.exports = {
     'notes.idNotFound': `❌ ID {id} doesn't exist. See the list with /notes -l`,
     'notes.countNotes': { one: `{count} note`, other: `{count} notes` },
     'notes.failEmail': `email: {error}`,
-    'notes.usage': `❌ Use: /notes [-list] [#tag] [-to ...] | -search <text|/regex/> | -view <id...|#tag...> | -move #tag #new | -desc #tag <text> | -update <id> <text> | -export [#tag] [-to ...] | #tag <text> [-alerta <when>] | -rm <id...|#tag...|all> | -alerta ...`,
+    'notes.usage': `❌ Invalid option for /notes.\n💡 _/notes -h for help_`,
 
     // ---- /notes: media
     'notes.media.image': `image`,
@@ -25,7 +25,7 @@ module.exports = {
     'notes.rm.missingOne': `❌ {what} doesn't exist. See the list with /notes -l\n💡 _Usage: {cmd} <id...|#tag...|all>_`,
     'notes.rm.alertsRemoved': { one: `🔕 {count} alert removed.`, other: `🔕 {count} alerts removed.` },
     'notes.rm.removed': { one: `🗑️ {count} note removed.`, other: `🗑️ {count} notes removed.` },
-    'notes.rm.noTo': `❌ -to doesn't apply when removing. It works with -list, #tag and -export (and, on -add, with -alerta).`,
+    'notes.rm.noTo': `❌ -to doesn't apply when removing. It works with -list, #tag and -export (and, on -add, with -alert).`,
 
     // ---- /notes: alert time
     'notes.when.invalid': `❌ Invalid time: "{text}"\n💡 _E.g.: +2h, 30m, 18h, amanhã 9h, sexta 18:30, 25/12 10h_`,
@@ -33,36 +33,36 @@ module.exports = {
     'notes.when.tooFar': `❌ At most {days} days ahead.`,
 
     // ---- /notes: -add
-    'notes.add.syntax': `❌ Use: /notes #tag <text> [-alerta <when> [-to <destination>]...]`,
+    'notes.add.syntax': `❌ Usage: /notes #tag <text> [-alert <when> [-to <destination>]...]`,
     'notes.add.missingTag': `💡 _The #tag is missing. See the tags with /notes_`,
     'notes.add.noText': `❌ The text is missing: /notes #tag <text>`,
     'notes.add.quotedNoText': `❌ The replied message has no text.`,
-    'notes.add.toNeedsAlert': `❌ -to only works with -alerta: /notes -add <text> -alerta amanhã 9h -to /Group L200/`,
+    'notes.add.toNeedsAlert': `❌ -to only works with -alert: /notes -add <text> -alert amanhã 9h -to /Group L200/`,
 
     // ---- /notes: -update
-    'notes.update.usage': `❌ Use: /notes -update <id> [#tag] <new text>`,
+    'notes.update.usage': `❌ Usage: /notes -update <id> [#tag] <new text>`,
 
-    // ---- /notes: -alerta
-    'notes.alert.toOnlyCreate': `❌ -to only works when creating the alert: /notes -alerta <id|#tag> amanhã 9h -to /Group L200/`,
+    // ---- /notes: -alert
+    'notes.alert.toOnlyCreate': `❌ -to only works when creating the alert: /notes -alert <id|#tag> amanhã 9h -to /Group L200/`,
     'notes.alert.listTitle': `🔔 *NOTE ALERTS{tags}*`,
-    'notes.alert.listHint': `💡 _Remove with /notes -alerta -rm <id...|#tag...|all>_`,
+    'notes.alert.listHint': `💡 _Remove with /notes -alert -rm <id...|#tag...|all>_`,
     'notes.alert.none': `🔔 No notes with an alert.`,
     'notes.alert.noneIn': `🔔 No notes in{tags} with an alert.`,
-    'notes.alert.createHint': `💡 _Create one with /notes -alerta <id|#tag> <when>_`,
-    'notes.alert.usage': `❌ Use: /notes -alerta <id|#tag> <when> [-to <destination>]...`,
+    'notes.alert.createHint': `💡 _Create one with /notes -alert <id|#tag> <when>_`,
+    'notes.alert.usage': `❌ Usage: /notes -alert <id|#tag> <when> [-to <destination>]...`,
     'notes.alert.noNotesInTags': `❌ No notes in {tags}. See the tags with /notes`,
     'notes.alert.createdOne': `🔔 *Alert created* on note #{id}\n{text}\n{where}`,
     'notes.alert.createdMany': `🔔 *Alert created* on {notes} in {tags} ({ids})\n{where}`,
     'notes.alert.fired': `🔔 *NOTE #{id}*\n\n{text}\n\n📅 Added on {date}`,
 
     // ---- /notes: lists
-    'notes.tips': `\n\n💡 *Tips*\n/notes #tag <text> adds a note\n/notes -v <id...|#tag...> shows it with the image\n/notes -r <id...|#tag...|all> removes\n-alerta <when> sets an alert.`,
+    'notes.tips': `\n\n💡 *Tips*\n/notes #tag <text> adds a note\n/notes -v <id...|#tag...> shows it with the image\n/notes -r <id...|#tag...|all> removes\n-alert <when> sets an alert.`,
     'notes.tipsCompact': `\n\n💡 _🖼️ media · ⏰ alert · 🔗 link_\n💡 _-v <no.> opens the whole note_\n💡 _without -c, the full list_`,
     'notes.tipsTags': `\n\n💡 _/notes #tag lists the notes of a tag_`,
     'notes.sentTo': `📝 Notes sent to {where}.`,
     'notes.sendFail': `❌ Couldn't send the notes: {error}`,
-    'notes.list.searchUsage': `❌ Use: /notes -search [#tag...] <text|/regex/flags> [-to <destination>]...`,
-    'notes.list.usage': `❌ Use: /notes -l [#tag...] [-to <destination>]...`,
+    'notes.list.searchUsage': `❌ Usage: /notes -search [#tag...] <text|/regex/flags> [-to <destination>]...`,
+    'notes.list.usage': `❌ Usage: /notes -l [#tag...] [-to <destination>]...`,
     'notes.list.none': `📝 No notes{inTags}{withSearch}.`,
     'notes.list.titleClean': `📝 *NOTES*{found}{count}`,
     'notes.list.titleFull': `📝 NOTES{tags}{found} ({total})`,
@@ -74,11 +74,11 @@ module.exports = {
     'notes.subject.alert': `🔔 Note #{id}: {text}`,
 
     // ---- /notes: -move, -desc
-    'notes.move.usage': `❌ Use: /notes -move #tag #newtag`,
+    'notes.move.usage': `❌ Usage: /notes -move #tag #newtag`,
     'notes.move.same': `❌ The new tag is the same as the current one.`,
     'notes.move.notFound': `❌ #{tag} doesn't exist. See the tags with /notes`,
     'notes.move.done': { one: `🏷️ #{from} → #{to} · {count} note`, other: `🏷️ #{from} → #{to} · {count} notes` },
-    'notes.desc.usage': `❌ Use: /notes -desc #tag [<description>] (or /notes -desc #tag -rm to delete)`,
+    'notes.desc.usage': `❌ Usage: /notes -desc #tag [<description>] (or /notes -desc #tag -rm to delete)`,
     'notes.desc.shown': `🏷️ *#{tag}*\n{desc}`,
     'notes.desc.none': `🏷️ #{tag} has no description.`,
     'notes.desc.createHint': `💡 _Create one with /notes -desc #{tag} <text>_`,
@@ -88,14 +88,14 @@ module.exports = {
     'notes.desc.replaced': `🏷️ *#{tag}* · description replaced`,
 
     // ---- /notes: -view
-    'notes.view.usage': `❌ Use: /notes -view <id...|#tag...> [-to <destination>]...`,
+    'notes.view.usage': `❌ Usage: /notes -view <id...|#tag...> [-to <destination>]...`,
     'notes.view.missingOne': `❌ {list} doesn't exist. See the list with /notes -l`,
     'notes.view.missingMany': `❌ {list} don't exist. See the list with /notes -l`,
     'notes.view.fileNotFound': `#{id}: media file not found`,
     'notes.view.sent': { one: `📝 {count} note sent to {where}.`, other: `📝 {count} notes sent to {where}.` },
 
     // ---- /notes: -export (PDF)
-    'notes.export.usage': `❌ Use: /notes -export [#tag...] [-to <destination>]...`,
+    'notes.export.usage': `❌ Usage: /notes -export [#tag...] [-to <destination>]...`,
     'notes.pdf.withMedia': `with media`,
     'notes.pdf.withAlert': `with alert`,
     'notes.pdf.withLink': `with link`,
@@ -134,7 +134,7 @@ module.exports = {
     'monitor.list.source': `     Source: WhatsApp presence · time not confirmed`,
     'monitor.list.noHistory': `   No last seen observed yet.`,
     'monitor.list.fileCaption': `👀 History · every {interval}`,
-    'monitor.alert.usage': `❌ Give a registered contact: /monitor -alerta /Maria/`,
+    'monitor.alert.usage': `❌ Give a registered contact: /monitor -alert /Maria/`,
     'monitor.alert.enabled': `🚨 Online alert enabled for "{name}" in the bot owner's private chat.`,
     'monitor.alert.fired': `🚨 The contact "{name}" came online at "{when}".\n💡 For more, type /monitor -l`,
     'monitor.add.usage': `❌ Give a contact: /monitor -add /Jorge Pereira/`,
@@ -145,7 +145,7 @@ module.exports = {
     'monitor.rm.usage': `❌ Give the list id or a contact: /monitor -rm 1 or /monitor -r /Jorge Pereira/`,
     'monitor.rm.all': `🗑️ Monitor cleared: {count} contact(s) and their histories removed.`,
     'monitor.rm.done': `🗑️ #{id} · {name}: registration and history removed.`,
-    'monitor.usage': `❌ Use /monitor, /monitor -add <contact> [-alerta], /monitor -alerta <contact>, /monitor -rm <id, contact or all> or /monitor -list [contact].`,
+    'monitor.usage': `❌ Use /monitor, /monitor -add <contact> [-alert], /monitor -alert <contact>, /monitor -rm <id, contact or all> or /monitor -list [contact].`,
     'monitor.status.online': `🟢 online`,
     'monitor.status.noData': `❔ no data`,
     'monitor.status.denied': `🔒 time unavailable`,

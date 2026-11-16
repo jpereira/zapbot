@@ -1,22 +1,22 @@
 # `/notes` · admin
 
 Notes saved in the database, valid for any chat (group or private). Each one has an ID, and
-`-alerta` notifies you about it at a date/time. Only the owner (and admins) can use it.
+`-alert` notifies you about it at a date/time. Only the owner (and admins) can use it.
 
 ```text
-/notes [-list|-l] [#tag...] [-to <destino>]...
-/notes -compact|-c [#tag...]
-/notes -search|-s [#tag...] <texto|/regex/flags> [-to <destino>]...
-/notes -update|-u <id> [#tag] <novo texto>
-/notes -view|-v <id...|#tag...> [-to <destino>]...
-/notes -move|-m #tag #novatag
-/notes -desc|-d #tag [<descrição>|-rm]
-/notes -export|-e [#tag...] [-to <destino>]...
+/notes [-l|-l] [#tag...] [-to <destino>]...
+/notes -c|-c [#tag...]
+/notes -s|-s [#tag...] <texto|/regex/flags> [-to <destino>]...
+/notes -u|-u <id> [#tag] <novo texto>
+/notes -v|-v <id...|#tag...> [-to <destino>]...
+/notes -m|-m #tag #novatag
+/notes -d|-d #tag [<descrição>|-r]
+/notes -e|-e [#tag...] [-to <destino>]...
 /notes #tag <texto>
-/notes -add|-a #tag <texto> [-alerta <quando> [-to <destino>]...]
-/notes -rm|-r <id...|#tag...|all>
-/notes -alerta [<id|#tag...> [<quando> [-to <destino>]...]]
-/notes -alerta -rm <id...|#tag...|all>
+/notes -a|-a #tag <texto> [-alert <quando> [-to <destino>]...]
+/notes -r|-r <id...|#tag...|all>
+/notes -alert [<id|#tag...> [<quando> [-to <destino>]...]]
+/notes -alert -r <id...|#tag...|all>
 ```
 
 | Option | Value | Description |
@@ -30,23 +30,23 @@ Notes saved in the database, valid for any chat (group or private). Each one has
 | `-desc`, `-d` | `#tag [<descrição>\|-rm]` | Tag description, shown in the list and in `/notes` alone. With no text, shows the current one; with `-rm`, deletes it. `-move` carries the description along |
 | `-export`, `-e` | `[#tag...]` | Sends the notes in a PDF, with the images and the text as the caption (header, footer with version, host, date and time, and pagination). With tags, only theirs. See [Export](#export) |
 | `#tag <texto>` | | With no option in front, it becomes a new note, same as `-add`: `/notes #casa não esquecer de remover a opção tal`. The `#tag` is required: `/notes meu texto` gives an error. Just `/notes #casa`, with no text, lists the tag's notes |
-| `-add`, `-a` | `#tag <texto>` | Adds a note; the `#tag` is required and comes at the start of the text. The text goes up to the `-alerta`, if there is one, and accepts multiple lines |
-| `-rm`, `-r` | `<id...\|#tag...\|all>` | Removes the notes with those IDs (`-r 2`, `-r 1 2 3` or `-r 1,2,3`), of a tag (`-r #casa`) or all (`all`). If any ID or tag doesn't exist, none is removed. Together with `-alerta`, removes only the alert, keeping the notes |
-| `-alerta` | `<quando>` | Notifies you about the note (or all notes of a `#tag`) at a date/time. See [Alerts](#alerts) |
-| `-to` | `<destino>` | With `-alerta`: notifies a contact, group, number or email instead of your private chat. With the list (`-l`, `#tag`) or `-export`: sends the list or the PDF there, instead of replying in the chat. Repeat it for several |
+| `-add`, `-a` | `#tag <texto>` | Adds a note; the `#tag` is required and comes at the start of the text. The text goes up to the `-alert`, if there is one, and accepts multiple lines |
+| `-rm`, `-r` | `<id...\|#tag...\|all>` | Removes the notes with those IDs (`-r 2`, `-r 1 2 3` or `-r 1,2,3`), of a tag (`-r #casa`) or all (`all`). If any ID or tag doesn't exist, none is removed. Together with `-alert`, removes only the alert, keeping the notes |
+| `-alert` | `<quando>` | Notifies you about the note (or all notes of a `#tag`) at a date/time. See [Alerts](#alerts) |
+| `-to` | `<destino>` | With `-alert`: notifies a contact, group, number or email instead of your private chat. With the list (`-l`, `#tag`) or `-export`: sends the list or the PDF there, instead of replying in the chat. Repeat it for several |
 
 ```text
 /notes -a #casa comprar leite
 /notes #casa comprar pão                             → the same as -a
-/notes -a #contatos ligar pro João -alerta amanhã 9h
+/notes -a #contatos ligar pro João -alert amanhã 9h
 /notes -l
 /notes -r 2
 /notes -r all
-/notes -update 3 comprar pão e leite             → replaces the text of #3
+/notes -u 3 comprar pão e leite             → replaces the text of #3
 /notes -u #3 #casa comprar pão\ne leite          → replaces the text and moves it to #casa
-/notes -move #casa #lar                           → renames #casa to #lar
-/notes -desc #casa Coisas da casa                 → description of #casa
-/notes -view 76                                   → #76 with the image, if it has one
+/notes -m #casa #lar                           → renames #casa to #lar
+/notes -d #casa Coisas da casa                 → description of #casa
+/notes -v 76                                   → #76 with the image, if it has one
 /notes                                            → #casa: 3, #duvidas: 1, no tag: 2
 ```
 
@@ -58,13 +58,13 @@ Notes saved in the database, valid for any chat (group or private). Each one has
 /notes                → the tags, with the number of notes
 /notes -l             → lists everything, one message per #tag (the untagged ones, from before, last)
 /notes #casa          → only the ones in #casa (the same as /notes -l #casa)
-/notes -rm #casa     → removes all the ones in #casa
-/notes -rm all       → removes everything
+/notes -r #casa     → removes all the ones in #casa
+/notes -r all       → removes everything
 ```
 
 - When you reply to a message, `/notes #lembrete` (or `/notes -a #lembrete`) saves its text as a
   note, with ↩️ in front. Text typed along with it takes the place of the message's (without the
-  ↩️). It can be combined with `-alerta`: `/notes -a #lembrete -alerta amanhã 9h`. In the PDF, the
+  ↩️). It can be combined with `-alert`: `/notes -a #lembrete -alert amanhã 9h`. In the PDF, the
   ↩️ becomes `[reply]`.
 - In the note text, `\n` becomes a line break (`/notes #casa pão\nleite`); `\\n` stays as is.
 - The first line is the title (the only one in bold), the rest comes as typed and every
@@ -82,7 +82,7 @@ Notes saved in the database, valid for any chat (group or private). Each one has
   deletes the file too, and [`/backup`](backup.md) takes the media in a separate file.
 - The tag can be partial in the list, in the search, in `-view`, in `-desc` and in `-export`:
   `/notes #idei` finds `#ideias`. The exact one wins; otherwise the ones that start with what you
-  typed apply, then the ones that contain it. Where it changes data (`-rm`, `-move` and `-alerta`
+  typed apply, then the ones that contain it. Where it changes data (`-rm`, `-move` and `-alert`
   with `<quando>`), the tag must be complete.
 - Each note has at most one tag, the one at the start of the text. Uppercase and lowercase count the
   same.
@@ -96,10 +96,10 @@ Notes saved in the database, valid for any chat (group or private). Each one has
 /notes -v 3 5                 → several at once, one message for each
 /notes -v #idei               → all of #ideias
 /notes -v 76 -to /Família/    → sends to the group (by email, the file is attached)
-/notes -move #casa #lar       → renames the tag in all notes
-/notes -desc #lar Coisas da casa   → tag description
+/notes -m #casa #lar       → renames the tag in all notes
+/notes -d #lar Coisas da casa   → tag description
 /notes -d #lar                → shows the description
-/notes -d #lar -rm            → deletes the description
+/notes -d #lar -r            → deletes the description
 ```
 
 - The `-view` header shows the ID, the tag and the date. An ID or tag that doesn't exist cancels
@@ -118,7 +118,7 @@ or `/regex/flags`.
 
 ```text
 /notes -s pao                    → the ones with "pão" (and "PAO", "Pão"...)
-/notes -search /etf|bolsa/i      → regex
+/notes -s /etf|bolsa/i      → regex
 /notes -s "comprar pão"          → with spaces, the text works directly (the quotes are optional)
 /notes -s #casa leite            → only the ones in #casa that match
 /notes -s casa                   → also matches the tag name (the ones in #casa)
@@ -152,29 +152,29 @@ work with `-rm`.
 
 ## Alerts
 
-The same scheme as the `-alerta` of [`/rates`](rates.md#price-alerts): list, `-rm`, `-to`
+The same scheme as the `-alert` of [`/rates`](rates.md#price-alerts): list, `-rm`, `-to`
 and a periodic check (every minute). Here the condition is a date/time, and the notification is the
 note itself.
 
 ```text
-/notes -a #contatos ligar pro João -alerta amanhã 9h       → saves it and notifies tomorrow at 9h
-/notes -alerta 3 +2h                              → notifies about note 3 in 2 hours
-/notes -alerta 3 sexta 18:30 -to /Família/        → notifies in the Família group
-/notes -alerta #casa +2h -to /Família/            → notifies about all in #casa, in the Família group
-/notes -a #contas pagar boleto -alerta 25/12 10h -to /Jorge Pereira/ -to email
-/notes -alerta                                    → lists only the notes with an alert
-/notes -alerta #casa                              → only the ones in #casa that have an alert
-/notes -alerta -rm 3                              → removes the alert from #3 (the note stays)
-/notes -alerta -rm #casa                          → removes the alerts of #casa
-/notes -alerta -rm all                            → removes all the alerts
+/notes -a #contatos ligar pro João -alert amanhã 9h       → saves it and notifies tomorrow at 9h
+/notes -alert 3 +2h                              → notifies about note 3 in 2 hours
+/notes -alert 3 sexta 18:30 -to /Família/        → notifies in the Família group
+/notes -alert #casa +2h -to /Família/            → notifies about all in #casa, in the Família group
+/notes -a #contas pagar boleto -alert 25/12 10h -to /Jorge Pereira/ -to email
+/notes -alert                                    → lists only the notes with an alert
+/notes -alert #casa                              → only the ones in #casa that have an alert
+/notes -alert -r 3                              → removes the alert from #3 (the note stays)
+/notes -alert -r #casa                          → removes the alerts of #casa
+/notes -alert -r all                            → removes all the alerts
 ```
 
 - The `<quando>` is the same as in [`/cron`](cron.md): `+2h`, `30m`, `1h30m`, `18h`, `18:30`,
   `hoje 18h`, `amanhã [9h]`, `sexta [18h]`, `25/12 [10h]`, `25/12/2027 10h` (no time: 9h). Maximum
   of 365 days ahead; past dates are refused.
 - The alert fires **once** and goes away; the note stays in the list. To repeat, create another
-  `-alerta <id> <quando>` (it replaces the previous one).
-- `-to` with `-add` only works together with `-alerta`; with `-alerta` alone (the list) it gives an
+  `-alert <id> <quando>` (it replaces the previous one).
+- `-to` with `-add` only works together with `-alert`; with `-alert` alone (the list) it gives an
   error: the destinations are only set when creating the alert.
 - With a `#tag`, the alert goes on all the tag's notes (replacing the ones that already had one),
   and at the scheduled time one message goes out per note. If the tag doesn't exist, nothing is

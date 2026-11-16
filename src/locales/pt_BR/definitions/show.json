@@ -41,7 +41,7 @@
         "l"
       ],
       "values": [],
-      "desc": "Lista os chats com conteúdo no cache, numerados para o /show <nº>, marcando o chat atual. Com chat (nº, nome, @menção ou /regex/), só os que casam, e as contas só deles.",
+      "desc": "Lista os chats com conteúdo no cache. Numerados para o /show <nº>, marcando o chat atual. Com chat (nº, nome, @menção ou /regex/), só os que casam, e as contas só deles.",
       "ex": [
         "/show -l",
         "/show -l /^Maria/"
@@ -53,7 +53,7 @@
         "f"
       ],
       "values": [],
-      "desc": "Remove do cache as apagadas deste chat ou, com -e/-s/-r/chat, o que foi pedido (no seu privado, sem chat: de todos)."
+      "desc": "Remove do cache as apagadas deste chat. Com -e/-s/-r/chat, o que foi pedido (no seu privado, sem chat: de todos)."
     },
     {
       "opts": [
@@ -96,7 +96,7 @@
       "values": [],
       "desc": "Ofusca telefones na saída (ex.: +55219****44). Os dados salvos e os destinos usam os números completos.",
       "ex": [
-        "/show -mask"
+        "/show -m"
       ]
     }
   ]

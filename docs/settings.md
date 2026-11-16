@@ -7,13 +7,13 @@ shows are in Portuguese; the ones here are in English).
 | Key | Type | Default | Description |
 |---|---|---|---|
 | `agenda.max` | 1–500 | `50` | Max items in [`/cron`](commands/cron.md), counting reminders and messages together |
-| `alerta.intervalMin` | 1–60 | `5` | Interval, in minutes, between [price alert](commands/rates.md#price-alerts) checks |
-| `alerta.max` | 1–100 | `20` | Max price alerts (`/rates` and `/crypto` combined) |
+| `alert.intervalMin` | 1–60 | `5` | Interval, in minutes, between [price alert](commands/rates.md#price-alerts) checks |
+| `alert.max` | 1–100 | `20` | Max price alerts (`/rates` and `/crypto` combined) |
 | `ascii.defaultChar` | 1 character | `#` | Character used for the strokes of [`/ascii`](commands/ascii.md) letters when `-char` is not given |
 | `backup.enabled` | on/off | `on` | [Automatic backup](commands/backup.md#automatic-backup) of the database, once a day |
 | `backup.hour` | 0–23 | `3` | Hour (Brasília time) of the automatic backup |
 | `backup.keep` | 1–90 | `7` | How many automatic backups (and pre-restore ones) to keep; manual ones stay until a `/backup -rm` |
-| `backup.to` | text (can be empty) | `""` | [Destination of the daily backup](commands/backup.md#automatic-backup), besides the local copy: contact, group, number or email, like `-to`. Empty: local only. For several, use `-to <destination> -to <destination>`. Sent automatically, without asking for `-sim` |
+| `backup.to` | text (can be empty) | `""` | [Destination of the daily backup](commands/backup.md#automatic-backup), besides the local copy: contact, group, number or email, like `-to`. Empty: local only. For several, use `-to <destination> -to <destination>`. Sent automatically, without asking for `-yes` |
 | `bot.admins` | list | *(empty)* | Other people who can also use the `admin` and `owner` commands: number with country code (`5521999999999`) or, through `/set`, the contact name (`/Jorge Pereira/`) or the mention. Only the owner can change it; `/bot +a`/`-a` is the shortcut. See [Extra admins](commands/bot.md#extra-admins) |
 | `bot.login` | text (can be empty) | `""` | Hash (scrypt) of the `/bot -login` password, which turns an outsider into an admin. Empty: login disabled. Set it with `/bot -passwd`, not `/set`. Secret |
 | `bot.paused` | on/off | `off` | Bot turned off: all commands ignored, except `/bot` (same as `/bot -on`/`-off`) |
@@ -25,7 +25,6 @@ shows are in Portuguese; the ones here are in English).
 | `cache.reactionRetentionDays` | 1–365 | `30` | Days removed or changed reactions are kept for `/show -r` |
 | `cache.revokedRetentionDays` | 1–365 | `30` | Days deleted messages are kept for `/show` |
 | `commands.disabled` | list | *(empty)* | Commands disabled at runtime: the bot ignores them and they disappear from `/help`. `/set` cannot be disabled. Unknown names are ignored with a warning in the log; valid aliases are normalized |
-| `cotacao.coins` | list | `EUR, USDT` | Currencies enabled in `/rates` (`USD`, `EUR`, `GBP`, `USDT`); usually changed with `/rates -a`/`-d` |
 | `crypto.coins` | list | `BTC, ETH, SOL, HYPE` | Coins in `/crypto` (supported ones only); usually changed with `/crypto -a`/`-d` |
 | `cve.max` | 1–20 | `10` | Number of CVEs shown by `/cve` (`/cve <max>` overrides it) |
 | `cve.maxDays` | 1–120 | `7` | Window, in days, of `/cve -highscore` |
@@ -35,7 +34,7 @@ shows are in Portuguese; the ones here are in English).
 | `debug.level` | 0–3 | `0` | Cumulative level: basic, functions and commands, integrations, development. See [`/debug`](commands/debug.md) |
 | `defi.aave.chains` | list | `1 8453` | Networks (chain id) where [`/defi aave`](commands/defi.md#aave-v3) looks for positions: `1` (Ethereum), `8453` (Base) |
 | `defi.aave.wallet` | text (can be empty) | *(empty)* | Wallet for [`/defi aave`](commands/defi.md#aave-v3) when no wallet is registered, used when `AAVE_WALLET_ADDRESS` is not in `config/.env` |
-| `defi.alerta.intervalMin` | 1–1440 | `10` | Interval (minutes) between [`/defi -alerta`](commands/defi.md#out-of-range-alert) checks; it queries the positions on Solana and HyperEVM, depending on the protocol |
+| `defi.alert.intervalMin` | 1–1440 | `10` | Interval (minutes) between [`/defi -alert`](commands/defi.md#out-of-range-alert) checks; it queries the positions on Solana and HyperEVM, depending on the protocol |
 | `defi.aptos.apikey` | text (can be empty) | *(empty)* | Aptos API key ([Geomi](https://geomi.dev/docs/start)) used by [`/defi liquidswap`](commands/defi.md#liquidswap), when `APTOS_API_KEY` is not in `config/.env`. Optional: without it, the anonymous per-IP limit applies, which is enough for the bot. Shown masked |
 | `defi.aptos.indexer` | URL | `https://api.mainnet.aptoslabs.com/v1/graphql` | Aptos GraphQL indexer used by [`/defi liquidswap`](commands/defi.md#liquidswap) to find the wallet's positions |
 | `defi.aptos.rpc` | URL | `https://api.mainnet.aptoslabs.com/v1` | Aptos fullnode REST API used by [`/defi liquidswap`](commands/defi.md#liquidswap) to read pools and tokens. Shown masked |
@@ -47,48 +46,50 @@ shows are in Portuguese; the ones here are in English).
 | `defi.morpho.wallet` | text (can be empty) | *(empty)* | Wallet for [`/defi morpho`](commands/defi.md#morpho) when no wallet is registered, used when `MORPHO_WALLET_ADDRESS` is not in `config/.env` |
 | `defi.solana.rpc` | URL | `https://api.mainnet-beta.solana.com` | Solana RPC used by [`/defi`](commands/defi.md#solana-rpc). Shown masked (the URL usually carries the key) |
 | `email.alerts` | on/off | `on` | Email alerts (crash, outage, reconnection...) through the QR Code SMTP. See [Email alerts](emails.md#email-alerts) |
-| `enquete.retentionDays` | 1–365 | `90` | Days polls and votes are kept for [`/poll -r`](commands/poll.md#result) |
 | `flood.intervalCommand` | 1–3600 | `2` | Flood protection: the window, in seconds, in which `flood.maxCommandRepeated` is counted, and how long the bot ignores whoever went over the limit. See [Flood protection](commands/bot.md#flood-protection) |
 | `flood.maxCommandRepeated` | 0–100 | `3` | How many times a non-admin can repeat the same command within `flood.intervalCommand` seconds; past that, the bot warns once and ignores the person until the interval ends. `0` turns it off |
 | `forward.delayMs` | 0–10000 | `1000` | Pause (ms) between messages when [`/forward`](commands/forward.md) forwards several, so WhatsApp isn't flooded |
 | `forward.header` | on/off | `on` | Header "Message forwarded by ZapBot!" at the start of what [`/forward`](commands/forward.md) sends, and the list of recipients in its result; off, only the message and `✉️ ... successfully!` go |
 | `forward.max` | 1–50 | `10` | Most messages [`/forward -N`](commands/forward.md#several-messages--n) forwards at once |
+| `forward.maxRecipients` | 1–200 | `30` | Most recipients of one [`/forward`](commands/forward.md#recipient-lists) (lists and single recipients together) and of each list |
 | `get.cache.maxDays` | 1–365 | `2` | Days cached downloads (`get.cache.tmp`) stay in `cache/tmp` before the periodic cleanup deletes them |
 | `get.cache.tmp` | on/off | `on` | Keeps in `cache/tmp` what yt-dlp downloads in `/get` and `/sticker`: the same link (and the same clip) is not downloaded again. See [Download cache](commands/get.md#download-cache). `off` deletes the original on every run |
 | `get.maxDownloadMB` | 10–2000 | `200` | Max size downloaded by yt-dlp in `/get` and `/sticker`, before conversion |
 | `get.maxSizeMB` | 1–100 | `20` | Max size of the file converted by ffmpeg in `/get` and `/sticker` |
 | `gif.tag` | text | `fail` | Default tag for `/giphy` |
 | `giphy.api.key` | text (can be empty) | *(empty)* | GIPHY key, used when `GIPHY_API_KEY` is not in `config/.env`. Shown masked (`••••1234`); `/set -reset giphy.api.key` clears it |
+| `gpt.admin.key` | text (can be empty) | *(empty)* | OpenAI admin key (`sk-admin-...`) for `/gpt -usage`, used when `OPENAI_ADMIN_KEY` is not in `config/.env`. Shown masked; `/set -reset gpt.admin.key` clears it |
+| `gpt.api.key` | text (can be empty) | *(empty)* | OpenAI key, used when `OPENAI_API_KEY` is not in `config/.env`. Shown masked (`••••1234`); `/set -reset gpt.api.key` clears it |
+| `gpt.api.model` | text (from the list) | `gpt-4o-mini` | `/gpt` model, used when `OPENAI_MODEL` is not in `config/.env`. Accepted: the ones listed by `/gpt -m` |
+| `gpt.credit.since` | text (YYYY-MM-DD, can be empty) | *(empty)* | Purchase date of the OpenAI credits: `/gpt -usage` adds up the spending since then to show `$used/$total` (empty: the last 180 days) |
+| `gpt.credit.total` | 0–100000 | `0` | Total OpenAI credits purchased, in dollars (the API doesn't report the balance): `/gpt -usage` shows `$used/$total`. `0`: doesn't show it |
+| `gpt.gif.frameMs` | 20–2000 | `200` | How long each frame of the `/draw -gif` and `/gpt -gif` GIF lasts, in ms (the total is frames x ms) |
+| `gpt.gif.frames` | 2–16 | `9` | How many frames the `/draw -gif` and `/gpt -gif` GIF has (the more frames, the more expensive) |
+| `gpt.image.gifModel` | text | `gpt-image-2.6-flare` | Model that generates the `/draw -gif` and `/gpt -gif` GIF (only the `gpt-image-2.6-*` ones make GIFs and require preview access): the id your account has (if it doesn't exist, the bot lists the ones the key sees) |
+| `gpt.image.model` | text | `gpt-image-2` | Model that generates and edits the image for `/draw` and `/gpt -img`: the id your account has (if it doesn't exist, the bot lists the ones the key sees). The GIF has its own, `gpt.image.gifModel` |
+| `gpt.pricing` | list `model=input/output` | *(empty)* (`/gpt -prices` or the automatic update fills it in) | Price per 1M tokens, in dollars, for the estimated cost in the status footer of `/gpt` and `/tldr` (model without a price: `custo n/d`). The exact name or the longest prefix applies |
+| `gpt.pricing.auto` | on/off | `on` | Updates `gpt.pricing` by itself every 15 days, reading the OpenAI website (like `/gpt -prices`); only runs with the OpenAI key configured. Off: manual only |
+| `gpt.pricing.updated` | `YYYY-MM-DD` | *(empty)* | Date of the last `gpt.pricing` update (written by the bot): empty: not updated yet |
+| `gpt.status` | on/off | `on` | Status footer in `/gpt` and `/tldr` replies: bytes sent (TX) and received (RX), tokens spent, estimated cost and balance (with it off, `-status` turns it on just that once) |
+| `gpt.timeout.ms` | 5000–300000 | `60000` | `/gpt` timeout, used when `OPENAI_TIMEOUT_MS` is not in `config/.env` |
+| `gpt.transcribe.model` | text | `gpt-transcribe` | Model that transcribes the audio replied to with `/gpt`: the id your account has (`whisper-1` goes offline in Feb/2027) |
+| `gpt.tts.instructions` | text | `Fale como um robô: voz metálica, monótona e pausada, sem emoção.` | Voice style for `/gpt -voice` (only `gpt-4o-mini-tts` uses it) |
+| `gpt.tts.model` | text | `gpt-4o-mini-tts` | Model that generates the voice for `/gpt -voice`: the id your account has (only the `gpt-4o-*` ones follow the style) |
+| `gpt.tts.voice` | text (from the list) | `onyx` | Voice for `/gpt -voice`: `alloy`, `ash`, `ballad`, `coral`, `echo`, `fable`, `nova`, `onyx`, `sage`, `shimmer` or `verse` |
 | `me.maxRepeat` | 1–1000 | `500` | Max repetitions of [`/me -repeat`](commands/me.md) (`-r <n>`) |
 | `monitor.enabled` | on/off | `on` | Periodic checks of [`/monitor`](commands/monitor.md); `off` pauses without deleting contacts or history |
 | `monitor.max` | 1–5 | `5` | Max monitored contacts. More contacts mean more queries and a higher risk of being blocked; hard limit of 5. Remove contacts before lowering it below the number registered |
 | `monitor.maxRecords` | 1–1000 | `30` | Max timestamps kept per contact and shown in `/monitor` and `/monitor -l`. Lowering it immediately removes the oldest excess timestamps |
 | `monitor.pool` | 120–86400 | `300` | Minimum interval in seconds per contact: default 5 min, minimum 2 min. Short intervals may contribute to WhatsApp blocking; no interval is guaranteed to be safe |
-| `news.brasil` | list | 15 blogs from [feedspot](https://rss.feedspot.com/brazil_rss_feeds/) | RSS feeds for `/news -brasil` |
+| `news.brazil` | list | 15 blogs from [feedspot](https://rss.feedspot.com/brazil_rss_feeds/) | RSS feeds for `/news -brazil` |
 | `news.g1` | list | `https://g1.globo.com/dynamo/rss2.xml` | RSS feeds for `/news -g1` |
 | `news.gazeta` | list | `https://www.gazetadopovo.com.br/feed/rss/brasil.xml` | RSS feeds for `/news -gazeta` |
 | `news.hack` | list | The Hacker News, BleepingComputer, Krebs on Security | RSS feeds for `/news -hack` |
 | `news.max` | 1–10 | `5` | Headlines shown by `/news` (`/news <count>` overrides it) |
-| `openai.admin.key` | text (can be empty) | *(empty)* | OpenAI admin key (`sk-admin-...`) for `/gpt -usage`, used when `OPENAI_ADMIN_KEY` is not in `config/.env`. Shown masked; `/set -reset openai.admin.key` clears it |
-| `openai.api.key` | text (can be empty) | *(empty)* | OpenAI key, used when `OPENAI_API_KEY` is not in `config/.env`. Shown masked (`••••1234`); `/set -reset openai.api.key` clears it |
-| `openai.api.model` | text (from the list) | `gpt-4o-mini` | `/gpt` model, used when `OPENAI_MODEL` is not in `config/.env`. Accepted: the ones listed by `/gpt -m` |
-| `openai.credit.since` | text (YYYY-MM-DD, can be empty) | *(empty)* | Purchase date of the OpenAI credits: `/gpt -usage` adds up the spending since then to show `$used/$total` (empty: the last 180 days) |
-| `openai.credit.total` | 0–100000 | `0` | Total OpenAI credits purchased, in dollars (the API doesn't report the balance): `/gpt -usage` shows `$used/$total`. `0`: doesn't show it |
-| `openai.gif.frameMs` | 20–2000 | `200` | How long each frame of the `/draw -gif` and `/gpt -gif` GIF lasts, in ms (the total is frames x ms) |
-| `openai.gif.frames` | 2–16 | `9` | How many frames the `/draw -gif` and `/gpt -gif` GIF has (the more frames, the more expensive) |
-| `openai.image.gifModel` | text | `gpt-image-2.6-flare` | Model that generates the `/draw -gif` and `/gpt -gif` GIF (only the `gpt-image-2.6-*` ones make GIFs and require preview access): the id your account has (if it doesn't exist, the bot lists the ones the key sees) |
-| `openai.image.model` | text | `gpt-image-2` | Model that generates and edits the image for `/draw` and `/gpt -img`: the id your account has (if it doesn't exist, the bot lists the ones the key sees). The GIF has its own, `openai.image.gifModel` |
-| `openai.pricing` | list `model=input/output` | *(empty)* (`/gpt -prices` or the automatic update fills it in) | Price per 1M tokens, in dollars, for the estimated cost in the status footer of `/gpt` and `/tldr` (model without a price: `custo n/d`). The exact name or the longest prefix applies |
-| `openai.pricing.auto` | on/off | `on` | Updates `openai.pricing` by itself every 15 days, reading the OpenAI website (like `/gpt -prices`); only runs with the OpenAI key configured. Off: manual only |
-| `openai.pricing.updated` | `YYYY-MM-DD` | *(empty)* | Date of the last `openai.pricing` update (written by the bot): empty: not updated yet |
-| `openai.status` | on/off | `on` | Status footer in `/gpt` and `/tldr` replies: bytes sent (TX) and received (RX), tokens spent, estimated cost and balance (with it off, `-status` turns it on just that once) |
-| `openai.timeout.ms` | 5000–300000 | `60000` | `/gpt` timeout, used when `OPENAI_TIMEOUT_MS` is not in `config/.env` |
-| `openai.transcribe.model` | text | `gpt-transcribe` | Model that transcribes the audio replied to with `/gpt`: the id your account has (`whisper-1` goes offline in Feb/2027) |
-| `openai.tts.instructions` | text | `Fale como um robô: voz metálica, monótona e pausada, sem emoção.` | Voice style for `/gpt -voz` (only `gpt-4o-mini-tts` uses it) |
-| `openai.tts.model` | text | `gpt-4o-mini-tts` | Model that generates the voice for `/gpt -voz`: the id your account has (only the `gpt-4o-*` ones follow the style) |
-| `openai.tts.voice` | text (from the list) | `onyx` | Voice for `/gpt -voz`: `alloy`, `ash`, `ballad`, `coral`, `echo`, `fable`, `nova`, `onyx`, `sage`, `shimmer` or `verse` |
 | `pixelart.maxParts` | 1–10 | `3` | Max parts of [`/pixelart`](commands/pixelart.md) when the art is taller than 4096 px |
 | `pixelart.packs` | list | `chuck-norris-lvl` | 16colo.rs packs picked at random by [`/pixelart`](commands/pixelart.md) with no arguments |
+| `poll.retentionDays` | 1–365 | `90` | Days polls and votes are kept for [`/poll -r`](commands/poll.md#result) |
+| `rates.coins` | list | `EUR, USDT` | Currencies enabled in `/rates` (`USD`, `EUR`, `GBP`, `USDT`); usually changed with `/rates -a`/`-d` |
 | `show.alert.deleted` | on/off | `on` | Alerts you in your private chat when someone deletes a message; `off` only stores it for `/show` |
 | `show.alert.edited` | on/off | `on` | Alerts you in your private chat when someone edits a message; `off` only stores it for `/show -e` |
 | `show.alert.reaction` | on/off | `on` | Alerts you in your private chat when someone removes or changes a reaction; `off` only stores it for `/show -r` |
@@ -99,14 +100,14 @@ shows are in Portuguese; the ones here are in English).
 | `stats.retentionDays` | 7–365 | `90` | Days the `/stats` counters are kept (and the max period of `/stats -N`) |
 | `sticker.author` | text | `https://github.com/jpereira/zapbot/` | Sticker author |
 | `sticker.name` | text | `ZapBot` | Sticker pack name |
-| `tempo.city` | text | `Niteroi, Rio de Janeiro, Brazil` | `/weather` city when none is given |
-| `tempo.maxDays` | 1–16 | `16` | Max days of `/weather N` (or `Nd`), counting today; 16 is the Open-Meteo limit |
 | `tldr.maxMsgs` | 10–2000 | `500` | Max messages sent to OpenAI per [`/tldr`](commands/tldr.md) |
-| `traduzir.lang` | text | `pt` | Default target language of [`/translate`](commands/translate.md) (code: `pt`, `en`, `es`...) |
+| `translate.lang` | text | `pt` | Default target language of [`/translate`](commands/translate.md) (code: `pt`, `en`, `es`...) |
 | `watch.hitsRetentionDays` | 1–365 | `30` | Days `/watch` hits are kept |
 | `watch.max` | 1–100 | `20` | Max `/watch` rules |
 | `watch.rules` | list (one per line) | *(empty)* | `/watch` rules: text or `/regex/flags`. Created with `/watch <rule>` and removed with `/watch -rm N` |
 | `watch.showMax` | 1–100 | `20` | Max hits shown by `/watch`, including with `-N` and `-show` |
+| `weather.city` | text | `Niteroi, Rio de Janeiro, Brazil` | `/weather` city when none is given |
+| `weather.maxDays` | 1–16 | `16` | Max days of `/weather N` (or `Nd`), counting today; 16 is the Open-Meteo limit |
 | `zapbot.lang` | `en_US`, `pt_BR` | `en_US` | Language of the bot: the help (`-h`, `/help`) and all the replies, alerts, errors, dates, and numbers are shown in it. `/set zapbot.lang pt_BR` (or `/set zapbot.lang=pt_BR`) switches to Portuguese; `pt-BR`, `pt` and `en` are accepted too. The descriptions that `/set` shows for each setting stay in Portuguese |
 
 A new key is declared in `SETTINGS_SCHEMA` (`src/settings.js`), **in alphabetical order**, with
@@ -114,5 +115,5 @@ default, type, description and limits (`allowEmpty` for text that can be empty, 
 the value in `/set` and in the logs), and read with `getSetting('<key>')`. Invalid values in the
 database are ignored at boot (the default applies, with a warning in the logs).
 
-A text setting accepts 1 to 100 characters; `secret` ones (API keys, like `openai.api.key`)
+A text setting accepts 1 to 100 characters; `secret` ones (API keys, like `gpt.api.key`)
 accept up to 500, because OpenAI's `sk-proj-` keys go past 160.

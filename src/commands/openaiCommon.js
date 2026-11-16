@@ -39,10 +39,10 @@ const withoutOption = (args, names) => args.replace(new RegExp(`(^|\\s)-(?:${nam
  * For the model error and for -m: the model setting, the account's model list filter and the
  * recurso.
  */
-const AUDIO_MODEL = { setting: 'openai.transcribe.model', tipo: /whisper|transcribe|audio/i, get nome() { return t('openai.kindAudio'); } };
-const VOICE_MODEL = { setting: 'openai.tts.model', tipo: /tts|speech|audio/i, get nome() { return t('openai.kindVoice'); } };
-const IMAGE_MODEL = { setting: 'openai.image.model', tipo: /image|dall/i, get nome() { return t('openai.kindImage'); } };
-const GIF_MODEL = { setting: 'openai.image.gifModel', tipo: /image/i, get nome() { return t('openai.kindGif'); } };
+const AUDIO_MODEL = { setting: 'gpt.transcribe.model', tipo: /whisper|transcribe|audio/i, get nome() { return t('openai.kindAudio'); } };
+const VOICE_MODEL = { setting: 'gpt.tts.model', tipo: /tts|speech|audio/i, get nome() { return t('openai.kindVoice'); } };
+const IMAGE_MODEL = { setting: 'gpt.image.model', tipo: /image|dall/i, get nome() { return t('openai.kindImage'); } };
+const GIF_MODEL = { setting: 'gpt.image.gifModel', tipo: /image/i, get nome() { return t('openai.kindGif'); } };
 
 /*
  * "The model 'x' does not exist": the setting points to a model the account does not have. Instead of the raw error,
@@ -76,24 +76,24 @@ async function modelError(err, { setting, tipo: type, nome: nameAlt }, cmd) {
  * fallback code when the key does not respond.
  */
 const QUESTION_USAGE = {
-    get nome() { return t('openai.useDefault'); }, get detalhe() { return t('openai.detailQuestions'); }, opcoes: [], setting: 'openai.api.model',
+    get nome() { return t('openai.useDefault'); }, get detalhe() { return t('openai.detailQuestions'); }, opcoes: [], setting: 'gpt.api.model',
     exemplo: (cmd) => `${cmd} -m <modelo>`, daConta: (id) => OPENAI_MODELS.includes(id), reserva: OPENAI_MODELS
 };
 const IMAGE_USAGE = {
-    nome: '-img', get detalhe() { return t('openai.detailImages'); }, opcoes: ['img'], setting: 'openai.image.model',
+    nome: '-img', get detalhe() { return t('openai.detailImages'); }, opcoes: ['img'], setting: 'gpt.image.model',
     exemplo: (cmd) => (cmd === '/gpt' ? '/gpt -m <modelo> -img' : `${cmd} -m <modelo>`), daConta: (id) => /image|dall-e/i.test(id)
 };
 const GIF_USAGE = {
-    nome: '-gif', get detalhe() { return t('openai.detailGif'); }, opcoes: ['gif', 'frames', 'ms'], setting: 'openai.image.gifModel',
+    nome: '-gif', get detalhe() { return t('openai.detailGif'); }, opcoes: ['gif', 'frames', 'ms'], setting: 'gpt.image.gifModel',
     exemplo: (cmd) => (cmd === '/gpt' ? '/gpt -m <modelo> -gif' : `${cmd} -gif -m <modelo>`), daConta: (id) => /image/i.test(id)
 };
 const AUDIO_USAGE = {
-    nome: '-audio', get detalhe() { return t('openai.detailAudio'); }, opcoes: ['audio'], setting: 'openai.transcribe.model',
+    nome: '-audio', get detalhe() { return t('openai.detailAudio'); }, opcoes: ['audio'], setting: 'gpt.transcribe.model',
     exemplo: (cmd) => `${cmd} -m <modelo> -audio`, daConta: (id) => /transcribe|whisper/i.test(id)
 };
 const VOICE_USAGE = {
-    nome: '-voz', get detalhe() { return t('openai.detailVoice'); }, opcoes: ['voz'], setting: 'openai.tts.model',
-    exemplo: (cmd) => `${cmd} -m <modelo> -voz`, daConta: (id) => /tts/i.test(id)
+    nome: '-voice', get detalhe() { return t('openai.detailVoice'); }, opcoes: ['voice'], setting: 'gpt.tts.model',
+    exemplo: (cmd) => `${cmd} -m <modelo> -voice`, daConta: (id) => /tts/i.test(id)
 };
 
 const GPT_USES = [QUESTION_USAGE, IMAGE_USAGE, GIF_USAGE, AUDIO_USAGE, VOICE_USAGE];
@@ -110,8 +110,8 @@ async function accountModels(cmd) {
 }
 
 // The model in use: the .env's (only for the questions) or the setting
-const modelCurrent = (usage) => (usage.setting === 'openai.api.model'
-    ? envOuSetting('OPENAI_MODEL', 'openai.api.model')
+const modelCurrent = (usage) => (usage.setting === 'gpt.api.model'
+    ? envOuSetting('OPENAI_MODEL', 'gpt.api.model')
     : getSetting(usage.setting));
 
 /**
@@ -136,7 +136,7 @@ async function swapModel(msg, modelAlt, opts, { cmd, icone: iconAlt, usos: uses,
             const usageAlt = ids ? ids.filter(usage.daConta) : (usage.reserva ?? []);
             const list = [...new Set([current, ...(usageAlt.length ? usageAlt : (usage.reserva ?? []))])];
             const linesAlt = list.map(m => `${m === current ? '✅' : '▫️'} ${m}${ids && !ids.includes(m) ? t('openai.keyCantSeeTag') : ''}`);
-            const origin = usage.setting === 'openai.api.model' && doEnv ? t('openai.envOrigin') : '';
+            const origin = usage.setting === 'gpt.api.model' && doEnv ? t('openai.envOrigin') : '';
             return t('openai.modelBlock', { nome: usage.nome, detalhe: usage.detalhe, exemplo: usage.exemplo(cmd), origem: origin, linhas: linesAlt.join('\n') });
         });
         await msg.reply(`${t('openai.modelsTitle', { icone: iconAlt, cmd })}\n\n${blocks.join('\n\n')}\n\n` + (ids
@@ -147,7 +147,7 @@ async function swapModel(msg, modelAlt, opts, { cmd, icone: iconAlt, usos: uses,
 
     // A model the key cannot see is pointless to save (the image, audio and voice ones are free, with no fixed list)
     const usage = request ?? defaults;
-    if (usage.setting !== 'openai.api.model' && ids && !ids.includes(modelAlt)) {
+    if (usage.setting !== 'gpt.api.model' && ids && !ids.includes(modelAlt)) {
         const candidates = ids.filter(usage.daConta);
         await msg.reply(t('openai.keyCantSee', { modelo: modelAlt, detalhe: usage.detalhe }) +
             (candidates.length ? t('openai.keySees', { lista: candidates.join(', ') }) : ''));
@@ -166,7 +166,7 @@ async function swapModel(msg, modelAlt, opts, { cmd, icone: iconAlt, usos: uses,
         return;
     }
     await msg.reply(t('openai.modelSet', { cmd, modelo: getSetting(usage.setting) }) +
-        (doEnv && usage.setting === 'openai.api.model'
+        (doEnv && usage.setting === 'gpt.api.model'
             ? t('openai.envPriority', { env: doEnv })
             : ''));
 }

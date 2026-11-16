@@ -31,7 +31,7 @@ const TIME_COLD = 5;   // °C: "It's freezing!"
 const TIME_CALOR = 30; // °C: "So hot!"
 
 // Geocoding kept in memory: a city's coordinates do not change and the city
-// default (tempo.city) is queried all the time
+// default (weather.city) is queried all the time
 const geoCache = new Map();
 const GEO_CACHE_MAX = 100;
 
@@ -60,7 +60,7 @@ async function geocodeCity(city) {
     return local;
 }
 
-// Open-Meteo's limit for forecast_days (the tempo.maxDays setting does not go past it)
+// Open-Meteo's limit for forecast_days (the weather.maxDays setting does not go past it)
 const TIME_DAYS_API = 16;
 
 async function queryTime({ latitude, longitude }, daysAlt = 1) {
@@ -137,15 +137,15 @@ function readArgumentsTime(args) {
 
 async function cmdWeather({ msg, args }) {
     const request = readArgumentsTime(args);
-    const max = getSetting('tempo.maxDays');
+    const max = getSetting('weather.maxDays');
 
     if (request.dias !== null && (request.dias < 1 || request.dias > max)) {
         await msg.reply(t('weather.invalidDays', { n: request.dias, max, api: TIME_DAYS_API }));
         return;
     }
 
-    // Without a city uses the tempo.city setting
-    const city = request.cidade || getSetting('tempo.city');
+    // Without a city uses the weather.city setting
+    const city = request.cidade || getSetting('weather.city');
 
     try {
         const local = await geocodeCity(city);

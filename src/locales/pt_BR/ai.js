@@ -5,9 +5,9 @@
 module.exports = {
     // src/openaiChat.js
     'openai.noKey': '⚠️ API key da OpenAI não encontrada: o {cmd} está desativado.\n' +
-        '💡 _Defina OPENAI_API_KEY no config/.env ou use /set openai.api.key <chave>_',
-    'openai.timeout': '⏱️ A OpenAI não respondeu em {s}s. Tente de novo ou aumente o openai.timeout.ms.',
-    'openai.badKey': '🔑 API key da OpenAI inválida. Confira o OPENAI_API_KEY ou o openai.api.key.',
+        '💡 _Defina OPENAI_API_KEY no config/.env ou use /set gpt.api.key <chave>_',
+    'openai.timeout': '⏱️ A OpenAI não respondeu em {s}s. Tente de novo ou aumente o gpt.timeout.ms.',
+    'openai.badKey': '🔑 API key da OpenAI inválida. Confira o OPENAI_API_KEY ou o gpt.api.key.',
     'openai.quota': '💸 Limite ou créditos da OpenAI esgotados. Tente mais tarde.',
     'openai.error': '❌ Erro no {cmd}: {erro}',
     'openai.pricesNotFound': 'não achei a tabela de preços na página da OpenAI (o formato dela mudou?)',
@@ -69,10 +69,10 @@ module.exports = {
     'gpt.noSpeech': '🤖 Não ouvi fala nenhuma nesse áudio.',
     'gpt.transcription': '🤖 *Transcrição:*\n{texto}',
     'gpt.audioPrompt': '{pergunta}\n\nTranscrição do áudio:\n{transcricao}',
-    'gpt.voiceUsage': '❌ Use: /gpt -voz <texto> (ou responda uma mensagem de texto)',
+    'gpt.voiceUsage': '❌ Usage: /gpt -voice <texto> (ou responda uma mensagem de texto)',
     'gpt.voiceTooLong': '❌ O texto tem {n} caracteres: a voz aceita até {max}.',
-    'gpt.imgUsage': '❌ Use: /gpt -img <o que criar> (respondendo uma foto, ela é editada)',
-    'gpt.gifUsage': '❌ Use: /gpt -gif <o que animar> (respondendo uma foto, ela é animada)',
+    'gpt.imgUsage': '❌ Usage: /gpt -img <o que criar> (respondendo uma foto, ela é editada)',
+    'gpt.gifUsage': '❌ Usage: /gpt -gif <o que animar> (respondendo uma foto, ela é animada)',
     'gpt.actionGif': 'gerar GIF',
     'gpt.noModel': '(sem modelo)',
     'gpt.otherItem': '(outros)',
@@ -102,15 +102,15 @@ module.exports = {
     'gpt.limitRequests': 'requisições',
     'gpt.limitLine': '• {nome}: {restante} de {limite}',
     'gpt.limitReset': ' · reseta em {reseta}',
-    'gpt.usageUsage': '❌ Use: /gpt -usage [dias] (de 1 a {max}; padrão {padrao})',
-    'gpt.adminKeyHint': '💡 _Para o consumo, a chave de admin: OPENAI_ADMIN_KEY ou /set openai.admin.key_',
-    'gpt.creditHint': '💡 _Para ver $usado/$total: /set openai.credit.total <dólares comprados> e ' +
-        '/set openai.credit.since AAAA-MM-DD (a API da OpenAI não informa o saldo)._',
+    'gpt.usageUsage': '❌ Usage: /gpt -usage [dias] (de 1 a {max}; padrão {padrao})',
+    'gpt.adminKeyHint': '💡 _Para o consumo, a chave de admin: OPENAI_ADMIN_KEY ou /set gpt.admin.key_',
+    'gpt.creditHint': '💡 _Para ver $usado/$total: /set gpt.credit.total <dólares comprados> e ' +
+        '/set gpt.credit.since AAAA-MM-DD (a API da OpenAI não informa o saldo)._',
     'gpt.adminRefusedScope': '🔑 A chave de admin foi recusada: ela não tem o escopo api.usage.read.',
     'gpt.adminRefused': '🔑 A chave de admin foi recusada.',
     'gpt.adminRefusedHint': '💡 _A Usage API pede uma Admin key (sk-admin-..., em platform.openai.com › Organization › ' +
         'Admin keys) ou uma chave com o escopo Usage em Read. Uma chave de projeto (sk-proj-...) comum não serve._',
-    'gpt.adminMissing': '💡 _Para ver o consumo, defina a chave de admin: OPENAI_ADMIN_KEY no config/.env ou /set openai.admin.key <chave>_',
+    'gpt.adminMissing': '💡 _Para ver o consumo, defina a chave de admin: OPENAI_ADMIN_KEY no config/.env ou /set gpt.admin.key <chave>_',
     'gpt.priceChangedOne': '{n} alterado',
     'gpt.priceChangedMany': '{n} alterados',
     'gpt.priceNewOne': '{n} novo',
@@ -118,7 +118,7 @@ module.exports = {
     'gpt.pricesUpdated': '✅ *Preços atualizados* ({mudados}, {novos}, {iguais} sem mudança)\n{linhas}',
     'gpt.pricesMore': '\n_…e mais {n}_',
     'gpt.pricesUpToDate': '✅ Os {iguais} preços já estão em dia.',
-    'gpt.pricesFooter': '💡 _Dólares por 1M de tokens, entrada/saída (openai.pricing)._',
+    'gpt.pricesFooter': '💡 _Dólares por 1M de tokens, entrada/saída (gpt.pricing)._',
     'gpt.pricesFail': '❌ Não consegui atualizar os preços: {erro}',
 
     // src/comandos/tldr.js
@@ -154,7 +154,7 @@ module.exports = {
     'draw.animatePrompt': 'Anime esta imagem em um GIF. {texto}',
     'draw.animateDefault': 'Com um movimento sutil e natural.',
     'draw.gifDenied': '🔒 A sua conta/modelo não faz GIF animado: {mensagem}\n' +
-        '💡 _Só os gpt-image-2.6-* fazem GIF, e pedem acesso à prévia. Troque com /set openai.image.gifModel <modelo>_',
+        '💡 _Só os gpt-image-2.6-* fazem GIF, e pedem acesso à prévia. Troque com /set gpt.image.gifModel <modelo>_',
     'draw.intRange': '{nome} precisa ser um inteiro de {min} a {max}.',
 
     // src/comandos/translate.js
@@ -163,11 +163,11 @@ module.exports = {
     'translate.refused': '⛔ O Google recusou o pedido deste servidor. Tente mais tarde.',
     'translate.error': '❌ Erro no /translate: {erro}',
     'translate.languages': '🌐 *Idiomas do /translate* ({n})\n\n```{lista}```\n\n' +
-        '💡 _Use o código: /translate -para en bom dia. Padrão: {padrao} (setting traduzir.lang)._',
+        '💡 _Use o código: /translate -to en bom dia. Padrão: {padrao} (setting translate.lang)._',
     'translate.invalid': '❌ Idioma inválido: {pedido}. Use o código (en, es, pt, zh-CN...). Veja os aceitos com /translate -l',
     'translate.tooLong': '❌ Texto grande demais: {n} caracteres (máx. {max}).',
     'translate.result': '🌐 *Tradução* _({origem} → {alvo})_\n\n{texto}',
-    'translate.sameLang': '\n\n💡 _O texto já estava em {alvo}. Para outro idioma: /translate -para en_',
+    'translate.sameLang': '\n\n💡 _O texto já estava em {alvo}. Para outro idioma: /translate -to en_',
 
     // src/comandos/pixelart.js
     'pixelart.invalidYear': '❌ Ano inválido. Ex.: /pixelart -y 1996',
@@ -181,7 +181,7 @@ module.exports = {
     'pixelart.fail': '❌ Não consegui buscar a arte no 16colo.rs agora.',
 
     // src/comandos/ascii.js
-    'ascii.usage': '❌ Use: /ascii [-width|-w <colunas>] [-char|-c <caractere>] <texto (\\n quebra a linha)>',
+    'ascii.usage': '❌ Usage: /ascii [-width|-w <colunas>] [-char|-c <caractere>] <texto (\\n quebra a linha)>',
     'ascii.tooLong': '❌ O texto tem no máximo {max} caracteres.',
     'ascii.width': '❌ -width precisa de um número de {min} a {max}',
     'ascii.char': '❌ -char precisa de um único caractere, ex: -char @',
@@ -214,17 +214,17 @@ module.exports = {
     'ocr.noText': '🔎 Nenhum texto encontrado na imagem.',
 
     // /tts
-    'tts.usage': '❌ Use: /tts <texto> (ou responda uma mensagem de texto)',
+    'tts.usage': '❌ Usage: /tts <texto> (ou responda uma mensagem de texto)',
 
     // /qr, /decodeqr
-    'qr.usage': '❌ Use: /qr <texto> (ou responda uma mensagem de texto). Para ler um QR Code: /qr -d numa foto.',
+    'qr.usage': '❌ Usage: /qr <texto> (ou responda uma mensagem de texto). Para ler um QR Code: /qr -d numa foto.',
     'qr.decodeUsage': '❌ Responda a foto de um QR Code com /decodeqr (ou envie a foto com /decodeqr na legenda).',
     'qr.tooLong': '❌ O texto tem {n} caracteres: o QR Code aceita até {max}.',
     'qr.download': '❌ Não consegui baixar a imagem.',
     'qr.notFound': '🔎 Nenhum QR Code encontrado na imagem.',
 
     // /carbon
-    'carbon.usage': '❌ Use: /carbon [-theme|-t dark|light] <código> (ou responda uma mensagem com o código)',
+    'carbon.usage': '❌ Usage: /carbon [-theme|-t dark|light] <código> (ou responda uma mensagem com o código)',
     'carbon.badTheme': '❌ Tema "{theme}" desconhecido. Disponíveis: {themes}.',
     'carbon.failed': '❌ Não consegui desenhar a imagem: {error}'
 };

@@ -184,12 +184,12 @@ async function cleanStatsOld() {
     }
 }
 
-// Polls (and their votes) older than 'enquete.retentionDays'
+// Polls (and their votes) older than 'poll.retentionDays'
 async function cleanPollsOld() {
     await dbReady;
 
     try {
-        const limitAlt = Date.now() - getSetting('enquete.retentionDays') * DAY_MS;
+        const limitAlt = Date.now() - getSetting('poll.retentionDays') * DAY_MS;
         await dbRun('DELETE FROM poll_votes WHERE poll_id IN (SELECT id FROM polls WHERE created_at < ?)', [limitAlt]);
         const res = await dbRun('DELETE FROM polls WHERE created_at < ?', [limitAlt]);
 

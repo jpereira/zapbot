@@ -30,7 +30,7 @@
       "values": [],
       "desc": "Ofusca telefones na saída (ex.: +55219****44).",
       "ex": [
-        "/block -mask"
+        "/block -m"
       ]
     }
   ]

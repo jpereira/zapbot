@@ -13,7 +13,7 @@ module.exports = {
         {
             opts: ['list', 'l'],
             values: [],
-            desc: 'Lists only rules, sources, destinations and counts, without the match texts.',
+            desc: 'Lists only rules, sources, destinations and counts. Without the match texts.',
             ex: ['/watch -l']
         },
         {
@@ -31,20 +31,20 @@ module.exports = {
         {
             opts: ['in'],
             values: ['<source>'],
-            desc: 'Restricts a new rule to a contact, group or channel, by name, number, mention or @newsletter ID. Contact: their messages in any chat.',
+            desc: 'Restricts a new rule to a contact, group or channel. By name, number, mention or @newsletter ID. Contact: their messages in any chat.',
             ex: ['/watch /chuva/i -in /Defesa Civil/']
         },
         {
             opts: ['rm', 'r'],
             values: ['<N|rule>'],
             desc: 'Removes rule N (or the rule by its text), its occurrences, source and destinations.',
-            ex: ['/watch -rm 3', '/watch -rm /Jorge/']
+            ex: ['/watch -r 3', '/watch -r /Jorge/']
         },
         {
             opts: ['flush', 'f'],
             values: ['[N|rule]'],
             desc: 'Clears the occurrences of rule N (or of the rule by its text); without N, clears all. Keeps rules, sources and destinations.',
-            ex: ['/watch -flush 3', '/watch -flush /Jorge/']
+            ex: ['/watch -f 3', '/watch -f /Jorge/']
         },
         {
             opts: ['to'],
@@ -54,7 +54,7 @@ module.exports = {
         },
         {
             argv: ['-N'],
-            desc: 'Number of recent matches in the listing or with -s, capped by watch.showMax (default 20).',
+            desc: 'Number of recent matches to show. In the listing or with -s, capped by watch.showMax (default 20).',
             ex: ['/watch -10', '/watch -s 3 -10']
         },
         {
@@ -66,13 +66,13 @@ module.exports = {
             opts: ['mask', 'm'],
             values: ['[N]'],
             desc: 'Obfuscates phone numbers in the output. With N, turns on the 🔒 of rule N: its alerts and occurrences come out obfuscated, until -umask.',
-            ex: ['/watch -mask', '/watch -mask 3']
+            ex: ['/watch -m', '/watch -m 3']
         },
         {
             opts: ['umask', 'u'],
             values: ['N'],
             desc: 'Turns off the 🔒 of rule N (phone numbers are shown again).',
-            ex: ['/watch -umask 3']
+            ex: ['/watch -u 3']
         }
     ],
     mask: true,

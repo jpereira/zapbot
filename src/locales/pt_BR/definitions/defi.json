@@ -1,6 +1,6 @@
 {
   "summary": "Posições DeFi (Orca, Project X, Liquidswap, Morpho e Aave)",
-  "usage": "/defi [protocolo] [-mask]  ou  /defi -l  ou  /defi -rm <#...|all>  ou  /defi [protocolo] -taxas [-alerta]  ou  /defi <protocolo> <opções>",
+  "usage": "/defi [protocolo] [-mask]  ou  /defi -l  ou  /defi -rm <#...|all>  ou  /defi [protocolo] -fees [-alert]  ou  /defi <protocolo> <opções>",
   "help": "Posições da Orca (Solana), do Project X (HyperEVM), da Liquidswap (Aptos), do Morpho e do Aave V3, lidas na hora: saldo, faixa e taxas a coletar das de liquidez; colateral, dívida e risco das de empréstimo. Sem nada, mostra todas; com o protocolo, só as dele. Cada protocolo tem a sua ajuda.",
   "ex": [
     "/defi orca -help",
@@ -21,16 +21,16 @@
     },
     {
       "opts": [
-        "alerta",
+        "alert",
         "a"
       ],
       "values": [
         "[nº|all|valor]"
       ],
-      "desc": "Sem nº: lista os alertas. Com nº (ou all): avisa quando a posição sair da faixa e quando voltar, no seu privado ou nos destinos do -to (verificada a cada defi.alerta.intervalMin minutos). Com -rm: desliga. No cadastro (com -address ou -wallet), liga o alerta da posição nova; o valor é o limite das taxas em dólar (como o -taxas).",
+      "desc": "Sem nº: lista os alertas. Com nº (ou all): avisa quando a posição sair da faixa e quando voltar, no seu privado ou nos destinos do -to (verificada a cada defi.alert.intervalMin minutos). Com -rm: desliga. No cadastro (com -address ou -wallet), liga o alerta da posição nova; o valor é o limite das taxas em dólar (como o -fees).",
       "ex": [
-        "/defi -alerta 1",
-        "/defi orca -address <endereço> -alerta 2000"
+        "/defi -a 1",
+        "/defi orca -address <endereço> -a 2000"
       ]
     },
     {
@@ -41,7 +41,7 @@
       "values": [],
       "desc": "Com aave: os detalhes da posição (LTV, liquidation threshold, available borrows, APY de cada ativo, o que é colateral, eMode e isolation mode).",
       "ex": [
-        "/defi aave -full"
+        "/defi aave -f"
       ]
     },
     {
@@ -60,7 +60,7 @@
       "values": [],
       "desc": "Esconde os números da carteira com * ($**,***.**): saldos, quantidades, valores e o rendimento. As taxas a coletar ficam visíveis. Os endereços da posição (-address) e da carteira (-wallet) também ficam ocultos, inclusive no privado. Preço, faixa, pool, Health Factor, LTV e APY continuam.",
       "ex": [
-        "/defi -mask",
+        "/defi -m",
         "/defi aave -m"
       ]
     },
@@ -75,7 +75,7 @@
       "desc": "Com -address ou -wallet: um nome para a posição ou a carteira (opcional, até 40 caracteres), mostrado junto do endereço. Com espaços, com ou sem aspas. Numa já cadastrada, troca o nome.",
       "ex": [
         "/defi orca -address <endereço> -n \"Posição TAL\"",
-        "/defi prjx -wallet <0x...> -n Carteira Hare"
+        "/defi prjx -w <0x...> -n Carteira Hare"
       ]
     },
     {
@@ -103,20 +103,20 @@
       "values": [
         "<nº...|all>"
       ],
-      "desc": "Remove o cadastro nº N, vários (-rm 1 3 ou 1,3) ou todos; se algum nº não existe, nenhum sai. Só desliga o alerta da nº N (ou de todas) (com -alerta)."
+      "desc": "Remove o cadastro nº N, vários (-rm 1 3 ou 1,3) ou todos; se algum nº não existe, nenhum sai. Só desliga o alerta da nº N (ou de todas) (com -alert)."
     },
     {
       "opts": [
-        "taxas"
+        "fees"
       ],
       "values": [
         "[valor|off]"
       ],
-      "desc": "Sozinho: o resumo das taxas a coletar, numa mensagem, com a faixa e o preço de cada posição da Orca e do Project X e o total em dólar (a Liquidswap entra, mas não tem o que coletar; o que não está cadastrado aparece como tal). Com -alerta (sem valor), mostra também o alerta de cada cadastro e quanto falta para o limite das taxas. Junto com -alerta <nº|all>: avisa também quando as taxas a coletar passarem do valor, em dólar (ex.: -taxas 50); avisa uma vez e de novo depois de você coletar; off tira.",
+      "desc": "Sozinho: o resumo das taxas a coletar. Vem numa mensagem, com a faixa e o preço de cada posição da Orca e do Project X e o total em dólar (a Liquidswap entra, mas não tem o que coletar; o que não está cadastrado aparece como tal). Com -alert (sem valor), mostra também o alerta de cada cadastro e quanto falta para o limite das taxas. Junto com -alert <nº|all>: avisa também quando as taxas a coletar passarem do valor, em dólar (ex.: -fees 50); avisa uma vez e de novo depois de você coletar; off tira.",
       "ex": [
-        "/defi -taxas",
-        "/defi prjx -taxas",
-        "/defi -taxas -alerta"
+        "/defi -fees",
+        "/defi prjx -fees",
+        "/defi -fees -a"
       ]
     },
     {
@@ -126,7 +126,7 @@
       "values": [
         "<destino>"
       ],
-      "desc": "Avisa num contato, num grupo, num número ou por e-mail em vez do seu privado (vários com o nome: você escolhe na lista) (com -alerta). Repita para avisar em vários.",
+      "desc": "Avisa em outro lugar em vez do seu privado. Um contato, um grupo, um número ou um e-mail (vários com o nome: você escolhe na lista) (com -alert). Repita para avisar em vários.",
       "ex": [
         "-to /Jorge Pereira/",
         "-to @Fulano (menção)",
@@ -146,8 +146,8 @@
       ],
       "desc": "Cadastra a carteira (EVM: 0x e 40 caracteres hexadecimais; Aptos, na Liquidswap: 0x e até 64): o bot lê todas as posições abertas dela.",
       "ex": [
-        "/defi prjx -wallet <0x...>",
-        "/defi liquidswap -wallet <0x...>",
+        "/defi prjx -w <0x...>",
+        "/defi liquidswap -w <0x...>",
         "/defi morpho -w <0x...>"
       ]
     },
@@ -166,27 +166,27 @@
   ],
   "protocolos": {
     "orca": {
-      "usage": "/defi orca [-mask]  ou  /defi orca -address <endereço> [-pool <endereço>] [-nft <mint>] [-name <nome>] [-alerta [valor]]",
+      "usage": "/defi orca [-mask]  ou  /defi orca -address <endereço> [-pool <endereço>] [-nft <mint>] [-name <nome>] [-alert [valor]]",
       "help": "Posições de liquidez da Orca (Whirlpools, na Solana): saldo, faixa, preço e taxas a coletar, lidos on-chain. Cada posição é cadastrada pelo endereço dela (-address).",
       "ex": [
         "/defi orca",
-        "/defi orca -address <endereço> -alerta 2000"
+        "/defi orca -address <endereço> -a 2000"
       ]
     },
     "prjx": {
-      "usage": "/defi prjx [-mask]  ou  /defi prjx -wallet <0x...> [-name <nome>] [-alerta [valor]]",
+      "usage": "/defi prjx [-mask]  ou  /defi prjx -wallet <0x...> [-name <nome>] [-alert [valor]]",
       "help": "Posições de liquidez do Project X (na HyperEVM): saldo, faixa, preço e taxas a coletar, lidos on-chain. Cadastre a carteira (-wallet): o bot lê todas as posições abertas dela.",
       "ex": [
         "/defi prjx",
-        "/defi prjx -wallet <0x...> -alerta"
+        "/defi prjx -w <0x...> -a"
       ]
     },
     "liquidswap": {
       "usage": "/defi liquidswap|liqswp [-mask]  ou  /defi liquidswap -wallet <0x...> [-name <nome>]",
-      "help": "Posições de liquidez da Liquidswap (a DEX da Pontem, na Aptos, versões v0 e v0.5): a fatia da pool, o saldo de cada token e o preço, lidos on-chain. Cadastre a carteira (-wallet): o bot lê todas as posições dela. As taxas dos swaps entram na pool e já estão no saldo, então não há faixa, taxas a coletar nem -alerta.",
+      "help": "Posições de liquidez da Liquidswap (a DEX da Pontem, na Aptos, versões v0 e v0.5): a fatia da pool, o saldo de cada token e o preço, lidos on-chain. Cadastre a carteira (-wallet): o bot lê todas as posições dela. As taxas dos swaps entram na pool e já estão no saldo, então não há faixa, taxas a coletar nem -alert.",
       "ex": [
         "/defi liquidswap",
-        "/defi liqswp -wallet <0x...> -n Carteira Aptos"
+        "/defi liqswp -w <0x...> -n Carteira Aptos"
       ]
     },
     "morpho": {
@@ -194,7 +194,7 @@
       "help": "Posição, empréstimos e risco no Morpho (na Base e nas redes do setting defi.morpho.chains): colateral, dívida, Health Rate, LTV, LLTV e preço de liquidação de cada mercado, e os vaults. Cadastre a carteira (-wallet); sem cadastro, vale a do MORPHO_WALLET_ADDRESS (ou do setting defi.morpho.wallet).",
       "ex": [
         "/defi morpho",
-        "/defi morpho -wallet <0x...>"
+        "/defi morpho -w <0x...>"
       ]
     },
     "aave": {
@@ -202,8 +202,8 @@
       "help": "Posição e risco no Aave V3, lidos on-chain nos contratos oficiais (Ethereum e Base, setting defi.aave.chains): o fornecido e o emprestado, o Health Factor de cada rede e a posição líquida. Com -full, os detalhes: LTV, liquidation threshold, available borrows, APY, o que é colateral, eMode e isolation mode. Cadastre a carteira (-wallet); sem cadastro, vale a do AAVE_WALLET_ADDRESS (ou do setting defi.aave.wallet).",
       "ex": [
         "/defi aave",
-        "/defi aave -full",
-        "/defi aave -wallet <0x...> -n Carteira X"
+        "/defi aave -f",
+        "/defi aave -w <0x...> -n Carteira X"
       ]
     }
   }

@@ -32,17 +32,17 @@ const { formatData, plural } = require('../util/format');
  * /defi orca -address <address> [-pool <address>] [-nft <mint>]  → registers a position
  * /defi prjx|liquidswap|morpho -wallet <0x...>  → registers the wallet (the bot reads its positions)
  * /defi <protocol> -help    → the help for that protocol only
- * /defi [protocol] -taxas [-alerta]  → the summary of fees to collect (with each one's alert)
+ * /defi [protocol] -fees [-alert]  → the summary of fees to collect (with each one's alert)
  * -nft and -pool are optional: if they come, the bot checks that they match the position.
  * In your private chat, addresses come in full; outside it, abbreviated (0x12…5678).
  *
  * And the out-of-range alert (the check lives in src/defi/alerts.js):
- * /defi -alerta                         → lists the alerts
- * /defi -alerta <no.|all> [-to <dest>]... → notifies when the position leaves the range and when
+ * /defi -alert                         → lists the alerts
+ * /defi -alert <no.|all> [-to <dest>]... → notifies when the position leaves the range and when
  * returns: in your private chat or in the -to (email, emails,
  * contact, group or number; repeat for several)
- * /defi -alerta <no.|all> -taxas <US$>   → and when the fees to collect pass the value
- *   /defi -alerta -rm <nº|all>            → desliga
+ * /defi -alert <no.|all> -fees <US$>   → and when the fees to collect pass the value
+ *   /defi -alert -rm <nº|all>            → desliga
  */
 const MAX_POSITIONS = 20;
 
@@ -80,7 +80,7 @@ const protocolAlt = (p) => ({
 });
 // Those that register a wallet (-wallet), and not a position (-address)
 const WALLET = ['aave', 'liquidswap', 'morpho', 'prjx'];
-// Those that have a range (the -alerta)
+// Those that have a range (the -alert)
 const WITH_RANGE = ['orca', 'prjx'];
 
 // The registration address: the position (address, from Orca) or the wallet (wallet)
@@ -205,7 +205,7 @@ async function readRegistration(p, end = short, { full = false, m = SHOW } = {})
 
 /*
  * An Orca position's numbers: minimum units → tokens and the price
- * raw → B per A (the Position Details and the -taxas summary).
+ * raw → B per A (the Position Details and the -fees summary).
  */
 function orcaNumbers(d) {
     const { calculo: c, tokenA, tokenB, infoPool } = d;
@@ -734,7 +734,7 @@ async function envShow(msg, protocol, end, optionsAlt) {
 }
 
 /*
- * -alerta
+ * -alert
  */
 /**
  * Where the position notice goes: "seu privado", "👥 Grupo", "📧 a@b.com".
@@ -755,7 +755,7 @@ function alertDestinations(p) {
 const RANGE_STATE = { 1: 'defi.stateIn', 0: 'defi.stateOut' };
 const ratesLimit = (p) => (p.alert_fees ? ` · 💸 ≥ ${fmtUsd(p.alert_fees)}` : '');
 const rangeState = (p) => t(RANGE_STATE[p.in_range] ?? 'defi.stateUnknown');
-const eachMinutes = () => plural(getSetting('defi.alerta.intervalMin'), t('alerts.minute'), t('alerts.minutes'));
+const eachMinutes = () => plural(getSetting('defi.alert.intervalMin'), t('alerts.minute'), t('alerts.minutes'));
 
 async function listAlerts(msg, positions, end) {
     const withAlert = positions.map((p, i) => ({ p, n: i + 1 })).filter(({ p }) => p.alert);
@@ -774,7 +774,7 @@ async function handleAlert(msg, opts, positions, { comDestino: withDestination, 
     const o = opts.opt;
     const byNumber = (v) => (/^\d+$/.test(v) ? positions[Number(v) - 1] : null);
 
-    // -alerta -rm <nº|all>: desliga
+    // -alert -rm <nº|all>: desliga
     if (opts.given.has('rm')) {
         const rm = String(o.rm ?? '').trim().toLowerCase();
         const targets = rm === 'all' ? positions.filter(p => p.alert) : [byNumber(rm)].filter(Boolean);
@@ -795,7 +795,7 @@ async function handleAlert(msg, opts, positions, { comDestino: withDestination, 
         return;
     }
 
-    const target = String(o.alerta ?? '').trim().toLowerCase();
+    const target = String(o.alert ?? '').trim().toLowerCase();
 
     if (!target) {
         if (withDestination) {
@@ -813,7 +813,7 @@ async function handleAlert(msg, opts, positions, { comDestino: withDestination, 
     if (!chosen.length) {
         await msg.reply(target === 'all'
             ? t('defi.noRangePositions', { examples: examples() })
-            : t('defi.positionNotFound', { n: o.alerta }));
+            : t('defi.positionNotFound', { n: o.alert }));
         return;
     }
     const withoutRange = chosen.find(p => !WITH_RANGE.includes(p.protocol));
@@ -822,10 +822,10 @@ async function handleAlert(msg, opts, positions, { comDestino: withDestination, 
         return;
     }
 
-    // -taxas <value>: the limit in dollars; off (or 0) removes it; without -taxas, what was there stays
+    // -fees <value>: the limit in dollars; off (or 0) removes it; without -fees, what was there stays
     let rates;
-    if (opts.given.has('taxas')) {
-        const v = String(o.taxas ?? '').trim().toLowerCase().replace(/^\$/, '').replace(',', '.');
+    if (opts.given.has('fees')) {
+        const v = String(o.fees ?? '').trim().toLowerCase().replace(/^\$/, '').replace(',', '.');
         rates = v === 'off' || v === '0' ? null : Number(v);
         if (rates !== null && !(rates > 0)) {
             await msg.reply(t('defi.feesInvalid'));
@@ -849,7 +849,7 @@ async function handleAlert(msg, opts, positions, { comDestino: withDestination, 
         const inRange = await readRegistration(p, end)
             .then(({ naFaixa: f }) => (f === null ? null : f ? 1 : 0))
             .catch((err) => {
-                printError(`/defi -alerta ${addressAlt2(p)}:`, err.response?.status ?? '', err.message);
+                printError(`/defi -alert ${addressAlt2(p)}:`, err.response?.status ?? '', err.message);
                 return null;
             });
 
@@ -874,18 +874,18 @@ async function handleAlert(msg, opts, positions, { comDestino: withDestination, 
 }
 
 /*
- * Registration with -alerta [value]: turns on the new position's alert, in your private chat (or in the -to).
- * The value is the fee limit in dollars (the same as -taxas): -alerta 2000.
+ * Registration with -alert [value]: turns on the new position's alert, in your private chat (or in the -to).
+ * The value is the fee limit in dollars (the same as -fees): -alert 2000.
  */
 async function registerWithAlert(msg, opts, protocol, destination, end) {
     const o = opts.opt;
     let limitAlt = null;
-    if (opts.given.has('alerta') && protocol && !WITH_RANGE.includes(protocol)) {
+    if (opts.given.has('alert') && protocol && !WITH_RANGE.includes(protocol)) {
         await msg.reply(t('defi.rangeOnlyProto', protocolAlt(protocol)));
         return;
     }
-    if (opts.given.has('alerta')) {
-        const v = String(o.alerta ?? '').trim().replace(/^\$/, '').replace(',', '.');
+    if (opts.given.has('alert')) {
+        const v = String(o.alert ?? '').trim().replace(/^\$/, '').replace(',', '.');
         limitAlt = v ? Number(v) : null;
         if (v && !(limitAlt > 0)) {
             await msg.reply(t('defi.alertFeesInvalid'));
@@ -894,20 +894,20 @@ async function registerWithAlert(msg, opts, protocol, destination, end) {
     }
 
     const address = await register(msg, opts, protocol, end);
-    if (!address || !opts.given.has('alerta')) return;
+    if (!address || !opts.given.has('alert')) return;
 
     const positions = await dbAll('SELECT * FROM defi_positions ORDER BY id');
     const n = positions.findIndex(p => p.protocol === protocol && addressAlt2(p).toLowerCase() === address.toLowerCase()) + 1;
-    const rates = o.taxas ?? (limitAlt ? String(limitAlt) : null);
+    const rates = o.fees ?? (limitAlt ? String(limitAlt) : null);
     await handleAlert(msg, {
-        opt: { ...o, alerta: String(n), taxas: rates },
-        given: new Set(['alerta', ...(rates ? ['taxas'] : [])]),
+        opt: { ...o, alert: String(n), fees: rates },
+        given: new Set(['alert', ...(rates ? ['fees'] : [])]),
         argv: []
     }, positions, destination, end);
 }
 
 /*
- * -taxas (without -alerta): the summary of fees to collect, in a single message. It goes
+ * -fees (without -alert): the summary of fees to collect, in a single message. It goes
  * per liquidity protocol (Orca, Project X and Liquidswap), with the range, the
  * price and the fees of each position, and the total at the end. What is not
  * registered appears as such; Liquidswap (AMM) has no fees to collect.
@@ -956,7 +956,7 @@ function ratesText(x) {
 }
 
 /*
- * With -alerta: the registration's alert, after its positions. In Project X, the
+ * With -alert: the registration's alert, after its positions. In Project X, the
  * the fee limit applies to the whole wallet (the sum of the positions), as in the
  * src/defi/alerts.js check.
  */
@@ -1012,7 +1012,7 @@ async function summarizeRates(msg, positions, protocol, end, { comAlerta: withAl
                     else blocks[blocks.length - 1] += `\n${alert}`;
                 }
             } catch (err) {
-                printError(`/defi -taxas ${addressAlt2(p)}:`, err.response?.status ?? '', err.message);
+                printError(`/defi -fees ${addressAlt2(p)}:`, err.response?.status ?? '', err.message);
                 blocks.push(t('defi.cantReadNow', { desc: describe(p, end), reason: err.motivo ?? `${err.message}.` }));
                 totalOutside.push(t('defi.notRead', { desc: describe(p, end) }));
             }
@@ -1082,7 +1082,7 @@ async function cmdDefi({ msg, opts: commandOpts, args, chatId }) {
     const o = opts.opt;
     const end = o.mask ? () => '****…****' : endNormal;
 
-    if (withDestination && !opts.given.has('alerta')) {
+    if (withDestination && !opts.given.has('alert')) {
         await msg.reply(t('defi.toIsForAlert'));
         return;
     }
@@ -1118,11 +1118,11 @@ async function cmdDefi({ msg, opts: commandOpts, args, chatId }) {
 
     const positions = await dbAll('SELECT * FROM defi_positions ORDER BY id');
 
-    // -taxas -alerta (both without a value): the fee summary with each registration's alert
-    const summaryWithAlert = opts.given.has('taxas') && opts.given.has('alerta') && !o.taxas && !o.alerta &&
+    // -fees -alert (both without a value): the fee summary with each registration's alert
+    const summaryWithAlert = opts.given.has('fees') && opts.given.has('alert') && !o.fees && !o.alert &&
         !opts.given.has('rm') && !withDestination;
 
-    if (opts.given.has('alerta') && !summaryWithAlert) {
+    if (opts.given.has('alert') && !summaryWithAlert) {
         await handleAlert(msg, opts, positions, { comDestino: withDestination, destinosTexto: destinationsText }, end);
         return;
     }
@@ -1132,9 +1132,9 @@ async function cmdDefi({ msg, opts: commandOpts, args, chatId }) {
         return;
     }
 
-    // -taxas without -alerta: the summary of fees to collect
-    if (opts.given.has('taxas')) {
-        const errorAlt = o.taxas
+    // -fees without -alert: the summary of fees to collect
+    if (opts.given.has('fees')) {
+        const errorAlt = o.fees
             ? t('defi.feesWithValue')
             : protocol && !WITH_RATES.includes(protocol)
                 ? t('defi.noFeesFor', protocolAlt(protocol))

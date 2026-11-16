@@ -1,6 +1,6 @@
 {
   "summary": "Manchetes mais recentes dos feeds RSS",
-  "usage": "/news <-hack|-g1|-gazeta|-brasil> [quantidade]",
+  "usage": "/news <-hack|-g1|-gazeta|-brazil> [quantidade]",
   "help": "Manchetes mais recentes dos feeds RSS, com fonte, data e link. Categorias combinam: /news -g1 -gazeta. Feeds de cada uma no setting news.<categoria>.",
   "cmd_opts": [
     {
@@ -28,7 +28,7 @@
     },
     {
       "opts": [
-        "brasil",
+        "brazil",
         "br"
       ],
       "values": [],

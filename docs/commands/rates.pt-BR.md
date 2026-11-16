@@ -1,6 +1,6 @@
 # `/rates`
 
-Cotação contra o real das moedas habilitadas (setting `cotacao.coins`, padrão: EUR e USDT), ou só
+Cotação contra o real das moedas habilitadas (setting `rates.coins`, padrão: EUR e USDT), ou só
 das pedidas: valor atual, abertura e fechamento anterior, máxima e mínima do dia e variação (🟢 alta,
 🔴 queda). Suportadas: `USD`, `EUR`, `GBP` e `USDT`.
 
@@ -10,10 +10,10 @@ das pedidas: valor atual, abertura e fechamento anterior, máxima e mínima do d
 | `-list`, `-l` | | Lista as suportadas; as habilitadas vêm com ✅ |
 | `-add`, `-a` | `<MOEDA>` | Habilita uma moeda suportada (só o dono do bot ou um [admin](bot.md#admins-extras)) |
 | `-del`, `-d` | `<MOEDA>` | Desabilita uma moeda (só o dono do bot ou um [admin](bot.md#admins-extras)) |
-| `-alerta` | `[regra]` | Sem regra, lista os alertas; com regra (ex.: `USD > 5.30`), cria um (só o dono do bot ou um [admin](bot.md#admins-extras)). A moeda também pode vir antes: `/rates USD -alerta > 5.30`. Veja [Alertas de preço](#alertas-de-preço) |
-| `-msg` | `<texto>` | Junto com `-alerta`: o texto vai no início do aviso. Vai até o fim do comando. Veja [Mensagem no aviso](#mensagem-no-aviso) |
-| `-rm` | `<nº...\|all>` | Junto com `-alerta`: remove os alertas com esses nºs (`-rm 2`, `-rm 1 2 3` ou `-rm 1,2,3`), ou todos (`all`). Se algum nº não existe, nenhum sai |
-| `-to` | `<destino>` | Junto com `-alerta`: avisa num contato (`/Jorge Pereira/`), numa menção (`@Fulano Da Silva`), num grupo (`/Grupo L200/`), num número (`+5521999999999`) ou por e-mail (`email`) em vez do seu privado. Repita para vários: um alerta só, que avisa em todos. Veja [Avisar em outro chat ou por e-mail](#avisar-em-outro-chat-ou-por-e-mail) |
+| `-alert` | `[regra]` | Sem regra, lista os alertas; com regra (ex.: `USD > 5.30`), cria um (só o dono do bot ou um [admin](bot.md#admins-extras)). A moeda também pode vir antes: `/rates USD -alert > 5.30`. Veja [Alertas de preço](#alertas-de-preço) |
+| `-msg` | `<texto>` | Junto com `-alert`: o texto vai no início do aviso. Vai até o fim do comando. Veja [Mensagem no aviso](#mensagem-no-aviso) |
+| `-rm` | `<nº...\|all>` | Junto com `-alert`: remove os alertas com esses nºs (`-rm 2`, `-rm 1 2 3` ou `-rm 1,2,3`), ou todos (`all`). Se algum nº não existe, nenhum sai |
+| `-to` | `<destino>` | Junto com `-alert`: avisa num contato (`/Jorge Pereira/`), numa menção (`@Fulano Da Silva`), num grupo (`/Grupo L200/`), num número (`+5521999999999`) ou por e-mail (`email`) em vez do seu privado. Repita para vários: um alerta só, que avisa em todos. Veja [Avisar em outro chat ou por e-mail](#avisar-em-outro-chat-ou-por-e-mail) |
 
 - **USD, EUR, GBP**: Yahoo Finance. Se ele falhar, a AwesomeAPI (que não informa a abertura: aparece
   `—`).
@@ -57,14 +57,14 @@ alerta dispara uma vez e é removido. Só o dono do bot (e os [admins extras](bo
 cria, lista e remove.
 
 ```text
-/rates -alerta USD > 5.30    → quando o dólar passar de R$ 5,30
-/rates -alerta eur < 5,50    → quando o euro ficar abaixo de R$ 5,50
-/crypto -alerta BTC < 90000    → quando o BTC ficar abaixo de $90.000
-/crypto BTC -alerta > 120000   → a moeda também pode vir antes do -alerta
-/rates -alerta               → lista os alertas do /rates, numerados
-/rates -alerta -rm 2         → remove o nº 2 da lista
-/crypto -alerta -rm 1 2 3      → remove os nº 1, 2 e 3 (também -rm 1,2,3)
-/crypto -alerta -rm all        → remove todos os do /crypto
+/rates -alert USD > 5.30    → quando o dólar passar de R$ 5,30
+/rates -alert eur < 5,50    → quando o euro ficar abaixo de R$ 5,50
+/crypto -alert BTC < 90000    → quando o BTC ficar abaixo de $90.000
+/crypto BTC -alert > 120000   → a moeda também pode vir antes do -alert
+/rates -alert               → lista os alertas do /rates, numerados
+/rates -alert -rm 2         → remove o nº 2 da lista
+/crypto -alert -rm 1 2 3      → remove os nº 1, 2 e 3 (também -rm 1,2,3)
+/crypto -alert -rm all        → remove todos os do /crypto
 ```
 
 - A regra é `<MOEDA> > valor` ou `<MOEDA> < valor`. O valor aceita `.` ou `,` como decimal, **sem**
@@ -72,8 +72,8 @@ cria, lista e remove.
 - O `/rates` compara em reais; o `/crypto`, em dólares (par `<TOKEN>USDT`).
 - Se o preço **já** está do lado pedido, o alerta não é criado (dispararia na hora): o bot mostra o
   valor atual.
-- Os preços são consultados a cada 5 minutos (setting `alerta.intervalMin`, de 1 a 60), uma vez por
-  moeda. O limite é de 20 alertas no total (setting `alerta.max`, de 1 a 100), somando `/rates` e
+- Os preços são consultados a cada 5 minutos (setting `alert.intervalMin`, de 1 a 60), uma vez por
+  moeda. O limite é de 20 alertas no total (setting `alert.max`, de 1 a 100), somando `/rates` e
   `/crypto`.
 - No `-rm` com vários nºs, se algum não existir, nenhum é removido (o bot diz quais faltam). Os nºs
   são os da lista de antes de remover.
@@ -85,8 +85,8 @@ Com `-msg <texto>`, o texto vai no início do aviso, antes do `🔔 ALERTA DE PR
 do comando, então pode ter espaços e pontuação; o `-to` pode vir antes ou depois dele.
 
 ```text
-/crypto BTC -alerta > 90000 -to /Jorge Pereira/ -msg Isso é uma mensagem que vai no início!
-/rates USD -alerta > 6 -msg Dólar nas alturas! -to /Família/
+/crypto BTC -alert > 90000 -to /Jorge Pereira/ -msg Isso é uma mensagem que vai no início!
+/rates USD -alert > 6 -msg Dólar nas alturas! -to /Família/
 ```
 
 ```text
@@ -99,7 +99,7 @@ Isso é uma mensagem que vai no início!
 📅 Alerta criado em 02/10/2026, 18:40:12
 ```
 
-- A lista (`-alerta`) mostra o texto embaixo do alerta: `💬 Isso é uma mensagem...`.
+- A lista (`-alert`) mostra o texto embaixo do alerta: `💬 Isso é uma mensagem...`.
 - O texto só não pode ter um ` -to ` solto no meio: ele é lido como destino.
 
 ### Avisar em outro chat ou por e-mail
@@ -110,22 +110,22 @@ destino é um contato, grupo, número ou e-mail. Nomes exatos têm prioridade, c
 [Destinos: contato, grupo, número ou e-mail](index.md#destinos-contato-grupo-número-ou-e-mail).
 
 ```text
-/crypto -alerta BTC < 90000 -to /Grupo L200/      → no grupo "Grupo sobre L200"
-/rates -alerta USD > 5.30 -to /Jorge Pereira/   → no privado do contato
-/rates -alerta USD > 5.30 -to +5521999999999    → no privado do número
-/rates -alerta EUR < 5,50 -to @Fulano Da Silva  → num grupo, mencionando a pessoa
-/crypto -alerta SOL > 200 -to email               → por e-mail (QRCODE_EMAIL_SMTP_TO)
-/crypto -alerta BTC < 90000 -to /Grupo L200/ -to email  → no grupo e por e-mail
-/rates -alerta -to familia EUR < 5,50           → o -to pode vir antes da regra
+/crypto -alert BTC < 90000 -to /Grupo L200/      → no grupo "Grupo sobre L200"
+/rates -alert USD > 5.30 -to /Jorge Pereira/   → no privado do contato
+/rates -alert USD > 5.30 -to +5521999999999    → no privado do número
+/rates -alert EUR < 5,50 -to @Fulano Da Silva  → num grupo, mencionando a pessoa
+/crypto -alert SOL > 200 -to email               → por e-mail (QRCODE_EMAIL_SMTP_TO)
+/crypto -alert BTC < 90000 -to /Grupo L200/ -to email  → no grupo e por e-mail
+/rates -alert -to familia EUR < 5,50           → o -to pode vir antes da regra
 ```
 
-- Com vários `-to`, é um alerta só (conta 1 no `alerta.max`): ele dispara uma vez e avisa em todos
+- Com vários `-to`, é um alerta só (conta 1 no `alert.max`): ele dispara uma vez e avisa em todos
   os destinos. Se o envio falhar num, os outros recebem assim mesmo. O mesmo destino repetido conta
   uma vez.
 - Se o nome servir para mais de um contato (ou grupo), o bot lista e você responde com o nº; o
   alerta só é criado depois da escolha.
 - O grupo precisa ser um em que a sua conta está; o número, uma conta do WhatsApp (o bot confere).
-- A lista (`-alerta`) mostra o destino de cada alerta: `→ 👥 Grupo sobre L200` ou
+- A lista (`-alert`) mostra o destino de cada alerta: `→ 👥 Grupo sobre L200` ou
   `→ 📧 voce@exemplo.com` (vários: `→ 👥 Grupo sobre L200, 📧 voce@exemplo.com`).
 
 ```text

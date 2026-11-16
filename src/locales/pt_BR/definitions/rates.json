@@ -1,6 +1,6 @@
 {
   "summary": "Cotação das moedas contra o real",
-  "usage": "/rates [OPÇÃO] [MOEDA...]  ou  /rates [MOEDA] -alerta [regra] [-to <destino>]... [-msg <texto>]  ou  /rates -alerta -rm <nº...|all>",
+  "usage": "/rates [OPÇÃO] [MOEDA...]  ou  /rates [MOEDA] -alert [regra] [-to <destino>]... [-msg <texto>]  ou  /rates -alert -rm <nº...|all>",
   "help": "Cotação contra o real das moedas habilitadas (padrão: EUR e USDT): atual, abertura, fechamento anterior, máx./mín. e variação.",
   "cmd_opts": [
     {
@@ -15,10 +15,10 @@
     },
     {
       "opts": [
-        "alerta"
+        "alert"
       ],
       "values": [],
-      "desc": "Sem regra: lista os alertas. Com regra (ex.: USD > 5.30): avisa no seu privado (ou nos destinos do -to) quando o preço passar do valor. A moeda também pode vir antes: /rates USD -alerta > 5.30. Só o dono (ou um admin)."
+      "desc": "Sem regra: lista os alertas. Com regra (ex.: USD > 5.30): avisa no seu privado (ou nos destinos do -to) quando o preço passar do valor. A moeda também pode vir antes: /rates USD -alert > 5.30. Só o dono (ou um admin)."
     },
     {
       "opts": [
@@ -45,7 +45,7 @@
       "values": [
         "<texto>"
       ],
-      "desc": "O texto vai no início do aviso (com -alerta). Vai até o fim do comando (pode ter espaços).",
+      "desc": "O texto vai no início do aviso (com -alert). Vai até o fim do comando (pode ter espaços).",
       "ex": [
         "-msg Hora de vender!"
       ]
@@ -57,7 +57,7 @@
       "values": [
         "<nº...|all>"
       ],
-      "desc": "Remove o alerta nº N da lista, vários de uma vez (-rm 1 2 3 ou -rm 1,2,3) ou todos (com -alerta). Se algum nº não existe, nenhum sai."
+      "desc": "Remove o alerta nº N da lista, vários de uma vez (-rm 1 2 3 ou -rm 1,2,3) ou todos (com -alert). Se algum nº não existe, nenhum sai."
     },
     {
       "opts": [
@@ -66,7 +66,7 @@
       "values": [
         "<destino>"
       ],
-      "desc": "Avisa num contato, num grupo, num número ou por e-mail em vez do seu privado (vários com o nome: você escolhe na lista) (com -alerta). Repita para vários: um alerta só, que avisa em todos.",
+      "desc": "Avisa em outro lugar em vez do seu privado. Um contato, um grupo, um número ou um e-mail (vários com o nome: você escolhe na lista) (com -alert). Repita para vários: um alerta só, que avisa em todos.",
       "ex": [
         "-to /Jorge Pereira/",
         "-to @Fulano (menção)",

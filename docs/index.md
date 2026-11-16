@@ -19,7 +19,7 @@ Persistent shortcuts (`/alias`) save a command with its arguments under a name y
 optional description:
 
 ```text
-/alias dimdim -desc "Shows the dollar price" /rates USD     → registers the shortcut
+/alias dimdim -d "Shows the dollar price" /rates USD     → registers the shortcut
 /dimdim                                                     → runs /rates USD
 /help alias                                                 → lists your shortcuts
 ```
@@ -134,14 +134,14 @@ Where to start:
   `cache.messageRetentionHours` and the media with `cache.messageMediaRetentionHours`), deleted and
   edited ones, and reactions older than 30 days, `/watch` hits older than 30 days (setting
   `watch.hitsRetentionDays`), `/stats` counters older than 90 days (setting `stats.retentionDays`),
-  polls older than 90 days (setting `enquete.retentionDays`) and alerts skipped by `/mute` older
+  polls older than 90 days (setting `poll.retentionDays`) and alerts skipped by `/mute` older
   than 30 days.
 - **Contact monitor**: [`/monitor`](commands/monitor.md) checks up to five people, one at a time,
   in random order and waiting 1 to 15 seconds between checks. The minimum interval per person is
   five minutes by default (`monitor.pool`). It keeps up to 30 distinct timestamps per person
   (`monitor.maxRecords`) in the `monitor_contacts` and `monitor_history` tables. `/monitor` and
   `/monitor -l` show the observed history; `/monitor -l /Maria/` filters one person.
-  `/monitor -add /Maria/ -alerta` or `/monitor -alerta /Maria/` enables online alerts in the bot
+  `/monitor -add /Maria/ -alert` or `/monitor -alert /Maria/` enables online alerts in the bot
   owner's private chat, once per observed transition. `/monitor -rm all` clears the local
   registrations and histories. `/set monitor.enabled false` pauses the checks without deleting data.
   Timestamps may come from the cache and aren't confirmed; there is no guarantee that every access
@@ -150,24 +150,24 @@ Where to start:
   hour and sender (table `stats`), used by [`/stats`](commands/stats.md). Numbers only, no text;
   they are kept for 90 days (setting `stats.retentionDays`). Bot replies, your private chat and
   statuses are not counted. Turn it off with `/set stats.enable off`.
-- **Price alerts**: `/rates -alerta USD > 5.30` and `/crypto -alerta BTC < 90000` store the rule
-  in the `price_alerts` table; every 5 minutes (setting `alerta.intervalMin`) the bot checks the
+- **Price alerts**: `/rates -alert USD > 5.30` and `/crypto -alert BTC < 90000` store the rule
+  in the `price_alerts` table; every 5 minutes (setting `alert.intervalMin`) the bot checks the
   prices and alerts **your private chat** (or, with one or more `-to`, contacts, groups, numbers or
   email) when the rule is met; with `-msg`, a text of yours goes at the start of the alert. See
   [Price alerts](commands/rates.md#price-alerts).
 - **Notes**: [`/notes`](commands/notes.md) stores texts (and media: image, document, audio, video) in the
   `notes` table, each with an ID and, if you want, a `#tag` (tag descriptions live in
-  `note_tags`). `-alerta` alerts about a note at a date/time (once; the note stays), in your
+  `note_tags`). `-alert` alerts about a note at a date/time (once; the note stays), in your
   private chat or at the `-to` destinations, with one check per minute.
 - **DeFi**: [`/defi`](commands/defi.md) reads on-chain the registered liquidity positions on Orca,
-  Project X and Liquidswap (by wallet) (table `defi_positions`) and, with `-alerta`, checks every 10
-  minutes (setting `defi.alerta.intervalMin`) and alerts (in your private chat or at the `-to`
-  destinations) when a position leaves the range, when it comes back and, with `-taxas`, when the
+  Project X and Liquidswap (by wallet) (table `defi_positions`) and, with `-alert`, checks every 10
+  minutes (setting `defi.alert.intervalMin`) and alerts (in your private chat or at the `-to`
+  destinations) when a position leaves the range, when it comes back and, with `-fees`, when the
   fees to collect pass a value. `/defi morpho` and `/defi aave` show a wallet's position, loans and
   risk on Morpho (through the official API) and on Aave V3 (in the contracts, on-chain).
 - **Polls**: the votes of your account's polls (`vote_update` event) go to the `polls` and
   `poll_votes` tables, and [`/poll -r`](commands/poll.md#result) shows the tally. They are
-  kept for 90 days (setting `enquete.retentionDays`).
+  kept for 90 days (setting `poll.retentionDays`).
 - **Schedule**: the reminders and messages of [`/cron`](commands/cron.md) live in the `schedules` table; every 30 s the bot sends what is due (repeating ones
   move on to the next time). A `{/command}` in the text runs at send time and its reply takes its
   place.

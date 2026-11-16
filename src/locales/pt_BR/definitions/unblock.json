@@ -11,7 +11,7 @@
       "values": [],
       "desc": "Desbloqueia todos os bloqueados (inclusive os que você bloqueou no celular).",
       "ex": [
-        "/unblock -all"
+        "/unblock -a"
       ]
     },
     {

@@ -83,7 +83,7 @@ describe('/search', () => {
     });
 
     test('sem texto: a sintaxe; a busca falha: o aviso', async () => {
-        assert.match((await bot.replyAlt('/search'))[0], /^```Uso: \/search \[-N\] <texto> \| -read <id>\n/);
+        assert.match((await bot.replyAlt('/search'))[0], /^```Usage: \/search \[-N\] <texto> \| -read <id>\n/);
 
         bot.client.resultadosDaBusca = new Error('page crashed');
         const r = await bot.replyAlt('/search pix', { erroEsperado: true });

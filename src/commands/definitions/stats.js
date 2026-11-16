@@ -14,7 +14,7 @@ module.exports = {
             opts: ['flush', 'f'],
             values: ['</chat/>'],
             desc: 'Deletes the stats of a chat: a group, or the private chat with a person, searched by name among those that have stats.',
-            ex: ['/stats -flush /Grupo Família/'],
+            ex: ['/stats -f /Grupo Família/'],
             cron: false,
             role: ADMIN
         },
@@ -28,7 +28,7 @@ module.exports = {
         {
             opts: ['list', 'l'],
             values: [],
-            desc: 'Lists the chats with stats, from the most active to the least, with the total and the day of the last message.',
+            desc: 'Lists the chats with stats, from the most active to the least. With the total and the day of the last message.',
             outrosChats: true
         },
         {

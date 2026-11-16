@@ -1,6 +1,6 @@
 {
   "summary": "Monitora contatos, um por vez",
-  "usage": "/monitor [-add <contato> [-alerta] | -alerta <contato> | -rm <id, contato ou all> | -list [contato]]",
+  "usage": "/monitor [-add <contato> [-alert] | -alert <contato> | -rm <id, contato ou all> | -list [contato]]",
   "help": "👀 Monitora até monitor.max contatos, um por vez, em ordem aleatória e com espera de 1 a 15 s entre consultas. O intervalo mínimo por contato é monitor.pool segundos (padrão: 300 s). Guarda até monitor.maxRecords horários distintos por contato (padrão: 30), sem garantir todos os acessos nem atualização do cache. Mais contatos e intervalos curtos podem contribuir para bloqueio pelo WhatsApp; nenhum intervalo garante segurança. /set monitor.enabled false pausa sem apagar.",
   "ex": [
     "/monitor -a /Jorge Chip L200/",
@@ -16,7 +16,7 @@
       "values": [
         "<contato>"
       ],
-      "desc": "Cadastra uma pessoa pelo nome da agenda, /nome com espaços/, menção real ou número com DDI e DDD. Nomes ambíguos oferecem escolha; grupos e e-mails não são aceitos.",
+      "desc": "Cadastra uma pessoa. Pelo nome da agenda, /nome com espaços/, menção real ou número com DDI e DDD. Nomes ambíguos oferecem escolha; grupos e e-mails não são aceitos.",
       "ex": [
         "-a /Jorge Chip L200/",
         "-a @Fulano",
@@ -25,13 +25,13 @@
     },
     {
       "opts": [
-        "alerta"
+        "alert"
       ],
       "values": [],
       "desc": "Avisa quando o contato ficar online (com -add, ou sozinho num já cadastrado).",
       "ex": [
-        "-add /Maria/ -alerta",
-        "-alerta /Maria/. Avisa uma vez por transição observada; não garante todos os acessos."
+        "-a /Maria/ -alert",
+        "-alert /Maria/. Avisa uma vez por transição observada; não garante todos os acessos."
       ]
     },
     {
@@ -42,11 +42,11 @@
       "values": [
         "<id, contato ou all>"
       ],
-      "desc": "Remove pelo id exibido em /monitor ou /monitor -list, ou pelo mesmo parser do cadastro: nome da agenda, /nome com espaços/, menção real ou telefone. Use -rm all ou -r all para apagar todos os cadastros e históricos locais. Apaga o histórico local do cadastro; os outros ids não são renumerados.",
+      "desc": "Remove um cadastro. Pelo id exibido em /monitor ou /monitor -list, ou pelo mesmo parser do cadastro: nome da agenda, /nome com espaços/, menção real ou telefone. Use -rm all ou -r all para apagar todos os cadastros e históricos locais. Apaga o histórico local do cadastro; os outros ids não são renumerados.",
       "ex": [
-        "-rm all",
+        "-r all",
         "-r 1",
-        "-rm /Jorge Chip L200/",
+        "-r /Jorge Chip L200/",
         "-r @Fulano",
         "-r +5521999999999"
       ]

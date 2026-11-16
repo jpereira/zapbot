@@ -4,7 +4,7 @@ Lê o **QR Code** de uma foto e responde com o texto dele. Responda a foto, ou e
 na legenda. Com `-encode` faz o contrário e gera o QR Code de um texto (igual ao [`/qr`](qr.md)).
 
 ```text
-/decodeqr [-encode|-e] [<texto>]
+/decodeqr [-e|-e] [<texto>]
 ```
 
 | Opção | Valor | Descrição |

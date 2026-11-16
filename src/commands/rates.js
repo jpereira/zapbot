@@ -15,12 +15,12 @@ async function cmdRates(ctx) {
     const { msg, opts } = ctx;
     await dbReady;
 
-    if (opts.given.has('alerta')) {
+    if (opts.given.has('alert')) {
         await priceHandleAlert('cotacao', ctx);
         return;
     }
 
-    const active = getSetting('cotacao.coins');
+    const active = getSetting('rates.coins');
 
     if (opts.opt.list) {
         const list = Object.entries(QUOTE_SUPPORTED)
@@ -50,7 +50,7 @@ async function cmdRates(ctx) {
             return;
         }
 
-        await setSetting('cotacao.coins', addAlt ? [...active, sym] : active.filter(c => c !== sym));
+        await setSetting('rates.coins', addAlt ? [...active, sym] : active.filter(c => c !== sym));
         await msg.reply(addAlt
             ? t('rates.enabled', { icon: QUOTE_SUPPORTED[sym].icone, sym })
             : t('rates.disabled', { sym }));

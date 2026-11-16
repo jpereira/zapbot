@@ -34,7 +34,7 @@ describe('/debug', () => {
             { symbol: 'BTCUSDT', price: '80000' }
         ]);
         const messageAlt = '⏰ Bitcoin to the moon! 🚀';
-        const commandAlt = '/crypto -alerta BTC > 90000 ' +
+        const commandAlt = '/crypto -alert BTC > 90000 ' +
             `-to /Jorge Pereira/ -to /Lourival Neto/ -msg "${messageAlt}"`;
         const [reply] = await bot.replyAlt(commandAlt);
         assert.match(reply, /Alerta criado/);
@@ -44,7 +44,7 @@ describe('/debug', () => {
         assert.equal((parser.match(/\bargv:/g) ?? []).length, 1);
         assert.match(parser, /to: \[ 'Jorge Pereira', 'Lourival Neto' \]/);
         assert.ok(parser.includes(messageAlt));
-        assert.match(parser, /given: Set\(3\) \{ 'alerta', 'to', 'msg' \}/);
+        assert.match(parser, /given: Set\(3\) \{ 'alert', 'to', 'msg' \}/);
         assert.doesNotMatch(parser, /circular|Pereira\/|Neto\/|DEBUG[123]/);
         const alert = await bot.dbGet('SELECT * FROM price_alerts');
         assert.equal(alert.symbol, 'BTC');
@@ -84,9 +84,9 @@ describe('/debug', () => {
 
     test('DEBUG0 mostra a agenda com texto livre e destinos repetidos', async () => {
         await configure('-on -lvl 0');
-        await bot.replyAlt('/cron 10m -r diario -to /Fulano/ -to /Família/ Bom dia, pessoal!');
+        await bot.replyAlt('/cron 10m -r daily -to /Fulano/ -to /Família/ Bom dia, pessoal!');
         const parser = bot.logs.find(l => l.includes('Parser do comando: /cron'));
-        assert.match(parser, /repetir: 'diario'/);
+        assert.match(parser, /repeat: 'daily'/);
         assert.match(parser, /texto: 'Bom dia, pessoal!'/);
         assert.match(parser, /destinos: \[ 'Fulano', 'Família' \]/);
     });
@@ -96,7 +96,7 @@ describe('/debug', () => {
         bot.network.responder('get', 'api.binance.com/api/v3/ticker/price', [
             { symbol: 'BTCUSDT', price: '80000' }
         ]);
-        await bot.replyAlt('/crypto BTC -alerta > 90000 -msg Bitcoin subiu! 🚀 -to "Fulano"');
+        await bot.replyAlt('/crypto BTC -alert > 90000 -msg Bitcoin subiu! 🚀 -to "Fulano"');
         const parser = bot.logs.find(l => l.includes('Parser do comando: /crypto'));
         assert.match(parser, /argv: \[ 'BTC', '>', '90000' \]/);
         assert.match(parser, /msg: 'Bitcoin subiu! 🚀'/);
@@ -106,13 +106,13 @@ describe('/debug', () => {
     test('referências compartilhadas, Set e Map aparecem sem esconder seus valores', async () => {
         await configure('-on -lvl 0');
         const argv = ['BTC', '>', '90000'];
-        const dataAlt = { opt: { argv }, argv, given: new Set(['alerta', 'to', 'msg']),
+        const dataAlt = { opt: { argv }, argv, given: new Set(['alert', 'to', 'msg']),
             valores: new Map([['destino', 'Jorge Pereira'], ['token', 'segredo-mapa']]) };
         dataAlt.circular = dataAlt;
         printDebug('dados do parser', dataAlt);
         const log = textLogs();
         assert.equal((log.match(/argv: \[ 'BTC', '>', '90000' \]/g) ?? []).length, 2);
-        assert.match(log, /given: Set\(3\) \{ 'alerta', 'to', 'msg' \}/);
+        assert.match(log, /given: Set\(3\) \{ 'alert', 'to', 'msg' \}/);
         assert.match(log, /'destino' => 'Jorge Pereira'/);
         assert.match(log, /'token' => '\[oculto\]'/);
         assert.match(log, /circular: '\[circular\]'/);
@@ -439,7 +439,7 @@ describe('instrumentação', () => {
         await configure('-on -lvl 3 -copy-to -filter /marcador/');
         process.env.DEBUG_TEST_TOKEN = 'segredo-do-ambiente';
         try {
-            await bot.setSetting('openai.api.key', 'segredo-da-setting');
+            await bot.setSetting('gpt.api.key', 'segredo-da-setting');
             const dataAlt = { password: 'novo-segredo', valor: Buffer.alloc(100),
                 get pesado() { throw new Error('getter não pode executar'); } };
             dataAlt.circular = dataAlt;
@@ -475,7 +475,7 @@ describe('instrumentação', () => {
     test('ocultar uma setting sensível preserva o contexto usado no filtro', async () => {
         await configure('-on -lvl 1 -filter /chatName.*Jorge/');
         withContextDebug({ chatId: bot.GROUP, chatName: 'Jorge' }, () => {
-            printDebug('/set openai.api.key segredo-temporario');
+            printDebug('/set gpt.api.key segredo-temporario');
         });
         assert.equal(bot.logs.length, 1);
         assert.match(textLogs(), /chatName=Jorge/);

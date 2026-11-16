@@ -19,10 +19,10 @@ adds the most recent hits. `/watch -10` shows the last ten matches of all rules,
 /watch -s /Jorge/ -q "carro"           → only the ones with "carro"
 /watch -s 3 -q /carr(o|ão)/i           → only the ones that match the regex
 /watch -s 3 -to /Jorge Pereira/        → changes the destinations of rule #3
-/watch -rm 3                          → removes rule #3
-/watch -flush /Jorge/                  → clears the hits of /Jorge/
-/watch -mask 3                         → 🔒 turns on mask for rule #3 (notices with obfuscated phone)
-/watch -umask 3                        → turns off the 🔒 of rule #3
+/watch -r 3                          → removes rule #3
+/watch -f /Jorge/                  → clears the hits of /Jorge/
+/watch -m 3                         → 🔒 turns on mask for rule #3 (notices with obfuscated phone)
+/watch -u 3                        → turns off the 🔒 of rule #3
 ```
 A rule without `-in` applies everywhere. With `-in`, you choose the source:
 
@@ -120,7 +120,7 @@ A listing, with the tips at the end, one per line:
 /watch -s N -q <text|/regex/> only the matching ones.
 /watch -s N -to <destination|off> changes the destinations.
 /watch -f N clears the hits.
-/watch -mask N turns on the 🔒 (phone numbers masked in alerts); -umask N turns it off.
+/watch -m N turns on the 🔒 (phone numbers masked in alerts); -u N turns it off.
 ```
 
 ## Search

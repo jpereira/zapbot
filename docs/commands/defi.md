@@ -17,8 +17,8 @@ Orca registers the **position** (`-address`); Project X, Liquidswap, Morpho and 
 **wallet** (`-wallet`). All of them accept an optional name (`-name`). `/defi` reads everything on
 the spot and shows the equivalent of "Position Details" for each position; with `orca`, `prjx`,
 `liquidswap` (or `liqswp`), `morpho` or `aave`, only the ones from that protocol. In your private
-chat, addresses and wallets show in full; elsewhere, abbreviated (`0x12…5678`). With `-alerta`, the
-bot warns when a position leaves the range, when it comes back and, with `-taxas`, when the fees to
+chat, addresses and wallets show in full; elsewhere, abbreviated (`0x12…5678`). With `-alert`, the
+bot warns when a position leaves the range, when it comes back and, with `-fees`, when the fees to
 collect go over a value ([Out-of-range alert](#out-of-range-alert)).
 
 For all protocols:
@@ -26,13 +26,13 @@ For all protocols:
 ```text
 /defi                          → the Position Details of all
 /defi -help                    → the help for all (/defi orca -help: just Orca's)
-/defi -mask                    → the same, with the wallet numbers hidden ($**,***.**)
+/defi -m                    → the same, with the wallet numbers hidden ($**,***.**)
 /defi -l                       → the list of registrations
 /defi -rm 2                    → removes no. 2
 /defi -rm 1 3                  → removes 1 and 3 (or -rm 1,3; -rm all removes all)
-/defi -taxas                   → the summary of fees to collect, with the total
-/defi -taxas -alerta           → the same, with each registration's alert
-/defi -alerta <n|all> [-to <destination>]... [-taxas <value>]
+/defi -fees                   → the summary of fees to collect, with the total
+/defi -fees -a           → the same, with each registration's alert
+/defi -a <n|all> [-to <destination>]... [-fees <value>]
 ```
 
 For Orca:
@@ -40,7 +40,7 @@ For Orca:
 ```text
 /defi orca                     → just the Orca positions
 /defi orca -address <address> -pool <address> -nft <mint>
-/defi orca -address <address> -alerta 2000   → registers and turns on the alert (in your private chat)
+/defi orca -address <address> -a 2000   → registers and turns on the alert (in your private chat)
 /defi orca -address <address> -n "Position X"   → with a name
 ```
 
@@ -48,43 +48,43 @@ For Project X:
 
 ```text
 /defi prjx                     → just the Project X ones
-/defi prjx -wallet <0x...>     → registers the wallet
-/defi prjx -wallet <0x...> -n Hare Wallet   → with a name (again, with another: changes the name)
-/defi prjx -wallet <0x...> -alerta    → registers and turns on the alert (in your private chat)
+/defi prjx -w <0x...>     → registers the wallet
+/defi prjx -w <0x...> -n Hare Wallet   → with a name (again, with another: changes the name)
+/defi prjx -w <0x...> -a    → registers and turns on the alert (in your private chat)
 ```
 
 For Liquidswap (`liquidswap` or `liqswp`):
 
 ```text
 /defi liquidswap               → just the Liquidswap ones (same as /defi liqswp)
-/defi liquidswap -wallet <0x...>   → registers the Aptos wallet
-/defi liqswp -wallet <0x...> -n Aptos Wallet   → with a name
+/defi liquidswap -w <0x...>   → registers the Aptos wallet
+/defi liqswp -w <0x...> -n Aptos Wallet   → with a name
 ```
 
 For Morpho:
 
 ```text
 /defi morpho                   → the registered wallets (with none: MORPHO_WALLET_ADDRESS's)
-/defi morpho -wallet <0x...>   → registers the wallet
-/defi morpho -wallet <0x...> -n Loan Wallet   → with a name
+/defi morpho -w <0x...>   → registers the wallet
+/defi morpho -w <0x...> -n Loan Wallet   → with a name
 ```
 
 For Aave:
 
 ```text
 /defi aave                     → the registered wallets (with none: AAVE_WALLET_ADDRESS's)
-/defi aave -full               → the details (risk, APY, collateral, eMode, isolation mode)
-/defi aave -wallet <0x...> -n WalletX   → registers the wallet (and shows the position)
+/defi aave -f               → the details (risk, APY, collateral, eMode, isolation mode)
+/defi aave -w <0x...> -n WalletX   → registers the wallet (and shows the position)
 ```
 
 | Option | Value | Description |
 |---|---|---|
 | *(protocol)* | `orca`, `prjx`, `liquidswap` (or `liqswp`), `morpho` or `aave` | Alone, shows the Position Details for that protocol only; with `-address` (`orca`) or `-wallet` (`prjx`, `liquidswap`, `morpho` and `aave`), registers; with `-help`, shows help for that protocol only. Without a protocol, `/defi` shows everything registered |
 | `-list`, `-l` | | Lists the registrations, with 🔔 on the ones that have an alert (and the fee threshold: `🔔 ≥ $2,000.00`). In your private chat, with full addresses; elsewhere, abbreviated (`ime1…VPcg`) |
-| `-rm` | `<#...\|all>` | Removes registration no. N, several (`-rm 1 3` or `-rm 1,3`) or all of them; if any number doesn't exist, none is removed. Together with `-alerta`: only turns off the alert for no. N (or for all) |
-| `-alerta`, `-a` | `[#\|all\|value]` | Without a number: lists the alerts. With a number (or `all`): warns when the position leaves the range and when it comes back. Orca and Project X only (Liquidswap, Morpho and Aave have no range). On registration (with `-address` or `-wallet`), turns on the alert for the new position, in your private chat (or at `-to`); the value is the fee threshold, same as `-taxas` (`-alerta 2000`). See [Out-of-range alert](#out-of-range-alert) |
-| `-taxas` | `[value\|off]` | Alone: the summary of fees to collect (see [Fee summary](#fee-summary)). Together with `-alerta <#\|all>`: also warns when the fees to collect go over the value, in dollars (e.g., `-taxas 50`). Warns once, and again after you collect; `off` removes it |
-| `-to` | `<destination>` | Together with `-alerta`: where the warning goes. A contact (`/Jorge Pereira/`), a mention (`@Fulano Da Silva`), a group (`/Grupo L200/`), a number (`+5521999999999`) or email (`email` is `QRCODE_EMAIL_SMTP_TO`) ([Destinations](index.md#destinations-contact-group-number-or-email)). Repeat it for several: the warning goes to all of them. Without it, your private chat |
+| `-rm` | `<#...\|all>` | Removes registration no. N, several (`-rm 1 3` or `-rm 1,3`) or all of them; if any number doesn't exist, none is removed. Together with `-alert`: only turns off the alert for no. N (or for all) |
+| `-alert`, `-a` | `[#\|all\|value]` | Without a number: lists the alerts. With a number (or `all`): warns when the position leaves the range and when it comes back. Orca and Project X only (Liquidswap, Morpho and Aave have no range). On registration (with `-address` or `-wallet`), turns on the alert for the new position, in your private chat (or at `-to`); the value is the fee threshold, same as `-fees` (`-alert 2000`). See [Out-of-range alert](#out-of-range-alert) |
+| `-fees` | `[value\|off]` | Alone: the summary of fees to collect (see [Fee summary](#fee-summary)). Together with `-alert <#\|all>`: also warns when the fees to collect go over the value, in dollars (e.g., `-fees 50`). Warns once, and again after you collect; `off` removes it |
+| `-to` | `<destination>` | Together with `-alert`: where the warning goes. A contact (`/Jorge Pereira/`), a mention (`@Fulano Da Silva`), a group (`/Grupo L200/`), a number (`+5521999999999`) or email (`email` is `QRCODE_EMAIL_SMTP_TO`) ([Destinations](index.md#destinations-contact-group-number-or-email)). Repeat it for several: the warning goes to all of them. Without it, your private chat |
 | `-address` | `<address>` | With `orca`: registers the Orca position by its address |
 | `-pool` | `<address>` | With `orca -address`: the pool. Optional; if given, the bot checks that it matches |
 | `-nft` | `<mint>` | With `orca -address`: the position's NFT. Optional; if given, the bot checks that it matches |
@@ -95,14 +95,14 @@ For Aave:
 
 ```text
 /defi orca -address ime16qBVbQBfByHQPME5gdCMhX9e2NqpL8UB5sJVPcg -pool J7HzHnKDshpc5Dvc1zW6SvA8Ltkkwn1tpwtBUrnCbHCh -nft 9UkHH3evduHjCojFxGGabCvRyRLsimbUY8iiNSaCoQqv
-/defi prjx -wallet 0x12b2C3d4E5f60718293A4b5C6d7E8f9012345678
-/defi liquidswap -wallet 0x8f3c4d2a1b9e7f6a5c4b3a29180f7e6d5c4b3a2918f7e6d5c4b3a2918f7e6d5c
-/defi morpho -wallet 0x74459EA7df673CFd90afbe39F635AcE08Ccb97C4
-/defi -alerta 1        → warns in your private chat when no. 1 leaves the range (and comes back)
-/defi -a 1 -taxas 50   → and when no. 1's fees to collect go over $50
+/defi prjx -w 0x12b2C3d4E5f60718293A4b5C6d7E8f9012345678
+/defi liquidswap -w 0x8f3c4d2a1b9e7f6a5c4b3a29180f7e6d5c4b3a2918f7e6d5c4b3a2918f7e6d5c
+/defi morpho -w 0x74459EA7df673CFd90afbe39F635AcE08Ccb97C4
+/defi -a 1        → warns in your private chat when no. 1 leaves the range (and comes back)
+/defi -a 1 -fees 50   → and when no. 1's fees to collect go over $50
 ```
 
-The list shows 🔔 for the ones with an alert and, with `-taxas` (or `-alerta <valor>` on
+The list shows 🔔 for the ones with an alert and, with `-fees` (or `-alert <valor>` on
 registration), the fee threshold:
 
 ```text
@@ -112,17 +112,17 @@ registration), the fee threshold:
 1. Orca · ime1…VPcg · pool J7Hz…bHCh (since 10/2/2026) 🔔 ≥ $2,000.00
 2. Project X · carteira 0x12…5678 (since 10/2/2026) 🔔
 
-💡 /defi shows the details; /defi -rm <num> removes; 🔔 = with alert (/defi -alerta), ≥ $ is the fees limit.
+💡 /defi shows the details; /defi -rm <num> removes; 🔔 = with alert (/defi -alert), ≥ $ is the fees limit.
 ```
 
 In your private chat, addresses show in full.
 
 To get the Position Details every day, in a chat or together with other commands, use
-[`/cron`](cron.md#commands-in-the-text) (it accepts the five protocols, `-l`, `-taxas`, `-mask` and
+[`/cron`](cron.md#commands-in-the-text) (it accepts the five protocols, `-l`, `-fees`, `-mask` and
 `aave -full`; the registration and alert options are rejected):
 
 ```text
-/cron 06:00 -r diario -to /Grupo da Faculdade/ ⏰ DeFi status! {/defi} BTC price! {/crypto BTC}
+/cron 06:00 -r d -to /Grupo da Faculdade/ ⏰ DeFi status! {/defi} BTC price! {/crypto BTC}
 ```
 
 ```text
@@ -155,7 +155,7 @@ it. That's why what you register is the **wallet**, and `/defi prjx` shows each 
 from newest to oldest:
 
 ```text
-/defi prjx -wallet 0x12b2C3d4E5f60718293A4b5C6d7E8f9012345678
+/defi prjx -w 0x12b2C3d4E5f60718293A4b5C6d7E8f9012345678
 ✅ Project X wallet registered: 0x12…5678
 📍 2 open positions.
 💡 See it with /defi prjx
@@ -195,7 +195,7 @@ you register is the Aptos **wallet**, and `/defi liquidswap` (or `/defi liqswp`)
 where it has LP, from largest to smallest in dollars:
 
 ```text
-/defi liquidswap -wallet 0x8f3c4d2a1b9e7f6a5c4b3a29180f7e6d5c4b3a2918f7e6d5c4b3a2918f7e6d5c
+/defi liquidswap -w 0x8f3c4d2a1b9e7f6a5c4b3a29180f7e6d5c4b3a2918f7e6d5c4b3a2918f7e6d5c
 ✅ Liquidswap wallet registered: 0x8f…6d5c
 📍 2 open positions.
 💡 See it with /defi liquidswap
@@ -223,7 +223,7 @@ where it has LP, from largest to smallest in dollars:
   only the amounts show.
 - **No range and no fees to collect**: in a classic AMM, the liquidity covers all prices and the swap
   fees go into the reserves. They're already in the balance, which is why Liquidswap has no
-  `-alerta`.
+  `-alert`.
 - The wallet address accepts Aptos's short form (`0x1` is `0x000…001`) and is stored in full. The bot
   shows up to 20 pools per wallet.
 - Registering a wallet with no LP is allowed (the bot warns you): `/defi liquidswap` shows the
@@ -239,7 +239,7 @@ include Ethereum, `/set defi.morpho.chains 8453 1`). The query is read-only: the
 nor uses a private key.
 
 Register the wallet with `/defi morpho -wallet <0x...>` (the bot checks the API before saving): it
-shows up in `/defi`, `-l` and `-rm`, along with the others. `-alerta` doesn't apply to Morpho, which
+shows up in `/defi`, `-l` and `-rm`, along with the others. `-alert` doesn't apply to Morpho, which
 has no range. With no registered wallet, `/defi morpho` queries the one in `MORPHO_WALLET_ADDRESS` in
 `config/.env` (or the one in the `defi.morpho.wallet` setting, which applies when the variable is
 empty). The response is kept in memory for 30 seconds: repeating the command in that interval doesn't
@@ -380,21 +380,21 @@ Where each number comes from:
 
 ## Fee summary
 
-`-taxas` alone puts together, in a single message, the fees to collect from all liquidity positions:
+`-fees` alone puts together, in a single message, the fees to collect from all liquidity positions:
 the range, the price and the fees of each Orca and Project X position, and the dollar total at the
 end (with each protocol's). Liquidswap is included, but in an AMM the fees are already in the
 balance: there's nothing to collect. A protocol that isn't registered shows as `➖ not registered`.
-With the protocol, only that one (`/defi prjx -taxas`); Morpho and Aave have no fees to collect.
+With the protocol, only that one (`/defi prjx -fees`); Morpho and Aave have no fees to collect.
 
-With `-alerta` (no value), it also shows each registration's alert: where it warns, the fee threshold
+With `-alert` (no value), it also shows each registration's alert: where it warns, the fee threshold
 and how far it is from reaching it. On Project X, the threshold applies to the whole wallet (the sum
 of the positions), as in the alert check.
 
 ```text
-/defi -taxas                   → the summary of all
-/defi prjx -taxas              → just Project X's
-/defi -taxas -alerta           → with each registration's alert
-/cron 8h -r diario {/defi -taxas}   → the summary every day at 8h
+/defi -fees                   → the summary of all
+/defi prjx -fees              → just Project X's
+/defi -fees -a           → with each registration's alert
+/cron 8h -r d {/defi -fees}   → the summary every day at 8h
 ```
 
 ```text
@@ -408,7 +408,7 @@ of the positions), as in the alert check.
 💸 Fees to collect: $1,426.35
    • 6.2494 SOL ($738.04)
    • 0.008212 cbBTC ($688.31)
-🔕 No alert (turn on with /defi -alerta 1)
+🔕 No alert (turn on with /defi -alert 1)
 
 🌊 Project X · UBTC/USD₮0 · 📍 #7
 📏 Range: 81,213.4 – 91,567.3 USD₮0 per UBTC
@@ -434,18 +434,18 @@ the total, with a warning at the end.
 
 ## Out-of-range alert
 
-Out of range, the position sits entirely in a single token and stops earning fees. With `-alerta`,
+Out of range, the position sits entirely in a single token and stops earning fees. With `-alert`,
 the bot reads the position (on Project X, the wallet's positions) every 10 minutes (setting
-`defi.alerta.intervalMin`, from 1 to 1440 minutes) and warns:
+`defi.alert.intervalMin`, from 1 to 1440 minutes) and warns:
 
 - **🚨 when it leaves the range**: once per exit. While it stays out, it doesn't repeat.
 - **✅ when it comes back into the range**: also once.
-- **💸 when the fees to collect go over the `-taxas` value** (in dollars, optional): once. After you
+- **💸 when the fees to collect go over the `-fees` value** (in dollars, optional): once. After you
   collect and they drop below the value, the warning re-arms. On a pair with no stablecoin (Project
   X only), with no dollar price, it doesn't warn.
 
 ```text
-/defi -alerta 1                  → in your private chat
+/defi -a 1                  → in your private chat
 /defi -a all -to email           → all, by email (QRCODE_EMAIL_SMTP_TO)
 /defi -a 2 -to you@example.com   → by email, to that address
 /defi -a 1 -to /Jorge Pereira/   → in the contact's private chat
@@ -453,11 +453,11 @@ the bot reads the position (on Project X, the wallet's positions) every 10 minut
 /defi -a 1 -to +5521999999999    → in the number's private chat
 /defi -a 1 -to @Fulano Da Silva  → in a group, mentioning the person
 /defi -a 1 -to /Grupo L200/ -to email  → in the group and by email
-/defi -a 1 -taxas 50             → and when the fees to collect go over $50
-/defi -a 1 -taxas off            → removes the fees notice (the range one stays)
-/defi orca -address <address> -alerta 2000   → on registration: turns it on, with a $2000 limit
-/defi -alerta                    → the list of alerts
-/defi -alerta -rm 1              → turns off no. 1's (the position stays registered)
+/defi -a 1 -fees 50             → and when the fees to collect go over $50
+/defi -a 1 -fees off            → removes the fees notice (the range one stays)
+/defi orca -address <address> -a 2000   → on registration: turns it on, with a $2000 limit
+/defi -a                    → the list of alerts
+/defi -a -rm 1              → turns off no. 1's (the position stays registered)
 ```
 
 `-to` accepts:
@@ -472,19 +472,19 @@ the bot reads the position (on Project X, the wallet's positions) every 10 minut
   the others still receive it.
 
 Turning on a position again replaces the destinations with the ones from the new `-to` (without
-`-to`, back to your private chat) and keeps the `-taxas`, if you don't send another. When turning it
+`-to`, back to your private chat) and keeps the `-fees`, if you don't send another. When turning it
 on, the bot already reads the position: if it's out of the range at that moment, the response shows
 it, and the next warning is the comeback one. If the RPC doesn't respond, the position stays
 `❔ not read yet`, and the first reading out of the range already warns.
 
 ```text
-/defi -alerta 1 -to email
+/defi -a 1 -to email
 🔔 /defi alert on (1)
 
 1. Orca · ime1…VPcg · ✅ in range
 
 📣 Notice: 📧 you@example.com, when the position leaves the range and when it comes back (checked every 10 minutes).
-💡 See it with /defi -alerta; turn off with /defi -alerta -rm <num|all>.
+💡 See it with /defi -alert; turn off with /defi -alert -rm <num|all>.
 ```
 
 The warning carries the position's "Position Details". On a Project X wallet, it's "in range" when
@@ -497,7 +497,7 @@ all the open positions are, and the warning carries only the ones that left:
 📍 ime1…VPcg · ⚠️ out of range (price below the range: the position earns no fees)
 ...
 
-💡 Turn off with /defi -alerta -rm 1.
+💡 Turn off with /defi -alert -rm 1.
 ```
 
 And the other warnings, with the same "Position Details":

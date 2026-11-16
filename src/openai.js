@@ -11,7 +11,7 @@ const OPENAI_MODELS = [
     'gpt-4.1', 'gpt-4.1-mini', 'gpt-4o', 'gpt-4o-mini'
 ];
 
-// Voice (v1/audio/speech): the /gpt -voz voices
+// Voice (v1/audio/speech): the /gpt -voice voices
 const OPENAI_VOICES = ['alloy', 'ash', 'ballad', 'coral', 'echo', 'fable', 'nova', 'onyx', 'sage', 'shimmer', 'verse'];
 
 module.exports = {

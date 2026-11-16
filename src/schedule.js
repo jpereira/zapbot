@@ -1,5 +1,5 @@
 /*
- * Schedule: the reminders (/cron -lembrete) and the scheduled messages (/cron), with the periodic check.
+ * Schedule: the reminders (/cron -reminder) and the scheduled messages (/cron), with the periodic check.
  */
 
 const { sendMedia, commandsError, assembleText, breakLines } = require('./textCommands');
@@ -14,7 +14,7 @@ const { statusDestinations, statusText } = require('./status');
 const { getSetting } = require('./settings');
 const { summarizeText, withoutAccents } = require('./util/format');
 const { t } = require('./i18n');
-const { REPETITIONS, fmtWhen, readWhen, partsInBrasilia, nextRepetition } = require('./util/when');
+const { REPETITIONS, fmtWhen, readWhen, readRepetition, partsInBrasilia, nextRepetition } = require('./util/when');
 
 /*
  * /cron has two modes, in the same table
@@ -22,8 +22,8 @@ const { REPETITIONS, fmtWhen, readWhen, partsInBrasilia, nextRepetition } = requ
  * agendar  → (message mode) the plain text, as if you typed it, in the current chat or in the -to one;
  * reminder → "⏰ Lembrete" in the chat where it was created (replying to the message of
  * command, or the message it replied to), or in your private chat with
- * -pv. It is the mode of -lembrete.
- * Both accept -repetir (-r) diario|semanal|mensal. The message mode accepts
+ * -private. It is the mode of -reminder.
+ * Both accept -repeat (-r) daily|weekly|monthly. The message mode accepts
  * several -to (a single item, with all the destinations). In the list, -edit <no.> changes the time, the text
  * or an item's repetition, and -pause/-resume <no....|all> hold and release it.
  * A {/command} in the text runs at send time and the reply goes in its place
@@ -32,7 +32,7 @@ const { REPETITIONS, fmtWhen, readWhen, partsInBrasilia, nextRepetition } = requ
  */
 const TYPES = {
     lembrete: {
-        cmd: '/cron -lembrete',
+        cmd: '/cron -reminder',
         icone: '⏰',
         criado: 'adm.agenda.createdReminder',
         exemplo: 'adm.agenda.exReminder',
@@ -72,15 +72,15 @@ function readScheduling(args) {
         const nameAlt = p.startsWith('-') ? p.slice(1).toLowerCase() : null;
 
         if (nameAlt === 'list' || nameAlt === 'l') opt.list = true;
-        else if (nameAlt === 'pv') opt.pv = true;
-        else if (nameAlt === 'lembrete' || nameAlt === 'lem') opt.lembrete = true;
+        else if (nameAlt === 'private') opt.private = true;
+        else if (nameAlt === 'reminder' || nameAlt === 'rem') opt.reminder = true;
         else if (['rm', 'pause', 'resume'].includes(nameAlt)) {
             // One or several numbers (-rm 2, -rm 1 3 5, -rm 1,3,5) or all
             const nums = [];
             while (/^\d+(?:,\d+)*,?$|^all$/i.test(words[i + 1]?.[0] ?? '')) nums.push(words[++i][0]);
             opt[nameAlt] = nums.join(' ');
         } else if (['edit', 'test'].includes(nameAlt)) opt[nameAlt] = words[++i]?.[0] ?? '';
-        else if (nameAlt === 'repetir' || nameAlt === 'r') opt.repetir = words[++i]?.[0] ?? '';
+        else if (nameAlt === 'repeat' || nameAlt === 'r') opt.repeat = words[++i]?.[0] ?? '';
         else if (!when && (when = readWhen(words.slice(i).map(m => m[0])))) i += when.usadas - 1;
         else break;
     }
@@ -187,7 +187,7 @@ async function pauseOrResume(msg, items, pause, valueAlt) {
 }
 
 /*
- * -edit <no.> [when] [-repetir ...] [text]: replaces whatever comes. The destination and the
+ * -edit <no.> [when] [-repeat ...] [text]: replaces whatever comes. The destination and the
  * mode do not change (for that, remove and create again).
  */
 async function edit(msg, items, { opt, quando: when, texto: textAlt }) {
@@ -197,16 +197,17 @@ async function edit(msg, items, { opt, quando: when, texto: textAlt }) {
         await msg.reply(t('adm.agenda.editNotFound', { n: opt.edit || '?' }));
         return;
     }
-    if (!when && !textAlt && opt.repetir === undefined) {
+    if (!when && !textAlt && opt.repeat === undefined) {
         await msg.reply(t('adm.agenda.editNothing'));
         return;
     }
 
     let repeatAlt = s.repeat;
-    if (opt.repetir !== undefined) {
-        repeatAlt = withoutAccents(opt.repetir).trim();
-        if (['nao', 'off', 'no'].includes(repeatAlt)) repeatAlt = null;
-        else if (!REPETITIONS[repeatAlt]) {
+    if (opt.repeat !== undefined) {
+        const typed = withoutAccents(opt.repeat).trim().toLowerCase();
+        repeatAlt = readRepetition(typed);
+        if (['nao', 'off', 'no'].includes(typed)) repeatAlt = null;
+        else if (!repeatAlt) {
             await msg.reply(t('adm.agenda.useRepeatOff'));
             return;
         }
@@ -240,13 +241,13 @@ async function handleSchedule({ msg, args, chatId, chatName, isGroup, quotedMsg 
 
     const { opt, quando: when, texto: typed, destinos: destinationsText, comDestino: withDestination } = readScheduling(args);
 
-    // Reminder mode: with -lembrete
-    const kind = opt.lembrete ? 'lembrete' : 'agendar';
+    // Reminder mode: with -reminder
+    const kind = opt.reminder ? 'lembrete' : 'agendar';
     const type = TYPES[kind];
     const syntax = t('adm.agenda.syntax', { ex: t(type.exemplo) });
     const items = await listAlt();
 
-    if (opt.pv && !type.aceitaPv) {
+    if (opt.private && !type.aceitaPv) {
         await msg.reply(t('adm.agenda.pvOnlyReminder'));
         return;
     }
@@ -286,9 +287,9 @@ async function handleSchedule({ msg, args, chatId, chatName, isGroup, quotedMsg 
         return;
     }
 
-    // -edit <no.> [when] [-repetir ...] [text]
+    // -edit <no.> [when] [-repeat ...] [text]
     if (opt.edit !== undefined) {
-        if (withDestination || opt.pv || opt.lembrete) {
+        if (withDestination || opt.private || opt.reminder) {
             await msg.reply(t('adm.agenda.editLimits'));
             return;
         }
@@ -342,9 +343,9 @@ async function handleSchedule({ msg, args, chatId, chatName, isGroup, quotedMsg 
     }
 
     let repeatAlt = null;
-    if (opt.repetir !== undefined) {
-        repeatAlt = withoutAccents(opt.repetir).trim();
-        if (!REPETITIONS[repeatAlt]) {
+    if (opt.repeat !== undefined) {
+        repeatAlt = readRepetition(opt.repeat);
+        if (!repeatAlt) {
             await msg.reply(t('adm.agenda.useRepeat'));
             return;
         }
@@ -357,7 +358,7 @@ async function handleSchedule({ msg, args, chatId, chatName, isGroup, quotedMsg 
         return;
     }
 
-    // Where it goes: -to (message; several -to, one item with all), -pv (reminder) or the current chat
+    // Where it goes: -to (message; several -to, one item with all), -private (reminder) or the current chat
     const myId = client.info.wid._serialized;
     let destinations = [{ id: chatId, nome: chatName, grupo: Boolean(isGroup) }];
 
@@ -371,7 +372,7 @@ async function handleSchedule({ msg, args, chatId, chatName, isGroup, quotedMsg 
             if (!destination) return;
             if (!destinations.some(d => d.id === destination.id)) destinations.push(destination);
         }
-    } else if (opt.pv) {
+    } else if (opt.private) {
         destinations = [{ id: myId, nome: 'seu privado', grupo: false }];
     }
 

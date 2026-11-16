@@ -32,7 +32,7 @@
       ],
       "desc": "Exibe inteira a mensagem de um id da lista da busca (mesmo escopo: este chat, ou todos no seu privado).",
       "ex": [
-        "/search -read false_5521988887777@c.us_3EB0A1B2"
+        "/search -r false_5521988887777@c.us_3EB0A1B2"
       ]
     },
     {
@@ -43,7 +43,7 @@
       "values": [],
       "desc": "Ofusca telefones na saída (ex.: +55219****44).",
       "ex": [
-        "/search -mask pix"
+        "/search -m pix"
       ]
     }
   ]

@@ -24,15 +24,15 @@ module.exports = {
         {
             opts: ['desc', 'd'],
             values: ['<text>'],
-            desc: 'Optional description in straight or curly quotes, even mixed, before the command or the text. Without a command, updates only the description of an alias that already exists.',
-            ex: ['/alias /eita -desc "Dollar" /rates USD', '/alias /eita -d "New text"']
+            desc: 'Optional description, in quotes, before the command or the text. Straight or curly quotes work, even mixed. Without a command, updates only the description of an alias that already exists.',
+            ex: ['/alias /eita -d "Dollar" /rates USD', '/alias /eita -d "New text"']
         },
         { opts: ['list', 'l'], values: [], desc: 'Lists the registered shortcuts.' },
         {
             opts: ['move', 'm'],
             values: ['<current name>', '<new name>'],
-            desc: 'Renames an alias, keeping the command, the description and the quiet flag; the new name must not exist.',
-            ex: ['/alias -move /dolar /usd']
+            desc: 'Renames an alias. Keeps the command, the description and the quiet flag; the new name must not exist.',
+            ex: ['/alias -m /dolar /usd']
         },
         {
             opts: ['rm'],

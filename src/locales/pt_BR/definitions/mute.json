@@ -64,7 +64,7 @@
       "argv": [
         "[/contato ou grupo/|@menção|+número]"
       ],
-      "desc": "Contato ou grupo pelo nome ou parte dele, com prioridade para nomes exatos (vários: você escolhe na lista), alguém mencionado com @ ou um número. Respondendo um aviso, silencia a origem: grupo primeiro; sem grupo, número ou nome da pessoa.",
+      "desc": "Contato ou grupo, pelo nome ou parte dele. Nomes exatos têm prioridade (vários: você escolhe na lista), alguém mencionado com @ ou um número. Respondendo um aviso, silencia a origem: grupo primeiro; sem grupo, número ou nome da pessoa.",
       "ex": [
         "/mute /Grupo L200/",
         "/mute /Jorge Pereira/",

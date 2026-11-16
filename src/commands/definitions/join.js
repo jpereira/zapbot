@@ -11,7 +11,7 @@ module.exports = {
     help: 'Joins a WhatsApp group through the invite link (chat.whatsapp.com/<code>, with or without https://, or just the code). With -info, shows the group name, participants and description without joining. With -list, lists the groups you are in (same as /leave -l). To leave, use /leave.',
     ex: [
         '/join https://chat.whatsapp.com/AbCdEfGhIjKlMnOpQrStUv',
-        '/join -info chat.whatsapp.com/AbCdEfGhIjKlMnOpQrStUv',
+        '/join -i chat.whatsapp.com/AbCdEfGhIjKlMnOpQrStUv',
         '/join -l'
     ],
     cmd_opts: [
@@ -24,7 +24,7 @@ module.exports = {
             opts: ['info', 'i'],
             values: [],
             desc: 'Shows the invited group (name, participants and description) without joining.',
-            ex: ['/join -info chat.whatsapp.com/AbCdEfGhIjKlMnOpQrStUv']
+            ex: ['/join -i chat.whatsapp.com/AbCdEfGhIjKlMnOpQrStUv']
         },
         {
             opts: ['list', 'l'],

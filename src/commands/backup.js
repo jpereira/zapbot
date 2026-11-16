@@ -27,7 +27,7 @@ const { fmtWhen, partsInBrasilia } = require('../util/when');
  * /backup -now          → creates a backup now
  * /backup -l            → lists the backups, numbered from newest to oldest
  * /backup -i <no.>       → details: date, reason, version and entries (compared with the current database)
- * /backup -r <no.|name>  → shows what will happen; with -sim, restores
+ * /backup -r <no.|name>  → shows what will happen; with -yes, restores
  * /backup -s [no.] [-to <destination>]... → sends the file (without no.: the most recent) in
  * your private chat or in the -to destinations: by email, as an attachment through the
  * The bot's SMTP ("email" = QRCODE_EMAIL_SMTP_TO), or in another chat
@@ -146,7 +146,7 @@ async function cmdBackup({ msg, opts: commandOpts, args }) {
         return;
     }
 
-    // -restore <nº|nome> [-sim]
+    // -restore <nº|nome> [-yes]
     if (opts.given.has('restore')) {
         const b = findBackup(list, o.restore);
         if (!b) {
@@ -154,7 +154,7 @@ async function cmdBackup({ msg, opts: commandOpts, args }) {
             return;
         }
 
-        if (!o.sim) {
+        if (!o.yes) {
             await msg.reply(t('adm.backup.restoreAsk', {
                 quando: fmtWhen(b.criadoEm),
                 nome: b.nome,
@@ -214,8 +214,8 @@ async function cmdBackup({ msg, opts: commandOpts, args }) {
         const myId = client.info.wid._serialized;
         const otherChats = destinations.filter(d => d.id && d.id !== myId);
 
-        // In another chat: the database has the stored messages of ALL chats, so it asks for -sim
-        if (otherChats.length && !o.sim) {
+        // In another chat: the database has the stored messages of ALL chats, so it asks for -yes
+        if (otherChats.length && !o.yes) {
             const tos = destinationsText.map(d => `-to ${/\s/.test(d) ? `/${d}/` : d}`).join(' ');
             await msg.reply(t('adm.backup.sendConfirm', {
                 onde: describeDestinations(otherChats),

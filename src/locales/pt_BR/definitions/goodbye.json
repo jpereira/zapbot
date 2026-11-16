@@ -34,9 +34,9 @@
         "t"
       ],
       "values": [],
-      "desc": "Manda a mensagem como ela ficaria, com você no lugar de quem sai (com o texto que você deu, ou o atual).",
+      "desc": "Manda a mensagem como ela ficaria. Você fica no lugar de quem sai (com o texto que você deu, ou o atual).",
       "ex": [
-        "/goodbye -test"
+        "/goodbye -t"
       ]
     },
     {

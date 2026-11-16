@@ -6,7 +6,7 @@ description) without joining. To leave, use [`/leave`](leave.md).
 ![Demonstração do /join](../assets/demo/04-join-leave.gif)
 
 ```text
-/join <invite link>  or  /join -info|-i <link>  or  /join -l
+/join <invite link>  or  /join -i|-i <link>  or  /join -l
 ```
 
 | Option | Value | Description |
@@ -19,7 +19,7 @@ description) without joining. To leave, use [`/leave`](leave.md).
 /join https://chat.whatsapp.com/AbCdEfGhIjKlMnOpQrStUv
 ✅ Joined 👥 Família
 
-/join -info chat.whatsapp.com/AbCdEfGhIjKlMnOpQrStUv
+/join -i chat.whatsapp.com/AbCdEfGhIjKlMnOpQrStUv
 👥 *Família*
 👤 12 participants
 📝 Avisos e fotos
@@ -36,7 +36,7 @@ description) without joining. To leave, use [`/leave`](leave.md).
 /leave <no.|name> leaves
 ```
 
-- No argument: `❌ Use: /join [-info] <invite link (chat.whatsapp.com/...)> or /join -l`.
+- No argument: `❌ Usage: /join [-info] <invite link (chat.whatsapp.com/...)> or /join -l`.
 - Not a link or code: `❌ Invalid invite link. E.g.: https://chat.whatsapp.com/AbCdEfGhIjKlMnOpQrStUv`.
 - Invalid, expired or revoked invite: `❌ Invalid, expired or revoked invite.`
 - Groups that require an admin's approval may refuse the join; WhatsApp's reason comes in the

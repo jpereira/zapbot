@@ -7,7 +7,7 @@ const { OPTION_ALERT_MSG, OPTION_ALERT_RM, OPTION_ALERT_TO } = require('./_optio
 
 module.exports = {
     cmd: '/crypto',
-    usage: '/crypto [OPTION] [CURRENCY...]  or  /crypto [CURRENCY] -alerta [rule] [-to <target>]... [-msg <text>]  or  /crypto -alerta -rm <num...|all>',
+    usage: '/crypto [OPTION] [CURRENCY...]  or  /crypto [CURRENCY] -alert [rule] [-to <target>]... [-msg <text>]  or  /crypto -alert -rm <num...|all>',
     aliases: [],
     summary: 'Price and 24 h change of cryptocurrencies',
     help: 'Current price and 24 h change of the enabled cryptocurrencies (Binance) or only the requested ones (e.g. /crypto BTC ETH).',
@@ -20,9 +20,9 @@ module.exports = {
             role: ADMIN
         },
         {
-            opts: ['alerta'],
+            opts: ['alert'],
             values: [],
-            desc: 'Without a rule: lists the alerts. With a rule (e.g. BTC < 90000): notifies you in your private chat (or at the -to targets) when the price crosses the value. The coin can also come first: /crypto BTC -alerta < 90000. Owner (or an admin) only.',
+            desc: 'Without a rule: lists the alerts. With a rule (e.g. BTC < 90000): notifies you in your private chat (or at the -to targets) when the price crosses the value. The coin can also come first: /crypto BTC -alert < 90000. Owner (or an admin) only.',
             cron: false
         },
         {

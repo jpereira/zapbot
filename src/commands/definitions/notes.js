@@ -6,9 +6,9 @@ const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/notes',
-    usage: '/notes #tag <text>  or  /notes [-list|-l] [#tag...] [-to <destination>]...  or  /notes -search|-view|-update|-export|-move|-desc|-rm|-alerta <...>',
+    usage: '/notes #tag <text>  or  /notes [-list|-l] [#tag...] [-to <destination>]...  or  /notes -search|-view|-update|-export|-move|-desc|-rm|-alert <...>',
     summary: 'Notes saved in the database',
-    help: 'Notes saved in the database. To add one, the syntax is /notes #tag <text>: without the #tag it errors, and just /notes #tag lists the tag\'s notes. Replying to a message, its text becomes the note, with ↩️ (/notes #lembrete); media (image, document, audio, video...) in the message itself or in the replied one is saved to disk along with the note. With nothing, shows the tags with the count and description of each; -l lists all notes, with the ID, grouped by #tag (one message per tag). The -alerta reminds you of a note at a date/time (once; the note stays): in your private chat or at the -to destinations.',
+    help: 'Notes saved in the database. To add one, the syntax is /notes #tag <text>: without the #tag it errors, and just /notes #tag lists the tag\'s notes. Replying to a message, its text becomes the note, with ↩️ (/notes #lembrete); media (image, document, audio, video...) in the message itself or in the replied one is saved to disk along with the note. With nothing, shows the tags with the count and description of each; -l lists all notes, with the ID, grouped by #tag (one message per tag). The -alert reminds you of a note at a date/time (once; the note stays): in your private chat or at the -to destinations.',
     ex: [
         '/notes #casa buy milk',
         '/notes #casa',
@@ -17,19 +17,19 @@ module.exports = {
         '/notes #idei (finds #ideias)',
         '/notes -m #casa #lar',
         '/notes -d #casa Home stuff',
-        '/notes -update 3 new text',
+        '/notes -u 3 new text',
         '/notes -e #casa',
         '/notes -r #casa',
-        '/notes #lembrete call João -alerta amanhã 9h',
-        '/notes -alerta 3 +2h -to /Família/',
-        '/notes -alerta #casa 18h -to /Família/',
+        '/notes #lembrete call João -alert amanhã 9h',
+        '/notes -alert 3 +2h -to /Família/',
+        '/notes -alert #casa 18h -to /Família/',
         '/notes -r 2'
     ],
     cmd_opts: [
         {
             opts: ['add', 'a'],
             values: ['#tag <text>'],
-            desc: 'Adds a note: the #tag is required and comes first (the text goes up to the -alerta, if any).',
+            desc: 'Adds a note: the #tag is required and comes first (the text goes up to the -alert, if any).',
             ex: ['/notes -a #casa buy milk'],
             cron: false
         },
@@ -56,7 +56,7 @@ module.exports = {
             opts: ['update', 'u'],
             values: ['<id> [#tag] <new text>'],
             desc: 'Replaces the note text (and the tag, if one is given).',
-            ex: ['/notes -update 3 buy bread and milk'],
+            ex: ['/notes -u 3 buy bread and milk'],
             cron: false
         },
         {
@@ -70,14 +70,14 @@ module.exports = {
             opts: ['move', 'm'],
             values: ['#tag #newtag'],
             desc: 'Renames the tag in all notes (if the new one already exists, the two merge). The tag must be complete, and its description goes along.',
-            ex: ['/notes -move #casa #lar'],
+            ex: ['/notes -m #casa #lar'],
             cron: false
         },
         {
             opts: ['desc', 'd'],
             values: ['#tag [<description>|-rm]'],
             desc: 'Tag description, shown in the list and in plain /notes. Without text, shows the current one; with -rm, deletes it. The tag can be partial.',
-            ex: ['/notes -desc #casa Home stuff', '/notes -d #casa', '/notes -d #casa -rm'],
+            ex: ['/notes -d #casa Home stuff', '/notes -d #casa', '/notes -d #casa -r'],
             cron: false
         },
         {
@@ -90,26 +90,26 @@ module.exports = {
         {
             opts: ['rm', 'r'],
             values: ['<id...|#tag...|all>'],
-            desc: 'Removes the notes with those IDs (-rm 1 2 3 or -rm 1,2,3), of a tag (-rm #casa) or all (all). If any ID or tag does not exist, none is removed. The tag must be complete. Together with -alerta, removes only the alert, keeping the notes.',
+            desc: 'Removes the notes with those IDs (-rm 1 2 3 or -rm 1,2,3), of a tag (-rm #casa) or all (all). If any ID or tag does not exist, none is removed. The tag must be complete. Together with -alert, removes only the alert, keeping the notes.',
             ex: [
-                '/notes -rm 2',
-                '/notes -rm 1 2 3',
-                '/notes -rm #casa',
-                '/notes -rm all',
-                '/notes -alerta -rm 3'
+                '/notes -r 2',
+                '/notes -r 1 2 3',
+                '/notes -r #casa',
+                '/notes -r all',
+                '/notes -alert -r 3'
             ],
             cron: false
         },
         {
-            opts: ['alerta'],
+            opts: ['alert'],
             values: ['<when>'],
-            desc: 'Reminds you of the note at a date/time. With -add: /notes -a text -alerta amanhã 9h. With ID: /notes -alerta 3 +2h. With #tag: reminds of all the tag\'s notes (/notes -alerta #casa 18h -to /Família/). Alone, lists the notes with an alert (with #tag, only the tag\'s); with -rm <id...|#tag...|all>, removes the alert. The when accepts +2h, 30m, 18h, amanhã 9h, sexta 18:30, 25/12 10h.',
+            desc: 'Reminds you of the note at a date/time. With -add: /notes -a text -alert amanhã 9h. With ID: /notes -alert 3 +2h. With #tag: reminds of all the tag\'s notes (/notes -alert #casa 18h -to /Família/). Alone, lists the notes with an alert (with #tag, only the tag\'s); with -rm <id...|#tag...|all>, removes the alert. The when accepts +2h, 30m, 18h, amanhã 9h, sexta 18:30, 25/12 10h.',
             cron: false
         },
         {
             opts: ['to'],
             values: ['<destination>'],
-            desc: 'Sends to the destination instead of replying here (list, -view and -export), or notifies it (-alerta). Repeat for several.',
+            desc: 'Sends to the destination instead of replying here (list, -view and -export), or notifies it (-alert). Repeat for several.',
             ex: [
                 '/notes -e #casa -to /Família/',
                 '-to /Jorge Pereira/',

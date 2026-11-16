@@ -36,4 +36,4 @@ Alguns pontos merecem atenção especial num relato:
   chat nem nos logs.
 - **Mensagens guardadas**: o banco (`cache/zapbot.db`), as mídias em `cache/media` e os
   backups em `cache/backups` têm conversas de terceiros. O `/backup -send` para outro chat pede
-  confirmação (`-sim`) por isso.
+  confirmação (`-yes`) por isso.

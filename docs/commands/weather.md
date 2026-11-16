@@ -6,11 +6,11 @@ it also shows the forecast for the next days.
 
 | Argument | Description |
 |---|---|
-| `[N]` or `[Nd]` | N-day forecast, counting today (`16` or `16d`). From 1 up to the `tempo.maxDays` setting (default 16, Open-Meteo's maximum). Only valid as the first argument |
-| `[city]` | City to look up, optionally with a state or country after a comma. Without it, uses the `tempo.city` setting |
+| `[N]` or `[Nd]` | N-day forecast, counting today (`16` or `16d`). From 1 up to the `weather.maxDays` setting (default 16, Open-Meteo's maximum). Only valid as the first argument |
+| `[city]` | City to look up, optionally with a state or country after a comma. Without it, uses the `weather.city` setting |
 
 ```text
-/weather                         → default city (tempo.city)
+/weather                         → default city (weather.city)
 /weather Rio de Janeiro          → Rio de Janeiro, RJ
 /weather Paris, Texas            → Paris in the US (not the one in France)
 /temp Lisboa                    → same, completed from the start of the name
@@ -42,7 +42,7 @@ With days (`/weather 3d Niteroi`), after the current weather:
 ```
 
 Above the maximum the bot refuses and states the limit. To limit queries, use
-`/set tempo.maxDays 7`; `/set -reset tempo.maxDays` sets the limit back to 16 days. A saved limit
+`/set weather.maxDays 7`; `/set -reset weather.maxDays` sets the limit back to 16 days. A saved limit
 keeps applying after a restart. Without N, the reply has only today's weather. Days follow the
 timezone of the city being queried. With `1`, the forecast block is titled "Today's forecast".
 At 5°C or below the reply ends with "🥶 It is freezing!", and at 30°C or above with "🔥 Damn, it is
@@ -50,14 +50,14 @@ hot!". The condition texts and the place names follow the `zapbot.lang` setting.
 
 ## Changing the default city
 
-The city `/weather` uses with no argument lives in the `tempo.city` setting (default
+The city `/weather` uses with no argument lives in the `weather.city` setting (default
 `Niteroi, Rio de Janeiro, Brazil`). To change it, send on WhatsApp (`/set` accepts the owner and
 extra admins):
 
 ```text
-/set tempo.city São Paulo, Brazil
-/set tempo.city                  → shows the current value
-/set -reset tempo.city           → goes back to Niteroi, Rio de Janeiro, Brazil
+/set weather.city São Paulo, Brazil
+/set weather.city                  → shows the current value
+/set -r weather.city           → goes back to Niteroi, Rio de Janeiro, Brazil
 ```
 
 The change takes effect immediately, without a restart. Tips:
@@ -66,4 +66,4 @@ The change takes effect immediately, without a restart. Tips:
   but the search picks the most relevant one with that name (usually the most populous).
 - Accents are optional (`Niteroi` or `Niterói`) and the country can be in Portuguese or English.
 - If the city isn't found the bot replies `❌ City not found`; test first with
-  `/weather <city>` and only then save it to `tempo.city`.
+  `/weather <city>` and only then save it to `weather.city`.

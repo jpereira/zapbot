@@ -16,8 +16,8 @@ A Orca cadastra a **posição** (`-address`); o Project X, a Liquidswap, o Morph
 **carteira** (`-wallet`). Todos aceitam um nome opcional (`-name`). O `/defi` lê tudo na hora e
 mostra o equivalente ao "Position Details" de cada posição; com `orca`, `prjx`, `liquidswap` (ou
 `liqswp`), `morpho` ou `aave`, só as daquele protocolo. No seu privado, os endereços e as
-carteiras aparecem inteiros; fora dele, abreviados (`0x12…5678`). Com o `-alerta`, o bot avisa
-quando uma posição sai da faixa, quando volta e, com o `-taxas`, quando as taxas a coletar passam
+carteiras aparecem inteiros; fora dele, abreviados (`0x12…5678`). Com o `-alert`, o bot avisa
+quando uma posição sai da faixa, quando volta e, com o `-fees`, quando as taxas a coletar passam
 de um valor ([Alerta de saída da faixa](#alerta-de-saída-da-faixa)).
 
 Para todos os protocolos:
@@ -25,13 +25,13 @@ Para todos os protocolos:
 ```text
 /defi                          → o Position Details de todos
 /defi -help                    → a ajuda de todos (/defi orca -help: só a da Orca)
-/defi -mask                    → o mesmo, com os números da carteira escondidos ($**,***.**)
+/defi -m                    → o mesmo, com os números da carteira escondidos ($**,***.**)
 /defi -l                       → a lista dos cadastros
 /defi -rm 2                    → remove o nº 2
 /defi -rm 1 3                  → remove o 1 e o 3 (ou -rm 1,3; -rm all remove todos)
-/defi -taxas                   → o resumo das taxas a coletar, com o total
-/defi -taxas -alerta           → o mesmo, com o alerta de cada cadastro
-/defi -alerta <nº|all> [-to <destino>]... [-taxas <valor>]
+/defi -fees                   → o resumo das taxas a coletar, com o total
+/defi -fees -a           → o mesmo, com o alerta de cada cadastro
+/defi -a <nº|all> [-to <destino>]... [-fees <valor>]
 ```
 
 Para a Orca:
@@ -39,7 +39,7 @@ Para a Orca:
 ```text
 /defi orca                     → só as posições da Orca
 /defi orca -address <endereço> -pool <endereço> -nft <mint>
-/defi orca -address <endereço> -alerta 2000   → cadastra e já liga o alerta (no seu privado)
+/defi orca -address <endereço> -a 2000   → cadastra e já liga o alerta (no seu privado)
 /defi orca -address <endereço> -n "Posição TAL"   → com um nome
 ```
 
@@ -47,43 +47,43 @@ Para o Project X:
 
 ```text
 /defi prjx                     → só as do Project X
-/defi prjx -wallet <0x...>     → cadastra a carteira
-/defi prjx -wallet <0x...> -n Carteira Hare   → com um nome (de novo, com outro: troca o nome)
-/defi prjx -wallet <0x...> -alerta    → cadastra e já liga o alerta (no seu privado)
+/defi prjx -w <0x...>     → cadastra a carteira
+/defi prjx -w <0x...> -n Carteira Hare   → com um nome (de novo, com outro: troca o nome)
+/defi prjx -w <0x...> -a    → cadastra e já liga o alerta (no seu privado)
 ```
 
 Para a Liquidswap (`liquidswap` ou `liqswp`):
 
 ```text
 /defi liquidswap               → só as da Liquidswap (o mesmo que /defi liqswp)
-/defi liquidswap -wallet <0x...>   → cadastra a carteira da Aptos
-/defi liqswp -wallet <0x...> -n Carteira Aptos   → com um nome
+/defi liquidswap -w <0x...>   → cadastra a carteira da Aptos
+/defi liqswp -w <0x...> -n Carteira Aptos   → com um nome
 ```
 
 Para o Morpho:
 
 ```text
 /defi morpho                   → as carteiras cadastradas (sem nenhuma: a do MORPHO_WALLET_ADDRESS)
-/defi morpho -wallet <0x...>   → cadastra a carteira
-/defi morpho -wallet <0x...> -n Carteira Empre   → com um nome
+/defi morpho -w <0x...>   → cadastra a carteira
+/defi morpho -w <0x...> -n Carteira Empre   → com um nome
 ```
 
 Para o Aave:
 
 ```text
 /defi aave                     → as carteiras cadastradas (sem nenhuma: a do AAVE_WALLET_ADDRESS)
-/defi aave -full               → os detalhes (risco, APY, colateral, eMode, isolation mode)
-/defi aave -wallet <0x...> -n CarteiraX   → cadastra a carteira (e já mostra a posição)
+/defi aave -f               → os detalhes (risco, APY, colateral, eMode, isolation mode)
+/defi aave -w <0x...> -n CarteiraX   → cadastra a carteira (e já mostra a posição)
 ```
 
 | Opção | Valor | Descrição |
 |---|---|---|
 | *(protocolo)* | `orca`, `prjx`, `liquidswap` (ou `liqswp`), `morpho` ou `aave` | Sozinho, mostra o Position Details só dele; com `-address` (`orca`) ou `-wallet` (`prjx`, `liquidswap`, `morpho` e `aave`), cadastra; com `-help`, mostra a ajuda só dele. Sem protocolo, o `/defi` mostra todos os cadastrados |
 | `-list`, `-l` | | Lista os cadastros, com 🔔 nos que têm alerta (e o limite das taxas: `🔔 ≥ $2,000.00`). No seu privado, com os endereços inteiros; fora dele, abreviados (`ime1…VPcg`) |
-| `-rm` | `<nº...\|all>` | Remove o cadastro nº N, vários (`-rm 1 3` ou `-rm 1,3`) ou todos; se algum nº não existe, nenhum sai. Junto com `-alerta`: só desliga o alerta da nº N (ou de todas) |
-| `-alerta`, `-a` | `[nº\|all\|valor]` | Sem nº: lista os alertas. Com nº (ou `all`): avisa quando a posição sair da faixa e quando voltar. Só da Orca e do Project X (a Liquidswap, o Morpho e o Aave não têm faixa). No cadastro (com `-address` ou `-wallet`), liga o alerta da posição nova, no seu privado (ou no `-to`); o valor é o limite das taxas, como o `-taxas` (`-alerta 2000`). Veja [Alerta de saída da faixa](#alerta-de-saída-da-faixa) |
-| `-taxas` | `[valor\|off]` | Sozinho: o resumo das taxas a coletar (veja [Resumo das taxas](#resumo-das-taxas)). Junto com `-alerta <nº\|all>`: avisa também quando as taxas a coletar passarem do valor, em dólar (ex.: `-taxas 50`). Avisa uma vez e de novo depois de você coletar; `off` tira |
-| `-to` | `<destino>` | Junto com `-alerta`: para onde vai o aviso. Um contato (`/Jorge Pereira/`), uma menção (`@Fulano Da Silva`), um grupo (`/Grupo L200/`), um número (`+5521999999999`) ou e-mail (`email` é o `QRCODE_EMAIL_SMTP_TO`) ([Destinos](index.md#destinos-contato-grupo-número-ou-e-mail)). Repita para vários: o aviso sai em todos. Sem ele, o seu privado |
+| `-rm` | `<nº...\|all>` | Remove o cadastro nº N, vários (`-rm 1 3` ou `-rm 1,3`) ou todos; se algum nº não existe, nenhum sai. Junto com `-alert`: só desliga o alerta da nº N (ou de todas) |
+| `-alert`, `-a` | `[nº\|all\|valor]` | Sem nº: lista os alertas. Com nº (ou `all`): avisa quando a posição sair da faixa e quando voltar. Só da Orca e do Project X (a Liquidswap, o Morpho e o Aave não têm faixa). No cadastro (com `-address` ou `-wallet`), liga o alerta da posição nova, no seu privado (ou no `-to`); o valor é o limite das taxas, como o `-fees` (`-alert 2000`). Veja [Alerta de saída da faixa](#alerta-de-saída-da-faixa) |
+| `-fees` | `[valor\|off]` | Sozinho: o resumo das taxas a coletar (veja [Resumo das taxas](#resumo-das-taxas)). Junto com `-alert <nº\|all>`: avisa também quando as taxas a coletar passarem do valor, em dólar (ex.: `-fees 50`). Avisa uma vez e de novo depois de você coletar; `off` tira |
+| `-to` | `<destino>` | Junto com `-alert`: para onde vai o aviso. Um contato (`/Jorge Pereira/`), uma menção (`@Fulano Da Silva`), um grupo (`/Grupo L200/`), um número (`+5521999999999`) ou e-mail (`email` é o `QRCODE_EMAIL_SMTP_TO`) ([Destinos](index.md#destinos-contato-grupo-número-ou-e-mail)). Repita para vários: o aviso sai em todos. Sem ele, o seu privado |
 | `-address` | `<endereço>` | Com `orca`: cadastra a posição da Orca pelo endereço dela |
 | `-pool` | `<endereço>` | Com `orca -address`: a pool. Opcional; se vier, o bot confere se bate |
 | `-nft` | `<mint>` | Com `orca -address`: o NFT da posição. Opcional; se vier, o bot confere se bate |
@@ -94,14 +94,14 @@ Para o Aave:
 
 ```text
 /defi orca -address ime16qBVbQBfByHQPME5gdCMhX9e2NqpL8UB5sJVPcg -pool J7HzHnKDshpc5Dvc1zW6SvA8Ltkkwn1tpwtBUrnCbHCh -nft 9UkHH3evduHjCojFxGGabCvRyRLsimbUY8iiNSaCoQqv
-/defi prjx -wallet 0x12b2C3d4E5f60718293A4b5C6d7E8f9012345678
-/defi liquidswap -wallet 0x8f3c4d2a1b9e7f6a5c4b3a29180f7e6d5c4b3a2918f7e6d5c4b3a2918f7e6d5c
-/defi morpho -wallet 0x74459EA7df673CFd90afbe39F635AcE08Ccb97C4
-/defi -alerta 1        → avisa no seu privado quando a nº 1 sair da faixa (e voltar)
-/defi -a 1 -taxas 50   → e quando as taxas a coletar da nº 1 passarem de $50
+/defi prjx -w 0x12b2C3d4E5f60718293A4b5C6d7E8f9012345678
+/defi liquidswap -w 0x8f3c4d2a1b9e7f6a5c4b3a29180f7e6d5c4b3a2918f7e6d5c4b3a2918f7e6d5c
+/defi morpho -w 0x74459EA7df673CFd90afbe39F635AcE08Ccb97C4
+/defi -a 1        → avisa no seu privado quando a nº 1 sair da faixa (e voltar)
+/defi -a 1 -fees 50   → e quando as taxas a coletar da nº 1 passarem de $50
 ```
 
-A lista mostra o 🔔 de quem tem alerta e, com o `-taxas` (ou o `-alerta <valor>` no cadastro), o
+A lista mostra o 🔔 de quem tem alerta e, com o `-fees` (ou o `-alert <valor>` no cadastro), o
 limite das taxas:
 
 ```text
@@ -111,17 +111,17 @@ limite das taxas:
 1. Orca · ime1…VPcg · pool J7Hz…bHCh (desde 02/10/2026) 🔔 ≥ $2,000.00
 2. Project X · carteira 0x12…5678 (desde 02/10/2026) 🔔
 
-💡 /defi mostra os detalhes; /defi -rm <nº> remove; 🔔 = com alerta (/defi -alerta), ≥ $ é o limite das taxas.
+💡 /defi mostra os detalhes; /defi -rm <nº> remove; 🔔 = com alerta (/defi -alert), ≥ $ é o limite das taxas.
 ```
 
 No seu privado, os endereços saem inteiros.
 
 Para receber o Position Details todo dia, num chat ou junto com outros comandos, use o
-[`/cron`](cron.md#comandos-no-texto) (aceita os cinco protocolos, `-l`, `-taxas`, `-mask` e
+[`/cron`](cron.md#comandos-no-texto) (aceita os cinco protocolos, `-l`, `-fees`, `-mask` e
 `aave -full`; as opções de cadastro e de alerta são recusadas):
 
 ```text
-/cron 06:00 -r diario -to /Grupo da Faculdade/ ⏰ Status da DeFi! {/defi} Preço do BTC! {/crypto BTC}
+/cron 06:00 -r d -to /Grupo da Faculdade/ ⏰ Status da DeFi! {/defi} Preço do BTC! {/crypto BTC}
 ```
 
 ```text
@@ -154,7 +154,7 @@ isso o cadastro é a **carteira**, e o `/defi prjx` mostra cada posição aberta
 para a mais velha:
 
 ```text
-/defi prjx -wallet 0x12b2C3d4E5f60718293A4b5C6d7E8f9012345678
+/defi prjx -w 0x12b2C3d4E5f60718293A4b5C6d7E8f9012345678
 ✅ Carteira do Project X cadastrada: 0x12…5678
 📍 2 posições abertas.
 💡 Veja com /defi prjx
@@ -194,7 +194,7 @@ A [Liquidswap](https://liquidswap.com/) é a DEX da Pontem na Aptos. As pools s�
 LP, da maior para a menor em dólar:
 
 ```text
-/defi liquidswap -wallet 0x8f3c4d2a1b9e7f6a5c4b3a29180f7e6d5c4b3a2918f7e6d5c4b3a2918f7e6d5c
+/defi liquidswap -w 0x8f3c4d2a1b9e7f6a5c4b3a29180f7e6d5c4b3a2918f7e6d5c4b3a2918f7e6d5c
 ✅ Carteira da Liquidswap cadastrada: 0x8f…6d5c
 📍 2 posições abertas.
 💡 Veja com /defi liquidswap
@@ -222,7 +222,7 @@ LP, da maior para a menor em dólar:
   quantidades.
 - **Sem faixa e sem taxas a coletar**: num AMM clássico, a liquidez cobre todos os preços e as
   taxas dos swaps entram nas reservas. Elas já estão no saldo, e por isso a Liquidswap não tem
-  `-alerta`.
+  `-alert`.
 - O endereço da carteira aceita a forma curta da Aptos (`0x1` é o `0x000…001`) e é guardado por
   inteiro. O bot mostra até 20 pools por carteira.
 - Cadastrar uma carteira sem LP vale (o bot avisa): o `/defi liquidswap` mostra as posições quando
@@ -238,7 +238,7 @@ a Ethereum, `/set defi.morpho.chains 8453 1`). A consulta é só de leitura: o b
 chave privada.
 
 Cadastre a carteira com `/defi morpho -wallet <0x...>` (o bot confere na API antes de guardar): ela
-entra no `/defi`, no `-l` e no `-rm`, junto com as outras. O `-alerta` não vale para o Morpho, que
+entra no `/defi`, no `-l` e no `-rm`, junto com as outras. O `-alert` não vale para o Morpho, que
 não tem faixa. Sem nenhuma carteira cadastrada, o `/defi morpho` consulta a do
 `MORPHO_WALLET_ADDRESS` no `config/.env` (ou a do setting `defi.morpho.wallet`, que vale quando a
 variável está vazia). A resposta fica 30 segundos em memória: repetir o comando nesse intervalo não
@@ -377,21 +377,21 @@ De onde vem cada número:
 
 ## Resumo das taxas
 
-O `-taxas` sozinho junta, numa mensagem só, as taxas a coletar de todas as posições de liquidez: a
+O `-fees` sozinho junta, numa mensagem só, as taxas a coletar de todas as posições de liquidez: a
 faixa, o preço e as taxas de cada posição da Orca e do Project X, e o total em dólar no fim (com o
 de cada protocolo). A Liquidswap entra, mas num AMM as taxas já estão no saldo: não há o que
 coletar. O protocolo que não está cadastrado aparece como `➖ não cadastrado`. Com o protocolo, só
-ele (`/defi prjx -taxas`); o Morpho e o Aave não têm taxas a coletar.
+ele (`/defi prjx -fees`); o Morpho e o Aave não têm taxas a coletar.
 
-Com `-alerta` (sem valor), mostra também o alerta de cada cadastro: para onde avisa, o limite das
+Com `-alert` (sem valor), mostra também o alerta de cada cadastro: para onde avisa, o limite das
 taxas e quanto falta para chegar nele. No Project X, o limite vale para a carteira toda (a soma das
 posições), como na verificação do alerta.
 
 ```text
-/defi -taxas                   → o resumo de todos
-/defi prjx -taxas              → só do Project X
-/defi -taxas -alerta           → com o alerta de cada cadastro
-/cron 8h -r diario {/defi -taxas}   → o resumo todo dia às 8h
+/defi -fees                   → o resumo de todos
+/defi prjx -fees              → só do Project X
+/defi -fees -a           → com o alerta de cada cadastro
+/cron 8h -r d {/defi -fees}   → o resumo todo dia às 8h
 ```
 
 ```text
@@ -405,7 +405,7 @@ posições), como na verificação do alerta.
 💸 Taxas a coletar: $1,426.35
    • 6.2494 SOL ($738.04)
    • 0.008212 cbBTC ($688.31)
-🔕 Sem alerta (ligue com /defi -alerta 1)
+🔕 Sem alerta (ligue com /defi -alert 1)
 
 🌊 Project X · UBTC/USD₮0 · 📍 #7
 📏 Faixa: 81,213.4 – 91,567.3 USD₮0 por UBTC
@@ -431,18 +431,18 @@ com um aviso no fim.
 
 ## Alerta de saída da faixa
 
-Fora da faixa, a posição fica toda num token só e para de render taxas. Com o `-alerta`, o bot lê a
+Fora da faixa, a posição fica toda num token só e para de render taxas. Com o `-alert`, o bot lê a
 posição (no Project X, as posições da carteira) a cada 10 minutos (setting
-`defi.alerta.intervalMin`, de 1 a 1440 minutos) e avisa:
+`defi.alert.intervalMin`, de 1 a 1440 minutos) e avisa:
 
 - **🚨 quando ela sai da faixa**: uma vez por saída. Enquanto continua fora, não repete.
 - **✅ quando ela volta para a faixa**: também uma vez.
-- **💸 quando as taxas a coletar passam do valor do `-taxas`** (em dólar, opcional): uma vez. Depois
+- **💸 quando as taxas a coletar passam do valor do `-fees`** (em dólar, opcional): uma vez. Depois
   que você coleta e elas caem abaixo do valor, o aviso se arma de novo. Num par sem stablecoin (só
   no Project X), sem preço em dólar, não avisa.
 
 ```text
-/defi -alerta 1                  → no seu privado
+/defi -a 1                  → no seu privado
 /defi -a all -to email           → todas, por e-mail (QRCODE_EMAIL_SMTP_TO)
 /defi -a 2 -to voce@exemplo.com  → por e-mail, para esse endereço
 /defi -a 1 -to /Jorge Pereira/   → no privado do contato
@@ -450,11 +450,11 @@ posição (no Project X, as posições da carteira) a cada 10 minutos (setting
 /defi -a 1 -to +5521999999999    → no privado do número
 /defi -a 1 -to @Fulano Da Silva  → num grupo, mencionando a pessoa
 /defi -a 1 -to /Grupo L200/ -to email  → no grupo e por e-mail
-/defi -a 1 -taxas 50             → e quando as taxas a coletar passarem de $50
-/defi -a 1 -taxas off            → tira o aviso das taxas (o da faixa continua)
-/defi orca -address <endereço> -alerta 2000   → no cadastro: liga já, com o limite de $2000
-/defi -alerta                    → a lista dos alertas
-/defi -alerta -rm 1              → desliga o da nº 1 (a posição continua cadastrada)
+/defi -a 1 -fees 50             → e quando as taxas a coletar passarem de $50
+/defi -a 1 -fees off            → tira o aviso das taxas (o da faixa continua)
+/defi orca -address <endereço> -a 2000   → no cadastro: liga já, com o limite de $2000
+/defi -a                    → a lista dos alertas
+/defi -a -rm 1              → desliga o da nº 1 (a posição continua cadastrada)
 ```
 
 O `-to` aceita:
@@ -469,18 +469,18 @@ O `-to` aceita:
   outros recebem assim mesmo.
 
 Ligar de novo uma posição troca os destinos pelos do novo `-to` (sem `-to`, volta ao seu privado) e
-mantém o `-taxas`, se você não mandar outro. Ao ligar, o bot já lê a posição: se ela estiver fora da
+mantém o `-fees`, se você não mandar outro. Ao ligar, o bot já lê a posição: se ela estiver fora da
 faixa nesse momento, a resposta mostra, e o próximo aviso é o da volta. Se o RPC não responder, a
 posição fica `❔ ainda não lida`, e a primeira leitura fora da faixa já avisa.
 
 ```text
-/defi -alerta 1 -to email
+/defi -a 1 -to email
 🔔 Alerta do /defi ligado (1)
 
 1. Orca · ime1…VPcg · ✅ na faixa
 
 📣 Aviso: 📧 voce@exemplo.com, quando a posição sair da faixa e quando voltar (verificada a cada 10 minutos).
-💡 Veja com /defi -alerta; desligue com /defi -alerta -rm <nº|all>.
+💡 Veja com /defi -alert; desligue com /defi -alert -rm <nº|all>.
 ```
 
 O aviso traz o "Position Details" da posição. Numa carteira do Project X, ela está "na faixa" quando
@@ -493,7 +493,7 @@ todas as posições abertas estão, e o aviso traz só as que saíram:
 📍 ime1…VPcg · ⚠️ fora da faixa (preço abaixo: a posição não rende taxas)
 ...
 
-💡 Desligue com /defi -alerta -rm 1.
+💡 Desligue com /defi -alert -rm 1.
 ```
 
 E os outros avisos, com o mesmo "Position Details":

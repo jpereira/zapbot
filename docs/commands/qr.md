@@ -5,7 +5,7 @@ Code in a photo (the same as [`/decodeqr`](decodeqr.md)). The bot's own `qrcode`
 `jsqr` reads it: nothing goes to an external service.
 
 ```text
-/qr [-decode|-d] [<text>]
+/qr [-d|-d] [<text>]
 ```
 
 | Option | Value | Description |

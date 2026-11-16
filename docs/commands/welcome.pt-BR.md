@@ -8,7 +8,7 @@ no grupo quando alguém entra (pelo link de convite ou adicionado por um admin).
 [`/goodbye`](goodbye.md).
 
 ```text
-/welcome [-on|-off|-test] [<texto>]
+/welcome [-on|-off|-t] [<texto>]
 ```
 
 | Opção | Valor | Descrição |
@@ -22,7 +22,7 @@ no grupo quando alguém entra (pelo link de convite ou adicionado por um admin).
 /welcome                         → mostra a mensagem deste grupo
 /welcome Boas-vindas ao {group}, {name}!
 /welcome -on                     → o texto padrão
-/welcome -test                   → prévia
+/welcome -t                   → prévia
 /welcome -off                    → desliga
 ```
 

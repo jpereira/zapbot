@@ -14,7 +14,7 @@ module.exports = {
         {
             argv: ['[/contact or group/|@mention|+number|#]'],
             desc: 'Who: searched as in /mute, or the # from the /mute list. Without it, replying to a notice, where the notice came from.',
-            ex: ['/unmute /Jorge Pereira/', '/unmute 2', '/unmute -all']
+            ex: ['/unmute /Jorge Pereira/', '/unmute 2', '/unmute -a']
         }
     ],
     role: ADMIN // mutes the owner's notices

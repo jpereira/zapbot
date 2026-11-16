@@ -14,7 +14,7 @@ const CRYPTO_SUPPORTED = {
     SUI: '💧', PEPE: '🐸', SHIB: '🐕', XLM: '🚀', NEAR: 'Ⓝ', UNI: '🦄'
 };
 
-// /rates currencies, against the real. The enabled ones stay in the 'cotacao.coins' setting.
+// /rates currencies, against the real. The enabled ones stay in the 'rates.coins' setting.
 const QUOTE_SUPPORTED = {
     USD: { icone: '🇺🇸', get nome() { return t('rates.name.USD'); }, fonte: 'fiat' },
     EUR: { icone: '🇪🇺', get nome() { return t('rates.name.EUR'); }, fonte: 'fiat' },

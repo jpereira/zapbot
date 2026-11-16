@@ -19,7 +19,7 @@ module.exports = {
             outrosChats: true
         },
         {
-            opts: ['pv'],
+            opts: ['private'],
             values: [],
             desc: 'Sends it to your private chat.',
             outrosChats: true

@@ -2,15 +2,15 @@
 
 Role `admin`: only you and the extra admins. The owner can grant it to a person or group with
 `/bot +u +cmd /gpt` ([Delegating](index.md#delegating-an-admin-command)).
-Whoever gets it can ask questions and use `-voz`: `-model`, `-audio`, `-img`, `-gif`, `-prices` and
+Whoever gets it can ask questions and use `-voice`: `-model`, `-audio`, `-img`, `-gif`, `-prices` and
 `-usage`, `-u` are for the owner and admins.
 
 Asks ChatGPT through the OpenAI API and replies in the chat. When you reply to a message, its text
 goes before the question; when you reply to a **photo**, it's sent along and ChatGPT sees it (see
 [With a photo](#with-a-photo)); when you reply to a **document** (text or PDF), its content goes along (see
 [With a document](#with-a-document)); when you reply to an **audio**, it's transcribed (see
-[With audio](#with-audio)); with `-voz`, the text becomes a robot voice note (see
-[Voice](#voice--voz)); with `-img` and `-gif`, it creates an image and a GIF (see
+[With audio](#with-audio)); with `-voice`, the text becomes a robot voice note (see
+[Voice](#voice--voice)); with `-img` and `-gif`, it creates an image and a GIF (see
 [Image and GIF](#image-and-gif--img--gif)). While waiting for the answer, the bot shows as
 "typing...". Without a question, it shows the help. The model answers in the language of
 `zapbot.lang` (default `en_US`), unless you ask for another one.
@@ -22,13 +22,13 @@ goes before the question; when you reply to a **photo**, it's sent along and Cha
 /gpt qual a raça desse cachorro?   (respondendo uma foto)
 /gpt agora transcreva isso         (respondendo um áudio)
 /gpt resuma esse áudio             (respondendo um áudio)
-/gpt -voz exterminar todos os humanos   → replies with a robot voice note
+/gpt -v exterminar todos os humanos   → replies with a robot voice note
 /gpt -img um robô nadando em aquarela   → creates an image (owner and admins only)
 /gpt gere um gif animado dele nadando   → replying to a photo: a GIF (owner and admins only)
 /gpt -m              → the models by use (questions, images, audio, voice), with the current one
 /gpt -m gpt-6-luna   → changes the questions model
 /gpt -m gpt-image-2.6-flare -gif   → changes the image and GIF model
-/gpt -usage          → usage for the last 7 days and the current limits (owner and admins only)
+/gpt -u          → usage for the last 7 days and the current limits (owner and admins only)
 /gpt -u 30           → (shortcut) usage for the last 30 days
 /gpt -h              → command help
 ```
@@ -44,9 +44,9 @@ still work).
 | `-audio` | | Owner and admins only. Together with `-m`: the audio transcription model |
 | `-img` | | Owner and admins only. Creates an image from the request (replying to a photo, it edits it). See [Image and GIF](#image-and-gif--img--gif) |
 | `-gif` | | Owner and admins only. Creates a GIF (replying to a photo, it animates it). See [Image and GIF](#image-and-gif--img--gif) |
-| `-voz`, `-v` | `[text]` | Replies with a robot voice note of the text (or of the replied message). See [Voice](#voice--voz) |
+| `-voice`, `-v` | `[text]` | Replies with a robot voice note of the text (or of the replied message). See [Voice](#voice--voice) |
 | `-status`, `-s` | | Appends the call's usage to the reply footer: TX/RX bytes, tokens, cost and balance. See [Status](#status--status) |
-| `-prices` | | Owner and admins only. Fetches the prices from OpenAI's site and updates `openai.pricing`. See [Status](#status--status) |
+| `-prices` | | Owner and admins only. Fetches the prices from OpenAI's site and updates `gpt.pricing`. See [Status](#status--status) |
 | `-usage`, `-u` | `[days]` | Owner and admins only. Usage for the last days (default 7, up to 31) and the current limits. See [Usage and limits](#usage-and-limits--usage) |
 
 ## Formatting on WhatsApp
@@ -138,8 +138,8 @@ oi, tudo bem? te ligo mais tarde, só queria confirmar o horário da reunião.
   "transcreve", "agora transcreva isso"), it replies with the transcription as it came out.
 - **With another question** ("resuma", "traduza para o inglês", "quais são os combinados?"), the bot
   sends the question and the transcription to the chat and answers based on it.
-- The transcription model is the `openai.transcribe.model` setting (default `gpt-transcribe`;
-  `whisper-1` is going away in Feb 2027): `/set openai.transcribe.model <modelo>`.
+- The transcription model is the `gpt.transcribe.model` setting (default `gpt-transcribe`;
+  `whisper-1` is going away in Feb 2027): `/set gpt.transcribe.model <modelo>`.
 - ogg (the WhatsApp voice note), mp3, m4a, wav, webm, and flac are accepted, up to 25 MB. Another
   format (like raw aac), expired audio, or audio that's too large gets a notice, and nothing is sent
   to OpenAI. Audio without speech replies `🤖 I heard no speech in this audio.`.
@@ -151,8 +151,8 @@ oi, tudo bem? te ligo mais tarde, só queria confirmar o horário da reunião.
 `/gpt -img <pedido>` and `/gpt -gif [pedido]` are [`/draw`](draw.md) and `/draw -gif`: the
 same code, so the result is the same (image, photo editing, animated GIF, a model the account
 doesn't have). Both **spend your OpenAI account**, so they're for the owner and admins only, even if
-`/gpt` was granted to a user. The image model is `openai.image.model` and the GIF one is
-`openai.image.gifModel`.
+`/gpt` was granted to a user. The image model is `gpt.image.model` and the GIF one is
+`gpt.image.gifModel`.
 
 ```text
 /gpt -img um robô nadando em aquarela
@@ -165,33 +165,33 @@ Without `-gif`, "gere um gif animado..." replying to a photo also works. To adju
 the time of each one in a single call (`-frames`, `-ms`), use
 [`/draw -gif`](draw.md#animated-gif--gif).
 
-## Voice (`-voz`)
+## Voice (`-voice`)
 
-`/gpt -voz <texto>` asks OpenAI (`v1/audio/speech`) for a voice for the text and replies with a
+`/gpt -voice <texto>` asks OpenAI (`v1/audio/speech`) for a voice for the text and replies with a
 **voice note** (Ogg/Opus, like WhatsApp's). The default style is the robot voice.
 
 ```text
-/gpt -voz exterminar todos os humanos          → the voice note, in a robot voice
-(respondendo um texto)  /gpt -voz              → speaks the replied message's text
-(respondendo um texto)  /gpt -voz fale como um robô meio metálico → speaks the replied text in that style
+/gpt -v exterminar todos os humanos          → the voice note, in a robot voice
+(respondendo um texto)  /gpt -voice              → speaks the replied message's text
+(respondendo um texto)  /gpt -voice fale como um robô meio metálico → speaks the replied text in that style
 ```
 
 - **With no typed text**, it speaks the replied message's (an audio is transcribed first). **With no
   reply**, it speaks the typed text. **With both**, it speaks the replied one and the typed one
-  becomes the style (only the `gpt-4o-*` models follow the style). `-voz` can go anywhere in the text.
+  becomes the style (only the `gpt-4o-*` models follow the style). `-voice` can go anywhere in the text.
   Up to 4096 characters.
-- Three settings choose how it sounds: `openai.tts.model` (`gpt-4o-mini-tts`; the id your account
-  has), `openai.tts.voice` (`onyx`, the default, or `alloy`, `ash`, `ballad`, `coral`, `echo`,
-  `fable`, `nova`, `sage`, `shimmer`, `verse`), and `openai.tts.instructions` (the style: the
+- Three settings choose how it sounds: `gpt.tts.model` (`gpt-4o-mini-tts`; the id your account
+  has), `gpt.tts.voice` (`onyx`, the default, or `alloy`, `ash`, `ballad`, `coral`, `echo`,
+  `fable`, `nova`, `sage`, `shimmer`, `verse`), and `gpt.tts.instructions` (the style: the
   default asks for a robot voice; e.g.:
-  `/set openai.tts.instructions Fale como um locutor de rádio animado`). Only the `gpt-4o-*` models
+  `/set gpt.tts.instructions Fale como um locutor de rádio animado`). Only the `gpt-4o-*` models
   follow the style: with `tts-1`, the voice comes out normal.
 - The voice is billed per character, and the text goes through OpenAI's server.
 
 ## Status (`-status`)
 
 With `-status` (or `-s`) the reply gets a footer with the call's usage. It's on by default in all
-replies (also in `/tldr`); to turn it off, `/set openai.status false` (then only `-status` shows
+replies (also in `/tldr`); to turn it off, `/set gpt.status false` (then only `-status` shows
 it).
 
 ```text
@@ -207,18 +207,18 @@ it).
   or TLS.
 - **Tokens**: the ones OpenAI reports (`usage`): total, input (📥), and output (📤). Voice doesn't
   report them.
-- **💵 Cost**: estimated (the `~`), tokens × the model's price in the `openai.pricing` setting
+- **💵 Cost**: estimated (the `~`), tokens × the model's price in the `gpt.pricing` setting
   (`modelo=entrada/saída`, dollars per 1M tokens). Prices start out empty: with no price, or no
   tokens (voice), the footer shows `cost n/a (run /gpt -prices)`. To update the prices, `/gpt -prices` (owner and
-  admins only) reads the Standard table on OpenAI's site and writes it to `openai.pricing`, showing
+  admins only) reads the Standard table on OpenAI's site and writes it to `gpt.pricing`, showing
   what changed; whatever you added by hand that the page doesn't have stays as is. With the OpenAI
-  key configured, the bot does this on its own every 15 days (`openai.pricing.auto`, on by default;
-  `/set openai.pricing.auto false` to only update by hand). With prices older than 30 days, the
+  key configured, the bot does this on its own every 15 days (`gpt.pricing.auto`, on by default;
+  `/set gpt.pricing.auto false` to only update by hand). With prices older than 30 days, the
   footer warns (`⚠️ prices are N days old: /gpt -prices`, only once the prices have been updated at least once). If the site changes format, the command warns
-  and nothing is changed (use `/set openai.pricing`).
-- **🏦 Balance**: only with the admin key and `openai.credit.total` (as in `-usage`). The spend comes
+  and nothing is changed (use `/set gpt.pricing`).
+- **🏦 Balance**: only with the admin key and `gpt.credit.total` (as in `-usage`). The spend comes
   from the Costs API, read every 5 minutes (it lags), plus the estimate of the calls made since
-  then. Without `openai.credit.since`, it counts the last 180 days.
+  then. Without `gpt.credit.since`, it counts the last 180 days.
 - **🔁 N calls**: shows up when the command made more than one (audio transcribed and then the chat).
 - Voice, image, and GIF have no text for the footer: the status goes in a separate message.
 
@@ -237,18 +237,18 @@ curl "https://api.openai.com/v1/organization/usage/completions?start_time=<7 dia
 
 The Usage API doesn't accept the regular key: it needs an Admin key (`sk-admin-...`, created at
 platform.openai.com › Organization › Admin keys), in `OPENAI_ADMIN_KEY` in `config/.env` or in the
-`openai.admin.key` setting (`/set openai.admin.key sk-admin-...`, shown masked). Days are in UTC.
+`gpt.admin.key` setting (`/set gpt.admin.key sk-admin-...`, shown masked). Days are in UTC.
 
 **Money** (Costs API, also with the admin key): the dollar spend for the period, by day and by model,
 and the "other costs" (image, voice, transcription). OpenAI's API **doesn't report the account
-balance**, so the `$used/$total` comes from two settings of yours: `openai.credit.total` (the dollars
-you bought) and `openai.credit.since` (the purchase date, `YYYY-MM-DD`). The used amount is the spend
+balance**, so the `$used/$total` comes from two settings of yours: `gpt.credit.total` (the dollars
+you bought) and `gpt.credit.since` (the purchase date, `YYYY-MM-DD`). The used amount is the spend
 since that date:
 
 ```text
-/set openai.credit.total 10
-/set openai.credit.since 2026-11-01
-/gpt -usage
+/set gpt.credit.total 10
+/set gpt.credit.since 2026-11-01
+/gpt -u
 💰 Credits: $1.51/$10.00 · $8.49 left (spent since 01/11/2026)
 ```
 
@@ -260,7 +260,7 @@ so it costs almost nothing) and reads the `x-ratelimit-*` headers from the respo
 remains in the current window, and when it resets, for tokens and requests of the model in use.
 
 ```text
-/gpt -usage
+/gpt -u
 💰 Credits: $1.51/$10.00 · $8.49 left (spent since 01/11/2026)
 
 📊 OpenAI usage — last 7 days
@@ -293,7 +293,7 @@ remains in the current window, and when it resets, for tokens and requests of th
   key rejected** (401 or 403): the warning that the Usage API needs an Admin key (or a key with the
   Usage scope in Read), and the limits come out anyway.
 - **Without any key**: `⚠️ OpenAI API key not found: /gpt is disabled.` plus a hint.
-- An invalid number of days: `❌ Use: /gpt -usage [days] (from 1 to 31; default 7)`.
+- An invalid number of days: `❌ Usage: /gpt -usage [days] (from 1 to 31; default 7)`.
 - There are no per-project limits here: the `organization/projects/<id>/rate_limits` endpoint needs
   the project id, and the headers already show the limit that applies to the key in use.
 
@@ -305,11 +305,11 @@ by the option that comes with it:
 
 | Use | Change with | Setting |
 |---|---|---|
-| Default (questions) | `/gpt -m <modelo>` | `openai.api.model` |
-| Images | `/gpt -m <modelo> -img` | `openai.image.model` |
-| GIF | `/gpt -m <modelo> -gif` | `openai.image.gifModel` |
-| Audio transcription | `/gpt -m <modelo> -audio` | `openai.transcribe.model` |
-| Voice | `/gpt -m <modelo> -voz` | `openai.tts.model` |
+| Default (questions) | `/gpt -m <modelo>` | `gpt.api.model` |
+| Images | `/gpt -m <modelo> -img` | `gpt.image.model` |
+| GIF | `/gpt -m <modelo> -gif` | `gpt.image.gifModel` |
+| Audio transcription | `/gpt -m <modelo> -audio` | `gpt.transcribe.model` |
+| Voice | `/gpt -m <modelo> -voice` | `gpt.tts.model` |
 
 ```text
 /gpt -m
@@ -329,7 +329,7 @@ by the option that comes with it:
 *-audio* (audio transcription) — /gpt -m <modelo> -audio
 ✅ gpt-transcribe
 
-*-voz* (voice) — /gpt -m <modelo> -voz
+*-voice* (voice) — /gpt -m <modelo> -voice
 ✅ gpt-4o-mini-tts
 
 💡 The list is the one from your key (GET /v1/models).
@@ -347,8 +347,8 @@ by the option that comes with it:
   audio, and voice ones are free-form, because the names change.
 
 The question model comes from `OPENAI_MODEL` in `config/.env` or, if it's empty, from the
-`openai.api.model` setting (default `gpt-4o-mini`). `/gpt -m <modelo>` and
-`/set openai.api.model <modelo>` change the setting right away; with `OPENAI_MODEL` filled in, it
+`gpt.api.model` setting (default `gpt-4o-mini`). `/gpt -m <modelo>` and
+`/set gpt.api.model <modelo>` change the setting right away; with `OPENAI_MODEL` filled in, it
 still takes priority (the bot warns).
 
 The bot uses the `v1/chat/completions` endpoint. The list of accepted IDs is in `src/openai.js`.
@@ -370,12 +370,12 @@ Availability depends on the account used by the API. Check the
 [platform.openai.com/api-keys](https://platform.openai.com/api-keys)). It's looked up in this order:
 
 1. `OPENAI_API_KEY` in `config/.env` (takes effect on the next start);
-2. the `openai.api.key` setting, which you can change from WhatsApp without restarting:
-   `/set openai.api.key sk-proj-...` (shown masked; `/set -reset openai.api.key` deletes it).
+2. the `gpt.api.key` setting, which you can change from WhatsApp without restarting:
+   `/set gpt.api.key sk-proj-...` (shown masked; `/set -reset gpt.api.key` deletes it).
 
 With neither, questions reply `⚠️ OpenAI API key not found: /gpt is disabled.`. Querying and configuring the model
 remain available. The maximum wait time follows the same order: `OPENAI_TIMEOUT_MS` in `.env` or the
-`openai.timeout.ms` setting (default 60000, from 5000 to 300000). An invalid value in `.env` is
+`gpt.timeout.ms` setting (default 60000, from 5000 to 300000). An invalid value in `.env` is
 ignored (with a warning in the log) and the setting applies. For the model, see
 [Choosing the model](#choosing-the-model).
 

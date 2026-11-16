@@ -6,7 +6,7 @@ const { USER } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/news',
-    usage: '/news <-hack|-g1|-gazeta|-brasil> [count]',
+    usage: '/news <-hack|-g1|-gazeta|-brazil> [count]',
     summary: 'Latest headlines from the RSS feeds',
     help: 'Latest headlines from the RSS feeds, with source, date and link. Categories can be combined: /news -g1 -gazeta. Feeds for each one in the setting news.<category>.',
     cmd_opts: [
@@ -18,7 +18,7 @@ module.exports = {
         { opts: ['g1'], values: [], desc: 'g1 (latest news).' },
         { opts: ['gazeta', 'gaz'], values: [], desc: 'Gazeta do Povo (Brazil).' },
         {
-            opts: ['brasil', 'br'],
+            opts: ['brazil', 'br'],
             values: [],
             desc: 'Blogs about Brazil listed on feedspot (mostly in English).'
         },

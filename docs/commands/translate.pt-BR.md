@@ -2,20 +2,20 @@
 
 Traduz um texto pelo Google Translate, sem chave e sem custo. Respondendo (reply) uma mensagem,
 traduz o texto dela. O idioma de origem é detectado sozinho; o de destino é o português, ou o do
-`-para`.
+`-to`.
 
 | Opção | Valor | Descrição |
 |---|---|---|
 | `[texto]` | | O texto (até 5000 caracteres, com quebras de linha). Sem ele, a mensagem respondida |
-| `-para`, `-p` | `<idioma>` | Idioma de destino, pelo código: `en`, `es`, `fr`, `it`, `de`, `ja`, `zh-CN`... Maiúsculas e minúsculas valem igual. Padrão: setting `traduzir.lang` (`pt`) |
+| `-to`, `-p` | `<idioma>` | Idioma de destino, pelo código: `en`, `es`, `fr`, `it`, `de`, `ja`, `zh-CN`... Maiúsculas e minúsculas valem igual. Padrão: setting `translate.lang` (`pt`) |
 | `-list`, `-l` | | Lista os idiomas aceitos, com o código |
 
 ```text
 /translate Where is the nearest pharmacy?
-/translate -para en Onde fica a farmácia mais próxima?
+/translate -p en Onde fica a farmácia mais próxima?
 /translate -p es               (respondendo uma mensagem)
 /translate -l                   → os idiomas e os códigos
-/set traduzir.lang en          → muda o idioma padrão
+/set translate.lang en          → muda o idioma padrão
 ```
 
 ```text
@@ -25,7 +25,7 @@ traduz o texto dela. O idioma de origem é detectado sozinho; o de destino é o 
 Onde fica a farmácia mais próxima?
 ```
 
-Se o texto já estiver no idioma de destino, a resposta acrescenta uma dica para usar o `-para` com
+Se o texto já estiver no idioma de destino, a resposta acrescenta uma dica para usar o `-to` com
 outro idioma.
 
 Não é admin: quem estiver no `bot.users` usa (com ele em `true`, qualquer pessoa).

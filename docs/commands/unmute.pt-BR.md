@@ -13,7 +13,7 @@ apagados e de reações removidas ou trocadas da pessoa, do grupo ou da comunida
 /unmute /Grupo L200/        → os do grupo
 /unmute 2                   → o nº 2 da lista do /mute
 /unmute                     → respondendo um aviso: de onde ele veio (a pessoa, o grupo ou a comunidade)
-/unmute -all                → todos (o mesmo que /unmute -a ou /mute -rm all)
+/unmute -a                → todos (o mesmo que /unmute -a ou /mute -rm all)
 ```
 
 - Quem não está silenciado: o bot avisa (`ℹ️ 👤 Fulano não está silenciado.`, com a dica de ver a

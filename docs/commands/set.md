@@ -18,7 +18,7 @@ Lists and changes the bot's settings stored in the `settings` table (see
 ```text
 /set
 /set show.max
-/set alerta          → only the keys with "alerta" (alerta.intervalMin, alerta.max, defi.alerta.intervalMin)
+/set alert           → only the keys with "alert" (alert.*, defi.alert.*, email.alerts, show.alert.*)
 /set /^news\./       → the ones that match the regex
 /set show.max 10
 /set monitor.pool=300

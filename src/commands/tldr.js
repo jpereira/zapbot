@@ -23,7 +23,7 @@ const { readDuration } = require('../util/when');
  * /tldr 2h | 1d     → those of the last period, as in /cron: 30m, 2h, 1d, 1h30m (the "-" in front is optional)
  * /tldr 300          → the last 300 (max. setting 'tldr.maxMsgs')
  * /tldr -c família   → from another chat: name, /regex/ or @contact
- * /tldr -pv          → in your private chat instead of exposing it in the current chat
+ * /tldr -private          → in your private chat instead of exposing it in the current chat
  * (replying)      → from the replied message until now (the typed period or -c win)
  * Uses the text already stored in the database: regular messages stay cache.messageRetentionHours (68 h). They stay
  * except the commands, the deleted ones and the media without a caption.
@@ -216,7 +216,7 @@ async function summarize({ msg, opts, chatId, chatName, quotedMsg }) {
             (notices.length ? `\n_(${notices.join('; ')})_` : '') +
             `\n\n${summary}${await consumptionFooter()}`;
 
-        if (opts.opt.pv) {
+        if (opts.opt.private) {
             await completeNotice(msg, notice, t('tldr.sentPrivate'));
             await client.sendMessage(client.info.wid._serialized, textAlt);
         } else {
@@ -227,7 +227,7 @@ async function summarize({ msg, opts, chatId, chatName, quotedMsg }) {
     }
 }
 
-// The -status|-s (or the openai.status setting) shows the call usage in the footer
+// The -status|-s (or the gpt.status setting) shows the call usage in the footer
 const cmdTldr = (ctx) => measureConsumption(ctx.opts?.given.has('status'), () => summarize(ctx));
 
 module.exports = {

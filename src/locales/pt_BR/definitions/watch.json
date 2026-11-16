@@ -9,7 +9,7 @@
         "l"
       ],
       "values": [],
-      "desc": "Lista somente regras, origens, destinos e contagens, sem os textos dos matches.",
+      "desc": "Lista somente regras, origens, destinos e contagens. Sem os textos dos matches.",
       "ex": [
         "/watch -l"
       ]
@@ -49,7 +49,7 @@
       "values": [
         "<origem>"
       ],
-      "desc": "Restringe uma regra nova a um contato, grupo ou canal, por nome, número, menção ou ID @newsletter. Contato: mensagens dele em qualquer chat.",
+      "desc": "Restringe uma regra nova a um contato, grupo ou canal. Por nome, número, menção ou ID @newsletter. Contato: mensagens dele em qualquer chat.",
       "ex": [
         "/watch /chuva/i -in /Defesa Civil/"
       ]
@@ -64,8 +64,8 @@
       ],
       "desc": "Remove a regra N (ou a regra pelo texto), suas ocorrências, origem e destinos.",
       "ex": [
-        "/watch -rm 3",
-        "/watch -rm /Jorge/"
+        "/watch -r 3",
+        "/watch -r /Jorge/"
       ]
     },
     {
@@ -78,8 +78,8 @@
       ],
       "desc": "Limpa as ocorrências da regra N (ou da regra pelo texto); sem N, limpa todas. Mantém regras, origens e destinos.",
       "ex": [
-        "/watch -flush 3",
-        "/watch -flush /Jorge/"
+        "/watch -f 3",
+        "/watch -f /Jorge/"
       ]
     },
     {
@@ -99,7 +99,7 @@
       "argv": [
         "-N"
       ],
-      "desc": "Quantidade de matches recentes na listagem ou com -s, limitada por watch.showMax (padrão 20).",
+      "desc": "Quantidade de matches recentes a mostrar. Na listagem ou com -s, limitada por watch.showMax (padrão 20).",
       "ex": [
         "/watch -10",
         "/watch -s 3 -10"
@@ -125,8 +125,8 @@
       ],
       "desc": "Ofusca telefones na saída. Com N, liga o 🔒 da regra N: os avisos e ocorrências dela saem ofuscados, até o -umask.",
       "ex": [
-        "/watch -mask",
-        "/watch -mask 3"
+        "/watch -m",
+        "/watch -m 3"
       ]
     },
     {
@@ -139,7 +139,7 @@
       ],
       "desc": "Desliga o 🔒 da regra N (volta a mostrar os telefones).",
       "ex": [
-        "/watch -umask 3"
+        "/watch -u 3"
       ]
     }
   ]

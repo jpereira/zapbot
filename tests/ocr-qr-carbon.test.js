@@ -18,7 +18,7 @@ const photo = (extras = {}) => bot.createMessage({ de: OTHERAlt.jid, tipo: 'imag
 beforeEach(bot.restart);
 
 describe('/ocr', () => {
-    beforeEach(() => bot.setSetting('openai.status', false)); // without the usage footer (the default is on)
+    beforeEach(() => bot.setSetting('gpt.status', false)); // without the usage footer (the default is on)
 
     const chat = (textAlt) => network.responder('post', 'api.openai.com/v1/chat/completions', { choices: [{ message: { content: textAlt } }] });
 
@@ -27,13 +27,13 @@ describe('/ocr', () => {
     });
 
     test('sem foto: o uso', async () => {
-        await bot.setSetting('openai.api.key', 'sk-teste');
+        await bot.setSetting('gpt.api.key', 'sk-teste');
         assert.deepEqual(await bot.replyAlt('/ocr'), ['❌ Responda uma foto com /ocr (ou envie a foto com /ocr na legenda).']);
         assert.equal(network.chamadas.length, 0);
     });
 
     test('respondendo uma foto: o texto dela, com a imagem indo para o ChatGPT', async () => {
-        await bot.setSetting('openai.api.key', 'sk-teste');
+        await bot.setSetting('gpt.api.key', 'sk-teste');
         chat('NOTA FISCAL\nTotal: 10,00');
 
         const r = await bot.replyAlt('/ocr', { citada: photo() });
@@ -45,7 +45,7 @@ describe('/ocr', () => {
     });
 
     test('a foto com a legenda /ocr também vale; imagem sem texto recebe o aviso', async () => {
-        await bot.setSetting('openai.api.key', 'sk-teste');
+        await bot.setSetting('gpt.api.key', 'sk-teste');
         chat('NO_TEXT');
         const msg = bot.createMessage({ texto: '/ocr', tipo: 'image', midia: PHOTO });
         const r = await bot.deliver(msg);
@@ -53,13 +53,13 @@ describe('/ocr', () => {
     });
 
     test('-s mostra o consumo no rodapé', async () => {
-        await bot.setSetting('openai.api.key', 'sk-teste');
+        await bot.setSetting('gpt.api.key', 'sk-teste');
         chat('Oi');
         assert.match((await bot.replyAlt('/ocr -s', { citada: photo() })).at(-1), /^📝 Oi\n\n_📡 ⬆️ \d+ B TX/);
     });
 
     test('o erro da OpenAI vira aviso', async () => {
-        await bot.setSetting('openai.api.key', 'sk-teste');
+        await bot.setSetting('gpt.api.key', 'sk-teste');
         network.responder('post', 'api.openai.com/v1/chat/completions', bot.errorHttp(401));
         const r = await bot.executar('/ocr', { citada: photo(), erroEsperado: true });
         assert.match(r.at(-1).texto, /Invalid|inválida|🔑/);
@@ -67,13 +67,13 @@ describe('/ocr', () => {
 });
 
 describe('/tts', () => {
-    beforeEach(() => bot.setSetting('openai.status', false));
+    beforeEach(() => bot.setSetting('gpt.status', false));
 
-    test('sem a chave, sem texto e o texto vira nota de voz (como o /gpt -voz)', async () => {
+    test('sem a chave, sem texto e o texto vira nota de voz (como o /gpt -voice)', async () => {
         assert.match((await bot.replyAlt('/tts oi'))[0], /⚠️ API key da OpenAI não encontrada: o \/tts está desativado/);
 
-        await bot.setSetting('openai.api.key', 'sk-teste');
-        assert.deepEqual(await bot.replyAlt('/tts'), ['❌ Use: /tts <texto> (ou responda uma mensagem de texto)']);
+        await bot.setSetting('gpt.api.key', 'sk-teste');
+        assert.deepEqual(await bot.replyAlt('/tts'), ['❌ Usage: /tts <texto> (ou responda uma mensagem de texto)']);
 
         network.responder('post', 'api.openai.com/v1/audio/speech', Buffer.from('OGGDATA'));
         const r = (await bot.executar('/tts Bom dia!')).at(-1);
@@ -84,7 +84,7 @@ describe('/tts', () => {
     });
 
     test('respondendo um texto: fala a mensagem, e o que foi digitado é o estilo', async () => {
-        await bot.setSetting('openai.api.key', 'sk-teste');
+        await bot.setSetting('gpt.api.key', 'sk-teste');
         network.responder('post', 'api.openai.com/v1/audio/speech', Buffer.from('OGGDATA'));
         const quoted = bot.createMessage({ texto: 'Olá, mundo', de: OTHERAlt.jid });
 
@@ -95,7 +95,7 @@ describe('/tts', () => {
     });
 
     test('texto grande demais', async () => {
-        await bot.setSetting('openai.api.key', 'sk-teste');
+        await bot.setSetting('gpt.api.key', 'sk-teste');
         assert.match((await bot.replyAlt(`/tts ${'a'.repeat(4097)}`))[0], /❌ O texto tem 4097 caracteres: a voz aceita até 4096\./);
     });
 });
@@ -132,7 +132,7 @@ describe('/qr e /decodeqr', () => {
     test('sem texto: o da mensagem respondida; sem nada, o uso; grande demais', async () => {
         const quoted = bot.createMessage({ texto: 'meu texto', de: OTHERAlt.jid });
         assert.ok((await bot.executar('/qr', { citada: quoted })).at(-1).content instanceof MessageMedia);
-        assert.match((await bot.replyAlt('/qr'))[0], /^❌ Use: \/qr <texto>/);
+        assert.match((await bot.replyAlt('/qr'))[0], /^❌ Usage: \/qr <texto>/);
         assert.match((await bot.replyAlt(`/qr ${'a'.repeat(1001)}`))[0], /❌ O texto tem 1001 caracteres: o QR Code aceita até 1000\./);
     });
 
@@ -196,7 +196,7 @@ describe('/carbon', () => {
         const quoted = bot.createMessage({ texto: 'let a = 1;', de: OTHERAlt.jid });
         await bot.executar('/carbon', { citada: quoted });
         assert.match(sharp.entradas.at(-1).toString(), /let<\/tspan> a = <tspan fill="#fab387">1/);
-        assert.match((await bot.replyAlt('/carbon'))[0], /^❌ Use: \/carbon /);
+        assert.match((await bot.replyAlt('/carbon'))[0], /^❌ Usage: \/carbon /);
     });
 
     test('a cerca do Markdown sai, o texto é escapado e os limites valem', () => {

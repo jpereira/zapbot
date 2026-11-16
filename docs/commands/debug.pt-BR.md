@@ -40,11 +40,11 @@ vale quando o envio desse e-mail ainda está em andamento.
 ```text
 /debug -off
 /debug -on
-/debug -level 2 -filter /chatName.*Jorge/
-/debug -on -level 2 -filter /sapato/i -copy-to @Jorge
-/debug -on -level 3 -filter -copy-to
+/debug -lvl 2 -f /chatName.*Jorge/
+/debug -on -lvl 2 -f /sapato/i -copy-to @Jorge
+/debug -on -lvl 3 -f -copy-to
 /debug -off
-/debug -on -lvl 3 -filter /@newsletter/
+/debug -on -lvl 3 -f /@newsletter/
 /debug
 ```
 

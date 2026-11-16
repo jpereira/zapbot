@@ -51,7 +51,7 @@ votou em cada uma. Respondendo (reply) uma enquete, o placar é o dela.
   placar. Com `-m`, cada opção marcada conta um voto.
 - Os votos começam a ser contados com o bot no ar: os dados em enquetes de antes disso (ou de quando
   ele estava desconectado) não aparecem.
-- As enquetes e os votos ficam 90 dias (setting `enquete.retentionDays`, padrão 90, de 1 a 365),
+- As enquetes e os votos ficam 90 dias (setting `poll.retentionDays`, padrão 90, de 1 a 365),
   nas tabelas `polls` e `poll_votes`.
 - Sem enquete registrada no chat, o bot avisa. Respondendo uma enquete da qual o bot não tem os
   votos (que não é da sua conta), ele também avisa.

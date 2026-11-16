@@ -1,7 +1,7 @@
 {
   "summary": "Desenha uma imagem com o GPT Image (OpenAI)",
   "usage": "/draw [pedido]  ou  /draw -gif [-frames N] [-ms N] [pedido]  ou  /draw [-gif] -model [modelo]",
-  "help": "Desenha uma imagem com o GPT Image (OpenAI); com -gif, um GIF animado (GPT Image 2.6), e numa foto (legenda ou resposta) edita a foto ou a anima. Respondendo uma mensagem, o texto dela entra no pedido. Precisa de OPENAI_API_KEY no config/.env ou do setting openai.api.key.",
+  "help": "Desenha uma imagem com o GPT Image (OpenAI); com -gif, um GIF animado (GPT Image 2.6), e numa foto (legenda ou resposta) edita a foto ou a anima. Respondendo uma mensagem, o texto dela entra no pedido. Precisa de OPENAI_API_KEY no config/.env ou do setting gpt.api.key.",
   "cmd_opts": [
     {
       "opts": [
@@ -9,10 +9,10 @@
         "g"
       ],
       "values": [],
-      "desc": "GIF animado (modelo openai.image.gifModel; só os gpt-image-2.6-*). Numa foto, ou respondendo uma, anima a foto. Os quadros e o tempo de cada um são os settings openai.gif.frames e openai.gif.frameMs.",
+      "desc": "GIF animado (modelo gpt.image.gifModel; só os gpt-image-2.6-*). Numa foto, ou respondendo uma, anima a foto. Os quadros e o tempo de cada um são os settings gpt.gif.frames e gpt.gif.frameMs.",
       "ex": [
-        "/draw -gif um gato dançando",
-        "/draw -gif a bandeira ao vento (respondendo uma foto)"
+        "/draw -g um gato dançando",
+        "/draw -g a bandeira ao vento (respondendo uma foto)"
       ]
     },
     {
@@ -23,7 +23,7 @@
       "values": [
         "<n>"
       ],
-      "desc": "Quadros do GIF, de 2 a 16 (padrão: o setting openai.gif.frames, 9). Vale como -gif; quanto mais quadros, mais caro.",
+      "desc": "Quadros do GIF, de 2 a 16 (padrão: o setting gpt.gif.frames, 9). Vale como -gif; quanto mais quadros, mais caro.",
       "ex": [
         "/draw -f 6 uma bandeira ao vento"
       ]
@@ -35,9 +35,9 @@
       "values": [
         "<ms>"
       ],
-      "desc": "Duração de cada quadro do GIF, de 20 a 2000 ms (padrão: o setting openai.gif.frameMs, 200). Vale como -gif.",
+      "desc": "Duração de cada quadro do GIF, de 20 a 2000 ms (padrão: o setting gpt.gif.frameMs, 200). Vale como -gif.",
       "ex": [
-        "/draw -gif -f 6 -ms 300 uma bandeira ao vento"
+        "/draw -g -f 6 -ms 300 uma bandeira ao vento"
       ]
     },
     {
@@ -48,11 +48,11 @@
       "values": [
         "[modelo]"
       ],
-      "desc": "Troca o modelo da imagem (setting openai.image.model) ou, com -gif, o do GIF (openai.image.gifModel). Sem modelo, lista o atual e os que a sua chave vê.",
+      "desc": "Troca o modelo da imagem (setting gpt.image.model) ou, com -gif, o do GIF (gpt.image.gifModel). Sem modelo, lista o atual e os que a sua chave vê.",
       "ex": [
         "/draw -m",
         "/draw -m gpt-image-2",
-        "/draw -gif -m gpt-image-2.6-flare"
+        "/draw -g -m gpt-image-2.6-flare"
       ]
     },
     {
@@ -61,7 +61,7 @@
         "s"
       ],
       "values": [],
-      "desc": "Acrescenta no rodapé da resposta o consumo da chamada: bytes enviados (TX) e recebidos (RX), tokens gastos, custo estimado e saldo. Para deixar sempre ligado: /set openai.status true.",
+      "desc": "Acrescenta no rodapé da resposta o consumo da chamada: bytes enviados (TX) e recebidos (RX), tokens gastos, custo estimado e saldo. Para deixar sempre ligado: /set gpt.status true.",
       "ex": [
         "/draw -s um gato astronauta em aquarela"
       ]

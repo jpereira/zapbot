@@ -7,7 +7,7 @@
     "/profile /Jorge Pereira/",
     "/profile @Fulano",
     "/profile +5521999999999",
-    "/profile -set"
+    "/profile -s"
   ],
   "cmd_opts": [
     {
@@ -24,7 +24,7 @@
       "values": [],
       "desc": "Troca a foto pela imagem que você respondeu (ou pela foto enviada com /profile -set na legenda): a do grupo, no grupo (o bot precisa ser admin, a menos que o grupo deixe todos editarem), ou a da sua conta, em qualquer outro chat. Só o dono e os admins, mesmo com o comando delegado.",
       "ex": [
-        "/profile -set"
+        "/profile -s"
       ]
     },
     {
@@ -35,7 +35,7 @@
       "values": [],
       "desc": "Ofusca telefones na saída (ex.: +55219****44).",
       "ex": [
-        "/profile -mask /Fulano/"
+        "/profile -m /Fulano/"
       ]
     }
   ]

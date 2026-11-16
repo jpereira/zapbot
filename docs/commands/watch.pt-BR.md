@@ -19,10 +19,10 @@ pelo setting `watch.showMax`.
 /watch -s /Jorge/ -q "carro"           → só os que têm "carro"
 /watch -s 3 -q /carr(o|ão)/i           → só os que casam com a regex
 /watch -s 3 -to /Jorge Pereira/        → troca os destinos da regra #3
-/watch -rm 3                          → remove a regra #3
-/watch -flush /Jorge/                  → limpa as ocorrências da /Jorge/
-/watch -mask 3                         → 🔒 liga o mask na regra #3 (avisos com telefone ofuscado)
-/watch -umask 3                        → desliga o 🔒 da regra #3
+/watch -r 3                          → remove a regra #3
+/watch -f /Jorge/                  → limpa as ocorrências da /Jorge/
+/watch -m 3                         → 🔒 liga o mask na regra #3 (avisos com telefone ofuscado)
+/watch -u 3                        → desliga o 🔒 da regra #3
 ```
 Uma regra sem `-in` vale em qualquer lugar. Com `-in`, você escolhe a origem:
 
@@ -119,7 +119,7 @@ Uma listagem, com as dicas no fim, uma por linha:
 /watch -s N -q <texto|/regex/> só as que casam.
 /watch -s N -to <destino|off> troca os destinos.
 /watch -f N limpa as ocorrências.
-/watch -mask N liga o 🔒 (telefones ofuscados nos avisos); -umask N desliga.
+/watch -m N liga o 🔒 (telefones ofuscados nos avisos); -u N desliga.
 ```
 
 ## Buscar

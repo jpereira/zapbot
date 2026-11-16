@@ -3,7 +3,7 @@
  */
 module.exports = {
     // -h|-help (src/comandos/base.js)
-    'help.usage': 'Uso: ',
+    'help.usage': 'Usage: ',
     'help.options': 'Opções:',
     'help.arguments': 'Argumentos:',
     'help.more': 'Detalhes: {url}',

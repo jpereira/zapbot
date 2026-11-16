@@ -9,36 +9,36 @@ live in SQLite and survive restarts; the database backup includes them too.
 | *(none)* | Registered contacts, ids, interval, observed state, last check and the last `monitor.maxRecords` times per contact |
 | `-add`, `-a` | Registers a person by address book name, `/name with spaces/`, mention or number with country and area code |
 | `-rm`, `-r` | Removes by list id or by name, `/name with spaces/`, real mention or phone; `all` deletes all local registrations and histories |
-| `-alerta` | With `-add`, turns on the online alert; alone, turns it on for a registered contact, via the same resolver or id |
+| `-alert` | With `-add`, turns on the online alert; alone, turns it on for a registered contact, via the same resolver or id |
 | `-list`, `-l` | All contacts or only the given contact, with the last `monitor.maxRecords` distinct times per contact; long reports go in a `.txt` |
 
 ![/monitor demo](../assets/demo/03-monitor.gif)
 
 ```text
 /monitor
-/monitor -add Jorge Chip L200
+/monitor -a Jorge Chip L200
 /monitor -a /Jorge Chip L200/
 /monitor -a "Jorge Chip L200"
-/monitor -add /Maria/ -alerta
-/monitor -alerta /Maria/
+/monitor -a /Maria/ -alert
+/monitor -alert /Maria/
 /monitor -a @Fulano
-/monitor -add +5521999999999
-/monitor -list
+/monitor -a +5521999999999
+/monitor -l
 /monitor -l
 /monitor -l Maria
 /monitor -l /Maria/
 /monitor -l +5521999999999
 /monitor -l @Fulano
 /monitor -l #1
-/monitor -rm 1
+/monitor -r 1
 /monitor -r #1
 /monitor -r 2
-/monitor -rm Jorge Chip L200
+/monitor -r Jorge Chip L200
 /monitor -r /Jorge Chip L200/
 /monitor -r "Jorge Chip L200"
-/monitor -rm @Fulano
+/monitor -r @Fulano
 /monitor -r +5521999999999
-/monitor -rm all
+/monitor -r all
 /monitor -r all
 ```
 
@@ -95,8 +95,8 @@ If more than one registration matches, the list shows all the results of the fil
 Phone, id and real mention are compared against the identifiers of the monitored registrations.
 Without a filter, they show all monitored contacts; with no match, they say none was found.
 
-Register with `/monitor -add /Maria/ -alerta` or turn it on for an already registered person with
-`/monitor -alerta /Maria/`. The alert is saved in the database and shows up as enabled in the list.
+Register with `/monitor -add /Maria/ -alert` or turn it on for an already registered person with
+`/monitor -alert /Maria/`. The alert is saved in the database and shows up as enabled in the list.
 The notice is sent **to the bot owner's private chat**, even when an admin turns the option on:
 
 ```text

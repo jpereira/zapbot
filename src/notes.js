@@ -1,5 +1,5 @@
 /*
- * /notes: notes (notes table) and -alerta, which reminds of a note at a date/time.
+ * /notes: notes (notes table) and -alert, which reminds of a note at a date/time.
  */
 
 const os = require('os');
@@ -40,21 +40,21 @@ const packageJson = require('../package.json');
  * → the list (or the PDF) goes to the destinations, as in the other commands
  * /notes #tag <text>                 → notes (the same as -add, when it does not start with "-"); the #tag is required
  * (with an image, or in reply to one) /notes #tag [<text>] → saves the media in NOTES_DIR
- * (in reply to a message) /notes #tag | -add #tag [-alerta ...]
+ * (in reply to a message) /notes #tag | -add #tag [-alert ...]
  * → saves the replied message's text, with the ↩️ in front
  *   -add | -a #tag <texto>            → anota
- * -add <text> -alerta <when> [-to <destination>]...
- * → saves the note and notifies at the date/time (-to works as in the other -alerta)
+ * -add <text> -alert <when> [-to <destination>]...
+ * → saves the note and notifies at the date/time (-to works as in the other -alert)
  * -rm | -r <id...|#tag...|all>       → removes (-r 1 2 3, -r 1,2,3, -r #casa or all)
- * -alerta                             → lists only the notes with an alert
- * -alerta <id|#tag...> <when> [-to ...]
+ * -alert                             → lists only the notes with an alert
+ * -alert <id|#tag...> <when> [-to ...]
  * → sets (or swaps) the alert of a note (or of all those in the tag)
- * -alerta #tag...                     → lists only the alerts of those tags
- * -alerta -rm <id...|#tag...|all>     → removes the alert, keeping the note
+ * -alert #tag...                     → lists only the alerts of those tags
+ * -alert -rm <id...|#tag...|all>     → removes the alert, keeping the note
  * The alert fires ONCE, right away; the note stays. Owner only (role owner).
  */
 const MAX_DAYS = 365;
-const ALERT = /(^|\s)-alerta(?=\s|$)([\s\S]*)$/;
+const ALERT = /(^|\s)-alert(?=\s|$)([\s\S]*)$/;
 
 const noteDestinations = (n) => destinationsSaved(n.recipients, lineDestination(n));
 const noticeWhere = (destinations) => (destinations.length ? describeDestinations(destinations) : t('notes.yourPrivate'));
@@ -153,7 +153,7 @@ function noteLine(n, plan = false, position = 0) {
         : `${ini} ${body}${alert.replace(/\n {3}/, '\n')}\n🕐 _${end}_`;
 }
 
-// The ids of -rm / -alerta -rm: 1 2 3, 1,2,3 or all. Does any not exist? None is touched
+// The ids of -rm / -alert -rm: 1 2 3, 1,2,3 or all. Does any not exist? None is touched
 function readIds(textAlt, notes) {
     const partsAlt = textAlt.toLowerCase().split(/[\s,]+/).filter(Boolean);
     if (partsAlt.includes('all')) return { todos: true, ids: notes.map(n => n.id) };
@@ -172,7 +172,7 @@ function readIds(textAlt, notes) {
 async function removeNotes(msg, textIds, soAlert) {
     const notes = await listNotes();
     const { ids, faltando: missing, todos: allAlt2 } = readIds(textIds, notes);
-    const cmd = soAlert ? '/notes -alerta -rm' : '/notes -rm';
+    const cmd = soAlert ? '/notes -alert -rm' : '/notes -rm';
 
     if (!allAlt2 && (!ids.length || missing.length)) {
         const label = missing?.every(f => !f.startsWith('#')) ? 'ID' : '';
@@ -926,7 +926,7 @@ async function cmdNote({ msg, args, quotedMsg }) {
         return msg.reply(t('notes.rm.noTo'));
     }
     if (nameAlt === '-rm' || nameAlt === '-rm' || nameAlt === '-r') return removeNotes(msg, words.join(' '), false);
-    if (nameAlt === '-alerta') return alertAlt(msg, rest);
+    if (nameAlt === '-alert') return alertAlt(msg, rest);
 
     // An option that does not exist: error. Without a "-" in front, the whole text is a new note (the same as -add)
     if (nameAlt.startsWith('-')) {
@@ -958,9 +958,9 @@ async function checkNotes() {
             await sendToDestinations(destinations,
                 t('notes.alert.fired', { id: n.id, text: n.text, date: formatData(n.created_at) }),
                 { assunto: t('notes.subject.alert', { id: n.id, text: summarizeText(n.text, 60) }), opcoes: WITHOUT_PREVIEW }
-            ).catch(err => printError('/notes -alerta: falha ao avisar:', err.message));
+            ).catch(err => printError('/notes -alert: falha ao avisar:', err.message));
 
-            printInfo(`/notes -alerta disparado: #${n.id}` +
+            printInfo(`/notes -alert disparado: #${n.id}` +
                 (destinations.length ? ` → ${destinations.map(d => d.email ?? d.id).join(', ')}` : ''));
         }
     } catch (err) {

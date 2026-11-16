@@ -29,18 +29,18 @@ test('/alias cadastra com barra, sem barra, descrição longa e persiste no banc
     assert.equal((await bot.replyAlt('/alias -l'))[0], list);
     assert.equal((await bot.replyAlt('/help alias'))[0], list);
     assert.equal((await bot.replyAlt('/help /alias'))[0], list);
-    assert.match((await bot.replyAlt('/alias -h'))[0], /Uso: \/alias/);
+    assert.match((await bot.replyAlt('/alias -h'))[0], /Usage: \/alias/);
 });
 
 test('execução preserva opções, aspas, destinos repetidos e argumentos adicionais', async t => {
-    const commandAlt = '/crypto -alerta BTC > 90000 -to /Jorge Pereira/ -to /Lourival Neto/ ' +
+    const commandAlt = '/crypto -alert BTC > 90000 -to /Jorge Pereira/ -to /Lourival Neto/ ' +
         '-msg "⏰ Bitcoin to the moon! 🚀"';
     await bot.replyAlt('/alias lua -d "Preço do Bitcoin" ' + commandAlt);
     const run = t.mock.method(HANDLERS, '/crypto', async ({ msg, args, opts }) => {
         assert.equal(args, commandAlt.slice('/crypto '.length) + ' -list');
         const { destinos: destinations } = bot.src('destinations').extractDestinations(args);
         assert.deepEqual(destinations, ['Jorge Pereira', 'Lourival Neto']);
-        assert.equal(opts.opt.alerta, true);
+        assert.equal(opts.opt.alert, true);
         await msg.reply('executado');
     });
     assert.deepEqual(await bot.replyAlt('/lua -list'), [`🔗 Alias /lua -> ${commandAlt} -list`, 'executado']);
@@ -75,9 +75,9 @@ test('/alias /nome mostra o que o alias faz; não sendo alias, o erro', async ()
 test('opções do alvo são preservadas e aliases fixos são destinos válidos', async () => {
     await bot.replyAlt('/alias socorro /rates -h');
     assert.equal((await aliases())[0].command, '/rates -h');
-    assert.match((await bot.replyAlt('/socorro'))[1], /Uso: \/rates/);
+    assert.match((await bot.replyAlt('/socorro'))[1], /Usage: \/rates/);
     await bot.replyAlt('/alias foto /sticker');
-    assert.match((await bot.replyAlt('/foto'))[1], /Uso: \/sticker/);
+    assert.match((await bot.replyAlt('/foto'))[1], /Usage: \/sticker/);
     await bot.replyAlt('/alias apagar /mute -rm 2');
     assert.equal((await aliases()).find(a => a.name === '/apagar').command, '/mute -rm 2');
 });
@@ -266,7 +266,7 @@ test('/me envia a mensagem, roda {/comando} e aceita \\n', async t => {
     assert.deepEqual(await bot.replyAlt('/me Linha 1\\nLinha 2'), ['Linha 1\nLinha 2']);
     t.mock.method(HANDLERS, '/crypto', async ({ msg }) => msg.reply('₿ BTC\n💰 $1'));
     assert.deepEqual(await bot.replyAlt('/me O preço está em {/crypto}'), ['O preço está em\n\n₿ BTC\n💰 $1']);
-    assert.match((await bot.replyAlt('/me'))[0], /^❌ Use: \/me/);
+    assert.match((await bot.replyAlt('/me'))[0], /^❌ Usage: \/me/);
     assert.match((await bot.replyAlt('/me {/ping}'))[0], /não roda dentro do \/me/);
 });
 
@@ -279,7 +279,7 @@ test('/me -repeat|-r repete a mensagem n vezes', async () => {
     await bot.setSetting('me.maxRepeat', 5);
     assert.match((await bot.replyAlt('/me -r 6 a'))[0], /1 a 5/);
     assert.equal((await bot.replyAlt('/me -r 5 a'))[0], 'aaaaa');
-    assert.match((await bot.replyAlt('/me -r 3'))[0], /^❌ Use: \/me/);
+    assert.match((await bot.replyAlt('/me -r 3'))[0], /^❌ Usage: \/me/);
 });
 
 test('/me respeita as permissões dos {/comando} de quem chama', async t => {
@@ -372,7 +372,7 @@ test('-move renomeia o alias e recusa nome existente, de comando ou alias inexis
     assert.match((await bot.replyAlt('/alias -move novo outro'))[0], /Já existe um alias \/outro/);
     assert.match((await bot.replyAlt('/alias -move nao x'))[0], /não encontrado/);
     assert.match((await bot.replyAlt('/alias -move novo /help'))[0], /já é um comando/);
-    assert.match((await bot.replyAlt('/alias -move novo'))[0], /Use: \/alias -move/);
+    assert.match((await bot.replyAlt('/alias -move novo'))[0], /Usage: \/alias -move/);
     await bot.replyAlt('/alias -rm all');
 });
 

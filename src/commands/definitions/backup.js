@@ -10,7 +10,7 @@ module.exports = {
     usage: '/backup [OPTION]',
     aliases: [],
     summary: 'Database backup: lists, details, restores, sends or deletes',
-    help: `Database backup in ${BACKUP_DIR}: one automatic per day, and you can list, detail, restore, send or delete. The daily backup is also sent to the destination in the backup.to setting (contact, group, number or email, as in -to), without asking for -sim; if empty, it only saves locally. With no option, shows the current database and the backups.`,
+    help: `Database backup in ${BACKUP_DIR}: one automatic per day, and you can list, detail, restore, send or delete. The daily backup is also sent to the destination in the backup.to setting (contact, group, number or email, as in -to), without asking for -yes; if empty, it only saves locally. With no option, shows the current database and the backups.`,
     cmd_opts: [
         {
             opts: ['info', 'i'],
@@ -30,7 +30,7 @@ module.exports = {
         {
             opts: ['restore', 'r'],
             values: ['<no.|name>'],
-            desc: 'Restores the backup (asks for confirmation with -sim). First, backs up the current state.'
+            desc: 'Restores the backup (asks for confirmation with -yes). First, backs up the current state.'
         },
         { opts: ['rm'], values: ['<no.|all>'], desc: 'Deletes backup no. N (or all).' },
         {
@@ -39,14 +39,14 @@ module.exports = {
             desc: 'Sends the backup file (without a no.: the latest) to your private chat or to the -to destinations.'
         },
         {
-            opts: ['sim'],
+            opts: ['yes'],
             values: [],
             desc: 'Confirms: with -restore, the restore; with -send -to another chat, the sending (the database has the messages of all chats).'
         },
         {
             opts: ['to'],
             values: ['<destination>'],
-            desc: 'With -send: by email, as an attachment (email = the QRCODE_EMAIL_SMTP_TO), or to another chat: a contact, a mention, a group or a number (asks for -sim). Repeat for several.',
+            desc: 'With -send: by email, as an attachment (email = the QRCODE_EMAIL_SMTP_TO), or to another chat: a contact, a mention, a group or a number (asks for -yes). Repeat for several.',
             ex: [
                 '-to email',
                 '-to you@example.com',

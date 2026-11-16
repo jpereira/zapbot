@@ -31,7 +31,7 @@ Example reply:
 
 ```text
 /set pixelart.packs mimic100 blocktronics_space       → picks among these
-/set -reset pixelart.packs                            → back to the default
+/set -r pixelart.packs                            → back to the default
 ```
 
 Details:

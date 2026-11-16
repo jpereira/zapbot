@@ -48,7 +48,7 @@ sem configuração.
 
 | Comando | Serviço | Chave |
 |---|---|---|
-| `/gpt`, `/tldr`, `/draw` | [OpenAI](https://platform.openai.com/) (pago por uso) | `OPENAI_API_KEY` ou setting `openai.api.key` |
+| `/gpt`, `/tldr`, `/draw` | [OpenAI](https://platform.openai.com/) (pago por uso) | `OPENAI_API_KEY` ou setting `gpt.api.key` |
 | `/giphy` | [GIPHY](https://developers.giphy.com/) (chave beta: 100 chamadas/hora) | `GIPHY_API_KEY` ou setting `giphy.api.key` |
 | `/translate` | [Google Translate](https://translate.google.com/) (acesso gratuito, não oficial, sem chave; pode ser limitado por IP) | — |
 | `/weather` | [Open-Meteo](https://open-meteo.com/) | — |
@@ -68,13 +68,13 @@ para trocar pelo WhatsApp com `/set` sem reiniciar.
 
 | Variável | Exemplo | Descrição |
 |---|---|---|
-| `OPENAI_ADMIN_KEY` | `sk-admin-...` | Chave de **admin** da OpenAI, só do `/gpt -usage` (a Usage API não aceita a chave normal). Se estiver vazia, o bot usa o setting `openai.admin.key`; sem nenhuma das duas, o `-usage` mostra só os limites. Crie em platform.openai.com › Organization › Admin keys. |
-| `OPENAI_API_KEY` | `sk-proj-...` | Chave da OpenAI usada pelo `/gpt` e pelo `/tldr`. Se estiver vazia, o bot usa o setting `openai.api.key`; sem nenhuma das duas, perguntas e resumos são recusados. A consulta e a configuração do modelo pelo `/gpt -m` continuam disponíveis. |
-| `OPENAI_MODEL` | `gpt-4o-mini` | Modelo do `/gpt` e do `/tldr`. Se estiver vazio, o bot usa o setting `openai.api.model` (padrão `gpt-4o-mini`), que dá para trocar pelo WhatsApp com `/gpt -m`. Preenchido, tem prioridade sobre o setting. |
-| `OPENAI_TIMEOUT_MS` | `60000` | Tempo máximo de espera pela resposta, em ms. Se estiver vazio, o bot usa o setting `openai.timeout.ms` (60000). |
+| `OPENAI_ADMIN_KEY` | `sk-admin-...` | Chave de **admin** da OpenAI, só do `/gpt -usage` (a Usage API não aceita a chave normal). Se estiver vazia, o bot usa o setting `gpt.admin.key`; sem nenhuma das duas, o `-usage` mostra só os limites. Crie em platform.openai.com › Organization › Admin keys. |
+| `OPENAI_API_KEY` | `sk-proj-...` | Chave da OpenAI usada pelo `/gpt` e pelo `/tldr`. Se estiver vazia, o bot usa o setting `gpt.api.key`; sem nenhuma das duas, perguntas e resumos são recusados. A consulta e a configuração do modelo pelo `/gpt -m` continuam disponíveis. |
+| `OPENAI_MODEL` | `gpt-4o-mini` | Modelo do `/gpt` e do `/tldr`. Se estiver vazio, o bot usa o setting `gpt.api.model` (padrão `gpt-4o-mini`), que dá para trocar pelo WhatsApp com `/gpt -m`. Preenchido, tem prioridade sobre o setting. |
+| `OPENAI_TIMEOUT_MS` | `60000` | Tempo máximo de espera pela resposta, em ms. Se estiver vazio, o bot usa o setting `gpt.timeout.ms` (60000). |
 
 A estimativa de custo do rodapé `-status` do `/gpt`, do `/tldr` e do `/draw` usa o setting
-`openai.pricing`, que o `openai.pricing.auto` mantém atualizado (veja [Settings](settings.md)).
+`gpt.pricing`, que o `gpt.pricing.auto` mantém atualizado (veja [Settings](settings.md)).
 
 ## Aave V3 (opcional)
 

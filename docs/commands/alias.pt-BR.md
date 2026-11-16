@@ -5,12 +5,12 @@ Salva atalhos no banco do bot: para um comando com argumentos ou para um texto c
 aliases. Quem executa um atalho precisa ter permissão para os comandos de destino.
 
 ```text
-/alias <nome> [-quiet|-q] [-desc|-d "Descrição"] </comando argumentos>
-/alias <nome> [-quiet|-q] [-desc|-d "Descrição"] <texto com {/comando}>
+/alias <nome> [-q|-q] [-d|-d "Descrição"] </comando argumentos>
+/alias <nome> [-q|-q] [-d|-d "Descrição"] <texto com {/comando}>
 /alias
-/alias [-list|-l]
+/alias [-l|-l]
 /alias <nome>
-/alias -move|-m <nome atual> <novo nome>
+/alias -m|-m <nome atual> <novo nome>
 /alias -rm <nome...|all>
 ```
 
@@ -23,17 +23,17 @@ aliases. Quem executa um atalho precisa ter permissão para os comandos de desti
 | `-rm` | `<nome...\|all>` | Remove um ou mais aliases (separados por espaço ou vírgula), com ou sem `/`; `all` remove todos |
 
 ```text
-/alias /eita -desc "Meu teste para dólar" /rates USD
+/alias /eita -d "Meu teste para dólar" /rates USD
 /alias /nome /crypto USD
 /alias /eita2 /rates EUR
 /alias eita3 /rates USDT
-/alias dimdim -desc “Exibe Dinheiro" /rates
+/alias dimdim -d “Exibe Dinheiro" /rates
 /alias -l
 /alias /eita
 /eita
 /eita2
 /help alias
-/alias -move /eita /eita3
+/alias -m /eita /eita3
 /alias /eita -d "Novo texto"
 /alias -rm /eita
 /alias -rm eita2
@@ -91,7 +91,7 @@ Antes de executar um alias, o bot imprime o nome do atalho e o comando que será
 incluindo os argumentos adicionais. Por exemplo:
 
 ```text
-/alias /dimdim -desc "Exibe o preço do dólar" /rates USD
+/alias /dimdim -d "Exibe o preço do dólar" /rates USD
 /dimdim
 ```
 

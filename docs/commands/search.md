@@ -6,7 +6,7 @@ covers the messages WhatsApp Web has, including ones that never went through the
 
 ```text
 /search [-N] <text>
-/search -read <id>
+/search -r <id>
 ```
 
 | Option | Value | Description |
@@ -42,7 +42,7 @@ type and the caption). Long texts are cut at 200 characters.
 ```
 
 ```text
-/search -read false_5521988887777@c.us_3EB0A1B2
+/search -r false_5521988887777@c.us_3EB0A1B2
 📅 10/13/2026, 11:02:10 · 💬 Family · 👤 Fulano
 
 send the pix and I'll pay, the whole text, no cut

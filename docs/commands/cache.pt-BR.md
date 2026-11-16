@@ -13,7 +13,7 @@ do comando (`/cache -h`) os caminhos aparecem completos (no Docker, `/app/cache`
 
 ```text
 /cache               → lista o conteúdo de cache/ e o total de mensagens
-/cache -clean        → limpeza normal (retenção)
+/cache -c        → limpeza normal (retenção)
 /cache -m            → só as mídias
 /cache -c -m         → limpeza normal e as mídias
 /cache -b            → só os backups

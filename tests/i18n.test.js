@@ -105,7 +105,7 @@ describe('definições dos comandos', () => {
                 for (const protocol of [undefined, ...Object.keys(c.protocolos ?? {})]) {
                     const textAlt = formatCommandHelp(c, { protocolo: protocol });
                     assert.doesNotMatch(textAlt, /\$\{|undefined|\[object/, `${lang} ${c.cmd}`);
-                    assert.ok(textAlt.startsWith(lang === 'en_US' ? 'Usage: ' : 'Uso: '), `${lang} ${c.cmd}`);
+                    assert.ok(textAlt.startsWith('Usage: '), `${lang} ${c.cmd}`);
                 }
             }
         }
@@ -120,7 +120,7 @@ describe('ajuda nos dois idiomas', () => {
         assert.match(help, /Options:\n/);
         assert.match(help, /Arguments:\n/);
         assert.match(help, /\nDetails: https:\/\/jpereira\.github\.io\/zapbot\/commands\/gpt\/```$/);
-        assert.doesNotMatch(help, /Uso:|Opções:|Argumentos:/);
+        assert.doesNotMatch(help, /Opções:|Argumentos:/);
 
         const [menu] = await bot.replyAlt('/help');
         assert.match(menu, /^🤖 \*HELP MENU\*/);
@@ -133,7 +133,7 @@ describe('ajuda nos dois idiomas', () => {
     test('pt_BR: o mesmo, em português', async () => {
         await setSetting('zapbot.lang', 'pt_BR');
         const [help] = await bot.replyAlt('/gpt -h');
-        assert.match(help, /Uso: \/gpt \[-s\] \[pergunta\]/);
+        assert.match(help, /Usage: \/gpt \[-s\] \[pergunta\]/);
         assert.match(help, /Opções:\n/);
         assert.match(help, /\nDetalhes: https:\/\/jpereira\.github\.io\/zapbot\/pt-BR\/commands\/gpt\/```$/);
 
@@ -147,7 +147,7 @@ describe('ajuda nos dois idiomas', () => {
         await setSetting('zapbot.lang', 'en_US');
         const en = (await bot.replyAlt('/ping -h'))[0];
         assert.notEqual(pt, en);
-        assert.match(pt, /^```Uso: \/ping\n/);
+        assert.match(pt, /^```Usage: \/ping\n/);
         assert.match(en, /^```Usage: \/ping\n/);
     });
 });

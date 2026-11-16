@@ -5,7 +5,7 @@ numbers and keywords. It is made by the bot itself (SVG turned into PNG by `shar
 service, and the code doesn't leave the machine.
 
 ```text
-/carbon [-theme|-t <dark|light>] <code>
+/carbon [-t|-t <dark|light>] <code>
 ```
 
 | Option | Value | Description |

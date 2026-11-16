@@ -27,8 +27,8 @@ const {
 const CAPTION_MAX = 200;
 
 // The -frames and -ms limits are those of the settings they override
-const LIMIT_FRAMES = SETTINGS_SCHEMA['openai.gif.frames'];
-const LIMIT_MS = SETTINGS_SCHEMA['openai.gif.frameMs'];
+const LIMIT_FRAMES = SETTINGS_SCHEMA['gpt.gif.frames'];
+const LIMIT_MS = SETTINGS_SCHEMA['gpt.gif.frameMs'];
 
 // OpenAI's GIF becomes an MP4 with no audio: that is how WhatsApp plays a GIF (as /giphy sends it)
 async function gifParaMp4(gif) {
@@ -94,8 +94,8 @@ async function drawAlt({ msg, cmd, pedido: request, quotedMsg = null, gif = null
     }
 
     const animation = gif && {
-        frames: gif.frames ?? getSetting('openai.gif.frames'),
-        frameMs: gif.frameMs ?? getSetting('openai.gif.frameMs')
+        frames: gif.frames ?? getSetting('gpt.gif.frames'),
+        frameMs: gif.frameMs ?? getSetting('gpt.gif.frameMs')
     };
     const prompt = animation && photo ? t('draw.animatePrompt', { texto: textAlt || t('draw.animateDefault') }) : textAlt;
     const captionAlt = `${animation ? '🎞️' : '🎨'} ${textAlt.length > CAPTION_MAX ? `${textAlt.slice(0, CAPTION_MAX)}…` : textAlt}`.trim();
@@ -154,7 +154,7 @@ async function draw({ msg, args, opts, quotedMsg }) {
     await drawAlt({ msg, cmd: '/draw', pedido: request, quotedMsg, gif, semPedido: '```' + getCommandSyntax('/draw') + '```' });
 }
 
-// The -status|-s (or the openai.status setting) shows the call usage in the footer
+// The -status|-s (or the gpt.status setting) shows the call usage in the footer
 const cmdDraw = (ctx) => measureConsumption(ctx.opts?.given.has('status'), () => draw(ctx));
 
 module.exports = {

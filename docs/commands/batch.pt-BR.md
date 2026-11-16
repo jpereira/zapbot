@@ -7,7 +7,7 @@ mandar de uma vez o que você mandaria em vários blocos (ex.: várias anotaçõ
 ![Demonstração do /batch](../assets/demo/12-batch-alias.gif)
 
 ```text
-/batch [-stop|-s] [-dry|-d] [-quiet|-q]
+/batch [-s|-s] [-d|-d] [-q|-q]
 <comandos, nas linhas de baixo>
 ```
 
@@ -50,7 +50,7 @@ A resposta é um resumo só:
 Com `-dry` (ou `-d`), nada roda; ele só mostra como separou:
 
 ```text
-/batch -dry
+/batch -d
 📦 BATCH (2) · só a separação, nada executado
 
 1. /ideia Preciso ver sobre isso (+2 linhas)

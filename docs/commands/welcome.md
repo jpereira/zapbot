@@ -8,7 +8,7 @@ the group when someone joins (by invite link or added by an admin). It is **per 
 also [`/goodbye`](goodbye.md).
 
 ```text
-/welcome [-on|-off|-test] [<text>]
+/welcome [-on|-off|-t] [<text>]
 ```
 
 | Option | Value | Description |
@@ -22,7 +22,7 @@ also [`/goodbye`](goodbye.md).
 /welcome                         → shows this group's message
 /welcome Welcome to {group}, {name}!
 /welcome -on                     → the default text
-/welcome -test                   → preview
+/welcome -t                   → preview
 /welcome -off                    → turns it off
 ```
 

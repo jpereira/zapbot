@@ -2,20 +2,20 @@
 
 Translates text with Google Translate, no key and no cost. When replying to a message, it translates
 that message's text. The source language is detected automatically; the target is Portuguese, or the
-one given with `-para`.
+one given with `-to`.
 
 | Option | Value | Description |
 |---|---|---|
 | `[texto]` | | The text (up to 5000 characters, line breaks included). Without it, the replied message |
-| `-para`, `-p` | `<idioma>` | Target language, by code: `en`, `es`, `fr`, `it`, `de`, `ja`, `zh-CN`... Case doesn't matter. Default: setting `traduzir.lang` (`pt`) |
+| `-to`, `-p` | `<idioma>` | Target language, by code: `en`, `es`, `fr`, `it`, `de`, `ja`, `zh-CN`... Case doesn't matter. Default: setting `translate.lang` (`pt`) |
 | `-list`, `-l` | | Lists the accepted languages, with their code |
 
 ```text
 /translate Where is the nearest pharmacy?
-/translate -para en Onde fica a farmácia mais próxima?
+/translate -p en Onde fica a farmácia mais próxima?
 /translate -p es               (replying to a message)
 /translate -l                   → the languages and codes
-/set traduzir.lang en          → changes the default language
+/set translate.lang en          → changes the default language
 ```
 
 ```text
@@ -25,7 +25,7 @@ one given with `-para`.
 Onde fica a farmácia mais próxima?
 ```
 
-If the text is already in the target language, the reply adds a tip to use `-para` with another
+If the text is already in the target language, the reply adds a tip to use `-to` with another
 language.
 
 It's not admin: anyone in `bot.users` can use it (with it set to `true`, anyone).

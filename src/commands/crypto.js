@@ -17,7 +17,7 @@ async function cmdCrypto(ctx) {
     const { msg, opts } = ctx;
     await dbReady;
 
-    if (opts.given.has('alerta')) {
+    if (opts.given.has('alert')) {
         await priceHandleAlert('crypto', ctx);
         return;
     }

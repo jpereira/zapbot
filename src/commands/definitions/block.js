@@ -29,7 +29,7 @@ module.exports = {
             opts: ['mask', 'm'],
             values: [],
             desc: 'Obfuscates phone numbers in the output (e.g. +55219****44).',
-            ex: ['/block -mask']
+            ex: ['/block -m']
         }
     ],
     mask: true,

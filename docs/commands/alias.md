@@ -5,12 +5,12 @@ Saves shortcuts in the bot's database: for a command with arguments or for a tex
 aliases. Whoever runs a shortcut needs permission for the target commands.
 
 ```text
-/alias <nome> [-quiet|-q] [-desc|-d "Descrição"] </comando argumentos>
-/alias <nome> [-quiet|-q] [-desc|-d "Descrição"] <texto com {/comando}>
+/alias <nome> [-q|-q] [-d|-d "Descrição"] </comando argumentos>
+/alias <nome> [-q|-q] [-d|-d "Descrição"] <texto com {/comando}>
 /alias
-/alias [-list|-l]
+/alias [-l|-l]
 /alias <nome>
-/alias -move|-m <nome atual> <novo nome>
+/alias -m|-m <nome atual> <novo nome>
 /alias -rm <nome...|all>
 ```
 
@@ -23,17 +23,17 @@ aliases. Whoever runs a shortcut needs permission for the target commands.
 | `-rm` | `<name...\|all>` | Removes one or more aliases (separated by space or comma), with or without `/`; `all` removes all of them |
 
 ```text
-/alias /eita -desc "Meu teste para dólar" /rates USD
+/alias /eita -d "Meu teste para dólar" /rates USD
 /alias /nome /crypto USD
 /alias /eita2 /rates EUR
 /alias eita3 /rates USDT
-/alias dimdim -desc “Exibe Dinheiro" /rates
+/alias dimdim -d “Exibe Dinheiro" /rates
 /alias -l
 /alias /eita
 /eita
 /eita2
 /help alias
-/alias -move /eita /eita3
+/alias -m /eita /eita3
 /alias /eita -d "Novo texto"
 /alias -rm /eita
 /alias -rm eita2
@@ -92,7 +92,7 @@ Before running an alias, the bot prints the shortcut's name and the command that
 including any additional arguments. For example:
 
 ```text
-/alias /dimdim -desc "Exibe o preço do dólar" /rates USD
+/alias /dimdim -d "Exibe o preço do dólar" /rates USD
 /dimdim
 ```
 

@@ -12,9 +12,9 @@ const { getSetting } = require('../settings');
 /*
  * /translate: Google Translate from the translate.google.com site, with no key and no cost, through the package
  * google-translate-api-x (unofficial access: Google may limit by IP or change the format).
- * /translate hello world        → to the default language (setting 'traduzir.lang', pt)
- * /translate -para en bom dia   → to English
- * (replying to a message) /translate [-para es]
+ * /translate hello world        → to the default language (setting 'translate.lang', pt)
+ * /translate -to en bom dia   → to English
+ * (replying to a message) /translate [-to es]
  *   /translate -l                 → idiomas aceitos
  * The source language is detected by Google.
  */
@@ -41,11 +41,11 @@ function errorTranslation(err) {
 
 async function listLanguages(msg) {
     const languagesAlt = [...CODES.values()].map(c => `${c} ${languages[c]}`);
-    await msg.reply(t('translate.languages', { n: languagesAlt.length, lista: languagesAlt.join('\n'), padrao: getSetting('traduzir.lang') }));
+    await msg.reply(t('translate.languages', { n: languagesAlt.length, lista: languagesAlt.join('\n'), padrao: getSetting('translate.lang') }));
 }
 
 async function cmdTranslate({ msg, args, opts, quotedMsg }) {
-    const request = String(opts.opt.para ?? getSetting('traduzir.lang')).trim();
+    const request = String(opts.opt.to ?? getSetting('translate.lang')).trim();
     const target = CODES.get(request.toLowerCase());
 
     try {
@@ -59,8 +59,8 @@ async function cmdTranslate({ msg, args, opts, quotedMsg }) {
             return;
         }
 
-        // Command text as typed (with the line breaks), without -para; without it, the replied message's
-        const typed = String(args ?? '').replace(/(^|\s)-(para|p)(\s+\S+)?(?=\s|$)/i, '$1').trim();
+        // Command text as typed (with the line breaks), without -to; without it, the replied message's
+        const typed = String(args ?? '').replace(/(^|\s)-(to|p)(\s+\S+)?(?=\s|$)/i, '$1').trim();
         const textAlt = typed || quotedMsg?.body?.trim() || '';
 
         if (!textAlt) {

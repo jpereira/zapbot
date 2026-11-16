@@ -38,8 +38,8 @@ function itemPhone(v) {
 // A bot.users item: 'all', null (false), a group, a person or a person only in a group
 function userItem(v) {
     const s = v.trim().toLowerCase();
-    if (['all', 'todos', 'true', 'on', 'sim', 'yes'].includes(s)) return 'all';
-    if (['false', 'off', 'nao', 'não', 'no', 'ninguem', 'ninguém'].includes(s)) return null;
+    if (['all', 'true', 'on', 'yes'].includes(s)) return 'all';
+    if (['false', 'off', 'no', 'none'].includes(s)) return null;
     if (/^[\d-]+@g\.us$/.test(s)) return s;
     const soInGroup = s.match(/^(.+):([\d-]+@g\.us)$/);
     if (soInGroup) return `${itemPhone(soInGroup[1])}:${soInGroup[2]}`;
@@ -68,13 +68,40 @@ function validateUrlFeed(v) {
  * new one (see migrateSettingsRenamed). In alphabetical order of the old name.
  */
 const SETTINGS_RENAMED = {
+    'alerta.intervalMin': 'alert.intervalMin',
+    'alerta.max': 'alert.max',
+    'cotacao.coins': 'rates.coins',
+    'defi.alerta.intervalMin': 'defi.alert.intervalMin',
     'edit.alert': 'show.alert.edited',
+    'enquete.retentionDays': 'poll.retentionDays',
     'gif.giphy.api.key': 'giphy.api.key',
+    'news.brasil': 'news.brazil',
+    'openai.admin.key': 'gpt.admin.key',
+    'openai.api.key': 'gpt.api.key',
+    'openai.api.model': 'gpt.api.model',
+    'openai.credit.since': 'gpt.credit.since',
+    'openai.credit.total': 'gpt.credit.total',
+    'openai.gif.frameMs': 'gpt.gif.frameMs',
+    'openai.gif.frames': 'gpt.gif.frames',
+    'openai.image.gifModel': 'gpt.image.gifModel',
+    'openai.image.model': 'gpt.image.model',
+    'openai.pricing': 'gpt.pricing',
+    'openai.pricing.auto': 'gpt.pricing.auto',
+    'openai.pricing.updated': 'gpt.pricing.updated',
+    'openai.status': 'gpt.status',
+    'openai.timeout.ms': 'gpt.timeout.ms',
+    'openai.transcribe.model': 'gpt.transcribe.model',
+    'openai.tts.instructions': 'gpt.tts.instructions',
+    'openai.tts.model': 'gpt.tts.model',
+    'openai.tts.voice': 'gpt.tts.voice',
     'resumo.maxMsgs': 'tldr.maxMsgs',
     'revoke.status': 'show.alert.status',
     'show.alert.edit': 'show.alert.edited',
     'show.revoke.status': 'show.alert.status',
-    'stats.enabled': 'stats.enable'
+    'stats.enabled': 'stats.enable',
+    'tempo.city': 'weather.city',
+    'tempo.maxDays': 'weather.maxDays',
+    'traduzir.lang': 'translate.lang'
 };
 
 // Renamed commands: a commands.disabled saved with the old name applies to the new one
@@ -89,12 +116,12 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 1, max: 500,
         desc: 'Máximo de itens do /cron, somando lembretes e mensagens.'
     },
-    'alerta.intervalMin': {
+    'alert.intervalMin': {
         default: 5,
         type: 'number', min: 1, max: 60,
         desc: 'Intervalo (minutos) entre as verificações dos alertas do /rates e do /crypto.'
     },
-    'alerta.max': {
+    'alert.max': {
         default: 20,
         type: 'number', min: 1, max: 100,
         desc: 'Máximo de alertas de preço (somando /rates e /crypto).'
@@ -127,7 +154,7 @@ const SETTINGS_SCHEMA = {
         default: '',
         type: 'string',
         allowEmpty: true,
-        desc: 'Destino do backup diário, além da cópia local: contato, grupo, número ou e-mail, como no -to do /backup. Vazio: só local. Para vários, use -to <destino> -to <destino>. O envio é automático, sem pedir -sim.'
+        desc: 'Destino do backup diário, além da cópia local: contato, grupo, número ou e-mail, como no -to do /backup. Vazio: só local. Para vários, use -to <destino> -to <destino>. O envio é automático, sem pedir -yes.'
     },
     'bot.admins': {
         default: [],
@@ -223,16 +250,6 @@ const SETTINGS_SCHEMA = {
             return command.cmd;
         }
     },
-    'cotacao.coins': {
-        default: ['EUR', 'USDT'],
-        type: 'list',
-        desc: 'Moedas exibidas pelo /rates (contra o real).',
-        item: (v) => {
-            const sym = v.toUpperCase();
-            if (!QUOTE_SUPPORTED[sym]) throw new Error(t('adm.settings.unsupportedCoin', { sym }));
-            return sym;
-        }
-    },
     'crypto.coins': {
         default: ['BTC', 'ETH', 'SOL', 'HYPE'],
         type: 'list',
@@ -299,10 +316,10 @@ const SETTINGS_SCHEMA = {
         },
         desc: 'Carteira do /defi aave quando não há carteira cadastrada, usada quando AAVE_WALLET_ADDRESS não está no config/.env.'
     },
-    'defi.alerta.intervalMin': {
+    'defi.alert.intervalMin': {
         default: 10,
         type: 'number', min: 1, max: 1440,
-        desc: 'Intervalo (minutos) entre as verificações do /defi -alerta (consulta Solana ou HyperEVM conforme o protocolo).'
+        desc: 'Intervalo (minutos) entre as verificações do /defi -alert (consulta Solana ou HyperEVM conforme o protocolo).'
     },
     'defi.aptos.apikey': {
         default: '',
@@ -382,11 +399,6 @@ const SETTINGS_SCHEMA = {
         type: 'boolean',
         desc: 'Avisa por e-mail (SMTP do QR Code) crash, queda, reconexão e outros eventos do bot.'
     },
-    'enquete.retentionDays': {
-        default: 90,
-        type: 'number', min: 1, max: 365,
-        desc: 'Dias que as enquetes e os votos ficam guardados para o /poll -r.'
-    },
     'flood.intervalCommand': {
         default: 2,
         type: 'number', min: 1, max: 3600,
@@ -411,6 +423,11 @@ const SETTINGS_SCHEMA = {
         default: 10,
         type: 'number', min: 1, max: 50,
         desc: 'Máximo de mensagens que o /forward -N encaminha de uma vez.'
+    },
+    'forward.maxRecipients': {
+        default: 30,
+        type: 'number', min: 1, max: 200,
+        desc: 'Máximo de destinatários do /forward de uma vez (somando as listas #lista e os avulsos) e de cada lista.'
     },
     'get.cache.maxDays': {
         default: 2,
@@ -444,6 +461,112 @@ const SETTINGS_SCHEMA = {
         secret: true,
         desc: 'Chave do GIPHY (/giphy), usada quando GIPHY_API_KEY não está no config/.env.'
     },
+    'gpt.admin.key': {
+        default: '',
+        type: 'string',
+        allowEmpty: true,
+        secret: true,
+        desc: 'Chave de admin da OpenAI (sk-admin-...), do /gpt -usage; usada quando OPENAI_ADMIN_KEY não está no config/.env.'
+    },
+    'gpt.api.key': {
+        default: '',
+        type: 'string',
+        allowEmpty: true,
+        secret: true,
+        desc: 'Chave da OpenAI (/gpt), usada quando OPENAI_API_KEY não está no config/.env.'
+    },
+    'gpt.api.model': {
+        default: 'gpt-4o-mini',
+        type: 'string',
+        opcoes: OPENAI_MODELS,
+        desc: 'Modelo do /gpt, usado quando OPENAI_MODEL não está no config/.env (o /gpt -m lista os aceitos).'
+    },
+    'gpt.credit.since': {
+        default: '',
+        type: 'string',
+        allowEmpty: true,
+        desc: 'Data (AAAA-MM-DD) da compra dos créditos da OpenAI: o /gpt -usage soma o gasto desde ela para mostrar $usado/$total.',
+        validar: (v) => {
+            if (v && (!/^\d{4}-\d{2}-\d{2}$/.test(v) || Number.isNaN(Date.parse(v)))) throw new Error(t('adm.settings.dateFormat'));
+            return v;
+        }
+    },
+    'gpt.credit.total': {
+        default: 0,
+        type: 'number', min: 0, max: 100000,
+        desc: 'Total de créditos comprados na OpenAI, em dólares (a API não informa o saldo): o /gpt -usage mostra $usado/$total. 0: não mostra.'
+    },
+    'gpt.gif.frameMs': {
+        default: 200,
+        type: 'number', min: 20, max: 2000,
+        desc: 'Quanto dura cada quadro do GIF do /draw -gif e do /gpt -gif, em ms (20 a 2000; o total é quadros x ms).'
+    },
+    'gpt.gif.frames': {
+        default: 9,
+        type: 'number', min: 2, max: 16,
+        desc: 'Quantos quadros tem o GIF do /draw -gif e do /gpt -gif (2 a 16; quanto mais quadros, mais caro).'
+    },
+    'gpt.image.gifModel': {
+        default: 'gpt-image-2.6-flare',
+        type: 'string',
+        desc: 'Modelo que gera o GIF do /draw -gif e do /gpt -gif (só os gpt-image-2.6-* fazem GIF e pedem acesso à prévia): o id que a sua conta tem (se não existir, o bot lista os que a chave vê).'
+    },
+    'gpt.image.model': {
+        default: 'gpt-image-2',
+        type: 'string',
+        desc: 'Modelo que gera e edita a imagem do /draw e do /gpt -img: o id que a sua conta tem (se não existir, o bot lista os que a chave vê). O GIF tem o seu, o gpt.image.gifModel.'
+    },
+    'gpt.pricing': {
+        default: [],
+        type: 'list',
+        desc: 'Preço por 1M de tokens em dólares, modelo=entrada/saída, para o custo estimado do rodapé de status do /gpt e do /tldr (modelo sem preço: custo n/d). Vem vazio: o /gpt -prices ou a atualização automática (gpt.pricing.auto) preenche. Vale o nome exato ou o prefixo mais longo.',
+        item: (v) => {
+            if (!/^[^=\s]+=\d+(\.\d+)?\/\d+(\.\d+)?$/.test(v)) throw new Error(t('adm.settings.priceFormat', { v }));
+            return v;
+        }
+    },
+    'gpt.pricing.auto': {
+        default: true,
+        type: 'boolean',
+        desc: 'Atualiza o gpt.pricing sozinho a cada 15 dias, lendo a tabela de preços do site da OpenAI (o mesmo do /gpt -prices). Só roda com a chave da OpenAI configurada. false: só atualiza à mão.'
+    },
+    'gpt.pricing.updated': {
+        default: '',
+        type: 'string',
+        allowEmpty: true,
+        desc: 'Data (AAAA-MM-DD) da última atualização do gpt.pricing, gravada pelo /gpt -prices e pela atualização automática. Vazio: ainda não atualizou.'
+    },
+    'gpt.status': {
+        default: true,
+        type: 'boolean',
+        desc: 'Rodapé de status nas respostas do /gpt e do /tldr: bytes enviados (TX) e recebidos (RX), tokens gastos, custo estimado e saldo (o -status|-s liga só naquela vez, se estiver desligado).'
+    },
+    'gpt.timeout.ms': {
+        default: 60000,
+        type: 'number', min: 5000, max: 300000,
+        desc: 'Timeout (ms) do /gpt, usado quando OPENAI_TIMEOUT_MS não está no config/.env.'
+    },
+    'gpt.transcribe.model': {
+        default: 'gpt-transcribe',
+        type: 'string',
+        desc: 'Modelo que transcreve o áudio respondido com o /gpt: o id que a sua conta da OpenAI tem (o whisper-1 sai do ar em fev/2027).'
+    },
+    'gpt.tts.instructions': {
+        default: 'Fale como um robô: voz metálica, monótona e pausada, sem emoção.',
+        type: 'string',
+        desc: 'O estilo da voz do /gpt -voice (só o gpt-4o-mini-tts usa). O padrão é a voz de robô.'
+    },
+    'gpt.tts.model': {
+        default: 'gpt-4o-mini-tts',
+        type: 'string',
+        desc: 'Modelo que gera a voz do /gpt -voice: o id que a sua conta da OpenAI tem. Só os gpt-4o-* seguem o estilo do gpt.tts.instructions.'
+    },
+    'gpt.tts.voice': {
+        default: 'onyx',
+        type: 'string',
+        opcoes: OPENAI_VOICES,
+        desc: 'A voz do /gpt -voice: alloy, ash, ballad, coral, echo, fable, nova, onyx, sage, shimmer ou verse.'
+    },
     'me.maxRepeat': {
         default: 500,
         type: 'number', min: 1, max: 1000,
@@ -469,7 +592,7 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 120, max: 86400,
         desc: 'Intervalo mínimo entre verificações de cada contato, em segundos (/monitor). Padrão: 300 s (5 min); mínimo: 120 s (2 min). Intervalos curtos aumentam as consultas e podem contribuir para bloqueio pelo WhatsApp. Nenhum intervalo garante segurança.'
     },
-    'news.brasil': {
+    'news.brazil': {
         // The feeds listed at https://rss.feedspot.com/brazil_rss_feeds/ (the page is HTML, not RSS)
         default: [
             'http://lifeinrocinha.blogspot.com/feeds/posts/default?alt=rss',
@@ -489,7 +612,7 @@ const SETTINGS_SCHEMA = {
             'https://www.brasilwire.com/feed/'
         ],
         type: 'list',
-        desc: 'Feeds RSS do /news -brasil (blogs sobre o Brasil, do feedspot).',
+        desc: 'Feeds RSS do /news -brazil (blogs sobre o Brasil, do feedspot).',
         item: validateUrlFeed
     },
     'news.g1': {
@@ -519,112 +642,6 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 1, max: 10,
         desc: 'Manchetes exibidas pelo /news (o /news <quantidade> sobrepõe).'
     },
-    'openai.admin.key': {
-        default: '',
-        type: 'string',
-        allowEmpty: true,
-        secret: true,
-        desc: 'Chave de admin da OpenAI (sk-admin-...), do /gpt -usage; usada quando OPENAI_ADMIN_KEY não está no config/.env.'
-    },
-    'openai.api.key': {
-        default: '',
-        type: 'string',
-        allowEmpty: true,
-        secret: true,
-        desc: 'Chave da OpenAI (/gpt), usada quando OPENAI_API_KEY não está no config/.env.'
-    },
-    'openai.api.model': {
-        default: 'gpt-4o-mini',
-        type: 'string',
-        opcoes: OPENAI_MODELS,
-        desc: 'Modelo do /gpt, usado quando OPENAI_MODEL não está no config/.env (o /gpt -m lista os aceitos).'
-    },
-    'openai.credit.since': {
-        default: '',
-        type: 'string',
-        allowEmpty: true,
-        desc: 'Data (AAAA-MM-DD) da compra dos créditos da OpenAI: o /gpt -usage soma o gasto desde ela para mostrar $usado/$total.',
-        validar: (v) => {
-            if (v && (!/^\d{4}-\d{2}-\d{2}$/.test(v) || Number.isNaN(Date.parse(v)))) throw new Error(t('adm.settings.dateFormat'));
-            return v;
-        }
-    },
-    'openai.credit.total': {
-        default: 0,
-        type: 'number', min: 0, max: 100000,
-        desc: 'Total de créditos comprados na OpenAI, em dólares (a API não informa o saldo): o /gpt -usage mostra $usado/$total. 0: não mostra.'
-    },
-    'openai.gif.frameMs': {
-        default: 200,
-        type: 'number', min: 20, max: 2000,
-        desc: 'Quanto dura cada quadro do GIF do /draw -gif e do /gpt -gif, em ms (20 a 2000; o total é quadros x ms).'
-    },
-    'openai.gif.frames': {
-        default: 9,
-        type: 'number', min: 2, max: 16,
-        desc: 'Quantos quadros tem o GIF do /draw -gif e do /gpt -gif (2 a 16; quanto mais quadros, mais caro).'
-    },
-    'openai.image.gifModel': {
-        default: 'gpt-image-2.6-flare',
-        type: 'string',
-        desc: 'Modelo que gera o GIF do /draw -gif e do /gpt -gif (só os gpt-image-2.6-* fazem GIF e pedem acesso à prévia): o id que a sua conta tem (se não existir, o bot lista os que a chave vê).'
-    },
-    'openai.image.model': {
-        default: 'gpt-image-2',
-        type: 'string',
-        desc: 'Modelo que gera e edita a imagem do /draw e do /gpt -img: o id que a sua conta tem (se não existir, o bot lista os que a chave vê). O GIF tem o seu, o openai.image.gifModel.'
-    },
-    'openai.pricing': {
-        default: [],
-        type: 'list',
-        desc: 'Preço por 1M de tokens em dólares, modelo=entrada/saída, para o custo estimado do rodapé de status do /gpt e do /tldr (modelo sem preço: custo n/d). Vem vazio: o /gpt -prices ou a atualização automática (openai.pricing.auto) preenche. Vale o nome exato ou o prefixo mais longo.',
-        item: (v) => {
-            if (!/^[^=\s]+=\d+(\.\d+)?\/\d+(\.\d+)?$/.test(v)) throw new Error(t('adm.settings.priceFormat', { v }));
-            return v;
-        }
-    },
-    'openai.pricing.auto': {
-        default: true,
-        type: 'boolean',
-        desc: 'Atualiza o openai.pricing sozinho a cada 15 dias, lendo a tabela de preços do site da OpenAI (o mesmo do /gpt -prices). Só roda com a chave da OpenAI configurada. false: só atualiza à mão.'
-    },
-    'openai.pricing.updated': {
-        default: '',
-        type: 'string',
-        allowEmpty: true,
-        desc: 'Data (AAAA-MM-DD) da última atualização do openai.pricing, gravada pelo /gpt -prices e pela atualização automática. Vazio: ainda não atualizou.'
-    },
-    'openai.status': {
-        default: true,
-        type: 'boolean',
-        desc: 'Rodapé de status nas respostas do /gpt e do /tldr: bytes enviados (TX) e recebidos (RX), tokens gastos, custo estimado e saldo (o -status|-s liga só naquela vez, se estiver desligado).'
-    },
-    'openai.timeout.ms': {
-        default: 60000,
-        type: 'number', min: 5000, max: 300000,
-        desc: 'Timeout (ms) do /gpt, usado quando OPENAI_TIMEOUT_MS não está no config/.env.'
-    },
-    'openai.transcribe.model': {
-        default: 'gpt-transcribe',
-        type: 'string',
-        desc: 'Modelo que transcreve o áudio respondido com o /gpt: o id que a sua conta da OpenAI tem (o whisper-1 sai do ar em fev/2027).'
-    },
-    'openai.tts.instructions': {
-        default: 'Fale como um robô: voz metálica, monótona e pausada, sem emoção.',
-        type: 'string',
-        desc: 'O estilo da voz do /gpt -voz (só o gpt-4o-mini-tts usa). O padrão é a voz de robô.'
-    },
-    'openai.tts.model': {
-        default: 'gpt-4o-mini-tts',
-        type: 'string',
-        desc: 'Modelo que gera a voz do /gpt -voz: o id que a sua conta da OpenAI tem. Só os gpt-4o-* seguem o estilo do openai.tts.instructions.'
-    },
-    'openai.tts.voice': {
-        default: 'onyx',
-        type: 'string',
-        opcoes: OPENAI_VOICES,
-        desc: 'A voz do /gpt -voz: alloy, ash, ballad, coral, echo, fable, nova, onyx, sage, shimmer ou verse.'
-    },
     'pixelart.maxParts': {
         default: 3,
         type: 'number', min: 1, max: 10,
@@ -637,6 +654,21 @@ const SETTINGS_SCHEMA = {
         item: (v) => {
             if (!/^[A-Za-z0-9._-]{1,100}$/.test(v)) throw new Error(t('adm.settings.badPack', { v }));
             return v;
+        }
+    },
+    'poll.retentionDays': {
+        default: 90,
+        type: 'number', min: 1, max: 365,
+        desc: 'Dias que as enquetes e os votos ficam guardados para o /poll -r.'
+    },
+    'rates.coins': {
+        default: ['EUR', 'USDT'],
+        type: 'list',
+        desc: 'Moedas exibidas pelo /rates (contra o real).',
+        item: (v) => {
+            const sym = v.toUpperCase();
+            if (!QUOTE_SUPPORTED[sym]) throw new Error(t('adm.settings.unsupportedCoin', { sym }));
+            return sym;
         }
     },
     'show.alert.deleted': {
@@ -689,22 +721,12 @@ const SETTINGS_SCHEMA = {
         type: 'string',
         desc: 'Nome do pacote das figurinhas (/sticker e /get -st).'
     },
-    'tempo.city': {
-        default: 'Niteroi, Rio de Janeiro, Brazil',
-        type: 'string',
-        desc: 'Cidade padrão do /weather (ex.: "Niteroi, Rio de Janeiro, Brazil").'
-    },
-    'tempo.maxDays': {
-        default: 16,
-        type: 'number', min: 1, max: 16, // 16: Open-Meteo limit
-        desc: 'Máximo de dias do /weather N (ou Nd), de 1 a 16. Ex.: /weather 16d Niteroi.'
-    },
     'tldr.maxMsgs': {
         default: 500,
         type: 'number', min: 10, max: 2000,
         desc: 'Máximo de mensagens enviadas à OpenAI por /tldr.'
     },
-    'traduzir.lang': {
+    'translate.lang': {
         default: 'pt',
         type: 'string',
         desc: 'Idioma de destino padrão do /translate (código: pt, en, es...).'
@@ -734,6 +756,16 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 1, max: 100,
         desc: 'Máximo de ocorrências listadas por /watch -show.'
     },
+    'weather.city': {
+        default: 'Niteroi, Rio de Janeiro, Brazil',
+        type: 'string',
+        desc: 'Cidade padrão do /weather (ex.: "Niteroi, Rio de Janeiro, Brazil").'
+    },
+    'weather.maxDays': {
+        default: 16,
+        type: 'number', min: 1, max: 16, // 16: Open-Meteo limit
+        desc: 'Máximo de dias do /weather N (ou Nd), de 1 a 16. Ex.: /weather 16d Niteroi.'
+    },
     'zapbot.lang': {
         default: 'en_US',
         type: 'string',
@@ -757,8 +789,8 @@ function validateSetting(key, value) {
         case 'boolean': {
             if (typeof value === 'boolean') return value;
             const v = String(value).trim().toLowerCase();
-            if (['on', 'true', '1', 'sim', 'yes'].includes(v)) return true;
-            if (['off', 'false', '0', 'nao', 'não', 'no'].includes(v)) return false;
+            if (['on', 'true', '1', 'yes'].includes(v)) return true;
+            if (['off', 'false', '0', 'no'].includes(v)) return false;
             throw new Error(t('adm.settings.onOff'));
         }
 

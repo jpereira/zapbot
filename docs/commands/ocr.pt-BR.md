@@ -5,15 +5,15 @@ Role `admin`: só você e os admins extras. O dono libera a uma pessoa ou grupo 
 
 Lê o texto de uma **foto** pelo ChatGPT (visão) e responde com ele. Responda a foto, ou envie a foto
 com `/ocr` na legenda. Usa a chave da OpenAI (`OPENAI_API_KEY` no `config/.env` ou o setting
-`openai.api.key`), como o [`/gpt`](gpt.md).
+`gpt.api.key`), como o [`/gpt`](gpt.md).
 
 ```text
-/ocr [-status|-s]
+/ocr [-s|-s]
 ```
 
 | Opção | Valor | Descrição |
 |---|---|---|
-| `-status`, `-s` | | Acrescenta no rodapé da resposta o consumo da chamada: bytes enviados (TX) e recebidos (RX), tokens gastos, custo estimado e saldo. Para deixar sempre ligado: `/set openai.status true` |
+| `-status`, `-s` | | Acrescenta no rodapé da resposta o consumo da chamada: bytes enviados (TX) e recebidos (RX), tokens gastos, custo estimado e saldo. Para deixar sempre ligado: `/set gpt.status true` |
 
 ```text
 /ocr                         → respondendo uma foto: o texto dela

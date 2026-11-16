@@ -32,7 +32,7 @@ describe('/join', () => {
     });
 
     test('erros: sem link, link inválido, convite expirado e recusa do WhatsApp', async () => {
-        assert.match((await bot.replyAlt('/join'))[0], /^❌ Use: \/join/);
+        assert.match((await bot.replyAlt('/join'))[0], /^❌ Usage: \/join/);
         assert.match((await bot.replyAlt('/join https://exemplo.com/x'))[0], /Link de convite inválido/);
         assert.match((await bot.replyAlt('/join chat.whatsapp.com/ZZZZZZZZZZZZZZZZZZZZZZ'))[0], /Convite inválido, expirado/);
 

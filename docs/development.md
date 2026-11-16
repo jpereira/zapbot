@@ -94,7 +94,7 @@ src/
   currencies.js, quotes.js, priceAlerts.js   /crypto, /rates and price alerts
   aliases.js            resolution, listing and execution (of the text ones) of the shortcuts persisted in the database
   schedule.js             /cron: reading, list and send on time
-  notes.js              /notes: notes, #tags (and the description), images, the -export PDF and the -alerta (a notice at a date/time, once)
+  notes.js              /notes: notes, #tags (and the description), images, the -export PDF and the -alert (a notice at a date/time, once)
   diagnostics.js        /bot -test: the test battery (cache, disk, database, WhatsApp, internet, speed, SMTP...)
   imap.js               /bot -flush-email: minimal IMAP client (logs in and empties Sent and Trash)
   textCommands.js    the {/command} and the \n in the text (/cron and /alias): checked on creation and run on send
@@ -115,7 +115,7 @@ src/
   flood.js              flood protection (the same command beyond the limit: one notice and then silence)
   permissions.js         who uses the commands (user, delegated admin), and which ones (bot.users, +cmd|-cmd)
   mudo.js               /mute: who is muted, the suppressed notices and the origin of each notice
-  defi/                 Solana, HyperEVM, Aptos and EVM (RPC, indexer, Multicall3), Orca, Project X, Liquidswap, Morpho and Aave V3 (/defi) and the out-of-range -alerta
+  defi/                 Solana, HyperEVM, Aptos and EVM (RPC, indexer, Multicall3), Orca, Project X, Liquidswap, Morpho and Aave V3 (/defi) and the out-of-range -alert
   watch/                /watch rules and checking
   events/              message_create, deleted, edited, reactions
   commands/             commands.js (loads definitions/), one file per command,
@@ -207,7 +207,7 @@ The messages the bot sends have whatsapp-web.js's `edit()`: it swaps the text in
 | `configuracao.test.js` | `commands.js`, settings (and validation of persisted values), option parser, help (one form of the usage and one example per line) and the consistency between config, code, README and `docs/` (including alphabetical order, links and the stable version of the installation) |
 | `cotacoes.test.js` | `/rates`, `/crypto` (and the filter by currency) and the price alerts (with one or several `-to`, `-msg` and `-rm` of several) |
 | `debug.test.js` | Levels, command parser, filter with highlighting, startup logs, copy to chats and credential masking |
-| `defi.test.js` | Solana (base58, PDA), Orca accounts (checked against the official SDK), Project X (simulated HyperEVM), Liquidswap (simulated Aptos: indexer and fullnode, with the price of the stable pools and the API key), Morpho (simulated API, with the accounts checked against the API's), Aave V3 (simulated blockchain, with the real Multicall3) and `/defi`: the filter by protocol, `-rm` of several, the addresses (full only in private), the list (with the 🔔 and the limit), the `-taxas` summary (with the total and `-alerta`) and `-alerta` (leaving and returning to the range, `-taxas`, `-alerta` on registration and several `-to`) |
+| `defi.test.js` | Solana (base58, PDA), Orca accounts (checked against the official SDK), Project X (simulated HyperEVM), Liquidswap (simulated Aptos: indexer and fullnode, with the price of the stable pools and the API key), Morpho (simulated API, with the accounts checked against the API's), Aave V3 (simulated blockchain, with the real Multicall3) and `/defi`: the filter by protocol, `-rm` of several, the addresses (full only in private), the list (with the 🔔 and the limit), the `-fees` summary (with the total and `-alert`) and `-alert` (leaving and returning to the range, `-fees`, `-alert` on registration and several `-to`) |
 | `dependencias.test.js` | Loading of the dependencies without the `punycode` module warning |
 | `diagnostico.test.js` | `/bot -test`: the items with ✅/❌/➖ (simulated network), a test failure in the count and the refusal alongside other options; `-flush-email` (without SMTP, refusal) and the lookup of the Sent and Trash folders |
 | `externos.test.js` | `/cve`, `/weather`, `/news`, `/gpt`, `/tldr`, `/draw`, `/translate`, `/giphy`, `/meme`, `/joke`, `/kernel`, `/pixelart` |
@@ -222,7 +222,7 @@ The messages the bot sends have whatsapp-web.js's `edit()`: it swaps the text in
 | `mascara-telefones.test.js` | Phone number obfuscation in `/show`, `/watch` and `/bot` |
 | `mensagens.test.js` | Recording (with the name from your contacts, not the pushname) and of locations without interpreting the thumbnail as text or command, routing, permissions (`role`, `bot.users` with people, groups, `true`/`false` and the persisted permissions, bot off, extra admins from `bot.admins`, the `/bot +a`/`+u` shortcuts, the `-list-users`/`-list-users all` lists, each user's commands (`+cmd`/`-cmd`), `-reset` with confirmation, `/whois` and flood protection), the log of unknown commands and the `/stats` count (without the system notices) |
 | `monitor.test.js` | Registration, filter and removal with the shared resolver, persistent online alerts, database migration, `-rm all`, sequential queries, pauses, history per contact, entry limit, persistence and listing as text or document |
-| `notes.test.js` | `/notes`: `-add`, `-list` and `-rm` (several IDs, `all`, nonexistent ID), the `#tags` (the partial one: `#idei` finds `#ideias`), `-tags`, `-desc`, `-move`, `-view` (with image), `-export` (PDF, with the images), `-search`, images and `-alerta` (in `-add` and by ID or tag, when invalid, `-to`, single trigger and `-alerta -rm`) |
+| `notes.test.js` | `/notes`: `-add`, `-list` and `-rm` (several IDs, `all`, nonexistent ID), the `#tags` (the partial one: `#idei` finds `#ideias`), `-tags`, `-desc`, `-move`, `-view` (with image), `-export` (PDF, with the images), `-search`, images and `-alert` (in `-add` and by ID or tag, when invalid, `-to`, single trigger and `-alert -rm`) |
 | `mute.test.js` | `/mute` and `/unmute`: notices muted per person, group or community (only the target is `-a`), the target lookup (exact names, contact, group, mention and a list to choose by number) and the reply to a notice (where it came from) |
 | `presenca.test.js` | Presence reading by LID, shared subscription, cache and absence of valid times without fabricating data |
 | `saudacoes.test.js` | `/welcome` and `/goodbye`: the text per group (`{name}`, `{group}`, mention), `-on`, `-off`, `-test`, the `group_join`/`group_leave` events and who doesn't trigger them |
@@ -377,7 +377,7 @@ loop back). Each entry follows this format:
 - `cron: true` lets the command run inside the text of
   [`/cron`](commands/cron.md#commands-in-the-text) (`{/crypto}`), at send time. Only for query
   commands, which reply with `msg.reply` (the text goes in place and media goes out afterwards). An
-  option that changes something (`-add`, `-alerta`...) gets `cron: false` and is refused when
+  option that changes something (`-add`, `-alert`...) gets `cron: false` and is refused when
   creating the item. `cron: 'dono'` (on the command or on the option) only applies if whoever
   creates the item is the owner (`/bot -flush-email`).
 - `role` is the minimum level of whoever uses it, and people have the same names (`src/roles.js`):
@@ -411,8 +411,8 @@ loop back). Each entry follows this format:
     line (keep it to 4 forms or fewer: group the options, like `-status|-info|-test`);
   - the command is described by its `summary`, one line (the `help` is not shown in the `-h`);
   - each option or argument shows only the 1st sentence of its `desc`, cut before the first `:`, `;` or
-    ` (` and at about 70 characters, so **put the essential first**: "Removes alert #N (with -alerta)",
-    not "With -alerta: removes alert #N". If name and sentence fit on a line, they stay together;
+    ` (` and at about 70 characters, so **put the essential first**: "Removes alert #N (with -alert)",
+    not "With -alert: removes alert #N". If name and sentence fit on a line, they stay together;
     otherwise the sentence goes below the name;
   - the `ex` of the command comes at the end, at most 3, one per line (`Ex: /defi` and, below it, the
     others); without a command `ex`, the options' are used.

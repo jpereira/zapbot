@@ -94,7 +94,7 @@ Help: -help, -h
 ```text
 /set zapbot.lang pt_BR
 /ping -h
-Uso: /ping
+Usage: /ping
 Verifica se o bot está respondendo (responde pong).
 
 Ajuda: -help, -h

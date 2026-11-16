@@ -5,7 +5,7 @@ foto (igual ao [`/decodeqr`](decodeqr.md)). A biblioteca `qrcode` do próprio bo
 nada vai para um serviço externo.
 
 ```text
-/qr [-decode|-d] [<texto>]
+/qr [-d|-d] [<texto>]
 ```
 
 | Opção | Valor | Descrição |

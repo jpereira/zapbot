@@ -1,5 +1,5 @@
 /*
- * /defi -alerta: notifies when a position leaves the range, when it comes back and (with -taxas)
+ * /defi -alert: notifies when a position leaves the range, when it comes back and (with -fees)
  * when the fees to collect go over a value.
  */
 
@@ -12,7 +12,7 @@ const { printError, printInfo } = require('../log');
 const { getSetting } = require('../settings');
 
 /*
- * Each position with the alert on is read every 'defi.alerta.intervalMin'
+ * Each position with the alert on is read every 'defi.alert.intervalMin'
  * minutes. The in_range column stores the state of the last read: notifies when
  * goes from inside (or unknown) to outside, and from outside to inside. The
  * fees_notified holds the fee notice: once per "filled up", until collected.
@@ -22,8 +22,8 @@ const { getSetting } = require('../settings');
 async function notify(p, n, emoji, title, texts) {
     const textAlt = `${emoji} *${title}*\n\n${texts.join('\n\n')}\n\n${t('defi.alertTip', { n })}`;
     await sendToDestinations(alertDestinations(p), textAlt, { assunto: title })
-        .then(() => printInfo(`/defi -alerta: ${title} → ${alertDescribeDestination(p)}`))
-        .catch(err => printError(`/defi -alerta: falha ao avisar (${addressAlt2(p)}):`, err.message));
+        .then(() => printInfo(`/defi -alert: ${title} → ${alertDescribeDestination(p)}`))
+        .catch(err => printError(`/defi -alert: falha ao avisar (${addressAlt2(p)}):`, err.message));
 }
 
 // Saves BEFORE notifying: if the send fails, it does not repeat on every check
@@ -55,7 +55,7 @@ let checking = false;
 
 async function checkAlertsDefi({ forcar: force = false } = {}) {
     if (checking || !stateAlt.pronto) return;
-    if (!force && Date.now() - lastCheck < getSetting('defi.alerta.intervalMin') * 60 * 1000) return;
+    if (!force && Date.now() - lastCheck < getSetting('defi.alert.intervalMin') * 60 * 1000) return;
 
     checking = true;
     lastCheck = Date.now();
@@ -72,7 +72,7 @@ async function checkAlertsDefi({ forcar: force = false } = {}) {
             try {
                 lido = await readRegistration(p);
             } catch (err) {
-                printError(`/defi -alerta: não consegui ler ${addressAlt2(p)}:`, err.message);
+                printError(`/defi -alert: não consegui ler ${addressAlt2(p)}:`, err.message);
                 continue;
             }
 
