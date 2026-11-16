@@ -19,7 +19,7 @@ Atalhos persistentes (`/alias`) guardam um comando com os argumentos sob o nome 
 com uma descrição opcional:
 
 ```text
-/alias dimdim -desc "Exibe o preço do dólar" /rates USD     → cadastra o atalho
+/alias dimdim -d "Exibe o preço do dólar" /rates USD     → cadastra o atalho
 /dimdim                                                     → executa o /rates USD
 /help alias                                                 → lista os seus atalhos
 ```
@@ -132,14 +132,14 @@ Por onde começar:
   de 68 h (janela máxima que o WhatsApp permite apagar; o texto fica mais tempo com o `cache.messageRetentionHours` e as mídias, com o `cache.messageMediaRetentionHours`), as apagadas, as editadas e as reações com
   mais de 30 dias, as ocorrências do `/watch` com mais de 30 dias (setting `watch.hitsRetentionDays`), os
   contadores do `/stats` com mais de 90 dias (setting `stats.retentionDays`), as enquetes com mais
-  de 90 dias (setting `enquete.retentionDays`) e os avisos ignorados pelo `/mute` com mais de 30
+  de 90 dias (setting `poll.retentionDays`) e os avisos ignorados pelo `/mute` com mais de 30
   dias.
 - **Monitor de contatos**: o [`/monitor`](commands/monitor.md) consulta até cinco pessoas,
   uma por vez, em ordem aleatória e com espera de 1 a 15 segundos entre consultas. O intervalo
   mínimo por pessoa é de cinco minutos por padrão (`monitor.pool`). Guarda até 30 horários distintos
   por pessoa (`monitor.maxRecords`) nas tabelas `monitor_contacts` e `monitor_history`.
   `/monitor` e `/monitor -l` mostram o histórico observado; `/monitor -l /Maria/` filtra uma pessoa.
-  `/monitor -add /Maria/ -alerta` ou `/monitor -alerta /Maria/` ativa avisos online no privado
+  `/monitor -add /Maria/ -alert` ou `/monitor -alert /Maria/` ativa avisos online no privado
   do dono do bot, uma vez por transição observada. `/monitor -rm all` limpa os cadastros
   e históricos locais. `/set monitor.enabled false` pausa as consultas sem apagar dados.
   Horários podem vir do cache e não são confirmados; não há garantia de registrar todos os acessos
@@ -148,24 +148,24 @@ Por onde começar:
   hora e remetente (tabela `stats`), usado pelo [`/stats`](commands/stats.md). Só números, sem o
   texto; ficam 90 dias (setting `stats.retentionDays`). As respostas do bot, o seu privado e os
   status não entram. Desligue com `/set stats.enable off`.
-- **Alertas de preço**: `/rates -alerta USD > 5.30` e `/crypto -alerta BTC < 90000` guardam a
-  regra na tabela `price_alerts`; a cada 5 minutos (setting `alerta.intervalMin`) o bot consulta os
+- **Alertas de preço**: `/rates -alert USD > 5.30` e `/crypto -alert BTC < 90000` guardam a
+  regra na tabela `price_alerts`; a cada 5 minutos (setting `alert.intervalMin`) o bot consulta os
   preços e avisa **no seu privado** (ou, com um ou vários `-to`, em contatos, grupos, números ou por
   e-mail) quando a regra é cumprida; com o `-msg`, um texto seu vai no início do aviso. Veja
   [Alertas de preço](commands/rates.md#alertas-de-preço).
 - **Anotações**: o [`/notes`](commands/notes.md) guarda textos (e mídias: imagem, documento, áudio, vídeo) na
   tabela `notes`, cada um com um ID e, se quiser, uma `#tag` (a descrição das tags fica em
-  `note_tags`). O `-alerta` avisa de uma anotação numa data/hora (uma vez; a anotação continua), no
+  `note_tags`). O `-alert` avisa de uma anotação numa data/hora (uma vez; a anotação continua), no
   seu privado ou nos destinos do `-to`, com uma verificação por minuto.
 - **DeFi**: o [`/defi`](commands/defi.md) lê on-chain as posições de liquidez da Orca, do Project X e da
-  Liquidswap (pela carteira) cadastradas (tabela `defi_positions`) e, com o `-alerta`, confere a cada 10
-  minutos (setting `defi.alerta.intervalMin`) e avisa (no seu privado ou nos destinos do `-to`)
-  quando uma posição sai da faixa, quando volta e, com o `-taxas`, quando as taxas a coletar passam
+  Liquidswap (pela carteira) cadastradas (tabela `defi_positions`) e, com o `-alert`, confere a cada 10
+  minutos (setting `defi.alert.intervalMin`) e avisa (no seu privado ou nos destinos do `-to`)
+  quando uma posição sai da faixa, quando volta e, com o `-fees`, quando as taxas a coletar passam
   de um valor. O `/defi morpho` e o `/defi aave` mostram a posição, os empréstimos e o risco de uma
   carteira no Morpho (pela API oficial) e no Aave V3 (nos contratos, on-chain).
 - **Enquetes**: os votos das enquetes da sua conta (evento `vote_update`) vão para as tabelas
   `polls` e `poll_votes`, e o [`/poll -r`](commands/poll.md#resultado) mostra o placar. Ficam
-  90 dias (setting `enquete.retentionDays`).
+  90 dias (setting `poll.retentionDays`).
 - **Agenda**: os lembretes e as mensagens do [`/cron`](commands/cron.md) ficam na tabela `schedules`; a cada 30 s o bot envia o que venceu (os repetidos
   seguem para o próximo horário). Um `{/comando}` no texto roda na hora do envio e a resposta entra
   no lugar.

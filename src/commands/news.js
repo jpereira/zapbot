@@ -20,7 +20,7 @@ const NEWS_CATEGORIES = {
     hack: '🏴‍☠️ *Hacking News*',
     g1: '📰 *g1*',
     gazeta: '📰 *Gazeta do Povo*',
-    get brasil() { return t('news.brazil'); }
+    get brazil() { return t('news.brazil'); }
 };
 
 const ENTITIES_XML = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };

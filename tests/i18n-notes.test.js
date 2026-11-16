@@ -27,10 +27,10 @@ test('/notes em inglês: vazio, anotar, listar, tags, remover e erro', async () 
         "❌ IDs 7, 8 don't exist. Nothing was changed; see the list with /notes -l");
 });
 
-test('/notes -alerta em inglês: lista vazia e alerta no passado', async () => {
-    assert.match((await bot.replyAlt('/notes -alerta'))[0], /^🔔 No notes with an alert\./);
+test('/notes -alert em inglês: lista vazia e alerta no passado', async () => {
+    assert.match((await bot.replyAlt('/notes -alert'))[0], /^🔔 No notes with an alert\./);
     await bot.replyAlt('/notes #home buy milk');
-    assert.match((await bot.replyAlt('/notes -alerta 1 xyz'))[0], /^❌ Invalid time: "xyz"/);
+    assert.match((await bot.replyAlt('/notes -alert 1 xyz'))[0], /^❌ Invalid time: "xyz"/);
 });
 
 test('/monitor em inglês: lista vazia e uso', async () => {

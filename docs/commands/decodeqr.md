@@ -5,7 +5,7 @@ Reads the **QR Code** in a photo and replies with its text. Reply to the photo, 
 same as [`/qr`](qr.md)).
 
 ```text
-/decodeqr [-encode|-e] [<text>]
+/decodeqr [-e|-e] [<text>]
 ```
 
 | Option | Value | Description |

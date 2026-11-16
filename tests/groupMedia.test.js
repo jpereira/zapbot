@@ -214,7 +214,7 @@ describe('/poll -r (resultado)', () => {
         assert.equal(r.content.pollName, 'Vale -r aqui?');
     });
 
-    test('limpeza: enquetes mais antigas que enquete.retentionDays saem com os votos', async () => {
+    test('limpeza: enquetes mais antigas que poll.retentionDays saem com os votos', async () => {
         const { cleanPollsOld } = bot.src('cleanup');
         const [sent] = await bot.executar('/poll Velha? | a | b');
         await bot.voteAlt(sent, OTHERAlt.jid, ['a']);
@@ -230,7 +230,7 @@ describe('/sticker', () => {
     const photo = { mimetype: 'image/jpeg', data: Buffer.from('jpg').toString('base64') };
 
     test('sem responder uma mensagem', async () => {
-        assert.match((await bot.replyAlt('/sticker'))[0], /^```Uso: \/sticker/);
+        assert.match((await bot.replyAlt('/sticker'))[0], /^```Usage: \/sticker/);
     });
 
     test('imagem: enquadrada em webp, com o nome e o autor do setting', async () => {

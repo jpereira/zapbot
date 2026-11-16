@@ -5,7 +5,7 @@ colunas de largura e 5 linhas de altura, e o texto quebra em várias linhas de l
 tela do celular: 30 colunas por padrão.
 
 ```text
-/ascii [-width|-w <colunas>] [-char|-c <caractere>] <texto>
+/ascii [-w|-w <colunas>] [-c|-c <caractere>] <texto>
 ```
 
 | Opção | Valor | Descrição |

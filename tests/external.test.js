@@ -102,7 +102,7 @@ describe('/weather', () => {
         daily: { temperature_2m_max: [temp + 3], temperature_2m_min: [temp - 3], precipitation_probability_max: [40] }
     });
 
-    test('sem cidade usa o tempo.city; mostra agora, máx/mín, umidade, vento e chuva', async () => {
+    test('sem cidade usa o weather.city; mostra agora, máx/mín, umidade, vento e chuva', async () => {
         network.responder('get', 'geocoding-api.open-meteo.com', (url, cfg) => ({ results: [{ ...local, pedido: cfg.params.name }] }));
         network.responder('get', 'api.open-meteo.com/v1/forecast', forecast(24, 2));
 
@@ -147,10 +147,10 @@ describe('/weather', () => {
         assert.match(r, /🌡️ \*Agora:\* 24°C/, 'mantém o tempo de agora');
         assert.match(r, /📅 \*Próximos 3 dias\*\n☀️ \*Hoje \(qui 01\/10\):\* 30°\/20° · ☔ 0% · Céu limpo\n🌧️ \*sex 02\/10:\* 31°\/21° · ☔ 10% · Chuva\n⛈️ \*sáb 03\/10:\* 32°\/22° · ☔ 20% · Trovoada/);
 
-        await bot.setSetting('tempo.city', 'Maricá');
+        await bot.setSetting('weather.city', 'Maricá');
         await bot.replyAlt('/weather 5');
         assert.equal(network.chamadas.at(-1).cfg.params.forecast_days, 5);
-        assert.equal(network.chamadas.at(-2).cfg.params.name, 'Maricá', 'sem cidade: tempo.city');
+        assert.equal(network.chamadas.at(-2).cfg.params.name, 'Maricá', 'sem cidade: weather.city');
 
         assert.match((await bot.replyAlt('/weather 1d'))[0], /📅 \*Previsão de hoje\*\n/);
         assert.match((await bot.replyAlt('/weather 7D Recife'))[0], /Próximos 7 dias/);
@@ -164,21 +164,21 @@ describe('/weather', () => {
         assert.doesNotMatch(r, /Próximos|Previsão de hoje/);
     });
 
-    test('N fora de 1..tempo.maxDays é recusado; o máximo vem do setting (até 16)', async () => {
-        await bot.setSetting('tempo.maxDays', 7);
+    test('N fora de 1..weather.maxDays é recusado; o máximo vem do setting (até 16)', async () => {
+        await bot.setSetting('weather.maxDays', 7);
         assert.match((await bot.replyAlt('/weather 8d Recife'))[0], /❌ Quantidade de dias inválida: 8\. Use de 1 a 7\./);
         assert.match((await bot.replyAlt('/weather 0'))[0], /Quantidade de dias inválida: 0/);
         assert.deepEqual(network.chamadas, [], 'nem consulta a API');
 
-        await bot.setSetting('tempo.maxDays', 16);
+        await bot.setSetting('weather.maxDays', 16);
         network.responder('get', 'geocoding-api.open-meteo.com', { results: [local] });
         network.responder('get', 'api.open-meteo.com/v1/forecast', (url, cfg) => forecastDays(cfg.params.forecast_days));
         assert.match((await bot.replyAlt('/weather 16'))[0], /Próximos 16 dias/);
-        await assert.rejects(bot.setSetting('tempo.maxDays', 17), /entre 1 e 16/);
+        await assert.rejects(bot.setSetting('weather.maxDays', 17), /entre 1 e 16/);
     });
 
     test('padrão permite 16d com datas válidas; 17 dias é recusado sem consultar a API', async () => {
-        assert.equal(bot.getSetting('tempo.maxDays'), 16);
+        assert.equal(bot.getSetting('weather.maxDays'), 16);
         network.responder('get', 'geocoding-api.open-meteo.com', { results: [local] });
         network.responder('get', 'api.open-meteo.com/v1/forecast',
             (url, cfg) => forecastDays(cfg.params.forecast_days));
@@ -207,7 +207,7 @@ describe('/news', () => {
         `<item><title><![CDATA[${title}]]></title><link>https://n.com/${encodeURIComponent(title)}</link><pubDate>${data}</pubDate></item>`).join('')}</channel></rss>`;
 
     test('sem categoria mostra a ajuda', async () => {
-        assert.match((await bot.replyAlt('/news'))[0], /Uso: \/news/);
+        assert.match((await bot.replyAlt('/news'))[0], /Usage: \/news/);
     });
 
     test('-g1: manchetes da mais nova para a mais antiga, com fonte e link', async () => {
@@ -241,14 +241,14 @@ describe('/news', () => {
 
 describe('/gpt', () => {
     // The status footer is on by default: the tests compare the exact reply, without it
-    beforeEach(() => bot.setSetting('openai.status', false));
+    beforeEach(() => bot.setSetting('gpt.status', false));
 
     test('sem chave: desativado', async () => {
         assert.match((await bot.replyAlt('/gpt oi'))[0], /⚠️ API key da OpenAI não encontrada/);
     });
 
     test('pergunta com a chave do setting; texto da mensagem respondida entra antes', async () => {
-        await bot.setSetting('openai.api.key', 'sk-teste');
+        await bot.setSetting('gpt.api.key', 'sk-teste');
         network.responder('post', 'api.openai.com', { choices: [{ message: { content: ' Resposta! ' } }] });
 
         const quoted = bot.createMessage({ texto: 'texto citado', de: bot.OTHERAlt.jid });
@@ -262,7 +262,7 @@ describe('/gpt', () => {
     });
 
     test('respondendo uma foto: ela vai junto da pergunta (legenda + pergunta + imagem em base64)', async () => {
-        await bot.setSetting('openai.api.key', 'sk-teste');
+        await bot.setSetting('gpt.api.key', 'sk-teste');
         network.responder('post', 'api.openai.com', { choices: [{ message: { content: 'É um labrador.' } }] });
 
         const photo = bot.createMessage({ texto: 'meu cachorro', de: bot.OTHERAlt.jid, tipo: 'image',
@@ -286,7 +286,7 @@ describe('/gpt', () => {
     });
 
     test('foto que não dá: não baixa, formato que a OpenAI não lê, grande demais; vídeo não é foto', async () => {
-        await bot.setSetting('openai.api.key', 'sk-teste');
+        await bot.setSetting('gpt.api.key', 'sk-teste');
         network.responder('post', 'api.openai.com', { choices: [{ message: { content: 'ok' } }] });
         const calls = () => network.chamadas.length;
         const beforeAlt = calls();
@@ -308,7 +308,7 @@ describe('/gpt', () => {
     });
 
     test('1ª palavra que parece opção e não existe (/gpt -price): erro com a dica do -h, sem chamar a OpenAI', async () => {
-        await bot.setSetting('openai.api.key', 'sk-teste');
+        await bot.setSetting('gpt.api.key', 'sk-teste');
         network.responder('post', 'api.openai.com/v1/chat/completions', { choices: [{ message: { content: 'Oi.' } }] });
 
         assert.deepEqual(await bot.replyAlt('/gpt -price'), ['❌ Opção desconhecida: -price\n💡 _Veja as opções com /gpt -h|-help_']);
@@ -320,8 +320,8 @@ describe('/gpt', () => {
         assert.equal((await bot.replyAlt('/gpt -1 é negativo?'))[0], '🤖 Oi.');
     });
 
-    test('-status|-s (ou o setting openai.status): rodapé com os bytes TX/RX e os tokens gastos', async () => {
-        await bot.setSetting('openai.api.key', 'sk-teste');
+    test('-status|-s (ou o setting gpt.status): rodapé com os bytes TX/RX e os tokens gastos', async () => {
+        await bot.setSetting('gpt.api.key', 'sk-teste');
         network.responder('post', 'api.openai.com/v1/chat/completions', {
             choices: [{ message: { content: 'Oi.' } }],
             usage: { prompt_tokens: 20, completion_tokens: 5, total_tokens: 25 }
@@ -331,27 +331,27 @@ describe('/gpt', () => {
         assert.equal(without, '🤖 Oi.');
 
         // The prices come empty: cost n/a until /gpt -prices (or the automatic update)
-        await bot.setSetting('openai.status', true);
+        await bot.setSetting('gpt.status', true);
         assert.match((await bot.replyAlt('/gpt oi'))[0], /_💵 custo n\/d \(rode \/gpt -prices\)_$/);
-        await bot.setSetting('openai.status', false);
-        await bot.setSetting('openai.pricing', ['gpt-4o-mini=0.15/0.6']);
+        await bot.setSetting('gpt.status', false);
+        await bot.setSetting('gpt.pricing', ['gpt-4o-mini=0.15/0.6']);
 
         // Default (on)
-        await bot.setSetting('openai.status', true);
+        await bot.setSetting('gpt.status', true);
         assert.match((await bot.replyAlt('/gpt oi'))[0], /📡 ⬆️/);
-        await bot.setSetting('openai.status', false);
+        await bot.setSetting('gpt.status', false);
 
         const [withValue] = await bot.replyAlt('/gpt -s oi');
         assert.match(withValue, /^🤖 Oi\.\n\n_📡 ⬆️ \d+ B TX · ⬇️ \d+ B RX · 🪙 25 tokens \(📥 20 · 📤 5\)_\n_💵 ~\$0\.00000\d_$/);
 
-        // Model without a price in openai.pricing: cost n/a
-        await bot.setSetting('openai.pricing', ['gpt-4.1=2/8']);
+        // Model without a price in gpt.pricing: cost n/a
+        await bot.setSetting('gpt.pricing', ['gpt-4.1=2/8']);
         assert.match((await bot.replyAlt('/gpt -s oi'))[0], /_💵 custo n\/d \(rode \/gpt -prices\)_$/);
 
     });
 
     test('respondendo um áudio: transcreve (v1/audio/transcriptions); com outra pergunta, o chat em cima da transcrição', async () => {
-        await bot.setSetting('openai.api.key', 'sk-teste');
+        await bot.setSetting('gpt.api.key', 'sk-teste');
         network.responder('post', 'api.openai.com/v1/audio/transcriptions', { text: ' olá, tudo bem? ' });
         network.responder('post', 'api.openai.com/v1/chat/completions', { choices: [{ message: { content: 'Um cumprimento.' } }] });
 
@@ -366,7 +366,7 @@ describe('/gpt', () => {
         assert.equal(network.chamadas.filter(c => c.url.endsWith('/chat/completions')).length, 0, 'só transcrever não chama o chat');
 
         // Without a question it also only transcribes; the model comes from the setting
-        await bot.setSetting('openai.transcribe.model', 'gpt-4o-mini-transcribe');
+        await bot.setSetting('gpt.transcribe.model', 'gpt-4o-mini-transcribe');
         assert.deepEqual(await bot.replyAlt('/gpt', { citada: voice }), ['🤖 *Transcrição:*\nolá, tudo bem?']);
         assert.equal(network.chamadas.at(-1).cfg.body.get('model'), 'gpt-4o-mini-transcribe');
 
@@ -377,7 +377,7 @@ describe('/gpt', () => {
     });
 
     test('áudio que não dá: não baixa, formato que a OpenAI não lê, grande demais, sem fala e erro da OpenAI', async () => {
-        await bot.setSetting('openai.api.key', 'sk-teste');
+        await bot.setSetting('gpt.api.key', 'sk-teste');
         const beforeAlt = network.chamadas.length;
 
         const expiredAlt2 = bot.createMessage({ de: bot.OTHERAlt.jid, tipo: 'audio', extras: { hasMedia: true, downloadMedia: async () => null } });
@@ -398,13 +398,13 @@ describe('/gpt', () => {
         assert.match((await bot.replyAlt('/gpt', { citada: muted, erroEsperado: true }))[0], /🔑 API key da OpenAI inválida/);
     });
 
-    test('-voz: o texto digitado (ou o da mensagem respondida) vira uma nota de voz de robô (v1/audio/speech)', async () => {
-        assert.match((await bot.replyAlt('/gpt -voz oi'))[0], /⚠️ API key da OpenAI não encontrada/);
+    test('-voice: o texto digitado (ou o da mensagem respondida) vira uma nota de voz de robô (v1/audio/speech)', async () => {
+        assert.match((await bot.replyAlt('/gpt -voice oi'))[0], /⚠️ API key da OpenAI não encontrada/);
 
-        await bot.setSetting('openai.api.key', 'sk-teste');
+        await bot.setSetting('gpt.api.key', 'sk-teste');
         network.responder('post', 'api.openai.com/v1/audio/speech', Buffer.from('OGGDATA'));
 
-        const r = (await bot.executar('/gpt -voz exterminar todos os humanos')).at(-1);
+        const r = (await bot.executar('/gpt -voice exterminar todos os humanos')).at(-1);
         assert.ok(r.content instanceof MessageMedia);
         assert.equal(r.content.mimetype, 'audio/ogg; codecs=opus');
         assert.equal(r.content.data, Buffer.from('OGGDATA').toString('base64'));
@@ -419,44 +419,44 @@ describe('/gpt', () => {
             instructions: 'Fale como um robô: voz metálica, monótona e pausada, sem emoção.'
         });
 
-        // Without typed text, speaks the replied message's; -voz can come in the middle
+        // Without typed text, speaks the replied message's; -voice can come in the middle
         const quoted = bot.createMessage({ texto: 'bom dia, humano', de: bot.OTHERAlt.jid });
-        await bot.executar('/gpt -voz', { citada: quoted });
+        await bot.executar('/gpt -voice', { citada: quoted });
         assert.equal(network.chamadas.at(-1).cfg.body.input, 'bom dia, humano');
         // With typed text and a replied message: speaks the replied one, in the typed style
-        await bot.executar('/gpt -voz fale como um robô meio metálico', { citada: quoted });
+        await bot.executar('/gpt -voice fale como um robô meio metálico', { citada: quoted });
         assert.equal(network.chamadas.at(-1).cfg.body.input, 'bom dia, humano');
         assert.equal(network.chamadas.at(-1).cfg.body.instructions, 'fale como um robô meio metálico');
         await bot.executar('/gpt fale -v isso aqui');
         assert.equal(network.chamadas.at(-1).cfg.body.input, 'fale isso aqui');
 
         // The model, voice and style come from the settings; tts-1 does not take the style
-        await bot.setSetting('openai.tts.voice', 'nova');
-        await bot.setSetting('openai.tts.model', 'tts-1');
-        await bot.executar('/gpt -voz oi');
+        await bot.setSetting('gpt.tts.voice', 'nova');
+        await bot.setSetting('gpt.tts.model', 'tts-1');
+        await bot.executar('/gpt -voice oi');
         assert.deepEqual(network.chamadas.at(-1).cfg.body, { model: 'tts-1', voice: 'nova', input: 'oi', response_format: 'opus' });
     });
 
-    test('-voz: sem texto, grande demais e erro da OpenAI (o corpo do erro vem em bytes)', async () => {
-        await bot.setSetting('openai.api.key', 'sk-teste');
+    test('-voice: sem texto, grande demais e erro da OpenAI (o corpo do erro vem em bytes)', async () => {
+        await bot.setSetting('gpt.api.key', 'sk-teste');
         const beforeAlt = network.chamadas.length;
 
-        assert.deepEqual(await bot.replyAlt('/gpt -voz'), ['❌ Use: /gpt -voz <texto> (ou responda uma mensagem de texto)']);
-        assert.match((await bot.replyAlt(`/gpt -voz ${'a'.repeat(4097)}`))[0], /❌ O texto tem 4097 caracteres: a voz aceita até 4096\./);
+        assert.deepEqual(await bot.replyAlt('/gpt -voice'), ['❌ Usage: /gpt -voice <texto> (ou responda uma mensagem de texto)']);
+        assert.match((await bot.replyAlt(`/gpt -voice ${'a'.repeat(4097)}`))[0], /❌ O texto tem 4097 caracteres: a voz aceita até 4096\./);
         assert.equal(network.chamadas.length, beforeAlt, 'nada foi para a OpenAI');
 
         network.responder('post', 'api.openai.com/v1/audio/speech', Object.assign(new Error('Request failed with status code 400'), {
             response: { status: 400, data: Buffer.from(JSON.stringify({ error: { message: 'voz inválida' } })) }
         }));
-        assert.deepEqual(await bot.replyAlt('/gpt -voz oi', { erroEsperado: true }), ['❌ Erro no /gpt: voz inválida']);
+        assert.deepEqual(await bot.replyAlt('/gpt -voice oi', { erroEsperado: true }), ['❌ Erro no /gpt: voz inválida']);
     });
 
     // The tests' sharp reads the dimensions from "png:WxH" (see sharpFake in tests/helpers/environment.js)
     const PNG_4X2 = Buffer.from('png:4x2').toString('base64');
 
     test('-img: gera uma imagem (v1/images/generations) e, respondendo uma foto, a edita (v1/images/edits)', async () => {
-        await bot.setSetting('openai.api.key', 'sk-teste');
-        assert.deepEqual(await bot.replyAlt('/gpt -img'), ['❌ Use: /gpt -img <o que criar> (respondendo uma foto, ela é editada)']);
+        await bot.setSetting('gpt.api.key', 'sk-teste');
+        assert.deepEqual(await bot.replyAlt('/gpt -img'), ['❌ Usage: /gpt -img <o que criar> (respondendo uma foto, ela é editada)']);
 
         network.responder('post', 'api.openai.com/v1/images/generations', { data: [{ b64_json: 'UE5H' }] });
         const r = (await bot.executar('/gpt -img um robô nadando em aquarela')).at(-1);
@@ -484,7 +484,7 @@ describe('/gpt', () => {
     });
 
     test('modelo que a conta não tem: o erro lista os que a chave vê (GET /v1/models) e diz como trocar', async () => {
-        await bot.setSetting('openai.api.key', 'sk-teste');
+        await bot.setSetting('gpt.api.key', 'sk-teste');
         const withoutModel = (modelAlt) => errorHttp(400, 'HTTP 400', { data: { error: { message: `The model '${modelAlt}' does not exist.` } } });
         network.responder('get', 'api.openai.com/v1/models', { data: [{ id: 'gpt-4o' }, { id: 'gpt-image-2' }, { id: 'dall-e-3' }, { id: 'sora-2' }, { id: 'whisper-1' }, { id: 'tts-1' }] });
 
@@ -493,11 +493,11 @@ describe('/gpt', () => {
         assert.deepEqual(await bot.replyAlt('/gpt -img um robô', { erroEsperado: true }), [
             '❌ O modelo gpt-image-2 não existe na sua conta da OpenAI (imagem).\n' +
             '💡 _A sua chave vê: dall-e-3, gpt-image-2_\n' +
-            '💡 _Troque com /set openai.image.model <modelo>_'
+            '💡 _Troque com /set gpt.image.model <modelo>_'
         ]);
 
         // The model is free: switch to whichever the account has and works
-        await bot.setSetting('openai.image.model', 'dall-e-3');
+        await bot.setSetting('gpt.image.model', 'dall-e-3');
         network.responder('post', 'api.openai.com/v1/images/generations', { data: [{ b64_json: 'UE5H' }] });
         const ok = (await bot.executar('/gpt -img um robô')).at(-1);
         assert.equal(ok.content.data, 'UE5H');
@@ -505,15 +505,15 @@ describe('/gpt', () => {
 
         // Voice, transcription and video follow the same notice
         network.responder('post', 'api.openai.com/v1/audio/speech', withoutModel('gpt-4o-mini-tts'));
-        assert.match((await bot.replyAlt('/gpt -voz oi', { erroEsperado: true }))[0], /^❌ O modelo gpt-4o-mini-tts não existe na sua conta da OpenAI \(voz\)\.\n💡 _A sua chave vê: tts-1_\n/);
+        assert.match((await bot.replyAlt('/gpt -voice oi', { erroEsperado: true }))[0], /^❌ O modelo gpt-4o-mini-tts não existe na sua conta da OpenAI \(voz\)\.\n💡 _A sua chave vê: tts-1_\n/);
 
         network.responder('post', 'api.openai.com/v1/audio/transcriptions', withoutModel('gpt-transcribe'));
         const voice = bot.createMessage({ de: bot.OTHERAlt.jid, tipo: 'ptt', midia: { mimetype: 'audio/ogg; codecs=opus', data: 'QUJD' } });
-        assert.match((await bot.replyAlt('/gpt', { citada: voice, erroEsperado: true }))[0], /^❌ O modelo gpt-transcribe não existe .*\(transcrição\)\.\n💡 _A sua chave vê: whisper-1_\n💡 _Troque com \/set openai\.transcribe\.model/s);
+        assert.match((await bot.replyAlt('/gpt', { citada: voice, erroEsperado: true }))[0], /^❌ O modelo gpt-transcribe não existe .*\(transcrição\)\.\n💡 _A sua chave vê: whisper-1_\n💡 _Troque com \/set gpt\.transcribe\.model/s);
 
-        await bot.setSetting('openai.image.gifModel', 'gpt-image-1');
+        await bot.setSetting('gpt.image.gifModel', 'gpt-image-1');
         network.responder('post', 'api.openai.com/v1/images/generations', withoutModel('gpt-image-1'));
-        assert.match((await bot.replyAlt('/draw -gif um gato', { erroEsperado: true })).at(-1), /^❌ O modelo gpt-image-1 não existe .*\(GIF\)\.\n💡 _A sua chave vê: gpt-image-2_\n💡 _Troque com \/set openai\.image\.gifModel/s);
+        assert.match((await bot.replyAlt('/draw -gif um gato', { erroEsperado: true })).at(-1), /^❌ O modelo gpt-image-1 não existe .*\(GIF\)\.\n💡 _A sua chave vê: gpt-image-2_\n💡 _Troque com \/set gpt\.image\.gifModel/s);
 
         // Without the list (/v1/models fails too): only the warning
         network.responder('get', 'api.openai.com/v1/models', errorHttp(500));
@@ -522,8 +522,8 @@ describe('/gpt', () => {
     });
 
     test('-gif: o GIF animado da API de imagens (output_format gif) vira um MP4 mandado como GIF; respondendo uma foto, ela é a base', async () => {
-        await bot.setSetting('openai.api.key', 'sk-teste');
-        assert.deepEqual(await bot.replyAlt('/gpt -gif'), ['❌ Use: /gpt -gif <o que animar> (respondendo uma foto, ela é animada)']);
+        await bot.setSetting('gpt.api.key', 'sk-teste');
+        assert.deepEqual(await bot.replyAlt('/gpt -gif'), ['❌ Usage: /gpt -gif <o que animar> (respondendo uma foto, ela é animada)']);
 
         network.responder('post', 'api.openai.com/v1/images/generations', { data: [{ b64_json: Buffer.from('GIF89a').toString('base64') }] });
         network.responder('post', 'api.openai.com/v1/images/edits', { data: [{ b64_json: Buffer.from('GIF89a').toString('base64') }] });
@@ -546,8 +546,8 @@ describe('/gpt', () => {
         assert.ok(ffmpeg.args[ffmpeg.args.indexOf('-i') + 1].endsWith('entrada.gif'));
 
         // The frames and the time come from the settings
-        await bot.setSetting('openai.gif.frames', 12);
-        await bot.setSetting('openai.gif.frameMs', 150);
+        await bot.setSetting('gpt.gif.frames', 12);
+        await bot.setSetting('gpt.gif.frameMs', 150);
         await bot.executar('/gpt -gif um gato');
         assert.equal(network.chamadas.at(-1).cfg.body.frame_count, 12);
         assert.equal(network.chamadas.at(-1).cfg.body.frame_duration_ms, 150);
@@ -567,7 +567,7 @@ describe('/gpt', () => {
     });
 
     test('-gif: conta sem a prévia do GIF, a OpenAI sem a imagem e o ffmpeg falhando', async () => {
-        await bot.setSetting('openai.api.key', 'sk-teste');
+        await bot.setSetting('gpt.api.key', 'sk-teste');
 
         network.responder('post', 'api.openai.com/v1/images/generations',
             errorHttp(400, 'HTTP 400', { data: { error: { message: 'output_format gif requires access to the GIF preview' } } }));
@@ -591,7 +591,7 @@ describe('/gpt', () => {
     });
 
     test('-img e -gif gastam a conta: só o dono e os admins, também no "gere um gif..." sem o -gif', async () => {
-        await bot.setSetting('openai.api.key', 'sk-teste');
+        await bot.setSetting('gpt.api.key', 'sk-teste');
         await bot.setSetting('bot.users', [bot.OTHERAlt.user]);
         await bot.setSetting('bot.users.cmds', [`${bot.OTHERAlt.user}=/gpt`]);
         const beforeAlt = network.chamadas.length;
@@ -608,7 +608,7 @@ describe('/gpt', () => {
     });
 
     test('a resposta em Markdown chega na formatação do WhatsApp (títulos, negrito duplo, tabela)', async () => {
-        await bot.setSetting('openai.api.key', 'sk-teste');
+        await bot.setSetting('gpt.api.key', 'sk-teste');
         network.responder('post', 'api.openai.com/v1/chat/completions', { choices: [{ message: { content:
             '# 🧺 O que é um conjunto?\n\nUm **conjunto** é uma coleção.\n\n| Símbolo | Significado |\n|---|---|\n| **∈** | Pertence |\n\n---\n\n* **União ∪:** tudo junto' } }] });
 
@@ -632,14 +632,14 @@ describe('/gpt', () => {
         }
     });
 
-    test('modelo: setting openai.api.model (padrão gpt-4o-mini); o OPENAI_MODEL do .env vence', async () => {
-        await bot.setSetting('openai.api.key', 'sk-teste');
+    test('modelo: setting gpt.api.model (padrão gpt-4o-mini); o OPENAI_MODEL do .env vence', async () => {
+        await bot.setSetting('gpt.api.key', 'sk-teste');
         network.responder('post', 'api.openai.com', { choices: [{ message: { content: 'ok' } }] });
 
         await bot.replyAlt('/gpt oi');
         assert.equal(network.chamadas.at(-1).cfg.body.model, 'gpt-4o-mini');
 
-        await bot.setSetting('openai.api.model', 'gpt-6-luna');
+        await bot.setSetting('gpt.api.model', 'gpt-6-luna');
         await bot.replyAlt('/gpt oi');
         assert.equal(network.chamadas.at(-1).cfg.body.model, 'gpt-6-luna');
 
@@ -652,7 +652,7 @@ describe('/gpt', () => {
         }
     });
 
-    test('-prices: lê a tabela Standard do site da OpenAI e atualiza o openai.pricing, sem tocar no que a página não tem', async () => {
+    test('-prices: lê a tabela Standard do site da OpenAI e atualiza o gpt.pricing, sem tocar no que a página não tem', async () => {
         const line = (nameAlt, ...v) => `[1,[[0,&quot;${nameAlt}&quot;]${v.map(x => `,[0,${typeof x === 'string' ? `&quot;${x}&quot;` : x}]`).join('')}]]`;
         const page = '<astro-island props="' + [
             line('gpt-4o-mini', 0.2, 0.075, 0.7),                 // mudou
@@ -664,13 +664,13 @@ describe('/gpt', () => {
             line('gpt-4o-mini', 0.075, '-', 0.3)                  // Batch: a primeira linha vale
         ].join(',') + '"></astro-island>';
         network.responder('get', 'developers.openai.com/api/docs/pricing', page);
-        await bot.setSetting('openai.pricing', ['gpt-4o-mini=0.15/0.6', 'meu-modelo=1/2']);
+        await bot.setSetting('gpt.pricing', ['gpt-4o-mini=0.15/0.6', 'meu-modelo=1/2']);
 
         const [r] = await bot.replyAlt('/gpt -prices');
         assert.match(r, /1 alterado, 1 novo, 0 sem mudança/);
         assert.match(r, /🔄 gpt-4o-mini: 0\.15\/0\.6 → \*0\.2\/0\.7\*/);
         assert.match(r, /➕ gpt-9-novo/);
-        assert.deepEqual(bot.getSetting('openai.pricing'), ['gpt-4o-mini=0.2/0.7', 'meu-modelo=1/2', 'gpt-9-novo=3/12']);
+        assert.deepEqual(bot.getSetting('gpt.pricing'), ['gpt-4o-mini=0.2/0.7', 'meu-modelo=1/2', 'gpt-9-novo=3/12']);
 
         // No change: only warns
         assert.match((await bot.replyAlt('/gpt -prices'))[0], /✅ Os 2 preços já estão em dia/);
@@ -678,10 +678,10 @@ describe('/gpt', () => {
         // Page without the table: error and nothing changes
         network.responder('get', 'developers.openai.com/api/docs/pricing', '<html></html>');
         assert.match((await bot.replyAlt('/gpt -prices'))[0], /❌ Não consegui atualizar os preços: não achei a tabela/);
-        assert.equal(bot.getSetting('openai.pricing').length, 3);
+        assert.equal(bot.getSetting('gpt.pricing').length, 3);
     });
 
-    test('atualização automática dos preços: a cada 15 dias, só com a chave e o openai.pricing.auto; aviso no rodapé com 30+', async () => {
+    test('atualização automática dos preços: a cada 15 dias, só com a chave e o gpt.pricing.auto; aviso no rodapé com 30+', async () => {
         const { updatePricesSeExpired } = bot.src('openaiChat');
         const page = '<x props="[1,[[0,&quot;gpt-4o-mini&quot;],[0,0.3],[0,0.1],[0,0.9]]]"></x>';
         network.responder('get', 'developers.openai.com/api/docs/pricing', page);
@@ -690,34 +690,34 @@ describe('/gpt', () => {
 
         // Without the key: nothing
         assert.equal(await updatePricesSeExpired(today + 40 * day), null);
-        await bot.setSetting('openai.api.key', 'sk-teste');
+        await bot.setSetting('gpt.api.key', 'sk-teste');
 
         // Never updated (prices and date empty, the default): updates now, without waiting for the 15 days
         const first = await updatePricesSeExpired(today);
         assert.deepEqual(first.novos, ['gpt-4o-mini']);
-        assert.deepEqual(bot.getSetting('openai.pricing'), ['gpt-4o-mini=0.3/0.9']);
-        await bot.setSetting('openai.pricing', ['gpt-4o-mini=0.15/0.6']);
+        assert.deepEqual(bot.getSetting('gpt.pricing'), ['gpt-4o-mini=0.3/0.9']);
+        await bot.setSetting('gpt.pricing', ['gpt-4o-mini=0.15/0.6']);
 
         // Just updated: not expired yet
-        await bot.setSetting('openai.pricing.updated', new Date(today).toISOString().slice(0, 10));
+        await bot.setSetting('gpt.pricing.updated', new Date(today).toISOString().slice(0, 10));
         assert.equal(await updatePricesSeExpired(today + 10 * day), null);
 
-        // Turned off by openai.pricing.auto: nothing, even if expired
+        // Turned off by gpt.pricing.auto: nothing, even if expired
         const queries = () => network.chamadas.filter(c => c.url.includes('/pricing')).length;
         const beforeAlt = queries();
-        await bot.setSetting('openai.pricing.auto', false);
+        await bot.setSetting('gpt.pricing.auto', false);
         assert.equal(await updatePricesSeExpired(today + 40 * day), null);
         assert.equal(queries(), beforeAlt);
 
         // Vencido (16 dias) e ligado: atualiza e grava a data
-        await bot.setSetting('openai.pricing.auto', true);
+        await bot.setSetting('gpt.pricing.auto', true);
         const r = await updatePricesSeExpired(today + 16 * day);
         assert.equal(r.mudados.length, 1);
-        assert.ok(bot.getSetting('openai.pricing').includes('gpt-4o-mini=0.3/0.9'));
-        assert.equal(bot.getSetting('openai.pricing.updated'), new Date().toISOString().slice(0, 10));
+        assert.ok(bot.getSetting('gpt.pricing').includes('gpt-4o-mini=0.3/0.9'));
+        assert.equal(bot.getSetting('gpt.pricing.updated'), new Date().toISOString().slice(0, 10));
 
         // Failure (site down): touches nothing and waits before trying again
-        await bot.setSetting('openai.pricing.updated', '2026-01-01');
+        await bot.setSetting('gpt.pricing.updated', '2026-01-01');
         network.responder('get', 'developers.openai.com/api/docs/pricing', '<html></html>');
         assert.equal(await updatePricesSeExpired(today), null);
         const n = network.chamadas.length;
@@ -732,8 +732,8 @@ describe('/gpt', () => {
     test('-usage: o consumo (Usage API, chave de admin) por dia e por modelo, e os limites de agora (cabeçalhos)', async () => {
         assert.match((await bot.replyAlt('/gpt -usage'))[0], /⚠️ API key da OpenAI não encontrada/);
 
-        await bot.setSetting('openai.api.key', 'sk-teste');
-        await bot.setSetting('openai.admin.key', 'sk-admin-teste');
+        await bot.setSetting('gpt.api.key', 'sk-teste');
+        await bot.setSetting('gpt.admin.key', 'sk-admin-teste');
         const day = Math.floor(Date.parse('2026-11-07T00:00:00Z') / 1000);
         network.responder('get', 'api.openai.com/v1/organization/usage/completions', {
             object: 'page',
@@ -764,8 +764,8 @@ describe('/gpt', () => {
         network.responder('get', 'api.openai.com/v1/organization/usage/audio_speeches', { has_more: false, data: [{ start_time: day, results: [{ characters: 1200, num_model_requests: 1 }] }] });
         network.responder('get', 'api.openai.com/v1/organization/usage/audio_transcriptions', { has_more: false, data: [{ start_time: day, results: [{ seconds: 42, num_model_requests: 1 }] }] });
         network.responder('get', 'api.openai.com/v1/organization/usage/embeddings', empty);
-        await bot.setSetting('openai.credit.total', '10');
-        await bot.setSetting('openai.credit.since', '2026-11-01');
+        await bot.setSetting('gpt.credit.total', '10');
+        await bot.setSetting('gpt.credit.since', '2026-11-01');
         network.responder('post', 'api.openai.com/v1/chat/completions', network.http({
             data: { choices: [{ message: { content: '' } }] },
             headers: {
@@ -816,7 +816,7 @@ describe('/gpt', () => {
     });
 
     test('-usage: sem a chave de admin só os limites (com a dica); dias inválidos; chave de admin recusada', async () => {
-        await bot.setSetting('openai.api.key', 'sk-teste');
+        await bot.setSetting('gpt.api.key', 'sk-teste');
         network.responder('post', 'api.openai.com/v1/chat/completions', network.http({
             data: { choices: [] }, headers: { 'x-ratelimit-limit-tokens': '1000', 'x-ratelimit-remaining-tokens': '10' }
         }));
@@ -826,12 +826,12 @@ describe('/gpt', () => {
         assert.match(withoutAdmin, /• tokens: 10 de 1\.000$/);
         assert.doesNotMatch(withoutAdmin, /requisições/);
 
-        assert.deepEqual(await bot.replyAlt('/gpt -u 99'), ['❌ Use: /gpt -usage [dias] (de 1 a 31; padrão 7)']);
-        assert.deepEqual(await bot.replyAlt('/gpt -usage 0'), ['❌ Use: /gpt -usage [dias] (de 1 a 31; padrão 7)']);
-        assert.deepEqual(await bot.replyAlt('/gpt -usage 99'), ['❌ Use: /gpt -usage [dias] (de 1 a 31; padrão 7)']);
-        assert.deepEqual(await bot.replyAlt('/gpt -usage abc'), ['❌ Use: /gpt -usage [dias] (de 1 a 31; padrão 7)']);
+        assert.deepEqual(await bot.replyAlt('/gpt -u 99'), ['❌ Usage: /gpt -usage [dias] (de 1 a 31; padrão 7)']);
+        assert.deepEqual(await bot.replyAlt('/gpt -usage 0'), ['❌ Usage: /gpt -usage [dias] (de 1 a 31; padrão 7)']);
+        assert.deepEqual(await bot.replyAlt('/gpt -usage 99'), ['❌ Usage: /gpt -usage [dias] (de 1 a 31; padrão 7)']);
+        assert.deepEqual(await bot.replyAlt('/gpt -usage abc'), ['❌ Usage: /gpt -usage [dias] (de 1 a 31; padrão 7)']);
 
-        await bot.setSetting('openai.admin.key', 'sk-admin-teste');
+        await bot.setSetting('gpt.admin.key', 'sk-admin-teste');
         network.responder('get', 'api.openai.com/v1/organization/usage/completions', errorHttp(403));
         const [rejected] = await bot.replyAlt('/gpt -usage', { erroEsperado: true });
         assert.match(rejected, /^🔑 A chave de admin foi recusada\.\n💡 _A Usage API pede uma Admin key/);
@@ -845,13 +845,13 @@ describe('/gpt', () => {
         assert.match(r, /\*-img\* \(imagens\) — \/gpt -m <modelo> -img\n✅ gpt-image-2\n\n/);
         assert.match(r, /\*-gif\* \(GIF\) — \/gpt -m <modelo> -gif\n✅ gpt-image-2\.6-flare\n\n/);
         assert.match(r, /\*-audio\* \(transcrição de áudio\) — \/gpt -m <modelo> -audio\n✅ gpt-transcribe\n\n/);
-        assert.match(r, /\*-voz\* \(voz\) — \/gpt -m <modelo> -voz\n✅ gpt-4o-mini-tts\n\n/);
+        assert.match(r, /\*-voice\* \(voz\) — \/gpt -m <modelo> -voice\n✅ gpt-4o-mini-tts\n\n/);
         assert.match(r, /💡 _Sem a lista da sua chave/);
         assert.doesNotMatch(r, /OPENAI_MODEL/);
     });
 
-    test('-m com a chave: os modelos que ela vê, por uso; -m <modelo> [-gif|-audio|-voz] troca o do uso', async () => {
-        await bot.setSetting('openai.api.key', 'sk-teste');
+    test('-m com a chave: os modelos que ela vê, por uso; -m <modelo> [-gif|-audio|-voice] troca o do uso', async () => {
+        await bot.setSetting('gpt.api.key', 'sk-teste');
         network.responder('get', 'api.openai.com/v1/models', { data: [
             { id: 'gpt-4.1' }, { id: 'gpt-4o-mini' }, { id: 'gpt-5-pro' }, { id: 'text-embedding-3-small' },
             { id: 'gpt-image-2.5-flare' }, { id: 'gpt-image-2.6-flare' }, { id: 'dall-e-3' },
@@ -880,7 +880,7 @@ describe('/gpt', () => {
             '✅ gpt-transcribe',
             '▫️ whisper-1',
             '',
-            '*-voz* (voz) — /gpt -m <modelo> -voz',
+            '*-voice* (voz) — /gpt -m <modelo> -voice',
             '✅ gpt-4o-mini-tts',
             '▫️ tts-1',
             '',
@@ -890,37 +890,37 @@ describe('/gpt', () => {
         // A single use
         const [soImage] = await bot.replyAlt('/gpt -m -gif');
         assert.match(soImage, /^🤖 \*Modelos do \/gpt\*\n\n\*-gif\*/);
-        assert.doesNotMatch(soImage, /Padrão|-audio|-voz/);
+        assert.doesNotMatch(soImage, /Padrão|-audio|-voice/);
 
         // Swap per use
         assert.deepEqual(await bot.replyAlt('/gpt -m gpt-4.1'), ['✅ Modelo do /gpt: *gpt-4.1*']);
         assert.deepEqual(await bot.replyAlt('/gpt -m gpt-image-2.5-flare -img'), ['✅ Modelo de imagens do /gpt: *gpt-image-2.5-flare*']);
         assert.deepEqual(await bot.replyAlt('/gpt -m gpt-image-2.6-flare -gif'), ['✅ Modelo de GIF do /gpt: *gpt-image-2.6-flare*']);
         assert.deepEqual(await bot.replyAlt('/gpt -m whisper-1 -audio'), ['✅ Modelo de transcrição de áudio do /gpt: *whisper-1*']);
-        assert.deepEqual(await bot.replyAlt('/gpt -m tts-1 -voz'), ['✅ Modelo de voz do /gpt: *tts-1*']);
-        assert.deepEqual([bot.getSetting('openai.api.model'), bot.getSetting('openai.image.model'), bot.getSetting('openai.image.gifModel'),
-            bot.getSetting('openai.transcribe.model'), bot.getSetting('openai.tts.model')],
+        assert.deepEqual(await bot.replyAlt('/gpt -m tts-1 -voice'), ['✅ Modelo de voz do /gpt: *tts-1*']);
+        assert.deepEqual([bot.getSetting('gpt.api.model'), bot.getSetting('gpt.image.model'), bot.getSetting('gpt.image.gifModel'),
+            bot.getSetting('gpt.transcribe.model'), bot.getSetting('gpt.tts.model')],
         ['gpt-4.1', 'gpt-image-2.5-flare', 'gpt-image-2.6-flare', 'whisper-1', 'tts-1']);
 
         // A model the key cannot see is not saved, and the error shows the ones of the use; the questions' follows the fixed list
         assert.deepEqual(await bot.replyAlt('/gpt -m gpt-image-1 -img'), [
             '❌ A sua chave não vê o modelo gpt-image-1 (imagens).\n💡 _Os que ela vê: dall-e-3, gpt-image-2.5-flare, gpt-image-2.6-flare_'
         ]);
-        assert.equal(bot.getSetting('openai.image.model'), 'gpt-image-2.5-flare');
+        assert.equal(bot.getSetting('gpt.image.model'), 'gpt-image-2.5-flare');
         assert.match((await bot.replyAlt('/gpt -m gpt-5-pro'))[0], /❌ Modelo não suportado: gpt-5-pro \(aceitos: gpt-6-astra/);
 
         // A current one the key cannot see appears with the warning
-        await bot.setSetting('openai.image.model', 'gpt-image-1');
+        await bot.setSetting('gpt.image.model', 'gpt-image-1');
         assert.match((await bot.replyAlt('/gpt -m -img'))[0], /✅ gpt-image-1 ⚠️ a sua chave não vê\n▫️ dall-e-3/);
     });
 
     test('-m <modelo> troca o setting; modelo fora da lista é recusado', async () => {
         assert.deepEqual(await bot.replyAlt('/gpt -model gpt-6-sol'), ['✅ Modelo do /gpt: *gpt-6-sol*']);
-        assert.equal(bot.getSetting('openai.api.model'), 'gpt-6-sol');
+        assert.equal(bot.getSetting('gpt.api.model'), 'gpt-6-sol');
 
         assert.match((await bot.replyAlt('/gpt -m gpt-5-pro'))[0], /❌ Modelo não suportado: gpt-5-pro \(aceitos: gpt-6-astra/);
-        assert.equal(bot.getSetting('openai.api.model'), 'gpt-6-sol');
-        await assert.rejects(bot.setSetting('openai.api.model', 'o1'), /não suportado: o1/);
+        assert.equal(bot.getSetting('gpt.api.model'), 'gpt-6-sol');
+        await assert.rejects(bot.setSetting('gpt.api.model', 'o1'), /não suportado: o1/);
     });
 
     test('-m com OPENAI_MODEL no .env: troca o setting e avisa da prioridade', async () => {
@@ -934,12 +934,12 @@ describe('/gpt', () => {
     });
 
     test('sem pergunta mostra a sintaxe', async () => {
-        await bot.setSetting('openai.api.key', 'sk-teste');
-        assert.match((await bot.replyAlt('/gpt'))[0], /Uso: \/gpt/);
+        await bot.setSetting('gpt.api.key', 'sk-teste');
+        assert.match((await bot.replyAlt('/gpt'))[0], /Usage: \/gpt/);
     });
 
     test('erros: chave inválida (sem vazar no log), limite, timeout e outros', async () => {
-        await bot.setSetting('openai.api.key', 'sk-teste');
+        await bot.setSetting('gpt.api.key', 'sk-teste');
         const cases = [
             [errorHttp(401, 'Incorrect API key provided: sk-tes**ste'), /🔑 API key da OpenAI inválida/],
             [errorHttp(429), /💸 Limite ou créditos da OpenAI esgotados/],
@@ -961,22 +961,22 @@ describe('/draw', () => {
     const imageCalls = () => network.chamadas.filter(c => /\/images\/(generations|edits)$/.test(c.url));
 
     beforeEach(async () => {
-        await bot.setSetting('openai.status', false);
-        await bot.setSetting('openai.api.key', 'sk-teste');
+        await bot.setSetting('gpt.status', false);
+        await bot.setSetting('gpt.api.key', 'sk-teste');
         network.responder('post', 'api.openai.com/v1/images/generations', { data: [{ b64_json: 'UE5H' }] });
         network.responder('post', 'api.openai.com/v1/images/edits', { data: [{ b64_json: 'RURJVA==' }] });
     });
 
     test('sem chave e sem pedido', async () => {
-        await bot.setSetting('openai.api.key', '');
+        await bot.setSetting('gpt.api.key', '');
         assert.match((await bot.replyAlt('/draw um gato'))[0], /⚠️ API key da OpenAI não encontrada: o \/draw está desativado/);
 
-        await bot.setSetting('openai.api.key', 'sk-teste');
-        assert.match((await bot.replyAlt('/draw'))[0], /Uso: \/draw/);
+        await bot.setSetting('gpt.api.key', 'sk-teste');
+        assert.match((await bot.replyAlt('/draw'))[0], /Usage: \/draw/);
         assert.equal(imageCalls().length, 0);
     });
 
-    test('desenha a imagem (modelo openai.image.model) com o pedido na legenda; os aliases valem', async () => {
+    test('desenha a imagem (modelo gpt.image.model) com o pedido na legenda; os aliases valem', async () => {
         const r = (await bot.executar('/draw um gato astronauta')).at(-1);
         assert.ok(r.content instanceof MessageMedia);
         assert.equal(r.content.mimetype, 'image/png');
@@ -1092,13 +1092,13 @@ describe('/draw', () => {
 
         assert.deepEqual(await bot.replyAlt('/draw -m dall-e-3'), ['✅ Modelo do /draw: *dall-e-3*']);
         assert.deepEqual(await bot.replyAlt('/draw -gif -m gpt-image-2.6-sunburst'), ['✅ Modelo de GIF do /draw: *gpt-image-2.6-sunburst*']);
-        assert.deepEqual([bot.getSetting('openai.image.model'), bot.getSetting('openai.image.gifModel')], ['dall-e-3', 'gpt-image-2.6-sunburst']);
+        assert.deepEqual([bot.getSetting('gpt.image.model'), bot.getSetting('gpt.image.gifModel')], ['dall-e-3', 'gpt-image-2.6-sunburst']);
 
         // What the key cannot see is not saved
         assert.deepEqual(await bot.replyAlt('/draw -m gpt-image-1'), [
             '❌ A sua chave não vê o modelo gpt-image-1 (imagens).\n💡 _Os que ela vê: dall-e-3, gpt-image-2, gpt-image-2.6-flare, gpt-image-2.6-sunburst_'
         ]);
-        assert.equal(bot.getSetting('openai.image.model'), 'dall-e-3');
+        assert.equal(bot.getSetting('gpt.image.model'), 'dall-e-3');
 
         // Each command uses the model of its use
         await bot.executar('/draw um gato');
@@ -1129,7 +1129,7 @@ describe('/draw', () => {
 
 describe('/tldr', () => {
     const { readPeriod } = bot.src('commands/tldr');
-    beforeEach(() => bot.setSetting('openai.status', false));
+    beforeEach(() => bot.setSetting('gpt.status', false));
 
     // Messages received in the group, saved `minutos` minutes ago
     async function chat(linesAlt, minutes = 10) {
@@ -1141,7 +1141,7 @@ describe('/tldr', () => {
     }
 
     beforeEach(async () => {
-        await bot.setSetting('openai.api.key', 'sk-teste');
+        await bot.setSetting('gpt.api.key', 'sk-teste');
         network.responder('post', 'api.openai.com', { choices: [{ message: { content: '• Combinaram o almoço de domingo.' } }] });
     });
 
@@ -1182,7 +1182,7 @@ describe('/tldr', () => {
     });
 
     test('opção desconhecida na 1ª palavra (/tldr -price): erro com a dica do -h, sem chamar a OpenAI; -2h continua valendo', async () => {
-        await bot.setSetting('openai.api.key', 'sk-teste');
+        await bot.setSetting('gpt.api.key', 'sk-teste');
         assert.deepEqual(await bot.replyAlt('/tldr -price'), ['❌ Opção desconhecida: -price\n💡 _Veja as opções com /tldr -h|-help_']);
         assert.equal(network.chamadas.length, 0);
         assert.doesNotMatch((await bot.replyAlt('/tldr -2h'))[0], /Opção desconhecida/);
@@ -1261,7 +1261,7 @@ describe('/tldr', () => {
         await assert.rejects(bot.setSetting('cache.messageRetentionHours', 3000), /2160/);
     });
 
-    test('-c pelo nome e -pv', async () => {
+    test('-c pelo nome e -private', async () => {
         const WORK = '120363000000000002@g.us';
         bot.createGroup(WORK, 'Trabalho Rio', [bot.OWNER.jid, bot.OTHERAlt.jid]);
         for (const textAlt of ['reunião às 15h', 'ok', 'levo o projetor']) {
@@ -1275,7 +1275,7 @@ describe('/tldr', () => {
         await bot.replyAlt('/tldr', { chat: bot.OTHERAlt.jid });
         assert.match(network.chamadas.at(-1).cfg.body.messages[1].content, /Fulano: oi\n.*Dono: tudo bem\?\n.*Fulano: tudo$/);
 
-        const r = await bot.executar('/tldr -c "rio trabalho" -pv');
+        const r = await bot.executar('/tldr -c "rio trabalho" -private');
         assert.equal(r[0].texto, '🤖 Resumo enviado no seu privado.');
         assert.equal(r[1].chatId, bot.OWNER.jid);
         assert.match(r[1].texto, /🤖 \*Resumo de Trabalho Rio\*/);
@@ -1283,7 +1283,7 @@ describe('/tldr', () => {
         assert.match((await bot.replyAlt('/tldr -c xyz'))[0], /❌ Nenhum chat no cache casa com "xyz"/);
 
         // Like /show: /regex/ and @mention; more than one chat matches: lists and waits for the no.
-        const r2 = await bot.executar('/tldr -c /rio$/ -pv');
+        const r2 = await bot.executar('/tldr -c /rio$/ -private');
         assert.match(r2[1].texto, /🤖 \*Resumo de Trabalho Rio\*/);
 
         const OTHER_GROUP = '120363000000000003@g.us';
@@ -1291,20 +1291,20 @@ describe('/tldr', () => {
         for (const textAlt of ['bom dia', 'oi', 'ok']) {
             await bot.deliver(bot.createMessage({ texto: textAlt, de: bot.OTHERAlt.jid, chat: OTHER_GROUP }));
         }
-        const choosing = await bot.replyChoosing('/tldr -c trabalho -pv', '2');
+        const choosing = await bot.replyChoosing('/tldr -c trabalho -private', '2');
         assert.match(choosing[0], /🔎 "trabalho" corresponde a 2 chats/);
         assert.match(choosing.join('\n'), /🤖 \*Resumo de Trabalho (Rio|SP)\*/);
     });
 
     test('poucas mensagens, período inválido, sem chave e erro da OpenAI', async () => {
         assert.match((await bot.replyAlt('/tldr'))[0], /📝 Poucas mensagens para resumir \(0\) em Família/);
-        assert.match((await bot.replyAlt('/tldr ontem'))[0], /Uso: \/tldr/);
+        assert.match((await bot.replyAlt('/tldr ontem'))[0], /Usage: \/tldr/);
 
         await chat([['a'], ['b'], ['c']]);
         network.responder('post', 'api.openai.com', errorHttp(429));
         assert.deepEqual(await bot.replyAlt('/tldr', { erroEsperado: true }), ['💸 Limite ou créditos da OpenAI esgotados. Tente mais tarde.']);
 
-        await bot.setSetting('openai.api.key', '');
+        await bot.setSetting('gpt.api.key', '');
         assert.match((await bot.replyAlt('/tldr'))[0], /⚠️ API key da OpenAI não encontrada: o \/tldr está desativado/);
     });
 });
@@ -1337,10 +1337,10 @@ describe('/translate', () => {
         assert.ok(init.signal instanceof AbortSignal);
     });
 
-    test('-para (sem diferenciar maiúsculas), mensagem respondida e o setting traduzir.lang', async () => {
+    test('-to (sem diferenciar maiúsculas), mensagem respondida e o setting translate.lang', async () => {
         network.responder('post', 'google-translate-api-x', translation('Good morning', 'pt'));
 
-        await bot.replyAlt('/translate -para en bom dia');
+        await bot.replyAlt('/translate -to en bom dia');
         assert.equal(network.chamadas.at(-1).cfg.body.to, 'en');
         assert.equal(network.chamadas.at(-1).cfg.body.texto, 'bom dia');
 
@@ -1352,7 +1352,7 @@ describe('/translate', () => {
         assert.equal(network.chamadas.at(-1).cfg.body.to, 'fr');
         assert.equal(network.chamadas.at(-1).cfg.body.texto, 'buenos días');
 
-        await bot.setSetting('traduzir.lang', 'es');
+        await bot.setSetting('translate.lang', 'es');
         await bot.replyAlt('/translate oi');
         assert.equal(network.chamadas.at(-1).cfg.body.to, 'es');
     });
@@ -1370,8 +1370,8 @@ describe('/translate', () => {
     });
 
     test('validações e erros do Google', async () => {
-        assert.match((await bot.replyAlt('/translate'))[0], /Uso: \/translate/);
-        assert.match((await bot.replyAlt('/translate -para português oi'))[0], /❌ Idioma inválido: português/);
+        assert.match((await bot.replyAlt('/translate'))[0], /Usage: \/translate/);
+        assert.match((await bot.replyAlt('/translate -to português oi'))[0], /❌ Idioma inválido: português/);
         assert.match((await bot.replyAlt(`/translate ${'a'.repeat(5001)}`))[0], /❌ Texto grande demais: 5001 caracteres/);
 
         const cases = [

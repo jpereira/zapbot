@@ -2,7 +2,7 @@
 
 Role `admin`: só você e os admins extras. O dono libera a uma pessoa ou grupo com
 `/bot +u +cmd /tldr` ([Delegando](index.md#delegando-um-comando-admin)).
-Quem recebe resume só o chat atual, aqui mesmo: `-chat` e `-pv` são do dono e dos admins extras.
+Quem recebe resume só o chat atual, aqui mesmo: `-chat` e `-private` são do dono e dos admins extras.
 
 Resume a conversa de um chat pelo ChatGPT: assuntos principais, decisões, combinados e pendências,
 em tópicos. Usa a mesma chave e o mesmo modelo do [`/gpt`](gpt.md) (veja
@@ -15,15 +15,15 @@ Markdown para a formatação do WhatsApp do `/gpt` (veja [Formatação no WhatsA
 | *(respondendo)* | | Resume da mensagem respondida até agora; o período digitado ou o `-chat` ganham |
 | `-chat`, `-c` | `<chat>` | Resume outro chat, nome do grupo ou do contato (todas as palavras, em qualquer ordem, sem diferenciar acentos), `/regex/` ou `@contato`. Nome com espaço vai entre aspas: `-c "trabalho rio"`. Se vários chats casarem, lista e espera o nº |
 | `-status`, `-s` | | Acrescenta no rodapé o consumo da chamada: bytes TX/RX, tokens, custo e saldo (veja [Status](gpt.md#status--status)) |
-| `-pv` | | Envia no seu privado em vez de expor no chat atual |
+| `-private` | | Envia no seu privado em vez de expor no chat atual |
 
 ```text
 /tldr                → as últimas 100 mensagens deste chat
 /tldr 2h             → as das últimas 2 horas
 /tldr 1d             → as do último dia (1h30m, 2d4h... valem; o banco guarda 68 h, ou o `cache.messageRetentionHours`)
 /tldr 30             → as últimas 30 mensagens (sem a letra, é quantidade)
-/tldr 300 -pv        → as últimas 300, no seu privado
-/tldr -c família 3h -pv
+/tldr 300 -private        → as últimas 300, no seu privado
+/tldr -c família 3h -private
 (respondendo uma mensagem)  /tldr  → dela até agora
 ```
 

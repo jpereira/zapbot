@@ -12,25 +12,25 @@ Removing contacts or reducing the local history doesn't change the backups that 
 | `-now`, `-n` | | Creates a backup now (manual: stays until deleted) |
 | `-list`, `-l` | | Lists the backups, numbered from newest to oldest, with date, size and reason |
 | `-info`, `-i` | `<no.>` | Backup details: date, reason, version of the bot that created it (with the commit, e.g.: `X.Y.Z (git+4465374/vX.Y.Z)`) and the entries of each table, compared with the current database |
-| `-restore`, `-r` | `<no.\|name>` | Restores the backup. Without `-sim`, it only shows what will happen and the command to confirm |
-| `-sim` | | Confirms: with `-restore`, the restore; with `-send -to` another chat, the sending |
+| `-restore`, `-r` | `<no.\|name>` | Restores the backup. Without `-yes`, it only shows what will happen and the command to confirm |
+| `-yes` | | Confirms: with `-restore`, the restore; with `-send -to` another chat, the sending |
 | `-send`, `-s` | `[no.]` | Sends the backup file (without no.: the most recent) to your private chat or to the `-to` destinations. See [Send the file](#send-the-file) |
-| `-to` | `<destination>` | With `-send`: by email, as an attachment (`email` is the `QRCODE_EMAIL_SMTP_TO`, or an address), or to another chat: a contact (`/Jorge Pereira/`), a mention (`@Fulano Da Silva`), a group (`/Grupo L200/`) or a number (`+5521999999999`) (asks for `-sim`). Repeat for several. See [Destinations](index.md#destinations-contact-group-number-or-email) |
+| `-to` | `<destination>` | With `-send`: by email, as an attachment (`email` is the `QRCODE_EMAIL_SMTP_TO`, or an address), or to another chat: a contact (`/Jorge Pereira/`), a mention (`@Fulano Da Silva`), a group (`/Grupo L200/`) or a number (`+5521999999999`) (asks for `-yes`). Repeat for several. See [Destinations](index.md#destinations-contact-group-number-or-email) |
 | `-rm` | `<no.\|all>` | Deletes backup no. N (or all of them) |
 
 ```text
 /backup                                 → the current database and the backups
-/backup -now                            → creates one now
+/backup -n                            → creates one now
 /backup -l                                 → the list
 /backup -i 2                            → what's in no. 2, compared with the current database
 /backup -r 2                            → shows what will happen and asks for confirmation
-/backup -r zapbot-20261001-030000 -sim  → restores
+/backup -r zapbot-20261001-030000 -yes  → restores
 /backup -s                              → the most recent file in your private chat
 /backup -s -to eu@gmail.com             → the most recent, by email
 /backup -s 2 -to email                  → no. 2, to the QRCODE_EMAIL_SMTP_TO
-/backup -s -to /Jorge Pereira/ -sim     → in a contact's private chat
-/backup -s -to @Fulano Da Silva -sim    → in the mentioned person's private chat
-/backup -s -to email -to /Jorge Pereira/ -sim  → by email and in the contact's private chat
+/backup -s -to /Jorge Pereira/ -yes     → in a contact's private chat
+/backup -s -to @Fulano Da Silva -yes    → in the mentioned person's private chat
+/backup -s -to email -to /Jorge Pereira/ -yes  → by email and in the contact's private chat
 /backup -rm 3                           → deletes no. 3
 ```
 
@@ -48,7 +48,7 @@ Removing contacts or reducing the local history doesn't change the backups that 
 • 📤 Automatic destination: local only
 
 💡 Tips
-/backup -now creates one now
+/backup -n creates one now
 /backup -l lists
 /backup -i <no.> shows details
 /backup -r <no.> restores
@@ -89,7 +89,7 @@ several destinations, write one `-to` for each in the setting.
 ```
 
 Setting `backup.to` authorizes sending the entire database to the destination every day, without
-asking for `-sim` each day. For names with more than one result, use the full name or the number:
+asking for `-yes` each day. For names with more than one result, use the full name or the number:
 the automatic sending doesn't open a choice list. For a person mentioned in a command, set their
 name or number in the setting. Emails use the bot's SMTP and the same 20 MB limit as manual
 sending. Manual backups and the ones made before restoring aren't sent through this setting.
@@ -132,11 +132,11 @@ Each backup is two or three files in `cache/backups/`, in the `app_cache` volume
 (a new backup in the meantime would change the numbers):
 
 ```text
-/backup -r 2 -sim
+/backup -r 2 -yes
 ♻️ Backup restored: Wed 30/09 15:20
 message_edits 10 · messages 1,180 · settings 47 · ...
 
-💾 The previous state was kept in backup zapbot-20261001-101530: to undo, /backup -r zapbot-20261001-101530 -sim
+💾 The previous state was kept in backup zapbot-20261001-101530: to undo, /backup -r zapbot-20261001-101530 -yes
 ```
 
 - The entire database goes back to that moment; whatever came in afterward is lost. That's why,
@@ -155,7 +155,7 @@ other commands ([Destinations](index.md#destinations-contact-group-number-or-ema
   (`-to "a@x.com, b@y.com"`). It goes as an attachment, through the same SMTP as the QR Code and the
   alerts (`QRCODE_EMAIL_SMTP_*`, see [Configuration](../configuration.md#email-qr-code-and-alerts)).
 - **Another chat**: a contact, a group or a number. Since the database has the stored messages of
-  **all** chats, the bot asks for confirmation: repeat with `-sim`.
+  **all** chats, the bot asks for confirmation: repeat with `-yes`.
 - **Several**: repeat `-to`. All the emails go in a single email; each chat receives the file (if
   one fails, the others still receive it).
 
@@ -165,11 +165,11 @@ other commands ([Destinations](index.md#destinations-contact-group-number-or-ema
 
 /backup -s -to /Jorge Pereira/
 ⚠️ The backup has the whole database: the saved messages of all chats, the deleted ones, the settings...
-To send it to 👤 Jorge Pereira anyway, repeat with -sim: /backup -send -to /Jorge Pereira/ -sim
+To send it to 👤 Jorge Pereira anyway, repeat with -yes: /backup -send -to /Jorge Pereira/ -yes
 
 /backup -s -to email -to /Jorge Pereira/ -to /Grupo L200/
 ⚠️ The backup has the whole database: the saved messages of all chats, the deleted ones, the settings...
-To send it to 👤 Jorge Pereira, 👥 Grupo sobre L200 anyway, repeat with -sim: /backup -send -to email -to /Jorge Pereira/ -to /Grupo L200/ -sim
+To send it to 👤 Jorge Pereira, 👥 Grupo sobre L200 anyway, repeat with -yes: /backup -send -to email -to /Jorge Pereira/ -to /Grupo L200/ -yes
 ```
 
 - The email includes the anti-phishing code, like the bot's other emails, and the restore

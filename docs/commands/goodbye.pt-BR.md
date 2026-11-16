@@ -8,7 +8,7 @@ no grupo quando alguém sai (ou é removido). Vale **por grupo**, e só existe o
 [`/welcome`](welcome.md).
 
 ```text
-/goodbye [-on|-off|-test] [<texto>]
+/goodbye [-on|-off|-t] [<texto>]
 ```
 
 | Opção | Valor | Descrição |
@@ -22,7 +22,7 @@ no grupo quando alguém sai (ou é removido). Vale **por grupo**, e só existe o
 /goodbye                         → mostra a mensagem deste grupo
 /goodbye {name} saiu do {group}.
 /goodbye -on                     → o texto padrão
-/goodbye -test                   → prévia
+/goodbye -t                   → prévia
 /goodbye -off                    → desliga
 ```
 

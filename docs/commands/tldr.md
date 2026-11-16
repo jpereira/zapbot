@@ -2,7 +2,7 @@
 
 Role `admin`: only you and the extra admins. The owner enables it for a person or group with
 `/bot +u +cmd /tldr` ([Delegating](index.md#delegating-an-admin-command)).
-Whoever gets it summarizes only the current chat, right there: `-chat` and `-pv` are for the owner
+Whoever gets it summarizes only the current chat, right there: `-chat` and `-private` are for the owner
 and the extra admins.
 
 Summarizes a chat's conversation with ChatGPT: main topics, decisions, agreements and pending items,
@@ -17,15 +17,15 @@ WhatsApp formatting conversion as `/gpt` (see
 | *(replying)* | | Summarizes from the replied message until now; a typed period or `-chat` win |
 | `-chat`, `-c` | `<chat>` | Summarizes another chat, the group or contact name (all the words, in any order, ignoring accents), `/regex/` or `@contact`. A name with a space goes in quotes: `-c "work rio"`. If several chats match, it lists them and waits for the number |
 | `-status`, `-s` | | Adds the call's usage to the footer: TX/RX bytes, tokens, cost and balance (see [Status](gpt.md#status--status)) |
-| `-pv` | | Sends to your private chat instead of exposing it in the current chat |
+| `-private` | | Sends to your private chat instead of exposing it in the current chat |
 
 ```text
 /tldr                → the last 100 messages of this chat
 /tldr 2h             → the ones from the last 2 hours
 /tldr 1d             → the ones from the last day (1h30m, 2d4h... work; the database keeps 68 h, or `cache.messageRetentionHours`)
 /tldr 30             → the last 30 messages (without the letter, it's a count)
-/tldr 300 -pv        → the last 300, in your private chat
-/tldr -c family 3h -pv
+/tldr 300 -private        → the last 300, in your private chat
+/tldr -c family 3h -private
 (replying to a message)  /tldr  → from it until now
 ```
 

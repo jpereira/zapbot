@@ -54,7 +54,7 @@ marcas; você, se estiver nela, com `🤖 dono`. Embaixo, as **Permissões** diz
 dizer.
 
 ```text
-/bot -list-users               (no seu privado)
+/bot -lu               (no seu privado)
 Usuários (4)
 • 👑 +a · 👤 Jorge Pereira · +5521999999999
 • 👑 +a 🗣️ +u · 👤 Ana Souza · +5511988887777
@@ -81,7 +81,7 @@ Quando alguém fica de fora, a lista diz quantos e como ver todos, com o cuidado
 grupo quem não é de lá:
 
 ```text
-/bot -list-users               (no grupo Amigos Faculdade)
+/bot -lu               (no grupo Amigos Faculdade)
 Usuários (2) neste grupo
 • 🗣️ +u · 👤 Jorge Chip L200 · +5521999983333
 • 🗣️ +u · 👤 Sofia Izabel · +5521•••••7777 · só neste grupo
@@ -144,7 +144,7 @@ admins:
 /bot +a @Fulano Da Silva              → ou, num grupo, mencionando a pessoa
 /bot +a                               → no privado de alguém: essa pessoa
 /bot -a /Jorge Pereira/               → tira
-/bot -list-users                           → a lista: 👑 +a · 👤 Jorge Pereira · +5521999999999
+/bot -lu                           → a lista: 👑 +a · 👤 Jorge Pereira · +5521999999999
 ```
 
 O nome é buscado como no `-to` ([Destinos](index.md#destinos-contato-grupo-número-ou-e-mail)):
@@ -162,7 +162,7 @@ contato de quem o WhatsApp só informa o id interno (LID), sem o telefone, tamb�
 - O número é comparado com o telefone de quem mandou a mensagem. Se o WhatsApp só informar o LID (o
   id interno) da pessoa e o bot não conseguir o telefone, ela não é reconhecida como admin.
 - Os comandos de um admin extra agem como os seus: os avisos que vão "para o seu privado" (alertas,
-  `-pv`, `/watch`...) vão para o **seu** privado, não para o dele. Admins também gerenciam as moedas
+  `-private`, `/watch`...) vão para o **seu** privado, não para o dele. Admins também gerenciam as moedas
   do `/rates` e do `/crypto`, os alertas de preço e a limpeza do `/show -f`.
 - Numa lista de escolha (vários contatos com o nome), só quem deu o comando responde com o nº.
 - Dê esse acesso só a quem você confia: um admin pode, por exemplo, apagar o cache (`/cache -a`) ou
@@ -318,7 +318,7 @@ mesmo chat (**não**, ou nada, deixa tudo como está; sem resposta, a pergunta v
 Aceitam `-mask`, mas não combinam com as outras opções.
 
 ```text
-/bot -reset
+/bot -r
 ⚠️ Tirar todos os usuários? Ficam só você e os admins extras usando comandos.
 💡 Responda sim em 10 s para confirmar (ou /bot -r force, para voltar tudo ao padrão).
 
@@ -330,7 +330,7 @@ sim
 ```
 
 ```text
-/bot -reset force
+/bot -r force
 ⚠️ Voltar tudo ao padrão? Tira os usuários e os admins extras e liga o bot: só você usa comandos.
 💡 Responda sim em 10 s para confirmar.
 
@@ -358,7 +358,7 @@ relatório sai todo dia nesse horário, no seu privado ou nos destinos do `-to`.
 ```text
 /bot                                     → o status agora
 /bot -s                                  → o mesmo
-/bot -status 06h                         → todo dia às 06:00, no seu privado
+/bot -s 06h                         → todo dia às 06:00, no seu privado
 /bot -s 06h -to voce@exemplo.com         → todo dia às 06:00, por e-mail
 /bot -s 7h -to /Grupo Familia/ -to email → no grupo e por e-mail
 /bot -s às 18h30                         → todo dia às 18:30 (nos mesmos destinos)
@@ -429,7 +429,7 @@ conta no limite dele. Se o bot estiver fora do ar no horário, o relatório sai 
 hora, o que está ruim: disco cheio, internet lenta, senha do SMTP errada, WhatsApp desconectado...
 
 ```text
-/bot -test
+/bot -t
 🧪 *TESTE DO BOT*
 
 ✅ Cache — escrita e leitura de 256 KB (3 ms)
@@ -467,11 +467,11 @@ O bot manda e-mails (QR Code, alertas, `/cron`...) e eles ficam em Sent. O `-flu
 quanto isso ocupa e limpa.
 
 ```text
-/bot -flush-email
+/bot -fe
 📧 *Caixa de e-mail:* 128 em Sent e 14 em Trash
 💡 /bot -flush-email true para apagar tudo
 
-/bot -flush-email true
+/bot -fe true
 ⏳ Limpando a caixa de e-mail...        (editada ao concluir)
 🧹 *E-mail limpo:* 128 em Sent e 14 em Trash (142 no total)
 ```
@@ -492,7 +492,7 @@ se a imagem precisa ser refeita (o `yt-dlp`, por exemplo, muda com frequência) 
 problema. Ele também avisa quando há versão nova do `yt-dlp` e do `whatsapp-web.js`.
 
 ```text
-/bot -info
+/bot -i
 ℹ️ ZapBot 1.0.23 (devel) · informações do sistema
 
 🤖 Bot

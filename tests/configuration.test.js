@@ -429,8 +429,8 @@ describe('SETTINGS_SCHEMA', () => {
 
 describe('settings', () => {
     test('boolean aceita on/off e sinônimos', async () => {
-        for (const v of ['on', 'true', '1', 'sim', 'yes']) assert.equal(await setSetting('show.alert.edited', v), true);
-        for (const v of ['off', 'false', '0', 'nao', 'não', 'no']) assert.equal(await setSetting('show.alert.edited', v), false);
+        for (const v of ['on', 'true', '1', 'yes']) assert.equal(await setSetting('show.alert.edited', v), true);
+        for (const v of ['off', 'false', '0', 'no']) assert.equal(await setSetting('show.alert.edited', v), false);
         await assert.rejects(setSetting('show.alert.edited', 'talvez'), /use on\|off/);
     });
 
@@ -443,23 +443,23 @@ describe('settings', () => {
     });
 
     test('string: 1 a 100 caracteres; allowEmpty aceita vazio', async () => {
-        assert.equal(await setSetting('tempo.city', '  Recife  '), 'Recife');
-        await assert.rejects(setSetting('tempo.city', ''), /1 a 100/);
-        await assert.rejects(setSetting('tempo.city', 'x'.repeat(101)), /1 a 100/);
-        assert.equal(await setSetting('openai.api.key', ''), '');
+        assert.equal(await setSetting('weather.city', '  Recife  '), 'Recife');
+        await assert.rejects(setSetting('weather.city', ''), /1 a 100/);
+        await assert.rejects(setSetting('weather.city', 'x'.repeat(101)), /1 a 100/);
+        assert.equal(await setSetting('gpt.api.key', ''), '');
     });
 
     test('string secreta (chave de API): até 500 caracteres', async () => {
         const keyAlt = `sk-proj-${'x'.repeat(156)}`; // OpenAI's have ~164
-        assert.equal(await setSetting('openai.api.key', keyAlt), keyAlt);
-        await assert.rejects(setSetting('openai.api.key', 'x'.repeat(501)), /1 a 500/);
+        assert.equal(await setSetting('gpt.api.key', keyAlt), keyAlt);
+        await assert.rejects(setSetting('gpt.api.key', 'x'.repeat(501)), /1 a 500/);
     });
 
     test('list: separa por vírgula/espaço, normaliza e tira repetidos', async () => {
         assert.deepEqual(await setSetting('crypto.coins', 'btc, ethusdt ETH'), ['BTC', 'ETH']);
         await assert.rejects(setSetting('crypto.coins', 'XYZ'), /não suportada: XYZ/);
-        assert.deepEqual(await setSetting('cotacao.coins', 'usd eur'), ['USD', 'EUR']);
-        await assert.rejects(setSetting('cotacao.coins', 'BRL'), /não suportada: BRL/);
+        assert.deepEqual(await setSetting('rates.coins', 'usd eur'), ['USD', 'EUR']);
+        await assert.rejects(setSetting('rates.coins', 'BRL'), /não suportada: BRL/);
     });
 
     test('commands.disabled: aceita nome ou alias, recusa o /set', async () => {
@@ -526,13 +526,13 @@ describe('settings', () => {
     });
 
     test('envOuSetting: .env vence; .env inválido cai no setting', async () => {
-        await setSetting('openai.timeout.ms', 60000);
+        await setSetting('gpt.timeout.ms', 60000);
         process.env.OPENAI_TIMEOUT_MS = '9000';
-        assert.equal(envOuSetting('OPENAI_TIMEOUT_MS', 'openai.timeout.ms'), 9000);
+        assert.equal(envOuSetting('OPENAI_TIMEOUT_MS', 'gpt.timeout.ms'), 9000);
         process.env.OPENAI_TIMEOUT_MS = 'abc';
-        assert.equal(envOuSetting('OPENAI_TIMEOUT_MS', 'openai.timeout.ms'), 60000);
+        assert.equal(envOuSetting('OPENAI_TIMEOUT_MS', 'gpt.timeout.ms'), 60000);
         delete process.env.OPENAI_TIMEOUT_MS;
-        assert.equal(envOuSetting('OPENAI_TIMEOUT_MS', 'openai.timeout.ms'), 60000);
+        assert.equal(envOuSetting('OPENAI_TIMEOUT_MS', 'gpt.timeout.ms'), 60000);
     });
 });
 
@@ -628,16 +628,16 @@ describe('ajuda', () => {
 
     test('ajuda mostra os títulos em português e as flags universais', () => {
         const textAlt = formatCommandHelp(findCommand('/get'));
-        assert.match(textAlt, /^Uso:/);
+        assert.match(textAlt, /^Usage:/);
         assert.match(textAlt, /\nOpções:\n/);
         assert.match(textAlt, /\nArgumentos:\n/);
         assert.match(textAlt, /\nDetalhes: https:\/\/jpereira\.github\.io\/zapbot\/pt-BR\/commands\/get\/$/);
-        assert.doesNotMatch(textAlt, /Usage:|Options:|Arguments:|\[OPTION\]/);
+        assert.doesNotMatch(textAlt, /Options:|Arguments:|\[OPTION\]/);
     });
 
     test('formatCommandHelp traz uso, opções, argumentos e aliases', () => {
         const textAlt = formatCommandHelp(findCommand('/show'));
-        assert.match(textAlt, /^Uso: \/show \[-N\] \[OPÇÃO\]/);
+        assert.match(textAlt, /^Usage: \/show \[-N\] \[OPÇÃO\]/);
         assert.match(textAlt, /-query, -q <texto\|\/regex\/flags>/);
         assert.match(textAlt, /Argumentos:\n  -N/);
         assert.doesNotMatch(textAlt, /Aliases:/);
@@ -649,10 +649,10 @@ describe('ajuda', () => {
     test('as formas do uso ("  ou  ") saem uma por linha, alinhadas', () => {
         const textAlt = formatCommandHelp(findCommand('/defi'));
         const linesAlt = textAlt.split('\n');
-        assert.equal(linesAlt[0], 'Uso: /defi [protocolo] [-mask]');
-        assert.equal(linesAlt[1], '     /defi -l');
-        assert.equal(linesAlt[3], '     /defi [protocolo] -taxas [-alerta]');
-        assert.equal(linesAlt[4], '     /defi <protocolo> <opções>');
+        assert.equal(linesAlt[0], 'Usage: /defi [protocolo] [-mask]');
+        assert.equal(linesAlt[1], '       /defi -l');
+        assert.equal(linesAlt[3], '       /defi [protocolo] -fees [-alert]');
+        assert.equal(linesAlt[4], '       /defi <protocolo> <opções>');
         assert.doesNotMatch(textAlt, / {2}ou {2}/);
     });
 
@@ -663,7 +663,7 @@ describe('ajuda', () => {
         assert.match(general, / > Orca\n {2}-address <endereço>\n {4}Cadastra a posição da Orca/);
 
         const morpho = formatCommandHelp(findCommand('/defi'), { protocolo: 'morpho' });
-        assert.match(morpho, /^Uso: \/defi morpho \[-mask\]\n {5}\/defi morpho -wallet <0x\.\.\.> \[-name <nome>\]\nPosição, empréstimos e risco no Morpho/);
+        assert.match(morpho, /^Usage: \/defi morpho \[-mask\]\n {7}\/defi morpho -wallet <0x\.\.\.> \[-name <nome>\]\nPosição, empréstimos e risco no Morpho/);
         const optionsAlt = morpho.match(/^ {2}-\S+/gm);
         assert.deepEqual(optionsAlt, ['  -list,', '  -mask,', '  -name,', '  -rm', '  -wallet,']);
         assert.doesNotMatch(morpho, / > |Argumentos:/);
@@ -674,28 +674,28 @@ describe('ajuda', () => {
 
         // By the command's -help and by /help
         assert.equal((await bot.replyAlt('/defi prjx -help'))[0], '```' + formatCommandHelp(findCommand('/defi'), { protocolo: 'prjx' }) + '```');
-        assert.match((await bot.replyAlt('/help defi orca'))[0], /^🤖 \*AJUDA\*\n\n```Uso: \/defi orca \[-mask\]\n/);
-        assert.match((await bot.replyAlt('/defi xyz -help'))[0], /^```Uso: \/defi \[protocolo\]/, 'protocolo desconhecido: a geral');
+        assert.match((await bot.replyAlt('/help defi orca'))[0], /^🤖 \*AJUDA\*\n\n```Usage: \/defi orca \[-mask\]\n/);
+        assert.match((await bot.replyAlt('/defi xyz -help'))[0], /^```Usage: \/defi \[protocolo\]/, 'protocolo desconhecido: a geral');
 
         // The protocol alias also finds its help
         const liquidswap = '```' + formatCommandHelp(findCommand('/defi'), { protocolo: 'liquidswap' }) + '```';
-        assert.match(liquidswap, /^```Uso: \/defi liquidswap\|liqswp \[-mask\]/);
+        assert.match(liquidswap, /^```Usage: \/defi liquidswap\|liqswp \[-mask\]/);
         assert.equal((await bot.replyAlt('/defi liqswp -help'))[0], liquidswap);
-        assert.match((await bot.replyAlt('/help defi liqswp'))[0], /```Uso: \/defi liquidswap\|liqswp/);
+        assert.match((await bot.replyAlt('/help defi liqswp'))[0], /```Usage: \/defi liquidswap\|liqswp/);
     });
 
     test('ajuda para o celular: o resumo em uma linha, no máximo 3 exemplos e o link do site', () => {
         // The summary comes right after the usage (the long text stays on the site page)
         const cron = formatCommandHelp(findCommand('/cron')).split('\n');
-        assert.match(cron[0], /^Uso: \/cron <quando>/);
+        assert.match(cron[0], /^Usage: \/cron <quando>/);
         assert.equal(cron[2], 'Agenda um texto ou comando para uma hora');
         assert.equal(cron[3], 'marcada');
         assert.doesNotMatch(cron.join('\n'), /O \\n digitado vira quebra de linha/);
 
         // The Ex: on the line below, one per line, at most 3
         const examples = cron.slice(cron.findIndex(l => l.startsWith('Ex: '))).filter(l => /^(Ex: |    \/)/.test(l));
-        assert.deepEqual(examples, ['Ex: /cron 09h -r diario -to /Família/ Bom dia! {/crypto BTC}',
-            '    /cron 8h -r diario Orca {/defi orca}\\n Prjx {/defi prjx}']);
+        assert.deepEqual(examples, ['Ex: /cron 09h -r d -to /Família/ Bom dia! {/crypto BTC}',
+            '    /cron 8h -r d Orca {/defi orca}\\n Prjx {/defi prjx}']);
         assert.equal(cron.at(-1), 'Detalhes: https://jpereira.github.io/zapbot/pt-BR/commands/cron/');
 
         // "Paris, Texas" is one example, not two; the Ex: comes after the options and the arguments

@@ -1,5 +1,5 @@
 /*
- * /tts command: the text as voice (voice note), through OpenAI's voice API, like /gpt -voz.
+ * /tts command: the text as voice (voice note), through OpenAI's voice API, like /gpt -voice.
  *   /tts <texto>          → fala o texto
  * /tts, replying     → speaks the replied message (audio is transcribed first); what was
  * typed becomes the speech style ("speak like a robot")

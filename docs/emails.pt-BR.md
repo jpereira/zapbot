@@ -8,7 +8,7 @@ O bot usa o mesmo SMTP (`QRCODE_EMAIL_SMTP_*`) para:
 - backups enviados com [`/backup -s -to`](commands/backup.md#enviar-o-arquivo) ou pelo destino
   configurado em `backup.to` no backup diário;
 - alertas de preço do `/rates` e `/crypto`, de posições e taxas do `/defi` e das anotações do
-  [`/notes -alerta`](commands/notes.md#alertas);
+  [`/notes -alert`](commands/notes.md#alertas);
 - ocorrências do `/watch` e relatórios do `/bot -status` com destino de e-mail.
 
 O destino `email` usa `QRCODE_EMAIL_SMTP_TO`; `-to voce@exemplo.com` escolhe outro endereço.

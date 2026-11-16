@@ -13,7 +13,7 @@
       ],
       "desc": "Apaga as estatísticas de um chat: um grupo, ou o privado com uma pessoa, buscado pelo nome entre os que têm estatísticas.",
       "ex": [
-        "/stats -flush /Grupo Família/"
+        "/stats -f /Grupo Família/"
       ]
     },
     {
@@ -29,7 +29,7 @@
         "l"
       ],
       "values": [],
-      "desc": "Lista os chats com estatísticas, do que mais fala para o que menos, com o total e o dia da última mensagem."
+      "desc": "Lista os chats com estatísticas, do que mais fala para o que menos. Com o total e o dia da última mensagem."
     },
     {
       "opts": [

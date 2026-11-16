@@ -11,25 +11,25 @@ Remover contatos ou reduzir o histórico local não altera os backups já existe
 | `-now`, `-n` | | Cria um backup agora (manual: fica até ser apagado) |
 | `-list`, `-l` | | Lista os backups, numerados do mais novo para o mais antigo, com data, tamanho e motivo |
 | `-info`, `-i` | `<nº>` | Detalhes do backup: data, motivo, versão do bot que o criou (com o commit, ex.: `X.Y.Z (git+4465374/vX.Y.Z)`) e as entradas de cada tabela, comparadas com o banco atual |
-| `-restore`, `-r` | `<nº\|nome>` | Restaura o backup. Sem `-sim`, só mostra o que vai acontecer e o comando para confirmar |
-| `-sim` | | Confirma: junto com `-restore`, a restauração; junto com `-send -to` outro chat, o envio |
+| `-restore`, `-r` | `<nº\|nome>` | Restaura o backup. Sem `-yes`, só mostra o que vai acontecer e o comando para confirmar |
+| `-yes` | | Confirma: junto com `-restore`, a restauração; junto com `-send -to` outro chat, o envio |
 | `-send`, `-s` | `[nº]` | Envia o arquivo do backup (sem nº: o mais recente) no seu privado ou nos destinos do `-to`. Veja [Enviar o arquivo](#enviar-o-arquivo) |
-| `-to` | `<destino>` | Junto com `-send`: por e-mail, como anexo (`email` é o `QRCODE_EMAIL_SMTP_TO`, ou um endereço), ou noutro chat: um contato (`/Jorge Pereira/`), uma menção (`@Fulano Da Silva`), um grupo (`/Grupo L200/`) ou um número (`+5521999999999`) (pede `-sim`). Repita para vários. Veja [Destinos](index.md#destinos-contato-grupo-número-ou-e-mail) |
+| `-to` | `<destino>` | Junto com `-send`: por e-mail, como anexo (`email` é o `QRCODE_EMAIL_SMTP_TO`, ou um endereço), ou noutro chat: um contato (`/Jorge Pereira/`), uma menção (`@Fulano Da Silva`), um grupo (`/Grupo L200/`) ou um número (`+5521999999999`) (pede `-yes`). Repita para vários. Veja [Destinos](index.md#destinos-contato-grupo-número-ou-e-mail) |
 | `-rm` | `<nº\|all>` | Apaga o backup nº N (ou todos) |
 
 ```text
 /backup                                 → o banco atual e os backups
-/backup -now                            → cria um agora
+/backup -n                            → cria um agora
 /backup -l                                 → a lista
 /backup -i 2                            → o que tem no nº 2, comparado com o banco atual
 /backup -r 2                            → mostra o que vai acontecer e pede confirmação
-/backup -r zapbot-20261001-030000 -sim  → restaura
+/backup -r zapbot-20261001-030000 -yes  → restaura
 /backup -s                              → o arquivo do mais recente no seu privado
 /backup -s -to eu@gmail.com             → o mais recente, por e-mail
 /backup -s 2 -to email                  → o nº 2, para o QRCODE_EMAIL_SMTP_TO
-/backup -s -to /Jorge Pereira/ -sim     → no privado de um contato
-/backup -s -to @Fulano Da Silva -sim    → no privado da pessoa mencionada
-/backup -s -to email -to /Jorge Pereira/ -sim  → por e-mail e no privado do contato
+/backup -s -to /Jorge Pereira/ -yes     → no privado de um contato
+/backup -s -to @Fulano Da Silva -yes    → no privado da pessoa mencionada
+/backup -s -to email -to /Jorge Pereira/ -yes  → por e-mail e no privado do contato
 /backup -rm 3                           → apaga o nº 3
 ```
 
@@ -47,7 +47,7 @@ Remover contatos ou reduzir o histórico local não altera os backups já existe
 • 📤 Destino automático: só local
 
 💡 Dicas
-/backup -now cria um agora
+/backup -n cria um agora
 /backup -l lista
 /backup -i <nº> detalha
 /backup -r <nº> restaura
@@ -87,7 +87,7 @@ cada um na setting.
 /set backup.to ""
 ```
 
-Configurar `backup.to` autoriza o envio diário do banco inteiro ao destino, sem pedir `-sim` a cada
+Configurar `backup.to` autoriza o envio diário do banco inteiro ao destino, sem pedir `-yes` a cada
 dia. Para nomes com mais de um resultado, use o nome completo ou o número: o envio automático não
 abre uma lista de escolha. Para uma pessoa mencionada num comando, configure seu nome ou número na
 setting. E-mails usam o SMTP do bot e o mesmo limite de 20 MB do envio manual. Backups manuais e os
@@ -131,11 +131,11 @@ Cada backup são dois ou três arquivos em `cache/backups/`, no volume `app_cach
 novo no meio do caminho mudaria os números):
 
 ```text
-/backup -r 2 -sim
+/backup -r 2 -yes
 ♻️ Backup restaurado: qua 30/09 15:20
 message_edits 10 · messages 1.180 · settings 47 · ...
 
-💾 O estado anterior ficou no backup zapbot-20261001-101530: para desfazer, /backup -r zapbot-20261001-101530 -sim
+💾 O estado anterior ficou no backup zapbot-20261001-101530: para desfazer, /backup -r zapbot-20261001-101530 -yes
 ```
 
 - O banco inteiro volta àquele momento; o que entrou depois se perde. Por isso, antes de restaurar,
@@ -154,7 +154,7 @@ outros comandos ([Destinos](index.md#destinos-contato-grupo-número-ou-e-mail)):
   (`-to "a@x.com, b@y.com"`). Vai como anexo, pelo mesmo SMTP do QR Code e dos alertas
   (`QRCODE_EMAIL_SMTP_*`, veja [Configuração](../configuration.md#e-mail-qr-code-e-alertas)).
 - **Outro chat**: um contato, um grupo ou um número. Como o banco tem as mensagens guardadas de
-  **todos** os chats, o bot pede confirmação: repita com `-sim`.
+  **todos** os chats, o bot pede confirmação: repita com `-yes`.
 - **Vários**: repita o `-to`. Os e-mails de todos vão num e-mail só; cada chat recebe o arquivo (se
   falhar num, os outros recebem assim mesmo).
 
@@ -164,11 +164,11 @@ outros comandos ([Destinos](index.md#destinos-contato-grupo-número-ou-e-mail)):
 
 /backup -s -to /Jorge Pereira/
 ⚠️ O backup tem o banco inteiro: as mensagens guardadas de todos os chats, as apagadas, os settings...
-Para enviar mesmo em 👤 Jorge Pereira, repita com -sim: /backup -send -to /Jorge Pereira/ -sim
+Para enviar mesmo em 👤 Jorge Pereira, repita com -yes: /backup -send -to /Jorge Pereira/ -yes
 
 /backup -s -to email -to /Jorge Pereira/ -to /Grupo L200/
 ⚠️ O backup tem o banco inteiro: as mensagens guardadas de todos os chats, as apagadas, os settings...
-Para enviar mesmo em 👤 Jorge Pereira, 👥 Grupo sobre L200, repita com -sim: /backup -send -to email -to /Jorge Pereira/ -to /Grupo L200/ -sim
+Para enviar mesmo em 👤 Jorge Pereira, 👥 Grupo sobre L200, repita com -yes: /backup -send -to email -to /Jorge Pereira/ -to /Grupo L200/ -yes
 ```
 
 - O e-mail traz o código anti-phishing, como os outros do bot, e as instruções para restaurar.

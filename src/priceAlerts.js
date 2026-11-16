@@ -1,5 +1,5 @@
 /*
- * Price alerts from /rates -alerta and /crypto -alerta.
+ * Price alerts from /rates -alert and /crypto -alert.
  */
 
 const axios = require('axios');
@@ -20,17 +20,17 @@ const { getSetting } = require('./settings');
 const { formatData, plural } = require('./util/format');
 
 /*
- * Price alerts: /rates -alerta and /crypto -alerta
- * -alerta                 → lists the command's alerts, numbered
- * -alerta USD > 5.30      → notifies your private chat when USD goes above R$ 5.30
- * -alerta BTC < 90000     → (in /crypto) when BTC drops below $90,000
- * BTC -alerta > 90000     → the same, with the currency before -alerta
- * -alerta -rm 2 | all     → removes alert no. 2 from the list (or all); -rm 1 2 3 removes several
- * -alerta BTC > 90000 -to /Grupo L200/  → notifies a group (or a contact,
+ * Price alerts: /rates -alert and /crypto -alert
+ * -alert                 → lists the command's alerts, numbered
+ * -alert USD > 5.30      → notifies your private chat when USD goes above R$ 5.30
+ * -alert BTC < 90000     → (in /crypto) when BTC drops below $90,000
+ * BTC -alert > 90000     → the same, with the currency before -alert
+ * -alert -rm 2 | all     → removes alert no. 2 from the list (or all); -rm 1 2 3 removes several
+ * -alert BTC > 90000 -to /Grupo L200/  → notifies a group (or a contact,
  * -to /Jorge Pereira/, a number, -to +5521999999999,
  * or by email, -to email) instead of your private chat;
  * repeat -to to notify several
- * -alerta BTC > 90000 -msg Time to sell!  → the text goes at the start of the notice; the
+ * -alert BTC > 90000 -msg Time to sell!  → the text goes at the start of the notice; the
  * -msg goes to the end (the text just cannot have a loose " -to ")
  * Each alert fires ONCE and is removed. The check runs every
  * 'alert.intervalMin' minutes. Only the owner creates and removes.
@@ -196,7 +196,7 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
         await msg.reply(t('alerts.list', {
             cmd: type.cmd,
             items: linesAlt.join('\n'),
-            every: plural(getSetting('alerta.intervalMin'), t('alerts.minute'), t('alerts.minutes'))
+            every: plural(getSetting('alert.intervalMin'), t('alerts.minute'), t('alerts.minutes'))
         }));
         return;
     }
@@ -221,7 +221,7 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
         if (!destinations) return;
     }
 
-    const max = getSetting('alerta.max');
+    const max = getSetting('alert.max');
     const total = (await dbGet('SELECT COUNT(*) AS n FROM price_alerts')).n;
 
     if (total >= max) {
@@ -234,7 +234,7 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
         price = (await type.precos([rule.sym]))[rule.sym];
         if (!Number.isFinite(price)) throw new Error('sem preço');
     } catch (err) {
-        printError(`${type.cmd} -alerta: preço de ${rule.sym}:`, err.message);
+        printError(`${type.cmd} -alert: preço de ${rule.sym}:`, err.message);
         await msg.reply(t('alerts.priceFailed', { sym: rule.sym }));
         return;
     }
@@ -261,13 +261,13 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
             messageLine({ message: messageAlt }),
         price: type.fmt(price),
         where: destinations.length ? t('alerts.whereIn', { dest: describeDestinations(destinations) }) : t('alerts.wherePrivate'),
-        every: plural(getSetting('alerta.intervalMin'), t('alerts.minute'), t('alerts.minutes'))
+        every: plural(getSetting('alert.intervalMin'), t('alerts.minute'), t('alerts.minutes'))
     }));
 }
 
 /*
  * Periodic check: one tick per minute, which only queries the prices
- * when 'alerta.intervalMin' has passed since the last time. One query per
+ * when 'alert.intervalMin' has passed since the last time. One query per
  * currency, even with several alerts on it.
  */
 let lastCheckAlerts = 0;
@@ -275,7 +275,7 @@ let checkingAlerts = false;
 
 async function priceCheckAlerts({ forcar: force = false } = {}) {
     if (checkingAlerts || !stateAlt.pronto) return;
-    if (!force && Date.now() - lastCheckAlerts < getSetting('alerta.intervalMin') * 60 * 1000) return;
+    if (!force && Date.now() - lastCheckAlerts < getSetting('alert.intervalMin') * 60 * 1000) return;
 
     checkingAlerts = true;
     lastCheckAlerts = Date.now();

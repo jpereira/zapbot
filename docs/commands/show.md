@@ -53,8 +53,8 @@ your private chat), you get everything together, by date.
 /show -2 -e                 → the last 2 edited
 /show /^Maria/             → the last one (deleted, edited, status or reaction) of the chat that starts with "Maria"
 /show -2 Maria Lucia        → the last 2 of the chat with "Maria Lucia" in the name
-/show -5 -deleted /Carlos$/ → the last 5 deleted of the chat that ends with "Carlos"
-/show -3 -edited @Jorge     → the last 3 edited of the private chat with Jorge
+/show -5 -d /Carlos$/ → the last 5 deleted of the chat that ends with "Carlos"
+/show -3 -e @Jorge     → the last 3 edited of the private chat with Jorge
 /show -s Marcio             → Marcio's last deleted status
 /show -3 -r Family         → the last 3 removed or changed reactions in the Family group
 /show 2                     → from chat #2 of /show -l

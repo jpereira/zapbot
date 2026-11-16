@@ -118,7 +118,7 @@ async function cmdMonitor({ msg, args }) {
         await replyList(msg, valueAlt || null);
         return;
     }
-    const alert = textAlt.match(/^-alerta(?:\s+([\s\S]+))?$/);
+    const alert = textAlt.match(/^-alert(?:\s+([\s\S]+))?$/);
     if (alert) {
         const valueAlt = withoutDelimiters(alert[1]);
         if (!valueAlt) {
@@ -133,9 +133,9 @@ async function cmdMonitor({ msg, args }) {
     }
     const addAlt = textAlt.match(/^-(?:add|a)(?:\s+([\s\S]+))?$/);
     if (addAlt) {
-        const withAlert = /\s+-alerta$/.test(addAlt[1] ?? '');
+        const withAlert = /\s+-alert$/.test(addAlt[1] ?? '');
         const valueAlt = withoutDelimiters(withAlert
-            ? addAlt[1].replace(/\s+-alerta$/, '') : addAlt[1]);
+            ? addAlt[1].replace(/\s+-alert$/, '') : addAlt[1]);
         if (!valueAlt) {
             await msg.reply(t('monitor.add.usage'));
             return;

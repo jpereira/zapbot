@@ -51,7 +51,7 @@ and who voted for each one. When replying to a poll, the scoreboard is that poll
   vote.
 - Votes only start being counted while the bot is up: data on polls from before that (or from when
   it was disconnected) doesn't show up.
-- Polls and votes are kept for 90 days (setting `enquete.retentionDays`, default 90, from 1 to
+- Polls and votes are kept for 90 days (setting `poll.retentionDays`, default 90, from 1 to
   365), in the `polls` and `poll_votes` tables.
 - With no poll recorded in the chat, the bot says so. Replying to a poll the bot doesn't have the
   votes of (one that isn't from your account), it says that too.

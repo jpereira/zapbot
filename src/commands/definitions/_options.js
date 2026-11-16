@@ -6,7 +6,7 @@
 const OPTION_ALERT_MSG = {
     opts: ['msg'],
     values: ['<text>'],
-    desc: 'The text goes at the start of the notice (with -alerta). It runs to the end of the command (may have spaces).',
+    desc: 'The text goes at the start of the notice (with -alert). It runs to the end of the command (may have spaces).',
     ex: ['-msg Time to sell!'],
     cron: false
 };
@@ -14,13 +14,13 @@ const OPTION_ALERT_MSG = {
 const OPTION_ALERT_RM = {
     opts: ['rm'],
     values: ['<#...|all>'],
-    desc: 'Removes alert #N from the list, several at once (-rm 1 2 3 or -rm 1,2,3), or all (with -alerta). If any # does not exist, none is removed.'
+    desc: 'Removes alert #N from the list, several at once (-rm 1 2 3 or -rm 1,2,3), or all (with -alert). If any # does not exist, none is removed.'
 };
 
 const OPTION_ALERT_TO = {
     opts: ['to'],
     values: ['<destination>'],
-    desc: 'Notifies a contact, a group, a number, or an email instead of your private chat (several with the name: you pick from the list) (with -alerta). Repeat for several: a single alert that notifies all of them.',
+    desc: 'Notifies somewhere else instead of your private chat. A contact, a group, a number, or an email (several with the name: you pick from the list) (with -alert). Repeat for several: a single alert that notifies all of them.',
     ex: [
         '-to /Jorge Pereira/',
         '-to @Fulano (mention)',
@@ -41,7 +41,7 @@ const OPTION_VERBOSE_FFMPEG = {
 const optionStatus = (example) => ({
     opts: ['status', 's'],
     values: [],
-    desc: 'Adds the call usage to the reply footer: bytes sent (TX) and received (RX), tokens spent, estimated cost, and balance. To keep it always on: /set openai.status true.',
+    desc: 'Adds the call usage to the reply footer: bytes sent (TX) and received (RX), tokens spent, estimated cost, and balance. To keep it always on: /set gpt.status true.',
     ex: [example],
     cron: false
 });

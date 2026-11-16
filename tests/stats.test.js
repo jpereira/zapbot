@@ -89,9 +89,9 @@ describe('/stats', () => {
         assert.match((await stats('/stats família -999'))[0], /_Últimos 90 dias_/, 'alvo sem barras');
     });
 
-    test('opção desconhecida ou -0 mostra a sintaxe; -c e -pv não existem mais', async () => {
-        for (const line of ['/stats -0', '/stats -x', '/stats -c família', '/stats -pv']) {
-            assert.match((await bot.replyAlt(line))[0], /Uso: \/stats/, line);
+    test('opção desconhecida ou -0 mostra a sintaxe; -c e -private não existem mais', async () => {
+        for (const line of ['/stats -0', '/stats -x', '/stats -c família', '/stats -private']) {
+            assert.match((await bot.replyAlt(line))[0], /Usage: \/stats/, line);
         }
     });
 

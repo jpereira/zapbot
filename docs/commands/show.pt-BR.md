@@ -53,8 +53,8 @@ junto, por data.
 /show -2 -e                 → as 2 últimas editadas
 /show /^Maria/             → a última (apagada, editada, status ou reação) do chat que começa com "Maria"
 /show -2 Maria Lucia        → as 2 últimas do chat com "Maria Lucia" no nome
-/show -5 -deleted /Carlos$/ → as 5 últimas apagadas do chat que termina com "Carlos"
-/show -3 -edited @Jorge     → as 3 últimas editadas do privado com o Jorge
+/show -5 -d /Carlos$/ → as 5 últimas apagadas do chat que termina com "Carlos"
+/show -3 -e @Jorge     → as 3 últimas editadas do privado com o Jorge
 /show -s Marcio             → o último status apagado do Marcio
 /show -3 -r Família         → as 3 últimas reações removidas ou trocadas no grupo Família
 /show 2                     → do chat nº 2 do /show -l

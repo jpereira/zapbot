@@ -50,7 +50,7 @@ module.exports = {
             opts: ['list-users', 'lu'],
             values: ['[all]'],
             desc: 'The users of this chat: in a group, who takes part in it (and the group); in someone\'s private chat, only the person; in your private chat, everyone. The all option shows everything anywhere (in a group, also people who are not from there, with the phone hidden: be careful not to expose anyone). Together with +a/+u, the reply brings everyone. Accepts -mask.',
-            ex: ['/bot -list-users', '/bot -lu all'],
+            ex: ['/bot -lu', '/bot -lu all'],
             cron: false
         },
         {
@@ -103,14 +103,14 @@ module.exports = {
             opts: ['flush-email', 'fe'],
             values: ['[true]'],
             desc: 'Connects to the email IMAP (QRCODE_EMAIL_IMAP_HOST, with the SMTP login) and shows how many messages there are in Sent and Trash. With true, deletes all those in Sent and Trash and finishes by showing how many were cleaned (⏳ while cleaning). Only the owner deletes. Alone: the other options are refused.',
-            ex: ['/bot -flush-email', '/bot -flush-email true'],
+            ex: ['/bot -fe', '/bot -fe true'],
             cron: 'dono'
         },
         {
             opts: ['mask', 'm'],
             values: [],
             desc: 'Obfuscates phone numbers in the output (e.g. +55219****44). Saved data and destinations use the full numbers.',
-            ex: ['/bot -mask'],
+            ex: ['/bot -m'],
             cron: false
         }
     ],

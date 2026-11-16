@@ -18,7 +18,7 @@ Lista e altera as configurações do bot guardadas na tabela `settings` (veja
 ```text
 /set
 /set show.max
-/set alerta          → só as chaves com "alerta" (alerta.intervalMin, alerta.max, defi.alerta.intervalMin)
+/set alert           → só as chaves com "alert" (alert.*, defi.alert.*, email.alerts, show.alert.*)
 /set /^news\./       → as que casam com a regex
 /set show.max 10
 /set monitor.pool=300

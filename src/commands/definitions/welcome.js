@@ -32,7 +32,7 @@ module.exports = {
             opts: ['test', 't'],
             values: [],
             desc: 'Sends the message as it would look, with you in place of whoever joins (with the text you gave, or the current one).',
-            ex: ['/welcome -test']
+            ex: ['/welcome -t']
         },
         {
             argv: ['[<text>]'],

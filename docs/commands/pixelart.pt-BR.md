@@ -31,7 +31,7 @@ Exemplo de resposta:
 
 ```text
 /set pixelart.packs mimic100 blocktronics_space       → sorteia entre esses
-/set -reset pixelart.packs                            → volta ao padrão
+/set -r pixelart.packs                            → volta ao padrão
 ```
 
 Detalhes:

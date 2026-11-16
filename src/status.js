@@ -20,7 +20,7 @@ const { fmtWhen, instantInBrasilia, partsInBrasilia } = require('./util/when');
 
 /*
  * The daily send is a schedule item (`schedules` table, kind 'status',
- * repetir 'diario'): the schedule already handles the time, the repetition and the send
+ * repetir 'daily'): the schedule already handles the time, the repetition and the send
  * late when the bot comes back. It does not show in /cron. The -to destinations
  * (people, groups, emails) stay in the recipients column; without it, your private chat.
  */
@@ -144,7 +144,7 @@ async function scheduleStatusDaily({ h, m }, nowAlt = Date.now(), destinations) 
     await dbRun(
         `INSERT INTO schedules (kind, chat_id, chat_name, is_group, text, due_at, repeat, day_of_month,
             quoted_id, created_at, recipients)
-         VALUES (?, ?, 'seu privado', 0, '', ?, 'diario', NULL, NULL, ?, ?)`,
+         VALUES (?, ?, 'seu privado', 0, '', ?, 'daily', NULL, NULL, ?, ?)`,
         [KIND, client.info.wid._serialized, next, nowAlt, recipients]
     );
     return next;

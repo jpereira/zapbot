@@ -262,7 +262,7 @@ describe('/get', () => {
     });
 
     test('sem URL mostra a sintaxe; URL inválida ou privada é recusada', async () => {
-        assert.match((await bot.replyAlt('/get'))[0], /^```Uso: \/get/);
+        assert.match((await bot.replyAlt('/get'))[0], /^```Usage: \/get/);
         assert.match((await bot.replyAlt('/get ftp://x.com', { erroEsperado: true }))[0], /A URL 'ftp:\/\/x\.com' é inválida/);
         assert.match((await bot.replyAlt('/get http://127.0.0.1:2375/', { erroEsperado: true }))[0], /aponta para um endereço não permitido/);
         assert.deepEqual(processes.chamadas, []);

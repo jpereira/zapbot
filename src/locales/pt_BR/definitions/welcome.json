@@ -36,7 +36,7 @@
       "values": [],
       "desc": "Manda a mensagem como ela ficaria, com você no lugar de quem entra (com o texto que você deu, ou o atual).",
       "ex": [
-        "/welcome -test"
+        "/welcome -t"
       ]
     },
     {

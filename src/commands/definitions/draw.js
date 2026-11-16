@@ -10,34 +10,34 @@ module.exports = {
     usage: '/draw [request]  or  /draw -gif [-frames N] [-ms N] [request]  or  /draw [-gif] -model [model]',
     aliases: [],
     summary: 'Draws an image with GPT Image (OpenAI)',
-    help: 'Draws an image with GPT Image (OpenAI); with -gif, an animated GIF (GPT Image 2.6), and on a photo (caption or reply) edits the photo or animates it. When replying to a message, its text is added to the request. Requires OPENAI_API_KEY in config/.env or the openai.api.key setting.',
+    help: 'Draws an image with GPT Image (OpenAI); with -gif, an animated GIF (GPT Image 2.6), and on a photo (caption or reply) edits the photo or animates it. When replying to a message, its text is added to the request. Requires OPENAI_API_KEY in config/.env or the gpt.api.key setting.',
     cmd_opts: [
         {
             opts: ['gif', 'g'],
             values: [],
-            desc: 'Animated GIF (model openai.image.gifModel; only the gpt-image-2.6-* ones). On a photo, or replying to one, animates the photo. The frames and the time of each are the settings openai.gif.frames and openai.gif.frameMs.',
-            ex: ['/draw -gif a dancing cat', '/draw -gif the flag in the wind (replying to a photo)'],
+            desc: 'Animated GIF (model gpt.image.gifModel; only the gpt-image-2.6-* ones). On a photo, or replying to one, animates the photo. The frames and the time of each are the settings gpt.gif.frames and gpt.gif.frameMs.',
+            ex: ['/draw -g a dancing cat', '/draw -g the flag in the wind (replying to a photo)'],
             cron: false
         },
         {
             opts: ['frames', 'f'],
             values: ['<n>'],
-            desc: 'GIF frames, from 2 to 16 (default: the openai.gif.frames setting, 9). Counts as -gif; the more frames, the more expensive.',
+            desc: 'GIF frames, from 2 to 16 (default: the gpt.gif.frames setting, 9). Counts as -gif; the more frames, the more expensive.',
             ex: ['/draw -f 6 a flag in the wind'],
             cron: false
         },
         {
             opts: ['ms'],
             values: ['<ms>'],
-            desc: 'Duration of each GIF frame, from 20 to 2000 ms (default: the openai.gif.frameMs setting, 200). Counts as -gif.',
-            ex: ['/draw -gif -f 6 -ms 300 a flag in the wind'],
+            desc: 'Duration of each GIF frame, from 20 to 2000 ms (default: the gpt.gif.frameMs setting, 200). Counts as -gif.',
+            ex: ['/draw -g -f 6 -ms 300 a flag in the wind'],
             cron: false
         },
         {
             opts: ['model', 'm'],
             values: ['[model]'],
-            desc: 'Changes the image model (openai.image.model setting) or, with -gif, the GIF one (openai.image.gifModel). Without a model, lists the current one and the ones your key can see.',
-            ex: ['/draw -m', '/draw -m gpt-image-2', '/draw -gif -m gpt-image-2.6-flare'],
+            desc: 'Changes the image model (gpt.image.model setting) or, with -gif, the GIF one (gpt.image.gifModel). Without a model, lists the current one and the ones your key can see.',
+            ex: ['/draw -m', '/draw -m gpt-image-2', '/draw -g -m gpt-image-2.6-flare'],
             role: ADMIN
         },
         optionStatus('/draw -s an astronaut cat in watercolor'),

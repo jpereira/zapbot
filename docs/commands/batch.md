@@ -7,7 +7,7 @@ to send at once what you'd otherwise send in several blocks (e.g. multiple notes
 ![/batch demo](../assets/demo/12-batch-alias.gif)
 
 ```text
-/batch [-stop|-s] [-dry|-d] [-quiet|-q]
+/batch [-s|-s] [-d|-d] [-q|-q]
 <commands, on the lines below>
 ```
 
@@ -51,7 +51,7 @@ The reply is a single summary:
 With `-dry` (or `-d`), nothing runs; it only shows how it split things:
 
 ```text
-/batch -dry
+/batch -d
 📦 BATCH (2) · only the split, nothing executed
 
 1. /ideia Preciso ver sobre isso (+2 lines)

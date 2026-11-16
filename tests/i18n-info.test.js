@@ -54,15 +54,15 @@ describe('en_US: informação', () => {
             }
         }));
 
-        const [created] = await bot.replyAlt('/rates -alerta USD > 5.30');
+        const [created] = await bot.replyAlt('/rates -alert USD > 5.30');
         assert.match(created, /^🔔 \*Alert created\*\n/);
         assert.match(created, /💰 Now: R\$ 5\.2000\n💡 _Notice in your private chat; checked every \d+ minutes?\._$/);
 
-        assert.match((await bot.replyAlt('/rates -alerta'))[0], /^🔔 \*PRICE ALERTS\* _\(\/rates\)_\n\n1\. /);
-        assert.equal((await bot.replyAlt('/rates -alerta -rm 9'))[0],
-            "❌ Alert #9 doesn't exist. See the list with /rates -alerta");
-        assert.match((await bot.replyAlt('/rates -alerta -rm 1'))[0], /^🗑️ Alert removed: /);
-        assert.match((await bot.replyAlt('/rates -alerta'))[0], /^🔔 No alerts in \/rates\./);
+        assert.match((await bot.replyAlt('/rates -alert'))[0], /^🔔 \*PRICE ALERTS\* _\(\/rates\)_\n\n1\. /);
+        assert.equal((await bot.replyAlt('/rates -alert -rm 9'))[0],
+            "❌ Alert #9 doesn't exist. See the list with /rates -alert");
+        assert.match((await bot.replyAlt('/rates -alert -rm 1'))[0], /^🗑️ Alert removed: /);
+        assert.match((await bot.replyAlt('/rates -alert'))[0], /^🔔 No alerts in \/rates\./);
     });
 
     test('/crypto -l, moeda não suportada e /uptime', async () => {

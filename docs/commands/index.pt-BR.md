@@ -31,9 +31,9 @@ Podem ser enviados em **qualquer chat** (privado, grupo ou no chat consigo mesmo
 
 Os comandos com envio a destinos usam **`-to`**: o [`/cron`](cron.md), os alertas do
 [`/rates`](rates.md#avisar-em-outro-chat-ou-por-e-mail) e do [`/crypto`](crypto.md), o
-[`/defi -alerta`](defi.md#alerta-de-saída-da-faixa), o [`/watch`](watch.md#avisar-em-outro-lugar) e
+[`/defi -alert`](defi.md#alerta-de-saída-da-faixa), o [`/watch`](watch.md#avisar-em-outro-lugar) e
 o [`/backup -send`](backup.md#enviar-o-arquivo) e os alertas do
-[`/notes -alerta`](notes.md#alertas) (o `/notes` também usa para enviar uma lista, uma
+[`/notes -alert`](notes.md#alertas) (o `/notes` também usa para enviar uma lista, uma
 visualização ou uma exportação). O `/bot -status` também aceita `-to`. Esses
 comandos aceitam vários `-to`: o aviso (ou a mensagem, ou o arquivo) sai em cada destino. O alvo do
 [`/mute`](mute.md), as pessoas do [`/bot +a`/`+u`](bot.md#admins-extras) e do [`/whois`](whois.md)
@@ -54,9 +54,9 @@ origem das mensagens: contato, grupo ou canal `@newsletter`.
 As mesmas formas, num comando só:
 
 ```text
-/cron 8h -r diario -to /Jorge Pereira/ -to @Fulano Da Silva -to /Grupo L200/ -to +5521999999999 Bom dia!
-/rates -alerta USD > 5.30 -to email           → por e-mail (o QRCODE_EMAIL_SMTP_TO)
-/crypto -alerta BTC < 90000 -to /Grupo L200/ -to email  → no grupo e por e-mail
+/cron 8h -r d -to /Jorge Pereira/ -to @Fulano Da Silva -to /Grupo L200/ -to +5521999999999 Bom dia!
+/rates -alert USD > 5.30 -to email           → por e-mail (o QRCODE_EMAIL_SMTP_TO)
+/crypto -alert BTC < 90000 -to /Grupo L200/ -to email  → no grupo e por e-mail
 /mute @Fulano Da Silva                          → o alvo do /mute, mencionando
 /bot +a /Jorge Pereira/ +5511988887777         → o /bot +a (e o +u) aceita várias pessoas de uma vez
 ```
@@ -161,7 +161,7 @@ responde `⛔ Apenas o dono do bot (ou um admin) pode ver outros chats.`
 | `/rates` |  | `-add`, `-del` |
 | `/show` | `-list`, `chat` | `-flush` |
 | `/stats` | `-list`, `-me`, `</chat/>` | `-flush`, `-flush-all` |
-| `/tldr` | `-chat`, `-pv` |  |
+| `/tldr` | `-chat`, `-private` |  |
 <!-- /gerado:limites -->
 
 Quem já usa todos os comuns (sem regra, ou "Todos, menos") não ganha um `admin` com o `+cmd`: o bot
@@ -233,12 +233,12 @@ e o `/alias /usd` mostra o que um atalho faz.
 | [`/bot`](bot.md) | | `admin` | Status do bot (relatório de 24 h e os usuários); liga/desliga os comandos (`-on`/`-off`) e diz quem usa: admins (`+a`/`-a`) e usuários (`+u`/`-u`, em qualquer chat ou só num grupo, e os comandos de cada um com `+cmd`/`-cmd`); `-reset` volta ao padrão; `-status` (`-s`): relatório das últimas 24 h, e `-s 06h` manda todo dia; `-info` (`-i`): versões e sistema; `-test` (`-t`): testa cache, disco, banco, WhatsApp, internet, SMTP, IMAP e programas |
 | [`/cache`](cache.md) | | `admin` | Árvore do cache com tamanhos, contagens de mensagens e limpeza |
 | [`/carbon`](carbon.md) | | `user` | O código numa imagem de janela de editor |
-| [`/cron`](cron.md) | | `admin` | Na hora marcada (`30m`, `às 18h`, `sexta 9h`...): envia uma mensagem (aqui ou com `-to`, em um ou vários chats) ou, com `-lembrete`, um ⏰ lembrete; pode repetir, editar e pausar, e rodar comandos no texto (`{/crypto}`) |
+| [`/cron`](cron.md) | | `admin` | Na hora marcada (`30m`, `às 18h`, `sexta 9h`...): envia uma mensagem (aqui ou com `-to`, em um ou vários chats) ou, com `-reminder`, um ⏰ lembrete; pode repetir, editar e pausar, e rodar comandos no texto (`{/crypto}`) |
 | [`/crypto`](crypto.md) | | `user` | Cotação das criptos ativadas (padrão: BTC, ETH, SOL e HYPE) ou só das pedidas (`BTC ETH`); alertas de preço |
 | [`/cve`](cve.md) | | `user` | Últimas CVEs publicadas (NVD); `-highscore` só as críticas |
 | [`/debug`](debug.md) | | `admin` | Logs de debug com níveis, filtro e cópia para chats |
 | [`/decodeqr`](decodeqr.md) | | `user` | Lê o QR Code de uma foto (`-encode` gera um) |
-| [`/defi`](defi.md) | | `admin` | Posições de liquidez da Orca e do Project X: saldo, faixa, preço e taxas a coletar, lidos on-chain; `-alerta` avisa quando sai e volta para a faixa e quando as taxas passam de um valor. `liquidswap`: posições de LP na Aptos. `morpho` e `aave`: posição, empréstimos e risco no Morpho e no Aave V3 |
+| [`/defi`](defi.md) | | `admin` | Posições de liquidez da Orca e do Project X: saldo, faixa, preço e taxas a coletar, lidos on-chain; `-alert` avisa quando sai e volta para a faixa e quando as taxas passam de um valor. `liquidswap`: posições de LP na Aptos. `morpho` e `aave`: posição, empréstimos e risco no Morpho e no Aave V3 |
 | [`/demote`](demote.md) | | `admin` · delegável | Tira o admin de alguém do grupo |
 | [`/draw`](draw.md) | | `admin` · delegável | Desenha uma imagem ou um GIF animado (`-gif`) com o GPT Image (OpenAI); numa foto, edita ou anima |
 | [`/everybody`](everybody.md) | | `admin` · delegável | Menciona todos do grupo |
@@ -246,7 +246,7 @@ e o `/alias /usd` mostra o que um atalho faz.
 | [`/get`](get.md) | | `user` | Baixa vídeo/áudio de redes sociais ou da mídia respondida |
 | [`/giphy`](giphy.md) | | `user` | GIF do GIPHY por tag, URL ou ID, enviado em loop |
 | [`/goodbye`](goodbye.md) | | `admin` · delegável | Mensagem quando alguém sai do grupo (por grupo; `{name}`, `{group}`) |
-| [`/gpt`](gpt.md) | | `admin` · delegável | Pergunta ao ChatGPT (OpenAI); `-img`, `-gif`, `-voz`, `-prices`, `-usage` e `-status` (bytes, tokens, custo e saldo) |
+| [`/gpt`](gpt.md) | | `admin` · delegável | Pergunta ao ChatGPT (OpenAI); `-img`, `-gif`, `-voice`, `-prices`, `-usage` e `-status` (bytes, tokens, custo e saldo) |
 | [`/help`](help.md) | | `user` | Menu de ajuda, só com os comandos que quem pediu pode usar |
 | [`/invite`](invite.md) | | `admin` | O link de convite do grupo (`-revoke` gera outro) |
 | [`/join`](join.md) | | `admin` | Entra em um grupo pelo link de convite (`-info` mostra o grupo sem entrar); `-l` lista os seus grupos |
@@ -258,9 +258,9 @@ e o `/alias /usd` mostra o que um atalho faz.
 | [`/meme`](meme.md) | | `user` | Template de meme aleatório (imgflip) |
 | [`/monitor`](monitor.md) | | `admin` | 👀 Até 5 contatos, histórico limitado, filtro por contato e alertas de entrada online |
 | [`/mute`](mute.md) | | `admin` | Silencia os avisos de apagadas, editadas, status e reações (e os do `/watch`) de uma pessoa, um grupo ou uma comunidade; respondendo um aviso, de onde ele veio |
-| [`/news`](news.md) | | `user` | Manchetes de feeds RSS: `-hack`, `-g1`, `-gazeta`, `-brasil` |
+| [`/news`](news.md) | | `user` | Manchetes de feeds RSS: `-hack`, `-g1`, `-gazeta`, `-brazil` |
 | [`/noffa`](noffa.md) | | `user` | Piada: enfeita o texto com arco-íris |
-| [`/notes`](notes.md) | | `admin` | Anotações com ID e `#tag` (`-a`, `-l`, `-s`, `-r`): ver com a mídia (`-v`), editar (`-u`), renomear tag (`-m`), descrever tag (`-d`), exportar em PDF (`-e`) e `-alerta` que avisa numa data/hora |
+| [`/notes`](notes.md) | | `admin` | Anotações com ID e `#tag` (`-a`, `-l`, `-s`, `-r`): ver com a mídia (`-v`), editar (`-u`), renomear tag (`-m`), descrever tag (`-d`), exportar em PDF (`-e`) e `-alert` que avisa numa data/hora |
 | [`/ocr`](ocr.md) | | `admin` · delegável | O texto de uma foto, lido pelo ChatGPT (visão) |
 | [`/ping`](ping.md) | | `user` | Verifica se o bot está vivo |
 | [`/pixelart`](pixelart.md) | | `user` | Arte ANSI/ASCII aleatória (16colo.rs) |
@@ -275,7 +275,7 @@ e o `/alias /usd` mostra o que um atalho faz.
 | [`/stats`](stats.md) | | `admin` · delegável | Ranking deste chat ou de outro (`/Grupo/`): quem mais fala, apaga e edita, horários de pico; `-me` para as suas, `-l` lista os chats, `-flush` apaga |
 | [`/sticker`](sticker.md) | | `user` | Figurinha de imagem, vídeo ou link (o `/get -st`), respondendo ou na legenda da mídia; com `-txt`, uma figurinha animada de texto |
 | [`/tldr`](tldr.md) | | `admin` · delegável | Resume a conversa do chat pelo ChatGPT (`30m`, `2h`, `1d`, `1h30m` ou `300` mensagens; respondendo uma mensagem, a partir dela) |
-| [`/translate`](translate.md) | | `user` | Traduz o texto ou a mensagem respondida pelo Google Translate, sem chave; `-para en` muda o idioma |
+| [`/translate`](translate.md) | | `user` | Traduz o texto ou a mensagem respondida pelo Google Translate, sem chave; `-to en` muda o idioma |
 | [`/tts`](tts.md) | | `admin` · delegável | O texto numa nota de voz de robô (OpenAI) |
 | [`/unblock`](unblock.md) | | `admin` | Desbloqueia uma pessoa: pelo nome, pelo número, pelo nº da lista do `/block` ou respondendo uma mensagem |
 | [`/unmute`](unmute.md) | | `admin` | Desfaz o silêncio do `/mute`: pelo nome, pelo nº da lista, respondendo um aviso ou todos (`-all`) |
@@ -283,6 +283,6 @@ e o `/alias /usd` mostra o que um atalho faz.
 | [`/version`](version.md) | | `user` | Versão do bot (mesmo banner do `/uptime`) |
 | [`/walissu`](walissu.md) | | `user` | Piada: Walissu CVE BOT: marca 2 membros com uma CVE aleatória |
 | [`/watch`](watch.md) | | `admin` | Regras de texto/regex, com origem opcional em `-in`; lista ocorrências, busca nelas com `-q` e avisa nos destinos de `-to`; `-mask` ofusca telefones e `-mask N` liga o 🔒 na regra N |
-| [`/weather`](weather.md) | | `user` | Tempo agora e máx./mín. do dia (Open-Meteo); `/weather 16d` mostra até 16 dias, contando hoje; sem cidade usa `tempo.city` |
+| [`/weather`](weather.md) | | `user` | Tempo agora e máx./mín. do dia (Open-Meteo); `/weather 16d` mostra até 16 dias, contando hoje; sem cidade usa `weather.city` |
 | [`/welcome`](welcome.md) | | `admin` · delegável | Mensagem quando alguém entra no grupo (por grupo; `{name}`, `{group}`) |
 | [`/whois`](whois.md) | | `user` | Quem é e o que pode no bot, neste chat: 🤖 dono, 👑 admin, 🗣️ usuário ou 🚫 sem permissão; o dono e os admins veem os outros |

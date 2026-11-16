@@ -1,5 +1,5 @@
 /*
- * Dates and times typed in the commands (/cron and -lembrete), in Brasília time.
+ * Dates and times typed in the commands (/cron and -reminder), in Brasília time.
  */
 
 const { withoutAccents } = require('./format');
@@ -154,10 +154,18 @@ function fmtWhen(ms, nowAlt = Date.now()) {
  * (daily, weekly) and the day of the month (monthly; in a month without the day, the last day).
  */
 const REPETITIONS = {
-    diario: { get rotulo() { return t('quando.todoDia'); }, dias: 1 },
-    semanal: { get rotulo() { return t('quando.todaSemana'); }, dias: 7 },
-    mensal: { get rotulo() { return t('quando.todoMes'); }, meses: 1 }
+    daily: { get rotulo() { return t('quando.todoDia'); }, dias: 1 },
+    weekly: { get rotulo() { return t('quando.todaSemana'); }, dias: 7 },
+    monthly: { get rotulo() { return t('quando.todoMes'); }, meses: 1 }
 };
+
+// What is typed in -repeat (pt or en, whole or the letter) → the REPETICOES key; null if it is not one
+const REPETITION_NAMES = {
+    d: 'daily', diario: 'daily', daily: 'daily',
+    s: 'weekly', semanal: 'weekly', w: 'weekly', weekly: 'weekly',
+    m: 'monthly', mensal: 'monthly', monthly: 'monthly'
+};
+const readRepetition = (textAlt) => REPETITION_NAMES[withoutAccents(String(textAlt ?? '')).trim().toLowerCase()] ?? null;
 
 function nextRepetition(ms, repeatAlt, dayOriginal) {
     const r = REPETITIONS[repeatAlt];
@@ -173,6 +181,7 @@ function nextRepetition(ms, repeatAlt, dayOriginal) {
 
 module.exports = {
     REPETITIONS,
+    readRepetition,
     fmtWhen,
     instantInBrasilia,
     readDuration,

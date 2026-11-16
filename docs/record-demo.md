@@ -61,17 +61,17 @@ Tip: one scene per file. Wait for the reply to arrive before sending the next co
 Ask someone (or another account of yours) to send a message and delete it, then:
 
 ```text
-/show -mask
-/show -3 -mask
-/show -2 -e -mask
-/show -s -mask
+/show -m
+/show -3 -m
+/show -2 -e -m
+/show -s -m
 ```
 
 ### 3. Who's online: `/monitor`
 
 ```text
 /monitor
-/monitor -add /Fulano/ -alerta
+/monitor -a /Fulano/ -alert
 /monitor
 ```
 
@@ -80,7 +80,7 @@ Without `-mask`: use a test contact.
 ### 4. Joining and leaving groups: `/join` and `/leave`
 
 ```text
-/join -info https://chat.whatsapp.com/<codigo-de-um-grupo-de-teste>
+/join -i https://chat.whatsapp.com/<codigo-de-um-grupo-de-teste>
 /join https://chat.whatsapp.com/<codigo-de-um-grupo-de-teste>
 /join -l
 /leave -l
@@ -109,7 +109,7 @@ the caption):
 ```text
 /get https://www.instagram.com/reel/<codigo>/
 /get -a https://youtu.be/<id>
-/get -sticker -ss 3 -es 6 https://youtu.be/<id>
+/get -st -ss 3 -es 6 https://youtu.be/<id>
 ```
 
 ### 7. Quotes: `/crypto`
@@ -125,9 +125,9 @@ the caption):
 Always with `-mask` (hides balances and wallets):
 
 ```text
-/defi -mask
-/defi -taxas -mask
-/defi -taxas -alerta -mask
+/defi -m
+/defi -fees -m
+/defi -fees -a -m
 ```
 
 ### 9. Scheduling messages: `/cron`
@@ -135,18 +135,18 @@ Always with `-mask` (hides balances and wallets):
 ```text
 /cron 1m Oi do futuro!
 /cron
-/cron -r diario 8h Bom dia!
+/cron -r d 8h Bom dia!
 /cron
 ```
 
-See the options (`-to`, `-repetir`, removing) in [`/cron`](commands/cron.md).
+See the options (`-to`, `-repeat`, removing) in [`/cron`](commands/cron.md).
 
 ### 10. Watching messages: `/watch`
 
 ```text
-/watch /pix/i -in /Fulano/ -mask
-/watch -mask
-/watch -10 -mask
+/watch /pix/i -in /Fulano/ -m
+/watch -m
+/watch -10 -m
 ```
 
 Send a "pix" from the other account and show the alert arriving in your private chat.
@@ -167,7 +167,7 @@ Without `-mask`: in a public recording, pick a test group.
 A shortcut that runs several commands at once:
 
 ```text
-/alias demo -desc "Mostra o bot em ação" /ping
+/alias demo -d "Mostra o bot em ação" /ping
 /demo
 /batch /uptime
 /crypto btc

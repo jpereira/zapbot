@@ -1,7 +1,7 @@
 {
   "summary": "Pergunta ao ChatGPT",
-  "usage": "/gpt [-s] [pergunta]  ou  /gpt -voz|-img|-gif <texto>  ou  /gpt -model [modelo]  ou  /gpt -prices|-usage [dias]",
-  "help": "Pergunta ao ChatGPT (OpenAI). Respondendo uma mensagem, o texto dela entra na pergunta; respondendo uma foto, ela vai junto (o ChatGPT vê a imagem); respondendo um áudio, ele é transcrito; respondendo um documento (texto ou PDF), o conteúdo vai junto; com -voz, o texto vira uma nota de voz de robô; com -img e -gif, cria uma imagem e um GIF. Precisa de OPENAI_API_KEY no config/.env ou do setting openai.api.key.",
+  "usage": "/gpt [-s] [pergunta]  ou  /gpt -voice|-img|-gif <texto>  ou  /gpt -model [modelo]  ou  /gpt -prices|-usage [dias]",
+  "help": "Pergunta ao ChatGPT (OpenAI). Respondendo uma mensagem, o texto dela entra na pergunta; respondendo uma foto, ela vai junto (o ChatGPT vê a imagem); respondendo um áudio, ele é transcrito; respondendo um documento (texto ou PDF), o conteúdo vai junto; com -voice, o texto vira uma nota de voz de robô; com -img e -gif, cria uma imagem e um GIF. Precisa de OPENAI_API_KEY no config/.env ou do setting gpt.api.key.",
   "cmd_opts": [
     {
       "opts": [
@@ -11,13 +11,13 @@
       "values": [
         "[modelo]"
       ],
-      "desc": "Lista os modelos por uso, os que a sua chave vê, e troca o de cada um: sem opção, o das perguntas (setting openai.api.model); com -img, o da imagem; com -gif, o do GIF; com -audio, o da transcrição; com -voz, o da voz. Sem modelo, só lista (com -gif, -audio ou -voz, só aquele uso).",
+      "desc": "Lista os modelos por uso e troca o de cada um. Só os que a sua chave vê: sem opção, o das perguntas (setting gpt.api.model); com -img, o da imagem; com -gif, o do GIF; com -audio, o da transcrição; com -voice, o da voz. Sem modelo, só lista (com -gif, -audio ou -voice, só aquele uso).",
       "ex": [
         "/gpt -m",
         "/gpt -m gpt-4.1",
         "/gpt -m gpt-image-2.6-flare -gif",
         "/gpt -m gpt-transcribe -audio",
-        "/gpt -m gpt-4o-mini-tts -voz"
+        "/gpt -m gpt-4o-mini-tts -v"
       ]
     },
     {
@@ -25,7 +25,7 @@
         "img"
       ],
       "values": [],
-      "desc": "O mesmo do /draw: cria uma imagem com o pedido (v1/images, modelo openai.image.model) e responde com ela. Respondendo uma foto, a edita. Só o dono e os admins: gasta a sua conta da OpenAI.",
+      "desc": "O mesmo do /draw: cria uma imagem com o pedido (v1/images, modelo gpt.image.model) e responde com ela. Respondendo uma foto, a edita. Só o dono e os admins: gasta a sua conta da OpenAI.",
       "ex": [
         "/gpt -img um robô nadando em aquarela",
         "/gpt -img coloque um chapéu nele (respondendo uma foto)"
@@ -36,7 +36,7 @@
         "gif"
       ],
       "values": [],
-      "desc": "O mesmo do /draw -gif: cria um GIF animado (API de imagens, output_format gif, modelo openai.image.gifModel, só os gpt-image-2.6-*) e responde com ele. Respondendo uma foto, a anima; \"gere um gif animado de...\" respondendo uma foto também vale, sem o -gif. Os quadros e o tempo de cada um são os settings openai.gif.frames e openai.gif.frameMs. Só o dono e os admins: gasta a sua conta da OpenAI.",
+      "desc": "O mesmo do /draw -gif: cria um GIF animado (API de imagens, output_format gif, modelo gpt.image.gifModel, só os gpt-image-2.6-*) e responde com ele. Respondendo uma foto, a anima; \"gere um gif animado de...\" respondendo uma foto também vale, sem o -gif. Os quadros e o tempo de cada um são os settings gpt.gif.frames e gpt.gif.frameMs. Só o dono e os admins: gasta a sua conta da OpenAI.",
       "ex": [
         "/gpt -gif um gato de óculos escuros",
         "/gpt gere um gif animado dele nadando (respondendo uma foto)"
@@ -47,22 +47,22 @@
         "audio"
       ],
       "values": [],
-      "desc": "Só junto do -m: escolhe o modelo da transcrição de áudio (setting openai.transcribe.model). O áudio respondido é transcrito sem esta opção.",
+      "desc": "Só junto do -m: escolhe o modelo da transcrição de áudio (setting gpt.transcribe.model). O áudio respondido é transcrito sem esta opção.",
       "ex": [
         "/gpt -m gpt-transcribe -audio"
       ]
     },
     {
       "opts": [
-        "voz",
+        "voice",
         "v"
       ],
       "values": [],
-      "desc": "Gera uma nota de voz com o texto e responde com o áudio (v1/audio/speech): voz de robô, por padrão. Sem texto digitado, fala o da mensagem respondida (um áudio é transcrito antes); respondendo uma mensagem, o que você digitar vira o estilo da fala (só o gpt-4o-mini-tts segue o estilo). Até 4096 caracteres. O modelo, a voz e o estilo são os settings openai.tts.model, openai.tts.voice e openai.tts.instructions.",
+      "desc": "Gera uma nota de voz com o texto e responde com o áudio (v1/audio/speech): voz de robô, por padrão. Sem texto digitado, fala o da mensagem respondida (um áudio é transcrito antes); respondendo uma mensagem, o que você digitar vira o estilo da fala (só o gpt-4o-mini-tts segue o estilo). Até 4096 caracteres. O modelo, a voz e o estilo são os settings gpt.tts.model, gpt.tts.voice e gpt.tts.instructions.",
       "ex": [
-        "/gpt -voz exterminar todos os humanos",
-        "/gpt -voz (respondendo uma mensagem de texto)",
-        "/gpt -voz fale como um robô meio metálico (respondendo uma mensagem)"
+        "/gpt -v exterminar todos os humanos",
+        "/gpt -v (respondendo uma mensagem de texto)",
+        "/gpt -v fale como um robô meio metálico (respondendo uma mensagem)"
       ]
     },
     {
@@ -70,7 +70,7 @@
         "prices"
       ],
       "values": [],
-      "desc": "Atualiza a tabela de preços (setting openai.pricing) pelo site da OpenAI.",
+      "desc": "Atualiza a tabela de preços (setting gpt.pricing) pelo site da OpenAI.",
       "ex": [
         "/gpt -prices"
       ]
@@ -83,9 +83,9 @@
       "values": [
         "[dias]"
       ],
-      "desc": "O consumo da OpenAI dos últimos dias (padrão 7, até 31): tokens de entrada, saída e cache, requisições, por dia e por modelo, pela Usage API (v1/organization/usage/completions), que pede a chave de admin (OPENAI_ADMIN_KEY ou o setting openai.admin.key). E os limites de agora, lidos dos cabeçalhos x-ratelimit-* de uma chamada mínima ao chat (gasta uns poucos tokens). Só o dono e os admins, mesmo que o /gpt tenha sido liberado a um usuário.",
+      "desc": "O consumo da OpenAI dos últimos dias (padrão 7, até 31): tokens de entrada, saída e cache, requisições, por dia e por modelo, pela Usage API (v1/organization/usage/completions), que pede a chave de admin (OPENAI_ADMIN_KEY ou o setting gpt.admin.key). E os limites de agora, lidos dos cabeçalhos x-ratelimit-* de uma chamada mínima ao chat (gasta uns poucos tokens). Só o dono e os admins, mesmo que o /gpt tenha sido liberado a um usuário.",
       "ex": [
-        "/gpt -usage [dias]",
+        "/gpt -u [dias]",
         "/gpt -u 30"
       ]
     },
@@ -95,7 +95,7 @@
         "s"
       ],
       "values": [],
-      "desc": "Acrescenta no rodapé da resposta o consumo da chamada: bytes enviados (TX) e recebidos (RX), tokens gastos, custo estimado e saldo. Para deixar sempre ligado: /set openai.status true.",
+      "desc": "Acrescenta no rodapé da resposta o consumo da chamada: bytes enviados (TX) e recebidos (RX), tokens gastos, custo estimado e saldo. Para deixar sempre ligado: /set gpt.status true.",
       "ex": [
         "/gpt -s explique SSRF em 3 linhas"
       ]

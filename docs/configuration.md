@@ -49,7 +49,7 @@ one is optional); the others work without any configuration.
 
 | Command | Service | Key |
 |---|---|---|
-| `/gpt`, `/tldr`, `/draw` | [OpenAI](https://platform.openai.com/) (pay per use) | `OPENAI_API_KEY` or setting `openai.api.key` |
+| `/gpt`, `/tldr`, `/draw` | [OpenAI](https://platform.openai.com/) (pay per use) | `OPENAI_API_KEY` or setting `gpt.api.key` |
 | `/giphy` | [GIPHY](https://developers.giphy.com/) (beta key: 100 calls/hour) | `GIPHY_API_KEY` or setting `giphy.api.key` |
 | `/translate` | [Google Translate](https://translate.google.com/) (free, unofficial access, no key; may be rate limited by IP) | — |
 | `/weather` | [Open-Meteo](https://open-meteo.com/) | — |
@@ -69,13 +69,13 @@ can change it from WhatsApp with `/set` without restarting.
 
 | Variable | Example | Description |
 |---|---|---|
-| `OPENAI_ADMIN_KEY` | `sk-admin-...` | OpenAI **admin** key, only for `/gpt -usage` (the Usage API doesn't accept the regular key). If empty, the bot uses the `openai.admin.key` setting; with neither, `-usage` shows only the limits. Create it at platform.openai.com › Organization › Admin keys. |
-| `OPENAI_API_KEY` | `sk-proj-...` | OpenAI key used by `/gpt` and `/tldr`. If empty, the bot uses the `openai.api.key` setting; with neither, questions and summaries are refused. Viewing and setting the model with `/gpt -m` remain available. |
-| `OPENAI_MODEL` | `gpt-4o-mini` | Model for `/gpt` and `/tldr`. If empty, the bot uses the `openai.api.model` setting (default `gpt-4o-mini`), which you can change from WhatsApp with `/gpt -m`. When set, it takes priority over the setting. |
-| `OPENAI_TIMEOUT_MS` | `60000` | Maximum time to wait for the response, in ms. If empty, the bot uses the `openai.timeout.ms` setting (60000). |
+| `OPENAI_ADMIN_KEY` | `sk-admin-...` | OpenAI **admin** key, only for `/gpt -usage` (the Usage API doesn't accept the regular key). If empty, the bot uses the `gpt.admin.key` setting; with neither, `-usage` shows only the limits. Create it at platform.openai.com › Organization › Admin keys. |
+| `OPENAI_API_KEY` | `sk-proj-...` | OpenAI key used by `/gpt` and `/tldr`. If empty, the bot uses the `gpt.api.key` setting; with neither, questions and summaries are refused. Viewing and setting the model with `/gpt -m` remain available. |
+| `OPENAI_MODEL` | `gpt-4o-mini` | Model for `/gpt` and `/tldr`. If empty, the bot uses the `gpt.api.model` setting (default `gpt-4o-mini`), which you can change from WhatsApp with `/gpt -m`. When set, it takes priority over the setting. |
+| `OPENAI_TIMEOUT_MS` | `60000` | Maximum time to wait for the response, in ms. If empty, the bot uses the `gpt.timeout.ms` setting (60000). |
 
-The cost estimate in the `-status` footer of `/gpt`, `/tldr` and `/draw` uses the `openai.pricing`
-setting, which `openai.pricing.auto` keeps up to date (see [Settings](settings.md)).
+The cost estimate in the `-status` footer of `/gpt`, `/tldr` and `/draw` uses the `gpt.pricing`
+setting, which `gpt.pricing.auto` keeps up to date (see [Settings](settings.md)).
 
 ## Aave V3 (optional)
 

@@ -35,7 +35,7 @@ joined the group, the name changed, encryption, a call...), which have no author
 /stats -me                     → yours, across all chats
 /stats -me /Family/            → yours, only in "Family"
 /stats -l                      → the chats that have statistics
-/stats -flush /Family Group/  → deletes the group's
+/stats -f /Family Group/  → deletes the group's
 /stats -flush-all              → deletes all of them
 ```
 

@@ -25,13 +25,13 @@ module.exports = {
             opts: ['read', 'r'],
             values: ['<id>'],
             desc: 'Shows the whole message for an id from the search list (same scope: this chat, or all chats in your private chat).',
-            ex: ['/search -read false_5521988887777@c.us_3EB0A1B2']
+            ex: ['/search -r false_5521988887777@c.us_3EB0A1B2']
         },
         {
             opts: ['mask', 'm'],
             values: [],
             desc: 'Obfuscates phone numbers in the output (e.g. +55219****44).',
-            ex: ['/search -mask pix']
+            ex: ['/search -m pix']
         }
     ],
     mask: true,

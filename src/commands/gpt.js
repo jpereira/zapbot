@@ -153,7 +153,7 @@ async function replyOnAudio(msg, { audio, erro: errorAlt }, args) {
 }
 
 /*
- * What /gpt -voz speaks from the replied message: its text or, if it is audio, the transcription.
+ * What /gpt -voice speaks from the replied message: its text or, if it is audio, the transcription.
  * @returns {Promise<{ texto?: string, erro?: string }>}  without text: there is nothing to speak in the reply
  */
 async function contentForTalk(quotedMsg, cmd = '/gpt') {
@@ -170,16 +170,16 @@ async function contentForTalk(quotedMsg, cmd = '/gpt') {
 }
 
 /*
- * /gpt -voz [text]: the voice of the text (v1/audio/speech), robot by default, in a voice note. Without
+ * /gpt -voice [text]: the voice of the text (v1/audio/speech), robot by default, in a voice note. Without
  * typed text, speaks the replied message's.
  */
 async function talkText(msg, args, quotedMsg, cmd = '/gpt') {
-    const typed = args.replace(/(^|\s)-(?:voz|v)(?=\s|$)/, '').trim();
+    const typed = args.replace(/(^|\s)-(?:voice|v)(?=\s|$)/, '').trim();
     let textAlt = typed;
     let style = null;
 
     // Replying to a text (or an audio, which is transcribed): what was typed is the speech style
-    // ("/gpt -voz speak like a metallic robot") and the replied content is what is spoken.
+    // ("/gpt -voice speak like a metallic robot") and the replied content is what is spoken.
     const replied = await contentForTalk(quotedMsg, cmd);
     if (replied.erro) {
         await msg.reply(replied.erro);
@@ -327,8 +327,8 @@ function consumptionText(buckets, daysAlt, { custos: costs = null, servicos: ser
 }
 
 /*
- * The balance in dollars: $used/$total. The API does not report the balance, so the total is openai.credit.total
- * (what was bought) and the used one is the spend since openai.credit.since (without it, the last 180 days).
+ * The balance in dollars: $used/$total. The API does not report the balance, so the total is gpt.credit.total
+ * (what was bought) and the used one is the spend since gpt.credit.since (without it, the last 180 days).
  */
 function balanceText(used, total, since) {
     const remains = total - used;
@@ -372,8 +372,8 @@ async function showUsage(msg, daysTyped) {
 
     if (withAdmin) {
         try {
-            const total = getSetting('openai.credit.total');
-            const sinceData = getSetting('openai.credit.since');
+            const total = getSetting('gpt.credit.total');
+            const sinceData = getSetting('gpt.credit.since');
             const nowAlt = Math.floor(Date.now() / 1000);
             const startBalance = sinceData ? Math.floor(Date.parse(sinceData) / 1000) : nowAlt - 180 * 86400;
 
@@ -414,7 +414,7 @@ async function showUsage(msg, daysTyped) {
 }
 
 /*
- * /gpt -prices: fetches the price table from the OpenAI site and updates openai.pricing (the estimated cost
+ * /gpt -prices: fetches the price table from the OpenAI site and updates gpt.pricing (the estimated cost
  * of -status). The models you added by hand that the page does not have stay as they are.
  */
 async function showPrices(msg) {
@@ -481,8 +481,8 @@ async function ask({ msg, args, opts, quotedMsg, admin }) {
         return;
     }
 
-    // -voz: the text becomes a voice note
-    if (opts?.given.has('voz')) {
+    // -voice: the text becomes a voice note
+    if (opts?.given.has('voice')) {
         await talkText(msg, args, quotedMsg);
         return;
     }
@@ -533,7 +533,7 @@ async function ask({ msg, args, opts, quotedMsg, admin }) {
     }
 }
 
-// The -status|-s (or the openai.status setting) shows the call usage in the footer
+// The -status|-s (or the gpt.status setting) shows the call usage in the footer
 const cmdGpt = (ctx) => measureConsumption(ctx.opts?.given.has('status'), () => ask(ctx));
 
 module.exports = {

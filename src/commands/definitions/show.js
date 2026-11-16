@@ -29,14 +29,14 @@ module.exports = {
         {
             opts: ['list', 'l'],
             values: [],
-            desc: 'Lists the chats with content in the cache, numbered for /show <no.>, marking the current chat. With chat (no., name, @mention or /regex/), only the ones that match, and the counts only for them.',
+            desc: 'Lists the chats with content in the cache. Numbered for /show <no.>, marking the current chat. With chat (no., name, @mention or /regex/), only the ones that match, and the counts only for them.',
             ex: ['/show -l', '/show -l /^Maria/'],
             outrosChats: true
         },
         {
             opts: ['flush', 'f'],
             values: [],
-            desc: 'Removes the deleted ones of this chat from the cache or, with -e/-s/-r/chat, whatever was requested (in your private chat, without chat: all of them).',
+            desc: 'Removes the deleted ones of this chat from the cache. With -e/-s/-r/chat, whatever was requested (in your private chat, without chat: all of them).',
             role: ADMIN
         },
         {
@@ -61,7 +61,7 @@ module.exports = {
             opts: ['mask', 'm'],
             values: [],
             desc: 'Obfuscates phone numbers in the output (e.g. +55219****44). Saved data and destinations use the full numbers.',
-            ex: ['/show -mask']
+            ex: ['/show -m']
         }
     ],
     estrito: true,

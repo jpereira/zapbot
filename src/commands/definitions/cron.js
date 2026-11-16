@@ -9,20 +9,20 @@ module.exports = {
     usage: '/cron <when> [OPTION] <text>  or  /cron -edit <n> [when] [text]',
     aliases: [],
     summary: 'Schedules a text or command for a set time',
-    help: 'At the set time, sends the text as if you typed it (in the current chat or the -to one) or, with -lembrete, a ⏰ Lembrete in this chat or in your private chat (-pv). In the text, {/command args} runs at send time and the reply takes its place (query commands only: /crypto, /rates, /weather...). A typed \\n becomes a line break.',
+    help: 'At the set time, sends the text as if you typed it (in the current chat or the -to one) or, with -reminder, a ⏰ Lembrete in this chat or in your private chat (-private). In the text, {/command args} runs at send time and the reply takes its place (query commands only: /crypto, /rates, /weather...). A typed \\n becomes a line break.',
     ex: [
-        '/cron 09h -r diario -to /Família/ Good morning! {/crypto BTC}',
-        '/cron 8h -r diario Orca {/defi orca}\\n Prjx {/defi prjx}'
+        '/cron 09h -r d -to /Família/ Good morning! {/crypto BTC}',
+        '/cron 8h -r d Orca {/defi orca}\\n Prjx {/defi prjx}'
     ],
     cmd_opts: [
         {
             opts: ['edit'],
             values: ['<n>'],
-            desc: 'Edits item N of the list: whatever comes after changes the time, the text and/or the -repetir (-r nao removes the repetition).',
+            desc: 'Edits item N of the list: whatever comes after changes the time, the text and/or the -repeat (-r nao removes the repetition).',
             ex: ['/cron -edit 2 18h', '/cron -edit 2 new text']
         },
         {
-            opts: ['lembrete', 'lem'],
+            opts: ['reminder', 'rem'],
             values: [],
             desc: 'Reminder mode: ⏰ Lembrete replying to the command message.'
         },
@@ -37,13 +37,13 @@ module.exports = {
             desc: 'Pauses item N, several (-pause 1 3 or 1,3) or all: it stays in the list, but is not sent until -resume. If any number does not exist, none is paused.'
         },
         {
-            opts: ['pv'],
+            opts: ['private'],
             values: [],
             desc: 'In reminder mode: reminds you in your private chat instead of the current chat.'
         },
         {
-            opts: ['repetir', 'r'],
-            values: ['<diario|semanal|mensal>'],
+            opts: ['repeat', 'r'],
+            values: ['<d|daily|w|weekly|m|monthly>'],
             desc: 'Repeats at the same time: every day, every week or every month.'
         },
         {
@@ -59,7 +59,7 @@ module.exports = {
         {
             opts: ['test'],
             values: ['<n>'],
-            desc: 'Builds item N now, running the {/command}s in the text, and shows here how it would go out (does not send to the destination nor change the time).'
+            desc: 'Builds item N now and shows here how it would go out. Runs the {/command}s in the text (does not send to the destination nor change the time).'
         },
         {
             opts: ['to'],

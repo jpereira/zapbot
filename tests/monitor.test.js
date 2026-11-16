@@ -457,20 +457,20 @@ test('lista filtrada compara nome, delimitadores, telefone, id e menção dos ca
 });
 
 test('ativa alerta ao cadastrar e para pessoa cadastrada sem duplicar o cadastro', async () => {
-    await bot.replyAlt('/monitor -add /Fulano/ -alerta');
+    await bot.replyAlt('/monitor -add /Fulano/ -alert');
     let [c] = await monitor.listMonitored();
     assert.equal(c.alert_enabled, 1);
     assert.match((await bot.replyAlt('/monitor -l /Fulano/'))[0], /Alerta online: ativado/);
     await bot.dbRun('UPDATE monitor_contacts SET alert_enabled = 0 WHERE id = ?', [c.id]);
-    assert.match((await bot.replyAlt('/monitor -alerta /Fulano/'))[0], /Alerta online ativado/);
+    assert.match((await bot.replyAlt('/monitor -alert /Fulano/'))[0], /Alerta online ativado/);
     [c] = await monitor.listMonitored();
     assert.equal(c.alert_enabled, 1);
     await bot.src('settings').loadSettings();
     assert.equal((await monitor.listMonitored()).length, 1);
     assert.equal((await monitor.listMonitored())[0].alert_enabled, 1);
-    await bot.replyAlt('/monitor -add /Fulano/ -alerta');
+    await bot.replyAlt('/monitor -add /Fulano/ -alert');
     assert.equal((await monitor.listMonitored()).length, 1);
-    assert.match((await bot.replyAlt('/monitor -alerta'))[0], /Informe um contato/);
+    assert.match((await bot.replyAlt('/monitor -alert'))[0], /Informe um contato/);
 });
 
 test('alerta online vai ao dono uma vez por entrada observada, sem rearmar com dados ausentes',

@@ -12,7 +12,7 @@ pedido. O `/gpt -img` e o `/gpt -gif` são o mesmo código: o resultado é igual
 ```text
 /draw um gato astronauta em aquarela
 /draw um castelo na neve
-/draw -gif um gato dançando
+/draw -g um gato dançando
 /draw -m                       → o modelo atual e os que a sua chave vê
 /draw -h                       → ajuda do comando
 ```
@@ -22,16 +22,16 @@ Se a **primeira palavra** parece uma opção mas não existe (`/draw -price`), o
 
 | Opção | Valor | Descrição |
 |---|---|---|
-| `-gif`, `-g` | | GIF animado (setting `openai.image.gifModel`). Numa foto, ou respondendo uma, anima a foto. Veja [GIF animado](#gif-animado--gif) |
-| `-frames`, `-f` | `<n>` | Quadros do GIF, de 2 a 16 (padrão: `openai.gif.frames`, 9). Vale como `-gif` |
-| `-ms` | `<ms>` | Duração de cada quadro do GIF, de 20 a 2000 ms (padrão: `openai.gif.frameMs`, 200). Vale como `-gif` |
-| `-model`, `-m` | `[modelo]` | Só dono e admins. Sem modelo, lista o atual e os que a sua chave vê; com modelo, troca (`openai.image.model`; com `-gif`, `openai.image.gifModel`) |
+| `-gif`, `-g` | | GIF animado (setting `gpt.image.gifModel`). Numa foto, ou respondendo uma, anima a foto. Veja [GIF animado](#gif-animado--gif) |
+| `-frames`, `-f` | `<n>` | Quadros do GIF, de 2 a 16 (padrão: `gpt.gif.frames`, 9). Vale como `-gif` |
+| `-ms` | `<ms>` | Duração de cada quadro do GIF, de 20 a 2000 ms (padrão: `gpt.gif.frameMs`, 200). Vale como `-gif` |
+| `-model`, `-m` | `[modelo]` | Só dono e admins. Sem modelo, lista o atual e os que a sua chave vê; com modelo, troca (`gpt.image.model`; com `-gif`, `gpt.image.gifModel`) |
 | `-status`, `-s` | | Acrescenta no rodapé o consumo da chamada: bytes TX/RX, tokens, custo e saldo (imagem e GIF: numa mensagem à parte). Veja [Status](gpt.md#status--status) |
 | `<pedido>` | | O que desenhar ou animar. Respondendo uma mensagem, o texto dela entra antes; numa foto, o pedido a edita |
 
-Usa a mesma chave do [`/gpt`](gpt.md): `OPENAI_API_KEY` no `config/.env` ou o setting `openai.api.key`
+Usa a mesma chave do [`/gpt`](gpt.md): `OPENAI_API_KEY` no `config/.env` ou o setting `gpt.api.key`
 (veja [Configurando a chave](gpt.md#configurando-a-chave)). A imagem pode levar mais de um minuto: o
-timeout é o `openai.timeout.ms`, mas nunca menos de 3 minutos (5 no GIF).
+timeout é o `gpt.timeout.ms`, mas nunca menos de 3 minutos (5 no GIF).
 
 ## Editar uma foto
 
@@ -49,19 +49,19 @@ Respondendo uma foto (ou mandando a foto com a legenda `/draw ...`), a OpenAI **
 Numa foto, o GIF a anima; sem pedido, com um movimento sutil e natural.
 
 ```text
-/draw -gif um gato dançando
+/draw -g um gato dançando
 → ⏳ Processando o /draw, aguarde.
 → (o GIF, em loop) 🎞️ um gato dançando
 
-/draw -gif -f 6 -ms 300 uma bandeira ao vento
+/draw -g -f 6 -ms 300 uma bandeira ao vento
 (respondendo uma foto)  /draw -gif como se estivesse nadando
 ```
 
-- Usa o modelo do setting `openai.image.gifModel` (padrão `gpt-image-2.6-flare`; o
+- Usa o modelo do setting `gpt.image.gifModel` (padrão `gpt-image-2.6-flare`; o
   `gpt-image-2.6-sunburst` é mais detalhado). Só a família 2.6 faz GIF, e ela **pede acesso à prévia**. Sem
   ele, o bot responde `🔒 A sua conta/modelo não faz GIF animado` com a mensagem da OpenAI.
-- O GIF sai com **9 quadros de 200 ms** (1,8 s); os settings `openai.gif.frames` (2 a 16) e
-  `openai.gif.frameMs` (20 a 2000) mudam, e o `-frames` e o `-ms` sobrepõem numa chamada.
+- O GIF sai com **9 quadros de 200 ms** (1,8 s); os settings `gpt.gif.frames` (2 a 16) e
+  `gpt.gif.frameMs` (20 a 2000) mudam, e o `-frames` e o `-ms` sobrepõem numa chamada.
 - `-frames` e `-ms` fora do intervalo respondem `❌ -frames precisa ser um inteiro de 2 a 16.` (ou o
   `-ms`, de 20 a 2000).
 - Cada quadro sai em **512x512**: a OpenAI cobra os pixels de todos os quadros, então mais quadros custam mais.
@@ -74,14 +74,14 @@ Numa foto, o GIF a anima; sem pedido, com um movimento sutil e natural.
 
 ## Modelo que a conta não tem
 
-Os modelos de imagem (`openai.image.model` e `openai.image.gifModel`) são settings de texto livre, porque os
+Os modelos de imagem (`gpt.image.model` e `gpt.image.gifModel`) são settings de texto livre, porque os
 nomes mudam (o `gpt-image-1` saiu do ar em 23/10/2026, por exemplo). Se a OpenAI responder que o modelo não
 existe, o bot lista os que a sua chave vê (parecidos com o recurso) e mostra o `/set` para trocar:
 
 ```text
 ❌ O modelo gpt-image-1 não existe na sua conta da OpenAI (imagem).
 💡 A sua chave vê: gpt-image-2.5-flare, gpt-image-2.6-flare
-💡 Troque com /set openai.image.model <modelo>
+💡 Troque com /set gpt.image.model <modelo>
 ```
 
 O `/draw -m` mostra o modelo da imagem e o do GIF, e troca o de cada um (`/draw -gif -m <modelo>`).

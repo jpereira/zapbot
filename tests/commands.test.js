@@ -21,7 +21,7 @@ describe('/help', () => {
         assert.match(r, /```\n \/alias +- [^]*\n \/ascii +- /);
         assert.match(r, /\n \/show +- Mostra mensagens do cache do bot\n/);
         assert.match(r, /\n \/rates +- /);
-        assert.doesNotMatch(r, /Uso:/);
+        assert.doesNotMatch(r, /Usage:/);
         assert.ok(r.endsWith('\n```\n\n💡 Utilize */help /comando* ou */comando -h* para mais informações.'));
     });
 
@@ -41,7 +41,7 @@ describe('/help', () => {
     test('um comando, com ou sem "/", por nome ou alias', async () => {
         for (const line of ['/help show', '/help /show', '/help show']) {
             const [r] = await bot.replyAlt(line);
-            assert.match(r, /AJUDA[\s\S]*Uso: \/show/, line);
+            assert.match(r, /AJUDA[\s\S]*Usage: \/show/, line);
         }
     });
 
@@ -57,7 +57,7 @@ describe('/help', () => {
 
         assert.deepEqual(await bot.replyAlt('/help show', { de: OTHERAlt.jid }),
             ['⛔ O /show é só do dono do bot (e dos admins).\n💡 _Veja os que você pode usar com /help_']);
-        assert.match((await bot.replyAlt('/help rates', { de: OTHERAlt.jid }))[0], /Uso: \/rates/);
+        assert.match((await bot.replyAlt('/help rates', { de: OTHERAlt.jid }))[0], /Usage: \/rates/);
 
         await bot.setSetting('bot.admins', [OTHERAlt.user]);
         const [admin] = await bot.replyAlt('/help', { de: OTHERAlt.jid });
@@ -83,7 +83,7 @@ describe('/help', () => {
         assert.doesNotMatch(deleg, /Role: owner/);
 
         // with the command, -r does not get in the way
-        assert.match((await bot.replyAlt('/help -r get'))[0], /Uso: \/get/);
+        assert.match((await bot.replyAlt('/help -r get'))[0], /Usage: \/get/);
     });
 
     test('comando desativado por setting some do menu', async () => {
@@ -179,7 +179,7 @@ describe('/noffa', () => {
     });
 
     test('sem texto mostra a sintaxe', async () => {
-        assert.match((await bot.replyAlt('/noffa'))[0], /^```Uso: \/noffa/);
+        assert.match((await bot.replyAlt('/noffa'))[0], /^```Usage: \/noffa/);
     });
 
     test('texto começando com "/" ganha um 🌈 na frente (nunca vira comando)', async () => {
@@ -278,7 +278,7 @@ describe('/bot', () => {
 
     test('combinações inválidas mostram o uso', async () => {
         for (const line of ['/bot -on -off', '/bot +admin', '/bot -admin', '/bot xyz']) {
-            assert.match((await bot.replyAlt(line))[0], /❌ Uso: \/bot/, line);
+            assert.match((await bot.replyAlt(line))[0], /❌ Opção inválida para o \/bot/, line);
         }
     });
 });
@@ -288,7 +288,7 @@ describe('/set', () => {
         const [r] = await bot.replyAlt('/set');
         const keys = [...r.matchAll(/^([a-z][\w.]+)\s{2}/gm)].map(m => m[1]);
         assert.deepEqual(keys, [...keys].sort());
-        assert.ok(keys.includes('show.max') && keys.includes('alerta.max'));
+        assert.ok(keys.includes('show.max') && keys.includes('alert.max'));
     });
 
     test('<chave> mostra valor, padrão, tipo e limites', async () => {
@@ -317,8 +317,8 @@ describe('/set', () => {
     });
 
     test('segredo aparece mascarado', async () => {
-        assert.deepEqual(await bot.replyAlt('/set openai.api.key sk-abcdef123456'), ['✅ *openai.api.key* = ••••3456']);
-        assert.match((await bot.replyAlt('/set'))[0], /openai\.api\.key\s+••••3456/);
+        assert.deepEqual(await bot.replyAlt('/set gpt.api.key sk-abcdef123456'), ['✅ *gpt.api.key* = ••••3456']);
+        assert.match((await bot.replyAlt('/set'))[0], /gpt\.api\.key\s+••••3456/);
     });
 
     test('config/.env: somente leitura, só no seu privado, com os segredos mascarados', async () => {
@@ -350,11 +350,11 @@ describe('/set', () => {
     });
 
     test('<trecho> ou /regex/ que não é uma chave: lista as que casam; nada casa: erro', async () => {
-        const [r] = await bot.replyAlt('/set alerta');
-        assert.match(r, /^⚙️ \*SETTINGS\* com "alerta" \(3\)\n\n```\nalerta\.intervalMin       5\nalerta\.max               20\ndefi\.alerta\.intervalMin  10\n```\n💡 _\/set <chave> para detalhes_$/);
+        const [r] = await bot.replyAlt('/set alert');
+        assert.match(r, /^⚙️ \*SETTINGS\* com "alert" \(8\)\n\n```\nalert\.intervalMin       5\nalert\.max               20\ndefi\.alert\.intervalMin  10\nemail\.alerts            on\nshow\.alert\.deleted      on\nshow\.alert\.edited       on\nshow\.alert\.reaction     on\nshow\.alert\.status       on\n```\n💡 _\/set <chave> para detalhes_$/);
 
         const keys = (textAlt) => [...textAlt.matchAll(/^([a-z][\w.]+)\s{2}/gm)].map(m => m[1]);
-        assert.deepEqual(keys((await bot.replyAlt('/set OPENAI'))[0]), ['openai.admin.key', 'openai.api.key', 'openai.api.model', 'openai.credit.since', 'openai.credit.total', 'openai.gif.frameMs', 'openai.gif.frames', 'openai.image.gifModel', 'openai.image.model', 'openai.pricing', 'openai.pricing.auto', 'openai.pricing.updated', 'openai.status', 'openai.timeout.ms', 'openai.transcribe.model', 'openai.tts.instructions', 'openai.tts.model', 'openai.tts.voice']);
+        assert.deepEqual(keys((await bot.replyAlt('/set GPT.'))[0]), ['gpt.admin.key', 'gpt.api.key', 'gpt.api.model', 'gpt.credit.since', 'gpt.credit.total', 'gpt.gif.frameMs', 'gpt.gif.frames', 'gpt.image.gifModel', 'gpt.image.model', 'gpt.pricing', 'gpt.pricing.auto', 'gpt.pricing.updated', 'gpt.status', 'gpt.timeout.ms', 'gpt.transcribe.model', 'gpt.tts.instructions', 'gpt.tts.model', 'gpt.tts.voice']);
         assert.deepEqual(keys((await bot.replyAlt('/set /^show\\./'))[0]), ['show.alert.deleted', 'show.alert.edited', 'show.alert.reaction', 'show.alert.status', 'show.delayMs', 'show.max']);
         assert.deepEqual(keys((await bot.replyAlt('/set /max$/'))[0]).length > 3, true);
 
@@ -362,8 +362,8 @@ describe('/set', () => {
         assert.deepEqual(await bot.replyAlt('/set /[/'), ['❌ Regex inválida: /[/']);
 
         // An exact key still shows the details; with a value, the snippet does not count
-        assert.match((await bot.replyAlt('/set alerta.max'))[0], /^⚙️ \*alerta\.max\*\n/);
-        assert.match((await bot.replyAlt('/set alerta 5'))[0], /❌ Setting desconhecido: alerta/);
+        assert.match((await bot.replyAlt('/set alert.max'))[0], /^⚙️ \*alert\.max\*\n/);
+        assert.match((await bot.replyAlt('/set alert 5'))[0], /❌ Setting desconhecido: alert/);
     });
 
     test('-append (-a) e -rm: acrescentam e tiram itens de uma lista; em outra chave, recusa e sugere o -reset', async () => {

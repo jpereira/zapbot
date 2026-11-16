@@ -8,7 +8,7 @@ Mostra a foto de perfil de um contato, com o nome que ele tem na **sua agenda** 
 ninguém, mostra a pessoa do privado (no seu próprio privado, o seu perfil) ou, no grupo, a foto do grupo; respondendo uma mensagem, o de quem a escreveu.
 
 ```text
-/profile [/contato/|@menção|+número]...  ou  /profile -set|-s
+/profile [/contato/|@menção|+número]...  ou  /profile -s|-s
 ```
 
 | Opção | Valor | Descrição |
@@ -33,7 +33,7 @@ só entre os contatos: grupos são recusados.
 Para trocar a foto em vez de ver:
 
 ```text
-/profile -set                   → respondendo uma imagem (ou enviando-a com esta legenda)
+/profile -s                   → respondendo uma imagem (ou enviando-a com esta legenda)
 ```
 
 - No grupo, troca a foto **do grupo**. O WhatsApp só deixa os admins fazerem isso (a menos que o

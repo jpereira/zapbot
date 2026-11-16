@@ -14,7 +14,7 @@ module.exports = {
             opts: ['all', 'a'],
             values: [],
             desc: 'Unblocks everyone blocked (including the ones you blocked on the phone).',
-            ex: ['/unblock -all']
+            ex: ['/unblock -a']
         },
         {
             argv: ['[/contact/|@mention|+number|#]'],

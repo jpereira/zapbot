@@ -52,7 +52,7 @@ const ALERT_DEFI_COLUMNS = {
     alert_dest_is_group: 'INTEGER DEFAULT 0',
     alert_email: 'TEXT',
     alert_recipients: 'TEXT',           // JSON with the destinations of several -to (the alert_dest_*: the first)
-    alert_fees: 'REAL',                 // -taxas: notifies when the fees to collect go above that (US$)
+    alert_fees: 'REAL',                 // -fees: notifies when the fees to collect go above that (US$)
     fees_notified: 'INTEGER DEFAULT 0', // already notified about this value (goes back to 0 when collected)
     in_range: 'INTEGER'
 };
@@ -255,7 +255,7 @@ async function initializeDb() {
     await dbRun("DELETE FROM stats WHERE sender_id = 'UNKNOWN'");
 
     /*
-     * Price alerts from /rates -alerta and /crypto -alerta (fire once
+     * Price alerts from /rates -alert and /crypto -alert (fire once
      * time and go away). dest_*: the notice chat (-to); dest_email: the emails (-to email);
      * empty = your private chat. With several -to, recipients has all of them (and the dest_*, the first).
      */
@@ -283,7 +283,7 @@ async function initializeDb() {
     });
 
     /*
-     * /notes notes. alert_at: when the -alerta notifies (null = no alert; fires once and clears);
+     * /notes notes. alert_at: when the -alert notifies (null = no alert; fires once and clears);
      * dest_* and recipients: where to (empty = your private chat), as in the price alerts.
      */
     await dbRun(`
@@ -303,6 +303,13 @@ async function initializeDb() {
         CREATE TABLE IF NOT EXISTS note_tags (
             tag TEXT PRIMARY KEY,   -- minúscula e sem o "#"
             description TEXT NOT NULL
+        )
+    `);
+    await dbRun(`
+        CREATE TABLE IF NOT EXISTS forward_lists (
+            list TEXT PRIMARY KEY,      -- minúscula e sem o "#"
+            description TEXT,
+            recipients TEXT NOT NULL    -- JSON dos destinos já resolvidos (id/nome/grupo ou e-mail)
         )
     `);
     await addColumns('notes', {
@@ -365,10 +372,12 @@ async function initializeDb() {
         recipients: 'TEXT'   // JSON [{ id, name, group }]: an item with several -to (without it, the chat_id)
     });
     await dbRun('CREATE INDEX IF NOT EXISTS idx_schedules_due ON schedules (due_at)');
+    // The /cron -repeat values were in Portuguese: converts what was already saved
+    await dbRun("UPDATE schedules SET repeat = CASE repeat WHEN 'diario' THEN 'daily' WHEN 'semanal' THEN 'weekly' WHEN 'mensal' THEN 'monthly' END WHERE repeat IN ('diario', 'semanal', 'mensal')");
 
     /*
      * /defi registrations (the Orca positions and the Project X and
-     * Morpho): the rest is read on the spot, on each /defi. The -alerta keeps where to notify (alert_dest_*: one chat;
+     * Morpho): the rest is read on the spot, on each /defi. The -alert keeps where to notify (alert_dest_*: one chat;
      * alert_email: emails; alert_recipients: several -to; none: your private chat)
      * and whether the position was in the range at the last check (in_range; NULL:
      * not read yet).

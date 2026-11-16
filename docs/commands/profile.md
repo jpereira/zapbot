@@ -10,7 +10,7 @@ number. With nobody given, it shows the person in the private chat (in your own 
 profile) or, in a group, the group's picture; when replying to a message, the one who wrote it.
 
 ```text
-/profile [/contact/|@mention|+number]...  or  /profile -set|-s
+/profile [/contact/|@mention|+number]...  or  /profile -s|-s
 ```
 
 | Option | Value | Description |
@@ -35,7 +35,7 @@ among contacts only: groups are refused.
 To change the picture instead of seeing it:
 
 ```text
-/profile -set                   → replying to an image (or sending it with this caption)
+/profile -s                   → replying to an image (or sending it with this caption)
 ```
 
 - In a group, it changes the **group's** picture. WhatsApp only lets admins do it (unless the group

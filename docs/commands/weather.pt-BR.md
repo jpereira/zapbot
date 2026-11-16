@@ -6,11 +6,11 @@ mostra também a previsão dos próximos dias.
 
 | Argumento | Descrição |
 |---|---|
-| `[N]` ou `[Nd]` | Previsão de N dias, contando hoje (`16` ou `16d`). De 1 até o setting `tempo.maxDays` (padrão 16, máximo da Open-Meteo). Só vale como primeiro argumento |
-| `[cidade]` | Cidade a consultar, opcionalmente com estado ou país após uma vírgula. Sem ela usa o setting `tempo.city` |
+| `[N]` ou `[Nd]` | Previsão de N dias, contando hoje (`16` ou `16d`). De 1 até o setting `weather.maxDays` (padrão 16, máximo da Open-Meteo). Só vale como primeiro argumento |
+| `[cidade]` | Cidade a consultar, opcionalmente com estado ou país após uma vírgula. Sem ela usa o setting `weather.city` |
 
 ```text
-/weather                         → cidade padrão (tempo.city)
+/weather                         → cidade padrão (weather.city)
 /weather Rio de Janeiro          → Rio de Janeiro, RJ
 /weather Paris, Texas            → Paris dos EUA (não a da França)
 /temp Lisboa                    → idem, completado pelo começo do nome
@@ -41,8 +41,8 @@ Com dias (`/weather 3d Niteroi`), depois do tempo de agora:
 🌦️ sex 02/10: 22°/20° · ☔ 100% · Pancadas de chuva
 ```
 
-Acima do máximo o bot recusa e diz o limite. Para limitar as consultas, use `/set tempo.maxDays 7`;
-`/set -reset tempo.maxDays` define o limite de 16 dias. Um limite salvo continua valendo após
+Acima do máximo o bot recusa e diz o limite. Para limitar as consultas, use `/set weather.maxDays 7`;
+`/set -reset weather.maxDays` define o limite de 16 dias. Um limite salvo continua valendo após
 reiniciar. Sem N, a resposta traz só o tempo de hoje. Os dias seguem o fuso da cidade consultada.
 Com `1`, o bloco da previsão se chama "Previsão de hoje". Com 5°C ou menos a resposta termina
 com "🥶 Tá congelando!", e com 30°C ou mais, com "🔥 Que calor da porra!". Os textos das condições e os nomes dos lugares seguem o
@@ -50,14 +50,14 @@ setting `zapbot.lang`.
 
 ## Alterando a cidade padrão
 
-A cidade usada pelo `/weather` sem argumento fica no setting `tempo.city` (padrão
+A cidade usada pelo `/weather` sem argumento fica no setting `weather.city` (padrão
 `Niteroi, Rio de Janeiro, Brazil`). Para trocar, mande no WhatsApp (o `/set` aceita o dono e os
 admins extras):
 
 ```text
-/set tempo.city São Paulo, Brazil
-/set tempo.city                  → mostra o valor atual
-/set -reset tempo.city           → volta para Niteroi, Rio de Janeiro, Brazil
+/set weather.city São Paulo, Brazil
+/set weather.city                  → mostra o valor atual
+/set -r weather.city           → volta para Niteroi, Rio de Janeiro, Brazil
 ```
 
 A mudança vale na hora, sem reiniciar. Dicas:
@@ -66,4 +66,4 @@ A mudança vale na hora, sem reiniciar. Dicas:
   também funciona, mas a busca escolhe a mais relevante com esse nome (normalmente a mais populosa).
 - Acentos são opcionais (`Niteroi` ou `Niterói`) e o país pode estar em português ou inglês.
 - Se a cidade não for encontrada o bot responde `❌ Cidade não encontrada`; teste antes com
-  `/weather <cidade>` e só depois grave no `tempo.city`.
+  `/weather <cidade>` e só depois grave no `weather.city`.

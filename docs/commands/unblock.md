@@ -4,7 +4,7 @@ Unblocks a person blocked by [`/block`](block.md) or on the phone, or everyone w
 to a message, unblocks whoever wrote it. With nothing, shows the `/block` list.
 
 ```text
-/unblock [/contact/|@mention|+number|#]  or  /unblock -all
+/unblock [/contact/|@mention|+number|#]  or  /unblock -a
 ```
 
 | Option | Value | Description |
@@ -16,14 +16,14 @@ to a message, unblocks whoever wrote it. With nothing, shows the `/block` list.
 /unblock /Fulano/           → unblocks the contact
 /unblock 2                  → no. 2 from the /block list
 /unblock +5521999999999     → by number
-/unblock -all               → everyone (same as /unblock -a)
+/unblock -a               → everyone (same as /unblock -a)
 ```
 
 ```text
 /unblock 2
 ✅ *Unblocked:* 👤 Fulano · +5521999999999
 
-/unblock -all
+/unblock -a
 ⏳ Unblocking 36 contacts, please wait.
 ```
 

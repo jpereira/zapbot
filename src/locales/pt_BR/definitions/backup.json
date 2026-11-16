@@ -1,7 +1,7 @@
 {
   "summary": "Backup do banco: lista, detalha, restaura, envia ou apaga",
   "usage": "/backup [OPÇÃO]",
-  "help": "Backup do banco em ${BACKUP_DIR}: um automático por dia, e você lista, detalha, restaura, envia ou apaga. O backup diário também é enviado ao destino da setting backup.to (contato, grupo, número ou e-mail, como no -to), sem pedir -sim; vazia, só salva localmente. Sem opção, mostra o banco atual e os backups.",
+  "help": "Backup do banco em ${BACKUP_DIR}: um automático por dia, e você lista, detalha, restaura, envia ou apaga. O backup diário também é enviado ao destino da setting backup.to (contato, grupo, número ou e-mail, como no -to), sem pedir -yes; vazia, só salva localmente. Sem opção, mostra o banco atual e os backups.",
   "cmd_opts": [
     {
       "opts": [
@@ -37,7 +37,7 @@
       "values": [
         "<nº|nome>"
       ],
-      "desc": "Restaura o backup (pede confirmação com -sim). Antes, faz um backup do estado atual."
+      "desc": "Restaura o backup (pede confirmação com -yes). Antes, faz um backup do estado atual."
     },
     {
       "opts": [
@@ -60,7 +60,7 @@
     },
     {
       "opts": [
-        "sim"
+        "yes"
       ],
       "values": [],
       "desc": "Confirma: junto com -restore, a restauração; junto com -send -to outro chat, o envio (o banco tem as mensagens de todos os chats)."
@@ -72,7 +72,7 @@
       "values": [
         "<destino>"
       ],
-      "desc": "Por e-mail, como anexo (email = o QRCODE_EMAIL_SMTP_TO), ou noutro chat: um contato, uma menção, um grupo ou um número (pede -sim) (com -send). Repita para vários.",
+      "desc": "Por e-mail, como anexo (email = o QRCODE_EMAIL_SMTP_TO), ou noutro chat: um contato, uma menção, um grupo ou um número (pede -yes) (com -send). Repita para vários.",
       "ex": [
         "-to email",
         "-to voce@exemplo.com",

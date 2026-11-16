@@ -34,7 +34,7 @@ WhatsApp (alguém entrou no grupo, o nome mudou, a criptografia, uma chamada...)
 /stats -me                     → as suas, em todos os chats
 /stats -me /Família/           → as suas, só no "Família"
 /stats -l                      → os chats que têm estatísticas
-/stats -flush /Grupo Família/  → apaga as do grupo
+/stats -f /Grupo Família/  → apaga as do grupo
 /stats -flush-all              → apaga todas
 ```
 

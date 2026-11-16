@@ -15,7 +15,7 @@ const { t } = require('../i18n');
  * /set
  * /set                  → lists all the settings and their values
  * /set <key>          → shows value, default and description
- * /set <snippet|/regex/> → lists the keys that match (e.g.: /set alerta)
+ * /set <snippet|/regex/> → lists the keys that match (e.g.: /set alert)
  * /set <key> <value>  → changes (list: items separated by comma or space)
  *   /set -append <chave> <valor> → numa lista, acrescenta itens (-a)
  *   /set -rm <chave> <valor>    → numa lista, tira itens

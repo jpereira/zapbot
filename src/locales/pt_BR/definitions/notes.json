@@ -1,7 +1,7 @@
 {
   "summary": "Anotações salvas no banco",
-  "usage": "/notes #tag <texto>  ou  /notes [-list|-l] [#tag...] [-to <destino>]...  ou  /notes -search|-view|-update|-export|-move|-desc|-rm|-alerta <...>",
-  "help": "Anotações salvas no banco. Para anotar, a sintaxe é /notes #tag <texto>: sem a #tag dá erro, e só /notes #tag lista as anotações da tag. Respondendo uma mensagem, o texto dela vira a anotação, com ↩️ (/notes #lembrete); uma mídia (imagem, documento, áudio, vídeo...) na própria mensagem ou na respondida é guardada no disco junto da anotação. Sem nada, mostra as tags com a quantidade e a descrição de cada uma; -l lista todas as anotações, com o ID, agrupadas por #tag (uma mensagem por tag). O -alerta lembra de uma anotação numa data/hora (uma vez; a anotação continua): no seu privado ou nos destinos do -to.",
+  "usage": "/notes #tag <texto>  ou  /notes [-list|-l] [#tag...] [-to <destino>]...  ou  /notes -search|-view|-update|-export|-move|-desc|-rm|-alert <...>",
+  "help": "Anotações salvas no banco. Para anotar, a sintaxe é /notes #tag <texto>: sem a #tag dá erro, e só /notes #tag lista as anotações da tag. Respondendo uma mensagem, o texto dela vira a anotação, com ↩️ (/notes #lembrete); uma mídia (imagem, documento, áudio, vídeo...) na própria mensagem ou na respondida é guardada no disco junto da anotação. Sem nada, mostra as tags com a quantidade e a descrição de cada uma; -l lista todas as anotações, com o ID, agrupadas por #tag (uma mensagem por tag). O -alert lembra de uma anotação numa data/hora (uma vez; a anotação continua): no seu privado ou nos destinos do -to.",
   "ex": [
     "/notes #casa comprar leite",
     "/notes #casa",
@@ -10,12 +10,12 @@
     "/notes #idei (acha a #ideias)",
     "/notes -m #casa #lar",
     "/notes -d #casa Coisas da casa",
-    "/notes -update 3 novo texto",
+    "/notes -u 3 novo texto",
     "/notes -e #casa",
     "/notes -r #casa",
-    "/notes #lembrete ligar pro João -alerta amanhã 9h",
-    "/notes -alerta 3 +2h -to /Família/",
-    "/notes -alerta #casa 18h -to /Família/",
+    "/notes #lembrete ligar pro João -alert amanhã 9h",
+    "/notes -alert 3 +2h -to /Família/",
+    "/notes -alert #casa 18h -to /Família/",
     "/notes -r 2"
   ],
   "cmd_opts": [
@@ -27,7 +27,7 @@
       "values": [
         "#tag <texto>"
       ],
-      "desc": "Adiciona uma anotação: a #tag é obrigatória e vem no começo (o texto vai até o -alerta, se houver).",
+      "desc": "Adiciona uma anotação: a #tag é obrigatória e vem no começo (o texto vai até o -alert, se houver).",
       "ex": [
         "/notes -a #casa comprar leite"
       ]
@@ -84,7 +84,7 @@
       ],
       "desc": "Troca o texto da anotação (e a tag, se vier uma).",
       "ex": [
-        "/notes -update 3 comprar pão e leite"
+        "/notes -u 3 comprar pão e leite"
       ]
     },
     {
@@ -113,7 +113,7 @@
       ],
       "desc": "Renomeia a tag em todas as anotações (se a nova já existe, as duas se juntam). A tag vai inteira, e a descrição dela vai junto.",
       "ex": [
-        "/notes -move #casa #lar"
+        "/notes -m #casa #lar"
       ]
     },
     {
@@ -126,9 +126,9 @@
       ],
       "desc": "Descrição da tag, mostrada na lista e no /notes sozinho. Sem texto, mostra a atual; com -rm, apaga. A tag pode vir pela metade.",
       "ex": [
-        "/notes -desc #casa Coisas da casa",
+        "/notes -d #casa Coisas da casa",
         "/notes -d #casa",
-        "/notes -d #casa -rm"
+        "/notes -d #casa -r"
       ]
     },
     {
@@ -154,23 +154,23 @@
       "values": [
         "<id...|#tag...|all>"
       ],
-      "desc": "Remove as anotações com esses IDs (-rm 1 2 3 ou -rm 1,2,3), de uma tag (-rm #casa) ou todas (all). Se algum ID ou tag não existe, nenhuma sai. A tag vai inteira. Junto com -alerta, tira só o alerta, mantendo as anotações.",
+      "desc": "Remove as anotações com esses IDs (-rm 1 2 3 ou -rm 1,2,3), de uma tag (-rm #casa) ou todas (all). Se algum ID ou tag não existe, nenhuma sai. A tag vai inteira. Junto com -alert, tira só o alerta, mantendo as anotações.",
       "ex": [
-        "/notes -rm 2",
-        "/notes -rm 1 2 3",
-        "/notes -rm #casa",
-        "/notes -rm all",
-        "/notes -alerta -rm 3"
+        "/notes -r 2",
+        "/notes -r 1 2 3",
+        "/notes -r #casa",
+        "/notes -r all",
+        "/notes -alert -r 3"
       ]
     },
     {
       "opts": [
-        "alerta"
+        "alert"
       ],
       "values": [
         "<quando>"
       ],
-      "desc": "Avisa da anotação numa data/hora. Com -add: /notes -a texto -alerta amanhã 9h. Com ID: /notes -alerta 3 +2h. Com #tag: avisa de todas as anotações da tag (/notes -alerta #casa 18h -to /Família/). Sozinho, lista as anotações com alerta (com #tag, só as da tag); com -rm <id...|#tag...|all>, tira o alerta. O quando aceita +2h, 30m, 18h, amanhã 9h, sexta 18:30, 25/12 10h."
+      "desc": "Avisa da anotação numa data/hora. Com -add: /notes -a texto -alert amanhã 9h. Com ID: /notes -alert 3 +2h. Com #tag: avisa de todas as anotações da tag (/notes -alert #casa 18h -to /Família/). Sozinho, lista as anotações com alerta (com #tag, só as da tag); com -rm <id...|#tag...|all>, tira o alerta. O quando aceita +2h, 30m, 18h, amanhã 9h, sexta 18:30, 25/12 10h."
     },
     {
       "opts": [
@@ -179,7 +179,7 @@
       "values": [
         "<destino>"
       ],
-      "desc": "Envia para o destino em vez de responder aqui (lista, -view e -export), ou avisa nele (-alerta). Repita para vários.",
+      "desc": "Envia para o destino em vez de responder aqui (lista, -view e -export), ou avisa nele (-alert). Repita para vários.",
       "ex": [
         "/notes -e #casa -to /Família/",
         "-to /Jorge Pereira/",

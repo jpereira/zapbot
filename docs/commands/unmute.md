@@ -13,7 +13,7 @@ statuses and removed or changed reactions from the person, group or community co
 /unmute /Grupo L200/        → the group's
 /unmute 2                   → no. 2 from the /mute list
 /unmute                     → replying to a warning: where it came from (the person, the group or the community)
-/unmute -all                → all of them (same as /unmute -a or /mute -rm all)
+/unmute -a                → all of them (same as /unmute -a or /mute -rm all)
 ```
 
 - Someone who isn't muted: the bot lets you know (`ℹ️ 👤 Fulano is not muted.`, with a tip to

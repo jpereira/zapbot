@@ -65,7 +65,7 @@ test('ascii.defaultChar muda o traço padrão; -char tem prioridade', async () =
 });
 
 test('erros: sem texto, texto grande, largura e caractere inválidos, nada desenhável', async () => {
-    assert.match((await bot.replyAlt('/ascii'))[0], /^❌ Use: \/ascii/);
+    assert.match((await bot.replyAlt('/ascii'))[0], /^❌ Usage: \/ascii/);
     assert.match((await bot.replyAlt(`/ascii ${'a'.repeat(41)}`))[0], /no máximo 40 caracteres/);
     for (const w of ['9', '61', 'x'])
         assert.match((await bot.replyAlt(`/ascii -w ${w} Oi`))[0], /^❌ -width precisa de um número de 10 a 60/);

@@ -5,8 +5,8 @@ Faz algo na hora marcada. Tem dois modos, na mesma agenda:
 - **Mensagem** (`/cron`): envia o texto como se você digitasse, no chat atual ou, com
   `-to`, num contato, num grupo ou num número. Serve para aniversários, avisos e mensagens
   recorrentes.
-- **Lembrete** (`/cron` com `-lembrete`/`-lem`): envia `⏰ Lembrete` e o texto,
-  respondendo a mensagem do comando, no chat atual (ou no seu privado, com `-pv`). Respondendo
+- **Lembrete** (`/cron` com `-reminder`/`-rem`): envia `⏰ Lembrete` e o texto,
+  respondendo a mensagem do comando, no chat atual (ou no seu privado, com `-private`). Respondendo
   (reply) uma mensagem, o lembrete cita essa mensagem, e o texto dela vira o lembrete se você não
   escrever outro.
 
@@ -14,11 +14,11 @@ Faz algo na hora marcada. Tem dois modos, na mesma agenda:
 |---|---|---|
 | `<quando>` | | Quando: `6h`, `às 18h`, `+2h`, `30m`, `amanhã 9h`, `sexta 18h`, `25/12 10:00`... Veja [Quando](#quando) |
 | `-to` | `<destino>` | Modo mensagem: envia num contato (`/Jorge Pereira/`), numa menção (`@Fulano Da Silva`), num grupo (`/Grupo L200/`) ou num número (`+5521999999999`) em vez do chat atual. Repita para vários: um item só, que sai em todos os destinos. Nomes exatos têm prioridade; vários resultados: você escolhe na lista. E-mail não vale: a mensagem sai no WhatsApp. Veja [Destinos](index.md#destinos-contato-grupo-número-ou-e-mail) |
-| `-lembrete`, `-lem` | | Modo lembrete |
-| `-pv` | | Modo lembrete: lembra no seu privado em vez do chat atual |
-| `-repetir`, `-r` | `<diario\|semanal\|mensal>` | Repete no mesmo horário: todo dia, toda semana ou todo mês |
+| `-reminder`, `-rem` | | Modo lembrete |
+| `-private` | | Modo lembrete: lembra no seu privado em vez do chat atual |
+| `-repeat`, `-r` | `<d\|diario\|s\|semanal\|m\|mensal>` | Repete no mesmo horário: todo dia, toda semana ou todo mês |
 | `-list`, `-l` | | Lista os lembretes e as mensagens, com o texto inteiro (o mesmo que o comando sem nada) |
-| `-edit` | `<nº>` | Edita o item nº N: troca a hora, o texto e/ou o `-repetir`. Veja [Editar, pausar e retomar](#editar-pausar-e-retomar) |
+| `-edit` | `<nº>` | Edita o item nº N: troca a hora, o texto e/ou o `-repeat`. Veja [Editar, pausar e retomar](#editar-pausar-e-retomar) |
 | `-pause` | `<nº...\|all>` | Pausa o item nº N, vários (`-pause 1 3` ou `1,3`) ou todos: fica na lista, mas não sai. Se algum nº não existe, nenhum é pausado |
 | `-resume` | `<nº...\|all>` | Retoma itens pausados: um, vários ou todos |
 | `-rm` | `<nº...\|all>` | Remove o item nº N da lista, vários de uma vez (`-rm 1 3 5` ou `-rm 1,3,5`) ou todos. Se algum nº não existe, nenhum sai |
@@ -29,19 +29,19 @@ Faz algo na hora marcada. Tem dois modos, na mesma agenda:
 ```text
 /cron 25/12 00:00 Feliz Natal, família! 🎄
 /cron sexta 18h -to /Grupo L200/ Bom fim de semana!
-/cron seg 8h -repetir semanal -to trabalho Bom dia! Pauta da semana no drive.
-/cron 05/11 9h -repetir mensal -to +5521999999999 Lembrete: aluguel vence hoje.
+/cron seg 8h -r s -to trabalho Bom dia! Pauta da semana no drive.
+/cron 05/11 9h -r m -to +5521999999999 Lembrete: aluguel vence hoje.
 /cron amanhã 8h -to /Jorge Pereira/ Bom dia! Não esquece a reunião.
 /cron 18h -to @Fulano Da Silva Já saiu do trabalho?   (num grupo, mencionando)
 /cron 20/10 -to /Família/ Parabéns, vó! 🎂
-/cron 8h -r diario -to /Família/ -to /Trabalho/ Bom dia!   (um item, nos dois grupos)
-/cron -lembrete 30m tirar o bolo do forno
-/cron -lembrete às 18h pagar o boleto
-/cron -lembrete -pv amanhã 9h ligar pro banco
-/cron -lem sexta 18h -r semanal enviar o relatório
-/cron -lembrete +2h                   (respondendo uma mensagem: lembra dela daqui a 2 horas)
-/cron 6h -r diario -to /Grupo L200/ Bom dia!   (todo dia às 06:00)
-/cron 9h -r diario -to /ZapBot/ O preço do Bitcoin agora: {/crypto BTC}
+/cron 8h -r d -to /Família/ -to /Trabalho/ Bom dia!   (um item, nos dois grupos)
+/cron -rem 30m tirar o bolo do forno
+/cron -rem às 18h pagar o boleto
+/cron -rem -private amanhã 9h ligar pro banco
+/cron -rem sexta 18h -r s enviar o relatório
+/cron -rem +2h                   (respondendo uma mensagem: lembra dela daqui a 2 horas)
+/cron 6h -r d -to /Grupo L200/ Bom dia!   (todo dia às 06:00)
+/cron 9h -r d -to /ZapBot/ O preço do Bitcoin agora: {/crypto BTC}
 /cron                           → a lista
 /cron -edit 2 18:30             → o nº 2 passa para 18:30
 /cron -pause 3                  → segura o nº 3 (e /cron -resume 3 solta)
@@ -86,13 +86,13 @@ inteiro, como foi cadastrado (os `{/comando}` também), e os números são os do
 ## Editar, pausar e retomar
 
 O `-edit <nº>` troca o que vier depois dele, com a mesma leitura de um item novo: um "quando" muda a
-hora, o `-repetir` (`-r`) muda a repetição (`-r nao` tira) e o resto vira o texto novo. O destino e
+hora, o `-repeat` (`-r`) muda a repetição (`-r nao` tira) e o resto vira o texto novo. O destino e
 o modo (mensagem ou lembrete) não mudam: para isso, remova (`-rm`) e crie de novo.
 
 ```text
 /cron -edit 2 18:30                       → só a hora
 /cron -edit 2 Bom dia, pessoal!           → só o texto
-/cron -edit 2 sexta 9h -r semanal Pauta   → hora, repetição e texto
+/cron -edit 2 sexta 9h -r s Pauta   → hora, repetição e texto
 /cron -edit 2 -r nao                      → deixa de repetir
 ```
 
@@ -107,9 +107,9 @@ dois modos, em qualquer ponto do texto e mais de uma vez:
 
 ```text
 /cron 09:24 -to /ZapBot/ O preço do Bitcoin agora: {/crypto BTC}
-/cron 8h -r diario -to /Família/ Bom dia! {/weather Rio de Janeiro}
-/cron seg 9h -r semanal Dólar: {/rates USD} · BTC: {/crypto BTC}
-/cron -lembrete sexta 18h -r semanal {/stats -7}
+/cron 8h -r d -to /Família/ Bom dia! {/weather Rio de Janeiro}
+/cron seg 9h -r s Dólar: {/rates USD} · BTC: {/crypto BTC}
+/cron -rem sexta 18h -r s {/stats -7}
 /cron 12h -to /Grupo L200/ {/meme}       (só mídia: sai a imagem, sem texto)
 ```
 
@@ -117,10 +117,10 @@ Vários comandos e vários destinos no mesmo item (um item só; na hora, ele sai
 os comandos rodando para cada chat):
 
 ```text
-/cron 06:00 -r diario -to /Krishina Da Silva/ -to /Grupo da Faculdade/ ⏰ Status da DeFi! {/defi} Preço do BTC! {/crypto BTC} Preço do Dólar! {/rates USD}
-/cron 07:30 -r diario -to /Família/ Bom dia! ☀️ {/weather Recife} Cripto: {/crypto BTC ETH} Câmbio: {/rates USD EUR}
-/cron seg 08:00 -r semanal -to /Trabalho/ -to @Fulano Da Silva Resumo da semana: {/news -hack 5} CVEs: {/cve -high 3}
-/cron -lembrete -pv 23:00 -r diario Fechamento do dia: {/crypto} {/defi}
+/cron 06:00 -r d -to /Krishina Da Silva/ -to /Grupo da Faculdade/ ⏰ Status da DeFi! {/defi} Preço do BTC! {/crypto BTC} Preço do Dólar! {/rates USD}
+/cron 07:30 -r d -to /Família/ Bom dia! ☀️ {/weather Recife} Cripto: {/crypto BTC ETH} Câmbio: {/rates USD EUR}
+/cron seg 08:00 -r s -to /Trabalho/ -to @Fulano Da Silva Resumo da semana: {/news -hack 5} CVEs: {/cve -high 3}
+/cron -rem -private 23:00 -r d Fechamento do dia: {/crypto} {/defi}
 ```
 
 Cada resposta de várias linhas vira um parágrafo, e o texto em volta fica entre elas. O primeiro
@@ -160,8 +160,8 @@ Preço do Dólar!
 - Só os comandos de consulta rodam aí: `/ascii`, `/rates`, `/crypto`, `/cve`, `/defi`, `/giphy`,
   `/joke`, `/kernel`, `/meme`, `/news`, `/pixelart`, `/stats`, `/weather`, `/uptime` e `/version`
   (nas definições, os com `cron: true`). As opções que mudam algo também não: o `-width` e o `-char`
-  do `/ascii`; o `-add`, o `-del` e o `-alerta` do `/crypto` e do `/rates`; o `-address`, o
-  `-wallet`, o `-pool`, o `-nft`, o `-name`, o `-rm`, o `-alerta`, o `-taxas` e o `-to` do `/defi`
+  do `/ascii`; o `-add`, o `-del` e o `-alert` do `/crypto` e do `/rates`; o `-address`, o
+  `-wallet`, o `-pool`, o `-nft`, o `-name`, o `-rm`, o `-alert`, o `-fees` e o `-to` do `/defi`
   (rodam os protocolos, o `-l`, o `-mask` e o `aave -full`); e o `-flush` e o `-flush-all` do
   `/stats`.
 - O `/bot` é a exceção: só o dono cria um item com `{/bot -flush-email true}` (nele, só o `-info` e o
@@ -181,9 +181,9 @@ espaços em volta dele são removidos. Vale em qualquer texto do `/cron`, com ou
 criar e no `-edit`:
 
 ```text
-/cron 8h -r diario Verificando Orca {/defi orca}\n Verificando Prjx {/defi prjx}
-/cron 07:30 -r diario -to /Família/ Bom dia! ☀️\n{/weather Recife}\nCâmbio: {/rates USD}
-/cron -lembrete sexta 18h Fechar a semana:\n- relatório\n- backup\n- planilha
+/cron 8h -r d Verificando Orca {/defi orca}\n Verificando Prjx {/defi prjx}
+/cron 07:30 -r d -to /Família/ Bom dia! ☀️\n{/weather Recife}\nCâmbio: {/rates USD}
+/cron -rem sexta 18h Fechar a semana:\n- relatório\n- backup\n- planilha
 /cron -edit 2 Linha 1\nLinha 2
 ```
 
@@ -213,7 +213,7 @@ digitado (com várias linhas, se for o caso). Tudo no horário de Brasília.
 | Dia da semana | `sexta`, `seg 8h`, `sábado 10:00` (ou `friday`, `mon`) | O próximo (hoje, se a hora ainda não passou). Sem hora: 9h |
 | Data | `25/12`, `25/12 10:00`, `25/12/2027 10h` | Sem ano: a próxima vez que a data chega (ano com 2 dígitos também vale: `25/12/27`). Sem hora: 9h |
 
-Até 366 dias à frente. O `-repetir mensal` (ou `-r mensal`) mantém o dia do mês: um item do dia 31
+Até 366 dias à frente. O `-repeat mensal` (ou `-r mensal`) mantém o dia do mês: um item do dia 31
 vai no último dia dos meses mais curtos e volta ao 31 depois.
 
 ## Detalhes
@@ -223,7 +223,7 @@ vai no último dia dos meses mais curtos e volta ao 31 depois.
   `(atrasado: era para ...)`). Um repetido vai uma vez e segue para o próximo horário.
 - Uma mensagem que comece com `/` é enviada, mas nunca roda como comando (só os `{/comando}` rodam;
   veja [Comandos no texto](#comandos-no-texto)).
-- O `-to` é só do modo mensagem; o `-pv`, só do lembrete. Com vários `-to`, é um item só, que sai em
+- O `-to` é só do modo mensagem; o `-private`, só do lembrete. Com vários `-to`, é um item só, que sai em
   todos os destinos (e conta 1 no limite); o mesmo destino repetido conta uma vez. Se o envio falhar
   num destino, os outros recebem assim mesmo. Os `-edit`, `-pause` e `-rm` valem para o item
   inteiro.

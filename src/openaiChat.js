@@ -13,8 +13,8 @@ const { paraWhatsapp } = require('./util/whatsapp');
 
 /*
  * Key, model and timeout come from config/.env (OPENAI_API_KEY, OPENAI_MODEL,
- * OPENAI_TIMEOUT_MS) or, if they are missing, from the settings 'openai.api.key',
- * 'openai.api.model' and 'openai.timeout.ms'. The key is never logged nor
+ * OPENAI_TIMEOUT_MS) or, if they are missing, from the settings 'gpt.api.key',
+ * 'gpt.api.model' and 'gpt.timeout.ms'. The key is never logged nor
  * echoed: the returned error is only the API message.
  */
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
@@ -25,16 +25,16 @@ const OPENAI_PRICES_URL = 'https://developers.openai.com/api/docs/pricing';
 const OPENAI_IMAGE_URL = `${OPENAI_BASE}/images/generations`;
 const OPENAI_IMAGE_EDIT_URL = `${OPENAI_BASE}/images/edits`;
 
-const keyOpenAi = () => envOuSetting('OPENAI_API_KEY', 'openai.api.key');
+const keyOpenAi = () => envOuSetting('OPENAI_API_KEY', 'gpt.api.key');
 
 // The admin key (sk-admin-...), only for /gpt -usage: the Usage API does not accept the normal key
-const keyAdminOpenAi = () => envOuSetting('OPENAI_ADMIN_KEY', 'openai.admin.key');
+const keyAdminOpenAi = () => envOuSetting('OPENAI_ADMIN_KEY', 'gpt.admin.key');
 
 const WITHOUT_KEY = (cmd) => t('openai.noKey', { cmd });
 
 // OpenAI error → message for the chat (never contains the key)
 function errorOpenAi(err, cmd) {
-    const timeout = envOuSetting('OPENAI_TIMEOUT_MS', 'openai.timeout.ms');
+    const timeout = envOuSetting('OPENAI_TIMEOUT_MS', 'gpt.timeout.ms');
 
     if (err.code === 'ECONNABORTED') return t('openai.timeout', { s: timeout / 1000 });
     if (err.response?.status === 401) return t('openai.badKey');
@@ -51,10 +51,10 @@ const consumptionCurrent = new AsyncLocalStorage();
 
 /**
  * Runs fn measuring the usage of the OpenAI calls made inside it.
- * @param {boolean} ligado  shows the status in the footer (-status or the openai.status setting)
+ * @param {boolean} ligado  shows the status in the footer (-status or the gpt.status setting)
  */
 function measureConsumption(on, fn) {
-    const consumption = { ligado: on || getSetting('openai.status'), custo: 0, semPreco: false, chamadas: 0, tx: 0, rx: 0, entrada: 0, saida: 0, total: 0 };
+    const consumption = { ligado: on || getSetting('gpt.status'), custo: 0, semPreco: false, chamadas: 0, tx: 0, rx: 0, entrada: 0, saida: 0, total: 0 };
     return consumptionCurrent.run(consumption, fn);
 }
 
@@ -83,7 +83,7 @@ function countAlt(sentAlt, received, usage = null, modelAlt = null) {
     c.saida += outputAlt;
     c.total += usage?.total_tokens ?? inputAlt + outputAlt;
 
-    // The cost is an estimate (tokens × openai.pricing price); without a price, the call's is unknown
+    // The cost is an estimate (tokens × gpt.pricing price); without a price, the call's is unknown
     const price = inputAlt || outputAlt ? modelPrice(modelAlt) : null;
     if (price) {
         const cost = (inputAlt * price.entrada + outputAlt * price.saida) / 1e6;
@@ -95,13 +95,13 @@ function countAlt(sentAlt, received, usage = null, modelAlt = null) {
 }
 
 /*
- * The price per 1M tokens of the model (setting openai.pricing, "model=input/output" in dollars). The
+ * The price per 1M tokens of the model (setting gpt.pricing, "model=input/output" in dollars). The
  * exact model or, failing that, the longest-named one that is a prefix (gpt-4o-mini-2024-07-18 → gpt-4o-mini).
  */
 function modelPrice(modelAlt) {
     if (!modelAlt) return null;
     let best = null;
-    for (const item of getSetting('openai.pricing')) {
+    for (const item of getSetting('gpt.pricing')) {
         const [nameAlt, price] = item.split('=');
         if (!modelAlt.startsWith(nameAlt) || (best && best.nome.length >= nameAlt.length)) continue;
         const [inputAlt, outputAlt] = price.split('/').map(Number);
@@ -122,7 +122,7 @@ async function searchPrices({ cmd }) {
     try {
         ({ data: html } = await axios.get(OPENAI_PRICES_URL, {
             headers: { 'User-Agent': 'Mozilla/5.0 (zapbot)' },
-            timeout: envOuSetting('OPENAI_TIMEOUT_MS', 'openai.timeout.ms'),
+            timeout: envOuSetting('OPENAI_TIMEOUT_MS', 'gpt.timeout.ms'),
             responseType: 'text'
         }));
     } catch (err) {
@@ -146,7 +146,7 @@ async function searchPrices({ cmd }) {
 }
 
 /**
- * Fetches the prices from the site and updates the openai.pricing setting: the page's models come in or are
+ * Fetches the prices from the site and updates the gpt.pricing setting: the page's models come in or are
  * fixed; those the page does not have (the ones you added) stay as they are.
  * @returns {Promise<{ novos: string[], mudados: { modelo: string, antes: string, depois: string }[], iguais: number }>}
  */
@@ -154,7 +154,7 @@ async function updatePrices({ cmd }) {
     const foundAlt6 = await searchPrices({ cmd });
     if (!foundAlt6.size) throw new Error(t('openai.pricesNotFound'));
 
-    const current = new Map(getSetting('openai.pricing').map(item => item.split('=')));
+    const current = new Map(getSetting('gpt.pricing').map(item => item.split('=')));
     const freshAlt3 = [];
     const changed = [];
     let equal = 0;
@@ -166,14 +166,14 @@ async function updatePrices({ cmd }) {
     }
 
     if (freshAlt3.length || changed.length) {
-        await setSetting('openai.pricing', [...current].map(([modelAlt, price]) => `${modelAlt}=${price}`).join(' '));
+        await setSetting('gpt.pricing', [...current].map(([modelAlt, price]) => `${modelAlt}=${price}`).join(' '));
     }
-    await setSetting('openai.pricing.updated', new Date().toISOString().slice(0, 10));
+    await setSetting('gpt.pricing.updated', new Date().toISOString().slice(0, 10));
     return { novos: freshAlt3, mudados: changed, iguais: equal };
 }
 
 /*
- * Automatic price update: with the OpenAI key configured and openai.pricing.auto on,
+ * Automatic price update: with the OpenAI key configured and gpt.pricing.auto on,
  * reads the site table every PRICES_INTERVAL_DAYS. If it failed (site down, new format): tries again
  * after PRICES_RETRY_MS, without touching what is already stored.
  */
@@ -182,19 +182,19 @@ const PRICES_NOTICE_DAYS = 30;
 const PRICES_RETRY_MS = 6 * 60 * 60 * 1000;
 let pricesNextAttempt = 0;
 
-// How many days ago openai.pricing was last updated (Infinity: never)
+// How many days ago gpt.pricing was last updated (Infinity: never)
 function pricesAge(nowAlt = Date.now()) {
-    const data = getSetting('openai.pricing.updated');
+    const data = getSetting('gpt.pricing.updated');
     return data ? Math.floor((nowAlt - Date.parse(data)) / 86400000) : Infinity;
 }
 
 async function updatePricesSeExpired(nowAlt = Date.now()) {
-    if (!getSetting('openai.pricing.auto') || !keyOpenAi()) return null;
+    if (!getSetting('gpt.pricing.auto') || !keyOpenAi()) return null;
     if (nowAlt < pricesNextAttempt || pricesAge(nowAlt) < PRICES_INTERVAL_DAYS) return null;
 
     try {
         const r = await updatePrices({ cmd: '/gpt' });
-        printInfo(`openai.pricing atualizado: ${r.mudados.length} alterados, ${r.novos.length} novos`);
+        printInfo(`gpt.pricing atualizado: ${r.mudados.length} alterados, ${r.novos.length} novos`);
         return r;
     } catch (err) {
         pricesNextAttempt = nowAlt + PRICES_RETRY_MS;
@@ -210,7 +210,7 @@ function startPricesAutomatic() {
 }
 
 /*
- * The estimated balance: openai.credit.total minus the Costs API spend (admin key, read from time to
+ * The estimated balance: gpt.credit.total minus the Costs API spend (admin key, read from time to
  * times, since it lags) minus the estimate of the calls made after the read.
  */
 const READING_VALIDITY_MS = 5 * 60 * 1000;
@@ -218,11 +218,11 @@ let spentReading = null;      // { used, when } or { failed: true, when }
 let spentSinceAReading = 0;     // the estimate of the calls since the read
 
 async function balanceEstimated(c) {
-    const total = getSetting('openai.credit.total');
+    const total = getSetting('gpt.credit.total');
     if (!total || !keyAdminOpenAi()) return null;
 
     if (!spentReading || Date.now() - spentReading.quando > READING_VALIDITY_MS) {
-        const sinceData = getSetting('openai.credit.since');
+        const sinceData = getSetting('gpt.credit.since');
         const since = sinceData ? Math.floor(Date.parse(sinceData) / 1000) : Math.floor(Date.now() / 1000) - 180 * 86400;
         try {
             const read = await queryCosts({ cmd: '/gpt', desde: since });
@@ -281,7 +281,7 @@ async function askOnChat({ cmd, sistema: system, texto: textAlt, imagem: image =
 
     try {
         const body = {
-            model: envOuSetting('OPENAI_MODEL', 'openai.api.model'),
+            model: envOuSetting('OPENAI_MODEL', 'gpt.api.model'),
             messages: [
                 { role: 'system', content: system },
                 { role: 'user', content: content }
@@ -289,7 +289,7 @@ async function askOnChat({ cmd, sistema: system, texto: textAlt, imagem: image =
         };
         const { data } = await axios.post(OPENAI_URL, body, {
             headers: { Authorization: `Bearer ${keyOpenAi()}` },
-            timeout: envOuSetting('OPENAI_TIMEOUT_MS', 'openai.timeout.ms')
+            timeout: envOuSetting('OPENAI_TIMEOUT_MS', 'gpt.timeout.ms')
         });
 
         countAlt(body, data, data?.usage, body.model);
@@ -316,12 +316,12 @@ async function askOnChat({ cmd, sistema: system, texto: textAlt, imagem: image =
 async function transcribeAudio({ cmd, audio }) {
     const form = new FormData();
     form.append('file', new Blob([Buffer.from(audio.data, 'base64')], { type: audio.mimetype }), audio.arquivo);
-    form.append('model', getSetting('openai.transcribe.model'));
+    form.append('model', getSetting('gpt.transcribe.model'));
 
     try {
         const { data } = await axios.post(OPENAI_TRANSCRIPTION_URL, form, {
             headers: { Authorization: `Bearer ${keyOpenAi()}` },
-            timeout: envOuSetting('OPENAI_TIMEOUT_MS', 'openai.timeout.ms'),
+            timeout: envOuSetting('OPENAI_TIMEOUT_MS', 'gpt.timeout.ms'),
             maxBodyLength: Infinity
         });
         countAlt(form, data, data?.usage, form.get('model'));
@@ -341,24 +341,24 @@ const VOICE_MAX_CHARACTERS = 4096;
  * @param {object} o
  * @param {string} o.cmd    command that called (for the log)
  * @param {string} o.texto  up to VOICE_MAX_CHARACTERS
- * @param {string} [o.estilo]  how to speak (overrides the openai.tts.instructions setting)
+ * @param {string} [o.estilo]  how to speak (overrides the gpt.tts.instructions setting)
  * @returns {Promise<Buffer>}
  */
 async function synthesizeVoice({ cmd, texto: textAlt, estilo: style = null }) {
-    const modelAlt = getSetting('openai.tts.model');
+    const modelAlt = getSetting('gpt.tts.model');
 
     try {
         const body = {
             model: modelAlt,
-            voice: getSetting('openai.tts.voice'),
+            voice: getSetting('gpt.tts.voice'),
             input: textAlt,
             response_format: 'opus',
             // Only gpt-4o-mini-tts follows the style; tts-1 and tts-1-hd refuse the field
-            ...(modelAlt.startsWith('gpt-4o') ? { instructions: style || getSetting('openai.tts.instructions') } : {})
+            ...(modelAlt.startsWith('gpt-4o') ? { instructions: style || getSetting('gpt.tts.instructions') } : {})
         };
         const { data } = await axios.post(OPENAI_VOICE_URL, body, {
             headers: { Authorization: `Bearer ${keyOpenAi()}` },
-            timeout: envOuSetting('OPENAI_TIMEOUT_MS', 'openai.timeout.ms'),
+            timeout: envOuSetting('OPENAI_TIMEOUT_MS', 'gpt.timeout.ms'),
             responseType: 'arraybuffer'
         });
         countAlt(body, data, null, modelAlt);
@@ -392,14 +392,14 @@ const TIMEOUT_GIF_MS = 5 * 60 * 1000;
 async function generateImage({ cmd, prompt, imagem: image = null, gif = null }) {
     // The GIF has its own model (only the gpt-image-2.6-* ones do it) and the frames come out at 512x512: OpenAI charges the
     // pixels of all of them
-    const modelAlt = getSetting(gif ? 'openai.image.gifModel' : 'openai.image.model');
+    const modelAlt = getSetting(gif ? 'gpt.image.gifModel' : 'gpt.image.model');
     const extras = gif
         ? { size: GIF_SIZE, output_format: 'gif', frame_count: gif.frames, frame_duration_ms: gif.frameMs }
         : {};
     const config = {
         headers: { Authorization: `Bearer ${keyOpenAi()}` },
         // An image takes much longer than a text reply: at least 3 minutes (the GIF, 5)
-        timeout: Math.max(envOuSetting('OPENAI_TIMEOUT_MS', 'openai.timeout.ms'), gif ? TIMEOUT_GIF_MS : TIMEOUT_IMAGE_MS)
+        timeout: Math.max(envOuSetting('OPENAI_TIMEOUT_MS', 'gpt.timeout.ms'), gif ? TIMEOUT_GIF_MS : TIMEOUT_IMAGE_MS)
     };
 
     try {
@@ -437,7 +437,7 @@ async function listModels({ cmd }) {
     try {
         const { data } = await axios.get(`${OPENAI_BASE}/models`, {
             headers: { Authorization: `Bearer ${keyOpenAi()}` },
-            timeout: envOuSetting('OPENAI_TIMEOUT_MS', 'openai.timeout.ms')
+            timeout: envOuSetting('OPENAI_TIMEOUT_MS', 'gpt.timeout.ms')
         });
         return (data?.data ?? []).map(m => m.id).filter(Boolean).sort();
     } catch (err) {
@@ -464,7 +464,7 @@ async function buckets({ cmd, caminho: pathAlt, params }) {
         for (let n = 0; n < 6; n++) {
             const { data } = await axios.get(`${OPENAI_BASE}/organization/${pathAlt}`, {
                 headers: { Authorization: `Bearer ${keyAdminOpenAi()}` },
-                timeout: envOuSetting('OPENAI_TIMEOUT_MS', 'openai.timeout.ms'),
+                timeout: envOuSetting('OPENAI_TIMEOUT_MS', 'gpt.timeout.ms'),
                 params: { ...params, ...(page ? { page: page } : {}) }
             });
             allAlt2.push(...(data?.data ?? []));
@@ -526,7 +526,7 @@ async function queryServices({ cmd, dias: daysAlt }) {
  * @returns {Promise<{ modelo: string, tokens: object, requisicoes: object }>}
  */
 async function queryLimits({ cmd }) {
-    const modelAlt = envOuSetting('OPENAI_MODEL', 'openai.api.model');
+    const modelAlt = envOuSetting('OPENAI_MODEL', 'gpt.api.model');
 
     try {
         const { headers } = await axios.post(OPENAI_URL, {
@@ -535,7 +535,7 @@ async function queryLimits({ cmd }) {
             max_completion_tokens: 16
         }, {
             headers: { Authorization: `Bearer ${keyOpenAi()}` },
-            timeout: envOuSetting('OPENAI_TIMEOUT_MS', 'openai.timeout.ms')
+            timeout: envOuSetting('OPENAI_TIMEOUT_MS', 'gpt.timeout.ms')
         });
 
         const h = (nameAlt) => headers?.[`x-ratelimit-${nameAlt}`] ?? null;

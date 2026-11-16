@@ -4,7 +4,7 @@ Sends the message you typed. Each `{/command args}` runs on the spot and the rep
 as in [`/cron`'s commands in the text](cron.md#commands-in-the-text). A typed `\n` becomes a line break.
 
 ```text
-/me [-repeat|-r <n>] <mensagem>
+/me [-r|-r <n>] <mensagem>
 ```
 
 | Option | Value | Description |

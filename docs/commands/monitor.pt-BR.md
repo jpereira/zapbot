@@ -9,36 +9,36 @@ histórico ficam no SQLite e sobrevivem a reinícios; o backup do banco também 
 | *(nenhuma)* | Contatos cadastrados, ids, intervalo, estado observado, última verificação e últimos `monitor.maxRecords` horários por contato |
 | `-add`, `-a` | Cadastra uma pessoa pelo nome da agenda, `/nome com espaços/`, menção ou número com DDI e DDD |
 | `-rm`, `-r` | Remove pelo id da lista ou por nome, `/nome com espaços/`, menção real ou telefone; `all` apaga todos os cadastros e históricos locais |
-| `-alerta` | Com `-add`, ativa o aviso online; sozinho, ativa para um contato cadastrado, pelo mesmo resolvedor ou id |
+| `-alert` | Com `-add`, ativa o aviso online; sozinho, ativa para um contato cadastrado, pelo mesmo resolvedor ou id |
 | `-list`, `-l` | Todos os contatos ou somente o contato informado, com os últimos `monitor.maxRecords` horários distintos por contato; relatório extenso vai em `.txt` |
 
 ![Demonstração do /monitor](../assets/demo/03-monitor.gif)
 
 ```text
 /monitor
-/monitor -add Jorge Chip L200
+/monitor -a Jorge Chip L200
 /monitor -a /Jorge Chip L200/
 /monitor -a "Jorge Chip L200"
-/monitor -add /Maria/ -alerta
-/monitor -alerta /Maria/
+/monitor -a /Maria/ -alert
+/monitor -alert /Maria/
 /monitor -a @Fulano
-/monitor -add +5521999999999
-/monitor -list
+/monitor -a +5521999999999
+/monitor -l
 /monitor -l
 /monitor -l Maria
 /monitor -l /Maria/
 /monitor -l +5521999999999
 /monitor -l @Fulano
 /monitor -l #1
-/monitor -rm 1
+/monitor -r 1
 /monitor -r #1
 /monitor -r 2
-/monitor -rm Jorge Chip L200
+/monitor -r Jorge Chip L200
 /monitor -r /Jorge Chip L200/
 /monitor -r "Jorge Chip L200"
-/monitor -rm @Fulano
+/monitor -r @Fulano
 /monitor -r +5521999999999
-/monitor -rm all
+/monitor -r all
 /monitor -r all
 ```
 
@@ -95,8 +95,8 @@ Se mais de um cadastro corresponder, a lista mostra todos os resultados do filtr
 Telefone, id e menção real são comparados aos identificadores dos cadastros monitorados.
 Sem filtro, mostram todos os monitorados; sem correspondência, informam que nenhum foi encontrado.
 
-Cadastre com `/monitor -add /Maria/ -alerta` ou ative para uma pessoa cadastrada com
-`/monitor -alerta /Maria/`. O alerta fica salvo no banco e aparece como ativado na lista.
+Cadastre com `/monitor -add /Maria/ -alert` ou ative para uma pessoa cadastrada com
+`/monitor -alert /Maria/`. O alerta fica salvo no banco e aparece como ativado na lista.
 O aviso é enviado **no privado do dono do bot**, inclusive quando um admin ativa a opção:
 
 ```text

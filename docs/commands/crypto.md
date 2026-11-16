@@ -9,10 +9,10 @@ only the requested ones. Default: BTC, ETH, SOL and HYPE.
 | `-list`, `-l` | | Lists the supported coins; the enabled ones are marked with `*` |
 | `-add`, `-a` | `<TOKEN>` | Enables a supported coin (bot owner or an [admin](bot.md#extra-admins) only) |
 | `-del`, `-d` | `<TOKEN>` | Disables a coin (bot owner or an [admin](bot.md#extra-admins) only) |
-| `-alerta` | `[rule]` | Without a rule, lists the alerts; with a rule (e.g. `BTC < 90000`), creates one (bot owner or an [admin](bot.md#extra-admins) only). The coin can also come first: `/crypto BTC -alerta < 90000`. See [Price alerts](rates.md#price-alerts) |
-| `-msg` | `<text>` | Together with `-alerta`: the text goes at the start of the notification. It runs to the end of the command. See [Message in the notice](rates.md#message-in-the-notice) |
-| `-rm` | `<#...\|all>` | Together with `-alerta`: removes the alerts with those numbers (`-rm 2`, `-rm 1 2 3` or `-rm 1,2,3`), or all of them (`all`). If any number doesn't exist, none is removed |
-| `-to` | `<destination>` | Together with `-alerta`: notifies a contact (`/Jorge Pereira/`), a mention (`@Fulano Da Silva`), a group (`/Grupo L200/`), a number (`+5521999999999`) or by email (`email`) instead of your private chat. Repeat for several: a single alert that notifies all of them. See [Notify another chat or by email](rates.md#notify-another-chat-or-by-email) |
+| `-alert` | `[rule]` | Without a rule, lists the alerts; with a rule (e.g. `BTC < 90000`), creates one (bot owner or an [admin](bot.md#extra-admins) only). The coin can also come first: `/crypto BTC -alert < 90000`. See [Price alerts](rates.md#price-alerts) |
+| `-msg` | `<text>` | Together with `-alert`: the text goes at the start of the notification. It runs to the end of the command. See [Message in the notice](rates.md#message-in-the-notice) |
+| `-rm` | `<#...\|all>` | Together with `-alert`: removes the alerts with those numbers (`-rm 2`, `-rm 1 2 3` or `-rm 1,2,3`), or all of them (`all`). If any number doesn't exist, none is removed |
+| `-to` | `<destination>` | Together with `-alert`: notifies a contact (`/Jorge Pereira/`), a mention (`@Fulano Da Silva`), a group (`/Grupo L200/`), a number (`+5521999999999`) or by email (`email`) instead of your private chat. Repeat for several: a single alert that notifies all of them. See [Notify another chat or by email](rates.md#notify-another-chat-or-by-email) |
 
 Supported: BTC, ETH, SOL, HYPE, BNB, XRP, DOGE, ADA, TRX, AVAX, LINK, DOT, LTC, TON, SUI, PEPE,
 SHIB, XLM, NEAR and UNI (`CRYPTO_SUPPORTED` list in `src/currencies.js`).
@@ -31,13 +31,13 @@ The enabled coins are stored in the `settings` table, key `crypto.coins`, and su
 /crypto -l
 /crypto -a doge
 /crypto -d hype
-/crypto -alerta ETH > 4000
-/crypto -alerta BTC < 90000 -to /Grupo L200/
-/crypto -alerta SOL > 200 -to /Jorge Pereira/
-/crypto -alerta ETH < 3000 -to @Fulano Da Silva
-/crypto -alerta HYPE > 50 -to +5521999999999
-/crypto -alerta BTC > 120000 -to email
-/crypto -alerta BTC < 90000 -to /Grupo L200/ -to /Jorge Pereira/
-/crypto BTC -alerta > 90000 -to /Jorge Pereira/ -msg Hora de vender!
-/crypto -alerta -rm 1 2 3
+/crypto -alert ETH > 4000
+/crypto -alert BTC < 90000 -to /Grupo L200/
+/crypto -alert SOL > 200 -to /Jorge Pereira/
+/crypto -alert ETH < 3000 -to @Fulano Da Silva
+/crypto -alert HYPE > 50 -to +5521999999999
+/crypto -alert BTC > 120000 -to email
+/crypto -alert BTC < 90000 -to /Grupo L200/ -to /Jorge Pereira/
+/crypto BTC -alert > 90000 -to /Jorge Pereira/ -msg Hora de vender!
+/crypto -alert -rm 1 2 3
 ```

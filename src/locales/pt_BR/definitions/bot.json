@@ -67,7 +67,7 @@
       ],
       "desc": "Os usuários deste chat: num grupo, quem participa dele (e o grupo); no privado de alguém, só a pessoa; no seu privado, todos. A opção all exibe tudo em qualquer lugar (num grupo, também quem não é de lá, com o telefone escondido: cuidado para não expor ninguém). Junto do +a/+u, a resposta traz todos. Aceita -mask.",
       "ex": [
-        "/bot -list-users",
+        "/bot -lu",
         "/bot -lu all"
       ]
     },
@@ -128,7 +128,7 @@
         "t"
       ],
       "values": [],
-      "desc": "Testa tudo: escrita/leitura no cache, espaço em disco, banco SQLite, conexão com o WhatsApp, DNS e internet, velocidade (baixa 8 MB e sobe 1 MB no speed.cloudflare.com), login no SMTP, login no IMAP (se configurado) e os programas externos (Chromium, yt-dlp, ffmpeg). Cada item sai com ✅ ou ❌ (➖ = não configurado). Sozinho: as outras opções são recusadas."
+      "desc": "Testa o ambiente completo: escrita/leitura no cache, espaço em disco, banco SQLite, conexão com o WhatsApp, DNS e internet, velocidade (baixa 8 MB e sobe 1 MB no speed.cloudflare.com), login no SMTP, login no IMAP (se configurado) e os programas externos (Chromium, yt-dlp, ffmpeg). Cada item sai com ✅ ou ❌ (➖ = não configurado). Sozinho: as outras opções são recusadas."
     },
     {
       "opts": [
@@ -164,8 +164,8 @@
       ],
       "desc": "Conecta no IMAP do e-mail (QRCODE_EMAIL_IMAP_HOST, com o login do SMTP) e mostra quantas mensagens há em Sent e Trash. Com true, apaga todas as de Sent e Trash e conclui mostrando quantas foram limpas (⏳ enquanto limpa). Só o dono apaga. Sozinho: as outras opções são recusadas.",
       "ex": [
-        "/bot -flush-email",
-        "/bot -flush-email true"
+        "/bot -fe",
+        "/bot -fe true"
       ]
     },
     {
@@ -176,7 +176,7 @@
       "values": [],
       "desc": "Ofusca telefones na saída (ex.: +55219****44). Os dados salvos e os destinos usam os números completos.",
       "ex": [
-        "/bot -mask"
+        "/bot -m"
       ]
     }
   ]

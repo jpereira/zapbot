@@ -31,8 +31,8 @@ module.exports = {
         {
             opts: ['test', 't'],
             values: [],
-            desc: 'Sends the message as it would look, with you in place of whoever leaves (with the text you gave, or the current one).',
-            ex: ['/goodbye -test']
+            desc: 'Sends the message as it would look. You take the place of whoever leaves (with the text you gave, or the current one).',
+            ex: ['/goodbye -t']
         },
         {
             argv: ['[<text>]'],

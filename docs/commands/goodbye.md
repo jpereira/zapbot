@@ -8,7 +8,7 @@ the group when someone leaves (or is removed). It is **per group**, and it only 
 also [`/welcome`](welcome.md).
 
 ```text
-/goodbye [-on|-off|-test] [<text>]
+/goodbye [-on|-off|-t] [<text>]
 ```
 
 | Option | Value | Description |
@@ -22,7 +22,7 @@ also [`/welcome`](welcome.md).
 /goodbye                         → shows this group's message
 /goodbye {name} left {group}.
 /goodbye -on                     → the default text
-/goodbye -test                   → preview
+/goodbye -t                   → preview
 /goodbye -off                    → turns it off
 ```
 

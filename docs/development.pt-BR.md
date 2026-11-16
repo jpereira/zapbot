@@ -94,7 +94,7 @@ src/
   currencies.js, quotes.js, priceAlerts.js   /crypto, /rates e alertas de preço
   aliases.js            resolução, listagem e execução (as de texto) dos atalhos persistidos no banco
   schedule.js             /cron: leitura, lista e envio na hora
-  notes.js              /notes: anotações, #tags (e a descrição), imagens, o PDF do -export e o -alerta (aviso numa data/hora, uma vez)
+  notes.js              /notes: anotações, #tags (e a descrição), imagens, o PDF do -export e o -alert (aviso numa data/hora, uma vez)
   diagnostics.js        /bot -test: a bateria de testes (cache, disco, banco, WhatsApp, internet, velocidade, SMTP...)
   imap.js               /bot -flush-email: cliente IMAP mínimo (conta e esvazia Sent e Trash)
   textCommands.js    os {/comando} e o \n no texto (o /cron e o /alias): conferidos ao criar e rodados no envio
@@ -115,7 +115,7 @@ src/
   flood.js              proteção contra flood (o mesmo comando além do limite: um aviso e silêncio)
   permissions.js         quem usa os comandos (user, admin delegado), e quais (bot.users, +cmd|-cmd)
   mudo.js               /mute: quem está silenciado, os avisos cortados e a origem de cada aviso
-  defi/                 Solana, HyperEVM, Aptos e EVM (RPC, indexador, Multicall3), a Orca, o Project X, a Liquidswap, o Morpho e o Aave V3 (/defi) e o -alerta de saída da faixa
+  defi/                 Solana, HyperEVM, Aptos e EVM (RPC, indexador, Multicall3), a Orca, o Project X, a Liquidswap, o Morpho e o Aave V3 (/defi) e o -alert de saída da faixa
   watch/                regras e verificação do /watch
   events/              message_create, apagadas, editadas, reações
   commands/             commands.js (carrega definitions/), um arquivo por comando,
@@ -204,7 +204,7 @@ devolve `null`, como quando o WhatsApp não deixa editar.
 | `configuracao.test.js` | `commands.js`, settings (e a validação dos valores persistidos), parser de opções, ajuda (uma forma do uso e um exemplo por linha) e a coerência entre config, código, README e `docs/` (inclusive a ordem alfabética, os links e a versão estável da instalação) |
 | `cotacoes.test.js` | `/rates`, `/crypto` (e o filtro por moeda) e os alertas de preço (com um ou vários `-to`, o `-msg` e o `-rm` de vários) |
 | `debug.test.js` | Níveis, parser dos comandos, filtro com destaque, logs de inicialização, cópia para chats e ocultação de credenciais |
-| `defi.test.js` | Solana (base58, PDA), contas da Orca (conferidas com o SDK oficial), o Project X (HyperEVM simulada), a Liquidswap (Aptos simulada: indexador e fullnode, com o preço das pools estáveis e a chave da API), o Morpho (API simulada, com as contas conferidas com as da API), o Aave V3 (blockchain simulada, com o Multicall3 de verdade) e o `/defi`: o filtro por protocolo, o `-rm` de vários, os endereços (inteiros só no privado), a lista (com o 🔔 e o limite), o resumo do `-taxas` (com o total e o `-alerta`) e o `-alerta` (saída e volta da faixa, o `-taxas`, o `-alerta` no cadastro e vários `-to`) |
+| `defi.test.js` | Solana (base58, PDA), contas da Orca (conferidas com o SDK oficial), o Project X (HyperEVM simulada), a Liquidswap (Aptos simulada: indexador e fullnode, com o preço das pools estáveis e a chave da API), o Morpho (API simulada, com as contas conferidas com as da API), o Aave V3 (blockchain simulada, com o Multicall3 de verdade) e o `/defi`: o filtro por protocolo, o `-rm` de vários, os endereços (inteiros só no privado), a lista (com o 🔔 e o limite), o resumo do `-fees` (com o total e o `-alert`) e o `-alert` (saída e volta da faixa, o `-fees`, o `-alert` no cadastro e vários `-to`) |
 | `dependencias.test.js` | Carregamento das dependências sem aviso do módulo `punycode` |
 | `diagnostico.test.js` | O `/bot -test`: os itens com ✅/❌/➖ (rede simulada), a falha de um teste na contagem e a recusa junto de outras opções; o `-flush-email` (sem SMTP, recusa) e a busca das pastas Sent e Trash |
 | `externos.test.js` | `/cve`, `/weather`, `/news`, `/gpt`, `/tldr`, `/draw`, `/translate`, `/giphy`, `/meme`, `/joke`, `/kernel`, `/pixelart` |
@@ -219,7 +219,7 @@ devolve `null`, como quando o WhatsApp não deixa editar.
 | `mascara-telefones.test.js` | Ofuscação de telefones no `/show`, `/watch` e `/bot` |
 | `mensagens.test.js` | Gravação (com o nome da sua agenda, não o pushname) e de localizações sem interpretar a miniatura como texto ou comando, roteamento, permissões (`role`, o `bot.users` com pessoas, grupos, `true`/`false` e as permissões persistidas, bot desligado, admins extras do `bot.admins`, os atalhos `/bot +a`/`+u`, as listas do `-list-users`/`-list-users all`, os comandos de cada usuário (`+cmd`/`-cmd`), o `-reset` com a confirmação, o `/whois` e a proteção contra flood), o log dos comandos desconhecidos e a contagem do `/stats` (sem os avisos do sistema) |
 | `monitor.test.js` | Cadastro, filtro e remoção com o resolvedor compartilhado, alertas online persistentes, migração do banco, `-rm all`, consultas sequenciais, pausas, histórico por contato, limite de entradas, persistência e listagem em texto ou documento |
-| `notes.test.js` | O `/notes`: `-add`, `-list` e `-rm` (vários IDs, `all`, ID inexistente), as `#tags` (a parcial: `#idei` acha `#ideias`), `-tags`, `-desc`, `-move`, `-view` (com imagem), `-export` (PDF, com as imagens), `-search`, imagens e o `-alerta` (no `-add` e por ID ou tag, quando inválido, `-to`, disparo único e `-alerta -rm`) |
+| `notes.test.js` | O `/notes`: `-add`, `-list` e `-rm` (vários IDs, `all`, ID inexistente), as `#tags` (a parcial: `#idei` acha `#ideias`), `-tags`, `-desc`, `-move`, `-view` (com imagem), `-export` (PDF, com as imagens), `-search`, imagens e o `-alert` (no `-add` e por ID ou tag, quando inválido, `-to`, disparo único e `-alert -rm`) |
 | `mute.test.js` | `/mute` e `/unmute`: avisos silenciados por pessoa, grupo ou comunidade (só o alvo é o `-a`), a busca do alvo (nomes exatos, contato, grupo, menção e lista para escolher pelo nº) e a resposta a um aviso (de onde ele veio) |
 | `presenca.test.js` | Leitura de presença por LID, assinatura compartilhada, cache e ausência de horários válidos sem fabricar dados |
 | `saudacoes.test.js` | `/welcome` e `/goodbye`: o texto por grupo (`{name}`, `{group}`, menção), `-on`, `-off`, `-test`, os eventos `group_join`/`group_leave` e quem não dispara |
@@ -373,7 +373,7 @@ Cada entrada segue este formato:
 - `cron: true` deixa o comando rodar dentro do texto do
   [`/cron`](commands/cron.md#comandos-no-texto) (`{/crypto}`), na hora do envio. Só para comandos de
   consulta, que respondem com `msg.reply` (o texto entra no lugar e as mídias saem depois). Uma
-  opção que muda algo (`-add`, `-alerta`...) leva `cron: false` e é recusada ao criar o item. `cron: 'dono'` (no comando ou na opção) só vale
+  opção que muda algo (`-add`, `-alert`...) leva `cron: false` e é recusada ao criar o item. `cron: 'dono'` (no comando ou na opção) só vale
   se quem cria o item for o dono (o `/bot -flush-email`).
 - `role` é o nível mínimo de quem usa, e as pessoas têm o mesmo nome (`src/roles.js`): `OWNER` (o
   dono, a conta pareada ao bot), `ADMIN` (os do `bot.admins`, `/bot +a`) e `USER` (os do
@@ -408,7 +408,7 @@ Cada entrada segue este formato:
   - o comando é descrito pelo `summary`, em uma linha (o `help` não aparece no `-h`);
   - cada opção ou argumento mostra só a 1ª frase do `desc`, cortada antes do primeiro `:`, `;` ou ` (`
     e em uns 70 caracteres, então **coloque o essencial primeiro**: "Remove o alerta nº N (com
-    -alerta)", e não "Junto com -alerta: remove o alerta nº N". Se o nome e a frase cabem numa linha,
+    -alert)", e não "Junto com -alert: remove o alerta nº N". Se o nome e a frase cabem numa linha,
     ficam juntos; senão, a frase vai embaixo do nome;
   - o `ex` do comando vem no fim, no máximo 3, um por linha (`Ex: /defi` e, abaixo, os outros); sem `ex`
     no comando, usa os das opções.
