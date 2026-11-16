@@ -177,13 +177,13 @@ and a shortcut's name doesn't go in `+cmd`.
 <!-- gerado:roles -->
 ### Commands by role
 
-**user** (whoever is in `bot.users`) (26):
+**user** (whoever is in `bot.users`) (25):
 
 [`/ascii`](ascii.md), [`/bills`](bills.md), [`/carbon`](carbon.md), [`/crypto`](crypto.md),
-[`/cve`](cve.md), [`/decodeqr`](decodeqr.md), [`/get`](get.md), [`/giphy`](giphy.md),
-[`/help`](help.md), [`/joke`](joke.md), [`/kernel`](kernel.md), [`/me`](me.md), [`/meme`](meme.md),
-[`/news`](news.md), [`/noffa`](noffa.md), [`/ping`](ping.md), [`/pixelart`](pixelart.md),
-[`/qr`](qr.md), [`/rates`](rates.md), [`/sticker`](sticker.md), [`/translate`](translate.md),
+[`/cve`](cve.md), [`/get`](get.md), [`/giphy`](giphy.md), [`/help`](help.md), [`/joke`](joke.md),
+[`/kernel`](kernel.md), [`/me`](me.md), [`/meme`](meme.md), [`/news`](news.md),
+[`/noffa`](noffa.md), [`/ping`](ping.md), [`/pixelart`](pixelart.md), [`/qr`](qr.md),
+[`/rates`](rates.md), [`/sticker`](sticker.md), [`/translate`](translate.md),
 [`/uptime`](uptime.md), [`/version`](version.md), [`/walissu`](walissu.md),
 [`/weather`](weather.md), [`/whois`](whois.md)
 
@@ -243,7 +243,6 @@ target command, and `/alias /usd` shows what a shortcut does.
 | [`/crypto`](crypto.md) | | `user` | Quote for the enabled cryptos (default: BTC, ETH, SOL, and HYPE) or just the requested ones (`BTC ETH`); price alerts |
 | [`/cve`](cve.md) | | `user` | Latest published CVEs (NVD); `-highscore` only the critical ones |
 | [`/debug`](debug.md) | | `admin` | Debug logs with levels, filtering, and copying to chats |
-| [`/decodeqr`](decodeqr.md) | | `user` | Reads the QR Code in a photo (`-encode` makes one) |
 | [`/defi`](defi.md) | | `admin` | Liquidity positions on Orca and Project X: balance, range, price, and fees to collect, read on-chain; `-alert` warns when it leaves and returns to the range and when fees go over a value. `liquidswap`: LP positions on Aptos. `morpho` and `aave`: position, loans, and risk on Morpho and Aave V3 |
 | [`/demote`](demote.md) | | `admin` · delegable | Removes someone's group admin |
 | [`/draw`](draw.md) | | `admin` · delegable | Draws an image or an animated GIF (`-gif`) with GPT Image (OpenAI); on a photo, edits or animates it |

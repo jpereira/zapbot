@@ -216,9 +216,9 @@ module.exports = {
     // /tts
     'tts.usage': '❌ Usage: /tts <text> (or reply to a text message)',
 
-    // /qr, /decodeqr
+    // /qr
     'qr.usage': '❌ Usage: /qr <text> (or reply to a text message). To read a QR Code: /qr -d on a photo.',
-    'qr.decodeUsage': '❌ Reply to a photo of a QR Code with /decodeqr (or send the photo with /decodeqr as the caption).',
+    'qr.decodeUsage': '❌ Reply to a photo of a QR Code with /qr -d (or send the photo with /qr -d as the caption).',
     'qr.tooLong': '❌ The text has {n} characters: a QR Code takes up to {max}.',
     'qr.download': '❌ I could not download the image.',
     'qr.notFound': '🔎 No QR Code found in the image.',

@@ -9,13 +9,13 @@ module.exports = {
     usage: '/qr [-decode|-d] [<text>]',
     aliases: [],
     summary: 'Makes the QR Code of a text',
-    help: 'Makes the QR Code (PNG image) of the text, up to 1000 characters. With no text, uses the replied message\'s. With -decode, it does the opposite: reads the QR Code in a photo (replied, or sent with /qr -d as the caption) and replies with its text (same as /decodeqr).',
+    help: 'Makes the QR Code (PNG image) of the text, up to 1000 characters. With no text, uses the replied message\'s. Replying to a photo with /qr (or sending a photo with /qr as the caption) does the opposite: it reads the QR Code and replies with its text, the same as -decode. Typed text always makes a QR Code.',
     ex: ['/qr https://example.com', '/qr -d'],
     cmd_opts: [
         {
             opts: ['decode', 'd'],
             values: [],
-            desc: 'Reads the QR Code in a photo instead of making one (same as /decodeqr).',
+            desc: 'Reads the QR Code in a photo instead of making one (automatic when you reply to a photo with no text).',
             ex: ['/qr -d']
         },
         {

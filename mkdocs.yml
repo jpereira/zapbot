@@ -117,7 +117,6 @@ nav:
       - /crypto: commands/crypto.md
       - /cve: commands/cve.md
       - /debug: commands/debug.md
-      - /decodeqr: commands/decodeqr.md
       - /defi: commands/defi.md
       - /demote: commands/demote.md
       - /draw: commands/draw.md

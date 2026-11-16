@@ -1,9 +1,8 @@
 /*
- * /qr and /decodeqr commands: generate and read QR Codes.
+ * /qr command: generates and reads QR Codes.
  * /qr <text>            → the QR Code of the text (without text: the replied message's)
  * /qr -decode            → reads the QR Code of an image (replied, or the photo with the caption)
- * /decodeqr              → the same as /qr -decode
- * /decodeqr -encode <t>  → the same as /qr <text>
+ * /qr (without text, replying to a photo, or the photo with the /qr caption) → the same as /qr -decode
  */
 
 const jsQR = require('jsqr');
@@ -19,7 +18,7 @@ const MAX_CHARACTERS = 1000;
 const SIDE_MAX = 1600; // a QR Code photo does not need more
 
 // The command text without the mode option (preserves the line breaks of what was typed)
-const withoutMode = (args) => args.replace(/(^|\s)-(?:decode|d|encode|e)(?=\s|$)/g, ' ').trim();
+const withoutMode = (args) => args.replace(/(^|\s)-(?:decode|d)(?=\s|$)/g, ' ').trim();
 
 async function generate({ msg, args, quotedMsg }) {
     const textAlt = withoutMode(args) || String(quotedMsg?.body ?? '').trim();
@@ -72,7 +71,10 @@ async function read({ msg, quotedMsg }) {
     }
 }
 
-const cmdQr = (ctx) => (ctx.opts?.given.has('decode') ? read(ctx) : generate(ctx));
-const cmdDecodeqr = (ctx) => (ctx.opts?.given.has('encode') ? generate(ctx) : read(ctx));
+// Without -decode, the photo with no typed text is also read: replying to a QR Code with /qr already decodes
+const cmdQr = (ctx) => {
+    const soAPhoto = !withoutMode(ctx.args ?? '') && [ctx.quotedMsg, ctx.msg].some(isPhoto);
+    return ctx.opts?.given.has('decode') || soAPhoto ? read(ctx) : generate(ctx);
+};
 
-module.exports = { cmdDecodeqr, cmdQr, readQr };
+module.exports = { cmdQr, readQr };

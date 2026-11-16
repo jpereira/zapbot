@@ -217,7 +217,6 @@ e deixe o bot do seu jeito:
 | [`/crypto`](https://jpereira.github.io/zapbot/pt-BR/commands/crypto/) | | `user` | Cotação das criptos ativadas (padrão: BTC, ETH, SOL e HYPE) ou só das pedidas (`BTC ETH`); alertas de preço |
 | [`/cve`](https://jpereira.github.io/zapbot/pt-BR/commands/cve/) | | `user` | Últimas CVEs publicadas (NVD); `-highscore` só as críticas |
 | [`/debug`](https://jpereira.github.io/zapbot/pt-BR/commands/debug/) | | `admin` | Logs de debug com níveis, filtro e cópia para chats |
-| [`/decodeqr`](https://jpereira.github.io/zapbot/pt-BR/commands/decodeqr/) | | `user` | Lê o QR Code de uma foto (`-encode` gera um) |
 | [`/defi`](https://jpereira.github.io/zapbot/pt-BR/commands/defi/) | | `admin` | Posições de liquidez da Orca e do Project X: saldo, faixa, preço e taxas a coletar, lidos on-chain; `-alert` avisa quando sai e volta para a faixa e quando as taxas passam de um valor. `liquidswap`: posições de LP na Aptos. `morpho` e `aave`: posição, empréstimos e risco no Morpho e no Aave V3 |
 | [`/demote`](https://jpereira.github.io/zapbot/pt-BR/commands/demote/) | | `admin` · delegável | Tira o admin de alguém do grupo |
 | [`/draw`](https://jpereira.github.io/zapbot/pt-BR/commands/draw/) | | `admin` · delegável | Desenha uma imagem ou um GIF animado (`-gif`) com o GPT Image (OpenAI); numa foto, edita ou anima |
