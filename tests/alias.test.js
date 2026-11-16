@@ -386,3 +386,16 @@ test('-desc sem comando atualiza só a descrição de um alias existente', async
     assert.match((await bot.replyAlt('/alias nada -d "x"'))[0], /não encontrado/);
     await bot.replyAlt('/alias -rm all');
 });
+
+test('${N:--l}: o padrão que começa com "-"; o travessão do teclado do celular vale como "--"', async () => {
+    const { applyParams } = bot.src('aliases');
+    assert.equal(applyParams('/forward ${1:--l} #nopt', '').comando, '/forward -l #nopt');
+    assert.equal(applyParams('/forward ${1:--l} #nopt', '-dry').comando, '/forward -dry #nopt');
+    assert.equal(applyParams('/forward ${1:—l} #nopt', '').comando, '/forward -l #nopt', 'travessão');
+    assert.equal(applyParams('/forward ${1:–l} #nopt', '').comando, '/forward -l #nopt', 'meia-risca');
+    assert.equal(applyParams('/rates ${1:-USD}', '').comando, '/rates USD', 'o padrão normal não muda');
+
+    // Saved with the dash, it is fixed
+    await bot.replyAlt('/alias nopt /forward ${1:—l} #nopt');
+    assert.equal((await aliases()).find(a => a.name === '/nopt').command, '/forward ${1:--l} #nopt');
+});

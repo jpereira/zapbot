@@ -3,7 +3,7 @@
  */
 const { botConfig } = require('../botConfig');
 const { dbGet, dbReady, dbRun } = require('../db');
-const { aliasBlock, textIsAlias, listAliases } = require('../aliases');
+const { aliasBlock, fixDash, textIsAlias, listAliases } = require('../aliases');
 const { commandsInText, commandsError, breakLines } = require('../textCommands');
 const { findCommand } = require('./base');
 const { t } = require('../i18n');
@@ -111,6 +111,7 @@ async function cmdAlias({ msg, args }) {
             if (errorAlt) return msg.reply(errorAlt);
         }
     }
+    commandAlt = fixDash(commandAlt);
     await dbRun(`INSERT INTO command_aliases (name, description, command, quiet) VALUES (?, ?, ?, ?)
         ON CONFLICT(name) DO UPDATE SET description = excluded.description,
         command = excluded.command, quiet = excluded.quiet`, [nameAlt, description, commandAlt, quiet ? 1 : 0]);

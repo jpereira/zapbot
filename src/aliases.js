@@ -20,7 +20,12 @@ const textIsAlias = (salvo) => !salvo.startsWith('/');
  * Command alias parameters: $1, $2... take the typed arguments, in order.
  * The used ones leave the list and the leftover go to the end; a $N without an argument stays empty.
  */
+// The phone keyboard swaps "--" for "—" (em dash): "${1:--l}" arrives as "${1:—l}". Inside the
+// ${N:...} the dash works like the ":-" of the default plus the "-" of a value that starts with "-".
+const fixDash = (textAlt) => String(textAlt).replace(/(\$\{[1-9]\d*:)[—–]/g, '$1--');
+
 function applyParams(salvo, args) {
+    salvo = fixDash(salvo);
     const typed = args.split(/\s+/).filter(Boolean);
     const used = new Set();
     // $N or ${N:-default value} (the default applies when argument N was not typed)
@@ -147,4 +152,4 @@ function aliasBlock(a) {
     ].filter(Boolean).join('\n');
 }
 
-module.exports = { applyParams, aliasBlock, textIsAlias, isCommandOrAlias, textRunAlias, listAliases, resolverAlias };
+module.exports = { applyParams, fixDash, aliasBlock, textIsAlias, isCommandOrAlias, textRunAlias, listAliases, resolverAlias };
