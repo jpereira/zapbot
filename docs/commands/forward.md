@@ -10,7 +10,7 @@ replies right away with `⏳ Forwarding message...` and, when it finishes, edits
 with the result (below).
 
 ```text
-/forward [-q|-q] [-d|-d] [-N|-N,-N|-N..-N] [/contact/|@mention|+number]... [-to <destination>]...
+/forward [-q|-q] [-d|-d] [#list]... [-N|-N,-N|-N..-N] [/contact/|@mention|+number]... [-to <destination>]...
 ```
 
 | Option | Value | Description |
@@ -20,6 +20,11 @@ with the result (below).
 | `-N` | `-N,-N` · `-N..-N` | Without a reply: the position of the messages above (see [Several messages](#several-messages--n)) |
 | `-quiet`, `-q` | | Shows no status: neither the notice while sending nor the list at the end. Only failures are reported |
 | `-dry`, `-d` | | Only validates the recipients: replies with who was found (or what is wrong) and sends nothing. Needs no reply or positions |
+| `-add`, `-a` | `#list <recipients>...` | Creates the [recipient list](#recipient-lists) (or adds to it). Recipients are resolved now and saved with their ids; never replaces |
+| `-list`, `-l` | `[#list...]` | Without a name, all the lists with their size; with names, their recipients (the name can be partial) |
+| `-rm`, `-r` | `<#list...\|all>` · `#list <recipient>...` | Removes the whole list, or only the given recipients from it. If any does not exist, nothing is removed |
+| `-move`, `-m` | `#list #newlist` | Renames the list (if the new name exists, the two merge) |
+| `-desc` | `#list [<description>\|-rm]` | List description, shown in `-list`. Without text, shows it; with `-rm`, deletes it |
 
 ```text
 /forward /Fulano de Tal/
@@ -44,6 +49,39 @@ has the recipient's type (👤 contact, 👥 group, 📧 email). If some sending
 down...), the title is `⚠️ Forwarded to 2 of 3` and the one that failed comes with `❌` and the reason
 (`👤 Beltrano · ❌ blocked chat`); the others are still sent. If all fail, the title is `❌ I could
 not forward the message`.
+
+## Recipient lists
+
+Like the tags of [`/notes`](notes.md), a `#list` is a saved group of recipients, so you do not have to
+type them every time (a mailing list).
+
+```text
+/forward -a #friends /Jorge Pereira/ /Rossam Silva/ +5521999999999 a@b.com   creates it (or adds to it)
+/forward -a #friends -to /Family/                                          -to also works as a member
+/forward -l                                                                  all the lists
+/forward -l #friends                                                         the recipients of #friends
+/forward -r #friends /Jorge Pereira/                                        takes a recipient out
+/forward -r #friends 2                                                      ...or by the number shown in -l
+/forward -r #friends                                                        deletes the list
+/forward -m #friends #team                                                renames (merges if #team exists)
+/forward -desc #friends The usual crowd                                      description
+
+/forward #friends                       sends to the whole list (reply, or -1 ...)
+/forward #friends #work /Maria/ -to x@y.com    several lists and single recipients, nobody twice
+/forward -d #friends                  validates and shows who would receive, sending nothing
+```
+
+- The recipients are resolved **when you add them** (you pick from the list if a name is ambiguous) and
+  saved with their ids, so sending is deterministic.
+- `-add` only adds, it never replaces: to start over, `-rm #friends` and `-add` again.
+- To send or delete, the list needs its **full name**; the partial name (`#fri`) only works for reading
+  (`-list`, `-desc`).
+- `-rm` is all or nothing: if any list or recipient does not exist, nothing is removed. Taking out the
+  last recipient removes the list.
+- Names are lowercase, with letters, digits, `_` and `-`.
+- A send (lists and single recipients together) and each list are limited by the setting
+  `forward.maxRecipients` (default 30).
+- Admin only, like the rest of the command.
 
 ## Header
 
