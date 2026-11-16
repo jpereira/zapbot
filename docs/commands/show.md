@@ -33,7 +33,7 @@ enter the deleted list.
 | `-edited`, `-e` | | Edited messages, with the text from before and after. Each edit is an item: a message edited twice shows up twice |
 | `-status`, `-s` | | Deleted statuses: in a private chat, the person's; in your private chat, with no chat, everyone's |
 | `-reaction`, `-r` | | Removed or changed reactions, with the previous reaction (and the new one, if changed) and the text of the message reacted to. See [Reactions](#reactions) |
-| `-list`, `-l` | `[chat]` | Lists all chats with content in the cache (in any chat), numbered for `/show <nº>`, marking the current chat with `← this chat`. With a chat (number, name, `@mention` or `/regex/`), only the ones that match. See [List](#list) |
+| `-list`, `-l` | `[chat]` | Lists all chats with content in the cache (in any chat), numbered for `/show <no.>`, marking the current chat with `← this chat`. With a chat (number, name, `@mention` or `/regex/`), only the ones that match. See [List](#list) |
 | `-query`, `-q` | `<text\|/regex/flags>` | Searches for the ones that have the text (ignoring case and accents) or that match the regex: in this chat, in the requested chat or, in your private chat, in all of them. Without `-N`: the 5 most recent. See [Search](#search) |
 | `-flush`, `-f` | | Removes from the cache the deleted ones of this chat or, with `-e`, `-s`, `-r` or chat, whatever was requested (in your private chat, with no chat: from all chats) |
 | `-mask`, `-m` | | Obfuscates phone numbers in the texts and captions of this run. E.g.: `+55219****44` |
@@ -45,7 +45,7 @@ applies to this run; the data stored in the cache stays complete.
 with options but no chat you get only the deleted ones of this chat; with a chat (or in a search in
 your private chat), you get everything together, by date.
 
-![Demonstração do /show](../assets/demo/02-show.gif)
+![Demo of /show](../assets/demo/02-show.gif)
 
 ```text
 /show                       → in a private chat, lists the cache; in a group, the last deleted one
@@ -63,9 +63,9 @@ your private chat), you get everything together, by date.
 /show -f                    → deletes this chat's deleted ones from the cache
 /show -e -f                 → deletes this chat's edited ones from the cache
 /show -f Work               → deletes everything from the Work chat from the cache
-/show -q pix                → the deleted ones with "pix" (in your private chat: everything, from all chats)
-/show -e -q "bom dia" -10   → up to 10 edited ones with "bom dia"
-/show -5 -q /pix|boleto/i   → up to 5 deleted ones that match the regex
+/show -q refund                → the deleted ones with "refund" (in your private chat: everything, from all chats)
+/show -e -q "good morning" -10   → up to 10 edited ones with "good morning"
+/show -5 -q /refund|invoice/i   → up to 5 deleted ones that match the regex
 ```
 
 In your private chat, when there's nothing from this chat, the bot suggests the next steps, one per
@@ -97,19 +97,19 @@ the notice `⌛ No number chosen…`). It works in any chat.
 
 `-q <text>` filters by the snippet, ignoring case and accents (for edited ones, by the text from
 before or after; for reactions, by the reaction or the text of the message reacted to). With spaces,
-it goes in quotes (`-q "bom dia"`). The scope is the usual one: this chat, the requested chat or, **in
+it goes in quotes (`-q "good morning"`). The scope is the usual one: this chat, the requested chat or, **in
 your private chat, all chats** (and, without `-d`, `-e`, `-s` or `-r`, all types). Without `-N`, you
 get the 5 most recent that match; the summary says how many were found in total.
 
-With slashes, it's a JavaScript regex, with flags (`-q /pix|boleto/i`). It tests the text as it came:
+With slashes, it's a JavaScript regex, with flags (`-q /refund|invoice/i`). It tests the text as it came:
 without the `i` flag, it's case-sensitive, and accents count. The `g` and `y` flags are ignored.
 
 ```text
-/show -2 -q pix
-♻️ 2 deleted messages with "pix" (the 2 most recent of 4; use -N for more)
+/show -2 -q refund
+♻️ 2 deleted messages with "refund" (the 2 most recent of 4; use -N for more)
 
-/show -5 -q /\bpix\b|boleto/i
-♻️ 2 deleted messages with "/\bpix\b|boleto/i"
+/show -5 -q /\bpix\b|invoice/i
+♻️ 2 deleted messages with "/\bpix\b|invoice/i"
 ```
 
 `-q` doesn't combine with `-l` or `-f`. Without the text, or with an invalid regex, the bot warns
@@ -123,7 +123,7 @@ you:
 
 ## List
 
-`-l` shows how many there are of each type and the chats, numbered for `/show <nº>`. The tips at the
+`-l` shows how many there are of each type and the chats, numbered for `/show <no.>`. The tips at the
 end come one per line:
 
 ```text
@@ -145,7 +145,7 @@ end come one per line:
    -f removes this chat's from the cache (in your private chat: everyone's)
 ```
 
-With a chat (`/show -l <nº, nome, @menção ou /regex/>`), `-l` shows only the chats that match (all of
+With a chat (`/show -l <no., name, @mention or /regex/>`), `-l` shows only the chats that match (all of
 them, without asking which one), keeping the number from the full list, and the counts per type
 become just theirs. The title shows the chat name when only one matches; with several, what was
 typed. With `@mention`, the person's private chat and statuses are included:

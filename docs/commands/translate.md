@@ -6,8 +6,8 @@ one given with `-to`.
 
 | Option | Value | Description |
 |---|---|---|
-| `[texto]` | | The text (up to 5000 characters, line breaks included). Without it, the replied message |
-| `-to`, `-p` | `<idioma>` | Target language, by code: `en`, `es`, `fr`, `it`, `de`, `ja`, `zh-CN`... Case doesn't matter. Default: setting `translate.lang` (`pt`) |
+| `[text]` | | The text (up to 5000 characters, line breaks included). Without it, the replied message |
+| `-to`, `-p` | `<language>` | Target language, by code: `en`, `es`, `fr`, `it`, `de`, `ja`, `zh-CN`... Case doesn't matter. Default: setting `translate.lang` (`pt`) |
 | `-list`, `-l` | | Lists the accepted languages, with their code |
 
 ```text

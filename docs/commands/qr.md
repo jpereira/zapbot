@@ -6,7 +6,7 @@ Code in a photo. **Replying to a photo with `/qr`** (or sending a photo with `/q
 `jsqr` reads it: nothing goes to an external service.
 
 ```text
-/qr [-d|-d] [<text>]
+/qr [-decode|-d] [<text>]
 ```
 
 | Option | Value | Description |

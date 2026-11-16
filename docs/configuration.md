@@ -82,8 +82,8 @@ setting, which `gpt.pricing.auto` keeps up to date (see [Settings](settings.md))
 | Variable | Example | Description |
 |---|---|---|
 | `AAVE_WALLET_ADDRESS` | `0x1234...abcd` | Wallet (public address, `0x` plus 40 hexadecimal characters) queried by [`/defi aave`](commands/defi.md#aave-v3) when no wallet is registered (`/defi aave -wallet`). If empty, the bot uses the `defi.aave.wallet` setting. Never put a private key or seed here: the query is read-only. |
-| `ETHEREUM_RPC_URL` | `https://eth-mainnet.g.alchemy.com/v2/<chave>` | Ethereum RPC for `/defi aave`. If empty, the `defi.ethereum.rpc` setting is used (the public one, which rate limits queries). |
-| `BASE_RPC_URL` | `https://base-mainnet.g.alchemy.com/v2/<chave>` | Base RPC for `/defi aave`. If empty, the `defi.base.rpc` setting is used (the public one, which rate limits queries). |
+| `ETHEREUM_RPC_URL` | `https://eth-mainnet.g.alchemy.com/v2/<key>` | Ethereum RPC for `/defi aave`. If empty, the `defi.ethereum.rpc` setting is used (the public one, which rate limits queries). |
+| `BASE_RPC_URL` | `https://base-mainnet.g.alchemy.com/v2/<key>` | Base RPC for `/defi aave`. If empty, the `defi.base.rpc` setting is used (the public one, which rate limits queries). |
 
 ## Aptos (optional)
 
@@ -101,7 +101,7 @@ setting, which `gpt.pricing.auto` keeps up to date (see [Settings](settings.md))
 
 | Variable | Example | Description |
 |---|---|---|
-| `GIPHY_API_KEY` | | GIPHY key used by `/giphy` ([developers.giphy.com](https://developers.giphy.com/)). If empty, the bot uses the `giphy.api.key` setting (`/set giphy.api.key <chave>`). |
+| `GIPHY_API_KEY` | | GIPHY key used by `/giphy` ([developers.giphy.com](https://developers.giphy.com/)). If empty, the bot uses the `giphy.api.key` setting (`/set giphy.api.key <key>`). |
 
 ### How to generate the GIPHY key
 
@@ -173,6 +173,6 @@ QRCODE_EMAIL_SMTP_PORT="465"
 QRCODE_EMAIL_SMTP_USER="meubot@gmail.com"
 QRCODE_EMAIL_SMTP_PASS="abcd efgh ijkl mnop"
 QRCODE_EMAIL_SMTP_FROM="ZapBot <meubot@gmail.com>"
-QRCODE_EMAIL_SMTP_TO="Eu <eu@exemplo.com>"
+QRCODE_EMAIL_SMTP_TO="Me <me@example.com>"
 QRCODE_EMAIL_SMTP_ANTIPHISHING="TroqueEstaFrase-7f3a"
 ```

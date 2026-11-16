@@ -8,16 +8,16 @@ adds the most recent hits. `/watch -10` shows the last ten matches of all rules,
 ![/watch demo](../assets/demo/10-watch.gif)
 
 ```text
-/watch /Defesa.*Civil/i                → creates a rule (regex)
-/watch /pix/i -in /Jorge Pereira/      → only in Jorge's messages
-/watch /chuva/i -in /Defesa Civil/     → only in the channel's posts
-/watch promoção -to /Grupo Ofertas/    → notifies in the group, not in your private chat
+/watch /Civil.*Defense/i                → creates a rule (regex)
+/watch /refund/i -in /Jorge Pereira/      → only in Jorge's messages
+/watch /chuva/i -in /Civil Defense/     → only in the channel's posts
+/watch sale -to /Deals Group/    → notifies in the group, not in your private chat
 /watch                                 → the rules and the latest matches
 /watch -10                             → the last 10 matches
 /watch -s 3                            → the matches of rule #3, in full
 /watch -s /Jorge/                      → the same, by rule
-/watch -s /Jorge/ -q "carro"           → only the ones with "carro"
-/watch -s 3 -q /carr(o|ão)/i           → only the ones that match the regex
+/watch -s /Jorge/ -q "car"           → only the ones with "car"
+/watch -s 3 -q /cars?/i           → only the ones that match the regex
 /watch -s 3 -to /Jorge Pereira/        → changes the destinations of rule #3
 /watch -r 3                          → removes rule #3
 /watch -f /Jorge/                  → clears the hits of /Jorge/
@@ -31,7 +31,7 @@ A rule without `-in` applies everywhere. With `-in`, you choose the source:
 - **Group:** tests messages received only in that group.
 - **Channel:** tests posts from that `@newsletter`. Accepts the channel name or ID.
 
-Names with spaces go between slashes or quotes (`/Jorge Pereira/`, `"Grupo Ofertas"`). If there are
+Names with spaces go between slashes or quotes (`/Jorge Pereira/`, `"Deals Group"`). If there are
 several results, the bot presents a list to choose from. Email isn't an accepted source. The source
 is stored with the rule and survives restarts.
 
@@ -104,16 +104,16 @@ A listing, with the tips at the end, one per line:
 ```text
 👀 WATCH: RULES (2/20)
 
-#1  /Defesa.*Civil/i  (1) only in 📰 Defesa Civil
-#2  /pix/i  (0) only in 👤 Jorge Pereira
+#1  /Civil.*Defense/i  (1) only in 📰 Civil Defense
+#2  /refund/i  (0) only in 👤 Jorge Pereira
 
 👀 WATCH: HITS
 🔎 Rules: all
 📦 Total: 1
 
 1. 📅 10/6/2026, 01:09:35 · 🔎 #1
-    📰 Defesa Civil
-    💬 "A Defesa Civil informa: alerta de chuva"
+    📰 Civil Defense
+    💬 "Civil Defense reports: rain alert"
 
 💡 Tips (N: the number or the rule itself)
 /watch -s N shows the full messages.
@@ -126,23 +126,23 @@ A listing, with the tips at the end, one per line:
 ## Search
 
 `-q <text>` filters the matches by the message body, ignoring case and accents.
-With spaces, put it in quotes (`-q "bom dia"`). It works with `-s` (of one rule or, without N, of
-all) and in the listing (`/watch -q carro`). The total counts only the ones that match, and `-N`
+With spaces, put it in quotes (`-q "good morning"`). It works with `-s` (of one rule or, without N, of
+all) and in the listing (`/watch -q car`). The total counts only the ones that match, and `-N`
 limits how many are displayed. It can't be combined with `-l`, `-rm`, `-flush` or a new rule.
 
-With slashes, it's a regex with flags, as in rules (`-q /carr(o|ão)/i`): it tests the text as it
+With slashes, it's a regex with flags, as in rules (`-q /cars?/i`): it tests the text as it
 came, so, without the `i` flag, it's case sensitive, and accents count.
 
 ```text
-/watch -s /Jorge/ -q "carro"
+/watch -s /Jorge/ -q "car"
 👀 WATCH: HITS
 🔎 Rule #3: /Jorge/
-🔍 Search: "carro"
+🔍 Search: "car"
 📦 Total: 1
 
 1. 📅 10/9/2026, 10:12:40
-    👥 Família · 👤 Fulano
-    💬 "Jorge vendeu o carro"
+    👥 Family · 👤 Fulano
+    💬 "Jorge sold the car"
 ```
 
 ## Notify somewhere else
@@ -152,7 +152,7 @@ group, number, mention or email, as in the other commands
 ([Destinations](index.md#destinations-contact-group-number-or-email)).
 
 ```text
-/watch /vaga de emprego/i -in /Grupo Trabalho/ -to /Grupo Carreira/ -to email
+/watch /job opening/i -in /Work Group/ -to /Career Group/ -to email
 /watch -s 1 -to /Jorge Pereira/
 /watch -s 1 -to email
 /watch -s 1 -to off

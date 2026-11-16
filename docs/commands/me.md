@@ -4,7 +4,7 @@ Sends the message you typed. Each `{/command args}` runs on the spot and the rep
 as in [`/cron`'s commands in the text](cron.md#commands-in-the-text). A typed `\n` becomes a line break.
 
 ```text
-/me [-r|-r <n>] <mensagem>
+/me [-repeat|-r <n>] <message>
 ```
 
 | Option | Value | Description |
@@ -12,10 +12,10 @@ as in [`/cron`'s commands in the text](cron.md#commands-in-the-text). A typed `\
 | `-repeat`, `-r` | `<n>` | Repeats the text `n` times (from 1 to `me.maxRepeat`, default 500), back to back, in a single message: `/me -r 3 Haha!` sends `Haha!Haha!Haha!`. The `{/command}`s run only once |
 
 ```text
-/me Minha mensagem
-/me Linha 1\nLinha 2
+/me My message
+/me Line 1\nLine 2
 /me -r 3 Haha!
-/me O preço do Bitcoin está em {/crypto BTC}
+/me The Bitcoin price is {/crypto BTC}
 ```
 
 - The message goes straight to the chat, without quoting the command you typed.

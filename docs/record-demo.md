@@ -80,8 +80,8 @@ Without `-mask`: use a test contact.
 ### 4. Joining and leaving groups: `/join` and `/leave`
 
 ```text
-/join -i https://chat.whatsapp.com/<codigo-de-um-grupo-de-teste>
-/join https://chat.whatsapp.com/<codigo-de-um-grupo-de-teste>
+/join -i https://chat.whatsapp.com/<codigo-de-um-group-de-teste>
+/join https://chat.whatsapp.com/<codigo-de-um-group-de-teste>
 /join -l
 /leave -l
 /leave 1
@@ -92,8 +92,8 @@ Without `-mask`: `-l` lists your groups. Do the scene with few groups, only the 
 ### 5. Stickers: `/sticker`
 
 ```text
-/sticker -txt "Bom dia!"
-/sticker -txt "Partiu praia?" -bg "#2980B9" -fg "#FFFFFF"
+/sticker -txt "Good morning!"
+/sticker -txt "Beach today?" -bg "#2980B9" -fg "#FFFFFF"
 ```
 
 Then, reply to a photo of yours with the commands below (or send the photo with `/sticker` as
@@ -133,9 +133,9 @@ Always with `-mask` (hides balances and wallets):
 ### 9. Scheduling messages: `/cron`
 
 ```text
-/cron 1m Oi do futuro!
+/cron 1m Hi from the future!
 /cron
-/cron -r d 8h Bom dia!
+/cron -r d 8h Good morning!
 /cron
 ```
 
@@ -144,12 +144,12 @@ See the options (`-to`, `-repeat`, removing) in [`/cron`](commands/cron.md).
 ### 10. Watching messages: `/watch`
 
 ```text
-/watch /pix/i -in /Fulano/ -m
+/watch /refund/i -in /Fulano/ -m
 /watch -m
 /watch -10 -m
 ```
 
-Send a "pix" from the other account and show the alert arriving in your private chat.
+Send a "refund" from the other account and show the alert arriving in your private chat.
 
 ### 11. Statistics: `/stats`
 
@@ -167,7 +167,7 @@ Without `-mask`: in a public recording, pick a test group.
 A shortcut that runs several commands at once:
 
 ```text
-/alias demo -d "Mostra o bot em ação" /ping
+/alias demo -d "Shows the bot in action" /ping
 /demo
 /batch /uptime
 /crypto btc

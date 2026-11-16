@@ -13,9 +13,9 @@ Replying to a message, its text goes before the request. `/gpt -img` and `/gpt -
 code: the result is the same.
 
 ```text
-/draw um gato astronauta em aquarela
+/draw an astronaut cat in watercolor
 /draw um castelo na neve
-/draw -g um gato dançando
+/draw -g a dancing cat
 /draw -m                       → the current model and the ones your key sees
 /draw -h                       → command help
 ```
@@ -43,8 +43,8 @@ photo (`v1/images/edits`) according to the request. A sticker works too; a GIF o
 a PNG.
 
 ```text
-(respondendo uma foto)  /draw coloque um chapéu nele
-(foto com a legenda)    /draw transforme em desenho a lápis
+(replying to a photo)  /draw put a hat on it
+(photo with the caption)    /draw turn it into a pencil drawing
 ```
 
 ## Animated GIF (`-gif`)
@@ -54,12 +54,12 @@ It's the `output_format: gif` of the `gpt-image-2.6-*` models, with `frame_count
 movement.
 
 ```text
-/draw -g um gato dançando
+/draw -g a dancing cat
 → ⏳ Processing /draw, hold on.
-→ (the GIF, looping) 🎞️ um gato dançando
+→ (the GIF, looping) 🎞️ a dancing cat
 
-/draw -g -f 6 -ms 300 uma bandeira ao vento
-(respondendo uma foto)  /draw -gif como se estivesse nadando
+/draw -g -f 6 -ms 300 a flag in the wind
+(replying to a photo)  /draw -gif as if it were swimming
 ```
 
 - Uses the model from the `gpt.image.gifModel` setting (default `gpt-image-2.6-flare`;

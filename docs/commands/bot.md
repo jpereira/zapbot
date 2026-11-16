@@ -59,7 +59,7 @@ Users (4)
 • 👑 +a · 👤 Jorge Pereira · +5521999999999
 • 👑 +a 🗣️ +u · 👤 Ana Souza · +5511988887777
 • 🗣️ +u · 👤 Maria Lucia · +5521999982222
-• 🗣️ +u · 👤 Maria Lucia · +5521999986666 · only in 👥 Amigos Faculdade
+• 🗣️ +u · 👤 Maria Lucia · +5521999986666 · only in 👥 College Friends
 
 Permissions
 👑 +a: admin, uses everything
@@ -81,7 +81,7 @@ When someone is left out, the list says how many and how to see everyone, being 
 in the group who isn't from there:
 
 ```text
-/bot -lu               (in the group Amigos Faculdade)
+/bot -lu               (in the group College Friends)
 Users (2) in this group
 • 🗣️ +u · 👤 Jorge Chip L200 · +5521999983333
 • 🗣️ +u · 👤 Sofia Izabel · +5521•••••7777 · only in this group
@@ -111,7 +111,7 @@ When to use each option:
 | Situation | Command |
 |---|---|
 | Someone is abusing the commands in a group | `/bot -u`, typed in the group (or `/bot -u /Grupo/`) |
-| Allow the bot for the family, only in their group | `/bot +u`, typed in the group (or `/bot +u /Grupo Familia/` from any chat) |
+| Allow the bot for the family, only in their group | `/bot +u`, typed in the group (or `/bot +u /Family Group/` from any chat) |
 | Allow it for one person, in any chat | `/bot +u /Maria Lucia/` |
 | Allow only some commands for someone | `/bot +u +cmd /rates,/crypto /Sofia Izabel/` |
 | Allow only `/gpt` for the Familia group | `/bot +u +cmd /gpt`, typed in the group (or `/bot +u +cmd /gpt /Familia/`) |
@@ -181,15 +181,15 @@ delegable).
 |---|---|
 | A person, added in your private chat or theirs (`/bot +u /Maria Lucia/`) | In any chat |
 | A person, added in a group (`/bot +u /Maria Lucia/`, typed in the group) | Only in that group. In private, the bot replies where they can |
-| A group (`/bot +u`, typed in the group, or `/bot +u /Amigos Faculdade/`) | Anyone, inside the group (not in each one's private chat) |
+| A group (`/bot +u`, typed in the group, or `/bot +u /College Friends/`) | Anyone, inside the group (not in each one's private chat) |
 | Nobody, the default (`/set bot.users false`) | Only you and the admins use commands |
 | Everyone (`/set bot.users true`) | Anyone, in any chat (`/bot` warns) |
 
 ```text
 /bot +u /Maria Lucia/                      → in your private chat: Maria, in any chat
-/bot +u /Maria Lucia/                      → in the group Amigos Faculdade: Maria, only there
+/bot +u /Maria Lucia/                      → in the group College Friends: Maria, only there
 /bot +u                                    → typed in a group: the group; in someone's private chat: the person
-/bot +u /Amigos Faculdade/ @Fulano +5521999999999  → several at once
+/bot +u /College Friends/ @Fulano +5521999999999  → several at once
 /bot -u /Maria Lucia/                      → in the group: removes the permission there
 /bot -u /Maria Lucia/                      → in your private chat: removes all of Maria's
 /bot -u                                    → removes the current chat
@@ -198,7 +198,7 @@ delegable).
 Someone who only has permission in groups and sends a command in private gets:
 
 ```text
-🚫 No permission for commands in private. Allowed only in: 👥 Amigos Faculdade.
+🚫 No permission for commands in private. Allowed only in: 👥 College Friends.
 ```
 
 The reply of `+a`/ `-a`/ `+u`/ `-u` is the chat's [user list](#user-list), with ✅ on whoever
@@ -206,7 +206,7 @@ just came in; whoever left comes in a 🗑️ line on top. With nobody on the li
 about who uses the commands (`🔒 Commands: owner only`):
 
 ```text
-/bot +u /Sofia Izabel/    (in the group Amigos Faculdade)
+/bot +u /Sofia Izabel/    (in the group College Friends)
 Users (2) in this group
 • 🗣️ +u · 👤 Jorge Chip L200 · +5521999983333
 • 🗣️ +u · 👤 Sofia Izabel · +5521•••••7777 · only in this group ✅
@@ -220,7 +220,7 @@ List users: /bot -list-users
 ```
 
 ```text
-/bot -u /Sofia Izabel/    (in the group Amigos Faculdade)
+/bot -u /Sofia Izabel/    (in the group College Friends)
 🗑️ 👤 Sofia Izabel · +5521•••••7777 · only in this group
 
 Users (1) in this group
@@ -252,7 +252,7 @@ A user (a person or a group) can be limited to some common commands, or receive 
 /bot +u -cmd /meme /Fulano/                       → Fulano uses all, except /meme
 /bot +cmd /weather /Sofia Izabel/                 → adds /weather to hers
 /bot -cmd /rates /Fulano Pereira/                 → removes /rates from his
-/bot -cmd /meme /Grupo Familia/ /Fulano da Silva/ → several at once
+/bot -cmd /meme /Family Group/ /Fulano da Silva/ → several at once
 /bot -cmd /meme                                   → from the current chat (the group, or the person in private)
 /bot +cmd all /Sofia Izabel/                      → Sofia goes back to using all the regular ones
 /bot +u +cmd /gpt                                 → typed in a group: everyone there uses only /gpt
@@ -355,7 +355,7 @@ time, the report goes out every day at that time, to your private chat or to the
 | Form | Description |
 |---|---|
 | `/bot` or `/bot -status` | The status now |
-| `/bot -status <time>` | Time of the daily delivery, in Brasília time: `06h`, `6h30`, `06:00` or `às 18h`. Changing the time replaces the previous one (the destinations stay) |
+| `/bot -status <time>` | Time of the daily delivery, in Brasília time: `06h`, `6h30`, `06:00` or `at 18h`. Changing the time replaces the previous one (the destinations stay) |
 | `/bot -status <time> -to <destination>` | The daily delivery to a person, a group or by email (`email` = the `QRCODE_EMAIL_SMTP_TO`), instead of your private chat; repeat `-to` for several |
 | `/bot -status -to <destination>` | The report now, to the destinations |
 | `/bot -status off` | Turns off the daily delivery |
@@ -364,9 +364,9 @@ time, the report goes out every day at that time, to your private chat or to the
 /bot                                     → the status now
 /bot -s                                  → the same
 /bot -s 06h                         → every day at 06:00, in your private chat
-/bot -s 06h -to voce@exemplo.com         → every day at 06:00, by email
-/bot -s 7h -to /Grupo Familia/ -to email → in the group and by email
-/bot -s às 18h30                         → every day at 18:30 (to the same destinations)
+/bot -s 06h -to you@example.com         → every day at 06:00, by email
+/bot -s 7h -to /Family Group/ -to email → in the group and by email
+/bot -s at 18h30                         → every day at 18:30 (to the same destinations)
 /bot -s -to /Jorge Pereira/              → the report now, in the contact's private chat
 /bot -s off                              → stops sending
 ```
@@ -380,7 +380,7 @@ Thu 01/10 06:00
 
 🤖 Up: 2 days, 3 hours · connected: 2 days, 2 hours
 🗄️ Cache: 45.20 MB (database 4.20 MB · media 40.10 MB) · 1,234 messages
-👀 Watch: 5 hits (#1 pix: 3, #2 boleto: 2)
+👀 Watch: 5 hits (#1 refund: 3, #2 invoice: 2)
 🗑️ Deleted: 12
 ✏️ Edited: 4
 📸 Deleted statuses: 2
@@ -390,13 +390,13 @@ Thu 01/10 06:00
 
 Users (2)
 • 🗣️ +u · 👤 Maria Lucia · +5521999982222
-• 🗣️ +u · 👥 Grupo Familia
+• 🗣️ +u · 👥 Family Group
 
 Permissions
 👑 +a: admin, uses everything
 🗣️ +u: user, uses the regular commands
 
-⏰ Daily status: every day at 06:00 → 📧 voce@exemplo.com, 👥 Grupo Familia
+⏰ Daily status: every day at 06:00 → 📧 you@example.com, 👥 Family Group
 📅 Next: Fri 02/10 06:00
 💡 Change it with /bot -status <time> or turn it off with /bot -status off.
 

@@ -5,7 +5,7 @@ wide and 5 rows tall, and the text wraps into several rows of letters to fit on 
 columns by default.
 
 ```text
-/ascii [-w|-w <columns>] [-c|-c <character>] <text>
+/ascii [-width|-w <columns>] [-char|-c <character>] <text>
 ```
 
 | Option | Value | Description |

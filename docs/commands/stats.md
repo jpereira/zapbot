@@ -24,7 +24,7 @@ joined the group, the name changed, encryption, a call...), which have no author
 | `-flush`, `-f` | `</chat/>` | Deletes a chat's statistics |
 | `-flush-all` | | Deletes the statistics of all chats |
 
-![Demonstração do /stats](../assets/demo/11-stats.gif)
+![Demo of /stats](../assets/demo/11-stats.gif)
 
 ```text
 /stats                         → last 7 days of this chat

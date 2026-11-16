@@ -76,7 +76,7 @@ X only serves videos marked as sensitive (NSFW) to logged-in users, and yt-dlp w
 fails on those links. The way out is to give it the cookies of a logged-in account (preferably one
 just for this):
 
-![Demonstração do /get](../assets/demo/06-get.gif)
+![Demo of /get](../assets/demo/06-get.gif)
 
 ```bash
 ./scripts/get-cookie.sh x.com twitter.com    # reads the Chrome cookies and writes ./cookies.txt (chmod 600)
@@ -89,7 +89,7 @@ rm cookies.txt
   missing, that is, if the account isn't logged in on the browser.
 - `make cookies` uses `docker cp` and does `chmod 600`. The file lands in the cache volume, so it
   survives `make recreate`; without `DOCK_REMOTE=1`, it goes to the local Docker container.
-  `FILE=outro.txt` picks another file.
+  `FILE=other.txt` picks another file.
 - If `cache/cookies.txt` exists, the bot passes `--cookies` to yt-dlp on every download, from any
   site. Without the file, it downloads without cookies. To turn it off, delete the file from the
   container.

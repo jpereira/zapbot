@@ -22,21 +22,21 @@ from. Results come from newest to oldest, with the date, who sent it and the tex
 type and the caption). Long texts are cut at 200 characters.
 
 ```text
-/search pix                 → the 10 most recent with "pix" in this chat
-/search -30 boleto          → up to 30
-/search bom dia             → with spaces, no quotes (/search is the same as /search)
+/search refund                 → the 10 most recent with "refund" in this chat
+/search -30 invoice          → up to 30
+/search good morning       → with spaces, no quotes (/search is the same as /search)
 ```
 
 ```text
-/search pix
-🔎 2 messages matching "pix" (all chats)
+/search refund
+🔎 2 messages matching "refund" (all chats)
 
 1. 📅 10/13/2026, 11:02:10 · 💬 Family · 👤 Fulano
-   "send the pix and I'll pay"
+   "send the refund and I'll pay"
    🆔 false_5521988887777@c.us_3EB0A1B2
 
 2. 📅 10/12/2026, 18:40:05 · 💬 Work · 👤 You
-   📎 [image] "pix receipt"
+   📎 [image] "refund receipt"
    🆔 true_120363000000000000@g.us_3EB0C3D4
 
 📖 To read one in full: /search -read <no.>.
@@ -46,7 +46,7 @@ type and the caption). Long texts are cut at 200 characters.
 /search -r false_5521988887777@c.us_3EB0A1B2
 📅 10/13/2026, 11:02:10 · 💬 Family · 👤 Fulano
 
-send the pix and I'll pay, the whole text, no cut
+send the refund and I'll pay, the whole text, no cut
 ```
 
 - The number of the list works for 2 hours after the search, per chat (`/search -r 1`); a new search replaces

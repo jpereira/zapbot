@@ -6,7 +6,7 @@ e descrição) sem entrar. Para sair, use o [`/leave`](leave.md).
 ![Demonstração do /join](../assets/demo/04-join-leave.gif)
 
 ```text
-/join <link do convite>  ou  /join -i|-i <link>  ou  /join -l
+/join <link do convite>  ou  /join -info|-i <link>  ou  /join -l
 ```
 
 | Opção | Valor | Descrição |

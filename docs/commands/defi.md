@@ -84,7 +84,7 @@ For Aave:
 | `-rm` | `<#...\|all>` | Removes registration no. N, several (`-rm 1 3` or `-rm 1,3`) or all of them; if any number doesn't exist, none is removed. Together with `-alert`: only turns off the alert for no. N (or for all) |
 | `-alert`, `-a` | `[#\|all\|value]` | Without a number: lists the alerts. With a number (or `all`): warns when the position leaves the range and when it comes back. Orca and Project X only (Liquidswap, Morpho and Aave have no range). On registration (with `-address` or `-wallet`), turns on the alert for the new position, in your private chat (or at `-to`); the value is the fee threshold, same as `-fees` (`-alert 2000`). See [Out-of-range alert](#out-of-range-alert) |
 | `-fees` | `[value\|off]` | Alone: the summary of fees to collect (see [Fee summary](#fee-summary)). Together with `-alert <#\|all>`: also warns when the fees to collect go over the value, in dollars (e.g., `-fees 50`). Warns once, and again after you collect; `off` removes it |
-| `-to` | `<destination>` | Together with `-alert`: where the warning goes. A contact (`/Jorge Pereira/`), a mention (`@Fulano Da Silva`), a group (`/Grupo L200/`), a number (`+5521999999999`) or email (`email` is `QRCODE_EMAIL_SMTP_TO`) ([Destinations](index.md#destinations-contact-group-number-or-email)). Repeat it for several: the warning goes to all of them. Without it, your private chat |
+| `-to` | `<destination>` | Together with `-alert`: where the warning goes. A contact (`/Jorge Pereira/`), a mention (`@Fulano Da Silva`), a group (`/L200 Group/`), a number (`+5521999999999`) or email (`email` is `QRCODE_EMAIL_SMTP_TO`) ([Destinations](index.md#destinations-contact-group-number-or-email)). Repeat it for several: the warning goes to all of them. Without it, your private chat |
 | `-address` | `<address>` | With `orca`: registers the Orca position by its address |
 | `-pool` | `<address>` | With `orca -address`: the pool. Optional; if given, the bot checks that it matches |
 | `-nft` | `<mint>` | With `orca -address`: the position's NFT. Optional; if given, the bot checks that it matches |
@@ -102,7 +102,7 @@ For Aave:
 /defi -a 1 -fees 50   → and when no. 1's fees to collect go over $50
 ```
 
-The list shows 🔔 for the ones with an alert and, with `-fees` (or `-alert <valor>` on
+The list shows 🔔 for the ones with an alert and, with `-fees` (or `-alert <value>` on
 registration), the fee threshold:
 
 ```text
@@ -110,7 +110,7 @@ registration), the fee threshold:
 🌊 DeFi positions (2)
 
 1. Orca · ime1…VPcg · pool J7Hz…bHCh (since 10/2/2026) 🔔 ≥ $2,000.00
-2. Project X · carteira 0x12…5678 (since 10/2/2026) 🔔
+2. Project X · wallet 0x12…5678 (since 10/2/2026) 🔔
 
 💡 /defi shows the details; /defi -rm <num> removes; 🔔 = with alert (/defi -alert), ≥ $ is the fees limit.
 ```
@@ -122,7 +122,7 @@ To get the Position Details every day, in a chat or together with other commands
 `aave -full`; the registration and alert options are rejected):
 
 ```text
-/cron 06:00 -r d -to /Grupo da Faculdade/ ⏰ DeFi status! {/defi} BTC price! {/crypto BTC}
+/cron 06:00 -r d -to /College Group/ ⏰ DeFi status! {/defi} BTC price! {/crypto BTC}
 ```
 
 ```text
@@ -449,10 +449,10 @@ the bot reads the position (on Project X, the wallet's positions) every 10 minut
 /defi -a all -to email           → all, by email (QRCODE_EMAIL_SMTP_TO)
 /defi -a 2 -to you@example.com   → by email, to that address
 /defi -a 1 -to /Jorge Pereira/   → in the contact's private chat
-/defi -a 1 -to /Grupo L200/      → in the group
+/defi -a 1 -to /L200 Group/      → in the group
 /defi -a 1 -to +5521999999999    → in the number's private chat
 /defi -a 1 -to @Fulano Da Silva  → in a group, mentioning the person
-/defi -a 1 -to /Grupo L200/ -to email  → in the group and by email
+/defi -a 1 -to /L200 Group/ -to email  → in the group and by email
 /defi -a 1 -fees 50             → and when the fees to collect go over $50
 /defi -a 1 -fees off            → removes the fees notice (the range one stays)
 /defi orca -address <address> -a 2000   → on registration: turns it on, with a $2000 limit

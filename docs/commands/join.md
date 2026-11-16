@@ -3,10 +3,10 @@
 Joins a WhatsApp group through the invite link. With `-info`, shows the group (name, participants and
 description) without joining. To leave, use [`/leave`](leave.md).
 
-![Demonstração do /join](../assets/demo/04-join-leave.gif)
+![Demo of /join](../assets/demo/04-join-leave.gif)
 
 ```text
-/join <invite link>  or  /join -i|-i <link>  or  /join -l
+/join <invite link>  or  /join -info|-i <link>  or  /join -l
 ```
 
 | Option | Value | Description |
@@ -17,12 +17,12 @@ description) without joining. To leave, use [`/leave`](leave.md).
 
 ```text
 /join https://chat.whatsapp.com/AbCdEfGhIjKlMnOpQrStUv
-✅ Joined 👥 Família
+✅ Joined 👥 Family
 
 /join -i chat.whatsapp.com/AbCdEfGhIjKlMnOpQrStUv
-👥 *Família*
+👥 *Family*
 👤 12 participants
-📝 Avisos e fotos
+📝 Announcements and photos
 💡 _Join with /join chat.whatsapp.com/AbCdEfGhIjKlMnOpQrStUv_
 
 /join -l

@@ -4,8 +4,8 @@ A **joke**. Puts rainbow emojis between the words. Accepts text or a reply to a 
 replied message's text are joined). With neither, it shows the usage.
 
 ```text
-/noffa bom dia grupo
-→ bom 🌈 dia 🏳️‍🌈 grupo
+/noffa good morning everyone
+→ good 🌈 morning 🏳️‍🌈 everyone
 
   🤡 Just a joke from /noffa.
 ```

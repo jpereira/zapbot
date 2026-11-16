@@ -12,8 +12,8 @@ change (🟢 up, 🔴 down). Supported: `USD`, `EUR`, `GBP` and `USDT`.
 | `-del`, `-d` | `<CURRENCY>` | Disables a currency (bot owner or an [admin](bot.md#extra-admins) only) |
 | `-alert` | `[regra]` | Without a rule, lists the alerts; with a rule (e.g., `USD > 5.30`), creates one (bot owner or an [admin](bot.md#extra-admins) only). The currency can also come first: `/rates USD -alert > 5.30`. See [Price alerts](#price-alerts) |
 | `-msg` | `<text>` | Together with `-alert`: the text goes at the start of the notice. Runs to the end of the command. See [Message in the notice](#message-in-the-notice) |
-| `-rm` | `<nº...\|all>` | Together with `-alert`: removes the alerts with those numbers (`-rm 2`, `-rm 1 2 3` or `-rm 1,2,3`), or all of them (`all`). If any number doesn't exist, none is removed |
-| `-to` | `<destination>` | Together with `-alert`: notifies a contact (`/Jorge Pereira/`), a mention (`@Fulano Da Silva`), a group (`/Grupo L200/`), a number (`+5521999999999`) or by email (`email`) instead of your private chat. Repeat for several: a single alert that notifies all of them. See [Notify another chat or by email](#notify-another-chat-or-by-email) |
+| `-rm` | `<no...\|all>` | Together with `-alert`: removes the alerts with those numbers (`-rm 2`, `-rm 1 2 3` or `-rm 1,2,3`), or all of them (`all`). If any number doesn't exist, none is removed |
+| `-to` | `<destination>` | Together with `-alert`: notifies a contact (`/Jorge Pereira/`), a mention (`@Fulano Da Silva`), a group (`/L200 Group/`), a number (`+5521999999999`) or by email (`email`) instead of your private chat. Repeat for several: a single alert that notifies all of them. See [Notify another chat or by email](#notify-another-chat-or-by-email) |
 
 - **USD, EUR, GBP**: Yahoo Finance. If it fails, AwesomeAPI (which doesn't report the open: `—`
   shows up).
@@ -110,12 +110,12 @@ message. The destination is a contact, group, number or email. Exact names take 
 [Destinations: contact, group, number or email](index.md#destinations-contact-group-number-or-email).
 
 ```text
-/crypto -alert BTC < 90000 -to /Grupo L200/      → in the group "Grupo sobre L200"
+/crypto -alert BTC < 90000 -to /L200 Group/      → in the group "L200 Group"
 /rates -alert USD > 5.30 -to /Jorge Pereira/   → in the contact's private chat
 /rates -alert USD > 5.30 -to +5521999999999    → in the number's private chat
 /rates -alert EUR < 5,50 -to @Fulano Da Silva  → in a group, mentioning the person
 /crypto -alert SOL > 200 -to email               → by email (QRCODE_EMAIL_SMTP_TO)
-/crypto -alert BTC < 90000 -to /Grupo L200/ -to email  → in the group and by email
+/crypto -alert BTC < 90000 -to /L200 Group/ -to email  → in the group and by email
 /rates -alert -to familia EUR < 5,50           → -to can come before the rule
 ```
 
@@ -125,8 +125,8 @@ message. The destination is a contact, group, number or email. Exact names take 
 - If the name matches more than one contact (or group), the bot lists them and you reply with the
   number; the alert is only created after the choice.
 - The group has to be one your account is in; the number, a WhatsApp account (the bot checks).
-- The list (`-alert`) shows each alert's destination: `→ 👥 Grupo sobre L200` or
-  `→ 📧 voce@exemplo.com` (several: `→ 👥 Grupo sobre L200, 📧 voce@exemplo.com`).
+- The list (`-alert`) shows each alert's destination: `→ 👥 L200 Group` or
+  `→ 📧 you@example.com` (several: `→ 👥 L200 Group, 📧 you@example.com`).
 
 ```text
 🔔 PRICE ALERT

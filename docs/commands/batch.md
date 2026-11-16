@@ -7,7 +7,7 @@ to send at once what you'd otherwise send in several blocks (e.g. multiple notes
 ![/batch demo](../assets/demo/12-batch-alias.gif)
 
 ```text
-/batch [-s|-s] [-d|-d] [-q|-q]
+/batch [-stop|-s] [-dry|-d] [-quiet|-q]
 <commands, on the lines below>
 ```
 
@@ -26,26 +26,26 @@ included, belongs to the same block. A line with `/` that is neither a command n
 
 ```text
 /batch
-/ideia Preciso ver sobre isso
+/idea I need to look into this
 
-http://minha.com/?124
+http://example.com/?124
 
-/ideia Quando puder ler o link sobre isso.
-http://g1.com/labala
+/idea When you can, read the link about this.
+http://news.example.com/story
 ```
 
-That's two blocks: the top URL belongs to the first `/ideia` and the bottom one to the second. The
-`/ideia` is an alias, for example `/alias /ideia /notes #ideias $1`.
+That's two blocks: the top URL belongs to the first `/idea` and the bottom one to the second. The
+`/idea` is an alias, for example `/alias /idea /notes #ideas $1`.
 
 The reply is a single summary:
 
 ```text
 📦 BATCH · 2/2 ok
 
-✅ 1 · /ideia Preciso ver sobre isso http://minha.com/?124
-   ↳ 📝 #77 · #ideias · Preciso ver sobre isso http://minha.com/?124
-✅ 2 · /ideia Quando puder ler o link sobre isso. http://g1.com/labala
-   ↳ 📝 #78 · #ideias · Quando puder ler o link sobre isso. http://g1.com/labala
+✅ 1 · /idea I need to look into this http://example.com/?124
+   ↳ 📝 #77 · #ideas · I need to look into this http://example.com/?124
+✅ 2 · /idea When you can, read the link about this. http://news.example.com/story
+   ↳ 📝 #78 · #ideas · When you can, read the link about this. http://news.example.com/story
 ```
 
 With `-dry` (or `-d`), nothing runs; it only shows how it split things:
@@ -54,8 +54,8 @@ With `-dry` (or `-d`), nothing runs; it only shows how it split things:
 /batch -d
 📦 BATCH (2) · only the split, nothing executed
 
-1. /ideia Preciso ver sobre isso (+2 lines)
-2. /ideia Quando puder ler o link sobre isso. (+1 lines)
+1. /idea I need to look into this (+2 lines)
+2. /idea When you can, read the link about this. (+1 lines)
 ```
 
 - Each block goes through the same path as a normal message (alias, `$1`, options). An alias with

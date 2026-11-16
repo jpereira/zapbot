@@ -5,12 +5,12 @@ Salva atalhos no banco do bot: para um comando com argumentos ou para um texto c
 aliases. Quem executa um atalho precisa ter permissão para os comandos de destino.
 
 ```text
-/alias <nome> [-q|-q] [-d|-d "Descrição"] </comando argumentos>
-/alias <nome> [-q|-q] [-d|-d "Descrição"] <texto com {/comando}>
+/alias <nome> [-quiet|-q] [-desc|-d "Descrição"] </comando argumentos>
+/alias <nome> [-quiet|-q] [-desc|-d "Descrição"] <texto com {/comando}>
 /alias
-/alias [-l|-l]
+/alias [-list|-l]
 /alias <nome>
-/alias -m|-m <nome atual> <novo nome>
+/alias -move|-m <nome atual> <novo nome>
 /alias -rm <nome...|all>
 ```
 

@@ -7,7 +7,7 @@ link (`https://chat.whatsapp.com/...`). **Your account has to be an admin of the
 to give the link.
 
 ```text
-/invite [-r|-r]
+/invite [-revoke|-r]
 ```
 
 | Option | Value | Description |

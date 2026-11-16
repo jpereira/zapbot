@@ -8,7 +8,7 @@ the photo with `/ocr` as the caption. It uses the OpenAI key (`OPENAI_API_KEY` i
 `gpt.api.key` setting), like [`/gpt`](gpt.md).
 
 ```text
-/ocr [-s|-s]
+/ocr [-status|-s]
 ```
 
 | Option | Value | Description |

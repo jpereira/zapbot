@@ -10,12 +10,12 @@ number. With nobody given, it shows the person in the private chat (in your own 
 profile) or, in a group, the group's picture; when replying to a message, the one who wrote it.
 
 ```text
-/profile [/contact/|@mention|+number]...  or  /profile -s|-s
+/profile [/contact/|@mention|+number]...  or  /profile -set|-s
 ```
 
 | Option | Value | Description |
 |---|---|---|
-| *(none)* | `[/contato/\|@menção\|+número]...` | The people, separated by spaces: an address book contact by name or part of it (a name with spaces goes between `/.../` or quotes; if several match, you pick from the list), someone mentioned with `@` or a number. With nobody given, the person in the private chat (in your own, your profile), the group's picture in a group, or the one who wrote the message being replied to |
+| *(none)* | `[/contact/\|@mention\|+number]...` | The people, separated by spaces: an address book contact by name or part of it (a name with spaces goes between `/.../` or quotes; if several match, you pick from the list), someone mentioned with `@` or a number. With nobody given, the person in the private chat (in your own, your profile), the group's picture in a group, or the one who wrote the message being replied to |
 | `-set`, `-s` | | Changes the picture to the image you replied to (or to the photo sent with `/profile -set` as the caption): the group's, in a group, or your account's, in any other chat. Owner and admins only, even if the command was delegated |
 | `-mask`, `-m` | | Obfuscates phone numbers (10 to 15 consecutive digits) in this run's output, keeping the first five and the last two. E.g.: `+55219****44` |
 
