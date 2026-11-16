@@ -66,7 +66,7 @@ function envText() {
         .join('\n');
     return t('adm.set.envTitle') + '\n\n```\n' + linesAlt + '\n```';
 }
-// "key  value" aligned, in alphabetical order
+// "key  value" aligned, in alphabetical order, with a blank line between the keys
 function settingsList(keys) {
     const width = Math.max(...keys.map(k => k.length));
     return [...keys]
@@ -75,7 +75,7 @@ function settingsList(keys) {
             const s = SETTINGS_SCHEMA[k];
             return `${k.padEnd(width)}  ${formatValueSetting(getSetting(k), s.separator ? ' | ' : ', ', s.secret)}`;
         })
-        .join('\n');
+        .join('\n\n');
 }
 
 /**
