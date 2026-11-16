@@ -51,5 +51,22 @@ The level is the highest one that applies **in the chat where you typed it**:
   [`/bot`](bot.md#who-shows-up-in-the-list).
 - Anyone limited to a few commands ([`/bot +cmd`](bot.md#each-users-commands)) has the rule
   below: `→ Only: /rates, /crypto` or `→ All but: /meme`.
+- Anyone with a [usage limit](bot.md#usage-limits-per-user-limit) (`/bot +cmd /gpt +limit 5/day`) has
+  the line `⏱️` with what was used and when it renews (the user sees the same with [`/usage`](usage.md)):
+
+```text
+/whois +5521911111111
+*Who is it?* (1)
+• 🗣️ +u · 👤 Fulano · +5521911111111
+ → Only: /gpt, /tldr
+ ⏱️ /gpt  3/3 per day · renews Tue 17/11 00:00; /tldr  0/3 per day · renews Tue 17/11 00:00
+
+*Permissions*
+👑 +a: admin, uses everything
+🗣️ +u: user, uses the regular commands
+
+Type /help to see which commands are available.
+```
+
 - To see the admins and users at once: [`/bot -list-users`](bot.md#user-list) (the ones in
   this chat) or `/bot -list-users all` (everyone).

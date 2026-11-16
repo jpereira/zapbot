@@ -211,6 +211,29 @@ const SETTINGS_SCHEMA = {
             return `${target}=${m[2]}${commands.join(',')}`;
         }
     },
+    /*
+     * Each user's usage limit per command (/bot +u ... +cmd /gpt +limit 5/day): "item=/gpt:5/day,/tldr:3",
+     * where the item is the same as bot.users and the period is day, week, month (without it: total, does not renew).
+     */
+    'bot.users.limits': {
+        default: [],
+        type: 'list',
+        separator: /\s+/,
+        desc: 'O limite de uso de cada usuário por comando (o /bot +cmd /gpt +limit 5/day): item=/gpt:5/day,/tldr:3, com o item do bot.users; o período é day, week ou month (sem ele, 5 no total). Só conta o que deu certo. O dono e os admins não têm limite.',
+        item: (v) => {
+            const m = v.match(/^(.+)=(.+)$/);
+            if (!m) throw new Error(t('usage.settingFormat', { v }));
+            const target = userItem(m[1]);
+            if (!target || target === 'all') throw new Error(t('adm.settings.badItem', { item: m[1] }));
+            const { readLimit, recordLimit } = require('./usageLimit');
+            const pairs = m[2].split(',').filter(Boolean).map((par) => {
+                const i = par.indexOf(':');
+                if (i < 1) throw new Error(t('usage.settingFormat', { v }));
+                return `${userCommand(par.slice(0, i))}:${recordLimit(readLimit(par.slice(i + 1)))}`;
+            });
+            return `${target}=${pairs.join(',')}`;
+        }
+    },
     'cache.editedRetentionDays': {
         default: 30,
         type: 'number', min: 1, max: 365,
@@ -744,6 +767,16 @@ const SETTINGS_SCHEMA = {
         default: 'pt',
         type: 'string',
         desc: 'Idioma de destino padrão do /translate (código: pt, en, es...).'
+    },
+    'usage.footer': {
+        default: true,
+        type: 'boolean',
+        desc: 'Depois de um comando com limite de uso (/bot +limit), avisa quantos usos restam ("📊 /gpt: restam 2 de 5 por dia").'
+    },
+    'usage.logDays': {
+        default: 90,
+        type: 'number', min: 1, max: 365,
+        desc: 'Dias que o histórico de usos com limite (/usage -log) fica guardado. Os usos que ainda contam para um limite nunca são apagados antes do fim do período.'
     },
     'watch.hitsRetentionDays': {
         default: 30,

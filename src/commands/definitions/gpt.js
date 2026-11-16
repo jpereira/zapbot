@@ -75,5 +75,6 @@ module.exports = {
     ],
     estrito: 'primeira',
     delegavel: true,
+    usageFree: ['prices', 'usage', 'u'], // queries: they do not spend the usage limit (/bot +limit)
     role: ADMIN // delegable: spends the owner's API (-model and -usage are owner and admins only)
 };

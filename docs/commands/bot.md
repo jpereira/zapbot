@@ -25,6 +25,7 @@ users and the daily delivery), the versions of what it uses
 | `+a`, `-a` | `[person...]`: adds (`+a`) and removes (`-a`) admins. With nobody, the person in the private chat where you typed it. See [Extra admins](#extra-admins) |
 | `+u`, `-u` | `[person\|group...]`: adds (`+u`) and removes (`-u`) users. Typed in a group, the `+u` of a person only applies in that group. With nobody, the current chat: the group or the person in the private chat. See [Users](#users) |
 | `+cmd`, `-cmd` | `<commands>`: a user's commands. With `+u`, sets them (`+cmd`: only these; `-cmd`: all, except these); alone, `+cmd` grants and `-cmd` removes. See [Each user's commands](#each-users-commands) |
+| `+limit`, `-limit` | `<N[/period]>` (with `+cmd`) or `<commands>`: the usage limit of a user per command (`+cmd /gpt +limit 5/day`); `-limit /gpt` or `all` removes it. See [Usage limits per user](#usage-limits-per-user-limit) |
 | `-list-users`, `-lu` | `[all]`: the users of this chat; with `all`, everyone, in any chat (in a group, the phone of those from outside is hidden). Accepts `-mask`. See [User list](#user-list) |
 | `-reset`, `-r` | `[force]`: removes all users and their limits (the extra admins and the on/off stay). With `force`, everything goes back to the default: it also removes the extra admins and turns the bot on. Both ask first. Accepts `-mask`; the other options are refused. Owner only. See [Back to the default](#back-to-the-default) |
 | `-status`, `-s` | The status now and its daily delivery (`[<time>\|off]`). Accepts `-to` and `-mask`; the other options are refused. See [Bot status](#bot-status) |
@@ -244,7 +245,7 @@ Users (1) in this group
 ### Each user's commands
 
 A user (a person or a group) can be limited to some common commands, or receive a command with the
-`admin` role (`/gpt`, `/show`...). `/help` and `/whois` always go through (`/help` shows only theirs).
+`admin` role (`/gpt`, `/show`...). `/help`, `/whois` and `/usage` always go through (`/help` shows only theirs). To limit how many times a user can call one, see [Usage limits per user](#usage-limits-per-user-limit).
 
 ```text
 /bot +cmd /rates,/crypto,/meme +u /Sofia Izabel/  → Sofia gets in with only these
@@ -291,6 +292,59 @@ Permissions
 - If more than one permission applies there (the person and the group, for example), the broadest
   one wins: one with no limit allows all the common ones.
 - `-u` and `-reset` (with or without `force`) remove the limits too.
+
+### Usage limits per user (`+limit`)
+
+Some commands are very wanted in groups and among friends, `/gpt` first of all, and each call costs
+you money. `+limit` gives a user a **limit of successful calls** per command, together with `+cmd`:
+
+```text
+/bot +u /Rafael Silva/ +cmd /gpt +limit 5               → 5 calls of /gpt in total (does not renew)
+/bot +u /Rafael Silva/ +cmd /gpt +limit 5/day           → 5 per day (renews at 00:00, Brasília)
+/bot +u +cmd /gpt +limit 10/week                        → typed in a group: 10 per week, for the whole group
+/bot +cmd /gpt,/tldr +limit 20/month /Rafael Silva/     → 20 per month, in each one
+/bot -limit /gpt /Rafael Silva/                         → removes the limit (he keeps the command)
+/bot -limit all /Rafael Silva/                          → removes all of his limits
+```
+
+```text
+/bot +u /Fulano/ +cmd /gpt,/tldr +limit 3/day
+*Users* (1)
+• 🗣️ +u · 👤 Fulano · +5521911111111 ✅
+ → Only: /gpt, /tldr
+ ⏱️ /gpt 3 per day, /tldr 3 per day
+
+*Permissions*
+👑 +a: admin, uses everything
+🗣️ +u: user, uses the regular commands
+```
+
+- **Periods:** `day`, `week` (starts on Monday) or `month`, in Brasília time; without a period, it is
+  the total and it does not renew (send a new `+limit` to give more). In Portuguese, `dia`, `sem` and `mês` work too.
+- **Only what worked counts:** `-h`, the usage shown when you forget the text, refusals (`🚫`), errors (`❌`)
+  and failures of the provider give the call back. Queries like `/gpt -usage` are free.
+- **Who has a limit:** users (`bot.users`) and groups. The limit of a group is shared by everyone in it;
+  one set for the person in that group (`telefone:grupo`) wins over the person's, which wins over the group's.
+  The owner and the admins never have one.
+- **Which commands:** the ones users can use and the delegable `admin` ones (`/gpt`, `/tldr`, `/draw`...).
+- **Not counted:** commands run by [`/cron`](cron.md), [`/batch`](batch.md) and shortcuts of the owner.
+  A shortcut of [`/alias`](alias.md) used by someone with a limit counts on each `{/command}` it runs.
+- The user checks theirs with [`/usage`](usage.md); the owner sees them in `/whois` and in the list:
+
+```text
+/bot -list-users
+*Users* (1)
+• 🗣️ +u · 👤 Fulano · +5521911111111
+ → Only: /gpt, /tldr
+ ⏱️ /gpt 3 per day, /tldr 3 per day
+
+*Permissions*
+👑 +a: admin, uses everything
+🗣️ +u: user, uses the regular commands
+```
+
+The limits are in the setting `bot.users.limits` (`item=/gpt:5/day,/tldr:3`); `-u` and `-reset`
+remove them too. The footer ("📊 /gpt: ... left") is `usage.footer`.
 
 ### Flood protection
 

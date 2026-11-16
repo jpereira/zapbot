@@ -39,9 +39,35 @@ mensalidade, e as suas mensagens ficam no seu servidor. Você digita comandos em
 | 📅 | **Agendar e automatizar** | Mensagens avulsas e recorrentes, lembretes, atalhos seus, vários comandos numa mensagem só, anotações com `#tags` e alertas, listas de destinatários | [`/cron`](docs/commands/cron.md) · [`/alias`](docs/commands/alias.md) · [`/batch`](docs/commands/batch.md) · [`/notes`](docs/commands/notes.md) · [`/forward`](docs/commands/forward.md) |
 | 👥 | **Gerir grupos** | Marca todo mundo, promove e rebaixa, links de convite, enquetes, boas-vindas e despedidas, silencia e bloqueia | [`/everybody`](docs/commands/everybody.md) · [`/promote`](docs/commands/promote.md) · [`/invite`](docs/commands/invite.md) · [`/poll`](docs/commands/poll.md) · [`/welcome`](docs/commands/welcome.md) · [`/mute`](docs/commands/mute.md) |
 | 🌎 | **Informação do dia a dia** | Tempo conferido em mais de uma fonte, notícias, CVEs, versões do kernel Linux, tradução e estatísticas do chat | [`/weather`](docs/commands/weather.md) · [`/news`](docs/commands/news.md) · [`/cve`](docs/commands/cve.md) · [`/kernel`](docs/commands/kernel.md) · [`/translate`](docs/commands/translate.md) · [`/stats`](docs/commands/stats.md) |
+| ⭐ | **Pro: limites por pessoa** | Divida o `/gpt` e outros comandos com amigos e grupos, com um limite de chamadas bem-sucedidas por pessoa, por dia, semana ou mês, e o `/usage` para ver o que resta | [`/usage`](docs/commands/usage.md) |
 | 🛡️ | **Seu, e seguro** | Papéis de dono, admin e usuário por comando, proteção contra flood, anti-SSRF nos downloads, backups, login do QR Code por e-mail, em inglês ou português do Brasil | [`/bot`](docs/commands/bot.md) · [`/backup`](docs/commands/backup.md) · [`/set`](docs/commands/set.md) |
 
 Todos os comandos, com as opções e os exemplos, estão em [Comandos](docs/commands/index.md).
+
+## ⭐ Pro: deixe os amigos usarem o `/gpt` sem esvaziar o seu crédito
+
+Os comandos mais pedidos em grupos e entre amigos (o `/gpt` principalmente) custam dinheiro a cada
+chamada. Com o **limite de uso por pessoa**, você decide quantas chamadas *bem-sucedidas* cada uma
+tem, por dia, semana ou mês. Quando acaba, o comando nem roda:
+
+```text
+/bot +u /Rafael Silva/ +cmd /gpt +limit 5/dia      → Rafael: 5 chamadas do /gpt por dia
+/bot +u +cmd /gpt,/tldr +limit 20/mês              → digitado num grupo: dividido por todos de lá
+/bot -limit /gpt /Rafael Silva/                    → tira o limite
+```
+
+```text
+/gpt qual a capital da França?
+🚫 Limite do /gpt atingido: 3 de 3 por dia. Renova em ter 17/11 00:00.
+
+/usage
+⏱️ *Limites de uso*
+• /gpt  2/3 por dia · renova ter 17/11 00:00
+• /tldr  0/3 por dia · renova ter 17/11 00:00
+```
+
+Ajuda, uso e erros nunca contam, você e os admins não têm limite, e o histórico está a um
+`/usage -l` de distância. Tudo no [`/usage`](docs/commands/usage.md) e no [`/bot`](docs/commands/bot.md#limite-de-uso-por-usuário-limit).
 
 ## 👀 Veja funcionando
 
@@ -299,6 +325,7 @@ e deixe o bot do seu jeito:
 | [`/unblock`](https://jpereira.github.io/zapbot/pt-BR/commands/unblock/) | | `admin` | Desbloqueia uma pessoa: pelo nome, pelo número, pelo nº da lista do `/block` ou respondendo uma mensagem |
 | [`/unmute`](https://jpereira.github.io/zapbot/pt-BR/commands/unmute/) | | `admin` | Desfaz o silêncio do `/mute`: pelo nome, pelo nº da lista, respondendo um aviso ou todos (`-all`) |
 | [`/uptime`](https://jpereira.github.io/zapbot/pt-BR/commands/uptime/) | | `user` | Tempo de execução e de conexão |
+| [`/usage`](https://jpereira.github.io/zapbot/pt-BR/commands/usage/) | | `user` | Os seus limites de uso (definidos pelo dono com o `/bot +limit`): usados, restantes e quando renovam; `-l` mostra as suas últimas chamadas |
 | [`/version`](https://jpereira.github.io/zapbot/pt-BR/commands/version/) | | `user` | Versão do bot (mesmo banner do `/uptime`) |
 | [`/walissu`](https://jpereira.github.io/zapbot/pt-BR/commands/walissu/) | | `user` | Piada: Walissu CVE BOT: marca 2 membros com uma CVE aleatória |
 | [`/watch`](https://jpereira.github.io/zapbot/pt-BR/commands/watch/) | | `admin` | Regras de texto/regex, com origem opcional em `-in`; lista ocorrências, busca nelas com `-q` e avisa nos destinos de `-to`; `-mask` ofusca telefones e `-mask N` liga o 🔒 na regra N |

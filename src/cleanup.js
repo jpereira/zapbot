@@ -274,6 +274,7 @@ async function cleanFilesOld(dir = TMP_DIR, maxAgeHours = 2) {
 const CLEANUP_INTERVAL_MS = 10 * 60 * 1000;
 
 function runCleanup() {
+    require('./usageLimit').cleanUsesOld().catch(() => {});
     cleanCacheOld();
     cleanFilesOld();
     cleanWatchOld();

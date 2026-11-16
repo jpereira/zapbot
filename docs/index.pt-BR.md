@@ -35,9 +35,35 @@ mensalidade, e as suas mensagens ficam no seu servidor. Você digita comandos em
 | 📅 | **Agendar e automatizar** | Mensagens avulsas e recorrentes, lembretes, atalhos seus, vários comandos numa mensagem só, anotações com `#tags` e alertas, listas de destinatários | [`/cron`](commands/cron.md) · [`/alias`](commands/alias.md) · [`/batch`](commands/batch.md) · [`/notes`](commands/notes.md) · [`/forward`](commands/forward.md) |
 | 👥 | **Gerir grupos** | Marca todo mundo, promove e rebaixa, links de convite, enquetes, boas-vindas e despedidas, silencia e bloqueia | [`/everybody`](commands/everybody.md) · [`/promote`](commands/promote.md) · [`/invite`](commands/invite.md) · [`/poll`](commands/poll.md) · [`/welcome`](commands/welcome.md) · [`/mute`](commands/mute.md) |
 | 🌎 | **Informação do dia a dia** | Tempo conferido em mais de uma fonte, notícias, CVEs, versões do kernel Linux, tradução e estatísticas do chat | [`/weather`](commands/weather.md) · [`/news`](commands/news.md) · [`/cve`](commands/cve.md) · [`/kernel`](commands/kernel.md) · [`/translate`](commands/translate.md) · [`/stats`](commands/stats.md) |
+| ⭐ | **Pro: limites por pessoa** | Divida o `/gpt` e outros comandos com amigos e grupos, com um limite de chamadas bem-sucedidas por pessoa, por dia, semana ou mês, e o `/usage` para ver o que resta | [`/usage`](commands/usage.md) |
 | 🛡️ | **Seu, e seguro** | Papéis de dono, admin e usuário por comando, proteção contra flood, anti-SSRF nos downloads, backups, login do QR Code por e-mail, em inglês ou português do Brasil | [`/bot`](commands/bot.md) · [`/backup`](commands/backup.md) · [`/set`](commands/set.md) |
 
 Todos os comandos, com as opções e os exemplos, estão em [Comandos](commands/index.md).
+
+## ⭐ Pro: deixe os amigos usarem o `/gpt` sem esvaziar o seu crédito
+
+Os comandos mais pedidos em grupos e entre amigos (o `/gpt` principalmente) custam dinheiro a cada
+chamada. Com o **limite de uso por pessoa**, você decide quantas chamadas *bem-sucedidas* cada uma
+tem, por dia, semana ou mês. Quando acaba, o comando nem roda:
+
+```text
+/bot +u /Rafael Silva/ +cmd /gpt +limit 5/dia      → Rafael: 5 chamadas do /gpt por dia
+/bot +u +cmd /gpt,/tldr +limit 20/mês              → digitado num grupo: dividido por todos de lá
+/bot -limit /gpt /Rafael Silva/                    → tira o limite
+```
+
+```text
+/gpt qual a capital da França?
+🚫 Limite do /gpt atingido: 3 de 3 por dia. Renova em ter 17/11 00:00.
+
+/usage
+⏱️ *Limites de uso*
+• /gpt  2/3 por dia · renova ter 17/11 00:00
+• /tldr  0/3 por dia · renova ter 17/11 00:00
+```
+
+Ajuda, uso e erros nunca contam, você e os admins não têm limite, e o histórico está a um
+`/usage -l` de distância. Tudo no [`/usage`](commands/usage.md) e no [`/bot`](commands/bot.md#limite-de-uso-por-usuário-limit).
 
 ## 👀 Veja funcionando
 

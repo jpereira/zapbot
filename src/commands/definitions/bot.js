@@ -6,7 +6,7 @@ const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/bot',
-    usage: '/bot [-on|-off]  or  /bot +a|-a|+u|-u [+cmd|-cmd <commands>] [person...]  or  /bot -status|-info|-test|-reset  or  /bot -passwd|-login <password>',
+    usage: '/bot [-on|-off]  or  /bot +a|-a|+u|-u [+cmd|-cmd <commands>] [+limit <N[/period]>] [person...]  or  /bot -status|-info|-test|-reset  or  /bot -passwd|-login <password>',
     aliases: [],
     summary: 'Turns the bot on/off and sets who uses the commands',
     help: 'Turns the bot on/off and sets who uses the commands: you and the admins use everything; users, the common commands. Without an option, shows the status (same as -status). -info shows the versions of what it uses.',
@@ -43,6 +43,18 @@ module.exports = {
                 '/bot +cmd /rates,/crypto +u /Sofia Izabel/',
                 '/bot -cmd /meme /Fulano/',
                 '/bot +u +cmd /rates'
+            ],
+            cron: false
+        },
+        {
+            opts: ['limit'],
+            sinais: ['+', '-'],
+            values: ['<N[/period]|commands>'],
+            desc: 'Usage limit of a user per command, together with +cmd: +cmd /gpt +limit 5/day (5 per day), +limit 20/month, +limit 5 (5 in total, no renewal). -limit /gpt (or all) removes it. Only successful calls count: help, usage and errors do not. The owner and admins have no limit. See /usage.',
+            ex: [
+                '/bot +u +cmd /gpt +limit 5/day /Rafael Silva/',
+                '/bot +cmd /gpt +limit 20/month /Rafael Silva/',
+                '/bot -limit /gpt /Rafael Silva/'
             ],
             cron: false
         },

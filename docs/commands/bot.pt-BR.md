@@ -25,6 +25,7 @@ usuários e o envio diário), as versões do que ele usa
 | `+a`, `-a` | `[pessoa...]`: adiciona (`+a`) e tira (`-a`) admins. Sem ninguém, a pessoa do privado onde você digitou. Veja [Admins extras](#admins-extras) |
 | `+u`, `-u` | `[pessoa\|grupo...]`: adiciona (`+u`) e tira (`-u`) usuários. Digitado num grupo, o `+u` de uma pessoa vale só nesse grupo. Sem ninguém, o chat atual: o grupo ou a pessoa do privado. Veja [Usuários](#usuários) |
 | `+cmd`, `-cmd` | `<comandos>`: os comandos de um usuário. Com o `+u`, define (`+cmd`: só esses; `-cmd`: todos, menos esses); sozinho, `+cmd` libera e `-cmd` tira. Veja [Comandos de cada usuário](#comandos-de-cada-usuário) |
+| `+limit`, `-limit` | `<N[/período]>` (com o `+cmd`) ou `<comandos>`: o limite de uso de um usuário por comando (`+cmd /gpt +limit 5/dia`); `-limit /gpt` ou `all` tira. Veja [Limite de uso por usuário](#limite-de-uso-por-usuário-limit) |
 | `-list-users`, `-lu` | `[all]`: os usuários deste chat; com `all`, todos, em qualquer chat (num grupo, o telefone de quem é de fora sai escondido). Aceita `-mask`. Veja [Lista de usuários](#lista-de-usuários) |
 | `-reset`, `-r` | `[force]`: tira todos os usuários e os limites deles (os admins extras e o liga/desliga ficam). Com `force`, volta tudo ao padrão: também tira os admins extras e liga o bot. Os dois perguntam antes. Aceita `-mask`; as outras opções são recusadas. Só o dono. Veja [Voltar ao padrão](#voltar-ao-padrão) |
 | `-status`, `-s` | O status agora e o envio diário dele (`[<hora>\|off]`). Aceita `-to` e `-mask`; as outras opções são recusadas. Veja [Status do bot](#status-do-bot) |
@@ -240,8 +241,9 @@ Usuários (1) neste grupo
 ### Comandos de cada usuário
 
 Um usuário (uma pessoa ou um grupo) pode ficar limitado a alguns comandos comuns, ou receber um
-comando de role `admin` (o `/gpt`, o `/show`...). O `/help` e o `/whois` sempre passam (o `/help`
-mostra só os dele).
+comando de role `admin` (o `/gpt`, o `/show`...). O `/help`, o `/whois` e o `/usage` sempre passam (o `/help`
+mostra só os dele). Para limitar quantas vezes um usuário chama um deles, veja
+[Limite de uso por usuário](#limite-de-uso-por-usuário-limit).
 
 ```text
 /bot +cmd /rates,/crypto,/meme +u /Sofia Izabel/  → a Sofia entra só com esses
@@ -286,6 +288,59 @@ Permissões
 - Se mais de uma permissão vale ali (a pessoa e o grupo, por exemplo), vale a mais ampla: uma sem
   limite libera todos os comuns.
 - O `-u` e o `-reset` (com ou sem `force`) tiram os limites junto.
+
+### Limite de uso por usuário (`+limit`)
+
+Alguns comandos são muito pedidos em grupos e entre amigos, o `/gpt` principalmente, e cada chamada custa
+dinheiro. O `+limit` dá a um usuário um **limite de chamadas bem-sucedidas** por comando, junto com o `+cmd`:
+
+```text
+/bot +u /Rafael Silva/ +cmd /gpt +limit 5               → 5 chamadas do /gpt no total (não renova)
+/bot +u /Rafael Silva/ +cmd /gpt +limit 5/dia           → 5 por dia (renova às 00:00, Brasília)
+/bot +u +cmd /gpt +limit 10/sem                         → digitado num grupo: 10 por semana, para o grupo todo
+/bot +cmd /gpt,/tldr +limit 20/mês /Rafael Silva/       → 20 por mês, em cada um
+/bot -limit /gpt /Rafael Silva/                         → tira o limite (ele continua com o comando)
+/bot -limit all /Rafael Silva/                          → tira todos os limites dele
+```
+
+```text
+/bot +u /Fulano/ +cmd /gpt,/tldr +limit 3/day
+*Usuários* (1)
+• 🗣️ +u · 👤 Fulano · +5521911111111 ✅
+ → Apenas: /gpt, /tldr
+ ⏱️ /gpt 3 por dia, /tldr 3 por dia
+
+*Permissões*
+👑 +a: admin, usa tudo
+🗣️ +u: usuário, usa os comandos comuns
+```
+
+- **Períodos:** `dia`, `sem` (a semana começa na segunda) ou `mês`, no horário de Brasília; sem período, é o
+  total e não renova (mande um novo `+limit` para dar mais). Em inglês, `day`, `week` e `month` também valem.
+- **Só o que deu certo conta:** `-h`, o uso mostrado quando falta o texto, recusas (`🚫`), erros (`❌`)
+  e falhas do provedor devolvem a chamada. Consultas como `/gpt -usage` são grátis.
+- **Quem tem limite:** usuários (`bot.users`) e grupos. O limite de um grupo é dividido por todos de lá;
+  o da pessoa naquele grupo (`telefone:grupo`) vale antes do da pessoa, que vale antes do do grupo.
+  O dono e os admins nunca têm.
+- **Quais comandos:** os que usuários usam e os `admin` delegáveis (`/gpt`, `/tldr`, `/draw`...).
+- **Não contam:** comandos executados pelo [`/cron`](cron.md), pelo [`/batch`](batch.md) e atalhos do dono.
+  Um atalho do [`/alias`](alias.md) usado por quem tem limite conta em cada `{/comando}` que ele roda.
+- O usuário consulta o dele com o [`/usage`](usage.md); o dono vê no `/whois` e na lista:
+
+```text
+/bot -list-users
+*Usuários* (1)
+• 🗣️ +u · 👤 Fulano · +5521911111111
+ → Apenas: /gpt, /tldr
+ ⏱️ /gpt 3 por dia, /tldr 3 por dia
+
+*Permissões*
+👑 +a: admin, usa tudo
+🗣️ +u: usuário, usa os comandos comuns
+```
+
+Os limites ficam no setting `bot.users.limits` (`item=/gpt:5/day,/tldr:3`); o `-u` e o `-reset`
+também os removem. O rodapé ("📊 /gpt: restam...") é o `usage.footer`.
 
 ### Proteção contra flood
 

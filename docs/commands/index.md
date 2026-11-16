@@ -186,7 +186,7 @@ and a shortcut's name doesn't go in `+cmd`.
 [`/kernel`](kernel.md), [`/me`](me.md), [`/meme`](meme.md), [`/news`](news.md),
 [`/noffa`](noffa.md), [`/ping`](ping.md), [`/pixelart`](pixelart.md), [`/qr`](qr.md),
 [`/rates`](rates.md), [`/sticker`](sticker.md), [`/translate`](translate.md),
-[`/uptime`](uptime.md), [`/version`](version.md), [`/walissu`](walissu.md),
+[`/uptime`](uptime.md), [`/usage`](usage.md), [`/version`](version.md), [`/walissu`](walissu.md),
 [`/weather`](weather.md), [`/whois`](whois.md)
 
 **admin, delegable** (admins and the owner; the owner releases them to a user with `+cmd`) (15):
@@ -292,6 +292,7 @@ target command, and `/alias /usd` shows what a shortcut does.
 | [`/unblock`](unblock.md) | | `admin` | Unblocks a person: by name, by number, by the `/block` list number, or by replying to a message |
 | [`/unmute`](unmute.md) | | `admin` | Undoes the `/mute` silence: by name, by list number, by replying to a notice, or all (`-all`) |
 | [`/uptime`](uptime.md) | | `user` | Run time and connection time |
+| [`/usage`](usage.md) | | `user` | Your usage limits (set by the owner with `/bot +limit`): used, left and when they renew; `-l` shows your last calls |
 | [`/version`](version.md) | | `user` | Bot version (same banner as `/uptime`) |
 | [`/walissu`](walissu.md) | | `user` | Joke: Walissu CVE BOT: tags 2 members with a random CVE |
 | [`/watch`](watch.md) | | `admin` | Text/regex rules, with an optional source in `-in`; lists occurrences, searches them with `-q`, and notifies the `-to` destinations; `-mask` obfuscates phone numbers and `-mask N` turns on 🔒 for rule N |
