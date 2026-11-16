@@ -78,6 +78,7 @@ type them every time (a mailing list).
   (`-list`, `-desc`).
 - `-rm` is all or nothing: if any list or recipient does not exist, nothing is removed. Taking out the
   last recipient removes the list.
+- If someone on a list is the chat you typed the command in (the conversation the message came from), they are left out: it does not go back to them. A recipient typed on purpose still gets it, and `-dry` tells who was left out.
 - Names are lowercase, with letters, digits, `_` and `-`.
 - A send (lists and single recipients together) and each list are limited by the setting
   `forward.maxRecipients` (default 30).

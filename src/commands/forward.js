@@ -124,19 +124,31 @@ async function messagesAbove(msg, positions) {
     return { mensagens: chosen.reverse() };
 }
 
-// The resolved loose ones plus those from the lists, without repeats; over forward.maxRecipients, it does not send
+// The resolved loose ones plus those from the lists, without repeats; over forward.maxRecipients, it does not send.
+// Whoever in a #list is the command's own chat (the conversation the message came from) stays out:
+// .ignored says who. The loose ones you typed always count.
 async function recipients(msg, texts, listsAlt) {
     const avulsos = texts.length ? await resolverDestinations(msg, texts, { aceitaEmail: true }) : [];
     if (!avulsos) return null;
 
-    const allAlt2 = [...listsAlt];
+    const chatCurrent = String(msg.id?.remote ?? msg.from ?? '').split('@')[0];
+    const isOChat = (d) => Boolean(chatCurrent) && d.id?.split('@')[0] === chatCurrent;
+    const ignored = listsAlt.filter(d => isOChat(d) && !avulsos.some(a => a.id === d.id));
+
+    const allAlt2 = listsAlt.filter(d => !ignored.includes(d));
     for (const d of avulsos) if (!allAlt2.some(x => (x.email ?? x.id) === (d.email ?? d.id))) allAlt2.push(d);
+
+    if (!allAlt2.length && ignored.length) {
+        await msg.reply(t('forward.onlyThisChat', { list: ignored.map(describeDestination).join(', ') }));
+        return null;
+    }
 
     const max = getSetting('forward.maxRecipients');
     if (allAlt2.length > max) {
         await msg.reply(t('forward.tooManyRecipients', { n: allAlt2.length, max }));
         return null;
     }
+    allAlt2.ignorados = ignored;
     return allAlt2;
 }
 
@@ -168,7 +180,9 @@ async function cmdForward({ msg, args: typed, opts, quotedMsg }) {
     if (simulation) {
         const foundAlt6 = await recipients(msg, texts, lists.destinos);
         if (!foundAlt6) return;
-        await msg.reply(t('forward.dry', { n: foundAlt6.length, list: foundAlt6.map(describeDestination).join('\n') }));
+        const note = foundAlt6.ignorados?.length
+            ? `\n\n${t('forward.dryIgnored', { list: foundAlt6.ignorados.map(describeDestination).join(', ') })}` : '';
+        await msg.reply(t('forward.dry', { n: foundAlt6.length, list: foundAlt6.map(describeDestination).join('\n') }) + note);
         return;
     }
     if (quotedMsg && positions.length) {
