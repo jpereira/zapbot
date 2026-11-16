@@ -16,16 +16,21 @@ you need a new invite ([`/join`](join.md)).
 
 ```text
 /leave -l
-👥 *GROUPS* (2)
+👥 *GROUPS* (7)
 
-1. Family · 12 participants
-2. Work · 40 participants
+1. 🍕 Friday night pizza · 9 participants
+2. 📚 Book club · 14 participants
+3. 🏔️ Trail crew 2026 · 38 participants
+4. Neighborhood association · 212 participants
+5. Surprise party for Ana · 1 participant
+6. Old friends
+7. Work · 40 participants
 
 💡 *Tips*
 /join <link> joins
 /leave <no.|name> leaves
 
-/leave 2
+/leave 7
 👋 Left 👥 Work
 
 /leave 2 1 /Group L200/  → several at once

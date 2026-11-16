@@ -102,6 +102,33 @@ Notes saved in the database, valid for any chat (group or private). Each one has
 /notes -d #lar -r            → deletes the description
 ```
 
+The compact list (`/notes -c`) puts one line per note, grouped by tag and by day, with the tag description in
+italics, the ID, the start of the text, the icons and the time:
+
+```text
+📝 *NOTES* (6)
+
+🏷️ home (3) · 🔗 1
+👉 Things for the apartment
+
+📆 11/03/2026
+#12 Buy a new shower head · 9:15 AM
+#13 Call the plumber about the leak · 9:20 AM
+#14 smartplug-review.example.com/best-of-20… 🔗 · 8:02 PM
+
+🏷️ ideas (3)
+👉 Ideas for the weekend project
+
+📆 11/05/2026
+#15 Photo wall with the trip pictures · 6:40 PM
+#16 Build a bookshelf with pallets · 6:44 PM
+#17 Try the new trail near the lake · 10:03 PM
+
+💡 _🖼️ media · ⏰ alert · 🔗 link_
+💡 _-v <no.> opens the whole note_
+💡 _without -c, the full list_
+```
+
 - The `-view` header shows the ID, the tag and the date. An ID or tag that doesn't exist cancels
   everything, sending nothing.
 - `-move` to a new tag that already exists merges the notes of both. The description goes along; if

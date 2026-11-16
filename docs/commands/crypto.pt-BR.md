@@ -21,6 +21,40 @@ As moedas ativadas ficam na tabela `settings`, chave `crypto.coins`, e sobrevive
 
 ![Demonstração do /crypto](../assets/demo/07-crypto.gif)
 
+Exemplo de resposta (`/crypto`): preço, variação em 24 h, máxima, mínima e volume de cada moeda, num bloco
+monoespaçado, e a que mais subiu:
+
+```text
+🚀 CRYPTO MARKET
+₿ BTC
+    💰 $64,820.55  🟢 +1.04%
+    📈 $65,870.10
+    📉 $63,512.00
+    📊 $1.52B
+
+Ξ ETH
+    💰 $1,812.40   🟢 +1.42%
+    📈 $1,838.20
+    📉 $1,765.95
+    📊 $648.10M
+
+◎ SOL
+    💰 $71.95      🟢 +2.15%
+    📈 $73.00
+    📉 $69.10
+    📊 $281.45M
+
+Ⓗ HYPE
+    💰 $66.20      🔴 -0.85%
+    📈 $68.90
+    📉 $64.30
+    📊 $35.02M
+
+🔥 Top: ◎ SOL
+🟡 Binance
+⚡ Live Market Data
+```
+
 ```text
 /crypto              → as ativadas (padrão: BTC, ETH, SOL e HYPE)
 /crypto BTC          → só o bitcoin
