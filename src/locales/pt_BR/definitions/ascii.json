@@ -1,7 +1,7 @@
 {
   "summary": "O texto em letras grandes de ASCII",
   "usage": "/ascii [-width|-w <colunas>] [-char|-c <caractere>] <texto>",
-  "help": "O texto em letras grandes de ASCII, num bloco monoespaçado que cabe na tela do celular (quebra em várias linhas de letras). Aceita letras (sem acento), números e ! ? . , : - + _ /, até 40 caracteres. Sem texto, usa o da mensagem respondida.",
+  "help": "O texto em letras grandes de ASCII, num bloco monoespaçado que cabe na tela do celular (quebra em várias linhas de letras, nos espaços: a palavra inteira desce; só a palavra maior que a linha é partida). Aceita letras (sem acento), números e ! ? . , : - + _ /, até 40 caracteres. Sem texto, usa o da mensagem respondida.",
   "ex": [
     "/ascii Jorge!",
     "/ascii -w 20 Feliz aniversario",
