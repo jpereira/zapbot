@@ -123,6 +123,7 @@ nav:
       - /draw: commands/draw.md
       - /everybody: commands/everybody.md
       - /forward: commands/forward.md
+      - /games: commands/games.md
       - /get: commands/get.md
       - /giphy: commands/giphy.md
       - /goodbye: commands/goodbye.md

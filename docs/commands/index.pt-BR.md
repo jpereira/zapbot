@@ -178,11 +178,11 @@ destino: quem pode o `/gpt` usa os atalhos para ele, e o nome de um atalho não 
 <!-- gerado:roles -->
 ### Comandos por role
 
-**user** (de quem está no `bot.users`) (26):
+**user** (de quem está no `bot.users`) (27):
 
 [`/ascii`](ascii.md), [`/bills`](bills.md), [`/carbon`](carbon.md), [`/crypto`](crypto.md),
-[`/cve`](cve.md), [`/get`](get.md), [`/giphy`](giphy.md), [`/help`](help.md), [`/joke`](joke.md),
-[`/kernel`](kernel.md), [`/me`](me.md), [`/meme`](meme.md), [`/news`](news.md),
+[`/cve`](cve.md), [`/games`](games.md), [`/get`](get.md), [`/giphy`](giphy.md), [`/help`](help.md),
+[`/joke`](joke.md), [`/kernel`](kernel.md), [`/me`](me.md), [`/meme`](meme.md), [`/news`](news.md),
 [`/noffa`](noffa.md), [`/ping`](ping.md), [`/pixelart`](pixelart.md), [`/qr`](qr.md),
 [`/rates`](rates.md), [`/sticker`](sticker.md), [`/translate`](translate.md),
 [`/uptime`](uptime.md), [`/usage`](usage.md), [`/version`](version.md), [`/walissu`](walissu.md),
@@ -254,6 +254,7 @@ e o `/alias /usd` mostra o que um atalho faz.
 | [`/draw`](draw.md) | | `admin` · delegável | Desenha uma imagem ou um GIF animado (`-gif`) com o GPT Image (OpenAI); numa foto, edita ou anima |
 | [`/everybody`](everybody.md) | | `admin` · delegável | Menciona todos do grupo |
 | [`/forward`](forward.md) | | `admin` | Encaminha a mensagem respondida para pessoas, grupos e e-mails (`-to`), só se todos os destinatários forem encontrados |
+| [`/games`](games.md) | | `user` | Jogos de grupo: bola 8 mágica, verdade, desafio e quiz |
 | [`/get`](get.md) | | `user` | Baixa vídeo/áudio de redes sociais ou da mídia respondida |
 | [`/giphy`](giphy.md) | | `user` | GIF do GIPHY por tag, URL ou ID, enviado em loop |
 | [`/goodbye`](goodbye.md) | | `admin` · delegável | Mensagem quando alguém sai do grupo (por grupo; `{name}`, `{group}`) |

@@ -13,6 +13,7 @@ const {
     scheduleName, contactName, removeDeviceSuffix, resolveLidToPhone, groupResolverName, privateResolverName
 } = require('../contacts');
 const { dbGet, dbReady, dbRun } = require('../db');
+const { replyGame } = require('../commands/games');
 const { replyChoice } = require('../choices');
 const { checkFlood } = require('../flood');
 const { hideInDb, loginPassword, tryLogin } = require('../login');
@@ -261,6 +262,9 @@ client.on('message_create', (msg) => withContextDebug({
 
         // Only the no., replying to a command's list (e.g.: several contacts with the name): does not go through /watch
         if (await replyChoice(msg, chatId, body)) return;
+
+        // Replying (reply) to a bot game message (/games), without the command
+        if (await replyGame(msg, chatId, body, { senderNumber, isGroup })) return;
 
         // The bot's own reply is never a command, even starting with "/" (see markSentByBot)
         const sentByBot = msg.fromMe && body.startsWith('/') && wasSentByBot(body);

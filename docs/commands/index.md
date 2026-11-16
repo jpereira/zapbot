@@ -179,11 +179,11 @@ and a shortcut's name doesn't go in `+cmd`.
 <!-- gerado:roles -->
 ### Commands by role
 
-**user** (whoever is in `bot.users`) (26):
+**user** (whoever is in `bot.users`) (27):
 
 [`/ascii`](ascii.md), [`/bills`](bills.md), [`/carbon`](carbon.md), [`/crypto`](crypto.md),
-[`/cve`](cve.md), [`/get`](get.md), [`/giphy`](giphy.md), [`/help`](help.md), [`/joke`](joke.md),
-[`/kernel`](kernel.md), [`/me`](me.md), [`/meme`](meme.md), [`/news`](news.md),
+[`/cve`](cve.md), [`/games`](games.md), [`/get`](get.md), [`/giphy`](giphy.md), [`/help`](help.md),
+[`/joke`](joke.md), [`/kernel`](kernel.md), [`/me`](me.md), [`/meme`](meme.md), [`/news`](news.md),
 [`/noffa`](noffa.md), [`/ping`](ping.md), [`/pixelart`](pixelart.md), [`/qr`](qr.md),
 [`/rates`](rates.md), [`/sticker`](sticker.md), [`/translate`](translate.md),
 [`/uptime`](uptime.md), [`/usage`](usage.md), [`/version`](version.md), [`/walissu`](walissu.md),
@@ -255,6 +255,7 @@ target command, and `/alias /usd` shows what a shortcut does.
 | [`/draw`](draw.md) | | `admin` · delegable | Draws an image or an animated GIF (`-gif`) with GPT Image (OpenAI); on a photo, edits or animates it |
 | [`/everybody`](everybody.md) | | `admin` · delegable | Mentions everyone in the group |
 | [`/forward`](forward.md) | | `admin` | Forwards the replied message to people, groups and emails (`-to`), only if every recipient is found |
+| [`/games`](games.md) | | `user` | Group games: magic 8 ball, truth, dare and trivia |
 | [`/get`](get.md) | | `user` | Downloads video/audio from social networks or from the replied media |
 | [`/giphy`](giphy.md) | | `user` | GIPHY GIF by tag, URL, or ID, sent looping |
 | [`/goodbye`](goodbye.md) | | `admin` · delegable | Message when someone leaves the group (per group; `{name}`, `{group}`) |

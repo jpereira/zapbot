@@ -61,6 +61,7 @@ async function restart() {
     for (const fileAlt of fs.existsSync(tmp) ? fs.readdirSync(tmp) : []) fs.rmSync(path.join(tmp, fileAlt), { recursive: true, force: true });
 
     client.enviadas.length = 0;
+    client.reagidas.length = 0;
     client.recusarEdicao = false;
     client.buscas.length = 0;
     client.resultadosDaBusca = [];
@@ -165,6 +166,7 @@ function createMessage({ texto: textAlt = '', chat = GROUP, de = OWNER.jid, id, 
             return client.contatos.get(de) ?? { id: { _serialized: de }, number: de.split('@')[0] };
         },
         async getQuotedMessage() { return quoted; },
+        async react(emoji) { client.reagidas.push({ id: this.id._serialized, emoji }); },
         async downloadMedia() { return mediaAlt; },
         ...extras
     };

@@ -1,0 +1,442 @@
+{
+  "pt_BR": {
+    "ball": [
+      "Sim, com certeza.",
+      "Tudo indica que sim.",
+      "Pode contar com isso.",
+      "Sem dúvida nenhuma.",
+      "Os sinais apontam que sim.",
+      "Provavelmente sim.",
+      "Parece bom.",
+      "Resposta nebulosa, tente de novo.",
+      "Pergunte mais tarde.",
+      "Melhor não te contar agora.",
+      "Não dá para prever agora.",
+      "Concentre-se e pergunte de novo.",
+      "Não conte com isso.",
+      "Minha resposta é não.",
+      "Minhas fontes dizem que não.",
+      "Não parece nada bom.",
+      "Duvido muito.",
+      "Só se você fizer sua parte.",
+      "Hoje não, amanhã quem sabe.",
+      "Claro que não!"
+    ],
+    "truth": [
+      "Qual foi a maior mentira que você já contou e nunca foi descoberto?",
+      "Qual foi a coisa mais vergonhosa que já aconteceu com você em público?",
+      "Quem do grupo você acha que fala mais do que faz?",
+      "Qual mensagem você mais se arrependeu de ter enviado?",
+      "Qual é o seu maior medo bobo?",
+      "Já fingiu estar doente para faltar a algum compromisso? Qual?",
+      "Qual é a música que você ouve escondido por vergonha?",
+      "Qual foi o último site que você abriu e não queria que ninguém visse?",
+      "Quem foi o seu primeiro crush?",
+      "Qual foi a pior ideia que você já teve e colocou em prática?",
+      "Qual a coisa mais cara que você comprou por impulso?",
+      "Já leu a conversa de alguém sem a pessoa saber?",
+      "Qual apelido seu que você mais odeia?",
+      "Qual foi a pior desculpa que você já deu para chegar atrasado?",
+      "Se pudesse trocar de vida com alguém do grupo por um dia, com quem seria?",
+      "Qual é o seu maior defeito, na sua opinião?",
+      "Qual a maior mentira que já contou numa entrevista de emprego?",
+      "O que você faz quando está sozinho(a) e ninguém sabe?",
+      "Qual foi a última vez que você chorou e por quê?",
+      "De quem do grupo você já sentiu ciúmes?"
+    ],
+    "dare": [
+      "Mande um áudio cantando o refrão da última música que você ouviu.",
+      "Mude sua foto de perfil para uma foto engraçada por 1 hora.",
+      "Escreva uma mensagem de bom dia para a última pessoa com quem você conversou, como se fosse um poema.",
+      "Mande uma selfie fazendo a sua melhor careta.",
+      "Fale só com emojis nas próximas 5 mensagens.",
+      "Mande um áudio imitando um animal à sua escolha.",
+      "Escreva o nome de todos do grupo de cabeça, sem olhar a lista.",
+      "Conte uma piada ruim e peça para o grupo avaliar.",
+      "Mande a foto mais antiga que você tem no celular.",
+      "Mande um áudio dizendo o alfabeto de trás para frente.",
+      "Escreva um elogio sincero para cada pessoa que responder a esta mensagem.",
+      "Mande um áudio falando um trava-língua três vezes rápido.",
+      "Troque seu status do WhatsApp por uma frase escolhida pelo grupo por 1 hora.",
+      "Faça uma declaração dramática para um objeto da sua casa e mande em áudio.",
+      "Mande a captura de tela da sua tela inicial.",
+      "Descreva o seu dia usando apenas títulos de filmes.",
+      "Mande um áudio contando até 20 em outro idioma.",
+      "Diga em voz alta uma qualidade de cada pessoa do grupo que responder aqui.",
+      "Mande uma foto do que está na sua frente agora.",
+      "Escolha alguém do grupo e escreva uma mensagem de agradecimento exagerada."
+    ],
+    "trivia": [
+      {
+        "q": "Qual é o maior planeta do Sistema Solar?",
+        "o": [
+          "Saturno",
+          "Júpiter",
+          "Netuno",
+          "Terra"
+        ],
+        "a": 1
+      },
+      {
+        "q": "Quantos continentes existem na divisão mais usada no Brasil?",
+        "o": [
+          "5",
+          "6",
+          "7",
+          "8"
+        ],
+        "a": 1
+      },
+      {
+        "q": "Quem pintou a Mona Lisa?",
+        "o": [
+          "Michelangelo",
+          "Van Gogh",
+          "Leonardo da Vinci",
+          "Picasso"
+        ],
+        "a": 2
+      },
+      {
+        "q": "Qual é a capital da Austrália?",
+        "o": [
+          "Sydney",
+          "Melbourne",
+          "Camberra",
+          "Perth"
+        ],
+        "a": 2
+      },
+      {
+        "q": "Qual é o elemento químico de símbolo Fe?",
+        "o": [
+          "Flúor",
+          "Ferro",
+          "Fósforo",
+          "Frâncio"
+        ],
+        "a": 1
+      },
+      {
+        "q": "Em que ano o homem pisou na Lua pela primeira vez?",
+        "o": [
+          "1965",
+          "1969",
+          "1972",
+          "1959"
+        ],
+        "a": 1
+      },
+      {
+        "q": "Qual é o maior oceano do planeta?",
+        "o": [
+          "Atlântico",
+          "Índico",
+          "Pacífico",
+          "Ártico"
+        ],
+        "a": 2
+      },
+      {
+        "q": "Quantos jogadores um time de futebol tem em campo?",
+        "o": [
+          "9",
+          "10",
+          "11",
+          "12"
+        ],
+        "a": 2
+      },
+      {
+        "q": "Qual é o rio mais extenso do Brasil?",
+        "o": [
+          "São Francisco",
+          "Amazonas",
+          "Paraná",
+          "Tocantins"
+        ],
+        "a": 1
+      },
+      {
+        "q": "Quem escreveu Dom Casmurro?",
+        "o": [
+          "José de Alencar",
+          "Machado de Assis",
+          "Graciliano Ramos",
+          "Clarice Lispector"
+        ],
+        "a": 1
+      },
+      {
+        "q": "Qual é o resultado de 7 x 8?",
+        "o": [
+          "54",
+          "56",
+          "58",
+          "64"
+        ],
+        "a": 1
+      },
+      {
+        "q": "Qual é o animal mais rápido em terra?",
+        "o": [
+          "Leão",
+          "Guepardo",
+          "Cavalo",
+          "Antílope"
+        ],
+        "a": 1
+      },
+      {
+        "q": "Qual é a língua mais falada do mundo por número de falantes nativos?",
+        "o": [
+          "Inglês",
+          "Espanhol",
+          "Mandarim",
+          "Hindi"
+        ],
+        "a": 2
+      },
+      {
+        "q": "Qual país tem o formato de uma bota?",
+        "o": [
+          "Espanha",
+          "Itália",
+          "Grécia",
+          "Portugal"
+        ],
+        "a": 1
+      },
+      {
+        "q": "Quantos bits tem um byte?",
+        "o": [
+          "4",
+          "8",
+          "16",
+          "32"
+        ],
+        "a": 1
+      }
+    ]
+  },
+  "en_US": {
+    "ball": [
+      "Yes, definitely.",
+      "It looks like it.",
+      "You can count on it.",
+      "Without a doubt.",
+      "Signs point to yes.",
+      "Probably yes.",
+      "Looks good.",
+      "Hazy, try again.",
+      "Ask again later.",
+      "Better not tell you now.",
+      "Cannot predict now.",
+      "Concentrate and ask again.",
+      "Don't count on it.",
+      "My answer is no.",
+      "My sources say no.",
+      "Doesn't look good.",
+      "I doubt it.",
+      "Only if you do your part.",
+      "Not today, maybe tomorrow.",
+      "Of course not!"
+    ],
+    "truth": [
+      "What is the biggest lie you ever told and never got caught?",
+      "What is the most embarrassing thing that ever happened to you in public?",
+      "Who in this group do you think talks more than they do?",
+      "Which message do you regret sending the most?",
+      "What is your silliest fear?",
+      "Did you ever fake being sick to skip something? What was it?",
+      "Which song do you listen to in secret because you are embarrassed?",
+      "What was the last site you opened that you didn't want anyone to see?",
+      "Who was your first crush?",
+      "What was the worst idea you ever had and actually did?",
+      "What is the most expensive thing you bought on impulse?",
+      "Did you ever read someone's chat without them knowing?",
+      "Which nickname of yours do you hate the most?",
+      "What is the worst excuse you ever gave for being late?",
+      "If you could swap lives with someone in the group for a day, who would it be?",
+      "What is your biggest flaw, in your opinion?",
+      "What is the biggest lie you told in a job interview?",
+      "What do you do when you are alone and nobody knows?",
+      "When was the last time you cried and why?",
+      "Who in the group did you ever feel jealous of?"
+    ],
+    "dare": [
+      "Send a voice note singing the chorus of the last song you listened to.",
+      "Change your profile picture to a funny one for 1 hour.",
+      "Write a good morning message to the last person you talked to, as a poem.",
+      "Send a selfie making your best face.",
+      "Talk only in emojis for the next 5 messages.",
+      "Send a voice note imitating an animal of your choice.",
+      "Write the name of everyone in the group from memory, without looking at the list.",
+      "Tell a bad joke and ask the group to rate it.",
+      "Send the oldest photo on your phone.",
+      "Send a voice note saying the alphabet backwards.",
+      "Write a sincere compliment to everyone who replies to this message.",
+      "Send a voice note saying a tongue twister three times fast.",
+      "Change your WhatsApp About to a sentence chosen by the group for 1 hour.",
+      "Make a dramatic declaration to an object in your house and send it as voice.",
+      "Send a screenshot of your home screen.",
+      "Describe your day using only movie titles.",
+      "Send a voice note counting to 20 in another language.",
+      "Say out loud one good quality of each person who replies here.",
+      "Send a photo of what is in front of you right now.",
+      "Pick someone in the group and write an over-the-top thank-you message."
+    ],
+    "trivia": [
+      {
+        "q": "What is the largest planet in the Solar System?",
+        "o": [
+          "Saturn",
+          "Jupiter",
+          "Neptune",
+          "Earth"
+        ],
+        "a": 1
+      },
+      {
+        "q": "How many continents are there in the most common division?",
+        "o": [
+          "5",
+          "6",
+          "7",
+          "8"
+        ],
+        "a": 2
+      },
+      {
+        "q": "Who painted the Mona Lisa?",
+        "o": [
+          "Michelangelo",
+          "Van Gogh",
+          "Leonardo da Vinci",
+          "Picasso"
+        ],
+        "a": 2
+      },
+      {
+        "q": "What is the capital of Australia?",
+        "o": [
+          "Sydney",
+          "Melbourne",
+          "Canberra",
+          "Perth"
+        ],
+        "a": 2
+      },
+      {
+        "q": "Which chemical element has the symbol Fe?",
+        "o": [
+          "Fluorine",
+          "Iron",
+          "Phosphorus",
+          "Francium"
+        ],
+        "a": 1
+      },
+      {
+        "q": "In which year did humans first walk on the Moon?",
+        "o": [
+          "1965",
+          "1969",
+          "1972",
+          "1959"
+        ],
+        "a": 1
+      },
+      {
+        "q": "What is the largest ocean on the planet?",
+        "o": [
+          "Atlantic",
+          "Indian",
+          "Pacific",
+          "Arctic"
+        ],
+        "a": 2
+      },
+      {
+        "q": "How many players does a football (soccer) team have on the pitch?",
+        "o": [
+          "9",
+          "10",
+          "11",
+          "12"
+        ],
+        "a": 2
+      },
+      {
+        "q": "What is the longest river in South America?",
+        "o": [
+          "Paraná",
+          "Amazon",
+          "Orinoco",
+          "São Francisco"
+        ],
+        "a": 1
+      },
+      {
+        "q": "Who wrote Don Quixote?",
+        "o": [
+          "Lope de Vega",
+          "Miguel de Cervantes",
+          "Gabriel García Márquez",
+          "Jorge Luis Borges"
+        ],
+        "a": 1
+      },
+      {
+        "q": "What is 7 x 8?",
+        "o": [
+          "54",
+          "56",
+          "58",
+          "64"
+        ],
+        "a": 1
+      },
+      {
+        "q": "Which is the fastest land animal?",
+        "o": [
+          "Lion",
+          "Cheetah",
+          "Horse",
+          "Antelope"
+        ],
+        "a": 1
+      },
+      {
+        "q": "Which language has the most native speakers in the world?",
+        "o": [
+          "English",
+          "Spanish",
+          "Mandarin",
+          "Hindi"
+        ],
+        "a": 2
+      },
+      {
+        "q": "Which country is shaped like a boot?",
+        "o": [
+          "Spain",
+          "Italy",
+          "Greece",
+          "Portugal"
+        ],
+        "a": 1
+      },
+      {
+        "q": "How many bits are in a byte?",
+        "o": [
+          "4",
+          "8",
+          "16",
+          "32"
+        ],
+        "a": 1
+      }
+    ]
+  }
+}
