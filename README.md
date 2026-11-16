@@ -5,7 +5,17 @@
   giving a thumbs up in a green chat bubble, with a little demon face peeking from the side" width="320">
 </p>
 
-[![Tests](https://github.com/jpereira/zapbot/actions/workflows/ci.yml/badge.svg)](https://github.com/jpereira/zapbot/actions/workflows/ci.yml)
+<p align="center">
+  <a href="https://github.com/jpereira/zapbot/actions/workflows/ci.yml"><img src="https://github.com/jpereira/zapbot/actions/workflows/ci.yml/badge.svg" alt="Tests"></a>
+  <a href="https://github.com/jpereira/zapbot/actions/workflows/containers.yml"><img src="https://github.com/jpereira/zapbot/actions/workflows/containers.yml/badge.svg" alt="Container image"></a>
+  <a href="https://github.com/jpereira/zapbot/actions/workflows/docs.yml"><img src="https://github.com/jpereira/zapbot/actions/workflows/docs.yml/badge.svg" alt="Documentation build"></a>
+  <a href="https://github.com/jpereira/zapbot/blob/main/package.json"><img src="https://img.shields.io/github/package-json/v/jpereira/zapbot" alt="Version"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/jpereira/zapbot" alt="License"></a>
+  <img src="https://img.shields.io/badge/node-24-339933?logo=nodedotjs&amp;logoColor=white" alt="Node.js 24">
+  <a href="https://github.com/jpereira/zapbot/commits/main"><img src="https://img.shields.io/github/last-commit/jpereira/zapbot" alt="Last commit"></a>
+  <a href="https://jpereira.github.io/zapbot/"><img src="https://img.shields.io/badge/docs-jpereira.github.io%2Fzapbot-blue?logo=readthedocs&amp;logoColor=white" alt="Documentation"></a>
+  <a href="https://chat.whatsapp.com/LrYlfasTbRx5lBhGdGNj4F?mode=gi_t"><img src="https://img.shields.io/badge/WhatsApp-Join%20the%20group-25D366?logo=whatsapp&amp;logoColor=white" alt="WhatsApp group"></a>
+</p>
 
 > 🇧🇷 **Leia em português (pt_BR): [README.pt-BR.md](README.pt-BR.md).**
 >
