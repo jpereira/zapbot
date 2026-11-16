@@ -595,7 +595,6 @@ const SETTINGS_SCHEMA = {
     'news.brazil': {
         // The feeds listed at https://rss.feedspot.com/brazil_rss_feeds/ (the page is HTML, not RSS)
         default: [
-            'http://lifeinrocinha.blogspot.com/feeds/posts/default?alt=rss',
             'https://braziliangringo.com/feed/',
             'https://brazilianspace.blogspot.com/feeds/posts/default?alt=rss',
             'https://cursosbiblicos.teo.br/feed/',
