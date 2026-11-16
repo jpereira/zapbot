@@ -366,6 +366,27 @@ describe('listas de destinatários (#lista)', () => {
         assert.equal(await bot.executar('/forward #ami', { citada: quoted() }).then(e => para(e, OTHERAlt.jid).length), 0, 'parcial não envia');
     });
 
+    test('quem da lista é o chat do comando fica de fora (avulso digitado vale)', async () => {
+        await bot.executar('/forward -add #amigos /Fulano/ /Ciclano/');
+
+        // The bot also replies (notice and status) in the command chat: only the forwarded message counts
+        const forwarded = (sendings, chatId) => para(sendings, chatId).filter(e => String(e.content).includes('Reunião às 10h'));
+
+        let sendings = await bot.executar('/forward #amigos', { citada: quoted(), chat: OTHERAlt.jid });
+        assert.equal(forwarded(sendings, OTHERAlt.jid).length, 0, 'não manda de volta para a conversa de origem');
+        assert.equal(forwarded(sendings, CICLANO.jid).length, 1);
+
+        sendings = await bot.executar('/forward #amigos /Fulano/', { citada: quoted(), chat: OTHERAlt.jid });
+        assert.equal(forwarded(sendings, OTHERAlt.jid).length, 1, 'digitado de propósito, vai');
+
+        assert.match(list(await bot.executar('/forward -dry #amigos', { chat: OTHERAlt.jid })), /Ficou de fora, por ser este chat: 👤 Fulano/);
+
+        await bot.executar('/forward -add #so /Fulano/');
+        sendings = await bot.executar('/forward #so', { citada: quoted(), chat: OTHERAlt.jid });
+        assert.equal(sendings.length, 1);
+        assert.match(sendings[0].texto, /Ninguém para encaminhar: 👤 Fulano é este mesmo chat/);
+    });
+
     test('-dry com lista mostra os membros sem enviar', async () => {
         await bot.executar('/forward -add #amigos /Fulano/ -to a@b.com');
         const sendings = await bot.executar('/forward -dry #amigos');

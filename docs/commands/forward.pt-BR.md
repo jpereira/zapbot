@@ -77,6 +77,7 @@ tudo toda vez (uma mala direta).
   (`-list`, `-desc`).
 - O `-rm` é tudo ou nada: se alguma lista ou destinatário não existir, nada é removido. Tirar o último
   destinatário remove a lista.
+- Se alguém da lista for o chat onde você digitou o comando (a conversa de onde veio a mensagem), ele fica de fora: não volta para ele. Um destinatário digitado de propósito recebe, e o `-dry` diz quem ficou de fora.
 - Os nomes são minúsculos, com letras, dígitos, `_` e `-`.
 - Um envio (listas e avulsos somados) e cada lista são limitados pelo setting
   `forward.maxRecipients` (padrão 30).
