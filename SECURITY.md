@@ -1,39 +1,41 @@
-# Política de segurança
+# Security policy
 
-## Versões suportadas
+> 🇧🇷 **Leia em português (pt_BR): [SECURITY.pt-BR.md](SECURITY.pt-BR.md).**
 
-Só a **última release** (tag `vX.Y.Z` mais recente) recebe correções de segurança. As correções
-saem numa release nova; atualize seguindo a
-[documentação](https://jpereira.github.io/zapbot/pt-BR/instalacao/#atualizar-para-uma-nova-versão).
+## Supported versions
 
-## Como reportar uma vulnerabilidade
+Only the **latest release** (the most recent `vX.Y.Z` tag) receives security fixes. Fixes ship in a
+new release; update following the
+[documentation](https://jpereira.github.io/zapbot/instalacao/#update-to-a-new-version).
 
-**Não abra uma issue pública.** Reporte em particular, de um destes jeitos:
+## How to report a vulnerability
 
-- pela aba **Security** do repositório no GitHub (**Report a vulnerability**);
-- por e-mail para **jpereiran@gmail.com**.
+**Do not open a public issue.** Report it privately, in one of these ways:
 
-Inclua, se possível: a versão (ou o commit), os passos para reproduzir, o impacto que você observou
-e, se tiver, uma sugestão de correção. O projeto é mantido por uma pessoa: a resposta vem assim que
-possível, e você será avisado quando a correção for publicada.
+- through the repository's **Security** tab on GitHub (**Report a vulnerability**);
+- by email to **jpereiran@gmail.com**.
 
-## O que é sensível neste projeto
+If possible, include: the version (or the commit), the steps to reproduce, the impact you observed and,
+if you have one, a suggested fix. The project is maintained by one person: the reply comes as soon as
+possible, and you will be told when the fix is published.
 
-Alguns pontos merecem atenção especial num relato:
+## What is sensitive in this project
 
-- **Sessão do WhatsApp** (`.wwebjs_auth`) e o **QR Code**: quem tiver um dos dois controla a conta.
-  O QR pode ir por e-mail (veja o código anti-phishing em
-  [E-mails](https://jpereira.github.io/zapbot/pt-BR/emails/)).
-- **Níveis dos comandos** (owner > admin > user): qualquer forma de alguém executar um comando
-  acima do nível dele, ou de role `admin` sem o dono ter liberado (`/bot +cmd`, só nos
-  delegáveis), inclusive fazendo o bot "digitar" um comando ou por um atalho do `/alias`. Ou de um
-  admin extra (`/bot +a`) alterar o `bot.admins` ou o `bot.users`, que só o dono pode mudar. Também conta
-  alguém de fora do `bot.users` conseguir usar os comandos comuns, ou um usuário usar um comando
-  fora dos dele (`/bot +cmd`).
-- **`/get`**: o `yt-dlp` roda na rede do servidor; URLs para a rede interna são recusadas
-  (anti-SSRF).
-- **Chaves de API** (OpenAI, GIPHY, Google Translate) e a senha do SMTP: nunca devem aparecer no
-  chat nem nos logs.
-- **Mensagens guardadas**: o banco (`cache/zapbot.db`), as mídias em `cache/media` e os
-  backups em `cache/backups` têm conversas de terceiros. O `/backup -send` para outro chat pede
-  confirmação (`-yes`) por isso.
+A few points deserve special attention in a report:
+
+- **WhatsApp session** (`.wwebjs_auth`) and the **QR Code**: whoever has either of them controls the
+  account. The QR can go by email (see the anti-phishing code in
+  [Emails](https://jpereira.github.io/zapbot/emails/)).
+- **Command levels** (owner > admin > user): any way for someone to run a command above their level,
+  or one with the `admin` role without the owner having released it (`/bot +cmd`, only for the
+  delegable ones), including making the bot "type" a command or through an `/alias` shortcut. Or for an
+  extra admin (`/bot +a`) to change `bot.admins` or `bot.users`, which only the owner can change. Also
+  counts someone outside `bot.users` being able to use the regular commands, or a user running a
+  command outside their own (`/bot +cmd`).
+- **`/get`**: `yt-dlp` runs on the server's network; URLs pointing to the internal network are
+  refused (anti-SSRF).
+- **API keys** (OpenAI, GIPHY, Google Translate) and the SMTP password: they must never show up in the
+  chat or in the logs.
+- **Stored messages**: the database (`cache/zapbot.db`), the media in `cache/media` and the backups in
+  `cache/backups` hold conversations of third parties. `/backup -send` to another chat asks for
+  confirmation (`-yes`) for that reason.

@@ -391,7 +391,7 @@ describe('documentação', () => {
 
     test('links para o site (jpereira.github.io/zapbot) apontam para páginas e âncoras do docs/', () => {
         const SITE = /https:\/\/jpereira\.github\.io\/zapbot\/([^)\s"'`]*)/g;
-        const files = [...READMES, 'SECURITY.md', ...definitionFiles(), ...pagesDocs().map(f => `docs/${f}`)];
+        const files = [...READMES, 'SECURITY.md', 'SECURITY.pt-BR.md', ...definitionFiles(), ...pagesDocs().map(f => `docs/${f}`)];
         let total = 0;
 
         for (const fileAlt of files) {
