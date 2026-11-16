@@ -52,39 +52,8 @@ still work).
 
 ## Formatting on WhatsApp
 
-ChatGPT writes in Markdown, which WhatsApp doesn't understand (the `#` and `**` would show up as
-stray characters, and a table would turn into a pile of bars). So the reply goes through two steps,
-in `/gpt` and in `/tldr`:
-
-1. **The request to the model**: the instructions tell it to write in WhatsApp format (`*bold*` with
-   one asterisk, `_italic_`, `~strikethrough~`, lists with `- `, code between backticks) and without
-   headings, tables, and `---`.
-2. **The conversion** of whatever slips through (`src/util/whatsapp.js`):
-
-| The model wrote | Arrives on WhatsApp |
-|---|---|
-| `# Title`, `## Title` | `*Title*` |
-| `**bold**`, `__bold__` | `*bold*` |
-| `***strong***` | `*_strong_*` |
-| `~~strikethrough~~` | `~strikethrough~` |
-| `* item`, `+ item` | `- item` |
-| `[text](https://x.com)` | `text (https://x.com)` |
-| `![photo](https://x.com/a.png)` | `https://x.com/a.png` |
-| `---` alone on a line | (disappears) |
-| table with `\|` | a code block with the columns aligned |
-| ` ```text ` | ` ``` ` (without the language name) |
-
-What's inside a code block is left alone, and what's already in WhatsApp format stays as is. A table
-becomes a monospaced block because it's the only way to keep the columns:
-
-````text
-```
-Symbol   Meaning
--------  -------
-∈        Belongs
-∉        Does not belong
-```
-````
+The replies come in WhatsApp's own formatting (`*bold*`, `_italic_`, lists, code blocks), and a table
+becomes an aligned code block. `/tldr` does the same.
 
 ## With a photo
 

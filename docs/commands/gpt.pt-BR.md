@@ -50,37 +50,8 @@ resto do texto, um `-x` é pergunta. O `/tldr` e o `/draw` agem igual (o `-2h` e
 
 ## Formatação no WhatsApp
 
-O ChatGPT escreve em Markdown, que o WhatsApp não entende (os `#` e os `**` apareceriam soltos, e uma
-tabela viraria um monte de barras). Por isso a resposta passa por duas etapas, no `/gpt` e no `/tldr`:
-
-1. **O pedido ao modelo**: as instruções dizem para escrever no formato do WhatsApp (`*negrito*` com um
-   asterisco, `_itálico_`, `~tachado~`, listas com `- `, código entre crases) e sem títulos, tabelas e `---`.
-2. **A conversão** do que escapar (`src/util/whatsapp.js`):
-
-| O modelo escreveu | Chega no WhatsApp |
-|---|---|
-| `# Título`, `## Título` | `*Título*` |
-| `**negrito**`, `__negrito__` | `*negrito*` |
-| `***forte***` | `*_forte_*` |
-| `~~tachado~~` | `~tachado~` |
-| `* item`, `+ item` | `- item` |
-| `[texto](https://x.com)` | `texto (https://x.com)` |
-| `![foto](https://x.com/a.png)` | `https://x.com/a.png` |
-| `---` sozinho na linha | (some) |
-| tabela com `\|` | um bloco de código com as colunas alinhadas |
-| ` ```text ` | ` ``` ` (sem o nome da linguagem) |
-
-O que está dentro de um bloco de código não é mexido, e o que já está no formato do WhatsApp fica como
-está. Uma tabela vira um bloco monoespaçado porque é o único jeito de manter as colunas:
-
-````text
-```
-Símbolo  Significado
--------  -----------
-∈        Pertence
-∉        Não pertence
-```
-````
+As respostas chegam na formatação do próprio WhatsApp (`*negrito*`, `_itálico_`, listas, blocos de
+código), e uma tabela vira um bloco de código alinhado. O `/tldr` faz o mesmo.
 
 ## Com foto
 
