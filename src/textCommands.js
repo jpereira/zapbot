@@ -11,6 +11,7 @@ const { printError } = require('./log');
 const { optionsError, readOptions, assembleContext, denial } = require('./execute');
 const { dbGet, dbReady } = require('./db');
 const { t } = require('./i18n');
+const { unescape } = require('./util/format');
 
 /*
  * Only the commands with "cron": true in commands.js (the query ones), and without the
@@ -192,7 +193,9 @@ function fit(textAlt, mark, reply) {
  */
 async function assembleText(textAlt, s, { onde: whereAlt, quem: who } = {}) {
     const commands = commandsInText(textAlt);
-    if (!commands.length) return { texto: textAlt, midias: [], comandos: [] };
+    // \-foo becomes -foo in the sent text; a text that is a command (starts with /) stays as it is
+    const literal = (s) => (String(s).trimStart().startsWith('/') ? s : unescape(s));
+    if (!commands.length) return { texto: literal(textAlt), midias: [], comandos: [] };
 
     const ctx = { chatName: s.chat_name, isGroup: Boolean(s.is_group), onde: whereAlt, quem: who };
     const mediaAltAlt = [];
@@ -204,7 +207,7 @@ async function assembleText(textAlt, s, { onde: whereAlt, quem: who } = {}) {
         mediaAltAlt.push(...r.midias);
     }
 
-    return { texto: final.trim(), midias: mediaAltAlt, comandos: commands.map(c => c.linha) };
+    return { texto: literal(final.trim()), midias: mediaAltAlt, comandos: commands.map(c => c.linha) };
 }
 
 // Sends the stored media, in order, to the chat

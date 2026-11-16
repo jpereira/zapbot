@@ -12,6 +12,11 @@ Podem ser enviados em **qualquer chat** (privado, grupo ou no chat consigo mesmo
 
 - Opções usam **um único hífen** e aceitam o nome longo ou o curto: `-audio` = `-a`, `-startSec 10`
   = `-ss 10`. Um valor com `-` na frente também vale quando é tempo (`-ss -10`: os últimos 10 s).
+- **Para escrever um texto que parece uma opção**, ponha uma barra invertida na frente: `\-foo` é o
+  texto `-foo`, não uma opção. Vale no meio de qualquer texto, mesmo quando `-foo` é uma opção do
+  comando: `/notes #casa comprar leite \-to o mercado` guarda `comprar leite -to o mercado` (sem o `\-to`,
+  seria lido como destino), e `/gpt explique \-a` manda `-a` para o ChatGPT. Também vale como valor de
+  uma opção (`-msg \-to`). Só conta a `\` logo antes do `-`, no começo da palavra.
 - Todo comando aceita `-help` / `-h`: `/get -h` mostra a ajuda só dele.
 - `/help` lista os comandos que você pode usar (o dono e os admins veem todos); `/help get` ou
   `/help /get` mostram um específico, e `/help -r` agrupa a lista por role (`owner`, `admin` e

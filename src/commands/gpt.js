@@ -17,6 +17,7 @@ const {
 } = require('./openaiCommon');
 const { TMP_DIR } = require('../constants');
 const { language, t } = require('../i18n');
+const { unescape } = require('../util/format');
 const {
     WITHOUT_KEY, updatePrices, keyAdminOpenAi, keyOpenAi, queryConsumption, queryCosts, queryLimits, queryServices, errorOpenAi,
     measureConsumption, askOnChat, consumptionFooter, synthesizeVoice, transcribeAudio, VOICE_MAX_CHARACTERS
@@ -174,7 +175,7 @@ async function contentForTalk(quotedMsg, cmd = '/gpt') {
  * typed text, speaks the replied message's.
  */
 async function talkText(msg, args, quotedMsg, cmd = '/gpt') {
-    const typed = args.replace(/(^|\s)-(?:voice|v)(?=\s|$)/, '').trim();
+    const typed = unescape(args.replace(/(^|\s)-(?:voice|v)(?=\s|$)/, '').trim());
     let textAlt = typed;
     let style = null;
 
@@ -505,7 +506,7 @@ async function ask({ msg, args, opts, quotedMsg, admin }) {
     const replied = doc
         ? t('gpt.docPrompt', { nome: doc.documento.nome, texto: doc.documento.texto })
         : String(quotedMsg?.body ?? '').trim();
-    let question = [replied, args.trim()].filter(Boolean).join('\n\n');
+    let question = [replied, unescape(args.trim())].filter(Boolean).join('\n\n');
 
     // Replying to a photo, it goes along with the question (without a question, /gpt describes the photo)
     const photo = await messageImage(quotedMsg, '/gpt');

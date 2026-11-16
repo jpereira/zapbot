@@ -13,6 +13,11 @@ You can send them in **any chat** (private, group, or the chat with yourself).
 - Options use **a single hyphen** and accept the long or the short name: `-audio` = `-a`,
   `-startSec 10` = `-ss 10`. A value with a leading `-` is also fine when it's a time (`-ss -10`:
   the last 10 s).
+- **To write text that looks like an option**, put a backslash in front: `\-foo` is the text `-foo`, not
+  an option. It works in the middle of any text, even when `-foo` is an option of the command:
+  `/notes #home buy milk \-to the market` saves `buy milk -to the market` (without `\-to`, it would be read
+  as the destination), and `/gpt explain \-a` sends `-a` to ChatGPT. It also works as an option value
+  (`-msg \-to`). Only the `\` right before the `-` counts, at the start of the word.
 - Every command accepts `-help` / `-h`: `/get -h` shows the help for that command only.
 - `/help` lists the commands you can use (the owner and admins see all of them); `/help get` or
   `/help /get` show a specific one, and `/help -r` groups the list by role (`owner`, `admin`, and

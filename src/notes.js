@@ -17,7 +17,7 @@ const {
 } = require('./destinations');
 const { sendEmail } = require('./email');
 const { printError, printInfo } = require('./log');
-const { formatData, paraMs, summarizeText } = require('./util/format');
+const { unescape, formatData, paraMs, summarizeText } = require('./util/format');
 const { language, t } = require('./i18n');
 const { generatePdf } = require('./util/pdf');
 const { compileSearch } = require('./watch/rules');
@@ -266,7 +266,7 @@ async function addAlt(msg, textTyped, quotedMsg) {
     const m = withoutDestination.match(ALERT);
     const separated = separateTag((m ? withoutDestination.slice(0, m.index) : withoutDestination).trim());
     const { tag } = separated;
-    let { texto: textAlt } = separated;
+    let textAlt = unescape(separated.texto);
 
     // The syntax is always /notes #tag <text>: without a tag it does not save
     if (!tag) {
@@ -348,6 +348,7 @@ async function update(msg, rest, quotedMsg) {
     }
 
     let { tag, texto: textAlt } = separateTag(withBreaks(m[2] ?? '').trim());
+    textAlt = unescape(textAlt);
     if (!textAlt && quotedMsg?.body?.trim()) textAlt = `${MARK_REPLY} ${quotedMsg.body.trim()}`;
     if (!textAlt) {
         await msg.reply(t('notes.update.usage'));

@@ -791,3 +791,23 @@ describe('banco', () => {
         await bot.dbRun('DELETE FROM defi_positions');
     });
 });
+
+describe('escape de opção (\\-foo)', () => {
+    const { GetOptFromCommand } = require('../src/options');
+    const { unescape } = require('../src/util/format');
+    const config = { cmd_opts: [{ opts: ['to'], values: ['<d>'] }, { opts: ['quiet', 'q'], values: [] }] };
+
+    test('no parser, \\-x vira o argumento -x e não é opção; como valor também', () => {
+        const r = GetOptFromCommand('oi \\-q \\-to x', config);
+        assert.deepEqual(r.argv, ['oi', '-q', '-to', 'x']);
+        assert.equal(r.opt.quiet, false);
+        assert.equal(GetOptFromCommand('-to \\-q', config).opt.to, '-q');
+        assert.equal(GetOptFromCommand('-q oi', config).opt.quiet, true);
+    });
+
+    test('desescapar só tira a "\\" do começo da palavra, antes do "-"', () => {
+        assert.equal(unescape('a \\-b c\\-d \\\\x \\-'), 'a -b c\\-d \\\\x -');
+        assert.equal(unescape('\\-q'), '-q');
+        assert.equal(unescape(undefined), '');
+    });
+});

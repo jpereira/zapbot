@@ -6,6 +6,7 @@ const { translate, languages } = require('google-translate-api-x');
 
 const { getCommandSyntax } = require('./base');
 const { t } = require('../i18n');
+const { unescape } = require('../util/format');
 const { printError } = require('../log');
 const { getSetting } = require('../settings');
 
@@ -61,7 +62,7 @@ async function cmdTranslate({ msg, args, opts, quotedMsg }) {
 
         // Command text as typed (with the line breaks), without -to; without it, the replied message's
         const typed = String(args ?? '').replace(/(^|\s)-(to|p)(\s+\S+)?(?=\s|$)/i, '$1').trim();
-        const textAlt = typed || quotedMsg?.body?.trim() || '';
+        const textAlt = unescape(typed) || quotedMsg?.body?.trim() || '';
 
         if (!textAlt) {
             await msg.reply('```' + getCommandSyntax('/translate') + '```');

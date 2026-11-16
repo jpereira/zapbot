@@ -31,7 +31,15 @@ const summarizeText = (textAlt, max = 100) => {
     return t.length > max ? `${t.slice(0, max - 1)}…` : t;
 };
 
+/*
+ * The option escape: "\-foo" is the text "-foo", not an option. It only counts with the "\" at the start of the word
+ * (after a space or at the start). The free-text commands call this when using the text,
+ * after removing the options; the options' regexes no longer catch the "\-foo" (they require a space before the "-").
+ */
+const unescape = (textAlt) => String(textAlt ?? '').replace(/(^|\s)\\(?=-)/g, '$1');
+
 module.exports = {
+    unescape,
     wait,
     fmtInA,
     formatData,

@@ -14,6 +14,7 @@ const { completeNotice } = require('../client');
 const { getCommandSyntax } = require('./base');
 const { BIN_FFMPEG, TMP_DIR } = require('../constants');
 const { t } = require('../i18n');
+const { unescape } = require('../util/format');
 const { printError } = require('../log');
 const { WITHOUT_KEY, keyOpenAi, errorOpenAi, generateImage, measureConsumption } = require('../openaiChat');
 const { SETTINGS_SCHEMA, getSetting } = require('../settings');
@@ -150,7 +151,7 @@ async function draw({ msg, args, opts, quotedMsg }) {
     }
 
     // Without options, the text goes as typed (with the Enters); with them, only what is left of them
-    const request = opts?.given.size ? opts.argv.join(' ') : args;
+    const request = unescape(opts?.given.size ? opts.argv.join(' ') : args);
     await drawAlt({ msg, cmd: '/draw', pedido: request, quotedMsg, gif, semPedido: '```' + getCommandSyntax('/draw') + '```' });
 }
 

@@ -9,13 +9,14 @@ const { MessageMedia } = require('whatsapp-web.js');
 
 const { THEMES, generateImage } = require('../carbon');
 const { t } = require('../i18n');
+const { unescape } = require('../util/format');
 const { printError } = require('../log');
 
 // The -theme|-t option only counts at the start (the rest is code, which may have "-t" in the middle)
 const TEMA_IN_START = /^\s*-(?:theme|t)\s+(\S+)\s*/;
 
 async function cmdCarbon({ msg, args, quotedMsg }) {
-    let textAlt = String(args ?? '');
+    let textAlt = unescape(String(args ?? ''));
     let tema = 'dark';
 
     const m = textAlt.match(TEMA_IN_START);
