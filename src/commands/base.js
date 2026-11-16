@@ -26,13 +26,13 @@ function commandsByPrefix(name) {
 /*
  * The help (-h) is read on the phone, in a code block of about 46 characters: only the essentials. The command
  * shows the one-line summary, the options with the 1st sentence of each (the rest stays on the site page, whose
- * link comes at the end) and at most 3 examples. End of sentence is ". " followed by an uppercase letter (or "{"): "Max. 20"
- * and "(e.g.: -taxas 50)" do not break.
+ * link comes at the end) and at most 2 examples. End of sentence is ". " followed by an uppercase letter (or "{"): "Max. 20"
+ * and "(e.g.: -fees 50)" do not break.
  */
 const PHRASE_END = /(?<=[.!?])\s+(?=[A-ZÀ-ÖØ-Þ{])/u;
 const WIDTH = 46;        // block columns on the phone
 const MAX_PHRASE = 70;      // the 1st sentence of an option goes over that: cuts at a comma (or at a word, with "…")
-const MAX_EXAMPLES = 3;
+const MAX_EXAMPLES = 2;
 const SITE = 'https://jpereira.github.io/zapbot';
 
 // The 1st sentence, only up to the first ":", ";" or " (" (what comes after stays on the site) and not exceeding MAX_PHRASE
