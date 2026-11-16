@@ -4,7 +4,7 @@
 
 const fs = require('fs-extra');
 
-const { MEDIA_DIR, NOTES_DIR, TMP_DIR } = require('./constants');
+const { CONTACTS_DIR, MEDIA_DIR, NOTES_DIR, TMP_DIR } = require('./constants');
 const { dbAll, dbRun } = require('./db');
 const { printInfo } = require('./log');
 const { loadSettings } = require('./settings');
@@ -500,7 +500,7 @@ async function initializeDb() {
 
     await loadSettings();
 
-    for (const dir of [MEDIA_DIR, NOTES_DIR, TMP_DIR]) {
+    for (const dir of [CONTACTS_DIR, MEDIA_DIR, NOTES_DIR, TMP_DIR]) {
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, { recursive: true });
             printInfo(`Creating ${dir}`);

@@ -11,7 +11,7 @@ const fs = require('fs-extra');
 const { MessageMedia } = require('whatsapp-web.js');
 
 const { client } = require('./client');
-const { BACKUP_DIR, NOTES_DIR, TMP_DIR } = require('./constants');
+const { BACKUP_DIR, CONTACTS_DIR, NOTES_DIR, TMP_DIR } = require('./constants');
 const { dbAll, dbGet, dbReady, dbRun } = require('./db');
 const { describeDestination, extractDestinations, resolverDestination } = require('./destinations');
 const { alertPerEmail, sendFilePerEmail } = require('./email');
@@ -28,6 +28,7 @@ const { t } = require('./i18n');
  * zapbot-YYYYMMDD-HHMMSS.json   → date, reason, bot version and each table's entries
  * zapbot-YYYYMMDD-HHMMSS.notes.tar.gz → the /notes images (NOTES_DIR); only exists if there are
  * some image (the system tar)
+ * zapbot-YYYYMMDD-HHMMSS.contacts.tar.gz → the /contacts photos (CONTACTS_DIR); likewise
  * Media (cache/media) is not included.
  *
  * Reasons: 'automático' (the daily one, setting 'backup.hour'), 'manual' (/backup -now)
@@ -37,6 +38,7 @@ const { t } = require('./i18n');
 const PREFIX = 'zapbot-';
 const EXT = '.db.gz';
 const EXT_NOTES = '.notes.tar.gz';
+const EXT_CONTACTS = '.contacts.tar.gz';
 const tar = promisify(execFile);
 // An attachment above this usually bounces back from the provider before reaching the recipient.
 const MAX_ATTACHMENT_BYTES = 20 * 1024 * 1024;
@@ -134,6 +136,12 @@ async function notesImages() {
     return items.filter(i => i.isFile()).map(i => i.name);
 }
 
+// How many photos are in CONTACTS_DIR (the .jpg; the .none are just "no photo" marks)
+async function contactsPhotos() {
+    if (!fs.existsSync(CONTACTS_DIR)) return [];
+    return (await fs.readdir(CONTACTS_DIR)).filter(f => f.endsWith('.jpg'));
+}
+
 // Free name for a backup created now (Brasília time in the name)
 function nameNew(nowAlt) {
     const p = partsInBrasilia(nowAlt);
@@ -158,6 +166,7 @@ async function listBackups() {
         const nameAlt = f.slice(0, -EXT.length);
         const fileAlt = path.join(BACKUP_DIR, f);
         const fileNotes = path.join(BACKUP_DIR, nameAlt + EXT_NOTES);
+        const fileContacts = path.join(BACKUP_DIR, nameAlt + EXT_CONTACTS);
         const stat = await fs.stat(fileAlt);
         const meta = await fs.readJson(path.join(BACKUP_DIR, `${nameAlt}.json`)).catch(() => ({}));
 
@@ -171,6 +180,9 @@ async function listBackups() {
             entradas: meta.entradas ?? null,
             ...(fs.existsSync(fileNotes)
                 ? { arquivoNotas: fileNotes, bytesNotas: (await fs.stat(fileNotes)).size, imagens: meta.imagens ?? null }
+                : {}),
+            ...(fs.existsSync(fileContacts)
+                ? { arquivoContatos: fileContacts, bytesContatos: (await fs.stat(fileContacts)).size, fotos: meta.fotos ?? null }
                 : {})
         });
     }
@@ -201,8 +213,12 @@ async function createBackup(reasonAlt = REASONS.manual, nowAlt = Date.now()) {
         if (images.length) {
             await tar('tar', ['-czf', path.join(BACKUP_DIR, nameAlt + EXT_NOTES), '-C', NOTES_DIR, '.']);
         }
+        const photos = await contactsPhotos();
+        if (photos.length) {
+            await tar('tar', ['-czf', path.join(BACKUP_DIR, nameAlt + EXT_CONTACTS), '-C', CONTACTS_DIR, '.']);
+        }
         await fs.writeJson(path.join(BACKUP_DIR, `${nameAlt}.json`),
-            { criadoEm: nowAlt, motivo: reasonAlt, versao: versionWithCommit(), bytesBanco: bytesDb, entradas: inputs, imagens: images.length },
+            { criadoEm: nowAlt, motivo: reasonAlt, versao: versionWithCommit(), bytesBanco: bytesDb, entradas: inputs, imagens: images.length, fotos: photos.length },
             { spaces: 2 });
 
         printInfo(`Backup ${nameAlt} created (${reasonAlt})`);
@@ -228,6 +244,7 @@ async function applyRetention() {
 async function removeBackup(b) {
     await fs.remove(b.arquivo);
     await fs.remove(path.join(BACKUP_DIR, b.nome + EXT_NOTES));
+    await fs.remove(path.join(BACKUP_DIR, b.nome + EXT_CONTACTS));
     await fs.remove(path.join(BACKUP_DIR, `${b.nome}.json`));
 }
 
@@ -235,7 +252,7 @@ async function removeBackup(b) {
 async function deleteAllBackups() {
     const list = await listBackups();
     for (const b of list) await removeBackup(b);
-    return { backups: list.length, bytes: list.reduce((s, b) => s + b.bytes + (b.bytesNotas ?? 0), 0) };
+    return { backups: list.length, bytes: list.reduce((s, b) => s + b.bytes + (b.bytesNotas ?? 0) + (b.bytesContatos ?? 0), 0) };
 }
 
 /**
@@ -282,6 +299,12 @@ async function restoreBackup(b) {
     if (b.arquivoNotas) {
         await fs.ensureDir(NOTES_DIR);
         await tar('tar', ['-xzf', b.arquivoNotas, '-C', NOTES_DIR]);
+    }
+
+    // The /contacts photos too (those already there that did not come stay)
+    if (b.arquivoContatos) {
+        await fs.ensureDir(CONTACTS_DIR);
+        await tar('tar', ['-xzf', b.arquivoContatos, '-C', CONTACTS_DIR]);
     }
 
     await loadSettings();

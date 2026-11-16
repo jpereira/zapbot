@@ -40,7 +40,7 @@ const inputsInLine = (inputs) => Object.entries(inputs)
     .map(([table, n]) => `${table} ${fmtInA(n)}`).join(' · ');
 
 const backupLine = (b, i) => `${i + 1}. *${fmtWhen(b.criadoEm)}* · ${humanSize(b.bytes)}` +
-    `${b.bytesNotas ? ` + 🖼️ ${humanSize(b.bytesNotas)}` : ''} · ${reasonText(b.motivo)}`;
+    `${b.bytesNotas ? ` + 🖼️ ${humanSize(b.bytesNotas)}` : ''}${b.bytesContatos ? ` + 📇 ${humanSize(b.bytesContatos)}` : ''} · ${reasonText(b.motivo)}`;
 
 // "2" (list number) or the file name (with or without .db.gz)
 function findBackup(list, valueAlt) {
@@ -54,7 +54,7 @@ async function status(msg) {
     const inputs = await countInputs();
     const db = DB_PATH;
     const bytesDb = fs.existsSync(db) ? fs.statSync(db).size : null;
-    const total = list.reduce((s, b) => s + b.bytes + (b.bytesNotas ?? 0), 0);
+    const total = list.reduce((s, b) => s + b.bytes + (b.bytesNotas ?? 0) + (b.bytesContatos ?? 0), 0);
     const [last] = list;
 
     const today = partsInBrasilia(Date.now());
@@ -110,7 +110,8 @@ async function cmdBackup({ msg, opts: commandOpts, args }) {
         await msg.reply(t('adm.backup.created', {
             nome: b.nome,
             tamanho: humanSize(b.bytes),
-            notas: b.bytesNotas ? t('adm.backup.createdNotes', { tamanho: humanSize(b.bytesNotas) }) : '',
+            notas: (b.bytesNotas ? t('adm.backup.createdNotes', { tamanho: humanSize(b.bytesNotas) }) : '') +
+                (b.bytesContatos ? t('adm.backup.createdContacts', { tamanho: humanSize(b.bytesContatos) }) : ''),
             entradas: inputsInLine(b.entradas)
         }));
         return;

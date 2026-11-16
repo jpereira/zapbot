@@ -1,0 +1,81 @@
+{
+  "summary": "Exporta a agenda em vCard, com as fotos de perfil",
+  "usage": "/contacts [OPÇÃO] [filtro...]",
+  "help": "Exporta a sua agenda num único arquivo vCard 3.0 (.vcf) com nome, número, empresa e recado de cada contato (acrescente -p para incluir as fotos de perfil), pronto para importar no Android (Google Contatos) e no iPhone. O UID é fixo por número: importar de novo atualiza em vez de duplicar, quando o aparelho casa pelo UID. Com -p as fotos ficam em ${CONTACTS_DIR} (e no backup) para a próxima exportação não baixar de novo; veja contacts.cache, contacts.cacheDays e contacts.delayMs no /set. Só no seu próprio privado.",
+  "ex": [
+    "/contacts",
+    "/contacts -e",
+    "/contacts -e -p",
+    "/contacts -e /Ana/"
+  ],
+  "cmd_opts": [
+    {
+      "opts": [
+        "export",
+        "e"
+      ],
+      "values": [],
+      "desc": "Gera o .vcf com todos os contatos da agenda (ou só os do filtro) e envia aqui, só texto: nome, número, empresa e recado.",
+      "ex": [
+        "/contacts -e",
+        "/contacts -e Silva"
+      ]
+    },
+    {
+      "opts": [
+        "list",
+        "l"
+      ],
+      "values": [],
+      "desc": "Lista os contatos (nome e número).",
+      "ex": [
+        "/contacts -l Ana"
+      ]
+    },
+    {
+      "opts": [
+        "photos",
+        "p"
+      ],
+      "values": [],
+      "desc": "Com -e: inclui as fotos de perfil (devagar: um download por contato, com pausa; cache em cache/contacts).",
+      "ex": [
+        "/contacts -e -p"
+      ]
+    },
+    {
+      "opts": [
+        "nocache",
+        "n"
+      ],
+      "values": [],
+      "desc": "Com -e -p: baixa as fotos só para esta exportação, sem ler nem gravar cache/contacts."
+    },
+    {
+      "opts": [
+        "refresh",
+        "r"
+      ],
+      "values": [],
+      "desc": "Com -e -p: baixa as fotos de novo, ignorando o cache."
+    },
+    {
+      "opts": [
+        "clear",
+        "c"
+      ],
+      "values": [],
+      "desc": "Apaga as fotos salvas em cache/contacts."
+    },
+    {
+      "argv": [
+        "[filtro...]"
+      ],
+      "desc": "Parte do nome ou do número, para restringir os contatos; vários de uma vez com /Nome/ (entra quem casar com qualquer um). Sem ele, todos.",
+      "ex": [
+        "/contacts -l 5521",
+        "/contacts -e /Jorge Pereira/ /Maria Lucia/"
+      ]
+    }
+  ]
+}

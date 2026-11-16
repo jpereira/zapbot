@@ -67,8 +67,7 @@ describe('/help', () => {
 
     test('-role|-r: lista por role (owner, admin, user), só o que a pessoa pode usar', async () => {
         const [r] = await bot.replyAlt('/help -r');
-        assert.match(r, /```\nRole: admin\n \/alias +- [^]*\n\nRole: user\n \/ascii +- /);
-        assert.doesNotMatch(r, /Role: owner/);
+        assert.match(r, /```\nRole: owner\n \/contacts +- [^]*\n\nRole: admin\n \/alias +- [^]*\n\nRole: user\n \/ascii +- /);
         assert.ok(r.search(/ \/show +- /) < r.indexOf('Role: user'));
         assert.deepEqual(await bot.replyAlt('/help -r'), [r]);
 

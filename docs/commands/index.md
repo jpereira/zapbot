@@ -204,6 +204,10 @@ and a shortcut's name doesn't go in `+cmd`.
 [`/leave`](leave.md), [`/monitor`](monitor.md), [`/mute`](mute.md), [`/notes`](notes.md),
 [`/search`](search.md), [`/set`](set.md), [`/unblock`](unblock.md), [`/unmute`](unmute.md),
 [`/watch`](watch.md)
+
+**owner** (the owner only) (1):
+
+[`/contacts`](contacts.md)
 <!-- /gerado:roles -->
 
 The **bot's own replies** also go out through your account, but they're never treated as commands,
@@ -241,6 +245,7 @@ target command, and `/alias /usd` shows what a shortcut does.
 | [`/bot`](bot.md) | | `admin` | Bot status (24 h report and the users); turns commands on/off (`-on`/`-off`) and says who uses them: admins (`+a`/`-a`) and users (`+u`/`-u`, in any chat or just in one group, and each one's commands with `+cmd`/`-cmd`); `-reset` goes back to the default; `-status` (`-s`): report for the last 24 h, and `-s 06h` sends it every day; `-info` (`-i`): versions and system; `-test` (`-t`): tests cache, disk, database, WhatsApp, internet, SMTP, IMAP, and programs |
 | [`/cache`](cache.md) | | `admin` | Cache tree with sizes, message counts, and cleanup |
 | [`/carbon`](carbon.md) | | `user` | The code in an editor-window image |
+| [`/contacts`](contacts.md) | | `owner` | Exports your address book as a vCard (`.vcf`) with name, number, about and profile photo, ready for Android and iPhone; photos cached in `cache/contacts`. Only in your own private chat |
 | [`/cron`](cron.md) | | `admin` | At the set time (`30m`, `at 18h`, `friday 9h`...): sends a message (here or with `-to`, to one or several chats) or, with `-reminder`, an ⏰ reminder; can repeat, be edited and paused, and run commands in the text (`{/crypto}`) |
 | [`/crypto`](crypto.md) | | `user` | Quote for the enabled cryptos (default: BTC, ETH, SOL, and HYPE) or just the requested ones (`BTC ETH`); price alerts |
 | [`/cve`](cve.md) | | `user` | Latest published CVEs (NVD); `-highscore` only the critical ones |
