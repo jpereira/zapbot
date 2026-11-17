@@ -413,7 +413,9 @@ e deixe o bot do seu jeito:
 | Comando | Aliases | Role | Descrição |
 |---|---|:-:|---|
 | [`/alias`](https://jpereira.github.io/zapbot/pt-BR/commands/alias/) | | `admin` | Cadastra, lista e remove atalhos para comandos com argumentos ou textos com vários `{/comando}` |
+| [`/antibadword`](https://jpereira.github.io/zapbot/pt-BR/commands/antibadword/) | | `admin` · delegável | Apaga mensagens de quem não é admin com palavras proibidas (uma lista por grupo) |
 | [`/antilink`](https://jpereira.github.io/zapbot/pt-BR/commands/antilink/) | | `admin` · delegável | Apaga links de quem não é admin do grupo |
+| [`/antitag`](https://jpereira.github.io/zapbot/pt-BR/commands/antitag/) | | `admin` · delegável | Apaga mensagens de quem não é admin que marcam muita gente |
 | [`/ascii`](https://jpereira.github.io/zapbot/pt-BR/commands/ascii/) | | `user` | O texto em letras grandes de ASCII, num bloco que cabe na tela do celular |
 | [`/backup`](https://jpereira.github.io/zapbot/pt-BR/commands/backup/) | | `admin` | Backup diário local e envio por `backup.to`; lista, detalha, restaura, envia e apaga o banco |
 | [`/batch`](https://jpereira.github.io/zapbot/pt-BR/commands/batch/) | | `admin` | Executa vários comandos de uma mensagem só, em sequência (cada linha que começa com um comando abre um bloco), e responde um resumo; `-stop` e `-dry` |

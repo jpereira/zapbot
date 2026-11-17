@@ -409,6 +409,17 @@ async function initializeDb() {
         )
     `);
 
+    // /antitag and /antibadword: the mode and the rule data (JSON) of each group
+    await dbRun(`
+        CREATE TABLE IF NOT EXISTS group_rules (
+            chat_id TEXT NOT NULL,
+            kind TEXT NOT NULL,
+            mode TEXT NOT NULL DEFAULT 'off',
+            data TEXT NOT NULL DEFAULT '{}',
+            PRIMARY KEY (chat_id, kind)
+        )
+    `);
+
     // /group -send admins -for <time>: when the closed group reopens by itself
     await dbRun(`
         CREATE TABLE IF NOT EXISTS group_reopen (

@@ -197,13 +197,14 @@ destino: quem pode o `/gpt` usa os atalhos para ele, e o nome de um atalho não 
 [`/translate`](translate.md), [`/uptime`](uptime.md), [`/usage`](usage.md),
 [`/version`](version.md), [`/walissu`](walissu.md), [`/weather`](weather.md), [`/whois`](whois.md)
 
-**admin, delegáveis** (admins e o dono; o dono libera a um usuário com `+cmd`) (18):
+**admin, delegáveis** (admins e o dono; o dono libera a um usuário com `+cmd`) (20):
 
-[`/antilink`](antilink.md), [`/demote`](demote.md), [`/draw`](draw.md),
-[`/everybody`](everybody.md), [`/goodbye`](goodbye.md), [`/gpt`](gpt.md), [`/group`](group.md),
-[`/members`](members.md), [`/ocr`](ocr.md), [`/poll`](poll.md), [`/profile`](profile.md),
-[`/promote`](promote.md), [`/show`](show.md), [`/stats`](stats.md), [`/tldr`](tldr.md),
-[`/tts`](tts.md), [`/warn`](warn.md), [`/welcome`](welcome.md)
+[`/antibadword`](antibadword.md), [`/antilink`](antilink.md), [`/antitag`](antitag.md),
+[`/demote`](demote.md), [`/draw`](draw.md), [`/everybody`](everybody.md), [`/goodbye`](goodbye.md),
+[`/gpt`](gpt.md), [`/group`](group.md), [`/members`](members.md), [`/ocr`](ocr.md),
+[`/poll`](poll.md), [`/profile`](profile.md), [`/promote`](promote.md), [`/show`](show.md),
+[`/stats`](stats.md), [`/tldr`](tldr.md), [`/tts`](tts.md), [`/warn`](warn.md),
+[`/welcome`](welcome.md)
 
 **admin** (admins e o dono; nunca delegáveis) (22):
 
@@ -246,7 +247,9 @@ e o `/alias /usd` mostra o que um atalho faz.
 | Comando | Aliases | Role | Descrição |
 |---|---|:-:|---|
 | [`/alias`](alias.md) | | `admin` | Cadastra, lista e remove atalhos para comandos com argumentos ou textos com vários `{/comando}` |
+| [`/antibadword`](antibadword.md) | | `admin` · delegável | Apaga mensagens de quem não é admin com palavras proibidas (uma lista por grupo) |
 | [`/antilink`](antilink.md) | | `admin` · delegável | Apaga links de quem não é admin do grupo |
+| [`/antitag`](antitag.md) | | `admin` · delegável | Apaga mensagens de quem não é admin que marcam muita gente |
 | [`/ascii`](ascii.md) | | `user` | O texto em letras grandes de ASCII, num bloco que cabe na tela do celular |
 | [`/backup`](backup.md) | | `admin` | Backup diário local e envio por `backup.to`; lista, detalha, restaura, envia e apaga o banco |
 | [`/batch`](batch.md) | | `admin` | Executa vários comandos de uma mensagem só, em sequência (cada linha que começa com um comando abre um bloco), e responde um resumo; `-stop` e `-dry` |

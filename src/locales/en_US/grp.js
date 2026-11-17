@@ -7,6 +7,26 @@ module.exports = {
     'grp.unknown': 'Unknown',
     'grp.hiddenNumber': '(hidden number)',
     'grp.members': '👥 *Members of {name}* ({n})\n\n{list}',
+
+    // /antitag, /antibadword
+    'antitag.status': '🏷️ *Antitag:* {mode}\n📏 *Minimum:* {min} tags in one message\n💡 _Change it with /antitag -delete|-warn|-remove|-off and -min <n>_',
+    'antitag.botNotAdmin': '⚠️ The bot is not an admin of the group: without that, the messages are not deleted.',
+    'antitag.badMin': '❌ -min: "{value}" is not valid. Use a whole number from {min} to 1000.',
+    'antitag.setMin': '📏 Minimum: {n} tags.',
+    'antitag.deleted': '🏷️ Message from {name} deleted: it tagged too many people.',
+    'antitag.removed': '🚪 {name} tagged everyone and was removed from the group.',
+    'antitag.reason': 'tagged too many people',
+    'antibadword.status': '🤬 *Antibadword:* {mode}\n📚 *Words:* {n}\n💡 _Add with /antibadword -add <word>; see them with -list_',
+    'antibadword.empty': '(no words)',
+    'antibadword.botNotAdmin': '⚠️ The bot is not an admin of the group: without that, the messages are not deleted.',
+    'antibadword.badWord': '❌ Invalid word: "{value}". Example: /antibadword -add idiot',
+    'antibadword.full': '❌ The list is full ({max} words).',
+    'antibadword.added': '✅ "{word}" added to the list.',
+    'antibadword.removedWord': '🚫 "{word}" taken off the list.',
+    'antibadword.deleted': '🤬 Message from {name} deleted: banned word.',
+    'antibadword.removed': '🚪 {name} used a banned word and was removed from the group.',
+    'antibadword.reason': 'used a banned word',
+
     // /group
     'grp.group.info': '👥 *{name}*\n👤 {members} members · ⭐ {admins} admins\n👑 Creator: {owner}\n📅 Created on {created}\n\n📝 {desc}\n\n💬 Send messages: {send}\n✏️ Edit the group info: {edit}\n➕ Add people: {add}\n🤖 Your account is {bot}',
     'grp.group.noDesc': '(no description)',
