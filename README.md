@@ -31,6 +31,9 @@ messages stay on your server. You type commands in any chat and it answers (`/he
 
 Yep, we've been busy. The best of the latest batch:
 
+- 🎙️ **Transcribe any video or audio.** Send a link (Instagram, YouTube, X, TikTok...) or reply to a video or
+  a voice note and get the **text of the speech**. It runs on your own server (faster-whisper), so no OpenAI bill
+  and the audio never leaves home. [`/transcribe`](docs/commands/transcribe.md) · [`/get -t`](docs/commands/get.md)
 - 🎨 **Draw yourself and your friends.** `/draw @me @this draw the two of us as pirates` grabs the profile
   photos for you (`@me` is you, `@this` is the chat, `@reply` is whoever you replied to, and plain names work
   too). [`/draw`](docs/commands/draw.md) · [`/gpt`](docs/commands/gpt.md)
@@ -51,6 +54,8 @@ Yep, we've been busy. The best of the latest batch:
 
 ```text
 /draw @me @this draw the two of us as pirates
+/transcribe https://www.instagram.com/reel/XXXXXXXX/
+/transcribe -ss 30 -es 90 https://youtu.be/XXXXXXXXXXX
 /games -trivia
 /warn @Fulano posted a link
 /antilink -delete -allow youtube.com
@@ -66,6 +71,7 @@ Yep, we've been busy. The best of the latest batch:
 | 🤖 | **Talk to ChatGPT** | Answers questions, reads photos and PDFs, transcribes voice notes, summarizes conversations, draws images and GIFs, turns text into voice and reads text in pictures | [`/gpt`](docs/commands/gpt.md) · [`/tldr`](docs/commands/tldr.md) · [`/draw`](docs/commands/draw.md) · [`/tts`](docs/commands/tts.md) · [`/ocr`](docs/commands/ocr.md) |
 | 📱 | **QR Codes** | Makes a QR Code from any text and reads one when you reply to its photo | [`/qr`](docs/commands/qr.md) |
 | 🎞️ | **Media and stickers** | Downloads videos and audio from social networks, makes stickers (from images, videos or text), memes, GIFs, code snapshots and ASCII art | [`/get`](docs/commands/get.md) · [`/sticker`](docs/commands/sticker.md) · [`/meme`](docs/commands/meme.md) · [`/giphy`](docs/commands/giphy.md) · [`/carbon`](docs/commands/carbon.md) · [`/ascii`](docs/commands/ascii.md) |
+| 🎙️ | **Transcribe speech** | Turns the speech of any link, video, audio or voice note into text, on your own server (no API, no cost per minute); `-ss` and `-es` pick a part | [`/transcribe`](docs/commands/transcribe.md) · [`/get -t`](docs/commands/get.md#transcribe-the-speech--transcribe) |
 | 🔔 | **Watch and alerts** | Watches messages by text or regex, alerts on currency and crypto prices, DeFi positions out of range and contacts coming online, in your private chat, in a group or by e-mail | [`/watch`](docs/commands/watch.md) · [`/rates`](docs/commands/rates.md) · [`/crypto`](docs/commands/crypto.md) · [`/defi`](docs/commands/defi.md) · [`/monitor`](docs/commands/monitor.md) |
 | 📅 | **Schedule and automate** | One-off and recurring messages, reminders, your own shortcuts, several commands in one message, notes with `#tags` and alerts, recipient lists | [`/cron`](docs/commands/cron.md) · [`/alias`](docs/commands/alias.md) · [`/batch`](docs/commands/batch.md) · [`/notes`](docs/commands/notes.md) · [`/forward`](docs/commands/forward.md) |
 | 👥 | **Group management** | Mentions everyone, promotes and demotes, invite links, polls, welcome and goodbye messages, mutes and blocks | [`/everybody`](docs/commands/everybody.md) · [`/promote`](docs/commands/promote.md) · [`/invite`](docs/commands/invite.md) · [`/poll`](docs/commands/poll.md) · [`/welcome`](docs/commands/welcome.md) · [`/mute`](docs/commands/mute.md) · [`/warn`](docs/commands/warn.md) · [`/antilink`](docs/commands/antilink.md) |
@@ -222,6 +228,15 @@ Don't count on it.
 ```text
 /draw -p /Rafael Silva/ /Maria Lucia/ draw the two of them at a birthday party
 🎨 draw the two of them at a birthday party
+```
+
+```text
+/transcribe https://www.instagram.com/reel/XXXXXXXX/
+⏳ Transcribing the speech, this can take a while.
+📝 Transcription · 🗣️ pt · 1:23
+
+oi gente, hoje eu vou mostrar como fazer um pão de queijo bem fofinho em casa...
+(reply to a voice note)  /transcribe
 ```
 
 **Your contacts, with photos, in one file:**
@@ -453,6 +468,7 @@ and make the bot your own:
 | [`/status`](https://jpereira.github.io/zapbot/commands/status/) | | `admin` | Posts on your WhatsApp Status (text, photo or video); `/cron -status` schedules it |
 | [`/sticker`](https://jpereira.github.io/zapbot/commands/sticker/) | | `user` | Sticker from an image, video or link (`/get -st`), replying or as the caption of the media; with `-txt`, an animated text sticker |
 | [`/tldr`](https://jpereira.github.io/zapbot/commands/tldr/) | | `admin` · delegable | Summarizes the chat's conversation with ChatGPT (`30m`, `2h`, `1d`, `1h30m` or `300` messages; replying to a message, from it on) |
+| [`/transcribe`](https://jpereira.github.io/zapbot/commands/transcribe/) | | `user` | Text of the speech of a link, video or audio (`/get -t` is a shortcut), replying or as the caption; `-ss` and `-es` pick a part |
 | [`/translate`](https://jpereira.github.io/zapbot/commands/translate/) | | `user` | Translates the text or the replied message with Google Translate, no key needed; `-to en` changes the language |
 | [`/tts`](https://jpereira.github.io/zapbot/commands/tts/) | | `admin` · delegable | The text as a robot voice note (OpenAI) |
 | [`/unblock`](https://jpereira.github.io/zapbot/commands/unblock/) | | `admin` | Unblocks a person: by name, by number, by the `/block` list number or by replying to a message |

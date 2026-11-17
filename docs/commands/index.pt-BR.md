@@ -187,15 +187,15 @@ destino: quem pode o `/gpt` usa os atalhos para ele, e o nome de um atalho não 
 <!-- gerado:roles -->
 ### Comandos por role
 
-**user** (de quem está no `bot.users`) (27):
+**user** (de quem está no `bot.users`) (28):
 
 [`/ascii`](ascii.md), [`/bills`](bills.md), [`/carbon`](carbon.md), [`/crypto`](crypto.md),
 [`/cve`](cve.md), [`/games`](games.md), [`/get`](get.md), [`/giphy`](giphy.md), [`/help`](help.md),
 [`/joke`](joke.md), [`/kernel`](kernel.md), [`/me`](me.md), [`/meme`](meme.md), [`/news`](news.md),
 [`/noffa`](noffa.md), [`/ping`](ping.md), [`/pixelart`](pixelart.md), [`/qr`](qr.md),
-[`/rates`](rates.md), [`/sticker`](sticker.md), [`/translate`](translate.md),
-[`/uptime`](uptime.md), [`/usage`](usage.md), [`/version`](version.md), [`/walissu`](walissu.md),
-[`/weather`](weather.md), [`/whois`](whois.md)
+[`/rates`](rates.md), [`/sticker`](sticker.md), [`/transcribe`](transcribe.md),
+[`/translate`](translate.md), [`/uptime`](uptime.md), [`/usage`](usage.md),
+[`/version`](version.md), [`/walissu`](walissu.md), [`/weather`](weather.md), [`/whois`](whois.md)
 
 **admin, delegáveis** (admins e o dono; o dono libera a um usuário com `+cmd`) (17):
 
@@ -299,6 +299,7 @@ e o `/alias /usd` mostra o que um atalho faz.
 | [`/status`](status.md) | | `admin` | Posta no seu Status do WhatsApp (texto, foto ou vídeo); o `/cron -status` agenda |
 | [`/sticker`](sticker.md) | | `user` | Figurinha de imagem, vídeo ou link (o `/get -st`), respondendo ou na legenda da mídia; com `-txt`, uma figurinha animada de texto |
 | [`/tldr`](tldr.md) | | `admin` · delegável | Resume a conversa do chat pelo ChatGPT (`30m`, `2h`, `1d`, `1h30m` ou `300` mensagens; respondendo uma mensagem, a partir dela) |
+| [`/transcribe`](transcribe.md) | | `user` | Texto da fala de um link, vídeo ou áudio (o `/get -t` é um atalho), respondendo ou na legenda; `-ss` e `-es` escolhem um trecho |
 | [`/translate`](translate.md) | | `user` | Traduz o texto ou a mensagem respondida pelo Google Translate, sem chave; `-to en` muda o idioma |
 | [`/tts`](tts.md) | | `admin` · delegável | O texto numa nota de voz de robô (OpenAI) |
 | [`/unblock`](unblock.md) | | `admin` | Desbloqueia uma pessoa: pelo nome, pelo número, pelo nº da lista do `/block` ou respondendo uma mensagem |

@@ -320,10 +320,13 @@ const processes = {
     falharTrecho: false, // yt-dlp fails only with --download-sections (a site that does not allow it)
     duracao: 100,        // what ffprobe (and yt-dlp --print duration) report; null: neither knows
     siteSemDuracao: false, // yt-dlp --print duration says NA (ffprobe still measures the file)
-    tamanhoSaida: 1024
+    tamanhoSaida: 1024,
+    fala: 'olá mundo, isto é um teste', // the text that faster-whisper (python) returns
+    saidaErro: null, // what yt-dlp writes in the log before failing
+    post: null // the JSON that yt-dlp -J returns (a photo post)
 };
 
-function spawnFake(bin, args) {
+function spawnFake(bin, args, optionsAlt) {
     const child = new EventEmitter();
     child.kill = () => {};
     child.stdout = new EventEmitter();
@@ -332,8 +335,25 @@ function spawnFake(bin, args) {
     setImmediate(() => {
         const nameAlt = path.basename(bin);
 
+        // yt-dlp -J (the post data): processos.post's JSON
+        if (nameAlt === 'yt-dlp' && args.includes('-J')) {
+            if (!processes.post) { child.emit('close', 1, null); return; }
+            child.stdout.emit('data', `${JSON.stringify(processes.post)}\n`);
+            child.emit('close', 0, null);
+            return;
+        }
+
         if (processes.falhar === nameAlt || (processes.falharTrecho && args.includes('--download-sections'))) {
+            // The program output goes to the log file (stdio[1]), as in the real one
+            if (processes.saidaErro && typeof optionsAlt?.stdio?.[1] === 'number') fs.writeSync(optionsAlt.stdio[1], processes.saidaErro);
             child.emit('close', 1, null);
+            return;
+        }
+
+        // transcribe.py: the JSON on the last line of the output
+        if (nameAlt === 'python') {
+            child.stdout.emit('data', `${JSON.stringify({ language: 'pt', duration: 5, text: processes.fala })}\n`);
+            child.emit('close', 0, null);
             return;
         }
 

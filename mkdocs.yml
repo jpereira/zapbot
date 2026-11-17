@@ -159,6 +159,7 @@ nav:
       - /status: commands/status.md
       - /sticker: commands/sticker.md
       - /tldr: commands/tldr.md
+      - /transcribe: commands/transcribe.md
       - /translate: commands/translate.md
       - /tts: commands/tts.md
       - /unblock: commands/unblock.md

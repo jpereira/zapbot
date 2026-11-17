@@ -1,7 +1,7 @@
 {
   "summary": "Baixa vídeo ou áudio de redes sociais",
   "usage": "/get [OPÇÃO]... <url>  ou  /get [OPÇÃO]... (respondendo um link ou uma mídia)",
-  "help": "Baixa vídeo ou áudio de redes sociais (Instagram, YouTube, X, TikTok e outros sites do yt-dlp), pela URL ou respondendo uma mensagem com link. Respondendo um vídeo, uma imagem ou um áudio do WhatsApp, usa a própria mídia: sem opção, devolve o arquivo original. Escolha áudio ou figurinha por execução; vídeo e áudio são enviados como documento.",
+  "help": "Baixa vídeo ou áudio de redes sociais (Instagram, YouTube, X, TikTok e outros sites do yt-dlp), pela URL ou respondendo uma mensagem com link. Respondendo um vídeo, uma imagem ou um áudio do WhatsApp, usa a própria mídia: sem opção, devolve o arquivo original. Escolha áudio, figurinha ou transcrição por execução; vídeo e áudio são enviados como documento.",
   "cmd_opts": [
     {
       "opts": [
@@ -30,6 +30,29 @@
       ],
       "values": [],
       "desc": "Só o áudio, em .mp3."
+    },
+    {
+      "opts": [
+        "transcribe",
+        "t"
+      ],
+      "values": [],
+      "desc": "Atalho do /transcribe: responde com o texto da fala em vez do arquivo. De um link, baixa só o áudio de menor qualidade; respondendo um vídeo ou áudio, usa ele. Transcreve localmente (faster-whisper). Vale com -ss e -es.",
+      "ex": [
+        "/get -t https://www.instagram.com/reel/...",
+        "/get -t -ss 30 -es 90 <url>"
+      ]
+    },
+    {
+      "opts": [
+        "summary",
+        "sum"
+      ],
+      "values": [],
+      "desc": "Com -t: também resume a fala com o ChatGPT (a mesma chave do /gpt). O resumo em tópicos no alto e a transcrição embaixo.",
+      "ex": [
+        "/get -t -sum https://www.instagram.com/reel/..."
+      ]
     },
     {
       "opts": [

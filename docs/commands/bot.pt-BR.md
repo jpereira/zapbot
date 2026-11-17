@@ -513,7 +513,7 @@ hora, o que está ruim: disco cheio, internet lenta, senha do SMTP errada, Whats
   falhou há pouco (`EAUTH`), o teste não tenta de novo durante a pausa de 30 minutos, para não
   prolongar o bloqueio do provedor.
 - **E-mail (IMAP)**: conecta e faz o login, sem mexer em nada; ➖ se não há `QRCODE_EMAIL_IMAP_HOST`.
-- **Chromium**, **yt-dlp** e **ffmpeg**: rodam o `--version`; ❌ se o programa não responde.
+- **Chromium**, **yt-dlp**, **ffmpeg** e **faster-whisper**: rodam o `--version` (o faster-whisper: carrega o módulo); ❌ se o programa não responde.
 - Um teste que trava (20 s) ou lança erro vira ❌ com o motivo, sem derrubar os outros.
 
 ## Limpar o e-mail

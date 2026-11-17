@@ -72,7 +72,7 @@ async function restart() {
     network.limpar();
     emails.length = 0;
     logs.length = 0;
-    Object.assign(processes, { chamadas: [], falhar: null, falharTrecho: false, duracao: 100, siteSemDuracao: false, naoBaixar: false, tamanhoSaida: 1024 });
+    Object.assign(processes, { chamadas: [], falhar: null, falharTrecho: false, duracao: 100, siteSemDuracao: false, naoBaixar: false, tamanhoSaida: 1024, fala: 'olá mundo, isto é um teste', saidaErro: null, post: null });
     stateAlt.pronto = true;
     // One test's reconnection does not leak into the next
     Object.assign(stateAlt, { tentativas: 0, foraDesde: null, aguardandoQr: false });

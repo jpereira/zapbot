@@ -10,7 +10,7 @@ const fs = require('fs');
 const path = require('path');
 
 const { client } = require('./client');
-const { BIN_FFMPEG, BIN_YT, CACHE_DIR } = require('./constants');
+const { BIN_FFMPEG, BIN_PYTHON, BIN_YT, CACHE_DIR } = require('./constants');
 const { dbGet, dbReady } = require('./db');
 const { smtpForSend, checkSmtp } = require('./email');
 const { estado: stateAlt } = require('./state');
@@ -138,7 +138,8 @@ const TESTES = () => [
     [t('diag.nomeImap'), testImap],
     ['Chromium', testChromium],
     ['yt-dlp', testProgram('yt-dlp', BIN_YT, ['--version'])],
-    ['ffmpeg', testProgram('ffmpeg', BIN_FFMPEG, ['-version'], (l) => l.match(/version\s+(\S+)/)?.[1] ?? l)]
+    ['ffmpeg', testProgram('ffmpeg', BIN_FFMPEG, ['-version'], (l) => l.match(/version\s+(\S+)/)?.[1] ?? l)],
+    ['faster-whisper', testProgram('faster-whisper', BIN_PYTHON, ['-c', 'import faster_whisper;print(faster_whisper.__version__)'])]
 ];
 const TEST_FINAL = () => [t('diag.nomeVelocidade'), testSpeed];
 

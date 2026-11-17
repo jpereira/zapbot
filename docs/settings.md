@@ -112,6 +112,9 @@ shows are in Portuguese; the ones here are in English).
 | `sticker.author` | text | `https://github.com/jpereira/zapbot/` | Sticker author |
 | `sticker.name` | text | `ZapBot` | Sticker pack name |
 | `tldr.maxMsgs` | 10–2000 | `500` | Max messages sent to OpenAI per [`/tldr`](commands/tldr.md) |
+| `transcribe.language` | text | `auto` | Language of the speech in [`/get -transcribe`](commands/get.md#transcribe-the-speech--transcribe) (`pt`, `en`, `es`...). `auto`: whisper detects it |
+| `transcribe.maxMinutes` | 1–180 | `20` | Longest audio (minutes) `/get -transcribe` transcribes: it uses the server CPU |
+| `transcribe.model` | text | `small` | faster-whisper model of `/get -transcribe`: `tiny`, `base`, `small`, `medium` or `large-v3-turbo` (bigger is better and slower). `small` comes in the image; another one is downloaded the first time |
 | `translate.lang` | text | `pt` | Default target language of [`/translate`](commands/translate.md) (code: `pt`, `en`, `es`...) |
 | `usage.footer` | on/off | `on` | After a command with a usage limit, says how many calls are left (`📊 /gpt: 1 of 3 per day left`) |
 | `usage.logDays` | 1–365 | `90` | Days the history of limited calls (`/usage -l`) is kept |

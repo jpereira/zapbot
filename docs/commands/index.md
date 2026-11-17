@@ -188,15 +188,15 @@ and a shortcut's name doesn't go in `+cmd`.
 <!-- gerado:roles -->
 ### Commands by role
 
-**user** (whoever is in `bot.users`) (27):
+**user** (whoever is in `bot.users`) (28):
 
 [`/ascii`](ascii.md), [`/bills`](bills.md), [`/carbon`](carbon.md), [`/crypto`](crypto.md),
 [`/cve`](cve.md), [`/games`](games.md), [`/get`](get.md), [`/giphy`](giphy.md), [`/help`](help.md),
 [`/joke`](joke.md), [`/kernel`](kernel.md), [`/me`](me.md), [`/meme`](meme.md), [`/news`](news.md),
 [`/noffa`](noffa.md), [`/ping`](ping.md), [`/pixelart`](pixelart.md), [`/qr`](qr.md),
-[`/rates`](rates.md), [`/sticker`](sticker.md), [`/translate`](translate.md),
-[`/uptime`](uptime.md), [`/usage`](usage.md), [`/version`](version.md), [`/walissu`](walissu.md),
-[`/weather`](weather.md), [`/whois`](whois.md)
+[`/rates`](rates.md), [`/sticker`](sticker.md), [`/transcribe`](transcribe.md),
+[`/translate`](translate.md), [`/uptime`](uptime.md), [`/usage`](usage.md),
+[`/version`](version.md), [`/walissu`](walissu.md), [`/weather`](weather.md), [`/whois`](whois.md)
 
 **admin, delegable** (admins and the owner; the owner releases them to a user with `+cmd`) (17):
 
@@ -300,6 +300,7 @@ target command, and `/alias /usd` shows what a shortcut does.
 | [`/status`](status.md) | | `admin` | Posts on your WhatsApp Status (text, photo or video); `/cron -status` schedules it |
 | [`/sticker`](sticker.md) | | `user` | Sticker from an image, video, or link (the `/get -st`), replying or as the caption of the media; with `-txt`, an animated text sticker |
 | [`/tldr`](tldr.md) | | `admin` · delegable | Summarizes the chat's conversation with ChatGPT (`30m`, `2h`, `1d`, `1h30m` or `300` messages; replying to a message, from it on) |
+| [`/transcribe`](transcribe.md) | | `user` | Text of the speech of a link, video or audio (`/get -t` is a shortcut), replying or as the caption; `-ss` and `-es` pick a part |
 | [`/translate`](translate.md) | | `user` | Translates the text or the replied message with Google Translate, no key; `-to en` changes the language |
 | [`/tts`](tts.md) | | `admin` · delegable | The text as a robot voice note (OpenAI) |
 | [`/unblock`](unblock.md) | | `admin` | Unblocks a person: by name, by number, by the `/block` list number, or by replying to a message |
