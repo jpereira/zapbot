@@ -7,6 +7,7 @@ the limit and when it renews. Only successful calls count: `-h`, usage, errors a
 |---|---|---|
 | *(none)* | | Your limits here: used, limit and when it renews |
 | `-log`, `-l` | | The last calls that counted: when, command and parameters |
+| `-all`, `-a` | | Owner and admins only: the usage of **everyone**, ranked by person and group and by command. See [Everyone's usage](#everyones-usage--all) |
 
 | Argument | Description |
 |---|---|
@@ -66,3 +67,28 @@ default):
 
 The history (`-l`) is kept for `usage.logDays` days (90 by default); the calls that still count for
 a limit are never deleted before the period ends.
+
+## Everyone's usage (`-all`)
+
+For the owner and the admins: who is using the commands that have a limit, and which commands go
+out the most. The top 10 people (or groups), with each one's commands, and the total per command:
+
+```text
+/usage -a
+📊 Everyone's usage (last 90 days, 57 calls)
+1. 👤 Rafael Silva — 31 (/gpt 24, /tldr 7)
+2. 👥 About L200 — 14 (/draw 14)
+3. 👤 Maria Lucia — 9 (/gpt 9)
+4. 👤 +5521933333333 — 3 (/tldr 3)
+
+By command: /gpt 33 · /draw 14 · /tldr 10
+```
+
+- It counts the last `usage.logDays` days (90 by default), the same window as `-l`.
+- Only commands with a limit (`/bot +cmd /gpt +limit 5/day`) leave a trace: a command without a
+  limit does not show up.
+- Someone's calls in different groups add up on the person; a limit set on a group appears as
+  the group (👥).
+- To see **one** person in detail, use `/usage /Rafael Silva/` or `/usage -l @Fulano`.
+
+For a regular user, `-a` is refused: `🔒 Only the owner and the admins see other people's limits.`

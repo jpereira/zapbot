@@ -175,3 +175,23 @@ test('limite do grupo é coletivo; o da pessoa naquele grupo vale primeiro', asy
     assert.deepEqual(await bot.replyAlt('/ping', { de: OWNER.jid.replace('0000', '9999'), chat: GROUP }), ['pong']);
     assert.match((await dele('/ping', { chat: GROUP }))[0], /^🚫/);
 });
+
+test('/usage -all: o consumo de todos (ranking por pessoa e por comando); só dono e admins', async () => {
+    const nowAlt = Date.now();
+    const log = (item, cmd, when = nowAlt) => bot.dbRun('INSERT INTO usage_log (item, cmd, used_at) VALUES (?, ?, ?)', [item, cmd, when]);
+    assert.match((await bot.replyAlt('/usage -a', OWNER_CHAT))[0], /Nenhuma chamada com limite nos últimos 90 dias/);
+
+    for (let i = 0; i < 3; i++) await log(OTHERAlt.user, '/gpt');
+    await log(`${OTHERAlt.user}:120363000000000009@g.us`, '/tldr');        // a pessoa naquele grupo soma nela
+    await log('5521922222222', '/gpt');
+    await log('120363000000000009@g.us', '/draw');                       // group limit: shows up as a group
+    await log(OTHERAlt.user, '/gpt', nowAlt - 200 * 24 * 3600_000);          // outside the 90-day window
+
+    const [r] = await bot.replyAlt('/usage -a', OWNER_CHAT);
+    assert.match(r, /^📊 \*Consumo de todos\* \(últimos 90 dias, 6 chamadas\)\n1\. 👤 Fulano — 4 \(\/gpt 3, \/tldr 1\)\n/);
+    assert.match(r, /\n2\. (👤 \+5521922222222 — 1 \(\/gpt 1\)|👥 .* — 1 \(\/draw 1\))\n/);
+    assert.match(r, /\*Por comando:\* \/gpt 4 · \/tldr 1 · \/draw 1$|\*Por comando:\* \/gpt 4 · (\/draw 1 · \/tldr 1|\/tldr 1 · \/draw 1)$/);
+
+    await bot.setSetting('bot.users', [OTHERAlt.user]);
+    assert.match((await dele('/usage -a'))[0], /Só o dono e os admins/);
+});

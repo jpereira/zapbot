@@ -20,6 +20,17 @@
       ]
     },
     {
+      "opts": [
+        "all",
+        "a"
+      ],
+      "values": [],
+      "desc": "Só o dono e os admins: o consumo de todos, em ranking por pessoa e grupo e por comando, na janela do histórico (setting usage.logDays).",
+      "ex": [
+        "/usage -a"
+      ]
+    },
+    {
       "argv": [
         "[pessoa...]"
       ],

@@ -230,5 +230,9 @@ module.exports = {
     'usage.none': 'You have no usage limits here.',
     'usage.noneOf': '{quem} has no usage limits here.',
     'usage.logEmpty': 'No call counted yet.',
+    'usage.allTitle': '📊 *Everyone\'s usage* (last {days} days, {total} calls)',
+    'usage.allMore': '… and {n} more outside the top 10.',
+    'usage.allByCmd': '*By command:*',
+    'usage.allEmpty': 'No limited calls in the last {days} days.',
     'usage.ownerOnly': '🔒 Only the owner and the admins can see other people\'s limits.'
 };

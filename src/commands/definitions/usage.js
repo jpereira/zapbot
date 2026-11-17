@@ -19,6 +19,12 @@ module.exports = {
             ex: ['/usage -l']
         },
         {
+            opts: ['all', 'a'],
+            values: [],
+            desc: 'Owner and admins only: the usage of everyone, ranked by person and group, and by command, over the history window (setting usage.logDays).',
+            ex: ['/usage -a']
+        },
+        {
             argv: ['[person...]'],
             desc: 'Whose limits to show (owner and admins only): /name/, @mention or +number. Without it, yours.',
             ex: ['/usage /Rafael Silva/', '/usage -l +5521999999999']

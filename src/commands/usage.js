@@ -3,9 +3,10 @@
  */
 
 const { phoneAlt3, textPhones } = require('./whois');
+const { contactName, groupResolverName } = require('../contacts');
 const { client } = require('../client');
 const { t } = require('../i18n');
-const { itemsAlt, limitsWithUsage, usageLine, lastUses } = require('../usageLimit');
+const { allConsumption, itemsAlt, limitsWithUsage, usageLine, lastUses } = require('../usageLimit');
 const { fmtWhen } = require('../util/when');
 
 /*
@@ -14,8 +15,41 @@ const { fmtWhen } = require('../util/when');
  * /usage <person>... → (owner and admins) other people's
  * The limit comes from /bot +cmd /gpt +limit 5/day; the owner and the admins have no limit.
  */
+const TOP = 10;
+
+// -all (owner and admins): who used the commands with a limit the most, and which commands go out the most
+async function allShowConsumption(msg) {
+    const { dias: daysAlt, total, pessoas: people, porCmd: byCmd } = await allConsumption();
+    if (!total) {
+        await msg.reply(t('usage.allEmpty', { days: daysAlt }));
+        return;
+    }
+
+    const linesAlt = [];
+    for (const [i, p] of people.slice(0, TOP).entries()) {
+        const nameAlt = p.grupo
+            ? `👥 ${await groupResolverName(p.chave).catch(() => null) ?? p.chave}`
+            : `👤 ${contactName(await client.getContactById(`${p.chave}@c.us`).catch(() => null)) ?? `+${p.chave}`}`;
+        const cmds = [...p.porCmd].sort((a, b) => b[1] - a[1]).map(([c, n]) => `${c} ${n}`).join(', ');
+        linesAlt.push(`${i + 1}. ${nameAlt} — ${p.total} (${cmds})`);
+    }
+    const commands = [...byCmd].sort((a, b) => b[1] - a[1]).map(([c, n]) => `${c} ${n}`).join(' · ');
+    const more = people.length > TOP ? '\n' + t('usage.allMore', { n: people.length - TOP }) : '';
+
+    await msg.reply(t('usage.allTitle', { days: daysAlt, total }) + `\n${linesAlt.join('\n')}${more}\n\n${t('usage.allByCmd')} ${commands}`);
+}
+
 async function cmdUsage({ msg, opts, quotedMsg, senderNumber, chatId, isGroup, admin }) {
     const textAlt = opts.argv.join(' ').trim();
+
+    if (opts.opt.all) {
+        if (!admin) {
+            await msg.reply(t('usage.ownerOnly'));
+            return;
+        }
+        await allShowConsumption(msg);
+        return;
+    }
 
     if ((textAlt || quotedMsg) && !admin) {
         await msg.reply(t('usage.ownerOnly'));

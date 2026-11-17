@@ -240,12 +240,43 @@ async function withLimit({ msg, quem: who, cmds, gratis = false, params = '' }, 
     return true;
 }
 
+/**
+ * Everyone's usage (/usage -all): per person (or group) and per command, in the history window
+ * (usage.logDays). Only commands with a limit leave a trace in the table.
+ * @returns {Promise<{ dias: number, total: number, pessoas: Array<{ chave: string, grupo: boolean, total: number, porCmd: Map<string, number> }>, porCmd: Map<string, number> }>}
+ */
+async function allConsumption(nowAlt = Date.now()) {
+    const daysAlt = getSetting('usage.logDays');
+    const linesAlt = await dbAll(
+        'SELECT item, cmd, COUNT(*) AS n FROM usage_log WHERE used_at >= ? GROUP BY item, cmd',
+        [nowAlt - daysAlt * 24 * 60 * 60 * 1000]
+    );
+
+    const people = new Map();
+    const byCmd = new Map();
+    let total = 0;
+    for (const { item, cmd, n } of linesAlt) {
+        // "phone:group" is the person in that group: adds to the person
+        const group = item.endsWith('@g.us') && !item.includes(':');
+        const keyAlt = group ? item : item.split(':')[0];
+        const p = people.get(keyAlt) ?? { chave: keyAlt, grupo: group, total: 0, porCmd: new Map() };
+        p.total += n;
+        p.porCmd.set(cmd, (p.porCmd.get(cmd) ?? 0) + n);
+        people.set(keyAlt, p);
+        byCmd.set(cmd, (byCmd.get(cmd) ?? 0) + n);
+        total += n;
+    }
+
+    return { dias: daysAlt, total, pessoas: [...people.values()].sort((a, b) => b.total - a.total), porCmd: byCmd };
+}
+
 // Deletes the uses older than 'usage.logDays' (called in the daily cleanup)
 const cleanUsesOld = (nowAlt = Date.now()) =>
     dbRun('DELETE FROM usage_log WHERE used_at < ?', [nowAlt - getSetting('usage.logDays') * 24 * 60 * 60 * 1000]);
 
 module.exports = {
     PERIODS,
+    allConsumption,
     withLimit,
     commandLimitable,
     describeLimit,
