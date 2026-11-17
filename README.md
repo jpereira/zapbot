@@ -439,6 +439,7 @@ and make the bot your own:
 | [`/giphy`](https://jpereira.github.io/zapbot/commands/giphy/) | | `user` | A GIPHY GIF by tag, URL or ID, sent looping |
 | [`/goodbye`](https://jpereira.github.io/zapbot/commands/goodbye/) | | `admin` · delegable | Message when someone leaves the group (per group; `{name}`, `{group}`) |
 | [`/gpt`](https://jpereira.github.io/zapbot/commands/gpt/) | | `admin` · delegable | Asks ChatGPT (OpenAI); `-img`, `-gif`, `-voice`, `-prices`, `-usage` and `-status` (bytes, tokens, cost and balance) |
+| [`/group`](https://jpereira.github.io/zapbot/commands/group/) | | `admin` · delegable | Shows and changes the group: name, description, photo, who can send, edit and add; `-send admins -for 30m` closes it for a while |
 | [`/help`](https://jpereira.github.io/zapbot/commands/help/) | | `user` | Help menu, with only the commands the requester can use |
 | [`/invite`](https://jpereira.github.io/zapbot/commands/invite/) | | `admin` | The group invite link (`-revoke` makes a new one) |
 | [`/join`](https://jpereira.github.io/zapbot/commands/join/) | | `admin` | Joins a group through the invite link (`-info` shows the group without joining); `-l` lists your groups |

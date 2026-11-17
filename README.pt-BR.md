@@ -437,6 +437,7 @@ e deixe o bot do seu jeito:
 | [`/giphy`](https://jpereira.github.io/zapbot/pt-BR/commands/giphy/) | | `user` | GIF do GIPHY por tag, URL ou ID, enviado em loop |
 | [`/goodbye`](https://jpereira.github.io/zapbot/pt-BR/commands/goodbye/) | | `admin` · delegável | Mensagem quando alguém sai do grupo (por grupo; `{name}`, `{group}`) |
 | [`/gpt`](https://jpereira.github.io/zapbot/pt-BR/commands/gpt/) | | `admin` · delegável | Pergunta ao ChatGPT (OpenAI); `-img`, `-gif`, `-voice`, `-prices`, `-usage` e `-status` (bytes, tokens, custo e saldo) |
+| [`/group`](https://jpereira.github.io/zapbot/pt-BR/commands/group/) | | `admin` · delegável | Mostra e muda o grupo: nome, descrição, foto, quem pode enviar, editar e adicionar; `-send admins -for 30m` fecha por um tempo |
 | [`/help`](https://jpereira.github.io/zapbot/pt-BR/commands/help/) | | `user` | Menu de ajuda, só com os comandos que quem pediu pode usar |
 | [`/invite`](https://jpereira.github.io/zapbot/pt-BR/commands/invite/) | | `admin` | O link de convite do grupo (`-revoke` gera outro) |
 | [`/join`](https://jpereira.github.io/zapbot/pt-BR/commands/join/) | | `admin` | Entra em um grupo pelo link de convite (`-info` mostra o grupo sem entrar); `-l` lista os seus grupos |

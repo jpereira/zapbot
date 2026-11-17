@@ -23,6 +23,7 @@ const { cmdForward } = require('./forward');
 const { cmdGet } = require('./get');
 const { cmdGiphy } = require('./giphy');
 const { cmdGpt } = require('./gpt');
+const { cmdGroup } = require('./group');
 const { cmdDemote, cmdPromote } = require('./admins');
 const { cmdAlias } = require('./alias');
 const { cmdAntilink } = require('./antilink');
@@ -94,6 +95,7 @@ const HANDLERS = {
     '/giphy': cmdGiphy,
     '/goodbye': cmdGoodbye,
     '/gpt': cmdGpt,
+    '/group': cmdGroup,
     '/help': cmdHelp,
     '/invite': cmdInvite,
     '/join': cmdJoin,

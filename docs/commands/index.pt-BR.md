@@ -197,13 +197,13 @@ destino: quem pode o `/gpt` usa os atalhos para ele, e o nome de um atalho não 
 [`/translate`](translate.md), [`/uptime`](uptime.md), [`/usage`](usage.md),
 [`/version`](version.md), [`/walissu`](walissu.md), [`/weather`](weather.md), [`/whois`](whois.md)
 
-**admin, delegáveis** (admins e o dono; o dono libera a um usuário com `+cmd`) (17):
+**admin, delegáveis** (admins e o dono; o dono libera a um usuário com `+cmd`) (18):
 
 [`/antilink`](antilink.md), [`/demote`](demote.md), [`/draw`](draw.md),
-[`/everybody`](everybody.md), [`/goodbye`](goodbye.md), [`/gpt`](gpt.md), [`/members`](members.md),
-[`/ocr`](ocr.md), [`/poll`](poll.md), [`/profile`](profile.md), [`/promote`](promote.md),
-[`/show`](show.md), [`/stats`](stats.md), [`/tldr`](tldr.md), [`/tts`](tts.md), [`/warn`](warn.md),
-[`/welcome`](welcome.md)
+[`/everybody`](everybody.md), [`/goodbye`](goodbye.md), [`/gpt`](gpt.md), [`/group`](group.md),
+[`/members`](members.md), [`/ocr`](ocr.md), [`/poll`](poll.md), [`/profile`](profile.md),
+[`/promote`](promote.md), [`/show`](show.md), [`/stats`](stats.md), [`/tldr`](tldr.md),
+[`/tts`](tts.md), [`/warn`](warn.md), [`/welcome`](welcome.md)
 
 **admin** (admins e o dono; nunca delegáveis) (22):
 
@@ -270,6 +270,7 @@ e o `/alias /usd` mostra o que um atalho faz.
 | [`/giphy`](giphy.md) | | `user` | GIF do GIPHY por tag, URL ou ID, enviado em loop |
 | [`/goodbye`](goodbye.md) | | `admin` · delegável | Mensagem quando alguém sai do grupo (por grupo; `{name}`, `{group}`) |
 | [`/gpt`](gpt.md) | | `admin` · delegável | Pergunta ao ChatGPT (OpenAI); `-img`, `-gif`, `-voice`, `-prices`, `-usage` e `-status` (bytes, tokens, custo e saldo) |
+| [`/group`](group.md) | | `admin` · delegável | Mostra e muda o grupo: nome, descrição, foto, quem pode enviar, editar e adicionar; `-send admins -for 30m` fecha por um tempo |
 | [`/help`](help.md) | | `user` | Menu de ajuda, só com os comandos que quem pediu pode usar |
 | [`/invite`](invite.md) | | `admin` | O link de convite do grupo (`-revoke` gera outro) |
 | [`/join`](join.md) | | `admin` | Entra em um grupo pelo link de convite (`-info` mostra o grupo sem entrar); `-l` lista os seus grupos |

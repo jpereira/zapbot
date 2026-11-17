@@ -1,0 +1,116 @@
+{
+  "summary": "Mostra e muda o grupo",
+  "usage": "/group [-info|-admins] [-name <texto>] [-desc [texto]] [-pic|-rmpic] [-send|-edit|-add <admins|all>] [-for <tempo>]",
+  "help": "Mostra e muda o grupo onde foi digitado. Sem opções, mostra as informações (membros, admins, criador, data de criação, descrição e quem pode enviar, editar e adicionar). As mudanças pedem que a sua conta seja admin do grupo. O link de convite está no /invite. Só funciona em grupos.",
+  "ex": [
+    "/group",
+    "/group -name Amigos da L200",
+    "/group -send admins -for 30m"
+  ],
+  "cmd_opts": [
+    {
+      "opts": [
+        "info",
+        "i"
+      ],
+      "values": [],
+      "desc": "Mostra as informações do grupo (o mesmo que /group sem nada)."
+    },
+    {
+      "opts": [
+        "admins",
+        "a"
+      ],
+      "values": [],
+      "desc": "Lista os admins (👑 criador, ⭐ admin)."
+    },
+    {
+      "opts": [
+        "name"
+      ],
+      "values": [
+        "<texto>"
+      ],
+      "desc": "Muda o nome do grupo. Vai até o fim do comando (pode ter espaços).",
+      "ex": [
+        "/group -name Amigos da L200"
+      ]
+    },
+    {
+      "opts": [
+        "desc"
+      ],
+      "values": [
+        "[texto]"
+      ],
+      "desc": "Muda a descrição do grupo. Sem texto, apaga.",
+      "ex": [
+        "/group -desc Regras: sem brigas",
+        "/group -desc"
+      ]
+    },
+    {
+      "opts": [
+        "pic"
+      ],
+      "values": [],
+      "desc": "Põe a foto do grupo com a imagem que você respondeu (ou a enviada com o comando na legenda)."
+    },
+    {
+      "opts": [
+        "rmpic"
+      ],
+      "values": [],
+      "desc": "Tira a foto do grupo."
+    },
+    {
+      "opts": [
+        "send"
+      ],
+      "values": [
+        "<admins|all>"
+      ],
+      "desc": "Quem pode mandar mensagem: admins (o grupo fica fechado para os outros) ou all. Com -for, reabre sozinho.",
+      "ex": [
+        "/group -send admins",
+        "/group -send all"
+      ]
+    },
+    {
+      "opts": [
+        "edit"
+      ],
+      "values": [
+        "<admins|all>"
+      ],
+      "desc": "Quem pode mudar o nome, a descrição e a foto do grupo.",
+      "ex": [
+        "/group -edit admins"
+      ]
+    },
+    {
+      "opts": [
+        "add"
+      ],
+      "values": [
+        "<admins|all>"
+      ],
+      "desc": "Quem pode adicionar pessoas ao grupo.",
+      "ex": [
+        "/group -add admins"
+      ]
+    },
+    {
+      "opts": [
+        "for"
+      ],
+      "values": [
+        "<tempo>"
+      ],
+      "desc": "Com -send admins: fecha só por esse tempo (30m, 2h, 1d, 1h30m) e reabre sozinho, mesmo se o bot reiniciar.",
+      "ex": [
+        "/group -send admins -for 30m"
+      ]
+    }
+  ]
+}

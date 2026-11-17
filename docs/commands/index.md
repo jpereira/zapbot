@@ -198,13 +198,13 @@ and a shortcut's name doesn't go in `+cmd`.
 [`/translate`](translate.md), [`/uptime`](uptime.md), [`/usage`](usage.md),
 [`/version`](version.md), [`/walissu`](walissu.md), [`/weather`](weather.md), [`/whois`](whois.md)
 
-**admin, delegable** (admins and the owner; the owner releases them to a user with `+cmd`) (17):
+**admin, delegable** (admins and the owner; the owner releases them to a user with `+cmd`) (18):
 
 [`/antilink`](antilink.md), [`/demote`](demote.md), [`/draw`](draw.md),
-[`/everybody`](everybody.md), [`/goodbye`](goodbye.md), [`/gpt`](gpt.md), [`/members`](members.md),
-[`/ocr`](ocr.md), [`/poll`](poll.md), [`/profile`](profile.md), [`/promote`](promote.md),
-[`/show`](show.md), [`/stats`](stats.md), [`/tldr`](tldr.md), [`/tts`](tts.md), [`/warn`](warn.md),
-[`/welcome`](welcome.md)
+[`/everybody`](everybody.md), [`/goodbye`](goodbye.md), [`/gpt`](gpt.md), [`/group`](group.md),
+[`/members`](members.md), [`/ocr`](ocr.md), [`/poll`](poll.md), [`/profile`](profile.md),
+[`/promote`](promote.md), [`/show`](show.md), [`/stats`](stats.md), [`/tldr`](tldr.md),
+[`/tts`](tts.md), [`/warn`](warn.md), [`/welcome`](welcome.md)
 
 **admin** (admins and the owner; never delegable) (22):
 
@@ -271,6 +271,7 @@ target command, and `/alias /usd` shows what a shortcut does.
 | [`/giphy`](giphy.md) | | `user` | GIPHY GIF by tag, URL, or ID, sent looping |
 | [`/goodbye`](goodbye.md) | | `admin` · delegable | Message when someone leaves the group (per group; `{name}`, `{group}`) |
 | [`/gpt`](gpt.md) | | `admin` · delegable | Asks ChatGPT (OpenAI); `-img`, `-gif`, `-voice`, `-prices`, `-usage`, and `-status` (bytes, tokens, cost, and balance) |
+| [`/group`](group.md) | | `admin` · delegable | Shows and changes the group: name, description, photo, who can send, edit and add; `-send admins -for 30m` closes it for a while |
 | [`/help`](help.md) | | `user` | Help menu, only with the commands the requester can use |
 | [`/invite`](invite.md) | | `admin` | The group invite link (`-revoke` makes a new one) |
 | [`/join`](join.md) | | `admin` | Joins a group through the invite link (`-info` shows the group without joining); `-l` lists your groups |

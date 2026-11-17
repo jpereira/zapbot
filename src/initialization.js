@@ -409,6 +409,14 @@ async function initializeDb() {
         )
     `);
 
+    // /group -send admins -for <time>: when the closed group reopens by itself
+    await dbRun(`
+        CREATE TABLE IF NOT EXISTS group_reopen (
+            chat_id TEXT PRIMARY KEY,
+            reopen_at INTEGER NOT NULL
+        )
+    `);
+
     // /antilink: the mode (off, delete, warn, remove) and the allowed domains (JSON) of each group
     await dbRun(`
         CREATE TABLE IF NOT EXISTS antilink (

@@ -130,6 +130,7 @@ nav:
       - /giphy: commands/giphy.md
       - /goodbye: commands/goodbye.md
       - /gpt: commands/gpt.md
+      - /group: commands/group.md
       - /help: commands/help.md
       - /invite: commands/invite.md
       - /join: commands/join.md

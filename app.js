@@ -110,6 +110,7 @@ const { startHeartbeat } = require('./src/heartbeat');
 const { startCleanupPeriodic } = require('./src/cleanup');
 const { startApi } = require('./src/api');
 const { startMonitor } = require('./src/monitor');
+const { startReopenings } = require('./src/groupReopen');
 
 // Periodic tasks
 marksStartCleanup();
@@ -123,6 +124,7 @@ startSchedule();
 startBackup();
 startPricesAutomatic();
 startMonitor();
+startReopenings();
 startApi();
 
 startBot();
