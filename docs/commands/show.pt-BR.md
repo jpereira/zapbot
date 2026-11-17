@@ -204,7 +204,8 @@ aviso diz `(fora do cache)`. Cada mudança é um item: trocar duas vezes gera do
 As menções do texto (`@265472113143884`, que é o id interno do WhatsApp) saem com o **nome**: o da
 sua agenda, o do perfil de quem não está nela, ou o telefone. Vale também nos avisos de mensagem
 apagada e editada e no `/show`; o banco guarda o texto original e os ids das menções (`messages.mentions`, vindos da própria
-mensagem), e o nome é buscado na hora de exibir. Uma edição que marca gente nova acrescenta os ids dela também. As mensagens salvas antes disso não têm os ids: o bot
+mensagem), e o nome é buscado na hora de exibir. Uma edição que marca gente nova acrescenta os ids dela também. As mensagens salvas antes disso não têm os ids: ao conectar, o bot os preenche pelos
+membros do grupo (as 5000 mais recentes, uma vez só); quem não for achado fica no palpite antigo, que
 tenta o número como id interno e como telefone.
 
 ```text

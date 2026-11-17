@@ -210,7 +210,8 @@ The mentions in the text (`@265472113143884`, WhatsApp's internal id) come out w
 the one in your address book, the profile name for someone who isn't in it, or the phone number.
 This also applies to the deleted and edited message alerts and to `/show`; the database keeps the
 original text plus the ids of the mentions (`messages.mentions`, from the message itself), and the
-name is looked up when displaying. An edit that mentions new people adds their ids too. Messages saved before this have no ids: the bot tries the number as
+name is looked up when displaying. An edit that mentions new people adds their ids too. Messages saved before this have no ids: when the bot connects, it fills them in from the group
+members (the most recent 5000, once); whoever is not found keeps the old guess, trying the number as
 both an internal id and a phone.
 
 ```text

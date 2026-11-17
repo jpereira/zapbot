@@ -8,6 +8,7 @@ const qrcodeTerminal = require('qrcode-terminal');
 const { estado: stateAlt } = require('./state');
 const { client, messageToSelf } = require('./client');
 const { dbReady } = require('./db');
+const { fillMentionsOld } = require('./mentions');
 const { t } = require('./i18n');
 const { alertPerEmail, transporter } = require('./email');
 const { printDebug, printError, printInfo, printSuccess } = require('./log');
@@ -365,6 +366,10 @@ client.on('ready', () => withContextDebug({ semFiltro: true }, async () => {
     alertPerEmail(t(jaStayedReady ? 'conexao.reconectadoTitulo' : 'conexao.iniciadoTitulo'),
         [jaStayedReady ? (dropReason ? t('conexao.conectadoDeNovoQueda', { motivo: dropReason }) : t('conexao.conectadoDeNovo')) : t('conexao.conectado'),
          outsidePer, ...listNotices].filter(Boolean).join('\n'));
+    if (!jaStayedReady) {
+        // In the background: the mention ids of messages stored before they existed
+        fillMentionsOld().catch(err => printError('[Mentions] Error filling in the old ones:', err.message));
+    }
     jaStayedReady = true;
     // SMTP may finish later: the context keeps this notice visible without delaying the filter.
     bootCompleteLogs();
