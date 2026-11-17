@@ -43,11 +43,17 @@ async function muted(type, { chatId, remetentes: senders = [] }) {
     const whereAlt = type === 'watch'
         ? Object.values(TYPES).map(t => `${t.coluna} = 1`).join(' OR ')
         : `${TYPES[type].coluna} = 1`;
-    const mutes = await dbAll(`SELECT * FROM mutes WHERE ${whereAlt}`);
+    const mutes = await dbAll(`SELECT * FROM mutes WHERE (${whereAlt}) AND (expires_at IS NULL OR expires_at > ?)`, [Date.now()]);
     if (!mutes.length) return null;
 
     const keys = new Set([chatId, ...senders].filter(Boolean).map(r => idKey(r.includes('@') ? r : `${r}@c.us`)));
     return mutes.find(m => keys.has(idKey(m.target_id))) ?? null;
+}
+
+// Deletes the temporary mutes that have already ended (/mute -for)
+async function cleanExpired() {
+    await dbReady;
+    await dbRun('DELETE FROM mutes WHERE expires_at IS NOT NULL AND expires_at <= ?', [Date.now()]);
 }
 
 // Records a cut notice (for /bot -status and for the /mute list)
@@ -92,6 +98,7 @@ async function noticeOrigin(messageId) {
 }
 
 module.exports = {
+    cleanExpired,
     TYPES,
     idKey,
     ignoreNotice,

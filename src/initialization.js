@@ -450,6 +450,8 @@ async function initializeDb() {
     await dbRun('CREATE INDEX IF NOT EXISTS idx_mute_hits_at ON mute_hits (at)');
     // is_community: the community (its announcements group), muted by /mute
     await addColumns('mutes', { is_community: 'INTEGER DEFAULT 0' });
+    // expires_at: the temporary mute (/mute -for 2h) ends by itself at that instant (null: no deadline)
+    await addColumns('mutes', { expires_at: 'INTEGER' });
     // reaction: /mute -r. Whoever already had everything muted (-a) stays with everything
     if ((await addColumns('mutes', { reaction: 'INTEGER DEFAULT 0' })).length) {
         await dbRun('UPDATE mutes SET reaction = 1 WHERE deleted = 1 AND edited = 1 AND status = 1');

@@ -8,7 +8,8 @@ const { contactName, resolveLidToPhone, groupResolverName } = require('../contac
 const { dbAll, dbGet, dbReady, dbRun } = require('../db');
 const { t } = require('../i18n');
 const { describeDestination, resolverOrChoose } = require('../destinations');
-const { TYPES, idKey, noticeOrigin } = require('../mudo');
+const { TYPES, idKey, cleanExpired, noticeOrigin } = require('../mudo');
+const { fmtWhen, readDuration } = require('../util/when');
 
 /*
  * /mute <option> </contact or group/|@mention|+number>
@@ -40,7 +41,8 @@ const examples = () => t('grp.mute.examples');
 
 const describe = (m) => {
     const label = labels();
-    return COLUMNS.filter(c => m[c]).map(c => label[c]).join(', ');
+    const o = COLUMNS.filter(c => m[c]).map(c => label[c]).join(', ');
+    return m.expires_at ? o + t('grp.mute.until', { quando: fmtWhen(m.expires_at) }) : o;
 };
 
 // "🏘️ Comunidade", "👥 Grupo" or "👤 Pessoa"
@@ -69,6 +71,13 @@ function readMuted(args) {
             const v = rest.match(/^(\S+)/);
             r.rm = v ? v[1] : '';
             rest = rest.slice(v ? v[0].length : 0).trim();
+        } else if (nameAlt === 'for') {
+            // -for 2h: the silence ends by itself
+            const v = rest.match(/^(\S+)/);
+            const ms = v ? readDuration(v[1]) : null;
+            if (!ms) return { erro: t('grp.mute.badTime', { value: v?.[1] ?? '' }) };
+            r.ms = ms;
+            rest = rest.slice(v[0].length).trim();
         } else if (nameAlt === 'l' || nameAlt === 'list') {
             r.list = true;
         } else if (OPTIONS[nameAlt] === 'all') {
@@ -168,6 +177,7 @@ async function readTarget(msg, textAlt, quotedMsg, commandAlt) {
 }
 
 async function listAlt(msg) {
+    await cleanExpired();
     const mutes = await dbAll(
         `SELECT m.*, (SELECT COUNT(*) FROM mute_hits h WHERE h.target_id = m.target_id) AS ignoradas
            FROM mutes m ORDER BY m.id`
@@ -206,6 +216,7 @@ async function undoNumber(msg, valueAlt) {
 
 async function cmdMute({ msg, args, quotedMsg }) {
     await dbReady;
+    await cleanExpired();
     const r = readMuted(args);
 
     if (r.erro) {
@@ -239,17 +250,19 @@ async function cmdMute({ msg, args, quotedMsg }) {
     // Muting again adds to what was there
     const beforeAlt = await dbGet('SELECT * FROM mutes WHERE target_id = ?', [destination.id]);
     const flags = Object.fromEntries(COLUMNS.map(c => [c, r.colunas.has(c) || beforeAlt?.[c] ? 1 : 0]));
+    // -for: the new deadline; without it, the silence has no deadline (even if it was temporary)
+    flags.expires_at = r.ms ? Date.now() + r.ms : null;
 
     await dbRun(
         `INSERT INTO mutes
-            (target_id, target_name, is_group, is_community, deleted, edited, status, reaction, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (target_id, target_name, is_group, is_community, deleted, edited, status, reaction, created_at, expires_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT(target_id) DO UPDATE SET
             target_name = excluded.target_name, is_community = excluded.is_community,
             deleted = excluded.deleted, edited = excluded.edited, status = excluded.status,
-            reaction = excluded.reaction`,
+            reaction = excluded.reaction, expires_at = excluded.expires_at`,
         [destination.id, destination.nome, destination.grupo ? 1 : 0, destination.comunidade ? 1 : 0,
-            flags.deleted, flags.edited, flags.status, flags.reaction, Date.now()]
+            flags.deleted, flags.edited, flags.status, flags.reaction, Date.now(), flags.expires_at]
     );
 
     await msg.reply(t(beforeAlt ? 'grp.mute.updated' : 'grp.mute.muted', { target: describeTarget(destination), what: describe(flags) }));
@@ -257,6 +270,7 @@ async function cmdMute({ msg, args, quotedMsg }) {
 
 async function cmdUnmute({ msg, args, opts, quotedMsg }) {
     await dbReady;
+    await cleanExpired();
 
     // -all (-a): todos
     if (opts.opt.all) {
