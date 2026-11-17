@@ -1,7 +1,7 @@
 /*
  * The -profile|-p of the commands that send images to GPT (/draw, /gpt): the profile photo of one or more
  * people goes along with the request images (the replied photo). Who: right after -p, /Name/,
- * @mention, +number, @me/$me (your own photo) or, with none of that, the address book name typed loose (-p fulano beltrano): the words
+ * @mention, +number, @me/$me (your own photo), @this/$this (the chat: the other person, or the group photo) or, with none of that, the address book name typed loose (-p fulano beltrano): the words
  * that are a contact's first name (or whole name) count as people, and the first that is not
  * starts the request. Without anyone, the private chat person (you, in yours) or, in the group, whoever wrote the message
  * respondida.
@@ -9,7 +9,7 @@
 
 const { readPerson, withoutDelimiters } = require('./block');
 const { client } = require('../client');
-const { scheduleName } = require('../contacts');
+const { scheduleName, groupResolverName } = require('../contacts');
 const { withoutAccents } = require('../util/format');
 const { dataAlt, photoAlt } = require('./profile');
 const { t } = require('../i18n');
@@ -17,8 +17,9 @@ const { t } = require('../i18n');
 const MAX_PROFILES = 4;
 const FLAG = /(^|\s)-(?:profile|p)(?=\s|$)/;
 // A person at the start of the text: /Compound Name/, @mention or +number
-const PERSON_IN_START = /^\s*(\/[^/\n]+\/|[@$]me(?![\p{L}\d])|@\S+|\+\d[\d()-]*)/iu;
+const PERSON_IN_START = /^\s*(\/[^/\n]+\/|[@$](?:me|this)(?![\p{L}\d])|@\S+|\+\d[\d()-]*)/iu;
 const EU = /^[@$]me$/i;
+const THIS = /^[@$]this$/i;
 
 // The address book names (without accent and lowercase), for 30 s: the first name and the whole name of each contact
 let namesCache = { quando: 0, inteiros: new Set(), primeiros: new Set() };
@@ -91,23 +92,30 @@ async function textReadProfile(textAlt) {
 async function resolverProfiles({ msg, quotedMsg, chatId, isGroup, itens: items, cmd }) {
     const people = [];
 
-    if (!items.length) {
-        if (isGroup) {
-            if (!quotedMsg) {
-                await msg.reply(t('ai.profileNeedsPerson', { cmd }));
-                return null;
-            }
-            const author = await readPerson(msg, '', quotedMsg, cmd);
-            if (!author) return null;
-            people.push(author);
-        } else {
-            people.push({ id: chatId });
+    // Nobody: in private, the other person; in a group, whoever wrote the replied message
+    const doChat = async () => {
+        if (!isGroup) return { id: chatId };
+        if (!quotedMsg) {
+            await msg.reply(t('ai.profileNeedsPerson', { cmd }));
+            return null;
         }
+        return readPerson(msg, '', quotedMsg, cmd);
+    };
+    // @this: the chat you are in: in private, the other person; in a group, the group's own photo
+    const thisChat = async () => isGroup
+        ? { id: chatId, nome: await groupResolverName(chatId).catch(() => null) ?? undefined }
+        : { id: chatId };
+
+    if (!items.length) {
+        const person = await doChat();
+        if (!person) return null;
+        people.push(person);
     } else {
         for (const item of items) {
             // @me / $me: whoever typed the command (the owner, through the bot account)
             const person = EU.test(item)
                 ? { id: msg.fromMe ? client.info.wid._serialized : (msg.author || msg.from) }
+                : THIS.test(item) ? await thisChat()
                 : await readPerson(msg, withoutDelimiters(item), null, cmd);
             if (!person) return null;
             if (!people.some(p => p.id === person.id)) people.push(person);
@@ -145,4 +153,22 @@ function imagesContext({ comFotoDaMensagem: messageWithPhoto, perfis: profiles }
     return t('ai.imgContext', { lista: list });
 }
 
-module.exports = { imagesContext, textReadProfile, restartNames, resolverProfiles };
+/**
+ * Without -p: @me/$me and @this/$this right at the start of the request (after valueless options like -img or -g) count
+ * as an implicit -p. Only these variables: a loose @mention at the start remains request text.
+ * @returns {{ itens: string[], texto: string } | null}  null: no variable at the start
+ */
+function readProfileImplicit(textAlt) {
+    const t0 = String(textAlt ?? '');
+    const optionsAlt = t0.match(/^(?:\s*-[a-z]+(?=\s))*/i)[0];
+    let rest = t0.slice(optionsAlt.length);
+    const items = [];
+    for (let m; (m = rest.match(/^\s*([@$](?:me|this))(?![\p{L}\d])/iu));) {
+        items.push(m[1]);
+        rest = rest.slice(m[0].length);
+    }
+    if (!items.length) return null;
+    return { itens: items, texto: [optionsAlt.trim(), rest.trim()].filter(Boolean).join(' ') };
+}
+
+module.exports = { imagesContext, textReadProfile, readProfileImplicit, restartNames, resolverProfiles };

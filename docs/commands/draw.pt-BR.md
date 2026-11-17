@@ -97,6 +97,7 @@ de uma foto, sem baixar e mandar a imagem dele.
 | Nome: `/Rafael Silva/` | O contato pelo nome (como no [`/profile`](profile.md)); se mais de um servir, o bot pergunta qual |
 | Menção: `@Rafael` | A pessoa mencionada |
 | `@me` ou `$me` | **Você**: a sua própria foto de perfil (quem digitou o comando) |
+| `@this` ou `$this` | **O chat em que você está**: num privado, a outra pessoa; num grupo, a **foto do grupo** |
 | Número: `+5521999999999` | Pelo número |
 | *(ninguém)*, num privado | A pessoa do chat (no seu próprio chat, você) |
 | *(ninguém)*, num grupo | Quem escreveu a mensagem que você responde |
@@ -135,7 +136,32 @@ sozinho ou com os amigos:
 ```text
 /draw -p @me desenhe eu como um cavaleiro medieval
 /draw -p @me fulano desenhe nós dois como piratas num navio
+(no chat com o Bruno)  /draw -p @me @this desenhe nós dois como piratas
+(num grupo)  /draw -p @this faça um cartaz com a foto deste grupo
 🎨 desenhe nós dois como piratas num navio
+```
+
+**O chat em que você está:** o `@this` (ou `$this`) é a outra pessoa num privado e a **foto do grupo**
+num grupo. Junto com o `@me`, é o jeito de você e a pessoa com quem fala entrarem na mesma imagem:
+
+```text
+(no chat com o Bruno)
+/draw -p @me @this desenhe nós dois como astronautas
+/draw -g -p @me @this nós dois dançando numa festa
+
+(num grupo)
+/draw -p @this faça um cartaz com a foto deste grupo
+/draw -p @me @this ponha eu e o grupo numa tirinha
+```
+
+**Sem o `-p`:** `@me`/`$me` e `@this`/`$this` no **começo do pedido** já valem como `-p`. Depois de
+uma opção como `-g` também. Só essas quatro variáveis: uma `@menção` solta continua texto do pedido, e
+uma variável no meio da frase é só texto:
+
+```text
+/draw @me @this desenhe nós dois como piratas           (igual a /draw -p @me @this ...)
+/draw -g $me $this nós dois dançando
+/draw desenhe @me de astronauta                         (sem foto: o @me é só texto)
 ```
 
 **Várias pessoas** (até 4), como um retrato de grupo:

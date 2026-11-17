@@ -105,6 +105,7 @@ a photo, without having to download and send their picture.
 | Name: `/Rafael Silva/` | The contact by name (like in [`/profile`](profile.md)); if several fit, the bot asks which |
 | Mention: `@Rafael` | The mentioned person |
 | `@me` or `$me` | **You**: your own profile photo (whoever typed the command) |
+| `@this` or `$this` | **The chat you are in**: in a private chat, the other person; in a group, the **group photo** |
 | Number: `+5521999999999` | By number |
 | *(nobody)*, in a private chat | The person of the chat (in your own chat, you) |
 | *(nobody)*, in a group | Whoever wrote the message you reply to |
@@ -144,7 +145,33 @@ with friends:
 ```text
 /draw -p @me draw me as a medieval knight
 /draw -p @me fulano draw the two of us as pirates on a ship
+(in the chat with Bruno)  /draw -p @me @this draw the two of us as pirates
+(in a group)  /draw -p @this make a poster with this group's photo
 🎨 draw the two of us as pirates on a ship
+```
+
+**The chat you are in:** `@this` (or `$this`) is the other person in a private chat and the
+**group photo** in a group. Together with `@me`, it is how you and the person you are talking to
+get into the same picture:
+
+```text
+(in the chat with Bruno)
+/draw -p @me @this draw the two of us as astronauts
+/draw -g -p @me @this the two of us dancing at a party
+
+(in a group)
+/draw -p @this make a poster with this group's photo
+/draw -p @me @this put me and the group in a comic strip
+```
+
+**Without the `-p`:** `@me`/`$me` and `@this`/`$this` at the **start of the request** already count as
+`-p`. The same goes after a flag like `-g`. Only these four variables: a loose `@mention` stays as
+request text, and a variable in the middle of the sentence is just text:
+
+```text
+/draw @me @this draw the two of us as pirates          (same as /draw -p @me @this ...)
+/draw -g $me $this the two of us dancing
+/draw draw @me as an astronaut                         (no photo: @me is just text)
 ```
 
 **Several people** (up to 4), as a group portrait:

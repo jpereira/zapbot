@@ -167,7 +167,14 @@ message you reply to. All the details, and the drawing examples, are in
 🤖 With a thick mustache, he would look more serious, with something of a 1970s detective...
 ```
 
-`@me` (or `$me`) is your own photo: `/gpt -p @me how do I look in this photo?`. Plain names work too, and several at once (up to 4), joined with the photo you replied to:
+```text
+/gpt -p @me @this what do we have in common?
+/gpt -img -p @this make a logo from this group photo        (in a group)
+```
+
+At the **start of the text**, `@me`/`@this` work even without `-p`: `/gpt @me @this what do we have in common?`.
+
+`@this` (or `$this`) is the chat you are in (the other person, or the group photo), and `@me` (or `$me`) is your own photo: `/gpt -p @me how do I look in this photo?`. Plain names work too, and several at once (up to 4), joined with the photo you replied to:
 
 ```text
 (replying to a photo of a meeting)
