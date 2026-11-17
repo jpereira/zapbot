@@ -357,6 +357,23 @@ até o intervalo acabar:
 - Os limites são settings: `/set flood.maxCommandRepeated 5` (`0` desliga) e
   `/set flood.intervalCommand 10` (em segundos). Veja [Settings](../settings.md).
 
+## Recusando ligações
+
+A conta do bot toca como qualquer outra. Com o `call.reject` ligado, o bot **recusa** as ligações de voz e de
+vídeo que chegam e responde uma vez com a `call.message` (no máximo uma mensagem a cada 10 minutos por pessoa,
+para quem liga dez vezes não receber dez textos). Vem desligado.
+
+```text
+/set call.reject on
+/set call.message Eu não atendo aqui, manda mensagem ou um áudio 🙏
+/set -a call.allow /Maria Lucia/      → as ligações da Maria sempre tocam
+/set call.message                     → limpa: recusa em silêncio
+```
+
+- Quem está em `call.allow` e o `bot.admins` sempre passam.
+- Recusa também as ligações de grupos.
+- Ninguém vê a recusa como um bloqueio: para quem ligou, parece uma ligação perdida.
+
 ## Voltar ao padrão
 
 Dois níveis, os dois só do dono e os dois pedem confirmação: responda **sim** em até 10 segundos, no

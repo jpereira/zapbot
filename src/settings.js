@@ -295,6 +295,23 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 1, max: 365,
         desc: 'Dias que as mensagens apagadas ficam guardadas para o /show.'
     },
+    'call.allow': {
+        default: [],
+        type: 'list',
+        desc: 'Números (com DDI, ex.: 5521999999999) cujas ligações nunca são recusadas, mesmo com call.reject ligado. O bot.admins também passa sempre.',
+        item: itemPhone
+    },
+    'call.message': {
+        default: 'Oi! Não atendo ligações aqui. Manda uma mensagem ou um áudio que eu respondo assim que der. 🙏',
+        type: 'string',
+        allowEmpty: true,
+        desc: 'Mensagem enviada a quem teve a ligação recusada (no máximo uma a cada 10 minutos por pessoa). Vazio: recusa em silêncio.'
+    },
+    'call.reject': {
+        default: false,
+        type: 'boolean',
+        desc: 'Recusa as ligações de voz e de vídeo que chegam (exceto de call.allow e do bot.admins) e responde com a call.message.'
+    },
     'commands.disabled': {
         default: [],
         type: 'list',

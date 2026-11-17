@@ -361,6 +361,23 @@ commands until the interval ends:
 - The limits are settings: `/set flood.maxCommandRepeated 5` (`0` turns it off) and
   `/set flood.intervalCommand 10` (in seconds). See [Settings](../settings.md).
 
+## Rejecting calls
+
+The bot's account rings like any other. With `call.reject` on, the bot **rejects** incoming voice and video
+calls and replies once with `call.message` (at most one message every 10 minutes per person, so someone who
+calls ten times doesn't get ten texts). It is off by default.
+
+```text
+/set call.reject on
+/set call.message I don't take calls here, send a message or an audio 🙏
+/set -a call.allow /Maria Lucia/      → Maria's calls always ring
+/set call.message                     → clears: rejects in silence
+```
+
+- Whoever is in `call.allow` and the `bot.admins` always get through.
+- It rejects calls from groups too.
+- Nobody sees the rejection as a block: for the caller it looks like a missed call.
+
 ## Back to the default
 
 Two levels, both owner-only and both ask for confirmation: reply **yes** within 10 seconds, in the

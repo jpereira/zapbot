@@ -30,6 +30,9 @@ em português).
 | `cache.messageRetentionHours` | 68–2160 | `68` | Horas que o texto das mensagens comuns fica no banco (68, a janela de apagar para todos; até 2160 = 90 dias): quanto mais, mais o `/tldr` alcança. As mídias têm o seu prazo, o `cache.messageMediaRetentionHours` |
 | `cache.reactionRetentionDays` | 1–365 | `30` | Dias que as reações removidas ou trocadas ficam guardadas para o `/show -r` |
 | `cache.revokedRetentionDays` | 1–365 | `30` | Dias que as mensagens apagadas ficam guardadas para o `/show` |
+| `call.allow` | lista | *(vazia)* | Números (com DDI) cujas ligações nunca são recusadas, mesmo com `call.reject` ligado. O `bot.admins` também passa sempre |
+| `call.message` | texto (pode ser vazio) | `Oi! Não atendo ligações aqui. Manda uma mensagem ou um áudio que eu respondo assim que der. 🙏` | Mensagem enviada a quem teve a ligação recusada (no máximo uma a cada 10 minutos por pessoa). Vazio: recusa em silêncio |
+| `call.reject` | on/off | `off` | Recusa as ligações de voz e de vídeo que chegam (exceto `call.allow` e `bot.admins`) e responde com a `call.message`. Veja [Recusando ligações](commands/bot.md#recusando-ligações) |
 | `commands.disabled` | lista | *(vazia)* | Comandos desativados em tempo de execução: o bot os ignora e eles somem do `/help`. O `/set` não pode ser desativado. Nomes desconhecidos são ignorados com aviso no log; aliases válidos são normalizados |
 | `contacts.cache` | on/off | `on` | Guarda as fotos de perfil baixadas pelo `/contacts` em `cache/contacts` (entram no backup). Desligado: baixa a cada exportação e não guarda nada |
 | `contacts.cacheDays` | 1–365 | `30` | Dias que uma foto em `cache/contacts` vale antes de ser baixada de novo (`/contacts -r` força) |
