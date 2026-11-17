@@ -89,12 +89,21 @@ The same forms, in a single command:
 1. 👤 Jorge Pereira · +5521999999999
 2. 👤 Jorge Silva · +5511988888888
 
-💡 Reply with just the number (within 2 minutes), or repeat the command with more words of the name.
+💡 Reply with just the number (within 2 minutes; 0 cancels), or repeat the command with more words of the name.
 
 1
 🔇 Muted: 👤 Jorge Pereira — deleted, edited, status, reactions
 💡 Only the alert goes away: the messages are still stored for /show. See the list with /mute; undo with /unmute.
 ```
+
+To give up without waiting, reply `0` (or `cancel`):
+
+```text
+0
+🚫 Cancelled.
+```
+
+The same goes for a yes/no confirmation: `cancel` counts as "no".
 
 With no reply in 2 minutes, nothing is done, and the list itself becomes the notice (no extra
 message): `⌛ No number chosen for "Jorge" in 2 minutes: nothing was done.`

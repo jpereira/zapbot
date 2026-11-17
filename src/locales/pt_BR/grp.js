@@ -116,7 +116,7 @@ module.exports = {
     'grp.dest.kindGroups': 'grupos',
     'grp.dest.kindContacts': 'contatos',
     'grp.dest.more': '_+{n} {kind}: use mais palavras do nome para ver os outros_',
-    'grp.dest.matches': '🔎 "{search}" corresponde a {n} {kind}:\n\n{list}{more}\n\n💡 _Responda só com o nº (em até 2 minutos), ou repita o comando com mais palavras do nome._',
+    'grp.dest.matches': '🔎 "{search}" corresponde a {n} {kind}:\n\n{list}{more}\n\n💡 _Responda só com o nº (em até 2 minutos; 0 cancela), ou repita o comando com mais palavras do nome._',
     'grp.dest.expired': '⌛ Nenhum nº escolhido para "{search}" em 2 minutos: nada foi feito.',
     'grp.dest.subject': 'Aviso',
     'grp.dest.yourPrivate': 'seu privado',

@@ -89,12 +89,21 @@ As mesmas formas, num comando só:
 1. 👤 Jorge Pereira · +5521999999999
 2. 👤 Jorge Silva · +5511988888888
 
-💡 Responda só com o nº (em até 2 minutos), ou repita o comando com mais palavras do nome.
+💡 Responda só com o nº (em até 2 minutos; 0 cancela), ou repita o comando com mais palavras do nome.
 
 1
 🔇 Silenciado: 👤 Jorge Pereira — apagadas, editadas, status, reações
 💡 Só o aviso some: as mensagens continuam guardadas para o /show. Veja a lista com /mute; desfaça com /unmute.
 ```
+
+Para desistir sem esperar, responda `0` (ou `cancelar`):
+
+```text
+0
+🚫 Cancelado.
+```
+
+Na confirmação de sim ou não vale o mesmo: `cancelar` conta como "não".
 
 Sem resposta em 2 minutos, nada é feito, e a própria lista vira o aviso (sem outra mensagem):
 `⌛ Nenhum nº escolhido para "Jorge" em 2 minutos: nada foi feito.`
