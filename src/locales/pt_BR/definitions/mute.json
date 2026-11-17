@@ -37,6 +37,19 @@
     },
     {
       "opts": [
+        "for"
+      ],
+      "values": [
+        "<tempo>"
+      ],
+      "desc": "Silêncio temporário: acaba sozinho depois do tempo (30m, 2h, 7d, 1h30m). Sem ele, o silêncio não tem fim.",
+      "ex": [
+        "/mute -for 2h /Grupo L200/",
+        "/mute -d -for 7d @João"
+      ]
+    },
+    {
+      "opts": [
         "reaction",
         "r"
       ],

@@ -27,6 +27,8 @@ module.exports = {
     'grp.mute.type.edited': 'edited',
     'grp.mute.type.status': 'status',
     'grp.mute.type.reaction': 'reactions',
+    'grp.mute.until': ' · until {quando}',
+    'grp.mute.badTime': '❌ Invalid time: "{value}". Use 30m, 2h, 7d or 1h30m, for example: /mute -for 2h /Group/',
     'grp.mute.unknownOption': '❌ Unknown option: -{name}',
     'grp.mute.unknownMessage': '❌ I do not know whose message this is: reply to an alert (deleted, edited, status, reaction) or say who: {examples}.',
     'grp.mute.examples': '/Jorge Pereira/, /Group L200/ or +5521999999999',

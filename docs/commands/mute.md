@@ -21,6 +21,7 @@ their destinations. These suppressed alerts also count as ignored, as `watch`.
 | `-reaction`, `-r` | | Mutes alerts for removed or changed reactions |
 | `-all`, `-a` | | All of the above (deleted, edited, status and reactions). It's the default: `/mute /Group L200/` is the same as `/mute -a /Group L200/` |
 | `-list`, `-l` | | Lists the muted ones (the same as `/mute` with nothing), with how many alerts were ignored |
+| `-for` | `<time>` | Temporary mute: it ends by itself after `30m`, `2h`, `7d` or `1h30m`. See [Temporary mute](#temporary-mute--for) |
 | `-rm` | `<no.\|all>` | Unmutes item N of the list (or all of them): the same as [`/unmute`](unmute.md) |
 
 The target is looked up like in `-to` ([Destinations](index.md#destinations-contact-group-number-or-email)):
@@ -74,6 +75,27 @@ message from the bot itself that isn't an alert, it doesn't know whose it is and
 🔇 Muted: 👥 About L200 — deleted, edited, status, reactions
 💡 Only the alert goes away: the messages are still stored for /show. See the list with /mute; undo with /unmute.
 ```
+
+## Temporary mute (`-for`)
+
+`-for` mutes only for a while: when the time is up, the alerts come back on their own,
+with no `/unmute`. It is for the meeting, the trip, the group that blew up for a day.
+
+```text
+/mute -for 2h /L200 Group/
+🔇 Muted: 👥 About L200 — deleted, edited, status, reactions · until Tue 17/11 14:30
+
+/mute -d -for 7d @John              → only John's deleted alerts, for a week
+/mute -r -for 30m /Family/          → no reaction alerts for half an hour
+/mute -for abc /Family/
+❌ Invalid time: "abc". Use 30m, 2h, 7d or 1h30m, for example: /mute -for 2h /Group/
+```
+
+- The list shows when each one ends: `1. 👥 About L200 — deleted · until Tue 17/11 14:30`.
+- Muting the same target again **without** `-for` makes the mute permanent, and with `-for` sets a new
+  end (it does not add up).
+- A mute that already ended is removed from the list and from the table the next time `/mute` or
+  `/unmute` runs; the alerts come back right at the time, even before that.
 
 ## The list
 

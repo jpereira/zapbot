@@ -24,6 +24,12 @@ module.exports = {
             desc: 'Lists the muted ones (also with no arguments), with how many notices were ignored.'
         },
         {
+            opts: ['for'],
+            values: ['<time>'],
+            desc: 'Temporary mute: it ends by itself after the time (30m, 2h, 7d, 1h30m). Without it, the mute has no end.',
+            ex: ['/mute -for 2h /L200 Group/', '/mute -d -for 7d @John']
+        },
+        {
             opts: ['reaction', 'r'],
             values: [],
             desc: 'Mutes the notices of removed or changed reactions.'

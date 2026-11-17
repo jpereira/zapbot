@@ -57,6 +57,31 @@ describe('/mute', () => {
         assert.equal((await edited('a', 'b', { chat: L200 })).length, 1, 'só as apagadas foram silenciadas');
     });
 
+    test('-for <tempo>: silêncio temporário que acaba sozinho; sem o -for, fica sem prazo', async () => {
+        const [reply] = await bot.replyAlt('/mute -d -for 2h /Grupo L200/');
+        assert.match(reply, /^🔇 \*Silenciado:\* 👥 Grupo sobre L200 — apagadas · até \w{3} \d\d\/\d\d \d\d:\d\d\n/);
+        const { expires_at: end } = await bot.dbGet('SELECT expires_at FROM mutes WHERE target_id = ?', [L200]);
+        assert.ok(Math.abs(end - (Date.now() + 2 * 3600_000)) < 60_000);
+
+        assert.deepEqual(await deleted('psiu', { chat: L200 }), [], 'dentro do prazo, silenciado');
+        assert.match((await bot.replyAlt('/mute'))[0], /Grupo sobre L200 — apagadas · até /, 'a lista mostra o prazo');
+
+        // the deadline has passed: the notice is back and the list no longer has the mute
+        await bot.dbRun('UPDATE mutes SET expires_at = ? WHERE target_id = ?', [Date.now() - 1000, L200]);
+        assert.equal((await deleted('de novo', { chat: L200 })).length, 1, 'expirou: avisa');
+        assert.match((await bot.replyAlt('/mute'))[0], /Ninguém silenciado/);
+        assert.equal(await bot.dbGet('SELECT 1 FROM mutes WHERE target_id = ?', [L200]), undefined, 'limpo');
+
+        // without -for, after a temporary one, the mute has no deadline
+        await bot.replyAlt('/mute -d -for 30m /Grupo L200/');
+        await bot.replyAlt('/mute -d /Grupo L200/');
+        assert.equal((await bot.dbGet('SELECT expires_at FROM mutes WHERE target_id = ?', [L200])).expires_at, null);
+
+        // invalid deadline
+        assert.match((await bot.replyAlt('/mute -for abc /Grupo L200/'))[0], /^❌ Prazo inválido: "abc"/);
+        assert.match((await bot.replyAlt('/mute -for'))[0], /^❌ Prazo inválido/);
+    });
+
     test('-a numa pessoa: apagadas, editadas e status dela, em qualquer chat', async () => {
         await bot.replyAlt('/mute -a +5521911111111');
 

@@ -21,6 +21,7 @@ avisando nos seus destinos. Esses avisos cortados também contam nas ignoradas, 
 | `-reaction`, `-r` | | Silencia os avisos de reações removidas ou trocadas |
 | `-all`, `-a` | | Tudo isso (apagadas, editadas, status e reações). É o padrão: `/mute /Grupo L200/` é o mesmo que `/mute -a /Grupo L200/` |
 | `-list`, `-l` | | Lista os silenciados (o mesmo que `/mute` sem nada), com quantos avisos foram ignorados |
+| `-for` | `<tempo>` | Silêncio temporário: acaba sozinho depois de `30m`, `2h`, `7d` ou `1h30m`. Veja [Silêncio temporário](#silêncio-temporário--for) |
 | `-rm` | `<nº\|all>` | Desfaz o silêncio do nº N da lista (ou de todos): o mesmo do [`/unmute`](unmute.md) |
 
 O alvo é buscado como no `-to` ([Destinos](index.md#destinos-contato-grupo-número-ou-e-mail)):
@@ -73,6 +74,27 @@ mensagem do próprio bot que não é um aviso, ele não sabe de quem é e pede q
 🔇 Silenciado: 👥 Grupo sobre L200 — apagadas, editadas, status, reações
 💡 Só o aviso some: as mensagens continuam guardadas para o /show. Veja a lista com /mute; desfaça com /unmute.
 ```
+
+## Silêncio temporário (`-for`)
+
+O `-for` silencia só por um tempo: quando acaba, os avisos voltam sozinhos, sem
+`/unmute`. Serve para a reunião, a viagem, o grupo que bombou por um dia.
+
+```text
+/mute -for 2h /Grupo L200/
+🔇 Silenciado: 👥 Grupo sobre L200 — apagadas, editadas, status, reações · até ter 17/11 14:30
+
+/mute -d -for 7d @João              → só as apagadas do João, por uma semana
+/mute -r -for 30m /Família/         → sem aviso de reação por meia hora
+/mute -for abc /Família/
+❌ Prazo inválido: "abc". Use 30m, 2h, 7d ou 1h30m, por exemplo: /mute -for 2h /Grupo/
+```
+
+- A lista mostra quando cada um acaba: `1. 👥 Grupo sobre L200 — apagadas · até ter 17/11 14:30`.
+- Silenciar o mesmo alvo de novo **sem** `-for` deixa o silêncio permanente, e com `-for` troca o fim
+  (não soma).
+- O silêncio que já acabou sai da lista e da tabela na próxima vez que o `/mute` ou o `/unmute`
+  rodar; os avisos voltam na hora certa, mesmo antes disso.
 
 ## A lista
 
