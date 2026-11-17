@@ -8,24 +8,6 @@ const { activeCommands, findCommand, formatCommandHelp, helpProtocol } = require
 const { locate } = require('./localize');
 const { t } = require('../i18n');
 
-// Menu width in the code block (a phone held upright shows about 46 characters without wrapping)
-const MENU_COLUMNS = 46;
-
-// The text in lines of up to `largura` characters, breaking between words
-function breakInLines(textAlt, widthAlt) {
-    const linesAlt = [];
-    let current = '';
-    for (const word of String(textAlt).split(/\s+/).filter(Boolean)) {
-        if (current && current.length + 1 + word.length > widthAlt) {
-            linesAlt.push(current);
-            current = word;
-        } else {
-            current = current ? `${current} ${word}` : word;
-        }
-    }
-    return current ? [...linesAlt, current] : linesAlt;
-}
-
 // The /help -full order: from the most restricted to the common
 const ROLES_IN_HELP = [ROLES.OWNER, ROLES.ADMIN, ROLES.USER];
 
@@ -77,24 +59,23 @@ async function cmdHelp({ msg, args: typed, opts, nivel: level, admin,
         return;
     }
 
-    // /help alone: one command per line, only with what it does; with -role, separated by role
-    // The names aligned in the same column and the leftover description wrapped with indent, to read well on the phone
+    // /help alone: one command per line, only with what it does: the command in bold and the description in italics.
+    // Outside a code block the line wraps by itself, at the phone width. The formatting symbols
+    // from WhatsApp that came in the description are removed, so as not to break the italics.
     const visible = activeCommands().filter(can);
-    const nameWidth = Math.max(0, ...visible.map(c => c.cmd.length));
-    const indent = ' '.repeat(nameWidth + 4);
     const line = (c) => {
         const l = locate(c);
-        const [first = '', ...rest] = breakInLines(l.summary ?? l.help, MENU_COLUMNS - indent.length);
-        return [` ${c.cmd.padEnd(nameWidth)} - ${first}`, ...rest.map(r => indent + r)].join('\n');
+        const description = String(l.summary ?? l.help ?? '').replace(/[*_~`]/g, '').replace(/\s+/g, ' ').trim();
+        return `*${c.cmd}* - _${description}_`;
     };
     const list = opts?.opt?.role
         ? ROLES_IN_HELP.map(g => [g, visible.filter(c => c.role === g)]).filter(([, cs]) => cs.length)
-            .map(([g, cs]) => `Role: ${g}\n${cs.map(line).join('\n')}`).join('\n\n')
+            .map(([g, cs]) => `🔸 Role: ${g}\n${cs.map(line).join('\n')}`).join('\n\n')
         : visible.map(line).join('\n');
     const helpText =
-        t('help.menuTitle') + (admin ? '' : ` ${t('help.menuUserNote')}`) + '\n\n```\n' +
+        t('help.menuTitle') + (admin ? '' : ` ${t('help.menuUserNote')}`) + '\n\n' +
         list +
-        `\n\`\`\`\n\n${t('help.menuFooter')}`;
+        `\n\n${t('help.menuFooter')}`;
 
     await msg.reply(helpText);
 }
