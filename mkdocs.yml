@@ -106,6 +106,7 @@ nav:
   - Commands:
       - commands/index.md
       - /alias: commands/alias.md
+      - /antilink: commands/antilink.md
       - /ascii: commands/ascii.md
       - /backup: commands/backup.md
       - /batch: commands/batch.md

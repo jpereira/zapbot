@@ -409,6 +409,15 @@ async function initializeDb() {
         )
     `);
 
+    // /antilink: the mode (off, delete, warn, remove) and the allowed domains (JSON) of each group
+    await dbRun(`
+        CREATE TABLE IF NOT EXISTS antilink (
+            chat_id TEXT PRIMARY KEY,
+            mode TEXT NOT NULL DEFAULT 'off',
+            allow TEXT NOT NULL DEFAULT '[]'
+        )
+    `);
+
     // /warn: each person's warnings in each group (person: the number or internal id, the participant's user)
     await dbRun(`
         CREATE TABLE IF NOT EXISTS warns (
