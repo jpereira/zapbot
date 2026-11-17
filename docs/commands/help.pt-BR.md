@@ -12,20 +12,16 @@ Exibe o menu com os comandos, ou a ajuda de um só. Cada um vê só o que pode u
   `/whois` sempre passam.
 
 O `/help` sozinho lista um comando por linha, só com o que ele faz (o `summary` da
-definição do comando), num bloco monoespaçado com os nomes alinhados numa coluna (a descrição que não cabe na tela do
-celular continua na linha de baixo, recuada sob ela), e termina com a dica de como ver o resto:
+definição do comando): o comando em **negrito** e a descrição em _itálico_ (formatação do WhatsApp, então
+quebra sozinha na largura do celular), e termina com a dica de como ver o resto:
 
 ````text
 /help
 
-```
- /alias  - Salva atalhos para comandos com
-           argumentos
- /ascii  - O texto em letras grandes de ASCII
- /backup - Backup do banco: lista, detalha,
-           restaura, envia ou apaga
- ...
-```
+*/alias* - _Salva atalhos para comandos com argumentos_
+*/ascii* - _O texto em letras grandes de ASCII_
+*/backup* - _Backup do banco: lista, detalha, restaura, envia ou apaga_
+...
 
 💡 Utilize */help /comando* ou */comando -h* para mais informações.
 ````
@@ -41,16 +37,13 @@ comando é `owner`):
 ````text
 /help -r
 
-```
-Role: admin
- /alias  - Salva atalhos para comandos com
-           argumentos
- ...
+🔸 Role: admin
+*/alias* - _Salva atalhos para comandos com argumentos_
+...
 
-Role: user
- /ascii  - O texto em letras grandes de ASCII
- ...
-```
+🔸 Role: user
+*/ascii* - _O texto em letras grandes de ASCII_
+...
 ````
 
 Para a ajuda completa de um comando:

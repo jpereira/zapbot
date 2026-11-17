@@ -18,24 +18,19 @@ describe('/help', () => {
     test('sem argumento (o dono): todos os comandos ativos', async () => {
         const [r] = await bot.replyAlt('/help');
         assert.match(r, /MENU DE AJUDA/);
-        assert.match(r, /```\n \/alias +- [^]*\n \/ascii +- /);
-        assert.match(r, /\n \/show +- Mostra mensagens do cache do bot\n/);
-        assert.match(r, /\n \/rates +- /);
-        assert.doesNotMatch(r, /Usage:/);
-        assert.ok(r.endsWith('\n```\n\n💡 Utilize */help /comando* ou */comando -h* para mais informações.'));
+        assert.match(r, /\n\*\/alias\* - _[^\n]+_\n[^]*\n\*\/ascii\* - _/);
+        assert.match(r, /\n\*\/show\* - _Mostra mensagens do cache do bot_\n/);
+        assert.match(r, /\n\*\/rates\* - _/);
+        assert.doesNotMatch(r, /Usage:|```/);
+        assert.ok(r.endsWith('_\n\n💡 Utilize */help /comando* ou */comando -h* para mais informações.'));
     });
 
-    test('a lista tem "/cmd - o que faz" com os nomes alinhados e o resto da descrição recuado', async () => {
+    test('a lista tem "*/cmd* - _o que faz_": comando em negrito, descrição em itálico, uma linha por comando', async () => {
         const [r] = await bot.replyAlt('/help');
-        const block = r.split('```')[1].split('\n').filter(Boolean);
-        const linesAlt = block.filter(l => /^ \//.test(l));
+        const linesAlt = r.split('\n').filter(l => /^\*\//.test(l));
         assert.equal(linesAlt.length, COMMANDS.commands.length);
-
-        // The " - " is always in the same column and the description that wraps starts below it
-        const column = linesAlt[0].indexOf(' - ');
-        for (const l of linesAlt) assert.equal(l.indexOf(' - '), column, l);
-        for (const l of block.filter(l => !/^ \//.test(l))) assert.match(l, new RegExp(`^ {${column + 3}}\\S`), l);
-        assert.ok(block.every(l => l.length <= 46), 'cabe na tela do celular');
+        // WhatsApp formatting closes on each line (no leftover *, _ or ` inside the description)
+        for (const l of linesAlt) assert.match(l, /^\*\/[a-z]+\* - _[^*_`~]+_$/, l);
     });
 
     test('um comando, com ou sem "/", por nome ou alias', async () => {
@@ -52,8 +47,8 @@ describe('/help', () => {
     test('quem não é admin vê só os comandos comuns; o admin extra vê tudo', async () => {
         const [r] = await bot.replyAlt('/help', { de: OTHERAlt.jid });
         assert.match(r, /^🤖 \*MENU DE AJUDA\* _\(os comandos que você pode usar\)_/);
-        assert.match(r, /\n \/rates +- /);
-        assert.doesNotMatch(r, /\n \/(show|backup|bot|set) - /);
+        assert.match(r, /\n\*\/rates\* - _/);
+        assert.doesNotMatch(r, /\n\*\/(show|backup|bot|set)\* - /);
 
         assert.deepEqual(await bot.replyAlt('/help show', { de: OTHERAlt.jid }),
             ['⛔ O /show é só do dono do bot (e dos admins).\n💡 _Veja os que você pode usar com /help_']);
@@ -62,23 +57,23 @@ describe('/help', () => {
         await bot.setSetting('bot.admins', [OTHERAlt.user]);
         const [admin] = await bot.replyAlt('/help', { de: OTHERAlt.jid });
         assert.match(admin, /^🤖 \*MENU DE AJUDA\*\n/);
-        assert.match(admin, /\n \/show +- /);
+        assert.match(admin, /\n\*\/show\* - _/);
     });
 
     test('-role|-r: lista por role (owner, admin, user), só o que a pessoa pode usar', async () => {
         const [r] = await bot.replyAlt('/help -r');
-        assert.match(r, /```\nRole: owner\n \/contacts +- [^]*\n\nRole: admin\n \/alias +- [^]*\n\nRole: user\n \/ascii +- /);
-        assert.ok(r.search(/ \/show +- /) < r.indexOf('Role: user'));
+        assert.match(r, /🔸 Role: owner\n\*\/contacts\* - _[^]*\n\n🔸 Role: admin\n\*\/alias\* - _[^]*\n\n🔸 Role: user\n\*\/ascii\* - _/);
+        assert.ok(r.search(/\*\/show\* - _/) < r.indexOf('Role: user'));
         assert.deepEqual(await bot.replyAlt('/help -r'), [r]);
 
         const [other] = await bot.replyAlt('/help -r', { de: OTHERAlt.jid });
-        assert.match(other, /```\nRole: user\n \/ascii +- /);
+        assert.match(other, /🔸 Role: user\n\*\/ascii\* - _/);
         assert.doesNotMatch(other, /Role: (owner|admin)/);
 
         await bot.setSetting('bot.users.cmds', [`${OTHERAlt.user}=/ping,/show`]);
         await bot.setSetting('bot.users', [OTHERAlt.user]);
         const [deleg] = await bot.replyAlt('/help -r', { de: OTHERAlt.jid });
-        assert.match(deleg, /Role: admin\n \/show +- [^]*\n\nRole: user\n \/help +- [^]*\n \/ping +- /);
+        assert.match(deleg, /Role: admin\n\*\/show\* - _[^]*\n\n🔸 Role: user\n\*\/help\* - _[^]*\n\*\/ping\* - _/);
         assert.doesNotMatch(deleg, /Role: owner/);
 
         // with the command, -r does not get in the way
@@ -87,7 +82,7 @@ describe('/help', () => {
 
     test('comando desativado por setting some do menu', async () => {
         await bot.setSetting('commands.disabled', 'noffa');
-        assert.doesNotMatch((await bot.replyAlt('/help'))[0], /\n \/noffa +- /);
+        assert.doesNotMatch((await bot.replyAlt('/help'))[0], /\n\*\/noffa\* - /);
     });
 });
 

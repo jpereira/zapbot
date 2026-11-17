@@ -12,21 +12,16 @@ Shows the command menu, or the help for a single command. Everyone sees only wha
   received it. `/help` and `/whois` always go through.
 
 `/help` on its own lists one command per line, with just what it does (the `summary` from the
-command definition), in a monospaced block with the names aligned in one column (a description that doesn't fit on a
-phone screen continues on the next line, indented under it), and ends with a tip on
-how to see the rest:
+command definition): the command in **bold** and the description in _italic_ (WhatsApp formatting, so it
+wraps on its own to the width of the phone), and ends with a tip on how to see the rest:
 
 ````text
 /help
 
-```
- /alias  - Saves shortcuts for commands
-           with arguments
- /ascii  - The text in big ASCII letters
- /backup - Database backup: lists, details,
-           restores, sends or deletes
- ...
-```
+*/alias* - _Saves shortcuts for commands with arguments_
+*/ascii* - _The text in big ASCII letters_
+*/backup* - _Database backup: lists, details, restores, sends or deletes_
+...
 
 💡 Use */help /command* or */command -h* for more information.
 ````
@@ -42,16 +37,13 @@ with only the ones you can use (a role with no visible commands doesn't show up;
 ````text
 /help -r
 
-```
-Role: admin
- /alias  - Saves shortcuts for commands
-           with arguments
- ...
+🔸 Role: admin
+*/alias* - _Saves shortcuts for commands with arguments_
+...
 
-Role: user
- /ascii  - The text in big ASCII letters
- ...
-```
+🔸 Role: user
+*/ascii* - _The text in big ASCII letters_
+...
 ````
 
 For the full help of a command:
