@@ -1,0 +1,28 @@
+{
+  "summary": "Apaga links de quem não é admin do grupo",
+  "usage": "/antilink [-off|-delete|-warn|-remove] [-allow <domínio>] [-deny <domínio>]",
+  "help": "Apaga os links mandados por quem não é admin do grupo. Por grupo, desligado por padrão: -delete só apaga, -warn apaga e soma um aviso do /warn (o limite do warn.max tira a pessoa), -remove apaga e tira a pessoa na hora. Admins do grupo, você e os admins do bot nunca são pegos. O bot precisa ser admin do grupo. Sem opções, mostra o modo atual e os domínios liberados. Só funciona em grupos.",
+  "ex": [
+    "/antilink -delete",
+    "/antilink -allow youtube.com",
+    "/antilink"
+  ],
+  "cmd_opts": [
+    { "opts": ["off"], "values": [], "desc": "Desliga neste grupo (o padrão)." },
+    { "opts": ["delete"], "values": [], "desc": "Apaga a mensagem com o link, para todos." },
+    { "opts": ["warn"], "values": [], "desc": "Apaga e soma um aviso do /warn; no limite (warn.max) a pessoa é removida." },
+    { "opts": ["remove"], "values": [], "desc": "Apaga e remove a pessoa do grupo na hora." },
+    {
+      "opts": ["allow"],
+      "values": ["<domínio>"],
+      "desc": "Libera um domínio (e os subdomínios): links para ele não são apagados.",
+      "ex": ["/antilink -allow youtube.com"]
+    },
+    {
+      "opts": ["deny"],
+      "values": ["<domínio>"],
+      "desc": "Tira um domínio da lista de liberados.",
+      "ex": ["/antilink -deny youtube.com"]
+    }
+  ]
+}

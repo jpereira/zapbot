@@ -13,6 +13,7 @@ const {
     scheduleName, contactName, removeDeviceSuffix, resolveLidToPhone, groupResolverName, privateResolverName
 } = require('../contacts');
 const { dbGet, dbReady, dbRun } = require('../db');
+const { checkAntilink } = require('../antilink');
 const { replyGame } = require('../commands/games');
 const { replyChoice } = require('../choices');
 const { checkFlood } = require('../flood');
@@ -267,6 +268,15 @@ client.on('message_create', (msg) => withContextDebug({
 
         // Replying (reply) to a bot game message (/games), without the command
         if (await replyGame(msg, chatId, body, { senderNumber, isGroup })) return;
+
+        // /antilink: a link from someone who is not a group admin is deleted (according to the group mode)
+        if (isGroup && !msg.fromMe) {
+            const dismissed = answer(levelAlt({ fromMe: msg.fromMe, numero: senderNumber, permissao: permissionHere({ numero: senderNumber, chatId, isGroup }) }), ROLES.ADMIN);
+            if (await checkAntilink({ msg, chatId, body, dispensado: dismissed, senderName }).catch((err) => {
+                printError('/antilink: erro ao conferir:', err.message);
+                return false;
+            })) return;
+        }
 
         // The bot's own reply is never a command, even starting with "/" (see markSentByBot)
         const sentByBot = msg.fromMe && body.startsWith('/') && wasSentByBot(body);

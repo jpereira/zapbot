@@ -35,7 +35,7 @@ const prepare = () => (db ??= initializeDb().then(markDbReady));
 
 const TABLES = ['command_aliases', 'messages', 'message_edits', 'stats', 'watch_hits', 'watch_destinations', 'price_alerts',
     'settings', 'polls', 'poll_votes', 'schedules', 'defi_positions', 'mutes', 'mute_hits',
-    'alerts', 'watch_sources', 'watch_masks', 'reactions', 'reaction_changes', 'monitor_contacts', 'monitor_history', 'group_greetings', 'forward_lists', 'warns'];
+    'alerts', 'watch_sources', 'watch_masks', 'reactions', 'reaction_changes', 'monitor_contacts', 'monitor_history', 'group_greetings', 'forward_lists', 'warns', 'antilink'];
 
 /*
  * Clean state for each test: empty tables, settings at default, no
@@ -166,6 +166,7 @@ function createMessage({ texto: textAlt = '', chat = GROUP, de = OWNER.jid, id, 
             return client.contatos.get(de) ?? { id: { _serialized: de }, number: de.split('@')[0] };
         },
         async getQuotedMessage() { return quoted; },
+        async delete(paraAll) { this.apagadaPara = paraAll ? 'todos' : 'mim'; },
         async react(emoji) { client.reagidas.push({ id: this.id._serialized, emoji }); },
         async downloadMedia() { return mediaAlt; },
         ...extras

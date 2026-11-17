@@ -198,12 +198,13 @@ and a shortcut's name doesn't go in `+cmd`.
 [`/uptime`](uptime.md), [`/usage`](usage.md), [`/version`](version.md), [`/walissu`](walissu.md),
 [`/weather`](weather.md), [`/whois`](whois.md)
 
-**admin, delegable** (admins and the owner; the owner releases them to a user with `+cmd`) (16):
+**admin, delegable** (admins and the owner; the owner releases them to a user with `+cmd`) (17):
 
-[`/demote`](demote.md), [`/draw`](draw.md), [`/everybody`](everybody.md), [`/goodbye`](goodbye.md),
-[`/gpt`](gpt.md), [`/members`](members.md), [`/ocr`](ocr.md), [`/poll`](poll.md),
-[`/profile`](profile.md), [`/promote`](promote.md), [`/show`](show.md), [`/stats`](stats.md),
-[`/tldr`](tldr.md), [`/tts`](tts.md), [`/warn`](warn.md), [`/welcome`](welcome.md)
+[`/antilink`](antilink.md), [`/demote`](demote.md), [`/draw`](draw.md),
+[`/everybody`](everybody.md), [`/goodbye`](goodbye.md), [`/gpt`](gpt.md), [`/members`](members.md),
+[`/ocr`](ocr.md), [`/poll`](poll.md), [`/profile`](profile.md), [`/promote`](promote.md),
+[`/show`](show.md), [`/stats`](stats.md), [`/tldr`](tldr.md), [`/tts`](tts.md), [`/warn`](warn.md),
+[`/welcome`](welcome.md)
 
 **admin** (admins and the owner; never delegable) (22):
 
@@ -246,6 +247,7 @@ target command, and `/alias /usd` shows what a shortcut does.
 | Command | Aliases | Role | Description |
 |---|---|:-:|---|
 | [`/alias`](alias.md) | | `admin` | Registers, lists, and removes shortcuts for commands with arguments or texts with several `{/command}` |
+| [`/antilink`](antilink.md) | | `admin` · delegable | Deletes links sent by non-admins in the group |
 | [`/ascii`](ascii.md) | | `user` | The text in big ASCII letters, in a block that fits a phone screen |
 | [`/backup`](backup.md) | | `admin` | Daily local backup and delivery through `backup.to`; lists, details, restores, sends, and deletes the database |
 | [`/batch`](batch.md) | | `admin` | Runs several commands from a single message, in sequence (each line that starts with a command opens a block), and replies with a summary; `-stop` and `-dry` |

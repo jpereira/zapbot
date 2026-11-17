@@ -25,6 +25,7 @@ const { cmdGiphy } = require('./giphy');
 const { cmdGpt } = require('./gpt');
 const { cmdDemote, cmdPromote } = require('./admins');
 const { cmdAlias } = require('./alias');
+const { cmdAntilink } = require('./antilink');
 const { cmdAscii } = require('./ascii');
 const { cmdHelp } = require('./help');
 const { cmdInvite } = require('./invite');
@@ -68,6 +69,7 @@ const { printError } = require('../log');
 // commands.js cmd -> handler
 const HANDLERS = {
     '/alias': cmdAlias,
+    '/antilink': cmdAntilink,
     '/ascii': cmdAscii,
     '/backup': cmdBackup,
     '/batch': cmdBatch,
