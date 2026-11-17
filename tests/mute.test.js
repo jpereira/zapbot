@@ -126,7 +126,7 @@ describe('/mute', () => {
         const r = await bot.replyChoosing('/mute -a /jorge/', [9, 2]);
         assert.deepEqual(r, [
             '🔎 "jorge" corresponde a 2 contatos:\n\n1. 👤 Jorge Pereira · +5521933333333\n2. 👤 Jorge Silva · +5511944444444\n\n' +
-                '💡 _Responda só com o nº (em até 2 minutos), ou repita o comando com mais palavras do nome._',
+                '💡 _Responda só com o nº (em até 2 minutos; 0 cancela), ou repita o comando com mais palavras do nome._',
             '❌ Escolha um nº de 1 a 2.',
             '🔇 *Silenciado:* 👤 Jorge Silva — apagadas, editadas, status, reações\n' +
                 '💡 _Só o aviso some: as mensagens continuam guardadas para o /show. Veja a lista com /mute; desfaça com /unmute._'

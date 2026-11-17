@@ -30,6 +30,7 @@ module.exports = {
     'login.novoAdminTitulo': '🔑 New admin by password',
     'login.novoAdminCorpo': '{nome} (+{numero}) became admin with /bot -login.\nTo revoke: /bot -a +{numero}',
     'login.pronto': '👑 *Done:* you are now an admin of the bot.',
+    'escolhas.cancelada': '🚫 Cancelled.',
     'escolhas.invalida': '❌ Choose a number from 1 to {max}.',
     'log.dia': '{n} day',
     'log.dias': '{n} days',

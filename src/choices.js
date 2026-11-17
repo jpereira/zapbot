@@ -82,10 +82,18 @@ async function replyChoice(msg, chatId, textAlt) {
     if (!p || authorAlt(msg) !== p.autor) return false;
 
     if (p.confirmacao) {
-        const reply = /^(sim|yes)$/i.test(textAlt) ? true : /^(n[aã]o|no)$/i.test(textAlt) ? false : null;
+        const reply = /^(sim|yes)$/i.test(textAlt) ? true : /^(n[aã]o|no|cancelar|cancel)$/i.test(textAlt) ? false : null;
         if (reply === null) return false;
         printInfo(`Confirmação em ${chatId}: ${textAlt}`);
         close(chatId, reply);
+        return true;
+    }
+
+    // 0 or "cancelar": gives up without waiting for the deadline
+    if (/^(0|cancelar|cancel)$/i.test(textAlt)) {
+        printInfo(`Escolha cancelada em ${chatId}`);
+        close(chatId, null);
+        await msg.reply(t('escolhas.cancelada'));
         return true;
     }
 
