@@ -35,6 +35,8 @@ LOCAL_CONTEXT ?= default
 DOCKER_REMOTE_SERVER ?= ssh://root@homelab.local
 REMOTE_CONTEXT ?= homelab
 SERVICE := zapbot
+# Seconds "make smoke" waits for the bot to come up (and connect to WhatsApp)
+SMOKE_PRAZO ?= 120
 COOKIES_DEST := /app/cache/cookies.txt
 VOLUMES := zapbot_app_cache zapbot_wwebjs_auth
 
@@ -63,7 +65,7 @@ DOCS_PATH := $(shell sed -nE 's|^site_url: *https?://[^/]+||p' mkdocs.yml)
 
 .DEFAULT_GOAL := help
 
-.PHONY: help all context build deploy logs ps shell images volume cookies clean recreate destroy prune \
+.PHONY: help all context build deploy smoke logs ps shell images volume cookies clean recreate destroy prune \
     deps test test.coverage lint check docs docs.deps docs.build
 
 help: ## Shows this help
@@ -128,9 +130,13 @@ endif
 build: context ## Builds the image on the selected target
 	$(Q)$(COMPOSE) build $(OPTS) $(SERVICE)
 
-deploy: context ## Build + (re)creates the service on the selected target
+deploy: context ## Build + (re)creates the service on the selected target and checks that it came up
 	$(Q)$(MAKE) build
 	$(Q)$(COMPOSE) up -d --force-recreate $(SERVICE)
+	$(Q)$(MAKE) smoke
+
+smoke: context ## Checks that the selected target's bot came up (commands loaded, WhatsApp connected)
+	$(Q)./scripts/smoke.sh "$(DOCKER)" $(SERVICE) $(SMOKE_PRAZO)
 
 # A deploy's new container has another id: a plain `logs -f` dies on it. Here the loop reopens the log
 # (without repeating what already came out) until you quit with Ctrl+C.
