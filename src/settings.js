@@ -518,7 +518,7 @@ const SETTINGS_SCHEMA = {
     'forward.header': {
         default: true,
         type: 'boolean',
-        desc: 'Cabeçalho "Mensagem encaminhada pelo ZapBot!" no começo do que o /forward envia e a lista de quem recebeu no resultado (desligado, vai só a mensagem e o "✉️ ... com sucesso!").'
+        desc: 'Cabeçalho "Mensagem encaminhada pelo ZapBot!" no começo do que o /forward envia (desligado, vai só a mensagem; o -status|-s força, o -quiet|-q e o -nohdr tiram).'
     },
     'forward.max': {
         default: 10,
@@ -529,6 +529,11 @@ const SETTINGS_SCHEMA = {
         default: 30,
         type: 'number', min: 1, max: 200,
         desc: 'Máximo de destinatários do /forward de uma vez (somando as listas #lista e os avulsos) e de cada lista.'
+    },
+    'forward.status': {
+        default: true,
+        type: 'boolean',
+        desc: 'O /forward mostra o status: o aviso enquanto envia e, no fim, "✉️ ... com sucesso!" com a lista de quem recebeu (desligado, só as falhas aparecem; o -status|-s força, o -quiet|-q tira).'
     },
     'get.cache.maxDays': {
         default: 2,

@@ -63,9 +63,10 @@ shows are in Portuguese; the ones here are in English).
 | `flood.intervalCommand` | 1–3600 | `2` | Flood protection: the window, in seconds, in which `flood.maxCommandRepeated` is counted, and how long the bot ignores whoever went over the limit. See [Flood protection](commands/bot.md#flood-protection) |
 | `flood.maxCommandRepeated` | 0–100 | `3` | How many times a non-admin can repeat the same command within `flood.intervalCommand` seconds; past that, the bot warns once and ignores the person until the interval ends. `0` turns it off |
 | `forward.delayMs` | 0–10000 | `1000` | Pause (ms) between messages when [`/forward`](commands/forward.md) forwards several, so WhatsApp isn't flooded |
-| `forward.header` | on/off | `on` | Header "Message forwarded by ZapBot!" at the start of what [`/forward`](commands/forward.md) sends, and the list of recipients in its result; off, only the message and `✉️ ... successfully!` go |
+| `forward.header` | on/off | `on` | Header "Message forwarded by ZapBot!" at the start of what [`/forward`](commands/forward.md) sends; off, only the message goes. `-status` forces it, `-quiet` and `-nohdr` drop it. See [Header](commands/forward.md#header) |
 | `forward.max` | 1–50 | `10` | Most messages [`/forward -N`](commands/forward.md#several-messages--n) forwards at once |
 | `forward.maxRecipients` | 1–200 | `30` | Most recipients of one [`/forward`](commands/forward.md#recipient-lists) (lists and single recipients together) and of each list |
+| `forward.status` | on/off | `on` | [`/forward`](commands/forward.md) shows the status: the notice while it sends and, at the end, `✉️ ... successfully!` with the list of who received it; off, only failures show up. `-status` forces it, `-quiet` drops it |
 | `get.cache.maxDays` | 1–365 | `2` | Days cached downloads (`get.cache.tmp`) stay in `cache/tmp` before the periodic cleanup deletes them |
 | `get.cache.tmp` | on/off | `on` | Keeps in `cache/tmp` what yt-dlp downloads in `/get` and `/sticker`: the same link (and the same clip) is not downloaded again. See [Download cache](commands/get.md#download-cache). `off` deletes the original on every run |
 | `get.maxDownloadMB` | 10–2000 | `200` | Max size downloaded by yt-dlp in `/get` and `/sticker`, before conversion |

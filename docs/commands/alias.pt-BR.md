@@ -144,6 +144,19 @@ Com `-quiet` (ou `-q`), o cabeçalho não é impresso e só o resultado aparece:
 /haha  → Hahahahahahhahahaha vc e burro!
 ```
 
+## Um atalho para encaminhar
+
+Um alias do `/forward` transforma "mande isso para os meus amigos" num reply só: `/alias -q nopt /forward -q #nopt` e,
+daí em diante, `/nopt` respondendo uma mensagem (ou `/nopt Olha isso!`, com um texto seu) manda para todos da lista
+`#nopt`, sem cabeçalho e sem status. O passo a passo todo está em
+[Um atalho para um grupo de amigos](forward.md#um-atalho-para-um-grupo-de-amigos).
+
+```text
+/forward -add #nopt /Fulano/ /Lourival Neto/ /Grupo Faculdade/
+/alias -q nopt /forward -q #nopt
+(respondendo algo interessante)  /nopt Olha isso!
+```
+
 ## Atalhos para cotações
 
 As cotações ([`/crypto`](crypto.md) e [`/stocks`](stocks.md)) são os comandos que você mais chama, então viram bons

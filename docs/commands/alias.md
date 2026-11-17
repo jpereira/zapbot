@@ -144,6 +144,19 @@ With `-quiet` (or `-q`), the header isn't printed and only the result shows up:
 /haha  → Hahahahahahhahahaha vc e burro!
 ```
 
+## A shortcut to forward
+
+An alias for `/forward` turns "send this to my friends" into one reply: `/alias -q nopt /forward -q #nopt` and, from
+then on, `/nopt` replying to a message (or `/nopt Look at this!` with a text of yours) sends it to everyone in the
+`#nopt` list, with no header and no status. The whole step by step is in
+[A shortcut for a group of friends](forward.md#a-shortcut-for-a-group-of-friends).
+
+```text
+/forward -add #nopt /Fulano/ /Lourival Neto/ /College Group/
+/alias -q nopt /forward -q #nopt
+(replying to something interesting)  /nopt Look at this!
+```
+
 ## Shortcuts for quotes
 
 The quotes ([`/crypto`](crypto.md) and [`/stocks`](stocks.md)) are the commands you call the most, so they make good

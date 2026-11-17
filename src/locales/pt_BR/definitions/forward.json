@@ -1,10 +1,11 @@
 {
   "summary": "Encaminha a mensagem respondida para pessoas, grupos ou e-mails",
-  "usage": "/forward [-q] [-d] [-N] [#lista]... <destinatário>... [-to <destino>]...  ou  /forward -add|-list|-rm|-move|-desc <...>",
-  "help": "Encaminha a mensagem que você respondeu (texto, foto, vídeo, áudio, documento, figurinha, localização...) para os destinatários. Sem resposta, diga antes a posição das mensagens acima: -1 é a logo acima, -1 -4 -6 ou -1,-4,-6 são várias, -3..-1 é uma faixa (até forward.max, enviadas da mais antiga para a mais nova; o cabeçalho vai uma vez, antes delas). Só envia se todos os destinatários forem encontrados; senão, não manda nada e o bot diz qual falhou. Responde na hora com quem vai receber e, no fim, edita essa mensagem com o status (um ❌ e o motivo para quem falhou); com -quiet, não mostra status. Por padrão a mensagem vai com o cabeçalho \"Mensagem encaminhada pelo ZapBot!\" (setting forward.header).",
+  "usage": "/forward [-q|-s] [-d] [-nohdr] [-N] [#lista]... <destinatário>... [texto] [-to <destino>]...  ou  /forward -add|-list|-rm|-move|-desc <...>",
+  "help": "Encaminha a mensagem que você respondeu (texto, foto, vídeo, áudio, documento, figurinha, localização...) para os destinatários. Sem resposta, diga antes a posição das mensagens acima: -1 é a logo acima, -1 -4 -6 ou -1,-4,-6 são várias, -3..-1 é uma faixa (até forward.max, enviadas da mais antiga para a mais nova; o cabeçalho vai uma vez, antes delas). Só envia se todos os destinatários forem encontrados; senão, não manda nada e o bot diz qual falhou. Responde na hora com quem vai receber e, no fim, edita essa mensagem com o status (um ❌ e o motivo para quem falhou); com -quiet, não mostra nada (nem status nem cabeçalho). Por padrão a mensagem vai com o cabeçalho \"Mensagem encaminhada pelo ZapBot!\" (setting forward.header) e o status aparece (setting forward.status); o -status força os dois e o -nohdr tira só o cabeçalho. Depois dos destinatários pode vir um texto: ele vai no começo e, com resposta, a mensagem respondida vai embaixo dele, depois de uma linha em branco.",
   "ex": [
     "/forward /Fulano de Tal/",
     "/forward /Jorge Pereira/ @Maria -to fulano@exemplo.com",
+    "/forward /Meu Contato/ #grupo /Família/ Isso vai para todos!",
     "/forward -to root@exemplo.org -to /Família/"
   ],
   "cmd_opts": [
@@ -48,9 +49,31 @@
         "q"
       ],
       "values": [],
-      "desc": "Não mostra status: nem o aviso, nem a lista. Só as falhas são avisadas.",
+      "desc": "Não mostra nada: nem status (aviso e lista) nem cabeçalho no que é enviado. Só as falhas são avisadas.",
       "ex": [
         "/forward -q /Jorge Pereira/"
+      ]
+    },
+    {
+      "opts": [
+        "status",
+        "s"
+      ],
+      "values": [],
+      "desc": "Força o cabeçalho no que é enviado e o status (o aviso e o resumo de quem recebeu), mesmo com forward.header e forward.status desligados.",
+      "ex": [
+        "/forward -s /Jorge Pereira/"
+      ]
+    },
+    {
+      "opts": [
+        "nohdr"
+      ],
+      "values": [],
+      "desc": "Envia sem o cabeçalho \"Mensagem encaminhada pelo ZapBot!\" apenas (o status continua; o -q tira os dois, o setting forward.header tira de todas).",
+      "ex": [
+        "/forward -nohdr /Jorge Pereira/",
+        "/forward -q -nohdr #amigos"
       ]
     },
     {

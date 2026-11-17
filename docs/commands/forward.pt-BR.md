@@ -9,7 +9,7 @@ destinatários forem encontrados**: se algum não casar, não manda nada e o bot
 `⏳ Encaminhando mensagem...` e, quando termina, edita essa mesma mensagem com o resultado (abaixo).
 
 ```text
-/forward [-quiet|-q] [-dry|-d] [#lista]... [-N|-N,-N|-N..-N] [/contato/|@menção|+número]... [-to <destino>]...
+/forward [-quiet|-q|-status|-s] [-dry|-d] [-nohdr] [#lista]... [-N|-N,-N|-N..-N] [/contato/|@menção|+número]... [-to <destino>]...
 ```
 
 | Opção | Valor | Descrição |
@@ -17,7 +17,9 @@ destinatários forem encontrados**: se algum não casar, não manda nada e o bot
 | *(nenhuma)* | `[/contato/\|@menção\|+número]...` | Os destinatários, separados por espaço: contato ou grupo pelo nome ou parte dele (nome com espaço entre `/.../` ou aspas; vários que servem: você escolhe na lista), alguém mencionado com `@`, um número ou um e-mail |
 | `-to` | `<destino>` | Mais um destinatário: um contato, um grupo, um número ou um e-mail (veja [Destinos](index.md#destinos-contato-grupo-número-ou-e-mail)). Repita para vários |
 | `-N` | `-N,-N` · `-N..-N` | Sem resposta: a posição das mensagens acima (veja [Várias mensagens](#várias-mensagens--n)) |
-| `-quiet`, `-q` | | Não mostra nenhum status: nem o aviso enquanto envia, nem a lista no fim. Só as falhas são avisadas |
+| `-quiet`, `-q` | | Não mostra **nada**: nem status (nem o aviso enquanto envia, nem a lista no fim) nem o cabeçalho no que é enviado. Só as falhas são avisadas |
+| `-status`, `-s` | | Força o cabeçalho no que é enviado **e** o status (o aviso e o resumo de quem recebeu), mesmo com os settings `forward.header` e `forward.status` desligados |
+| `-nohdr` | | Envia sem o cabeçalho `🤖 Mensagem encaminhada pelo ZapBot!` apenas (o status fica; o `-q` tira os dois). Veja [Cabeçalho](#cabeçalho) |
 | `-dry`, `-d` | | Só valida os destinatários: responde quem foi encontrado (ou o que está errado) e não envia nada. Não precisa de resposta nem de posições |
 | `-add`, `-a` | `#lista <destinatários>...` | Cria a [lista de destinatários](#listas-de-destinatários) (ou acrescenta). Os destinatários são resolvidos agora e guardados com os ids; nunca substitui |
 | `-list`, `-l` | `[#lista...]` | Sem nome, todas as listas com o tamanho; com nomes, os destinatários delas (o nome pode ser parcial) |
@@ -83,6 +85,69 @@ tudo toda vez (uma mala direta).
   `forward.maxRecipients` (padrão 30).
 - Só admin, como o resto do comando.
 
+## Um texto junto da mensagem
+
+Depois dos destinatários, o que sobrar é um **texto para enviar**. Ele vai no começo da mensagem e, quando você
+responde uma mensagem, a respondida vem embaixo (depois de uma linha em branco), abaixo do cabeçalho:
+
+```text
+/forward /Meu Contato/ #grupo /Família/ Essa mensagem vai para todos!
+(respondendo "Reunião às 10h")
+→ 🤖 Mensagem encaminhada pelo ZapBot!
+
+  Essa mensagem vai para todos!
+
+  Reunião às 10h
+
+/forward -q /Jorge Pereira/ Bom dia!             → sem resposta: só o texto, sem cabeçalho e sem status
+/forward /Fulano/ Silva                          → "Silva" é o texto (o destinatário é o /Fulano/)
+/forward Fulano Silva                            → sem destinatário explícito: é um nome, como sempre
+```
+
+- Contam como destinatário explícito: `/Nome/`, `"Nome"`, `@menção`, `+número`, um e-mail, uma `#lista` e o `-to`. A
+  primeira palavra solta depois de um deles começa o texto. Só com palavras soltas, elas são um nome (`/forward Fulano Silva`).
+- Sem resposta (e sem posições), o texto sozinho é o que vai: não pede uma resposta.
+- Com `-q`, não há cabeçalho nem status, só o texto (e a mensagem respondida, se houver).
+
+## Um atalho para um grupo de amigos
+
+Um uso comum: sempre que você vir algo para mandar para as mesmas pessoas, vira um reply só. Aqui com uma lista de
+amigos que não gostam do PT (chame de `#nopt`):
+
+**1. Crie a lista** (uma vez). Os destinatários ficam salvos com os ids, e podem ser contatos, grupos ou e-mails:
+
+```text
+/forward -add #nopt /Fulano/ /Lourival Neto/ /Grupo Faculdade/ /Rodrigo Souza/ /Rossam Silva/ /Erik Gielow/ /Bruno Melo/
+```
+
+**2. Crie um atalho** (uma vez). Com `-q` no alias, só a mensagem encaminhada vai, sem o cabeçalho `🔗 Alias ...`, e
+com `-q` no `/forward`, também sem cabeçalho nem status:
+
+```text
+/alias -q nopt /forward -q #nopt
+```
+
+**3. Use.** Sempre que ver algo que valha mandar, **responda a mensagem com `/nopt`**. Dá para pôr um texto extra, que
+vai no começo, com a mensagem respondida embaixo:
+
+```text
+(respondendo a mensagem)  /nopt
+→ eles recebem só a mensagem
+
+(respondendo a mensagem)  /nopt Olha isso!
+→ eles recebem:
+  Olha isso!
+
+  <a mensagem respondida>
+```
+
+- Para ver quem está na lista: `/forward -l #nopt`. Para pôr ou tirar alguém: `/forward -a #nopt /Maria/` e
+  `/forward -r #nopt /Maria/`. Mais em [Listas de destinatários](#listas-de-destinatários).
+- Quer o cabeçalho e a confirmação? Use `/alias -q nopt /forward -s #nopt` (o `-s` força os dois).
+- Vale para várias listas (`#família`, `#trabalho`): um alias para cada, ou misture numa só:
+  `/alias -q todos /forward -q #família #trabalho`. Sem reply, `/nopt Bom dia!` manda só o texto.
+- Mais sobre aliases no [`/alias`](alias.md).
+
 ## Cabeçalho
 
 Por padrão a mensagem vai com um cabeçalho dizendo que veio do bot:
@@ -99,6 +164,13 @@ a mídia vai em anexo. Para mandar só a mensagem, desligue:
 
 ```text
 /set forward.header false
+```
+
+Ou só numa vez: o `-nohdr` tira só o cabeçalho (o status fica), o `-q` tira o cabeçalho e o status, e o `-s` força os dois:
+
+```text
+/forward -nohdr /Jorge Pereira/
+/alias -q /nopt /forward -q -nohdr #nopt
 ```
 
 - Localização vira a descrição e um link do mapa; enquete vira a pergunta e as opções.

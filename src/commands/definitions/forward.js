@@ -6,11 +6,11 @@ const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/forward',
-    usage: '/forward [-q] [-d] [-N] [#list]... <recipient>... [-to <destination>]...  or  /forward -add|-list|-rm|-move|-desc <...>',
+    usage: '/forward [-q|-s] [-d] [-nohdr] [-N] [#list]... <recipient>... [text] [-to <destination>]...  or  /forward -add|-list|-rm|-move|-desc <...>',
     aliases: [],
     summary: 'Forwards the replied message to people, groups or emails',
-    help: 'Forwards the message you replied to (text, photo, video, audio, document, sticker, location...) to the recipients. Without a reply, give the position of the messages above first: -1 is the one right above, -1 -4 -6 or -1,-4,-6 are several, -3..-1 is a range (up to forward.max, sent from the oldest to the newest; the header goes once, before them). It only sends if every recipient is found; otherwise nothing is sent and the bot says which one failed. It replies right away with who will receive it and, when done, edits that message with the status (a ❌ and the reason for any that failed); with -quiet, no status is shown. By default the message comes with the header "Message forwarded by ZapBot!" (setting forward.header).',
-    ex: ['/forward /Fulano de Tal/', '/forward /Jorge Pereira/ @Maria -to fulano@example.com', '/forward -to root@example.org -to /Family/'],
+    help: 'Forwards the message you replied to (text, photo, video, audio, document, sticker, location...) to the recipients. Without a reply, give the position of the messages above first: -1 is the one right above, -1 -4 -6 or -1,-4,-6 are several, -3..-1 is a range (up to forward.max, sent from the oldest to the newest; the header goes once, before them). It only sends if every recipient is found; otherwise nothing is sent and the bot says which one failed. It replies right away with who will receive it and, when done, edits that message with the status (a ❌ and the reason for any that failed); with -quiet, nothing is shown (no status and no header). By default the message comes with the header "Message forwarded by ZapBot!" (setting forward.header) and the status is shown (setting forward.status); -status forces both and -nohdr drops only the header. After the recipients, a text can follow: it goes at the start and, with a reply, the replied message goes below it, after a blank line.',
+    ex: ['/forward /Fulano de Tal/', '/forward /Jorge Pereira/ @Maria -to fulano@example.com', '/forward /My Contact/ #group /Family/ This goes to everyone!', '/forward -to root@example.org -to /Family/'],
     cmd_opts: [
         {
             argv: ['[/contact/|@mention|+number]...'],
@@ -31,8 +31,20 @@ module.exports = {
         {
             opts: ['quiet', 'q'],
             values: [],
-            desc: 'Shows no status: neither the notice nor the list. Only failures are reported.',
+            desc: 'Shows nothing: no status (neither the notice nor the list) and no header on what is sent. Only failures are reported.',
             ex: ['/forward -q /Jorge Pereira/']
+        },
+        {
+            opts: ['status', 's'],
+            values: [],
+            desc: 'Forces the header on what is sent and the status (the notice and the summary of who received it), even with forward.header and forward.status off.',
+            ex: ['/forward -s /Jorge Pereira/']
+        },
+        {
+            opts: ['nohdr'],
+            values: [],
+            desc: 'Sends without the "Message forwarded by ZapBot!" header only (the status stays; -q drops both, the setting forward.header turns it off for all).',
+            ex: ['/forward -nohdr /Jorge Pereira/', '/forward -q -nohdr #friends']
         },
         {
             opts: ['dry', 'd'],
