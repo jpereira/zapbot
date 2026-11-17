@@ -34,6 +34,11 @@ Yep, we've been busy. The best of the latest batch:
 - 🎙️ **Transcribe any video or audio.** Send a link (Instagram, YouTube, X, TikTok...) or reply to a video or
   a voice note and get the **text of the speech**. It runs on your own server (faster-whisper), so no OpenAI bill
   and the audio never leaves home. [`/transcribe`](docs/commands/transcribe.md) · [`/get -t`](docs/commands/get.md)
+- 🧮 **A calculator for lists.** Reply to a message like `437 gym / 351 running` (or a debt list, with `R$`, signs
+  and the total) with `/calc`: it reads the numbers, prints a tape with all of them and checks the total of the
+  text. It also does `100/2*6` and `((1+7)*8)/2`. [`/calc`](docs/commands/calc.md)
+- 📸 **An Instagram carousel becomes an album.** `/get <link>` on a post with only photos sends **all of them** to the
+  chat (`Image 1/10`...), the last one with the text of the post. [`/get`](docs/commands/get.md)
 - 🎨 **Draw yourself and your friends.** `/draw @me @this draw the two of us as pirates` grabs the profile
   photos for you (`@me` is you, `@this` is the chat, `@reply` is whoever you replied to, and plain names work
   too). [`/draw`](docs/commands/draw.md) · [`/gpt`](docs/commands/gpt.md)
@@ -41,6 +46,9 @@ Yep, we've been busy. The best of the latest batch:
   the bot. [`/games`](docs/commands/games.md)
 - 📣 **Post on your Status** (and schedule it), peek at anyone's About and change yours.
   [`/status`](docs/commands/status.md) · [`/profile`](docs/commands/profile.md)
+- 👥 **Control the group from the chat.** `/group` shows and changes name, description, photo and who can send, and
+  `/group -send admins -for 30m` closes it and reopens by itself; `/antitag` and `/antibadword` delete the "tag everyone"
+  abuse and banned words. [`/group`](docs/commands/group.md) · [`/antitag`](docs/commands/antitag.md) · [`/antibadword`](docs/commands/antibadword.md)
 - 🛡️ **Group moderation.** `/warn` with a limit that kicks, and `/antilink` that deletes links from
   non-admins. [`/warn`](docs/commands/warn.md) · [`/antilink`](docs/commands/antilink.md)
 - 🔇 **Mute for a while.** `/mute -for 2h` and the alerts come back by themselves. [`/mute`](docs/commands/mute.md)
@@ -56,6 +64,8 @@ Yep, we've been busy. The best of the latest batch:
 /draw @me @this draw the two of us as pirates
 /transcribe https://www.instagram.com/reel/XXXXXXXX/
 /transcribe -ss 30 -es 90 https://youtu.be/XXXXXXXXXXX
+/calc 100/2*6
+/get https://www.instagram.com/p/XXXXXXXX/            (a carousel: all the photos)
 /games -trivia
 /warn @Fulano posted a link
 /antilink -delete -allow youtube.com

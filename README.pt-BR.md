@@ -34,6 +34,11 @@ Pois é, a gente andou ocupado. O melhor da última leva:
 - 🎙️ **Transcreva qualquer vídeo ou áudio.** Mande um link (Instagram, YouTube, X, TikTok...) ou responda um vídeo ou
   uma nota de voz e receba o **texto da fala**. Roda no seu próprio servidor (faster-whisper), sem conta na OpenAI
   e o áudio não sai de casa. [`/transcribe`](docs/commands/transcribe.md) · [`/get -t`](docs/commands/get.md)
+- 🧮 **Uma calculadora para listas.** Responda uma mensagem como `437 maromba / 351 corrida` (ou uma lista de dívida, com `R$`,
+  sinais e o total) com `/calc`: ele lê os números, mostra uma fita com todos e confere o total do texto.
+  Também faz `100/2*6` e `((1+7)*8)/2`. [`/calc`](docs/commands/calc.md)
+- 📸 **Carrossel do Instagram vira álbum.** O `/get <link>` num post só de fotos manda **todas** no chat
+  (`Imagem 1/10`...), a última com o texto do post. [`/get`](docs/commands/get.md)
 - 🎨 **Desenhe você e os amigos.** `/draw @me @this desenhe nós dois como piratas` pega as fotos de perfil
   sozinho (`@me` é você, `@this` é o chat, `@reply` é quem você respondeu, e nome solto também vale).
   [`/draw`](docs/commands/draw.md) · [`/gpt`](docs/commands/gpt.md)
@@ -41,6 +46,9 @@ Pois é, a gente andou ocupado. O melhor da última leva:
   bot. [`/games`](docs/commands/games.md)
 - 📣 **Poste no seu Status** (e agende), espie o Recado de qualquer um e mude o seu.
   [`/status`](docs/commands/status.md) · [`/profile`](docs/commands/profile.md)
+- 👥 **Controle o grupo pelo chat.** O `/group` mostra e muda nome, descrição, foto e quem pode enviar, e o
+  `/group -send admins -for 30m` fecha e reabre sozinho; o `/antitag` e o `/antibadword` apagam o abuso de "marcar
+  todo mundo" e as palavras proibidas. [`/group`](docs/commands/group.md) · [`/antitag`](docs/commands/antitag.md) · [`/antibadword`](docs/commands/antibadword.md)
 - 🛡️ **Moderação de grupo.** O `/warn` com limite que expulsa e o `/antilink` que apaga link de quem não
   é admin. [`/warn`](docs/commands/warn.md) · [`/antilink`](docs/commands/antilink.md)
 - 🔇 **Silêncio por um tempo.** `/mute -for 2h` e os avisos voltam sozinhos. [`/mute`](docs/commands/mute.md)
@@ -56,6 +64,8 @@ Pois é, a gente andou ocupado. O melhor da última leva:
 /draw @me @this desenhe nós dois como piratas
 /transcribe https://www.instagram.com/reel/XXXXXXXX/
 /transcribe -ss 30 -es 90 https://youtu.be/XXXXXXXXXXX
+/calc 100/2*6
+/get https://www.instagram.com/p/XXXXXXXX/            (um carrossel: todas as fotos)
 /games -trivia
 /warn @Fulano mandou link
 /antilink -delete -allow youtube.com
