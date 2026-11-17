@@ -7,6 +7,7 @@ const fs = require('fs-extra');
 
 const { client } = require('../client');
 const { contactName, resolveLidToPhone, channelResolverName } = require('../contacts');
+const { messageResolverMentions } = require('../mentions');
 const { dbGet, dbReady, dbRun } = require('../db');
 const { printDebug, printError } = require('../log');
 const { t } = require('../i18n');
@@ -151,7 +152,7 @@ async function sendMessageDeleted(destination, row, info, { titulo: title = t('a
     if (row.has_media && mediaIsPath(row.media_path) && fs.existsSync(row.media_path)) {
         const mediaAttachment = MessageMedia.fromFilePath(row.media_path);
         const mimetype = mediaAttachment.mimetype || '';
-        const captionAlt = row.body || t('apagadas.semTexto');
+        const captionAlt = await messageResolverMentions(row.body, row.id) || t('apagadas.semTexto');
 
         if (row.type === 'audio' || row.type === 'ptt' || mimetype.startsWith('audio/')) {
             alertText += t('apagadas.audio');
@@ -182,7 +183,7 @@ async function sendMessageDeleted(destination, row, info, { titulo: title = t('a
     }
 
     // Texto
-    alertText += t('apagadas.texto', { texto: row.body || t('apagadas.semConteudo') });
+    alertText += t('apagadas.texto', { texto: await messageResolverMentions(row.body, row.id) || t('apagadas.semConteudo') });
 
     await send(destination, alertText, { linkPreview: true });
 }

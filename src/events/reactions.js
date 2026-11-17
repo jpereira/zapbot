@@ -4,6 +4,7 @@
 
 const { client } = require('../client');
 const { contactName, resolveLidToPhone } = require('../contacts');
+const { messageResolverMentions } = require('../mentions');
 const { dbGet, dbReady, dbRun } = require('../db');
 const { printError, printInfo } = require('../log');
 const { t } = require('../i18n');
@@ -42,7 +43,8 @@ async function sendReactionUndone(destination, row, { contagem: count = null } =
     const removed = !row.new_reaction;
     const title = t(`reacoes.${removed ? 'removida' : 'trocada'}${count ? 'Contagem' : 'Detectada'}`, { contagem: count });
 
-    const body = String(row.body ?? '');
+    // Raw mentions (@265472113143884) become the name only on display; the original text stays in the database
+    const body = await messageResolverMentions(row.body, row.message_id);
     const messageAlt = row.body == null ? t('reacoes.foraDoCache')
         : `"${body.length > SNIPPET ? `${body.slice(0, SNIPPET)}…` : body || t('reacoes.semTexto')}"`;
 

@@ -162,6 +162,8 @@ async function initializeDb() {
     await addColumns('messages', { from_me: 'INTEGER DEFAULT 0' });
     // transcription: the audio transcription, stored by /tldr so as not to transcribe again
     await addColumns('messages', { transcription: 'TEXT' });
+    // mentions: the ids (@lid/@c.us) of the message mentions, in JSON, to swap @number for the name on display
+    await addColumns('messages', { mentions: 'TEXT' });
 
     // /show query: a chat's deleted messages, from most recent to oldest
     await dbRun('CREATE INDEX IF NOT EXISTS idx_messages_chat_revoked ON messages (chat_id, revoked, revoked_at)');
