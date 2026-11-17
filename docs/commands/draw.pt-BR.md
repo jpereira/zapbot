@@ -15,6 +15,7 @@ pedido. O `/gpt -img` e o `/gpt -gif` são o mesmo código: o resultado é igual
 /draw -g um gato dançando
 /draw -m                       → o modelo atual e os que a sua chave vê
 /draw -h                       → ajuda do comando
+/draw -s um gato astronauta          → a imagem mais o consumo no rodapé
 ```
 
 Se a **primeira palavra** parece uma opção mas não existe (`/draw -price`), o bot responde

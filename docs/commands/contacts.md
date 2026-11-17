@@ -30,6 +30,8 @@ Only in **your own private chat**: the output is your whole address book.
 /contacts -e         → all of them, text only, as contacts-YYYYMMDD.vcf (seconds)
 /contacts -e -p      → with the profile photos (minutes)
 /contacts -e -p -r   → downloads every photo again
+/contacts -e -p -n                → exports with photos, without touching the photo cache
+/contacts -clear                  → deletes the saved photos
 ```
 
 - Each card has a fixed `UID` derived from the number (`zapbot-<number>`), so importing the file again

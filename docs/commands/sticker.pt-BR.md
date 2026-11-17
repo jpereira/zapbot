@@ -30,6 +30,8 @@ qualidade e, se ainda não couber, sugere um trecho menor com `-ss` e `-es`.
 (reply num vídeo)                /sticker -ss 01:10 -es 01:13 → de 1:10 a 1:13
 (reply num vídeo)                /sticker -ss -10           → começa 10 s antes do fim (6 s)
 /sticker https://www.instagram.com/p/XXXXXXXX/
+/sticker -pos topo            → (reply numa foto) recorte no topo
+/sticker -v https://youtu.be/XXXXXXXXXXX   → mostra também os comandos que rodaram
 ```
 
 | Opção | Valor | Descrição |

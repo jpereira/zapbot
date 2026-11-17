@@ -23,6 +23,7 @@ adds the most recent hits. `/watch -10` shows the last ten matches of all rules,
 /watch -f /Jorge/                  → clears the hits of /Jorge/
 /watch -m 3                         → 🔒 turns on mask for rule #3 (notices with obfuscated phone)
 /watch -u 3                        → turns off the 🔒 of rule #3
+/watch -l                     → only the rules, sources, destinations and counts
 ```
 A rule without `-in` applies everywhere. With `-in`, you choose the source:
 

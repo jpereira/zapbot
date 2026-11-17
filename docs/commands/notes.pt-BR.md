@@ -48,6 +48,7 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 /notes -d #casa Coisas da casa                 → descrição da #casa
 /notes -v 76                                   → a nº 76 com a imagem, se tiver
 /notes                                            → #casa: 3, #duvidas: 1, sem tag: 2
+/notes -compact                → uma linha por nota, por dia
 ```
 
 ## Tags

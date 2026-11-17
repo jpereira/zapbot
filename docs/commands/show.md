@@ -66,6 +66,7 @@ your private chat), you get everything together, by date.
 /show -q refund                → the deleted ones with "refund" (in your private chat: everything, from all chats)
 /show -e -q "good morning" -10   → up to 10 edited ones with "good morning"
 /show -5 -q /refund|invoice/i   → up to 5 deleted ones that match the regex
+/show -5 -m                  → the last 5, with the numbers obfuscated
 ```
 
 In your private chat, when there's nothing from this chat, the bot suggests the next steps, one per

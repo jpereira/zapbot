@@ -40,6 +40,9 @@ lists them and you reply with just the number. In a **group**, it applies to eve
 /mute @Fulano Da Silva         → in a group, mentioning the person
 /mute /Jorge/                  → several Jorges: lists them, and you reply with the number
 /mute                       → the list
+/mute -list                    → the muted ones
+/mute -rm 2                     → unmutes item 2 of the list
+/mute -rm all                   → unmutes everything
 ```
 
 ## Replying to an alert

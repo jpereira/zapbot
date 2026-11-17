@@ -23,6 +23,7 @@ pelo setting `watch.showMax`.
 /watch -f /Jorge/                  → limpa as ocorrências da /Jorge/
 /watch -m 3                         → 🔒 liga o mask na regra #3 (avisos com telefone ofuscado)
 /watch -u 3                        → desliga o 🔒 da regra #3
+/watch -l                     → só as regras, origens, destinos e contagens
 ```
 Uma regra sem `-in` vale em qualquer lugar. Com `-in`, você escolhe a origem:
 

@@ -25,6 +25,8 @@ o tipo e a legenda). Textos longos são cortados em 200 caracteres.
 /search pix                 → as 10 mais recentes com "pix" neste chat
 /search -30 boleto          → até 30
 /search bom dia             → com espaços, sem aspas (/search é o mesmo que /search)
+/search -a reembolso            → todos os chats, enviado no seu privado (dono)
+/search -m reembolso            → com os números ofuscados
 ```
 
 ```text

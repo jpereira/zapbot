@@ -25,6 +25,7 @@ among contacts only: groups can't be blocked.
 /block +5521999999999 +5521988888888 /Ciclano Souza/  → several at once
 /block                      → replying to a message: whoever wrote it (not replying: the list)
 /block -l                   → the list
+/block -m -l                  → the list, with the numbers obfuscated
 ```
 
 ```text

@@ -48,6 +48,7 @@ Faz algo na hora marcada. Tem dois modos, na mesma agenda:
 /cron -pause 3                  → segura o nº 3 (e /cron -resume 3 solta)
 /cron -rm 2                     → remove o nº 2
 /cron -rm 1 3 5                 → remove o 1, o 3 e o 5 (os números da lista de antes)
+/cron -status amanhã 9h Bom dia, pessoal!   → posta no seu Status
 ```
 
 ```text

@@ -29,6 +29,7 @@ só entre os contatos: grupos são recusados.
 /profile +5521999999999         → pelo número
 /profile /Ana/ /Beto/           → uma foto para cada
 /profile                        → respondendo uma mensagem: quem a escreveu
+/profile -m /Rafael Silva/       → o Recado, com os números ofuscados
 ```
 
 Para trocar a foto em vez de ver:

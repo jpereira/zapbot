@@ -31,6 +31,7 @@ goes before the question; when you reply to a **photo**, it's sent along and Cha
 /gpt -u          → usage for the last 7 days and the current limits (owner and admins only)
 /gpt -u 30           → (shortcut) usage for the last 30 days
 /gpt -h              → command help
+/gpt -prices                   → updates the prices used in the footer (owner and admins)
 ```
 
 If the **first word** looks like an option but doesn't exist (`/gpt -price`), the bot replies
