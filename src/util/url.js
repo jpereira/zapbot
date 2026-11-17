@@ -93,7 +93,8 @@ async function httpGetSafe(urlInitial, { maxRedirects = 3, ...optionsAlt } = {})
         const ip = public[0];
         const familia = net.isIPv6(ip) ? 6 : 4;
         // fixed lookup: the socket connects to the verified IP, not to a new resolution
-        const lookup = (_host, _opts, cb) => cb(null, ip, familia);
+        // The new Node calls lookup with { all: true } and expects a list of addresses
+        const lookup = (_host, optionsAlt, cb) => (optionsAlt?.all ? cb(null, [{ address: ip, family: familia }]) : cb(null, ip, familia));
         const agent = parsed.protocol === 'https:'
             ? new https.Agent({ lookup })
             : new http.Agent({ lookup });
