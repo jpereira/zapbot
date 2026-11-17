@@ -230,5 +230,9 @@ module.exports = {
     'usage.none': 'Você não tem limites de uso aqui.',
     'usage.noneOf': '{quem} não tem limites de uso aqui.',
     'usage.logEmpty': 'Nenhuma chamada contou ainda.',
+    'usage.allTitle': '📊 *Consumo de todos* (últimos {days} dias, {total} chamadas)',
+    'usage.allMore': '… e mais {n} fora do top 10.',
+    'usage.allByCmd': '*Por comando:*',
+    'usage.allEmpty': 'Nenhuma chamada com limite nos últimos {days} dias.',
     'usage.ownerOnly': '🔒 Só o dono e os admins veem os limites dos outros.'
 };
