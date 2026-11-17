@@ -11,7 +11,7 @@ const { MessageMedia } = require('whatsapp-web.js');
 const { completeNotice } = require('../client');
 const { commandUsage } = require('./base');
 const { drawAlt } = require('./draw');
-const { imagesContext, textReadProfile, resolverProfiles } = require('./profileInAi');
+const { imagesContext, textReadProfile, readProfileImplicit, resolverProfiles } = require('./profileInAi');
 const {
     AUDIO_MODEL, VOICE_MODEL, SO_OWNER_GENERATE, GPT_USES, QUESTION_USAGE, notifyProcessing, isPhoto,
     modelError, messageImage, replyConsumption, withoutOption, swapModel
@@ -463,7 +463,8 @@ async function ask({ msg, args, opts, quotedMsg, admin, chatId, isGroup }) {
     }
 
     // -p [people]: the profile photos come along with the images (only in -img, -gif and in the question; -p leaves the text)
-    const profileText = opts?.given.has('profile') ? await textReadProfile(args) : null;
+    // (without -p, @me/@this at the start of the text count the same)
+    const profileText = opts?.given.has('profile') ? await textReadProfile(args) : readProfileImplicit(args);
     const prepareProfiles = async () => {
         if (!profileText) return [];
         args = profileText.texto;

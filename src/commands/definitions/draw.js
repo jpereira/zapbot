@@ -11,6 +11,7 @@ module.exports = {
     aliases: [],
     summary: 'Draws an image with GPT Image (OpenAI)',
     help: 'Draws an image with GPT Image (OpenAI); with -gif, an animated GIF (GPT Image 2.6), and on a photo (caption or reply) edits the photo or animates it. When replying to a message, its text is added to the request. Requires OPENAI_API_KEY in config/.env or the gpt.api.key setting.',
+    ex: ['/draw -p @me @this draw the two of us as pirates', '/draw -g a dancing cat'],
     cmd_opts: [
         {
             opts: ['gif', 'g'],
@@ -36,8 +37,8 @@ module.exports = {
         {
             opts: ['profile', 'p'],
             values: [],
-            desc: 'Adds the profile photo of one or more people to the images sent to the model, next to the photo you reply to. Right after -p, as many as you want (up to 4): the names as they are in your address book, typed plain (-p fulano beltrano; the first word that is not a contact starts the request), /Full Name/, @mention, +number or @me (or $me): your own photo. Without anyone: the person of the private chat (you, in yours) or, in a group, whoever wrote the message you reply to. Whoever hides the photo by privacy is refused.',
-            ex: ['/draw -p /Rafael Silva/ draw him as an astronaut', '/draw -g -p put a hat on this person (replying to a photo)'],
+            desc: 'Adds profile photos of @me/$me, @this/$this or names (@me/@this at the start of the request already count, without -p). They go to the model next to the photo you reply to. Right after -p, as many as you want (up to 4): the names as they are in your address book, typed plain (-p fulano beltrano; the first word that is not a contact starts the request), /Full Name/, @mention, +number, @this (or $this): the chat (the other person, or the group photo), or @me (or $me): your own photo. Without anyone: the person of the private chat (you, in yours) or, in a group, whoever wrote the message you reply to. Whoever hides the photo by privacy is refused.',
+            ex: ['/draw -p /Rafael Silva/ draw him as an astronaut', '/draw -g -p put a hat on this person (replying to a photo)', '/draw -p @me @this draw the two of us as pirates (in a private chat)', '/draw -p @this make a poster with this group\'s photo (in a group)', '/draw -p @me fulano beltrano draw the three of us climbing'],
             cron: false
         },
         {

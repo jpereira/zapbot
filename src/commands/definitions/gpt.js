@@ -11,6 +11,7 @@ module.exports = {
     aliases: [],
     summary: 'Asks ChatGPT',
     help: 'Asks ChatGPT (OpenAI). Replying to a message, its text goes into the question; replying to a photo, it goes along (ChatGPT sees the image); replying to an audio, it is transcribed; replying to a document (text or PDF), the content goes along; with -voice, the text becomes a robot voice note; with -img and -gif, creates an image and a GIF. Requires OPENAI_API_KEY in config/.env or the gpt.api.key setting.',
+    ex: ['/gpt -img -p @me @this draw the two of us as pirates', '/gpt -p @this who is this?'],
     cmd_opts: [
         {
             opts: ['model', 'm'],
@@ -69,8 +70,8 @@ module.exports = {
         {
             opts: ['profile', 'p'],
             values: [],
-            desc: 'Adds the profile photo of one or more people to the images sent to the model, next to the photo you reply to. Right after -p, as many as you want (up to 4): the names as they are in your address book, typed plain (-p fulano beltrano; the first word that is not a contact starts the request), /Full Name/, @mention, +number or @me (or $me): your own photo. Without anyone: the person of the private chat (you, in yours) or, in a group, whoever wrote the message you reply to. Whoever hides the photo by privacy is refused.',
-            ex: ['/gpt -p /Rafael Silva/ describe this person', '/gpt -p /Rafael Silva/ add this person to the photo (replying to a photo, with -img)'],
+            desc: 'Adds profile photos of @me/$me, @this/$this or names (@me/@this at the start of the text already count, without -p). They go to the model next to the photo you reply to. Right after -p, as many as you want (up to 4): the names as they are in your address book, typed plain (-p fulano beltrano; the first word that is not a contact starts the request), /Full Name/, @mention, +number, @this (or $this): the chat (the other person, or the group photo), or @me (or $me): your own photo. Without anyone: the person of the private chat (you, in yours) or, in a group, whoever wrote the message you reply to. Whoever hides the photo by privacy is refused.',
+            ex: ['/gpt -p /Rafael Silva/ describe this person', '/gpt -p /Rafael Silva/ add this person to the photo (replying to a photo, with -img)', '/gpt -p @me @this what do we have in common?', '/gpt -img -p @this make a logo from this group photo (in a group)'],
             cron: false
         },
         optionStatus('/gpt -s explique SSRF em 3 linhas'),

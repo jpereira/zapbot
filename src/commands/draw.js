@@ -16,7 +16,7 @@ const { BIN_FFMPEG, TMP_DIR } = require('../constants');
 const { t } = require('../i18n');
 const { unescape } = require('../util/format');
 const { printError } = require('../log');
-const { imagesContext, textReadProfile, resolverProfiles } = require('./profileInAi');
+const { imagesContext, textReadProfile, readProfileImplicit, resolverProfiles } = require('./profileInAi');
 const { WITHOUT_KEY, keyOpenAi, errorOpenAi, generateImage, measureConsumption } = require('../openaiChat');
 const { SETTINGS_SCHEMA, getSetting } = require('../settings');
 const { runCommand } = require('../util/processes');
@@ -168,8 +168,10 @@ async function draw({ msg, args, opts, quotedMsg, chatId, isGroup }) {
 
     // -p [people]: the profile photos come along (the people leave the request)
     let profiles = [];
-    if (opts?.given.has('profile')) {
-        const profile = await textReadProfile(args);
+    // (without -p, @me/@this at the start of the request count the same: /draw @me @this desenhe nós dois)
+    const withP = opts?.given.has('profile');
+    const profile = withP ? await textReadProfile(args) : readProfileImplicit(request);
+    if (withP || profile) {
         for (const item of profile?.itens ?? []) request = request.replace(item, '');
         request = request.replace(/\s{2,}/g, ' ').trim();
         profiles = await resolverProfiles({ msg, quotedMsg, chatId, isGroup, itens: profile?.itens ?? [], cmd: '/draw' });

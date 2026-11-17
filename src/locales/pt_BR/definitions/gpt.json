@@ -2,6 +2,10 @@
   "summary": "Pergunta ao ChatGPT",
   "usage": "/gpt [-s] [pergunta]  ou  /gpt -voice|-img|-gif <texto>  ou  /gpt -model [modelo]  ou  /gpt -prices|-usage [dias]",
   "help": "Pergunta ao ChatGPT (OpenAI). Respondendo uma mensagem, o texto dela entra na pergunta; respondendo uma foto, ela vai junto (o ChatGPT vê a imagem); respondendo um áudio, ele é transcrito; respondendo um documento (texto ou PDF), o conteúdo vai junto; com -voice, o texto vira uma nota de voz de robô; com -img e -gif, cria uma imagem e um GIF. Precisa de OPENAI_API_KEY no config/.env ou do setting gpt.api.key.",
+  "ex": [
+    "/gpt -img -p @me @this desenhe nós dois como piratas",
+    "/gpt -p @this quem é essa pessoa?"
+  ],
   "cmd_opts": [
     {
       "opts": [
@@ -95,10 +99,12 @@
         "p"
       ],
       "values": [],
-      "desc": "Junta a foto de perfil de uma ou mais pessoas às imagens enviadas ao modelo, ao lado da foto que você responde. Logo depois do -p, quantas quiser (até 4): os nomes como estão na sua agenda, digitados soltos (-p fulano beltrano; a primeira palavra que não é contato começa o pedido), /Nome Completo/, @menção, +número ou @me (ou $me): a sua própria foto. Sem ninguém: a pessoa do privado (você, no seu) ou, no grupo, quem escreveu a mensagem respondida. Quem esconde a foto pela privacidade é recusado.",
+      "desc": "Junta fotos de perfil de @me/$me, @this/$this ou nomes (@me/@this no começo do texto já valem, sem o -p). Vão ao modelo ao lado da foto que você responde. Logo depois do -p, quantas quiser (até 4): os nomes como estão na sua agenda, digitados soltos (-p fulano beltrano; a primeira palavra que não é contato começa o pedido), /Nome Completo/, @menção, +número, @this (ou $this): o chat (a outra pessoa, ou a foto do grupo), ou @me (ou $me): a sua própria foto. Sem ninguém: a pessoa do privado (você, no seu) ou, no grupo, quem escreveu a mensagem respondida. Quem esconde a foto pela privacidade é recusado.",
       "ex": [
         "/gpt -p /Rafael Silva/ descreva essa pessoa",
-        "/gpt -img -p /Rafael Silva/ coloque essa pessoa na foto (respondendo a uma foto)"
+        "/gpt -img -p /Rafael Silva/ coloque essa pessoa na foto (respondendo a uma foto)",
+        "/gpt -p @me @this o que temos em comum?",
+        "/gpt -img -p @this faça um logo com a foto deste grupo (num grupo)"
       ]
     },
     {
