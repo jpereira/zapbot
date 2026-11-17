@@ -100,6 +100,17 @@ describe('"digitando..." ao executar um comando', () => {
         assert.equal(typing(), 2);
     });
 
+    test('marca a conversa como lida antes de responder (commands.seen), até nos instantâneos', async () => {
+        const group = bot.client.chats.get(bot.GROUP);
+        await bot.replyAlt('/ping');
+        await bot.replyAlt('/me oi');
+        assert.equal(group.lidas, 2);
+
+        await bot.setSetting('commands.seen', false);
+        await bot.replyAlt('/ping');
+        assert.equal(group.lidas, 2, 'desligado: não marca');
+    });
+
     test('segue aceso enquanto o comando roda (a resposta do meio apaga o aviso) e apaga ao terminar', async () => {
         const { withTyping } = bot.src('execute');
         const sentAlt3 = [];

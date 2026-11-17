@@ -34,6 +34,7 @@ shows are in Portuguese; the ones here are in English).
 | `call.message` | text (can be empty) | `Oi! Não atendo ligações aqui. Manda uma mensagem ou um áudio que eu respondo assim que der. 🙏` | Message sent to whoever had the call rejected (at most one every 10 minutes per person). Empty: rejects in silence |
 | `call.reject` | on/off | `off` | Rejects incoming voice and video calls (except `call.allow` and `bot.admins`) and replies with `call.message`. See [Rejecting calls](commands/bot.md#rejecting-calls) |
 | `commands.disabled` | list | *(empty)* | Commands disabled at runtime: the bot ignores them and they disappear from `/help`. `/set` cannot be disabled. Unknown names are ignored with a warning in the log; valid aliases are normalized |
+| `commands.seen` | on/off | `on` | Marks the chat as read (blue ✓✓) when a command is typed in it, before replying, as a person would. The "typing..." also shows while the command runs |
 | `contacts.cache` | on/off | `on` | Keeps the profile photos downloaded by `/contacts` in `cache/contacts` (also in the backup). Off: downloads on every export and saves nothing |
 | `contacts.cacheDays` | 1–365 | `30` | Days a photo in `cache/contacts` stays valid before being downloaded again (`/contacts -r` forces it) |
 | `contacts.delayMs` | 0–5000 | `300` | Pause, in milliseconds, between photos in `/contacts`, to avoid hitting WhatsApp in a burst |

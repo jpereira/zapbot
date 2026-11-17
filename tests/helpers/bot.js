@@ -114,7 +114,9 @@ function createGroup(id, nameAlt, members = []) {
             return { id: { _serialized: jid, user: jid.split('@')[0] }, isAdmin, isSuperAdmin };
         }),
         digitando: 0,
+        lidas: 0,
         async sendStateTyping() { this.digitando++; },
+        async sendSeen() { this.lidas++; },
         async leave() { client.chats.delete(id); }
     };
     client.chats.set(id, chat);

@@ -7,6 +7,7 @@
 const { getCommandSyntax } = require('./commands/base');
 const { GetOptFromCommand } = require('./options');
 const { t } = require('./i18n');
+const { getSetting } = require('./settings');
 const { ROLES, answer } = require('./roles');
 const { askedHelpWatch, askedMaskWatch } = require('./watch/options');
 
@@ -41,10 +42,15 @@ function readOptions(command, args) {
  * @param {number} [o.cada]  the resend interval (only the tests change it)
  */
 async function withTyping(msg, command, run, { cada: each = 3000 } = {}) {
+    let chat = null;
+    const getChat = () => (chat ? Promise.resolve(chat) : msg.getChat().then(c => (chat = c)));
+
+    // Like a person: reads (blue ✓✓) before replying. Also applies to instant ones (/ping)
+    if (getSetting('commands.seen')) await getChat().then(c => c.sendSeen?.()).catch(() => {});
+
     if (command.digitando === false) return run();
 
-    let chat = null;
-    const type = () => (chat ? Promise.resolve(chat) : msg.getChat().then(c => (chat = c)))
+    const type = () => getChat()
         .then(c => c.sendStateTyping())
         .catch(() => {});
 

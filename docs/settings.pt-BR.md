@@ -34,6 +34,7 @@ em português).
 | `call.message` | texto (pode ser vazio) | `Oi! Não atendo ligações aqui. Manda uma mensagem ou um áudio que eu respondo assim que der. 🙏` | Mensagem enviada a quem teve a ligação recusada (no máximo uma a cada 10 minutos por pessoa). Vazio: recusa em silêncio |
 | `call.reject` | on/off | `off` | Recusa as ligações de voz e de vídeo que chegam (exceto `call.allow` e `bot.admins`) e responde com a `call.message`. Veja [Recusando ligações](commands/bot.md#recusando-ligações) |
 | `commands.disabled` | lista | *(vazia)* | Comandos desativados em tempo de execução: o bot os ignora e eles somem do `/help`. O `/set` não pode ser desativado. Nomes desconhecidos são ignorados com aviso no log; aliases válidos são normalizados |
+| `commands.seen` | on/off | `on` | Marca a conversa como lida (✓✓ azul) quando um comando é digitado nela, antes de responder, como uma pessoa faria. O "digitando..." também aparece enquanto o comando roda |
 | `contacts.cache` | on/off | `on` | Guarda as fotos de perfil baixadas pelo `/contacts` em `cache/contacts` (entram no backup). Desligado: baixa a cada exportação e não guarda nada |
 | `contacts.cacheDays` | 1–365 | `30` | Dias que uma foto em `cache/contacts` vale antes de ser baixada de novo (`/contacts -r` força) |
 | `contacts.delayMs` | 0–5000 | `300` | Pausa, em milissegundos, entre uma foto e outra no `/contacts`, para não consultar o WhatsApp em rajada |
