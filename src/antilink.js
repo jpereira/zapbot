@@ -11,13 +11,9 @@
  * Deleting other people's message and removing require the bot account to be a group admin.
  */
 
-const { notify, noticeText } = require('./commands/warn');
-const { client } = require('./client');
 const { dbGet, dbReady, dbRun } = require('./db');
 const { t } = require('./i18n');
-const { printError, printInfo } = require('./log');
-
-const MODES = ['off', 'delete', 'warn', 'remove'];
+const { MODES, applyMode } = require('./moderation');
 
 // http(s)://, www., WhatsApp invites and loose domains with common TLDs (arquivo.zip does not count)
 const TLDS = 'com|net|org|io|me|gg|ly|co|app|dev|xyz|info|link|tv|ai|br|pt|us|uk|de|fr|es|it|ru|cn|in|club|shop|site|online|top|vip|cc|to|sh|gl|be';
@@ -71,8 +67,6 @@ async function recordConfig(chatId, { modo: mode, liberados: releasedAlt }) {
     );
 }
 
-const groupIsAdmin = (p) => Boolean(p?.isAdmin || p?.isSuperAdmin);
-
 /**
  * Checks a group message and acts according to the mode. Called by the messages event, after saving.
  * @param {object} o
@@ -95,42 +89,14 @@ async function checkAntilink({ msg, chatId, body, dispensado: dismissed, senderN
     const bad = prohibited(domains, releasedAlt);
     if (!bad.length) return false;
 
-    const group = await msg.getChat().catch(() => null);
-    if (!group?.isGroup) return false;
-
-    const authorId = msg.author || msg.from;
-    const author = group.participants.find((p) => p.id._serialized === authorId || p.id.user === authorId.split('@')[0]);
-    if (groupIsAdmin(author)) return false;
-
-    const eu = group.participants.find((p) => p.id._serialized === client.info.wid._serialized || p.id.user === client.info.wid.user);
-    if (!groupIsAdmin(eu)) {
-        printInfo(`[Antilink] link de ${senderName} em ${chatId} mantido: o bot não é admin do grupo`);
-        return false;
-    }
-
-    try {
-        await msg.delete(true);
-    } catch (err) {
-        printError('[Antilink] não apaguei:', err.message);
-        return false;
-    }
-    printInfo(`[Antilink] link de ${senderName} apagado em ${chatId} (${mode}): ${bad.join(', ')}`);
-
-    const nameAlt = senderName || authorId.split('@')[0];
-    if (mode === 'delete') {
-        await client.sendMessage(chatId, t('antilink.deleted', { name: nameAlt }), { linkPreview: false }).catch(() => {});
-    } else if (mode === 'warn' && author) {
-        const r = await notify({ grupo: group, participante: author, nome: nameAlt, motivo: t('antilink.reason'), por: 'antilink' });
-        await client.sendMessage(chatId, `${t('antilink.deleted', { name: nameAlt })}\n${noticeText(nameAlt, t('antilink.reason'), r)}`, { linkPreview: false }).catch(() => {});
-    } else if (mode === 'remove' && author) {
-        try {
-            await group.removeParticipants([author.id._serialized]);
-            await client.sendMessage(chatId, t('antilink.removed', { name: nameAlt }), { linkPreview: false }).catch(() => {});
-        } catch (err) {
-            printError('[Antilink] não removi:', err.message);
-        }
-    }
-    return true;
+    return applyMode({
+        msg, chatId, modo: mode, senderName,
+        tag: 'Antilink',
+        detalhe: bad.join(', '),
+        avisoApagada: t('antilink.deleted', { name: '{name}' }),
+        avisoRemovida: t('antilink.removed', { name: '{name}' }),
+        motivo: t('antilink.reason')
+    });
 }
 
 module.exports = {

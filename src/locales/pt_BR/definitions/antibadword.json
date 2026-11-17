@@ -1,0 +1,73 @@
+{
+  "summary": "Apaga mensagens de quem não é admin com palavrões da lista",
+  "usage": "/antibadword [-off|-delete|-warn|-remove] [-add <palavra>] [-rm <palavra>] [-list]",
+  "help": "Apaga as mensagens de quem não é admin do grupo que têm uma palavra (ou frase) da lista do grupo. Ignora maiúsculas, acentos e pontuação, e só vale a palavra inteira (\"cu\" não pega \"cuidado\"). Por grupo, desligado por padrão: -delete só apaga, -warn apaga e soma um aviso do /warn (o limite do warn.max remove a pessoa), -remove apaga e remove a pessoa na hora. Admins do grupo, você e os admins do bot nunca são pegos. O bot precisa ser admin do grupo. Sem opções, mostra o modo e quantas palavras há. Só funciona em grupos.",
+  "ex": [
+    "/antibadword -add idiota",
+    "/antibadword -delete",
+    "/antibadword -list"
+  ],
+  "cmd_opts": [
+    {
+      "opts": [
+        "off"
+      ],
+      "values": [],
+      "desc": "Desliga neste grupo (o padrão)."
+    },
+    {
+      "opts": [
+        "delete"
+      ],
+      "values": [],
+      "desc": "Apaga a mensagem, para todos."
+    },
+    {
+      "opts": [
+        "warn"
+      ],
+      "values": [],
+      "desc": "Apaga e soma um aviso do /warn; no limite (warn.max) a pessoa é removida."
+    },
+    {
+      "opts": [
+        "remove"
+      ],
+      "values": [],
+      "desc": "Apaga e remove a pessoa do grupo na hora."
+    },
+    {
+      "opts": [
+        "add"
+      ],
+      "values": [
+        "<palavra>"
+      ],
+      "desc": "Põe uma palavra na lista (até 100), uma por comando. Para uma frase, use aspas.",
+      "ex": [
+        "/antibadword -add idiota",
+        "/antibadword -add \"vai se ferrar\""
+      ]
+    },
+    {
+      "opts": [
+        "rm"
+      ],
+      "values": [
+        "<palavra>"
+      ],
+      "desc": "Tira uma palavra da lista.",
+      "ex": [
+        "/antibadword -rm idiota"
+      ]
+    },
+    {
+      "opts": [
+        "list",
+        "l"
+      ],
+      "values": [],
+      "desc": "Mostra as palavras da lista."
+    }
+  ]
+}

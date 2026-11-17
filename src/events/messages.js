@@ -14,6 +14,7 @@ const {
 } = require('../contacts');
 const { dbGet, dbReady, dbRun } = require('../db');
 const { checkAntilink } = require('../antilink');
+const { checkRules } = require('../groupRules');
 const { replyGame } = require('../commands/games');
 const { replyChoice } = require('../choices');
 const { checkFlood } = require('../flood');
@@ -274,6 +275,11 @@ client.on('message_create', (msg) => withContextDebug({
             const dismissed = answer(levelAlt({ fromMe: msg.fromMe, numero: senderNumber, permissao: permissionHere({ numero: senderNumber, chatId, isGroup }) }), ROLES.ADMIN);
             if (await checkAntilink({ msg, chatId, body, dispensado: dismissed, senderName }).catch((err) => {
                 printError('/antilink: error checking:', err.message);
+                return false;
+            })) return;
+            // /antitag and /antibadword: tagging everyone and prohibited words
+            if (await checkRules({ msg, chatId, body, dispensado: dismissed, senderName }).catch((err) => {
+                printError('/antitag, /antibadword: error checking:', err.message);
                 return false;
             })) return;
         }

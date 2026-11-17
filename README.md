@@ -415,7 +415,9 @@ and make the bot your own:
 | Command | Aliases | Role | Description |
 |---|---|:-:|---|
 | [`/alias`](https://jpereira.github.io/zapbot/commands/alias/) | | `admin` | Registers, lists and removes shortcuts for commands with arguments, or texts with several `{/command}` |
+| [`/antibadword`](https://jpereira.github.io/zapbot/commands/antibadword/) | | `admin` · delegable | Deletes messages from non-admins with banned words (a list per group) |
 | [`/antilink`](https://jpereira.github.io/zapbot/commands/antilink/) | | `admin` · delegable | Deletes links sent by non-admins in the group |
+| [`/antitag`](https://jpereira.github.io/zapbot/commands/antitag/) | | `admin` · delegable | Deletes messages from non-admins that tag lots of people |
 | [`/ascii`](https://jpereira.github.io/zapbot/commands/ascii/) | | `user` | The text in big ASCII letters, in a block that fits on the phone screen |
 | [`/backup`](https://jpereira.github.io/zapbot/commands/backup/) | | `admin` | Daily local backup and sending through `backup.to`; lists, details, restores, sends and deletes the database |
 | [`/batch`](https://jpereira.github.io/zapbot/commands/batch/) | | `admin` | Runs several commands from a single message, in sequence (each line that starts with a command opens a block), and replies with a summary; `-stop` and `-dry` |
