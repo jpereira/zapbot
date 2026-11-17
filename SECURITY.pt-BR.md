@@ -6,7 +6,7 @@
 
 Só a **última release** (tag `vX.Y.Z` mais recente) recebe correções de segurança. As correções
 saem numa release nova; atualize seguindo a
-[documentação](https://jpereira.github.io/zapbot/pt-BR/instalacao/#atualizar-para-uma-nova-versão).
+[documentação](https://jpereira.github.io/zapbot/pt-BR/installation/#atualizar-para-uma-nova-versão).
 
 ## Como reportar uma vulnerabilidade
 

@@ -80,8 +80,8 @@ Without `-mask`: use a test contact.
 ### 4. Joining and leaving groups: `/join` and `/leave`
 
 ```text
-/join -i https://chat.whatsapp.com/<codigo-de-um-group-de-teste>
-/join https://chat.whatsapp.com/<codigo-de-um-group-de-teste>
+/join -i https://chat.whatsapp.com/<test-group-code>
+/join https://chat.whatsapp.com/<test-group-code>
 /join -l
 /leave -l
 /leave 1
@@ -107,7 +107,7 @@ the caption):
 ### 6. Downloading videos: `/get`
 
 ```text
-/get https://www.instagram.com/reel/<codigo>/
+/get https://www.instagram.com/reel/<code>/
 /get -a https://youtu.be/<id>
 /get -st -ss 3 -es 6 https://youtu.be/<id>
 ```

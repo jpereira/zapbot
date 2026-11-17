@@ -406,7 +406,7 @@ describe('documentação', () => {
         for (const fileAlt of files) {
             for (const [, url] of fs.readFileSync(path.join(bot.ROOT, fileAlt), 'utf8').matchAll(SITE)) {
                 total++;
-                // "comandos/show/" → docs/comandos/show.md; "comandos/" → docs/comandos/index.md; "" → docs/index.md
+                // "commands/show/" → docs/commands/show.md; "commands/" → docs/commands/index.md; "" → docs/index.md
                 // "pt-BR/commands/show/" → the Portuguese version (docs/commands/show.pt-BR.md)
                 const [pathAlt, anc] = url.split('#');
                 const pt = /^pt-BR(\/|$)/.test(pathAlt);
