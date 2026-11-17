@@ -30,7 +30,8 @@ this machine's Docker; `1` uses the remote server's. The service is always `zapb
 ```bash
 make test                    # tests of the local checkout
 make DOCK_REMOTE=1 test      # tests of the image running on the homelab
-make DOCK_REMOTE=1 deploy      # build + recreates the remote bot
+make DOCK_REMOTE=1 deploy      # build + recreates the remote bot, then runs the smoke test
+make DOCK_REMOTE=1 smoke     # only the smoke test: did the bot come up?
 make DOCK_REMOTE=1 recreate  # the same, but with the image rebuilt from scratch (no cache)
 make DOCK_REMOTE=1 logs      # remote bot logs
 make DOCK_REMOTE=1 shell     # shell inside the remote bot
@@ -41,6 +42,21 @@ export DOCKER_REMOTE_SERVER=ssh://root@homelab.local
 export REMOTE_CONTEXT=homelab
 make test                    # remote, using the exported variables
 make DOCK_REMOTE=0 test      # local, even with DOCK_REMOTE=1 in the environment
+```
+
+**Smoke test after a deploy.** `make deploy` ends with `make smoke` (`scripts/smoke.sh`), which waits
+for the new container to come up and checks that it is running, that it loaded the commands and that
+WhatsApp connected. It fails (exit 1) if the container stopped or the commands did not load in time;
+if WhatsApp did not connect in time (waiting for the QR code, for example) or the log has `[*]` error
+lines, it only warns. The wait is 120 s, changeable with `SMOKE_PRAZO=300`:
+
+```text
+$ make DOCK_REMOTE=1 deploy
+...
+smoke: ok, 65 comandos carregados
+
+$ make DOCK_REMOTE=1 smoke SMOKE_PRAZO=30
+smoke: FALHOU, o container zapbot não está rodando
 ```
 
 `DOCKER_REMOTE_SERVER` defaults to `ssh://root@homelab.local`; `REMOTE_CONTEXT`, to `homelab`;
