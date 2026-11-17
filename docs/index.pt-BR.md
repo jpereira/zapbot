@@ -23,6 +23,37 @@ em cima de uma sessão real do WhatsApp Web, como um *aparelho conectado* da sua
 mensalidade, e as suas mensagens ficam no seu servidor. Você digita comandos em qualquer chat e ele responde
 (`/help`, `/show`, `/gpt`, `/qr`...).
 
+## 🆕 Novidades (as boas)
+
+Pois é, a gente andou ocupado. O melhor da última leva:
+
+- 🎨 **Desenhe você e os amigos.** `/draw @me @this desenhe nós dois como piratas` pega as fotos de perfil
+  sozinho (`@me` é você, `@this` é o chat, `@reply` é quem você respondeu, e nome solto também vale).
+  [`/draw`](commands/draw.md) · [`/gpt`](commands/gpt.md)
+- 🎲 **Jogos para o grupo.** Bola 8 mágica, verdade, desafio e trivia, e dá para jogar só respondendo o
+  bot. [`/games`](commands/games.md)
+- 📣 **Poste no seu Status** (e agende), espie o Recado de qualquer um e mude o seu.
+  [`/status`](commands/status.md) · [`/profile`](commands/profile.md)
+- 🛡️ **Moderação de grupo.** O `/warn` com limite que expulsa e o `/antilink` que apaga link de quem não
+  é admin. [`/warn`](commands/warn.md) · [`/antilink`](commands/antilink.md)
+- 🔇 **Silêncio por um tempo.** `/mute -for 2h` e os avisos voltam sozinhos. [`/mute`](commands/mute.md)
+- 📊 **Relatórios.** O `/usage -all` mostra quem está usando o quê, e o `/whois -id` traz os ids
+  escondidos. [`/usage`](commands/usage.md) · [`/whois`](commands/whois.md)
+- 🏷️ **Nome no lugar de número.** Os avisos de mensagem apagada, editada e reação agora mostram
+  `@Luis`, não `@265472113143884`. [`/show`](commands/show.md)
+- 🔌 **API e MCP (experimental).** Mande mensagens e leia as suas notas por scripts ou por um cliente de
+  IA. [API e MCP](api.md)
+- 🧰 **O `/help` mudou a cara**: o comando em **negrito** e o que ele faz em _itálico_.
+
+```text
+/draw @me @this desenhe nós dois como piratas
+/games -trivia
+/warn @Fulano mandou link
+/antilink -delete -allow youtube.com
+/mute -for 2h /Grupo do trabalho/
+/usage -a
+```
+
 ## ✨ O que ele faz
 
 | | Habilidade | O que faz | Experimente |
