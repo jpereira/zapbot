@@ -98,6 +98,7 @@ de uma foto, sem baixar e mandar a imagem dele.
 | Menção: `@Rafael` | A pessoa mencionada |
 | `@me` ou `$me` | **Você**: a sua própria foto de perfil (quem digitou o comando) |
 | `@this` ou `$this` | **O chat em que você está**: num privado, a outra pessoa; num grupo, a **foto do grupo** |
+| `@reply` ou `$reply` | **Quem escreveu a mensagem que você responde**, num privado ou num grupo (precisa de uma resposta) |
 | Número: `+5521999999999` | Pelo número |
 | *(ninguém)*, num privado | A pessoa do chat (no seu próprio chat, você) |
 | *(ninguém)*, num grupo | Quem escreveu a mensagem que você responde |
@@ -153,6 +154,17 @@ num grupo. Junto com o `@me`, é o jeito de você e a pessoa com quem fala entra
 /draw -p @this faça um cartaz com a foto deste grupo
 /draw -p @me @this ponha eu e o grupo numa tirinha
 ```
+
+**Quem você está respondendo:** `@reply` (ou `$reply`) é quem escreveu a mensagem que você respondeu,
+num grupo ou num privado. Bom para pôr alguém do grupo na imagem com você:
+
+```text
+(num grupo, respondendo a uma mensagem da Maria)
+/draw -p @reply @me desenhe nós dois na praia
+/draw @reply transforme ela numa super-heroína        (sem o -p, no começo do pedido)
+```
+
+Sem uma resposta, o bot diz `❌ O /draw @reply precisa de uma resposta: responda a uma mensagem da pessoa.`
 
 **Sem o `-p`:** `@me`/`$me` e `@this`/`$this` no **começo do pedido** já valem como `-p`. Depois de
 uma opção como `-g` também. Só essas quatro variáveis: uma `@menção` solta continua texto do pedido, e

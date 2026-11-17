@@ -168,6 +168,8 @@ Todos os detalhes, e os exemplos de desenho, estão no
 
 No **começo do texto**, o `@me`/`@this` valem mesmo sem o `-p`: `/gpt @me @this o que temos em comum?`.
 
+O `@reply` (ou `$reply`) é quem escreveu a mensagem que você respondeu: `/gpt @reply o que acha dessa pessoa?`.
+
 O `@this` (ou `$this`) é o chat em que você está (a outra pessoa, ou a foto do grupo), e o `@me` (ou `$me`) é a sua própria foto: `/gpt -p @me como eu estou nesta foto?`. Os nomes soltos também valem, e vários de uma vez (até 4), junto com a foto que você respondeu:
 
 ```text

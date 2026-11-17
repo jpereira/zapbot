@@ -239,6 +239,20 @@ test('sem o -p: @me/$me e @this/$this no começo do pedido valem o -p (e uma @me
     assert.equal(network.chamadas.at(-1).cfg.body.prompt, '@Fulano de astronauta');
 });
 
+test('-p @reply e $reply: quem escreveu a mensagem respondida (no grupo e no privado), com ou sem o -p', async () => {
+    // in the group, along with the replied photo and @me; $reply and the implicit -p also count
+    await bot.executar('/draw -p @reply nós dois juntos', { chat: GROUP, citada: photo() });
+    assert.match(last().getAll('image[]').length >= 1 ? last().get('prompt') : '', /foto de perfil de Fulano/);
+    await bot.executar('/draw $reply me desenhe como ele', { chat: GROUP, citada: photo() });
+    assert.match(last().get('prompt'), /^me desenhe como ele\n\nImagens anexadas, nesta ordem: 1\) a foto da mensagem; 2\) a foto de perfil de Fulano/);
+
+    // without a reply: error, and nothing goes to OpenAI
+    const beforeAlt = network.chamadas.length;
+    const [errorAlt] = await bot.replyAlt('/draw -p @reply desenhe', { chat: GROUP });
+    assert.match(errorAlt, /@reply precisa de uma resposta/);
+    assert.equal(network.chamadas.length, beforeAlt);
+});
+
 test('imagem pronta: o aviso "Processando" vira "Imagem gerada abaixo" (e fica), e a imagem vem depois', async () => {
     network.responder('post', 'api.openai.com/v1/images/generations', { data: [{ b64_json: 'RURJVA==' }] });
     const sentAlt2 = await bot.executar('/draw um gato astronauta');

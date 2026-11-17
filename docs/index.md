@@ -185,6 +185,8 @@ Don't count on it.
 
 ```text
 /draw -p /Rafael Silva/ /Maria Lucia/ draw the two of them at a birthday party
+/draw @me @this draw the two of us as pirates           (in the chat with someone)
+/draw @reply draw her as a superhero                   (replying to her message)
 🎨 draw the two of them at a birthday party
 ```
 

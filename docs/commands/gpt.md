@@ -174,6 +174,8 @@ message you reply to. All the details, and the drawing examples, are in
 
 At the **start of the text**, `@me`/`@this` work even without `-p`: `/gpt @me @this what do we have in common?`.
 
+`@reply` (or `$reply`) is who wrote the message you replied to: `/gpt @reply what do you think of this person?`.
+
 `@this` (or `$this`) is the chat you are in (the other person, or the group photo), and `@me` (or `$me`) is your own photo: `/gpt -p @me how do I look in this photo?`. Plain names work too, and several at once (up to 4), joined with the photo you replied to:
 
 ```text
