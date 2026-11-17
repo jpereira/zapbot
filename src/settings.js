@@ -326,6 +326,11 @@ const SETTINGS_SCHEMA = {
             return command.cmd;
         }
     },
+    'commands.seen': {
+        default: true,
+        type: 'boolean',
+        desc: 'Marca a conversa como lida (✓✓ azul) quando um comando é digitado nela, antes de responder, como uma pessoa faria. Também aparece o "digitando..." enquanto o comando roda.'
+    },
     'contacts.cache': {
         default: true,
         type: 'boolean',
