@@ -6,8 +6,6 @@ e o da mensagem respondida são juntados). Sem nenhum dos dois, mostra o uso.
 ```text
 /noffa bom dia grupo
 → bom 🌈 dia 🏳️‍🌈 grupo
-
-  🤡 Relaxa, é só zoeira do /noffa.
 ```
 
 Os emojis se alternam entre 🌈 🏳️‍🌈 🏳️‍⚧️ 🧡 💛 💚 💙 💜, um por espaço. Se o texto começar com `/`, a
