@@ -809,6 +809,21 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 10, max: 2000,
         desc: 'Máximo de mensagens enviadas à OpenAI por /tldr.'
     },
+    'transcribe.language': {
+        default: 'auto',
+        type: 'string',
+        desc: 'Idioma da fala no /get -transcribe (pt, en, es...). auto: o whisper detecta.'
+    },
+    'transcribe.maxMinutes': {
+        default: 20,
+        type: 'number', min: 1, max: 180,
+        desc: 'Duração máxima (minutos) do áudio que o /get -transcribe transcreve. A transcrição usa a CPU do servidor.'
+    },
+    'transcribe.model': {
+        default: 'small',
+        type: 'string',
+        desc: 'Modelo do faster-whisper no /get -transcribe: tiny, base, small, medium ou large-v3-turbo (maior = melhor e mais lento). O small vem na imagem; outro é baixado na primeira vez.'
+    },
     'translate.lang': {
         default: 'pt',
         type: 'string',

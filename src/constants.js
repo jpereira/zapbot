@@ -31,6 +31,10 @@ const BIN_CHROMIUM = process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium
 const BIN_FFMPEG = '/usr/bin/ffmpeg';
 const BIN_FFPROBE = '/usr/bin/ffprobe';
 const BIN_YT = '/venv/bin/yt-dlp';
+const BIN_PYTHON = '/venv/bin/python';
+// /get -transcribe: the faster-whisper script and the models folder (downloaded at image build)
+const SCRIPT_TRANSCRIPTION = path.join(ROOT_DIR, 'scripts', 'transcribe.py');
+const WHISPER_DIR = process.env.WHISPER_MODELS_DIR || '/opt/whisper';
 
 // /get: each yt-dlp/ffmpeg is killed after this time; at most N downloads at the same time
 const GET_TIMEOUT_MS = 5 * 60 * 1000;
@@ -48,6 +52,7 @@ module.exports = {
     BIN_CHROMIUM,
     BIN_FFMPEG,
     BIN_FFPROBE,
+    BIN_PYTHON,
     BIN_YT,
     BOT_START_TIME,
     CACHE_DIR,
@@ -58,7 +63,9 @@ module.exports = {
     MAX_DELETE_WINDOW,
     MEDIA_DIR,
     ROOT_DIR,
+    SCRIPT_TRANSCRIPTION,
     THUMBNAIL_MAX_BYTES,
     THUMBNAIL_TIMEOUT_MS,
-    TMP_DIR
+    TMP_DIR,
+    WHISPER_DIR
 };

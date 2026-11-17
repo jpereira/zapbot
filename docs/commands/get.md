@@ -14,6 +14,8 @@ through ffmpeg. If the media has a link in the caption, the media wins.
 | `-sticker`, `-st` | | Sends as an animated sticker (up to 6 s), framed on the middle of the video. Same as [`/sticker`](sticker.md) |
 | `-pos` | `<top\|middle\|bottom>` | With `-st`: where the square crop goes (default `middle`; `topo`, `meio`, `baixo`, `cima` and `centro` also work). On media wider than tall, `top` is the left and `bottom` the right |
 | `-audio`, `-a` | | Extracts only the audio (`.mp3`) |
+| `-transcribe`, `-t` | | Shortcut for [`/transcribe`](transcribe.md): replies with the **text of the speech** instead of the file. See [Transcribe the speech](#transcribe-the-speech--transcribe) |
+| `-summary`, `-sum` | | With `-t`: also summarizes the speech with ChatGPT. See [Transcribe the speech](#transcribe-the-speech--transcribe) |
 | `-startSec`, `-ss` | `<time>` | Starts at this point of the original video (default 0), in seconds (`22`, `1.5`) or in `min:sec` (`09:33`, or `h:min:sec`). With a `-` in front, counts from the **end** of the video (`-10`, `-01:44`) |
 | `-endSec`, `-es` | `<time>` | Ends at this point of the original video, in the same format as `-ss` (`-es -5` ends 5 s before the end); must be greater than the start. Also works without `-ss` and for stickers |
 | `-verbose`, `-v` | | Shows the parameters used in yt-dlp/ffmpeg |
@@ -54,6 +56,31 @@ On a replied media:
 - Audio: with `-ss` or `-es`, the range comes out as `.mp3`; sticker is refused.
 - Other files (PDF, documents) are refused.
 
+#### Posts with only photos (carousel)
+
+For a link that has **only photos** (an Instagram carousel, for example), yt-dlp has nothing to download as
+a video. `/get` then takes the photos (the biggest version of each, the original) and sends **all of them
+to the chat**, each one with `Image i/N`, and the **text of the post** in the last one:
+
+```text
+/get https://www.instagram.com/p/XXXXXXXX/        (a carousel of 3 photos)
+🖼️ Image 1/3
+🖼️ Image 2/3
+🖼️ Image 3/3
+
+The text of the post, all of it here...
+✅ 3 photos sent!
+```
+
+- Up to 20 photos, with a short pause between them. The caption of the last one holds up to 1000
+  characters; if the text is longer, the rest comes in the next message.
+- A photo that doesn't download is left out and the final notice says how many. If none does, the reply is
+  `This link has no video or audio to download (a post with only photos?)`.
+- With `-a`, `-st`, `-t` or in [`/transcribe`](transcribe.md) the photos are not sent (there is no audio to
+  take): the reply is that notice.
+- Photos are downloaded with the same anti-SSRF protection as the rest of `/get`. A carousel that mixes photos
+  and videos is not handled yet.
+
 #### Download cache
 
 With the `get.cache.tmp` setting on (default), what yt-dlp downloads stays in `cache/tmp` (in
@@ -69,6 +96,40 @@ Docker, `/app/cache/tmp`) as `<sha1>_original.mp4`, and the same link isn't down
 - Off (`/set get.cache.tmp off`), the original is deleted on every run, as before, and what was left
   in cache counts as a regular temporary file (deleted after 2 hours).
 - `/cache -all` deletes the download cache along with the other temporary files.
+
+#### Transcribe the speech (`-transcribe`)
+
+`-transcribe` (`-t`) is a shortcut for [`/transcribe`](transcribe.md): it gets the text of what is said in the video, and replies with it instead of
+sending a file. It runs **inside the server**, with [faster-whisper](https://github.com/SYSTRAN/faster-whisper)
+(open source, on the CPU): no OpenAI, no cost per minute, and the audio doesn't leave the homelab.
+
+```text
+/get -t https://www.instagram.com/reel/XXXXXXXX/
+⏳ Transcribing the speech, this can take a while.   →   📝 Transcription · 🗣️ pt · 1:23
+(the text)
+
+/get -t -ss 30 -es 90 https://youtu.be/XXXXXXXXXXX     → only from 0:30 to 1:30
+(reply to a WhatsApp audio or video)  /get -t
+```
+
+- **Light download.** From a link, yt-dlp downloads only the **lowest-quality audio**
+  (`-f worstaudio`), a few hundred KB per minute, and ffmpeg turns it into 16 kHz mono wav,
+  which is what whisper uses. The video is not downloaded when the site has an audio-only track.
+- **Original language.** YouTube has auto-dubbed audio tracks; the bot picks the **original** track,
+  otherwise you would get a transcription of the dub (a Portuguese video coming out in English).
+- **Replying** to a WhatsApp video or audio (a voice note too) transcribes it, with no download.
+- `-ss` and `-es` pick a part (same format as always, `-ss -60` is the last minute).
+- The language is detected by whisper. If it gets it wrong on a short clip, fix it with
+  `/set transcribe.language pt`.
+- The model is `transcribe.model` (default `small`, which comes in the Docker image). `medium` or
+  `large-v3-turbo` are better and slower; they are downloaded the first time they are used.
+- At most `transcribe.maxMinutes` (default 20) of audio, otherwise the bot asks for a part with
+  `-ss` and `-es`. It uses the server CPU, and counts in the limit of 2 `/get` at once.
+- `-sum` (with `-t`) also summarizes, as in [`/transcribe`](transcribe.md).
+- `-v` also sends the commands that ran (yt-dlp, ffmpeg, faster-whisper) and how long the
+  transcription took, before the text.
+- It doesn't mix with `-a`, `-st` or `-pos`. Instagram may ask for login: it uses the same
+  `cookies.txt` as the rest of `/get` (see below).
 
 #### Sensitive content on X
 
@@ -129,4 +190,7 @@ blocks all access to the internal network from the bot.
 (reply to a message with a link)  /get -a
 (reply to a WhatsApp video)       /get -a              → only the audio, as .mp3
 (reply to a WhatsApp video)       /get -ss 5 -es 20    → the range, as a document
+/get -t https://www.instagram.com/reel/XXXXXXXX/   → the speech, as text
+/get -st -pos top https://youtu.be/XXXXXXXXXXX   → sticker framed on the top
+/get -v https://youtu.be/XXXXXXXXXXX            → also shows the commands that ran
 ```

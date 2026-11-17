@@ -27,6 +27,9 @@ mensalidade, e as suas mensagens ficam no seu servidor. Você digita comandos em
 
 Pois é, a gente andou ocupado. O melhor da última leva:
 
+- 🎙️ **Transcreva qualquer vídeo ou áudio.** Mande um link (Instagram, YouTube, X, TikTok...) ou responda um vídeo ou
+  uma nota de voz e receba o **texto da fala**. Roda no seu próprio servidor (faster-whisper), sem conta na OpenAI
+  e o áudio não sai de casa. [`/transcribe`](commands/transcribe.md) · [`/get -t`](commands/get.md)
 - 🎨 **Desenhe você e os amigos.** `/draw @me @this desenhe nós dois como piratas` pega as fotos de perfil
   sozinho (`@me` é você, `@this` é o chat, `@reply` é quem você respondeu, e nome solto também vale).
   [`/draw`](commands/draw.md) · [`/gpt`](commands/gpt.md)
@@ -47,6 +50,8 @@ Pois é, a gente andou ocupado. O melhor da última leva:
 
 ```text
 /draw @me @this desenhe nós dois como piratas
+/transcribe https://www.instagram.com/reel/XXXXXXXX/
+/transcribe -ss 30 -es 90 https://youtu.be/XXXXXXXXXXX
 /games -trivia
 /warn @Fulano mandou link
 /antilink -delete -allow youtube.com
@@ -62,6 +67,7 @@ Pois é, a gente andou ocupado. O melhor da última leva:
 | 🤖 | **Conversar com o ChatGPT** | Responde perguntas, lê fotos e PDFs, transcreve notas de voz, resume conversas, desenha imagens e GIFs, transforma texto em voz e lê o texto de figuras | [`/gpt`](commands/gpt.md) · [`/tldr`](commands/tldr.md) · [`/draw`](commands/draw.md) · [`/tts`](commands/tts.md) · [`/ocr`](commands/ocr.md) |
 | 📱 | **QR Codes** | Gera um QR Code de qualquer texto e lê um quando você responde a foto dele | [`/qr`](commands/qr.md) |
 | 🎞️ | **Mídia e figurinhas** | Baixa vídeos e áudios de redes sociais, cria figurinhas (de imagens, vídeos ou texto), memes, GIFs, imagens de código e arte ASCII | [`/get`](commands/get.md) · [`/sticker`](commands/sticker.md) · [`/meme`](commands/meme.md) · [`/giphy`](commands/giphy.md) · [`/carbon`](commands/carbon.md) · [`/ascii`](commands/ascii.md) |
+| 🎙️ | **Transcrição de fala** | Transforma a fala de qualquer link, vídeo, áudio ou nota de voz em texto, no seu próprio servidor (sem API, sem custo por minuto); `-ss` e `-es` escolhem um trecho | [`/transcribe`](commands/transcribe.md) · [`/get -t`](commands/get.md#transcrever-a-fala--transcribe) |
 | 🔔 | **Vigiar e avisar** | Vigia mensagens por texto ou regex, avisa de cotações de moedas e cripto, de posições DeFi fora da faixa e de contatos que ficaram online, no seu privado, num grupo ou por e-mail | [`/watch`](commands/watch.md) · [`/rates`](commands/rates.md) · [`/crypto`](commands/crypto.md) · [`/defi`](commands/defi.md) · [`/monitor`](commands/monitor.md) |
 | 📅 | **Agendar e automatizar** | Mensagens avulsas e recorrentes, lembretes, atalhos seus, vários comandos numa mensagem só, anotações com `#tags` e alertas, listas de destinatários | [`/cron`](commands/cron.md) · [`/alias`](commands/alias.md) · [`/batch`](commands/batch.md) · [`/notes`](commands/notes.md) · [`/forward`](commands/forward.md) |
 | 👥 | **Gerir grupos** | Marca todo mundo, promove e rebaixa, links de convite, enquetes, boas-vindas e despedidas, silencia e bloqueia | [`/everybody`](commands/everybody.md) · [`/promote`](commands/promote.md) · [`/invite`](commands/invite.md) · [`/poll`](commands/poll.md) · [`/welcome`](commands/welcome.md) · [`/mute`](commands/mute.md) · [`/warn`](commands/warn.md) · [`/antilink`](commands/antilink.md) |
@@ -220,6 +226,17 @@ Não conte com isso.
 /draw @me @this desenhe nós dois como piratas           (no chat com alguém)
 /draw @reply desenhe ela como super-heroína             (respondendo a mensagem dela)
 🎨 desenhe os dois numa festa de aniversário
+```
+
+**A fala de um vídeo, em texto (sem API, roda no seu servidor):**
+
+```text
+/transcribe https://www.instagram.com/reel/XXXXXXXX/
+⏳ Transcrevendo a fala, pode levar um tempo.
+📝 Transcrição · 🗣️ pt · 1:23
+
+oi gente, hoje eu vou mostrar como fazer um pão de queijo bem fofinho em casa...
+(reply numa nota de voz)  /transcribe
 ```
 
 **Seus contatos, com fotos, num arquivo só:**

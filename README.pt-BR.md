@@ -31,6 +31,9 @@ mensalidade, e as suas mensagens ficam no seu servidor. Você digita comandos em
 
 Pois é, a gente andou ocupado. O melhor da última leva:
 
+- 🎙️ **Transcreva qualquer vídeo ou áudio.** Mande um link (Instagram, YouTube, X, TikTok...) ou responda um vídeo ou
+  uma nota de voz e receba o **texto da fala**. Roda no seu próprio servidor (faster-whisper), sem conta na OpenAI
+  e o áudio não sai de casa. [`/transcribe`](docs/commands/transcribe.md) · [`/get -t`](docs/commands/get.md)
 - 🎨 **Desenhe você e os amigos.** `/draw @me @this desenhe nós dois como piratas` pega as fotos de perfil
   sozinho (`@me` é você, `@this` é o chat, `@reply` é quem você respondeu, e nome solto também vale).
   [`/draw`](docs/commands/draw.md) · [`/gpt`](docs/commands/gpt.md)
@@ -51,6 +54,8 @@ Pois é, a gente andou ocupado. O melhor da última leva:
 
 ```text
 /draw @me @this desenhe nós dois como piratas
+/transcribe https://www.instagram.com/reel/XXXXXXXX/
+/transcribe -ss 30 -es 90 https://youtu.be/XXXXXXXXXXX
 /games -trivia
 /warn @Fulano mandou link
 /antilink -delete -allow youtube.com
@@ -66,6 +71,7 @@ Pois é, a gente andou ocupado. O melhor da última leva:
 | 🤖 | **Conversar com o ChatGPT** | Responde perguntas, lê fotos e PDFs, transcreve notas de voz, resume conversas, desenha imagens e GIFs, transforma texto em voz e lê o texto de figuras | [`/gpt`](docs/commands/gpt.md) · [`/tldr`](docs/commands/tldr.md) · [`/draw`](docs/commands/draw.md) · [`/tts`](docs/commands/tts.md) · [`/ocr`](docs/commands/ocr.md) |
 | 📱 | **QR Codes** | Gera um QR Code de qualquer texto e lê um quando você responde a foto dele | [`/qr`](docs/commands/qr.md) |
 | 🎞️ | **Mídia e figurinhas** | Baixa vídeos e áudios de redes sociais, cria figurinhas (de imagens, vídeos ou texto), memes, GIFs, imagens de código e arte ASCII | [`/get`](docs/commands/get.md) · [`/sticker`](docs/commands/sticker.md) · [`/meme`](docs/commands/meme.md) · [`/giphy`](docs/commands/giphy.md) · [`/carbon`](docs/commands/carbon.md) · [`/ascii`](docs/commands/ascii.md) |
+| 🎙️ | **Transcrição de fala** | Transforma a fala de qualquer link, vídeo, áudio ou nota de voz em texto, no seu próprio servidor (sem API, sem custo por minuto); `-ss` e `-es` escolhem um trecho | [`/transcribe`](docs/commands/transcribe.md) · [`/get -t`](docs/commands/get.md#transcrever-a-fala--transcribe) |
 | 🔔 | **Vigiar e avisar** | Vigia mensagens por texto ou regex, avisa de cotações de moedas e cripto, de posições DeFi fora da faixa e de contatos que ficaram online, no seu privado, num grupo ou por e-mail | [`/watch`](docs/commands/watch.md) · [`/rates`](docs/commands/rates.md) · [`/crypto`](docs/commands/crypto.md) · [`/defi`](docs/commands/defi.md) · [`/monitor`](docs/commands/monitor.md) |
 | 📅 | **Agendar e automatizar** | Mensagens avulsas e recorrentes, lembretes, atalhos seus, vários comandos numa mensagem só, anotações com `#tags` e alertas, listas de destinatários | [`/cron`](docs/commands/cron.md) · [`/alias`](docs/commands/alias.md) · [`/batch`](docs/commands/batch.md) · [`/notes`](docs/commands/notes.md) · [`/forward`](docs/commands/forward.md) |
 | 👥 | **Gerir grupos** | Marca todo mundo, promove e rebaixa, links de convite, enquetes, boas-vindas e despedidas, silencia e bloqueia | [`/everybody`](docs/commands/everybody.md) · [`/promote`](docs/commands/promote.md) · [`/invite`](docs/commands/invite.md) · [`/poll`](docs/commands/poll.md) · [`/welcome`](docs/commands/welcome.md) · [`/mute`](docs/commands/mute.md) · [`/warn`](docs/commands/warn.md) · [`/antilink`](docs/commands/antilink.md) |
@@ -222,6 +228,15 @@ Não conte com isso.
 ```text
 /draw -p /Rafael Silva/ /Maria Lucia/ desenhe os dois numa festa de aniversário
 🎨 desenhe os dois numa festa de aniversário
+```
+
+```text
+/transcribe https://www.instagram.com/reel/XXXXXXXX/
+⏳ Transcrevendo a fala, pode levar um tempo.
+📝 Transcrição · 🗣️ pt · 1:23
+
+oi gente, hoje eu vou mostrar como fazer um pão de queijo bem fofinho em casa...
+(reply numa nota de voz)  /transcribe
 ```
 
 **Seus contatos, com fotos, num arquivo só:**
@@ -451,6 +466,7 @@ e deixe o bot do seu jeito:
 | [`/status`](https://jpereira.github.io/zapbot/pt-BR/commands/status/) | | `admin` | Posta no seu Status do WhatsApp (texto, foto ou vídeo); o `/cron -status` agenda |
 | [`/sticker`](https://jpereira.github.io/zapbot/pt-BR/commands/sticker/) | | `user` | Figurinha de imagem, vídeo ou link (o `/get -st`), respondendo ou na legenda da mídia; com `-txt`, uma figurinha animada de texto |
 | [`/tldr`](https://jpereira.github.io/zapbot/pt-BR/commands/tldr/) | | `admin` · delegável | Resume a conversa do chat pelo ChatGPT (`30m`, `2h`, `1d`, `1h30m` ou `300` mensagens; respondendo uma mensagem, a partir dela) |
+| [`/transcribe`](https://jpereira.github.io/zapbot/pt-BR/commands/transcribe/) | | `user` | Texto da fala de um link, vídeo ou áudio (o `/get -t` é um atalho), respondendo ou na legenda; `-ss` e `-es` escolhem um trecho |
 | [`/translate`](https://jpereira.github.io/zapbot/pt-BR/commands/translate/) | | `user` | Traduz o texto ou a mensagem respondida pelo Google Translate, sem chave; `-to en` muda o idioma |
 | [`/tts`](https://jpereira.github.io/zapbot/pt-BR/commands/tts/) | | `admin` · delegável | O texto numa nota de voz de robô (OpenAI) |
 | [`/unblock`](https://jpereira.github.io/zapbot/pt-BR/commands/unblock/) | | `admin` | Desbloqueia uma pessoa: pelo nome, pelo número, pelo nº da lista do `/block` ou respondendo uma mensagem |

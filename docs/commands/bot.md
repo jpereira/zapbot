@@ -518,7 +518,7 @@ right then, what's wrong: full disk, slow internet, wrong SMTP password, WhatsAp
   recently (`EAUTH`), the test doesn't try again during the 30-minute pause, so it doesn't extend the
   provider's block.
 - **E-mail (IMAP)**: connects and logs in, touches nothing; ➖ if there's no `QRCODE_EMAIL_IMAP_HOST`.
-- **Chromium**, **yt-dlp** and **ffmpeg**: run `--version`; ❌ if the program doesn't respond.
+- **Chromium**, **yt-dlp**, **ffmpeg** and **faster-whisper**: run `--version` (faster-whisper: loads the module); ❌ if the program doesn't respond.
 - A test that hangs (20 s) or throws an error becomes ❌ with the reason, without taking down the
   others.
 

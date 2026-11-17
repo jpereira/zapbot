@@ -112,6 +112,9 @@ em português).
 | `sticker.author` | texto | `https://github.com/jpereira/zapbot/` | Autor das figurinhas |
 | `sticker.name` | texto | `ZapBot` | Nome do pacote das figurinhas |
 | `tldr.maxMsgs` | 10–2000 | `500` | Máximo de mensagens enviadas à OpenAI por [`/tldr`](commands/tldr.md) |
+| `transcribe.language` | texto | `auto` | Idioma da fala no [`/get -transcribe`](commands/get.md#transcrever-a-fala--transcribe) (`pt`, `en`, `es`...). `auto`: o whisper detecta |
+| `transcribe.maxMinutes` | 1–180 | `20` | Duração máxima (minutos) do áudio que o `/get -transcribe` transcreve: usa a CPU do servidor |
+| `transcribe.model` | texto | `small` | Modelo do faster-whisper no `/get -transcribe`: `tiny`, `base`, `small`, `medium` ou `large-v3-turbo` (maior = melhor e mais lento). O `small` vem na imagem; outro é baixado na primeira vez |
 | `translate.lang` | texto | `pt` | Idioma de destino padrão do [`/translate`](commands/translate.md) (código: `pt`, `en`, `es`...) |
 | `usage.footer` | on/off | `on` | Depois de um comando com limite de uso, avisa quantas chamadas restam (`📊 /gpt: restam 1 de 3 por dia`) |
 | `usage.logDays` | 1–365 | `90` | Dias que o histórico das chamadas com limite (`/usage -l`) fica guardado |

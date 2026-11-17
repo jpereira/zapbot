@@ -56,6 +56,14 @@ RUN /venv/bin/pip install --no-cache-dir yt-dlp
 # dependencies
 RUN /venv/bin/python -m pip install -U yt-dlp
 
+# faster-whisper (local transcription, CPU), used by "/get -transcribe". The av stays below 17:
+# 19 does not open audio with the current faster-whisper (error "metadata_errors"). The default model
+# (transcribe.model) goes in the image: the first transcription does not wait for a download. Another model
+# is downloaded to /opt/whisper the first time it is used.
+ENV WHISPER_MODELS_DIR=/opt/whisper
+RUN /venv/bin/pip install --no-cache-dir faster-whisper "av<17" \
+ && /venv/bin/python -c "from faster_whisper import WhisperModel; WhisperModel('small', device='cpu', compute_type='int8', download_root='/opt/whisper')"
+
 # Misc
 RUN echo "alias ls='ls --color=auto'" >> /etc/profile.d/aliases.sh && \
     echo "alias ll='ls -lah --color=auto'" >> /etc/profile.d/aliases.sh && \

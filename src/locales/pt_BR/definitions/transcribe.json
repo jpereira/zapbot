@@ -1,0 +1,64 @@
+{
+  "summary": "Transcreve a fala de um vídeo ou áudio",
+  "usage": "/transcribe [OPÇÃO]... <url>  ou  /transcribe [OPÇÃO]... (respondendo um vídeo, áudio ou link)",
+  "help": "Transcreve a fala de um vídeo ou áudio para texto. O /get -transcribe (-t) é um atalho dele. De uma URL (Instagram, YouTube, X, TikTok e outros sites do yt-dlp) ou do link respondido, baixa só o áudio de menor qualidade. Respondendo qualquer arquivo de vídeo ou áudio (nota de voz também), usa ele. Roda no servidor (faster-whisper), sem custo por minuto.",
+  "cmd_opts": [
+    {
+      "opts": [
+        "startSec",
+        "ss"
+      ],
+      "values": [
+        "<tempo>"
+      ],
+      "desc": "Começa neste ponto do vídeo ou áudio (padrão 0), em segundos ou em min:seg. Com - na frente, conta do final (-ss -60 é o último minuto).",
+      "ex": [
+        "-ss 30",
+        "-ss 09:33",
+        "-ss -60"
+      ]
+    },
+    {
+      "opts": [
+        "endSec",
+        "es"
+      ],
+      "values": [
+        "<tempo>"
+      ],
+      "desc": "Termina neste ponto (segundos ou min:seg); deve ser maior que o início. Com - na frente, conta do final.",
+      "ex": [
+        "-es 90",
+        "-es -5"
+      ]
+    },
+    {
+      "opts": [
+        "summary",
+        "sum"
+      ],
+      "values": [],
+      "desc": "Também resume a fala com o ChatGPT (a mesma chave do /gpt, que gasta a sua conta da OpenAI): o resumo em tópicos no alto e a transcrição inteira embaixo.",
+      "ex": [
+        "/transcribe -sum https://www.instagram.com/reel/..."
+      ]
+    },
+    {
+      "opts": [
+        "verbose",
+        "v"
+      ],
+      "values": [],
+      "desc": "Mostra os comandos usados no yt-dlp, no ffmpeg e no faster-whisper, e quanto tempo a transcrição levou."
+    },
+    {
+      "argv": [
+        "<url>"
+      ],
+      "desc": "Link do vídeo ou áudio; vale mais que a mensagem respondida.",
+      "ex": [
+        "https://www.instagram.com/reel/..."
+      ]
+    }
+  ]
+}

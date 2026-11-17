@@ -10,7 +10,7 @@ module.exports = {
     usage: '/get [OPTION]... <url>  or  /get [OPTION]... (replying to a link or media)',
     aliases: [],
     summary: 'Downloads video or audio from social networks',
-    help: 'Downloads video or audio from social networks (Instagram, YouTube, X, TikTok and other yt-dlp sites), from the URL or by replying to a message with a link. Replying to a WhatsApp video, image or audio uses that media itself: with no option, returns the original file. Pick audio or sticker per run; video and audio are sent as a document.',
+    help: 'Downloads video or audio from social networks (Instagram, YouTube, X, TikTok and other yt-dlp sites), from the URL or by replying to a message with a link. Replying to a WhatsApp video, image or audio uses that media itself: with no option, returns the original file. Pick audio, sticker or transcription per run; video and audio are sent as a document.',
     cmd_opts: [
         {
             opts: ['sticker', 'st'],
@@ -24,6 +24,18 @@ module.exports = {
             ex: ['/get -st -pos topo <url>']
         },
         { opts: ['audio', 'a'], values: [], desc: 'Audio only, as .mp3.' },
+        {
+            opts: ['transcribe', 't'],
+            values: [],
+            desc: 'Shortcut for /transcribe: replies with the text of the speech instead of the file. From a link, downloads only the lowest-quality audio; replying to a video or audio, uses it. Transcribed locally (faster-whisper). Works with -ss and -es.',
+            ex: ['/get -t https://www.instagram.com/reel/...', '/get -t -ss 30 -es 90 <url>']
+        },
+        {
+            opts: ['summary', 'sum'],
+            values: [],
+            desc: 'With -t: also summarizes the speech with ChatGPT (same key as /gpt). The summary in topics on top and the transcription below.',
+            ex: ['/get -t -sum https://www.instagram.com/reel/...']
+        },
         {
             opts: ['startSec', 'ss'],
             values: ['<time>'],
