@@ -27,6 +27,37 @@
 a real WhatsApp Web session, as a *linked device* of your own account: no Business API, no monthly fee, and your
 messages stay on your server. You type commands in any chat and it answers (`/help`, `/show`, `/gpt`, `/qr`...).
 
+## 🆕 What's new (the fun stuff)
+
+Yep, we've been busy. The best of the latest batch:
+
+- 🎨 **Draw yourself and your friends.** `/draw @me @this draw the two of us as pirates` grabs the profile
+  photos for you (`@me` is you, `@this` is the chat, `@reply` is whoever you replied to, and plain names work
+  too). [`/draw`](docs/commands/draw.md) · [`/gpt`](docs/commands/gpt.md)
+- 🎲 **Games for the group.** Magic 8 ball, truth, dare and trivia, and you can play just by replying to
+  the bot. [`/games`](docs/commands/games.md)
+- 📣 **Post on your Status** (and schedule it), peek at anyone's About and change yours.
+  [`/status`](docs/commands/status.md) · [`/profile`](docs/commands/profile.md)
+- 🛡️ **Group moderation.** `/warn` with a limit that kicks, and `/antilink` that deletes links from
+  non-admins. [`/warn`](docs/commands/warn.md) · [`/antilink`](docs/commands/antilink.md)
+- 🔇 **Mute for a while.** `/mute -for 2h` and the alerts come back by themselves. [`/mute`](docs/commands/mute.md)
+- 📊 **Reports.** `/usage -all` shows who is using what, and `/whois -id` brings the hidden ids.
+  [`/usage`](docs/commands/usage.md) · [`/whois`](docs/commands/whois.md)
+- 🏷️ **Names instead of numbers.** Alerts of deleted and edited messages and reactions now show
+  `@Luis`, not `@265472113143884`. [`/show`](docs/commands/show.md)
+- 🔌 **API and MCP (experimental).** Send messages and read your notes from scripts or from an AI client.
+  [API and MCP](docs/api.md)
+- 🧰 **`/help` got a new look**: the command in **bold** and what it does in _italic_.
+
+```text
+/draw @me @this draw the two of us as pirates
+/games -trivia
+/warn @Fulano posted a link
+/antilink -delete -allow youtube.com
+/mute -for 2h /Work group/
+/usage -a
+```
+
 ## ✨ What it can do
 
 | | Skill | What it does | Try it |
