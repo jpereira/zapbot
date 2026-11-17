@@ -132,7 +132,7 @@ describe('comandos', () => {
         assert.deepEqual(await bot.replyAlt('/un'),
             ["🤔 Comando '/un' ambíguo. Possíveis comandos: /unblock, /unmute"]);
         assert.deepEqual(await bot.replyAlt('/wa'),
-            ["🤔 Comando '/wa' ambíguo. Possíveis comandos: /walissu, /watch"]);
+            ["🤔 Comando '/wa' ambíguo. Possíveis comandos: /walissu, /warn, /watch"]);
         assert.match((await bot.replyAlt('/watc -h'))[0], /Usage: \/watch/);
         assert.deepEqual(await bot.replyAlt('/'),
             ["⚠️ Comando '/' desconhecido, tente: /help"]);

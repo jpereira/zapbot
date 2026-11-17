@@ -115,6 +115,7 @@ shows are in Portuguese; the ones here are in English).
 | `translate.lang` | text | `pt` | Default target language of [`/translate`](commands/translate.md) (code: `pt`, `en`, `es`...) |
 | `usage.footer` | on/off | `on` | After a command with a usage limit, says how many calls are left (`📊 /gpt: 1 of 3 per day left`) |
 | `usage.logDays` | 1–365 | `90` | Days the history of limited calls (`/usage -l`) is kept |
+| `warn.max` | 0–20 | `3` | How many [`/warn`](commands/warn.md) warnings remove someone from the group (the bot has to be an admin of it). `0`: only counts, never removes |
 | `watch.hitsRetentionDays` | 1–365 | `30` | Days `/watch` hits are kept |
 | `watch.max` | 1–100 | `20` | Max `/watch` rules |
 | `watch.rules` | list (one per line) | *(empty)* | `/watch` rules: text or `/regex/flags`. Created with `/watch <rule>` and removed with `/watch -rm N` |

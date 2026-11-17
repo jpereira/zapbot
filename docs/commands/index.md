@@ -32,7 +32,7 @@ You can send them in **any chat** (private, group, or the chat with yourself).
   alerts, errors, dates, and numbers of the bot. The descriptions that `/set` shows for each
   setting are still in Portuguese.
 - Just type the beginning of the command: `/wat` or `/watc` become `/watch`. If the beginning
-  matches more than one (`/wa`), the bot replies with the possible commands (`/walissu, /watch`).
+  matches more than one (`/wa`), the bot replies with the possible commands (`/walissu, /warn, /watch`).
   The exact name and the `/alias` shortcuts take priority.
 
 ## Destinations: contact, group, number, or email
@@ -198,12 +198,12 @@ and a shortcut's name doesn't go in `+cmd`.
 [`/uptime`](uptime.md), [`/usage`](usage.md), [`/version`](version.md), [`/walissu`](walissu.md),
 [`/weather`](weather.md), [`/whois`](whois.md)
 
-**admin, delegable** (admins and the owner; the owner releases them to a user with `+cmd`) (15):
+**admin, delegable** (admins and the owner; the owner releases them to a user with `+cmd`) (16):
 
 [`/demote`](demote.md), [`/draw`](draw.md), [`/everybody`](everybody.md), [`/goodbye`](goodbye.md),
 [`/gpt`](gpt.md), [`/members`](members.md), [`/ocr`](ocr.md), [`/poll`](poll.md),
 [`/profile`](profile.md), [`/promote`](promote.md), [`/show`](show.md), [`/stats`](stats.md),
-[`/tldr`](tldr.md), [`/tts`](tts.md), [`/welcome`](welcome.md)
+[`/tldr`](tldr.md), [`/tts`](tts.md), [`/warn`](warn.md), [`/welcome`](welcome.md)
 
 **admin** (admins and the owner; never delegable) (22):
 
@@ -306,6 +306,7 @@ target command, and `/alias /usd` shows what a shortcut does.
 | [`/usage`](usage.md) | | `user` | Your usage limits (set by the owner with `/bot +limit`): used, left and when they renew; `-l` shows your last calls |
 | [`/version`](version.md) | | `user` | Bot version (same banner as `/uptime`) |
 | [`/walissu`](walissu.md) | | `user` | Joke: Walissu CVE BOT: tags 2 members with a random CVE |
+| [`/warn`](warn.md) | | `admin` · delegable | Warns someone in the group; at the limit, they are removed |
 | [`/watch`](watch.md) | | `admin` | Text/regex rules, with an optional source in `-in`; lists occurrences, searches them with `-q`, and notifies the `-to` destinations; `-mask` obfuscates phone numbers and `-mask N` turns on 🔒 for rule N |
 | [`/weather`](weather.md) | | `user` | Weather now and the day's max/min (Open-Meteo); `/weather 16d` shows up to 16 days, counting today; without a city it uses `weather.city` |
 | [`/welcome`](welcome.md) | | `admin` · delegable | Message when someone joins the group (per group; `{name}`, `{group}`) |

@@ -166,6 +166,7 @@ nav:
       - /usage: commands/usage.md
       - /version: commands/version.md
       - /walissu: commands/walissu.md
+      - /warn: commands/warn.md
       - /watch: commands/watch.md
       - /weather: commands/weather.md
       - /welcome: commands/welcome.md

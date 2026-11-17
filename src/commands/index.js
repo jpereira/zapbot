@@ -60,6 +60,7 @@ const { cmdEverybody } = require('./everybody');
 const { cmdTranslate } = require('./translate');
 const { cmdUptime } = require('./uptime');
 const { cmdWalissu } = require('./walissu');
+const { cmdWarn } = require('./warn');
 const { cmdWatch } = require('./watch');
 const { cmdWhois } = require('./whois');
 const { printError } = require('../log');
@@ -127,6 +128,7 @@ const HANDLERS = {
     '/usage': cmdUsage,
     '/version': cmdUptime,
     '/walissu': cmdWalissu,
+    '/warn': cmdWarn,
     '/watch': cmdWatch,
     '/weather': cmdWeather,
     '/welcome': cmdWelcome,
