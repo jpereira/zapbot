@@ -167,7 +167,7 @@ module.exports = {
     'walissu.groupOnly': 'Only usable inside groups.',
     'walissu.noCve': '🛡️ No CVE published in the last 2 days.',
     'walissu.message': 'Hey {a} and {b}, this is the Walissu CVE BOT! Take a look at this CVE or you are leaving the rave 😊\n\n{cve}\n\nWhere is the exploit? I need to get out of Brasília!\n\n🤡 _Just a joke from the Walissu CVE BOT: nobody is leaving Brasília, but the CVE is real._',
-    'noffa.joke': '🤡 _Just a joke from /noffa._',
+    'noffa.joke': '🤡 _Relax, it\'s just the /noffa prank._',
     'walissu.failed': "❌ I couldn't query the NVD right now.",
 
     // /whois

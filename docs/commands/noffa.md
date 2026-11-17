@@ -7,7 +7,7 @@ replied message's text are joined). With neither, it shows the usage.
 /noffa good morning everyone
 → good 🌈 morning 🏳️‍🌈 everyone
 
-  🤡 Just a joke from /noffa.
+  🤡 Relax, it's just the /noffa prank.
 ```
 
 The emojis cycle through 🌈 🏳️‍🌈 🏳️‍⚧️ 🧡 💛 💚 💙 💜, one per space. If the text starts with `/`, the reply
