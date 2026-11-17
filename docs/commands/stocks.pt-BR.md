@@ -189,6 +189,19 @@ destino é um contato, grupo, número ou e-mail. Nomes exatos têm prioridade, c
 📅 Alerta criado em 30/09/2026, 10:12:03
 ```
 
+## Atalho para as cotações que você confere
+
+Para a cotação que você olha todo dia, um alias poupa a digitação: `/alias -q /mstr /stocks MSTR` e daí em diante o `/mstr`
+traz só a cotação (`/dolar`, `/euro`, `/usdt`...). Mais em
+[Atalhos para cotações](alias.md#atalhos-para-cotações).
+
+```text
+/alias -q /mstr /stocks MSTR
+/alias -q /dolar /stocks USD
+/mstr                          → a MicroStrategy
+/dolar                         → o dólar contra o real
+```
+
 ## A lista habilitada
 
 Os símbolos habilitados ficam no setting `stocks.symbols` (padrão: `USD`, `EUR`, `USDT` e `MSTR`) e sobrevivem a

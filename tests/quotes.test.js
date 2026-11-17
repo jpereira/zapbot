@@ -51,12 +51,21 @@ function simulateMarket() {
             return { symbol: par, lastPrice: v, priceChangePercent: '1.5', highPrice: v * 1.02, lowPrice: v * 0.98, quoteVolume: 12_345_678 };
         }));
 
+    // exchangeInfo of the reais pairs: all trading, except DOTBRL (paused, as on the real Binance)
+    network.responder('get', 'api.binance.com/api/v3/exchangeInfo', (url, cfg) =>
+        ({ symbols: JSON.parse(cfg.params.symbols).map(par => ({ symbol: par, baseAsset: par.replace(/BRL$/, ''), quoteAsset: 'BRL', status: par === 'DOTBRL' ? 'BREAK' : 'TRADING' })) }));
+
+    // <TOKEN>USDT (the alerts) and <TOKEN>BRL (/crypto in reais): the reais pair is the dollar price × 5.2; USDTBRL is USDT itself
     network.responder('get', 'api.binance.com/api/v3/ticker/price', (url, cfg) =>
-        JSON.parse(cfg.params.symbols).map(par => ({ symbol: par, price: String(prices[par.replace(/USDT$/, '')]) })));
+        JSON.parse(cfg.params.symbols).map(par => ({
+            symbol: par,
+            price: String(par.endsWith('BRL') ? prices[par.replace(/BRL$/, '')] * (par === 'USDTBRL' ? 1 : 5.2) : prices[par.replace(/USDT$/, '')])
+        })));
 }
 
 beforeEach(async () => {
     await bot.restart();
+    bot.src('quotes').zeroStatusBrl();
     simulateMarket();
 });
 
@@ -142,6 +151,38 @@ describe('/crypto', () => {
         assert.ok(r.indexOf('BTC') < r.indexOf('ETH') && r.indexOf('ETH') < r.indexOf('SOL'));
         assert.match(r, /📊 \$12\.35M/);
         assert.match(r, /🔥 \*Top:\*/);
+    });
+
+    test('em reais: o par direto da Binance (BTC) e o dólar × USDTBRL nas que não têm (HYPE); o setting crypto.brl desliga', async () => {
+        const [r] = await bot.replyAlt('/crypto');
+        assert.match(r, /₿ BTC\n    💰 \$95,000\.00 +🟢 \+1\.50%\n    🇧🇷 R\$ 494\.000,00\n/, 'BTCBRL direto: 95000 × 5,2');
+        assert.match(r, /Ⓗ HYPE\n    💰 \$40\.00 +🟢 \+1\.50%\n    🇧🇷 R\$ 207,20\n/, 'sem par direto: 40 × USDTBRL (5,18)');
+
+        await bot.setSetting('crypto.brl', false);
+        assert.doesNotMatch((await bot.replyAlt('/crypto'))[0], /🇧🇷/);
+    });
+
+    test('par em reais pausado na Binance (DOTBRL em BREAK) sai pelo dólar × USDTBRL, e a falha do status cai na lista fixa', async () => {
+        await bot.setSetting('crypto.coins', 'BTC DOT');
+        prices.DOT = 8;
+        const [r] = await bot.replyAlt('/crypto');
+        assert.match(r, /● DOT\n    💰 \$8\.00 +🟢 \+1\.50%\n    🇧🇷 R\$ 41,44\n/, 'DOT: 8 × 5,18, e não o 8 × 5,2 do par direto');
+        assert.match(r, /₿ BTC\n    💰 \$95,000\.00 +🟢 \+1\.50%\n    🇧🇷 R\$ 494\.000,00\n/, 'BTC segue direto');
+
+        bot.src('quotes').zeroStatusBrl();
+        network.responder('get', 'api.binance.com/api/v3/exchangeInfo', new Error('fora do ar'));
+        const [r2] = await bot.replyAlt('/crypto', { erroEsperado: true });
+        assert.match(r2, /● DOT\n    💰 \$8\.00 +🟢 \+1\.50%\n    🇧🇷 R\$ 41,60\n/, 'sem o status vale a lista fixa: DOT direto (8 × 5,2)');
+    });
+
+    test('em inglês o real sai com o formato do idioma; a Binance fora do ar nos reais não derruba o dólar', async () => {
+        await bot.setSetting('zapbot.lang', 'en_US');
+        assert.match((await bot.replyAlt('/crypto BTC'))[0], /🇧🇷 R\$ 494,000\.00/);
+
+        network.responder('get', 'api.binance.com/api/v3/ticker/price', new Error('fora do ar'));
+        const [r] = await bot.replyAlt('/crypto BTC', { erroEsperado: true });
+        assert.match(r, /₿ BTC\n    💰 \$95,000\.00/);
+        assert.doesNotMatch(r, /🇧🇷/);
     });
 
     test('com argumentos: só as pedidas, na ordem pedida, ativadas ou não', async () => {

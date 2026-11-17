@@ -22,31 +22,63 @@ As moedas ativadas ficam na tabela `settings`, chave `crypto.coins`, e sobrevive
 
 ![Demonstração do /crypto](../assets/demo/07-crypto.gif)
 
-Exemplo de resposta (`/crypto`): preço, variação em 24 h, máxima, mínima e volume de cada moeda, num bloco
-monoespaçado, e a que mais subiu:
+## Atalho para as moedas que você confere
+
+Para a moeda que você olha todo dia, um alias poupa a digitação: `/alias -q /btc /crypto BTC` e daí em diante o `/btc`
+traz só a cotação (`/eth`, `/sol`, `/xaut` para o ouro...). Mais em
+[Atalhos para cotações](alias.md#atalhos-para-cotações).
+
+```text
+/alias -q /btc /crypto BTC
+/alias -q /xaut /crypto XAUT
+/btc                           → o bitcoin, em dólar e em reais
+/xaut                          → o ouro
+```
+
+## Em reais
+
+Além do dólar, cada moeda vem com o preço **em reais** (a linha 🇧🇷). Para as que a Binance negocia direto contra o
+real (BTC, ETH, SOL, BNB, XRP, DOGE, ADA, AVAX, LINK, LTC, SUI, PEPE, SHIB e NEAR) é o par `<TOKEN>BRL`; para as
+outras (HYPE, TRX, DOT, TON, XLM, UNI e XAUT) é o preço em dólar vezes o `USDTBRL`. O bot confere na Binance (a cada
+6 horas) quais pares estão mesmo negociando: um par pausado, como o `DOTBRL`, continua devolvendo um preço congelado,
+então ele também sai pelo dólar. Se não der para buscar os reais, o
+dólar sai sozinho. Para desligar: `/set crypto.brl off`.
+
+```text
+/crypto BTC          → o bitcoin em dólar e em reais
+/crypto BTC ETH XAUT → bitcoin, ether e ouro, cada um em dólar e em reais
+/set crypto.brl off  → volta a só dólar
+```
+
+Exemplo de resposta (`/crypto`): preço em dólar, variação em 24 h, **preço em reais** (🇧🇷), máxima, mínima e volume de
+cada moeda, num bloco monoespaçado, e a que mais subiu:
 
 ```text
 🚀 CRYPTO MARKET
 ₿ BTC
     💰 $64,820.55  🟢 +1.04%
+    🇧🇷 R$ 374.675,80
     📈 $65,870.10
     📉 $63,512.00
     📊 $1.52B
 
 Ξ ETH
     💰 $1,812.40   🟢 +1.42%
+    🇧🇷 R$ 10.475,90
     📈 $1,838.20
     📉 $1,765.95
     📊 $648.10M
 
 ◎ SOL
     💰 $71.95      🟢 +2.15%
+    🇧🇷 R$ 415,87
     📈 $73.00
     📉 $69.10
     📊 $281.45M
 
 Ⓗ HYPE
     💰 $66.20      🔴 -0.85%
+    🇧🇷 R$ 382,64
     📈 $68.90
     📉 $64.30
     📊 $35.02M

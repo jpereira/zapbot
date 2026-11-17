@@ -144,6 +144,40 @@ Com `-quiet` (ou `-q`), o cabeçalho não é impresso e só o resultado aparece:
 /haha  → Hahahahahahhahahaha vc e burro!
 ```
 
+## Atalhos para cotações
+
+As cotações ([`/crypto`](crypto.md) e [`/stocks`](stocks.md)) são os comandos que você mais chama, então viram bons
+atalhos: uma palavra no lugar de `/crypto BTC`. Com `-q`, só a cotação aparece, sem o cabeçalho `🔗 Alias ...`:
+
+```text
+/alias -q /btc /crypto BTC
+/alias -q /eth /crypto ETH
+/alias -q /sol /crypto SOL            (o mesmo para /solana: um alias para cada nome que você gostar)
+/alias -q /xaut /crypto XAUT          → o ouro (o token Tether Gold)
+/alias -q /mstr /stocks MSTR
+/alias -q /dolar /stocks USD
+/alias -q /euro /stocks EUR
+/alias -q /usdt /stocks USDT
+```
+
+Depois disso, `/btc`, `/xaut`, `/mstr`, `/dolar`... respondem direto com a cotação. Mais duas ideias:
+
+- **Vários de uma vez:** `/alias -q /cripto /crypto BTC ETH SOL XAUT` e `/alias -q /mercado /stocks USD EUR MSTR` trazem o
+  grupo todo numa mensagem só.
+- **Um alias para qualquer moeda ou ticker**, com o [parâmetro](#parâmetros-1-n) `${1:-...}`:
+
+```text
+/alias -q /moeda /crypto ${1:-BTC}
+/moeda                 → /crypto BTC
+/moeda eth             → /crypto ETH
+/moeda xaut            → /crypto XAUT
+
+/alias -q /cot /stocks ${1:-MSTR}
+/cot                   → /stocks MSTR
+/cot nvda              → /stocks NVDA
+/cot PETR4.SA          → /stocks PETR4.SA
+```
+
 ## Texto com comandos
 
 Quando o que vem depois do nome (e da descrição) não começa com `/`, o alias guarda um texto. Cada

@@ -346,6 +346,11 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 0, max: 5000,
         desc: 'Pausa, em milissegundos, entre uma foto e outra no /contacts, para não consultar o WhatsApp em rajada.'
     },
+    'crypto.brl': {
+        default: true,
+        type: 'boolean',
+        desc: 'O /crypto mostra também o preço de cada moeda em reais (o par direto da Binance, ou o dólar × USDTBRL).'
+    },
     'crypto.coins': {
         default: ['BTC', 'ETH', 'SOL', 'HYPE'],
         type: 'list',
