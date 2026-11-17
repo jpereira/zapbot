@@ -23,11 +23,11 @@ aliases. Whoever runs a shortcut needs permission for the target commands.
 | `-rm` | `<name...\|all>` | Removes one or more aliases (separated by space or comma), with or without `/`; `all` removes all of them |
 
 ```text
-/alias /demo -d "My dollar test" /rates USD
+/alias /demo -d "My dollar test" /stocks USD
 /alias /name /crypto USD
-/alias /demo2 /rates EUR
-/alias demo3 /rates USDT
-/alias money -d “Shows Money" /rates
+/alias /demo2 /stocks EUR
+/alias demo3 /stocks USDT
+/alias money -d “Shows Money" /stocks
 /alias -l
 /alias /demo
 /demo
@@ -52,7 +52,7 @@ the ones that run without the `🔗 Alias ...` header (`-q`):
 
 */dollar*
 📝 Dollar price
-→ /rates USD
+→ /stocks USD
 
 */endereco* 🔇
 📝 My address
@@ -85,8 +85,8 @@ and options are preserved.
 Arguments typed when running are appended to the end of the saved command:
 
 ```text
-/alias /dollar /rates USD
-/dollar -h                    → the /rates help
+/alias /dollar /stocks USD
+/dollar -h                    → the /stocks help
 ```
 
 ### Parameters `$1`, `$N`
@@ -99,9 +99,9 @@ empty, unless it has a default value: `${N:-valor}`.
 /alias /rec /sticker -ss $1 -es $2
 /rec 10 20 http://minhaurl/foo   → /sticker -ss 10 -es 20 http://minhaurl/foo
 
-/alias /dollar /rates ${1:-USD}
-/dollar                           → /rates USD
-/dollar EUR                       → /rates EUR
+/alias /dollar /stocks ${1:-USD}
+/dollar                           → /stocks USD
+/dollar EUR                       → /stocks EUR
 
 /alias nopt /forward ${1:--l} #nopt
 /nopt                            → /forward -l #nopt
@@ -127,14 +127,14 @@ Before running an alias, the bot prints the shortcut's name and the command that
 including any additional arguments. For example:
 
 ```text
-/alias /money -d "Shows the dollar price" /rates USD
+/alias /money -d "Shows the dollar price" /stocks USD
 /money
 ```
 
-The bot replies with the notice below and then with the result of `/rates USD`:
+The bot replies with the notice below and then with the result of `/stocks USD`:
 
 ```text
-🔗 Alias /money -> /rates USD
+🔗 Alias /money -> /stocks USD
 ```
 
 With `-quiet` (or `-q`), the header isn't printed and only the result shows up:
@@ -154,7 +154,7 @@ removed.
 
 ```text
 /alias name2 Checking Orca {/defi orca}\n Checking Prjx {/defi prjx}
-/alias goodmorning -d "Morning summary" Good morning! ☀️ {/weather Recife}\nExchange: {/rates USD EUR}\nCrypto: {/crypto BTC ETH}
+/alias goodmorning -d "Morning summary" Good morning! ☀️ {/weather Recife}\nExchange: {/stocks USD EUR}\nCrypto: {/crypto BTC ETH}
 /alias wallet {/defi orca}\n{/defi prjx}\n{/defi morpho}\n{/defi aave}
 /alias risk Critical CVEs: {/cve -highscore}
 ```
@@ -181,7 +181,7 @@ Checking Prjx
   it. If the person can't use one of them, the whole alias doesn't run: a command above their
   level, like `/defi`, makes the alias be silently ignored, and a command outside their rule
   (`/bot -cmd`) shows the limit notice. `/help alias` only lists the aliases in which they can use all the commands.
-- The same query commands as `/cron` run (`/rates`, `/crypto`, `/cve`, `/defi`, `/weather`...),
+- The same query commands as `/cron` run (`/stocks`, `/crypto`, `/cve`, `/defi`, `/weather`...),
   without the options that change something, like `/crypto`'s `-add`. They're checked on
   registration: one that doesn't exist or doesn't run in the text errors right away.
 - A multi-line reply becomes a paragraph, with a blank line before and after; a single-line one

@@ -1,5 +1,5 @@
 /*
- * i18n (en_US) of the information commands: /rates, /crypto, price alerts, /bills, /whois, /me,
+ * i18n (en_US) of the information commands: /stocks, /crypto, price alerts, /bills, /whois, /me,
  * /status of /bot and /uptime. No network. The other tests run in pt_BR.
  */
 const bot = require('./helpers/bot');
@@ -16,18 +16,18 @@ beforeEach(async () => {
 });
 
 describe('en_US: informação', () => {
-    test('/rates -l e a habilitação de moedas', async () => {
-        const [list] = await bot.replyAlt('/rates -l');
-        assert.match(list, /^💱 \*SUPPORTED CURRENCIES\* _\(against the real\)_\n\n/);
-        assert.match(list, /\*USD\* — Dollar/);
+    test('/stocks -l e a habilitação de moedas', async () => {
+        const [list] = await bot.replyAlt('/stocks -l');
+        assert.match(list, /^📈 \*Enabled symbols\*\n\n• 🇺🇸 USD — Dollar\n/);
+        assert.match(list, /Currencies against the real: USD, EUR, GBP, USDT/);
 
-        assert.equal((await bot.replyAlt('/rates -a GBP'))[0], '✅ 🇬🇧 GBP enabled.');
-        assert.equal((await bot.replyAlt('/rates -a GBP'))[0], 'ℹ️ GBP is already enabled.');
-        assert.equal((await bot.replyAlt('/rates -a XYZ'))[0],
-            '❌ Unsupported currency: XYZ\n💡 _See the supported ones with /rates -l_');
+        assert.equal((await bot.replyAlt('/stocks -a GBP'))[0], '✅ GBP (Pound) enabled.');
+        assert.equal((await bot.replyAlt('/stocks -a GBP'))[0], 'ℹ️ GBP is already enabled.');
+        network.responder('get', 'query1.finance.yahoo.com', Object.assign(new Error('404'), { response: { status: 404 } }));
+        assert.match((await bot.replyAlt('/stocks -a XYZ'))[0], /^❌ Ticker not found on Yahoo Finance: XYZ/);
     });
 
-    test('/rates com cotação simulada: números no formato do idioma', async () => {
+    test('/stocks com cotação simulada: números no formato do idioma', async () => {
         network.responder('get', 'query1.finance.yahoo.com', () => ({
             chart: {
                 result: [{
@@ -37,11 +37,11 @@ describe('en_US: informação', () => {
             }
         }));
 
-        const [r] = await bot.replyAlt('/rates usd');
-        assert.match(r, /^💱 \*EXCHANGE RATES\* _\(in reais\)_\n/);
+        const [r] = await bot.replyAlt('/stocks usd');
+        assert.match(r, /^📈 \*MARKETS\*\n/);
         assert.match(r, /💰 \*R\$ 5\.2000\*/);
         assert.match(r, /🏁 Previous close: R\$ 5\.1000/);
-        assert.match(r, /💡 _% next to the value: change since the previous close\._$/);
+        assert.match(r, /💡 _% next to the value: change since the previous close\. Stock quotes can be delayed\._$/);
     });
 
     test('alertas de preço: criar, listar e remover', async () => {
@@ -54,15 +54,15 @@ describe('en_US: informação', () => {
             }
         }));
 
-        const [created] = await bot.replyAlt('/rates -alert USD > 5.30');
+        const [created] = await bot.replyAlt('/stocks -alert USD > 5.30');
         assert.match(created, /^🔔 \*Alert created\*\n/);
         assert.match(created, /💰 Now: R\$ 5\.2000\n💡 _Notice in your private chat; checked every \d+ minutes?\._$/);
 
-        assert.match((await bot.replyAlt('/rates -alert'))[0], /^🔔 \*PRICE ALERTS\* _\(\/rates\)_\n\n1\. /);
-        assert.equal((await bot.replyAlt('/rates -alert -rm 9'))[0],
-            "❌ Alert #9 doesn't exist. See the list with /rates -alert");
-        assert.match((await bot.replyAlt('/rates -alert -rm 1'))[0], /^🗑️ Alert removed: /);
-        assert.match((await bot.replyAlt('/rates -alert'))[0], /^🔔 No alerts in \/rates\./);
+        assert.match((await bot.replyAlt('/stocks -alert'))[0], /^🔔 \*PRICE ALERTS\* _\(\/stocks\)_\n\n1\. /);
+        assert.equal((await bot.replyAlt('/stocks -alert -rm 9'))[0],
+            "❌ Alert #9 doesn't exist. See the list with /stocks -alert");
+        assert.match((await bot.replyAlt('/stocks -alert -rm 1'))[0], /^🗑️ Alert removed: /);
+        assert.match((await bot.replyAlt('/stocks -alert'))[0], /^🔔 No alerts in \/stocks\./);
     });
 
     test('/crypto -l, moeda não suportada e /uptime', async () => {

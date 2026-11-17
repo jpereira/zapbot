@@ -74,7 +74,7 @@ The level is the highest one that applies **in the chat where you typed it**:
 - In a group, the phone number of someone who isn't in it is hidden (`+5521•••••2222`), like in
   [`/bot`](bot.md#who-shows-up-in-the-list).
 - Anyone limited to a few commands ([`/bot +cmd`](bot.md#each-users-commands)) has the rule
-  below: `→ Only: /rates, /crypto` or `→ All but: /meme`.
+  below: `→ Only: /stocks, /crypto` or `→ All but: /meme`.
 - Anyone with a [usage limit](bot.md#usage-limits-per-user-limit) (`/bot +cmd /gpt +limit 5/day`) has
   the line `⏱️` with what was used and when it renews (the user sees the same with [`/usage`](usage.md)):
 

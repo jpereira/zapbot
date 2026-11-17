@@ -55,7 +55,7 @@ one is optional); the others work without any configuration.
 | `/weather` | [Open-Meteo](https://open-meteo.com/) | — |
 | `/cve`, `/walissu` | [NVD](https://nvd.nist.gov/) (~5 queries every 30 s) | — |
 | `/news` | RSS feeds (g1, Gazeta do Povo, The Hacker News...) | — |
-| `/rates` | [Yahoo Finance](https://finance.yahoo.com/) (fallback: [AwesomeAPI](https://docs.awesomeapi.com.br/)) and [Binance](https://www.binance.com/) for USDT | — |
+| `/stocks` (`/rates`) | [Yahoo Finance](https://finance.yahoo.com/) (currencies and stocks; fallback for currencies: [AwesomeAPI](https://docs.awesomeapi.com.br/)) and [Binance](https://www.binance.com/) for USDT | — |
 | `/crypto` | [Binance](https://www.binance.com/) | — |
 | `/defi` | Solana RPC (setting `defi.solana.rpc`), the [Orca API](https://www.orca.so/), the HyperEVM RPC (setting `defi.hyperevm.rpc`, for Project X), the Aptos API (settings `defi.aptos.rpc` and `defi.aptos.indexer`, for Liquidswap), the [Morpho API](https://docs.morpho.org/) (setting `defi.morpho.api`) and the [Aave V3](https://aave.com/docs) contracts through the Ethereum and Base RPCs (`ETHEREUM_RPC_URL`, `BASE_RPC_URL`) | — |
 | `/kernel` | [kernel.org](https://www.kernel.org/) | — |

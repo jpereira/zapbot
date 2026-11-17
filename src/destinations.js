@@ -1,7 +1,7 @@
 /*
  * Destination of a notice or target of a command: a contact, a group, a number
  * or (where it makes sense) emails. It is the -to of all commands: /cron, the
- * price alerts (/rates and /crypto -alert), /defi -alert, /watch and
+ * price alerts (/stocks and /crypto -alert), /defi -alert, /watch and
  * /backup -send; and the /mute target. All accept several -to.
  */
 

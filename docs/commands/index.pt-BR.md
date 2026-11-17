@@ -37,7 +37,7 @@ Podem ser enviados em **qualquer chat** (privado, grupo ou no chat consigo mesmo
 ## Destinos: contato, grupo, número ou e-mail
 
 Os comandos com envio a destinos usam **`-to`**: o [`/cron`](cron.md), os alertas do
-[`/rates`](rates.md#avisar-em-outro-chat-ou-por-e-mail) e do [`/crypto`](crypto.md), o
+[`/stocks`](stocks.md#avisar-em-outro-chat-ou-por-e-mail) e do [`/crypto`](crypto.md), o
 [`/defi -alert`](defi.md#alerta-de-saída-da-faixa), o [`/watch`](watch.md#avisar-em-outro-lugar) e
 o [`/backup -send`](backup.md#enviar-o-arquivo) e os alertas do
 [`/notes -alert`](notes.md#alertas) (o `/notes` também usa para enviar uma lista, uma
@@ -53,7 +53,7 @@ usam a mesma busca. Sem `-to`, os avisos (e o arquivo do `/backup`) vão para o 
 | Grupo | `/Grupo L200/`, `"Grupo L200"` ou `L200` | O grupo, com prioridade para o nome exato |
 | Menção | `@Fulano` (escolhido na lista do `@` do WhatsApp) | A pessoa mencionada. Útil num grupo, para quem não está na sua agenda. Um `@número` digitado, sem ser menção, é recusado |
 | Número | `+5521999999999` | O privado do número: DDI + DDD + número (o `+` é opcional; o bot confere se ele está no WhatsApp) |
-| E-mail | `email`, `voce@exemplo.com` ou `"a@x.com, b@y.com"` | Nos alertas (`/rates`, `/crypto`, `/defi` e `/notes`), no `/watch`, no `/bot -status` e no `/backup -send`: `email` é o `QRCODE_EMAIL_SMTP_TO`; sai pelo SMTP do bot, sem a formatação do WhatsApp ([E-mails](../emails.md)) |
+| E-mail | `email`, `voce@exemplo.com` ou `"a@x.com, b@y.com"` | Nos alertas (`/stocks`, `/crypto`, `/defi` e `/notes`), no `/watch`, no `/bot -status` e no `/backup -send`: `email` é o `QRCODE_EMAIL_SMTP_TO`; sai pelo SMTP do bot, sem a formatação do WhatsApp ([E-mails](../emails.md)) |
 
 O `/debug` usa `-copy-to` para copiar logs a um chat, sem aceitar e-mail. O `/watch -in` seleciona a
 origem das mensagens: contato, grupo ou canal `@newsletter`.
@@ -62,7 +62,7 @@ As mesmas formas, num comando só:
 
 ```text
 /cron 8h -r d -to /Jorge Pereira/ -to @Fulano Da Silva -to /Grupo L200/ -to +5521999999999 Bom dia!
-/rates -alert USD > 5.30 -to email           → por e-mail (o QRCODE_EMAIL_SMTP_TO)
+/stocks -alert USD > 5.30 -to email           → por e-mail (o QRCODE_EMAIL_SMTP_TO)
 /crypto -alert BTC < 90000 -to /Grupo L200/ -to email  → no grupo e por e-mail
 /mute @Fulano Da Silva                          → o alvo do /mute, mencionando
 /bot +a /Jorge Pereira/ +5511988887777         → o /bot +a (e o +u) aceita várias pessoas de uma vez
@@ -157,7 +157,7 @@ num `+cmd` ("Apenas"). O `-cmd` ("Todos, menos") e o `bot.users = true` **não**
 /bot +u +cmd /gpt                 → digitado no grupo Familia: todos ali usam só o /gpt
 /bot +u +cmd /gpt /Familia/       → o mesmo, de qualquer chat
 /bot +cmd /show /Sofia Izabel/    → a Sofia (que já tem "Apenas") ganha o /show
-/bot +u +cmd /rates,/gpt /Sofia Izabel/   → a Sofia usa os comuns citados e o /gpt
+/bot +u +cmd /stocks,/gpt /Sofia Izabel/   → a Sofia usa os comuns citados e o /gpt
 ```
 
 Mesmo delegado, o comando não **ajusta** nada para um usuário: as opções que trocam um setting ou
@@ -174,9 +174,9 @@ responde `⛔ Apenas o dono do bot (ou um admin) pode ver outros chats.`
 | `/draw` |  | `-model` |
 | `/gpt` |  | `-model`, `-img`, `-gif`, `-audio`, `-prices`, `-usage` |
 | `/profile` | `[/contato/\|@menção\|+número]...` | `-set` |
-| `/rates` |  | `-add`, `-del` |
 | `/show` | `-list`, `chat` | `-flush` |
 | `/stats` | `-list`, `-me`, `</chat/>` | `-flush`, `-flush-all` |
+| `/stocks` |  | `-add`, `-del` |
 | `/tldr` | `-chat`, `-private` |  |
 <!-- /gerado:limites -->
 
@@ -193,7 +193,7 @@ destino: quem pode o `/gpt` usa os atalhos para ele, e o nome de um atalho não 
 [`/crypto`](crypto.md), [`/cve`](cve.md), [`/games`](games.md), [`/get`](get.md),
 [`/giphy`](giphy.md), [`/help`](help.md), [`/joke`](joke.md), [`/kernel`](kernel.md),
 [`/me`](me.md), [`/meme`](meme.md), [`/news`](news.md), [`/noffa`](noffa.md), [`/ping`](ping.md),
-[`/pixelart`](pixelart.md), [`/qr`](qr.md), [`/rates`](rates.md), [`/sticker`](sticker.md),
+[`/pixelart`](pixelart.md), [`/qr`](qr.md), [`/sticker`](sticker.md), [`/stocks`](stocks.md),
 [`/transcribe`](transcribe.md), [`/translate`](translate.md), [`/uptime`](uptime.md),
 [`/usage`](usage.md), [`/version`](version.md), [`/walissu`](walissu.md), [`/weather`](weather.md),
 [`/whois`](whois.md)
@@ -231,7 +231,7 @@ Se você acha que o bot tem parâmetros demais, simplifique com o [`/alias`](ali
 jeito. Cada atalho fica salvo no banco e funciona como um comando:
 
 ```text
-/alias -q /usd /rates USD          → mostra o preço do dólar
+/alias -q /usd /stocks USD          → mostra o preço do dólar
 /alias -q /btc /crypto BTC         → mostra o preço do Bitcoin
 /alias -q /clima /weather ${1:-Rio de Janeiro}   → /clima mostra o Rio; /clima Lisboa, Lisboa
 /alias /rec /sticker -ss $1 -es $2           → /rec 10 20 <link> executa /sticker -ss 10 -es 20 <link>
@@ -297,13 +297,13 @@ e o `/alias /usd` mostra o que um atalho faz.
 | [`/profile`](profile.md) | | `admin` · delegável | A foto de perfil de um contato, com o nome da sua agenda e o telefone |
 | [`/promote`](promote.md) | | `admin` · delegável | Torna alguém admin do grupo |
 | [`/qr`](qr.md) | | `user` | Gera o QR Code de um texto (`-decode` lê um) |
-| [`/rates`](rates.md) | | `user` | Cotação de EUR e USDT (e USD, GBP) contra o real: atual, abertura, fechamento e variação; alertas de preço |
 | [`/search`](search.md) | | `admin` | Busca no histórico do WhatsApp Web, não só no cache: neste chat ou, no seu privado, em todos (`-N` para mais); `-mask` ofusca telefones |
 | [`/set`](set.md) | | `admin` | Lista e altera as configurações (settings); `-a`/`-rm` acrescentam e tiram itens das listas (ex.: o `bot.admins` e o `bot.users`) |
 | [`/show`](show.md) | | `admin` · delegável | No privado, lista o cache; reexibe apagadas, edições (`-e`), status (`-s`) e reações removidas ou trocadas (`-r`); `-q` busca (texto ou regex) e `-mask` ofusca telefones |
 | [`/stats`](stats.md) | | `admin` · delegável | Ranking deste chat ou de outro (`/Grupo/`): quem mais fala, apaga e edita, horários de pico; `-me` para as suas, `-l` lista os chats, `-flush` apaga |
 | [`/status`](status.md) | | `admin` | Posta no seu Status do WhatsApp (texto, foto ou vídeo); o `/cron -status` agenda |
 | [`/sticker`](sticker.md) | | `user` | Figurinha de imagem, vídeo ou link (o `/get -st`), respondendo ou na legenda da mídia; com `-txt`, uma figurinha animada de texto |
+| [`/stocks`](stocks.md) | `/stock`, `/rates` | `user` | Cotações do dólar, euro, libra e USDT contra o real, e de ações, ETFs e índices (Yahoo Finance): USD, EUR, MSTR, PETR4.SA, `^GSPC`; `-alert` para alertas de preço |
 | [`/tldr`](tldr.md) | | `admin` · delegável | Resume a conversa do chat pelo ChatGPT (`30m`, `2h`, `1d`, `1h30m` ou `300` mensagens; respondendo uma mensagem, a partir dela) |
 | [`/transcribe`](transcribe.md) | | `user` | Texto da fala de um link, vídeo ou áudio (o `/get -t` é um atalho), respondendo ou na legenda; `-ss` e `-es` escolhem um trecho |
 | [`/translate`](translate.md) | | `user` | Traduz o texto ou a mensagem respondida pelo Google Translate, sem chave; `-to en` muda o idioma |

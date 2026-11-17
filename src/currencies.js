@@ -1,5 +1,5 @@
 /*
- * Currencies supported by /crypto and /rates.
+ * Currencies supported by /crypto and /stocks (the currencies against the real).
  */
 
 const { t } = require('./i18n');
@@ -11,15 +11,15 @@ const { t } = require('./i18n');
 const CRYPTO_SUPPORTED = {
     BTC: '₿', ETH: 'Ξ', SOL: '◎', HYPE: 'Ⓗ', BNB: '🔶', XRP: '✕', DOGE: 'Ð',
     ADA: '₳', TRX: '🔺', AVAX: '🔻', LINK: '🔗', DOT: '●', LTC: 'Ł', TON: '💎',
-    SUI: '💧', PEPE: '🐸', SHIB: '🐕', XLM: '🚀', NEAR: 'Ⓝ', UNI: '🦄'
+    SUI: '💧', PEPE: '🐸', SHIB: '🐕', XLM: '🚀', NEAR: 'Ⓝ', UNI: '🦄', XAUT: '🥇'
 };
 
-// /rates currencies, against the real. The enabled ones stay in the 'rates.coins' setting.
+// /stocks currencies, against the real. The enabled ones stay in the 'stocks.symbols' setting.
 const QUOTE_SUPPORTED = {
-    USD: { icone: '🇺🇸', get nome() { return t('rates.name.USD'); }, fonte: 'fiat' },
-    EUR: { icone: '🇪🇺', get nome() { return t('rates.name.EUR'); }, fonte: 'fiat' },
-    GBP: { icone: '🇬🇧', get nome() { return t('rates.name.GBP'); }, fonte: 'fiat' },
-    USDT: { icone: '🪙', get nome() { return t('rates.name.USDT'); }, fonte: 'binance' }
+    USD: { icone: '🇺🇸', get nome() { return t('stocks.name.USD'); }, fonte: 'fiat' },
+    EUR: { icone: '🇪🇺', get nome() { return t('stocks.name.EUR'); }, fonte: 'fiat' },
+    GBP: { icone: '🇬🇧', get nome() { return t('stocks.name.GBP'); }, fonte: 'fiat' },
+    USDT: { icone: '🪙', get nome() { return t('stocks.name.USDT'); }, fonte: 'binance' }
 };
 
 module.exports = {

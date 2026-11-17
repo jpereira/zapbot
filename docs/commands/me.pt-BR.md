@@ -19,7 +19,7 @@ Envia a mensagem digitada. Cada `{/comando args}` roda na hora e a resposta entr
 ```
 
 - A mensagem sai direto no chat, sem citar o comando digitado.
-- Rodam só os comandos de consulta do `/cron` (`/rates`, `/crypto`, `/weather`...), sem as opções
+- Rodam só os comandos de consulta do `/cron` (`/stocks`, `/crypto`, `/weather`...), sem as opções
   que mudam algo. Quem executa precisa de permissão para cada um deles.
 - Uma resposta de várias linhas vira um parágrafo; uma de uma linha só fica na frase. Mídias
   (`/meme`, `/giphy`) saem depois do texto.

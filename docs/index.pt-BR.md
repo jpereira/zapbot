@@ -30,6 +30,8 @@ Pois é, a gente andou ocupado. O melhor da última leva:
 - 🎙️ **Transcreva qualquer vídeo ou áudio.** Mande um link (Instagram, YouTube, X, TikTok...) ou responda um vídeo ou
   uma nota de voz e receba o **texto da fala**. Roda no seu próprio servidor (faster-whisper), sem conta na OpenAI
   e o áudio não sai de casa. [`/transcribe`](commands/transcribe.md) · [`/get -t`](commands/get.md)
+- 📈 **Cotações num comando só.** O `/stocks` agora tem também o dólar, o euro e o USDT (ele substitui o `/rates`), e o `/stocks MSTR` traz o preço, a variação e a faixa de 52 semanas de qualquer ação (MSTR, NVDA, PETR4.SA,
+  `^GSPC`...), com alertas como `/stocks MSTR -alert < 90`; o ouro é o `/crypto XAUT`. [`/stocks`](commands/stocks.md) · [`/crypto`](commands/crypto.md)
 - 🧮 **Uma calculadora para listas.** Responda uma mensagem como `437 maromba / 351 corrida` (ou uma lista de dívida, com `R$`,
   sinais e o total) com `/calc`: ele lê os números, mostra uma fita com todos e confere o total do texto.
   Também faz `100/2*6` e `((1+7)*8)/2`. [`/calc`](commands/calc.md)
@@ -60,6 +62,8 @@ Pois é, a gente andou ocupado. O melhor da última leva:
 /draw @me @this desenhe nós dois como piratas
 /transcribe https://www.instagram.com/reel/XXXXXXXX/
 /transcribe -ss 30 -es 90 https://youtu.be/XXXXXXXXXXX
+/stocks MSTR NVDA
+/crypto XAUT
 /calc 100/2*6
 /get https://www.instagram.com/p/XXXXXXXX/            (um carrossel: todas as fotos)
 /games -trivia
@@ -78,9 +82,10 @@ Pois é, a gente andou ocupado. O melhor da última leva:
 | 📱 | **QR Codes** | Gera um QR Code de qualquer texto e lê um quando você responde a foto dele | [`/qr`](commands/qr.md) |
 | 🎞️ | **Mídia e figurinhas** | Baixa vídeos e áudios de redes sociais, cria figurinhas (de imagens, vídeos ou texto), memes, GIFs, imagens de código e arte ASCII | [`/get`](commands/get.md) · [`/sticker`](commands/sticker.md) · [`/meme`](commands/meme.md) · [`/giphy`](commands/giphy.md) · [`/carbon`](commands/carbon.md) · [`/ascii`](commands/ascii.md) |
 | 🎙️ | **Transcrição de fala** | Transforma a fala de qualquer link, vídeo, áudio ou nota de voz em texto, no seu próprio servidor (sem API, sem custo por minuto); `-ss` e `-es` escolhem um trecho | [`/transcribe`](commands/transcribe.md) · [`/get -t`](commands/get.md#transcrever-a-fala--transcribe) |
-| 🔔 | **Vigiar e avisar** | Vigia mensagens por texto ou regex, avisa de cotações de moedas e cripto, de posições DeFi fora da faixa e de contatos que ficaram online, no seu privado, num grupo ou por e-mail | [`/watch`](commands/watch.md) · [`/rates`](commands/rates.md) · [`/crypto`](commands/crypto.md) · [`/defi`](commands/defi.md) · [`/monitor`](commands/monitor.md) |
+| 🔔 | **Vigiar e avisar** | Vigia mensagens por texto ou regex, avisa de cotações de moedas e cripto, de posições DeFi fora da faixa e de contatos que ficaram online, no seu privado, num grupo ou por e-mail | [`/watch`](commands/watch.md) · [`/stocks`](commands/stocks.md) · [`/crypto`](commands/crypto.md) · [`/defi`](commands/defi.md) · [`/monitor`](commands/monitor.md) |
 | 📅 | **Agendar e automatizar** | Mensagens avulsas e recorrentes, lembretes, atalhos seus, vários comandos numa mensagem só, anotações com `#tags` e alertas, listas de destinatários | [`/cron`](commands/cron.md) · [`/alias`](commands/alias.md) · [`/batch`](commands/batch.md) · [`/notes`](commands/notes.md) · [`/forward`](commands/forward.md) |
 | 👥 | **Gerir grupos** | Marca todo mundo, promove e rebaixa, links de convite, enquetes, boas-vindas e despedidas, silencia e bloqueia | [`/everybody`](commands/everybody.md) · [`/promote`](commands/promote.md) · [`/invite`](commands/invite.md) · [`/poll`](commands/poll.md) · [`/welcome`](commands/welcome.md) · [`/mute`](commands/mute.md) · [`/warn`](commands/warn.md) · [`/antilink`](commands/antilink.md) |
+| 📈 | **Mercados** | Dólar e euro contra o real, cripto (BTC, ETH, o ouro como **XAUT**) e **ações e índices** (MSTR, NVDA, PETR4.SA, o S&P 500), com alertas quando o preço cruza o valor que você definir | [`/crypto`](commands/crypto.md) · [`/stocks`](commands/stocks.md) |
 | 🌎 | **Informação do dia a dia** | Tempo conferido em mais de uma fonte, notícias, CVEs, versões do kernel Linux, tradução e estatísticas do chat | [`/weather`](commands/weather.md) · [`/news`](commands/news.md) · [`/cve`](commands/cve.md) · [`/kernel`](commands/kernel.md) · [`/translate`](commands/translate.md) · [`/stats`](commands/stats.md) |
 | 🎲 | **Diversão e jogos** | Bola 8 mágica, verdade, desafio e trivia para o grupo (dá para jogar só respondendo), piadas e os seus amigos desenhados em imagens | [`/games`](commands/games.md) · [`/joke`](commands/joke.md) · [`/draw`](commands/draw.md) |
 | 📣 | **Seu perfil e Status** | Posta no seu Status do WhatsApp (e agenda), mostra o recado de qualquer pessoa e troca o seu, exporta seus contatos com fotos | [`/status`](commands/status.md) · [`/profile`](commands/profile.md) · [`/contacts`](commands/contacts.md) |
@@ -160,8 +165,8 @@ Ajuda, uso e erros nunca contam, você e os admins não têm limite, e o histór
 **Seus próprios atalhos, e vários comandos em um:**
 
 ```text
-/alias dimdim -d "Exibe o preço do dólar" /rates USD     → cadastra o atalho
-/dimdim                                                  → executa o /rates USD
+/alias dimdim -d "Exibe o preço do dólar" /stocks USD     → cadastra o atalho
+/dimdim                                                  → executa o /stocks USD
 /alias carteira Orca {/defi orca}\n Prjx {/defi prjx}   → um texto, vários comandos
 ```
 
@@ -379,11 +384,11 @@ Por onde começar:
   hora e remetente (tabela `stats`), usado pelo [`/stats`](commands/stats.md). Só números, sem o
   texto; ficam 90 dias (setting `stats.retentionDays`). As respostas do bot, o seu privado e os
   status não entram. Desligue com `/set stats.enable off`.
-- **Alertas de preço**: `/rates -alert USD > 5.30` e `/crypto -alert BTC < 90000` guardam a
+- **Alertas de preço**: `/stocks -alert USD > 5.30` e `/crypto -alert BTC < 90000` guardam a
   regra na tabela `price_alerts`; a cada 5 minutos (setting `alert.intervalMin`) o bot consulta os
   preços e avisa **no seu privado** (ou, com um ou vários `-to`, em contatos, grupos, números ou por
   e-mail) quando a regra é cumprida; com o `-msg`, um texto seu vai no início do aviso. Veja
-  [Alertas de preço](commands/rates.md#alertas-de-preço).
+  [Alertas de preço](commands/stocks.md#alertas-de-preço).
 - **Anotações**: o [`/notes`](commands/notes.md) guarda textos (e mídias: imagem, documento, áudio, vídeo) na
   tabela `notes`, cada um com um ID e, se quiser, uma `#tag` (a descrição das tags fica em
   `note_tags`). O `-alert` avisa de uma anotação numa data/hora (uma vez; a anotação continua), no

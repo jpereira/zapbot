@@ -7,8 +7,8 @@ em português).
 | Chave | Tipo | Padrão | Descrição |
 |---|---|---|---|
 | `agenda.max` | 1–500 | `50` | Máximo de itens do [`/cron`](commands/cron.md), somando lembretes e mensagens |
-| `alert.intervalMin` | 1–60 | `5` | Intervalo, em minutos, entre as verificações dos [alertas de preço](commands/rates.md#alertas-de-preço) |
-| `alert.max` | 1–100 | `20` | Máximo de alertas de preço (somando `/rates` e `/crypto`) |
+| `alert.intervalMin` | 1–60 | `5` | Intervalo, em minutos, entre as verificações dos [alertas de preço](commands/stocks.md#alertas-de-preço) |
+| `alert.max` | 1–100 | `20` | Máximo de alertas de preço (somando `/stocks` e `/crypto`) |
 | `api.enabled` | on/off | `off` | Liga a API HTTP local ([API e MCP](api.md)): `/health`, `/status`, `/notes` e `/send`, com a `api.key`. Vale ao reiniciar o bot |
 | `api.host` | texto | `127.0.0.1` | Endereço em que a API escuta. O padrão só atende a própria máquina; fora dele, ponha um proxy com HTTPS na frente. Vale ao reiniciar |
 | `api.key` | texto (pode ser vazio) | *(vazio)* | A chave da API (cabeçalho `Authorization: Bearer <chave>` ou `X-API-Key`). Vazia: a API não inicia. Exibida mascarada; use uma chave longa e aleatória |
@@ -103,7 +103,6 @@ em português).
 | `pixelart.maxParts` | 1–10 | `3` | Máximo de partes do [`/pixelart`](commands/pixelart.md) quando a arte é mais alta que 4096 px |
 | `pixelart.packs` | lista | `chuck-norris-lvl` | Packs do 16colo.rs sorteados pelo [`/pixelart`](commands/pixelart.md) sem argumentos |
 | `poll.retentionDays` | 1–365 | `90` | Dias que as enquetes e os votos ficam guardados para o [`/poll -r`](commands/poll.md#resultado) |
-| `rates.coins` | lista | `EUR, USDT` | Moedas habilitadas no `/rates` (`USD`, `EUR`, `GBP`, `USDT`); normalmente alterada pelo `/rates -a`/`-d` |
 | `show.alert.deleted` | on/off | `on` | Avisa no seu privado quando alguém apaga uma mensagem; `off` só guarda para o `/show` |
 | `show.alert.edited` | on/off | `on` | Avisa no seu privado quando alguém edita uma mensagem; `off` só guarda para o `/show -e` |
 | `show.alert.reaction` | on/off | `on` | Avisa no seu privado quando alguém remove ou troca uma reação; `off` só guarda para o `/show -r` |
@@ -115,6 +114,7 @@ em português).
 | `status.warnAfter` | 1–50 | `3` | A partir de quantas postagens no Status em 24 horas o `/status` avisa do risco de banimento (não bloqueia) |
 | `sticker.author` | texto | `https://github.com/jpereira/zapbot/` | Autor das figurinhas |
 | `sticker.name` | texto | `ZapBot` | Nome do pacote das figurinhas |
+| `stocks.symbols` | lista | `USD, EUR, USDT, MSTR` | Símbolos exibidos pelo [`/stocks`](commands/stocks.md) (e `/rates`): moedas contra o real (`USD`, `EUR`, `GBP`, `USDT`) e tickers do Yahoo Finance (`MSTR`, `NVDA`, `PETR4.SA`, `BRK-B`, `^GSPC`); normalmente alterada pelo `/stocks -a`/`-d` |
 | `tldr.maxMsgs` | 10–2000 | `500` | Máximo de mensagens enviadas à OpenAI por [`/tldr`](commands/tldr.md) |
 | `transcribe.language` | texto | `auto` | Idioma da fala no [`/get -transcribe`](commands/get.md#transcrever-a-fala--transcribe) (`pt`, `en`, `es`...). `auto`: o whisper detecta |
 | `transcribe.maxMinutes` | 1–180 | `20` | Duração máxima (minutos) do áudio que o `/get -transcribe` transcreve: usa a CPU do servidor |

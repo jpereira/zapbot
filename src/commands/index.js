@@ -11,7 +11,6 @@ const { cmdBot } = require('./bot');
 const { cmdCalc } = require('./calc');
 const { cmdCarbon } = require('./carbon');
 const { cmdCache } = require('./cache');
-const { cmdRates } = require('./rates');
 const { cmdContacts } = require('./contacts');
 const { cmdCron } = require('./cron');
 const { cmdCrypto } = require('./crypto');
@@ -57,6 +56,7 @@ const { cmdSet } = require('./set');
 const { cmdShow } = require('./show');
 const { cmdStats } = require('./stats');
 const { cmdSticker } = require('./sticker');
+const { cmdStocks } = require('./stocks');
 const { cmdWeather } = require('./weather');
 const { cmdMe } = require('./me');
 const { cmdJoin, cmdLeave } = require('./groups');
@@ -123,13 +123,13 @@ const HANDLERS = {
     '/profile': cmdProfile,
     '/promote': cmdPromote,
     '/qr': cmdQr,
-    '/rates': cmdRates,
     '/search': cmdSearch,
     '/set': cmdSet,
     '/show': cmdShow,
     '/stats': cmdStats,
     '/status': cmdStatus,
     '/sticker': cmdSticker,
+    '/stocks': cmdStocks,
     '/tldr': cmdTldr,
     '/transcribe': cmdTranscribe,
     '/translate': cmdTranslate,

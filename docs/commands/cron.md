@@ -111,7 +111,7 @@ both modes, anywhere in the text and more than once:
 ```text
 /cron 09:24 -to /ZapBot/ The Bitcoin price now: {/crypto BTC}
 /cron 8h -r d -to /Family/ Good morning! {/weather Rio de Janeiro}
-/cron mon 9h -r w Dollar: {/rates USD} · BTC: {/crypto BTC}
+/cron mon 9h -r w Dollar: {/stocks USD} · BTC: {/crypto BTC}
 /cron -rem friday 18h -r w {/stats -7}
 /cron 12h -to /L200 Group/ {/meme}       (media only: the image goes out, no text)
 ```
@@ -120,8 +120,8 @@ Several commands and several destinations in the same item (a single item; at se
 out to each destination, with the commands running for each chat):
 
 ```text
-/cron 06:00 -r d -to /Krishina Da Silva/ -to /College Group/ ⏰ DeFi status! {/defi} BTC price! {/crypto BTC} Dollar price! {/rates USD}
-/cron 07:30 -r d -to /Family/ Good morning! ☀️ {/weather Recife} Crypto: {/crypto BTC ETH} Exchange: {/rates USD EUR}
+/cron 06:00 -r d -to /Krishina Da Silva/ -to /College Group/ ⏰ DeFi status! {/defi} BTC price! {/crypto BTC} Dollar price! {/stocks USD}
+/cron 07:30 -r d -to /Family/ Good morning! ☀️ {/weather Recife} Crypto: {/crypto BTC ETH} Exchange: {/stocks USD EUR}
 /cron mon 08:00 -r w -to /Work/ -to @Fulano Da Silva Weekly summary: {/news -hack 5} CVEs: {/cve -high 3}
 /cron -rem -private 23:00 -r d Day wrap-up: {/crypto} {/defi}
 ```
@@ -160,10 +160,10 @@ Dollar price!
   single-line one stays in the sentence. A command that replies more than once (`/defi`, one per
   position) has its replies separated by a blank line. Media (`/meme`, `/giphy`, `/pixelart`) goes
   out right after the message.
-- Only lookup commands run there: `/ascii`, `/rates`, `/crypto`, `/cve`, `/defi`, `/giphy`,
+- Only lookup commands run there: `/ascii`, `/stocks`, `/crypto`, `/cve`, `/defi`, `/giphy`,
   `/joke`, `/kernel`, `/meme`, `/news`, `/pixelart`, `/stats`, `/weather`, `/uptime` and `/version`
   (in the definitions, the ones with `cron: true`). Options that change something don't run
-  either: `-width` and `-char` of `/ascii`; `-add`, `-del` and `-alert` of `/crypto` and `/rates`;
+  either: `-width` and `-char` of `/ascii`; `-add`, `-del` and `-alert` of `/crypto` and `/stocks`;
   `-address`, `-wallet`, `-pool`, `-nft`, `-name`, `-rm`, `-alert`, `-fees` and `-to` of `/defi`
   (the protocols, `-l`, `-mask` and `aave -full` run); and `-flush` and `-flush-all` of `/stats`.
 - `/bot` is the exception: only the owner creates an item with `{/bot -flush-email true}` (in it,
@@ -185,7 +185,7 @@ around it are removed. It works in any `/cron` text, with or without commands, o
 
 ```text
 /cron 8h -r d Checking Orca {/defi orca}\n Checking Prjx {/defi prjx}
-/cron 07:30 -r d -to /Family/ Good morning! ☀️\n{/weather Recife}\nExchange: {/rates USD}
+/cron 07:30 -r d -to /Family/ Good morning! ☀️\n{/weather Recife}\nExchange: {/stocks USD}
 /cron -rem friday 18h Wrap up the week:\n- report\n- backup\n- spreadsheet
 /cron -edit 2 Linha 1\nLinha 2
 ```

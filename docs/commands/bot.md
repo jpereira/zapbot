@@ -114,7 +114,7 @@ When to use each option:
 | Someone is abusing the commands in a group | `/bot -u`, typed in the group (or `/bot -u /Grupo/`) |
 | Allow the bot for the family, only in their group | `/bot +u`, typed in the group (or `/bot +u /Family Group/` from any chat) |
 | Allow it for one person, in any chat | `/bot +u /Maria Lucia/` |
-| Allow only some commands for someone | `/bot +u +cmd /rates,/crypto /Sofia Izabel/` |
+| Allow only some commands for someone | `/bot +u +cmd /stocks,/crypto /Sofia Izabel/` |
 | Allow only `/gpt` for the Familia group | `/bot +u +cmd /gpt`, typed in the group (or `/bot +u +cmd /gpt /Familia/`) |
 | Give someone the admin commands | `/bot +a /Jorge Pereira/` |
 | Stop the bot completely for a while, without taking down the container | `/bot -off` |
@@ -165,7 +165,7 @@ number.
   person's LID (the internal id) and the bot can't get the phone, they aren't recognized as admin.
 - An extra admin's commands act like yours: the notices that go "to your private chat" (alerts,
   `-private`, `/watch`...) go to **your** private chat, not theirs. Admins also manage the currencies of
-  `/rates` and `/crypto`, the price alerts and the `/show -f` cleanup.
+  `/stocks` and `/crypto`, the price alerts and the `/show -f` cleanup.
 - In a choice list (several contacts with the name), only whoever gave the command replies with the
   no.
 - Give this access only to whoever you trust: an admin can, for example, delete the cache
@@ -248,11 +248,11 @@ A user (a person or a group) can be limited to some common commands, or receive 
 `admin` role (`/gpt`, `/show`...). `/help`, `/whois` and `/usage` always go through (`/help` shows only theirs). To limit how many times a user can call one, see [Usage limits per user](#usage-limits-per-user-limit).
 
 ```text
-/bot +cmd /rates,/crypto,/meme +u /Sofia Izabel/  → Sofia gets in with only these
-/bot +u +cmd /rates                               → typed in a group: the whole group, only /rates
+/bot +cmd /stocks,/crypto,/meme +u /Sofia Izabel/  → Sofia gets in with only these
+/bot +u +cmd /stocks                               → typed in a group: the whole group, only /stocks
 /bot +u -cmd /meme /Fulano/                       → Fulano uses all, except /meme
 /bot +cmd /weather /Sofia Izabel/                 → adds /weather to hers
-/bot -cmd /rates /Fulano Pereira/                 → removes /rates from his
+/bot -cmd /stocks /Fulano Pereira/                 → removes /stocks from his
 /bot -cmd /meme /Family Group/ /Fulano da Silva/ → several at once
 /bot -cmd /meme                                   → from the current chat (the group, or the person in private)
 /bot +cmd all /Sofia Izabel/                      → Sofia goes back to using all the regular ones
@@ -274,25 +274,25 @@ A user (a person or a group) can be limited to some common commands, or receive 
   `admin` one (`/gpt`, `/show`...) goes in only in an "Only" list: `-cmd` ("All but") and `bot.users = true` don't allow it, and someone
   who already uses all the common ones doesn't get it with `+cmd` (the bot refuses and asks for
   the "Only" list). To add a delegable `admin` one to someone who uses the common ones, list their
-  commands: `+u +cmd /rates,/gpt`.
+  commands: `+u +cmd /stocks,/gpt`.
 - The name of a shortcut from [`/alias`](alias.md) doesn't go in `+cmd`: the shortcut inherits the
   permission of the target command (whoever can use `/gpt` uses the shortcuts for it).
 - In a group, the person is the one from there (like in `+u`); if they are a user in any chat, that's
   the permission that changes.
-- In the list, under the person, `→ Only: /rates, /crypto, /meme` or `→ All but: /meme`:
+- In the list, under the person, `→ Only: /stocks, /crypto, /meme` or `→ All but: /meme`:
 
 ```text
 Users (2)
 • 🗣️ +u · 👤 Jorge Chip L200 · +5521999983333
 • 🗣️ +u · 👤 Sofia Izabel · +5521999987777 ✅
- → Only: /rates, /crypto, /meme
+ → Only: /stocks, /crypto, /meme
 
 Permissions
 👑 +a: admin, uses everything
 🗣️ +u: user, uses the regular commands
 ```
 
-- Outside the list, the bot replies `🚫 Limited to the commands: /rates, /crypto, /meme.` (or
+- Outside the list, the bot replies `🚫 Limited to the commands: /stocks, /crypto, /meme.` (or
   `🚫 /meme is not enabled for you.`).
 - If more than one permission applies there (the person and the group, for example), the broadest
   one wins: one with no limit allows all the common ones.

@@ -1,5 +1,5 @@
 /*
- * /rates, /crypto and the price alerts (-alert).
+ * /stocks, /crypto and the price alerts (-alert).
  */
 const bot = require('./helpers/bot');
 
@@ -15,15 +15,18 @@ const { priceCheckAlerts } = bot.src('priceAlerts');
 const prices = {};
 
 function simulateMarket() {
-    Object.assign(prices, { USD: 5.20, EUR: 5.85, GBP: 6.85, USDT: 5.18, BTC: 95000, ETH: 3000, SOL: 150, HYPE: 40 });
+    Object.assign(prices, { MSTR: 100, USD: 5.20, EUR: 5.85, GBP: 6.85, USDT: 5.18, BTC: 95000, ETH: 3000, SOL: 150, HYPE: 40 });
 
     network.responder('get', 'query1.finance.yahoo.com', (url) => {
-        const currency = url.match(/chart\/([A-Z]+)BRL=X/)[1];
-        const v = prices[currency];
+        const currency = url.match(/chart\/([A-Z]+)BRL=X/)?.[1];
+        const ticker = currency ?? decodeURIComponent(url.match(/chart\/([^?]+)/)[1]);
+        const v = prices[ticker];
+        // Ticker that Yahoo does not know: 404
+        if (v === undefined) throw Object.assign(new Error('Request failed with status code 404'), { response: { status: 404 } });
         return {
             chart: {
                 result: [{
-                    meta: { regularMarketPrice: v, regularMarketDayHigh: v + 0.1, regularMarketDayLow: v - 0.1 },
+                    meta: { symbol: ticker, longName: currency ? undefined : 'Strategy Inc', fullExchangeName: 'NasdaqGS', currency: currency ? 'BRL' : 'USD', regularMarketPrice: v, regularMarketDayHigh: v + 0.1, regularMarketDayLow: v - 0.1 },
                     indicators: { quote: [{ open: [v - 0.2, v - 0.05], close: [v - 0.1, v], high: [v, v], low: [v, v] }] }
                 }]
             }
@@ -57,29 +60,41 @@ beforeEach(async () => {
     simulateMarket();
 });
 
-describe('/rates', () => {
-    test('sem argumento: as habilitadas (EUR e USDT), com abertura, fechamento e variação', async () => {
-        const [r] = await bot.replyAlt('/rates');
-        assert.match(r, /💱 \*COTAÇÕES\* _\(em reais\)_/);
+describe('/stocks (moedas e ações; o /rates é o mesmo comando)', () => {
+    test('sem argumento: as habilitadas (USD, EUR, USDT e MSTR), cada uma com abertura, fechamento e variação', async () => {
+        const [r] = await bot.replyAlt('/stocks');
+        assert.match(r, /^📈 \*MERCADOS\*\n/);
+        assert.match(r, /🇺🇸 \*USD\/BRL\* _\(Dólar\)_\n   💰 \*R\$ 5,2000\*/);
         assert.match(r, /🇪🇺 \*EUR\/BRL\* _\(Euro\)_\n   💰 \*R\$ 5,8500\*  🟢 \+1,74%\n   🔔 Abertura: R\$ 5,8000 _\(🟢 \+0,86% desde a abertura\)_\n   🏁 Fechamento anterior: R\$ 5,7500\n   📈 Máx: R\$ 5,9500  📉 Mín: R\$ 5,7500/);
         assert.match(r, /🪙 \*USDT\/BRL\* _\(Tether\)_\n   💰 \*R\$ 5,1800\*/);
+        assert.match(r, /🏢 \*MSTR\* _\(Strategy Inc · NasdaqGS\)_\n   💰 \*US\$ 100,00\*/);
         assert.match(r, /· Yahoo Finance, Binance_/);
-        assert.doesNotMatch(r, /USD\/BRL/);
+        assert.doesNotMatch(r, /GBP\/BRL/);
     });
 
-    test('com argumentos: só as pedidas', async () => {
-        const [r] = await bot.replyAlt('/rates usd, gbp');
-        assert.match(r, /USD\/BRL[\s\S]*GBP\/BRL/);
+    test('/rates e /stock são o mesmo comando', async () => {
+        const [a] = await bot.replyAlt('/stocks eur');
+        const [b] = await bot.replyAlt('/rates eur');
+        const [c] = await bot.replyAlt('/stock eur');
+        const withoutHour = (x) => x.replace(/🕐 _.*_/, '');
+        assert.equal(withoutHour(b), withoutHour(a));
+        assert.equal(withoutHour(c), withoutHour(a));
+    });
+
+    test('com argumentos: só os pedidos, moedas e ações misturadas', async () => {
+        const [r] = await bot.replyAlt('/stocks usd, gbp mstr');
+        assert.match(r, /USD\/BRL[\s\S]*GBP\/BRL[\s\S]*MSTR/);
         assert.doesNotMatch(r, /EUR\/BRL|USDT/);
     });
 
-    test('moeda não suportada', async () => {
-        assert.match((await bot.replyAlt('/rates xyz'))[0], /❌ Moeda não suportada: XYZ\n💡 _Suportadas: USD, EUR, GBP, USDT_/);
+    test('ticker que o Yahoo não conhece', async () => {
+        assert.match((await bot.replyAlt('/stocks xyz'))[0], /^❌ Ticker não encontrado no Yahoo Finance: XYZ/);
+        assert.match((await bot.replyAlt('/stocks usd xyz'))[0], /USD\/BRL[\s\S]*🏢 \*XYZ\*\n   ⚠️ _Ticker não encontrado no Yahoo Finance\._/);
     });
 
-    test('Yahoo fora do ar: usa a AwesomeAPI (sem abertura)', async () => {
+    test('Yahoo fora do ar: as moedas usam a AwesomeAPI (sem abertura)', async () => {
         network.responder('get', 'query1.finance.yahoo.com', new Error('429'));
-        const [r] = await bot.replyAlt('/rates eur', { erroEsperado: true });
+        const [r] = await bot.replyAlt('/stocks eur', { erroEsperado: true });
         assert.match(r, /💰 \*R\$ 5,8500\*/);
         assert.match(r, /🔔 Abertura: —\n   🏁 Fechamento anterior: R\$ 5,8000/);
         assert.match(r, /· AwesomeAPI_/);
@@ -87,33 +102,35 @@ describe('/rates', () => {
 
     test('uma fonte fora do ar não derruba as outras', async () => {
         network.responder('get', 'api.binance.com/api/v3/klines', new Error('timeout'));
-        const [r] = await bot.replyAlt('/rates', { erroEsperado: true });
+        const [r] = await bot.replyAlt('/stocks', { erroEsperado: true });
         assert.match(r, /EUR\/BRL[\s\S]*💰/);
         assert.match(r, /USDT\/BRL\* _\(Tether\)_\n   ⚠️ _Cotação indisponível agora\._/);
     });
 
-    test('-l lista as suportadas com ✅ nas habilitadas', async () => {
-        const [r] = await bot.replyAlt('/rates -l');
-        assert.match(r, /▫️ 🇺🇸 \*USD\* — Dólar\n✅ 🇪🇺 \*EUR\* — Euro\n▫️ 🇬🇧 \*GBP\* — Libra\n✅ 🪙 \*USDT\* — Tether/);
+    test('-l lista os habilitados e as moedas suportadas', async () => {
+        const [r] = await bot.replyAlt('/stocks -l');
+        assert.match(r, /• 🇺🇸 USD — Dólar\n• 🇪🇺 EUR — Euro\n• 🪙 USDT — Tether\n• 🏢 MSTR/);
+        assert.match(r, /Moedas contra o real: USD, EUR, GBP, USDT/);
     });
 
-    test('-a e -d habilitam e desabilitam', async () => {
-        assert.deepEqual(await bot.replyAlt('/rates -a usd'), ['✅ 🇺🇸 USD habilitada.']);
-        assert.deepEqual(await bot.replyAlt('/rates -a usd'), ['ℹ️ USD já está habilitada.']);
-        assert.deepEqual(await bot.replyAlt('/rates -d eur'), ['🗑️ EUR desabilitada.']);
-        assert.deepEqual(await bot.replyAlt('/rates -d eur'), ['ℹ️ EUR já está desabilitada.']);
-        assert.deepEqual(bot.getSetting('rates.coins'), ['USDT', 'USD']);
+    test('-a e -d: moeda suportada entra direto, ticker só se o Yahoo o conhece', async () => {
+        assert.deepEqual(await bot.replyAlt('/stocks -a gbp'), ['✅ GBP (Libra) habilitado.']);
+        assert.deepEqual(await bot.replyAlt('/stocks -a gbp'), ['ℹ️ GBP já está habilitado.']);
+        assert.deepEqual(await bot.replyAlt('/stocks -d eur'), ['🗑️ EUR desabilitado.']);
+        assert.deepEqual(await bot.replyAlt('/stocks -d eur'), ['ℹ️ EUR não está habilitado.']);
+        assert.deepEqual(bot.getSetting('stocks.symbols'), ['USD', 'USDT', 'MSTR', 'GBP']);
     });
 
-    test('-a/-d: moeda inválida, sem moeda e de outra pessoa', async () => {
-        assert.match((await bot.replyAlt('/rates -a xyz'))[0], /❌ Moeda não suportada: XYZ/);
-        assert.match((await bot.replyAlt('/rates -a'))[0], /Usage: \/rates/);
-        assert.deepEqual(await bot.replyAlt('/rates -a gbp', { de: OTHERAlt.jid }), ['⛔ Apenas o dono do bot (ou um admin) pode usar o -add do /rates.']);
+    test('-a/-d: símbolo inválido, ticker desconhecido, sem símbolo e de outra pessoa', async () => {
+        assert.match((await bot.replyAlt('/stocks -a "a b"'))[0], /não é um ticker válido/);
+        assert.match((await bot.replyAlt('/stocks -a xyz'))[0], /Ticker não encontrado no Yahoo Finance: XYZ/);
+        assert.match((await bot.replyAlt('/stocks -a'))[0], /Usage: \/stocks/);
+        assert.deepEqual(await bot.replyAlt('/stocks -a gbp', { de: OTHERAlt.jid }), ['⛔ Apenas o dono do bot (ou um admin) pode usar o -add do /stocks.']);
     });
 
-    test('nenhuma habilitada', async () => {
-        await bot.setSetting('rates.coins', '');
-        assert.match((await bot.replyAlt('/rates'))[0], /ℹ️ Nenhuma moeda habilitada/);
+    test('nada habilitado', async () => {
+        await bot.setSetting('stocks.symbols', '');
+        assert.match((await bot.replyAlt('/stocks'))[0], /ℹ️ Nada habilitado/);
     });
 });
 
@@ -139,7 +156,7 @@ describe('/crypto', () => {
     });
 
     test('moeda não suportada: avisa e lista as suportadas (sem buscar preço)', async () => {
-        const supported = /💡 _Suportadas: BTC, ETH, SOL, HYPE, BNB, .*, UNI_$/;
+        const supported = /💡 _Suportadas: BTC, ETH, SOL, HYPE, BNB, .*, UNI, XAUT_$/;
         const [r] = await bot.replyAlt('/crypto FOO');
         assert.match(r, /^❌ Moeda não suportada: FOO\n/);
         assert.match(r, supported);
@@ -180,11 +197,11 @@ describe('/crypto', () => {
 
 describe('alertas de preço (-alert)', () => {
     test('cria, lista e dispara uma vez no seu privado', async () => {
-        const [created] = await bot.replyAlt('/rates -alert USD > 5.30');
+        const [created] = await bot.replyAlt('/stocks -alert USD > 5.30');
         assert.match(created, /🔔 \*Alerta criado\*\n🇺🇸 USD\/BRL acima de \*R\$ 5,3000\*\n💰 Agora: R\$ 5,2000/);
 
-        const [list] = await bot.replyAlt('/rates -alert');
-        assert.match(list, /🔔 \*ALERTAS DE PREÇO\* _\(\/rates\)_\n\n1\. 🇺🇸 USD\/BRL acima de \*R\$ 5,3000\*/);
+        const [list] = await bot.replyAlt('/stocks -alert');
+        assert.match(list, /🔔 \*ALERTAS DE PREÇO\* _\(\/stocks\)_\n\n1\. 🇺🇸 USD\/BRL acima de \*R\$ 5,3000\*/);
 
         // Not yet: nothing happens
         await priceCheckAlerts({ forcar: true });
@@ -213,23 +230,23 @@ describe('alertas de preço (-alert)', () => {
     });
 
     test('formatos aceitos: sem espaços, vírgula decimal, minúsculas', async () => {
-        assert.match((await bot.replyAlt('/rates -alert eur<5,5'))[0], /EUR\/BRL abaixo de \*R\$ 5,5000\*/);
+        assert.match((await bot.replyAlt('/stocks -alert eur<5,5'))[0], /EUR\/BRL abaixo de \*R\$ 5,5000\*/);
     });
 
     test('regra inválida, moeda não suportada e já cumprida', async () => {
-        assert.match((await bot.replyAlt('/rates -alert USD = 5'))[0], /❌ Regra inválida: "USD = 5"/);
-        assert.match((await bot.replyAlt('/rates -alert USD > abc'))[0], /❌ Regra inválida/);
-        assert.match((await bot.replyAlt('/rates -alert XYZ > 1'))[0], /❌ Moeda não suportada: XYZ/);
+        assert.match((await bot.replyAlt('/stocks -alert USD = 5'))[0], /❌ Regra inválida: "USD = 5"/);
+        assert.match((await bot.replyAlt('/stocks -alert USD > abc'))[0], /❌ Regra inválida/);
+        assert.match((await bot.replyAlt('/stocks -alert XYZ > 1', { erroEsperado: true }))[0], /⚠️ Não consegui consultar o preço de XYZ agora/, 'ticker que o Yahoo não conhece');
         assert.match((await bot.replyAlt('/crypto -alert XYZ > 1'))[0], /❌ Moeda não suportada: XYZ\n💡 _Veja as suportadas com \/crypto -l_/);
-        assert.match((await bot.replyAlt('/rates -alert USD > 5'))[0], /ℹ️ USD\/BRL já está acima de R\$ 5,0000: agora está em \*R\$ 5,2000\*/);
+        assert.match((await bot.replyAlt('/stocks -alert USD > 5'))[0], /ℹ️ USD\/BRL já está acima de R\$ 5,0000: agora está em \*R\$ 5,2000\*/);
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM price_alerts')).n, 0);
     });
 
     test('limite do alert.max (somando os dois comandos)', async () => {
         await bot.setSetting('alert.max', 2);
-        await bot.replyAlt('/rates -alert USD > 6');
+        await bot.replyAlt('/stocks -alert USD > 6');
         await bot.replyAlt('/crypto -alert BTC > 100000');
-        assert.match((await bot.replyAlt('/rates -alert EUR > 7'))[0], /❌ Limite de 2 alertas atingido/);
+        assert.match((await bot.replyAlt('/stocks -alert EUR > 7'))[0], /❌ Limite de 2 alertas atingido/);
     });
 
     test('preço indisponível na criação', async () => {
@@ -238,13 +255,13 @@ describe('alertas de preço (-alert)', () => {
     });
 
     test('-rm N, -rm all e nº inexistente; listas separadas por comando', async () => {
-        await bot.replyAlt('/rates -alert USD > 6');
-        await bot.replyAlt('/rates -alert EUR > 7');
+        await bot.replyAlt('/stocks -alert USD > 6');
+        await bot.replyAlt('/stocks -alert EUR > 7');
         await bot.replyAlt('/crypto -alert BTC > 100000');
 
-        assert.match((await bot.replyAlt('/rates -alert -rm 1'))[0], /🗑️ Alerta removido: 🇺🇸 USD\/BRL acima de/);
-        assert.match((await bot.replyAlt('/rates -alert -rm 9'))[0], /❌ Alerta nº 9 não existe/);
-        assert.deepEqual(await bot.replyAlt('/rates -alert -rm all'), ['🗑️ 1 alerta removido.']);
+        assert.match((await bot.replyAlt('/stocks -alert -rm 1'))[0], /🗑️ Alerta removido: 🇺🇸 USD\/BRL acima de/);
+        assert.match((await bot.replyAlt('/stocks -alert -rm 9'))[0], /❌ Alerta nº 9 não existe/);
+        assert.deepEqual(await bot.replyAlt('/stocks -alert -rm all'), ['🗑️ 1 alerta removido.']);
         assert.match((await bot.replyAlt('/crypto -alert'))[0], /1\. ₿ BTC\/USDT acima de/);
     });
 
@@ -266,8 +283,8 @@ describe('alertas de preço (-alert)', () => {
         assert.match(created, /^🔔 \*Alerta criado\*\n₿ BTC\/USDT acima de \*\$96,000\.00\*\n   💬 Isso é uma mensagem: hora de vender!\n💰 Agora/);
         assert.match((await bot.replyAlt('/crypto -alert'))[0], /→ 👤 Fulano _\(criado .*\)_\n   💬 Isso é uma mensagem: hora de vender!/);
 
-        // -to can also come after -msg; and in /rates
-        await bot.replyAlt('/rates USD -alert > 6 -msg Dólar subiu! -to /Fulano/');
+        // -to can also come after -msg; and in /stocks
+        await bot.replyAlt('/stocks USD -alert > 6 -msg Dólar subiu! -to /Fulano/');
         assert.deepEqual(await bot.dbAll('SELECT symbol, dest_name, message FROM price_alerts ORDER BY id'), [
             { symbol: 'BTC', dest_name: 'Fulano', message: 'Isso é uma mensagem: hora de vender!' },
             { symbol: 'USD', dest_name: 'Fulano', message: 'Dólar subiu!' }
@@ -285,7 +302,7 @@ describe('alertas de preço (-alert)', () => {
     });
 
     test('só o dono; lista vazia', async () => {
-        assert.deepEqual(await bot.replyAlt('/rates -alert USD > 6', { de: OTHERAlt.jid }), ['⛔ Apenas o dono do bot (ou um admin) pode usar os alertas.']);
+        assert.deepEqual(await bot.replyAlt('/stocks -alert USD > 6', { de: OTHERAlt.jid }), ['⛔ Apenas o dono do bot (ou um admin) pode usar os alertas.']);
         assert.match((await bot.replyAlt('/crypto -alert'))[0], /🔔 Nenhum alerta no \/crypto\.\n💡 _Crie com \/crypto -alert BTC < 90000_/);
     });
 
@@ -300,10 +317,10 @@ describe('alertas de preço (-alert)', () => {
         assert.match((await bot.replyAlt('/crypto -alert'))[0], /1\. ₿ BTC\/USDT abaixo de \*\$90,000\.00\* → 👥 Grupo sobre L200/);
 
         // Other forms: quotes, one word, with @, -to before the rule
-        for (const line of ['/rates -alert USD > 6 -to "l200 grupo"', '/rates -alert -to L200 EUR > 7', '/rates -alert USD > 8 -to onibus']) {
+        for (const line of ['/stocks -alert USD > 6 -to "l200 grupo"', '/stocks -alert -to L200 EUR > 7', '/stocks -alert USD > 8 -to onibus']) {
             assert.match((await bot.replyAlt(line))[0], /🔔 \*Alerta criado\*/, line);
         }
-        const destinations = await bot.dbAll("SELECT dest_name FROM price_alerts WHERE kind = 'cotacao' ORDER BY id");
+        const destinations = await bot.dbAll("SELECT dest_name FROM price_alerts WHERE kind = 'acao' ORDER BY id");
         assert.deepEqual(destinations.map(d => d.dest_name), ['Grupo sobre L200', 'Grupo sobre L200', 'Família Ônibus']);
 
         prices.BTC = 89000;
@@ -315,15 +332,15 @@ describe('alertas de preço (-alert)', () => {
     });
 
     test('-to: contato pelo número ou pelo nome', async () => {
-        await bot.replyAlt('/rates -alert USD > 6 -to +5521911111111');
-        await bot.replyAlt('/rates -alert EUR > 7 -to fulano');
+        await bot.replyAlt('/stocks -alert USD > 6 -to +5521911111111');
+        await bot.replyAlt('/stocks -alert EUR > 7 -to fulano');
 
         const destinations = await bot.dbAll('SELECT dest_id, dest_name, dest_is_group FROM price_alerts ORDER BY id');
         assert.deepEqual(destinations, [
             { dest_id: OTHERAlt.jid, dest_name: 'Fulano', dest_is_group: 0 },
             { dest_id: OTHERAlt.jid, dest_name: 'Fulano', dest_is_group: 0 }
         ]);
-        assert.match((await bot.replyAlt('/rates -alert'))[0], /USD\/BRL acima de \*R\$ 6,0000\* → 👤 Fulano/);
+        assert.match((await bot.replyAlt('/stocks -alert'))[0], /USD\/BRL acima de \*R\$ 6,0000\* → 👤 Fulano/);
 
         prices.USD = 6.1;
         const beforeAlt = bot.client.enviadas.length;
@@ -335,9 +352,9 @@ describe('alertas de preço (-alert)', () => {
         const L200 = '120363000000000200@g.us';
         bot.createGroup(L200, 'Grupo sobre L200', [OWNER.jid]);
 
-        const [created] = await bot.replyAlt('/rates -alert USD > 6 -to /Grupo L200/ -to fulano -to +5521911111111');
+        const [created] = await bot.replyAlt('/stocks -alert USD > 6 -to /Grupo L200/ -to fulano -to +5521911111111');
         assert.match(created, /💡 _Aviso em 👥 Grupo sobre L200, 👤 Fulano;/);
-        assert.match((await bot.replyAlt('/rates -alert'))[0], /USD\/BRL acima de \*R\$ 6,0000\* → 👥 Grupo sobre L200, 👤 Fulano/);
+        assert.match((await bot.replyAlt('/stocks -alert'))[0], /USD\/BRL acima de \*R\$ 6,0000\* → 👥 Grupo sobre L200, 👤 Fulano/);
 
         const [a] = await bot.dbAll('SELECT dest_id, recipients FROM price_alerts');
         assert.equal(a.dest_id, L200, 'as dest_* ficam com o primeiro');
@@ -350,7 +367,7 @@ describe('alertas de preço (-alert)', () => {
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM price_alerts')).n, 0);
 
         // A destination that fails does not hold up the others
-        await bot.replyAlt('/rates -alert EUR > 7 -to /Grupo L200/ -to fulano');
+        await bot.replyAlt('/stocks -alert EUR > 7 -to /Grupo L200/ -to fulano');
         const send = bot.client.sendMessage;
         bot.client.sendMessage = (chatId, ...rest) => (chatId === L200
             ? Promise.reject(new Error('fora do ar'))
@@ -365,19 +382,19 @@ describe('alertas de preço (-alert)', () => {
         }
 
         // A -to that fails: nothing is created
-        assert.match((await bot.replyAlt('/rates -alert USD > 8 -to fulano -to xyz'))[0], /❌ Nenhum contato ou grupo com "xyz"/);
+        assert.match((await bot.replyAlt('/stocks -alert USD > 8 -to fulano -to xyz'))[0], /❌ Nenhum contato ou grupo com "xyz"/);
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM price_alerts')).n, 0);
     });
 
     test('-to email: o aviso sai por e-mail, sem a formatação do WhatsApp', async () => {
-        assert.match((await bot.replyAlt('/rates -alert USD > 6 -to email'))[0], /❌ O "email" usa o QRCODE_EMAIL_SMTP_TO/);
+        assert.match((await bot.replyAlt('/stocks -alert USD > 6 -to email'))[0], /❌ O "email" usa o QRCODE_EMAIL_SMTP_TO/);
 
         // QRCODE_EMAIL_SMTP_TO in the documentation format: "Name <email>"
         const env = { QRCODE_EMAIL_SMTP_HOST: 'smtp.exemplo.com', QRCODE_EMAIL_SMTP_USER: 'bot@exemplo.com', QRCODE_EMAIL_SMTP_TO: 'Eu <eu@exemplo.com>' };
         Object.assign(process.env, env);
         try {
-            assert.match((await bot.replyAlt('/rates -alert USD > 6 -to email'))[0], /💡 _Aviso em 📧 eu@exemplo\.com;/);
-            assert.match((await bot.replyAlt('/rates -alert'))[0], /USD\/BRL acima de \*R\$ 6,0000\* → 📧 eu@exemplo\.com/);
+            assert.match((await bot.replyAlt('/stocks -alert USD > 6 -to email'))[0], /💡 _Aviso em 📧 eu@exemplo\.com;/);
+            assert.match((await bot.replyAlt('/stocks -alert'))[0], /USD\/BRL acima de \*R\$ 6,0000\* → 📧 eu@exemplo\.com/);
 
             prices.USD = 6.1;
             const beforeAlt = bot.client.enviadas.length;
@@ -389,7 +406,7 @@ describe('alertas de preço (-alert)', () => {
             assert.match(m.text, /^🔔 ALERTA DE PREÇO\n\n📈 🇺🇸 USD\/BRL ficou acima de R\$ 6,0000\n💰 Agora: R\$ 6,1000/);
 
             // -msg goes at the start of the email too, without WhatsApp formatting
-            await bot.replyAlt('/rates -alert EUR > 7 -to email -msg *Euro* nas alturas!');
+            await bot.replyAlt('/stocks -alert EUR > 7 -to email -msg *Euro* nas alturas!');
             prices.EUR = 7.1;
             await priceCheckAlerts({ forcar: true });
             assert.match(emails.at(-1).text, /^Euro nas alturas!\n\n🔔 ALERTA DE PREÇO\n\n📈 🇪🇺 EUR\/BRL/);
@@ -402,20 +419,20 @@ describe('alertas de preço (-alert)', () => {
         bot.createGroup('120363000000000300@g.us', 'Trabalho Rio', [OWNER.jid]);
         bot.createGroup('120363000000000301@g.us', 'Trabalho SP', [OWNER.jid]);
 
-        const [list, created] = await bot.replyChoosing('/rates -alert USD > 6 -to trabalho', 1);
+        const [list, created] = await bot.replyChoosing('/stocks -alert USD > 6 -to trabalho', 1);
         assert.match(list, /^🔎 "trabalho" corresponde a 2 grupos:\n\n1\. 👥 Trabalho Rio\n2\. 👥 Trabalho SP\n/);
         assert.match(created, /💡 _Aviso em 👥 Trabalho Rio;/);
-        assert.match((await bot.replyAlt('/rates -alert USD > 6 -to /trabalho sp/'))[0], /💡 _Aviso em 👥 Trabalho SP;/);
-        assert.match((await bot.replyAlt('/rates -alert USD > 6 -to xyz'))[0], /❌ Nenhum contato ou grupo com "xyz" no nome/);
-        assert.match((await bot.replyAlt('/rates -alert USD > 6 -to +5521988888888'))[0], /❌ O número \+5521988888888 não está no WhatsApp/);
-        assert.match((await bot.replyAlt('/rates -alert USD > 6 -to +123'))[0], /❌ Número inválido: \+123/);
-        assert.match((await bot.replyAlt('/rates -alert USD > 6 -to'))[0], /Informe o destino do -to/);
-        assert.match((await bot.replyAlt('/rates -alert -to trabalho'))[0], /❌ O -to só vale ao criar um alerta/);
+        assert.match((await bot.replyAlt('/stocks -alert USD > 6 -to /trabalho sp/'))[0], /💡 _Aviso em 👥 Trabalho SP;/);
+        assert.match((await bot.replyAlt('/stocks -alert USD > 6 -to xyz'))[0], /❌ Nenhum contato ou grupo com "xyz" no nome/);
+        assert.match((await bot.replyAlt('/stocks -alert USD > 6 -to +5521988888888'))[0], /❌ O número \+5521988888888 não está no WhatsApp/);
+        assert.match((await bot.replyAlt('/stocks -alert USD > 6 -to +123'))[0], /❌ Número inválido: \+123/);
+        assert.match((await bot.replyAlt('/stocks -alert USD > 6 -to'))[0], /Informe o destino do -to/);
+        assert.match((await bot.replyAlt('/stocks -alert -to trabalho'))[0], /❌ O -to só vale ao criar um alerta/);
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM price_alerts')).n, 2);
     });
 
     test('verificação: respeita o intervalo, espera a conexão e sobrevive a falhas', async () => {
-        await bot.replyAlt('/rates -alert USD > 5.30');
+        await bot.replyAlt('/stocks -alert USD > 5.30');
         prices.USD = 6;
 
         bot.estado.pronto = false;
