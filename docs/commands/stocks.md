@@ -190,6 +190,19 @@ message. The destination is a contact, group, number or email. Exact names take 
 📅 Alert created on 9/30/2026, 10:12:03
 ```
 
+## Shortcut for the quotes you check
+
+For the quote you look at every day, an alias saves the typing: `/alias -q /mstr /stocks MSTR` and from then on `/mstr`
+brings only the quote (`/dolar`, `/euro`, `/usdt`...). More in
+[Shortcuts for quotes](alias.md#shortcuts-for-quotes).
+
+```text
+/alias -q /mstr /stocks MSTR
+/alias -q /dolar /stocks USD
+/mstr                          → MicroStrategy
+/dolar                         → the dollar against the real
+```
+
 ## The enabled list
 
 The enabled symbols are in the `stocks.symbols` setting (default: `USD`, `EUR`, `USDT` and `MSTR`) and survive

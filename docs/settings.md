@@ -38,6 +38,7 @@ shows are in Portuguese; the ones here are in English).
 | `contacts.cache` | on/off | `on` | Keeps the profile photos downloaded by `/contacts` in `cache/contacts` (also in the backup). Off: downloads on every export and saves nothing |
 | `contacts.cacheDays` | 1–365 | `30` | Days a photo in `cache/contacts` stays valid before being downloaded again (`/contacts -r` forces it) |
 | `contacts.delayMs` | 0–5000 | `300` | Pause, in milliseconds, between photos in `/contacts`, to avoid hitting WhatsApp in a burst |
+| `crypto.brl` | on/off | `on` | [`/crypto`](commands/crypto.md) also shows the price of each coin in reais (the Binance pair against the real, or the dollar price × USDTBRL) |
 | `crypto.coins` | list | `BTC, ETH, SOL, HYPE` | Coins in `/crypto` (supported ones only); usually changed with `/crypto -a`/`-d` |
 | `cve.max` | 1–20 | `10` | Number of CVEs shown by `/cve` (`/cve <max>` overrides it) |
 | `cve.maxDays` | 1–120 | `7` | Window, in days, of `/cve -highscore` |

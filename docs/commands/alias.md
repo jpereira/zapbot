@@ -144,6 +144,40 @@ With `-quiet` (or `-q`), the header isn't printed and only the result shows up:
 /haha  → Hahahahahahhahahaha vc e burro!
 ```
 
+## Shortcuts for quotes
+
+The quotes ([`/crypto`](crypto.md) and [`/stocks`](stocks.md)) are the commands you call the most, so they make good
+aliases: one word instead of `/crypto BTC`. With `-q`, only the quote shows up, without the `🔗 Alias ...` header:
+
+```text
+/alias -q /btc /crypto BTC
+/alias -q /eth /crypto ETH
+/alias -q /sol /crypto SOL            (the same for /solana: one alias per name you like)
+/alias -q /xaut /crypto XAUT          → gold (the Tether Gold token)
+/alias -q /mstr /stocks MSTR
+/alias -q /dolar /stocks USD
+/alias -q /euro /stocks EUR
+/alias -q /usdt /stocks USDT
+```
+
+After that, `/btc`, `/xaut`, `/mstr`, `/dolar`... answer with the quote straight away. Two more ideas:
+
+- **A few at once:** `/alias -q /cripto /crypto BTC ETH SOL XAUT` and `/alias -q /mercado /stocks USD EUR MSTR` bring the
+  whole group in one message.
+- **One alias for any coin or ticker**, with the [parameter](#parameters-1-n) `${1:-...}`:
+
+```text
+/alias -q /coin /crypto ${1:-BTC}
+/coin                  → /crypto BTC
+/coin eth              → /crypto ETH
+/coin xaut             → /crypto XAUT
+
+/alias -q /mkt /stocks ${1:-MSTR}
+/mkt                   → /stocks MSTR
+/mkt nvda              → /stocks NVDA
+/mkt PETR4.SA          → /stocks PETR4.SA
+```
+
 ## Text with commands
 
 When what comes after the name (and the description) doesn't start with `/`, the alias stores a

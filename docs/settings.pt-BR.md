@@ -38,6 +38,7 @@ em português).
 | `contacts.cache` | on/off | `on` | Guarda as fotos de perfil baixadas pelo `/contacts` em `cache/contacts` (entram no backup). Desligado: baixa a cada exportação e não guarda nada |
 | `contacts.cacheDays` | 1–365 | `30` | Dias que uma foto em `cache/contacts` vale antes de ser baixada de novo (`/contacts -r` força) |
 | `contacts.delayMs` | 0–5000 | `300` | Pausa, em milissegundos, entre uma foto e outra no `/contacts`, para não consultar o WhatsApp em rajada |
+| `crypto.brl` | on/off | `on` | O [`/crypto`](commands/crypto.md) mostra também o preço de cada moeda em reais (o par da Binance contra o real, ou o preço em dólar × USDTBRL) |
 | `crypto.coins` | lista | `BTC, ETH, SOL, HYPE` | Moedas do `/crypto` (só as suportadas); normalmente alterada pelo `/crypto -a`/`-d` |
 | `cve.max` | 1–20 | `10` | Quantidade de CVEs exibidas pelo `/cve` (o `/cve <max>` sobrepõe) |
 | `cve.maxDays` | 1–120 | `7` | Janela, em dias, do `/cve -highscore` |

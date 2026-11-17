@@ -144,7 +144,11 @@ test('XAUT (ouro tokenizado) é suportado no /crypto, com o ícone 🥇', async 
     assert.equal(CRYPTO_SUPPORTED.XAUT, '🥇');
     network.responder('get', 'api.binance.com/api/v3/ticker/24hr', (url, cfg) =>
         JSON.parse(cfg.params.symbols).map((par) => ({ symbol: par, lastPrice: 3837.83, priceChangePercent: '-0.325', highPrice: 3880, lowPrice: 3820, quoteVolume: 41_000_000 })));
+    bot.src('quotes').zeroStatusBrl();
+    network.responder('get', 'api.binance.com/api/v3/exchangeInfo', (url, cfg) => ({ symbols: JSON.parse(cfg.params.symbols).map((par) => ({ symbol: par, baseAsset: par.replace(/BRL$/, ''), status: 'TRADING' })) }));
+    // Without a direct reais pair: the dollar price × USDTBRL
+    network.responder('get', 'api.binance.com/api/v3/ticker/price', (url, cfg) => JSON.parse(cfg.params.symbols).map((par) => ({ symbol: par, price: '5.78' })));
     const [r] = await bot.replyAlt('/crypto XAUT');
-    assert.match(r, /🥇 XAUT\n {4}💰 \$3,837\.83/);
+    assert.match(r, /🥇 XAUT\n {4}💰 \$3,837\.83[^\n]*\n {4}🇧🇷 R\$ 22\.182,66\n/);
     assert.match((await bot.replyAlt('/crypto -l'))[0], /🥇 XAUT/);
 });
