@@ -4,7 +4,7 @@
  * the name is found without guessing whether the number is a LID or a phone.
  */
 
-const { dbGet } = require('./db');
+const { dbGet, dbRun } = require('./db');
 const { resolverMentions } = require('./contacts');
 
 /**
@@ -36,4 +36,16 @@ function mentionsForRecord(mentionedIds) {
     return ids.length ? JSON.stringify([...new Set(ids)]) : null;
 }
 
-module.exports = { mentionsRecorded, mentionsForRecord, messageResolverMentions };
+/**
+ * Joins the stored mentions with those of an edit (which may tag new people).
+ * @param {string} messageId
+ * @param {Array<string|{_serialized: string}>} mentionedIds  the mentionedIds of the edited message
+ */
+async function appendMentions(messageId, mentionedIds) {
+    const freshAlt2 = mentionsForRecord(mentionedIds);
+    if (!freshAlt2) return;
+    const allAlt = mentionsForRecord([...await mentionsRecorded(messageId), ...JSON.parse(freshAlt2)]);
+    await dbRun('UPDATE messages SET mentions = ? WHERE id = ?', [allAlt, messageId]);
+}
+
+module.exports = { appendMentions, mentionsRecorded, mentionsForRecord, messageResolverMentions };

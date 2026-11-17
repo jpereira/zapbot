@@ -12,7 +12,7 @@ const { getSetting } = require('../settings');
 const { countStats } = require('../stats');
 const { formatData } = require('../util/format');
 const { headerOrigin, channelId } = require('../util/origin');
-const { messageResolverMentions } = require('../mentions');
+const { appendMentions, messageResolverMentions } = require('../mentions');
 
 /*
  * Mensagens editadas
@@ -102,6 +102,8 @@ client.on('message_edit', async (msg, newBody, prevBody) => {
 
         // If the message is deleted later, /show shows the final text
         await dbRun('UPDATE messages SET body = ? WHERE id = ? AND revoked = 0', [afterAlt, messageId]);
+        // The edit may tag new people: their ids go along with the message's
+        await appendMentions(messageId, msg.mentionedIds);
 
         printInfo(`[Edit] Message ${messageId} edited in ${row.chat_name}`);
 
