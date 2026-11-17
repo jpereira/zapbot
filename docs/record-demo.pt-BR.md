@@ -79,8 +79,8 @@ Sem `-mask`: use um contato de teste.
 ### 4. Entrar e sair de grupos: `/join` e `/leave`
 
 ```text
-/join -i https://chat.whatsapp.com/<codigo-de-um-grupo-de-teste>
-/join https://chat.whatsapp.com/<codigo-de-um-grupo-de-teste>
+/join -i https://chat.whatsapp.com/<código-de-um-grupo-de-teste>
+/join https://chat.whatsapp.com/<código-de-um-grupo-de-teste>
 /join -l
 /leave -l
 /leave 1
@@ -106,7 +106,7 @@ legenda):
 ### 6. Baixar vídeos: `/get`
 
 ```text
-/get https://www.instagram.com/reel/<codigo>/
+/get https://www.instagram.com/reel/<código>/
 /get -a https://youtu.be/<id>
 /get -st -ss 3 -es 6 https://youtu.be/<id>
 ```

@@ -386,15 +386,15 @@ QRCODE_EMAIL_SMTP_ANTIPHISHING="UmaFraseSoSua"         # vai em todo e-mail do b
 
 Se algo der errado, volte para `QRCODE_EMAIL_ENABLE="false"` e leia o QR pelos logs. Os detalhes
 (provedores, erros comuns) estão em
-[Configuração](https://jpereira.github.io/zapbot/pt-BR/configuracao/#e-mail-qr-code-e-alertas) e em
+[Configuração](https://jpereira.github.io/zapbot/pt-BR/configuration/#e-mail-qr-code-e-alertas) e em
 [E-mails](https://jpereira.github.io/zapbot/pt-BR/emails/).
 
 ### Atualizar
 
 Para atualizar, use `git fetch --tags`, o mesmo `git checkout` (com a release nova) e o build de
 novo. O passo a passo (inclusive a versão de desenvolvimento, `main`) está em
-[Instalação](https://jpereira.github.io/zapbot/pt-BR/instalacao/); as variáveis do `config/.env`, em
-[Configuração](https://jpereira.github.io/zapbot/pt-BR/configuracao/).
+[Instalação](https://jpereira.github.io/zapbot/pt-BR/installation/); as variáveis do `config/.env`, em
+[Configuração](https://jpereira.github.io/zapbot/pt-BR/configuration/).
 
 ## Comandos
 
@@ -506,15 +506,15 @@ e deixe o bot do seu jeito:
 
 | Página | O que tem |
 |---|---|
-| [Instalação](https://jpereira.github.io/zapbot/pt-BR/instalacao/) | Requisitos, instalação, atualização (estável e `main`) e QR Code |
-| [Configuração](https://jpereira.github.io/zapbot/pt-BR/configuracao/) | `config/.env`, serviços externos e chaves de API |
+| [Instalação](https://jpereira.github.io/zapbot/pt-BR/installation/) | Requisitos, instalação, atualização (estável e `main`) e QR Code |
+| [Configuração](https://jpereira.github.io/zapbot/pt-BR/configuration/) | `config/.env`, serviços externos e chaves de API |
 | [E-mails](https://jpereira.github.io/zapbot/pt-BR/emails/) | QR Code por e-mail, código anti-phishing e alertas por e-mail |
 | [Comandos](https://jpereira.github.io/zapbot/pt-BR/commands/) | Uma página por comando, com opções e exemplos |
 | [Demonstração](docs/demo.md) | O bot em ação, em GIFs |
 | [Settings](https://jpereira.github.io/zapbot/pt-BR/settings/) | Configurações alteráveis pelo `/set` |
 | [API e MCP](https://jpereira.github.io/zapbot/pt-BR/api/) | A API HTTP local opcional e o servidor MCP experimental para clientes de IA |
-| [Operação](https://jpereira.github.io/zapbot/pt-BR/operacao/) | Dia a dia, saúde do container (heartbeat) e solução de problemas |
-| [Desenvolvimento](https://jpereira.github.io/zapbot/pt-BR/desenvolvimento/) | Estrutura do código, testes, documentação e nova versão |
+| [Operação](https://jpereira.github.io/zapbot/pt-BR/operation/) | Dia a dia, saúde do container (heartbeat) e solução de problemas |
+| [Desenvolvimento](https://jpereira.github.io/zapbot/pt-BR/development/) | Estrutura do código, testes, documentação e nova versão |
 
 ## Desenvolvimento
 
@@ -527,7 +527,7 @@ make check        # lint, testes e documentação em modo estrito
 ```
 
 O código fica em `src/` (o `app.js` só faz o bootstrap). Veja
-[Desenvolvimento](https://jpereira.github.io/zapbot/pt-BR/desenvolvimento/) para a estrutura, os testes, a
+[Desenvolvimento](https://jpereira.github.io/zapbot/pt-BR/development/) para a estrutura, os testes, a
 documentação e o `scripts/bump.sh` das releases.
 
 ## Contribuições

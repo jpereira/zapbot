@@ -387,15 +387,15 @@ QRCODE_EMAIL_SMTP_ANTIPHISHING="AnyPhraseOfYours"      # goes in every e-mail fr
 
 If something goes wrong, go back to `QRCODE_EMAIL_ENABLE="false"` and read the QR from the logs.
 The details (providers, common errors) are in
-[Configuration](https://jpereira.github.io/zapbot/configuracao/#email-qr-code-and-alerts) and in
+[Configuration](https://jpereira.github.io/zapbot/configuration/#email-qr-code-and-alerts) and in
 [E-mails](https://jpereira.github.io/zapbot/emails/).
 
 ### Updating
 
 To update, use `git fetch --tags`, the same `git checkout` (with the new release) and the build
 again. The step by step (including the development version, `main`) is in
-[Installation](https://jpereira.github.io/zapbot/instalacao/); the `config/.env` variables are in
-[Configuration](https://jpereira.github.io/zapbot/configuracao/).
+[Installation](https://jpereira.github.io/zapbot/installation/); the `config/.env` variables are in
+[Configuration](https://jpereira.github.io/zapbot/configuration/).
 
 ## Commands
 
@@ -508,15 +508,15 @@ and make the bot your own:
 
 | Page | What it has |
 |---|---|
-| [Installation](https://jpereira.github.io/zapbot/instalacao/) | Requirements, installation, updating (stable and `main`) and QR Code |
-| [Configuration](https://jpereira.github.io/zapbot/configuracao/) | `config/.env`, external services and API keys |
+| [Installation](https://jpereira.github.io/zapbot/installation/) | Requirements, installation, updating (stable and `main`) and QR Code |
+| [Configuration](https://jpereira.github.io/zapbot/configuration/) | `config/.env`, external services and API keys |
 | [E-mails](https://jpereira.github.io/zapbot/emails/) | QR Code by e-mail, anti-phishing code and e-mail alerts |
 | [Commands](https://jpereira.github.io/zapbot/commands/) | One page per command, with options and examples |
 | [Demo](docs/demo.md) | The bot in action, in GIFs |
 | [Settings](https://jpereira.github.io/zapbot/settings/) | Settings you can change with `/set` |
 | [API and MCP](https://jpereira.github.io/zapbot/api/) | The optional local HTTP API and the experimental MCP server for AI clients |
-| [Operation](https://jpereira.github.io/zapbot/operacao/) | Day to day, container health (heartbeat) and troubleshooting |
-| [Development](https://jpereira.github.io/zapbot/desenvolvimento/) | Code structure, tests, documentation and a new version |
+| [Operation](https://jpereira.github.io/zapbot/operation/) | Day to day, container health (heartbeat) and troubleshooting |
+| [Development](https://jpereira.github.io/zapbot/development/) | Code structure, tests, documentation and a new version |
 
 ## Development
 
@@ -529,7 +529,7 @@ make check        # lint, tests and documentation in strict mode
 ```
 
 The code lives in `src/` (`app.js` only does the bootstrap). See
-[Development](https://jpereira.github.io/zapbot/desenvolvimento/) for the structure, the tests, the
+[Development](https://jpereira.github.io/zapbot/development/) for the structure, the tests, the
 documentation and the releases' `scripts/bump.sh`.
 
 ## Contributions
