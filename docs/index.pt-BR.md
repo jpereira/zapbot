@@ -186,6 +186,8 @@ Não conte com isso.
 
 ```text
 /draw -p /Rafael Silva/ /Maria Lucia/ desenhe os dois numa festa de aniversário
+/draw @me @this desenhe nós dois como piratas           (no chat com alguém)
+/draw @reply desenhe ela como super-heroína             (respondendo a mensagem dela)
 🎨 desenhe os dois numa festa de aniversário
 ```
 

@@ -99,7 +99,7 @@
         "p"
       ],
       "values": [],
-      "desc": "Junta fotos de perfil de @me/$me, @this/$this ou nomes (@me/@this no começo do texto já valem, sem o -p). Vão ao modelo ao lado da foto que você responde. Logo depois do -p, quantas quiser (até 4): os nomes como estão na sua agenda, digitados soltos (-p fulano beltrano; a primeira palavra que não é contato começa o pedido), /Nome Completo/, @menção, +número, @this (ou $this): o chat (a outra pessoa, ou a foto do grupo), ou @me (ou $me): a sua própria foto. Sem ninguém: a pessoa do privado (você, no seu) ou, no grupo, quem escreveu a mensagem respondida. Quem esconde a foto pela privacidade é recusado.",
+      "desc": "Junta fotos de perfil de @me/$me, @this/$this, @reply/$reply ou nomes (@me/@this no começo do texto já valem, sem o -p). Vão ao modelo ao lado da foto que você responde. Logo depois do -p, quantas quiser (até 4): os nomes como estão na sua agenda, digitados soltos (-p fulano beltrano; a primeira palavra que não é contato começa o pedido), /Nome Completo/, @menção, +número, @this (ou $this): o chat (a outra pessoa, ou a foto do grupo), @reply (ou $reply): quem escreveu a mensagem respondida, ou @me (ou $me): a sua própria foto. Sem ninguém: a pessoa do privado (você, no seu) ou, no grupo, quem escreveu a mensagem respondida. Quem esconde a foto pela privacidade é recusado.",
       "ex": [
         "/gpt -p /Rafael Silva/ descreva essa pessoa",
         "/gpt -img -p /Rafael Silva/ coloque essa pessoa na foto (respondendo a uma foto)",

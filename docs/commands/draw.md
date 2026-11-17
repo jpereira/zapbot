@@ -106,6 +106,7 @@ a photo, without having to download and send their picture.
 | Mention: `@Rafael` | The mentioned person |
 | `@me` or `$me` | **You**: your own profile photo (whoever typed the command) |
 | `@this` or `$this` | **The chat you are in**: in a private chat, the other person; in a group, the **group photo** |
+| `@reply` or `$reply` | **Who wrote the message you reply to**, in a private chat or in a group (needs a reply) |
 | Number: `+5521999999999` | By number |
 | *(nobody)*, in a private chat | The person of the chat (in your own chat, you) |
 | *(nobody)*, in a group | Whoever wrote the message you reply to |
@@ -163,6 +164,17 @@ get into the same picture:
 /draw -p @this make a poster with this group's photo
 /draw -p @me @this put me and the group in a comic strip
 ```
+
+**Who you are replying to:** `@reply` (or `$reply`) is whoever wrote the message you replied to, in a
+group or in a private chat. Handy to put someone from the group in a picture with you:
+
+```text
+(in a group, replying to a message from Maria)
+/draw -p @reply @me draw the two of us at the beach
+/draw @reply turn her into a superhero        (without -p, at the start of the request)
+```
+
+Without a reply, the bot says `❌ /draw @reply needs a reply: answer a message from the person.`
 
 **Without the `-p`:** `@me`/`$me` and `@this`/`$this` at the **start of the request** already count as
 `-p`. The same goes after a flag like `-g`. Only these four variables: a loose `@mention` stays as
