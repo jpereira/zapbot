@@ -1,5 +1,5 @@
 /*
- * Price alerts from /rates -alert and /crypto -alert.
+ * Price alerts from /stocks -alert and /crypto -alert.
  */
 
 const axios = require('axios');
@@ -13,6 +13,7 @@ const {
     recipientsDe, resolverDestinations
 } = require('./destinations');
 const { printError, printInfo } = require('./log');
+const { quoteAction, fmtPrice, normalizeTicker } = require('./actions');
 const { QUOTE_SUPPORTED, CRYPTO_SUPPORTED } = require('./currencies');
 const { t } = require('./i18n');
 const { GetOptFromCommand } = require('./options');
@@ -20,9 +21,9 @@ const { getSetting } = require('./settings');
 const { formatData, plural } = require('./util/format');
 
 /*
- * Price alerts: /rates -alert and /crypto -alert
+ * Price alerts: /stocks -alert (/rates is the same) and /crypto -alert
  * -alert                 → lists the command's alerts, numbered
- * -alert USD > 5.30      → notifies your private chat when USD goes above R$ 5.30
+ * -alert USD > 5.30      → (in /stocks) notifies your private chat when USD goes above R$ 5.30
  * -alert BTC < 90000     → (in /crypto) when BTC drops below $90,000
  * BTC -alert > 90000     → the same, with the currency before -alert
  * -alert -rm 2 | all     → removes alert no. 2 from the list (or all); -rm 1 2 3 removes several
@@ -36,17 +37,6 @@ const { formatData, plural } = require('./util/format');
  * 'alert.intervalMin' minutes. Only the owner creates and removes.
  */
 const ALERT_TYPES = {
-    cotacao: {
-        cmd: '/rates',
-        suportada: (sym) => Boolean(QUOTE_SUPPORTED[sym]),
-        icone: (sym) => QUOTE_SUPPORTED[sym].icone,
-        par: (sym) => `${sym}/BRL`,
-        fmt: fmtReal,
-        exemplo: 'USD > 5.30',
-        precos: async (syms) => Object.fromEntries(
-            await Promise.all(syms.map(async sym => [sym, (await searchQuote(sym)).atual]))
-        )
-    },
     crypto: {
         cmd: '/crypto',
         suportada: (sym) => Boolean(CRYPTO_SUPPORTED[sym]),
@@ -61,6 +51,19 @@ const ALERT_TYPES = {
             });
             return Object.fromEntries(data.map(d => [d.symbol.replace(/USDT$/, ''), Number(d.price)]));
         }
+    },
+    // Currencies against the real (USD, EUR, GBP, USDT), stocks, ETFs and indexes (/stocks): currencies in reais, the rest in
+    // asset currency (reais on B3 tickers, ".SA"; dollars on the others)
+    acao: {
+        cmd: '/stocks',
+        suportada: (sym) => Boolean(QUOTE_SUPPORTED[sym] || normalizeTicker(sym)),
+        icone: (sym) => QUOTE_SUPPORTED[sym]?.icone ?? '🏢',
+        par: (sym) => (QUOTE_SUPPORTED[sym] ? `${sym}/BRL` : sym),
+        fmt: (v, sym) => (QUOTE_SUPPORTED[sym] ? fmtReal(v) : fmtPrice(v, sym?.endsWith('.SA') ? 'BRL' : 'USD')),
+        exemplo: 'USD > 5.30',
+        precos: async (syms) => Object.fromEntries(
+            await Promise.all(syms.map(async (sym) => [sym, (QUOTE_SUPPORTED[sym] ? await searchQuote(sym) : await quoteAction(sym)).atual]))
+        )
     }
 };
 
@@ -80,7 +83,7 @@ function readValueAlert(textAlt) {
  * @returns {{sym: string, op: string, alvo: number} | null}
  */
 function readRuleAlert(textAlt) {
-    const m = String(textAlt).trim().match(/^([a-z0-9]+)\s*([<>])\s*([\d.,]+)$/i);
+    const m = String(textAlt).trim().match(/^([a-z0-9.^=-]+?)\s*([<>])\s*([\d.,]+)$/i);
     if (!m) return null;
 
     const target = readValueAlert(m[3]);
@@ -112,7 +115,7 @@ const messageLine = (a) => (a.message ? `\n   💬 ${a.message.replace(/\n/g, '\
 function describeAlert(kind, a) {
     const type = ALERT_TYPES[kind];
     const destinations = alertDestinations(a);
-    return `${type.icone(a.symbol)} ${type.par(a.symbol)} ${OPERATORS[a.op].texto} *${type.fmt(a.target)}*` +
+    return `${type.icone(a.symbol)} ${type.par(a.symbol)} ${OPERATORS[a.op].texto} *${type.fmt(a.target, a.symbol)}*` +
         (destinations.length ? ` → ${describeDestinations(destinations)}` : '');
 }
 
@@ -243,7 +246,7 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
 
     // Already fulfilled: it would fire right away, which is not what you want from an alert
     if (op.testar(price, rule.alvo)) {
-        await msg.reply(t('alerts.alreadyMet', { pair: type.par(rule.sym), op: op.texto, target: type.fmt(rule.alvo), price: type.fmt(price) }));
+        await msg.reply(t('alerts.alreadyMet', { pair: type.par(rule.sym), op: op.texto, target: type.fmt(rule.alvo, rule.sym), price: type.fmt(price, rule.sym) }));
         return;
     }
 
@@ -259,7 +262,7 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
     await msg.reply(t('alerts.created', {
         alert: describeAlert(kind, { symbol: rule.sym, op: rule.op, target: rule.alvo }) +
             messageLine({ message: messageAlt }),
-        price: type.fmt(price),
+        price: type.fmt(price, rule.sym),
         where: destinations.length ? t('alerts.whereIn', { dest: describeDestinations(destinations) }) : t('alerts.wherePrivate'),
         every: plural(getSetting('alert.intervalMin'), t('alerts.minute'), t('alerts.minutes'))
     }));
@@ -313,12 +316,12 @@ async function priceCheckAlerts({ forcar: force = false } = {}) {
                         icon: type.icone(a.symbol),
                         pair: type.par(a.symbol),
                         op: OPERATORS[a.op].texto,
-                        target: type.fmt(a.target),
-                        price: type.fmt(price),
+                        target: type.fmt(a.target, a.symbol),
+                        price: type.fmt(price, a.symbol),
                         change: changeAlt ? t('alerts.sinceCreation', { change: changeAlt }) : '',
                         date: formatData(a.created_at)
                     }),
-                    { assunto: t('alerts.subject', { pair: type.par(a.symbol), op: OPERATORS[a.op].texto, target: type.fmt(a.target) }) }
+                    { assunto: t('alerts.subject', { pair: type.par(a.symbol), op: OPERATORS[a.op].texto, target: type.fmt(a.target, a.symbol) }) }
                 ).catch(err => printError('Price alert: failed to notify:', err.message));
 
                 printInfo(`Price alert triggered: ${a.symbol} ${a.op} ${a.target} (now ${price})` +

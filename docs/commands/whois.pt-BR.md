@@ -75,7 +75,7 @@ O nível é o mais alto que vale **no chat onde você digitou**:
 - Num grupo, o telefone de quem não participa dele sai escondido (`+5521•••••2222`), como no
   [`/bot`](bot.md#quem-aparece-na-lista).
 - Quem está limitado a alguns comandos ([`/bot +cmd`](bot.md#comandos-de-cada-usuário)) tem a regra
-  embaixo: `→ Apenas: /rates, /crypto` ou `→ Todos, menos: /meme`.
+  embaixo: `→ Apenas: /stocks, /crypto` ou `→ Todos, menos: /meme`.
 - Quem tem um [limite de uso](bot.md#limite-de-uso-por-usuário-limit) (`/bot +cmd /gpt +limit 5/dia`) tem
   a linha `⏱️` com o que já usou e quando renova (o usuário vê o mesmo com o [`/usage`](usage.md)):
 

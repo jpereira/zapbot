@@ -29,6 +29,8 @@ Yep, we've been busy. The best of the latest batch:
 - 🎙️ **Transcribe any video or audio.** Send a link (Instagram, YouTube, X, TikTok...) or reply to a video or
   a voice note and get the **text of the speech**. It runs on your own server (faster-whisper), so no OpenAI bill
   and the audio never leaves home. [`/transcribe`](commands/transcribe.md) · [`/get -t`](commands/get.md)
+- 📈 **Quotes in one command.** `/stocks` now has the dollar, euro and USDT too (it replaces `/rates`), and `/stocks MSTR` brings the price, the change and the 52-week range of any stock (MSTR, NVDA, PETR4.SA,
+  `^GSPC`...), with alerts like `/stocks MSTR -alert < 90`; gold is `/crypto XAUT`. [`/stocks`](commands/stocks.md) · [`/crypto`](commands/crypto.md)
 - 🧮 **A calculator for lists.** Reply to a message like `437 gym / 351 running` (or a debt list, with `R$`, signs
   and the total) with `/calc`: it reads the numbers, prints a tape with all of them and checks the total of the
   text. It also does `100/2*6` and `((1+7)*8)/2`. [`/calc`](commands/calc.md)
@@ -59,6 +61,8 @@ Yep, we've been busy. The best of the latest batch:
 /draw @me @this draw the two of us as pirates
 /transcribe https://www.instagram.com/reel/XXXXXXXX/
 /transcribe -ss 30 -es 90 https://youtu.be/XXXXXXXXXXX
+/stocks MSTR NVDA
+/crypto XAUT
 /calc 100/2*6
 /get https://www.instagram.com/p/XXXXXXXX/            (a carousel: all the photos)
 /games -trivia
@@ -77,9 +81,10 @@ Yep, we've been busy. The best of the latest batch:
 | 📱 | **QR Codes** | Makes a QR Code from any text and reads one when you reply to its photo | [`/qr`](commands/qr.md) |
 | 🎞️ | **Media and stickers** | Downloads videos and audio from social networks, makes stickers (from images, videos or text), memes, GIFs, code snapshots and ASCII art | [`/get`](commands/get.md) · [`/sticker`](commands/sticker.md) · [`/meme`](commands/meme.md) · [`/giphy`](commands/giphy.md) · [`/carbon`](commands/carbon.md) · [`/ascii`](commands/ascii.md) |
 | 🎙️ | **Transcribe speech** | Turns the speech of any link, video, audio or voice note into text, on your own server (no API, no cost per minute); `-ss` and `-es` pick a part | [`/transcribe`](commands/transcribe.md) · [`/get -t`](commands/get.md#transcribe-the-speech--transcribe) |
-| 🔔 | **Watch and alerts** | Watches messages by text or regex, alerts on currency and crypto prices, DeFi positions out of range and contacts coming online, in your private chat, in a group or by e-mail | [`/watch`](commands/watch.md) · [`/rates`](commands/rates.md) · [`/crypto`](commands/crypto.md) · [`/defi`](commands/defi.md) · [`/monitor`](commands/monitor.md) |
+| 🔔 | **Watch and alerts** | Watches messages by text or regex, alerts on currency and crypto prices, DeFi positions out of range and contacts coming online, in your private chat, in a group or by e-mail | [`/watch`](commands/watch.md) · [`/stocks`](commands/stocks.md) · [`/crypto`](commands/crypto.md) · [`/defi`](commands/defi.md) · [`/monitor`](commands/monitor.md) |
 | 📅 | **Schedule and automate** | One-off and recurring messages, reminders, your own shortcuts, several commands in one message, notes with `#tags` and alerts, recipient lists | [`/cron`](commands/cron.md) · [`/alias`](commands/alias.md) · [`/batch`](commands/batch.md) · [`/notes`](commands/notes.md) · [`/forward`](commands/forward.md) |
 | 👥 | **Group management** | Mentions everyone, promotes and demotes, invite links, polls, welcome and goodbye messages, mutes and blocks | [`/everybody`](commands/everybody.md) · [`/promote`](commands/promote.md) · [`/invite`](commands/invite.md) · [`/poll`](commands/poll.md) · [`/welcome`](commands/welcome.md) · [`/mute`](commands/mute.md) · [`/warn`](commands/warn.md) · [`/antilink`](commands/antilink.md) |
+| 📈 | **Markets** | Dollar and euro against the real, crypto (BTC, ETH, gold as **XAUT**), and **stocks and indexes** (MSTR, NVDA, PETR4.SA, the S&P 500), with alerts when a price crosses the value you set | [`/crypto`](commands/crypto.md) · [`/stocks`](commands/stocks.md) |
 | 🌎 | **Everyday info** | Weather checked against more than one source, news, CVEs, Linux kernel versions, translation and chat statistics | [`/weather`](commands/weather.md) · [`/news`](commands/news.md) · [`/cve`](commands/cve.md) · [`/kernel`](commands/kernel.md) · [`/translate`](commands/translate.md) · [`/stats`](commands/stats.md) |
 | 🎲 | **Fun and games** | Magic 8 ball, truth, dare and trivia for the group (you can play just by replying), jokes and your friends drawn into pictures | [`/games`](commands/games.md) · [`/joke`](commands/joke.md) · [`/draw`](commands/draw.md) |
 | 📣 | **Your profile and Status** | Posts on your WhatsApp Status (and schedules it), shows anyone's About text and changes yours, exports your contacts with photos | [`/status`](commands/status.md) · [`/profile`](commands/profile.md) · [`/contacts`](commands/contacts.md) |
@@ -159,8 +164,8 @@ Help, usage and errors never count, you and the admins have no limit, and the hi
 **Your own shortcuts, and several commands in one:**
 
 ```text
-/alias money -d "Shows the dollar price" /rates USD     → registers the shortcut
-/money                                                  → runs /rates USD
+/alias money -d "Shows the dollar price" /stocks USD     → registers the shortcut
+/money                                                  → runs /stocks USD
 /alias wallet Orca {/defi orca}\n Prjx {/defi prjx}     → one text, several commands
 ```
 
@@ -381,11 +386,11 @@ Where to start:
   hour and sender (table `stats`), used by [`/stats`](commands/stats.md). Numbers only, no text;
   they are kept for 90 days (setting `stats.retentionDays`). Bot replies, your private chat and
   statuses are not counted. Turn it off with `/set stats.enable off`.
-- **Price alerts**: `/rates -alert USD > 5.30` and `/crypto -alert BTC < 90000` store the rule
+- **Price alerts**: `/stocks -alert USD > 5.30` and `/crypto -alert BTC < 90000` store the rule
   in the `price_alerts` table; every 5 minutes (setting `alert.intervalMin`) the bot checks the
   prices and alerts **your private chat** (or, with one or more `-to`, contacts, groups, numbers or
   email) when the rule is met; with `-msg`, a text of yours goes at the start of the alert. See
-  [Price alerts](commands/rates.md#price-alerts).
+  [Price alerts](commands/stocks.md#price-alerts).
 - **Notes**: [`/notes`](commands/notes.md) stores texts (and media: image, document, audio, video) in the
   `notes` table, each with an ID and, if you want, a `#tag` (tag descriptions live in
   `note_tags`). `-alert` alerts about a note at a date/time (once; the note stays), in your

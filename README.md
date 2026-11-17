@@ -34,6 +34,8 @@ Yep, we've been busy. The best of the latest batch:
 - 🎙️ **Transcribe any video or audio.** Send a link (Instagram, YouTube, X, TikTok...) or reply to a video or
   a voice note and get the **text of the speech**. It runs on your own server (faster-whisper), so no OpenAI bill
   and the audio never leaves home. [`/transcribe`](docs/commands/transcribe.md) · [`/get -t`](docs/commands/get.md)
+- 📈 **Quotes in one command.** `/stocks` now has the dollar, euro and USDT too (it replaces `/rates`), and `/stocks MSTR` brings the price, the change and the 52-week range of any stock (MSTR, NVDA, PETR4.SA,
+  `^GSPC`...), with alerts like `/stocks MSTR -alert < 90`; gold is `/crypto XAUT`. [`/stocks`](docs/commands/stocks.md) · [`/crypto`](docs/commands/crypto.md)
 - 🧮 **A calculator for lists.** Reply to a message like `437 gym / 351 running` (or a debt list, with `R$`, signs
   and the total) with `/calc`: it reads the numbers, prints a tape with all of them and checks the total of the
   text. It also does `100/2*6` and `((1+7)*8)/2`. [`/calc`](docs/commands/calc.md)
@@ -64,6 +66,8 @@ Yep, we've been busy. The best of the latest batch:
 /draw @me @this draw the two of us as pirates
 /transcribe https://www.instagram.com/reel/XXXXXXXX/
 /transcribe -ss 30 -es 90 https://youtu.be/XXXXXXXXXXX
+/stocks MSTR NVDA
+/crypto XAUT
 /calc 100/2*6
 /get https://www.instagram.com/p/XXXXXXXX/            (a carousel: all the photos)
 /games -trivia
@@ -82,9 +86,10 @@ Yep, we've been busy. The best of the latest batch:
 | 📱 | **QR Codes** | Makes a QR Code from any text and reads one when you reply to its photo | [`/qr`](docs/commands/qr.md) |
 | 🎞️ | **Media and stickers** | Downloads videos and audio from social networks, makes stickers (from images, videos or text), memes, GIFs, code snapshots and ASCII art | [`/get`](docs/commands/get.md) · [`/sticker`](docs/commands/sticker.md) · [`/meme`](docs/commands/meme.md) · [`/giphy`](docs/commands/giphy.md) · [`/carbon`](docs/commands/carbon.md) · [`/ascii`](docs/commands/ascii.md) |
 | 🎙️ | **Transcribe speech** | Turns the speech of any link, video, audio or voice note into text, on your own server (no API, no cost per minute); `-ss` and `-es` pick a part | [`/transcribe`](docs/commands/transcribe.md) · [`/get -t`](docs/commands/get.md#transcribe-the-speech--transcribe) |
-| 🔔 | **Watch and alerts** | Watches messages by text or regex, alerts on currency and crypto prices, DeFi positions out of range and contacts coming online, in your private chat, in a group or by e-mail | [`/watch`](docs/commands/watch.md) · [`/rates`](docs/commands/rates.md) · [`/crypto`](docs/commands/crypto.md) · [`/defi`](docs/commands/defi.md) · [`/monitor`](docs/commands/monitor.md) |
+| 🔔 | **Watch and alerts** | Watches messages by text or regex, alerts on currency and crypto prices, DeFi positions out of range and contacts coming online, in your private chat, in a group or by e-mail | [`/watch`](docs/commands/watch.md) · [`/stocks`](docs/commands/stocks.md) · [`/crypto`](docs/commands/crypto.md) · [`/defi`](docs/commands/defi.md) · [`/monitor`](docs/commands/monitor.md) |
 | 📅 | **Schedule and automate** | One-off and recurring messages, reminders, your own shortcuts, several commands in one message, notes with `#tags` and alerts, recipient lists | [`/cron`](docs/commands/cron.md) · [`/alias`](docs/commands/alias.md) · [`/batch`](docs/commands/batch.md) · [`/notes`](docs/commands/notes.md) · [`/forward`](docs/commands/forward.md) |
 | 👥 | **Group management** | Mentions everyone, promotes and demotes, invite links, polls, welcome and goodbye messages, mutes and blocks | [`/everybody`](docs/commands/everybody.md) · [`/promote`](docs/commands/promote.md) · [`/invite`](docs/commands/invite.md) · [`/poll`](docs/commands/poll.md) · [`/welcome`](docs/commands/welcome.md) · [`/mute`](docs/commands/mute.md) · [`/warn`](docs/commands/warn.md) · [`/antilink`](docs/commands/antilink.md) |
+| 📈 | **Markets** | Dollar and euro against the real, crypto (BTC, ETH, gold as **XAUT**), and **stocks and indexes** (MSTR, NVDA, PETR4.SA, the S&P 500), with alerts when a price crosses the value you set | [`/crypto`](docs/commands/crypto.md) · [`/stocks`](docs/commands/stocks.md) |
 | 🌎 | **Everyday info** | Weather checked against more than one source, news, CVEs, Linux kernel versions, translation and chat statistics | [`/weather`](docs/commands/weather.md) · [`/news`](docs/commands/news.md) · [`/cve`](docs/commands/cve.md) · [`/kernel`](docs/commands/kernel.md) · [`/translate`](docs/commands/translate.md) · [`/stats`](docs/commands/stats.md) |
 | 🎲 | **Fun and games** | Magic 8 ball, truth, dare and trivia for the group (you can play just by replying), jokes and your friends drawn into pictures | [`/games`](docs/commands/games.md) · [`/joke`](docs/commands/joke.md) · [`/draw`](docs/commands/draw.md) |
 | 📣 | **Your profile and Status** | Posts on your WhatsApp Status (and schedules it), shows anyone's About text and changes yours, exports your contacts with photos | [`/status`](docs/commands/status.md) · [`/profile`](docs/commands/profile.md) · [`/contacts`](docs/commands/contacts.md) |
@@ -164,8 +169,8 @@ Help, usage and errors never count, you and the admins have no limit, and the hi
 **Your own shortcuts, and several commands in one:**
 
 ```text
-/alias money -d "Shows the dollar price" /rates USD     → registers the shortcut
-/money                                                  → runs /rates USD
+/alias money -d "Shows the dollar price" /stocks USD     → registers the shortcut
+/money                                                  → runs /stocks USD
 /alias wallet Orca {/defi orca}\n Prjx {/defi prjx}     → one text, several commands
 ```
 
@@ -414,7 +419,7 @@ role); `/<command> -h` shows the help of one. The person typing and each command
 and make the bot your own:
 
 ```text
-/alias -q /usd /rates USD          → shows the USD price
+/alias -q /usd /stocks USD          → shows the USD price
 /alias -q /btc /crypto BTC         → shows the Bitcoin price
 /alias -q /forecast /weather ${1:-Rio de Janeiro}   → /forecast shows Rio; /forecast Lisboa, Lisbon
 /alias /rec /sticker -ss $1 -es $2           → /rec 10 20 <link> runs /sticker -ss 10 -es 20 <link>
@@ -476,13 +481,13 @@ and make the bot your own:
 | [`/profile`](https://jpereira.github.io/zapbot/commands/profile/) | | `admin` · delegable | A contact's profile picture, with the name from your address book and the phone number |
 | [`/promote`](https://jpereira.github.io/zapbot/commands/promote/) | | `admin` · delegable | Makes someone a group admin |
 | [`/qr`](https://jpereira.github.io/zapbot/commands/qr/) | | `user` | Makes the QR Code of a text (`-decode` reads one) |
-| [`/rates`](https://jpereira.github.io/zapbot/commands/rates/) | | `user` | EUR and USDT (and USD, GBP) exchange rates against the real: current, open, close and change; price alerts |
 | [`/search`](https://jpereira.github.io/zapbot/commands/search/) | | `admin` | Searches the WhatsApp Web history, not just the cache: in this chat or, in your private chat, in all of them (`-N` for more); `-mask` hides phone numbers |
 | [`/set`](https://jpereira.github.io/zapbot/commands/set/) | | `admin` | Lists and changes the settings; `-a`/`-rm` add and remove list items (e.g. `bot.admins` and `bot.users`) |
 | [`/show`](https://jpereira.github.io/zapbot/commands/show/) | | `admin` · delegable | In private, lists the cache; redisplays deleted messages, edits (`-e`), statuses (`-s`) and removed or changed reactions (`-r`); `-q` searches (text or regex) and `-mask` hides phone numbers |
 | [`/stats`](https://jpereira.github.io/zapbot/commands/stats/) | | `admin` · delegable | Ranking of this chat or another (`/Group/`): who talks, deletes and edits the most, peak hours; `-me` for yours, `-l` lists the chats, `-flush` deletes |
 | [`/status`](https://jpereira.github.io/zapbot/commands/status/) | | `admin` | Posts on your WhatsApp Status (text, photo or video); `/cron -status` schedules it |
 | [`/sticker`](https://jpereira.github.io/zapbot/commands/sticker/) | | `user` | Sticker from an image, video or link (`/get -st`), replying or as the caption of the media; with `-txt`, an animated text sticker |
+| [`/stocks`](https://jpereira.github.io/zapbot/commands/stocks/) | `/stock`, `/rates` | `user` | Quotes of the dollar, euro, pound and USDT against the real, and of stocks, ETFs and indexes (Yahoo Finance): USD, EUR, MSTR, PETR4.SA, `^GSPC`; `-alert` for price alerts |
 | [`/tldr`](https://jpereira.github.io/zapbot/commands/tldr/) | | `admin` · delegable | Summarizes the chat's conversation with ChatGPT (`30m`, `2h`, `1d`, `1h30m` or `300` messages; replying to a message, from it on) |
 | [`/transcribe`](https://jpereira.github.io/zapbot/commands/transcribe/) | | `user` | Text of the speech of a link, video or audio (`/get -t` is a shortcut), replying or as the caption; `-ss` and `-es` pick a part |
 | [`/translate`](https://jpereira.github.io/zapbot/commands/translate/) | | `user` | Translates the text or the replied message with Google Translate, no key needed; `-to en` changes the language |

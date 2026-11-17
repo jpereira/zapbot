@@ -161,7 +161,7 @@ acentos, ou `/regex/flags`.
 ```
 
 O `-to` funciona como nos outros comandos (veja
-[Avisar em outro chat ou por e-mail](rates.md#avisar-em-outro-chat-ou-por-e-mail)). Não vale no
+[Avisar em outro chat ou por e-mail](stocks.md#avisar-em-outro-chat-ou-por-e-mail)). Não vale no
 `-rm`.
 
 - Sai como documento no próprio chat (com `-to`, nos destinos; por e-mail, em anexo). A data e a
@@ -175,7 +175,7 @@ O `-to` funciona como nos outros comandos (veja
 
 ## Alertas
 
-O mesmo esquema do `-alert` do [`/rates`](rates.md#alertas-de-preço): lista, `-rm`, `-to` e
+O mesmo esquema do `-alert` do [`/stocks`](stocks.md#alertas-de-preço): lista, `-rm`, `-to` e
 uma verificação periódica (a cada minuto). Aqui a condição é uma data/hora, e o aviso é a própria
 anotação.
 
@@ -202,5 +202,5 @@ anotação.
 - Com `#tag`, o alerta vai em todas as anotações da tag (trocando os que já tinham), e na hora saem
   uma mensagem por anotação. Se a tag não existe, nada é mexido.
 - Sem `-to`, o aviso vai para o seu privado. O `-to` aceita os mesmos destinos dos outros alertas
-  (veja [Avisar em outro chat ou por e-mail](rates.md#avisar-em-outro-chat-ou-por-e-mail)).
+  (veja [Avisar em outro chat ou por e-mail](stocks.md#avisar-em-outro-chat-ou-por-e-mail)).
 - Se o bot estava fora do ar na hora, o aviso sai assim que ele voltar.

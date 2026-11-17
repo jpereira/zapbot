@@ -467,8 +467,8 @@ describe('settings', () => {
     test('list: separa por vírgula/espaço, normaliza e tira repetidos', async () => {
         assert.deepEqual(await setSetting('crypto.coins', 'btc, ethusdt ETH'), ['BTC', 'ETH']);
         await assert.rejects(setSetting('crypto.coins', 'XYZ'), /não suportada: XYZ/);
-        assert.deepEqual(await setSetting('rates.coins', 'usd eur'), ['USD', 'EUR']);
-        await assert.rejects(setSetting('rates.coins', 'BRL'), /não suportada: BRL/);
+        assert.deepEqual(await setSetting('stocks.symbols', 'usd eur mstr petr4.sa'), ['USD', 'EUR', 'MSTR', 'PETR4.SA']);
+        await assert.rejects(setSetting('stocks.symbols', 'a b!'), /não é um ticker válido/);
     });
 
     test('commands.disabled: aceita nome ou alias, recusa o /set', async () => {

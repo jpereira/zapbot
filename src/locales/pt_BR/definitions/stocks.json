@@ -1,0 +1,88 @@
+{
+  "summary": "Cotações de moedas, ações, ETFs e índices",
+  "usage": "/stocks [OPÇÃO] [TICKER...]  ou  /stocks [TICKER] -alert [regra] [-to <destino>]... [-msg <texto>]  ou  /stocks -alert -rm <nº...|all>",
+  "help": "Cotações de mercado num lugar só: o dólar, o euro, a libra e o USDT contra o real (USD, EUR, GBP, USDT) e ações, ETFs e índices (Yahoo Finance), com a variação desde o fechamento anterior, abertura, máxima e mínima e, nas ações, o volume e a faixa de 52 semanas. Sem símbolos, os habilitados (setting stocks.symbols: USD, EUR, USDT e MSTR por padrão); com símbolos, só eles (ex.: /stocks usd MSTR PETR4.SA). O ticker é o do Yahoo Finance: MSTR, NVDA, PETR4.SA (B3), BRK-B, ^GSPC (S&P 500). Para cripto, o /crypto. O /rates é o mesmo comando.",
+  "ex": [
+    "/stocks",
+    "/stocks usd eur",
+    "/stocks MSTR NVDA",
+    "/stocks PETR4.SA",
+    "/stocks USD -alert > 5.30",
+    "/stocks MSTR -alert < 90"
+  ],
+  "cmd_opts": [
+    {
+      "opts": [
+        "add",
+        "a"
+      ],
+      "values": [
+        "<SÍMBOLO>"
+      ],
+      "desc": "Habilita um símbolo: USD, EUR, GBP ou USDT, ou um ticker que exista no Yahoo Finance. Só o dono (ou um admin)."
+    },
+    {
+      "opts": [
+        "alert"
+      ],
+      "values": [],
+      "desc": "Sem regra: lista os alertas. Com regra (ex.: USD > 5.30 ou MSTR < 90): avisa você no privado (ou nos destinos do -to) quando o preço cruzar o valor (moedas em reais, ações na moeda do ativo). O símbolo também pode vir antes: /stocks MSTR -alert < 90. Só o dono (ou um admin)."
+    },
+    {
+      "opts": [
+        "del",
+        "d"
+      ],
+      "values": [
+        "<SÍMBOLO>"
+      ],
+      "desc": "Desabilita um símbolo. Só o dono (ou um admin)."
+    },
+    {
+      "opts": [
+        "list",
+        "l"
+      ],
+      "values": [],
+      "desc": "Lista os símbolos habilitados (e as moedas suportadas)."
+    },
+    {
+      "opts": [
+        "msg"
+      ],
+      "values": [
+        "<texto>"
+      ],
+      "desc": "O texto vai no início do aviso (com -alert). Vai até o fim do comando (pode ter espaços).",
+      "ex": [
+        "-msg Hora de vender!"
+      ]
+    },
+    {
+      "opts": [
+        "rm"
+      ],
+      "values": [
+        "<nº...|all>"
+      ],
+      "desc": "Remove o alerta nº N da lista, vários de uma vez (-rm 1 2 3 ou -rm 1,2,3) ou todos (com -alert). Se algum nº não existe, nenhum sai."
+    },
+    {
+      "opts": [
+        "to"
+      ],
+      "values": [
+        "<destino>"
+      ],
+      "desc": "Avisa em outro lugar em vez do seu privado. Um contato, um grupo, um número ou um e-mail (vários com o nome: você escolhe na lista) (com -alert). Repita para vários: um alerta só, que avisa em todos.",
+      "ex": [
+        "-to /Jorge Pereira/",
+        "-to @Fulano (menção)",
+        "-to /Grupo L200/ -to /Família/",
+        "-to +5521999999999",
+        "-to email (o QRCODE_EMAIL_SMTP_TO)",
+        "-to voce@exemplo.com"
+      ]
+    }
+  ]
+}

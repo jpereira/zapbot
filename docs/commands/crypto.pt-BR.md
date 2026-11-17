@@ -9,13 +9,14 @@ das pedidas. Por padrão: BTC, ETH, SOL e HYPE.
 | `-list`, `-l` | | Lista as moedas suportadas; as ativadas vêm marcadas com `*` |
 | `-add`, `-a` | `<TOKEN>` | Ativa uma moeda suportada (só o dono do bot ou um [admin](bot.md#admins-extras)) |
 | `-del`, `-d` | `<TOKEN>` | Desativa uma moeda (só o dono do bot ou um [admin](bot.md#admins-extras)) |
-| `-alert` | `[regra]` | Sem regra, lista os alertas; com regra (ex.: `BTC < 90000`), cria um (só o dono do bot ou um [admin](bot.md#admins-extras)). A moeda também pode vir antes: `/crypto BTC -alert < 90000`. Veja [Alertas de preço](rates.md#alertas-de-preço) |
-| `-msg` | `<texto>` | Junto com `-alert`: o texto vai no início do aviso. Vai até o fim do comando. Veja [Mensagem no aviso](rates.md#mensagem-no-aviso) |
+| `-alert` | `[regra]` | Sem regra, lista os alertas; com regra (ex.: `BTC < 90000`), cria um (só o dono do bot ou um [admin](bot.md#admins-extras)). A moeda também pode vir antes: `/crypto BTC -alert < 90000`. Veja [Alertas de preço](stocks.md#alertas-de-preço) |
+| `-msg` | `<texto>` | Junto com `-alert`: o texto vai no início do aviso. Vai até o fim do comando. Veja [Mensagem no aviso](stocks.md#mensagem-no-aviso) |
 | `-rm` | `<nº...\|all>` | Junto com `-alert`: remove os alertas com esses nºs (`-rm 2`, `-rm 1 2 3` ou `-rm 1,2,3`), ou todos (`all`). Se algum nº não existe, nenhum sai |
-| `-to` | `<destino>` | Junto com `-alert`: avisa num contato (`/Jorge Pereira/`), numa menção (`@Fulano Da Silva`), num grupo (`/Grupo L200/`), num número (`+5521999999999`) ou por e-mail (`email`) em vez do seu privado. Repita para vários: um alerta só, que avisa em todos. Veja [Avisar em outro chat ou por e-mail](rates.md#avisar-em-outro-chat-ou-por-e-mail) |
+| `-to` | `<destino>` | Junto com `-alert`: avisa num contato (`/Jorge Pereira/`), numa menção (`@Fulano Da Silva`), num grupo (`/Grupo L200/`), num número (`+5521999999999`) ou por e-mail (`email`) em vez do seu privado. Repita para vários: um alerta só, que avisa em todos. Veja [Avisar em outro chat ou por e-mail](stocks.md#avisar-em-outro-chat-ou-por-e-mail) |
 
 Suportadas: BTC, ETH, SOL, HYPE, BNB, XRP, DOGE, ADA, TRX, AVAX, LINK, DOT, LTC, TON, SUI, PEPE,
-SHIB, XLM, NEAR e UNI (lista `CRYPTO_SUPPORTED` em `src/currencies.js`).
+SHIB, XLM, NEAR, UNI e **XAUT** (Tether Gold: um token que acompanha o preço do ouro; lista `CRYPTO_SUPPORTED` em
+`src/currencies.js`). Para **ações** (MSTR, NVDA...) use o [`/stocks`](stocks.md).
 
 As moedas ativadas ficam na tabela `settings`, chave `crypto.coins`, e sobrevivem a reinícios.
 
@@ -60,6 +61,9 @@ monoespaçado, e a que mais subiu:
 /crypto BTC          → só o bitcoin
 /crypto btc eth      → bitcoin e ether (também "BTC,ETH")
 /crypto doge         → uma suportada, mesmo sem estar ativada
+/crypto XAUT         → o ouro (Tether Gold, em dólar por onça troy)
+/crypto -a XAUT      → ativa no /crypto puro
+/crypto -alert XAUT > 4000   → avisa quando o ouro passar de US$ 4.000
 /crypto FOO          → ❌ Moeda não suportada: FOO, com a lista das suportadas
 /crypto
 /crypto -l

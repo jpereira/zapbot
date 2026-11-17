@@ -114,7 +114,7 @@ Quando usar cada opção:
 | Alguém está abusando dos comandos num grupo | `/bot -u`, digitado no grupo (ou `/bot -u /Grupo/`) |
 | Liberar o bot para a família, só no grupo dela | `/bot +u`, digitado no grupo (ou `/bot +u /Grupo Familia/` de qualquer chat) |
 | Liberar para uma pessoa, em qualquer chat | `/bot +u /Maria Lucia/` |
-| Liberar só alguns comandos para alguém | `/bot +u +cmd /rates,/crypto /Sofia Izabel/` |
+| Liberar só alguns comandos para alguém | `/bot +u +cmd /stocks,/crypto /Sofia Izabel/` |
 | Liberar só o `/gpt` para o grupo Familia | `/bot +u +cmd /gpt`, digitado no grupo (ou `/bot +u +cmd /gpt /Familia/`) |
 | Dar a alguém os comandos admin | `/bot +a /Jorge Pereira/` |
 | Parar o bot por completo por um tempo, sem derrubar o container | `/bot -off` |
@@ -164,7 +164,7 @@ contato de quem o WhatsApp só informa o id interno (LID), sem o telefone, tamb�
   id interno) da pessoa e o bot não conseguir o telefone, ela não é reconhecida como admin.
 - Os comandos de um admin extra agem como os seus: os avisos que vão "para o seu privado" (alertas,
   `-private`, `/watch`...) vão para o **seu** privado, não para o dele. Admins também gerenciam as moedas
-  do `/rates` e do `/crypto`, os alertas de preço e a limpeza do `/show -f`.
+  do `/stocks` e do `/crypto`, os alertas de preço e a limpeza do `/show -f`.
 - Numa lista de escolha (vários contatos com o nome), só quem deu o comando responde com o nº.
 - Dê esse acesso só a quem você confia: um admin pode, por exemplo, apagar o cache (`/cache -a`) ou
   restaurar um backup.
@@ -246,11 +246,11 @@ mostra só os dele). Para limitar quantas vezes um usuário chama um deles, veja
 [Limite de uso por usuário](#limite-de-uso-por-usuário-limit).
 
 ```text
-/bot +cmd /rates,/crypto,/meme +u /Sofia Izabel/  → a Sofia entra só com esses
-/bot +u +cmd /rates                               → digitado num grupo: o grupo inteiro, só /rates
+/bot +cmd /stocks,/crypto,/meme +u /Sofia Izabel/  → a Sofia entra só com esses
+/bot +u +cmd /stocks                               → digitado num grupo: o grupo inteiro, só /stocks
 /bot +u -cmd /meme /Fulano/                         → o Fulano usa todos, menos /meme
 /bot +cmd /weather /Sofia Izabel/                     → acrescenta /weather aos dela
-/bot -cmd /rates /Fulano Pereira/                 → tira /rates dos dele
+/bot -cmd /stocks /Fulano Pereira/                 → tira /stocks dos dele
 /bot -cmd /meme /Grupo Familia/ /Fulano da Silva/   → vários de uma vez
 /bot -cmd /meme                                     → do chat atual (o grupo, ou a pessoa do privado)
 /bot +cmd all /Sofia Izabel/                        → a Sofia volta a usar todos os comuns
@@ -270,25 +270,25 @@ mostra só os dele). Para limitar quantas vezes um usuário chama um deles, veja
   Um comando não delegável (`/set`, `/bot`...) não entra: o bot recusa. Um `admin` delegável
   (`/gpt`, `/show`...) entra só numa lista "Apenas": o `-cmd` ("Todos, menos") e o `bot.users = true` não o liberam, e
   quem já usa todos os comuns não o ganha com o `+cmd` (o bot recusa e pede a lista "Apenas").
-  Para acrescentar um `admin` delegável a quem usa os comuns, liste os comandos dele: `+u +cmd /rates,/gpt`.
+  Para acrescentar um `admin` delegável a quem usa os comuns, liste os comandos dele: `+u +cmd /stocks,/gpt`.
 - O nome de um atalho do [`/alias`](alias.md) não entra no `+cmd`: o atalho herda a permissão do
   comando de destino (quem pode o `/gpt` usa os atalhos para ele).
 - Num grupo, a pessoa é a de lá (como no `+u`); se ela for usuária em qualquer chat, é essa
   permissão que muda.
-- Na lista, embaixo da pessoa, `→ Apenas: /rates, /crypto, /meme` ou `→ Todos, menos: /meme`:
+- Na lista, embaixo da pessoa, `→ Apenas: /stocks, /crypto, /meme` ou `→ Todos, menos: /meme`:
 
 ```text
 Usuários (2)
 • 🗣️ +u · 👤 Jorge Chip L200 · +5521999983333
 • 🗣️ +u · 👤 Sofia Izabel · +5521999987777 ✅
- → Apenas: /rates, /crypto, /meme
+ → Apenas: /stocks, /crypto, /meme
 
 Permissões
 👑 +a: admin, usa tudo
 🗣️ +u: usuário, usa os comandos comuns
 ```
 
-- Fora da lista, o bot responde `🚫 Limitado aos comandos: /rates, /crypto, /meme.` (ou
+- Fora da lista, o bot responde `🚫 Limitado aos comandos: /stocks, /crypto, /meme.` (ou
   `🚫 O /meme não está liberado para você.`).
 - Se mais de uma permissão vale ali (a pessoa e o grupo, por exemplo), vale a mais ampla: uma sem
   limite libera todos os comuns.

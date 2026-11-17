@@ -155,13 +155,13 @@ nav:
       - /profile: commands/profile.md
       - /promote: commands/promote.md
       - /qr: commands/qr.md
-      - /rates: commands/rates.md
       - /search: commands/search.md
       - /set: commands/set.md
       - /show: commands/show.md
       - /stats: commands/stats.md
       - /status: commands/status.md
       - /sticker: commands/sticker.md
+      - /stocks: commands/stocks.md
       - /tldr: commands/tldr.md
       - /transcribe: commands/transcribe.md
       - /translate: commands/translate.md

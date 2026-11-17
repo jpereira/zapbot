@@ -257,7 +257,7 @@ async function initializeDb() {
     await dbRun("DELETE FROM stats WHERE sender_id = 'UNKNOWN'");
 
     /*
-     * Price alerts from /rates -alert and /crypto -alert (fire once
+     * Price alerts from /stocks -alert and /crypto -alert (fire once
      * time and go away). dest_*: the notice chat (-to); dest_email: the emails (-to email);
      * empty = your private chat. With several -to, recipients has all of them (and the dest_*, the first).
      */

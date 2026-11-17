@@ -7,7 +7,7 @@ The bot uses the same SMTP (`QRCODE_EMAIL_SMTP_*`) for:
 - [operational alerts](#email-alerts), like crash, outage and reconnection;
 - backups sent with [`/backup -s -to`](commands/backup.md#send-the-file) or through the
   destination set in `backup.to` for the daily backup;
-- price alerts from `/rates` and `/crypto`, position and fee alerts from `/defi`, and note alerts
+- price alerts from `/stocks` and `/crypto`, position and fee alerts from `/defi`, and note alerts
   from [`/notes -alert`](commands/notes.md#alerts);
 - `/watch` hits and `/bot -status` reports with an email destination.
 

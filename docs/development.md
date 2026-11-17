@@ -111,7 +111,7 @@ src/
   stats.js              /stats counters
   status.js             /bot -status report and the daily send (via the schedule)
   system.js            /bot -info: versions (Node.js, whatsapp-web.js, Chromium, yt-dlp, ffmpeg...), the new ones and the system
-  currencies.js, quotes.js, priceAlerts.js   /crypto, /rates and price alerts
+  currencies.js, quotes.js, priceAlerts.js   /crypto, /stocks and price alerts
   aliases.js            resolution, listing and execution (of the text ones) of the shortcuts persisted in the database
   schedule.js             /cron: reading, list and send on time
   notes.js              /notes: notes, #tags (and the description), images, the -export PDF and the -alert (a notice at a date/time, once)
@@ -225,7 +225,7 @@ The messages the bot sends have whatsapp-web.js's `edit()`: it swaps the text in
 | `comandos.test.js` | `/help` (only with the commands of whoever asked), `/debug`, `/uptime`, `/version`, `/ping`, `/noffa`, `/bot` (the `-h` in blocks, the status without option, `-on`/`-off`, `-list-users`, and `-info`, with the new yt-dlp and whatsapp-web.js versions), `/set` (and `-append`/`-rm`) |
 | `conexao-email.test.js` | Connection events, restart (and the retries without internet, at boot and on restart, and the `ready` watchdog), watchdog, email alerts, crash and `docker stop` |
 | `configuracao.test.js` | `commands.js`, settings (and validation of persisted values), option parser, help (one form of the usage and one example per line) and the consistency between config, code, README and `docs/` (including alphabetical order, links and the stable version of the installation) |
-| `cotacoes.test.js` | `/rates`, `/crypto` (and the filter by currency) and the price alerts (with one or several `-to`, `-msg` and `-rm` of several) |
+| `cotacoes.test.js` | `/stocks`, `/crypto` (and the filter by currency) and the price alerts (with one or several `-to`, `-msg` and `-rm` of several) |
 | `debug.test.js` | Levels, command parser, filter with highlighting, startup logs, copy to chats and credential masking |
 | `defi.test.js` | Solana (base58, PDA), Orca accounts (checked against the official SDK), Project X (simulated HyperEVM), Liquidswap (simulated Aptos: indexer and fullnode, with the price of the stable pools and the API key), Morpho (simulated API, with the accounts checked against the API's), Aave V3 (simulated blockchain, with the real Multicall3) and `/defi`: the filter by protocol, `-rm` of several, the addresses (full only in private), the list (with the 🔔 and the limit), the `-fees` summary (with the total and `-alert`) and `-alert` (leaving and returning to the range, `-fees`, `-alert` on registration and several `-to`) |
 | `dependencias.test.js` | Loading of the dependencies without the `punycode` module warning |
@@ -237,7 +237,7 @@ The messages the bot sends have whatsapp-web.js's `edit()`: it swaps the text in
 | `admins-invite.test.js` | `/promote` and `/demote` (by name, mention, number and replying; already admin, not in the group, the creator, the `@lid` participant, the bot not being an admin and the refusal) and `/invite` (and `-revoke`) |
 | `grupos.test.js` | `/join` (link, code, `-info`, invalid invite and refusal) and `/leave` (by name, by number, the list) |
 | `i18n.test.js` | The `zapbot.lang` setting (default `en_US`, `pt-BR`/`pt`/`en` accepted), the catalogs (same keys and `{placeholders}`), the English text of the definitions with a Portuguese translation for each, and `-h`/`/help` in both languages |
-| `i18n-adm.test.js`, `i18n-ai.test.js`, `i18n-core.test.js`, `i18n-data.test.js`, `i18n-grp.test.js`, `i18n-info.test.js`, `i18n-notes.test.js`, `i18n-novos.test.js` | The replies in `en_US` (the other tests run in `pt_BR`), one file per catalog subject: administration (`/bot`, `/set`, `/backup`, `/alias`, `/batch`, `/debug`, `/cron`), AI and media (`/gpt`, `/tldr`, `/draw`...), core (login, unknown option and command, notices), data (`/get`, `/show`, `/stats`, `/watch`, `/cache`), groups (`/mute`, `/block`, `/poll`, `/leave`...), information (`/rates`, `/crypto`, `/bills`, `/whois`, `/me`, `/bot -status`, `/uptime`) and notes (`/notes`, `/monitor`), and the new commands (`/welcome`, `/promote`, `/invite`, `/ocr`, `/qr`, `/carbon`...) |
+| `i18n-adm.test.js`, `i18n-ai.test.js`, `i18n-core.test.js`, `i18n-data.test.js`, `i18n-grp.test.js`, `i18n-info.test.js`, `i18n-notes.test.js`, `i18n-novos.test.js` | The replies in `en_US` (the other tests run in `pt_BR`), one file per catalog subject: administration (`/bot`, `/set`, `/backup`, `/alias`, `/batch`, `/debug`, `/cron`), AI and media (`/gpt`, `/tldr`, `/draw`...), core (login, unknown option and command, notices), data (`/get`, `/show`, `/stats`, `/watch`, `/cache`), groups (`/mute`, `/block`, `/poll`, `/leave`...), information (`/stocks`, `/crypto`, `/bills`, `/whois`, `/me`, `/bot -status`, `/uptime`) and notes (`/notes`, `/monitor`), and the new commands (`/welcome`, `/promote`, `/invite`, `/ocr`, `/qr`, `/carbon`...) |
 | `heartbeat.test.js` | Heartbeat and `docker/app/healthcheck.js` (actually executed) |
 | `mascara-telefones.test.js` | Phone number obfuscation in `/show`, `/watch` and `/bot` |
 | `mensagens.test.js` | Recording (with the name from your contacts, not the pushname) and of locations without interpreting the thumbnail as text or command, routing, permissions (`role`, `bot.users` with people, groups, `true`/`false` and the persisted permissions, bot off, extra admins from `bot.admins`, the `/bot +a`/`+u` shortcuts, the `-list-users`/`-list-users all` lists, each user's commands (`+cmd`/`-cmd`), `-reset` with confirmation, `/whois` and flood protection), the log of unknown commands and the `/stats` count (without the system notices) |
@@ -456,7 +456,7 @@ loop back). Each entry follows this format:
   `src/constants.js` (`` `... em ${CACHE_DIR}` ``): the help shows the real path (e.g. the
   `/cache -h`).
 - An option that's the same in more than one command becomes a constant in `definitions/_options.js`
-  (`OPCAO_ALERTA_TO`, from `/rates` and `/crypto`), so the description lives in one place only.
+  (`OPCAO_ALERTA_TO`, from `/stocks` and `/crypto`), so the description lives in one place only.
 - With `disabled: true` the command isn't loaded: the bot doesn't respond to it or to its aliases,
   and it disappears from `/help`. At boot it shows up in the logs as `Disabled N callers (...)`. To
   disable without a rebuild, use the `commands.disabled` setting (`/set commands.disabled noffa`).

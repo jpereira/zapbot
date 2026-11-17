@@ -270,7 +270,7 @@ describe('comando desconhecido', () => {
 
 describe('nomes em inglês, sem aliases fixos em português', () => {
     test('os nomes em inglês respondem; os antigos aliases em português não existem mais (use o /alias)', async () => {
-        for (const nameAlt of ['/draw', '/weather', '/everybody', '/bills', '/rates', '/translate']) {
+        for (const nameAlt of ['/draw', '/weather', '/everybody', '/bills', '/stocks', '/translate']) {
             assert.ok((await bot.replyAlt(`${nameAlt} -h`))[0].includes(`Usage: ${nameAlt}`), `${nameAlt} -h`);
         }
         for (const oldAlt2 of ['/desenhe', '/tempo', '/todos', '/boletos', '/cotacao', '/traduzir', '/bloquear', '/agenda',
@@ -287,7 +287,7 @@ describe('nomes em inglês, sem aliases fixos em português', () => {
 describe('permissões', () => {
     test('comandos comuns: exigem liberação e oferecem ajuda aos usuários +u', async () => {
         const common = [
-            'bills', 'rates', 'crypto', 'cve', 'get', 'giphy', 'help', 'joke', 'kernel',
+            'bills', 'stocks', 'crypto', 'cve', 'get', 'giphy', 'help', 'joke', 'kernel',
             'meme', 'news', 'noffa', 'ping', 'pixelart', 'sticker', 'weather', 'translate',
             'uptime', 'version', 'whois'
         ];
@@ -337,8 +337,8 @@ describe('permissões', () => {
         await bot.setSetting('bot.users.cmds', [`${OTHERAlt.user}=!/ping`]);
         assert.match((await bot.replyAlt('/bot +cmd /gpt /Fulano/', { chat: OWNER.jid }))[0], /só entra numa lista "Apenas"/);
         assert.deepEqual(bot.getSetting('bot.users.cmds'), [`${OTHERAlt.user}=!/ping`]);
-        await bot.replyAlt('/bot +u +cmd /rates,/gpt /Fulano/', { chat: OWNER.jid });
-        assert.deepEqual(bot.getSetting('bot.users.cmds'), [`${OTHERAlt.user}=/rates,/gpt`]);
+        await bot.replyAlt('/bot +u +cmd /stocks,/gpt /Fulano/', { chat: OWNER.jid });
+        assert.deepEqual(bot.getSetting('bot.users.cmds'), [`${OTHERAlt.user}=/stocks,/gpt`]);
 
         // o +cmd recusa o owner
         assert.match((await bot.replyAlt('/bot +cmd /set +u /Fulano/', { chat: OWNER.jid }))[0], /não dá para liberar/);
@@ -433,7 +433,7 @@ describe('permissões', () => {
         assert.deepEqual(await bot.replyAlt('/debug', { de: OTHERAlt.jid }), ['🪲 Debug Desativado.'], 'bot.users false');
         assert.match((await bot.replyAlt('/bot'))[0], /\n🔒 \*Comandos:\* só o dono e os admins\n/);
         assert.deepEqual(await bot.replyAlt('/bot -lu'), ['*Usuários* (1) neste grupo\n• 👑 +a · 👤 Fulano · +5521911111111' + CAPTION]);
-        assert.deepEqual(await bot.replyAlt('/rates -a gbp', { de: OTHERAlt.jid }), ['✅ 🇬🇧 GBP habilitada.']);
+        assert.deepEqual(await bot.replyAlt('/stocks -a gbp', { de: OTHERAlt.jid }), ['✅ GBP (Libra) habilitado.']);
 
         // Another person stays out
         const CICLANO = '5521922222222@c.us';

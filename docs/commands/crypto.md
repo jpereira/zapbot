@@ -9,13 +9,14 @@ only the requested ones. Default: BTC, ETH, SOL and HYPE.
 | `-list`, `-l` | | Lists the supported coins; the enabled ones are marked with `*` |
 | `-add`, `-a` | `<TOKEN>` | Enables a supported coin (bot owner or an [admin](bot.md#extra-admins) only) |
 | `-del`, `-d` | `<TOKEN>` | Disables a coin (bot owner or an [admin](bot.md#extra-admins) only) |
-| `-alert` | `[rule]` | Without a rule, lists the alerts; with a rule (e.g. `BTC < 90000`), creates one (bot owner or an [admin](bot.md#extra-admins) only). The coin can also come first: `/crypto BTC -alert < 90000`. See [Price alerts](rates.md#price-alerts) |
-| `-msg` | `<text>` | Together with `-alert`: the text goes at the start of the notification. It runs to the end of the command. See [Message in the notice](rates.md#message-in-the-notice) |
+| `-alert` | `[rule]` | Without a rule, lists the alerts; with a rule (e.g. `BTC < 90000`), creates one (bot owner or an [admin](bot.md#extra-admins) only). The coin can also come first: `/crypto BTC -alert < 90000`. See [Price alerts](stocks.md#price-alerts) |
+| `-msg` | `<text>` | Together with `-alert`: the text goes at the start of the notification. It runs to the end of the command. See [Message in the notice](stocks.md#message-in-the-notice) |
 | `-rm` | `<#...\|all>` | Together with `-alert`: removes the alerts with those numbers (`-rm 2`, `-rm 1 2 3` or `-rm 1,2,3`), or all of them (`all`). If any number doesn't exist, none is removed |
-| `-to` | `<destination>` | Together with `-alert`: notifies a contact (`/Jorge Pereira/`), a mention (`@Fulano Da Silva`), a group (`/L200 Group/`), a number (`+5521999999999`) or by email (`email`) instead of your private chat. Repeat for several: a single alert that notifies all of them. See [Notify another chat or by email](rates.md#notify-another-chat-or-by-email) |
+| `-to` | `<destination>` | Together with `-alert`: notifies a contact (`/Jorge Pereira/`), a mention (`@Fulano Da Silva`), a group (`/L200 Group/`), a number (`+5521999999999`) or by email (`email`) instead of your private chat. Repeat for several: a single alert that notifies all of them. See [Notify another chat or by email](stocks.md#notify-another-chat-or-by-email) |
 
 Supported: BTC, ETH, SOL, HYPE, BNB, XRP, DOGE, ADA, TRX, AVAX, LINK, DOT, LTC, TON, SUI, PEPE,
-SHIB, XLM, NEAR and UNI (`CRYPTO_SUPPORTED` list in `src/currencies.js`).
+SHIB, XLM, NEAR, UNI and **XAUT** (Tether Gold: a token that follows the price of gold; `CRYPTO_SUPPORTED` list in
+`src/currencies.js`). For **stocks** (MSTR, NVDA...) use [`/stocks`](stocks.md).
 
 The enabled coins are stored in the `settings` table, key `crypto.coins`, and survive restarts.
 
@@ -60,6 +61,9 @@ one that rose the most:
 /crypto BTC          → bitcoin only
 /crypto btc eth      → bitcoin and ether (also "BTC,ETH")
 /crypto doge         → a supported one, even if not enabled
+/crypto XAUT         → gold (Tether Gold, in dollars per troy ounce)
+/crypto -a XAUT      → enables it in the plain /crypto
+/crypto -alert XAUT > 4000   → warns when gold passes $4,000
 /crypto FOO          → ❌ Unsupported coin: FOO, with the list of supported ones
 /crypto
 /crypto -l

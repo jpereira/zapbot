@@ -165,7 +165,7 @@ or `/regex/flags`.
 ```
 
 `-to` works as in the other commands (see
-[Notify in another chat or by email](rates.md#notify-another-chat-or-by-email)). It doesn't
+[Notify in another chat or by email](stocks.md#notify-another-chat-or-by-email)). It doesn't
 work with `-rm`.
 
 - It goes out as a document in the chat itself (with `-to`, in the destinations; by email, as an
@@ -180,7 +180,7 @@ work with `-rm`.
 
 ## Alerts
 
-The same scheme as the `-alert` of [`/rates`](rates.md#price-alerts): list, `-rm`, `-to`
+The same scheme as the `-alert` of [`/stocks`](stocks.md#price-alerts): list, `-rm`, `-to`
 and a periodic check (every minute). Here the condition is a date/time, and the notification is the
 note itself.
 
@@ -209,5 +209,5 @@ note itself.
   touched.
 - Without `-to`, the notification goes to your private chat. `-to` accepts the same destinations as
   the other alerts (see
-  [Notify in another chat or by email](rates.md#notify-another-chat-or-by-email)).
+  [Notify in another chat or by email](stocks.md#notify-another-chat-or-by-email)).
 - If the bot was down at the scheduled time, the notification goes out as soon as it's back.

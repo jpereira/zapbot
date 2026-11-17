@@ -23,11 +23,11 @@ aliases. Quem executa um atalho precisa ter permissão para os comandos de desti
 | `-rm` | `<nome...\|all>` | Remove um ou mais aliases (separados por espaço ou vírgula), com ou sem `/`; `all` remove todos |
 
 ```text
-/alias /eita -d "Meu teste para dólar" /rates USD
+/alias /eita -d "Meu teste para dólar" /stocks USD
 /alias /nome /crypto USD
-/alias /eita2 /rates EUR
-/alias eita3 /rates USDT
-/alias dimdim -d “Exibe Dinheiro" /rates
+/alias /eita2 /stocks EUR
+/alias eita3 /stocks USDT
+/alias dimdim -d “Exibe Dinheiro" /stocks
 /alias -l
 /alias /eita
 /eita
@@ -52,7 +52,7 @@ rodam sem o cabeçalho `🔗 Alias ...` (`-q`):
 
 */dolar*
 📝 Preço do dólar
-→ /rates USD
+→ /stocks USD
 
 */endereco* 🔇
 📝 Meu endereço
@@ -84,8 +84,8 @@ e opções do destino são preservados.
 Argumentos digitados ao executar são acrescentados ao final do comando salvo:
 
 ```text
-/alias /dolar /rates USD
-/dolar -h                    → ajuda do /rates
+/alias /dolar /stocks USD
+/dolar -h                    → ajuda do /stocks
 ```
 
 ### Parâmetros `$1`, `$N`
@@ -98,9 +98,9 @@ a não ser que tenha um valor padrão: `${N:-valor}`.
 /alias /rec /sticker -ss $1 -es $2
 /rec 10 20 http://minhaurl/foo   → /sticker -ss 10 -es 20 http://minhaurl/foo
 
-/alias /dolar /rates ${1:-USD}
-/dolar                           → /rates USD
-/dolar EUR                       → /rates EUR
+/alias /dolar /stocks ${1:-USD}
+/dolar                           → /stocks USD
+/dolar EUR                       → /stocks EUR
 
 /alias nopt /forward ${1:--l} #nopt
 /nopt                            → /forward -l #nopt
@@ -127,14 +127,14 @@ Antes de executar um alias, o bot imprime o nome do atalho e o comando que será
 incluindo os argumentos adicionais. Por exemplo:
 
 ```text
-/alias /dimdim -d "Exibe o preço do dólar" /rates USD
+/alias /dimdim -d "Exibe o preço do dólar" /stocks USD
 /dimdim
 ```
 
-O bot responde com o aviso abaixo e depois com o resultado de `/rates USD`:
+O bot responde com o aviso abaixo e depois com o resultado de `/stocks USD`:
 
 ```text
-🔗 Alias /dimdim -> /rates USD
+🔗 Alias /dimdim -> /stocks USD
 ```
 
 Com `-quiet` (ou `-q`), o cabeçalho não é impresso e só o resultado aparece:
@@ -153,7 +153,7 @@ respostas. Um `\n` digitado vira uma quebra de linha, e os espaços em volta del
 
 ```text
 /alias nome2 Verificando Orca {/defi orca}\n Verificando Prjx {/defi prjx}
-/alias bomdia -d "Resumo da manhã" Bom dia! ☀️ {/weather Recife}\nCâmbio: {/rates USD EUR}\nCripto: {/crypto BTC ETH}
+/alias bomdia -d "Resumo da manhã" Bom dia! ☀️ {/weather Recife}\nCâmbio: {/stocks USD EUR}\nCripto: {/crypto BTC ETH}
 /alias carteira {/defi orca}\n{/defi prjx}\n{/defi morpho}\n{/defi aave}
 /alias risco CVEs críticas: {/cve -highscore}
 ```
@@ -180,7 +180,7 @@ Verificando Prjx
   pessoa não puder usar algum deles, o alias inteiro não roda: um comando acima do nível dela, como o
   `/defi`, faz o alias ser ignorado em silêncio, e um comando fora da regra dela (`/bot -cmd`) mostra
   o aviso do limite. O `/help alias` só lista os aliases em que ela pode usar todos os comandos.
-- Rodam os mesmos comandos de consulta do `/cron` (`/rates`, `/crypto`, `/cve`, `/defi`,
+- Rodam os mesmos comandos de consulta do `/cron` (`/stocks`, `/crypto`, `/cve`, `/defi`,
   `/weather`...), sem as opções que mudam algo, como o `-add` do `/crypto`. Eles são conferidos no
   cadastro: um que não existe ou que não roda no texto dá erro na hora.
 - Uma resposta de várias linhas vira um parágrafo, com uma linha em branco antes e depois; uma de

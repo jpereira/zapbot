@@ -19,7 +19,7 @@ as in [`/cron`'s commands in the text](cron.md#commands-in-the-text). A typed `\
 ```
 
 - The message goes straight to the chat, without quoting the command you typed.
-- Only `/cron`'s query commands run (`/rates`, `/crypto`, `/weather`...), without the options that
+- Only `/cron`'s query commands run (`/stocks`, `/crypto`, `/weather`...), without the options that
   change something. Whoever runs it needs permission for each one of them.
 - A multi-line reply becomes a paragraph; a single-line one stays inline. Media (`/meme`, `/giphy`)
   goes out after the text.

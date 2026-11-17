@@ -12,19 +12,19 @@ beforeEach(async () => { await bot.restart(); });
 const aliases = () => bot.dbAll('SELECT name, description, command, quiet FROM command_aliases ORDER BY name');
 
 test('/alias cadastra com barra, sem barra, descrição longa e persiste no banco', async () => {
-    await bot.replyAlt('/alias /eita -desc "Meu teste para dolar" /rates USD');
-    await bot.replyAlt('/alias /eita2 /rates EUR');
-    await bot.replyAlt('/alias eita3 /rates USDT');
+    await bot.replyAlt('/alias /eita -desc "Meu teste para dolar" /stocks USD');
+    await bot.replyAlt('/alias /eita2 /stocks EUR');
+    await bot.replyAlt('/alias eita3 /stocks USDT');
     assert.deepEqual(await aliases(), [
-        { name: '/eita', description: 'Meu teste para dolar', command: '/rates USD', quiet: 0 },
-        { name: '/eita2', description: '', command: '/rates EUR', quiet: 0 },
-        { name: '/eita3', description: '', command: '/rates USDT', quiet: 0 }
+        { name: '/eita', description: 'Meu teste para dolar', command: '/stocks USD', quiet: 0 },
+        { name: '/eita2', description: '', command: '/stocks EUR', quiet: 0 },
+        { name: '/eita3', description: '', command: '/stocks USDT', quiet: 0 }
     ]);
     await bot.src('initialization').initializeDb();
     assert.equal((await aliases()).length, 3);
     const [list] = await bot.replyAlt('/alias');
     assert.match(list, /Meu teste para dolar/);
-    assert.match(list, /\*\/eita3\*\n→ \/rates USDT/);
+    assert.match(list, /\*\/eita3\*\n→ \/stocks USDT/);
     assert.equal((await bot.replyAlt('/alias -l'))[0], list);
     assert.equal((await bot.replyAlt('/alias -l'))[0], list);
     assert.equal((await bot.replyAlt('/help alias'))[0], list);
@@ -58,14 +58,14 @@ test('parâmetros $1, $N: pegam os argumentos digitados e as sobras vão para o 
 });
 
 test('/alias /nome mostra o que o alias faz; não sendo alias, o erro', async () => {
-    await bot.replyAlt('/alias /dolar -desc "Dólar" /rates USD');
-    await bot.replyAlt('/alias texto Oi {/rates USD}');
-    await bot.replyAlt('/alias -q /quieto /rates EUR');
+    await bot.replyAlt('/alias /dolar -desc "Dólar" /stocks USD');
+    await bot.replyAlt('/alias texto Oi {/stocks USD}');
+    await bot.replyAlt('/alias -q /quieto /stocks EUR');
 
-    assert.deepEqual(await bot.replyAlt('/alias /dolar'), ['*/dolar*\n📝 Dólar\n→ /rates USD']);
-    assert.deepEqual(await bot.replyAlt('/alias dolar'), ['*/dolar*\n📝 Dólar\n→ /rates USD'], 'sem a barra também');
-    assert.deepEqual(await bot.replyAlt('/alias /quieto'), ['*/quieto* 🔇\n→ /rates EUR']);
-    assert.deepEqual(await bot.replyAlt('/alias texto'), ['*/texto*\n→ Oi {/rates USD}']);
+    assert.deepEqual(await bot.replyAlt('/alias /dolar'), ['*/dolar*\n📝 Dólar\n→ /stocks USD']);
+    assert.deepEqual(await bot.replyAlt('/alias dolar'), ['*/dolar*\n📝 Dólar\n→ /stocks USD'], 'sem a barra também');
+    assert.deepEqual(await bot.replyAlt('/alias /quieto'), ['*/quieto* 🔇\n→ /stocks EUR']);
+    assert.deepEqual(await bot.replyAlt('/alias texto'), ['*/texto*\n→ Oi {/stocks USD}']);
 
     assert.deepEqual(await bot.replyAlt('/alias /naoexiste'), ['❌ Alias /naoexiste não encontrado.']);
     assert.deepEqual(await bot.replyAlt('/alias /gpt'), ['❌ /gpt já é um comando do bot.']);
@@ -73,9 +73,9 @@ test('/alias /nome mostra o que o alias faz; não sendo alias, o erro', async ()
 });
 
 test('opções do alvo são preservadas e aliases fixos são destinos válidos', async () => {
-    await bot.replyAlt('/alias socorro /rates -h');
-    assert.equal((await aliases())[0].command, '/rates -h');
-    assert.match((await bot.replyAlt('/socorro'))[1], /Usage: \/rates/);
+    await bot.replyAlt('/alias socorro /stocks -h');
+    assert.equal((await aliases())[0].command, '/stocks -h');
+    assert.match((await bot.replyAlt('/socorro'))[1], /Usage: \/stocks/);
     await bot.replyAlt('/alias foto /sticker');
     assert.match((await bot.replyAlt('/foto'))[1], /Usage: \/sticker/);
     await bot.replyAlt('/alias apagar /mute -rm 2');
@@ -93,10 +93,10 @@ test('reply do atalho chega ao comando original', async t => {
 });
 
 test('cadastro substitui o atalho e remoção aceita com ou sem barra', async () => {
-    await bot.replyAlt('/alias eita -d "Dólar" /rates USD');
-    await bot.replyAlt('/alias eita /rates EUR');
+    await bot.replyAlt('/alias eita -d "Dólar" /stocks USD');
+    await bot.replyAlt('/alias eita /stocks EUR');
     assert.deepEqual(await aliases(), [
-        { name: '/eita', description: '', command: '/rates EUR', quiet: 0 }
+        { name: '/eita', description: '', command: '/stocks EUR', quiet: 0 }
     ]);
     assert.match((await bot.replyAlt('/alias -rm /eita'))[0], /removido/);
     assert.equal((await aliases()).length, 0);
@@ -108,8 +108,8 @@ test('cadastro substitui o atalho e remoção aceita com ou sem barra', async ()
 
 test('recusa nomes reservados, cadastro inválido, destinos inexistentes e ciclos', async () => {
     await bot.setSetting('commands.disabled', ['/ping']);
-    for (const line of ['/alias ping /rates USD', '/alias mute /rates USD',
-        '/alias all /rates USD', '/alias /all /rates USD', '/alias foo/bar /ping', '/alias foo', '/alias foo -d semaspas /rates USD',
+    for (const line of ['/alias ping /stocks USD', '/alias mute /stocks USD',
+        '/alias all /stocks USD', '/alias /all /stocks USD', '/alias foo/bar /ping', '/alias foo', '/alias foo -d semaspas /stocks USD',
         '/alias foo /naoexiste', '/alias foo /alias', '/alias foo /foo', '/alias foo /ping']) {
         assert.match((await bot.replyAlt(line))[0], /^(❌|Usage: \/alias|Informe a descrição)/, line);
     }
@@ -118,14 +118,14 @@ test('recusa nomes reservados, cadastro inválido, destinos inexistentes e ciclo
 
 test('permissões do destino valem no alias e na listagem de /help alias', async t => {
     await bot.setSetting('bot.users', true);
-    await bot.replyAlt('/alias publico /rates USD');
+    await bot.replyAlt('/alias publico /stocks USD');
     await bot.replyAlt('/alias privado /show -l');
-    const quote = t.mock.method(HANDLERS, '/rates', async ({ msg }) => msg.reply('cotação'));
+    const quote = t.mock.method(HANDLERS, '/stocks', async ({ msg }) => msg.reply('cotação'));
     const show = t.mock.method(HANDLERS, '/show', async () => {
         throw new Error('sem permissão');
     });
     const de = bot.OTHERAlt.jid;
-    assert.deepEqual(await bot.replyAlt('/publico', { de }), ['🔗 Alias /publico -> /rates USD', 'cotação']);
+    assert.deepEqual(await bot.replyAlt('/publico', { de }), ['🔗 Alias /publico -> /stocks USD', 'cotação']);
     assert.deepEqual(await bot.replyAlt('/privado', { de }), []);
     assert.equal(show.mock.callCount(), 0);
     const [list] = await bot.replyAlt('/help alias', { de });
@@ -157,25 +157,25 @@ test('alias herda a permissão do destino: o +cmd do /gpt (role admin) vale para
 });
 
 test('desativar o destino impede a execução e nomes reservados continuam protegidos', async t => {
-    await bot.replyAlt('/alias eita /rates USD');
-    await bot.setSetting('commands.disabled', ['/rates']);
-    const run = t.mock.method(HANDLERS, '/rates', async () => {});
+    await bot.replyAlt('/alias eita /stocks USD');
+    await bot.setSetting('commands.disabled', ['/stocks']);
+    const run = t.mock.method(HANDLERS, '/stocks', async () => {});
     assert.match((await bot.replyAlt('/eita'))[0], /desconhecido/);
     assert.equal(run.mock.callCount(), 0);
-    assert.match((await bot.replyAlt('/help alias'))[0], /\*\/eita\*\n→ \/rates USD/);
-    assert.match((await bot.replyAlt('/alias -l'))[0], /\*\/eita\*\n→ \/rates USD/);
+    assert.match((await bot.replyAlt('/help alias'))[0], /\*\/eita\*\n→ \/stocks USD/);
+    assert.match((await bot.replyAlt('/alias -l'))[0], /\*\/eita\*\n→ \/stocks USD/);
     await bot.setSetting('bot.users', true);
     assert.match((await bot.replyAlt('/help alias', { de: bot.OTHERAlt.jid }))[0], /Nenhum alias/);
 });
 
 
 test('remoção de todos os aliases (-rm all) mantém os comandos do bot', async () => {
-    await bot.replyAlt('/alias eita /rates USD');
-    await bot.replyAlt('/alias eita2 /rates EUR');
+    await bot.replyAlt('/alias eita /stocks USD');
+    await bot.replyAlt('/alias eita2 /stocks EUR');
     assert.match((await bot.replyAlt('/alias -rm all'))[0], /Todos os aliases removidos \(2\)/);
     assert.deepEqual(await aliases(), []);
     assert.match((await bot.replyAlt('/help alias'))[0], /Nenhum alias/);
-    assert.ok(await resolverAlias('/rates USD'));
+    assert.ok(await resolverAlias('/stocks USD'));
     assert.match((await bot.replyAlt('/alias -rm all'))[0], /removidos \(0\)/);
 });
 
@@ -183,13 +183,13 @@ test('remoção de todos os aliases (-rm all) mantém os comandos do bot', async
 test('descrição aceita aspas curvas e misturadas sem alterar o comando salvo', async () => {
     for (const description of ['“Exibe Dinheiro"', '“Exibe Dinheiro”', '"Exibe Dinheiro”',
         '‘Exibe Dinheiro’', "‘Exibe Dinheiro'", "'Exibe Dinheiro’"]) {
-        await bot.replyAlt(`/alias dimdim -desc ${description} /rates`);
+        await bot.replyAlt(`/alias dimdim -desc ${description} /stocks`);
         assert.deepEqual(await aliases(), [
-            { name: '/dimdim', description: 'Exibe Dinheiro', command: '/rates', quiet: 0 }
+            { name: '/dimdim', description: 'Exibe Dinheiro', command: '/stocks', quiet: 0 }
         ]);
     }
-    await bot.replyAlt('/alias euros -d “Preço em euros” /rates EUR -h');
-    assert.equal((await aliases()).find(a => a.name === '/euros').command, '/rates EUR -h');
+    await bot.replyAlt('/alias euros -d “Preço em euros” /stocks EUR -h');
+    assert.equal((await aliases()).find(a => a.name === '/euros').command, '/stocks EUR -h');
 });
 
 test('/alias /nome /crypto USD: nome com barra e destino com argumento', async t => {
@@ -234,10 +234,10 @@ test('alias de texto: recusa texto sem {/comando}, comandos inexistentes e os qu
 });
 
 test('alias de texto: cada {/comando} respeita as permissões de quem chama', async t => {
-    await bot.replyAlt('/alias misto Dólar {/rates USD} DeFi {/defi}');
-    await bot.replyAlt('/alias dolarbtc Dólar {/rates USD} BTC {/crypto BTC}');
+    await bot.replyAlt('/alias misto Dólar {/stocks USD} DeFi {/defi}');
+    await bot.replyAlt('/alias dolarbtc Dólar {/stocks USD} BTC {/crypto BTC}');
     const defi = t.mock.method(HANDLERS, '/defi', async ({ msg }) => msg.reply('defi'));
-    const quote = t.mock.method(HANDLERS, '/rates', async ({ msg, admin }) => msg.reply(`admin=${admin}`));
+    const quote = t.mock.method(HANDLERS, '/stocks', async ({ msg, admin }) => msg.reply(`admin=${admin}`));
     t.mock.method(HANDLERS, '/crypto', async ({ msg }) => msg.reply('btc'));
     const de = bot.OTHERAlt.jid;
 
@@ -247,7 +247,7 @@ test('alias de texto: cada {/comando} respeita as permissões de quem chama', as
 
     // The commands run as whoever called, not as the owner
     assert.deepEqual(await bot.replyAlt('/dolarbtc', { de }),
-        ['🔗 Alias /dolarbtc -> /rates USD, /crypto BTC', 'Dólar admin=false BTC btc']);
+        ['🔗 Alias /dolarbtc -> /stocks USD, /crypto BTC', 'Dólar admin=false BTC btc']);
 
     // A command outside the person's rule blocks the alias
     await bot.setSetting('bot.users', []);
@@ -322,8 +322,8 @@ test('{/alias} dentro de um texto roda o alias de comando; alias de texto é rec
 });
 
 test('nome do alias aceita ponto e os parâmetros aceitam valor padrão ${N:-valor}', async t => {
-    const cot = t.mock.method(HANDLERS, '/rates', async () => {});
-    assert.match((await bot.replyAlt('/alias -q meu.comando /rates ${1:-USD} $2'))[0], /Alias salvo: \/meu\.comando/);
+    const cot = t.mock.method(HANDLERS, '/stocks', async () => {});
+    assert.match((await bot.replyAlt('/alias -q meu.comando /stocks ${1:-USD} $2'))[0], /Alias salvo: \/meu\.comando/);
     await bot.replyAlt('/meu.comando');
     await bot.replyAlt('/meu.comando EUR');
     assert.deepEqual(cot.mock.calls.map(c => c.arguments[0].args), ['USD', 'EUR']);
@@ -331,12 +331,12 @@ test('nome do alias aceita ponto e os parâmetros aceitam valor padrão ${N:-val
 
 test('o começo do nome de um alias salvo também completa (único roda, vários lista)', async () => {
     await bot.replyAlt('/alias -rm all');
-    await bot.replyAlt('/alias zzuno /rates USD');
+    await bot.replyAlt('/alias zzuno /stocks USD');
     const single = await resolverAlias('/zzu');
     assert.equal(single.alias, '/zzuno');
     assert.equal(single.prefixo, '/zzu');
 
-    await bot.replyAlt('/alias zzdois /rates EUR');
+    await bot.replyAlt('/alias zzdois /stocks EUR');
     const several = await resolverAlias('/zz');
     assert.deepEqual(several.possiveis.map(c => c.cmd), ['/zzdois', '/zzuno']);
     await bot.replyAlt('/alias -rm all');
@@ -344,7 +344,7 @@ test('o começo do nome de um alias salvo também completa (único roda, vários
 
 test('-rm aceita vários nomes (espaço ou vírgula) e diz os que não existiam', async () => {
     await bot.replyAlt('/alias -rm all');
-    for (const n of ['um', 'dois', 'tres']) await bot.replyAlt(`/alias ${n} /rates USD`);
+    for (const n of ['um', 'dois', 'tres']) await bot.replyAlt(`/alias ${n} /stocks USD`);
 
     const [r] = await bot.replyAlt('/alias -rm um /dois, nao');
     assert.match(r, /Aliases removidos \(2\): \/um, \/dois/);
@@ -353,18 +353,18 @@ test('-rm aceita vários nomes (espaço ou vírgula) e diz os que não existiam'
 
     assert.match((await bot.replyAlt('/alias -rm tres'))[0], /Alias \/tres removido/);
     assert.match((await bot.replyAlt('/alias -rm x y'))[0], /^❌ Não encontrados: \/x, \/y$/);
-    await bot.replyAlt('/alias um /rates USD');
+    await bot.replyAlt('/alias um /stocks USD');
     assert.match((await bot.replyAlt('/alias -rm um all'))[0], /Todos os aliases removidos \(1\)/);
 });
 
 test('-move renomeia o alias e recusa nome existente, de comando ou alias inexistente', async () => {
     await bot.replyAlt('/alias -rm all');
-    await bot.replyAlt('/alias velho -q -desc "Dólar" /rates USD');
-    await bot.replyAlt('/alias outro /rates EUR');
+    await bot.replyAlt('/alias velho -q -desc "Dólar" /stocks USD');
+    await bot.replyAlt('/alias outro /stocks EUR');
 
     assert.match((await bot.replyAlt('/alias -m velho /novo'))[0], /renomeado: \/velho → \/novo/);
     const [a] = (await aliases()).filter(a => a.name === '/novo');
-    assert.equal(a.command, '/rates USD');
+    assert.equal(a.command, '/stocks USD');
     assert.equal(a.description, 'Dólar');
     assert.equal(a.quiet, 1);
     assert.equal((await aliases()).some(a => a.name === '/velho'), false);
@@ -378,11 +378,11 @@ test('-move renomeia o alias e recusa nome existente, de comando ou alias inexis
 
 test('-desc sem comando atualiza só a descrição de um alias existente', async () => {
     await bot.replyAlt('/alias -rm all');
-    await bot.replyAlt('/alias end.inga /rates USD');
+    await bot.replyAlt('/alias end.inga /stocks USD');
     assert.match((await bot.replyAlt('/alias /end.inga -d “Endereço do Ingá"'))[0], /Descrição de \/end.inga atualizada/);
     const a = (await aliases()).find(a => a.name === '/end.inga');
     assert.equal(a.description, 'Endereço do Ingá');
-    assert.equal(a.command, '/rates USD');
+    assert.equal(a.command, '/stocks USD');
     assert.match((await bot.replyAlt('/alias nada -d "x"'))[0], /não encontrado/);
     await bot.replyAlt('/alias -rm all');
 });
@@ -393,7 +393,7 @@ test('${N:--l}: o padrão que começa com "-"; o travessão do teclado do celula
     assert.equal(applyParams('/forward ${1:--l} #nopt', '-dry').comando, '/forward -dry #nopt');
     assert.equal(applyParams('/forward ${1:—l} #nopt', '').comando, '/forward -l #nopt', 'travessão');
     assert.equal(applyParams('/forward ${1:–l} #nopt', '').comando, '/forward -l #nopt', 'meia-risca');
-    assert.equal(applyParams('/rates ${1:-USD}', '').comando, '/rates USD', 'o padrão normal não muda');
+    assert.equal(applyParams('/stocks ${1:-USD}', '').comando, '/stocks USD', 'o padrão normal não muda');
 
     // Saved with the dash, it is fixed
     await bot.replyAlt('/alias nopt /forward ${1:—l} #nopt');

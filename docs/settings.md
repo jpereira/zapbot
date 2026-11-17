@@ -7,8 +7,8 @@ shows are in Portuguese; the ones here are in English).
 | Key | Type | Default | Description |
 |---|---|---|---|
 | `agenda.max` | 1–500 | `50` | Max items in [`/cron`](commands/cron.md), counting reminders and messages together |
-| `alert.intervalMin` | 1–60 | `5` | Interval, in minutes, between [price alert](commands/rates.md#price-alerts) checks |
-| `alert.max` | 1–100 | `20` | Max price alerts (`/rates` and `/crypto` combined) |
+| `alert.intervalMin` | 1–60 | `5` | Interval, in minutes, between [price alert](commands/stocks.md#price-alerts) checks |
+| `alert.max` | 1–100 | `20` | Max price alerts (`/stocks` and `/crypto` combined) |
 | `api.enabled` | on/off | `off` | Turns on the local HTTP API ([API and MCP](api.md)): `/health`, `/status`, `/notes` and `/send`, with `api.key`. Takes effect after restarting the bot |
 | `api.host` | text | `127.0.0.1` | Address the API listens on. The default only serves the machine itself; elsewhere, put an HTTPS proxy in front. Takes effect after restarting |
 | `api.key` | text (can be empty) | *(empty)* | The API key (`Authorization: Bearer <key>` or `X-API-Key` header). Empty: the API does not start. Shown masked; use a long random key |
@@ -103,7 +103,6 @@ shows are in Portuguese; the ones here are in English).
 | `pixelart.maxParts` | 1–10 | `3` | Max parts of [`/pixelart`](commands/pixelart.md) when the art is taller than 4096 px |
 | `pixelart.packs` | list | `chuck-norris-lvl` | 16colo.rs packs picked at random by [`/pixelart`](commands/pixelart.md) with no arguments |
 | `poll.retentionDays` | 1–365 | `90` | Days polls and votes are kept for [`/poll -r`](commands/poll.md#result) |
-| `rates.coins` | list | `EUR, USDT` | Currencies enabled in `/rates` (`USD`, `EUR`, `GBP`, `USDT`); usually changed with `/rates -a`/`-d` |
 | `show.alert.deleted` | on/off | `on` | Alerts you in your private chat when someone deletes a message; `off` only stores it for `/show` |
 | `show.alert.edited` | on/off | `on` | Alerts you in your private chat when someone edits a message; `off` only stores it for `/show -e` |
 | `show.alert.reaction` | on/off | `on` | Alerts you in your private chat when someone removes or changes a reaction; `off` only stores it for `/show -r` |
@@ -115,6 +114,7 @@ shows are in Portuguese; the ones here are in English).
 | `status.warnAfter` | 1–50 | `3` | From how many Status posts in 24 hours `/status` warns about the risk of a ban (it doesn't block) |
 | `sticker.author` | text | `https://github.com/jpereira/zapbot/` | Sticker author |
 | `sticker.name` | text | `ZapBot` | Sticker pack name |
+| `stocks.symbols` | list | `USD, EUR, USDT, MSTR` | Symbols shown by [`/stocks`](commands/stocks.md) (and `/rates`): currencies against the real (`USD`, `EUR`, `GBP`, `USDT`) and Yahoo Finance tickers (`MSTR`, `NVDA`, `PETR4.SA`, `BRK-B`, `^GSPC`); usually changed with `/stocks -a`/`-d` |
 | `tldr.maxMsgs` | 10–2000 | `500` | Max messages sent to OpenAI per [`/tldr`](commands/tldr.md) |
 | `transcribe.language` | text | `auto` | Language of the speech in [`/get -transcribe`](commands/get.md#transcribe-the-speech--transcribe) (`pt`, `en`, `es`...). `auto`: whisper detects it |
 | `transcribe.maxMinutes` | 1–180 | `20` | Longest audio (minutes) `/get -transcribe` transcribes: it uses the server CPU |

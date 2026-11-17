@@ -111,7 +111,7 @@ src/
   stats.js              contadores do /stats
   status.js             relatório do /bot -status e o envio diário (pela agenda)
   system.js            /bot -info: versões (Node.js, whatsapp-web.js, Chromium, yt-dlp, ffmpeg...), as novas e o sistema
-  currencies.js, quotes.js, priceAlerts.js   /crypto, /rates e alertas de preço
+  currencies.js, quotes.js, priceAlerts.js   /crypto, /stocks e alertas de preço
   aliases.js            resolução, listagem e execução (as de texto) dos atalhos persistidos no banco
   schedule.js             /cron: leitura, lista e envio na hora
   notes.js              /notes: anotações, #tags (e a descrição), imagens, o PDF do -export e o -alert (aviso numa data/hora, uma vez)
@@ -222,7 +222,7 @@ devolve `null`, como quando o WhatsApp não deixa editar.
 | `comandos.test.js` | `/help` (só com os comandos de quem pediu), `/debug`, `/uptime`, `/version`, `/ping`, `/noffa`, `/bot` (o `-h` em blocos, o status sem opção, o `-on`/`-off`, o `-list-users`, e o `-info`, com as versões novas do yt-dlp e do whatsapp-web.js), `/set` (e o `-append`/`-rm`) |
 | `conexao-email.test.js` | Eventos de conexão, reinício (e as novas tentativas sem internet, no boot e no reinício, e o vigia do `ready`), watchdog, alertas por e-mail, crash e `docker stop` |
 | `configuracao.test.js` | `commands.js`, settings (e a validação dos valores persistidos), parser de opções, ajuda (uma forma do uso e um exemplo por linha) e a coerência entre config, código, README e `docs/` (inclusive a ordem alfabética, os links e a versão estável da instalação) |
-| `cotacoes.test.js` | `/rates`, `/crypto` (e o filtro por moeda) e os alertas de preço (com um ou vários `-to`, o `-msg` e o `-rm` de vários) |
+| `cotacoes.test.js` | `/stocks`, `/crypto` (e o filtro por moeda) e os alertas de preço (com um ou vários `-to`, o `-msg` e o `-rm` de vários) |
 | `debug.test.js` | Níveis, parser dos comandos, filtro com destaque, logs de inicialização, cópia para chats e ocultação de credenciais |
 | `defi.test.js` | Solana (base58, PDA), contas da Orca (conferidas com o SDK oficial), o Project X (HyperEVM simulada), a Liquidswap (Aptos simulada: indexador e fullnode, com o preço das pools estáveis e a chave da API), o Morpho (API simulada, com as contas conferidas com as da API), o Aave V3 (blockchain simulada, com o Multicall3 de verdade) e o `/defi`: o filtro por protocolo, o `-rm` de vários, os endereços (inteiros só no privado), a lista (com o 🔔 e o limite), o resumo do `-fees` (com o total e o `-alert`) e o `-alert` (saída e volta da faixa, o `-fees`, o `-alert` no cadastro e vários `-to`) |
 | `dependencias.test.js` | Carregamento das dependências sem aviso do módulo `punycode` |
@@ -234,7 +234,7 @@ devolve `null`, como quando o WhatsApp não deixa editar.
 | `admins-invite.test.js` | `/promote` e `/demote` (por nome, menção, número e respondendo; já é admin, fora do grupo, o criador, o participante `@lid`, o bot sem ser admin e a recusa) e `/invite` (e `-revoke`) |
 | `grupos.test.js` | `/join` (link, código, `-info`, convite inválido e recusa) e `/leave` (pelo nome, pelo nº, a lista) |
 | `i18n.test.js` | O setting `zapbot.lang` (padrão `en_US`, aceita `pt-BR`/`pt`/`en`), os catálogos (mesmas chaves e `{placeholders}`), o texto das definições em inglês com a tradução em português de cada uma, e o `-h`/`/help` nos dois idiomas |
-| `i18n-adm.test.js`, `i18n-ai.test.js`, `i18n-core.test.js`, `i18n-data.test.js`, `i18n-grp.test.js`, `i18n-info.test.js`, `i18n-notes.test.js`, `i18n-novos.test.js` | As respostas em `en_US` (os outros testes rodam em `pt_BR`), um arquivo por assunto do catálogo: administração (`/bot`, `/set`, `/backup`, `/alias`, `/batch`, `/debug`, `/cron`), IA e mídia (`/gpt`, `/tldr`, `/draw`...), núcleo (login, opção e comando desconhecidos, avisos), dados (`/get`, `/show`, `/stats`, `/watch`, `/cache`), grupos (`/mute`, `/block`, `/poll`, `/leave`...), informação (`/rates`, `/crypto`, `/bills`, `/whois`, `/me`, `/bot -status`, `/uptime`) e notas (`/notes`, `/monitor`) e os comandos novos (`/welcome`, `/promote`, `/invite`, `/ocr`, `/qr`, `/carbon`...) |
+| `i18n-adm.test.js`, `i18n-ai.test.js`, `i18n-core.test.js`, `i18n-data.test.js`, `i18n-grp.test.js`, `i18n-info.test.js`, `i18n-notes.test.js`, `i18n-novos.test.js` | As respostas em `en_US` (os outros testes rodam em `pt_BR`), um arquivo por assunto do catálogo: administração (`/bot`, `/set`, `/backup`, `/alias`, `/batch`, `/debug`, `/cron`), IA e mídia (`/gpt`, `/tldr`, `/draw`...), núcleo (login, opção e comando desconhecidos, avisos), dados (`/get`, `/show`, `/stats`, `/watch`, `/cache`), grupos (`/mute`, `/block`, `/poll`, `/leave`...), informação (`/stocks`, `/crypto`, `/bills`, `/whois`, `/me`, `/bot -status`, `/uptime`) e notas (`/notes`, `/monitor`) e os comandos novos (`/welcome`, `/promote`, `/invite`, `/ocr`, `/qr`, `/carbon`...) |
 | `heartbeat.test.js` | Heartbeat e o `docker/app/healthcheck.js` (executado de verdade) |
 | `mascara-telefones.test.js` | Ofuscação de telefones no `/show`, `/watch` e `/bot` |
 | `mensagens.test.js` | Gravação (com o nome da sua agenda, não o pushname) e de localizações sem interpretar a miniatura como texto ou comando, roteamento, permissões (`role`, o `bot.users` com pessoas, grupos, `true`/`false` e as permissões persistidas, bot desligado, admins extras do `bot.admins`, os atalhos `/bot +a`/`+u`, as listas do `-list-users`/`-list-users all`, os comandos de cada usuário (`+cmd`/`-cmd`), o `-reset` com a confirmação, o `/whois` e a proteção contra flood), o log dos comandos desconhecidos e a contagem do `/stats` (sem os avisos do sistema) |
@@ -451,7 +451,7 @@ Cada entrada segue este formato:
 - Os textos (`usage`, `help` e `desc`) aceitam template string com as constantes de
   `src/constants.js` (`` `... em ${CACHE_DIR}` ``): a ajuda mostra o caminho real (ex.: o `/cache -h`).
 - Uma opção igual em mais de um comando vira uma constante em `definitions/_options.js`
-  (`OPCAO_ALERTA_TO`, do `/rates` e do `/crypto`), para a descrição ficar num lugar só.
+  (`OPCAO_ALERTA_TO`, do `/stocks` e do `/crypto`), para a descrição ficar num lugar só.
 - Com `disabled: true` o comando não é carregado: o bot não responde a ele nem aos aliases, e ele
   some do `/help`. No boot aparece nos logs `Disabled N callers (...)`. Para desativar sem rebuild,
   use o setting `commands.disabled` (`/set commands.disabled noffa`).

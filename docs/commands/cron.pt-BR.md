@@ -110,7 +110,7 @@ dois modos, em qualquer ponto do texto e mais de uma vez:
 ```text
 /cron 09:24 -to /ZapBot/ O preço do Bitcoin agora: {/crypto BTC}
 /cron 8h -r d -to /Família/ Bom dia! {/weather Rio de Janeiro}
-/cron seg 9h -r s Dólar: {/rates USD} · BTC: {/crypto BTC}
+/cron seg 9h -r s Dólar: {/stocks USD} · BTC: {/crypto BTC}
 /cron -rem sexta 18h -r s {/stats -7}
 /cron 12h -to /Grupo L200/ {/meme}       (só mídia: sai a imagem, sem texto)
 ```
@@ -119,8 +119,8 @@ Vários comandos e vários destinos no mesmo item (um item só; na hora, ele sai
 os comandos rodando para cada chat):
 
 ```text
-/cron 06:00 -r d -to /Krishina Da Silva/ -to /Grupo da Faculdade/ ⏰ Status da DeFi! {/defi} Preço do BTC! {/crypto BTC} Preço do Dólar! {/rates USD}
-/cron 07:30 -r d -to /Família/ Bom dia! ☀️ {/weather Recife} Cripto: {/crypto BTC ETH} Câmbio: {/rates USD EUR}
+/cron 06:00 -r d -to /Krishina Da Silva/ -to /Grupo da Faculdade/ ⏰ Status da DeFi! {/defi} Preço do BTC! {/crypto BTC} Preço do Dólar! {/stocks USD}
+/cron 07:30 -r d -to /Família/ Bom dia! ☀️ {/weather Recife} Cripto: {/crypto BTC ETH} Câmbio: {/stocks USD EUR}
 /cron seg 08:00 -r s -to /Trabalho/ -to @Fulano Da Silva Resumo da semana: {/news -hack 5} CVEs: {/cve -high 3}
 /cron -rem -private 23:00 -r d Fechamento do dia: {/crypto} {/defi}
 ```
@@ -159,10 +159,10 @@ Preço do Dólar!
   de uma linha só fica na frase. Um comando que responde mais de uma vez (o `/defi`, uma por
   posição) tem as respostas separadas por uma linha em branco. Mídias (`/meme`, `/giphy`,
   `/pixelart`) saem logo depois da mensagem.
-- Só os comandos de consulta rodam aí: `/ascii`, `/rates`, `/crypto`, `/cve`, `/defi`, `/giphy`,
+- Só os comandos de consulta rodam aí: `/ascii`, `/stocks`, `/crypto`, `/cve`, `/defi`, `/giphy`,
   `/joke`, `/kernel`, `/meme`, `/news`, `/pixelart`, `/stats`, `/weather`, `/uptime` e `/version`
   (nas definições, os com `cron: true`). As opções que mudam algo também não: o `-width` e o `-char`
-  do `/ascii`; o `-add`, o `-del` e o `-alert` do `/crypto` e do `/rates`; o `-address`, o
+  do `/ascii`; o `-add`, o `-del` e o `-alert` do `/crypto` e do `/stocks`; o `-address`, o
   `-wallet`, o `-pool`, o `-nft`, o `-name`, o `-rm`, o `-alert`, o `-fees` e o `-to` do `/defi`
   (rodam os protocolos, o `-l`, o `-mask` e o `aave -full`); e o `-flush` e o `-flush-all` do
   `/stats`.
@@ -184,7 +184,7 @@ criar e no `-edit`:
 
 ```text
 /cron 8h -r d Verificando Orca {/defi orca}\n Verificando Prjx {/defi prjx}
-/cron 07:30 -r d -to /Família/ Bom dia! ☀️\n{/weather Recife}\nCâmbio: {/rates USD}
+/cron 07:30 -r d -to /Família/ Bom dia! ☀️\n{/weather Recife}\nCâmbio: {/stocks USD}
 /cron -rem sexta 18h Fechar a semana:\n- relatório\n- backup\n- planilha
 /cron -edit 2 Linha 1\nLinha 2
 ```

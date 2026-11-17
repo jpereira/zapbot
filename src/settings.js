@@ -10,7 +10,8 @@ const { t } = require('./i18n');
 const { dbAll, dbGet, dbRun } = require('./db');
 const { limitHistoryMonitor } = require('./monitorHistory');
 const { printError, printInfo, printSuccess } = require('./log');
-const { QUOTE_SUPPORTED, CRYPTO_SUPPORTED } = require('./currencies');
+const { normalizeTicker } = require('./actions');
+const { CRYPTO_SUPPORTED } = require('./currencies');
 const { isValidHttpUrl } = require('./util/url');
 const { compileRuleWatch } = require('./watch/rules');
 
@@ -78,7 +79,6 @@ function validateUrlFeed(v) {
 const SETTINGS_RENAMED = {
     'alerta.intervalMin': 'alert.intervalMin',
     'alerta.max': 'alert.max',
-    'cotacao.coins': 'rates.coins',
     'defi.alerta.intervalMin': 'defi.alert.intervalMin',
     'edit.alert': 'show.alert.edited',
     'enquete.retentionDays': 'poll.retentionDays',
@@ -127,12 +127,12 @@ const SETTINGS_SCHEMA = {
     'alert.intervalMin': {
         default: 5,
         type: 'number', min: 1, max: 60,
-        desc: 'Intervalo (minutos) entre as verificações dos alertas do /rates e do /crypto.'
+        desc: 'Intervalo (minutos) entre as verificações dos alertas do /stocks e do /crypto.'
     },
     'alert.max': {
         default: 20,
         type: 'number', min: 1, max: 100,
-        desc: 'Máximo de alertas de preço (somando /rates e /crypto).'
+        desc: 'Máximo de alertas de preço (somando /stocks e /crypto).'
     },
     'api.enabled': {
         default: false,
@@ -761,16 +761,6 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 1, max: 365,
         desc: 'Dias que as enquetes e os votos ficam guardados para o /poll -r.'
     },
-    'rates.coins': {
-        default: ['EUR', 'USDT'],
-        type: 'list',
-        desc: 'Moedas exibidas pelo /rates (contra o real).',
-        item: (v) => {
-            const sym = v.toUpperCase();
-            if (!QUOTE_SUPPORTED[sym]) throw new Error(t('adm.settings.unsupportedCoin', { sym }));
-            return sym;
-        }
-    },
     'show.alert.deleted': {
         default: true,
         type: 'boolean',
@@ -825,6 +815,16 @@ const SETTINGS_SCHEMA = {
         default: 'ZapBot',
         type: 'string',
         desc: 'Nome do pacote das figurinhas (/sticker e /get -st).'
+    },
+    'stocks.symbols': {
+        default: ['USD', 'EUR', 'USDT', 'MSTR'],
+        type: 'list',
+        desc: 'Símbolos exibidos pelo /stocks (e /rates): moedas contra o real (USD, EUR, GBP, USDT) e tickers do Yahoo Finance (MSTR, NVDA, PETR4.SA, BRK-B, ^GSPC).',
+        item: (v) => {
+            const ticker = normalizeTicker(v);
+            if (!ticker) throw new Error(t('stocks.badTicker', { value: v }));
+            return ticker;
+        }
     },
     'tldr.maxMsgs': {
         default: 500,
