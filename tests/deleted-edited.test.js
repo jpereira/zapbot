@@ -569,3 +569,46 @@ describe('/show -e (editadas)', () => {
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM messages WHERE revoked = 1')).n, 1);
     });
 });
+
+test('as menções cruas (@número) viram o nome na apagada e na editada; o banco guarda o texto original', async () => {
+    const msg = bot.createMessage({ texto: `parabéns @${OTHERAlt.user}!`, de: OTHERAlt.jid });
+    await bot.deliver(msg);
+
+    const [edited] = await bot.edit(msg, `parabéns de novo @${OTHERAlt.user}!`);
+    assert.match(edited.texto, /parabéns @Fulano!/);
+    assert.match(edited.texto, /parabéns de novo @Fulano!/);
+
+    const [deleted] = await bot.apagar(msg);
+    assert.match(deleted.texto, /parabéns de novo @Fulano!/);
+    assert.doesNotMatch(deleted.texto, new RegExp(`@${OTHERAlt.user}`));
+    assert.match((await bot.dbGet('SELECT body FROM messages WHERE id = ?', [msg.id.id])).body, new RegExp(`@${OTHERAlt.user}`));
+});
+
+test('os ids das menções ficam na coluna mentions, e a exibição usa eles para achar o nome', async () => {
+    const LID = '100000000000077@lid';
+    const msg = bot.createMessage({ texto: 'oi @100000000000077 e @100000000000078', de: OTHERAlt.jid, mencoes: [LID, OTHERAlt.jid, LID] });
+    await bot.deliver(msg);
+    const row = await bot.dbGet('SELECT mentions FROM messages WHERE id = ?', [msg.id.id]);
+    assert.deepEqual(JSON.parse(row.mentions), [LID, OTHERAlt.jid], 'sem repetir');
+
+    const without = bot.createMessage({ texto: 'sem menção', de: OTHERAlt.jid });
+    await bot.deliver(without);
+    assert.equal((await bot.dbGet('SELECT mentions FROM messages WHERE id = ?', [without.id.id])).mentions, null);
+
+    // the real contact only exists for the stored id: without it, the name would not be found
+    const queried = [];
+    const original = bot.client.getContactById;
+    bot.client.getContactById = async (id) => {
+        queried.push(id);
+        return id === LID ? { id: { _serialized: LID }, name: 'Beltrano da Agenda', pushname: 'Beltrano' } : original.call(bot.client, id);
+    };
+    try {
+        const { messageResolverMentions, mentionsRecorded } = bot.src('mentions');
+        assert.deepEqual(await mentionsRecorded(msg.id.id), [LID, OTHERAlt.jid]);
+        assert.match(await messageResolverMentions('oi @100000000000077', msg.id.id), /^oi @Beltrano/);
+        assert.ok(queried.includes(LID));
+        assert.equal(await messageResolverMentions('sem nada', 'nao-existe'), 'sem nada');
+    } finally {
+        bot.client.getContactById = original;
+    }
+});

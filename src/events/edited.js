@@ -12,6 +12,7 @@ const { getSetting } = require('../settings');
 const { countStats } = require('../stats');
 const { formatData } = require('../util/format');
 const { headerOrigin, channelId } = require('../util/origin');
+const { messageResolverMentions } = require('../mentions');
 
 /*
  * Mensagens editadas
@@ -29,7 +30,8 @@ async function sendMessageEdited(destination, row, info, { titulo: title = t('ed
     }) +
         t('editadas.corpo', {
             enviada: formatData(row.timestamp), editada: formatData(row.edited_at),
-            antes: row.old_body || t('editadas.vazio'), depois: row.new_body || t('editadas.vazio')
+            antes: await messageResolverMentions(row.old_body, row.message_id) || t('editadas.vazio'),
+            depois: await messageResolverMentions(row.new_body, row.message_id) || t('editadas.vazio')
         });
 
     // Records where it came from (/mute replying to the notice)

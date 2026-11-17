@@ -201,6 +201,12 @@ feita antes de o bot estar rodando não gera nada ao ser removida: o bot não sa
 O texto da mensagem reagida vem do cache, como estava na hora; se ela já tinha saído do cache, o
 aviso diz `(fora do cache)`. Cada mudança é um item: trocar duas vezes gera dois.
 
+As menções do texto (`@265472113143884`, que é o id interno do WhatsApp) saem com o **nome**: o da
+sua agenda, o do perfil de quem não está nela, ou o telefone. Vale também nos avisos de mensagem
+apagada e editada e no `/show`; o banco guarda o texto original e os ids das menções (`messages.mentions`, vindos da própria
+mensagem), e o nome é buscado na hora de exibir. As mensagens salvas antes disso não têm os ids: o bot
+tenta o número como id interno e como telefone.
+
 ```text
 😶 REAÇÃO REMOVIDA DETECTADA
 

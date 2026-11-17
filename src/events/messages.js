@@ -31,6 +31,7 @@ const { withContextDebug, contextDebug } = require('../debugContext');
 const { printDebugLevel } = require('../log');
 const { instrumentObject } = require('../debugInstrumentation');
 const { channelResolverName } = require('../contacts');
+const { mentionsForRecord } = require('../mentions');
 const { isChannelAlt, channelId } = require('../util/origin');
 const { withLimit } = require('../usageLimit');
 const { withTyping, optionsError, readOptions, assembleContext, denial, askedMask } = require('../execute');
@@ -229,8 +230,8 @@ client.on('message_create', (msg) => withContextDebug({
                  body, type, timestamp,
                  has_media, media_path,
                  location_lat, location_lng,
-                 raw_json, from_me)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 raw_json, from_me, mentions)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
              ON CONFLICT(id) DO UPDATE SET
                 sender_name   = excluded.sender_name,
                 sender_jid    = excluded.sender_jid,
@@ -245,7 +246,8 @@ client.on('message_create', (msg) => withContextDebug({
                 location_lat  = excluded.location_lat,
                 location_lng  = excluded.location_lng,
                 raw_json      = excluded.raw_json,
-                from_me       = excluded.from_me
+                from_me       = excluded.from_me,
+                mentions      = COALESCE(excluded.mentions, messages.mentions)
              WHERE messages.revoked = 0`,
             [
                 msgIdPure, senderName, senderJid, senderNumber,
@@ -253,7 +255,7 @@ client.on('message_create', (msg) => withContextDebug({
                 msg.body || '', msgType, timestamp,
                 hasMedia, localMediaPath,
                 lat, lng,
-                'desativado', msg.fromMe ? 1 : 0
+                'desativado', msg.fromMe ? 1 : 0, mentionsForRecord(msg.mentionedIds)
             ]
         ).catch(err => printError('Error saving message:', err.message));
 

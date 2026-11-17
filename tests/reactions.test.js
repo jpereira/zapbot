@@ -41,6 +41,13 @@ describe('evento: reação removida ou trocada', () => {
         assert.equal(await bot.dbGet('SELECT 1 FROM reactions WHERE message_id = ?', [msg.id.id]), undefined, 'a atual sai');
     });
 
+    test('a menção crua (@número) da mensagem vira o nome no aviso', async () => {
+        const msg = await messageReacted(`@${OTHERAlt.user} parabéns! Tudo de bom`, '❤️');
+        const [notice] = await bot.react(msg, OTHERAlt.jid, '');
+        assert.match(notice.texto, /💬 \*Na mensagem:\* "@Fulano parabéns! Tudo de bom"$/);
+        assert.equal((await bot.dbGet('SELECT body FROM reaction_changes WHERE message_id = ?', [msg.id.id])).body, `@${OTHERAlt.user} parabéns! Tudo de bom`);
+    });
+
     test('trocada: a de antes e a nova; na sua mensagem, diz que é sua', async () => {
         const sent = bot.createMessage({ texto: 'chego às 8' });
         await bot.deliver(sent);

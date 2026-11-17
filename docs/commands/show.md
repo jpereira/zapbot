@@ -206,6 +206,13 @@ The text of the message reacted to comes from the cache, as it was at the time; 
 left the cache, the notice says `(not in the cache)`. Each change is an item: changing twice generates
 two.
 
+The mentions in the text (`@265472113143884`, WhatsApp's internal id) come out with the **name**:
+the one in your address book, the profile name for someone who isn't in it, or the phone number.
+This also applies to the deleted and edited message alerts and to `/show`; the database keeps the
+original text plus the ids of the mentions (`messages.mentions`, from the message itself), and the
+name is looked up when displaying. Messages saved before this have no ids: the bot tries the number as
+both an internal id and a phone.
+
 ```text
 😶 REACTION REMOVED DETECTED
 
