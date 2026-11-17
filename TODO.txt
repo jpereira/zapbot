@@ -1,18 +1,94 @@
 * /defi: -alert de Health Factor no Morpho e no Aave.
-* /view: salvar a foto/video de visualizacao unica quando chega, com o mesmo cache de
-  midias e o mesmo -l do /show, com um -v ao lado do -d e do -e (terceira secao "Visualizacao unica").
 * /enquete: avisar no privado quando todos do grupo votarem.
 * /bot -status: incluir no relatorio daily cotacoes, cripto, tempo, CVEs criticas, um
   mini /stats dos grupos e o /defi.
-* /transcrever: respondendo um audio, transcreve pela OpenAI (Whisper) com a chave do
-  /gpt; um setting liga a transcricao automatica em chats escolhidos.
+* Transcricao automatica de notas de voz (transcribe.autoChats): chats escolhidos, so ate N minutos, um por vez.
+* /group -ephemeral 24h|7d|off: o whatsapp-web.js nao tem chamada; precisaria de page.evaluate no WhatsApp Web.
+* Agrupar o /help por categoria (Grupos, Admin, GPT, Chats...) e /g<comando> como atalho (proposta em aberto).
+* /get de carrossel misto (fotos e videos no mesmo post): hoje so o post so de fotos manda as fotos.
 * /lembrete em linguagem natural pelo /gpt ("me lembra amanha as 9h de ligar pro banco").
-* /mute -por <tempo> (ex.: -por 2h, -por 7d): silencio temporario, que expira sozinho.
 * Alertas de preco: -sempre (repete em vez de sair ao disparar) e por variacao
   (ex.: BTC +-5% em 24h).
 * /backup: senha no arquivo (age/gpg) antes de enviar por e-mail ou para outro chat, e
   envio automatico weekly (setting backup.sendTo).
-* /gpt e /tldr: aceitar imagem respondida (visao) e /ocr para tirar o texto de uma imagem.
-* Lista de escolha (destinos): aceitar 0 ou "cancelar" para desistir sem esperar os 2 min.
-* Limite de uso por pessoa nos comandos publicos (ex.: /get, /gpt), contra abuso em grupo.
-* Adicionar função para fazer /join, /leave de grupos.
+
+IDEIAS
+====================================================================================================
+Prioridade: [A] alta, [M] media, [B] baixa. Cuidado com ban: automacao em massa (autostatus,
+autoreact, chatbot em todo chat) e o que mais derruba conta.
+
+--- Moderacao de grupo -----------------------------------------------------------------------------
+* [B] /everybody -hide (marca todos sem listar os @) e -nonadmin. Como: opcoes novas no /everybody;
+  so mexe no array de mentions.
+* [B] pmblocker: ignorar/bloquear DM de desconhecido com mensagem padrao. Como: settings pm.block e
+  pm.message; liberar contatos da agenda. Cuidado: pode afastar gente.
+* [M] Chats ignorados: grupos onde o bot nao responde a ninguem (so ao dono). Como: setting
+  bot.ignoreChats (lista), checado antes de executar.
+* [M] Historico de entrada/saida de grupo (quem entrou, quem saiu, quem adicionou). Como: evento
+  group_join/group_leave -> tabela; /members -log ou /stats.
+
+--- Midia, figurinhas e imagens --------------------------------------------------------------------
+* [M] /sticker: -crop (recorte quadrado), -pack "nome" (por figurinha, alem dos settings
+  sticker.name/author), e o caminho inverso /sticker -img e -video (figurinha -> imagem/video).
+  Como: sharp e ffmpeg, que ja usamos.
+* [B] emojimix (junta dois emojis numa figurinha) e attp (texto animado
+  como figurinha). Como: API publica de mistura de emojis; attp via SVG animado + ffmpeg. Diversao, sem
+  pressa.
+* [B] Importar pack de figurinhas do Telegram por link. Como: API de bots do Telegram (exige token);
+  so se alguem pedir.
+* [M] /ss <url>: print de site. Como: o Puppeteer ja vem com o whatsapp-web.js; abrir aba nova,
+  screenshot e fechar. Risco: SSRF (bloquear localhost/IP privado/ esquema que nao seja http/https),
+  timeout curto, so dono/admin.
+* [B] /removebg, /remini (aumentar resolucao), blur. Como: ja ha edicao de foto no /draw (OpenAI);
+  "tirar o fundo" pode ser um prompt pronto. Upscale pede servico externo.
+* [B] Filtros de avatar (wasted, jail, triggered, circle...). Como: overlays com sharp em cima da
+  foto de perfil. Diversao.
+* [B] /textmaker (texto neon/fogo/metal em imagem). Como: SVG + sharp, parente do /carbon e do
+  /ascii.
+
+--- Consultas e utilidades -------------------------------------------------------------------------
+* [A] /cron -repeat yearly (y): aniversario, vencimento, renovacao. Como: mais um item em REPETICOES
+  (util/when.js), com o dia/mes originais e tratamento do 29/02 (cai no 28).
+* [A] /get com texto em vez de link: "/get -a nome da musica" busca no YouTube e baixa o audio.
+  Como: yt-dlp aceita "ytsearch1:texto"; so liberar quando o argumento nao for URL e mostrar o
+  titulo antes de baixar.
+* [M] /lyrics <musica>. Como: API aberta sem chave, com limite de tamanho (cortar e
+  mandar o resto em partes).
+* [M] /dict <palavra> (significado, exemplos, sinonimos). Como: API aberta de dicionario por idioma
+  (en e pt), escolhida pelo zapbot.lang.
+* [B] /github <usuario/repo>: estrelas, ultima release, descricao. Como: API publica do GitHub, sem
+  chave (limite baixo sem token).
+* [M] Busca na web no /gpt (-web). Como: ferramenta web_search da API Responses da OpenAI, se o
+  modelo configurado aceitar; mostrar as fontes no fim.
+
+--- Automacao e IA ---------------------------------------------------------------------------------
+* [M] Chatbot por chat: o /gpt responde sozinho em chats escolhidos. Como: setting gpt.autoChats, so
+  quando mencionado ou respondido, com cooldown e teto de tokens por dia (custo e ban).
+* [M] Digest dos grupos: um resumo so, no privado, de varios grupos ("/tldr -digest 1d"). Como:
+  /tldr em cada grupo + /cron + -to; um prompt final que junta os resumos.
+* [M] Despesas por mensagem: "/gasto 30 almoco", "/gastos mes", exporta CSV/PDF. Como: extensao do
+  /notes (tag + valor) ou tabela propria; o PDF ja existe no /notes -export.
+* [B] Moderacao com IA: classificar spam/ofensa no grupo com o /gpt e so denunciar aos admins, sem
+  agir sozinho. Como: amostrar mensagens de quem nao e admin; custo e privacidade pedem opt-in por
+  grupo.
+* [M] Reagir no lugar de responder: 👀 ao receber, ✅ ao terminar (e ❌ se falhar), para comandos
+  lentos ou com -q. Como: msg.react(); um helper unico nos comandos que hoje mandam o aviso
+  "aguarde".
+* [M] Recibo de entrega/leitura: mostrar "entregue/lido" no status do /forward e nos alertas. Como:
+  evento message_ack guardado por id da mensagem enviada pelo bot.
+
+--- Infra e integracoes ----------------------------------------------------------------------------
+* [A] Destinos de alerta alem do e-mail: ntfy, Telegram, Discord, webhook generico (com HMAC). Como:
+  tipo novo em destinations.js ("ntfy:topico", "https://..."); /watch, alertas de preco e /defi passam a
+  aceitar -to.
+* [A] Heartbeat externo: GET periodico numa URL de push de um servico de monitoramento para
+  saber que o bot caiu mesmo sem o e-mail. Como: setting heartbeat.url; ja existe src/heartbeat.js,
+  e so ligar o GET.
+* [M] API HTTP local: o miolo ja existe (docs/api.md); falta o dashboard so de leitura (status,
+  agenda, ultimos alertas) e, quem sabe, mais rotas (/cron, /show).
+* [B] Metricas Prometheus (mensagens, comandos, erros, latencia do /get). Como: endpoint /metrics na
+  mesma API; contadores em memoria.
+* [B] Aviso de versao nova (GitHub releases) no /bot -status em vez do /update por git pull. Como: o
+  deploy aqui e por Docker, entao so avisar.
+* [B] Sessao: reassumir quando o WhatsApp Web abre em outro lugar (useHere) e mostrar a bateria do
+  celular no /bot -status. Como: conferir o que o whatsapp-web.js ainda expoe.
