@@ -624,3 +624,21 @@ test('editar a mensagem marcando gente nova: os ids da edição entram na coluna
     const { mentions } = await bot.dbGet('SELECT mentions FROM messages WHERE id = ?', [msg.id.id]);
     assert.deepEqual(JSON.parse(mentions), [OTHERAlt.jid, LID]);
 });
+
+test('mensagens antigas (sem a coluna mentions): os ids saem dos participantes do grupo, uma vez só', async () => {
+    const LID = '100000000000099@lid';
+    bot.createGroup('120363000000000077@g.us', 'Velho', [OWNER.jid, { jid: LID }, OTHERAlt.jid]);
+    const base = "INSERT INTO messages (id, chat_id, is_group, body, type, timestamp, mentions) VALUES (?, ?, 1, ?, 'chat', ?, NULL)";
+    await bot.dbRun(base, ['ANTIGA1', '120363000000000077@g.us', 'oi @100000000000099 e @100000000000098', 1]);
+    await bot.dbRun(base, ['ANTIGA2', '120363000000000077@g.us', 'sem menção, só um @ solto', 2]);
+    await bot.dbRun(base, ['ANTIGA3', '120363000000000077@g.us', 'quem? @100000000000011', 3]);
+
+    const { fillMentionsOld } = bot.src('mentions');
+    assert.deepEqual(await fillMentionsOld(), { lidas: 2, preenchidas: 1 });
+    const lido = async (id) => (await bot.dbGet('SELECT mentions FROM messages WHERE id = ?', [id])).mentions;
+    assert.deepEqual(JSON.parse(await lido('ANTIGA1')), [LID], 'só quem é do grupo');
+    assert.equal(await lido('ANTIGA2'), null, 'sem @número: não mexe');
+    assert.equal(await lido('ANTIGA3'), '[]', 'ninguém achado: não tenta de novo');
+
+    assert.deepEqual(await fillMentionsOld(), { lidas: 0, preenchidas: 0 }, 'a segunda vez não acha nada');
+});

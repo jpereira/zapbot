@@ -4,7 +4,9 @@
  * the name is found without guessing whether the number is a LID or a phone.
  */
 
-const { dbGet, dbRun } = require('./db');
+const { dbAll, dbGet, dbRun } = require('./db');
+const { client } = require('./client');
+const { printInfo } = require('./log');
 const { resolverMentions } = require('./contacts');
 
 /**
@@ -48,4 +50,48 @@ async function appendMentions(messageId, mentionedIds) {
     await dbRun('UPDATE messages SET mentions = ? WHERE id = ?', [allAlt, messageId]);
 }
 
-module.exports = { appendMentions, mentionsRecorded, mentionsForRecord, messageResolverMentions };
+/**
+ * Messages stored before mentions existed: finds the @number ids of the text among the
+ * group participants and stores it. Whoever is not found stays with [] (does not try again).
+ * @param {object} [o]
+ * @param {number} [o.limite]  how many messages at a time (the newest first)
+ * @returns {Promise<{ lidas: number, preenchidas: number }>}
+ */
+async function fillMentionsOld({ limite: limitAlt = 5000 } = {}) {
+    const linesAlt = await dbAll(
+        "SELECT id, chat_id, body FROM messages WHERE mentions IS NULL AND body LIKE '%@%' ORDER BY timestamp DESC LIMIT ?",
+        [limitAlt]
+    );
+
+    const participants = new Map(); // chatId -> Map(number -> full id)
+    const group = async (chatId) => {
+        if (!participants.has(chatId)) {
+            const chat = chatId.endsWith('@g.us') ? await client.getChatById(chatId).catch(() => null) : null;
+            const map = new Map();
+            for (const p of chat?.participants ?? []) {
+                const id = p?.id?._serialized;
+                if (id) map.set(id.split('@')[0], id);
+            }
+            participants.set(chatId, map);
+        }
+        return participants.get(chatId);
+    };
+
+    let read = 0;
+    let filled = 0;
+    for (const { id, chat_id: chatId, body } of linesAlt) {
+        const numbers = [...new Set([...String(body).matchAll(/@(\d{6,})/g)].map(m => m[1]))];
+        if (!numbers.length) continue;
+
+        read++;
+        const map = await group(chatId);
+        const ids = numbers.map(n => map.get(n)).filter(Boolean);
+        await dbRun('UPDATE messages SET mentions = ? WHERE id = ? AND mentions IS NULL', [JSON.stringify(ids), id]);
+        if (ids.length) filled++;
+    }
+
+    if (read) printInfo(`[Menções] ${filled} de ${read} mensagens antigas com ids de menção preenchidos`);
+    return { lidas: read, preenchidas: filled };
+}
+
+module.exports = { appendMentions, fillMentionsOld, mentionsRecorded, mentionsForRecord, messageResolverMentions };
