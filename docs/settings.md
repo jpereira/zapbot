@@ -30,6 +30,9 @@ shows are in Portuguese; the ones here are in English).
 | `cache.messageRetentionHours` | 68–2160 | `68` | Hours the text of regular messages stays in the database (68, the delete-for-everyone window; up to 2160 = 90 days): the more, the further back `/tldr` reaches. Media has its own limit, `cache.messageMediaRetentionHours` |
 | `cache.reactionRetentionDays` | 1–365 | `30` | Days removed or changed reactions are kept for `/show -r` |
 | `cache.revokedRetentionDays` | 1–365 | `30` | Days deleted messages are kept for `/show` |
+| `call.allow` | list | *(empty)* | Numbers (with country code) whose calls are never rejected, even with `call.reject` on. `bot.admins` always get through too |
+| `call.message` | text (can be empty) | `Oi! Não atendo ligações aqui. Manda uma mensagem ou um áudio que eu respondo assim que der. 🙏` | Message sent to whoever had the call rejected (at most one every 10 minutes per person). Empty: rejects in silence |
+| `call.reject` | on/off | `off` | Rejects incoming voice and video calls (except `call.allow` and `bot.admins`) and replies with `call.message`. See [Rejecting calls](commands/bot.md#rejecting-calls) |
 | `commands.disabled` | list | *(empty)* | Commands disabled at runtime: the bot ignores them and they disappear from `/help`. `/set` cannot be disabled. Unknown names are ignored with a warning in the log; valid aliases are normalized |
 | `contacts.cache` | on/off | `on` | Keeps the profile photos downloaded by `/contacts` in `cache/contacts` (also in the backup). Off: downloads on every export and saves nothing |
 | `contacts.cacheDays` | 1–365 | `30` | Days a photo in `cache/contacts` stays valid before being downloaded again (`/contacts -r` forces it) |

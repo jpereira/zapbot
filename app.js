@@ -99,6 +99,7 @@ require('./src/events/reactions');
 require('./src/events/messages');
 require('./src/polls');
 require('./src/greetings');
+require('./src/calls');
 
 const { startSchedule } = require('./src/schedule');
 const { priceStartAlerts } = require('./src/priceAlerts');
