@@ -25,6 +25,7 @@ Markdown para a formatação do WhatsApp do `/gpt` (veja [Formatação no WhatsA
 /tldr 300 -private        → as últimas 300, no seu privado
 /tldr -c família 3h -private
 (respondendo uma mensagem)  /tldr  → dela até agora
+/tldr -s 2h                  → o resumo mais o consumo no rodapé
 ```
 
 Respondendo uma mensagem, o `/tldr` resume a conversa **a partir dela** (inclusive) até agora, como um

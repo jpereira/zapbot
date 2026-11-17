@@ -20,6 +20,7 @@ the voice and the style come from the `gpt.tts.*` settings.
 /tts Good morning!                → a voice note saying it
 /tts                              → replying to a text: speaks the message
 /tts speak slowly                 → replying to a text: speaks it in that style
+/tts -s hello, how are you?   → the voice note plus the usage in the footer
 ```
 
 - Replying to an **audio**, it is transcribed first and the transcription is spoken.

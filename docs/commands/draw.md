@@ -18,6 +18,7 @@ code: the result is the same.
 /draw -g a dancing cat
 /draw -m                       → the current model and the ones your key sees
 /draw -h                       → command help
+/draw -s an astronaut cat           → the image plus the usage in the footer
 ```
 
 If the **first word** looks like an option but doesn't exist (`/draw -price`), the bot replies

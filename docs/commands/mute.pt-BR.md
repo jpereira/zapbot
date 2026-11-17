@@ -40,6 +40,9 @@ fizer em qualquer chat, inclusive os status dela.
 /mute @Fulano Da Silva         → num grupo, mencionando a pessoa
 /mute /Jorge/                  → vários Jorge: lista, e você responde com o nº
 /mute                       → a lista
+/mute -list                    → os silenciados
+/mute -rm 2                     → tira o item 2 da lista
+/mute -rm all                   → tira todos
 ```
 
 ## Respondendo um aviso

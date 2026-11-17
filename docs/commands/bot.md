@@ -257,6 +257,11 @@ A user (a person or a group) can be limited to some common commands, or receive 
 /bot -cmd /meme                                   → from the current chat (the group, or the person in private)
 /bot +cmd all /Sofia Izabel/                      → Sofia goes back to using all the regular ones
 /bot +u +cmd /gpt                                 → typed in a group: everyone there uses only /gpt
+/bot -off                      → turns off all the commands (except /bot)
+/bot -on                       → turns it back on
+/bot -passwd MyPass1234        → sets the password for -login (owner)
+/bot -login MyPass1234         → in private: becomes an admin with the password
+/bot -lu -m                    → the users, with the numbers obfuscated
 ```
 
 - `+cmd` on someone who isn't a user yet already adds the person (or the group), with only those

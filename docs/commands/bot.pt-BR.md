@@ -255,6 +255,11 @@ mostra só os dele). Para limitar quantas vezes um usuário chama um deles, veja
 /bot -cmd /meme                                     → do chat atual (o grupo, ou a pessoa do privado)
 /bot +cmd all /Sofia Izabel/                        → a Sofia volta a usar todos os comuns
 /bot +u +cmd /gpt                                   → digitado num grupo: todos ali usam só o /gpt
+/bot -off                      → desliga todos os comandos (menos o /bot)
+/bot -on                       → liga de novo
+/bot -passwd MinhaSenha1234    → define a senha do -login (dono)
+/bot -login MinhaSenha1234     → no privado: vira admin com a senha
+/bot -lu -m                    → os usuários, com os números ofuscados
 ```
 
 - O `+cmd` em quem ainda não é usuário já adiciona a pessoa (ou o grupo), só com esses comandos. Em quem

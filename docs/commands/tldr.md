@@ -27,6 +27,7 @@ WhatsApp formatting conversion as `/gpt` (see
 /tldr 300 -private        → the last 300, in your private chat
 /tldr -c family 3h -private
 (replying to a message)  /tldr  → from it until now
+/tldr -s 2h                  → the summary plus the usage in the footer
 ```
 
 Replying to a message, `/tldr` summarizes the conversation **starting from it** (inclusive) until

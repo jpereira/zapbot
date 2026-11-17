@@ -17,6 +17,17 @@ to send at once what you'd otherwise send in several blocks (e.g. multiple notes
 | `-dry`, `-d` | | Only shows how the blocks were split, without running anything |
 | `-quiet`, `-q` | | Doesn't reply with the execution summary (errors go only to the log). Doesn't work with `-dry` |
 
+```text
+/batch -stop
+/ping
+/uptime
+→ if /ping fails, /uptime doesn't run
+
+/batch -q
+/notes #home buy milk
+→ saves the note and doesn't reply with the summary
+```
+
 ## How blocks are split
 
 A line that starts with a command (or alias) opens a block. Whatever comes after it, blank lines

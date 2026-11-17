@@ -48,6 +48,7 @@ Notes saved in the database, valid for any chat (group or private). Each one has
 /notes -d #home Home stuff                     → description of #home
 /notes -v 76                                   → #76 with the image, if it has one
 /notes                                            → #home: 3, #doubts: 1, no tag: 2
+/notes -compact                → one line per note, by day
 ```
 
 ## Tags

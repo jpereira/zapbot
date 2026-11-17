@@ -230,6 +230,8 @@ Não conte com isso.
 🎨 desenhe os dois numa festa de aniversário
 ```
 
+**A fala de um vídeo, em texto (sem API, roda no seu servidor):**
+
 ```text
 /transcribe https://www.instagram.com/reel/XXXXXXXX/
 ⏳ Transcrevendo a fala, pode levar um tempo.

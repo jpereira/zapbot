@@ -230,6 +230,8 @@ Don't count on it.
 🎨 draw the two of them at a birthday party
 ```
 
+**The speech of a video, as text (no API, it runs on your server):**
+
 ```text
 /transcribe https://www.instagram.com/reel/XXXXXXXX/
 ⏳ Transcribing the speech, this can take a while.

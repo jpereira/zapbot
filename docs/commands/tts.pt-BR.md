@@ -20,6 +20,7 @@ Transforma texto numa **nota de voz** de robô pela API de voz da OpenAI, como o
 /tts Bom dia!                     → uma nota de voz falando isso
 /tts                              → respondendo um texto: fala a mensagem
 /tts fale devagar                 → respondendo um texto: fala no estilo pedido
+/tts -s olá, tudo bem?         → a nota de voz mais o consumo no rodapé
 ```
 
 - Respondendo um **áudio**, ele é transcrito antes e a transcrição é falada.

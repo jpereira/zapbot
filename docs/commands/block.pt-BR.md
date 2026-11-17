@@ -24,6 +24,7 @@ só entre os contatos: grupos não se bloqueiam.
 /block +5521999999999 +5521988888888 /Ciclano Souza/  → várias de uma vez
 /block                      → respondendo uma mensagem: quem a escreveu (sem responder: a lista)
 /block -l                   → a lista
+/block -m -l                  → a lista, com os números ofuscados
 ```
 
 ```text

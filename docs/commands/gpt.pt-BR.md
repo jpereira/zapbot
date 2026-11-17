@@ -30,6 +30,7 @@ que você peça outro.
 /gpt -u          → consumo dos últimos 7 dias e os limites de agora (só dono e admins)
 /gpt -u 30           → (atalho) o consumo dos últimos 30 dias
 /gpt -h              → ajuda do comando
+/gpt -prices                   → atualiza os preços usados no rodapé (dono e admins)
 ```
 
 Se a **primeira palavra** parece uma opção mas não existe (`/gpt -price`), o bot responde

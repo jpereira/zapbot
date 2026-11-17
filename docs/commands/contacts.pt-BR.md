@@ -30,6 +30,8 @@ Só no **seu próprio privado**: a saída é a agenda inteira.
 /contacts -e         → todos, só texto, como contacts-AAAAMMDD.vcf (segundos)
 /contacts -e -p      → com as fotos de perfil (minutos)
 /contacts -e -p -r   → baixa todas as fotos de novo
+/contacts -e -p -n                → exporta com fotos, sem mexer no cache de fotos
+/contacts -clear                  → apaga as fotos salvas
 ```
 
 - Cada cartão tem um `UID` fixo derivado do número (`zapbot-<número>`), então importar o arquivo de

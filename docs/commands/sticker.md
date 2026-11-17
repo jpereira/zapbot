@@ -30,6 +30,8 @@ lower quality and, if it still doesn't fit, suggests a shorter clip with `-ss` a
 (reply to a video)               /sticker -ss 01:10 -es 01:13 → from 1:10 to 1:13
 (reply to a video)               /sticker -ss -10           → starts 10 s before the end (6 s)
 /sticker https://www.instagram.com/p/XXXXXXXX/
+/sticker -pos top             → (reply to a photo) the crop on the top
+/sticker -v https://youtu.be/XXXXXXXXXXX   → also shows the commands that ran
 ```
 
 | Option | Value | Description |

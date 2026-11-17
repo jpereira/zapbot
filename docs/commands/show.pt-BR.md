@@ -66,6 +66,7 @@ junto, por data.
 /show -q pix                → as apagadas com "pix" (no seu privado: tudo, de todos os chats)
 /show -e -q "bom dia" -10   → até 10 editadas com "bom dia"
 /show -5 -q /pix|boleto/i   → até 5 apagadas que casam com a regex
+/show -5 -m                  → as últimas 5, com os números ofuscados
 ```
 
 No seu privado, quando não há nada deste chat, o bot sugere os próximos passos, um por linha:

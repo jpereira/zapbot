@@ -47,6 +47,7 @@ Does something at the scheduled time. It has two modes, in the same schedule:
 /cron -pause 3                  → holds #3 (and /cron -resume 3 releases it)
 /cron -rm 2                     → removes #2
 /cron -rm 1 3 5                 → removes 1, 3 and 5 (the numbers from the previous list)
+/cron -status tomorrow 9h Good morning, friends!   → posts on your Status
 ```
 
 ```text

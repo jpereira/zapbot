@@ -33,6 +33,9 @@ outros, **a sua conta precisa ser admin do grupo**; sem isso os links ficam (e o
 ✅ youtube.com liberado.
 🔗 Antilink: apagar
 ✅ Liberados: youtube.com
+
+/antilink -deny youtube.com        → tira o youtube.com da lista de liberados
+/antilink -off                      → desliga neste grupo
 ```
 
 Depois, no grupo:

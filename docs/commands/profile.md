@@ -31,6 +31,7 @@ among contacts only: groups are refused.
 /profile +5521999999999         → by number
 /profile /Ana/ /Beto/           → one picture for each
 /profile                        → replying to a message: who wrote it
+/profile -m /Rafael Silva/       → the About, with the numbers obfuscated
 ```
 
 To change the picture instead of seeing it:

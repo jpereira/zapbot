@@ -34,6 +34,9 @@ other people's messages, **your account has to be an admin of the group**; witho
 ✅ youtube.com allowed.
 🔗 Antilink: delete
 ✅ Allowed: youtube.com
+
+/antilink -deny youtube.com        → takes youtube.com off the allowed list
+/antilink -off                      → turns it off in this group
 ```
 
 Then, in the group:

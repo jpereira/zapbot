@@ -25,6 +25,8 @@ type and the caption). Long texts are cut at 200 characters.
 /search refund                 → the 10 most recent with "refund" in this chat
 /search -30 invoice          → up to 30
 /search good morning       → with spaces, no quotes (/search is the same as /search)
+/search -a refund               → all chats, sent to your private chat (owner)
+/search -m refund               → with the numbers obfuscated
 ```
 
 ```text

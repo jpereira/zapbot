@@ -17,6 +17,17 @@ mandar de uma vez o que você mandaria em vários blocos (ex.: várias anotaçõ
 | `-dry`, `-d` | | Só mostra como os blocos foram separados, sem executar |
 | `-quiet`, `-q` | | Não responde o resumo da execução (os erros ficam só no log). Não vale com `-dry` |
 
+```text
+/batch -stop
+/ping
+/uptime
+→ se o /ping falhar, o /uptime não roda
+
+/batch -q
+/notes #casa comprar leite
+→ salva a nota e não responde o resumo
+```
+
 ## Como separa os blocos
 
 Uma linha que começa com um comando (ou alias) abre um bloco. O que vem depois, linhas em branco
