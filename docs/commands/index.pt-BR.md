@@ -187,15 +187,16 @@ destino: quem pode o `/gpt` usa os atalhos para ele, e o nome de um atalho não 
 <!-- gerado:roles -->
 ### Comandos por role
 
-**user** (de quem está no `bot.users`) (28):
+**user** (de quem está no `bot.users`) (29):
 
-[`/ascii`](ascii.md), [`/bills`](bills.md), [`/carbon`](carbon.md), [`/crypto`](crypto.md),
-[`/cve`](cve.md), [`/games`](games.md), [`/get`](get.md), [`/giphy`](giphy.md), [`/help`](help.md),
-[`/joke`](joke.md), [`/kernel`](kernel.md), [`/me`](me.md), [`/meme`](meme.md), [`/news`](news.md),
-[`/noffa`](noffa.md), [`/ping`](ping.md), [`/pixelart`](pixelart.md), [`/qr`](qr.md),
-[`/rates`](rates.md), [`/sticker`](sticker.md), [`/transcribe`](transcribe.md),
-[`/translate`](translate.md), [`/uptime`](uptime.md), [`/usage`](usage.md),
-[`/version`](version.md), [`/walissu`](walissu.md), [`/weather`](weather.md), [`/whois`](whois.md)
+[`/ascii`](ascii.md), [`/bills`](bills.md), [`/calc`](calc.md), [`/carbon`](carbon.md),
+[`/crypto`](crypto.md), [`/cve`](cve.md), [`/games`](games.md), [`/get`](get.md),
+[`/giphy`](giphy.md), [`/help`](help.md), [`/joke`](joke.md), [`/kernel`](kernel.md),
+[`/me`](me.md), [`/meme`](meme.md), [`/news`](news.md), [`/noffa`](noffa.md), [`/ping`](ping.md),
+[`/pixelart`](pixelart.md), [`/qr`](qr.md), [`/rates`](rates.md), [`/sticker`](sticker.md),
+[`/transcribe`](transcribe.md), [`/translate`](translate.md), [`/uptime`](uptime.md),
+[`/usage`](usage.md), [`/version`](version.md), [`/walissu`](walissu.md), [`/weather`](weather.md),
+[`/whois`](whois.md)
 
 **admin, delegáveis** (admins e o dono; o dono libera a um usuário com `+cmd`) (20):
 
@@ -257,6 +258,7 @@ e o `/alias /usd` mostra o que um atalho faz.
 | [`/block`](block.md) | | `admin` | Bloqueia uma ou várias pessoas na sua conta do WhatsApp (respondendo uma mensagem, quem a escreveu); sem nada, lista os bloqueados; `-mask` ofusca telefones |
 | [`/bot`](bot.md) | | `admin` | Status do bot (relatório de 24 h e os usuários); liga/desliga os comandos (`-on`/`-off`) e diz quem usa: admins (`+a`/`-a`) e usuários (`+u`/`-u`, em qualquer chat ou só num grupo, e os comandos de cada um com `+cmd`/`-cmd`); `-reset` volta ao padrão; `-status` (`-s`): relatório das últimas 24 h, e `-s 06h` manda todo dia; `-info` (`-i`): versões e sistema; `-test` (`-t`): testa cache, disco, banco, WhatsApp, internet, SMTP, IMAP e programas |
 | [`/cache`](cache.md) | | `admin` | Árvore do cache com tamanhos, contagens de mensagens e limpeza |
+| [`/calc`](calc.md) | `/math`, `/sum` | `user` | Calcula e soma os números de uma lista: responda "437 maromba / 351 corrida" e leia 788; entende 1.234,56, sinais, mostra a fita do que leu e o `-group` por nome |
 | [`/carbon`](carbon.md) | | `user` | O código numa imagem de janela de editor |
 | [`/contacts`](contacts.md) | | `owner` | Exporta a sua agenda em vCard (`.vcf`) com nome, número, recado e foto de perfil, pronto para Android e iPhone; fotos em cache em `cache/contacts`. Só no seu próprio privado |
 | [`/cron`](cron.md) | | `admin` | Na hora marcada (`30m`, `às 18h`, `sexta 9h`...): envia uma mensagem (aqui ou com `-to`, em um ou vários chats) ou, com `-reminder`, um ⏰ lembrete; pode repetir, editar e pausar, e rodar comandos no texto (`{/crypto}`) |
