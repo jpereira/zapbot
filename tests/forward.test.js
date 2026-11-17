@@ -48,7 +48,7 @@ test('o setting forward.header=false manda só a mensagem', async () => {
     await bot.setSetting('forward.header', false);
     const sendings = await bot.executar('/forward /Fulano/', { citada: quoted() });
     assert.equal(para(sendings, OTHERAlt.jid)[0].content, 'Reunião às 10h');
-    assert.equal(status(sendings).texto, '✉️ Mensagem encaminhada com sucesso!', 'sem o cabeçalho, sem a lista de quem recebeu');
+    assert.equal(status(sendings).texto, '✉️ Mensagem encaminhada com sucesso!\n\n👤 Fulano', 'sem o cabeçalho, mas o status (com a lista) continua');
 });
 
 test('só envia se todos os destinatários forem encontrados', async () => {
@@ -153,12 +153,89 @@ test('avisa na hora para quem vai e, depois de enviar, edita o aviso com o statu
     }
 });
 
+test('-nohdr tira só o cabeçalho (o status fica); -q tira os dois; -s força os dois mesmo com os settings desligados', async () => {
+    // -q: no header and no status
+    let sendings = await bot.executar('/forward -q /Fulano/', { citada: quoted() });
+    assert.equal(sendings.length, 1);
+    assert.equal(para(sendings, OTHERAlt.jid)[0].content, 'Reunião às 10h');
+
+    // -nohdr (in any position): without the header, with the status and the list
+    sendings = await bot.executar('/forward -nohdr /Fulano/', { citada: quoted() });
+    assert.equal(para(sendings, OTHERAlt.jid)[0].content, 'Reunião às 10h');
+    assert.equal(status(sendings).texto, '✉️ Mensagem encaminhada com sucesso!\n\n👤 Fulano');
+    sendings = await bot.executar('/forward /Fulano/ -nohdr', { citada: quoted() });
+    assert.equal(para(sendings, OTHERAlt.jid)[0].content, 'Reunião às 10h');
+
+    // And by email too
+    emails.length = 0;
+    await bot.executar('/forward -nohdr -q -to a@b.com', { citada: quoted() });
+    assert.doesNotMatch(emails[0].text ?? '', /encaminhada pelo ZapBot/);
+
+    // -s: the header and the status, even with both settings off
+    await bot.setSetting('forward.header', false);
+    await bot.setSetting('forward.status', false);
+    sendings = await bot.executar('/forward /Fulano/', { citada: quoted() });
+    assert.equal(sendings.length, 1, 'settings desligados: só a mensagem, sem status');
+    assert.equal(para(sendings, OTHERAlt.jid)[0].content, 'Reunião às 10h');
+    sendings = await bot.executar('/forward -s /Fulano/', { citada: quoted() });
+    assert.equal(para(sendings, OTHERAlt.jid)[0].content, `${HEADER}\n\nReunião às 10h`);
+    assert.equal(status(sendings).texto, '✉️ Mensagem encaminhada com sucesso!\n\n👤 Fulano');
+    sendings = await bot.executar('/forward -status /Fulano/', { citada: quoted() });
+    assert.ok(sendings.some(e => /encaminhada com sucesso/.test(e.texto)));
+});
+
+test('forward.status=false: sem o aviso e sem a lista; as falhas continuam aparecendo', async () => {
+    await bot.setSetting('forward.status', false);
+    const sendings = await bot.executar('/forward /Fulano/', { citada: quoted() });
+    assert.equal(sendings.length, 1);
+    assert.equal(sendings[0].content, `${HEADER}\n\nReunião às 10h`, 'o cabeçalho segue o forward.header');
+});
+
+test('texto depois dos destinatários: vai no começo, a mensagem respondida embaixo, depois do cabeçalho', async () => {
+    const sendings = await bot.executar('/forward /Fulano/ /Maria/ Essa mensagem vai para todos!', { citada: quoted() });
+    const expected = `${HEADER}\n\nEssa mensagem vai para todos!\n\nReunião às 10h`;
+    assert.equal(para(sendings, OTHERAlt.jid)[0].content, expected);
+    assert.equal(para(sendings, MARIA.jid)[0].content, expected);
+
+    // With -q: no header and no status
+    const quiet = await bot.executar('/forward -q /Fulano/ Essa mensagem vai para todos!', { citada: quoted() });
+    assert.equal(quiet.length, 1);
+    assert.equal(para(quiet, OTHERAlt.jid)[0].content, 'Essa mensagem vai para todos!\n\nReunião às 10h');
+
+    // Without a reply: only the typed text (without asking for the reply)
+    const alone = await bot.executar('/forward /Fulano/ Bom dia, pessoal!');
+    assert.equal(para(alone, OTHERAlt.jid)[0].content, `${HEADER}\n\nBom dia, pessoal!`);
+    assert.ok(alone.some(e => /encaminhada com sucesso/.test(e.texto)));
+
+    // Loose words only, with no explicit recipient, remain a name (as always)
+    const withoutExplicit = await bot.executar('/forward Fulano', { citada: quoted() });
+    assert.equal(para(withoutExplicit, OTHERAlt.jid).length, 1);
+});
+
+test('o exemplo dos docs: lista + alias -q; "/nopt" respondendo manda a mensagem, e "/nopt Olha isso!" põe o texto antes', async () => {
+    // 1. a lista; 2. o alias mudo
+    await bot.executar('/forward -add #nopt /Fulano/ /Maria/');
+    assert.match((await bot.executar('/alias -q nopt /forward -q #nopt')).at(-1).texto ?? '', /nopt/);
+
+    // 3. replying to a message: no header and no status (the alias is silent and -q removes both)
+    let sendings = await bot.executar('/nopt', { citada: quoted() });
+    assert.equal(para(sendings, OTHERAlt.jid)[0].content, 'Reunião às 10h');
+    assert.equal(para(sendings, MARIA.jid)[0].content, 'Reunião às 10h');
+    assert.equal(sendings.length, 2, 'só as duas mensagens encaminhadas, nada mais');
+
+    // with an extra message: the text before, a blank line and the replied message
+    sendings = await bot.executar('/nopt Olha isso!', { citada: quoted() });
+    assert.equal(para(sendings, OTHERAlt.jid)[0].content, 'Olha isso!\n\nReunião às 10h');
+    assert.equal(para(sendings, MARIA.jid)[0].content, 'Olha isso!\n\nReunião às 10h');
+    assert.equal(sendings.length, 2);
+});
+
 test('-quiet|-q: envia sem aviso e sem status; só as falhas aparecem', async () => {
     let sendings = await bot.executar('/forward -q /Fulano/ -to a@b.com', { citada: quoted() });
     assert.equal(para(sendings, OTHERAlt.jid).length, 1, 'enviou');
     assert.equal(emails.length, 1);
     assert.equal(sendings.length, 1, 'só a mensagem encaminhada: sem o aviso e sem o status');
-    assert.equal(sendings[0].content, `${HEADER}\n\nReunião às 10h`);
+    assert.equal(sendings[0].content, 'Reunião às 10h', 'o -q tira também o cabeçalho');
 
     // -quiet works in any position and the long name too
     sendings = await bot.executar('/forward /Fulano/ -quiet', { citada: quoted() });
@@ -229,7 +306,7 @@ describe('várias mensagens: /forward -N', () => {
         const sendings = await bot.executar('/forward -2 -1 /Fulano/ /Maria/');
         assert.deepEqual(someone(sendings), ['m5', 'm6']);
         assert.deepEqual(para(sendings, MARIA.jid).map(e => e.content), ['m5', 'm6']);
-        assert.equal(status(sendings).texto, '✉️ 2 mensagens encaminhadas com sucesso!');
+        assert.equal(status(sendings).texto, '✉️ 2 mensagens encaminhadas com sucesso!\n\n👤 Fulano\n👤 Maria');
     });
 
     test('o aviso diz quantas mensagens vão; o -q tira o aviso e o status', async () => {
@@ -246,7 +323,7 @@ describe('várias mensagens: /forward -N', () => {
             bot.client.sendMessage = original;
         }
         const sendings = await bot.executar('/forward -q -1,-2 /Fulano/');
-        assert.deepEqual(sendings.map(e => e.chatId), [OTHERAlt.jid, OTHERAlt.jid, OTHERAlt.jid], 'cabeçalho + 2 mensagens, sem status');
+        assert.deepEqual(sendings.map(e => e.chatId), [OTHERAlt.jid, OTHERAlt.jid], '2 mensagens, sem cabeçalho e sem status');
     });
 
     test('não contam: as mensagens do próprio bot e os avisos do WhatsApp', async () => {

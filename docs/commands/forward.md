@@ -10,7 +10,7 @@ replies right away with `⏳ Forwarding message...` and, when it finishes, edits
 with the result (below).
 
 ```text
-/forward [-quiet|-q] [-dry|-d] [#list]... [-N|-N,-N|-N..-N] [/contact/|@mention|+number]... [-to <destination>]...
+/forward [-quiet|-q|-status|-s] [-dry|-d] [-nohdr] [#list]... [-N|-N,-N|-N..-N] [/contact/|@mention|+number]... [text] [-to <destination>]...
 ```
 
 | Option | Value | Description |
@@ -18,7 +18,9 @@ with the result (below).
 | *(none)* | `[/contact/\|@mention\|+number]...` | The recipients, separated by spaces: a contact or group by name or part of it (a name with spaces goes between `/.../` or quotes; if several match, you pick from the list), someone mentioned with `@`, a number or an email |
 | `-to` | `<destination>` | One more recipient: a contact, a group, a number or an email (see [Destinations](index.md#destinations-contact-group-number-or-email)). Repeat for several |
 | `-N` | `-N,-N` · `-N..-N` | Without a reply: the position of the messages above (see [Several messages](#several-messages--n)) |
-| `-quiet`, `-q` | | Shows no status: neither the notice while sending nor the list at the end. Only failures are reported |
+| `-quiet`, `-q` | | Shows **nothing**: no status (neither the notice while sending nor the list at the end) and no header on what is sent. Only failures are reported |
+| `-status`, `-s` | | Forces the header on what is sent **and** the status (the notice and the summary of who received it), even with the `forward.header` and `forward.status` settings off |
+| `-nohdr` | | Sends without the `🤖 Message forwarded by ZapBot!` header only (the status stays; `-q` drops both). See [Header](#header) |
 | `-dry`, `-d` | | Only validates the recipients: replies with who was found (or what is wrong) and sends nothing. Needs no reply or positions |
 | `-add`, `-a` | `#list <recipients>...` | Creates the [recipient list](#recipient-lists) (or adds to it). Recipients are resolved now and saved with their ids; never replaces |
 | `-list`, `-l` | `[#list...]` | Without a name, all the lists with their size; with names, their recipients (the name can be partial) |
@@ -84,6 +86,69 @@ type them every time (a mailing list).
   `forward.maxRecipients` (default 30).
 - Admin only, like the rest of the command.
 
+## A text with the message
+
+After the recipients, what is left is a **text to send**. It goes at the start of the message and, when you reply to a
+message, the replied message goes below it (after a blank line), under the header:
+
+```text
+/forward /My Contact/ #group /Family/ This goes to everyone!
+(replying to "Meeting at 10am")
+→ 🤖 Message forwarded by ZapBot!
+
+  This goes to everyone!
+
+  Meeting at 10am
+
+/forward -q /Jorge Pereira/ Good morning!        → no reply: only the text, with no header and no status
+/forward /Fulano/ Silva                          → "Silva" is the text (the recipient is /Fulano/)
+/forward Fulano Silva                            → no explicit recipient: it's a name, as always
+```
+
+- The recipients that count as explicit are `/Name/`, `"Name"`, `@mention`, `+number`, an email, a `#list` and `-to`.
+  The first loose word after one of them starts the text. With only loose words, they are a name (`/forward Fulano Silva`).
+- Without a reply (and without positions), the text alone is what is sent: it doesn't ask for a reply.
+- With `-q`, there's no header and no status, only the text (and the replied message, if any).
+
+## A shortcut for a group of friends
+
+A common use: whenever you see something to send to the same people, it's one reply. Here with a list of friends
+who don't like politics (call it `#nopt`):
+
+**1. Create the list** (once). The recipients are saved with their ids, and they can be contacts, groups or emails:
+
+```text
+/forward -add #nopt /Fulano/ /Lourival Neto/ /College Group/ /Rodrigo Souza/ /Rossam Silva/ /Erik Gielow/ /Bruno Melo/
+```
+
+**2. Create a shortcut** (once). With `-q` on the alias, only the forwarded message goes, with no `🔗 Alias ...` header,
+and with `-q` on the `/forward`, no header and no status either:
+
+```text
+/alias -q nopt /forward -q #nopt
+```
+
+**3. Use it.** Whenever there is something worth sending, **reply to the message with `/nopt`**. You can also add an
+extra text, which goes at the start, and the replied message below it:
+
+```text
+(replying to the message)  /nopt
+→ they receive only the message
+
+(replying to the message)  /nopt Look at this!
+→ they receive:
+  Look at this!
+
+  <the replied message>
+```
+
+- To see who is in the list: `/forward -l #nopt`. To add or remove someone: `/forward -a #nopt /Maria/` and
+  `/forward -r #nopt /Maria/`. More in [Recipient lists](#recipient-lists).
+- Want the header and the confirmation? Use `/alias -q nopt /forward -s #nopt` (`-s` forces both).
+- The same works for several lists (`#family`, `#work`): one alias for each, or mix them in one:
+  `/alias -q all /forward -q #family #work`. Without a reply, `/nopt Good morning!` sends only the text.
+- More about aliases in [`/alias`](alias.md).
+
 ## Header
 
 By default the message goes with a header saying it came from the bot:
@@ -100,6 +165,13 @@ the text and the media goes as an attachment. To send only the message, turn it 
 
 ```text
 /set forward.header false
+```
+
+Or only for one run: `-nohdr` drops only the header (the status stays), `-q` drops the header and the status, and `-s` forces both:
+
+```text
+/forward -nohdr /Jorge Pereira/
+/alias -q /nopt /forward -q -nohdr #nopt
 ```
 
 - Location becomes the description and a map link; a poll becomes the question and the options.

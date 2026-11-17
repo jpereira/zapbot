@@ -7,9 +7,10 @@
  * /forward -3..-1 /Fulano/                   → from -3 to -1, in sequence
  * /forward -dry /Fulano/                     → only validates the recipients, without sending
  * /forward #list ...                        → the saved lists (see forwardLists.js: -add, -l, -rm...)
- * Only sends if all recipients are found. With -quiet|-q it shows neither the notice nor the status
- * (only the failures). The "forwarded by ZapBot" header comes from the forward.header setting (default on):
- * with several messages, it goes only once, before them.
+ * Only sends if all recipients are found. The "forwarded by ZapBot" header (setting
+ * forward.header) and the status (the notice and the list of who received it, setting forward.status) come on; -quiet|-q
+ * removes both (only the failures) and -status|-s forces both. With several messages, the header goes only once.
+ * /forward /Fulano/ #grupo Text for everyone   → the typed text goes at the start; with a reply, its message below
  */
 
 const { commandUsage } = require('./base');
@@ -152,13 +153,37 @@ async function recipients(msg, texts, listsAlt) {
     return allAlt2;
 }
 
+/*
+ * Separates the text to send from the recipients: the explicit recipients at the start (/Name/, "Name", @mention, +number,
+ * email) and, after them, the text. Only counts if there was already an explicit recipient (here or before: #list or -to);
+ * without any, the loose words are a name, as always (/forward Fulano Silva).
+ */
+const DESTINATION_EXPLICIT = /^(?:\/(?:[^/\\]|\\.)+\/|"[^"]*"|'[^']*'|@\S+|\+\d[\d()-]*|\S+@\S+\.\S+)(?=\s|$)/;
+
+function separateText(rest, jaHasDestination) {
+    let s = String(rest ?? '').trim();
+    const items = [];
+    for (let m = s.match(DESTINATION_EXPLICIT); m; m = s.match(DESTINATION_EXPLICIT)) {
+        items.push(m[0]);
+        s = s.slice(m[0].length).trimStart();
+    }
+    if (items.length || jaHasDestination) return { destinatarios: items.join(' '), texto: s };
+    return { destinatarios: String(rest ?? '').trim(), texto: '' };
+}
+
 async function cmdForward({ msg, args: typed, opts, quotedMsg }) {
     // Manage the lists: -add, -list, -rm, -move, -desc (the first word)
     if (await manage(msg, typed)) return;
 
     const silent = Boolean(opts?.given.has('quiet'));
+    const forceStatus = Boolean(opts?.given.has('status'));
     const simulation = Boolean(opts?.given.has('dry'));
-    const withoutQuiet = typed.replace(/(^|\s)-(?:quiet|q|dry|d)(?=\s|$)/g, ' ').trim();
+    const withoutHeader = Boolean(opts?.given.has('nohdr'));
+    // -q: no header and no status (only the failures); -s: both, even with the settings off.
+    // Without either, the forward.header and forward.status settings apply (-nohdr removes only the header)
+    const withHeader = !silent && !withoutHeader && (forceStatus || getSetting('forward.header'));
+    const withStatus = !silent && (forceStatus || getSetting('forward.status'));
+    const withoutQuiet = typed.replace(/(^|\s)-(?:quiet|q|status|s|dry|d|nohdr)(?=\s|$)/g, ' ').trim();
     const { posicoes: positions, resto: withoutPositions } = readPositions(withoutQuiet);
 
     // The -to (emails and also chats) and, in the rest, the recipients: /Name/, "Name", @mention, +number, words
@@ -170,7 +195,11 @@ async function cmdForward({ msg, args: typed, opts, quotedMsg }) {
         await msg.reply(lists.erro);
         return;
     }
-    const texts = [...textPeople(lists.resto).map(withoutDelimiters), ...porTo];
+
+    // After the explicit recipients (/Name/, "Name", @mention, +number, email, #list, -to) whatever is left is the
+    // text to send: goes at the start, and the replied message below. Only loose words remain a name.
+    const { destinatarios: restDestinations, texto: textExtra } = separateText(lists.resto, lists.destinos.length > 0 || porTo.length > 0);
+    const texts = [...textPeople(restDestinations).map(withoutDelimiters), ...porTo];
 
     if (!texts.length && !lists.destinos.length) {
         await msg.reply(commandUsage('/forward'));
@@ -189,7 +218,7 @@ async function cmdForward({ msg, args: typed, opts, quotedMsg }) {
         await msg.reply(t('forward.replyAndNumbers'));
         return;
     }
-    if (!quotedMsg && !positions.length) {
+    if (!quotedMsg && !positions.length && !textExtra) {
         await msg.reply(t('forward.needReply'));
         return;
     }
@@ -210,10 +239,10 @@ async function cmdForward({ msg, args: typed, opts, quotedMsg }) {
     // Notifies right away whoever is going (downloading the media and sending may take a while) and, when it ends, that same
     // the notice is edited with each one's status
     const total = positions.length || 1;
-    const notice = silent ? null : await msg.reply(t('forward.processing', { n: total }));
+    const notice = withStatus ? await msg.reply(t('forward.processing', { n: total })) : null;
 
-    // The messages, oldest to newest
-    let origin = [{ pos: null, m: quotedMsg }];
+    // The messages, oldest to newest (without a reply or positions, only the typed text)
+    let origin = quotedMsg || positions.length ? [{ pos: null, m: quotedMsg }] : [];
     if (positions.length) {
         const r = await messagesAbove(msg, positions);
         if (r.erro) {
@@ -223,7 +252,7 @@ async function cmdForward({ msg, args: typed, opts, quotedMsg }) {
         origin = r.mensagens;
     }
 
-    const contents = [];
+    const contents = origin.length ? [] : [{ texto: textExtra, midia: null, tipo: 'chat' }];
     for (const { pos, m } of origin) {
         const c = await content(m);
         if (c.erro) {
@@ -233,10 +262,17 @@ async function cmdForward({ msg, args: typed, opts, quotedMsg }) {
         contents.push(c);
     }
 
-    // One message: the header opens the text (or the caption). Several: it goes once, before all of them
-    const header = getSetting('forward.header') ? t('forward.header') : '';
-    if (header && contents.length === 1) contents[0].texto = [header, contents[0].texto].filter(Boolean).join('\n\n');
-    const headerAparte = contents.length > 1 ? header : '';
+    // One message: the header opens the text (or the caption), then the typed text and below, after a line in
+    // blank, the replied message's body. Several: the header and the typed text go once, before all of them
+    const header = withHeader ? t('forward.header') : '';
+    let headerAparte = '';
+    if (contents.length === 1) {
+        const body = origin.length ? contents[0].texto : '';
+        const meio = origin.length ? [textExtra, body].filter(Boolean).join('\n\n') : textExtra;
+        contents[0].texto = [header, meio].filter(Boolean).join('\n\n');
+    } else {
+        headerAparte = [header, textExtra].filter(Boolean).join('\n\n');
+    }
     const pause = getSetting('forward.delayMs');
 
     const linesAlt = [];
@@ -263,17 +299,16 @@ async function cmdForward({ msg, args: typed, opts, quotedMsg }) {
         }
     }
 
-    // Silent: no status when everything was sent; on failure, the bot warns
-    if (silent && !failed) return;
+    // Without status (-q or forward.status off): nothing when everything was sent; on failure, the bot warns
+    if (!withStatus && !failed) return;
 
-    // Success: "✉️ ... com sucesso!" and, with the forward.header setting on, the list of who received it
+    // Success: "✉️ ... com sucesso!" and the list of who received it
     if (!failed) {
-        const keyAlt = getSetting('forward.header') ? 'forward.doneList' : 'forward.done';
-        await completeNotice(msg, notice, t(keyAlt, { n: contents.length, list: linesAlt.join('\n') }));
+        await completeNotice(msg, notice, t('forward.doneList', { n: contents.length, list: linesAlt.join('\n') }));
         return;
     }
     const keyAlt = failed === destinations.length ? 'forward.allFailed' : 'forward.partial';
     await completeNotice(msg, notice, t(keyAlt, { n: destinations.length, ok: destinations.length - failed, list: linesAlt.join('\n') }));
 }
 
-module.exports = { cmdForward, readPositions };
+module.exports = { cmdForward, readPositions, separateText };
