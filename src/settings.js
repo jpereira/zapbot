@@ -824,6 +824,11 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 1, max: 365,
         desc: 'Dias que o histórico de usos com limite (/usage -log) fica guardado. Os usos que ainda contam para um limite nunca são apagados antes do fim do período.'
     },
+    'warn.max': {
+        default: 3,
+        type: 'number', min: 0, max: 20,
+        desc: 'Quantos avisos do /warn tiram a pessoa do grupo (o bot precisa ser admin dele). 0: só conta, nunca remove.'
+    },
     'watch.hitsRetentionDays': {
         default: 30,
         type: 'number', min: 1, max: 365,

@@ -409,6 +409,20 @@ async function initializeDb() {
         )
     `);
 
+    // /warn: each person's warnings in each group (person: the number or internal id, the participant's user)
+    await dbRun(`
+        CREATE TABLE IF NOT EXISTS warns (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            chat_id TEXT NOT NULL,
+            person TEXT NOT NULL,
+            person_name TEXT,
+            reason TEXT,
+            by TEXT,
+            created_at INTEGER NOT NULL
+        )
+    `);
+    await dbRun('CREATE INDEX IF NOT EXISTS idx_warns ON warns (chat_id, person)');
+
     // Usage limit (/bot +limit): one row per call that counted, in the period window (src/usageLimit.js)
     await dbRun(`
         CREATE TABLE IF NOT EXISTS usage_log (

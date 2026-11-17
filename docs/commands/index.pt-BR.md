@@ -31,7 +31,7 @@ Podem ser enviados em **qualquer chat** (privado, grupo ou no chat consigo mesmo
   avisos, os erros, as datas e os números do bot. As descrições que o `/set` mostra de cada
   setting ainda estão em português.
 - Basta digitar o começo do comando: `/wat` ou `/watc` viram `/watch`. Se o começo servir para mais
-  de um (`/wa`), o bot responde com os possíveis comandos (`/walissu, /watch`). O nome exato e os
+  de um (`/wa`), o bot responde com os possíveis comandos (`/walissu, /warn, /watch`). O nome exato e os
   atalhos do `/alias` têm prioridade.
 
 ## Destinos: contato, grupo, número ou e-mail
@@ -197,12 +197,12 @@ destino: quem pode o `/gpt` usa os atalhos para ele, e o nome de um atalho não 
 [`/uptime`](uptime.md), [`/usage`](usage.md), [`/version`](version.md), [`/walissu`](walissu.md),
 [`/weather`](weather.md), [`/whois`](whois.md)
 
-**admin, delegáveis** (admins e o dono; o dono libera a um usuário com `+cmd`) (15):
+**admin, delegáveis** (admins e o dono; o dono libera a um usuário com `+cmd`) (16):
 
 [`/demote`](demote.md), [`/draw`](draw.md), [`/everybody`](everybody.md), [`/goodbye`](goodbye.md),
 [`/gpt`](gpt.md), [`/members`](members.md), [`/ocr`](ocr.md), [`/poll`](poll.md),
 [`/profile`](profile.md), [`/promote`](promote.md), [`/show`](show.md), [`/stats`](stats.md),
-[`/tldr`](tldr.md), [`/tts`](tts.md), [`/welcome`](welcome.md)
+[`/tldr`](tldr.md), [`/tts`](tts.md), [`/warn`](warn.md), [`/welcome`](welcome.md)
 
 **admin** (admins e o dono; nunca delegáveis) (22):
 
@@ -305,6 +305,7 @@ e o `/alias /usd` mostra o que um atalho faz.
 | [`/usage`](usage.md) | | `user` | Os seus limites de uso (definidos pelo dono com o `/bot +limit`): usados, restantes e quando renovam; `-l` mostra as suas últimas chamadas |
 | [`/version`](version.md) | | `user` | Versão do bot (mesmo banner do `/uptime`) |
 | [`/walissu`](walissu.md) | | `user` | Piada: Walissu CVE BOT: marca 2 membros com uma CVE aleatória |
+| [`/warn`](warn.md) | | `admin` · delegável | Avisa alguém no grupo; no limite, a pessoa é removida |
 | [`/watch`](watch.md) | | `admin` | Regras de texto/regex, com origem opcional em `-in`; lista ocorrências, busca nelas com `-q` e avisa nos destinos de `-to`; `-mask` ofusca telefones e `-mask N` liga o 🔒 na regra N |
 | [`/weather`](weather.md) | | `user` | Tempo agora e máx./mín. do dia (Open-Meteo); `/weather 16d` mostra até 16 dias, contando hoje; sem cidade usa `weather.city` |
 | [`/welcome`](welcome.md) | | `admin` · delegável | Mensagem quando alguém entra no grupo (por grupo; `{name}`, `{group}`) |

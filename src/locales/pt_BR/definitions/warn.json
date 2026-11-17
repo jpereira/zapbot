@@ -1,0 +1,46 @@
+{
+  "summary": "Avisa alguém no grupo; no limite, a pessoa é removida",
+  "usage": "/warn [/contato/|@menção|+número] [motivo]  ou  /warn -list|-clear [pessoa]",
+  "help": "Soma um aviso a alguém do grupo, com um motivo se quiser (o resto do texto). Respondendo uma mensagem, é quem a escreveu. Quando a pessoa chega no limite (setting warn.max, 3 por padrão), o bot a tira do grupo e zera a contagem (ele precisa ser admin do grupo). Admins do grupo não levam aviso. Só funciona em grupos.",
+  "ex": [
+    "/warn @Fulano mandou link",
+    "/warn -l",
+    "/warn -c @Fulano"
+  ],
+  "cmd_opts": [
+    {
+      "opts": [
+        "list",
+        "l"
+      ],
+      "values": [],
+      "desc": "Lista os avisos do grupo (quem tem quantos) ou, com uma pessoa, cada um com data e motivo.",
+      "ex": [
+        "/warn -l",
+        "/warn -l @Fulano"
+      ]
+    },
+    {
+      "opts": [
+        "clear",
+        "c"
+      ],
+      "values": [],
+      "desc": "Zera os avisos de uma pessoa (ou de quem escreveu a mensagem respondida).",
+      "ex": [
+        "/warn -c @Fulano"
+      ]
+    },
+    {
+      "argv": [
+        "[/contato/|@menção|+número] [motivo]"
+      ],
+      "desc": "Quem avisar: um contato da agenda (nome com espaço entre /.../), alguém mencionado com @ ou um número, e depois o motivo. Respondendo uma mensagem, a pessoa é a autora dela e o texto todo é o motivo.",
+      "ex": [
+        "/warn @Fulano mandou link",
+        "/warn /Fulano de Tal/ spam",
+        "/warn fora do assunto (respondendo a uma mensagem)"
+      ]
+    }
+  ]
+}
