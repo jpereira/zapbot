@@ -612,3 +612,15 @@ test('os ids das menções ficam na coluna mentions, e a exibição usa eles par
         bot.client.getContactById = original;
     }
 });
+
+test('editar a mensagem marcando gente nova: os ids da edição entram na coluna mentions', async () => {
+    const LID = '100000000000077@lid';
+    const msg = bot.createMessage({ texto: 'oi pessoal', de: OTHERAlt.jid, mencoes: [OTHERAlt.jid] });
+    await bot.deliver(msg);
+
+    msg.mentionedIds = [OTHERAlt.jid, LID];
+    const [notice] = await bot.edit(msg, 'oi pessoal @100000000000077');
+    assert.ok(notice);
+    const { mentions } = await bot.dbGet('SELECT mentions FROM messages WHERE id = ?', [msg.id.id]);
+    assert.deepEqual(JSON.parse(mentions), [OTHERAlt.jid, LID]);
+});
