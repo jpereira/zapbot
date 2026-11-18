@@ -71,9 +71,13 @@ async function cmdStocks(ctx) {
 
     if (opts.opt.list) {
         const line = (s) => (isCurrency(s) ? `• ${QUOTE_SUPPORTED[s].icone} ${s} — ${QUOTE_SUPPORTED[s].nome}` : `• 🏢 ${s}`);
-        await msg.reply(assets.length
-            ? t('stocks.enabledList', { list: assets.map(line).join('\n'), currencies: Object.keys(QUOTE_SUPPORTED).join(', ') })
-            : t('stocks.noneEnabled'));
+        // Everything the command supports: the enabled ones, the currencies (✅ on the enabled ones) and the ticker kinds
+        const currencies = Object.entries(QUOTE_SUPPORTED)
+            .map(([s, m]) => `${m.icone} ${s} — ${m.nome}${assets.includes(s) ? ' ✅' : ''}`).join('\n');
+        await msg.reply(t('stocks.enabledList', {
+            list: assets.length ? assets.map(line).join('\n') : t('stocks.listNone'),
+            currencies: currencies
+        }));
         return;
     }
 

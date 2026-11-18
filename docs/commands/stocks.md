@@ -8,7 +8,7 @@ indexes** (MSTR, NVDA, PETR4.SA, the S&P 500...). It shows the enabled symbols (
 | Option | Value | Description |
 |---|---|---|
 | *(none)* | `[SYMBOL...]` | The enabled ones, or only the given symbols (enabled or not), in the order requested: `USD`, `EUR`, `GBP`, `USDT` or a ticker from Yahoo Finance |
-| `-list`, `-l` | | Lists the enabled symbols and the supported currencies |
+| `-list`, `-l` | | Lists everything it supports: the enabled symbols, the currencies (✅ the enabled ones) and the kinds of ticker, with examples |
 | `-add`, `-a` | `<SYMBOL>` | Enables a currency (`USD`, `EUR`, `GBP`, `USDT`) or a ticker that exists on Yahoo Finance (bot owner or an [admin](bot.md#extra-admins) only) |
 | `-del`, `-d` | `<SYMBOL>` | Disables a symbol (bot owner or an [admin](bot.md#extra-admins) only) |
 | `-alert` | `[rule]` | Without a rule, lists the alerts; with a rule (e.g. `USD > 5.30` or `MSTR < 90`), creates one (bot owner or an [admin](bot.md#extra-admins) only). The symbol can also come first: `/stocks MSTR -alert < 90`. See [Price alerts](#price-alerts) |
@@ -29,6 +29,32 @@ indexes** (MSTR, NVDA, PETR4.SA, the S&P 500...). It shows the enabled symbols (
 /stocks -a gbp                → starts showing the pound
 /stocks -a NVDA               → enables NVDA (it has to exist on Yahoo Finance)
 /stocks -d eur                → stops showing the euro
+```
+
+What `/stocks -l` brings (everything it supports, at a glance):
+
+```text
+📈 Enabled symbols
+
+• 🇺🇸 USD — Dollar
+• 🇪🇺 EUR — Euro
+• 🪙 USDT — Tether
+• 🏢 MSTR
+
+💱 Currencies against the real (✅ enabled)
+🇺🇸 USD — Dollar ✅
+🇪🇺 EUR — Euro ✅
+🇬🇧 GBP — Pound
+🪙 USDT — Tether ✅
+
+🏢 Stocks, ETFs and indexes (any Yahoo Finance ticker)
+• US: MSTR, NVDA, AAPL, IBIT, SPY
+• Brazil (B3, ends in .SA): PETR4.SA, VALE3.SA, BOVA11.SA
+• Indexes (start with ^): ^GSPC, ^IXIC, ^BVSP
+• Others: BRK-B, EURUSD=X
+
+💡 /stocks -a <SYMBOL> enables, /stocks -d <SYMBOL> disables, /stocks <SYMBOL>... asks for a one-off quote.
+Crypto is in /crypto -l.
 ```
 
 Which command for what: `/stocks` is currencies against the real and everything that trades on a stock

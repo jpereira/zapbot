@@ -19,7 +19,8 @@ describe('en_US: informação', () => {
     test('/stocks -l e a habilitação de moedas', async () => {
         const [list] = await bot.replyAlt('/stocks -l');
         assert.match(list, /^📈 \*Enabled symbols\*\n\n• 🇺🇸 USD — Dollar\n/);
-        assert.match(list, /Currencies against the real: USD, EUR, GBP, USDT/);
+        assert.match(list, /💱 \*Currencies against the real\* \(✅ enabled\)\n🇺🇸 USD — Dollar ✅\n🇪🇺 EUR — Euro ✅\n🇬🇧 GBP — Pound\n🪙 USDT — Tether ✅/);
+        assert.match(list, /🏢 \*Stocks, ETFs and indexes\*[^]*PETR4\.SA[^]*\^GSPC[^]*EURUSD=X/);
 
         assert.equal((await bot.replyAlt('/stocks -a GBP'))[0], '✅ GBP (Pound) enabled.');
         assert.equal((await bot.replyAlt('/stocks -a GBP'))[0], 'ℹ️ GBP is already enabled.');
