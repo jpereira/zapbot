@@ -623,6 +623,7 @@ problema. Ele também avisa quando há versão nova do `yt-dlp` e do `whatsapp-w
 • Chromium: Chromium 141.0.7390.54
 • yt-dlp: 2026.09.21 · ⬆️ nova: 2026.9.30
 • ffmpeg: 7.1.1
+• faster-whisper: 1.0.2 (modelo small) · transcribe.py 1.0.0
 
 🖥️ Sistema
 • Linux 9f2c1a7d3e4b 6.8.0-85-generic #85-Ubuntu SMP x86_64 Linux
