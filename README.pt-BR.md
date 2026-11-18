@@ -32,48 +32,57 @@ mensalidade, e as suas mensagens ficam no seu servidor. Você digita comandos em
 Pois é, a gente andou ocupado. O melhor da última leva:
 
 - 🎙️ **Transcreva qualquer vídeo ou áudio.** Mande um link (Instagram, YouTube, X, TikTok...) ou responda um vídeo ou
-  uma nota de voz e receba o **texto da fala**. Roda no seu próprio servidor (faster-whisper), sem conta na OpenAI
-  e o áudio não sai de casa. [`/transcribe`](docs/commands/transcribe.md) · [`/get -t`](docs/commands/get.md)
-- 📈 **Cotações num comando só.** O `/stocks` agora tem também o dólar, o euro e o USDT (ele substitui o `/rates`), e o `/stocks MSTR` traz o preço, a variação e a faixa de 52 semanas de qualquer ação (MSTR, NVDA, PETR4.SA,
-  `^GSPC`...), com alertas como `/stocks MSTR -alert < 90`; o ouro é o `/crypto XAUT`. [`/stocks`](docs/commands/stocks.md) · [`/crypto`](docs/commands/crypto.md)
-- 🧮 **Uma calculadora para listas.** Responda uma mensagem como `437 maromba / 351 corrida` (ou uma lista de dívida, com `R$`, `EUR`, `USD`,
-  sinais e o total) com `/calc`: ele lê os números, mostra uma fita com todos e confere o total do texto.
-  Também faz `100/2*6` e `((1+7)*8)/2`. [`/calc`](docs/commands/calc.md)
-- 📸 **Carrossel do Instagram vira álbum.** O `/get <link>` num post só de fotos manda **todas** no chat
-  (`Imagem 1/10`...), a última com o texto do post. [`/get`](docs/commands/get.md)
-- 🎨 **Desenhe você e os amigos.** `/draw @me @this desenhe nós dois como piratas` pega as fotos de perfil
-  sozinho (`@me` é você, `@this` é o chat, `@reply` é quem você respondeu, e nome solto também vale).
-  [`/draw`](docs/commands/draw.md) · [`/gpt`](docs/commands/gpt.md)
-- 🎲 **Jogos para o grupo.** Bola 8 mágica, verdade, desafio e trivia, e dá para jogar só respondendo o
-  bot. [`/games`](docs/commands/games.md)
-- 📣 **Poste no seu Status** (e agende), espie o Recado de qualquer um e mude o seu.
-  [`/status`](docs/commands/status.md) · [`/profile`](docs/commands/profile.md)
-- 👥 **Controle o grupo pelo chat.** O `/group` mostra e muda nome, descrição, foto e quem pode enviar, e o
-  `/group -send admins -for 30m` fecha e reabre sozinho; o `/antitag` e o `/antibadword` apagam o abuso de "marcar
-  todo mundo" e as palavras proibidas. [`/group`](docs/commands/group.md) · [`/antitag`](docs/commands/antitag.md) · [`/antibadword`](docs/commands/antibadword.md)
-- 🛡️ **Moderação de grupo.** O `/warn` com limite que expulsa e o `/antilink` que apaga link de quem não
-  é admin. [`/warn`](docs/commands/warn.md) · [`/antilink`](docs/commands/antilink.md)
-- 🔇 **Silêncio por um tempo.** `/mute -for 2h` e os avisos voltam sozinhos. [`/mute`](docs/commands/mute.md)
-- 📊 **Relatórios.** O `/usage -all` mostra quem está usando o quê, e o `/whois -id` traz os ids
-  escondidos. [`/usage`](docs/commands/usage.md) · [`/whois`](docs/commands/whois.md)
-- 🏷️ **Nome no lugar de número.** Os avisos de mensagem apagada, editada e reação agora mostram
-  `@Luis`, não `@265472113143884`. [`/show`](docs/commands/show.md)
-- 🔌 **API e MCP (experimental).** Mande mensagens e leia as suas notas por scripts ou por um cliente de
-  IA. [API e MCP](docs/api.md)
-- 🧰 **O `/help` mudou a cara**: o comando em **negrito** e o que ele faz em _itálico_.
+  uma nota de voz e receba o **texto da fala**, ou `-sum` para um **resumo** em cima. Roda no seu próprio servidor
+  (faster-whisper), então sem conta da OpenAI e o áudio nunca sai de casa. [`/transcribe`](docs/commands/transcribe.md) · [`/get -t`](docs/commands/get.md)
+- 📈 **Cotações num comando só.** O `/stocks` traz o dólar, o euro e o USDT (ele substitui o `/rates`) e qualquer ação,
+  ETF ou índice (`MSTR`, `NVDA`, `PETR4.SA`, `^GSPC`...), com alertas como `/stocks MSTR -alert < 90`. O `/crypto`
+  agora mostra também o preço **em reais** (🇧🇷, direto da Binance) e o ouro como `XAUT`. [`/stocks`](docs/commands/stocks.md) · [`/crypto`](docs/commands/crypto.md)
+- 🧮 **Uma calculadora para listas.** Responda `437 maromba / 351 corrida` (ou uma lista de dívida em `R$`, `EUR`,
+  `USD`, com sinais e o total) com `/calc`: ele imprime uma fita com cada número e confere o total do texto. Também
+  faz `100/2*6` e `((1+7)*8)/2`. [`/calc`](docs/commands/calc.md)
+- 📨 **Encaminhe para a sua turma com um reply.** O `/forward` manda a mensagem respondida (com um texto seu em cima, se
+  quiser) para contatos, grupos, e-mails ou listas salvas. Crie uma lista e um alias e vira uma palavra:
+  `/alias -q nopt /forward -q #nopt`, depois responda `/nopt Olha isso!`. O `-q` é totalmente mudo e o `-s` traz o
+  cabeçalho e o resumo. [`/forward`](docs/commands/forward.md)
+- 🚫 **Um "não" educado no lugar do silêncio.** Quem digita um comando que não pode usar recebe
+  `🚫 Sem permissão para executar /backup, fale com Jorge`, de vez em quando, nunca como flood. Ligue, desligue ou
+  mude o texto com `/bot -d`. [`/bot`](docs/commands/bot.md#aviso-de-comando-negado)
+- 📸 **Um carrossel do Instagram vira álbum.** O `/get <link>` num post só de fotos manda **todas** (`Imagem 1/10`...),
+  a última com o texto do post. [`/get`](docs/commands/get.md)
+- 👥 **Controle o grupo pelo chat.** O `/group` mostra e muda nome, descrição, foto e quem pode enviar;
+  `/group -send admins -for 30m` fecha e reabre sozinho. [`/group`](docs/commands/group.md)
+- 🛡️ **Moderação do grupo.** `/warn` com um limite que remove, `/antilink` para links, `/antitag` contra o abuso de
+  "marcar todo mundo" e `/antibadword` para palavrões. [`/warn`](docs/commands/warn.md) · [`/antilink`](docs/commands/antilink.md) · [`/antitag`](docs/commands/antitag.md) · [`/antibadword`](docs/commands/antibadword.md)
+- 📵 **Recuse ligações com uma mensagem.** O `call.reject` desliga chamadas de voz e de vídeo e responde com um texto
+  seu (uma vez a cada 10 minutos por pessoa). [Recusando ligações](docs/commands/bot.md#recusando-ligações)
+- 🎨 **Desenhe você e os amigos.** `/draw @me @this desenhe nós dois como piratas` pega as fotos de perfil (`@me`,
+  `@this`, `@reply` e nomes comuns). [`/draw`](docs/commands/draw.md) · [`/gpt`](docs/commands/gpt.md)
+- 🎲 **Jogos para o grupo.** Bola 8 mágica, verdade, desafio e quiz; dá para jogar só respondendo o bot. [`/games`](docs/commands/games.md)
+- 📣 **Poste no seu Status** (e agende), espie o Recado de qualquer um e mude o seu. [`/status`](docs/commands/status.md) · [`/profile`](docs/commands/profile.md)
+- 📇 **Sua agenda, exportada.** O `/contacts` gera um vCard com nomes, números e fotos de perfil. [`/contacts`](docs/commands/contacts.md)
+- 🔇 **Silencie por um tempo.** `/mute -for 2h` e os avisos voltam sozinhos. [`/mute`](docs/commands/mute.md)
+- 📊 **Uso e limites.** O `/usage -all` mostra quem usa o quê, o `/bot +limit` limita cada pessoa e o `/whois -id` traz
+  os ids escondidos. [`/usage`](docs/commands/usage.md) · [`/whois`](docs/commands/whois.md)
+- 🏷️ **Nomes no lugar de números.** Os avisos de mensagens apagadas, editadas e reações mostram `@Luis`, não
+  `@265472113143884`. [`/show`](docs/commands/show.md)
+- 🔌 **API e MCP (experimental).** Envie mensagens e leia suas notas de scripts ou de um cliente de IA.
+  [API e MCP](docs/api.md)
 
 ```text
 /draw @me @this desenhe nós dois como piratas
 /transcribe https://www.instagram.com/reel/XXXXXXXX/
+/transcribe -sum https://youtu.be/XXXXXXXXXXX
 /transcribe -ss 30 -es 90 https://youtu.be/XXXXXXXXXXX
 /stocks MSTR NVDA
 /crypto XAUT
 /calc 100/2*6
 /get https://www.instagram.com/p/XXXXXXXX/            (um carrossel: todas as fotos)
+/forward /Família/ #amigos Olha isso!                 (respondendo a mensagem)
+/bot -denied Você não pode usar o $cmd aqui. Fale com $admin!
 /games -trivia
-/warn @Fulano mandou link
+/warn @Fulano postou um link
 /antilink -delete -allow youtube.com
-/mute -for 2h /Grupo do trabalho/
+/mute -for 2h /Grupo do Trabalho/
 /usage -a
 ```
 
