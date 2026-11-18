@@ -218,3 +218,9 @@ test('as casas decimais são as mesmas na lista toda, e o nome da linha não se 
     assert.equal((await bot.replyAlt('/calc -all', { citada: ida }))[0],
         '🧮 *Total: 140*\n\n```   45  Ida volta\n+  38\n+  52  Almoço gorjeta\n+   5\n─────\n= 140```\n_4 números · média 35_');
 });
+
+test('/calc respondendo a lista em EUR: EUR e EUR$ são a mesma moeda e o saldo sai com ela', async () => {
+    const quoted = bot.createMessage({ texto: 'EUR 120 hotel\nEUR$ 35,50 jantar\n- EUR 20 reembolso' });
+    const [r] = await bot.replyAlt('/calc', { citada: quoted });
+    assert.equal(r, '🧮 *Saldo: EUR 135,50*\n\n```+ EUR 120,00  Hotel\n+ EUR  35,50  Jantar\n- EUR  20,00  Reembolso\n────────────\n= EUR 135,50```\n\n➕ *Entradas:* EUR 155,50 _(2)_\n➖ *Saídas:* EUR 20,00 _(1)_');
+});

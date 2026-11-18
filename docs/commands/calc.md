@@ -97,6 +97,23 @@ came in, what went out and the biggest expense:
 
 If the list and the text disagree, the reply says `⚠️ The text says R$ 600,00: a difference of R$ 64,89`.
 
+Other currencies work the same way, before the number (`EUR`, `EUR$`, `USD`, `USD$`, `US$`, `$`, `€`). `EUR$ 10` and
+`EUR 5` are the same currency; with different currencies in the same list, the result comes without a symbol:
+
+```text
+(replying to "EUR 120 hotel" / "EUR$ 35,50 dinner" / "- EUR 20 refund")  /calc
+🧮 Balance: EUR 135,50
+
++ EUR 120,00  Hotel
++ EUR  35,50  Dinner
+- EUR  20,00  Refund
+────────────
+= EUR 135,50
+
+➕ In: EUR 155,50 (2)
+➖ Out: EUR 20,00 (1)
+```
+
 ## By name
 
 `-group` adds the lines with the same name and puts the subtotals in the tape:

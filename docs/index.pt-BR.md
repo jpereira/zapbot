@@ -32,7 +32,7 @@ Pois é, a gente andou ocupado. O melhor da última leva:
   e o áudio não sai de casa. [`/transcribe`](commands/transcribe.md) · [`/get -t`](commands/get.md)
 - 📈 **Cotações num comando só.** O `/stocks` agora tem também o dólar, o euro e o USDT (ele substitui o `/rates`), e o `/stocks MSTR` traz o preço, a variação e a faixa de 52 semanas de qualquer ação (MSTR, NVDA, PETR4.SA,
   `^GSPC`...), com alertas como `/stocks MSTR -alert < 90`; o ouro é o `/crypto XAUT`. [`/stocks`](commands/stocks.md) · [`/crypto`](commands/crypto.md)
-- 🧮 **Uma calculadora para listas.** Responda uma mensagem como `437 maromba / 351 corrida` (ou uma lista de dívida, com `R$`,
+- 🧮 **Uma calculadora para listas.** Responda uma mensagem como `437 maromba / 351 corrida` (ou uma lista de dívida, com `R$`, `EUR`, `USD`,
   sinais e o total) com `/calc`: ele lê os números, mostra uma fita com todos e confere o total do texto.
   Também faz `100/2*6` e `((1+7)*8)/2`. [`/calc`](commands/calc.md)
 - 📸 **Carrossel do Instagram vira álbum.** O `/get <link>` num post só de fotos manda **todas** no chat
