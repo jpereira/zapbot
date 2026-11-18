@@ -740,6 +740,38 @@ async function handleNoticeDenied(valueAlt) {
     });
 }
 
+/*
+ * /bot -flood: the flood protection (settings flood.maxCommandRepeated and flood.intervalCommand). With nothing,
+ * shows; off turns off (0 repetitions); on goes back to the defaults; N[/seconds] changes the max (and the window).
+ */
+async function handleFlood(valueAlt) {
+    const v = valueAlt.toLowerCase().trim();
+    const max = 'flood.maxCommandRepeated';
+    const window = 'flood.intervalCommand';
+    try {
+        if (v === 'off') await setSetting(max, 0);
+        else if (v === 'on') {
+            await setSetting(max, SETTINGS_SCHEMA[max].default);
+            await setSetting(window, SETTINGS_SCHEMA[window].default);
+        } else if (v) {
+            const m = v.match(/^(\d+)(?:\/(\d+)s?)?$/);
+            if (!m || Number(m[1]) < 1) return t('adm.bot.floodUsage');
+            // Both values checked before saving the first (5/0 must not leave the 5 half done)
+            validateSetting(max, m[1]);
+            if (m[2]) validateSetting(window, m[2]);
+            await setSetting(max, Number(m[1]));
+            if (m[2]) await setSetting(window, Number(m[2]));
+        }
+    } catch (e) {
+        return t('adm.set.invalid', { key: max, erro: e.message });
+    }
+    const n = getSetting(max);
+    return t('adm.bot.flood', {
+        state: t(n ? 'adm.bot.flood.on' : 'adm.bot.flood.off'),
+        detail: n ? t('adm.bot.flood.detail', { max: n, seconds: getSetting(window) }) : t('adm.bot.flood.none')
+    });
+}
+
 async function cmdBot({ msg, opts: commandOpts, args, chatId, isGroup }) {
     args = removeOptionMask(args);
     if (SHORTCUT.test(String(args ?? ''))) {
@@ -775,6 +807,12 @@ async function cmdBot({ msg, opts: commandOpts, args, chatId, isGroup }) {
         }
         const password = [opts.opt.passwd, ...opts.argv].filter(Boolean).join(' ').trim();
         await msg.reply(password ? await definePassword(password) : t('adm.bot.passwdUsage'));
+        return;
+    }
+
+    // -flood [on|off|N[/seconds]]: the flood protection (settings flood.*)
+    if (opts.given.has('flood')) {
+        await msg.reply(await handleFlood([opts.opt.flood, ...opts.argv].filter(Boolean).join(' ')));
         return;
     }
 

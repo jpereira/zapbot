@@ -61,8 +61,8 @@ Yep, we've been busy. The best of the latest batch:
 - 📣 **Post on your Status** (and schedule it), peek at anyone's About and change yours. [`/status`](docs/commands/status.md) · [`/profile`](docs/commands/profile.md)
 - 📇 **Your contacts, exported.** `/contacts` makes a vCard with names, numbers and profile photos. [`/contacts`](docs/commands/contacts.md)
 - 🔇 **Mute for a while.** `/mute -for 2h` and the alerts come back by themselves. [`/mute`](docs/commands/mute.md)
-- 📊 **Usage and limits.** `/usage -all` shows who uses what, `/bot +limit` caps each person, and `/whois -id` brings
-  the hidden ids. [`/usage`](docs/commands/usage.md) · [`/whois`](docs/commands/whois.md)
+- 📊 **Usage and limits.** `/usage -all` shows who uses what, `/bot +limit` caps each person, `/bot -flood` tunes the
+  anti-flood, and `/whois -id` brings the hidden ids. [`/usage`](docs/commands/usage.md) · [`/whois`](docs/commands/whois.md)
 - 🏷️ **Names instead of numbers.** Alerts of deleted and edited messages and reactions show `@Luis`, not
   `@265472113143884`. [`/show`](docs/commands/show.md)
 - 🔌 **API and MCP (experimental).** Send messages and read your notes from scripts or an AI client.
@@ -80,6 +80,7 @@ Yep, we've been busy. The best of the latest batch:
 /forward /Family/ #friends Look at this!              (replying to the message)
 /bot -denied You can't use $cmd here. Ask $admin!
 /call -on -msg I don't take calls here, send a message!
+/bot -flood 5/10                                      (at most 5 repeats in 10 seconds)
 /games -trivia
 /warn @Fulano posted a link
 /antilink -delete -allow youtube.com

@@ -33,6 +33,7 @@ users and the daily delivery), the versions of what it uses
 | `-info`, `-i` | Versions of the bot and of what it uses, and the system. Accepts `-mask`; the other options are refused. See [System information](#system-information) |
 | `-test`, `-t` | Tests everything (cache, disk, database, WhatsApp, internet, speed, SMTP, IMAP and programs), with ✅ or ❌ on each item. The other options are refused. See [Bot test](#bot-test) |
 | `-denied`, `-d` | `[on\|off\|reset\|<text>]`: the notice for whoever types a command they can't use, instead of silence. Without a value, shows it; `on`/`off` turn it on and off; `reset` brings back the default text; any other text becomes the message (`$cmd` is the typed command and `$admin`, the bot owner). See [Notice for denied commands](#notice-for-denied-commands) |
+| `-flood`, `-f` | `[off\|on\|<N>[/<seconds>]]`: the [flood protection](#flood-protection). Without a value, shows it; `off` turns it off; `on` brings back the defaults (3 times in 2 seconds); `N` changes the maximum and `N/S` also the interval in seconds |
 | `-passwd` | `<password\|off>`: owner only. Sets the password for `-login` (min. 8 characters; only the scrypt hash is stored in the database, in the `bot.login` setting). With `off`, turns login off |
 | `-login` | `<password>`: for outsiders, in private only. With the right password, the person goes into `bot.admins` and the owner is notified by WhatsApp and email. 5 wrong tries, 15 min blocked. The password is deleted from the message database. To revoke: `/bot -a +number` |
 | `-flush-email`, `-fe` | `[true]`: connects to the email IMAP (needs `QRCODE_EMAIL_IMAP_HOST`) and shows how many messages are in Sent and Trash; with `true`, deletes them all. Only the owner deletes. The other options are refused. See [Cleaning the email](#cleaning-the-email) |
@@ -364,8 +365,18 @@ commands until the interval ends:
 
 - Different commands count separately.
 - You and the admins have no limit.
-- The limits are settings: `/set flood.maxCommandRepeated 5` (`0` turns it off) and
-  `/set flood.intervalCommand 10` (in seconds). See [Settings](../settings.md).
+- Change it with `/bot -flood` (or `-f`):
+
+```text
+/bot -flood            → shows it: on or off, the maximum and the interval
+/bot -f 5              → at most 5 repetitions (the interval stays)
+/bot -f 5/10           → at most 5 repetitions in 10 seconds
+/bot -f off            → turns it off (no limit)
+/bot -f on             → back to the defaults (3 times in 2 seconds)
+```
+
+- The same limits are the settings `flood.maxCommandRepeated` (`0` turns it off) and `flood.intervalCommand` (in
+  seconds). See [Settings](../settings.md).
 
 ## Rejecting calls
 

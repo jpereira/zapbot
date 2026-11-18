@@ -34,6 +34,7 @@ usuários e o envio diário), as versões do que ele usa
 | `-info`, `-i` | Versões do bot e do que ele usa, e o sistema. Aceita `-mask`; as outras opções são recusadas. Veja [Informações do sistema](#informações-do-sistema) |
 | `-test`, `-t` | Testa tudo (cache, disco, banco, WhatsApp, internet, velocidade, SMTP, IMAP e programas), com ✅ ou ❌ em cada item. As outras opções são recusadas. Veja [Teste do bot](#teste-do-bot) |
 | `-denied`, `-d` | `[on\|off\|reset\|<texto>]`: o aviso de quem digita um comando que não pode usar, em vez do silêncio. Sem valor, mostra o aviso; `on`/`off` ligam e desligam; `reset` volta ao texto padrão; qualquer outro texto vira a mensagem (`$cmd` é o comando digitado e `$admin`, o dono do bot). Veja [Aviso de comando negado](#aviso-de-comando-negado) |
+| `-flood`, `-f` | `[off\|on\|<N>[/<segundos>]]`: a [proteção contra flood](#proteção-contra-flood). Sem valor, mostra; `off` desliga; `on` volta aos padrões (3 vezes em 2 segundos); `N` muda o máximo e `N/S` também o intervalo em segundos |
 | `-passwd` | `<senha\|off>`: só o dono. Define a senha do `-login` (mín. 8 caracteres; só o hash scrypt fica no banco, no setting `bot.login`). Com `off`, desliga o login |
 | `-login` | `<senha>`: para quem é de fora, só no privado. Com a senha certa, a pessoa entra no `bot.admins` e o dono é avisado por WhatsApp e e-mail. Erra 5 vezes, fica 15 min bloqueada. A senha é apagada do banco de mensagens. Para revogar: `/bot -a +número` |
 | `-flush-email`, `-fe` | `[true]`: conecta no IMAP do e-mail (precisa de `QRCODE_EMAIL_IMAP_HOST`) e mostra quantas mensagens há em Sent e Trash; com `true`, apaga todas. Só o dono apaga. As outras opções são recusadas. Veja [Limpar o e-mail](#limpar-o-e-mail) |
@@ -361,8 +362,18 @@ até o intervalo acabar:
 
 - Comandos diferentes contam à parte.
 - Você e os admins não têm limite.
-- Os limites são settings: `/set flood.maxCommandRepeated 5` (`0` desliga) e
-  `/set flood.intervalCommand 10` (em segundos). Veja [Settings](../settings.md).
+- Mude com o `/bot -flood` (ou `-f`):
+
+```text
+/bot -flood            → mostra: ligada ou desligada, o máximo e o intervalo
+/bot -f 5              → no máximo 5 repetições (o intervalo fica)
+/bot -f 5/10           → no máximo 5 repetições em 10 segundos
+/bot -f off            → desliga (sem limite)
+/bot -f on             → volta aos padrões (3 vezes em 2 segundos)
+```
+
+- Os mesmos limites são os settings `flood.maxCommandRepeated` (`0` desliga) e `flood.intervalCommand` (em
+  segundos). Veja [Settings](../settings.md).
 
 ## Recusando ligações
 
