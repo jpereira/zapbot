@@ -143,6 +143,7 @@ module.exports = {
     'mensagens.ambiguo': '🤔 Command \'{caller}\' is ambiguous. Possible commands: {lista}',
     'mensagens.desconhecido': '⚠️ Unknown command \'{body}\', try: /help',
     'mensagens.voceEDono': '👑 You are the owner, you already rule everything.',
+    'mensagens.negadoPadrao': '🚫 No permission to run $cmd, talk to $admin',
     'mensagens.semPermissaoPrivado': '🚫 No permission for commands in private. Allowed only in: {grupos}.',
     'mensagens.tentouExecutar': '⚠️ {nome} tried to run {cmd} inside {chat}, but has no permission',
     'mensagens.vez': '{n} time',

@@ -198,6 +198,22 @@ const SETTINGS_SCHEMA = {
         desc: 'Outras pessoas (número com DDI, ex.: 5521999999999) que também usam os comandos admin. Só o dono altera; pelo /set vale o nome do contato (/set -a bot.admins /Jorge Pereira/), e o /bot +a|-a é o atalho.',
         item: itemPhone
     },
+    'bot.denied.enabled': {
+        default: true,
+        type: 'boolean',
+        desc: 'Quem digita um comando que não pode usar recebe a bot.denied.message, em vez do silêncio (sem repetir enquanto a pessoa insistir, veja bot.denied.interval). Desligado: o bot ignora em silêncio. Vem ligado.'
+    },
+    'bot.denied.interval': {
+        default: 10,
+        type: 'number', min: 0, max: 1440,
+        desc: 'Minutos de calma do aviso de bot.denied.enabled: se a pessoa já foi avisada (ou tentou algum comando) neste chat nos últimos X minutos, o bot fica quieto, e cada nova tentativa renova a espera. 0: avisa a cada tentativa.'
+    },
+    'bot.denied.message': {
+        default: '',
+        type: 'string',
+        allowEmpty: true,
+        desc: 'Texto do aviso de bot.denied.enabled. $cmd é o comando digitado e $admin, o dono do bot (nome e telefone). Vazio: o texto padrão do idioma do bot (zapbot.lang).'
+    },
     'bot.login': {
         default: '',
         type: 'string',
