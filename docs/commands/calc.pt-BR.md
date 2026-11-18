@@ -95,6 +95,23 @@ entrou, o que saiu e o maior gasto:
 
 Se a lista e o texto discordam, a resposta diz `⚠️ O texto diz R$ 600,00: diferença de R$ 64,89`.
 
+As outras moedas funcionam do mesmo jeito, antes do número (`EUR`, `EUR$`, `USD`, `USD$`, `US$`, `$`, `€`). `EUR$ 10` e
+`EUR 5` são a mesma moeda; com moedas diferentes na mesma lista, o resultado sai sem símbolo:
+
+```text
+(respondendo "EUR 120 hotel" / "EUR$ 35,50 jantar" / "- EUR 20 reembolso")  /calc
+🧮 Saldo: EUR 135,50
+
++ EUR 120,00  Hotel
++ EUR  35,50  Jantar
+- EUR  20,00  Reembolso
+────────────
+= EUR 135,50
+
+➕ Entradas: EUR 155,50 (2)
+➖ Saídas: EUR 20,00 (1)
+```
+
 ## Por nome
 
 O `-group` soma as linhas com o mesmo nome e põe os subtotais na fita:
