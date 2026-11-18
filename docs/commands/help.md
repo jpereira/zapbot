@@ -11,16 +11,21 @@ Shows the command menu, or the help for a single command. Everyone sees only wha
   those, and an `admin` command the owner delegated (`/bot +u +cmd /gpt`) shows up for whoever
   received it. `/help` and `/whois` always go through.
 
-`/help` on its own lists one command per line, with just what it does (the `summary` from the
-command definition): the command in **bold** and the description in _italic_ (WhatsApp formatting, so it
-wraps on its own to the width of the phone), and ends with a tip on how to see the rest:
+`/help` on its own lists the commands with just what each does (the `summary` from the command
+definition): the command in **bold** and, on the line below, the description in _italic_ (WhatsApp
+formatting, so it wraps on its own to the width of the phone, and every description starts at the same margin), and ends with a tip on how to see the rest:
 
 ````text
 /help
 
-*/alias* - _Saves shortcuts for commands with arguments_
-*/ascii* - _The text in big ASCII letters_
-*/backup* - _Database backup: lists, details, restores, sends or deletes_
+*/alias*
+_Saves shortcuts for commands with arguments_
+
+*/ascii*
+_The text in big ASCII letters_
+
+*/backup*
+_Database backup: lists, details, restores, sends or deletes_
 ...
 
 💡 Use */help /command* or */command -h* for more information.
@@ -38,11 +43,15 @@ with only the ones you can use (a role with no visible commands doesn't show up;
 /help -r
 
 🔸 Role: admin
-*/alias* - _Saves shortcuts for commands with arguments_
+
+*/alias*
+_Saves shortcuts for commands with arguments_
 ...
 
 🔸 Role: user
-*/ascii* - _The text in big ASCII letters_
+
+*/ascii*
+_The text in big ASCII letters_
 ...
 ````
 
