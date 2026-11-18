@@ -8,7 +8,7 @@ pedidos. O `/rates` é o mesmo comando (o nome antigo). Para **cripto**, use o [
 | Opção | Valor | Descrição |
 |---|---|---|
 | *(nada)* | `[SÍMBOLO...]` | Os habilitados, ou só os símbolos pedidos (habilitados ou não), na ordem pedida: `USD`, `EUR`, `GBP`, `USDT` ou um ticker do Yahoo Finance |
-| `-list`, `-l` | | Lista os símbolos habilitados e as moedas suportadas |
+| `-list`, `-l` | | Lista tudo o que ele suporta: os símbolos habilitados, as moedas (✅ as habilitadas) e os tipos de ticker, com exemplos |
 | `-add`, `-a` | `<SÍMBOLO>` | Habilita uma moeda (`USD`, `EUR`, `GBP`, `USDT`) ou um ticker que exista no Yahoo Finance (só o dono do bot ou um [admin](bot.md#admins-extras)) |
 | `-del`, `-d` | `<SÍMBOLO>` | Desabilita um símbolo (só o dono do bot ou um [admin](bot.md#admins-extras)) |
 | `-alert` | `[regra]` | Sem regra, lista os alertas; com regra (ex.: `USD > 5.30` ou `MSTR < 90`), cria um (só o dono do bot ou um [admin](bot.md#admins-extras)). O símbolo também pode vir antes: `/stocks MSTR -alert < 90`. Veja [Alertas de preço](#alertas-de-preço) |
@@ -29,6 +29,32 @@ pedidos. O `/rates` é o mesmo comando (o nome antigo). Para **cripto**, use o [
 /stocks -a gbp                → passa a mostrar a libra
 /stocks -a NVDA               → habilita a NVDA (ela precisa existir no Yahoo Finance)
 /stocks -d eur                → deixa de mostrar o euro
+```
+
+O que o `/stocks -l` traz (tudo o que ele suporta, de uma vez):
+
+```text
+📈 Símbolos habilitados
+
+• 🇺🇸 USD — Dólar
+• 🇪🇺 EUR — Euro
+• 🪙 USDT — Tether
+• 🏢 MSTR
+
+💱 Moedas contra o real (✅ habilitada)
+🇺🇸 USD — Dólar ✅
+🇪🇺 EUR — Euro ✅
+🇬🇧 GBP — Libra
+🪙 USDT — Tether ✅
+
+🏢 Ações, ETFs e índices (qualquer ticker do Yahoo Finance)
+• EUA: MSTR, NVDA, AAPL, IBIT, SPY
+• Brasil (B3, termina em .SA): PETR4.SA, VALE3.SA, BOVA11.SA
+• Índices (começam com ^): ^GSPC, ^IXIC, ^BVSP
+• Outros: BRK-B, EURUSD=X
+
+💡 /stocks -a <SÍMBOLO> habilita, /stocks -d <SÍMBOLO> desabilita, /stocks <SÍMBOLO>... pede uma cotação avulsa.
+Cripto está em /crypto -l.
 ```
 
 Qual comando para quê: o `/stocks` é câmbio contra o real e tudo o que negocia em bolsa; o [`/crypto`](crypto.md) é

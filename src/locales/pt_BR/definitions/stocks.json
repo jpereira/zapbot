@@ -44,7 +44,7 @@
         "l"
       ],
       "values": [],
-      "desc": "Lista os símbolos habilitados (e as moedas suportadas)."
+      "desc": "Lista tudo o que ele suporta: os símbolos habilitados, as moedas (✅ as habilitadas) e os tipos de ticker, com exemplos."
     },
     {
       "opts": [
