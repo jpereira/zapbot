@@ -12,7 +12,11 @@ pelo ffmpeg. Se a mídia tiver um link na legenda, vale a mídia.
 | Opção | Valor | Descrição |
 |---|---|---|
 | `-sticker`, `-st` | | Envia como figurinha animada (até 6 s), enquadrada no meio do vídeo. É o mesmo que o [`/sticker`](sticker.md) |
-| `-pos` | `<topo\|meio\|baixo>` | Com `-st`: onde fica o recorte quadrado (padrão `meio`; `top`, `middle`, `bottom`, `cima` e `centro` também valem). Em mídia mais larga que alta, `topo` é a esquerda e `baixo` a direita |
+| `-photo`, `-ph` | `<n>` | Post de fotos (Instagram, X/Twitter): manda só esta foto do carrossel, em vez de todas (`1` é a primeira; com `-` na frente, conta do final: `-1` é a última). Com `-st`, a figurinha sai dela |
+| `-pos` | `<top\|center\|bottom>` | Com `-st`: onde fica o recorte quadrado (padrão `center`). Em mídia mais larga que alta, `top` é a esquerda e `bottom` a direita |
+| `-pb` | | O mesmo que `-pos bottom` |
+| `-pc` | | O mesmo que `-pos center` |
+| `-pt` | | O mesmo que `-pos top` |
 | `-audio`, `-a` | | Extrai só o áudio (`.mp3`) |
 | `-transcribe`, `-t` | | Atalho do [`/transcribe`](transcribe.md): responde com o **texto da fala** em vez do arquivo. Veja [Transcrever a fala](#transcrever-a-fala--transcribe) |
 | `-summary`, `-sum` | | Com `-t`: também resume a fala com o ChatGPT. Veja [Transcrever a fala](#transcrever-a-fala--transcribe) |
@@ -187,6 +191,6 @@ firewall de egresso no container (`docker/app/egress-firewall.sh`, ligado por
 (reply num vídeo do WhatsApp)   /get -a              → só o áudio, em .mp3
 (reply num vídeo do WhatsApp)   /get -ss 5 -es 20    → o trecho, como documento
 /get -t https://www.instagram.com/reel/XXXXXXXX/   → a fala, em texto
-/get -st -pos topo https://youtu.be/XXXXXXXXXXX   → figurinha com o recorte no topo
+/get -st -pos top https://youtu.be/XXXXXXXXXXX   → figurinha com o recorte no topo
 /get -v https://youtu.be/XXXXXXXXXXX            → mostra também os comandos que rodaram
 ```

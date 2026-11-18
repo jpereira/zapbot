@@ -5,7 +5,9 @@ vídeo/GIF ou numa imagem, e devolve a figurinha. Nome e autor da figurinha vêm
 `sticker.name` e `sticker.author`.
 
 - **URL ou link respondido**: baixa o vídeo com o yt-dlp e faz a figurinha animada. Se o link não
-  tiver vídeo (uma matéria, um post de foto), usa a miniatura da prévia do link.
+  tiver vídeo (uma matéria), usa a miniatura da prévia do link. Um **post de fotos** (Instagram, X/Twitter)
+  vira figurinha da foto; num carrossel, o `-photo N` escolhe a foto (`1` é a primeira, `-1` a última; o link
+  do Instagram com `?img_index=N` também vale).
 - **Vídeo ou GIF respondido**: figurinha animada pelo ffmpeg.
 - **Imagem respondida**: um quadrado 512x512 **enquadrado no meio da imagem**: numa foto deitada as
   laterais são cortadas, numa em pé o topo e a base. GIFs (imagem) mantêm a animação. Figurinhas
@@ -30,13 +32,17 @@ qualidade e, se ainda não couber, sugere um trecho menor com `-ss` e `-es`.
 (reply num vídeo)                /sticker -ss 01:10 -es 01:13 → de 1:10 a 1:13
 (reply num vídeo)                /sticker -ss -10           → começa 10 s antes do fim (6 s)
 /sticker https://www.instagram.com/p/XXXXXXXX/
-/sticker -pos topo            → (reply numa foto) recorte no topo
+/sticker -pos top            → (reply numa foto) recorte no topo
 /sticker -v https://youtu.be/XXXXXXXXXXX   → mostra também os comandos que rodaram
 ```
 
 | Opção | Valor | Descrição |
 |---|---|---|
-| `-pos` | `<topo\|meio\|baixo>` | Onde fica o recorte quadrado da imagem ou do vídeo (padrão `meio`; `top`, `middle`, `bottom`, `cima` e `centro` também valem). Em mídia mais larga que alta, `topo` é a esquerda e `baixo` a direita. Não vale com `-txt` |
+| `-photo`, `-ph` | `<n>` | Post de fotos (Instagram, X/Twitter): qual foto do carrossel usar (`1` é a primeira, o padrão; com `-` na frente, conta do final: `-1` é a última) |
+| `-pos` | `<top\|center\|bottom>` | Onde fica o recorte quadrado da imagem ou do vídeo (padrão `center`). Em mídia mais larga que alta, `top` é a esquerda e `bottom` a direita. Não vale com `-txt` |
+| `-pb` | | O mesmo que `-pos bottom` |
+| `-pc` | | O mesmo que `-pos center` |
+| `-pt` | | O mesmo que `-pos top` |
 | `-txt` | `<texto>` | Figurinha animada com o texto, sem precisar responder nada. Veja [Figurinha de texto](#figurinha-de-texto) |
 | `-bg` | `<cor>` | Com `-txt`: a cor de fundo, em `#RRGGBB` (padrão `#FFFFFF`, branco) |
 | `-fg` | `<cor>` | Com `-txt`: a cor da letra, em `#RRGGBB` (padrão `#000000`, preto) |

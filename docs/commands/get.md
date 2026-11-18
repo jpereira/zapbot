@@ -12,7 +12,11 @@ through ffmpeg. If the media has a link in the caption, the media wins.
 | Option | Value | Description |
 |---|---|---|
 | `-sticker`, `-st` | | Sends as an animated sticker (up to 6 s), framed on the middle of the video. Same as [`/sticker`](sticker.md) |
-| `-pos` | `<top\|middle\|bottom>` | With `-st`: where the square crop goes (default `middle`; `topo`, `meio`, `baixo`, `cima` and `centro` also work). On media wider than tall, `top` is the left and `bottom` the right |
+| `-photo`, `-ph` | `<n>` | Photo post (Instagram, X/Twitter): sends only this photo of the carousel, instead of all (`1` is the first; with a leading `-`, counts from the end: `-1` is the last). With `-st`, the sticker is made from it |
+| `-pos` | `<top\|center\|bottom>` | With `-st`: where the square crop goes (default `center`). On media wider than tall, `top` is the left and `bottom` the right |
+| `-pb` | | Same as `-pos bottom` |
+| `-pc` | | Same as `-pos center` |
+| `-pt` | | Same as `-pos top` |
 | `-audio`, `-a` | | Extracts only the audio (`.mp3`) |
 | `-transcribe`, `-t` | | Shortcut for [`/transcribe`](transcribe.md): replies with the **text of the speech** instead of the file. See [Transcribe the speech](#transcribe-the-speech--transcribe) |
 | `-summary`, `-sum` | | With `-t`: also summarizes the speech with ChatGPT. See [Transcribe the speech](#transcribe-the-speech--transcribe) |

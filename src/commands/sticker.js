@@ -7,6 +7,7 @@ const { downloadMedia } = require('./get');
 
 const { t } = require('../i18n');
 const { printError } = require('../log');
+const { applyPosShortcuts } = require('../media');
 const { stickerMeta } = require('../settings');
 const { MAX_CHARACTERS, readCor, textSticker } = require('../stickerText');
 
@@ -31,7 +32,7 @@ function readText(args) {
 
     return {
         comTexto: Boolean(m),
-        comVideo: /(^|\s)(-(ss|es|startSec|endSec|v|verbose)(\s|$)|https?:\/\/)/i.test(beforeAlt),
+        comVideo: /(^|\s)(-(ss|es|startSec|endSec|photo|ph|v|verbose)(\s|$)|https?:\/\/)/i.test(beforeAlt),
         texto: (m?.[2] ?? '').trim().replace(/^(["'])(.*)\1$/s, '$2').trim(),
         bg: bg ?? '#FFFFFF',
         fg: fg ?? '#000000',
@@ -67,6 +68,10 @@ async function stickerWithText(msg, { texto: textAlt, bg: bgTyped, fg: fgTyped }
  */
 async function cmdSticker(ctx) {
     const { msg, args, opts } = ctx;
+    if (!applyPosShortcuts(opts)) {
+        await msg.reply(t('get.posConflict'));
+        return;
+    }
     const txt = readText(args);
     if (txt.semTxt) {
         await msg.reply(t('sticker.colorsNeedTxt'));

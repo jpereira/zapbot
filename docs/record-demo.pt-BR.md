@@ -100,7 +100,7 @@ legenda):
 
 ```text
 /sticker
-/sticker -pos topo
+/sticker -pos top
 ```
 
 ### 6. Baixar vídeos: `/get`

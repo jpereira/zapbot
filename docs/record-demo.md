@@ -101,7 +101,7 @@ the caption):
 
 ```text
 /sticker
-/sticker -pos topo
+/sticker -pos top
 ```
 
 ### 6. Downloading videos: `/get`

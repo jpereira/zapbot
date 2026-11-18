@@ -11,7 +11,7 @@ const { formatErrorCommand, commandUsage } = require('./base');
 const { completeNotice } = require('../client');
 const { BIN_FFMPEG, BIN_FFPROBE, BIN_YT, CACHE_DIR, GET_MAX_CONCURRENT, TMP_DIR } = require('../constants');
 const { printDebug, printError, printInfo } = require('../log');
-const { STICKER_ANIMATED_MAX_BYTES, ATTEMPTS_STICKER, argsDoFfmpeg, fitSticker, readPosition, thumbnailDoLink } = require('../media');
+const { STICKER_ANIMATED_MAX_BYTES, ATTEMPTS_STICKER, argsDoFfmpeg, applyPosShortcuts, fitSticker, readPosition, thumbnailDoLink } = require('../media');
 const { getSetting, isDebugMode, stickerMeta } = require('../settings');
 const { t } = require('../i18n');
 const { WITHOUT_KEY, keyOpenAi, errorOpenAi, askOnChat } = require('../openaiChat');
@@ -172,6 +172,10 @@ async function optionsValid(msg, opts, cmd) {
     }
     if (opts.opt.transcribe && (opts.opt.audio || opts.opt.sticker || opts.given.has('pos'))) {
         await msg.reply(t('get.transcribeAlone'));
+        return false;
+    }
+    if (!applyPosShortcuts(opts)) {
+        await msg.reply(t('get.posConflict'));
         return false;
     }
     if (opts.given.has('pos')) {
@@ -438,7 +442,8 @@ async function converterAndSend({ msg, opts, senderName, url, media, previa: pre
         await completeNotice(msg, notice, t(isSticker ? 'get.stickerDone' : 'get.mediaDone'), { linkPreview: false });
     } catch (e) {
         // Photo-only post (carousel): without -a, -st or -t, the photos go to the chat, the last one with the post text
-        if (e.semMidia && url && !opts.opt.audio && !opts.opt.sticker && (await postSendPhotos(msg, notice, url))) return;
+        if (e.semMidia && url && !opts.opt.audio && !opts.opt.sticker && (await postSendPhotos(msg, notice, url, opts))) return;
+        if (e.semMidia && url && opts.opt.sticker && (await postPhotoSticker(msg, notice, url, opts))) return;
         if (e.aoBaixar && preview && (await previewSticker(msg, preview, notice, e, opts.opt.pos))) return;
         printError(e.message);
         await completeNotice(msg, notice, formatErrorCommand(e), { linkPreview: false });
@@ -671,7 +676,7 @@ const PHOTOS_PAUSE_MS = 250;   // between one photo and another: not dumping eve
  * of CAPTION_MAX, the rest goes in a message afterward). The "Processando" notice becomes "✅ N photos sent".
  * @returns {Promise<boolean>} false = it was not a photo post (or nothing could be downloaded): the usual error follows
  */
-async function postSendPhotos(msg, notice, url) {
+async function postSendPhotos(msg, notice, url, opts) {
     let post;
     try {
         post = await postPhotos(url, argsDeCookies());
@@ -680,6 +685,17 @@ async function postSendPhotos(msg, notice, url) {
         return false;
     }
     if (!post.fotos.length) return false;
+
+    // -photo N: only that one, with the post text
+    const only = photoIndex(opts, url, post.fotos.length);
+    if (only !== null) {
+        if (only < 0 || only >= post.fotos.length) {
+            await completeNotice(msg, notice, t('get.photoOutOfRange', { n: opts.opt.photo, total: post.fotos.length }), { linkPreview: false });
+            return true;
+        }
+        post.fotos = [post.fotos[only]];
+        post.total = 1;
+    }
 
     const photos = [];
     for (const [i, photo] of post.fotos.entries()) {
@@ -712,8 +728,50 @@ async function postSendPhotos(msg, notice, url) {
     return true;
 }
 
+/*
+ * Which photo of the post (0-based): -photo N (1-based; negative counts from the end); for the sticker, else
+ * the ?img_index=N of the link (Instagram), else the first. null = no -photo (and not a sticker): all of them.
+ */
+function photoIndex(opts, url, total) {
+    let n = opts.opt.photo == null ? 0 : Number(opts.opt.photo);
+    if (opts.opt.photo == null && opts.opt.sticker) {
+        try {
+            n = Number(new URL(url).searchParams.get('img_index'));
+        } catch { /* not a valid URL: the first one */ }
+        if (!n) n = 1;
+    }
+    if (!n) return null;
+    return Number.isInteger(n) ? (n < 0 ? total + n : n - 1) : -1;
+}
+
+/*
+ * /sticker on a photo-only post (Instagram, X/Twitter): the sticker is made from one of the photos.
+ * @returns {Promise<boolean>} false = it was not a photo post (or the photo could not be downloaded)
+ */
+async function postPhotoSticker(msg, notice, url, opts) {
+    try {
+        const post = await postPhotos(url, argsDeCookies());
+        if (!post.fotos.length) return false;
+
+        const i = photoIndex(opts, url, post.fotos.length);
+        if (i < 0 || i >= post.fotos.length) {
+            await completeNotice(msg, notice, t('get.photoOutOfRange', { n: opts.opt.photo, total: post.fotos.length }), { linkPreview: false });
+            return true;
+        }
+
+        const photo = await downloadPhoto(post.fotos[i], i + 1);
+        printInfo(`> Photo post: sticker from photo ${i + 1} of ${post.fotos.length}`);
+        await msg.reply(await fitSticker(photo, opts.opt.pos), null, { ...MSG_STICKER, ...stickerMeta() });
+        await completeNotice(msg, notice, t('get.stickerDone'), { linkPreview: false });
+        return true;
+    } catch (err) {
+        printError('/sticker: photo of the post failed:', err.message);
+        return false;
+    }
+}
+
 // yt-dlp found the post but without video (photo-only carousel, image post): there is nothing to download
-const WITHOUT_MEDIA = /No video formats found|There is no video in this post/i;
+const WITHOUT_MEDIA = /No video formats found|There is no video in this post|No video could be found in this tweet/i;
 function withoutMediaInLink(fileLog) {
     try {
         return Boolean(fileLog) && WITHOUT_MEDIA.test(fs.readFileSync(fileLog, 'utf8'));

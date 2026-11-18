@@ -54,6 +54,17 @@ function isOption(token) {
 const isTimeNegative = (token) => /^-\d[\d:.]*$/.test(token);
 
 /*
+ * An option typed by half (-phot for -photo): when it is the start (2+ letters) of the name of one
+ * single option, that one. Two or more matches (or none) leave it as unknown.
+ */
+function uniquePrefix(optionMap, nameAlt) {
+    if (!/^[A-Za-z]{2,}$/.test(nameAlt)) return undefined;
+    const found = [...optionMap.keys()].filter((k) => k.toLowerCase().startsWith(nameAlt.toLowerCase()));
+    const canon = new Set(found.map((k) => optionMap.get(k).canonicalName));
+    return canon.size === 1 ? optionMap.get(found[0]) : undefined;
+}
+
+/*
  * Converts "-ss 10 -a https://..." into:
  *   { opt: { startSec: '10', audio: true, ... }, argv: ['https://...'] }
  *
@@ -116,7 +127,7 @@ function GetOptFromCommand(input, config = {}) {
             continue;
         }
 
-        const option = optionMap.get(token.slice(1));
+        const option = optionMap.get(token.slice(1)) ?? uniquePrefix(optionMap, token.slice(1));
 
         // An unknown option goes to argv (or, in a strict command, to `desconhecidas`)
         if (!option) {
