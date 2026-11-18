@@ -268,7 +268,7 @@ describe('/bot', () => {
             assert.match(r, /• whatsapp-web\.js: [\d.]+ \(commit [0-9a-f]{7}\)\n/);
             assert.match(r, /• WhatsApp Web: _não encontrado_\n/);   // the simulated client has no getWWebVersion
             assert.match(r, /• SQLite: \d+\.\d+\.\d+\n/);
-            assert.match(r, /🧰 \*Programas\*\n• Chromium: .+\n• yt-dlp: .+\n• ffmpeg: .+\n/);
+            assert.match(r, /🧰 \*Programas\*\n• Chromium: .+\n• yt-dlp: .+\n• ffmpeg: .+\n• faster-whisper: .+\n/);
             assert.match(r, /🖥️ \*Sistema\*\n• .+\n• Host: .+\n• CPU: \d+× .+ · carga [\d.]+ · [\d.]+ · [\d.]+\n• Memória: .+ de .+ em uso · o bot usa .+\n• No ar: sistema há .+ · bot há .+ \(PID \d+\)$/);
         }
         assert.match((await bot.replyAlt('/bot -i -on'))[0], /❌ O -info não combina com as outras opções/);
@@ -404,5 +404,17 @@ describe('/set', () => {
     test('só o dono usa', async () => {
         assert.deepEqual(await bot.replyAlt('/set show.max 1', { de: OTHERAlt.jid }), []);
         assert.equal(bot.getSetting('show.max'), 20);
+    });
+});
+
+describe('/bot -info: a versão do faster-whisper', () => {
+    test('vem do "transcribe.py --version": a versão da API, o modelo e a versão do script', () => {
+        const { describeWhisper } = bot.src('system');
+        assert.equal(describeWhisper('{"wrapper": "1.0.0", "faster_whisper": "1.2.0"}', 'small'),
+            '1.2.0 (modelo small) · transcribe.py 1.0.0');
+        // Without the API installed (the script exits with an error and prints nothing) or with odd output: null
+        assert.equal(describeWhisper(null, 'small'), null);
+        assert.equal(describeWhisper('lixo', 'small'), null);
+        assert.equal(describeWhisper('{"wrapper": "1.0.0"}', 'small'), null);
     });
 });
