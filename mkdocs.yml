@@ -117,6 +117,7 @@ nav:
       - /bot: commands/bot.md
       - /cache: commands/cache.md
       - /calc: commands/calc.md
+      - /call: commands/call.md
       - /carbon: commands/carbon.md
       - /contacts: commands/contacts.md
       - /cron: commands/cron.md

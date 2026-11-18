@@ -373,11 +373,23 @@ The bot's account rings like any other. With `call.reject` on, the bot **rejects
 calls and replies once with `call.message` (at most one message every 10 minutes per person, so someone who
 calls ten times doesn't get ten texts). It is off by default.
 
+With the [`/call`](call.md) command:
+
+```text
+/call -on
+/call -msg I don't take calls here, send a message or an audio 🙏
+/call -allow /Maria Lucia/            → Maria's calls always ring
+/call -deny /Fulano/ -msg "Not now!"   → Fulano's calls are always rejected, with this message
+/call -msg off                        → rejects in silence
+```
+
+Or with `/set`:
+
 ```text
 /set call.reject on
 /set call.message I don't take calls here, send a message or an audio 🙏
-/set -a call.allow /Maria Lucia/      → Maria's calls always ring
-/set call.message                     → clears: rejects in silence
+/set -a call.allow /Maria Lucia/
+/set call.message off                 → rejects in silence
 ```
 
 - Whoever is in `call.allow` and the `bot.admins` always get through.

@@ -48,8 +48,8 @@ Yep, we've been busy. The best of the latest batch:
   `/group -send admins -for 30m` closes it and reopens by itself. [`/group`](commands/group.md)
 - 🛡️ **Group moderation.** `/warn` with a limit that kicks, `/antilink` for links, `/antitag` for the "tag everyone"
   abuse and `/antibadword` for banned words. [`/warn`](commands/warn.md) · [`/antilink`](commands/antilink.md) · [`/antitag`](commands/antitag.md) · [`/antibadword`](commands/antibadword.md)
-- 📵 **Reject calls with a message.** `call.reject` hangs up voice and video calls and answers with a text of yours
-  (once every 10 minutes per person). [Rejecting calls](commands/bot.md#rejecting-calls)
+- 📵 **Reject calls with a message.** `/call -on` hangs up voice and video calls and answers with a text of yours
+  (`/call -msg ...`), once every 10 minutes per person, `/call -allow` lists who always rings and `/call -deny /Fulano/ -msg "Not now!"` always rejects someone, with a message of their own. [`/call`](commands/call.md)
 - 🎨 **Draw yourself and your friends.** `/draw @me @this draw the two of us as pirates` grabs the profile photos
   (`@me`, `@this`, `@reply` and plain names). [`/draw`](commands/draw.md) · [`/gpt`](commands/gpt.md)
 - 🎲 **Games for the group.** Magic 8 ball, truth, dare and trivia; you can play just by replying to the bot. [`/games`](commands/games.md)
@@ -74,6 +74,7 @@ Yep, we've been busy. The best of the latest batch:
 /get https://www.instagram.com/p/XXXXXXXX/            (a carousel: all the photos)
 /forward /Family/ #friends Look at this!              (replying to the message)
 /bot -denied You can't use $cmd here. Ask $admin!
+/call -on -msg I don't take calls here, send a message!
 /games -trivia
 /warn @Fulano posted a link
 /antilink -delete -allow youtube.com
