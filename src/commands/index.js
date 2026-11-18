@@ -63,7 +63,7 @@ const { cmdMe } = require('./me');
 const { cmdJoin, cmdLeave } = require('./groups');
 const { cmdTldr } = require('./tldr');
 const { cmdEverybody } = require('./everybody');
-const { cmdTranscribe } = require('./transcribe');
+const { cmdStt } = require('./stt');
 const { cmdTranslate } = require('./translate');
 const { cmdUptime } = require('./uptime');
 const { cmdWalissu } = require('./walissu');
@@ -132,8 +132,8 @@ const HANDLERS = {
     '/status': cmdStatus,
     '/sticker': cmdSticker,
     '/stocks': cmdStocks,
+    '/stt': cmdStt,
     '/tldr': cmdTldr,
-    '/transcribe': cmdTranscribe,
     '/translate': cmdTranslate,
     '/tts': cmdTts,
     '/unblock': cmdUnblock,

@@ -107,7 +107,7 @@ module.exports = {
         {
             opts: ['flood', 'f'],
             values: ['[off|on|<N>[/<seconds>]]'],
-            desc: 'The flood protection: how many times a non-admin can repeat the same command within an interval (settings flood.maxCommandRepeated and flood.intervalCommand). Without a value, shows it; off turns it off; on brings back the defaults (3 times in 2 seconds); N changes the maximum and N/S also the interval in seconds.',
+            desc: 'The flood protection: how many times a non-admin can repeat the same command within an interval (settings bot.flood.maxCommandRepeated and bot.flood.intervalCommand). Without a value, shows it; off turns it off; on brings back the defaults (3 times in 2 seconds); N changes the maximum and N/S also the interval in seconds.',
             ex: ['/bot -flood', '/bot -f 5/10', '/bot -f off'],
             cron: false
         },

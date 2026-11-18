@@ -42,11 +42,11 @@ test('/promote, /demote e /invite', async () => {
 
 test('/ocr, /tts, /qr, /carbon e /profile -set', async () => {
     assert.match((await bot.replyAlt('/ocr'))[0], /^⚠️ OpenAI API key not found: \/ocr is disabled\./);
-    assert.match((await bot.replyAlt('/tts hi'))[0], /^⚠️ OpenAI API key not found: \/tts is disabled\./);
+    assert.match((await bot.replyAlt('/tts -gpt hi'))[0], /^⚠️ OpenAI API key not found: \/tts is disabled\./);
 
     await setSetting('gpt.api.key', 'sk-teste');
     assert.deepEqual(await bot.replyAlt('/ocr'), ['Reply to a photo with /ocr (or send the photo with /ocr as the caption).\n💡 _/ocr -h for help_']);
-    assert.deepEqual(await bot.replyAlt('/tts'), ['```Usage: /tts [-status|-s] [<text>]```\n💡 _/tts -h for help_']);
+    assert.deepEqual(await bot.replyAlt('/tts'), ['```Usage: /tts [-gpt|-g] [-local|-l] [-status|-s] [<text>]```\n💡 _/tts -h for help_']);
 
     assert.match((await bot.replyAlt('/qr'))[0], /^```Usage: \/qr \[-decode\|-d\] \[<text>\]```/);
     assert.deepEqual(await bot.replyAlt('/qr -d'), ['Reply to a photo of a QR Code with /qr -d (or send the photo with /qr -d as the caption).\n💡 _/qr -h for help_']);

@@ -43,7 +43,7 @@ module.exports = {
     'adm.agenda.badWhen': '❌ Não entendi quando. Use 6h, 18:30, às 18h (horário), +2h ou 30m (daqui a tanto tempo), amanhã 9h, sexta 18h ou 25/12 10:00.\n{sintaxe}',
     'adm.agenda.noText': 'Faltou o texto.\n{sintaxe}',
     'adm.agenda.useRepeat': '❌ Use -repeat (-r) diario, semanal ou mensal.',
-    'adm.agenda.limit': '❌ Limite de {max} lembretes e mensagens agendadas (setting agenda.max). Remova algum antes.',
+    'adm.agenda.limit': '❌ Limite de {max} lembretes e mensagens agendadas (setting cron.max). Remova algum antes.',
     'adm.agenda.semEmail': '❌ O /cron envia a mensagem como se você digitasse, no WhatsApp: o -to é um contato, um grupo ou um número, não um e-mail.',
     'adm.agenda.inPrivate': 'no seu privado',
     'adm.agenda.inThisChat': 'neste chat',

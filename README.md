@@ -1,4 +1,4 @@
-# 🤖 ZapBot v1.0.24 (devel)
+# 🤖 ZapBot v1.0.24
 
 <p align="center">
   <img src="docs/assets/logo.png" alt="ZapBot logo: an angel robot with a halo and wings, winking and
@@ -33,7 +33,7 @@ Yep, we've been busy. The best of the latest batch:
 
 - 🎙️ **Transcribe any video or audio.** Send a link (Instagram, YouTube, X, TikTok...) or reply to a video or a voice
   note and get the **text of the speech**, or `-sum` for a **summary** on top. It runs on your own server
-  (faster-whisper), so no OpenAI bill and the audio never leaves home. [`/transcribe`](docs/commands/transcribe.md) · [`/get -t`](docs/commands/get.md)
+  (faster-whisper), so no OpenAI bill and the audio never leaves home. [`/stt`](docs/commands/stt.md) · [`/get -t`](docs/commands/get.md)
 - 📈 **Quotes in one command.** `/stocks` has the dollar, euro and USDT (it replaces `/rates`) and any stock, ETF or
   index (`MSTR`, `NVDA`, `PETR4.SA`, `^GSPC`...), with alerts like `/stocks MSTR -alert < 90`. `/crypto` now also
   shows the price **in reais** (🇧🇷, straight from Binance) and gold as `XAUT`. [`/stocks`](docs/commands/stocks.md) · [`/crypto`](docs/commands/crypto.md)
@@ -70,9 +70,9 @@ Yep, we've been busy. The best of the latest batch:
 
 ```text
 /draw @me @this draw the two of us as pirates
-/transcribe https://www.instagram.com/reel/XXXXXXXX/
-/transcribe -sum https://youtu.be/XXXXXXXXXXX
-/transcribe -ss 30 -es 90 https://youtu.be/XXXXXXXXXXX
+/stt https://www.instagram.com/reel/XXXXXXXX/
+/stt -sum https://youtu.be/XXXXXXXXXXX
+/stt -ss 30 -es 90 https://youtu.be/XXXXXXXXXXX
 /stocks MSTR NVDA
 /crypto XAUT
 /calc 100/2*6
@@ -96,7 +96,7 @@ Yep, we've been busy. The best of the latest batch:
 | 🤖 | **Talk to ChatGPT** | Answers questions, reads photos and PDFs, transcribes voice notes, summarizes conversations, draws images and GIFs, turns text into voice and reads text in pictures | [`/gpt`](docs/commands/gpt.md) · [`/tldr`](docs/commands/tldr.md) · [`/draw`](docs/commands/draw.md) · [`/tts`](docs/commands/tts.md) · [`/ocr`](docs/commands/ocr.md) |
 | 📱 | **QR Codes** | Makes a QR Code from any text and reads one when you reply to its photo | [`/qr`](docs/commands/qr.md) |
 | 🎞️ | **Media and stickers** | Downloads videos and audio from social networks, makes stickers (from images, videos or text), memes, GIFs, code snapshots and ASCII art | [`/get`](docs/commands/get.md) · [`/sticker`](docs/commands/sticker.md) · [`/meme`](docs/commands/meme.md) · [`/giphy`](docs/commands/giphy.md) · [`/carbon`](docs/commands/carbon.md) · [`/ascii`](docs/commands/ascii.md) |
-| 🎙️ | **Transcribe speech** | Turns the speech of any link, video, audio or voice note into text, on your own server (no API, no cost per minute); `-ss` and `-es` pick a part | [`/transcribe`](docs/commands/transcribe.md) · [`/get -t`](docs/commands/get.md#transcribe-the-speech--transcribe) |
+| 🎙️ | **Transcribe speech** | Turns the speech of any link, video, audio or voice note into text, on your own server (no API, no cost per minute); `-ss` and `-es` pick a part | [`/stt`](docs/commands/stt.md) · [`/get -t`](docs/commands/get.md#transcribe-the-speech--stt) |
 | 🔔 | **Watch and alerts** | Watches messages by text or regex, alerts on currency and crypto prices, DeFi positions out of range and contacts coming online, in your private chat, in a group or by e-mail | [`/watch`](docs/commands/watch.md) · [`/stocks`](docs/commands/stocks.md) · [`/crypto`](docs/commands/crypto.md) · [`/defi`](docs/commands/defi.md) · [`/monitor`](docs/commands/monitor.md) |
 | 📅 | **Schedule and automate** | One-off and recurring messages, reminders, your own shortcuts, several commands in one message, notes with `#tags` and alerts, recipient lists | [`/cron`](docs/commands/cron.md) · [`/alias`](docs/commands/alias.md) · [`/batch`](docs/commands/batch.md) · [`/notes`](docs/commands/notes.md) · [`/forward`](docs/commands/forward.md) |
 | 👥 | **Group management** | Mentions everyone, promotes and demotes, invite links, polls, welcome and goodbye messages, mutes and blocks | [`/everybody`](docs/commands/everybody.md) · [`/promote`](docs/commands/promote.md) · [`/invite`](docs/commands/invite.md) · [`/poll`](docs/commands/poll.md) · [`/welcome`](docs/commands/welcome.md) · [`/mute`](docs/commands/mute.md) · [`/warn`](docs/commands/warn.md) · [`/antilink`](docs/commands/antilink.md) |
@@ -259,12 +259,12 @@ Don't count on it.
 **The speech of a video, as text (no API, it runs on your server):**
 
 ```text
-/transcribe https://www.instagram.com/reel/XXXXXXXX/
+/stt https://www.instagram.com/reel/XXXXXXXX/
 ⏳ Transcribing the speech, this can take a while.
 📝 Transcription · 🗣️ pt · 1:23
 
 oi gente, hoje eu vou mostrar como fazer um pão de queijo bem fofinho em casa...
-(reply to a voice note)  /transcribe
+(reply to a voice note)  /stt
 ```
 
 **Your contacts, with photos, in one file:**
@@ -350,12 +350,12 @@ reacts to commands typed in any chat. Details in
 ## Installation
 
 All you need is Docker with Compose v2, Git and a phone with WhatsApp. The stable version is the
-latest release, currently `v1.0.23`:
+latest release, currently `v1.0.24`:
 
 ```bash
 git clone https://github.com/jpereira/zapbot.git
 cd zapbot
-git checkout v1.0.23
+git checkout v1.0.24
 
 cp config/.env.example config/.env   # fill in PHONE_NUMBER and the e-mail (see below)
 
@@ -463,7 +463,7 @@ and make the bot your own:
 | [`/debug`](https://jpereira.github.io/zapbot/commands/debug/) | | `admin` | Debug logs with levels, filter and copy to chats |
 | [`/defi`](https://jpereira.github.io/zapbot/commands/defi/) | | `admin` | Orca and Project X liquidity positions: balance, range, price and fees to collect, read on-chain; `-alert` warns when a position leaves and re-enters its range and when fees pass a value. `liquidswap`: LP positions on Aptos. `morpho` and `aave`: position, loans and risk on Morpho and Aave V3 |
 | [`/demote`](https://jpereira.github.io/zapbot/commands/demote/) | | `admin` · delegable | Removes someone's group admin |
-| [`/draw`](https://jpereira.github.io/zapbot/commands/draw/) | | `admin` · delegable | Draws an image or an animated GIF (`-gif`) with GPT Image (OpenAI); on a photo, edits or animates it |
+| [`/draw`](https://jpereira.github.io/zapbot/commands/draw/) | | `admin` · delegable | Draws an image or an animated GIF (`-gif`) with ChatGPT (GPT Image); on a photo, edits or animates it |
 | [`/everybody`](https://jpereira.github.io/zapbot/commands/everybody/) | | `admin` · delegable | Mentions everyone in the group |
 | [`/forward`](https://jpereira.github.io/zapbot/commands/forward/) | | `admin` | Forwards the replied message to people, groups and emails (`-to`), only if every recipient is found |
 | [`/games`](https://jpereira.github.io/zapbot/commands/games/) | | `user` | Group games: magic 8 ball, truth, dare and trivia |
@@ -500,10 +500,10 @@ and make the bot your own:
 | [`/status`](https://jpereira.github.io/zapbot/commands/status/) | | `admin` | Posts on your WhatsApp Status (text, photo or video); `/cron -status` schedules it |
 | [`/sticker`](https://jpereira.github.io/zapbot/commands/sticker/) | | `user` | Sticker from an image, video or link (`/get -st`), replying or as the caption of the media; with `-txt`, an animated text sticker |
 | [`/stocks`](https://jpereira.github.io/zapbot/commands/stocks/) | `/stock`, `/rates` | `user` | Quotes of the dollar, euro, pound and USDT against the real, and of stocks, ETFs and indexes (Yahoo Finance): USD, EUR, MSTR, PETR4.SA, `^GSPC`; `-alert` for price alerts |
+| [`/stt`](https://jpereira.github.io/zapbot/commands/stt/) | | `user` | Text of the speech of a link, video or audio (`/get -t` is a shortcut), replying or as the caption; `-ss` and `-es` pick a part |
 | [`/tldr`](https://jpereira.github.io/zapbot/commands/tldr/) | | `admin` · delegable | Summarizes the chat's conversation with ChatGPT (`30m`, `2h`, `1d`, `1h30m` or `300` messages; replying to a message, from it on) |
-| [`/transcribe`](https://jpereira.github.io/zapbot/commands/transcribe/) | | `user` | Text of the speech of a link, video or audio (`/get -t` is a shortcut), replying or as the caption; `-ss` and `-es` pick a part |
 | [`/translate`](https://jpereira.github.io/zapbot/commands/translate/) | | `user` | Translates the text or the replied message with Google Translate, no key needed; `-to en` changes the language |
-| [`/tts`](https://jpereira.github.io/zapbot/commands/tts/) | | `admin` · delegable | The text as a robot voice note (OpenAI) |
+| [`/tts`](https://jpereira.github.io/zapbot/commands/tts/) | | `admin` · delegable | The text as a voice note, with a local voice (Piper) or ChatGPT (`-gpt`) |
 | [`/unblock`](https://jpereira.github.io/zapbot/commands/unblock/) | | `admin` | Unblocks a person: by name, by number, by the `/block` list number or by replying to a message |
 | [`/unmute`](https://jpereira.github.io/zapbot/commands/unmute/) | | `admin` | Undoes `/mute`: by name, by list number, by replying to an alert, or all of them (`-all`) |
 | [`/uptime`](https://jpereira.github.io/zapbot/commands/uptime/) | | `user` | Run time and connection time |

@@ -230,5 +230,5 @@ Up to 366 days ahead. `-repeat monthly` (or `-r monthly`) keeps the day of the m
   which goes out to all destinations (and counts as 1 toward the limit); the same destination
   repeated counts once. If sending fails for one destination, the others receive it anyway. `-edit`,
   `-pause` and `-rm` apply to the whole item.
-- The limit is 50 items by default, adding up both types (setting `agenda.max`, from 1 to 500).
+- The limit is 50 items by default, adding up both types (setting `cron.max`, from 1 to 500).
 - The `(late: ...)` notice only appears when it goes out more than 5 minutes late.

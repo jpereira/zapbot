@@ -6,13 +6,13 @@ cima dela há um **servidor MCP experimental**, para um cliente de IA (o Claude 
 exemplo) enviar mensagens e ler as suas `/notes`.
 
 !!! danger "Ela fala pela sua conta do WhatsApp"
-    Quem tem a `api.key` manda mensagens **como você**. Trate como uma senha: longa, aleatória, em
+    Quem tem a `zapbot.api.key` manda mensagens **como você**. Trate como uma senha: longa, aleatória, em
     nenhum repositório. A API só escuta em `127.0.0.1` por padrão; para abrir para a rede, ponha um
     proxy reverso com HTTPS na frente.
 
 !!! warning "O servidor MCP é experimental"
     O protocolo MCP e as ferramentas podem mudar entre versões, e uma IA com acesso a elas pode agir
-    na sua conta. Ele vem desligado (`mcp.enabled`), só envia para os destinos do `api.sendTo` e é
+    na sua conta. Ele vem desligado (`zapbot.mcp.enabled`), só envia para os destinos do `zapbot.api.sendTo` e é
     limitado a **10 mensagens por minuto**.
 
 ## Ligando
@@ -20,9 +20,9 @@ exemplo) enviar mensagens e ler as suas `/notes`.
 Os settings, todos pelo [`/set`](commands/set.md) (valem ao reiniciar o bot):
 
 ```text
-/set api.key 5f8d0c1e2b7a49c3a1d6e4f0b9a8c7d2e1f3a4b5c6d7e8f90123456789abcde
-/set api.port 3100
-/set api.enabled on
+/set zapbot.api.key 5f8d0c1e2b7a49c3a1d6e4f0b9a8c7d2e1f3a4b5c6d7e8f90123456789abcde
+/set zapbot.api.port 3100
+/set zapbot.api.enabled on
 ```
 
 No Docker, publique a porta só na própria máquina, no `docker-compose.yml`:
@@ -32,10 +32,10 @@ ports:
   - "127.0.0.1:3100:3100"
 ```
 
-O `api.host` é `127.0.0.1` por padrão; dentro de um container, ponha `0.0.0.0` (a porta publicada
+O `zapbot.api.host` é `127.0.0.1` por padrão; dentro de um container, ponha `0.0.0.0` (a porta publicada
 acima é o que a mantém fechada para a rede).
 
-Sem a `api.key` a API não inicia (o log avisa).
+Sem a `zapbot.api.key` a API não inicia (o log avisa).
 
 ## Endpoints
 
@@ -48,14 +48,14 @@ Toda chamada (menos o `/health`) manda a chave no cabeçalho `Authorization: Bea
 | `GET` | `/status` | Versão, se o WhatsApp está conectado e se o MCP está ligado |
 | `GET` | `/notes?limit=N` | As últimas notas do [`/notes`](commands/notes.md) (padrão 20, até 100) |
 | `POST` | `/send` | `{ "to": "5521999999999", "text": "..." }`: manda uma mensagem de texto |
-| `POST` | `/mcp` | O servidor MCP (só com `mcp.enabled`) |
+| `POST` | `/mcp` | O servidor MCP (só com `zapbot.mcp.enabled`) |
 
 ```text
 $ curl -s http://127.0.0.1:3100/health
 {"ok":true,"connected":true}
 
 $ curl -s -H "Authorization: Bearer $KEY" http://127.0.0.1:3100/status
-{"name":"zapbot","version":"1.0.24 (devel)","connected":true,"mcp":false}
+{"name":"zapbot","version":"1.0.24","connected":true,"mcp":false}
 
 $ curl -s -H "Authorization: Bearer $KEY" "http://127.0.0.1:3100/notes?limit=2"
 [{"id":12,"text":"ligar pro banco #amanha","createdAt":1794800000000,"alertAt":null},
@@ -72,12 +72,12 @@ $ curl -s -X POST http://127.0.0.1:3100/send \
 ```
 
 O `to` é um telefone com DDI (conferido no WhatsApp) ou um id (`…@c.us`, `…@g.us`). Só pode ser o
-**seu próprio chat** ou algo da lista do [`api.sendTo`](settings.md); os ids dos grupos o
+**seu próprio chat** ou algo da lista do [`zapbot.api.sendTo`](settings.md); os ids dos grupos o
 [`/whois -id`](commands/whois.md#os-ids--id) mostra:
 
 ```text
-/set -a api.sendTo +5521999999999
-/set -a api.sendTo 120363012345678901@g.us
+/set -a zapbot.api.sendTo +5521999999999
+/set -a zapbot.api.sendTo 120363012345678901@g.us
 ```
 
 | Status | Quando |
@@ -85,7 +85,7 @@ O `to` é um telefone com DDI (conferido no WhatsApp) ou um id (`…@c.us`, `…
 | `200` | Enviou |
 | `400` | `to` ou `text` faltando/inválidos, texto com mais de 4000 caracteres ou JSON inválido |
 | `401` | Chave errada ou ausente |
-| `403` | O destino não está no `api.sendTo` |
+| `403` | O destino não está no `zapbot.api.sendTo` |
 | `404` | O número não está no WhatsApp, ou o caminho não existe |
 | `413` | Corpo com mais de 64 KB |
 | `429` | Mais de 10 mensagens em um minuto |
@@ -93,7 +93,7 @@ O `to` é um telefone com DDI (conferido no WhatsApp) ou um id (`…@c.us`, `…
 
 ## Servidor MCP (experimental)
 
-Com o `mcp.enabled` ligado, o `POST /mcp` fala JSON-RPC 2.0 do [Model Context
+Com o `zapbot.mcp.enabled` ligado, o `POST /mcp` fala JSON-RPC 2.0 do [Model Context
 Protocol](https://modelcontextprotocol.io) (os métodos `initialize`, `ping`, `tools/list` e
 `tools/call`, respondidos em JSON no próprio POST). As ferramentas:
 
@@ -105,7 +105,7 @@ Protocol](https://modelcontextprotocol.io) (os métodos `initialize`, `ping`, `t
 | `get_status` | Versão e conexão |
 
 ```text
-/set mcp.enabled on
+/set zapbot.mcp.enabled on
 ```
 
 O Claude Desktop conecta a servidores locais por linha de comando; para usar este, que é HTTP,
@@ -120,7 +120,7 @@ passe pela ponte `mcp-remote`, no `claude_desktop_config.json`:
         "mcp-remote", "http://127.0.0.1:3100/mcp",
         "--header", "Authorization: Bearer ${ZAPBOT_KEY}"
       ],
-      "env": { "ZAPBOT_KEY": "o mesmo valor da api.key" }
+      "env": { "ZAPBOT_KEY": "o mesmo valor da zapbot.api.key" }
     }
   }
 }
@@ -128,13 +128,13 @@ passe pela ponte `mcp-remote`, no `claude_desktop_config.json`:
 
 Depois peça, por exemplo: *"leia as minhas 3 últimas notas e me mande um resumo no WhatsApp"*. As
 descrições das ferramentas levam a marca `[EXPERIMENTAL]`, e o `send_message` só alcança o seu
-próprio chat a menos que você ponha mais destinos no `api.sendTo`.
+próprio chat a menos que você ponha mais destinos no `zapbot.api.sendTo`.
 
 ## Boas práticas
 
-- Deixe o `api.sendTo` vazio se não precisar e **nunca** use `all` com uma chave que outras
+- Deixe o `zapbot.api.sendTo` vazio se não precisar e **nunca** use `all` com uma chave que outras
   pessoas ou programas conseguem ler.
 - Mantenha a porta fechada para a internet. Se precisar abrir, use HTTPS e um firewall.
 - Mandar muitas mensagens seguidas é o que bane contas de WhatsApp: o limite de 10 por minuto
   existe por isso, não tente contorná-lo.
-- Troque a chave na dúvida: `/set api.key <nova>` e reinicie o bot.
+- Troque a chave na dúvida: `/set zapbot.api.key <nova>` e reinicie o bot.

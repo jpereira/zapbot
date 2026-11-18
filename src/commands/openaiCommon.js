@@ -83,7 +83,7 @@ const GIF_USAGE = {
 };
 const AUDIO_USAGE = {
     nome: '-audio', get detalhe() { return t('openai.detailAudio'); }, opcoes: ['audio'], setting: 'gpt.transcribe.model',
-    exemplo: (cmd) => `${cmd} -m <modelo> -audio`, daConta: (id) => /transcribe|whisper/i.test(id)
+    exemplo: (cmd) => `${cmd} -m <modelo> -audio`, daConta: (id) => /stt|whisper/i.test(id)
 };
 const VOICE_USAGE = {
     nome: '-voice', get detalhe() { return t('openai.detailVoice'); }, opcoes: ['voice'], setting: 'gpt.tts.model',

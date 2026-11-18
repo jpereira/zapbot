@@ -151,9 +151,9 @@ cria, lista e remove.
   tickers terminados em `.SA`); o `/crypto`, em dólares (par `<TOKEN>USDT`).
 - Se o preço **já** está do lado pedido, o alerta não é criado (dispararia na hora): o bot mostra o
   valor atual.
-- Os preços são consultados a cada 5 minutos (setting `alert.intervalMin`, de 1 a 60), uma vez por
-  moeda. O limite é de 20 alertas no total (setting `alert.max`, de 1 a 100), somando `/stocks` e
-  `/crypto`.
+- Os preços são consultados a cada 5 minutos (setting `stocks.alert.intervalMin`, de 1 a 60), uma vez por
+  moeda. O limite é de 20 alertas (setting `stocks.alert.max`, de 1 a 100). O `/crypto` tem os seus:
+  `crypto.alert.intervalMin` e `crypto.alert.max`.
 - No `-rm` com vários nºs, se algum não existir, nenhum é removido (o bot diz quais faltam). Os nºs
   são os da lista de antes de remover.
 - Os alertas ficam na tabela `price_alerts` e sobrevivem a reinícios.
@@ -198,7 +198,7 @@ destino é um contato, grupo, número ou e-mail. Nomes exatos têm prioridade, c
 /stocks -alert -to familia EUR < 5,50           → o -to pode vir antes da regra
 ```
 
-- Com vários `-to`, é um alerta só (conta 1 no `alert.max`): ele dispara uma vez e avisa em todos
+- Com vários `-to`, é um alerta só (conta 1 no `stocks.alert.max`): ele dispara uma vez e avisa em todos
   os destinos. Se o envio falhar num, os outros recebem assim mesmo. O mesmo destino repetido conta
   uma vez.
 - Se o nome servir para mais de um contato (ou grupo), o bot lista e você responde com o nº; o

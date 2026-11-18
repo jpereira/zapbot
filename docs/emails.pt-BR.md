@@ -48,7 +48,7 @@ ao aparelho *deles*.
 
 Quando o WhatsApp cai, o aviso no privado não chega. Por isso os eventos importantes também vão por
 e-mail, pelo mesmo SMTP do QR Code (`QRCODE_EMAIL_SMTP_*`, independente do `QRCODE_EMAIL_ENABLE`).
-Ligado por padrão; desligue com `/set email.alerts off`. Sem `QRCODE_EMAIL_SMTP_HOST`, `_USER` e
+Ligado por padrão; desligue com `/set zapbot.email.alerts off`. Sem `QRCODE_EMAIL_SMTP_HOST`, `_USER` e
 `_TO` preenchidos, nada é enviado.
 
 | Assunto | Quando |

@@ -1,7 +1,7 @@
 /*
  * Flood protection: a non-admin repeats the same command (the aliases
- * count as it) at most flood.maxCommandRepeated times in
- * flood.intervalCommand seconds. Over it: the bot warns once and ignores everything
+ * count as it) at most bot.flood.maxCommandRepeated times in
+ * bot.flood.intervalCommand seconds. Over it: the bot warns once and ignores everything
  * of that person until the interval ends. It stays in memory: a restart resets it.
  */
 
@@ -17,10 +17,10 @@ const blockedAlt = new Map();   // who → until when the bot ignores them
  * notify: just went over the limit (the notice goes out only once)
  */
 function checkFlood(who, commandAlt, nowAlt = Date.now()) {
-    const max = getSetting('flood.maxCommandRepeated');
+    const max = getSetting('bot.flood.maxCommandRepeated');
     if (!max || !who) return { liberado: true };
 
-    const seconds = getSetting('flood.intervalCommand');
+    const seconds = getSetting('bot.flood.intervalCommand');
     const window = seconds * 1000;
 
     const ate = blockedAlt.get(who);

@@ -1,5 +1,5 @@
 {
-  "summary": "O texto de uma imagem (OCR)",
+  "summary": "O texto de uma imagem (OCR), lido pelo ChatGPT",
   "usage": "/ocr [-status|-s]",
   "help": "Lê o texto de uma foto pelo ChatGPT (visão) e responde com ele. Respondendo a foto, ou mandando a foto com /ocr na legenda. Exige OPENAI_API_KEY no config/.env ou o setting gpt.api.key.",
   "ex": [

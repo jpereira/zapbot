@@ -14,8 +14,9 @@ const { printDebug, printError, printInfo } = require('../log');
 const { STICKER_ANIMATED_MAX_BYTES, ATTEMPTS_STICKER, argsDoFfmpeg, applyPosShortcuts, fitSticker, readPosition, thumbnailDoLink } = require('../media');
 const { getSetting, isDebugMode, stickerMeta } = require('../settings');
 const { t } = require('../i18n');
-const { WITHOUT_KEY, keyOpenAi, errorOpenAi, askOnChat } = require('../openaiChat');
+const { WITHOUT_KEY, keyOpenAi, errorOpenAi, askOnChat, transcribeAudio } = require('../openaiChat');
 const { downloadPhoto, postPhotos } = require('../postPhotos');
+const { pickEngine } = require('../engines');
 const { transcriptionCommand, transcribeFile } = require('../transcription');
 const { humanSize } = require('../util/files');
 const { wait } = require('../util/format');
@@ -52,7 +53,7 @@ async function downloadMedia({ msg, opts, quotedMsg, senderName }, { cmd }) {
     if (origin.citada) {
         media = await downloadQuoted(msg, origin.citada);
         if (!media) return;
-        if (opts.opt.transcribe) {
+        if (opts.opt.stt) {
             if (!isAudioOrVideo(media)) {
                 await msg.reply(t('get.transcribeNeedsAudio'));
                 return;
@@ -71,7 +72,7 @@ async function downloadMedia({ msg, opts, quotedMsg, senderName }, { cmd }) {
     getInProgress++;
 
     try {
-        if (opts.opt.transcribe) {
+        if (opts.opt.stt) {
             await transcribeAndSend({ msg, opts, senderName, url: origin.url, media });
             return;
         }
@@ -170,7 +171,7 @@ async function optionsValid(msg, opts, cmd) {
         await msg.reply(t('get.endBeforeStart'));
         return false;
     }
-    if (opts.opt.transcribe && (opts.opt.audio || opts.opt.sticker || opts.given.has('pos'))) {
+    if (opts.opt.stt && (opts.opt.audio || opts.opt.sticker || opts.given.has('pos'))) {
         await msg.reply(t('get.transcribeAlone'));
         return false;
     }
@@ -467,24 +468,37 @@ const mmss = (seg) => `${Math.floor(seg / 60)}:${String(Math.round(seg % 60)).pa
 const TRANSCRIPTION_MAX_CHARACTERS = 60000;
 
 /**
- * /get -transcribe: the speech of the link (or of the replied video/audio) as text, transcribed
+ * /get -stt: the speech of the link (or of the replied video/audio) as text, transcribed
  * locally. From the link it downloads only the lowest-quality audio (it is the lightest and whisper
  * works at 16 kHz mono), converts to 16 kHz mono wav (with the -ss/-es cut) and transcribes.
  * O aviso "Processando" vira o texto.
  */
 async function transcribeAndSend({ msg, opts, senderName, url, media }) {
+    let engine;
+    try {
+        engine = pickEngine(opts, 'stt.engine');
+    } catch (e) {
+        await msg.reply(e.message);
+        return;
+    }
+    const gpt = engine === 'gpt';
     const id = crypto.randomUUID();
     const raw = path.join(TMP_DIR, `${id}_fala.${media ? extension(media) : '%(ext)s'}`);
-    const wav = path.join(TMP_DIR, `${id}_fala_16k.wav`);
+    // -gpt sends the audio to OpenAI (25 MB ceiling): a small Opus; the local engine reads 16 kHz mono wav
+    const wav = path.join(TMP_DIR, `${id}_fala_16k.${gpt ? 'ogg' : 'wav'}`);
     let logCmdFile = null;
     let logCmd = null;
     let notice = null;
+    let engineTip;
 
     try {
         if (url) await checkUrl(url, senderName);
-        // -sum uses the OpenAI key (/gpt): better to know before spending the CPU
-        if (opts.opt.summary && !keyOpenAi()) throw new Error(WITHOUT_KEY('/transcribe'));
-        notice = await msg.reply(t('get.processingTranscribe'), null, { linkPreview: false });
+        // -gpt and -sum use the OpenAI key (/gpt): better to know before spending the CPU
+        if ((gpt || opts.opt.summary) && !keyOpenAi()) throw new Error(WITHOUT_KEY('/stt'));
+        // Who transcribes (and summarizes), in the wait notice and in the final tip
+        const engineName = (gpt ? 'ChatGPT' : 'faster-whisper') + (opts.opt.summary && !gpt ? ' + ChatGPT' : '');
+        engineTip = t('get.engineTip', { engine: engineName });
+        notice = await msg.reply(t('get.processingTranscribe', { engine: engineName }), null, { linkPreview: false });
 
         fs.mkdirSync(TMP_DIR, { recursive: true });
         logCmdFile = path.join(TMP_DIR, `${id}_cmd.log`);
@@ -509,7 +523,7 @@ async function transcribeAndSend({ msg, opts, senderName, url, media }) {
             '-y',
             ...(startSec != null ? ['-ss', String(startSec)] : []),
             ...(endSec != null ? ['-to', String(endSec)] : []),
-            '-i', fileAlt, '-vn', '-ac', '1', '-ar', '16000', '-c:a', 'pcm_s16le', wav
+            '-i', fileAlt, '-vn', '-ac', '1', '-ar', '16000', ...(gpt ? ['-c:a', 'libopus', '-b:a', '24k'] : ['-c:a', 'pcm_s16le']), wav
         ];
         const cmdFfmpeg = [BIN_FFMPEG, ...ffmpegArgs].join(' ');
         fs.writeSync(logCmd, `\n# Executando: ${cmdFfmpeg}\n`);
@@ -520,13 +534,19 @@ async function transcribeAndSend({ msg, opts, senderName, url, media }) {
         }
 
         const duration = await fileDuration(wav);
-        const maxMin = getSetting('transcribe.maxMinutes');
+        const maxMin = getSetting('stt.maxMinutes');
         if (duration > maxMin * 60) throw new Error(t('get.transcribeTooLong', { dur: mmss(duration), max: maxMin }));
 
         let r;
         const start = Date.now();
         try {
-            r = await transcribeFile(wav);
+            r = gpt
+                ? {
+                    texto: await transcribeAudio({ cmd: '/stt', audio: { arquivo: 'speech.ogg', mimetype: 'audio/ogg', data: fs.readFileSync(wav).toString('base64') } }),
+                    idioma: 'auto',
+                    duracao: duration
+                }
+                : await transcribeFile(wav);
         } catch (inner) {
             throw new Error(t('get.transcribeFailed'), { cause: inner });
         }
@@ -535,7 +555,9 @@ async function transcribeAndSend({ msg, opts, senderName, url, media }) {
             let textMsg = '🛠️ *Verbose Mode*\n\n';
             if (cmdYt) textMsg += `💾 *yt-dlp*: _${cmdYt}_\n\n`;
             textMsg += `🔗 *ffmpeg*: _${cmdFfmpeg}_\n\n`;
-            textMsg += `🧠 *faster-whisper* (${((Date.now() - start) / 1000).toFixed(1)} s): _${transcriptionCommand(wav)}_\n\n`;
+            textMsg += gpt
+                ? `🧠 *OpenAI* (${((Date.now() - start) / 1000).toFixed(1)} s): _${getSetting('gpt.transcribe.model')}_\n\n`
+                : `🧠 *faster-whisper* (${((Date.now() - start) / 1000).toFixed(1)} s): _${transcriptionCommand(wav)}_\n\n`;
             textMsg += '🧩 *cmdArgs*:```\n' + JSON.stringify(opts, null, 4) + '\n```';
             await msg.reply(textMsg, null, { linkPreview: false });
         }
@@ -545,9 +567,9 @@ async function transcribeAndSend({ msg, opts, senderName, url, media }) {
         if (!textAlt) {
             await completeNotice(msg, notice, t('get.transcribeEmpty'), { linkPreview: false });
         } else if (opts.opt.summary) {
-            await completeNotice(msg, notice, await speechSummary(r, duration, textAlt), { linkPreview: false });
+            await completeNotice(msg, notice, (await speechSummary(r, duration, textAlt)) + engineTip, { linkPreview: false });
         } else {
-            await completeNotice(msg, notice, t('get.transcribeResult', { lang: r.idioma, dur: mmss(duration), text: textAlt }), { linkPreview: false });
+            await completeNotice(msg, notice, t('get.transcribeResult', { lang: r.idioma, dur: mmss(duration), text: textAlt }) + engineTip, { linkPreview: false });
         }
     } catch (e) {
         printError(e.message);
@@ -577,12 +599,12 @@ async function speechSummary(r, duration, textAlt) {
     let summary;
     try {
         summary = await askOnChat({
-            cmd: '/transcribe',
+            cmd: '/stt',
             sistema: t('get.sumInstructions'),
             texto: t('get.sumPrompt', { text: textAlt })
         });
     } catch (err) {
-        summary = errorOpenAi(err, '/transcribe');
+        summary = errorOpenAi(err, '/stt');
     }
     // With the summary, the 60 thousand character cap applies to the sum
     const head = t('get.transcribeSummary', { lang: r.idioma, dur: mmss(duration), summary: summary, text: '' });

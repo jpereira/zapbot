@@ -1,12 +1,32 @@
 {
-  "summary": "O texto numa nota de voz",
-  "usage": "/tts [-status|-s] [<texto>]",
-  "help": "Transforma o texto numa nota de voz de robô (API de voz da OpenAI), como o /gpt -voice. Até 4096 caracteres. Respondendo um texto, fala a mensagem (um áudio é transcrito antes), e o que você digitou vira o estilo da fala (\"fale como um robô\"). Exige OPENAI_API_KEY no config/.env ou o setting gpt.api.key.",
+  "summary": "O texto numa nota de voz, com uma voz local (Piper) ou o ChatGPT (-gpt)",
+  "usage": "/tts [-gpt|-g] [-local|-l] [-status|-s] [<texto>]",
+  "help": "Transforma o texto numa nota de voz: por padrão com uma voz local do Piper (sem chave), em português ou inglês conforme o texto; com -gpt (-g), pelo ChatGPT (API de voz da OpenAI, como o /gpt -voice), que exige a chave da OpenAI. Até 4096 caracteres. Respondendo um texto, fala a mensagem (um áudio é transcrito antes), e o que você digitou vira o estilo da fala (\"fale como um robô\"). O -gpt exige OPENAI_API_KEY no config/.env ou o setting gpt.api.key.",
   "ex": [
     "/tts Bom dia!",
     "/tts fale devagar"
   ],
   "cmd_opts": [
+    {
+      "opts": [
+        "gpt",
+        "g"
+      ],
+      "desc": "Fala pelo ChatGPT (API de voz da OpenAI, gasta a sua conta) em vez da voz local do Piper. Sem -gpt nem -local, vale o setting tts.engine.",
+      "ex": [
+        "/tts -gpt Bom dia!"
+      ]
+    },
+    {
+      "opts": [
+        "local",
+        "l"
+      ],
+      "desc": "Fala com a voz local do Piper (sem chave, usa a CPU do servidor), mesmo com o tts.engine em gpt.",
+      "ex": [
+        "/tts -local Bom dia!"
+      ]
+    },
     {
       "opts": [
         "status",

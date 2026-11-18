@@ -20,7 +20,10 @@ module.exports = {
     // src/comandos/openaiComum.js
     'draw.imageBelow': '🖼️ Imagem gerada abaixo.',
     'draw.gifBelow': '🎞️ GIF gerado abaixo.',
-    'gpt.voiceBelow': '🔊 Áudio gerado abaixo.',
+    'engine.both': '❌ Use só um: -gpt (-g) ou -local (-l).',
+    'tts.localFailed': '❌ A voz local falhou: {error}',
+    'gpt.voiceBelow': '🔊 Áudio gerado abaixo.\n💡 _Gerado por {engine}_',
+    'tts.processing': '⏳ Gerando a voz com {engine}, aguarde.',
     'openai.processing': '⏳ Processando o {cmd}, aguarde.',
     'openai.ownerOnly': '⛔ Apenas o dono do bot (ou um admin) pode {acao}.',
     'openai.kindAudio': 'transcrição',

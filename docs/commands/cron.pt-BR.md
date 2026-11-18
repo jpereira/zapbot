@@ -229,5 +229,5 @@ vai no último dia dos meses mais curtos e volta ao 31 depois.
   todos os destinos (e conta 1 no limite); o mesmo destino repetido conta uma vez. Se o envio falhar
   num destino, os outros recebem assim mesmo. Os `-edit`, `-pause` e `-rm` valem para o item
   inteiro.
-- O limite padrão é de 50 itens, somando os dois tipos (setting `agenda.max`, de 1 a 500).
+- O limite padrão é de 50 itens, somando os dois tipos (setting `cron.max`, de 1 a 500).
 - O aviso `(atrasado: ...)` só aparece quando o envio sai com mais de 5 minutos de atraso.

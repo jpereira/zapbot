@@ -18,8 +18,10 @@ through ffmpeg. If the media has a link in the caption, the media wins.
 | `-pc` | | Same as `-pos center` |
 | `-pt` | | Same as `-pos top` |
 | `-audio`, `-a` | | Extracts only the audio (`.mp3`) |
-| `-transcribe`, `-t` | | Shortcut for [`/transcribe`](transcribe.md): replies with the **text of the speech** instead of the file. See [Transcribe the speech](#transcribe-the-speech--transcribe) |
-| `-summary`, `-sum` | | With `-t`: also summarizes the speech with ChatGPT. See [Transcribe the speech](#transcribe-the-speech--transcribe) |
+| `-stt`, `-t` | | Shortcut for [`/stt`](stt.md): replies with the **text of the speech** instead of the file. See [Transcribe the speech](#transcribe-the-speech--stt) |
+| `-gpt`, `-g` | | With `-t`: transcribes with ChatGPT (OpenAI API, spends your account) instead of the local faster-whisper. Without `-gpt` or `-local`, the [`stt.engine`](../settings.md) setting decides |
+| `-local`, `-l` | | With `-t`: transcribes with the local faster-whisper (no key, uses the server CPU), even with `stt.engine` at `gpt` |
+| `-summary`, `-sum` | | With `-t`: also summarizes the speech with ChatGPT. See [Transcribe the speech](#transcribe-the-speech--stt) |
 | `-startSec`, `-ss` | `<time>` | Starts at this point of the original video (default 0), in seconds (`22`, `1.5`) or in `min:sec` (`09:33`, or `h:min:sec`). With a `-` in front, counts from the **end** of the video (`-10`, `-01:44`) |
 | `-endSec`, `-es` | `<time>` | Ends at this point of the original video, in the same format as `-ss` (`-es -5` ends 5 s before the end); must be greater than the start. Also works without `-ss` and for stickers |
 | `-verbose`, `-v` | | Shows the parameters used in yt-dlp/ffmpeg |
@@ -80,7 +82,7 @@ The text of the post, all of it here...
   characters; if the text is longer, the rest comes in the next message.
 - A photo that doesn't download is left out and the final notice says how many. If none does, the reply is
   `This link has no video or audio to download (a post with only photos?)`.
-- With `-a`, `-st`, `-t` or in [`/transcribe`](transcribe.md) the photos are not sent (there is no audio to
+- With `-a`, `-st`, `-t` or in [`/stt`](stt.md) the photos are not sent (there is no audio to
   take): the reply is that notice.
 - Photos are downloaded with the same anti-SSRF protection as the rest of `/get`. A carousel that mixes photos
   and videos is not handled yet.
@@ -101,9 +103,9 @@ Docker, `/app/cache/tmp`) as `<sha1>_original.mp4`, and the same link isn't down
   in cache counts as a regular temporary file (deleted after 2 hours).
 - `/cache -all` deletes the download cache along with the other temporary files.
 
-#### Transcribe the speech (`-transcribe`)
+#### Transcribe the speech (`-stt`)
 
-`-transcribe` (`-t`) is a shortcut for [`/transcribe`](transcribe.md): it gets the text of what is said in the video, and replies with it instead of
+`-stt` (`-t`) is a shortcut for [`/stt`](stt.md): it gets the text of what is said in the video, and replies with it instead of
 sending a file. It runs **inside the server**, with [faster-whisper](https://github.com/SYSTRAN/faster-whisper)
 (open source, on the CPU): no OpenAI, no cost per minute, and the audio doesn't leave the homelab.
 
@@ -124,12 +126,12 @@ sending a file. It runs **inside the server**, with [faster-whisper](https://git
 - **Replying** to a WhatsApp video or audio (a voice note too) transcribes it, with no download.
 - `-ss` and `-es` pick a part (same format as always, `-ss -60` is the last minute).
 - The language is detected by whisper. If it gets it wrong on a short clip, fix it with
-  `/set transcribe.language pt`.
-- The model is `transcribe.model` (default `small`, which comes in the Docker image). `medium` or
+  `/set stt.language pt`.
+- The model is `stt.model` (default `small`, which comes in the Docker image). `medium` or
   `large-v3-turbo` are better and slower; they are downloaded the first time they are used.
-- At most `transcribe.maxMinutes` (default 20) of audio, otherwise the bot asks for a part with
+- At most `stt.maxMinutes` (default 20) of audio, otherwise the bot asks for a part with
   `-ss` and `-es`. It uses the server CPU, and counts in the limit of 2 `/get` at once.
-- `-sum` (with `-t`) also summarizes, as in [`/transcribe`](transcribe.md).
+- `-sum` (with `-t`) also summarizes, as in [`/stt`](stt.md).
 - `-v` also sends the commands that ran (yt-dlp, ffmpeg, faster-whisper) and how long the
   transcription took, before the text.
 - It doesn't mix with `-a`, `-st` or `-pos`. Instagram may ask for login: it uses the same

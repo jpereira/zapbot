@@ -52,7 +52,7 @@ initialize failed: net::ERR_NAME_NOT_RESOLVED at https://web.whatsapp.com/
 ♻️ Retrying to connect in 15s (consecutive failures: 1).
 ♻️ Restarting client. Reason: nova tentativa nº 2 (heartbeat: OPENING)
 ...
-🤖 ZapBot 1.0.24 (devel) inicializado!
+🤖 ZapBot 1.0.24 inicializado!
 ```
 
 - Um e-mail só, na primeira falha (`❌ Falha ao reiniciar`); com a internet fora, ele também falha, e
@@ -93,7 +93,7 @@ adicione ao serviço `zapbot` o label `autoheal=true`:
 | `Too many bad auth attempts` (`535 5.7.0`, `EAUTH`) ou `SMTP em pausa` | O provedor bloqueou o login por tentativas erradas (senha de app errada ou revogada). O bot para de tentar por 30 minutos para não piorar. Confira a senha, espere o bloqueio passar e teste com `/bot -test`. Veja [Pausa depois de falha de login](emails.md#pausa-depois-de-falha-de-login). |
 | `Erro ao enviar QR por email: ... self-signed certificate` / `unable to verify` | O certificado do SMTP não é válido. Use o host oficial do provedor (o nome precisa bater com o certificado). |
 | E-mail do QR chega no spam | `QRCODE_EMAIL_SMTP_FROM` diferente da conta SMTP. |
-| Não chegam os alertas por e-mail | Confira `QRCODE_EMAIL_SMTP_HOST`, `_USER` e `_TO` (sem eles nada é enviado) e o setting `email.alerts` (`/set email.alerts`). Falhas do SMTP aparecem no log como `Alerta por e-mail '...' falhou`. |
+| Não chegam os alertas por e-mail | Confira `QRCODE_EMAIL_SMTP_HOST`, `_USER` e `_TO` (sem eles nada é enviado) e o setting `zapbot.email.alerts` (`/set zapbot.email.alerts`). Falhas do SMTP aparecem no log como `Alerta por e-mail '...' falhou`. |
 | Um comando não responde | Veja nos logs se aparece `executed unknown command`: o nome está errado ou o comando está desativado (`commands.disabled`, ou `disabled: true` na definição do comando). Dos outros, só aparece com o [`/debug`](commands/debug.md) ligado. |
 | `docker ps` mostra `(unhealthy)` | O bot parou de gravar o heartbeat. Veja o motivo com `docker inspect --format '{{json .State.Health}}' zapbot` e os logs; reinicie com `docker compose -f docker/docker-compose.yml restart zapbot`. Veja [Saúde do container](#saúde-do-container-heartbeat). |
 | `make test`: `No such built-in module: node:sqlite` | Node antigo: os testes precisam do Node 22.13+. |

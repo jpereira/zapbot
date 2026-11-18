@@ -56,7 +56,7 @@ async function cmdGiphy({ msg, args }) {
                     timeout: 15000,
                     params: {
                         api_key: apiKey,
-                        tag: input || getSetting('gif.tag'),
+                        tag: input || getSetting('giphy.tag'),
                         rating: 'pg-13'
                     }
                 }

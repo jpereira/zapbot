@@ -1,14 +1,14 @@
 /*
- * /transcribe: Transcribes the speech of a video or audio
+ * /stt: Transcribes the speech of a video or audio
  */
 
 const { USER } = require('../../roles').ROLES;
 
 module.exports = {
-    cmd: '/transcribe',
-    usage: '/transcribe [OPTION]... <url>  or  /transcribe [OPTION]... (replying to a video, audio or link)',
+    cmd: '/stt',
+    usage: '/stt [OPTION]... <url>  or  /stt [OPTION]... (replying to a video, audio or link)',
     summary: 'Transcribes the speech of a video or audio',
-    help: 'Transcribes the speech of a video or audio to text. /get -transcribe (-t) is a shortcut for it. From a URL (Instagram, YouTube, X, TikTok and other yt-dlp sites) or the replied link, downloads only the lowest-quality audio. Replying to any video or audio file (a voice note too), uses it. Runs on the server (faster-whisper), with no cost per minute.',
+    help: 'Transcribes the speech of a video or audio to text. /get -stt (-t) is a shortcut for it. From a URL (Instagram, YouTube, X, TikTok and other yt-dlp sites) or the replied link, downloads only the lowest-quality audio. Replying to any video or audio file (a voice note too), uses it. By default it runs on the server (faster-whisper, Portuguese, English and other languages detected by itself), with no cost per minute; with -gpt (-g), through ChatGPT, which needs the OpenAI key.',
     cmd_opts: [
         {
             opts: ['startSec', 'ss'],
@@ -23,10 +23,22 @@ module.exports = {
             ex: ['-es 90', '-es -5']
         },
         {
+            opts: ['gpt', 'g'],
+            values: [],
+            desc: 'Transcribes with ChatGPT (OpenAI API, spends your account) instead of the local faster-whisper. Without -gpt or -local, the stt.engine setting decides.',
+            ex: ['/stt -gpt https://www.instagram.com/reel/...']
+        },
+        {
+            opts: ['local', 'l'],
+            values: [],
+            desc: 'Transcribes with the local faster-whisper (no key, runs on the server CPU), even when stt.engine is gpt.',
+            ex: ['/stt -local https://www.instagram.com/reel/...']
+        },
+        {
             opts: ['summary', 'sum'],
             values: [],
             desc: 'Also summarizes the speech with ChatGPT (same key as /gpt, which spends your OpenAI account): the summary in topics on top and the whole transcription below.',
-            ex: ['/transcribe -sum https://www.instagram.com/reel/...']
+            ex: ['/stt -sum https://www.instagram.com/reel/...']
         },
         {
             opts: ['verbose', 'v'],

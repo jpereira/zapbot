@@ -152,8 +152,9 @@ Each alert fires once and is removed. Only the bot owner (and the
   reais for the B3, tickers ending in `.SA`); `/crypto`, in dollars (`<TOKEN>USDT` pair).
 - If the price is **already** on the requested side, the alert isn't created (it would fire right
   away): the bot shows the current value.
-- Prices are checked every 5 minutes (setting `alert.intervalMin`, 1 to 60), once per currency. The
-  limit is 20 alerts in total (setting `alert.max`, 1 to 100), `/stocks` and `/crypto` together.
+- Prices are checked every 5 minutes (setting `stocks.alert.intervalMin`, 1 to 60), once per currency. The
+  limit is 20 alerts (setting `stocks.alert.max`, 1 to 100). `/crypto` has its own: `crypto.alert.intervalMin`
+  and `crypto.alert.max`.
 - With `-rm` and several numbers, if any doesn't exist, none is removed (the bot says which ones are
   missing). The numbers are the ones from the list before removing.
 - Alerts are kept in the `price_alerts` table and survive restarts.
@@ -199,7 +200,7 @@ message. The destination is a contact, group, number or email. Exact names take 
 /stocks -alert -to familia EUR < 5,50           → -to can come before the rule
 ```
 
-- With several `-to`, it's a single alert (counts as 1 in `alert.max`): it fires once and notifies
+- With several `-to`, it's a single alert (counts as 1 in `stocks.alert.max`): it fires once and notifies
   all the destinations. If sending fails on one, the others still get it. The same destination
   repeated counts once.
 - If the name matches more than one contact (or group), the bot lists them and you reply with the

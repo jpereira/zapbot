@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Transcreve um áudio localmente com o faster-whisper (CPU, int8). Usado pelo /get -transcribe.
+Transcreve um áudio localmente com o faster-whisper (CPU, int8). Usado pelo /get -stt.
 
   transcribe.py <audio> <modelo> <pasta-dos-modelos> [idioma]
   transcribe.py --version

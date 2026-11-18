@@ -67,14 +67,34 @@
     },
     {
       "opts": [
-        "transcribe",
+        "stt",
         "t"
       ],
       "values": [],
-      "desc": "Atalho do /transcribe: responde com o texto da fala em vez do arquivo. De um link, baixa só o áudio de menor qualidade; respondendo um vídeo ou áudio, usa ele. Transcreve localmente (faster-whisper). Vale com -ss e -es.",
+      "desc": "Atalho do /stt: responde com o texto da fala em vez do arquivo. De um link, baixa só o áudio de menor qualidade; respondendo um vídeo ou áudio, usa ele. Transcreve localmente (faster-whisper). Vale com -ss e -es.",
       "ex": [
         "/get -t https://www.instagram.com/reel/...",
         "/get -t -ss 30 -es 90 <url>"
+      ]
+    },
+    {
+      "opts": [
+        "gpt",
+        "g"
+      ],
+      "desc": "Com -t: transcreve pelo ChatGPT (API da OpenAI, gasta a sua conta) em vez do faster-whisper local. Sem -gpt nem -local, vale o setting stt.engine.",
+      "ex": [
+        "/get -t -gpt https://www.instagram.com/reel/..."
+      ]
+    },
+    {
+      "opts": [
+        "local",
+        "l"
+      ],
+      "desc": "Com -t: transcreve com o faster-whisper local (sem chave, usa a CPU do servidor), mesmo com o stt.engine em gpt.",
+      "ex": [
+        "/get -t -local https://www.instagram.com/reel/..."
       ]
     },
     {

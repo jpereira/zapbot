@@ -1,7 +1,7 @@
 {
-  "summary": "Desenha uma imagem com o GPT Image (OpenAI)",
+  "summary": "Desenha uma imagem com o ChatGPT (GPT Image)",
   "usage": "/draw [pedido]  ou  /draw -gif [-frames N] [-ms N] [pedido]  ou  /draw [-gif] -model [modelo]",
-  "help": "Desenha uma imagem com o GPT Image (OpenAI); com -gif, um GIF animado (GPT Image 2.6), e numa foto (legenda ou resposta) edita a foto ou a anima. Respondendo uma mensagem, o texto dela entra no pedido. Precisa de OPENAI_API_KEY no config/.env ou do setting gpt.api.key.",
+  "help": "Desenha uma imagem com o ChatGPT (GPT Image); com -gif, um GIF animado (GPT Image 2.6), e numa foto (legenda ou resposta) edita a foto ou a anima. Respondendo uma mensagem, o texto dela entra no pedido. Precisa de OPENAI_API_KEY no config/.env ou do setting gpt.api.key.",
   "ex": [
     "/draw -p @me @this desenhe nós dois como piratas",
     "/draw -g um gato dançando"

@@ -72,7 +72,7 @@ module.exports = {
     'alerts.list': '🔔 *PRICE ALERTS* _({cmd})_\n\n{items}\n\n💡 _Checked every {every}_\n💡 _Remove with {cmd} -alert -rm <num...|all>_',
     'alerts.invalidRule': '❌ Invalid rule: "{rule}"\n💡 _Format: {cmd} -alert {example} (use > or <; no thousands separator)_',
     'alerts.unsupported': '❌ Unsupported currency: {sym}\n💡 _See the supported ones with {cmd} -l_',
-    'alerts.limit': '❌ Limit of {max} alerts reached (alert.max setting). Remove one first.',
+    'alerts.limit': '❌ Limit of {max} alerts reached (setting {setting}). Remove one first.',
     'alerts.priceFailed': "⚠️ I couldn't check the price of {sym} right now. Try again in a moment.",
     'alerts.alreadyMet': 'ℹ️ {pair} is already {op} {target}: it is now at *{price}*.',
     'alerts.whereIn': 'in {dest}',

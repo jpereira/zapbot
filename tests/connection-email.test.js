@@ -53,10 +53,10 @@ describe('alertas por e-mail', () => {
         assert.deepEqual(subjects(), ['[ZapBot] 🧪 Teste repetição', '[ZapBot] 🧪 Teste repetição', '[ZapBot] 🧪 Outro evento']);
     });
 
-    test('não envia com email.alerts off ou sem SMTP configurado', async () => {
-        await bot.setSetting('email.alerts', false);
+    test('não envia com zapbot.email.alerts off ou sem SMTP configurado', async () => {
+        await bot.setSetting('zapbot.email.alerts', false);
         await alertPerEmail('🧪 Desligado');
-        await bot.setSetting('email.alerts', true);
+        await bot.setSetting('zapbot.email.alerts', true);
         delete process.env.QRCODE_EMAIL_SMTP_TO;
         await alertPerEmail('🧪 Sem SMTP');
         assert.deepEqual(emails, []);
