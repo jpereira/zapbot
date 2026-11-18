@@ -11,16 +11,21 @@ Exibe o menu com os comandos, ou a ajuda de um só. Cada um vê só o que pode u
   e um `admin` que o dono liberou (`/bot +u +cmd /gpt`) aparece para quem o recebeu. O `/help` e o
   `/whois` sempre passam.
 
-O `/help` sozinho lista um comando por linha, só com o que ele faz (o `summary` da
-definição do comando): o comando em **negrito** e a descrição em _itálico_ (formatação do WhatsApp, então
-quebra sozinha na largura do celular), e termina com a dica de como ver o resto:
+O `/help` sozinho lista os comandos só com o que cada um faz (o `summary` da definição
+do comando): o comando em **negrito** e, na linha de baixo, a descrição em _itálico_ (formatação do WhatsApp,
+então quebra sozinha na largura do celular, e todas as descrições começam na mesma margem), e termina com a dica de como ver o resto:
 
 ````text
 /help
 
-*/alias* - _Salva atalhos para comandos com argumentos_
-*/ascii* - _O texto em letras grandes de ASCII_
-*/backup* - _Backup do banco: lista, detalha, restaura, envia ou apaga_
+*/alias*
+_Salva atalhos para comandos com argumentos_
+
+*/ascii*
+_O texto em letras grandes de ASCII_
+
+*/backup*
+_Backup do banco: lista, detalha, restaura, envia ou apaga_
 ...
 
 💡 Utilize */help /comando* ou */comando -h* para mais informações.
@@ -38,11 +43,15 @@ comando é `owner`):
 /help -r
 
 🔸 Role: admin
-*/alias* - _Salva atalhos para comandos com argumentos_
+
+*/alias*
+_Salva atalhos para comandos com argumentos_
 ...
 
 🔸 Role: user
-*/ascii* - _O texto em letras grandes de ASCII_
+
+*/ascii*
+_O texto em letras grandes de ASCII_
 ...
 ````
 

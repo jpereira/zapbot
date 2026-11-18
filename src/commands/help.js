@@ -59,19 +59,20 @@ async function cmdHelp({ msg, args: typed, opts, nivel: level, admin,
         return;
     }
 
-    // /help alone: one command per line, only with what it does: the command in bold and the description in italics.
+    // /help alone: each command in bold and, on the line below, what it does in italics (all the descriptions
+    // start at the same margin; WhatsApp only aligns columns in a monospaced font, which has no bold or italics).
     // Outside a code block the line wraps by itself, at the phone width. The formatting symbols
     // from WhatsApp that came in the description are removed, so as not to break the italics.
     const visible = activeCommands().filter(can);
     const line = (c) => {
         const l = locate(c);
         const description = String(l.summary ?? l.help ?? '').replace(/[*_~`]/g, '').replace(/\s+/g, ' ').trim();
-        return `*${c.cmd}* - _${description}_`;
+        return `*${c.cmd}*\n_${description}_`;
     };
     const list = opts?.opt?.role
         ? ROLES_IN_HELP.map(g => [g, visible.filter(c => c.role === g)]).filter(([, cs]) => cs.length)
-            .map(([g, cs]) => `🔸 Role: ${g}\n${cs.map(line).join('\n')}`).join('\n\n')
-        : visible.map(line).join('\n');
+            .map(([g, cs]) => `🔸 Role: ${g}\n\n${cs.map(line).join('\n\n')}`).join('\n\n')
+        : visible.map(line).join('\n\n');
     const helpText =
         t('help.menuTitle') + (admin ? '' : ` ${t('help.menuUserNote')}`) + '\n\n' +
         list +
