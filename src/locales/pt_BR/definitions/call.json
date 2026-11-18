@@ -1,0 +1,75 @@
+{
+  "summary": "Recusa ligações de voz e de vídeo e responde com uma mensagem",
+  "usage": "/call [-on|-off] [-msg <texto|off|reset>] [-allow|-deny|-rm <pessoa...>]",
+  "help": "Recusa as ligações de voz e de vídeo que chegam na conta do bot e responde uma vez com uma mensagem (no máximo uma a cada 10 minutos por pessoa). Sem opção, mostra como está: ligado ou desligado, a mensagem, quem sempre toca e quem é sempre recusado. As ligações dos admins do bot e das pessoas da lista liberada sempre tocam; as das pessoas da lista negada (-deny) são sempre recusadas, mesmo com a recusa desligada, com uma mensagem própria. É o mesmo que os settings call.reject, call.message e call.allow.",
+  "cmd_opts": [
+    {
+      "opts": [
+        "on"
+      ],
+      "values": [],
+      "desc": "Liga a recusa (setting call.reject)."
+    },
+    {
+      "opts": [
+        "off"
+      ],
+      "values": [],
+      "desc": "Desliga a recusa: as ligações voltam a tocar."
+    },
+    {
+      "opts": [
+        "msg",
+        "m"
+      ],
+      "values": [
+        "<texto|off|reset>"
+      ],
+      "desc": "A mensagem enviada a quem teve a ligação recusada (setting call.message). Com off, recusa em silêncio; com reset, volta ao texto padrão. Junto do -deny, é a mensagem só dessas pessoas.",
+      "ex": [
+        "/call -msg Não atendo ligações aqui, mande uma mensagem ou um áudio",
+        "/call -msg off"
+      ]
+    },
+    {
+      "opts": [
+        "allow",
+        "a"
+      ],
+      "values": [
+        "<pessoa...>"
+      ],
+      "desc": "Pessoas cujas ligações sempre tocam (setting call.allow): /nome/, @menção ou +número.",
+      "ex": [
+        "/call -allow /Maria Lucia/"
+      ]
+    },
+    {
+      "opts": [
+        "deny",
+        "d"
+      ],
+      "values": [
+        "<pessoa...>"
+      ],
+      "desc": "Pessoas cujas ligações são sempre recusadas, mesmo com a recusa desligada: /nome/, @menção ou +número. Com -msg, a mensagem é delas; sem, um texto padrão de quem foi negado.",
+      "ex": [
+        "/call -deny /Fulano/ +5521977777777",
+        "/call -deny /Fulano/ -msg \"Não quero falar agora!\""
+      ]
+    },
+    {
+      "opts": [
+        "rm",
+        "r"
+      ],
+      "values": [
+        "<pessoa...>"
+      ],
+      "desc": "Tira as pessoas das duas listas (as que sempre tocam e as sempre recusadas).",
+      "ex": [
+        "/call -rm /Maria Lucia/"
+      ]
+    }
+  ]
+}

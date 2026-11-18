@@ -49,8 +49,8 @@ Pois é, a gente andou ocupado. O melhor da última leva:
   `/group -send admins -for 30m` fecha e reabre sozinho. [`/group`](commands/group.md)
 - 🛡️ **Moderação do grupo.** `/warn` com um limite que remove, `/antilink` para links, `/antitag` contra o abuso de
   "marcar todo mundo" e `/antibadword` para palavrões. [`/warn`](commands/warn.md) · [`/antilink`](commands/antilink.md) · [`/antitag`](commands/antitag.md) · [`/antibadword`](commands/antibadword.md)
-- 📵 **Recuse ligações com uma mensagem.** O `call.reject` desliga chamadas de voz e de vídeo e responde com um texto
-  seu (uma vez a cada 10 minutos por pessoa). [Recusando ligações](commands/bot.md#recusando-ligações)
+- 📵 **Recuse ligações com uma mensagem.** O `/call -on` desliga chamadas de voz e de vídeo e responde com um texto seu
+  (`/call -msg ...`), uma vez a cada 10 minutos por pessoa, o `/call -allow` diz quem sempre toca e o `/call -deny /Fulano/ -msg "Agora não!"` recusa sempre alguém, com uma mensagem só dele. [`/call`](commands/call.md)
 - 🎨 **Desenhe você e os amigos.** `/draw @me @this desenhe nós dois como piratas` pega as fotos de perfil (`@me`,
   `@this`, `@reply` e nomes comuns). [`/draw`](commands/draw.md) · [`/gpt`](commands/gpt.md)
 - 🎲 **Jogos para o grupo.** Bola 8 mágica, verdade, desafio e quiz; dá para jogar só respondendo o bot. [`/games`](commands/games.md)
@@ -75,6 +75,7 @@ Pois é, a gente andou ocupado. O melhor da última leva:
 /get https://www.instagram.com/p/XXXXXXXX/            (um carrossel: todas as fotos)
 /forward /Família/ #amigos Olha isso!                 (respondendo a mensagem)
 /bot -denied Você não pode usar o $cmd aqui. Fale com $admin!
+/call -on -msg Não atendo ligações aqui, mande mensagem!
 /games -trivia
 /warn @Fulano postou um link
 /antilink -delete -allow youtube.com

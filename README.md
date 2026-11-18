@@ -53,8 +53,8 @@ Yep, we've been busy. The best of the latest batch:
   `/group -send admins -for 30m` closes it and reopens by itself. [`/group`](docs/commands/group.md)
 - 🛡️ **Group moderation.** `/warn` with a limit that kicks, `/antilink` for links, `/antitag` for the "tag everyone"
   abuse and `/antibadword` for banned words. [`/warn`](docs/commands/warn.md) · [`/antilink`](docs/commands/antilink.md) · [`/antitag`](docs/commands/antitag.md) · [`/antibadword`](docs/commands/antibadword.md)
-- 📵 **Reject calls with a message.** `call.reject` hangs up voice and video calls and answers with a text of yours
-  (once every 10 minutes per person). [Rejecting calls](docs/commands/bot.md#rejecting-calls)
+- 📵 **Reject calls with a message.** `/call -on` hangs up voice and video calls and answers with a text of yours
+  (`/call -msg ...`), once every 10 minutes per person, `/call -allow` lists who always rings and `/call -deny /Fulano/ -msg "Not now!"` always rejects someone, with a message of their own. [`/call`](docs/commands/call.md)
 - 🎨 **Draw yourself and your friends.** `/draw @me @this draw the two of us as pirates` grabs the profile photos
   (`@me`, `@this`, `@reply` and plain names). [`/draw`](docs/commands/draw.md) · [`/gpt`](docs/commands/gpt.md)
 - 🎲 **Games for the group.** Magic 8 ball, truth, dare and trivia; you can play just by replying to the bot. [`/games`](docs/commands/games.md)
@@ -79,6 +79,7 @@ Yep, we've been busy. The best of the latest batch:
 /get https://www.instagram.com/p/XXXXXXXX/            (a carousel: all the photos)
 /forward /Family/ #friends Look at this!              (replying to the message)
 /bot -denied You can't use $cmd here. Ask $admin!
+/call -on -msg I don't take calls here, send a message!
 /games -trivia
 /warn @Fulano posted a link
 /antilink -delete -allow youtube.com
@@ -452,6 +453,7 @@ and make the bot your own:
 | [`/bot`](https://jpereira.github.io/zapbot/commands/bot/) | | `admin` | Bot status (24 h report and the users); turns the commands on/off (`-on`/`-off`) and says who uses them: admins (`+a`/`-a`) and users (`+u`/`-u`, in any chat or only in one group, and each one's commands with `+cmd`/`-cmd`); `-reset` goes back to the default; `-status` (`-s`): report of the last 24 h, and `-s 06h` sends it every day; `-info` (`-i`): versions and system; `-test` (`-t`): tests cache, disk, database, WhatsApp, internet, SMTP, IMAP and programs; `-flush-email [true]`: counts and clears the messages in Sent and Trash; `-passwd <password\|off>` (owner) and `-login <password>`: an outsider becomes admin with the password |
 | [`/cache`](https://jpereira.github.io/zapbot/commands/cache/) | | `admin` | Cache tree with sizes, message counts and cleanup |
 | [`/calc`](https://jpereira.github.io/zapbot/commands/calc/) | `/math`, `/sum` | `user` | Calculates and sums the numbers of a list: reply to "437 gym / 351 running" and get 788; understands 1.234,56, signs, shows a tape of what it read and `-group` by name |
+| [`/call`](https://jpereira.github.io/zapbot/commands/call/) | | `admin` | Rejects voice and video calls and replies with a message: turn it on/off, set the text and who always rings |
 | [`/carbon`](https://jpereira.github.io/zapbot/commands/carbon/) | | `user` | The code in an editor-window image |
 | [`/contacts`](https://jpereira.github.io/zapbot/commands/contacts/) | | `owner` | Exports your address book as a vCard (`.vcf`) with name, number, about and profile photo, ready for Android and iPhone. Only in your own private chat |
 | [`/cron`](https://jpereira.github.io/zapbot/commands/cron/) | | `admin` | At the scheduled time (`30m`, `at 18h`, `friday 9h`...): sends a message (here or with `-to`, to one or several chats) or, with `-reminder`, a ⏰ reminder; can repeat, be edited and paused, and run commands in the text (`{/crypto}`) |

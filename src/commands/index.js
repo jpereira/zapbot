@@ -9,6 +9,7 @@ const { cmdBlock, cmdUnblock } = require('./block');
 const { cmdBills } = require('./bills');
 const { cmdBot } = require('./bot');
 const { cmdCalc } = require('./calc');
+const { cmdCall } = require('./call');
 const { cmdCarbon } = require('./carbon');
 const { cmdCache } = require('./cache');
 const { cmdContacts } = require('./contacts');
@@ -85,6 +86,7 @@ const HANDLERS = {
     '/bot': cmdBot,
     '/cache': cmdCache,
     '/calc': cmdCalc,
+    '/call': cmdCall,
     '/carbon': cmdCarbon,
     '/contacts': cmdContacts,
     '/cron': cmdCron,

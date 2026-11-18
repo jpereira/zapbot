@@ -370,11 +370,23 @@ A conta do bot toca como qualquer outra. Com o `call.reject` ligado, o bot **rec
 vídeo que chegam e responde uma vez com a `call.message` (no máximo uma mensagem a cada 10 minutos por pessoa,
 para quem liga dez vezes não receber dez textos). Vem desligado.
 
+Com o comando [`/call`](call.md):
+
+```text
+/call -on
+/call -msg Eu não atendo aqui, manda mensagem ou um áudio 🙏
+/call -allow /Maria Lucia/            → as ligações da Maria sempre tocam
+/call -deny /Fulano/ -msg "Agora não!" → as ligações do Fulano são sempre recusadas, com essa mensagem
+/call -msg off                        → recusa em silêncio
+```
+
+Ou pelo `/set`:
+
 ```text
 /set call.reject on
 /set call.message Eu não atendo aqui, manda mensagem ou um áudio 🙏
-/set -a call.allow /Maria Lucia/      → as ligações da Maria sempre tocam
-/set call.message                     → limpa: recusa em silêncio
+/set -a call.allow /Maria Lucia/
+/set call.message off                 → recusa em silêncio
 ```
 
 - Quem está em `call.allow` e o `bot.admins` sempre passam.
