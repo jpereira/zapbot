@@ -11,14 +11,14 @@ You don't need Node, Chromium, ffmpeg or yt-dlp installed: everything ships insi
 
 ## Installation (Docker)
 
-The current stable version is `v1.0.23` (from 2026-11-16); the steps below install that version. The
+The current stable version is `v1.0.24` (from 2026-11-17); the steps below install that version. The
 notes for each one are in [Releases](https://github.com/jpereira/zapbot/releases).
 
 ```bash
 # 1. Clone the project and go to the latest stable version
 git clone https://github.com/jpereira/zapbot.git
 cd zapbot
-git checkout v1.0.23
+git checkout v1.0.24
 
 # 2. Create the config file from the example and edit it
 cp config/.env.example config/.env
@@ -51,12 +51,12 @@ and get a message on your WhatsApp (`🤖 ZapBot X.Y.Z (git+4465374/vX.Y.Z) star
 
 ### Update to a new version
 
-The **stable version** is the latest release, currently `v1.0.23` (each one has its notes in
+The **stable version** is the latest release, currently `v1.0.24` (each one has its notes in
 [Releases](https://github.com/jpereira/zapbot/releases)). To move to it:
 
 ```bash
 git fetch --tags
-git checkout v1.0.23
+git checkout v1.0.24
 git describe --tags        # checks the version: v1.0.21
 docker compose -f docker/docker-compose.yml build zapbot
 docker compose -f docker/docker-compose.yml up -d --force-recreate zapbot
