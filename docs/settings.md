@@ -63,8 +63,8 @@ shows are in Portuguese; the ones here are in English).
 | `defi.morpho.wallet` | text (can be empty) | *(empty)* | Wallet for [`/defi morpho`](commands/defi.md#morpho) when no wallet is registered, used when `MORPHO_WALLET_ADDRESS` is not in `config/.env` |
 | `defi.solana.rpc` | URL | `https://api.mainnet-beta.solana.com` | Solana RPC used by [`/defi`](commands/defi.md#solana-rpc). Shown masked (the URL usually carries the key) |
 | `email.alerts` | on/off | `on` | Email alerts (crash, outage, reconnection...) through the QR Code SMTP. See [Email alerts](emails.md#email-alerts) |
-| `flood.intervalCommand` | 1–3600 | `2` | Flood protection: the window, in seconds, in which `flood.maxCommandRepeated` is counted, and how long the bot ignores whoever went over the limit. See [Flood protection](commands/bot.md#flood-protection) |
-| `flood.maxCommandRepeated` | 0–100 | `3` | How many times a non-admin can repeat the same command within `flood.intervalCommand` seconds; past that, the bot warns once and ignores the person until the interval ends. `0` turns it off |
+| `flood.intervalCommand` | 1–3600 | `2` | Flood protection: the window, in seconds, in which `flood.maxCommandRepeated` is counted, and how long the bot ignores whoever went over the limit. See [Flood protection](commands/bot.md#flood-protection). Same as `/bot -flood`. |
+| `flood.maxCommandRepeated` | 0–100 | `3` | How many times a non-admin can repeat the same command within `flood.intervalCommand` seconds; past that, the bot warns once and ignores the person until the interval ends. `0` turns it off. Same as `/bot -flood`. |
 | `forward.delayMs` | 0–10000 | `1000` | Pause (ms) between messages when [`/forward`](commands/forward.md) forwards several, so WhatsApp isn't flooded |
 | `forward.header` | on/off | `on` | Header "Message forwarded by ZapBot!" at the start of what [`/forward`](commands/forward.md) sends; off, only the message goes. `-status` forces it, `-quiet` and `-nohdr` drop it. See [Header](commands/forward.md#header) |
 | `forward.max` | 1–50 | `10` | Most messages [`/forward -N`](commands/forward.md#several-messages--n) forwards at once |
