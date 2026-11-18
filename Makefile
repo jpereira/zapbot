@@ -152,8 +152,8 @@ ps: context ## Lists the selected target's containers
 	$(Q)$(DOCKER) ps
 
 shell: context ## Shell inside the bot on the selected target
-	@# COLUMNS e LINES reais: pelo contexto SSH o tamanho da janela chega depois de o bash subir, e o prompt quebra
-	$(Q)$(DOCKER) exec -it -e COLUMNS=$$(tput cols) -e LINES=$$(tput lines) $(SERVICE) /bin/bash -l
+	@# exec: o docker assume o terminal no lugar do sh do make (por baixo do make, o que se digita não aparecia)
+	$(Q)exec $(DOCKER) exec -it $(SERVICE) /bin/bash -l
 
 images: context ## Lists the selected target's images
 	$(Q)$(DOCKER) images -a
