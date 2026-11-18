@@ -14,7 +14,8 @@ usuários e o envio diário), as versões do que ele usa
       [tabela de comandos](index.md#resumo): `/get`, `/weather`...): em qualquer chat, só num grupo (o
       grupo inteiro) ou só uma pessoa num grupo. Um comando `admin` (`/gpt`, `/show`...) só com a
       [delegação](index.md#delegando-um-comando-admin) do `+cmd`.
-    - Os outros são ignorados em silêncio. Por padrão não há usuários: só você (e os admins) usa
+    - Os outros recebem o [aviso de comando negado](#aviso-de-comando-negado) (ou silêncio, se você o desligar).
+      Por padrão não há usuários: só você (e os admins) usa
       comandos.
 
 | Opção | Descrição |
@@ -32,6 +33,7 @@ usuários e o envio diário), as versões do que ele usa
 | `-to` | `<destino>`: junto com `-status`, para onde vai o relatório (pessoa, grupo ou e-mail; repita para vários). Veja [Status do bot](#status-do-bot) |
 | `-info`, `-i` | Versões do bot e do que ele usa, e o sistema. Aceita `-mask`; as outras opções são recusadas. Veja [Informações do sistema](#informações-do-sistema) |
 | `-test`, `-t` | Testa tudo (cache, disco, banco, WhatsApp, internet, velocidade, SMTP, IMAP e programas), com ✅ ou ❌ em cada item. As outras opções são recusadas. Veja [Teste do bot](#teste-do-bot) |
+| `-denied`, `-d` | `[on\|off\|reset\|<texto>]`: o aviso de quem digita um comando que não pode usar, em vez do silêncio. Sem valor, mostra o aviso; `on`/`off` ligam e desligam; `reset` volta ao texto padrão; qualquer outro texto vira a mensagem (`$cmd` é o comando digitado e `$admin`, o dono do bot). Veja [Aviso de comando negado](#aviso-de-comando-negado) |
 | `-passwd` | `<senha\|off>`: só o dono. Define a senha do `-login` (mín. 8 caracteres; só o hash scrypt fica no banco, no setting `bot.login`). Com `off`, desliga o login |
 | `-login` | `<senha>`: para quem é de fora, só no privado. Com a senha certa, a pessoa entra no `bot.admins` e o dono é avisado por WhatsApp e e-mail. Erra 5 vezes, fica 15 min bloqueada. A senha é apagada do banco de mensagens. Para revogar: `/bot -a +número` |
 | `-flush-email`, `-fe` | `[true]`: conecta no IMAP do e-mail (precisa de `QRCODE_EMAIL_IMAP_HOST`) e mostra quantas mensagens há em Sent e Trash; com `true`, apaga todas. Só o dono apaga. As outras opções são recusadas. Veja [Limpar o e-mail](#limpar-o-e-mail) |
@@ -378,6 +380,44 @@ para quem liga dez vezes não receber dez textos). Vem desligado.
 - Quem está em `call.allow` e o `bot.admins` sempre passam.
 - Recusa também as ligações de grupos.
 - Ninguém vê a recusa como um bloqueio: para quem ligou, parece uma ligação perdida.
+
+## Aviso de comando negado
+
+Quem digita um comando que não pode usar (fora do [`bot.users`](#usuários) ou acima do seu nível) recebe um
+aviso, a `bot.denied.message`. Vem **ligado**, e o bot fica ligado o
+tempo todo. Com `bot.denied.enabled` desligado, o bot volta a ignorar em silêncio.
+
+```text
+/bot -denied                  → mostra o aviso (ligado/desligado e o texto)
+/bot -denied on               → o mesmo que /set bot.denied.enabled on
+/bot -denied Você não pode usar o $cmd aqui. Fale com $admin!   → muda o texto
+/bot -denied reset            → volta ao texto padrão
+/bot -denied off
+/bot -d off                    → a forma curta também vale
+```
+
+Ou pelo `/set`:
+
+```text
+/set bot.denied.enabled on
+/set bot.denied.message                                  → vazio: o texto padrão do idioma do bot
+/set bot.denied.message Você não pode usar o $cmd aqui. Fale com $admin!
+/set bot.denied.enabled off                                                  → volta ao silêncio
+```
+
+O texto padrão (`🚫 Sem permissão para executar $cmd, fale com $admin`) acompanha o idioma do bot (`zapbot.lang`). No texto, `$cmd` é o comando digitado (`/backup`) e `$admin` é o dono do bot (nome e telefone):
+
+```text
+(alguém digita /backup)
+🚫 Sem permissão para executar /backup, fale com Jorge (+5521999999999)
+```
+
+- **Sem flood:** quem foi avisado, ou tentou outro comando, nos últimos `bot.denied.interval` minutos (padrão 10)
+  naquele chat não recebe nada, e cada nova tentativa renova a espera. Quem insiste não é respondido de novo até
+  parar por todo o intervalo (`/set bot.denied.interval 30`; `0` avisa a cada tentativa).
+- O dono e os admins nunca recebem o aviso: eles executam os comandos.
+- Um comando liberado que a pessoa não pode usar (fora da regra do `/bot +cmd`) continua com o aviso próprio do limite.
+- Com vários bots no mesmo grupo, ligue em só um, senão todos respondem.
 
 ## Voltar ao padrão
 

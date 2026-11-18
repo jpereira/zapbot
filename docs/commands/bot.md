@@ -14,8 +14,8 @@ users and the daily delivery), the versions of what it uses
       the [command table](index.md#summary): `/get`, `/weather`...): in any chat, only in one group (the
       whole group) or only one person in a group. An `admin` command (`/gpt`, `/show`...) only with
       the [delegation](index.md#delegating-an-admin-command) of `+cmd`.
-    - Everyone else is silently ignored. By default there are no users: only you (and the admins) use
-      commands.
+    - Everyone else gets the [denied-command notice](#notice-for-denied-commands) (or silence, if you turn it
+      off). By default there are no users: only you (and the admins) use commands.
 
 | Option | Description |
 |---|---|
@@ -32,6 +32,7 @@ users and the daily delivery), the versions of what it uses
 | `-to` | `<destination>`: together with `-status`, where the report goes (person, group or email; repeat for several). See [Bot status](#bot-status) |
 | `-info`, `-i` | Versions of the bot and of what it uses, and the system. Accepts `-mask`; the other options are refused. See [System information](#system-information) |
 | `-test`, `-t` | Tests everything (cache, disk, database, WhatsApp, internet, speed, SMTP, IMAP and programs), with ✅ or ❌ on each item. The other options are refused. See [Bot test](#bot-test) |
+| `-denied`, `-d` | `[on\|off\|reset\|<text>]`: the notice for whoever types a command they can't use, instead of silence. Without a value, shows it; `on`/`off` turn it on and off; `reset` brings back the default text; any other text becomes the message (`$cmd` is the typed command and `$admin`, the bot owner). See [Notice for denied commands](#notice-for-denied-commands) |
 | `-passwd` | `<password\|off>`: owner only. Sets the password for `-login` (min. 8 characters; only the scrypt hash is stored in the database, in the `bot.login` setting). With `off`, turns login off |
 | `-login` | `<password>`: for outsiders, in private only. With the right password, the person goes into `bot.admins` and the owner is notified by WhatsApp and email. 5 wrong tries, 15 min blocked. The password is deleted from the message database. To revoke: `/bot -a +number` |
 | `-flush-email`, `-fe` | `[true]`: connects to the email IMAP (needs `QRCODE_EMAIL_IMAP_HOST`) and shows how many messages are in Sent and Trash; with `true`, deletes them all. Only the owner deletes. The other options are refused. See [Cleaning the email](#cleaning-the-email) |
@@ -382,6 +383,45 @@ calls ten times doesn't get ten texts). It is off by default.
 - Whoever is in `call.allow` and the `bot.admins` always get through.
 - It rejects calls from groups too.
 - Nobody sees the rejection as a block: for the caller it looks like a missed call.
+
+## Notice for denied commands
+
+Whoever types a command they can't use (outside [`bot.users`](#users), or above their level) gets a notice, the
+`bot.denied.message`. It comes **on**, and the bot stays on the whole
+time. With `bot.denied.enabled` off, the bot goes back to ignoring in silence.
+
+```text
+/bot -denied                  → shows the notice (on/off and the text)
+/bot -denied on               → same as /set bot.denied.enabled on
+/bot -denied You can't use $cmd here. Ask $admin!   → changes the text
+/bot -denied reset            → back to the default text
+/bot -denied off
+/bot -d off                    → the short form works too
+```
+
+Or with `/set`:
+
+```text
+/set bot.denied.enabled on
+/set bot.denied.message                                  → empty: the default text of the bot's language
+/set bot.denied.message You can't use $cmd here. Ask $admin!
+/set bot.denied.enabled off                                                  → back to silence
+```
+
+The default text (`🚫 No permission to run $cmd, talk to $admin`) follows the bot's language (`zapbot.lang`). In the text, `$cmd` is the typed command (`/backup`) and `$admin` is the bot's owner (name and phone):
+
+```text
+(someone types /backup)
+🚫 No permission to run /backup, talk to Jorge (+5521999999999)
+```
+
+- **No flood:** whoever was notified, or tried another command, in the last `bot.denied.interval` minutes
+  (default 10) in that chat gets nothing, and each new attempt renews the wait. Someone who keeps insisting
+  is not answered again until they stop for the whole interval (`/set bot.denied.interval 30`; `0` notifies on
+  every attempt).
+- The owner and the admins never get the notice: they run the commands.
+- A command the person was allowed but can't use (outside their `/bot +cmd` rule) keeps its own notice with the limit.
+- With several bots in the same group, turn it on in only one, or every bot answers.
 
 ## Back to the default
 

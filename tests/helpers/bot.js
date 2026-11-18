@@ -53,6 +53,7 @@ async function restart() {
     for (const t of TABLES) await dbRun(`DELETE FROM ${t}`);
     await loadSettings();
     await setSetting('bot.users', ['all']);
+    await setSetting('bot.denied.enabled', false); // the default is on; the tests that count replies expect silence
     await setSetting('zapbot.lang', 'pt_BR'); // the test assertions are in Portuguese; en_US has separate tests
     await setSetting('flood.maxCommandRepeated', 0);
 
