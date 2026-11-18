@@ -26,45 +26,54 @@ messages stay on your server. You type commands in any chat and it answers (`/he
 
 Yep, we've been busy. The best of the latest batch:
 
-- 🎙️ **Transcribe any video or audio.** Send a link (Instagram, YouTube, X, TikTok...) or reply to a video or
-  a voice note and get the **text of the speech**. It runs on your own server (faster-whisper), so no OpenAI bill
-  and the audio never leaves home. [`/transcribe`](commands/transcribe.md) · [`/get -t`](commands/get.md)
-- 📈 **Quotes in one command.** `/stocks` now has the dollar, euro and USDT too (it replaces `/rates`), and `/stocks MSTR` brings the price, the change and the 52-week range of any stock (MSTR, NVDA, PETR4.SA,
-  `^GSPC`...), with alerts like `/stocks MSTR -alert < 90`; gold is `/crypto XAUT`. [`/stocks`](commands/stocks.md) · [`/crypto`](commands/crypto.md)
-- 🧮 **A calculator for lists.** Reply to a message like `437 gym / 351 running` (or a debt list, with `R$`, `EUR`, `USD`, signs
-  and the total) with `/calc`: it reads the numbers, prints a tape with all of them and checks the total of the
-  text. It also does `100/2*6` and `((1+7)*8)/2`. [`/calc`](commands/calc.md)
-- 📸 **An Instagram carousel becomes an album.** `/get <link>` on a post with only photos sends **all of them** to the
-  chat (`Image 1/10`...), the last one with the text of the post. [`/get`](commands/get.md)
-- 🎨 **Draw yourself and your friends.** `/draw @me @this draw the two of us as pirates` grabs the profile
-  photos for you (`@me` is you, `@this` is the chat, `@reply` is whoever you replied to, and plain names work
-  too). [`/draw`](commands/draw.md) · [`/gpt`](commands/gpt.md)
-- 🎲 **Games for the group.** Magic 8 ball, truth, dare and trivia, and you can play just by replying to
-  the bot. [`/games`](commands/games.md)
-- 📣 **Post on your Status** (and schedule it), peek at anyone's About and change yours.
-  [`/status`](commands/status.md) · [`/profile`](commands/profile.md)
-- 👥 **Control the group from the chat.** `/group` shows and changes name, description, photo and who can send, and
-  `/group -send admins -for 30m` closes it and reopens by itself; `/antitag` and `/antibadword` delete the "tag everyone"
-  abuse and banned words. [`/group`](commands/group.md) · [`/antitag`](commands/antitag.md) · [`/antibadword`](commands/antibadword.md)
-- 🛡️ **Group moderation.** `/warn` with a limit that kicks, and `/antilink` that deletes links from
-  non-admins. [`/warn`](commands/warn.md) · [`/antilink`](commands/antilink.md)
+- 🎙️ **Transcribe any video or audio.** Send a link (Instagram, YouTube, X, TikTok...) or reply to a video or a voice
+  note and get the **text of the speech**, or `-sum` for a **summary** on top. It runs on your own server
+  (faster-whisper), so no OpenAI bill and the audio never leaves home. [`/transcribe`](commands/transcribe.md) · [`/get -t`](commands/get.md)
+- 📈 **Quotes in one command.** `/stocks` has the dollar, euro and USDT (it replaces `/rates`) and any stock, ETF or
+  index (`MSTR`, `NVDA`, `PETR4.SA`, `^GSPC`...), with alerts like `/stocks MSTR -alert < 90`. `/crypto` now also
+  shows the price **in reais** (🇧🇷, straight from Binance) and gold as `XAUT`. [`/stocks`](commands/stocks.md) · [`/crypto`](commands/crypto.md)
+- 🧮 **A calculator for lists.** Reply to `437 gym / 351 running` (or a debt list in `R$`, `EUR`, `USD`, with signs
+  and the total) with `/calc`: it prints a tape with every number and checks the total of the text. It also does
+  `100/2*6` and `((1+7)*8)/2`. [`/calc`](commands/calc.md)
+- 📨 **Forward to your people in one reply.** `/forward` sends the message you replied to (with a text of yours on
+  top, if you want) to contacts, groups, emails or saved lists. Make a list and an alias and it's one word:
+  `/alias -q nopt /forward -q #nopt`, then reply `/nopt Look at this!`. `-q` is fully silent, `-s` brings the
+  header and the summary. [`/forward`](commands/forward.md)
+- 🚫 **A polite "no" instead of silence.** Whoever types a command they can't use gets
+  `🚫 No permission to run /backup, talk to Jorge`, once in a while, never as flood. Turn it on/off or change the
+  text with `/bot -d`. [`/bot`](commands/bot.md#notice-for-denied-commands)
+- 📸 **An Instagram carousel becomes an album.** `/get <link>` on a post with only photos sends **all of them**
+  (`Image 1/10`...), the last one with the post's text. [`/get`](commands/get.md)
+- 👥 **Control the group from the chat.** `/group` shows and changes name, description, photo and who can send;
+  `/group -send admins -for 30m` closes it and reopens by itself. [`/group`](commands/group.md)
+- 🛡️ **Group moderation.** `/warn` with a limit that kicks, `/antilink` for links, `/antitag` for the "tag everyone"
+  abuse and `/antibadword` for banned words. [`/warn`](commands/warn.md) · [`/antilink`](commands/antilink.md) · [`/antitag`](commands/antitag.md) · [`/antibadword`](commands/antibadword.md)
+- 📵 **Reject calls with a message.** `call.reject` hangs up voice and video calls and answers with a text of yours
+  (once every 10 minutes per person). [Rejecting calls](commands/bot.md#rejecting-calls)
+- 🎨 **Draw yourself and your friends.** `/draw @me @this draw the two of us as pirates` grabs the profile photos
+  (`@me`, `@this`, `@reply` and plain names). [`/draw`](commands/draw.md) · [`/gpt`](commands/gpt.md)
+- 🎲 **Games for the group.** Magic 8 ball, truth, dare and trivia; you can play just by replying to the bot. [`/games`](commands/games.md)
+- 📣 **Post on your Status** (and schedule it), peek at anyone's About and change yours. [`/status`](commands/status.md) · [`/profile`](commands/profile.md)
+- 📇 **Your contacts, exported.** `/contacts` makes a vCard with names, numbers and profile photos. [`/contacts`](commands/contacts.md)
 - 🔇 **Mute for a while.** `/mute -for 2h` and the alerts come back by themselves. [`/mute`](commands/mute.md)
-- 📊 **Reports.** `/usage -all` shows who is using what, and `/whois -id` brings the hidden ids.
-  [`/usage`](commands/usage.md) · [`/whois`](commands/whois.md)
-- 🏷️ **Names instead of numbers.** Alerts of deleted and edited messages and reactions now show
-  `@Luis`, not `@265472113143884`. [`/show`](commands/show.md)
-- 🔌 **API and MCP (experimental).** Send messages and read your notes from scripts or from an AI client.
+- 📊 **Usage and limits.** `/usage -all` shows who uses what, `/bot +limit` caps each person, and `/whois -id` brings
+  the hidden ids. [`/usage`](commands/usage.md) · [`/whois`](commands/whois.md)
+- 🏷️ **Names instead of numbers.** Alerts of deleted and edited messages and reactions show `@Luis`, not
+  `@265472113143884`. [`/show`](commands/show.md)
+- 🔌 **API and MCP (experimental).** Send messages and read your notes from scripts or an AI client.
   [API and MCP](api.md)
-- 🧰 **`/help` got a new look**: the command in **bold** and what it does in _italic_.
 
 ```text
 /draw @me @this draw the two of us as pirates
 /transcribe https://www.instagram.com/reel/XXXXXXXX/
+/transcribe -sum https://youtu.be/XXXXXXXXXXX
 /transcribe -ss 30 -es 90 https://youtu.be/XXXXXXXXXXX
 /stocks MSTR NVDA
 /crypto XAUT
 /calc 100/2*6
 /get https://www.instagram.com/p/XXXXXXXX/            (a carousel: all the photos)
+/forward /Family/ #friends Look at this!              (replying to the message)
+/bot -denied You can't use $cmd here. Ask $admin!
 /games -trivia
 /warn @Fulano posted a link
 /antilink -delete -allow youtube.com
