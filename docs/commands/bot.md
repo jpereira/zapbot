@@ -511,7 +511,7 @@ time, the report goes out every day at that time, to your private chat or to the
 ```
 
 ```text
-📊 ZapBot Status 1.0.23 · last 24 h
+📊 ZapBot Status 1.0.24 (devel) · last 24 h
 Thu 01/10 06:00
 
 ▶️ Bot: on
@@ -639,10 +639,10 @@ also warns when there's a new version of `yt-dlp` and `whatsapp-web.js`.
 
 ```text
 /bot -i
-ℹ️ ZapBot 1.0.23 · system information
+ℹ️ ZapBot 1.0.24 (devel) · system information
 
 🤖 Bot
-• ZapBot: 1.0.23 (git+7a89b92/v1.0.23)
+• ZapBot: 1.0.24 (devel) (git+7a89b92/HEAD)
 • Node.js: v24.9.0 (V8 13.6.233.10-node.27)
 • whatsapp-web.js: 1.34.7 (commit 58ddf15) · ✅ the latest · ⬆️ 1 new commit on main
 • WhatsApp Web: 2.3000.1027123456
