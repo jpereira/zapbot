@@ -210,6 +210,21 @@ After that, `/btc`, `/xaut`, `/mstr`, `/dolar`... answer with the quote straight
 /mkt PETR4.SA          → /stocks PETR4.SA
 ```
 
+## A long command, in several lines
+
+A `/alias` with a long `-desc` is easier to type in two lines. In **any command message** (it has to start with `/`), a
+`\` at the end of a line joins it with the next one, with a single space (the indentation of the next line goes away), as in
+the [`.zb` files](#example-files-zb):
+
+```text
+/alias -q -p /stash.view -desc "Unlocks the protected tag #stash and shows its notes" \
+    /notes -v -lock $1 #stash
+```
+
+is the same as `/alias -q -p /stash.view -desc "..." /notes -v -lock $1 #stash`. A `\n` that you type (a backslash and an `n`
+in the middle of a line) is still the line break of a [text alias](#text-with-commands), and a text that does not start with `/`
+keeps its `\`.
+
 ## Example files (`.zb`)
 
 The bot ships with `.zb` files in the `examples/` folder: the commands you would type here, saved in a

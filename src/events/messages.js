@@ -29,7 +29,7 @@ const { t } = require('../i18n');
 const { getSetting, isDebugMode } = require('../settings');
 const { countStats, myIdStats } = require('../stats');
 const { mediaIsPath, nameSafe, getFolderMedia } = require('../util/files');
-const { paraMs } = require('../util/format');
+const { joinContinuedLines, paraMs } = require('../util/format');
 const { checkWatch } = require('../watch/check');
 const { logIsCopy } = require('../debugCopy');
 const { withContextDebug, contextDebug } = require('../debugContext');
@@ -266,7 +266,7 @@ client.on('message_create', (msg) => withContextDebug({
         ).catch(err => printError('Error saving message:', err.message));
 
         // The location body contains the base64 thumbnail, not text or a command.
-        const body = msgType === 'location' ? '' : (msg.body || '').trim();
+        const body = msgType === 'location' ? '' : joinContinuedLines((msg.body || '').trim());
 
         // Only the no., replying to a command's list (e.g.: several contacts with the name): does not go through /watch
         if (await replyChoice(msg, chatId, body)) return;
