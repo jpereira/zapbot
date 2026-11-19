@@ -46,7 +46,7 @@ em português).
 | `debug.copyTo` | texto (pode ser vazio) | *(vazio)* | Chat que recebe a cópia dos logs; configure pelo [`/debug -copy-to`](commands/debug.md). Vazio: só console |
 | `debug.enabled` | on/off | `off` | Modo debug (o mesmo do `/debug -on`/`-off`) |
 | `debug.filter` | texto (pode ser vazio) | *(vazio)* | Filtro `/regex/flags` dos logs durante o debug. Vazio: sem filtro; `/debug -off` limpa. O filtro vale após a inicialização; matches são destacados no console com cores |
-| `debug.level` | 0–3 | `0` | Nível cumulativo: básico, funções e comandos, integrações, desenvolvimento. Veja [`/debug`](commands/debug.md) |
+| `debug.level` | 0–3 | `0` | Nível do debug: 0 básico, 1 o que o bot está chamando (comandos, banco, requisições, processos, e-mail, WhatsApp), uma linha cada, 2 as mesmas chamadas com os parâmetros e todas as funções dos módulos, 3 resultados e Chromium. Veja [`/debug`](commands/debug.md) |
 | `defi.aave.chains` | lista | `1 8453` | Redes (chain id) em que o [`/defi aave`](commands/defi.md#aave-v3) procura as posições: `1` (Ethereum), `8453` (Base) |
 | `defi.aave.wallet` | texto (pode ser vazio) | *(vazio)* | Carteira do [`/defi aave`](commands/defi.md#aave-v3) quando não há carteira cadastrada, usada quando `AAVE_WALLET_ADDRESS` não está no `config/.env` |
 | `defi.alert.intervalMin` | 1–1440 | `10` | Intervalo (minutos) entre as verificações do [`/defi -alert`](commands/defi.md#alerta-de-saída-da-faixa); consulta as posições na Solana e na HyperEVM, conforme o protocolo |

@@ -352,7 +352,7 @@ const SETTINGS_SCHEMA = {
     'debug.level': {
         default: 0,
         type: 'number', min: 0, max: 3,
-        desc: 'Nível cumulativo do debug: 0 básico, 1 funções e comandos, 2 integrações, 3 desenvolvimento.'
+        desc: 'Nível do debug: 0 básico, 1 o que o bot está chamando (comandos, banco, requisições, processos, e-mail, WhatsApp), uma linha cada, 2 as mesmas chamadas com os parâmetros e todas as funções dos módulos, 3 resultados e Chromium.'
     },
     'defi.aave.chains': {
         default: ['1', '8453'],

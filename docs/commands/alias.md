@@ -314,6 +314,15 @@ Most use `-q` (no "🔗 Alias" header). Take the whole file with `/alias -exampl
 | `/vf` | `/batch -q` + `/tts -q -l -v $@` with the voices tugão, cadu, edresson, faber |
 | `/vfazol` | `/batch -q` + `/tts -q -l -v $@` with the voices cadu, edresson, faber |
 
+**Debug (`/debug`)**
+
+| Shortcut | Runs |
+|---|---|
+| `/dbg.off` | `/debug -off` |
+| `/dbg.on` | `/debug -on -level 1` |
+| `/dbg.on2` | `/debug -on -level 2` |
+| `/dbg.on3` | `/debug -on -level 3` |
+
 **Sending (`/me`, `/forward`) and others**
 
 | Shortcut | Runs |

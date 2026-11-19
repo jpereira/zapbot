@@ -238,32 +238,56 @@ describe('/debug', () => {
         assert.equal(bot.getSetting('debug.copyTo'), bot.GROUP);
     });
 
-    test('níveis cumulativos e rastro do parser, funções e APIs com parâmetros', async () => {
+    test('níveis cumulativos: 1 o que está chamando (uma linha), 2 com parâmetros e funções, 3 resultados', async () => {
         for (let level = 0; level <= 3; level++) {
             await configure(`-on -lvl ${level}`);
             for (let n = 0; n <= 3; n++) printDebugLevel(n, `marcador${n}`);
             assert.equal(bot.logs.length, level + 1);
             await bot.replyAlt('/ping');
             if (level >= 1) {
+                // level 1: the message, the command, the database: one line each, with the duration
                 assert.match(textLogs(), /DEBUG1.*message_create start/);
-                assert.match(textLogs(), /GetOptFromCommand start/);
-                assert.match(textLogs(), /cmdPing end/);
                 assert.match(textLogs(), /chatName=Família/);
-            } else assert.doesNotMatch(textLogs(), /DEBUG[123]/);
+            }
+            if (level === 1) {
+                assert.match(textLogs(), /DEBUG1.*command \/ping .*\+\d+ms/);
+                assert.match(textLogs(), /DEBUG1.*database INSERT INTO messages.*\+\d+ms/);
+                assert.match(textLogs(), /DEBUG1.*whatsapp sendMessage \S+ \+\d+ms/);
+                assert.doesNotMatch(textLogs(), /DEBUG2/);
+            }
+            if (level === 0) assert.doesNotMatch(textLogs(), /DEBUG[123]/);
+            if (level >= 2) {
+                // level 2: every function of the modules, with the arguments
+                assert.match(textLogs(), /DEBUG2.*GetOptFromCommand start/);
+                assert.match(textLogs(), /DEBUG2.*cmdPing end/);
+                assert.match(textLogs(), /DEBUG2.*db\.js\.dbRun start/);
+            } else assert.doesNotMatch(textLogs(), /GetOptFromCommand|cmdPing|DEBUG2/);
+
             bot.network.responder('get', 'kernel.org/releases.json', {
                 latest_stable: { version: '6.1' }, releases: []
             });
             await bot.replyAlt('/kernel');
+            if (level === 1) assert.match(textLogs(), /DEBUG1.*request GET https:\/\/[^ ]*kernel\.org\/releases\.json → 200 \+\d+ms/);
             if (level >= 2) {
                 assert.match(textLogs(), /DEBUG2.*axios.get start/);
-                assert.match(textLogs(), /kernel.org\/releases.json/);
                 assert.match(textLogs(), /timeout: 15000/);
-            } else assert.doesNotMatch(textLogs(), /DEBUG2/);
-            if (level === 3) {
-                assert.match(textLogs(), /DEBUG3.*dbRun start/);
-                assert.match(textLogs(), /DEBUG3.*result/);
-            } else assert.doesNotMatch(textLogs(), /DEBUG3/);
+            } else assert.doesNotMatch(textLogs(), /axios\.get start|timeout: 15000/);
+            if (level === 3) assert.match(textLogs(), /DEBUG3.*result/);
+            else assert.doesNotMatch(textLogs(), /DEBUG3/);
         }
+    });
+
+    test('nível 1 é enxuto: bem menos linhas que o 2, e o 3 ainda mais', async () => {
+        const counts = [];
+        for (const level of [1, 2, 3]) {
+            await configure(`-on -lvl ${level}`);
+            const before = bot.logs.length;
+            await bot.replyAlt('/ping');
+            counts.push(bot.logs.length - before);
+        }
+        assert.ok(counts[0] > 0);
+        assert.ok(counts[1] > counts[0] * 2, `nível 2 (${counts[1]}) bem acima do 1 (${counts[0]})`);
+        assert.ok(counts[2] > counts[1], `nível 3 (${counts[2]}) acima do 2 (${counts[1]})`);
     });
 
     test('filtro pelo contexto do chat e isolamento entre execuções simultâneas', async () => {

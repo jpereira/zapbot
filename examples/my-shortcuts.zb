@@ -82,6 +82,15 @@
   /tts -q -l -v faber $@
 
 # ----------------------------------------------------------------------
+# Debug (/debug): the levels are 1 what the bot is calling, 2 with arguments and functions, 3 everything
+# ----------------------------------------------------------------------
+
+/alias -q /dbg.off -desc "Debug off" /debug -off
+/alias -q /dbg.on -desc "Debug on, level 1: what the bot is calling" /debug -on -level 1
+/alias -q /dbg.on2 -desc "Debug on, level 2: with the arguments and every function" /debug -on -level 2
+/alias -q /dbg.on3 -desc "Debug on, level 3: the results too (very verbose)" /debug -on -level 3
+
+# ----------------------------------------------------------------------
 # Sending (/me, /forward) and others
 # ----------------------------------------------------------------------
 
