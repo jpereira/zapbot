@@ -2,7 +2,7 @@
  * Comando /help.
  */
 
-const { listAliases } = require('../aliases');
+const { aliasBlock, aliasesFor, listAliases } = require('../aliases');
 const { ROLES, answer } = require('../roles');
 const { activeCommands, findCommand, formatCommandHelp, helpProtocol } = require('./base');
 const { locate } = require('./localize');
@@ -73,9 +73,16 @@ async function cmdHelp({ msg, args: typed, opts, nivel: level, admin,
         ? ROLES_IN_HELP.map(g => [g, visible.filter(c => c.role === g)]).filter(([, cs]) => cs.length)
             .map(([g, cs]) => `🔸 Role: ${g}\n\n${cs.map(line).join('\n\n')}`).join('\n\n')
         : visible.map(line).join('\n\n');
+    // Whoever is not an admin also sees the aliases (shortcuts) that lead to commands they can use: they work
+    // as the commands do, so they belong in the menu
+    const shortcuts = admin ? [] : await aliasesFor(c => can(c) && Boolean(findCommand(c.cmd)));
+    // Each one as in the /alias list (the name, the description and where it leads), without the 🔇 and the 🔒
+    const aliasSection = shortcuts.length
+        ? `\n\n${t('help.aliasesTitle', { n: shortcuts.length })}\n\n${shortcuts.map(a => aliasBlock(a, { marks: false })).join('\n\n')}`
+        : '';
     const helpText =
         t('help.menuTitle') + (admin ? '' : ` ${t('help.menuUserNote')}`) + '\n\n' +
-        list +
+        list + aliasSection +
         `\n\n${t('help.menuFooter')}`;
 
     await msg.reply(helpText);

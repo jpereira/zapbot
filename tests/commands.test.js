@@ -10,7 +10,7 @@ const assert = require('node:assert/strict');
 const packageJson = require('../package.json');
 const COMMANDS = require('../src/commands/commands');
 const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-const { OTHERAlt } = bot;
+const { OTHERAlt, OWNER } = bot;
 
 beforeEach(bot.restart);
 
@@ -428,5 +428,53 @@ describe('/bot -info: a versão do faster-whisper', () => {
         assert.equal(describeWhisper(null, 'small'), null);
         assert.equal(describeWhisper('lixo', 'small'), null);
         assert.equal(describeWhisper('{"wrapper": "1.0.0"}', 'small'), null);
+    });
+});
+
+describe('/help: os atalhos (alias) no fim, só os que levam a comandos que a pessoa pode usar', () => {
+    const FULANO = { de: OTHERAlt.jid };
+
+    test('usuário: vê o /tuga (leva ao /tts, de usuário) com o -desc; não vê o que leva a comando de admin', async () => {
+        await bot.setSetting('bot.users', [OTHERAlt.user]);
+        await bot.replyAlt('/alias -q /tuga -desc "Fala com a voz do tugão" /tts -q -l -v tugão $@');
+        await bot.replyAlt('/alias -q /moeda /stocks USD');
+        await bot.replyAlt('/alias -q /pessoal /forward -q #lista');
+        await bot.replyAlt('/alias -q /dois Oi {/joke} e {/crypto BTC}');
+
+        const [help] = await bot.replyAlt('/help', FULANO);
+        const section = help.split('🔗 *Atalhos*')[1] ?? '';
+        assert.match(help, /\n\n🔗 \*Atalhos\* \(3\): funcionam como os comandos \(\/help alias mostra cada um por inteiro\)\n\n/);
+        // The same block as in the /alias list, without the 🔇 and the 🔒
+        assert.match(section, /\n\*\/tuga\*\n📝 Fala com a voz do tugão\n→ \/tts -q -l -v tugão \$@\n/);
+        assert.match(section, /\n\*\/moeda\*\n→ \/stocks USD\n/);
+        assert.match(section, /\n\*\/dois\*\n→ Oi \{\/joke\} e \{\/crypto BTC\}\n/);
+        assert.doesNotMatch(section, /🔇|🔒/);
+        const listed = (await bot.replyAlt('/help alias', FULANO))[0];
+        for (const block of ['*/tuga* 🔇\n📝 Fala com a voz do tugão\n→ /tts -q -l -v tugão $@', '*/moeda* 🔇\n→ /stocks USD']) assert.ok(listed.includes(block), block);
+        assert.doesNotMatch(section, /\/pessoal|\/forward/);
+        // The shortcuts come before the footer, which stays the last line
+        assert.match(help, /💡 Utilize \*\/help \/comando\* ou \*\/comando -h\* para mais informações\.$/);
+        assert.ok(help.indexOf('🔗 *Atalhos*') > help.indexOf('*/whois*'));
+    });
+
+    test('a regra do usuário (+cmd) também filtra; o admin e o dono não têm a seção (têm o /help alias)', async () => {
+        await bot.setSetting('bot.users', [OTHERAlt.user]);
+        await bot.replyAlt('/alias -q /tuga /tts -q -l -v tugão $@');
+        await bot.replyAlt('/alias -q /moeda /stocks USD');
+        await bot.replyAlt('/bot +u /Fulano/ +cmd /stocks', { chat: OWNER.jid });
+
+        const [limited] = await bot.replyAlt('/help', FULANO);
+        assert.match(limited, /🔗 \*Atalhos\* \(1\)/);
+        assert.match(limited, /\*\/moeda\*/);
+        assert.doesNotMatch(limited, /\/tuga/);
+
+        assert.doesNotMatch((await bot.replyAlt('/help'))[0], /🔗 \*Atalhos\*/, 'o dono');
+        await bot.setSetting('bot.admins', [OTHERAlt.user]);
+        assert.doesNotMatch((await bot.replyAlt('/help', FULANO))[0], /🔗 \*Atalhos\*/, 'o admin');
+
+        // Without any shortcut that leads to something they can use: no section
+        await bot.setSetting('bot.admins', []);
+        await bot.replyAlt('/bot +u /Fulano/ +cmd /joke', { chat: OWNER.jid });
+        assert.doesNotMatch((await bot.replyAlt('/help', FULANO))[0], /🔗 \*Atalhos\*/);
     });
 });

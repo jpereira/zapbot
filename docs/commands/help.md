@@ -31,6 +31,26 @@ _Database backup: lists, details, restores, sends or deletes_
 💡 Use */help /command* or */command -h* for more information.
 ````
 
+**Shortcuts at the end (for users).** Whoever is not an admin also gets, after the commands and before the tip, the
+[shortcuts](alias.md) (aliases) that lead to commands they can use: an alias works as the command it points to, so it
+belongs in the menu (an alias to a command they cannot use does not show up, and neither does one inside a text with
+such a command). Each one is **the same block as in the [`/alias`](alias.md) list** (the name, the `-desc` and the command it
+leads to, with its arguments), without the 🔇 and 🔒 marks:
+
+````text
+🔗 *Shortcuts* (2): they work like the commands (/help alias shows each one in full)
+
+*/moeda*
+→ /stocks USD
+
+*/tuga*
+📝 Speaks with the Portuguese voice
+→ /tts -q -l -v tugão $@
+````
+
+The owner and the admins do not get this section (they have `/help alias`, which lists them with the full
+description). `/help alias` for a user lists the same shortcuts, in full.
+
 | Option | Value | Description |
 |---|---|---|
 | `-role`, `-r` | | Lists the commands split by role, only the ones you can use |

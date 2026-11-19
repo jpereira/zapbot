@@ -2,7 +2,9 @@
 
 Saves shortcuts in the bot's database: for a command with arguments or for a text with several
 `{/command}`, as in [`/cron`](cron.md#commands-in-the-text). The owner and admins register and remove
-aliases. Whoever runs a shortcut needs permission for the target commands.
+aliases. Whoever runs a shortcut needs permission for the target commands. A user (`+u`) sees the shortcuts that lead
+to commands they can use at the end of their [`/help`](help.md) (the command it leads to and the `-desc`), so write a
+good `-desc`.
 
 ```text
 /alias <name> [-quiet|-q] [-desc|-d "description"] </command arguments>

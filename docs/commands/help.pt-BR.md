@@ -31,6 +31,26 @@ _Backup do banco: lista, detalha, restaura, envia ou apaga_
 💡 Utilize */help /comando* ou */comando -h* para mais informações.
 ````
 
+**Atalhos no fim (para usuários).** Quem não é admin também recebe, depois dos comandos e antes da dica, os
+[atalhos](alias.md) (aliases) que levam a comandos que pode usar: um alias funciona como o comando para o qual aponta,
+então ele merece estar no menu (um alias para um comando que a pessoa não pode usar não aparece, nem um dentro de um
+texto com um desses). Cada um é **o mesmo bloco da lista do [`/alias`](alias.md)** (o nome, o `-desc` e o comando para o
+qual leva, com os argumentos), sem as marcas 🔇 e 🔒:
+
+````text
+🔗 *Atalhos* (2): funcionam como os comandos (/help alias mostra cada um por inteiro)
+
+*/moeda*
+→ /stocks USD
+
+*/tuga*
+📝 Fala com a voz do tugão
+→ /tts -q -l -v tugão $@
+````
+
+O dono e os admins não recebem esta seção (têm o `/help alias`, que lista com a descrição inteira). O `/help alias`
+de um usuário lista os mesmos atalhos, por inteiro.
+
 | Opção | Valor | Descrição |
 |---|---|---|
 | `-role`, `-r` | | Lista os comandos separados por role, só os que você pode usar |
