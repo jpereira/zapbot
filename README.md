@@ -448,12 +448,12 @@ and make the bot your own:
 | [`/antilink`](https://jpereira.github.io/zapbot/commands/antilink/) | | `admin` · delegable | Deletes links sent by non-admins in the group |
 | [`/antitag`](https://jpereira.github.io/zapbot/commands/antitag/) | | `admin` · delegable | Deletes messages from non-admins that tag lots of people |
 | [`/ascii`](https://jpereira.github.io/zapbot/commands/ascii/) | | `user` | The text in big ASCII letters, in a block that fits on the phone screen |
-| [`/backup`](https://jpereira.github.io/zapbot/commands/backup/) | | `admin` | Daily local backup and sending through `backup.to`; lists, details, restores, sends and deletes the database |
+| [`/backup`](https://jpereira.github.io/zapbot/commands/backup/) | | `owner` | Daily local backup and sending through `backup.to`; lists, details, restores, sends and deletes the database |
 | [`/batch`](https://jpereira.github.io/zapbot/commands/batch/) | | `admin` | Runs several commands from a single message, in sequence (each line that starts with a command opens a block), and replies with a summary; `-stop` and `-dry` |
 | [`/bills`](https://jpereira.github.io/zapbot/commands/bills/) | | `user` | Joke: draws 2 members to "pay a bill" |
 | [`/block`](https://jpereira.github.io/zapbot/commands/block/) | | `admin` | Blocks one or several people on your WhatsApp account (replying to a message, whoever wrote it); with nothing, lists the blocked ones; `-mask` hides phone numbers |
 | [`/bot`](https://jpereira.github.io/zapbot/commands/bot/) | | `admin` | Bot status (24 h report and the users); turns the commands on/off (`-on`/`-off`) and says who uses them: admins (`+a`/`-a`) and users (`+u`/`-u`, in any chat or only in one group, and each one's commands with `+cmd`/`-cmd`); `-reset` goes back to the default; `-status` (`-s`): report of the last 24 h, and `-s 06h` sends it every day; `-info` (`-i`): versions and system; `-test` (`-t`): tests cache, disk, database, WhatsApp, internet, SMTP, IMAP and programs; `-flush-email [true]`: counts and clears the messages in Sent and Trash; `-passwd <password\|off>` (owner) and `-login <password>`: an outsider becomes admin with the password |
-| [`/cache`](https://jpereira.github.io/zapbot/commands/cache/) | | `admin` | Cache tree with sizes, message counts and cleanup |
+| [`/cache`](https://jpereira.github.io/zapbot/commands/cache/) | | `owner` | Cache tree with sizes, message counts and cleanup |
 | [`/calc`](https://jpereira.github.io/zapbot/commands/calc/) | `/math`, `/sum` | `user` | Calculates and sums the numbers of a list: reply to "437 gym / 351 running" and get 788; understands 1.234,56, signs, shows a tape of what it read and `-group` by name |
 | [`/call`](https://jpereira.github.io/zapbot/commands/call/) | | `admin` | Rejects voice and video calls and replies with a message: turn it on/off, set the text and who always rings |
 | [`/carbon`](https://jpereira.github.io/zapbot/commands/carbon/) | | `user` | The code in an editor-window image |
@@ -461,7 +461,7 @@ and make the bot your own:
 | [`/cron`](https://jpereira.github.io/zapbot/commands/cron/) | | `admin` | At the scheduled time (`30m`, `at 18h`, `friday 9h`...): sends a message (here or with `-to`, to one or several chats) or, with `-reminder`, a ⏰ reminder; can repeat, be edited and paused, and run commands in the text (`{/crypto}`) |
 | [`/crypto`](https://jpereira.github.io/zapbot/commands/crypto/) | | `user` | Prices of the enabled cryptos (default: BTC, ETH, SOL and HYPE) or only the requested ones (`BTC ETH`); price alerts |
 | [`/cve`](https://jpereira.github.io/zapbot/commands/cve/) | | `user` | Latest published CVEs (NVD); `-highscore` only the critical ones |
-| [`/debug`](https://jpereira.github.io/zapbot/commands/debug/) | | `admin` | Debug logs with levels, filter and copy to chats |
+| [`/debug`](https://jpereira.github.io/zapbot/commands/debug/) | | `owner` | Debug logs with levels, filter and copy to chats |
 | [`/defi`](https://jpereira.github.io/zapbot/commands/defi/) | | `admin` | Orca and Project X liquidity positions: balance, range, price and fees to collect, read on-chain; `-alert` warns when a position leaves and re-enters its range and when fees pass a value. `liquidswap`: LP positions on Aptos. `morpho` and `aave`: position, loans and risk on Morpho and Aave V3 |
 | [`/demote`](https://jpereira.github.io/zapbot/commands/demote/) | | `admin` · delegable | Removes someone's group admin |
 | [`/draw`](https://jpereira.github.io/zapbot/commands/draw/) | | `admin` · delegable | Draws an image or an animated GIF (`-gif`) with ChatGPT (GPT Image); on a photo, edits or animates it |
@@ -487,7 +487,7 @@ and make the bot your own:
 | [`/news`](https://jpereira.github.io/zapbot/commands/news/) | | `user` | Headlines from RSS feeds: `-hack`, `-g1`, `-gazeta`, `-brazil` |
 | [`/noffa`](https://jpereira.github.io/zapbot/commands/noffa/) | | `user` | Joke: decorates the text with a rainbow |
 | [`/notes`](https://jpereira.github.io/zapbot/commands/notes/) | | `admin` | Notes with ID and `#tag` (`-a`, `-l`, `-s`, `-r`): view with the media (`-v`), edit (`-u`), rename a tag (`-m`), describe a tag (`-d`), export to PDF (`-e`) and `-alert`, which warns at a date/time |
-| [`/ocr`](https://jpereira.github.io/zapbot/commands/ocr/) | | `admin` · delegable | The text in a photo, read locally (Tesseract) or by ChatGPT (`-gpt`) |
+| [`/ocr`](https://jpereira.github.io/zapbot/commands/ocr/) | | `user` | The text in a photo, read locally (Tesseract) or by ChatGPT (`-gpt`) |
 | [`/ping`](https://jpereira.github.io/zapbot/commands/ping/) | | `user` | Checks that the bot is alive |
 | [`/pixelart`](https://jpereira.github.io/zapbot/commands/pixelart/) | | `user` | Random ANSI/ASCII art (16colo.rs) |
 | [`/poll`](https://jpereira.github.io/zapbot/commands/poll/) | | `admin` · delegable | Creates a native WhatsApp poll in the chat; `-r` shows the result |
@@ -504,7 +504,7 @@ and make the bot your own:
 | [`/stt`](https://jpereira.github.io/zapbot/commands/stt/) | | `user` | Text of the speech of a link, video or audio (`/get -t` is a shortcut), replying or as the caption; `-ss` and `-es` pick a part |
 | [`/tldr`](https://jpereira.github.io/zapbot/commands/tldr/) | | `admin` · delegable | Summarizes the chat's conversation with ChatGPT (`30m`, `2h`, `1d`, `1h30m` or `300` messages; replying to a message, from it on) |
 | [`/translate`](https://jpereira.github.io/zapbot/commands/translate/) | | `user` | Translates the text or the replied message with Google Translate, no key needed; `-to en` changes the language |
-| [`/tts`](https://jpereira.github.io/zapbot/commands/tts/) | | `admin` · delegable | The text as a voice note, with a local voice (Piper) or ChatGPT (`-gpt`) |
+| [`/tts`](https://jpereira.github.io/zapbot/commands/tts/) | | `user` | The text as a voice note, with a local voice (Piper) or ChatGPT (`-gpt`) |
 | [`/unblock`](https://jpereira.github.io/zapbot/commands/unblock/) | | `admin` | Unblocks a person: by name, by number, by the `/block` list number or by replying to a message |
 | [`/unmute`](https://jpereira.github.io/zapbot/commands/unmute/) | | `admin` | Undoes `/mute`: by name, by list number, by replying to an alert, or all of them (`-all`) |
 | [`/uptime`](https://jpereira.github.io/zapbot/commands/uptime/) | | `user` | Run time and connection time |

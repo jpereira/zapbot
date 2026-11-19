@@ -187,37 +187,36 @@ destino: quem pode o `/gpt` usa os atalhos para ele, e o nome de um atalho não 
 <!-- gerado:roles -->
 ### Comandos por role
 
-**user** (de quem está no `bot.users`) (29):
+**user** (de quem está no `bot.users`) (31):
 
 [`/ascii`](ascii.md), [`/bills`](bills.md), [`/calc`](calc.md), [`/carbon`](carbon.md),
 [`/crypto`](crypto.md), [`/cve`](cve.md), [`/games`](games.md), [`/get`](get.md),
 [`/giphy`](giphy.md), [`/help`](help.md), [`/joke`](joke.md), [`/kernel`](kernel.md),
-[`/me`](me.md), [`/meme`](meme.md), [`/news`](news.md), [`/noffa`](noffa.md), [`/ping`](ping.md),
-[`/pixelart`](pixelart.md), [`/qr`](qr.md), [`/sticker`](sticker.md), [`/stocks`](stocks.md),
-[`/stt`](stt.md), [`/translate`](translate.md), [`/uptime`](uptime.md), [`/usage`](usage.md),
-[`/version`](version.md), [`/walissu`](walissu.md), [`/weather`](weather.md), [`/whois`](whois.md)
+[`/me`](me.md), [`/meme`](meme.md), [`/news`](news.md), [`/noffa`](noffa.md), [`/ocr`](ocr.md),
+[`/ping`](ping.md), [`/pixelart`](pixelart.md), [`/qr`](qr.md), [`/sticker`](sticker.md),
+[`/stocks`](stocks.md), [`/stt`](stt.md), [`/translate`](translate.md), [`/tts`](tts.md),
+[`/uptime`](uptime.md), [`/usage`](usage.md), [`/version`](version.md), [`/walissu`](walissu.md),
+[`/weather`](weather.md), [`/whois`](whois.md)
 
-**admin, delegáveis** (admins e o dono; o dono libera a um usuário com `+cmd`) (20):
+**admin, delegáveis** (admins e o dono; o dono libera a um usuário com `+cmd`) (18):
 
 [`/antibadword`](antibadword.md), [`/antilink`](antilink.md), [`/antitag`](antitag.md),
 [`/demote`](demote.md), [`/draw`](draw.md), [`/everybody`](everybody.md), [`/goodbye`](goodbye.md),
-[`/gpt`](gpt.md), [`/group`](group.md), [`/members`](members.md), [`/ocr`](ocr.md),
-[`/poll`](poll.md), [`/profile`](profile.md), [`/promote`](promote.md), [`/show`](show.md),
-[`/stats`](stats.md), [`/tldr`](tldr.md), [`/tts`](tts.md), [`/warn`](warn.md),
-[`/welcome`](welcome.md)
+[`/gpt`](gpt.md), [`/group`](group.md), [`/members`](members.md), [`/poll`](poll.md),
+[`/profile`](profile.md), [`/promote`](promote.md), [`/show`](show.md), [`/stats`](stats.md),
+[`/tldr`](tldr.md), [`/warn`](warn.md), [`/welcome`](welcome.md)
 
-**admin** (admins e o dono; nunca delegáveis) (23):
+**admin** (admins e o dono; nunca delegáveis) (20):
 
-[`/alias`](alias.md), [`/backup`](backup.md), [`/batch`](batch.md), [`/block`](block.md),
-[`/bot`](bot.md), [`/cache`](cache.md), [`/call`](call.md), [`/cron`](cron.md),
-[`/debug`](debug.md), [`/defi`](defi.md), [`/forward`](forward.md), [`/invite`](invite.md),
-[`/join`](join.md), [`/leave`](leave.md), [`/monitor`](monitor.md), [`/mute`](mute.md),
-[`/notes`](notes.md), [`/search`](search.md), [`/set`](set.md), [`/status`](status.md),
-[`/unblock`](unblock.md), [`/unmute`](unmute.md), [`/watch`](watch.md)
+[`/alias`](alias.md), [`/batch`](batch.md), [`/block`](block.md), [`/bot`](bot.md),
+[`/call`](call.md), [`/cron`](cron.md), [`/defi`](defi.md), [`/forward`](forward.md),
+[`/invite`](invite.md), [`/join`](join.md), [`/leave`](leave.md), [`/monitor`](monitor.md),
+[`/mute`](mute.md), [`/notes`](notes.md), [`/search`](search.md), [`/set`](set.md),
+[`/status`](status.md), [`/unblock`](unblock.md), [`/unmute`](unmute.md), [`/watch`](watch.md)
 
-**owner** (só o dono) (1):
+**owner** (só o dono) (4):
 
-[`/contacts`](contacts.md)
+[`/backup`](backup.md), [`/cache`](cache.md), [`/contacts`](contacts.md), [`/debug`](debug.md)
 <!-- /gerado:roles -->
 
 As **respostas do próprio bot** também saem pela sua conta, mas nunca são tratadas como comando,
@@ -251,12 +250,12 @@ e o `/alias /usd` mostra o que um atalho faz.
 | [`/antilink`](antilink.md) | | `admin` · delegável | Apaga links de quem não é admin do grupo |
 | [`/antitag`](antitag.md) | | `admin` · delegável | Apaga mensagens de quem não é admin que marcam muita gente |
 | [`/ascii`](ascii.md) | | `user` | O texto em letras grandes de ASCII, num bloco que cabe na tela do celular |
-| [`/backup`](backup.md) | | `admin` | Backup diário local e envio por `backup.to`; lista, detalha, restaura, envia e apaga o banco |
+| [`/backup`](backup.md) | | `owner` | Backup diário local e envio por `backup.to`; lista, detalha, restaura, envia e apaga o banco |
 | [`/batch`](batch.md) | | `admin` | Executa vários comandos de uma mensagem só, em sequência (cada linha que começa com um comando abre um bloco), e responde um resumo; `-stop` e `-dry` |
 | [`/bills`](bills.md) | | `user` | Piada: sorteia 2 membros para "pagar um boleto" |
 | [`/block`](block.md) | | `admin` | Bloqueia uma ou várias pessoas na sua conta do WhatsApp (respondendo uma mensagem, quem a escreveu); sem nada, lista os bloqueados; `-mask` ofusca telefones |
 | [`/bot`](bot.md) | | `admin` | Status do bot (relatório de 24 h e os usuários); liga/desliga os comandos (`-on`/`-off`) e diz quem usa: admins (`+a`/`-a`) e usuários (`+u`/`-u`, em qualquer chat ou só num grupo, e os comandos de cada um com `+cmd`/`-cmd`); `-reset` volta ao padrão; `-status` (`-s`): relatório das últimas 24 h, e `-s 06h` manda todo dia; `-info` (`-i`): versões e sistema; `-test` (`-t`): testa cache, disco, banco, WhatsApp, internet, SMTP, IMAP e programas |
-| [`/cache`](cache.md) | | `admin` | Árvore do cache com tamanhos, contagens de mensagens e limpeza |
+| [`/cache`](cache.md) | | `owner` | Árvore do cache com tamanhos, contagens de mensagens e limpeza |
 | [`/calc`](calc.md) | `/math`, `/sum` | `user` | Calcula e soma os números de uma lista: responda "437 maromba / 351 corrida" e leia 788; entende 1.234,56, sinais, mostra a fita do que leu e o `-group` por nome |
 | [`/call`](call.md) | | `admin` | Recusa ligações de voz e de vídeo e responde com uma mensagem: liga/desliga, muda o texto e quem sempre toca |
 | [`/carbon`](carbon.md) | | `user` | O código numa imagem de janela de editor |
@@ -264,7 +263,7 @@ e o `/alias /usd` mostra o que um atalho faz.
 | [`/cron`](cron.md) | | `admin` | Na hora marcada (`30m`, `às 18h`, `sexta 9h`...): envia uma mensagem (aqui ou com `-to`, em um ou vários chats) ou, com `-reminder`, um ⏰ lembrete; pode repetir, editar e pausar, e rodar comandos no texto (`{/crypto}`) |
 | [`/crypto`](crypto.md) | | `user` | Cotação das criptos ativadas (padrão: BTC, ETH, SOL e HYPE) ou só das pedidas (`BTC ETH`); alertas de preço |
 | [`/cve`](cve.md) | | `user` | Últimas CVEs publicadas (NVD); `-highscore` só as críticas |
-| [`/debug`](debug.md) | | `admin` | Logs de debug com níveis, filtro e cópia para chats |
+| [`/debug`](debug.md) | | `owner` | Logs de debug com níveis, filtro e cópia para chats |
 | [`/defi`](defi.md) | | `admin` | Posições de liquidez da Orca e do Project X: saldo, faixa, preço e taxas a coletar, lidos on-chain; `-alert` avisa quando sai e volta para a faixa e quando as taxas passam de um valor. `liquidswap`: posições de LP na Aptos. `morpho` e `aave`: posição, empréstimos e risco no Morpho e no Aave V3 |
 | [`/demote`](demote.md) | | `admin` · delegável | Tira o admin de alguém do grupo |
 | [`/draw`](draw.md) | | `admin` · delegável | Desenha uma imagem ou um GIF animado (`-gif`) com o ChatGPT (GPT Image); numa foto, edita ou anima |
@@ -290,7 +289,7 @@ e o `/alias /usd` mostra o que um atalho faz.
 | [`/news`](news.md) | | `user` | Manchetes de feeds RSS: `-hack`, `-g1`, `-gazeta`, `-brazil` |
 | [`/noffa`](noffa.md) | | `user` | Piada: enfeita o texto com arco-íris |
 | [`/notes`](notes.md) | | `admin` | Anotações com ID e `#tag` (`-a`, `-l`, `-s`, `-r`): ver com a mídia (`-v`), editar (`-u`), renomear tag (`-m`), descrever tag (`-d`), exportar em PDF (`-e`) e `-alert` que avisa numa data/hora |
-| [`/ocr`](ocr.md) | | `admin` · delegável | O texto de uma foto, lido localmente (Tesseract) ou pelo ChatGPT (`-gpt`) |
+| [`/ocr`](ocr.md) | | `user` | O texto de uma foto, lido localmente (Tesseract) ou pelo ChatGPT (`-gpt`) |
 | [`/ping`](ping.md) | | `user` | Verifica se o bot está vivo |
 | [`/pixelart`](pixelart.md) | | `user` | Arte ANSI/ASCII aleatória (16colo.rs) |
 | [`/poll`](poll.md) | | `admin` · delegável | Cria uma enquete nativa do WhatsApp no chat; `-r` mostra o resultado |
@@ -307,7 +306,7 @@ e o `/alias /usd` mostra o que um atalho faz.
 | [`/stt`](stt.md) | | `user` | Texto da fala de um link, vídeo ou áudio (o `/get -t` é um atalho), respondendo ou na legenda; `-ss` e `-es` escolhem um trecho |
 | [`/tldr`](tldr.md) | | `admin` · delegável | Resume a conversa do chat pelo ChatGPT (`30m`, `2h`, `1d`, `1h30m` ou `300` mensagens; respondendo uma mensagem, a partir dela) |
 | [`/translate`](translate.md) | | `user` | Traduz o texto ou a mensagem respondida pelo Google Translate, sem chave; `-to en` muda o idioma |
-| [`/tts`](tts.md) | | `admin` · delegável | O texto numa nota de voz, com uma voz local (Piper) ou o ChatGPT (`-gpt`) |
+| [`/tts`](tts.md) | | `user` | O texto numa nota de voz, com uma voz local (Piper) ou o ChatGPT (`-gpt`) |
 | [`/unblock`](unblock.md) | | `admin` | Desbloqueia uma pessoa: pelo nome, pelo número, pelo nº da lista do `/block` ou respondendo uma mensagem |
 | [`/unmute`](unmute.md) | | `admin` | Desfaz o silêncio do `/mute`: pelo nome, pelo nº da lista, respondendo um aviso ou todos (`-all`) |
 | [`/uptime`](uptime.md) | | `user` | Tempo de execução e de conexão |

@@ -1,4 +1,4 @@
-# `/ocr` · admin
+# `/ocr` · user
 
 Role `admin`: only you and the extra admins. The owner can grant it to a person or group with
 `/bot +u +cmd /ocr` ([Delegating](index.md#delegating-an-admin-command)).

@@ -9,7 +9,8 @@
  */
 
 const { talkText } = require('./gpt');
-const { pickEngine } = require('../engines');
+const { t } = require('../i18n');
+const { gptAllowed, pickEngine } = require('../engines');
 const { WITHOUT_KEY, keyOpenAi, measureConsumption } = require('../openaiChat');
 const { withoutOption } = require('./openaiCommon');
 const { listVoices, readVoiceOptions } = require('../ttsVoice');
@@ -37,6 +38,11 @@ async function cmdTts({ msg, args, opts, quotedMsg, chatId, chatName, isGroup, n
         voice = readVoiceOptions(opts, engine);
     } catch (e) {
         await msg.reply(e.message);
+        return;
+    }
+    // ChatGPT spends the key: only the admins, or a user with a limit for the /tts (/bot +cmd /tts +limit N)
+    if (!gptAllowed({ engine, admin, cmd: '/tts', senderNumber, chatId, isGroup })) {
+        await msg.reply(t('tts.gptNeedsLimit'));
         return;
     }
     // The options with a value (-voice, -speed, -pitch, -volume) leave the text as well as the flags

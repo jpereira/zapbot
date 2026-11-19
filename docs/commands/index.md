@@ -188,37 +188,36 @@ and a shortcut's name doesn't go in `+cmd`.
 <!-- gerado:roles -->
 ### Commands by role
 
-**user** (whoever is in `bot.users`) (29):
+**user** (whoever is in `bot.users`) (31):
 
 [`/ascii`](ascii.md), [`/bills`](bills.md), [`/calc`](calc.md), [`/carbon`](carbon.md),
 [`/crypto`](crypto.md), [`/cve`](cve.md), [`/games`](games.md), [`/get`](get.md),
 [`/giphy`](giphy.md), [`/help`](help.md), [`/joke`](joke.md), [`/kernel`](kernel.md),
-[`/me`](me.md), [`/meme`](meme.md), [`/news`](news.md), [`/noffa`](noffa.md), [`/ping`](ping.md),
-[`/pixelart`](pixelart.md), [`/qr`](qr.md), [`/sticker`](sticker.md), [`/stocks`](stocks.md),
-[`/stt`](stt.md), [`/translate`](translate.md), [`/uptime`](uptime.md), [`/usage`](usage.md),
-[`/version`](version.md), [`/walissu`](walissu.md), [`/weather`](weather.md), [`/whois`](whois.md)
+[`/me`](me.md), [`/meme`](meme.md), [`/news`](news.md), [`/noffa`](noffa.md), [`/ocr`](ocr.md),
+[`/ping`](ping.md), [`/pixelart`](pixelart.md), [`/qr`](qr.md), [`/sticker`](sticker.md),
+[`/stocks`](stocks.md), [`/stt`](stt.md), [`/translate`](translate.md), [`/tts`](tts.md),
+[`/uptime`](uptime.md), [`/usage`](usage.md), [`/version`](version.md), [`/walissu`](walissu.md),
+[`/weather`](weather.md), [`/whois`](whois.md)
 
-**admin, delegable** (admins and the owner; the owner releases them to a user with `+cmd`) (20):
+**admin, delegable** (admins and the owner; the owner releases them to a user with `+cmd`) (18):
 
 [`/antibadword`](antibadword.md), [`/antilink`](antilink.md), [`/antitag`](antitag.md),
 [`/demote`](demote.md), [`/draw`](draw.md), [`/everybody`](everybody.md), [`/goodbye`](goodbye.md),
-[`/gpt`](gpt.md), [`/group`](group.md), [`/members`](members.md), [`/ocr`](ocr.md),
-[`/poll`](poll.md), [`/profile`](profile.md), [`/promote`](promote.md), [`/show`](show.md),
-[`/stats`](stats.md), [`/tldr`](tldr.md), [`/tts`](tts.md), [`/warn`](warn.md),
-[`/welcome`](welcome.md)
+[`/gpt`](gpt.md), [`/group`](group.md), [`/members`](members.md), [`/poll`](poll.md),
+[`/profile`](profile.md), [`/promote`](promote.md), [`/show`](show.md), [`/stats`](stats.md),
+[`/tldr`](tldr.md), [`/warn`](warn.md), [`/welcome`](welcome.md)
 
-**admin** (admins and the owner; never delegable) (23):
+**admin** (admins and the owner; never delegable) (20):
 
-[`/alias`](alias.md), [`/backup`](backup.md), [`/batch`](batch.md), [`/block`](block.md),
-[`/bot`](bot.md), [`/cache`](cache.md), [`/call`](call.md), [`/cron`](cron.md),
-[`/debug`](debug.md), [`/defi`](defi.md), [`/forward`](forward.md), [`/invite`](invite.md),
-[`/join`](join.md), [`/leave`](leave.md), [`/monitor`](monitor.md), [`/mute`](mute.md),
-[`/notes`](notes.md), [`/search`](search.md), [`/set`](set.md), [`/status`](status.md),
-[`/unblock`](unblock.md), [`/unmute`](unmute.md), [`/watch`](watch.md)
+[`/alias`](alias.md), [`/batch`](batch.md), [`/block`](block.md), [`/bot`](bot.md),
+[`/call`](call.md), [`/cron`](cron.md), [`/defi`](defi.md), [`/forward`](forward.md),
+[`/invite`](invite.md), [`/join`](join.md), [`/leave`](leave.md), [`/monitor`](monitor.md),
+[`/mute`](mute.md), [`/notes`](notes.md), [`/search`](search.md), [`/set`](set.md),
+[`/status`](status.md), [`/unblock`](unblock.md), [`/unmute`](unmute.md), [`/watch`](watch.md)
 
-**owner** (the owner only) (1):
+**owner** (the owner only) (4):
 
-[`/contacts`](contacts.md)
+[`/backup`](backup.md), [`/cache`](cache.md), [`/contacts`](contacts.md), [`/debug`](debug.md)
 <!-- /gerado:roles -->
 
 The **bot's own replies** also go out through your account, but they're never treated as commands,
@@ -252,12 +251,12 @@ target command, and `/alias /usd` shows what a shortcut does.
 | [`/antilink`](antilink.md) | | `admin` · delegable | Deletes links sent by non-admins in the group |
 | [`/antitag`](antitag.md) | | `admin` · delegable | Deletes messages from non-admins that tag lots of people |
 | [`/ascii`](ascii.md) | | `user` | The text in big ASCII letters, in a block that fits a phone screen |
-| [`/backup`](backup.md) | | `admin` | Daily local backup and delivery through `backup.to`; lists, details, restores, sends, and deletes the database |
+| [`/backup`](backup.md) | | `owner` | Daily local backup and delivery through `backup.to`; lists, details, restores, sends, and deletes the database |
 | [`/batch`](batch.md) | | `admin` | Runs several commands from a single message, in sequence (each line that starts with a command opens a block), and replies with a summary; `-stop` and `-dry` |
 | [`/bills`](bills.md) | | `user` | Joke: draws 2 members to "pay a invoice" |
 | [`/block`](block.md) | | `admin` | Blocks one or more people on your WhatsApp account (replying to a message, whoever wrote it); with nothing, lists the blocked ones; `-mask` obfuscates phone numbers |
 | [`/bot`](bot.md) | | `admin` | Bot status (24 h report and the users); turns commands on/off (`-on`/`-off`) and says who uses them: admins (`+a`/`-a`) and users (`+u`/`-u`, in any chat or just in one group, and each one's commands with `+cmd`/`-cmd`); `-reset` goes back to the default; `-status` (`-s`): report for the last 24 h, and `-s 06h` sends it every day; `-info` (`-i`): versions and system; `-test` (`-t`): tests cache, disk, database, WhatsApp, internet, SMTP, IMAP, and programs |
-| [`/cache`](cache.md) | | `admin` | Cache tree with sizes, message counts, and cleanup |
+| [`/cache`](cache.md) | | `owner` | Cache tree with sizes, message counts, and cleanup |
 | [`/calc`](calc.md) | `/math`, `/sum` | `user` | Calculates and sums the numbers of a list: reply to "437 gym / 351 running" and get 788; understands 1.234,56, signs, shows a tape of what it read and `-group` by name |
 | [`/call`](call.md) | | `admin` | Rejects voice and video calls and replies with a message: turn it on/off, set the text and who always rings |
 | [`/carbon`](carbon.md) | | `user` | The code in an editor-window image |
@@ -265,7 +264,7 @@ target command, and `/alias /usd` shows what a shortcut does.
 | [`/cron`](cron.md) | | `admin` | At the set time (`30m`, `at 18h`, `friday 9h`...): sends a message (here or with `-to`, to one or several chats) or, with `-reminder`, an ⏰ reminder; can repeat, be edited and paused, and run commands in the text (`{/crypto}`) |
 | [`/crypto`](crypto.md) | | `user` | Quote for the enabled cryptos (default: BTC, ETH, SOL, and HYPE) or just the requested ones (`BTC ETH`); price alerts |
 | [`/cve`](cve.md) | | `user` | Latest published CVEs (NVD); `-highscore` only the critical ones |
-| [`/debug`](debug.md) | | `admin` | Debug logs with levels, filtering, and copying to chats |
+| [`/debug`](debug.md) | | `owner` | Debug logs with levels, filtering, and copying to chats |
 | [`/defi`](defi.md) | | `admin` | Liquidity positions on Orca and Project X: balance, range, price, and fees to collect, read on-chain; `-alert` warns when it leaves and returns to the range and when fees go over a value. `liquidswap`: LP positions on Aptos. `morpho` and `aave`: position, loans, and risk on Morpho and Aave V3 |
 | [`/demote`](demote.md) | | `admin` · delegable | Removes someone's group admin |
 | [`/draw`](draw.md) | | `admin` · delegable | Draws an image or an animated GIF (`-gif`) with ChatGPT (GPT Image); on a photo, edits or animates it |
@@ -291,7 +290,7 @@ target command, and `/alias /usd` shows what a shortcut does.
 | [`/news`](news.md) | | `user` | Headlines from RSS feeds: `-hack`, `-g1`, `-gazeta`, `-brazil` |
 | [`/noffa`](noffa.md) | | `user` | Joke: decorates the text with rainbows |
 | [`/notes`](notes.md) | | `admin` | Notes with ID and `#tag` (`-a`, `-l`, `-s`, `-r`): view with the media (`-v`), edit (`-u`), rename a tag (`-m`), describe a tag (`-d`), export to PDF (`-e`), and `-alert` that notifies at a date/time |
-| [`/ocr`](ocr.md) | | `admin` · delegable | The text in a photo, read locally (Tesseract) or by ChatGPT (`-gpt`) |
+| [`/ocr`](ocr.md) | | `user` | The text in a photo, read locally (Tesseract) or by ChatGPT (`-gpt`) |
 | [`/ping`](ping.md) | | `user` | Checks whether the bot is alive |
 | [`/pixelart`](pixelart.md) | | `user` | Random ANSI/ASCII art (16colo.rs) |
 | [`/poll`](poll.md) | | `admin` · delegable | Creates a native WhatsApp poll in the chat; `-r` shows the result |
@@ -308,7 +307,7 @@ target command, and `/alias /usd` shows what a shortcut does.
 | [`/stt`](stt.md) | | `user` | Text of the speech of a link, video or audio (`/get -t` is a shortcut), replying or as the caption; `-ss` and `-es` pick a part |
 | [`/tldr`](tldr.md) | | `admin` · delegable | Summarizes the chat's conversation with ChatGPT (`30m`, `2h`, `1d`, `1h30m` or `300` messages; replying to a message, from it on) |
 | [`/translate`](translate.md) | | `user` | Translates the text or the replied message with Google Translate, no key; `-to en` changes the language |
-| [`/tts`](tts.md) | | `admin` · delegable | The text as a voice note, with a local voice (Piper) or ChatGPT (`-gpt`) |
+| [`/tts`](tts.md) | | `user` | The text as a voice note, with a local voice (Piper) or ChatGPT (`-gpt`) |
 | [`/unblock`](unblock.md) | | `admin` | Unblocks a person: by name, by number, by the `/block` list number, or by replying to a message |
 | [`/unmute`](unmute.md) | | `admin` | Undoes the `/mute` silence: by name, by list number, by replying to a notice, or all (`-all`) |
 | [`/uptime`](uptime.md) | | `user` | Run time and connection time |

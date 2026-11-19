@@ -481,7 +481,8 @@ client.on('message_create', (msg) => withContextDebug({
         if (admin) {
             await run();
         } else {
-            const gratis = (command.usageFree ?? []).some(o => opts.given.has(o));
+            // The usageCounts of the definition tells whether this call spends (/tts: only the ChatGPT one)
+            const gratis = (command.usageFree ?? []).some(o => opts.given.has(o)) || command.usageCounts?.(opts) === false;
             await withLimit({ msg, quem: { numero: senderNumber, chatId, isGroup }, cmds: [command.cmd], gratis, params: args }, run);
         }
     } catch (error) {

@@ -2,7 +2,7 @@
  * /ocr: The text in an image (OCR)
  */
 
-const { ADMIN } = require('../../roles').ROLES;
+const { USER } = require('../../roles').ROLES;
 
 const { OPTION_QUIET_TIP } = require('./_options');
 
@@ -35,6 +35,7 @@ module.exports = {
             cron: false
         }
     ],
-    delegavel: true,
-    role: ADMIN // Spends the OpenAI key: delegable, like /gpt
+    // The local OCR (Tesseract) is free; with ChatGPT it spends the OpenAI key: only the admins, or a user with a limit
+    usageCounts: (opts) => require('../../engines').countsOnlyGpt('ocr.engine')(opts),
+    role: USER
 };
