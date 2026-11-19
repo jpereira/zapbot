@@ -53,7 +53,20 @@
         "f"
       ],
       "values": [],
-      "desc": "Remove do cache as apagadas deste chat. Com -e/-s/-r/chat, o que foi pedido (no seu privado, sem chat: de todos)."
+      "desc": "Remove do cache as apagadas deste chat. Com -e/-s/-r/chat, o que foi pedido (no seu privado, sem chat: de todos). Com -yes, tudo."
+    },
+    {
+      "opts": [
+        "yes",
+        "y"
+      ],
+      "values": [],
+      "desc": "Com -flush: apaga TUDO do escopo, não só as apagadas: apagadas, editadas, status e reações, e os arquivos de mídia das apagadas e dos status. No seu privado sem chat: de todos os chats; em outro chat ou com um chat: só dele. Só vale com -flush.",
+      "ex": [
+        "/show -f -yes",
+        "/show -f -y /^Maria/"
+      ],
+      "role": "admin"
     },
     {
       "opts": [

@@ -174,7 +174,7 @@ your private chat replies `⛔ Only the bot owner (or an admin) can see other ch
 | `/draw` |  | `-model` |
 | `/gpt` |  | `-model`, `-img`, `-gif`, `-audio`, `-prices`, `-usage` |
 | `/profile` | `[/contact/\|@mention\|+number]...` | `-set` |
-| `/show` | `-list`, `chat` | `-flush` |
+| `/show` | `-list`, `chat` | `-flush`, `-yes` |
 | `/stats` | `-list`, `-me`, `</chat/>` | `-flush`, `-flush-all` |
 | `/stocks` |  | `-add`, `-del` |
 | `/tldr` | `-chat`, `-private` |  |

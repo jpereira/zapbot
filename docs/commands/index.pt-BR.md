@@ -174,7 +174,7 @@ responde `⛔ Apenas o dono do bot (ou um admin) pode ver outros chats.`
 | `/draw` |  | `-model` |
 | `/gpt` |  | `-model`, `-img`, `-gif`, `-audio`, `-prices`, `-usage` |
 | `/profile` | `[/contato/\|@menção\|+número]...` | `-set` |
-| `/show` | `-list`, `chat` | `-flush` |
+| `/show` | `-list`, `chat` | `-flush`, `-yes` |
 | `/stats` | `-list`, `-me`, `</chat/>` | `-flush`, `-flush-all` |
 | `/stocks` |  | `-add`, `-del` |
 | `/tldr` | `-chat`, `-private` |  |

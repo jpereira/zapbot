@@ -111,6 +111,7 @@ module.exports = {
     'show.flushMedia': '📎 Mídias apagadas do disco: *{count}*{size}\n',
     'show.flushPerChat': '\n*Por chat* ({count}):\n',
     'show.flushMore': '_+{count} chat(s)_\n',
+    'show.yesNeedsFlush': '❌ O -yes só vale com o -flush.\n💡 _{cmd} -f -yes apaga tudo do cache_',
     'show.flushHint': '\n💡 _Para limpar as de todos os chats, use {cmd} -f no seu privado._',
     'show.deletedStatusTitle': '📸 *STATUS APAGADO* ({i}/{total})',
     'show.deletedTitle': '❌ *MENSAGEM APAGADA* ({i}/{total})',
