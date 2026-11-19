@@ -27,7 +27,8 @@ users and the daily delivery), the versions of what it uses
 | `+cmd`, `-cmd` | `<commands>`: a user's commands. With `+u`, sets them (`+cmd`: only these; `-cmd`: all, except these); alone, `+cmd` grants and `-cmd` removes. See [Each user's commands](#each-users-commands) |
 | `+limit`, `-limit` | `<N[/period]>` (with `+cmd`) or `<commands>`: the usage limit of a user per command (`+cmd /gpt +limit 5/day`); `-limit /gpt` or `all` removes it. See [Usage limits per user](#usage-limits-per-user-limit) |
 | `-list-users`, `-lu` | `[all]`: the users of this chat; with `all`, everyone, in any chat (in a group, the phone of those from outside is hidden). Accepts `-mask`. See [User list](#user-list) |
-| `-reset`, `-r` | `[force]`: removes all users and their limits (the extra admins and the on/off stay). With `force`, everything goes back to the default: it also removes the extra admins and turns the bot on. Both ask first (with `-yes` or `-y`, they run at once). Accepts `-mask`; the other options are refused. Owner only. See [Back to the default](#back-to-the-default) |
+| `-list-commands`, `-lc` | The commands by level: user, admin delegable (with `+cmd`), admin and owner; with a person (`-lc /Fulano/`), everything they can use and their limits. See [Commands by level](#commands-by-level) |
+| `-reset`, `-r` | `[force]`: removes all users and their limits (the extra admins and the on/off stay). With `force`, everything goes back to the default: it also removes the extra admins and turns the bot on. Both ask first (with `-yes` or `-y`, they run at once). With `+u` and a person (`-r +u /Fulano/`), it resets only them: the common commands, with no rule, no limit and nothing left only in a group (no question). Accepts `-mask`; the other options are refused. Owner only. See [Back to the default](#back-to-the-default) |
 | `-status`, `-s` | The status now and its daily delivery (`[<time>\|off]`). Accepts `-to` and `-mask`; the other options are refused. See [Bot status](#bot-status) |
 | `-to` | `<destination>`: together with `-status`, where the report goes (person, group or email; repeat for several). See [Bot status](#bot-status) |
 | `-yes`, `-y` | With `-reset`: confirms right away, without the question (it runs at once). With `-flush-email`: deletes the messages (without it, only counts). Only valid with those two |
@@ -47,6 +48,26 @@ daily deliveries. Permissions and destinations use the full numbers.
 `-on`/ `-off` combines with `-list-users [all]` (`/bot -on -list-users` turns it on and shows the
 users); `-on` with `-off` in the same command is refused. `+a`/ `-a`/ `+u`/ `-u` go one at a time;
 together with them, `+cmd`/ `-cmd` (only with users) and `-list-users all` (the reply with everyone).
+
+## Commands by level
+
+`/bot -lc` lists which commands each level uses: the **user** ones (the common ones, for whoever is in `+u`), the
+**admin, delegable** ones (admin only, unless you give one to a user with `+cmd`), the **admin** ones (not
+delegable) and the **owner** ones. The admins (`+a`) use everything except the owner's.
+
+```text
+/bot -lc /Sofia Izabel/
+👤 Sofia Izabel · +5521944444444
+🗣️ +u · Only: /tts, /joke
+✅ Can use (2): /joke, /tts
+⏱️ Limits: /tts 3/day
+
+/bot -lc
+🗣️ User (29): the common ones, for whoever is in +u
+/ascii, /bills, /calc, ...
+🔓 Admin, delegable (20): only admins, or a user with +cmd
+/gpt, /tts, ...
+```
 
 ## User list
 
@@ -259,6 +280,8 @@ A user (a person or a group) can be limited to some common commands, or receive 
 /bot -cmd /meme /Family Group/ /Fulano da Silva/ → several at once
 /bot -cmd /meme                                   → from the current chat (the group, or the person in private)
 /bot +cmd all /Sofia Izabel/                      → Sofia goes back to using all the regular ones
+/bot +u +cmd all /Sofia Izabel/                   → the same, on the whole person (see below)
+/bot -r +u /Sofia Izabel/                        → resets her: the common ones only, no rule, no limit, nothing left in a group
 /bot +u +cmd /gpt                                 → typed in a group: everyone there uses only /gpt
 /bot -off                      → turns off all the commands (except /bot)
 /bot -on                       → turns it back on
@@ -270,6 +293,15 @@ A user (a person or a group) can be limited to some common commands, or receive 
 - `+cmd` on someone who isn't a user yet already adds the person (or the group), with only those
   commands. On someone who uses all, it changes nothing; on someone with "All but", it allows
   those again.
+- **Where you type it matters.** In **your own private chat** the reply is the list of users, for you. In **any other
+  chat** (the person's private, or a group) the reply is a notice for whoever is there, with no list and no phone:
+  `✅ You are now a user of the bot, with these commands: /joke, /noffa.`, the limits (`⏱️ Limits: ...`) and
+  `Type /whois to see what you can use, or /help for the list of commands.` In a group it says it about the group or
+  about the person ("✅ Fulano is now a user of the bot in this group."). `-u` becomes `🗑️ Fulano is no longer a user of
+  the bot.`, and changing the rule or the limits, `🔄 Your commands in the bot changed.` With a long rule (more than 10
+  commands) it only says to type `/whois`. With `-lu` or `-mask` in the command, you get the list anyway.
+- `+cmd all` on a person, typed in a private chat, resets them: all the regular ones **everywhere**, so what they had
+  only in a group (the entry, its rule and its limits) goes too. Typed in a group, it only touches that group.
 - `-cmd` on someone who uses all leaves "All but" those. Removing the last command of a list is
   refused: to remove the person, `/bot -u`; to allow all, `/bot +cmd all`.
 - Commands go by name (with or without the `/`), separated by commas. A

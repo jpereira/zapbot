@@ -87,18 +87,31 @@
     },
     {
       "opts": [
+        "list-commands",
+        "lc"
+      ],
+      "values": [],
+      "desc": "Os comandos por nível: o que um usuário usa, o que só um admin usa (e os que você pode delegar com +cmd) e o que é só seu. Com uma pessoa (/bot -lc /Fulano/): tudo o que ela pode usar e os limites dela.",
+      "ex": [
+        "/bot -lc",
+        "/bot -lc /Fulano/"
+      ]
+    },
+    {
+      "opts": [
         "reset",
         "r"
       ],
       "values": [
         "[force]"
       ],
-      "desc": "Tira todos os usuários (e os limites deles), de qualquer chat e grupo: ficam só você e os admins extras. Os admins, o liga/desliga e o envio diário do -status não mudam. Com force, volta tudo ao padrão: também tira os admins extras e liga o bot. Os dois perguntam antes: responda sim em 10 s (com -yes ou -y, não pergunta e roda na hora). Aceita -mask; as outras opções são recusadas. Só o dono.",
+      "desc": "Tira todos os usuários (e os limites deles), de qualquer chat e grupo: ficam só você e os admins extras. Os admins, o liga/desliga e o envio diário do -status não mudam. Com force, volta tudo ao padrão: também tira os admins extras e liga o bot. Os dois perguntam antes: responda sim em 10 s (com -yes ou -y, não pergunta e roda na hora). Aceita -mask; as outras opções são recusadas. Só o dono. Com +u e uma pessoa (/bot -r +u /Fulano/) zera só ela: volta aos comandos comuns, sem regra (+cmd), sem limite (+limit) e sem nada só em um grupo.",
       "ex": [
         "/bot -r",
         "/bot -r force",
         "/bot -r -y",
-        "/bot -r force -yes"
+        "/bot -r force -yes",
+        "/bot -r +u /Fulano/"
       ]
     },
     {
