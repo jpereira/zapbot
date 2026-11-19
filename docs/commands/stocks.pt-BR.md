@@ -9,6 +9,7 @@ pedidos. O `/rates` é o mesmo comando (o nome antigo). Para **cripto**, use o [
 |---|---|---|
 | *(nada)* | `[SÍMBOLO...]` | Os habilitados, ou só os símbolos pedidos (habilitados ou não), na ordem pedida: `USD`, `EUR`, `GBP`, `USDT` ou um ticker do Yahoo Finance |
 | `-list`, `-l` | | Lista tudo o que ele suporta: os símbolos habilitados, as moedas (✅ as habilitadas) e os tipos de ticker, com exemplos |
+| `-quiet`, `-q` | | Só os preços, uma linha por símbolo, sem cabeçalho, sem detalhes e sem rodapé (um símbolo que falha aparece com `-`). Bom para um texto (`{/stocks -q USD}`) ou para o [`/tts`](tts.md#comandos-no-texto) |
 | `-add`, `-a` | `<SÍMBOLO>` | Habilita uma moeda (`USD`, `EUR`, `GBP`, `USDT`) ou um ticker que exista no Yahoo Finance (só o dono do bot ou um [admin](bot.md#admins-extras)) |
 | `-del`, `-d` | `<SÍMBOLO>` | Desabilita um símbolo (só o dono do bot ou um [admin](bot.md#admins-extras)) |
 | `-alert` | `[regra]` | Sem regra, lista os alertas; com regra (ex.: `USD > 5.30` ou `MSTR < 90`), cria um (só o dono do bot ou um [admin](bot.md#admins-extras)). O símbolo também pode vir antes: `/stocks MSTR -alert < 90`. Veja [Alertas de preço](#alertas-de-preço) |
@@ -59,6 +60,14 @@ Cripto está em /crypto -l.
 
 Qual comando para quê: o `/stocks` é câmbio contra o real e tudo o que negocia em bolsa; o [`/crypto`](crypto.md) é
 cripto da Binance (BTC, ETH, **XAUT**...).
+
+Só os preços (`-q`):
+
+```text
+/stocks -q USD MSTR
+USD R$ 5,4321
+MSTR US$ 245,10
+```
 
 ## Moedas
 

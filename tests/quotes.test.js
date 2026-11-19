@@ -497,3 +497,23 @@ describe('alertas de preço (-alert)', () => {
         assert.equal(network.chamadas.length, 0);
     });
 });
+
+describe('-q|-quiet: só os preços, uma linha por item', () => {
+    test('/crypto -q: "BTC $preço" por moeda, sem cabeçalho, sem detalhes e sem rodapé', async () => {
+        network.responder('get', 'api.binance.com/api/v3/ticker/24hr', [
+            { symbol: 'BTCUSDT', lastPrice: '90123.45', priceChangePercent: '2.3', highPrice: '91000', lowPrice: '88000', quoteVolume: '1500000000' },
+            { symbol: 'ETHUSDT', lastPrice: '3100.2', priceChangePercent: '-1.1', highPrice: '3200', lowPrice: '3000', quoteVolume: '900000000' }
+        ]);
+        const [r] = await bot.replyAlt('/crypto -q BTC ETH');
+        assert.equal(r, 'BTC $90,123.45\nETH $3,100.20');
+        assert.doesNotMatch(r, /MERCADO|Binance|Live Market|📈|🟢/);
+    });
+});
+
+describe('/stocks -q', () => {
+    test('uma linha por símbolo (moeda em R$, ação na moeda dela); o que falha vai com -; sem cabeçalho nem rodapé', async () => {
+        const [r] = await bot.replyAlt('/stocks -q usd mstr xyz');
+        assert.equal(r, 'USD R$ 5,2000\nMSTR US$ 100,00\nXYZ -');
+        assert.doesNotMatch(r, /MERCADO|🕐|Yahoo|💰/);
+    });
+});

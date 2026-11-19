@@ -311,6 +311,7 @@ Most use `-q` (no "🔗 Alias" header). Take the whole file with `/alias -exampl
 | `/gptvoz` | `/gpt -voice` |
 | `/tovoz` | `/gpt -voice` |
 | `/tuga` | `/tts -q -l -v tugão $@` |
+| `/tuga.btc` | `/tts -q -sp 75 -l -v tugão $@ {/crypto -q BTC}` |
 | `/vf` | `/batch -q` + `/tts -q -l -v $@` with the voices tugão, cadu, edresson, faber |
 | `/vfazol` | `/batch -q` + `/tts -q -l -v $@` with the voices cadu, edresson, faber |
 

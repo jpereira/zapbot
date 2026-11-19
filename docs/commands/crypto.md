@@ -7,6 +7,7 @@ only the requested ones. Default: BTC, ETH, SOL and HYPE.
 |---|---|---|
 | *(none)* | `[TOKEN...]` | Quotes for the enabled coins, or only the given coins (enabled or not), in the order requested. An unsupported one: warns and lists the supported ones |
 | `-list`, `-l` | | Lists the supported coins; the enabled ones are marked with `*` |
+| `-quiet`, `-q` | | Only the prices, one line per coin, with no header, no details and no footer. Handy for a text (`{/crypto -q}`) or for the [`/tts`](tts.md#commands-in-the-text) |
 | `-add`, `-a` | `<TOKEN>` | Enables a supported coin (bot owner or an [admin](bot.md#extra-admins) only) |
 | `-del`, `-d` | `<TOKEN>` | Disables a coin (bot owner or an [admin](bot.md#extra-admins) only) |
 | `-alert` | `[rule]` | Without a rule, lists the alerts; with a rule (e.g. `BTC < 90000`), creates one (bot owner or an [admin](bot.md#extra-admins) only). The coin can also come first: `/crypto BTC -alert < 90000`. See [Price alerts](stocks.md#price-alerts) |
@@ -21,6 +22,15 @@ SHIB, XLM, NEAR, UNI and **XAUT** (Tether Gold: a token that follows the price o
 The enabled coins are stored in the `settings` table, key `crypto.coins`, and survive restarts.
 
 ![Demo of /crypto](../assets/demo/07-crypto.gif)
+
+Only the prices (`-q`):
+
+```text
+/crypto -q
+BTC $90,123.45
+ETH $3,100.20
+SOL $145.10
+```
 
 ## Shortcut for the coins you check
 

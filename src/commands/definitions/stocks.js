@@ -14,6 +14,12 @@ module.exports = {
     ex: ['/stocks', '/stocks usd eur', '/stocks MSTR NVDA', '/stocks PETR4.SA', '/stocks USD -alert > 5.30', '/stocks MSTR -alert < 90'],
     cmd_opts: [
         {
+            opts: ['quiet', 'q'],
+            values: [],
+            desc: 'Only the prices, one line per symbol (USD R$ 5.4321, MSTR $245.10), with no header, no details and no footer. A symbol that fails shows -.',
+            ex: ['/stocks -q', '/stocks -q USD MSTR']
+        },
+        {
             opts: ['add', 'a'],
             values: ['<SYMBOL>'],
             desc: 'Enables a symbol: USD, EUR, GBP or USDT, or a ticker that exists on Yahoo Finance. Owner (or an admin) only.',

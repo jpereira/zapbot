@@ -9,6 +9,7 @@ indexes** (MSTR, NVDA, PETR4.SA, the S&P 500...). It shows the enabled symbols (
 |---|---|---|
 | *(none)* | `[SYMBOL...]` | The enabled ones, or only the given symbols (enabled or not), in the order requested: `USD`, `EUR`, `GBP`, `USDT` or a ticker from Yahoo Finance |
 | `-list`, `-l` | | Lists everything it supports: the enabled symbols, the currencies (✅ the enabled ones) and the kinds of ticker, with examples |
+| `-quiet`, `-q` | | Only the prices, one line per symbol, with no header, no details and no footer (a symbol that fails shows `-`). Handy for a text (`{/stocks -q USD}`) or for the [`/tts`](tts.md#commands-in-the-text) |
 | `-add`, `-a` | `<SYMBOL>` | Enables a currency (`USD`, `EUR`, `GBP`, `USDT`) or a ticker that exists on Yahoo Finance (bot owner or an [admin](bot.md#extra-admins) only) |
 | `-del`, `-d` | `<SYMBOL>` | Disables a symbol (bot owner or an [admin](bot.md#extra-admins) only) |
 | `-alert` | `[rule]` | Without a rule, lists the alerts; with a rule (e.g. `USD > 5.30` or `MSTR < 90`), creates one (bot owner or an [admin](bot.md#extra-admins) only). The symbol can also come first: `/stocks MSTR -alert < 90`. See [Price alerts](#price-alerts) |
@@ -59,6 +60,14 @@ Crypto is in /crypto -l.
 
 Which command for what: `/stocks` is currencies against the real and everything that trades on a stock
 exchange; [`/crypto`](crypto.md) is crypto from Binance (BTC, ETH, **XAUT**...).
+
+Only the prices (`-q`):
+
+```text
+/stocks -q USD MSTR
+USD R$ 5.4321
+MSTR $245.10
+```
 
 ## Currencies
 

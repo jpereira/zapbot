@@ -311,6 +311,7 @@ A maioria usa `-q` (sem o cabeçalho "🔗 Alias"). Pegue o arquivo inteiro com 
 | `/gptvoz` | `/gpt -voice` |
 | `/tovoz` | `/gpt -voice` |
 | `/tuga` | `/tts -q -l -v tugão $@` |
+| `/tuga.btc` | `/tts -q -sp 75 -l -v tugão $@ {/crypto -q BTC}` |
 | `/vf` | `/batch -q` + `/tts -q -l -v $@` com as vozes tugão, cadu, edresson, faber |
 | `/vfazol` | `/batch -q` + `/tts -q -l -v $@` com as vozes cadu, edresson, faber |
 
