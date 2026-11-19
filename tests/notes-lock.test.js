@@ -224,6 +224,12 @@ describe('/notes -lock', () => {
         assert.doesNotMatch(shown, new RegExp(PASSWORD));
         assert.equal((await dbGet('SELECT body FROM messages WHERE id = ?', [inline.id.id])).body, '/stash.view ***');
 
+        // The three are private (-q -p): for anyone else they do not exist, and they are not in the user's /help
+        await bot.setSetting('bot.users', [bot.OTHERAlt.user]);
+        assert.deepEqual(await bot.replyAlt('/stash.view', { de: bot.OTHERAlt.jid }), ["⚠️ Comando '/stash.view' desconhecido, tente: /help"]);
+        assert.doesNotMatch((await bot.replyAlt('/help', { de: bot.OTHERAlt.jid }))[0], /stash/);
+        assert.doesNotMatch((await bot.replyAlt('/alias', { de: bot.OTHERAlt.jid }))[0] ?? '', /stash/);
+
         // In a group the notes stay locked even with the tag unlocked
         const group = await bot.replyAlt('/stash.view', { chat: GROUP });
         assert.doesNotMatch(group.join('\n'), /1234/);

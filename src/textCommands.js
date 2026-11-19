@@ -44,9 +44,9 @@ async function findCommandAlt(line) {
     if (direct) return { command: direct, args: rest };
 
     await dbReady;
-    const alias = await dbGet('SELECT command FROM command_aliases WHERE name = ?', [caller]);
+    const alias = await dbGet('SELECT command, owner_only FROM command_aliases WHERE name = ?', [caller]);
     if (!alias) return null;
-    if (!alias.command.startsWith('/')) return { textoAlias: caller };
+    if (!alias.command.startsWith('/')) return { textoAlias: caller, privado: Boolean(alias.owner_only) };
 
     const { applyParams } = require('./aliases'); // in here: aliases imports this file
     const { comando: commandAlt, sobras: leftovers } = applyParams(alias.command, rest);
@@ -54,7 +54,7 @@ async function findCommandAlt(line) {
     const target = findCommand(destination);
     if (!target) return null;
     const args = [commandAlt.slice(destination.length).trim(), leftovers].filter(Boolean).join(' ');
-    return { command: target, args, alias: caller };
+    return { command: target, args, alias: caller, privado: Boolean(alias.owner_only) };
 }
 
 /*
@@ -72,11 +72,12 @@ async function withTargets(command, textAlt) {
 const allowed = () => activeCommands().filter(c => c.cron).map(c => c.cmd);
 
 // "/crypto BTC" → { command, args, opts }, or { error }
-async function readCommand(line, whereAlt = '/cron', owner = false) {
+async function readCommand(line, whereAlt = '/cron', owner = false, privateOk = false) {
     const caller = line.split(/\s+/, 1)[0].toLowerCase();
     const foundAlt2 = await findCommandAlt(line);
 
-    if (!foundAlt2) return { erro: t('cnt.naoExiste', { linha: line, caller }) };
+    // A private alias (/alias -private) is the owner's: for anyone else it does not exist
+    if (!foundAlt2 || (foundAlt2.privado && !privateOk)) return { erro: t('cnt.naoExiste', { linha: line, caller }) };
     if (foundAlt2.textoAlias) return { erro: t('cnt.aliasTexto', { linha: line, caller, onde: whereAlt }) };
 
     const { command, args } = foundAlt2;
@@ -98,7 +99,7 @@ async function readCommand(line, whereAlt = '/cron', owner = false) {
  */
 async function commandsError(textAlt, whereAlt = '/cron', owner = false) {
     for (const { linha: line } of commandsInText(textAlt)) {
-        const { erro: errorAlt } = await readCommand(line, whereAlt, owner);
+        const { erro: errorAlt } = await readCommand(line, whereAlt, owner, true); // at the time of saving; running is what counts
         if (errorAlt) return errorAlt;
     }
     return null;
@@ -137,7 +138,8 @@ function messageSynthetic(chatId, line, replies) {
  * you (admin); with it, with the admin and the permissions of whoever runs.
  */
 async function runCommand(chatId, line, { chatName, isGroup, onde: whereAlt = '/cron', quem: who = null, origem: origin = null }) {
-    const { erro: errorAlt, command, args, opts } = await readCommand(line, whereAlt, !who); // without `quem`: runs as the owner
+    // without `quem`: runs as the owner; a private alias only runs for the owner
+    const { erro: errorAlt, command, args, opts } = await readCommand(line, whereAlt, !who, !who || who.nivel === ROLES.OWNER);
     if (errorAlt) return { texto: t('cnt.naoRodaNo', { cmd: line.split(/\s+/, 1)[0], onde: whereAlt }), midias: [] };
 
     printExpand(who?.senderName ?? client.info?.pushname ?? '-', origin ?? line, line);

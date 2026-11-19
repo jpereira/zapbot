@@ -297,6 +297,9 @@ client.on('message_create', (msg) => withContextDebug({
 
         if (sentByBot) printInfo(`Bot's own message starting with '/' ignored as a command: ${body.slice(0, 60)}`);
         let resolved = caller ? await resolverAlias(body) : null;
+        // A private alias (/alias -private) is the owner's: for anyone else it is a command that does not exist
+        if (resolved?.privado && !msg.fromMe) resolved = null;
+        if (resolved?.possiveis && !msg.fromMe) resolved = { ...resolved, possiveis: resolved.possiveis.filter(c => !c.privado) };
         // -tts (/crypto -tts BTC): it is /tts {/crypto -q BTC}; the log of the call keeps what was typed
         const spoken = ttsRewrite(resolved?.command, resolved?.args ?? '');
         if (spoken) resolved = await resolverAlias(spoken);

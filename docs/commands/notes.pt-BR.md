@@ -240,7 +240,7 @@ A senha também pode vir no comando, no lugar da pergunta: uma mensagem só e pr
 ```text
 /notes -v -lock minhasenha #stash        → libera a #stash e mostra as notas
 /notes -lock "minha senha longa" #stash  → só libera (aspas para uma senha com espaços)
-/stash.lock minhasenha                   → com um alias como /alias -q /stash.lock /notes -v -lock $@ #stash
+/stash.lock minhasenha                   → com um alias como /alias -q -p /stash.lock /notes -v -lock $@ #stash
 ```
 
 A senha é a primeira palavra depois do `-lock` (ou `-lo`, ou `-l` ao lado de `-v`/`-e`/`-s`/`-c`) que não começa com `#` nem
@@ -289,12 +289,13 @@ um instante; a pergunta é mais segura).
 
 Para uma tag que você usa toda hora (a `#stash` abaixo), três [aliases](alias.md) deixam cada uso em uma palavra. Eles
 estão em [`examples/secret-notes.zb`](https://github.com/jpereira/zapbot/blob/main/examples/secret-notes.zb) (carregue
-com `/alias -examples secret-notes`), ou crie à mão. O `-desc` de cada um o explica no `/alias`:
+com `/alias -examples secret-notes`), ou crie à mão. Eles são **privados** (`-p`, veja [Aliases privados](alias.md#aliases-privados)): só você os vê e os executa.
+O `-desc` de cada um o explica no `/alias`:
 
 ```text
-/alias -q /stash.add  -desc "Guarda uma nota na tag protegida #stash, cifrada. A tag precisa estar liberada antes (/stash.view); travada, ou fora do seu privado (um grupo, o chat de outra pessoa), ela recusa e o comando fica fora do histórico"  /notes #stash $@
-/alias -q /stash.lock -desc "Trava a tag protegida #stash agora: depois só aparece um cadeado. Use antes de emprestar o celular ou compartilhar a tela (ela também trava sozinha após notes.lockMinutes sem uso e quando o bot reinicia)"  /notes -lock #stash -now
-/alias -q /stash.view -desc "Libera a tag protegida #stash e mostra as notas: pede a senha no seu privado (ou /stash.view senha, menos seguro: viaja num comando comum, o bot a apaga e a esconde dos logs e do histórico). Nunca abre em grupo nem com -to; trava de novo após notes.lockMinutes sem uso"  /notes -v -lock $1 #stash
+/alias -q -p /stash.add  -desc "Guarda uma nota na tag protegida #stash, cifrada. A tag precisa estar liberada antes (/stash.view); travada, ou fora do seu privado (um grupo, o chat de outra pessoa), ela recusa e o comando fica fora do histórico"  /notes #stash $@
+/alias -q -p /stash.lock -desc "Trava a tag protegida #stash agora: depois só aparece um cadeado. Use antes de emprestar o celular ou compartilhar a tela (ela também trava sozinha após notes.lockMinutes sem uso e quando o bot reinicia)"  /notes -lock #stash -now
+/alias -q -p /stash.view -desc "Libera a tag protegida #stash e mostra as notas: pede a senha no seu privado (ou /stash.view senha, menos seguro: viaja num comando comum, o bot a apaga e a esconde dos logs e do histórico). Nunca abre em grupo nem com -to; trava de novo após notes.lockMinutes sem uso"  /notes -v -lock $1 #stash
 ```
 
 Uma vez, à mão, proteja a tag (ela pede a senha **nova** duas vezes, não há recuperação):

@@ -73,13 +73,13 @@ const safe = (text) => String(text).replace(/[\u0000-\u001f\u007f-\u009f]/g, ' '
 
 /**
  * The name an "/alias [-q] <name> [-desc "text"] <rest>" block registers, or null when the block is anything else:
- * the name cannot look like an option (/alias -rm all, -move, -list...), and before the command only -q and -desc are allowed.
+ * the name cannot look like an option (/alias -rm all, -move, -list...), and before the command only -q, -p and -desc are allowed.
  */
 function aliasNameOf(block) {
-    const m = block.match(/^\/alias[ \t]+((?:-(?:q|quiet)[ \t]+)*)(\/?[\p{L}\p{N}_.][\p{L}\p{N}_.-]*)[ \t]+(\S[\s\S]*)$/u);
+    const m = block.match(/^\/alias[ \t]+((?:-(?:q|quiet|p|private)[ \t]+)*)(\/?[\p{L}\p{N}_.][\p{L}\p{N}_.-]*)[ \t]+(\S[\s\S]*)$/u);
     if (!m) return null;
     let rest = m[3];
-    for (let o; (o = rest.match(/^(?:-(?:q|quiet)(?=\s)|-(?:d|desc)\s+(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|“[^”]*”|‘[^’]*’))\s*/));) rest = rest.slice(o[0].length);
+    for (let o; (o = rest.match(/^(?:-(?:q|quiet|p|private)(?=\s)|-(?:d|desc)\s+(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|“[^”]*”|‘[^’]*’))\s*/));) rest = rest.slice(o[0].length);
     if (!rest || /^-/.test(rest)) return null;
     return `/${m[2].replace(/^\//, '')}`;
 }
@@ -106,7 +106,7 @@ function listExampleFiles() {
 
 /** A msg that only keeps what the command replies (the /alias handler replies to whoever typed). */
 function silentMsg(replies) {
-    return { reply: async (content) => { replies.push(String(content)); return { body: String(content) }; } };
+    return { fromMe: true, reply: async (content) => { replies.push(String(content)); return { body: String(content) }; } };
 }
 
 /**
