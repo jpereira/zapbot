@@ -1,4 +1,4 @@
-# `/cache` · admin
+# `/cache` · owner
 
 Shows the space used in `cache/` (database, media, temp files, backups) and cleans the cache. In the
 command help (`/cache -h`) the paths appear in full (in Docker, `/app/cache` and `/app/cache/media`).

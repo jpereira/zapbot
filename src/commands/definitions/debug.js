@@ -2,7 +2,7 @@
  * /debug: Debug logs with levels and filter
  */
 
-const { ADMIN } = require('../../roles').ROLES;
+const { OWNER } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/debug',
@@ -41,5 +41,5 @@ module.exports = {
             desc: 'Turns debug on at the configured level. Can be combined with level, filter and copy.'
         }
     ],
-    role: ADMIN // bot logs
+    role: OWNER // the bot logs show everything: owner only
 };

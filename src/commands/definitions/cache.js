@@ -3,7 +3,7 @@
  */
 
 const { CACHE_DIR } = require('../../constants');
-const { ADMIN } = require('../../roles').ROLES;
+const { OWNER } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/cache',
@@ -25,5 +25,5 @@ module.exports = {
             desc: 'Deletes the downloaded media (the messages stay).'
         }
     ],
-    role: ADMIN // apaga dados
+    role: OWNER // deletes data: owner only
 };
