@@ -120,6 +120,7 @@ module.exports = {
     'mensagens.statusDe': 'Status de {nome}',
     'mensagens.transmissaoDe': 'Transmissão de {nome}',
     'mensagens.ambiguo': '🤔 Comando \'{caller}\' ambíguo. Possíveis comandos: {lista}',
+    'mensagens.desativado': '🚫 O {cmd} está desativado. Para ligar: /set -rm commands.disabled {nome}',
     'mensagens.desconhecido': '⚠️ Comando \'{body}\' desconhecido, tente: /help',
     'mensagens.voceEDono': '👑 Você é o dono, já manda em tudo.',
     'mensagens.negadoPadrao': '🚫 Sem permissão para executar $cmd, fale com $admin',

@@ -256,9 +256,11 @@ const SETTINGS_SCHEMA = {
         desc: 'Recusa as ligações de voz e de vídeo que chegam (exceto de call.allow e do bot.admins) e responde com a call.message.'
     },
     'commands.disabled': {
-        default: [],
+        // Off out of the box: three commands that most people do not want (jokes and news from the Linux world).
+        // /set -rm commands.disabled kernel cve walissu (or /set commands.disabled "") turns them on
+        default: ['/cve', '/kernel', '/walissu'],
         type: 'list',
-        desc: 'Comandos desativados em tempo de execução (somem do /help).',
+        desc: 'Comandos desativados em tempo de execução (somem do /help). Já vêm desativados: /cve, /kernel e /walissu (veja /set -rm commands.disabled).',
         item: (v) => {
             const typed = v.startsWith('/') ? v.toLowerCase() : `/${v.toLowerCase()}`;
             const command = botConfig.commands.find(c => c.cmd === typed || c.aliases?.includes(typed));

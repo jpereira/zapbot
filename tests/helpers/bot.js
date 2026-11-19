@@ -42,7 +42,7 @@ const TABLES = ['command_aliases', 'messages', 'message_edits', 'stats', 'watch_
  * sent, with no network routes. bot.users comes true (the default is false: only the
  * owner) so the tests can use other people's commands, and the protection
  * against flood comes off (the tests repeat commands in sequence); whoever
- * tests the restriction or the flood changes again.
+ * tests the restriction or the flood changes again. The commands that come disabled (/cve, /kernel, /walissu) are on.
  */
 async function restart() {
     await prepare();
@@ -56,6 +56,7 @@ async function restart() {
     await setSetting('bot.denied.enabled', false); // the default is on; the tests that count replies expect silence
     await setSetting('zapbot.lang', 'pt_BR'); // the test assertions are in Portuguese; en_US has separate tests
     await setSetting('bot.flood.maxCommandRepeated', 0);
+    await setSetting('commands.disabled', []); // /cve, /kernel and /walissu come disabled; tests/commands-disabled.test.js has the default
 
     // The /get downloads cache does not leak from one test to the next
     const tmp = src('constants').TMP_DIR;

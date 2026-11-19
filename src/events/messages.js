@@ -24,6 +24,7 @@ const { checkFlood } = require('../flood');
 const { hideInDb, loginPassword, tryLogin } = require('../login');
 const { ALWAYS_RELEASED, limitNotice, levelAlt, permissionHere } = require('../permissions');
 const { ROLES, answer } = require('../roles');
+const { botConfig } = require('../botConfig');
 const { printCall, printCommandUnknown, printDebug, printError, printInfo } = require('../log');
 const { t } = require('../i18n');
 const { getSetting, isDebugMode } = require('../settings');
@@ -342,6 +343,12 @@ client.on('message_create', (msg) => withContextDebug({
                 .filter(c => answer(level, c.role) || (c.alvos ?? [c.cmd])
                     .every(cmd => ALWAYS_RELEASED.includes(cmd) || permission.pode(cmd)))
                 .map(c => c.cmd);
+            // A command the owner turned off (or that comes off, like /kernel): the owner and the admins are told how to turn it on
+            const off = botConfig.commands.find(c => c.cmd === caller.toLowerCase() || c.aliases?.includes(caller.toLowerCase()));
+            if (!possible.length && off && getSetting('commands.disabled').includes(off.cmd) && answer(level, ROLES.ADMIN)) {
+                await msg.reply(t('mensagens.desativado', { cmd: off.cmd, nome: off.cmd.slice(1) }));
+                return;
+            }
             await msg.reply(possible.length
                 ? t('mensagens.ambiguo', { caller, lista: possible.join(', ') })
                 : t('mensagens.desconhecido', { body }));

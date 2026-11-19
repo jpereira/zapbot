@@ -170,9 +170,11 @@ describe('comandos', () => {
         assert.match(r, /Usage: \/ping/);
     });
 
-    test('comando desativado por setting é desconhecido', async () => {
+    test('comando desativado por setting: o dono é avisado de como ligar; para os outros é desconhecido', async () => {
         await bot.setSetting('commands.disabled', 'ping');
         assert.deepEqual(await bot.replyAlt('/ping'),
+            ['🚫 O /ping está desativado. Para ligar: /set -rm commands.disabled ping']);
+        assert.deepEqual(await bot.replyAlt('/ping', { de: OTHERAlt.jid }),
             ["⚠️ Comando '/ping' desconhecido, tente: /help"]);
     });
 
