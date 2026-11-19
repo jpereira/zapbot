@@ -34,7 +34,7 @@ const BIN_YT = '/venv/bin/yt-dlp';
 const BIN_PYTHON = '/venv/bin/python';
 const BIN_TESSERACT = '/usr/bin/tesseract';
 // /get -stt: the faster-whisper script and the models folder (downloaded at image build)
-const SCRIPT_TRANSCRIPTION = path.join(ROOT_DIR, 'scripts', 'transcribe.py');
+const SCRIPT_STT = path.join(ROOT_DIR, 'scripts', 'stt.py');
 const WHISPER_DIR = process.env.WHISPER_MODELS_DIR || '/opt/whisper';
 // /tts without -gpt: the Piper script and the voices folder (downloaded at image build)
 const SCRIPT_TTS = path.join(ROOT_DIR, 'scripts', 'tts.py');
@@ -68,7 +68,7 @@ module.exports = {
     MAX_DELETE_WINDOW,
     MEDIA_DIR,
     ROOT_DIR,
-    SCRIPT_TRANSCRIPTION,
+    SCRIPT_STT,
     SCRIPT_TTS,
     PIPER_DIR,
     THUMBNAIL_MAX_BYTES,

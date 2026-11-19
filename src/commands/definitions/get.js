@@ -59,6 +59,30 @@ module.exports = {
             ex: ['/get -t -sum https://www.instagram.com/reel/...']
         },
         {
+            opts: ['lang', 'L'],
+            values: ['<code>'],
+            desc: 'The language of the speech: pt, en, es, pt-br... or auto (whisper detects it). With -gpt, it also goes to the OpenAI API. The default is the stt.language setting (auto). (-l is the short of -local.)',
+            ex: ['/get -t -lang en <url>', '/get -t -L pt']
+        },
+        {
+            opts: ['model', 'M'],
+            values: ['<name>'],
+            desc: 'The faster-whisper model (tiny, base, small, medium, large-v3-turbo...; bigger is better and slower; one that is not in the image is downloaded the first time). With -gpt, the OpenAI model. The default is the stt.model setting.',
+            ex: ['/get -t -model medium <url>']
+        },
+        {
+            opts: ['beam', 'b'],
+            values: ['<1-10>'],
+            desc: 'The beam size of the local search: 1 is the fastest, more can get a little more right and takes longer. The default is the stt.beam setting.',
+            ex: ['/get -t -beam 5 <url>']
+        },
+        {
+            opts: ['vad'],
+            values: ['<on|off>'],
+            desc: 'On: skips the silence and the music before transcribing (where whisper invents text); off: transcribes it all. Local engine only. The default is the stt.vad setting.',
+            ex: ['/get -t -vad off <url>']
+        },
+        {
             opts: ['startSec', 'ss'],
             values: ['<time>'],
             desc: 'Starts at this point of the original video (default 0), in seconds or min:sec. Accepts a decimal with a dot. With a leading -, counts from the end (-ss -10 is the last 10 s).',

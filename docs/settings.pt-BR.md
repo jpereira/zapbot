@@ -122,11 +122,13 @@ em português).
 | `stocks.alert.intervalMin` | 1–60 | `5` | Intervalo, em minutos, entre as verificações dos [alertas de preço](commands/stocks.md#alertas-de-preço) do `/stocks` |
 | `stocks.alert.max` | 1–100 | `20` | Máximo de alertas de preço do `/stocks` |
 | `stocks.symbols` | lista | `USD, EUR, USDT, MSTR` | Símbolos exibidos pelo [`/stocks`](commands/stocks.md) (e `/rates`): moedas contra o real (`USD`, `EUR`, `GBP`, `USDT`) e tickers do Yahoo Finance (`MSTR`, `NVDA`, `PETR4.SA`, `BRK-B`, `^GSPC`); normalmente alterada pelo `/stocks -a`/`-d` |
+| `stt.beam` | 1–10 | `1` | Tamanho do beam da busca do faster-whisper no [`/stt`](commands/stt.md) (`1` é o mais rápido; mais pode acertar um pouco mais e demora mais). O `-beam` muda na chamada |
 | `stt.engine` | `local`, `gpt` | `local` | Motor do [`/stt`](commands/stt.md) e do `/get -stt`: `local` (faster-whisper, sem chave) ou `gpt` (ChatGPT, API da OpenAI). `-gpt` e `-local` escolhem na chamada |
 | `stt.footer` | on/off | `on` | Termina a transcrição do /stt e do /get -stt com a dica "💡 Transcrito por <motor>". O -quiet (-q) esconde na chamada. |
-| `stt.language` | texto | `auto` | Idioma da fala no [`/get -stt`](commands/get.md#transcrever-a-fala--stt) (`pt`, `en`, `es`...). `auto`: o whisper detecta |
+| `stt.language` | texto | `auto` | Idioma da fala no [`/stt`](commands/stt.md) (`pt`, `en`, `es`...). `auto`: o whisper detecta. O `-lang` muda na chamada |
 | `stt.maxMinutes` | 1–180 | `20` | Duração máxima (minutos) do áudio que o `/get -stt` transcreve: usa a CPU do servidor |
-| `stt.model` | texto | `small` | Modelo do faster-whisper no `/get -stt`: `tiny`, `base`, `small`, `medium` ou `large-v3-turbo` (maior = melhor e mais lento). O `small` vem na imagem; outro é baixado na primeira vez |
+| `stt.model` | texto | `small` | Modelo do faster-whisper no [`/stt`](commands/stt.md): `tiny`, `base`, `small`, `medium` ou `large-v3-turbo` (maior = melhor e mais lento). O `small` vem na imagem; outro é baixado na primeira vez. O `-model` muda na chamada |
+| `stt.vad` | on/off | `on` | Pula o silêncio e a música antes de transcrever no [`/stt`](commands/stt.md) (onde o whisper inventa texto). O `-vad on\|off` muda na chamada |
 | `tldr.footer` | on/off | `on` | Termina o resumo do /tldr com a dica "💡 Resumido por ChatGPT". O -quiet (-q) esconde na chamada. |
 | `tldr.maxMsgs` | 10–2000 | `500` | Máximo de mensagens enviadas à OpenAI por [`/tldr`](commands/tldr.md) |
 | `translate.lang` | texto | `pt` | Idioma de destino padrão do [`/translate`](commands/translate.md) (código: `pt`, `en`, `es`...) |

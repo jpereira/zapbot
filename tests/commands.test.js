@@ -408,10 +408,10 @@ describe('/set', () => {
 });
 
 describe('/bot -info: a versão do faster-whisper', () => {
-    test('vem do "transcribe.py --version": a versão da API, o modelo e a versão do script', () => {
+    test('vem do "stt.py --version": a versão da API, o modelo e a versão do script', () => {
         const { describeWhisper } = bot.src('system');
         assert.equal(describeWhisper('{"wrapper": "1.0.0", "faster_whisper": "1.2.0"}', 'small'),
-            '1.2.0 (modelo small) · transcribe.py 1.0.0');
+            '1.2.0 (modelo small) · stt.py 1.0.0');
         // Without the API installed (the script exits with an error and prints nothing) or with odd output: null
         assert.equal(describeWhisper(null, 'small'), null);
         assert.equal(describeWhisper('lixo', 'small'), null);

@@ -818,6 +818,11 @@ const SETTINGS_SCHEMA = {
             return ticker;
         }
     },
+    'stt.beam': {
+        default: 1,
+        type: 'number', min: 1, max: 10,
+        desc: 'Tamanho do beam da busca do faster-whisper no /stt (1 é o mais rápido; maior pode acertar um pouco mais e demora mais). O -beam muda na chamada.'
+    },
     'stt.engine': {
         default: 'local',
         type: 'string',
@@ -833,7 +838,7 @@ const SETTINGS_SCHEMA = {
     'stt.language': {
         default: 'auto',
         type: 'string',
-        desc: 'Idioma da fala no /get -stt (pt, en, es...). auto: o whisper detecta.'
+        desc: 'Idioma da fala no /stt (pt, en, es...). auto: o whisper detecta. O -lang muda na chamada.'
     },
     'stt.maxMinutes': {
         default: 20,
@@ -843,7 +848,12 @@ const SETTINGS_SCHEMA = {
     'stt.model': {
         default: 'small',
         type: 'string',
-        desc: 'Modelo do faster-whisper no /get -stt: tiny, base, small, medium ou large-v3-turbo (maior = melhor e mais lento). O small vem na imagem; outro é baixado na primeira vez.'
+        desc: 'Modelo do faster-whisper no /stt: tiny, base, small, medium ou large-v3-turbo (maior = melhor e mais lento). O small vem na imagem; outro é baixado na primeira vez. O -model muda na chamada.'
+    },
+    'stt.vad': {
+        default: true,
+        type: 'boolean',
+        desc: 'Pula o silêncio e a música antes de transcrever no /stt (onde o whisper costuma inventar texto). O -vad on|off muda na chamada.'
     },
     'tldr.footer': {
         default: true,

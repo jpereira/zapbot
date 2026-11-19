@@ -34,6 +34,7 @@ module.exports = {
     'get.transcribeNeedsAudio': '❌ Para transcrever, responda um vídeo ou um áudio (ou mande um link).',
     'get.transcribeTooLong': 'Áudio longo demais para transcrever ({dur}; máx. {max} min, veja o setting stt.maxMinutes). Use -ss e -es para pegar um trecho',
     'get.transcribeFailed': 'Problemas para transcrever o áudio (faster-whisper)',
+    'stt.badOption': '❌ {name}: "{value}" não vale. Use {hint}.',
     'get.transcribeEmpty': '🔇 Não achei fala no áudio.',
     'get.transcribeResult': '📝 *Transcrição* · 🗣️ {lang} · {dur}\n\n{text}',
     'get.sumInstructions': 'Você resume a fala de um vídeo ou áudio, em português do Brasil. Escreva um resumo curto, em tópicos (um por linha, começando com "• "), só com o que foi dito. Sem introdução, sem opinião, sem Markdown.',

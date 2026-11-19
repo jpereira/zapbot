@@ -358,7 +358,7 @@ function spawnFake(bin, args, optionsAlt) {
             return;
         }
 
-        // transcribe.py: the JSON on the last line of the output
+        // stt.py: the JSON on the last line of the output
         if (nameAlt === 'python') {
             // tts.py: the text it was asked to speak (the file goes away after the call)
             if (/tts\.py$/.test(args[0]) && args.includes('--input')) processes.falado = fs.readFileSync(args[args.indexOf('--input') + 1], 'utf8');
