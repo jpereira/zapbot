@@ -198,7 +198,7 @@ voz** (Ogg/Opus, como as do WhatsApp). O estilo padrão é a voz de robô.
 
 - **Sem texto digitado**, fala o da mensagem respondida (um áudio é transcrito antes). **Sem resposta**, fala o
   digitado. **Com os dois**, fala o respondido e o digitado vira o estilo (só os `gpt-4o-*` seguem o estilo). O `-voice` pode
-  vir em qualquer lugar do texto. Até 4096 caracteres.
+  vir em qualquer lugar do texto. Até o setting `tts.maxChars` (32000 caracteres; o ChatGPT fala em partes de 4096 e o áudio é junto).
 - Três settings escolhem como soa: `gpt.tts.model` (`gpt-4o-mini-tts`; o id que a sua conta tem),
   `gpt.tts.voice` (`onyx`, o padrão, ou `alloy`, `ash`, `ballad`, `coral`, `echo`, `fable`, `nova`,
   `sage`, `shimmer`, `verse`) e `gpt.tts.instructions` (o estilo: o padrão pede voz de robô; ex.:

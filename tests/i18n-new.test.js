@@ -46,7 +46,7 @@ test('/ocr, /tts, /qr, /carbon e /profile -set', async () => {
 
     await setSetting('gpt.api.key', 'sk-teste');
     assert.deepEqual(await bot.replyAlt('/ocr'), ['Reply to a photo with /ocr (or send the photo with /ocr as the caption).\n💡 _/ocr -h for help_']);
-    assert.deepEqual(await bot.replyAlt('/tts'), ['```Usage: /tts [-gpt|-g] [-local|-l] [-status|-s] [<text>]```\n💡 _/tts -h for help_']);
+    assert.deepEqual(await bot.replyAlt('/tts'), ['```Usage: /tts [-gpt|-g] [-local|-l] [-voice|-v <name>] [-speed|-sp <%>] [-pitch|-pi <semitones>] [-volume|-vol <%>] [-quiet|-q] [-status|-s] [<text>]```\n💡 _/tts -h for help_']);
 
     assert.match((await bot.replyAlt('/qr'))[0], /^```Usage: \/qr \[-decode\|-d\] \[<text>\]```/);
     assert.deepEqual(await bot.replyAlt('/qr -d'), ['Reply to a photo of a QR Code with /qr -d (or send the photo with /qr -d as the caption).\n💡 _/qr -h for help_']);

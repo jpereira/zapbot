@@ -110,6 +110,13 @@ function printCall(who, call, chat) {
         `${chat ? ` in '${chat}'` : ''}`, colors.blue);
 }
 
+// A {/command} of the text that runs (/tts, /me, /cron...): the text that had it, the command and who:
+//   [+]          EXPAND '/tts The dollar is {/stocks USD}' > /stocks USD 'Fulano'
+function printExpand(who, origin, call) {
+    const text = String(origin).length > 100 ? `${String(origin).slice(0, 100)}…` : origin;
+    emitLog(`[${getTimestamp()}] [+]          EXPAND '${text}' > ${call} '${who}'`, colors.blue);
+}
+
 /*
  * A command that does not exist (or is disabled): the owner's always shows up; the others',
  * only in debug mode (otherwise any "/" typed in a group would flood the log).
@@ -131,6 +138,7 @@ module.exports = {
     printDebug,
     printDebugLevel,
     printError,
+    printExpand,
     printInfo,
     printSuccess
 };

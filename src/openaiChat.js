@@ -343,15 +343,18 @@ const VOICE_MAX_CHARACTERS = 4096;
  * @param {string} o.cmd    command that called (for the log)
  * @param {string} o.texto  up to VOICE_MAX_CHARACTERS
  * @param {string} [o.estilo]  how to speak (overrides the gpt.tts.instructions setting)
+ * @param {string} [o.voz]  the voice (overrides the gpt.tts.voice setting)
+ * @param {number} [o.velocidade]  speed in % (100 = normal)
  * @returns {Promise<Buffer>}
  */
-async function synthesizeVoice({ cmd, texto: textAlt, estilo: style = null }) {
+async function synthesizeVoice({ cmd, texto: textAlt, estilo: style = null, voz: voice = null, velocidade: speed = 100 }) {
     const modelAlt = getSetting('gpt.tts.model');
 
     try {
         const body = {
             model: modelAlt,
-            voice: getSetting('gpt.tts.voice'),
+            voice: voice || getSetting('gpt.tts.voice'),
+            ...(speed !== 100 ? { speed: speed / 100 } : {}),
             input: textAlt,
             response_format: 'opus',
             // Only gpt-4o-mini-tts follows the style; tts-1 and tts-1-hd refuse the field

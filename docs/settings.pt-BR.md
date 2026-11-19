@@ -89,6 +89,7 @@ em português).
 | `gpt.transcribe.model` | texto | `gpt-transcribe` | Modelo que transcreve o áudio respondido com o `/gpt`: o id que a sua conta tem (o `whisper-1` sai do ar em fev/2027) |
 | `gpt.tts.instructions` | texto | `Fale como um robô: voz metálica, monótona e pausada, sem emoção.` | Estilo da voz do `/gpt -voice` (só o `gpt-4o-mini-tts` usa) |
 | `gpt.tts.model` | texto | `gpt-4o-mini-tts` | Modelo que gera a voz do `/gpt -voice`: o id que a sua conta tem (só os `gpt-4o-*` seguem o estilo) |
+| `gpt.tts.speed` | 50–200 | `100` | Velocidade da voz do ChatGPT no `/gpt -voice` e no `/tts -gpt`, em % (`100` normal, `150` mais rápido). O `-speed` (`-sp`) muda na chamada; a voz local usa o `tts.speed` |
 | `gpt.tts.voice` | texto (da lista) | `onyx` | Voz do `/gpt -voice`: `alloy`, `ash`, `ballad`, `coral`, `echo`, `fable`, `nova`, `onyx`, `sage`, `shimmer` ou `verse` |
 | `me.maxRepeat` | 1–1000 | `500` | Máximo de repetições do [`/me -repeat`](commands/me.md) (`-r <n>`) |
 | `monitor.enabled` | on/off | `on` | Consultas periódicas do [`/monitor`](commands/monitor.md); `off` pausa sem apagar contatos ou histórico |
@@ -130,8 +131,12 @@ em português).
 | `translate.lang` | texto | `pt` | Idioma de destino padrão do [`/translate`](commands/translate.md) (código: `pt`, `en`, `es`...) |
 | `tts.engine` | `local`, `gpt` | `local` | Motor do [`/tts`](commands/tts.md): `local` (voz Piper, sem chave) ou `gpt` (ChatGPT, API de voz da OpenAI). `-gpt` e `-local` escolhem na chamada |
 | `tts.footer` | on/off | `on` | Acrescenta a dica "💡 Gerado por <motor>" no aviso "áudio gerado abaixo" do /tts e do /gpt -voice. O -quiet (-q) esconde na chamada. |
+| `tts.maxChars` | 100–100000 | `32000` | Máximo de caracteres do texto do [`/tts`](commands/tts.md) e do `/gpt -voice`. A voz local (Piper) fala tudo; o ChatGPT recebe em partes de 4096 (o limite da API) e o áudio é junto (quanto maior o texto, mais custa) |
+| `tts.pitch` | -12–12 | `0` | Tom da voz do [`/tts`](commands/tts.md) e do `/gpt -voice`, em semitons (`0` normal, `3` mais agudo, `-3` mais grave). O `-pitch` (`-pi`) muda na chamada |
+| `tts.speed` | 50–200 | `50` | Velocidade da voz local (Piper) do [`/tts`](commands/tts.md), em % (`100` é a velocidade original do motor, `150` mais rápido; o padrão `50` fala mais devagar, que fica melhor de ouvir). Com `-gpt` vale o `gpt.tts.speed`. O `-speed` (`-sp`) muda na chamada |
 | `tts.voice.en` | texto | `en_US-lessac-medium` | Voz local (Piper) do [`/tts`](commands/tts.md) para texto em inglês: `en_US-lessac-medium`, `en_US-amy-medium`, `en_GB-alan-medium`... A que não está na imagem é baixada na primeira vez |
 | `tts.voice.pt` | texto | `pt_BR-faber-medium` | Voz local (Piper) do [`/tts`](commands/tts.md) para texto em português: `pt_BR-faber-medium`, `pt_BR-edresson-low`, `pt_PT-tugão-medium`... A que não está na imagem é baixada na primeira vez |
+| `tts.volume` | 20–300 | `100` | Volume da voz do [`/tts`](commands/tts.md) e do `/gpt -voice`, em % (`100` normal, `200` o dobro). O `-volume` (`-vol`) muda na chamada |
 | `usage.footer` | on/off | `on` | Depois de um comando com limite de uso, avisa quantas chamadas restam (`📊 /gpt: restam 1 de 3 por dia`) |
 | `usage.logDays` | 1–365 | `90` | Dias que o histórico das chamadas com limite (`/usage -l`) fica guardado |
 | `warn.max` | 0–20 | `3` | Quantos avisos do [`/warn`](commands/warn.md) tiram a pessoa do grupo (o bot precisa ser admin dele). `0`: só conta, nunca remove |

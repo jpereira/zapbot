@@ -612,6 +612,11 @@ const SETTINGS_SCHEMA = {
         type: 'string',
         desc: 'Modelo que gera a voz do /gpt -voice: o id que a sua conta da OpenAI tem. Só os gpt-4o-* seguem o estilo do gpt.tts.instructions.'
     },
+    'gpt.tts.speed': {
+        default: 100,
+        type: 'number', min: 50, max: 200,
+        desc: 'A velocidade da voz do ChatGPT no /gpt -voice e no /tts -gpt, em % (100 normal, 150 mais rápido). O -speed (-sp) muda na chamada; a voz local usa o tts.speed.'
+    },
     'gpt.tts.voice': {
         default: 'onyx',
         type: 'string',
@@ -861,6 +866,21 @@ const SETTINGS_SCHEMA = {
         type: 'boolean',
         desc: 'Acrescenta a dica "💡 Gerado por <motor>" no aviso "áudio gerado abaixo" do /tts e do /gpt -voice. O -quiet (-q) esconde na chamada.'
     },
+    'tts.maxChars': {
+        default: 32000,
+        type: 'number', min: 100, max: 100000,
+        desc: 'Máximo de caracteres do texto do /tts e do /gpt -voice. A voz local (Piper) fala tudo de uma vez; a do ChatGPT recebe em partes de 4096 (o limite da API) e junta o áudio (custa mais quanto maior o texto).'
+    },
+    'tts.pitch': {
+        default: 0,
+        type: 'number', min: -12, max: 12,
+        desc: 'O tom da voz do /tts e do /gpt -voice, em semitons (0 normal, 3 mais agudo, -3 mais grave). O -pitch (-pi) muda na chamada.'
+    },
+    'tts.speed': {
+        default: 50,
+        type: 'number', min: 50, max: 200,
+        desc: 'A velocidade da voz local (Piper) do /tts, em % (100 é a velocidade original do motor; o padrão 50 fala mais devagar, que fica melhor de ouvir). Com -gpt vale o gpt.tts.speed. O -speed (-sp) muda na chamada.'
+    },
     'tts.voice.en': {
         default: 'en_US-lessac-medium',
         type: 'string',
@@ -870,6 +890,11 @@ const SETTINGS_SCHEMA = {
         default: 'pt_BR-faber-medium',
         type: 'string',
         desc: 'Voz local (Piper) do /tts para texto em português: pt_BR-faber-medium, pt_BR-edresson-low, pt_PT-tugão-medium... A que não está na imagem é baixada na primeira vez.'
+    },
+    'tts.volume': {
+        default: 100,
+        type: 'number', min: 20, max: 300,
+        desc: 'O volume da voz do /tts e do /gpt -voice, em % (100 normal, 200 o dobro). O -volume (-vol) muda na chamada.'
     },
     'usage.footer': {
         default: true,

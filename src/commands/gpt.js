@@ -18,6 +18,7 @@ const {
 } = require('./openaiCommon');
 const { TMP_DIR } = require('../constants');
 const { CHATGPT, engineProcessing, withEngineTip } = require('../engines');
+const { adjustVoice, joinVoices, readVoiceOptions, splitSpeech } = require('../ttsVoice');
 const { printError } = require('../log');
 const { speakLocal } = require('../ttsLocal');
 const { language, t } = require('../i18n');
@@ -178,7 +179,14 @@ async function contentForTalk(quotedMsg, cmd = '/gpt') {
  * /gpt -voice [text]: the voice of the text (v1/audio/speech), robot by default, in a voice note. Without
  * typed text, speaks the replied message's.
  */
-async function talkText(msg, args, quotedMsg, cmd = '/gpt', { local = false, quiet = false } = {}) {
+// ChatGPT's voice takes up to VOICE_MAX_CHARACTERS: a longer text goes in parts, one request each, in order
+async function speakParts(textAlt, synthesize) {
+    const buffers = [];
+    for (const part of splitSpeech(textAlt, VOICE_MAX_CHARACTERS)) buffers.push(await synthesize(part));
+    return buffers;
+}
+
+async function talkText(msg, args, quotedMsg, cmd = '/gpt', { local = false, quiet = false, voice = null } = {}) {
     const typed = unescape(args.replace(/(^|\s)-(?:voice|v)(?=\s|$)/, '').trim());
     let textAlt = typed;
     let style = null;
@@ -199,8 +207,10 @@ async function talkText(msg, args, quotedMsg, cmd = '/gpt', { local = false, qui
         await msg.reply(cmd === '/tts' ? commandUsage('/tts') : t('gpt.voiceUsage'));
         return;
     }
-    if (textAlt.length > VOICE_MAX_CHARACTERS) {
-        await msg.reply(t('gpt.voiceTooLong', { n: textAlt.length, max: VOICE_MAX_CHARACTERS }));
+    // The whole text: tts.maxChars (the local voice speaks it all; ChatGPT, in parts of the API limit, joined)
+    const maxChars = getSetting('tts.maxChars');
+    if (textAlt.length > maxChars) {
+        await msg.reply(t('gpt.voiceTooLong', { n: textAlt.length, max: maxChars }));
         return;
     }
 
@@ -208,9 +218,13 @@ async function talkText(msg, args, quotedMsg, cmd = '/gpt', { local = false, qui
     // -quiet: no "generating..." notice and no "audio below": only the voice note
     const notice = quiet ? null : await msg.reply(engineProcessing('tts', engine), null, { linkPreview: false });
     try {
-        const voice = local ? await speakLocal(textAlt) : await synthesizeVoice({ cmd, texto: textAlt, estilo: style });
+        const settings = voice ?? readVoiceOptions(null, local ? 'local' : 'gpt');
+        const spoken = local
+            ? await speakLocal(textAlt, settings)
+            : await adjustVoice(await joinVoices(await speakParts(textAlt, (part) =>
+                synthesizeVoice({ cmd, texto: part, estilo: style, voz: settings.voice, velocidade: settings.speed }))), settings);
         if (!quiet) await completeNotice(msg, notice, withEngineTip(t('gpt.voiceBelow'), 'tts', engine, { sep: '\n', command: cmd.slice(1) }));
-        await msg.reply(new MessageMedia('audio/ogg; codecs=opus', voice.toString('base64'), 'voz.ogg'), null, { sendAudioAsVoice: true });
+        await msg.reply(new MessageMedia('audio/ogg; codecs=opus', spoken.toString('base64'), 'voz.ogg'), null, { sendAudioAsVoice: true });
         if (!local) await replyConsumption(msg);
     } catch (err) {
         printError(`${cmd}:`, err.message);

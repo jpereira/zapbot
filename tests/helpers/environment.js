@@ -360,6 +360,8 @@ function spawnFake(bin, args, optionsAlt) {
 
         // transcribe.py: the JSON on the last line of the output
         if (nameAlt === 'python') {
+            // tts.py: the text it was asked to speak (the file goes away after the call)
+            if (/tts\.py$/.test(args[0]) && args.includes('--input')) processes.falado = fs.readFileSync(args[args.indexOf('--input') + 1], 'utf8');
             child.stdout.emit('data', `${JSON.stringify({ language: 'pt', duration: 5, text: processes.fala })}\n`);
             child.emit('close', 0, null);
             return;

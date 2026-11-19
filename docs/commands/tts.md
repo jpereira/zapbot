@@ -3,20 +3,26 @@
 Role `admin`: only you and the extra admins. The owner can grant it to a person or group with
 `/bot +u +cmd /tts` ([Delegating](index.md#delegating-an-admin-command)).
 
-Turns text into a robot **voice note** with ChatGPT (the OpenAI speech API), like [`/gpt -voice`](gpt.md#voice--voice).
-It uses the OpenAI key (`OPENAI_API_KEY` in `config/.env` or the `gpt.api.key` setting). The model,
-the voice and the style come from the `gpt.tts.*` settings.
+Turns text into a **voice note**: by default with a local Piper voice (no key, Portuguese or English by the text) or,
+with `-gpt`, with ChatGPT (the OpenAI speech API, like [`/gpt -voice`](gpt.md#voice--voice)), which uses the
+OpenAI key (`OPENAI_API_KEY` in `config/.env` or the `gpt.api.key` setting; the model, the voice and the style come from
+the `gpt.tts.*` settings). The voice, the speed, the pitch and the volume come from the options or from the
+`tts.*` settings.
 
 ```text
-/tts [-status|-s] [<text>]
+/tts [-gpt|-g] [-local|-l] [-voice|-v <name>] [-speed|-sp <%>] [-pitch|-pi <semitones>] [-volume|-vol <%>] [-quiet|-q] [-status|-s] [<text>]
 ```
 
 | Option | Value | Description |
 |---|---|---|
 | `-quiet`, `-q` | | Does not show the engine tip ("💡 ... by ChatGPT, Tesseract, Piper...") at the end of the reply. To hide it always: the `tts.footer` setting off |
-| *(none)* | `[<text>]` | What to speak, up to 4096 characters. Replying to a message, the style of the speech |
+| *(none)* | `[<text>]` | What to speak, up to `tts.maxChars` characters (32000; the local voice speaks it all, ChatGPT in parts of 4096 that are joined into one audio). Replying to a message, the style of the speech |
 | `-gpt`, `-g` | | Speaks with ChatGPT (OpenAI speech API, spends your account) instead of the local Piper voice. Without `-gpt` or `-local`, the [`tts.engine`](../settings.md) setting decides |
 | `-local`, `-l` | | Speaks with the local Piper voice (no key, uses the server CPU), even with `tts.engine` at `gpt` |
+| `-voice`, `-v` | `<name>` | The voice, by the name of the person. Local (Piper): Portuguese (Brazil): cadu, edresson, faber, jeff; Portuguese (Portugal): tugão; English (US): amy (low/medium), arctic, bryce, danny, hfc_female, hfc_male, hifi_tts_92, joe, john, kathleen (low/medium), kristin, kusal, l2arctic, lessac (low/medium/high), libritts, libritts_r, ljspeech (medium/high), mike, norman, reza_ibrahim, ryan (low/medium/high), sam; English (UK): alan (low/medium), alba, aru, cori (medium/high), jenny_dioco, northern_english_male, semaine, southern_english_female, vctk. Write just the name (`faber`), the name with the quality (`faber-medium`) or the full id (`pt_BR-faber-medium`); with several qualities the name alone is the medium one. The default is `tts.voice.pt` or `tts.voice.en`, by the language of the text; one not in the image is downloaded the first time. With `-gpt`: `alloy`, `ash`, `ballad`, `coral`, `echo`, `fable`, `nova`, `onyx`, `sage`, `shimmer`, `verse` (the default is `gpt.tts.voice`). `/tts -v` lists the Piper voices and `/tts -g -v` the ChatGPT ones. |
+| `-speed`, `-sp` | `<percent>` | The speed of the voice, in % from 50 to 200 (`100` normal, `150` faster, `75` slower). The default is the `tts.speed` setting (`50`) for the local voice and `gpt.tts.speed` (`100`) with `-gpt` |
+| `-pitch`, `-pi` | `<semitones>` | The pitch of the voice, in semitones from -12 to 12 (`0` normal, `3` higher, `-3` lower). The default is the `tts.pitch` setting |
+| `-volume`, `-vol` | `<percent>` | The volume of the voice, in % from 20 to 300 (`100` normal, `200` twice as loud). The default is the `tts.volume` setting |
 | `-status`, `-s` | | Adds the call usage to a separate message: bytes sent (TX) and received (RX), tokens spent, estimated cost, and balance. To keep it always on: `/set gpt.status true` |
 
 ```text
@@ -24,6 +30,42 @@ the voice and the style come from the `gpt.tts.*` settings.
 /tts                              → replying to a text: speaks the message
 /tts speak slowly                 → replying to a text: speaks it in that style
 /tts -s hello, how are you?   → the voice note plus the usage in the footer
+/tts -speed 130 -pitch 3 Hi!   → faster and higher
+/tts -voice amy Hi!            → another local voice (amy, amy-medium or en_US-amy-medium)
+/tts -voice ryan Hello!         → another English voice
+/tts -gpt -voice nova Hi!      → the nova voice of ChatGPT
+/tts -v                       → lists the Piper voices
+/tts -g -v                    → lists the ChatGPT voices
 ```
 
 - Replying to an **audio**, it is transcribed first and the transcription is spoken.
+
+## Commands in the text
+
+The `{/command args}` of the text run before the speech, as in [`/me`](me.md) and
+[`/cron`](cron.md#commands-in-the-text), and the reply goes in their place. The **slash is optional** for the
+commands that exist: `{/stocks USD}` and `{stocks USD}` are the same, and `{name}` (not a command) stays as text.
+Only the query commands run (`/crypto`, `/stocks`, `/weather`, `/uptime`, `/version`, `/news`, `/joke`...), the
+options that change something are refused, and you need to be allowed to run each one. The reply is **cleaned to
+be spoken**: no emoji, markdown, links or separators, and each line becomes a sentence. What you typed is spoken
+as it is. A `\{` keeps the brace literal. The options inside the braces are of the command, not of `/tts`.
+
+```text
+/tts The dollar now is {/stocks USD}
+/tts Good morning! Today in Recife: {weather Recife}
+/alias /price /tts Bitcoin: {/crypto BTC}         → /price speaks the quote
+```
+
+## Trying the voices
+
+To hear one phrase in several voices, save a [shortcut](alias.md) with a [`/batch`](batch.md). The `$@` is the
+whole text typed after the shortcut, and the `-q` makes each `/tts` send only the audio:
+
+```text
+/alias /vfazol /batch -q
+  /tts -q -l -v amy $@
+  /tts -q -l -v ryan $@
+  /tts -q -l -v lessac $@
+
+/vfazol DO THE L!
+```

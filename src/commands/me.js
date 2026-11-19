@@ -30,7 +30,7 @@ async function cmdMe({ msg, args, chatId, chatName, isGroup, nivel: level, admin
 
     const { texto: final, midias: mediaAltAlt } = await assembleText(textAlt,
         { chat_id: chatId, chat_name: chatName, is_group: isGroup },
-        { onde: '/me', quem: { nivel: level, admin, podeUsar: canUse, senderContact, senderName, senderNumber } });
+        { onde: '/me', origem: msg.body, quem: { nivel: level, admin, podeUsar: canUse, senderContact, senderName, senderNumber } });
 
     // assembleText only trims with {/command}: it normalizes and returns the trailing space/line break, so "Haha!\n" repeats as "Haha!\nHaha!\n"
     const buf = (final.trimEnd() + textAlt.match(/\s*$/)[0]).repeat(times);

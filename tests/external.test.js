@@ -524,7 +524,7 @@ describe('/gpt', () => {
         const beforeAlt = network.chamadas.length;
 
         assert.deepEqual(await bot.replyAlt('/gpt -v'), ['Usage: /gpt -v <texto> (ou responda uma mensagem de texto)\n💡 _/gpt -h para ajuda_']);
-        assert.match((await bot.replyAlt(`/gpt -v ${'a'.repeat(4097)}`))[0], /❌ O texto tem 4097 caracteres: a voz aceita até 4096\./);
+        assert.match((await bot.replyAlt(`/gpt -v ${'a'.repeat(32001)}`))[0], /❌ O texto tem 32001 caracteres: a voz aceita até 32000\./);
         assert.equal(network.chamadas.length, beforeAlt, 'nada foi para a OpenAI');
 
         network.responder('post', 'api.openai.com/v1/audio/speech', Object.assign(new Error('Request failed with status code 400'), {

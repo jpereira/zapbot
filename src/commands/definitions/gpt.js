@@ -48,7 +48,7 @@ module.exports = {
         {
             opts: ['voice', 'v'],
             values: [],
-            desc: 'Generates a voice note from the text and replies with the audio (v1/audio/speech): robot voice, by default. Without typed text, speaks the replied message\'s (an audio is transcribed first); replying to a message, what you type becomes the speech style (only gpt-4o-mini-tts follows the style). Up to 4096 characters. The model, voice and style are the settings gpt.tts.model, gpt.tts.voice and gpt.tts.instructions.',
+            desc: 'Generates a voice note from the text and replies with the audio (v1/audio/speech): robot voice, by default. Without typed text, speaks the replied message\'s (an audio is transcribed first); replying to a message, what you type becomes the speech style (only gpt-4o-mini-tts follows the style). Up to the tts.maxChars setting (32000 characters; ChatGPT speaks in parts of 4096 and the audio is joined). The model, voice and style are the settings gpt.tts.model, gpt.tts.voice and gpt.tts.instructions.',
             ex: ['/gpt -v exterminate all humans', '/gpt -v (replying to a text message)', '/gpt -v speak like a kind of metallic robot (replying to a message)'],
             cron: false
         },
