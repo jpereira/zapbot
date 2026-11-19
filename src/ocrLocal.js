@@ -24,7 +24,7 @@ async function readLocal(image) {
     const file = path.join(dir, 'image.png');
     try {
         fs.writeFileSync(file, await sharp(Buffer.from(image.data, 'base64')).png().toBuffer());
-        const output = await captureOutput(BIN_TESSERACT, [file, 'stdout', '-l', getSetting('ocr.language')], OCR_TIMEOUT_MS);
+        const output = await captureOutput(BIN_TESSERACT, [file, 'stdout', '-l', getSetting('ocr.language')], OCR_TIMEOUT_MS, { log: true });
         return output.trim();
     } finally {
         fs.rmSync(dir, { recursive: true, force: true });
