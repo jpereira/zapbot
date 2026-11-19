@@ -31,7 +31,8 @@ Notes saved in the database, valid for any chat (group or private). Each one has
 | `-export`, `-e` | `[#tag...]` | Sends the notes in a PDF, with the images and the text as the caption (header, footer with version, host, date and time, and pagination). With tags, only theirs. See [Export](#export) |
 | `#tag <text>` | | With no option in front, it becomes a new note, same as `-add`: `/notes #home do not forget to remove that option`. The `#tag` is required: `/notes meu texto` gives an error. Just `/notes #home`, with no text, lists the tag's notes |
 | `-add`, `-a` | `#tag <text>` | Adds a note; the `#tag` is required and comes at the start of the text. The text goes up to the `-alert`, if there is one, and accepts multiple lines |
-| `-rm`, `-r` | `<id...\|#tag...\|all>` | Removes the notes with those IDs (`-r 2`, `-r 1 2 3` or `-r 1,2,3`), of a tag (`-r #home`) or all (`all`). If any ID or tag doesn't exist, none is removed. Together with `-alert`, removes only the alert, keeping the notes |
+| `-rm`, `-r` | `<id...\|#tag...\|all>` | Removes the notes with those IDs (`-r 2`, `-r 1 2 3` or `-r 1,2,3`), of a tag (`-r #home`) or all (`all`). With a `#tag`, the numbers are the **positions in that tag's list** (`-r #home 1` is the 1st of `#home`), not IDs. A whole tag or `all` asks for `-yes`. If any ID, position or tag doesn't exist, none is removed. Together with `-alert`, removes only the alert, keeping the notes |
+| `-yes`, `-y` | | With `-rm`: confirms removing a whole tag or all the notes (without it, the bot only says how many would go) |
 | `-alert` | `<when>` | Notifies you about the note (or all notes of a `#tag`) at a date/time. See [Alerts](#alerts) |
 | `-to` | `<destination>` | With `-alert`: notifies a contact, group, number or email instead of your private chat. With the list (`-l`, `#tag`) or `-export`: sends the list or the PDF there, instead of replying in the chat. Repeat it for several |
 
@@ -41,7 +42,7 @@ Notes saved in the database, valid for any chat (group or private). Each one has
 /notes -a #contacts call John -alert tomorrow 9h
 /notes -l
 /notes -r 2
-/notes -r all
+/notes -r all -yes
 /notes -u 3 buy bread and milk            → replaces the text of #3
 /notes -u #3 #home buy bread\nand milk         → replaces the text and moves it to #home
 /notes -m #home #house                           → renames #home to #house
@@ -59,13 +60,15 @@ Notes saved in the database, valid for any chat (group or private). Each one has
 /notes                → the tags, with the number of notes
 /notes -l             → lists everything, one message per #tag (the untagged ones, from before, last)
 /notes #home          → only the ones in #home (the same as /notes -l #home)
-/notes -r #home     → removes all the ones in #home
-/notes -r all       → removes everything
+/notes -r #home 1 3   → removes the 1st and the 3rd of #home (their positions in the list)
+/notes -r #home -yes → removes all the ones in #home (without -yes, it only says how many would go)
+/notes -r all -yes   → removes everything
 ```
 
 - When you reply to a message, `/notes #reminder` (or `/notes -a #reminder`) saves its text as a
-  note, with ↩️ in front. Text typed along with it takes the place of the message's (without the
-  ↩️). It can be combined with `-alert`: `/notes -a #reminder -alert tomorrow 9h`. In the PDF, the
+  note, with ↩️ in front. With text typed along (`/notes #reminder Remember to save this!`), the typed
+  text comes first (it's the title) and the replied message follows, after a blank line, with ↩️; its
+  media (image, document, audio, video) is saved in the same note. It can be combined with `-alert`: `/notes -a #reminder -alert tomorrow 9h`. In the PDF, the
   ↩️ becomes `[reply]`.
 - In the note text, `\n` becomes a line break (`/notes #home bread\nmilk`); `\\n` stays as is.
 - The first line is the title (the only one in bold), the rest comes as typed and every

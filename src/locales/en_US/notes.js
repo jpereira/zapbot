@@ -22,7 +22,12 @@ module.exports = {
 
     // ---- /notes: -rm
     'notes.rm.missingMany': `❌ {what} don't exist. Nothing was changed; see the list with /notes -l`,
-    'notes.rm.missingOne': `❌ {what} doesn't exist. See the list with /notes -l\n💡 _Usage: {cmd} <id...|#tag...|all>_`,
+    'notes.add.optionAfterTag': `❌ Options go before the tag, so I didn't save anything: {opcao} came after #{tag}.\n💡 _Example: /notes {opcao} #{tag} ... (or /notes #{tag} <text> to save a note)_`,
+    'notes.rm.missingPos': `❌ No such position in the list of the tag: {list}.\n💡 _The numbers with a #tag are the positions in its list (/notes -l #tag). Usage: {cmd} #tag <position...>_`,
+    'notes.rm.manyTags': `❌ With positions, use only one #tag (the numbers are the positions in its list). Without a #tag, the numbers are IDs.`,
+    'notes.rm.confirm': { one: `⚠️ This removes {count} note ({what}). To confirm: {cmd}`, other: `⚠️ This removes {count} notes ({what}). To confirm: {cmd}` },
+    'notes.rm.whatAll': `all of them`,
+    'notes.rm.missingOne': `❌ {what} doesn't exist. See the list with /notes -l\n💡 _Usage: {cmd} <id...|#tag... <position>|all>_`,
     'notes.rm.alertsRemoved': { one: `🔕 {count} alert removed.`, other: `🔕 {count} alerts removed.` },
     'notes.rm.removed': { one: `🗑️ {count} note removed.`, other: `🗑️ {count} notes removed.` },
     'notes.rm.noTo': `❌ -to doesn't apply when removing. It works with -list, #tag and -export (and, on -add, with -alert).`,
@@ -56,7 +61,7 @@ module.exports = {
     'notes.alert.fired': `🔔 *NOTE #{id}*\n\n{text}\n\n📅 Added on {date}`,
 
     // ---- /notes: lists
-    'notes.tips': `\n\n💡 *Tips*\n/notes #tag <text> adds a note\n/notes -v <id...|#tag...> shows it with the image\n/notes -r <id...|#tag...|all> removes\n-alert <when> sets an alert.`,
+    'notes.tips': `\n\n💡 *Tips*\n/notes #tag <text> adds a note\n/notes -v <id...|#tag...> shows it with the image\n/notes -r <id...|#tag... <position>> removes (a whole tag or all: -yes)\n-alert <when> sets an alert.`,
     'notes.tipsCompact': `\n\n💡 _🖼️ media · ⏰ alert · 🔗 link_\n💡 _-v <no.> opens the whole note_\n💡 _without -c, the full list_`,
     'notes.tipsTags': `\n\n💡 _/notes #tag lists the notes of a tag_`,
     'notes.sentTo': `📝 Notes sent to {where}.`,

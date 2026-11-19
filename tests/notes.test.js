@@ -46,7 +46,7 @@ test('-add, -list e -rm (vários IDs, all e ID inexistente sem remover nada)', a
     assert.equal((await notes()).length, 3);
     assert.match((await bot.replyAlt('/notes -rm 2'))[0], /1 anotação removida/);
     assert.deepEqual((await notes()).map(n => n.id), [1, 3]);
-    assert.match((await bot.replyAlt('/notes -r all'))[0], /2 anotações removidas/);
+    assert.match((await bot.replyAlt('/notes -r all -yes'))[0], /2 anotações removidas/);
     assert.equal((await notes()).length, 0);
 });
 
@@ -145,9 +145,9 @@ test('#tag: agrupa na lista, filtra e remove por tag', async () => {
     assert.match((await bot.replyAlt('/notes -l #nada'))[0], /Nenhuma anotação em #nada/);
 
     assert.match((await bot.replyAlt('/notes -rm #nada'))[0], /#nada não existe/);
-    assert.match((await bot.replyAlt('/notes -rm #casa'))[0], /2 anotações removidas/);
+    assert.match((await bot.replyAlt('/notes -rm #casa -yes'))[0], /2 anotações removidas/);
     assert.deepEqual((await notes()).map(n => n.id), [2, 4]);
-    await bot.replyAlt('/notes -rm all');
+    await bot.replyAlt('/notes -rm all -yes');
     assert.deepEqual(await notes(), []);
 });
 
@@ -212,7 +212,7 @@ test('em resposta a uma mensagem: anota o texto dela com ↩️, com ou sem #tag
         { text: '↩️ ver https://exemplo.com/video', tag: 'lembrete', alerta: 0 },
         { text: '↩️ ver https://exemplo.com/video', tag: 'lembrete', alerta: 0 },
         { text: '↩️ ver https://exemplo.com/video', tag: 'lembrete', alerta: 1 },
-        { text: 'outro texto', tag: 'lembrete', alerta: 0 }
+        { text: 'outro texto\n\n↩️ ver https://exemplo.com/video', tag: 'lembrete', alerta: 0 }
     ]);
 
     assert.match((await bot.replyAlt('/notes #lembrete', { citada: withoutText }))[0], /não tem texto/);
@@ -325,7 +325,7 @@ test('imagem: na própria mensagem ou em resposta, vai para o disco; -rm apaga o
     await bot.replyAlt('/notes -rm 1');
     assert.equal(fs.existsSync(linesAlt[0].media_path), false);
     assert.equal(fs.existsSync(linesAlt[1].media_path), true);
-    await bot.replyAlt('/notes -rm all');
+    await bot.replyAlt('/notes -rm all -yes');
     assert.equal(linesAlt.some(n => fs.existsSync(n.media_path)), false);
 
 });
@@ -364,7 +364,7 @@ test('qualquer mídia: documento, vídeo e áudio vão para o disco com o nome o
     assert.equal(audio.enviadas.at(-1).options.caption, undefined);
     assert.match(audio.textos.at(-1), /#3\* · #m/);
 
-    await bot.replyAlt('/notes -rm all');
+    await bot.replyAlt('/notes -rm all -yes');
     assert.equal(linesAlt.some(n => fs.existsSync(n.media_path)), false);
 });
 
@@ -381,7 +381,7 @@ test('-export: as imagens entram no PDF (JPEG), com a anotação como legenda; i
     assert.match(pdf, /Narrativas polares/);
     assert.match(pdf, /imagem n.o inclu.da/);
     assert.match(pdf, /%%EOF\n$/);
-    await bot.replyAlt('/notes -rm all');
+    await bot.replyAlt('/notes -rm all -yes');
 });
 
 test('-export: a descrição da tag vem embaixo do cabeçalho dela no PDF, só das tags exportadas', async () => {
@@ -404,7 +404,7 @@ test('-export: a descrição da tag vem embaixo do cabeçalho dela no PDF, só d
     assert.doesNotMatch(await pdfDe('/notes -e #duvidas'), /Coisas da casa/);
     await bot.replyAlt('/notes -d #casa -rm');
     assert.doesNotMatch(await pdfDe('/notes -e #casa'), /Coisas da casa/);
-    await bot.replyAlt('/notes -rm all');
+    await bot.replyAlt('/notes -rm all -yes');
 });
 
 test('-view: manda a imagem com o texto na legenda (e só o texto, sem imagem)', async () => {
@@ -428,7 +428,7 @@ test('-view: manda a imagem com o texto na legenda (e só o texto, sem imagem)',
     await bot.replyAlt('/notes -v 1 -to /Grupo sobre L200/');
     const fresh = bot.client.enviadas.slice(n).find(e => e.chatId === L200);
     assert.match(fresh.options.caption, /Narrativas/);
-    await bot.replyAlt('/notes -rm all');
+    await bot.replyAlt('/notes -rm all -yes');
 });
 
 test('a confirmação mostra só os 35 primeiros caracteres do texto, numa linha', async () => {
@@ -490,7 +490,7 @@ test('-move: renomeia a tag (juntando se a nova já existe)', async () => {
     assert.match((await bot.replyAlt('/notes -m casa'))[0], /Usage: \/notes -m/);
     assert.match((await bot.replyAlt('/notes -m #casa #lar'))[0], /#casa → #lar · 2 anotações/);
     assert.match((await bot.replyAlt('/notes'))[0], /#lar: 3/);
-    await bot.replyAlt('/notes -rm all');
+    await bot.replyAlt('/notes -rm all -yes');
 });
 
 test('tag parcial: #idei acha #ideias (exata ganha; remover pede a inteira)', async () => {
@@ -502,7 +502,7 @@ test('tag parcial: #idei acha #ideias (exata ganha; remover pede a inteira)', as
     assert.doesNotMatch((await bot.replyAlt('/notes -l #ideia'))[0], /app novo/);
     assert.match((await bot.replyAlt('/notes -s #cas pão'))[0], /pão/);
     assert.match((await bot.replyAlt('/notes -rm #idei'))[0], /#idei não existe/);
-    await bot.replyAlt('/notes -rm all');
+    await bot.replyAlt('/notes -rm all -yes');
 });
 
 test('-desc: grava, mostra, aparece na lista e no /notes sozinho, vai no -move e apaga com -rm', async () => {
@@ -518,7 +518,7 @@ test('-desc: grava, mostra, aparece na lista e no /notes sozinho, vai no -move e
     assert.match((await bot.replyAlt('/notes -d #lar -rm'))[0], /apagada/);
     assert.match((await bot.replyAlt('/notes -d #lar -rm'))[0], /não tem descrição/);
     assert.match((await bot.replyAlt('/notes -d'))[0], /Usage: \/notes -d/);
-    await bot.replyAlt('/notes -rm all');
+    await bot.replyAlt('/notes -rm all -yes');
 });
 
 test('tag parcial também no -export, no -alert (lista) e no -view; ambígua junta as tags', async () => {
@@ -541,7 +541,7 @@ test('tag parcial também no -export, no -alert (lista) e no -view; ambígua jun
     assert.match(see, /um|dois/);
     assert.match((await bot.replyAlt('/notes -v #nada'))[0], /#nada não existe/);
     assert.match((await bot.replyAlt('/notes -v 1 #nada 9'))[0], /não existem/);
-    await bot.replyAlt('/notes -rm all');
+    await bot.replyAlt('/notes -rm all -yes');
 });
 
 test('-desc: tag parcial só vale se for uma; -move leva a descrição e não sobrescreve a da tag nova', async () => {
@@ -557,7 +557,7 @@ test('-desc: tag parcial só vale se for uma; -move leva a descrição e não so
     assert.match((await bot.replyAlt('/notes -d #ideias'))[0], /Coisas grandes/);
     assert.match((await bot.replyAlt('/notes'))[0], /#ideias: 2 · Coisas grandes/);
     assert.match((await bot.replyAlt('/notes -d #ideia'))[0], /Coisas grandes/); // parcial agora acha a #ideias
-    await bot.replyAlt('/notes -rm all');
+    await bot.replyAlt('/notes -rm all -yes');
 });
 
 test('-update: troca o texto (e a tag, se vier) e mantém o alerta', async () => {
@@ -656,7 +656,7 @@ test('título em negrito (só ele), corpo e "🔗 Links" no fim, com o link tira
 
     const [view] = await bot.replyAlt('/notes -v 1');
     assert.match(view, /\n\*Mais um caso de roubalheira\.\*\n\nNesse dia o pt fez isso\n\n🔗 Links\n• http:\/\/link1\.com\/\n• http:\/\/link2\.com$/);
-    await bot.replyAlt('/notes -rm all');
+    await bot.replyAlt('/notes -rm all -yes');
 });
 
 test('-c: uma linha por nota, por dia, com 🖼️ ⏰ 🔗; o cabeçalho da tag traz o resumo', async () => {
@@ -672,7 +672,7 @@ test('-c: uma linha por nota, por dia, com 🖼️ ⏰ 🔗; o cabeçalho da tag
         assert.match(list, /^📝 \*ANOTAÇÕES\*\n\n🏷️ pt \(3\) · 🔗 2\n\n📆 \d\d\/\d\d\/\d{4}\n#1 Explicação sobre o dólar 🔗 · \d\d:\d\d\n#2 g1\.globo\.com\/x\/y\.ghtml 🔗 · \d\d:\d\d\n#3 Sem link · \d\d:\d\d\n/, cmd);
         assert.match(list, /💡 _-v <nº> abre a nota inteira_/);
     }
-    await bot.replyAlt('/notes -rm all');
+    await bot.replyAlt('/notes -rm all -yes');
 });
 
 test('\\-foo é texto: o escape de opção vale no /notes (-to, -alert, -c...)', async () => {
@@ -690,4 +690,73 @@ test('\\-foo é texto: o escape de opção vale no /notes (-to, -alert, -c...)',
     // -update too
     await bot.replyAlt('/notes -update 1 #casa novo \\-to texto');
     assert.equal((await notes())[0].text, 'novo -to texto');
+});
+
+test('-rm com #tag: os números são as posições na lista da tag (não IDs); tag inteira e all pedem -yes', async () => {
+    await bot.replyAlt('/notes #stash primeira');
+    await bot.replyAlt('/notes #stash segunda');
+    await bot.replyAlt('/notes #stash terceira');
+    await bot.replyAlt('/notes #outra x');
+    const texts = async () => (await notes()).map(n => n.text);
+
+    // "-r 1 #stash" is the 1st of #stash, and it does not take the whole tag along (it used to)
+    assert.match((await bot.replyAlt('/notes -r 1 #stash'))[0], /1 anotação removida/);
+    assert.deepEqual(await texts(), ['segunda', 'terceira', 'x']);
+    // the number of the position is that of the tag's list, not the ID
+    assert.match((await bot.replyAlt('/notes -rm #stash 2'))[0], /1 anotação removida/);
+    assert.deepEqual(await texts(), ['segunda', 'x']);
+    // a position that does not exist: nothing is removed
+    assert.match((await bot.replyAlt('/notes -rm #stash 1 5'))[0], /Essa posição não existe na lista da tag: 5 \(#stash: 1\)/);
+    assert.deepEqual(await texts(), ['segunda', 'x']);
+    // two tags with positions is ambiguous
+    assert.match((await bot.replyAlt('/notes -rm #stash #outra 1'))[0], /use uma #tag só/);
+    // without a #tag, the numbers are still IDs
+    assert.match((await bot.replyAlt('/notes -rm 99'))[0], /ID 99 não existe/);
+
+    // a whole tag and all: only with -yes
+    assert.match((await bot.replyAlt('/notes -rm #stash'))[0], /⚠️ Isso remove 1 anotação \(#stash\)\. Para confirmar: \/notes -rm #stash -yes/);
+    assert.match((await bot.replyAlt('/notes -rm all'))[0], /⚠️ Isso remove 2 anotações \(todas\)\. Para confirmar: \/notes -rm all -yes/);
+    assert.equal((await notes()).length, 2, 'nada saiu sem o -yes');
+    assert.match((await bot.replyAlt('/notes -rm #stash -yes'))[0], /1 anotação removida/);
+    assert.match((await bot.replyAlt('/notes -r all -y'))[0], /1 anotação removida/);
+    assert.equal((await notes()).length, 0);
+});
+
+test('/notes #tag -rm 2: opção depois da tag não vira uma anotação "-rm 2"', async () => {
+    await bot.replyAlt('/notes #stash primeira');
+    for (const typed of ['/notes #stash -rm 2', '/notes #stash -r 2', '/notes #stash -l', '/notes #stash -u 1 x']) {
+        assert.match((await bot.replyAlt(typed))[0], /As opções vão antes da tag, então não salvei nada/, typed);
+    }
+    assert.deepEqual((await notes()).map(n => n.text), ['primeira']);
+    // the -alert after the text is still part of the note
+    assert.match((await bot.replyAlt('/notes #stash lembrar -alert +2h'))[0], /stash/);
+    assert.equal((await notes()).length, 2);
+});
+
+test('reply com texto digitado: o texto vem primeiro e a mensagem respondida (texto e mídia) vai junto, na mesma anotação', async () => {
+    const fs = require('fs');
+    const png = Buffer.from('89504e470d0a1a0a0000000d49484452', 'hex');
+    const mediaAlt = { mimetype: 'image/png', data: png.toString('base64') };
+
+    // replied text
+    const quotedText = bot.createMessage({ de: bot.OWNER.jid, texto: 'a promoção acaba hoje' });
+    await bot.replyAlt('/notes #mytag Lembrar de salvar isso aqui!', { citada: quotedText });
+    // replied photo with a caption: the text of the caption and the image
+    const quotedPhoto = bot.createMessage({ de: bot.OWNER.jid, texto: 'legenda da foto', midia: mediaAlt });
+    const [saved] = await bot.replyAlt('/notes #mytag Lembrar de salvar isso aqui!', { citada: quotedPhoto });
+    assert.match(saved, /^📝 \*#2\* · #mytag · 🖼️ · Lembrar de salvar isso aqui!/);
+    // replied photo without a caption: only the typed text and the image
+    await bot.replyAlt('/notes #mytag só a foto', { citada: bot.createMessage({ de: bot.OWNER.jid, texto: '', midia: mediaAlt }) });
+    // without typed text: still the replied text with ↩️ (as before)
+    await bot.replyAlt('/notes #mytag', { citada: quotedText });
+
+    const rows = await bot.dbAll('SELECT text, tag, media_path, media_mime FROM notes ORDER BY id');
+    assert.deepEqual(rows.map(n => [n.text, n.tag, n.media_mime]), [
+        ['Lembrar de salvar isso aqui!\n\n↩️ a promoção acaba hoje', 'mytag', null],
+        ['Lembrar de salvar isso aqui!\n\n↩️ legenda da foto', 'mytag', 'image/png'],
+        ['só a foto', 'mytag', 'image/png'],
+        ['↩️ a promoção acaba hoje', 'mytag', null]
+    ]);
+    assert.deepEqual(fs.readFileSync(rows[1].media_path), png);
+    await bot.replyAlt('/notes -rm all -yes');
 });

@@ -45,7 +45,9 @@ const packageJson = require('../package.json');
  *   -add | -a #tag <texto>            → anota
  * -add <text> -alert <when> [-to <destination>]...
  * → saves the note and notifies at the date/time (-to works as in the other -alert)
- * -rm | -r <id...|#tag...|all>       → removes (-r 1 2 3, -r 1,2,3, -r #casa or all)
+ * -rm | -r <id...|#tag...|all>       → removes (-r 1 2 3, -r 1,2,3, -r #casa or all). With a #tag, the numbers are
+ *                                     the positions in that tag's list (-r #casa 1 = the 1st of #casa);
+ *                                     a whole tag or all asks for -yes (-r #casa -yes)
  * -alert                             → lists only the notes with an alert
  * -alert <id|#tag...> <when> [-to ...]
  * → sets (or swaps) the alert of a note (or of all those in the tag)
@@ -153,13 +155,24 @@ function noteLine(n, plan = false, position = 0) {
         : `${ini} ${body}${alert.replace(/\n {3}/, '\n')}\n🕐 _${end}_`;
 }
 
-// The ids of -rm / -alert -rm: 1 2 3, 1,2,3 or all. Does any not exist? None is touched
+// The ids of -rm / -alert -rm: 1 2 3, 1,2,3 or all. Does any not exist? None is touched.
+// With a #tag, the numbers are positions in that tag's list (-rm #casa 1 or -rm 1 #casa: the 1st of #casa)
 function readIds(textAlt, notes) {
     const partsAlt = textAlt.toLowerCase().split(/[\s,]+/).filter(Boolean);
     if (partsAlt.includes('all')) return { todos: true, ids: notes.map(n => n.id) };
 
     const tags = partsAlt.filter(p => p.startsWith('#')).map(readTag);
     const other = [...new Set(partsAlt.filter(p => !p.startsWith('#')))].sort((a, b) => a - b);
+    if (tags.length && other.length) {
+        if (new Set(tags).size > 1) return { ids: [], faltando: [], muitasTags: true };
+        const inTag = notes.filter(n => n.tag === tags[0]);
+        if (!inTag.length) return { ids: [], faltando: [`#${tags[0]}`] };
+        const bad = other.filter(i => !/^\d+$/.test(i) || Number(i) < 1 || Number(i) > inTag.length);
+        return {
+            ids: bad.length ? [] : [...new Set(other.map(i => inTag[Number(i) - 1].id))].sort((a, b) => a - b),
+            faltando: [], posicoesFaltando: bad.map(i => `${i} (#${tags[0]}: ${inTag.length})`), tag: tags[0]
+        };
+    }
     const missing = [
         ...tags.filter(t => !notes.some(n => n.tag === t)).map(t => `#${t}`),
         ...other.filter(i => !/^\d+$/.test(i) || !notes.some(n => n.id === Number(i)))
@@ -169,16 +182,35 @@ function readIds(textAlt, notes) {
     return { ids: [...ids].sort((a, b) => a - b), faltando: missing };
 }
 
-async function removeNotes(msg, textIds, soAlert) {
+async function removeNotes(msg, textIdsTyped, soAlert) {
     const notes = await listNotes();
-    const { ids, faltando: missing, todos: allAlt2 } = readIds(textIds, notes);
+    // -yes (-y) confirms the removal of a whole tag or of all of them
+    const yes = /(^|\s)-(?:yes|y)(?=\s|$)/i.test(textIdsTyped);
+    const textIds = textIdsTyped.replace(/(^|\s)-(?:yes|y)(?=\s|$)/gi, ' ').trim();
+    const { ids, faltando: missing, todos: allAlt2, muitasTags: manyTags, posicoesFaltando: missingPositions } = readIds(textIds, notes);
     const cmd = soAlert ? '/notes -alert -rm' : '/notes -rm';
+
+    if (manyTags) {
+        await msg.reply(t('notes.rm.manyTags'));
+        return;
+    }
+    if (missingPositions?.length) {
+        await msg.reply(t('notes.rm.missingPos', { list: missingPositions.join(', '), cmd }));
+        return;
+    }
 
     if (!allAlt2 && (!ids.length || missing.length)) {
         const label = missing?.every(f => !f.startsWith('#')) ? 'ID' : '';
         await msg.reply(missing?.length > 1
             ? t('notes.rm.missingMany', { what: label ? t('notes.idsLabel', { list: missing.join(', ') }) : missing.join(', ') })
             : t('notes.rm.missingOne', { what: label ? t('notes.idLabel', { id: missing?.[0] ?? '?' }) : (missing?.[0] ?? '?'), cmd }));
+        return;
+    }
+
+    // All of them or a whole tag (#tag with no position): only with -yes, saying how many would go
+    const wholeTag = !soAlert && !allAlt2 && /(^|[\s,])#/.test(textIds) && !/(^|[\s,])\d/.test(textIds);
+    if (!soAlert && (allAlt2 || wholeTag) && !yes) {
+        await msg.reply(countAlt('notes.rm.confirm', ids.length, { what: allAlt2 ? t('notes.rm.whatAll') : textIds.trim(), cmd: `${cmd} ${textIds} -yes` }));
         return;
     }
 
@@ -268,6 +300,12 @@ async function addAlt(msg, textTyped, quotedMsg) {
     const { tag } = separated;
     let textAlt = unescape(separated.texto);
 
+    // "/notes #stash -rm 2": an option after the tag is not a note (it would save "-rm 2"); the options come first
+    if (tag && /^-(?:rm|r|list|l|compact|c|search|s|update|u|view|v|move|m|desc|d|export|e|add|a|yes|y)(?=\s|$)/i.test(textAlt.trim())) {
+        await msg.reply(t('notes.add.optionAfterTag', { opcao: textAlt.trim().split(/\s+/)[0], tag }));
+        return;
+    }
+
     // The syntax is always /notes #tag <text>: without a tag it does not save
     if (!tag) {
         await msg.reply(`${t('notes.add.syntax')}\n${t('notes.add.missingTag')}`, undefined, WITHOUT_PREVIEW);
@@ -276,6 +314,7 @@ async function addAlt(msg, textTyped, quotedMsg) {
 
     // Without text, but replying to a message: saves its text (if any; the media counts alone)
     const origin = mediaOrigin(msg, quotedMsg);
+    const typedAlong = Boolean(textAlt);
     if (!textAlt && quotedMsg) {
         const quoted = String(quotedMsg.body ?? '').trim();
         if (!quoted && !origin) {
@@ -283,6 +322,12 @@ async function addAlt(msg, textTyped, quotedMsg) {
             return;
         }
         if (quoted) textAlt = `${MARK_REPLY} ${quoted}`;
+    }
+
+    // Text typed along with a reply: it comes first and the replied message follows, with ↩️ (its media is saved too)
+    if (typedAlong && quotedMsg) {
+        const quoted = String(quotedMsg.body ?? '').trim();
+        if (quoted) textAlt = `${textAlt}\n\n${MARK_REPLY} ${quoted}`;
     }
 
     if (!textAlt && !origin) {
@@ -934,7 +979,7 @@ async function cmdNote({ msg, args, quotedMsg }) {
         return msg.reply(t('notes.usage'));
     }
 
-    return addAlt(msg, textAlt);
+    return addAlt(msg, textAlt, quotedMsg);
 }
 
 /*

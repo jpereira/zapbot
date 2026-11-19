@@ -1,7 +1,7 @@
 {
   "summary": "Anotações salvas no banco",
   "usage": "/notes #tag <texto>  ou  /notes [-list|-l] [#tag...] [-to <destino>]...  ou  /notes -search|-view|-update|-export|-move|-desc|-rm|-alert <...>",
-  "help": "Anotações salvas no banco. Para anotar, a sintaxe é /notes #tag <texto>: sem a #tag dá erro, e só /notes #tag lista as anotações da tag. Respondendo uma mensagem, o texto dela vira a anotação, com ↩️ (/notes #lembrete); uma mídia (imagem, documento, áudio, vídeo...) na própria mensagem ou na respondida é guardada no disco junto da anotação. Sem nada, mostra as tags com a quantidade e a descrição de cada uma; -l lista todas as anotações, com o ID, agrupadas por #tag (uma mensagem por tag). O -alert lembra de uma anotação numa data/hora (uma vez; a anotação continua): no seu privado ou nos destinos do -to.",
+  "help": "Anotações salvas no banco. Para anotar, a sintaxe é /notes #tag <texto>: sem a #tag dá erro, e só /notes #tag lista as anotações da tag. Respondendo uma mensagem, o texto dela vira a anotação, com ↩️ (/notes #lembrete); com texto digitado junto (/notes #lembrete Lembrar disso!), o que você digitou vem primeiro e a mensagem respondida vem depois, com ↩️ e a mídia dela; uma mídia (imagem, documento, áudio, vídeo...) na própria mensagem ou na respondida é guardada no disco junto da anotação. Sem nada, mostra as tags com a quantidade e a descrição de cada uma; -l lista todas as anotações, com o ID, agrupadas por #tag (uma mensagem por tag). O -alert lembra de uma anotação numa data/hora (uma vez; a anotação continua): no seu privado ou nos destinos do -to.",
   "ex": [
     "/notes #casa comprar leite",
     "/notes #casa",
@@ -12,7 +12,7 @@
     "/notes -d #casa Coisas da casa",
     "/notes -u 3 novo texto",
     "/notes -e #casa",
-    "/notes -r #casa",
+    "/notes -r #casa -yes",
     "/notes #lembrete ligar pro João -alert amanhã 9h",
     "/notes -alert 3 +2h -to /Família/",
     "/notes -alert #casa 18h -to /Família/",
@@ -154,13 +154,25 @@
       "values": [
         "<id...|#tag...|all>"
       ],
-      "desc": "Remove as anotações com esses IDs (-rm 1 2 3 ou -rm 1,2,3), de uma tag (-rm #casa) ou todas (all). Se algum ID ou tag não existe, nenhuma sai. A tag vai inteira. Junto com -alert, tira só o alerta, mantendo as anotações.",
+      "desc": "Remove as anotações com esses IDs (-rm 1 2 3 ou -rm 1,2,3), de uma tag (-rm #casa) ou todas (all). Com uma #tag, os números são as posições na lista dela (-rm #casa 1 é a 1ª da #casa), não IDs. Uma tag inteira ou all pede o -yes. Se algum ID, posição ou tag não existe, nenhuma sai. A tag vai inteira. Junto com -alert, tira só o alerta, mantendo as anotações.",
       "ex": [
         "/notes -r 2",
         "/notes -r 1 2 3",
-        "/notes -r #casa",
-        "/notes -r all",
+        "/notes -r #casa 1 3",
+        "/notes -r #casa -yes",
+        "/notes -r all -yes",
         "/notes -alert -r 3"
+      ]
+    },
+    {
+      "opts": [
+        "yes",
+        "y"
+      ],
+      "values": [],
+      "desc": "Com -rm: confirma a remoção de uma tag inteira ou de todas as anotações (sem ele, o bot só diz quantas sairiam).",
+      "ex": [
+        "/notes -rm #casa -yes"
       ]
     },
     {
