@@ -19,6 +19,8 @@ const textIsAlias = (salvo) => !salvo.startsWith('/');
 /*
  * Command alias parameters: $1, $2... take the typed arguments, in order.
  * The used ones leave the list and the leftover go to the end; a $N without an argument stays empty.
+ * $@ (or $*) is all of them, in every place it appears (nothing is left over): in a /batch alias,
+ * each line gets the whole text. ${@:-default} is the default when nothing was typed.
  */
 // The phone keyboard swaps "--" for "—" (em dash): "${1:--l}" arrives as "${1:—l}". Inside the
 // ${N:...} the dash works like the ":-" of the default plus the "-" of a value that starts with "-".
@@ -29,11 +31,17 @@ function applyParams(salvo, args) {
     const typed = args.split(/\s+/).filter(Boolean);
     const used = new Set();
     // $N or ${N:-default value} (the default applies when argument N was not typed)
-    const commandAlt = salvo.replace(/\$(?:([1-9]\d*)|\{([1-9]\d*)(?::-([^}]*))?\})/g, (_, n1, n2, defaults) => {
+    let all = false;
+    const commandAlt = salvo.replace(/\$(?:([1-9]\d*)|\{([1-9]\d*)(?::-([^}]*))?\}|([@*])|\{@(?::-([^}]*))?\})/g, (m, n1, n2, defaults, star, defaultsAll) => {
+        if (star || m.startsWith('${@')) {
+            all = true;
+            return typed.join(' ') || defaultsAll || '';
+        }
         const n = Number(n1 ?? n2);
         used.add(n - 1);
         return typed[n - 1] ?? defaults ?? '';
     }).trim();
+    if (all) return { comando: commandAlt, sobras: '' };
     // Without $N, what is left is the typed text as it came (line breaks stay, e.g. in /notes)
     if (!used.size) return { comando: commandAlt, sobras: args };
     return { comando: commandAlt, sobras: typed.filter((_, i) => !used.has(i)).join(' ') };

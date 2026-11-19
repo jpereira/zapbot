@@ -108,6 +108,17 @@ empty, unless it has a default value: `${N:-valor}`.
 /nopt -dry                       → /forward -dry #nopt
 ```
 
+`$@` (or `$*`) is **all** the typed arguments, in every place it appears, and nothing is left over to the end:
+it is the one for a [`/batch`](batch.md) shortcut, where each line needs the whole text. `${@:-default}` is the
+default when nothing is typed.
+
+```text
+/alias /vfazol /batch -q
+  /tts -q -l -v amy $@
+  /tts -q -l -v lessac $@
+/vfazol DO THE L!           → both voices say "DO THE L!"
+```
+
 The default goes after `:-`, so a default that itself starts with `-` takes two hyphens: `${1:--l}`. The
 phone keyboards change `--` into `—` (a long dash): the bot understands `${1:—l}` as `${1:--l}` and saves it fixed.
 

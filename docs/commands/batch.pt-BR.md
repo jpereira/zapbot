@@ -28,6 +28,33 @@ mandar de uma vez o que você mandaria em vários blocos (ex.: várias anotaçõ
 → salva a nota e não responde o resumo
 ```
 
+## Um atalho que roda um `/batch`
+
+Um [atalho](alias.md) pode guardar um `/batch` inteiro: as linhas abaixo da primeira vão com recuo, e o `$@`
+coloca **todo** o texto digitado em cada linha (o `$1` seria só a primeira palavra, e o resto iria para o fim
+da última linha).
+
+```text
+/alias /vfazol /batch -q
+  /tts -q -l -v cadu $@
+  /tts -q -l -v edresson $@
+  /tts -q -l -v faber $@
+
+/vfazol FAZ O L!
+→ três notas de voz, uma de cada voz, todas falando "FAZ O L!"
+```
+
+Outro uso: testar um monte de coisas de uma vez. Cada [`/tts`](tts.md) com `-q` manda só o áudio, então um
+`/me` antes dele diz qual voz está falando:
+
+```text
+/batch
+/me 🎙️ pt_BR-cadu-medium
+/tts -q -l -v cadu FAZ O L!
+/me 🎙️ pt_BR-jeff-medium
+/tts -q -l -v jeff FAZ O L!
+```
+
 ## Como separa os blocos
 
 Uma linha que começa com um comando (ou alias) abre um bloco. O que vem depois, linhas em branco
