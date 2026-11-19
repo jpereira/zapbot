@@ -183,6 +183,7 @@ Ajuda, uso e erros nunca contam, você e os admins não têm limite, e o histór
 
 O bot mostra o comando chamado antes do resultado. Os atalhos seguem as permissões dos comandos que chamam, e o
 `/help alias` lista os seus.
+Tem atalhos prontos (cotações, letreiros, traduções, vozes) nos [arquivos `.zb` do GitHub](https://github.com/jpereira/zapbot/tree/main/examples), que o `/alias -examples` carrega.
 
 **Jogos para o grupo, só respondendo:**
 

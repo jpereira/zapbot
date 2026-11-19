@@ -189,3 +189,22 @@ describe('segurança: um .zb só registra atalhos', () => {
         assert.deepEqual(listExampleFiles(), []);
     });
 });
+
+describe('os exemplos que acompanham o bot', () => {
+    test('todos carregam: cada bloco é um /alias válido', async () => {
+        const files = listExampleFiles();
+        assert.ok(files.length >= 2);
+        const { loadExample } = bot.src('zb');
+        for (const f of files) {
+            const r = await loadExample(f);
+            assert.deepEqual(r.failed, [], f.name);
+            assert.ok(r.loaded.length >= 1, f.name);
+        }
+        const voices = await bot.dbGet("SELECT command FROM command_aliases WHERE name = '/test.tts.voices'");
+        assert.equal(voices.command.split('\n').length, 32, '/batch -q + 31 vozes');
+        assert.match(voices.command, /\/tts -l -v amy \$\{@:-VOICE EXAMPLE\}/);
+        assert.match((await bot.dbGet("SELECT command FROM command_aliases WHERE name = '/test.tts.vozes'")).command, /\/tts -l -v cadu \$\{@:-AUDIO DE EXEMPLO\}/);
+        assert.equal((await bot.dbGet("SELECT description FROM command_aliases WHERE name = '/test.tts.voices'")).description, 'Says the text in every English voice (Piper), one voice note each');
+        assert.match((await bot.dbGet("SELECT description FROM command_aliases WHERE name = '/dollar'")).description, /^Currency quote/);
+    });
+});

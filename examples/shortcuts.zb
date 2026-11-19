@@ -1,0 +1,12 @@
+# ZapBot example: everyday shortcuts.
+#
+#   /dollar            the dollar quote (/stocks USD); /dollar EUR for another currency
+#   /idea some text    saves the text as a note tagged #ideas (/notes #ideas)
+#
+# A \ at the end of a line joins it with the next one; a line that starts with # is a comment.
+
+/alias /dollar -desc "Currency quote, USD by default" \
+    /stocks ${1:-USD}
+
+/alias /idea -desc "Saves an idea in the notes" \
+    /notes #ideas $@

@@ -230,6 +230,104 @@ overwritten by the first-boot load; by hand, `/alias -examples tts-voices -yes` 
 - Only the form `/alias [-q] <name> [-desc "text"] <command>` runs, so a file can only **define** shortcuts: `-rm`, `-move`, `-list`
   and the like are refused, and so is any other command. A file is limited to 128 KB and 200 aliases, and a symlink isn't read.
   Still, a `.zb` is trusted code (it creates shortcuts that anyone allowed can run): read a file before putting it in `examples/`.
+- Only `/alias` blocks run, so a file can only define shortcuts. The ones that come are in
+  [Ready-made shortcuts](#ready-made-shortcuts-examples).
+
+## Ready-made shortcuts (`examples/`)
+
+The `.zb` files that come with the bot are in the [`examples/`](https://github.com/jpereira/zapbot/tree/main/examples) folder on GitHub:
+
+| File | What it has | Loaded |
+|---|---|---|
+| [`tts-voices.zb`](https://github.com/jpereira/zapbot/blob/main/examples/tts-voices.zb) | `/test.tts.voices` and `/test.tts.vozes`: a phrase in every local voice, one voice note each | on the first boot |
+| [`shortcuts.zb`](https://github.com/jpereira/zapbot/blob/main/examples/shortcuts.zb) | `/dollar` (currency quote) and `/idea` (a note with `#ideas`) | on the first boot |
+| [`my-shortcuts.zb`](https://github.com/jpereira/zapbot/blob/main/examples/my-shortcuts.zb) | The author's shortcuts, below (the addresses and the contacts were replaced by examples) | by hand only: `/alias -examples my-shortcuts` |
+
+A file with `# @manual` in its first lines isn't loaded on the boot, only with `/alias -examples <name>`.
+
+### The author's shortcuts (`my-shortcuts.zb`)
+
+Most use `-q` (no "🔗 Alias" header). Take the whole file with `/alias -examples my-shortcuts` or copy just the lines you like.
+
+**Quotes (crypto, stocks, DeFi)**
+
+| Shortcut | Runs |
+|---|---|
+| `/bitcoio` | `/crypto BTC` |
+| `/btc` | `/crypto BTC` |
+| `/creptomoeda` | `/crypto` |
+| `/dolar` | `/stocks USD` |
+| `/eth` | `/crypto ETH` |
+| `/euro` | `/stocks EUR` |
+| `/gold` | `/crypto XAUT` |
+| `/hype` | `/crypto HYPE` |
+| `/mkt` | `/stocks ${1:-MSTR}` |
+| `/mstr` | `/stocks MSTR` |
+| `/sol` | `/crypto SOL` |
+| `/solana` | `/crypto SOL` |
+| `/taxas` | `/defi -fees` |
+| `/usdt` | `/stocks USDT` |
+| `/xaut` | `/crypto XAUT` |
+
+**Banners with `/ascii`**
+
+| Shortcut | Runs |
+|---|---|
+| `/arrombado` | `/ascii -w 60 -c # ARROMBADO!` |
+| `/bora` | `/ascii -c # BORA!` |
+| `/fazol` | `/ascii  FAZ O L!` |
+| `/fazolp` | `/ascii -c # FAZ O L\nPORRA!` |
+| `/fodase` | `/ascii -c # FODA-SE!` |
+| `/fuck` | `/ascii -w 60 FUCK\nTHE\nPRIVACY!` |
+| `/fuckyou` | `/ascii -w 60 -c # FUCK YOU!` |
+| `/partiu` | `/ascii -c # PARTIU!` |
+| `/recua` | `/ascii RECUA  - FACISTE!` |
+| `/viado` | `/ascii -c # VIADO` |
+
+**Translations**
+
+| Shortcut | Runs |
+|---|---|
+| `/en` | `/translate -p en $1` |
+| `/toen` | `/translate -p en` |
+| `/toes` | `/translate -p es` |
+| `/topt` | `/translate -p pt` |
+| `/txt2en` | `/translate -p en` |
+| `/txt2es` | `/translate -p es` |
+| `/txt2pt` | `/translate -p pt` |
+
+**Notes**
+
+| Shortcut | Runs |
+|---|---|
+| `/ideias` | `/notes #ideias` |
+| `/n` | `/notes` |
+| `/pt` | `/notes #pt $1` |
+
+**Voice (`/tts` and `/gpt -voice`)**
+
+| Shortcut | Runs |
+|---|---|
+| `/gptvoz` | `/gpt -voice` |
+| `/tovoz` | `/gpt -voice` |
+| `/tuga` | `/tts -q -l -v tugão $@` |
+| `/vf` | `/batch -q` + `/tts -q -l -v $@` with the voices tugão, cadu, edresson, faber |
+| `/vfazol` | `/batch -q` + `/tts -q -l -v $@` with the voices cadu, edresson, faber |
+
+**Sending (`/me`, `/forward`) and others**
+
+| Shortcut | Runs |
+|---|---|
+| `/end.home` | `/me` + the address text |
+| `/end.work` | `/me` + the address text |
+| `/flood` | `/me  -r 30 $1` |
+| `/funny` | `/forward -q /Contact 1/ /Contact 2/ /Contact 3/` |
+| `/gptusage` | `/gpt -usage` |
+| `/haha` | `/me -r 15 AHHAhaₕₐₐₕahAHHAhaₕₐₐₕah` |
+| `/nopt` | `/forward -q #nopt` |
+| `/nopt.add` | `/forward -add #nopt` |
+| `/rec` | `/sticker -ss $1` |
+| `/sts` | `/sticker -ss` |
 
 ## Text with commands
 

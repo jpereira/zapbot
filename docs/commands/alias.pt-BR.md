@@ -230,6 +230,104 @@ sobrescrito na carga do primeiro boot; na mão, `/alias -examples tts-voices -ye
 - Só roda a forma `/alias [-q] <nome> [-desc "texto"] <comando>`, então um arquivo só consegue **definir** atalhos: `-rm`, `-move`, `-list`
   e parecidos são recusados, e qualquer outro comando também. Um arquivo é limitado a 128 KB e 200 aliases, e link simbólico não é lido.
   Mesmo assim, um `.zb` é código de confiança (ele cria atalhos que qualquer pessoa autorizada pode rodar): leia um arquivo antes de colocá-lo em `examples/`.
+- Só rodam blocos `/alias`, então um arquivo só consegue definir atalhos. Os que vêm estão em
+  [Atalhos prontos](#atalhos-prontos-examples).
+
+## Atalhos prontos (`examples/`)
+
+Os arquivos `.zb` que acompanham o bot estão na pasta [`examples/`](https://github.com/jpereira/zapbot/tree/main/examples) do GitHub:
+
+| Arquivo | O que tem | Carga |
+|---|---|---|
+| [`tts-voices.zb`](https://github.com/jpereira/zapbot/blob/main/examples/tts-voices.zb) | `/test.tts.voices` e `/test.tts.vozes`: uma frase em todas as vozes locais, uma nota de voz cada | no primeiro boot |
+| [`shortcuts.zb`](https://github.com/jpereira/zapbot/blob/main/examples/shortcuts.zb) | `/dollar` (cotação de moeda) e `/idea` (nota com `#ideas`) | no primeiro boot |
+| [`my-shortcuts.zb`](https://github.com/jpereira/zapbot/blob/main/examples/my-shortcuts.zb) | Os atalhos do autor, abaixo (os endereços e os contatos foram trocados por exemplos) | só na mão: `/alias -examples my-shortcuts` |
+
+Um arquivo com `# @manual` nas primeiras linhas não carrega no boot, só com `/alias -examples <nome>`.
+
+### Os atalhos do autor (`my-shortcuts.zb`)
+
+A maioria usa `-q` (sem o cabeçalho "🔗 Alias"). Pegue o arquivo inteiro com `/alias -examples my-shortcuts` ou copie só as linhas de que gostar.
+
+**Cotações (cripto, ações, DeFi)**
+
+| Atalho | Executa |
+|---|---|
+| `/bitcoio` | `/crypto BTC` |
+| `/btc` | `/crypto BTC` |
+| `/creptomoeda` | `/crypto` |
+| `/dolar` | `/stocks USD` |
+| `/eth` | `/crypto ETH` |
+| `/euro` | `/stocks EUR` |
+| `/gold` | `/crypto XAUT` |
+| `/hype` | `/crypto HYPE` |
+| `/mkt` | `/stocks ${1:-MSTR}` |
+| `/mstr` | `/stocks MSTR` |
+| `/sol` | `/crypto SOL` |
+| `/solana` | `/crypto SOL` |
+| `/taxas` | `/defi -fees` |
+| `/usdt` | `/stocks USDT` |
+| `/xaut` | `/crypto XAUT` |
+
+**Letreiros com `/ascii`**
+
+| Atalho | Executa |
+|---|---|
+| `/arrombado` | `/ascii -w 60 -c # ARROMBADO!` |
+| `/bora` | `/ascii -c # BORA!` |
+| `/fazol` | `/ascii  FAZ O L!` |
+| `/fazolp` | `/ascii -c # FAZ O L\nPORRA!` |
+| `/fodase` | `/ascii -c # FODA-SE!` |
+| `/fuck` | `/ascii -w 60 FUCK\nTHE\nPRIVACY!` |
+| `/fuckyou` | `/ascii -w 60 -c # FUCK YOU!` |
+| `/partiu` | `/ascii -c # PARTIU!` |
+| `/recua` | `/ascii RECUA  - FACISTE!` |
+| `/viado` | `/ascii -c # VIADO` |
+
+**Traduções**
+
+| Atalho | Executa |
+|---|---|
+| `/en` | `/translate -p en $1` |
+| `/toen` | `/translate -p en` |
+| `/toes` | `/translate -p es` |
+| `/topt` | `/translate -p pt` |
+| `/txt2en` | `/translate -p en` |
+| `/txt2es` | `/translate -p es` |
+| `/txt2pt` | `/translate -p pt` |
+
+**Notas**
+
+| Atalho | Executa |
+|---|---|
+| `/ideias` | `/notes #ideias` |
+| `/n` | `/notes` |
+| `/pt` | `/notes #pt $1` |
+
+**Voz (`/tts` e `/gpt -voice`)**
+
+| Atalho | Executa |
+|---|---|
+| `/gptvoz` | `/gpt -voice` |
+| `/tovoz` | `/gpt -voice` |
+| `/tuga` | `/tts -q -l -v tugão $@` |
+| `/vf` | `/batch -q` + `/tts -q -l -v $@` com as vozes tugão, cadu, edresson, faber |
+| `/vfazol` | `/batch -q` + `/tts -q -l -v $@` com as vozes cadu, edresson, faber |
+
+**Envio (`/me`, `/forward`) e outros**
+
+| Atalho | Executa |
+|---|---|
+| `/end.home` | `/me` + o texto do endereço |
+| `/end.work` | `/me` + o texto do endereço |
+| `/flood` | `/me  -r 30 $1` |
+| `/funny` | `/forward -q /Contact 1/ /Contact 2/ /Contact 3/` |
+| `/gptusage` | `/gpt -usage` |
+| `/haha` | `/me -r 15 AHHAhaₕₐₐₕahAHHAhaₕₐₐₕah` |
+| `/nopt` | `/forward -q #nopt` |
+| `/nopt.add` | `/forward -add #nopt` |
+| `/rec` | `/sticker -ss $1` |
+| `/sts` | `/sticker -ss` |
 
 ## Texto com comandos
 
