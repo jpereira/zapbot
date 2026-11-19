@@ -61,6 +61,35 @@ function sendingText(content, options = {}) {
     return options.caption ?? content?.description ?? null;
 }
 
+/*
+ * Everything the bot sends, by chat and text, for a short time: its replies come back as 'message_create' from you, and
+ * whoever waits for something typed by you (the /notes -lock password) must not take the bot's own question for the answer.
+ */
+const sentTexts = new Map(); // "chat|text" -> [expires at, ...]
+
+function markText(chatId, content) {
+    const text = String(content ?? '').trim();
+    if (!text) return;
+    const nowAlt = Date.now();
+    if (sentTexts.size > 500) for (const [k, v] of sentTexts) if (v.every(t => t <= nowAlt)) sentTexts.delete(k);
+    const key = `${chatId}|${text}`;
+    sentTexts.set(key, [...(sentTexts.get(key) ?? []).filter(t => t > nowAlt), nowAlt + SENT_TTL_MS]);
+}
+
+// true (and consumes the mark) if the bot sent this text in this chat
+function wasBotText(chatId, content) {
+    const key = `${chatId}|${String(content ?? '').trim()}`;
+    const valid = (sentTexts.get(key) ?? []).filter(t => t > Date.now());
+    if (!valid.length) {
+        sentTexts.delete(key);
+        return false;
+    }
+    valid.shift();
+    if (valid.length) sentTexts.set(key, valid);
+    else sentTexts.delete(key);
+    return true;
+}
+
 function markSentByBot(textAlt) {
     textAlt = String(textAlt ?? '').trim();
     if (!textAlt.startsWith('/')) return; // only what could become a command
@@ -141,6 +170,7 @@ client.sendMessage = (chatId, content, options = {}) => {
         }
     }
     markSentByBot(sendingText(content, options));
+    markText(chatId, sendingText(content, options));
     botMarkSending(chatId);
     return sendMessageOriginal(chatId, content, options).then((sent) => {
         botRegisterSending(sent);
@@ -196,6 +226,7 @@ module.exports = {
     botConsumeSending,
     sentByBot,
     wasSentByBot,
+    wasBotText,
     marksStartCleanup,
     cleanMarks,
     markSentByBot,
