@@ -4,6 +4,8 @@
 
 const { ADMIN } = require('../../roles').ROLES;
 
+const { OPTION_QUIET_TIP } = require('./_options');
+
 module.exports = {
     cmd: '/ocr',
     usage: '/ocr [-gpt|-g] [-local|-l] [-status|-s]',
@@ -12,6 +14,7 @@ module.exports = {
     help: 'Reads the text in a photo and replies with it: by default locally with Tesseract (no key, languages in ocr.language), or with -gpt (-g) by ChatGPT (vision), which needs the OpenAI key. Replying to the photo, or sending the photo with /ocr as the caption. -gpt requires OPENAI_API_KEY in config/.env or the gpt.api.key setting.',
     ex: ['/ocr'],
     cmd_opts: [
+        OPTION_QUIET_TIP,
         {
             opts: ['gpt', 'g'],
             values: [],

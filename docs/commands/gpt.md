@@ -41,6 +41,7 @@ still work).
 
 | Option | Value | Description |
 |---|---|---|
+| `-quiet`, `-q` | | Does not show the engine tip ("💡 ... by ChatGPT, Tesseract, Piper...") at the end of the reply. To hide it always: the `gpt.footer` setting off |
 | `-model`, `-m` | `[model]` | Owner and admins only. Lists the models by use, the ones your key sees, and changes each one (see [Choosing the model](#choosing-the-model)) |
 | `-audio` | | Owner and admins only. Together with `-m`: the audio transcription model |
 | `-img` | | Owner and admins only. Creates an image from the request (replying to a photo, it edits it). See [Image and GIF](#image-and-gif--img--gif) |

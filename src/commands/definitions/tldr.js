@@ -3,7 +3,7 @@
  */
 
 const { ADMIN } = require('../../roles').ROLES;
-const { optionStatus } = require('./_options');
+const { optionStatus, OPTION_QUIET_TIP } = require('./_options');
 
 module.exports = {
     cmd: '/tldr',
@@ -12,6 +12,7 @@ module.exports = {
     summary: 'Summarizes the chat conversation with ChatGPT',
     help: 'Summarizes the chat conversation with ChatGPT: topics, decisions and pending items. Audio messages (the most recent ones) are transcribed and included in the summary with who sent them and when.',
     cmd_opts: [
+        OPTION_QUIET_TIP,
         {
             opts: ['chat', 'c'],
             values: ['<name>'],

@@ -46,7 +46,15 @@ const optionStatus = (example) => ({
     cron: false
 });
 
+// -quiet|-q of the commands that end the reply with the engine tip ("💡 Read by Tesseract")
+const OPTION_QUIET_TIP = {
+    opts: ['quiet', 'q'],
+    values: [],
+    desc: 'Does not show the engine tip ("💡 ... by ChatGPT, Tesseract, Piper...") at the end of the reply. To hide it always: the <command>.footer setting off.'
+};
+
 module.exports = {
+    OPTION_QUIET_TIP,
     optionStatus,
     OPTION_ALERT_MSG,
     OPTION_ALERT_RM,

@@ -59,6 +59,7 @@ shows are in Portuguese; the ones here are in English).
 | `defi.morpho.chains` | list | `8453` | Networks (chain id) where [`/defi morpho`](commands/defi.md#morpho) looks for positions: `8453` (Base), `1` (Ethereum)... |
 | `defi.morpho.wallet` | text (can be empty) | *(empty)* | Wallet for [`/defi morpho`](commands/defi.md#morpho) when no wallet is registered, used when `MORPHO_WALLET_ADDRESS` is not in `config/.env` |
 | `defi.solana.rpc` | URL | `https://api.mainnet-beta.solana.com` | Solana RPC used by [`/defi`](commands/defi.md#solana-rpc). Shown masked (the URL usually carries the key) |
+| `draw.footer` | on/off | `on` | Adds the tip "💡 Drawn by ChatGPT" to the "image generated below" notice of /draw and /gpt -img and -gif. -quiet (-q) hides it on the call. |
 | `forward.delayMs` | 0–10000 | `1000` | Pause (ms) between messages when [`/forward`](commands/forward.md) forwards several, so WhatsApp isn't flooded |
 | `forward.header` | on/off | `on` | Header "Message forwarded by ZapBot!" at the start of what [`/forward`](commands/forward.md) sends; off, only the message goes. `-status` forces it, `-quiet` and `-nohdr` drop it. See [Header](commands/forward.md#header) |
 | `forward.max` | 1–50 | `10` | Most messages [`/forward -N`](commands/forward.md#several-messages--n) forwards at once |
@@ -75,6 +76,7 @@ shows are in Portuguese; the ones here are in English).
 | `gpt.api.model` | text (from the list) | `gpt-4o-mini` | `/gpt` model, used when `OPENAI_MODEL` is not in `config/.env`. Accepted: the ones listed by `/gpt -m` |
 | `gpt.credit.since` | text (YYYY-MM-DD, can be empty) | *(empty)* | Purchase date of the OpenAI credits: `/gpt -usage` adds up the spending since then to show `$used/$total` (empty: the last 180 days) |
 | `gpt.credit.total` | 0–100000 | `0` | Total OpenAI credits purchased, in dollars (the API doesn't report the balance): `/gpt -usage` shows `$used/$total`. `0`: doesn't show it |
+| `gpt.footer` | on/off | `on` | Ends the /gpt replies with the tip "💡 Answered by ChatGPT". -quiet (-q) hides it on the call. |
 | `gpt.gif.frameMs` | 20–2000 | `200` | How long each frame of the `/draw -gif` and `/gpt -gif` GIF lasts, in ms (the total is frames x ms) |
 | `gpt.gif.frames` | 2–16 | `9` | How many frames the `/draw -gif` and `/gpt -gif` GIF has (the more frames, the more expensive) |
 | `gpt.image.gifModel` | text | `gpt-image-2.6-flare` | Model that generates the `/draw -gif` and `/gpt -gif` GIF (only the `gpt-image-2.6-*` ones make GIFs and require preview access): the id your account has (if it doesn't exist, the bot lists the ones the key sees) |
@@ -99,6 +101,7 @@ shows are in Portuguese; the ones here are in English).
 | `news.hack` | list | The Hacker News, BleepingComputer, Krebs on Security | RSS feeds for `/news -hack` |
 | `news.max` | 1–10 | `5` | Headlines shown by `/news` (`/news <count>` overrides it) |
 | `ocr.engine` | `local`, `gpt` | `local` | Engine of [`/ocr`](commands/ocr.md): `local` (Tesseract, no key) or `gpt` (ChatGPT, OpenAI vision). `-gpt` and `-local` pick it per call |
+| `ocr.footer` | on/off | `on` | Ends the /ocr reply with the tip "💡 Read by <engine>". -quiet (-q) hides it on the call. |
 | `ocr.language` | text | `por+eng` | Languages of the local [`/ocr`](commands/ocr.md) (Tesseract), joined by `+`: `por+eng`, `por`, `eng`, `spa`... One that is not in the Docker image is not read |
 | `pixelart.maxParts` | 1–10 | `3` | Max parts of [`/pixelart`](commands/pixelart.md) when the art is taller than 4096 px |
 | `pixelart.packs` | list | `chuck-norris-lvl` | 16colo.rs packs picked at random by [`/pixelart`](commands/pixelart.md) with no arguments |
@@ -118,12 +121,15 @@ shows are in Portuguese; the ones here are in English).
 | `stocks.alert.max` | 1–100 | `20` | Max price alerts of `/stocks` |
 | `stocks.symbols` | list | `USD, EUR, USDT, MSTR` | Symbols shown by [`/stocks`](commands/stocks.md) (and `/rates`): currencies against the real (`USD`, `EUR`, `GBP`, `USDT`) and Yahoo Finance tickers (`MSTR`, `NVDA`, `PETR4.SA`, `BRK-B`, `^GSPC`); usually changed with `/stocks -a`/`-d` |
 | `stt.engine` | `local`, `gpt` | `local` | Engine of [`/stt`](commands/stt.md) and `/get -stt`: `local` (faster-whisper, no key) or `gpt` (ChatGPT, OpenAI API). `-gpt` and `-local` pick it per call |
+| `stt.footer` | on/off | `on` | Ends the /stt and /get -stt transcription with the tip "💡 Transcribed by <engine>". -quiet (-q) hides it on the call. |
 | `stt.language` | text | `auto` | Language of the speech in [`/get -stt`](commands/get.md#transcribe-the-speech--stt) (`pt`, `en`, `es`...). `auto`: whisper detects it |
 | `stt.maxMinutes` | 1–180 | `20` | Longest audio (minutes) `/get -stt` transcribes: it uses the server CPU |
 | `stt.model` | text | `small` | faster-whisper model of `/get -stt`: `tiny`, `base`, `small`, `medium` or `large-v3-turbo` (bigger is better and slower). `small` comes in the image; another one is downloaded the first time |
+| `tldr.footer` | on/off | `on` | Ends the /tldr summary with the tip "💡 Summarized by ChatGPT". -quiet (-q) hides it on the call. |
 | `tldr.maxMsgs` | 10–2000 | `500` | Max messages sent to OpenAI per [`/tldr`](commands/tldr.md) |
 | `translate.lang` | text | `pt` | Default target language of [`/translate`](commands/translate.md) (code: `pt`, `en`, `es`...) |
 | `tts.engine` | `local`, `gpt` | `local` | Engine of [`/tts`](commands/tts.md): `local` (Piper voice, no key) or `gpt` (ChatGPT, OpenAI speech API). `-gpt` and `-local` pick it per call |
+| `tts.footer` | on/off | `on` | Adds the tip "💡 Generated by <engine>" to the "audio generated below" notice of /tts and /gpt -voice. -quiet (-q) hides it on the call. |
 | `tts.voice.en` | text | `en_US-lessac-medium` | Local (Piper) voice of [`/tts`](commands/tts.md) for English text: `en_US-lessac-medium`, `en_US-amy-medium`, `en_GB-alan-medium`... One that is not in the image is downloaded the first time |
 | `tts.voice.pt` | text | `pt_BR-faber-medium` | Local (Piper) voice of [`/tts`](commands/tts.md) for Portuguese text: `pt_BR-faber-medium`, `pt_BR-edresson-low`, `pt_PT-tugão-medium`... One that is not in the image is downloaded the first time |
 | `usage.footer` | on/off | `on` | After a command with a usage limit, says how many calls are left (`📊 /gpt: 1 of 3 per day left`) |

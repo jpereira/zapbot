@@ -19,17 +19,17 @@ async function cmdTts({ msg, args, opts, quotedMsg }) {
         await msg.reply(e.message);
         return;
     }
-    const text = withoutOption(args, 'status|s|gpt|g|local|l');
+    const text = withoutOption(args, 'status|s|quiet|q|gpt|g|local|l');
 
     if (engine === 'local') {
-        await talkText(msg, text, quotedMsg, '/tts', { local: true });
+        await talkText(msg, text, quotedMsg, '/tts', { local: true, quiet: opts.opt.quiet });
         return;
     }
     if (!keyOpenAi()) {
         await msg.reply(WITHOUT_KEY('/tts'));
         return;
     }
-    await measureConsumption(opts?.given.has('status'), () => talkText(msg, text, quotedMsg, '/tts'));
+    await measureConsumption(opts?.given.has('status'), () => talkText(msg, text, quotedMsg, '/tts', { quiet: opts.opt.quiet }));
 }
 
 module.exports = { cmdTts };

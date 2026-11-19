@@ -3,7 +3,7 @@
  */
 
 const { ADMIN } = require('../../roles').ROLES;
-const { optionStatus } = require('./_options');
+const { optionStatus, OPTION_QUIET_TIP } = require('./_options');
 
 module.exports = {
     cmd: '/draw',
@@ -13,6 +13,7 @@ module.exports = {
     help: 'Draws an image with ChatGPT (GPT Image); with -gif, an animated GIF (GPT Image 2.6), and on a photo (caption or reply) edits the photo or animates it. When replying to a message, its text is added to the request. Requires OPENAI_API_KEY in config/.env or the gpt.api.key setting.',
     ex: ['/draw -p @me @this draw the two of us as pirates', '/draw -g a dancing cat'],
     cmd_opts: [
+        OPTION_QUIET_TIP,
         {
             opts: ['gif', 'g'],
             values: [],

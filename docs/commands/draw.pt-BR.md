@@ -23,6 +23,7 @@ Se a **primeira palavra** parece uma opção mas não existe (`/draw -price`), o
 
 | Opção | Valor | Descrição |
 |---|---|---|
+| `-quiet`, `-q` | | Não mostra a dica do motor ("💡 ... por ChatGPT, Tesseract, Piper...") no fim da resposta. Para esconder sempre: o setting `draw.footer` em `off` |
 | `-gif`, `-g` | | GIF animado (setting `gpt.image.gifModel`). Numa foto, ou respondendo uma, anima a foto. Veja [GIF animado](#gif-animado--gif) |
 | `-frames`, `-f` | `<n>` | Quadros do GIF, de 2 a 16 (padrão: `gpt.gif.frames`, 9). Vale como `-gif` |
 | `-ms` | `<ms>` | Duração de cada quadro do GIF, de 20 a 2000 ms (padrão: `gpt.gif.frameMs`, 200). Vale como `-gif` |

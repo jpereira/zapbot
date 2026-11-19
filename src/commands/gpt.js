@@ -128,7 +128,7 @@ const soTranscribe = (args) => !args.trim() ||
  * Replying to an audio: transcribes (v1/audio/transcriptions). Without a question, or just "transcreva", replies the
  * transcription; with another question ("resuma", "traduza para o inglês"), sends the transcription along to the chat.
  */
-async function replyOnAudio(msg, { audio, erro: errorAlt }, args) {
+async function replyOnAudio(msg, { audio, erro: errorAlt }, args, quiet) {
     if (errorAlt) {
         await msg.reply(errorAlt);
         return;
@@ -144,14 +144,14 @@ async function replyOnAudio(msg, { audio, erro: errorAlt }, args) {
             return;
         }
         if (soTranscribe(args)) {
-            await completeNotice(msg, notice, `${withEngineTip(t('gpt.transcription', { texto: transcription }), 'stt', CHATGPT)}${await consumptionFooter()}`);
+            await completeNotice(msg, notice, `${withEngineTip(t('gpt.transcription', { texto: transcription }), 'stt', CHATGPT, { quiet, command: 'gpt' })}${await consumptionFooter()}`);
             return;
         }
 
         const reply = await askOnChat({
             cmd: '/gpt', sistema: GPT_INSTRUCTIONS(), texto: t('gpt.audioPrompt', { pergunta: args.trim(), transcricao: transcription })
         });
-        await completeNotice(msg, notice, `${withEngineTip(`🤖 ${reply}`, 'gpt', CHATGPT)}${await consumptionFooter()}`);
+        await completeNotice(msg, notice, `${withEngineTip(`🤖 ${reply}`, 'gpt', CHATGPT, { quiet })}${await consumptionFooter()}`);
     } catch (err) {
         await completeNotice(msg, notice, (transcribing && await modelError(err, AUDIO_MODEL, '/gpt')) || errorOpenAi(err, '/gpt'));
     }
@@ -178,7 +178,7 @@ async function contentForTalk(quotedMsg, cmd = '/gpt') {
  * /gpt -voice [text]: the voice of the text (v1/audio/speech), robot by default, in a voice note. Without
  * typed text, speaks the replied message's.
  */
-async function talkText(msg, args, quotedMsg, cmd = '/gpt', { local = false } = {}) {
+async function talkText(msg, args, quotedMsg, cmd = '/gpt', { local = false, quiet = false } = {}) {
     const typed = unescape(args.replace(/(^|\s)-(?:voice|v)(?=\s|$)/, '').trim());
     let textAlt = typed;
     let style = null;
@@ -205,10 +205,11 @@ async function talkText(msg, args, quotedMsg, cmd = '/gpt', { local = false } = 
     }
 
     const engine = local ? 'Piper' : CHATGPT;
-    const notice = await msg.reply(engineProcessing('tts', engine), null, { linkPreview: false });
+    // -quiet: no "generating..." notice and no "audio below": only the voice note
+    const notice = quiet ? null : await msg.reply(engineProcessing('tts', engine), null, { linkPreview: false });
     try {
         const voice = local ? await speakLocal(textAlt) : await synthesizeVoice({ cmd, texto: textAlt, estilo: style });
-        await completeNotice(msg, notice, withEngineTip(t('gpt.voiceBelow'), 'tts', engine, { sep: '\n' }));
+        if (!quiet) await completeNotice(msg, notice, withEngineTip(t('gpt.voiceBelow'), 'tts', engine, { sep: '\n', command: cmd.slice(1) }));
         await msg.reply(new MessageMedia('audio/ogg; codecs=opus', voice.toString('base64'), 'voz.ogg'), null, { sendAudioAsVoice: true });
         if (!local) await replyConsumption(msg);
     } catch (err) {
@@ -228,8 +229,8 @@ const CREATE_VERB = /\b(ger[ae]r?|cri[ae]r?|fa[çc]a|fazer|faz|anim[ae]r?|transf
 const asksGif = (textAlt) => ASKED_GIF.test(textAlt) && CREATE_VERB.test(textAlt);
 
 // -img and -gif are those of /draw (desenhar() is a single one): here only the request text and the usage message
-const gptDraw = (msg, args, quotedMsg, { opcao: optionAlt, gif, perfis: profiles = [], semPedido: withoutRequest }) =>
-    drawAlt({ msg, cmd: '/gpt', pedido: withoutOption(args, optionAlt), quotedMsg, gif, perfis: profiles, semPedido: withoutRequest });
+const gptDraw = (msg, args, quotedMsg, { opcao: optionAlt, gif, perfis: profiles = [], semPedido: withoutRequest, quiet }) =>
+    drawAlt({ msg, cmd: '/gpt', pedido: withoutOption(args, optionAlt), quotedMsg, gif, perfis: profiles, semPedido: withoutRequest, quiet });
 
 const DAYS_DEFAULT = 7;
 const DAYS_MAX = 31;
@@ -447,6 +448,8 @@ async function showPrices(msg) {
 }
 
 async function ask({ msg, args, opts, quotedMsg, admin, chatId, isGroup }) {
+    // -status and -quiet are read by the options: they do not go in the question
+    if (opts?.given.has('status') || opts?.given.has('quiet')) args = withoutOption(args, 'status|s|quiet|q');
     if (opts?.given.has('usage')) {
         await showUsage(msg, opts.opt.usage);
         return;
@@ -482,7 +485,7 @@ async function ask({ msg, args, opts, quotedMsg, admin, chatId, isGroup }) {
         const profiles = await prepareProfiles();
         if (!profiles) return;
         await gptDraw(msg, args, quotedMsg, {
-            opcao: 'img', gif: null, perfis: profiles,
+            opcao: 'img', gif: null, perfis: profiles, quiet: opts.opt.quiet,
             semPedido: t('gpt.imgUsage')
         });
         return;
@@ -495,7 +498,7 @@ async function ask({ msg, args, opts, quotedMsg, admin, chatId, isGroup }) {
         const profiles = await prepareProfiles();
         if (!profiles) return;
         await gptDraw(msg, args, quotedMsg, {
-            opcao: 'gif', gif: {}, perfis: profiles,
+            opcao: 'gif', gif: {}, perfis: profiles, quiet: opts.opt.quiet,
             semPedido: t('gpt.gifUsage')
         });
         return;
@@ -503,14 +506,14 @@ async function ask({ msg, args, opts, quotedMsg, admin, chatId, isGroup }) {
 
     // -voice: the text becomes a voice note
     if (opts?.given.has('voice')) {
-        await talkText(msg, args, quotedMsg);
+        await talkText(msg, args, quotedMsg, '/gpt', { quiet: opts.opt.quiet });
         return;
     }
 
     // Replying to an audio: the transcription (and, with a question, the chat on top of it)
     const audio = await replyAudio(quotedMsg);
     if (audio) {
-        await replyOnAudio(msg, audio, args);
+        await replyOnAudio(msg, audio, args, opts?.opt?.quiet);
         return;
     }
 
@@ -553,7 +556,7 @@ async function ask({ msg, args, opts, quotedMsg, admin, chatId, isGroup }) {
         });
 
         // The 🤖 in front also guarantees the reply never starts with "/" (see markSentByBot)
-        await completeNotice(msg, notice, `${withEngineTip(`🤖 ${reply}`, 'gpt', CHATGPT)}${await consumptionFooter()}`);
+        await completeNotice(msg, notice, `${withEngineTip(`🤖 ${reply}`, 'gpt', CHATGPT, { quiet: opts?.opt?.quiet })}${await consumptionFooter()}`);
     } catch (err) {
         await completeNotice(msg, notice, errorOpenAi(err, '/gpt'));
     }

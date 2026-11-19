@@ -498,7 +498,8 @@ async function transcribeAndSend({ msg, opts, senderName, url, media }) {
         // Who transcribes (and summarizes), in the wait notice and in the final tip
         const engineName = (gpt ? CHATGPT : 'faster-whisper') + (opts.opt.summary && !gpt ? ` + ${CHATGPT}` : '');
         engineTip = engineName;
-        notice = await msg.reply(engineProcessing('stt', engineName), null, { linkPreview: false });
+        // -quiet: no "transcribing..." notice either (the text comes straight away)
+        notice = opts.opt.quiet ? null : await msg.reply(engineProcessing('stt', engineName), null, { linkPreview: false });
 
         fs.mkdirSync(TMP_DIR, { recursive: true });
         logCmdFile = path.join(TMP_DIR, `${id}_cmd.log`);
@@ -567,9 +568,11 @@ async function transcribeAndSend({ msg, opts, senderName, url, media }) {
         if (!textAlt) {
             await completeNotice(msg, notice, t('get.transcribeEmpty'), { linkPreview: false });
         } else if (opts.opt.summary) {
-            await completeNotice(msg, notice, withEngineTip(await speechSummary(r, duration, textAlt), 'stt', engineTip), { linkPreview: false });
+            await completeNotice(msg, notice, withEngineTip(await speechSummary(r, duration, textAlt, opts.opt.quiet), 'stt', engineTip, { quiet: opts.opt.quiet }), { linkPreview: false });
         } else {
-            await completeNotice(msg, notice, withEngineTip(t('get.transcribeResult', { lang: r.idioma, dur: mmss(duration), text: textAlt }), 'stt', engineTip), { linkPreview: false });
+            // -quiet: only the text, with no header and no footer
+            const result = opts.opt.quiet ? textAlt : t('get.transcribeResult', { lang: r.idioma, dur: mmss(duration), text: textAlt });
+            await completeNotice(msg, notice, withEngineTip(result, 'stt', engineTip, { quiet: opts.opt.quiet }), { linkPreview: false });
         }
     } catch (e) {
         printError(e.message);
@@ -595,7 +598,7 @@ async function transcribeAndSend({ msg, opts, senderName, url, media }) {
  * -sum: the summary (ChatGPT, the /gpt key) on top and the whole transcription below. If the summary
  * fail (no balance, timeout), the transcription goes out anyway, with the reason in place of the summary.
  */
-async function speechSummary(r, duration, textAlt) {
+async function speechSummary(r, duration, textAlt, plain = false) {
     let summary;
     try {
         summary = await askOnChat({
@@ -607,9 +610,11 @@ async function speechSummary(r, duration, textAlt) {
         summary = errorOpenAi(err, '/stt');
     }
     // With the summary, the 60 thousand character cap applies to the sum
-    const head = t('get.transcribeSummary', { lang: r.idioma, dur: mmss(duration), summary: summary, text: '' });
+    // -quiet: the summary and the transcription, with no titles
+    const format = (text) => (plain ? `${summary}\n\n${text}` : t('get.transcribeSummary', { lang: r.idioma, dur: mmss(duration), summary: summary, text }));
+    const head = format('');
     const space = Math.max(1000, TRANSCRIPTION_MAX_CHARACTERS - head.length);
-    return t('get.transcribeSummary', { lang: r.idioma, dur: mmss(duration), summary: summary, text: textAlt.length > space ? `${textAlt.slice(0, space)}…` : textAlt });
+    return format(textAlt.length > space ? `${textAlt.slice(0, space)}…` : textAlt);
 }
 
 /*

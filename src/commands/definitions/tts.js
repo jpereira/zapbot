@@ -4,6 +4,8 @@
 
 const { ADMIN } = require('../../roles').ROLES;
 
+const { OPTION_QUIET_TIP } = require('./_options');
+
 module.exports = {
     cmd: '/tts',
     usage: '/tts [-gpt|-g] [-local|-l] [-status|-s] [<text>]',
@@ -12,6 +14,7 @@ module.exports = {
     help: 'Turns the text into a voice note: by default with a local Piper voice (no key), in Portuguese or English according to the text; with -gpt (-g), with ChatGPT (OpenAI speech API, like /gpt -voice), which needs the OpenAI key. Up to 4096 characters. Replying to a text, it speaks the message (an audio is transcribed first), and what you typed becomes the speaking style ("speak like a robot"). -gpt requires OPENAI_API_KEY in config/.env or the gpt.api.key setting.',
     ex: ['/tts Good morning!', '/tts speak slowly'],
     cmd_opts: [
+        OPTION_QUIET_TIP,
         {
             opts: ['gpt', 'g'],
             values: [],

@@ -8,6 +8,14 @@
   "cmd_opts": [
     {
       "opts": [
+        "quiet",
+        "q"
+      ],
+      "values": [],
+      "desc": "Não mostra a dica do motor (\"💡 ... por ChatGPT, Tesseract, Piper...\") no fim da resposta. Para esconder sempre: o setting <comando>.footer em off."
+    },
+    {
+      "opts": [
         "gpt",
         "g"
       ],

@@ -9,6 +9,7 @@ It runs **inside the server**, with [faster-whisper](https://github.com/SYSTRAN/
 
 | Option | Value | Description |
 |---|---|---|
+| `-quiet`, `-q` | | Returns **only** the transcribed text: no header (language and duration), no engine tip and no `⏳` notice. With `-sum`, the summary and the text, with no titles. To hide the tip always: the `stt.footer` setting off |
 | `-startSec`, `-ss` | `<time>` | Starts at this point (default 0), in seconds (`30`) or `min:sec` (`09:33`). With a `-` in front, counts from the **end** (`-60` is the last minute) |
 | `-endSec`, `-es` | `<time>` | Ends at this point, in the same format as `-ss`; must be greater than the start |
 | `-gpt`, `-g` | | Transcribes with ChatGPT (OpenAI API, spends your account) instead of the local faster-whisper. Without `-gpt` or `-local`, the [`stt.engine`](../settings.md) setting decides |

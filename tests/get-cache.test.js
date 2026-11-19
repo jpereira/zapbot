@@ -828,6 +828,25 @@ describe('/stt', () => {
         assert.deepEqual(binaries(), ['yt-dlp', 'ffmpeg', 'ffprobe', 'python']);
     });
 
+    test('-q: SÓ o texto, sem cabeçalho (idioma e duração), sem a dica do motor e sem o aviso ⏳', async () => {
+        const r = await bot.executar(`/stt -q ${URL}`);
+        assert.equal(r.length, 1, 'nem o ⏳ nem outra mensagem');
+        assert.equal(r[0].texto, 'olá mundo, isto é um teste');
+        assert.equal((await bot.executar(`/get -t -q ${URL}`))[0].texto, 'olá mundo, isto é um teste');
+        // the long ones are cut as always, with no header either
+        processes.fala = 'x'.repeat(61000);
+        const [long] = await bot.executar(`/stt -q ${URL}`);
+        assert.equal(long.texto, `${'x'.repeat(60000)}…`);
+    });
+
+    test('-q com -sum: o resumo e a transcrição, sem títulos nem dica', async () => {
+        await bot.setSetting('gpt.api.key', 'sk-teste');
+        network.responder('post', 'api.openai.com/v1/chat/completions', { choices: [{ message: { content: '• fala de um teste' } }] });
+        const r = await bot.executar(`/stt -q -sum ${URL}`);
+        assert.equal(r.length, 1);
+        assert.equal(r[0].texto, '• fala de um teste\n\nolá mundo, isto é um teste');
+    });
+
     test('-v: manda os comandos do yt-dlp, ffmpeg e faster-whisper antes do texto', async () => {
         const r = await bot.executar(`/stt -v ${URL}`);
         assert.match(r[1].texto, /🛠️ \*Verbose Mode\*[\s\S]*yt-dlp[\s\S]*ffmpeg[\s\S]*faster-whisper\* \(\d+\.\d s\)[\s\S]*transcribe\.py[\s\S]*small/);

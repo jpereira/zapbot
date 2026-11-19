@@ -59,6 +59,7 @@ em português).
 | `defi.morpho.chains` | lista | `8453` | Redes (chain id) em que o [`/defi morpho`](commands/defi.md#morpho) procura as posições: `8453` (Base), `1` (Ethereum)... |
 | `defi.morpho.wallet` | texto (pode ser vazio) | *(vazio)* | Carteira do [`/defi morpho`](commands/defi.md#morpho) quando não há carteira cadastrada, usada quando `MORPHO_WALLET_ADDRESS` não está no `config/.env` |
 | `defi.solana.rpc` | URL | `https://api.mainnet-beta.solana.com` | RPC da Solana usado pelo [`/defi`](commands/defi.md#rpc-da-solana). Exibido mascarado (a URL costuma levar a chave) |
+| `draw.footer` | on/off | `on` | Acrescenta a dica "💡 Desenhado por ChatGPT" no aviso "imagem gerada abaixo" do /draw e do /gpt -img e -gif. O -quiet (-q) esconde na chamada. |
 | `forward.delayMs` | 0–10000 | `1000` | Pausa (ms) entre as mensagens quando o [`/forward`](commands/forward.md) encaminha várias, para não encher o WhatsApp de uma vez |
 | `forward.header` | on/off | `on` | Cabeçalho "Mensagem encaminhada pelo ZapBot!" no começo do que o [`/forward`](commands/forward.md) envia; desligado, vai só a mensagem. O `-status` força, o `-quiet` e o `-nohdr` tiram. Veja [Cabeçalho](commands/forward.md#cabeçalho) |
 | `forward.max` | 1–50 | `10` | Máximo de mensagens que o [`/forward -N`](commands/forward.md#várias-mensagens--n) encaminha de uma vez |
@@ -75,6 +76,7 @@ em português).
 | `gpt.api.model` | texto (da lista) | `gpt-4o-mini` | Modelo do `/gpt`, usado quando `OPENAI_MODEL` não está no `config/.env`. Aceitos: os listados por `/gpt -m` |
 | `gpt.credit.since` | texto (AAAA-MM-DD, pode ser vazio) | *(vazio)* | Data da compra dos créditos da OpenAI: o `/gpt -usage` soma o gasto desde ela para mostrar `$usado/$total` (vazio: os últimos 180 dias) |
 | `gpt.credit.total` | 0–100000 | `0` | Total de créditos comprados na OpenAI, em dólares (a API não informa o saldo): o `/gpt -usage` mostra `$usado/$total`. `0`: não mostra |
+| `gpt.footer` | on/off | `on` | Termina as respostas do /gpt com a dica "💡 Respondido por ChatGPT". O -quiet (-q) esconde na chamada. |
 | `gpt.gif.frameMs` | 20–2000 | `200` | Quanto dura cada quadro do GIF do `/draw -gif` e do `/gpt -gif`, em ms (o total é quadros x ms) |
 | `gpt.gif.frames` | 2–16 | `9` | Quantos quadros tem o GIF do `/draw -gif` e do `/gpt -gif` (quanto mais quadros, mais caro) |
 | `gpt.image.gifModel` | texto | `gpt-image-2.6-flare` | Modelo que gera o GIF do `/draw -gif` e do `/gpt -gif` (só os `gpt-image-2.6-*` fazem GIF e pedem acesso à prévia): o id que a sua conta tem (se não existir, o bot lista os que a chave vê) |
@@ -99,6 +101,7 @@ em português).
 | `news.hack` | lista | The Hacker News, BleepingComputer, Krebs on Security | Feeds RSS do `/news -hack` |
 | `news.max` | 1–10 | `5` | Manchetes exibidas pelo `/news` (o `/news <quantidade>` sobrepõe) |
 | `ocr.engine` | `local`, `gpt` | `local` | Motor do [`/ocr`](commands/ocr.md): `local` (Tesseract, sem chave) ou `gpt` (ChatGPT, visão da OpenAI). `-gpt` e `-local` escolhem na chamada |
+| `ocr.footer` | on/off | `on` | Termina a resposta do /ocr com a dica "💡 Lido por <motor>". O -quiet (-q) esconde na chamada. |
 | `ocr.language` | texto | `por+eng` | Idiomas do [`/ocr`](commands/ocr.md) local (Tesseract), separados por `+`: `por+eng`, `por`, `eng`, `spa`... O que não está na imagem Docker não é lido |
 | `pixelart.maxParts` | 1–10 | `3` | Máximo de partes do [`/pixelart`](commands/pixelart.md) quando a arte é mais alta que 4096 px |
 | `pixelart.packs` | lista | `chuck-norris-lvl` | Packs do 16colo.rs sorteados pelo [`/pixelart`](commands/pixelart.md) sem argumentos |
@@ -118,12 +121,15 @@ em português).
 | `stocks.alert.max` | 1–100 | `20` | Máximo de alertas de preço do `/stocks` |
 | `stocks.symbols` | lista | `USD, EUR, USDT, MSTR` | Símbolos exibidos pelo [`/stocks`](commands/stocks.md) (e `/rates`): moedas contra o real (`USD`, `EUR`, `GBP`, `USDT`) e tickers do Yahoo Finance (`MSTR`, `NVDA`, `PETR4.SA`, `BRK-B`, `^GSPC`); normalmente alterada pelo `/stocks -a`/`-d` |
 | `stt.engine` | `local`, `gpt` | `local` | Motor do [`/stt`](commands/stt.md) e do `/get -stt`: `local` (faster-whisper, sem chave) ou `gpt` (ChatGPT, API da OpenAI). `-gpt` e `-local` escolhem na chamada |
+| `stt.footer` | on/off | `on` | Termina a transcrição do /stt e do /get -stt com a dica "💡 Transcrito por <motor>". O -quiet (-q) esconde na chamada. |
 | `stt.language` | texto | `auto` | Idioma da fala no [`/get -stt`](commands/get.md#transcrever-a-fala--stt) (`pt`, `en`, `es`...). `auto`: o whisper detecta |
 | `stt.maxMinutes` | 1–180 | `20` | Duração máxima (minutos) do áudio que o `/get -stt` transcreve: usa a CPU do servidor |
 | `stt.model` | texto | `small` | Modelo do faster-whisper no `/get -stt`: `tiny`, `base`, `small`, `medium` ou `large-v3-turbo` (maior = melhor e mais lento). O `small` vem na imagem; outro é baixado na primeira vez |
+| `tldr.footer` | on/off | `on` | Termina o resumo do /tldr com a dica "💡 Resumido por ChatGPT". O -quiet (-q) esconde na chamada. |
 | `tldr.maxMsgs` | 10–2000 | `500` | Máximo de mensagens enviadas à OpenAI por [`/tldr`](commands/tldr.md) |
 | `translate.lang` | texto | `pt` | Idioma de destino padrão do [`/translate`](commands/translate.md) (código: `pt`, `en`, `es`...) |
 | `tts.engine` | `local`, `gpt` | `local` | Motor do [`/tts`](commands/tts.md): `local` (voz Piper, sem chave) ou `gpt` (ChatGPT, API de voz da OpenAI). `-gpt` e `-local` escolhem na chamada |
+| `tts.footer` | on/off | `on` | Acrescenta a dica "💡 Gerado por <motor>" no aviso "áudio gerado abaixo" do /tts e do /gpt -voice. O -quiet (-q) esconde na chamada. |
 | `tts.voice.en` | texto | `en_US-lessac-medium` | Voz local (Piper) do [`/tts`](commands/tts.md) para texto em inglês: `en_US-lessac-medium`, `en_US-amy-medium`, `en_GB-alan-medium`... A que não está na imagem é baixada na primeira vez |
 | `tts.voice.pt` | texto | `pt_BR-faber-medium` | Voz local (Piper) do [`/tts`](commands/tts.md) para texto em português: `pt_BR-faber-medium`, `pt_BR-edresson-low`, `pt_PT-tugão-medium`... A que não está na imagem é baixada na primeira vez |
 | `usage.footer` | on/off | `on` | Depois de um comando com limite de uso, avisa quantas chamadas restam (`📊 /gpt: restam 1 de 3 por dia`) |

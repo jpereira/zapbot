@@ -83,7 +83,7 @@ async function sendGif(msg, b64, captionAlt, cmd) {
  * @param {Array<{ nome: string, imagem: object }>} [o.perfis]  the -p profile photos: they go along with the base photo
  * @param {string} o.withoutRequest  the reply when there is nothing to draw
  */
-async function drawAlt({ msg, cmd, pedido: request, quotedMsg = null, gif = null, perfis: profiles = [], semPedido: withoutRequest }) {
+async function drawAlt({ msg, cmd, pedido: request, quotedMsg = null, gif = null, perfis: profiles = [], semPedido: withoutRequest, quiet = false }) {
     const base = await referencePhoto(msg, quotedMsg, cmd);
     if (base?.erro) {
         await msg.reply(base.erro);
@@ -118,7 +118,7 @@ async function drawAlt({ msg, cmd, pedido: request, quotedMsg = null, gif = null
             imagens: photo ? await Promise.all(photo.map(image => photoInPng({ imagem: image }))) : []
         });
         // Media does not become an edit of the notice: it says the result comes below (and stays), and the media goes out afterward
-        await completeNotice(msg, notice, withEngineTip(t(animation ? 'draw.gifBelow' : 'draw.imageBelow'), 'draw', CHATGPT, { sep: '\n' }));
+        await completeNotice(msg, notice, withEngineTip(t(animation ? 'draw.gifBelow' : 'draw.imageBelow'), 'draw', CHATGPT, { sep: '\n', quiet, command: cmd.slice(1) }));
         if (animation) await sendGif(msg, b64, captionAlt, cmd);
         else await msg.reply(new MessageMedia('image/png', b64, 'desenho.png'), null, { caption: captionAlt });
         await replyConsumption(msg);
@@ -179,7 +179,7 @@ async function draw({ msg, args, opts, quotedMsg, chatId, isGroup }) {
         if (!profiles) return;
     }
 
-    await drawAlt({ msg, cmd: '/draw', pedido: request, quotedMsg, gif, perfis: profiles, semPedido: commandUsage('/draw') });
+    await drawAlt({ msg, cmd: '/draw', pedido: request, quotedMsg, gif, perfis: profiles, semPedido: commandUsage('/draw'), quiet: opts?.opt?.quiet });
 }
 
 // The -status|-s (or the gpt.status setting) shows the call usage in the footer

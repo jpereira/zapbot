@@ -26,6 +26,7 @@ If the **first word** looks like an option but doesn't exist (`/draw -price`), t
 
 | Option | Value | Description |
 |---|---|---|
+| `-quiet`, `-q` | | Does not show the engine tip ("💡 ... by ChatGPT, Tesseract, Piper...") at the end of the reply. To hide it always: the `draw.footer` setting off |
 | `-gif`, `-g` | | Animated GIF (setting `gpt.image.gifModel`). On a photo, or replying to one, animates the photo. See [Animated GIF](#animated-gif--gif) |
 | `-frames`, `-f` | `<n>` | GIF frames, from 2 to 16 (default: `gpt.gif.frames`, 9). Implies `-gif` |
 | `-ms` | `<ms>` | Duration of each GIF frame, from 20 to 2000 ms (default: `gpt.gif.frameMs`, 200). Implies `-gif` |

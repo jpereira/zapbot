@@ -3,7 +3,7 @@
  */
 
 const { ADMIN } = require('../../roles').ROLES;
-const { optionStatus } = require('./_options');
+const { optionStatus, OPTION_QUIET_TIP } = require('./_options');
 
 module.exports = {
     cmd: '/gpt',
@@ -13,6 +13,7 @@ module.exports = {
     help: 'Asks ChatGPT (OpenAI). Replying to a message, its text goes into the question; replying to a photo, it goes along (ChatGPT sees the image); replying to an audio, it is transcribed; replying to a document (text or PDF), the content goes along; with -voice, the text becomes a robot voice note; with -img and -gif, creates an image and a GIF. Requires OPENAI_API_KEY in config/.env or the gpt.api.key setting.',
     ex: ['/gpt -img -p @me @this draw the two of us as pirates', '/gpt -p @this who is this?'],
     cmd_opts: [
+        OPTION_QUIET_TIP,
         {
             opts: ['model', 'm'],
             values: ['[model]'],

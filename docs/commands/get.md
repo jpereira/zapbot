@@ -11,6 +11,7 @@ through ffmpeg. If the media has a link in the caption, the media wins.
 
 | Option | Value | Description |
 |---|---|---|
+| `-quiet`, `-q` | | Returns **only** the transcribed text: no header (language and duration), no engine tip and no `⏳` notice. With `-sum`, the summary and the text, with no titles. To hide the tip always: the `stt.footer` setting off |
 | `-sticker`, `-st` | | Sends as an animated sticker (up to 6 s), framed on the middle of the video. Same as [`/sticker`](sticker.md) |
 | `-photo`, `-ph` | `<n>` | Photo post (Instagram, X/Twitter): sends only this photo of the carousel, instead of all (`1` is the first; with a leading `-`, counts from the end: `-1` is the last). With `-st`, the sticker is made from it |
 | `-pos` | `<top\|center\|bottom>` | With `-st`: where the square crop goes (default `center`). On media wider than tall, `top` is the left and `bottom` the right |
